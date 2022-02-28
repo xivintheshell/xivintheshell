@@ -1,4 +1,5 @@
 import React from 'react';
+import { SkillName } from './Game/Skills';
 import { game, runTest } from './Game/GameState';
 //import logo from './logo.svg';
 import './App.css';
@@ -57,10 +58,11 @@ class DebugTick extends React.Component {
 	)}
 }
 
-function DebugThunder()
+function DebugButton()
 {
 	var fn = ()=>{
-		console.log("clicked");
+		//console.log("clicked");
+		game.useSkillIfAvailable(SkillName.Blizzard);
 	};
 	return <button onClick={fn}>click me</button>;
 }
@@ -78,24 +80,8 @@ class App extends React.Component {
 		return (
 			<div className="App">
 				<DebugTick />
-				<DebugThunder />
+				<DebugButton />
 				{gameStateDisplay}
-				{/*
-				<header className="App-header">
-					<img src={logo} className="App-logo" alt="logo" />
-					<p>
-						Edit <code>src/App.js</code> and save to reload.
-					</p>
-					<a
-						className="App-link"
-						href="https://reactjs.org"
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						Learn React
-					</a>
-				</header>
-				*/}
 			</div>
 		);
 	}

@@ -1,5 +1,7 @@
-const SkillID = 
+export const SkillName = 
 {
+    Blizzard: "Blizzard",
+    Fire: "Fire",
 	Fire3: "Fire3",
 	Transpose: "Transpose"
 };
@@ -7,27 +9,61 @@ const SkillID =
 class SkillInstance
 {
 	// timeTillAvailableFn : GameState -> float
-	// requirementFn : GameState -> bool
+	// available : GameState -> bool
 	// effectFn : GameState -> ()
-	constructor(timeTillAvailableFn, requirementFn, effectFn)
+	constructor(description, requirementFn, effectFn)
 	{
-		this.timeTillAvailableFn = timeTillAvailableFn;
-		this.requirementFn = requirementFn;
-		this.effectFn = effectFn;
+        this.description = description;
+		this.available = requirementFn;
+		this.use = effectFn;
 	}
 };
 
 class Skill
 {
 	// instances : SkilInstance[]
-	constructor(name, instances)
+	constructor(name, timeTillAvailableFn, instances)
 	{
 		this.name = name;
+        this.timeTillAvailable = timeTillAvailableFn;
 		this.instances = instances;
 	}
 };
 
-var skills = new Map();
+class SkillsList extends Map
+{
+    constructor(game)
+    {
+        super();
+        this.game = game;
+    }
+};
+
+export function makeSkillsList(game)
+{
+    var skillsList = new SkillsList(game);
+
+    // Blizzard
+    skillsList.set(SkillName.Blizzard, new Skill(
+        SkillName.Blizzard,
+        game.timeTillNextGCDAvailable, [
+        new SkillInstance(
+            "not in AF or UI",
+            g=>{
+                return g.getFireStacks() == 0 &&
+                g.getIceStacks() == 0 &&
+                g.getMP() >= 400;
+            },
+            g=>{
+                g.castGCDSpell(2.5, 0.1, 180, 400);
+            }
+        )
+    ]));
+
+    return skillsList;
+}
+
+/*
 skills.set(SkillID.Fire3, new Skill(SkillID.Fire3,
 	[
 		// case 1: has umbral ice
@@ -57,3 +93,4 @@ skills.set(SkillID.Fire3, new Skill(SkillID.Fire3,
 		),
 	]
 ));
+*/
