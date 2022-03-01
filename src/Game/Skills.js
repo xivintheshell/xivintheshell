@@ -1,4 +1,4 @@
-import { Constants, SkillName, ResourceType } from './Common'
+import { Constants, SkillName, ResourceType, Aspect } from './Common'
 import { Event } from './Resources';
 
 class SkillInstance
@@ -42,15 +42,14 @@ export function makeSkillsList(game)
         SkillName.Blizzard,
         game.timeTillNextGCDAvailable, [
         new SkillInstance(
-            "not in AF or UI",
+            "no AF",
             ()=>{
-                return game.resources.get(ResourceType.GCDReady).available(1) &&
+                return game.cooldowns.available(ResourceType.cd_GCD, Constants.gcd) &&
                 game.getFireStacks() === 0 &&
-                game.getIceStacks() === 0 &&
-                game.getMP() >= 400;
+                game.getMP() >= game.captureManaCost(Aspect.Ice, 400);
             },
             ()=>{
-                game.castGCDSpell(Constants.gcd, 0.1, 180, 400);
+                game.castGCDSpell(Aspect.Ice, Constants.gcd, 0.1, 180, game.captureManaCost(Aspect.Ice, 400));
 				game.addEvent(new Event("gain enochian", Constants.gcd - Constants.casterTax, ()=>{
                 	game.resources.get(ResourceType.UmbralIce).gain(1);
 					game.startOrRefreshEnochian();
@@ -58,46 +57,15 @@ export function makeSkillsList(game)
             }
         ),
 		new SkillInstance(
-			"in UI 1",
+			"in AF",
 			()=>{
-                return game.resources.get(ResourceType.GCDReady).available(1) &&
-				game.getIceStacks() === 1 &&
-				game.getMP() >= 300;
+                return game.cooldowns.available(ResourceType.cd_GCD, Constants.gcd) &&
+				game.getFireStacks() > 0
 			},
 			()=>{
-                game.castGCDSpell(Constants.gcd, 0.1, 180, 300);
-				game.addEvent(new Event("gain enochian", Constants.gcd - Constants.casterTax, ()=>{
-                	game.resources.get(ResourceType.UmbralIce).gain(1);
-					game.startOrRefreshEnochian();
-				}));
-			}
-		),
-		new SkillInstance(
-			"in UI 2",
-			()=>{
-                return game.resources.get(ResourceType.GCDReady).available(1) &&
-				game.getIceStacks() === 2 &&
-				game.getMP() >= 200;
-			},
-			()=>{
-                game.castGCDSpell(Constants.gcd, 0.1, 180, 200);
-				game.addEvent(new Event("gain enochian", Constants.gcd - Constants.casterTax, ()=>{
-                	game.resources.get(ResourceType.UmbralIce).gain(1);
-					game.startOrRefreshEnochian();
-				}));
-			}
-		),
-		new SkillInstance(
-			"in UI 3",
-			()=>{
-                return game.resources.get(ResourceType.GCDReady).available(1) &&
-				game.getIceStacks() === 3
-			},
-			()=>{
-                game.castGCDSpell(Constants.gcd, 0.1, 180, 0);
-				game.addEvent(new Event("gain enochian", Constants.gcd - Constants.casterTax, ()=>{
-                	game.resources.get(ResourceType.UmbralIce).gain(1);
-					game.startOrRefreshEnochian();
+                game.castGCDSpell(Aspect.Ice, Constants.gcd, 0.1, 180, 0);
+				game.addEvent(new Event("lose enochian", Constants.gcd - Constants.casterTax, ()=>{
+					game.loseEnochian();
 				}));
 			}
 		),

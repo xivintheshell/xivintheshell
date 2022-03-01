@@ -4,8 +4,16 @@ export const Constants =
     animationLock: 0.3,
     gcd: 2.5,
 
-	//====
+	//==== DEBUG ====
 	epsilon: 0.00001,
+	disableManaAndThunderTicks: 1,
+};
+
+export const Aspect = 
+{
+	Fire: "Fire",
+	Ice: "Ice",
+	Other: "Other"
 };
 
 export const SkillName = 
@@ -26,6 +34,7 @@ export const ResourceType =
 	UmbralHeart: "UmbralHeart", // [0, 3]
 
 	// binaries (buffs & states)
+	LeyLines: "LeyLines", // [0, 1]
 	Enochian: "Enochian", // [0, 1]
 	Paradox: "Paradox", // [0, 1]
 	Firestarter: "Firestarter", // [0, 1]
@@ -36,9 +45,10 @@ export const ResourceType =
 	NotAnimationLocked: "NotAnimationLocked", // [0, 1]
 	GCDReady: "GCDReady", // shared by GCDs
 	// oGCDs
-	s_Sharpcast: "s_Sharpcast", // [0, 2] // TODO: figure out how this works
-	s_LeyLines: "s_LeyLines", // [0, 1]
-	s_TripleCast: "s_TripleCast", // [0, 2]
-	s_Manafont: "s_Manafont", // [0, 1]
-	s_Amplifier: "s_Amplifier" // [0, 1]
+	cd_GCD: "cd_GCD", // [0, Constant.gcd]
+	cd_Sharpcast: "cd_Sharpcast", // [0, 2x] // TODO: figure out how this works
+	cd_LeyLines: "cd_LeyLines", // [0, 1x]
+	cd_TripleCast: "cd_TripleCast", // [0, 2x]
+	cd_Manafont: "cd_Manafont", // [0, 1x]
+	cd_Amplifier: "cd_Amplifier" // [0, 1x]
 };

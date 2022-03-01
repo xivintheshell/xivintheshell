@@ -1,7 +1,7 @@
-import { Constants, ResourceType } from "./Common"
+import { Constants, ResourceType, Aspect } from "./Common"
 import { StatsModifier } from "./Stats";
 import { makeSkillsList } from "./Skills"
-import { Resource, ResourceState, Event } from "./Resources"
+import { Resource, ResourceState, CoolDowns, Event } from "./Resources"
 
 
 // GameState := resources + events queue
@@ -20,6 +20,7 @@ class GameState
 		this.resources.set(ResourceType.UmbralIce, new Resource(ResourceType.UmbralIce, 3, 0));
 		this.resources.set(ResourceType.UmbralHeart, new Resource(ResourceType.UmbralHeart, 3, 0));
 
+		this.resources.set(ResourceType.LeyLines, new Resource(ResourceType.LeyLines, 1, 0));
 		this.resources.set(ResourceType.Enochian, new Resource(ResourceType.Enochian, 1, 0));
 		this.resources.set(ResourceType.Paradox, new Resource(ResourceType.Paradox, 1, 0));
 		this.resources.set(ResourceType.Firestarter, new Resource(ResourceType.Firestarter, 1, 0));
@@ -28,14 +29,15 @@ class GameState
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(ResourceType.NotCasting, new Resource(ResourceType.NotCasting, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
-		this.resources.set(ResourceType.GCDReady, new Resource(ResourceType.GCDReady, 1, 1));
 
-		this.resources.set(ResourceType.s_Sharpcast, new Resource(ResourceType.s_Sharpcast, 2, 0));
-		this.resources.set(ResourceType.s_LeyLines, new Resource(ResourceType.s_LeyLines, 1, 0));
-		this.resources.set(ResourceType.s_TripleCast, new Resource(ResourceType.s_TripleCast, 2, 0));
-		this.resources.set(ResourceType.s_Manafont, new Resource(ResourceType.s_Manafont, 1, 0));
-		this.resources.set(ResourceType.s_Amplifier, new Resource(ResourceType.s_Amplifier, 1, 0));
-		// ... TODO
+		// skill CDs (also a form of resource)
+		this.cooldowns = new CoolDowns(this);
+		this.cooldowns.set(ResourceType.cd_GCD, new Resource(ResourceType.cd_GCD, Constants.gcd, Constants.gcd));
+		this.cooldowns.set(ResourceType.cd_Sharpcast, new Resource(ResourceType.cd_Sharpcast, 60, 60));
+		this.cooldowns.set(ResourceType.cd_LeyLines, new Resource(ResourceType.cd_LeyLines, 1, 0));
+		this.cooldowns.set(ResourceType.cd_TripleCast, new Resource(ResourceType.cd_TripleCast, 2, 0));
+		this.cooldowns.set(ResourceType.cd_Manafont, new Resource(ResourceType.cd_Manafont, 1, 0));
+		this.cooldowns.set(ResourceType.cd_Amplifier, new Resource(ResourceType.cd_Amplifier, 1, 0));
 
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
@@ -67,6 +69,7 @@ class GameState
 
 			// advance time
 			this.time += timeToTick;
+			this.cooldowns.tick(timeToTick);
 
 			// make a deep copy of events to advance for this round...
 			var eventsToExecuteOld = [];
@@ -82,7 +85,7 @@ class GameState
 					if (!e.canceled)
 					{
 						e.effectFn(this);
-						console.log(this.time.toFixed(2) + "s: " + e.name);
+						console.log(this.time.toFixed(3) + "s: " + e.name);
 					}
 					executedEvents++;
 				}
@@ -97,8 +100,6 @@ class GameState
 
 	addEvent(evt)
 	{
-		//console.log((this.time).toFixed(2) + "s: (add evt) " + evt.name);
-		//console.log(evt);
 		this.eventsQueue.push(evt);
 	}
 
@@ -108,10 +109,39 @@ class GameState
 	getMP() { return this.resources.get(ResourceType.Mana).currentValue; }
 
 	// number -> number
-	captureDamage(basePotency)
+	captureDamage(aspect, basePotency)
 	{
-		// TODO: capture buffs, etc.
-		return basePotency;
+		let mod = this.combinedStatsModifier();
+
+		var potency = basePotency * mod.damageBase;
+
+		if (aspect === Aspect.Fire)
+		{
+			potency *= mod.damageFire;
+		}
+		else if (aspect === Aspect.Ice)
+		{
+			potency *= mod.damageIce;
+		}
+		return potency;
+	}
+
+	captureManaCost(aspect, baseManaCost)
+	{
+		let mod = this.combinedStatsModifier();
+
+		if (aspect === Aspect.Fire)
+		{
+			return baseManaCost * mod.manaCostFire;
+		}
+		else if (aspect === Aspect.Ice)
+		{
+			return baseManaCost * mod.manaCostIce;
+		}
+		else
+		{
+			return baseManaCost;
+		}
 	}
 
 	// number -> ()
@@ -121,7 +151,7 @@ class GameState
 		// console.log("    BOOM! " + potency);
 	}
 
-	castGCDSpell(castTime, damageApplicationDelay, potency, manaCost)
+	castGCDSpell(aspect, castTime, damageApplicationDelay, potency, manaCost)
 	{
 		// movement lock
 		this.resources.takeResourceLock(ResourceType.Movement, castTime - 0.5);
@@ -132,12 +162,12 @@ class GameState
 		// (after done casting) deduct MP, calc damage, queue actual damage 
 		this.addEvent(new Event("deduct MP & calc damage", castTime, ()=>{
 			this.resources.get(ResourceType.Mana).consume(manaCost); // actually deduct mana
-			let capturedDamage = this.captureDamage(potency);
+			let capturedDamage = this.captureDamage(aspect, potency);
 			this.addEvent(new Event("apply damage: " + capturedDamage, damageApplicationDelay, ()=>{ this.dealDamage(capturedDamage); }));
 		}));
 
 		// recast (GCD ready)
-		this.resources.takeResourceLock(ResourceType.GCDReady, Constants.gcd);
+		this.cooldowns.use(ResourceType.cd_GCD, Constants.gcd);
 
 		// animation lock
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, castTime + Constants.casterTax);
@@ -167,13 +197,7 @@ class GameState
 
 			// add the event for losing it
 			this.resources.addResourceEvent(ResourceType.Enochian, "lose enochian, clear all AF, UI, UH, stop poly timer", 15, rsc=>{
-				rsc.consume(1);
-				let af = this.resources.get(ResourceType.AstralFire);
-				let ui = this.resources.get(ResourceType.UmbralIce);
-				let uh = this.resources.get(ResourceType.UmbralHeart);
-				af.consume(af.currentValue);
-				ui.consume(ui.currentValue);
-				uh.consume(uh.currentValue);
+				this.loseEnochian();
 			});
 
 			console.log(this.time + "s: override poly timer to 30");
@@ -182,10 +206,21 @@ class GameState
 		}
 	}
 
+	loseEnochian()
+	{
+		this.resources.get(ResourceType.Enochian).consume(1);
+		let af = this.resources.get(ResourceType.AstralFire);
+		let ui = this.resources.get(ResourceType.UmbralIce);
+		let uh = this.resources.get(ResourceType.UmbralHeart);
+		af.consume(af.currentValue);
+		ui.consume(ui.currentValue);
+		uh.consume(uh.currentValue);
+	}
+
 	timeTillNextGCDAvailable()
 	{
 		let nextSkillTime = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
-		let nextGCDReady = this.resources.timeTillReady(ResourceType.GCDReady);
+		let nextGCDReady = Constants.gcd - this.cooldowns.get(ResourceType.cd_GCD).currentValue;
 		return Math.max(nextSkillTime, nextGCDReady);
 	}
 
@@ -205,9 +240,61 @@ class GameState
 		console.log("none of the skill instances are available (nothing happened)");
 	}
 
-	cumulativeStatsModifier()
+	updateStatsModifiers()
 	{
-		let ret = new StatsModifier();
+		this.resources.resetStatsModifiers();
+
+		let ui = this.resources.get(ResourceType.UmbralIce);
+		if (ui.currentValue === 1) {
+			ui.statsModifier.manaRegen = 2800;
+			ui.statsModifier.manaCostFire = 0;
+			ui.statsModifier.damageFire = 0.9;
+			ui.statsModifier.manaCostIce = 0.75;
+		} else if (ui.currentValue === 2) {
+			ui.statsModifier.manaRegen = 4300;
+			ui.statsModifier.manaCostFire = 0;
+			ui.statsModifier.damageFire = 0.8;
+			ui.statsModifier.manaCostIce = 0.5;
+		} else if (ui.currentValue === 3) {
+			ui.statsModifier.manaRegen = 5800;
+			ui.statsModifier.manaCostFire = 0;
+			ui.statsModifier.damageFire = 0.7;
+			ui.statsModifier.manaCostIce = 0;
+			ui.statsModifier.castTimeFire = 0.5;
+		}
+
+		let af = this.resources.get(ResourceType.AstralFire);
+		if (af.currentValue === 1) {
+			af.statsModifier.manaRegen = -400;
+			af.statsModifier.manaCostFire = 2;
+			af.statsModifier.damageFire = 1.4;
+			af.statsModifier.manaCostIce = 0;
+			af.statsModifier.damageIce = 0.9;
+		} else if (af.currentValue === 2) {
+			af.statsModifier.manaRegen = -400;
+			af.statsModifier.manaCostFire = 2;
+			af.statsModifier.damageFire = 1.6;
+			af.statsModifier.manaCostIce = 0;
+			af.statsModifier.damageIce = 0.8;
+		} else if (af.currentValue === 3) {
+			af.statsModifier.manaRegen = -400;
+			af.statsModifier.manaCostFire = 2;
+			af.statsModifier.damageFire = 1.8;
+			af.statsModifier.manaCostIce = 0;
+			af.statsModifier.damageIce = 0.7;
+			af.statsModifier.castTimeIce = 0.5;
+		}
+
+		let uh = this.resources.get(ResourceType.UmbralHeart);
+		if (uh.available(1))
+		{
+			af.statsModifier.manaCostFire = 1;
+		}
+	}
+	combinedStatsModifier()
+	{
+		this.updateStatsModifiers();
+		let ret = StatsModifier.base();
 		for (var resource of this.resources.values())
 		{
 			ret.apply(resource.statsModifier);
@@ -217,7 +304,7 @@ class GameState
 
 	toString()
 	{
-		var s = "======== " + this.time + "s ========\n";
+		var s = "======== " + this.time.toFixed(3) + "s ========\n";
 		s += "MP:\t" + this.resources.get(ResourceType.Mana).currentValue + "\n";
 		s += "AF:\t" + this.resources.get(ResourceType.AstralFire).currentValue + "\n";
 		s += "UI:\t" + this.resources.get(ResourceType.UmbralIce).currentValue + "\n";
@@ -225,7 +312,7 @@ class GameState
 		s += "Enochian:\t" + this.resources.get(ResourceType.Enochian).currentValue + "\n";
 		s += "Poly:\t" + this.resources.get(ResourceType.Polyglot).currentValue + "\n";
 		s += "Para:\t" + this.resources.get(ResourceType.Paradox).currentValue + "\n";
-		s += "GCD Ready:\t" + this.resources.get(ResourceType.GCDReady).currentValue + "\n";
+		s += "GCD:\t" + this.cooldowns.get(ResourceType.cd_GCD).currentValue + "\n";
 		return s;
 	}
 };
@@ -238,23 +325,24 @@ export var game = new GameState();
 
 export function runTest()
 {
-	/*
-	// get mana and thunder ticks rolling (through recursion)
-	let recurringManaRegen = ()=>{
-		// mana regen
-		var additionalGain = 0;
-		// TODO: apply modifiers
-		game.resources.get(ResourceType.Mana).gain(200 + additionalGain);
-		// queue the next tick
-		game.addEvent(new Event("ManaTick", 3, recurringManaRegen));
-	};
-	let recurringThunderTick = ()=>{
-		// TODO: tick effect
-		game.addEvent(new Event("ThunderTick", 3, recurringThunderTick));
-	};
-	game.addEvent(new Event("InitialManaTick", 0.2, recurringManaRegen));
-	game.addEvent(new Event("InitialThunderTick", 0.8, recurringThunderTick));
-	*/
+	if (Constants.disableManaAndThunderTicks === 0)
+	{
+		// get mana and thunder ticks rolling (through recursion)
+		let recurringManaRegen = ()=>{
+			// mana regen
+			var additionalGain = 0;
+			// TODO: apply modifiers
+			game.resources.get(ResourceType.Mana).gain(200 + additionalGain);
+			// queue the next tick
+			game.addEvent(new Event("ManaTick", 3, recurringManaRegen));
+		};
+		let recurringThunderTick = ()=>{
+			// TODO: tick effect
+			game.addEvent(new Event("ThunderTick", 3, recurringThunderTick));
+		};
+		game.addEvent(new Event("InitialManaTick", 0.2, recurringManaRegen));
+		game.addEvent(new Event("InitialThunderTick", 0.8, recurringThunderTick));
+	}
 
 	// also polyglot
 	let recurringPolyglotGain = rsc=>{
@@ -265,16 +353,4 @@ export function runTest()
 
 	console.log(game);
 	console.log("========");
-
-	console.log(game.resources.game);
-
-	/*
-	let base = StatsModifier.base();
-	let mod = new StatsModifier();
-	mod.damage = 0.1;
-	mod.manaRegen = 100;
-	base.apply(mod);
-	console.log(base);
-	console.log(StatsModifier.base());
-	*/
 }

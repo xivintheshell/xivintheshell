@@ -45,6 +45,27 @@ export class Resource
 	}
 };
 
+export class CoolDowns extends Map
+{
+	constructor(game)
+	{
+		super();
+		this.game = game;
+	}
+	tick(deltaTime)
+	{
+		for (var rsc of this.values()) rsc.gain(deltaTime);
+	}
+	available(rscType, amount)
+	{
+		return this.get(rscType).available(amount);
+	}
+	use(rscType, amount)
+	{
+		this.get(rscType).consume(amount);
+	}
+};
+
 export class ResourceState extends Map
 {
 	constructor(game)
@@ -79,29 +100,11 @@ export class ResourceState extends Map
 		this.addResourceEvent(rscType, "[resource ready] " + rscType, delay, rsc=>{ rsc.gain(1); });
 	}
 
-	//=============
-
-	// Map(string -> number) -> bool
-	available(requirements)
+	resetStatsModifiers()
 	{
-		for (var [resource, amount] of requirements.entries())
+		for (let rcs of this.values())
 		{
-			if (!this.get(resource).available(amount)) return false;
-		}
-		return true;
-	}
-	consume(resourcesMap)	
-	{
-		for (var [resource, amount] of resourcesMap.entries())
-		{
-			this.get(resource).consume(amount);
-		}
-	}
-	gain(resourcesMap)
-	{
-		for (var [resource, amount] of resourcesMap.entries())
-		{
-			this.get(resource).gain(amount);
+			rcs.statsModifier.reset();
 		}
 	}
 };
