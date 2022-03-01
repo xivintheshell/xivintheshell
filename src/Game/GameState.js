@@ -1,104 +1,11 @@
+import { Constants, ResourceType } from "./Common"
 import { StatsModifier } from "./Stats";
 import { makeSkillsList } from "./Skills"
+import { Resource, ResourceState, Event } from "./Resources"
 
-export const ResourceType =
-{
-	// hard resources
-	Mana: "Mana", // [0, 10000]
-	Polyglot: "Polyglot", // [0, 2]
-	AstralFire: "AstralFire", // [0, 3]
-	UmbralIce: "UmbralIce", // [0, 3]
-	UmbralHeart: "UmbralHeart", // [0, 3]
-	// binaries (buffs & states)
-	Paradox: "Paradox", // [0, 1]
-	Firestarter: "Firestarter", // [0, 1]
-	Thundercloud: "Thundercloud", // [0, 1]
-
-	Movement: "Movement", // [0, 1]
-	NotCasting: "NotCasting", // [0, 1] (movement time as a resource)
-	NotAnimationLocked: "NotAnimationLocked", // [0, 1]
-	GCDReady: "GCDReady", // shared by GCDs
-	// oGCDs
-	s_Sharpcast: "s_Sharpcast", // [0, 2] // TODO: figure out how this works
-	s_LeyLines: "s_LeyLines", // [0, 1]
-	s_TripleCast: "s_TripleCast", // [0, 2]
-	s_Manafont: "s_Manafont", // [0, 1]
-	s_Amplifier: "s_Amplifier" // [0, 1]
-};
-
-const casterTax = 0.06;
-const animationLock = 0.3;
-
-const gcd = 2.35;
-
-
-// can never be negative
-// has a stats modifier which may change over time depending on resource amount
-class Resource
-{
-	constructor(type, maxValue, initialValue)
-	{
-		this.type = type;
-		this.maxValue = maxValue;
-		this.currentValue = initialValue;
-		this.statsModifier = new StatsModifier();
-	}
-	available(amount)
-	{
-		return this.currentValue >= amount;
-	}
-	consume(amount)	
-	{
-		if (!this.available(amount)) console.warn("invalid resource consumption: " + this.type);
-		this.currentValue -= amount;
-	}
-	gain(amount)
-	{
-		//console.log("resource gain: " + amount);
-		this.currentValue = Math.min(this.currentValue + amount, this.maxValue);
-	}
-};
-
-class ResourceState extends Map
-{
-	// Map(string -> number) -> bool
-	available(requirements)
-	{
-		for (var [resource, amount] of requirements.entries())
-		{
-			if (!this.get(resource).available(amount)) return false;
-		}
-		return true;
-	}
-	consume(resourcesMap)	
-	{
-		for (var [resource, amount] of resourcesMap.entries())
-		{
-			this.get(resource).consume(amount);
-		}
-	}
-	gain(resourcesMap)
-	{
-		for (var [resource, amount] of resourcesMap.entries())
-		{
-			this.get(resource).gain(amount);
-		}
-	}
-};
-
-class Event
-{
-	// effectFn : GameState -> ()
-	constructor(name, delay, effectFn)
-	{
-		this.name = name;
-		this.timeTillEvent = delay;
-		this.effectFn = effectFn;
-	}
-};
 
 // GameState := resources + events queue
-export class GameState
+class GameState
 {
 	constructor()
 	{
@@ -106,13 +13,14 @@ export class GameState
 		this.time = 0;
 
 		// RESOURCES (checked when using skills)
-		this.resources = new ResourceState();
+		this.resources = new ResourceState(this);
 		this.resources.set(ResourceType.Mana, new Resource(ResourceType.Mana, 10000, 10000));
 		this.resources.set(ResourceType.Polyglot, new Resource(ResourceType.Polyglot, 2, 0));
 		this.resources.set(ResourceType.AstralFire, new Resource(ResourceType.AstralFire, 3, 0));
 		this.resources.set(ResourceType.UmbralIce, new Resource(ResourceType.UmbralIce, 3, 0));
 		this.resources.set(ResourceType.UmbralHeart, new Resource(ResourceType.UmbralHeart, 3, 0));
 
+		this.resources.set(ResourceType.Enochian, new Resource(ResourceType.Enochian, 1, 0));
 		this.resources.set(ResourceType.Paradox, new Resource(ResourceType.Paradox, 1, 0));
 		this.resources.set(ResourceType.Firestarter, new Resource(ResourceType.Firestarter, 1, 0));
 		this.resources.set(ResourceType.Thundercloud, new Resource(ResourceType.Thundercloud, 1, 0));
@@ -142,13 +50,6 @@ export class GameState
 
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = makeSkillsList(this);
-
-		//================
-		// convenience accessors (maintained elsewhere)
-
-		this.unlockAnimationEvent = null;
-
-		this.GCDReadyEvent = null;
 	}
 
 	// advance game state by this much time
@@ -156,7 +57,7 @@ export class GameState
 	{
 		//======== events ========
 		var cumulativeDeltaTime = 0;
-		while (cumulativeDeltaTime < deltaTime-0.00001 && this.eventsQueue.length > 0)
+		while (cumulativeDeltaTime < deltaTime - Constants.epsilon && this.eventsQueue.length > 0)
 		{
 			// make sure events are in proper order
 			this.eventsQueue.sort((a, b)=>{return a.timeTillEvent - b.timeTillEvent;})
@@ -174,10 +75,13 @@ export class GameState
 			var executedEvents = 0;
 			eventsToExecuteOld.forEach(e=>{
 				e.timeTillEvent -= timeToTick;
-				if (e.timeTillEvent <= 0)
+				if (e.timeTillEvent <= Constants.epsilon)
 				{
-					e.effectFn(this);
-					console.log((this.time + cumulativeDeltaTime + timeToTick).toFixed(2) + "s: " + e.name);
+					if (!e.canceled)
+					{
+						e.effectFn(this);
+						console.log((this.time + cumulativeDeltaTime + timeToTick).toFixed(2) + "s: " + e.name);
+					}
 					executedEvents++;
 				}
 			});
@@ -193,9 +97,9 @@ export class GameState
 
 	addEvent(evt)
 	{
-		var i = 0;
-		while (i < this.eventsQueue.length && this.eventsQueue[i].timeTillEvent < evt.timeTillEvent) i++;
-		this.eventsQueue.splice(i, 0, evt);
+		//console.log((this.time).toFixed(2) + "s: (add evt) " + evt.name);
+		//console.log(evt);
+		this.eventsQueue.push(evt);
 	}
 
 	getFireStacks() { return this.resources.get(ResourceType.AstralFire).currentValue; }
@@ -203,52 +107,84 @@ export class GameState
 	getUmbralHearts() { return this.resources.get(ResourceType.UmbralHeart).currentValue; }
 	getMP() { return this.resources.get(ResourceType.Mana).currentValue; }
 
+	// number -> number
 	captureDamage(basePotency)
 	{
 		// TODO: capture buffs, etc.
 		return basePotency;
 	}
 
+	// number -> ()
 	dealDamage(potency)
 	{
-		console.log("    BOOM! " + potency);
+		// placeholder
+		// console.log("    BOOM! " + potency);
 	}
 
 	castGCDSpell(castTime, damageApplicationDelay, potency, manaCost)
 	{
 		// movement lock
-		this.resources.get(ResourceType.Movement).consume(1);
-		this.addEvent(new Event("unlock movement", castTime - 0.5, g=>{ g.resources.get(ResourceType.Movement).gain(1); }));
+		this.resources.takeResourceLock(ResourceType.Movement, castTime - 0.5);
 
-		// spell cast, damage, etc.
-		this.resources.get(ResourceType.NotCasting).consume(1);
-		this.addEvent(new Event("finish casting & calc damage", castTime, g=>{
-			g.resources.get(ResourceType.NotCasting).gain(1); // done casting
-			g.resources.get(ResourceType.Mana).consume(manaCost); // actually deduct mana
-			let capturedPotency = g.captureDamage(potency);
-			g.addEvent(new Event("apply damage: " + capturedPotency, damageApplicationDelay, g=>{ g.dealDamage(capturedPotency); }));
+		// casting status
+		this.resources.takeResourceLock(ResourceType.NotCasting, castTime);
+
+		// (after done casting) deduct MP, calc damage, queue actual damage 
+		this.addEvent(new Event("deduct MP & calc damage", castTime, ()=>{
+			this.resources.get(ResourceType.Mana).consume(manaCost); // actually deduct mana
+			let capturedDamage = this.captureDamage(potency);
+			this.addEvent(new Event("apply damage: " + capturedDamage, damageApplicationDelay, ()=>{ this.dealDamage(capturedDamage); }));
 		}));
 
 		// recast (GCD ready)
-		this.resources.get(ResourceType.GCDReady).consume(1);
-		this.GCDReadyEvent = new Event("GCD ready", gcd, g=>{
-			g.resources.get(ResourceType.GCDReady).gain(1);
-			g.GCDReadyEvent = null;
-		});
+		this.resources.takeResourceLock(ResourceType.GCDReady, Constants.gcd);
 
 		// animation lock
-		this.resources.get(ResourceType.NotAnimationLocked).consume(1);
-		this.unlockAnimationEvent = new Event("unlock animation", castTime + casterTax, g=>{
-			g.resources.get(ResourceType.NotAnimationLocked).gain(1);
-			g.unlockAnimationEvent = null;
-		});
-		this.addEvent(this.unlockAnimationEvent);
+		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, castTime + Constants.casterTax);
+	}
+
+	hasEnochian()
+	{
+		// lasts a teeny bit longer to allow simultaneous events catch its effect
+		let enochian = this.resources.get(ResourceType.Enochian);
+		return enochian.available(1);
+	}
+
+	// falls off after 15s unless refreshed by AF / UI
+	startOrRefreshEnochian()
+	{
+		let enochian = this.resources.get(ResourceType.Enochian);
+
+		if (enochian.available(1)) 
+		{
+			// refresh
+			enochian.overrideTimer(15);
+		}
+		else
+		{
+			// fresh gain
+			enochian.gain(1);
+
+			// add the event for losing it
+			this.resources.addResourceEvent(ResourceType.Enochian, "lose enochian, clear all AF, UI, UH, stop poly timer", 15, rsc=>{
+				rsc.consume(1);
+				let af = this.resources.get(ResourceType.AstralFire);
+				let ui = this.resources.get(ResourceType.UmbralIce);
+				let uh = this.resources.get(ResourceType.UmbralHeart);
+				af.consume(af.currentValue);
+				ui.consume(ui.currentValue);
+				uh.consume(uh.currentValue);
+			});
+
+			// reset polyglot countdown to 30s
+			this.resources.get(ResourceType.Polyglot).overrideTimer(30);
+		}
 	}
 
 	timeTillNextGCDAvailable()
 	{
-		let nextSkillTime = this.unlockAnimationEvent ? this.unlockAnimationEvent.timeTillEvent : 0;
-		let nextGCDReady = this.GCDReadyEvent ? this.GCDReadyEvent.timeTillEvent : 0;
+		let nextSkillTime = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
+		let nextGCDReady = this.resources.timeTillReady(ResourceType.GCDReady);
 		return Math.max(nextSkillTime, nextGCDReady);
 	}
 
@@ -260,12 +196,12 @@ export class GameState
 		{
 			if (skill.instances[i].available(this))
 			{
-				skill.instances[i].use(this);
 				console.log(this.time + "s: use skill [" + skillName + "] - " + skill.instances[i].description);
+				skill.instances[i].use(this);
 				return;
 			}
 		}
-		console.log("none of the skill instances are available");
+		console.log("none of the skill instances are available (nothing happened)");
 	}
 
 	cumulativeStatsModifier()
@@ -285,8 +221,10 @@ export class GameState
 		s += "AF:\t" + this.resources.get(ResourceType.AstralFire).currentValue + "\n";
 		s += "UI:\t" + this.resources.get(ResourceType.UmbralIce).currentValue + "\n";
 		s += "UH:\t" + this.resources.get(ResourceType.UmbralHeart).currentValue + "\n";
+		s += "Enochian:\t" + this.resources.get(ResourceType.Enochian).currentValue + "\n";
 		s += "Poly:\t" + this.resources.get(ResourceType.Polyglot).currentValue + "\n";
 		s += "Para:\t" + this.resources.get(ResourceType.Paradox).currentValue + "\n";
+		s += "GCD Ready:\t" + this.resources.get(ResourceType.GCDReady).currentValue + "\n";
 		return s;
 	}
 };
@@ -299,33 +237,34 @@ export var game = new GameState();
 
 export function runTest()
 {
-	// get mana tick rolling (through recursion)
-	let recurringManaRegen = g=>{
+	// get mana and thunder ticks rolling (through recursion)
+	let recurringManaRegen = ()=>{
 		// mana regen
 		var additionalGain = 0;
 		/* TODO: apply modifiers
 		*/
-		g.resources.get(ResourceType.Mana).gain(200 + additionalGain);
+		game.resources.get(ResourceType.Mana).gain(200 + additionalGain);
 		// queue the next tick
-		g.addEvent(new Event("ManaTick", 3, recurringManaRegen));
+		game.addEvent(new Event("ManaTick", 3, recurringManaRegen));
+	};
+	let recurringThunderTick = ()=>{
+		// TODO: tick effect
+		game.addEvent(new Event("ThunderTick", 3, recurringThunderTick));
 	};
 
-	let recurringThunderTick = g=>{
-		// TODO: tick effect
-		g.addEvent(new Event("ThunderTick", 3, recurringThunderTick));
+	// also polyglot
+	let recurringPolyglotGain = rsc=>{
+		if (game.hasEnochian()) rsc.gain(1);
+		game.resources.addResourceEvent(ResourceType.Polyglot, "gain polyglot if currently has enochian", 30, recurringPolyglotGain);
 	};
+	recurringPolyglotGain(ResourceType.Polyglot);
 
 	game.addEvent(new Event("InitialManaTick", 0.2, recurringManaRegen));
 	game.addEvent(new Event("InitialThunderTick", 0.8, recurringThunderTick));
 	console.log(game);
 	console.log("========");
 
-	/*
-	for (const t in ResourceType)
-	{
-		console.log(t);
-	}
-	*/
+	console.log(game.resources.game);
 
 	/*
 	let base = StatsModifier.base();

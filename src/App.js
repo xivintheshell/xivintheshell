@@ -1,10 +1,11 @@
 import React from 'react';
-import { SkillName } from './Game/Skills';
+import { SkillName } from './Game/Common';
 import { game, runTest } from './Game/GameState';
-//import logo from './logo.svg';
 import './App.css';
 
 //======================================================
+
+var boundUpdateText = null;
 
 class GameStateDisplay extends React.Component
 {
@@ -14,14 +15,17 @@ class GameStateDisplay extends React.Component
 		this.state = {
 			text: "(empty)"
 		};
+		var updateText = (text)=>{
+			this.setState({ text: text });
+		};
+		boundUpdateText = updateText.bind(this);
 	}
-	update(s){ this.setState({ text: s }); }
 	render()
 	{
 		return(<div>{this.state.text}</div>);
 	}
 }
-let gameStateDisplay = <GameStateDisplay />;
+var gameStateDisplay = null;
 
 class DebugTick extends React.Component {
 	constructor(props) {
@@ -34,8 +38,8 @@ class DebugTick extends React.Component {
 	handleSubmit (event) {
 		game.tick(parseFloat(this.state.value));
 		console.log(game.toString());
+		console.log(game.resources);
 		console.log(game.eventsQueue);
-		//gameStateDisplay.update(game.toString());
 		event.preventDefault();
 	}
 
@@ -44,7 +48,7 @@ class DebugTick extends React.Component {
 	}
 
 	render(){ 
-		var powered =
+		var form =
 			<form onSubmit={this.handleSubmit}>
 				<span>Tick by </span>
 				<input size="5" type="text" 
@@ -53,18 +57,29 @@ class DebugTick extends React.Component {
 			</form>
 		return (
 			<div className="footer">
-				{powered}
+				{form}
 			</div>
 	)}
 }
 
-function DebugButton()
+class DebugButton extends React.Component
 {
-	var fn = ()=>{
-		//console.log("clicked");
+	constructor(props)
+	{
+		super(props);
+		this.state = {timesClicked: 0};
+		this.boundAction = this.action.bind(this);
+	}
+	action()
+	{
 		game.useSkillIfAvailable(SkillName.Blizzard);
-	};
-	return <button onClick={fn}>click me</button>;
+		this.setState({timesClicked: this.state.timesClicked + 1});
+		boundUpdateText("hihi");
+	}
+	render()
+	{
+		return <button onClick={this.boundAction}>click me {this.state.timesClicked}</button>;
+	}
 }
 
 class App extends React.Component {
@@ -73,6 +88,7 @@ class App extends React.Component {
 	{
 		super(props);
 		runTest();
+		gameStateDisplay = <GameStateDisplay text="initial text" />
 	}
 
 	render()

@@ -1,16 +1,10 @@
-export const SkillName = 
-{
-    Blizzard: "Blizzard",
-    Fire: "Fire",
-	Fire3: "Fire3",
-	Transpose: "Transpose"
-};
+import { Constants, SkillName, ResourceType } from './Common'
+import { Event } from './Resources';
 
 class SkillInstance
 {
-	// timeTillAvailableFn : GameState -> float
-	// available : GameState -> bool
-	// effectFn : GameState -> ()
+	// available : () -> bool
+	// effectFn : () -> ()
 	constructor(description, requirementFn, effectFn)
 	{
         this.description = description;
@@ -49,13 +43,18 @@ export function makeSkillsList(game)
         game.timeTillNextGCDAvailable, [
         new SkillInstance(
             "not in AF or UI",
-            g=>{
-                return g.getFireStacks() == 0 &&
-                g.getIceStacks() == 0 &&
-                g.getMP() >= 400;
+            ()=>{
+                return game.resources.get(ResourceType.GCDReady).available(1) &&
+                game.getFireStacks() == 0 &&
+                game.getIceStacks() == 0 &&
+                game.getMP() >= 400;
             },
-            g=>{
-                g.castGCDSpell(2.5, 0.1, 180, 400);
+            ()=>{
+                game.castGCDSpell(Constants.gcd, 0.1, 180, 400);
+				game.addEvent(new Event("gain enochian", Constants.gcd - Constants.casterTax, ()=>{
+                	game.resources.get(ResourceType.UmbralIce).gain(1);
+					game.startOrRefreshEnochian();
+				}));
             }
         )
     ]));
