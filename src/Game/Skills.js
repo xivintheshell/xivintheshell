@@ -45,8 +45,8 @@ export function makeSkillsList(game)
             "not in AF or UI",
             ()=>{
                 return game.resources.get(ResourceType.GCDReady).available(1) &&
-                game.getFireStacks() == 0 &&
-                game.getIceStacks() == 0 &&
+                game.getFireStacks() === 0 &&
+                game.getIceStacks() === 0 &&
                 game.getMP() >= 400;
             },
             ()=>{
@@ -56,7 +56,51 @@ export function makeSkillsList(game)
 					game.startOrRefreshEnochian();
 				}));
             }
-        )
+        ),
+		new SkillInstance(
+			"in UI 1",
+			()=>{
+                return game.resources.get(ResourceType.GCDReady).available(1) &&
+				game.getIceStacks() === 1 &&
+				game.getMP() >= 300;
+			},
+			()=>{
+                game.castGCDSpell(Constants.gcd, 0.1, 180, 300);
+				game.addEvent(new Event("gain enochian", Constants.gcd - Constants.casterTax, ()=>{
+                	game.resources.get(ResourceType.UmbralIce).gain(1);
+					game.startOrRefreshEnochian();
+				}));
+			}
+		),
+		new SkillInstance(
+			"in UI 2",
+			()=>{
+                return game.resources.get(ResourceType.GCDReady).available(1) &&
+				game.getIceStacks() === 2 &&
+				game.getMP() >= 200;
+			},
+			()=>{
+                game.castGCDSpell(Constants.gcd, 0.1, 180, 200);
+				game.addEvent(new Event("gain enochian", Constants.gcd - Constants.casterTax, ()=>{
+                	game.resources.get(ResourceType.UmbralIce).gain(1);
+					game.startOrRefreshEnochian();
+				}));
+			}
+		),
+		new SkillInstance(
+			"in UI 3",
+			()=>{
+                return game.resources.get(ResourceType.GCDReady).available(1) &&
+				game.getIceStacks() === 3
+			},
+			()=>{
+                game.castGCDSpell(Constants.gcd, 0.1, 180, 0);
+				game.addEvent(new Event("gain enochian", Constants.gcd - Constants.casterTax, ()=>{
+                	game.resources.get(ResourceType.UmbralIce).gain(1);
+					game.startOrRefreshEnochian();
+				}));
+			}
+		),
     ]));
 
     return skillsList;

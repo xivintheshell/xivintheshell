@@ -65,6 +65,9 @@ class GameState
 			// time to safely advance without skipping anything or ticking past deltaTime
 			let timeToTick = Math.min(deltaTime - cumulativeDeltaTime, this.eventsQueue[0].timeTillEvent);
 
+			// advance time
+			this.time += timeToTick;
+
 			// make a deep copy of events to advance for this round...
 			var eventsToExecuteOld = [];
 			for (var i = 0; i < this.eventsQueue.length; i++)
@@ -74,25 +77,22 @@ class GameState
 			// actually tick them (which might enqueue new events)
 			var executedEvents = 0;
 			eventsToExecuteOld.forEach(e=>{
-				e.timeTillEvent -= timeToTick;
 				if (e.timeTillEvent <= Constants.epsilon)
 				{
 					if (!e.canceled)
 					{
 						e.effectFn(this);
-						console.log((this.time + cumulativeDeltaTime + timeToTick).toFixed(2) + "s: " + e.name);
+						console.log(this.time.toFixed(2) + "s: " + e.name);
 					}
 					executedEvents++;
 				}
+				e.timeTillEvent -= timeToTick;
 			});
 			// remove the executed events from the master list
 			this.eventsQueue.splice(0, executedEvents);
 
 			cumulativeDeltaTime += timeToTick;
 		}
-
-		// actually update time
-		this.time += deltaTime;
 	}
 
 	addEvent(evt)
@@ -176,6 +176,7 @@ class GameState
 				uh.consume(uh.currentValue);
 			});
 
+			console.log(this.time + "s: override poly timer to 30");
 			// reset polyglot countdown to 30s
 			this.resources.get(ResourceType.Polyglot).overrideTimer(30);
 		}
@@ -237,12 +238,12 @@ export var game = new GameState();
 
 export function runTest()
 {
+	/*
 	// get mana and thunder ticks rolling (through recursion)
 	let recurringManaRegen = ()=>{
 		// mana regen
 		var additionalGain = 0;
-		/* TODO: apply modifiers
-		*/
+		// TODO: apply modifiers
 		game.resources.get(ResourceType.Mana).gain(200 + additionalGain);
 		// queue the next tick
 		game.addEvent(new Event("ManaTick", 3, recurringManaRegen));
@@ -251,6 +252,9 @@ export function runTest()
 		// TODO: tick effect
 		game.addEvent(new Event("ThunderTick", 3, recurringThunderTick));
 	};
+	game.addEvent(new Event("InitialManaTick", 0.2, recurringManaRegen));
+	game.addEvent(new Event("InitialThunderTick", 0.8, recurringThunderTick));
+	*/
 
 	// also polyglot
 	let recurringPolyglotGain = rsc=>{
@@ -259,8 +263,6 @@ export function runTest()
 	};
 	recurringPolyglotGain(ResourceType.Polyglot);
 
-	game.addEvent(new Event("InitialManaTick", 0.2, recurringManaRegen));
-	game.addEvent(new Event("InitialThunderTick", 0.8, recurringThunderTick));
 	console.log(game);
 	console.log("========");
 

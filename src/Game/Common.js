@@ -2,7 +2,7 @@ export const Constants =
 {
     casterTax: 0.06,
     animationLock: 0.3,
-    gcd: 2.35,
+    gcd: 2.5,
 
 	//====
 	epsilon: 0.00001,
