@@ -255,7 +255,7 @@ class GameState
 		return this.resources.timeTillReady(ResourceType.NotAnimationLocked);
 	}
 
-	timeTillNextStackAvailable(cdName)
+	timeTillNextUseAvailable(cdName)
 	{
 		let tillNextSkill = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
 		let tillNextStack = this.cooldowns.timeTillNextStackAvailable(cdName);
@@ -270,7 +270,7 @@ class GameState
 		{
 			if (skill.instances[i].available(this))
 			{
-				console.log(this.time + "s: use skill [" + skillName + "] - " + skill.instances[i].description);
+				console.log(this.time.toFixed(3) + "s: use skill [" + skillName + "] - " + skill.instances[i].description);
 				skill.instances[i].use(this);
 				return;
 			}

@@ -39,14 +39,12 @@ export function makeSkillsList(game)
 	const skillsList = new SkillsList(game);
 
 	// Blizzard
-	// TODO: do something to scale cast & recast time due to LL
     skillsList.set(SkillName.Blizzard, new Skill(
         SkillName.Blizzard,
-		()=>{ return game.timeTillNextStackAvailable(ResourceType.cd_GCD); },
+		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
 		true,
 		[
-			new SkillInstance(
-				"no AF",
+			new SkillInstance("no AF",
 				()=>{
 					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
 					game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
@@ -56,14 +54,13 @@ export function makeSkillsList(game)
 				()=>{
 					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Ice, game.config.gcd);
 					game.castSpell(Aspect.Ice, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 180, game.captureManaCost(Aspect.Ice, 400));
-					game.addEvent(new Event("gain enochian", castTime - 0.06, ()=>{
+					game.addEvent(new Event("gain UI", castTime - 0.06, ()=>{
 						game.resources.get(ResourceType.UmbralIce).gain(1);
 						game.startOrRefreshEnochian();
 					 }));
 				}
 			),
-			new SkillInstance(
-				 "in AF",
+			new SkillInstance("in AF",
 				 ()=>{
 					 return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
 						 game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
@@ -80,10 +77,49 @@ export function makeSkillsList(game)
     	]
 	));
 
+	// Fire
+	skillsList.set(SkillName.Fire, new Skill(
+		SkillName.Fire,
+		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
+		false,
+		[
+			new SkillInstance("no UI",
+				()=>{
+					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
+						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
+						game.getIceStacks() === 0 &&
+						game.getMP() >= game.captureManaCost(Aspect.Fire, 800);
+				},
+				()=>{
+					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.gcd);
+					game.castSpell(Aspect.Fire, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 180, game.captureManaCost(Aspect.Fire, 800));
+					game.addEvent(new Event("gain AF", castTime - 0.06, ()=>{
+						game.resources.get(ResourceType.AstralFire).gain(1);
+						game.startOrRefreshEnochian();
+					}));
+				}
+			),
+			new SkillInstance("in UI",
+				()=>{
+					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
+						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
+						game.getIceStacks() > 0
+				},
+				()=>{
+					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.gcd);
+					game.castSpell(Aspect.Fire, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 180, 0);
+					game.addEvent(new Event("lose enochian", castTime - 0.06, ()=>{
+						game.loseEnochian();
+					}));
+				}
+			),
+		]
+	));
+
 	// Ley Lines
 	skillsList.set(SkillName.LeyLines, new Skill(
 		SkillName.LeyLines,
-		()=>{ return game.timeTillNextStackAvailable(ResourceType.cd_LeyLines); },
+		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_LeyLines); },
 		false,
 		[
 			new SkillInstance(

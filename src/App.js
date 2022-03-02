@@ -82,6 +82,25 @@ class Blizzard extends React.Component
 	}
 }
 
+class Fire extends React.Component
+{
+	constructor(props)
+	{
+		super(props);
+		this.state = {timesClicked: 0};
+		this.boundAction = this.action.bind(this);
+	}
+	action()
+	{
+		game.useSkillIfAvailable(SkillName.Fire);
+		this.setState({timesClicked: this.state.timesClicked + 1});
+	}
+	render()
+	{
+		return <button onClick={this.boundAction}>Fire {this.state.timesClicked}</button>;
+	}
+}
+
 class LeyLines extends React.Component
 {
 	constructor(props)
@@ -116,6 +135,7 @@ class App extends React.Component {
 			<div className="App">
 				<DebugTick />
 				<Blizzard />
+				<Fire />
 				<LeyLines />
 				{gameStateDisplay}
 			</div>
