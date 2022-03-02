@@ -1,7 +1,7 @@
-import { GameConfig, ResourceType, Aspect } from "./Common"
-import { StatsModifier } from "./Stats";
-import { makeSkillsList } from "./Skills"
-import { Resource, ResourceState, CoolDownState, Event } from "./Resources"
+import {Aspect, GameConfig, ResourceType} from "./Common"
+import {StatsModifier} from "./Stats";
+import {makeSkillsList} from "./Skills"
+import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
 
 
 // GameState := resources + events queue
@@ -29,17 +29,17 @@ class GameState
 		this.resources.set(ResourceType.Thundercloud, new Resource(ResourceType.Thundercloud, 1, 0));
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
-		this.resources.set(ResourceType.NotCasting, new Resource(ResourceType.NotCasting, 1, 1));
+		//this.resources.set(ResourceType.NotCasting, new Resource(ResourceType.NotCasting, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(ResourceType.cd_GCD, new Resource(ResourceType.cd_GCD, this.config.gcd, this.config.gcd));
-		this.cooldowns.set(ResourceType.cd_Sharpcast, new Resource(ResourceType.cd_Sharpcast, 60, 60));
-		this.cooldowns.set(ResourceType.cd_LeyLines, new Resource(ResourceType.cd_LeyLines, 1, 0));
-		this.cooldowns.set(ResourceType.cd_TripleCast, new Resource(ResourceType.cd_TripleCast, 2, 0));
-		this.cooldowns.set(ResourceType.cd_Manafont, new Resource(ResourceType.cd_Manafont, 1, 0));
-		this.cooldowns.set(ResourceType.cd_Amplifier, new Resource(ResourceType.cd_Amplifier, 1, 0));
+		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, this.config.gcd, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Sharpcast, new CoolDown(ResourceType.cd_Sharpcast, 30, 2, 2));
+		this.cooldowns.set(ResourceType.cd_LeyLines, new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1));
+		this.cooldowns.set(ResourceType.cd_TripleCast, new CoolDown(ResourceType.cd_TripleCast, 60, 2, 2));
+		this.cooldowns.set(ResourceType.cd_Manafont, new CoolDown(ResourceType.cd_Manafont, 120, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Amplifier, new CoolDown(ResourceType.cd_Amplifier, 120, 1, 1));
 
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
@@ -146,12 +146,15 @@ class GameState
 		}
 	}
 
-	captureCastAndRecastTime(baseCastTime, baseRecastTime)
+	captureSpellCastAndRecastTimeScale(aspect, baseCastTime)
 	{
 		let mod = StatsModifier.fromResourceState(this.resources);
+
 		let castTime = baseCastTime * mod.castTimeBase;
-		let recastTime = baseRecastTime * mod.recastTime;
-		return [castTime, recastTime];
+		if (aspect === Aspect.Fire) castTime *= mod.castTimeFire;
+		else if (aspect === Aspect.Ice) castTime *= mod.castTimeIce;
+
+		return [castTime, mod.spellRecastTimeScale];
 	}
 
 	// number -> ()
@@ -161,26 +164,46 @@ class GameState
 		// console.log("    BOOM! " + potency);
 	}
 
-	castSpell(aspect, CD, castTime, damageApplicationDelay, potency, manaCost)
+	castSpell(aspect, cdName, capturedCastTime, recastTimeScale, damageApplicationDelay, basePotency, capturedManaCost)
 	{
 		// movement lock
-		this.resources.takeResourceLock(ResourceType.Movement, castTime - 0.5);
+		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - this.config.slideCastDuration);
 
-		// casting status
-		this.resources.takeResourceLock(ResourceType.NotCasting, castTime);
-
-		// (after done casting) deduct MP, calc damage, queue actual damage 
-		this.addEvent(new Event("deduct MP & calc damage", castTime, ()=>{
-			this.resources.get(ResourceType.Mana).consume(manaCost); // actually deduct mana
-			let capturedDamage = this.captureDamage(aspect, potency);
-			this.addEvent(new Event("apply damage: " + capturedDamage, damageApplicationDelay, ()=>{ this.dealDamage(capturedDamage); }));
+		// (basically done casting) deduct MP, calc damage, queue actual damage
+		this.addEvent(new Event("deduct MP & calc damage", capturedCastTime - this.config.slideCastDuration, ()=>{
+			this.resources.get(ResourceType.Mana).consume(capturedManaCost); // actually deduct mana
+			let capturedDamage = this.captureDamage(aspect, basePotency);
+			this.addEvent(new Event(
+				"apply spell damage: " + capturedDamage,
+				this.config.slideCastDuration + damageApplicationDelay,
+				()=>{ this.dealDamage(capturedDamage); }));
 		}));
 
+		// casting status (TODO: this doesn't do anything meaningful though, delete it?)
+		//this.resources.takeResourceLock(ResourceType.NotCasting, castTime);
+
 		// recast
-		this.cooldowns.use(CD, castTime);
+		this.cooldowns.useStack(cdName);
+		this.cooldowns.setRecastTimeScale(cdName, recastTimeScale);
+
+		// caster tax
+		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, capturedCastTime + this.config.casterTax);
+	}
+
+	useAbility(cdName, effectApplicationDelay, effectFn)
+	{
+		console.log(this.time.toFixed(3) + "s: use ability with cd [" + cdName + "]");
+		this.addEvent(new Event(
+			"apply ability with cd [" + cdName + "]",
+			effectApplicationDelay,
+			()=>{ effectFn(); }
+		));
+
+		// recast
+		this.cooldowns.useStack(cdName);
 
 		// animation lock
-		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, castTime + this.config.casterTax);
+		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.animationLock);
 	}
 
 	hasEnochian()
@@ -227,18 +250,23 @@ class GameState
 		uh.consume(uh.currentValue);
 	}
 
-	timeTillNextGCDAvailable()
+	timeTillNextSkillAvailable()
 	{
-		let nextSkillTime = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
-		let nextGCDReady = this.cooldowns.timeTillFull(ResourceType.cd_GCD);
-		return Math.max(nextSkillTime, nextGCDReady);
+		return this.resources.timeTillReady(ResourceType.NotAnimationLocked);
+	}
+
+	timeTillNextStackAvailable(cdName)
+	{
+		let tillNextSkill = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
+		let tillNextStack = this.cooldowns.timeTillNextStackAvailable(cdName);
+		return Math.max(tillNextSkill, tillNextStack);
 	}
 
 	// basically the action when you press down the skill button
 	useSkillIfAvailable(skillName)
 	{
 		let skill = this.skillsList.get(skillName);
-		for (var i = 0; i < skill.instances.length; i++)
+		for (let i = 0; i < skill.instances.length; i++)
 		{
 			if (skill.instances[i].available(this))
 			{
@@ -247,7 +275,8 @@ class GameState
 				return;
 			}
 		}
-		console.log("none of the skill instances are available (nothing happened)");
+		let timeTillAvailable = skill.timeTillAvailable();
+		console.log("none of the instances are available (nothing happened). available in " + timeTillAvailable.toFixed(3) + "s.");
 	}
 
 	toString()
@@ -258,9 +287,10 @@ class GameState
 		s += "UI:\t" + this.resources.get(ResourceType.UmbralIce).currentValue + "\n";
 		s += "UH:\t" + this.resources.get(ResourceType.UmbralHeart).currentValue + "\n";
 		s += "Enochian:\t" + this.resources.get(ResourceType.Enochian).currentValue + "\n";
+		s += "LL:\t" + this.resources.get(ResourceType.LeyLines).currentValue + "\n";
 		s += "Poly:\t" + this.resources.get(ResourceType.Polyglot).currentValue + "\n";
-		s += "Para:\t" + this.resources.get(ResourceType.Paradox).currentValue + "\n";
-		s += "GCD:\t" + this.cooldowns.get(ResourceType.cd_GCD).currentValue + "\n";
+		s += "GCD:\t" + this.cooldowns.get(ResourceType.cd_GCD).currentValue.toFixed(3) + "\n";
+		s += "LLCD:\t" + this.cooldowns.get(ResourceType.cd_LeyLines).currentValue.toFixed(3) + "\n";
 		return s;
 	}
 }

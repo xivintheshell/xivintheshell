@@ -15,7 +15,7 @@ export class StatsModifier
 		this.castTimeBase = 1;
 		this.castTimeFire = 1;
 		this.castTimeIce = 1;
-		this.recastTime = 1;
+		this.spellRecastTimeScale = 1;
 		this.manaCostFire = 1;
 		this.manaCostIce = 1;
 		this.CH = 1;
@@ -34,7 +34,7 @@ export class StatsModifier
 		this.castTimeBase *= other.castTimeBase;
 		this.castTimeFire *= other.castTimeFire;
 		this.castTimeIce *= other.castTimeIce;
-		this.recastTime *= other.recastTime;
+		this.spellRecastTimeScale *= other.spellRecastTimeScale;
 		this.manaCostFire *= other.manaCostFire;
 		this.manaCostIce *= other.manaCostIce;
 		this.CH *= other.CH;
@@ -108,7 +108,7 @@ export class StatsModifier
 		if (ll.available(1))
 		{
 			llMod.castTimeBase = 0.85;
-			llMod.recastTime = 0.85;
+			llMod.spellRecastTimeScale = 0.85;
 		}
 		modifiers.push(llMod);
 

@@ -11,18 +11,19 @@ class SkillInstance
 		this.available = requirementFn;
 		this.use = effectFn;
 	}
-};
+}
 
 class Skill
 {
 	// instances : SkillInstance[]
-	constructor(name, timeTillAvailableFn, instances)
+	constructor(name, timeTillAvailableFn, isSpell, instances)
 	{
 		this.name = name;
+		this.isSpell = isSpell;
         this.timeTillAvailable = timeTillAvailableFn;
 		this.instances = instances;
 	}
-};
+}
 
 class SkillsList extends Map
 {
@@ -31,46 +32,93 @@ class SkillsList extends Map
         super();
         this.game = game;
     }
-};
+}
 
 export function makeSkillsList(game)
 {
-    var skillsList = new SkillsList(game);
+	const skillsList = new SkillsList(game);
 
-    // Blizzard
+	// Blizzard
 	// TODO: do something to scale cast & recast time due to LL
     skillsList.set(SkillName.Blizzard, new Skill(
         SkillName.Blizzard,
-        game.timeTillNextGCDAvailable, [
-        new SkillInstance(
-            "no AF",
-            ()=>{
-                return game.cooldowns.available(ResourceType.cd_GCD, game.config.gcd) &&
-                game.getFireStacks() === 0 &&
-                game.getMP() >= game.captureManaCost(Aspect.Ice, 400);
-            },
-            ()=>{
-                game.castSpell(Aspect.Ice, ResourceType.cd_GCD, game.config.gcd, 0.1, 180, game.captureManaCost(Aspect.Ice, 400));
-				game.addEvent(new Event("gain enochian", game.config.gcd - game.config.casterTax, ()=>{
-                	game.resources.get(ResourceType.UmbralIce).gain(1);
-					game.startOrRefreshEnochian();
-				}));
-            }
-        ),
-		new SkillInstance(
-			"in AF",
-			()=>{
-                return game.cooldowns.available(ResourceType.cd_GCD, game.config.gcd) &&
-				game.getFireStacks() > 0
-			},
-			()=>{
-                game.castSpell(Aspect.Ice, ResourceType.cd_GCD, game.config.gcd, 0.1, 180, 0);
-				game.addEvent(new Event("lose enochian", game.config.gcd - game.config.casterTax, ()=>{
-					game.loseEnochian();
-				}));
-			}
-		),
-    ]));
+		()=>{ return game.timeTillNextStackAvailable(ResourceType.cd_GCD); },
+		true,
+		[
+			new SkillInstance(
+				"no AF",
+				()=>{
+					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
+					game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
+					game.getFireStacks() === 0 &&
+					game.getMP() >= game.captureManaCost(Aspect.Ice, 400);
+				},
+				()=>{
+					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Ice, game.config.gcd);
+					game.castSpell(Aspect.Ice, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 180, game.captureManaCost(Aspect.Ice, 400));
+					game.addEvent(new Event("gain enochian", castTime - 0.06, ()=>{
+						game.resources.get(ResourceType.UmbralIce).gain(1);
+						game.startOrRefreshEnochian();
+					 }));
+				}
+			),
+			new SkillInstance(
+				 "in AF",
+				 ()=>{
+					 return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
+						 game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
+						 game.getFireStacks() > 0
+				 },
+				 ()=>{
+					 let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Ice, game.config.gcd);
+					 game.castSpell(Aspect.Ice, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 180, 0);
+					 game.addEvent(new Event("lose enochian", castTime - 0.06, ()=>{
+						 game.loseEnochian();
+					 }));
+				 }
+			),
+    	]
+	));
+
+	// Ley Lines
+	skillsList.set(SkillName.LeyLines, new Skill(
+		SkillName.LeyLines,
+		()=>{ return game.timeTillNextStackAvailable(ResourceType.cd_LeyLines); },
+		false,
+		[
+			new SkillInstance(
+				"LL",
+				()=>{
+					return game.cooldowns.stacksAvailable(ResourceType.cd_LeyLines) >= 1 && // CD ready
+					game.resources.get(ResourceType.NotAnimationLocked).available(1); // not animation locked
+				},
+				()=>{
+					game.useAbility(ResourceType.cd_LeyLines, 0.1, ()=>{
+						game.resources.get(ResourceType.LeyLines).gain(1);
+						game.resources.addResourceEvent(
+							ResourceType.LeyLines, "drop LL", 30, rsc=>{ rsc.consume(1); })
+					})
+				}
+			),
+		]
+	));
+
+	skillsList.set(SkillName.Template, new Skill(
+		SkillName.Template,
+		()=>{ return 0 },
+		false,
+		[
+			new SkillInstance(
+				"(template skill instance)",
+				()=>{
+					return true;
+				},
+				()=>{
+
+				}
+			),
+		]
+	));
 
     return skillsList;
 }

@@ -62,7 +62,7 @@ class DebugTick extends React.Component {
 	)}
 }
 
-class DebugButton extends React.Component
+class Blizzard extends React.Component
 {
 	constructor(props)
 	{
@@ -78,7 +78,26 @@ class DebugButton extends React.Component
 	}
 	render()
 	{
-		return <button onClick={this.boundAction}>click me {this.state.timesClicked}</button>;
+		return <button onClick={this.boundAction}>Blizzard {this.state.timesClicked}</button>;
+	}
+}
+
+class LeyLines extends React.Component
+{
+	constructor(props)
+	{
+		super(props);
+		this.state = {timesClicked: 0};
+		this.boundAction = this.action.bind(this);
+	}
+	action()
+	{
+		game.useSkillIfAvailable(SkillName.LeyLines);
+		this.setState({timesClicked: this.state.timesClicked + 1});
+	}
+	render()
+	{
+		return <button onClick={this.boundAction}>Ley Lines {this.state.timesClicked}</button>;
 	}
 }
 
@@ -96,7 +115,8 @@ class App extends React.Component {
 		return (
 			<div className="App">
 				<DebugTick />
-				<DebugButton />
+				<Blizzard />
+				<LeyLines />
 				{gameStateDisplay}
 			</div>
 		);

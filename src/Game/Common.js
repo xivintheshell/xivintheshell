@@ -3,7 +3,8 @@ export class GameConfig
 	constructor()
 	{
 		this.casterTax = 0.06;
-		this.animationLock = 0.3;
+		this.slideCastDuration = 0.4;
+		this.animationLock = 0.7;
 		this.gcd = 2.5;
 
 		//==== DEBUG ====
@@ -24,7 +25,10 @@ export const SkillName =
     Blizzard: "Blizzard",
     Fire: "Fire",
 	Fire3: "Fire3",
-	Transpose: "Transpose"
+	Transpose: "Transpose",
+	LeyLines: "LeyLines",
+
+	Template: "(template)"
 };
 
 export const ResourceType =
@@ -44,9 +48,8 @@ export const ResourceType =
 	Thundercloud: "Thundercloud", // [0, 1]
 
 	Movement: "Movement", // [0, 1]
-	NotCasting: "NotCasting", // [0, 1] (movement time as a resource)
+	//NotCasting: "NotCasting", // [0, 1]
 	NotAnimationLocked: "NotAnimationLocked", // [0, 1]
-	GCDReady: "GCDReady", // shared by GCDs
 	// oGCDs
 	cd_GCD: "cd_GCD", // [0, Constant.gcd]
 	cd_Sharpcast: "cd_Sharpcast", // [0, 2x] // TODO: figure out how this works

@@ -8,7 +8,7 @@ export class Event
 		this.effectFn = effectFn;
 		this.canceled = false;
 	}
-};
+}
 
 // can never be negative
 export class Resource
@@ -20,7 +20,6 @@ export class Resource
 		this.currentValue = initialValue;
 		this.pendingChange = null;
 	}
-	getValue(rscType) { return this.get(rscType).currentValue; }
 	overrideTimer(newTime)
 	{
 		this.pendingChange.timeTillEvent = newTime;
@@ -38,7 +37,33 @@ export class Resource
 	{
 		this.currentValue = Math.min(this.currentValue + amount, this.maxValue);
 	}
-};
+}
+
+export class CoolDown extends Resource
+{
+	constructor(type, cdPerStack, maxStacks, initialNumStacks)
+	{
+		super(type, maxStacks * cdPerStack, initialNumStacks * cdPerStack);
+		this.cdPerStack = cdPerStack;
+		this.recastTimeScale = 1; // effective for the next stack (ie. 0.85 if captured LL)
+	}
+	stacksAvailable() { return Math.floor(this.currentValue / this.cdPerStack); }
+	restore(deltaTime)
+	{
+		let stacksBefore = this.stacksAvailable();
+		let timeTillNextStack = (stacksBefore + 1) * this.cdPerStack - this.currentValue;
+		let scaledTimeTillNextStack = timeTillNextStack * this.recastTimeScale;
+		if (deltaTime >= scaledTimeTillNextStack) // upon return, will have gained another stack
+		{
+			this.gain(timeTillNextStack + (deltaTime - scaledTimeTillNextStack));
+			this.recastTimeScale = 1;
+		}
+		else
+		{
+			this.gain(deltaTime / this.recastTimeScale);
+		}
+	}
+}
 
 export class CoolDownState extends Map
 {
@@ -49,22 +74,30 @@ export class CoolDownState extends Map
 	}
 	tick(deltaTime)
 	{
-		for (var rsc of this.values()) rsc.gain(deltaTime);
+		for (var cd of this.values()) cd.restore(deltaTime);
 	}
-	available(rscType, amount)
+	stacksAvailable(rscType)
 	{
-		return this.get(rscType).available(amount);
+		return this.get(rscType).stacksAvailable();
 	}
-	use(rscType, amount)
+	useStack(cdName)
 	{
-		this.get(rscType).consume(amount);
+		let cd = this.get(cdName);
+		cd.consume(cd.cdPerStack);
 	}
-	timeTillFull(rscType)
+	setRecastTimeScale(cdName, timeScale)
 	{
-		let rsc = this.get(rscType);
-		return rsc.maxValue - rsc.currentValue;
+		let cd = this.get(cdName);
+		cd.recastTimeScale = timeScale;
 	}
-};
+	timeTillNextStackAvailable(cdName)
+	{
+		let cd = this.get(cdName);
+		let currentStacks = cd.stacksAvailable();
+		if (currentStacks > 0) return 0;
+		return (cd.cdPerStack - cd.currentValue) * cd.recastTimeScale;
+	}
+}
 
 export class ResourceState extends Map
 {
@@ -99,12 +132,4 @@ export class ResourceState extends Map
 		console.log("[resource locked] " + rscType);
 		this.addResourceEvent(rscType, "[resource ready] " + rscType, delay, rsc=>{ rsc.gain(1); });
 	}
-
-	resetStatsModifiers()
-	{
-		for (let rcs of this.values())
-		{
-			rcs.statsModifier.reset();
-		}
-	}
-};
+}
