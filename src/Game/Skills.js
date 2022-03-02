@@ -49,7 +49,7 @@ export function makeSkillsList(game)
                 game.getMP() >= game.captureManaCost(Aspect.Ice, 400);
             },
             ()=>{
-                game.castGCDSpell(Aspect.Ice, Constants.gcd, 0.1, 180, game.captureManaCost(Aspect.Ice, 400));
+                game.castSpell(Aspect.Ice, ResourceType.cd_GCD, Constants.gcd, 0.1, 180, game.captureManaCost(Aspect.Ice, 400));
 				game.addEvent(new Event("gain enochian", Constants.gcd - Constants.casterTax, ()=>{
                 	game.resources.get(ResourceType.UmbralIce).gain(1);
 					game.startOrRefreshEnochian();
@@ -63,7 +63,7 @@ export function makeSkillsList(game)
 				game.getFireStacks() > 0
 			},
 			()=>{
-                game.castGCDSpell(Aspect.Ice, Constants.gcd, 0.1, 180, 0);
+                game.castSpell(Aspect.Ice, ResourceType.cd_GCD, Constants.gcd, 0.1, 180, 0);
 				game.addEvent(new Event("lose enochian", Constants.gcd - Constants.casterTax, ()=>{
 					game.loseEnochian();
 				}));

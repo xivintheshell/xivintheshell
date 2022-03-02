@@ -1,6 +1,3 @@
-import { StatsModifier } from "./Stats";
-
-// events := pending changes to the game state (resources)
 export class Event
 {
 	// effectFn : () -> ()
@@ -14,7 +11,6 @@ export class Event
 };
 
 // can never be negative
-// has a stats modifier which may change over time depending on resource amount
 export class Resource
 {
 	constructor(type, maxValue, initialValue)
@@ -22,7 +18,6 @@ export class Resource
 		this.type = type;
 		this.maxValue = maxValue;
 		this.currentValue = initialValue;
-		this.statsModifier = new StatsModifier();
 		this.pendingChange = null;
 	}
 	getValue(rscType) { return this.get(rscType).currentValue; }
@@ -45,7 +40,7 @@ export class Resource
 	}
 };
 
-export class CoolDowns extends Map
+export class CoolDownState extends Map
 {
 	constructor(game)
 	{
@@ -63,6 +58,11 @@ export class CoolDowns extends Map
 	use(rscType, amount)
 	{
 		this.get(rscType).consume(amount);
+	}
+	timeTillFull(rscType)
+	{
+		let rsc = this.get(rscType);
+		return rsc.maxValue - rsc.currentValue;
 	}
 };
 
