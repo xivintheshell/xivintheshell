@@ -1,4 +1,10 @@
-# Getting Started with Create React App
+# ffxiv-blm-rotation
+
+A tool intended to be used for optimizing Final Fantasy XIV black mage gameplay.
+
+---
+
+# Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 

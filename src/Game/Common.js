@@ -1,13 +1,16 @@
-export const Constants =
+export class GameConfig
 {
-    casterTax: 0.06,
-    animationLock: 0.3,
-    gcd: 2.5,
+	constructor()
+	{
+		this.casterTax = 0.06;
+		this.animationLock = 0.3;
+		this.gcd = 2.5;
 
-	//==== DEBUG ====
-	epsilon: 0.00001,
-	disableManaAndThunderTicks: 1,
-};
+		//==== DEBUG ====
+		this.epsilon = 0.00001;
+		this.disableManaAndThunderTicks = 1;
+	}
+}
 
 export const Aspect = 
 {

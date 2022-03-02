@@ -1,4 +1,4 @@
-import { Constants, ResourceType, Aspect } from "./Common"
+import { GameConfig, ResourceType, Aspect } from "./Common"
 import { StatsModifier } from "./Stats";
 import { makeSkillsList } from "./Skills"
 import { Resource, ResourceState, CoolDownState, Event } from "./Resources"
@@ -7,8 +7,10 @@ import { Resource, ResourceState, CoolDownState, Event } from "./Resources"
 // GameState := resources + events queue
 class GameState
 {
-	constructor()
+	constructor(config)
 	{
+		this.config = config;
+
 		// TIME
 		this.time = 0;
 
@@ -32,7 +34,7 @@ class GameState
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(ResourceType.cd_GCD, new Resource(ResourceType.cd_GCD, Constants.gcd, Constants.gcd));
+		this.cooldowns.set(ResourceType.cd_GCD, new Resource(ResourceType.cd_GCD, this.config.gcd, this.config.gcd));
 		this.cooldowns.set(ResourceType.cd_Sharpcast, new Resource(ResourceType.cd_Sharpcast, 60, 60));
 		this.cooldowns.set(ResourceType.cd_LeyLines, new Resource(ResourceType.cd_LeyLines, 1, 0));
 		this.cooldowns.set(ResourceType.cd_TripleCast, new Resource(ResourceType.cd_TripleCast, 2, 0));
@@ -59,7 +61,7 @@ class GameState
 	{
 		//======== events ========
 		var cumulativeDeltaTime = 0;
-		while (cumulativeDeltaTime < deltaTime - Constants.epsilon && this.eventsQueue.length > 0)
+		while (cumulativeDeltaTime < deltaTime - this.config.epsilon && this.eventsQueue.length > 0)
 		{
 			// make sure events are in proper order
 			this.eventsQueue.sort((a, b)=>{return a.timeTillEvent - b.timeTillEvent;})
@@ -72,15 +74,15 @@ class GameState
 			this.cooldowns.tick(timeToTick);
 
 			// make a deep copy of events to advance for this round...
-			var eventsToExecuteOld = [];
+			const eventsToExecuteOld = [];
 			for (var i = 0; i < this.eventsQueue.length; i++)
 			{
 				eventsToExecuteOld.push(this.eventsQueue[i]);
 			}
 			// actually tick them (which might enqueue new events)
-			var executedEvents = 0;
+			let executedEvents = 0;
 			eventsToExecuteOld.forEach(e=>{
-				if (e.timeTillEvent <= Constants.epsilon)
+				if (e.timeTillEvent <= this.config.epsilon)
 				{
 					if (!e.canceled)
 					{
@@ -113,7 +115,7 @@ class GameState
 	{
 		let mod = StatsModifier.fromResourceState(this.resources);
 
-		var potency = basePotency * mod.damageBase;
+		let potency = basePotency * mod.damageBase;
 
 		if (aspect === Aspect.Fire)
 		{
@@ -178,7 +180,7 @@ class GameState
 		this.cooldowns.use(CD, castTime);
 
 		// animation lock
-		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, castTime + Constants.casterTax);
+		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, castTime + this.config.casterTax);
 	}
 
 	hasEnochian()
@@ -261,17 +263,17 @@ class GameState
 		s += "GCD:\t" + this.cooldowns.get(ResourceType.cd_GCD).currentValue + "\n";
 		return s;
 	}
-};
+}
 
 /*
 Time is automatically advanced untill next available skill time.
 */
 
-export var game = new GameState();
+export var game = new GameState(new GameConfig());
 
 export function runTest()
 {
-	if (Constants.disableManaAndThunderTicks === 0)
+	if (game.config.disableManaAndThunderTicks === 0)
 	{
 		// get mana and thunder ticks rolling (through recursion)
 		let recurringManaRegen = ()=>{

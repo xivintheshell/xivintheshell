@@ -1,4 +1,4 @@
-import { Constants, SkillName, ResourceType, Aspect } from './Common'
+import { SkillName, ResourceType, Aspect } from './Common'
 import { Event } from './Resources';
 
 class SkillInstance
@@ -15,7 +15,7 @@ class SkillInstance
 
 class Skill
 {
-	// instances : SkilInstance[]
+	// instances : SkillInstance[]
 	constructor(name, timeTillAvailableFn, instances)
 	{
 		this.name = name;
@@ -38,19 +38,20 @@ export function makeSkillsList(game)
     var skillsList = new SkillsList(game);
 
     // Blizzard
+	// TODO: do something to scale cast & recast time due to LL
     skillsList.set(SkillName.Blizzard, new Skill(
         SkillName.Blizzard,
         game.timeTillNextGCDAvailable, [
         new SkillInstance(
             "no AF",
             ()=>{
-                return game.cooldowns.available(ResourceType.cd_GCD, Constants.gcd) &&
+                return game.cooldowns.available(ResourceType.cd_GCD, game.config.gcd) &&
                 game.getFireStacks() === 0 &&
                 game.getMP() >= game.captureManaCost(Aspect.Ice, 400);
             },
             ()=>{
-                game.castSpell(Aspect.Ice, ResourceType.cd_GCD, Constants.gcd, 0.1, 180, game.captureManaCost(Aspect.Ice, 400));
-				game.addEvent(new Event("gain enochian", Constants.gcd - Constants.casterTax, ()=>{
+                game.castSpell(Aspect.Ice, ResourceType.cd_GCD, game.config.gcd, 0.1, 180, game.captureManaCost(Aspect.Ice, 400));
+				game.addEvent(new Event("gain enochian", game.config.gcd - game.config.casterTax, ()=>{
                 	game.resources.get(ResourceType.UmbralIce).gain(1);
 					game.startOrRefreshEnochian();
 				}));
@@ -59,12 +60,12 @@ export function makeSkillsList(game)
 		new SkillInstance(
 			"in AF",
 			()=>{
-                return game.cooldowns.available(ResourceType.cd_GCD, Constants.gcd) &&
+                return game.cooldowns.available(ResourceType.cd_GCD, game.config.gcd) &&
 				game.getFireStacks() > 0
 			},
 			()=>{
-                game.castSpell(Aspect.Ice, ResourceType.cd_GCD, Constants.gcd, 0.1, 180, 0);
-				game.addEvent(new Event("lose enochian", Constants.gcd - Constants.casterTax, ()=>{
+                game.castSpell(Aspect.Ice, ResourceType.cd_GCD, game.config.gcd, 0.1, 180, 0);
+				game.addEvent(new Event("lose enochian", game.config.gcd - game.config.casterTax, ()=>{
 					game.loseEnochian();
 				}));
 			}
@@ -73,35 +74,3 @@ export function makeSkillsList(game)
 
     return skillsList;
 }
-
-/*
-skills.set(SkillID.Fire3, new Skill(SkillID.Fire3,
-	[
-		// case 1: has umbral ice
-		new SkillInstance(
-			g=>{ // time till available
-				return Math.max(g.timeTillNextSkillAvailable(), gcd - g.resources.get(ResourceType.GCD).currentValue);
-			},
-			g=>{ // requirement: has umbral ice
-				return g.resources.get(ResourceType.UmbralIce).currentValue > 0;
-			},
-			g=>{ // effect
-				// TODO
-				// queue damage; remove UI, apply AF3, add 1/2 cast time + caster lock, refresh GCD timer
-			}
-		),
-		// case 2: hard-casted F3
-		new SkillInstance(
-			g=>{
-				return Math.max(g.timeTillNextSkillAvailable(), gcd - g.resources.get(ResourceType.GCD).currentValue);
-			},
-			g=>{
-				return g.resources.get(ResourceType.Mana).available(2000);
-			},
-			g=>{
-				// TODO
-			}
-		),
-	]
-));
-*/

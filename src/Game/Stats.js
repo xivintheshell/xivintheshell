@@ -42,26 +42,6 @@ export class StatsModifier
 
 		this.manaRegen += other.manaRegen;
 	}
-	/*
-	// () -> StatsModifier
-	clone()
-	{
-		var ret = new StatsModifier();
-		ret.damageBase = this.damageBase;
-		ret.damageFire = this.damageFire;
-		ret.damageIce = this.damageIce;
-		ret.castTimeBase = this.castTimeBase;
-		ret.castTimeFire = this.castTimeFire;
-		ret.castTimeIce = this.castTimeIce;
-		ret.recastTime = this.recastTime;
-		ret.manaCostFire = this.manaCostFire;
-		ret.manaCostIce = this.manaCostIce;
-		ret.CH = this.CH;
-		ret.DH = this.DH;
-		ret.manaRegen = this. manaRegen;
-		return ret;
-	}
-	*/
 
 	static base()
 	{
@@ -137,4 +117,4 @@ export class StatsModifier
 		modifiers.forEach(mod=>{ base.apply(mod); });
 		return base;
 	}
-};
+}
