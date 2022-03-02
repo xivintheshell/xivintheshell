@@ -64,7 +64,7 @@ export function makeSkillsList(game)
 				 ()=>{
 					 return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
 						 game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-						 game.getFireStacks() > 0
+						 game.getFireStacks() > 0;
 				 },
 				 ()=>{
 					 let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Ice, game.config.gcd);
@@ -81,7 +81,7 @@ export function makeSkillsList(game)
 	skillsList.set(SkillName.Fire, new Skill(
 		SkillName.Fire,
 		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
-		false,
+		true,
 		[
 			new SkillInstance("no UI",
 				()=>{
@@ -103,7 +103,7 @@ export function makeSkillsList(game)
 				()=>{
 					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
 						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-						game.getIceStacks() > 0
+						game.getIceStacks() > 0;
 				},
 				()=>{
 					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.gcd);
@@ -116,14 +116,47 @@ export function makeSkillsList(game)
 		]
 	));
 
+	// Transpose
+	skillsList.set(SkillName.Transpose, new Skill(
+		SkillName.Transpose,
+		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_Transpose); },
+		false,
+		[
+			new SkillInstance("all",
+				()=>{
+					return game.cooldowns.stacksAvailable(ResourceType.cd_Transpose) >= 1 && // CD ready
+						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
+						(game.getFireStacks() > 0 || game.getIceStacks() > 0); // has UI or AF
+				},
+				()=>{
+					game.useAbility(ResourceType.cd_Transpose, 0.1, ()=>{
+						if (game.getFireStacks()===0 && game.getIceStacks()===0) {
+							console.log("transpose failed; AF/UI just fell off");
+							return;
+						}
+						let af = game.resources.get(ResourceType.AstralFire);
+						let ui = game.resources.get(ResourceType.UmbralIce);
+						if (game.getFireStacks() > 0) {
+							af.consume(af.currentValue);
+							ui.gain(1);
+						} else {
+							ui.consume(ui.currentValue);
+							af.gain(1);
+						}
+						game.startOrRefreshEnochian();
+					})
+				}
+			),
+		]
+	));
+
 	// Ley Lines
 	skillsList.set(SkillName.LeyLines, new Skill(
 		SkillName.LeyLines,
 		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_LeyLines); },
 		false,
 		[
-			new SkillInstance(
-				"LL",
+			new SkillInstance("LL",
 				()=>{
 					return game.cooldowns.stacksAvailable(ResourceType.cd_LeyLines) >= 1 && // CD ready
 					game.resources.get(ResourceType.NotAnimationLocked).available(1); // not animation locked

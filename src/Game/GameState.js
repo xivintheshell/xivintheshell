@@ -37,6 +37,7 @@ class GameState
 		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, this.config.gcd, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Sharpcast, new CoolDown(ResourceType.cd_Sharpcast, 30, 2, 2));
 		this.cooldowns.set(ResourceType.cd_LeyLines, new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Transpose, new CoolDown(ResourceType.cd_Transpose, 5, 1, 1));
 		this.cooldowns.set(ResourceType.cd_TripleCast, new CoolDown(ResourceType.cd_TripleCast, 60, 2, 2));
 		this.cooldowns.set(ResourceType.cd_Manafont, new CoolDown(ResourceType.cd_Manafont, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Amplifier, new CoolDown(ResourceType.cd_Amplifier, 120, 1, 1));

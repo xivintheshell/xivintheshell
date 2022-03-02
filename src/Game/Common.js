@@ -24,9 +24,9 @@ export const SkillName =
 {
     Blizzard: "Blizzard",
     Fire: "Fire",
-	Fire3: "Fire3",
+	Fire3: "Fire III",
 	Transpose: "Transpose",
-	LeyLines: "LeyLines",
+	LeyLines: "Ley Lines",
 
 	Template: "(template)"
 };
@@ -52,6 +52,7 @@ export const ResourceType =
 	NotAnimationLocked: "NotAnimationLocked", // [0, 1]
 	// oGCDs
 	cd_GCD: "cd_GCD", // [0, Constant.gcd]
+	cd_Transpose: "cd_Transpose", // [0, 1x]
 	cd_Sharpcast: "cd_Sharpcast", // [0, 2x] // TODO: figure out how this works
 	cd_LeyLines: "cd_LeyLines", // [0, 1x]
 	cd_TripleCast: "cd_TripleCast", // [0, 2x]

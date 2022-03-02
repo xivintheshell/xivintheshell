@@ -62,61 +62,23 @@ class DebugTick extends React.Component {
 	)}
 }
 
-class Blizzard extends React.Component
+class SkillButton extends React.Component
 {
 	constructor(props)
 	{
 		super(props);
+		this.skillName = props.skillName;
 		this.state = {timesClicked: 0};
 		this.boundAction = this.action.bind(this);
 	}
 	action()
 	{
-		game.useSkillIfAvailable(SkillName.Blizzard);
-		this.setState({timesClicked: this.state.timesClicked + 1});
-		boundUpdateText("hihi");
-	}
-	render()
-	{
-		return <button onClick={this.boundAction}>Blizzard {this.state.timesClicked}</button>;
-	}
-}
-
-class Fire extends React.Component
-{
-	constructor(props)
-	{
-		super(props);
-		this.state = {timesClicked: 0};
-		this.boundAction = this.action.bind(this);
-	}
-	action()
-	{
-		game.useSkillIfAvailable(SkillName.Fire);
+		game.useSkillIfAvailable(this.skillName);
 		this.setState({timesClicked: this.state.timesClicked + 1});
 	}
 	render()
 	{
-		return <button onClick={this.boundAction}>Fire {this.state.timesClicked}</button>;
-	}
-}
-
-class LeyLines extends React.Component
-{
-	constructor(props)
-	{
-		super(props);
-		this.state = {timesClicked: 0};
-		this.boundAction = this.action.bind(this);
-	}
-	action()
-	{
-		game.useSkillIfAvailable(SkillName.LeyLines);
-		this.setState({timesClicked: this.state.timesClicked + 1});
-	}
-	render()
-	{
-		return <button onClick={this.boundAction}>Ley Lines {this.state.timesClicked}</button>;
+		return <button onClick={this.boundAction}>{this.skillName} {this.state.timesClicked}</button>;
 	}
 }
 
@@ -134,9 +96,10 @@ class App extends React.Component {
 		return (
 			<div className="App">
 				<DebugTick />
-				<Blizzard />
-				<Fire />
-				<LeyLines />
+				<SkillButton skillName={SkillName.Blizzard} />
+				<SkillButton skillName={SkillName.Fire} />
+				<SkillButton skillName={SkillName.Transpose} />
+				<SkillButton skillName={SkillName.LeyLines} />
 				{gameStateDisplay}
 			</div>
 		);
