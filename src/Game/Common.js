@@ -7,6 +7,9 @@ export class GameConfig
 		this.animationLock = 0.7;
 		this.gcd = 2.5;
 
+		this.timeTillFirstManaTick = 0.3;
+		this.timeTillFirstThunderTick = 0.8;
+
 		//==== DEBUG ====
 		this.epsilon = 0.00001;
 		this.disableManaAndThunderTicks = 1;

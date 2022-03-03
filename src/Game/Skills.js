@@ -1,5 +1,7 @@
 import { SkillName, ResourceType, Aspect } from './Common'
 import { Event } from './Resources';
+import { controller } from "../Controller/Controller";
+import { LogCategory, Color } from "../Controller/Common";
 
 class SkillInstance
 {
@@ -57,7 +59,7 @@ export function makeSkillsList(game)
 					game.addEvent(new Event("gain UI", castTime - 0.06, ()=>{
 						game.resources.get(ResourceType.UmbralIce).gain(1);
 						game.startOrRefreshEnochian();
-					 }));
+					 }, Color.Ice));
 				}
 			),
 			new SkillInstance("in AF",
@@ -96,7 +98,7 @@ export function makeSkillsList(game)
 					game.addEvent(new Event("gain AF", castTime - 0.06, ()=>{
 						game.resources.get(ResourceType.AstralFire).gain(1);
 						game.startOrRefreshEnochian();
-					}));
+					}, Color.Fire));
 				}
 			),
 			new SkillInstance("in UI",
@@ -131,7 +133,7 @@ export function makeSkillsList(game)
 				()=>{
 					game.useAbility(ResourceType.cd_Transpose, 0.1, ()=>{
 						if (game.getFireStacks()===0 && game.getIceStacks()===0) {
-							console.log("transpose failed; AF/UI just fell off");
+							controller.log(LogCategory.Event, "transpose failed; AF/UI just fell off", game.time, Color.Error);
 							return;
 						}
 						let af = game.resources.get(ResourceType.AstralFire);

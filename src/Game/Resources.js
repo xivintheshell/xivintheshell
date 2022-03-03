@@ -1,12 +1,16 @@
+import {Color, LogCategory} from "../Controller/Common";
+import {controller} from "../Controller/Controller";
+
 export class Event
 {
 	// effectFn : () -> ()
-	constructor(name, delay, effectFn)
+	constructor(name, delay, effectFn, logColor)
 	{
 		this.name = name;
 		this.timeTillEvent = delay;
 		this.effectFn = effectFn;
 		this.canceled = false;
+		this.logColor = logColor === undefined ? Color.Text : logColor;
 	}
 }
 
@@ -114,13 +118,13 @@ export class ResourceState extends Map
 	}
 
 	// fnOnRsc : Resource -> ()
-	addResourceEvent(rscType, name, delay, fnOnRsc)
+	addResourceEvent(rscType, name, delay, fnOnRsc, logColor=Color.Text)
 	{
 		let rsc = this.get(rscType);
 		let evt = new Event(name, delay, ()=>{
 			rsc.pendingChange = null; // unregister from resource
 			fnOnRsc(rsc);
-		});
+		}, logColor);
 		rsc.pendingChange = evt; // register to resource
 		this.game.addEvent(evt); // register to events master list
 	}
@@ -129,7 +133,7 @@ export class ResourceState extends Map
 	takeResourceLock(rscType, delay)
 	{
 		this.get(rscType).consume(1);
-		console.log("[resource locked] " + rscType);
-		this.addResourceEvent(rscType, "[resource ready] " + rscType, delay, rsc=>{ rsc.gain(1); });
+		controller.log(LogCategory.Event, "[resource locked] " + rscType, this.game.time, Color.Grey);
+		this.addResourceEvent(rscType, "[resource ready] " + rscType, delay, rsc=>{ rsc.gain(1); }, Color.Grey);
 	}
 }

@@ -1,0 +1,24 @@
+.textColor {
+    color: #111;
+}
+.fireColor {
+    color: darkorange;
+}
+.iceColor {
+    color: deepskyblue;
+}
+.thunderColor {
+    color: mediumpurple;
+}
+.damageColor {
+    color: crimson;
+}
+.greyColor {
+    color: lightgray;
+}
+.successColor {
+    color: mediumseagreen;
+}
+.errorColor {
+    color: red;
+}

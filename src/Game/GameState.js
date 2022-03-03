@@ -3,6 +3,8 @@ import {StatsModifier} from "./Stats";
 import {makeSkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
 
+import {controller} from "../Controller/Controller";
+import {Color, LogCategory} from "../Controller/Common";
 
 // GameState := resources + events queue
 class GameState
@@ -57,6 +59,35 @@ class GameState
 		this.skillsList = makeSkillsList(this);
 	}
 
+	init()
+	{
+		if (this.config.disableManaAndThunderTicks === 0)
+		{
+			// get mana and thunder ticks rolling (through recursion)
+			let recurringManaRegen = ()=>{
+				// mana regen
+				var additionalGain = 0;
+				// TODO: apply modifiers
+				this.resources.get(ResourceType.Mana).gain(200 + additionalGain);
+				// queue the next tick
+				this.addEvent(new Event("ManaTick", 3, recurringManaRegen));
+			};
+			let recurringThunderTick = ()=>{
+				// TODO: tick effect
+				this.addEvent(new Event("ThunderTick", 3, recurringThunderTick));
+			};
+			this.addEvent(new Event("InitialManaTick", this.config.timeTillFirstManaTick, recurringManaRegen));
+			this.addEvent(new Event("InitialThunderTick", this.config.timeTillFirstThunderTick, recurringThunderTick));
+		}
+
+		// also polyglot
+		let recurringPolyglotGain = rsc=>{
+			if (this.hasEnochian()) rsc.gain(1);
+			this.resources.addResourceEvent(ResourceType.Polyglot, "gain polyglot if currently has enochian", 30, recurringPolyglotGain);
+		};
+		recurringPolyglotGain(ResourceType.Polyglot);
+	}
+
 	// advance game state by this much time
 	tick(deltaTime)
 	{
@@ -88,7 +119,7 @@ class GameState
 					if (!e.canceled)
 					{
 						e.effectFn(this);
-						console.log(this.time.toFixed(3) + "s: " + e.name);
+						controller.log(LogCategory.Event, e.name, this.time, e.logColor);
 					}
 					executedEvents++;
 				}
@@ -175,9 +206,9 @@ class GameState
 			this.resources.get(ResourceType.Mana).consume(capturedManaCost); // actually deduct mana
 			let capturedDamage = this.captureDamage(aspect, basePotency);
 			this.addEvent(new Event(
-				"apply spell damage: " + capturedDamage,
+				"apply damage after [" + cdName + "]: " + capturedDamage.toFixed(1),
 				this.config.slideCastDuration + damageApplicationDelay,
-				()=>{ this.dealDamage(capturedDamage); }));
+				()=>{ this.dealDamage(capturedDamage); }, Color.Damage));
 		}));
 
 		// casting status (TODO: this doesn't do anything meaningful though, delete it?)
@@ -193,12 +224,12 @@ class GameState
 
 	useAbility(cdName, effectApplicationDelay, effectFn)
 	{
-		console.log(this.time.toFixed(3) + "s: use ability with cd [" + cdName + "]");
+		controller.log(LogCategory.Event,"ability cd [" + cdName + "] used", this.time, Color.Text);
 		this.addEvent(new Event(
-			"apply ability with cd [" + cdName + "]",
+			"apply ability after cd [" + cdName + "]",
 			effectApplicationDelay,
 			()=>{ effectFn(); }
-		));
+		, Color.Success));
 
 		// recast
 		this.cooldowns.useStack(cdName);
@@ -234,7 +265,7 @@ class GameState
 				this.loseEnochian();
 			});
 
-			console.log(this.time.toFixed(3) + "s: override poly timer to 30");
+			controller.log(LogCategory.Event, "override poly timer to 30", this.time, Color.Text);
 			// reset polyglot countdown to 30s
 			this.resources.get(ResourceType.Polyglot).overrideTimer(30);
 		}
@@ -271,13 +302,27 @@ class GameState
 		{
 			if (skill.instances[i].available(this))
 			{
-				console.log(this.time.toFixed(3) + "s: use skill [" + skillName + "] - " + skill.instances[i].description);
+				controller.log(
+					LogCategory.Skill,
+					"use skill [" + skillName + "] - " + skill.instances[i].description,
+					this.time,
+					Color.Text);
+				controller.log(
+					LogCategory.Event,
+					"use skill [" + skillName + "] - " + skill.instances[i].description,
+					this.time,
+					Color.Success);
 				skill.instances[i].use(this);
 				return;
 			}
 		}
 		let timeTillAvailable = skill.timeTillAvailable();
-		console.log("none of the instances are available (nothing happened). available in " + timeTillAvailable.toFixed(3) + "s.");
+		controller.log(
+			LogCategory.Skill,
+			"none of [" + skillName + "] instances are available (nothing happened). available in " +
+			timeTillAvailable.toFixed(3) + "s.",
+			this.time,
+			Color.Error);
 	}
 
 	toString()
@@ -304,32 +349,7 @@ export var game = new GameState(new GameConfig());
 
 export function runTest()
 {
-	if (game.config.disableManaAndThunderTicks === 0)
-	{
-		// get mana and thunder ticks rolling (through recursion)
-		let recurringManaRegen = ()=>{
-			// mana regen
-			var additionalGain = 0;
-			// TODO: apply modifiers
-			game.resources.get(ResourceType.Mana).gain(200 + additionalGain);
-			// queue the next tick
-			game.addEvent(new Event("ManaTick", 3, recurringManaRegen));
-		};
-		let recurringThunderTick = ()=>{
-			// TODO: tick effect
-			game.addEvent(new Event("ThunderTick", 3, recurringThunderTick));
-		};
-		game.addEvent(new Event("InitialManaTick", 0.2, recurringManaRegen));
-		game.addEvent(new Event("InitialThunderTick", 0.8, recurringThunderTick));
-	}
-
-	// also polyglot
-	let recurringPolyglotGain = rsc=>{
-		if (game.hasEnochian()) rsc.gain(1);
-		game.resources.addResourceEvent(ResourceType.Polyglot, "gain polyglot if currently has enochian", 30, recurringPolyglotGain);
-	};
-	recurringPolyglotGain(ResourceType.Polyglot);
-
+	game.init();
 	console.log(game);
 	console.log("========");
 }

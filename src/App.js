@@ -1,31 +1,8 @@
 import React from 'react';
 import { SkillName } from './Game/Common';
 import { game, runTest } from './Game/GameState';
+import { logView } from "./Components/LogView";
 import './App.css';
-
-//======================================================
-
-var boundUpdateText = null;
-
-class GameStateDisplay extends React.Component
-{
-	constructor(props)
-	{
-		super(props);
-		this.state = {
-			text: "(empty)"
-		};
-		var updateText = (text)=>{
-			this.setState({ text: text });
-		};
-		boundUpdateText = updateText.bind(this);
-	}
-	render()
-	{
-		return(<div>{this.state.text}</div>);
-	}
-}
-var gameStateDisplay = null;
 
 class DebugTick extends React.Component {
 	constructor(props) {
@@ -88,7 +65,6 @@ class App extends React.Component {
 	{
 		super(props);
 		runTest();
-		gameStateDisplay = <GameStateDisplay text="initial text" />
 	}
 
 	render()
@@ -100,7 +76,7 @@ class App extends React.Component {
 				<SkillButton skillName={SkillName.Fire} />
 				<SkillButton skillName={SkillName.Transpose} />
 				<SkillButton skillName={SkillName.LeyLines} />
-				{gameStateDisplay}
+				{logView}
 			</div>
 		);
 	}
