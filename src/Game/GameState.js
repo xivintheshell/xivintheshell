@@ -30,9 +30,9 @@ class GameState
 		this.resources.set(ResourceType.Firestarter, new Resource(ResourceType.Firestarter, 1, 0));
 		this.resources.set(ResourceType.Thundercloud, new Resource(ResourceType.Thundercloud, 1, 0));
 		this.resources.set(ResourceType.ThunderDoT, new Resource(ResourceType.ThunderDoT, 1, 0));
+		this.resources.set(ResourceType.Manaward, new Resource(ResourceType.Manaward, 1, 0));
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
-		//this.resources.set(ResourceType.NotCasting, new Resource(ResourceType.NotCasting, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
 
 		// skill CDs (also a form of resource)
@@ -41,6 +41,7 @@ class GameState
 		this.cooldowns.set(ResourceType.cd_Sharpcast, new CoolDown(ResourceType.cd_Sharpcast, 30, 2, 2));
 		this.cooldowns.set(ResourceType.cd_LeyLines, new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Transpose, new CoolDown(ResourceType.cd_Transpose, 5, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Manaward, new CoolDown(ResourceType.cd_Manaward, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_TripleCast, new CoolDown(ResourceType.cd_TripleCast, 60, 2, 2));
 		this.cooldowns.set(ResourceType.cd_Manafont, new CoolDown(ResourceType.cd_Manafont, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Amplifier, new CoolDown(ResourceType.cd_Amplifier, 120, 1, 1));
@@ -67,11 +68,13 @@ class GameState
 			// get mana and thunder ticks rolling (through recursion)
 			let recurringManaRegen = ()=>{
 				// mana regen
-				var additionalGain = 0;
-				// TODO: apply modifiers
-				this.resources.get(ResourceType.Mana).gain(200 + additionalGain);
+				let amount = this.captureManaRegenAmount();
+				this.resources.get(ResourceType.Mana).gain(amount);
+				controller.log(LogCategory.Event, "mana tick +" + amount, this.time, Color.ManaTick);
 				// queue the next tick
-				this.addEvent(new Event("mana tick", 3, recurringManaRegen, Color.ManaTick));
+				let nextTick = new Event("mana tick", 3, recurringManaRegen);
+				nextTick.supressLog();
+				this.addEvent(nextTick);
 			};
 			this.addEvent(new Event("initial mana tick", this.config.timeTillFirstManaTick, recurringManaRegen, Color.ManaTick));
 		}
@@ -119,7 +122,7 @@ class GameState
 					if (!e.canceled)
 					{
 						e.effectFn(this);
-						controller.log(LogCategory.Event, e.name, this.time, e.logColor);
+						if (e.shouldLog) controller.log(LogCategory.Event, e.name, this.time, e.logColor);
 					}
 					executedEvents++;
 				}
@@ -177,6 +180,12 @@ class GameState
 		}
 	}
 
+	captureManaRegenAmount()
+	{
+		let mod = StatsModifier.fromResourceState(this.resources);
+		return mod.manaRegen;
+	}
+
 	captureSpellCastAndRecastTimeScale(aspect, baseCastTime)
 	{
 		let mod = StatsModifier.fromResourceState(this.resources);
@@ -225,7 +234,7 @@ class GameState
 			"apply instant skill effect with cd [" + cdName + "]",
 			effectApplicationDelay,
 			()=>{ effectFn(); }
-		, Color.Success));
+		, Color.Text));
 
 		// recast
 		this.cooldowns.useStack(cdName);

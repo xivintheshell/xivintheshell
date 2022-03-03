@@ -46,7 +46,7 @@ export class StatsModifier
 	static base()
 	{
 		let ret = new StatsModifier();
-		ret.manaRegen = 400;
+		ret.manaRegen = 200;
 		return ret;
 	}
 
@@ -59,17 +59,17 @@ export class StatsModifier
 		let ui = resources.get(ResourceType.UmbralIce);
 		let uiMod = new StatsModifier();
 		if (ui.currentValue === 1) {
-			uiMod.manaRegen = 2800;
+			uiMod.manaRegen = 3000;
 			uiMod.manaCostFire = 0;
 			uiMod.damageFire = 0.9;
 			uiMod.manaCostIce = 0.75;
 		} else if (ui.currentValue === 2) {
-			uiMod.manaRegen = 4300;
+			uiMod.manaRegen = 4500;
 			uiMod.manaCostFire = 0;
 			uiMod.damageFire = 0.8;
 			uiMod.manaCostIce = 0.5;
 		} else if (ui.currentValue === 3) {
-			uiMod.manaRegen = 5800;
+			uiMod.manaRegen = 6000;
 			uiMod.manaCostFire = 0;
 			uiMod.damageFire = 0.7;
 			uiMod.manaCostIce = 0;
@@ -81,19 +81,19 @@ export class StatsModifier
 		let af = resources.get(ResourceType.AstralFire);
 		let afMod = new StatsModifier();
 		if (af.currentValue === 1) {
-			afMod.manaRegen = -400;
+			afMod.manaRegen = -200;
 			afMod.manaCostFire = 2;
 			afMod.damageFire = 1.4;
 			afMod.manaCostIce = 0;
 			afMod.damageIce = 0.9;
 		} else if (af.currentValue === 2) {
-			afMod.manaRegen = -400;
+			afMod.manaRegen = -200;
 			afMod.manaCostFire = 2;
 			afMod.damageFire = 1.6;
 			afMod.manaCostIce = 0;
 			afMod.damageIce = 0.8;
 		} else if (af.currentValue === 3) {
-			afMod.manaRegen = -400;
+			afMod.manaRegen = -200;
 			afMod.manaCostFire = 2;
 			afMod.damageFire = 1.8;
 			afMod.manaCostIce = 0;

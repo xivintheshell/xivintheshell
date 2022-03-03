@@ -266,6 +266,28 @@ export function makeSkillsList(game)
 		]
 	));
 
+	// Manaward
+	skillsList.set(SkillName.Manaward, new Skill(
+		SkillName.Manaward,
+		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_Manaward); },
+		false,
+		[
+			new SkillInstance(
+				"(template skill instance)",
+				()=>{
+					return game.cooldowns.stacksAvailable(ResourceType.cd_Manaward) >= 1 && // CD ready
+						game.resources.get(ResourceType.NotAnimationLocked).available(1); // not animation locked
+				},
+				()=>{
+					game.useInstantSkill(ResourceType.cd_Manaward, 0.1, ()=>{
+						game.resources.get(ResourceType.Manaward).gain(1);
+						game.resources.addResourceEvent(
+							ResourceType.Manaward, "drop Manaward", 20, rsc=>{ rsc.consume(1); })
+					});
+				}
+			),
+		]
+	));
 
 	skillsList.set(SkillName.Template, new Skill(
 		SkillName.Template,

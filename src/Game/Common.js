@@ -26,10 +26,11 @@ export const SkillName =
 {
     Blizzard: "Blizzard",
     Fire: "Fire",
-	Thunder3: "Thunder3",
-	Fire3: "Fire III",
 	Transpose: "Transpose",
+	Thunder3: "Thunder 3",
+	Manaward: "Manaward",
 	LeyLines: "Ley Lines",
+	Fire3: "Fire 3",
 
 	Template: "(template)"
 };
@@ -50,15 +51,16 @@ export const ResourceType =
 	Firestarter: "Firestarter", // [0, 1]
 	Thundercloud: "Thundercloud", // [0, 1]
 	ThunderDoT: "ThunderDoT", // [0, 1]
+	Manaward: "Manaward", // [0, 1]
 
 	Movement: "Movement", // [0, 1]
-	//NotCasting: "NotCasting", // [0, 1]
 	NotAnimationLocked: "NotAnimationLocked", // [0, 1]
 	// oGCDs
 	cd_GCD: "cd_GCD", // [0, Constant.gcd]
 	cd_Transpose: "cd_Transpose", // [0, 1x]
 	cd_Sharpcast: "cd_Sharpcast", // [0, 2x] // TODO: figure out how this works
 	cd_LeyLines: "cd_LeyLines", // [0, 1x]
+	cd_Manaward: "cd_Manaward", // [0, 1x]
 	cd_TripleCast: "cd_TripleCast", // [0, 2x]
 	cd_Manafont: "cd_Manafont", // [0, 1x]
 	cd_Amplifier: "cd_Amplifier" // [0, 1x]

@@ -10,8 +10,10 @@ export class Event
 		this.timeTillEvent = delay;
 		this.effectFn = effectFn;
 		this.canceled = false;
+		this.shouldLog = true;
 		this.logColor = logColor === undefined ? Color.Text : logColor;
 	}
+	supressLog() { this.shouldLog = false; }
 }
 
 // can never be negative

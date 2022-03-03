@@ -73,6 +73,7 @@ class App extends React.Component {
 				<SkillButton skillName={SkillName.Fire} />
 				<SkillButton skillName={SkillName.Transpose} />
 				<SkillButton skillName={SkillName.Thunder3} />
+				<SkillButton skillName={SkillName.Manaward} />
 				<SkillButton skillName={SkillName.LeyLines} />
 				{logView}
 			</div>
