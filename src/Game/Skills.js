@@ -131,7 +131,7 @@ export function makeSkillsList(game)
 						(game.getFireStacks() > 0 || game.getIceStacks() > 0); // has UI or AF
 				},
 				()=>{
-					game.useAbility(ResourceType.cd_Transpose, 0.1, ()=>{
+					game.useInstantSkill(ResourceType.cd_Transpose, 0.1, ()=>{
 						if (game.getFireStacks()===0 && game.getIceStacks()===0) {
 							controller.log(LogCategory.Event, "transpose failed; AF/UI just fell off", game.time, Color.Error);
 							return;
@@ -164,15 +164,108 @@ export function makeSkillsList(game)
 					game.resources.get(ResourceType.NotAnimationLocked).available(1); // not animation locked
 				},
 				()=>{
-					game.useAbility(ResourceType.cd_LeyLines, 0.1, ()=>{
+					game.useInstantSkill(ResourceType.cd_LeyLines, 0.1, ()=>{
 						game.resources.get(ResourceType.LeyLines).gain(1);
 						game.resources.addResourceEvent(
 							ResourceType.LeyLines, "drop LL", 30, rsc=>{ rsc.consume(1); })
-					})
+					});
 				}
 			),
 		]
 	));
+
+	// Thunder
+	// called at the time of APPLICATION (not snapshot)
+	let applyThunderDoT = function(game, capturedInitialPotency, capturedTickPotency)
+	{
+		// define stuff
+		let recurringThunderTick = (remainingTicks, capturedTickPotency)=>
+		{
+			if (remainingTicks===0) return;
+			game.dealDamage(capturedTickPotency);
+			game.resources.addResourceEvent(
+				ResourceType.ThunderDoT,
+				"recurring thunder tick " + (11-remainingTicks) + "/10", 3, thundercloud=>{
+					recurringThunderTick(remainingTicks - 1, capturedTickPotency);
+					if (Math.random() < 0.1) // thundercloud proc
+					{
+						if (thundercloud.available(1)) { // already has a proc; reset its timer
+							thundercloud.overrideTimer(40);
+							controller.log(LogCategory.Event, "Thundercloud proc! overriding an existing one", game.time, Color.Thunder);
+						} else { // there's currently no proc. gain one.
+							thundercloud.gain(1);
+							controller.log(LogCategory.Event, "Thundercloud proc!", game.time, Color.Thunder);
+							game.resources.addResourceEvent(ResourceType.Thundercloud, "drop thundercloud proc", 40, rsc=>{
+								rsc.consume(1);
+							}, Color.Thunder);
+						}
+					}
+				}, Color.Thunder);
+		};
+		let rsc = game.resources.get(ResourceType.ThunderDoT);
+		if (rsc.pendingChange !== null) {
+			// if already has thunder applied; cancel the remaining ticks now.
+			rsc.removeTimer();
+		}
+		// order of events:
+		game.dealDamage(capturedInitialPotency);
+		recurringThunderTick(10, capturedTickPotency);
+	};
+	skillsList.set(SkillName.Thunder3, new Skill(
+		SkillName.Thunder3,
+		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
+		true,
+		[
+			new SkillInstance(
+				"made instant via thundercloud",
+				()=>{
+					// no need to wait for GCD
+					return game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
+						game.resources.get(ResourceType.Thundercloud).available(1); // thundercloud
+				},
+				()=>{
+					let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
+					let capturedTickPotency = game.captureDamage(Aspect.Other, 35);
+					game.useInstantSkill(ResourceType.cd_GCD, 0.1, ()=>{
+						applyThunderDoT(game, capturedInitialPotency, capturedTickPotency);
+					});
+					let thundercloud = game.resources.get(ResourceType.Thundercloud);
+					thundercloud.consume(1);
+					thundercloud.removeTimer();
+				}
+			),
+			new SkillInstance(
+				"regular cast",
+				()=>{
+					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
+						game.resources.get(ResourceType.NotAnimationLocked).available(1); // not animation locked
+				},
+				()=>{
+					// similar to but not exactly covered by game.castSpell(...)
+					let [capturedCastTime, capturedRecastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.gcd);
+					// lock movement
+					game.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - game.config.slideCastDuration);
+					game.addEvent(new Event("deduct MP, snapshot damage", capturedCastTime - game.config.slideCastDuration, ()=>{
+						let capturedInitialPotency = game.captureDamage(Aspect.Other, 50);
+						let capturedTickPotency = game.captureDamage(Aspect.Other, 35);
+						game.addEvent(new Event(
+							"apply DoT and deal initial damage " + capturedInitialPotency.toFixed(1),
+							game.config.slideCastDuration + 0.1, ()=>{
+								applyThunderDoT(game, capturedInitialPotency, capturedTickPotency);
+							}, Color.Thunder));
+					}));
+
+					// recast
+					game.cooldowns.useStack(ResourceType.cd_GCD);
+					game.cooldowns.setRecastTimeScale(ResourceType.cd_GCD, capturedRecastTimeScale);
+
+					// caster tax
+					game.resources.takeResourceLock(ResourceType.NotAnimationLocked, capturedCastTime + game.config.casterTax);
+				}
+			),
+		]
+	));
+
 
 	skillsList.set(SkillName.Template, new Skill(
 		SkillName.Template,

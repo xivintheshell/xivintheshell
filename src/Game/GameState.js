@@ -29,6 +29,7 @@ class GameState
 		this.resources.set(ResourceType.Paradox, new Resource(ResourceType.Paradox, 1, 0));
 		this.resources.set(ResourceType.Firestarter, new Resource(ResourceType.Firestarter, 1, 0));
 		this.resources.set(ResourceType.Thundercloud, new Resource(ResourceType.Thundercloud, 1, 0));
+		this.resources.set(ResourceType.ThunderDoT, new Resource(ResourceType.ThunderDoT, 1, 0));
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
 		//this.resources.set(ResourceType.NotCasting, new Resource(ResourceType.NotCasting, 1, 1));
@@ -70,14 +71,9 @@ class GameState
 				// TODO: apply modifiers
 				this.resources.get(ResourceType.Mana).gain(200 + additionalGain);
 				// queue the next tick
-				this.addEvent(new Event("ManaTick", 3, recurringManaRegen));
+				this.addEvent(new Event("mana tick", 3, recurringManaRegen, Color.ManaTick));
 			};
-			let recurringThunderTick = ()=>{
-				// TODO: tick effect
-				this.addEvent(new Event("ThunderTick", 3, recurringThunderTick));
-			};
-			this.addEvent(new Event("InitialManaTick", this.config.timeTillFirstManaTick, recurringManaRegen));
-			this.addEvent(new Event("InitialThunderTick", this.config.timeTillFirstThunderTick, recurringThunderTick));
+			this.addEvent(new Event("initial mana tick", this.config.timeTillFirstManaTick, recurringManaRegen, Color.ManaTick));
 		}
 
 		// also polyglot
@@ -214,9 +210,6 @@ class GameState
 				()=>{ this.dealDamage(capturedDamage); }, Color.Damage));
 		}));
 
-		// casting status (TODO: this doesn't do anything meaningful though, delete it?)
-		//this.resources.takeResourceLock(ResourceType.NotCasting, castTime);
-
 		// recast
 		this.cooldowns.useStack(cdName);
 		this.cooldowns.setRecastTimeScale(cdName, recastTimeScale);
@@ -225,11 +218,11 @@ class GameState
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, capturedCastTime + this.config.casterTax);
 	}
 
-	useAbility(cdName, effectApplicationDelay, effectFn)
+	useInstantSkill(cdName, effectApplicationDelay, effectFn)
 	{
 		controller.log(LogCategory.Event,"ability cd [" + cdName + "] used", this.time, Color.Text);
 		this.addEvent(new Event(
-			"apply ability after cd [" + cdName + "]",
+			"apply instant skill effect with cd [" + cdName + "]",
 			effectApplicationDelay,
 			()=>{ effectFn(); }
 		, Color.Success));

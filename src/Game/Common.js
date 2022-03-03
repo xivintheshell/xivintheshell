@@ -8,11 +8,10 @@ export class GameConfig
 		this.gcd = 2.5;
 
 		this.timeTillFirstManaTick = 0.3;
-		this.timeTillFirstThunderTick = 0.8;
 
 		//==== DEBUG ====
 		this.epsilon = 0.00001;
-		this.disableManaAndThunderTicks = 1;
+		this.disableManaAndThunderTicks = 0;
 	}
 }
 
@@ -27,6 +26,7 @@ export const SkillName =
 {
     Blizzard: "Blizzard",
     Fire: "Fire",
+	Thunder3: "Thunder3",
 	Fire3: "Fire III",
 	Transpose: "Transpose",
 	LeyLines: "Ley Lines",
@@ -49,6 +49,7 @@ export const ResourceType =
 	Paradox: "Paradox", // [0, 1]
 	Firestarter: "Firestarter", // [0, 1]
 	Thundercloud: "Thundercloud", // [0, 1]
+	ThunderDoT: "ThunderDoT", // [0, 1]
 
 	Movement: "Movement", // [0, 1]
 	//NotCasting: "NotCasting", // [0, 1]

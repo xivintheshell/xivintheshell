@@ -28,6 +28,11 @@ export class Resource
 	{
 		this.pendingChange.timeTillEvent = newTime;
 	}
+	removeTimer()
+	{
+		this.pendingChange.canceled = true;
+		this.pendingChange = null;
+	}
 	available(amount)
 	{
 		return this.currentValue >= amount;
@@ -49,7 +54,7 @@ export class CoolDown extends Resource
 	{
 		super(type, maxStacks * cdPerStack, initialNumStacks * cdPerStack);
 		this.cdPerStack = cdPerStack;
-		this.recastTimeScale = 1; // effective for the next stack (ie. 0.85 if captured LL)
+		this.recastTimeScale = 1; // effective for the next stack (i.e. 0.85 if captured LL)
 	}
 	stacksAvailable() { return Math.floor(this.currentValue / this.cdPerStack); }
 	restore(deltaTime)
@@ -78,7 +83,7 @@ export class CoolDownState extends Map
 	}
 	tick(deltaTime)
 	{
-		for (var cd of this.values()) cd.restore(deltaTime);
+		for (const cd of this.values()) cd.restore(deltaTime);
 	}
 	stacksAvailable(rscType)
 	{
@@ -121,12 +126,12 @@ export class ResourceState extends Map
 	addResourceEvent(rscType, name, delay, fnOnRsc, logColor=Color.Text)
 	{
 		let rsc = this.get(rscType);
-		let evt = new Event(name, delay, ()=>{
-			rsc.pendingChange = null; // unregister from resource
-			fnOnRsc(rsc);
-		}, logColor);
-		rsc.pendingChange = evt; // register to resource
-		this.game.addEvent(evt); // register to events master list
+		 let evt = new Event(name, delay, ()=>{
+			 rsc.pendingChange = null; // unregister self from resource
+			 fnOnRsc(rsc); // before the scheduled event takes effect
+		 }, logColor);
+		 rsc.pendingChange = evt; // register to resource
+		 this.game.addEvent(evt); // register to events master list
 	}
 
 	// useful for binary resources

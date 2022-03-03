@@ -21,14 +21,14 @@ class DebugTick extends React.Component {
 		this.setState({value: event.target.value});
 	}
 
-	render(){ 
-		var form =
+	render(){
+		const form =
 			<form onSubmit={this.handleSubmit}>
 				<span>Tick by </span>
-				<input size="5" type="text" 
-						value={this.state.value} onChange={this.handleChange} />
-				<input type="submit" value="GO" />
-			</form>
+				<input size="5" type="text"
+					   value={this.state.value} onChange={this.handleChange}/>
+				<input type="submit" value="GO"/>
+			</form>;
 		return (
 			<div className="footer">
 				{form}
@@ -72,6 +72,7 @@ class App extends React.Component {
 				<SkillButton skillName={SkillName.Blizzard} />
 				<SkillButton skillName={SkillName.Fire} />
 				<SkillButton skillName={SkillName.Transpose} />
+				<SkillButton skillName={SkillName.Thunder3} />
 				<SkillButton skillName={SkillName.LeyLines} />
 				{logView}
 			</div>

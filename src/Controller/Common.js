@@ -10,6 +10,7 @@ export const Color =
     Fire: "fireColor",
     Ice: "iceColor",
     Thunder: "thunderColor",
+    ManaTick: "manaTickColor",
     Grey: "greyColor",
     Damage: "damageColor",
     Success: "successColor",
