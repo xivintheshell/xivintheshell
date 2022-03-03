@@ -14,9 +14,6 @@ class DebugTick extends React.Component {
 
 	handleSubmit (event) {
 		game.tick(parseFloat(this.state.value));
-		console.log(game.toString());
-		console.log(game.resources);
-		console.log(game.eventsQueue);
 		event.preventDefault();
 	}
 

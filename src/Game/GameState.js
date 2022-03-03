@@ -93,27 +93,31 @@ class GameState
 	{
 		//======== events ========
 		var cumulativeDeltaTime = 0;
-		while (cumulativeDeltaTime < deltaTime - this.config.epsilon && this.eventsQueue.length > 0)
+		while (cumulativeDeltaTime < deltaTime && this.eventsQueue.length > 0)
 		{
 			// make sure events are in proper order
 			this.eventsQueue.sort((a, b)=>{return a.timeTillEvent - b.timeTillEvent;})
 
 			// time to safely advance without skipping anything or ticking past deltaTime
 			let timeToTick = Math.min(deltaTime - cumulativeDeltaTime, this.eventsQueue[0].timeTillEvent);
+			cumulativeDeltaTime = Math.min(cumulativeDeltaTime + timeToTick, deltaTime);
 
 			// advance time
 			this.time += timeToTick;
 			this.cooldowns.tick(timeToTick);
+			console.log("    tick " + timeToTick + " now at " + this.time);
 
 			// make a deep copy of events to advance for this round...
 			const eventsToExecuteOld = [];
-			for (var i = 0; i < this.eventsQueue.length; i++)
+			for (let i = 0; i < this.eventsQueue.length; i++)
 			{
 				eventsToExecuteOld.push(this.eventsQueue[i]);
 			}
 			// actually tick them (which might enqueue new events)
 			let executedEvents = 0;
 			eventsToExecuteOld.forEach(e=>{
+				e.timeTillEvent -= timeToTick;
+				console.log(e.name + " in " + e.timeTillEvent);
 				if (e.timeTillEvent <= this.config.epsilon)
 				{
 					if (!e.canceled)
@@ -123,13 +127,12 @@ class GameState
 					}
 					executedEvents++;
 				}
-				e.timeTillEvent -= timeToTick;
 			});
 			// remove the executed events from the master list
 			this.eventsQueue.splice(0, executedEvents);
-
-			cumulativeDeltaTime += timeToTick;
 		}
+		console.log(game.toString());
+		console.log(game.resources);
 	}
 
 	addEvent(evt)
