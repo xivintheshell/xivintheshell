@@ -4,16 +4,15 @@ import {controller} from "../Controller/Controller";
 export class Event
 {
 	// effectFn : () -> ()
-	constructor(name, delay, effectFn, logColor)
+	constructor(name, delay, effectFn, logColor=Color.Text, shouldLog=true)
 	{
 		this.name = name;
 		this.timeTillEvent = delay;
 		this.effectFn = effectFn;
 		this.canceled = false;
-		this.shouldLog = true;
-		this.logColor = logColor === undefined ? Color.Text : logColor;
+		this.shouldLog = shouldLog;
+		this.logColor = logColor;
 	}
-	supressLog() { this.shouldLog = false; }
 }
 
 // can never be negative

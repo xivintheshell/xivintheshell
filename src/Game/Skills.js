@@ -94,10 +94,17 @@ export function makeSkillsList(game)
 				},
 				()=>{
 					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.gcd);
-					game.castSpell(Aspect.Fire, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 180, game.captureManaCost(Aspect.Fire, 800));
+					let capturedManaCost = game.captureManaCost(Aspect.Fire, 800);
+					game.castSpell(Aspect.Fire, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 180, capturedManaCost);
 					game.addEvent(new Event("gain AF", castTime - 0.06, ()=>{
 						game.resources.get(ResourceType.AstralFire).gain(1);
 						game.startOrRefreshEnochian();
+						// umbral heart
+						let uh = game.resources.get(ResourceType.UmbralHeart);
+						if (capturedManaCost > 0 && uh.available(1)) {
+							uh.consume(1);
+							controller.log(LogCategory.Event, "consume a UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
+						}
 					}, Color.Fire));
 				}
 			),
@@ -238,14 +245,17 @@ export function makeSkillsList(game)
 				"regular cast",
 				()=>{
 					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
-						game.resources.get(ResourceType.NotAnimationLocked).available(1); // not animation locked
+						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
+						game.resources.get(ResourceType.Mana).available(game.captureManaCost(Aspect.Other, 400));
 				},
 				()=>{
 					// similar to but not exactly covered by game.castSpell(...)
 					let [capturedCastTime, capturedRecastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.gcd);
+					let capturedManaCost = game.captureManaCost(Aspect.Other, 400);
 					// lock movement
 					game.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - game.config.slideCastDuration);
 					game.addEvent(new Event("deduct MP, snapshot damage", capturedCastTime - game.config.slideCastDuration, ()=>{
+						game.resources.get(ResourceType.Mana).consume(capturedManaCost); // actually deduct mana
 						let capturedInitialPotency = game.captureDamage(Aspect.Other, 50);
 						let capturedTickPotency = game.captureDamage(Aspect.Other, 35);
 						game.addEvent(new Event(
@@ -273,7 +283,7 @@ export function makeSkillsList(game)
 		false,
 		[
 			new SkillInstance(
-				"(template skill instance)",
+				"any",
 				()=>{
 					return game.cooldowns.stacksAvailable(ResourceType.cd_Manaward) >= 1 && // CD ready
 						game.resources.get(ResourceType.NotAnimationLocked).available(1); // not animation locked
@@ -284,6 +294,60 @@ export function makeSkillsList(game)
 						game.resources.addResourceEvent(
 							ResourceType.Manaward, "drop Manaward", 20, rsc=>{ rsc.consume(1); })
 					});
+				}
+			),
+		]
+	));
+
+	// Manafont
+	skillsList.set(SkillName.Manafont, new Skill(
+		SkillName.Manafont,
+		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_Manafont); },
+		false,
+		[
+			new SkillInstance(
+				"any",
+				()=>{
+					return game.cooldowns.stacksAvailable(ResourceType.cd_Manafont) >= 1 && // CD ready
+						game.resources.get(ResourceType.NotAnimationLocked).available(1); // not animation locked
+				},
+				()=>{
+					game.useInstantSkill(ResourceType.cd_Manafont, 0.4, ()=>{
+						game.resources.get(ResourceType.Mana).gain(3000);
+						controller.log(LogCategory.Event, "manafont effect: mana +3000", game.time);
+					}, false);
+				}
+			),
+		]
+	));
+
+	// Fire 3
+	skillsList.set(SkillName.Fire3, new Skill(
+		SkillName.Fire3,
+		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
+		true,
+		[
+			new SkillInstance("any",
+				()=>{
+					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
+						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
+						game.getMP() >= game.captureManaCost(Aspect.Fire, 2000);
+				},
+				()=>{
+					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.longCastTime);
+					let capturedManaCost = game.captureManaCost(Aspect.Fire, 2000);
+					game.castSpell(Aspect.Fire, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 240, capturedManaCost);
+					game.addEvent(new Event("lose all UI and gain full AF; refresh enochian", castTime - 0.06, ()=>{
+						game.resources.get(ResourceType.UmbralIce).consume(game.resources.get(ResourceType.UmbralIce).currentValue);
+						game.resources.get(ResourceType.AstralFire).gain(3);
+						game.startOrRefreshEnochian();
+						// umbral heart
+						let uh = game.resources.get(ResourceType.UmbralHeart);
+						if (capturedManaCost > 0 && uh.available(1)) {
+							uh.consume(1);
+							controller.log(LogCategory.Event, "consume a UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
+						}
+					}, Color.Fire));
 				}
 			),
 		]

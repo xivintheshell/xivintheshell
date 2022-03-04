@@ -6,6 +6,7 @@ export class GameConfig
 		this.slideCastDuration = 0.4;
 		this.animationLock = 0.7;
 		this.gcd = 2.5;
+		this.longCastTime = 3.5;
 
 		this.timeTillFirstManaTick = 0.3;
 
@@ -29,6 +30,7 @@ export const SkillName =
 	Transpose: "Transpose",
 	Thunder3: "Thunder 3",
 	Manaward: "Manaward",
+	Manafont: "Manafont",
 	LeyLines: "Ley Lines",
 	Fire3: "Fire 3",
 

@@ -72,8 +72,7 @@ class GameState
 				this.resources.get(ResourceType.Mana).gain(amount);
 				controller.log(LogCategory.Event, "mana tick +" + amount, this.time, Color.ManaTick);
 				// queue the next tick
-				let nextTick = new Event("mana tick", 3, recurringManaRegen);
-				nextTick.supressLog();
+				let nextTick = new Event("mana tick", 3, recurringManaRegen, Color.Text, false);
 				this.addEvent(nextTick);
 			};
 			this.addEvent(new Event("initial mana tick", this.config.timeTillFirstManaTick, recurringManaRegen, Color.ManaTick));
@@ -227,14 +226,15 @@ class GameState
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, capturedCastTime + this.config.casterTax);
 	}
 
-	useInstantSkill(cdName, effectApplicationDelay, effectFn)
+	useInstantSkill(cdName, effectApplicationDelay, effectFn, shouldLog=true)
 	{
 		controller.log(LogCategory.Event,"ability cd [" + cdName + "] used", this.time, Color.Text);
-		this.addEvent(new Event(
+		let skillEvent = new Event(
 			"apply instant skill effect with cd [" + cdName + "]",
 			effectApplicationDelay,
 			()=>{ effectFn(); }
-		, Color.Text));
+			, Color.Text, shouldLog);
+		this.addEvent(skillEvent);
 
 		// recast
 		this.cooldowns.useStack(cdName);

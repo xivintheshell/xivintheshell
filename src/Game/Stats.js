@@ -77,24 +77,25 @@ export class StatsModifier
 		}
 		modifiers.push(uiMod);
 
-		// astral fire
+		// astral fire & umbral hearts
 		let af = resources.get(ResourceType.AstralFire);
+		let uhStacks = resources.get(ResourceType.UmbralHeart).currentValue;
 		let afMod = new StatsModifier();
 		if (af.currentValue === 1) {
 			afMod.manaRegen = -200;
-			afMod.manaCostFire = 2;
+			afMod.manaCostFire = uhStacks > 0 ? 1 : 2;
 			afMod.damageFire = 1.4;
 			afMod.manaCostIce = 0;
 			afMod.damageIce = 0.9;
 		} else if (af.currentValue === 2) {
 			afMod.manaRegen = -200;
-			afMod.manaCostFire = 2;
+			afMod.manaCostFire = uhStacks > 0 ? 1 : 2;
 			afMod.damageFire = 1.6;
 			afMod.manaCostIce = 0;
 			afMod.damageIce = 0.8;
 		} else if (af.currentValue === 3) {
 			afMod.manaRegen = -200;
-			afMod.manaCostFire = 2;
+			afMod.manaCostFire = uhStacks > 0 ? 1 : 2;
 			afMod.damageFire = 1.8;
 			afMod.manaCostIce = 0;
 			afMod.damageIce = 0.7;
