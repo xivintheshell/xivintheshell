@@ -52,7 +52,7 @@ class SkillButton extends React.Component
 	}
 	render()
 	{
-		return <button onClick={this.boundAction}>{this.skillName} {this.state.timesClicked}</button>;
+		return <button onClick={this.boundAction}>{this.skillName} {/*this.state.timesClicked*/}</button>;
 	}
 }
 
@@ -80,6 +80,13 @@ class App extends React.Component {
 				<SkillButton skillName={SkillName.Freeze} />
 				<SkillButton skillName={SkillName.Flare} />
 				<SkillButton skillName={SkillName.LeyLines} />
+				<SkillButton skillName={SkillName.Sharpcast} />
+				<SkillButton skillName={SkillName.Blizzard4} />
+				<SkillButton skillName={SkillName.Fire4} />
+				<SkillButton skillName={SkillName.BetweenTheLines} />
+				<SkillButton skillName={SkillName.AetherialManipulation} />
+				<SkillButton skillName={SkillName.Thunder4} />
+				<SkillButton skillName={SkillName.Triplecast} />
 				{logView}
 			</div>
 		);

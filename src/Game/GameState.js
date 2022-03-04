@@ -25,12 +25,14 @@ class GameState
 		this.resources.set(ResourceType.UmbralHeart, new Resource(ResourceType.UmbralHeart, 3, 0));
 
 		this.resources.set(ResourceType.LeyLines, new Resource(ResourceType.LeyLines, 1, 0));
+		this.resources.set(ResourceType.Sharpcast, new Resource(ResourceType.Sharpcast, 1, 0));
 		this.resources.set(ResourceType.Enochian, new Resource(ResourceType.Enochian, 1, 0));
 		this.resources.set(ResourceType.Paradox, new Resource(ResourceType.Paradox, 1, 0));
 		this.resources.set(ResourceType.Firestarter, new Resource(ResourceType.Firestarter, 1, 0));
 		this.resources.set(ResourceType.Thundercloud, new Resource(ResourceType.Thundercloud, 1, 0));
 		this.resources.set(ResourceType.ThunderDoT, new Resource(ResourceType.ThunderDoT, 1, 0));
 		this.resources.set(ResourceType.Manaward, new Resource(ResourceType.Manaward, 1, 0));
+		this.resources.set(ResourceType.Triplecast, new Resource(ResourceType.Triplecast, 3, 0));
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
@@ -42,7 +44,9 @@ class GameState
 		this.cooldowns.set(ResourceType.cd_LeyLines, new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Transpose, new CoolDown(ResourceType.cd_Transpose, 5, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Manaward, new CoolDown(ResourceType.cd_Manaward, 120, 1, 1));
-		this.cooldowns.set(ResourceType.cd_TripleCast, new CoolDown(ResourceType.cd_TripleCast, 60, 2, 2));
+		this.cooldowns.set(ResourceType.cd_BetweenTheLines, new CoolDown(ResourceType.cd_BetweenTheLines, 3, 1, 1));
+		this.cooldowns.set(ResourceType.cd_AetherialManipulation, new CoolDown(ResourceType.cd_AetherialManipulation, 10, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Triplecast, new CoolDown(ResourceType.cd_Triplecast, 60, 2, 2));
 		this.cooldowns.set(ResourceType.cd_Manafont, new CoolDown(ResourceType.cd_Manafont, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Amplifier, new CoolDown(ResourceType.cd_Amplifier, 120, 1, 1));
 
@@ -206,16 +210,12 @@ class GameState
 	{
 		let skillInfo = this.skillsList.get(skillName).info;
 		let cd = this.cooldowns.get(skillInfo.cdName);
-		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, skillInfo.baseCastTime);
 		let capturedManaCost = this.captureManaCost(skillInfo.aspect, skillInfo.baseManaCost);
 
-		// movement lock
-		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - this.config.slideCastDuration);
-
-		// (basically done casting) deduct MP, calc damage, queue damage
-		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - this.config.slideCastDuration, ()=>{
-			this.resources.get(ResourceType.Mana).consume(capturedManaCost); // actually deduct mana
-			let capturedPotency = this.captureDamage(skillInfo.aspect, skillInfo.basePotency);
+		let takeEffect = function(game, additionalDelay)
+		{
+			game.resources.get(ResourceType.Mana).consume(capturedManaCost); // actually deduct mana
+			let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 			let captureInfo = {
 				capturedManaCost: capturedManaCost
 				//...
@@ -223,17 +223,45 @@ class GameState
 			onCapture(captureInfo);
 
 			// effect application
-			this.addEvent(new Event(
-				skillInfo.name + " applied",
-				this.config.slideCastDuration + skillInfo.damageApplicationDelay,
+			game.addEvent(new Event(
+				skillInfo.name + " applied and cost " + capturedManaCost + "MP",
+				additionalDelay + skillInfo.damageApplicationDelay,
 				()=>{
-					this.dealDamage(capturedPotency);
+					game.dealDamage(capturedPotency);
 					let applicationInfo = {
 						//...
 					};
 					onApplication(applicationInfo);
 				},
 				Color.Text));
+		}
+
+		// if there's a triplecast charge, use it and make this skill instant.
+		let triple = this.resources.get(ResourceType.Triplecast);
+		if (triple.available(1)) // made instant via a triple stack
+		{
+			controller.log(LogCategory.Event, "a cast is made instant via a triplecast charge", game.time, Color.Success);
+			triple.consume(1);
+			takeEffect(this, 0);
+
+			// recast
+			cd.useStack();
+
+			// animation lock
+			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.animationLock);
+
+			return;
+		}
+
+		// there are no triplecast charges. cast and apply effect
+		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, skillInfo.baseCastTime);
+
+		// movement lock
+		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - this.config.slideCastDuration);
+
+		// (basically done casting) deduct MP, calc damage, queue damage
+		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - this.config.slideCastDuration, ()=>{
+			takeEffect(this, this.config.slideCastDuration);
 		}));
 
 		// recast
@@ -257,7 +285,7 @@ class GameState
 		this.addEvent(skillEvent);
 
 		// recast
-		cd.useStack(); // TODO: might be wrong under LL
+		cd.useStack();
 
 		// animation lock
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.animationLock);
@@ -307,20 +335,9 @@ class GameState
 		uh.consume(uh.currentValue);
 	}
 
-	timeTillNextSkillAvailable()
-	{
-		return this.resources.timeTillReady(ResourceType.NotAnimationLocked);
-	}
-
-	timeTillNextUseAvailable(cdName)
-	{
-		let tillNextSkill = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
-		let tillNextStack = this.cooldowns.timeTillNextStackAvailable(cdName);
-		return Math.max(tillNextSkill, tillNextStack);
-	}
-
 	timeTillSkillAvailable(skillName)
 	{
+		// TODO: should also wait until next casting ends (make caster tax separate from animation lock?)
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.info.cdName;
 		let tillAnySkill = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
@@ -371,7 +388,7 @@ class GameState
 				return;
 			}
 		}
-		controller.log(LogCategory.Skill, skillName + " failed (reqs not satisfied)", this.time);
+		controller.log(LogCategory.Skill, skillName + " failed (reqs not satisfied)", this.time, Color.Error);
 	}
 
 	toString()

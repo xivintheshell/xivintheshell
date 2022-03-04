@@ -28,6 +28,13 @@ export const skillInfos = [
 	new SkillInfo(SkillName.Blizzard3, ResourceType.cd_GCD, Aspect.Ice, true, 3.5, 800, 260, 0.1),
 	new SkillInfo(SkillName.Freeze, ResourceType.cd_GCD, Aspect.Ice, true, 2.8, 1000, 120, 0.1),
 	new SkillInfo(SkillName.Flare, ResourceType.cd_GCD, Aspect.Fire, true, 4, 0, 280, 0.1), // mana is handled separately
+	new SkillInfo(SkillName.Sharpcast, ResourceType.cd_Sharpcast, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Blizzard4, ResourceType.cd_GCD, Aspect.Ice, true, 2.5, 800, 300, 0.1),
+	new SkillInfo(SkillName.Fire4, ResourceType.cd_GCD, Aspect.Fire, true, 2.8, 800, 300, 0.1),
+	new SkillInfo(SkillName.BetweenTheLines, ResourceType.cd_BetweenTheLines, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.AetherialManipulation, ResourceType.cd_AetherialManipulation, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Thunder4, ResourceType.cd_GCD, Aspect.Lightning, true, 2.5, 400, 50, 0.1),
+	new SkillInfo(SkillName.Triplecast, ResourceType.cd_Triplecast, Aspect.Other, false, 0, 0, 0, 0.1),
 
 	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false, 0, 0, 0, 0.1),
 ];
@@ -183,32 +190,36 @@ export function makeSkillsList(game)
 		]
 	));
 
-	// Thunder 3
+	let gainThundercloudProc = function(game)
+	{
+		let thundercloud = game.resources.get(ResourceType.Thundercloud);
+		if (thundercloud.available(1)) { // already has a proc; reset its timer
+			thundercloud.overrideTimer(40);
+			controller.log(LogCategory.Event, "Thundercloud proc! overriding an existing one", game.time, Color.Thunder);
+		} else { // there's currently no proc. gain one.
+			thundercloud.gain(1);
+			controller.log(LogCategory.Event, "Thundercloud proc!", game.time, Color.Thunder);
+			game.resources.addResourceEvent(ResourceType.Thundercloud, "drop thundercloud proc", 40, rsc=>{
+				rsc.consume(1);
+			}, Color.Thunder);
+		}
+	}
+
 	// called at the time of APPLICATION (not snapshot)
-	let applyThunderDoT = function(game, capturedTickPotency)
+	let applyThunderDoT = function(game, capturedTickPotency, numTicks)
 	{
 		// define stuff
 		let recurringThunderTick = (remainingTicks, capturedTickPotency)=>
 		{
 			if (remainingTicks===0) return;
-			game.dealDamage(capturedTickPotency);
 			game.resources.addResourceEvent(
 				ResourceType.ThunderDoT,
-				"recurring thunder tick " + (11-remainingTicks) + "/10", 3, rsc=>{
+				"recurring thunder tick " + (numTicks+1-remainingTicks) + "/" + numTicks, 3, rsc=>{
+					game.dealDamage(capturedTickPotency);
 					recurringThunderTick(remainingTicks - 1, capturedTickPotency);
 					if (Math.random() < 0.1) // thundercloud proc
 					{
-						let thundercloud = game.resources.get(ResourceType.Thundercloud);
-						if (thundercloud.available(1)) { // already has a proc; reset its timer
-							thundercloud.overrideTimer(40);
-							controller.log(LogCategory.Event, "Thundercloud proc! overriding an existing one", game.time, Color.Thunder);
-						} else { // there's currently no proc. gain one.
-							thundercloud.gain(1);
-							controller.log(LogCategory.Event, "Thundercloud proc!", game.time, Color.Thunder);
-							game.resources.addResourceEvent(ResourceType.Thundercloud, "drop thundercloud proc", 40, rsc=>{
-								rsc.consume(1);
-							}, Color.Thunder);
-						}
+						gainThundercloudProc(game);
 					}
 				}, Color.Thunder);
 		};
@@ -218,12 +229,13 @@ export function makeSkillsList(game)
 			rsc.removeTimer();
 		}
 		// order of events:
-		recurringThunderTick(10, capturedTickPotency);
+		recurringThunderTick(numTicks, capturedTickPotency);
 	};
+
+	// Thunder 3
 	skillsList.set(SkillName.Thunder3, new Skill(SkillName.Thunder3,
 		[
-			new SkillInstance(
-				"made instant via thundercloud",
+			new SkillInstance("made instant via thundercloud",
 				()=>{
 					return game.resources.get(ResourceType.Thundercloud).available(1); // thundercloud
 				},
@@ -232,24 +244,82 @@ export function makeSkillsList(game)
 					let capturedTickPotency = game.captureDamage(Aspect.Other, 35);
 					game.useInstantSkill(SkillName.Thunder3, ()=>{
 						game.dealDamage(capturedInitialPotency);
-						applyThunderDoT(game, capturedTickPotency);
+						applyThunderDoT(game, capturedTickPotency, 10);
 					});
 					let thundercloud = game.resources.get(ResourceType.Thundercloud);
 					thundercloud.consume(1);
 					thundercloud.removeTimer();
+					// if there's a sharpcast stack, consume it and gain (a potentially new) proc
+					let sc = game.resources.get(ResourceType.Sharpcast);
+					if (sc.available(1)) {
+						gainThundercloudProc(game);
+						sc.consume(1);
+						sc.removeTimer();
+					}
 				}
 			),
-			new SkillInstance(
-				"regular cast",
-				()=>{
-					return true;
-				},
+			new SkillInstance("regular cast",
+				()=>{ return true; },
 				()=>{
 					let capturedTickPotency;
 					game.castSpell(SkillName.Thunder3, cap=>{
 						capturedTickPotency = game.captureDamage(Aspect.Lightning, 35);
+						// if there's a sharpcast stack, consume it and gain (a potentially new) proc
+						let sc = game.resources.get(ResourceType.Sharpcast);
+						if (sc.available(1)) {
+							gainThundercloudProc(game);
+							sc.consume(1);
+							sc.removeTimer();
+						}
 					}, app=>{
-						applyThunderDoT(game, capturedTickPotency);
+						applyThunderDoT(game, capturedTickPotency, 10);
+					});
+				}
+			),
+		]
+	));
+
+	// Thunder 4
+	skillsList.set(SkillName.Thunder4, new Skill(SkillName.Thunder4,
+		[
+			new SkillInstance("made instant via thundercloud",
+				()=>{
+					return game.resources.get(ResourceType.Thundercloud).available(1); // thundercloud
+				},
+				()=>{
+					let capturedInitialPotency = game.captureDamage(Aspect.Other, 170);
+					let capturedTickPotency = game.captureDamage(Aspect.Other, 20);
+					game.useInstantSkill(SkillName.Thunder4, ()=>{
+						game.dealDamage(capturedInitialPotency);
+						applyThunderDoT(game, capturedTickPotency, 6);
+					});
+					let thundercloud = game.resources.get(ResourceType.Thundercloud);
+					thundercloud.consume(1);
+					thundercloud.removeTimer();
+					// if there's a sharpcast stack, consume it and gain (a potentially new) proc
+					let sc = game.resources.get(ResourceType.Sharpcast);
+					if (sc.available(1)) {
+						gainThundercloudProc(game);
+						sc.consume(1);
+						sc.removeTimer();
+					}
+				}
+			),
+			new SkillInstance("regular cast",
+				()=>{ return true; },
+				()=>{
+					let capturedTickPotency;
+					game.castSpell(SkillName.Thunder4, cap=>{
+						capturedTickPotency = game.captureDamage(Aspect.Lightning, 20);
+						// if there's a sharpcast stack, consume it and gain (a potentially new) proc
+						let sc = game.resources.get(ResourceType.Sharpcast);
+						if (sc.available(1)) {
+							gainThundercloudProc(game);
+							sc.consume(1);
+							sc.removeTimer();
+						}
+					}, app=>{
+						applyThunderDoT(game, capturedTickPotency, 6);
 					});
 				}
 			),
@@ -349,7 +419,7 @@ export function makeSkillsList(game)
 			new SkillInstance("any",
 				()=>{
 					return game.getFireStacks() > 0 && // in AF
-						game.getMP() >= 800; // TODO: is there a minimum?
+						game.getMP() >= 800;
 				},
 				()=>{
 					game.castSpell(SkillName.Flare, cap=>{
@@ -368,5 +438,101 @@ export function makeSkillsList(game)
 		]
 	));
 
-    return skillsList;
+	// Sharpcast
+	skillsList.set(SkillName.Sharpcast, new Skill(SkillName.Sharpcast,
+		[
+			new SkillInstance("any", ()=>{ return true; },
+				()=>{
+					game.useInstantSkill(SkillName.Sharpcast, ()=>{
+						let sc = game.resources.get(ResourceType.Sharpcast);
+						if (sc.available(1)) sc.overrideTimer(30);
+						else { // fresh gain
+							sc.gain(1);
+							game.resources.addResourceEvent(
+								ResourceType.Sharpcast,
+								"drop sharpcast",
+								30,
+								rsc=>{
+									sc.consume(1);
+								}, Color.Text);
+						}
+					});
+				}
+			),
+		]
+	));
+
+	// Blizzard 4
+	skillsList.set(SkillName.Blizzard4, new Skill(SkillName.Blizzard4,
+		[
+			new SkillInstance("any",
+				()=>{
+					return game.getIceStacks() > 0; // in UI
+				},
+				()=>{
+					game.castSpell(SkillName.Blizzard4, cap=>{
+						game.resources.get(ResourceType.UmbralHeart).gain(3);
+					}, app=>{});
+				}
+			),
+		]
+	));
+
+	// Fire 4
+	skillsList.set(SkillName.Fire4, new Skill(SkillName.Fire4,
+		[
+			new SkillInstance("any",
+				()=>{
+					return game.getFireStacks() > 0; // in AF
+				},
+				()=>{
+					game.castSpell(SkillName.Fire4, cap=>{}, app=>{});
+				}
+			),
+		]
+	));
+
+	// Between the Lines
+	skillsList.set(SkillName.BetweenTheLines, new Skill(SkillName.BetweenTheLines,
+		[
+			new SkillInstance("any", ()=>{ return true; },
+				()=>{
+					game.useInstantSkill(SkillName.BetweenTheLines, ()=>{});
+				}
+			),
+		]
+	));
+
+	// Aetherial Manipulation
+	skillsList.set(SkillName.AetherialManipulation, new Skill(SkillName.AetherialManipulation,
+		[
+			new SkillInstance("any", ()=>{ return true; },
+				()=>{
+					game.useInstantSkill(SkillName.AetherialManipulation, ()=>{});
+				}
+			),
+		]
+	));
+
+	// Triplecast
+	skillsList.set(SkillName.Triplecast, new Skill(SkillName.Triplecast,
+		[
+			new SkillInstance("any", ()=>{ return true; },
+				()=>{
+					game.useInstantSkill(SkillName.Triplecast, ()=>{
+						let triple = game.resources.get(ResourceType.Triplecast);
+						if (triple.pendingChange!==null) triple.removeTimer(); // should never need this, but just in case
+						triple.gain(3);
+						game.resources.addResourceEvent(
+							ResourceType.Triplecast,
+							"drop remaining Triple charges", 15, rsc=>{
+								rsc.consume(rsc.currentValue);
+							});
+					});
+				}
+			),
+		]
+	));
+
+	return skillsList;
 }

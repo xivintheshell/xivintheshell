@@ -5,11 +5,8 @@ export class GameConfig
 		this.casterTax = 0.06;
 		this.slideCastDuration = 0.4;
 		this.animationLock = 0.7;
-		// TODO: get rid of these CD lengths (should be defined elsewhere)
+
 		this.gcd = 2.5;
-		this.longCastTime = 3.5;
-		this.freezeCastTime = 2.8;
-		this.flareCastTime = 4;
 
 		this.timeTillFirstManaTick = 0.3;
 
@@ -39,7 +36,14 @@ export const SkillName =
 	Fire3: "Fire 3",
 	Blizzard3: "Blizzard 3",
 	Freeze: "Freeze",
-	Flare: "Flare", // TODO: available with very little MP left?
+	Flare: "Flare",
+	Sharpcast: "Sharpcast",
+	Blizzard4: "Blizzard 4",
+	Fire4: "Fire 4",
+	BetweenTheLines: "Between the Lines",
+	AetherialManipulation: "Aetherial Manipulation",
+	Thunder4: "Thunder 4",
+	Triplecast: "Triplecast",
 
 	Template: "(template)"
 };
@@ -55,6 +59,8 @@ export const ResourceType =
 
 	// binaries (buffs & states)
 	LeyLines: "LeyLines", // [0, 1]
+	Sharpcast: "Sharpcast", // [0, 1]
+	Triplecast: "Triplecast", // [0, 3]
 	Enochian: "Enochian", // [0, 1]
 	Paradox: "Paradox", // [0, 1]
 	Firestarter: "Firestarter", // [0, 1]
@@ -70,7 +76,9 @@ export const ResourceType =
 	cd_Sharpcast: "cd_Sharpcast", // [0, 2x] // TODO: figure out how this works
 	cd_LeyLines: "cd_LeyLines", // [0, 1x]
 	cd_Manaward: "cd_Manaward", // [0, 1x]
-	cd_TripleCast: "cd_TripleCast", // [0, 2x]
+	cd_BetweenTheLines: "cd_BetweenTheLines", // [0, 1x]
+	cd_AetherialManipulation: "cd_AetherialManipulation", // [0, 1x]
+	cd_Triplecast: "cd_Triplecast", // [0, 2x]
 	cd_Manafont: "cd_Manafont", // [0, 1x]
 	cd_Amplifier: "cd_Amplifier" // [0, 1x]
 };
