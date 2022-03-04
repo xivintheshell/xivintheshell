@@ -1,7 +1,36 @@
 import { SkillName, ResourceType, Aspect } from './Common'
-import { Event } from './Resources';
 import { controller } from "../Controller/Controller";
 import { LogCategory, Color } from "../Controller/Common";
+
+class SkillInfo
+{
+	constructor(skillName, cdName, aspect, isSpell, baseCastTime, baseManaCost, basePotency, damageApplicationDelay)
+	{
+		this.name = skillName;
+		this.cdName = cdName;
+		this.aspect = aspect;
+		this.isSpell = isSpell;
+		this.baseCastTime = baseCastTime;
+		this.baseManaCost = baseManaCost;
+		this.basePotency = basePotency;
+		this.damageApplicationDelay = damageApplicationDelay;
+	}
+}
+
+export const skillInfos = [
+	new SkillInfo(SkillName.Blizzard, ResourceType.cd_GCD, Aspect.Ice, true, 2.5, 400, 180, 0.1),
+	new SkillInfo(SkillName.Fire, ResourceType.cd_GCD, Aspect.Fire, true, 2.5, 800, 180, 0.1),
+	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Thunder3, ResourceType.cd_GCD, Aspect.Lightning, true, 2.5, 400, 50, 0.1),
+	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Manafont, ResourceType.cd_Manafont, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Fire3, ResourceType.cd_GCD, Aspect.Fire, true, 3.5, 2000, 260, 0.1),
+	new SkillInfo(SkillName.Blizzard3, ResourceType.cd_GCD, Aspect.Ice, true, 3.5, 800, 260, 0.1),
+	new SkillInfo(SkillName.Freeze, ResourceType.cd_GCD, Aspect.Ice, true, 2.8, 1000, 120, 0.1),
+	new SkillInfo(SkillName.Flare, ResourceType.cd_GCD, Aspect.Fire, true, 4, 0, 280, 0.1), // mana is handled separately
+
+	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false, 0, 0, 0, 0.1),
+];
 
 class SkillInstance
 {
@@ -18,12 +47,11 @@ class SkillInstance
 class Skill
 {
 	// instances : SkillInstance[]
-	constructor(name, timeTillAvailableFn, isSpell, instances)
+	constructor(name, instances)
 	{
 		this.name = name;
-		this.isSpell = isSpell;
-        this.timeTillAvailable = timeTillAvailableFn;
 		this.instances = instances;
+		this.info = null;
 	}
 }
 
@@ -34,6 +62,13 @@ class SkillsList extends Map
         super();
         this.game = game;
     }
+	setSkillInfos(infos)
+	{
+		infos.forEach(info=>{
+			let s = this.get(info.name);
+			s.info = info;
+		});
+	}
 }
 
 export function makeSkillsList(game)
@@ -41,104 +76,75 @@ export function makeSkillsList(game)
 	const skillsList = new SkillsList(game);
 
 	// Blizzard
-    skillsList.set(SkillName.Blizzard, new Skill(
-        SkillName.Blizzard,
-		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
-		true,
+    skillsList.set(SkillName.Blizzard, new Skill(SkillName.Blizzard,
 		[
 			new SkillInstance("no AF",
 				()=>{
-					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
-					game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-					game.getFireStacks() === 0 &&
+					return game.getFireStacks() === 0 &&
 					game.getMP() >= game.captureManaCost(Aspect.Ice, 400);
 				},
 				()=>{
-					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Ice, game.config.gcd);
-					game.castSpell(Aspect.Ice, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 180, game.captureManaCost(Aspect.Ice, 400));
-					game.addEvent(new Event("gain UI", castTime - 0.06, ()=>{
+					game.castSpell(SkillName.Blizzard, cap=>{
 						game.resources.get(ResourceType.UmbralIce).gain(1);
 						game.startOrRefreshEnochian();
-					 }, Color.Ice));
+					}, app=>{});
 				}
 			),
 			new SkillInstance("in AF",
-				 ()=>{
-					 return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
-						 game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-						 game.getFireStacks() > 0;
-				 },
-				 ()=>{
-					 let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Ice, game.config.gcd);
-					 game.castSpell(Aspect.Ice, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 180, 0);
-					 game.addEvent(new Event("lose enochian", castTime - 0.06, ()=>{
-						 game.loseEnochian();
-					 }));
-				 }
+				()=>{
+					return game.getFireStacks() > 0;
+				},
+				()=>{
+					game.castSpell(SkillName.Blizzard, cap=>{
+						game.loseEnochian();
+					}, app=>{});
+				},
 			),
     	]
 	));
 
 	// Fire
-	skillsList.set(SkillName.Fire, new Skill(
-		SkillName.Fire,
-		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
-		true,
+	skillsList.set(SkillName.Fire, new Skill(SkillName.Fire,
 		[
 			new SkillInstance("no UI",
 				()=>{
-					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
-						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-						game.getIceStacks() === 0 &&
-						game.getMP() >= game.captureManaCost(Aspect.Fire, 800);
+					return game.getIceStacks() === 0;
 				},
 				()=>{
-					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.gcd);
-					let capturedManaCost = game.captureManaCost(Aspect.Fire, 800);
-					game.castSpell(Aspect.Fire, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 180, capturedManaCost);
-					game.addEvent(new Event("gain AF", castTime - 0.06, ()=>{
+					game.castSpell(SkillName.Fire, cap=>{
 						game.resources.get(ResourceType.AstralFire).gain(1);
 						game.startOrRefreshEnochian();
 						// umbral heart
 						let uh = game.resources.get(ResourceType.UmbralHeart);
-						if (capturedManaCost > 0 && uh.available(1)) {
+						if (cap.capturedManaCost > 0 && uh.available(1)) {
 							uh.consume(1);
 							controller.log(LogCategory.Event, "consume a UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
 						}
-					}, Color.Fire));
+					}, app=>{});
 				}
 			),
 			new SkillInstance("in UI",
 				()=>{
-					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
-						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-						game.getIceStacks() > 0;
+					return game.getIceStacks() > 0;
 				},
 				()=>{
-					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.gcd);
-					game.castSpell(Aspect.Fire, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 180, 0);
-					game.addEvent(new Event("lose enochian", castTime - 0.06, ()=>{
+					game.castSpell(SkillName.Fire, cap=>{
 						game.loseEnochian();
-					}));
+					}, app=>{});
 				}
 			),
 		]
 	));
 
 	// Transpose
-	skillsList.set(SkillName.Transpose, new Skill(
-		SkillName.Transpose,
-		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_Transpose); },
-		false,
+	skillsList.set(SkillName.Transpose, new Skill(SkillName.Transpose,
 		[
-			new SkillInstance("all",
+			new SkillInstance("any",
 				()=>{
-					return game.cooldowns.stacksAvailable(ResourceType.cd_Transpose) >= 1 && // CD ready
-						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-						(game.getFireStacks() > 0 || game.getIceStacks() > 0); // has UI or AF
+					return game.getFireStacks() > 0 || game.getIceStacks() > 0; // has UI or AF
 				},
 				()=>{
-					game.useInstantSkill(ResourceType.cd_Transpose, 0.1, ()=>{
+					game.useInstantSkill(SkillName.Transpose, ()=>{
 						if (game.getFireStacks()===0 && game.getIceStacks()===0) {
 							controller.log(LogCategory.Event, "transpose failed; AF/UI just fell off", game.time, Color.Error);
 							return;
@@ -153,25 +159,21 @@ export function makeSkillsList(game)
 							af.gain(1);
 						}
 						game.startOrRefreshEnochian();
-					})
+					});
 				}
 			),
 		]
 	));
 
 	// Ley Lines
-	skillsList.set(SkillName.LeyLines, new Skill(
-		SkillName.LeyLines,
-		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_LeyLines); },
-		false,
+	skillsList.set(SkillName.LeyLines, new Skill(SkillName.LeyLines,
 		[
-			new SkillInstance("LL",
+			new SkillInstance("any",
 				()=>{
-					return game.cooldowns.stacksAvailable(ResourceType.cd_LeyLines) >= 1 && // CD ready
-					game.resources.get(ResourceType.NotAnimationLocked).available(1); // not animation locked
+					return true;
 				},
 				()=>{
-					game.useInstantSkill(ResourceType.cd_LeyLines, 0.1, ()=>{
+					game.useInstantSkill(SkillName.LeyLines, ()=>{
 						game.resources.get(ResourceType.LeyLines).gain(1);
 						game.resources.addResourceEvent(
 							ResourceType.LeyLines, "drop LL", 30, rsc=>{ rsc.consume(1); })
@@ -181,9 +183,9 @@ export function makeSkillsList(game)
 		]
 	));
 
-	// Thunder
+	// Thunder 3
 	// called at the time of APPLICATION (not snapshot)
-	let applyThunderDoT = function(game, capturedInitialPotency, capturedTickPotency)
+	let applyThunderDoT = function(game, capturedTickPotency)
 	{
 		// define stuff
 		let recurringThunderTick = (remainingTicks, capturedTickPotency)=>
@@ -192,10 +194,11 @@ export function makeSkillsList(game)
 			game.dealDamage(capturedTickPotency);
 			game.resources.addResourceEvent(
 				ResourceType.ThunderDoT,
-				"recurring thunder tick " + (11-remainingTicks) + "/10", 3, thundercloud=>{
+				"recurring thunder tick " + (11-remainingTicks) + "/10", 3, rsc=>{
 					recurringThunderTick(remainingTicks - 1, capturedTickPotency);
 					if (Math.random() < 0.1) // thundercloud proc
 					{
+						let thundercloud = game.resources.get(ResourceType.Thundercloud);
 						if (thundercloud.available(1)) { // already has a proc; reset its timer
 							thundercloud.overrideTimer(40);
 							controller.log(LogCategory.Event, "Thundercloud proc! overriding an existing one", game.time, Color.Thunder);
@@ -215,26 +218,21 @@ export function makeSkillsList(game)
 			rsc.removeTimer();
 		}
 		// order of events:
-		game.dealDamage(capturedInitialPotency);
 		recurringThunderTick(10, capturedTickPotency);
 	};
-	skillsList.set(SkillName.Thunder3, new Skill(
-		SkillName.Thunder3,
-		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
-		true,
+	skillsList.set(SkillName.Thunder3, new Skill(SkillName.Thunder3,
 		[
 			new SkillInstance(
 				"made instant via thundercloud",
 				()=>{
-					// no need to wait for GCD
-					return game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-						game.resources.get(ResourceType.Thundercloud).available(1); // thundercloud
+					return game.resources.get(ResourceType.Thundercloud).available(1); // thundercloud
 				},
 				()=>{
 					let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
 					let capturedTickPotency = game.captureDamage(Aspect.Other, 35);
-					game.useInstantSkill(ResourceType.cd_GCD, 0.1, ()=>{
-						applyThunderDoT(game, capturedInitialPotency, capturedTickPotency);
+					game.useInstantSkill(SkillName.Thunder3, ()=>{
+						game.dealDamage(capturedInitialPotency);
+						applyThunderDoT(game, capturedTickPotency);
 					});
 					let thundercloud = game.resources.get(ResourceType.Thundercloud);
 					thundercloud.consume(1);
@@ -244,52 +242,28 @@ export function makeSkillsList(game)
 			new SkillInstance(
 				"regular cast",
 				()=>{
-					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
-						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-						game.resources.get(ResourceType.Mana).available(game.captureManaCost(Aspect.Other, 400));
+					return true;
 				},
 				()=>{
-					// similar to but not exactly covered by game.castSpell(...)
-					let [capturedCastTime, capturedRecastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.gcd);
-					let capturedManaCost = game.captureManaCost(Aspect.Other, 400);
-					// lock movement
-					game.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - game.config.slideCastDuration);
-					game.addEvent(new Event("deduct MP, snapshot damage", capturedCastTime - game.config.slideCastDuration, ()=>{
-						game.resources.get(ResourceType.Mana).consume(capturedManaCost); // actually deduct mana
-						let capturedInitialPotency = game.captureDamage(Aspect.Other, 50);
-						let capturedTickPotency = game.captureDamage(Aspect.Other, 35);
-						game.addEvent(new Event(
-							"apply DoT and deal initial damage " + capturedInitialPotency.toFixed(1),
-							game.config.slideCastDuration + 0.1, ()=>{
-								applyThunderDoT(game, capturedInitialPotency, capturedTickPotency);
-							}, Color.Thunder));
-					}));
-
-					// recast
-					game.cooldowns.useStack(ResourceType.cd_GCD);
-					game.cooldowns.setRecastTimeScale(ResourceType.cd_GCD, capturedRecastTimeScale);
-
-					// caster tax
-					game.resources.takeResourceLock(ResourceType.NotAnimationLocked, capturedCastTime + game.config.casterTax);
+					let capturedTickPotency;
+					game.castSpell(SkillName.Thunder3, cap=>{
+						capturedTickPotency = game.captureDamage(Aspect.Lightning, 35);
+					}, app=>{
+						applyThunderDoT(game, capturedTickPotency);
+					});
 				}
 			),
 		]
 	));
 
 	// Manaward
-	skillsList.set(SkillName.Manaward, new Skill(
-		SkillName.Manaward,
-		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_Manaward); },
-		false,
+	skillsList.set(SkillName.Manaward, new Skill(SkillName.Manaward,
 		[
 			new SkillInstance(
 				"any",
+				()=>{ return true; },
 				()=>{
-					return game.cooldowns.stacksAvailable(ResourceType.cd_Manaward) >= 1 && // CD ready
-						game.resources.get(ResourceType.NotAnimationLocked).available(1); // not animation locked
-				},
-				()=>{
-					game.useInstantSkill(ResourceType.cd_Manaward, 0.1, ()=>{
+					game.useInstantSkill(SkillName.Manaward, ()=>{
 						game.resources.get(ResourceType.Manaward).gain(1);
 						game.resources.addResourceEvent(
 							ResourceType.Manaward, "drop Manaward", 20, rsc=>{ rsc.consume(1); })
@@ -300,19 +274,13 @@ export function makeSkillsList(game)
 	));
 
 	// Manafont
-	skillsList.set(SkillName.Manafont, new Skill(
-		SkillName.Manafont,
-		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_Manafont); },
-		false,
+	skillsList.set(SkillName.Manafont, new Skill(SkillName.Manafont,
 		[
 			new SkillInstance(
 				"any",
+				()=>{ return true; },
 				()=>{
-					return game.cooldowns.stacksAvailable(ResourceType.cd_Manafont) >= 1 && // CD ready
-						game.resources.get(ResourceType.NotAnimationLocked).available(1); // not animation locked
-				},
-				()=>{
-					game.useInstantSkill(ResourceType.cd_Manafont, 0.4, ()=>{
+					game.useInstantSkill(SkillName.Manafont, ()=>{
 						game.resources.get(ResourceType.Mana).gain(3000);
 						controller.log(LogCategory.Event, "manafont effect: mana +3000", game.time);
 					}, false);
@@ -322,100 +290,79 @@ export function makeSkillsList(game)
 	));
 
 	// Fire 3
-	skillsList.set(SkillName.Fire3, new Skill(
-		SkillName.Fire3,
-		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
-		true,
+	skillsList.set(SkillName.Fire3, new Skill(SkillName.Fire3,
 		[
 			new SkillInstance("any",
+				()=>{ return true; },
 				()=>{
-					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
-						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-						game.getMP() >= game.captureManaCost(Aspect.Fire, 2000);
-				},
-				()=>{
-					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.longCastTime);
-					let capturedManaCost = game.captureManaCost(Aspect.Fire, 2000);
-					game.castSpell(Aspect.Fire, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 260, capturedManaCost);
-					game.addEvent(new Event("lose all UI and gain full AF; refresh enochian", castTime - 0.06, ()=>{
+					game.castSpell(SkillName.Fire3, cap=>{
 						game.resources.get(ResourceType.UmbralIce).consume(game.resources.get(ResourceType.UmbralIce).currentValue);
 						game.resources.get(ResourceType.AstralFire).gain(3);
 						game.startOrRefreshEnochian();
 						// umbral heart
 						let uh = game.resources.get(ResourceType.UmbralHeart);
-						if (capturedManaCost > 0 && uh.available(1)) {
+						if (cap.capturedManaCost > 0 && uh.available(1)) {
 							uh.consume(1);
 							controller.log(LogCategory.Event, "consume a UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
 						}
-					}, Color.Fire));
+					}, app=>{});
 				}
 			),
 		]
 	));
 
 	// Blizzard 3
-	skillsList.set(SkillName.Blizzard3, new Skill(
-		SkillName.Blizzard3,
-		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
-		true,
+	skillsList.set(SkillName.Blizzard3, new Skill(SkillName.Blizzard3,
 		[
 			new SkillInstance("any",
+				()=>{ return true; },
 				()=>{
-					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
-						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-						game.getMP() >= game.captureManaCost(Aspect.Ice, 800);
-				},
-				()=>{
-					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Ice, game.config.longCastTime);
-					let capturedManaCost = game.captureManaCost(Aspect.Ice, 800);
-					game.castSpell(Aspect.Ice, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 260, capturedManaCost);
-					game.addEvent(new Event("lose all AF and gain full UI; refresh enochian", castTime - 0.06, ()=>{
+					game.castSpell(SkillName.Blizzard3, cap=>{
 						game.resources.get(ResourceType.AstralFire).consume(game.resources.get(ResourceType.AstralFire).currentValue);
 						game.resources.get(ResourceType.UmbralIce).gain(3);
 						game.startOrRefreshEnochian();
-					}, Color.Ice));
+					}, app=>{});
 				}
 			),
 		]
 	));
 
 	// Freeze
-	skillsList.set(SkillName.Freeze, new Skill(
-		SkillName.Freeze,
-		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
-		true,
+	skillsList.set(SkillName.Freeze, new Skill(SkillName.Freeze,
 		[
 			new SkillInstance("any",
 				()=>{
-					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
-						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
-						game.getIceStacks() > 0 && // in UI
-						game.getMP() >= game.captureManaCost(Aspect.Ice, 1000);
+					return game.getIceStacks() > 0; // in UI
 				},
 				()=>{
-					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Ice, game.config.freezeCastTime);
-					let capturedManaCost = game.captureManaCost(Aspect.Ice, 1000);
-					game.castSpell(Aspect.Ice, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 120, capturedManaCost);
-					game.addEvent(new Event("gain full UH stacks via Freeze", castTime - 0.06, ()=>{
+					game.castSpell(SkillName.Freeze, cap=>{
 						game.resources.get(ResourceType.UmbralHeart).gain(3);
-					}, Color.Ice));
+					}, app=>{});
 				}
 			),
 		]
 	));
 
-	skillsList.set(SkillName.Template, new Skill(
-		SkillName.Template,
-		()=>{ return 0 },
-		false,
+	// Flare
+	skillsList.set(SkillName.Flare, new Skill(SkillName.Flare,
 		[
-			new SkillInstance(
-				"(template skill instance)",
+			new SkillInstance("any",
 				()=>{
-					return true;
+					return game.getFireStacks() > 0 && // in AF
+						game.getMP() >= 800; // TODO: is there a minimum?
 				},
 				()=>{
-
+					game.castSpell(SkillName.Flare, cap=>{
+						let uh = game.resources.get(ResourceType.UmbralHeart);
+						let mana = game.resources.get(ResourceType.Mana);
+						let manaCost = uh.available(1) ? mana.currentValue * 2 / 3 : mana.currentValue;
+						// mana
+						game.resources.get(ResourceType.Mana).consume(manaCost);
+						uh.consume(uh.currentValue);
+						// +3 AF; refresh enochian
+						game.resources.get(ResourceType.AstralFire).gain(3);
+						game.startOrRefreshEnochian();
+					}, app=>{});
 				}
 			),
 		]

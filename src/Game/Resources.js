@@ -58,6 +58,8 @@ export class CoolDown extends Resource
 		this.recastTimeScale = 1; // effective for the next stack (i.e. 0.85 if captured LL)
 	}
 	stacksAvailable() { return Math.floor(this.currentValue / this.cdPerStack); }
+	useStack() { this.consume(this.cdPerStack); }
+	setRecastTimeScale(timeScale) { this.recastTimeScale = timeScale; }
 	restore(deltaTime)
 	{
 		let stacksBefore = this.stacksAvailable();
@@ -93,7 +95,7 @@ export class CoolDownState extends Map
 	useStack(cdName)
 	{
 		let cd = this.get(cdName);
-		cd.consume(cd.cdPerStack);
+		cd.useStack();
 	}
 	setRecastTimeScale(cdName, timeScale)
 	{

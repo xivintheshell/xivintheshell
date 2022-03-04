@@ -1,6 +1,6 @@
 import {Aspect, GameConfig, ResourceType} from "./Common"
 import {StatsModifier} from "./Stats";
-import {makeSkillsList} from "./Skills"
+import {makeSkillsList, skillInfos} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
@@ -59,6 +59,7 @@ class GameState
 
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = makeSkillsList(this);
+		this.skillsList.setSkillInfos(skillInfos);
 	}
 
 	init()
@@ -120,8 +121,8 @@ class GameState
 				{
 					if (!e.canceled)
 					{
-						e.effectFn(this);
 						if (e.shouldLog) controller.log(LogCategory.Event, e.name, this.time, e.logColor);
+						e.effectFn(this);
 					}
 					executedEvents++;
 				}
@@ -196,48 +197,67 @@ class GameState
 		return [castTime, mod.spellRecastTimeScale];
 	}
 
-	// number -> ()
 	dealDamage(potency)
 	{
-		// placeholder
-		// console.log("    BOOM! " + potency);
+		controller.log(LogCategory.Event, "dealing damage of potency " + potency.toFixed(1), this.time, Color.Damage);
 	}
 
-	castSpell(aspect, cdName, capturedCastTime, recastTimeScale, damageApplicationDelay, basePotency, capturedManaCost)
+	castSpell(skillName, onCapture, onApplication)
 	{
+		let skillInfo = this.skillsList.get(skillName).info;
+		let cd = this.cooldowns.get(skillInfo.cdName);
+		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, skillInfo.baseCastTime);
+		let capturedManaCost = this.captureManaCost(skillInfo.aspect, skillInfo.baseManaCost);
+
 		// movement lock
 		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - this.config.slideCastDuration);
 
-		// (basically done casting) deduct MP, calc damage, queue actual damage
-		this.addEvent(new Event("deduct MP, snapshot & calc damage", capturedCastTime - this.config.slideCastDuration, ()=>{
+		// (basically done casting) deduct MP, calc damage, queue damage
+		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - this.config.slideCastDuration, ()=>{
 			this.resources.get(ResourceType.Mana).consume(capturedManaCost); // actually deduct mana
-			let capturedDamage = this.captureDamage(aspect, basePotency);
+			let capturedPotency = this.captureDamage(skillInfo.aspect, skillInfo.basePotency);
+			let captureInfo = {
+				capturedManaCost: capturedManaCost
+				//...
+			};
+			onCapture(captureInfo);
+
+			// effect application
 			this.addEvent(new Event(
-				"apply damage after [" + cdName + "]: " + capturedDamage.toFixed(1),
-				this.config.slideCastDuration + damageApplicationDelay,
-				()=>{ this.dealDamage(capturedDamage); }, Color.Damage));
+				skillInfo.name + " applied",
+				this.config.slideCastDuration + skillInfo.damageApplicationDelay,
+				()=>{
+					this.dealDamage(capturedPotency);
+					let applicationInfo = {
+						//...
+					};
+					onApplication(applicationInfo);
+				},
+				Color.Text));
 		}));
 
 		// recast
-		this.cooldowns.useStack(cdName);
-		this.cooldowns.setRecastTimeScale(cdName, recastTimeScale);
+		cd.useStack();
+		cd.setRecastTimeScale(recastTimeScale)
 
 		// caster tax
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, capturedCastTime + this.config.casterTax);
 	}
 
-	useInstantSkill(cdName, effectApplicationDelay, effectFn, shouldLog=true)
+	useInstantSkill(skillName, effectFn)
 	{
-		controller.log(LogCategory.Event,"ability cd [" + cdName + "] used", this.time, Color.Text);
+		let skillInfo = this.skillsList.get(skillName).info;
+		let cd = this.cooldowns.get(skillInfo.cdName);
+
 		let skillEvent = new Event(
-			"apply instant skill effect with cd [" + cdName + "]",
-			effectApplicationDelay,
+			skillInfo.name + " applied",
+			skillInfo.damageApplicationDelay,
 			()=>{ effectFn(); }
-			, Color.Text, shouldLog);
+			, Color.Text);
 		this.addEvent(skillEvent);
 
 		// recast
-		this.cooldowns.useStack(cdName);
+		cd.useStack(); // TODO: might be wrong under LL
 
 		// animation lock
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.animationLock);
@@ -299,10 +319,40 @@ class GameState
 		return Math.max(tillNextSkill, tillNextStack);
 	}
 
+	timeTillSkillAvailable(skillName)
+	{
+		let skill = this.skillsList.get(skillName);
+		let cdName = skill.info.cdName;
+		let tillAnySkill = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
+		let tillNextCDStack = this.cooldowns.timeTillNextStackAvailable(cdName);
+		return Math.max(tillAnySkill, tillNextCDStack);
+	}
+
 	// basically the action when you press down the skill button
 	useSkillIfAvailable(skillName)
 	{
 		let skill = this.skillsList.get(skillName);
+		let timeTillAvailable = this.timeTillSkillAvailable(skill.info.name);
+		let capturedManaCost = skill.info.isSpell ? this.captureManaCost(skill.info.aspect, skill.info.baseManaCost) : 0;
+		if (timeTillAvailable > 0)
+		{
+			controller.log(
+				LogCategory.Skill,
+				skillName + " is not available yet. available in " +
+					timeTillAvailable.toFixed(3) + "s.",
+				this.time,
+				Color.Error);
+			return;
+		}
+		if (capturedManaCost > this.resources.get(ResourceType.Mana).currentValue)
+		{
+			controller.log(
+				LogCategory.Skill,
+				skillName + " is not available yet (not enough MP)",
+				this.time,
+				Color.Error);
+			return;
+		}
 		for (let i = 0; i < skill.instances.length; i++)
 		{
 			if (skill.instances[i].available(this))
@@ -321,13 +371,7 @@ class GameState
 				return;
 			}
 		}
-		let timeTillAvailable = skill.timeTillAvailable();
-		controller.log(
-			LogCategory.Skill,
-			"none of [" + skillName + "] instances are available (nothing happened). available in " +
-			timeTillAvailable.toFixed(3) + "s.",
-			this.time,
-			Color.Error);
+		controller.log(LogCategory.Skill, skillName + " failed (reqs not satisfied)", this.time);
 	}
 
 	toString()
@@ -338,6 +382,7 @@ class GameState
 		s += "UI:\t" + this.resources.get(ResourceType.UmbralIce).currentValue + "\n";
 		s += "UH:\t" + this.resources.get(ResourceType.UmbralHeart).currentValue + "\n";
 		s += "Enochian:\t" + this.resources.get(ResourceType.Enochian).currentValue + "\n";
+		s += "TC:\t" + this.resources.get(ResourceType.Thundercloud).currentValue + "\n";
 		s += "LL:\t" + this.resources.get(ResourceType.LeyLines).currentValue + "\n";
 		s += "Poly:\t" + this.resources.get(ResourceType.Polyglot).currentValue + "\n";
 		s += "GCD:\t" + this.cooldowns.get(ResourceType.cd_GCD).currentValue.toFixed(3) + "\n";

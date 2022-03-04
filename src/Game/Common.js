@@ -5,9 +5,11 @@ export class GameConfig
 		this.casterTax = 0.06;
 		this.slideCastDuration = 0.4;
 		this.animationLock = 0.7;
+		// TODO: get rid of these CD lengths (should be defined elsewhere)
 		this.gcd = 2.5;
 		this.longCastTime = 3.5;
 		this.freezeCastTime = 2.8;
+		this.flareCastTime = 4;
 
 		this.timeTillFirstManaTick = 0.3;
 
@@ -21,6 +23,7 @@ export const Aspect =
 {
 	Fire: "Fire",
 	Ice: "Ice",
+	Lightning: "Lightning",
 	Other: "Other"
 };
 
@@ -36,6 +39,7 @@ export const SkillName =
 	Fire3: "Fire 3",
 	Blizzard3: "Blizzard 3",
 	Freeze: "Freeze",
+	Flare: "Flare", // TODO: available with very little MP left?
 
 	Template: "(template)"
 };
