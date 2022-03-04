@@ -209,7 +209,7 @@ class GameState
 		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - this.config.slideCastDuration);
 
 		// (basically done casting) deduct MP, calc damage, queue actual damage
-		this.addEvent(new Event("deduct MP & calc damage", capturedCastTime - this.config.slideCastDuration, ()=>{
+		this.addEvent(new Event("deduct MP, snapshot & calc damage", capturedCastTime - this.config.slideCastDuration, ()=>{
 			this.resources.get(ResourceType.Mana).consume(capturedManaCost); // actually deduct mana
 			let capturedDamage = this.captureDamage(aspect, basePotency);
 			this.addEvent(new Event(

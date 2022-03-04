@@ -336,7 +336,7 @@ export function makeSkillsList(game)
 				()=>{
 					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Fire, game.config.longCastTime);
 					let capturedManaCost = game.captureManaCost(Aspect.Fire, 2000);
-					game.castSpell(Aspect.Fire, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 240, capturedManaCost);
+					game.castSpell(Aspect.Fire, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 260, capturedManaCost);
 					game.addEvent(new Event("lose all UI and gain full AF; refresh enochian", castTime - 0.06, ()=>{
 						game.resources.get(ResourceType.UmbralIce).consume(game.resources.get(ResourceType.UmbralIce).currentValue);
 						game.resources.get(ResourceType.AstralFire).gain(3);
@@ -348,6 +348,57 @@ export function makeSkillsList(game)
 							controller.log(LogCategory.Event, "consume a UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
 						}
 					}, Color.Fire));
+				}
+			),
+		]
+	));
+
+	// Blizzard 3
+	skillsList.set(SkillName.Blizzard3, new Skill(
+		SkillName.Blizzard3,
+		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
+		true,
+		[
+			new SkillInstance("any",
+				()=>{
+					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
+						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
+						game.getMP() >= game.captureManaCost(Aspect.Ice, 800);
+				},
+				()=>{
+					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Ice, game.config.longCastTime);
+					let capturedManaCost = game.captureManaCost(Aspect.Ice, 800);
+					game.castSpell(Aspect.Ice, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 260, capturedManaCost);
+					game.addEvent(new Event("lose all AF and gain full UI; refresh enochian", castTime - 0.06, ()=>{
+						game.resources.get(ResourceType.AstralFire).consume(game.resources.get(ResourceType.AstralFire).currentValue);
+						game.resources.get(ResourceType.UmbralIce).gain(3);
+						game.startOrRefreshEnochian();
+					}, Color.Ice));
+				}
+			),
+		]
+	));
+
+	// Freeze
+	skillsList.set(SkillName.Freeze, new Skill(
+		SkillName.Freeze,
+		()=>{ return game.timeTillNextUseAvailable(ResourceType.cd_GCD); },
+		true,
+		[
+			new SkillInstance("any",
+				()=>{
+					return game.cooldowns.stacksAvailable(ResourceType.cd_GCD) >= 1 && // CD ready
+						game.resources.get(ResourceType.NotAnimationLocked).available(1) && // not animation locked
+						game.getIceStacks() > 0 && // in UI
+						game.getMP() >= game.captureManaCost(Aspect.Ice, 1000);
+				},
+				()=>{
+					let [castTime, recastTimeScale] = game.captureSpellCastAndRecastTimeScale(Aspect.Ice, game.config.freezeCastTime);
+					let capturedManaCost = game.captureManaCost(Aspect.Ice, 1000);
+					game.castSpell(Aspect.Ice, ResourceType.cd_GCD, castTime, recastTimeScale, 0.1, 120, capturedManaCost);
+					game.addEvent(new Event("gain full UH stacks via Freeze", castTime - 0.06, ()=>{
+						game.resources.get(ResourceType.UmbralHeart).gain(3);
+					}, Color.Ice));
 				}
 			),
 		]

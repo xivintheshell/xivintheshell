@@ -7,6 +7,7 @@ export class GameConfig
 		this.animationLock = 0.7;
 		this.gcd = 2.5;
 		this.longCastTime = 3.5;
+		this.freezeCastTime = 2.8;
 
 		this.timeTillFirstManaTick = 0.3;
 
@@ -33,6 +34,8 @@ export const SkillName =
 	Manafont: "Manafont",
 	LeyLines: "Ley Lines",
 	Fire3: "Fire 3",
+	Blizzard3: "Blizzard 3",
+	Freeze: "Freeze",
 
 	Template: "(template)"
 };
