@@ -63,6 +63,7 @@ export const ResourceType =
 	UmbralIce: "UmbralIce", // [0, 3]
 	UmbralHeart: "UmbralHeart", // [0, 3]
 	Enochian: "Enochian", // [0, 1]
+	Paradox: "Paradox", // [0, 1]
 
 	// buffs & states
 	LeyLines: "LeyLines", // [0, 1]
@@ -72,7 +73,6 @@ export const ResourceType =
 	Thundercloud: "Thundercloud", // [0, 1]
 	ThunderDoT: "ThunderDoT", // [0, 1]
 	Manaward: "Manaward", // [0, 1]
-	Paradox: "Paradox", // [0, 1]
 
 	// special
 	Movement: "Movement", // [0, 1]

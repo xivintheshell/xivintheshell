@@ -30,6 +30,10 @@
 .container {
     margin: 40px;
 }
+.container-narrow {
+    max-width: 960px;
+    margin: 10px auto;
+}
 
 /* Logging */
 
@@ -38,6 +42,7 @@
     text-align: left;
     width: 100%;
     margin-bottom: 10px;
+    padding-bottom: 10px;
     overflow-y: scroll;
 }
 
@@ -55,14 +60,14 @@
 
 /*======== sections ========*/
 
-/* keyboard-controled area */
+/* keyboard-controlled area */
 
 .keyboardControlled {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .keyboardControlled:focus {
-    outline-offset: 3px;
+    outline-offset: 5px;
     outline: mediumpurple solid 2px;
 }
 
@@ -70,28 +75,92 @@
 .timeline {
     border: 1px solid grey;
     width: 100%;
-    height: 240px;
+    height: 340px;
 }
 
 /* playback control */
 
 .playbackControl {
     margin-bottom: 10px;
-    border: 1px solid grey;
     text-align: center;
 }
 
 /* Status display */
 
 .statusDisplay {
+    text-align: center;
+    margin: 10px 0;
+}
+/* resource bar & counter */
+.resourceDisplay {
+    text-align: left;
+    position: relative;
+    display: inline-block;
+    margin-right: 20px;
+}
+.resource {
+    margin-bottom: 4px;
+}
+.resource-name, .resource-value {
+    display: inline-block;
+    height: 100%;
+    vertical-align: center;
+}
+.resource-name {
+    width: 100px;
+    horiz-align: left;
+}
+.resource>.progressBar {
+    width: 100%;
+}
+.resource>.resourceStack {
+    margin-right: 8px;
+}
+.resource-value {
+    width: 60px;
+    margin-left: 6px;
+}
+/* resource stack */
+.resourceStack {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: inline-block;
     border: 1px solid grey;
-    height: 100px;
+    vertical-align: top;
+}
+.resourceStackInner {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 2px;
+    right: 2px;
+    border-radius: inherit;
+}
+
+/* buffs */
+.buffsDisplay {
+    vertical-align: top;
+    display: inline-block;
+}
+.buff {
+    text-align: center;
+    width: 48px;
+    display: inline-block;
+}
+.buff.ThunderDoT {
+    margin-right: 22px;
+}
+.buff>img {
+    display: inline-block;
+    height: 48px;
+    vertical-align: top;
 }
 
 /* Skills window */
 
 .skillsWindow {
-    border: 1px solid grey;
     line-height: 1;
 }
 
@@ -116,4 +185,13 @@
 
 .manualTickSelection {
     display: inline-block;
+}
+
+.progressBar {
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+    border: 1px solid grey;
+    border-radius: 5px;
+    height: 10px;
 }

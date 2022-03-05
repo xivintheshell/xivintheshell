@@ -16,6 +16,7 @@ class Controller
     {
         if (props.deltaTime > 0) {
             game.tick(props.deltaTime);
+            this.log(LogCategory.Action, "fast forward " + props.deltaTime.toFixed(3) + "s", game.time, Color.Grey);
         }
     }
 
@@ -27,13 +28,21 @@ class Controller
     requestFastForward(props)
     {
         let deltaTime = game.timeTillAnySkillAvailable();
-        this.log(LogCategory.Action, "wait for " + deltaTime + "s", game.time, Color.Grey);
-        game.tick(deltaTime);
+        if (deltaTime > 0) {
+            game.tick(deltaTime);
+        }
+        this.log(LogCategory.Action, "wait for " + deltaTime.toFixed(3) + "s", game.time, Color.Grey);
     }
 
     requestUseSkill(props)
     {
         game.useSkillIfAvailable(props.skillName);
+    }
+
+    getResourceStatus(rscType)
+    {
+        let rsc = game.resources.get(rscType);
+        return [rsc.currentValue, rsc.maxValue];
     }
 }
 export const controller = new Controller();

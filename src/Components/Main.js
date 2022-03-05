@@ -19,15 +19,17 @@ export default class Main extends React.Component {
 	}
 	render() {
 		return <div className={"container"}>
-			<div className={"keyboardControlled"}
-				 tabIndex={-1}
-				 onKeyDown={this.boundKeyCapture}>
-				{timeline}
-				{statusDisplay}
-				{skillsWindow}
+			{timeline}
+			<div className={"container-narrow"}>
+				<div className={"keyboardControlled"}
+					 tabIndex={-1}
+					 onKeyDown={this.boundKeyCapture}>
+					{statusDisplay}
+					{skillsWindow}
+				</div>
+				{playbackControl}
+				{logView}
 			</div>
-			{playbackControl}
-			{logView}
 		</div>;
 	}
 }
