@@ -26,11 +26,18 @@
     color: red;
 }
 
+/* Overall */
+.container {
+    margin: 40px;
+}
+
+/* Logging */
+
 .logWindow {
     border: 1px solid grey;
     text-align: left;
     width: 100%;
-    margin: 10px auto;
+    margin-bottom: 10px;
     overflow-y: scroll;
 }
 
@@ -44,4 +51,69 @@
 .logEntry {
     font-family: monospace;
     font-weight: bold;
+}
+
+/*======== sections ========*/
+
+/* keyboard-controled area */
+
+.keyboardControlled {
+    margin-bottom: 20px;
+}
+
+.keyboardControlled:focus {
+    outline-offset: 3px;
+    outline: mediumpurple solid 2px;
+}
+
+/* Timeline */
+.timeline {
+    border: 1px solid grey;
+    width: 100%;
+    height: 240px;
+}
+
+/* playback control */
+
+.playbackControl {
+    margin-bottom: 10px;
+    border: 1px solid grey;
+    text-align: center;
+}
+
+/* Status display */
+
+.statusDisplay {
+    border: 1px solid grey;
+    height: 100px;
+}
+
+/* Skills window */
+
+.skillsWindow {
+    border: 1px solid grey;
+    line-height: 1;
+}
+
+.skillButton {
+    display: inline-block;
+    padding: 2px;
+}
+.skillIcon {
+    width: 48px;
+    height: 48px;
+    vertical-align: top;
+}
+
+/*======== individual elems ========*/
+
+.clickable {
+    display: inline-block;
+}
+.clickable:hover {
+    cursor: pointer;
+}
+
+.manualTickSelection {
+    display: inline-block;
 }

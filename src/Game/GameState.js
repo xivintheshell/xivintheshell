@@ -64,6 +64,9 @@ class GameState
 
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = makeSkillsList(this);
+
+		this.init();
+		console.log(this);
 	}
 
 	init()
@@ -345,23 +348,27 @@ class GameState
 	{
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.info.cdName;
+		let tillNextCDStack = this.cooldowns.timeTillNextStackAvailable(cdName);
+		return Math.max(this.timeTillAnySkillAvailable(), tillNextCDStack);
+	}
+
+	timeTillAnySkillAvailable()
+	{
 		let tillNotAnimationLocked = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
 		let tillNotCasterTaxed = this.resources.timeTillReady(ResourceType.NotCasterTaxed);
-		let tillNextCDStack = this.cooldowns.timeTillNextStackAvailable(cdName);
-		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed, tillNextCDStack);
+		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed);
 	}
 
 	// basically the action when you press down the skill button
 	useSkillIfAvailable(skillName)
 	{
 		let skill = this.skillsList.get(skillName);
-		console.log(skill);
 		let timeTillAvailable = this.timeTillSkillAvailable(skill.info.name);
 		let capturedManaCost = skill.info.isSpell ? this.captureManaCost(skill.info.aspect, skill.info.baseManaCost) : 0;
 		if (timeTillAvailable > 0)
 		{
 			controller.log(
-				LogCategory.Skill,
+				LogCategory.Action,
 				skillName + " is not available yet. available in " +
 					timeTillAvailable.toFixed(3) + "s.",
 				this.time,
@@ -371,7 +378,7 @@ class GameState
 		if (capturedManaCost > this.resources.get(ResourceType.Mana).currentValue)
 		{
 			controller.log(
-				LogCategory.Skill,
+				LogCategory.Action,
 				skillName + " is not available yet (not enough MP)",
 				this.time,
 				Color.Error);
@@ -380,7 +387,7 @@ class GameState
 		 if (skill.available())
 		 {
 			 controller.log(
-				 LogCategory.Skill,
+				 LogCategory.Action,
 				 "use skill [" + skillName + "]",
 				 this.time,
 				 Color.Text);
@@ -392,12 +399,12 @@ class GameState
 			 skill.use(this);
 			 return;
 		 }
-		controller.log(LogCategory.Skill, skillName + " failed (reqs not satisfied)", this.time, Color.Error);
+		controller.log(LogCategory.Action, skillName + " failed (reqs not satisfied)", this.time, Color.Error);
 	}
 
 	toString()
 	{
-		var s = "======== " + this.time.toFixed(3) + "s ========\n";
+		let s = "======== " + this.time.toFixed(3) + "s ========\n";
 		s += "MP:\t" + this.resources.get(ResourceType.Mana).currentValue + "\n";
 		s += "AF:\t" + this.resources.get(ResourceType.AstralFire).currentValue + "\n";
 		s += "UI:\t" + this.resources.get(ResourceType.UmbralIce).currentValue + "\n";
@@ -412,15 +419,4 @@ class GameState
 	}
 }
 
-/*
-Time is automatically advanced untill next available skill time.
-*/
-
-export var game = new GameState(new GameConfig());
-
-export function runTest()
-{
-	game.init();
-	console.log(game);
-	console.log("========");
-}
+export const game = new GameState(new GameConfig());

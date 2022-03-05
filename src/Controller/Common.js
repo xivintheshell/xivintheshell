@@ -1,6 +1,6 @@
 export const LogCategory =
 {
-    Skill: "Skill",
+    Action: "Action",
     Event: "Event",
 }
 

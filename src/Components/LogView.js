@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 import { LogCategory } from "../Controller/Common";
 
 let updateTextFunctions = new Map();
@@ -7,6 +7,7 @@ class UpdatableText extends React.Component
     constructor(props)
     {
         super(props);
+        this.myRef = React.createRef();
         this.state = {
             content: "(empty)"
         };
@@ -15,40 +16,66 @@ class UpdatableText extends React.Component
         };
         updateTextFunctions.set(this.props.name, unboundUpdateContent.bind(this));
     }
-    render()
-    {
-        return(<span>{this.state.content}</span>);
+    scroll() {
+        let cur = this.myRef.current;
+        if (cur) {
+            this.myRef.current.scrollTop = this.myRef.current.scrollHeight;
+        }
+    }
+    componentDidUpdate() {
+        this.scroll();
+    }
+    render() {
+        return(<div ref={this.myRef} className={this.props.className}>{this.state.content}</div>);
     }
 }
-const AlwaysScrollToBottom = () => {
-    const elementRef = useRef();
-    useEffect(() => elementRef.current.scrollIntoView({ behavior: "smooth" }));
-    return <div ref={elementRef} />;
-};
+
+// meh.. for later maybe
+class ScrollAnchor extends React.Component
+{
+    constructor(props)
+    {
+        super(props);
+        this.myRef = React.createRef();
+    }
+    scroll()
+    {
+        console.log(this.myRef);
+        if (this.myRef.current !== null) {
+            this.myRef.current.scrollIntoView({behavior: "smooth"});
+        }
+    }
+    render() {
+        this.scroll();
+        return <div ref={this.myRef}/>;
+    }
+}
 
 export var addLogContent = function(logCategory, newContent, color)
 {
     let [view, content] = this.views.get(logCategory);
-    content.push(<div className={color + " logEntry"} key={content.length}>{newContent}<br/></div>);
+    let newEntry = <div className={color + " logEntry"} key={content.length}>{newContent}<br/></div>;
+    content.push(newEntry);
     let updateFn = updateTextFunctions.get(view.props.name);
-    updateFn(<span>{content.map(s=>{return s})} <AlwaysScrollToBottom/></span>);
+    updateFn(<span>{content.map(s=>{return s})} </span>);
 }
+
 class LogView extends React.Component
 {
     constructor(props)
     {
         super(props);
         this.views = new Map();
-        this.views.set(LogCategory.Skill, [<UpdatableText key={0} name={LogCategory.Skill}/>, []]);
-        this.views.set(LogCategory.Event, [<UpdatableText key={0} name={LogCategory.Event}/>, []]);
+        this.views.set(LogCategory.Action, [<UpdatableText className="logWindow small" key={0} name={LogCategory.Action}/>, []]);
+        this.views.set(LogCategory.Event, [<UpdatableText className="logWindow medium" key={1} name={LogCategory.Event}/>, []]);
 
         addLogContent = addLogContent.bind(this);
     }
     render()
     {
         return(<div>
-            <div className="logWindow small">{this.views.get(LogCategory.Skill)}</div>
-            <div className="logWindow medium">{this.views.get(LogCategory.Event)}</div>
+            {this.views.get(LogCategory.Action)}
+            {this.views.get(LogCategory.Event)}
         </div>);
     }
 }
