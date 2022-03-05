@@ -355,6 +355,7 @@ class GameState
 	useSkillIfAvailable(skillName)
 	{
 		let skill = this.skillsList.get(skillName);
+		console.log(skill);
 		let timeTillAvailable = this.timeTillSkillAvailable(skill.info.name);
 		let capturedManaCost = skill.info.isSpell ? this.captureManaCost(skill.info.aspect, skill.info.baseManaCost) : 0;
 		if (timeTillAvailable > 0)
@@ -376,24 +377,21 @@ class GameState
 				Color.Error);
 			return;
 		}
-		for (let i = 0; i < skill.instances.length; i++)
-		{
-			if (skill.instances[i].available(this))
-			{
-				controller.log(
-					LogCategory.Skill,
-					"use skill [" + skillName + "] - " + skill.instances[i].description,
-					this.time,
-					Color.Text);
-				controller.log(
-					LogCategory.Event,
-					"use skill [" + skillName + "] - " + skill.instances[i].description,
-					this.time,
-					Color.Success);
-				skill.instances[i].use(this);
-				return;
-			}
-		}
+		 if (skill.available())
+		 {
+			 controller.log(
+				 LogCategory.Skill,
+				 "use skill [" + skillName + "]",
+				 this.time,
+				 Color.Text);
+			 controller.log(
+				 LogCategory.Event,
+				 "use skill [" + skillName + "]",
+				 this.time,
+				 Color.Success);
+			 skill.use(this);
+			 return;
+		 }
 		controller.log(LogCategory.Skill, skillName + " failed (reqs not satisfied)", this.time, Color.Error);
 	}
 

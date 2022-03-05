@@ -64,10 +64,11 @@ class SkillInstance
 class Skill
 {
 	// instances : SkillInstance[]
-	constructor(name, instances)
+	constructor(name, requirementFn, effectFn)
 	{
 		this.name = name;
-		this.instances = instances;
+		this.available = requirementFn;
+		this.use = effectFn;
 		this.info = null;
 	}
 }
@@ -93,27 +94,26 @@ export function makeSkillsList(game)
 	const skillsList = new SkillsList(game);
 
 	// Blizzard
-    skillsList.set(SkillName.Blizzard, new Skill(SkillName.Blizzard,
-		[
-			new SkillInstance("any",
-				()=>{ return true; },
-				()=>{
-					if (game.getFireStacks() === 0) // no AF
-					{
-						game.castSpell(SkillName.Blizzard, cap=>{
-							game.resources.get(ResourceType.UmbralIce).gain(1);
-							game.startOrRefreshEnochian();
-						}, app=>{});
-					}
-					else // in AF
-					{
-						game.castSpell(SkillName.Blizzard, cap=>{
-							game.loseEnochian();
-						}, app=>{});
-					}
-				}
-			),
-    	]
+	skillsList.set(SkillName.Blizzard, new Skill(SkillName.Blizzard,
+		() => {
+			return true;
+		},
+		() => {
+			if (game.getFireStacks() === 0) // no AF
+			{
+				game.castSpell(SkillName.Blizzard, cap => {
+					game.resources.get(ResourceType.UmbralIce).gain(1);
+					game.startOrRefreshEnochian();
+				}, app => {
+				});
+			} else // in AF
+			{
+				game.castSpell(SkillName.Blizzard, cap => {
+					game.loseEnochian();
+				}, app => {
+				});
+			}
+		}
 	));
 
 	let gainFirestarterProc = function(game)
@@ -137,85 +137,75 @@ export function makeSkillsList(game)
 
 	// Fire
 	skillsList.set(SkillName.Fire, new Skill(SkillName.Fire,
-		[
-			new SkillInstance("no UI",
-				()=>{ return true; },
-				()=>{
-					if (game.getIceStacks()===0)
-					{
-						game.castSpell(SkillName.Fire, cap=>{
-							game.resources.get(ResourceType.AstralFire).gain(1);
-							game.startOrRefreshEnochian();
-							// umbral heart
-							let uh = game.resources.get(ResourceType.UmbralHeart);
-							if (cap.capturedManaCost > 0 && uh.available(1)) {
-								uh.consume(1);
-								controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
-							}
-						}, app=>{});
+		() => {
+			return true;
+		},
+		() => {
+			if (game.getIceStacks() === 0) {
+				game.castSpell(SkillName.Fire, cap => {
+					game.resources.get(ResourceType.AstralFire).gain(1);
+					game.startOrRefreshEnochian();
+					// umbral heart
+					let uh = game.resources.get(ResourceType.UmbralHeart);
+					if (cap.capturedManaCost > 0 && uh.available(1)) {
+						uh.consume(1);
+						controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
 					}
-					else
-					{
-						game.castSpell(SkillName.Fire, cap=>{
-							game.loseEnochian();
-						}, app=>{});
-					}
-					// firestarter
-					if (Math.random() < 0.4) gainFirestarterProc(game);
-				}
-			),
-		]
+				}, app => {
+				});
+			} else {
+				game.castSpell(SkillName.Fire, cap => {
+					game.loseEnochian();
+				}, app => {
+				});
+			}
+			// firestarter
+			if (Math.random() < 0.4) gainFirestarterProc(game);
+		}
 	));
 
 	// Transpose
 	skillsList.set(SkillName.Transpose, new Skill(SkillName.Transpose,
-		[
-			new SkillInstance("any",
-				()=>{
-					return game.getFireStacks() > 0 || game.getIceStacks() > 0; // has UI or AF
-				},
-				()=>{
-					game.useInstantSkill(SkillName.Transpose, ()=>{
-						if (game.getFireStacks()===0 && game.getIceStacks()===0) {
-							controller.log(LogCategory.Event, "transpose failed; AF/UI just fell off", game.time, Color.Error);
-							return;
-						}
-						let af = game.resources.get(ResourceType.AstralFire);
-						let ui = game.resources.get(ResourceType.UmbralIce);
-						if (game.getFireStacks() > 0) {
-							af.consume(af.currentValue);
-							ui.gain(1);
-						} else {
-							ui.consume(ui.currentValue);
-							af.gain(1);
-						}
-						game.startOrRefreshEnochian();
-					});
+		() => {
+			return game.getFireStacks() > 0 || game.getIceStacks() > 0; // has UI or AF
+		},
+		() => {
+			game.useInstantSkill(SkillName.Transpose, () => {
+				if (game.getFireStacks() === 0 && game.getIceStacks() === 0) {
+					controller.log(LogCategory.Event, "transpose failed; AF/UI just fell off", game.time, Color.Error);
+					return;
 				}
-			),
-		]
+				let af = game.resources.get(ResourceType.AstralFire);
+				let ui = game.resources.get(ResourceType.UmbralIce);
+				if (game.getFireStacks() > 0) {
+					af.consume(af.currentValue);
+					ui.gain(1);
+				} else {
+					ui.consume(ui.currentValue);
+					af.gain(1);
+				}
+				game.startOrRefreshEnochian();
+			});
+		}
 	));
 
 	// Ley Lines
 	skillsList.set(SkillName.LeyLines, new Skill(SkillName.LeyLines,
-		[
-			new SkillInstance("any",
-				()=>{
-					return true;
-				},
-				()=>{
-					game.useInstantSkill(SkillName.LeyLines, ()=>{
-						game.resources.get(ResourceType.LeyLines).gain(1);
-						game.resources.addResourceEvent(
-							ResourceType.LeyLines, "drop LL", 30, rsc=>{ rsc.consume(1); })
+		() => {
+			return true;
+		},
+		() => {
+			game.useInstantSkill(SkillName.LeyLines, () => {
+				game.resources.get(ResourceType.LeyLines).gain(1);
+				game.resources.addResourceEvent(
+					ResourceType.LeyLines, "drop LL", 30, rsc => {
+						rsc.consume(1);
 					});
-				}
-			),
-		]
+			});
+		}
 	));
 
-	let gainThundercloudProc = function(game)
-	{
+	let gainThundercloudProc = function (game) {
 		let thundercloud = game.resources.get(ResourceType.Thundercloud);
 		if (thundercloud.available(1)) { // already has a proc; reset its timer
 			thundercloud.overrideTimer(40);
@@ -223,7 +213,7 @@ export function makeSkillsList(game)
 		} else { // there's currently no proc. gain one.
 			thundercloud.gain(1);
 			controller.log(LogCategory.Event, "Thundercloud proc!", game.time, Color.Thunder);
-			game.resources.addResourceEvent(ResourceType.Thundercloud, "drop thundercloud proc", 40, rsc=>{
+			game.resources.addResourceEvent(ResourceType.Thundercloud, "drop thundercloud proc", 40, rsc => {
 				rsc.consume(1);
 			}, Color.Thunder);
 		}
@@ -258,407 +248,382 @@ export function makeSkillsList(game)
 
 	// Thunder 3
 	skillsList.set(SkillName.Thunder3, new Skill(SkillName.Thunder3,
-		[
-			new SkillInstance("any",
-				()=>{ return true; },
-				()=>{
-					if (game.resources.get(ResourceType.Thundercloud).available(1)) // made instant via thundercloud
-					{
-						let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
-						let capturedTickPotency = game.captureDamage(Aspect.Other, 35);
-						game.useInstantSkill(SkillName.Thunder3, ()=>{
-							game.dealDamage(capturedInitialPotency);
-							applyThunderDoT(game, capturedTickPotency, 10);
-						});
-						let thundercloud = game.resources.get(ResourceType.Thundercloud);
-						thundercloud.consume(1);
-						thundercloud.removeTimer();
-						// if there's a sharpcast stack, consume it and gain (a potentially new) proc
-						let sc = game.resources.get(ResourceType.Sharpcast);
-						if (sc.available(1)) {
-							gainThundercloudProc(game);
-							sc.consume(1);
-							sc.removeTimer();
-						}
-					}
-					else
-					{
-						let capturedTickPotency;
-						game.castSpell(SkillName.Thunder3, cap=>{
-							capturedTickPotency = game.captureDamage(Aspect.Lightning, 35);
-							// if there's a sharpcast stack, consume it and gain (a potentially new) proc
-							let sc = game.resources.get(ResourceType.Sharpcast);
-							if (sc.available(1)) {
-								gainThundercloudProc(game);
-								sc.consume(1);
-								sc.removeTimer();
-							}
-						}, app=>{
-							applyThunderDoT(game, capturedTickPotency, 10);
-						});
-					}
+		() => {
+			return true;
+		},
+		() => {
+			if (game.resources.get(ResourceType.Thundercloud).available(1)) // made instant via thundercloud
+			{
+				let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
+				let capturedTickPotency = game.captureDamage(Aspect.Other, 35);
+				game.useInstantSkill(SkillName.Thunder3, () => {
+					game.dealDamage(capturedInitialPotency);
+					applyThunderDoT(game, capturedTickPotency, 10);
+				});
+				let thundercloud = game.resources.get(ResourceType.Thundercloud);
+				thundercloud.consume(1);
+				thundercloud.removeTimer();
+				// if there's a sharpcast stack, consume it and gain (a potentially new) proc
+				let sc = game.resources.get(ResourceType.Sharpcast);
+				if (sc.available(1)) {
+					gainThundercloudProc(game);
+					sc.consume(1);
+					sc.removeTimer();
 				}
-			)
-		]
+			} else {
+				let capturedTickPotency;
+				game.castSpell(SkillName.Thunder3, cap => {
+					capturedTickPotency = game.captureDamage(Aspect.Lightning, 35);
+					// if there's a sharpcast stack, consume it and gain (a potentially new) proc
+					let sc = game.resources.get(ResourceType.Sharpcast);
+					if (sc.available(1)) {
+						gainThundercloudProc(game);
+						sc.consume(1);
+						sc.removeTimer();
+					}
+				}, app => {
+					applyThunderDoT(game, capturedTickPotency, 10);
+				});
+			}
+		}
 	));
 
 	// Manaward
 	skillsList.set(SkillName.Manaward, new Skill(SkillName.Manaward,
-		[
-			new SkillInstance(
-				"any",
-				()=>{ return true; },
-				()=>{
-					game.useInstantSkill(SkillName.Manaward, ()=>{
-						game.resources.get(ResourceType.Manaward).gain(1);
-						game.resources.addResourceEvent(
-							ResourceType.Manaward, "drop Manaward", 20, rsc=>{ rsc.consume(1); })
-					});
-				}
-			),
-		]
+		() => {
+			return true;
+		},
+		() => {
+			game.useInstantSkill(SkillName.Manaward, () => {
+				game.resources.get(ResourceType.Manaward).gain(1);
+				game.resources.addResourceEvent(
+					ResourceType.Manaward, "drop Manaward", 20, rsc => {
+						rsc.consume(1);
+					})
+			});
+		}
 	));
 
 	// Manafont
 	skillsList.set(SkillName.Manafont, new Skill(SkillName.Manafont,
-		[
-			new SkillInstance(
-				"any",
-				()=>{ return true; },
-				()=>{
-					game.useInstantSkill(SkillName.Manafont, ()=>{
-						game.resources.get(ResourceType.Mana).gain(3000);
-						controller.log(LogCategory.Event, "manafont effect: mana +3000", game.time);
-					}, false);
-				}
-			),
-		]
+		() => {
+			return true;
+		},
+		() => {
+			game.useInstantSkill(SkillName.Manafont, () => {
+				game.resources.get(ResourceType.Mana).gain(3000);
+				controller.log(LogCategory.Event, "manafont effect: mana +3000", game.time);
+			}, false);
+		}
 	));
 
 	// Fire 3
 	skillsList.set(SkillName.Fire3, new Skill(SkillName.Fire3,
-		[
-			new SkillInstance("any",
-				()=>{ return true; },
-				()=>{
-					game.castSpell(SkillName.Fire3, cap=>{
-						game.resources.get(ResourceType.UmbralIce).consume(game.resources.get(ResourceType.UmbralIce).currentValue);
-						game.resources.get(ResourceType.AstralFire).gain(3);
-						game.startOrRefreshEnochian();
-						// umbral heart
-						let uh = game.resources.get(ResourceType.UmbralHeart);
-						if (cap.capturedManaCost > 0 && uh.available(1)) {
-							uh.consume(1);
-							controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
-						}
-					}, app=>{});
-				}
-			),
-		]
+		() => {
+			return true;
+		},
+		() => {
+			let fs = game.resources.get(ResourceType.Firestarter);
+			if (fs.available(1))
+			{
+				controller.log(LogCategory.Event, "F3 made instant via firestarter proc", game.time, Color.Fire);
+				fs.consume(1);
+				let capturedDamage;
+				game.useInstantSkill(SkillName.Fire3, cap => {
+					let skillInfo = game.skillsList.get(SkillName.Fire3).info;
+					capturedDamage = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
+				}, app => {
+					game.dealDamage(capturedDamage);
+				}, false);
+			}
+			else
+			{
+				game.castSpell(SkillName.Fire3, cap => {
+					game.resources.get(ResourceType.UmbralIce).consume(game.resources.get(ResourceType.UmbralIce).currentValue);
+					game.resources.get(ResourceType.AstralFire).gain(3);
+					game.startOrRefreshEnochian();
+					// umbral heart
+					let uh = game.resources.get(ResourceType.UmbralHeart);
+					if (cap.capturedManaCost > 0 && uh.available(1)) {
+						uh.consume(1);
+						controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
+					}
+				}, app => {
+				});
+			}
+		}
 	));
 
 	// Blizzard 3
 	skillsList.set(SkillName.Blizzard3, new Skill(SkillName.Blizzard3,
-		[
-			new SkillInstance("any",
-				()=>{ return true; },
-				()=>{
-					game.castSpell(SkillName.Blizzard3, cap=>{
-						game.resources.get(ResourceType.AstralFire).consume(game.resources.get(ResourceType.AstralFire).currentValue);
-						game.resources.get(ResourceType.UmbralIce).gain(3);
-						game.startOrRefreshEnochian();
-					}, app=>{});
-				}
-			),
-		]
+		() => {
+			return true;
+		},
+		() => {
+			game.castSpell(SkillName.Blizzard3, cap => {
+				game.resources.get(ResourceType.AstralFire).consume(game.resources.get(ResourceType.AstralFire).currentValue);
+				game.resources.get(ResourceType.UmbralIce).gain(3);
+				game.startOrRefreshEnochian();
+			}, app => {
+			});
+		}
 	));
 
 	// Freeze
 	skillsList.set(SkillName.Freeze, new Skill(SkillName.Freeze,
-		[
-			new SkillInstance("any",
-				()=>{
-					return game.getIceStacks() > 0; // in UI
-				},
-				()=>{
-					game.castSpell(SkillName.Freeze, cap=>{
-						game.resources.get(ResourceType.UmbralHeart).gain(3);
-					}, app=>{});
-				}
-			),
-		]
+		() => {
+			return game.getIceStacks() > 0; // in UI
+		},
+		() => {
+			game.castSpell(SkillName.Freeze, cap => {
+				game.resources.get(ResourceType.UmbralHeart).gain(3);
+			}, app => {
+			});
+		}
 	));
 
 	// Flare
 	skillsList.set(SkillName.Flare, new Skill(SkillName.Flare,
-		[
-			new SkillInstance("any",
-				()=>{
-					return game.getFireStacks() > 0 && // in AF
-						game.getMP() >= 800;
-				},
-				()=>{
-					game.castSpell(SkillName.Flare, cap=>{
-						let uh = game.resources.get(ResourceType.UmbralHeart);
-						let mana = game.resources.get(ResourceType.Mana);
-						let manaCost = uh.available(1) ? mana.currentValue * 2 / 3 : mana.currentValue;
-						// mana
-						game.resources.get(ResourceType.Mana).consume(manaCost);
-						uh.consume(uh.currentValue);
-						// +3 AF; refresh enochian
-						game.resources.get(ResourceType.AstralFire).gain(3);
-						game.startOrRefreshEnochian();
-					}, app=>{});
-				}
-			),
-		]
+		() => {
+			return game.getFireStacks() > 0 && // in AF
+				game.getMP() >= 800;
+		},
+		() => {
+			game.castSpell(SkillName.Flare, cap => {
+				let uh = game.resources.get(ResourceType.UmbralHeart);
+				let mana = game.resources.get(ResourceType.Mana);
+				let manaCost = uh.available(1) ? mana.currentValue * 2 / 3 : mana.currentValue;
+				// mana
+				game.resources.get(ResourceType.Mana).consume(manaCost);
+				uh.consume(uh.currentValue);
+				// +3 AF; refresh enochian
+				game.resources.get(ResourceType.AstralFire).gain(3);
+				game.startOrRefreshEnochian();
+			}, app => {
+			});
+		}
 	));
 
 	// Sharpcast
 	skillsList.set(SkillName.Sharpcast, new Skill(SkillName.Sharpcast,
-		[
-			new SkillInstance("any", ()=>{ return true; },
-				()=>{
-					game.useInstantSkill(SkillName.Sharpcast, ()=>{
-						let sc = game.resources.get(ResourceType.Sharpcast);
-						if (sc.available(1)) sc.overrideTimer(30);
-						else { // fresh gain
-							sc.gain(1);
-							game.resources.addResourceEvent(
-								ResourceType.Sharpcast,
-								"drop sharpcast",
-								30,
-								rsc=>{
-									sc.consume(1);
-								}, Color.Text);
-						}
-					});
+		() => {
+			return true;
+		},
+		() => {
+			game.useInstantSkill(SkillName.Sharpcast, () => {
+				let sc = game.resources.get(ResourceType.Sharpcast);
+				if (sc.available(1)) sc.overrideTimer(30);
+				else { // fresh gain
+					sc.gain(1);
+					game.resources.addResourceEvent(
+						ResourceType.Sharpcast,
+						"drop sharpcast",
+						30,
+						rsc => {
+							sc.consume(1);
+						}, Color.Text);
 				}
-			),
-		]
+			});
+		}
 	));
 
 	// Blizzard 4
 	skillsList.set(SkillName.Blizzard4, new Skill(SkillName.Blizzard4,
-		[
-			new SkillInstance("any",
-				()=>{
-					return game.getIceStacks() > 0; // in UI
-				},
-				()=>{
-					game.castSpell(SkillName.Blizzard4, cap=>{
-						game.resources.get(ResourceType.UmbralHeart).gain(3);
-					}, app=>{});
-				}
-			),
-		]
+		() => {
+			return game.getIceStacks() > 0; // in UI
+		},
+		() => {
+			game.castSpell(SkillName.Blizzard4, cap => {
+				game.resources.get(ResourceType.UmbralHeart).gain(3);
+			}, app => {
+			});
+		}
 	));
 
 	// Fire 4
 	skillsList.set(SkillName.Fire4, new Skill(SkillName.Fire4,
-		[
-			new SkillInstance("any",
-				()=>{
-					return game.getFireStacks() > 0; // in AF
-				},
-				()=>{
-					game.castSpell(SkillName.Fire4, cap=>{}, app=>{});
-				}
-			),
-		]
+		() => {
+			return game.getFireStacks() > 0; // in AF
+		},
+		() => {
+			game.castSpell(SkillName.Fire4, cap => {
+			}, app => {
+			});
+		}
 	));
 
 	// Between the Lines
 	skillsList.set(SkillName.BetweenTheLines, new Skill(SkillName.BetweenTheLines,
-		[
-			new SkillInstance("any", ()=>{ return true; },
-				()=>{
-					game.useInstantSkill(SkillName.BetweenTheLines, ()=>{});
-				}
-			),
-		]
+		() => {
+			return true;
+		},
+		() => {
+			game.useInstantSkill(SkillName.BetweenTheLines, () => {
+			});
+		}
 	));
 
 	// Aetherial Manipulation
 	skillsList.set(SkillName.AetherialManipulation, new Skill(SkillName.AetherialManipulation,
-		[
-			new SkillInstance("any", ()=>{ return true; },
-				()=>{
-					game.useInstantSkill(SkillName.AetherialManipulation, ()=>{});
-				}
-			),
-		]
+		() => {
+			return true;
+		},
+		() => {
+			game.useInstantSkill(SkillName.AetherialManipulation, () => {
+			});
+		}
 	));
 
 	// Triplecast
 	skillsList.set(SkillName.Triplecast, new Skill(SkillName.Triplecast,
-		[
-			new SkillInstance("any", ()=>{ return true; },
-				()=>{
-					game.useInstantSkill(SkillName.Triplecast, ()=>{
-						let triple = game.resources.get(ResourceType.Triplecast);
-						if (triple.pendingChange!==null) triple.removeTimer(); // should never need this, but just in case
-						triple.gain(3);
-						game.resources.addResourceEvent(
-							ResourceType.Triplecast,
-							"drop remaining Triple charges", 15, rsc=>{
-								rsc.consume(rsc.currentValue);
-							});
+		() => {
+			return true;
+		},
+		() => {
+			game.useInstantSkill(SkillName.Triplecast, () => {
+				let triple = game.resources.get(ResourceType.Triplecast);
+				if (triple.pendingChange !== null) triple.removeTimer(); // should never need this, but just in case
+				triple.gain(3);
+				game.resources.addResourceEvent(
+					ResourceType.Triplecast,
+					"drop remaining Triple charges", 15, rsc => {
+						rsc.consume(rsc.currentValue);
 					});
-				}
-			),
-		]
+			});
+		}
 	));
 
 	// Foul
 	skillsList.set(SkillName.Foul, new Skill(SkillName.Foul,
-		[
-			new SkillInstance("any", ()=>{
-					return game.resources.get(ResourceType.Polyglot).available(1);
-				},
-				()=>{
-					game.resources.get(ResourceType.Polyglot).consume(1);
-					game.useInstantSkill(SkillName.Foul, ()=>{}, true);
-				}
-			),
-		]
+		() => {
+			return game.resources.get(ResourceType.Polyglot).available(1);
+		},
+		() => {
+			game.resources.get(ResourceType.Polyglot).consume(1);
+			game.useInstantSkill(SkillName.Foul, () => {
+			}, true);
+		}
 	));
 
 	// Despair
 	skillsList.set(SkillName.Despair, new Skill(SkillName.Despair,
-		[
-			new SkillInstance("any",
-				()=>{
-					return game.getFireStacks() > 0 && // in AF
-						game.getMP() >= 800;
-				},
-				()=>{
-					game.castSpell(SkillName.Despair, cap=>{
-						let mana = game.resources.get(ResourceType.Mana);
-						// mana
-						mana.consume(mana.currentValue);
-						// +3 AF; refresh enochian
-						game.resources.get(ResourceType.AstralFire).gain(3);
-						game.startOrRefreshEnochian();
-					}, app=>{});
-				}
-			),
-		]
+		() => {
+			return game.getFireStacks() > 0 && // in AF
+				game.getMP() >= 800;
+		},
+		() => {
+			game.castSpell(SkillName.Despair, cap => {
+				let mana = game.resources.get(ResourceType.Mana);
+				// mana
+				mana.consume(mana.currentValue);
+				// +3 AF; refresh enochian
+				game.resources.get(ResourceType.AstralFire).gain(3);
+				game.startOrRefreshEnochian();
+			}, app => {
+			});
+		}
 	));
 
 	// Umbral Soul
 	skillsList.set(SkillName.UmbralSoul, new Skill(SkillName.UmbralSoul,
-		[
-			new SkillInstance("any", ()=>{ return game.getIceStacks() > 0; },
-				()=>{
-					game.useInstantSkill(SkillName.UmbralSoul, ()=>{
-						game.resources.get(ResourceType.UmbralIce).gain(1);
-						game.resources.get(ResourceType.UmbralHeart).gain(1);
-						game.startOrRefreshEnochian();
-					});
-				}
-			),
-		]
+		() => {
+			return game.getIceStacks() > 0;
+		},
+		() => {
+			game.useInstantSkill(SkillName.UmbralSoul, () => {
+				game.resources.get(ResourceType.UmbralIce).gain(1);
+				game.resources.get(ResourceType.UmbralHeart).gain(1);
+				game.startOrRefreshEnochian();
+			});
+		}
 	));
 
 	// Xenoglossy
 	skillsList.set(SkillName.Xenoglossy, new Skill(SkillName.Xenoglossy,
-		[
-			new SkillInstance("any", ()=>{
-					return game.resources.get(ResourceType.Polyglot).available(1);
-				},
-				()=>{
-					game.resources.get(ResourceType.Polyglot).consume(1);
-					game.useInstantSkill(SkillName.Xenoglossy, ()=>{}, true);
-				}
-			),
-		]
+		() => {
+			return game.resources.get(ResourceType.Polyglot).available(1);
+		},
+		() => {
+			game.resources.get(ResourceType.Polyglot).consume(1);
+			game.useInstantSkill(SkillName.Xenoglossy, () => {
+			}, true);
+		}
 	));
 
 	// High Fire 2
 	skillsList.set(SkillName.HighFire2, new Skill(SkillName.HighFire2,
-		[
-			new SkillInstance("any",
-				()=>{ return true; },
-				()=>{
-					game.castSpell(SkillName.HighFire2, cap=>{
-						game.resources.get(ResourceType.UmbralIce).consume(game.resources.get(ResourceType.UmbralIce).currentValue);
-						game.resources.get(ResourceType.AstralFire).gain(3);
-						game.startOrRefreshEnochian();
-						// umbral heart
-						let uh = game.resources.get(ResourceType.UmbralHeart);
-						if (cap.capturedManaCost > 0 && uh.available(1)) {
-							uh.consume(1);
-							controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
-						}
-					}, app=>{});
+		() => {
+			return true;
+		},
+		() => {
+			game.castSpell(SkillName.HighFire2, cap => {
+				game.resources.get(ResourceType.UmbralIce).consume(game.resources.get(ResourceType.UmbralIce).currentValue);
+				game.resources.get(ResourceType.AstralFire).gain(3);
+				game.startOrRefreshEnochian();
+				// umbral heart
+				let uh = game.resources.get(ResourceType.UmbralHeart);
+				if (cap.capturedManaCost > 0 && uh.available(1)) {
+					uh.consume(1);
+					controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
 				}
-			),
-		]
+			}, app => {
+			});
+		}
 	));
 
 	// High Blizzard 2
 	skillsList.set(SkillName.HighBlizzard2, new Skill(SkillName.HighBlizzard2,
-		[
-			new SkillInstance("any",
-				()=>{ return true; },
-				()=>{
-					game.castSpell(SkillName.Freeze, cap=>{
-						game.resources.get(ResourceType.AstralFire).consume(game.resources.get(ResourceType.AstralFire).currentValue);
-						game.resources.get(ResourceType.UmbralIce).gain(3);
-						game.startOrRefreshEnochian();
-					}, app=>{});
-				}
-			),
-		]
+		() => {
+			return true;
+		},
+		() => {
+			game.castSpell(SkillName.Freeze, cap => {
+				game.resources.get(ResourceType.AstralFire).consume(game.resources.get(ResourceType.AstralFire).currentValue);
+				game.resources.get(ResourceType.UmbralIce).gain(3);
+				game.startOrRefreshEnochian();
+			}, app => {
+			});
+		}
 	));
 
 	// Amplifier
 	skillsList.set(SkillName.Amplifier, new Skill(SkillName.Amplifier,
-		[
-			new SkillInstance("any",
-				()=>{ return true; },
-				()=>{
-					game.useInstantSkill(SkillName.Amplifier, ()=>{
-						game.resources.get(ResourceType.Polyglot).gain(1);
-					});
-				}
-			),
-		]
+		() => {
+			return true;
+		},
+		() => {
+			game.useInstantSkill(SkillName.Amplifier, () => {
+				game.resources.get(ResourceType.Polyglot).gain(1);
+			});
+		}
 	));
 
 	// Paradox
 	skillsList.set(SkillName.Paradox, new Skill(SkillName.Paradox,
-		[
-			new SkillInstance("any",
-				()=>{
-					return game.resources.get(ResourceType.Paradox).available(1);
-				},
-				()=>{
-					game.resources.get(ResourceType.Paradox).consume(1);
-					if (game.getFireStacks() > 0)
+		() => {
+			return game.resources.get(ResourceType.Paradox).available(1);
+		},
+		() => {
+			game.resources.get(ResourceType.Paradox).consume(1);
+			if (game.getFireStacks() > 0) {
+				game.castSpell(SkillName.Paradox, cap => {
+					game.startOrRefreshEnochian();
+					if (Math.random() < 0.4) // firestarter proc
 					{
-						game.castSpell(SkillName.Paradox, cap=>{
-							game.startOrRefreshEnochian();
-							if (Math.random() < 0.4) // firestarter proc
-							{
-								gainFirestarterProc(game);
-							}
-						}, app=>{});
+						gainFirestarterProc(game);
 					}
-					else if (game.getIceStacks() > 0)
-					{
-						game.useInstantSkill(SkillName.Paradox, ()=>{
-							game.startOrRefreshEnochian();
-						}, true);
-					}
-					else
-					{
-						game.castSpell(SkillName.Paradox, cap=>{}, app=>{});
-					}
-				}
-			),
-		]
+				}, app => {
+				});
+			} else if (game.getIceStacks() > 0) {
+				game.useInstantSkill(SkillName.Paradox, () => {
+					game.startOrRefreshEnochian();
+				}, true);
+			} else {
+				game.castSpell(SkillName.Paradox, cap => {
+				}, app => {
+				});
+			}
+		}
 	));
 
 	skillsList.setSkillInfos(skillInfos);
