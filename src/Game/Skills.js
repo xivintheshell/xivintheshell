@@ -28,12 +28,14 @@ const skillInfos = [
 	new SkillInfo(SkillName.Blizzard3, ResourceType.cd_GCD, Aspect.Ice, true, 3.5, 800, 260, 0.1),
 	new SkillInfo(SkillName.Freeze, ResourceType.cd_GCD, Aspect.Ice, true, 2.8, 1000, 120, 0.1),
 	new SkillInfo(SkillName.Flare, ResourceType.cd_GCD, Aspect.Fire, true, 4, 0, 280, 0.1), // mana is handled separately
+
+	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false, 0, 0, 0, 0.1),
 	new SkillInfo(SkillName.Sharpcast, ResourceType.cd_Sharpcast, Aspect.Other, false, 0, 0, 0, 0.1),
 	new SkillInfo(SkillName.Blizzard4, ResourceType.cd_GCD, Aspect.Ice, true, 2.5, 800, 300, 0.1),
 	new SkillInfo(SkillName.Fire4, ResourceType.cd_GCD, Aspect.Fire, true, 2.8, 800, 300, 0.1),
 	new SkillInfo(SkillName.BetweenTheLines, ResourceType.cd_BetweenTheLines, Aspect.Other, false, 0, 0, 0, 0.1),
 	new SkillInfo(SkillName.AetherialManipulation, ResourceType.cd_AetherialManipulation, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.Thunder4, ResourceType.cd_GCD, Aspect.Lightning, true, 2.5, 400, 50, 0.1),
+	//new SkillInfo(SkillName.Thunder4, ResourceType.cd_GCD, Aspect.Lightning, true, 2.5, 400, 50, 0.1),
 	new SkillInfo(SkillName.Triplecast, ResourceType.cd_Triplecast, Aspect.Other, false, 0, 0, 0, 0.1),
 
 	new SkillInfo(SkillName.Foul, ResourceType.cd_GCD, Aspect.Other, true, 0, 0, 560, 0.1),
@@ -41,7 +43,10 @@ const skillInfos = [
 	new SkillInfo(SkillName.UmbralSoul, ResourceType.cd_GCD, Aspect.Ice, true, 0, 0, 0, 0.1),
 	new SkillInfo(SkillName.Xenoglossy, ResourceType.cd_GCD, Aspect.Other, true, 0, 0, 760, 0.1),
 
-	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.HighFire2, ResourceType.cd_GCD, Aspect.Fire, true, 3, 1500, 140, 0.1),
+	new SkillInfo(SkillName.HighBlizzard2, ResourceType.cd_GCD, Aspect.Ice, true, 3, 800, 140, 0.1),
+	new SkillInfo(SkillName.Amplifier, ResourceType.cd_Amplifier, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true, 2.5, 1600, 500, 0.1),
 ];
 
 class SkillInstance
@@ -90,59 +95,73 @@ export function makeSkillsList(game)
 	// Blizzard
     skillsList.set(SkillName.Blizzard, new Skill(SkillName.Blizzard,
 		[
-			new SkillInstance("no AF",
+			new SkillInstance("any",
+				()=>{ return true; },
 				()=>{
-					return game.getFireStacks() === 0 &&
-					game.getMP() >= game.captureManaCost(Aspect.Ice, 400);
-				},
-				()=>{
-					game.castSpell(SkillName.Blizzard, cap=>{
-						game.resources.get(ResourceType.UmbralIce).gain(1);
-						game.startOrRefreshEnochian();
-					}, app=>{});
+					if (game.getFireStacks() === 0) // no AF
+					{
+						game.castSpell(SkillName.Blizzard, cap=>{
+							game.resources.get(ResourceType.UmbralIce).gain(1);
+							game.startOrRefreshEnochian();
+						}, app=>{});
+					}
+					else // in AF
+					{
+						game.castSpell(SkillName.Blizzard, cap=>{
+							game.loseEnochian();
+						}, app=>{});
+					}
 				}
-			),
-			new SkillInstance("in AF",
-				()=>{
-					return game.getFireStacks() > 0;
-				},
-				()=>{
-					game.castSpell(SkillName.Blizzard, cap=>{
-						game.loseEnochian();
-					}, app=>{});
-				},
 			),
     	]
 	));
+
+	let gainFirestarterProc = function(game)
+	{
+		let fs = game.resources.get(ResourceType.Firestarter);
+		if (fs.available(1)) {
+			fs.overrideTimer(30);
+			controller.log(LogCategory.Event,
+				"Firestarter proc! Overriding an existing one",
+				game.time, Color.Fire);
+		} else {
+			fs.gain(1);
+			controller.log(LogCategory.Event,
+				"Firestarter proc!",
+				game.time, Color.Fire);
+			game.resources.addResourceEvent(ResourceType.Firestarter,"drop firestarter proc", 30, rsc=>{
+				rsc.consume(1);
+			}, Color.Fire);
+		}
+	}
 
 	// Fire
 	skillsList.set(SkillName.Fire, new Skill(SkillName.Fire,
 		[
 			new SkillInstance("no UI",
+				()=>{ return true; },
 				()=>{
-					return game.getIceStacks() === 0;
-				},
-				()=>{
-					game.castSpell(SkillName.Fire, cap=>{
-						game.resources.get(ResourceType.AstralFire).gain(1);
-						game.startOrRefreshEnochian();
-						// umbral heart
-						let uh = game.resources.get(ResourceType.UmbralHeart);
-						if (cap.capturedManaCost > 0 && uh.available(1)) {
-							uh.consume(1);
-							controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
-						}
-					}, app=>{});
-				}
-			),
-			new SkillInstance("in UI",
-				()=>{
-					return game.getIceStacks() > 0;
-				},
-				()=>{
-					game.castSpell(SkillName.Fire, cap=>{
-						game.loseEnochian();
-					}, app=>{});
+					if (game.getIceStacks()===0)
+					{
+						game.castSpell(SkillName.Fire, cap=>{
+							game.resources.get(ResourceType.AstralFire).gain(1);
+							game.startOrRefreshEnochian();
+							// umbral heart
+							let uh = game.resources.get(ResourceType.UmbralHeart);
+							if (cap.capturedManaCost > 0 && uh.available(1)) {
+								uh.consume(1);
+								controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
+							}
+						}, app=>{});
+					}
+					else
+					{
+						game.castSpell(SkillName.Fire, cap=>{
+							game.loseEnochian();
+						}, app=>{});
+					}
+					// firestarter
+					if (Math.random() < 0.4) gainFirestarterProc(game);
 				}
 			),
 		]
@@ -240,35 +259,20 @@ export function makeSkillsList(game)
 	// Thunder 3
 	skillsList.set(SkillName.Thunder3, new Skill(SkillName.Thunder3,
 		[
-			new SkillInstance("made instant via thundercloud",
-				()=>{
-					return game.resources.get(ResourceType.Thundercloud).available(1); // thundercloud
-				},
-				()=>{
-					let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
-					let capturedTickPotency = game.captureDamage(Aspect.Other, 35);
-					game.useInstantSkill(SkillName.Thunder3, ()=>{
-						game.dealDamage(capturedInitialPotency);
-						applyThunderDoT(game, capturedTickPotency, 10);
-					});
-					let thundercloud = game.resources.get(ResourceType.Thundercloud);
-					thundercloud.consume(1);
-					thundercloud.removeTimer();
-					// if there's a sharpcast stack, consume it and gain (a potentially new) proc
-					let sc = game.resources.get(ResourceType.Sharpcast);
-					if (sc.available(1)) {
-						gainThundercloudProc(game);
-						sc.consume(1);
-						sc.removeTimer();
-					}
-				}
-			),
-			new SkillInstance("regular cast",
+			new SkillInstance("any",
 				()=>{ return true; },
 				()=>{
-					let capturedTickPotency;
-					game.castSpell(SkillName.Thunder3, cap=>{
-						capturedTickPotency = game.captureDamage(Aspect.Lightning, 35);
+					if (game.resources.get(ResourceType.Thundercloud).available(1)) // made instant via thundercloud
+					{
+						let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
+						let capturedTickPotency = game.captureDamage(Aspect.Other, 35);
+						game.useInstantSkill(SkillName.Thunder3, ()=>{
+							game.dealDamage(capturedInitialPotency);
+							applyThunderDoT(game, capturedTickPotency, 10);
+						});
+						let thundercloud = game.resources.get(ResourceType.Thundercloud);
+						thundercloud.consume(1);
+						thundercloud.removeTimer();
 						// if there's a sharpcast stack, consume it and gain (a potentially new) proc
 						let sc = game.resources.get(ResourceType.Sharpcast);
 						if (sc.available(1)) {
@@ -276,58 +280,25 @@ export function makeSkillsList(game)
 							sc.consume(1);
 							sc.removeTimer();
 						}
-					}, app=>{
-						applyThunderDoT(game, capturedTickPotency, 10);
-					});
-				}
-			),
-		]
-	));
-
-	// Thunder 4 (not used for now)
-	skillsList.set(SkillName.Thunder4, new Skill(SkillName.Thunder4,
-		[
-			new SkillInstance("made instant via thundercloud",
-				()=>{
-					return game.resources.get(ResourceType.Thundercloud).available(1); // thundercloud
-				},
-				()=>{
-					let capturedInitialPotency = game.captureDamage(Aspect.Other, 170);
-					let capturedTickPotency = game.captureDamage(Aspect.Other, 20);
-					game.useInstantSkill(SkillName.Thunder4, ()=>{
-						game.dealDamage(capturedInitialPotency);
-						applyThunderDoT(game, capturedTickPotency, 6);
-					});
-					let thundercloud = game.resources.get(ResourceType.Thundercloud);
-					thundercloud.consume(1);
-					thundercloud.removeTimer();
-					// if there's a sharpcast stack, consume it and gain (a potentially new) proc
-					let sc = game.resources.get(ResourceType.Sharpcast);
-					if (sc.available(1)) {
-						gainThundercloudProc(game);
-						sc.consume(1);
-						sc.removeTimer();
+					}
+					else
+					{
+						let capturedTickPotency;
+						game.castSpell(SkillName.Thunder3, cap=>{
+							capturedTickPotency = game.captureDamage(Aspect.Lightning, 35);
+							// if there's a sharpcast stack, consume it and gain (a potentially new) proc
+							let sc = game.resources.get(ResourceType.Sharpcast);
+							if (sc.available(1)) {
+								gainThundercloudProc(game);
+								sc.consume(1);
+								sc.removeTimer();
+							}
+						}, app=>{
+							applyThunderDoT(game, capturedTickPotency, 10);
+						});
 					}
 				}
-			),
-			new SkillInstance("regular cast",
-				()=>{ return true; },
-				()=>{
-					let capturedTickPotency;
-					game.castSpell(SkillName.Thunder4, cap=>{
-						capturedTickPotency = game.captureDamage(Aspect.Lightning, 20);
-						// if there's a sharpcast stack, consume it and gain (a potentially new) proc
-						let sc = game.resources.get(ResourceType.Sharpcast);
-						if (sc.available(1)) {
-							gainThundercloudProc(game);
-							sc.consume(1);
-							sc.removeTimer();
-						}
-					}, app=>{
-						applyThunderDoT(game, capturedTickPotency, 6);
-					});
-				}
-			),
+			)
 		]
 	));
 
@@ -599,6 +570,92 @@ export function makeSkillsList(game)
 				()=>{
 					game.resources.get(ResourceType.Polyglot).consume(1);
 					game.useInstantSkill(SkillName.Xenoglossy, ()=>{}, true);
+				}
+			),
+		]
+	));
+
+	// High Fire 2
+	skillsList.set(SkillName.HighFire2, new Skill(SkillName.HighFire2,
+		[
+			new SkillInstance("any",
+				()=>{ return true; },
+				()=>{
+					game.castSpell(SkillName.HighFire2, cap=>{
+						game.resources.get(ResourceType.UmbralIce).consume(game.resources.get(ResourceType.UmbralIce).currentValue);
+						game.resources.get(ResourceType.AstralFire).gain(3);
+						game.startOrRefreshEnochian();
+						// umbral heart
+						let uh = game.resources.get(ResourceType.UmbralHeart);
+						if (cap.capturedManaCost > 0 && uh.available(1)) {
+							uh.consume(1);
+							controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
+						}
+					}, app=>{});
+				}
+			),
+		]
+	));
+
+	// High Blizzard 2
+	skillsList.set(SkillName.HighBlizzard2, new Skill(SkillName.HighBlizzard2,
+		[
+			new SkillInstance("any",
+				()=>{ return true; },
+				()=>{
+					game.castSpell(SkillName.Freeze, cap=>{
+						game.resources.get(ResourceType.AstralFire).consume(game.resources.get(ResourceType.AstralFire).currentValue);
+						game.resources.get(ResourceType.UmbralIce).gain(3);
+						game.startOrRefreshEnochian();
+					}, app=>{});
+				}
+			),
+		]
+	));
+
+	// Amplifier
+	skillsList.set(SkillName.Amplifier, new Skill(SkillName.Amplifier,
+		[
+			new SkillInstance("any",
+				()=>{ return true; },
+				()=>{
+					game.useInstantSkill(SkillName.Amplifier, ()=>{
+						game.resources.get(ResourceType.Polyglot).gain(1);
+					});
+				}
+			),
+		]
+	));
+
+	// Paradox
+	skillsList.set(SkillName.Paradox, new Skill(SkillName.Paradox,
+		[
+			new SkillInstance("any",
+				()=>{
+					return game.resources.get(ResourceType.Paradox).available(1);
+				},
+				()=>{
+					game.resources.get(ResourceType.Paradox).consume(1);
+					if (game.getFireStacks() > 0)
+					{
+						game.castSpell(SkillName.Paradox, cap=>{
+							game.startOrRefreshEnochian();
+							if (Math.random() < 0.4) // firestarter proc
+							{
+								gainFirestarterProc(game);
+							}
+						}, app=>{});
+					}
+					else if (game.getIceStacks() > 0)
+					{
+						game.useInstantSkill(SkillName.Paradox, ()=>{
+							game.startOrRefreshEnochian();
+						}, true);
+					}
+					else
+					{
+						game.castSpell(SkillName.Paradox, cap=>{}, app=>{});
+					}
 				}
 			),
 		]

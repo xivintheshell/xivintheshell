@@ -90,6 +90,10 @@ class App extends React.Component {
 				<SkillButton skillName={SkillName.Despair} />
 				<SkillButton skillName={SkillName.UmbralSoul} />
 				<SkillButton skillName={SkillName.Xenoglossy} />
+				<SkillButton skillName={SkillName.HighFire2} />
+				<SkillButton skillName={SkillName.HighBlizzard2} />
+				<SkillButton skillName={SkillName.Amplifier} />
+				<SkillButton skillName={SkillName.Paradox} />
 				{logView}
 			</div>
 		);
