@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/ffxiv-blm-rotation/static/css/main.ca1b24fc.css",
-    "main.js": "/ffxiv-blm-rotation/static/js/main.81fedb12.js",
+    "main.js": "/ffxiv-blm-rotation/static/js/main.c23ac37e.js",
     "index.html": "/ffxiv-blm-rotation/index.html",
     "main.ca1b24fc.css.map": "/ffxiv-blm-rotation/static/css/main.ca1b24fc.css.map",
-    "main.81fedb12.js.map": "/ffxiv-blm-rotation/static/js/main.81fedb12.js.map"
+    "main.c23ac37e.js.map": "/ffxiv-blm-rotation/static/js/main.c23ac37e.js.map"
   },
   "entrypoints": [
     "static/css/main.ca1b24fc.css",
-    "static/js/main.81fedb12.js"
+    "static/js/main.c23ac37e.js"
   ]
 }
