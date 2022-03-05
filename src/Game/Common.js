@@ -44,8 +44,14 @@ export const SkillName =
 	AetherialManipulation: "Aetherial Manipulation",
 	Thunder4: "Thunder 4",
 	Triplecast: "Triplecast",
-
-	Template: "(template)"
+	Foul: "Foul",
+	Despair: "Despair",
+	UmbralSoul: "Umbral Soul",
+	Xenoglossy: "Xenoglossy",
+	HighFire2: "High Fire 2",
+	HighBlizzard2: "High Blizzard 2",
+	Amplifier: "Amplifier",
+	Paradox: "Paradox",
 };
 
 export const ResourceType =

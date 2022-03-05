@@ -1,6 +1,6 @@
 import {Aspect, GameConfig, ResourceType} from "./Common"
 import {StatsModifier} from "./Stats";
-import {makeSkillsList, skillInfos} from "./Skills"
+import {makeSkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
@@ -63,7 +63,7 @@ class GameState
 		this.eventsQueue = [];
 
 		// SKILLS (instantiated once, read-only later)
-		this.skillsList = makeSkillsList(this, skillInfos);
+		this.skillsList = makeSkillsList(this);
 	}
 
 	init()
@@ -215,7 +215,8 @@ class GameState
 		let takeEffect = function(game, additionalDelay)
 		{
 			game.resources.get(ResourceType.Mana).consume(capturedManaCost); // actually deduct mana
-			controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.time);
+			if (capturedManaCost > 0)
+				controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.time);
 			let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 			let captureInfo = {
 				capturedManaCost: capturedManaCost
@@ -273,15 +274,19 @@ class GameState
 		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
 	}
 
-	useInstantSkill(skillName, effectFn)
+	useInstantSkill(skillName, effectFn, dealDamage=false)
 	{
 		let skillInfo = this.skillsList.get(skillName).info;
 		let cd = this.cooldowns.get(skillInfo.cdName);
+		let capturedDamage = dealDamage ? this.captureDamage(skillInfo.aspect, skillInfo.basePotency) : 0;
 
 		let skillEvent = new Event(
 			skillInfo.name + " applied",
 			skillInfo.damageApplicationDelay,
-			()=>{ effectFn(); }
+			()=>{
+				if (dealDamage) this.dealDamage(capturedDamage);
+				effectFn();
+			}
 			, Color.Text);
 		this.addEvent(skillEvent);
 

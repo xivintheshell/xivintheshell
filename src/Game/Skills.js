@@ -17,7 +17,7 @@ class SkillInfo
 	}
 }
 
-export const skillInfos = [
+const skillInfos = [
 	new SkillInfo(SkillName.Blizzard, ResourceType.cd_GCD, Aspect.Ice, true, 2.5, 400, 180, 0.1),
 	new SkillInfo(SkillName.Fire, ResourceType.cd_GCD, Aspect.Fire, true, 2.5, 800, 180, 0.1),
 	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false, 0, 0, 0, 0.1),
@@ -35,6 +35,11 @@ export const skillInfos = [
 	new SkillInfo(SkillName.AetherialManipulation, ResourceType.cd_AetherialManipulation, Aspect.Other, false, 0, 0, 0, 0.1),
 	new SkillInfo(SkillName.Thunder4, ResourceType.cd_GCD, Aspect.Lightning, true, 2.5, 400, 50, 0.1),
 	new SkillInfo(SkillName.Triplecast, ResourceType.cd_Triplecast, Aspect.Other, false, 0, 0, 0, 0.1),
+
+	new SkillInfo(SkillName.Foul, ResourceType.cd_GCD, Aspect.Other, true, 0, 0, 560, 0.1),
+	new SkillInfo(SkillName.Despair, ResourceType.cd_GCD, Aspect.Fire, true, 3, 0, 340, 0.1),
+	new SkillInfo(SkillName.UmbralSoul, ResourceType.cd_GCD, Aspect.Ice, true, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Xenoglossy, ResourceType.cd_GCD, Aspect.Other, true, 0, 0, 760, 0.1),
 
 	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false, 0, 0, 0, 0.1),
 ];
@@ -78,7 +83,7 @@ class SkillsList extends Map
 	}
 }
 
-export function makeSkillsList(game, infos)
+export function makeSkillsList(game)
 {
 	const skillsList = new SkillsList(game);
 
@@ -125,7 +130,7 @@ export function makeSkillsList(game, infos)
 						let uh = game.resources.get(ResourceType.UmbralHeart);
 						if (cap.capturedManaCost > 0 && uh.available(1)) {
 							uh.consume(1);
-							controller.log(LogCategory.Event, "consume a UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
+							controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
 						}
 					}, app=>{});
 				}
@@ -373,7 +378,7 @@ export function makeSkillsList(game, infos)
 						let uh = game.resources.get(ResourceType.UmbralHeart);
 						if (cap.capturedManaCost > 0 && uh.available(1)) {
 							uh.consume(1);
-							controller.log(LogCategory.Event, "consume a UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
+							controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
 						}
 					}, app=>{});
 				}
@@ -534,7 +539,71 @@ export function makeSkillsList(game, infos)
 		]
 	));
 
-	skillsList.setSkillInfos(infos);
+	// Foul
+	skillsList.set(SkillName.Foul, new Skill(SkillName.Foul,
+		[
+			new SkillInstance("any", ()=>{
+					return game.resources.get(ResourceType.Polyglot).available(1);
+				},
+				()=>{
+					game.resources.get(ResourceType.Polyglot).consume(1);
+					game.useInstantSkill(SkillName.Foul, ()=>{}, true);
+				}
+			),
+		]
+	));
 
+	// Despair
+	skillsList.set(SkillName.Despair, new Skill(SkillName.Despair,
+		[
+			new SkillInstance("any",
+				()=>{
+					return game.getFireStacks() > 0 && // in AF
+						game.getMP() >= 800;
+				},
+				()=>{
+					game.castSpell(SkillName.Despair, cap=>{
+						let mana = game.resources.get(ResourceType.Mana);
+						// mana
+						mana.consume(mana.currentValue);
+						// +3 AF; refresh enochian
+						game.resources.get(ResourceType.AstralFire).gain(3);
+						game.startOrRefreshEnochian();
+					}, app=>{});
+				}
+			),
+		]
+	));
+
+	// Umbral Soul
+	skillsList.set(SkillName.UmbralSoul, new Skill(SkillName.UmbralSoul,
+		[
+			new SkillInstance("any", ()=>{ return game.getIceStacks() > 0; },
+				()=>{
+					game.useInstantSkill(SkillName.UmbralSoul, ()=>{
+						game.resources.get(ResourceType.UmbralIce).gain(1);
+						game.resources.get(ResourceType.UmbralHeart).gain(1);
+						game.startOrRefreshEnochian();
+					});
+				}
+			),
+		]
+	));
+
+	// Xenoglossy
+	skillsList.set(SkillName.Xenoglossy, new Skill(SkillName.Xenoglossy,
+		[
+			new SkillInstance("any", ()=>{
+					return game.resources.get(ResourceType.Polyglot).available(1);
+				},
+				()=>{
+					game.resources.get(ResourceType.Polyglot).consume(1);
+					game.useInstantSkill(SkillName.Xenoglossy, ()=>{}, true);
+				}
+			),
+		]
+	));
+
+	skillsList.setSkillInfos(skillInfos);
 	return skillsList;
 }
