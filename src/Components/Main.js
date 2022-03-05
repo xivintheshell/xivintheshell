@@ -1,8 +1,8 @@
 import React from 'react';
-import { SkillName } from './Game/Common';
-import { game, runTest } from './Game/GameState';
-import { logView } from "./Components/LogView";
-import './App.css';
+import { LogCategory } from "../Controller/Common";
+import { SkillName } from '../Game/Common';
+import { game, runTest } from '../Game/GameState';
+import { logView } from "./LogView";
 
 class DebugTick extends React.Component {
 	constructor(props) {
@@ -33,7 +33,7 @@ class DebugTick extends React.Component {
 			<div className="footer">
 				{form}
 			</div>
-	)}
+		)}
 }
 
 class SkillButton extends React.Component
@@ -56,7 +56,7 @@ class SkillButton extends React.Component
 	}
 }
 
-class App extends React.Component {
+export default class Main extends React.Component {
 
 	constructor(props)
 	{
@@ -99,5 +99,3 @@ class App extends React.Component {
 		);
 	}
 }
-
-export default App;

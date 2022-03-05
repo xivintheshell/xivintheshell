@@ -1,9 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { LogCategory } from "../Controller/Common";
 
-import "./LogView.css"
-import "./Color.css"
-
 let updateTextFunctions = new Map();
 class UpdatableText extends React.Component
 {
@@ -32,7 +29,7 @@ const AlwaysScrollToBottom = () => {
 export var addLogContent = function(logCategory, newContent, color)
 {
     let [view, content] = this.views.get(logCategory);
-    content.push(<span className={color} key={content.length}>{newContent}<br/></span>);
+    content.push(<div className={color + " logEntry"} key={content.length}>{newContent}<br/></div>);
     let updateFn = updateTextFunctions.get(view.props.name);
     updateFn(<span>{content.map(s=>{return s})} <AlwaysScrollToBottom/></span>);
 }
@@ -50,8 +47,8 @@ class LogView extends React.Component
     render()
     {
         return(<div>
-            <div className="LogWindow">{this.views.get(LogCategory.Skill)}</div>
-            <div className="LogWindow">{this.views.get(LogCategory.Event)}</div>
+            <div className="logWindow small">{this.views.get(LogCategory.Skill)}</div>
+            <div className="logWindow medium">{this.views.get(LogCategory.Event)}</div>
         </div>);
     }
 }

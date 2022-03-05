@@ -25,3 +25,23 @@
 .errorColor {
     color: red;
 }
+
+.logWindow {
+    border: 1px solid grey;
+    text-align: left;
+    width: 100%;
+    margin: 10px auto;
+    overflow-y: scroll;
+}
+
+.logWindow.small {
+    height: 100px;
+}
+.logWindow.medium {
+    height: 400px;
+}
+
+.logEntry {
+    font-family: monospace;
+    font-weight: bold;
+}

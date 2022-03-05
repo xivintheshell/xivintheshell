@@ -56,19 +56,19 @@ export const SkillName =
 
 export const ResourceType =
 {
-	// hard resources
+	// job resources
 	Mana: "Mana", // [0, 10000]
 	Polyglot: "Polyglot", // [0, 2]
 	AstralFire: "AstralFire", // [0, 3]
 	UmbralIce: "UmbralIce", // [0, 3]
 	UmbralHeart: "UmbralHeart", // [0, 3]
+	Enochian: "Enochian", // [0, 1]
+	Paradox: "Paradox", // [0, 1]
 
-	// binaries (buffs & states)
+	// buffs & states
 	LeyLines: "LeyLines", // [0, 1]
 	Sharpcast: "Sharpcast", // [0, 1]
 	Triplecast: "Triplecast", // [0, 3]
-	Enochian: "Enochian", // [0, 1]
-	Paradox: "Paradox", // [0, 1]
 	Firestarter: "Firestarter", // [0, 1]
 	Thundercloud: "Thundercloud", // [0, 1]
 	ThunderDoT: "ThunderDoT", // [0, 1]
