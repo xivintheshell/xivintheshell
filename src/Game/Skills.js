@@ -78,7 +78,7 @@ class SkillsList extends Map
 	}
 }
 
-export function makeSkillsList(game)
+export function makeSkillsList(game, infos)
 {
 	const skillsList = new SkillsList(game);
 
@@ -279,7 +279,7 @@ export function makeSkillsList(game)
 		]
 	));
 
-	// Thunder 4
+	// Thunder 4 (not used for now)
 	skillsList.set(SkillName.Thunder4, new Skill(SkillName.Thunder4,
 		[
 			new SkillInstance("made instant via thundercloud",
@@ -533,6 +533,8 @@ export function makeSkillsList(game)
 			),
 		]
 	));
+
+	skillsList.setSkillInfos(infos);
 
 	return skillsList;
 }

@@ -36,6 +36,7 @@ class GameState
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
+		this.resources.set(ResourceType.NotCasterTaxed, new Resource(ResourceType.NotCasterTaxed, 1, 1));
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
@@ -62,8 +63,7 @@ class GameState
 		this.eventsQueue = [];
 
 		// SKILLS (instantiated once, read-only later)
-		this.skillsList = makeSkillsList(this);
-		this.skillsList.setSkillInfos(skillInfos);
+		this.skillsList = makeSkillsList(this, skillInfos);
 	}
 
 	init()
@@ -215,6 +215,7 @@ class GameState
 		let takeEffect = function(game, additionalDelay)
 		{
 			game.resources.get(ResourceType.Mana).consume(capturedManaCost); // actually deduct mana
+			controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.time);
 			let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 			let captureInfo = {
 				capturedManaCost: capturedManaCost
@@ -224,7 +225,7 @@ class GameState
 
 			// effect application
 			game.addEvent(new Event(
-				skillInfo.name + " applied and cost " + capturedManaCost + "MP",
+				skillInfo.name + " applied",
 				additionalDelay + skillInfo.damageApplicationDelay,
 				()=>{
 					game.dealDamage(capturedPotency);
@@ -269,7 +270,7 @@ class GameState
 		cd.setRecastTimeScale(recastTimeScale)
 
 		// caster tax
-		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, capturedCastTime + this.config.casterTax);
+		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
 	}
 
 	useInstantSkill(skillName, effectFn)
@@ -337,12 +338,12 @@ class GameState
 
 	timeTillSkillAvailable(skillName)
 	{
-		// TODO: should also wait until next casting ends (make caster tax separate from animation lock?)
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.info.cdName;
-		let tillAnySkill = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
+		let tillNotAnimationLocked = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
+		let tillNotCasterTaxed = this.resources.timeTillReady(ResourceType.NotCasterTaxed);
 		let tillNextCDStack = this.cooldowns.timeTillNextStackAvailable(cdName);
-		return Math.max(tillAnySkill, tillNextCDStack);
+		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed, tillNextCDStack);
 	}
 
 	// basically the action when you press down the skill button

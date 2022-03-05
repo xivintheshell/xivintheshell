@@ -68,8 +68,11 @@ export const ResourceType =
 	ThunderDoT: "ThunderDoT", // [0, 1]
 	Manaward: "Manaward", // [0, 1]
 
+	// special
 	Movement: "Movement", // [0, 1]
 	NotAnimationLocked: "NotAnimationLocked", // [0, 1]
+	NotCasterTaxed: "NotCasterTaxed", // [0, 1]
+
 	// oGCDs
 	cd_GCD: "cd_GCD", // [0, Constant.gcd]
 	cd_Transpose: "cd_Transpose", // [0, 1x]
