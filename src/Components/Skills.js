@@ -3,6 +3,39 @@ import {Clickable} from "./Common";
 import {SkillName} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 
+export let displayedSkills = [
+	SkillName.Blizzard,
+	SkillName.Fire,
+	SkillName.Transpose,
+	SkillName.Thunder3,
+	SkillName.Manaward,
+	SkillName.Manafont,
+	SkillName.Fire3,
+	SkillName.Blizzard3,
+	SkillName.Freeze,
+	SkillName.Flare,
+	SkillName.LeyLines,
+	SkillName.Sharpcast,
+	SkillName.Blizzard4,
+	SkillName.Fire4,
+	SkillName.BetweenTheLines,
+	SkillName.AetherialManipulation,
+	SkillName.Triplecast,
+	SkillName.Foul,
+	SkillName.Despair,
+	SkillName.UmbralSoul,
+	SkillName.Xenoglossy,
+	SkillName.HighFire2,
+	SkillName.HighBlizzard2,
+	SkillName.Amplifier,
+	SkillName.Paradox,
+	SkillName.Addle,
+	SkillName.Swiftcast,
+	SkillName.LucidDreaming,
+	SkillName.Surecast,
+	SkillName.Tincture
+];
+
 const skillIcons = new Map();
 skillIcons.set(SkillName.Blizzard, require("./Asset/blizzard.png"));
 skillIcons.set(SkillName.Fire, require("./Asset/fire.png"));
@@ -35,60 +68,83 @@ skillIcons.set(SkillName.LucidDreaming, require("./Asset/lucidDreaming.png"));
 skillIcons.set(SkillName.Surecast, require("./Asset/surecast.png"));
 skillIcons.set(SkillName.Tincture, require("./Asset/tincture.png"));
 
-class SkillButton extends React.Component
-{
+let setSkillInfoText = (text)=>{};
+class SkillInfoText extends React.Component {
 	constructor(props) {
 		super(props);
-		this.skillName = props.skillName;
-		this.state = {timesClicked: 0};
+		setSkillInfoText = this.setContent.bind(this);
+		this.state = {
+			content: "n/a"
+		}
 	}
-	render()
-	{
-		let iconPath = skillIcons.get(this.skillName);
-		let icon = <div className={"skillIcon"}><img src={iconPath} alt={this.skillName}/></div>;
-		return <span className={"skillButton"}>
+	setContent(newContent) {
+		this.setState({content: newContent});
+	}
+	render() { return <div className={"skillInfoText"}>
+		{this.state.content}
+	</div> }
+}
+
+class SkillButton extends React.Component {
+	constructor(props) {
+		super(props);
+		this.boundHandleMouseEnter = this.handleMouseEnter.bind(this);
+	}
+	handleMouseEnter(evt) {
+		let info = controller.getSkillInfo({skillName: this.props.skillName});
+
+		let s = this.props.skillName + ": ";
+		if (info.ready) s += "ready";
+		else if (info.timeTillAvailable <= 0) {
+			s += " skill requirement(s) not satisfied";
+		} else {
+			s += "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (CD ready in " + info.cdReadyCountdown.toFixed(2) + ")";
+		}
+		setSkillInfoText(s);
+	}
+	render() {
+		let iconPath = skillIcons.get(this.props.skillName);
+		let icon = <div onMouseEnter={this.boundHandleMouseEnter} className={"skillIcon" + (this.props.ready ? "" : " notReady")}><img src={iconPath} alt={this.props.skillName}/></div>;
+		return <span title={this.skillName} className={"skillButton"}>
 			<Clickable onClickFn={()=>{
-				controller.requestUseSkill({skillName: this.skillName});
+				controller.requestUseSkill({skillName: this.props.skillName});
 			}} content={icon}/>
 		</span>
 	}
 }
 
-class SkillsWindow extends React.Component
-{
-	render()
-	{
+export let updateSkillButtons = (statusList)=>{ console.log("umm") }
+class SkillsWindow extends React.Component {
+	constructor(props) {
+		super(props);
+		updateSkillButtons = this.unboundUpdateFn.bind(this);
+		//controller.updateSkillButtons();
+		this.state = {
+			statusList: displayedSkills.map(sn=>{
+				return controller.getSkillInfo({skillName: sn});
+			}),
+		}
+	}
+	unboundUpdateFn(statusList) {
+		this.setState({statusList: statusList});
+	}
+	render() {
+
+		let skillButtons = [];
+		for (let i = 0; i < displayedSkills.length; i++) {
+			let btn = <SkillButton
+				key={i}
+				skillName={displayedSkills[i]}
+				ready={this.state.statusList[i].ready}
+				/>
+			skillButtons.push(btn);
+		}
+
 		return <div className={"skillsWindow"}>
-			<SkillButton skillName={SkillName.Blizzard} />
-			<SkillButton skillName={SkillName.Fire} />
-			<SkillButton skillName={SkillName.Transpose} />
-			<SkillButton skillName={SkillName.Thunder3} />
-			<SkillButton skillName={SkillName.Manaward} />
-			<SkillButton skillName={SkillName.Manafont} />
-			<SkillButton skillName={SkillName.Fire3} />
-			<SkillButton skillName={SkillName.Blizzard3} />
-			<SkillButton skillName={SkillName.Freeze} />
-			<SkillButton skillName={SkillName.Flare} />
-			<SkillButton skillName={SkillName.LeyLines} />
-			<SkillButton skillName={SkillName.Sharpcast} />
-			<SkillButton skillName={SkillName.Blizzard4} />
-			<SkillButton skillName={SkillName.Fire4} />
-			<SkillButton skillName={SkillName.BetweenTheLines} />
-			<SkillButton skillName={SkillName.AetherialManipulation} />
-			<SkillButton skillName={SkillName.Triplecast} />
-			<SkillButton skillName={SkillName.Foul} />
-			<SkillButton skillName={SkillName.Despair} />
-			<SkillButton skillName={SkillName.UmbralSoul} />
-			<SkillButton skillName={SkillName.Xenoglossy} />
-			<SkillButton skillName={SkillName.HighFire2} />
-			<SkillButton skillName={SkillName.HighBlizzard2} />
-			<SkillButton skillName={SkillName.Amplifier} />
-			<SkillButton skillName={SkillName.Paradox} />
-			<SkillButton skillName={SkillName.Addle} />
-			<SkillButton skillName={SkillName.Swiftcast} />
-			<SkillButton skillName={SkillName.LucidDreaming} />
-			<SkillButton skillName={SkillName.Surecast} />
-			<SkillButton skillName={SkillName.Tincture} />
+			<SkillInfoText/>
+			<div className={"skillIcons"}>
+				{skillButtons}
+			</div>
 		</div>
 	}
 }

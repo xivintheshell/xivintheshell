@@ -412,6 +412,24 @@ class GameState
 		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed);
 	}
 
+	getSkillAvailabilityStatus(skillName) {
+		let skill = this.skillsList.get(skillName);
+		let timeTillAvailable = this.timeTillSkillAvailable(skill.info.name);
+		let capturedManaCost = skill.info.isSpell ? this.captureManaCost(skill.info.aspect, skill.info.baseManaCost) : 0;
+		let currentMana = this.resources.get(ResourceType.Mana).currentValue;
+
+		let notBlocked = timeTillAvailable <= 0;
+		let enoughMana = capturedManaCost <= currentMana;
+		let reqsMet = skill.available();
+
+		return {
+			ready: notBlocked && enoughMana && reqsMet,
+			cdReadyCountdown: this.cooldowns.timeTillNextStackAvailable(skill.info.cdName),
+			timeTillAvailable: timeTillAvailable,
+			capturedManaCost: capturedManaCost
+		}
+	}
+
 	// basically the action when you press down the skill button
 	useSkillIfAvailable(skillName)
 	{

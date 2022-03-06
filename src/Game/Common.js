@@ -55,7 +55,7 @@ export const SkillName =
 	Paradox: "Paradox",
 	Addle: "Addle",
 	Swiftcast: "Swiftcast",
-	LucidDreaming: "LucidDreaming",
+	LucidDreaming: "Lucid Dreaming",
 	Surecast: "Surecast",
 	Tincture: "Tincture"
 };
@@ -72,7 +72,7 @@ export const ResourceType =
 	Paradox: "Paradox", // [0, 1]
 
 	// buffs & states
-	LeyLines: "LeyLines", // [0, 1]
+	LeyLines: "Ley Lines", // [0, 1]
 	Sharpcast: "Sharpcast", // [0, 1]
 	Triplecast: "Triplecast", // [0, 3]
 	Firestarter: "Firestarter", // [0, 1]

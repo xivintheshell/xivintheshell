@@ -4,6 +4,7 @@ import { game } from "../Game/GameState";
 import {ResourceType} from "../Game/Common";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {stepSize} from "../Components/PlaybackControl";
+import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 
 class Controller
 {
@@ -70,14 +71,28 @@ class Controller
         });
     }
 
+    updateSkillButtons() {
+        updateSkillButtons(displayedSkills.map(skillName=>{
+            return game.getSkillAvailabilityStatus(skillName);
+        }));
+    }
+
     // view --> game
     requestTick(props={ deltaTime: -1 })
     {
         if (props.deltaTime > 0) {
             game.tick(props.deltaTime);
             this.updateStatusDisplay(game);
+            this.updateSkillButtons();
             this.log(LogCategory.Action, "fast forward " + props.deltaTime.toFixed(3) + "s", game.time, Color.Grey);
         }
+    }
+
+    getSkillInfo(props={skillName: undefined}) {
+        if (props.skillName) {
+            return game.getSkillAvailabilityStatus(props.skillName);
+        }
+        return null;
     }
 
     requestPlayPause(props)
@@ -88,10 +103,7 @@ class Controller
     requestFastForward(props)
     {
         let deltaTime = game.timeTillAnySkillAvailable();
-        if (deltaTime > 0) {
-            game.tick(deltaTime);
-            this.updateStatusDisplay(game);
-        }
+        this.requestTick({deltaTime: deltaTime});
         this.log(LogCategory.Action, "wait for " + deltaTime.toFixed(3) + "s", game.time, Color.Grey);
     }
 

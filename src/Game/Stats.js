@@ -113,6 +113,12 @@ export class StatsModifier
 		}
 		modifiers.push(llMod);
 
+		let enoMod = new StatsModifier();
+		if (resources.get(ResourceType.Enochian).available(1)) {
+			enoMod.damageBase = 1.2;
+		}
+		modifiers.push(enoMod);
+
 		//======== combine and return ========
 
 		modifiers.forEach(mod=>{ base.apply(mod); });

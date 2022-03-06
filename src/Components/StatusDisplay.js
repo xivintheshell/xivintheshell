@@ -62,7 +62,7 @@ buffIcons.set(ResourceType.Tincture, require("./Asset/buff_tincture.png"));
 
 // rscType, stacks, timeRemaining
 function Buff(props) {
-	return <div className={props.className + " buff " + props.rscType}>
+	return <div title={props.rscType} className={props.className + " buff " + props.rscType}>
 		<img src={buffIcons.get(props.rscType)} alt={props.rscType}/>
 		<span className={"buff-label"}>{props.timeRemaining}</span>
 	</div>

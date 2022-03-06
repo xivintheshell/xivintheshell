@@ -68,12 +68,13 @@
 
 .keyboardControlled {
     margin-bottom: 16px;
+    outline-offset: 8px;
+    outline: lightgrey solid 1px;
 }
 
 .keyboardControlled:focus {
     outline-offset: 8px;
-    outline: mediumpurple dotted 2px;
-    -moz-outline-radius: 2px;
+    outline: mediumpurple solid 2px;
 }
 
 /* Timeline */
@@ -189,9 +190,8 @@
 .skillsWindow {
     line-height: 1;
 }
-
-.skillButton {
-    display: inline-block;
+.skillInfoText {
+    margin-bottom: 10px;
 }
 .skillIcon {
     width: 48px;
@@ -199,6 +199,9 @@
     vertical-align: top;
     position: relative;
     display: inline-block;
+}
+.skillIcon.notReady {
+    filter: brightness(0.5);
 }
 .skillIcon>img {
     width: 40px;
