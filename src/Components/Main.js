@@ -12,9 +12,7 @@ export default class Main extends React.Component {
 		this.boundKeyCapture = this.keyCapture.bind(this);
 	}
 	keyCapture(evt) {
-		if (evt.keyCode===32) {
-			controller.requestFastForward();
-		}
+		controller.handleKeyboardEvent(evt);
 		evt.preventDefault();
 	}
 	render() {

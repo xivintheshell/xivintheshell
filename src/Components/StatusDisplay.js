@@ -178,6 +178,8 @@ function EnemyBuffsDisplay(props)
 function ResourceLocksDisplay(props)
 {
 	let data = (props && props.data) ? props.data : {
+		gcd: 2.5,
+		timeTillGCDReady: 0,
 		castLocked: false,
 		castLockTotalDuration: 0,
 		castLockCountdown: 0,
@@ -186,6 +188,13 @@ function ResourceLocksDisplay(props)
 		animLockCountdown: 0,
 		canMove: true
 	};
+	let gcd = <ResourceBar
+		name={"GCD"}
+		color={"#cf9eec"}
+		progress={1 - data.timeTillGCDReady / data.gcd}
+		value={data.timeTillGCDReady.toFixed(2)}
+		width={100}
+		className={""}/>;
 	let tax = <ResourceBar
 		name={"casting/taxed"}
 		color={data.canMove ? "#8edc72" : "#cbcbcb"}
@@ -201,6 +210,7 @@ function ResourceLocksDisplay(props)
 		width={100}
 		className={data.animLocked ? "" : "hidden"}/>;
 	return <div className={"resourceLocksDisplay"}>
+		{gcd}
 		{tax}
 		{anim}
 	</div>

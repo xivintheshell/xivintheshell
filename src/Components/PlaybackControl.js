@@ -43,6 +43,8 @@ class TickModeSelection extends React.Component
 	}
 }
 
+export var stepSize = 0.5;
+
 class ManualTick extends React.Component {
 	constructor(props) {
 		super(props);
@@ -60,9 +62,10 @@ class ManualTick extends React.Component {
 
 	handleChange(event) {
 		this.setState({value: event.target.value});
+		stepSize = parseFloat(this.state.value);
 	}
 
-	render(){
+	render() {
 		const form =
 			<form onSubmit={this.handleSubmit}>
 				<span>Step by </span>

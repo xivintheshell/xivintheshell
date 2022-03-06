@@ -3,6 +3,7 @@ import {Color, LogCategory} from "./Common";
 import { game } from "../Game/GameState";
 import {ResourceType} from "../Game/Common";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
+import {stepSize} from "../Components/PlaybackControl";
 
 class Controller
 {
@@ -33,6 +34,7 @@ class Controller
         let cast = game.resources.get(ResourceType.NotCasterTaxed);
         let anim = game.resources.get(ResourceType.NotAnimationLocked);
         let resourceLocksData = {
+            gcd: game.config.gcd,
             timeTillGCDReady: game.cooldowns.timeTillNextStackAvailable(ResourceType.cd_GCD),
             castLocked: game.resources.timeTillReady(ResourceType.NotCasterTaxed) > 0,
             castLockTotalDuration: cast.pendingChange ? cast.pendingChange.delay : 0,
@@ -94,7 +96,6 @@ class Controller
     }
 
     useSkill(skillName, bWaitFirst) {
-
         if (bWaitFirst) {
             game.waitAndUseSkillIfAvailable(skillName);
             this.lastAtteptedSkill = "";
@@ -121,10 +122,15 @@ class Controller
         }
     }
 
-    getResourceStatus(rscType)
-    {
-        let rsc = game.resources.get(rscType);
-        return [rsc.currentValue, rsc.maxValue];
+    handleKeyboardEvent(evt) {
+        if (evt.keyCode===32) { // space
+            this.requestFastForward();
+        }
+        if (evt.shiftKey && evt.keyCode===39) { // shift + right
+            this.requestTick({deltaTime: stepSize * 0.1});
+        } else if (evt.keyCode===39) {
+            this.requestTick({deltaTime: stepSize});
+        }
     }
 }
 export const controller = new Controller();
