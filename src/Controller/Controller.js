@@ -84,7 +84,7 @@ class Controller
             game.tick(props.deltaTime);
             this.updateStatusDisplay(game);
             this.updateSkillButtons();
-            this.log(LogCategory.Action, "fast forward " + props.deltaTime.toFixed(3) + "s", game.time, Color.Grey);
+            this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", game.time, Color.Grey);
         }
     }
 
@@ -104,7 +104,6 @@ class Controller
     {
         let deltaTime = game.timeTillAnySkillAvailable();
         this.requestTick({deltaTime: deltaTime});
-        this.log(LogCategory.Action, "wait for " + deltaTime.toFixed(3) + "s", game.time, Color.Grey);
     }
 
     useSkill(skillName, bWaitFirst) {
@@ -139,7 +138,7 @@ class Controller
             this.requestFastForward();
         }
         if (evt.shiftKey && evt.keyCode===39) { // shift + right
-            this.requestTick({deltaTime: stepSize * 0.1});
+            this.requestTick({deltaTime: stepSize * 0.2});
         } else if (evt.keyCode===39) {
             this.requestTick({deltaTime: stepSize});
         }

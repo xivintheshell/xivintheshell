@@ -249,9 +249,6 @@ export function makeSkillsList(game)
 			dot.consume(1);
 		}, Color.Thunder);
 		recurringThunderTick(numTicks, capturedTickPotency);
-
-		console.log(game.resources.timeTillReady(ResourceType.ThunderDoTTick));
-		console.log(game.resources.timeTillReady(ResourceType.ThunderDoT));
 	};
 
 	// Thunder 3

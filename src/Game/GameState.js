@@ -424,6 +424,7 @@ class GameState
 
 		return {
 			ready: notBlocked && enoughMana && reqsMet,
+			stacksAvailable: this.cooldowns.get(skill.info.cdName).stacksAvailable(),
 			cdReadyCountdown: this.cooldowns.timeTillNextStackAvailable(skill.info.cdName),
 			timeTillAvailable: timeTillAvailable,
 			capturedManaCost: capturedManaCost

@@ -94,7 +94,11 @@ class SkillButton extends React.Component {
 		let info = controller.getSkillInfo({skillName: this.props.skillName});
 
 		let s = this.props.skillName + ": ";
-		if (info.ready) s += "ready";
+		if (info.ready) {
+			s += "ready (" + info.stacksAvailable + " stack";
+			if (info.stacksAvailable > 1) s += "s";
+			s += ")";
+		}
 		else if (info.timeTillAvailable <= 0) {
 			s += " skill requirement(s) not satisfied";
 		} else {
