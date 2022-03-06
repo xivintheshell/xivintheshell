@@ -8,6 +8,7 @@ export class Event
 	{
 		this.name = name;
 		this.timeTillEvent = delay;
+		this.delay = delay;
 		this.effectFn = effectFn;
 		this.canceled = false;
 		this.shouldLog = shouldLog;

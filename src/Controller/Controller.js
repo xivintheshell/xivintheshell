@@ -24,9 +24,21 @@ class Controller
             paradox: game.resources.get(ResourceType.Paradox).currentValue,
             polyglotCountdown: eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30,
             polyglotStacks: game.resources.get(ResourceType.Polyglot).currentValue
-        }
+        };
+        let cast = game.resources.get(ResourceType.NotCasterTaxed);
+        let anim = game.resources.get(ResourceType.NotAnimationLocked);
+        let resourceLocksData = {
+            castLocked: game.resources.timeTillReady(ResourceType.NotCasterTaxed) > 0,
+            castLockTotalDuration: cast.pendingChange ? cast.pendingChange.delay : 0,
+            castLockCountdown: game.resources.timeTillReady(ResourceType.NotCasterTaxed),
+            animLocked: game.resources.timeTillReady(ResourceType.NotAnimationLocked) > 0,
+            animLockTotalDuration: anim.pendingChange ? anim.pendingChange.delay : 0,
+            animLockCountdown: game.resources.timeTillReady(ResourceType.NotAnimationLocked),
+            canMove: game.resources.get(ResourceType.Movement).available(1),
+        };
         updateStatusDisplay({
             resources: resourcesData,
+            resourceLocks: resourceLocksData,
         });
     }
 

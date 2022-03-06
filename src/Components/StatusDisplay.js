@@ -21,9 +21,10 @@ function ResourceBar(props = {
 	color: "#6cf",
 	value: "0.34/1.00",
 	progress: 0.34,
-	width: 100
+	width: 100,
+	className: ""
 }) {
-	return <div className={"resource"}>
+	return <div className={"resource " + props.className}>
 		 <div className={"resource-name"}>{props.name}</div>
 		 <ProgressBar backgroundColor={props.color}
 					  progress={props.progress}
@@ -105,8 +106,29 @@ class EnemyBuffsDisplay extends React.Component
 
 function ResourceLocksDisplay(props)
 {
-	let anim = <ResourceBar name={"using skill"} color={"#cbcbcb"} progress={0.7} value={"mana"} width={100}/>;
-	let tax = <ResourceBar name={"casting/taxed"} color={"#cbcbcb"} progress={0.7} value={"mana"} width={100}/>;
+	let data = (props && props.data) ? props.data : {
+		castLocked: false,
+		castLockTotalDuration: 0,
+		castLockCountdown: 0,
+		animLocked: false,
+		animLockTotalDuration: 0,
+		animLockCountdown: 0,
+		canMove: true
+	};
+	let tax = <ResourceBar
+		name={"casting/taxed"}
+		color={data.canMove ? "#8edc72" : "#cbcbcb"}
+		progress={data.castLocked ? 1 - data.castLockCountdown / data.castLockTotalDuration : 0}
+		value={data.castLockCountdown.toFixed(2)}
+		width={100}
+		className={data.castLocked ? "" : "hidden"}/>;
+	let anim = <ResourceBar
+		name={"using skill"}
+		color={"#cbcbcb"}
+		progress={data.animLocked ? 1 - data.animLockCountdown / data.animLockTotalDuration : 0}
+		value={data.animLockCountdown.toFixed(2)}
+		width={100}
+		className={data.animLocked ? "" : "hidden"}/>;
 	return <div className={"resourceLocksDisplay"}>
 		{tax}
 		{anim}
@@ -203,7 +225,7 @@ class StatusDisplay extends React.Component {
 				<ResourcesDisplay data={this.state.resources}/>
 			</div>
 			<div className={"-right"}>
-				<ResourceLocksDisplay/>
+				<ResourceLocksDisplay data={this.state.resourceLocks}/>
 				<EnemyBuffsDisplay/>
 				<BuffsDisplay/>
 			</div>
