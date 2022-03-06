@@ -14,6 +14,7 @@ class Controller
     }
 
     updateStatusDisplay(game) {
+        // resources
         let eno = game.resources.get(ResourceType.Enochian);
         let resourcesData = {
             mana: game.resources.get(ResourceType.Mana).currentValue,
@@ -25,6 +26,7 @@ class Controller
             polyglotCountdown: eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30,
             polyglotStacks: game.resources.get(ResourceType.Polyglot).currentValue
         };
+        // locks
         let cast = game.resources.get(ResourceType.NotCasterTaxed);
         let anim = game.resources.get(ResourceType.NotAnimationLocked);
         let resourceLocksData = {
@@ -36,9 +38,29 @@ class Controller
             animLockCountdown: game.resources.timeTillReady(ResourceType.NotAnimationLocked),
             canMove: game.resources.get(ResourceType.Movement).available(1),
         };
+        // enemy buffs
+        let enemyBuffsData = {
+            DoTCountdown: game.resources.timeTillReady(ResourceType.ThunderDoT),
+            addleCountdown: game.resources.timeTillReady(ResourceType.Addle)
+        };
+        // self buffs
+        let selfBuffsData = {
+            leyLinesCountdown: game.resources.timeTillReady(ResourceType.LeyLines),
+            sharpcastCountdown: game.resources.timeTillReady(ResourceType.Sharpcast),
+            triplecastCountdown: game.resources.timeTillReady(ResourceType.Triplecast),
+            firestarterCountdown: game.resources.timeTillReady(ResourceType.Firestarter),
+            thundercloudCountdown: game.resources.timeTillReady(ResourceType.Thundercloud),
+            manawardCountdown: game.resources.timeTillReady(ResourceType.Manaward),
+            swiftcastCountdown: game.resources.timeTillReady(ResourceType.Swiftcast),
+            lucidDreamingCountdown: game.resources.timeTillReady(ResourceType.LucidDreaming),
+            surecastCountdown: game.resources.timeTillReady(ResourceType.Surecast),
+            tinctureCountdown: game.resources.timeTillReady(ResourceType.Tincture),
+        };
         updateStatusDisplay({
             resources: resourcesData,
             resourceLocks: resourceLocksData,
+            enemyBuffs: enemyBuffsData,
+            selfBuffs: selfBuffsData
         });
     }
 

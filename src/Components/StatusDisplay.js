@@ -62,46 +62,117 @@ buffIcons.set(ResourceType.Tincture, require("./Asset/buff_tincture.png"));
 
 // rscType, stacks, timeRemaining
 function Buff(props) {
-	return <div className={"buff " + props.rscType}>
+	return <div className={props.className + " buff " + props.rscType}>
 		<img src={buffIcons.get(props.rscType)} alt={props.rscType}/>
-		<span className={"buff-label"}>{props.timeRemaining.toFixed(2)}</span>
+		<span className={"buff-label"}>{props.timeRemaining}</span>
 	</div>
 }
 
-class BuffsDisplay extends React.Component
-{
-	render() {
-		let buffs = [];
-		buffs.push({rscType: ResourceType.LeyLines, stacks:1, timeRemaining:14.234});
-		buffs.push({rscType: ResourceType.Sharpcast, stacks:1, timeRemaining:14.234});
-		buffs.push({rscType: ResourceType.Triplecast, stacks:1, timeRemaining:14.234});
-		buffs.push({rscType: ResourceType.Firestarter, stacks:1, timeRemaining:14.234});
-		buffs.push({rscType: ResourceType.Thundercloud, stacks:1, timeRemaining:14.234});
-		buffs.push({rscType: ResourceType.Manaward, stacks:1, timeRemaining:14.234});
-		buffs.push({rscType: ResourceType.Swiftcast, stacks:1, timeRemaining:14.234});
-		buffs.push({rscType: ResourceType.LucidDreaming, stacks:1, timeRemaining:14.234});
-		buffs.push({rscType: ResourceType.Surecast, stacks:1, timeRemaining:14.234});
-		buffs.push({rscType: ResourceType.Tincture, stacks:1, timeRemaining:14.234});
+function BuffsDisplay(props) {
+	let data = (props && props.data) ? props.data : {
+		leyLinesCountdown: 0,
+		sharpcastCountdown: 0,
+		triplecastCountdown: 0,
+		firestarterCountdown: 0,
+		thundercloudCountdown: 0,
+		manawardCountdown: 0,
+		swiftcastCountdown: 0,
+		lucidDreamingCountdown: 0,
+		surecastCountdown: 0,
+		tinctureCountdown: 0
+	};
+	let buffs = [];
+	buffs.push({
+		rscType: ResourceType.LeyLines,
+		stacks:1,
+		timeRemaining: data.leyLinesCountdown.toFixed(2),
+		className: data.leyLinesCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.Sharpcast,
+		stacks:1,
+		timeRemaining: data.sharpcastCountdown.toFixed(2),
+		className: data.sharpcastCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.Triplecast,
+		stacks:1,
+		timeRemaining: data.triplecastCountdown.toFixed(2),
+		className: data.triplecastCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.Firestarter,
+		stacks:1,
+		timeRemaining: data.firestarterCountdown.toFixed(2),
+		className: data.firestarterCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.Thundercloud,
+		stacks:1,
+		timeRemaining: data.thundercloudCountdown.toFixed(2),
+		className: data.thundercloudCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.Manaward,
+		stacks:1,
+		timeRemaining: data.manawardCountdown.toFixed(2),
+		className: data.manawardCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.Swiftcast,
+		stacks:1,
+		timeRemaining: data.swiftcastCountdown.toFixed(2),
+		className: data.swiftcastCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.LucidDreaming,
+		stacks:1,
+		timeRemaining: data.lucidDreamingCountdown.toFixed(2),
+		className: data.lucidDreamingCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.Surecast,
+		stacks:1,
+		timeRemaining: data.surecastCountdown.toFixed(2),
+		className: data.surecastCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.Tincture,
+		stacks:1,
+		timeRemaining: data.tinctureCountdown.toFixed(2),
+		className: data.tinctureCountdown > 0 ? "" : "hidden"
+	});
 
-		for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
-		return <div className={"buffsDisplay self"}>
-			{buffs.map(obj=>{return <Buff {...obj}/>;})}
-		</div>
-	}
+	for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
+	return <div className={"buffsDisplay self"}>
+		 {buffs.map(obj=>{return <Buff {...obj}/>;})}
+	</div>
 }
 
-class EnemyBuffsDisplay extends React.Component
+function EnemyBuffsDisplay(props)
 {
-	render() {
-		let buffs = [];
-		buffs.push({rscType: ResourceType.ThunderDoT, stacks:1, timeRemaining:14.234});
-		buffs.push({rscType: ResourceType.Addle, stacks:1, timeRemaining:14.234});
+	let data = (props && props.data) ? props.data : {
+		DoTCountdown: 0,
+		addleCountdown: 0
+	};
+	let buffs = [];
+	buffs.push({
+		rscType: ResourceType.ThunderDoT,
+		stacks:1,
+		timeRemaining: data.DoTCountdown.toFixed(2),
+		className: data.DoTCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.Addle,
+		stacks:1,
+		timeRemaining: data.addleCountdown.toFixed(2),
+		className: data.addleCountdown > 0 ? "" : "hidden"
+	});
 
-		for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
-		return <div className={"buffsDisplay enemy"}>
-			{buffs.map(obj=>{return <Buff {...obj}/>;})}
-		</div>
-	}
+	for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
+	return <div className={"buffsDisplay enemy"}>
+		 {buffs.map(obj=>{return <Buff {...obj}/>;})}
+	</div>
 }
 
 function ResourceLocksDisplay(props)
@@ -146,8 +217,6 @@ function ResourcesDisplay(props) {
 		polyglotCountdown: 30,
 		polyglotStacks: 0
 	}
-	console.log("rendering ResourcesDisplay with data ")
-	console.log(data);
 	let manaBar = <ResourceBar
 		name={"MP"}
 		color={"#8aceea"}
@@ -210,8 +279,6 @@ class StatusDisplay extends React.Component {
 		updateStatusDisplay = this.unboundUpdateStatus.bind(this);
 	}
 	unboundUpdateStatus(newData){
-		console.log("status display new data");
-		console.log(newData);
 		this.setState({
 			resources: newData.resources,
 			resourceLocks: newData.resourceLocks,
@@ -226,8 +293,8 @@ class StatusDisplay extends React.Component {
 			</div>
 			<div className={"-right"}>
 				<ResourceLocksDisplay data={this.state.resourceLocks}/>
-				<EnemyBuffsDisplay/>
-				<BuffsDisplay/>
+				<EnemyBuffsDisplay data={this.state.enemyBuffs}/>
+				<BuffsDisplay data={this.state.selfBuffs}/>
 			</div>
 		</div>
 	}

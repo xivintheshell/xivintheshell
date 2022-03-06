@@ -76,7 +76,6 @@ class GameState
 		this.skillsList = makeSkillsList(this);
 
 		this.init();
-		console.log(this);
 	}
 
 	init()
@@ -121,7 +120,6 @@ class GameState
 			// advance time
 			this.time += timeToTick;
 			this.cooldowns.tick(timeToTick);
-			console.log("    tick " + timeToTick + " now at " + this.time);
 
 			// make a deep copy of events to advance for this round...
 			const eventsToExecuteOld = [];
@@ -147,8 +145,6 @@ class GameState
 			// remove the executed events from the master list
 			this.eventsQueue.splice(0, executedEvents);
 		}
-		console.log(game.toString());
-		console.log(game.resources);
 	}
 
 	addEvent(evt)
