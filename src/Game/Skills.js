@@ -226,7 +226,7 @@ export function makeSkillsList(game)
 		{
 			if (remainingTicks===0) return;
 			game.resources.addResourceEvent(
-				ResourceType.ThunderDoT,
+				ResourceType.ThunderDoTTick,
 				"recurring thunder tick " + (numTicks+1-remainingTicks) + "/" + numTicks, 3, rsc=>{
 					game.dealDamage(capturedTickPotency);
 					recurringThunderTick(remainingTicks - 1, capturedTickPotency);
@@ -236,13 +236,22 @@ export function makeSkillsList(game)
 					}
 				}, Color.Thunder);
 		};
-		let rsc = game.resources.get(ResourceType.ThunderDoT);
-		if (rsc.pendingChange !== null) {
+		let dot = game.resources.get(ResourceType.ThunderDoT);
+		let tick = game.resources.get(ResourceType.ThunderDoTTick);
+		if (tick.pendingChange !== null) {
 			// if already has thunder applied; cancel the remaining ticks now.
-			rsc.removeTimer();
+			dot.removeTimer();
+			tick.removeTimer();
 		}
 		// order of events:
+		dot.gain(1);
+		game.resources.addResourceEvent(ResourceType.ThunderDoT, "drop DoT", 30, dot=>{
+			dot.consume(1);
+		}, Color.Thunder);
 		recurringThunderTick(numTicks, capturedTickPotency);
+
+		console.log(game.resources.timeTillReady(ResourceType.ThunderDoTTick));
+		console.log(game.resources.timeTillReady(ResourceType.ThunderDoT));
 	};
 
 	// Thunder 3

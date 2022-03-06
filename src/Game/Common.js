@@ -77,7 +77,8 @@ export const ResourceType =
 	Triplecast: "Triplecast", // [0, 3]
 	Firestarter: "Firestarter", // [0, 1]
 	Thundercloud: "Thundercloud", // [0, 1]
-	ThunderDoT: "ThunderDoT", // [0, 1]
+	ThunderDoTTick: "ThunderDoTTick", // [0, 1]
+	ThunderDoT: "ThunderDoT", // [0, 1] is actually used for display timing only
 	Manaward: "Manaward", // [0, 1]
 	Addle: "Addle", // [0, 1]
 	Swiftcast: "Swiftcast", // [0, 1]

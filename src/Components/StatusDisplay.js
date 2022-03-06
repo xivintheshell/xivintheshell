@@ -51,7 +51,7 @@ buffIcons.set(ResourceType.Triplecast, require("./Asset/buff_triplecast.png"));
 buffIcons.set(ResourceType.Sharpcast, require("./Asset/buff_sharpcast.png"));
 buffIcons.set(ResourceType.Firestarter, require("./Asset/buff_firestarter.png"));
 buffIcons.set(ResourceType.Thundercloud, require("./Asset/buff_thundercloud.png"));
-buffIcons.set(ResourceType.ThunderDoT, require("./Asset/buff_thunder3.png"));
+buffIcons.set(ResourceType.ThunderDoTTick, require("./Asset/buff_thunder3.png"));
 buffIcons.set(ResourceType.LeyLines, require("./Asset/buff_leyLines.png"));
 buffIcons.set(ResourceType.Manaward, require("./Asset/buff_manaward.png"));
 buffIcons.set(ResourceType.Addle, require("./Asset/buff_addle.png"));
@@ -157,7 +157,7 @@ function EnemyBuffsDisplay(props)
 	};
 	let buffs = [];
 	buffs.push({
-		rscType: ResourceType.ThunderDoT,
+		rscType: ResourceType.ThunderDoTTick,
 		stacks:1,
 		timeRemaining: data.DoTCountdown.toFixed(2),
 		className: data.DoTCountdown > 0 ? "" : "hidden"
