@@ -80,8 +80,7 @@ class GameState
 
 	init()
 	{
-		if (this.config.disableManaAndThunderTicks === 0)
-		{
+		if (this.config.disableManaTicks === 0) {
 			// get mana and thunder ticks rolling (through recursion)
 			let recurringManaRegen = ()=>{
 				// mana regen
@@ -120,6 +119,7 @@ class GameState
 			// advance time
 			this.time += timeToTick;
 			this.cooldowns.tick(timeToTick);
+			if (this.config.logEvents) console.log("====== tick " + timeToTick + " now at " + this.time);
 
 			// make a deep copy of events to advance for this round...
 			const eventsToExecuteOld = [];
@@ -131,7 +131,7 @@ class GameState
 			let executedEvents = 0;
 			eventsToExecuteOld.forEach(e=>{
 				e.timeTillEvent -= timeToTick;
-				console.log(e.name + " in " + e.timeTillEvent);
+				if (this.config.logEvents) console.log(e.name + " in " + e.timeTillEvent);
 				if (e.timeTillEvent <= this.config.epsilon)
 				{
 					if (!e.canceled)
@@ -144,6 +144,10 @@ class GameState
 			});
 			// remove the executed events from the master list
 			this.eventsQueue.splice(0, executedEvents);
+		}
+		if (this.config.logEvents) {
+			console.log(game.toString());
+			console.log(game.resources);
 		}
 	}
 
@@ -298,6 +302,10 @@ class GameState
 		let triple = this.resources.get(ResourceType.Triplecast);
 		if (triple.available(1)) {
 			instantCast(this, triple);
+			if (!triple.available(1)) {
+				triple.removeTimer();
+				controller.log(LogCategory.Event, "all triple charges used", this.time);
+			}
 			return;
 		}
 
@@ -409,27 +417,37 @@ class GameState
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.timeTillSkillAvailable(skill.info.name);
 		let capturedManaCost = skill.info.isSpell ? this.captureManaCost(skill.info.aspect, skill.info.baseManaCost) : 0;
+
+		let result = {
+			success: true,
+			time: this.time,
+			logColor: Color.Text,
+			reason: "",
+			description: ""
+		}
 		if (timeTillAvailable > 0)
 		{
-			controller.log(
-				LogCategory.Action,
-				skillName + " is not available yet. available in " +
-					timeTillAvailable.toFixed(3) + "s.",
-				this.time,
-				Color.Error);
-			return;
+			return {
+				success: false,
+				time: this.time,
+				logColor: Color.Warning,
+				reason: "notReady",
+				description: skillName + " is not available yet. available in " +
+					timeTillAvailable.toFixed(3) + "s."
+			};
 		}
 		if (capturedManaCost > this.resources.get(ResourceType.Mana).currentValue)
 		{
-			controller.log(
-				LogCategory.Action,
-				skillName + " is not available yet (not enough MP)",
-				this.time,
-				Color.Error);
-			return;
+			return {
+				success: false,
+				time: this.time,
+				logColor: Color.Error,
+				reason: "notEnoughMana",
+				description: skillName + " is not available yet (not enough MP)"
+			}
 		}
-		 if (skill.available())
-		 {
+		if (skill.available())
+		{
 			 controller.log(
 				 LogCategory.Action,
 				 "use skill [" + skillName + "]",
@@ -441,9 +459,22 @@ class GameState
 				 this.time,
 				 Color.Success);
 			 skill.use(this);
-			 return;
+			 return result;
 		 }
-		controller.log(LogCategory.Action, skillName + " failed (reqs not satisfied)", this.time, Color.Error);
+		return {
+			success: false,
+			time: this.time,
+			logColor: Color.Error,
+			reason: "requirementsNotMet",
+			description: skillName + " failed (reqs not satisfied)"
+		}
+	}
+
+	waitAndUseSkillIfAvailable(skillName) {
+		let skill = this.skillsList.get(skillName);
+		let timeTillAvailable = this.timeTillSkillAvailable(skill.info.name);
+		if (timeTillAvailable > 0) this.tick(timeTillAvailable);
+		return this.useSkillIfAvailable(skillName);
 	}
 
 	toString()

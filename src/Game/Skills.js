@@ -448,7 +448,7 @@ export function makeSkillsList(game)
 				game.resources.addResourceEvent(
 					ResourceType.Triplecast,
 					"drop remaining Triple charges", 15, rsc => {
-						rsc.consume(rsc.currentValue);
+						 rsc.consume(rsc.currentValue);
 					});
 			});
 		}

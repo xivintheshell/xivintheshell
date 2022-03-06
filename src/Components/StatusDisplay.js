@@ -29,7 +29,7 @@ function ResourceBar(props = {
 		 <ProgressBar backgroundColor={props.color}
 					  progress={props.progress}
 					  width={props.width}
-					  offsetY={3}/>
+					  offsetY={4}/>
 		 <div className={"resource-value"}>{props.value}</div>
 	</div>;
 }

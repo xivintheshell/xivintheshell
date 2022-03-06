@@ -6,6 +6,9 @@ import {updateStatusDisplay} from "../Components/StatusDisplay";
 
 class Controller
 {
+    constructor() {
+        this.lastAtteptedSkill = ""
+    }
     // game --> view
     log(category, content, time, color=Color.Text)
     {
@@ -30,6 +33,7 @@ class Controller
         let cast = game.resources.get(ResourceType.NotCasterTaxed);
         let anim = game.resources.get(ResourceType.NotAnimationLocked);
         let resourceLocksData = {
+            timeTillGCDReady: game.cooldowns.timeTillNextStackAvailable(ResourceType.cd_GCD),
             castLocked: game.resources.timeTillReady(ResourceType.NotCasterTaxed) > 0,
             castLockTotalDuration: cast.pendingChange ? cast.pendingChange.delay : 0,
             castLockCountdown: game.resources.timeTillReady(ResourceType.NotCasterTaxed),
@@ -89,9 +93,32 @@ class Controller
         this.log(LogCategory.Action, "wait for " + deltaTime.toFixed(3) + "s", game.time, Color.Grey);
     }
 
-    requestUseSkill(props)
-    {
-        game.useSkillIfAvailable(props.skillName);
+    useSkill(skillName, bWaitFirst) {
+
+        if (bWaitFirst) {
+            game.waitAndUseSkillIfAvailable(skillName);
+            this.lastAtteptedSkill = "";
+
+        } else {
+            let result = game.useSkillIfAvailable(skillName);
+            if (!result.success) {
+                let s = result.description;
+                if (result.reason==="notReady") {
+                    s += " press again to step until then and use";
+                    this.lastAtteptedSkill = skillName;
+                }
+                this.log(LogCategory.Action, s, result.time, result.logColor);
+            }
+        }
+
+    }
+
+    requestUseSkill(props) {
+        if (props.skillName === this.lastAtteptedSkill) {
+            this.useSkill(props.skillName, true);
+        } else {
+            this.useSkill(props.skillName, false);
+        }
     }
 
     getResourceStatus(rscType)

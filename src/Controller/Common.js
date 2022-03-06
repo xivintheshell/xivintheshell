@@ -15,4 +15,5 @@ export const Color =
     Damage: "damageColor",
     Success: "successColor",
     Error: "errorColor",
+    Warning: "warningColor",
 }

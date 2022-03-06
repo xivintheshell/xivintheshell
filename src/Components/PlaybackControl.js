@@ -46,7 +46,7 @@ class TickModeSelection extends React.Component
 class ManualTick extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = {value: 1, redirect: false};
+		this.state = {value: 0.5, redirect: false};
 		this.handleChange = this.handleChange.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
 	}
@@ -65,9 +65,10 @@ class ManualTick extends React.Component {
 	render(){
 		const form =
 			<form onSubmit={this.handleSubmit}>
-				<span>Fast forward by seconds: </span>
-				<input size="8" type="text"
+				<span>Step by </span>
+				<input size="5" type="text"
 					   value={this.state.value} onChange={this.handleChange}/>
+				<span> seconds </span>
 				<input type="submit" value="GO"/>
 			</form>;
 		return (

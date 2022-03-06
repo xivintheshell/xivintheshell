@@ -12,7 +12,8 @@ export class GameConfig
 
 		//==== DEBUG ====
 		this.epsilon = 0.00001;
-		this.disableManaAndThunderTicks = 0;
+		this.disableManaTicks = 0;
+		this.logEvents = false;
 	}
 }
 
