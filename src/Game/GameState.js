@@ -33,6 +33,11 @@ class GameState
 		this.resources.set(ResourceType.ThunderDoT, new Resource(ResourceType.ThunderDoT, 1, 0));
 		this.resources.set(ResourceType.Manaward, new Resource(ResourceType.Manaward, 1, 0));
 		this.resources.set(ResourceType.Triplecast, new Resource(ResourceType.Triplecast, 3, 0));
+		this.resources.set(ResourceType.Addle, new Resource(ResourceType.Addle, 1, 0));
+		this.resources.set(ResourceType.Swiftcast, new Resource(ResourceType.Swiftcast, 1, 0));
+		this.resources.set(ResourceType.LucidDreaming, new Resource(ResourceType.LucidDreaming, 1, 0));
+		this.resources.set(ResourceType.Surecast, new Resource(ResourceType.Surecast, 1, 0));
+		this.resources.set(ResourceType.Tincture, new Resource(ResourceType.Tincture, 1, 0));
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
@@ -50,6 +55,11 @@ class GameState
 		this.cooldowns.set(ResourceType.cd_Triplecast, new CoolDown(ResourceType.cd_Triplecast, 60, 2, 2));
 		this.cooldowns.set(ResourceType.cd_Manafont, new CoolDown(ResourceType.cd_Manafont, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Amplifier, new CoolDown(ResourceType.cd_Amplifier, 120, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Addle, new CoolDown(ResourceType.cd_Addle, 90, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Swiftcast, new CoolDown(ResourceType.cd_Swiftcast, 60, 1, 1));
+		this.cooldowns.set(ResourceType.cd_LucidDreaming, new CoolDown(ResourceType.cd_LucidDreaming, 60, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Surecast, new CoolDown(ResourceType.cd_Surecast, 120, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Tincture, new CoolDown(ResourceType.cd_Tincture, 300, 1, 1));
 
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
@@ -151,6 +161,32 @@ class GameState
 	getUmbralHearts() { return this.resources.get(ResourceType.UmbralHeart).currentValue; }
 	getMP() { return this.resources.get(ResourceType.Mana).currentValue; }
 
+	switchToAForUI(rscType, numStacks)
+	{
+		let af = this.resources.get(ResourceType.AstralFire);
+		let ui = this.resources.get(ResourceType.UmbralIce);
+		let uh = this.resources.get(ResourceType.UmbralHeart);
+		let paradox = this.resources.get(ResourceType.Paradox);
+		if (rscType===ResourceType.AstralFire)
+		{
+			af.gain(numStacks);
+			if (ui.available(3) && uh.available(3)) {
+				ui.consume(ui.currentValue);
+				paradox.gain(1);
+				controller.log(LogCategory.Event, "Paradox! (UI -> AF)", game.time);
+			}
+		}
+		else if (rscType===ResourceType.UmbralIce)
+		{
+			ui.gain(numStacks);
+			if (af.available(3)) {
+				af.consume(af.currentValue);
+				paradox.gain(1);
+				controller.log(LogCategory.Event, "Paradox! (AF -> UI)", game.time);
+			}
+		}
+	}
+
 	// number -> number
 	captureDamage(aspect, basePotency)
 	{
@@ -241,20 +277,31 @@ class GameState
 				Color.Text));
 		}
 
-		// if there's a triplecast charge, use it and make this skill instant.
-		let triple = this.resources.get(ResourceType.Triplecast);
-		if (triple.available(1)) // made instant via a triple stack
+		let instantCast = function(game, rsc)
 		{
-			controller.log(LogCategory.Event, "a cast is made instant via a triplecast charge", game.time, Color.Success);
-			triple.consume(1);
-			takeEffect(this, 0);
+			controller.log(LogCategory.Event, "a cast is made instant via " + rsc.type, game.time, Color.Success);
+			rsc.consume(1);
+			takeEffect(game, 0);
 
 			// recast
 			cd.useStack();
 
 			// animation lock
-			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.animationLock);
+			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.animationLock);
+		}
 
+		// Swiftcast
+		let swift = this.resources.get(ResourceType.Swiftcast);
+		if (swift.available(1)) {
+			swift.removeTimer();
+			instantCast(this, swift);
+			return;
+		}
+
+		// Triplecast charge
+		let triple = this.resources.get(ResourceType.Triplecast);
+		if (triple.available(1)) {
+			instantCast(this, triple);
 			return;
 		}
 
@@ -316,6 +363,7 @@ class GameState
 		{
 			// refresh
 			enochian.overrideTimer(15);
+			controller.log(LogCategory.Event, "refresh enochian timer", this.time);
 		}
 		else
 		{

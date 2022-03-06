@@ -52,6 +52,11 @@ export const SkillName =
 	HighBlizzard2: "High Blizzard 2",
 	Amplifier: "Amplifier",
 	Paradox: "Paradox",
+	Addle: "Addle",
+	Swiftcast: "Swiftcast",
+	LucidDreaming: "LucidDreaming",
+	Surecast: "Surecast",
+	Tincture: "Tincture"
 };
 
 export const ResourceType =
@@ -73,6 +78,11 @@ export const ResourceType =
 	Thundercloud: "Thundercloud", // [0, 1]
 	ThunderDoT: "ThunderDoT", // [0, 1]
 	Manaward: "Manaward", // [0, 1]
+	Addle: "Addle", // [0, 1]
+	Swiftcast: "Swiftcast", // [0, 1]
+	LucidDreaming: "Lucid Dreaming", // [0, 1]
+	Surecast: "Surecast", // [0, 1]
+	Tincture: "Tincture", // [0, 1]
 
 	// special
 	Movement: "Movement", // [0, 1]
@@ -89,5 +99,10 @@ export const ResourceType =
 	cd_AetherialManipulation: "cd_AetherialManipulation", // [0, 1x]
 	cd_Triplecast: "cd_Triplecast", // [0, 2x]
 	cd_Manafont: "cd_Manafont", // [0, 1x]
-	cd_Amplifier: "cd_Amplifier" // [0, 1x]
+	cd_Amplifier: "cd_Amplifier", // [0, 1x]
+	cd_Addle: "cd_Addle",
+	cd_Swiftcast: "cd_Swiftcast",
+	cd_LucidDreaming: "cd_LucidDreaming",
+	cd_Surecast: "cd_Surecast",
+	cd_Tincture: "cd_Tincture"
 };

@@ -1,6 +1,7 @@
 import { SkillName, ResourceType, Aspect } from './Common'
 import { controller } from "../Controller/Controller";
 import { LogCategory, Color } from "../Controller/Common";
+import {Resource} from "./Resources";
 
 class SkillInfo
 {
@@ -47,19 +48,13 @@ const skillInfos = [
 	new SkillInfo(SkillName.HighBlizzard2, ResourceType.cd_GCD, Aspect.Ice, true, 3, 800, 140, 0.1),
 	new SkillInfo(SkillName.Amplifier, ResourceType.cd_Amplifier, Aspect.Other, false, 0, 0, 0, 0.1),
 	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true, 2.5, 1600, 500, 0.1),
-];
 
-class SkillInstance
-{
-	// available : () -> bool
-	// effectFn : () -> ()
-	constructor(description, requirementFn, effectFn)
-	{
-        this.description = description;
-		this.available = requirementFn;
-		this.use = effectFn;
-	}
-}
+	new SkillInfo(SkillName.Addle, ResourceType.cd_Addle, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Swiftcast, ResourceType.cd_Swiftcast, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.LucidDreaming, ResourceType.cd_LucidDreaming, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Surecast, ResourceType.cd_Surecast, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Tincture, ResourceType.cd_Tincture, Aspect.Other, false, 0, 0, 0, 0.1),
+];
 
 class Skill
 {
@@ -92,6 +87,27 @@ class SkillsList extends Map
 export function makeSkillsList(game)
 {
 	const skillsList = new SkillsList(game);
+
+	let addResourceAbility = function(skillName, rscType, duration) {
+		skillsList.set(skillName, new Skill(skillName,
+			() => {
+				return true;
+			},
+			() => {
+				game.useInstantSkill(skillName, () => {
+					let resource = game.resources.get(rscType);
+					if (resource.available(1)) {
+						resource.overrideTimer(duration);
+					} else {
+						resource.gain(1);
+						game.resources.addResourceEvent(rscType, "drop " + rscType, duration, rsc=>{
+							rsc.consume(1);
+						});
+					}
+				});
+			}
+		));
+	}
 
 	// Blizzard
 	skillsList.set(SkillName.Blizzard, new Skill(SkillName.Blizzard,
@@ -175,14 +191,10 @@ export function makeSkillsList(game)
 					controller.log(LogCategory.Event, "transpose failed; AF/UI just fell off", game.time, Color.Error);
 					return;
 				}
-				let af = game.resources.get(ResourceType.AstralFire);
-				let ui = game.resources.get(ResourceType.UmbralIce);
 				if (game.getFireStacks() > 0) {
-					af.consume(af.currentValue);
-					ui.gain(1);
+					game.switchToAForUI(ResourceType.UmbralIce, 1);
 				} else {
-					ui.consume(ui.currentValue);
-					af.gain(1);
+					game.switchToAForUI(ResourceType.AstralFire, 1);
 				}
 				game.startOrRefreshEnochian();
 			});
@@ -190,20 +202,7 @@ export function makeSkillsList(game)
 	));
 
 	// Ley Lines
-	skillsList.set(SkillName.LeyLines, new Skill(SkillName.LeyLines,
-		() => {
-			return true;
-		},
-		() => {
-			game.useInstantSkill(SkillName.LeyLines, () => {
-				game.resources.get(ResourceType.LeyLines).gain(1);
-				game.resources.addResourceEvent(
-					ResourceType.LeyLines, "drop LL", 30, rsc => {
-						rsc.consume(1);
-					});
-			});
-		}
-	));
+	addResourceAbility(SkillName.LeyLines, ResourceType.LeyLines, 30);
 
 	let gainThundercloudProc = function (game) {
 		let thundercloud = game.resources.get(ResourceType.Thundercloud);
@@ -289,20 +288,7 @@ export function makeSkillsList(game)
 	));
 
 	// Manaward
-	skillsList.set(SkillName.Manaward, new Skill(SkillName.Manaward,
-		() => {
-			return true;
-		},
-		() => {
-			game.useInstantSkill(SkillName.Manaward, () => {
-				game.resources.get(ResourceType.Manaward).gain(1);
-				game.resources.addResourceEvent(
-					ResourceType.Manaward, "drop Manaward", 20, rsc => {
-						rsc.consume(1);
-					})
-			});
-		}
-	));
+	addResourceAbility(SkillName.Manaward, ResourceType.Manaward, 20);
 
 	// Manafont
 	skillsList.set(SkillName.Manafont, new Skill(SkillName.Manafont,
@@ -328,19 +314,15 @@ export function makeSkillsList(game)
 			{
 				controller.log(LogCategory.Event, "F3 made instant via firestarter proc", game.time, Color.Fire);
 				fs.consume(1);
-				let capturedDamage;
+				game.switchToAForUI(ResourceType.AstralFire, 3);
+				game.startOrRefreshEnochian();
 				game.useInstantSkill(SkillName.Fire3, cap => {
-					let skillInfo = game.skillsList.get(SkillName.Fire3).info;
-					capturedDamage = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
-				}, app => {
-					game.dealDamage(capturedDamage);
 				}, false);
 			}
 			else
 			{
 				game.castSpell(SkillName.Fire3, cap => {
-					game.resources.get(ResourceType.UmbralIce).consume(game.resources.get(ResourceType.UmbralIce).currentValue);
-					game.resources.get(ResourceType.AstralFire).gain(3);
+					game.switchToAForUI(ResourceType.AstralFire, 3);
 					game.startOrRefreshEnochian();
 					// umbral heart
 					let uh = game.resources.get(ResourceType.UmbralHeart);
@@ -361,8 +343,7 @@ export function makeSkillsList(game)
 		},
 		() => {
 			game.castSpell(SkillName.Blizzard3, cap => {
-				game.resources.get(ResourceType.AstralFire).consume(game.resources.get(ResourceType.AstralFire).currentValue);
-				game.resources.get(ResourceType.UmbralIce).gain(3);
+				game.switchToAForUI(ResourceType.UmbralIce, 3);
 				game.startOrRefreshEnochian();
 			}, app => {
 			});
@@ -405,27 +386,7 @@ export function makeSkillsList(game)
 	));
 
 	// Sharpcast
-	skillsList.set(SkillName.Sharpcast, new Skill(SkillName.Sharpcast,
-		() => {
-			return true;
-		},
-		() => {
-			game.useInstantSkill(SkillName.Sharpcast, () => {
-				let sc = game.resources.get(ResourceType.Sharpcast);
-				if (sc.available(1)) sc.overrideTimer(30);
-				else { // fresh gain
-					sc.gain(1);
-					game.resources.addResourceEvent(
-						ResourceType.Sharpcast,
-						"drop sharpcast",
-						30,
-						rsc => {
-							sc.consume(1);
-						}, Color.Text);
-				}
-			});
-		}
-	));
+	addResourceAbility(SkillName.Sharpcast, ResourceType.Sharpcast, 30);
 
 	// Blizzard 4
 	skillsList.set(SkillName.Blizzard4, new Skill(SkillName.Blizzard4,
@@ -557,8 +518,7 @@ export function makeSkillsList(game)
 		},
 		() => {
 			game.castSpell(SkillName.HighFire2, cap => {
-				game.resources.get(ResourceType.UmbralIce).consume(game.resources.get(ResourceType.UmbralIce).currentValue);
-				game.resources.get(ResourceType.AstralFire).gain(3);
+				game.switchToAForUI(ResourceType.AstralFire, 3);
 				game.startOrRefreshEnochian();
 				// umbral heart
 				let uh = game.resources.get(ResourceType.UmbralHeart);
@@ -578,8 +538,7 @@ export function makeSkillsList(game)
 		},
 		() => {
 			game.castSpell(SkillName.Freeze, cap => {
-				game.resources.get(ResourceType.AstralFire).consume(game.resources.get(ResourceType.AstralFire).currentValue);
-				game.resources.get(ResourceType.UmbralIce).gain(3);
+				game.switchToAForUI(ResourceType.UmbralIce, 3);
 				game.startOrRefreshEnochian();
 			}, app => {
 			});
@@ -625,6 +584,22 @@ export function makeSkillsList(game)
 			}
 		}
 	));
+
+	// Addle
+	addResourceAbility(SkillName.Addle, ResourceType.Addle, 10);
+
+	// Swiftcast
+	addResourceAbility(SkillName.Swiftcast, ResourceType.Swiftcast, 10);
+
+	// Lucid Dreaming
+	// TODO: implement lucid ticks
+	addResourceAbility(SkillName.LucidDreaming, ResourceType.LucidDreaming, 21);
+
+	// Surecast
+	addResourceAbility(SkillName.Surecast, ResourceType.Surecast, 10);
+
+	// Tincture
+	addResourceAbility(SkillName.Tincture, ResourceType.Tincture, 15);
 
 	skillsList.setSkillInfos(skillInfos);
 	return skillsList;

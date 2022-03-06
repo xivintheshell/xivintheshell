@@ -15,13 +15,19 @@ function ResourceStack(props) {
 	</div>;
 }
 
-// name, color, value, progress
-function ResourceBar(props) {
+// name, color, value, progress, width
+function ResourceBar(props = {
+	name: "placeholder",
+	color: "#6cf",
+	value: "0.34/1.00",
+	progress: 0.34,
+	width: 100
+}) {
 	return <div className={"resource"}>
 		 <div className={"resource-name"}>{props.name}</div>
 		 <ProgressBar backgroundColor={props.color}
 					  progress={props.progress}
-					  width={150}
+					  width={props.width}
 					  offsetY={3}/>
 		 <div className={"resource-value"}>{props.value}</div>
 	</div>;
@@ -36,7 +42,7 @@ function ResourceCounter(props) {
 	return <div className={"resource"}>
 		<div className={"resource-name"}>{props.name}</div>
 		{stacks}
-		<div className={"resource-value"}>{props.currentStacks + " / " + props.maxStacks}</div>
+		<div className={"resource-value"}>{props.currentStacks + "/" + props.maxStacks}</div>
 	</div>;
 }
 const buffIcons = new Map();
@@ -47,6 +53,11 @@ buffIcons.set(ResourceType.Thundercloud, require("./Asset/buff_thundercloud.png"
 buffIcons.set(ResourceType.ThunderDoT, require("./Asset/buff_thunder3.png"));
 buffIcons.set(ResourceType.LeyLines, require("./Asset/buff_leyLines.png"));
 buffIcons.set(ResourceType.Manaward, require("./Asset/buff_manaward.png"));
+buffIcons.set(ResourceType.Addle, require("./Asset/buff_addle.png"));
+buffIcons.set(ResourceType.Swiftcast, require("./Asset/buff_swiftcast.png"));
+buffIcons.set(ResourceType.LucidDreaming, require("./Asset/buff_lucidDreaming.png"));
+buffIcons.set(ResourceType.Surecast, require("./Asset/buff_surecast.png"));
+buffIcons.set(ResourceType.Tincture, require("./Asset/buff_tincture.png"));
 
 // rscType, stacks, timeRemaining
 function Buff(props) {
@@ -60,17 +71,47 @@ class BuffsDisplay extends React.Component
 {
 	render() {
 		let buffs = [];
-		buffs.push({rscType: ResourceType.ThunderDoT, stacks:1, timeRemaining:14.234});
 		buffs.push({rscType: ResourceType.LeyLines, stacks:1, timeRemaining:14.234});
 		buffs.push({rscType: ResourceType.Sharpcast, stacks:1, timeRemaining:14.234});
 		buffs.push({rscType: ResourceType.Triplecast, stacks:1, timeRemaining:14.234});
 		buffs.push({rscType: ResourceType.Firestarter, stacks:1, timeRemaining:14.234});
 		buffs.push({rscType: ResourceType.Thundercloud, stacks:1, timeRemaining:14.234});
 		buffs.push({rscType: ResourceType.Manaward, stacks:1, timeRemaining:14.234});
+		buffs.push({rscType: ResourceType.Swiftcast, stacks:1, timeRemaining:14.234});
+		buffs.push({rscType: ResourceType.LucidDreaming, stacks:1, timeRemaining:14.234});
+		buffs.push({rscType: ResourceType.Surecast, stacks:1, timeRemaining:14.234});
+		buffs.push({rscType: ResourceType.Tincture, stacks:1, timeRemaining:14.234});
 
 		for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
-		return <div className={"buffsDisplay"}>
+		return <div className={"buffsDisplay self"}>
 			{buffs.map(obj=>{return <Buff {...obj}/>;})}
+		</div>
+	}
+}
+
+class EnemyBuffsDisplay extends React.Component
+{
+	render() {
+		let buffs = [];
+		buffs.push({rscType: ResourceType.ThunderDoT, stacks:1, timeRemaining:14.234});
+		buffs.push({rscType: ResourceType.Addle, stacks:1, timeRemaining:14.234});
+
+		for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
+		return <div className={"buffsDisplay enemy"}>
+			{buffs.map(obj=>{return <Buff {...obj}/>;})}
+		</div>
+	}
+}
+
+class ResourceLocksDisplay extends React.Component
+{
+	render() {
+		let anim = <ResourceBar name={"using skill"} color={"#cbcbcb"} progress={0.7} value={"mana"} width={100}/>;
+		let tax = <ResourceBar name={"casting/taxed"} color={"#cbcbcb"} progress={0.7} value={"mana"} width={100}/>;
+		return <div className={"resourceLocksDisplay"}>
+			{anim}
+			{tax}
+			{anim}
 		</div>
 	}
 }
@@ -78,18 +119,20 @@ class BuffsDisplay extends React.Component
 class ResourcesDisplay extends React.Component
 {
 	render() {
-		let manaBar = <ResourceBar name={"MP"} color={"#6cf"} progress={0.7} value={"mana"}/>;
-		let afui = <ResourceCounter name={"AF / UI"} color={"#de2222"} currentStacks={2} maxStacks={3}/>;
+		let manaBar = <ResourceBar name={"MP"} color={"#6cf"} progress={0.7} value={"mana"} width={100}/>;
+		let afui = <ResourceCounter name={"AF/UI"} color={"#de2222"} currentStacks={2} maxStacks={3}/>;
 		let uh = <ResourceCounter name={"Hearts"} color={"#66c6de"} currentStacks={2} maxStacks={3}/>;
 		let paradox = <ResourceCounter name={"Paradox"} color={"#d953ee"} currentStacks={1} maxStacks={1}/>;
-		let enochian = <ResourceBar name={"Enochian"} color={"#f5cf96"} progress={0.9} value={"24 / 30"}/>;
-		let poly = <ResourceCounter name={"Polyglot"} color={"#b138ee"} currentStacks={1} maxStacks={2}/>;
+		let enochian = <ResourceBar name={"Enochian"} color={"#f5cf96"} progress={0.9} value={"3.24/15"} width={100}/>;
+		let polyTimer = <ResourceBar name={"poly timer"} color={"#d5bbf1"} progress={0.7} value={"24/30"} width={100}/>;
+		let poly = <ResourceCounter name={"poly stacks"} color={"#b138ee"} currentStacks={1} maxStacks={2}/>;
 		return <div className={"resourceDisplay"}>
 			{manaBar}
+			{enochian}
 			{afui}
 			{uh}
 			{paradox}
-			{enochian}
+			{polyTimer}
 			{poly}
 		</div>;
 	}
@@ -98,10 +141,16 @@ class ResourcesDisplay extends React.Component
 class StatusDisplay extends React.Component
 {
 	render() {
-		let [currentMana, maxMana] = controller.getResourceStatus(ResourceType.Mana);
+		//let [currentMana, maxMana] = controller.getResourceStatus(ResourceType.Mana);
 		return <div className={"statusDisplay"}>
-			<ResourcesDisplay/>
-			<BuffsDisplay/>
+			<div className={"-left"}>
+				<ResourcesDisplay/>
+			</div>
+			<div className={"-right"}>
+				<ResourceLocksDisplay/>
+				<EnemyBuffsDisplay/>
+				<BuffsDisplay/>
+			</div>
 		</div>
 	}
 }

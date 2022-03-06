@@ -29,6 +29,7 @@
 /* Overall */
 .container {
     margin: 40px;
+    font-family: monospace;
 }
 .container-narrow {
     max-width: 960px;
@@ -88,26 +89,39 @@
 /* Status display */
 
 .statusDisplay {
-    text-align: center;
-    margin: 10px 0;
+    text-align: left;
+    margin: 30px 0;
+}
+.statusDisplay>.-left {
+    display: inline-block;
+    vertical-align: top;
+    width: 36%;
+    height: 100%;
+}
+.statusDisplay>.-right {
+    display: inline-block;
+    width: 64%;
 }
 /* resource bar & counter */
 .resourceDisplay {
     text-align: left;
-    position: relative;
-    display: inline-block;
-    margin-right: 20px;
 }
+
+.resourceLocksDisplay {
+    position: absolute;
+    display: inline-block;
+}
+
 .resource {
     margin-bottom: 4px;
+    line-height: 1.4em;
 }
 .resource-name, .resource-value {
     display: inline-block;
     height: 100%;
-    vertical-align: center;
 }
 .resource-name {
-    width: 100px;
+    width: 108px;
     horiz-align: left;
 }
 .resource>.progressBar {
@@ -117,7 +131,7 @@
     margin-right: 8px;
 }
 .resource-value {
-    width: 60px;
+    width: 80px;
     margin-left: 6px;
 }
 /* resource stack */
@@ -142,15 +156,16 @@
 /* buffs */
 .buffsDisplay {
     vertical-align: top;
-    display: inline-block;
+    text-align: right;
+    line-height: 1em;
+}
+.buffsDisplay.enemy {
+    margin-bottom: 26px;
 }
 .buff {
     text-align: center;
     width: 48px;
     display: inline-block;
-}
-.buff.ThunderDoT {
-    margin-right: 22px;
 }
 .buff>img {
     display: inline-block;

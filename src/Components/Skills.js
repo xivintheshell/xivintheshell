@@ -29,6 +29,11 @@ skillIcons.set(SkillName.HighFire2, require("./Asset/highFire2.png"));
 skillIcons.set(SkillName.HighBlizzard2, require("./Asset/highBlizzard2.png"));
 skillIcons.set(SkillName.Amplifier, require("./Asset/amplifier.png"));
 skillIcons.set(SkillName.Paradox, require("./Asset/paradox.png"));
+skillIcons.set(SkillName.Addle, require("./Asset/addle.png"));
+skillIcons.set(SkillName.Swiftcast, require("./Asset/swiftcast.png"));
+skillIcons.set(SkillName.LucidDreaming, require("./Asset/lucidDreaming.png"));
+skillIcons.set(SkillName.Surecast, require("./Asset/surecast.png"));
+skillIcons.set(SkillName.Tincture, require("./Asset/tincture.png"));
 
 class SkillButton extends React.Component
 {
@@ -79,6 +84,11 @@ class SkillsWindow extends React.Component
 			<SkillButton skillName={SkillName.HighBlizzard2} />
 			<SkillButton skillName={SkillName.Amplifier} />
 			<SkillButton skillName={SkillName.Paradox} />
+			<SkillButton skillName={SkillName.Addle} />
+			<SkillButton skillName={SkillName.Swiftcast} />
+			<SkillButton skillName={SkillName.LucidDreaming} />
+			<SkillButton skillName={SkillName.Surecast} />
+			<SkillButton skillName={SkillName.Tincture} />
 		</div>
 	}
 }
