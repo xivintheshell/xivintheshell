@@ -45,7 +45,7 @@ class SkillButton extends React.Component
 	render()
 	{
 		let iconPath = skillIcons.get(this.skillName);
-		let icon = <img className={"skillIcon"} src={iconPath} alt={this.skillName}/>;
+		let icon = <div className={"skillIcon"}><img src={iconPath} alt={this.skillName}/></div>;
 		return <span className={"skillButton"}>
 			<Clickable onClickFn={()=>{
 				controller.requestUseSkill({skillName: this.skillName});

@@ -1,7 +1,7 @@
 import React from 'react';
 import {ProgressBar} from "./Common";
 import {controller} from '../Controller/Controller'
-import {ResourceType, SkillName} from "../Game/Common";
+import {ResourceType} from "../Game/Common";
 
 // color, value
 function ResourceStack(props) {
@@ -103,48 +103,104 @@ class EnemyBuffsDisplay extends React.Component
 	}
 }
 
-class ResourceLocksDisplay extends React.Component
+function ResourceLocksDisplay(props)
 {
-	render() {
-		let anim = <ResourceBar name={"using skill"} color={"#cbcbcb"} progress={0.7} value={"mana"} width={100}/>;
-		let tax = <ResourceBar name={"casting/taxed"} color={"#cbcbcb"} progress={0.7} value={"mana"} width={100}/>;
-		return <div className={"resourceLocksDisplay"}>
-			{anim}
-			{tax}
-			{anim}
-		</div>
-	}
+	let anim = <ResourceBar name={"using skill"} color={"#cbcbcb"} progress={0.7} value={"mana"} width={100}/>;
+	let tax = <ResourceBar name={"casting/taxed"} color={"#cbcbcb"} progress={0.7} value={"mana"} width={100}/>;
+	return <div className={"resourceLocksDisplay"}>
+		{tax}
+		{anim}
+	</div>
 }
 
-class ResourcesDisplay extends React.Component
-{
-	render() {
-		let manaBar = <ResourceBar name={"MP"} color={"#6cf"} progress={0.7} value={"mana"} width={100}/>;
-		let afui = <ResourceCounter name={"AF/UI"} color={"#de2222"} currentStacks={2} maxStacks={3}/>;
-		let uh = <ResourceCounter name={"Hearts"} color={"#66c6de"} currentStacks={2} maxStacks={3}/>;
-		let paradox = <ResourceCounter name={"Paradox"} color={"#d953ee"} currentStacks={1} maxStacks={1}/>;
-		let enochian = <ResourceBar name={"Enochian"} color={"#f5cf96"} progress={0.9} value={"3.24/15"} width={100}/>;
-		let polyTimer = <ResourceBar name={"poly timer"} color={"#d5bbf1"} progress={0.7} value={"24/30"} width={100}/>;
-		let poly = <ResourceCounter name={"poly stacks"} color={"#b138ee"} currentStacks={1} maxStacks={2}/>;
-		return <div className={"resourceDisplay"}>
-			{manaBar}
-			{enochian}
-			{afui}
-			{uh}
-			{paradox}
-			{polyTimer}
-			{poly}
-		</div>;
+function ResourcesDisplay(props) {
+	let data = (props && props.data) ? props.data : {
+		mana: 10000,
+		enochianCountdown: 0,
+		astralFire: 0,
+		umbralIce: 0,
+		umbralHearts: 0,
+		paradox: 0,
+		polyglotCountdown: 30,
+		polyglotStacks: 0
 	}
+	console.log("rendering ResourcesDisplay with data ")
+	console.log(data);
+	let manaBar = <ResourceBar
+		name={"MP"}
+		color={"#8aceea"}
+		progress={data.mana / 10000}
+		value={Math.floor(data.mana) + "/10000"}
+		width={100}/>;
+	let enochian = <ResourceBar
+		name={"enochian"}
+		color={"#f5cf96"}
+		progress={data.enochianCountdown / 15}
+		value={`${data.enochianCountdown.toFixed(2)}`}
+		width={100}/>;
+	let afui = <ResourceCounter
+		name={"AF/UI"}
+		color={data.astralFire > 0 ? "#f63" : "#6bf"}
+		currentStacks={data.astralFire > 0 ? data.astralFire : data.umbralIce}
+		maxStacks={3}/>;
+	let uh = <ResourceCounter
+		name={"hearts"}
+		color={"#95dae3"}
+		currentStacks={data.umbralHearts}
+		maxStacks={3}/>;
+	let paradox = <ResourceCounter
+		name={"paradox"}
+		color={"#d953ee"}
+		currentStacks={data.paradox}
+		maxStacks={1}/>;
+	let polyTimer = <ResourceBar
+		name={"poly timer"}
+		color={"#d5bbf1"}
+		progress={1 - data.polyglotCountdown / 30}
+		value={`${data.polyglotCountdown.toFixed(2)}`}
+		width={100}/>;
+	let poly = <ResourceCounter
+		name={"poly stacks"}
+		color={"#b138ee"}
+		currentStacks={data.polyglotStacks}
+		maxStacks={2}/>;
+	return <div className={"resourceDisplay"}>
+		{manaBar}
+		{afui}
+		{uh}
+		{paradox}
+		{enochian}
+		{polyTimer}
+		{poly}
+	</div>;
 }
 
-class StatusDisplay extends React.Component
-{
+export let updateStatusDisplay = (data)=>{};
+class StatusDisplay extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			resources: null,
+			resourceLocks: null,
+			selfBuffs: null,
+			enemyBuffs: null
+		}
+		updateStatusDisplay = this.unboundUpdateStatus.bind(this);
+	}
+	unboundUpdateStatus(newData){
+		console.log("status display new data");
+		console.log(newData);
+		this.setState({
+			resources: newData.resources,
+			resourceLocks: newData.resourceLocks,
+			selfBuffs: newData.selfBuffs,
+			enemyBuffs: newData.enemyBuffs
+		});
+	}
 	render() {
-		//let [currentMana, maxMana] = controller.getResourceStatus(ResourceType.Mana);
 		return <div className={"statusDisplay"}>
 			<div className={"-left"}>
-				<ResourcesDisplay/>
+				<ResourcesDisplay data={this.state.resources}/>
 			</div>
 			<div className={"-right"}>
 				<ResourceLocksDisplay/>
