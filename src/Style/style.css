@@ -230,6 +230,7 @@
     left: 50%;
     top: 3px;
     margin-left: -20px;
+    pointer-events: none;
 }
 
 /*======== individual elems ========*/

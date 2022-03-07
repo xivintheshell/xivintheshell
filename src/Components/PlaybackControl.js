@@ -43,14 +43,19 @@ class TickModeSelection extends React.Component
 	}
 }
 
-export var stepSize = 0.5;
+export var getStepSize = function() { return 0.5; }
 
 class ManualTick extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = {value: 0.5, redirect: false};
+		this.state = {value: 0.5};
 		this.handleChange = this.handleChange.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
+		getStepSize = this.unboundGetStepSize.bind(this);
+	}
+
+	unboundGetStepSize() {
+		return parseFloat(this.state.value);
 	}
 
 	handleSubmit (event) {
@@ -62,7 +67,6 @@ class ManualTick extends React.Component {
 
 	handleChange(event) {
 		this.setState({value: event.target.value});
-		stepSize = parseFloat(this.state.value);
 	}
 
 	render() {

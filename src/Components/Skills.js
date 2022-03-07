@@ -1,6 +1,6 @@
 import React from 'react'
 import {Clickable} from "./Common";
-import {SkillName} from "../Game/Common";
+import {ResourceType, SkillName} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 
 export let displayedSkills = [
@@ -28,7 +28,7 @@ export let displayedSkills = [
 	SkillName.HighFire2,
 	SkillName.HighBlizzard2,
 	SkillName.Amplifier,
-	SkillName.Paradox,
+	//SkillName.Paradox, // display paradox at F1/B1
 	SkillName.Addle,
 	SkillName.Swiftcast,
 	SkillName.LucidDreaming,
@@ -137,11 +137,10 @@ class SkillButton extends React.Component {
 		let icon = <div onMouseEnter={this.boundHandleMouseEnter} className={"skillIcon" + (this.props.ready ? "" : " notReady")}><img src={iconPath} alt={this.props.skillName}/></div>;
 		let progressCircle = <ProgressCircle className="cdProgress" diameter={40} progress={this.props.cdProgress} color={"rgba(255,255,255,0.7)"}/>;
 		return <span title={this.skillName} className={"skillButton"}>
+			{this.props.cdProgress === 1 ? "" : progressCircle}
 			<Clickable onClickFn={()=>{
 				controller.requestUseSkill({skillName: this.props.skillName});
 			}} content={icon}/>
-			{this.props.cdProgress === 1 ? "" : progressCircle}
-
 		</span>
 	}
 }
@@ -151,25 +150,31 @@ class SkillsWindow extends React.Component {
 	constructor(props) {
 		super(props);
 		updateSkillButtons = this.unboundUpdateFn.bind(this);
-		//controller.updateSkillButtons();
 		this.state = {
 			statusList: displayedSkills.map(sn=>{
 				return controller.getSkillInfo({skillName: sn});
 			}),
+			paradoxInfo: controller.getSkillInfo({skillName: SkillName.Paradox}),
 		}
 	}
 	unboundUpdateFn(statusList) {
-		this.setState({statusList: statusList});
+		this.setState({
+			statusList: statusList,
+			paradoxInfo: controller.getSkillInfo({skillName: SkillName.Paradox}),
+		});
 	}
 	render() {
-
 		let skillButtons = [];
+		let para = controller.getResourceValue({rscType: ResourceType.Paradox});
 		for (let i = 0; i < displayedSkills.length; i++) {
+			let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
+			let skillName = (isF1B1 && para) ? SkillName.Paradox : displayedSkills[i];
+			let info = (isF1B1 && para) ? this.state.paradoxInfo : this.state.statusList[i];
 			let btn = <SkillButton
 				key={i}
-				skillName={displayedSkills[i]}
-				ready={this.state.statusList[i].ready}
-				cdProgress={this.state.statusList[i].cdProgress}
+				skillName={skillName}
+				ready={info.ready}
+				cdProgress={info.cdProgress}
 				/>
 			skillButtons.push(btn);
 		}

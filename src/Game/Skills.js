@@ -316,10 +316,10 @@ export function makeSkillsList(game)
 		},
 		() => {
 			let fs = game.resources.get(ResourceType.Firestarter);
-			if (fs.available(1))
-			{
+			if (fs.available(1)) {
 				controller.log(LogCategory.Event, "F3 made instant via firestarter proc", game.time, Color.Fire);
 				fs.consume(1);
+				fs.removeTimer();
 				game.switchToAForUI(ResourceType.AstralFire, 3);
 				game.startOrRefreshEnochian();
 				game.useInstantSkill(SkillName.Fire3, cap => {

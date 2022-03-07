@@ -3,7 +3,7 @@ import {Color, LogCategory} from "./Common";
 import { game } from "../Game/GameState";
 import {ResourceType} from "../Game/Common";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
-import {stepSize} from "../Components/PlaybackControl";
+import {getStepSize} from "../Components/PlaybackControl";
 import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 
 class Controller
@@ -96,6 +96,13 @@ class Controller
         return null;
     }
 
+    getResourceValue(props={rscType: undefined}) {
+        if (props.rscType) {
+            return game.resources.get(props.rscType).currentValue;
+        }
+        return -1;
+    }
+
     requestPlayPause(props)
     {
         console.log("req play/pause");
@@ -140,9 +147,9 @@ class Controller
             this.requestFastForward();
         }
         if (evt.shiftKey && evt.keyCode===39) { // shift + right
-            this.requestTick({deltaTime: stepSize * 0.2});
+            this.requestTick({deltaTime: getStepSize() * 0.2});
         } else if (evt.keyCode===39) {
-            this.requestTick({deltaTime: stepSize});
+            this.requestTick({deltaTime: getStepSize()});
         }
     }
 }
