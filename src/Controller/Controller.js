@@ -35,6 +35,7 @@ class Controller
         let cast = game.resources.get(ResourceType.NotCasterTaxed);
         let anim = game.resources.get(ResourceType.NotAnimationLocked);
         let resourceLocksData = {
+            gcdReady: game.cooldowns.get(ResourceType.cd_GCD).stacksAvailable() > 0,
             gcd: game.config.gcd,
             timeTillGCDReady: game.cooldowns.timeTillNextStackAvailable(ResourceType.cd_GCD),
             castLocked: game.resources.timeTillReady(ResourceType.NotCasterTaxed) > 0,
@@ -122,7 +123,8 @@ class Controller
                 this.log(LogCategory.Action, s, result.time, result.logColor);
             }
         }
-
+        this.updateStatusDisplay(game);
+        this.updateSkillButtons();
     }
 
     requestUseSkill(props) {
@@ -145,3 +147,9 @@ class Controller
     }
 }
 export const controller = new Controller();
+
+function calcGcdMultiplier(sps) {
+    let gcd = 2.5;
+    let res = Math.floor(gcd * (1000 + Math.ceil(130 * (400 - sps) / 1900)) / 10000) / 100;
+    console.log(res);
+}
