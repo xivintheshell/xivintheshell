@@ -84,6 +84,32 @@ class SkillInfoText extends React.Component {
 		{this.state.content}
 	</div> }
 }
+export function ProgressCircle(props={
+	className: "",
+	diameter: 50,
+	progress: 0.7,
+	color: "rgba(255,255,255,0.5)",
+}) {
+	let elemRadius = props.diameter / 2.0;
+	let outRadius = props.diameter * 0.35;
+	let outCircumference = 2 * Math.PI * outRadius;
+	let outFillLength = outCircumference * props.progress;
+	let outGapLength = outCircumference - outFillLength;
+	let outDasharray = outFillLength + "," + outGapLength;
+	let outlineCircle = <circle
+		r={outRadius}
+		cx={elemRadius}
+		cy={elemRadius}
+		fill="none"
+		stroke={props.color}
+		strokeWidth="6"
+		strokeDasharray={outDasharray}//{Math.PI * props.diameter}
+		strokeDashoffset={outCircumference / 4}/>
+
+	return <svg className={props.className} width={props.diameter} height={props.diameter}>
+		{outlineCircle}
+	</svg>
+}
 
 class SkillButton extends React.Component {
 	constructor(props) {
@@ -109,10 +135,13 @@ class SkillButton extends React.Component {
 	render() {
 		let iconPath = skillIcons.get(this.props.skillName);
 		let icon = <div onMouseEnter={this.boundHandleMouseEnter} className={"skillIcon" + (this.props.ready ? "" : " notReady")}><img src={iconPath} alt={this.props.skillName}/></div>;
+		let progressCircle = <ProgressCircle className="cdProgress" diameter={40} progress={this.props.cdProgress} color={"rgba(255,255,255,0.7)"}/>;
 		return <span title={this.skillName} className={"skillButton"}>
 			<Clickable onClickFn={()=>{
 				controller.requestUseSkill({skillName: this.props.skillName});
 			}} content={icon}/>
+			{this.props.cdProgress === 1 ? "" : progressCircle}
+
 		</span>
 	}
 }
@@ -140,6 +169,7 @@ class SkillsWindow extends React.Component {
 				key={i}
 				skillName={displayedSkills[i]}
 				ready={this.state.statusList[i].ready}
+				cdProgress={this.state.statusList[i].cdProgress}
 				/>
 			skillButtons.push(btn);
 		}

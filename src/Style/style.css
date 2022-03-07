@@ -196,6 +196,9 @@
 .skillInfoText {
     margin-bottom: 10px;
 }
+.skillButton {
+    position: relative;
+}
 .skillIcon {
     width: 48px;
     height: 48px;
@@ -220,6 +223,13 @@
     width: 48px;
     height: 48px;
     position: absolute;
+}
+.cdProgress {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    top: 3px;
+    margin-left: -20px;
 }
 
 /*======== individual elems ========*/

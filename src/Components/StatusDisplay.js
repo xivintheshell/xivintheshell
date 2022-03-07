@@ -15,7 +15,7 @@ function ResourceStack(props) {
 	</div>;
 }
 
-// name, color, value, progress, width
+// name, color, value, progress, width, className
 function ResourceBar(props = {
 	name: "placeholder",
 	color: "#6cf",

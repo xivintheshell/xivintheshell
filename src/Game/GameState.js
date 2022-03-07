@@ -422,10 +422,15 @@ class GameState
 		let enoughMana = capturedManaCost <= currentMana;
 		let reqsMet = skill.available();
 
+		let cd = this.cooldowns.get(skill.info.cdName);
+		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
+		let cdProgress = 1 - cdReadyCountdown / cd.cdPerStack;
+
 		return {
 			ready: notBlocked && enoughMana && reqsMet,
-			stacksAvailable: this.cooldowns.get(skill.info.cdName).stacksAvailable(),
-			cdReadyCountdown: this.cooldowns.timeTillNextStackAvailable(skill.info.cdName),
+			stacksAvailable: cd.stacksAvailable(),
+			cdReadyCountdown: cdReadyCountdown,
+			cdProgress: cdProgress,
 			timeTillAvailable: timeTillAvailable,
 			capturedManaCost: capturedManaCost
 		}

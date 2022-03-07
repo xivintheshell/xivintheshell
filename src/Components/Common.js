@@ -12,8 +12,7 @@ export class Clickable extends React.Component {
 	}
 }
 
-export class ProgressBar extends React.Component
-{
+export class ProgressBar extends React.Component {
 	constructor(props={
 		progress: 0.9,
 		backgroundColor: "#6cf",
