@@ -2,39 +2,64 @@ import React from 'react';
 import { controller } from '../Controller/Controller'
 import { Clickable } from "./Common";
 
-const TickMode = {
-	RealTime: "real-time",
-	RealTimeAutoPause: "real-time, auto pause",
-	AutoFastForward: "auto fast forward",
-	Manual: "manual"
+export const TickMode = {
+	RealTime: 0,
+	RealTimeAutoPause: 1,
+	Manual: 2
 };
 
 class TickModeSelection extends React.Component
 {
 	constructor(props) {
 		super(props);
-		this.state = {
-			tickMode: TickMode.Manual
-		}
 		this.onChangeValue = this.unboundOnSelectionChanged.bind(this);
+
+		let desc0 = <div>
+			<span>- click to use a skill just like in-game</span><br/>
+			<span>- [space bar] to play/pause. game time is elapsing when the above region has a green border</span><br/><br/>
+			<span>Note that keyboard inputs are only effective within the control region i.e. when the above box is purple/green</span><br/>
+		</div>;
+		let desc1 = <div>
+			<span>*Recommended*</span><br/><br/>
+			<span>- click to use a skill. or if it's not ready, click again to wait then retry</span><br/>
+			<span>- [->] to advance time by "step size" as configured below</span><br/>
+			<span>- [shift]+[->] to advance time by 1/5 "step size" as configured below</span><br/><br/>
+			<span>Note that keyboard inputs are only effective within the control region i.e. when the above region has purple or green border.</span><br/>
+		</div>
+		let desc2 = <div>
+			<span>- click to use a skill. or if it's not ready, click again to wait then retry</span><br/>
+			<span>- [space bar] to advance game time to the earliest possible time for the next skill</span><br/>
+			<span>- [->] to advance time by "step size" as configured below</span><br/>
+			<span>- [shift]+[->] to advance time by 1/5 "step size" as configured below</span><br/><br/>
+			<span>Note that keyboard inputs are only effective within the control region i.e. when the above region has purple or green border.</span><br/>
+		</div>
+
+		this.descriptions = [desc0, desc1, desc2];
+
+		this.state = {
+			description: this.descriptions[TickMode.RealTimeAutoPause],
+		}
 	}
 	unboundOnSelectionChanged(evt) {
-		console.log(evt.target.value);
+		let mode = parseInt(evt.target.value);
+		controller.setTickMode(mode);
+		this.setState({description: this.descriptions[mode]});
 	}
 	render() {
 		return <div className={"tickModeSelection"} onChange={this.onChangeValue}>
-			<label>
-				<input type={"radio"} value={TickMode.RealTimeAutoPause} defaultChecked={false} name={"tick mode"}/>
-				{TickMode.RealTimeAutoPause}
+			<label className={"tickModeOption"}>
+				<input className={"radioButton"} type={"radio"} value={TickMode.RealTime} defaultChecked={false} name={"tick mode"}/>
+				{"real-time"}
 			</label>
-			<label>
-				<input type={"radio"} value={TickMode.AutoFastForward} defaultChecked={false} name={"tick mode"}/>
-				{TickMode.AutoFastForward}
+			<label className={"tickModeOption"}>
+				<input className={"radioButton"} type={"radio"} value={TickMode.RealTimeAutoPause} defaultChecked={true} name={"tick mode"}/>
+				{"real-time auto pause"}
 			</label>
-			<label>
-				<input type={"radio"} value={TickMode.Manual} defaultChecked={true} name={"tick mode"}/>
-				{TickMode.Manual}
+			<label className={"tickModeOption"}>
+				<input className={"radioButton"} type={"radio"} value={TickMode.Manual} defaultChecked={false} name={"tick mode"}/>
+				{"manual"}
 			</label>
+			<div className={"tickModeDescription"}>{this.state.description}</div>
 		</div>
 	}
 }
@@ -44,10 +69,10 @@ class Config extends React.Component {
 		super(props);
 		this.state = {
 			stepSize : 0.5,
-			spellSpeed: 400,
-			slideCastDuration: 0.4,
-			animationLock: 0.7,
-			casterTax: 0.08,
+			spellSpeed: 1300,
+			slideCastDuration: 0.45,
+			animationLock: 0.66,
+			casterTax: 0.06,
 			timeTillFirstManaTick: 1.5
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
@@ -97,7 +122,7 @@ class Config extends React.Component {
 				<span>animation lock = {inAnimationLock}, </span>
 				<span>caster tax = {inCasterTax}, </span>
 				<span>time till first mana tick = {inTimeTillFirstManaTick}. </span>
-				<input type="submit" value="confirm and restart"/>
+				<input type="submit" value="apply and reset"/>
 			</form>;
 		return (
 			<div className={"manualTickSelection"}>{form}</div>
@@ -106,14 +131,6 @@ class Config extends React.Component {
 
 class PlaybackControl extends React.Component {
 	render() {
-		let playPauseButton = <Clickable onClickFn={()=>{
-			controller.requestPlayPause({});
-		}} content={"[Play/Pause]"}/>
-
-		let fastForwardButton = <Clickable onClickFn={()=>{
-			controller.requestFastForward({})
-		}} content={"[Fast-forward]"}/>
-
 		// TODO
 		return <div className={"playbackControl"}>
 			<TickModeSelection/>

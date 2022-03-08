@@ -32,6 +32,7 @@
 /* Overall */
 .container {
     margin: 40px;
+    accent-color: mediumpurple;
     font-family: monospace;
 }
 .container-narrow {
@@ -70,10 +71,12 @@
     outline-offset: 8px;
     outline: lightgrey solid 1px;
 }
-
 .keyboardControlled:focus {
-    outline-offset: 8px;
     outline: mediumpurple solid 2px;
+}
+
+.keyboardControlled.realTime:focus {
+    outline: mediumseagreen solid 2px;
 }
 
 /* Timeline */
@@ -97,7 +100,18 @@
     border: none;
     border-bottom: 1px solid black;
 }
-
+.tickModeOption {
+    margin-right: 1em;
+    margin-bottom: 30px;
+}
+.tickModeDescription {
+    padding: 1em 2em;
+}
+.radioButton {
+    position: relative;
+    top: 3px;
+    margin-right: 0.25em;
+}
 
 /* Status display */
 

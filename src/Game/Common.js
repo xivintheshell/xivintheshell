@@ -9,7 +9,6 @@ export class GameConfig
 {
 	adjustedDoTPotency(inPotency) {
 		let dotStrength = (1000 + Math.floor((this.spellSpeed - 400) * 130 / 1900.0)) * 0.001;
-		console.log(dotStrength);
 		return inPotency * dotStrength;
 	}
 

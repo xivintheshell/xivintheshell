@@ -4,6 +4,8 @@ import { GameState } from "../Game/GameState";
 import {GameConfig, ResourceType, SkillReadyStatus} from "../Game/Common";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {displayedSkills, updateSkillButtons} from "../Components/Skills";
+import {TickMode} from "../Components/PlaybackControl"
+import {setRealTime} from "../Components/Main";
 
 class Controller
 {
@@ -11,6 +13,10 @@ class Controller
     {
         this.stepSize = 0.5;
         this.shouldLoop = false;
+        this.tickMode = TickMode.RealTimeAutoPause;
+        this.lastAtteptedSkill = "";
+        this.skillMaxTimeInQueue = 0.5;
+        this.skillsQueue = [];
 
         this.gameConfig = new GameConfig();
         this.gameConfig.casterTax = 0.06;
@@ -21,8 +27,7 @@ class Controller
         this.requestRestart();
     }
     // game --> view
-    log(category, content, time, color=Color.Text)
-    {
+    log(category, content, time, color=Color.Text) {
         if (time !== undefined) content = time.toFixed(3) + "s: " + content;
         addLogContent(category, content, color);
     }
@@ -93,14 +98,22 @@ class Controller
     }
 
     // view --> game
-    requestTick(props={ deltaTime: -1 })
-    {
+    #requestTick(props={
+        deltaTime: -1,
+        suppressLog: false
+    }) {
         if (props.deltaTime > 0) {
             this.game.tick(props.deltaTime);
             this.#updateStatusDisplay(this.game);
             this.#updateSkillButtons();
-            this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.time, Color.Grey);
+            if (!props.suppressLog) this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.time, Color.Grey);
         }
+    }
+
+    setTickMode(tickMode) {
+        this.tickMode = tickMode;
+        this.shouldLoop = false;
+        this.lastAtteptedSkill = "";
     }
 
     setConfigAndRestart(props={
@@ -138,22 +151,27 @@ class Controller
         return -1;
     }
 
-    requestPlayPause(props)
+    #playPause(props)
     {
+        let newShouldLoop = props ? props.shouldLoop : !this.shouldLoop;
+        if (this.shouldLoop === newShouldLoop) return;
+
+        this.shouldLoop = newShouldLoop;
+
         if (this.shouldLoop) {
-            this.shouldLoop = false;
-        } else {
-            this.shouldLoop = true;
+            this.log(LogCategory.Action, "starting real-time control", this.game.time, Color.Success);
             this.#runLoop(()=>{
                 return this.shouldLoop
             });
+        } else {
+            this.log(LogCategory.Action, "paused", this.game.time, Color.Success);
         }
     }
 
-    requestFastForward(props)
+    #fastForward(props)
     {
         let deltaTime = this.game.timeTillAnySkillAvailable();
-        this.requestTick({deltaTime: deltaTime});
+        this.#requestTick({deltaTime: deltaTime, suppressLog: false});
     }
 
     requestRestart(props)
@@ -162,6 +180,7 @@ class Controller
         this.game = new GameState(this.gameConfig);
         this.#updateStatusDisplay(this.game);
         this.#updateSkillButtons();
+        this.#playPause({shouldLoop: false});
         this.log(
             LogCategory.Action,
             "======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5) + ") ========",
@@ -174,11 +193,12 @@ class Controller
             Color.Grey);
     }
 
-    #useSkill(skillName, bWaitFirst)
+    #useSkill(skillName, bWaitFirst, bSuppressLog=false)
     {
         let status = this.game.getSkillAvailabilityStatus(skillName);
+
         if (bWaitFirst) {
-            this.requestTick({deltaTime: status.timeTillAvailable});
+            this.#requestTick({deltaTime: status.timeTillAvailable, suppressLog: false});
             status = this.game.getSkillAvailabilityStatus(skillName);
             this.lastAtteptedSkill = "";
         }
@@ -189,7 +209,7 @@ class Controller
         if (status.status === SkillReadyStatus.Ready)
         {
             logString = "use skill [" + skillName + "]";
-            logColor = Color.Success;
+            logColor = Color.Text;
         }
         else if (status.status === SkillReadyStatus.Blocked)
         {
@@ -211,9 +231,11 @@ class Controller
             logColor = Color.Error;
         }
 
-        this.log(LogCategory.Action, logString, this.game.time, logColor);
-        if (status.status === SkillReadyStatus.Ready) {
-            this.log(LogCategory.Event, logString, this.game.time, logColor);
+        if (!bSuppressLog || status.status === SkillReadyStatus.Ready) {
+            this.log(LogCategory.Action, logString, this.game.time, logColor);
+            if (status.status === SkillReadyStatus.Ready) {
+                this.log(LogCategory.Event, logString, this.game.time, logColor);
+            }
         }
 
         if (status.status === SkillReadyStatus.Ready)
@@ -221,44 +243,104 @@ class Controller
             this.game.useSkillIfAvailable(skillName);
             this.#updateStatusDisplay();
             this.#updateSkillButtons();
+            if (this.tickMode === TickMode.AutoFastForward) {
+                this.#fastForward();
+            } else if (this.tickMode === TickMode.RealTimeAutoPause) {
+                this.shouldLoop = true;
+                this.#runLoop(()=>{
+                    return this.game.timeTillAnySkillAvailable() > 0;
+                });
+            }
         }
     }
 
     requestUseSkill(props) {
-        this.#useSkill(props.skillName, props.skillName === this.lastAtteptedSkill);
+        if (this.tickMode === TickMode.RealTime && this.shouldLoop) {
+            this.skillsQueue.push({
+                skillName: props.skillName,
+                timeInQueue: 0
+            });
+        } else {
+            let waitFirst = props.skillName === this.lastAtteptedSkill;
+            this.#useSkill(props.skillName, waitFirst);
+        }
     }
 
     #runLoop(loopCondition) {
 
-        let numFrames = 0;
+        let prevTime = 0;
+        let ctrl = this;
 
-        const loopFn = function(elapsed) {
-            if (numFrames === 0) { // first frame
+        const loopFn = function(time) {
+            if (prevTime === 0) { // first frame
+                prevTime = time;
                 // start
+                // ...
             }
-            // update
+            let dt = (time - prevTime) / 1000;
+
+            // update (skills queue)
+            let numSkillsProcessed = 0;
+            for (let i = 0; i < ctrl.skillsQueue.length; i++) {
+                ctrl.#useSkill(ctrl.skillsQueue[i].skillName, false, true);
+                ctrl.skillsQueue[i].timeInQueue += dt;
+                if (ctrl.skillsQueue[i].timeInQueue >= ctrl.skillMaxTimeInQueue) {
+                    numSkillsProcessed++;
+                }
+            }
+            ctrl.skillsQueue.splice(0, numSkillsProcessed);
+            ctrl.#requestTick({deltaTime : dt, suppressLog: true});
 
             // end of frame
-            numFrames++;
+            prevTime = time;
             if (loopCondition()) requestAnimationFrame(loopFn);
+            else {
+                ctrl.shouldLoop = false;
+                setRealTime(false);
+            }
         }
+        setRealTime(true);
         requestAnimationFrame(loopFn);
     }
 
-    handleKeyboardEvent(evt) {
-        console.log(evt.keyCode);
+    #handleKeyboardEvent_RealTime(evt) {
         if (evt.keyCode===32) { // space
-            this.requestFastForward();
+            this.#playPause();
+        }
+    }
+    #handleKeyboardEvent_RealTimeAutoPause(evt) {
+
+        if (this.shouldLoop) return;
+
+        if (evt.shiftKey && evt.keyCode===39 && !this.shouldLoop) { // shift + right
+            this.#requestTick({deltaTime: this.stepSize * 0.2});
+        }
+        else if (evt.keyCode===39 && !this.shouldLoop) {// right arrow
+            this.#requestTick({deltaTime: this.stepSize});
+        }
+    }
+    #handleKeyboardEvent_Manual(evt) {
+        if (evt.keyCode===32) { // space
+            this.#fastForward();
         }
         if (evt.shiftKey && evt.keyCode===39) { // shift + right
-            this.requestTick({deltaTime: this.stepSize * 0.2});
+            this.#requestTick({deltaTime: this.stepSize * 0.2});
         }
-        else if (evt.keyCode===39) {
-            this.requestTick({deltaTime: this.stepSize});
+        else if (evt.keyCode===39) {// right arrow
+            this.#requestTick({deltaTime: this.stepSize});
         }
-        else if (evt.keyCode===49) {
-            this.requestPlayPause();
+    }
+
+    handleKeyboardEvent(evt) {
+        //console.log(evt.keyCode);
+        if (this.tickMode === TickMode.RealTime) {
+            this.#handleKeyboardEvent_RealTime(evt);
+        } else if (this.tickMode === TickMode.RealTimeAutoPause) {
+            this.#handleKeyboardEvent_RealTimeAutoPause(evt);
+        } else if (this.tickMode === TickMode.Manual) {
+            this.#handleKeyboardEvent_Manual(evt);
         }
+
     }
 }
 export const controller = new Controller();
