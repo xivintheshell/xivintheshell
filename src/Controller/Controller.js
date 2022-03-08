@@ -3,19 +3,22 @@ import {Color, LogCategory} from "./Common";
 import { GameState } from "../Game/GameState";
 import {GameConfig, ResourceType, SkillReadyStatus} from "../Game/Common";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
-import {getStepSize} from "../Components/PlaybackControl";
 import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 
 class Controller
 {
-    constructor() {
+    constructor()
+    {
+        this.stepSize = 0.5;
+        this.shouldLoop = false;
+
         this.gameConfig = new GameConfig();
-        this.gameConfig.casterTax = 0.04;
-        this.gameConfig.slideCastDuration = 0.4;
-        this.gameConfig.animationLock = 0.5;
+        this.gameConfig.casterTax = 0.06;
+        this.gameConfig.slideCastDuration = 0.5;
+        this.gameConfig.animationLock = 0.66;
         this.gameConfig.spellSpeed = 1300;
-        this.gameConfig.timeTillFirstManaTick = 0.1;
-        this.requestRestart({});
+        this.gameConfig.timeTillFirstManaTick = 1.2;
+        this.requestRestart();
     }
     // game --> view
     log(category, content, time, color=Color.Text)
@@ -137,7 +140,14 @@ class Controller
 
     requestPlayPause(props)
     {
-        console.log("req play/pause");
+        if (this.shouldLoop) {
+            this.shouldLoop = false;
+        } else {
+            this.shouldLoop = true;
+            this.#runLoop(()=>{
+                return this.shouldLoop
+            });
+        }
     }
 
     requestFastForward(props)
@@ -152,6 +162,16 @@ class Controller
         this.game = new GameState(this.gameConfig);
         this.#updateStatusDisplay(this.game);
         this.#updateSkillButtons();
+        this.log(
+            LogCategory.Action,
+            "======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5) + ") ========",
+            this.game.time,
+            Color.Grey);
+        this.log(
+            LogCategory.Event,
+            "======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5) + ") ========",
+            this.game.time,
+            Color.Grey);
     }
 
     #useSkill(skillName, bWaitFirst)
@@ -208,14 +228,36 @@ class Controller
         this.#useSkill(props.skillName, props.skillName === this.lastAtteptedSkill);
     }
 
+    #runLoop(loopCondition) {
+
+        let numFrames = 0;
+
+        const loopFn = function(elapsed) {
+            if (numFrames === 0) { // first frame
+                // start
+            }
+            // update
+
+            // end of frame
+            numFrames++;
+            if (loopCondition()) requestAnimationFrame(loopFn);
+        }
+        requestAnimationFrame(loopFn);
+    }
+
     handleKeyboardEvent(evt) {
+        console.log(evt.keyCode);
         if (evt.keyCode===32) { // space
             this.requestFastForward();
         }
         if (evt.shiftKey && evt.keyCode===39) { // shift + right
-            this.requestTick({deltaTime: getStepSize() * 0.2});
-        } else if (evt.keyCode===39) {
-            this.requestTick({deltaTime: getStepSize()});
+            this.requestTick({deltaTime: this.stepSize * 0.2});
+        }
+        else if (evt.keyCode===39) {
+            this.requestTick({deltaTime: this.stepSize});
+        }
+        else if (evt.keyCode===49) {
+            this.requestPlayPause();
         }
     }
 }

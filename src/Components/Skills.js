@@ -103,7 +103,7 @@ export function ProgressCircle(props={
 		fill="none"
 		stroke={props.color}
 		strokeWidth="6"
-		strokeDasharray={outDasharray}//{Math.PI * props.diameter}
+		strokeDasharray={outDasharray}
 		strokeDashoffset={outCircumference / 4}/>
 
 	return <svg className={props.className} width={props.diameter} height={props.diameter}>

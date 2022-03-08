@@ -51,14 +51,7 @@ class ScrollAnchor extends React.Component
     }
 }
 
-export var addLogContent = function(logCategory, newContent, color)
-{
-    let [view, content] = this.views.get(logCategory);
-    let newEntry = <div className={color + " logEntry"} key={content.length}>{newContent}<br/></div>;
-    content.push(newEntry);
-    let updateFn = updateTextFunctions.get(view.props.name);
-    updateFn(<span>{content.map(s=>{return s})} </span>);
-}
+export var addLogContent = function(logCategory, newContent, color) {}
 
 class LogView extends React.Component
 {
@@ -69,7 +62,14 @@ class LogView extends React.Component
         this.views.set(LogCategory.Action, [<UpdatableText className="logWindow small" key={0} name={LogCategory.Action}/>, []]);
         this.views.set(LogCategory.Event, [<UpdatableText className="logWindow medium" key={1} name={LogCategory.Event}/>, []]);
 
-        addLogContent = addLogContent.bind(this);
+        addLogContent = this.unboundAddLogContent.bind(this);
+    }
+    unboundAddLogContent(logCategory, newContent, color) {
+        let [view, content] = this.views.get(logCategory);
+        let newEntry = <div className={color + " logEntry"} key={content.length}>{newContent}<br/></div>;
+        content.push(newEntry);
+        let updateFn = updateTextFunctions.get(view.props.name);
+        updateFn(<span>{content.map(s=>{return s})} </span>);
     }
     render()
     {

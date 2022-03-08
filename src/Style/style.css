@@ -38,7 +38,6 @@
     max-width: 960px;
     margin: 10px auto;
 }
-
 /* Logging */
 
 .logWindow {
@@ -67,7 +66,7 @@
 /* keyboard-controlled area */
 
 .keyboardControlled {
-    margin-bottom: 16px;
+    margin-bottom: 30px;
     outline-offset: 8px;
     outline: lightgrey solid 1px;
 }
@@ -89,8 +88,16 @@
 
 .playbackControl {
     margin-bottom: 10px;
-    text-align: center;
 }
+.config,.tickModeSelection {
+    margin: 10px 0;
+}
+.numberInput {
+    outline: none;
+    border: none;
+    border-bottom: 1px solid black;
+}
+
 
 /* Status display */
 
