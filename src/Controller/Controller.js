@@ -9,9 +9,13 @@ import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 class Controller
 {
     constructor() {
-        this.lastAtteptedSkill = ""
         this.gameConfig = new GameConfig();
-        this.game = new GameState(this.gameConfig);
+        this.gameConfig.casterTax = 0.04;
+        this.gameConfig.slideCastDuration = 0.4;
+        this.gameConfig.animationLock = 0.5;
+        this.gameConfig.spellSpeed = 1300;
+        this.gameConfig.timeTillFirstManaTick = 0.1;
+        this.requestRestart({});
     }
     // game --> view
     log(category, content, time, color=Color.Text)
@@ -20,7 +24,7 @@ class Controller
         addLogContent(category, content, color);
     }
 
-    updateStatusDisplay() {
+    #updateStatusDisplay() {
         let game = this.game;
         // resources
         let eno = game.resources.get(ResourceType.Enochian);
@@ -67,18 +71,22 @@ class Controller
             surecastCountdown: game.resources.timeTillReady(ResourceType.Surecast),
             tinctureCountdown: game.resources.timeTillReady(ResourceType.Tincture),
         };
-        updateStatusDisplay({
-            resources: resourcesData,
-            resourceLocks: resourceLocksData,
-            enemyBuffs: enemyBuffsData,
-            selfBuffs: selfBuffsData
-        });
+        if (typeof updateStatusDisplay !== "undefined") {
+            updateStatusDisplay({
+                resources: resourcesData,
+                resourceLocks: resourceLocksData,
+                enemyBuffs: enemyBuffsData,
+                selfBuffs: selfBuffsData
+            });
+        }
     }
 
-    updateSkillButtons() {
-        updateSkillButtons(displayedSkills.map(skillName=>{
-            return this.game.getSkillAvailabilityStatus(skillName);
-        }));
+    #updateSkillButtons() {
+        if (typeof updateSkillButtons !== "undefined") {
+            updateSkillButtons(displayedSkills.map(skillName=>{
+                return this.game.getSkillAvailabilityStatus(skillName);
+            }));
+        }
     }
 
     // view --> game
@@ -86,10 +94,31 @@ class Controller
     {
         if (props.deltaTime > 0) {
             this.game.tick(props.deltaTime);
-            this.updateStatusDisplay(this.game);
-            this.updateSkillButtons();
+            this.#updateStatusDisplay(this.game);
+            this.#updateSkillButtons();
             this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.time, Color.Grey);
         }
+    }
+
+    setConfigAndRestart(props={
+        stepSize: 0.5,
+        spellSpeed: 1268,
+        slideCastDuration: 0.5,
+        animationLock: 0.66,
+        casterTax: 0.06,
+        timeTillFirstManaTick: 0.3,
+    })
+    {
+        this.stepSize = props.stepSize;
+
+        this.gameConfig = new GameConfig();
+        this.gameConfig.casterTax = props.casterTax;
+        this.gameConfig.slideCastDuration = props.slideCastDuration;
+        this.gameConfig.animationLock = props.animationLock;
+        this.gameConfig.spellSpeed = props.spellSpeed;
+        this.gameConfig.timeTillFirstManaTick = props.timeTillFirstManaTick;
+
+        this.requestRestart();
     }
 
     getSkillInfo(props={skillName: undefined}) {
@@ -115,6 +144,14 @@ class Controller
     {
         let deltaTime = this.game.timeTillAnySkillAvailable();
         this.requestTick({deltaTime: deltaTime});
+    }
+
+    requestRestart(props)
+    {
+        this.lastAtteptedSkill = ""
+        this.game = new GameState(this.gameConfig);
+        this.#updateStatusDisplay(this.game);
+        this.#updateSkillButtons();
     }
 
     #useSkill(skillName, bWaitFirst)
@@ -162,8 +199,8 @@ class Controller
         if (status.status === SkillReadyStatus.Ready)
         {
             this.game.useSkillIfAvailable(skillName);
-            this.updateStatusDisplay();
-            this.updateSkillButtons();
+            this.#updateStatusDisplay();
+            this.#updateSkillButtons();
         }
     }
 
@@ -183,4 +220,3 @@ class Controller
     }
 }
 export const controller = new Controller();
-

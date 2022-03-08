@@ -47,35 +47,41 @@ export var getStepSize = function() { return 0.5; }
 class Config extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = {value: 0.5};
+		this.state = {
+			stepSize : 0.5
+		};
 		this.handleChange = this.handleChange.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
 		getStepSize = this.unboundGetStepSize.bind(this);
 	}
 
 	unboundGetStepSize() {
-		return parseFloat(this.state.value);
+		return parseFloat(this.state.stepSize);
 	}
 
 	handleSubmit (event) {
-		controller.requestTick({
-			deltaTime: parseFloat(this.state.value)
+		controller.setConfigAndRestart({
+			stepSize: this.state.stepSize,
+			spellSpeed: 400,
+			slideCastDuration: 0.4,
+			animationLock: 0.7,
+			casterTax: 0.08,
+			timeTillFirstManaTick: 1.5
 		});
 		event.preventDefault();
 	}
 
 	handleChange(event) {
-		this.setState({value: event.target.value});
+		this.setState({stepSize: event.target.value});
 	}
 
 	render() {
 		const form =
 			<form onSubmit={this.handleSubmit}>
 				<span>Step by </span>
-				<input size="5" type="text"
-					   value={this.state.value} onChange={this.handleChange}/>
+				<input size="5" type="text" value={this.state.stepSize} onChange={this.handleChange}/>
 				<span> seconds </span>
-				<input type="submit" value="GO"/>
+				<input type="submit" value="set and restart"/>
 			</form>;
 		return (
 			<div className={"manualTickSelection"}>{form}</div>
@@ -104,4 +110,4 @@ class PlaybackControl extends React.Component {
 	}
 }
 
-export const playbackControl = <PlaybackControl/>;
+export var playbackControl = <PlaybackControl/>;

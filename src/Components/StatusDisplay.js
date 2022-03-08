@@ -277,7 +277,7 @@ function ResourcesDisplay(props) {
 	</div>;
 }
 
-export let updateStatusDisplay = (data)=>{};
+export var updateStatusDisplay = (data)=>{};
 class StatusDisplay extends React.Component {
 	constructor(props) {
 		super(props);

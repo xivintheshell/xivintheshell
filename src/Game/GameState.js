@@ -1,4 +1,4 @@
-import {Aspect, SkillReadyStatus, ResourceType} from "./Common"
+import {Debug, Aspect, SkillReadyStatus, ResourceType, SkillName} from "./Common"
 import {StatsModifier} from "./Stats";
 import {makeSkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
@@ -80,7 +80,7 @@ export class GameState
 
 	#init()
 	{
-		if (this.config.disableManaTicks === 0) {
+		if (Debug.disableManaTicks === false) {
 			// get mana and thunder ticks rolling (through recursion)
 			let recurringManaRegen = ()=>{
 				// mana regen
@@ -106,7 +106,7 @@ export class GameState
 	tick(deltaTime)
 	{
 		//======== events ========
-		var cumulativeDeltaTime = 0;
+		let cumulativeDeltaTime = 0;
 		while (cumulativeDeltaTime < deltaTime && this.eventsQueue.length > 0)
 		{
 			// make sure events are in proper order
@@ -119,7 +119,7 @@ export class GameState
 			// advance time
 			this.time += timeToTick;
 			this.cooldowns.tick(timeToTick);
-			if (this.config.logEvents) console.log("====== tick " + timeToTick + " now at " + this.time);
+			if (Debug.consoleLogEvents) console.log("====== tick " + timeToTick + " now at " + this.time);
 
 			// make a deep copy of events to advance for this round...
 			const eventsToExecuteOld = [];
@@ -131,8 +131,8 @@ export class GameState
 			let executedEvents = 0;
 			eventsToExecuteOld.forEach(e=>{
 				e.timeTillEvent -= timeToTick;
-				if (this.config.logEvents) console.log(e.name + " in " + e.timeTillEvent);
-				if (e.timeTillEvent <= this.config.epsilon)
+				if (Debug.consoleLogEvents) console.log(e.name + " in " + e.timeTillEvent);
+				if (e.timeTillEvent <= Debug.epsilon)
 				{
 					if (!e.canceled)
 					{
@@ -145,9 +145,10 @@ export class GameState
 			// remove the executed events from the master list
 			this.eventsQueue.splice(0, executedEvents);
 		}
-		if (this.config.logEvents) {
+		if (Debug.consoleLogEvents) {
 			console.log(this.toString());
 			console.log(this.resources);
+			console.log(this.cooldowns);
 		}
 	}
 
@@ -205,22 +206,24 @@ export class GameState
 		return potency;
 	}
 
-	captureManaCost(aspect, baseManaCost)
+	captureManaCostAndUHConsumption(aspect, baseManaCost)
 	{
 		let mod = StatsModifier.fromResourceState(this.resources);
 
-		if (aspect === Aspect.Fire)
-		{
-			return baseManaCost * mod.manaCostFire;
+		let manaCost;
+		let uhConsumption = 0;
+
+		if (aspect === Aspect.Fire) {
+			manaCost = baseManaCost * mod.manaCostFire;
+			uhConsumption = mod.uhConsumption;
 		}
-		else if (aspect === Aspect.Ice)
-		{
-			return baseManaCost * mod.manaCostIce;
+		else if (aspect === Aspect.Ice) {
+			manaCost = baseManaCost * mod.manaCostIce;
 		}
-		else
-		{
-			return baseManaCost;
+		else {
+			manaCost = baseManaCost;
 		}
+		return [manaCost, uhConsumption];
 	}
 
 	captureManaRegenAmount()
@@ -247,13 +250,16 @@ export class GameState
 
 	castSpell(skillName, onCapture, onApplication)
 	{
-		let skillInfo = this.skillsList.get(skillName).info;
+		let skill = this.skillsList.get(skillName);
+		let skillInfo = skill.info;
 		let cd = this.cooldowns.get(skillInfo.cdName);
-		let capturedManaCost = this.captureManaCost(skillInfo.aspect, skillInfo.baseManaCost);
+		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 
 		let takeEffect = function(game, additionalDelay)
 		{
-			game.resources.get(ResourceType.Mana).consume(capturedManaCost); // actually deduct mana
+			// actually deduct resources
+			game.resources.get(ResourceType.Mana).consume(capturedManaCost);
+			if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
 			if (capturedManaCost > 0)
 				controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.time);
 			let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
@@ -310,7 +316,7 @@ export class GameState
 		}
 
 		// there are no triplecast charges. cast and apply effect
-		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, skillInfo.baseCastTime);
+		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, skill.castTime);
 
 		// movement lock
 		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - this.config.slideCastDuration);
@@ -415,10 +421,10 @@ export class GameState
 	{
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
-		let capturedManaCost = skill.info.isSpell ? this.captureManaCost(skill.info.aspect, skill.info.baseManaCost) : 0;
+		let [capturedManaCost, uhConsumption] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
 		let currentMana = this.resources.get(ResourceType.Mana).currentValue;
 
-		let notBlocked = timeTillAvailable <= 0;
+		let notBlocked = timeTillAvailable <= Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana;
 		let reqsMet = skill.available();
 		let status = SkillReadyStatus.Ready;
@@ -426,7 +432,7 @@ export class GameState
 		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
 		else if (!reqsMet) status = SkillReadyStatus.RequirementsNotMet;
 
-			let cd = this.cooldowns.get(skill.info.cdName);
+		let cd = this.cooldowns.get(skill.info.cdName);
 		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
 		let cdProgress = 1 - cdReadyCountdown / cd.cdPerStack;
 

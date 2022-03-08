@@ -120,14 +120,16 @@ class SkillButton extends React.Component {
 		let info = controller.getSkillInfo({skillName: this.props.skillName});
 
 		let s = this.props.skillName + ": ";
-		if (info.ready) {
+		if (info.status === SkillReadyStatus.Ready) {
 			s += "ready (" + info.stacksAvailable + " stack";
 			if (info.stacksAvailable > 1) s += "s";
 			s += ")";
 		}
-		else if (info.timeTillAvailable <= 0) {
+		else if (info.status === SkillReadyStatus.RequirementsNotMet) {
 			s += " skill requirement(s) not satisfied";
-		} else {
+		} else if (info.status === SkillReadyStatus.NotEnoughMP) {
+			s += " not enough MP (needs " + info.capturedManaCost + ")";
+		} else if (info.status === SkillReadyStatus.Blocked) {
 			s += "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (CD ready in " + info.cdReadyCountdown.toFixed(2) + ")";
 		}
 		setSkillInfoText(s);
@@ -145,7 +147,7 @@ class SkillButton extends React.Component {
 	}
 }
 
-export let updateSkillButtons = (statusList)=>{ console.log("umm") }
+export var updateSkillButtons = (statusList)=>{}
 class SkillsWindow extends React.Component {
 	constructor(props) {
 		super(props);

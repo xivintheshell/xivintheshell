@@ -1,23 +1,12 @@
+export const Debug =
+{
+	epsilon: 1e-5,
+	disableManaTicks: false,
+	consoleLogEvents: false
+};
+
 export class GameConfig
 {
-	constructor()
-	{
-		this.casterTax = 0.06;
-		this.slideCastDuration = 0.4;
-		this.animationLock = 0.7;
-
-		this.spellSpeed = 1268;
-
-		this.gcd = 2.5;
-
-		this.timeTillFirstManaTick = 0.3;
-
-		//==== DEBUG ====
-		this.epsilon = 0.00001;
-		this.disableManaTicks = 0;
-		this.logEvents = false;
-	}
-
 	adjustedDoTPotency(inPotency) {
 		let dotStrength = (1000 + Math.floor((this.spellSpeed - 400) * 130 / 1900.0)) * 0.001;
 		console.log(dotStrength);

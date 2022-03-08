@@ -17,6 +17,7 @@ class SkillInfo
 	}
 }
 
+// SHOULD NEVER MODIFY THIS LIST DFSODGHSIPJF
 const skillInfos = [
 	new SkillInfo(SkillName.Blizzard, ResourceType.cd_GCD, Aspect.Ice, true, 2.5, 400, 180, 0.1),
 	new SkillInfo(SkillName.Fire, ResourceType.cd_GCD, Aspect.Fire, true, 2.5, 800, 180, 0.1),
@@ -63,6 +64,7 @@ class Skill
 		this.name = name;
 		this.available = requirementFn;
 		this.use = effectFn;
+		this.castTime = 1;
 		this.info = null;
 	}
 }
@@ -74,12 +76,12 @@ class SkillsList extends Map
         super();
         this.game = game;
     }
-	setSkillInfos(infos) // also adjust cast times by SPS
+	setSkillInfos(infos)
 	{
 		infos.forEach(info=>{
 			let skill = this.get(info.name);
 			skill.info = info;
-			skill.info.baseCastTime = this.game.config.adjustedCastTime(info.baseCastTime);
+			skill.castTime = this.game.config.adjustedCastTime(skill.info.baseCastTime);
 		});
 	}
 }

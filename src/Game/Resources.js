@@ -1,4 +1,5 @@
 import {Color, LogCategory} from "../Controller/Common";
+import {Debug, ResourceType} from "./Common"
 import {controller} from "../Controller/Controller";
 
 export class Event
@@ -37,12 +38,12 @@ export class Resource
 	}
 	available(amount)
 	{
-		return this.currentValue >= amount;
+		return this.currentValue + Debug.epsilon >= amount;
 	}
 	consume(amount)	
 	{
 		if (!this.available(amount)) console.warn("invalid resource consumption: " + this.type);
-		this.currentValue -= amount;
+		this.currentValue = Math.max(this.currentValue - amount, 0);
 	}
 	gain(amount)
 	{
@@ -58,7 +59,7 @@ export class CoolDown extends Resource
 		this.cdPerStack = cdPerStack;
 		this.recastTimeScale = 1; // effective for the next stack (i.e. 0.85 if captured LL)
 	}
-	stacksAvailable() { return Math.floor(this.currentValue / this.cdPerStack); }
+	stacksAvailable() { return Math.floor((this.currentValue + Debug.epsilon) / this.cdPerStack); }
 	useStack() { this.consume(this.cdPerStack); }
 	setRecastTimeScale(timeScale) { this.recastTimeScale = timeScale; }
 	restore(deltaTime)
@@ -92,11 +93,6 @@ export class CoolDownState extends Map
 	stacksAvailable(rscType)
 	{
 		return this.get(rscType).stacksAvailable();
-	}
-	useStack(cdName)
-	{
-		let cd = this.get(cdName);
-		cd.useStack();
 	}
 	setRecastTimeScale(cdName, timeScale)
 	{

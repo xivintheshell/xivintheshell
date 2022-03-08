@@ -23,6 +23,7 @@ export class StatsModifier
 
 		// additive constant
 		this.manaRegen = 0;
+		this.uhConsumption = 0;
 	}
 
 	// StatsModifier -> ()
@@ -41,6 +42,7 @@ export class StatsModifier
 		this.DH *= other.DH;
 
 		this.manaRegen += other.manaRegen;
+		this.uhConsumption += other.uhConsumption;
 	}
 
 	static base()
@@ -83,18 +85,21 @@ export class StatsModifier
 		let afMod = new StatsModifier();
 		if (af.currentValue === 1) {
 			afMod.manaRegen = -200;
+			afMod.uhConsumption = uhStacks > 0 ? 1 : 0;
 			afMod.manaCostFire = uhStacks > 0 ? 1 : 2;
 			afMod.damageFire = 1.4;
 			afMod.manaCostIce = 0;
 			afMod.damageIce = 0.9;
 		} else if (af.currentValue === 2) {
 			afMod.manaRegen = -200;
+			afMod.uhConsumption = uhStacks > 0 ? 1 : 0;
 			afMod.manaCostFire = uhStacks > 0 ? 1 : 2;
 			afMod.damageFire = 1.6;
 			afMod.manaCostIce = 0;
 			afMod.damageIce = 0.8;
 		} else if (af.currentValue === 3) {
 			afMod.manaRegen = -200;
+			afMod.uhConsumption = uhStacks > 0 ? 1 : 0;
 			afMod.manaCostFire = uhStacks > 0 ? 1 : 2;
 			afMod.damageFire = 1.8;
 			afMod.manaCostIce = 0;
