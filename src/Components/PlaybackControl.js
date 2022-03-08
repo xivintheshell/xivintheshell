@@ -1,6 +1,5 @@
 import React from 'react';
 import { controller } from '../Controller/Controller'
-import { Clickable } from "./Common";
 
 export const TickMode = {
 	RealTime: 0,

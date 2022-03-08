@@ -257,30 +257,42 @@ export class GameState
 
 		let takeEffect = function(game, additionalDelay)
 		{
-			// actually deduct resources
-			game.resources.get(ResourceType.Mana).consume(capturedManaCost);
-			if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
-			if (capturedManaCost > 0)
-				controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.time);
-			let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
-			let captureInfo = {
-				capturedManaCost: capturedManaCost
-				//...
-			};
-			onCapture(captureInfo);
+			let resourcesStillAvailable = skill.available();
+			if (resourcesStillAvailable) {
+				// actually deduct resources
+				game.resources.get(ResourceType.Mana).consume(capturedManaCost);
+				if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
+				if (capturedManaCost > 0)
+					controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.time);
+				let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
+				let captureInfo = {
+					capturedManaCost: capturedManaCost
+					//...
+				};
+				onCapture(captureInfo);
 
-			// effect application
-			game.addEvent(new Event(
-				skillInfo.name + " applied",
-				additionalDelay + skillInfo.damageApplicationDelay,
-				()=>{
-					game.dealDamage(capturedPotency);
-					let applicationInfo = {
-						//...
-					};
-					onApplication(applicationInfo);
-				},
-				Color.Text));
+				// effect application
+				game.addEvent(new Event(
+					skillInfo.name + " applied",
+					additionalDelay + skillInfo.damageApplicationDelay,
+					()=>{
+						game.dealDamage(capturedPotency);
+						let applicationInfo = {
+							//...
+						};
+						onApplication(applicationInfo);
+					},
+					Color.Text));
+			} else {
+				controller.log(
+					LogCategory.Event,
+					skillName + " cast failed! Resources no longer available.",
+					game.time,
+					Color.Error);
+				// unlock movement and casting
+				game.resources.get(ResourceType.NotCasterTaxed).gain(1);
+				game.resources.get(ResourceType.NotCasterTaxed).removeTimer();
+			}
 		}
 
 		let instantCast = function(game, rsc)
