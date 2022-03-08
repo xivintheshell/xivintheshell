@@ -1,4 +1,4 @@
-import {Aspect, GameConfig, ResourceType} from "./Common"
+import {Aspect, SkillReadyStatus, ResourceType} from "./Common"
 import {StatsModifier} from "./Stats";
 import {makeSkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
@@ -7,7 +7,7 @@ import {controller} from "../Controller/Controller";
 import {Color, LogCategory} from "../Controller/Common";
 
 // GameState := resources + events queue
-class GameState
+export class GameState
 {
 	constructor(config)
 	{
@@ -46,7 +46,7 @@ class GameState
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, this.config.gcd, 1, 1));
+		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.adjustedCastTime(2.5), 1, 1));
 		this.cooldowns.set(ResourceType.cd_Sharpcast, new CoolDown(ResourceType.cd_Sharpcast, 30, 2, 2));
 		this.cooldowns.set(ResourceType.cd_LeyLines, new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Transpose, new CoolDown(ResourceType.cd_Transpose, 5, 1, 1));
@@ -65,8 +65,7 @@ class GameState
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
 		// - damage calc (enqueues damage application)
-		// - damage application (by damage calc)
-		//   (dot as a flag for whether dot tick causes damage)
+		// - damage application
 		// - dot application / refresh (put dot up, refresh timer by removing and re-enqueueing "thunder fall off" event)
 		// - dot fall off (by dot application)
 		// - modifiers up (which potentially enqueues modifier down)
@@ -76,10 +75,10 @@ class GameState
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = makeSkillsList(this);
 
-		this.init();
+		this.#init();
 	}
 
-	init()
+	#init()
 	{
 		if (this.config.disableManaTicks === 0) {
 			// get mana and thunder ticks rolling (through recursion)
@@ -147,8 +146,8 @@ class GameState
 			this.eventsQueue.splice(0, executedEvents);
 		}
 		if (this.config.logEvents) {
-			console.log(game.toString());
-			console.log(game.resources);
+			console.log(this.toString());
+			console.log(this.resources);
 		}
 	}
 
@@ -174,7 +173,7 @@ class GameState
 			if (ui.available(3) && uh.available(3)) {
 				ui.consume(ui.currentValue);
 				paradox.gain(1);
-				controller.log(LogCategory.Event, "Paradox! (UI -> AF)", game.time);
+				controller.log(LogCategory.Event, "Paradox! (UI -> AF)", this.time);
 			}
 		}
 		else if (rscType===ResourceType.UmbralIce)
@@ -183,7 +182,7 @@ class GameState
 			if (af.available(3)) {
 				af.consume(af.currentValue);
 				paradox.gain(1);
-				controller.log(LogCategory.Event, "Paradox! (AF -> UI)", game.time);
+				controller.log(LogCategory.Event, "Paradox! (AF -> UI)", this.time);
 			}
 		}
 	}
@@ -397,7 +396,7 @@ class GameState
 		uh.consume(uh.currentValue);
 	}
 
-	timeTillSkillAvailable(skillName)
+	#timeTillSkillAvailable(skillName)
 	{
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.info.cdName;
@@ -412,22 +411,28 @@ class GameState
 		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed);
 	}
 
-	getSkillAvailabilityStatus(skillName) {
+	getSkillAvailabilityStatus(skillName)
+	{
 		let skill = this.skillsList.get(skillName);
-		let timeTillAvailable = this.timeTillSkillAvailable(skill.info.name);
+		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
 		let capturedManaCost = skill.info.isSpell ? this.captureManaCost(skill.info.aspect, skill.info.baseManaCost) : 0;
 		let currentMana = this.resources.get(ResourceType.Mana).currentValue;
 
 		let notBlocked = timeTillAvailable <= 0;
 		let enoughMana = capturedManaCost <= currentMana;
 		let reqsMet = skill.available();
+		let status = SkillReadyStatus.Ready;
+		if (!notBlocked) status = SkillReadyStatus.Blocked;
+		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
+		else if (!reqsMet) status = SkillReadyStatus.RequirementsNotMet;
 
-		let cd = this.cooldowns.get(skill.info.cdName);
+			let cd = this.cooldowns.get(skill.info.cdName);
 		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
 		let cdProgress = 1 - cdReadyCountdown / cd.cdPerStack;
 
 		return {
-			ready: notBlocked && enoughMana && reqsMet,
+			status: status,
+			description: "",
 			stacksAvailable: cd.stacksAvailable(),
 			cdReadyCountdown: cdReadyCountdown,
 			cdProgress: cdProgress,
@@ -436,70 +441,15 @@ class GameState
 		}
 	}
 
-	// basically the action when you press down the skill button
 	useSkillIfAvailable(skillName)
 	{
 		let skill = this.skillsList.get(skillName);
-		let timeTillAvailable = this.timeTillSkillAvailable(skill.info.name);
-		let capturedManaCost = skill.info.isSpell ? this.captureManaCost(skill.info.aspect, skill.info.baseManaCost) : 0;
+		let status = this.getSkillAvailabilityStatus(skillName);
 
-		let result = {
-			success: true,
-			time: this.time,
-			logColor: Color.Text,
-			reason: "",
-			description: ""
+		if (status.status === SkillReadyStatus.Ready) {
+			skill.use(this);
 		}
-		if (timeTillAvailable > 0)
-		{
-			return {
-				success: false,
-				time: this.time,
-				logColor: Color.Warning,
-				reason: "notReady",
-				description: skillName + " is not available yet. available in " +
-					timeTillAvailable.toFixed(3) + "s."
-			};
-		}
-		if (capturedManaCost > this.resources.get(ResourceType.Mana).currentValue)
-		{
-			return {
-				success: false,
-				time: this.time,
-				logColor: Color.Error,
-				reason: "notEnoughMana",
-				description: skillName + " is not available yet (not enough MP)"
-			}
-		}
-		if (skill.available())
-		{
-			 controller.log(
-				 LogCategory.Action,
-				 "use skill [" + skillName + "]",
-				 this.time,
-				 Color.Text);
-			 controller.log(
-				 LogCategory.Event,
-				 "use skill [" + skillName + "]",
-				 this.time,
-				 Color.Success);
-			 skill.use(this);
-			 return result;
-		 }
-		return {
-			success: false,
-			time: this.time,
-			logColor: Color.Error,
-			reason: "requirementsNotMet",
-			description: skillName + " failed (reqs not satisfied)"
-		}
-	}
-
-	waitAndUseSkillIfAvailable(skillName) {
-		let skill = this.skillsList.get(skillName);
-		let timeTillAvailable = this.timeTillSkillAvailable(skill.info.name);
-		if (timeTillAvailable > 0) this.tick(timeTillAvailable);
-		return this.useSkillIfAvailable(skillName);
+		return status;
 	}
 
 	toString()
@@ -518,5 +468,3 @@ class GameState
 		return s;
 	}
 }
-
-export const game = new GameState(new GameConfig());

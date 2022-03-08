@@ -44,8 +44,7 @@ class TickModeSelection extends React.Component
 }
 
 export var getStepSize = function() { return 0.5; }
-
-class ManualTick extends React.Component {
+class Config extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {value: 0.5};
@@ -100,7 +99,7 @@ class PlaybackControl extends React.Component {
 			{playPauseButton}
 			{fastForwardButton}
 			*/}
-			<ManualTick/>
+			<Config/>
 		</div>;
 	}
 }

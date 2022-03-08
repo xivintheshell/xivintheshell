@@ -6,6 +6,8 @@ export class GameConfig
 		this.slideCastDuration = 0.4;
 		this.animationLock = 0.7;
 
+		this.spellSpeed = 1268;
+
 		this.gcd = 2.5;
 
 		this.timeTillFirstManaTick = 0.3;
@@ -14,6 +16,20 @@ export class GameConfig
 		this.epsilon = 0.00001;
 		this.disableManaTicks = 0;
 		this.logEvents = false;
+	}
+
+	adjustedDoTPotency(inPotency) {
+		let dotStrength = (1000 + Math.floor((this.spellSpeed - 400) * 130 / 1900.0)) * 0.001;
+		console.log(dotStrength);
+		return inPotency * dotStrength;
+	}
+
+	adjustedCastTime(inCastTime)
+	{
+		let ceil = Math.ceil((400.0 - this.spellSpeed) * 130 / 1900.0);
+		let pts = Math.floor(inCastTime * (1000.0 + ceil));
+
+		return Math.floor(pts / 10) * 0.01;
 	}
 }
 
@@ -58,6 +74,14 @@ export const SkillName =
 	LucidDreaming: "Lucid Dreaming",
 	Surecast: "Surecast",
 	Tincture: "Tincture"
+};
+
+export const SkillReadyStatus =
+{
+	Ready: "ready",
+	Blocked: "blocked by CD, animation lock or caster tax",
+	NotEnoughMP: "not enough MP",
+	RequirementsNotMet: "requirements not met",
 };
 
 export const ResourceType =

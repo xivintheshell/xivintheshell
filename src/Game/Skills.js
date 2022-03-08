@@ -1,7 +1,6 @@
 import { SkillName, ResourceType, Aspect } from './Common'
 import { controller } from "../Controller/Controller";
 import { LogCategory, Color } from "../Controller/Common";
-import {Resource} from "./Resources";
 
 class SkillInfo
 {
@@ -75,11 +74,12 @@ class SkillsList extends Map
         super();
         this.game = game;
     }
-	setSkillInfos(infos)
+	setSkillInfos(infos) // also adjust cast times by SPS
 	{
 		infos.forEach(info=>{
-			let s = this.get(info.name);
-			s.info = info;
+			let skill = this.get(info.name);
+			skill.info = info;
+			skill.info.baseCastTime = this.game.config.adjustedCastTime(info.baseCastTime);
 		});
 	}
 }
@@ -260,7 +260,7 @@ export function makeSkillsList(game)
 			if (game.resources.get(ResourceType.Thundercloud).available(1)) // made instant via thundercloud
 			{
 				let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
-				let capturedTickPotency = game.captureDamage(Aspect.Other, 35);
+				let capturedTickPotency = game.captureDamage(Aspect.Other, game.config.adjustedDoTPotency(35));
 				game.useInstantSkill(SkillName.Thunder3, () => {
 					game.dealDamage(capturedInitialPotency);
 					applyThunderDoT(game, capturedTickPotency, 10);
@@ -278,7 +278,7 @@ export function makeSkillsList(game)
 			} else {
 				let capturedTickPotency;
 				game.castSpell(SkillName.Thunder3, cap => {
-					capturedTickPotency = game.captureDamage(Aspect.Lightning, 35);
+					capturedTickPotency = game.captureDamage(Aspect.Lightning, game.config.adjustedDoTPotency(35));
 					// if there's a sharpcast stack, consume it and gain (a potentially new) proc
 					let sc = game.resources.get(ResourceType.Sharpcast);
 					if (sc.available(1)) {

@@ -1,7 +1,7 @@
 import { addLogContent } from "../Components/LogView";
 import {Color, LogCategory} from "./Common";
-import { game } from "../Game/GameState";
-import {ResourceType} from "../Game/Common";
+import { GameState } from "../Game/GameState";
+import {GameConfig, ResourceType, SkillReadyStatus} from "../Game/Common";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {getStepSize} from "../Components/PlaybackControl";
 import {displayedSkills, updateSkillButtons} from "../Components/Skills";
@@ -10,6 +10,8 @@ class Controller
 {
     constructor() {
         this.lastAtteptedSkill = ""
+        this.gameConfig = new GameConfig();
+        this.game = new GameState(this.gameConfig);
     }
     // game --> view
     log(category, content, time, color=Color.Text)
@@ -18,7 +20,8 @@ class Controller
         addLogContent(category, content, color);
     }
 
-    updateStatusDisplay(game) {
+    updateStatusDisplay() {
+        let game = this.game;
         // resources
         let eno = game.resources.get(ResourceType.Enochian);
         let resourcesData = {
@@ -36,7 +39,7 @@ class Controller
         let anim = game.resources.get(ResourceType.NotAnimationLocked);
         let resourceLocksData = {
             gcdReady: game.cooldowns.get(ResourceType.cd_GCD).stacksAvailable() > 0,
-            gcd: game.config.gcd,
+            gcd: 2.5,
             timeTillGCDReady: game.cooldowns.timeTillNextStackAvailable(ResourceType.cd_GCD),
             castLocked: game.resources.timeTillReady(ResourceType.NotCasterTaxed) > 0,
             castLockTotalDuration: cast.pendingChange ? cast.pendingChange.delay : 0,
@@ -74,7 +77,7 @@ class Controller
 
     updateSkillButtons() {
         updateSkillButtons(displayedSkills.map(skillName=>{
-            return game.getSkillAvailabilityStatus(skillName);
+            return this.game.getSkillAvailabilityStatus(skillName);
         }));
     }
 
@@ -82,23 +85,23 @@ class Controller
     requestTick(props={ deltaTime: -1 })
     {
         if (props.deltaTime > 0) {
-            game.tick(props.deltaTime);
-            this.updateStatusDisplay(game);
+            this.game.tick(props.deltaTime);
+            this.updateStatusDisplay(this.game);
             this.updateSkillButtons();
-            this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", game.time, Color.Grey);
+            this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.time, Color.Grey);
         }
     }
 
     getSkillInfo(props={skillName: undefined}) {
         if (props.skillName) {
-            return game.getSkillAvailabilityStatus(props.skillName);
+            return this.game.getSkillAvailabilityStatus(props.skillName);
         }
         return null;
     }
 
     getResourceValue(props={rscType: undefined}) {
         if (props.rscType) {
-            return game.resources.get(props.rscType).currentValue;
+            return this.game.resources.get(props.rscType).currentValue;
         }
         return -1;
     }
@@ -110,36 +113,62 @@ class Controller
 
     requestFastForward(props)
     {
-        let deltaTime = game.timeTillAnySkillAvailable();
+        let deltaTime = this.game.timeTillAnySkillAvailable();
         this.requestTick({deltaTime: deltaTime});
     }
 
-    useSkill(skillName, bWaitFirst) {
+    #useSkill(skillName, bWaitFirst)
+    {
+        let status = this.game.getSkillAvailabilityStatus(skillName);
         if (bWaitFirst) {
-            game.waitAndUseSkillIfAvailable(skillName);
+            this.requestTick({deltaTime: status.timeTillAvailable});
+            status = this.game.getSkillAvailabilityStatus(skillName);
             this.lastAtteptedSkill = "";
-
-        } else {
-            let result = game.useSkillIfAvailable(skillName);
-            if (!result.success) {
-                let s = result.description;
-                if (result.reason==="notReady") {
-                    s += " press again to step until then and use";
-                    this.lastAtteptedSkill = skillName;
-                }
-                this.log(LogCategory.Action, s, result.time, result.logColor);
-            }
         }
-        this.updateStatusDisplay(game);
-        this.updateSkillButtons();
+
+        let logString = "";
+        let logColor = Color.Text;
+
+        if (status.status === SkillReadyStatus.Ready)
+        {
+            logString = "use skill [" + skillName + "]";
+            logColor = Color.Success;
+        }
+        else if (status.status === SkillReadyStatus.Blocked)
+        {
+            logString = "["+skillName+"] is not available yet. might be ready in ";
+            logString += status.timeTillAvailable.toFixed(3) + ". press again to wait until then and retry";
+            logColor = Color.Warning;
+            this.lastAtteptedSkill = skillName;
+        }
+        else if (status.status === SkillReadyStatus.NotEnoughMP)
+        {
+            logString = "["+skillName+"] is not ready (not enough MP)";
+            logColor = Color.Error;
+        }
+        else if (status.status === SkillReadyStatus.RequirementsNotMet)
+        {
+            logString = "["+skillName+"] requirements are not met";
+            if (status.description.length > 0)
+                logString += " (need: " + status.description + ")";
+            logColor = Color.Error;
+        }
+
+        this.log(LogCategory.Action, logString, this.game.time, logColor);
+        if (status.status === SkillReadyStatus.Ready) {
+            this.log(LogCategory.Event, logString, this.game.time, logColor);
+        }
+
+        if (status.status === SkillReadyStatus.Ready)
+        {
+            this.game.useSkillIfAvailable(skillName);
+            this.updateStatusDisplay();
+            this.updateSkillButtons();
+        }
     }
 
     requestUseSkill(props) {
-        if (props.skillName === this.lastAtteptedSkill) {
-            this.useSkill(props.skillName, true);
-        } else {
-            this.useSkill(props.skillName, false);
-        }
+        this.#useSkill(props.skillName, props.skillName === this.lastAtteptedSkill);
     }
 
     handleKeyboardEvent(evt) {
@@ -155,8 +184,3 @@ class Controller
 }
 export const controller = new Controller();
 
-function calcGcdMultiplier(sps) {
-    let gcd = 2.5;
-    let res = Math.floor(gcd * (1000 + Math.ceil(130 * (400 - sps) / 1900)) / 10000) / 100;
-    console.log(res);
-}

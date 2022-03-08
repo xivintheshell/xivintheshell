@@ -1,6 +1,6 @@
 import React from 'react'
 import {Clickable} from "./Common";
-import {ResourceType, SkillName} from "../Game/Common";
+import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 
 export let displayedSkills = [
@@ -173,7 +173,7 @@ class SkillsWindow extends React.Component {
 			let btn = <SkillButton
 				key={i}
 				skillName={skillName}
-				ready={info.ready}
+				ready={info.status===SkillReadyStatus.Ready}
 				cdProgress={info.cdProgress}
 				/>
 			skillButtons.push(btn);
