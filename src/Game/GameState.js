@@ -434,7 +434,7 @@ export class GameState
 
 		let cd = this.cooldowns.get(skill.info.cdName);
 		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
-		let cdProgress = 1 - cdReadyCountdown / cd.cdPerStack;
+		let cdProgress = 1 - cdReadyCountdown / (cd.cdPerStack * cd.recastTimeScale);
 
 		return {
 			status: status,
