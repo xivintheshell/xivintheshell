@@ -68,10 +68,10 @@ class Config extends React.Component {
 		super(props);
 		this.state = {
 			stepSize : 0.5,
-			spellSpeed: 1300,
-			slideCastDuration: 0.45,
-			animationLock: 0.8,
-			casterTax: 0.08,
+			spellSpeed: 1532,
+			slideCastDuration: 0.5,
+			animationLock: 0.68,
+			casterTax: 0.12,
 			timeTillFirstManaTick: 1.5
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
@@ -117,7 +117,7 @@ class Config extends React.Component {
 			<form className={"config"} onSubmit={this.handleSubmit}>
 				<span>step size = {inStepSize}, </span>
 				<span>spell speed = {inSpellSpeed}, </span>
-				<span>slide cast duration = {inSlideCastDuration}, </span>
+				<span>slidecast window = {inSlideCastDuration}, </span>
 				<span>animation lock = {inAnimationLock}, </span>
 				<span>caster tax = {inCasterTax}, </span>
 				<span>time till first mana tick = {inTimeTillFirstManaTick}. </span>

@@ -22,9 +22,19 @@ class Controller
         this.gameConfig.casterTax = 0.06;
         this.gameConfig.slideCastDuration = 0.5;
         this.gameConfig.animationLock = 0.66;
-        this.gameConfig.spellSpeed = 1300;
+        this.gameConfig.spellSpeed = 1532;
         this.gameConfig.timeTillFirstManaTick = 1.2;
         this.requestRestart();
+
+        /*
+        let intimes = [1.5, 2, 2.5, 2.8, 3, 3.5, 4];
+        intimes.forEach(t=>{
+            let adjusted = this.gameConfig.adjustedCastTime(t);
+            let lltime = adjusted * 0.85;
+            console.log(t.toFixed(2) + " " + adjusted.toFixed(2) + " " + lltime.toFixed(2));
+        })
+         */
+
     }
     // game --> view
     log(category, content, time, color=Color.Text) {
@@ -183,12 +193,12 @@ class Controller
         this.#playPause({shouldLoop: false});
         this.log(
             LogCategory.Action,
-            "======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5) + ") ========",
+            "======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
             this.game.time,
             Color.Grey);
         this.log(
             LogCategory.Event,
-            "======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5) + ") ========",
+            "======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
             this.game.time,
             Color.Grey);
     }

@@ -25,12 +25,14 @@ function ResourceBar(props = {
 	className: ""
 }) {
 	return <div className={"resource " + props.className}>
-		 <div className={"resource-name"}>{props.name}</div>
-		 <ProgressBar backgroundColor={props.color}
-					  progress={props.progress}
-					  width={props.width}
-					  offsetY={4}/>
-		 <div className={"resource-value"}>{props.value}</div>
+		<div className={"resource-name"}>{props.name}</div>
+		<div className={"resource-stacksOrBarAndValue"}>
+			<ProgressBar backgroundColor={props.color}
+						 progress={props.progress}
+						 width={props.width}
+						 offsetY={4}/>
+			<div className={"resource-value"}>{props.value}</div>
+		</div>
 	</div>;
 }
 
@@ -42,8 +44,10 @@ function ResourceCounter(props) {
 	}
 	return <div className={"resource"}>
 		<div className={"resource-name"}>{props.name}</div>
-		{stacks}
-		<div className={"resource-value"}>{props.currentStacks + "/" + props.maxStacks}</div>
+		<div className={"resource-stacksOrBarAndValue"}>
+			<div className={"resource-stacks"}>{stacks}</div>
+			<div className={"resource-value"}>{props.currentStacks + "/" + props.maxStacks}</div>
+		</div>
 	</div>;
 }
 const buffIcons = new Map();

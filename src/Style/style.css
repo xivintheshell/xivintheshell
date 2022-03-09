@@ -31,9 +31,14 @@
 
 /* Overall */
 .container {
-    margin: 40px;
+    margin: 20px;
     accent-color: mediumpurple;
     font-family: monospace;
+}
+@media(min-width: 768px) {
+    .container {
+        margin: 40px;
+    }
 }
 .container-narrow {
     max-width: 960px;
@@ -128,7 +133,8 @@
 .statusDisplay>.-right {
     position: relative;
     display: inline-block;
-    width: 64%;
+    float: right;
+    width: 56%;
 }
 /* resource bar & counter */
 .resourceDisplay {
@@ -146,7 +152,7 @@
 .resource.hidden {
     display: none;
 }
-.resource-name, .resource-value {
+.resource-name, .resource-stacks, .resource-value {
     display: inline-block;
     height: 100%;
 }
@@ -154,14 +160,21 @@
     width: 108px;
     horiz-align: left;
 }
+.resource-stacksOrBarAndValue {
+    width: 200px;
+    display: inline-block;
+}
+.resource-stacks {
+}
 .resource>.progressBar {
     width: 100%;
 }
-.resource>.resourceStack {
+.resource-stacks>.resourceStack {
+    position: relative;
+    top: 1px;
     margin-right: 8px;
 }
 .resource-value {
-    width: 80px;
     margin-left: 6px;
 }
 /* resource stack */
@@ -218,6 +231,7 @@
     margin-bottom: 10px;
 }
 .skillButton {
+    display: inline-block;
     position: relative;
 }
 .skillIcon {
