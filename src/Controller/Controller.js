@@ -20,7 +20,6 @@ class Controller
 
         this.gameConfig = new GameConfig();
         this.gameConfig.casterTax = 0.06;
-        this.gameConfig.slideCastDuration = 0.5;
         this.gameConfig.animationLock = 0.66;
         this.gameConfig.spellSpeed = 1532;
         this.gameConfig.timeTillFirstManaTick = 1.2;
@@ -110,10 +109,13 @@ class Controller
     // view --> game
     #requestTick(props={
         deltaTime: -1,
-        suppressLog: false
+        suppressLog: false,
+        prematureStopCondition: null
     }) {
         if (props.deltaTime > 0) {
-            this.game.tick(props.deltaTime);
+            this.game.tick(
+                props.deltaTime,
+                props.prematureStopCondition ? props.prematureStopCondition : ()=>{ return false; });
             this.#updateStatusDisplay(this.game);
             this.#updateSkillButtons();
             if (!props.suppressLog) this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.time, Color.Grey);
@@ -129,7 +131,6 @@ class Controller
     setConfigAndRestart(props={
         stepSize: 0.5,
         spellSpeed: 1268,
-        slideCastDuration: 0.5,
         animationLock: 0.66,
         casterTax: 0.06,
         timeTillFirstManaTick: 0.3,
@@ -139,7 +140,6 @@ class Controller
 
         this.gameConfig = new GameConfig();
         this.gameConfig.casterTax = props.casterTax;
-        this.gameConfig.slideCastDuration = props.slideCastDuration;
         this.gameConfig.animationLock = props.animationLock;
         this.gameConfig.spellSpeed = props.spellSpeed;
         this.gameConfig.timeTillFirstManaTick = props.timeTillFirstManaTick;
@@ -253,9 +253,7 @@ class Controller
             this.game.useSkillIfAvailable(skillName);
             this.#updateStatusDisplay();
             this.#updateSkillButtons();
-            if (this.tickMode === TickMode.AutoFastForward) {
-                this.#fastForward();
-            } else if (this.tickMode === TickMode.RealTimeAutoPause) {
+            if (this.tickMode === TickMode.RealTimeAutoPause) {
                 this.shouldLoop = true;
                 this.#runLoop(()=>{
                     return this.game.timeTillAnySkillAvailable() > 0;
@@ -299,7 +297,11 @@ class Controller
                 }
             }
             ctrl.skillsQueue.splice(0, numSkillsProcessed);
-            ctrl.#requestTick({deltaTime : dt, suppressLog: true});
+            ctrl.#requestTick({
+                deltaTime : dt,
+                suppressLog: true,
+                prematureStopCondition: ()=>{ return !loopCondition(); }
+            });
 
             // end of frame
             prevTime = time;

@@ -103,11 +103,11 @@ export class GameState
 	}
 
 	// advance game state by this much time
-	tick(deltaTime)
+	tick(deltaTime, prematureStopCondition=()=>{ return false; })
 	{
 		//======== events ========
 		let cumulativeDeltaTime = 0;
-		while (cumulativeDeltaTime < deltaTime && this.eventsQueue.length > 0)
+		while (cumulativeDeltaTime < deltaTime && this.eventsQueue.length > 0 && !prematureStopCondition())
 		{
 			// make sure events are in proper order
 			this.eventsQueue.sort((a, b)=>{return a.timeTillEvent - b.timeTillEvent;})
@@ -255,8 +255,7 @@ export class GameState
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 
-		let takeEffect = function(game)
-		{
+		let takeEffect = function(game) {
 			let resourcesStillAvailable = skill.available();
 			if (resourcesStillAvailable) {
 				// actually deduct resources
@@ -283,6 +282,7 @@ export class GameState
 						onApplication(applicationInfo);
 					},
 					Color.Text));
+				return true;
 			} else {
 				controller.log(
 					LogCategory.Event,
@@ -292,14 +292,21 @@ export class GameState
 				// unlock movement and casting
 				game.resources.get(ResourceType.NotCasterTaxed).gain(1);
 				game.resources.get(ResourceType.NotCasterTaxed).removeTimer();
+				return false;
 			}
 		}
 
 		let instantCast = function(game, rsc)
 		{
 			controller.log(LogCategory.Event, "a cast is made instant via " + rsc.type, game.time, Color.Success);
-			rsc.consume(1);
-			takeEffect(game);
+			game.addEvent(new Event(
+				skillName + " prepared",
+				0.3,
+				()=> {
+					if (takeEffect(game)) {
+						rsc.consume(1);
+					}
+				}));
 
 			// recast
 			cd.useStack();
@@ -331,10 +338,10 @@ export class GameState
 		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, skill.castTime);
 
 		// movement lock
-		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - this.config.slideCastDuration);
+		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - this.config.getSlidecastWindow(capturedCastTime));
 
 		// (basically done casting) deduct MP, calc damage, queue damage
-		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - this.config.slideCastDuration, ()=>{
+		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - this.config.getSlidecastWindow(capturedCastTime), ()=>{
 			takeEffect(this);
 		}));
 
@@ -360,7 +367,13 @@ export class GameState
 				effectFn();
 			}
 			, Color.Text);
-		this.addEvent(skillEvent);
+
+		//this.addEvent(skillEvent);
+		this.addEvent(new Event(skillInfo.name + " prepared",
+			0.3,
+			()=>{
+				this.addEvent(skillEvent);
+			}));
 
 		// recast
 		cd.useStack();

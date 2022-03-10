@@ -20,7 +20,7 @@ export class GameConfig
 	}
 
 	getSlidecastWindow(castTime) {
-		return 0.46 + 0.025 * castTime;
+		return 0.46 + 0.02 * castTime;
 	}
 }
 

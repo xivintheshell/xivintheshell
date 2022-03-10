@@ -20,7 +20,7 @@ class SkillInfo
 // SHOULD NEVER MODIFY THIS LIST DFSODGHSIPJF
 const skillInfos = [
 	new SkillInfo(SkillName.Blizzard, ResourceType.cd_GCD, Aspect.Ice, true,
-		2.5, 400, 180, 0.1),
+		2.5, 400, 180, 0.846),
 	new SkillInfo(SkillName.Fire, ResourceType.cd_GCD, Aspect.Fire, true,
 		2.5, 800, 180, 1.871),
 	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false,
@@ -36,7 +36,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Blizzard3, ResourceType.cd_GCD, Aspect.Ice, true,
 		3.5, 800, 260, 0.89),
 	new SkillInfo(SkillName.Freeze, ResourceType.cd_GCD, Aspect.Ice, true,
-		2.8, 1000, 120, 0.1),
+		2.8, 1000, 120, 0.664),
 	new SkillInfo(SkillName.Flare, ResourceType.cd_GCD, Aspect.Fire, true,
 		4, 0, 280, 1.157), // mana is handled separately
 
@@ -66,9 +66,9 @@ const skillInfos = [
 		0, 0, 760, 0.63),
 
 	new SkillInfo(SkillName.HighFire2, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 1500, 140, 0.1),
+		3, 1500, 140, 1.154),
 	new SkillInfo(SkillName.HighBlizzard2, ResourceType.cd_GCD, Aspect.Ice, true,
-		3, 800, 140, 0.1),
+		3, 800, 140, 1.158),
 	new SkillInfo(SkillName.Amplifier, ResourceType.cd_Amplifier, Aspect.Other, false,
 		0, 0, 0, 0.1),
 	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true,

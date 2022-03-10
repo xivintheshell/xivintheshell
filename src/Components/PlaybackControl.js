@@ -69,7 +69,6 @@ class Config extends React.Component {
 		this.state = {
 			stepSize : 0.5,
 			spellSpeed: 1532,
-			slideCastDuration: 0.5,
 			animationLock: 0.68,
 			casterTax: 0.12,
 			timeTillFirstManaTick: 1.5
@@ -82,7 +81,6 @@ class Config extends React.Component {
 		controller.setConfigAndRestart({
 			stepSize: parseFloat(this.state.stepSize),
 			spellSpeed: parseFloat(this.state.spellSpeed),
-			slideCastDuration: parseFloat(this.state.slideCastDuration),
 			animationLock: parseFloat(this.state.animationLock),
 			casterTax: parseFloat(this.state.casterTax),
 			timeTillFirstManaTick: parseFloat(this.state.timeTillFirstManaTick)
@@ -101,9 +99,6 @@ class Config extends React.Component {
 		const inSpellSpeed = <input className={"numberInput"} size="5" type="text" value={this.state.spellSpeed} onChange={
 			e=>{ this.setState({spellSpeed: e.target.value});}
 		}/>;
-		const inSlideCastDuration = <input className={"numberInput"} size="5" type="text" value={this.state.slideCastDuration} onChange={
-			e=>{ this.setState({slideCastDuration: e.target.value});}
-		}/>;
 		const inAnimationLock = <input className={"numberInput"} size="5" type="text" value={this.state.animationLock} onChange={
 			e=>{ this.setState({animationLock: e.target.value});}
 		}/>;
@@ -117,7 +112,6 @@ class Config extends React.Component {
 			<form className={"config"} onSubmit={this.handleSubmit}>
 				<span>step size = {inStepSize}, </span>
 				<span>spell speed = {inSpellSpeed}, </span>
-				<span>slidecast window = {inSlideCastDuration}, </span>
 				<span>animation lock = {inAnimationLock}, </span>
 				<span>caster tax = {inCasterTax}, </span>
 				<span>time till first mana tick = {inTimeTillFirstManaTick}. </span>
