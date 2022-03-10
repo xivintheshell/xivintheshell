@@ -255,7 +255,7 @@ export class GameState
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 
-		let takeEffect = function(game, additionalDelay)
+		let takeEffect = function(game)
 		{
 			let resourcesStillAvailable = skill.available();
 			if (resourcesStillAvailable) {
@@ -274,7 +274,7 @@ export class GameState
 				// effect application
 				game.addEvent(new Event(
 					skillInfo.name + " applied",
-					additionalDelay + skillInfo.damageApplicationDelay,
+					skillInfo.skillApplicationDelay,
 					()=>{
 						game.dealDamage(capturedPotency);
 						let applicationInfo = {
@@ -299,7 +299,7 @@ export class GameState
 		{
 			controller.log(LogCategory.Event, "a cast is made instant via " + rsc.type, game.time, Color.Success);
 			rsc.consume(1);
-			takeEffect(game, 0);
+			takeEffect(game);
 
 			// recast
 			cd.useStack();
@@ -335,7 +335,7 @@ export class GameState
 
 		// (basically done casting) deduct MP, calc damage, queue damage
 		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - this.config.slideCastDuration, ()=>{
-			takeEffect(this, this.config.slideCastDuration);
+			takeEffect(this);
 		}));
 
 		// recast
@@ -354,7 +354,7 @@ export class GameState
 
 		let skillEvent = new Event(
 			skillInfo.name + " applied",
-			skillInfo.damageApplicationDelay,
+			skillInfo.skillApplicationDelay,
 			()=>{
 				if (dealDamage) this.dealDamage(capturedDamage);
 				effectFn();

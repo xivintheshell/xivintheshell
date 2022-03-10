@@ -12,12 +12,15 @@ export class GameConfig
 		return inPotency * dotStrength;
 	}
 
-	adjustedCastTime(inCastTime)
-	{
+	adjustedCastTime(inCastTime) {
 		let ceil = Math.ceil((400.0 - this.spellSpeed) * 130 / 1900.0);
 		let pts = Math.floor(inCastTime * (1000.0 + ceil));
 
 		return Math.floor(pts / 10) * 0.01;
+	}
+
+	getSlidecastWindow(castTime) {
+		return 0.46 + 0.025 * castTime;
 	}
 }
 

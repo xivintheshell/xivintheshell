@@ -4,7 +4,7 @@ import { LogCategory, Color } from "../Controller/Common";
 
 class SkillInfo
 {
-	constructor(skillName, cdName, aspect, isSpell, baseCastTime, baseManaCost, basePotency, damageApplicationDelay)
+	constructor(skillName, cdName, aspect, isSpell, baseCastTime, baseManaCost, basePotency, skillApplicationDelay)
 	{
 		this.name = skillName;
 		this.cdName = cdName;
@@ -13,47 +13,77 @@ class SkillInfo
 		this.baseCastTime = baseCastTime;
 		this.baseManaCost = baseManaCost;
 		this.basePotency = basePotency;
-		this.damageApplicationDelay = damageApplicationDelay;
+		this.skillApplicationDelay = skillApplicationDelay;
 	}
 }
 
 // SHOULD NEVER MODIFY THIS LIST DFSODGHSIPJF
 const skillInfos = [
-	new SkillInfo(SkillName.Blizzard, ResourceType.cd_GCD, Aspect.Ice, true, 2.5, 400, 180, 0.1),
-	new SkillInfo(SkillName.Fire, ResourceType.cd_GCD, Aspect.Fire, true, 2.5, 800, 180, 0.1),
-	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.Thunder3, ResourceType.cd_GCD, Aspect.Lightning, true, 2.5, 400, 50, 0.1),
-	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.Manafont, ResourceType.cd_Manafont, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.Fire3, ResourceType.cd_GCD, Aspect.Fire, true, 3.5, 2000, 260, 0.1),
-	new SkillInfo(SkillName.Blizzard3, ResourceType.cd_GCD, Aspect.Ice, true, 3.5, 800, 260, 0.1),
-	new SkillInfo(SkillName.Freeze, ResourceType.cd_GCD, Aspect.Ice, true, 2.8, 1000, 120, 0.1),
-	new SkillInfo(SkillName.Flare, ResourceType.cd_GCD, Aspect.Fire, true, 4, 0, 280, 0.1), // mana is handled separately
+	new SkillInfo(SkillName.Blizzard, ResourceType.cd_GCD, Aspect.Ice, true,
+		2.5, 400, 180, 0.1),
+	new SkillInfo(SkillName.Fire, ResourceType.cd_GCD, Aspect.Fire, true,
+		2.5, 800, 180, 1.871),
+	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Thunder3, ResourceType.cd_GCD, Aspect.Lightning, true,
+		2.5, 400, 50, 1.025),
+	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Manafont, ResourceType.cd_Manafont, Aspect.Other, false,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Fire3, ResourceType.cd_GCD, Aspect.Fire, true,
+		3.5, 2000, 260, 1.292),
+	new SkillInfo(SkillName.Blizzard3, ResourceType.cd_GCD, Aspect.Ice, true,
+		3.5, 800, 260, 0.89),
+	new SkillInfo(SkillName.Freeze, ResourceType.cd_GCD, Aspect.Ice, true,
+		2.8, 1000, 120, 0.1),
+	new SkillInfo(SkillName.Flare, ResourceType.cd_GCD, Aspect.Fire, true,
+		4, 0, 280, 1.157), // mana is handled separately
 
-	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.Sharpcast, ResourceType.cd_Sharpcast, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.Blizzard4, ResourceType.cd_GCD, Aspect.Ice, true, 2.5, 800, 300, 0.1),
-	new SkillInfo(SkillName.Fire4, ResourceType.cd_GCD, Aspect.Fire, true, 2.8, 800, 300, 0.1),
-	new SkillInfo(SkillName.BetweenTheLines, ResourceType.cd_BetweenTheLines, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.AetherialManipulation, ResourceType.cd_AetherialManipulation, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Sharpcast, ResourceType.cd_Sharpcast, Aspect.Other,false,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Blizzard4, ResourceType.cd_GCD, Aspect.Ice, true,
+		2.5, 800, 300, 1.156),
+	new SkillInfo(SkillName.Fire4, ResourceType.cd_GCD, Aspect.Fire, true,
+		2.8, 800, 300, 1.159),
+	new SkillInfo(SkillName.BetweenTheLines, ResourceType.cd_BetweenTheLines, Aspect.Other, false,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.AetherialManipulation, ResourceType.cd_AetherialManipulation, Aspect.Other, false,
+		0, 0, 0, 0.1),
 	//new SkillInfo(SkillName.Thunder4, ResourceType.cd_GCD, Aspect.Lightning, true, 2.5, 400, 50, 0.1),
-	new SkillInfo(SkillName.Triplecast, ResourceType.cd_Triplecast, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Triplecast, ResourceType.cd_Triplecast, Aspect.Other, false,
+		0, 0, 0, 0.1),
 
-	new SkillInfo(SkillName.Foul, ResourceType.cd_GCD, Aspect.Other, true, 0, 0, 560, 0.1),
-	new SkillInfo(SkillName.Despair, ResourceType.cd_GCD, Aspect.Fire, true, 3, 0, 340, 0.1),
-	new SkillInfo(SkillName.UmbralSoul, ResourceType.cd_GCD, Aspect.Ice, true, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.Xenoglossy, ResourceType.cd_GCD, Aspect.Other, true, 0, 0, 760, 0.1),
+	new SkillInfo(SkillName.Foul, ResourceType.cd_GCD, Aspect.Other, true,
+		0, 0, 560, 1.158),
+	new SkillInfo(SkillName.Despair, ResourceType.cd_GCD, Aspect.Fire, true,
+		3, 0, 340, 0.056),
+	new SkillInfo(SkillName.UmbralSoul, ResourceType.cd_GCD, Aspect.Ice, true,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Xenoglossy, ResourceType.cd_GCD, Aspect.Other, true,
+		0, 0, 760, 0.63),
 
-	new SkillInfo(SkillName.HighFire2, ResourceType.cd_GCD, Aspect.Fire, true, 3, 1500, 140, 0.1),
-	new SkillInfo(SkillName.HighBlizzard2, ResourceType.cd_GCD, Aspect.Ice, true, 3, 800, 140, 0.1),
-	new SkillInfo(SkillName.Amplifier, ResourceType.cd_Amplifier, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true, 2.5, 1600, 500, 0.1),
+	new SkillInfo(SkillName.HighFire2, ResourceType.cd_GCD, Aspect.Fire, true,
+		3, 1500, 140, 0.1),
+	new SkillInfo(SkillName.HighBlizzard2, ResourceType.cd_GCD, Aspect.Ice, true,
+		3, 800, 140, 0.1),
+	new SkillInfo(SkillName.Amplifier, ResourceType.cd_Amplifier, Aspect.Other, false,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true,
+		2.5, 1600, 500, 0.624),
 
-	new SkillInfo(SkillName.Addle, ResourceType.cd_Addle, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.Swiftcast, ResourceType.cd_Swiftcast, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.LucidDreaming, ResourceType.cd_LucidDreaming, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.Surecast, ResourceType.cd_Surecast, Aspect.Other, false, 0, 0, 0, 0.1),
-	new SkillInfo(SkillName.Tincture, ResourceType.cd_Tincture, Aspect.Other, false, 0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Addle, ResourceType.cd_Addle, Aspect.Other, false,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Swiftcast, ResourceType.cd_Swiftcast, Aspect.Other, false,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.LucidDreaming, ResourceType.cd_LucidDreaming, Aspect.Other, false,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Surecast, ResourceType.cd_Surecast, Aspect.Other, false,
+		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Tincture, ResourceType.cd_Tincture, Aspect.Other, false,
+		0, 0, 0, 0.1),
 ];
 
 class Skill
