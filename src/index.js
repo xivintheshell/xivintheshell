@@ -4,6 +4,7 @@ import Main from './Components/Main';
 
 import './Style/normalize.css';
 import './Style/style.css';
+import './Style/timeline.css';
 
 ReactDOM.render(
 	//<React.StrictMode>

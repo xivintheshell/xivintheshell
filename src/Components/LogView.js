@@ -1,20 +1,15 @@
 import React from 'react'
 import { LogCategory } from "../Controller/Common";
 
-let updateTextFunctions = new Map();
-class UpdatableText extends React.Component
+class AutoScroll extends React.Component
 {
     constructor(props)
     {
         super(props);
         this.myRef = React.createRef();
-        this.state = {
-            content: "(empty)"
-        };
-        const unboundUpdateContent = (inContent) => {
-            this.setState({content: inContent});
-        };
-        updateTextFunctions.set(this.props.name, unboundUpdateContent.bind(this));
+    }
+    componentDidMount() {
+        this.scroll();
     }
     scroll() {
         let cur = this.myRef.current;
@@ -26,7 +21,7 @@ class UpdatableText extends React.Component
         this.scroll();
     }
     render() {
-        return(<div ref={this.myRef} className={this.props.className}>{this.state.content}</div>);
+        return(<div ref={this.myRef} className={this.props.className}>{this.props.content}</div>);
     }
 }
 
@@ -51,31 +46,41 @@ class ScrollAnchor extends React.Component
     }
 }
 
-export var addLogContent = function(logCategory, newContent, color) {}
+let logContent = new Map();
+logContent.set(LogCategory.Action, []);
+logContent.set(LogCategory.Event, []);
+
+export var addLogContent = function(logCategory, newContent, color) {
+}
 
 class LogView extends React.Component
 {
     constructor(props)
     {
         super(props);
-        this.views = new Map();
-        this.views.set(LogCategory.Action, [<UpdatableText className="logWindow small" key={0} name={LogCategory.Action}/>, []]);
-        this.views.set(LogCategory.Event, [<UpdatableText className="logWindow medium" key={1} name={LogCategory.Event}/>, []]);
-
         addLogContent = this.unboundAddLogContent.bind(this);
     }
     unboundAddLogContent(logCategory, newContent, color) {
-        let [view, content] = this.views.get(logCategory);
-        let newEntry = <div className={color + " logEntry"} key={content.length}>{newContent}<br/></div>;
-        content.push(newEntry);
-        let updateFn = updateTextFunctions.get(view.props.name);
-        updateFn(<span>{content.map(s=>{return s})} </span>);
+        logContent.get(logCategory).push({
+            text: newContent,
+            color: color
+        });
+        this.forceUpdate();
     }
     render()
     {
+        let mappedContent = function(category) {
+            let list = logContent.get(category);
+            let outList = [];
+            for (let i=0; i<list.length; i++) {
+                let entry = list[i];
+                outList.push(<div key={i} className={entry.color + " logEntry"}>{entry.text}</div>)
+            }
+            return outList;
+        }
         return(<div>
-            {this.views.get(LogCategory.Action)}
-            {this.views.get(LogCategory.Event)}
+            <AutoScroll className={"logWindow actions"} key={0} name={LogCategory.Action} content={mappedContent(LogCategory.Action)}/>
+            <AutoScroll className={"logWindow events"} key={1} name={LogCategory.Event} content={mappedContent(LogCategory.Event)}/>
         </div>);
     }
 }

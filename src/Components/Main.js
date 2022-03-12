@@ -5,6 +5,8 @@ import { skillsWindow } from "./Skills";
 import { playbackControl } from "./PlaybackControl";
 import { statusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
 
 export var setRealTime = inRealTime=>{};
 export default class Main extends React.Component {
@@ -25,7 +27,6 @@ export default class Main extends React.Component {
 	}
 	render() {
 		return <div className={"container"}>
-			{timeline}
 			<div className={"container-narrow"}>
 				<div className={"keyboardControlled" + (this.state.realTime ? " realTime" : "")}
 					 tabIndex={-1}
@@ -34,8 +35,20 @@ export default class Main extends React.Component {
 					{skillsWindow}
 				</div>
 				{playbackControl}
-				{logView}
 			</div>
+			<Tabs>
+				<TabList>
+					<Tab>Timeline</Tab>
+					<Tab>Logs</Tab>
+				</TabList>
+
+				<TabPanel className={"timelineTab"}>
+					{timeline}
+				</TabPanel>
+				<TabPanel className={"logsTab"}>
+					{logView}
+				</TabPanel>
+			</Tabs>
 		</div>;
 	}
 }
