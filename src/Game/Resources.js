@@ -123,13 +123,13 @@ export class ResourceState extends Map
 	}
 
 	// fnOnRsc : Resource -> ()
-	addResourceEvent(rscType, name, delay, fnOnRsc, logColor=Color.Text)
+	addResourceEvent(rscType, name, delay, fnOnRsc, logColor=Color.Text, shouldLog=true)
 	{
 		let rsc = this.get(rscType);
 		 let evt = new Event(name, delay, ()=>{
 			 rsc.pendingChange = null; // unregister self from resource
 			 fnOnRsc(rsc); // before the scheduled event takes effect
-		 }, logColor);
+		 }, logColor, shouldLog);
 		 rsc.pendingChange = evt; // register to resource
 		 this.game.addEvent(evt); // register to events master list
 	}

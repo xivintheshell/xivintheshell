@@ -88,10 +88,11 @@ export class GameState
 				this.resources.get(ResourceType.Mana).gain(amount);
 				controller.log(LogCategory.Event, "mana tick +" + amount, this.time, Color.ManaTick);
 				// queue the next tick
-				let nextTick = new Event("mana tick", 3, recurringManaRegen, Color.Text, false);
-				this.addEvent(nextTick);
+				this.resources.addResourceEvent(ResourceType.Mana, "mana tick", 3, rsc=>{
+					recurringManaRegen();
+				}, Color.ManaTick, false);
 			};
-			this.addEvent(new Event("initial mana tick", this.config.timeTillFirstManaTick, recurringManaRegen, Color.ManaTick));
+			this.resources.addResourceEvent(ResourceType.Mana, "initial mana tick", this.config.timeTillFirstManaTick, recurringManaRegen, Color.ManaTick, false);
 		}
 
 		// also polyglot
@@ -172,19 +173,19 @@ export class GameState
 		{
 			af.gain(numStacks);
 			if (ui.available(3) && uh.available(3)) {
-				ui.consume(ui.currentValue);
 				paradox.gain(1);
 				controller.log(LogCategory.Event, "Paradox! (UI -> AF)", this.time);
 			}
+			ui.consume(ui.currentValue);
 		}
 		else if (rscType===ResourceType.UmbralIce)
 		{
 			ui.gain(numStacks);
 			if (af.available(3)) {
-				af.consume(af.currentValue);
 				paradox.gain(1);
 				controller.log(LogCategory.Event, "Paradox! (AF -> UI)", this.time);
 			}
+			af.consume(af.currentValue);
 		}
 	}
 
@@ -258,6 +259,8 @@ export class GameState
 		let takeEffect = function(game) {
 			let resourcesStillAvailable = skill.available();
 			if (resourcesStillAvailable) {
+				// re-capture them here, since game state might've changed (say, AF/UI fell off)
+				[capturedManaCost, uhConsumption] = game.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 				// actually deduct resources
 				game.resources.get(ResourceType.Mana).consume(capturedManaCost);
 				if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
@@ -299,14 +302,8 @@ export class GameState
 		let instantCast = function(game, rsc)
 		{
 			controller.log(LogCategory.Event, "a cast is made instant via " + rsc.type, game.time, Color.Success);
-			game.addEvent(new Event(
-				skillName + " prepared",
-				0.3,
-				()=> {
-					if (takeEffect(game)) {
-						rsc.consume(1);
-					}
-				}));
+			rsc.consume(1);
+			takeEffect(game);
 
 			// recast
 			cd.useStack();
@@ -367,13 +364,7 @@ export class GameState
 				effectFn();
 			}
 			, Color.Text);
-
-		//this.addEvent(skillEvent);
-		this.addEvent(new Event(skillInfo.name + " prepared",
-			0.3,
-			()=>{
-				this.addEvent(skillEvent);
-			}));
+		this.addEvent(skillEvent);
 
 		// recast
 		cd.useStack();

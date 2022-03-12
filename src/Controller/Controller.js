@@ -47,6 +47,7 @@ class Controller
         let eno = game.resources.get(ResourceType.Enochian);
         let resourcesData = {
             mana: game.resources.get(ResourceType.Mana).currentValue,
+            timeTillNextManaTick: game.resources.timeTillReady(ResourceType.Mana),
             enochianCountdown: game.resources.timeTillReady(ResourceType.Enochian),
             astralFire: game.getFireStacks(),
             umbralIce: game.getIceStacks(),
@@ -219,7 +220,7 @@ class Controller
         if (status.status === SkillReadyStatus.Ready)
         {
             logString = "use skill [" + skillName + "]";
-            logColor = Color.Text;
+            logColor = Color.Success;
         }
         else if (status.status === SkillReadyStatus.Blocked)
         {
@@ -268,6 +269,8 @@ class Controller
                 skillName: props.skillName,
                 timeInQueue: 0
             });
+        } else if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
+            // not sure if should allow any control here.
         } else {
             let waitFirst = props.skillName === this.lastAtteptedSkill;
             this.#useSkill(props.skillName, waitFirst);

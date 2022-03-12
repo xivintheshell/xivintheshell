@@ -2,6 +2,7 @@ import React from 'react'
 import {Clickable} from "./Common";
 import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
+import ReactTooltip from 'react-tooltip';
 
 export let displayedSkills = [
 	SkillName.Blizzard,
@@ -69,6 +70,7 @@ skillIcons.set(SkillName.Surecast, require("./Asset/surecast.png"));
 skillIcons.set(SkillName.Tincture, require("./Asset/tincture.png"));
 
 let setSkillInfoText = (text)=>{};
+/*
 class SkillInfoText extends React.Component {
 	constructor(props) {
 		super(props);
@@ -84,6 +86,7 @@ class SkillInfoText extends React.Component {
 		{this.state.content}
 	</div> }
 }
+ */
 export function ProgressCircle(props={
 	className: "",
 	diameter: 50,
@@ -119,7 +122,7 @@ class SkillButton extends React.Component {
 	handleMouseEnter(evt) {
 		let info = controller.getSkillInfo({skillName: this.props.skillName});
 
-		let s = this.props.skillName + ": ";
+		let s = "";
 		if (info.status === SkillReadyStatus.Ready) {
 			s += "ready (" + info.stacksAvailable + " stack";
 			if (info.stacksAvailable > 1) s += "s";
@@ -132,7 +135,11 @@ class SkillButton extends React.Component {
 		} else if (info.status === SkillReadyStatus.Blocked) {
 			s += "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (CD ready in " + info.cdReadyCountdown.toFixed(2) + ")";
 		}
-		setSkillInfoText(s);
+		let content = <div>
+			<p>{this.props.skillName}</p>
+			<p>{s}</p>
+		</div>;
+		setSkillInfoText(content);
 	}
 	render() {
 		let iconPath = skillIcons.get(this.props.skillName);
@@ -152,11 +159,13 @@ class SkillsWindow extends React.Component {
 	constructor(props) {
 		super(props);
 		updateSkillButtons = this.unboundUpdateFn.bind(this);
+		setSkillInfoText = this.unboundSetSkillInfoText.bind(this);
 		this.state = {
 			statusList: displayedSkills.map(sn=>{
 				return controller.getSkillInfo({skillName: sn});
 			}),
 			paradoxInfo: controller.getSkillInfo({skillName: SkillName.Paradox}),
+			tooltipContent: "",
 		}
 	}
 	unboundUpdateFn(statusList) {
@@ -165,9 +174,16 @@ class SkillsWindow extends React.Component {
 			paradoxInfo: controller.getSkillInfo({skillName: SkillName.Paradox}),
 		});
 	}
+	unboundSetSkillInfoText(text) {
+		this.setState({tooltipContent: text});
+	}
 	render() {
 		let skillButtons = [];
 		let para = controller.getResourceValue({rscType: ResourceType.Paradox});
+		let tooltip =
+			<ReactTooltip id={"SkillDescription"} delayShow={200}>
+				<div className={"toolTip"}>{this.state.tooltipContent}</div>
+			</ReactTooltip>
 		for (let i = 0; i < displayedSkills.length; i++) {
 			let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
 			let skillName = (isF1B1 && para) ? SkillName.Paradox : displayedSkills[i];
@@ -182,9 +198,9 @@ class SkillsWindow extends React.Component {
 		}
 
 		return <div className={"skillsWindow"}>
-			<SkillInfoText/>
-			<div className={"skillIcons"}>
+			<div data-tip data-for="SkillDescription" className={"skillIcons"}>
 				{skillButtons}
+				{tooltip}
 			</div>
 		</div>
 	}

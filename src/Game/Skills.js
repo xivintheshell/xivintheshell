@@ -157,6 +157,7 @@ export function makeSkillsList(game)
 			} else // in AF
 			{
 				game.castSpell(SkillName.Blizzard, cap => {
+					game.resources.get(ResourceType.Enochian).removeTimer();
 					game.loseEnochian();
 				}, app => {
 				});
@@ -203,6 +204,7 @@ export function makeSkillsList(game)
 				});
 			} else {
 				game.castSpell(SkillName.Fire, cap => {
+					game.resources.get(ResourceType.Enochian).removeTimer();
 					game.loseEnochian();
 				}, app => {
 				});

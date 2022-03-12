@@ -1,6 +1,5 @@
 import React from 'react';
 import {ProgressBar} from "./Common";
-import {controller} from '../Controller/Controller'
 import {ResourceType} from "../Game/Common";
 
 // color, value
@@ -224,6 +223,7 @@ function ResourceLocksDisplay(props)
 function ResourcesDisplay(props) {
 	let data = (props && props.data) ? props.data : {
 		mana: 10000,
+		timeTillNextManaTick: 0.8,
 		enochianCountdown: 0,
 		astralFire: 0,
 		umbralIce: 0,
@@ -237,6 +237,12 @@ function ResourcesDisplay(props) {
 		color={"#8aceea"}
 		progress={data.mana / 10000}
 		value={Math.floor(data.mana) + "/10000"}
+		width={100}/>;
+	let manaTick = <ResourceBar
+		name={"MP tick"}
+		color={"#c2eaff"}
+		progress={1 - data.timeTillNextManaTick / 3}
+		value={(3 - data.timeTillNextManaTick).toFixed(2) + "/3"}
 		width={100}/>;
 	let enochian = <ResourceBar
 		name={"enochian"}
@@ -272,6 +278,7 @@ function ResourcesDisplay(props) {
 		maxStacks={2}/>;
 	return <div className={"resourceDisplay"}>
 		{manaBar}
+		{manaTick}
 		{afui}
 		{uh}
 		{paradox}
