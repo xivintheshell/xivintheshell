@@ -35,20 +35,20 @@ export default class Main extends React.Component {
 					{skillsWindow}
 				</div>
 				{playbackControl}
-			</div>
-			<Tabs>
-				<TabList>
-					<Tab>Timeline</Tab>
-					<Tab>Logs</Tab>
-				</TabList>
+				<Tabs>
+					<TabList>
+						<Tab>Timeline</Tab>
+						<Tab>Logs</Tab>
+					</TabList>
 
-				<TabPanel className={"timelineTab"}>
-					{timeline}
-				</TabPanel>
-				<TabPanel className={"logsTab"}>
-					{logView}
-				</TabPanel>
-			</Tabs>
+					<TabPanel className={"timelineTab"}>
+						{timeline}
+					</TabPanel>
+					<TabPanel className={"logsTab"}>
+						{logView}
+					</TabPanel>
+				</Tabs>
+			</div>
 		</div>;
 	}
 }

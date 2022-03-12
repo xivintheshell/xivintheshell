@@ -49,26 +49,46 @@
 .logsTab {
     position: relative;
     width: 100%;
-    height: 400px;
 }
 
 .logWindow {
-    position: absolute;
+    margin-bottom: 8px;
     border: 1px solid grey;
     text-align: left;
     padding: 0.5em 0.5em 10px;
     overflow-y: scroll;
-    top: 0;
-    bottom: 0;
 }
 
 .logWindow.actions {
-    left: 0;
-    right: 50.5%;
+    height: 100px;
 }
+
 .logWindow.events {
-    left: 50.5%;
-    right: 0;
+    height: 300px;
+}
+
+@media(min-width: 768px) {
+
+    .logsTab {
+        height: 400px;
+    }
+
+    .logWindow {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+    }
+
+    .logWindow.actions {
+        left: 0;
+        right: 50.5%;
+        height: 100%;
+    }
+    .logWindow.events {
+        left: 50.5%;
+        right: 0;
+        height: 100%;
+    }
 }
 
 .logEntry {
