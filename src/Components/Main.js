@@ -25,6 +25,7 @@ export default class Main extends React.Component {
 	setRealTime(rt) {
 		this.setState({realTime: rt});
 	}
+	// tabs: https://reactcommunity.org/react-tabs/
 	render() {
 		return <div className={"container"}>
 			<div className={"container-narrow"}>

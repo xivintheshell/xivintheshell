@@ -6,6 +6,7 @@ import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 import {TickMode} from "../Components/PlaybackControl"
 import {setRealTime} from "../Components/Main";
+import {Timeline, ElemType} from "./Timeline"
 
 class Controller
 {
@@ -24,6 +25,12 @@ class Controller
         this.gameConfig.spellSpeed = 1532;
         this.gameConfig.timeTillFirstManaTick = 1.2;
         this.requestRestart();
+
+        this.timeline = new Timeline();
+        this.timeline.addElement({
+            type: ElemType.s_Cursor,
+            time: 0
+        });
 
         /*
         let intimes = [1.5, 2, 2.5, 2.8, 3, 3.5, 4];
@@ -99,6 +106,12 @@ class Controller
         }
     }
 
+    #updateTimelineDisplay() {
+        this.timeline.setTimeSegment(0, this.game.time);
+        this.timeline.updateElem({type: ElemType.s_Cursor, time: this.game.time});
+        this.timeline.drawElements();
+    }
+
     #updateSkillButtons() {
         if (typeof updateSkillButtons !== "undefined") {
             updateSkillButtons(displayedSkills.map(skillName=>{
@@ -107,7 +120,6 @@ class Controller
         }
     }
 
-    // view --> game
     #requestTick(props={
         deltaTime: -1,
         suppressLog: false,
@@ -119,6 +131,7 @@ class Controller
                 props.prematureStopCondition ? props.prematureStopCondition : ()=>{ return false; });
             this.#updateStatusDisplay(this.game);
             this.#updateSkillButtons();
+            this.#updateTimelineDisplay();
             if (!props.suppressLog) this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.time, Color.Grey);
         }
     }

@@ -50,8 +50,13 @@ let logContent = new Map();
 logContent.set(LogCategory.Action, []);
 logContent.set(LogCategory.Event, []);
 
-export var addLogContent = function(logCategory, newContent, color) {
+let addLogContentInner = function(logCategory, newContent, color) {
+    logContent.get(logCategory).push({
+        text: newContent,
+        color: color
+    });
 }
+export var addLogContent = addLogContentInner;
 
 class LogView extends React.Component
 {
@@ -60,11 +65,11 @@ class LogView extends React.Component
         super(props);
         addLogContent = this.unboundAddLogContent.bind(this);
     }
+    componentWillUnmount() {
+        addLogContent = addLogContentInner;
+    }
     unboundAddLogContent(logCategory, newContent, color) {
-        logContent.get(logCategory).push({
-            text: newContent,
-            color: color
-        });
+        addLogContentInner(logCategory, newContent, color);
         this.forceUpdate();
     }
     render()

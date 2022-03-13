@@ -1,7 +1,6 @@
 .timeline {
     outline: 1px solid grey;
     position: relative;
-    overflow-y: visible;
     vertical-align: middle;
 }
 .timeline-fixedLeftColumn {
@@ -12,7 +11,7 @@
 }
 .timeline-fixedRightColumn {
     display: inline-block;
-    width: 400px;
+    width: 100%;
     overflow-x: scroll;
     vertical-align: bottom;
 }
@@ -32,4 +31,13 @@
 .timeline-main {
     position: relative;
     background: lightgrey;
+}
+
+.timeline-elem{
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+.timeline-elem.cursor {
 }
