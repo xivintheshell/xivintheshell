@@ -262,7 +262,7 @@ export function makeSkillsList(game)
 			game.resources.addResourceEvent(
 				ResourceType.ThunderDoTTick,
 				"recurring thunder tick " + (numTicks+1-remainingTicks) + "/" + numTicks, 3, rsc=>{
-					game.dealDamage(capturedTickPotency);
+					game.dealDamage(capturedTickPotency, "DoT");
 					recurringThunderTick(remainingTicks - 1, capturedTickPotency);
 					if (Math.random() < 0.1) // thundercloud proc
 					{
@@ -293,10 +293,11 @@ export function makeSkillsList(game)
 		() => {
 			if (game.resources.get(ResourceType.Thundercloud).available(1)) // made instant via thundercloud
 			{
+				let skillTime = game.time;
 				let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
 				let capturedTickPotency = game.captureDamage(Aspect.Other, game.config.adjustedDoTPotency(35));
 				game.useInstantSkill(SkillName.Thunder3, () => {
-					game.dealDamage(capturedInitialPotency);
+					game.dealDamage(capturedInitialPotency, "Thunder 3@"+skillTime.toFixed(2));
 					applyThunderDoT(game, capturedTickPotency, 10);
 				});
 				let thundercloud = game.resources.get(ResourceType.Thundercloud);

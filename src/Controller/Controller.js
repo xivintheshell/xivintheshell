@@ -48,6 +48,18 @@ class Controller
         addLogContent(category, content, color);
     }
 
+    reportDamage(props) {
+
+        this.timeline.addElement({
+            type: ElemType.DamageMark,
+            potency: props.potency,
+            time: props.time,
+            source: props.source
+        })
+
+        this.log(LogCategory.Event, "dealing damage of potency " + props.potency.toFixed(1), props.time, Color.Damage);
+    }
+
     #updateStatusDisplay() {
         let game = this.game;
         // resources

@@ -1,17 +1,36 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
+import ReactTooltip from 'react-tooltip';
+import {addLogContent} from "./LogView";
 
 const MAX_HEIGHT = 500;
 
 function Cursor(props) {
 	let style={
-		left: props.elem.left-3,
+		left: props.elem.left - 3,
+		hoverText: props.elem.time,
 	};
-	return <svg style={style} className={"timeline-elem cursor"} width={6} height={MAX_HEIGHT}>
-		<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"black"}/>
-		<polygon points="0,0 6,0 3,6" fill="black" stroke="none"/>
-	</svg>;
+	return <div style={style} className={"timeline-elem cursor"} data-tip data-for={`${props.elemID}`}>
+		<svg width={6} height={MAX_HEIGHT}>
+			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"black"}/>
+			<polygon points="0,0 6,0 3,6" fill="black" stroke="none"/>
+		</svg>
+		<ReactTooltip id={`${props.elemID}`}>{props.elem.hoverText}</ReactTooltip>
+	</div>;
+}
+
+function DamageMark(props) {
+	let style={
+		left: props.elem.left-3,
+		//hoverText: props.elem.ho
+	};
+	return <div style={style} className={"timeline-elem damageMark"} data-tip data-for={`${props.elemID}`}>
+		<svg width={6} height={6}>
+			<polygon points="0,0 6,0 3,6" fill="red" stroke="none"/>
+		</svg>
+		<ReactTooltip id={`${props.elemID}`}>{props.elem.hoverText}</ReactTooltip>
+	</div>;
 }
 
 function TimelineHeader(props) {
@@ -44,6 +63,9 @@ class TimelineMain extends React.Component {
 			elements: controller.timeline.getTimelineElements()
 		});
 	}
+	componentWillUnmount() {
+		updateTimelineContent = (startTime, canvasWidth, data)=>{};
+	}
 	unboundUpdateTimelineContent(startTime, canvasWidth, data) {
 		this.setState({
 			startTime: startTime,
@@ -56,9 +78,10 @@ class TimelineMain extends React.Component {
 		for (let i = 0; i < this.state.elements.length; i++) {
 			let e = this.state.elements[i];
 			if (e.type === ElemType.s_Cursor) {
-				elemComponents.push(<Cursor key={i} elem={e}/>)
+				elemComponents.push(<Cursor key={i} elem={e} elemID={"elemID-"+i}/>)
 
 			} else if (e.type === ElemType.DamageMark) {
+				elemComponents.push(<DamageMark key={i} elem={e} elemID={"elemID-"+i}/>)
 
 			}
 		}

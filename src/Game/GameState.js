@@ -244,9 +244,13 @@ export class GameState
 		return [castTime, mod.spellRecastTimeScale];
 	}
 
-	dealDamage(potency)
+	dealDamage(potency, source="unknown")
 	{
-		controller.log(LogCategory.Event, "dealing damage of potency " + potency.toFixed(1), this.time, Color.Damage);
+		controller.reportDamage({
+			potency: potency,
+			time: this.time,
+			source: source
+		});
 	}
 
 	castSpell(skillName, onCapture, onApplication)
@@ -255,6 +259,8 @@ export class GameState
 		let skillInfo = skill.info;
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
+
+		let skillTime = this.time;
 
 		let takeEffect = function(game) {
 			let resourcesStillAvailable = skill.available();
@@ -278,7 +284,7 @@ export class GameState
 					skillInfo.name + " applied",
 					skillInfo.skillApplicationDelay,
 					()=>{
-						game.dealDamage(capturedPotency);
+						game.dealDamage(capturedPotency, skillInfo.name + "@"+skillTime.toFixed(2));
 						let applicationInfo = {
 							//...
 						};
@@ -356,11 +362,13 @@ export class GameState
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let capturedDamage = dealDamage ? this.captureDamage(skillInfo.aspect, skillInfo.basePotency) : 0;
 
+		let skillTime = this.time;
+
 		let skillEvent = new Event(
 			skillInfo.name + " applied",
 			skillInfo.skillApplicationDelay,
 			()=>{
-				if (dealDamage) this.dealDamage(capturedDamage);
+				if (dealDamage) this.dealDamage(capturedDamage, skillInfo.name+"@"+skillTime.toFixed(2));
 				effectFn();
 			}
 			, Color.Text);

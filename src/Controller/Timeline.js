@@ -25,6 +25,9 @@ function verifyElem(elem) {
 	}
 
 	if (elem.type === ElemType.DamageMark) {
+		console.assert(!isNaN(parseFloat(elem.time)));
+		console.assert(!isNaN(parseFloat(elem.potency)));
+		console.assert(elem.source !== undefined);
 		return;
 	}
 
@@ -36,13 +39,13 @@ export class Timeline {
 	constructor() {
 		this.scale = 0.25;
 		this.startTime = 0;
-		this.showDuration = 0;
+		this.elapsedTime = 0;
 		this.elements = [];
 	}
 
-	setTimeSegment(startTime, showDuration) {
+	setTimeSegment(startTime, elapsedTime) {
 		this.startTime = startTime;
-		this.showDuration = showDuration;
+		this.elapsedTime = elapsedTime;
 	}
 
 	addElement(elem) {
@@ -68,20 +71,29 @@ export class Timeline {
 	}
 
 	getCanvasWidth() {
-		let secondsToDraw = Math.ceil((this.showDuration + 4) / 8) * 8;
+		let secondsToDraw = Math.ceil((this.elapsedTime + 4) / 8) * 8;
 		return secondsToDraw * 100 * this.scale;
 	}
 
 	getTimelineElements() {
 		let elemsToDraw = [];
 		this.elements.forEach(e=>{
-			 // cursor
-			 if (e.type === ElemType.s_Cursor) {
-				 elemsToDraw.push({
-					  type: e.type,
-					  left: (this.startTime + this.showDuration) * 100 * this.scale,
-				 });
-			 }
+			// cursor
+			if (e.type === ElemType.s_Cursor) {
+				elemsToDraw.push({
+					type: e.type,
+					hoverText: (e.time).toFixed(2).toString(),
+					left: (this.startTime + this.elapsedTime) * 100 * this.scale,
+				});
+			}
+			//
+			else if (e.type === ElemType.DamageMark) {
+				elemsToDraw.push({
+					type: e.type,
+					hoverText: e.potency.toFixed(2) + " (" + e.source + ")",
+					left: (e.time) * 100 * this.scale,
+				});
+			}
 		});
 		return elemsToDraw;
 	}

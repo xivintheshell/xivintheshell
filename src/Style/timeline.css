@@ -1,3 +1,7 @@
+svg {
+    display: block;
+}
+
 .timeline {
     outline: 1px solid grey;
     position: relative;
@@ -13,6 +17,7 @@
     display: inline-block;
     width: 100%;
     overflow-x: scroll;
+    overflow-y: clip;
     vertical-align: bottom;
 }
 
@@ -40,4 +45,6 @@
     z-index: 1;
 }
 .timeline-elem.cursor {
+}
+.timeline-elem.damageMark {
 }
