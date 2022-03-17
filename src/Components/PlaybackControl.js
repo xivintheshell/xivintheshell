@@ -8,6 +8,33 @@ export const TickMode = {
 	Manual: 2
 };
 
+// description, defaultValue, onChange: value->()
+export class Input extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			value: props.defaultValue,
+			description: props.description,
+			onChange: ()=>{ console.log("hi hi") },
+		}
+		this.onChange = this.unboundOnChange.bind(this);
+	}
+	unboundOnChange(e) {
+		this.setState({value: e.target.value});
+		this.props.onChange(e.target.value);
+	}
+	componentDidMount() {
+		this.props.onChange(this.state.value);
+	}
+	render() {
+		return <div>
+			<span>{this.state.description}</span>
+			<input className={"numberInput"} size="5" type="text" value={this.state.value} onChange={this.onChange}/>
+		</div>
+	}
+}
+
+// actually, control settings: tick mode, time scale, step size
 class TickModeSelection extends React.Component
 {
 	constructor(props) {
@@ -19,7 +46,8 @@ class TickModeSelection extends React.Component
 		controller.setTickMode(mode);
 	}
 	render() {
-		return <div className={"tickModeSelection"} onChange={this.onChangeValue}>
+		return <div onChange={this.onChangeValue}>
+			<span>Tick mode: </span>
 			<label data-tip data-for="RealTime" className={"tickModeOption"}>
 				<input className={"radioButton"} type={"radio"} value={TickMode.RealTime} defaultChecked={false} name={"tick mode"}/>
 				{"real-time"}
@@ -61,7 +89,50 @@ class TickModeSelection extends React.Component
 	}
 }
 
-class Config extends React.Component {
+export class TimeControl extends React.Component {
+	constructor(props) {
+		super(props);
+		this.setStepSize = this.unboundSetStepSize.bind(this);
+		this.setTimeScale = this.unboundSetTimeScale.bind(this);
+		this.state = {
+			stepSize: 1,
+			timeScale: 2
+		}
+	}
+	unboundSetStepSize(val) {
+		let numVal = parseFloat(val);
+		if (!isNaN(numVal)) {
+			this.setState({stepSize: numVal})
+			controller.setTimeControlSettings({
+				stepSize: numVal,
+				timeScale: this.state.timeScale
+			});
+		}
+	}
+	unboundSetTimeScale(val) {
+		let numVal = parseFloat(val);
+		if (!isNaN(numVal)) {
+			this.setState({timeScale: numVal})
+			controller.setTimeControlSettings({
+				stepSize: this.state.stepSize,
+				timeScale: numVal
+			});
+		}
+	}
+	componentDidMount() {
+		this.unboundSetStepSize(this.state.stepSize);
+		this.unboundSetTimeScale(this.state.timeScale);
+	}
+	render() {
+		return <div className={"timeControl"}>
+			<TickModeSelection/>
+			<Input defaultValue={this.state.stepSize} description="step size: " onChange={this.setStepSize}/>
+			<Input defaultValue={this.state.timeScale} description="time scale: " onChange={this.setTimeScale}/>
+		</div>
+	}
+}
+
+export class Config extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -72,17 +143,28 @@ class Config extends React.Component {
 			timeTillFirstManaTick: 1.5
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
-		this.setConfigAndRestart();
+		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);
+		this.setAnimationLock = this.unboundSetAnimationLock.bind(this);
+		this.setCasterTax = this.unboundSetCasterTax.bind(this);
+		this.setTimeTillFirstManaTick = this.unboundSetTimeTillFirstManaTick.bind(this);
 	}
+	unboundSetSpellSpeed(val) { this.setState({spellSpeed: parseFloat(val)}) }
+	unboundSetAnimationLock(val) { this.setState({animationLock: parseFloat(val)}) }
+	unboundSetCasterTax(val) { this.setState({casterTax: parseFloat(val)}) }
+	unboundSetTimeTillFirstManaTick(val) { this.setState({timeTillFirstManaTick: parseFloat(val)}) }
 
 	setConfigAndRestart() {
 		controller.setConfigAndRestart({
-			stepSize: parseFloat(this.state.stepSize),
+			//stepSize: parseFloat(this.state.stepSize),
 			spellSpeed: parseFloat(this.state.spellSpeed),
 			animationLock: parseFloat(this.state.animationLock),
 			casterTax: parseFloat(this.state.casterTax),
 			timeTillFirstManaTick: parseFloat(this.state.timeTillFirstManaTick)
 		});
+	}
+
+	componentDidMount() {
+		this.setConfigAndRestart();
 	}
 
 	handleSubmit (event) {
@@ -91,43 +173,15 @@ class Config extends React.Component {
 	}
 
 	render() {
-		const inStepSize = <input className={"numberInput"} size="5" type="text" value={this.state.stepSize} onChange={
-			e=>{ this.setState({stepSize: e.target.value});}
-		}/>;
-		const inSpellSpeed = <input className={"numberInput"} size="5" type="text" value={this.state.spellSpeed} onChange={
-			e=>{ this.setState({spellSpeed: e.target.value});}
-		}/>;
-		const inAnimationLock = <input className={"numberInput"} size="5" type="text" value={this.state.animationLock} onChange={
-			e=>{ this.setState({animationLock: e.target.value});}
-		}/>;
-		const inCasterTax = <input className={"numberInput"} size="5" type="text" value={this.state.casterTax} onChange={
-			e=>{ this.setState({casterTax: e.target.value});}
-		}/>;
-		const inTimeTillFirstManaTick = <input className={"numberInput"} size="5" type="text" value={this.state.timeTillFirstManaTick} onChange={
-			e=>{ this.setState({timeTillFirstManaTick: e.target.value});}
-		}/>;
-		const form =
-			<form className={"config"} onSubmit={this.handleSubmit}>
-				<span>step size = {inStepSize}, </span>
-				<span>spell speed = {inSpellSpeed}, </span>
-				<span>animation lock = {inAnimationLock}, </span>
-				<span>caster tax = {inCasterTax}, </span>
-				<span>time till first mana tick = {inTimeTillFirstManaTick}. </span>
-				<input type="submit" value="apply and reset"/>
-			</form>;
 		return (
-			<div className={"manualTickSelection"}>{form}</div>
+			<div className={"manualTickSelection config"}>
+				<form onSubmit={this.handleSubmit}>
+					<Input defaultValue={this.state.spellSpeed} description="spell speed: " onChange={this.setSpellSpeed}/>
+					<Input defaultValue={this.state.animationLock} description="animation lock: " onChange={this.setAnimationLock}/>
+					<Input defaultValue={this.state.casterTax} description="caster tax: " onChange={this.setCasterTax}/>
+					<Input defaultValue={this.state.timeTillFirstManaTick} description="time till first MP tick: " onChange={this.setTimeTillFirstManaTick}/>
+					<input type="submit" value="apply and reset"/>
+				</form>
+			</div>
 		)}
 }
-
-class PlaybackControl extends React.Component {
-	render() {
-		// TODO
-		return <div className={"playbackControl"}>
-			<TickModeSelection/>
-			<Config/>
-		</div>;
-	}
-}
-
-export var playbackControl = <PlaybackControl/>;

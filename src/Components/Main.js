@@ -2,7 +2,7 @@ import React from 'react';
 import { logView } from "./LogView";
 import { timeline } from "./Timeline";
 import { skillsWindow } from "./Skills";
-import { playbackControl } from "./PlaybackControl";
+import { Config, TimeControl } from "./PlaybackControl";
 import { statusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
@@ -29,13 +29,14 @@ export default class Main extends React.Component {
 	render() {
 		return <div className={"container"}>
 			<div className={"container-narrow"}>
+				<Config/>
+				<TimeControl/>
 				<div className={"keyboardControlled" + (this.state.realTime ? " realTime" : "")}
 					 tabIndex={-1}
 					 onKeyDown={this.boundKeyCapture}>
 					{statusDisplay}
 					{skillsWindow}
 				</div>
-				{playbackControl}
 				<Tabs>
 					<TabList>
 						<Tab>Timeline</Tab>

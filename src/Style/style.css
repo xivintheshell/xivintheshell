@@ -117,11 +117,15 @@
 
 /* playback control */
 
-.playbackControl {
+.config,.timeControl {
+    display: block;
     margin-bottom: 10px;
 }
-.config,.tickModeSelection {
-    margin: 10px 0;
+@media(min-width: 768px) {
+    .config,.timeControl {
+        display: inline-block;
+        width: 50%;
+    }
 }
 .numberInput {
     outline: none;
@@ -129,8 +133,8 @@
     border-bottom: 1px solid black;
 }
 .tickModeOption {
+    display: inline-block;
     margin-right: 1em;
-    margin-bottom: 30px;
 }
 .tickModeDescription {
     padding: 1em 2em;

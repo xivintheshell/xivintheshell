@@ -1,6 +1,7 @@
 import React from 'react';
 import {ProgressBar} from "./Common";
 import {ResourceType} from "../Game/Common";
+import {controller} from "../Controller/Controller";
 
 // color, value
 function ResourceStack(props) {
@@ -299,6 +300,9 @@ class StatusDisplay extends React.Component {
 			enemyBuffs: null
 		}
 		updateStatusDisplay = this.unboundUpdateStatus.bind(this);
+	}
+	componentDidMount() {
+		controller.updateStatusDisplay();
 	}
 	unboundUpdateStatus(newData){
 		this.setState({

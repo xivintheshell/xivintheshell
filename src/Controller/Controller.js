@@ -13,6 +13,7 @@ class Controller
     constructor()
     {
         this.stepSize = 0.5;
+        this.timeScale = 1;
         this.shouldLoop = false;
         this.tickMode = TickMode.RealTimeAutoPause;
         this.lastAtteptedSkill = "";
@@ -60,7 +61,7 @@ class Controller
         this.log(LogCategory.Event, "dealing damage of potency " + props.potency.toFixed(1), props.time, Color.Damage);
     }
 
-    #updateStatusDisplay() {
+    updateStatusDisplay() {
         let game = this.game;
         // resources
         let eno = game.resources.get(ResourceType.Enochian);
@@ -141,7 +142,7 @@ class Controller
             this.game.tick(
                 props.deltaTime,
                 props.prematureStopCondition ? props.prematureStopCondition : ()=>{ return false; });
-            this.#updateStatusDisplay(this.game);
+            this.updateStatusDisplay(this.game);
             this.#updateSkillButtons();
             this.#updateTimelineDisplay();
             if (!props.suppressLog) this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.time, Color.Grey);
@@ -154,16 +155,20 @@ class Controller
         this.lastAtteptedSkill = "";
     }
 
+    setTimeControlSettings(props) {
+        this.stepSize = props.stepSize;
+        this.timeScale = props.timeScale;
+    }
+
     setConfigAndRestart(props={
-        stepSize: 0.5,
+        //stepSize: 0.5,
         spellSpeed: 1268,
         animationLock: 0.66,
         casterTax: 0.06,
         timeTillFirstManaTick: 0.3,
     })
     {
-        this.stepSize = props.stepSize;
-
+        //this.stepSize = props.stepSize;
         this.gameConfig = new GameConfig();
         this.gameConfig.casterTax = props.casterTax;
         this.gameConfig.animationLock = props.animationLock;
@@ -214,7 +219,7 @@ class Controller
     {
         this.lastAtteptedSkill = ""
         this.game = new GameState(this.gameConfig);
-        this.#updateStatusDisplay(this.game);
+        this.updateStatusDisplay(this.game);
         this.#updateSkillButtons();
         this.#playPause({shouldLoop: false});
         this.log(
@@ -277,7 +282,7 @@ class Controller
         if (status.status === SkillReadyStatus.Ready)
         {
             this.game.useSkillIfAvailable(skillName);
-            this.#updateStatusDisplay();
+            this.updateStatusDisplay();
             this.#updateSkillButtons();
             if (this.tickMode === TickMode.RealTimeAutoPause) {
                 this.shouldLoop = true;
@@ -313,7 +318,7 @@ class Controller
                 // start
                 // ...
             }
-            let dt = (time - prevTime) / 1000;
+            let dt = (time - prevTime) / 1000 * ctrl.timeScale;
 
             // update (skills queue)
             let numSkillsProcessed = 0;
