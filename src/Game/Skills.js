@@ -604,9 +604,9 @@ export function makeSkillsList(game)
 			return game.resources.get(ResourceType.Paradox).available(1);
 		},
 		() => {
-			game.resources.get(ResourceType.Paradox).consume(1);
 			if (game.getFireStacks() > 0) {
 				game.castSpell(SkillName.Paradox, cap => {
+					game.resources.get(ResourceType.Paradox).consume(1);
 					game.startOrRefreshEnochian();
 					if (Math.random() < 0.4) // firestarter proc
 					{
@@ -616,6 +616,7 @@ export function makeSkillsList(game)
 				});
 			} else if (game.getIceStacks() > 0) {
 				game.useInstantSkill(SkillName.Paradox, () => {
+					game.resources.get(ResourceType.Paradox).consume(1);
 					game.startOrRefreshEnochian();
 				}, true);
 			} else {

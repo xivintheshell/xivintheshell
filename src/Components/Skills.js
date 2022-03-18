@@ -70,23 +70,6 @@ skillIcons.set(SkillName.Surecast, require("./Asset/surecast.png"));
 skillIcons.set(SkillName.Tincture, require("./Asset/tincture.png"));
 
 let setSkillInfoText = (text)=>{};
-/*
-class SkillInfoText extends React.Component {
-	constructor(props) {
-		super(props);
-		setSkillInfoText = this.setContent.bind(this);
-		this.state = {
-			content: "n/a"
-		}
-	}
-	setContent(newContent) {
-		this.setState({content: newContent});
-	}
-	render() { return <div className={"skillInfoText"}>
-		{this.state.content}
-	</div> }
-}
- */
 export function ProgressCircle(props={
 	className: "",
 	diameter: 50,

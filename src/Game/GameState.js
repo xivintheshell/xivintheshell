@@ -293,6 +293,7 @@ export class GameState
 					Color.Text));
 				return true;
 			} else {
+				console.log(skillName + " failed");
 				controller.log(
 					LogCategory.Event,
 					skillName + " cast failed! Resources no longer available.",

@@ -294,6 +294,7 @@ class StatusDisplay extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			time: 0,
 			resources: null,
 			resourceLocks: null,
 			selfBuffs: null,
@@ -306,6 +307,7 @@ class StatusDisplay extends React.Component {
 	}
 	unboundUpdateStatus(newData){
 		this.setState({
+			time: newData.time,
 			resources: newData.resources,
 			resourceLocks: newData.resourceLocks,
 			selfBuffs: newData.selfBuffs,
@@ -315,6 +317,7 @@ class StatusDisplay extends React.Component {
 	render() {
 		return <div className={"statusDisplay"}>
 			<div className={"-left"}>
+				<span>time: {this.state.time.toFixed(2)}</span>
 				<ResourcesDisplay data={this.state.resources}/>
 			</div>
 			<div className={"-right"}>

@@ -138,9 +138,9 @@ export class Config extends React.Component {
 		this.state = {
 			stepSize : 0.5,
 			spellSpeed: 1532,
-			animationLock: 0.76,
+			animationLock: 0.74,
 			casterTax: 0.12,
-			timeTillFirstManaTick: 1.5
+			timeTillFirstManaTick: 1.2
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);

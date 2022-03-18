@@ -111,6 +111,7 @@ class Controller
         };
         if (typeof updateStatusDisplay !== "undefined") {
             updateStatusDisplay({
+                time: game.time,
                 resources: resourcesData,
                 resourceLocks: resourceLocksData,
                 enemyBuffs: enemyBuffsData,
