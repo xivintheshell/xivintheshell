@@ -13,7 +13,8 @@ width: multiple of 800px?
 
 export const ElemType = {
 	s_Cursor: "s_Cursor",
-	DamageMark: "DamageMark"
+	DamageMark: "DamageMark",
+	Skill: "Skill"
 };
 
 function verifyElem(elem) {
@@ -28,6 +29,15 @@ function verifyElem(elem) {
 		console.assert(!isNaN(parseFloat(elem.time)));
 		console.assert(!isNaN(parseFloat(elem.potency)));
 		console.assert(elem.source !== undefined);
+		return;
+	}
+
+	if (elem.type === ElemType.Skill) {
+		console.assert(typeof elem.skillName !== undefined);
+		console.assert(typeof elem.isGCD !== undefined);
+		console.assert(!isNaN(parseFloat(elem.time)));
+		console.assert(!isNaN(parseFloat(elem.lockDuration)));
+		console.assert(!isNaN(parseFloat(elem.recastDuration)));
 		return;
 	}
 
@@ -75,6 +85,10 @@ export class Timeline {
 		return secondsToDraw * 100 * this.scale;
 	}
 
+	positionFromTime(time) {
+		return time * this.scale * 100;
+	}
+
 	getTimelineElements() {
 		let elemsToDraw = [];
 		this.elements.forEach(e=>{
@@ -83,15 +97,23 @@ export class Timeline {
 				elemsToDraw.push({
 					type: e.type,
 					hoverText: (e.time).toFixed(2).toString(),
-					left: (this.startTime + this.elapsedTime) * 100 * this.scale,
+					left: this.positionFromTime(this.startTime + this.elapsedTime),
 				});
 			}
-			//
+			// damage mark
 			else if (e.type === ElemType.DamageMark) {
 				elemsToDraw.push({
 					type: e.type,
 					hoverText: e.potency.toFixed(2) + " (" + e.source + ")",
-					left: (e.time) * 100 * this.scale,
+					left: this.positionFromTime(e.time),
+				});
+			}
+			// skill
+			else if (e.type === ElemType.Skill) {
+				elemsToDraw.push({
+					type: e.type,
+					left: this.positionFromTime(e.time),
+					data: e,
 				});
 			}
 		});

@@ -291,6 +291,17 @@ class Controller
                     return this.game.timeTillAnySkillAvailable() > 0;
                 });
             }
+
+            let isGCD = this.game.skillsList.get(skillName).info.cdName === ResourceType.cd_GCD;
+            let newStatus = this.game.getSkillAvailabilityStatus(skillName);
+            this.timeline.addElement({
+                type: ElemType.Skill,
+                skillName: skillName,
+                isGCD: isGCD,
+                time: this.game.time,
+                lockDuration: this.game.timeTillAnySkillAvailable(),
+                recastDuration: newStatus.cdRecastTime,
+            });
         }
     }
 

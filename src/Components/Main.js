@@ -43,10 +43,10 @@ export default class Main extends React.Component {
 						<Tab>Logs</Tab>
 					</TabList>
 
-					<TabPanel className={"timelineTab"}>
+					<TabPanel>
 						{timeline}
 					</TabPanel>
-					<TabPanel className={"logsTab"}>
+					<TabPanel>
 						{logView}
 					</TabPanel>
 				</Tabs>

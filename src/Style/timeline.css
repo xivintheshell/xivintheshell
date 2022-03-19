@@ -20,22 +20,27 @@ svg {
     overflow-y: clip;
     vertical-align: bottom;
 }
+.timeline-fixedRightColumn::-webkit-scrollbar {
+    -webkit-appearance: none;
+    height: 5px;
+}
+.timeline-fixedRightColumn::-webkit-scrollbar-thumb {
+    background-color: darkgray;
+}
 
 .timeline-header {
     width: 100%;
     height: 2em;
-    background: lightpink;
+    background: #ececec;
 }
 
 .timeline-content {
+    position: relative;
     width: 100%;
     height: 4em;
-    background: #f5e8b2;
 }
 
 .timeline-main {
-    position: relative;
-    background: lightgrey;
 }
 
 .timeline-elem{
@@ -47,4 +52,10 @@ svg {
 .timeline-elem.cursor {
 }
 .timeline-elem.damageMark {
+}
+.timeline-elem.skill{
+}
+.timeline-elem-skill-icon {
+    display: block;
+    z-index: 4;
 }

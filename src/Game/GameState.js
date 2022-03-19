@@ -1,4 +1,4 @@
-import {Debug, Aspect, SkillReadyStatus, ResourceType, SkillName} from "./Common"
+import {Aspect, Debug, ResourceType, SkillReadyStatus} from "./Common"
 import {StatsModifier} from "./Stats";
 import {makeSkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
@@ -459,17 +459,16 @@ export class GameState
 
 		let cd = this.cooldowns.get(skill.info.cdName);
 		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
-		let cdProgress = 1 - cdReadyCountdown / (cd.cdPerStack * cd.recastTimeScale);
 
 		return {
 			status: status,
 			description: "",
 			stacksAvailable: cd.stacksAvailable(),
+			cdRecastTime: cd.cdPerStack * cd.recastTimeScale,
 			cdReadyCountdown: cdReadyCountdown,
-			cdProgress: cdProgress,
 			timeTillAvailable: timeTillAvailable,
-			capturedManaCost: capturedManaCost
-		}
+			capturedManaCost: capturedManaCost,
+		};
 	}
 
 	useSkillIfAvailable(skillName)

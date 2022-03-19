@@ -83,7 +83,7 @@ class LogView extends React.Component
             }
             return outList;
         }
-        return(<div>
+        return(<div className={"logsAll"}>
             <AutoScroll className={"logWindow actions"} key={0} name={LogCategory.Action} content={mappedContent(LogCategory.Action)}/>
             <AutoScroll className={"logWindow events"} key={1} name={LogCategory.Event} content={mappedContent(LogCategory.Event)}/>
         </div>);

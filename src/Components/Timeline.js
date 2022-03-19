@@ -1,13 +1,14 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
+import {skillIcons} from "./Skills";
 import ReactTooltip from 'react-tooltip';
-import {addLogContent} from "./LogView";
 
-const MAX_HEIGHT = 500;
+const MAX_HEIGHT = 400;
 
 function Cursor(props) {
 	let style={
+		top: props.vOffset,
 		left: props.elem.left - 3,
 		hoverText: props.elem.time,
 	};
@@ -22,6 +23,7 @@ function Cursor(props) {
 
 function DamageMark(props) {
 	let style={
+		top: props.vOffset,
 		left: props.elem.left-3,
 		//hoverText: props.elem.ho
 	};
@@ -33,6 +35,41 @@ function DamageMark(props) {
 	</div>;
 }
 
+function TimelineSkill(props) {
+	let iconPath = skillIcons.get(props.elem.data.skillName);
+	let icon = <img width={20} height={20} className={"timeline-elem-skill-icon"} src={iconPath} alt={props.elem.data.skillName}/>
+
+	let lockBarWidth = controller.timeline.positionFromTime(props.elem.data.lockDuration);
+	let lockBarStyle = {
+		position: "absolute",
+		zIndex: -1,
+		background: "#c4c4c4",
+		width: lockBarWidth,
+		height: 10
+	};
+	let lockBar = <div style={lockBarStyle}/>
+
+	let recastBarWidth = controller.timeline.positionFromTime(props.elem.data.recastDuration);
+	let recastBarStyle = {
+		top: 10,
+		position: "absolute",
+		zIndex: -1,
+		background: "#cf9eec",
+		width: recastBarWidth,
+		height: 10
+	};
+	let recastBar = <div style={recastBarStyle}/>
+
+	let style={
+		left: props.elem.left,
+		top: props.elem.data.isGCD ? 20 : 10,
+	};
+	return <div style={style} className={"timeline-elem skill"} data-tip data-for={`${props.elemID}`}>
+		{lockBar}{props.elem.data.isGCD ? recastBar : <div/>}{icon}
+		<ReactTooltip id={`${props.elemID}`}>{props.elem.data.skillName + "@" + props.elem.data.time.toFixed(2)}</ReactTooltip>
+	</div>;
+}
+
 function TimelineHeader(props) {
 	return <div className="timeline-header">
 		timeline header
@@ -41,7 +78,7 @@ function TimelineHeader(props) {
 
 function TimelineContent(props) {
 	return <div className="timeline-content" width={800}>
-		timeline content
+		{props.elements}
 	</div>
 }
 
@@ -75,20 +112,22 @@ class TimelineMain extends React.Component {
 	}
 	render() {
 		let elemComponents = [];
+		let verticalOffset = "-2em";
 		for (let i = 0; i < this.state.elements.length; i++) {
 			let e = this.state.elements[i];
 			if (e.type === ElemType.s_Cursor) {
-				elemComponents.push(<Cursor key={i} elem={e} elemID={"elemID-"+i}/>)
-
-			} else if (e.type === ElemType.DamageMark) {
-				elemComponents.push(<DamageMark key={i} elem={e} elemID={"elemID-"+i}/>)
-
+				elemComponents.push(<Cursor key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
+			}
+			else if (e.type === ElemType.DamageMark) {
+				elemComponents.push(<DamageMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
+			}
+			else if (e.type === ElemType.Skill) {
+				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
 			}
 		}
 		return <div className="timeline-main" style={{width: this.state.canvasWidth+"px"}}>
 			<TimelineHeader/>
-			<TimelineContent/>
-			{elemComponents}
+			<TimelineContent elements={elemComponents}/>
 		</div>
 	}
 }
@@ -111,7 +150,7 @@ class Timeline extends React.Component
 {
 	render()
 	{
-		return <div className={"timeline"}>
+		return <div className={"timeline timelineTab"}>
 			<FixedRightColumn/>
 		</div>
 	}

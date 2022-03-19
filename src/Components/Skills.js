@@ -37,7 +37,7 @@ export let displayedSkills = [
 	SkillName.Tincture
 ];
 
-const skillIcons = new Map();
+export const skillIcons = new Map();
 skillIcons.set(SkillName.Blizzard, require("./Asset/blizzard.png"));
 skillIcons.set(SkillName.Fire, require("./Asset/fire.png"));
 skillIcons.set(SkillName.Transpose, require("./Asset/transpose.png"));
@@ -175,7 +175,7 @@ class SkillsWindow extends React.Component {
 				key={i}
 				skillName={skillName}
 				ready={info.status===SkillReadyStatus.Ready}
-				cdProgress={info.cdProgress}
+				cdProgress={1 - info.cdReadyCountdown / info.cdRecastTime}
 				/>
 			skillButtons.push(btn);
 		}
