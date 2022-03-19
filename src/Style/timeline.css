@@ -3,6 +3,7 @@ svg {
 }
 
 .timeline {
+    margin: 10px 0;
     outline: 1px solid grey;
     position: relative;
     vertical-align: middle;

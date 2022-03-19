@@ -1,5 +1,6 @@
 import React from 'react';
 import { controller } from '../Controller/Controller'
+import { Input } from "./Common";
 import ReactTooltip from 'react-tooltip';
 
 export const TickMode = {
@@ -7,32 +8,6 @@ export const TickMode = {
 	RealTimeAutoPause: 1,
 	Manual: 2
 };
-
-// description, defaultValue, onChange: value->()
-export class Input extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			value: props.defaultValue,
-			description: props.description,
-			onChange: ()=>{ console.log("hi hi") },
-		}
-		this.onChange = this.unboundOnChange.bind(this);
-	}
-	unboundOnChange(e) {
-		this.setState({value: e.target.value});
-		this.props.onChange(e.target.value);
-	}
-	componentDidMount() {
-		this.props.onChange(this.state.value);
-	}
-	render() {
-		return <div>
-			<span>{this.state.description}</span>
-			<input className={"numberInput"} size="5" type="text" value={this.state.value} onChange={this.onChange}/>
-		</div>
-	}
-}
 
 // actually, control settings: tick mode, time scale, step size
 class TickModeSelection extends React.Component

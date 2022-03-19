@@ -132,6 +132,10 @@
     border: none;
     border-bottom: 1px solid black;
 }
+.sliderInput {
+    position: relative;
+    top: 4px;
+}
 .tickModeOption {
     display: inline-block;
     margin-right: 1em;

@@ -50,3 +50,55 @@ export class ProgressBar extends React.Component {
 		</div>
 	}
 }
+
+// description, defaultValue, onChange: value->()
+export class Input extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			value: props.defaultValue,
+			description: props.description,
+			onChange: ()=>{ console.log("hi hi") },
+		}
+		this.onChange = this.unboundOnChange.bind(this);
+	}
+	unboundOnChange(e) {
+		this.setState({value: e.target.value});
+		if (typeof this.props.onChange !== "undefined") this.props.onChange(e.target.value);
+	}
+	componentDidMount() {
+		if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
+	}
+	render() {
+		return <div>
+			<span>{this.state.description}</span>
+			<input className={"numberInput"} size="5" type="text" value={this.state.value} onChange={this.onChange}/>
+		</div>
+	}
+}
+
+// description, defaultValue, onChange: value->()
+export class Slider extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			value: props.defaultValue,
+			description: props.description,
+			onChange: ()=>{ console.log("hi hi") },
+		}
+		this.onChange = this.unboundOnChange.bind(this);
+	}
+	unboundOnChange(e) {
+		this.setState({value: e.target.value});
+		if (typeof this.props.onChange !== "undefined") this.props.onChange(e.target.value);
+	}
+	componentDidMount() {
+		if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
+	}
+	render() {
+		return <div className={"sliderInputContainer"}>
+			<span>{this.state.description}</span>
+			<input className={"sliderInput"} size="10" type="range" value={this.state.value} min={0.1} max={1} step={0.05} onChange={this.onChange}/>
+		</div>
+	}
+}

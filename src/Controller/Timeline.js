@@ -78,6 +78,7 @@ export class Timeline {
 	// scale=1 := 100px represents 1s
 	setHorizontalScale(inScale) {
 		this.scale = inScale;
+		this.drawElements();
 	}
 
 	getCanvasWidth() {

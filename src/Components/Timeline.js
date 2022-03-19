@@ -2,6 +2,7 @@ import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
 import {skillIcons} from "./Skills";
+import {Slider} from "./Common";
 import ReactTooltip from 'react-tooltip';
 
 const MAX_HEIGHT = 400;
@@ -150,8 +151,13 @@ class Timeline extends React.Component
 {
 	render()
 	{
-		return <div className={"timeline timelineTab"}>
-			<FixedRightColumn/>
+		return <div>
+			<Slider description={"display scale: "} defaultValue={0.25} onChange={(newVal)=>{
+				controller.timeline.setHorizontalScale(parseFloat(newVal));
+			}}/>
+			<div className={"timeline timelineTab"}>
+				<FixedRightColumn/>
+			</div>
 		</div>
 	}
 }
