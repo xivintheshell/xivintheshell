@@ -172,12 +172,12 @@ export function makeSkillsList(game)
 			fs.overrideTimer(30);
 			controller.log(LogCategory.Event,
 				"Firestarter proc! Overriding an existing one",
-				game.time, Color.Fire);
+				game.getDisplayTime(), Color.Fire);
 		} else {
 			fs.gain(1);
 			controller.log(LogCategory.Event,
 				"Firestarter proc!",
-				game.time, Color.Fire);
+				game.getDisplayTime(), Color.Fire);
 			game.resources.addResourceEvent(ResourceType.Firestarter,"drop firestarter proc", 30, rsc=>{
 				rsc.consume(1);
 			}, Color.Fire);
@@ -198,7 +198,7 @@ export function makeSkillsList(game)
 					let uh = game.resources.get(ResourceType.UmbralHeart);
 					if (cap.capturedManaCost > 0 && uh.available(1)) {
 						uh.consume(1);
-						controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
+						controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
 					}
 				}, app => {
 				});
@@ -222,7 +222,7 @@ export function makeSkillsList(game)
 		() => {
 			game.useInstantSkill(SkillName.Transpose, () => {
 				if (game.getFireStacks() === 0 && game.getIceStacks() === 0) {
-					controller.log(LogCategory.Event, "transpose failed; AF/UI just fell off", game.time, Color.Error);
+					controller.log(LogCategory.Event, "transpose failed; AF/UI just fell off", game.getDisplayTime(), Color.Error);
 					return;
 				}
 				if (game.getFireStacks() > 0) {
@@ -242,10 +242,10 @@ export function makeSkillsList(game)
 		let thundercloud = game.resources.get(ResourceType.Thundercloud);
 		if (thundercloud.available(1)) { // already has a proc; reset its timer
 			thundercloud.overrideTimer(40);
-			controller.log(LogCategory.Event, "Thundercloud proc! overriding an existing one", game.time, Color.Thunder);
+			controller.log(LogCategory.Event, "Thundercloud proc! overriding an existing one", game.getDisplayTime(), Color.Thunder);
 		} else { // there's currently no proc. gain one.
 			thundercloud.gain(1);
-			controller.log(LogCategory.Event, "Thundercloud proc!", game.time, Color.Thunder);
+			controller.log(LogCategory.Event, "Thundercloud proc!", game.getDisplayTime(), Color.Thunder);
 			game.resources.addResourceEvent(ResourceType.Thundercloud, "drop thundercloud proc", 40, rsc => {
 				rsc.consume(1);
 			}, Color.Thunder);
@@ -293,7 +293,7 @@ export function makeSkillsList(game)
 		() => {
 			if (game.resources.get(ResourceType.Thundercloud).available(1)) // made instant via thundercloud
 			{
-				let skillTime = game.time;
+				let skillTime = game.getDisplayTime();
 				let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
 				let capturedTickPotency = game.captureDamage(Aspect.Other, game.config.adjustedDoTPotency(35));
 				game.useInstantSkill(SkillName.Thunder3, () => {
@@ -339,7 +339,7 @@ export function makeSkillsList(game)
 		() => {
 			game.useInstantSkill(SkillName.Manafont, () => {
 				game.resources.get(ResourceType.Mana).gain(3000);
-				controller.log(LogCategory.Event, "manafont effect: mana +3000", game.time);
+				controller.log(LogCategory.Event, "manafont effect: mana +3000", game.getDisplayTime());
 			}, false);
 		}
 	));
@@ -352,7 +352,7 @@ export function makeSkillsList(game)
 		() => {
 			let fs = game.resources.get(ResourceType.Firestarter);
 			if (fs.available(1)) {
-				controller.log(LogCategory.Event, "F3 made instant via firestarter proc", game.time, Color.Fire);
+				controller.log(LogCategory.Event, "F3 made instant via firestarter proc", game.getDisplayTime(), Color.Fire);
 				fs.consume(1);
 				fs.removeTimer();
 				game.switchToAForUI(ResourceType.AstralFire, 3);
@@ -369,7 +369,7 @@ export function makeSkillsList(game)
 					let uh = game.resources.get(ResourceType.UmbralHeart);
 					if (cap.capturedManaCost > 0 && uh.available(1)) {
 						uh.consume(1);
-						controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
+						controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
 					}
 				}, app => {
 				});
@@ -565,7 +565,7 @@ export function makeSkillsList(game)
 				let uh = game.resources.get(ResourceType.UmbralHeart);
 				if (cap.capturedManaCost > 0 && uh.available(1)) {
 					uh.consume(1);
-					controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.time, Color.Ice);
+					controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
 				}
 			}, app => {
 			});

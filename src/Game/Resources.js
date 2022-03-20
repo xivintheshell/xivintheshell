@@ -138,7 +138,7 @@ export class ResourceState extends Map
 	takeResourceLock(rscType, delay)
 	{
 		this.get(rscType).consume(1);
-		controller.log(LogCategory.Event, "[resource locked] " + rscType, this.game.time, Color.Grey);
+		controller.log(LogCategory.Event, "[resource locked] " + rscType, this.game.getDisplayTime(), Color.Grey);
 		this.addResourceEvent(rscType, "[resource ready] " + rscType, delay, rsc=>{ rsc.gain(1); }, Color.Grey);
 	}
 }

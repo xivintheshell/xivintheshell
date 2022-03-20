@@ -64,6 +64,16 @@ export class Timeline {
 		this.elements.push(elem);
 	}
 
+	reset() {
+		this.startTime = 0;
+		this.elapsedTime = 0;
+		this.elements = [];
+		this.addElement({
+			type: ElemType.s_Cursor,
+			time: 0
+		})
+	}
+
 	// can only update singletons this way
 	updateElem(elem) {
 		console.assert(elem && elem.type.substring(0, 2)==="s_");

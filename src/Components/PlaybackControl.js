@@ -115,18 +115,21 @@ export class Config extends React.Component {
 			spellSpeed: 1532,
 			animationLock: 0.74,
 			casterTax: 0.12,
-			timeTillFirstManaTick: 1.2
+			timeTillFirstManaTick: 1.2,
+			countdown: 3,
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);
 		this.setAnimationLock = this.unboundSetAnimationLock.bind(this);
 		this.setCasterTax = this.unboundSetCasterTax.bind(this);
 		this.setTimeTillFirstManaTick = this.unboundSetTimeTillFirstManaTick.bind(this);
+		this.setCountdown = this.unboundSetCountdown.bind(this);
 	}
 	unboundSetSpellSpeed(val) { this.setState({spellSpeed: parseFloat(val)}) }
 	unboundSetAnimationLock(val) { this.setState({animationLock: parseFloat(val)}) }
 	unboundSetCasterTax(val) { this.setState({casterTax: parseFloat(val)}) }
 	unboundSetTimeTillFirstManaTick(val) { this.setState({timeTillFirstManaTick: parseFloat(val)}) }
+	unboundSetCountdown(val) { this.setState({countdown: parseFloat(val)}) }
 
 	setConfigAndRestart() {
 		controller.setConfigAndRestart({
@@ -134,7 +137,8 @@ export class Config extends React.Component {
 			spellSpeed: parseFloat(this.state.spellSpeed),
 			animationLock: parseFloat(this.state.animationLock),
 			casterTax: parseFloat(this.state.casterTax),
-			timeTillFirstManaTick: parseFloat(this.state.timeTillFirstManaTick)
+			timeTillFirstManaTick: parseFloat(this.state.timeTillFirstManaTick),
+			countdown: parseFloat(this.state.countdown),
 		});
 	}
 
@@ -155,6 +159,7 @@ export class Config extends React.Component {
 					<Input defaultValue={this.state.animationLock} description="animation lock: " onChange={this.setAnimationLock}/>
 					<Input defaultValue={this.state.casterTax} description="caster tax: " onChange={this.setCasterTax}/>
 					<Input defaultValue={this.state.timeTillFirstManaTick} description="time till first MP tick: " onChange={this.setTimeTillFirstManaTick}/>
+					<Input defaultValue={this.state.countdown} description="countdown: " onChange={this.setCountdown}/>
 					<input type="submit" value="apply and reset"/>
 				</form>
 			</div>

@@ -7,6 +7,10 @@ export const Debug =
 
 export class GameConfig
 {
+	constructor() {
+		this.spellSpeed = 400;
+		this.countdown = 0;
+	}
 	adjustedDoTPotency(inPotency) {
 		let dotStrength = (1000 + Math.floor((this.spellSpeed - 400) * 130 / 1900.0)) * 0.001;
 		return inPotency * dotStrength;

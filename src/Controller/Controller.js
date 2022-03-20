@@ -28,10 +28,7 @@ class Controller
         this.requestRestart();
 
         this.timeline = new Timeline();
-        this.timeline.addElement({
-            type: ElemType.s_Cursor,
-            time: 0
-        });
+        this.timeline.reset();
 
         /*
         let intimes = [1.5, 2, 2.5, 2.8, 3, 3.5, 4];
@@ -111,7 +108,7 @@ class Controller
         };
         if (typeof updateStatusDisplay !== "undefined") {
             updateStatusDisplay({
-                time: game.time,
+                time: game.getDisplayTime(),
                 resources: resourcesData,
                 resourceLocks: resourceLocksData,
                 enemyBuffs: enemyBuffsData,
@@ -146,7 +143,7 @@ class Controller
             this.updateStatusDisplay(this.game);
             this.#updateSkillButtons();
             this.#updateTimelineDisplay();
-            if (!props.suppressLog) this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.time, Color.Grey);
+            if (!props.suppressLog) this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.getDisplayTime(), Color.Grey);
         }
     }
 
@@ -167,6 +164,7 @@ class Controller
         animationLock: 0.66,
         casterTax: 0.06,
         timeTillFirstManaTick: 0.3,
+        countdown: 5,
     })
     {
         //this.stepSize = props.stepSize;
@@ -175,6 +173,7 @@ class Controller
         this.gameConfig.animationLock = props.animationLock;
         this.gameConfig.spellSpeed = props.spellSpeed;
         this.gameConfig.timeTillFirstManaTick = props.timeTillFirstManaTick;
+        this.gameConfig.countdown = props.countdown;
 
         this.requestRestart();
     }
@@ -201,12 +200,12 @@ class Controller
         this.shouldLoop = newShouldLoop;
 
         if (this.shouldLoop) {
-            this.log(LogCategory.Action, "starting real-time control", this.game.time, Color.Success);
+            this.log(LogCategory.Action, "starting real-time control", this.game.getDisplayTime(), Color.Success);
             this.#runLoop(()=>{
                 return this.shouldLoop
             });
         } else {
-            this.log(LogCategory.Action, "paused", this.game.time, Color.Success);
+            this.log(LogCategory.Action, "paused", this.game.getDisplayTime(), Color.Success);
         }
     }
 
@@ -223,15 +222,19 @@ class Controller
         this.updateStatusDisplay(this.game);
         this.#updateSkillButtons();
         this.#playPause({shouldLoop: false});
+        if (this.timeline) {
+            this.timeline.reset();
+            this.timeline.drawElements();
+        }
         this.log(
             LogCategory.Action,
             "======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
-            this.game.time,
+            this.game.getDisplayTime(),
             Color.Grey);
         this.log(
             LogCategory.Event,
             "======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
-            this.game.time,
+            this.game.getDisplayTime(),
             Color.Grey);
     }
 
@@ -274,9 +277,9 @@ class Controller
         }
 
         if (!bSuppressLog || status.status === SkillReadyStatus.Ready) {
-            this.log(LogCategory.Action, logString, this.game.time, logColor);
+            this.log(LogCategory.Action, logString, this.game.getDisplayTime(), logColor);
             if (status.status === SkillReadyStatus.Ready) {
-                this.log(LogCategory.Event, logString, this.game.time, logColor);
+                this.log(LogCategory.Event, logString, this.game.getDisplayTime(), logColor);
             }
         }
 

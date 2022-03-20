@@ -2,7 +2,7 @@ import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
 import {skillIcons} from "./Skills";
-import {Slider} from "./Common";
+import {Input, Slider} from "./Common";
 import ReactTooltip from 'react-tooltip';
 
 const MAX_HEIGHT = 400;
@@ -175,7 +175,7 @@ class TimelineMain extends React.Component {
 			<TimelineHeader
 				canvasWidth={this.state.canvasWidth}
 				pixelPerSecond={controller.timeline.scale * 100}
-				countdown={10}
+				countdown={controller.gameConfig.countdown}
 			/>
 			<TimelineContent elements={elemComponents}/>
 		</div>
@@ -198,8 +198,7 @@ class FixedRightColumn extends React.Component {
 
 class Timeline extends React.Component
 {
-	render()
-	{
+	render() {
 		return <div>
 			<Slider description={"display scale: "} defaultValue={0.4} onChange={(newVal)=>{
 				controller.timeline.setHorizontalScale(parseFloat(newVal));

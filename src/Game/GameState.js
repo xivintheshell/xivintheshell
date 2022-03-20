@@ -86,7 +86,7 @@ export class GameState
 				// mana regen
 				let amount = this.captureManaRegenAmount();
 				this.resources.get(ResourceType.Mana).gain(amount);
-				controller.log(LogCategory.Event, "mana tick +" + amount, this.time, Color.ManaTick);
+				controller.log(LogCategory.Event, "mana tick +" + amount, this.getDisplayTime(), Color.ManaTick);
 				// queue the next tick
 				this.resources.addResourceEvent(ResourceType.Mana, "mana tick", 3, rsc=>{
 					recurringManaRegen();
@@ -137,7 +137,7 @@ export class GameState
 				{
 					if (!e.canceled)
 					{
-						if (e.shouldLog) controller.log(LogCategory.Event, e.name, this.time, e.logColor);
+						if (e.shouldLog) controller.log(LogCategory.Event, e.name, this.getDisplayTime(), e.logColor);
 						e.effectFn(this);
 					}
 					executedEvents++;
@@ -163,6 +163,10 @@ export class GameState
 	getUmbralHearts() { return this.resources.get(ResourceType.UmbralHeart).currentValue; }
 	getMP() { return this.resources.get(ResourceType.Mana).currentValue; }
 
+	getDisplayTime() {
+		return (this.time - this.config.countdown);
+	}
+
 	switchToAForUI(rscType, numStacks)
 	{
 		let af = this.resources.get(ResourceType.AstralFire);
@@ -174,7 +178,7 @@ export class GameState
 			af.gain(numStacks);
 			if (ui.available(3) && uh.available(3)) {
 				paradox.gain(1);
-				controller.log(LogCategory.Event, "Paradox! (UI -> AF)", this.time);
+				controller.log(LogCategory.Event, "Paradox! (UI -> AF)", this.getDisplayTime());
 			}
 			ui.consume(ui.currentValue);
 		}
@@ -183,7 +187,7 @@ export class GameState
 			ui.gain(numStacks);
 			if (af.available(3)) {
 				paradox.gain(1);
-				controller.log(LogCategory.Event, "Paradox! (AF -> UI)", this.time);
+				controller.log(LogCategory.Event, "Paradox! (AF -> UI)", this.getDisplayTime());
 			}
 			af.consume(af.currentValue);
 		}
@@ -272,7 +276,7 @@ export class GameState
 				game.resources.get(ResourceType.Mana).consume(capturedManaCost);
 				if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
 				if (capturedManaCost > 0)
-					controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.time);
+					controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.getDisplayTime());
 				let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 				let captureInfo = {
 					capturedManaCost: capturedManaCost
@@ -298,7 +302,7 @@ export class GameState
 				controller.log(
 					LogCategory.Event,
 					skillName + " cast failed! Resources no longer available.",
-					game.time,
+					game.getDisplayTime(),
 					Color.Error);
 				// unlock movement and casting
 				game.resources.get(ResourceType.NotCasterTaxed).gain(1);
@@ -309,7 +313,7 @@ export class GameState
 
 		let instantCast = function(game, rsc)
 		{
-			controller.log(LogCategory.Event, "a cast is made instant via " + rsc.type, game.time, Color.Success);
+			controller.log(LogCategory.Event, "a cast is made instant via " + rsc.type, game.getDisplayTime(), Color.Success);
 			rsc.consume(1);
 			takeEffect(game);
 
@@ -335,7 +339,7 @@ export class GameState
 			instantCast(this, triple);
 			if (!triple.available(1)) {
 				triple.removeTimer();
-				controller.log(LogCategory.Event, "all triple charges used", this.time);
+				controller.log(LogCategory.Event, "all triple charges used", this.getDisplayTime());
 			}
 			return;
 		}
@@ -399,7 +403,7 @@ export class GameState
 		{
 			// refresh
 			enochian.overrideTimer(15);
-			controller.log(LogCategory.Event, "refresh enochian timer", this.time);
+			controller.log(LogCategory.Event, "refresh enochian timer", this.getDisplayTime());
 		}
 		else
 		{
@@ -411,7 +415,7 @@ export class GameState
 				this.loseEnochian();
 			});
 
-			controller.log(LogCategory.Event, "override poly timer to 30", this.time, Color.Text);
+			controller.log(LogCategory.Event, "override poly timer to 30", this.getDisplayTime(), Color.Text);
 			// reset polyglot countdown to 30s
 			this.resources.get(ResourceType.Polyglot).overrideTimer(30);
 		}
