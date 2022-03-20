@@ -621,6 +621,7 @@ export function makeSkillsList(game)
 				}, true);
 			} else {
 				game.castSpell(SkillName.Paradox, cap => {
+					game.resources.get(ResourceType.Paradox).consume(1);
 				}, app => {
 				});
 			}

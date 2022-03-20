@@ -1,4 +1,4 @@
-import {Aspect, Debug, ResourceType, SkillReadyStatus} from "./Common"
+import {Aspect, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
 import {StatsModifier} from "./Stats";
 import {makeSkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
@@ -457,7 +457,7 @@ export class GameState
 		let currentMana = this.resources.get(ResourceType.Mana).currentValue;
 
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
-		let enoughMana = capturedManaCost <= currentMana;
+		let enoughMana = capturedManaCost <= currentMana || (skillName===SkillName.Paradox && this.getIceStacks()>0);
 		let reqsMet = skill.available();
 		let status = SkillReadyStatus.Ready;
 		if (!notBlocked) status = SkillReadyStatus.Blocked;
