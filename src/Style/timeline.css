@@ -48,7 +48,7 @@ svg {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1;
+    /*z-index: 1;*/
 }
 .timeline-elem.cursor {
 }
@@ -58,5 +58,4 @@ svg {
 }
 .timeline-elem-skill-icon {
     display: block;
-    z-index: 4;
 }

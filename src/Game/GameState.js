@@ -259,6 +259,7 @@ export class GameState
 		let skillInfo = skill.info;
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
+		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, skill.castTime);
 
 		let skillTime = this.time;
 
@@ -314,6 +315,7 @@ export class GameState
 
 			// recast
 			cd.useStack();
+			cd.setRecastTimeScale(recastTimeScale)
 
 			// animation lock
 			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.animationLock);
@@ -339,7 +341,6 @@ export class GameState
 		}
 
 		// there are no triplecast charges. cast and apply effect
-		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, skill.castTime);
 
 		// movement lock
 		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - this.config.getSlidecastWindow(capturedCastTime));
@@ -447,6 +448,8 @@ export class GameState
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
 		let [capturedManaCost, uhConsumption] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
+		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skill.info.aspect, skill.castTime);
+		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1) || this.resources.get(ResourceType.Swiftcast).available(1);
 		let currentMana = this.resources.get(ResourceType.Mana).currentValue;
 
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
@@ -464,7 +467,9 @@ export class GameState
 			status: status,
 			description: "",
 			stacksAvailable: cd.stacksAvailable(),
-			cdRecastTime: cd.cdPerStack * cd.recastTimeScale,
+			castTime: capturedCastTime,
+			instantCast: instantCastAvailable,
+			cdRecastTime: cd.cdPerStack * recastTimeScale,
 			cdReadyCountdown: cdReadyCountdown,
 			timeTillAvailable: timeTillAvailable,
 			capturedManaCost: capturedManaCost,

@@ -292,15 +292,17 @@ class Controller
                 });
             }
 
-            let isGCD = this.game.skillsList.get(skillName).info.cdName === ResourceType.cd_GCD;
-            let newStatus = this.game.getSkillAvailabilityStatus(skillName);
+            let skillInfo = this.game.skillsList.get(skillName).info;
+            let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
+            let isSpellCast = status.castTime > 0 && !status.instantCast;
             this.timeline.addElement({
                 type: ElemType.Skill,
                 skillName: skillName,
                 isGCD: isGCD,
+                isSpellCast: isSpellCast,
                 time: this.game.time,
                 lockDuration: this.game.timeTillAnySkillAvailable(),
-                recastDuration: newStatus.cdRecastTime,
+                recastDuration: status.cdRecastTime,
             });
         }
     }

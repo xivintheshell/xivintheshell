@@ -38,32 +38,32 @@ function DamageMark(props) {
 
 function TimelineSkill(props) {
 	let iconPath = skillIcons.get(props.elem.data.skillName);
-	let icon = <img width={20} height={20} className={"timeline-elem-skill-icon"} src={iconPath} alt={props.elem.data.skillName}/>
+	let icon = <img width={28} height={28} className={"timeline-elem-skill-icon"} src={iconPath} alt={props.elem.data.skillName}/>
 
 	let lockBarWidth = controller.timeline.positionFromTime(props.elem.data.lockDuration);
 	let lockBarStyle = {
 		position: "absolute",
 		zIndex: -1,
-		background: "#c4c4c4",
+		background: props.elem.data.isSpellCast ? "#e7d9ee" : "#9d9d9d",
 		width: lockBarWidth,
-		height: 10
+		height: props.elem.data.isSpellCast ? 14 : 28,
 	};
 	let lockBar = <div style={lockBarStyle}/>
 
 	let recastBarWidth = controller.timeline.positionFromTime(props.elem.data.recastDuration);
 	let recastBarStyle = {
-		top: 10,
+		top: 14,
 		position: "absolute",
 		zIndex: -1,
-		background: "#cf9eec",
+		background: "#dbf3d6",
 		width: recastBarWidth,
-		height: 10
+		height: 14
 	};
 	let recastBar = <div style={recastBarStyle}/>
 
 	let style={
 		left: props.elem.left,
-		top: props.elem.data.isGCD ? 20 : 10,
+		top: props.elem.data.isGCD ? 14 : 0,
 	};
 	return <div style={style} className={"timeline-elem skill"} data-tip data-for={`${props.elemID}`}>
 		{lockBar}{props.elem.data.isGCD ? recastBar : <div/>}{icon}
@@ -152,7 +152,7 @@ class Timeline extends React.Component
 	render()
 	{
 		return <div>
-			<Slider description={"display scale: "} defaultValue={0.25} onChange={(newVal)=>{
+			<Slider description={"display scale: "} defaultValue={0.4} onChange={(newVal)=>{
 				controller.timeline.setHorizontalScale(parseFloat(newVal));
 			}}/>
 			<div className={"timeline timelineTab"}>

@@ -97,7 +97,7 @@ export class CoolDownState extends Map
 	setRecastTimeScale(cdName, timeScale)
 	{
 		let cd = this.get(cdName);
-		cd.recastTimeScale = timeScale;
+		cd.setRecastTimeScale(timeScale);
 	}
 	timeTillNextStackAvailable(cdName)
 	{

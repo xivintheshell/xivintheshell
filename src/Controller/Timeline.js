@@ -35,6 +35,7 @@ function verifyElem(elem) {
 	if (elem.type === ElemType.Skill) {
 		console.assert(typeof elem.skillName !== undefined);
 		console.assert(typeof elem.isGCD !== undefined);
+		console.assert(typeof elem.isSpellCast !== undefined);
 		console.assert(!isNaN(parseFloat(elem.time)));
 		console.assert(!isNaN(parseFloat(elem.lockDuration)));
 		console.assert(!isNaN(parseFloat(elem.recastDuration)));
