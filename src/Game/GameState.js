@@ -261,6 +261,7 @@ export class GameState
 	{
 		let skill = this.skillsList.get(skillName);
 		let skillInfo = skill.info;
+		console.assert(skillInfo.isSpell);
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, skill.castTime);
@@ -313,8 +314,9 @@ export class GameState
 
 		let instantCast = function(game, rsc)
 		{
-			controller.log(LogCategory.Event, "a cast is made instant via " + rsc.type, game.getDisplayTime(), Color.Success);
-			rsc.consume(1);
+			let instantCastReason = rsc ? rsc.type : "(unknown, paradox?)";
+			controller.log(LogCategory.Event, "a cast is made instant via " + instantCastReason, game.getDisplayTime(), Color.Success);
+			if (rsc) rsc.consume(1);
 			takeEffect(game);
 
 			// recast
@@ -323,6 +325,20 @@ export class GameState
 
 			// animation lock
 			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.animationLock);
+		}
+
+		// Paradox made instant via UI
+		if (skillName === SkillName.Paradox && this.getIceStacks() > 0) {
+			instantCast(this, null);
+			return;
+		}
+
+		// F3 made instant via Firestarter proc
+		let firestarter = this.resources.get(ResourceType.Firestarter);
+		if (skillName === SkillName.Fire3 && firestarter.available(1)) {
+			firestarter.removeTimer();
+			instantCast(this, firestarter);
+			return;
 		}
 
 		// Swiftcast
@@ -367,6 +383,7 @@ export class GameState
 		let skillInfo = this.skillsList.get(skillName).info;
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let capturedDamage = dealDamage ? this.captureDamage(skillInfo.aspect, skillInfo.basePotency) : 0;
+		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, 0);
 
 		let skillTime = this.getDisplayTime();
 
@@ -382,6 +399,7 @@ export class GameState
 
 		// recast
 		cd.useStack();
+		if (skillInfo.isSpell) cd.setRecastTimeScale(recastTimeScale);
 
 		// animation lock
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.animationLock);
@@ -468,7 +486,7 @@ export class GameState
 		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
 		let cdRecastTime = cd.cdPerStack * (skill.info.isSpell ? recastTimeScale : 1);
 
-		return {
+		let result = {
 			status: status,
 			description: "",
 			stacksAvailable: cd.stacksAvailable(),
@@ -479,6 +497,11 @@ export class GameState
 			timeTillAvailable: timeTillAvailable,
 			capturedManaCost: capturedManaCost,
 		};
+		if (skillName===SkillName.Blizzard) {
+			//console.log(result);
+		}
+
+		return result;
 	}
 
 	useSkillIfAvailable(skillName)

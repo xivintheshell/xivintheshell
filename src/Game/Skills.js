@@ -350,30 +350,17 @@ export function makeSkillsList(game)
 			return true;
 		},
 		() => {
-			let fs = game.resources.get(ResourceType.Firestarter);
-			if (fs.available(1)) {
-				controller.log(LogCategory.Event, "F3 made instant via firestarter proc", game.getDisplayTime(), Color.Fire);
-				fs.consume(1);
-				fs.removeTimer();
+			game.castSpell(SkillName.Fire3, cap => {
 				game.switchToAForUI(ResourceType.AstralFire, 3);
 				game.startOrRefreshEnochian();
-				game.useInstantSkill(SkillName.Fire3, cap => {
-				}, false);
-			}
-			else
-			{
-				game.castSpell(SkillName.Fire3, cap => {
-					game.switchToAForUI(ResourceType.AstralFire, 3);
-					game.startOrRefreshEnochian();
-					// umbral heart
-					let uh = game.resources.get(ResourceType.UmbralHeart);
-					if (cap.capturedManaCost > 0 && uh.available(1)) {
-						uh.consume(1);
-						controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
-					}
-				}, app => {
-				});
-			}
+				// umbral heart
+				let uh = game.resources.get(ResourceType.UmbralHeart);
+				if (cap.capturedManaCost > 0 && uh.available(1)) {
+					uh.consume(1);
+					controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
+				}
+			}, app => {
+			});
 		}
 	));
 
@@ -604,27 +591,16 @@ export function makeSkillsList(game)
 			return game.resources.get(ResourceType.Paradox).available(1);
 		},
 		() => {
-			if (game.getFireStacks() > 0) {
-				game.castSpell(SkillName.Paradox, cap => {
-					game.resources.get(ResourceType.Paradox).consume(1);
-					game.startOrRefreshEnochian();
-					if (Math.random() < 0.4) // firestarter proc
-					{
-						gainFirestarterProc(game);
-					}
-				}, app => {
-				});
-			} else if (game.getIceStacks() > 0) {
-				game.useInstantSkill(SkillName.Paradox, () => {
-					game.resources.get(ResourceType.Paradox).consume(1);
-					game.startOrRefreshEnochian();
-				}, true);
-			} else {
-				game.castSpell(SkillName.Paradox, cap => {
-					game.resources.get(ResourceType.Paradox).consume(1);
-				}, app => {
-				});
-			}
+			game.castSpell(SkillName.Paradox, cap => {
+				game.resources.get(ResourceType.Paradox).consume(1);
+				// enochian (refresh only
+				if (game.hasEnochian()) game.startOrRefreshEnochian();
+
+				if (game.getFireStacks() > 0 && Math.random() < 0.4) {// firestarter proc
+					gainFirestarterProc(game);
+				}
+			}, app => {
+			});
 		}
 	));
 
