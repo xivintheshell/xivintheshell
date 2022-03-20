@@ -72,8 +72,53 @@ function TimelineSkill(props) {
 }
 
 function TimelineHeader(props) {
+	let countdownPadding = props.countdown * props.pixelPerSecond;
+	let style = {
+		//border: "1px solid red",
+	};
+	let marks_1sec = [];
+	let marks_5sec = [];
+	//let marks_1min = [];
+	for (let i = 0; i < props.canvasWidth - countdownPadding; i += props.pixelPerSecond) {
+		marks_1sec.push(i + countdownPadding);
+	}
+	for (let i = -props.pixelPerSecond; i >= -countdownPadding; i -= props.pixelPerSecond) {
+		marks_1sec.push(i + countdownPadding);
+	}
+	for (let i = 0; i < props.canvasWidth - countdownPadding; i += props.pixelPerSecond * 5) {
+		marks_5sec.push(i + countdownPadding);
+	}
+	for (let i = -props.pixelPerSecond * 5; i >= -countdownPadding; i -= props.pixelPerSecond * 5) {
+		marks_5sec.push(i + countdownPadding);
+	}
+	/*
+	for (let i = 0; i < props.canvasWidth; i += props.pixelPerSecond * 60) {
+		marks_1min.push(i);
+	}*/
+	let ruler = <div style={{position: "relative"}}>
+		<svg width={props.canvasWidth} height="100%" style={style}>
+			{marks_1sec.map(i=>{
+				return <line key={"1sec-"+i} stroke="black" strokeWidth="1" x1={i} y1="0" x2={i} y2="6"/>
+			})}
+			{marks_5sec.map(i=>{
+				return <line key={"5sec-"+i} stroke="black" strokeWidth="1" x1={i} y1="0" x2={i} y2="10"/>
+			})}
+			{/*marks_1min.map(i=>{
+				return <line key={"1min-"+i} stroke="grey" strokeWidth="1" x1={i} y1="0" x2={i} y2="50"/>
+			})*/}
+		</svg>
+		{marks_5sec.map(i=>{return <div key={i} style={{
+			textAlign: "center",
+			position: "absolute",
+			top: "11px",
+			left: `${i - 24}px`,
+			width: "48px",
+			display: "inline-block",
+			//border: "1px solid red",
+		}}><div style={{}}>{((i - countdownPadding) / props.pixelPerSecond).toFixed(0).toString()}</div></div>;})}
+	</div>
 	return <div className="timeline-header">
-		timeline header
+		{ruler}
 	</div>
 }
 
@@ -127,7 +172,11 @@ class TimelineMain extends React.Component {
 			}
 		}
 		return <div className="timeline-main" style={{width: this.state.canvasWidth+"px"}}>
-			<TimelineHeader/>
+			<TimelineHeader
+				canvasWidth={this.state.canvasWidth}
+				pixelPerSecond={controller.timeline.scale * 100}
+				countdown={10}
+			/>
 			<TimelineContent elements={elemComponents}/>
 		</div>
 	}

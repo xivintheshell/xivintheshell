@@ -195,7 +195,7 @@ function ResourceLocksDisplay(props)
 	};
 	let gcd = <ResourceBar
 		name={"GCD"}
-		color={"#cf9eec"}
+		color={"#8edc72"}
 		progress={data.gcdReady ? 0 : 1 - data.timeTillGCDReady / data.gcd}
 		value={data.timeTillGCDReady.toFixed(2)}
 		width={100}
