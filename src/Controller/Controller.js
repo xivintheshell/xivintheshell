@@ -7,6 +7,7 @@ import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 import {TickMode} from "../Components/PlaybackControl"
 import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
+import {scrollTimelineTo} from "../Components/Timeline";
 
 class Controller
 {
@@ -307,6 +308,7 @@ class Controller
                 lockDuration: this.game.timeTillAnySkillAvailable(),
                 recastDuration: status.cdRecastTime,
             });
+            scrollTimelineTo(this.timeline.positionFromTime(this.game.time));
         }
     }
 

@@ -2,7 +2,7 @@ import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
 import {skillIcons} from "./Skills";
-import {Input, Slider} from "./Common";
+import {Input, ScrollAnchor, Slider} from "./Common";
 import ReactTooltip from 'react-tooltip';
 
 const MAX_HEIGHT = 400;
@@ -67,7 +67,9 @@ function TimelineSkill(props) {
 	};
 	return <div style={style} className={"timeline-elem skill"} data-tip data-for={`${props.elemID}`}>
 		{lockBar}{props.elem.data.isGCD ? recastBar : <div/>}{icon}
-		<ReactTooltip id={`${props.elemID}`}>{props.elem.data.skillName + "@" + props.elem.data.time.toFixed(2)}</ReactTooltip>
+		<ReactTooltip id={`${props.elemID}`}>{
+			props.elem.data.skillName + "@" + (props.elem.data.time-props.elem.countdown).toFixed(2)
+		}</ReactTooltip>
 	</div>;
 }
 
@@ -188,9 +190,26 @@ function FixedLeftColumn(props) {
 	</div>;
 }
 
+export let scrollTimelineTo = (positionX)=>{}
 class FixedRightColumn extends React.Component {
+	constructor(props) {
+		super(props);
+		this.myRef = React.createRef();
+	}
+	componentDidMount() {
+		scrollTimelineTo = this.unboundScroll.bind(this);
+	}
+	componentWillUnmount() {
+		scrollTimelineTo = (positionX)=>{};
+	}
+	unboundScroll(positionX) {
+		if (this.myRef.current != null) {
+			let clientWidth = this.myRef.current.clientWidth;
+			this.myRef.current.scrollLeft = positionX - clientWidth * 0.6;
+		}
+	}
 	render() {
-		return <div className={"timeline-fixedRightColumn"}>
+		return <div ref={this.myRef} className={"timeline-fixedRightColumn"}>
 			<TimelineMain/>
 		</div>
 	}

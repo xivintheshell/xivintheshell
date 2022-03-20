@@ -25,27 +25,6 @@ class AutoScroll extends React.Component
     }
 }
 
-// meh.. for later maybe
-class ScrollAnchor extends React.Component
-{
-    constructor(props)
-    {
-        super(props);
-        this.myRef = React.createRef();
-    }
-    scroll()
-    {
-        console.log(this.myRef);
-        if (this.myRef.current !== null) {
-            this.myRef.current.scrollIntoView({behavior: "smooth"});
-        }
-    }
-    render() {
-        this.scroll();
-        return <div ref={this.myRef}/>;
-    }
-}
-
 let logContent = new Map();
 logContent.set(LogCategory.Action, []);
 logContent.set(LogCategory.Event, []);

@@ -102,3 +102,20 @@ export class Slider extends React.Component {
 		</div>
 	}
 }
+
+export class ScrollAnchor extends React.Component
+{
+	constructor(props) {
+		super(props);
+		this.myRef = React.createRef();
+	}
+	scroll() {
+		if (this.myRef.current !== null) {
+			this.myRef.current.scrollIntoView({behavior: "smooth"});
+		}
+	}
+	render() {
+		this.scroll();
+		return <div ref={this.myRef}/>;
+	}
+}

@@ -70,7 +70,7 @@ skillIcons.set(SkillName.Surecast, require("./Asset/surecast.png"));
 skillIcons.set(SkillName.Tincture, require("./Asset/tincture.png"));
 
 let setSkillInfoText = (text)=>{};
-export function ProgressCircle(props={
+function ProgressCircle(props={
 	className: "",
 	diameter: 50,
 	progress: 0.7,

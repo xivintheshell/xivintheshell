@@ -265,7 +265,7 @@ export class GameState
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, skill.castTime);
 
-		let skillTime = this.time;
+		let skillTime = this.getDisplayTime();
 
 		let takeEffect = function(game) {
 			let resourcesStillAvailable = skill.available();
@@ -368,7 +368,7 @@ export class GameState
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let capturedDamage = dealDamage ? this.captureDamage(skillInfo.aspect, skillInfo.basePotency) : 0;
 
-		let skillTime = this.time;
+		let skillTime = this.getDisplayTime();
 
 		let skillEvent = new Event(
 			skillInfo.name + " applied",
@@ -466,6 +466,7 @@ export class GameState
 
 		let cd = this.cooldowns.get(skill.info.cdName);
 		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
+		let cdRecastTime = cd.cdPerStack * (skill.info.isSpell ? recastTimeScale : 1);
 
 		return {
 			status: status,
@@ -473,7 +474,7 @@ export class GameState
 			stacksAvailable: cd.stacksAvailable(),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
-			cdRecastTime: cd.cdPerStack * recastTimeScale,
+			cdRecastTime: cdRecastTime,
 			cdReadyCountdown: cdReadyCountdown,
 			timeTillAvailable: timeTillAvailable,
 			capturedManaCost: capturedManaCost,

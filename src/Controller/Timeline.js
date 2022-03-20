@@ -2,6 +2,7 @@ import {Color, LogCategory} from "./Common";
 import { GameState } from "../Game/GameState";
 import {GameConfig, ResourceType, SkillReadyStatus} from "../Game/Common";
 import {updateTimelineContent} from "../Components/Timeline";
+import {controller} from "./Controller";
 
 
 /*
@@ -126,6 +127,7 @@ export class Timeline {
 					type: e.type,
 					left: this.positionFromTime(e.time),
 					data: e,
+					countdown: controller.gameConfig.countdown,
 				});
 			}
 		});
