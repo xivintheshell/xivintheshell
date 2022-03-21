@@ -27,12 +27,10 @@ class Controller
 		this.gameConfig.animationLock = 0.66;
 		this.gameConfig.spellSpeed = 1532;
 		this.gameConfig.timeTillFirstManaTick = 1.2;
-		this.requestRestart();
+		this.#requestRestart();
 
 		this.timeline = new Timeline();
 		this.timeline.reset();
-
-		this.battleRecording = new Recording();
 
 		/*
 		let intimes = [1.5, 2, 2.5, 2.8, 3, 3.5, 4];
@@ -188,7 +186,9 @@ class Controller
 		this.gameConfig.timeTillFirstManaTick = props.timeTillFirstManaTick;
 		this.gameConfig.countdown = props.countdown;
 
-		this.requestRestart();
+		this.battleRecording = new Recording(this.gameConfig);
+
+		this.#requestRestart();
 	}
 
 	getSkillInfo(props={skillName: undefined}) {
@@ -228,7 +228,7 @@ class Controller
 		this.#requestTick({deltaTime: deltaTime, suppressLog: false});
 	}
 
-	requestRestart(props)
+	#requestRestart(props)
 	{
 		this.lastAtteptedSkill = ""
 		this.game = new GameState(this.gameConfig);

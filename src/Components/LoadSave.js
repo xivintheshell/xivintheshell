@@ -20,12 +20,9 @@ export class LoadSave extends React.Component {
 			fileReader.onload = function(fileLoadedEvent) {
 				let str = fileLoadedEvent.target.result.toString();
 				let json = JSON.parse(str);
-				let actions = json.map(a=>{
-					a.selected = false;
-					return a;
-				});
 				// TODO: do something with this result
-				console.log(actions);
+				// 2 types of import? 1) exact time & stats match, 2) tight skills only (might fail)
+				console.log(json);
 			};
 			fileReader.readAsText(fileToLoad, "UTF-8");
 		}

@@ -26,7 +26,8 @@ export class ActionNode {
 
 // a sequence of actions
 export class Recording {
-	constructor() {
+	constructor(config) {
+		this.config = config;
 		this.head = null;
 		this.tail = null;
 	}
@@ -59,7 +60,10 @@ export class Recording {
 			});
 			itr = itr.next;
 		}
-		return list;
+		return {
+			config: this.config,
+			actions: list,
+		};
 	}
 }
 
