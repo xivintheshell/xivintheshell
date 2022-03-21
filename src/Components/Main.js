@@ -7,6 +7,7 @@ import { statusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
+import {LoadSave} from "./LoadSave";
 
 export var setRealTime = inRealTime=>{};
 export default class Main extends React.Component {
@@ -37,6 +38,7 @@ export default class Main extends React.Component {
 					{statusDisplay}
 					{skillsWindow}
 				</div>
+				<LoadSave/>
 				<Tabs>
 					<TabList>
 						<Tab>Timeline</Tab>

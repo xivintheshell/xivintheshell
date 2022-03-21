@@ -59,7 +59,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Foul, ResourceType.cd_GCD, Aspect.Other, true,
 		0, 0, 560, 1.158),
 	new SkillInfo(SkillName.Despair, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 0, 340, 0.056),
+		3, 0, 340, 0.556),
 	new SkillInfo(SkillName.UmbralSoul, ResourceType.cd_GCD, Aspect.Ice, true,
 		0, 0, 0, 0.1),
 	new SkillInfo(SkillName.Xenoglossy, ResourceType.cd_GCD, Aspect.Other, true,

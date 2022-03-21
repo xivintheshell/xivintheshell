@@ -72,7 +72,7 @@ export class Input extends React.Component {
 	render() {
 		return <div>
 			<span>{this.state.description}</span>
-			<input className={"numberInput"} size="5" type="text" value={this.state.value} onChange={this.onChange}/>
+			<input className={"textInput"} size="5" type="text" value={this.state.value} onChange={this.onChange}/>
 		</div>
 	}
 }
