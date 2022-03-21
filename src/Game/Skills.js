@@ -165,8 +165,7 @@ export function makeSkillsList(game)
 		}
 	));
 
-	let gainFirestarterProc = function(game)
-	{
+	let gainFirestarterProc = function(game) {
 		let fs = game.resources.get(ResourceType.Firestarter);
 		if (fs.available(1)) {
 			fs.overrideTimer(30);
@@ -181,6 +180,19 @@ export function makeSkillsList(game)
 			game.resources.addResourceEvent(ResourceType.Firestarter,"drop firestarter proc", 30, rsc=>{
 				rsc.consume(1);
 			}, Color.Fire);
+		}
+	}
+
+	let potentiallyGainFirestarter = function(game) {
+		// firestarter
+		let sc = game.resources.get(ResourceType.Sharpcast);
+		if (sc.available(1)) {
+			gainFirestarterProc(game);
+			sc.consume(1);
+			sc.removeTimer();
+		} else {
+			let rand = Math.random();
+			if (rand < 0.4) gainFirestarterProc(game);
 		}
 	}
 
@@ -200,17 +212,18 @@ export function makeSkillsList(game)
 						uh.consume(1);
 						controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
 					}
+					potentiallyGainFirestarter(game);
 				}, app => {
 				});
 			} else {
 				game.castSpell(SkillName.Fire, cap => {
 					game.resources.get(ResourceType.Enochian).removeTimer();
 					game.loseEnochian();
+					potentiallyGainFirestarter(game);
 				}, app => {
 				});
 			}
-			// firestarter
-			if (Math.random() < 0.4) gainFirestarterProc(game);
+			// firestarter?
 		}
 	));
 
@@ -596,8 +609,8 @@ export function makeSkillsList(game)
 				// enochian (refresh only
 				if (game.hasEnochian()) game.startOrRefreshEnochian();
 
-				if (game.getFireStacks() > 0 && Math.random() < 0.4) {// firestarter proc
-					gainFirestarterProc(game);
+				if (game.getFireStacks() > 0) {// firestarter proc
+					potentiallyGainFirestarter(game);
 				}
 			}, app => {
 			});
