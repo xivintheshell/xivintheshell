@@ -8,7 +8,7 @@ import {TickMode} from "../Components/PlaybackControl"
 import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
 import {scrollTimelineTo} from "../Components/Timeline";
-import {ActionType, Recording} from "./Recording";
+import {ActionNode, ActionType, Recording} from "./Recording";
 
 class Controller
 {
@@ -141,13 +141,22 @@ class Controller
 		prematureStopCondition: null
 	}) {
 		if (props.deltaTime > 0) {
-			this.game.tick(
+			let timeTicked = this.game.tick(
 				props.deltaTime,
 				props.prematureStopCondition ? props.prematureStopCondition : ()=>{ return false; });
 			this.updateStatusDisplay(this.game);
 			this.#updateSkillButtons();
 			this.#updateTimelineDisplay();
 			if (!props.suppressLog) this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.getDisplayTime(), Color.Grey);
+
+			let lastAction = this.battleRecording.getLastAction();
+			if (lastAction!==null && lastAction.type===ActionType.Wait) {
+				lastAction.duration += timeTicked;
+			} else {
+				let waitNode = new ActionNode(ActionType.Wait);
+				waitNode.duration = timeTicked;
+				this.battleRecording.addActionNode(waitNode);
+			}
 		}
 	}
 
@@ -313,13 +322,9 @@ class Controller
 			});
 			scrollTimelineTo(this.timeline.positionFromTime(this.game.time));
 
-			this.battleRecording.addAction({
-				type: ActionType.Skill,
-				skillName: skillName,
-				selected: false,
-				immediateNext: bWaitFirst,
-				relativeTime: this.game.time,
-			});
+			let node = new ActionNode(ActionType.Skill);
+			node.skillName = skillName;
+			this.battleRecording.addActionNode(node);
 		}
 	}
 

@@ -151,6 +151,7 @@ export class GameState
 			console.log(this.resources);
 			console.log(this.cooldowns);
 		}
+		return cumulativeDeltaTime;
 	}
 
 	addEvent(evt)

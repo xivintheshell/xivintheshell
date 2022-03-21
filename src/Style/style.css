@@ -299,6 +299,11 @@
     pointer-events: none;
 }
 
+/*======== load and save ========*/
+.loadSave {
+    margin: 10px 0;
+}
+
 /*======== individual elems ========*/
 
 .clickable {

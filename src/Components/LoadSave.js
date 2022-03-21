@@ -19,7 +19,13 @@ export class LoadSave extends React.Component {
 			let fileReader = new FileReader();
 			fileReader.onload = function(fileLoadedEvent) {
 				let str = fileLoadedEvent.target.result.toString();
-				console.log(JSON.parse(str));
+				let json = JSON.parse(str);
+				let actions = json.map(a=>{
+					a.selected = false;
+					return a;
+				});
+				// TODO: do something with this result
+				console.log(actions);
 			};
 			fileReader.readAsText(fileToLoad, "UTF-8");
 		}
@@ -27,7 +33,8 @@ export class LoadSave extends React.Component {
 	// https://github.com/eligrey/FileSaver.js#readme
 	unboundOnSave() {
 		let FileSaver = require('file-saver');
-		let content = JSON.stringify(controller.battleRecording.getActions());
+		let strippedActions = controller.battleRecording.serialized();
+		let content = JSON.stringify(strippedActions);
 		let blob = new Blob([content], {type: "text/plain;charset=utf-8"});
 		FileSaver.saveAs(blob, this.saveFilename);
 	}
@@ -41,7 +48,7 @@ export class LoadSave extends React.Component {
 			<div>
 				<Clickable content="[save]" onClickFn={this.onSave}/>
 				<span> as: </span>
-				<input className="textInput" width="10" onChange={this.onSaveFilenameChange}/>
+				<input defaultValue="battle.txt" className="textInput" width="10" onChange={this.onSaveFilenameChange}/>
 			</div>
 			<div>
 				<Clickable content="[load]" onClickFn={this.onLoad}/>
