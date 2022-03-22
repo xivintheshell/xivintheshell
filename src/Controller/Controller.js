@@ -308,6 +308,9 @@ class Controller
 				});
 			}
 
+			// TODO: do onClick here
+			// onClick -> mark this as selected
+			//
 			let skillInfo = this.game.skillsList.get(skillName).info;
 			let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
 			let isSpellCast = status.castTime > 0 && !status.instantCast;
