@@ -308,9 +308,13 @@ class Controller
 				});
 			}
 
+			let node = new ActionNode(ActionType.Skill);
+			node.skillName = skillName;
+			this.battleRecording.addActionNode(node);
+
 			// TODO: do onClick here
-			// onClick -> mark this as selected
-			//
+			// onClick -> mark this as selected. If one is already selected, clear that first
+			// shift click -> if none is selected, select it. Otherwise select a sequence
 			let skillInfo = this.game.skillsList.get(skillName).info;
 			let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
 			let isSpellCast = status.castTime > 0 && !status.instantCast;
@@ -322,12 +326,15 @@ class Controller
 				time: this.game.time,
 				lockDuration: this.game.timeTillAnySkillAvailable(),
 				recastDuration: status.cdRecastTime,
+				getIsSelected: ()=>{ return node.isSelected(); },
+				onClickFn: ()=>{
+					this.battleRecording.selectSingle(node);
+				},
+				onShiftClickFn: ()=>{
+					this.battleRecording.selectUntil(node);
+				},
 			});
 			scrollTimelineTo(this.timeline.positionFromTime(this.game.time));
-
-			let node = new ActionNode(ActionType.Skill);
-			node.skillName = skillName;
-			this.battleRecording.addActionNode(node);
 		}
 	}
 

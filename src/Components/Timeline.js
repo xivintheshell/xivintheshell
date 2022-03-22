@@ -2,7 +2,7 @@ import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
 import {skillIcons} from "./Skills";
-import {Input, ScrollAnchor, Slider} from "./Common";
+import {Clickable, Input, ScrollAnchor, Slider} from "./Common";
 import ReactTooltip from 'react-tooltip';
 
 const MAX_HEIGHT = 400;
@@ -22,6 +22,19 @@ function Cursor(props) {
 	</div>;
 }
 
+// TODO:
+// let updateSelectionDisplay = (startX, endX)=>{}
+// a rect maybe
+// function called when timeline skill is clicked
+class TimelineSelection extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+	render() {
+		return <div>placeholder selection</div>;
+	}
+}
+
 function DamageMark(props) {
 	let style={
 		top: props.vOffset,
@@ -38,7 +51,8 @@ function DamageMark(props) {
 
 function TimelineSkill(props) {
 	let iconPath = skillIcons.get(props.elem.data.skillName);
-	let icon = <img width={28} height={28} className={"timeline-elem-skill-icon"} src={iconPath} alt={props.elem.data.skillName}/>
+	let iconImg = <img width={28} height={28} className={"timeline-elem-skill-icon"} src={iconPath} alt={props.elem.data.skillName}/>;
+	let icon = <Clickable content={iconImg} onClickFn={props.elem.data.onClickFn}/>
 
 	let lockBarWidth = controller.timeline.positionFromTime(props.elem.data.lockDuration);
 	let lockBarStyle = {
