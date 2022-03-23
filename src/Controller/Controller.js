@@ -7,7 +7,7 @@ import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 import {TickMode} from "../Components/PlaybackControl"
 import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
-import {scrollTimelineTo} from "../Components/Timeline";
+import {scrollTimelineTo, updateSelectionDisplay} from "../Components/Timeline";
 import {ActionNode, ActionType, Recording} from "./Recording";
 
 class Controller
@@ -308,13 +308,15 @@ class Controller
 				});
 			}
 
+			let lockDuration = this.game.timeTillAnySkillAvailable();
+			let time = this.game.time;
+
 			let node = new ActionNode(ActionType.Skill);
 			node.skillName = skillName;
+			node.tmp_startLockTime = time;
+			node.tmp_endLockTime = time + lockDuration;
 			this.battleRecording.addActionNode(node);
 
-			// TODO: do onClick here
-			// onClick -> mark this as selected. If one is already selected, clear that first
-			// shift click -> if none is selected, select it. Otherwise select a sequence
 			let skillInfo = this.game.skillsList.get(skillName).info;
 			let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
 			let isSpellCast = status.castTime > 0 && !status.instantCast;
@@ -323,15 +325,22 @@ class Controller
 				skillName: skillName,
 				isGCD: isGCD,
 				isSpellCast: isSpellCast,
-				time: this.game.time,
-				lockDuration: this.game.timeTillAnySkillAvailable(),
+				time: time,
+				lockDuration: lockDuration,
 				recastDuration: status.cdRecastTime,
 				getIsSelected: ()=>{ return node.isSelected(); },
-				onClickFn: ()=>{
-					this.battleRecording.selectSingle(node);
-				},
-				onShiftClickFn: ()=>{
-					this.battleRecording.selectUntil(node);
+				onClickFn: (e)=>{
+					if (e.shiftKey) {
+						this.battleRecording.selectUntil(node);
+						updateSelectionDisplay(
+							this.timeline.positionFromTime(this.battleRecording.getFirstSelection().tmp_startLockTime),
+							this.timeline.positionFromTime(this.battleRecording.getLastSelection().tmp_endLockTime));
+					} else {
+						this.battleRecording.selectSingle(node);
+						updateSelectionDisplay(
+							this.timeline.positionFromTime(node.tmp_startLockTime),
+							this.timeline.positionFromTime(node.tmp_endLockTime));
+					}
 				},
 			});
 			scrollTimelineTo(this.timeline.positionFromTime(this.game.time));
@@ -430,7 +439,6 @@ class Controller
 		} else if (this.tickMode === TickMode.Manual) {
 			this.#handleKeyboardEvent_Manual(evt);
 		}
-
 	}
 }
 export const controller = new Controller();

@@ -23,15 +23,37 @@ function Cursor(props) {
 }
 
 // TODO:
-// let updateSelectionDisplay = (startX, endX)=>{}
-// a rect maybe
-// function called when timeline skill is clicked
+export let updateSelectionDisplay = (startX, endX)=>{}
 class TimelineSelection extends React.Component {
 	constructor(props) {
 		super(props);
+		updateSelectionDisplay = this.unboundUpdateSelectionDisplay.bind(this);
+		this.state={
+			startX: 0,
+			endX: 0
+		};
+	}
+	componentWillUnmount() {
+		updateSelectionDisplay = (startX, endX)=>{}
+	}
+	unboundUpdateSelectionDisplay(startX, endX) {
+		this.setState({
+			startX: startX,
+			endX: endX
+		});
 	}
 	render() {
-		return <div>placeholder selection</div>;
+		let style = {
+			position: "absolute",
+			display: this.state.endX <= this.state.startX ? "none" : "block",
+			backgroundColor: "rgba(151,111,246,0.1)",
+			borderLeft: "1px solid mediumpurple",
+			borderRight: "1px solid mediumpurple",
+			left: this.state.startX,
+			width: Math.max(0, this.state.endX - this.state.startX - 2),
+			height: "100%",
+		};
+		return <div style={style}/>;
 	}
 }
 
@@ -50,10 +72,6 @@ function DamageMark(props) {
 }
 
 function TimelineSkill(props) {
-	let iconPath = skillIcons.get(props.elem.data.skillName);
-	let iconImg = <img width={28} height={28} className={"timeline-elem-skill-icon"} src={iconPath} alt={props.elem.data.skillName}/>;
-	let icon = <Clickable content={iconImg} onClickFn={props.elem.data.onClickFn}/>
-
 	let lockBarWidth = controller.timeline.positionFromTime(props.elem.data.lockDuration);
 	let lockBarStyle = {
 		position: "absolute",
@@ -74,6 +92,10 @@ function TimelineSkill(props) {
 		height: 14
 	};
 	let recastBar = <div style={recastBarStyle}/>
+
+	let iconPath = skillIcons.get(props.elem.data.skillName);
+	let iconImg = <img width={28} height={28} className={"timeline-elem-skill-icon"} src={iconPath} alt={props.elem.data.skillName}/>;
+	let icon = <Clickable content={iconImg} onClickFn={props.elem.data.onClickFn}/>
 
 	let style={
 		left: props.elem.left,
@@ -187,7 +209,19 @@ class TimelineMain extends React.Component {
 				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
 			}
 		}
-		return <div className="timeline-main" style={{width: this.state.canvasWidth+"px"}}>
+		return <div className="timeline-main" style={{width: this.state.canvasWidth+"px"}} onMouseDown={
+			(evt)=>{
+				/*
+				if (evt.target) {
+					console.log(evt.target.classList);
+				}*/
+				if (!evt.shiftKey) {
+					controller.battleRecording.unselectAll();
+					updateSelectionDisplay(0, 0);
+				}
+			}
+		}>
+			<TimelineSelection/>
 			<TimelineHeader
 				canvasWidth={this.state.canvasWidth}
 				pixelPerSecond={controller.timeline.scale * 100}

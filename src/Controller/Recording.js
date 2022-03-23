@@ -7,6 +7,8 @@ function verifyActionNode(action) {
 	console.assert(typeof action !== "undefined");
 	if (action.type === ActionType.Skill) {
 		console.assert(typeof action.skillName === "string");
+		console.assert(typeof action.tmp_startLockTime === "number");
+		console.assert(typeof action.tmp_endLockTime === "number");
 		return;
 	} else if (action.type === ActionType.Wait) {
 		console.assert(!isNaN(parseFloat(action.duration)));
@@ -24,8 +26,6 @@ export class ActionNode {
 	}
 	isSelected() { return this.#selected; }
 	select() {
-		console.log("select: ");
-		console.log(this);
 		this.#selected = true;
 	}
 	unselect() {
@@ -59,27 +59,42 @@ export class Recording {
 	getLastAction() {
 		return this.tail;
 	}
+	getFirstSelection() {
+		return this.selectionStart;
+	}
+	getLastSelection() {
+		return this.selectionEnd;
+	}
 	// assume node is actually in this recording
 	selectSingle(node) {
-		this.#unselectAll();
+		this.unselectAll();
 		node.select();
 		this.selectionStart = node;
 		this.selectionEnd = node;
 	}
-	#unselectAll() {
-		for (let itr = this.head; itr !== null; itr = itr.next) {
-			itr.unselect();
+	unselectAll() {
+		//for (let itr = this.head; itr !== null; itr = itr.next) {
+		if (this.selectionStart) {
+			console.assert(this.selectionEnd);
+			for (let itr = this.selectionStart; itr !== this.selectionEnd.next; itr = itr.next) {
+				itr.unselect();
+			}
 		}
+		this.selectionStart = null;
+		this.selectionEnd = null;
 	}
 	#selectSequence(first, last) {
-		this.#unselectAll();
+		this.unselectAll();
 		for (let itr = first; itr !== last.next; itr = itr.next) {
 			itr.select();
 		}
+		this.selectionStart = first;
+		this.selectionEnd = last;
 	}
 	// returns true on success
 	selectUntil(node) {
-		if (this.selectionStart) {
+		// proceed only if there's currently exactly 1 node selected
+		if (this.selectionStart && this.selectionStart === this.selectionEnd) {
 			for (let itr = this.selectionStart; itr !== null; itr = itr.next) {
 				if (itr === node) {
 					this.#selectSequence(this.selectionStart, node);

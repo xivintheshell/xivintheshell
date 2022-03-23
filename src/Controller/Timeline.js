@@ -42,7 +42,6 @@ function verifyElem(elem) {
 		console.assert(!isNaN(parseFloat(elem.recastDuration)));
 		console.assert(typeof elem.getIsSelected !== undefined && elem.getIsSelected !== null);
 		console.assert(typeof elem.onClickFn !== undefined && elem.onClickFn !== null);
-		console.assert(typeof elem.onShiftClickFn !== undefined && elem.onShiftClickFn !== null);
 		return;
 	}
 
