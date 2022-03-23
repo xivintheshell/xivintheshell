@@ -42,6 +42,7 @@ svg {
 }
 
 .timeline-main {
+    position: relative;
 }
 
 .timeline-elem{

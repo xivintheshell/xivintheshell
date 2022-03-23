@@ -216,7 +216,7 @@ class TimelineMain extends React.Component {
 					console.log(evt.target.classList);
 				}*/
 				if (!evt.shiftKey) {
-					controller.battleRecording.unselectAll();
+					controller.record.unselectAll();
 					updateSelectionDisplay(0, 0);
 				}
 			}

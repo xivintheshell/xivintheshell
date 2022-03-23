@@ -8,7 +8,7 @@ import {TickMode} from "../Components/PlaybackControl"
 import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
 import {scrollTimelineTo, updateSelectionDisplay} from "../Components/Timeline";
-import {ActionNode, ActionType, Recording} from "./Recording";
+import {ActionNode, ActionType, Record} from "./Record";
 
 class Controller
 {
@@ -147,13 +147,13 @@ class Controller
 			this.#updateTimelineDisplay();
 			if (!props.suppressLog) this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.getDisplayTime(), Color.Grey);
 
-			let lastAction = this.battleRecording.getLastAction();
+			let lastAction = this.record.getLastAction();
 			if (lastAction!==null && lastAction.type===ActionType.Wait) {
 				lastAction.duration += timeTicked;
 			} else {
 				let waitNode = new ActionNode(ActionType.Wait);
 				waitNode.duration = timeTicked;
-				this.battleRecording.addActionNode(waitNode);
+				this.record.addActionNode(waitNode);
 			}
 		}
 	}
@@ -186,7 +186,7 @@ class Controller
 		this.gameConfig.timeTillFirstManaTick = props.timeTillFirstManaTick;
 		this.gameConfig.countdown = props.countdown;
 
-		this.battleRecording = new Recording(this.gameConfig);
+		this.record = new Record(this.gameConfig);
 
 		this.#requestRestart();
 	}
@@ -315,7 +315,11 @@ class Controller
 			node.skillName = skillName;
 			node.tmp_startLockTime = time;
 			node.tmp_endLockTime = time + lockDuration;
-			this.battleRecording.addActionNode(node);
+			this.record.addActionNode(node);
+			// and its wait node
+			let waitNode = new ActionNode(ActionType.Wait);
+			waitNode.duration = 0;
+			this.record.addActionNode(waitNode);
 
 			let skillInfo = this.game.skillsList.get(skillName).info;
 			let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
@@ -330,17 +334,18 @@ class Controller
 				recastDuration: status.cdRecastTime,
 				getIsSelected: ()=>{ return node.isSelected(); },
 				onClickFn: (e)=>{
+					let selectionStart, selectionEnd;
 					if (e.shiftKey) {
-						this.battleRecording.selectUntil(node);
-						updateSelectionDisplay(
-							this.timeline.positionFromTime(this.battleRecording.getFirstSelection().tmp_startLockTime),
-							this.timeline.positionFromTime(this.battleRecording.getLastSelection().tmp_endLockTime));
+						this.record.selectUntil(node);
 					} else {
-						this.battleRecording.selectSingle(node);
-						updateSelectionDisplay(
-							this.timeline.positionFromTime(node.tmp_startLockTime),
-							this.timeline.positionFromTime(node.tmp_endLockTime));
+						this.record.selectSingle(node);
 					}
+					selectionStart = this.record.getFirstSelection().tmp_startLockTime;
+					selectionEnd = this.record.getLastSelection().next.next ?
+						this.record.getLastSelection().next.next.tmp_startLockTime :
+						this.record.getLastSelection().tmp_endLockTime;
+					updateSelectionDisplay(
+						this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
 				},
 			});
 			scrollTimelineTo(this.timeline.positionFromTime(this.game.time));

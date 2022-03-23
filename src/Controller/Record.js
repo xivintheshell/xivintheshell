@@ -34,7 +34,7 @@ export class ActionNode {
 }
 
 // a sequence of actions
-export class Recording {
+export class Record {
 	head = null;
 	tail = null;
 	selectionStart = null;

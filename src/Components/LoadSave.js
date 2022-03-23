@@ -30,7 +30,7 @@ export class LoadSave extends React.Component {
 	// https://github.com/eligrey/FileSaver.js#readme
 	unboundOnSave() {
 		let FileSaver = require('file-saver');
-		let strippedActions = controller.battleRecording.serialized();
+		let strippedActions = controller.record.serialized();
 		let content = JSON.stringify(strippedActions);
 		let blob = new Blob([content], {type: "text/plain;charset=utf-8"});
 		FileSaver.saveAs(blob, this.saveFilename);
