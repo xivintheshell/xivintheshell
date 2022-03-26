@@ -7,7 +7,7 @@ import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 import {TickMode} from "../Components/PlaybackControl"
 import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
-import {scrollTimelineTo, updateSelectionDisplay} from "../Components/Timeline";
+import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
 import {ActionNode, ActionType, Record} from "./Record";
 
 class Controller
@@ -344,8 +344,10 @@ class Controller
 						[potency, duration] = this.record.selectSingle(node);
 					}
 					this.updateSelectionDisplay();
-					// TODO: display stats
-					console.log(potency.toFixed(2) + ", " + duration.toFixed(2));
+					updateStatsDisplay({
+						selectedPotency: potency,
+						selectedDuration: duration,
+					});
 				},
 				node: node,
 			});

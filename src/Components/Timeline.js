@@ -2,7 +2,7 @@ import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
 import {skillIcons} from "./Skills";
-import {Clickable, Input, ScrollAnchor, Slider} from "./Common";
+import {Clickable, Slider} from "./Common";
 import ReactTooltip from 'react-tooltip';
 
 const MAX_HEIGHT = 400;
@@ -22,7 +22,6 @@ function Cursor(props) {
 	</div>;
 }
 
-// TODO:
 export let updateSelectionDisplay = (startX, endX)=>{}
 class TimelineSelection extends React.Component {
 	constructor(props) {
@@ -109,7 +108,7 @@ function TimelineSkill(props) {
 		hoverText = <div>
 			{hoverText}<br/>
 			<span>{"potency: " + potency.toFixed(2)}</span><br/>
-			<span>{"PPS: " + (potency / lockDuration).toFixed(2)}</span>
+			<span>{"PPS*: " + (potency / lockDuration).toFixed(2)}</span>
 		</div>;
 	}
 	return <div style={style} className={"timeline-elem skill"} data-tip data-for={`${props.elemID}`}>
@@ -227,6 +226,10 @@ class TimelineMain extends React.Component {
 				if (!evt.shiftKey) {
 					controller.record.unselectAll();
 					updateSelectionDisplay(0, 0);
+					updateStatsDisplay({
+						selectedPotency: 0,
+						selectedDuration: 0
+					});
 				}
 			}
 		}>
@@ -272,8 +275,40 @@ class FixedRightColumn extends React.Component {
 	}
 }
 
+export let updateStatsDisplay = (props)=>{}
+class StatsDisplay extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			selectedPotency: 0,
+			selectedDuration: 0
+		}
+		updateStatsDisplay = this.unboundUpdateStatsDisplay.bind(this);
+	}
+	componentWillUnmount() {
+		updateStatsDisplay = (props)=>{};
+	}
+	// selectedPotency, selectedDuration
+	unboundUpdateStatsDisplay(props) {
+		this.setState({
+			selectedPotency: props.selectedPotency,
+			selectedDuration: props.selectedDuration
+		});
+	}
+	render() {
+		let selected = <div>
+			<span>---- Selected ----</span><br/>
+			<span>Potency: {this.state.selectedPotency.toFixed(2)}</span><br/>
+			<span>Duration: {this.state.selectedDuration.toFixed(2)}</span><br/>
+			<span>PPS: {(this.state.selectedPotency / this.state.selectedDuration).toFixed(2)}</span>
+		</div>
+		return this.state.selectedDuration > 0 ? selected : <div/>;
+	}
+}
+
 class Timeline extends React.Component
 {
+	// TODO: explain asterisk maybe?
 	render() {
 		return <div>
 			<Slider description={"display scale: "} defaultValue={0.4} onChange={(newVal)=>{
@@ -283,6 +318,7 @@ class Timeline extends React.Component
 			<div className={"timeline timelineTab"}>
 				<FixedRightColumn/>
 			</div>
+			<StatsDisplay/>
 		</div>
 	}
 }
