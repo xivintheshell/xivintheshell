@@ -2,7 +2,8 @@ export const Debug =
 {
 	epsilon: 1e-5,
 	disableManaTicks: false,
-	consoleLogEvents: false
+	consoleLogEvents: false,
+	noEnochian: true,
 };
 
 export class GameConfig

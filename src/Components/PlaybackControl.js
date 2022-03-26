@@ -112,9 +112,9 @@ export class Config extends React.Component {
 		super(props);
 		this.state = {
 			stepSize : 0.5,
-			spellSpeed: 1532,
-			animationLock: 0.74,
-			casterTax: 0.12,
+			spellSpeed: 400,
+			animationLock: 0.7,
+			casterTax: 0.1,
 			timeTillFirstManaTick: 1.2,
 			countdown: 3,
 		};

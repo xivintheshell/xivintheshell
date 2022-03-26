@@ -66,15 +66,29 @@ export class Record {
 	getLastSelection() {
 		return this.selectionEnd;
 	}
+	#getSelectionStats() {
+		console.assert(this.selectionStart !== null && this.selectionEnd !== null);
+		let potency = 0;
+		let duration = 0;
+		for (let itr = this.selectionStart; itr !== this.selectionEnd.next; itr = itr.next) {
+			if (itr.type === ActionType.Skill) {
+				potency += itr.tmp_capturedPotency;
+				duration += itr.next.duration;
+			}
+		}
+		console.assert(!isNaN(potency));
+		console.assert(!isNaN(duration));
+		return [potency, duration];
+	}
 	// assume node is actually in this recording
 	selectSingle(node) {
 		this.unselectAll();
 		node.select();
 		this.selectionStart = node;
 		this.selectionEnd = node;
+		return this.#getSelectionStats();
 	}
 	unselectAll() {
-		//for (let itr = this.head; itr !== null; itr = itr.next) {
 		if (this.selectionStart) {
 			console.assert(this.selectionEnd);
 			for (let itr = this.selectionStart; itr !== this.selectionEnd.next; itr = itr.next) {
@@ -91,28 +105,26 @@ export class Record {
 		}
 		this.selectionStart = first;
 		this.selectionEnd = last;
+		return this.#getSelectionStats();
 	}
-	// returns true on success
 	selectUntil(node) {
 		// proceed only if there's currently exactly 1 node selected
 		if (this.selectionStart && this.selectionStart === this.selectionEnd) {
 			for (let itr = this.selectionStart; itr !== null; itr = itr.next) {
 				if (itr === node) {
-					this.#selectSequence(this.selectionStart, node);
-					return true;
+					return this.#selectSequence(this.selectionStart, node);
 				}
 			}
 			// failed to find node from going down the currently selected list
 			for (let itr = node; itr !== null; itr = itr.next) {
 				if (itr === this.selectionStart) {
-					this.#selectSequence(node, this.selectionStart);
-					return true;
+					return this.#selectSequence(node, this.selectionStart);
 				}
 			}
 			// failed both ways (shouldn't get here)
 			console.assert(false);
 		} else {
-			this.selectSingle(node);
+			return this.selectSingle(node);
 		}
 	}
 	serialized() {

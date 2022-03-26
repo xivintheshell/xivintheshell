@@ -1,4 +1,4 @@
-import { ResourceType } from "./Common"
+import {Debug, ResourceType} from "./Common"
 
 export class StatsModifier
 {
@@ -119,7 +119,7 @@ export class StatsModifier
 		modifiers.push(llMod);
 
 		let enoMod = new StatsModifier();
-		if (resources.get(ResourceType.Enochian).available(1)) {
+		if (resources.get(ResourceType.Enochian).available(1) && !Debug.noEnochian) {
 			enoMod.damageBase = 1.2;
 		}
 		modifiers.push(enoMod);

@@ -299,6 +299,7 @@ class Controller
 		if (status.status === SkillReadyStatus.Ready)
 		{
 			let node = new ActionNode(ActionType.Skill);
+			node.tmp_capturedPotency = 0;
 
 			this.game.useSkill(skillName, node);
 			this.updateStatusDisplay();
@@ -316,7 +317,6 @@ class Controller
 			node.skillName = skillName;
 			node.tmp_startLockTime = time;
 			node.tmp_endLockTime = time + lockDuration;
-			node.tmp_capturedPotency = 0;
 			this.record.addActionNode(node);
 			// and its wait node
 			let waitNode = new ActionNode(ActionType.Wait);
@@ -337,23 +337,30 @@ class Controller
 				recastDuration: status.cdRecastTime,
 				getIsSelected: ()=>{ return node.isSelected(); },
 				onClickFn: (e)=>{
-					let selectionStart, selectionEnd;
+					let potency, duration;
 					if (e.shiftKey) {
-						this.record.selectUntil(node);
+						[potency, duration] = this.record.selectUntil(node);
 					} else {
-						this.record.selectSingle(node);
+						[potency, duration] = this.record.selectSingle(node);
 					}
-					selectionStart = this.record.getFirstSelection().tmp_startLockTime;
-					selectionEnd = this.record.getLastSelection().next.next ?
-						this.record.getLastSelection().next.next.tmp_startLockTime :
-						this.record.getLastSelection().tmp_endLockTime;
-					updateSelectionDisplay(
-						this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
+					this.updateSelectionDisplay();
+					// TODO: display stats
+					console.log(potency.toFixed(2) + ", " + duration.toFixed(2));
 				},
 				node: node,
 			});
 			scrollTimelineTo(this.timeline.positionFromTime(this.game.time));
 		}
+	}
+
+	updateSelectionDisplay() {
+		if (!this.record.getFirstSelection()) return;
+		let selectionStart = this.record.getFirstSelection().tmp_startLockTime;
+		let selectionEnd = this.record.getLastSelection().next.next ?
+			this.record.getLastSelection().next.next.tmp_startLockTime :
+			this.record.getLastSelection().tmp_endLockTime;
+		updateSelectionDisplay(
+			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
 	}
 
 	requestUseSkill(props) {

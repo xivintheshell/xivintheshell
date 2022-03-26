@@ -278,6 +278,7 @@ class Timeline extends React.Component
 		return <div>
 			<Slider description={"display scale: "} defaultValue={0.4} onChange={(newVal)=>{
 				controller.timeline.setHorizontalScale(parseFloat(newVal));
+				controller.updateSelectionDisplay();
 			}}/>
 			<div className={"timeline timelineTab"}>
 				<FixedRightColumn/>
