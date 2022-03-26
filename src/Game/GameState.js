@@ -258,8 +258,13 @@ export class GameState
 		});
 	}
 
-	castSpell(skillName, onCapture, onApplication)
+	reportPotency(node, potency) {
+		node.tmp_capturedPotency = node.tmp_capturedPotency + potency;
+	}
+
+	castSpell(skillName, onCapture, onApplication, node=null)
 	{
+		console.assert(node !== null);
 		let skill = this.skillsList.get(skillName);
 		let skillInfo = skill.info;
 		console.assert(skillInfo.isSpell);
@@ -280,6 +285,7 @@ export class GameState
 				if (capturedManaCost > 0)
 					controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.getDisplayTime());
 				let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
+				game.reportPotency(node, capturedPotency);
 				let captureInfo = {
 					capturedManaCost: capturedManaCost
 					//...
@@ -379,11 +385,16 @@ export class GameState
 		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
 	}
 
-	useInstantSkill(skillName, effectFn, dealDamage=false)
+	useInstantSkill(skillName, effectFn, dealDamage=false, node=null)
 	{
+		console.assert(node !== null);
 		let skillInfo = this.skillsList.get(skillName).info;
 		let cd = this.cooldowns.get(skillInfo.cdName);
-		let capturedDamage = dealDamage ? this.captureDamage(skillInfo.aspect, skillInfo.basePotency) : 0;
+		let capturedDamage = 0;
+		if (dealDamage) {
+			capturedDamage = this.captureDamage(skillInfo.aspect, skillInfo.basePotency);
+			this.reportPotency(node, capturedDamage);
+		}
 		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, 0);
 
 		let skillTime = this.getDisplayTime();
@@ -487,7 +498,7 @@ export class GameState
 		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
 		let cdRecastTime = cd.cdPerStack * (skill.info.isSpell ? recastTimeScale : 1);
 
-		let result = {
+		return {
 			status: status,
 			description: "",
 			stacksAvailable: cd.stacksAvailable(),
@@ -498,22 +509,12 @@ export class GameState
 			timeTillAvailable: timeTillAvailable,
 			capturedManaCost: capturedManaCost,
 		};
-		if (skillName===SkillName.Blizzard) {
-			//console.log(result);
-		}
-
-		return result;
 	}
 
-	useSkillIfAvailable(skillName)
+	useSkill(skillName, node=null)
 	{
 		let skill = this.skillsList.get(skillName);
-		let status = this.getSkillAvailabilityStatus(skillName);
-
-		if (status.status === SkillReadyStatus.Ready) {
-			skill.use(this);
-		}
-		return status;
+		skill.use(this, node);
 	}
 
 	toString()

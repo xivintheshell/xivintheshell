@@ -298,7 +298,9 @@ class Controller
 
 		if (status.status === SkillReadyStatus.Ready)
 		{
-			this.game.useSkillIfAvailable(skillName);
+			let node = new ActionNode(ActionType.Skill);
+
+			this.game.useSkill(skillName, node);
 			this.updateStatusDisplay();
 			this.#updateSkillButtons();
 			if (this.tickMode === TickMode.RealTimeAutoPause) {
@@ -311,10 +313,10 @@ class Controller
 			let lockDuration = this.game.timeTillAnySkillAvailable();
 			let time = this.game.time;
 
-			let node = new ActionNode(ActionType.Skill);
 			node.skillName = skillName;
 			node.tmp_startLockTime = time;
 			node.tmp_endLockTime = time + lockDuration;
+			node.tmp_capturedPotency = 0;
 			this.record.addActionNode(node);
 			// and its wait node
 			let waitNode = new ActionNode(ActionType.Wait);
@@ -329,6 +331,7 @@ class Controller
 				skillName: skillName,
 				isGCD: isGCD,
 				isSpellCast: isSpellCast,
+				capturedPotency: node.tmp_capturedPotency,
 				time: time,
 				lockDuration: lockDuration,
 				recastDuration: status.cdRecastTime,
@@ -347,6 +350,7 @@ class Controller
 					updateSelectionDisplay(
 						this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
 				},
+				node: node,
 			});
 			scrollTimelineTo(this.timeline.positionFromTime(this.game.time));
 		}

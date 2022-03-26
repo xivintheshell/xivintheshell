@@ -40,8 +40,9 @@ function verifyElem(elem) {
 		console.assert(!isNaN(parseFloat(elem.time)));
 		console.assert(!isNaN(parseFloat(elem.lockDuration)));
 		console.assert(!isNaN(parseFloat(elem.recastDuration)));
-		console.assert(typeof elem.getIsSelected !== undefined && elem.getIsSelected !== null);
-		console.assert(typeof elem.onClickFn !== undefined && elem.onClickFn !== null);
+		console.assert(elem.getIsSelected !== undefined && elem.getIsSelected !== null);
+		console.assert(elem.onClickFn !== undefined && elem.onClickFn !== null);
+		console.assert(elem.node !== undefined && elem.node !== null);
 		return;
 	}
 

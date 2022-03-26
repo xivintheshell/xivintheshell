@@ -101,11 +101,20 @@ function TimelineSkill(props) {
 		left: props.elem.left,
 		top: props.elem.data.isGCD ? 14 : 0,
 	};
+	let node = props.elem.data.node;
+	let potency = node.tmp_capturedPotency;
+	let lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
+	let hoverText = <span>{props.elem.data.skillName + "@" + (props.elem.data.time-props.elem.countdown).toFixed(2)}</span>;
+	if (potency > 0) {
+		hoverText = <div>
+			{hoverText}<br/>
+			<span>{"potency: " + potency.toFixed(2)}</span><br/>
+			<span>{"PPS: " + (potency / lockDuration).toFixed(2)}</span>
+		</div>;
+	}
 	return <div style={style} className={"timeline-elem skill"} data-tip data-for={`${props.elemID}`}>
 		{lockBar}{props.elem.data.isGCD ? recastBar : <div/>}{icon}
-		<ReactTooltip id={`${props.elemID}`}>{
-			props.elem.data.skillName + "@" + (props.elem.data.time-props.elem.countdown).toFixed(2)
-		}</ReactTooltip>
+		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
 	</div>;
 }
 

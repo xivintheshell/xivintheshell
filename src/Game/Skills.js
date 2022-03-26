@@ -125,7 +125,7 @@ export function makeSkillsList(game)
 			() => {
 				return true;
 			},
-			() => {
+			(game, node) => {
 				game.useInstantSkill(skillName, () => {
 					let resource = game.resources.get(rscType);
 					if (resource.available(1)) {
@@ -136,7 +136,7 @@ export function makeSkillsList(game)
 							rsc.consume(1);
 						});
 					}
-				});
+				}, false, node);
 			}
 		));
 	}
@@ -146,21 +146,21 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			if (game.getFireStacks() === 0) // no AF
 			{
 				game.castSpell(SkillName.Blizzard, cap => {
 					game.resources.get(ResourceType.UmbralIce).gain(1);
 					game.startOrRefreshEnochian();
 				}, app => {
-				});
+				}, node);
 			} else // in AF
 			{
 				game.castSpell(SkillName.Blizzard, cap => {
 					game.resources.get(ResourceType.Enochian).removeTimer();
 					game.loseEnochian();
 				}, app => {
-				});
+				}, node);
 			}
 		}
 	));
@@ -201,7 +201,7 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			if (game.getIceStacks() === 0) {
 				game.castSpell(SkillName.Fire, cap => {
 					game.resources.get(ResourceType.AstralFire).gain(1);
@@ -214,14 +214,14 @@ export function makeSkillsList(game)
 					}
 					potentiallyGainFirestarter(game);
 				}, app => {
-				});
+				}, node);
 			} else {
 				game.castSpell(SkillName.Fire, cap => {
 					game.resources.get(ResourceType.Enochian).removeTimer();
 					game.loseEnochian();
 					potentiallyGainFirestarter(game);
 				}, app => {
-				});
+				}, node);
 			}
 			// firestarter?
 		}
@@ -232,7 +232,7 @@ export function makeSkillsList(game)
 		() => {
 			return game.getFireStacks() > 0 || game.getIceStacks() > 0; // has UI or AF
 		},
-		() => {
+		(game, node) => {
 			game.useInstantSkill(SkillName.Transpose, () => {
 				if (game.getFireStacks() === 0 && game.getIceStacks() === 0) {
 					controller.log(LogCategory.Event, "transpose failed; AF/UI just fell off", game.getDisplayTime(), Color.Error);
@@ -244,7 +244,7 @@ export function makeSkillsList(game)
 					game.switchToAForUI(ResourceType.AstralFire, 1);
 				}
 				game.startOrRefreshEnochian();
-			});
+			}, false, node);
 		}
 	));
 
@@ -265,8 +265,9 @@ export function makeSkillsList(game)
 		}
 	}
 
+	// TODO: node
 	// called at the time of APPLICATION (not snapshot)
-	let applyThunderDoT = function(game, capturedTickPotency, numTicks)
+	let applyThunderDoT = function(game, node, capturedTickPotency, numTicks)
 	{
 		// define stuff
 		let recurringThunderTick = (remainingTicks, capturedTickPotency)=>
@@ -275,6 +276,7 @@ export function makeSkillsList(game)
 			game.resources.addResourceEvent(
 				ResourceType.ThunderDoTTick,
 				"recurring thunder tick " + (numTicks+1-remainingTicks) + "/" + numTicks, 3, rsc=>{
+					game.reportPotency(node, capturedTickPotency);
 					game.dealDamage(capturedTickPotency, "DoT");
 					recurringThunderTick(remainingTicks - 1, capturedTickPotency);
 					if (Math.random() < 0.1) // thundercloud proc
@@ -303,16 +305,17 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			if (game.resources.get(ResourceType.Thundercloud).available(1)) // made instant via thundercloud
 			{
 				let skillTime = game.getDisplayTime();
 				let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
 				let capturedTickPotency = game.captureDamage(Aspect.Other, game.config.adjustedDoTPotency(35));
+				game.reportPotency(node, capturedInitialPotency);
 				game.useInstantSkill(SkillName.Thunder3, () => {
 					game.dealDamage(capturedInitialPotency, "Thunder 3@"+skillTime.toFixed(2));
-					applyThunderDoT(game, capturedTickPotency, 10);
-				});
+					applyThunderDoT(game, node, capturedTickPotency, 10);
+				}, false, node);
 				let thundercloud = game.resources.get(ResourceType.Thundercloud);
 				thundercloud.consume(1);
 				thundercloud.removeTimer();
@@ -335,8 +338,8 @@ export function makeSkillsList(game)
 						sc.removeTimer();
 					}
 				}, app => {
-					applyThunderDoT(game, capturedTickPotency, 10);
-				});
+					applyThunderDoT(game, node, capturedTickPotency, 10);
+				}, node);
 			}
 		}
 	));
@@ -349,11 +352,11 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			game.useInstantSkill(SkillName.Manafont, () => {
 				game.resources.get(ResourceType.Mana).gain(3000);
 				controller.log(LogCategory.Event, "manafont effect: mana +3000", game.getDisplayTime());
-			}, false);
+			}, false, node);
 		}
 	));
 
@@ -362,7 +365,7 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			game.castSpell(SkillName.Fire3, cap => {
 				game.switchToAForUI(ResourceType.AstralFire, 3);
 				game.startOrRefreshEnochian();
@@ -373,7 +376,7 @@ export function makeSkillsList(game)
 					controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
 				}
 			}, app => {
-			});
+			}, node);
 		}
 	));
 
@@ -382,12 +385,12 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			game.castSpell(SkillName.Blizzard3, cap => {
 				game.switchToAForUI(ResourceType.UmbralIce, 3);
 				game.startOrRefreshEnochian();
 			}, app => {
-			});
+			}, node);
 		}
 	));
 
@@ -396,11 +399,11 @@ export function makeSkillsList(game)
 		() => {
 			return game.getIceStacks() > 0; // in UI
 		},
-		() => {
+		(game, node) => {
 			game.castSpell(SkillName.Freeze, cap => {
 				game.resources.get(ResourceType.UmbralHeart).gain(3);
 			}, app => {
-			});
+			}, node);
 		}
 	));
 
@@ -410,7 +413,7 @@ export function makeSkillsList(game)
 			return game.getFireStacks() > 0 && // in AF
 				game.getMP() >= 800;
 		},
-		() => {
+		(game, node) => {
 			game.castSpell(SkillName.Flare, cap => {
 				let uh = game.resources.get(ResourceType.UmbralHeart);
 				let mana = game.resources.get(ResourceType.Mana);
@@ -422,7 +425,7 @@ export function makeSkillsList(game)
 				game.resources.get(ResourceType.AstralFire).gain(3);
 				game.startOrRefreshEnochian();
 			}, app => {
-			});
+			}, node);
 		}
 	));
 
@@ -434,11 +437,11 @@ export function makeSkillsList(game)
 		() => {
 			return game.getIceStacks() > 0; // in UI
 		},
-		() => {
+		(game, node) => {
 			game.castSpell(SkillName.Blizzard4, cap => {
 				game.resources.get(ResourceType.UmbralHeart).gain(3);
 			}, app => {
-			});
+			}, node);
 		}
 	));
 
@@ -447,10 +450,10 @@ export function makeSkillsList(game)
 		() => {
 			return game.getFireStacks() > 0; // in AF
 		},
-		() => {
+		(game, node) => {
 			game.castSpell(SkillName.Fire4, cap => {
 			}, app => {
-			});
+			}, node);
 		}
 	));
 
@@ -459,9 +462,9 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			game.useInstantSkill(SkillName.BetweenTheLines, () => {
-			});
+			}, false, node);
 		}
 	));
 
@@ -470,9 +473,9 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			game.useInstantSkill(SkillName.AetherialManipulation, () => {
-			});
+			}, false, node);
 		}
 	));
 
@@ -481,7 +484,7 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			game.useInstantSkill(SkillName.Triplecast, () => {
 				let triple = game.resources.get(ResourceType.Triplecast);
 				if (triple.pendingChange !== null) triple.removeTimer(); // should never need this, but just in case
@@ -491,7 +494,7 @@ export function makeSkillsList(game)
 					"drop remaining Triple charges", 15, rsc => {
 						 rsc.consume(rsc.currentValue);
 					});
-			});
+			}, false, node);
 		}
 	));
 
@@ -500,10 +503,10 @@ export function makeSkillsList(game)
 		() => {
 			return game.resources.get(ResourceType.Polyglot).available(1);
 		},
-		() => {
+		(game, node) => {
 			game.resources.get(ResourceType.Polyglot).consume(1);
 			game.useInstantSkill(SkillName.Foul, () => {
-			}, true);
+			}, true, node);
 		}
 	));
 
@@ -513,7 +516,7 @@ export function makeSkillsList(game)
 			return game.getFireStacks() > 0 && // in AF
 				game.getMP() >= 800;
 		},
-		() => {
+		(game, node) => {
 			game.castSpell(SkillName.Despair, cap => {
 				let mana = game.resources.get(ResourceType.Mana);
 				// mana
@@ -522,7 +525,7 @@ export function makeSkillsList(game)
 				game.resources.get(ResourceType.AstralFire).gain(3);
 				game.startOrRefreshEnochian();
 			}, app => {
-			});
+			}, node);
 		}
 	));
 
@@ -531,12 +534,12 @@ export function makeSkillsList(game)
 		() => {
 			return game.getIceStacks() > 0;
 		},
-		() => {
+		(game, node) => {
 			game.useInstantSkill(SkillName.UmbralSoul, () => {
 				game.resources.get(ResourceType.UmbralIce).gain(1);
 				game.resources.get(ResourceType.UmbralHeart).gain(1);
 				game.startOrRefreshEnochian();
-			});
+			}, false, node);
 		}
 	));
 
@@ -545,10 +548,10 @@ export function makeSkillsList(game)
 		() => {
 			return game.resources.get(ResourceType.Polyglot).available(1);
 		},
-		() => {
+		(game, node) => {
 			game.resources.get(ResourceType.Polyglot).consume(1);
 			game.useInstantSkill(SkillName.Xenoglossy, () => {
-			}, true);
+			}, true, node);
 		}
 	));
 
@@ -557,7 +560,7 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			game.castSpell(SkillName.HighFire2, cap => {
 				game.switchToAForUI(ResourceType.AstralFire, 3);
 				game.startOrRefreshEnochian();
@@ -568,7 +571,7 @@ export function makeSkillsList(game)
 					controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
 				}
 			}, app => {
-			});
+			}, node);
 		}
 	));
 
@@ -577,12 +580,12 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			game.castSpell(SkillName.Freeze, cap => {
 				game.switchToAForUI(ResourceType.UmbralIce, 3);
 				game.startOrRefreshEnochian();
 			}, app => {
-			});
+			}, node);
 		}
 	));
 
@@ -591,10 +594,10 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		() => {
+		(game, node) => {
 			game.useInstantSkill(SkillName.Amplifier, () => {
 				game.resources.get(ResourceType.Polyglot).gain(1);
-			});
+			}, false, node);
 		}
 	));
 
@@ -603,7 +606,7 @@ export function makeSkillsList(game)
 		() => {
 			return game.resources.get(ResourceType.Paradox).available(1);
 		},
-		() => {
+		(game, node) => {
 			game.castSpell(SkillName.Paradox, cap => {
 				game.resources.get(ResourceType.Paradox).consume(1);
 				// enochian (refresh only
@@ -613,7 +616,7 @@ export function makeSkillsList(game)
 					potentiallyGainFirestarter(game);
 				}
 			}, app => {
-			});
+			}, node);
 		}
 	));
 
