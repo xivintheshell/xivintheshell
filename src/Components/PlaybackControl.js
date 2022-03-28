@@ -116,7 +116,7 @@ export class Config extends React.Component {
 			animationLock: 0.7,
 			casterTax: 0.1,
 			timeTillFirstManaTick: 1.2,
-			countdown: 3,
+			countdown: 0,
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);

@@ -265,7 +265,6 @@ export function makeSkillsList(game)
 		}
 	}
 
-	// TODO: node
 	// called at the time of APPLICATION (not snapshot)
 	let applyThunderDoT = function(game, node, capturedTickPotency, numTicks)
 	{

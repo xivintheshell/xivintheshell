@@ -217,6 +217,14 @@ class TimelineMain extends React.Component {
 				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
 			}
 		}
+		let countdownBgStyle = {
+			background: "rgba(0,0,0,0.1)",
+			position: "absolute",
+			left: "0",
+			height: "100%",
+			width: controller.timeline.positionFromTime(controller.gameConfig.countdown),
+		};
+		let countdownGrey = <div style={countdownBgStyle}/>;
 		return <div className="timeline-main" style={{width: this.state.canvasWidth+"px"}} onMouseDown={
 			(evt)=>{
 				/*
@@ -234,6 +242,7 @@ class TimelineMain extends React.Component {
 			}
 		}>
 			<TimelineSelection/>
+			{countdownGrey}
 			<TimelineHeader
 				canvasWidth={this.state.canvasWidth}
 				pixelPerSecond={controller.timeline.scale * 100}
@@ -280,6 +289,8 @@ class StatsDisplay extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			cumulativePPS: 0,
+			cumulativeDuration: 0,
 			selectedPotency: 0,
 			selectedDuration: 0
 		}
@@ -290,19 +301,29 @@ class StatsDisplay extends React.Component {
 	}
 	// selectedPotency, selectedDuration
 	unboundUpdateStatsDisplay(props) {
-		this.setState({
-			selectedPotency: props.selectedPotency,
-			selectedDuration: props.selectedDuration
-		});
+		this.setState(props);
 	}
 	render() {
-		let selected = <div>
+		let cumulative = <div data-tip data-for="ppsNotes">
+			<span>Time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
+			<span>PPS: {this.state.cumulativePPS.toFixed(2)}</span><br/>
+			<ReactTooltip id={"ppsNotes"}>
+				<div className={"toolTip"}>
+					potency / time since pull (0s).<br/>
+					could be inaccurate if any damage is done before pull
+				</div>
+			</ReactTooltip>
+		</div>
+		let selected = <div style={{marginTop: "10px"}}>
 			<span>---- Selected ----</span><br/>
 			<span>Potency: {this.state.selectedPotency.toFixed(2)}</span><br/>
 			<span>Duration: {this.state.selectedDuration.toFixed(2)}</span><br/>
 			<span>PPS: {(this.state.selectedPotency / this.state.selectedDuration).toFixed(2)}</span>
 		</div>
-		return this.state.selectedDuration > 0 ? selected : <div/>;
+		return <div>
+			{cumulative}
+			{this.state.selectedDuration > 0 ? selected : <div/>}
+		</div>;
 	}
 }
 

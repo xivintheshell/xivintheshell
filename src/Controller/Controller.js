@@ -48,6 +48,20 @@ class Controller
 		addLogContent(category, content, color);
 	}
 
+	reportPotencyUpdate() {
+		let cumulativePotency = 0;
+		for (let itr = this.record.getFirstAction(); itr !== this.record.getLastAction().next; itr = itr.next) {
+			if (itr.type === ActionType.Skill && itr.tmp_startLockTime >= 0) {
+				cumulativePotency += itr.tmp_capturedPotency;
+			}
+		}
+		let totalTime = this.game.time - this.gameConfig.countdown;
+		updateStatsDisplay({
+			cumulativePPS: totalTime > 0 ? cumulativePotency / totalTime : 0,
+			cumulativeDuration: Math.max(0, totalTime),
+		});
+	}
+
 	reportDamage(props) {
 
 		this.timeline.addElement({

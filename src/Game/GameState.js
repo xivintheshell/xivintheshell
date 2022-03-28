@@ -260,6 +260,7 @@ export class GameState
 
 	reportPotency(node, potency) {
 		node.tmp_capturedPotency = node.tmp_capturedPotency + potency;
+		controller.reportPotencyUpdate();
 	}
 
 	castSpell(skillName, onCapture, onApplication, node=null)
