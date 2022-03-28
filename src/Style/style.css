@@ -44,6 +44,9 @@
     max-width: 960px;
     margin: 10px auto;
 }
+.__react_component_tooltip {
+    z-index: 10;
+}
 /* Logging */
 
 .logsAll {
@@ -100,13 +103,12 @@
 
 /* keyboard-controlled area */
 
-.keyboardControlled {
+.gameplay {
+    padding: 8px;
     margin-bottom: 16px;
     border: 1px solid lightgrey;
-    /*outline-offset: 8px;*/
-    /*outline: lightgrey solid 1px;*/
-    padding: 8px;
 }
+
 .keyboardControlled:focus {
     outline: mediumpurple solid 2px;
 }

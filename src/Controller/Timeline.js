@@ -4,14 +4,6 @@ import {GameConfig, ResourceType, SkillReadyStatus} from "../Game/Common";
 import {updateTimelineContent} from "../Components/Timeline";
 import {controller} from "./Controller";
 
-
-/*
-Timeline:
-
-width: multiple of 800px?
-
- */
-
 export const ElemType = {
 	s_Cursor: "s_Cursor",
 	DamageMark: "DamageMark",

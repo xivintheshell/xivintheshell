@@ -379,18 +379,28 @@ class Controller
 						selectedDuration: duration,
 					});
 				},
+				onKeyDownFn: (e)=>{
+					if (e.keyCode === 8) { // delete key
+						this.#rewindUntilBefore(node);
+						e.preventDefault();
+					}
+				},
 				node: node,
 			});
 			scrollTimelineTo(this.timeline.positionFromTime(this.game.time));
 		}
 	}
 
+	// basically restart the game and play till here:
+	#rewindUntilBefore(node) {
+		// TODO
+		console.log(node);
+	}
+
 	updateSelectionDisplay() {
 		if (!this.record.getFirstSelection()) return;
 		let selectionStart = this.record.getFirstSelection().tmp_startLockTime;
-		let selectionEnd = this.record.getLastSelection().next.next ?
-			this.record.getLastSelection().next.next.tmp_startLockTime :
-			this.record.getLastSelection().tmp_endLockTime;
+		let selectionEnd = this.record.getLastSelection().tmp_endLockTime;
 		updateSelectionDisplay(
 			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
 	}
@@ -479,7 +489,7 @@ class Controller
 	}
 
 	handleKeyboardEvent(evt) {
-		//console.log(evt.keyCode);
+		console.log(evt.keyCode);
 		if (this.tickMode === TickMode.RealTime) {
 			this.#handleKeyboardEvent_RealTime(evt);
 		} else if (this.tickMode === TickMode.RealTimeAutoPause) {

@@ -4,7 +4,7 @@ svg {
 
 .timeline {
     margin: 10px 0;
-    outline: 1px solid grey;
+    outline: 1px solid lightgrey;
     position: relative;
     vertical-align: middle;
 }
@@ -23,6 +23,7 @@ svg {
 }
 .timeline-fixedRightColumn::-webkit-scrollbar {
     -webkit-appearance: none;
+    background-color: #e8e8e8;
     height: 5px;
 }
 .timeline-fixedRightColumn::-webkit-scrollbar-thumb {
@@ -59,4 +60,7 @@ svg {
 }
 .timeline-elem-skill-icon {
     display: block;
+}
+.timeline-elem-skill-icon:focus {
+    outline: none;
 }

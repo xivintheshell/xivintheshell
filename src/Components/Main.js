@@ -16,10 +16,10 @@ export default class Main extends React.Component {
 		this.state = {
 			realTime: false,
 		}
-		this.boundKeyCapture = this.keyCapture.bind(this);
+		this.gameplayKeyCapture = this.unboundGameplayKeyCapture.bind(this);
 		setRealTime = this.setRealTime.bind(this);
 	}
-	keyCapture(evt) {
+	unboundGameplayKeyCapture(evt) {
 		controller.handleKeyboardEvent(evt);
 		evt.preventDefault();
 	}
@@ -32,9 +32,9 @@ export default class Main extends React.Component {
 			<div className={"container-narrow"}>
 				<Config/>
 				<TimeControl/>
-				<div className={"keyboardControlled" + (this.state.realTime ? " realTime" : "")}
+				<div className={"gameplay keyboardControlled" + (this.state.realTime ? " realTime" : "")}
 					 tabIndex={-1}
-					 onKeyDown={this.boundKeyCapture}>
+					 onKeyDown={this.gameplayKeyCapture}>
 					{statusDisplay}
 					{skillsWindow}
 				</div>

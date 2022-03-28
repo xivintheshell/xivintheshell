@@ -64,7 +64,8 @@ class TimelineSelection extends React.Component {
 			left: this.state.startX,
 			width: Math.max(0, this.state.endX - this.state.startX - 2),
 			height: "100%",
-			zIndex: 2
+			zIndex: 2,
+			pointerEvents: "none"
 		};
 		return <div style={style}/>;
 	}
@@ -129,11 +130,13 @@ function TimelineSkill(props) {
 		className={"timeline-elem-skill-icon"}
 		src={iconPath}
 		alt={props.elem.data.skillName}
-		data-tip data-for={`${props.elemID}`}/>;
+		data-tip data-for={`${props.elemID}`}
+		tabIndex={-1}
+		onKeyDown={props.elem.data.onKeyDownFn}
+	/>;
 	let icon = <Clickable content={iconImg} onClickFn={props.elem.data.onClickFn}/>
 
 	let componentStyle={
-		zIndex: 1,
 		left: props.elem.left,
 		top: props.elem.data.isGCD ? 14 : 0,
 	};
@@ -353,7 +356,7 @@ class StatsDisplay extends React.Component {
 			<ReactTooltip id={"ppsNotes"}>
 				<div className={"toolTip"}>
 					potency / time since pull (0s).<br/>
-					could be inaccurate if any damage is done before pull
+					could be inaccurate if any damage happens before pull
 				</div>
 			</ReactTooltip>
 		</div>

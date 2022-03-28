@@ -4,6 +4,7 @@ export const Debug =
 	disableManaTicks: false,
 	consoleLogEvents: false,
 	noEnochian: true,
+	constantSlidecastWindow: true,
 };
 
 export class GameConfig
@@ -25,7 +26,7 @@ export class GameConfig
 	}
 
 	getSlidecastWindow(castTime) {
-		return 0.46 + 0.02 * castTime;
+		return Debug.constantSlidecastWindow ? 0.5 : 0.46 + 0.02 * castTime;
 	}
 }
 
