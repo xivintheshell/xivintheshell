@@ -23,6 +23,7 @@ class Controller
 		this.skillsQueue = [];
 
 		this.gameConfig = new GameConfig();
+		this.gameConfig.randomSeed = "hello.";
 		this.gameConfig.casterTax = 0.06;
 		this.gameConfig.animationLock = 0.66;
 		this.gameConfig.spellSpeed = 1532;
@@ -206,15 +207,16 @@ class Controller
 		casterTax: 0.06,
 		timeTillFirstManaTick: 0.3,
 		countdown: 5,
+		randomSeed: "hello.",
 	})
 	{
-		//this.stepSize = props.stepSize;
 		this.gameConfig = new GameConfig();
 		this.gameConfig.casterTax = props.casterTax;
 		this.gameConfig.animationLock = props.animationLock;
 		this.gameConfig.spellSpeed = props.spellSpeed;
 		this.gameConfig.timeTillFirstManaTick = props.timeTillFirstManaTick;
 		this.gameConfig.countdown = props.countdown;
+		this.gameConfig.randomSeed = props.randomSeed;
 
 		this.record = new Record(this.gameConfig);
 
@@ -489,7 +491,7 @@ class Controller
 	}
 
 	handleKeyboardEvent(evt) {
-		console.log(evt.keyCode);
+		//console.log(evt.keyCode);
 		if (this.tickMode === TickMode.RealTime) {
 			this.#handleKeyboardEvent_RealTime(evt);
 		} else if (this.tickMode === TickMode.RealTimeAutoPause) {

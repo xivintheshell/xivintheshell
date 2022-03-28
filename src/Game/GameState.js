@@ -6,12 +6,17 @@ import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resourc
 import {controller} from "../Controller/Controller";
 import {Color, LogCategory} from "../Controller/Common";
 
+//https://www.npmjs.com/package/seedrandom
+let SeedRandom = require('seedrandom');
+
 // GameState := resources + events queue
 export class GameState
 {
 	constructor(config)
 	{
 		this.config = config;
+		this.rng = new SeedRandom(config.randomSeed);
+		console.log("random seed: " + config.randomSeed);
 
 		// TIME
 		this.time = 0;

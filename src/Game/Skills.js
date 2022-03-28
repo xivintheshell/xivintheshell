@@ -192,7 +192,7 @@ export function makeSkillsList(game)
 			sc.consume(1);
 			sc.removeTimer();
 		} else {
-			let rand = Math.random();
+			let rand = game.rng();
 			if (rand < 0.4) gainFirestarterProc(game);
 		}
 	}
@@ -279,7 +279,7 @@ export function makeSkillsList(game)
 					game.reportPotency(node, capturedTickPotency);
 					game.dealDamage(capturedTickPotency, "DoT");
 					recurringThunderTick(remainingTicks - 1, capturedTickPotency);
-					if (Math.random() < 0.1) // thundercloud proc
+					if (game.rng() < 0.1) // thundercloud proc
 					{
 						gainThundercloudProc(game);
 					}

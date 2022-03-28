@@ -117,6 +117,7 @@ export class Config extends React.Component {
 			casterTax: 0.1,
 			timeTillFirstManaTick: 1.2,
 			countdown: 0,
+			randomSeed: "",
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);
@@ -124,21 +125,25 @@ export class Config extends React.Component {
 		this.setCasterTax = this.unboundSetCasterTax.bind(this);
 		this.setTimeTillFirstManaTick = this.unboundSetTimeTillFirstManaTick.bind(this);
 		this.setCountdown = this.unboundSetCountdown.bind(this);
+		this.setRandomSeed = this.unboundSetRandomSeed.bind(this);
 	}
 	unboundSetSpellSpeed(val) { this.setState({spellSpeed: parseFloat(val)}) }
 	unboundSetAnimationLock(val) { this.setState({animationLock: parseFloat(val)}) }
 	unboundSetCasterTax(val) { this.setState({casterTax: parseFloat(val)}) }
 	unboundSetTimeTillFirstManaTick(val) { this.setState({timeTillFirstManaTick: parseFloat(val)}) }
 	unboundSetCountdown(val) { this.setState({countdown: parseFloat(val)}) }
+	unboundSetRandomSeed(val) { this.setState({randomSeed: val }); }
 
 	setConfigAndRestart() {
+		let seed = this.state.randomSeed.length > 0 ?
+			this.state.randomSeed : Math.random().toString();
 		controller.setConfigAndRestart({
-			//stepSize: parseFloat(this.state.stepSize),
 			spellSpeed: parseFloat(this.state.spellSpeed),
 			animationLock: parseFloat(this.state.animationLock),
 			casterTax: parseFloat(this.state.casterTax),
 			timeTillFirstManaTick: parseFloat(this.state.timeTillFirstManaTick),
 			countdown: parseFloat(this.state.countdown),
+			randomSeed: seed,
 		});
 	}
 
@@ -160,6 +165,7 @@ export class Config extends React.Component {
 					<Input defaultValue={this.state.casterTax} description="caster tax: " onChange={this.setCasterTax}/>
 					<Input defaultValue={this.state.timeTillFirstManaTick} description="time till first MP tick: " onChange={this.setTimeTillFirstManaTick}/>
 					<Input defaultValue={this.state.countdown} description="countdown: " onChange={this.setCountdown}/>
+					<Input defaultValue={this.state.randomSeed} description="random seed: " onChange={this.setRandomSeed}/>
 					<input type="submit" value="apply and reset"/>
 				</form>
 			</div>
