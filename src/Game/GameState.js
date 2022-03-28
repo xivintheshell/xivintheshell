@@ -37,6 +37,7 @@ export class GameState
 		this.resources.set(ResourceType.Addle, new Resource(ResourceType.Addle, 1, 0));
 		this.resources.set(ResourceType.Swiftcast, new Resource(ResourceType.Swiftcast, 1, 0));
 		this.resources.set(ResourceType.LucidDreaming, new Resource(ResourceType.LucidDreaming, 1, 0));
+		this.resources.set(ResourceType.LucidTick, new Resource(ResourceType.LucidDreaming, 1, 0));
 		this.resources.set(ResourceType.Surecast, new Resource(ResourceType.Surecast, 1, 0));
 		this.resources.set(ResourceType.Tincture, new Resource(ResourceType.Tincture, 1, 0));
 

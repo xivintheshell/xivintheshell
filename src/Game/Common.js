@@ -1,6 +1,6 @@
 export const Debug =
 {
-	epsilon: 1e-5,
+	epsilon: 1e-6,
 	disableManaTicks: false,
 	consoleLogEvents: false,
 	noEnochian: true,
@@ -102,7 +102,8 @@ export const ResourceType =
 	Manaward: "Manaward", // [0, 1]
 	Addle: "Addle", // [0, 1]
 	Swiftcast: "Swiftcast", // [0, 1]
-	LucidDreaming: "Lucid Dreaming", // [0, 1]
+	LucidDreaming: "Lucid Dreaming", // [0, 1] also just for timing display
+	LucidTick: "Lucid Tick", // [0, 1]
 	Surecast: "Surecast", // [0, 1]
 	Tincture: "Tincture", // [0, 1]
 
