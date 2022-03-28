@@ -26,6 +26,7 @@ function MPTickMark(props) {
 	let style={
 		top: props.vOffset,
 		left: props.elem.left - 3,
+		zIndex: -1
 	};
 	return <div style={style} className={"timeline-elem MPTickMark"} data-tip data-for={`${props.elemID}`}>
 		<svg width={6} height={MAX_HEIGHT}>
