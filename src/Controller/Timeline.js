@@ -15,6 +15,8 @@ width: multiple of 800px?
 export const ElemType = {
 	s_Cursor: "s_Cursor",
 	DamageMark: "DamageMark",
+	LucidMark: "LucidMark",
+	MPTickMark: "MPTickMark",
 	Skill: "Skill"
 };
 
@@ -29,6 +31,18 @@ function verifyElem(elem) {
 	if (elem.type === ElemType.DamageMark) {
 		console.assert(!isNaN(parseFloat(elem.time)));
 		console.assert(!isNaN(parseFloat(elem.potency)));
+		console.assert(elem.source !== undefined);
+		return;
+	}
+
+	if (elem.type === ElemType.LucidMark) {
+		console.assert(!isNaN(parseFloat(elem.time)));
+		console.assert(elem.source !== undefined);
+		return;
+	}
+
+	if (elem.type === ElemType.MPTickMark) {
+		console.assert(!isNaN(parseFloat(elem.time)));
 		console.assert(elem.source !== undefined);
 		return;
 	}
@@ -121,6 +135,22 @@ export class Timeline {
 				elemsToDraw.push({
 					type: e.type,
 					hoverText: e.potency.toFixed(2) + " (" + e.source + ")",
+					left: this.positionFromTime(e.time),
+				});
+			}
+			// lucid mark
+			else if (e.type === ElemType.LucidMark) {
+				elemsToDraw.push({
+					type: e.type,
+					hoverText: e.source,
+					left: this.positionFromTime(e.time),
+				});
+			}
+			// MP tick mark
+			else if (e.type === ElemType.MPTickMark) {
+				elemsToDraw.push({
+					type: e.type,
+					hoverText: e.source,
 					left: this.positionFromTime(e.time),
 				});
 			}

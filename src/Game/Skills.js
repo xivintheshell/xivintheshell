@@ -344,65 +344,6 @@ export function makeSkillsList(game)
 		}
 	));
 
-	skillsList.set(SkillName.LucidDreaming, new Skill(SkillName.LucidDreaming,
-		() => {
-			return true;
-		},
-		(game, node) => {
-			// set time for the first lucid tick,
-			// since order of events at roughly the same time are virtually undefined
-			let skillAppDelay = game.skillsList.get(SkillName.LucidDreaming).info.skillApplicationDelay;
-			let timeTillNextManaTick = game.resources.timeTillReady(ResourceType.Mana);
-			let timeTillFirstLucidTickSinceApply = timeTillNextManaTick - skillAppDelay - 1.5;
-			if (timeTillFirstLucidTickSinceApply < 0) timeTillFirstLucidTickSinceApply += 3;
-			game.useInstantSkill(SkillName.LucidDreaming, () => {
-				const numTicks = 7;
-
-				let applyLucidTick = () => {
-					if (game.getFireStacks() > 0) return; // not tick during fire
-					game.resources.get(ResourceType.Mana).gain(550);
-				};
-
-				let recurringLucidTick = (remainingTicks) => {
-					if (remainingTicks === 0) return;
-					applyLucidTick();
-					controller.log(
-						LogCategory.Event,
-						"recurring lucid tick " + (numTicks + 1 - remainingTicks) + "/" + numTicks,
-						game.getDisplayTime(),
-						Color.ManaTick);
-					game.resources.addResourceEvent(
-						ResourceType.LucidTick,
-						"recurring lucid tick", 3, rsc => {
-							recurringLucidTick(remainingTicks - 1);
-						}, Color.Text, false);
-				};
-
-				let buff = game.resources.get(ResourceType.LucidDreaming);
-				let tick = game.resources.get(ResourceType.LucidTick);
-				if (tick.pendingChange !== null) {
-					// if already has lucid applied; cancel the remaining ticks now.
-					buff.removeTimer();
-					tick.removeTimer();
-				}
-				// order of events:
-				buff.gain(1);
-				game.resources.addResourceEvent(ResourceType.LucidDreaming, "drop Lucid", 21, buff => {
-					buff.consume(1);
-				}, Color.ManaTick);
-
-				let startLucidEvt = new Event(
-					"first lucid tick",
-					timeTillFirstLucidTickSinceApply,
-					() => {
-						recurringLucidTick(numTicks);
-					},
-					Color.ManaTick);
-				game.addEvent(startLucidEvt);
-			}, false, node);
-		}
-	));
-
 	// Manaward
 	addResourceAbility(SkillName.Manaward, ResourceType.Manaward, 20);
 
@@ -686,8 +627,69 @@ export function makeSkillsList(game)
 	addResourceAbility(SkillName.Swiftcast, ResourceType.Swiftcast, 10);
 
 	// Lucid Dreaming
-	// TODO: implement lucid ticks
-	//addResourceAbility(SkillName.LucidDreaming, ResourceType.LucidDreaming, 21);
+	skillsList.set(SkillName.LucidDreaming, new Skill(SkillName.LucidDreaming,
+		() => {
+			return true;
+		},
+		(game, node) => {
+			// set time for the first lucid tick,
+			// since order of events at roughly the same time are virtually undefined
+			let skillAppDelay = game.skillsList.get(SkillName.LucidDreaming).info.skillApplicationDelay;
+			let timeTillNextManaTick = game.resources.timeTillReady(ResourceType.Mana);
+			let timeTillFirstLucidTickSinceApply = timeTillNextManaTick - skillAppDelay - 1.5;
+			if (timeTillFirstLucidTickSinceApply < 0) timeTillFirstLucidTickSinceApply += 3;
+			game.useInstantSkill(SkillName.LucidDreaming, () => {
+				const numTicks = 7;
+				const skillTime = game.getDisplayTime();
+
+				let applyLucidTick = (index) => {
+					if (game.getFireStacks() > 0) return; // not tick during fire
+					game.resources.get(ResourceType.Mana).gain(550);
+					let currentMP = game.resources.get(ResourceType.Mana).currentValue;
+					let reportText = "Lucid@" + skillTime.toFixed(2) + " (" + index + "/7) (MP=" + currentMP + ")";
+					controller.reportLucidTick(game.time, reportText);
+				};
+
+				let recurringLucidTick = (remainingTicks) => {
+					if (remainingTicks === 0) return;
+					applyLucidTick(numTicks + 1 - remainingTicks);
+					controller.log(
+						LogCategory.Event,
+						"recurring lucid tick " + (numTicks + 1 - remainingTicks) + "/" + numTicks,
+						game.getDisplayTime(),
+						Color.ManaTick);
+					game.resources.addResourceEvent(
+						ResourceType.LucidTick,
+						"recurring lucid tick", 3, rsc => {
+							recurringLucidTick(remainingTicks - 1);
+						}, Color.Text, false);
+				};
+
+				let buff = game.resources.get(ResourceType.LucidDreaming);
+				let tick = game.resources.get(ResourceType.LucidTick);
+				if (tick.pendingChange !== null) {
+					// if already has lucid applied; cancel the remaining ticks now.
+					buff.removeTimer();
+					tick.removeTimer();
+				}
+				// order of events:
+				buff.gain(1);
+				game.resources.addResourceEvent(ResourceType.LucidDreaming, "drop Lucid", 21, buff => {
+					buff.consume(1);
+				}, Color.ManaTick);
+
+				let startLucidEvt = new Event(
+					"first lucid tick",
+					timeTillFirstLucidTickSinceApply,
+					() => {
+						recurringLucidTick(numTicks);
+					},
+					Color.ManaTick);
+				game.addEvent(startLucidEvt);
+			}, false, node);
+		}
+	));
+
 
 	// Surecast
 	addResourceAbility(SkillName.Surecast, ResourceType.Surecast, 10);

@@ -82,12 +82,16 @@ export class GameState
 	#init()
 	{
 		if (Debug.disableManaTicks === false) {
-			// get mana and thunder ticks rolling (through recursion)
+			// get mana ticks rolling (through recursion)
+			let game = this;
 			let recurringManaRegen = ()=>{
 				// mana regen
-				let amount = this.captureManaRegenAmount();
-				this.resources.get(ResourceType.Mana).gain(amount);
-				controller.log(LogCategory.Event, "mana tick +" + amount, this.getDisplayTime(), Color.ManaTick);
+				let mana = this.resources.get(ResourceType.Mana);
+				let gainAmount = this.captureManaRegenAmount();
+				mana.gain(gainAmount);
+				let currentAmount = mana.currentValue;
+				controller.reportManaTick(game.time, "MP +" + gainAmount + " (MP="+currentAmount+")");
+				controller.log(LogCategory.Event, "mana tick +" + gainAmount, this.getDisplayTime(), Color.ManaTick);
 				// queue the next tick
 				this.resources.addResourceEvent(ResourceType.Mana, "mana tick", 3, rsc=>{
 					recurringManaRegen();

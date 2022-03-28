@@ -70,12 +70,17 @@ export class Record {
 		console.assert(this.selectionStart !== null && this.selectionEnd !== null);
 		let potency = 0;
 		let duration = 0;
-		for (let itr = this.selectionStart; itr !== this.selectionEnd.next; itr = itr.next) {
+		let itr;
+		for (itr = this.selectionStart; itr !== this.selectionEnd; itr = itr.next) {
 			if (itr.type === ActionType.Skill) {
 				potency += itr.tmp_capturedPotency;
 				duration += itr.next.duration;
 			}
 		}
+		itr = this.selectionEnd;
+		potency += itr.tmp_capturedPotency;
+		duration += Math.min(itr.next.duration, itr.tmp_endLockTime - itr.tmp_startLockTime);
+
 		console.assert(!isNaN(potency));
 		console.assert(!isNaN(duration));
 		return [potency, duration];

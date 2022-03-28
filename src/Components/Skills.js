@@ -164,7 +164,7 @@ class SkillsWindow extends React.Component {
 		let skillButtons = [];
 		let para = controller.getResourceValue({rscType: ResourceType.Paradox});
 		let tooltip =
-			<ReactTooltip id={"SkillDescription"} delayShow={200}>
+			<ReactTooltip id={"SkillDescription"}>
 				<div className={"toolTip"}>{this.state.tooltipContent}</div>
 			</ReactTooltip>
 		for (let i = 0; i < displayedSkills.length; i++) {

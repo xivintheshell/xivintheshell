@@ -69,9 +69,25 @@ class Controller
 			potency: props.potency,
 			time: props.time,
 			source: props.source
-		})
+		});
 
 		this.log(LogCategory.Event, "dealing damage of potency " + props.potency.toFixed(1), props.time, Color.Damage);
+	}
+
+	reportLucidTick(time, source) {
+		this.timeline.addElement({
+			type: ElemType.LucidMark,
+			time: time,
+			source: source,
+		});
+	}
+
+	reportManaTick(time, source) {
+		this.timeline.addElement({
+			type: ElemType.MPTickMark,
+			time: time,
+			source: source,
+		});
 	}
 
 	updateStatusDisplay() {

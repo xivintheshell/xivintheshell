@@ -11,12 +11,25 @@ function Cursor(props) {
 	let style={
 		top: props.vOffset,
 		left: props.elem.left - 3,
-		hoverText: props.elem.time,
+		zIndex: 2,
 	};
 	return <div style={style} className={"timeline-elem cursor"} data-tip data-for={`${props.elemID}`}>
 		<svg width={6} height={MAX_HEIGHT}>
 			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"black"}/>
 			<polygon points="0,0 6,0 3,6" fill="black" stroke="none"/>
+		</svg>
+		<ReactTooltip id={`${props.elemID}`}>{props.elem.hoverText}</ReactTooltip>
+	</div>;
+}
+
+function MPTickMark(props) {
+	let style={
+		top: props.vOffset,
+		left: props.elem.left - 3,
+	};
+	return <div style={style} className={"timeline-elem MPTickMark"} data-tip data-for={`${props.elemID}`}>
+		<svg width={6} height={MAX_HEIGHT}>
+			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"#88cae0"}/>
 		</svg>
 		<ReactTooltip id={`${props.elemID}`}>{props.elem.hoverText}</ReactTooltip>
 	</div>;
@@ -51,6 +64,7 @@ class TimelineSelection extends React.Component {
 			left: this.state.startX,
 			width: Math.max(0, this.state.endX - this.state.startX - 2),
 			height: "100%",
+			zIndex: 2
 		};
 		return <div style={style}/>;
 	}
@@ -60,7 +74,6 @@ function DamageMark(props) {
 	let style={
 		top: props.vOffset,
 		left: props.elem.left-3,
-		//hoverText: props.elem.ho
 	};
 	return <div style={style} className={"timeline-elem damageMark"} data-tip data-for={`${props.elemID}`}>
 		<svg width={6} height={6}>
@@ -70,11 +83,24 @@ function DamageMark(props) {
 	</div>;
 }
 
+function LucidMark(props) {
+	let style={
+		top: props.vOffset,
+		left: props.elem.left-3,
+	};
+	return <div style={style} className={"timeline-elem lucidMark"} data-tip data-for={`${props.elemID}`}>
+		<svg width={6} height={6}>
+			<polygon points="0,0 6,0 3,6" fill="#88cae0" stroke="none"/>
+		</svg>
+		<ReactTooltip id={`${props.elemID}`}>{props.elem.hoverText}</ReactTooltip>
+	</div>;
+}
+
 function TimelineSkill(props) {
 	let lockBarWidth = controller.timeline.positionFromTime(props.elem.data.lockDuration);
 	let lockBarStyle = {
 		position: "absolute",
-		zIndex: -1,
+		top: 0,
 		background: props.elem.data.isSpellCast ? "#e7d9ee" : "#9d9d9d",
 		width: lockBarWidth,
 		height: props.elem.data.isSpellCast ? 14 : 28,
@@ -83,20 +109,31 @@ function TimelineSkill(props) {
 
 	let recastBarWidth = controller.timeline.positionFromTime(props.elem.data.recastDuration);
 	let recastBarStyle = {
-		top: 14,
 		position: "absolute",
-		zIndex: -1,
+		top: 14,
 		background: "#dbf3d6",
 		width: recastBarWidth,
 		height: 14
 	};
 	let recastBar = <div style={recastBarStyle}/>
 
+	let iconStyle = {
+		position: "absolute",
+		top: 0,
+		width: 28,
+		height: 28,
+	};
 	let iconPath = skillIcons.get(props.elem.data.skillName);
-	let iconImg = <img width={28} height={28} className={"timeline-elem-skill-icon"} src={iconPath} alt={props.elem.data.skillName}/>;
+	let iconImg = <img
+		style={iconStyle}
+		className={"timeline-elem-skill-icon"}
+		src={iconPath}
+		alt={props.elem.data.skillName}
+		data-tip data-for={`${props.elemID}`}/>;
 	let icon = <Clickable content={iconImg} onClickFn={props.elem.data.onClickFn}/>
 
-	let style={
+	let componentStyle={
+		zIndex: 1,
 		left: props.elem.left,
 		top: props.elem.data.isGCD ? 14 : 0,
 	};
@@ -108,10 +145,10 @@ function TimelineSkill(props) {
 		hoverText = <div>
 			{hoverText}<br/>
 			<span>{"potency: " + potency.toFixed(2)}</span><br/>
-			<span>{"PPS*: " + (potency / lockDuration).toFixed(2)}</span>
+			<span>{"lock time: " + lockDuration.toFixed(2)}</span>
 		</div>;
 	}
-	return <div style={style} className={"timeline-elem skill"} data-tip data-for={`${props.elemID}`}>
+	return <div style={componentStyle} className={"timeline-elem skill"}>
 		{lockBar}{props.elem.data.isGCD ? recastBar : <div/>}{icon}
 		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
 	</div>;
@@ -119,9 +156,6 @@ function TimelineSkill(props) {
 
 function TimelineHeader(props) {
 	let countdownPadding = props.countdown * props.pixelPerSecond;
-	let style = {
-		//border: "1px solid red",
-	};
 	let marks_1sec = [];
 	let marks_5sec = [];
 	//let marks_1min = [];
@@ -141,8 +175,8 @@ function TimelineHeader(props) {
 	for (let i = 0; i < props.canvasWidth; i += props.pixelPerSecond * 60) {
 		marks_1min.push(i);
 	}*/
-	let ruler = <div style={{position: "relative"}}>
-		<svg width={props.canvasWidth} height="100%" style={style}>
+	let ruler = <div>
+		<svg width={props.canvasWidth} height="100%">
 			{marks_1sec.map(i=>{
 				return <line key={"1sec-"+i} stroke="black" strokeWidth="1" x1={i} y1="0" x2={i} y2="6"/>
 			})}
@@ -163,9 +197,10 @@ function TimelineHeader(props) {
 			//border: "1px solid red",
 		}}><div style={{}}>{((i - countdownPadding) / props.pixelPerSecond).toFixed(0).toString()}</div></div>;})}
 	</div>
-	return <div className="timeline-header">
-		{ruler}
-	</div>
+	return <div className="timeline-header" style={{
+		zIndex: -3,
+		position: "relative",
+	}}>{ruler}</div>
 }
 
 function TimelineContent(props) {
@@ -213,6 +248,12 @@ class TimelineMain extends React.Component {
 			else if (e.type === ElemType.DamageMark) {
 				elemComponents.push(<DamageMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
 			}
+			else if (e.type === ElemType.LucidMark) {
+				elemComponents.push(<LucidMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
+			}
+			else if (e.type === ElemType.MPTickMark) {
+				elemComponents.push(<MPTickMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
+			}
 			else if (e.type === ElemType.Skill) {
 				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
 			}
@@ -223,6 +264,8 @@ class TimelineMain extends React.Component {
 			left: "0",
 			height: "100%",
 			width: controller.timeline.positionFromTime(controller.gameConfig.countdown),
+			zIndex: 2,
+			pointerEvents: "none"
 		};
 		let countdownGrey = <div style={countdownBgStyle}/>;
 		return <div className="timeline-main" style={{width: this.state.canvasWidth+"px"}} onMouseDown={
@@ -305,7 +348,7 @@ class StatsDisplay extends React.Component {
 	}
 	render() {
 		let cumulative = <div data-tip data-for="ppsNotes">
-			<span>Time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
+			<span>Last damage time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
 			<span>PPS: {this.state.cumulativePPS.toFixed(2)}</span><br/>
 			<ReactTooltip id={"ppsNotes"}>
 				<div className={"toolTip"}>
