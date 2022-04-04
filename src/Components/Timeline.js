@@ -366,7 +366,7 @@ class StatsDisplay extends React.Component {
 			<span>Duration: {this.state.selectedDuration.toFixed(2)}</span><br/>
 			<span>PPS: {(this.state.selectedPotency / this.state.selectedDuration).toFixed(2)}</span>
 		</div>
-		return <div>
+		return <div style={{ height: "120px" }}>
 			{cumulative}
 			{this.state.selectedDuration > 0 ? selected : <div/>}
 		</div>;

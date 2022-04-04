@@ -30,15 +30,29 @@ export default class Main extends React.Component {
 	render() {
 		return <div className={"container"}>
 			<div className={"container-narrow"}>
-				<Config/>
-				<TimeControl/>
-				<div className={"gameplay keyboardControlled" + (this.state.realTime ? " realTime" : "")}
-					 tabIndex={-1}
-					 onKeyDown={this.gameplayKeyCapture}>
-					{statusDisplay}
-					{skillsWindow}
+				<div style={{ position: "relative", marginBottom: "16px" }}>
+					<div style={{ display: "inline-block", position: "relative", width: "70%" }}>
+						<div className={"keyboardControlled" + (this.state.realTime ? " realTime" : "")}
+							 tabIndex={-1}
+							 onKeyDown={this.gameplayKeyCapture}>
+							{statusDisplay}
+							{skillsWindow}
+						</div>
+					</div>
+					<div style={{
+						marginLeft: "1%",
+						display: "inline-block",
+						position: "relative",
+						verticalAlign: "top",
+						width: "29%" }}>
+						<Config/>
+						<TimeControl/>
+						<LoadSave/>
+					</div>
 				</div>
-				<LoadSave/>
+				<div style={{ height: "200px", outline: "1px solid green", position: "relative", marginBottom: "16px" }}>
+					presets
+				</div>
 				<Tabs>
 					<TabList>
 						<Tab>Timeline</Tab>
