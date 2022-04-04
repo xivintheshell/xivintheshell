@@ -330,7 +330,12 @@ class FixedRightColumn extends React.Component {
 	}
 }
 
-export let updateStatsDisplay = (props)=>{}
+export let updateStatsDisplay = (props={
+	cumulativePPS: 0,
+	cumulativeDuration: 0,
+	selectedPotency: 0,
+	selectedDuration: 0
+})=>{}
 class StatsDisplay extends React.Component {
 	constructor(props) {
 		super(props);
@@ -343,7 +348,12 @@ class StatsDisplay extends React.Component {
 		updateStatsDisplay = this.unboundUpdateStatsDisplay.bind(this);
 	}
 	componentWillUnmount() {
-		updateStatsDisplay = (props)=>{};
+		updateStatsDisplay = (props={
+			cumulativePPS: 0,
+			cumulativeDuration: 0,
+			selectedPotency: 0,
+			selectedDuration: 0
+		})=>{};
 	}
 	// selectedPotency, selectedDuration
 	unboundUpdateStatsDisplay(props) {

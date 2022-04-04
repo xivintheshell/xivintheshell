@@ -1,5 +1,5 @@
 import { addLogContent } from "../Components/LogView";
-import {Color, LogCategory} from "./Common";
+import {Color, LogCategory, ReplayMode} from "./Common";
 import { GameState } from "../Game/GameState";
 import {GameConfig, ResourceType, SkillReadyStatus} from "../Game/Common";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
@@ -8,10 +8,9 @@ import {TickMode} from "../Components/PlaybackControl"
 import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
 import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
-import {ActionNode, ActionType, Record} from "./Record";
+import {ActionNode, ActionType, Record, Line} from "./Record";
 
-class Controller
-{
+class Controller {
 	constructor()
 	{
 		this.stepSize = 0.5;
@@ -219,7 +218,8 @@ class Controller
 		this.gameConfig.countdown = props.countdown;
 		this.gameConfig.randomSeed = props.randomSeed;
 
-		this.record = new Record(this.gameConfig);
+		this.record = new Record();
+		this.record.config = this.gameConfig;
 
 		this.#requestRestart();
 	}
@@ -238,8 +238,7 @@ class Controller
 		return -1;
 	}
 
-	#playPause(props)
-	{
+	#playPause(props) {
 		let newShouldLoop = props ? props.shouldLoop : !this.shouldLoop;
 		if (this.shouldLoop === newShouldLoop) return;
 
@@ -255,14 +254,12 @@ class Controller
 		}
 	}
 
-	#fastForward(props)
-	{
+	#fastForward(props) {
 		let deltaTime = this.game.timeTillAnySkillAvailable();
 		this.#requestTick({deltaTime: deltaTime, suppressLog: false});
 	}
 
-	#requestRestart(props)
-	{
+	#requestRestart(props) {
 		this.lastAtteptedSkill = ""
 		this.game = new GameState(this.gameConfig);
 		this.updateStatusDisplay(this.game);
@@ -272,20 +269,26 @@ class Controller
 			this.timeline.reset();
 			this.timeline.drawElements();
 		}
-		this.log(
-			LogCategory.Action,
-			"======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
-			this.game.getDisplayTime(),
-			Color.Grey);
-		this.log(
-			LogCategory.Event,
-			"======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
-			this.game.getDisplayTime(),
-			Color.Grey);
+		if (this.record) {
+			this.record.unselectAll();
+			this.updateSelectionDisplay();
+		}
+		// updateStatsDisplay(); // TODO
+		if (!(props && props.suppressLog)) {
+			this.log(
+				LogCategory.Action,
+				"======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
+				this.game.getDisplayTime(),
+				Color.Grey);
+			this.log(
+				LogCategory.Event,
+				"======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
+				this.game.getDisplayTime(),
+				Color.Grey);
+		}
 	}
 
-	#useSkill(skillName, bWaitFirst, bSuppressLog=false)
-	{
+	#useSkill(skillName, bWaitFirst, bSuppressLog=false) {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
 		if (bWaitFirst) {
@@ -389,18 +392,60 @@ class Controller
 			});
 			scrollTimelineTo(this.timeline.positionFromTime(this.game.time));
 		}
+		return status;
+	}
+
+	// STRICT replay. used for expanding battle record to game state. ASSUMES the replay will succeed
+	#replay(line, suppressLog=false) {
+		let itr = line.getFirstAction();
+		while (itr !== null) {
+			if (itr.type === ActionType.Wait) {
+				this.#requestTick({
+					deltaTime: itr.waitDuration,
+					suppressLog: suppressLog
+				});
+			} else if (itr.type === ActionType.Skill) {
+				let status = this.#useSkill(itr.skillName, false, suppressLog);
+				console.assert(status.status === SkillReadyStatus.Ready);
+				this.#requestTick({
+					deltaTime: itr.waitDuration,
+					suppressLog: suppressLog
+				});
+			} else {
+				console.assert(false);
+			}
+			itr = itr.next;
+		}
+	}
+
+	// generally used for trying to add a line to the current timeline
+	#attemptReplay(line, replayMode=ReplayMode.Tight) {
+		// TODO
 	}
 
 	// basically restart the game and play till here:
 	#rewindUntilBefore(node) {
-		// TODO
-		console.log(node);
+		let line = new Line();
+		let itr = this.record.getFirstAction();
+		while (itr !== node) {
+			let savedNext = itr.next;
+			itr.next = null;
+			line.addActionNode(itr);
+			itr = savedNext;
+		}
+		this.record = new Record();
+		this.record.config = this.gameConfig;
+		this.#requestRestart();
+		this.#replay(line, ReplayMode.Exact);
 	}
 
 	updateSelectionDisplay() {
-		if (!this.record.getFirstSelection()) return;
-		let selectionStart = this.record.getFirstSelection().tmp_startLockTime;
-		let selectionEnd = this.record.getLastSelection().tmp_endLockTime;
+		let selectionStart = 0;
+		let selectionEnd = 0;
+		if (this.record.getFirstSelection()) {
+			selectionStart = this.record.getFirstSelection().tmp_startLockTime;
+			selectionEnd = this.record.getLastSelection().tmp_endLockTime;
+		}
 		updateSelectionDisplay(
 			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
 	}

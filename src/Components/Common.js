@@ -4,6 +4,7 @@ export class Clickable extends React.Component {
 	constructor(props) { // in: content, onClickFn
 		super(props);
 		this.onClick = props.onClickFn.bind(this);
+		this.style = typeof props.style === "undefined" ? {} : props.style;
 	}
 
 	// TODO: bind hotkeys to buttons?
@@ -11,6 +12,7 @@ export class Clickable extends React.Component {
 		return <div
 			className={"clickable"}
 			onClick={this.onClick}
+			style={this.style}
 		>{this.props.content}</div>
 	}
 }
@@ -120,5 +122,29 @@ export class ScrollAnchor extends React.Component
 	render() {
 		this.scroll();
 		return <div ref={this.myRef}/>;
+	}
+}
+
+// defaultShow, title, content
+export class Expandable extends React.Component {
+	constructor(props) {
+		super(props);
+		this.onClick = this.unboundOnClick.bind(this);
+		this.state = {
+			show: props.defaultShow ? props.defaultShow : false
+		};
+	}
+	unboundOnClick() {
+		this.setState({ show: !this.state.show });
+	}
+	render() {
+		return <div>
+			<Clickable
+				content={(this.state.show ? '- ' : '+ ') + this.props.title}
+				onClickFn={this.onClick}/>
+			<div style={{position: "relative", display: this.state.show ? "block" : "none"}}>
+				{this.props.content}
+			</div>
+		</div>
 	}
 }

@@ -8,6 +8,7 @@ import {controller} from "../Controller/Controller";
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 import {LoadSave} from "./LoadSave";
+import {presets} from "./Presets";
 
 export var setRealTime = inRealTime=>{};
 export default class Main extends React.Component {
@@ -50,22 +51,22 @@ export default class Main extends React.Component {
 						<LoadSave/>
 					</div>
 				</div>
-				<div style={{ height: "200px", outline: "1px solid green", position: "relative", marginBottom: "16px" }}>
-					presets
-				</div>
-				<Tabs>
-					<TabList>
-						<Tab>Timeline</Tab>
-						<Tab>Logs</Tab>
-					</TabList>
+				{presets}
+				<div style={{marginTop: "16px"}}>
+					<Tabs>
+						<TabList>
+							<Tab>Timeline</Tab>
+							<Tab>Logs</Tab>
+						</TabList>
 
-					<TabPanel>
-						{timeline}
-					</TabPanel>
-					<TabPanel>
-						{logView}
-					</TabPanel>
-				</Tabs>
+						<TabPanel>
+							{timeline}
+						</TabPanel>
+						<TabPanel>
+							{logView}
+						</TabPanel>
+					</Tabs>
+				</div>
 			</div>
 		</div>;
 	}
