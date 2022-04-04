@@ -7,12 +7,13 @@ function verifyActionNode(action) {
 	console.assert(typeof action !== "undefined");
 	if (action.type === ActionType.Skill) {
 		console.assert(typeof action.skillName === "string");
+		console.assert(typeof action.waitDuration === "number");
 		console.assert(typeof action.tmp_startLockTime === "number");
 		console.assert(typeof action.tmp_endLockTime === "number");
 		console.assert(typeof action.tmp_capturedPotency === "number");
 		return;
 	} else if (action.type === ActionType.Wait) {
-		console.assert(!isNaN(parseFloat(action.duration)));
+		console.assert(!isNaN(parseFloat(action.waitDuration)));
 		return;
 	}
 	console.assert(false);
@@ -69,21 +70,17 @@ export class Record {
 	#getSelectionStats() {
 		console.assert(this.selectionStart !== null && this.selectionEnd !== null);
 		let potency = 0;
-		let duration = 0;
+		let waitDuration = 0;
 		let itr;
-		for (itr = this.selectionStart; itr !== this.selectionEnd; itr = itr.next) {
+		for (itr = this.selectionStart; itr !== this.selectionEnd.next; itr = itr.next) {
 			if (itr.type === ActionType.Skill) {
 				potency += itr.tmp_capturedPotency;
-				duration += itr.next.duration;
+				waitDuration += itr.waitDuration;
 			}
 		}
-		itr = this.selectionEnd;
-		potency += itr.tmp_capturedPotency;
-		duration += Math.min(itr.next.duration, itr.tmp_endLockTime - itr.tmp_startLockTime);
-
 		console.assert(!isNaN(potency));
-		console.assert(!isNaN(duration));
-		return [potency, duration];
+		console.assert(!isNaN(waitDuration));
+		return [potency, waitDuration];
 	}
 	// assume node is actually in this recording
 	selectSingle(node) {
@@ -140,8 +137,8 @@ export class Record {
 				type: itr.type,
 				// skill
 				skillName: itr.skillName,
-				// wait
-				duration: itr.duration,
+				// any
+				waitDuration: itr.waitDuration,
 			});
 			itr = itr.next;
 		}

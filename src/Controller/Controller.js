@@ -178,12 +178,13 @@ class Controller
 			this.#updateTimelineDisplay();
 			if (!props.suppressLog) this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.getDisplayTime(), Color.Grey);
 
+			// add this tick to game record
 			let lastAction = this.record.getLastAction();
-			if (lastAction!==null && lastAction.type===ActionType.Wait) {
-				lastAction.duration += timeTicked;
+			if (lastAction!==null) {
+				lastAction.waitDuration += timeTicked;
 			} else {
 				let waitNode = new ActionNode(ActionType.Wait);
-				waitNode.duration = timeTicked;
+				waitNode.waitDuration = timeTicked;
 				this.record.addActionNode(waitNode);
 			}
 		}
@@ -347,13 +348,10 @@ class Controller
 			let time = this.game.time;
 
 			node.skillName = skillName;
+			node.waitDuration = 0;
 			node.tmp_startLockTime = time;
 			node.tmp_endLockTime = time + lockDuration;
 			this.record.addActionNode(node);
-			// and its wait node
-			let waitNode = new ActionNode(ActionType.Wait);
-			waitNode.duration = 0;
-			this.record.addActionNode(waitNode);
 
 			let skillInfo = this.game.skillsList.get(skillName).info;
 			let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
