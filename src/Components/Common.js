@@ -1,5 +1,23 @@
 import React from "react";
 
+// https://github.com/eligrey/FileSaver.js#readme
+export function saveToFile(content, filename) {
+	let FileSaver = require('file-saver');
+	let blob = new Blob([JSON.stringify(content)], {type: "text/plain;charset=utf-8"});
+	FileSaver.saveAs(blob, filename);
+}
+
+//https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
+export function loadFromFile(fileObject, callback=(content)=>{console.log(content)}) {
+	let fileReader = new FileReader();
+	fileReader.onload = function(fileLoadedEvent) {
+		let str = fileLoadedEvent.target.result.toString();
+		let json = JSON.parse(str);
+		callback(json);
+	};
+	fileReader.readAsText(fileObject, "UTF-8");
+}
+
 export class Clickable extends React.Component {
 	constructor(props) { // in: content, onClickFn
 		super(props);
@@ -75,9 +93,11 @@ export class Input extends React.Component {
 		if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
 	}
 	render() {
-		return <div>
+		let width = typeof this.props.width === "undefined" ? 5 : this.props.width;
+		let style = typeof this.props.style === "undefined" ? {} : this.props.style;
+		return <div style={style}>
 			<span>{this.state.description}</span>
-			<input className={"textInput"} size="5" type="text" value={this.state.value} onChange={this.onChange}/>
+			<input className={"textInput"} size={width} type="text" value={this.state.value} onChange={this.onChange}/>
 		</div>
 	}
 }

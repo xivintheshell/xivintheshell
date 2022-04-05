@@ -9,10 +9,10 @@ import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
 import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
 import {ActionNode, ActionType, Record, Line} from "./Record";
+import {updatePresetsView} from "../Components/Presets";
 
 class Controller {
-	constructor()
-	{
+	constructor() {
 		this.stepSize = 0.5;
 		this.timeScale = 1;
 		this.shouldLoop = false;
@@ -22,15 +22,12 @@ class Controller {
 		this.skillsQueue = [];
 
 		this.gameConfig = new GameConfig();
-		this.gameConfig.randomSeed = "hello.";
-		this.gameConfig.casterTax = 0.06;
-		this.gameConfig.animationLock = 0.66;
-		this.gameConfig.spellSpeed = 1532;
-		this.gameConfig.timeTillFirstManaTick = 1.2;
 		this.#requestRestart();
 
 		this.timeline = new Timeline();
 		this.timeline.reset();
+
+		this.presetLines = [];
 
 		/*
 		let intimes = [1.5, 2, 2.5, 2.8, 3, 3.5, 4];
@@ -46,6 +43,22 @@ class Controller {
 	log(category, content, time, color=Color.Text) {
 		if (time !== undefined) content = time.toFixed(3) + "s: " + content;
 		addLogContent(category, content, color);
+	}
+
+	addSelectionToPreset(name="(untitled)") {
+		console.assert(this.record.getFirstSelection() !== null);
+		let line = new Line();
+		line.name = name;
+		let itr = this.record.getFirstSelection();
+		let ctr = 0;
+		while (itr !== this.record.getLastSelection().next) {
+			line.addActionNode(itr.getClone());
+			ctr++;
+			itr = itr.next;
+		}
+		this.presetLines.push(line);
+
+		updatePresetsView();
 	}
 
 	reportPotencyUpdate() {
@@ -201,7 +214,6 @@ class Controller {
 	}
 
 	setConfigAndRestart(props={
-		//stepSize: 0.5,
 		spellSpeed: 1268,
 		animationLock: 0.66,
 		casterTax: 0.06,
@@ -271,7 +283,7 @@ class Controller {
 		}
 		if (this.record) {
 			this.record.unselectAll();
-			this.updateSelectionDisplay();
+			this.onTimelineSelectionChanged();
 		}
 		// updateStatsDisplay(); // TODO
 		if (!(props && props.suppressLog)) {
@@ -376,7 +388,7 @@ class Controller {
 					} else {
 						[potency, duration] = this.record.selectSingle(node);
 					}
-					this.updateSelectionDisplay();
+					this.onTimelineSelectionChanged();
 					updateStatsDisplay({
 						selectedPotency: potency,
 						selectedDuration: duration,
@@ -384,7 +396,7 @@ class Controller {
 				},
 				onKeyDownFn: (e)=>{
 					if (e.keyCode === 8) { // delete key
-						this.#rewindUntilBefore(node);
+						this.#rewindUntilBefore(this.record.getFirstSelection());
 						e.preventDefault();
 					}
 				},
@@ -419,8 +431,19 @@ class Controller {
 	}
 
 	// generally used for trying to add a line to the current timeline
-	#attemptReplay(line, replayMode=ReplayMode.Tight) {
+	tryAddLine(line, replayMode=ReplayMode.Tight) {
 		// TODO
+	}
+
+	deleteLine(line) {
+		for (let i = 0; i < this.presetLines.length; i++) {
+			if (this.presetLines[i] === line) {
+				this.presetLines.splice(i, 1);
+				updatePresetsView();
+				return;
+			}
+		}
+		console.assert(false);
 	}
 
 	// basically restart the game and play till here:
@@ -428,26 +451,30 @@ class Controller {
 		let line = new Line();
 		let itr = this.record.getFirstAction();
 		while (itr !== node) {
-			let savedNext = itr.next;
-			itr.next = null;
-			line.addActionNode(itr);
-			itr = savedNext;
+			line.addActionNode(itr.getClone());
+			itr = itr.next;
 		}
 		this.record = new Record();
 		this.record.config = this.gameConfig;
 		this.#requestRestart();
-		this.#replay(line, ReplayMode.Exact);
+		this.#replay(line, false);
 	}
 
-	updateSelectionDisplay() {
+	onTimelineSelectionChanged() {
 		let selectionStart = 0;
 		let selectionEnd = 0;
 		if (this.record.getFirstSelection()) {
 			selectionStart = this.record.getFirstSelection().tmp_startLockTime;
 			selectionEnd = this.record.getLastSelection().tmp_endLockTime;
+		} else {
+			updateStatsDisplay({
+				selectedPotency: 0,
+				selectedDuration: 0
+			});
 		}
 		updateSelectionDisplay(
 			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
+		updatePresetsView();
 	}
 
 	requestUseSkill(props) {

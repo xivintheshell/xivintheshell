@@ -21,11 +21,22 @@ function verifyActionNode(action) {
 
 export class ActionNode {
 	type;
+	skillName;
+	waitDuration = 0;
+
 	next = null;
-	#selected = false;
 	constructor(actionType) {
 		this.type = actionType;
 	}
+
+	getClone() {
+		let copy = new ActionNode(this.type);
+		copy.skillName = this.skillName;
+		copy.waitDuration = this.waitDuration;
+		return copy;
+	}
+
+	#selected = false;
 	isSelected() { return this.#selected; }
 	select() {
 		this.#selected = true;
@@ -42,7 +53,6 @@ export class Line {
 	addActionNode(actionNode) {
 		console.assert(actionNode);
 		if (this.tail) console.assert(this.tail.next === null);
-		verifyActionNode(actionNode);
 		if (this.head === null) {
 			this.head = actionNode;
 		} else {
@@ -86,6 +96,10 @@ export class Record extends Line {
 	}
 	getLastSelection() {
 		return this.selectionEnd;
+	}
+	addActionNode(actionNode) {
+		verifyActionNode(actionNode);
+		super.addActionNode(actionNode);
 	}
 	#getSelectionStats() {
 		console.assert(this.selectionStart !== null && this.selectionEnd !== null);

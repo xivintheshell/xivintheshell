@@ -1,5 +1,5 @@
-import {Aspect, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
-import {StatsModifier} from "./Stats";
+import {Aspect, Debug, GameConfig, ResourceType, SkillName, SkillReadyStatus} from "./Common"
+import {StatsModifier} from "./StatsModifier";
 import {makeSkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
 
@@ -376,10 +376,10 @@ export class GameState
 		// there are no triplecast charges. cast and apply effect
 
 		// movement lock
-		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - this.config.getSlidecastWindow(capturedCastTime));
+		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
 
 		// (basically done casting) deduct MP, calc damage, queue damage
-		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - this.config.getSlidecastWindow(capturedCastTime), ()=>{
+		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime), ()=>{
 			takeEffect(this);
 		}));
 

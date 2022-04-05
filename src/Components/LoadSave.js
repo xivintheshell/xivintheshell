@@ -1,5 +1,5 @@
 import React from 'react'
-import {Clickable, Input} from "./Common";
+import {Clickable, loadFromFile, saveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 
 export class LoadSave extends React.Component {
@@ -11,29 +11,18 @@ export class LoadSave extends React.Component {
 		this.fileSelectorRef = React.createRef();
 		this.saveFilename = "battle.txt";
 	}
-	//https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
 	unboundOnLoad() {
 		let cur = this.fileSelectorRef.current;
 		if (cur && cur.files.length > 0) {
 			let fileToLoad = cur.files[0];
-			let fileReader = new FileReader();
-			fileReader.onload = function(fileLoadedEvent) {
-				let str = fileLoadedEvent.target.result.toString();
-				let json = JSON.parse(str);
+			loadFromFile(fileToLoad, (content)=>{
 				// TODO: do something with this result
-				// 2 types of import? 1) exact time & stats match, 2) tight skills only (might fail)
-				console.log(json);
-			};
-			fileReader.readAsText(fileToLoad, "UTF-8");
+				console.log(content);
+			});
 		}
 	}
-	// https://github.com/eligrey/FileSaver.js#readme
 	unboundOnSave() {
-		let FileSaver = require('file-saver');
-		let strippedActions = controller.record.serialized();
-		let content = JSON.stringify(strippedActions);
-		let blob = new Blob([content], {type: "text/plain;charset=utf-8"});
-		FileSaver.saveAs(blob, this.saveFilename);
+		saveToFile(controller.record.serialized(), this.saveFilename);
 	}
 	unboundOnSaveFilenameChange(e) {
 		if (e.target) {

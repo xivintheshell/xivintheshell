@@ -273,17 +273,9 @@ class TimelineMain extends React.Component {
 		let countdownGrey = <div style={countdownBgStyle}/>;
 		return <div className="timeline-main" style={{width: this.state.canvasWidth+"px"}} onMouseDown={
 			(evt)=>{
-				/*
-				if (evt.target) {
-					console.log(evt.target.classList);
-				}*/
 				if (!evt.shiftKey) {
 					controller.record.unselectAll();
-					updateSelectionDisplay(0, 0);
-					updateStatsDisplay({
-						selectedPotency: 0,
-						selectedDuration: 0
-					});
+					controller.onTimelineSelectionChanged();
 				}
 			}
 		}>
@@ -390,7 +382,7 @@ class Timeline extends React.Component
 		return <div>
 			<Slider description={"display scale: "} defaultValue={0.4} onChange={(newVal)=>{
 				controller.timeline.setHorizontalScale(parseFloat(newVal));
-				controller.updateSelectionDisplay();
+				controller.onTimelineSelectionChanged();
 			}}/>
 			<div className={"timeline timelineTab"}>
 				<FixedRightColumn/>
