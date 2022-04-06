@@ -84,7 +84,11 @@ class Controller {
 			source: props.source
 		});
 
-		this.log(LogCategory.Event, "dealing damage of potency " + props.potency.toFixed(1), props.time, Color.Damage);
+		this.log(
+			LogCategory.Event,
+			"dealing damage of potency " + props.potency.toFixed(1),
+			props.time,
+			Color.Damage);
 	}
 
 	reportLucidTick(time, source) {
@@ -188,7 +192,13 @@ class Controller {
 			this.updateStatusDisplay(this.game);
 			this.#updateSkillButtons();
 			this.#updateTimelineDisplay();
-			if (!props.suppressLog) this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.getDisplayTime(), Color.Grey);
+			if (!props.suppressLog) {
+				this.log(
+					LogCategory.Action,
+					"wait for " + props.deltaTime.toFixed(3) + "s",
+					this.game.getDisplayTime(),
+					Color.Grey);
+			}
 
 			// add this tick to game record
 			let lastAction = this.record.getLastAction();
@@ -289,22 +299,24 @@ class Controller {
 		if (!(props && props.suppressLog)) {
 			this.log(
 				LogCategory.Action,
-				"======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
+				"======== RESET (GCD=" +
+					this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
 				this.game.getDisplayTime(),
 				Color.Grey);
 			this.log(
 				LogCategory.Event,
-				"======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
+				"======== RESET (GCD=" +
+					this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
 				this.game.getDisplayTime(),
 				Color.Grey);
 		}
 	}
 
-	#useSkill(skillName, bWaitFirst, bSuppressLog=false) {
+	#useSkill(skillName, bWaitFirst, bSuppressLog=false, overrideTickMode=this.tickMode) {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
 		if (bWaitFirst) {
-			this.#requestTick({deltaTime: status.timeTillAvailable, suppressLog: false});
+			this.#requestTick({deltaTime: status.timeTillAvailable, suppressLog: bSuppressLog});
 			status = this.game.getSkillAvailabilityStatus(skillName);
 			this.lastAtteptedSkill = "";
 		}
@@ -352,7 +364,7 @@ class Controller {
 			this.game.useSkill(skillName, node);
 			this.updateStatusDisplay();
 			this.#updateSkillButtons();
-			if (this.tickMode === TickMode.RealTimeAutoPause) {
+			if (overrideTickMode === TickMode.RealTimeAutoPause) {
 				this.shouldLoop = true;
 				this.#runLoop(()=>{
 					return this.game.timeTillAnySkillAvailable() > 0;
@@ -383,6 +395,7 @@ class Controller {
 				getIsSelected: ()=>{ return node.isSelected(); },
 				onClickFn: (e)=>{
 					let potency, duration;
+					//console.log(this.record);
 					if (e.shiftKey) {
 						[potency, duration] = this.record.selectUntil(node);
 					} else {
@@ -407,32 +420,55 @@ class Controller {
 		return status;
 	}
 
-	// STRICT replay. used for expanding battle record to game state. ASSUMES the replay will succeed
-	#replay(line, suppressLog=false) {
+	// returns true on success
+	#replay(line, replayMode, suppressLog=false) {
 		let itr = line.getFirstAction();
 		while (itr !== null) {
-			if (itr.type === ActionType.Wait) {
+
+			// only Exact mode replays wait nodes
+			if (itr.type === ActionType.Wait && replayMode === ReplayMode.Exact) {
 				this.#requestTick({
 					deltaTime: itr.waitDuration,
 					suppressLog: suppressLog
 				});
-			} else if (itr.type === ActionType.Skill) {
-				let status = this.#useSkill(itr.skillName, false, suppressLog);
-				console.assert(status.status === SkillReadyStatus.Ready);
-				this.#requestTick({
-					deltaTime: itr.waitDuration,
-					suppressLog: suppressLog
-				});
-			} else {
-				console.assert(false);
 			}
+
+			// skill nodes
+			else if (itr.type === ActionType.Skill) {
+				let waitFirst = replayMode === ReplayMode.Tight;
+				let status = this.#useSkill(itr.skillName, waitFirst, suppressLog, TickMode.Manual);
+				if (replayMode === ReplayMode.Exact) {
+					console.assert(status.status === SkillReadyStatus.Ready);
+					this.#requestTick({
+						deltaTime: itr.waitDuration,
+						suppressLog: suppressLog
+					});
+				} else if (replayMode === ReplayMode.Tight) {
+					this.#requestTick({
+						deltaTime: this.game.timeTillAnySkillAvailable(),
+						suppressLog: suppressLog
+					});
+				}
+				if (status.status !== SkillReadyStatus.Ready) {
+					return false;
+				}
+			}
+
 			itr = itr.next;
 		}
+		return true;
 	}
 
 	// generally used for trying to add a line to the current timeline
 	tryAddLine(line, replayMode=ReplayMode.Tight) {
-		// TODO
+		let oldTail = this.record.getLastAction();
+		let replaySuccessful = this.#replay(line, replayMode, false);
+		if (!replaySuccessful) {
+			this.#rewindUntilBefore(oldTail.next);
+		}
+		console.log(replaySuccessful);
+
+		// TODO: make it load a default set of lines
 	}
 
 	deleteLine(line) {
@@ -457,7 +493,7 @@ class Controller {
 		this.record = new Record();
 		this.record.config = this.gameConfig;
 		this.#requestRestart();
-		this.#replay(line, false);
+		this.#replay(line, ReplayMode.Exact, false);
 	}
 
 	onTimelineSelectionChanged() {
@@ -475,6 +511,8 @@ class Controller {
 		updateSelectionDisplay(
 			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
 		updatePresetsView();
+
+		console.log(this.record);
 	}
 
 	requestUseSkill(props) {
