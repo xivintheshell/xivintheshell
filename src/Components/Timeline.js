@@ -274,17 +274,9 @@ class TimelineMain extends React.Component {
 		let countdownGrey = <div style={countdownBgStyle}/>;
 		return <div className="timeline-main" style={{width: this.state.canvasWidth+"px"}} onMouseDown={
 			(evt)=>{
-				/*
-				if (evt.target) {
-					console.log(evt.target.classList);
-				}*/
 				if (!evt.shiftKey) {
 					controller.record.unselectAll();
-					updateSelectionDisplay(0, 0);
-					updateStatsDisplay({
-						selectedPotency: 0,
-						selectedDuration: 0
-					});
+					controller.onTimelineSelectionChanged();
 				}
 			}
 		}>
@@ -331,7 +323,12 @@ class FixedRightColumn extends React.Component {
 	}
 }
 
-export let updateStatsDisplay = (props)=>{}
+export let updateStatsDisplay = (props={
+	cumulativePPS: 0,
+	cumulativeDuration: 0,
+	selectedPotency: 0,
+	selectedDuration: 0
+})=>{}
 class StatsDisplay extends React.Component {
 	constructor(props) {
 		super(props);
@@ -344,7 +341,12 @@ class StatsDisplay extends React.Component {
 		updateStatsDisplay = this.unboundUpdateStatsDisplay.bind(this);
 	}
 	componentWillUnmount() {
-		updateStatsDisplay = (props)=>{};
+		updateStatsDisplay = (props={
+			cumulativePPS: 0,
+			cumulativeDuration: 0,
+			selectedPotency: 0,
+			selectedDuration: 0
+		})=>{};
 	}
 	// selectedPotency, selectedDuration
 	unboundUpdateStatsDisplay(props) {
@@ -367,7 +369,7 @@ class StatsDisplay extends React.Component {
 			<span>Duration: {this.state.selectedDuration.toFixed(2)}</span><br/>
 			<span>PPS: {(this.state.selectedPotency / this.state.selectedDuration).toFixed(2)}</span>
 		</div>
-		return <div>
+		return <div style={{ height: "120px" }}>
 			{cumulative}
 			{this.state.selectedDuration > 0 ? selected : <div/>}
 		</div>;
@@ -381,7 +383,7 @@ class Timeline extends React.Component
 		return <div>
 			<Slider description={"display scale: "} defaultValue={0.4} onChange={(newVal)=>{
 				controller.timeline.setHorizontalScale(parseFloat(newVal));
-				controller.updateSelectionDisplay();
+				controller.onTimelineSelectionChanged();
 			}}/>
 			<div className={"timeline timelineTab"}>
 				<FixedRightColumn/>

@@ -1,11 +1,14 @@
-export const LogCategory =
-{
+export const LogCategory = {
     Action: "Action",
     Event: "Event",
 }
 
-export const Color =
-{
+export const ReplayMode = {
+	Exact: "Exact",
+	Tight: "Tight",
+}
+
+export const Color = {
     Text: "textColor",
     Fire: "fireColor",
     Ice: "iceColor",

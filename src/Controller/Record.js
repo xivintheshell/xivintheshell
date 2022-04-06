@@ -7,12 +7,13 @@ function verifyActionNode(action) {
 	console.assert(typeof action !== "undefined");
 	if (action.type === ActionType.Skill) {
 		console.assert(typeof action.skillName === "string");
+		console.assert(typeof action.waitDuration === "number");
 		console.assert(typeof action.tmp_startLockTime === "number");
 		console.assert(typeof action.tmp_endLockTime === "number");
 		console.assert(typeof action.tmp_capturedPotency === "number");
 		return;
 	} else if (action.type === ActionType.Wait) {
-		console.assert(!isNaN(parseFloat(action.duration)));
+		console.assert(!isNaN(parseFloat(action.waitDuration)));
 		return;
 	}
 	console.assert(false);
@@ -20,11 +21,22 @@ function verifyActionNode(action) {
 
 export class ActionNode {
 	type;
+	skillName;
+	waitDuration = 0;
+
 	next = null;
-	#selected = false;
 	constructor(actionType) {
 		this.type = actionType;
 	}
+
+	getClone() {
+		let copy = new ActionNode(this.type);
+		copy.skillName = this.skillName;
+		copy.waitDuration = this.waitDuration;
+		return copy;
+	}
+
+	#selected = false;
 	isSelected() { return this.#selected; }
 	select() {
 		this.#selected = true;
@@ -34,19 +46,13 @@ export class ActionNode {
 	}
 }
 
-// a sequence of actions
-export class Record {
+export class Line {
 	head = null;
 	tail = null;
-	selectionStart = null;
-	selectionEnd = null;
-	constructor(config) {
-		this.config = config;
-	}
+	name = "(anonymous line)";
 	addActionNode(actionNode) {
 		console.assert(actionNode);
 		if (this.tail) console.assert(this.tail.next === null);
-		verifyActionNode(actionNode);
 		if (this.head === null) {
 			this.head = actionNode;
 		} else {
@@ -60,30 +66,55 @@ export class Record {
 	getLastAction() {
 		return this.tail;
 	}
+	serialized() {
+		let list = [];
+		let itr = this.head;
+		while (itr !== null) {
+			list.push({
+				type: itr.type,
+				// skill
+				skillName: itr.skillName,
+				// any
+				waitDuration: itr.waitDuration,
+			});
+			itr = itr.next;
+		}
+		return {
+			name: this.name,
+			actions: list
+		};
+	}
+}
+
+// a sequence of actions
+export class Record extends Line {
+	selectionStart = null;
+	selectionEnd = null;
+	config = null;
 	getFirstSelection() {
 		return this.selectionStart;
 	}
 	getLastSelection() {
 		return this.selectionEnd;
 	}
+	addActionNode(actionNode) {
+		verifyActionNode(actionNode);
+		super.addActionNode(actionNode);
+	}
 	#getSelectionStats() {
 		console.assert(this.selectionStart !== null && this.selectionEnd !== null);
 		let potency = 0;
-		let duration = 0;
+		let waitDuration = 0;
 		let itr;
-		for (itr = this.selectionStart; itr !== this.selectionEnd; itr = itr.next) {
+		for (itr = this.selectionStart; itr !== this.selectionEnd.next; itr = itr.next) {
 			if (itr.type === ActionType.Skill) {
 				potency += itr.tmp_capturedPotency;
-				duration += itr.next.duration;
+				waitDuration += itr.waitDuration;
 			}
 		}
-		itr = this.selectionEnd;
-		potency += itr.tmp_capturedPotency;
-		duration += Math.min(itr.next.duration, itr.tmp_endLockTime - itr.tmp_startLockTime);
-
 		console.assert(!isNaN(potency));
-		console.assert(!isNaN(duration));
-		return [potency, duration];
+		console.assert(!isNaN(waitDuration));
+		return [potency, waitDuration];
 	}
 	// assume node is actually in this recording
 	selectSingle(node) {
@@ -133,21 +164,10 @@ export class Record {
 		}
 	}
 	serialized() {
-		let list = [];
-		let itr = this.head;
-		while (itr !== null) {
-			list.push({
-				type: itr.type,
-				// skill
-				skillName: itr.skillName,
-				// wait
-				duration: itr.duration,
-			});
-			itr = itr.next;
-		}
+		console.assert(this.config !== null);
 		return {
 			config: this.config,
-			actions: list,
+			actions: super.serialized().actions
 		};
 	}
 }

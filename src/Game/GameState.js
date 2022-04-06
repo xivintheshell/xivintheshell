@@ -1,5 +1,5 @@
-import {Aspect, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
-import {StatsModifier} from "./Stats";
+import {Aspect, Debug, GameConfig, ResourceType, SkillName, SkillReadyStatus} from "./Common"
+import {StatsModifier} from "./StatsModifier";
 import {makeSkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
 
@@ -16,7 +16,6 @@ export class GameState
 	{
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
-		console.log("random seed: " + config.randomSeed);
 
 		// TIME
 		this.time = 0;
@@ -222,8 +221,7 @@ export class GameState
 		return potency;
 	}
 
-	captureManaCostAndUHConsumption(aspect, baseManaCost)
-	{
+	captureManaCostAndUHConsumption(aspect, baseManaCost) {
 		let mod = StatsModifier.fromResourceState(this.resources);
 
 		let manaCost;
@@ -242,14 +240,12 @@ export class GameState
 		return [manaCost, uhConsumption];
 	}
 
-	captureManaRegenAmount()
-	{
+	captureManaRegenAmount() {
 		let mod = StatsModifier.fromResourceState(this.resources);
 		return mod.manaRegen;
 	}
 
-	captureSpellCastAndRecastTimeScale(aspect, baseCastTime)
-	{
+	captureSpellCastAndRecastTimeScale(aspect, baseCastTime) {
 		let mod = StatsModifier.fromResourceState(this.resources);
 
 		let castTime = baseCastTime * mod.castTimeBase;
@@ -259,8 +255,7 @@ export class GameState
 		return [castTime, mod.spellRecastTimeScale];
 	}
 
-	dealDamage(potency, source="unknown")
-	{
+	dealDamage(potency, source="unknown") {
 		controller.reportDamage({
 			potency: potency,
 			time: this.time,
@@ -273,8 +268,7 @@ export class GameState
 		controller.reportPotencyUpdate();
 	}
 
-	castSpell(skillName, onCapture, onApplication, node=null)
-	{
+	castSpell(skillName, onCapture, onApplication, node=null) {
 		console.assert(node !== null);
 		let skill = this.skillsList.get(skillName);
 		let skillInfo = skill.info;
@@ -291,7 +285,8 @@ export class GameState
 				// re-capture them here, since game state might've changed (say, AF/UI fell off)
 				[capturedManaCost, uhConsumption] = game.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 				// actually deduct resources
-				game.resources.get(ResourceType.Mana).consume(capturedManaCost);
+				// TODO: find a better place to put this paradox mana cost exception?
+				if (!(skillName===SkillName.Paradox && game.getIceStacks()>0)) game.resources.get(ResourceType.Mana).consume(capturedManaCost);
 				if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
 				if (capturedManaCost > 0)
 					controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.getDisplayTime());
@@ -381,10 +376,10 @@ export class GameState
 		// there are no triplecast charges. cast and apply effect
 
 		// movement lock
-		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - this.config.getSlidecastWindow(capturedCastTime));
+		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
 
 		// (basically done casting) deduct MP, calc damage, queue damage
-		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - this.config.getSlidecastWindow(capturedCastTime), ()=>{
+		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime), ()=>{
 			takeEffect(this);
 		}));
 

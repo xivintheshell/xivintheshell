@@ -158,7 +158,7 @@ export class Config extends React.Component {
 
 	render() {
 		return (
-			<div className={"manualTickSelection config"}>
+			<div className={"config"}>
 				<form onSubmit={this.handleSubmit}>
 					<Input defaultValue={this.state.spellSpeed} description="spell speed: " onChange={this.setSpellSpeed}/>
 					<Input defaultValue={this.state.animationLock} description="animation lock: " onChange={this.setAnimationLock}/>

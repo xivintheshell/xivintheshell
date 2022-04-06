@@ -8,6 +8,7 @@ import {controller} from "../Controller/Controller";
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 import {LoadSave} from "./LoadSave";
+import {presets} from "./Presets";
 
 export var setRealTime = inRealTime=>{};
 export default class Main extends React.Component {
@@ -30,28 +31,42 @@ export default class Main extends React.Component {
 	render() {
 		return <div className={"container"}>
 			<div className={"container-narrow"}>
-				<Config/>
-				<TimeControl/>
-				<div className={"gameplay keyboardControlled" + (this.state.realTime ? " realTime" : "")}
-					 tabIndex={-1}
-					 onKeyDown={this.gameplayKeyCapture}>
-					{statusDisplay}
-					{skillsWindow}
+				<div style={{ position: "relative", marginBottom: "16px" }}>
+					<div style={{ display: "inline-block", position: "relative", width: "70%" }}>
+						<div className={"keyboardControlled" + (this.state.realTime ? " realTime" : "")}
+							 tabIndex={-1}
+							 onKeyDown={this.gameplayKeyCapture}>
+							{statusDisplay}
+							{skillsWindow}
+						</div>
+					</div>
+					<div style={{
+						marginLeft: "1%",
+						display: "inline-block",
+						position: "relative",
+						verticalAlign: "top",
+						width: "29%" }}>
+						<Config/>
+						<TimeControl/>
+						<LoadSave/>
+					</div>
 				</div>
-				<LoadSave/>
-				<Tabs>
-					<TabList>
-						<Tab>Timeline</Tab>
-						<Tab>Logs</Tab>
-					</TabList>
+				{presets}
+				<div style={{marginTop: "16px"}}>
+					<Tabs>
+						<TabList>
+							<Tab>Timeline</Tab>
+							<Tab>Logs</Tab>
+						</TabList>
 
-					<TabPanel>
-						{timeline}
-					</TabPanel>
-					<TabPanel>
-						{logView}
-					</TabPanel>
-				</Tabs>
+						<TabPanel>
+							{timeline}
+						</TabPanel>
+						<TabPanel>
+							{logView}
+						</TabPanel>
+					</Tabs>
+				</div>
 			</div>
 		</div>;
 	}

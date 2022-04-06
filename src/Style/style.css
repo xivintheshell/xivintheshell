@@ -41,7 +41,7 @@
     }
 }
 .container-narrow {
-    max-width: 960px;
+    max-width: 1080px;
     margin: 10px auto;
 }
 .__react_component_tooltip {
@@ -103,10 +103,11 @@
 
 /* keyboard-controlled area */
 
-.gameplay {
+.keyboardControlled {
+    display: inline-block;
     padding: 8px;
-    margin-bottom: 16px;
-    border: 1px solid lightgrey;
+    marginBottom: 16px;
+    outline: 1px solid lightgrey;
 }
 
 .keyboardControlled:focus {
@@ -120,13 +121,11 @@
 /* playback control */
 
 .config,.timeControl {
-    display: block;
-    margin-bottom: 10px;
+    display: inline-block;
+    margin-bottom: 14px;
 }
 @media(min-width: 768px) {
     .config,.timeControl {
-        display: inline-block;
-        width: 50%;
     }
 }
 .textInput {
@@ -160,14 +159,14 @@
 .statusDisplay>.-left {
     display: inline-block;
     vertical-align: top;
-    width: 36%;
+    width: 50%;
     height: 100%;
 }
 .statusDisplay>.-right {
     position: relative;
     display: inline-block;
     float: right;
-    width: 56%;
+    width: 50%;
 }
 /* resource bar & counter */
 .resourceDisplay {
@@ -236,14 +235,14 @@
     line-height: 1em;
 }
 .buffsDisplay.enemy {
-    margin-bottom: 4em;
+    margin-bottom: 3em;
 }
 .buffsDisplay.self {
 }
 
 .buff {
     text-align: center;
-    width: 52px;
+    width: 54px;
     display: inline-block;
 }
 .buff.hidden {
@@ -301,11 +300,6 @@
     pointer-events: none;
 }
 
-/*======== load and save ========*/
-.loadSave {
-    margin: 10px 0;
-}
-
 /*======== individual elems ========*/
 
 .clickable {
@@ -313,10 +307,6 @@
 }
 .clickable:hover {
     cursor: pointer;
-}
-
-.manualTickSelection {
-    display: inline-block;
 }
 
 .progressBar {

@@ -1,5 +1,5 @@
 import { addLogContent } from "../Components/LogView";
-import {Color, LogCategory} from "./Common";
+import {Color, LogCategory, ReplayMode} from "./Common";
 import { GameState } from "../Game/GameState";
 import {GameConfig, ResourceType, SkillReadyStatus} from "../Game/Common";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
@@ -8,12 +8,11 @@ import {TickMode} from "../Components/PlaybackControl"
 import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
 import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
-import {ActionNode, ActionType, Record} from "./Record";
+import {ActionNode, ActionType, Record, Line} from "./Record";
+import {updatePresetsView} from "../Components/Presets";
 
-class Controller
-{
-	constructor()
-	{
+class Controller {
+	constructor() {
 		this.stepSize = 0.5;
 		this.timeScale = 1;
 		this.shouldLoop = false;
@@ -23,15 +22,12 @@ class Controller
 		this.skillsQueue = [];
 
 		this.gameConfig = new GameConfig();
-		this.gameConfig.randomSeed = "hello.";
-		this.gameConfig.casterTax = 0.06;
-		this.gameConfig.animationLock = 0.66;
-		this.gameConfig.spellSpeed = 1532;
-		this.gameConfig.timeTillFirstManaTick = 1.2;
 		this.#requestRestart();
 
 		this.timeline = new Timeline();
 		this.timeline.reset();
+
+		this.presetLines = [];
 
 		/*
 		let intimes = [1.5, 2, 2.5, 2.8, 3, 3.5, 4];
@@ -47,6 +43,22 @@ class Controller
 	log(category, content, time, color=Color.Text) {
 		if (time !== undefined) content = time.toFixed(3) + "s: " + content;
 		addLogContent(category, content, color);
+	}
+
+	addSelectionToPreset(name="(untitled)") {
+		console.assert(this.record.getFirstSelection() !== null);
+		let line = new Line();
+		line.name = name;
+		let itr = this.record.getFirstSelection();
+		let ctr = 0;
+		while (itr !== this.record.getLastSelection().next) {
+			line.addActionNode(itr.getClone());
+			ctr++;
+			itr = itr.next;
+		}
+		this.presetLines.push(line);
+
+		updatePresetsView();
 	}
 
 	reportPotencyUpdate() {
@@ -72,7 +84,11 @@ class Controller
 			source: props.source
 		});
 
-		this.log(LogCategory.Event, "dealing damage of potency " + props.potency.toFixed(1), props.time, Color.Damage);
+		this.log(
+			LogCategory.Event,
+			"dealing damage of potency " + props.potency.toFixed(1),
+			props.time,
+			Color.Damage);
 	}
 
 	reportLucidTick(time, source) {
@@ -176,14 +192,21 @@ class Controller
 			this.updateStatusDisplay(this.game);
 			this.#updateSkillButtons();
 			this.#updateTimelineDisplay();
-			if (!props.suppressLog) this.log(LogCategory.Action, "wait for " + props.deltaTime.toFixed(3) + "s", this.game.getDisplayTime(), Color.Grey);
+			if (!props.suppressLog) {
+				this.log(
+					LogCategory.Action,
+					"wait for " + props.deltaTime.toFixed(3) + "s",
+					this.game.getDisplayTime(),
+					Color.Grey);
+			}
 
+			// add this tick to game record
 			let lastAction = this.record.getLastAction();
-			if (lastAction!==null && lastAction.type===ActionType.Wait) {
-				lastAction.duration += timeTicked;
+			if (lastAction!==null) {
+				lastAction.waitDuration += timeTicked;
 			} else {
 				let waitNode = new ActionNode(ActionType.Wait);
-				waitNode.duration = timeTicked;
+				waitNode.waitDuration = timeTicked;
 				this.record.addActionNode(waitNode);
 			}
 		}
@@ -201,7 +224,6 @@ class Controller
 	}
 
 	setConfigAndRestart(props={
-		//stepSize: 0.5,
 		spellSpeed: 1268,
 		animationLock: 0.66,
 		casterTax: 0.06,
@@ -218,7 +240,8 @@ class Controller
 		this.gameConfig.countdown = props.countdown;
 		this.gameConfig.randomSeed = props.randomSeed;
 
-		this.record = new Record(this.gameConfig);
+		this.record = new Record();
+		this.record.config = this.gameConfig;
 
 		this.#requestRestart();
 	}
@@ -237,8 +260,7 @@ class Controller
 		return -1;
 	}
 
-	#playPause(props)
-	{
+	#playPause(props) {
 		let newShouldLoop = props ? props.shouldLoop : !this.shouldLoop;
 		if (this.shouldLoop === newShouldLoop) return;
 
@@ -254,14 +276,12 @@ class Controller
 		}
 	}
 
-	#fastForward(props)
-	{
+	#fastForward(props) {
 		let deltaTime = this.game.timeTillAnySkillAvailable();
 		this.#requestTick({deltaTime: deltaTime, suppressLog: false});
 	}
 
-	#requestRestart(props)
-	{
+	#requestRestart(props) {
 		this.lastAtteptedSkill = ""
 		this.game = new GameState(this.gameConfig);
 		this.updateStatusDisplay(this.game);
@@ -271,24 +291,32 @@ class Controller
 			this.timeline.reset();
 			this.timeline.drawElements();
 		}
-		this.log(
-			LogCategory.Action,
-			"======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
-			this.game.getDisplayTime(),
-			Color.Grey);
-		this.log(
-			LogCategory.Event,
-			"======== RESET (GCD=" + this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
-			this.game.getDisplayTime(),
-			Color.Grey);
+		if (this.record) {
+			this.record.unselectAll();
+			this.onTimelineSelectionChanged();
+		}
+		// updateStatsDisplay(); // TODO
+		if (!(props && props.suppressLog)) {
+			this.log(
+				LogCategory.Action,
+				"======== RESET (GCD=" +
+					this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
+				this.game.getDisplayTime(),
+				Color.Grey);
+			this.log(
+				LogCategory.Event,
+				"======== RESET (GCD=" +
+					this.game.config.adjustedCastTime(2.5).toFixed(2) + ") ========",
+				this.game.getDisplayTime(),
+				Color.Grey);
+		}
 	}
 
-	#useSkill(skillName, bWaitFirst, bSuppressLog=false)
-	{
+	#useSkill(skillName, bWaitFirst, bSuppressLog=false, overrideTickMode=this.tickMode) {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
 		if (bWaitFirst) {
-			this.#requestTick({deltaTime: status.timeTillAvailable, suppressLog: false});
+			this.#requestTick({deltaTime: status.timeTillAvailable, suppressLog: bSuppressLog});
 			status = this.game.getSkillAvailabilityStatus(skillName);
 			this.lastAtteptedSkill = "";
 		}
@@ -336,7 +364,7 @@ class Controller
 			this.game.useSkill(skillName, node);
 			this.updateStatusDisplay();
 			this.#updateSkillButtons();
-			if (this.tickMode === TickMode.RealTimeAutoPause) {
+			if (overrideTickMode === TickMode.RealTimeAutoPause) {
 				this.shouldLoop = true;
 				this.#runLoop(()=>{
 					return this.game.timeTillAnySkillAvailable() > 0;
@@ -347,13 +375,10 @@ class Controller
 			let time = this.game.time;
 
 			node.skillName = skillName;
+			node.waitDuration = 0;
 			node.tmp_startLockTime = time;
 			node.tmp_endLockTime = time + lockDuration;
 			this.record.addActionNode(node);
-			// and its wait node
-			let waitNode = new ActionNode(ActionType.Wait);
-			waitNode.duration = 0;
-			this.record.addActionNode(waitNode);
 
 			let skillInfo = this.game.skillsList.get(skillName).info;
 			let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
@@ -370,12 +395,13 @@ class Controller
 				getIsSelected: ()=>{ return node.isSelected(); },
 				onClickFn: (e)=>{
 					let potency, duration;
+					//console.log(this.record);
 					if (e.shiftKey) {
 						[potency, duration] = this.record.selectUntil(node);
 					} else {
 						[potency, duration] = this.record.selectSingle(node);
 					}
-					this.updateSelectionDisplay();
+					this.onTimelineSelectionChanged();
 					updateStatsDisplay({
 						selectedPotency: potency,
 						selectedDuration: duration,
@@ -383,7 +409,7 @@ class Controller
 				},
 				onKeyDownFn: (e)=>{
 					if (e.keyCode === 8) { // delete key
-						this.#rewindUntilBefore(node);
+						this.#rewindUntilBefore(this.record.getFirstSelection());
 						e.preventDefault();
 					}
 				},
@@ -391,20 +417,102 @@ class Controller
 			});
 			scrollTimelineTo(this.timeline.positionFromTime(this.game.time));
 		}
+		return status;
+	}
+
+	// returns true on success
+	#replay(line, replayMode, suppressLog=false) {
+		let itr = line.getFirstAction();
+		while (itr !== null) {
+
+			// only Exact mode replays wait nodes
+			if (itr.type === ActionType.Wait && replayMode === ReplayMode.Exact) {
+				this.#requestTick({
+					deltaTime: itr.waitDuration,
+					suppressLog: suppressLog
+				});
+			}
+
+			// skill nodes
+			else if (itr.type === ActionType.Skill) {
+				let waitFirst = replayMode === ReplayMode.Tight;
+				let status = this.#useSkill(itr.skillName, waitFirst, suppressLog, TickMode.Manual);
+				if (replayMode === ReplayMode.Exact) {
+					console.assert(status.status === SkillReadyStatus.Ready);
+					this.#requestTick({
+						deltaTime: itr.waitDuration,
+						suppressLog: suppressLog
+					});
+				} else if (replayMode === ReplayMode.Tight) {
+					this.#requestTick({
+						deltaTime: this.game.timeTillAnySkillAvailable(),
+						suppressLog: suppressLog
+					});
+				}
+				if (status.status !== SkillReadyStatus.Ready) {
+					return false;
+				}
+			}
+
+			itr = itr.next;
+		}
+		return true;
+	}
+
+	// generally used for trying to add a line to the current timeline
+	tryAddLine(line, replayMode=ReplayMode.Tight) {
+		let oldTail = this.record.getLastAction();
+		let replaySuccessful = this.#replay(line, replayMode, false);
+		if (!replaySuccessful) {
+			this.#rewindUntilBefore(oldTail.next);
+		}
+		console.log(replaySuccessful);
+
+		// TODO: make it load a default set of lines
+	}
+
+	deleteLine(line) {
+		for (let i = 0; i < this.presetLines.length; i++) {
+			if (this.presetLines[i] === line) {
+				this.presetLines.splice(i, 1);
+				updatePresetsView();
+				return;
+			}
+		}
+		console.assert(false);
 	}
 
 	// basically restart the game and play till here:
 	#rewindUntilBefore(node) {
-		// TODO
-		console.log(node);
+		let line = new Line();
+		let itr = this.record.getFirstAction();
+		while (itr !== node) {
+			line.addActionNode(itr.getClone());
+			itr = itr.next;
+		}
+		this.record = new Record();
+		this.record.config = this.gameConfig;
+		this.#requestRestart();
+		this.#replay(line, ReplayMode.Exact, false);
 	}
 
-	updateSelectionDisplay() {
-		if (!this.record.getFirstSelection()) return;
-		let selectionStart = this.record.getFirstSelection().tmp_startLockTime;
-		let selectionEnd = this.record.getLastSelection().tmp_endLockTime;
+	onTimelineSelectionChanged() {
+		let selectionStart = 0;
+		let selectionEnd = 0;
+		if (this.record.getFirstSelection()) {
+			selectionStart = this.record.getFirstSelection().tmp_startLockTime;
+			selectionEnd = this.record.getLastSelection().tmp_endLockTime;
+		} else {
+			updateStatsDisplay({
+				selectedPotency: 0,
+				selectedDuration: 0
+			});
+		}
 		updateSelectionDisplay(
 			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
+		updatePresetsView();
+
+		console.log(this.record);
 	}
 
 	requestUseSkill(props) {
