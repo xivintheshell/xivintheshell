@@ -99,6 +99,7 @@ function LucidMark(props) {
 }
 
 function TimelineSkill(props) {
+	let node = props.elem.data.node;
 	let lockBarWidth = controller.timeline.positionFromTime(props.elem.data.lockDuration);
 	let lockBarStyle = {
 		position: "absolute",
@@ -133,15 +134,20 @@ function TimelineSkill(props) {
 		alt={props.elem.data.skillName}
 		data-tip data-for={`${props.elemID}`}
 		tabIndex={-1}
-		onKeyDown={props.elem.data.onKeyDownFn}
+		onKeyDown={(e)=>{
+			if (e.key === "Backspace") {
+				controller.rewindUntilBefore(controller.record.getFirstSelection());
+			}
+		}}
 	/>;
-	let icon = <Clickable content={iconImg} onClickFn={props.elem.data.onClickFn}/>
+	let icon = <Clickable key={node._nodeIndex} content={iconImg} onClickFn={(e) => {
+		controller.timeline.onClickSkill(node, e.shiftKey);
+	}}/>
 
 	let componentStyle={
 		left: props.elem.left,
 		top: props.elem.data.isGCD ? 14 : 0,
 	};
-	let node = props.elem.data.node;
 	let potency = node.tmp_capturedPotency;
 	let lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
 	let hoverText = <span>{props.elem.data.skillName + "@" + (props.elem.data.time-props.elem.countdown).toFixed(2)}</span>;

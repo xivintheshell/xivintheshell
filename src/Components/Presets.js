@@ -85,12 +85,9 @@ class Presets extends React.Component {
 			margin: "10px",
 			paddingLeft: "10px",
 		};
-		let ctr = 0;
 		let content = <div style={contentStyle}>
 			{controller.presetLines.map((line)=>{
-				let res = <PresetLine line={line} key={ctr}/>
-				ctr++;
-				return res;
+				return <PresetLine line={line} key={line._lineIndex}/>
 			})}
 			<SaveAsPreset enabled={hasSelection}/>
 		</div>;

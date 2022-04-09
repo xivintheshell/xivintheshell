@@ -24,9 +24,15 @@ export class ActionNode {
 	skillName;
 	waitDuration = 0;
 
+	static _gNodeIndex = 0;
+	_nodeIndex;
+
 	next = null;
+
 	constructor(actionType) {
 		this.type = actionType;
+		this._nodeIndex = ActionNode._gNodeIndex;
+		ActionNode._gNodeIndex++;
 	}
 
 	getClone() {
@@ -50,6 +56,12 @@ export class Line {
 	head = null;
 	tail = null;
 	name = "(anonymous line)";
+	static _gLineIndex = 0;
+	_lineIndex;
+	constructor() {
+		this._lineIndex = Line._gLineIndex;
+		Line._gLineIndex++;
+	}
 	addActionNode(actionNode) {
 		console.assert(actionNode);
 		if (this.tail) console.assert(this.tail.next === null);

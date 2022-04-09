@@ -1,8 +1,9 @@
 import {Color, LogCategory} from "./Common";
 import { GameState } from "../Game/GameState";
 import {GameConfig, ResourceType, SkillReadyStatus} from "../Game/Common";
-import {updateTimelineContent} from "../Components/Timeline";
+import {updateStatsDisplay, updateTimelineContent} from "../Components/Timeline";
 import {controller} from "./Controller";
+import {ActionType} from "./Record";
 
 export const ElemType = {
 	s_Cursor: "s_Cursor",
@@ -47,7 +48,6 @@ function verifyElem(elem) {
 		console.assert(!isNaN(parseFloat(elem.lockDuration)));
 		console.assert(!isNaN(parseFloat(elem.recastDuration)));
 		console.assert(elem.getIsSelected !== undefined && elem.getIsSelected !== null);
-		console.assert(elem.onClickFn !== undefined && elem.onClickFn !== null);
 		console.assert(elem.node !== undefined && elem.node !== null);
 		return;
 	}
@@ -162,5 +162,23 @@ export class Timeline {
 	drawElements(filter=(e)=>{ return true; }) {
 		let elemsToDraw = this.getTimelineElements();
 		updateTimelineContent(this.startTime, this.getCanvasWidth(), elemsToDraw.filter(filter));
+	}
+
+	onClickSkill(node, bShift) {
+		let potency, duration;
+		if (bShift) {
+			[potency, duration] = controller.record.selectUntil(node);
+		} else {
+			[potency, duration] = controller.record.selectSingle(node);
+		}
+		controller.onTimelineSelectionChanged();
+		updateStatsDisplay({
+			selectedPotency: potency,
+			selectedDuration: duration,
+		});
+	}
+
+	onDeleteSkill(node) {
+		// TODO
 	}
 }

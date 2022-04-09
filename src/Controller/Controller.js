@@ -393,26 +393,6 @@ class Controller {
 				lockDuration: lockDuration,
 				recastDuration: status.cdRecastTime,
 				getIsSelected: ()=>{ return node.isSelected(); },
-				onClickFn: (e)=>{
-					let potency, duration;
-					//console.log(this.record);
-					if (e.shiftKey) {
-						[potency, duration] = this.record.selectUntil(node);
-					} else {
-						[potency, duration] = this.record.selectSingle(node);
-					}
-					this.onTimelineSelectionChanged();
-					updateStatsDisplay({
-						selectedPotency: potency,
-						selectedDuration: duration,
-					});
-				},
-				onKeyDownFn: (e)=>{
-					if (e.keyCode === 8) { // delete key
-						this.#rewindUntilBefore(this.record.getFirstSelection());
-						e.preventDefault();
-					}
-				},
 				node: node,
 			});
 			scrollTimelineTo(this.timeline.positionFromTime(this.game.time));
@@ -464,7 +444,7 @@ class Controller {
 		let oldTail = this.record.getLastAction();
 		let replaySuccessful = this.#replay(line, replayMode, false);
 		if (!replaySuccessful) {
-			this.#rewindUntilBefore(oldTail.next);
+			this.rewindUntilBefore(oldTail.next);
 		}
 		console.log(replaySuccessful);
 
@@ -483,17 +463,22 @@ class Controller {
 	}
 
 	// basically restart the game and play till here:
-	#rewindUntilBefore(node) {
-		let line = new Line();
-		let itr = this.record.getFirstAction();
-		while (itr !== node) {
-			line.addActionNode(itr.getClone());
-			itr = itr.next;
-		}
+	rewindUntilBefore(node) {
+		let replayRecord = this.record;
 		this.record = new Record();
 		this.record.config = this.gameConfig;
+
 		this.#requestRestart();
-		this.#replay(line, ReplayMode.Exact, false);
+
+		if (node !== replayRecord.getFirstAction())
+		{
+			let itr = replayRecord.getFirstAction();
+			while (itr.next !== node) {
+				itr = itr.next;
+			}
+			itr.next = null;
+			this.#replay(replayRecord, ReplayMode.Exact, false);
+		}
 	}
 
 	onTimelineSelectionChanged() {
@@ -512,7 +497,6 @@ class Controller {
 			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
 		updatePresetsView();
 
-		console.log(this.record);
 	}
 
 	requestUseSkill(props) {
