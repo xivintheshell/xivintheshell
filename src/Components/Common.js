@@ -1,4 +1,5 @@
 import React from "react";
+import jQuery from 'jquery';
 
 // https://github.com/eligrey/FileSaver.js#readme
 export function saveToFile(content, filename) {
@@ -16,6 +17,25 @@ export function loadFromFile(fileObject, callback=(content)=>{console.log(conten
 		callback(json);
 	};
 	fileReader.readAsText(fileObject, "UTF-8");
+}
+
+let fetchCache = new Map();
+export function asyncFetch(url, callback, errorCallback) {
+	if (fetchCache.has(url))
+	{
+		callback(fetchCache.get(url));
+		return;
+	}
+	jQuery.ajax({
+		type: 'GET',
+		url: url,
+		success: (data)=>{
+			callback(data);
+			fetchCache.set(url, data);
+		},
+		error: errorCallback,
+		async: true
+	});
 }
 
 export class Clickable extends React.Component {

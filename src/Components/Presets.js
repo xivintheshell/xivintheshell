@@ -1,5 +1,5 @@
 import React from 'react'
-import {Clickable, Expandable, Input, loadFromFile, saveToFile} from "./Common";
+import {asyncFetch, Clickable, Expandable, Input, loadFromFile, saveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {ReplayMode} from "../Controller/Common";
 import {skillIcons} from "./Skills";
@@ -35,7 +35,7 @@ class SaveAsPreset extends React.Component {
 
 class LoadSavePresets extends React.Component {
 	saveFilename = "presets.txt";
-	loadUrl = "hallo";
+	loadUrl = "https://miyehn.me/ffxiv-blm-rotation/presets/testPresets.txt";
 	fileSelectorRef = null;
 	constructor(props) {
 		super(props);
@@ -46,11 +46,11 @@ class LoadSavePresets extends React.Component {
 		this.onLoadUrl = this.unboundOnLoadUrl.bind(this);
 		this.fileSelectorRef = React.createRef();
 	}
-	unboundOnSaveFilenameChange(val) {
-		this.saveFilename = val;
+	unboundOnSaveFilenameChange(evt) {
+		if (evt.target) this.saveFilename = evt.target.value;
 	}
-	unboundOnLoadUrlChange(val) {
-		this.loadUrl = val;
+	unboundOnLoadUrlChange(evt) {
+		if (evt.target) this.loadUrl = evt.target.value;
 	}
 	unboundOnLoadPresetFile() {
 		let cur = this.fileSelectorRef.current;
@@ -63,17 +63,35 @@ class LoadSavePresets extends React.Component {
 		}
 	}
 	unboundOnLoadUrl() {
-		// perform get request
+		let errorHandler = function(e) {
+			console.log("some error occurred");
+		};
+		asyncFetch(this.loadUrl, data=>{
+			try {
+				console.log(JSON.parse(data));
+				// TODO: do something with this result
+			} catch(e) {
+				errorHandler(e);
+			}
+		}, (e)=>{
+			errorHandler(e);
+		});
 	}
 	unboundOnSave(e) {
 		saveToFile(controller.serializedPresets(), this.saveFilename);
 	}
 	render() {
+		let longInputStyle = {
+			outline: "none",
+			border: "none",
+			borderBottom: "1px solid black",
+			width: "20em",
+		};
 		return <div>
 			<div>
 				<Clickable content="[save presets to file]" onClickFn={this.onSave}/>
 				<span> as: </span>
-				<input defaultValue={this.saveFilename} className="textInput" width="10"
+				<input defaultValue={this.saveFilename} style={longInputStyle}
 					   onChange={this.onSaveFilenameChange}/>
 			</div>
 			<div>
@@ -84,8 +102,9 @@ class LoadSavePresets extends React.Component {
 			<div>
 				<Clickable content="[load presets from URL]" onClickFn={this.onLoadUrl}/>
 				<span>: </span>
-				<input defaultValue={this.loadUrl} className="textInput" width="10"
+				<input defaultValue={this.loadUrl} style={longInputStyle}
 					   onChange={this.onLoadUrlChange}/>
+				{this.loading ? <span> (loading..)</span> : <div/>}
 			</div>
 		</div>
 	}
