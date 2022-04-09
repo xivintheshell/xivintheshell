@@ -1,5 +1,5 @@
 import { addLogContent } from "../Components/LogView";
-import {Color, LogCategory, ReplayMode} from "./Common";
+import {Color, FileType, LogCategory, ReplayMode} from "./Common";
 import { GameState } from "../Game/GameState";
 import {GameConfig, ResourceType, SkillReadyStatus} from "../Game/Common";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
@@ -45,15 +45,23 @@ class Controller {
 		addLogContent(category, content, color);
 	}
 
+	serializedPresets() {
+		return {
+			fileType: FileType.Presets,
+			config: this.gameConfig,
+			presets: this.presetLines.map(line=>{
+				return line.serialized();
+			}),
+		}
+	}
+
 	addSelectionToPreset(name="(untitled)") {
 		console.assert(this.record.getFirstSelection() !== null);
 		let line = new Line();
 		line.name = name;
 		let itr = this.record.getFirstSelection();
-		let ctr = 0;
 		while (itr !== this.record.getLastSelection().next) {
 			line.addActionNode(itr.getClone());
-			ctr++;
 			itr = itr.next;
 		}
 		this.presetLines.push(line);

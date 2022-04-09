@@ -1,5 +1,5 @@
 import React from 'react'
-import {Clickable, Expandable, Input} from "./Common";
+import {Clickable, Expandable, Input, loadFromFile, saveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {ReplayMode} from "../Controller/Common";
 import {skillIcons} from "./Skills";
@@ -24,11 +24,69 @@ class SaveAsPreset extends React.Component {
 				onChange={this.onChange}/>
 			{
 				this.props.enabled ?
-				<Clickable content="[save selection as preset]" onClickFn={()=>{
+				<Clickable content="[add selection to preset]" onClickFn={()=>{
 					controller.addSelectionToPreset(this.filename);
 				}}/> :
-				<span><s>[save selection as preset]</s></span>
+				<span><s>[add selection to preset]</s></span>
 			}
+		</div>
+	}
+}
+
+class LoadSavePresets extends React.Component {
+	saveFilename = "presets.txt";
+	loadUrl = "hallo";
+	fileSelectorRef = null;
+	constructor(props) {
+		super(props);
+		this.onSaveFilenameChange = this.unboundOnSaveFilenameChange.bind(this);
+		this.onLoadUrlChange = this.unboundOnLoadUrlChange.bind(this);
+		this.onSave = this.unboundOnSave.bind(this);
+		this.onLoadPresetFile = this.unboundOnLoadPresetFile.bind(this);
+		this.onLoadUrl = this.unboundOnLoadUrl.bind(this);
+		this.fileSelectorRef = React.createRef();
+	}
+	unboundOnSaveFilenameChange(val) {
+		this.saveFilename = val;
+	}
+	unboundOnLoadUrlChange(val) {
+		this.loadUrl = val;
+	}
+	unboundOnLoadPresetFile() {
+		let cur = this.fileSelectorRef.current;
+		if (cur && cur.files.length > 0) {
+			let fileToLoad = cur.files[0];
+			loadFromFile(fileToLoad, (content)=>{
+				// TODO: do something with this result
+				console.log(content);
+			});
+		}
+	}
+	unboundOnLoadUrl() {
+		// perform get request
+	}
+	unboundOnSave(e) {
+		saveToFile(controller.serializedPresets(), this.saveFilename);
+	}
+	render() {
+		return <div>
+			<div>
+				<Clickable content="[save presets to file]" onClickFn={this.onSave}/>
+				<span> as: </span>
+				<input defaultValue={this.saveFilename} className="textInput" width="10"
+					   onChange={this.onSaveFilenameChange}/>
+			</div>
+			<div>
+				<Clickable content="[load presets from file]" onClickFn={this.onLoadPresetFile}/>
+				<span>: </span>
+				<input type="file" ref={this.fileSelectorRef}/>
+			</div>
+			<div>
+				<Clickable content="[load presets from URL]" onClickFn={this.onLoadUrl}/>
+				<span>: </span>
+				<input defaultValue={this.loadUrl} className="textInput" width="10"
+					   onChange={this.onLoadUrlChange}/>
+			</div>
 		</div>
 	}
 }
@@ -39,6 +97,7 @@ function PresetLine(props) {
 	let itr = line.getFirstAction();
 	let ctr = 0;
 	let iconStyle = {
+		margin: "0 1px",
 		width: "18px",
 		verticalAlign: "middle"
 	}
@@ -61,6 +120,7 @@ function PresetLine(props) {
 }
 
 class Presets extends React.Component {
+
 	constructor(props) {
 		super(props);
 		updatePresetsView = this.unboundUpdatePresetsView.bind(this);
@@ -71,8 +131,9 @@ class Presets extends React.Component {
 	unboundUpdatePresetsView() { this.forceUpdate(); }
 	render() {
 		/*
-		[load lines from file]:
-		[save lines to file] as: ______
+		[load presets from URL]: ______
+		[load presets from file]: [choose file]
+		[save presets to file] as: ______
 
 		<list all preset lines>
 			each line: <name>: <Clickable>{icon}{icon}...{icon}</Clickable> [delete (x)]
@@ -86,10 +147,17 @@ class Presets extends React.Component {
 			paddingLeft: "10px",
 		};
 		let content = <div style={contentStyle}>
-			{controller.presetLines.map((line)=>{
-				return <PresetLine line={line} key={line._lineIndex}/>
-			})}
-			<SaveAsPreset enabled={hasSelection}/>
+			<LoadSavePresets/>
+			<div style={{
+				outline: "1px solid lightgrey",
+				marginTop: "10px",
+				padding: "10px",
+			}}>
+				{controller.presetLines.map((line)=>{
+					return <PresetLine line={line} key={line._lineIndex}/>
+				})}
+				<SaveAsPreset enabled={hasSelection}/>
+			</div>
 		</div>;
 		return <Expandable
 			title="Presets"

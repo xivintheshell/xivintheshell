@@ -8,6 +8,11 @@ export const ReplayMode = {
 	Tight: "Tight",
 }
 
+export const FileType = {
+    Record: "Record",
+    Presets: "Presets"
+}
+
 export const Color = {
     Text: "textColor",
     Fire: "fireColor",

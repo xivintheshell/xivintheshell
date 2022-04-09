@@ -1,3 +1,5 @@
+import {FileType} from "./Common";
+
 export const ActionType = {
 	Skill: "Skill",
 	Wait: "Wait"
@@ -178,6 +180,7 @@ export class Record extends Line {
 	serialized() {
 		console.assert(this.config !== null);
 		return {
+			fileType: FileType.Record,
 			config: this.config,
 			actions: super.serialized().actions
 		};
