@@ -69,6 +69,22 @@ class Controller {
 		updatePresetsView();
 	}
 
+	appendFilePresets(content) {
+		for (let i = 0; i < content.presets.length; i++) {
+			let line = new Line();
+			line.name = content.presets[i].name;
+			for (let j = 0; j < content.presets[i].actions.length; j++) {
+				let action = content.presets[i].actions[j];
+				let node = new ActionNode(action.type);
+				node.skillName = action.skillName;
+				node.waitDuration = action.waitDuration;
+				line.addActionNode(node);
+			}
+			this.presetLines.push(line);
+		}
+		updatePresetsView();
+	}
+
 	reportPotencyUpdate() {
 		let cumulativePotency = 0;
 		for (let itr = this.record.getFirstAction(); itr !== this.record.getLastAction().next; itr = itr.next) {
@@ -454,9 +470,9 @@ class Controller {
 		if (!replaySuccessful) {
 			this.rewindUntilBefore(oldTail.next);
 		}
-		console.log(replaySuccessful);
-
-		// TODO: make it load a default set of lines
+		if (!replaySuccessful) {
+			window.alert('Failed to add line "' + line.name + '" due to insufficient resources and/or stats mismatch.');
+		}
 	}
 
 	deleteLine(line) {
@@ -468,6 +484,11 @@ class Controller {
 			}
 		}
 		console.assert(false);
+	}
+
+	deleteAllLines() {
+		this.presetLines = [];
+		updatePresetsView();
 	}
 
 	// basically restart the game and play till here:
