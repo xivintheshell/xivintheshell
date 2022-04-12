@@ -443,8 +443,10 @@ class Controller {
 				let status = this.#useSkill(itr.skillName, waitFirst, suppressLog, TickMode.Manual);
 				if (replayMode === ReplayMode.Exact) {
 					console.assert(status.status === SkillReadyStatus.Ready);
+					let deltaTime = itr===line.getLastAction() ?
+						this.game.timeTillAnySkillAvailable() : itr.waitDuration;
 					this.#requestTick({
-						deltaTime: itr.waitDuration,
+						deltaTime: deltaTime,
 						suppressLog: suppressLog
 					});
 				} else if (replayMode === ReplayMode.Tight) {
@@ -457,9 +459,13 @@ class Controller {
 					return false;
 				}
 			}
+			else {
+				console.assert(false);
+			}
 
 			itr = itr.next;
 		}
+
 		return true;
 	}
 
@@ -506,6 +512,7 @@ class Controller {
 				itr = itr.next;
 			}
 			itr.next = null;
+			replayRecord.tail = itr;
 			this.#replay(replayRecord, ReplayMode.Exact, false);
 		}
 	}
