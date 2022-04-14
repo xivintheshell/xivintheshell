@@ -23,11 +23,9 @@ class SaveAsPreset extends React.Component {
 				description="name: " width={30}
 				onChange={this.onChange}/>
 			{
-				this.props.enabled ?
-				<button onClick={()=>{
+				<button disabled={!this.props.enabled} onClick={()=>{
 					controller.addSelectionToPreset(this.filename);
-				}}>add selection to preset</button> :
-				<span><s>[add selection to preset]</s></span>
+				}}>add selection to preset</button>
 			}
 		</div>
 	}

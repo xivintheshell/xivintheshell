@@ -346,14 +346,6 @@ export class GameState
 			return;
 		}
 
-		// F3 made instant via Firestarter proc
-		let firestarter = this.resources.get(ResourceType.Firestarter);
-		if (skillName === SkillName.Fire3 && firestarter.available(1)) {
-			firestarter.removeTimer();
-			instantCast(this, firestarter);
-			return;
-		}
-
 		// Swiftcast
 		let swift = this.resources.get(ResourceType.Swiftcast);
 		if (swift.available(1)) {

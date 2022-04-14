@@ -366,17 +366,18 @@ export function makeSkillsList(game)
 			return true;
 		},
 		(game, node) => {
-			game.castSpell(SkillName.Fire3, cap => {
-				game.switchToAForUI(ResourceType.AstralFire, 3);
-				game.startOrRefreshEnochian();
-				// umbral heart
-				let uh = game.resources.get(ResourceType.UmbralHeart);
-				if (cap.capturedManaCost > 0 && uh.available(1)) {
-					uh.consume(1);
-					controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
-				}
-			}, app => {
-			}, node);
+			if (game.resources.get(ResourceType.Firestarter).available(1)) {
+				game.useInstantSkill(SkillName.Fire3, ()=>{
+					game.switchToAForUI(ResourceType.AstralFire, 3);
+					game.startOrRefreshEnochian();
+				}, true, node);
+			} else {
+				game.castSpell(SkillName.Fire3, cap => {
+					game.switchToAForUI(ResourceType.AstralFire, 3);
+					game.startOrRefreshEnochian();
+				}, app => {
+				}, node);
+			}
 		}
 	));
 
