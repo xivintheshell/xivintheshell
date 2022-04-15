@@ -256,16 +256,17 @@ export class GameState
 	}
 
 	dealDamage(potency, source="unknown") {
+		// report damage is moved to capture time
+	}
+
+	reportPotency(node, potency, source) {
+		node.tmp_capturedPotency = node.tmp_capturedPotency + potency;
+		controller.reportPotencyUpdate();
 		controller.reportDamage({
 			potency: potency,
 			time: this.time,
 			source: source
 		});
-	}
-
-	reportPotency(node, potency) {
-		node.tmp_capturedPotency = node.tmp_capturedPotency + potency;
-		controller.reportPotencyUpdate();
 	}
 
 	castSpell(skillName, onCapture, onApplication, node=null) {
@@ -281,6 +282,7 @@ export class GameState
 
 		let takeEffect = function(game) {
 			let resourcesStillAvailable = skill.available();
+			let sourceName = skillInfo.name + "@"+skillTime.toFixed(2)
 			if (resourcesStillAvailable) {
 				// re-capture them here, since game state might've changed (say, AF/UI fell off)
 				[capturedManaCost, uhConsumption] = game.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
@@ -291,7 +293,7 @@ export class GameState
 				if (capturedManaCost > 0)
 					controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.getDisplayTime());
 				let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
-				game.reportPotency(node, capturedPotency);
+				game.reportPotency(node, capturedPotency, sourceName);
 				let captureInfo = {
 					capturedManaCost: capturedManaCost
 					//...
@@ -303,7 +305,7 @@ export class GameState
 					skillInfo.name + " applied",
 					skillInfo.skillApplicationDelay,
 					()=>{
-						game.dealDamage(capturedPotency, skillInfo.name + "@"+skillTime.toFixed(2));
+						game.dealDamage(capturedPotency, sourceName);
 						let applicationInfo = {
 							//...
 						};
@@ -387,21 +389,22 @@ export class GameState
 	{
 		console.assert(node !== null);
 		let skillInfo = this.skillsList.get(skillName).info;
+		let skillTime = this.getDisplayTime();
 		let cd = this.cooldowns.get(skillInfo.cdName);
+		let sourceName = skillInfo.name+"@"+skillTime.toFixed(2);
+
 		let capturedDamage = 0;
 		if (dealDamage) {
 			capturedDamage = this.captureDamage(skillInfo.aspect, skillInfo.basePotency);
-			this.reportPotency(node, capturedDamage);
+			this.reportPotency(node, capturedDamage, sourceName);
 		}
 		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, 0);
-
-		let skillTime = this.getDisplayTime();
 
 		let skillEvent = new Event(
 			skillInfo.name + " applied",
 			skillInfo.skillApplicationDelay,
 			()=>{
-				if (dealDamage) this.dealDamage(capturedDamage, skillInfo.name+"@"+skillTime.toFixed(2));
+				if (dealDamage) this.dealDamage(capturedDamage, sourceName);
 				effectFn();
 			}
 			, Color.Text);

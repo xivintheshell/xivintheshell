@@ -110,7 +110,7 @@ class Controller {
 
 		this.log(
 			LogCategory.Event,
-			"dealing damage of potency " + props.potency.toFixed(1),
+			"reporting damage of potency " + props.potency.toFixed(1),
 			props.time,
 			Color.Damage);
 	}
@@ -474,9 +474,10 @@ class Controller {
 		let oldTail = this.record.getLastAction();
 		let replaySuccessful = this.#replay(line, replayMode, false);
 		if (!replaySuccessful) {
-			this.rewindUntilBefore(oldTail.next);
-		}
-		if (!replaySuccessful) {
+			if (oldTail) this.rewindUntilBefore(oldTail.next);
+			else { // tried to add line at the start but failed
+				if (this.record.getFirstAction()) this.rewindUntilBefore(this.record.getFirstAction());
+			}
 			window.alert('Failed to add line "' + line.name + '" due to insufficient resources and/or stats mismatch.');
 		}
 	}

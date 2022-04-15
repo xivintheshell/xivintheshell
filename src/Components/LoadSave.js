@@ -1,6 +1,7 @@
 import React from 'react'
 import {Clickable, loadFromFile, saveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
+import {FileType} from "../Controller/Common";
 
 export class LoadSave extends React.Component {
 	constructor(props) {
@@ -16,8 +17,13 @@ export class LoadSave extends React.Component {
 		if (cur && cur.files.length > 0) {
 			let fileToLoad = cur.files[0];
 			loadFromFile(fileToLoad, (content)=>{
-				// TODO: do something with this result
-				console.log(content);
+				if (content.fileType === FileType.Record) {
+					// TODO: do something with this result
+					console.log(content);
+				} else {
+					window.alert("wrong file type '" + content.fileType + "'.");
+					return;
+				}
 			});
 		}
 	}

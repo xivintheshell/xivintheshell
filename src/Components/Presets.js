@@ -59,7 +59,7 @@ class LoadSavePresets extends React.Component {
 				if (content.fileType === FileType.Presets) {
 					controller.appendFilePresets(content);
 				} else {
-					console.log("incorrect file type");
+					window.alert("wrong file type '" + content.fileType + "'");
 				}
 			});
 		}
@@ -123,7 +123,7 @@ function PresetLine(props) {
 		itr = itr.next; ctr++;
 	}
 	let clickableContent = <span>{line.name} ({icons})</span>;
-	return <div>
+	return <div style={{marginBottom: "8px"}}>
 		<Clickable content={clickableContent} onClickFn={() => {
 			controller.tryAddLine(line, ReplayMode.Tight);
 		}}/>
