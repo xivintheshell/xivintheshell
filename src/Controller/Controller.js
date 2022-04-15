@@ -4,7 +4,7 @@ import { GameState } from "../Game/GameState";
 import {GameConfig, ResourceType, SkillReadyStatus} from "../Game/Common";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {displayedSkills, updateSkillButtons} from "../Components/Skills";
-import {TickMode} from "../Components/PlaybackControl"
+import {TickMode, updateConfigDisplay} from "../Components/PlaybackControl"
 import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
 import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
@@ -83,6 +83,35 @@ class Controller {
 			this.presetLines.push(line);
 		}
 		updatePresetsView();
+	}
+
+	loadBattleRecordFromFile(content) {
+		this.gameConfig = new GameConfig();
+		this.gameConfig.casterTax = content.config.casterTax;
+		this.gameConfig.animationLock = content.config.animationLock;
+		this.gameConfig.spellSpeed = content.config.spellSpeed;
+		this.gameConfig.timeTillFirstManaTick = content.config.timeTillFirstManaTick;
+		this.gameConfig.countdown = content.config.countdown;
+		this.gameConfig.randomSeed = content.config.randomSeed;
+
+		this.record = new Record();
+		this.record.config = content.config;
+		updateConfigDisplay(content.config);
+
+		this.#requestRestart();
+
+		// now add the actions
+		//console.log(content);
+		let line = new Line();
+		for (let i = 0; i < content.actions.length; i++) {
+			let action = content.actions[i];
+			let node = new ActionNode(action.type);
+			node.skillName = action.skillName;
+			node.waitDuration = action.waitDuration;
+			line.addActionNode(node);
+		}
+		let replayResult = this.#replay(line, ReplayMode.Exact, false);
+		console.assert(replayResult);
 	}
 
 	reportPotencyUpdate() {
@@ -465,7 +494,6 @@ class Controller {
 
 			itr = itr.next;
 		}
-
 		return true;
 	}
 

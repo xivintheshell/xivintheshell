@@ -116,8 +116,8 @@ export class Input extends React.Component {
 		let width = typeof this.props.width === "undefined" ? 5 : this.props.width;
 		let style = typeof this.props.style === "undefined" ? {} : this.props.style;
 		return <div style={style}>
-			<span>{this.state.description}</span>
-			<input className={"textInput"} size={width} type="text" value={this.state.value} onChange={this.onChange}/>
+			<span>{this.state.description/* + "(" + this.state.value + ")"*/}</span>
+			<input className={"textInput"} size={width} type="text" value={this.props.defaultValue} onChange={this.onChange}/>
 		</div>
 	}
 }

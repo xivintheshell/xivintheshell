@@ -18,8 +18,7 @@ export class LoadSave extends React.Component {
 			let fileToLoad = cur.files[0];
 			loadFromFile(fileToLoad, (content)=>{
 				if (content.fileType === FileType.Record) {
-					// TODO: do something with this result
-					console.log(content);
+					controller.loadBattleRecordFromFile(content);
 				} else {
 					window.alert("wrong file type '" + content.fileType + "'.");
 					return;

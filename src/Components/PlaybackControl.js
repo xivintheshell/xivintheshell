@@ -72,12 +72,12 @@ export class TimeControl extends React.Component {
 		this.state = {
 			stepSize: 1,
 			timeScale: 2
-		}
+		};
 	}
 	unboundSetStepSize(val) {
+		this.setState({stepSize: val})
 		let numVal = parseFloat(val);
 		if (!isNaN(numVal)) {
-			this.setState({stepSize: numVal})
 			controller.setTimeControlSettings({
 				stepSize: numVal,
 				timeScale: this.state.timeScale
@@ -85,9 +85,9 @@ export class TimeControl extends React.Component {
 		}
 	}
 	unboundSetTimeScale(val) {
+		this.setState({timeScale: val})
 		let numVal = parseFloat(val);
 		if (!isNaN(numVal)) {
-			this.setState({timeScale: numVal})
 			controller.setTimeControlSettings({
 				stepSize: this.state.stepSize,
 				timeScale: numVal
@@ -106,6 +106,8 @@ export class TimeControl extends React.Component {
 		</div>
 	}
 }
+
+export let updateConfigDisplay = (config)=>{};
 
 export class Config extends React.Component {
 	constructor(props) {
@@ -126,17 +128,28 @@ export class Config extends React.Component {
 		this.setTimeTillFirstManaTick = this.unboundSetTimeTillFirstManaTick.bind(this);
 		this.setCountdown = this.unboundSetCountdown.bind(this);
 		this.setRandomSeed = this.unboundSetRandomSeed.bind(this);
+
+		updateConfigDisplay = this.unboundUpdateConfigDisplay.bind(this);
 	}
-	unboundSetSpellSpeed(val) { this.setState({spellSpeed: parseFloat(val)}) }
-	unboundSetAnimationLock(val) { this.setState({animationLock: parseFloat(val)}) }
-	unboundSetCasterTax(val) { this.setState({casterTax: parseFloat(val)}) }
-	unboundSetTimeTillFirstManaTick(val) { this.setState({timeTillFirstManaTick: parseFloat(val)}) }
-	unboundSetCountdown(val) { this.setState({countdown: parseFloat(val)}) }
+
+	unboundSetSpellSpeed(val) { this.setState({spellSpeed: val}) }
+	unboundSetAnimationLock(val) { this.setState({animationLock: val}) }
+	unboundSetCasterTax(val) { this.setState({casterTax: val}) }
+	unboundSetTimeTillFirstManaTick(val) { this.setState({timeTillFirstManaTick: val}) }
+	unboundSetCountdown(val) { this.setState({countdown: val}) }
 	unboundSetRandomSeed(val) { this.setState({randomSeed: val }); }
 
 	setConfigAndRestart() {
 		let seed = this.state.randomSeed.length > 0 ?
 			this.state.randomSeed : Math.random().toString();
+		if (isNaN(parseFloat(this.state.spellSpeed)) ||
+			isNaN(parseFloat(this.state.animationLock)) ||
+			isNaN(parseFloat(this.state.casterTax)) ||
+			isNaN(parseFloat(this.state.timeTillFirstManaTick)) ||
+			isNaN(parseFloat(this.state.countdown))) {
+			window.alert("Some config fields are not numbers!");
+			return;
+		}
 		controller.setConfigAndRestart({
 			spellSpeed: parseFloat(this.state.spellSpeed),
 			animationLock: parseFloat(this.state.animationLock),
@@ -147,8 +160,23 @@ export class Config extends React.Component {
 		});
 	}
 
+	unboundUpdateConfigDisplay(config) {
+		this.setState({
+			spellSpeed: config.spellSpeed,
+			animationLock: config.animationLock,
+			casterTax: config.casterTax,
+			timeTillFirstManaTick: config.timeTillFirstManaTick,
+			countdown: config.countdown,
+			randomSeed: config.randomSeed
+		});
+	}
+
 	componentDidMount() {
 		this.setConfigAndRestart();
+	}
+
+	componentWillUnmount() {
+		updateConfigDisplay = (config)=>{};
 	}
 
 	handleSubmit (event) {
@@ -156,6 +184,7 @@ export class Config extends React.Component {
 		event.preventDefault();
 	}
 
+	// TODO: how to let Input fields update....
 	render() {
 		return (
 			<div className={"config"}>
