@@ -182,7 +182,7 @@ export class ScrollAnchor extends React.Component {
 		this.myRef = React.createRef();
 	}
 	scroll() {
-		if (this.myRef.current !== null) {
+		if (this.myRef.current) {
 			this.myRef.current.scrollIntoView({behavior: "smooth"});
 		}
 	}

@@ -56,7 +56,7 @@ class Controller {
 	}
 
 	addSelectionToPreset(name="(untitled)") {
-		console.assert(this.record.getFirstSelection() !== null);
+		console.assert(this.record.getFirstSelection());
 		let line = new Line();
 		line.name = name;
 		let itr = this.record.getFirstSelection();
@@ -255,7 +255,7 @@ class Controller {
 
 			// add this tick to game record
 			let lastAction = this.record.getLastAction();
-			if (lastAction!==null) {
+			if (lastAction) {
 				lastAction.waitDuration += timeTicked;
 			} else {
 				let waitNode = new ActionNode(ActionType.Wait);
@@ -456,7 +456,7 @@ class Controller {
 	// returns true on success
 	#replay(line, replayMode, suppressLog=false) {
 		let itr = line.getFirstAction();
-		while (itr !== null) {
+		while (itr) {
 
 			// only Exact mode replays wait nodes
 			if (itr.type === ActionType.Wait && replayMode === ReplayMode.Exact) {

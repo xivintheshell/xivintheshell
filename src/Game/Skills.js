@@ -287,7 +287,7 @@ export function makeSkillsList(game)
 		};
 		let dot = game.resources.get(ResourceType.ThunderDoT);
 		let tick = game.resources.get(ResourceType.ThunderDoTTick);
-		if (tick.pendingChange !== null) {
+		if (tick.pendingChange) {
 			// if already has thunder applied; cancel the remaining ticks now.
 			dot.removeTimer();
 			tick.removeTimer();
@@ -489,7 +489,7 @@ export function makeSkillsList(game)
 		(game, node) => {
 			game.useInstantSkill(SkillName.Triplecast, () => {
 				let triple = game.resources.get(ResourceType.Triplecast);
-				if (triple.pendingChange !== null) triple.removeTimer(); // should never need this, but just in case
+				if (triple.pendingChange) triple.removeTimer(); // should never need this, but just in case
 				triple.gain(3);
 				game.resources.addResourceEvent(
 					ResourceType.Triplecast,
@@ -669,7 +669,7 @@ export function makeSkillsList(game)
 
 				let buff = game.resources.get(ResourceType.LucidDreaming);
 				let tick = game.resources.get(ResourceType.LucidTick);
-				if (tick.pendingChange !== null) {
+				if (tick.pendingChange) {
 					// if already has lucid applied; cancel the remaining ticks now.
 					buff.removeTimer();
 					tick.removeTimer();

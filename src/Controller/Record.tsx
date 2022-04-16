@@ -1,11 +1,12 @@
 import {FileType} from "./Common";
+import {GameConfig, SkillName} from "../Game/Common";
 
-export const ActionType = {
-	Skill: "Skill",
-	Wait: "Wait"
-};
+export const enum ActionType {
+	Skill = "Skill",
+	Wait = "Wait",
+}
 
-function verifyActionNode(action) {
+function verifyActionNode(action: ActionNode) {
 	console.assert(typeof action !== "undefined");
 	if (action.type === ActionType.Skill) {
 		console.assert(typeof action.skillName === "string");
@@ -15,23 +16,26 @@ function verifyActionNode(action) {
 		console.assert(typeof action.tmp_capturedPotency === "number");
 		return;
 	} else if (action.type === ActionType.Wait) {
-		console.assert(!isNaN(parseFloat(action.waitDuration)));
+		console.assert(!isNaN(action.waitDuration));
 		return;
 	}
 	console.assert(false);
 }
 
 export class ActionNode {
-	type;
-	skillName;
-	waitDuration = 0;
+	static _gNodeIndex: number = 0;
+	_nodeIndex: number;
 
-	static _gNodeIndex = 0;
-	_nodeIndex;
+	type: ActionType;
+	waitDuration: number = 0;
+	skillName?: SkillName;
+	next?: ActionNode = undefined;
 
-	next = null;
+	tmp_startLockTime?: number;
+	tmp_endLockTime?: number;
+	tmp_capturedPotency?: number;
 
-	constructor(actionType) {
+	constructor(actionType: ActionType) {
 		this.type = actionType;
 		this._nodeIndex = ActionNode._gNodeIndex;
 		ActionNode._gNodeIndex++;
@@ -55,22 +59,25 @@ export class ActionNode {
 }
 
 export class Line {
-	head = null;
-	tail = null;
-	name = "(anonymous line)";
-	static _gLineIndex = 0;
-	_lineIndex;
+	static _gLineIndex: number = 0;
+	_lineIndex: number;
+
+	head?: ActionNode;
+	tail?: ActionNode;
+	name: string = "(anonymous line)";
+
 	constructor() {
 		this._lineIndex = Line._gLineIndex;
 		Line._gLineIndex++;
 	}
-	addActionNode(actionNode) {
+	addActionNode(actionNode: ActionNode) {
 		console.assert(actionNode);
-		if (this.tail) console.assert(this.tail.next === null);
-		if (this.head === null) {
+		if (!this.head) {
 			this.head = actionNode;
-		} else {
+		} else if (this.tail) {
 			this.tail.next = actionNode;
+		} else {
+			console.assert(false);
 		}
 		this.tail = actionNode;
 	}
@@ -80,10 +87,10 @@ export class Line {
 	getLastAction() {
 		return this.tail;
 	}
-	serialized() {
+	serialized(): {name: string, actions: object[]} {
 		let list = [];
 		let itr = this.head;
-		while (itr !== null) {
+		while (itr) {
 			list.push({
 				type: itr.type,
 				// skill
@@ -102,36 +109,34 @@ export class Line {
 
 // a sequence of actions
 export class Record extends Line {
-	selectionStart = null;
-	selectionEnd = null;
-	config = null;
+	selectionStart?: ActionNode;
+	selectionEnd?: ActionNode;
+	config?: GameConfig;
 	getFirstSelection() {
 		return this.selectionStart;
 	}
 	getLastSelection() {
 		return this.selectionEnd;
 	}
-	addActionNode(actionNode) {
+	addActionNode(actionNode: ActionNode) {
 		verifyActionNode(actionNode);
 		super.addActionNode(actionNode);
 	}
 	#getSelectionStats() {
-		console.assert(this.selectionStart !== null && this.selectionEnd !== null);
 		let potency = 0;
 		let waitDuration = 0;
-		let itr;
-		for (itr = this.selectionStart; itr !== this.selectionEnd.next; itr = itr.next) {
-			if (itr.type === ActionType.Skill) {
-				potency += itr.tmp_capturedPotency;
-				waitDuration += itr.waitDuration;
-			}
+		let itr: ActionNode | undefined = this.selectionStart;
+		while (itr) {
+			potency += itr.tmp_capturedPotency ?? 0;
+			waitDuration += itr.waitDuration;
+			itr = itr.next;
 		}
 		console.assert(!isNaN(potency));
 		console.assert(!isNaN(waitDuration));
 		return [potency, waitDuration];
 	}
 	// assume node is actually in this recording
-	selectSingle(node) {
+	selectSingle(node: ActionNode) {
 		this.unselectAll();
 		node.select();
 		this.selectionStart = node;
@@ -139,34 +144,36 @@ export class Record extends Line {
 		return this.#getSelectionStats();
 	}
 	unselectAll() {
-		if (this.selectionStart) {
-			console.assert(this.selectionEnd);
-			for (let itr = this.selectionStart; itr !== this.selectionEnd.next; itr = itr.next) {
-				itr.unselect();
-			}
+		let itr: ActionNode | undefined = this.selectionStart;
+		while (itr) {
+			itr.unselect();
+			itr = itr.next;
 		}
-		this.selectionStart = null;
-		this.selectionEnd = null;
+		this.selectionStart = undefined;
+		this.selectionEnd = undefined;
 	}
-	#selectSequence(first, last) {
+	#selectSequence(first: ActionNode, last: ActionNode) {
 		this.unselectAll();
-		for (let itr = first; itr !== last.next; itr = itr.next) {
+		let itr: ActionNode | undefined = first;
+		while (itr && itr !== last.next) {
 			itr.select();
+			itr = itr.next;
 		}
 		this.selectionStart = first;
 		this.selectionEnd = last;
 		return this.#getSelectionStats();
 	}
-	selectUntil(node) {
+	selectUntil(node: ActionNode) {
 		// proceed only if there's currently exactly 1 node selected
 		if (this.selectionStart && this.selectionStart === this.selectionEnd) {
-			for (let itr = this.selectionStart; itr !== null; itr = itr.next) {
+			let itr: ActionNode | undefined;
+			for (itr = this.selectionStart; itr; itr = itr.next) {
 				if (itr === node) {
 					return this.#selectSequence(this.selectionStart, node);
 				}
 			}
 			// failed to find node from going down the currently selected list
-			for (let itr = node; itr !== null; itr = itr.next) {
+			for (itr = node; itr; itr = itr.next) {
 				if (itr === this.selectionStart) {
 					return this.#selectSequence(node, this.selectionStart);
 				}
@@ -178,11 +185,13 @@ export class Record extends Line {
 		}
 	}
 	serialized() {
-		console.assert(this.config !== null);
+		console.assert(this.config);
+		let base = super.serialized();
 		return {
+			name: base.name,
 			fileType: FileType.Record,
 			config: this.config,
-			actions: super.serialized().actions
+			actions: base.actions,
 		};
 	}
 }

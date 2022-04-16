@@ -116,7 +116,7 @@ function PresetLine(props) {
 		width: "18px",
 		verticalAlign: "middle"
 	}
-	while (itr !== null) {
+	while (itr) {
 		console.assert(itr.type === ActionType.Skill);
 		let iconPath = skillIcons.get(itr.skillName);
 		icons.push(<img style={iconStyle} key={ctr} src={iconPath} alt={itr.skillName}/>)
@@ -165,7 +165,7 @@ class Presets extends React.Component {
 
 		(if timeline selection is not empty: ) name: ______ [save current selection as line]
 		 */
-		let hasSelection = controller && controller.record && controller.record.getFirstSelection() !== null;
+		let hasSelection = controller && controller.record && controller.record.getFirstSelection();
 		let contentStyle = {
 			margin: "10px",
 			paddingLeft: "10px",

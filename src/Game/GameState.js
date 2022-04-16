@@ -270,7 +270,7 @@ export class GameState
 	}
 
 	castSpell(skillName, onCapture, onApplication, node=null) {
-		console.assert(node !== null);
+		console.assert(node);
 		let skill = this.skillsList.get(skillName);
 		let skillInfo = skill.info;
 		console.assert(skillInfo.isSpell);
@@ -387,7 +387,7 @@ export class GameState
 
 	useInstantSkill(skillName, effectFn, dealDamage=false, node=null)
 	{
-		console.assert(node !== null);
+		console.assert(node);
 		let skillInfo = this.skillsList.get(skillName).info;
 		let skillTime = this.getDisplayTime();
 		let cd = this.cooldowns.get(skillInfo.cdName);
