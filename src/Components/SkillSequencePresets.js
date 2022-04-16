@@ -5,7 +5,7 @@ import {FileType, ReplayMode} from "../Controller/Common";
 import {skillIcons} from "./Skills";
 import {ActionType} from "../Controller/Record";
 
-export let updatePresetsView = ()=>{};
+export let updateSkillSequencePresetsView = ()=>{};
 
 class SaveAsPreset extends React.Component {
 	constructor(props) {
@@ -134,17 +134,17 @@ function PresetLine(props) {
 	</div>
 }
 
-class Presets extends React.Component {
+class SkillSequencePresets extends React.Component {
 
 	saveFilename = "presets.txt";
 	constructor(props) {
 		super(props);
-		updatePresetsView = this.unboundUpdatePresetsView.bind(this);
+		updateSkillSequencePresetsView = this.unboundUpdatePresetsView.bind(this);
 		this.onSaveFilenameChange = this.unboundOnSaveFilenameChange.bind(this);
 		this.onSave = this.unboundOnSave.bind(this);
 	}
 	componentWillUnmount() {
-		updatePresetsView = ()=>{};
+		updateSkillSequencePresetsView = ()=>{};
 	}
 	unboundOnSaveFilenameChange(evt) {
 		if (evt.target) this.saveFilename = evt.target.value;
@@ -199,10 +199,10 @@ class Presets extends React.Component {
 			</div>
 		</div>;
 		return <Expandable
-			title="Presets"
+			title="Skill sequence presets"
 			content={content}
 			defaultShow={true}/>
 	}
 }
 
-export let presets = <Presets/>;
+export let skillSequencePresets = <SkillSequencePresets/>;

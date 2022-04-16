@@ -361,6 +361,7 @@ class StatsDisplay extends React.Component {
 	render() {
 		let cumulative = <div data-tip data-for="ppsNotes">
 			<span>Last damage time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
+			<span>Cumulative potency: {(this.state.cumulativePPS * this.state.cumulativeDuration).toFixed(2)}</span><br/>
 			<span>PPS: {this.state.cumulativePPS.toFixed(2)}</span><br/>
 			<ReactTooltip id={"ppsNotes"}>
 				<div className={"toolTip"}>

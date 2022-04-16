@@ -8,9 +8,9 @@ import {controller} from "../Controller/Controller";
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 import {LoadSave} from "./LoadSave";
-import {presets} from "./Presets";
+import {skillSequencePresets} from "./SkillSequencePresets";
 
-export var setRealTime = inRealTime=>{};
+export let setRealTime = inRealTime=>{};
 export default class Main extends React.Component {
 	constructor(props) {
 		super(props);
@@ -51,7 +51,7 @@ export default class Main extends React.Component {
 						<LoadSave/>
 					</div>
 				</div>
-				{presets}
+				{skillSequencePresets}
 				<div style={{marginTop: "16px"}}>
 					<Tabs>
 						<TabList>

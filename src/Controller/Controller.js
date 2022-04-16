@@ -9,7 +9,7 @@ import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
 import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
 import {ActionNode, ActionType, Record, Line} from "./Record";
-import {updatePresetsView} from "../Components/Presets";
+import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 
 class Controller {
 	constructor() {
@@ -66,7 +66,7 @@ class Controller {
 		}
 		this.presetLines.push(line);
 
-		updatePresetsView();
+		updateSkillSequencePresetsView();
 	}
 
 	appendFilePresets(content) {
@@ -82,7 +82,7 @@ class Controller {
 			}
 			this.presetLines.push(line);
 		}
-		updatePresetsView();
+		updateSkillSequencePresetsView();
 	}
 
 	loadBattleRecordFromFile(content) {
@@ -116,11 +116,9 @@ class Controller {
 
 	reportPotencyUpdate() {
 		let cumulativePotency = 0;
-		for (let itr = this.record.getFirstAction(); itr !== this.record.getLastAction().next; itr = itr.next) {
-			if (itr.type === ActionType.Skill && itr.tmp_startLockTime >= 0) {
-				cumulativePotency += itr.tmp_capturedPotency;
-			}
-		}
+		this.record.iterateAll(itr=>{
+			cumulativePotency += itr.tmp_capturedPotency ?? 0;
+		});
 		let totalTime = this.game.time - this.gameConfig.countdown;
 		updateStatsDisplay({
 			cumulativePPS: totalTime > 0 ? cumulativePotency / totalTime : 0,
@@ -409,14 +407,14 @@ class Controller {
 			}
 		}
 
-		if (status.status === SkillReadyStatus.Ready)
-		{
+		if (status.status === SkillReadyStatus.Ready) {
 			let node = new ActionNode(ActionType.Skill);
 			node.tmp_capturedPotency = 0;
+			node.skillName = skillName;
+			node.waitDuration = 0;
+			this.record.addActionNode(node);
 
 			this.game.useSkill(skillName, node);
-			this.updateStatusDisplay();
-			this.#updateSkillButtons();
 			if (overrideTickMode === TickMode.RealTimeAutoPause) {
 				this.shouldLoop = true;
 				this.#runLoop(()=>{
@@ -427,11 +425,11 @@ class Controller {
 			let lockDuration = this.game.timeTillAnySkillAvailable();
 			let time = this.game.time;
 
-			node.skillName = skillName;
-			node.waitDuration = 0;
 			node.tmp_startLockTime = time;
 			node.tmp_endLockTime = time + lockDuration;
-			this.record.addActionNode(node);
+
+			this.updateStatusDisplay();
+			this.#updateSkillButtons();
 
 			let skillInfo = this.game.skillsList.get(skillName).info;
 			let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
@@ -514,7 +512,7 @@ class Controller {
 		for (let i = 0; i < this.presetLines.length; i++) {
 			if (this.presetLines[i] === line) {
 				this.presetLines.splice(i, 1);
-				updatePresetsView();
+				updateSkillSequencePresetsView();
 				return;
 			}
 		}
@@ -523,7 +521,7 @@ class Controller {
 
 	deleteAllLines() {
 		this.presetLines = [];
-		updatePresetsView();
+		updateSkillSequencePresetsView();
 	}
 
 	// basically restart the game and play till here:
@@ -560,7 +558,7 @@ class Controller {
 		}
 		updateSelectionDisplay(
 			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
-		updatePresetsView();
+		updateSkillSequencePresetsView();
 
 	}
 

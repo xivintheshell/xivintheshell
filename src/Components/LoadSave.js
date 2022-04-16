@@ -37,14 +37,12 @@ export class LoadSave extends React.Component {
 	render() {
 		return <div className={"loadSave"}>
 			<div>
-				<Clickable content="[save]" onClickFn={this.onSave}/>
-				<span> as: </span>
-				<input defaultValue="battle.txt" className="textInput" width="10" onChange={this.onSaveFilenameChange}/>
+				<input defaultValue="battle.txt" className="textInput" width="8" onChange={this.onSaveFilenameChange}/>
+				<button onClick={this.onSave}>save to file</button>
 			</div>
 			<div>
-				<Clickable content="[load]" onClickFn={this.onLoad}/>
-				<span> from: </span>
-				<input type="file" ref={this.fileSelectorRef}/>
+				<span>Load from: </span>
+				<input type="file" ref={this.fileSelectorRef} onChange={this.onLoad}/>
 			</div>
 		</div>
 	}

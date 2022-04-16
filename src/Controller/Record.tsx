@@ -11,8 +11,8 @@ function verifyActionNode(action: ActionNode) {
 	if (action.type === ActionType.Skill) {
 		console.assert(typeof action.skillName === "string");
 		console.assert(typeof action.waitDuration === "number");
-		console.assert(typeof action.tmp_startLockTime === "number");
-		console.assert(typeof action.tmp_endLockTime === "number");
+		//console.assert(typeof action.tmp_startLockTime === "number");
+		//console.assert(typeof action.tmp_endLockTime === "number");
 		console.assert(typeof action.tmp_capturedPotency === "number");
 		return;
 	} else if (action.type === ActionType.Wait) {
@@ -122,18 +122,41 @@ export class Record extends Line {
 		verifyActionNode(actionNode);
 		super.addActionNode(actionNode);
 	}
-	#getSelectionStats() {
-		let potency = 0;
-		let waitDuration = 0;
-		let itr: ActionNode | undefined = this.selectionStart;
+
+	iterateAll(fn: (node: ActionNode) => void): void {
+		let itr: ActionNode | undefined = this.head;
 		while (itr) {
-			potency += itr.tmp_capturedPotency ?? 0;
-			waitDuration += itr.waitDuration;
+			fn(itr);
 			itr = itr.next;
 		}
+	}
+
+	iterateSelected(fn: (node: ActionNode) => void): void {
+		let itr: ActionNode | undefined = this.selectionStart;
+		while (itr && itr !== (this.selectionEnd?.next ?? undefined)) {
+			fn(itr);
+			itr = itr.next;
+		}
+	}
+
+	#getSelectionStats() {
+		let potency = 0;
+		let duration = 0;
+
+		this.iterateSelected(itr=>{
+			// potency
+			potency += itr.tmp_capturedPotency ?? 0;
+			// duration
+			if (itr !== this.selectionEnd) {
+				duration += itr.waitDuration;
+			} else {
+				duration += (itr.tmp_endLockTime ?? 0) - (itr.tmp_startLockTime ?? 0);
+			}
+		});
+
 		console.assert(!isNaN(potency));
-		console.assert(!isNaN(waitDuration));
-		return [potency, waitDuration];
+		console.assert(!isNaN(duration));
+		return [potency, duration];
 	}
 	// assume node is actually in this recording
 	selectSingle(node: ActionNode) {
@@ -144,21 +167,17 @@ export class Record extends Line {
 		return this.#getSelectionStats();
 	}
 	unselectAll() {
-		let itr: ActionNode | undefined = this.selectionStart;
-		while (itr) {
+		this.iterateAll(itr=>{
 			itr.unselect();
-			itr = itr.next;
-		}
+		})
 		this.selectionStart = undefined;
 		this.selectionEnd = undefined;
 	}
 	#selectSequence(first: ActionNode, last: ActionNode) {
 		this.unselectAll();
-		let itr: ActionNode | undefined = first;
-		while (itr && itr !== last.next) {
+		this.iterateSelected(itr=>{
 			itr.select();
-			itr = itr.next;
-		}
+		})
 		this.selectionStart = first;
 		this.selectionEnd = last;
 		return this.#getSelectionStats();
