@@ -1,5 +1,5 @@
 import React from 'react'
-import {asyncFetch, Clickable, Expandable, Input, loadFromFile, saveToFile} from "./Common";
+import {asyncFetch, Clickable, Expandable, Input, loadFromFile, LoadJsonFromFileOrUrl, saveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType, ReplayMode} from "../Controller/Common";
 import {skillIcons} from "./Skills";
@@ -11,98 +11,26 @@ class SaveAsPreset extends React.Component {
 	constructor(props) {
 		super(props);
 		this.onChange = this.unboundOnChange.bind(this);
+		this.state = {
+			filename: "(untitled)"
+		};
 	}
 	unboundOnChange(val) {
-		this.filename = val;
+		this.setState({filename: val});
 	}
 	render() {
-		return <div>
+		return <form>
 			<Input
 				style={{display: "inline-block", marginTop: "10px"}}
-				defaultValue="(untitled)"
-				description="name: " width={30}
+				defaultValue={this.state.filename}
+				description={"name: "} width={30}
 				onChange={this.onChange}/>
-			{
-				<button disabled={!this.props.enabled} onClick={()=>{
-					controller.addSelectionToPreset(this.filename);
-				}}>add selection to preset</button>
-			}
-		</div>
-	}
-}
-
-class LoadSavePresets extends React.Component {
-	loadUrl = "https://miyehn.me/ffxiv-blm-rotation/presets/default.txt";
-	fileSelectorRef = null;
-	constructor(props) {
-		super(props);
-		this.onLoadFileChange = this.unboundOnLoadFileChange.bind(this);
-		this.onLoadUrlChange = this.unboundOnLoadUrlChange.bind(this);
-		this.onLoadPresetFile = this.unboundOnLoadPresetFile.bind(this);
-		this.onLoadUrl = this.unboundOnLoadUrl.bind(this);
-		this.fileSelectorRef = React.createRef();
-	}
-	componentDidMount() {
-		this.onLoadUrl();
-	}
-	unboundOnLoadUrlChange(evt) {
-		if (evt.target) this.loadUrl = evt.target.value;
-	}
-	unboundOnLoadFileChange() {
-		this.onLoadPresetFile();
-	}
-	unboundOnLoadPresetFile() {
-		let cur = this.fileSelectorRef.current;
-		if (cur && cur.files.length > 0) {
-			let fileToLoad = cur.files[0];
-			loadFromFile(fileToLoad, (content)=>{
-				if (content.fileType === FileType.Presets) {
-					controller.appendFilePresets(content);
-				} else {
-					window.alert("wrong file type '" + content.fileType + "'");
-				}
-			});
-		}
-	}
-	unboundOnLoadUrl() {
-		let errorHandler = function(e) {
-			console.log("some error occurred");
-		};
-		asyncFetch(this.loadUrl, data=>{
-			try {
-				let content = JSON.parse(data);
-				if (content.fileType === FileType.Presets) {
-					controller.appendFilePresets(content);
-				} else {
-					console.log("incorrect file type");
-				}
-			} catch(e) {
-				errorHandler(e);
-			}
-		}, (e)=>{
-			errorHandler(e);
-		});
-	}
-	render() {
-		let longInputStyle = {
-			outline: "none",
-			border: "none",
-			borderBottom: "1px solid black",
-			width: "30em",
-		};
-		return <div>
-			<div>
-				<span>Load presets from file: </span>
-				<input type="file" ref={this.fileSelectorRef} onChange={this.onLoadFileChange}/>
-			</div>
-			<div>
-				<span>Load presets from URL: </span>
-				<input defaultValue={this.loadUrl} style={longInputStyle}
-					   onChange={this.onLoadUrlChange}/>
-				<button onClick={this.onLoadUrl}>load</button>
-				{this.loading ? <span> (loading..)</span> : <div/>}
-			</div>
-		</div>
+			<button type={"submit"} disabled={!this.props.enabled} onClick={(e) => {
+				controller.addSelectionToPreset(this.filename);
+				e.preventDefault();
+			}}>add selection to preset
+			</button>
+		</form>
 	}
 }
 
@@ -154,17 +82,6 @@ class SkillSequencePresets extends React.Component {
 	}
 	unboundUpdatePresetsView() { this.forceUpdate(); }
 	render() {
-		/*
-		[load presets from URL]: ______
-		[load presets from file]: [choose file]
-		[save presets to file] as: ______
-
-		<list all preset lines>
-			each line: <name>: <Clickable>{icon}{icon}...{icon}</Clickable> [delete (x)]
-			when clicked on a line, controller.tryAddLine(line) : boolean
-
-		(if timeline selection is not empty: ) name: ______ [save current selection as line]
-		 */
 		let hasSelection = controller && controller.record && controller.record.getFirstSelection();
 		let contentStyle = {
 			margin: "10px",
@@ -177,26 +94,36 @@ class SkillSequencePresets extends React.Component {
 			width: "20em",
 		};
 		let content = <div style={contentStyle}>
-			<LoadSavePresets/>
+			<LoadJsonFromFileOrUrl
+				defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/defaultLines.txt"}
+				onLoadFn={(content)=>{
+					if (content.fileType === FileType.Presets) {
+						controller.appendFilePresets(content);
+					} else {
+						window.alert("incorrect file type '" + content.fileType + "'");
+					}
+				}}/>
 			<div style={{
 				outline: "1px solid lightgrey",
-				marginTop: "10px",
+				margin: "10px 0",
 				padding: "10px",
 			}}>
 				{controller.presetLines.map((line)=>{
 					return <PresetLine line={line} key={line._lineIndex}/>
 				})}
 				<SaveAsPreset enabled={hasSelection}/>
-				<hr style={{marginTop: "16px"}}/>
-				<button onClick={()=>{
-					controller.deleteAllLines();
-				}}>clear all presets</button>
-				<div>
+				<form style={{marginTop: "16px"}}>
 					<span>Save presets to file as: </span>
 					<input defaultValue={this.saveFilename} style={longInputStyle} onChange={this.onSaveFilenameChange}/>
-					<button onClick={this.onSave}>save</button>
-				</div>
+					<button type={"submit"} onClick={(e)=>{
+						this.onSave();
+						e.preventDefault();
+					}}>save</button>
+				</form>
 			</div>
+			<button onClick={()=>{
+				controller.deleteAllLines();
+			}}>clear all presets</button>
 		</div>;
 		return <Expandable
 			title="Skill sequence presets"

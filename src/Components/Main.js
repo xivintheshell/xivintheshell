@@ -9,6 +9,7 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 import {LoadSave} from "./LoadSave";
 import {skillSequencePresets} from "./SkillSequencePresets";
+import {timelineMarkerPresets} from "./TimelineMarkerPresets";
 
 export let setRealTime = inRealTime=>{};
 export default class Main extends React.Component {
@@ -60,6 +61,7 @@ export default class Main extends React.Component {
 						</TabList>
 
 						<TabPanel>
+							{timelineMarkerPresets}
 							{timeline}
 						</TabPanel>
 						<TabPanel>

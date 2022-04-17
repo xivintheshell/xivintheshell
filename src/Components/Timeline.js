@@ -1,40 +1,10 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
-import {skillIcons} from "./Skills";
-import {Clickable, Slider} from "./Common";
+import {Slider} from "./Common";
 import ReactTooltip from 'react-tooltip';
-
-const MAX_HEIGHT = 400;
-
-function Cursor(props) {
-	let style={
-		top: props.vOffset,
-		left: props.elem.left - 3,
-		zIndex: 2,
-	};
-	return <div style={style} className={"timeline-elem cursor"} data-tip data-for={`${props.elemID}`}>
-		<svg width={6} height={MAX_HEIGHT}>
-			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"black"}/>
-			<polygon points="0,0 6,0 3,6" fill="black" stroke="none"/>
-		</svg>
-		<ReactTooltip id={`${props.elemID}`}>{props.elem.hoverText}</ReactTooltip>
-	</div>;
-}
-
-function MPTickMark(props) {
-	let style={
-		top: props.vOffset,
-		left: props.elem.left - 3,
-		zIndex: -1
-	};
-	return <div style={style} className={"timeline-elem MPTickMark"} data-tip data-for={`${props.elemID}`}>
-		<svg width={6} height={MAX_HEIGHT}>
-			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"#88cae0"}/>
-		</svg>
-		<ReactTooltip id={`${props.elemID}`}>{props.elem.hoverText}</ReactTooltip>
-	</div>;
-}
+import {Cursor, MPTickMark, DamageMark, LucidMark, TimelineSkill} from "./TimelineElements";
+import {getTimelineMarkersHeight, timelineMarkers} from "./TimelineMarkers";
 
 export let updateSelectionDisplay = (startX, endX)=>{}
 class TimelineSelection extends React.Component {
@@ -70,98 +40,6 @@ class TimelineSelection extends React.Component {
 		};
 		return <div style={style}/>;
 	}
-}
-
-function DamageMark(props) {
-	let style={
-		top: props.vOffset,
-		left: props.elem.left-3,
-	};
-	return <div style={style} className={"timeline-elem damageMark"} data-tip data-for={`${props.elemID}`}>
-		<svg width={6} height={6}>
-			<polygon points="0,0 6,0 3,6" fill="red" stroke="none"/>
-		</svg>
-		<ReactTooltip id={`${props.elemID}`}>{props.elem.hoverText}</ReactTooltip>
-	</div>;
-}
-
-function LucidMark(props) {
-	let style={
-		top: props.vOffset,
-		left: props.elem.left-3,
-	};
-	return <div style={style} className={"timeline-elem lucidMark"} data-tip data-for={`${props.elemID}`}>
-		<svg width={6} height={6}>
-			<polygon points="0,0 6,0 3,6" fill="#88cae0" stroke="none"/>
-		</svg>
-		<ReactTooltip id={`${props.elemID}`}>{props.elem.hoverText}</ReactTooltip>
-	</div>;
-}
-
-function TimelineSkill(props) {
-	let node = props.elem.data.node;
-	let lockBarWidth = controller.timeline.positionFromTime(props.elem.data.lockDuration);
-	let lockBarStyle = {
-		position: "absolute",
-		top: 0,
-		background: props.elem.data.isSpellCast ? "#e7d9ee" : "#9d9d9d",
-		width: lockBarWidth,
-		height: props.elem.data.isSpellCast ? 14 : 28,
-	};
-	let lockBar = <div style={lockBarStyle}/>
-
-	let recastBarWidth = controller.timeline.positionFromTime(props.elem.data.recastDuration);
-	let recastBarStyle = {
-		position: "absolute",
-		top: 14,
-		background: "#dbf3d6",
-		width: recastBarWidth,
-		height: 14
-	};
-	let recastBar = <div style={recastBarStyle}/>
-
-	let iconStyle = {
-		position: "absolute",
-		top: 0,
-		width: 28,
-		height: 28,
-	};
-	let iconPath = skillIcons.get(props.elem.data.skillName);
-	let iconImg = <img
-		style={iconStyle}
-		className={"timeline-elem-skill-icon"}
-		src={iconPath}
-		alt={props.elem.data.skillName}
-		data-tip data-for={`${props.elemID}`}
-		tabIndex={-1}
-		onKeyDown={(e)=>{
-			if (e.key === "Backspace") {
-				controller.rewindUntilBefore(controller.record.getFirstSelection());
-			}
-		}}
-	/>;
-	let icon = <Clickable key={node._nodeIndex} content={iconImg} onClickFn={(e) => {
-		controller.timeline.onClickSkill(node, e.shiftKey);
-	}}/>
-
-	let componentStyle={
-		left: props.elem.left,
-		top: props.elem.data.isGCD ? 14 : 0,
-	};
-	let potency = node.tmp_capturedPotency;
-	let lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
-	let hoverText = <span>{props.elem.data.skillName + "@" + (props.elem.data.time-props.elem.countdown).toFixed(2)}</span>;
-	if (potency > 0) {
-		hoverText = <div>
-			{hoverText}<br/>
-			<span>{"potency: " + potency.toFixed(2)}</span><br/>
-			<span>{"lock time: " + lockDuration.toFixed(2)}</span>
-		</div>;
-	}
-	return <div style={componentStyle} className={"timeline-elem skill"}>
-		{lockBar}{props.elem.data.isGCD ? recastBar : <div/>}{icon}
-		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
-	</div>;
 }
 
 function TimelineHeader(props) {
@@ -207,16 +85,13 @@ function TimelineHeader(props) {
 			//border: "1px solid red",
 		}}><div style={{}}>{((i - countdownPadding) / props.pixelPerSecond).toFixed(0).toString()}</div></div>;})}
 	</div>
-	return <div className="timeline-header" style={{
+	return <div style={{
 		zIndex: -3,
 		position: "relative",
+		width: "100%",
+		height: "30px",
+		background: "#ececec",
 	}}>{ruler}</div>
-}
-
-function TimelineContent(props) {
-	return <div className="timeline-content" width={800}>
-		{props.elements}
-	</div>
 }
 
 export let updateTimelineContent = function(startTime, canvasWidth, data) {}
@@ -234,7 +109,7 @@ class TimelineMain extends React.Component {
 		this.setState({
 			startTime: 0,
 			canvasWidth: controller.timeline.getCanvasWidth(),
-			elements: controller.timeline.getTimelineElements()
+			elements: controller.timeline.elements,
 		});
 	}
 	componentWillUnmount() {
@@ -249,7 +124,7 @@ class TimelineMain extends React.Component {
 	}
 	render() {
 		let elemComponents = [];
-		let verticalOffset = "-2em";
+		let verticalOffset = "-" + (getTimelineMarkersHeight() + 30) + "px";
 		for (let i = 0; i < this.state.elements.length; i++) {
 			let e = this.state.elements[i];
 			if (e.type === ElemType.s_Cursor) {
@@ -265,7 +140,7 @@ class TimelineMain extends React.Component {
 				elemComponents.push(<MPTickMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
 			}
 			else if (e.type === ElemType.Skill) {
-				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
+				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i} />)
 			}
 		}
 		let countdownBgStyle = {
@@ -276,6 +151,11 @@ class TimelineMain extends React.Component {
 			width: controller.timeline.positionFromTime(controller.gameConfig.countdown),
 			zIndex: 2,
 			pointerEvents: "none"
+		};
+		let contentStyle = {
+			position: "relative",
+			width: "100%",
+			height: "54px"
 		};
 		let countdownGrey = <div style={countdownBgStyle}/>;
 		return <div className="timeline-main" style={{width: this.state.canvasWidth+"px"}} onMouseDown={
@@ -293,15 +173,10 @@ class TimelineMain extends React.Component {
 				pixelPerSecond={controller.timeline.scale * 100}
 				countdown={controller.gameConfig.countdown}
 			/>
-			<TimelineContent elements={elemComponents}/>
+			{timelineMarkers}
+			<div style={contentStyle}>{elemComponents}</div>
 		</div>
 	}
-}
-
-function FixedLeftColumn(props) {
-	return <div className={"timeline-fixedLeftColumn"}>
-		timeline left col
-	</div>;
 }
 
 export let scrollTimelineTo = (positionX)=>{}
@@ -383,8 +258,7 @@ class StatsDisplay extends React.Component {
 	}
 }
 
-class Timeline extends React.Component
-{
+class Timeline extends React.Component {
 	// TODO: explain asterisk maybe?
 	render() {
 		return <div>

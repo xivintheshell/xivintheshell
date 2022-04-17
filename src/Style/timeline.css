@@ -30,18 +30,6 @@ svg {
     background-color: darkgray;
 }
 
-.timeline-header {
-    width: 100%;
-    height: 2em;
-    background: #ececec;
-}
-
-.timeline-content {
-    position: relative;
-    width: 100%;
-    height: 4em;
-}
-
 .timeline-main {
     position: relative;
 }

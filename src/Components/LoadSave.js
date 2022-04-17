@@ -1,5 +1,5 @@
 import React from 'react'
-import {Clickable, loadFromFile, saveToFile} from "./Common";
+import {loadFromFile, saveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType} from "../Controller/Common";
 

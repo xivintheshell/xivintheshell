@@ -48,7 +48,6 @@ class Controller {
 	serializedPresets() {
 		return {
 			fileType: FileType.Presets,
-			config: this.gameConfig,
 			presets: this.presetLines.map(line=>{
 				return line.serialized();
 			}),
@@ -101,7 +100,6 @@ class Controller {
 		this.#requestRestart();
 
 		// now add the actions
-		//console.log(content);
 		let line = new Line();
 		for (let i = 0; i < content.actions.length; i++) {
 			let action = content.actions[i];
@@ -443,7 +441,7 @@ class Controller {
 				time: time,
 				lockDuration: lockDuration,
 				recastDuration: status.cdRecastTime,
-				getIsSelected: ()=>{ return node.isSelected(); },
+				//getIsSelected: ()=>{ return node.isSelected(); },
 				node: node,
 			});
 			scrollTimelineTo(this.timeline.positionFromTime(this.game.time));
