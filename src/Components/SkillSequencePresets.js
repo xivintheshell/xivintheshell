@@ -128,7 +128,7 @@ class SkillSequencePresets extends React.Component {
 		return <Expandable
 			title="Skill sequence presets"
 			content={content}
-			defaultShow={true}/>
+			defaultShow={false}/>
 	}
 }
 

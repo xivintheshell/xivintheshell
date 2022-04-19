@@ -53,6 +53,7 @@ export default class Main extends React.Component {
 					</div>
 				</div>
 				{skillSequencePresets}
+				{timelineMarkerPresets}
 				<div style={{marginTop: "16px"}}>
 					<Tabs>
 						<TabList>
@@ -61,7 +62,6 @@ export default class Main extends React.Component {
 						</TabList>
 
 						<TabPanel>
-							{timelineMarkerPresets}
 							{timeline}
 						</TabPanel>
 						<TabPanel>

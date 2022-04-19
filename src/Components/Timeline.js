@@ -7,6 +7,7 @@ import {Cursor, MPTickMark, DamageMark, LucidMark, TimelineSkill} from "./Timeli
 import {getTimelineMarkersHeight, timelineMarkers} from "./TimelineMarkers";
 
 export let updateSelectionDisplay = (startX, endX)=>{}
+
 class TimelineSelection extends React.Component {
 	constructor(props) {
 		super(props);
@@ -94,12 +95,12 @@ function TimelineHeader(props) {
 	}}>{ruler}</div>
 }
 
-export let updateTimelineContent = function(startTime, canvasWidth, data) {}
+export let updateTimelineContent = function(canvasWidth, data) {}
+
 class TimelineMain extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			startTime: 0,
 			canvasWidth: 300,
 			elements: []
 		}
@@ -107,17 +108,15 @@ class TimelineMain extends React.Component {
 	}
 	componentDidMount() {
 		this.setState({
-			startTime: 0,
 			canvasWidth: controller.timeline.getCanvasWidth(),
 			elements: controller.timeline.elements,
 		});
 	}
 	componentWillUnmount() {
-		updateTimelineContent = (startTime, canvasWidth, data)=>{};
+		updateTimelineContent = (canvasWidth, data)=>{};
 	}
-	unboundUpdateTimelineContent(startTime, canvasWidth, data) {
+	unboundUpdateTimelineContent(canvasWidth, data) {
 		this.setState({
-			startTime: startTime,
 			canvasWidth: canvasWidth,
 			elements: data
 		});
@@ -180,6 +179,7 @@ class TimelineMain extends React.Component {
 }
 
 export let scrollTimelineTo = (positionX)=>{}
+
 class FixedRightColumn extends React.Component {
 	constructor(props) {
 		super(props);
@@ -210,6 +210,7 @@ export let updateStatsDisplay = (props={
 	selectedPotency: 0,
 	selectedDuration: 0
 })=>{}
+
 class StatsDisplay extends React.Component {
 	constructor(props) {
 		super(props);
@@ -259,7 +260,6 @@ class StatsDisplay extends React.Component {
 }
 
 class Timeline extends React.Component {
-	// TODO: explain asterisk maybe?
 	render() {
 		return <div>
 			<Slider description={"display scale: "} defaultValue={0.4} onChange={(newVal)=>{

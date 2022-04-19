@@ -5,6 +5,7 @@ import {controller} from "./Controller";
 import {SkillName} from "../Game/Common";
 import {ActionNode} from "./Record";
 import {FileType} from "./Common";
+import {updateMarkers} from "../Components/TimelineMarkers";
 
 export const enum ElemType {
 	s_Cursor = "s_Cursor",
@@ -55,7 +56,7 @@ type SkillElem = TimelineElemBase & {
 	recastDuration: number;
 	node: ActionNode;
 }
-type MarkerElem = TimelineElemBase & {
+export type MarkerElem = TimelineElemBase & {
 	type: ElemType.Marker;
 	duration: number;
 	color: MarkerColor;
@@ -136,6 +137,7 @@ export class Timeline {
 	// assumes valid
 	addMarker(marker: MarkerElem) {
 		this.markers.push(marker);
+		this.drawElements();
 	}
 
 	// TODO: type safety
@@ -145,8 +147,7 @@ export class Timeline {
 			return;
 		}
 		this.markers = this.markers.concat(preset.markers);
-		console.log(this.markers);
-		// TODO: display markers
+		this.drawElements();
 	}
 
 	deleteAllMarkers() {
@@ -193,9 +194,9 @@ export class Timeline {
 
 	drawElements(filter=()=>{ return true; }) {
 		updateTimelineContent(
-			this.startTime,
 			this.getCanvasWidth(),
-			this.elements.concat(this.markers).filter(filter));
+			this.elements.filter(filter));
+		updateMarkers(this.markers);
 	}
 
 	onClickSkill(node: ActionNode, bShift: boolean) {

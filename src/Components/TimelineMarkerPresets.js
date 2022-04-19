@@ -16,6 +16,19 @@ import {ElemType, MarkerColor} from "../Controller/Timeline";
 	[clear all markers]
  */
 
+/*
+	For the sake of simplicity, tracks be like:
+
+	track 0
+	track 1
+	...
+	track -1 (auto)*
+
+	*implement later
+
+	put auto markers to a separate pool, so they can be cleared with battle reset
+ */
+
 
 export let updateTimelineMarkerPresetsView = ()=>{};
 
