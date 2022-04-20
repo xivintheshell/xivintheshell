@@ -17,14 +17,14 @@ export const enum ElemType {
 }
 
 export const enum MarkerColor {
-	Red = "#FF0000",
-	Orange = "#FF7700",
-	Yellow = "#FFFF00",
-	Green = "#00FF00",
-	Cyan = "#00FFFF",
-	Blue = "#0077FF",
-	Purple = "#7700FF",
-	Magenta = "#FF00FF"
+	Red = "#f64141",
+	Orange = "#e89b5f",
+	Yellow = "#ffd535",
+	Green = "#50c53d",
+	Cyan = "#53e5e5",
+	Blue = "#217ff5",
+	Purple = "#9755ef",
+	Pink = "#ee79ee"
 }
 
 type TimelineElemBase = {
@@ -138,6 +138,17 @@ export class Timeline {
 	addMarker(marker: MarkerElem) {
 		this.markers.push(marker);
 		this.drawElements();
+	}
+
+	deleteMarker(marker: MarkerElem) {
+		for (let i = 0; i < this.markers.length; i++) {
+			if (marker === this.markers[i]) {
+				this.markers.splice(i, 1);
+				this.drawElements();
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// TODO: type safety

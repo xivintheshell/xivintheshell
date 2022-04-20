@@ -1,5 +1,8 @@
-import React from 'react'
+import React, {CSSProperties} from 'react'
 import {MarkerElem} from "../Controller/Timeline";
+// @ts-ignore // FIXME
+import {controller} from "../Controller/Controller.js";
+import ReactTooltip from "react-tooltip";
 
 export let getTimelineMarkersHeight = () => { return 0 };
 
@@ -37,13 +40,42 @@ class TimelineMarkers extends React.Component {
 	}
 
 	render() {
-		console.log("render markers");
-		console.log(this.state.markers);
+		let makeMarker = (marker: MarkerElem, key: number | string) => {
+			let radius = 2;
+			let top = marker.track * 10 + 5 - radius;
+			let left = controller.timeline.positionFromTime(
+				marker.time + controller.gameConfig.countdown) - radius;
+			let width = controller.timeline.positionFromTime(marker.duration) + 2 * radius;
+			let height = 2 * radius;
+			let style: CSSProperties = {
+				position: "absolute",
+				background: marker.color,
+				borderRadius: radius,
+				top: top,
+				left: left,
+				width: width,
+				height: height,
+				textAlign: "center",
+			};
+			let id = "timelineMarker-" + key;
+			return <div key={key} data-tip data-for={id} style={style} onClick={()=>{
+				let success = controller.timeline.deleteMarker(marker);
+				console.assert(success);
+			}}>
+				<ReactTooltip id={id}>{marker.description}</ReactTooltip>
+			</div>;
+		};
+		let markerElems: JSX.Element[] = [];
+		let maxTrack = 0;
+		for (let i = 0; i < this.state.markers.length; i++) {
+			markerElems.push(makeMarker(this.state.markers[i], i));
+			maxTrack = Math.max(maxTrack, this.state.markers[i].track);
+		}
 		return <div ref={this.myRef} style={{
-			outline: "1px solid red"
-		}}>
-			(placeholder markers)
-		</div>;
+			height: 10 * (maxTrack + 1),
+			//outline: "1px solid red",
+			position: "relative"
+		}}>{markerElems}</div>;
 	}
 }
 

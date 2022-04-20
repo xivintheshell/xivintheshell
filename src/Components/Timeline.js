@@ -157,7 +157,7 @@ class TimelineMain extends React.Component {
 			height: "54px"
 		};
 		let countdownGrey = <div style={countdownBgStyle}/>;
-		return <div className="timeline-main" style={{width: this.state.canvasWidth+"px"}} onMouseDown={
+		return <div className="timeline-main" style={{width: this.state.canvasWidth}} onMouseDown={
 			(evt)=>{
 				if (!evt.shiftKey) {
 					controller.record.unselectAll();

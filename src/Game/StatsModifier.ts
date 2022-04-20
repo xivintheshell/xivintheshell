@@ -1,11 +1,21 @@
 import {Debug, ResourceType} from "./Common"
+import {Stats} from "fs";
 
 export class StatsModifier
 {
-	constructor()
-	{
-		this.reset();
-	}
+	damageBase = 1;
+	damageFire = 1;
+	damageIce = 1;
+	castTimeBase = 1;
+	castTimeFire = 1;
+	castTimeIce = 1;
+	spellRecastTimeScale = 1;
+	manaCostFire = 1;
+	manaCostIce = 1;
+	CH = 1;
+	DH = 1;
+	manaRegen = 0;
+	uhConsumption = 0;
 
 	reset()
 	{
@@ -27,7 +37,7 @@ export class StatsModifier
 	}
 
 	// StatsModifier -> ()
-	apply(other)
+	apply(other: StatsModifier)
 	{
 		this.damageBase *= other.damageBase;
 		this.damageFire *= other.damageFire;
@@ -52,7 +62,8 @@ export class StatsModifier
 		return ret;
 	}
 
-	static fromResourceState(resources)
+	// FIXME
+	static fromResourceState(resources: { get: (arg0: ResourceType) => { (): any; new(): any; currentValue: any; available: { (arg0: number): any; new(): any; }; }; })
 	{
 		let base = StatsModifier.base();
 		let modifiers = [];
