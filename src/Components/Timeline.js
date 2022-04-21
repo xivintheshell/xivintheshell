@@ -64,6 +64,12 @@ function TimelineHeader(props) {
 	for (let i = 0; i < props.canvasWidth; i += props.pixelPerSecond * 60) {
 		marks_1min.push(i);
 	}*/
+	let displayTime = (time) => {
+		let minute = Math.floor(time / 60);
+		let second = time - 60 * minute;
+		//if (minute === 0) return second.toString();
+		return minute.toString() + ":" + (second < 10 ? "0" : "") + second.toString();
+	}
 	let ruler = <div>
 		<svg width={props.canvasWidth} height="100%">
 			{marks_1sec.map(i=>{
@@ -76,7 +82,7 @@ function TimelineHeader(props) {
 				return <line key={"1min-"+i} stroke="grey" strokeWidth="1" x1={i} y1="0" x2={i} y2="50"/>
 			})*/}
 		</svg>
-		{marks_5sec.map(i=>{return <div key={i} style={{
+		{marks_5sec.map(i=>{return<div key={i} style={{
 			textAlign: "center",
 			position: "absolute",
 			top: "11px",
@@ -84,7 +90,7 @@ function TimelineHeader(props) {
 			width: "48px",
 			display: "inline-block",
 			//border: "1px solid red",
-		}}><div style={{}}>{((i - countdownPadding) / props.pixelPerSecond).toFixed(0).toString()}</div></div>;})}
+		}}><div>{displayTime((i - countdownPadding) / props.pixelPerSecond)}</div></div>;})}
 	</div>
 	return <div style={{
 		zIndex: -3,

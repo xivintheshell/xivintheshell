@@ -102,7 +102,7 @@ class TimelineMarkerPresets extends React.Component {
 		}
 		let content = <div style={contentStyle}>
 			<LoadJsonFromFileOrUrl
-				defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/defaultMarkers.txt"}
+				defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/p1s_core.txt"}
 				onLoadFn={(content)=>{
 					controller.timeline.appendMarkersPreset(content);
 				}}/>
@@ -111,13 +111,13 @@ class TimelineMarkerPresets extends React.Component {
 				margin: "10px 0",
 				padding: "10px",
 			}}>
-				<Input defaultValue={this.state.nextMarkerTime} description={"Time: "} width={5} style={inlineDiv}
+				<Input defaultValue={this.state.nextMarkerTime} description={"Time: "} width={8} style={inlineDiv}
 					   onChange={this.setTime}/>
-				<Input defaultValue={this.state.nextMarkerDuration} description={"Duration: "} width={5}
+				<Input defaultValue={this.state.nextMarkerDuration} description={"Duration: "} width={8}
 					   style={inlineDiv} onChange={this.setDuration}/>
 				<Input defaultValue={this.state.nextMarkerDescription} description={"Description: "} width={40}
 					   onChange={this.setDescription}/>
-				<Input defaultValue={this.state.nextMarkerTrack} description={"Track: "} width={5}
+				<Input defaultValue={this.state.nextMarkerTrack} description={"Track: "} width={4}
 					   style={inlineDiv} onChange={this.setTrack}/>
 				<div style={{display: "inline-block", marginTop: "4px"}}>
 					<span>Color: </span>
@@ -145,9 +145,19 @@ class TimelineMarkerPresets extends React.Component {
 					type={"submit"}
 					style={{display: "block", marginTop: "0.5em"}}
 					onClick={(e) => {
-						let marker = {
+						let parseTime = (timeStr: string): number => {
+							let val = timeStr.trim();
+							let colonIndex = val.indexOf(':');
+							if (colonIndex < 0) {
+								return parseFloat(val);
+							}
+							let minute = parseInt(val.substring(0, colonIndex));
+							let second = parseFloat(val.substring(colonIndex + 1));
+							return minute * 60 + second;
+						};
+						let marker: MarkerElem = {
 							type: ElemType.Marker,
-							time: parseFloat(this.state.nextMarkerTime),
+							time: parseTime(this.state.nextMarkerTime),
 							duration: parseFloat(this.state.nextMarkerDuration),
 							color: this.state.nextMarkerColor,
 							track: parseInt(this.state.nextMarkerTrack),

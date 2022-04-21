@@ -195,7 +195,12 @@ export class Timeline {
 	}
 
 	getCanvasWidth() {
-		let secondsToDraw = Math.ceil((this.elapsedTime + 4) / 8) * 8;
+		let rightMostTime = this.elapsedTime;
+		this.markers.forEach(marker=>{
+			let endTime = marker.time + marker.duration;
+			rightMostTime = Math.max(rightMostTime, endTime);
+		});
+		let secondsToDraw = Math.ceil((rightMostTime + 4) / 8) * 8;
 		return secondsToDraw * 100 * this.scale;
 	}
 
