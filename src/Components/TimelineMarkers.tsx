@@ -42,7 +42,7 @@ class TimelineMarkers extends React.Component {
 
 	render() {
 		let makeMarker = (marker: MarkerElem, key: number | string) => {
-			let radius = 2;
+			let radius = marker.duration === 0 ? 3 : 2;
 			let top = marker.track * 10 + 5 - radius;
 			let left = controller.timeline.positionFromTime(
 				marker.time + controller.gameConfig.countdown) - radius;

@@ -82,7 +82,7 @@ function TimelineHeader(props) {
 				return <line key={"1min-"+i} stroke="grey" strokeWidth="1" x1={i} y1="0" x2={i} y2="50"/>
 			})*/}
 		</svg>
-		{marks_5sec.map(i=>{return<div key={i} style={{
+		{props.pixelPerSecond < 6 ? <div/> : marks_5sec.map(i=>{return<div key={i} style={{
 			textAlign: "center",
 			position: "absolute",
 			top: "11px",

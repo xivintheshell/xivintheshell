@@ -175,9 +175,9 @@ export class Slider extends React.Component {
 				className={"sliderInput"}
 				size={10} type="range"
 				value={this.state.value}
-				min={0.1}
+				min={0.05}
 				max={1}
-				step={0.05}
+				step={0.025}
 				onChange={this.onChange}/>
 		</div>
 	}
