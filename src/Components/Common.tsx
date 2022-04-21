@@ -1,6 +1,5 @@
 import React, {ChangeEvent, CSSProperties, ReactNode} from "react";
 import jQuery from 'jquery';
-import {FileType} from "../Controller/Common";
 
 // https://github.com/eligrey/FileSaver.js#readme
 export function saveToFile(content: object, filename: string) {

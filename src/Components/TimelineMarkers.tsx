@@ -3,6 +3,7 @@ import {MarkerElem} from "../Controller/Timeline";
 // @ts-ignore // FIXME
 import {controller} from "../Controller/Controller.js";
 import ReactTooltip from "react-tooltip";
+import {setEditingMarkerValues} from "./TimelineMarkerPresets";
 
 export let getTimelineMarkersHeight = () => { return 0 };
 
@@ -61,6 +62,7 @@ class TimelineMarkers extends React.Component {
 			return <div key={key} data-tip data-for={id} style={style} onClick={()=>{
 				let success = controller.timeline.deleteMarker(marker);
 				console.assert(success);
+				setEditingMarkerValues(marker);
 			}}>
 				<ReactTooltip id={id}>{marker.description}</ReactTooltip>
 			</div>;

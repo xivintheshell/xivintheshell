@@ -1,20 +1,8 @@
-import React from 'react'
+import React, {ChangeEvent} from 'react'
 import {Expandable, Input, LoadJsonFromFileOrUrl, saveToFile} from "./Common";
+// @ts-ignore // FIXME
 import {controller} from "../Controller/Controller";
-import {ElemType, MarkerColor} from "../Controller/Timeline";
-
-/*
-	Load markers from file: [choose file] No file chosen
-	Load markers from URL: __________[load]
-	----
-	| Time: ______ Duration: ______
-	| Description: __________
-	| Track: ______ Color: [dropdown]
-	| [add marker]
-	----
-	Save markers to file as: __________[save]
-	[clear all markers]
- */
+import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
 
 /*
 	For the sake of simplicity, tracks be like:
@@ -29,17 +17,57 @@ import {ElemType, MarkerColor} from "../Controller/Timeline";
 	put auto markers to a separate pool, so they can be cleared with battle reset
  */
 
-
 export let updateTimelineMarkerPresetsView = ()=>{};
 
+export let setEditingMarkerValues = (marker: MarkerElem)=>{};
+
+type TimelineMarkerPresetsProp = {}
+type TimelineMarkerPresetsState = {
+	nextMarkerColor: MarkerColor,
+	nextMarkerTime: string,
+	nextMarkerDuration: string,
+	nextMarkerTrack: string,
+	nextMarkerDescription: string
+}
 class TimelineMarkerPresets extends React.Component {
 	saveFilename = "markers.txt";
-	constructor(props) {
+	state: TimelineMarkerPresetsState;
+
+	onSaveFilenameChange: (evt: ChangeEvent<{value: string}>) => void;
+	onSave: () => void;
+	onColorChange: (evt: ChangeEvent<{value: string}>) => void;
+
+	setTime: (val: string) => void;
+	setDuration: (val: string) => void;
+	setTrack: (val: string) => void;
+	setDescription: (val: string) => void;
+
+	constructor(props: TimelineMarkerPresetsProp) {
 		super(props);
-		updateTimelineMarkerPresetsView = this.unboundUpdatePresetsView.bind(this);
-		this.onSaveFilenameChange = this.unboundOnSaveFilenameChange.bind(this);
-		this.onSave = this.unboundOnSave.bind(this);
-		this.onColorChange = this.unboundOnColorChange.bind(this);
+		updateTimelineMarkerPresetsView = (()=>{this.forceUpdate();}).bind(this);
+		setEditingMarkerValues = ((marker: MarkerElem)=>{
+			this.setState({
+				nextMarkerColor: marker.color,
+				nextMarkerTime: marker.time.toString(),
+				nextMarkerDuration: marker.duration.toString(),
+				nextMarkerTrack: marker.track.toString(),
+				nextMarkerDescription: marker.description
+			});
+		}).bind(this);
+		this.onSaveFilenameChange = ((evt: ChangeEvent<{value: string}>)=>{
+			if (evt.target) this.saveFilename = evt.target.value;
+		}).bind(this);
+
+		this.onSave = (()=>{
+			saveToFile(controller.timeline.serializedMarkers(), this.saveFilename);
+		}).bind(this);
+
+		this.onColorChange = ((evt: ChangeEvent<{value: string}>)=>{
+			if (evt.target) {
+				this.setState({nextMarkerColor: evt.target.value});
+			}
+		}).bind(this);
+
 		this.state = {
 			nextMarkerColor: MarkerColor.Blue,
 			nextMarkerTime: "0",
@@ -47,31 +75,16 @@ class TimelineMarkerPresets extends React.Component {
 			nextMarkerTrack: "0",
 			nextMarkerDescription: "default description"
 		};
-		this.setTime = this.unboundSetTime.bind(this);
-		this.setDuration = this.unboundSetDuration.bind(this);
-		this.setTrack = this.unboundSetTrack.bind(this);
-		this.setDescription = this.unboundSetDescription.bind(this);
+		this.setTime = ((val: string)=>{this.setState({nextMarkerTime: val})}).bind(this);
+		this.setDuration = ((val: string)=>{this.setState({nextMarkerDuration: val})}).bind(this);
+		this.setTrack = ((val: string)=>{this.setState({nextMarkerTrack: val})}).bind(this);
+		this.setDescription = ((val: string)=>{this.setState({nextMarkerDescription: val})}).bind(this);
 	}
 	componentWillUnmount() {
 		updateTimelineMarkerPresetsView = ()=>{};
+		setEditingMarkerValues = (marker)=>{};
 	}
-	unboundOnSaveFilenameChange(evt) {
-		if (evt.target) this.saveFilename = evt.target.value;
-	}
-	unboundOnSave(e) {
-		saveToFile(controller.timeline.serializedMarkers(), this.saveFilename);
-	}
-	unboundOnColorChange(evt) {
-		if (evt.target) {
-			this.setState({nextMarkerColor: evt.target.value});
-		}
-	}
-	unboundSetTime(val) { this.setState({nextMarkerTime: val}); }
-	unboundSetDuration(val) { this.setState({nextMarkerDuration: val}); }
-	unboundSetTrack(val) { this.setState({nextMarkerTrack: val}); }
-	unboundSetDescription(val) { this.setState({nextMarkerDescription: val}); }
 
-	unboundUpdatePresetsView() { this.forceUpdate(); }
 	render() {
 		let contentStyle = {
 			margin: "10px",
@@ -84,7 +97,7 @@ class TimelineMarkerPresets extends React.Component {
 			width: "20em",
 		};
 		let inlineDiv = {display: "inline-block", marginRight: "1em"};
-		let colorOption = function(markerColor, displayName) {
+		let colorOption = function(markerColor: MarkerColor, displayName: string) {
 			return <option key={markerColor} value={markerColor}>{displayName}</option>
 		}
 		let content = <div style={contentStyle}>
