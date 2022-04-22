@@ -267,7 +267,6 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 	}
 	unboundOnLoadPresetFile() {
 		let cur = this.fileSelectorRef.current;
-		console.log(typeof cur);
 		if (cur && cur.files && cur.files.length > 0) {
 			let fileToLoad = cur.files[0];
 			loadFromFile(fileToLoad, (content)=>{
@@ -313,6 +312,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 				<span>Load from URL: </span>
 				<input defaultValue={this.loadUrl} style={longInputStyle}
 					   onChange={this.onLoadUrlChange}/>
+				<span> </span>
 				<button type={"submit"} onClick={e => {
 					this.onLoadUrl();
 					e.preventDefault();

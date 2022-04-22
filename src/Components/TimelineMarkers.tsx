@@ -41,9 +41,13 @@ class TimelineMarkers extends React.Component {
 	}
 
 	render() {
+		let maxTrack = 0;
+		for (let i = 0; i < this.state.markers.length; i++) {
+			maxTrack = Math.max(maxTrack, this.state.markers[i].track);
+		}
 		let makeMarker = (marker: MarkerElem, key: number | string) => {
 			let radius = marker.duration === 0 ? 3 : 2;
-			let top = marker.track * 10 + 5 - radius;
+			let top = (maxTrack - marker.track) * 10 + 5 - radius;
 			let left = controller.timeline.positionFromTime(
 				marker.time + controller.gameConfig.countdown) - radius;
 			let width = controller.timeline.positionFromTime(marker.duration) + 2 * radius;
@@ -68,10 +72,8 @@ class TimelineMarkers extends React.Component {
 			</div>;
 		};
 		let markerElems: JSX.Element[] = [];
-		let maxTrack = 0;
 		for (let i = 0; i < this.state.markers.length; i++) {
 			markerElems.push(makeMarker(this.state.markers[i], i));
-			maxTrack = Math.max(maxTrack, this.state.markers[i].track);
 		}
 		return <div ref={this.myRef} style={{
 			height: 10 * (maxTrack + 1),

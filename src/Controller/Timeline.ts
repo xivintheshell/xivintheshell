@@ -64,6 +64,12 @@ export type MarkerElem = TimelineElemBase & {
 	description: string;
 }
 
+export type SerializedMarker = TimelineElemBase & {
+	duration: number;
+	color: MarkerColor;
+	description: string;
+}
+
 type TimelineElem =
 	CursorElem |
 	DamageMarkElem |
@@ -152,12 +158,21 @@ export class Timeline {
 	}
 
 	// TODO: type safety
-	appendMarkersPreset(preset: any, suppressAlert=false) {
+	appendMarkersPreset(preset: any, track: number) {
 		if (preset.fileType !== FileType.Markers) {
-			if (!suppressAlert) window.alert("wrong file time '" + preset.fileType + "'");
+			window.alert("wrong file type '" + preset.fileType + "'");
 			return;
 		}
-		this.markers = this.markers.concat(preset.markers);
+		this.markers = this.markers.concat(preset.markers.map((m: SerializedMarker): MarkerElem=>{
+			return {
+				time: m.time,
+				duration: m.duration,
+				color: m.color,
+				description: m.description,
+				track: track,
+				type: ElemType.Marker
+			};
+		}));
 		this.drawElements();
 	}
 
@@ -234,9 +249,28 @@ export class Timeline {
 	}
 
 	serializedMarkers() {
-		return {
-			fileType: FileType.Markers,
-			markers: this.markers
-		};
+		let maxTrack = 0;
+		let markerTracks: SerializedMarker[][] = [];
+		for (let i = 0; i < this.markers.length; i++) {
+			maxTrack = Math.max(maxTrack, this.markers[i].track);
+		}
+		for (let i = 0; i < maxTrack + 1; i++) {
+			markerTracks.push([]);
+		}
+
+		this.markers.forEach(marker=>{
+			markerTracks[marker.track].push({
+				time: marker.time,
+				duration: marker.duration,
+				description: marker.description,
+				color: marker.color,
+			});
+		});
+		return markerTracks.map((track: SerializedMarker[])=>{
+			return {
+				fileType: FileType.Markers,
+				markers: track
+			}
+		});
 	}
 }

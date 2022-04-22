@@ -2,7 +2,7 @@ import React, {ChangeEvent} from 'react'
 import {Expandable, Input, LoadJsonFromFileOrUrl, saveToFile} from "./Common";
 // @ts-ignore // FIXME
 import {controller} from "../Controller/Controller";
-import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
+import {ElemType, MarkerColor, MarkerElem, SerializedMarker} from "../Controller/Timeline";
 
 /*
 	For the sake of simplicity, tracks be like:
@@ -27,10 +27,11 @@ type TimelineMarkerPresetsState = {
 	nextMarkerTime: string,
 	nextMarkerDuration: string,
 	nextMarkerTrack: string,
-	nextMarkerDescription: string
+	nextMarkerDescription: string,
+	loadTrackDest: string,
 }
 class TimelineMarkerPresets extends React.Component {
-	saveFilename = "markers.txt";
+	saveFilename = "markers";
 	state: TimelineMarkerPresetsState;
 
 	onSaveFilenameChange: (evt: ChangeEvent<{value: string}>) => void;
@@ -41,6 +42,8 @@ class TimelineMarkerPresets extends React.Component {
 	setDuration: (val: string) => void;
 	setTrack: (val: string) => void;
 	setDescription: (val: string) => void;
+
+	setLoadTrackDest: (val: string) => void;
 
 	constructor(props: TimelineMarkerPresetsProp) {
 		super(props);
@@ -59,7 +62,10 @@ class TimelineMarkerPresets extends React.Component {
 		}).bind(this);
 
 		this.onSave = (()=>{
-			saveToFile(controller.timeline.serializedMarkers(), this.saveFilename);
+			let files = controller.timeline.serializedMarkers();
+			for (let i = 0; i < files.length; i++) {
+				saveToFile(files[i], this.saveFilename + "_" + i + ".txt");
+			}
 		}).bind(this);
 
 		this.onColorChange = ((evt: ChangeEvent<{value: string}>)=>{
@@ -73,12 +79,15 @@ class TimelineMarkerPresets extends React.Component {
 			nextMarkerTime: "0",
 			nextMarkerDuration: "1",
 			nextMarkerTrack: "0",
-			nextMarkerDescription: "default description"
+			nextMarkerDescription: "default description",
+			loadTrackDest: "0"
 		};
 		this.setTime = ((val: string)=>{this.setState({nextMarkerTime: val})}).bind(this);
 		this.setDuration = ((val: string)=>{this.setState({nextMarkerDuration: val})}).bind(this);
 		this.setTrack = ((val: string)=>{this.setState({nextMarkerTrack: val})}).bind(this);
 		this.setDescription = ((val: string)=>{this.setState({nextMarkerDescription: val})}).bind(this);
+
+		this.setLoadTrackDest = ((val: string)=>{this.setState({loadTrackDest: val})}).bind(this);
 	}
 	componentWillUnmount() {
 		updateTimelineMarkerPresetsView = ()=>{};
@@ -94,17 +103,25 @@ class TimelineMarkerPresets extends React.Component {
 			outline: "none",
 			border: "none",
 			borderBottom: "1px solid black",
-			width: "20em",
+			width: "10em",
 		};
 		let inlineDiv = {display: "inline-block", marginRight: "1em"};
 		let colorOption = function(markerColor: MarkerColor, displayName: string) {
 			return <option key={markerColor} value={markerColor}>{displayName}</option>
 		}
 		let content = <div style={contentStyle}>
+			<Input defaultValue={this.state.loadTrackDest} description={"Load into track: "} width={8} style={inlineDiv}
+				   onChange={this.setLoadTrackDest}/>
 			<LoadJsonFromFileOrUrl
-				defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/p1s_core.txt"}
-				onLoadFn={(content)=>{
-					controller.timeline.appendMarkersPreset(content);
+				defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/p1s_0.txt"}
+				// FIXME
+				onLoadFn={(content: any)=>{
+					let track = parseInt(this.state.loadTrackDest);
+					if (isNaN(track)) {
+						window.alert("invalid track destination");
+						return;
+					}
+					controller.timeline.appendMarkersPreset(content, track);
 				}}/>
 			<form style={{
 				outline: "1px solid lightgrey",
@@ -176,8 +193,9 @@ class TimelineMarkerPresets extends React.Component {
 				</button>
 			</form>
 			<form>
-				<span>Save markers to file as: </span>
+				<span>Save markers to file: </span>
 				<input defaultValue={this.saveFilename} style={longInputStyle} onChange={this.onSaveFilenameChange}/>
+				<span> (each track as a separate file) </span>
 				<button type={"submit"} onClick={(e)=>{
 					this.onSave();
 					e.preventDefault();
