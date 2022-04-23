@@ -2,7 +2,7 @@ import React, {ChangeEvent} from 'react'
 import {Expandable, Input, LoadJsonFromFileOrUrl, saveToFile} from "./Common";
 // @ts-ignore // FIXME
 import {controller} from "../Controller/Controller";
-import {ElemType, MarkerColor, MarkerElem, SerializedMarker} from "../Controller/Timeline";
+import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
 
 /*
 	For the sake of simplicity, tracks be like:
@@ -29,6 +29,11 @@ type TimelineMarkerPresetsState = {
 	nextMarkerTrack: string,
 	nextMarkerDescription: string,
 	loadTrackDest: string,
+	durationInputMode: DurationInputMode,
+}
+const enum DurationInputMode {
+	Duration = "duration",
+	EndTime = "endTime"
 }
 class TimelineMarkerPresets extends React.Component {
 	saveFilename = "markers";
@@ -44,6 +49,7 @@ class TimelineMarkerPresets extends React.Component {
 	setDescription: (val: string) => void;
 
 	setLoadTrackDest: (val: string) => void;
+	setDurationInputMode: (val: string) => void;
 
 	constructor(props: TimelineMarkerPresetsProp) {
 		super(props);
@@ -80,7 +86,8 @@ class TimelineMarkerPresets extends React.Component {
 			nextMarkerDuration: "1",
 			nextMarkerTrack: "0",
 			nextMarkerDescription: "default description",
-			loadTrackDest: "0"
+			loadTrackDest: "0",
+			durationInputMode: DurationInputMode.Duration
 		};
 		this.setTime = ((val: string)=>{this.setState({nextMarkerTime: val})}).bind(this);
 		this.setDuration = ((val: string)=>{this.setState({nextMarkerDuration: val})}).bind(this);
@@ -88,6 +95,10 @@ class TimelineMarkerPresets extends React.Component {
 		this.setDescription = ((val: string)=>{this.setState({nextMarkerDescription: val})}).bind(this);
 
 		this.setLoadTrackDest = ((val: string)=>{this.setState({loadTrackDest: val})}).bind(this);
+
+		this.setDurationInputMode = ((val: string)=>{
+			this.setState({durationInputMode: val});
+		}).bind(this);
 	}
 	componentWillUnmount() {
 		updateTimelineMarkerPresetsView = ()=>{};
@@ -105,95 +116,111 @@ class TimelineMarkerPresets extends React.Component {
 			borderBottom: "1px solid black",
 			width: "10em",
 		};
-		let inlineDiv = {display: "inline-block", marginRight: "1em"};
+		let inlineDiv = {display: "inline-block", marginRight: "1em", marginBottom: 6};
 		let colorOption = function(markerColor: MarkerColor, displayName: string) {
 			return <option key={markerColor} value={markerColor}>{displayName}</option>
 		}
+		/*
+		// TODO: input end time for duration
+		let tmp =
+			<select defaultValue={DurationInputMode.Duration}
+					style={{display: "inline-block", outline: "none"}}
+					onChange={this.setDurationInputMode}>
+			</select>;
+		 */
 		let content = <div style={contentStyle}>
-			<Input defaultValue={this.state.loadTrackDest} description={"Load into track: "} width={8} style={inlineDiv}
-				   onChange={this.setLoadTrackDest}/>
-			<LoadJsonFromFileOrUrl
-				defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/p1s_0.txt"}
-				// FIXME
-				onLoadFn={(content: any)=>{
-					let track = parseInt(this.state.loadTrackDest);
-					if (isNaN(track)) {
-						window.alert("invalid track destination");
-						return;
-					}
-					controller.timeline.appendMarkersPreset(content, track);
-				}}/>
-			<form style={{
-				outline: "1px solid lightgrey",
-				margin: "10px 0",
-				padding: "10px",
-			}}>
-				<Input defaultValue={this.state.nextMarkerTime} description={"Time: "} width={8} style={inlineDiv}
-					   onChange={this.setTime}/>
-				<Input defaultValue={this.state.nextMarkerDuration} description={"Duration: "} width={8}
-					   style={inlineDiv} onChange={this.setDuration}/>
-				<Input defaultValue={this.state.nextMarkerDescription} description={"Description: "} width={40}
-					   onChange={this.setDescription}/>
-				<Input defaultValue={this.state.nextMarkerTrack} description={"Track: "} width={4}
-					   style={inlineDiv} onChange={this.setTrack}/>
-				<div style={{display: "inline-block", marginTop: "4px"}}>
-					<span>Color: </span>
-					<select defaultValue={this.state.nextMarkerColor}
-						style={{display: "inline-block", outline: "none"}}
-						onChange={this.onColorChange}>{[
-						colorOption(MarkerColor.Red, "red"),
-						colorOption(MarkerColor.Orange, "orange"),
-						colorOption(MarkerColor.Yellow, "yellow"),
-						colorOption(MarkerColor.Green, "green"),
-						colorOption(MarkerColor.Cyan, "cyan"),
-						colorOption(MarkerColor.Blue, "blue"),
-						colorOption(MarkerColor.Purple, "purple"),
-					]}</select>
-					<div style={{
-						background: this.state.nextMarkerColor,
-						marginLeft: "4px",
-						display: "inline-block",
-						verticalAlign: "middle",
-						height: "1em",
-						width: "4em",
-					}}/>
-				</div>
-				<button
-					type={"submit"}
-					style={{display: "block", marginTop: "0.5em"}}
-					onClick={(e) => {
-						let parseTime = (timeStr: string): number => {
-							let val = timeStr.trim();
-							let colonIndex = val.indexOf(':');
-							if (colonIndex < 0) {
-								return parseFloat(val);
+			<Expandable title={"Load tracks"} defaultShow={false} content={
+				<div style={{padding: 10, paddingLeft: 16}}>
+					<Input defaultValue={this.state.loadTrackDest} description={"Track: "} width={8} style={inlineDiv}
+						   onChange={this.setLoadTrackDest}/>
+					<LoadJsonFromFileOrUrl
+						defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/p1s_0.txt"}
+						// FIXME
+						onLoadFn={(content: any)=>{
+							let track = parseInt(this.state.loadTrackDest);
+							if (isNaN(track)) {
+								window.alert("invalid track destination");
+								return;
 							}
-							let minute = parseInt(val.substring(0, colonIndex));
-							let second = parseFloat(val.substring(colonIndex + 1));
-							return minute * 60 + second;
-						};
-						let marker: MarkerElem = {
-							type: ElemType.Marker,
-							time: parseTime(this.state.nextMarkerTime),
-							duration: parseFloat(this.state.nextMarkerDuration),
-							color: this.state.nextMarkerColor,
-							track: parseInt(this.state.nextMarkerTrack),
-							description: this.state.nextMarkerDescription
-						};
-						if (isNaN(marker.duration) ||
-							isNaN(marker.time) ||
-							isNaN(marker.track)) {
-							window.alert("some input(s) are invalid");
+							controller.timeline.appendMarkersPreset(content, track);
+						}}/>
+				</div>
+			}/>
+			<Expandable title={"Add marker"} defaultShow={false} content={
+				<form style={{
+					outline: "1px solid lightgrey",
+					margin: "10px 0",
+					marginLeft: 16,
+					padding: "10px",
+				}}>
+					<Input defaultValue={this.state.nextMarkerTime} description={"Time: "} width={8} style={inlineDiv}
+						   onChange={this.setTime}/>
+					<Input defaultValue={this.state.nextMarkerDuration} description={"Duration: "} width={8}
+						   style={inlineDiv} onChange={this.setDuration}/>
+
+					<Input defaultValue={this.state.nextMarkerDescription} description={"Description: "} width={40}
+						   onChange={this.setDescription}/>
+					<Input defaultValue={this.state.nextMarkerTrack} description={"Track: "} width={4}
+						   style={inlineDiv} onChange={this.setTrack}/>
+					<div style={{display: "inline-block", marginTop: "4px"}}>
+						<span>Color: </span>
+						<select defaultValue={this.state.nextMarkerColor}
+								style={{display: "inline-block", outline: "none"}}
+								onChange={this.onColorChange}>{[
+							colorOption(MarkerColor.Red, "red"),
+							colorOption(MarkerColor.Orange, "orange"),
+							colorOption(MarkerColor.Yellow, "yellow"),
+							colorOption(MarkerColor.Green, "green"),
+							colorOption(MarkerColor.Cyan, "cyan"),
+							colorOption(MarkerColor.Blue, "blue"),
+							colorOption(MarkerColor.Purple, "purple"),
+						]}</select>
+						<div style={{
+							background: this.state.nextMarkerColor,
+							marginLeft: "4px",
+							display: "inline-block",
+							verticalAlign: "middle",
+							height: "1em",
+							width: "4em",
+						}}/>
+					</div>
+					<button
+						type={"submit"}
+						style={{display: "block", marginTop: "0.5em"}}
+						onClick={(e) => {
+							let parseTime = (timeStr: string): number => {
+								let val = timeStr.trim();
+								let colonIndex = val.indexOf(':');
+								if (colonIndex < 0) {
+									return parseFloat(val);
+								}
+								let minute = parseInt(val.substring(0, colonIndex));
+								let second = parseFloat(val.substring(colonIndex + 1));
+								return minute * 60 + second;
+							};
+							let marker: MarkerElem = {
+								type: ElemType.Marker,
+								time: parseTime(this.state.nextMarkerTime),
+								duration: parseFloat(this.state.nextMarkerDuration),
+								color: this.state.nextMarkerColor,
+								track: parseInt(this.state.nextMarkerTrack),
+								description: this.state.nextMarkerDescription
+							};
+							if (isNaN(marker.duration) ||
+								isNaN(marker.time) ||
+								isNaN(marker.track)) {
+								window.alert("some input(s) are invalid");
+								e.preventDefault();
+								return;
+							}
+							controller.timeline.addMarker(marker);
 							e.preventDefault();
-							return;
-						}
-						controller.timeline.addMarker(marker);
-						e.preventDefault();
-					}}>add marker
-				</button>
-			</form>
+						}}>add marker
+					</button>
+				</form>
+			}/>
 			<form>
-				<span>Save markers to file: </span>
+				<span>Save current markers to file: </span>
 				<input defaultValue={this.saveFilename} style={longInputStyle} onChange={this.onSaveFilenameChange}/>
 				<span> (each track as a separate file) </span>
 				<button type={"submit"} onClick={(e)=>{
@@ -201,14 +228,14 @@ class TimelineMarkerPresets extends React.Component {
 					e.preventDefault();
 				}}>save</button>
 			</form>
-			<button onClick={()=>{
+			<button style={{marginTop: 10}} onClick={()=>{
 				controller.timeline.deleteAllMarkers();
 			}}>clear all markers</button>
 		</div>;
 		return <Expandable
 			title="Timeline markers"
 			content={content}
-			defaultShow={true}/>
+			defaultShow={false}/>
 	}
 }
 export let timelineMarkerPresets = <TimelineMarkerPresets/>;

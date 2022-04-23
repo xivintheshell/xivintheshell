@@ -225,7 +225,7 @@ export class Expandable extends React.Component {
 		this.setState({ show: !this.state.show });
 	}
 	render() {
-		return <div>
+		return <div style={{marginBottom: 10}}>
 			<Clickable
 				content={(this.state.show ? '- ' : '+ ') + this.props.title}
 				onClickFn={this.onClick}/>
