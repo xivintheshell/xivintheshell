@@ -19,11 +19,14 @@ export function loadFromFile(fileObject: Blob, callback=(content: object)=>{cons
 	fileReader.readAsText(fileObject, "UTF-8");
 }
 
+let genericErrorHandler = function(err: object) {
+	console.log("[asyncFetch] some error occurred");
+}
 let fetchCache: Map<string, string> = new Map();
 export function asyncFetch(
 	url: string,
 	callback: (content: string) => void,
-	errorCallback: (err: object) => void)
+	errorCallback: (err: object) => void = genericErrorHandler)
 {
 	let cachedContent = fetchCache.get(url);
 	if (cachedContent) {

@@ -1,5 +1,5 @@
-import React, {ChangeEvent} from 'react'
-import {Expandable, Input, LoadJsonFromFileOrUrl, saveToFile} from "./Common";
+import React, {ChangeEvent, CSSProperties} from 'react'
+import {Expandable, Input, LoadJsonFromFileOrUrl, asyncFetch, saveToFile} from "./Common";
 // @ts-ignore // FIXME
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
@@ -35,6 +35,59 @@ const enum DurationInputMode {
 	Duration = "duration",
 	EndTime = "endTime"
 }
+let asyncFetchJson = function(url: string, callback: (content: any)=>void) {
+	asyncFetch(url, data=>{
+		try {
+			let content = JSON.parse(data);
+			callback(content);
+		} catch {
+			console.log("parse error");
+		}
+	});
+}
+
+type TrackAndUrl = {track: number, url: string}
+let loadPresets = function(tracks: TrackAndUrl[]) {
+	tracks.forEach(trackAndUrl=>{
+		asyncFetchJson(trackAndUrl.url, (content)=>{
+			controller.timeline.appendMarkersPreset(content, trackAndUrl.track);
+		});
+	});
+}
+
+type BtnProps = {
+	displayName: string,
+	trackAndUrls: TrackAndUrl[]
+}
+function LoadPresetsBtn(props: BtnProps) {
+	let style: CSSProperties = {
+		marginBottom: 10,
+		marginRight: 4,
+	};
+	return <button style={style} onClick={()=>{
+		controller.timeline.deleteAllMarkers();
+		loadPresets(props.trackAndUrls);
+	}}>{props.displayName}</button>;
+}
+
+function PresetButtons() {
+	return <div>
+		<span>Presets: </span>
+		<LoadPresetsBtn displayName={"P1S Shackles of Time first"} trackAndUrls={[
+			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_shackles_of_time_first/0.txt"},
+			{track: 1, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_shackles_of_time_first/1.txt"},
+			{track: 2, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_shackles_of_time_first/2.txt"},
+			{track: 3, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_shackles_of_time_first/3.txt"},
+		]}/>
+		<LoadPresetsBtn displayName={"P1S Aetherial Shackles first"} trackAndUrls={[
+			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_aetherial_shackles_first/0.txt"},
+			{track: 1, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_aetherial_shackles_first/1.txt"},
+			{track: 2, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_aetherial_shackles_first/2.txt"},
+			{track: 3, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_aetherial_shackles_first/3.txt"},
+		]}/>
+	</div>
+}
+
 class TimelineMarkerPresets extends React.Component {
 	saveFilename = "markers";
 	state: TimelineMarkerPresetsState;
@@ -129,13 +182,14 @@ class TimelineMarkerPresets extends React.Component {
 			</select>;
 		 */
 		let content = <div style={contentStyle}>
+			<PresetButtons/>
 			<Expandable title={"Load tracks"} defaultShow={false} content={
 				<div style={{padding: 10, paddingLeft: 16}}>
 					<Input defaultValue={this.state.loadTrackDest} description={"Track: "} width={8} style={inlineDiv}
 						   onChange={this.setLoadTrackDest}/>
 					<LoadJsonFromFileOrUrl
-						defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/p1s_0.txt"}
-						// FIXME
+						defaultLoadUrl={""}
+						//defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/p1s_shackles_of_time_first/0.txt"}
 						onLoadFn={(content: any)=>{
 							let track = parseInt(this.state.loadTrackDest);
 							if (isNaN(track)) {
