@@ -65,10 +65,11 @@ function TimelineHeader(props) {
 		marks_1min.push(i);
 	}*/
 	let displayTime = (time) => {
-		let minute = Math.floor(time / 60);
-		let second = time - 60 * minute;
-		//if (minute === 0) return second.toString();
-		return minute.toString() + ":" + (second < 10 ? "0" : "") + second.toString();
+		let absTime = Math.abs(time);
+		let minute = Math.floor(absTime / 60);
+		let second = absTime - 60 * minute;
+		return (time < 0 ? "-" : "") +
+			minute.toString() + ":" + (second < 10 ? "0" : "") + second.toString();
 	}
 	let ruler = <div>
 		<svg width={props.canvasWidth} height="100%">

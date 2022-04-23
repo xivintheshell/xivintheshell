@@ -210,7 +210,7 @@ export class Timeline {
 	}
 
 	getCanvasWidth() {
-		let rightMostTime = this.elapsedTime;
+		let rightMostTime = Math.max(this.elapsedTime, controller.gameConfig.countdown);
 		this.markers.forEach(marker=>{
 			let endTime = marker.time + marker.duration;
 			rightMostTime = Math.max(rightMostTime, endTime);

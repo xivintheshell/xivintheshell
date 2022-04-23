@@ -114,11 +114,11 @@ export class Config extends React.Component {
 		super(props);
 		this.state = {
 			stepSize : 0.5,
-			spellSpeed: 400,
+			spellSpeed: 1532,
 			animationLock: 0.7,
 			casterTax: 0.1,
 			timeTillFirstManaTick: 1.2,
-			countdown: 0,
+			countdown: 5,
 			randomSeed: "",
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
