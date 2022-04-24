@@ -9,8 +9,8 @@ import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
 import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
 import {ActionNode, ActionType, Record, Line} from "./Record";
-import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {PresetLinesManager} from "./PresetLinesManager";
+import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 
 class Controller {
 	#presetLinesManager;
@@ -56,13 +56,10 @@ class Controller {
 			itr = itr.next;
 		}
 		this.#presetLinesManager.addLine(line);
-
-		updateSkillSequencePresetsView();
 	}
 
 	appendFilePresets(content) {
 		this.#presetLinesManager.deserializeAndAppend(content);
-		updateSkillSequencePresetsView();
 	}
 
 	loadBattleRecordFromFile(content) {
@@ -488,12 +485,10 @@ class Controller {
 
 	deleteLine(line) {
 		this.#presetLinesManager.deleteLine(line);
-		updateSkillSequencePresetsView();
 	}
 
 	deleteAllLines() {
 		this.#presetLinesManager.deleteAllLines();
-		updateSkillSequencePresetsView();
 	}
 
 	// basically restart the game and play till here:
@@ -525,7 +520,7 @@ class Controller {
 		} else {
 			updateStatsDisplay({
 				selectedPotency: 0,
-				selectedDuration: 0
+				selectedDuration: 0,
 			});
 		}
 		updateSelectionDisplay(

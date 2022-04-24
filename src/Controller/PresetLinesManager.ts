@@ -1,5 +1,8 @@
 import {FileType} from "./Common";
 import {ActionNode, Line} from "./Record";
+import {asyncFetch} from "../Components/Common";
+// @ts-ignore
+import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 
 type Fixme = any;
 
@@ -7,7 +10,15 @@ export class PresetLinesManager {
     presetLines: Line[] = [];
 
     constructor() {
-        this.#load();
+        let loadLocalSuccess = this.#load();
+        if (!loadLocalSuccess) {
+            asyncFetch(
+                "https://miyehn.me/ffxiv-blm-rotation/presets/lines/default.txt",
+                (data)=>{
+                this.deserializeAndAppend(JSON.parse(data));
+                updateSkillSequencePresetsView();
+            });
+        }
     }
 
     #save() {
@@ -19,7 +30,9 @@ export class PresetLinesManager {
         if (data !== null) {
             let content = JSON.parse(data);
             this.deserializeAndAppend(content);
+            return true;
         }
+        return false;
     }
 
     serialized() {
@@ -44,11 +57,13 @@ export class PresetLinesManager {
             }
             this.addLine(line);
         }
+        updateSkillSequencePresetsView();
         this.#save();
     }
 
     addLine(line: Line) {
         this.presetLines.push(line);
+        updateSkillSequencePresetsView();
         this.#save();
     }
 
@@ -56,6 +71,7 @@ export class PresetLinesManager {
         for (let i = 0; i < this.presetLines.length; i++) {
             if (this.presetLines[i] === line) {
                 this.presetLines.splice(i, 1);
+                updateSkillSequencePresetsView();
                 this.#save();
                 return;
             }
@@ -65,6 +81,7 @@ export class PresetLinesManager {
 
     deleteAllLines() {
         this.presetLines = [];
+        updateSkillSequencePresetsView();
         this.#save();
     }
 
