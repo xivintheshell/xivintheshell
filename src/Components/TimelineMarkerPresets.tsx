@@ -75,16 +75,21 @@ function PresetButtons() {
 	return <div>
 		<span>Presets: </span>
 		<LoadPresetsBtn displayName={"P1S Shackles of Time first"} trackAndUrls={[
-			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_shackles_of_time_first/0.txt"},
-			{track: 1, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_shackles_of_time_first/1.txt"},
-			{track: 2, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_shackles_of_time_first/2.txt"},
-			{track: 3, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_shackles_of_time_first/3.txt"},
+			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_0.txt"},
+			{track: 1, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_1.txt"},
+			{track: 2, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_2.txt"},
+			{track: 3, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_3.txt"},
 		]}/>
 		<LoadPresetsBtn displayName={"P1S Aetherial Shackles first"} trackAndUrls={[
-			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_aetherial_shackles_first/0.txt"},
-			{track: 1, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_aetherial_shackles_first/1.txt"},
-			{track: 2, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_aetherial_shackles_first/2.txt"},
-			{track: 3, url: "https://miyehn.me/ffxiv-blm-rotation/presets/p1s_aetherial_shackles_first/3.txt"},
+			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first_0.txt"},
+			{track: 1, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first_1.txt"},
+			{track: 2, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first_2.txt"},
+			{track: 3, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first_3.txt"},
+		]}/>
+		<LoadPresetsBtn displayName={"P2S"} trackAndUrls={[
+			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s_0.txt"},
+			{track: 1, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s_1.txt"},
+			{track: 2, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s_2.txt"},
 		]}/>
 	</div>
 }

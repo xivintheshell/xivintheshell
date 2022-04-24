@@ -47,7 +47,7 @@ class Controller {
 
 	serializedPresets() {
 		return {
-			fileType: FileType.Presets,
+			fileType: FileType.SkillSequencePresets,
 			presets: this.presetLines.map(line=>{
 				return line.serialized();
 			}),

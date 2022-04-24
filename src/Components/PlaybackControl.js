@@ -184,7 +184,6 @@ export class Config extends React.Component {
 		event.preventDefault();
 	}
 
-	// TODO: how to let Input fields update....
 	render() {
 		return (
 			<div className={"config"}>

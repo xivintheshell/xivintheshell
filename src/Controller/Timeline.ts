@@ -159,7 +159,7 @@ export class Timeline {
 
 	// TODO: type safety
 	appendMarkersPreset(preset: any, track: number) {
-		if (preset.fileType !== FileType.Markers) {
+		if (preset.fileType !== FileType.MarkerTrackPreset) {
 			window.alert("wrong file type '" + preset.fileType + "'");
 			return;
 		}
@@ -268,7 +268,7 @@ export class Timeline {
 		});
 		return markerTracks.map((track: SerializedMarker[])=>{
 			return {
-				fileType: FileType.Markers,
+				fileType: FileType.MarkerTrackPreset,
 				markers: track
 			}
 		});
