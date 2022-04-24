@@ -94,7 +94,11 @@ class SkillSequencePresets extends React.Component {
 			width: "20em",
 		};
 		let content = <div style={contentStyle}>
+			<button style={{marginBottom: 10}} onClick={()=>{
+				controller.deleteAllLines();
+			}}>clear all presets</button>
 			<LoadJsonFromFileOrUrl
+				loadUrlOnMount={false}
 				defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/lines/default.txt"}
 				onLoadFn={(content)=>{
 					if (content.fileType === FileType.SkillSequencePresets) {
@@ -108,7 +112,7 @@ class SkillSequencePresets extends React.Component {
 				margin: "10px 0",
 				padding: "10px",
 			}}>
-				{controller.presetLines.map((line)=>{
+				{controller.getPresetLines().map((line)=>{
 					return <PresetLine line={line} key={line._lineIndex}/>
 				})}
 				<SaveAsPreset enabled={hasSelection}/>
@@ -121,9 +125,6 @@ class SkillSequencePresets extends React.Component {
 					}}>save</button>
 				</form>
 			</div>
-			<button onClick={()=>{
-				controller.deleteAllLines();
-			}}>clear all presets</button>
 		</div>;
 		return <Expandable
 			title="Skill sequence presets"

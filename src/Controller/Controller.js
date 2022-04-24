@@ -10,8 +10,10 @@ import {Timeline, ElemType} from "./Timeline"
 import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
 import {ActionNode, ActionType, Record, Line} from "./Record";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
+import {PresetLinesManager} from "./PresetLinesManager";
 
 class Controller {
+	#presetLinesManager;
 	constructor() {
 		this.stepSize = 0.5;
 		this.timeScale = 1;
@@ -27,16 +29,7 @@ class Controller {
 		this.timeline = new Timeline();
 		this.timeline.reset();
 
-		this.presetLines = [];
-
-		/*
-		let intimes = [1.5, 2, 2.5, 2.8, 3, 3.5, 4];
-		intimes.forEach(t=>{
-			let adjusted = this.gameConfig.adjustedCastTime(t);
-			let lltime = adjusted * 0.85;
-			console.log(t.toFixed(2) + " " + adjusted.toFixed(2) + " " + lltime.toFixed(2));
-		})
-		 */
+		this.#presetLinesManager = new PresetLinesManager();
 
 	}
 	// game --> view
@@ -45,13 +38,12 @@ class Controller {
 		addLogContent(category, content, color);
 	}
 
+	getPresetLines() {
+		return this.#presetLinesManager.presetLines;
+	}
+
 	serializedPresets() {
-		return {
-			fileType: FileType.SkillSequencePresets,
-			presets: this.presetLines.map(line=>{
-				return line.serialized();
-			}),
-		}
+		return this.#presetLinesManager.serialized();
 	}
 
 	addSelectionToPreset(name="(untitled)") {
@@ -63,24 +55,13 @@ class Controller {
 			line.addActionNode(itr.getClone());
 			itr = itr.next;
 		}
-		this.presetLines.push(line);
+		this.#presetLinesManager.addLine(line);
 
 		updateSkillSequencePresetsView();
 	}
 
 	appendFilePresets(content) {
-		for (let i = 0; i < content.presets.length; i++) {
-			let line = new Line();
-			line.name = content.presets[i].name;
-			for (let j = 0; j < content.presets[i].actions.length; j++) {
-				let action = content.presets[i].actions[j];
-				let node = new ActionNode(action.type);
-				node.skillName = action.skillName;
-				node.waitDuration = action.waitDuration;
-				line.addActionNode(node);
-			}
-			this.presetLines.push(line);
-		}
+		this.#presetLinesManager.deserializeAndAppend(content);
 		updateSkillSequencePresetsView();
 	}
 
@@ -506,18 +487,12 @@ class Controller {
 	}
 
 	deleteLine(line) {
-		for (let i = 0; i < this.presetLines.length; i++) {
-			if (this.presetLines[i] === line) {
-				this.presetLines.splice(i, 1);
-				updateSkillSequencePresetsView();
-				return;
-			}
-		}
-		console.assert(false);
+		this.#presetLinesManager.deleteLine(line);
+		updateSkillSequencePresetsView();
 	}
 
 	deleteAllLines() {
-		this.presetLines = [];
+		this.#presetLinesManager.deleteAllLines();
 		updateSkillSequencePresetsView();
 	}
 

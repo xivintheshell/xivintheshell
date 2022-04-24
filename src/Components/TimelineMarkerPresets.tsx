@@ -188,14 +188,17 @@ class TimelineMarkerPresets extends React.Component {
 			</select>;
 		 */
 		let content = <div style={contentStyle}>
+			<button style={{marginBottom: 10}} onClick={()=>{
+				controller.timeline.deleteAllMarkers();
+			}}>clear all markers</button>
 			<PresetButtons/>
 			<Expandable title={"Load tracks"} defaultShow={false} content={
 				<div style={{padding: 10, paddingLeft: 16}}>
 					<Input defaultValue={this.state.loadTrackDest} description={"Track: "} width={8} style={inlineDiv}
 						   onChange={this.setLoadTrackDest}/>
 					<LoadJsonFromFileOrUrl
-						defaultLoadUrl={""}
-						//defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/p1s_shackles_of_time_first/0.txt"}
+						loadUrlOnMount={false}
+						defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_0.txt"}
 						onLoadFn={(content: any)=>{
 							let track = parseInt(this.state.loadTrackDest);
 							if (isNaN(track)) {
@@ -288,9 +291,6 @@ class TimelineMarkerPresets extends React.Component {
 					e.preventDefault();
 				}}>save</button>
 			</form>
-			<button style={{marginTop: 10}} onClick={()=>{
-				controller.timeline.deleteAllMarkers();
-			}}>clear all markers</button>
 		</div>;
 		return <Expandable
 			title="Timeline markers"

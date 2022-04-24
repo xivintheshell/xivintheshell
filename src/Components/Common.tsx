@@ -1,5 +1,6 @@
 import React, {ChangeEvent, CSSProperties, ReactNode} from "react";
 import jQuery from 'jquery';
+import exp from "constants";
 
 // https://github.com/eligrey/FileSaver.js#readme
 export function saveToFile(content: object, filename: string) {
@@ -205,27 +206,35 @@ export class ScrollAnchor extends React.Component {
 
 // defaultShow, title, content
 interface ExpandableProps {
+	title: string,
 	defaultShow?: boolean,
 	content?: ReactNode,
-	title?: ReactNode
 }
 interface ExpandableState {
 	show: boolean,
 }
 export class Expandable extends React.Component {
-	props: ExpandableProps = {};
+	props: ExpandableProps = { title: "(expand me)" };
 	state: ExpandableState = { show: false };
-	onClick: () => void = ()=>{};
+	onClick: () => void;
 	constructor(inProps: ExpandableProps) {
 		super(inProps);
 		this.props = inProps;
-		this.onClick = this.unboundOnClick.bind(this);
+		this.onClick = (()=>{
+			let newShow = !this.state.show
+			this.setState({show: newShow});
+			localStorage.setItem("exp: " + inProps.title, (newShow ? 1 : 0).toString());
+		}).bind(this);
+
+		let expanded = localStorage.getItem("exp: " + inProps.title);
+		let show: boolean = inProps.defaultShow ?? false;
+		if (expanded !== null) {
+			show = parseInt(expanded) === 1;
+		}
+
 		this.state = {
-			show: inProps.defaultShow ?? false
+			show: show
 		};
-	}
-	unboundOnClick() {
-		this.setState({ show: !this.state.show });
 	}
 	render() {
 		return <div style={{marginBottom: 10}}>
@@ -241,6 +250,7 @@ export class Expandable extends React.Component {
 
 type LoadJsonFromFileOrUrlProps = {
 	defaultLoadUrl: string;
+	loadUrlOnMount: boolean;
 	onLoadFn: (content: object) => void;
 }
 export class LoadJsonFromFileOrUrl extends React.Component {
@@ -263,7 +273,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 		this.onLoadUrl = this.unboundOnLoadUrl.bind(this);
 	}
 	componentDidMount() {
-		if (this.loadUrl.length > 0) this.onLoadUrl();
+		if (this.props.loadUrlOnMount) this.onLoadUrl();
 	}
 	unboundOnLoadUrlChange(evt: ChangeEvent<{value: string}>) {
 		if (evt.target) this.loadUrl = evt.target.value;

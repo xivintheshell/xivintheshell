@@ -9,7 +9,14 @@ export interface IPlaybackSettings {
 
 export class LocalStorage {
     static storeConfig(config: IConfig): void {
-        localStorage.setItem("config", JSON.stringify(config));
+        localStorage.setItem("config", JSON.stringify({
+            spellSpeed: config.spellSpeed,
+            countdown: config.countdown,
+            animationLock: config.animationLock,
+            casterTax: config.casterTax,
+            randomSeed: config.randomSeed,
+            timeTillFirstManaTick: config.timeTillFirstManaTick
+        }));
     }
     static loadConfig(): IConfig | undefined {
         let configStr = localStorage.getItem("config");

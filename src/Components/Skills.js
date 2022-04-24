@@ -100,39 +100,45 @@ function ProgressCircle(props={
 class SkillButton extends React.Component {
 	constructor(props) {
 		super(props);
-		this.boundHandleMouseEnter = this.handleMouseEnter.bind(this);
-	}
-	handleMouseEnter(evt) {
-		let info = controller.getSkillInfo({skillName: this.props.skillName});
+		this.state = {
+			skillDescription: <div/>
+		};
+		this.handleMouseEnter = ((evt)=>{
+			let info = controller.getSkillInfo({skillName: this.props.skillName});
 
-		let s = "";
-		if (info.status === SkillReadyStatus.Ready) {
-			s += "ready (" + info.stacksAvailable + " stack";
-			if (info.stacksAvailable > 1) s += "s";
-			s += ")";
-		}
-		else if (info.status === SkillReadyStatus.RequirementsNotMet) {
-			s += " skill requirement(s) not satisfied";
-		} else if (info.status === SkillReadyStatus.NotEnoughMP) {
-			s += " not enough MP (needs " + info.capturedManaCost + ")";
-		} else if (info.status === SkillReadyStatus.Blocked) {
-			s += "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (CD ready in " + info.cdReadyCountdown.toFixed(2) + ")";
-		}
-		let content = <div>
-			<p>{this.props.skillName}</p>
-			<p>{s}</p>
-		</div>;
-		setSkillInfoText(content);
+			let s = "";
+			if (info.status === SkillReadyStatus.Ready) {
+				s += "ready (" + info.stacksAvailable + " stack";
+				if (info.stacksAvailable > 1) s += "s";
+				s += ")";
+			}
+			else if (info.status === SkillReadyStatus.RequirementsNotMet) {
+				s += " skill requirement(s) not satisfied";
+			} else if (info.status === SkillReadyStatus.NotEnoughMP) {
+				s += " not enough MP (needs " + info.capturedManaCost + ")";
+			} else if (info.status === SkillReadyStatus.Blocked) {
+				s += "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (CD ready in " + info.cdReadyCountdown.toFixed(2) + ")";
+			}
+			let content = <div>
+				<p>{this.props.skillName}</p>
+				<p>{s}</p>
+			</div>;
+			setSkillInfoText(content);
+			this.setState({skillDescription: content});
+		}).bind(this);
 	}
 	render() {
 		let iconPath = skillIcons.get(this.props.skillName);
-		let icon = <div onMouseEnter={this.boundHandleMouseEnter} className={"skillIcon" + (this.props.ready ? "" : " notReady")}><img src={iconPath} alt={this.props.skillName}/></div>;
+		let icon = <div onMouseEnter={this.handleMouseEnter} className={"skillIcon" + (this.props.ready ? "" : " notReady")}><img src={iconPath} alt={this.props.skillName}/></div>;
 		let progressCircle = <ProgressCircle className="cdProgress" diameter={40} progress={this.props.cdProgress} color={"rgba(255,255,255,0.7)"}/>;
-		return <span title={this.skillName} className={"skillButton"}>
+		return <span title={this.skillName} className={"skillButton"} data-tip data-for={"skillButton-" + this.props.skillName}>
 			{this.props.cdProgress === 1 ? "" : progressCircle}
 			<Clickable onClickFn={()=>{
 				controller.requestUseSkill({skillName: this.props.skillName});
 			}} content={icon}/>
+			<ReactTooltip id={"skillButton-" + this.props.skillName}>
+				{this.state.skillDescription}
+			</ReactTooltip>
 		</span>
 	}
 }
@@ -163,10 +169,6 @@ class SkillsWindow extends React.Component {
 	render() {
 		let skillButtons = [];
 		let para = controller.getResourceValue({rscType: ResourceType.Paradox});
-		let tooltip =
-			<ReactTooltip id={"SkillDescription"}>
-				<div className={"toolTip"}>{this.state.tooltipContent}</div>
-			</ReactTooltip>
 		for (let i = 0; i < displayedSkills.length; i++) {
 			let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
 			let skillName = (isF1B1 && para) ? SkillName.Paradox : displayedSkills[i];
@@ -183,7 +185,6 @@ class SkillsWindow extends React.Component {
 		return <div className={"skillsWindow"}>
 			<div data-tip data-for="SkillDescription" className={"skillIcons"}>
 				{skillButtons}
-				{tooltip}
 			</div>
 		</div>
 	}
