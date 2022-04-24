@@ -71,6 +71,7 @@ function LoadPresetsBtn(props: BtnProps) {
 }
 
 function PresetButtons() {
+	// https://github.com/quisquous/cactbot/blob/main/ui/raidboss/data/06-ew/raid/
 	return <div>
 		<span>Presets: </span>
 		<LoadPresetsBtn displayName={"P1S Shackles of Time first"} trackAndUrls={[
@@ -218,8 +219,8 @@ class TimelineMarkerPresets extends React.Component {
 						   style={inlineDiv} onChange={this.setTrack}/>
 					<div style={{display: "inline-block", marginTop: "4px"}}>
 						<span>Color: </span>
-						<select defaultValue={this.state.nextMarkerColor}
-								style={{display: "inline-block", outline: "none"}}
+						<select style={{display: "inline-block", outline: "none"}}
+								value={this.state.nextMarkerColor}
 								onChange={this.onColorChange}>{[
 							colorOption(MarkerColor.Red, "red"),
 							colorOption(MarkerColor.Orange, "orange"),

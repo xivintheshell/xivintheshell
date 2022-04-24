@@ -1,11 +1,31 @@
-import { SkillName, ResourceType, Aspect } from './Common'
-import { controller } from "../Controller/Controller";
-import { LogCategory, Color } from "../Controller/Common";
-import { Event } from "./Resources";
+import {Aspect, ResourceType, SkillName} from './Common'
+// @ts-ignore
+import {controller} from "../Controller/Controller";
+import {Color, LogCategory} from "../Controller/Common";
+import {Event, Resource} from "./Resources";
+import {ActionNode} from "../Controller/Record";
 
-class SkillInfo
-{
-	constructor(skillName, cdName, aspect, isSpell, baseCastTime, baseManaCost, basePotency, skillApplicationDelay)
+type Fixme = any;
+
+class SkillInfo {
+	readonly name: SkillName;
+	readonly cdName: ResourceType;
+	readonly aspect: Aspect;
+	readonly isSpell: boolean;
+	readonly baseCastTime: number;
+	readonly baseManaCost: number;
+	readonly basePotency: number;
+	readonly skillApplicationDelay: number;
+
+	constructor(
+		skillName: SkillName,
+		cdName: ResourceType,
+		aspect: Aspect,
+		isSpell: boolean,
+		baseCastTime: number,
+		baseManaCost: number,
+		basePotency: number,
+		skillApplicationDelay: number)
 	{
 		this.name = skillName;
 		this.cdName = cdName;
@@ -18,7 +38,6 @@ class SkillInfo
 	}
 }
 
-// SHOULD NEVER MODIFY THIS LIST DFSODGHSIPJF
 const skillInfos = [
 	new SkillInfo(SkillName.Blizzard, ResourceType.cd_GCD, Aspect.Ice, true,
 		2.5, 400, 180, 0.846),
@@ -87,41 +106,34 @@ const skillInfos = [
 		0, 0, 0, 0.1),
 ];
 
-class Skill
-{
-	// instances : SkillInstance[]
-	constructor(name, requirementFn, effectFn)
-	{
+const skillInfosMap: Map<SkillName, SkillInfo> = new Map();
+skillInfos.forEach(info=>{
+	skillInfosMap.set(info.name, info);
+});
+
+class Skill {
+	readonly name: SkillName;
+	readonly available: () => boolean;
+	readonly use: (game: Fixme, node: ActionNode) => void;
+	info: SkillInfo;
+
+	constructor(name: SkillName, requirementFn: ()=>boolean, effectFn: (game: Fixme, node: ActionNode)=>void) {
 		this.name = name;
 		this.available = requirementFn;
 		this.use = effectFn;
-		this.castTime = 1;
-		this.info = null;
+		let info = skillInfosMap.get(name);
+		if (!info) {
+			info = skillInfos[0];
+			console.error("Skill info not found!");
+		}
+		this.info = info;
 	}
 }
 
-class SkillsList extends Map
-{
-    constructor(game)
-    {
-        super();
-        this.game = game;
-    }
-	setSkillInfos(infos)
-	{
-		infos.forEach(info=>{
-			let skill = this.get(info.name);
-			skill.info = info;
-			skill.castTime = this.game.config.adjustedCastTime(skill.info.baseCastTime);
-		});
-	}
-}
+export function makeSkillsList(game: Fixme) {
+	const skillsList = new Map<SkillName, Skill>();
 
-export function makeSkillsList(game)
-{
-	const skillsList = new SkillsList(game);
-
-	let addResourceAbility = function(skillName, rscType, duration) {
+	let addResourceAbility = function(skillName: SkillName, rscType: ResourceType, duration: number) {
 		skillsList.set(skillName, new Skill(skillName,
 			() => {
 				return true;
@@ -133,7 +145,9 @@ export function makeSkillsList(game)
 						resource.overrideTimer(duration);
 					} else {
 						resource.gain(1);
-						game.resources.addResourceEvent(rscType, "drop " + rscType, duration, rsc=>{
+						game.resources.addResourceEvent(
+							rscType,
+							"drop " + rscType, duration, (rsc: Resource)=>{
 							rsc.consume(1);
 						});
 					}
@@ -147,26 +161,26 @@ export function makeSkillsList(game)
 		() => {
 			return true;
 		},
-		(game, node) => {
+		(game: Fixme, node: ActionNode) => {
 			if (game.getFireStacks() === 0) // no AF
 			{
-				game.castSpell(SkillName.Blizzard, cap => {
+				game.castSpell(SkillName.Blizzard, (cap: Fixme) => {
 					game.resources.get(ResourceType.UmbralIce).gain(1);
 					game.startOrRefreshEnochian();
-				}, app => {
+				}, (app: Fixme) => {
 				}, node);
 			} else // in AF
 			{
-				game.castSpell(SkillName.Blizzard, cap => {
+				game.castSpell(SkillName.Blizzard, (cap: Fixme) => {
 					game.resources.get(ResourceType.Enochian).removeTimer();
 					game.loseEnochian();
-				}, app => {
+				}, (app: Fixme) => {
 				}, node);
 			}
 		}
 	));
 
-	let gainFirestarterProc = function(game) {
+	let gainFirestarterProc = function(game: Fixme) {
 		let fs = game.resources.get(ResourceType.Firestarter);
 		if (fs.available(1)) {
 			fs.overrideTimer(30);
@@ -178,13 +192,15 @@ export function makeSkillsList(game)
 			controller.log(LogCategory.Event,
 				"Firestarter proc!",
 				game.getDisplayTime(), Color.Fire);
-			game.resources.addResourceEvent(ResourceType.Firestarter,"drop firestarter proc", 30, rsc=>{
+			game.resources.addResourceEvent(
+				ResourceType.Firestarter,
+				"drop firestarter proc", 30, (rsc: Resource)=>{
 				rsc.consume(1);
 			}, Color.Fire);
 		}
 	}
 
-	let potentiallyGainFirestarter = function(game) {
+	let potentiallyGainFirestarter = function(game: Fixme) {
 		// firestarter
 		let sc = game.resources.get(ResourceType.Sharpcast);
 		if (sc.available(1)) {
@@ -204,7 +220,7 @@ export function makeSkillsList(game)
 		},
 		(game, node) => {
 			if (game.getIceStacks() === 0) {
-				game.castSpell(SkillName.Fire, cap => {
+				game.castSpell(SkillName.Fire, (cap: Fixme) => {
 					game.resources.get(ResourceType.AstralFire).gain(1);
 					game.startOrRefreshEnochian();
 					// umbral heart
@@ -214,14 +230,14 @@ export function makeSkillsList(game)
 						controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
 					}
 					potentiallyGainFirestarter(game);
-				}, app => {
+				}, (app: Fixme) => {
 				}, node);
 			} else {
-				game.castSpell(SkillName.Fire, cap => {
+				game.castSpell(SkillName.Fire, (cap: Fixme) => {
 					game.resources.get(ResourceType.Enochian).removeTimer();
 					game.loseEnochian();
 					potentiallyGainFirestarter(game);
-				}, app => {
+				}, (app: Fixme) => {
 				}, node);
 			}
 			// firestarter?
@@ -252,7 +268,7 @@ export function makeSkillsList(game)
 	// Ley Lines
 	addResourceAbility(SkillName.LeyLines, ResourceType.LeyLines, 30);
 
-	let gainThundercloudProc = function (game) {
+	let gainThundercloudProc = function (game: Fixme) {
 		let thundercloud = game.resources.get(ResourceType.Thundercloud);
 		if (thundercloud.available(1)) { // already has a proc; reset its timer
 			thundercloud.overrideTimer(40);
@@ -260,22 +276,23 @@ export function makeSkillsList(game)
 		} else { // there's currently no proc. gain one.
 			thundercloud.gain(1);
 			controller.log(LogCategory.Event, "Thundercloud proc!", game.getDisplayTime(), Color.Thunder);
-			game.resources.addResourceEvent(ResourceType.Thundercloud, "drop thundercloud proc", 40, rsc => {
+			game.resources.addResourceEvent(
+				ResourceType.Thundercloud,
+				"drop thundercloud proc", 40, (rsc: Resource) => {
 				rsc.consume(1);
 			}, Color.Thunder);
 		}
 	}
 
 	// called at the time of APPLICATION (not snapshot)
-	let applyThunderDoT = function(game, node, capturedTickPotency, numTicks)
-	{
+	let applyThunderDoT = function(game: Fixme, node: ActionNode, capturedTickPotency: number, numTicks: number) {
 		// define stuff
-		let recurringThunderTick = (remainingTicks, capturedTickPotency)=>
+		let recurringThunderTick = (remainingTicks: number, capturedTickPotency: number)=>
 		{
 			if (remainingTicks===0) return;
 			game.resources.addResourceEvent(
 				ResourceType.ThunderDoTTick,
-				"recurring thunder tick " + (numTicks+1-remainingTicks) + "/" + numTicks, 3, rsc=>{
+				"recurring thunder tick " + (numTicks+1-remainingTicks) + "/" + numTicks, 3, (rsc: Resource) =>{
 					game.reportPotency(node, capturedTickPotency, "DoT");
 					game.dealDamage(capturedTickPotency, "DoT");
 					recurringThunderTick(remainingTicks - 1, capturedTickPotency);
@@ -294,7 +311,7 @@ export function makeSkillsList(game)
 		}
 		// order of events:
 		dot.gain(1);
-		game.resources.addResourceEvent(ResourceType.ThunderDoT, "drop DoT", 30, dot=>{
+		game.resources.addResourceEvent(ResourceType.ThunderDoT, "drop DoT", 30, (dot: Resource)=>{
 			dot.consume(1);
 		}, Color.Thunder);
 		recurringThunderTick(numTicks, capturedTickPotency);
@@ -328,8 +345,8 @@ export function makeSkillsList(game)
 					sc.removeTimer();
 				}
 			} else {
-				let capturedTickPotency;
-				game.castSpell(SkillName.Thunder3, cap => {
+				let capturedTickPotency: number;
+				game.castSpell(SkillName.Thunder3, (cap: Fixme) => {
 					capturedTickPotency = game.captureDamage(Aspect.Lightning, game.config.adjustedDoTPotency(35));
 					// if there's a sharpcast stack, consume it and gain (a potentially new) proc
 					let sc = game.resources.get(ResourceType.Sharpcast);
@@ -338,7 +355,7 @@ export function makeSkillsList(game)
 						sc.consume(1);
 						sc.removeTimer();
 					}
-				}, app => {
+				}, (app: Fixme) => {
 					applyThunderDoT(game, node, capturedTickPotency, 10);
 				}, node);
 			}
@@ -373,10 +390,10 @@ export function makeSkillsList(game)
 					game.startOrRefreshEnochian();
 				}, true, node);
 			} else {
-				game.castSpell(SkillName.Fire3, cap => {
+				game.castSpell(SkillName.Fire3, (cap: Fixme) => {
 					game.switchToAForUI(ResourceType.AstralFire, 3);
 					game.startOrRefreshEnochian();
-				}, app => {
+				}, (app: Fixme) => {
 				}, node);
 			}
 		}
@@ -388,10 +405,10 @@ export function makeSkillsList(game)
 			return true;
 		},
 		(game, node) => {
-			game.castSpell(SkillName.Blizzard3, cap => {
+			game.castSpell(SkillName.Blizzard3, (cap: Fixme) => {
 				game.switchToAForUI(ResourceType.UmbralIce, 3);
 				game.startOrRefreshEnochian();
-			}, app => {
+			}, (app: Fixme) => {
 			}, node);
 		}
 	));
@@ -402,9 +419,9 @@ export function makeSkillsList(game)
 			return game.getIceStacks() > 0; // in UI
 		},
 		(game, node) => {
-			game.castSpell(SkillName.Freeze, cap => {
+			game.castSpell(SkillName.Freeze, (cap: Fixme) => {
 				game.resources.get(ResourceType.UmbralHeart).gain(3);
-			}, app => {
+			}, (app: Fixme) => {
 			}, node);
 		}
 	));
@@ -416,7 +433,7 @@ export function makeSkillsList(game)
 				game.getMP() >= 800;
 		},
 		(game, node) => {
-			game.castSpell(SkillName.Flare, cap => {
+			game.castSpell(SkillName.Flare, (cap: Fixme) => {
 				let uh = game.resources.get(ResourceType.UmbralHeart);
 				let mana = game.resources.get(ResourceType.Mana);
 				let manaCost = uh.available(1) ? mana.currentValue * 2 / 3 : mana.currentValue;
@@ -426,7 +443,7 @@ export function makeSkillsList(game)
 				// +3 AF; refresh enochian
 				game.resources.get(ResourceType.AstralFire).gain(3);
 				game.startOrRefreshEnochian();
-			}, app => {
+			}, (app: Fixme) => {
 			}, node);
 		}
 	));
@@ -440,9 +457,9 @@ export function makeSkillsList(game)
 			return game.getIceStacks() > 0; // in UI
 		},
 		(game, node) => {
-			game.castSpell(SkillName.Blizzard4, cap => {
+			game.castSpell(SkillName.Blizzard4, (cap: Fixme) => {
 				game.resources.get(ResourceType.UmbralHeart).gain(3);
-			}, app => {
+			}, (app: Fixme) => {
 			}, node);
 		}
 	));
@@ -453,8 +470,8 @@ export function makeSkillsList(game)
 			return game.getFireStacks() > 0; // in AF
 		},
 		(game, node) => {
-			game.castSpell(SkillName.Fire4, cap => {
-			}, app => {
+			game.castSpell(SkillName.Fire4, (cap: Fixme) => {
+			}, (app: Fixme) => {
 			}, node);
 		}
 	));
@@ -493,7 +510,7 @@ export function makeSkillsList(game)
 				triple.gain(3);
 				game.resources.addResourceEvent(
 					ResourceType.Triplecast,
-					"drop remaining Triple charges", 15, rsc => {
+					"drop remaining Triple charges", 15, (rsc: Resource) => {
 						 rsc.consume(rsc.currentValue);
 					});
 			}, false, node);
@@ -519,14 +536,14 @@ export function makeSkillsList(game)
 				game.getMP() >= 800;
 		},
 		(game, node) => {
-			game.castSpell(SkillName.Despair, cap => {
+			game.castSpell(SkillName.Despair, (cap: Fixme) => {
 				let mana = game.resources.get(ResourceType.Mana);
 				// mana
 				mana.consume(mana.currentValue);
 				// +3 AF; refresh enochian
 				game.resources.get(ResourceType.AstralFire).gain(3);
 				game.startOrRefreshEnochian();
-			}, app => {
+			}, (app: Fixme) => {
 			}, node);
 		}
 	));
@@ -563,7 +580,7 @@ export function makeSkillsList(game)
 			return true;
 		},
 		(game, node) => {
-			game.castSpell(SkillName.HighFire2, cap => {
+			game.castSpell(SkillName.HighFire2, (cap: Fixme) => {
 				game.switchToAForUI(ResourceType.AstralFire, 3);
 				game.startOrRefreshEnochian();
 				// umbral heart
@@ -572,7 +589,7 @@ export function makeSkillsList(game)
 					uh.consume(1);
 					controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
 				}
-			}, app => {
+			}, (app: Fixme) => {
 			}, node);
 		}
 	));
@@ -583,10 +600,10 @@ export function makeSkillsList(game)
 			return true;
 		},
 		(game, node) => {
-			game.castSpell(SkillName.Freeze, cap => {
+			game.castSpell(SkillName.Freeze, (cap: Fixme) => {
 				game.switchToAForUI(ResourceType.UmbralIce, 3);
 				game.startOrRefreshEnochian();
-			}, app => {
+			}, (app: Fixme) => {
 			}, node);
 		}
 	));
@@ -609,7 +626,7 @@ export function makeSkillsList(game)
 			return game.resources.get(ResourceType.Paradox).available(1);
 		},
 		(game, node) => {
-			game.castSpell(SkillName.Paradox, cap => {
+			game.castSpell(SkillName.Paradox, (cap: Fixme) => {
 				game.resources.get(ResourceType.Paradox).consume(1);
 				// enochian (refresh only
 				if (game.hasEnochian()) game.startOrRefreshEnochian();
@@ -617,7 +634,7 @@ export function makeSkillsList(game)
 				if (game.getFireStacks() > 0) {// firestarter proc
 					potentiallyGainFirestarter(game);
 				}
-			}, app => {
+			}, (app: Fixme) => {
 			}, node);
 		}
 	));
@@ -644,7 +661,7 @@ export function makeSkillsList(game)
 				const numTicks = 7;
 				const skillTime = game.getDisplayTime();
 
-				let applyLucidTick = (index) => {
+				let applyLucidTick = (index: number) => {
 					if (game.getFireStacks() > 0) return; // not tick during fire
 					game.resources.get(ResourceType.Mana).gain(550);
 					let currentMP = game.resources.get(ResourceType.Mana).currentValue;
@@ -652,7 +669,7 @@ export function makeSkillsList(game)
 					controller.reportLucidTick(game.time, reportText);
 				};
 
-				let recurringLucidTick = (remainingTicks) => {
+				let recurringLucidTick = (remainingTicks: number) => {
 					if (remainingTicks === 0) return;
 					applyLucidTick(numTicks + 1 - remainingTicks);
 					controller.log(
@@ -662,7 +679,7 @@ export function makeSkillsList(game)
 						Color.ManaTick);
 					game.resources.addResourceEvent(
 						ResourceType.LucidTick,
-						"recurring lucid tick", 3, rsc => {
+						"recurring lucid tick", 3, (rsc: Resource) => {
 							recurringLucidTick(remainingTicks - 1);
 						}, Color.Text, false);
 				};
@@ -676,7 +693,8 @@ export function makeSkillsList(game)
 				}
 				// order of events:
 				buff.gain(1);
-				game.resources.addResourceEvent(ResourceType.LucidDreaming, "drop Lucid", 21, buff => {
+				game.resources.addResourceEvent(
+					ResourceType.LucidDreaming, "drop Lucid", 21, (buff: Resource) => {
 					buff.consume(1);
 				}, Color.ManaTick);
 
@@ -692,13 +710,11 @@ export function makeSkillsList(game)
 		}
 	));
 
-
 	// Surecast
 	addResourceAbility(SkillName.Surecast, ResourceType.Surecast, 10);
 
 	// Tincture
 	addResourceAbility(SkillName.Tincture, ResourceType.Tincture, 15);
 
-	skillsList.setSkillInfos(skillInfos);
 	return skillsList;
 }

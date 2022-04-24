@@ -276,7 +276,8 @@ export class GameState
 		console.assert(skillInfo.isSpell);
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
-		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, skill.castTime);
+		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(
+			skillInfo.aspect, this.config.adjustedCastTime(skillInfo.baseCastTime));
 
 		let skillTime = this.getDisplayTime();
 
@@ -483,7 +484,8 @@ export class GameState
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
 		let [capturedManaCost, uhConsumption] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
-		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skill.info.aspect, skill.castTime);
+		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(
+			skill.info.aspect, this.config.adjustedCastTime(skill.info.baseCastTime));
 		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1) || this.resources.get(ResourceType.Swiftcast).available(1);
 		let currentMana = this.resources.get(ResourceType.Mana).currentValue;
 
