@@ -6,7 +6,16 @@ export const Debug = {
 	constantSlidecastWindow: true,
 };
 
-export class GameConfig {
+export interface IConfig {
+	spellSpeed: number,
+	countdown: number,
+	randomSeed: string,
+	casterTax: number,
+	animationLock: number,
+	timeTillFirstManaTick: number
+}
+
+export class GameConfig implements IConfig {
 	spellSpeed = 400;
 	countdown = 0;
 	randomSeed = "hello.";

@@ -2,105 +2,137 @@ import React from 'react';
 import { controller } from '../Controller/Controller'
 import { Input } from "./Common";
 import ReactTooltip from 'react-tooltip';
-
-export const TickMode = {
-	RealTime: 0,
-	RealTimeAutoPause: 1,
-	Manual: 2
-};
-
-// actually, control settings: tick mode, time scale, step size
-class TickModeSelection extends React.Component
-{
-	constructor(props) {
-		super(props);
-		this.onChangeValue = this.unboundOnSelectionChanged.bind(this);
-	}
-	unboundOnSelectionChanged(evt) {
-		let mode = parseInt(evt.target.value);
-		controller.setTickMode(mode);
-	}
-	render() {
-		return <div onChange={this.onChangeValue}>
-			<span>Tick mode: </span>
-			<label data-tip data-for="RealTime" className={"tickModeOption"}>
-				<input className={"radioButton"} type={"radio"} value={TickMode.RealTime} defaultChecked={false} name={"tick mode"}/>
-				{"real-time"}
-			</label>
-			<label data-tip data-for="RealTimeAutoPause" className={"tickModeOption"}>
-				<input className={"radioButton"} type={"radio"} value={TickMode.RealTimeAutoPause} defaultChecked={true} name={"tick mode"}/>
-				{"real-time auto pause"}
-			</label>
-			<label data-tip data-for="Manual" className={"tickModeOption"}>
-				<input className={"radioButton"} type={"radio"} value={TickMode.Manual} defaultChecked={false} name={"tick mode"}/>
-				{"manual"}
-			</label>
-			<ReactTooltip id={"RealTime"}>
-				<div className="toolTip">
-					<p>- click to use a skill</p>
-					<p>- [space bar] to play/pause. game time is elapsing when the above region has a green border</p>
-					<p>Note that keyboard inputs are only effective within the control region i.e. when the above box is purple/green</p>
-				</div>
-			</ReactTooltip>
-			<ReactTooltip id={"RealTimeAutoPause"}>
-				<div className="toolTip">
-					<p>*Recommended*</p>
-					<p>- click to use a skill. or if it's not ready, click again to wait then retry</p>
-					<p>- [->] to advance time by "step size" as configured below</p>
-					<p>- [shift]+[->] to advance time by 1/5 "step size" as configured below</p>
-					<p>Note that keyboard inputs are only effective within the control region i.e. when the above region has purple or green border.</p>
-				</div>
-			</ReactTooltip>
-			<ReactTooltip id={"Manual"}>
-				<div className="toolTip">
-					<p>- click to use a skill. or if it's not ready, click again to wait then retry</p>
-					<p>- [space bar] to advance game time to the earliest possible time for the next skill</p>
-					<p>- [->] to advance time by "step size" as configured below</p>
-					<p>- [shift]+[->] to advance time by 1/5 "step size" as configured below</p>
-					<p>Note that keyboard inputs are only effective within the control region i.e. when the above region has purple or green border.</p>
-				</div>
-			</ReactTooltip>
-		</div>
-	}
-}
+import {LocalStorage} from "../Controller/LocalStorage";
+import {TickMode} from "../Controller/Common";
 
 export class TimeControl extends React.Component {
 	constructor(props) {
 		super(props);
-		this.setStepSize = this.unboundSetStepSize.bind(this);
-		this.setTimeScale = this.unboundSetTimeScale.bind(this);
+
+		this.saveSettings = (settings)=>{
+			LocalStorage.storePlaybackSettings(settings);
+		}
+
+		this.setTickMode = ((e)=>{
+			if (!e || !e.target || isNaN(parseInt(e.target.value))) return;
+			this.setState({tickMode: parseInt(e.target.value)});
+			let numVal = parseInt(e.target.value);
+			if (!isNaN(numVal)) {
+				controller.setTickMode(numVal);
+				this.saveSettings({
+					tickMode: numVal,
+					stepSize: this.state.stepSize,
+					timeScale: this.state.timeScale
+				});
+			}
+		}).bind(this);
+
+		this.setStepSize = ((val)=>{
+			this.setState({stepSize: val});
+			let numVal = parseFloat(val);
+			if (!isNaN(numVal)) {
+				controller.setTimeControlSettings({
+					stepSize: numVal,
+					timeScale: this.state.timeScale
+				});
+				this.saveSettings({
+					tickMode: this.state.tickMode,
+					stepSize: numVal,
+					timeScale: this.state.timeScale
+				});
+			}
+		}).bind(this);
+
+		this.setTimeScale = ((val)=>{
+			this.setState({timeScale: val});
+			let numVal = parseFloat(val);
+			if (!isNaN(numVal)) {
+				controller.setTimeControlSettings({
+					stepSize: this.state.stepSize,
+					timeScale: numVal
+				});
+				this.saveSettings({
+					tickMode: this.state.tickMode,
+					stepSize: this.state.stepSize,
+					timeScale: numVal
+				});
+			}
+		}).bind(this);
+
 		this.state = {
+			tickMode: 1,
 			stepSize: 1,
 			timeScale: 2
 		};
 	}
-	unboundSetStepSize(val) {
-		this.setState({stepSize: val})
-		let numVal = parseFloat(val);
-		if (!isNaN(numVal)) {
-			controller.setTimeControlSettings({
-				stepSize: numVal,
-				timeScale: this.state.timeScale
-			});
-		}
-	}
-	unboundSetTimeScale(val) {
-		this.setState({timeScale: val})
-		let numVal = parseFloat(val);
-		if (!isNaN(numVal)) {
-			controller.setTimeControlSettings({
-				stepSize: this.state.stepSize,
-				timeScale: numVal
-			});
-		}
-	}
 	componentDidMount() {
-		this.unboundSetStepSize(this.state.stepSize);
-		this.unboundSetTimeScale(this.state.timeScale);
+		let settings = LocalStorage.loadPlaybackSettings();
+		if (settings) {
+			this.setState({
+				tickMode: settings.tickMode,
+				stepSize: settings.stepSize,
+				timeScale: settings.timeScale
+			});
+		} else {
+			settings = {
+				tickMode: this.state.tickMode,
+				stepSize: this.state.stepSize,
+				timeScale: this.state.timeScale
+			};
+		}
+		controller.setTimeControlSettings(settings);
 	}
 	render() {
 		return <div className={"timeControl"}>
-			<TickModeSelection/>
+			<div>
+				<span>Tick mode: </span>
+				<label data-tip data-for="RealTime" className={"tickModeOption"}>
+					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
+						   value={TickMode.RealTime}
+						   checked={this.state.tickMode===TickMode.RealTime}
+						   name={"tick mode"}/>
+					{"real-time"}
+				</label>
+				<label data-tip data-for="RealTimeAutoPause" className={"tickModeOption"}>
+					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
+						   value={TickMode.RealTimeAutoPause}
+						   checked={this.state.tickMode===TickMode.RealTimeAutoPause}
+						   name={"tick mode"}/>
+					{"real-time auto pause"}
+				</label>
+				<label data-tip data-for="Manual" className={"tickModeOption"}>
+					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
+						   value={TickMode.Manual}
+						   checked={this.state.tickMode===TickMode.Manual}
+						   name={"tick mode"}/>
+					{"manual"}
+				</label>
+				<ReactTooltip id={"RealTime"}>
+					<div className="toolTip">
+						<p>- click to use a skill</p>
+						<p>- [space bar] to play/pause. game time is elapsing when the above region has a green border</p>
+						<p>Note that keyboard inputs are only effective within the control region i.e. when the above box is purple/green</p>
+					</div>
+				</ReactTooltip>
+				<ReactTooltip id={"RealTimeAutoPause"}>
+					<div className="toolTip">
+						<p>*Recommended*</p>
+						<p>- click to use a skill. or if it's not ready, click again to wait then retry</p>
+						<p>- [->] to advance time by "step size" as configured below</p>
+						<p>- [shift]+[->] to advance time by 1/5 "step size" as configured below</p>
+						<p>Note that keyboard inputs are only effective within the control region i.e. when the above region has purple or green border.</p>
+					</div>
+				</ReactTooltip>
+				<ReactTooltip id={"Manual"}>
+					<div className="toolTip">
+						<p>- click to use a skill. or if it's not ready, click again to wait then retry</p>
+						<p>- [space bar] to advance game time to the earliest possible time for the next skill</p>
+						<p>- [->] to advance time by "step size" as configured below</p>
+						<p>- [shift]+[->] to advance time by 1/5 "step size" as configured below</p>
+						<p>Note that keyboard inputs are only effective within the control region i.e. when the above region has purple or green border.</p>
+					</div>
+				</ReactTooltip>
+			</div>
 			<Input defaultValue={this.state.stepSize} description="step size: " onChange={this.setStepSize}/>
 			<Input defaultValue={this.state.timeScale} description="time scale: " onChange={this.setTimeScale}/>
 		</div>
@@ -112,14 +144,14 @@ export let updateConfigDisplay = (config)=>{};
 export class Config extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = {
+		this.state = { // NOT DEFAULTS
 			stepSize : 0.5,
 			spellSpeed: 1532,
 			animationLock: 0.7,
 			casterTax: 0.1,
 			timeTillFirstManaTick: 1.2,
 			countdown: 5,
-			randomSeed: "",
+			randomSeed: Math.floor(Math.random() * 10000).toString(),
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);
@@ -129,7 +161,16 @@ export class Config extends React.Component {
 		this.setCountdown = this.unboundSetCountdown.bind(this);
 		this.setRandomSeed = this.unboundSetRandomSeed.bind(this);
 
-		updateConfigDisplay = this.unboundUpdateConfigDisplay.bind(this);
+		updateConfigDisplay = ((config)=>{
+			this.setState({
+				spellSpeed: config.spellSpeed,
+				animationLock: config.animationLock,
+				casterTax: config.casterTax,
+				timeTillFirstManaTick: config.timeTillFirstManaTick,
+				countdown: config.countdown,
+				randomSeed: config.randomSeed
+			});
+		}).bind(this);
 	}
 
 	unboundSetSpellSpeed(val) { this.setState({spellSpeed: val}) }
@@ -139,40 +180,41 @@ export class Config extends React.Component {
 	unboundSetCountdown(val) { this.setState({countdown: val}) }
 	unboundSetRandomSeed(val) { this.setState({randomSeed: val }); }
 
-	setConfigAndRestart() {
-		let seed = this.state.randomSeed.length > 0 ?
-			this.state.randomSeed : Math.random().toString();
-		if (isNaN(parseFloat(this.state.spellSpeed)) ||
-			isNaN(parseFloat(this.state.animationLock)) ||
-			isNaN(parseFloat(this.state.casterTax)) ||
-			isNaN(parseFloat(this.state.timeTillFirstManaTick)) ||
-			isNaN(parseFloat(this.state.countdown))) {
+	setConfigAndRestart(config) {
+		if (isNaN(parseFloat(config.spellSpeed)) ||
+			isNaN(parseFloat(config.animationLock)) ||
+			isNaN(parseFloat(config.casterTax)) ||
+			isNaN(parseFloat(config.timeTillFirstManaTick)) ||
+			isNaN(parseFloat(config.countdown))) {
 			window.alert("Some config fields are not numbers!");
 			return;
 		}
 		controller.setConfigAndRestart({
-			spellSpeed: parseFloat(this.state.spellSpeed),
-			animationLock: parseFloat(this.state.animationLock),
-			casterTax: parseFloat(this.state.casterTax),
-			timeTillFirstManaTick: parseFloat(this.state.timeTillFirstManaTick),
-			countdown: parseFloat(this.state.countdown),
-			randomSeed: seed,
-		});
-	}
-
-	unboundUpdateConfigDisplay(config) {
-		this.setState({
-			spellSpeed: config.spellSpeed,
-			animationLock: config.animationLock,
-			casterTax: config.casterTax,
-			timeTillFirstManaTick: config.timeTillFirstManaTick,
-			countdown: config.countdown,
-			randomSeed: config.randomSeed
+			spellSpeed: parseFloat(config.spellSpeed),
+			animationLock: parseFloat(config.animationLock),
+			casterTax: parseFloat(config.casterTax),
+			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
+			countdown: parseFloat(config.countdown),
+			randomSeed: config.randomSeed,
 		});
 	}
 
 	componentDidMount() {
-		this.setConfigAndRestart();
+		let config = LocalStorage.loadConfig();
+		if (config) {
+			updateConfigDisplay(config);
+		} else {
+			config = {
+				spellSpeed: this.state.spellSpeed,
+				animationLock: this.state.animationLock,
+				casterTax: this.state.casterTax,
+				countdown: this.state.countdown,
+				timeTillFirstManaTick: this.state.timeTillFirstManaTick,
+				randomSeed: this.state.randomSeed
+			};
+			updateConfigDisplay(config);
+		}
+		this.setConfigAndRestart(config);
 	}
 
 	componentWillUnmount() {
@@ -180,7 +222,21 @@ export class Config extends React.Component {
 	}
 
 	handleSubmit (event) {
-		this.setConfigAndRestart();
+		let seed = this.state.randomSeed;
+		if (seed.length === 0) {
+			seed = Math.floor(Math.random() * 10000).toString();
+			this.setState({randomSeed: seed});
+		}
+		let config = {
+			spellSpeed: this.state.spellSpeed,
+			animationLock: this.state.animationLock,
+			casterTax: this.state.casterTax,
+			countdown: this.state.countdown,
+			timeTillFirstManaTick: this.state.timeTillFirstManaTick,
+			randomSeed: seed
+		};
+		this.setConfigAndRestart(config);
+		LocalStorage.storeConfig(config);
 		event.preventDefault();
 	}
 

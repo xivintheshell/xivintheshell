@@ -128,7 +128,7 @@ export class Input extends React.Component {
 		if (this.props.onChange) this.props.onChange(e.target.value);
 	}
 	componentDidMount() {
-		if (this.props.onChange) this.props.onChange(this.state.value);
+		//if (this.props.onChange) this.props.onChange(this.state.value);
 	}
 	render() {
 		let width = this.props.width ?? 5;

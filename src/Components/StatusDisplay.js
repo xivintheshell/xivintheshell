@@ -300,19 +300,18 @@ class StatusDisplay extends React.Component {
 			selfBuffs: null,
 			enemyBuffs: null
 		}
-		updateStatusDisplay = this.unboundUpdateStatus.bind(this);
+		updateStatusDisplay = ((newData)=>{
+			this.setState({
+				time: newData.time,
+				resources: newData.resources,
+				resourceLocks: newData.resourceLocks,
+				selfBuffs: newData.selfBuffs,
+				enemyBuffs: newData.enemyBuffs
+			});
+		}).bind(this);
 	}
 	componentDidMount() {
 		controller.updateStatusDisplay();
-	}
-	unboundUpdateStatus(newData){
-		this.setState({
-			time: newData.time,
-			resources: newData.resources,
-			resourceLocks: newData.resourceLocks,
-			selfBuffs: newData.selfBuffs,
-			enemyBuffs: newData.enemyBuffs
-		});
 	}
 	render() {
 		return <div className={"statusDisplay"}>

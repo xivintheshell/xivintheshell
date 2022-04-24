@@ -26,3 +26,9 @@ export const enum Color {
     Error = "errorColor",
     Warning = "warningColor",
 }
+
+export const enum TickMode {
+    RealTime = 0,
+    RealTimeAutoPause = 1,
+    Manual = 2
+}

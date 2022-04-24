@@ -1,10 +1,10 @@
 import { addLogContent } from "../Components/LogView";
-import {Color, FileType, LogCategory, ReplayMode} from "./Common";
+import {Color, FileType, LogCategory, ReplayMode, TickMode} from "./Common";
 import { GameState } from "../Game/GameState";
 import {GameConfig, ResourceType, SkillReadyStatus} from "../Game/Common";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {displayedSkills, updateSkillButtons} from "../Components/Skills";
-import {TickMode, updateConfigDisplay} from "../Components/PlaybackControl"
+import {updateConfigDisplay} from "../Components/PlaybackControl"
 import {setRealTime} from "../Components/Main";
 import {Timeline, ElemType} from "./Timeline"
 import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
@@ -279,8 +279,7 @@ class Controller {
 		timeTillFirstManaTick: 0.3,
 		countdown: 5,
 		randomSeed: "hello.",
-	})
-	{
+	}) {
 		this.gameConfig = new GameConfig();
 		this.gameConfig.casterTax = props.casterTax;
 		this.gameConfig.animationLock = props.animationLock;
