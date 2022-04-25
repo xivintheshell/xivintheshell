@@ -200,8 +200,8 @@ export class Config extends React.Component {
 	}
 
 	componentDidMount() {
-		let config = LocalStorage.loadConfig();
-		if (config) {
+		let config = null;//LocalStorage.loadConfig();
+		if (config !== null) {
 			updateConfigDisplay(config);
 		} else {
 			config = {
@@ -236,7 +236,7 @@ export class Config extends React.Component {
 			randomSeed: seed
 		};
 		this.setConfigAndRestart(config);
-		LocalStorage.storeConfig(config);
+		//LocalStorage.storeConfig(config);
 		event.preventDefault();
 	}
 

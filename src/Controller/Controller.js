@@ -270,6 +270,8 @@ class Controller {
 		this.record.config = this.gameConfig;
 
 		this.#requestRestart();
+
+		this.#autoSave();
 	}
 
 	getSkillInfo(props={skillName: undefined}) {
@@ -470,6 +472,24 @@ class Controller {
 		return true;
 	}
 
+	#autoSave() {
+		let serializedRecord = this.record.serialized();
+		console.log(serializedRecord);
+		localStorage.setItem("gameRecord", JSON.stringify(serializedRecord));
+	}
+
+	#tryAutoLoad() {
+		let str = localStorage.getItem("gameRecord");
+		if (str !== null) {
+			let content = JSON.parse(str);
+			console.log("loaded: ");
+			console.log(content);
+			this.loadBattleRecordFromFile(content);
+		}
+		return undefined;
+	}
+
+
 	// generally used for trying to add a line to the current timeline
 	tryAddLine(line, replayMode=ReplayMode.Tight) {
 		let oldTail = this.record.getLastAction();
@@ -480,6 +500,8 @@ class Controller {
 				if (this.record.getFirstAction()) this.rewindUntilBefore(this.record.getFirstAction());
 			}
 			window.alert('Failed to add line "' + line.name + '" due to insufficient resources and/or stats mismatch.');
+		} else {
+			this.#autoSave();
 		}
 	}
 
@@ -539,7 +561,10 @@ class Controller {
 			// not sure if should allow any control here.
 		} else {
 			let waitFirst = props.skillName === this.lastAtteptedSkill;
-			this.#useSkill(props.skillName, waitFirst);
+			let status = this.#useSkill(props.skillName, waitFirst);
+			if (status.status === SkillReadyStatus.Ready) {
+				this.#autoSave();
+			}
 		}
 	}
 
