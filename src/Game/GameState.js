@@ -4,7 +4,7 @@ import {makeSkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
-import {Color, LogCategory} from "../Controller/Common";
+import {addLog, Color, LogCategory} from "../Controller/Common";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -95,7 +95,7 @@ export class GameState
 				mana.gain(gainAmount);
 				let currentAmount = mana.currentValue;
 				controller.reportManaTick(game.time, "MP +" + gainAmount + " (MP="+currentAmount+")");
-				controller.log(LogCategory.Event, "mana tick +" + gainAmount, this.getDisplayTime(), Color.ManaTick);
+				addLog(LogCategory.Event, "mana tick +" + gainAmount, this.getDisplayTime(), Color.ManaTick);
 				// queue the next tick
 				this.resources.addResourceEvent(ResourceType.Mana, "mana tick", 3, rsc=>{
 					recurringManaRegen();
@@ -146,7 +146,7 @@ export class GameState
 				{
 					if (!e.canceled)
 					{
-						if (e.shouldLog) controller.log(LogCategory.Event, e.name, this.getDisplayTime(), e.logColor);
+						if (e.shouldLog) addLog(LogCategory.Event, e.name, this.getDisplayTime(), e.logColor);
 						e.effectFn(this);
 					}
 					executedEvents++;
@@ -188,7 +188,7 @@ export class GameState
 			af.gain(numStacks);
 			if (ui.available(3) && uh.available(3)) {
 				paradox.gain(1);
-				controller.log(LogCategory.Event, "Paradox! (UI -> AF)", this.getDisplayTime());
+				addLog(LogCategory.Event, "Paradox! (UI -> AF)", this.getDisplayTime());
 			}
 			ui.consume(ui.currentValue);
 		}
@@ -197,7 +197,7 @@ export class GameState
 			ui.gain(numStacks);
 			if (af.available(3)) {
 				paradox.gain(1);
-				controller.log(LogCategory.Event, "Paradox! (AF -> UI)", this.getDisplayTime());
+				addLog(LogCategory.Event, "Paradox! (AF -> UI)", this.getDisplayTime());
 			}
 			af.consume(af.currentValue);
 		}
@@ -292,7 +292,7 @@ export class GameState
 				if (!(skillName===SkillName.Paradox && game.getIceStacks()>0)) game.resources.get(ResourceType.Mana).consume(capturedManaCost);
 				if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
 				if (capturedManaCost > 0)
-					controller.log(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.getDisplayTime());
+					addLog(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.getDisplayTime());
 				let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 				game.reportPotency(node, capturedPotency, sourceName);
 				let captureInfo = {
@@ -316,7 +316,7 @@ export class GameState
 				return true;
 			} else {
 				console.log(skillName + " failed");
-				controller.log(
+				addLog(
 					LogCategory.Event,
 					skillName + " cast failed! Resources no longer available.",
 					game.getDisplayTime(),
@@ -331,7 +331,7 @@ export class GameState
 		let instantCast = function(game, rsc)
 		{
 			let instantCastReason = rsc ? rsc.type : "(unknown, paradox?)";
-			controller.log(LogCategory.Event, "a cast is made instant via " + instantCastReason, game.getDisplayTime(), Color.Success);
+			addLog(LogCategory.Event, "a cast is made instant via " + instantCastReason, game.getDisplayTime(), Color.Success);
 			if (rsc) rsc.consume(1);
 			takeEffect(game);
 
@@ -363,7 +363,7 @@ export class GameState
 			instantCast(this, triple);
 			if (!triple.available(1)) {
 				triple.removeTimer();
-				controller.log(LogCategory.Event, "all triple charges used", this.getDisplayTime());
+				addLog(LogCategory.Event, "all triple charges used", this.getDisplayTime());
 			}
 			return;
 		}
@@ -434,8 +434,8 @@ export class GameState
 		if (enochian.available(1)) 
 		{
 			// refresh
-			enochian.overrideTimer(15);
-			controller.log(LogCategory.Event, "refresh enochian timer", this.getDisplayTime());
+			enochian.overrideTimer(this, 15);
+			addLog(LogCategory.Event, "refresh enochian timer", this.getDisplayTime());
 		}
 		else
 		{
@@ -447,9 +447,9 @@ export class GameState
 				this.loseEnochian();
 			});
 
-			controller.log(LogCategory.Event, "override poly timer to 30", this.getDisplayTime(), Color.Text);
+			addLog(LogCategory.Event, "override poly timer to 30", this.getDisplayTime(), Color.Text);
 			// reset polyglot countdown to 30s
-			this.resources.get(ResourceType.Polyglot).overrideTimer(30);
+			this.resources.get(ResourceType.Polyglot).overrideTimer(this, 30);
 		}
 	}
 

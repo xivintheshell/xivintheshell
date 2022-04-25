@@ -1,7 +1,7 @@
 import {Aspect, ResourceType, SkillName} from './Common'
 // @ts-ignore
 import {controller} from "../Controller/Controller";
-import {Color, LogCategory} from "../Controller/Common";
+import {addLog, Color, LogCategory} from "../Controller/Common";
 import {Event, Resource} from "./Resources";
 import {ActionNode} from "../Controller/Record";
 
@@ -142,7 +142,7 @@ export function makeSkillsList(game: Fixme) {
 				game.useInstantSkill(skillName, () => {
 					let resource = game.resources.get(rscType);
 					if (resource.available(1)) {
-						resource.overrideTimer(duration);
+						resource.overrideTimer(game, duration);
 					} else {
 						resource.gain(1);
 						game.resources.addResourceEvent(
@@ -183,13 +183,13 @@ export function makeSkillsList(game: Fixme) {
 	let gainFirestarterProc = function(game: Fixme) {
 		let fs = game.resources.get(ResourceType.Firestarter);
 		if (fs.available(1)) {
-			fs.overrideTimer(30);
-			controller.log(LogCategory.Event,
+			fs.overrideTimer(game, 30);
+			addLog(LogCategory.Event,
 				"Firestarter proc! Overriding an existing one",
 				game.getDisplayTime(), Color.Fire);
 		} else {
 			fs.gain(1);
-			controller.log(LogCategory.Event,
+			addLog(LogCategory.Event,
 				"Firestarter proc!",
 				game.getDisplayTime(), Color.Fire);
 			game.resources.addResourceEvent(
@@ -227,7 +227,7 @@ export function makeSkillsList(game: Fixme) {
 					let uh = game.resources.get(ResourceType.UmbralHeart);
 					if (cap.capturedManaCost > 0 && uh.available(1)) {
 						uh.consume(1);
-						controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
+						addLog(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
 					}
 					potentiallyGainFirestarter(game);
 				}, (app: Fixme) => {
@@ -252,7 +252,7 @@ export function makeSkillsList(game: Fixme) {
 		(game, node) => {
 			game.useInstantSkill(SkillName.Transpose, () => {
 				if (game.getFireStacks() === 0 && game.getIceStacks() === 0) {
-					controller.log(LogCategory.Event, "transpose failed; AF/UI just fell off", game.getDisplayTime(), Color.Error);
+					addLog(LogCategory.Event, "transpose failed; AF/UI just fell off", game.getDisplayTime(), Color.Error);
 					return;
 				}
 				if (game.getFireStacks() > 0) {
@@ -271,11 +271,11 @@ export function makeSkillsList(game: Fixme) {
 	let gainThundercloudProc = function (game: Fixme) {
 		let thundercloud = game.resources.get(ResourceType.Thundercloud);
 		if (thundercloud.available(1)) { // already has a proc; reset its timer
-			thundercloud.overrideTimer(40);
-			controller.log(LogCategory.Event, "Thundercloud proc! overriding an existing one", game.getDisplayTime(), Color.Thunder);
+			thundercloud.overrideTimer(game, 40);
+			addLog(LogCategory.Event, "Thundercloud proc! overriding an existing one", game.getDisplayTime(), Color.Thunder);
 		} else { // there's currently no proc. gain one.
 			thundercloud.gain(1);
-			controller.log(LogCategory.Event, "Thundercloud proc!", game.getDisplayTime(), Color.Thunder);
+			addLog(LogCategory.Event, "Thundercloud proc!", game.getDisplayTime(), Color.Thunder);
 			game.resources.addResourceEvent(
 				ResourceType.Thundercloud,
 				"drop thundercloud proc", 40, (rsc: Resource) => {
@@ -373,7 +373,7 @@ export function makeSkillsList(game: Fixme) {
 		(game, node) => {
 			game.useInstantSkill(SkillName.Manafont, () => {
 				game.resources.get(ResourceType.Mana).gain(3000);
-				controller.log(LogCategory.Event, "manafont effect: mana +3000", game.getDisplayTime());
+				addLog(LogCategory.Event, "manafont effect: mana +3000", game.getDisplayTime());
 			}, false, node);
 		}
 	));
@@ -587,7 +587,7 @@ export function makeSkillsList(game: Fixme) {
 				let uh = game.resources.get(ResourceType.UmbralHeart);
 				if (cap.capturedManaCost > 0 && uh.available(1)) {
 					uh.consume(1);
-					controller.log(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
+					addLog(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
 				}
 			}, (app: Fixme) => {
 			}, node);
@@ -672,7 +672,7 @@ export function makeSkillsList(game: Fixme) {
 				let recurringLucidTick = (remainingTicks: number) => {
 					if (remainingTicks === 0) return;
 					applyLucidTick(numTicks + 1 - remainingTicks);
-					controller.log(
+					addLog(
 						LogCategory.Event,
 						"recurring lucid tick " + (numTicks + 1 - remainingTicks) + "/" + numTicks,
 						game.getDisplayTime(),

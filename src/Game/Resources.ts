@@ -1,7 +1,7 @@
-import {Color, LogCategory} from "../Controller/Common";
+import {addLog, Color, LogCategory} from "../Controller/Common";
 import {Debug, ResourceType} from "./Common"
-// @ts-ignore FIXME
-import {controller} from "../Controller/Controller";
+
+type Fixme = any;
 
 export class Event
 {
@@ -38,8 +38,14 @@ export class Resource
 		this.maxValue = maxValue;
 		this.currentValue = initialValue;
 	}
-	overrideTimer(newTime: number) {
+	overrideTimer(game: Fixme, newTime: number) {
 		if (this.pendingChange) {
+			// hack: make a new event for this, so it's executed after all other events at this time are ticked
+			game.addEvent(new Event(
+				"override " + this.pendingChange.name + " timer: " + newTime,
+				0,
+				()=>{ if (this.pendingChange) this.pendingChange.timeTillEvent = newTime; }
+			));
 			this.pendingChange.timeTillEvent = newTime;
 		} else {
 			console.assert(false);
@@ -151,7 +157,7 @@ export class ResourceState extends Map
 	// useful for binary resources
 	takeResourceLock(rscType: ResourceType, delay: number) {
 		this.get(rscType).consume(1);
-		controller.log(LogCategory.Event, "[resource locked] " + rscType, this.game.getDisplayTime(), Color.Grey);
+		addLog(LogCategory.Event, "[resource locked] " + rscType, this.game.getDisplayTime(), Color.Grey);
 		this.addResourceEvent(
 			rscType, "[resource ready] " + rscType, delay, rsc=>{ rsc.gain(1); }, Color.Grey);
 	}

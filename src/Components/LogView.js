@@ -1,10 +1,8 @@
 import React from 'react'
 import { LogCategory } from "../Controller/Common";
 
-class AutoScroll extends React.Component
-{
-    constructor(props)
-    {
+class AutoScroll extends React.Component {
+    constructor(props) {
         super(props);
         this.myRef = React.createRef();
     }
@@ -35,24 +33,20 @@ let addLogContentInner = function(logCategory, newContent, color) {
         color: color
     });
 }
-export var addLogContent = addLogContentInner;
+export let addLogContent = addLogContentInner;
 
-class LogView extends React.Component
-{
-    constructor(props)
-    {
+class LogView extends React.Component {
+    constructor(props) {
         super(props);
-        addLogContent = this.unboundAddLogContent.bind(this);
+        addLogContent = ((logCategory, newContent, color)=>{
+            addLogContentInner(logCategory, newContent, color);
+            this.forceUpdate();
+        }).bind(this);
     }
     componentWillUnmount() {
         addLogContent = addLogContentInner;
     }
-    unboundAddLogContent(logCategory, newContent, color) {
-        addLogContentInner(logCategory, newContent, color);
-        this.forceUpdate();
-    }
-    render()
-    {
+    render() {
         let mappedContent = function(category) {
             let list = logContent.get(category);
             let outList = [];

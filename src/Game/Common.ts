@@ -23,7 +23,7 @@ export class GameConfig implements IConfig {
 	animationLock = 0.66;
 	timeTillFirstManaTick = 1.2;
 
-	equals(other : GameConfig) {
+	equals(other : IConfig) {
 		return this.spellSpeed === other.spellSpeed &&
 			this.countdown === other.countdown &&
 			this.randomSeed === other.randomSeed &&

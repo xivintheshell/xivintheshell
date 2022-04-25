@@ -179,8 +179,7 @@ function EnemyBuffsDisplay(props)
 	</div>
 }
 
-function ResourceLocksDisplay(props)
-{
+function ResourceLocksDisplay(props) {
 	let data = (props && props.data) ? props.data : {
 		gcdReady: true,
 		gcd: 2.5,

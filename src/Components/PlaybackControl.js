@@ -18,7 +18,11 @@ export class TimeControl extends React.Component {
 			this.setState({tickMode: parseInt(e.target.value)});
 			let numVal = parseInt(e.target.value);
 			if (!isNaN(numVal)) {
-				controller.setTickMode(numVal);
+				controller.setTimeControlSettings({
+					tickMode: numVal,
+					stepSize: this.state.stepSize,
+					timeScale: this.state.timeScale
+				});
 				this.saveSettings({
 					tickMode: numVal,
 					stepSize: this.state.stepSize,
@@ -32,6 +36,7 @@ export class TimeControl extends React.Component {
 			let numVal = parseFloat(val);
 			if (!isNaN(numVal)) {
 				controller.setTimeControlSettings({
+					tickMode: this.state.tickMode,
 					stepSize: numVal,
 					timeScale: this.state.timeScale
 				});
@@ -48,6 +53,7 @@ export class TimeControl extends React.Component {
 			let numVal = parseFloat(val);
 			if (!isNaN(numVal)) {
 				controller.setTimeControlSettings({
+					tickMode: this.state.tickMode,
 					stepSize: this.state.stepSize,
 					timeScale: numVal
 				});
@@ -59,28 +65,23 @@ export class TimeControl extends React.Component {
 			}
 		}).bind(this);
 
-		this.state = {
-			tickMode: 1,
-			stepSize: 1,
-			timeScale: 2
-		};
-	}
-	componentDidMount() {
 		let settings = LocalStorage.loadPlaybackSettings();
 		if (settings) {
-			this.setState({
+			this.state = {
 				tickMode: settings.tickMode,
 				stepSize: settings.stepSize,
 				timeScale: settings.timeScale
-			});
+			};
 		} else {
-			settings = {
-				tickMode: this.state.tickMode,
-				stepSize: this.state.stepSize,
-				timeScale: this.state.timeScale
+			this.state = {
+				tickMode: 1,
+				stepSize: 1,
+				timeScale: 2
 			};
 		}
-		controller.setTimeControlSettings(settings);
+	}
+	componentDidMount() {
+		controller.setTimeControlSettings(this.state);
 	}
 	render() {
 		return <div className={"timeControl"}>
@@ -145,13 +146,13 @@ export class Config extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = { // NOT DEFAULTS
-			stepSize : 0.5,
-			spellSpeed: 1532,
-			animationLock: 0.7,
-			casterTax: 0.1,
-			timeTillFirstManaTick: 1.2,
-			countdown: 5,
-			randomSeed: Math.floor(Math.random() * 10000).toString(),
+			stepSize : 0,
+			spellSpeed: 0,
+			animationLock: 0,
+			casterTax: 0,
+			timeTillFirstManaTick: 0,
+			countdown: 0,
+			randomSeed: ""
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);
@@ -197,24 +198,7 @@ export class Config extends React.Component {
 			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed,
 		});
-	}
-
-	componentDidMount() {
-		let config = null;//LocalStorage.loadConfig();
-		if (config !== null) {
-			updateConfigDisplay(config);
-		} else {
-			config = {
-				spellSpeed: this.state.spellSpeed,
-				animationLock: this.state.animationLock,
-				casterTax: this.state.casterTax,
-				countdown: this.state.countdown,
-				timeTillFirstManaTick: this.state.timeTillFirstManaTick,
-				randomSeed: this.state.randomSeed
-			};
-			updateConfigDisplay(config);
-		}
-		this.setConfigAndRestart(config);
+		controller.updateAllDisplay();
 	}
 
 	componentWillUnmount() {
@@ -236,7 +220,6 @@ export class Config extends React.Component {
 			randomSeed: seed
 		};
 		this.setConfigAndRestart(config);
-		//LocalStorage.storeConfig(config);
 		event.preventDefault();
 	}
 

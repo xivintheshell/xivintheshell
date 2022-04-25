@@ -135,6 +135,7 @@ class SkillButton extends React.Component {
 			{this.props.cdProgress === 1 ? "" : progressCircle}
 			<Clickable onClickFn={()=>{
 				controller.requestUseSkill({skillName: this.props.skillName});
+				controller.updateAllDisplay();
 			}} content={icon}/>
 			<ReactTooltip id={"skillButton-" + this.props.skillName}>
 				{this.state.skillDescription}
@@ -147,37 +148,45 @@ export var updateSkillButtons = (statusList)=>{}
 class SkillsWindow extends React.Component {
 	constructor(props) {
 		super(props);
-		updateSkillButtons = this.unboundUpdateFn.bind(this);
-		setSkillInfoText = this.unboundSetSkillInfoText.bind(this);
+		updateSkillButtons = ((statusList)=>{
+			this.setState({
+				statusList: statusList,
+				paradoxInfo: controller.getSkillInfo({skillName: SkillName.Paradox}),
+			});
+		}).bind(this);
+
+		setSkillInfoText = ((text)=>{
+			this.setState({tooltipContent: text});
+		}).bind(this);
+
 		this.state = {
+			statusList: undefined,
+			paradoxInfo: undefined,
+			tooltipContent: "",
+		}
+	}
+	componentDidMount() {
+		this.setState({
 			statusList: displayedSkills.map(sn=>{
 				return controller.getSkillInfo({skillName: sn});
 			}),
 			paradoxInfo: controller.getSkillInfo({skillName: SkillName.Paradox}),
-			tooltipContent: "",
-		}
-	}
-	unboundUpdateFn(statusList) {
-		this.setState({
-			statusList: statusList,
-			paradoxInfo: controller.getSkillInfo({skillName: SkillName.Paradox}),
 		});
 	}
-	unboundSetSkillInfoText(text) {
-		this.setState({tooltipContent: text});
-	}
+
 	render() {
 		let skillButtons = [];
 		let para = controller.getResourceValue({rscType: ResourceType.Paradox});
 		for (let i = 0; i < displayedSkills.length; i++) {
 			let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
 			let skillName = (isF1B1 && para) ? SkillName.Paradox : displayedSkills[i];
-			let info = (isF1B1 && para) ? this.state.paradoxInfo : this.state.statusList[i];
+			let info = undefined;
+			if (this.state.paradoxInfo) info = (isF1B1 && para) ? this.state.paradoxInfo : this.state.statusList[i];
 			let btn = <SkillButton
 				key={i}
 				skillName={skillName}
-				ready={info.status===SkillReadyStatus.Ready}
-				cdProgress={1 - info.cdReadyCountdown / info.cdRecastTime}
+				ready={info ? info.status===SkillReadyStatus.Ready : false}
+				cdProgress={info ? 1 - info.cdReadyCountdown / info.cdRecastTime : 1}
 				/>
 			skillButtons.push(btn);
 		}

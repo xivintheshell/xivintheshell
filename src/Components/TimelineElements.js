@@ -99,6 +99,8 @@ export function TimelineSkill(props) {
 		onKeyDown={(e)=>{
 			if (e.key === "Backspace") {
 				controller.rewindUntilBefore(controller.record.getFirstSelection());
+				controller.updateAllDisplay();
+				controller.autoSave();
 			}
 		}}
 	/>;

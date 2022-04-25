@@ -193,16 +193,15 @@ class FixedRightColumn extends React.Component {
 		this.myRef = React.createRef();
 	}
 	componentDidMount() {
-		scrollTimelineTo = this.unboundScroll.bind(this);
+		scrollTimelineTo = ((positionX)=>{
+			if (this.myRef.current != null) {
+				let clientWidth = this.myRef.current.clientWidth;
+				this.myRef.current.scrollLeft = positionX - clientWidth * 0.6;
+			}
+		}).bind(this);
 	}
 	componentWillUnmount() {
 		scrollTimelineTo = (positionX)=>{};
-	}
-	unboundScroll(positionX) {
-		if (this.myRef.current != null) {
-			let clientWidth = this.myRef.current.clientWidth;
-			this.myRef.current.scrollLeft = positionX - clientWidth * 0.6;
-		}
 	}
 	render() {
 		return <div ref={this.myRef} className={"timeline-fixedRightColumn"}>

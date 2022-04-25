@@ -10,13 +10,13 @@ export let updateSkillSequencePresetsView = ()=>{};
 class SaveAsPreset extends React.Component {
 	constructor(props) {
 		super(props);
-		this.onChange = this.unboundOnChange.bind(this);
+		this.onChange = ((val)=>{
+			this.setState({filename: val});
+		}).bind(this);
+
 		this.state = {
 			filename: "(untitled)"
 		};
-	}
-	unboundOnChange(val) {
-		this.setState({filename: val});
 	}
 	render() {
 		return <form>
@@ -54,6 +54,8 @@ function PresetLine(props) {
 	return <div style={{marginBottom: "8px"}}>
 		<Clickable content={clickableContent} onClickFn={() => {
 			controller.tryAddLine(line, ReplayMode.Tight);
+			controller.updateAllDisplay();
+			controller.scrollToTime();
 		}}/>
 		<span> </span>
 		<Clickable content="[x]" onClickFn={() => {
@@ -63,7 +65,6 @@ function PresetLine(props) {
 }
 
 class SkillSequencePresets extends React.Component {
-
 	saveFilename = "presets.txt";
 	constructor(props) {
 		super(props);

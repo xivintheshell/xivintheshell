@@ -46,30 +46,19 @@ export function asyncFetch(
 	});
 }
 
-interface ClickableProps {
+type ClickableProps = {
 	content?: ReactNode,
 	onClickFn?: () => void,
 	style?: CSSProperties
 }
-export class Clickable extends React.Component {
-	props: ClickableProps = {};
-	constructor(inProps: {
-		onClickFn: () => void,
-		content: ReactNode,
-		style?: CSSProperties
-	}) {
-		super(inProps);
-		this.props = inProps;
-	}
 
-	// TODO: bind hotkeys to buttons?
-	render() {
-		return <div
-			className={"clickable"}
-			onClick={this.props.onClickFn}
-			style={this.props.style}
-		>{this.props.content}</div>
-	}
+// TODO: bind hotkeys to them?
+export function Clickable(props: ClickableProps) {
+	return <div
+		className={"clickable"}
+		onClick={props.onClickFn}
+		style={props.style}
+	>{props.content}</div>
 }
 
 export function ProgressBar(props: {
@@ -100,14 +89,14 @@ export function ProgressBar(props: {
 	</div>
 }
 
-interface InputProps {
+type InputProps = {
 	defaultValue?: string,
 	description?: string,
 	onChange?: (newVal: string) => void,
 	width?: number,
 	style?: CSSProperties,
 }
-interface InputState {
+type InputState = {
 	value: string,
 	description: string,
 }
@@ -122,14 +111,10 @@ export class Input extends React.Component {
 			value: inProps.defaultValue ?? "",
 			description: inProps.description ?? "",
 		}
-		this.onChange = this.unboundOnChange.bind(this);
-	}
-	unboundOnChange(e: ChangeEvent<{value: string}>) {
-		this.setState({value: e.target.value});
-		if (this.props.onChange) this.props.onChange(e.target.value);
-	}
-	componentDidMount() {
-		//if (this.props.onChange) this.props.onChange(this.state.value);
+		this.onChange = ((e: ChangeEvent<{value: string}>)=>{
+			this.setState({value: e.target.value});
+			if (this.props.onChange) this.props.onChange(e.target.value);
+		}).bind(this);
 	}
 	render() {
 		let width = this.props.width ?? 5;
@@ -142,12 +127,12 @@ export class Input extends React.Component {
 	}
 }
 
-interface SliderProps {
+type SliderProps = {
 	onChange?: (e: string) => void,
 	defaultValue?: string,
 	description?: string
 }
-interface SliderState {
+type SliderState = {
 	value: string,
 }
 export class Slider extends React.Component {
@@ -163,14 +148,13 @@ export class Slider extends React.Component {
 		this.state = {
 			value: inProps.defaultValue ?? "",
 		}
-		this.onChange = this.unboundOnChange.bind(this);
-	}
-	unboundOnChange(e: ChangeEvent<{value: string}>) {
-		this.setState({value: e.target.value});
-		if (typeof this.props.onChange !== "undefined") this.props.onChange(e.target.value);
+		this.onChange = ((e: ChangeEvent<{value: string}>)=>{
+			this.setState({value: e.target.value});
+			if (typeof this.props.onChange !== "undefined") this.props.onChange(e.target.value);
+		}).bind(this);
 	}
 	componentDidMount() {
-		if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
+		//if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
 	}
 	render() {
 		return <div className={"sliderInputContainer"}>
@@ -205,12 +189,12 @@ export class ScrollAnchor extends React.Component {
 }
 
 // defaultShow, title, content
-interface ExpandableProps {
+type ExpandableProps = {
 	title: string,
 	defaultShow?: boolean,
 	content?: ReactNode,
 }
-interface ExpandableState {
+type ExpandableState = {
 	show: boolean,
 }
 export class Expandable extends React.Component {
@@ -231,7 +215,6 @@ export class Expandable extends React.Component {
 		if (expanded !== null) {
 			show = parseInt(expanded) === 1;
 		}
-
 		this.state = {
 			show: show
 		};
@@ -268,46 +251,38 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 		this.fileSelectorRef = React.createRef();
 		this.loadUrl = inProps.defaultLoadUrl;
 
-		this.onLoadUrlChange = this.unboundOnLoadUrlChange.bind(this);
-		this.onLoadPresetFile = this.unboundOnLoadPresetFile.bind(this);
-		this.onLoadUrl = this.unboundOnLoadUrl.bind(this);
+		this.onLoadUrlChange = ((evt: ChangeEvent<{value: string}>)=>{
+			if (evt.target) this.loadUrl = evt.target.value;
+		}).bind(this);
+
+		this.onLoadPresetFile = (()=>{
+			let cur = this.fileSelectorRef.current;
+			if (cur && cur.files && cur.files.length > 0) {
+				let fileToLoad = cur.files[0];
+				loadFromFile(fileToLoad, (content)=>{
+					this.props.onLoadFn(content);
+				});
+			}
+		}).bind(this);
+
+		this.onLoadUrl = (()=>{
+			let errorHandler = function(e: any) {
+				console.log("some error occurred");
+			};
+			asyncFetch(this.loadUrl, data=>{
+				try {
+					let content = JSON.parse(data);
+					this.props.onLoadFn(content);
+				} catch(e: any) {
+					errorHandler(e);
+				}
+			}, (e)=>{
+				errorHandler(e);
+			});
+		}).bind(this);
 	}
 	componentDidMount() {
 		if (this.props.loadUrlOnMount) this.onLoadUrl();
-	}
-	unboundOnLoadUrlChange(evt: ChangeEvent<{value: string}>) {
-		if (evt.target) this.loadUrl = evt.target.value;
-	}
-	unboundOnLoadPresetFile() {
-		let cur = this.fileSelectorRef.current;
-		if (cur && cur.files && cur.files.length > 0) {
-			let fileToLoad = cur.files[0];
-			loadFromFile(fileToLoad, (content)=>{
-				this.props.onLoadFn(content);
-			});
-		}
-	}
-	unboundOnLoadUrl() {
-		let errorHandler = function(e: any) {
-			console.log("some error occurred");
-		};
-		asyncFetch(this.loadUrl, data=>{
-			try {
-				let content = JSON.parse(data);
-				this.props.onLoadFn(content);
-				/*
-				if (content.fileType === FileType.Presets) {
-					controller.appendFilePresets(content);
-				} else {
-					console.log("incorrect file type");
-				}
-				 */
-			} catch(e: any) {
-				errorHandler(e);
-			}
-		}, (e)=>{
-			errorHandler(e);
-		});
 	}
 	render() {
 		let longInputStyle = {
