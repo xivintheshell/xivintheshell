@@ -1,7 +1,6 @@
 import React, {CSSProperties} from 'react'
 import {MarkerElem} from "../Controller/Timeline";
-// @ts-ignore // FIXME
-import {controller} from "../Controller/Controller.js";
+import {controller} from "../Controller/Controller";
 import ReactTooltip from "react-tooltip";
 import {setEditingMarkerValues} from "./TimelineMarkerPresets";
 

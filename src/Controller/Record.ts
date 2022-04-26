@@ -199,6 +199,7 @@ export class Record extends Line {
 			}
 			// failed both ways (shouldn't get here)
 			console.assert(false);
+			return [0, 0];
 		} else {
 			return this.selectSingle(node);
 		}

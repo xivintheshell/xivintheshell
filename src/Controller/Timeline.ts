@@ -54,6 +54,7 @@ type SkillElem = TimelineElemBase & {
 	isSpellCast: boolean;
 	lockDuration: number;
 	recastDuration: number;
+	capturedPotency: number;
 	node: ActionNode;
 }
 export type MarkerElem = TimelineElemBase & {
