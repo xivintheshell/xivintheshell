@@ -1,5 +1,6 @@
 import {Debug, ResourceType} from "./Common"
 import {Stats} from "fs";
+import {ResourceState} from "./Resources";
 
 export class StatsModifier
 {
@@ -63,7 +64,7 @@ export class StatsModifier
 	}
 
 	// FIXME
-	static fromResourceState(resources: { get: (arg0: ResourceType) => { (): any; new(): any; currentValue: any; available: { (arg0: number): any; new(): any; }; }; })
+	static fromResourceState(resources: ResourceState)
 	{
 		let base = StatsModifier.base();
 		let modifiers = [];

@@ -1,7 +1,6 @@
 import {addLog, Color, LogCategory} from "../Controller/Common";
 import {Debug, ResourceType} from "./Common"
-
-type Fixme = any;
+import {GameState} from "./GameState";
 
 export class Event
 {
@@ -38,7 +37,7 @@ export class Resource
 		this.maxValue = maxValue;
 		this.currentValue = initialValue;
 	}
-	overrideTimer(game: Fixme, newTime: number) {
+	overrideTimer(game: GameState, newTime: number) {
 		if (this.pendingChange) {
 			// hack: make a new event for this, so it's executed after all other events at this time are ticked
 			game.addEvent(new Event(
@@ -121,12 +120,20 @@ export class CoolDownState extends Map {
 	}
 }
 
-export class ResourceState extends Map
-{
+export class ResourceState extends Map<ResourceType, Resource> {
 	game: any; // FIXME
 	constructor(game: any) {
 		super();
 		this.game = game;
+	}
+
+	get(rscType: ResourceType): Resource {
+		let rsc = super.get(rscType);
+		if (rsc) return rsc;
+		else {
+			console.assert(false);
+			return new Resource(ResourceType.Never, 0, 0);
+		}
 	}
 
 	timeTillReady(rscType: ResourceType): number {
@@ -147,7 +154,7 @@ export class ResourceState extends Map
 	{
 		let rsc = this.get(rscType);
 		 let evt = new Event(name, delay, ()=>{
-			 rsc.pendingChange = null; // unregister self from resource
+			 rsc.pendingChange = undefined; // unregister self from resource
 			 fnOnRsc(rsc); // before the scheduled event takes effect
 		 }, logColor, shouldLog);
 		 rsc.pendingChange = evt; // register to resource

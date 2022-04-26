@@ -1,19 +1,29 @@
 import {Aspect, Debug, GameConfig, ResourceType, SkillName, SkillReadyStatus} from "./Common"
 import {StatsModifier} from "./StatsModifier";
-import {makeSkillsList} from "./Skills"
+import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
 
+// @ts-ignore
 import {controller} from "../Controller/Controller";
 import {addLog, Color, LogCategory} from "../Controller/Common";
+import {ActionNode} from "../Controller/Record";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
 
+type RNG = any;
+
 // GameState := resources + events queue
-export class GameState
-{
-	constructor(config)
-	{
+export class GameState {
+	config: GameConfig
+	rng: RNG;
+	time: number;
+	resources: ResourceState;
+	cooldowns: CoolDownState;
+	eventsQueue: Event[];
+	skillsList: SkillsList;
+
+	constructor(config: GameConfig) {
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
 
@@ -78,7 +88,7 @@ export class GameState
 		this.eventsQueue = [];
 
 		// SKILLS (instantiated once, read-only later)
-		this.skillsList = makeSkillsList(this);
+		this.skillsList = new SkillsList(this);
 
 		this.#init();
 	}
@@ -105,15 +115,15 @@ export class GameState
 		}
 
 		// also polyglot
-		let recurringPolyglotGain = rsc=>{
+		let recurringPolyglotGain = (rsc: Resource)=>{
 			if (this.hasEnochian()) rsc.gain(1);
 			this.resources.addResourceEvent(ResourceType.Polyglot, "gain polyglot if currently has enochian", 30, recurringPolyglotGain);
 		};
-		recurringPolyglotGain(ResourceType.Polyglot);
+		recurringPolyglotGain(this.resources.get(ResourceType.Polyglot));
 	}
 
 	// advance game state by this much time
-	tick(deltaTime, prematureStopCondition=()=>{ return false; })
+	tick(deltaTime: number, prematureStopCondition=()=>{ return false; })
 	{
 		//======== events ========
 		let cumulativeDeltaTime = 0;
@@ -147,7 +157,7 @@ export class GameState
 					if (!e.canceled)
 					{
 						if (e.shouldLog) addLog(LogCategory.Event, e.name, this.getDisplayTime(), e.logColor);
-						e.effectFn(this);
+						e.effectFn();
 					}
 					executedEvents++;
 				}
@@ -163,8 +173,7 @@ export class GameState
 		return cumulativeDeltaTime;
 	}
 
-	addEvent(evt)
-	{
+	addEvent(evt: Event) {
 		this.eventsQueue.push(evt);
 	}
 
@@ -177,7 +186,7 @@ export class GameState
 		return (this.time - this.config.countdown);
 	}
 
-	switchToAForUI(rscType, numStacks)
+	switchToAForUI(rscType: ResourceType, numStacks: number)
 	{
 		let af = this.resources.get(ResourceType.AstralFire);
 		let ui = this.resources.get(ResourceType.UmbralIce);
@@ -204,7 +213,7 @@ export class GameState
 	}
 
 	// number -> number
-	captureDamage(aspect, basePotency)
+	captureDamage(aspect: Aspect, basePotency: number)
 	{
 		let mod = StatsModifier.fromResourceState(this.resources);
 
@@ -221,7 +230,7 @@ export class GameState
 		return potency;
 	}
 
-	captureManaCostAndUHConsumption(aspect, baseManaCost) {
+	captureManaCostAndUHConsumption(aspect: Aspect, baseManaCost: number) {
 		let mod = StatsModifier.fromResourceState(this.resources);
 
 		let manaCost;
@@ -245,7 +254,7 @@ export class GameState
 		return mod.manaRegen;
 	}
 
-	captureSpellCastAndRecastTimeScale(aspect, baseCastTime) {
+	captureSpellCastAndRecastTimeScale(aspect: Aspect, baseCastTime: number) {
 		let mod = StatsModifier.fromResourceState(this.resources);
 
 		let castTime = baseCastTime * mod.castTimeBase;
@@ -255,12 +264,12 @@ export class GameState
 		return [castTime, mod.spellRecastTimeScale];
 	}
 
-	dealDamage(potency, source="unknown") {
+	dealDamage(potency: number, source="unknown") {
 		// report damage is moved to capture time
 	}
 
-	reportPotency(node, potency, source) {
-		node.tmp_capturedPotency = node.tmp_capturedPotency + potency;
+	reportPotency(node: ActionNode, potency: number, source: string) {
+		node.tmp_capturedPotency = (node.tmp_capturedPotency ?? 0) + potency;
 		controller.reportPotencyUpdate();
 		controller.reportDamage({
 			potency: potency,
@@ -269,8 +278,12 @@ export class GameState
 		});
 	}
 
-	castSpell(skillName, onCapture, onApplication, node=null) {
-		console.assert(node);
+	castSpell(
+		skillName: SkillName,
+		onCapture: (cap: SkillCaptureCallbackInfo)=>void,
+		onApplication: (app: SkillApplicationCallbackInfo)=>void,
+		node: ActionNode)
+	{
 		let skill = this.skillsList.get(skillName);
 		let skillInfo = skill.info;
 		console.assert(skillInfo.isSpell);
@@ -281,7 +294,7 @@ export class GameState
 
 		let skillTime = this.getDisplayTime();
 
-		let takeEffect = function(game) {
+		let takeEffect = function(game: GameState) {
 			let resourcesStillAvailable = skill.available();
 			let sourceName = skillInfo.name + "@"+skillTime.toFixed(2)
 			if (resourcesStillAvailable) {
@@ -295,7 +308,7 @@ export class GameState
 					addLog(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.getDisplayTime());
 				let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 				game.reportPotency(node, capturedPotency, sourceName);
-				let captureInfo = {
+				let captureInfo: SkillCaptureCallbackInfo = {
 					capturedManaCost: capturedManaCost
 					//...
 				};
@@ -307,7 +320,7 @@ export class GameState
 					skillInfo.skillApplicationDelay,
 					()=>{
 						game.dealDamage(capturedPotency, sourceName);
-						let applicationInfo = {
+						let applicationInfo: SkillApplicationCallbackInfo = {
 							//...
 						};
 						onApplication(applicationInfo);
@@ -328,7 +341,7 @@ export class GameState
 			}
 		}
 
-		let instantCast = function(game, rsc)
+		let instantCast = function(game: GameState, rsc: Resource | undefined)
 		{
 			let instantCastReason = rsc ? rsc.type : "(unknown, paradox?)";
 			addLog(LogCategory.Event, "a cast is made instant via " + instantCastReason, game.getDisplayTime(), Color.Success);
@@ -345,7 +358,7 @@ export class GameState
 
 		// Paradox made instant via UI
 		if (skillName === SkillName.Paradox && this.getIceStacks() > 0) {
-			instantCast(this, null);
+			instantCast(this, undefined);
 			return;
 		}
 
@@ -386,7 +399,11 @@ export class GameState
 		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
 	}
 
-	useInstantSkill(skillName, effectFn, dealDamage=false, node=null)
+	useInstantSkill(
+		skillName: SkillName,
+		effectFn: ()=>void,
+		dealDamage: boolean,
+		node: ActionNode)
 	{
 		console.assert(node);
 		let skillInfo = this.skillsList.get(skillName).info;
@@ -464,7 +481,7 @@ export class GameState
 		uh.consume(uh.currentValue);
 	}
 
-	#timeTillSkillAvailable(skillName)
+	#timeTillSkillAvailable(skillName: SkillName)
 	{
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.info.cdName;
@@ -479,7 +496,7 @@ export class GameState
 		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed);
 	}
 
-	getSkillAvailabilityStatus(skillName)
+	getSkillAvailabilityStatus(skillName: SkillName)
 	{
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
@@ -514,8 +531,7 @@ export class GameState
 		};
 	}
 
-	useSkill(skillName, node=null)
-	{
+	useSkill(skillName: SkillName, node: ActionNode) {
 		let skill = this.skillsList.get(skillName);
 		skill.use(this, node);
 	}

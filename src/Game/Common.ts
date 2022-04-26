@@ -87,7 +87,9 @@ export const enum SkillName {
 	Swiftcast = "Swiftcast",
 	LucidDreaming = "Lucid Dreaming",
 	Surecast = "Surecast",
-	Tincture = "Tincture"
+	Tincture = "Tincture",
+
+	Never = "Never",
 }
 
 export const enum SkillReadyStatus {
@@ -143,5 +145,7 @@ export const enum ResourceType {
 	cd_Swiftcast = "cd_Swiftcast",
 	cd_LucidDreaming = "cd_LucidDreaming",
 	cd_Surecast = "cd_Surecast",
-	cd_Tincture = "cd_Tincture"
+	cd_Tincture = "cd_Tincture",
+
+	Never = "Never",
 }
