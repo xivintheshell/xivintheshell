@@ -51,6 +51,7 @@ let loadPresets = function(tracks: TrackAndUrl[]) {
 	tracks.forEach(trackAndUrl=>{
 		asyncFetchJson(trackAndUrl.url, (content)=>{
 			controller.timeline.appendMarkersPreset(content, trackAndUrl.track);
+			controller.timeline.drawElements();
 		});
 	});
 }
@@ -206,6 +207,7 @@ class TimelineMarkerPresets extends React.Component {
 								return;
 							}
 							controller.timeline.appendMarkersPreset(content, track);
+							controller.timeline.drawElements();
 						}}/>
 				</div>
 			}/>

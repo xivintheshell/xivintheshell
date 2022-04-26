@@ -31,6 +31,8 @@ type TimelineElemBase = {
 	time: number;
 }
 
+type Fixme = any;
+
 type CursorElem = TimelineElemBase & {
 	type: ElemType.s_Cursor;
 }
@@ -129,6 +131,7 @@ export class Timeline {
 		this.elapsedTime = 0;
 		this.elements = [];
 		this.markers = [];
+		this.#load();
 	}
 
 	setTimeSegment(startTime: number, elapsedTime: number) {
@@ -145,6 +148,7 @@ export class Timeline {
 	addMarker(marker: MarkerElem) {
 		this.markers.push(marker);
 		this.drawElements();
+		this.#save();
 	}
 
 	deleteMarker(marker: MarkerElem) {
@@ -152,14 +156,14 @@ export class Timeline {
 			if (marker === this.markers[i]) {
 				this.markers.splice(i, 1);
 				this.drawElements();
+				this.#save();
 				return true;
 			}
 		}
 		return false;
 	}
 
-	// TODO: type safety
-	appendMarkersPreset(preset: any, track: number) {
+	appendMarkersPreset(preset: Fixme, track: number) {
 		if (preset.fileType !== FileType.MarkerTrackPreset) {
 			window.alert("wrong file type '" + preset.fileType + "'");
 			return;
@@ -174,12 +178,13 @@ export class Timeline {
 				type: ElemType.Marker
 			};
 		}));
-		this.drawElements();
+		this.#save();
 	}
 
 	deleteAllMarkers() {
 		this.markers = [];
 		this.drawElements();
+		this.#save();
 	}
 
 	reset() {
@@ -249,12 +254,33 @@ export class Timeline {
 		// TODO
 	}
 
-	serializedMarkers() {
-		let maxTrack = 0;
-		let markerTracks: SerializedMarker[][] = [];
+	getNumMarkerTracks() {
+		let maxTrack = -1;
 		for (let i = 0; i < this.markers.length; i++) {
 			maxTrack = Math.max(maxTrack, this.markers[i].track);
 		}
+		return maxTrack + 1;
+	}
+
+	#save() {
+		let files = this.serializedMarkers();
+		localStorage.setItem("timelineMarkers", JSON.stringify(files));
+	}
+
+	#load() {
+		let str = localStorage.getItem("timelineMarkers");
+		if (str !== null) {
+			let files = JSON.parse(str);
+			files.forEach((f: Fixme)=>{
+				this.appendMarkersPreset(f, f.track);
+			});
+		}
+	}
+
+	serializedMarkers() {
+		let maxTrack = this.getNumMarkerTracks() - 1;
+
+		let markerTracks: SerializedMarker[][] = [];
 		for (let i = 0; i < maxTrack + 1; i++) {
 			markerTracks.push([]);
 		}
@@ -267,11 +293,14 @@ export class Timeline {
 				color: marker.color,
 			});
 		});
-		return markerTracks.map((track: SerializedMarker[])=>{
-			return {
+		let files: Fixme[] = [];
+		for (let i = 0; i < markerTracks.length; i++) {
+			files.push({
 				fileType: FileType.MarkerTrackPreset,
-				markers: track
-			}
-		});
+				track: i,
+				markers: markerTracks[i]
+			});
+		}
+		return files;
 	}
 }

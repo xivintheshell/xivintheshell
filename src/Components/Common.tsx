@@ -165,7 +165,7 @@ export class Slider extends React.Component {
 				value={this.state.value}
 				min={0.05}
 				max={1}
-				step={0.025}
+				step={0.05}
 				onChange={this.onChange}/>
 		</div>
 	}

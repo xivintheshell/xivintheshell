@@ -2,7 +2,6 @@ import React from 'react';
 import { controller } from '../Controller/Controller'
 import { Input } from "./Common";
 import ReactTooltip from 'react-tooltip';
-import {LocalStorage} from "../Controller/LocalStorage";
 import {TickMode} from "../Controller/Common";
 
 export class TimeControl extends React.Component {
@@ -10,7 +9,21 @@ export class TimeControl extends React.Component {
 		super(props);
 
 		this.saveSettings = (settings)=>{
-			LocalStorage.storePlaybackSettings(settings);
+			let str = JSON.stringify({
+				tickMode: settings.tickMode,
+				stepSize: settings.stepSize,
+				timeScale: settings.timeScale
+			});
+			localStorage.setItem("playbackSettings", str);
+		}
+
+		this.loadSettings = ()=>{
+			let str = localStorage.getItem("playbackSettings");
+			if (str) {
+				let settings = JSON.parse(str);
+				return settings;
+			}
+			return undefined;
 		}
 
 		this.setTickMode = ((e)=>{
@@ -65,7 +78,7 @@ export class TimeControl extends React.Component {
 			}
 		}).bind(this);
 
-		let settings = LocalStorage.loadPlaybackSettings();
+		let settings = this.loadSettings();//LocalStorage.loadPlaybackSettings();
 		if (settings) {
 			this.state = {
 				tickMode: settings.tickMode,

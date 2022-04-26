@@ -22,12 +22,9 @@ class TimelineMarkers extends React.Component {
 			markers: []
 		};
 
-		getTimelineMarkersHeight = (()=>{
-			if (this.myRef.current) {
-				return this.myRef.current.clientHeight;
-			}
-			return 0;
-		}).bind(this);
+		getTimelineMarkersHeight = ()=>{
+			return controller.timeline.getNumMarkerTracks() * 10;
+		};
 
 		updateMarkers = ((markers: MarkerElem[]) => {
 			this.setState({markers: markers});
@@ -40,10 +37,7 @@ class TimelineMarkers extends React.Component {
 	}
 
 	render() {
-		let maxTrack = 0;
-		for (let i = 0; i < this.state.markers.length; i++) {
-			maxTrack = Math.max(maxTrack, this.state.markers[i].track);
-		}
+		let maxTrack = controller.timeline.getNumMarkerTracks() - 1;
 		let makeMarker = (marker: MarkerElem, key: number | string) => {
 			let radius = marker.duration === 0 ? 3 : 2;
 			let top = (maxTrack - marker.track) * 10 + 5 - radius;

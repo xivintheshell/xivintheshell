@@ -69,7 +69,7 @@ function TimelineHeader(props) {
 		let minute = Math.floor(absTime / 60);
 		let second = absTime - 60 * minute;
 		return (time < 0 ? "-" : "") +
-			minute.toString() + ":" + (second < 10 ? "0" : "") + second.toString();
+			minute.toString() + ":" + (second < 10 ? "0" : "") + second.toFixed(0).toString();
 	}
 	let ruler = <div>
 		<svg width={props.canvasWidth} height="100%">
@@ -266,11 +266,22 @@ class StatsDisplay extends React.Component {
 }
 
 class Timeline extends React.Component {
+	constructor(props) {
+		super(props);
+		this.initialDisplayScale = 0.4;
+		let str = localStorage.getItem("timelineDisplayScale");
+		if (str !== null) {
+			this.initialDisplayScale = parseFloat(str);
+		}
+	}
 	render() {
 		return <div>
-			<Slider description={"display scale: "} defaultValue={0.4} onChange={(newVal)=>{
+			<Slider description={"display scale: "}
+					defaultValue={this.initialDisplayScale.toString()}
+					onChange={(newVal)=>{
 				controller.timeline.setHorizontalScale(parseFloat(newVal));
 				controller.onTimelineSelectionChanged();
+				localStorage.setItem("timelineDisplayScale", newVal);
 			}}/>
 			<div className={"timeline timelineTab"}>
 				<FixedRightColumn/>

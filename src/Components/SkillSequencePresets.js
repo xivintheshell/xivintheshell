@@ -25,6 +25,7 @@ class SaveAsPreset extends React.Component {
 				defaultValue={this.state.filename}
 				description={"name: "} width={30}
 				onChange={this.onChange}/>
+			<span> </span>
 			<button type={"submit"} disabled={!this.props.enabled} onClick={(e) => {
 				controller.addSelectionToPreset(this.filename);
 				e.preventDefault();
@@ -120,6 +121,7 @@ class SkillSequencePresets extends React.Component {
 				<form style={{marginTop: "16px"}}>
 					<span>Save presets to file as: </span>
 					<input defaultValue={this.saveFilename} style={longInputStyle} onChange={this.onSaveFilenameChange}/>
+					<span> </span>
 					<button type={"submit"} onClick={(e)=>{
 						this.onSave();
 						e.preventDefault();

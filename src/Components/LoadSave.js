@@ -2,7 +2,6 @@ import React from 'react'
 import {loadFromFile, saveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType} from "../Controller/Common";
-import {updateConfigDisplay} from "./PlaybackControl";
 
 export class LoadSave extends React.Component {
 	constructor(props) {
@@ -42,6 +41,7 @@ export class LoadSave extends React.Component {
 		return <div className={"loadSave"}>
 			<div>
 				<input defaultValue="battle.txt" className="textInput" width="8" onChange={this.onSaveFilenameChange}/>
+				<span> </span>
 				<button onClick={this.onSave}>save to file</button>
 			</div>
 			<div>

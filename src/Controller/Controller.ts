@@ -579,11 +579,11 @@ class Controller {
 		}
 	}
 
-	scrollToTime(t: number) {
-		if (t === undefined) t = this.game.time;
+	scrollToTime(t?: number) {
+		let targetT = t === undefined ? this.game.time : t;
 		// the most adhoc hack ever...
 		setTimeout(()=>{
-			scrollTimelineTo(this.timeline.positionFromTime(t));
+			scrollTimelineTo(this.timeline.positionFromTime(targetT));
 		}, 0);
 	}
 
