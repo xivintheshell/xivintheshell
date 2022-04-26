@@ -280,7 +280,6 @@ class Timeline extends React.Component {
 					defaultValue={this.initialDisplayScale.toString()}
 					onChange={(newVal)=>{
 				controller.timeline.setHorizontalScale(parseFloat(newVal));
-				controller.onTimelineSelectionChanged();
 				localStorage.setItem("timelineDisplayScale", newVal);
 			}}/>
 			<div className={"timeline timelineTab"}>

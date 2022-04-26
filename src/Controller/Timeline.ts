@@ -64,11 +64,13 @@ export type MarkerElem = TimelineElemBase & {
 	duration: number;
 	color: MarkerColor;
 	track: number;
+	showText: boolean;
 	description: string;
 }
 
 export type SerializedMarker = TimelineElemBase & {
 	duration: number;
+	showText: boolean;
 	color: MarkerColor;
 	description: string;
 }
@@ -175,7 +177,8 @@ export class Timeline {
 				color: m.color,
 				description: m.description,
 				track: track,
-				type: ElemType.Marker
+				type: ElemType.Marker,
+				showText: m.showText===undefined ? false : m.showText,
 			};
 		}));
 		this.#save();
@@ -291,6 +294,7 @@ export class Timeline {
 				duration: marker.duration,
 				description: marker.description,
 				color: marker.color,
+				showText: marker.showText
 			});
 		});
 		let files: Fixme[] = [];

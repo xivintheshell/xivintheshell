@@ -154,7 +154,7 @@ export class Slider extends React.Component {
 		}).bind(this);
 	}
 	componentDidMount() {
-		//if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
+		if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
 	}
 	render() {
 		return <div className={"sliderInputContainer"}>

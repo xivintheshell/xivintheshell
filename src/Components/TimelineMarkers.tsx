@@ -40,27 +40,47 @@ class TimelineMarkers extends React.Component {
 		let maxTrack = controller.timeline.getNumMarkerTracks() - 1;
 		let makeMarker = (marker: MarkerElem, key: number | string) => {
 			let radius = marker.duration === 0 ? 3 : 2;
-			let top = (maxTrack - marker.track) * 10 + 5 - radius;
-			let left = controller.timeline.positionFromTime(
-				marker.time + controller.gameConfig.countdown) - radius;
-			let width = controller.timeline.positionFromTime(marker.duration) + 2 * radius;
-			let height = 2 * radius;
-			let style: CSSProperties = {
+			let leftPos = controller.timeline.positionFromTime(marker.time + controller.gameConfig.countdown);
+			let absTop = (maxTrack - marker.track) * 10;
+			let absWidth = controller.timeline.positionFromTime(marker.duration);
+			let noTextStyle: CSSProperties = {
 				position: "absolute",
 				background: marker.color,
 				borderRadius: radius,
-				top: top,
-				left: left,
-				width: width,
-				height: height,
-				textAlign: "center",
+				top: 5 - radius,
+				left: -radius,
+				width: absWidth + 2 * radius,
+				height: 2 * radius,
 			};
+			let textStyle: CSSProperties = {
+				position: "absolute",
+				top: 0,
+				left: 0,
+				background: marker.color + "7f",
+				width: absWidth,
+				height: "100%",
+			}
+			// sets the anchor for inner elems
+			let containerStyle: CSSProperties = {
+				position: "absolute",
+				top: absTop,
+				left: leftPos,
+				height: 10,
+				outline: "1px solid orange",
+				fontSize: 9
+			}
 			let id = "timelineMarker-" + key;
-			return <div key={key} data-tip data-for={id} style={style} onClick={()=>{
-				let success = controller.timeline.deleteMarker(marker);
-				console.assert(success);
-				setEditingMarkerValues(marker);
-			}}>
+			return <div key={key} style={containerStyle} >
+				<div data-tip data-for={id}
+					 style={(marker.showText && marker.duration > 0) ? textStyle : noTextStyle}
+					 onClick={()=>{
+					let success = controller.timeline.deleteMarker(marker);
+					console.assert(success);
+					setEditingMarkerValues(marker);
+				}}/>
+				<div style={{marginLeft: 5, position: "absolute", whiteSpace: "nowrap"}}>{
+					marker.showText ? marker.description : ""
+				}</div>
 				<ReactTooltip id={id}>{marker.description}</ReactTooltip>
 			</div>;
 		};

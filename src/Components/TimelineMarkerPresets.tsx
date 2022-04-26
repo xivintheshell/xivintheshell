@@ -28,6 +28,7 @@ type TimelineMarkerPresetsState = {
 	nextMarkerDuration: string,
 	nextMarkerTrack: string,
 	nextMarkerDescription: string,
+	nextMarkerShowText: boolean,
 	loadTrackDest: string,
 	durationInputMode: DurationInputMode,
 }
@@ -102,6 +103,7 @@ class TimelineMarkerPresets extends React.Component {
 	onSaveFilenameChange: (evt: ChangeEvent<{value: string}>) => void;
 	onSave: () => void;
 	onColorChange: (evt: ChangeEvent<{value: string}>) => void;
+	onShowTextChange: React.ChangeEventHandler<HTMLInputElement>;
 
 	setTime: (val: string) => void;
 	setDuration: (val: string) => void;
@@ -120,7 +122,8 @@ class TimelineMarkerPresets extends React.Component {
 				nextMarkerTime: marker.time.toString(),
 				nextMarkerDuration: marker.duration.toString(),
 				nextMarkerTrack: marker.track.toString(),
-				nextMarkerDescription: marker.description
+				nextMarkerDescription: marker.description,
+				nextMarkerShowText: marker.showText,
 			});
 		}).bind(this);
 		this.onSaveFilenameChange = ((evt: ChangeEvent<{value: string}>)=>{
@@ -140,12 +143,19 @@ class TimelineMarkerPresets extends React.Component {
 			}
 		}).bind(this);
 
+		this.onShowTextChange = ((evt: ChangeEvent<HTMLInputElement>)=>{
+			if (evt.target) {
+				this.setState({nextMarkerShowText: evt.target.checked});
+			}
+		}).bind(this);
+
 		this.state = {
 			nextMarkerColor: MarkerColor.Blue,
 			nextMarkerTime: "0",
 			nextMarkerDuration: "1",
 			nextMarkerTrack: "0",
 			nextMarkerDescription: "default description",
+			nextMarkerShowText: false,
 			loadTrackDest: "0",
 			durationInputMode: DurationInputMode.Duration
 		};
@@ -249,6 +259,10 @@ class TimelineMarkerPresets extends React.Component {
 							width: "4em",
 						}}/>
 					</div>
+					<div style={{display: "inline-block", marginTop: "4px", marginLeft: "10px"}}>
+						<input type="checkbox" style={{position: "relative", top: 3}} checked={this.state.nextMarkerShowText} onChange={this.onShowTextChange}/>
+						<span style={{marginLeft: 4}}>show text</span>
+					</div>
 					<button
 						type={"submit"}
 						style={{display: "block", marginTop: "0.5em"}}
@@ -269,7 +283,8 @@ class TimelineMarkerPresets extends React.Component {
 								duration: parseFloat(this.state.nextMarkerDuration),
 								color: this.state.nextMarkerColor,
 								track: parseInt(this.state.nextMarkerTrack),
-								description: this.state.nextMarkerDescription
+								description: this.state.nextMarkerDescription,
+								showText: this.state.nextMarkerShowText,
 							};
 							if (isNaN(marker.duration) ||
 								isNaN(marker.time) ||
