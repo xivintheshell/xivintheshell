@@ -1,6 +1,7 @@
 import React, {ChangeEvent, CSSProperties, ReactNode} from "react";
 import jQuery from 'jquery';
 import exp from "constants";
+import ReactTooltip from "react-tooltip";
 
 // https://github.com/eligrey/FileSaver.js#readme
 export function saveToFile(content: object, filename: string) {
@@ -191,6 +192,7 @@ export class ScrollAnchor extends React.Component {
 // defaultShow, title, content
 type ExpandableProps = {
 	title: string,
+	titleNode?: ReactNode,
 	defaultShow?: boolean,
 	content?: ReactNode,
 }
@@ -221,9 +223,10 @@ export class Expandable extends React.Component {
 	}
 	render() {
 		return <div style={{marginBottom: 10}}>
-			<Clickable
-				content={(this.state.show ? '- ' : '+ ') + this.props.title}
-				onClickFn={this.onClick}/>
+			<Clickable content={<span>
+				<span>{this.state.show ? '- ' : '+ '}</span>
+				{(this.props.titleNode ? this.props.titleNode : this.props.title)}
+			</span>} onClickFn={this.onClick}/>
 			<div style={{position: "relative", display: this.state.show ? "block" : "none"}}>
 				{this.props.content}
 			</div>
@@ -237,7 +240,6 @@ type LoadJsonFromFileOrUrlProps = {
 	onLoadFn: (content: object) => void;
 }
 export class LoadJsonFromFileOrUrl extends React.Component {
-	//"https://miyehn.me/ffxiv-blm-rotation/presets/default.txt";
 	loadUrl: string;
 	fileSelectorRef: React.RefObject<HTMLInputElement>;
 	props: LoadJsonFromFileOrUrlProps;
@@ -310,3 +312,29 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 	}
 }
 
+export function Help(props: {topic: string, content: ReactNode}) {
+	return <div style={{display: "inline-block"}}>
+		<div data-tip data-for={"help-" + props.topic} style={{
+			position: "relative",
+			top: 2,
+			width: 12,
+			height: 12,
+			cursor: "help",
+			//background: "#217ff5",
+			background: "#c2c2c2",
+			borderRadius: 6,
+			textAlign: "center",
+			verticalAlign: "middle",
+		}}><span style={{position: "relative", top: -1, color: "white"}}>&#63;</span></div>
+		<ReactTooltip
+			effect={"solid"}
+			border={true}
+			borderColor={"#000"}
+			backgroundColor={"#fff"}
+			arrowColor={"#000"}
+			textColor={"#000"}
+			id={"help-" + props.topic}>
+			{props.content}
+		</ReactTooltip>
+	</div>
+}

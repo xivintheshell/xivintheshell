@@ -1,6 +1,5 @@
 import React, {ChangeEvent, CSSProperties} from 'react'
-import {Expandable, Input, LoadJsonFromFileOrUrl, asyncFetch, saveToFile} from "./Common";
-// @ts-ignore // FIXME
+import {Expandable, Input, LoadJsonFromFileOrUrl, Help, asyncFetch, saveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
 
@@ -311,6 +310,7 @@ class TimelineMarkerPresets extends React.Component {
 		</div>;
 		return <Expandable
 			title="Timeline markers"
+			titleNode={<span>Timeline markers</span>}
 			content={content}
 			defaultShow={false}/>
 	}

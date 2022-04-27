@@ -1,5 +1,5 @@
 import {addLog, Color, LogCategory, ReplayMode, TickMode} from "./Common";
-import { GameState } from "../Game/GameState";
+import {GameState} from "../Game/GameState";
 import {GameConfig, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 // @ts-ignore
 import {updateStatusDisplay} from "../Components/StatusDisplay";
@@ -9,10 +9,10 @@ import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
 // @ts-ignore
 import {setRealTime} from "../Components/Main";
-import {Timeline, ElemType} from "./Timeline"
+import {ElemType, Timeline} from "./Timeline"
 // @ts-ignore
 import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
-import {ActionNode, ActionType, Record, Line} from "./Record";
+import {ActionNode, ActionType, Line, Record} from "./Record";
 import {PresetLinesManager} from "./PresetLinesManager";
 // @ts-ignore
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
@@ -578,7 +578,6 @@ class Controller {
 			}
 		}
 	}
-
 	scrollToTime(t?: number) {
 		let targetT = t === undefined ? this.game.time : t;
 		// the most adhoc hack ever...
@@ -603,7 +602,10 @@ class Controller {
 			// update (skills queue)
 			let numSkillsProcessed = 0;
 			for (let i = 0; i < ctrl.skillsQueue.length; i++) {
-				ctrl.#useSkill(ctrl.skillsQueue[i].skillName, false, true);
+				let status = ctrl.#useSkill(ctrl.skillsQueue[i].skillName, false, true);
+				if (status.status === SkillReadyStatus.Ready) {
+					ctrl.autoSave();
+				}
 				ctrl.skillsQueue[i].timeInQueue += dt;
 				if (ctrl.skillsQueue[i].timeInQueue >= ctrl.skillMaxTimeInQueue) {
 					numSkillsProcessed++;

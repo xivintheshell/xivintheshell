@@ -328,15 +328,15 @@ export class GameState {
 					Color.Text));
 				return true;
 			} else {
-				console.log(skillName + " failed");
+				//console.log(skillName + " failed; rewinding game...");
 				addLog(
 					LogCategory.Event,
 					skillName + " cast failed! Resources no longer available.",
 					game.getDisplayTime(),
 					Color.Error);
 				// unlock movement and casting
-				game.resources.get(ResourceType.NotCasterTaxed).gain(1);
-				game.resources.get(ResourceType.NotCasterTaxed).removeTimer();
+				//game.resources.get(ResourceType.NotCasterTaxed).gain(1);
+				//game.resources.get(ResourceType.NotCasterTaxed).removeTimer();
 				return false;
 			}
 		}
@@ -388,7 +388,11 @@ export class GameState {
 
 		// (basically done casting) deduct MP, calc damage, queue damage
 		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime), ()=>{
-			takeEffect(this);
+			let success = takeEffect(this);
+			if (!success) {
+				controller.rewindUntilBefore(node);
+				controller.autoSave();
+			}
 		}));
 
 		// recast

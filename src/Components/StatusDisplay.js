@@ -315,7 +315,7 @@ class StatusDisplay extends React.Component {
 	render() {
 		return <div className={"statusDisplay"}>
 			<div className={"-left"}>
-				<span>time: {this.state.time.toFixed(2)}</span>
+				<span style={{display: "block", marginBottom: 10}}>time: {this.state.time.toFixed(2)}</span>
 				<ResourcesDisplay data={this.state.resources}/>
 			</div>
 			<div className={"-right"}>

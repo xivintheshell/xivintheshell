@@ -99,21 +99,21 @@ export class TimeControl extends React.Component {
 	render() {
 		return <div className={"timeControl"}>
 			<div>
-				<span>Tick mode: </span>
+				<div style={{marginBottom: 10}}><b>Control</b></div>
 				<label data-tip data-for="RealTime" className={"tickModeOption"}>
 					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
 						   value={TickMode.RealTime}
 						   checked={this.state.tickMode===TickMode.RealTime}
 						   name={"tick mode"}/>
 					{"real-time"}
-				</label>
+				</label><br/>
 				<label data-tip data-for="RealTimeAutoPause" className={"tickModeOption"}>
 					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
 						   value={TickMode.RealTimeAutoPause}
 						   checked={this.state.tickMode===TickMode.RealTimeAutoPause}
 						   name={"tick mode"}/>
 					{"real-time auto pause"}
-				</label>
+				</label><br/>
 				<label data-tip data-for="Manual" className={"tickModeOption"}>
 					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
 						   value={TickMode.Manual}
@@ -239,6 +239,7 @@ export class Config extends React.Component {
 	render() {
 		return (
 			<div className={"config"}>
+				<div style={{marginBottom: 10}}><b>Rotation</b></div>
 				<form onSubmit={this.handleSubmit}>
 					<Input defaultValue={this.state.spellSpeed} description="spell speed: " onChange={this.setSpellSpeed}/>
 					<Input defaultValue={this.state.animationLock} description="animation lock: " onChange={this.setAnimationLock}/>
