@@ -120,8 +120,8 @@ class SkillButton extends React.Component {
 				s += "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (CD ready in " + info.cdReadyCountdown.toFixed(2) + ")";
 			}
 			let content = <div>
-				<p>{this.props.skillName}</p>
-				<p>{s}</p>
+				<div className="paragraph">{this.props.skillName}</div>
+				<div className="paragraph">{s}</div>
 			</div>;
 			setSkillInfoText(content);
 			this.setState({skillDescription: content});

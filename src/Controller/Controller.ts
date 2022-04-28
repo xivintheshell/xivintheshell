@@ -67,7 +67,6 @@ class Controller {
 		this.updateStatusDisplay();
 		this.updateSkillButtons();
 		this.updateTimelineDisplay();
-		this.onTimelineSelectionChanged();
 	}
 
 	#requestRestart() {
@@ -142,7 +141,7 @@ class Controller {
 		console.assert(replayResult);
 	}
 
-	reportPotencyUpdate() {
+	updateCumulativeStatsDisplay() {
 		let cumulativePotency = 0;
 		this.record.iterateAll(itr=>{
 			cumulativePotency += itr.tmp_capturedPotency ?? 0;
@@ -152,6 +151,10 @@ class Controller {
 			cumulativePPS: totalTime > 0 ? cumulativePotency / totalTime : 0,
 			cumulativeDuration: Math.max(0, totalTime),
 		});
+	}
+
+	reportPotencyUpdate() {
+		this.updateCumulativeStatsDisplay();
 	}
 
 	reportDamage(props: { potency: number; time: number; source: string; }) {

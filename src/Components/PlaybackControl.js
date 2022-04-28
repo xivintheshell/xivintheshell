@@ -1,7 +1,6 @@
 import React from 'react';
 import { controller } from '../Controller/Controller'
-import { Input } from "./Common";
-import ReactTooltip from 'react-tooltip';
+import {Help, Input, btnStyle, ButtonIndicator} from "./Common";
 import {TickMode} from "../Controller/Common";
 
 export class TimeControl extends React.Component {
@@ -98,57 +97,59 @@ export class TimeControl extends React.Component {
 	}
 	render() {
 		return <div className={"timeControl"}>
-			<div>
-				<div style={{marginBottom: 10}}><b>Control</b></div>
-				<label data-tip data-for="RealTime" className={"tickModeOption"}>
+			<div style={{marginBottom: 5}}>
+				<div style={{marginBottom: 5}}><b>Control</b></div>
+				<label className={"tickModeOption"}>
 					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
 						   value={TickMode.RealTime}
-						   checked={this.state.tickMode===TickMode.RealTime}
+						   checked={this.state.tickMode === TickMode.RealTime}
 						   name={"tick mode"}/>
 					{"real-time"}
-				</label><br/>
-				<label data-tip data-for="RealTimeAutoPause" className={"tickModeOption"}>
+				</label>
+				<Help topic={"ctrl-realTime"} content={
+					<div className="toolTip">
+						<div className="paragraph">- click to use a skill</div>
+						<div className="paragraph">- <ButtonIndicator text={"space"}/> to play/pause. game time is elapsing when the main region has a green border</div>
+					</div>
+				}/><br/>
+				<label className={"tickModeOption"}>
 					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
 						   value={TickMode.RealTimeAutoPause}
 						   checked={this.state.tickMode===TickMode.RealTimeAutoPause}
 						   name={"tick mode"}/>
 					{"real-time auto pause"}
-				</label><br/>
-				<label data-tip data-for="Manual" className={"tickModeOption"}>
+				</label>
+				<Help topic={"ctrl-realTimeAutoPause"} content={
+					<div className="toolTip">
+						<div className="paragraph">*Recommended*</div>
+						<div className="paragraph">- click to use a skill. or if it's not ready, click again to wait then retry</div>
+					</div>
+				}/><br/>
+				<label className={"tickModeOption"}>
 					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
 						   value={TickMode.Manual}
 						   checked={this.state.tickMode===TickMode.Manual}
 						   name={"tick mode"}/>
 					{"manual"}
 				</label>
-				<ReactTooltip id={"RealTime"}>
+				<Help topic={"ctrl-manual"} content={
 					<div className="toolTip">
-						<p>- click to use a skill</p>
-						<p>- [space bar] to play/pause. game time is elapsing when the above region has a green border</p>
-						<p>Note that keyboard inputs are only effective within the control region i.e. when the above box is purple/green</p>
+						<div className="paragraph">- click to use a skill. or if it's not ready, click again to wait then retry</div>
+						<div className="paragraph">- <ButtonIndicator text={"space"}/> to advance game time to the earliest possible time for the next skill</div>
 					</div>
-				</ReactTooltip>
-				<ReactTooltip id={"RealTimeAutoPause"}>
-					<div className="toolTip">
-						<p>*Recommended*</p>
-						<p>- click to use a skill. or if it's not ready, click again to wait then retry</p>
-						<p>- [->] to advance time by "step size" as configured below</p>
-						<p>- [shift]+[->] to advance time by 1/5 "step size" as configured below</p>
-						<p>Note that keyboard inputs are only effective within the control region i.e. when the above region has purple or green border.</p>
-					</div>
-				</ReactTooltip>
-				<ReactTooltip id={"Manual"}>
-					<div className="toolTip">
-						<p>- click to use a skill. or if it's not ready, click again to wait then retry</p>
-						<p>- [space bar] to advance game time to the earliest possible time for the next skill</p>
-						<p>- [->] to advance time by "step size" as configured below</p>
-						<p>- [shift]+[->] to advance time by 1/5 "step size" as configured below</p>
-						<p>Note that keyboard inputs are only effective within the control region i.e. when the above region has purple or green border.</p>
-					</div>
-				</ReactTooltip>
+				}/><br/>
 			</div>
-			<Input defaultValue={this.state.stepSize} description="step size: " onChange={this.setStepSize}/>
-			<Input defaultValue={this.state.timeScale} description="time scale: " onChange={this.setTimeScale}/>
+			<Input defaultValue={this.state.stepSize} description={<span>step size <Help topic={"stepSize"} content={
+				<div>
+					<div className="paragraph">When the control region is focused:</div>
+					<div className="paragraph"><ButtonIndicator text={"->"}/> to advance time by <i>step size</i> seconds</div>
+					<div className="paragraph">or <ButtonIndicator text={"shift"}/> + <ButtonIndicator text={"->"}/> to advance time
+						by 1/5 <i>step size</i> seconds.</div>
+				</div>
+			}/>: </span>} onChange={this.setStepSize}/>
+			<Input defaultValue={this.state.timeScale} description={<span>time scale <Help topic={"timeScale"} content={
+				<div>rate at which game time advances automatically (aka when in real-time)</div>
+			}/>: </span>} onChange={this.setTimeScale}/>
 		</div>
 	}
 }
@@ -212,6 +213,7 @@ export class Config extends React.Component {
 			randomSeed: config.randomSeed,
 		});
 		controller.updateAllDisplay();
+		controller.updateCumulativeStatsDisplay();
 	}
 
 	componentWillUnmount() {
@@ -239,15 +241,17 @@ export class Config extends React.Component {
 	render() {
 		return (
 			<div className={"config"}>
-				<div style={{marginBottom: 10}}><b>Rotation</b></div>
+				<div style={{marginBottom: 5}}><b>Rotation</b></div>
 				<form onSubmit={this.handleSubmit}>
 					<Input defaultValue={this.state.spellSpeed} description="spell speed: " onChange={this.setSpellSpeed}/>
 					<Input defaultValue={this.state.animationLock} description="animation lock: " onChange={this.setAnimationLock}/>
 					<Input defaultValue={this.state.casterTax} description="caster tax: " onChange={this.setCasterTax}/>
 					<Input defaultValue={this.state.timeTillFirstManaTick} description="time till first MP tick: " onChange={this.setTimeTillFirstManaTick}/>
 					<Input defaultValue={this.state.countdown} description="countdown: " onChange={this.setCountdown}/>
-					<Input defaultValue={this.state.randomSeed} description="random seed: " onChange={this.setRandomSeed}/>
-					<input type="submit" value="apply and reset"/>
+					<Input defaultValue={this.state.randomSeed} description={
+						<span>random seed <Help topic={"randomSeed"} content={"can be anything, or leave empty to get 4 random digits"}/>: </span>} onChange={this.setRandomSeed}/>
+
+					<input style={{marginTop: 5}} type="submit" value="apply and reset"/>
 				</form>
 			</div>
 		)}

@@ -1,7 +1,7 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
-import {Slider} from "./Common";
+import {Help, Slider} from "./Common";
 import ReactTooltip from 'react-tooltip';
 import {Cursor, MPTickMark, DamageMark, LucidMark, TimelineSkill} from "./TimelineElements";
 import {getTimelineMarkersHeight, timelineMarkers} from "./TimelineMarkers";
@@ -241,16 +241,15 @@ class StatsDisplay extends React.Component {
 		this.setState(props);
 	}
 	render() {
-		let cumulative = <div data-tip data-for="ppsNotes">
+		let cumulative = <div>
 			<span>Last damage time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
 			<span>Cumulative potency: {(this.state.cumulativePPS * this.state.cumulativeDuration).toFixed(2)}</span><br/>
-			<span>PPS: {this.state.cumulativePPS.toFixed(2)}</span><br/>
-			<ReactTooltip id={"ppsNotes"}>
+			<span>PPS <Help topic={"ppsNotes"} content={
 				<div className={"toolTip"}>
-					potency / time since pull (0s).<br/>
+					cumulative potency divided by time since pull (0s).<br/>
 					could be inaccurate if any damage happens before pull
 				</div>
-			</ReactTooltip>
+			}/>: {this.state.cumulativePPS.toFixed(2)}</span><br/>
 		</div>
 		let selected = <div style={{marginTop: "10px"}}>
 			<span>---- Selected ----</span><br/>

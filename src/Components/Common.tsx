@@ -92,14 +92,14 @@ export function ProgressBar(props: {
 
 type InputProps = {
 	defaultValue?: string,
-	description?: string,
+	description: ReactNode,
 	onChange?: (newVal: string) => void,
 	width?: number,
 	style?: CSSProperties,
 }
 type InputState = {
 	value: string,
-	description: string,
+	description: ReactNode,
 }
 export class Input extends React.Component {
 	props: InputProps;
@@ -110,7 +110,7 @@ export class Input extends React.Component {
 		this.props = inProps;
 		this.state = {
 			value: inProps.defaultValue ?? "",
-			description: inProps.description ?? "",
+			description: inProps.description,
 		}
 		this.onChange = ((e: ChangeEvent<{value: string}>)=>{
 			this.setState({value: e.target.value});
@@ -313,8 +313,9 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 }
 
 export function Help(props: {topic: string, content: ReactNode}) {
-	return <div style={{display: "inline-block"}}>
-		<div data-tip data-for={"help-" + props.topic} style={{
+	return <span style={{display: "inline-block"}}>
+		<span data-tip data-for={"help-" + props.topic} style={{
+			display: "block",
 			position: "relative",
 			top: 2,
 			width: 12,
@@ -325,7 +326,7 @@ export function Help(props: {topic: string, content: ReactNode}) {
 			borderRadius: 6,
 			textAlign: "center",
 			verticalAlign: "middle",
-		}}><span style={{position: "relative", top: -1, color: "white"}}>&#63;</span></div>
+		}}><span style={{position: "relative", top: -1, color: "white"}}>&#63;</span></span>
 		<ReactTooltip
 			effect={"solid"}
 			border={true}
@@ -336,5 +337,14 @@ export function Help(props: {topic: string, content: ReactNode}) {
 			id={"help-" + props.topic}>
 			{props.content}
 		</ReactTooltip>
-	</div>
+	</span>
+}
+export function ButtonIndicator(props: {text: string}) {
+	return <span style={{
+		fontSize: 10,
+		border: "1px solid #444",
+		borderRadius: 2,
+		padding: "1px 4px",
+		background: "#efefef"
+	}}>{props.text}</span>
 }

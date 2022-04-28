@@ -2,7 +2,7 @@ export const Debug = {
 	epsilon: 1e-6,
 	disableManaTicks: false,
 	consoleLogEvents: false,
-	noEnochian: true,
+	noEnochian: false,
 	constantSlidecastWindow: true,
 };
 

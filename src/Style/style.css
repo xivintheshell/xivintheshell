@@ -46,6 +46,8 @@
 }
 .__react_component_tooltip {
     z-index: 10;
+    opacity: 0.96 !important;
+    max-width: 300px;
 }
 /* Logging */
 
@@ -122,7 +124,7 @@
 
 .config,.timeControl {
     display: inline-block;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
 }
 @media(min-width: 768px) {
     .config,.timeControl {
@@ -139,7 +141,7 @@
 }
 .tickModeOption {
     display: inline-block;
-    margin-right: 1em;
+    margin-right: 0.5em;
 }
 .tickModeDescription {
     padding: 1em 2em;
@@ -153,6 +155,7 @@
 /* Status display */
 
 .statusDisplay {
+    position: relative;
     text-align: left;
     margin: 8px 0;
 }
@@ -318,8 +321,6 @@
     height: 8px;
 }
 
-.toolTip {
-    max-width: 300px;
-}
-.toolTip>p {
+.paragraph {
+    margin: 10px 0;
 }

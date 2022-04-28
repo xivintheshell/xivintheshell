@@ -270,12 +270,12 @@ export class GameState {
 
 	reportPotency(node: ActionNode, potency: number, source: string) {
 		node.tmp_capturedPotency = (node.tmp_capturedPotency ?? 0) + potency;
-		controller.reportPotencyUpdate();
 		controller.reportDamage({
 			potency: potency,
 			time: this.time,
 			source: source
 		});
+		controller.reportPotencyUpdate();
 	}
 
 	castSpell(

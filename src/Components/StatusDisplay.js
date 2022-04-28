@@ -1,5 +1,5 @@
 import React from 'react';
-import {ProgressBar} from "./Common";
+import {Help, ProgressBar} from "./Common";
 import {ResourceType} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 
@@ -314,6 +314,12 @@ class StatusDisplay extends React.Component {
 	}
 	render() {
 		return <div className={"statusDisplay"}>
+			<div style={{position: "absolute", right: 10, zIndex: 1}}><Help topic={"mainControlRegion"} content={
+				<div className="toolTip">
+					<div className="paragraph">This is the main control region. See <b>Control</b> settings on the right.</div>
+					<div className="paragraph">Keyboard inputs are only effective when it is focused (when it has a purple or green border)</div>
+				</div>
+			}/></div>
 			<div className={"-left"}>
 				<span style={{display: "block", marginBottom: 10}}>time: {this.state.time.toFixed(2)}</span>
 				<ResourcesDisplay data={this.state.resources}/>
