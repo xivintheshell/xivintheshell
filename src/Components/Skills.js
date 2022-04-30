@@ -1,5 +1,5 @@
 import React from 'react'
-import {Clickable} from "./Common";
+import {ButtonIndicator, Clickable} from "./Common";
 import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import ReactTooltip from 'react-tooltip';
@@ -159,10 +159,24 @@ class SkillsWindow extends React.Component {
 			this.setState({tooltipContent: text});
 		}).bind(this);
 
+		this.onWaitTimeChange = ((e)=>{
+			if (!e || !e.target) return;
+			this.setState({waitTime: e.target.value});
+		}).bind(this);
+
+		this.onWaitTimeSubmit = ((e)=>{
+			let numVal = parseFloat(this.state.waitTime);
+			if (!isNaN(numVal)) {
+				controller.step(numVal);
+			}
+			e.preventDefault();
+		}).bind(this);
+
 		this.state = {
 			statusList: undefined,
 			paradoxInfo: undefined,
 			tooltipContent: "",
+			waitTime: "1"
 		}
 	}
 	componentDidMount() {
@@ -194,6 +208,11 @@ class SkillsWindow extends React.Component {
 		return <div className={"skillsWindow"}>
 			<div data-tip data-for="SkillDescription" className={"skillIcons"}>
 				{skillButtons}
+				<form onSubmit={this.onWaitTimeSubmit} style={{margin: "10px 0"}}>
+					Wait for <input type={"text"} style={{
+						width: 40, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
+					}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) <input type="submit" value="GO"/>
+				</form>
 			</div>
 		</div>
 	}

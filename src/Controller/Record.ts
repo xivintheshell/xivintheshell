@@ -11,8 +11,6 @@ function verifyActionNode(action: ActionNode) {
 	if (action.type === ActionType.Skill) {
 		console.assert(typeof action.skillName === "string");
 		console.assert(typeof action.waitDuration === "number");
-		//console.assert(typeof action.tmp_startLockTime === "number");
-		//console.assert(typeof action.tmp_endLockTime === "number");
 		console.assert(typeof action.tmp_capturedPotency === "number");
 		return;
 	} else if (action.type === ActionType.Wait) {

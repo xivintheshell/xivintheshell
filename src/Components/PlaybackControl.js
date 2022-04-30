@@ -1,6 +1,6 @@
 import React from 'react';
 import { controller } from '../Controller/Controller'
-import {Help, Input, btnStyle, ButtonIndicator} from "./Common";
+import {Help, Input, ButtonIndicator} from "./Common";
 import {TickMode} from "../Controller/Common";
 
 export class TimeControl extends React.Component {
@@ -10,7 +10,6 @@ export class TimeControl extends React.Component {
 		this.saveSettings = (settings)=>{
 			let str = JSON.stringify({
 				tickMode: settings.tickMode,
-				stepSize: settings.stepSize,
 				timeScale: settings.timeScale
 			});
 			localStorage.setItem("playbackSettings", str);
@@ -32,29 +31,10 @@ export class TimeControl extends React.Component {
 			if (!isNaN(numVal)) {
 				controller.setTimeControlSettings({
 					tickMode: numVal,
-					stepSize: this.state.stepSize,
 					timeScale: this.state.timeScale
 				});
 				this.saveSettings({
 					tickMode: numVal,
-					stepSize: this.state.stepSize,
-					timeScale: this.state.timeScale
-				});
-			}
-		}).bind(this);
-
-		this.setStepSize = ((val)=>{
-			this.setState({stepSize: val});
-			let numVal = parseFloat(val);
-			if (!isNaN(numVal)) {
-				controller.setTimeControlSettings({
-					tickMode: this.state.tickMode,
-					stepSize: numVal,
-					timeScale: this.state.timeScale
-				});
-				this.saveSettings({
-					tickMode: this.state.tickMode,
-					stepSize: numVal,
 					timeScale: this.state.timeScale
 				});
 			}
@@ -66,12 +46,10 @@ export class TimeControl extends React.Component {
 			if (!isNaN(numVal)) {
 				controller.setTimeControlSettings({
 					tickMode: this.state.tickMode,
-					stepSize: this.state.stepSize,
 					timeScale: numVal
 				});
 				this.saveSettings({
 					tickMode: this.state.tickMode,
-					stepSize: this.state.stepSize,
 					timeScale: numVal
 				});
 			}
@@ -81,19 +59,17 @@ export class TimeControl extends React.Component {
 		if (settings) {
 			this.state = {
 				tickMode: settings.tickMode,
-				stepSize: settings.stepSize,
 				timeScale: settings.timeScale
 			};
 		} else {
 			this.state = {
 				tickMode: 1,
-				stepSize: 1,
 				timeScale: 2
 			};
 		}
 	}
 	componentDidMount() {
-		controller.setTimeControlSettings(this.state);
+		controller.setTimeControlSettings({tickMode: this.state.tickMode, timeScale: this.state.timeScale});
 	}
 	render() {
 		return <div className={"timeControl"}>
@@ -139,6 +115,7 @@ export class TimeControl extends React.Component {
 					</div>
 				}/><br/>
 			</div>
+			{/*
 			<Input defaultValue={this.state.stepSize} description={<span>step size <Help topic={"stepSize"} content={
 				<div>
 					<div className="paragraph">When the control region is focused:</div>
@@ -147,6 +124,7 @@ export class TimeControl extends React.Component {
 						by 1/5 <i>step size</i> seconds.</div>
 				</div>
 			}/>: </span>} onChange={this.setStepSize}/>
+			*/}
 			<Input defaultValue={this.state.timeScale} description={<span>time scale <Help topic={"timeScale"} content={
 				<div>rate at which game time advances automatically (aka when in real-time)</div>
 			}/>: </span>} onChange={this.setTimeScale}/>

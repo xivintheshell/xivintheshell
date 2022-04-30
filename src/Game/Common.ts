@@ -57,8 +57,8 @@ export const enum Aspect {
 }
 
 export const enum SkillName {
-    Blizzard = "Blizzard",
-    Fire = "Fire",
+	Blizzard = "Blizzard",
+	Fire = "Fire",
 	Transpose = "Transpose",
 	Thunder3 = "Thunder 3",
 	Manaward = "Manaward",

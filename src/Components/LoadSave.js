@@ -35,12 +35,12 @@ export class LoadSave extends React.Component {
 		}).bind(this);
 
 		this.fileSelectorRef = React.createRef();
-		this.saveFilename = "battle.txt";
+		this.saveFilename = "fight.txt";
 	}
 	render() {
 		return <div className={"loadSave"}>
 			<div>
-				<input defaultValue="battle.txt" className="textInput" width="4" onChange={this.onSaveFilenameChange}/>
+				<input defaultValue="fight.txt" className="textInput" width="4" onChange={this.onSaveFilenameChange}/>
 				<span> </span>
 				<button onClick={this.onSave}>save to file</button>
 			</div>

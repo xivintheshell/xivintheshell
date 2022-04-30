@@ -2,8 +2,7 @@ import {addLog, Color, LogCategory} from "../Controller/Common";
 import {Debug, ResourceType} from "./Common"
 import {GameState} from "./GameState";
 
-export class Event
-{
+export class Event {
 	name: string;
 	timeTillEvent: number;
 	delay: number;
@@ -26,8 +25,7 @@ export class Event
 }
 
 // can never be negative
-export class Resource
-{
+export class Resource {
 	type: ResourceType;
 	maxValue: number;
 	currentValue: number;

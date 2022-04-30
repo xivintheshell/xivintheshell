@@ -20,11 +20,10 @@ import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets
 type Fixme = any;
 
 class Controller {
-	stepSize;
 	timeScale;
 	shouldLoop;
 	tickMode;
-	lastAtteptedSkill;
+	lastAttemptedSkill;
 	skillMaxTimeInQueue;
 	skillsQueue: { skillName: SkillName, timeInQueue: number }[];
 	timeline;
@@ -34,11 +33,10 @@ class Controller {
 	game;
 
 	constructor() {
-		this.stepSize = 0.5;
 		this.timeScale = 1;
 		this.shouldLoop = false;
 		this.tickMode = TickMode.RealTimeAutoPause;
-		this.lastAtteptedSkill = "";
+		this.lastAttemptedSkill = "";
 		this.skillMaxTimeInQueue = 0.5;
 		this.skillsQueue = [];
 
@@ -70,7 +68,7 @@ class Controller {
 	}
 
 	#requestRestart() {
-		this.lastAtteptedSkill = ""
+		this.lastAttemptedSkill = ""
 		this.game = new GameState(this.gameConfig);
 		this.#playPause({shouldLoop: false});
 		this.timeline.reset();
@@ -290,12 +288,11 @@ class Controller {
 		}
 	}
 
-	setTimeControlSettings(props: { stepSize: number; timeScale: number; tickMode: TickMode; }) {
-		this.stepSize = props.stepSize;
+	setTimeControlSettings(props: { timeScale: number; tickMode: TickMode; }) {
 		this.timeScale = props.timeScale;
 		this.tickMode = props.tickMode;
 		this.shouldLoop = false;
-		this.lastAtteptedSkill = "";
+		this.lastAttemptedSkill = "";
 	}
 
 	setConfigAndRestart(props={
@@ -322,14 +319,11 @@ class Controller {
 		this.autoSave();
 	}
 
-	getSkillInfo(props={skillName: undefined}) {
-		if (props.skillName) {
+	getSkillInfo(props: {skillName: SkillName}) {
 			return this.game.getSkillAvailabilityStatus(props.skillName);
-		}
-		return null;
 	}
 
-	getResourceValue(props={rscType: undefined}) {
+	getResourceValue(props: {rscType: ResourceType}) {
 		if (props.rscType) {
 			return this.game.resources.get(props.rscType).currentValue;
 		}
@@ -363,7 +357,7 @@ class Controller {
 		if (bWaitFirst) {
 			this.#requestTick({deltaTime: status.timeTillAvailable, suppressLog: bSuppressLog});
 			status = this.game.getSkillAvailabilityStatus(skillName);
-			this.lastAtteptedSkill = "";
+			this.lastAttemptedSkill = "";
 		}
 
 		let logString = "";
@@ -379,7 +373,7 @@ class Controller {
 			logString = "["+skillName+"] is not available yet. might be ready in ";
 			logString += status.timeTillAvailable.toFixed(3) + ". press again to wait until then and retry";
 			logColor = Color.Warning;
-			this.lastAtteptedSkill = skillName;
+			this.lastAttemptedSkill = skillName;
 		}
 		else if (status.status === SkillReadyStatus.NotEnoughMP)
 		{
@@ -573,7 +567,7 @@ class Controller {
 		} else if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure if should allow any control here.
 		} else {
-			let waitFirst = props.skillName === this.lastAtteptedSkill;
+			let waitFirst = props.skillName === this.lastAttemptedSkill;
 			let status = this.#useSkill(props.skillName, waitFirst);
 			if (status.status === SkillReadyStatus.Ready) {
 				this.scrollToTime(this.game.time);
@@ -642,32 +636,40 @@ class Controller {
 			this.#playPause({shouldLoop: !this.shouldLoop});
 		}
 	}
+	step(t: number) {
+		this.#requestTick({deltaTime: t, suppressLog: false});
+		this.updateAllDisplay();
+	}
 	#handleKeyboardEvent_RealTimeAutoPause(evt: { shiftKey: boolean; keyCode: number; }) {
 
 		if (this.shouldLoop) return;
 
+		/*
 		if (evt.shiftKey && evt.keyCode===39 && !this.shouldLoop) { // shift + right
 			this.#requestTick({deltaTime: this.stepSize * 0.2, suppressLog: false});
 			this.updateAllDisplay();
 		}
 		else if (evt.keyCode===39 && !this.shouldLoop) {// right arrow
-			this.#requestTick({deltaTime: this.stepSize, suppressLog: false});
+			this.stepTime();
 			this.updateAllDisplay();
 		}
+		 */
 	}
 	#handleKeyboardEvent_Manual(evt: { keyCode: number; shiftKey: boolean; }) {
 		if (evt.keyCode===32) { // space
 			this.#fastForward();
 			this.updateAllDisplay();
 		}
+		/*
 		if (evt.shiftKey && evt.keyCode===39) { // shift + right
 			this.#requestTick({deltaTime: this.stepSize * 0.2, suppressLog: false});
 			this.updateAllDisplay();
 		}
 		else if (evt.keyCode===39) {// right arrow
-			this.#requestTick({deltaTime: this.stepSize, suppressLog: false});
+			this.stepTime();
 			this.updateAllDisplay();
 		}
+		 */
 	}
 
 	handleKeyboardEvent(evt: { keyCode: number; shiftKey: boolean; }) {

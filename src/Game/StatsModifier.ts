@@ -1,5 +1,4 @@
 import {Debug, ResourceType} from "./Common"
-import {Stats} from "fs";
 import {ResourceState} from "./Resources";
 
 export class StatsModifier

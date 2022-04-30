@@ -1,6 +1,6 @@
 # Black Mage in the Shell
 
-FFXIV black mage job emulator & rotation planner.
+FFXIV black mage job simulator & rotation planner.
 
 It's up there but still heavily work in progress so expect to encounter bugs or get confused: [https://miyehn.me/ffxiv-blm-rotation](https://miyehn.me/ffxiv-blm-rotation)
 
