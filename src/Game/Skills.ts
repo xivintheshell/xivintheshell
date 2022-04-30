@@ -639,9 +639,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.castSpell(SkillName.Paradox, (cap: SkillCaptureCallbackInfo) => {
 					game.resources.get(ResourceType.Paradox).consume(1);
 					// enochian (refresh only
-					if (game.hasEnochian()) game.startOrRefreshEnochian();
-
+					if (game.hasEnochian()) {
+						game.startOrRefreshEnochian();
+					}
+					if (game.getIceStacks() > 0) {
+						game.resources.get(ResourceType.UmbralIce).gain(1);
+					}
 					if (game.getFireStacks() > 0) {// firestarter proc
+						game.resources.get(ResourceType.AstralFire).gain(1);
 						potentiallyGainFirestarter(game);
 					}
 				}, (app: SkillApplicationCallbackInfo) => {

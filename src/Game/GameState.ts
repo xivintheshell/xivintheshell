@@ -448,18 +448,15 @@ export class GameState {
 	}
 
 	// falls off after 15s unless refreshed by AF / UI
-	startOrRefreshEnochian()
-	{
+	startOrRefreshEnochian() {
 		let enochian = this.resources.get(ResourceType.Enochian);
 
-		if (enochian.available(1)) 
-		{
+		if (enochian.available(1)) {
 			// refresh
 			enochian.overrideTimer(this, 15);
 			addLog(LogCategory.Event, "refresh enochian timer", this.getDisplayTime());
-		}
-		else
-		{
+
+		} else {
 			// fresh gain
 			enochian.gain(1);
 
@@ -474,8 +471,7 @@ export class GameState {
 		}
 	}
 
-	loseEnochian()
-	{
+	loseEnochian() {
 		this.resources.get(ResourceType.Enochian).consume(1);
 		let af = this.resources.get(ResourceType.AstralFire);
 		let ui = this.resources.get(ResourceType.UmbralIce);
@@ -485,23 +481,20 @@ export class GameState {
 		uh.consume(uh.currentValue);
 	}
 
-	#timeTillSkillAvailable(skillName: SkillName)
-	{
+	#timeTillSkillAvailable(skillName: SkillName) {
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.info.cdName;
 		let tillNextCDStack = this.cooldowns.timeTillNextStackAvailable(cdName);
 		return Math.max(this.timeTillAnySkillAvailable(), tillNextCDStack);
 	}
 
-	timeTillAnySkillAvailable()
-	{
+	timeTillAnySkillAvailable() {
 		let tillNotAnimationLocked = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
 		let tillNotCasterTaxed = this.resources.timeTillReady(ResourceType.NotCasterTaxed);
 		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed);
 	}
 
-	getSkillAvailabilityStatus(skillName: SkillName)
-	{
+	getSkillAvailabilityStatus(skillName: SkillName) {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
 		let [capturedManaCost, uhConsumption] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
@@ -511,7 +504,9 @@ export class GameState {
 		let currentMana = this.resources.get(ResourceType.Mana).currentValue;
 
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
-		let enoughMana = capturedManaCost <= currentMana || (skillName===SkillName.Paradox && this.getIceStacks()>0);
+		let enoughMana = capturedManaCost <= currentMana
+			|| (skillName===SkillName.Paradox && this.getIceStacks()>0)
+			|| (skillName===SkillName.Thunder3 && this.resources.get(ResourceType.Thundercloud).available(1));
 		let reqsMet = skill.available();
 		let status = SkillReadyStatus.Ready;
 		if (!notBlocked) status = SkillReadyStatus.Blocked;
@@ -540,8 +535,7 @@ export class GameState {
 		skill.use(this, node);
 	}
 
-	toString()
-	{
+	toString() {
 		let s = "======== " + this.time.toFixed(3) + "s ========\n";
 		s += "MP:\t" + this.resources.get(ResourceType.Mana).currentValue + "\n";
 		s += "AF:\t" + this.resources.get(ResourceType.AstralFire).currentValue + "\n";

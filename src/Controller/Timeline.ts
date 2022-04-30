@@ -215,6 +215,7 @@ export class Timeline {
 	// scale=1 := 100px represents 1s
 	setHorizontalScale(inScale: number) {
 		this.scale = inScale;
+		controller.onTimelineSelectionChanged();
 		this.drawElements();
 	}
 

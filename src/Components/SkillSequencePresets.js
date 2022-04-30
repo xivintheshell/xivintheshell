@@ -27,7 +27,7 @@ class SaveAsPreset extends React.Component {
 				onChange={this.onChange}/>
 			<span> </span>
 			<button type={"submit"} disabled={!this.props.enabled} onClick={(e) => {
-				controller.addSelectionToPreset(this.filename);
+				controller.addSelectionToPreset(this.state.filename);
 				e.preventDefault();
 			}}>add selection to preset
 			</button>
