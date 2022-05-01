@@ -156,7 +156,6 @@ class Controller {
 	}
 
 	reportDamage(props: { potency: number; time: number; source: string; }) {
-
 		this.timeline.addElement({
 			type: ElemType.DamageMark,
 			potency: props.potency,
@@ -420,6 +419,7 @@ class Controller {
 			let skillInfo = this.game.skillsList.get(skillName).info;
 			let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
 			let isSpellCast = status.castTime > 0 && !status.instantCast;
+			let snapshotTime = isSpellCast ? status.castTime - GameConfig.getSlidecastWindow(status.castTime) : 0;
 			this.timeline.addElement({
 				type: ElemType.Skill,
 				skillName: skillName,
@@ -427,6 +427,7 @@ class Controller {
 				isSpellCast: isSpellCast,
 				capturedPotency: node.tmp_capturedPotency,
 				time: time,
+				relativeSnapshotTime: snapshotTime,
 				lockDuration: lockDuration,
 				recastDuration: status.cdRecastTime,
 				node: node,

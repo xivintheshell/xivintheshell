@@ -54,6 +54,7 @@ type SkillElem = TimelineElemBase & {
 	skillName: SkillName;
 	isGCD: boolean;
 	isSpellCast: boolean;
+	relativeSnapshotTime: number;
 	lockDuration: number;
 	recastDuration: number;
 	capturedPotency: number;

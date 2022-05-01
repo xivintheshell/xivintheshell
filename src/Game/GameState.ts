@@ -264,16 +264,15 @@ export class GameState {
 	}
 
 	dealDamage(potency: number, source="unknown") {
-		// report damage is moved to capture time
-	}
-
-	reportPotency(node: ActionNode, potency: number, source: string) {
-		node.tmp_capturedPotency = (node.tmp_capturedPotency ?? 0) + potency;
 		controller.reportDamage({
 			potency: potency,
 			time: this.time,
 			source: source
 		});
+	}
+
+	reportPotency(node: ActionNode, potency: number, source: string) {
+		node.tmp_capturedPotency = (node.tmp_capturedPotency ?? 0) + potency;
 		controller.reportPotencyUpdate();
 	}
 

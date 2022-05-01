@@ -220,7 +220,7 @@ export class Config extends React.Component {
 					<Input defaultValue={this.state.countdown} description="countdown: " onChange={this.setCountdown}/>
 					<Input defaultValue={this.state.randomSeed} description={
 						<span>random seed <Help topic={"randomSeed"} content={
-							"can be anything, or leave empty to get 4 random digits. A special value \"0\" will turn all rng procs off and force you sharpcast everything"
+							"can be anything, or leave empty to get 4 random digits. A special value \"0\" will turn all rng procs off and force you to sharpcast everything"
 						}/>: </span>} onChange={this.setRandomSeed}/>
 
 					<input style={{marginTop: 5}} type="submit" value="apply and reset"/>

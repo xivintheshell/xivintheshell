@@ -82,6 +82,16 @@ export function TimelineSkill(props) {
 	};
 	let recastBar = <div style={recastBarStyle}/>
 
+	let snapshotIndicatorStyle = {
+		position: "absolute",
+		width: 0,
+		height: 18,
+		top: -4,
+		left: controller.timeline.positionFromTime(props.elem.relativeSnapshotTime),
+		borderLeft: "1px solid " + "#4cb43a"
+	}
+	let snapshotIndicator = <div style={snapshotIndicatorStyle}/>
+
 	let iconStyle = {
 		position: "absolute",
 		top: 0,
@@ -124,7 +134,10 @@ export function TimelineSkill(props) {
 		</div>;
 	}
 	return <div style={componentStyle} className={"timeline-elem skill"}>
-		{lockBar}{props.elem.isGCD ? recastBar : <div/>}{icon}
+		{lockBar}
+		{props.elem.isGCD ? recastBar : <div/>}
+		{snapshotIndicator}
+		{icon}
 		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
 	</div>;
 }
