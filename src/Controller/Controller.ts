@@ -356,6 +356,11 @@ class Controller {
 
 		if (bWaitFirst) {
 			this.#requestTick({deltaTime: status.timeTillAvailable, suppressLog: bSuppressLog});
+			// automatically turn F1/B1 into paradox if conditions are met
+			if ((skillName === SkillName.Fire || skillName === SkillName.Blizzard)
+				&& this.game.resources.get(ResourceType.Paradox).available(1)) {
+				skillName = SkillName.Paradox;
+			}
 			status = this.game.getSkillAvailabilityStatus(skillName);
 			this.lastAttemptedSkill = "";
 		}
@@ -363,25 +368,21 @@ class Controller {
 		let logString = "";
 		let logColor = Color.Text;
 
-		if (status.status === SkillReadyStatus.Ready)
-		{
+		if (status.status === SkillReadyStatus.Ready) {
 			logString = "use skill [" + skillName + "]";
 			logColor = Color.Success;
 		}
-		else if (status.status === SkillReadyStatus.Blocked)
-		{
+		else if (status.status === SkillReadyStatus.Blocked) {
 			logString = "["+skillName+"] is not available yet. might be ready in ";
 			logString += status.timeTillAvailable.toFixed(3) + ". press again to wait until then and retry";
 			logColor = Color.Warning;
 			this.lastAttemptedSkill = skillName;
 		}
-		else if (status.status === SkillReadyStatus.NotEnoughMP)
-		{
+		else if (status.status === SkillReadyStatus.NotEnoughMP) {
 			logString = "["+skillName+"] is not ready (not enough MP)";
 			logColor = Color.Error;
 		}
-		else if (status.status === SkillReadyStatus.RequirementsNotMet)
-		{
+		else if (status.status === SkillReadyStatus.RequirementsNotMet) {
 			logString = "["+skillName+"] requirements are not met";
 			if (status.description.length > 0)
 				logString += " (need: " + status.description + ")";

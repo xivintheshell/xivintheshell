@@ -499,9 +499,12 @@ export class GameState {
 		let [capturedManaCost, uhConsumption] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
 		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(
 			skill.info.aspect, this.config.adjustedCastTime(skill.info.baseCastTime));
-		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1) || this.resources.get(ResourceType.Swiftcast).available(1);
+		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1)
+			|| this.resources.get(ResourceType.Swiftcast).available(1)
+			|| (skillName===SkillName.Paradox && this.getIceStacks()>0)
+			|| (skillName===SkillName.Thunder3 && this.resources.get(ResourceType.Thundercloud).available(1))
+			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)));
 		let currentMana = this.resources.get(ResourceType.Mana).currentValue;
-
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana
 			|| (skillName===SkillName.Paradox && this.getIceStacks()>0)

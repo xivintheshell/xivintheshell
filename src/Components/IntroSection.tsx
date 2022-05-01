@@ -44,7 +44,7 @@ export function IntroSection(props: {}) {
 					This tool is developed by <b>miyehn (Ellyn Waterford @ Sargatanas)</b> with generous help from their
 					black mage friends and players on The Balance discord. Big shout out to <b>Galahad Donnadieu
 					@ Exodus</b> for teaching me BLM from the ground up, testing the tool, and help collecting data.
-					I must also thank <b>Turtle</b> from The Balance for their detailed feedback and bug reports.
+					Also thanks <b>Turtle</b> from The Balance for their detailed feedback and bug reports.
 				</div>
 				<div className="paragraph">
 					If you have questions,
