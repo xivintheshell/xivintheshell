@@ -267,6 +267,7 @@
 }
 .skillButton {
     display: inline-block;
+    user-select: none;
     position: relative;
 }
 .skillIcon {

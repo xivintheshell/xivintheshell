@@ -3,7 +3,6 @@ import {StatsModifier} from "./StatsModifier";
 import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
 
-// @ts-ignore
 import {controller} from "../Controller/Controller";
 import {addLog, Color, LogCategory} from "../Controller/Common";
 import {ActionNode} from "../Controller/Record";

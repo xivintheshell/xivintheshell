@@ -57,13 +57,13 @@ export class DebugOptions extends React.Component {
 						this.saveSettings({noEnochian: e.target.checked});
 						this.apply({noEnochian: e.target.checked});
 					}
-				}}/><span> no enochian</span>
+				}}/><span> no enochian in potency calculation</span>
 			</div>
 			<div>
 				<button style={{color: "#be0f0f"}} onClick={()=>{
 					localStorage.clear();
 					window.location.reload();
-				}}>[DANGER!] clear cache and reload</button>
+				}}>[DANGER!] clear browser cache and reload</button>
 			</div>
 		</div>
 	}

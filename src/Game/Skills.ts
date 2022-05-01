@@ -219,7 +219,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				sc.removeTimer();
 			} else {
 				let rand = game.rng();
-				if (rand < 0.4) gainFirestarterProc(game);
+				if (game.config.randomSeed !== "0" && rand < 0.4) gainFirestarterProc(game);
 			}
 		}
 
@@ -297,8 +297,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		// called at the time of APPLICATION (not snapshot)
 		let applyThunderDoT = function(game: GameState, node: ActionNode, capturedTickPotency: number, numTicks: number) {
 			// define stuff
-			let recurringThunderTick = (remainingTicks: number, capturedTickPotency: number)=>
-			{
+			let recurringThunderTick = (remainingTicks: number, capturedTickPotency: number)=> {
 				if (remainingTicks===0) return;
 				game.resources.addResourceEvent(
 					ResourceType.ThunderDoTTick,
@@ -306,8 +305,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.reportPotency(node, capturedTickPotency, "DoT");
 						game.dealDamage(capturedTickPotency, "DoT");
 						recurringThunderTick(remainingTicks - 1, capturedTickPotency);
-						if (game.rng() < 0.1) // thundercloud proc
-						{
+						if (game.config.randomSeed != "0" && game.rng() < 0.1) {// thundercloud proc
 							gainThundercloudProc(game);
 						}
 					}, Color.Thunder);

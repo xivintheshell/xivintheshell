@@ -115,16 +115,6 @@ export class TimeControl extends React.Component {
 					</div>
 				}/><br/>
 			</div>
-			{/*
-			<Input defaultValue={this.state.stepSize} description={<span>step size <Help topic={"stepSize"} content={
-				<div>
-					<div className="paragraph">When the control region is focused:</div>
-					<div className="paragraph"><ButtonIndicator text={"->"}/> to advance time by <i>step size</i> seconds</div>
-					<div className="paragraph">or <ButtonIndicator text={"shift"}/> + <ButtonIndicator text={"->"}/> to advance time
-						by 1/5 <i>step size</i> seconds.</div>
-				</div>
-			}/>: </span>} onChange={this.setStepSize}/>
-			*/}
 			<Input defaultValue={this.state.timeScale} description={<span>time scale <Help topic={"timeScale"} content={
 				<div>rate at which game time advances automatically (aka when in real-time)</div>
 			}/>: </span>} onChange={this.setTimeScale}/>
@@ -188,7 +178,7 @@ export class Config extends React.Component {
 			casterTax: parseFloat(config.casterTax),
 			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
 			countdown: parseFloat(config.countdown),
-			randomSeed: config.randomSeed,
+			randomSeed: config.randomSeed.trim(),
 		});
 		controller.updateAllDisplay();
 		controller.updateCumulativeStatsDisplay();
@@ -201,7 +191,9 @@ export class Config extends React.Component {
 	handleSubmit (event) {
 		let seed = this.state.randomSeed;
 		if (seed.length === 0) {
-			seed = Math.floor(Math.random() * 10000).toString();
+			for (let i = 0; i < 4; i++) {
+				seed += Math.floor(Math.random() * 10).toString();
+			}
 			this.setState({randomSeed: seed});
 		}
 		let config = {
@@ -227,7 +219,9 @@ export class Config extends React.Component {
 					<Input defaultValue={this.state.timeTillFirstManaTick} description="time till first MP tick: " onChange={this.setTimeTillFirstManaTick}/>
 					<Input defaultValue={this.state.countdown} description="countdown: " onChange={this.setCountdown}/>
 					<Input defaultValue={this.state.randomSeed} description={
-						<span>random seed <Help topic={"randomSeed"} content={"can be anything, or leave empty to get 4 random digits"}/>: </span>} onChange={this.setRandomSeed}/>
+						<span>random seed <Help topic={"randomSeed"} content={
+							"can be anything, or leave empty to get 4 random digits. A special value \"0\" will turn all rng procs off and force you sharpcast everything"
+						}/>: </span>} onChange={this.setRandomSeed}/>
 
 					<input style={{marginTop: 5}} type="submit" value="apply and reset"/>
 				</form>

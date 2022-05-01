@@ -48,7 +48,7 @@ class Controller {
 		this.gameConfig = new GameConfig();
 		this.gameConfig.spellSpeed = 1532;
 		this.gameConfig.countdown = 5;
-		this.gameConfig.randomSeed = "";
+		this.gameConfig.randomSeed = "sup";
 		this.gameConfig.casterTax = 0.1;
 		this.gameConfig.animationLock = 0.7;
 		this.gameConfig.timeTillFirstManaTick = 1.2;
@@ -565,7 +565,7 @@ class Controller {
 				timeInQueue: 0
 			});
 		} else if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
-			// not sure if should allow any control here.
+			// not sure should allow any control here.
 		} else {
 			let waitFirst = props.skillName === this.lastAttemptedSkill;
 			let status = this.#useSkill(props.skillName, waitFirst);
@@ -601,6 +601,7 @@ class Controller {
 			for (let i = 0; i < ctrl.skillsQueue.length; i++) {
 				let status = ctrl.#useSkill(ctrl.skillsQueue[i].skillName, false, true);
 				if (status.status === SkillReadyStatus.Ready) {
+					ctrl.scrollToTime(ctrl.game.time);
 					ctrl.autoSave();
 				}
 				ctrl.skillsQueue[i].timeInQueue += dt;
