@@ -75,7 +75,7 @@ export class GameState {
 		this.cooldowns.set(ResourceType.cd_Swiftcast, new CoolDown(ResourceType.cd_Swiftcast, 60, 1, 1));
 		this.cooldowns.set(ResourceType.cd_LucidDreaming, new CoolDown(ResourceType.cd_LucidDreaming, 60, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Surecast, new CoolDown(ResourceType.cd_Surecast, 120, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Tincture, new CoolDown(ResourceType.cd_Tincture, 300, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Tincture, new CoolDown(ResourceType.cd_Tincture, 270, 1, 1));
 
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
@@ -506,7 +506,8 @@ export class GameState {
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana
 			|| (skillName===SkillName.Paradox && this.getIceStacks()>0)
-			|| (skillName===SkillName.Thunder3 && this.resources.get(ResourceType.Thundercloud).available(1));
+			|| (skillName===SkillName.Thunder3 && this.resources.get(ResourceType.Thundercloud).available(1))
+			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)));
 		let reqsMet = skill.available();
 		let status = SkillReadyStatus.Ready;
 		if (!notBlocked) status = SkillReadyStatus.Blocked;

@@ -399,6 +399,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.switchToAForUI(ResourceType.AstralFire, 3);
 						game.startOrRefreshEnochian();
 					}, true, node);
+					game.resources.get(ResourceType.Firestarter).consume(1);
+					game.resources.get(ResourceType.Firestarter).removeTimer();
 				} else {
 					game.castSpell(SkillName.Fire3, (cap: SkillCaptureCallbackInfo) => {
 						game.switchToAForUI(ResourceType.AstralFire, 3);
@@ -729,7 +731,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		addResourceAbility(SkillName.Surecast, ResourceType.Surecast, 10);
 
 		// Tincture
-		addResourceAbility(SkillName.Tincture, ResourceType.Tincture, 15);
+		addResourceAbility(SkillName.Tincture, ResourceType.Tincture, 30);
 
 		return skillsList;
 	}
