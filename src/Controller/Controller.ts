@@ -32,6 +32,9 @@ class Controller {
 	record;
 	game;
 
+	#bAddingLine: boolean = false;
+	#bInterrupted: boolean = false;
+
 	constructor() {
 		this.timeScale = 1;
 		this.shouldLoop = false;
@@ -136,7 +139,7 @@ class Controller {
 			line.addActionNode(node);
 		}
 		let replayResult = this.#replay(line, ReplayMode.Exact, false);
-		console.assert(replayResult);
+		console.assert(replayResult.success);
 	}
 
 	updateCumulativeStatsDisplay() {
@@ -437,11 +440,21 @@ class Controller {
 	}
 
 	// returns true on success
-	#replay(line: Line, replayMode: ReplayMode, suppressLog=false) {
+	#replay(line: Line, replayMode: ReplayMode, suppressLog=false) : {
+		success: boolean,
+		firstAddedNode: ActionNode | undefined
+	} {
 		let itr = line.getFirstAction();
-		if (!itr) return true;
+		if (!itr) return {
+			success: true,
+			firstAddedNode: undefined
+		};
 
+		const oldTail = this.record.getLastAction();
+		let firstAddedNode = undefined;
 		while (itr) {
+
+			let lastIter = false;
 
 			// only Exact mode replays wait nodes
 			if (itr.type === ActionType.Wait && replayMode === ReplayMode.Exact) {
@@ -470,16 +483,37 @@ class Controller {
 					});
 				}
 				if (status.status !== SkillReadyStatus.Ready) {
-					return false;
+					lastIter = true;//return false;
+				}
+				if (this.#bInterrupted) {
+					this.#bInterrupted = false;
+					//return false;
+					lastIter = true;
 				}
 			}
 			else {
 				console.assert(false);
 			}
 
-			itr = itr.next;
+			// this iteration just added something, but firstAddedNode is still empty:
+			if (this.record.getLastAction() !== oldTail && !firstAddedNode) {
+				firstAddedNode = this.record.getLastAction();
+			}
+
+			if (lastIter) {
+				return {
+					success: false,
+					firstAddedNode: firstAddedNode
+				};
+			} else {
+				itr = itr.next;
+			}
+
 		}
-		return true;
+		return {
+			success: true,
+			firstAddedNode: firstAddedNode
+		};
 	}
 
 	autoSave() {
@@ -497,18 +531,17 @@ class Controller {
 
 	// generally used for trying to add a line to the current timeline
 	tryAddLine(line: Line, replayMode=ReplayMode.Tight) {
-		let oldTail = this.record.getLastAction();
-		let replaySuccessful = this.#replay(line, replayMode, false);
-		if (!replaySuccessful) {
-			if (oldTail) this.rewindUntilBefore(oldTail.next);
-			else { // tried to add line at the start but failed
-				/*if (this.record.getFirstAction())*/
-				this.rewindUntilBefore(this.record.getFirstAction());
-			}
+		this.#bAddingLine = true;
+
+		let replayResult = this.#replay(line, replayMode, false);
+		if (!replayResult.success) {
+			this.rewindUntilBefore(replayResult.firstAddedNode);
 			window.alert('Failed to add line "' + line.name + '" due to insufficient resources and/or stats mismatch.');
+			this.#bAddingLine = false;
 			return false;
 		} else {
 			this.autoSave();
+			this.#bAddingLine = false;
 			return true;
 		}
 	}
@@ -521,24 +554,59 @@ class Controller {
 		this.#presetLinesManager.deleteAllLines();
 	}
 
+	reportInterruption(props: {failNode: ActionNode}) {
+		if (!this.shouldLoop) {
+			window.alert("cast failed! Resources no longer available");
+		}
+		// if adding from a line, invalidate the whole line
+		// if loading from file (shouldn't happen)
+		// if real-time / using a skill directly: get rid of this node but don't scrub time back
+
+		if (this.#bAddingLine) {
+			this.#bInterrupted = true;
+		} else {
+			let currentTime = this.game.time;
+			let currentLoop = this.shouldLoop;
+			this.rewindUntilBefore(props.failNode);
+			this.autoSave();
+			this.#requestTick({
+				deltaTime: currentTime - this.game.time,
+				suppressLog: true
+			});
+			this.shouldLoop = currentLoop;
+		}
+	}
+
 	// basically restart the game and play till here:
 	rewindUntilBefore(node: ActionNode | undefined) {
 		let replayRecord = this.record;
-		let replayRecordHead = replayRecord.getFirstAction();
+
+		// replaying the whole thing := just leave it as is
+		if (node === undefined) return;
+
+		let newTail: ActionNode | undefined;
+		if (replayRecord.getFirstAction() === node) {
+			// deleting everything before head (making it empty)
+			newTail = undefined;
+		} else {
+			console.assert(replayRecord.getFirstAction() !== undefined);
+			console.assert(node !== undefined);
+			newTail = replayRecord.getFirstAction();
+			while ((newTail as ActionNode).next !== node) {
+				newTail = (newTail as ActionNode).next;
+			}
+			console.assert((newTail as ActionNode).next === node);
+		}
+
 		this.record = new Record();
 		this.record.config = this.gameConfig;
 
 		this.#requestRestart();
 
-		// TODO: cleanup logic
-		if (node && replayRecordHead && node !== replayRecord.getFirstAction()) {
-			let itr: ActionNode | undefined = replayRecordHead;
-			while (itr ? (itr.next !== node) : false) {
-				itr = (itr as ActionNode).next;
-			}
-			(itr as ActionNode).next = undefined;
-			replayRecord.tail = itr;
-			this.#replay(replayRecord, ReplayMode.Exact, false);
+		if (newTail) {
+			replayRecord.tail = newTail;
+			replayRecord.tail.next = undefined;
+			this.#replay(replayRecord, ReplayMode.Exact, true);
 		}
 	}
 
@@ -676,7 +744,7 @@ class Controller {
 	}
 
 	handleKeyboardEvent(evt: { keyCode: number; shiftKey: boolean; }) {
-		//console.log(evt.keyCode);
+		console.log(evt.keyCode);
 		if (this.tickMode === TickMode.RealTime) {
 			this.#handleKeyboardEvent_RealTime(evt);
 		} else if (this.tickMode === TickMode.RealTimeAutoPause) {

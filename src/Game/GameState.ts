@@ -388,8 +388,9 @@ export class GameState {
 		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime), ()=>{
 			let success = takeEffect(this);
 			if (!success) {
-				controller.rewindUntilBefore(node);
-				controller.autoSave();
+				controller.reportInterruption({
+					failNode: node
+				});
 			}
 		}));
 

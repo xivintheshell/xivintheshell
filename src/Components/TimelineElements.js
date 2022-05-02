@@ -85,10 +85,10 @@ export function TimelineSkill(props) {
 	let snapshotIndicatorStyle = {
 		position: "absolute",
 		width: 0,
-		height: 18,
-		top: -4,
+		height: 14,
+		top: 0,
 		left: controller.timeline.positionFromTime(props.elem.relativeSnapshotTime),
-		borderLeft: "1px solid " + "#4cb43a"
+		borderLeft: "1px solid " + "rgba(151,85,239,0.2)"
 	}
 	let snapshotIndicator = <div style={snapshotIndicatorStyle}/>
 

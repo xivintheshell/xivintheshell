@@ -229,16 +229,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				if (game.getIceStacks() === 0) {
+				if (game.getIceStacks() === 0) { // in fire or no enochian
 					game.castSpell(SkillName.Fire, (cap: SkillCaptureCallbackInfo) => {
 						game.resources.get(ResourceType.AstralFire).gain(1);
 						game.startOrRefreshEnochian();
-						// umbral heart
-						let uh = game.resources.get(ResourceType.UmbralHeart);
-						if (cap.capturedManaCost > 0 && uh.available(1)) {
-							uh.consume(1);
-							addLog(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
-						}
 						potentiallyGainFirestarter(game);
 					}, (app: SkillApplicationCallbackInfo) => {
 					}, node);
@@ -250,7 +244,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 					}, (app: SkillApplicationCallbackInfo) => {
 					}, node);
 				}
-				// firestarter?
 			}
 		));
 
@@ -305,7 +298,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.reportPotency(node, capturedTickPotency, "DoT");
 						game.dealDamage(capturedTickPotency, "DoT");
 						recurringThunderTick(remainingTicks - 1, capturedTickPotency);
-						if (game.config.randomSeed != "0" && game.rng() < 0.1) {// thundercloud proc
+						if (game.config.randomSeed !== "0" && game.rng() < 0.1) {// thundercloud proc
 							gainThundercloudProc(game);
 						}
 					}, Color.Thunder);
