@@ -586,12 +586,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.castSpell(SkillName.HighFire2, (cap: SkillCaptureCallbackInfo) => {
 					game.switchToAForUI(ResourceType.AstralFire, 3);
 					game.startOrRefreshEnochian();
-					// umbral heart
-					let uh = game.resources.get(ResourceType.UmbralHeart);
-					if (cap.capturedManaCost > 0 && uh.available(1)) {
-						uh.consume(1);
-						addLog(LogCategory.Event, "consumed an UH stack, remaining: " + uh.currentValue, game.getDisplayTime(), Color.Ice);
-					}
 				}, (app: SkillApplicationCallbackInfo) => {
 				}, node);
 			}
@@ -603,7 +597,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				game.castSpell(SkillName.Freeze, (cap: SkillCaptureCallbackInfo) => {
+				game.castSpell(SkillName.HighBlizzard2, (cap: SkillCaptureCallbackInfo) => {
 					game.switchToAForUI(ResourceType.UmbralIce, 3);
 					game.startOrRefreshEnochian();
 				}, (app: SkillApplicationCallbackInfo) => {

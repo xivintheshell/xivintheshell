@@ -555,12 +555,14 @@ class Controller {
 	}
 
 	reportInterruption(props: {failNode: ActionNode}) {
-		if (!this.shouldLoop) {
-			window.alert("cast failed! Resources no longer available");
+		if (this.tickMode !== TickMode.RealTime) {
+			window.alert("cast failed! Resources for " + props.failNode.skillName + " are no longer available");
 		}
 		// if adding from a line, invalidate the whole line
 		// if loading from file (shouldn't happen)
 		// if real-time / using a skill directly: get rid of this node but don't scrub time back
+
+		console.warn("failed: " + props.failNode.skillName);
 
 		if (this.#bAddingLine) {
 			this.#bInterrupted = true;
@@ -712,39 +714,17 @@ class Controller {
 		this.updateAllDisplay();
 	}
 	#handleKeyboardEvent_RealTimeAutoPause(evt: { shiftKey: boolean; keyCode: number; }) {
-
 		if (this.shouldLoop) return;
-
-		/*
-		if (evt.shiftKey && evt.keyCode===39 && !this.shouldLoop) { // shift + right
-			this.#requestTick({deltaTime: this.stepSize * 0.2, suppressLog: false});
-			this.updateAllDisplay();
-		}
-		else if (evt.keyCode===39 && !this.shouldLoop) {// right arrow
-			this.stepTime();
-			this.updateAllDisplay();
-		}
-		 */
 	}
 	#handleKeyboardEvent_Manual(evt: { keyCode: number; shiftKey: boolean; }) {
 		if (evt.keyCode===32) { // space
 			this.#fastForward();
 			this.updateAllDisplay();
 		}
-		/*
-		if (evt.shiftKey && evt.keyCode===39) { // shift + right
-			this.#requestTick({deltaTime: this.stepSize * 0.2, suppressLog: false});
-			this.updateAllDisplay();
-		}
-		else if (evt.keyCode===39) {// right arrow
-			this.stepTime();
-			this.updateAllDisplay();
-		}
-		 */
 	}
 
 	handleKeyboardEvent(evt: { keyCode: number; shiftKey: boolean; }) {
-		console.log(evt.keyCode);
+		//console.log(evt.keyCode);
 		if (this.tickMode === TickMode.RealTime) {
 			this.#handleKeyboardEvent_RealTime(evt);
 		} else if (this.tickMode === TickMode.RealTimeAutoPause) {
