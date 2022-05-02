@@ -310,13 +310,16 @@ class StatusDisplay extends React.Component {
 		}).bind(this);
 	}
 	componentDidMount() {
-		controller.updateStatusDisplay();
+		controller.updateStatusDisplay(controller.game);
 	}
 	render() {
 		return <div className={"statusDisplay"}>
 			<div style={{position: "absolute", top: -8, right: 0, zIndex: 1}}><Help topic={"mainControlRegion"} content={
 				<div className="toolTip">
-					<div className="paragraph">Keyboard inputs are only effective when this region is focused (when it has a purple or green border)</div>
+					<div className="paragraph"><span style={{color: "lightgray"}}>grey</span> border: not focused</div>
+					<div className="paragraph"><b style={{color: "mediumpurple"}}>purple</b> border: receiving input</div>
+					<div className="paragraph"><b style={{color: "mediumseagreen"}}>green</b> border: real-time</div>
+					<div className="paragraph"><b style={{color: "darkorange"}}>orange</b> border: viewing historical state, not receiving input</div>
 				</div>
 			}/></div>
 			<div className={"-left"}>

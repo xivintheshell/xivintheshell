@@ -10,16 +10,17 @@ import 'react-tabs/style/react-tabs.css';
 import {LoadSave} from "./LoadSave";
 import {skillSequencePresets} from "./SkillSequencePresets";
 import {timelineMarkerPresets} from "./TimelineMarkerPresets";
-import {ButtonIndicator, Expandable, Help} from "./Common";
 import {IntroSection} from "./IntroSection";
 
 export let setRealTime = inRealTime=>{};
+export let setOverrideOutlineColor = outlineColor=>{};
 export default class Main extends React.Component {
 
 	constructor(props) {
 		super(props);
 		this.state = {
 			realTime: false,
+			overrideOutlineColor: undefined,
 		}
 		this.controlRegionRef = React.createRef();
 		this.gameplayKeyCapture = ((evt)=>{
@@ -31,6 +32,9 @@ export default class Main extends React.Component {
 		setRealTime = ((rt)=>{
 			this.setState({realTime: rt});
 		}).bind(this);
+		setOverrideOutlineColor = (col=>{
+			this.setState({ overrideOutlineColor: col });
+		}).bind(this);
 	}
 
 	componentDidMount() {
@@ -40,6 +44,7 @@ export default class Main extends React.Component {
 
 	componentWillUnmount() {
 		setRealTime = inRealTime=>{};
+		setOverrideOutlineColor = outlineColor=>{};
 	}
 
 	// tabs: https://reactcommunity.org/react-tabs/
@@ -53,6 +58,8 @@ export default class Main extends React.Component {
 				<div style={{ position: "relative", marginBottom: "16px" }}>
 					<div style={{ display: "inline-block", position: "relative", width: "70%" }}>
 						<div className={"keyboardControlled" + (this.state.realTime ? " realTime" : "")}
+							 style={this.state.overrideOutlineColor ?
+								 {outline: "2px solid " + this.state.overrideOutlineColor} : {}}
 							 tabIndex={-1}
 							 ref={this.controlRegionRef}
 							 onKeyDown={this.gameplayKeyCapture}>

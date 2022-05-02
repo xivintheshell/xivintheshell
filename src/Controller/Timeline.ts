@@ -9,6 +9,7 @@ import {updateMarkers} from "../Components/TimelineMarkers";
 
 export const enum ElemType {
 	s_Cursor = "s_Cursor",
+	s_ViewOnlyCursor = "s_ViewOnlyCursor",
 	DamageMark = "DamageMark",
 	LucidMark = "LucidMark",
 	MPTickMark = "MPTickMark",
@@ -35,6 +36,10 @@ type Fixme = any;
 
 type CursorElem = TimelineElemBase & {
 	type: ElemType.s_Cursor;
+}
+type ViewOnlyCursorElem = TimelineElemBase & {
+	type: ElemType.s_ViewOnlyCursor;
+	enabled: boolean;
 }
 type DamageMarkElem = TimelineElemBase & {
 	type: ElemType.DamageMark;
@@ -78,6 +83,7 @@ export type SerializedMarker = TimelineElemBase & {
 
 type TimelineElem =
 	CursorElem |
+	ViewOnlyCursorElem |
 	DamageMarkElem |
 	LucidMarkElem |
 	MPTickMarkElem |
@@ -88,7 +94,8 @@ type TimelineElem =
 function verifyElem(elem: TimelineElem) {
 	console.assert(elem!==undefined);
 
-	if (elem.type === ElemType.s_Cursor) {
+	if (elem.type === ElemType.s_Cursor ||
+		elem.type === ElemType.s_ViewOnlyCursor) {
 		console.assert(!isNaN(elem.time));
 		return;
 	}
@@ -199,6 +206,11 @@ export class Timeline {
 			type: ElemType.s_Cursor,
 			time: 0
 		});
+		this.addElement({
+			type: ElemType.s_ViewOnlyCursor,
+			time: 0,
+			enabled: false
+		});
 	}
 
 	// can only update singletons this way
@@ -232,6 +244,10 @@ export class Timeline {
 
 	positionFromTime(time: number) {
 		return time * this.scale * 100;
+	}
+
+	timeFromPosition(x: number) {
+		return x / (this.scale * 100);
 	}
 
 	drawElements(filter=()=>{ return true; }) {

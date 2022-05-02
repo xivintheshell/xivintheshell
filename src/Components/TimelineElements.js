@@ -13,8 +13,8 @@ export function Cursor(props) {
 	};
 	return <div style={style} className={"timeline-elem cursor"} data-tip data-for={`${props.elemID}`}>
 		<svg width={6} height={MAX_HEIGHT}>
-			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"black"}/>
-			<polygon points="0,0 6,0 3,6" fill="black" stroke="none"/>
+			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={props.color}/>
+			<polygon points="0,0 6,0 3,6" fill={props.color} stroke="none"/>
 		</svg>
 		<ReactTooltip id={`${props.elemID}`}>{props.elem.time.toFixed(2)}</ReactTooltip>
 	</div>;

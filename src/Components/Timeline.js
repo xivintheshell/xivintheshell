@@ -71,7 +71,7 @@ function TimelineHeader(props) {
 		return (time < 0 ? "-" : "") +
 			minute.toString() + ":" + (second < 10 ? "0" : "") + second.toFixed(0).toString();
 	}
-	let ruler = <div>
+	let ruler = <div style={{pointerEvents: "none"}}>
 		<svg width={props.canvasWidth} height="100%">
 			{marks_1sec.map(i=>{
 				return <line key={"1sec-"+i} stroke="black" strokeWidth="1" x1={i} y1="0" x2={i} y2="6"/>
@@ -90,15 +90,30 @@ function TimelineHeader(props) {
 			left: `${i - 24}px`,
 			width: "48px",
 			display: "inline-block",
-			//border: "1px solid red",
 		}}><div>{displayTime((i - countdownPadding) / props.pixelPerSecond)}</div></div>;})}
 	</div>
-	return <div style={{
-		zIndex: -3,
+	return <div ref={props.divref} style={{
+		//zIndex: -3,
 		position: "relative",
 		width: "100%",
 		height: "30px",
 		background: "#ececec",
+	}} onClick={(e)=>{
+		if (e.target) {
+			let rect = e.target.getBoundingClientRect();
+			let x = e.clientX - rect.left;
+			let t = controller.timeline.timeFromPosition(x);
+			controller.timeline.updateElem({
+				type: ElemType.s_ViewOnlyCursor,
+				time: t,
+				enabled: t < controller.game.time,
+			});
+			if (t < controller.game.time) {
+				controller.displayHistoricalState(t);
+			} else {
+				controller.displayCurrentState();
+			}
+		}
 	}}>{ruler}</div>
 }
 
@@ -111,6 +126,7 @@ class TimelineMain extends React.Component {
 			canvasWidth: 300,
 			elements: []
 		}
+		this.timelineHeaderRef = React.createRef();
 		updateTimelineContent = this.unboundUpdateTimelineContent.bind(this);
 	}
 	componentDidMount() {
@@ -134,7 +150,10 @@ class TimelineMain extends React.Component {
 		for (let i = 0; i < this.state.elements.length; i++) {
 			let e = this.state.elements[i];
 			if (e.type === ElemType.s_Cursor) {
-				elemComponents.push(<Cursor key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
+				elemComponents.push(<Cursor key={i} elem={e} elemID={"elemID-"+i} color="black" vOffset={verticalOffset}/>)
+			}
+			else if (e.type === ElemType.s_ViewOnlyCursor) {
+				if (e.enabled) elemComponents.push(<Cursor key={i} elem={e} elemID={"elemID-"+i} color={"darkorange"} vOffset={verticalOffset}/>)
 			}
 			else if (e.type === ElemType.DamageMark) {
 				elemComponents.push(<DamageMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
@@ -169,12 +188,21 @@ class TimelineMain extends React.Component {
 				if (!evt.shiftKey) {
 					controller.record.unselectAll();
 					controller.onTimelineSelectionChanged();
+					controller.timeline.updateElem({
+						type: ElemType.s_ViewOnlyCursor,
+						enabled: false,
+						time: 0
+					});
+					if (evt.target !== this.timelineHeaderRef.current) {
+						controller.displayCurrentState();
+					}
 				}
 			}
 		}>
 			<TimelineSelection/>
 			{countdownGrey}
 			<TimelineHeader
+				divref={this.timelineHeaderRef}
 				canvasWidth={this.state.canvasWidth}
 				pixelPerSecond={controller.timeline.scale * 100}
 				countdown={controller.gameConfig.countdown}

@@ -24,6 +24,10 @@ export function IntroSection(props: {}) {
 				<ul>
 					<li style={smallGap}>Click to select a skill on the timeline. Shift click to select a sequence of skills</li>
 					<li style={smallGap}><ButtonIndicator text={"backspace"}/> to delete the selected skill and everything after it</li>
+					<li style={smallGap}>Click on the timeline's ruler-like header to view historical game states.
+						While doing so, the main control region will have an <b style={{color: "darkorange"}}>orange</b> border
+						and you will not be able to use skills. Click on somewhere else on the timeline to cancel.
+					</li>
 				</ul>
 				<div className="paragraph">
 					Most edits are automatically saved in your browser cache, so it's generally okay to refresh the page

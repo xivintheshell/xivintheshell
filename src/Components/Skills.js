@@ -133,10 +133,10 @@ class SkillButton extends React.Component {
 		let progressCircle = <ProgressCircle className="cdProgress" diameter={40} progress={this.props.cdProgress} color={"rgba(255,255,255,0.7)"}/>;
 		return <span title={this.skillName} className={"skillButton"} data-tip data-for={"skillButton-" + this.props.skillName}>
 			{this.props.cdProgress === 1 ? "" : progressCircle}
-			<Clickable onClickFn={()=>{
+			<Clickable onClickFn={controller.inputEnabled ? ()=>{
 				controller.requestUseSkill({skillName: this.props.skillName});
 				controller.updateAllDisplay();
-			}} content={icon}/>
+			} : undefined} content={icon} style={controller.inputEnabled ? {} : { cursor: "not-allowed" }}/>
 			<ReactTooltip id={"skillButton-" + this.props.skillName}>
 				{this.state.skillDescription}
 			</ReactTooltip>
@@ -211,7 +211,7 @@ class SkillsWindow extends React.Component {
 				<form onSubmit={this.onWaitTimeSubmit} style={{margin: "10px 0"}}>
 					Wait for <input type={"text"} style={{
 						width: 40, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
-					}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) <input type="submit" value="GO"/>
+					}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) <input type="submit" disabled={!controller.inputEnabled} value="GO"/>
 				</form>
 			</div>
 		</div>

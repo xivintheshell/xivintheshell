@@ -52,8 +52,13 @@ function PresetLine(props) {
 		itr = itr.next; ctr++;
 	}
 	let clickableContent = <span>{line.name} ({icons})</span>;
+
+	let addLineStyle = controller.inputEnabled ? {} : {
+		//filter: "grayscale(100%)",
+		pointerEvents: "none"
+	};
 	return <div style={{marginBottom: "8px"}}>
-		<Clickable content={clickableContent} onClickFn={() => {
+		<Clickable content={clickableContent} style={addLineStyle} onClickFn={() => {
 			controller.tryAddLine(line, ReplayMode.Tight);
 			controller.updateAllDisplay();
 			controller.scrollToTime();
