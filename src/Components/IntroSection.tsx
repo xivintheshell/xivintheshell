@@ -48,7 +48,7 @@ export function IntroSection(props: {}) {
 					This tool is developed by <b>miyehn (Ellyn Waterford @ Sargatanas)</b> with generous help from their
 					black mage friends and players on The Balance discord. Big shout out to <b>Galahad Donnadieu
 					@ Exodus</b> for teaching me BLM from the ground up, testing the tool, and help collecting data.
-					Also thanks <b>Turtle</b> from The Balance for their detailed feedback and bug reports.
+					Also thank <b>Turtle</b> from The Balance for their detailed feedback and bug reports.
 				</div>
 				<div className="paragraph">
 					If you have questions,
@@ -70,7 +70,38 @@ export function IntroSection(props: {}) {
 				</ul>
 				<div className="paragraph"><Expandable title={"Implementation notes"} defaultShow={false} content={
 					<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>
-						TODO
+						<div className="paragraph">
+							Galahad found that slidecast window size is linear with respect to cast time. I made a
+							<a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>script</a>, parsed
+							a few logs and confirmed this. Albeit the slope is tiny (~0.02) so I'm just using 0.5s here
+							for simplicity.
+						</div>
+						<div className="paragraph">
+							Astral fire / umbral ice refresh happens at slidecast timing (0.5s before cast finishes)
+						</div>
+						<div className="paragraph">
+							Skill application delays are fairly accurate for spells (got them from logs), but all abilities
+							except lucid dreaming just use a 0.1s estimate (see the last function
+							argument <a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>here</a>).
+							Please contact me if you know how to measure this missing data.
+							These delay times affect when buffs are applied as well as where the red damage marks appear
+							on the timeline.
+						</div>
+						<div className="paragraph">
+							Lucid dreaming ticks happen halfway between MP ticks. The earliest first tick time is 0.3s after you press
+							the skill button. It always ticks 7 times.
+						</div>
+					</div>
+				}/></div>
+				<div className="paragraph"><Expandable title={"Changelog"} defaultShow={false} content={
+					<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>
+						<div className="paragraph">5/3<br/>
+							added this section so most people can stay here instead of go and look at my messy code and commit messages<br/>
+							added a few implementation notes
+						</div>
+						<div className="paragraph">5/2<br/>
+							can now view historical game states by clicking on the timeline
+						</div>
 					</div>
 				}/></div>
 				<Expandable

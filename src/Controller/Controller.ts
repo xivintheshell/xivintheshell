@@ -82,7 +82,7 @@ class Controller {
 		this.game = new GameState(this.gameConfig);
 		this.record = new Record();
 		this.record.config = this.gameConfig;
-		this.#replay(savedRecord, ReplayMode.Exact, true, time);
+		this.#replay(savedRecord, ReplayMode.Exact, true, time, false);
 
 		// update display
 		this.updateStatusDisplay(this.game);
@@ -386,7 +386,13 @@ class Controller {
 		this.#requestTick({deltaTime: deltaTime, suppressLog: false});
 	}
 
-	#useSkill(skillName: SkillName, bWaitFirst: boolean, bSuppressLog=false, overrideTickMode=this.tickMode) {
+	#useSkill(
+		skillName: SkillName,
+		bWaitFirst: boolean,
+		bSuppressLog: boolean = false,
+		overrideTickMode: TickMode = this.tickMode,
+		modifyTimeline: boolean = true
+	) {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
 		if (bWaitFirst) {
@@ -452,28 +458,31 @@ class Controller {
 			node.tmp_startLockTime = time;
 			node.tmp_endLockTime = time + lockDuration;
 
-			let skillInfo = this.game.skillsList.get(skillName).info;
-			let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
-			let isSpellCast = status.castTime > 0 && !status.instantCast;
-			let snapshotTime = isSpellCast ? status.castTime - GameConfig.getSlidecastWindow(status.castTime) : 0;
-			this.timeline.addElement({
-				type: ElemType.Skill,
-				skillName: skillName,
-				isGCD: isGCD,
-				isSpellCast: isSpellCast,
-				capturedPotency: node.tmp_capturedPotency,
-				time: time,
-				relativeSnapshotTime: snapshotTime,
-				lockDuration: lockDuration,
-				recastDuration: status.cdRecastTime,
-				node: node,
-			});
+			if (modifyTimeline) { // false when replaying to display historical game state
+				let skillInfo = this.game.skillsList.get(skillName).info;
+				let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
+				let isSpellCast = status.castTime > 0 && !status.instantCast;
+				let snapshotTime = isSpellCast ? status.castTime - GameConfig.getSlidecastWindow(status.castTime) : 0;
+				this.timeline.addElement({
+					type: ElemType.Skill,
+					skillName: skillName,
+					isGCD: isGCD,
+					isSpellCast: isSpellCast,
+					capturedPotency: node.tmp_capturedPotency,
+					time: time,
+					relativeSnapshotTime: snapshotTime,
+					lockDuration: lockDuration,
+					recastDuration: status.cdRecastTime,
+					node: node,
+				});
+			}
 		}
 		return status;
 	}
 
 	// returns true on success
-	#replay(line: Line, replayMode: ReplayMode, suppressLog=false, maxReplayTime=-1) : {
+	#replay(line: Line, replayMode: ReplayMode, suppressLog=false,
+			maxReplayTime=-1, modifyTimeline=true) : {
 		success: boolean,
 		firstAddedNode: ActionNode | undefined
 	} {
@@ -510,7 +519,7 @@ class Controller {
 			else if (itr.type === ActionType.Skill) {
 
 				let waitFirst = replayMode === ReplayMode.Tight; // false for exact replay
-				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, suppressLog, TickMode.Manual);
+				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, suppressLog, TickMode.Manual, modifyTimeline);
 
 				if (replayMode === ReplayMode.Exact) {
 					console.assert(status.status === SkillReadyStatus.Ready);
