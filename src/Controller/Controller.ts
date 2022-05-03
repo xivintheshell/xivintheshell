@@ -34,6 +34,7 @@ class Controller {
 
 	#bAddingLine: boolean = false;
 	#bInterrupted: boolean = false;
+	#bCalculatingHistoricalState: boolean = true;
 
 	inputEnabled = true;
 
@@ -74,30 +75,47 @@ class Controller {
 
 	displayHistoricalState(time: number) {
 		this.inputEnabled = false;
+		this.#bCalculatingHistoricalState = false;
 		setOverrideOutlineColor("darkorange");
 		let savedGame = this.game;
 		let savedRecord = this.record;
 		this.lastAttemptedSkill = "";
+		//============ stashed states ============
+
+		this.timeline.updateElem({
+			type: ElemType.s_ViewOnlyCursor,
+			time: time,
+			enabled: true
+		});
 
 		this.game = new GameState(this.gameConfig);
 		this.record = new Record();
 		this.record.config = this.gameConfig;
-		this.#replay(savedRecord, ReplayMode.Exact, true, time, false);
+		this.#replay(savedRecord, ReplayMode.Exact, true, time);
 
 		// update display
 		this.updateStatusDisplay(this.game);
 		this.updateSkillButtons(this.game);
+		updateSkillSequencePresetsView();
 		// timeline
 		this.timeline.drawElements();
 
+		//============ pop stashed states ============
 		this.game = savedGame;
 		this.record = savedRecord;
+		this.#bCalculatingHistoricalState = true;
 	}
 
 	displayCurrentState() {
 		this.inputEnabled = true;
+		this.timeline.updateElem({
+			type: ElemType.s_ViewOnlyCursor,
+			enabled: false,
+			time: 0
+		});
 		setOverrideOutlineColor(undefined);
 		this.updateAllDisplay(this.game);
+		this.updateCumulativeStatsDisplay();
 	}
 
 	#requestRestart() {
@@ -192,12 +210,14 @@ class Controller {
 	}
 
 	reportDamage(props: { potency: number; time: number; source: string; }) {
-		this.timeline.addElement({
-			type: ElemType.DamageMark,
-			potency: props.potency,
-			time: props.time,
-			source: props.source
-		});
+		if (this.#bCalculatingHistoricalState) {
+			this.timeline.addElement({
+				type: ElemType.DamageMark,
+				potency: props.potency,
+				time: props.time,
+				source: props.source
+			});
+		}
 
 		addLog(
 			LogCategory.Event,
@@ -207,19 +227,23 @@ class Controller {
 	}
 
 	reportLucidTick(time: number, source: string) {
-		this.timeline.addElement({
-			type: ElemType.LucidMark,
-			time: time,
-			source: source,
-		});
+		if (this.#bCalculatingHistoricalState) {
+			this.timeline.addElement({
+				type: ElemType.LucidMark,
+				time: time,
+				source: source,
+			});
+		}
 	}
 
 	reportManaTick(time: number, source: string) {
-		this.timeline.addElement({
-			type: ElemType.MPTickMark,
-			time: time,
-			source: source,
-		});
+		if (this.#bCalculatingHistoricalState) {
+			this.timeline.addElement({
+				type: ElemType.MPTickMark,
+				time: time,
+				source: source,
+			});
+		}
 	}
 
 	updateStatusDisplay(game: GameState) {
@@ -390,8 +414,7 @@ class Controller {
 		skillName: SkillName,
 		bWaitFirst: boolean,
 		bSuppressLog: boolean = false,
-		overrideTickMode: TickMode = this.tickMode,
-		modifyTimeline: boolean = true
+		overrideTickMode: TickMode = this.tickMode
 	) {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
@@ -458,7 +481,7 @@ class Controller {
 			node.tmp_startLockTime = time;
 			node.tmp_endLockTime = time + lockDuration;
 
-			if (modifyTimeline) { // false when replaying to display historical game state
+			if (this.#bCalculatingHistoricalState) { // false when replaying to display historical game state
 				let skillInfo = this.game.skillsList.get(skillName).info;
 				let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
 				let isSpellCast = status.castTime > 0 && !status.instantCast;
@@ -482,7 +505,7 @@ class Controller {
 
 	// returns true on success
 	#replay(line: Line, replayMode: ReplayMode, suppressLog=false,
-			maxReplayTime=-1, modifyTimeline=true) : {
+			maxReplayTime=-1) : {
 		success: boolean,
 		firstAddedNode: ActionNode | undefined
 	} {
@@ -519,7 +542,7 @@ class Controller {
 			else if (itr.type === ActionType.Skill) {
 
 				let waitFirst = replayMode === ReplayMode.Tight; // false for exact replay
-				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, suppressLog, TickMode.Manual, modifyTimeline);
+				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, suppressLog, TickMode.Manual);
 
 				if (replayMode === ReplayMode.Exact) {
 					console.assert(status.status === SkillReadyStatus.Ready);

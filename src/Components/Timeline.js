@@ -103,11 +103,6 @@ function TimelineHeader(props) {
 			let rect = e.target.getBoundingClientRect();
 			let x = e.clientX - rect.left;
 			let t = controller.timeline.timeFromPosition(x);
-			controller.timeline.updateElem({
-				type: ElemType.s_ViewOnlyCursor,
-				time: t,
-				enabled: t < controller.game.time,
-			});
 			if (t < controller.game.time) {
 				controller.displayHistoricalState(t);
 			} else {
@@ -188,11 +183,6 @@ class TimelineMain extends React.Component {
 				if (!evt.shiftKey) {
 					controller.record.unselectAll();
 					controller.onTimelineSelectionChanged();
-					controller.timeline.updateElem({
-						type: ElemType.s_ViewOnlyCursor,
-						enabled: false,
-						time: 0
-					});
 					if (evt.target !== this.timelineHeaderRef.current) {
 						controller.displayCurrentState();
 					}
@@ -270,12 +260,16 @@ class StatsDisplay extends React.Component {
 	}
 	render() {
 		let cumulative = <div>
-			<span>Last damage time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
+			<span>Time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
 			<span>Cumulative potency: {(this.state.cumulativePPS * this.state.cumulativeDuration).toFixed(2)}</span><br/>
 			<span>PPS <Help topic={"ppsNotes"} content={
 				<div className={"toolTip"}>
-					cumulative potency divided by time since pull (0s).<br/>
-					could be inaccurate if any damage happens before pull
+					<div className="paragraph">
+						cumulative potency divided by time since pull (0s).
+					</div>
+					<div className="paragraph">
+						could be inaccurate if any damage happens before pull
+					</div>
 				</div>
 			}/>: {this.state.cumulativePPS.toFixed(2)}</span><br/>
 		</div>

@@ -150,7 +150,7 @@ export class Timeline {
 	}
 
 	addElement(elem: TimelineElem) {
-		verifyElem(elem);
+		//verifyElem(elem);
 		this.elements.push(elem);
 	}
 

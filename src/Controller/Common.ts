@@ -38,6 +38,9 @@ export const enum TickMode {
 
 // game --> view
 export function addLog(category: LogCategory, content: string, time: number, color=Color.Text) {
+	// disabled now for performance (nobody looks at it anyway lol)
+	/*
 	if (time !== undefined) content = time.toFixed(3) + "s: " + content;
 	addLogContent(category, content, color);
+	 */
 }

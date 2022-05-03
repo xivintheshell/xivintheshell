@@ -1,5 +1,5 @@
 import React from 'react'
-import {asyncFetch, Clickable, Expandable, Input, loadFromFile, LoadJsonFromFileOrUrl, saveToFile} from "./Common";
+import {Clickable, Expandable, Input, LoadJsonFromFileOrUrl, saveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType, ReplayMode} from "../Controller/Common";
 import {skillIcons} from "./Skills";
@@ -55,14 +55,15 @@ function PresetLine(props) {
 
 	let addLineStyle = controller.inputEnabled ? {} : {
 		//filter: "grayscale(100%)",
-		pointerEvents: "none"
+		//pointerEvents: "none",
+		cursor: "not-allowed"
 	};
 	return <div style={{marginBottom: "8px"}}>
-		<Clickable content={clickableContent} style={addLineStyle} onClickFn={() => {
+		<Clickable content={clickableContent} style={addLineStyle} onClickFn={controller.inputEnabled ? (() => {
 			controller.tryAddLine(line, ReplayMode.Tight);
 			controller.updateAllDisplay();
 			controller.scrollToTime();
-		}}/>
+		}) : undefined}/>
 		<span> </span>
 		<Clickable content="[x]" onClickFn={() => {
 			controller.deleteLine(line);

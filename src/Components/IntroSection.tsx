@@ -97,6 +97,7 @@ export function IntroSection(props: {}) {
 					<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>
 						<div className="paragraph">5/3<br/>
 							added this section so most people can stay here instead of go and look at my messy code and commit messages<br/>
+							fixed a performance issue related to viewing historical game states. <br/>
 							added a few implementation notes
 						</div>
 						<div className="paragraph">5/2<br/>

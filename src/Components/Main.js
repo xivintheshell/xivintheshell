@@ -29,6 +29,9 @@ export default class Main extends React.Component {
 				evt.preventDefault();
 			}
 		}).bind(this);
+		this.gameplayMouseCapture = ((evt)=>{
+			controller.displayCurrentState();
+		}).bind(this);
 		setRealTime = ((rt)=>{
 			this.setState({realTime: rt});
 		}).bind(this);
@@ -62,7 +65,9 @@ export default class Main extends React.Component {
 								 {outline: "2px solid " + this.state.overrideOutlineColor} : {}}
 							 tabIndex={-1}
 							 ref={this.controlRegionRef}
-							 onKeyDown={this.gameplayKeyCapture}>
+							 onKeyDown={this.gameplayKeyCapture}
+							 onMouseDown={this.gameplayMouseCapture}
+						>
 							{statusDisplay}
 							{skillsWindow}
 						</div>
@@ -81,6 +86,8 @@ export default class Main extends React.Component {
 				{skillSequencePresets}
 				{timelineMarkerPresets}
 				<div style={{marginTop: "16px"}}>
+					{timeline}
+					{/*
 					<Tabs>
 						<TabList>
 							<Tab>Timeline</Tab>
@@ -94,6 +101,7 @@ export default class Main extends React.Component {
 							{logView}
 						</TabPanel>
 					</Tabs>
+					*/}
 				</div>
 			</div>
 		</div>;
