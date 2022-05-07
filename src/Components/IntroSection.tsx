@@ -17,6 +17,7 @@ export function IntroSection(props: {}) {
 				<ul>
 					<li style={smallGap}>Set your stats in <b>Rotation</b> settings on the right, then <ButtonIndicator text={"apply and reset"}/></li>
 					<li style={smallGap}>Click on a skill to use it. If it's not ready yet, click on it again will wait and retry.</li>
+					<li style={smallGap}>Click on a buff applied to self to remove it. Unless it's ley lines, in which case it can be re-enabled.</li>
 				</ul>
 				<div className="paragraph">
 					<b>Timeline</b>
@@ -94,6 +95,9 @@ export function IntroSection(props: {}) {
 				}/></div>
 				<div className="paragraph"><Expandable title={"Changelog"} defaultShow={false} content={
 					<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>
+						<div className="paragraph">5/7 (yes I'm still working on it)<br/>
+							added support for enabling/disabling ley lines and removing buffs applied to self
+						</div>
 						<div className="paragraph">5/3<br/>
 							added this section so most people can stay here instead of go and look at my messy code and commit messages<br/>
 							fixed a performance issue related to viewing historical game states. <br/>
