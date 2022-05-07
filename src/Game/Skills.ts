@@ -439,10 +439,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.castSpell(SkillName.Flare, (cap: SkillCaptureCallbackInfo) => {
 					let uh = game.resources.get(ResourceType.UmbralHeart);
 					let mana = game.resources.get(ResourceType.Mana);
-					let manaCost = uh.available(1) ? mana.currentValue * 2 / 3 : mana.currentValue;
+					let manaCost = uh.available(1) ? mana.availableAmount() * 2 / 3 : mana.availableAmount();
 					// mana
 					game.resources.get(ResourceType.Mana).consume(manaCost);
-					uh.consume(uh.currentValue);
+					uh.consume(uh.availableAmount());
 					// +3 AF; refresh enochian
 					game.resources.get(ResourceType.AstralFire).gain(3);
 					game.startOrRefreshEnochian();
@@ -514,7 +514,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					game.resources.addResourceEvent(
 						ResourceType.Triplecast,
 						"drop remaining Triple charges", 15, (rsc: Resource) => {
-							rsc.consume(rsc.currentValue);
+							rsc.consume(rsc.availableAmount());
 						});
 				}, false, node);
 			}
@@ -542,7 +542,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.castSpell(SkillName.Despair, (cap: SkillCaptureCallbackInfo) => {
 					let mana = game.resources.get(ResourceType.Mana);
 					// mana
-					mana.consume(mana.currentValue);
+					mana.consume(mana.availableAmount());
 					// +3 AF; refresh enochian
 					game.resources.get(ResourceType.AstralFire).gain(3);
 					game.startOrRefreshEnochian();
@@ -666,7 +666,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					let applyLucidTick = (index: number) => {
 						if (game.getFireStacks() > 0) return; // not tick during fire
 						game.resources.get(ResourceType.Mana).gain(550);
-						let currentMP = game.resources.get(ResourceType.Mana).currentValue;
+						let currentMP = game.resources.get(ResourceType.Mana).availableAmount();
 						let reportText = "Lucid@" + skillTime.toFixed(2) + " (" + index + "/7) (MP=" + currentMP + ")";
 						controller.reportLucidTick(game.time, reportText);
 					};

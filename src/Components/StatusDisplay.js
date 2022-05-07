@@ -1,5 +1,5 @@
 import React from 'react';
-import {Help, ProgressBar} from "./Common";
+import {Clickable, Help, ProgressBar} from "./Common";
 import {ResourceType} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 
@@ -64,16 +64,27 @@ buffIcons.set(ResourceType.LucidDreaming, require("./Asset/buff_lucidDreaming.pn
 buffIcons.set(ResourceType.Surecast, require("./Asset/buff_surecast.png"));
 buffIcons.set(ResourceType.Tincture, require("./Asset/buff_tincture.png"));
 
-// rscType, stacks, timeRemaining
+// rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props) {
 	return <div title={props.rscType} className={props.className + " buff " + props.rscType}>
-		<img src={buffIcons.get(props.rscType)} alt={props.rscType}/>
+		<Clickable content={
+			<img style={{height: 40}} src={buffIcons.get(props.rscType)} alt={props.rscType}/>
+		} style={{
+			display: "inline-block",
+			verticalAlign: "top",
+			filter: props.enabled ? "none" : "grayScale(100%)"
+		}} onClickFn={()=>{
+			if (props.onSelf) {
+				controller.requestToggleBuff(props.rscType);
+			}
+		}}/>
 		<span className={"buff-label"}>{props.timeRemaining}</span>
 	</div>
 }
 
 function BuffsDisplay(props) {
 	let data = (props && props.data) ? props.data : {
+		leyLinesEnabled: true,
 		leyLinesCountdown: 0,
 		sharpcastCountdown: 0,
 		triplecastCountdown: 0,
@@ -88,60 +99,80 @@ function BuffsDisplay(props) {
 	let buffs = [];
 	buffs.push({
 		rscType: ResourceType.LeyLines,
+		onSelf: true,
+		enabled: data.leyLinesEnabled,
 		stacks:1,
 		timeRemaining: data.leyLinesCountdown.toFixed(2),
 		className: data.leyLinesCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Sharpcast,
+		onSelf: true,
+		enabled: true,
 		stacks:1,
 		timeRemaining: data.sharpcastCountdown.toFixed(2),
 		className: data.sharpcastCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Triplecast,
+		onSelf: true,
+		enabled: true,
 		stacks:1,
 		timeRemaining: data.triplecastCountdown.toFixed(2),
 		className: data.triplecastCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Firestarter,
+		onSelf: true,
+		enabled: true,
 		stacks:1,
 		timeRemaining: data.firestarterCountdown.toFixed(2),
 		className: data.firestarterCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Thundercloud,
+		onSelf: true,
+		enabled: true,
 		stacks:1,
 		timeRemaining: data.thundercloudCountdown.toFixed(2),
 		className: data.thundercloudCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Manaward,
+		onSelf: true,
+		enabled: true,
 		stacks:1,
 		timeRemaining: data.manawardCountdown.toFixed(2),
 		className: data.manawardCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Swiftcast,
+		onSelf: true,
+		enabled: true,
 		stacks:1,
 		timeRemaining: data.swiftcastCountdown.toFixed(2),
 		className: data.swiftcastCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.LucidDreaming,
+		onSelf: true,
+		enabled: true,
 		stacks:1,
 		timeRemaining: data.lucidDreamingCountdown.toFixed(2),
 		className: data.lucidDreamingCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Surecast,
+		onSelf: true,
+		enabled: true,
 		stacks:1,
 		timeRemaining: data.surecastCountdown.toFixed(2),
 		className: data.surecastCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Tincture,
+		onSelf: true,
+		enabled: true,
 		stacks:1,
 		timeRemaining: data.tinctureCountdown.toFixed(2),
 		className: data.tinctureCountdown > 0 ? "" : "hidden"
@@ -162,12 +193,14 @@ function EnemyBuffsDisplay(props)
 	let buffs = [];
 	buffs.push({
 		rscType: ResourceType.ThunderDoTTick,
+		enabled: true,
 		stacks:1,
 		timeRemaining: data.DoTCountdown.toFixed(2),
 		className: data.DoTCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Addle,
+		enabled: true,
 		stacks:1,
 		timeRemaining: data.addleCountdown.toFixed(2),
 		className: data.addleCountdown > 0 ? "" : "hidden"

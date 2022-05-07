@@ -71,8 +71,7 @@ export function IntroSection(props: {}) {
 				<div className="paragraph"><Expandable title={"Implementation notes"} defaultShow={false} content={
 					<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>
 						<div className="paragraph">
-							Galahad found that slidecast window size is linear with respect to cast time. I made a
-							<a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>script</a>, parsed
+							Galahad found that slidecast window size is linear with respect to cast time. I made a <a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>script</a>, parsed
 							a few logs and confirmed this. Albeit the slope is tiny (~0.02) so I'm just using 0.5s here
 							for simplicity.
 						</div>

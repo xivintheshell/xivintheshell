@@ -28,12 +28,14 @@ export class Event {
 export class Resource {
 	type: ResourceType;
 	maxValue: number;
-	currentValue: number;
+	#currentValue: number;
+	enabled: boolean;
 	pendingChange?: Event;
 	constructor(type: ResourceType, maxValue: number, initialValue: number) {
 		this.type = type;
 		this.maxValue = maxValue;
-		this.currentValue = initialValue;
+		this.#currentValue = initialValue;
+		this.enabled = true;
 	}
 	overrideTimer(game: GameState, newTime: number) {
 		if (this.pendingChange) {
@@ -55,53 +57,76 @@ export class Resource {
 		}
 	}
 	available(amount: number) {
-		return this.currentValue + Debug.epsilon >= amount;
+		return this.availableAmount() + Debug.epsilon >= amount;
+	}
+	availableAmount() {
+		return this.enabled ? this.#currentValue : 0;
 	}
 	consume(amount: number) {
 		if (!this.available(amount)) console.warn("invalid resource consumption: " + this.type);
-		this.currentValue = Math.max(this.currentValue - amount, 0);
+		this.#currentValue = Math.max(this.#currentValue - amount, 0);
 	}
 	gain(amount: number) {
-		this.currentValue = Math.min(this.currentValue + amount, this.maxValue);
+		this.#currentValue = Math.min(this.#currentValue + amount, this.maxValue);
 	}
 }
 
-export class CoolDown extends Resource
-{
-	cdPerStack: number;
-	recastTimeScale: number;
+export class CoolDown extends Resource {
+	readonly #cdPerStack: number;
+	#recastTimeScale: number;
 	constructor(type: ResourceType, cdPerStack: number, maxStacks: number, initialNumStacks: number) {
 		super(type, maxStacks * cdPerStack, initialNumStacks * cdPerStack);
-		this.cdPerStack = cdPerStack;
-		this.recastTimeScale = 1; // effective for the next stack (i.e. 0.85 if captured LL)
+		this.#cdPerStack = cdPerStack;
+		this.#recastTimeScale = 1; // effective for the next stack (i.e. 0.85 if captured LL)
 	}
-	stacksAvailable() { return Math.floor((this.currentValue + Debug.epsilon) / this.cdPerStack); }
-	useStack() { this.consume(this.cdPerStack); }
-	setRecastTimeScale(timeScale: number) { this.recastTimeScale = timeScale; }
-	restore(deltaTime: number) {
+	currentStackCd() { return this.#cdPerStack * this.#recastTimeScale; }
+	stacksAvailable() { return Math.floor((this.availableAmount() + Debug.epsilon) / this.#cdPerStack); }
+	useStack(game: GameState) {
+		this.consume(this.#cdPerStack);
+		this.#reCaptureRecastTimeScale(game);
+	}
+	setRecastTimeScale(timeScale: number) { this.#recastTimeScale = timeScale; }
+	#reCaptureRecastTimeScale(game: GameState) {
+		this.#recastTimeScale = this.type === ResourceType.cd_GCD ? game.captureRecastTimeScale() : 1;
+	}
+	restore(game: GameState, deltaTime: number) {
 		let stacksBefore = this.stacksAvailable();
-		let timeTillNextStack = (stacksBefore + 1) * this.cdPerStack - this.currentValue;
-		let scaledTimeTillNextStack = timeTillNextStack * this.recastTimeScale;
-		if (deltaTime >= scaledTimeTillNextStack) // upon return, will have gained another stack
-		{
-			this.gain(timeTillNextStack + (deltaTime - scaledTimeTillNextStack));
-			this.recastTimeScale = 1;
+		let unscaledTimeTillNextStack = (stacksBefore + 1) * this.#cdPerStack - this.availableAmount();
+		let scaledTimeTillNextStack = unscaledTimeTillNextStack * this.#recastTimeScale;
+		if (deltaTime >= scaledTimeTillNextStack) {// upon return, will have gained another stack
+			// part before stack gain
+			this.gain(unscaledTimeTillNextStack);
+			// re-capture
+			this.#reCaptureRecastTimeScale(game);
+			// and part after stack gain
+			this.gain((deltaTime - scaledTimeTillNextStack) / this.#recastTimeScale);
+		} else {
+			this.gain(deltaTime / this.#recastTimeScale);
 		}
-		else
-		{
-			this.gain(deltaTime / this.recastTimeScale);
-		}
+	}
+	timeTillNextStackAvailable() {
+		let currentStacks = this.stacksAvailable();
+		if (currentStacks > 0) return 0;
+		return (this.#cdPerStack - this.availableAmount()) * this.#recastTimeScale;
 	}
 }
 
-export class CoolDownState extends Map {
-	game: any; // FIXME
-	constructor(game: any) {
+export class CoolDownState extends Map<ResourceType, CoolDown> {
+	game: GameState;
+	constructor(game: GameState) {
 		super();
 		this.game = game;
 	}
+	get(rscType: ResourceType): CoolDown {
+		let rsc = super.get(rscType);
+		if (rsc) return rsc;
+		else {
+			console.assert(false);
+			return new CoolDown(ResourceType.Never, 0, 0, 0);
+		}
+	}
 	tick(deltaTime: number) {
-		for (const cd of this.values()) cd.restore(deltaTime);
+		for (const cd of this.values()) cd.restore(this.game, deltaTime);
 	}
 	stacksAvailable(rscType: ResourceType): number {
 		return this.get(rscType).stacksAvailable();
@@ -112,15 +137,13 @@ export class CoolDownState extends Map {
 	}
 	timeTillNextStackAvailable(cdName: ResourceType) {
 		let cd = this.get(cdName);
-		let currentStacks = cd.stacksAvailable();
-		if (currentStacks > 0) return 0;
-		return (cd.cdPerStack - cd.currentValue) * cd.recastTimeScale;
+		return cd.timeTillNextStackAvailable();
 	}
 }
 
 export class ResourceState extends Map<ResourceType, Resource> {
-	game: any; // FIXME
-	constructor(game: any) {
+	game: GameState;
+	constructor(game: GameState) {
 		super();
 		this.game = game;
 	}

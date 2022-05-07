@@ -1,9 +1,10 @@
 import {FileType} from "./Common";
-import {GameConfig, SkillName} from "../Game/Common";
+import {GameConfig, ResourceType, SkillName} from "../Game/Common";
 
 export const enum ActionType {
 	Skill = "Skill",
 	Wait = "Wait",
+	SetResourceEnabled = "SetResourceEnabled",
 }
 
 function verifyActionNode(action: ActionNode) {
@@ -16,6 +17,9 @@ function verifyActionNode(action: ActionNode) {
 	} else if (action.type === ActionType.Wait) {
 		console.assert(!isNaN(action.waitDuration));
 		return;
+	} else if (action.type === ActionType.SetResourceEnabled) {
+		console.assert(typeof action.buffName === "string");
+		return;
 	}
 	console.assert(false);
 }
@@ -27,6 +31,7 @@ export class ActionNode {
 	type: ActionType;
 	waitDuration: number = 0;
 	skillName?: SkillName;
+	buffName? : ResourceType;
 	next?: ActionNode = undefined;
 
 	tmp_startLockTime?: number;
@@ -43,6 +48,7 @@ export class ActionNode {
 		let copy = new ActionNode(this.type);
 		copy.skillName = this.skillName;
 		copy.waitDuration = this.waitDuration;
+		copy.buffName = this.buffName;
 		return copy;
 	}
 
@@ -93,6 +99,8 @@ export class Line {
 				type: itr.type,
 				// skill
 				skillName: itr.skillName,
+				// setResourceEnabled
+				buffName: itr.buffName,
 				// any
 				waitDuration: itr.waitDuration,
 			});

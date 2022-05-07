@@ -92,8 +92,7 @@ export class GameState {
 		this.#init();
 	}
 
-	#init()
-	{
+	#init() {
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
 			let game = this;
@@ -102,7 +101,7 @@ export class GameState {
 				let mana = this.resources.get(ResourceType.Mana);
 				let gainAmount = this.captureManaRegenAmount();
 				mana.gain(gainAmount);
-				let currentAmount = mana.currentValue;
+				let currentAmount = mana.availableAmount();
 				controller.reportManaTick(game.time, "MP +" + gainAmount + " (MP="+currentAmount+")");
 				addLog(LogCategory.Event, "mana tick +" + gainAmount, this.getDisplayTime(), Color.ManaTick);
 				// queue the next tick
@@ -122,8 +121,7 @@ export class GameState {
 	}
 
 	// advance game state by this much time
-	tick(deltaTime: number, prematureStopCondition=()=>{ return false; })
-	{
+	tick(deltaTime: number, prematureStopCondition=()=>{ return false; }) {
 		//======== events ========
 		let cumulativeDeltaTime = 0;
 		while (cumulativeDeltaTime < deltaTime && this.eventsQueue.length > 0 && !prematureStopCondition())
@@ -176,17 +174,16 @@ export class GameState {
 		this.eventsQueue.push(evt);
 	}
 
-	getFireStacks() { return this.resources.get(ResourceType.AstralFire).currentValue; }
-	getIceStacks() { return this.resources.get(ResourceType.UmbralIce).currentValue; }
-	getUmbralHearts() { return this.resources.get(ResourceType.UmbralHeart).currentValue; }
-	getMP() { return this.resources.get(ResourceType.Mana).currentValue; }
+	getFireStacks() { return this.resources.get(ResourceType.AstralFire).availableAmount(); }
+	getIceStacks() { return this.resources.get(ResourceType.UmbralIce).availableAmount(); }
+	getUmbralHearts() { return this.resources.get(ResourceType.UmbralHeart).availableAmount(); }
+	getMP() { return this.resources.get(ResourceType.Mana).availableAmount(); }
 
 	getDisplayTime() {
 		return (this.time - this.config.countdown);
 	}
 
-	switchToAForUI(rscType: ResourceType, numStacks: number)
-	{
+	switchToAForUI(rscType: ResourceType, numStacks: number) {
 		let af = this.resources.get(ResourceType.AstralFire);
 		let ui = this.resources.get(ResourceType.UmbralIce);
 		let uh = this.resources.get(ResourceType.UmbralHeart);
@@ -198,7 +195,7 @@ export class GameState {
 				paradox.gain(1);
 				addLog(LogCategory.Event, "Paradox! (UI -> AF)", this.getDisplayTime());
 			}
-			ui.consume(ui.currentValue);
+			ui.consume(ui.availableAmount());
 		}
 		else if (rscType===ResourceType.UmbralIce)
 		{
@@ -207,13 +204,12 @@ export class GameState {
 				paradox.gain(1);
 				addLog(LogCategory.Event, "Paradox! (AF -> UI)", this.getDisplayTime());
 			}
-			af.consume(af.currentValue);
+			af.consume(af.availableAmount());
 		}
 	}
 
 	// number -> number
-	captureDamage(aspect: Aspect, basePotency: number)
-	{
+	captureDamage(aspect: Aspect, basePotency: number) {
 		let mod = StatsModifier.fromResourceState(this.resources);
 
 		let potency = basePotency * mod.damageBase;
@@ -253,14 +249,19 @@ export class GameState {
 		return mod.manaRegen;
 	}
 
-	captureSpellCastAndRecastTimeScale(aspect: Aspect, baseCastTime: number) {
+	captureSpellCastTime(aspect: Aspect, baseCastTime: number) {
 		let mod = StatsModifier.fromResourceState(this.resources);
 
 		let castTime = baseCastTime * mod.castTimeBase;
 		if (aspect === Aspect.Fire) castTime *= mod.castTimeFire;
 		else if (aspect === Aspect.Ice) castTime *= mod.castTimeIce;
 
-		return [castTime, mod.spellRecastTimeScale];
+		return castTime;
+	}
+
+	captureRecastTimeScale() {
+		let mod = StatsModifier.fromResourceState(this.resources);
+		return mod.spellRecastTimeScale;
 	}
 
 	dealDamage(potency: number, source="unknown") {
@@ -276,6 +277,17 @@ export class GameState {
 		controller.reportPotencyUpdate();
 	}
 
+	requestToggleBuff(buffName: ResourceType) {
+		let rsc = this.resources.get(buffName);
+		// only ley lines can be enabled / disabled. Everything else will just be canceled
+		if (buffName === ResourceType.LeyLines) {
+			rsc.enabled = !rsc.enabled;
+		} else {
+			rsc.consume(rsc.availableAmount());
+			rsc.removeTimer();
+		}
+	}
+
 	castSpell(
 		skillName: SkillName,
 		onCapture: (cap: SkillCaptureCallbackInfo)=>void,
@@ -287,8 +299,8 @@ export class GameState {
 		console.assert(skillInfo.isSpell);
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
-		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(
-			skillInfo.aspect, this.config.adjustedCastTime(skillInfo.baseCastTime));
+		let capturedCastTime = this.captureSpellCastTime(skillInfo.aspect, this.config.adjustedCastTime(skillInfo.baseCastTime));
+		//let recastTimeScale = this.captureRecastTimeScale();
 
 		let skillTime = this.getDisplayTime();
 
@@ -339,16 +351,15 @@ export class GameState {
 			}
 		}
 
-		let instantCast = function(game: GameState, rsc: Resource | undefined)
-		{
+		let instantCast = function(game: GameState, rsc: Resource | undefined) {
 			let instantCastReason = rsc ? rsc.type : "(unknown, paradox?)";
 			addLog(LogCategory.Event, "a cast is made instant via " + instantCastReason, game.getDisplayTime(), Color.Success);
 			if (rsc) rsc.consume(1);
 			takeEffect(game);
 
 			// recast
-			cd.useStack();
-			cd.setRecastTimeScale(recastTimeScale)
+			cd.useStack(game);
+			//cd.setRecastTimeScale(recastTimeScale)
 
 			// animation lock
 			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.animationLock);
@@ -395,8 +406,8 @@ export class GameState {
 		}));
 
 		// recast
-		cd.useStack();
-		cd.setRecastTimeScale(recastTimeScale)
+		cd.useStack(this);
+		//cd.setRecastTimeScale(recastTimeScale)
 
 		// caster tax
 		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
@@ -419,7 +430,7 @@ export class GameState {
 			capturedDamage = this.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 			this.reportPotency(node, capturedDamage, sourceName);
 		}
-		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(skillInfo.aspect, 0);
+		//let recastTimeScale = this.captureRecastTimeScale();
 
 		let skillEvent = new Event(
 			skillInfo.name + " applied",
@@ -432,8 +443,8 @@ export class GameState {
 		this.addEvent(skillEvent);
 
 		// recast
-		cd.useStack();
-		if (skillInfo.isSpell) cd.setRecastTimeScale(recastTimeScale);
+		cd.useStack(this);
+		//if (skillInfo.isSpell) cd.setRecastTimeScale(recastTimeScale);
 
 		// animation lock
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.animationLock);
@@ -475,9 +486,9 @@ export class GameState {
 		let af = this.resources.get(ResourceType.AstralFire);
 		let ui = this.resources.get(ResourceType.UmbralIce);
 		let uh = this.resources.get(ResourceType.UmbralHeart);
-		af.consume(af.currentValue);
-		ui.consume(ui.currentValue);
-		uh.consume(uh.currentValue);
+		af.consume(af.availableAmount());
+		ui.consume(ui.availableAmount());
+		uh.consume(uh.availableAmount());
 	}
 
 	#timeTillSkillAvailable(skillName: SkillName) {
@@ -497,14 +508,13 @@ export class GameState {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
 		let [capturedManaCost, uhConsumption] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
-		let [capturedCastTime, recastTimeScale] = this.captureSpellCastAndRecastTimeScale(
-			skill.info.aspect, this.config.adjustedCastTime(skill.info.baseCastTime));
+		let capturedCastTime = this.captureSpellCastTime(skill.info.aspect, this.config.adjustedCastTime(skill.info.baseCastTime));
 		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1)
 			|| this.resources.get(ResourceType.Swiftcast).available(1)
 			|| (skillName===SkillName.Paradox && this.getIceStacks()>0)
 			|| (skillName===SkillName.Thunder3 && this.resources.get(ResourceType.Thundercloud).available(1))
 			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)));
-		let currentMana = this.resources.get(ResourceType.Mana).currentValue;
+		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana
 			|| (skillName===SkillName.Paradox && this.getIceStacks()>0)
@@ -518,7 +528,7 @@ export class GameState {
 
 		let cd = this.cooldowns.get(skill.info.cdName);
 		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
-		let cdRecastTime = cd.cdPerStack * (skill.info.isSpell ? recastTimeScale : 1);
+		let cdRecastTime = cd.currentStackCd();//cd.#cdPerStack * (skill.info.isSpell ? recastTimeScale : 1);
 
 		return {
 			status: status,
@@ -540,16 +550,16 @@ export class GameState {
 
 	toString() {
 		let s = "======== " + this.time.toFixed(3) + "s ========\n";
-		s += "MP:\t" + this.resources.get(ResourceType.Mana).currentValue + "\n";
-		s += "AF:\t" + this.resources.get(ResourceType.AstralFire).currentValue + "\n";
-		s += "UI:\t" + this.resources.get(ResourceType.UmbralIce).currentValue + "\n";
-		s += "UH:\t" + this.resources.get(ResourceType.UmbralHeart).currentValue + "\n";
-		s += "Enochian:\t" + this.resources.get(ResourceType.Enochian).currentValue + "\n";
-		s += "TC:\t" + this.resources.get(ResourceType.Thundercloud).currentValue + "\n";
-		s += "LL:\t" + this.resources.get(ResourceType.LeyLines).currentValue + "\n";
-		s += "Poly:\t" + this.resources.get(ResourceType.Polyglot).currentValue + "\n";
-		s += "GCD:\t" + this.cooldowns.get(ResourceType.cd_GCD).currentValue.toFixed(3) + "\n";
-		s += "LLCD:\t" + this.cooldowns.get(ResourceType.cd_LeyLines).currentValue.toFixed(3) + "\n";
+		s += "MP:\t" + this.resources.get(ResourceType.Mana).availableAmount() + "\n";
+		s += "AF:\t" + this.resources.get(ResourceType.AstralFire).availableAmount() + "\n";
+		s += "UI:\t" + this.resources.get(ResourceType.UmbralIce).availableAmount() + "\n";
+		s += "UH:\t" + this.resources.get(ResourceType.UmbralHeart).availableAmount() + "\n";
+		s += "Enochian:\t" + this.resources.get(ResourceType.Enochian).availableAmount() + "\n";
+		s += "TC:\t" + this.resources.get(ResourceType.Thundercloud).availableAmount() + "\n";
+		s += "LL:\t" + this.resources.get(ResourceType.LeyLines).availableAmount() + "\n";
+		s += "Poly:\t" + this.resources.get(ResourceType.Polyglot).availableAmount() + "\n";
+		s += "GCD:\t" + this.cooldowns.get(ResourceType.cd_GCD).availableAmount().toFixed(3) + "\n";
+		s += "LLCD:\t" + this.cooldowns.get(ResourceType.cd_LeyLines).availableAmount().toFixed(3) + "\n";
 		return s;
 	}
 }

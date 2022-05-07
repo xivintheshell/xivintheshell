@@ -71,17 +71,17 @@ export class StatsModifier
 		// umbral ice
 		let ui = resources.get(ResourceType.UmbralIce);
 		let uiMod = new StatsModifier();
-		if (ui.currentValue === 1) {
+		if (ui.availableAmount() === 1) {
 			uiMod.manaRegen = 3000;
 			uiMod.manaCostFire = 0;
 			uiMod.damageFire = 0.9;
 			uiMod.manaCostIce = 0.75;
-		} else if (ui.currentValue === 2) {
+		} else if (ui.availableAmount() === 2) {
 			uiMod.manaRegen = 4500;
 			uiMod.manaCostFire = 0;
 			uiMod.damageFire = 0.8;
 			uiMod.manaCostIce = 0.5;
-		} else if (ui.currentValue === 3) {
+		} else if (ui.availableAmount() === 3) {
 			uiMod.manaRegen = 6000;
 			uiMod.manaCostFire = 0;
 			uiMod.damageFire = 0.7;
@@ -92,23 +92,23 @@ export class StatsModifier
 
 		// astral fire & umbral hearts
 		let af = resources.get(ResourceType.AstralFire);
-		let uhStacks = resources.get(ResourceType.UmbralHeart).currentValue;
+		let uhStacks = resources.get(ResourceType.UmbralHeart).availableAmount();
 		let afMod = new StatsModifier();
-		if (af.currentValue === 1) {
+		if (af.availableAmount() === 1) {
 			afMod.manaRegen = -200;
 			afMod.uhConsumption = uhStacks > 0 ? 1 : 0;
 			afMod.manaCostFire = uhStacks > 0 ? 1 : 2;
 			afMod.damageFire = 1.4;
 			afMod.manaCostIce = 0;
 			afMod.damageIce = 0.9;
-		} else if (af.currentValue === 2) {
+		} else if (af.availableAmount() === 2) {
 			afMod.manaRegen = -200;
 			afMod.uhConsumption = uhStacks > 0 ? 1 : 0;
 			afMod.manaCostFire = uhStacks > 0 ? 1 : 2;
 			afMod.damageFire = 1.6;
 			afMod.manaCostIce = 0;
 			afMod.damageIce = 0.8;
-		} else if (af.currentValue === 3) {
+		} else if (af.availableAmount() === 3) {
 			afMod.manaRegen = -200;
 			afMod.uhConsumption = uhStacks > 0 ? 1 : 0;
 			afMod.manaCostFire = uhStacks > 0 ? 1 : 2;
@@ -122,8 +122,7 @@ export class StatsModifier
 		// ley lines
 		let ll = resources.get(ResourceType.LeyLines);
 		let llMod = new StatsModifier();
-		if (ll.available(1))
-		{
+		if (ll.available(1)) {
 			llMod.castTimeBase = 0.85;
 			llMod.spellRecastTimeScale = 0.85;
 		}

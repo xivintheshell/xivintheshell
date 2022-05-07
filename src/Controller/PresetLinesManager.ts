@@ -53,6 +53,7 @@ export class PresetLinesManager {
                 let node = new ActionNode(action.type);
                 node.skillName = action.skillName;
                 node.waitDuration = action.waitDuration;
+                node.buffName = action.buffName;
                 line.addActionNode(node);
             }
             this.addLine(line);

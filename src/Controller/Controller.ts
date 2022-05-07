@@ -8,7 +8,7 @@ import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 // @ts-ignore
 import {updateConfigDisplay} from "../Components/PlaybackControl"
 // @ts-ignore
-import {setRealTime, setOverrideOutlineColor} from "../Components/Main";
+import {setOverrideOutlineColor, setRealTime} from "../Components/Main";
 import {ElemType, Timeline} from "./Timeline"
 // @ts-ignore
 import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
@@ -156,7 +156,9 @@ class Controller {
 		let itr = this.record.getFirstSelection();
 		while (itr !== this.record.getLastSelection()?.next ?? undefined) {
 			itr = itr as ActionNode;
-			line.addActionNode(itr.getClone());
+			if (itr.type === ActionType.Skill) {
+				line.addActionNode(itr.getClone());
+			}
 			itr = itr.next;
 		}
 		this.#presetLinesManager.addLine(line);
@@ -186,6 +188,7 @@ class Controller {
 			let action = content.actions[i];
 			let node = new ActionNode(action.type);
 			node.skillName = action.skillName;
+			node.buffName = action.buffName;
 			node.waitDuration = action.waitDuration;
 			line.addActionNode(node);
 		}
@@ -247,26 +250,26 @@ class Controller {
 	}
 
 	updateStatusDisplay(game: GameState) {
-		//let game = this.game;
 		// resources
 		let eno = game.resources.get(ResourceType.Enochian);
 		let resourcesData = {
-			mana: game.resources.get(ResourceType.Mana).currentValue,
+			mana: game.resources.get(ResourceType.Mana).availableAmount(),
 			timeTillNextManaTick: game.resources.timeTillReady(ResourceType.Mana),
 			enochianCountdown: game.resources.timeTillReady(ResourceType.Enochian),
 			astralFire: game.getFireStacks(),
 			umbralIce: game.getIceStacks(),
-			umbralHearts: game.resources.get(ResourceType.UmbralHeart).currentValue,
-			paradox: game.resources.get(ResourceType.Paradox).currentValue,
+			umbralHearts: game.resources.get(ResourceType.UmbralHeart).availableAmount(),
+			paradox: game.resources.get(ResourceType.Paradox).availableAmount(),
 			polyglotCountdown: eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30,
-			polyglotStacks: game.resources.get(ResourceType.Polyglot).currentValue
+			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount()
 		};
 		// locks
 		let cast = game.resources.get(ResourceType.NotCasterTaxed);
 		let anim = game.resources.get(ResourceType.NotAnimationLocked);
+		let gcd = game.cooldowns.get(ResourceType.cd_GCD);
 		let resourceLocksData = {
-			gcdReady: game.cooldowns.get(ResourceType.cd_GCD).stacksAvailable() > 0,
-			gcd: 2.5,
+			gcdReady: gcd.stacksAvailable() > 0,
+			gcd: gcd.currentStackCd(),
 			timeTillGCDReady: game.cooldowns.timeTillNextStackAvailable(ResourceType.cd_GCD),
 			castLocked: game.resources.timeTillReady(ResourceType.NotCasterTaxed) > 0,
 			castLockTotalDuration: cast.pendingChange ? cast.pendingChange.delay : 0,
@@ -283,6 +286,7 @@ class Controller {
 		};
 		// self buffs
 		let selfBuffsData = {
+			leyLinesEnabled: game.resources.get(ResourceType.LeyLines).enabled,
 			leyLinesCountdown: game.resources.timeTillReady(ResourceType.LeyLines),
 			sharpcastCountdown: game.resources.timeTillReady(ResourceType.Sharpcast),
 			triplecastCountdown: game.resources.timeTillReady(ResourceType.Triplecast),
@@ -384,7 +388,7 @@ class Controller {
 
 	getResourceValue(props: {rscType: ResourceType}) {
 		if (props.rscType) {
-			return this.game.resources.get(props.rscType).currentValue;
+			return this.game.resources.get(props.rscType).availableAmount();
 		}
 		return -1;
 	}
@@ -482,6 +486,7 @@ class Controller {
 			node.tmp_endLockTime = time + lockDuration;
 
 			if (this.#bCalculatingHistoricalState) { // false when replaying to display historical game state
+				let newStatus = this.game.getSkillAvailabilityStatus(skillName); // refresh to get re-captured recast time
 				let skillInfo = this.game.skillsList.get(skillName).info;
 				let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
 				let isSpellCast = status.castTime > 0 && !status.instantCast;
@@ -495,7 +500,7 @@ class Controller {
 					time: time,
 					relativeSnapshotTime: snapshotTime,
 					lockDuration: lockDuration,
-					recastDuration: status.cdRecastTime,
+					recastDuration: newStatus.cdRecastTime,
 					node: node,
 				});
 			}
@@ -559,6 +564,9 @@ class Controller {
 						suppressLog: suppressLog
 					});
 				}
+				else {
+					console.assert(false);
+				}
 
 				if (status.status !== SkillReadyStatus.Ready) {
 					lastIter = true;
@@ -567,6 +575,14 @@ class Controller {
 					this.#bInterrupted = false;
 					lastIter = true;
 				}
+			}
+			// buff enable/disable also only supported by exact replay
+			else if (itr.type === ActionType.SetResourceEnabled && replayMode === ReplayMode.Exact) {
+				this.requestToggleBuff(itr.buffName as ResourceType);
+				this.#requestTick({
+					deltaTime: waitDuration,
+					suppressLog: suppressLog
+				});
 			}
 			else {
 				console.assert(false);
@@ -724,6 +740,16 @@ class Controller {
 			}
 		}
 	}
+
+	requestToggleBuff(buffName: ResourceType) {
+		this.game.requestToggleBuff(buffName);
+		let node = new ActionNode(ActionType.SetResourceEnabled);
+		node.buffName = buffName;
+		this.record.addActionNode(node);
+		this.updateStatusDisplay(this.game);
+		this.updateSkillButtons(this.game);
+	}
+
 	scrollToTime(t?: number) {
 		let targetT = t === undefined ? this.game.time : t;
 		// the most adhoc hack ever...
