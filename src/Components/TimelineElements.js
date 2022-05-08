@@ -24,13 +24,13 @@ export function MPTickMark(props) {
 	let style={
 		top: props.vOffset,
 		left: controller.timeline.positionFromTime(props.elem.time) - 3,
-		zIndex: -5
+		zIndex: -1
 	};
-	return <div style={style} className={"timeline-elem MPTickMark"} data-tip data-for={`${props.elemID}`}>
-		<svg width={6} height={MAX_HEIGHT}>
-			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"#88cae0"}/>
+	return <div style={style} className={"timeline-elem MPTickMark"} >
+		<svg width={6} height={MAX_HEIGHT} data-tip data-for={`${props.elemID}`}>
+			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"#caebf6"}/>
 		</svg>
-		<ReactTooltip id={`${props.elemID}`}>{props.elem.source}</ReactTooltip>
+		{/*<ReactTooltip id={`${props.elemID}`}>{props.elem.source}</ReactTooltip>*/}
 	</div>;
 }
 export function DamageMark(props) {
@@ -99,22 +99,26 @@ export function TimelineSkill(props) {
 		height: 28,
 	};
 	let iconPath = skillIcons.get(props.elem.skillName);
-	let iconImg = <img
-		style={iconStyle}
-		className={"timeline-elem-skill-icon"}
-		src={iconPath}
-		alt={props.elem.skillName}
-		data-tip data-for={`${props.elemID}`}
-		tabIndex={-1}
-		onKeyDown={(e)=>{
-			if (e.key === "Backspace") {
-				controller.rewindUntilBefore(controller.record.getFirstSelection());
-				controller.updateAllDisplay();
-				controller.autoSave();
-			}
-		}}
-	/>;
-	let icon = <Clickable key={node._nodeIndex} content={iconImg} onClickFn={(e) => {
+	let description = props.elem.skillName + "@" + (props.elem.time-controller.gameConfig.countdown).toFixed(2);
+	let hoverText = <span>{description}</span>;
+	let iconImg = <div style={iconStyle} className={"timeline-elem-skill-icon"}>
+		<img
+			style={{display: "block", width: "100%", height: "100%"}}
+			src={iconPath}
+			alt={props.elem.skillName}
+			data-tip data-for={`${props.elemID}`}
+			tabIndex={-1}
+			onKeyDown={(e) => {
+				if (e.key === "Backspace") {
+					controller.rewindUntilBefore(controller.record.getFirstSelection());
+					controller.updateAllDisplay();
+					controller.autoSave();
+				}
+			}}
+		/>
+		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
+	</div>;
+	let icon = <Clickable key={node.getNodeIndex()} content={iconImg} onClickFn={(e) => {
 		controller.timeline.onClickSkill(node, e.shiftKey);
 	}}/>
 
@@ -124,8 +128,6 @@ export function TimelineSkill(props) {
 	};
 	let potency = node.tmp_capturedPotency;
 	let lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
-	let description = props.elem.skillName + "@" + (props.elem.time-controller.gameConfig.countdown).toFixed(2);
-	let hoverText = <span>{description}</span>;
 	if (potency > 0) {
 		hoverText = <div>
 			{hoverText}<br/>
@@ -138,7 +140,6 @@ export function TimelineSkill(props) {
 		{props.elem.isGCD ? recastBar : <div/>}
 		{snapshotIndicator}
 		{icon}
-		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
 	</div>;
 }
 

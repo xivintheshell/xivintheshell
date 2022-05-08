@@ -26,7 +26,7 @@ function verifyActionNode(action: ActionNode) {
 
 export class ActionNode {
 	static _gNodeIndex: number = 0;
-	_nodeIndex: number;
+	#nodeIndex: number;
 
 	type: ActionType;
 	waitDuration: number = 0;
@@ -40,7 +40,7 @@ export class ActionNode {
 
 	constructor(actionType: ActionType) {
 		this.type = actionType;
-		this._nodeIndex = ActionNode._gNodeIndex;
+		this.#nodeIndex = ActionNode._gNodeIndex;
 		ActionNode._gNodeIndex++;
 	}
 
@@ -51,6 +51,8 @@ export class ActionNode {
 		copy.buffName = this.buffName;
 		return copy;
 	}
+
+	getNodeIndex() { return this.#nodeIndex; }
 
 	#selected = false;
 	isSelected() { return this.#selected; }
