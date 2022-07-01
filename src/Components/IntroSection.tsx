@@ -95,6 +95,9 @@ export function IntroSection(props: {}) {
 				}/></div>
 				<div className="paragraph"><Expandable title={"Changelog"} defaultShow={false} content={
 					<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>
+						<div className="paragraph">6/27<br/>
+							ayyee coming back for a couple of features lined up in the next two weeks or so. For now just updated some node dependencies.
+						</div>
 						<div className="paragraph">5/26<br/>
 							leaving this thingy for now but if anyone encounters bugs and/or gets confused let me know. I can always come back to fix things.
 						</div>

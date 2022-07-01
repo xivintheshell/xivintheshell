@@ -818,16 +818,27 @@ class Controller {
 	}
 	#handleKeyboardEvent_RealTimeAutoPause(evt: { shiftKey: boolean; keyCode: number; }) {
 		if (this.shouldLoop) return;
+
+		if (evt.keyCode===85) { // u (undo)
+			this.rewindUntilBefore(this.record.getLastAction());
+			this.updateAllDisplay();
+			this.autoSave();
+		}
 	}
 	#handleKeyboardEvent_Manual(evt: { keyCode: number; shiftKey: boolean; }) {
 		if (evt.keyCode===32) { // space
 			this.#fastForward();
 			this.updateAllDisplay();
 		}
+		else if (evt.keyCode===85) { // u (undo)
+			this.rewindUntilBefore(this.record.getLastAction());
+			this.updateAllDisplay();
+			this.autoSave();
+		}
 	}
 
 	handleKeyboardEvent(evt: { keyCode: number; shiftKey: boolean; }) {
-		//console.log(evt.keyCode);
+		// console.log(evt.keyCode);
 		if (this.inputEnabled) {
 			if (this.tickMode === TickMode.RealTime) {
 				this.#handleKeyboardEvent_RealTime(evt);
