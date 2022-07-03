@@ -3,7 +3,8 @@
 		"date": "7/3/22",
 		"changes": [
 			"press u to delete the last action (undo)",
-			"added \"last updated\" line"
+			"added \"last updated\" line",
+			"added google analytics tag"
 		]
 	},
 	{
