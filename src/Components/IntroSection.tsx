@@ -1,6 +1,24 @@
 import React, {CSSProperties} from 'react';
 import {Expandable, Help, ButtonIndicator} from "./Common";
 import {DebugOptions} from "./DebugOptions";
+import changelog from "../changelog.json"
+
+function Changelog() {
+	return <div className={"paragraph"}><Expandable title={"Changelog"} defaultShow={false} content={
+		<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>{
+			changelog.map(entry => {
+				let changes: JSX.Element[] = [];
+				for (let i = 0; i < entry.changes.length; i++) {
+					changes.push(<div key={i}>{entry.changes[i]}</div>);
+				}
+				return <div className={"paragraph"} key={entry.date}>
+					{entry.date}<br/>
+					{changes}
+				</div>
+			})
+		}</div>
+	}/></div>
+}
 
 export function IntroSection(props: {}) {
 	let smallGap: CSSProperties = { marginBottom: 5 };
@@ -17,6 +35,7 @@ export function IntroSection(props: {}) {
 				<ul>
 					<li style={smallGap}>Set your stats in <b>Rotation</b> settings on the right, then <ButtonIndicator text={"apply and reset"}/></li>
 					<li style={smallGap}>Click on a skill to use it. If it's not ready yet, click on it again will wait and retry.</li>
+					<li style={smallGap}>Press <ButtonIndicator text={"u"}/> to delete the last skill (effective when not running in real-time).</li>
 					<li style={smallGap}>Click on a buff applied to self to remove it. Unless it's ley lines, in which case it can be re-enabled.</li>
 				</ul>
 				<div className="paragraph">
@@ -93,27 +112,7 @@ export function IntroSection(props: {}) {
 						</div>
 					</div>
 				}/></div>
-				<div className="paragraph"><Expandable title={"Changelog"} defaultShow={false} content={
-					<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>
-						<div className="paragraph">6/27<br/>
-							ayyee coming back for a couple of features lined up in the next two weeks or so. For now just updated some node dependencies.
-						</div>
-						<div className="paragraph">5/26<br/>
-							leaving this thingy for now but if anyone encounters bugs and/or gets confused let me know. I can always come back to fix things.
-						</div>
-						<div className="paragraph">5/7 (yes I'm still working on it)<br/>
-							added support for enabling/disabling ley lines and removing buffs applied to self
-						</div>
-						<div className="paragraph">5/3<br/>
-							added this section so most people can stay here instead of go and look at my messy code and commit messages<br/>
-							fixed a performance issue related to viewing historical game states. <br/>
-							added a few implementation notes
-						</div>
-						<div className="paragraph">5/2<br/>
-							can now view historical game states by clicking on the timeline
-						</div>
-					</div>
-				}/></div>
+				<Changelog/>
 				<Expandable
 					defaultShow={false}
 					title={"Debug"}

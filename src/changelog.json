@@ -1,0 +1,41 @@
+[
+	{
+		"date": "7/3/22",
+		"changes": [
+			"press u to delete the last action (undo)",
+			"added \"last updated\" line"
+		]
+	},
+	{
+		"date": "6/27/22",
+		"changes": [
+			 "ayyee coming back for a couple of features lined up in the next two weeks or so. For now just updated some node dependencies."
+		]
+	},
+	{
+		"date": "5/26/22",
+		"changes": [
+			"leaving this thingy for now but if anyone encounters bugs and/or gets confused let me know. I can always come back to fix things."
+		]
+	},
+	{
+		"date": "5/7/22 (yes I'm still working on it)",
+		"changes": [
+			"added support for enabling/disabling ley lines and removing buffs applied to self"
+		]
+	},
+	{
+		"date": "5/3/22",
+		"changes": [
+			"added this section so most people can stay here instead of go and look at my messy code and commit messages",
+			"fixed a performance issue related to viewing historical game states.",
+			"added a few implementation notes"
+		]
+	},
+	{
+		"date": "5/2/22",
+		"changes": [
+			"can now view historical game states by clicking on the timeline"
+		]
+	}
+]

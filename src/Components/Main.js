@@ -1,16 +1,15 @@
 import React from 'react';
-import { logView } from "./LogView";
 import { timeline } from "./Timeline";
 import { skillsWindow } from "./Skills";
 import { Config, TimeControl } from "./PlaybackControl";
 import { statusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 import {LoadSave} from "./LoadSave";
 import {skillSequencePresets} from "./SkillSequencePresets";
 import {timelineMarkerPresets} from "./TimelineMarkerPresets";
 import {IntroSection} from "./IntroSection";
+import changelog from "../changelog.json"
 
 export let setRealTime = inRealTime=>{};
 export let setOverrideOutlineColor = outlineColor=>{};
@@ -55,7 +54,8 @@ export default class Main extends React.Component {
 		return <div className={"container"}>
 			<div className={"container-narrow"}>
 				<div>
-					<h3>Black Mage in the Shell</h3>
+					<h3 style={{marginBottom: 6}}>Black Mage in the Shell</h3>
+					<div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this tool/Changelog</b>)</div>
 					<IntroSection/>
 				</div>
 				<div style={{ position: "relative", marginBottom: "16px" }}>
@@ -87,21 +87,6 @@ export default class Main extends React.Component {
 				{timelineMarkerPresets}
 				<div style={{marginTop: "16px"}}>
 					{timeline}
-					{/*
-					<Tabs>
-						<TabList>
-							<Tab>Timeline</Tab>
-							<Tab>Logs</Tab>
-						</TabList>
-
-						<TabPanel>
-							{timeline}
-						</TabPanel>
-						<TabPanel>
-							{logView}
-						</TabPanel>
-					</Tabs>
-					*/}
 				</div>
 			</div>
 		</div>;
