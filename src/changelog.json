@@ -1,5 +1,12 @@
 [
 	{
+		"date": "7/18/22",
+		"changes": [
+			"hotfix for flare taking both umbral heart stacks and all mp; accurate flare mp cost calculation",
+			"when viewing historical game state, hover over a skill to view its availability at the specified time point"
+		]
+	},
+	{
 		"date": "7/3/22",
 		"changes": [
 			"press u to delete the last action (undo)",

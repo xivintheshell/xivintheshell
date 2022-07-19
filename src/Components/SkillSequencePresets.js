@@ -53,13 +53,13 @@ function PresetLine(props) {
 	}
 	let clickableContent = <span>{line.name} ({icons})</span>;
 
-	let addLineStyle = controller.inputEnabled ? {} : {
+	let addLineStyle = controller.displayingUpToDateGameState ? {} : {
 		//filter: "grayscale(100%)",
 		//pointerEvents: "none",
 		cursor: "not-allowed"
 	};
 	return <div style={{marginBottom: "8px"}}>
-		<Clickable content={clickableContent} style={addLineStyle} onClickFn={controller.inputEnabled ? (() => {
+		<Clickable content={clickableContent} style={addLineStyle} onClickFn={controller.displayingUpToDateGameState ? (() => {
 			controller.tryAddLine(line, ReplayMode.Tight);
 			controller.updateAllDisplay();
 			controller.scrollToTime();

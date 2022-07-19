@@ -66,7 +66,7 @@ export default class Main extends React.Component {
 							 tabIndex={-1}
 							 ref={this.controlRegionRef}
 							 onKeyDown={this.gameplayKeyCapture}
-							 onMouseDown={this.gameplayMouseCapture}
+							 onClick={this.gameplayMouseCapture}
 						>
 							{statusDisplay}
 							{skillsWindow}

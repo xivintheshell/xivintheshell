@@ -439,7 +439,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.castSpell(SkillName.Flare, (cap: SkillCaptureCallbackInfo) => {
 					let uh = game.resources.get(ResourceType.UmbralHeart);
 					let mana = game.resources.get(ResourceType.Mana);
-					let manaCost = uh.available(1) ? mana.availableAmount() * 2 / 3 : mana.availableAmount();
+					let manaCost = uh.available(1) ? mana.availableAmount() * 0.66 : mana.availableAmount();
 					// mana
 					game.resources.get(ResourceType.Mana).consume(manaCost);
 					uh.consume(uh.availableAmount());

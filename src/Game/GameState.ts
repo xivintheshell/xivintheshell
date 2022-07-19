@@ -310,12 +310,16 @@ export class GameState {
 			if (resourcesStillAvailable) {
 				// re-capture them here, since game state might've changed (say, AF/UI fell off)
 				[capturedManaCost, uhConsumption] = game.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
-				// actually deduct resources
-				// TODO: find a better place to put this paradox mana cost exception?
-				if (!(skillName===SkillName.Paradox && game.getIceStacks()>0)) game.resources.get(ResourceType.Mana).consume(capturedManaCost);
-				if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
+
+				// actually deduct resources (except some special ones like Paradox and Flare that deduct resources in effect fn)
+				if (skillName !== SkillName.Flare) {
+					if (!(skillName===SkillName.Paradox && game.getIceStacks()>0)) game.resources.get(ResourceType.Mana).consume(capturedManaCost);
+					if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
+				}
+
 				if (capturedManaCost > 0)
 					addLog(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.getDisplayTime());
+
 				let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 				game.reportPotency(node, capturedPotency, sourceName);
 				let captureInfo: SkillCaptureCallbackInfo = {

@@ -32,11 +32,14 @@ class Controller {
 	record;
 	game;
 
+	savedHistoricalGame: GameState;
+	savedHistoricalRecord: Record;
+
 	#bAddingLine: boolean = false;
 	#bInterrupted: boolean = false;
-	#bCalculatingHistoricalState: boolean = true;
+	#bCalculatingHistoricalState: boolean = false;
 
-	inputEnabled = true;
+	displayingUpToDateGameState = true;
 
 	constructor() {
 		this.timeScale = 1;
@@ -63,6 +66,10 @@ class Controller {
 		this.record = new Record();
 		this.record.config = this.gameConfig;
 
+		// meaningless at the beginning
+		this.savedHistoricalGame = this.game;
+		this.savedHistoricalRecord = this.record;
+
 		this.#requestRestart();
 	}
 
@@ -74,11 +81,11 @@ class Controller {
 	}
 
 	displayHistoricalState(time: number) {
-		this.inputEnabled = false;
-		this.#bCalculatingHistoricalState = false;
+		this.displayingUpToDateGameState = false;
+		this.#bCalculatingHistoricalState = true;
 		setOverrideOutlineColor("darkorange");
-		let savedGame = this.game;
-		let savedRecord = this.record;
+		let tmpGame = this.game;
+		let tmpRecord = this.record;
 		this.lastAttemptedSkill = "";
 		//============ stashed states ============
 
@@ -91,7 +98,7 @@ class Controller {
 		this.game = new GameState(this.gameConfig);
 		this.record = new Record();
 		this.record.config = this.gameConfig;
-		this.#replay(savedRecord, ReplayMode.Exact, true, time);
+		this.#replay(tmpRecord, ReplayMode.Exact, true, time);
 
 		// update display
 		this.updateStatusDisplay(this.game);
@@ -101,13 +108,15 @@ class Controller {
 		this.timeline.drawElements();
 
 		//============ pop stashed states ============
-		this.game = savedGame;
-		this.record = savedRecord;
-		this.#bCalculatingHistoricalState = true;
+		this.#bCalculatingHistoricalState = false;
+		this.savedHistoricalGame = this.game;
+		this.savedHistoricalRecord = this.record;
+		this.game = tmpGame;
+		this.record = tmpRecord;
 	}
 
 	displayCurrentState() {
-		this.inputEnabled = true;
+		this.displayingUpToDateGameState = true;
 		this.timeline.updateElem({
 			type: ElemType.s_ViewOnlyCursor,
 			enabled: false,
@@ -126,7 +135,7 @@ class Controller {
 		this.record.unselectAll();
 		this.#bAddingLine = false;
 		this.#bInterrupted = false;
-		this.inputEnabled = true;
+		this.displayingUpToDateGameState = true;
 		let gcd = this.game.config.adjustedCastTime(2.5).toFixed(2);
 		addLog(
 			LogCategory.Action,
@@ -213,7 +222,7 @@ class Controller {
 	}
 
 	reportDamage(props: { potency: number; time: number; source: string; }) {
-		if (this.#bCalculatingHistoricalState) {
+		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.DamageMark,
 				potency: props.potency,
@@ -230,7 +239,7 @@ class Controller {
 	}
 
 	reportLucidTick(time: number, source: string) {
-		if (this.#bCalculatingHistoricalState) {
+		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.LucidMark,
 				time: time,
@@ -240,7 +249,7 @@ class Controller {
 	}
 
 	reportManaTick(time: number, source: string) {
-		if (this.#bCalculatingHistoricalState) {
+		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.MPTickMark,
 				time: time,
@@ -382,8 +391,12 @@ class Controller {
 		this.autoSave();
 	}
 
-	getSkillInfo(props: {skillName: SkillName}) {
-			return this.game.getSkillAvailabilityStatus(props.skillName);
+	getDisplayedGame() : GameState {
+		return this.displayingUpToDateGameState ? this.game : this.savedHistoricalGame;
+	}
+
+	getSkillInfo(props: {game: GameState, skillName: SkillName}) {
+		return props.game.getSkillAvailabilityStatus(props.skillName);
 	}
 
 	getResourceValue(props: {rscType: ResourceType}) {
@@ -485,7 +498,7 @@ class Controller {
 			node.tmp_startLockTime = time;
 			node.tmp_endLockTime = time + lockDuration;
 
-			if (this.#bCalculatingHistoricalState) { // false when replaying to display historical game state
+			if (!this.#bCalculatingHistoricalState) { // true when replaying to display historical game state
 				let newStatus = this.game.getSkillAvailabilityStatus(skillName); // refresh to get re-captured recast time
 				let skillInfo = this.game.skillsList.get(skillName).info;
 				let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
@@ -839,7 +852,7 @@ class Controller {
 
 	handleKeyboardEvent(evt: { keyCode: number; shiftKey: boolean; }) {
 		// console.log(evt.keyCode);
-		if (this.inputEnabled) {
+		if (this.displayingUpToDateGameState) {
 			if (this.tickMode === TickMode.RealTime) {
 				this.#handleKeyboardEvent_RealTime(evt);
 			} else if (this.tickMode === TickMode.RealTimeAutoPause) {

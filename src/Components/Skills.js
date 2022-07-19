@@ -104,7 +104,10 @@ class SkillButton extends React.Component {
 			skillDescription: <div/>
 		};
 		this.handleMouseEnter = ((evt)=>{
-			let info = controller.getSkillInfo({skillName: this.props.skillName});
+			let info = controller.getSkillInfo({
+				game: controller.getDisplayedGame(),
+				skillName: this.props.skillName
+			});
 
 			let s = "";
 			if (info.status === SkillReadyStatus.Ready) {
@@ -119,7 +122,7 @@ class SkillButton extends React.Component {
 			} else if (info.status === SkillReadyStatus.Blocked) {
 				s += "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (CD ready in " + info.cdReadyCountdown.toFixed(2) + ")";
 			}
-			let content = <div>
+			let content = <div style={{color: controller.displayingUpToDateGameState ? "white" : "darkorange"}}>
 				<div className="paragraph">{this.props.skillName}</div>
 				<div className="paragraph">{s}</div>
 			</div>;
@@ -133,10 +136,10 @@ class SkillButton extends React.Component {
 		let progressCircle = <ProgressCircle className="cdProgress" diameter={40} progress={this.props.cdProgress} color={"rgba(255,255,255,0.7)"}/>;
 		return <span title={this.skillName} className={"skillButton"} data-tip data-for={"skillButton-" + this.props.skillName}>
 			{this.props.cdProgress === 1 ? "" : progressCircle}
-			<Clickable onClickFn={controller.inputEnabled ? ()=>{
+			<Clickable onClickFn={controller.displayingUpToDateGameState ? ()=>{
 				controller.requestUseSkill({skillName: this.props.skillName});
 				controller.updateAllDisplay();
-			} : undefined} content={icon} style={controller.inputEnabled ? {} : { cursor: "not-allowed" }}/>
+			} : undefined} content={icon} style={controller.displayingUpToDateGameState ? {} : { cursor: "not-allowed" }}/>
 			<ReactTooltip id={"skillButton-" + this.props.skillName}>
 				{this.state.skillDescription}
 			</ReactTooltip>
@@ -151,7 +154,7 @@ class SkillsWindow extends React.Component {
 		updateSkillButtons = ((statusList)=>{
 			this.setState({
 				statusList: statusList,
-				paradoxInfo: controller.getSkillInfo({skillName: SkillName.Paradox}),
+				paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
 			});
 		}).bind(this);
 
@@ -182,9 +185,9 @@ class SkillsWindow extends React.Component {
 	componentDidMount() {
 		this.setState({
 			statusList: displayedSkills.map(sn=>{
-				return controller.getSkillInfo({skillName: sn});
+				return controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: sn});
 			}),
-			paradoxInfo: controller.getSkillInfo({skillName: SkillName.Paradox}),
+			paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
 		});
 	}
 
@@ -211,7 +214,7 @@ class SkillsWindow extends React.Component {
 				<form onSubmit={this.onWaitTimeSubmit} style={{margin: "10px 0"}}>
 					Wait for <input type={"text"} style={{
 						width: 40, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
-					}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) <input type="submit" disabled={!controller.inputEnabled} value="GO"/>
+					}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
 				</form>
 			</div>
 		</div>
