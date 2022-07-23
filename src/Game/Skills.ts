@@ -219,7 +219,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				sc.removeTimer();
 			} else {
 				let rand = game.rng();
-				if (game.config.randomSeed !== "0" && rand < 0.4) gainFirestarterProc(game);
+				if (game.config.allowProcs && rand < 0.4) gainFirestarterProc(game);
 			}
 		}
 
@@ -298,7 +298,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.reportPotency(node, capturedTickPotency, "DoT");
 						game.dealDamage(capturedTickPotency, "DoT");
 						recurringThunderTick(remainingTicks - 1, capturedTickPotency);
-						if (game.config.randomSeed !== "0" && game.rng() < 0.1) {// thundercloud proc
+						if (game.config.allowProcs && game.rng() < 0.1) {// thundercloud proc
 							gainThundercloudProc(game);
 						}
 					}, Color.Thunder);

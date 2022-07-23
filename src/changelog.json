@@ -4,7 +4,7 @@
 		"changes": [
 			"let tinctures have 1.19s animation lock",
 			"make lucid tick offset random relative to mp tick",
-			"TODO: use a checkbox to turn procs on/off"
+			"use a checkbox to turn procs on/off"
 		]
 	},
 	{

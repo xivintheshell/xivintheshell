@@ -62,6 +62,7 @@ class Controller {
 		this.gameConfig.casterTax = 0.1;
 		this.gameConfig.animationLock = 0.7;
 		this.gameConfig.timeTillFirstManaTick = 1.2;
+		this.gameConfig.allowProcs = true;
 		this.game = new GameState(this.gameConfig);
 
 		this.record = new Record();
@@ -186,6 +187,7 @@ class Controller {
 		this.gameConfig.timeTillFirstManaTick = content.config.timeTillFirstManaTick;
 		this.gameConfig.countdown = content.config.countdown;
 		this.gameConfig.randomSeed = content.config.randomSeed;
+		this.gameConfig.allowProcs = content.config.allowProcs===undefined ? true : content.config.allowProcs;
 
 		this.record = new Record();
 		this.record.config = content.config;
@@ -375,6 +377,7 @@ class Controller {
 		timeTillFirstManaTick: 0.3,
 		countdown: 5,
 		randomSeed: "hello.",
+		allowProcs: true
 	}) {
 		this.gameConfig = new GameConfig();
 		this.gameConfig.casterTax = props.casterTax;
@@ -383,6 +386,7 @@ class Controller {
 		this.gameConfig.timeTillFirstManaTick = props.timeTillFirstManaTick;
 		this.gameConfig.countdown = props.countdown;
 		this.gameConfig.randomSeed = props.randomSeed;
+		this.gameConfig.allowProcs = props.allowProcs;
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;

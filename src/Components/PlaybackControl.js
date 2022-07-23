@@ -134,7 +134,8 @@ export class Config extends React.Component {
 			casterTax: 0,
 			timeTillFirstManaTick: 0,
 			countdown: 0,
-			randomSeed: ""
+			randomSeed: "",
+			allowProcs: true
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);
@@ -143,6 +144,7 @@ export class Config extends React.Component {
 		this.setTimeTillFirstManaTick = this.unboundSetTimeTillFirstManaTick.bind(this);
 		this.setCountdown = this.unboundSetCountdown.bind(this);
 		this.setRandomSeed = this.unboundSetRandomSeed.bind(this);
+		this.setAllowProcs = this.unboundSetAllowProcs.bind(this);
 
 		updateConfigDisplay = ((config)=>{
 			this.setState({
@@ -151,7 +153,8 @@ export class Config extends React.Component {
 				casterTax: config.casterTax,
 				timeTillFirstManaTick: config.timeTillFirstManaTick,
 				countdown: config.countdown,
-				randomSeed: config.randomSeed
+				randomSeed: config.randomSeed,
+				allowProcs: config.allowProcs
 			});
 		}).bind(this);
 	}
@@ -161,7 +164,8 @@ export class Config extends React.Component {
 	unboundSetCasterTax(val) { this.setState({casterTax: val}) }
 	unboundSetTimeTillFirstManaTick(val) { this.setState({timeTillFirstManaTick: val}) }
 	unboundSetCountdown(val) { this.setState({countdown: val}) }
-	unboundSetRandomSeed(val) { this.setState({randomSeed: val }); }
+	unboundSetRandomSeed(val) { this.setState({randomSeed: val}); }
+	unboundSetAllowProcs(evt) { this.setState({allowProcs: evt.target.checked}); }
 
 	setConfigAndRestart(config) {
 		if (isNaN(parseFloat(config.spellSpeed)) ||
@@ -179,6 +183,7 @@ export class Config extends React.Component {
 			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
 			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed.trim(),
+			allowProcs: config.allowProcs
 		});
 		controller.updateAllDisplay();
 		controller.updateCumulativeStatsDisplay();
@@ -202,7 +207,8 @@ export class Config extends React.Component {
 			casterTax: this.state.casterTax,
 			countdown: this.state.countdown,
 			timeTillFirstManaTick: this.state.timeTillFirstManaTick,
-			randomSeed: seed
+			randomSeed: seed,
+			allowProcs: this.state.allowProcs
 		};
 		this.setConfigAndRestart(config);
 		event.preventDefault();
@@ -220,8 +226,16 @@ export class Config extends React.Component {
 					<Input defaultValue={this.state.countdown} description="countdown: " onChange={this.setCountdown}/>
 					<Input defaultValue={this.state.randomSeed} description={
 						<span>random seed <Help topic={"randomSeed"} content={
-							"can be anything, or leave empty to get 4 random digits. A special value \"0\" will turn all rng procs off and force you to sharpcast everything"
+							"can be anything, or leave empty to get 4 random digits."
 						}/>: </span>} onChange={this.setRandomSeed}/>
+					<div>
+						<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}
+							   checked={this.state.allowProcs}
+							   onChange={this.setAllowProcs}/>
+						<span>allow procs <Help topic={"allowProcs"} content={
+							"turning off rng procs will force you to sharpcast everything."
+						}/></span>
+					</div>
 
 					<input style={{marginTop: 5}} type="submit" value="apply and reset"/>
 				</form>
