@@ -1,6 +1,7 @@
 import {addLog, Color, LogCategory, ReplayMode, TickMode} from "./Common";
 import {GameState} from "../Game/GameState";
-import {GameConfig, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
+import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
+import {GameConfig} from "../Game/GameConfig"
 // @ts-ignore
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 // @ts-ignore

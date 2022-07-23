@@ -1,4 +1,5 @@
-import {Aspect, Debug, GameConfig, ResourceType, SkillName, SkillReadyStatus} from "./Common"
+import {Aspect, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
+import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
 import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
 import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
@@ -366,7 +367,7 @@ export class GameState {
 			//cd.setRecastTimeScale(recastTimeScale)
 
 			// animation lock
-			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.animationLock);
+			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(skillName));
 		}
 
 		// Paradox made instant via UI
@@ -451,7 +452,7 @@ export class GameState {
 		//if (skillInfo.isSpell) cd.setRecastTimeScale(recastTimeScale);
 
 		// animation lock
-		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.animationLock);
+		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(skillName));
 	}
 
 	hasEnochian()

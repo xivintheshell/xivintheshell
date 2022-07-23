@@ -1,5 +1,6 @@
 import {FileType} from "./Common";
-import {GameConfig, ResourceType, SkillName} from "../Game/Common";
+import {ResourceType, SkillName} from "../Game/Common";
+import {GameConfig} from "../Game/GameConfig"
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -11,7 +12,6 @@ function verifyActionNode(action: ActionNode) {
 	console.assert(typeof action !== "undefined");
 	if (action.type === ActionType.Skill) {
 		console.assert(typeof action.skillName === "string");
-		console.assert(typeof action.waitDuration === "number");
 		console.assert(typeof action.tmp_capturedPotency === "number");
 		return;
 	} else if (action.type === ActionType.Wait) {
