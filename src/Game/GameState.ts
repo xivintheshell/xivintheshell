@@ -17,6 +17,7 @@ type RNG = any;
 export class GameState {
 	config: GameConfig
 	rng: RNG;
+	actorTickOffset: number;
 	time: number;
 	resources: ResourceState;
 	cooldowns: CoolDownState;
@@ -26,6 +27,7 @@ export class GameState {
 	constructor(config: GameConfig) {
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
+		this.actorTickOffset = this.rng() * 3.0;
 
 		// TIME
 		this.time = 0;
