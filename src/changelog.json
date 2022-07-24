@@ -3,7 +3,8 @@
 		"date": "7/24/22",
 		"changes": [
 			"accurate tincture lock time",
-			"fix 'load from file' not responding when trying to load the same file for the 2nd time"
+			"fix 'load from file' not responding when trying to load the same file for the 2nd time",
+			"make sure timeline ruler covers all markers, regardless of countdown time"
 		]
 	},
 	{
