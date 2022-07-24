@@ -1,8 +1,9 @@
 [
 	{
-		"date": "7/20/22",
+		"date": "7/24/22",
 		"changes": [
-			"accurate potion lock time"
+			"accurate tincture lock time",
+			"fix 'load from file' not responding when trying to load the same file for the 2nd time"
 		]
 	},
 	{

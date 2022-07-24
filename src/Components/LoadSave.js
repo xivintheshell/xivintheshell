@@ -18,9 +18,9 @@ export class LoadSave extends React.Component {
 						controller.autoSave();
 					} else {
 						window.alert("wrong file type '" + content.fileType + "'.");
-						return;
 					}
 				});
+				cur.value = "";
 			}
 		}).bind(this);
 
@@ -46,7 +46,14 @@ export class LoadSave extends React.Component {
 			</div>
 			<div>
 				<span>Load from: </span>
-				<input type="file" ref={this.fileSelectorRef} onChange={this.onLoad}/>
+				<input
+					style={{
+						width: "110px",
+						color: "transparent"
+					}}
+					type="file"
+					ref={this.fileSelectorRef}
+					onChange={this.onLoad}/>
 			</div>
 		</div>
 	}
