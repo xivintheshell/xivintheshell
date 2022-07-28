@@ -264,6 +264,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 				loadFromFile(fileToLoad, (content)=>{
 					this.props.onLoadFn(content);
 				});
+				cur.value = "";
 			}
 		}).bind(this);
 
@@ -296,7 +297,14 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 		return <div>
 			<div>
 				<span>Load from file: </span>
-				<input type="file" ref={this.fileSelectorRef} onChange={this.onLoadPresetFile}/>
+				<input
+					style={{
+						width: "110px",
+						color: "transparent"
+					}}
+					type="file"
+					ref={this.fileSelectorRef}
+					onChange={this.onLoadPresetFile}/>
 			</div>
 			<form>
 				<span>Load from URL: </span>

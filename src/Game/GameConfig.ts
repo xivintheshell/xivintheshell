@@ -33,7 +33,7 @@ export class GameConfig {
 
     getSkillAnimationLock(skillName : SkillName) : number {
         if (skillName === SkillName.Tincture) {
-            return 1.19;
+            return 1.16;
         } else {
             return this.animationLock;
         }

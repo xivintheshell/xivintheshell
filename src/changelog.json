@@ -1,10 +1,17 @@
 [
 	{
-		"date": "7/23/22",
+		"date": "7/29/22",
 		"changes": [
-			"let tinctures have 1.19s animation lock",
 			"make lucid tick offset random relative to mp tick",
 			"use a checkbox to turn procs on/off"
+		]
+	},
+	{
+		"date": "7/24/22",
+		"changes": [
+			"accurate tincture lock time",
+			"fix 'load from file' not responding when trying to load the same file for the 2nd time",
+			"make sure timeline ruler covers all markers, regardless of countdown time"
 		]
 	},
 	{
