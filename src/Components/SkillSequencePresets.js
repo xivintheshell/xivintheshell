@@ -91,17 +91,13 @@ class SkillSequencePresets extends React.Component {
 	unboundUpdatePresetsView() { this.forceUpdate(); }
 	render() {
 		let hasSelection = controller && controller.record && controller.record.getFirstSelection();
-		let contentStyle = {
-			margin: "10px",
-			paddingLeft: "10px",
-		};
 		let longInputStyle = {
 			outline: "none",
 			border: "none",
 			borderBottom: "1px solid black",
 			width: "20em",
 		};
-		let content = <div style={contentStyle}>
+		let content = <div>
 			<button style={{marginBottom: 10}} onClick={()=>{
 				controller.deleteAllLines();
 			}}>clear all presets</button>

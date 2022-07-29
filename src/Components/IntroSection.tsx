@@ -5,7 +5,7 @@ import changelog from "../changelog.json"
 
 function Changelog() {
 	return <div className={"paragraph"}><Expandable title={"Changelog"} defaultShow={false} content={
-		<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>{
+		<div>{
 			changelog.map(entry => {
 				let changes: JSX.Element[] = [];
 				for (let i = 0; i < entry.changes.length; i++) {
@@ -28,7 +28,7 @@ export function IntroSection(props: {}) {
 			title={"instructions"}
 			titleNode={<span>{"Instructions "}
 				<Help topic={"expandable"} content={"click me to expand or collapse"}/></span>}
-			content={<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>
+			content={<div>
 				<div className="paragraph">
 					<b>General usage</b>
 				</div>
@@ -62,7 +62,7 @@ export function IntroSection(props: {}) {
 		<Expandable
 			defaultShow={false}
 			title={"About this tool"}
-			content={<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>
+			content={<div>
 				<div className="paragraph">This is a FFXIV black mage simulator & rotation planner.</div>
 				<div className="paragraph">
 					This tool is developed by <b>miyehn (Ellyn Waterford @ Sargatanas)</b> with generous help from their
@@ -89,7 +89,7 @@ export function IntroSection(props: {}) {
 						BLM resources channel on The Balance (make sure you've already joined the server)</a></li>
 				</ul>
 				<div className="paragraph"><Expandable title={"Implementation notes"} defaultShow={false} content={
-					<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>
+					<div>
 						<div className="paragraph">
 							Galahad found that slidecast window size is linear with respect to cast time. I made a <a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>script</a>, parsed
 							a few logs and confirmed this. Albeit the slope is tiny (~0.02) so I'm just using 0.5s here
@@ -116,10 +116,8 @@ export function IntroSection(props: {}) {
 				<Expandable
 					defaultShow={false}
 					title={"Debug"}
-					content={<div style={{margin: 10, paddingLeft: 10, marginBottom: 20}}>
-						<DebugOptions/>
-					</div>
-					}/>
+					content={<DebugOptions/>}
+				/>
 			</div>
 			}
 		/>

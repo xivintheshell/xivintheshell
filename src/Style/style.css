@@ -30,25 +30,12 @@
 }
 
 /* Overall */
-.container {
-    margin: 20px;
-    accent-color: mediumpurple;
-    font-family: monospace;
-}
-@media(min-width: 768px) {
-    .container {
-        margin: 40px;
-    }
-}
-.container-narrow {
-    max-width: 1080px;
-    margin: 10px auto;
-}
 .__react_component_tooltip {
     z-index: 10;
     opacity: 0.96 !important;
     max-width: 300px;
 }
+
 /* Logging */
 
 .logsAll {

@@ -1,8 +1,7 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
-import {Help, Slider} from "./Common";
-import ReactTooltip from 'react-tooltip';
+import {Expandable, Help, Slider} from "./Common";
 import {Cursor, MPTickMark, DamageMark, LucidMark, TimelineSkill} from "./TimelineElements";
 import {getTimelineMarkersHeight, timelineMarkers} from "./TimelineMarkers";
 
@@ -279,7 +278,7 @@ class StatsDisplay extends React.Component {
 			<span>Duration: {this.state.selectedDuration.toFixed(2)}</span><br/>
 			<span>PPS: {(this.state.selectedPotency / this.state.selectedDuration).toFixed(2)}</span>
 		</div>
-		return <div style={{ height: "120px" }}>
+		return <div style={{ height: 120 }}>
 			{cumulative}
 			{this.state.selectedDuration > 0 ? selected : <div/>}
 		</div>;
@@ -296,7 +295,16 @@ class Timeline extends React.Component {
 		}
 	}
 	render() {
-		return <div>
+		return <div style={{
+			bottom: 0,
+			left: 0,
+			right: 0,
+			paddingTop: 10,
+			paddingLeft: 6,
+			paddingRight: 6,
+			borderTop: "2px solid darkgrey",
+			flex: 0
+		}}>
 			<Slider description={"display scale: "}
 					defaultValue={this.initialDisplayScale.toString()}
 					onChange={(newVal)=>{
@@ -306,7 +314,11 @@ class Timeline extends React.Component {
 			<div className={"timeline timelineTab"}>
 				<FixedRightColumn/>
 			</div>
-			<StatsDisplay/>
+			<Expandable
+				title={"Damage stats"}
+				defaultShow={false}
+				content={<StatsDisplay/>}
+			/>
 		</div>
 	}
 }

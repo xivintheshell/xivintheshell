@@ -1,5 +1,11 @@
 [
 	{
+		"date": "7/29/22",
+		"changes": [
+			"pin timeline to the bottom of the page"
+		]
+	},
+	{
 		"date": "7/24/22",
 		"changes": [
 			"accurate tincture lock time",

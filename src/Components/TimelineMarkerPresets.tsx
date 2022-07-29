@@ -175,10 +175,6 @@ class TimelineMarkerPresets extends React.Component {
 	}
 
 	render() {
-		let contentStyle = {
-			margin: "10px",
-			paddingLeft: "10px",
-		};
 		let longInputStyle = {
 			outline: "none",
 			border: "none",
@@ -197,13 +193,13 @@ class TimelineMarkerPresets extends React.Component {
 					onChange={this.setDurationInputMode}>
 			</select>;
 		 */
-		let content = <div style={contentStyle}>
+		let content = <div>
 			<button style={{marginBottom: 10}} onClick={()=>{
 				controller.timeline.deleteAllMarkers();
 			}}>clear all markers</button>
 			<PresetButtons/>
 			<Expandable title={"Load tracks"} defaultShow={false} content={
-				<div style={{padding: 10, paddingLeft: 16}}>
+				<div>
 					<Input defaultValue={this.state.loadTrackDest} description={"Track: "} width={8} style={inlineDiv}
 						   onChange={this.setLoadTrackDest}/>
 					<LoadJsonFromFileOrUrl
@@ -223,8 +219,6 @@ class TimelineMarkerPresets extends React.Component {
 			<Expandable title={"Add marker"} defaultShow={false} content={
 				<form style={{
 					outline: "1px solid lightgrey",
-					margin: "10px 0",
-					marginLeft: 16,
 					padding: "10px",
 				}}>
 					<Input defaultValue={this.state.nextMarkerTime} description={"Time: "} width={8} style={inlineDiv}

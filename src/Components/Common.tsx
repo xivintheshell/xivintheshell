@@ -189,12 +189,14 @@ export class ScrollAnchor extends React.Component {
 	}
 }
 
-// defaultShow, title, content
 type ExpandableProps = {
 	title: string,
+	autoIndent?: boolean,
 	titleNode?: ReactNode,
 	defaultShow?: boolean,
 	content?: ReactNode,
+	onExpand?: () => void,
+	onCollapse?: () => void
 }
 type ExpandableState = {
 	show: boolean,
@@ -202,13 +204,17 @@ type ExpandableState = {
 export class Expandable extends React.Component {
 	props: ExpandableProps = { title: "(expand me)" };
 	state: ExpandableState = { show: false };
+	autoIndent: boolean = true;
 	onClick: () => void;
 	constructor(inProps: ExpandableProps) {
 		super(inProps);
 		this.props = inProps;
+		if (inProps.autoIndent === false) this.autoIndent = false;
 		this.onClick = (()=>{
 			let newShow = !this.state.show
 			this.setState({show: newShow});
+			if (this.props.onExpand && newShow) this.props.onExpand();
+			if (this.props.onCollapse && !newShow) this.props.onCollapse();
 			localStorage.setItem("exp: " + inProps.title, (newShow ? 1 : 0).toString());
 		}).bind(this);
 
@@ -222,13 +228,16 @@ export class Expandable extends React.Component {
 		};
 	}
 	render() {
+		let indentDivStyle = this.autoIndent ? {margin: 10, paddingLeft: 10, marginBottom: 20}: {};
 		return <div style={{marginBottom: 10}}>
 			<Clickable content={<span>
 				<span>{this.state.show ? '- ' : '+ '}</span>
 				{(this.props.titleNode ? this.props.titleNode : this.props.title)}
 			</span>} onClickFn={this.onClick}/>
 			<div style={{position: "relative", display: this.state.show ? "block" : "none"}}>
-				{this.props.content}
+				<div style={indentDivStyle}>
+					{this.props.content}
+				</div>
 			</div>
 		</div>
 	}
