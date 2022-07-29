@@ -72,7 +72,7 @@ export default class Main extends React.Component {
 					<div>
 						<h3 style={{marginBottom: 6}}>Black Mage in the Shell</h3>
 						<div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
-							tool/Changelog</b>)
+							tool/Changelog</b>) (see my <a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>roadmap</a>)
 						</div>
 						<IntroSection/>
 					</div>

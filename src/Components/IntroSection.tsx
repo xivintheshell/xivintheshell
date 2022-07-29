@@ -5,18 +5,20 @@ import changelog from "../changelog.json"
 
 function Changelog() {
 	return <div className={"paragraph"}><Expandable title={"Changelog"} defaultShow={false} content={
-		<div>{
-			changelog.map(entry => {
-				let changes: JSX.Element[] = [];
-				for (let i = 0; i < entry.changes.length; i++) {
-					changes.push(<div key={i}>{entry.changes[i]}</div>);
-				}
-				return <div className={"paragraph"} key={entry.date}>
-					{entry.date}<br/>
-					{changes}
-				</div>
-			})
-		}</div>
+		<div>
+			{
+				changelog.map(entry => {
+					let changes: JSX.Element[] = [];
+					for (let i = 0; i < entry.changes.length; i++) {
+						changes.push(<div key={i}>{entry.changes[i]}</div>);
+					}
+					return <div className={"paragraph"} key={entry.date}>
+						{entry.date}<br/>
+						{changes}
+					</div>
+				})
+			}
+		</div>
 	}/></div>
 }
 
