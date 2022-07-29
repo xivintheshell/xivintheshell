@@ -229,7 +229,7 @@ export class Expandable extends React.Component {
 	}
 	render() {
 		let indentDivStyle = this.autoIndent ? {margin: 10, paddingLeft: 10, marginBottom: 20}: {};
-		return <div style={{marginBottom: 10}}>
+		return <div style={{marginTop: 10, marginBottom: 10}}>
 			<Clickable content={<span>
 				<span>{this.state.show ? '- ' : '+ '}</span>
 				{(this.props.titleNode ? this.props.titleNode : this.props.title)}

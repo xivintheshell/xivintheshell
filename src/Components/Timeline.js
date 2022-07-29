@@ -4,6 +4,7 @@ import {ElemType} from "../Controller/Timeline";
 import {Expandable, Help, Slider} from "./Common";
 import {Cursor, MPTickMark, DamageMark, LucidMark, TimelineSkill} from "./TimelineElements";
 import {getTimelineMarkersHeight, timelineMarkers} from "./TimelineMarkers";
+import {timelineMarkerPresets} from "./TimelineMarkerPresets";
 
 export let updateSelectionDisplay = (startX, endX)=>{}
 
@@ -258,7 +259,7 @@ class StatsDisplay extends React.Component {
 		this.setState(props);
 	}
 	render() {
-		let cumulative = <div>
+		let cumulative = <div style={{flex: 1}}>
 			<span>Time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
 			<span>Cumulative potency: {(this.state.cumulativePPS * this.state.cumulativeDuration).toFixed(2)}</span><br/>
 			<span>PPS <Help topic={"ppsNotes"} content={
@@ -272,13 +273,12 @@ class StatsDisplay extends React.Component {
 				</div>
 			}/>: {this.state.cumulativePPS.toFixed(2)}</span><br/>
 		</div>
-		let selected = <div style={{marginTop: "10px"}}>
-			<span>---- Selected ----</span><br/>
-			<span>Potency: {this.state.selectedPotency.toFixed(2)}</span><br/>
-			<span>Duration: {this.state.selectedDuration.toFixed(2)}</span><br/>
-			<span>PPS: {(this.state.selectedPotency / this.state.selectedDuration).toFixed(2)}</span>
+		let selected = <div style={{flex: 1}}>
+			<span>Duration (selected): {this.state.selectedDuration.toFixed(2)}</span><br/>
+			<span>Potency (selected): {this.state.selectedPotency.toFixed(2)}</span><br/>
+			<span>PPS (selected): {(this.state.selectedPotency / this.state.selectedDuration).toFixed(2)}</span>
 		</div>
-		return <div style={{ height: 120 }}>
+		return <div style={{ height: 48, display: "flex", flexDirection: "row" }}>
 			{cumulative}
 			{this.state.selectedDuration > 0 ? selected : <div/>}
 		</div>;
@@ -299,26 +299,26 @@ class Timeline extends React.Component {
 			bottom: 0,
 			left: 0,
 			right: 0,
-			paddingTop: 10,
 			paddingLeft: 6,
 			paddingRight: 6,
 			borderTop: "2px solid darkgrey",
 			flex: 0
 		}}>
-			<Slider description={"display scale: "}
-					defaultValue={this.initialDisplayScale.toString()}
-					onChange={(newVal)=>{
-				controller.timeline.setHorizontalScale(parseFloat(newVal));
-				localStorage.setItem("timelineDisplayScale", newVal);
-			}}/>
-			<div className={"timeline timelineTab"}>
-				<FixedRightColumn/>
-			</div>
 			<Expandable
 				title={"Damage stats"}
 				defaultShow={false}
 				content={<StatsDisplay/>}
 			/>
+			<div className={"timeline timelineTab"}>
+				<FixedRightColumn/>
+			</div>
+			<Slider description={"display scale: "}
+					defaultValue={this.initialDisplayScale.toString()}
+					onChange={(newVal)=>{
+						controller.timeline.setHorizontalScale(parseFloat(newVal));
+						localStorage.setItem("timelineDisplayScale", newVal);
+					}}/>
+			{timelineMarkerPresets}
 		</div>
 	}
 }

@@ -52,61 +52,65 @@ export default class Main extends React.Component {
 	// tabs: https://reactcommunity.org/react-tabs/
 	render() {
 		let containerStyle = {
-			height: window.innerHeight,
+			height: "100%",
 			accentColor: "mediumpurple",
 			fontFamily: "monospace",
 			display: "flex",
 			flexDirection: "column"
 		}
-		return <div style={containerStyle}>
-			<div style={{
-				flex: 1,
-				overflow: "scroll",
-				overscrollBehaviorY: "contain",
-			}}>
+		return <div style={{
+			position: "fixed",
+			top: 0, bottom: 0, left: 0, right: 0
+		}}>
+			<div style={containerStyle}>
 				<div style={{
-					maxWidth: 1000,
-					margin: "0 auto",
-					marginTop: 40,
+					flex: 1,
+					overflow: "scroll",
+					overscrollBehaviorY: "contain",
 				}}>
-					<div>
-						<h3 style={{marginBottom: 6}}>Black Mage in the Shell</h3>
-						<div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
-							tool/Changelog</b>) (see my <a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>roadmap</a>)
+					<div style={{
+						maxWidth: 1000,
+						margin: "0 auto",
+						marginTop: 40,
+					}}>
+						<div>
+							<h3 style={{marginBottom: 6}}>Black Mage in the Shell</h3>
+							<div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
+								tool/Changelog</b>) (see my <a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>roadmap</a>)
+							</div>
+							<IntroSection/>
 						</div>
-						<IntroSection/>
-					</div>
-					<div style={{position: "relative", marginBottom: "16px"}}>
-						<div style={{display: "inline-block", position: "relative", width: "70%"}}>
-							<div className={"keyboardControlled" + (this.state.realTime ? " realTime" : "")}
-								 style={this.state.overrideOutlineColor ?
-									 {outline: "2px solid " + this.state.overrideOutlineColor} : {}}
-								 tabIndex={-1}
-								 ref={this.controlRegionRef}
-								 onKeyDown={this.gameplayKeyCapture}
-								 onClick={this.gameplayMouseCapture}
-							>
-								{statusDisplay}
-								{skillsWindow}
+						<div style={{position: "relative", marginBottom: "16px"}}>
+							<div style={{display: "inline-block", position: "relative", width: "70%"}}>
+								<div className={"keyboardControlled" + (this.state.realTime ? " realTime" : "")}
+									 style={this.state.overrideOutlineColor ?
+										 {outline: "2px solid " + this.state.overrideOutlineColor} : {}}
+									 tabIndex={-1}
+									 ref={this.controlRegionRef}
+									 onKeyDown={this.gameplayKeyCapture}
+									 onClick={this.gameplayMouseCapture}
+								>
+									{statusDisplay}
+									{skillsWindow}
+								</div>
+							</div>
+							<div style={{
+								marginLeft: "1%",
+								display: "inline-block",
+								position: "relative",
+								verticalAlign: "top",
+								width: "29%"
+							}}>
+								<Config/>
+								<TimeControl/>
+								<LoadSave/>
 							</div>
 						</div>
-						<div style={{
-							marginLeft: "1%",
-							display: "inline-block",
-							position: "relative",
-							verticalAlign: "top",
-							width: "29%"
-						}}>
-							<Config/>
-							<TimeControl/>
-							<LoadSave/>
-						</div>
+						{skillSequencePresets}
 					</div>
-					{skillSequencePresets}
-					{timelineMarkerPresets}
 				</div>
+				{timeline}
 			</div>
-			{timeline}
 		</div>;
 	}
 }
