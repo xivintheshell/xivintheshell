@@ -1,5 +1,5 @@
 import React from 'react'
-import {ButtonIndicator, Clickable} from "./Common";
+import {ButtonIndicator, Clickable, Help, parseTime} from "./Common";
 import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import ReactTooltip from 'react-tooltip';
@@ -175,11 +175,31 @@ class SkillsWindow extends React.Component {
 			e.preventDefault();
 		}).bind(this);
 
+		this.onWaitUntilChange = (e=>{
+			if (!e || !e.target) return;
+			this.setState({waitUntil: e.target.value});
+		}).bind(this);
+
+		this.onWaitUntilSubmit = (e=>{
+			let targetTime = parseTime(this.state.waitUntil);
+			if (!isNaN(targetTime)) {
+				let currentTime = controller.game.getDisplayTime();
+				if (targetTime > currentTime) {
+					let elapse = targetTime - currentTime;
+					controller.step(elapse);
+				} else {
+					window.alert("Can only jump to a time in the future!");
+				}
+			}
+			e.preventDefault();
+		}).bind(this);
+
 		this.state = {
 			statusList: undefined,
 			paradoxInfo: undefined,
 			tooltipContent: "",
-			waitTime: "1"
+			waitTime: "1",
+			waitUntil: "0:00"
 		}
 	}
 	componentDidMount() {
@@ -208,14 +228,31 @@ class SkillsWindow extends React.Component {
 			skillButtons.push(btn);
 		}
 
+		let waitUntilHelp = <Help topic="waitUntilInputFormat" content={<div>
+			<div className="paragraph">Examples:</div>
+			<div className="paragraph">
+				12 <br/>
+				1.5 <br/>
+				10:04.2 <br/>
+				-0:03
+			</div>
+		</div>}/>;
+
 		return <div className={"skillsWindow"}>
 			<div data-tip data-for="SkillDescription" className={"skillIcons"}>
 				{skillButtons}
-				<form onSubmit={this.onWaitTimeSubmit} style={{margin: "10px 0"}}>
-					Wait for <input type={"text"} style={{
+				<div style={{display: "flex", flexDirection: "row", margin: "10px 0"}}>
+					<form onSubmit={this.onWaitTimeSubmit} style={{flex: 1}}>
+						Wait for <input type={"text"} style={{
 						width: 40, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
 					}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
-				</form>
+					</form>
+					<form onSubmit={this.onWaitUntilSubmit} style={{flex: 1}}>
+						Wait until {waitUntilHelp} <input type={"text"} style={{
+						width: 80, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
+					}} value={this.state.waitUntil} onChange={this.onWaitUntilChange}/> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
+					</form>
+				</div>
 			</div>
 		</div>
 	}

@@ -1,5 +1,5 @@
 import React, {ChangeEvent, CSSProperties} from 'react'
-import {Expandable, Input, LoadJsonFromFileOrUrl, Help, asyncFetch, saveToFile} from "./Common";
+import {Expandable, Input, LoadJsonFromFileOrUrl, Help, asyncFetch, saveToFile, parseTime} from "./Common";
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
 
@@ -260,16 +260,6 @@ class TimelineMarkerPresets extends React.Component {
 						type={"submit"}
 						style={{display: "block", marginTop: "0.5em"}}
 						onClick={(e) => {
-							let parseTime = (timeStr: string): number => {
-								let val = timeStr.trim();
-								let colonIndex = val.indexOf(':');
-								if (colonIndex < 0) {
-									return parseFloat(val);
-								}
-								let minute = parseInt(val.substring(0, colonIndex));
-								let second = parseFloat(val.substring(colonIndex + 1));
-								return minute * 60 + second;
-							};
 							let marker: MarkerElem = {
 								type: ElemType.Marker,
 								time: parseTime(this.state.nextMarkerTime),

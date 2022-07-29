@@ -36,9 +36,11 @@ type Fixme = any;
 
 type CursorElem = TimelineElemBase & {
 	type: ElemType.s_Cursor;
+	displayTime: number;
 }
 type ViewOnlyCursorElem = TimelineElemBase & {
 	type: ElemType.s_ViewOnlyCursor;
+	displayTime: number;
 	enabled: boolean;
 }
 type DamageMarkElem = TimelineElemBase & {
@@ -56,6 +58,7 @@ type MPTickMarkElem = TimelineElemBase & {
 }
 type SkillElem = TimelineElemBase & {
 	type: ElemType.Skill;
+	displayTime: number;
 	skillName: SkillName;
 	isGCD: boolean;
 	isSpellCast: boolean;
@@ -90,42 +93,6 @@ type TimelineElem =
 	SkillElem |
 	MarkerElem
 	;
-
-function verifyElem(elem: TimelineElem) {
-	console.assert(elem!==undefined);
-
-	if (elem.type === ElemType.s_Cursor ||
-		elem.type === ElemType.s_ViewOnlyCursor) {
-		console.assert(!isNaN(elem.time));
-		return;
-	}
-
-	if (elem.type === ElemType.DamageMark) {
-		console.assert(!isNaN(elem.time));
-		console.assert(!isNaN(elem.potency));
-		return;
-	}
-
-	if (elem.type === ElemType.LucidMark) {
-		console.assert(!isNaN(elem.time));
-		return;
-	}
-
-	if (elem.type === ElemType.MPTickMark) {
-		console.assert(!isNaN(elem.time));
-		console.assert(elem.source !== undefined);
-		return;
-	}
-
-	if (elem.type === ElemType.Skill) {
-		console.assert(!isNaN(elem.time));
-		console.assert(!isNaN(elem.lockDuration));
-		console.assert(!isNaN(elem.recastDuration));
-		return;
-	}
-
-	console.assert(false);
-}
 
 export class Timeline {
 
@@ -204,11 +171,13 @@ export class Timeline {
 		this.elements = [];
 		this.addElement({
 			type: ElemType.s_Cursor,
-			time: 0
+			time: 0,
+			displayTime: 0 // gets updated later (it seems)
 		});
 		this.addElement({
 			type: ElemType.s_ViewOnlyCursor,
 			time: 0,
+			displayTime: 0,
 			enabled: false
 		});
 	}

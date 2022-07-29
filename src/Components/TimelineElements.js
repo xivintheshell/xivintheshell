@@ -16,7 +16,7 @@ export function Cursor(props) {
 			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={props.color}/>
 			<polygon points="0,0 6,0 3,6" fill={props.color} stroke="none"/>
 		</svg>
-		<ReactTooltip id={`${props.elemID}`}>{props.elem.time.toFixed(2)}</ReactTooltip>
+		<ReactTooltip id={`${props.elemID}`}>{props.elem.displayTime.toFixed(2)}</ReactTooltip>
 	</div>;
 }
 
@@ -99,7 +99,7 @@ export function TimelineSkill(props) {
 		height: 28,
 	};
 	let iconPath = skillIcons.get(props.elem.skillName);
-	let description = props.elem.skillName + "@" + (props.elem.time-controller.gameConfig.countdown).toFixed(2);
+	let description = props.elem.skillName + "@" + (props.elem.displayTime).toFixed(2);
 	let hoverText = <span>{description}</span>;
 	let iconImg = <div style={iconStyle} className={"timeline-elem-skill-icon"}>
 		<img

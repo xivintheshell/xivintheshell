@@ -47,6 +47,22 @@ export function asyncFetch(
 	});
 }
 
+export function parseTime(timeStr: string) : number {
+	let val = timeStr.trim();
+	let sign = 1;
+	if (timeStr[0]==='-') {
+		sign = -1;
+		timeStr = timeStr.substring(1);
+	}
+	let colonIndex = val.indexOf(':');
+	if (colonIndex < 0) {
+		return parseFloat(val);
+	}
+	let minute = parseInt(val.substring(0, colonIndex));
+	let second = parseFloat(val.substring(colonIndex + 1));
+	return sign * (minute * 60 + second);
+}
+
 type ClickableProps = {
 	content?: ReactNode,
 	onClickFn?: () => void,

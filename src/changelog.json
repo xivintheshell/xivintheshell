@@ -3,7 +3,9 @@
 		"date": "7/29/22",
 		"changes": [
 			"pin timeline to the bottom of the page plus some layout changes",
-			"add a link to my roadmap page"
+			"add a link to my roadmap page",
+			"option to jump to a specific time",
+			"bugfix: hovering over timeline cursor shows incorrect game time"
 		]
 	},
 	{

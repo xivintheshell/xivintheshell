@@ -90,16 +90,18 @@ class Controller {
 		this.lastAttemptedSkill = "";
 		//============ stashed states ============
 
-		this.timeline.updateElem({
-			type: ElemType.s_ViewOnlyCursor,
-			time: time,
-			enabled: true
-		});
-
 		this.game = new GameState(this.gameConfig);
 		this.record = new Record();
 		this.record.config = this.gameConfig;
 		this.#replay(tmpRecord, ReplayMode.Exact, true, time);
+
+		// view only cursor
+		this.timeline.updateElem({
+			type: ElemType.s_ViewOnlyCursor,
+			time: time,
+			displayTime: this.game.getDisplayTime(),
+			enabled: true
+		});
 
 		// update display
 		this.updateStatusDisplay(this.game);
@@ -121,7 +123,8 @@ class Controller {
 		this.timeline.updateElem({
 			type: ElemType.s_ViewOnlyCursor,
 			enabled: false,
-			time: 0
+			time: 0,
+			displayTime: 0
 		});
 		setOverrideOutlineColor(undefined);
 		this.updateAllDisplay(this.game);
@@ -322,7 +325,11 @@ class Controller {
 	updateTimelineDisplay() {
 		this.timeline.setTimeSegment(0, this.game.time);
 		this.onTimelineSelectionChanged();
-		this.timeline.updateElem({type: ElemType.s_Cursor, time: this.game.time});
+		this.timeline.updateElem({
+			type: ElemType.s_Cursor,
+			time: this.game.time,
+			displayTime: this.game.getDisplayTime()
+		});
 		this.timeline.drawElements();
 	}
 
@@ -494,10 +501,9 @@ class Controller {
 			}
 
 			let lockDuration = this.game.timeTillAnySkillAvailable();
-			let time = this.game.time;
 
-			node.tmp_startLockTime = time;
-			node.tmp_endLockTime = time + lockDuration;
+			node.tmp_startLockTime = this.game.time;
+			node.tmp_endLockTime = this.game.time + lockDuration;
 
 			if (!this.#bCalculatingHistoricalState) { // true when replaying to display historical game state
 				let newStatus = this.game.getSkillAvailabilityStatus(skillName); // refresh to get re-captured recast time
@@ -507,11 +513,12 @@ class Controller {
 				let snapshotTime = isSpellCast ? status.castTime - GameConfig.getSlidecastWindow(status.castTime) : 0;
 				this.timeline.addElement({
 					type: ElemType.Skill,
+					displayTime: this.game.getDisplayTime(),
 					skillName: skillName,
 					isGCD: isGCD,
 					isSpellCast: isSpellCast,
 					capturedPotency: node.tmp_capturedPotency,
-					time: time,
+					time: this.game.time,
 					relativeSnapshotTime: snapshotTime,
 					lockDuration: lockDuration,
 					recastDuration: newStatus.cdRecastTime,

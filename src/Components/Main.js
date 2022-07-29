@@ -69,7 +69,7 @@ export default class Main extends React.Component {
 					overscrollBehaviorY: "contain",
 				}}>
 					<div style={{
-						maxWidth: 1000,
+						maxWidth: 1060,
 						margin: "0 auto",
 						marginTop: 40,
 					}}>
