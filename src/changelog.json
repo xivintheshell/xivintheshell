@@ -1,5 +1,11 @@
 [
 	{
+		"date": "7/30/22",
+		"changes": [
+			"specify wait time since the last skill is used"
+		]
+	},
+	{
 		"date": "7/29/22",
 		"changes": [
 			"pin timeline to the bottom of the page plus some layout changes",

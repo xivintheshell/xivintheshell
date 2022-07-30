@@ -3,6 +3,7 @@ import {ButtonIndicator, Clickable, Help, parseTime} from "./Common";
 import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import ReactTooltip from 'react-tooltip';
+import {ActionType} from "../Controller/Record";
 
 export let displayedSkills = [
 	SkillName.Blizzard,
@@ -147,6 +148,11 @@ class SkillButton extends React.Component {
 	}
 }
 
+const WaitSince = {
+	Now: "Now",
+	LastSkill: "LastSkill"
+};
+
 export var updateSkillButtons = (statusList)=>{}
 class SkillsWindow extends React.Component {
 	constructor(props) {
@@ -168,9 +174,27 @@ class SkillsWindow extends React.Component {
 		}).bind(this);
 
 		this.onWaitTimeSubmit = ((e)=>{
-			let numVal = parseFloat(this.state.waitTime);
-			if (!isNaN(numVal)) {
-				controller.step(numVal);
+			let waitTime = parseFloat(this.state.waitTime);
+			if (!isNaN(waitTime)) {
+				if (this.state.waitSince === WaitSince.Now) {
+					controller.step(waitTime);
+				} else if (this.state.waitSince === WaitSince.LastSkill) {
+					let timeSinceLastSkill = 0;
+					let lastAction = controller.record.getLastAction();
+					if (lastAction && (lastAction.type === ActionType.Wait || lastAction.type === ActionType.Skill)) {
+						timeSinceLastSkill = lastAction.waitDuration;
+					}
+					let stepTime = waitTime - timeSinceLastSkill;
+					if (stepTime <= 0) {
+						window.alert("Invalid input: trying to jump to " + waitTime +
+							"s since the last skill is used, but " + timeSinceLastSkill +
+							"s has already elapsed.");
+					} else {
+						controller.step(stepTime);
+					}
+				} else {
+					console.assert(false);
+				}
 			}
 			e.preventDefault();
 		}).bind(this);
@@ -194,11 +218,16 @@ class SkillsWindow extends React.Component {
 			e.preventDefault();
 		}).bind(this);
 
+		this.onWaitSinceChange = (e=>{
+			this.setState({waitSince: e.target.value});
+		}).bind(this);
+
 		this.state = {
 			statusList: undefined,
 			paradoxInfo: undefined,
 			tooltipContent: "",
 			waitTime: "1",
+			waitSince: WaitSince.Now,
 			waitUntil: "0:00"
 		}
 	}
@@ -242,12 +271,18 @@ class SkillsWindow extends React.Component {
 			<div data-tip data-for="SkillDescription" className={"skillIcons"}>
 				{skillButtons}
 				<div style={{display: "flex", flexDirection: "row", margin: "10px 0"}}>
-					<form onSubmit={this.onWaitTimeSubmit} style={{flex: 1}}>
-						Wait for <input type={"text"} style={{
+					<form onSubmit={this.onWaitTimeSubmit} style={{flex: 3}}>
+						Wait until <input type={"text"} style={{
 						width: 40, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
-					}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
+					}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) since <select
+						style={{display: "inline-block", outline: "none"}}
+						value={this.state.waitSince}
+						onChange={this.onWaitSinceChange}>
+						<option value={WaitSince.Now}>now</option>
+						<option value={WaitSince.LastSkill}>last skill</option>
+					</select> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
 					</form>
-					<form onSubmit={this.onWaitUntilSubmit} style={{flex: 1}}>
+					<form onSubmit={this.onWaitUntilSubmit} style={{flex: 2}}>
 						Wait until {waitUntilHelp} <input type={"text"} style={{
 						width: 80, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
 					}} value={this.state.waitUntil} onChange={this.onWaitUntilChange}/> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
