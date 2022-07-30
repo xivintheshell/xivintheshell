@@ -92,6 +92,9 @@ function PresetButtons() {
 			{track: 1, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s_1.txt"},
 			{track: 2, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s_2.txt"},
 		]}/>
+		<LoadPresetsBtn displayName={"DSR P7 by Santa"} trackAndUrls={[
+			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/dsr_p7_0.txt"},
+		]}/>
 	</div>
 }
 

@@ -2,7 +2,8 @@
 	{
 		"date": "7/30/22",
 		"changes": [
-			"specify wait time since the last skill is used"
+			"specify wait time since the last skill is used",
+			"add DSR P7 timeline track preset by Santa (Thank you!!)"
 		]
 	},
 	{
