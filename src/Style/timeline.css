@@ -18,6 +18,7 @@ svg {
     display: inline-block;
     width: 100%;
     overflow-x: scroll;
+    overscroll-behavior-x: contain;
     overflow-y: clip;
     vertical-align: bottom;
 }
