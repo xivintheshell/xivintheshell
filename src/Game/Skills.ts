@@ -221,7 +221,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				sc.removeTimer();
 			} else {
 				let rand = game.rng();
-				if (game.config.randomSeed !== "0" && rand < 0.4) gainFirestarterProc(game);
+				if (game.config.allowProcs && rand < 0.4) gainFirestarterProc(game);
 			}
 		}
 
@@ -300,7 +300,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.reportPotency(node, capturedTickPotency, "DoT");
 						game.dealDamage(capturedTickPotency, "DoT");
 						recurringThunderTick(remainingTicks - 1, capturedTickPotency);
-						if (game.config.randomSeed !== "0" && game.rng() < 0.1) {// thundercloud proc
+						if (game.config.allowProcs && game.rng() < 0.1) {// thundercloud proc
 							gainThundercloudProc(game);
 						}
 					}, Color.Thunder);
@@ -659,11 +659,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 				// since order of events at roughly the same time are virtually undefined
 				let skillAppDelay = game.skillsList.get(SkillName.LucidDreaming).info.skillApplicationDelay;
 				let timeTillNextManaTick = game.resources.timeTillReady(ResourceType.Mana);
-				let timeTillFirstLucidTickSinceApply = timeTillNextManaTick - skillAppDelay - 1.5;
-				if (timeTillFirstLucidTickSinceApply < 0) timeTillFirstLucidTickSinceApply += 3;
+
+				let timeTillFirstLucidTickSinceApply = (timeTillNextManaTick - skillAppDelay) + game.actorTickOffset;
+				while (timeTillFirstLucidTickSinceApply < 0) timeTillFirstLucidTickSinceApply += 3;
+				while (timeTillFirstLucidTickSinceApply > 3) timeTillFirstLucidTickSinceApply -= 3;
+
+				const skillTime = game.getDisplayTime();
 				game.useInstantSkill(SkillName.LucidDreaming, () => {
 					const numTicks = 7;
-					const skillTime = game.getDisplayTime();
 
 					let applyLucidTick = (index: number) => {
 						if (game.getFireStacks() > 0) return; // not tick during fire

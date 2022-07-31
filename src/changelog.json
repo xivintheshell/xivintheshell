@@ -2,7 +2,9 @@
 	{
 		"date": "7/31/22",
 		"changes": [
-			"add sprint"
+			"add sprint",
+			"make lucid tick offset random relative to mp tick",
+			"use a checkbox to turn procs on/off"
 		]
 	},
 	{

@@ -37,7 +37,7 @@ export function IntroSection(props: {}) {
 				<ul>
 					<li style={smallGap}>Set your stats in <b>Rotation</b> settings on the right, then <ButtonIndicator text={"apply and reset"}/></li>
 					<li style={smallGap}>Click on a skill to use it. If it's not ready yet, click on it again will wait and retry.</li>
-					<li style={smallGap}>Press <ButtonIndicator text={"u"}/> to delete the last skill (effective when not running in real-time).</li>
+					<li style={smallGap}>Press <ButtonIndicator text={"u"}/> to delete the last added action (effective when not running in real-time).</li>
 					<li style={smallGap}>Click on a buff applied to self to remove it. Unless it's ley lines, in which case it can be re-enabled.</li>
 				</ul>
 				<div className="paragraph">
@@ -109,8 +109,8 @@ export function IntroSection(props: {}) {
 							on the timeline.
 						</div>
 						<div className="paragraph">
-							Lucid dreaming ticks happen halfway between MP ticks. The earliest first tick time is 0.3s after you press
-							the skill button. It always ticks 7 times.
+							Lucid dreaming ticks happen on actor ticks, which have a random offset relative to MP tick.
+							The earliest first tick time is 0.3s after you press the skill button. It ticks 7 times.
 						</div>
 					</div>
 				}/></div>
