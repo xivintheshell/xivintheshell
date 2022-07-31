@@ -1,8 +1,9 @@
 {
   "files": {
     "main.css": "/ffxiv-blm-rotation/static/css/main.efbd6b28.css",
-    "main.js": "/ffxiv-blm-rotation/static/js/main.f69b2a22.js",
+    "main.js": "/ffxiv-blm-rotation/static/js/main.96dcba0b.js",
     "static/media/tincture.png": "/ffxiv-blm-rotation/static/media/tincture.30918e122174e90fe254.png",
+    "static/media/sprint.png": "/ffxiv-blm-rotation/static/media/sprint.337bd2225fa4fad61ec8.png",
     "static/media/xenoglossy.png": "/ffxiv-blm-rotation/static/media/xenoglossy.921b357e81afd074a7aa.png",
     "static/media/foul.png": "/ffxiv-blm-rotation/static/media/foul.da4ca9de7a96c96e9c52.png",
     "static/media/blizzard3.png": "/ffxiv-blm-rotation/static/media/blizzard3.7bcf294e278198abd72a.png",
@@ -34,10 +35,10 @@
     "static/media/fire.png": "/ffxiv-blm-rotation/static/media/fire.ab81ab59487e92139ead.png",
     "index.html": "/ffxiv-blm-rotation/index.html",
     "main.efbd6b28.css.map": "/ffxiv-blm-rotation/static/css/main.efbd6b28.css.map",
-    "main.f69b2a22.js.map": "/ffxiv-blm-rotation/static/js/main.f69b2a22.js.map"
+    "main.96dcba0b.js.map": "/ffxiv-blm-rotation/static/js/main.96dcba0b.js.map"
   },
   "entrypoints": [
     "static/css/main.efbd6b28.css",
-    "static/js/main.f69b2a22.js"
+    "static/js/main.96dcba0b.js"
   ]
 }
