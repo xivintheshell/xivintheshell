@@ -180,8 +180,10 @@ class SkillsWindow extends React.Component {
 					controller.step(waitTime);
 				} else if (this.state.waitSince === WaitSince.LastSkill) {
 					let timeSinceLastSkill = 0;
-					let lastAction = controller.record.getLastAction();
-					if (lastAction && (lastAction.type === ActionType.Wait || lastAction.type === ActionType.Skill)) {
+					let lastAction = controller.record.getLastAction(node=>{
+						return node.type === ActionType.Wait || node.type === ActionType.Skill;
+					});
+					if (lastAction) {
 						timeSinceLastSkill = lastAction.waitDuration;
 					}
 					let stepTime = waitTime - timeSinceLastSkill;

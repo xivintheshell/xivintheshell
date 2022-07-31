@@ -87,11 +87,28 @@ export class Line {
 		}
 		this.tail = actionNode;
 	}
+	iterateAll(fn: (node: ActionNode) => void): void {
+		let itr: ActionNode | undefined = this.head;
+		while (itr) {
+			fn(itr);
+			itr = itr.next;
+		}
+	}
 	getFirstAction() {
 		return this.head;
 	}
-	getLastAction() {
-		return this.tail;
+	getLastAction(condition? : (node: ActionNode) => boolean) {
+		if (condition===undefined) {
+			return this.tail;
+		} else {
+			let lastMatch : ActionNode | undefined = undefined;
+			this.iterateAll(node=>{
+				if (condition(node)) {
+					lastMatch = node;
+				}
+			});
+			return lastMatch;
+		}
 	}
 	serialized(): {name: string, actions: object[]} {
 		let list = [];
@@ -129,14 +146,6 @@ export class Record extends Line {
 	addActionNode(actionNode: ActionNode) {
 		verifyActionNode(actionNode);
 		super.addActionNode(actionNode);
-	}
-
-	iterateAll(fn: (node: ActionNode) => void): void {
-		let itr: ActionNode | undefined = this.head;
-		while (itr) {
-			fn(itr);
-			itr = itr.next;
-		}
 	}
 
 	iterateSelected(fn: (node: ActionNode) => void): void {
