@@ -135,7 +135,7 @@ export class Config extends React.Component {
 			timeTillFirstManaTick: 0,
 			countdown: 0,
 			randomSeed: "",
-			allowProcs: true
+			rngProcs: true
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);
@@ -144,7 +144,7 @@ export class Config extends React.Component {
 		this.setTimeTillFirstManaTick = this.unboundSetTimeTillFirstManaTick.bind(this);
 		this.setCountdown = this.unboundSetCountdown.bind(this);
 		this.setRandomSeed = this.unboundSetRandomSeed.bind(this);
-		this.setAllowProcs = this.unboundSetAllowProcs.bind(this);
+		this.setrngProcs = this.unboundSetrngProcs.bind(this);
 
 		updateConfigDisplay = ((config)=>{
 			this.setState({
@@ -154,7 +154,7 @@ export class Config extends React.Component {
 				timeTillFirstManaTick: config.timeTillFirstManaTick,
 				countdown: config.countdown,
 				randomSeed: config.randomSeed,
-				allowProcs: config.allowProcs
+				rngProcs: config.rngProcs
 			});
 		}).bind(this);
 	}
@@ -165,7 +165,7 @@ export class Config extends React.Component {
 	unboundSetTimeTillFirstManaTick(val) { this.setState({timeTillFirstManaTick: val}) }
 	unboundSetCountdown(val) { this.setState({countdown: val}) }
 	unboundSetRandomSeed(val) { this.setState({randomSeed: val}); }
-	unboundSetAllowProcs(evt) { this.setState({allowProcs: evt.target.checked}); }
+	unboundSetrngProcs(evt) { this.setState({rngProcs: evt.target.checked}); }
 
 	setConfigAndRestart(config) {
 		if (isNaN(parseFloat(config.spellSpeed)) ||
@@ -183,7 +183,7 @@ export class Config extends React.Component {
 			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
 			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed.trim(),
-			allowProcs: config.allowProcs
+			rngProcs: config.rngProcs
 		});
 		controller.updateAllDisplay();
 		controller.updateCumulativeStatsDisplay();
@@ -208,7 +208,7 @@ export class Config extends React.Component {
 			countdown: this.state.countdown,
 			timeTillFirstManaTick: this.state.timeTillFirstManaTick,
 			randomSeed: seed,
-			allowProcs: this.state.allowProcs
+			rngProcs: this.state.rngProcs
 		};
 		this.setConfigAndRestart(config);
 		event.preventDefault();
@@ -230,9 +230,9 @@ export class Config extends React.Component {
 						}/>: </span>} onChange={this.setRandomSeed}/>
 					<div>
 						<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}
-							   checked={this.state.allowProcs}
-							   onChange={this.setAllowProcs}/>
-						<span>allow procs <Help topic={"allowProcs"} content={
+							   checked={this.state.rngProcs}
+							   onChange={this.setrngProcs}/>
+						<span>rng procs <Help topic={"rngProcs"} content={
 							"turning off rng procs will force you to sharpcast everything."
 						}/></span>
 					</div>

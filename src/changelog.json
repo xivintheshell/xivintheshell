@@ -4,7 +4,7 @@
 		"changes": [
 			"add sprint",
 			"make lucid tick offset random relative to mp tick",
-			"use a checkbox to turn procs on/off"
+			"use a checkbox to turn rng procs on/off"
 		]
 	},
 	{

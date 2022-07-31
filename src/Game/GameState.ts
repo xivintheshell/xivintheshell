@@ -17,6 +17,7 @@ type RNG = any;
 export class GameState {
 	config: GameConfig
 	rng: RNG;
+	#nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
 	actorTickOffset: number;
 	time: number;
 	resources: ResourceState;
@@ -27,7 +28,8 @@ export class GameState {
 	constructor(config: GameConfig) {
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
-		this.actorTickOffset = this.rng() * 3.0;
+		this.#nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
+		this.actorTickOffset = this.#nonProcRng() * 3.0;
 
 		// TIME
 		this.time = 0;

@@ -7,7 +7,7 @@ export class GameConfig {
     casterTax = 0.06;
     animationLock = 0.66;
     timeTillFirstManaTick = 1.2;
-    allowProcs = true;
+    rngProcs = true;
 
     equals(other : GameConfig) {
         return this.spellSpeed === other.spellSpeed &&
@@ -16,7 +16,7 @@ export class GameConfig {
             this.casterTax === other.casterTax &&
             this.animationLock === other.animationLock &&
             this.timeTillFirstManaTick === other.timeTillFirstManaTick &&
-            this.allowProcs === other.allowProcs;
+            this.rngProcs === other.rngProcs;
     }
 
     adjustedDoTPotency(inPotency : number) {
