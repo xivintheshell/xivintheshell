@@ -111,6 +111,8 @@ const skillInfos = [
 		0, 0, 0, 0.1),
 	new SkillInfo(SkillName.Tincture, ResourceType.cd_Tincture, Aspect.Other, false,
 		0, 0, 0, 0.1),
+	new SkillInfo(SkillName.Sprint, ResourceType.cd_Sprint, Aspect.Other, false,
+		0, 0, 0, 0.1)
 ];
 
 const skillInfosMap: Map<SkillName, SkillInfo> = new Map();
@@ -717,6 +719,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 
 		// Tincture
 		addResourceAbility(SkillName.Tincture, ResourceType.Tincture, 30);
+
+		// Sprint
+		addResourceAbility(SkillName.Sprint, ResourceType.Sprint, 10);
 
 		return skillsList;
 	}

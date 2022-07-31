@@ -45,6 +45,7 @@ export const enum SkillName {
 	LucidDreaming = "Lucid Dreaming",
 	Surecast = "Surecast",
 	Tincture = "Tincture",
+	Sprint = "Sprint",
 
 	Never = "Never",
 }
@@ -81,6 +82,7 @@ export const enum ResourceType {
 	LucidTick = "Lucid Tick", // [0, 1]
 	Surecast = "Surecast", // [0, 1]
 	Tincture = "Tincture", // [0, 1]
+	Sprint = "Sprint", // [0, 1]
 
 	// special
 	Movement = "Movement", // [0, 1]
@@ -103,6 +105,7 @@ export const enum ResourceType {
 	cd_LucidDreaming = "cd_LucidDreaming",
 	cd_Surecast = "cd_Surecast",
 	cd_Tincture = "cd_Tincture",
+	cd_Sprint = "cd_Sprint",
 
 	Never = "Never",
 }

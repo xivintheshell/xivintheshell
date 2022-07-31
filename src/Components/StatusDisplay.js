@@ -63,6 +63,7 @@ buffIcons.set(ResourceType.Swiftcast, require("./Asset/buff_swiftcast.png"));
 buffIcons.set(ResourceType.LucidDreaming, require("./Asset/buff_lucidDreaming.png"));
 buffIcons.set(ResourceType.Surecast, require("./Asset/buff_surecast.png"));
 buffIcons.set(ResourceType.Tincture, require("./Asset/buff_tincture.png"));
+buffIcons.set(ResourceType.Sprint, require("./Asset/buff_sprint.png"));
 
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props) {
@@ -94,7 +95,8 @@ function BuffsDisplay(props) {
 		swiftcastCountdown: 0,
 		lucidDreamingCountdown: 0,
 		surecastCountdown: 0,
-		tinctureCountdown: 0
+		tinctureCountdown: 0,
+		sprintCountdown: 0
 	};
 	let buffs = [];
 	buffs.push({
@@ -176,6 +178,14 @@ function BuffsDisplay(props) {
 		stacks:1,
 		timeRemaining: data.tinctureCountdown.toFixed(2),
 		className: data.tinctureCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.Sprint,
+		onSelf: true,
+		enabled: true,
+		stacks:1,
+		timeRemaining: data.sprintCountdown.toFixed(2),
+		className: data.sprintCountdown > 0 ? "" : "hidden"
 	});
 
 	for (let i = 0; i < buffs.length; i++) buffs[i].key=i;

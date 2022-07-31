@@ -35,9 +35,11 @@ export let displayedSkills = [
 	SkillName.Swiftcast,
 	SkillName.LucidDreaming,
 	SkillName.Surecast,
-	SkillName.Tincture
+	SkillName.Tincture,
+	SkillName.Sprint
 ];
 
+// seems useful: https://na.finalfantasyxiv.com/lodestone/special/fankit/icon/
 export const skillIcons = new Map();
 skillIcons.set(SkillName.Blizzard, require("./Asset/blizzard.png"));
 skillIcons.set(SkillName.Fire, require("./Asset/fire.png"));
@@ -69,6 +71,7 @@ skillIcons.set(SkillName.Swiftcast, require("./Asset/swiftcast.png"));
 skillIcons.set(SkillName.LucidDreaming, require("./Asset/lucidDreaming.png"));
 skillIcons.set(SkillName.Surecast, require("./Asset/surecast.png"));
 skillIcons.set(SkillName.Tincture, require("./Asset/tincture.png"));
+skillIcons.set(SkillName.Sprint, require("./Asset/sprint.png"));
 
 let setSkillInfoText = (text)=>{};
 function ProgressCircle(props={

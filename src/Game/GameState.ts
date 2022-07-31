@@ -54,6 +54,7 @@ export class GameState {
 		this.resources.set(ResourceType.LucidTick, new Resource(ResourceType.LucidDreaming, 1, 0));
 		this.resources.set(ResourceType.Surecast, new Resource(ResourceType.Surecast, 1, 0));
 		this.resources.set(ResourceType.Tincture, new Resource(ResourceType.Tincture, 1, 0));
+		this.resources.set(ResourceType.Sprint, new Resource(ResourceType.Sprint, 1, 0));
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
@@ -76,6 +77,7 @@ export class GameState {
 		this.cooldowns.set(ResourceType.cd_LucidDreaming, new CoolDown(ResourceType.cd_LucidDreaming, 60, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Surecast, new CoolDown(ResourceType.cd_Surecast, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Tincture, new CoolDown(ResourceType.cd_Tincture, 270, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Sprint, new CoolDown(ResourceType.cd_Sprint, 60, 1, 1));
 
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
