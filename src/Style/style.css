@@ -35,6 +35,15 @@
     opacity: 0.96 !important;
     max-width: 300px;
 }
+.staticScrollbar::-webkit-scrollbar {
+    -webkit-appearance: none;
+    background-color: #e8e8e8;
+    height: 5px;
+    width: 5px;
+}
+.staticScrollbar::-webkit-scrollbar-thumb {
+    background-color: darkgray;
+}
 
 /* Logging */
 

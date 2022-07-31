@@ -7,7 +7,6 @@ import {controller} from "../Controller/Controller";
 import 'react-tabs/style/react-tabs.css';
 import {LoadSave} from "./LoadSave";
 import {skillSequencePresets} from "./SkillSequencePresets";
-import {timelineMarkerPresets} from "./TimelineMarkerPresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../changelog.json"
 
@@ -20,6 +19,7 @@ export default class Main extends React.Component {
 		this.state = {
 			realTime: false,
 			overrideOutlineColor: undefined,
+			controlRegionHeight: 0
 		}
 		this.controlRegionRef = React.createRef();
 		this.gameplayKeyCapture = ((evt)=>{
@@ -42,6 +42,15 @@ export default class Main extends React.Component {
 	componentDidMount() {
 		controller.tryAutoLoad();
 		controller.updateAllDisplay();
+
+		let handleResize = e=>{
+			let cur = this.controlRegionRef.current;
+			if (cur) {
+				this.setState({controlRegionHeight: cur.clientHeight});
+			}
+		}
+		handleResize(null);
+		window.addEventListener("resize", handleResize);
 	}
 
 	componentWillUnmount() {
@@ -58,6 +67,19 @@ export default class Main extends React.Component {
 			display: "flex",
 			flexDirection: "column"
 		}
+		let mainControlRegion = <div style={{flex: 7, display: "inline-block", position: "relative"}}>
+				<div className={"keyboardControlled" + (this.state.realTime ? " realTime" : "")}
+					 style={this.state.overrideOutlineColor ?
+						 {outline: "2px solid " + this.state.overrideOutlineColor} : {}}
+					 tabIndex={-1}
+					 ref={this.controlRegionRef}
+					 onKeyDown={this.gameplayKeyCapture}
+					 onClick={this.gameplayMouseCapture}
+				>
+					{statusDisplay}
+					{skillsWindow}
+				</div>
+			</div>;
 		return <div style={{
 			position: "fixed",
 			top: 0, bottom: 0, left: 0, right: 0
@@ -80,26 +102,20 @@ export default class Main extends React.Component {
 							</div>
 							<IntroSection/>
 						</div>
-						<div style={{position: "relative", marginBottom: "16px"}}>
-							<div style={{display: "inline-block", position: "relative", width: "70%"}}>
-								<div className={"keyboardControlled" + (this.state.realTime ? " realTime" : "")}
-									 style={this.state.overrideOutlineColor ?
-										 {outline: "2px solid " + this.state.overrideOutlineColor} : {}}
-									 tabIndex={-1}
-									 ref={this.controlRegionRef}
-									 onKeyDown={this.gameplayKeyCapture}
-									 onClick={this.gameplayMouseCapture}
-								>
-									{statusDisplay}
-									{skillsWindow}
-								</div>
-							</div>
-							<div style={{
-								marginLeft: "1%",
-								display: "inline-block",
+						<div style={{
+							display: "flex",
+							flexDirection: "row",
+							position: "relative",
+							marginBottom: "16px"}}>
+							{mainControlRegion}
+							<div className={"staticScrollbar"} style={{
+								flex: 3,
+								height: this.state.controlRegionHeight,
+								marginLeft: 6,
 								position: "relative",
 								verticalAlign: "top",
-								width: "29%"
+								overflowY: "scroll",
+								overscrollBehaviorY: "contain"
 							}}>
 								<Config/>
 								<TimeControl/>

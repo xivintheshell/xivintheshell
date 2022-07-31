@@ -21,6 +21,8 @@ export function loadFromFile(fileObject: Blob, callback=(content: object)=>{cons
 	fileReader.readAsText(fileObject, "UTF-8");
 }
 
+
+
 let genericErrorHandler = function(err: object) {
 	console.log("[asyncFetch] some error occurred");
 }

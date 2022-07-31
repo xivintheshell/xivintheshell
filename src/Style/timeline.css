@@ -22,15 +22,6 @@ svg {
     overflow-y: clip;
     vertical-align: bottom;
 }
-.timeline-fixedRightColumn::-webkit-scrollbar {
-    -webkit-appearance: none;
-    background-color: #e8e8e8;
-    height: 5px;
-}
-.timeline-fixedRightColumn::-webkit-scrollbar-thumb {
-    background-color: darkgray;
-}
-
 .timeline-main {
     position: relative;
 }

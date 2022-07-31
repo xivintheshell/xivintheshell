@@ -222,7 +222,7 @@ class FixedRightColumn extends React.Component {
 		scrollTimelineTo = (positionX)=>{};
 	}
 	render() {
-		return <div ref={this.myRef} className={"timeline-fixedRightColumn"}>
+		return <div ref={this.myRef} className={"timeline-fixedRightColumn staticScrollbar"}>
 			<TimelineMain/>
 		</div>
 	}
