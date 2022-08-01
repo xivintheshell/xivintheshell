@@ -1,6 +1,6 @@
 import React from 'react';
 import { controller } from '../Controller/Controller'
-import {Help, Input, ButtonIndicator} from "./Common";
+import {Help, Input, ButtonIndicator, Expandable} from "./Common";
 import {TickMode} from "../Controller/Common";
 
 export class TimeControl extends React.Component {
@@ -215,30 +215,31 @@ export class Config extends React.Component {
 	}
 
 	render() {
-		return (
-			<div className={"config"}>
-				<div style={{marginBottom: 5}}><b>Rotation</b></div>
-				<form onSubmit={this.handleSubmit}>
-					<Input defaultValue={this.state.spellSpeed} description="spell speed: " onChange={this.setSpellSpeed}/>
-					<Input defaultValue={this.state.animationLock} description="animation lock: " onChange={this.setAnimationLock}/>
-					<Input defaultValue={this.state.casterTax} description="caster tax: " onChange={this.setCasterTax}/>
-					<Input defaultValue={this.state.timeTillFirstManaTick} description="time till first MP tick: " onChange={this.setTimeTillFirstManaTick}/>
-					<Input defaultValue={this.state.countdown} description="countdown: " onChange={this.setCountdown}/>
-					<Input defaultValue={this.state.randomSeed} description={
-						<span>random seed <Help topic={"randomSeed"} content={
-							"can be anything, or leave empty to get 4 random digits."
-						}/>: </span>} onChange={this.setRandomSeed}/>
-					<div>
-						<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}
-							   checked={this.state.rngProcs}
-							   onChange={this.setrngProcs}/>
-						<span>rng procs <Help topic={"rngProcs"} content={
-							"turning off rng procs will force you to sharpcast everything."
-						}/></span>
-					</div>
+		let editSection = <form onSubmit={this.handleSubmit}>
+			<Input defaultValue={this.state.spellSpeed} description="spell speed: " onChange={this.setSpellSpeed}/>
+			<Input defaultValue={this.state.animationLock} description="animation lock: " onChange={this.setAnimationLock}/>
+			<Input defaultValue={this.state.casterTax} description="caster tax: " onChange={this.setCasterTax}/>
+			<Input defaultValue={this.state.timeTillFirstManaTick} description="time till first MP tick: " onChange={this.setTimeTillFirstManaTick}/>
+			<Input defaultValue={this.state.countdown} description="countdown: " onChange={this.setCountdown}/>
+			<Input defaultValue={this.state.randomSeed} description={
+				<span>random seed <Help topic={"randomSeed"} content={
+					"can be anything, or leave empty to get 4 random digits."
+				}/>: </span>} onChange={this.setRandomSeed}/>
+			<div>
+				<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}
+					   checked={this.state.rngProcs}
+					   onChange={this.setrngProcs}/>
+				<span>rng procs <Help topic={"rngProcs"} content={
+					"turning off rng procs will force you to sharpcast everything."
+				}/></span>
+			</div>
 
-					<input style={{marginTop: 5}} type="submit" value="apply and reset"/>
-				</form>
+			<input style={{marginTop: 5}} type="submit" value="apply and reset"/>
+		</form>;
+		return (
+			<div className={"config"} style={{marginBottom: 16}}>
+				<div style={{marginBottom: 5}}><b>Config</b></div>
+				<Expandable title={"Edit"} content={editSection}/>
 			</div>
 		)}
 }

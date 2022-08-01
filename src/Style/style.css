@@ -118,7 +118,7 @@
 
 /* playback control */
 
-.config,.timeControl {
+.timeControl {
     display: inline-block;
     margin-bottom: 15px;
 }
