@@ -94,7 +94,12 @@ class Controller {
 		this.game = new GameState(this.gameConfig);
 		this.record = new Record();
 		this.record.config = this.gameConfig;
-		this.#replay(tmpRecord, ReplayMode.Exact, true, time);
+		this.#replay({
+			line: tmpRecord,
+			replayMode: ReplayMode.Exact,
+			suppressLog: true,
+			maxReplayTime: time
+		});
 
 		// view only cursor
 		this.timeline.updateElem({
@@ -207,7 +212,7 @@ class Controller {
 			node.waitDuration = action.waitDuration;
 			line.addActionNode(node);
 		}
-		let replayResult = this.#replay(line, ReplayMode.Exact, false);
+		let replayResult = this.#replay({line: line, replayMode: ReplayMode.Exact});
 		console.assert(replayResult.success);
 	}
 
@@ -535,12 +540,22 @@ class Controller {
 	}
 
 	// returns true on success
-	#replay(line: Line, replayMode: ReplayMode, suppressLog=false,
-			maxReplayTime=-1) : {
+	#replay(props: {
+		line: Line,
+		replayMode: ReplayMode,
+		suppressLog?: boolean,
+		removeTrailingIdleTime?: boolean,
+		maxReplayTime?: number
+	}) : {
 		success: boolean,
 		firstAddedNode: ActionNode | undefined
 	} {
-		let itr = line.getFirstAction();
+		// default input, if not provided
+		if (props.suppressLog===undefined) props.suppressLog = false;
+		if (props.removeTrailingIdleTime===undefined) props.removeTrailingIdleTime = false;
+		if (props.maxReplayTime===undefined) props.maxReplayTime = -1;
+
+		let itr = props.line.getFirstAction();
 		if (!itr) return {
 			success: true,
 			firstAddedNode: undefined
@@ -552,42 +567,53 @@ class Controller {
 
 			let lastIter = false;
 
+			// maxReplayTime is used for replay for displaying historical game states (only replay some given duration)
 			let waitDuration = itr.waitDuration;
-			if (maxReplayTime >= 0 &&
-				maxReplayTime - this.game.time < waitDuration &&
-				replayMode === ReplayMode.Exact
+			if (props.maxReplayTime >= 0 &&
+				props.maxReplayTime - this.game.time < waitDuration &&
+				props.replayMode === ReplayMode.Exact
 			) {
-				waitDuration = maxReplayTime - this.game.time;
+				waitDuration = props.maxReplayTime - this.game.time;
 				lastIter = true;
 			}
 
 			// only Exact mode replays wait nodes
-			if (itr.type === ActionType.Wait && replayMode === ReplayMode.Exact) {
+			if (itr.type === ActionType.Wait && props.replayMode === ReplayMode.Exact) {
 				this.#requestTick({
 					deltaTime: waitDuration,
-					suppressLog: suppressLog
+					suppressLog: props.suppressLog
 				});
 			}
 
 			// skill nodes
 			else if (itr.type === ActionType.Skill) {
 
-				let waitFirst = replayMode === ReplayMode.Tight; // false for exact replay
-				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, suppressLog, TickMode.Manual);
+				let waitFirst = props.replayMode === ReplayMode.Tight; // false for exact replay
+				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, props.suppressLog, TickMode.Manual);
 
-				if (replayMode === ReplayMode.Exact) {
+				if (props.replayMode === ReplayMode.Exact) {
 					console.assert(status.status === SkillReadyStatus.Ready);
-					let deltaTime = maxReplayTime >= 0 ? waitDuration :
-						(itr===line.getLastAction() ? this.game.timeTillAnySkillAvailable() : waitDuration);
+
+					let deltaTime = 0;
+					if (props.maxReplayTime >= 0) {
+						deltaTime = waitDuration;
+					} else {
+						if (props.removeTrailingIdleTime) {
+							deltaTime = (itr===props.line.getLastAction() ? this.game.timeTillAnySkillAvailable() : waitDuration);
+						} else {
+							deltaTime = waitDuration;
+						}
+					}
+
 					this.#requestTick({
 						deltaTime: deltaTime,
-						suppressLog: suppressLog
+						suppressLog: props.suppressLog
 					});
 				}
-				else if (replayMode === ReplayMode.Tight) {
+				else if (props.replayMode === ReplayMode.Tight) {
 					this.#requestTick({
 						deltaTime: this.game.timeTillAnySkillAvailable(),
-						suppressLog: suppressLog
+						suppressLog: props.suppressLog
 					});
 				}
 				else {
@@ -603,11 +629,11 @@ class Controller {
 				}
 			}
 			// buff enable/disable also only supported by exact replay
-			else if (itr.type === ActionType.SetResourceEnabled && replayMode === ReplayMode.Exact) {
+			else if (itr.type === ActionType.SetResourceEnabled && props.replayMode === ReplayMode.Exact) {
 				this.requestToggleBuff(itr.buffName as ResourceType);
 				this.#requestTick({
 					deltaTime: waitDuration,
-					suppressLog: suppressLog
+					suppressLog: props.suppressLog
 				});
 			}
 			else {
@@ -652,7 +678,7 @@ class Controller {
 	tryAddLine(line: Line, replayMode=ReplayMode.Tight) {
 		this.#bAddingLine = true;
 
-		let replayResult = this.#replay(line, replayMode, false);
+		let replayResult = this.#replay({line: line, replayMode: replayMode});
 		if (!replayResult.success) {
 			this.rewindUntilBefore(replayResult.firstAddedNode);
 			window.alert('Failed to add line "' + line.name + '" due to insufficient resources and/or stats mismatch.');
@@ -727,8 +753,29 @@ class Controller {
 		if (newTail) {
 			replayRecord.tail = newTail;
 			replayRecord.tail.next = undefined;
-			this.#replay(replayRecord, ReplayMode.Exact, true);
+			this.#replay({line: replayRecord, replayMode: ReplayMode.Exact, suppressLog: true});
 		}
+	}
+
+	removeTrailingIdleTime() {
+
+		// first remove any non-skill nodes in the end
+		let lastSkill = this.record.getLastAction(node=>{ return node.type === ActionType.Skill; });
+		if (lastSkill && lastSkill.next) { // there are nodes after the last skill
+			this.rewindUntilBefore(lastSkill.next);
+		}
+
+		// now replay the rest
+		let replayRecord = this.record;
+		this.record = new Record();
+		this.record.config = this.gameConfig;
+		this.#requestRestart();
+		this.#replay({
+			line: replayRecord,
+			replayMode: ReplayMode.Exact,
+			suppressLog: true,
+			removeTrailingIdleTime: true
+		});
 	}
 
 	onTimelineSelectionChanged() {

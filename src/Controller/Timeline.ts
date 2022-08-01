@@ -117,7 +117,6 @@ export class Timeline {
 	}
 
 	addElement(elem: TimelineElem) {
-		//verifyElem(elem);
 		this.elements.push(elem);
 	}
 

@@ -200,6 +200,7 @@ class SkillsWindow extends React.Component {
 				} else {
 					console.assert(false);
 				}
+				controller.autoSave();
 			}
 			e.preventDefault();
 		}).bind(this);
@@ -216,6 +217,7 @@ class SkillsWindow extends React.Component {
 				if (targetTime > currentTime) {
 					let elapse = targetTime - currentTime;
 					controller.step(elapse);
+					controller.autoSave();
 				} else {
 					window.alert("Can only jump to a time in the future!");
 				}
@@ -225,6 +227,10 @@ class SkillsWindow extends React.Component {
 
 		this.onWaitSinceChange = (e=>{
 			this.setState({waitSince: e.target.value});
+		}).bind(this);
+
+		this.onRemoveTrailingIdleTime = (e=>{
+			controller.removeTrailingIdleTime();
 		}).bind(this);
 
 		this.state = {
@@ -272,26 +278,36 @@ class SkillsWindow extends React.Component {
 			</div>
 		</div>}/>;
 
+		let textInputStyle = {
+			display: "inline-block",
+			flex: "auto",
+			//marginRight: 10,
+			//border: "1px solid red",
+		};
+
 		return <div className={"skillsWindow"}>
 			<div data-tip data-for="SkillDescription" className={"skillIcons"}>
 				{skillButtons}
-				<div style={{display: "flex", flexDirection: "row", margin: "10px 0"}}>
-					<form onSubmit={this.onWaitTimeSubmit} style={{flex: 3}}>
-						Wait until <input type={"text"} style={{
-						width: 40, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
-					}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) since <select
-						style={{display: "inline-block", outline: "none"}}
-						value={this.state.waitSince}
-						onChange={this.onWaitSinceChange}>
-						<option value={WaitSince.Now}>now</option>
-						<option value={WaitSince.LastSkill}>last skill</option>
-					</select> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
-					</form>
-					<form onSubmit={this.onWaitUntilSubmit} style={{flex: 2}}>
-						Wait until {waitUntilHelp} <input type={"text"} style={{
-						width: 80, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
-					}} value={this.state.waitUntil} onChange={this.onWaitUntilChange}/> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
-					</form>
+				<div style={{margin: "10px 0"}}>
+					<div style={{display: "flex", flexDirection: "row", marginBottom: 6}}>
+						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+							Wait until <input type={"text"} style={{
+							width: 30, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
+						}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) since <select
+							style={{display: "inline-block", outline: "none"}}
+							value={this.state.waitSince}
+							onChange={this.onWaitSinceChange}>
+							<option value={WaitSince.Now}>now</option>
+							<option value={WaitSince.LastSkill}>last skill</option>
+						</select> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
+						</form>
+						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
+							Wait until {waitUntilHelp} <input type={"text"} style={{
+							width: 60, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
+						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange}/> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
+						</form>
+					</div>
+					<button onClick={this.onRemoveTrailingIdleTime}>remove trailing idle time</button>
 				</div>
 			</div>
 		</div>

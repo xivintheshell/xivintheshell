@@ -234,7 +234,7 @@ export class Config extends React.Component {
 				}/></span>
 			</div>
 
-			<input style={{marginTop: 5}} type="submit" value="apply and reset"/>
+			<input style={{marginTop: 10}} type="submit" value="apply and reset"/>
 		</form>;
 		return (
 			<div className={"config"} style={{marginBottom: 16}}>
