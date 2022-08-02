@@ -1,17 +1,24 @@
 import React from 'react'
-import { LogCategory } from "../Controller/Common";
+import {Color, LogCategory} from "../Controller/Common";
 
+type AutoScrollProps = {
+	name: LogCategory,
+	className: string,
+	content: React.ReactNode,
+};
 class AutoScroll extends React.Component {
-	constructor(props) {
+	props: AutoScrollProps;
+	private readonly myRef: React.RefObject<HTMLDivElement>;
+	constructor(props: AutoScrollProps) {
 		super(props);
+		this.props = props;
 		this.myRef = React.createRef();
 	}
 	componentDidMount() {
 		this.scroll();
 	}
 	scroll() {
-		let cur = this.myRef.current;
-		if (cur) {
+		if (this.myRef.current !== null) {
 			this.myRef.current.scrollTop = this.myRef.current.scrollHeight;
 		}
 	}
@@ -27,7 +34,7 @@ let logContent = new Map();
 logContent.set(LogCategory.Action, []);
 logContent.set(LogCategory.Event, []);
 
-let addLogContentInner = function(logCategory, newContent, color) {
+let addLogContentInner = function(logCategory: LogCategory, newContent: string, color: Color) {
 	logContent.get(logCategory).push({
 		text: newContent,
 		color: color
@@ -35,10 +42,13 @@ let addLogContentInner = function(logCategory, newContent, color) {
 }
 export let addLogContent = addLogContentInner;
 
+type LogViewProps = {};
 class LogView extends React.Component {
-	constructor(props) {
+	props: LogViewProps;
+	constructor(props: LogViewProps) {
 		super(props);
-		addLogContent = ((logCategory, newContent, color)=>{
+		this.props = props;
+		addLogContent = ((logCategory: LogCategory, newContent: string, color: Color)=>{
 			addLogContentInner(logCategory, newContent, color);
 			this.forceUpdate();
 		}).bind(this);
@@ -47,7 +57,7 @@ class LogView extends React.Component {
 		addLogContent = addLogContentInner;
 	}
 	render() {
-		let mappedContent = function(category) {
+		let mappedContent = function(category: LogCategory) {
 			let list = logContent.get(category);
 			let outList = [];
 			for (let i=0; i<list.length; i++) {

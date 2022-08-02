@@ -1,5 +1,14 @@
 [
 	{
+		"date": "8/2/22",
+		"changes": [
+			"page refresh and loading from timeline no longer removes wait time at the end",
+			"\"remove trailing wait time\" button",
+			"bugfix: caster tax being dependent on framerate when in real time (if desired, add it to config instead)",
+			"bugfix: hover on skills on the timeline doesn't show potency & lock duration"
+		]
+	},
+	{
 		"date": "7/31/22",
 		"changes": [
 			"add sprint",

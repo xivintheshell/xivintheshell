@@ -1,5 +1,5 @@
 import React from 'react'
-import {ButtonIndicator, Clickable, Help, parseTime} from "./Common";
+import {Clickable, Help, parseTime} from "./Common";
 import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import ReactTooltip from 'react-tooltip';

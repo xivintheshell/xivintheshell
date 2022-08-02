@@ -1,6 +1,5 @@
 import React, {ChangeEvent, CSSProperties, ReactNode} from "react";
 import jQuery from 'jquery';
-import exp from "constants";
 import ReactTooltip from "react-tooltip";
 
 // https://github.com/eligrey/FileSaver.js#readme
@@ -67,7 +66,7 @@ export function parseTime(timeStr: string) : number {
 
 type ClickableProps = {
 	content?: ReactNode,
-	onClickFn?: () => void,
+	onClickFn?: (e: any) => void,
 	style?: CSSProperties
 }
 

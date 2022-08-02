@@ -1,11 +1,21 @@
-import React from 'react'
+import React, {CSSProperties} from 'react'
 import {controller} from "../Controller/Controller";
+// @ts-ignore
 import {skillIcons} from "./Skills";
 import {Clickable} from "./Common";
 import ReactTooltip from 'react-tooltip';
+import {ActionNode} from "../Controller/Record";
 
 const MAX_HEIGHT = 400;
-export function Cursor(props) {
+export function Cursor(props: {
+	vOffset: number;
+	elem: {
+		time: number;
+		displayTime: number;
+	};
+	elemID: string;
+	color: string;
+}) {
 	let style={
 		top: props.vOffset,
 		left: controller.timeline.positionFromTime(props.elem.time) - 3,
@@ -20,7 +30,11 @@ export function Cursor(props) {
 	</div>;
 }
 
-export function MPTickMark(props) {
+export function MPTickMark(props: {
+	vOffset: number;
+	elem: { time: number; };
+	elemID: string;
+}) {
 	let style={
 		top: props.vOffset,
 		left: controller.timeline.positionFromTime(props.elem.time) - 3,
@@ -33,7 +47,15 @@ export function MPTickMark(props) {
 		{/*<ReactTooltip id={`${props.elemID}`}>{props.elem.source}</ReactTooltip>*/}
 	</div>;
 }
-export function DamageMark(props) {
+export function DamageMark(props: {
+	vOffset: number;
+	elem: {
+		time: number;
+		potency: number;
+		source: string;
+	};
+	elemID: string;
+}) {
 	let style={
 		top: props.vOffset,
 		left: controller.timeline.positionFromTime(props.elem.time) - 3,
@@ -47,7 +69,14 @@ export function DamageMark(props) {
 	</div>;
 }
 
-export function LucidMark(props) {
+export function LucidMark(props: {
+	vOffset: number;
+	elem: {
+		time: number;
+		source: string;
+	};
+	elemID: string;
+}) {
 	let style={
 		top: props.vOffset,
 		left: controller.timeline.positionFromTime(props.elem.time)-3,
@@ -60,10 +89,23 @@ export function LucidMark(props) {
 	</div>;
 }
 
-export function TimelineSkill(props) {
+export function TimelineSkill(props: {
+	elem: {
+		node: ActionNode;
+		lockDuration: number;
+		isSpellCast: boolean;
+		recastDuration: number;
+		relativeSnapshotTime: number;
+		skillName: string;
+		displayTime: number;
+		time: number;
+		isGCD: boolean;
+	};
+	elemID: string;
+}) {
 	let node = props.elem.node;
 	let lockBarWidth = controller.timeline.positionFromTime(props.elem.lockDuration);
-	let lockBarStyle = {
+	let lockBarStyle: CSSProperties = {
 		position: "absolute",
 		top: 0,
 		background: props.elem.isSpellCast ? "#e7d9ee" : "#9d9d9d",
@@ -73,7 +115,7 @@ export function TimelineSkill(props) {
 	let lockBar = <div style={lockBarStyle}/>
 
 	let recastBarWidth = controller.timeline.positionFromTime(props.elem.recastDuration);
-	let recastBarStyle = {
+	let recastBarStyle: CSSProperties = {
 		position: "absolute",
 		top: 14,
 		background: "#dbf3d6",
@@ -82,7 +124,7 @@ export function TimelineSkill(props) {
 	};
 	let recastBar = <div style={recastBarStyle}/>
 
-	let snapshotIndicatorStyle = {
+	let snapshotIndicatorStyle: CSSProperties = {
 		position: "absolute",
 		width: 0,
 		height: 14,
@@ -92,7 +134,7 @@ export function TimelineSkill(props) {
 	}
 	let snapshotIndicator = <div style={snapshotIndicatorStyle}/>
 
-	let iconStyle = {
+	let iconStyle: CSSProperties = {
 		position: "absolute",
 		top: 0,
 		width: 28,
@@ -101,6 +143,22 @@ export function TimelineSkill(props) {
 	let iconPath = skillIcons.get(props.elem.skillName);
 	let description = props.elem.skillName + "@" + (props.elem.displayTime).toFixed(2);
 	let hoverText = <span>{description}</span>;
+	let componentStyle={
+		left: controller.timeline.positionFromTime(props.elem.time),
+		top: props.elem.isGCD ? 14 : 0,
+	};
+	let potency = node.tmp_capturedPotency;
+	let lockDuration = 0;
+	if (node.tmp_endLockTime!==undefined && node.tmp_startLockTime!==undefined) {
+		lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
+	}
+	if (potency !== undefined && potency > 0) {
+		hoverText = <div>
+			{hoverText}<br/>
+			<span>{"potency: " + potency.toFixed(2)}</span><br/>
+			<span>{"lock duration: " + lockDuration.toFixed(2)}</span>
+		</div>;
+	}
 	let iconImg = <div style={iconStyle} className={"timeline-elem-skill-icon"}>
 		<img
 			style={{display: "block", width: "100%", height: "100%"}}
@@ -122,19 +180,6 @@ export function TimelineSkill(props) {
 		controller.timeline.onClickSkill(node, e.shiftKey);
 	}}/>
 
-	let componentStyle={
-		left: controller.timeline.positionFromTime(props.elem.time),
-		top: props.elem.isGCD ? 14 : 0,
-	};
-	let potency = node.tmp_capturedPotency;
-	let lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
-	if (potency > 0) {
-		hoverText = <div>
-			{hoverText}<br/>
-			<span>{"potency: " + potency.toFixed(2)}</span><br/>
-			<span>{"lock time: " + lockDuration.toFixed(2)}</span>
-		</div>;
-	}
 	return <div style={componentStyle} className={"timeline-elem skill"}>
 		{lockBar}
 		{props.elem.isGCD ? recastBar : <div/>}
@@ -142,4 +187,3 @@ export function TimelineSkill(props) {
 		{icon}
 	</div>;
 }
-

@@ -845,24 +845,51 @@ class Controller {
 			let dt = (time - prevTime) / 1000 * ctrl.timeScale;
 
 			// update (skills queue)
-			let numSkillsProcessed = 0;
-			for (let i = 0; i < ctrl.skillsQueue.length; i++) {
-				let status = ctrl.#useSkill(ctrl.skillsQueue[i].skillName, false, true);
-				if (status.status === SkillReadyStatus.Ready) {
-					ctrl.scrollToTime(ctrl.game.time);
-					ctrl.autoSave();
+			// dequeue skills at the start of each frame - if the skill is actually ready before the last frame is finished,
+			// will leave a small gap between skills... OOF
+
+			// tick until (1) dt, or (2) exactly when the last skill is finished, whichever comes first
+			// if (2), dequeue the next skill if there is one, then tick the rest of dt
+
+			let tryDequeueSkill = ()=>{
+				let numSkillsProcessed = 0;
+				for (let i = 0; i < ctrl.skillsQueue.length; i++) {
+					let status = ctrl.#useSkill(ctrl.skillsQueue[i].skillName, false, true);
+					if (status.status === SkillReadyStatus.Ready) {
+						ctrl.scrollToTime(ctrl.game.time);
+						ctrl.autoSave();
+					}
+					ctrl.skillsQueue[i].timeInQueue += dt;
+					if (ctrl.skillsQueue[i].timeInQueue >= ctrl.skillMaxTimeInQueue) {
+						numSkillsProcessed++;
+					}
 				}
-				ctrl.skillsQueue[i].timeInQueue += dt;
-				if (ctrl.skillsQueue[i].timeInQueue >= ctrl.skillMaxTimeInQueue) {
-					numSkillsProcessed++;
-				}
+				ctrl.skillsQueue.splice(0, numSkillsProcessed);
+			};
+
+			tryDequeueSkill();
+
+			// advance by dt, but potentially dequeue another skill in between
+			let timeTillAnySkillAvailable = ctrl.game.timeTillAnySkillAvailable();
+			if (timeTillAnySkillAvailable >= dt) {
+				ctrl.#requestTick({
+					deltaTime : dt,
+					suppressLog: true,
+					prematureStopCondition: ()=>{ return !loopCondition(); }
+				});
+			} else {
+				ctrl.#requestTick({
+					deltaTime : timeTillAnySkillAvailable,
+					suppressLog: true,
+					prematureStopCondition: ()=>{ return !loopCondition(); }
+				});
+				tryDequeueSkill(); // potentially sandwich another skill here
+				ctrl.#requestTick({
+					deltaTime : dt - timeTillAnySkillAvailable,
+					suppressLog: true,
+					prematureStopCondition: ()=>{ return !loopCondition(); }
+				});
 			}
-			ctrl.skillsQueue.splice(0, numSkillsProcessed);
-			ctrl.#requestTick({
-				deltaTime : dt,
-				suppressLog: true,
-				prematureStopCondition: ()=>{ return !loopCondition(); }
-			});
 
 			// update display
 			ctrl.updateAllDisplay();
@@ -872,6 +899,7 @@ class Controller {
 			if (loopCondition()) requestAnimationFrame(loopFn);
 			else {
 				ctrl.shouldLoop = false;
+				ctrl.autoSave();
 				setRealTime(false);
 			}
 		}
@@ -879,15 +907,16 @@ class Controller {
 		requestAnimationFrame(loopFn);
 	}
 
+	step(t: number) {
+		this.#requestTick({deltaTime: t, suppressLog: false});
+		this.updateAllDisplay();
+	}
+
 	// TODO: update display?
 	#handleKeyboardEvent_RealTime(evt: { keyCode: number; }) {
 		if (evt.keyCode===32) { // space
 			this.#playPause({shouldLoop: !this.shouldLoop});
 		}
-	}
-	step(t: number) {
-		this.#requestTick({deltaTime: t, suppressLog: false});
-		this.updateAllDisplay();
 	}
 	#handleKeyboardEvent_RealTimeAutoPause(evt: { shiftKey: boolean; keyCode: number; }) {
 		if (this.shouldLoop) return;
@@ -902,6 +931,7 @@ class Controller {
 		if (evt.keyCode===32) { // space
 			this.#fastForward();
 			this.updateAllDisplay();
+			this.autoSave();
 		}
 		else if (evt.keyCode===85) { // u (undo)
 			this.rewindUntilBefore(this.record.getLastAction());
