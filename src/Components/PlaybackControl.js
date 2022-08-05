@@ -122,6 +122,18 @@ export class TimeControl extends React.Component {
 	}
 }
 
+function ConfigSummary(props) {
+	let ct_2_5 = controller.gameConfig.adjustedCastTime(2.5).toFixed(2);
+	let lucidTickOffset = controller.game.actorTickOffset.toFixed(2);
+	let offsetDesc = "The random time offset of actor (lucid dreaming) ticks relative to MP ticks";
+	let rngProc = controller.gameConfig.rngProcs;
+	return <div>
+		GCD: {ct_2_5}
+		<br/>Actor tick offset <Help topic={"actorTickOffset"} content={offsetDesc}/>: {lucidTickOffset}
+		{rngProc ? undefined : <span><br/>No rng procs</span>}
+	</div>
+}
+
 export let updateConfigDisplay = (config)=>{};
 
 export class Config extends React.Component {
@@ -135,7 +147,7 @@ export class Config extends React.Component {
 			timeTillFirstManaTick: 0,
 			countdown: 0,
 			randomSeed: "",
-			rngProcs: true
+			rngProcs: true,
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);
@@ -144,7 +156,7 @@ export class Config extends React.Component {
 		this.setTimeTillFirstManaTick = this.unboundSetTimeTillFirstManaTick.bind(this);
 		this.setCountdown = this.unboundSetCountdown.bind(this);
 		this.setRandomSeed = this.unboundSetRandomSeed.bind(this);
-		this.setrngProcs = this.unboundSetrngProcs.bind(this);
+		this.setrngProcs = this.unboundSetRngProcs.bind(this);
 
 		updateConfigDisplay = ((config)=>{
 			this.setState({
@@ -165,7 +177,7 @@ export class Config extends React.Component {
 	unboundSetTimeTillFirstManaTick(val) { this.setState({timeTillFirstManaTick: val}) }
 	unboundSetCountdown(val) { this.setState({countdown: val}) }
 	unboundSetRandomSeed(val) { this.setState({randomSeed: val}); }
-	unboundSetrngProcs(evt) { this.setState({rngProcs: evt.target.checked}); }
+	unboundSetRngProcs(evt) { this.setState({rngProcs: evt.target.checked}); }
 
 	setConfigAndRestart(config) {
 		if (isNaN(parseFloat(config.spellSpeed)) ||
@@ -239,6 +251,7 @@ export class Config extends React.Component {
 		return (
 			<div className={"config"} style={{marginBottom: 16}}>
 				<div style={{marginBottom: 5}}><b>Config</b></div>
+				<ConfigSummary/> {/* retrieves data from global controller */}
 				<Expandable title={"Edit"} content={editSection}/>
 			</div>
 		)}

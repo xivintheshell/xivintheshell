@@ -64,6 +64,7 @@ export class ActionNode {
 	}
 }
 
+// Record but without config/stats and selection info, just a sequence of skills
 export class Line {
 	static _gLineIndex: number = 0;
 	_lineIndex: number;
@@ -132,7 +133,7 @@ export class Line {
 	}
 }
 
-// a sequence of actions
+// information abt a timeline
 export class Record extends Line {
 	selectionStart?: ActionNode;
 	selectionEnd?: ActionNode;

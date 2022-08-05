@@ -3,15 +3,24 @@ import {loadFromFile, saveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType} from "../Controller/Common";
 
+type Fixme = any;
+
 export class LoadSave extends React.Component {
-	constructor(props) {
+	private readonly onLoad: () => void;
+	private readonly onSave: () => void;
+	private readonly onSaveFilenameChange: (e: React.ChangeEvent<{value: string}>) => void;
+
+	private readonly fileSelectorRef: React.RefObject<HTMLInputElement>;
+	private saveFilename: string;
+	
+	constructor(props: {} | Readonly<{}>) {
 		super(props);
 
 		this.onLoad = (()=>{
 			let cur = this.fileSelectorRef.current;
-			if (cur && cur.files.length > 0) {
+			if (cur && cur.files!==null && cur.files.length > 0) {
 				let fileToLoad = cur.files[0];
-				loadFromFile(fileToLoad, (content)=>{
+				loadFromFile(fileToLoad, (content: Fixme)=>{
 					if (content.fileType === FileType.Record) {
 						controller.loadBattleRecordFromFile(content);
 						controller.updateAllDisplay();
@@ -28,7 +37,7 @@ export class LoadSave extends React.Component {
 			saveToFile(controller.record.serialized(), this.saveFilename);
 		}).bind(this);
 
-		this.onSaveFilenameChange = ((e)=>{
+		this.onSaveFilenameChange = ((e: React.ChangeEvent<{value: string}>)=>{
 			if (e.target) {
 				this.saveFilename = e.target.value;
 			}

@@ -2,15 +2,23 @@ import React from 'react'
 import {Clickable, Expandable, Input, LoadJsonFromFileOrUrl, saveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType, ReplayMode} from "../Controller/Common";
+// @ts-ignore
 import {skillIcons} from "./Skills";
 import {ActionType} from "../Controller/Record";
+import {Line} from "../Controller/Record";
+
+type Fixme = any;
 
 export let updateSkillSequencePresetsView = ()=>{};
 
 class SaveAsPreset extends React.Component {
-	constructor(props) {
+	props: Readonly<{enabled: boolean}>;
+	state: { filename: string };
+	onChange: (val: string) => void;
+	constructor(props: Readonly<{enabled: boolean}>) {
 		super(props);
-		this.onChange = ((val)=>{
+		this.props = props;
+		this.onChange = ((val: string)=>{
 			this.setState({filename: val});
 		}).bind(this);
 
@@ -35,7 +43,7 @@ class SaveAsPreset extends React.Component {
 	}
 }
 
-function PresetLine(props) {
+function PresetLine(props: { line: Line }) {
 	let line = props.line;
 	let icons = [];
 	let itr = line.getFirstAction();
@@ -73,7 +81,9 @@ function PresetLine(props) {
 
 class SkillSequencePresets extends React.Component {
 	saveFilename = "presets.txt";
-	constructor(props) {
+	onSaveFilenameChange: (evt: React.ChangeEvent<{value: string}>) => void;
+	onSave: () => void;
+	constructor(props: Readonly<{}>) {
 		super(props);
 		updateSkillSequencePresetsView = this.unboundUpdatePresetsView.bind(this);
 		this.onSaveFilenameChange = this.unboundOnSaveFilenameChange.bind(this);
@@ -82,15 +92,15 @@ class SkillSequencePresets extends React.Component {
 	componentWillUnmount() {
 		updateSkillSequencePresetsView = ()=>{};
 	}
-	unboundOnSaveFilenameChange(evt) {
+	unboundOnSaveFilenameChange(evt: React.ChangeEvent<{value: string}>) {
 		if (evt.target) this.saveFilename = evt.target.value;
 	}
-	unboundOnSave(e) {
+	unboundOnSave() {
 		saveToFile(controller.serializedPresets(), this.saveFilename);
 	}
 	unboundUpdatePresetsView() { this.forceUpdate(); }
 	render() {
-		let hasSelection = controller && controller.record && controller.record.getFirstSelection();
+		let hasSelection = controller && controller.record && controller.record.getFirstSelection() !== undefined;
 		let longInputStyle = {
 			outline: "none",
 			border: "none",
@@ -104,7 +114,7 @@ class SkillSequencePresets extends React.Component {
 			<LoadJsonFromFileOrUrl
 				loadUrlOnMount={false}
 				defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/lines/default.txt"}
-				onLoadFn={(content)=>{
+				onLoadFn={(content: Fixme)=>{
 					if (content.fileType === FileType.SkillSequencePresets) {
 						controller.appendFilePresets(content);
 					} else {
