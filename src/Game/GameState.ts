@@ -100,9 +100,9 @@ export class GameState {
 	}
 
 	#init() {
+		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
-			let game = this;
 			let recurringManaRegen = ()=>{
 				// mana regen
 				let mana = this.resources.get(ResourceType.Mana);

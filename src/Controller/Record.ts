@@ -228,7 +228,7 @@ export class Record extends Line {
 		return {
 			name: base.name,
 			fileType: FileType.Record,
-			config: this.config,
+			config: this.config?.serialized(),
 			actions: base.actions,
 		};
 	}

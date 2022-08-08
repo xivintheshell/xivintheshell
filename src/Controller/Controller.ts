@@ -76,10 +76,20 @@ class Controller {
 	}
 
 	updateAllDisplay(game: GameState = this.game) {
-		updateConfigDisplay(this.gameConfig);
+		updateConfigDisplay(game.config.serialized());
 		this.updateStatusDisplay(game);
 		this.updateSkillButtons(game);
 		this.updateTimelineDisplay();
+	}
+
+	#applyResourceOverrides(gameConfig: GameConfig) {
+		const apply = 1
+		if (apply > 0) {
+			let overrides = gameConfig.initialResourceOverrides;
+			for (let i = 0; i < overrides.length; i++) {
+				overrides[i].applyTo(this.game);
+			}
+		}
 	}
 
 	displayHistoricalState(time: number) {
@@ -89,11 +99,16 @@ class Controller {
 		let tmpGame = this.game;
 		let tmpRecord = this.record;
 		this.lastAttemptedSkill = "";
-		//============ stashed states ============
+		//============^ stashed states ^============
 
 		this.game = new GameState(this.gameConfig);
 		this.record = new Record();
 		this.record.config = this.gameConfig;
+
+		// apply resource overrides
+		this.#applyResourceOverrides(this.record.config);
+
+		// replay skills sequence
 		this.#replay({
 			line: tmpRecord,
 			replayMode: ReplayMode.Exact,
@@ -116,7 +131,7 @@ class Controller {
 		// timeline
 		this.timeline.drawElements();
 
-		//============ pop stashed states ============
+		//============v pop stashed states v============
 		this.#bCalculatingHistoricalState = false;
 		this.savedHistoricalGame = this.game;
 		this.savedHistoricalRecord = this.record;
@@ -188,19 +203,17 @@ class Controller {
 	}
 
 	loadBattleRecordFromFile(content: Fixme) {
-		this.gameConfig = new GameConfig();
-		this.gameConfig.casterTax = content.config.casterTax;
-		this.gameConfig.animationLock = content.config.animationLock;
-		this.gameConfig.spellSpeed = content.config.spellSpeed;
-		this.gameConfig.timeTillFirstManaTick = content.config.timeTillFirstManaTick;
-		this.gameConfig.countdown = content.config.countdown;
-		this.gameConfig.randomSeed = content.config.randomSeed;
-		this.gameConfig.rngProcs = content.config.rngProcs===undefined ? true : content.config.rngProcs;
+		let gameConfig = new GameConfig(content.config);
+
+		this.gameConfig = gameConfig;
 
 		this.record = new Record();
-		this.record.config = content.config;
+		this.record.config = gameConfig;
 
 		this.#requestRestart();
+
+		// apply resource overrides
+		this.#applyResourceOverrides(this.gameConfig);
 
 		// now add the actions
 		let line = new Line();
@@ -390,21 +403,16 @@ class Controller {
 		timeTillFirstManaTick: 0.3,
 		countdown: 5,
 		randomSeed: "hello.",
-		rngProcs: true
+		rngProcs: true,
+		initialResourceOverrides: []
 	}) {
-		this.gameConfig = new GameConfig();
-		this.gameConfig.casterTax = props.casterTax;
-		this.gameConfig.animationLock = props.animationLock;
-		this.gameConfig.spellSpeed = props.spellSpeed;
-		this.gameConfig.timeTillFirstManaTick = props.timeTillFirstManaTick;
-		this.gameConfig.countdown = props.countdown;
-		this.gameConfig.randomSeed = props.randomSeed;
-		this.gameConfig.rngProcs = props.rngProcs;
+		this.gameConfig = new GameConfig(props);
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;
 
 		this.#requestRestart();
+		this.#applyResourceOverrides(this.gameConfig);
 
 		this.autoSave();
 	}
@@ -749,6 +757,7 @@ class Controller {
 		this.record.config = this.gameConfig;
 
 		this.#requestRestart();
+		this.#applyResourceOverrides(this.gameConfig);
 
 		if (newTail) {
 			replayRecord.tail = newTail;
@@ -770,6 +779,7 @@ class Controller {
 		this.record = new Record();
 		this.record.config = this.gameConfig;
 		this.#requestRestart();
+		this.#applyResourceOverrides(this.gameConfig);
 		this.#replay({
 			line: replayRecord,
 			replayMode: ReplayMode.Exact,
@@ -821,6 +831,7 @@ class Controller {
 		this.record.addActionNode(node);
 		this.updateStatusDisplay(this.game);
 		this.updateSkillButtons(this.game);
+		this.autoSave();
 	}
 
 	scrollToTime(t?: number) {

@@ -73,8 +73,8 @@ export const enum ResourceType {
 	Triplecast = "Triplecast", // [0, 3]
 	Firestarter = "Firestarter", // [0, 1]
 	Thundercloud = "Thundercloud", // [0, 1]
-	ThunderDoTTick = "ThunderDoTTick", // [0, 1]
 	ThunderDoT = "ThunderDoT", // [0, 1] is actually used for display timing only
+	ThunderDoTTick = "ThunderDoTTick", // [0, 1]
 	Manaward = "Manaward", // [0, 1]
 	Addle = "Addle", // [0, 1]
 	Swiftcast = "Swiftcast", // [0, 1]
@@ -89,7 +89,7 @@ export const enum ResourceType {
 	NotAnimationLocked = "NotAnimationLocked", // [0, 1]
 	NotCasterTaxed = "NotCasterTaxed", // [0, 1]
 
-	// oGCDs
+	// CDs
 	cd_GCD = "cd_GCD", // [0, Constant.gcd]
 	cd_Transpose = "cd_Transpose", // [0, 1x]
 	cd_Sharpcast = "cd_Sharpcast", // [0, 2x] // TODO = figure out how this works
@@ -100,12 +100,12 @@ export const enum ResourceType {
 	cd_Triplecast = "cd_Triplecast", // [0, 2x]
 	cd_Manafont = "cd_Manafont", // [0, 1x]
 	cd_Amplifier = "cd_Amplifier", // [0, 1x]
-	cd_Addle = "cd_Addle",
-	cd_Swiftcast = "cd_Swiftcast",
-	cd_LucidDreaming = "cd_LucidDreaming",
-	cd_Surecast = "cd_Surecast",
-	cd_Tincture = "cd_Tincture",
-	cd_Sprint = "cd_Sprint",
+	cd_Addle = "cd_Addle", // [0, 1x]
+	cd_Swiftcast = "cd_Swiftcast", // [0, 1x]
+	cd_LucidDreaming = "cd_LucidDreaming", // [0, 1x]
+	cd_Surecast = "cd_Surecast", // [0, 1x]
+	cd_Tincture = "cd_Tincture", // [0, 1x]
+	cd_Sprint = "cd_Sprint", // [0, 1x]
 
 	Never = "Never",
 }

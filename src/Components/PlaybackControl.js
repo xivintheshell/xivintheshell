@@ -1,7 +1,10 @@
 import React from 'react';
-import { controller } from '../Controller/Controller'
-import {Help, Input, ButtonIndicator, Expandable} from "./Common";
+import {controller} from '../Controller/Controller'
+import {ButtonIndicator, Expandable, Help, Input} from "./Common";
 import {TickMode} from "../Controller/Common";
+import {ResourceType} from "../Game/Common";
+import {resourceInfos} from "../Game/Resources";
+import {CoolDownInfo} from "../Game/Resources";
 
 export class TimeControl extends React.Component {
 	constructor(props) {
@@ -134,6 +137,20 @@ function ConfigSummary(props) {
 	</div>
 }
 
+// key, rscType, rscInfo
+function ResourceOverrideDisplay(props) {
+	let str;
+	if (props.rscInfo.isCoolDown) {
+		str = props.override.type + " full in " + props.override.timeTillFullOrDrop + "s";
+	} else {
+		str = props.override.type;
+		if (props.override.type === ResourceType.LeyLines) str += " (" + (props.override.enabled ? "enabled" : "disabled") + ")";
+		if (props.rscInfo.maxValue > 1 || props.override.type === ResourceType.Paradox) str += " (amount: " + props.override.stacks + ")";
+		if (props.rscInfo.maxTimeout >= 0) str += " drops in " + props.override.timeTillFullOrDrop + "s";
+	}
+	return <div style={{marginTop: 10}}>{str}</div>;
+}
+
 export let updateConfigDisplay = (config)=>{};
 
 export class Config extends React.Component {
@@ -148,6 +165,12 @@ export class Config extends React.Component {
 			countdown: 0,
 			randomSeed: "",
 			rngProcs: true,
+			initialResourceOverrides: [],
+			/////////
+			selectedOverrideResource: ResourceType.Mana,
+			overrideTimer: 0,
+			overrideStacks: 0,
+			overrideEnabled: true
 		};
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);
@@ -158,16 +181,12 @@ export class Config extends React.Component {
 		this.setRandomSeed = this.unboundSetRandomSeed.bind(this);
 		this.setrngProcs = this.unboundSetRngProcs.bind(this);
 
+		this.setOverrideTimer = (val=>{ this.setState({overrideTimer: val}) }).bind(this);
+		this.setOverrideStacks = (val=>{ this.setState({overrideStacks: val}) }).bind(this);
+		this.setOverrideEnabled = (evt=>{ this.setState({overrideEnabled: evt.target.checked}) }).bind(this);
+
 		updateConfigDisplay = ((config)=>{
-			this.setState({
-				spellSpeed: config.spellSpeed,
-				animationLock: config.animationLock,
-				casterTax: config.casterTax,
-				timeTillFirstManaTick: config.timeTillFirstManaTick,
-				countdown: config.countdown,
-				randomSeed: config.randomSeed,
-				rngProcs: config.rngProcs
-			});
+			this.setState(config);
 		}).bind(this);
 	}
 
@@ -179,6 +198,125 @@ export class Config extends React.Component {
 	unboundSetRandomSeed(val) { this.setState({randomSeed: val}); }
 	unboundSetRngProcs(evt) { this.setState({rngProcs: evt.target.checked}); }
 
+	#addResourceOverride() {
+		let rscType = this.state.selectedOverrideResource;
+		let info = resourceInfos.get(rscType);
+
+		let inputOverrideTimer = parseFloat(this.state.overrideTimer);
+		let inputOverrideStacks = parseInt(this.state.overrideStacks);
+		let inputOverrideEnabled = this.state.overrideEnabled;
+		if (isNaN(inputOverrideStacks) || isNaN(inputOverrideTimer)) {
+			window.alert("some inputs are not numbers!");
+			return;
+		}
+
+		if (inputOverrideStacks < 0 || inputOverrideStacks > info.maxValue) {
+			window.alert("invalid input amount (must be in range [0, " + info.maxValue + "]");
+			return;
+		}
+		if (inputOverrideTimer < 0 || inputOverrideTimer > info.maxTimeout) {
+			window.alert("invalid input timeout (must be in range [0, " + info.maxTimeout + "]");
+			return;
+		}
+
+		let props = {
+			type: rscType,
+			timeTillFullOrDrop: info.maxTimeout >= 0 ? inputOverrideTimer : -1,
+			stacks: info.maxValue > 1 ? inputOverrideStacks : 1,
+			enabled: rscType === ResourceType.LeyLines ? inputOverrideEnabled : true,
+		};
+		let overrides = this.state.initialResourceOverrides;
+		overrides.push(props);
+		this.setState({initialResourceOverrides: overrides});
+	}
+
+	#addResourceOverrideNode() {
+		let resourceOptions = [];
+		let counter = 0;
+		for (let k of resourceInfos.keys()) {
+			resourceOptions.push(<option key={counter} value={k}>{k}</option>);
+			counter++;
+		}
+
+		let rscType = this.state.selectedOverrideResource;
+		let info = resourceInfos.get(rscType);
+		let inputSection = undefined;
+		if (info !== undefined) {
+			inputSection = <div style={{margin: "6px 0"}}>{
+				info.isCoolDown ?
+					<Input description="Time till full: " defaultValue={this.state.overrideTimer}
+						   onChange={this.setOverrideTimer}/> :
+					<div>
+						{/*timer*/}
+						{info.maxTimeout >= 0 ? <Input
+							description="Time till drop: "
+							defaultValue={this.state.overrideTimer}
+							onChange={this.setOverrideTimer}/> : undefined}
+
+						{/*stacks*/}
+						{info.maxValue > 1 || rscType === ResourceType.Paradox ? <Input
+							description="Amount: "
+							defaultValue={this.state.overrideStacks}
+							onChange={this.setOverrideStacks}/> : undefined}
+
+						{/*enabled*/}
+						{rscType === ResourceType.LeyLines ? <div>
+							<input style={{position: "relative", top: 3, marginRight: 5}}
+								   type="checkbox"
+								   checked={this.state.overrideEnabled}
+								   onChange={this.setOverrideEnabled}
+							/><span>enabled</span>
+
+						</div> : undefined}
+					</div>
+			}</div>
+		}
+
+		return <div style={{marginTop: 16, outline: "1px solid lightgrey", outlineOffset: 6}}>
+			<select value={this.state.selectedOverrideResource}
+					onChange={evt=>{
+						if (evt.target) {
+							this.setState({
+								selectedOverrideResource: evt.target.value,
+								overrideEnabled: evt.target.value===ResourceType.LeyLines ?
+									this.state.overrideEnabled : true
+							});
+						}
+					}}>
+				{resourceOptions}
+			</select>
+			{inputSection}
+			<button onClick={evt=>{
+				this.#addResourceOverride();
+				evt.preventDefault();
+			}}>add override</button>
+		</div>
+	}
+
+	#resourceOverridesSection() {
+		let resourceOverridesDisplayNodes = [];
+		for (let i = 0; i < this.state.initialResourceOverrides.length; i++) {
+			let override = this.state.initialResourceOverrides[i];
+			let info = resourceInfos.get(override.type);
+			// TODO: find a better way to display stuff
+			resourceOverridesDisplayNodes.push(<ResourceOverrideDisplay key={i} override={override} rscInfo={info}/>);
+		}
+		return <div style={{marginTop: 10}}>
+			<Expandable title="overrideInitialResources" titleNode={<span>
+				Override initial resources <Help topic="overrideInitialResources" content={<div>
+				ouch.
+			</div>}/>
+			</span>} content={<div>
+				<button onClick={evt=>{
+					this.setState({ initialResourceOverrides: [] });
+					evt.preventDefault();
+				}}>clear all overrides</button>
+				{resourceOverridesDisplayNodes}
+				{this.#addResourceOverrideNode()}
+			</div>}/>
+		</div>;
+	}
+
 	setConfigAndRestart(config) {
 		if (isNaN(parseFloat(config.spellSpeed)) ||
 			isNaN(parseFloat(config.animationLock)) ||
@@ -188,6 +326,10 @@ export class Config extends React.Component {
 			window.alert("Some config fields are not numbers!");
 			return;
 		}
+		if (config.initialResourceOverrides === undefined) {
+			console.assert(false);
+			return;
+		}
 		controller.setConfigAndRestart({
 			spellSpeed: parseFloat(config.spellSpeed),
 			animationLock: parseFloat(config.animationLock),
@@ -195,7 +337,8 @@ export class Config extends React.Component {
 			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
 			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed.trim(),
-			rngProcs: config.rngProcs
+			rngProcs: config.rngProcs,
+			initialResourceOverrides: config.initialResourceOverrides // info only
 		});
 		controller.updateAllDisplay();
 		controller.updateCumulativeStatsDisplay();
@@ -220,7 +363,8 @@ export class Config extends React.Component {
 			countdown: this.state.countdown,
 			timeTillFirstManaTick: this.state.timeTillFirstManaTick,
 			randomSeed: seed,
-			rngProcs: this.state.rngProcs
+			rngProcs: this.state.rngProcs,
+			initialResourceOverrides: this.state.initialResourceOverrides // info only
 		};
 		this.setConfigAndRestart(config);
 		event.preventDefault();
@@ -245,8 +389,8 @@ export class Config extends React.Component {
 					"turning off rng procs will force you to sharpcast everything."
 				}/></span>
 			</div>
-
-			<input style={{marginTop: 10}} type="submit" value="apply and reset"/>
+			{this.#resourceOverridesSection()}
+			<input type="submit" value="apply and reset"/>
 		</form>;
 		return (
 			<div className={"config"} style={{marginBottom: 16}}>

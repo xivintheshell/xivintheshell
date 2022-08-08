@@ -114,8 +114,7 @@ export default class Main extends React.Component {
 								marginLeft: 6,
 								position: "relative",
 								verticalAlign: "top",
-								overflowY: "scroll",
-								overscrollBehaviorY: "contain"
+								overflowY: "scroll"
 							}}>
 								<Config/>
 								<TimeControl/>

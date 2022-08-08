@@ -69,6 +69,9 @@ export class Resource {
 	gain(amount: number) {
 		this.#currentValue = Math.min(this.#currentValue + amount, this.maxValue);
 	}
+	overrideCurrentValue(amount: number) {
+		this.#currentValue = amount;
+	}
 }
 
 export class CoolDown extends Resource {
@@ -188,5 +191,142 @@ export class ResourceState extends Map<ResourceType, Resource> {
 		addLog(LogCategory.Event, "[resource locked] " + rscType, this.game.getDisplayTime(), Color.Grey);
 		this.addResourceEvent(
 			rscType, "[resource ready] " + rscType, delay, rsc=>{ rsc.gain(1); }, Color.Grey);
+	}
+}
+
+export type ResourceInfo = {
+	isCoolDown: false,
+	defaultValue: number,
+	maxValue: number,
+	maxTimeout: number,
+}
+export type CoolDownInfo = {
+	isCoolDown: true,
+	maxStacks: number,
+	cdPerStack: number
+}
+export type ResourceOrCoolDownInfo = ResourceInfo | CoolDownInfo;
+
+export const resourceInfos = new Map<ResourceType, ResourceOrCoolDownInfo>();
+
+// resources
+resourceInfos.set(ResourceType.Mana, { isCoolDown: false, defaultValue: 10000, maxValue: 10000, maxTimeout: -1 });
+resourceInfos.set(ResourceType.Polyglot, { isCoolDown: false, defaultValue: 0, maxValue: 2, maxTimeout: -1 });
+resourceInfos.set(ResourceType.AstralFire, { isCoolDown: false, defaultValue: 0, maxValue: 3, maxTimeout: -1 });
+resourceInfos.set(ResourceType.UmbralIce, { isCoolDown: false, defaultValue: 0, maxValue: 3, maxTimeout: -1 });
+resourceInfos.set(ResourceType.UmbralHeart, { isCoolDown: false, defaultValue: 0, maxValue: 3, maxTimeout: -1 });
+
+resourceInfos.set(ResourceType.LeyLines, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 30 });
+resourceInfos.set(ResourceType.Sharpcast, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 30 });
+resourceInfos.set(ResourceType.Enochian, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 15 }); // controls AF, UI, UH
+resourceInfos.set(ResourceType.Paradox, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: -1 });
+resourceInfos.set(ResourceType.Firestarter, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 30 });
+resourceInfos.set(ResourceType.Thundercloud, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 40 });
+resourceInfos.set(ResourceType.ThunderDoT, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 30 }); // buff display only
+resourceInfos.set(ResourceType.Manaward, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 20 });
+resourceInfos.set(ResourceType.Triplecast, { isCoolDown: false, defaultValue: 0, maxValue: 3, maxTimeout: 15 });
+resourceInfos.set(ResourceType.Addle, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 10 });
+resourceInfos.set(ResourceType.Swiftcast, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 10 });
+resourceInfos.set(ResourceType.LucidDreaming, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 21 }); // buff display only
+resourceInfos.set(ResourceType.Surecast, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 10 });
+resourceInfos.set(ResourceType.Tincture, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 30 });
+resourceInfos.set(ResourceType.Sprint, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 10 });
+
+// CDs
+resourceInfos.set(ResourceType.cd_GCD, { isCoolDown: true, maxStacks: 1, cdPerStack: 2.5 });
+resourceInfos.set(ResourceType.cd_Sharpcast, { isCoolDown: true, maxStacks: 2, cdPerStack: 30 });
+resourceInfos.set(ResourceType.cd_LeyLines, { isCoolDown: true, maxStacks: 1, cdPerStack: 120 });
+resourceInfos.set(ResourceType.cd_Transpose, { isCoolDown: true, maxStacks: 1, cdPerStack: 5 });
+resourceInfos.set(ResourceType.cd_Manaward, { isCoolDown: true, maxStacks: 1, cdPerStack: 120 });
+resourceInfos.set(ResourceType.cd_BetweenTheLines, { isCoolDown: true, maxStacks: 1, cdPerStack: 3 });
+resourceInfos.set(ResourceType.cd_AetherialManipulation, { isCoolDown: true, maxStacks: 1, cdPerStack: 10 });
+resourceInfos.set(ResourceType.cd_Triplecast, { isCoolDown: true, maxStacks: 2, cdPerStack: 60 });
+resourceInfos.set(ResourceType.cd_Manafont, { isCoolDown: true, maxStacks: 1, cdPerStack: 120 });
+resourceInfos.set(ResourceType.cd_Amplifier, { isCoolDown: true, maxStacks: 1, cdPerStack: 120 });
+resourceInfos.set(ResourceType.cd_Addle, { isCoolDown: true, maxStacks: 1, cdPerStack: 90 });
+resourceInfos.set(ResourceType.cd_Swiftcast, { isCoolDown: true, maxStacks: 1, cdPerStack: 60 });
+resourceInfos.set(ResourceType.cd_LucidDreaming, { isCoolDown: true, maxStacks: 1, cdPerStack: 60 });
+resourceInfos.set(ResourceType.cd_Surecast, { isCoolDown: true, maxStacks: 1, cdPerStack: 120 });
+resourceInfos.set(ResourceType.cd_Tincture, { isCoolDown: true, maxStacks: 1, cdPerStack: 270 });
+resourceInfos.set(ResourceType.cd_Sprint, { isCoolDown: true, maxStacks: 1, cdPerStack: 60 });
+
+type ResourceOverrideProps = {
+	type: ResourceType,
+	timeTillFullOrDrop: number, // CDs (full), buff/procs (drop)
+	stacks: number, // Triplecast, MP, AF, UI, UH, Paradox, Polyglot
+	enabled: boolean, // LL
+};
+
+export class ResourceOverride {
+	props: ResourceOverrideProps;
+	constructor(props: ResourceOverrideProps) {
+		this.props = props;
+	}
+
+	equals(other: ResourceOverride) {
+		let a = this.props;
+		let b = other.props;
+		return a.type === b.type &&
+			a.timeTillFullOrDrop === b.timeTillFullOrDrop &&
+			a.stacks === b.stacks &&
+			a.enabled === b.enabled;
+	}
+
+	// CDs: time till full
+	// LL: enabled, time till full
+	// Triplecast: stacks, time till drop
+	// other buffs & enochian: time till drop
+	// MP, AF, UI, UH, Paradox, Polyglot: amount (stacks)
+	applyTo(game: GameState) {
+
+		let info = resourceInfos.get(this.props.type);
+		if (!info) {
+			console.assert(false);
+			return;
+		}
+
+		// CD
+		if (info.isCoolDown) {
+			let cd = game.cooldowns.get(this.props.type);
+			cd.overrideCurrentValue(cd.maxValue - this.props.timeTillFullOrDrop);
+		}
+
+		// resource
+		else {
+			let rsc = game.resources.get(this.props.type);
+
+			let overrideTimer = (newTimer: number) => {
+				rsc.removeTimer();
+				game.resources.addResourceEvent(rsc.type, "drop " + rsc.type, newTimer, (r: Resource) => {
+					r.consume(r.availableAmount());
+				});
+			};
+
+			// TODO: only stacks seem to work properly; override time is broken
+
+			// Ley Lines (timer + enabled)
+			if (rsc.type === ResourceType.LeyLines)
+			{
+				rsc.consume(rsc.availableAmount());
+				rsc.gain(1);
+				overrideTimer(this.props.timeTillFullOrDrop);
+				rsc.enabled = this.props.enabled;
+			}
+			// everything else (timer and/or stacks)
+			else {
+				// stacks
+				let stacks = this.props.stacks;
+				rsc.consume(rsc.availableAmount());
+				rsc.gain(stacks);
+				// timer
+				let timer = this.props.timeTillFullOrDrop;
+				if (stacks > 0 && info.maxTimeout >= 0) { // may expire
+					overrideTimer(timer);
+				}
+			}
+		}
+	}
+	serialized() {
+		return this.props;
 	}
 }

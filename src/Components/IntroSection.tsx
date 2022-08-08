@@ -35,7 +35,7 @@ export function IntroSection(props: {}) {
 					<b>General usage</b>
 				</div>
 				<ul>
-					<li style={smallGap}>Set your stats in <b>Config</b> on the right, then <ButtonIndicator text={"apply and reset"}/></li>
+					<li style={smallGap}>Set your stats in <b>Config/Edit</b> on the right, then <ButtonIndicator text={"apply and reset"}/></li>
 					<li style={smallGap}>Click on a skill to use it. If it's not ready yet, click on it again will wait and retry.</li>
 					<li style={smallGap}>Press <ButtonIndicator text={"u"}/> to delete the last added action (effective when not running in real-time).</li>
 					<li style={smallGap}>Click on a buff applied to self to remove it. Unless it's ley lines, in which case it can be re-enabled.</li>

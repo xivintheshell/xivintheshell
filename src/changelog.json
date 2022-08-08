@@ -1,6 +1,6 @@
 [
 	{
-		"date": "8/2/22",
+		"date": "8/5/22",
 		"changes": [
 			"page refresh and loading from timeline no longer removes wait time at the end",
 			"\"remove trailing wait time\" button",
