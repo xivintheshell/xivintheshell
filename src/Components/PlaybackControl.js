@@ -1,10 +1,11 @@
 import React from 'react';
 import {controller} from '../Controller/Controller'
-import {ButtonIndicator, Expandable, Help, Input} from "./Common";
+import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
 import {TickMode} from "../Controller/Common";
 import {ResourceType} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 import {CoolDownInfo} from "../Game/Resources";
+import {updateSelectionDisplay} from "./Timeline";
 
 export class TimeControl extends React.Component {
 	constructor(props) {
@@ -130,10 +131,12 @@ function ConfigSummary(props) {
 	let lucidTickOffset = controller.game.actorTickOffset.toFixed(2);
 	let offsetDesc = "The random time offset of actor (lucid dreaming) ticks relative to MP ticks";
 	let rngProc = controller.gameConfig.rngProcs;
+	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	return <div>
 		GCD: {ct_2_5}
 		<br/>Actor tick offset <Help topic={"actorTickOffset"} content={offsetDesc}/>: {lucidTickOffset}
-		{rngProc ? undefined : <span><br/>No rng procs</span>}
+		{rngProc ? undefined : <span style={{color: "mediumpurple"}}><br/>No rng procs</span>}
+		{numOverrides === 0 ? undefined : <span style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</span>}
 	</div>
 }
 
@@ -148,7 +151,11 @@ function ResourceOverrideDisplay(props) {
 		if (props.rscInfo.maxValue > 1 || props.override.type === ResourceType.Paradox) str += " (amount: " + props.override.stacks + ")";
 		if (props.rscInfo.maxTimeout >= 0) str += " drops in " + props.override.timeTillFullOrDrop + "s";
 	}
-	return <div style={{marginTop: 10}}>{str}</div>;
+	str += " ";
+	return <div style={{marginTop: 10, color: "mediumpurple"}}>
+		{str}
+		<Clickable content="[x]" onClickFn={e=>{ props.deleteFn(props.override.type); }}/>
+	</div>;
 }
 
 export let updateConfigDisplay = (config)=>{};
@@ -170,33 +177,86 @@ export class Config extends React.Component {
 			selectedOverrideResource: ResourceType.Mana,
 			overrideTimer: 0,
 			overrideStacks: 0,
-			overrideEnabled: true
+			overrideEnabled: true,
+			/////////
+			dirty: false,
 		};
-		this.handleSubmit = this.handleSubmit.bind(this);
-		this.setSpellSpeed = this.unboundSetSpellSpeed.bind(this);
-		this.setAnimationLock = this.unboundSetAnimationLock.bind(this);
-		this.setCasterTax = this.unboundSetCasterTax.bind(this);
-		this.setTimeTillFirstManaTick = this.unboundSetTimeTillFirstManaTick.bind(this);
-		this.setCountdown = this.unboundSetCountdown.bind(this);
-		this.setRandomSeed = this.unboundSetRandomSeed.bind(this);
-		this.setrngProcs = this.unboundSetRngProcs.bind(this);
+		this.resourceOverridesMap = new Map();
 
-		this.setOverrideTimer = (val=>{ this.setState({overrideTimer: val}) }).bind(this);
+		this.handleSubmit = (event => {
+			let seed = this.state.randomSeed;
+			if (seed.length === 0) {
+				for (let i = 0; i < 4; i++) {
+					seed += Math.floor(Math.random() * 10).toString();
+				}
+				this.setState({randomSeed: seed});
+			}
+			let config = {
+				spellSpeed: this.state.spellSpeed,
+				animationLock: this.state.animationLock,
+				casterTax: this.state.casterTax,
+				countdown: this.state.countdown,
+				timeTillFirstManaTick: this.state.timeTillFirstManaTick,
+				randomSeed: seed,
+				rngProcs: this.state.rngProcs,
+				initialResourceOverrides: this.state.initialResourceOverrides // info only
+			};
+			this.setConfigAndRestart(config);
+			this.setState({dirty: false});
+			event.preventDefault();
+		}).bind(this);
+
+		this.setSpellSpeed = (val => {
+			this.setState({spellSpeed: val, dirty: true});
+		}).bind(this);
+
+		this.setAnimationLock = (val => {
+			this.setState({animationLock: val, dirty: true});
+		}).bind(this);
+
+		this.setCasterTax = (val => {
+			this.setState({casterTax: val, dirty: true});
+		}).bind(this);
+
+		this.setTimeTillFirstManaTick = (val => {
+			this.setState({timeTillFirstManaTick: val, dirty: true});
+		}).bind(this);
+
+		this.setCountdown = (val => {
+			this.setState({countdown: val, dirty: true});
+		}).bind(this);
+
+		this.setRandomSeed = (val => {
+			this.setState({randomSeed: val, dirty: true});
+		}).bind(this);
+
+		this.setrngProcs = (evt => {
+			this.setState({rngProcs: evt.target.checked, dirty: true});
+		}).bind(this);
+
+		this.setOverrideTimer = (val=>{
+			this.setState({overrideTimer: val})}).bind(this);
 		this.setOverrideStacks = (val=>{ this.setState({overrideStacks: val}) }).bind(this);
 		this.setOverrideEnabled = (evt=>{ this.setState({overrideEnabled: evt.target.checked}) }).bind(this);
-
-		updateConfigDisplay = ((config)=>{
-			this.setState(config);
+		this.deleteResourceOverride = (rscType=>{
+			this.resourceOverridesMap.delete(rscType);
+			let overrides = this.state.initialResourceOverrides;
+			for (let i = 0; i < overrides.length; i++) {
+				if (overrides[i].type === rscType) {
+					overrides.splice(i, 1);
+					break;
+				}
+			}
+			this.setState({ initialResourceOverrides: overrides, dirty: true });
 		}).bind(this);
 	}
 
-	unboundSetSpellSpeed(val) { this.setState({spellSpeed: val}) }
-	unboundSetAnimationLock(val) { this.setState({animationLock: val}) }
-	unboundSetCasterTax(val) { this.setState({casterTax: val}) }
-	unboundSetTimeTillFirstManaTick(val) { this.setState({timeTillFirstManaTick: val}) }
-	unboundSetCountdown(val) { this.setState({countdown: val}) }
-	unboundSetRandomSeed(val) { this.setState({randomSeed: val}); }
-	unboundSetRngProcs(evt) { this.setState({rngProcs: evt.target.checked}); }
+	componentDidMount() {
+		updateConfigDisplay = ((config)=>{
+			this.setState(config);
+			this.setState({dirty: false});
+		}).bind(this);
+	}
 
 	#addResourceOverride() {
 		let rscType = this.state.selectedOverrideResource;
@@ -210,12 +270,16 @@ export class Config extends React.Component {
 			return;
 		}
 
-		if (inputOverrideStacks < 0 || inputOverrideStacks > info.maxValue) {
-			window.alert("invalid input amount (must be in range [0, " + info.maxValue + "]");
+		if ((info.maxValue > 1 || rscType===ResourceType.Paradox) &&
+			(inputOverrideStacks < 0 || inputOverrideStacks > info.maxValue))
+		{
+			window.alert("invalid input amount (must be in range [0, " + info.maxValue + "])");
 			return;
 		}
-		if (inputOverrideTimer < 0 || inputOverrideTimer > info.maxTimeout) {
-			window.alert("invalid input timeout (must be in range [0, " + info.maxTimeout + "]");
+		if (info.maxTimeout >= 0 &&
+			(inputOverrideTimer < 0 || inputOverrideTimer > info.maxTimeout))
+		{
+			window.alert("invalid input timeout (must be in range [0, " + info.maxTimeout + "])");
 			return;
 		}
 
@@ -227,15 +291,18 @@ export class Config extends React.Component {
 		};
 		let overrides = this.state.initialResourceOverrides;
 		overrides.push(props);
-		this.setState({initialResourceOverrides: overrides});
+		this.setState({initialResourceOverrides: overrides, dirty: true});
+		this.resourceOverridesMap.set(rscType, props);
 	}
 
 	#addResourceOverrideNode() {
 		let resourceOptions = [];
 		let counter = 0;
 		for (let k of resourceInfos.keys()) {
-			resourceOptions.push(<option key={counter} value={k}>{k}</option>);
-			counter++;
+			if (!this.resourceOverridesMap.has(k)) {
+				resourceOptions.push(<option key={counter} value={k}>{k}</option>);
+				counter++;
+			}
 		}
 
 		let rscType = this.state.selectedOverrideResource;
@@ -272,9 +339,14 @@ export class Config extends React.Component {
 			}</div>
 		}
 
-		return <div style={{marginTop: 16, outline: "1px solid lightgrey", outlineOffset: 6}}>
+		return <form
+			onSubmit={evt => {
+				this.#addResourceOverride();
+				evt.preventDefault();
+			}}
+			style={{marginTop: 16, outline: "1px solid lightgrey", outlineOffset: 6}}>
 			<select value={this.state.selectedOverrideResource}
-					onChange={evt=>{
+					onChange={evt => {
 						if (evt.target) {
 							this.setState({
 								selectedOverrideResource: evt.target.value,
@@ -286,11 +358,8 @@ export class Config extends React.Component {
 				{resourceOptions}
 			</select>
 			{inputSection}
-			<button onClick={evt=>{
-				this.#addResourceOverride();
-				evt.preventDefault();
-			}}>add override</button>
-		</div>
+			<input type="submit" value="add override"/>
+		</form>
 	}
 
 	#resourceOverridesSection() {
@@ -298,13 +367,17 @@ export class Config extends React.Component {
 		for (let i = 0; i < this.state.initialResourceOverrides.length; i++) {
 			let override = this.state.initialResourceOverrides[i];
 			let info = resourceInfos.get(override.type);
-			// TODO: find a better way to display stuff
-			resourceOverridesDisplayNodes.push(<ResourceOverrideDisplay key={i} override={override} rscInfo={info}/>);
+			resourceOverridesDisplayNodes.push(<ResourceOverrideDisplay
+				key={i}
+				override={override}
+				rscInfo={info}
+				deleteFn={this.deleteResourceOverride}
+			/>);
 		}
 		return <div style={{marginTop: 10}}>
 			<Expandable title="overrideInitialResources" titleNode={<span>
-				Override initial resources <Help topic="overrideInitialResources" content={<div>
-				ouch.
+				Override initial resources <Help topic="overrideInitialResources"content={<div>
+				<span style={{color: "orangered"}}><b>Can create invalid game states, use carefully and at your own risk!</b></span>
 			</div>}/>
 			</span>} content={<div>
 				<button onClick={evt=>{
@@ -348,30 +421,8 @@ export class Config extends React.Component {
 		updateConfigDisplay = (config)=>{};
 	}
 
-	handleSubmit (event) {
-		let seed = this.state.randomSeed;
-		if (seed.length === 0) {
-			for (let i = 0; i < 4; i++) {
-				seed += Math.floor(Math.random() * 10).toString();
-			}
-			this.setState({randomSeed: seed});
-		}
-		let config = {
-			spellSpeed: this.state.spellSpeed,
-			animationLock: this.state.animationLock,
-			casterTax: this.state.casterTax,
-			countdown: this.state.countdown,
-			timeTillFirstManaTick: this.state.timeTillFirstManaTick,
-			randomSeed: seed,
-			rngProcs: this.state.rngProcs,
-			initialResourceOverrides: this.state.initialResourceOverrides // info only
-		};
-		this.setConfigAndRestart(config);
-		event.preventDefault();
-	}
-
 	render() {
-		let editSection = <form onSubmit={this.handleSubmit}>
+		let editSection = <div>
 			<Input defaultValue={this.state.spellSpeed} description="spell speed: " onChange={this.setSpellSpeed}/>
 			<Input defaultValue={this.state.animationLock} description="animation lock: " onChange={this.setAnimationLock}/>
 			<Input defaultValue={this.state.casterTax} description="caster tax: " onChange={this.setCasterTax}/>
@@ -390,13 +441,13 @@ export class Config extends React.Component {
 				}/></span>
 			</div>
 			{this.#resourceOverridesSection()}
-			<input type="submit" value="apply and reset"/>
-		</form>;
+			<button onClick={this.handleSubmit}>apply and reset</button>
+		</div>;
 		return (
 			<div className={"config"} style={{marginBottom: 16}}>
 				<div style={{marginBottom: 5}}><b>Config</b></div>
 				<ConfigSummary/> {/* retrieves data from global controller */}
-				<Expandable title={"Edit"} content={editSection}/>
+				<Expandable title={"Edit" + (this.state.dirty ? "*" : "")} content={editSection}/>
 			</div>
 		)}
 }

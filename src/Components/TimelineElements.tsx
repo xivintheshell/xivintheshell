@@ -156,7 +156,7 @@ export function TimelineSkill(props: {
 		hoverText = <div>
 			{hoverText}<br/>
 			<span>{"potency: " + potency.toFixed(2)}</span><br/>
-			<span>{"lock duration: " + lockDuration.toFixed(2)}</span>
+			<span>{"duration: " + lockDuration.toFixed(2)}</span>
 		</div>;
 	}
 	let iconImg = <div style={iconStyle} className={"timeline-elem-skill-icon"}>
