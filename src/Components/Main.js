@@ -12,10 +12,37 @@ import changelog from "../changelog.json"
 
 export let setRealTime = inRealTime=>{};
 export let setOverrideOutlineColor = outlineColor=>{};
+
+function handleUrlCommands(command) {
+	if (command === "resetAll") {
+		localStorage.clear();
+		window.location.href = "/ffxiv-blm-rotation";
+	}
+	else if (command === "resetResourceOverrides") {
+		let str = localStorage.getItem("gameRecord");
+		if (str !== null) {
+			let content = JSON.parse(str);
+			console.log(content);
+			if (content.config) {
+				content.config.initialResourceOverrides = [];
+			}
+			content.actions = [];
+			localStorage.setItem("gameRecord", JSON.stringify(content));
+		}
+		window.location.href = "/ffxiv-blm-rotation";
+	}
+	else if (command !== undefined) {
+		console.log("unrecognized command '" + command + "'");
+	}
+}
+
 export default class Main extends React.Component {
 
 	constructor(props) {
 		super(props);
+
+		handleUrlCommands(props.command);
+
 		this.state = {
 			realTime: false,
 			overrideOutlineColor: undefined,

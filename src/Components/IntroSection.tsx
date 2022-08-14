@@ -59,6 +59,18 @@ export function IntroSection(props: {}) {
 				<div className="paragraph">Hover over <Help topic={"sampleTips"} content={"sample tip"}/> everywhere to
 					see more tips.
 				</div>
+				<div className="paragraph" style={{marginTop: 16}}>
+					<Expandable title={"Troubleshoot"} titleNode={<b>Troubleshoot</b>} content={
+						<div className="paragraph">
+							If the browser cache is somehow messed up (likely due to invalid game states), this is how to reset it:<br/>
+							Enter this tool from <b>{"https://miyehn.me/ffxiv-blm-rotation/{command}"}</b> replacing <b>{"{command}"}</b> with one of the following:
+							<ul>
+								<li style={smallGap}><b>resetResourceOverrides</b>: delete all resource overrides and all actions on the current timeline.</li>
+								<li style={smallGap}><b>resetAll</b>: delete all browser-cached settings.</li>
+							</ul>
+						</div>
+					}/>
+				</div>
 			</div>}
 		/>
 		<Expandable

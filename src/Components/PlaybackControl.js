@@ -4,8 +4,6 @@ import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
 import {TickMode} from "../Controller/Common";
 import {ResourceType} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
-import {CoolDownInfo} from "../Game/Resources";
-import {updateSelectionDisplay} from "./Timeline";
 
 export class TimeControl extends React.Component {
 	constructor(props) {
@@ -377,7 +375,8 @@ export class Config extends React.Component {
 		return <div style={{marginTop: 10}}>
 			<Expandable title="overrideInitialResources" titleNode={<span>
 				Override initial resources <Help topic="overrideInitialResources"content={<div>
-				<span style={{color: "orangered"}}><b>Can create invalid game states, use carefully and at your own risk!</b></span>
+				<div className={"paragraph"} style={{color: "orangered"}}><b>Can create invalid game states. Go over Instructions/Troubleshoot first and use carefully at your own risk!</b></div>
+				<div className={"paragraph"}>I would recommend saving settings (stats, lines presets, timeline markers etc.) to files first, in case invalid game states really mess up the tool and a complete reset is required.</div>
 			</div>}/>
 			</span>} content={<div>
 				<button onClick={evt=>{
