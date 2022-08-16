@@ -182,25 +182,27 @@ export class Config extends React.Component {
 		this.resourceOverridesMap = new Map();
 
 		this.handleSubmit = (event => {
-			let seed = this.state.randomSeed;
-			if (seed.length === 0) {
-				for (let i = 0; i < 4; i++) {
-					seed += Math.floor(Math.random() * 10).toString();
+			if (this.#resourceOverridesAreValid()) {
+				let seed = this.state.randomSeed;
+				if (seed.length === 0) {
+					for (let i = 0; i < 4; i++) {
+						seed += Math.floor(Math.random() * 10).toString();
+					}
+					this.setState({randomSeed: seed});
 				}
-				this.setState({randomSeed: seed});
+				let config = {
+					spellSpeed: this.state.spellSpeed,
+					animationLock: this.state.animationLock,
+					casterTax: this.state.casterTax,
+					countdown: this.state.countdown,
+					timeTillFirstManaTick: this.state.timeTillFirstManaTick,
+					randomSeed: seed,
+					rngProcs: this.state.rngProcs,
+					initialResourceOverrides: this.state.initialResourceOverrides // info only
+				};
+				this.setConfigAndRestart(config);
+				this.setState({dirty: false});
 			}
-			let config = {
-				spellSpeed: this.state.spellSpeed,
-				animationLock: this.state.animationLock,
-				casterTax: this.state.casterTax,
-				countdown: this.state.countdown,
-				timeTillFirstManaTick: this.state.timeTillFirstManaTick,
-				randomSeed: seed,
-				rngProcs: this.state.rngProcs,
-				initialResourceOverrides: this.state.initialResourceOverrides // info only
-			};
-			this.setConfigAndRestart(config);
-			this.setState({dirty: false});
 			event.preventDefault();
 		}).bind(this);
 
@@ -256,6 +258,11 @@ export class Config extends React.Component {
 		}).bind(this);
 	}
 
+	#resourceOverridesAreValid() {
+		// TODO
+		return true;
+	}
+
 	#addResourceOverride() {
 		let rscType = this.state.selectedOverrideResource;
 		let info = resourceInfos.get(rscType);
@@ -307,34 +314,65 @@ export class Config extends React.Component {
 		let info = resourceInfos.get(rscType);
 		let inputSection = undefined;
 		if (info !== undefined) {
-			inputSection = <div style={{margin: "6px 0"}}>{
-				info.isCoolDown ?
-					<Input description="Time till full: " defaultValue={this.state.overrideTimer}
-						   onChange={this.setOverrideTimer}/> :
-					<div>
-						{/*timer*/}
-						{info.maxTimeout >= 0 ? <Input
-							description="Time till drop: "
-							defaultValue={this.state.overrideTimer}
-							onChange={this.setOverrideTimer}/> : undefined}
 
-						{/*stacks*/}
-						{info.maxValue > 1 || rscType === ResourceType.Paradox ? <Input
-							description="Amount: "
-							defaultValue={this.state.overrideStacks}
-							onChange={this.setOverrideStacks}/> : undefined}
+			let showTimer, showAmount, showEnabled;
+			let timerDefaultValue = "-1", timerOnChange = undefined;
+			let amountDefaultValue = "0", amountOnChange = undefined;
 
-						{/*enabled*/}
-						{rscType === ResourceType.LeyLines ? <div>
-							<input style={{position: "relative", top: 3, marginRight: 5}}
-								   type="checkbox"
-								   checked={this.state.overrideEnabled}
-								   onChange={this.setOverrideEnabled}
-							/><span>enabled</span>
+			if (info.isCoolDown) {
+				showTimer = true; showAmount = false; showEnabled = false;
+				timerDefaultValue = this.state.overrideTimer;
+				timerOnChange = this.setOverrideTimer;
+			} else {
+				// timer
+				if (info.maxTimeout >= 0) {
+					showTimer = true;
+					timerDefaultValue = this.state.overrideTimer;
+					timerOnChange = this.setOverrideTimer;
+				} else {
+					showTimer = false;
+				}
 
-						</div> : undefined}
-					</div>
-			}</div>
+				// amount
+				if (info.maxValue > 1) {
+					showAmount = true;
+					amountDefaultValue = this.state.overrideStacks;
+					amountOnChange = this.setOverrideStacks;
+				} else {
+					showAmount = false;
+				}
+
+				// enabled
+				showEnabled = (rscType === ResourceType.LeyLines);
+			}
+
+			inputSection = <div style={{margin: "6px 0"}}>
+
+				{/*timer*/}
+				<div hidden={!showTimer}>
+					<Input description={info.isCoolDown ? "Time till full: " : "Time till drop: "}
+						   defaultValue={timerDefaultValue}
+						   onChange={timerOnChange}/>
+				</div>
+
+				{/*stacks*/}
+				<div hidden={!showAmount}>
+					<Input description="Amount: "
+						   defaultValue={amountDefaultValue}
+						   onChange={amountOnChange}/>
+				</div>
+
+				{/*enabled*/}
+				<div hidden={!showEnabled}>
+					<input style={{position: "relative", top: 3, marginRight: 5}}
+						   type="checkbox"
+						   checked={this.state.overrideEnabled}
+						   onChange={this.setOverrideEnabled}
+					/><span>enabled</span>
+				</div>
+
+			</div>
+
 		}
 
 		return <form

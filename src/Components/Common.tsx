@@ -116,7 +116,6 @@ type InputProps = {
 }
 type InputState = {
 	value: string,
-	description: ReactNode,
 }
 export class Input extends React.Component {
 	props: InputProps;
@@ -126,8 +125,7 @@ export class Input extends React.Component {
 		super(inProps);
 		this.props = inProps;
 		this.state = {
-			value: inProps.defaultValue ?? "",
-			description: inProps.description,
+			value: inProps.defaultValue ?? ""
 		}
 		this.onChange = ((e: ChangeEvent<{value: string}>)=>{
 			this.setState({value: e.target.value});
@@ -138,7 +136,7 @@ export class Input extends React.Component {
 		let width = this.props.width ?? 5;
 		let style = this.props.style;
 		return <div style={style}>
-			<span>{this.state.description/* + "(" + this.state.value + ")"*/}</span>
+			<span>{this.props.description/* + "(" + this.state.value + ")"*/}</span>
 			<input className={"textInput"} size={width} type="text"
 				   value={this.props.defaultValue} onChange={this.onChange}/>
 		</div>
