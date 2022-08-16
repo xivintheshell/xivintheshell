@@ -179,7 +179,6 @@ export class Config extends React.Component {
 			/////////
 			dirty: false,
 		};
-		this.resourceOverridesMap = new Map();
 
 		this.handleSubmit = (event => {
 			if (this.#resourceOverridesAreValid()) {
@@ -239,7 +238,6 @@ export class Config extends React.Component {
 		this.setOverrideStacks = (val=>{ this.setState({overrideStacks: val}) }).bind(this);
 		this.setOverrideEnabled = (evt=>{ this.setState({overrideEnabled: evt.target.checked}) }).bind(this);
 		this.deleteResourceOverride = (rscType=>{
-			this.resourceOverridesMap.delete(rscType);
 			let overrides = this.state.initialResourceOverrides;
 			for (let i = 0; i < overrides.length; i++) {
 				if (overrides[i].type === rscType) {
@@ -251,18 +249,32 @@ export class Config extends React.Component {
 		}).bind(this);
 	}
 
+	// call this whenver the list of options has potentially changed
+	#selectFirstAddable() {
+		console.log("select first addable");
+		let firstAddableRsc = "aba aba";
+		let S = new Set();
+		this.state.initialResourceOverrides.forEach(ov=>{
+			S.add(ov.type);
+		});
+		for (let k of resourceInfos.keys()) {
+			if (!S.has(k)) {
+				firstAddableRsc = k;
+				break;
+			}
+		}
+		this.setState({
+			selectedOverrideResource: firstAddableRsc
+		});
+	}
+
 	componentDidMount() {
 		updateConfigDisplay = ((config)=>{
 			this.setState(config);
 			this.setState({
-				dirty: false
+				dirty: false,
 			});
-			this.resourceOverridesMap.clear();
-			if (config.initialResourceOverrides) {
-				config.initialResourceOverrides.forEach(override=>{
-					this.resourceOverridesMap.set(override.type, 1);
-				});
-			}
+			this.#selectFirstAddable();
 		}).bind(this);
 	}
 
@@ -305,14 +317,18 @@ export class Config extends React.Component {
 		let overrides = this.state.initialResourceOverrides;
 		overrides.push(props);
 		this.setState({initialResourceOverrides: overrides, dirty: true});
-		this.resourceOverridesMap.set(rscType, 1);
 	}
 
 	#addResourceOverrideNode() {
 		let resourceOptions = [];
+		let S = new Set();
+		this.state.initialResourceOverrides.forEach(override=>{
+			S.add(override.type);
+		})
+
 		let counter = 0;
 		for (let k of resourceInfos.keys()) {
-			if (!this.resourceOverridesMap.has(k)) {
+			if (!S.has(k)) {
 				resourceOptions.push(<option key={counter} value={k}>{k}</option>);
 				counter++;
 			}
@@ -386,6 +402,7 @@ export class Config extends React.Component {
 		return <form
 			onSubmit={evt => {
 				this.#addResourceOverride();
+				this.#selectFirstAddable();
 				evt.preventDefault();
 			}}
 			style={{marginTop: 16, outline: "1px solid lightgrey", outlineOffset: 6}}>
