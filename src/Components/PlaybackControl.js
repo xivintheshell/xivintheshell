@@ -254,7 +254,15 @@ export class Config extends React.Component {
 	componentDidMount() {
 		updateConfigDisplay = ((config)=>{
 			this.setState(config);
-			this.setState({dirty: false});
+			this.setState({
+				dirty: false
+			});
+			this.resourceOverridesMap.clear();
+			if (config.initialResourceOverrides) {
+				config.initialResourceOverrides.forEach(override=>{
+					this.resourceOverridesMap.set(override.type, 1);
+				});
+			}
 		}).bind(this);
 	}
 
@@ -297,7 +305,7 @@ export class Config extends React.Component {
 		let overrides = this.state.initialResourceOverrides;
 		overrides.push(props);
 		this.setState({initialResourceOverrides: overrides, dirty: true});
-		this.resourceOverridesMap.set(rscType, props);
+		this.resourceOverridesMap.set(rscType, 1);
 	}
 
 	#addResourceOverrideNode() {
@@ -418,7 +426,7 @@ export class Config extends React.Component {
 			</div>}/>
 			</span>} content={<div>
 				<button onClick={evt=>{
-					this.setState({ initialResourceOverrides: [] });
+					this.setState({ initialResourceOverrides: [], dirty: true });
 					evt.preventDefault();
 				}}>clear all overrides</button>
 				{resourceOverridesDisplayNodes}
@@ -437,8 +445,7 @@ export class Config extends React.Component {
 			return;
 		}
 		if (config.initialResourceOverrides === undefined) {
-			console.assert(false);
-			return;
+			config.initialResourceOverrides = [];
 		}
 		controller.setConfigAndRestart({
 			spellSpeed: parseFloat(config.spellSpeed),

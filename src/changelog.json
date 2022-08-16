@@ -1,5 +1,13 @@
 [
 	{
+		"date": "8/15/22",
+		"changes": [
+			"[not extensively tested] customize initial resources (see Config/Edit on the right)",
+			"add URL commands to reset browser cache, in case it's messed up (see Insructions/Troubleshoot)",
+			"display config summary at the top of Config/Edit, as well as some other minor UI changes"
+		]
+	},
+	{
 		"date": "8/5/22",
 		"changes": [
 			"page refresh and loading from timeline no longer removes wait time at the end",
