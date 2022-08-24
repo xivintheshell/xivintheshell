@@ -151,19 +151,24 @@ export class SkillsList extends Map<SkillName, Skill> {
 					return true;
 				},
 				(game, node) => {
-					game.useInstantSkill(skillName, () => {
-						let resource = game.resources.get(rscType);
-						if (resource.available(1)) {
-							resource.overrideTimer(game, duration);
-						} else {
-							resource.gain(1);
-							game.resources.addResourceEvent(
-								rscType,
-								"drop " + rscType, duration, (rsc: Resource)=>{
-									rsc.consume(1);
-								});
-						}
-					}, false, node);
+					game.useInstantSkill({
+						skillName: skillName,
+						effectFn: () => {
+							let resource = game.resources.get(rscType);
+							if (resource.available(1)) {
+								resource.overrideTimer(game, duration);
+							} else {
+								resource.gain(1);
+								game.resources.addResourceEvent(
+									rscType,
+									"drop " + rscType, duration, (rsc: Resource) => {
+										rsc.consume(1);
+									});
+							}
+						},
+						dealDamage: false,
+						node: node
+					});
 				}
 			));
 		}
@@ -255,18 +260,23 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return game.getFireStacks() > 0 || game.getIceStacks() > 0; // has UI or AF
 			},
 			(game, node) => {
-				game.useInstantSkill(SkillName.Transpose, () => {
-					if (game.getFireStacks() === 0 && game.getIceStacks() === 0) {
-						addLog(LogCategory.Event, "transpose failed; AF/UI just fell off", game.getDisplayTime(), Color.Error);
-						return;
-					}
-					if (game.getFireStacks() > 0) {
-						game.switchToAForUI(ResourceType.UmbralIce, 1);
-					} else {
-						game.switchToAForUI(ResourceType.AstralFire, 1);
-					}
-					game.startOrRefreshEnochian();
-				}, false, node);
+				game.useInstantSkill({
+					skillName: SkillName.Transpose,
+					effectFn: () => {
+						if (game.getFireStacks() === 0 && game.getIceStacks() === 0) {
+							addLog(LogCategory.Event, "transpose failed; AF/UI just fell off", game.getDisplayTime(), Color.Error);
+							return;
+						}
+						if (game.getFireStacks() > 0) {
+							game.switchToAForUI(ResourceType.UmbralIce, 1);
+						} else {
+							game.switchToAForUI(ResourceType.AstralFire, 1);
+						}
+						game.startOrRefreshEnochian();
+					},
+					dealDamage: false,
+					node: node
+				});
 			}
 		));
 
@@ -333,10 +343,15 @@ export class SkillsList extends Map<SkillName, Skill> {
 					let capturedTickPotency = game.captureDamage(Aspect.Other, game.config.adjustedDoTPotency(35));
 					let sourceName = "Thunder 3@"+skillTime.toFixed(2);
 					game.reportPotency(node, capturedInitialPotency, sourceName);
-					game.useInstantSkill(SkillName.Thunder3, () => {
-						game.dealDamage(capturedInitialPotency, sourceName);
-						applyThunderDoT(game, node, capturedTickPotency, 10);
-					}, false, node);
+					applyThunderDoT(game, node, capturedTickPotency, 10);
+					game.useInstantSkill({
+						skillName: SkillName.Thunder3,
+						effectFn: () => {
+							game.dealDamage(capturedInitialPotency, sourceName);
+						},
+						dealDamage: false,
+						node: node
+					});
 					let thundercloud = game.resources.get(ResourceType.Thundercloud);
 					thundercloud.consume(1);
 					thundercloud.removeTimer();
@@ -374,10 +389,15 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				game.useInstantSkill(SkillName.Manafont, () => {
-					game.resources.get(ResourceType.Mana).gain(3000);
-					addLog(LogCategory.Event, "manafont effect: mana +3000", game.getDisplayTime());
-				}, false, node);
+				game.useInstantSkill({
+					skillName: SkillName.Manafont,
+					effectFn: () => {
+						game.resources.get(ResourceType.Mana).gain(3000);
+						addLog(LogCategory.Event, "manafont effect: mana +3000", game.getDisplayTime());
+					},
+					dealDamage: false,
+					node: node
+				});
 			}
 		));
 
@@ -388,10 +408,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				if (game.resources.get(ResourceType.Firestarter).available(1)) {
-					game.useInstantSkill(SkillName.Fire3, ()=>{
-						game.switchToAForUI(ResourceType.AstralFire, 3);
-						game.startOrRefreshEnochian();
-					}, true, node);
+					game.useInstantSkill({
+						skillName: SkillName.Fire3,
+						effectFn: () => {},
+						dealDamage: true,
+						node: node
+					});
+					game.switchToAForUI(ResourceType.AstralFire, 3);
+					game.startOrRefreshEnochian();
 					game.resources.get(ResourceType.Firestarter).consume(1);
 					game.resources.get(ResourceType.Firestarter).removeTimer();
 				} else {
@@ -487,8 +511,13 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				game.useInstantSkill(SkillName.BetweenTheLines, () => {
-				}, false, node);
+				game.useInstantSkill({
+					skillName: SkillName.BetweenTheLines,
+					effectFn: () => {
+					},
+					dealDamage: false,
+					node: node
+				});
 			}
 		));
 
@@ -498,8 +527,12 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				game.useInstantSkill(SkillName.AetherialManipulation, () => {
-				}, false, node);
+				game.useInstantSkill({
+					skillName: SkillName.AetherialManipulation,
+					effectFn: () => {},
+					dealDamage: false,
+					node: node
+				});
 			}
 		));
 
@@ -509,16 +542,21 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				game.useInstantSkill(SkillName.Triplecast, () => {
-					let triple = game.resources.get(ResourceType.Triplecast);
-					if (triple.pendingChange) triple.removeTimer(); // should never need this, but just in case
-					triple.gain(3);
-					game.resources.addResourceEvent(
-						ResourceType.Triplecast,
-						"drop remaining Triple charges", 15, (rsc: Resource) => {
-							rsc.consume(rsc.availableAmount());
-						});
-				}, false, node);
+				game.useInstantSkill({
+					skillName: SkillName.Triplecast,
+					effectFn: () => {
+						let triple = game.resources.get(ResourceType.Triplecast);
+						if (triple.pendingChange) triple.removeTimer(); // should never need this, but just in case
+						triple.gain(3);
+						game.resources.addResourceEvent(
+							ResourceType.Triplecast,
+							"drop remaining Triple charges", 15, (rsc: Resource) => {
+								rsc.consume(rsc.availableAmount());
+							});
+					},
+					dealDamage: false,
+					node: node
+				});
 			}
 		));
 
@@ -529,8 +567,12 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				game.resources.get(ResourceType.Polyglot).consume(1);
-				game.useInstantSkill(SkillName.Foul, () => {
-				}, true, node);
+				game.useInstantSkill({
+					skillName: SkillName.Foul,
+					effectFn: () => {},
+					dealDamage: true,
+					node: node
+				});
 			}
 		));
 
@@ -559,11 +601,16 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return game.getIceStacks() > 0;
 			},
 			(game, node) => {
-				game.useInstantSkill(SkillName.UmbralSoul, () => {
-					game.resources.get(ResourceType.UmbralIce).gain(1);
-					game.resources.get(ResourceType.UmbralHeart).gain(1);
-					game.startOrRefreshEnochian();
-				}, false, node);
+				game.useInstantSkill({
+					skillName: SkillName.UmbralSoul,
+					effectFn: () => {
+						game.resources.get(ResourceType.UmbralIce).gain(1);
+						game.resources.get(ResourceType.UmbralHeart).gain(1);
+						game.startOrRefreshEnochian();
+					},
+					dealDamage: false,
+					node: node
+				});
 			}
 		));
 
@@ -574,8 +621,12 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				game.resources.get(ResourceType.Polyglot).consume(1);
-				game.useInstantSkill(SkillName.Xenoglossy, () => {
-				}, true, node);
+				game.useInstantSkill({
+					skillName: SkillName.Xenoglossy,
+					effectFn: () => {},
+					dealDamage: true,
+					node: node
+				});
 			}
 		));
 
@@ -610,12 +661,17 @@ export class SkillsList extends Map<SkillName, Skill> {
 		// Amplifier
 		skillsList.set(SkillName.Amplifier, new Skill(SkillName.Amplifier,
 			() => {
-				return true;
+				return game.getIceStacks() > 0 || game.getFireStacks() > 0;
 			},
 			(game, node) => {
-				game.useInstantSkill(SkillName.Amplifier, () => {
-					game.resources.get(ResourceType.Polyglot).gain(1);
-				}, false, node);
+				game.useInstantSkill({
+					skillName: SkillName.Amplifier,
+					effectFn: () => {
+						game.resources.get(ResourceType.Polyglot).gain(1);
+					},
+					dealDamage: false,
+					node: node
+				});
 			}
 		));
 
@@ -665,55 +721,60 @@ export class SkillsList extends Map<SkillName, Skill> {
 				while (timeTillFirstLucidTickSinceApply > 3) timeTillFirstLucidTickSinceApply -= 3;
 
 				const skillTime = game.getDisplayTime();
-				game.useInstantSkill(SkillName.LucidDreaming, () => {
-					const numTicks = 7;
+				game.useInstantSkill({
+					skillName: SkillName.LucidDreaming,
+					effectFn: () => {
+						const numTicks = 7;
 
-					let applyLucidTick = (index: number) => {
-						if (game.getFireStacks() > 0) return; // not tick during fire
-						game.resources.get(ResourceType.Mana).gain(550);
-						let currentMP = game.resources.get(ResourceType.Mana).availableAmount();
-						let reportText = "Lucid@" + skillTime.toFixed(2) + " (" + index + "/7) (MP=" + currentMP + ")";
-						controller.reportLucidTick(game.time, reportText);
-					};
+						let applyLucidTick = (index: number) => {
+							if (game.getFireStacks() > 0) return; // not tick during fire
+							game.resources.get(ResourceType.Mana).gain(550);
+							let currentMP = game.resources.get(ResourceType.Mana).availableAmount();
+							let reportText = "Lucid@" + skillTime.toFixed(2) + " (" + index + "/7) (MP=" + currentMP + ")";
+							controller.reportLucidTick(game.time, reportText);
+						};
 
-					let recurringLucidTick = (remainingTicks: number) => {
-						if (remainingTicks === 0) return;
-						applyLucidTick(numTicks + 1 - remainingTicks);
-						addLog(
-							LogCategory.Event,
-							"recurring lucid tick " + (numTicks + 1 - remainingTicks) + "/" + numTicks,
-							game.getDisplayTime(),
-							Color.ManaTick);
+						let recurringLucidTick = (remainingTicks: number) => {
+							if (remainingTicks === 0) return;
+							applyLucidTick(numTicks + 1 - remainingTicks);
+							addLog(
+								LogCategory.Event,
+								"recurring lucid tick " + (numTicks + 1 - remainingTicks) + "/" + numTicks,
+								game.getDisplayTime(),
+								Color.ManaTick);
+							game.resources.addResourceEvent(
+								ResourceType.LucidTick,
+								"recurring lucid tick", 3, (rsc: Resource) => {
+									recurringLucidTick(remainingTicks - 1);
+								}, Color.Text, false);
+						};
+
+						let buff = game.resources.get(ResourceType.LucidDreaming);
+						let tick = game.resources.get(ResourceType.LucidTick);
+						if (tick.pendingChange) {
+							// if already has lucid applied; cancel the remaining ticks now.
+							buff.removeTimer();
+							tick.removeTimer();
+						}
+						// order of events:
+						buff.gain(1);
 						game.resources.addResourceEvent(
-							ResourceType.LucidTick,
-							"recurring lucid tick", 3, (rsc: Resource) => {
-								recurringLucidTick(remainingTicks - 1);
-							}, Color.Text, false);
-					};
+							ResourceType.LucidDreaming, "drop Lucid", 21, (buff: Resource) => {
+								buff.consume(1);
+							}, Color.ManaTick);
 
-					let buff = game.resources.get(ResourceType.LucidDreaming);
-					let tick = game.resources.get(ResourceType.LucidTick);
-					if (tick.pendingChange) {
-						// if already has lucid applied; cancel the remaining ticks now.
-						buff.removeTimer();
-						tick.removeTimer();
-					}
-					// order of events:
-					buff.gain(1);
-					game.resources.addResourceEvent(
-						ResourceType.LucidDreaming, "drop Lucid", 21, (buff: Resource) => {
-							buff.consume(1);
-						}, Color.ManaTick);
-
-					let startLucidEvt = new Event(
-						"first lucid tick",
-						timeTillFirstLucidTickSinceApply,
-						() => {
-							recurringLucidTick(numTicks);
-						},
-						Color.ManaTick);
-					game.addEvent(startLucidEvt);
-				}, false, node);
+						let startLucidEvt = new Event(
+							"first lucid tick",
+							timeTillFirstLucidTickSinceApply,
+							() => {
+								recurringLucidTick(numTicks);
+							},
+							Color.ManaTick);
+						game.addEvent(startLucidEvt);
+					},
+					dealDamage: false,
+					node: node
+				});
 			}
 		));
 

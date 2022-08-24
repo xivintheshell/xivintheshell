@@ -1,5 +1,12 @@
 [
 	{
+		"date": "8/23/22",
+		"changes": [
+			"bugfix: F3P and T3P now refresh enochian/thunder immediately",
+			"bugfix: Amplifier can be used without AF/UI"
+		]
+	},
+	{
 		"date": "8/15/22",
 		"changes": [
 			"[not extensively tested] customize initial resources (see Config/Edit on the right)",

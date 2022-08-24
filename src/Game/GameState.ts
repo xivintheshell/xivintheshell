@@ -362,7 +362,7 @@ export class GameState {
 			}
 		}
 
-		let instantCast = function(game: GameState, rsc: Resource | undefined) {
+		let instantCast = function(game: GameState, rsc?: Resource) {
 			let instantCastReason = rsc ? rsc.type : "(unknown, paradox?)";
 			addLog(LogCategory.Event, "a cast is made instant via " + instantCastReason, game.getDisplayTime(), Color.Success);
 			if (rsc) rsc.consume(1);
@@ -424,22 +424,22 @@ export class GameState {
 		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
 	}
 
-	useInstantSkill(
+	useInstantSkill(props: {
 		skillName: SkillName,
-		effectFn: ()=>void,
+		effectFn: () => void,
 		dealDamage: boolean,
-		node: ActionNode)
-	{
-		console.assert(node);
-		let skillInfo = this.skillsList.get(skillName).info;
+		node: ActionNode
+	}) {
+		console.assert(props.node);
+		let skillInfo = this.skillsList.get(props.skillName).info;
 		let skillTime = this.getDisplayTime();
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let sourceName = skillInfo.name+"@"+skillTime.toFixed(2);
 
 		let capturedDamage = 0;
-		if (dealDamage) {
+		if (props.dealDamage) {
 			capturedDamage = this.captureDamage(skillInfo.aspect, skillInfo.basePotency);
-			this.reportPotency(node, capturedDamage, sourceName);
+			this.reportPotency(props.node, capturedDamage, sourceName);
 		}
 		//let recastTimeScale = this.captureRecastTimeScale();
 
@@ -447,8 +447,8 @@ export class GameState {
 			skillInfo.name + " applied",
 			skillInfo.skillApplicationDelay,
 			()=>{
-				if (dealDamage) this.dealDamage(capturedDamage, sourceName);
-				effectFn();
+				if (props.dealDamage) this.dealDamage(capturedDamage, sourceName);
+				props.effectFn();
 			}
 			, Color.Text);
 		this.addEvent(skillEvent);
@@ -458,7 +458,7 @@ export class GameState {
 		//if (skillInfo.isSpell) cd.setRecastTimeScale(recastTimeScale);
 
 		// animation lock
-		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(skillName));
+		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(props.skillName));
 	}
 
 	hasEnochian()

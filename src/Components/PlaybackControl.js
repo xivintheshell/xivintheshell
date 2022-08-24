@@ -251,7 +251,7 @@ export class Config extends React.Component {
 
 	// call this whenver the list of options has potentially changed
 	#selectFirstAddable() {
-		console.log("select first addable");
+		//console.log("select first addable");
 		let firstAddableRsc = "aba aba";
 		let S = new Set();
 		this.state.initialResourceOverrides.forEach(ov=>{
