@@ -2,8 +2,8 @@
 	{
 		"date": "8/23/22",
 		"changes": [
-			"bugfix: F3P and T3P now refresh enochian/thunder immediately",
-			"bugfix: Amplifier can be used without AF/UI"
+			"bugfix: F3P and T3P refreshed at damage application time (now refresh on button press which is also snapshot time)",
+			"bugfix: Amplifier could be used without AF/UI (now AF/UI is required)"
 		]
 	},
 	{

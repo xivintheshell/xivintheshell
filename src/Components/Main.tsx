@@ -1,7 +1,11 @@
-import React from 'react';
+import React, {CSSProperties} from 'react';
+// @ts-ignore
 import {timeline} from "./Timeline";
+// @ts-ignore
 import { skillsWindow } from "./Skills";
+// @ts-ignore
 import { Config, TimeControl } from "./PlaybackControl";
+// @ts-ignore
 import { statusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import 'react-tabs/style/react-tabs.css';
@@ -10,10 +14,10 @@ import {skillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../changelog.json"
 
-export let setRealTime = inRealTime=>{};
-export let setOverrideOutlineColor = outlineColor=>{};
+export let setRealTime = (inRealTime: boolean) => {};
+export let setOverrideOutlineColor = (outlineColor?: string)=>{};
 
-function handleUrlCommands(command) {
+function handleUrlCommands(command?: string) {
 	if (command === "resetAll") {
 		localStorage.clear();
 		window.location.href = "/ffxiv-blm-rotation";
@@ -38,7 +42,17 @@ function handleUrlCommands(command) {
 
 export default class Main extends React.Component {
 
-	constructor(props) {
+	controlRegionRef: React.RefObject<HTMLDivElement>;
+	gameplayKeyCapture: React.KeyboardEventHandler<HTMLDivElement>;
+	gameplayMouseCapture: React.MouseEventHandler<HTMLDivElement>;
+
+	state: {
+		realTime: boolean,
+		overrideOutlineColor?: string,
+		controlRegionHeight: number
+	}
+
+	constructor(props: {command?: string}) {
 		super(props);
 
 		handleUrlCommands(props.command);
@@ -49,19 +63,23 @@ export default class Main extends React.Component {
 			controlRegionHeight: 0
 		}
 		this.controlRegionRef = React.createRef();
-		this.gameplayKeyCapture = ((evt)=>{
+
+		this.gameplayKeyCapture = ((evt: React.KeyboardEvent)=>{
 			if (evt.target && evt.target === this.controlRegionRef.current) {
 				controller.handleKeyboardEvent(evt);
 				evt.preventDefault();
 			}
 		}).bind(this);
-		this.gameplayMouseCapture = ((evt)=>{
+
+		this.gameplayMouseCapture = ((evt: React.MouseEvent)=>{
 			controller.displayCurrentState();
 		}).bind(this);
-		setRealTime = ((rt)=>{
+
+		setRealTime = ((rt: boolean)=>{
 			this.setState({realTime: rt});
 		}).bind(this);
-		setOverrideOutlineColor = (col=>{
+
+		setOverrideOutlineColor = ((col?: string)=>{
 			this.setState({ overrideOutlineColor: col });
 		}).bind(this);
 	}
@@ -70,13 +88,13 @@ export default class Main extends React.Component {
 		controller.tryAutoLoad();
 		controller.updateAllDisplay();
 
-		let handleResize = e=>{
+		let handleResize = ()=>{
 			let cur = this.controlRegionRef.current;
 			if (cur) {
 				this.setState({controlRegionHeight: cur.clientHeight});
 			}
 		}
-		handleResize(null);
+		handleResize();
 		window.addEventListener("resize", handleResize);
 	}
 
@@ -87,7 +105,7 @@ export default class Main extends React.Component {
 
 	// tabs: https://reactcommunity.org/react-tabs/
 	render() {
-		let containerStyle = {
+		let containerStyle : CSSProperties = {
 			height: "100%",
 			accentColor: "mediumpurple",
 			fontFamily: "monospace",
