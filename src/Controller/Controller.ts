@@ -83,12 +83,9 @@ class Controller {
 	}
 
 	#applyResourceOverrides(gameConfig: GameConfig) {
-		const apply = 1
-		if (apply > 0) {
-			let overrides = gameConfig.initialResourceOverrides;
-			for (let i = 0; i < overrides.length; i++) {
-				overrides[i].applyTo(this.game);
-			}
+		let overrides = gameConfig.initialResourceOverrides;
+		for (let i = 0; i < overrides.length; i++) {
+			overrides[i].applyTo(this.game);
 		}
 	}
 

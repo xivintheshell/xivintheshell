@@ -5,7 +5,8 @@ import {controller} from "./Controller";
 import {SkillName} from "../Game/Common";
 import {ActionNode} from "./Record";
 import {FileType} from "./Common";
-import {updateMarkers} from "../Components/TimelineMarkers";
+import {updateMarkers_TimelineMarkers} from "../Components/TimelineMarkers";
+import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
 
 export const enum ElemType {
 	s_Cursor = "s_Cursor",
@@ -220,11 +221,23 @@ export class Timeline {
 		return x / (this.scale * 100);
 	}
 
-	drawElements(filter=()=>{ return true; }) {
+	drawElements() {
+
 		updateTimelineContent(
 			this.getCanvasWidth(),
-			this.elements.filter(filter));
-		updateMarkers(this.markers);
+			this.elements);
+
+		// TODO: make bins
+		let M = new Map<number, MarkerElem[]>();
+		this.markers.forEach(marker=>{
+			let trackBin = M.get(marker.track);
+			if (trackBin === undefined) trackBin = [];
+			trackBin.push(marker);
+			M.set(marker.track, trackBin);
+		});
+
+		updateMarkers_TimelineMarkers(M);
+		updateMarkers_TimelineMarkerPresets(M);
 	}
 
 	onClickSkill(node: ActionNode, bShift: boolean) {

@@ -2,11 +2,36 @@ import React, {ChangeEvent, CSSProperties, ReactNode} from "react";
 import jQuery from 'jquery';
 import ReactTooltip from "react-tooltip";
 
-// https://github.com/eligrey/FileSaver.js#readme
-export function saveToFile(content: object, filename: string) {
-	let FileSaver = require('file-saver');
+function getBlobUrl(content: object) {
 	let blob = new Blob([JSON.stringify(content)], {type: "text/plain;charset=utf-8"});
-	FileSaver.saveAs(blob, filename);
+	return window.URL.createObjectURL(blob);
+}
+
+type SaveToFileProps = {
+	getContentFn: () => object,
+	filename: string,
+	displayName?: string
+};
+export class SaveToFile extends React.Component{
+	props: SaveToFileProps;
+	state: { content: object }
+	constructor(props: SaveToFileProps) {
+		super(props);
+		this.props = props;
+		this.state = {
+			content: {}
+		};
+	}
+	render() {
+		return <a
+			style={{color: "darkolivegreen", marginRight: 6}}
+			href={getBlobUrl(this.state.content)}
+			download={this.props.filename}
+			onClick={()=>{ this.setState({content: this.props.getContentFn()}); }}
+		>
+			{"[" + (this.props.displayName===undefined?"download":this.props.displayName) + "]"}
+		</a>
+	}
 }
 
 //https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/

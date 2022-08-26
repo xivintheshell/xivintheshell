@@ -1,5 +1,5 @@
 import React from 'react'
-import {Clickable, Expandable, Input, LoadJsonFromFileOrUrl, saveToFile} from "./Common";
+import {Clickable, Expandable, Input, LoadJsonFromFileOrUrl, SaveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType, ReplayMode} from "../Controller/Common";
 // @ts-ignore
@@ -80,33 +80,16 @@ function PresetLine(props: { line: Line }) {
 }
 
 class SkillSequencePresets extends React.Component {
-	saveFilename = "presets.txt";
-	onSaveFilenameChange: (evt: React.ChangeEvent<{value: string}>) => void;
-	onSave: () => void;
 	constructor(props: Readonly<{}>) {
 		super(props);
 		updateSkillSequencePresetsView = this.unboundUpdatePresetsView.bind(this);
-		this.onSaveFilenameChange = this.unboundOnSaveFilenameChange.bind(this);
-		this.onSave = this.unboundOnSave.bind(this);
 	}
 	componentWillUnmount() {
 		updateSkillSequencePresetsView = ()=>{};
 	}
-	unboundOnSaveFilenameChange(evt: React.ChangeEvent<{value: string}>) {
-		if (evt.target) this.saveFilename = evt.target.value;
-	}
-	unboundOnSave() {
-		saveToFile(controller.serializedPresets(), this.saveFilename);
-	}
 	unboundUpdatePresetsView() { this.forceUpdate(); }
 	render() {
 		let hasSelection = controller && controller.record && controller.record.getFirstSelection() !== undefined;
-		let longInputStyle = {
-			outline: "none",
-			border: "none",
-			borderBottom: "1px solid black",
-			width: "20em",
-		};
 		let content = <div>
 			<button style={{marginBottom: 10}} onClick={()=>{
 				controller.deleteAllLines();
@@ -130,15 +113,11 @@ class SkillSequencePresets extends React.Component {
 					return <PresetLine line={line} key={line._lineIndex}/>
 				})}
 				<SaveAsPreset enabled={hasSelection}/>
-				<form style={{marginTop: "16px"}}>
-					<span>Save presets to file as: </span>
-					<input defaultValue={this.saveFilename} style={longInputStyle} onChange={this.onSaveFilenameChange}/>
-					<span> </span>
-					<button type={"submit"} onClick={(e)=>{
-						this.onSave();
-						e.preventDefault();
-					}}>save</button>
-				</form>
+				<div style={{marginTop: 16}}>
+					<SaveToFile getContentFn={()=>{
+						return controller.serializedPresets();
+					}} filename={"presets"} displayName={"download presets to file"}/>
+				</div>
 			</div>
 		</div>;
 		return <Expandable

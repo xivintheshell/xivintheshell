@@ -1,5 +1,5 @@
 import React, {ChangeEvent, CSSProperties} from 'react'
-import {Expandable, Input, LoadJsonFromFileOrUrl, Help, asyncFetch, saveToFile, parseTime} from "./Common";
+import {Expandable, Input, LoadJsonFromFileOrUrl, asyncFetch, SaveToFile, parseTime} from "./Common";
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
 
@@ -16,9 +16,9 @@ import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
 	put auto markers to a separate pool, so they can be cleared with battle reset
  */
 
-export let updateTimelineMarkerPresetsView = ()=>{};
-
 export let setEditingMarkerValues = (marker: MarkerElem)=>{};
+
+export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
 
 type TimelineMarkerPresetsProp = {}
 type TimelineMarkerPresetsState = {
@@ -30,6 +30,8 @@ type TimelineMarkerPresetsState = {
 	nextMarkerShowText: boolean,
 	loadTrackDest: string,
 	durationInputMode: DurationInputMode,
+	/////////
+	trackBins: Map<number, MarkerElem[]>
 }
 const enum DurationInputMode {
 	Duration = "duration",
@@ -103,7 +105,7 @@ class TimelineMarkerPresets extends React.Component {
 	state: TimelineMarkerPresetsState;
 
 	onSaveFilenameChange: (evt: ChangeEvent<{value: string}>) => void;
-	onSave: () => void;
+	//onSave: () => void;
 	onColorChange: (evt: ChangeEvent<{value: string}>) => void;
 	onShowTextChange: React.ChangeEventHandler<HTMLInputElement>;
 
@@ -117,7 +119,6 @@ class TimelineMarkerPresets extends React.Component {
 
 	constructor(props: TimelineMarkerPresetsProp) {
 		super(props);
-		updateTimelineMarkerPresetsView = (()=>{this.forceUpdate();}).bind(this);
 		setEditingMarkerValues = ((marker: MarkerElem)=>{
 			this.setState({
 				nextMarkerColor: marker.color,
@@ -130,13 +131,6 @@ class TimelineMarkerPresets extends React.Component {
 		}).bind(this);
 		this.onSaveFilenameChange = ((evt: ChangeEvent<{value: string}>)=>{
 			if (evt.target) this.saveFilename = evt.target.value;
-		}).bind(this);
-
-		this.onSave = (()=>{
-			let files = controller.timeline.serializedMarkers();
-			for (let i = 0; i < files.length; i++) {
-				saveToFile(files[i], this.saveFilename + "_" + i + ".txt");
-			}
 		}).bind(this);
 
 		this.onColorChange = ((evt: ChangeEvent<{value: string}>)=>{
@@ -159,7 +153,9 @@ class TimelineMarkerPresets extends React.Component {
 			nextMarkerDescription: "default description",
 			nextMarkerShowText: false,
 			loadTrackDest: "0",
-			durationInputMode: DurationInputMode.Duration
+			durationInputMode: DurationInputMode.Duration,
+			///////
+			trackBins: new Map()
 		};
 		this.setTime = ((val: string)=>{this.setState({nextMarkerTime: val})}).bind(this);
 		this.setDuration = ((val: string)=>{this.setState({nextMarkerDuration: val})}).bind(this);
@@ -171,31 +167,43 @@ class TimelineMarkerPresets extends React.Component {
 		this.setDurationInputMode = ((val: string)=>{
 			this.setState({durationInputMode: val});
 		}).bind(this);
+
+		updateMarkers_TimelineMarkerPresets = ((trackBins: Map<number, MarkerElem[]>) => {
+			this.setState({trackBins: trackBins});
+		}).bind(this);
 	}
+
 	componentWillUnmount() {
-		updateTimelineMarkerPresetsView = ()=>{};
+		updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
 		setEditingMarkerValues = (marker)=>{};
 	}
 
 	render() {
-		let longInputStyle = {
-			outline: "none",
-			border: "none",
-			borderBottom: "1px solid black",
-			width: "10em",
-		};
 		let inlineDiv = {display: "inline-block", marginRight: "1em", marginBottom: 6};
 		let colorOption = function(markerColor: MarkerColor, displayName: string) {
 			return <option key={markerColor} value={markerColor}>{displayName}</option>
 		}
-		/*
-		// TODO: input end time for duration
-		let tmp =
-			<select defaultValue={DurationInputMode.Duration}
-					style={{display: "inline-block", outline: "none"}}
-					onChange={this.setDurationInputMode}>
-			</select>;
-		 */
+
+		let trackIndices: number[] = [];
+		this.state.trackBins.forEach((bin, trackIndex)=>{
+			trackIndices.push(trackIndex);
+		});
+		trackIndices.sort();
+
+		let saveTrackLinks: JSX.Element[] = [];
+		trackIndices.forEach(trackIndex=>{
+			saveTrackLinks.push(<SaveToFile
+				key={trackIndex}
+				getContentFn={()=>{ return controller.timeline.serializedMarkers()[trackIndex]; }}
+				filename={"track_" + trackIndex}
+				displayName={"track " + trackIndex}
+			/>);
+		});
+
+		if (saveTrackLinks.length === 0) {
+			saveTrackLinks.push(<span key={0}>(empty)</span>);
+		}
+
 		let content = <div>
 			<button style={{marginBottom: 10}} onClick={()=>{
 				controller.timeline.deleteAllMarkers();
@@ -285,15 +293,10 @@ class TimelineMarkerPresets extends React.Component {
 					</button>
 				</form>
 			}/>
-			<form>
-				<span>Save current markers to file: </span>
-				<input defaultValue={this.saveFilename} style={longInputStyle} onChange={this.onSaveFilenameChange}/>
-				<span> (each track as a separate file) </span>
-				<button type={"submit"} onClick={(e)=>{
-					this.onSave();
-					e.preventDefault();
-				}}>save</button>
-			</form>
+			<div>
+				<span>Save marker tracks to file: </span>
+				{saveTrackLinks}
+			</div>
 		</div>;
 		return <Expandable
 			title="Timeline markers"

@@ -295,37 +295,43 @@ export class ResourceOverride {
 		else {
 			let rsc = game.resources.get(this.props.type);
 
-			let overrideTimer = (newTimer: number) => {
+			let overrideRscTimer = (newTimer: number) => {
 				rsc.removeTimer();
 				game.resources.addResourceEvent(rsc.type, "drop " + rsc.type, newTimer, (r: Resource) => {
-					r.consume(r.availableAmount());
+					if (rsc.type === ResourceType.Enochian) { // since enochian should also take away AF/UI/UH stacks
+						game.loseEnochian();
+					} else {
+						r.consume(r.availableAmount());
+					}
 				});
 			};
-
-			// TODO: only stacks seem to work properly; override time is broken
 
 			// Ley Lines (timer + enabled)
 			if (rsc.type === ResourceType.LeyLines)
 			{
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(1);
-				overrideTimer(this.props.timeTillFullOrDrop);
+				overrideRscTimer(this.props.timeTillFullOrDrop);
 				rsc.enabled = this.props.enabled;
 			}
+
 			// everything else (timer and/or stacks)
 			else {
+
 				// stacks
 				let stacks = this.props.stacks;
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(stacks);
+
 				// timer
 				let timer = this.props.timeTillFullOrDrop;
 				if (stacks > 0 && info.maxTimeout >= 0) { // may expire
-					overrideTimer(timer);
+					overrideRscTimer(timer);
 				}
 			}
 		}
 	}
+
 	serialized() {
 		return this.props;
 	}

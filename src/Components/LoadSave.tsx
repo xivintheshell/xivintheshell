@@ -1,5 +1,5 @@
 import React from 'react'
-import {loadFromFile, saveToFile} from "./Common";
+import {loadFromFile, SaveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType} from "../Controller/Common";
 
@@ -7,12 +7,8 @@ type Fixme = any;
 
 export class LoadSave extends React.Component {
 	private readonly onLoad: () => void;
-	private readonly onSave: () => void;
-	private readonly onSaveFilenameChange: (e: React.ChangeEvent<{value: string}>) => void;
-
 	private readonly fileSelectorRef: React.RefObject<HTMLInputElement>;
-	private saveFilename: string;
-	
+
 	constructor(props: {} | Readonly<{}>) {
 		super(props);
 
@@ -33,27 +29,16 @@ export class LoadSave extends React.Component {
 			}
 		}).bind(this);
 
-		this.onSave = (()=>{
-			saveToFile(controller.record.serialized(), this.saveFilename);
-		}).bind(this);
-
-		this.onSaveFilenameChange = ((e: React.ChangeEvent<{value: string}>)=>{
-			if (e.target) {
-				this.saveFilename = e.target.value;
-			}
-		}).bind(this);
-
 		this.fileSelectorRef = React.createRef();
-		this.saveFilename = "fight.txt";
 	}
 	render() {
 		return <div className={"loadSave"}>
 			<div>
-				<input defaultValue="fight.txt" className="textInput" width="4" onChange={this.onSaveFilenameChange}/>
-				<span> </span>
-				<button onClick={this.onSave}>save to file</button>
+				<SaveToFile getContentFn={()=>{
+					return controller.record.serialized();
+				}} filename={"fight"} displayName={"download fight record"}/>
 			</div>
-			<div>
+			<div style={{marginTop: 10}}>
 				<span>Load from: </span>
 				<input
 					style={{

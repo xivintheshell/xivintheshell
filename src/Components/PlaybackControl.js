@@ -251,7 +251,6 @@ export class Config extends React.Component {
 
 	// call this whenver the list of options has potentially changed
 	#selectFirstAddable() {
-		//console.log("select first addable");
 		let firstAddableRsc = "aba aba";
 		let S = new Set();
 		this.state.initialResourceOverrides.forEach(ov=>{
@@ -279,7 +278,54 @@ export class Config extends React.Component {
 	}
 
 	#resourceOverridesAreValid() {
-		// TODO
+
+		// gather resources for quick access
+		let M = new Map();
+		this.state.initialResourceOverrides.forEach(ov=> {
+			M.set(ov.type, ov);
+		});
+
+		// shouldn't have AF and UI at the same time
+		if (M.has(ResourceType.AstralFire) && M.has(ResourceType.UmbralIce)) {
+			let af = M.get(ResourceType.AstralFire).stacks;
+			let ui = M.get(ResourceType.UmbralIce).stacks;
+			if (af > 0 && ui > 0) {
+				window.alert("shouldn't have both AF and UI stacks");
+				return false;
+			}
+		}
+
+		let af = 0;
+		let ui = 0;
+		let uh = 0;
+		if (M.has(ResourceType.AstralFire)) af = M.get(ResourceType.AstralFire).stacks;
+		if (M.has(ResourceType.UmbralIce)) ui = M.get(ResourceType.UmbralIce).stacks;
+		if (M.has(ResourceType.UmbralHeart)) uh = M.get(ResourceType.UmbralHeart).stacks;
+
+		// if there's uh, must have AF/UI
+		if (uh > 0) {
+			if (af === 0 && ui === 0) {
+				window.alert("since there's at least one UH stack, there should also be Enochian and AF or UI");
+				return false;
+			}
+		}
+
+		// if there are AF/UI stacks, must have enochian
+		if (af > 0 || ui > 0 || uh > 0) {
+			if (!M.has(ResourceType.Enochian)) {
+				window.alert("since there's at least one AF/UI stack, there should also be an Enochian timer");
+				return false;
+			}
+		}
+
+		// vice versa: if there's enochian, must have AF/UI
+		if (M.has(ResourceType.Enochian)) {
+			if (af === 0 && ui === 0) {
+				window.alert("since there's enochian, there should be at least one AF/UI stack");
+				return false;
+			}
+		}
+
 		return true;
 	}
 
@@ -439,6 +485,7 @@ export class Config extends React.Component {
 			<Expandable title="overrideInitialResources" titleNode={<span>
 				Override initial resources <Help topic="overrideInitialResources"content={<div>
 				<div className={"paragraph"} style={{color: "orangered"}}><b>Can create invalid game states. Go over Instructions/Troubleshoot first and use carefully at your own risk!</b></div>
+				<div className={"paragraph"}>Also, currently thunder dot and lucid dreaming buffs created with such overrides don't actually tick. They just show remaining buff timers.</div>
 				<div className={"paragraph"}>I would recommend saving settings (stats, lines presets, timeline markers etc.) to files first, in case invalid game states really mess up the tool and a complete reset is required.</div>
 			</div>}/>
 			</span>} content={<div>

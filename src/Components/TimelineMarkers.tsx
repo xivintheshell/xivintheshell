@@ -6,10 +6,10 @@ import {setEditingMarkerValues} from "./TimelineMarkerPresets";
 
 export let getTimelineMarkersHeight = () => { return 0 };
 
-export let updateMarkers = (markers: MarkerElem[]) => {};
+export let updateMarkers_TimelineMarkers = (trackBins: Map<number, MarkerElem[]>) => {};
 
 type TimelineMarkersState = {
-	markers: MarkerElem[]
+	trackBins: Map<number, MarkerElem[]>;
 }
 
 class TimelineMarkers extends React.Component {
@@ -24,29 +24,28 @@ class TimelineMarkers extends React.Component {
 		super(props);
 		this.myRef = React.createRef();
 		this.state = {
-			markers: []
+			trackBins: new Map()
 		};
 
 		getTimelineMarkersHeight = ()=>{
 			return controller.timeline.getNumMarkerTracks() * this.trackHeight + this.marginBottom;
 		};
 
-		updateMarkers = ((markers: MarkerElem[]) => {
-			this.setState({markers: markers});
+		updateMarkers_TimelineMarkers = ((trackBins: Map<number, MarkerElem[]>) => {
+			this.setState({trackBins: trackBins});
 		}).bind(this);
 	}
 
 	componentWillUnmount() {
 		getTimelineMarkersHeight = () => { return 0 };
-		updateMarkers = markers => {};
+		updateMarkers_TimelineMarkers = (trackBins: Map<number, MarkerElem[]>) => {};
 	}
 
 	render() {
-		let maxTrack = controller.timeline.getNumMarkerTracks() - 1;
 		let makeMarker = (marker: MarkerElem, key: number | string) => {
 			let radius = marker.duration === 0 ? 4 : 2;
 			let leftPos = controller.timeline.positionFromTime(marker.time + controller.gameConfig.countdown);
-			let absTop = (maxTrack - marker.track) * this.trackHeight;
+			let absTop = 0;//(maxTrack - marker.track) * this.trackHeight;
 			let absWidth = controller.timeline.positionFromTime(marker.duration);
 			let colorBarStyleWithoutText: CSSProperties = {
 				position: "absolute",
@@ -94,14 +93,34 @@ class TimelineMarkers extends React.Component {
 				<ReactTooltip id={id}>{marker.description}</ReactTooltip>
 			</div>;
 		};
-		let markerElems: JSX.Element[] = [];
-		for (let i = 0; i < this.state.markers.length; i++) {
-			markerElems.push(makeMarker(this.state.markers[i], i));
+
+		let makeTrack = (trackIndex: number, key: number) => {
+			let track: JSX.Element[] = [];
+			let trackBin = this.state.trackBins.get(trackIndex);
+			if (trackBin) {
+				for (let i = 0; i < trackBin.length; i++) {
+					track.push(makeMarker(trackBin[i], trackIndex + "-" + i));
+				}
+			}
+			return <div key={key} style={{
+				position: "absolute",
+				top: (numTracks - 1 - trackIndex) * this.trackHeight,
+				width: "100%",
+				height: this.trackHeight,
+				background: trackIndex % 2 === 0 ? "#f3f3f3" : "#ffffff"
+			}}>{track}</div>
 		}
+
+		let numTracks = controller.timeline.getNumMarkerTracks();
+		let tracks: JSX.Element[] = [];
+		for (let i = 0; i < numTracks; i++) {
+			tracks.push(makeTrack(i, i));
+		}
+
 		return <div ref={this.myRef} style={{
 			height: getTimelineMarkersHeight(),
 			position: "relative"
-		}}>{markerElems}</div>;
+		}}>{tracks}</div>;
 	}
 }
 

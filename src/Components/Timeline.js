@@ -122,7 +122,12 @@ class TimelineMain extends React.Component {
 			elements: []
 		}
 		this.timelineHeaderRef = React.createRef();
-		updateTimelineContent = this.unboundUpdateTimelineContent.bind(this);
+		updateTimelineContent = ((canvasWidth, data) => {
+			this.setState({
+				canvasWidth: canvasWidth,
+				elements: data
+			});
+		}).bind(this);
 	}
 	componentDidMount() {
 		this.setState({
@@ -132,12 +137,6 @@ class TimelineMain extends React.Component {
 	}
 	componentWillUnmount() {
 		updateTimelineContent = (canvasWidth, data)=>{};
-	}
-	unboundUpdateTimelineContent(canvasWidth, data) {
-		this.setState({
-			canvasWidth: canvasWidth,
-			elements: data
-		});
 	}
 	render() {
 		let elemComponents = [];

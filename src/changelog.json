@@ -1,5 +1,13 @@
 [
 	{
+		"date": "8/26/22",
+		"changes": [
+			"option to save files to specified locations",
+			"let timeline marker tracks have alternating background colors",
+			"some simple checks for resource override validity (AF/UI/UH with enochian)"
+		]
+	},
+	{
 		"date": "8/23/22",
 		"changes": [
 			"bugfix: F3P and T3P refreshed at damage application time (now refresh on button press which is also snapshot time)",
