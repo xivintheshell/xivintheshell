@@ -1,7 +1,8 @@
 import React, {ChangeEvent, CSSProperties} from 'react'
-import {Expandable, Input, LoadJsonFromFileOrUrl, asyncFetch, SaveToFile, parseTime} from "./Common";
+import {Expandable, Input, LoadJsonFromFileOrUrl, asyncFetch, SaveToFile, parseTime, Help} from "./Common";
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
+import {FileType} from "../Controller/Common";
 
 /*
 	For the sake of simplicity, tracks be like:
@@ -15,6 +16,8 @@ import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
 
 	put auto markers to a separate pool, so they can be cleared with battle reset
  */
+
+type Fixme = any;
 
 export let setEditingMarkerValues = (marker: MarkerElem)=>{};
 
@@ -191,40 +194,70 @@ class TimelineMarkerPresets extends React.Component {
 		trackIndices.sort();
 
 		let saveTrackLinks: JSX.Element[] = [];
+		saveTrackLinks.push(<SaveToFile
+			key={"combined"}
+			getContentFn={()=>{return controller.timeline.serializedCombinedMarkerTracks();}}
+			filename={"tracks_all"}
+			displayName={"all tracks combined"}
+		/>);
 		trackIndices.forEach(trackIndex=>{
 			saveTrackLinks.push(<SaveToFile
 				key={trackIndex}
-				getContentFn={()=>{ return controller.timeline.serializedMarkers()[trackIndex]; }}
+				getContentFn={()=>{ return controller.timeline.serializedSeparateMarkerTracks()[trackIndex]; }}
 				filename={"track_" + trackIndex}
 				displayName={"track " + trackIndex}
 			/>);
 		});
-
-		if (saveTrackLinks.length === 0) {
-			saveTrackLinks.push(<span key={0}>(empty)</span>);
-		}
 
 		let content = <div>
 			<button style={{marginBottom: 10}} onClick={()=>{
 				controller.timeline.deleteAllMarkers();
 			}}>clear all markers</button>
 			<PresetButtons/>
-			<Expandable title={"Load tracks"} defaultShow={false} content={
+			<Expandable
+				title={"Load tracks"}
+				titleNode={<span>
+					Load tracks <Help topic={"load tracks"} content={"when loading additional markers, no current markers will be deleted"}/></span>}
+				defaultShow={false}
+				content={
 				<div>
-					<Input defaultValue={this.state.loadTrackDest} description={"Track: "} width={8} style={inlineDiv}
-						   onChange={this.setLoadTrackDest}/>
+					<div className={"paragraph"}><b>Multiple tracks combined</b></div>
 					<LoadJsonFromFileOrUrl
+						allowLoadFromUrl={false}
 						loadUrlOnMount={false}
-						defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_0.txt"}
+						defaultLoadUrl={""}
 						onLoadFn={(content: any)=>{
-							let track = parseInt(this.state.loadTrackDest);
-							if (isNaN(track)) {
-								window.alert("invalid track destination");
+							if (content.fileType !== FileType.MarkerTracksCombined) {
+								window.alert("wrong file type '" + content.fileType + "'");
 								return;
 							}
-							controller.timeline.appendMarkersPreset(content, track);
+							content.tracks.forEach((track: Fixme) => {
+								controller.timeline.appendMarkersPreset(track, track.track);
+							});
 							controller.timeline.drawElements();
 						}}/>
+					<div className={"paragraph"}><b>Individual track</b></div>
+					<div className={"paragraph"}>
+						<Input defaultValue={this.state.loadTrackDest} description={"Track: "} width={8} style={inlineDiv}
+							   onChange={this.setLoadTrackDest}/>
+						<LoadJsonFromFileOrUrl
+							allowLoadFromUrl={true}
+							loadUrlOnMount={false}
+							defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_0.txt"}
+							onLoadFn={(content: any)=>{
+								if (content.fileType !== FileType.MarkerTrackIndividual) {
+									window.alert("wrong file type '" + content.fileType + "'");
+									return;
+								}
+								let track = parseInt(this.state.loadTrackDest);
+								if (isNaN(track)) {
+									window.alert("invalid track destination");
+									return;
+								}
+								controller.timeline.appendMarkersPreset(content, track);
+								controller.timeline.drawElements();
+							}}/>
+					</div>
 				</div>
 			}/>
 			<Expandable title={"Add marker"} defaultShow={false} content={

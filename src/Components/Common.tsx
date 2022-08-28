@@ -284,6 +284,7 @@ export class Expandable extends React.Component {
 }
 
 type LoadJsonFromFileOrUrlProps = {
+	allowLoadFromUrl: boolean;
 	defaultLoadUrl: string;
 	loadUrlOnMount: boolean;
 	onLoadFn: (content: object) => void;
@@ -355,16 +356,19 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 					ref={this.fileSelectorRef}
 					onChange={this.onLoadPresetFile}/>
 			</div>
-			<form>
-				<span>Load from URL: </span>
-				<input defaultValue={this.loadUrl} style={longInputStyle}
-					   onChange={this.onLoadUrlChange}/>
-				<span> </span>
-				<button type={"submit"} onClick={e => {
-					this.onLoadUrl();
-					e.preventDefault();
-				}}>load</button>
-			</form>
+			{
+				this.props.allowLoadFromUrl ?
+					<form>
+						<span>Load from URL: </span>
+						<input defaultValue={this.loadUrl} style={longInputStyle}
+							   onChange={this.onLoadUrlChange}/>
+						<span> </span>
+						<button type={"submit"} onClick={e => {
+							this.onLoadUrl();
+							e.preventDefault();
+						}}>load</button>
+					</form> : undefined
+			}
 		</div>
 	}
 }

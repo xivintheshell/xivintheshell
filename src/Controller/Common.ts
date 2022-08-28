@@ -14,7 +14,8 @@ export const enum ReplayMode {
 export const enum FileType {
 	Record = "Record",
 	SkillSequencePresets = "SkillSequencePresets",
-	MarkerTrackPreset = "MarkerTrackPreset"
+	MarkerTrackIndividual = "MarkerTrackIndividual",
+	MarkerTracksCombined = "MarkerTracksCombined"
 }
 
 export const enum Color {

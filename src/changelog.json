@@ -2,6 +2,7 @@
 	{
 		"date": "8/26/22",
 		"changes": [
+			"option to save multiple marker tracks into the same file",
 			"option to save files to specified locations",
 			"let timeline marker tracks have alternating background colors",
 			"some simple checks for resource override validity (AF/UI/UH with enochian)"

@@ -140,11 +140,8 @@ export class Timeline {
 		return false;
 	}
 
+	// assumes input is avlid
 	appendMarkersPreset(preset: Fixme, track: number) {
-		if (preset.fileType !== FileType.MarkerTrackPreset) {
-			window.alert("wrong file type '" + preset.fileType + "'");
-			return;
-		}
 		this.markers = this.markers.concat(preset.markers.map((m: SerializedMarker): MarkerElem=>{
 			return {
 				time: m.time,
@@ -267,7 +264,7 @@ export class Timeline {
 	}
 
 	#save() {
-		let files = this.serializedMarkers();
+		let files = this.serializedSeparateMarkerTracks();
 		localStorage.setItem("timelineMarkers", JSON.stringify(files));
 	}
 
@@ -281,7 +278,8 @@ export class Timeline {
 		}
 	}
 
-	serializedMarkers() {
+	// localStorage; saving tracks as separate files
+	serializedSeparateMarkerTracks() {
 		let maxTrack = this.getNumMarkerTracks() - 1;
 
 		let markerTracks: SerializedMarker[][] = [];
@@ -301,11 +299,20 @@ export class Timeline {
 		let files: Fixme[] = [];
 		for (let i = 0; i < markerTracks.length; i++) {
 			files.push({
-				fileType: FileType.MarkerTrackPreset,
+				fileType: FileType.MarkerTrackIndividual,
 				track: i,
 				markers: markerTracks[i]
 			});
 		}
 		return files;
+	}
+
+	// saving tracks as a combined file
+	serializedCombinedMarkerTracks() {
+		let tracks = this.serializedSeparateMarkerTracks();
+		return {
+			fileType: FileType.MarkerTracksCombined,
+			tracks: tracks
+		};
 	}
 }

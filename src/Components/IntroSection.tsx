@@ -52,7 +52,7 @@ export function IntroSection(props: {}) {
 					</li>
 				</ul>
 				<div className={"paragraph"}>
-					<span style={{color: "darkolivegreen", cursor: "pointer"}}><u>[these]</u></span> are file download links. You can right click to choose save location.
+					<span style={{color: "darkolivegreen", cursor: "pointer"}}><u>[these]</u></span> are file download links. You can right click on them to choose save location.
 				</div>
 				<div className="paragraph">
 					Most edits are automatically saved in your browser cache, so it's generally okay to refresh the page
