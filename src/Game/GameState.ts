@@ -541,6 +541,19 @@ export class GameState {
 		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
 		let cdRecastTime = cd.currentStackCd();//cd.#cdPerStack * (skill.info.isSpell ? recastTimeScale : 1);
 
+		// conditions that make the skills show proc
+		let highlight = false;
+
+		if (skillName === SkillName.Paradox) {// paradox
+			highlight = true;
+		} else if (skillName === SkillName.Fire3) {// F3P
+			if (this.resources.get(ResourceType.Firestarter).available(1)) highlight = true;
+		} else if (skillName === SkillName.Thunder3) {// T3P
+			if (this.resources.get(ResourceType.Thundercloud).available(1)) highlight = true;
+		} else if (skillName === SkillName.Foul || skillName === SkillName.Xenoglossy) {// polyglot
+			if (this.resources.get(ResourceType.Polyglot).available(1)) highlight = true;
+		}
+
 		return {
 			status: status,
 			description: "",
@@ -551,6 +564,7 @@ export class GameState {
 			cdReadyCountdown: cdReadyCountdown,
 			timeTillAvailable: timeTillAvailable,
 			capturedManaCost: capturedManaCost,
+			highlight: highlight
 		};
 	}
 

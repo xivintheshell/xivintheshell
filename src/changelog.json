@@ -1,5 +1,12 @@
 [
 	{
+		"date": "8/28/22",
+		"changes": [
+			"show orange dotted lines around some skills just like in game",
+			"(also this is probably the last feature update for now because of irl priorities, but I can still come back to fix bugs)"
+		]
+	},
+	{
 		"date": "8/26/22",
 		"changes": [
 			"option to save multiple marker tracks into the same file",

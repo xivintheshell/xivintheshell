@@ -286,7 +286,7 @@
 }
 .skillIcon::after {
     content: "";
-    background: url("https://img.finalfantasyxiv.com/lds/promo/h/X/hPseSzWlbPmvaEK5JZk3xGWbfQ.png") no-repeat;
+    background: url("https://miyehn.me/ffxiv-blm-rotation/misc/skillIcon_overlay.png") no-repeat;
     width: 48px;
     height: 48px;
     position: absolute;

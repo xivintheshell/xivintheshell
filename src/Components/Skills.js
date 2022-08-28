@@ -136,7 +136,16 @@ class SkillButton extends React.Component {
 	}
 	render() {
 		let iconPath = skillIcons.get(this.props.skillName);
-		let icon = <div onMouseEnter={this.handleMouseEnter} className={"skillIcon" + (this.props.ready ? "" : " notReady")}><img src={iconPath} alt={this.props.skillName}/></div>;
+		let icon = <div>
+			<div onMouseEnter={this.handleMouseEnter} className={"skillIcon" + (this.props.ready ? "" : " notReady")}><img src={iconPath} alt={this.props.skillName}/></div>
+			<img hidden = {!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" style={{
+				position: "absolute",
+				width: 44,
+				height: 44,
+				top: 0,
+				left: 2
+			}}/>
+		</div>;
 		let progressCircle = <ProgressCircle className="cdProgress" diameter={40} progress={this.props.cdProgress} color={"rgba(255,255,255,0.7)"}/>;
 		return <span title={this.skillName} className={"skillButton"} data-tip data-for={"skillButton-" + this.props.skillName}>
 			{this.props.cdProgress === 1 ? "" : progressCircle}
@@ -261,6 +270,7 @@ class SkillsWindow extends React.Component {
 			if (this.state.paradoxInfo) info = (isF1B1 && para) ? this.state.paradoxInfo : this.state.statusList[i];
 			let btn = <SkillButton
 				key={i}
+				highlight={info ? info.highlight : false}
 				skillName={skillName}
 				ready={info ? info.status===SkillReadyStatus.Ready : false}
 				cdProgress={info ? 1 - info.cdReadyCountdown / info.cdRecastTime : 1}
