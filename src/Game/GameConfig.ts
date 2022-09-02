@@ -28,6 +28,7 @@ export class GameConfig {
             this.randomSeed = props.randomSeed;
             this.casterTax = props.casterTax;
             this.animationLock = props.animationLock;
+            this.timeTillFirstManaTick = props.timeTillFirstManaTick;
             this.rngProcs = props.rngProcs;
             if (props.initialResourceOverrides) {
                 this.initialResourceOverrides = props.initialResourceOverrides.map(obj=>{

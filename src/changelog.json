@@ -1,5 +1,11 @@
 [
 	{
+		"date": "9/2/22",
+		"changes": [
+			"bugfix: timeTillNextManaTick wasn't updated correctly"
+		]
+	},
+	{
 		"date": "8/28/22",
 		"changes": [
 			"show orange dotted lines around some skills just like in game",
