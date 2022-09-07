@@ -1,5 +1,11 @@
 [
 	{
+		"date": "9/7/22",
+		"changes": [
+			"add link to Spider's Bozjan version of this tool"
+		]
+	},
+	{
 		"date": "9/2/22",
 		"changes": [
 			"bugfix: timeTillNextManaTick wasn't updated correctly"

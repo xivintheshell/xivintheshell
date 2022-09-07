@@ -100,10 +100,11 @@ export function IntroSection(props: {}) {
 				<div className="paragraph">Some links:</div>
 				<ul>
 					<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
+					<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation of this tool for Save the Queens areas by <b>A'zhek Silvaire @ Zalera</b></li>
 					<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job
 						guide</a></li>
 					<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
-						BLM resources channel on The Balance (make sure you've already joined the server)</a></li>
+						BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
 				</ul>
 				<div className="paragraph"><Expandable title={"Implementation notes"} defaultShow={false} content={
 					<div>
