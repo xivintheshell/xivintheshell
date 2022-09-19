@@ -45,19 +45,22 @@ export class SkillInfo {
 	}
 }
 
+// ref logs
+// https://www.fflogs.com/reports/KVgxmW9fC26qhNGt#fight=16&type=summary&view=events&source=6
+// https://www.fflogs.com/reports/rK87bvMFN2R3Hqpy#fight=1&type=casts&source=7
 const skillInfos = [
 	new SkillInfo(SkillName.Blizzard, ResourceType.cd_GCD, Aspect.Ice, true,
 		2.5, 400, 180, 0.846),
 	new SkillInfo(SkillName.Fire, ResourceType.cd_GCD, Aspect.Fire, true,
 		2.5, 800, 180, 1.871),
 	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.1), // instant
 	new SkillInfo(SkillName.Thunder3, ResourceType.cd_GCD, Aspect.Lightning, true,
 		2.5, 400, 50, 1.025),
 	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 1.114),// delayed
 	new SkillInfo(SkillName.Manafont, ResourceType.cd_Manafont, Aspect.Other, false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.6),// ? (there's def a delay but I don't know how much)
 	new SkillInfo(SkillName.Fire3, ResourceType.cd_GCD, Aspect.Fire, true,
 		3.5, 2000, 260, 1.292),
 	new SkillInfo(SkillName.Blizzard3, ResourceType.cd_GCD, Aspect.Ice, true,
@@ -68,27 +71,26 @@ const skillInfos = [
 		4, 0, 280, 1.157), // mana is handled separately
 
 	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.49),// delayed
 	new SkillInfo(SkillName.Sharpcast, ResourceType.cd_Sharpcast, Aspect.Other,false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.1), // instant
 	new SkillInfo(SkillName.Blizzard4, ResourceType.cd_GCD, Aspect.Ice, true,
 		2.5, 800, 310, 1.156),
 	new SkillInfo(SkillName.Fire4, ResourceType.cd_GCD, Aspect.Fire, true,
 		2.8, 800, 310, 1.159),
 	new SkillInfo(SkillName.BetweenTheLines, ResourceType.cd_BetweenTheLines, Aspect.Other, false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.1), // ?
 	new SkillInfo(SkillName.AetherialManipulation, ResourceType.cd_AetherialManipulation, Aspect.Other, false,
-		0, 0, 0, 0.1),
-	//new SkillInfo(SkillName.Thunder4, ResourceType.cd_GCD, Aspect.Lightning, true, 2.5, 400, 50, 0.1),
+		0, 0, 0, 0.1), // ?
 	new SkillInfo(SkillName.Triplecast, ResourceType.cd_Triplecast, Aspect.Other, false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.1), // instant
 
 	new SkillInfo(SkillName.Foul, ResourceType.cd_GCD, Aspect.Other, true,
 		0, 0, 560, 1.158),
 	new SkillInfo(SkillName.Despair, ResourceType.cd_GCD, Aspect.Fire, true,
 		3, 0, 340, 0.556),
 	new SkillInfo(SkillName.UmbralSoul, ResourceType.cd_GCD, Aspect.Ice, true,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.1),// ? (assumed to be instant)
 	new SkillInfo(SkillName.Xenoglossy, ResourceType.cd_GCD, Aspect.Other, true,
 		0, 0, 760, 0.63),
 
@@ -97,22 +99,22 @@ const skillInfos = [
 	new SkillInfo(SkillName.HighBlizzard2, ResourceType.cd_GCD, Aspect.Ice, true,
 		3, 800, 140, 1.158),
 	new SkillInfo(SkillName.Amplifier, ResourceType.cd_Amplifier, Aspect.Other, false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.1), // ? (assumed to be instant)
 	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true,
 		2.5, 1600, 500, 0.624),
 
 	new SkillInfo(SkillName.Addle, ResourceType.cd_Addle, Aspect.Other, false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.621),// delayed
 	new SkillInfo(SkillName.Swiftcast, ResourceType.cd_Swiftcast, Aspect.Other, false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.1), // instant
 	new SkillInfo(SkillName.LucidDreaming, ResourceType.cd_LucidDreaming, Aspect.Other, false,
-		0, 0, 0, 0.3),
+		0, 0, 0, 0.623), // delayed
 	new SkillInfo(SkillName.Surecast, ResourceType.cd_Surecast, Aspect.Other, false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.1), // surprisingly instant because arms length is not
 	new SkillInfo(SkillName.Tincture, ResourceType.cd_Tincture, Aspect.Other, false,
-		0, 0, 0, 0.1),
+		0, 0, 0, 0.891),// delayed
 	new SkillInfo(SkillName.Sprint, ResourceType.cd_Sprint, Aspect.Other, false,
-		0, 0, 0, 0.1)
+		0, 0, 0, 0.133)// delayed
 ];
 
 const skillInfosMap: Map<SkillName, SkillInfo> = new Map();
@@ -145,27 +147,34 @@ export class SkillsList extends Map<SkillName, Skill> {
 
 		let skillsList = this;
 
-		let addResourceAbility = function(skillName: SkillName, rscType: ResourceType, duration: number) {
-			skillsList.set(skillName, new Skill(skillName,
+		let addResourceAbility = function(props: {
+			skillName: SkillName,
+			rscType: ResourceType,
+			instant: boolean,
+			duration: number
+		}) {
+			let takeEffect = () => {
+				let resource = game.resources.get(props.rscType);
+				if (resource.available(1)) {
+					resource.overrideTimer(game, props.duration);
+				} else {
+					resource.gain(1);
+					game.resources.addResourceEvent(
+						props.rscType,
+						"drop " + props.rscType, props.duration, (rsc: Resource) => {
+							rsc.consume(1);
+						});
+				}
+			};
+			skillsList.set(props.skillName, new Skill(props.skillName,
 				() => {
 					return true;
 				},
 				(game, node) => {
 					game.useInstantSkill({
-						skillName: skillName,
-						effectFn: () => {
-							let resource = game.resources.get(rscType);
-							if (resource.available(1)) {
-								resource.overrideTimer(game, duration);
-							} else {
-								resource.gain(1);
-								game.resources.addResourceEvent(
-									rscType,
-									"drop " + rscType, duration, (rsc: Resource) => {
-										rsc.consume(1);
-									});
-							}
-						},
+						skillName: props.skillName,
+						onCapture: props.instant ? takeEffect : undefined,
+						onApplication: props.instant ? undefined : takeEffect,
 						dealDamage: false,
 						node: node
 					});
@@ -262,7 +271,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.useInstantSkill({
 					skillName: SkillName.Transpose,
-					effectFn: () => {
+					onCapture: () => {
 						if (game.getFireStacks() === 0 && game.getIceStacks() === 0) {
 							addLog(LogCategory.Event, "transpose failed; AF/UI just fell off", game.getDisplayTime(), Color.Error);
 							return;
@@ -281,7 +290,11 @@ export class SkillsList extends Map<SkillName, Skill> {
 		));
 
 		// Ley Lines
-		addResourceAbility(SkillName.LeyLines, ResourceType.LeyLines, 30);
+		addResourceAbility({
+			skillName: SkillName.LeyLines,
+			rscType: ResourceType.LeyLines,
+			instant: false,
+			duration: 30});
 
 		let gainThundercloudProc = function (game: GameState) {
 			let thundercloud = game.resources.get(ResourceType.Thundercloud);
@@ -343,11 +356,11 @@ export class SkillsList extends Map<SkillName, Skill> {
 					let capturedTickPotency = game.captureDamage(Aspect.Other, game.config.adjustedDoTPotency(35));
 					let sourceName = "Thunder 3@"+skillTime.toFixed(2);
 					game.reportPotency(node, capturedInitialPotency, sourceName);
-					applyThunderDoT(game, node, capturedTickPotency, 10);
 					game.useInstantSkill({
 						skillName: SkillName.Thunder3,
-						effectFn: () => {
+						onApplication: () => {
 							game.dealDamage(capturedInitialPotency, sourceName);
+							applyThunderDoT(game, node, capturedTickPotency, 10);
 						},
 						dealDamage: false,
 						node: node
@@ -381,7 +394,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		));
 
 		// Manaward
-		addResourceAbility(SkillName.Manaward, ResourceType.Manaward, 20);
+		addResourceAbility({skillName: SkillName.Manaward, rscType: ResourceType.Manaward, instant: false, duration: 20});
 
 		// Manafont
 		skillsList.set(SkillName.Manafont, new Skill(SkillName.Manafont,
@@ -391,7 +404,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.useInstantSkill({
 					skillName: SkillName.Manafont,
-					effectFn: () => {
+					onCapture: () => {
 						game.resources.get(ResourceType.Mana).gain(3000);
 						addLog(LogCategory.Event, "manafont effect: mana +3000", game.getDisplayTime());
 					},
@@ -410,7 +423,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 				if (game.resources.get(ResourceType.Firestarter).available(1)) {
 					game.useInstantSkill({
 						skillName: SkillName.Fire3,
-						effectFn: () => {},
 						dealDamage: true,
 						node: node
 					});
@@ -478,7 +490,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		));
 
 		// Sharpcast
-		addResourceAbility(SkillName.Sharpcast, ResourceType.Sharpcast, 30);
+		addResourceAbility({skillName: SkillName.Sharpcast, rscType: ResourceType.Sharpcast, instant: true, duration: 30});
 
 		// Blizzard 4
 		skillsList.set(SkillName.Blizzard4, new Skill(SkillName.Blizzard4,
@@ -513,7 +525,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.useInstantSkill({
 					skillName: SkillName.BetweenTheLines,
-					effectFn: () => {
+					onCapture: () => {
 					},
 					dealDamage: false,
 					node: node
@@ -529,7 +541,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.useInstantSkill({
 					skillName: SkillName.AetherialManipulation,
-					effectFn: () => {},
 					dealDamage: false,
 					node: node
 				});
@@ -544,7 +555,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.useInstantSkill({
 					skillName: SkillName.Triplecast,
-					effectFn: () => {
+					onCapture: () => {
 						let triple = game.resources.get(ResourceType.Triplecast);
 						if (triple.pendingChange) triple.removeTimer(); // should never need this, but just in case
 						triple.gain(3);
@@ -569,7 +580,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.resources.get(ResourceType.Polyglot).consume(1);
 				game.useInstantSkill({
 					skillName: SkillName.Foul,
-					effectFn: () => {},
 					dealDamage: true,
 					node: node
 				});
@@ -603,7 +613,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.useInstantSkill({
 					skillName: SkillName.UmbralSoul,
-					effectFn: () => {
+					onCapture: () => {
 						game.resources.get(ResourceType.UmbralIce).gain(1);
 						game.resources.get(ResourceType.UmbralHeart).gain(1);
 						game.startOrRefreshEnochian();
@@ -623,7 +633,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.resources.get(ResourceType.Polyglot).consume(1);
 				game.useInstantSkill({
 					skillName: SkillName.Xenoglossy,
-					effectFn: () => {},
 					dealDamage: true,
 					node: node
 				});
@@ -666,7 +675,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.useInstantSkill({
 					skillName: SkillName.Amplifier,
-					effectFn: () => {
+					onCapture: () => {
 						game.resources.get(ResourceType.Polyglot).gain(1);
 					},
 					dealDamage: false,
@@ -700,10 +709,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 		));
 
 		// Addle
-		addResourceAbility(SkillName.Addle, ResourceType.Addle, 10);
+		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 10});
 
 		// Swiftcast
-		addResourceAbility(SkillName.Swiftcast, ResourceType.Swiftcast, 10);
+		addResourceAbility({skillName: SkillName.Swiftcast, rscType: ResourceType.Swiftcast, instant: true, duration: 10});
 
 		// Lucid Dreaming
 		skillsList.set(SkillName.LucidDreaming, new Skill(SkillName.LucidDreaming,
@@ -711,20 +720,17 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				// set time for the first lucid tick,
-				// since order of events at roughly the same time are virtually undefined
-				let skillAppDelay = game.skillsList.get(SkillName.LucidDreaming).info.skillApplicationDelay;
-				let timeTillNextManaTick = game.resources.timeTillReady(ResourceType.Mana);
-
-				let timeTillFirstLucidTickSinceApply = (timeTillNextManaTick - skillAppDelay) + game.actorTickOffset;
-				while (timeTillFirstLucidTickSinceApply < 0) timeTillFirstLucidTickSinceApply += 3;
-				while (timeTillFirstLucidTickSinceApply > 3) timeTillFirstLucidTickSinceApply -= 3;
 
 				const skillTime = game.getDisplayTime();
 				game.useInstantSkill({
 					skillName: SkillName.LucidDreaming,
-					effectFn: () => {
+					onApplication: () => {
 						const numTicks = 7;
+
+						let timeTillNextManaTick = game.resources.timeTillReady(ResourceType.Mana);
+						let timeTillFirstLucidTickSinceApply = timeTillNextManaTick + game.actorTickOffset;
+						while (timeTillFirstLucidTickSinceApply < 0) timeTillFirstLucidTickSinceApply += 3;
+						while (timeTillFirstLucidTickSinceApply > 3) timeTillFirstLucidTickSinceApply -= 3;
 
 						let applyLucidTick = (index: number) => {
 							if (game.getFireStacks() > 0) return; // not tick during fire
@@ -779,13 +785,13 @@ export class SkillsList extends Map<SkillName, Skill> {
 		));
 
 		// Surecast
-		addResourceAbility(SkillName.Surecast, ResourceType.Surecast, 10);
+		addResourceAbility({skillName: SkillName.Surecast, rscType: ResourceType.Surecast, instant: true, duration: 10});
 
 		// Tincture
-		addResourceAbility(SkillName.Tincture, ResourceType.Tincture, 30);
+		addResourceAbility({skillName: SkillName.Tincture, rscType: ResourceType.Tincture, instant: false, duration: 30});
 
 		// Sprint
-		addResourceAbility(SkillName.Sprint, ResourceType.Sprint, 10);
+		addResourceAbility({skillName: SkillName.Sprint, rscType: ResourceType.Sprint, instant: false, duration: 10});
 
 		return skillsList;
 	}

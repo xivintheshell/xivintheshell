@@ -1,5 +1,12 @@
 [
 	{
+		"date": "9/18/22",
+		"changes": [
+			"add a lot of missing ability skill application delay times (see implementation notes) and get rid of the 0.1s estimates",
+			"bugfix: t3p refreshed buff timer instantly; it now refreshes after skill application delay"
+		]
+	},
+	{
 		"date": "9/7/22",
 		"changes": [
 			"add link to Spider's Bozjan version of this tool"

@@ -426,7 +426,8 @@ export class GameState {
 
 	useInstantSkill(props: {
 		skillName: SkillName,
-		effectFn: () => void,
+		onCapture?: () => void,
+		onApplication?: () => void,
 		dealDamage: boolean,
 		node: ActionNode
 	}) {
@@ -443,12 +444,14 @@ export class GameState {
 		}
 		//let recastTimeScale = this.captureRecastTimeScale();
 
+		if (props.onCapture) props.onCapture();
+
 		let skillEvent = new Event(
-			skillInfo.name + " applied",
+			skillInfo.name + " captured",
 			skillInfo.skillApplicationDelay,
 			()=>{
 				if (props.dealDamage) this.dealDamage(capturedDamage, sourceName);
-				props.effectFn();
+				if (props.onApplication) props.onApplication();
 			}
 			, Color.Text);
 		this.addEvent(skillEvent);

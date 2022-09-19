@@ -117,12 +117,11 @@ export function IntroSection(props: {}) {
 							Astral fire / umbral ice refresh happens at slidecast timing (0.5s before cast finishes)
 						</div>
 						<div className="paragraph">
-							Skill application delays are fairly accurate for spells (got them from logs), but all abilities
-							except lucid dreaming just use a 0.1s estimate (see the last function
-							argument <a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>here</a>).
-							Please contact me if you know how to measure this missing data.
-							These delay times affect when buffs are applied as well as where the red damage marks appear
-							on the timeline.
+							Thanks to Galahad and Blink, skill application delays (see the last function
+							argument <a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>here</a>)
+							should be pretty accurate now: looking at the logs, the ones for spells are between "prepare XX" to actual damage,
+							the others from between "casts XX" to whatever the effect is (mostly buff apply/refresh times).
+							Please contact me if you know how to measure the rest of missing data.
 						</div>
 						<div className="paragraph">
 							Lucid dreaming ticks happen on actor ticks, which have a random offset relative to MP tick.
