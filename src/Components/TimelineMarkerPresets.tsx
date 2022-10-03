@@ -17,8 +17,6 @@ import {FileType} from "../Controller/Common";
 	put auto markers to a separate pool, so they can be cleared with battle reset
  */
 
-type Fixme = any;
-
 export let setEditingMarkerValues = (marker: MarkerElem)=>{};
 
 export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
@@ -51,55 +49,27 @@ let asyncFetchJson = function(url: string, callback: (content: any)=>void) {
 	});
 }
 
-type TrackAndUrl = {track: number, url: string}
-let loadPresets = function(tracks: TrackAndUrl[]) {
-	tracks.forEach(trackAndUrl=>{
-		asyncFetchJson(trackAndUrl.url, (content)=>{
-			controller.timeline.appendMarkersPreset(content, trackAndUrl.track);
-			controller.timeline.drawElements();
-		});
-	});
-}
-
-type BtnProps = {
-	displayName: string,
-	trackAndUrls: TrackAndUrl[]
-}
-function LoadPresetsBtn(props: BtnProps) {
+function LoadCombinedTracksBtn(props: {displayName: string, url: string}) {
 	let style: CSSProperties = {
 		marginBottom: 10,
 		marginRight: 4,
 	};
 	return <button style={style} onClick={()=>{
-		controller.timeline.deleteAllMarkers();
-		loadPresets(props.trackAndUrls);
-	}}>{props.displayName}</button>;
+		asyncFetchJson(props.url, content => {
+			controller.timeline.loadCombinedTracksPreset(content);
+			controller.timeline.drawElements();
+		});
+	}}>{props.displayName}</button>
 }
 
 function PresetButtons() {
 	// https://github.com/quisquous/cactbot/blob/main/ui/raidboss/data/06-ew/raid/
 	return <div>
 		<span>Presets: </span>
-		<LoadPresetsBtn displayName={"P1S Shackles of Time first"} trackAndUrls={[
-			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_0.txt"},
-			{track: 1, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_1.txt"},
-			{track: 2, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_2.txt"},
-			{track: 3, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_3.txt"},
-		]}/>
-		<LoadPresetsBtn displayName={"P1S Aetherial Shackles first"} trackAndUrls={[
-			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first_0.txt"},
-			{track: 1, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first_1.txt"},
-			{track: 2, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first_2.txt"},
-			{track: 3, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first_3.txt"},
-		]}/>
-		<LoadPresetsBtn displayName={"P2S"} trackAndUrls={[
-			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s_0.txt"},
-			{track: 1, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s_1.txt"},
-			{track: 2, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s_2.txt"},
-		]}/>
-		<LoadPresetsBtn displayName={"DSR P7 by Santa"} trackAndUrls={[
-			{track: 0, url: "https://miyehn.me/ffxiv-blm-rotation/presets/markers/dsr_p7_0.txt"},
-		]}/>
+		<LoadCombinedTracksBtn displayName={"P1S Shackles of Time first"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P1S Aetherial Shackles first"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P2S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s.txt"}/>
+		<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/dsr_p7.txt"}/>
 	</div>
 }
 
@@ -227,13 +197,7 @@ class TimelineMarkerPresets extends React.Component {
 						loadUrlOnMount={false}
 						defaultLoadUrl={""}
 						onLoadFn={(content: any)=>{
-							if (content.fileType !== FileType.MarkerTracksCombined) {
-								window.alert("wrong file type '" + content.fileType + "'");
-								return;
-							}
-							content.tracks.forEach((track: Fixme) => {
-								controller.timeline.appendMarkersPreset(track, track.track);
-							});
+							controller.timeline.loadCombinedTracksPreset(content);
 							controller.timeline.drawElements();
 						}}/>
 					<div className={"paragraph"}><b>Individual track</b></div>
@@ -245,16 +209,12 @@ class TimelineMarkerPresets extends React.Component {
 							loadUrlOnMount={false}
 							defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_0.txt"}
 							onLoadFn={(content: any)=>{
-								if (content.fileType !== FileType.MarkerTrackIndividual) {
-									window.alert("wrong file type '" + content.fileType + "'");
-									return;
-								}
 								let track = parseInt(this.state.loadTrackDest);
 								if (isNaN(track)) {
 									window.alert("invalid track destination");
 									return;
 								}
-								controller.timeline.appendMarkersPreset(content, track);
+								controller.timeline.loadIndividualTrackPreset(content, track);
 								controller.timeline.drawElements();
 							}}/>
 					</div>

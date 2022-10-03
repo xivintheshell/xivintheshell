@@ -1,5 +1,11 @@
 [
 	{
+		"date": "10/2/22",
+		"changes": [
+			"update legacy timeline marker presets and fix not being able to load them from file"
+		]
+	},
+	{
 		"date": "9/18/22",
 		"changes": [
 			"add a lot of missing ability skill application delay times (see implementation notes) and get rid of the 0.1s estimates",

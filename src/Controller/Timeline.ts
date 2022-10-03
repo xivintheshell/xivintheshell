@@ -141,7 +141,7 @@ export class Timeline {
 	}
 
 	// assumes input is avlid
-	appendMarkersPreset(preset: Fixme, track: number) {
+	#appendMarkersPreset(preset: Fixme, track: number) {
 		this.markers = this.markers.concat(preset.markers.map((m: SerializedMarker): MarkerElem=>{
 			return {
 				time: m.time,
@@ -154,6 +154,24 @@ export class Timeline {
 			};
 		}));
 		this.#save();
+	}
+
+	loadCombinedTracksPreset(content: Fixme) {
+		if (content.fileType !== FileType.MarkerTracksCombined) {
+			window.alert("wrong file type '" + content.fileType + "'");
+			return;
+		}
+		content.tracks.forEach((trackContent: Fixme) => {
+			this.loadIndividualTrackPreset(trackContent, trackContent.track);
+		});
+	}
+
+	loadIndividualTrackPreset(content: Fixme, track: number) {
+		if (content.fileType !== FileType.MarkerTrackIndividual) {
+			window.alert("wrong file type '" + content.fileType + "'");
+			return;
+		}
+		this.#appendMarkersPreset(content, track);
 	}
 
 	deleteAllMarkers() {
@@ -273,7 +291,7 @@ export class Timeline {
 		if (str !== null) {
 			let files = JSON.parse(str);
 			files.forEach((f: Fixme)=>{
-				this.appendMarkersPreset(f, f.track);
+				this.#appendMarkersPreset(f, f.track);
 			});
 		}
 	}
