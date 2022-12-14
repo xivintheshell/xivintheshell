@@ -97,7 +97,7 @@ function TimelineHeader(props) {
 			let x = e.clientX - rect.left;
 			let t = controller.timeline.timeFromPosition(x);
 			if (t < controller.game.time) {
-				controller.displayHistoricalState(t);
+				controller.displayHistoricalState(t, undefined); // replay the actions as-is
 			} else {
 				controller.displayCurrentState();
 			}

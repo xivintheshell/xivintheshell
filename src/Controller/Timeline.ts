@@ -2,7 +2,7 @@
 import {updateStatsDisplay, updateTimelineContent} from "../Components/Timeline";
 // @ts-ignore
 import {controller} from "./Controller";
-import {SkillName} from "../Game/Common";
+import {Debug, SkillName} from "../Game/Common";
 import {ActionNode} from "./Record";
 import {FileType} from "./Common";
 import {updateMarkers_TimelineMarkers} from "../Components/TimelineMarkers";
@@ -270,7 +270,7 @@ export class Timeline {
 
 		let firstNode = controller.record.getFirstSelection();
 		if (firstNode) {
-			controller.displayHistoricalState(firstNode.tmp_startLockTime ?? 0);
+			controller.displayHistoricalState(firstNode.tmp_startLockTime ?? 0, firstNode);
 		}
 	}
 

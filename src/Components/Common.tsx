@@ -22,12 +22,17 @@ export class SaveToFile extends React.Component{
 			content: {}
 		};
 	}
+	updateContent() {
+		let newContent = this.props.getContentFn();
+		this.setState({content: newContent});
+	}
 	render() {
 		return <a
 			style={{color: "darkolivegreen", marginRight: 6}}
 			href={getBlobUrl(this.state.content)}
 			download={this.props.filename}
-			onClick={()=>{ this.setState({content: this.props.getContentFn()}); }}
+			onClick={()=>{ this.updateContent(); }}
+			onContextMenu={()=>{ this.updateContent(); }}
 		>
 			{"[" + (this.props.displayName===undefined?"download":this.props.displayName) + "]"}
 		</a>

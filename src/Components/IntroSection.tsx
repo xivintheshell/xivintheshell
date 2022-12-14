@@ -52,7 +52,7 @@ export function IntroSection(props: {}) {
 					</li>
 				</ul>
 				<div className={"paragraph"}>
-					<span style={{color: "darkolivegreen", cursor: "pointer"}}><u>[these]</u></span> are file download links. Click to download. (Right click to choose save location is broken; will fix at some point)
+					<span style={{color: "darkolivegreen", cursor: "pointer"}}><u>[these]</u></span> are file download links. Click to download, or right click to choose save location.
 				</div>
 				<div className="paragraph">
 					Most edits are automatically saved in your browser cache, so it's generally okay to refresh the page
@@ -66,7 +66,7 @@ export function IntroSection(props: {}) {
 					<Expandable title={"Troubleshoot"} titleNode={<b>Troubleshoot</b>} content={
 						<div className="paragraph">
 							If the browser cache is somehow messed up (likely due to invalid game states), this is how to reset it:<br/>
-							Enter this tool from <b>{"https://miyehn.me/ffxiv-blm-rotation/{command}"}</b> replacing <b>{"{command}"}</b> with one of the following:
+							Enter this tool from <b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b> replacing <b>{"{command}"}</b> with one of the following:
 							<ul>
 								<li style={smallGap}><b>resetResourceOverrides</b>: delete all resource overrides and all actions on the current timeline.</li>
 								<li style={smallGap}><b>resetAll</b>: delete all browser-cached settings.</li>

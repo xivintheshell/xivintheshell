@@ -132,7 +132,7 @@ class SkillButton extends React.Component {
 				<div className="paragraph">{this.props.skillName}</div>
 				<div className="paragraph">{s}</div>
 				{info.status===SkillReadyStatus.Ready ?
-					<div className="paragraph">{"cast: " + actualCastTime + ", w delay: " + info.timeTillDamageApplication.toFixed(3)}</div> : undefined
+					<div className="paragraph">{"cast: " + actualCastTime.toFixed(2) + ", w delay: " + info.timeTillDamageApplication.toFixed(3)}</div> : undefined
 				}
 			</div>;
 			setSkillInfoText(content);

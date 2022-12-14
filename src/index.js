@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
+import { HashRouter, Routes, Route, useParams } from "react-router-dom";
 import Main from './Components/Main';
 
 import './Style/normalize.css';
@@ -14,12 +14,12 @@ function MainWithCommand() {
 
 ReactDOM.render(
 	//<React.StrictMode>
-	<BrowserRouter>
+	<HashRouter>
 		<Routes>
-			<Route path="/ffxiv-blm-rotation/" element={<Main/>}/>
-			<Route path="/ffxiv-blm-rotation/:command" element={<MainWithCommand/>}/>
+			<Route path={"/"} element={<Main/>}/>
+			<Route path={"/:command"} element={<MainWithCommand/>}/>
 		</Routes>
-	</BrowserRouter>,
+	</HashRouter>,
 	//</React.StrictMode>,
 	document.getElementById('root')
 );

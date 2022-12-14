@@ -89,7 +89,7 @@ class Controller {
 		}
 	}
 
-	displayHistoricalState(time: number) {
+	displayHistoricalState(time: number, cutoffAction?: ActionNode) {
 		this.displayingUpToDateGameState = false;
 		this.#bCalculatingHistoricalState = true;
 		setOverrideOutlineColor("darkorange");
@@ -110,7 +110,8 @@ class Controller {
 			line: tmpRecord,
 			replayMode: ReplayMode.Exact,
 			suppressLog: true,
-			maxReplayTime: time
+			maxReplayTime: time,
+			cutoffAction: cutoffAction
 		});
 
 		// view only cursor
@@ -545,7 +546,8 @@ class Controller {
 		replayMode: ReplayMode,
 		suppressLog?: boolean,
 		removeTrailingIdleTime?: boolean,
-		maxReplayTime?: number
+		maxReplayTime?: number,
+		cutoffAction?: ActionNode
 	}) : {
 		success: boolean,
 		firstAddedNode: ActionNode | undefined
@@ -563,7 +565,7 @@ class Controller {
 
 		const oldTail = this.record.getLastAction();
 		let firstAddedNode = undefined;
-		while (itr) {
+		while (itr && itr !== props.cutoffAction) {
 
 			let lastIter = false;
 

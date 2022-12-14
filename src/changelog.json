@@ -1,5 +1,14 @@
 [
 	{
+		"date": "12/13/22",
+		"changes": [
+			"display historical game state at the start of the first selected skill",
+			"other miscellaneous ui & code cleanups",
+			"bugfix: broken right click to choose download location",
+			"bugfix: broken resetAll and resetResourceOverrides command links"
+		]
+	},
+	{
 		"date": "10/31/22",
 		"changes": [
 			"6.28 job adjustments: foul & xenoglossy potency increase; enochian buff -> 21%"
