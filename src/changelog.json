@@ -1,5 +1,17 @@
 [
 	{
+		"date": "10/31/22",
+		"changes": [
+			"6.28 job adjustments: foul & xenoglossy potency increase; enochian buff -> 21%"
+		]
+	},
+	{
+		"date": "10/3/22",
+		"changes": [
+			"when hovered on a skill, show its captured cast time and time till application"
+		]
+	},
+	{
 		"date": "10/2/22",
 		"changes": [
 			"update legacy timeline marker presets and fix not being able to load them from file"

@@ -130,7 +130,7 @@ export class StatsModifier
 
 		let enoMod = new StatsModifier();
 		if (resources.get(ResourceType.Enochian).available(1) && !Debug.noEnochian) {
-			enoMod.damageBase = 1.2;
+			enoMod.damageBase = 1.21;
 		}
 		modifiers.push(enoMod);
 

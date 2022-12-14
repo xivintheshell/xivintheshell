@@ -126,9 +126,14 @@ class SkillButton extends React.Component {
 			} else if (info.status === SkillReadyStatus.Blocked) {
 				s += "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (CD ready in " + info.cdReadyCountdown.toFixed(2) + ")";
 			}
+			// if ready, also show captured cast time & time till damage application
+			let actualCastTime = info.instantCast ? 0 : info.castTime;
 			let content = <div style={{color: controller.displayingUpToDateGameState ? "white" : "darkorange"}}>
 				<div className="paragraph">{this.props.skillName}</div>
 				<div className="paragraph">{s}</div>
+				{info.status===SkillReadyStatus.Ready ?
+					<div className="paragraph">{"cast: " + actualCastTime + ", w delay: " + info.timeTillDamageApplication.toFixed(3)}</div> : undefined
+				}
 			</div>;
 			setSkillInfoText(content);
 			this.setState({skillDescription: content});
@@ -136,8 +141,8 @@ class SkillButton extends React.Component {
 	}
 	render() {
 		let iconPath = skillIcons.get(this.props.skillName);
-		let icon = <div>
-			<div onMouseEnter={this.handleMouseEnter} className={"skillIcon" + (this.props.ready ? "" : " notReady")}><img src={iconPath} alt={this.props.skillName}/></div>
+		let icon = <div onMouseEnter={this.handleMouseEnter}>
+			<div className={"skillIcon" + (this.props.ready ? "" : " notReady")}><img src={iconPath} alt={this.props.skillName}/></div>
 			<img hidden = {!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" style={{
 				position: "absolute",
 				width: 44,

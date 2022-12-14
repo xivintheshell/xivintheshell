@@ -52,7 +52,7 @@ export function IntroSection(props: {}) {
 					</li>
 				</ul>
 				<div className={"paragraph"}>
-					<span style={{color: "darkolivegreen", cursor: "pointer"}}><u>[these]</u></span> are file download links. You can right click on them to choose save location.
+					<span style={{color: "darkolivegreen", cursor: "pointer"}}><u>[these]</u></span> are file download links. Click to download. (Right click to choose save location is broken; will fix at some point)
 				</div>
 				<div className="paragraph">
 					Most edits are automatically saved in your browser cache, so it's generally okay to refresh the page
@@ -81,21 +81,20 @@ export function IntroSection(props: {}) {
 			title={"About this tool"}
 			content={<div>
 				<div className="paragraph">This is a FFXIV black mage simulator & rotation planner.</div>
-				<div className="paragraph">
-					This tool is developed by <b>miyehn (Ellyn Waterford @ Sargatanas)</b> with generous help from their
-					black mage friends and players on The Balance discord. Big shout out to <b>Galahad Donnadieu
-					@ Exodus</b> for teaching me BLM from the ground up, testing the tool, and help collecting data.
-					Also thank <b>Turtle</b> from The Balance for their detailed feedback and bug reports.
-				</div>
+				<div className="paragraph">This tool is made by:</div>
+				<ul>
+					<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
+					<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
+					<li><b>Turtle, Spider,</b> and many other players who contributed feature suggestions, timeline markers, bug reports, or in any other way</li>
+				</ul>
 				<div className="paragraph">
 					If you have questions,
-					encountered bugs, or would like to suggest features, you can find me on discord
+					encountered bugs, or would like to suggest features, you can find me (miyehn) on discord
 					(miyehn#5857) or via email (rainduym@gmail.com). In case of sending me a bug report, attaching the
 					fight record (download "fight.txt" from the right or name it anything else) would be
 					very helpful.
 				</div>
-				<div className="paragraph">Also, consider contributing! I didn't even clear P3S or P4S so it's hard for
-					me to make timeline presets for those fights...
+				<div className="paragraph">Also, consider contributing! I'm not raiding this tier so I can't make the timeline markers..
 				</div>
 				<div className="paragraph">Some links:</div>
 				<ul>

@@ -205,7 +205,7 @@ class TimelineMarkerPresets extends React.Component {
 						<Input defaultValue={this.state.loadTrackDest} description={"Track: "} width={8} style={inlineDiv}
 							   onChange={this.setLoadTrackDest}/>
 						<LoadJsonFromFileOrUrl
-							allowLoadFromUrl={true}
+							allowLoadFromUrl={false}
 							loadUrlOnMount={false}
 							defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_0.txt"}
 							onLoadFn={(content: any)=>{

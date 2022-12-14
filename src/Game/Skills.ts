@@ -32,7 +32,7 @@ export class SkillInfo {
 		baseCastTime: number,
 		baseManaCost: number,
 		basePotency: number,
-		skillApplicationDelay: number)
+		skillApplicationDelay?: number)
 	{
 		this.name = skillName;
 		this.cdName = cdName;
@@ -41,7 +41,7 @@ export class SkillInfo {
 		this.baseCastTime = baseCastTime;
 		this.baseManaCost = baseManaCost;
 		this.basePotency = basePotency;
-		this.skillApplicationDelay = skillApplicationDelay;
+		this.skillApplicationDelay = skillApplicationDelay===undefined ? 0 : skillApplicationDelay;
 	}
 }
 
@@ -54,7 +54,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Fire, ResourceType.cd_GCD, Aspect.Fire, true,
 		2.5, 800, 180, 1.871),
 	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false,
-		0, 0, 0, 0.1), // instant
+		0, 0, 0), // instant
 	new SkillInfo(SkillName.Thunder3, ResourceType.cd_GCD, Aspect.Lightning, true,
 		2.5, 400, 50, 1.025),
 	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false,
@@ -73,44 +73,44 @@ const skillInfos = [
 	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false,
 		0, 0, 0, 0.49),// delayed
 	new SkillInfo(SkillName.Sharpcast, ResourceType.cd_Sharpcast, Aspect.Other,false,
-		0, 0, 0, 0.1), // instant
+		0, 0, 0), // instant
 	new SkillInfo(SkillName.Blizzard4, ResourceType.cd_GCD, Aspect.Ice, true,
 		2.5, 800, 310, 1.156),
 	new SkillInfo(SkillName.Fire4, ResourceType.cd_GCD, Aspect.Fire, true,
 		2.8, 800, 310, 1.159),
 	new SkillInfo(SkillName.BetweenTheLines, ResourceType.cd_BetweenTheLines, Aspect.Other, false,
-		0, 0, 0, 0.1), // ?
+		0, 0, 0), // ?
 	new SkillInfo(SkillName.AetherialManipulation, ResourceType.cd_AetherialManipulation, Aspect.Other, false,
-		0, 0, 0, 0.1), // ?
+		0, 0, 0), // ?
 	new SkillInfo(SkillName.Triplecast, ResourceType.cd_Triplecast, Aspect.Other, false,
-		0, 0, 0, 0.1), // instant
+		0, 0, 0), // instant
 
 	new SkillInfo(SkillName.Foul, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 0, 560, 1.158),
+		0, 0, 600, 1.158),
 	new SkillInfo(SkillName.Despair, ResourceType.cd_GCD, Aspect.Fire, true,
 		3, 0, 340, 0.556),
 	new SkillInfo(SkillName.UmbralSoul, ResourceType.cd_GCD, Aspect.Ice, true,
-		0, 0, 0, 0.1),// ? (assumed to be instant)
+		0, 0, 0),// ? (assumed to be instant)
 	new SkillInfo(SkillName.Xenoglossy, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 0, 760, 0.63),
+		0, 0, 800, 0.63),
 
 	new SkillInfo(SkillName.HighFire2, ResourceType.cd_GCD, Aspect.Fire, true,
 		3, 1500, 140, 1.154),
 	new SkillInfo(SkillName.HighBlizzard2, ResourceType.cd_GCD, Aspect.Ice, true,
 		3, 800, 140, 1.158),
 	new SkillInfo(SkillName.Amplifier, ResourceType.cd_Amplifier, Aspect.Other, false,
-		0, 0, 0, 0.1), // ? (assumed to be instant)
+		0, 0, 0), // ? (assumed to be instant)
 	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true,
 		2.5, 1600, 500, 0.624),
 
 	new SkillInfo(SkillName.Addle, ResourceType.cd_Addle, Aspect.Other, false,
 		0, 0, 0, 0.621),// delayed
 	new SkillInfo(SkillName.Swiftcast, ResourceType.cd_Swiftcast, Aspect.Other, false,
-		0, 0, 0, 0.1), // instant
+		0, 0, 0), // instant
 	new SkillInfo(SkillName.LucidDreaming, ResourceType.cd_LucidDreaming, Aspect.Other, false,
 		0, 0, 0, 0.623), // delayed
 	new SkillInfo(SkillName.Surecast, ResourceType.cd_Surecast, Aspect.Other, false,
-		0, 0, 0, 0.1), // surprisingly instant because arms length is not
+		0, 0, 0), // surprisingly instant because arms length is not
 	new SkillInfo(SkillName.Tincture, ResourceType.cd_Tincture, Aspect.Other, false,
 		0, 0, 0, 0.891),// delayed
 	new SkillInfo(SkillName.Sprint, ResourceType.cd_Sprint, Aspect.Other, false,
@@ -525,8 +525,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.useInstantSkill({
 					skillName: SkillName.BetweenTheLines,
-					onCapture: () => {
-					},
 					dealDamage: false,
 					node: node
 				});

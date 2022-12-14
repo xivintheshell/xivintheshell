@@ -542,7 +542,14 @@ export class GameState {
 
 		let cd = this.cooldowns.get(skill.info.cdName);
 		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
-		let cdRecastTime = cd.currentStackCd();//cd.#cdPerStack * (skill.info.isSpell ? recastTimeScale : 1);
+		let cdRecastTime = cd.currentStackCd();
+
+		// to be displayed together when hovered on a skill
+		let timeTillDamageApplication = 0;
+		if (status === SkillReadyStatus.Ready) {
+			let timeTillCapture = instantCastAvailable ? 0 : (capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
+			timeTillDamageApplication = timeTillCapture + skill.info.skillApplicationDelay;
+		}
 
 		// conditions that make the skills show proc
 		let highlight = false;
@@ -566,6 +573,7 @@ export class GameState {
 			cdRecastTime: cdRecastTime,
 			cdReadyCountdown: cdReadyCountdown,
 			timeTillAvailable: timeTillAvailable,
+			timeTillDamageApplication: timeTillDamageApplication,
 			capturedManaCost: capturedManaCost,
 			highlight: highlight
 		};
