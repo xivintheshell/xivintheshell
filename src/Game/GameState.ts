@@ -25,6 +25,9 @@ export class GameState {
 	eventsQueue: Event[];
 	skillsList: SkillsList;
 
+	#lastDamageApplicationTime: number;
+	#cumulativePotency: number;
+
 	constructor(config: GameConfig) {
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
@@ -96,9 +99,13 @@ export class GameState {
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = new SkillsList(this);
 
+		this.#lastDamageApplicationTime = 0;
+		this.#cumulativePotency = 0;
+
 		this.#init();
 	}
 
+	// get mp tick and polyglot rolling
 	#init() {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
@@ -272,6 +279,8 @@ export class GameState {
 	}
 
 	dealDamage(potency: number, source="unknown") {
+		this.#lastDamageApplicationTime = this.time;
+		this.#cumulativePotency += potency;
 		controller.reportDamage({
 			potency: potency,
 			time: this.time,
@@ -279,9 +288,11 @@ export class GameState {
 		});
 	}
 
+	getLastDamageApplicationDisplayTime() { return this.#lastDamageApplicationTime - this.config.countdown; }
+	getCumulativePotency() { return this.#cumulativePotency; }
+
 	reportPotency(node: ActionNode, potency: number, source: string) {
 		node.tmp_capturedPotency = (node.tmp_capturedPotency ?? 0) + potency;
-		controller.reportPotencyUpdate();
 	}
 
 	requestToggleBuff(buffName: ResourceType) {

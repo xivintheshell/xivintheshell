@@ -227,19 +227,12 @@ class Controller {
 	}
 
 	updateCumulativeStatsDisplay() {
-		let cumulativePotency = 0;
-		this.record.iterateAll(itr=>{
-			cumulativePotency += itr.tmp_capturedPotency ?? 0;
-		});
-		let totalTime = this.game.time - this.gameConfig.countdown;
+		let cumulativePotency = this.game.getCumulativePotency();
+		let totalTime = this.game.getLastDamageApplicationDisplayTime();
 		updateStatsDisplay({
 			cumulativePPS: totalTime > 0 ? cumulativePotency / totalTime : 0,
 			cumulativeDuration: Math.max(0, totalTime),
 		});
-	}
-
-	reportPotencyUpdate() {
-		this.updateCumulativeStatsDisplay();
 	}
 
 	reportDamage(props: { potency: number; time: number; source: string; }) {
@@ -251,6 +244,8 @@ class Controller {
 				source: props.source
 			});
 		}
+
+		this.updateCumulativeStatsDisplay();
 
 		addLog(
 			LogCategory.Event,
@@ -800,7 +795,6 @@ class Controller {
 		updateSelectionDisplay(
 			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
 		updateSkillSequencePresetsView();
-
 	}
 
 	requestUseSkill(props: { skillName: SkillName; }) {

@@ -2,7 +2,7 @@ import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
 import {Expandable, Help, Slider} from "./Common";
-import {Cursor, MPTickMark, DamageMark, LucidMark, TimelineSkill} from "./TimelineElements";
+import {Cursor, MPTickMark, DamageMark, LucidMark, TimelineSkill, displayTime} from "./TimelineElements";
 import {getTimelineMarkersHeight, timelineMarkers} from "./TimelineMarkers";
 import {timelineMarkerPresets} from "./TimelineMarkerPresets";
 
@@ -64,13 +64,6 @@ function TimelineHeader(props) {
 	for (let i = 0; i < props.canvasWidth; i += props.pixelPerSecond * 60) {
 		marks_1min.push(i);
 	}*/
-	let displayTime = (time) => {
-		let absTime = Math.abs(time);
-		let minute = Math.floor(absTime / 60);
-		let second = absTime - 60 * minute;
-		return (time < 0 ? "-" : "") +
-			minute.toString() + ":" + (second < 10 ? "0" : "") + second.toFixed(0).toString();
-	}
 	let ruler = <div style={{pointerEvents: "none"}}>
 		<svg width={props.canvasWidth} height="100%">
 			{marks_1sec.map(i=>{
@@ -90,7 +83,7 @@ function TimelineHeader(props) {
 			left: `${i - 24}px`,
 			width: "48px",
 			display: "inline-block",
-		}}><div>{displayTime((i - countdownPadding) / props.pixelPerSecond)}</div></div>;})}
+		}}><div>{displayTime((i - countdownPadding) / props.pixelPerSecond, 0)}</div></div>;})}
 	</div>
 	return <div ref={props.divref} style={{
 		//zIndex: -3,
@@ -181,7 +174,6 @@ class TimelineMain extends React.Component {
 			(evt)=>{
 				if (!evt.shiftKey) {
 					controller.record.unselectAll();
-					controller.onTimelineSelectionChanged();
 					if (evt.target !== this.timelineHeaderRef.current) {
 						controller.displayCurrentState();
 					}
@@ -259,12 +251,12 @@ class StatsDisplay extends React.Component {
 	}
 	render() {
 		let cumulative = <div style={{flex: 1}}>
-			<span>Time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
+			<span>Last damage application time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
 			<span>Cumulative potency: {(this.state.cumulativePPS * this.state.cumulativeDuration).toFixed(2)}</span><br/>
 			<span>PPS <Help topic={"ppsNotes"} content={
 				<div className={"toolTip"}>
 					<div className="paragraph">
-						cumulative potency divided by time since pull (0s).
+						cumulative potency divided by last damage application time since pull (0s).
 					</div>
 					<div className="paragraph">
 						could be inaccurate if any damage happens before pull

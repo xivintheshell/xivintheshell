@@ -6,6 +6,14 @@ import {Clickable} from "./Common";
 import ReactTooltip from 'react-tooltip';
 import {ActionNode} from "../Controller/Record";
 
+export let displayTime = (time: number, fractionDigits: number) => {
+	let absTime = Math.abs(time);
+	let minute = Math.floor(absTime / 60);
+	let second = absTime - 60 * minute;
+	return (time < 0 ? "-" : "") +
+		minute.toString() + ":" + (second < 10 ? "0" : "") + second.toFixed(fractionDigits).toString();
+}
+
 const MAX_HEIGHT = 400;
 export function Cursor(props: {
 	vOffset: number;
@@ -60,7 +68,7 @@ export function DamageMark(props: {
 		top: props.vOffset,
 		left: controller.timeline.positionFromTime(props.elem.time) - 3,
 	};
-	let hoverText = props.elem.potency.toFixed(2) + " (" + props.elem.source + ")";
+	let hoverText = "[" + (props.elem.time - controller.gameConfig.countdown).toFixed(2) + "] " + props.elem.potency.toFixed(2) + " (" + props.elem.source + ")";
 	return <div style={style} className={"timeline-elem damageMark"} data-tip data-for={`${props.elemID}`}>
 		<svg width={6} height={6}>
 			<polygon points="0,0 6,0 3,6" fill="red" stroke="none"/>
@@ -169,6 +177,7 @@ export function TimelineSkill(props: {
 			onKeyDown={(e) => {
 				if (e.key === "Backspace") {
 					controller.rewindUntilBefore(controller.record.getFirstSelection());
+					controller.displayCurrentState();
 					controller.updateAllDisplay();
 					controller.autoSave();
 				}

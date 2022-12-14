@@ -140,7 +140,7 @@ export class Timeline {
 		return false;
 	}
 
-	// assumes input is avlid
+	// assumes input is valid
 	#appendMarkersPreset(preset: Fixme, track: number) {
 		this.markers = this.markers.concat(preset.markers.map((m: SerializedMarker): MarkerElem=>{
 			return {
@@ -267,10 +267,11 @@ export class Timeline {
 			selectedPotency: potency,
 			selectedDuration: duration,
 		});
-	}
 
-	onDeleteSkill(node: ActionNode) {
-		// TODO
+		let firstNode = controller.record.getFirstSelection();
+		if (firstNode) {
+			controller.displayHistoricalState(firstNode.tmp_startLockTime ?? 0);
+		}
 	}
 
 	getNumMarkerTracks() {
