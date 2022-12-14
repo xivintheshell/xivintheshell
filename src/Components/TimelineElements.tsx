@@ -97,6 +97,10 @@ export function LucidMark(props: {
 	</div>;
 }
 
+export let bHandledSkillSelectionThisFrame : boolean = false;
+export function resetHandledSkillSelectionThisFrame() {
+	bHandledSkillSelectionThisFrame = false;
+}
 export function TimelineSkill(props: {
 	elem: {
 		node: ActionNode;
@@ -186,6 +190,7 @@ export function TimelineSkill(props: {
 		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
 	</div>;
 	let icon = <Clickable key={node.getNodeIndex()} content={iconImg} onClickFn={(e) => {
+		bHandledSkillSelectionThisFrame = true;
 		controller.timeline.onClickSkill(node, e.shiftKey);
 	}}/>
 

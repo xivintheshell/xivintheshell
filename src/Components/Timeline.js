@@ -2,7 +2,15 @@ import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
 import {Expandable, Help, Slider} from "./Common";
-import {Cursor, MPTickMark, DamageMark, LucidMark, TimelineSkill, displayTime} from "./TimelineElements";
+import {
+	Cursor,
+	MPTickMark,
+	DamageMark,
+	LucidMark,
+	TimelineSkill,
+	displayTime,
+	resetHandledSkillSelectionThisFrame, bHandledSkillSelectionThisFrame
+} from "./TimelineElements";
 import {getTimelineMarkersHeight, timelineMarkers} from "./TimelineMarkers";
 import {timelineMarkerPresets} from "./TimelineMarkerPresets";
 
@@ -170,14 +178,15 @@ class TimelineMain extends React.Component {
 			height: "54px"
 		};
 		let countdownGrey = <div style={countdownBgStyle}/>;
-		return <div className="timeline-main" style={{width: this.state.canvasWidth}} onMouseDown={
+		return <div className="timeline-main" style={{width: this.state.canvasWidth}} onClick={
 			(evt)=>{
-				if (!evt.shiftKey) {
+				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
 					controller.record.unselectAll();
 					if (evt.target !== this.timelineHeaderRef.current) {
 						controller.displayCurrentState();
 					}
 				}
+				resetHandledSkillSelectionThisFrame();
 			}
 		}>
 			<TimelineSelection/>
