@@ -329,8 +329,8 @@ export class GameState {
 				// re-capture them here, since game state might've changed (say, AF/UI fell off)
 				[capturedManaCost, uhConsumption] = game.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 
-				// actually deduct resources (except some special ones like Paradox and Flare that deduct resources in effect fn)
-				if (skillName !== SkillName.Flare) {
+				// actually deduct resources (except some special ones like Paradox, Despair and Flare that deduct resources in onCapture fn)
+				if (skillName !== SkillName.Flare && skillName !== SkillName.Despair) {
 					if (!(skillName===SkillName.Paradox && game.getIceStacks()>0)) game.resources.get(ResourceType.Mana).consume(capturedManaCost);
 					if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
 				}
@@ -558,8 +558,12 @@ export class GameState {
 		// to be displayed together when hovered on a skill
 		let timeTillDamageApplication = 0;
 		if (status === SkillReadyStatus.Ready) {
-			let timeTillCapture = instantCastAvailable ? 0 : (capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
-			timeTillDamageApplication = timeTillCapture + skill.info.skillApplicationDelay;
+			if (skill.info.isSpell) {
+				let timeTillCapture = instantCastAvailable ? 0 : (capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
+				timeTillDamageApplication = timeTillCapture + skill.info.skillApplicationDelay;
+			} else {
+				timeTillDamageApplication = skill.info.skillApplicationDelay;
+			}
 		}
 
 		// conditions that make the skills show proc

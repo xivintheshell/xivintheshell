@@ -231,7 +231,7 @@ class Controller {
 		let cumulativePotency = this.game.getCumulativePotency();
 		let totalTime = this.game.getLastDamageApplicationDisplayTime();
 		updateStatsDisplay({
-			cumulativePPS: totalTime > 0 ? cumulativePotency / totalTime : 0,
+			cumulativePotency: cumulativePotency,//totalTime > 0 ? cumulativePotency / totalTime : 0,
 			cumulativeDuration: Math.max(0, totalTime),
 		});
 	}

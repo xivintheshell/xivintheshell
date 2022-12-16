@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/15/22",
+		"changes": [
+			"bugfix: Despair consumes umbral heart (it shouldn't)"
+		]
+	},
+	{
 		"date": "12/13/22",
 		"changes": [
 			"display historical game state at the start of the first selected skill",

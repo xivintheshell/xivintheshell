@@ -229,7 +229,7 @@ class FixedRightColumn extends React.Component {
 }
 
 export let updateStatsDisplay = (props={
-	cumulativePPS: 0,
+	cumulativePotency: 0,
 	cumulativeDuration: 0,
 	selectedPotency: 0,
 	selectedDuration: 0
@@ -239,7 +239,7 @@ class StatsDisplay extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			cumulativePPS: 0,
+			cumulativePotency: 0,
 			cumulativeDuration: 0,
 			selectedPotency: 0,
 			selectedDuration: 0
@@ -248,7 +248,7 @@ class StatsDisplay extends React.Component {
 	}
 	componentWillUnmount() {
 		updateStatsDisplay = (props={
-			cumulativePPS: 0,
+			cumulativePotency: 0,
 			cumulativeDuration: 0,
 			selectedPotency: 0,
 			selectedDuration: 0
@@ -261,7 +261,7 @@ class StatsDisplay extends React.Component {
 	render() {
 		let cumulative = <div style={{flex: 1}}>
 			<span>Last damage application time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
-			<span>Cumulative potency: {(this.state.cumulativePPS * this.state.cumulativeDuration).toFixed(2)}</span><br/>
+			<span>Cumulative potency: {(this.state.cumulativePotency).toFixed(2)}</span><br/>
 			<span>PPS <Help topic={"ppsNotes"} content={
 				<div className={"toolTip"}>
 					<div className="paragraph">
@@ -271,7 +271,7 @@ class StatsDisplay extends React.Component {
 						could be inaccurate if any damage happens before pull
 					</div>
 				</div>
-			}/>: {this.state.cumulativePPS.toFixed(2)}</span><br/>
+			}/>: {this.state.cumulativeDuration <= 0 ? "N/A" : (this.state.cumulativePotency / this.state.cumulativeDuration).toFixed(2)}</span><br/>
 		</div>
 		let selected = <div style={{flex: 1}}>
 			<span>Duration (selected): {this.state.selectedDuration.toFixed(2)}</span><br/>
