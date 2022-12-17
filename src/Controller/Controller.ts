@@ -17,6 +17,7 @@ import {ActionNode, ActionType, Line, Record} from "./Record";
 import {PresetLinesManager} from "./PresetLinesManager";
 // @ts-ignore
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
+import {refreshTimelineEditor} from "../Components/TimelineEditor";
 
 type Fixme = any;
 
@@ -90,6 +91,7 @@ class Controller {
 		}
 	}
 
+	// max replay time; cutoff action
 	displayHistoricalState(time: number, cutoffAction?: ActionNode) {
 		this.displayingUpToDateGameState = false;
 		this.#bCalculatingHistoricalState = true;
@@ -541,6 +543,8 @@ class Controller {
 					node: node,
 				});
 			}
+
+			refreshTimelineEditor();
 		}
 		return status;
 	}
@@ -802,6 +806,8 @@ class Controller {
 		updateSelectionDisplay(
 			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
 		updateSkillSequencePresetsView();
+
+		refreshTimelineEditor();
 	}
 
 	requestUseSkill(props: { skillName: SkillName; }) {

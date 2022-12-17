@@ -98,8 +98,8 @@ export function LucidMark(props: {
 }
 
 export let bHandledSkillSelectionThisFrame : boolean = false;
-export function resetHandledSkillSelectionThisFrame() {
-	bHandledSkillSelectionThisFrame = false;
+export function setHandledSkillSelectionThisFrame(handled : boolean) {
+	bHandledSkillSelectionThisFrame = handled;
 }
 export function TimelineSkill(props: {
 	elem: {
@@ -191,7 +191,7 @@ export function TimelineSkill(props: {
 	</div>;
 	let icon = <Clickable key={node.getNodeIndex()} content={iconImg} onClickFn={(e) => {
 		bHandledSkillSelectionThisFrame = true;
-		controller.timeline.onClickSkill(node, e.shiftKey);
+		controller.timeline.onClickAction(node, e.shiftKey);
 	}}/>
 
 	return <div style={componentStyle} className={"timeline-elem skill"}>

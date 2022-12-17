@@ -9,10 +9,11 @@ import {
 	LucidMark,
 	TimelineSkill,
 	displayTime,
-	resetHandledSkillSelectionThisFrame, bHandledSkillSelectionThisFrame
+	setHandledSkillSelectionThisFrame, bHandledSkillSelectionThisFrame
 } from "./TimelineElements";
 import {getTimelineMarkersHeight, timelineMarkers} from "./TimelineMarkers";
 import {timelineMarkerPresets} from "./TimelineMarkerPresets";
+import {timelineEditor} from "./TimelineEditor";
 
 export let updateSelectionDisplay = (startX, endX)=>{}
 
@@ -186,7 +187,7 @@ class TimelineMain extends React.Component {
 						controller.displayCurrentState();
 					}
 				}
-				resetHandledSkillSelectionThisFrame();
+				setHandledSkillSelectionThisFrame(false);
 			}
 		}>
 			<TimelineSelection/>
@@ -319,6 +320,7 @@ class Timeline extends React.Component {
 						localStorage.setItem("timelineDisplayScale", newVal);
 					}}/>
 			{timelineMarkerPresets}
+			{timelineEditor}
 		</div>
 	}
 }

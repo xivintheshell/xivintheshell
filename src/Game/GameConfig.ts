@@ -59,7 +59,8 @@ export class GameConfig {
                 this.casterTax === other.casterTax &&
                 this.animationLock === other.animationLock &&
                 this.timeTillFirstManaTick === other.timeTillFirstManaTick &&
-                this.rngProcs === other.rngProcs;
+                this.rngProcs === other.rngProcs &&
+                this.extendedBuffTimes === other.extendedBuffTimes;
         } else {
             return false;
         }

@@ -1,6 +1,7 @@
 import {FileType} from "./Common";
 import {ResourceType, SkillName} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
+import {refreshTimelineEditor} from "../Components/TimelineEditor";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -162,13 +163,15 @@ export class Record extends Line {
 		let duration = 0;
 
 		this.iterateSelected(itr=>{
-			// potency
-			potency += itr.tmp_capturedPotency ?? 0;
-			// duration
-			if (itr !== this.selectionEnd) {
-				duration += itr.waitDuration;
-			} else {
-				duration += (itr.tmp_endLockTime ?? 0) - (itr.tmp_startLockTime ?? 0);
+			if (itr.type === ActionType.Skill) {
+				// potency
+				potency += itr.tmp_capturedPotency ?? 0;
+				// duration
+				if (itr !== this.selectionEnd) {
+					duration += itr.waitDuration;
+				} else {
+					duration += (itr.tmp_endLockTime ?? 0) - (itr.tmp_startLockTime ?? 0);
+				}
 			}
 		});
 
@@ -193,11 +196,11 @@ export class Record extends Line {
 	}
 	#selectSequence(first: ActionNode, last: ActionNode) {
 		this.unselectAll();
+		this.selectionStart = first;
+		this.selectionEnd = last;
 		this.iterateSelected(itr=>{
 			itr.select();
 		})
-		this.selectionStart = first;
-		this.selectionEnd = last;
 		return this.#getSelectionStats();
 	}
 	selectUntil(node: ActionNode) {

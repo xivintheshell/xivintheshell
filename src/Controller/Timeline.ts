@@ -2,8 +2,8 @@
 import {updateStatsDisplay, updateTimelineContent} from "../Components/Timeline";
 // @ts-ignore
 import {controller} from "./Controller";
-import {Debug, SkillName} from "../Game/Common";
-import {ActionNode} from "./Record";
+import {SkillName} from "../Game/Common";
+import {ActionNode, ActionType} from "./Record";
 import {FileType} from "./Common";
 import {updateMarkers_TimelineMarkers} from "../Components/TimelineMarkers";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
@@ -255,7 +255,7 @@ export class Timeline {
 		updateMarkers_TimelineMarkerPresets(M);
 	}
 
-	onClickSkill(node: ActionNode, bShift: boolean) {
+	onClickAction(node: ActionNode, bShift: boolean) {
 		let potency, duration;
 		if (bShift) {
 			[potency, duration] = controller.record.selectUntil(node);
@@ -270,7 +270,7 @@ export class Timeline {
 
 		let firstNode = controller.record.getFirstSelection();
 		if (firstNode) {
-			controller.displayHistoricalState(firstNode.tmp_startLockTime ?? 0, firstNode);
+			controller.displayHistoricalState(controller.game.time, firstNode);
 		}
 	}
 
