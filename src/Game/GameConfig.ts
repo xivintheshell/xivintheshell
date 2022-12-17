@@ -9,6 +9,7 @@ export class GameConfig {
     animationLock = 0.66;
     timeTillFirstManaTick = 1.2;
     rngProcs = true;
+    extendedBuffTimes = false;
     initialResourceOverrides: ResourceOverride[] = [];
 
     // DEBUG
@@ -20,6 +21,7 @@ export class GameConfig {
         animationLock: number,
         timeTillFirstManaTick: number,
         rngProcs: boolean,
+        extendedBuffTimes: boolean,
         initialResourceOverrides: any[]
     }) {
         if (props) {
@@ -30,6 +32,7 @@ export class GameConfig {
             this.animationLock = props.animationLock;
             this.timeTillFirstManaTick = props.timeTillFirstManaTick;
             this.rngProcs = props.rngProcs;
+            this.extendedBuffTimes = props.extendedBuffTimes;
             if (props.initialResourceOverrides) {
                 this.initialResourceOverrides = props.initialResourceOverrides.map(obj=>{
                     return new ResourceOverride(obj);
@@ -95,6 +98,7 @@ export class GameConfig {
             animationLock: this.animationLock,
             timeTillFirstManaTick: this.timeTillFirstManaTick,
             rngProcs: this.rngProcs,
+            extendedBuffTimes: this.extendedBuffTimes,
             initialResourceOverrides: this.initialResourceOverrides.map(override=>{ return override.serialized(); })
         };
     }

@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/16/22",
+		"changes": [
+			"added a checkbox to let a few buffs last slightly longer which is closer to actual game behavior (thank you itu from The Balance). See Config/Edit"
+		]
+	},
+	{
 		"date": "12/15/22",
 		"changes": [
 			"bugfix: Despair consumes umbral heart (it shouldn't)"

@@ -63,6 +63,7 @@ class Controller {
 		this.gameConfig.animationLock = 0.7;
 		this.gameConfig.timeTillFirstManaTick = 1.2;
 		this.gameConfig.rngProcs = true;
+		this.gameConfig.extendedBuffTimes = false;
 		this.game = new GameState(this.gameConfig);
 
 		this.record = new Record();
@@ -201,6 +202,9 @@ class Controller {
 	}
 
 	loadBattleRecordFromFile(content: Fixme) {
+		if (content.config.extendedBuffTimes === undefined) {
+			content.config.extendedBuffTimes = false;
+		}
 		let gameConfig = new GameConfig(content.config);
 
 		this.gameConfig = gameConfig;
@@ -397,6 +401,7 @@ class Controller {
 		countdown: 5,
 		randomSeed: "hello.",
 		rngProcs: true,
+		extendedBuffTimes: false,
 		initialResourceOverrides: []
 	}) {
 		this.gameConfig = new GameConfig(props);

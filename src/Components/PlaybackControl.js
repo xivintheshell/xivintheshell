@@ -170,6 +170,7 @@ export class Config extends React.Component {
 			countdown: 0,
 			randomSeed: "",
 			rngProcs: true,
+			extendedBuffTimes: false,
 			initialResourceOverrides: [],
 			/////////
 			selectedOverrideResource: ResourceType.Mana,
@@ -197,6 +198,7 @@ export class Config extends React.Component {
 					timeTillFirstManaTick: this.state.timeTillFirstManaTick,
 					randomSeed: seed,
 					rngProcs: this.state.rngProcs,
+					extendedBuffTimes: this.state.extendedBuffTimes,
 					initialResourceOverrides: this.state.initialResourceOverrides // info only
 				};
 				this.setConfigAndRestart(config);
@@ -227,6 +229,10 @@ export class Config extends React.Component {
 
 		this.setRandomSeed = (val => {
 			this.setState({randomSeed: val, dirty: true});
+		}).bind(this);
+
+		this.setExtendedBuffTimes = (evt => {
+			this.setState({extendedBuffTimes: evt.target.checked, dirty: true});
 		}).bind(this);
 
 		this.setrngProcs = (evt => {
@@ -519,6 +525,7 @@ export class Config extends React.Component {
 			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed.trim(),
 			rngProcs: config.rngProcs,
+			extendedBuffTimes: config.extendedBuffTimes,
 			initialResourceOverrides: config.initialResourceOverrides // info only
 		});
 		controller.updateAllDisplay();
@@ -546,6 +553,20 @@ export class Config extends React.Component {
 					   onChange={this.setrngProcs}/>
 				<span>rng procs <Help topic={"rngProcs"} content={
 					"turning off rng procs will force you to sharpcast everything."
+				}/></span>
+			</div>
+			<div>
+				<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}
+					   checked={this.state.extendedBuffTimes}
+					   onChange={this.setExtendedBuffTimes}/>
+				<span>extended buff times <Help topic={"extendedBuffTimes"} content={
+					<div>
+						<div className={"paragraph"}>Many buffs actually last longer than listed in the skill descriptions. I got some rough numbers from logs and screen captures but please contact me if you have more accurate data.</div>
+						<div className={"paragraph"}>Having this checked will give the following duration overrides:</div>
+						<div className={"paragraph"}> - Triplecast: 15.7s</div>
+						<div className={"paragraph"}> - Firestarter: 31s</div>
+						<div className={"paragraph"}> - Thundercloud: 41s</div>
+					</div>
 				}/></span>
 			</div>
 			{this.#resourceOverridesSection()}

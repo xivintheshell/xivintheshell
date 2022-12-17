@@ -208,8 +208,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 
 		let gainFirestarterProc = function(game: GameState) {
 			let fs = game.resources.get(ResourceType.Firestarter);
+			let duration = game.config.extendedBuffTimes ? 31 : 30;
 			if (fs.available(1)) {
-				fs.overrideTimer(game, 30);
+				fs.overrideTimer(game, duration);
 				addLog(LogCategory.Event,
 					"Firestarter proc! Overriding an existing one",
 					game.getDisplayTime(), Color.Fire);
@@ -220,7 +221,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					game.getDisplayTime(), Color.Fire);
 				game.resources.addResourceEvent(
 					ResourceType.Firestarter,
-					"drop firestarter proc", 30, (rsc: Resource)=>{
+					"drop firestarter proc", duration, (rsc: Resource)=>{
 						rsc.consume(1);
 					}, Color.Fire);
 			}
@@ -298,15 +299,16 @@ export class SkillsList extends Map<SkillName, Skill> {
 
 		let gainThundercloudProc = function (game: GameState) {
 			let thundercloud = game.resources.get(ResourceType.Thundercloud);
+			let duration = game.config.extendedBuffTimes ? 41 : 40;
 			if (thundercloud.available(1)) { // already has a proc; reset its timer
-				thundercloud.overrideTimer(game, 40);
+				thundercloud.overrideTimer(game, duration);
 				addLog(LogCategory.Event, "Thundercloud proc! overriding an existing one", game.getDisplayTime(), Color.Thunder);
 			} else { // there's currently no proc. gain one.
 				thundercloud.gain(1);
 				addLog(LogCategory.Event, "Thundercloud proc!", game.getDisplayTime(), Color.Thunder);
 				game.resources.addResourceEvent(
 					ResourceType.Thundercloud,
-					"drop thundercloud proc", 40, (rsc: Resource) => {
+					"drop thundercloud proc", duration, (rsc: Resource) => {
 						rsc.consume(1);
 					}, Color.Thunder);
 			}
@@ -559,7 +561,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						triple.gain(3);
 						game.resources.addResourceEvent(
 							ResourceType.Triplecast,
-							"drop remaining Triple charges", 15, (rsc: Resource) => {
+							"drop remaining Triple charges", game.config.extendedBuffTimes ? 15.7 : 15, (rsc: Resource) => {
 								rsc.consume(rsc.availableAmount());
 							});
 					},
