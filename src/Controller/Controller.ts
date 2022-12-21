@@ -120,7 +120,7 @@ class Controller {
 		// view only cursor
 		this.timeline.updateElem({
 			type: ElemType.s_ViewOnlyCursor,
-			time: time,
+			time: this.game.time, // is actually historical state
 			displayTime: this.game.getDisplayTime(),
 			enabled: true
 		});

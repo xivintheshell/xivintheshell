@@ -1,7 +1,6 @@
 import {FileType} from "./Common";
 import {ResourceType, SkillName} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
-import {refreshTimelineEditor} from "../Components/TimelineEditor";
 
 export const enum ActionType {
 	Skill = "Skill",

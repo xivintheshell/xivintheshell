@@ -270,7 +270,7 @@ export class Timeline {
 
 		let firstNode = controller.record.getFirstSelection();
 		if (firstNode) {
-			controller.displayHistoricalState(controller.game.time, firstNode);
+			controller.displayHistoricalState(-1, firstNode);
 		}
 	}
 

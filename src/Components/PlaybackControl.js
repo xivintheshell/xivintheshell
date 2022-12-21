@@ -146,8 +146,14 @@ function ResourceOverrideDisplay(props) {
 	} else {
 		str = props.override.type;
 		if (props.override.type === ResourceType.LeyLines) str += " (" + (props.override.enabled ? "enabled" : "disabled") + ")";
-		if (props.rscInfo.maxValue > 1 || props.override.type === ResourceType.Paradox) str += " (amount: " + props.override.stacks + ")";
-		if (props.rscInfo.maxTimeout >= 0) str += " drops in " + props.override.timeTillFullOrDrop + "s";
+		if (props.rscInfo.maxValue > 1) str += " (amount: " + props.override.stacks + ")";
+		if (props.rscInfo.maxTimeout >= 0) {
+			if (props.override.type === ResourceType.Polyglot) {
+				str += " next stack ready in " + props.override.timeTillFullOrDrop + "s";
+			} else {
+				str += " drops in " + props.override.timeTillFullOrDrop + "s";
+			}
+		}
 	}
 	str += " ";
 	return <div style={{marginTop: 10, color: "mediumpurple"}}>
@@ -239,11 +245,16 @@ export class Config extends React.Component {
 			this.setState({rngProcs: evt.target.checked, dirty: true});
 		}).bind(this);
 
-		this.setOverrideTimer = (val=>{
-			this.setState({overrideTimer: val})}).bind(this);
-		this.setOverrideStacks = (val=>{ this.setState({overrideStacks: val}) }).bind(this);
-		this.setOverrideEnabled = (evt=>{ this.setState({overrideEnabled: evt.target.checked}) }).bind(this);
-		this.deleteResourceOverride = (rscType=>{
+		this.setOverrideTimer = (val => {
+			this.setState({overrideTimer: val})
+		}).bind(this);
+		this.setOverrideStacks = (val => {
+			this.setState({overrideStacks: val})
+		}).bind(this);
+		this.setOverrideEnabled = (evt => {
+			this.setState({overrideEnabled: evt.target.checked})
+		}).bind(this);
+		this.deleteResourceOverride = (rscType => {
 			let overrides = this.state.initialResourceOverrides;
 			for (let i = 0; i < overrides.length; i++) {
 				if (overrides[i].type === rscType) {
@@ -251,15 +262,15 @@ export class Config extends React.Component {
 					break;
 				}
 			}
-			this.setState({ initialResourceOverrides: overrides, dirty: true });
+			this.setState({initialResourceOverrides: overrides, dirty: true});
 		}).bind(this);
 	}
 
 	// call this whenver the list of options has potentially changed
-	#selectFirstAddable() {
+	#getFirstAddable(overridesList) {
 		let firstAddableRsc = "aba aba";
 		let S = new Set();
-		this.state.initialResourceOverrides.forEach(ov=>{
+		overridesList.forEach(ov=>{
 			S.add(ov.type);
 		});
 		for (let k of resourceInfos.keys()) {
@@ -268,9 +279,7 @@ export class Config extends React.Component {
 				break;
 			}
 		}
-		this.setState({
-			selectedOverrideResource: firstAddableRsc
-		});
+		return firstAddableRsc;
 	}
 
 	componentDidMount() {
@@ -278,8 +287,8 @@ export class Config extends React.Component {
 			this.setState(config);
 			this.setState({
 				dirty: false,
+				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides)
 			});
-			this.#selectFirstAddable();
 		}).bind(this);
 	}
 
@@ -332,6 +341,15 @@ export class Config extends React.Component {
 			}
 		}
 
+		// if polyglot timer is set (>0), must have enochian
+		if (M.has(ResourceType.Polyglot)) {
+			let polyTimer = M.get(ResourceType.Polyglot).timeTillFullOrDrop;
+			if (polyTimer > 0 && !M.has(ResourceType.Enochian)) {
+				window.alert("since a timer for polyglot is set, there must also be Enochian");
+				return false;
+			}
+		}
+
 		return true;
 	}
 
@@ -347,25 +365,47 @@ export class Config extends React.Component {
 			return;
 		}
 
-		if ((info.maxValue > 1 || rscType===ResourceType.Paradox) &&
-			(inputOverrideStacks < 0 || inputOverrideStacks > info.maxValue))
-		{
-			window.alert("invalid input amount (must be in range [0, " + info.maxValue + "])");
-			return;
-		}
-		if (info.maxTimeout >= 0 &&
-			(inputOverrideTimer < 0 || inputOverrideTimer > info.maxTimeout))
-		{
-			window.alert("invalid input timeout (must be in range [0, " + info.maxTimeout + "])");
-			return;
-		}
+		let props = {};
 
-		let props = {
-			type: rscType,
-			timeTillFullOrDrop: info.maxTimeout >= 0 ? inputOverrideTimer : -1,
-			stacks: info.maxValue > 1 ? inputOverrideStacks : 1,
-			enabled: rscType === ResourceType.LeyLines ? inputOverrideEnabled : true,
-		};
+		if (info.isCoolDown)
+		{
+			let maxTimer = info.maxStacks * info.cdPerStack;
+			if (inputOverrideTimer < 0 || inputOverrideTimer > maxTimer) {
+				window.alert("invalid input timeout (must be in range [0, " + maxTimer + "])");
+				return;
+			}
+
+			props = {
+				type: rscType,
+				timeTillFullOrDrop: inputOverrideTimer,
+				stacks: info.maxValue > 1 ? inputOverrideStacks : 1,
+				enabled: rscType === ResourceType.LeyLines ? inputOverrideEnabled : true,
+			};
+		}
+		else
+		{
+			if ((info.maxValue > 1 && rscType!==ResourceType.Paradox) &&
+				(inputOverrideStacks < 0 || inputOverrideStacks > info.maxValue))
+			{
+				window.alert("invalid input amount (must be in range [0, " + info.maxValue + "])");
+				return;
+			}
+			if (info.maxTimeout >= 0 &&
+				(inputOverrideTimer < 0 || inputOverrideTimer > info.maxTimeout))
+			{
+				window.alert("invalid input timeout (must be in range [0, " + info.maxTimeout + "])");
+				return;
+			}
+
+			props = {
+				type: rscType,
+				timeTillFullOrDrop: info.maxTimeout >= 0 ? inputOverrideTimer : -1,
+				stacks: info.maxValue > 1 ? inputOverrideStacks : 1,
+				enabled: rscType === ResourceType.LeyLines ? inputOverrideEnabled : true,
+			};
+		}
+		// end validation
+
 		let overrides = this.state.initialResourceOverrides;
 		overrides.push(props);
 		this.setState({initialResourceOverrides: overrides, dirty: true});
@@ -426,7 +466,7 @@ export class Config extends React.Component {
 
 				{/*timer*/}
 				<div hidden={!showTimer}>
-					<Input description={info.isCoolDown ? "Time till full: " : "Time till drop: "}
+					<Input description={info.isCoolDown ? "Time till full: " : (rscType===ResourceType.Polyglot ? "Time till next stack: " : "Time till drop: ")}
 						   defaultValue={timerDefaultValue}
 						   onChange={timerOnChange}/>
 				</div>
@@ -454,7 +494,9 @@ export class Config extends React.Component {
 		return <form
 			onSubmit={evt => {
 				this.#addResourceOverride();
-				this.#selectFirstAddable();
+				this.setState({
+					selectedOverrideResource: this.#getFirstAddable(this.state.initialResourceOverrides)
+				});
 				evt.preventDefault();
 			}}
 			style={{marginTop: 16, outline: "1px solid lightgrey", outlineOffset: 6}}>

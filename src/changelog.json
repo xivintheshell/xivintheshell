@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/20/22",
+		"changes": [
+			"bugfix: misc fixes related to resource overrides (ty sotsu); also can now add override to polyglot timer"
+		]
+	},
+	{
 		"date": "12/16/22",
 		"changes": [
 			"added a checkbox to let a few buffs last slightly longer which is closer to actual game behavior (thank you itu from The Balance). See Config/Edit"

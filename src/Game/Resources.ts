@@ -211,7 +211,7 @@ export const resourceInfos = new Map<ResourceType, ResourceOrCoolDownInfo>();
 
 // resources
 resourceInfos.set(ResourceType.Mana, { isCoolDown: false, defaultValue: 10000, maxValue: 10000, maxTimeout: -1 });
-resourceInfos.set(ResourceType.Polyglot, { isCoolDown: false, defaultValue: 0, maxValue: 2, maxTimeout: -1 });
+resourceInfos.set(ResourceType.Polyglot, { isCoolDown: false, defaultValue: 0, maxValue: 2, maxTimeout: 30 });
 resourceInfos.set(ResourceType.AstralFire, { isCoolDown: false, defaultValue: 0, maxValue: 3, maxTimeout: -1 });
 resourceInfos.set(ResourceType.UmbralIce, { isCoolDown: false, defaultValue: 0, maxValue: 3, maxTimeout: -1 });
 resourceInfos.set(ResourceType.UmbralHeart, { isCoolDown: false, defaultValue: 0, maxValue: 3, maxTimeout: -1 });
@@ -295,7 +295,7 @@ export class ResourceOverride {
 		else {
 			let rsc = game.resources.get(this.props.type);
 
-			let overrideRscTimer = (newTimer: number) => {
+			let overrideDropRscTimer = (newTimer: number) => {
 				rsc.removeTimer();
 				game.resources.addResourceEvent(rsc.type, "drop " + rsc.type, newTimer, (r: Resource) => {
 					if (rsc.type === ResourceType.Enochian) { // since enochian should also take away AF/UI/UH stacks
@@ -311,8 +311,22 @@ export class ResourceOverride {
 			{
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(1);
-				overrideRscTimer(this.props.timeTillFullOrDrop);
+				overrideDropRscTimer(this.props.timeTillFullOrDrop);
 				rsc.enabled = this.props.enabled;
+			}
+
+			// Polyglot (refresh timer + stacks)
+			else if (rsc.type === ResourceType.Polyglot)
+			{
+				// stacks
+				let stacks = this.props.stacks;
+				rsc.consume(rsc.availableAmount());
+				rsc.gain(stacks);
+				// timer
+				let timer = this.props.timeTillFullOrDrop;
+				if (timer > 0) { // timer is set
+					rsc.overrideTimer(game, timer);
+				}
 			}
 
 			// everything else (timer and/or stacks)
@@ -326,7 +340,7 @@ export class ResourceOverride {
 				// timer
 				let timer = this.props.timeTillFullOrDrop;
 				if (stacks > 0 && info.maxTimeout >= 0) { // may expire
-					overrideRscTimer(timer);
+					overrideDropRscTimer(timer);
 				}
 			}
 		}

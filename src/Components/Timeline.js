@@ -320,7 +320,7 @@ class Timeline extends React.Component {
 						localStorage.setItem("timelineDisplayScale", newVal);
 					}}/>
 			{timelineMarkerPresets}
-			{timelineEditor}
+			{/*timelineEditor*/}
 		</div>
 	}
 }
