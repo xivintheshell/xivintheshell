@@ -111,7 +111,7 @@ export default class Main extends React.Component {
 			fontFamily: "monospace",
 			display: "flex",
 			flexDirection: "column"
-		}
+		};
 		let mainControlRegion = <div style={{flex: 7, display: "inline-block", position: "relative"}}>
 				<div className={"keyboardControlled" + (this.state.realTime ? " realTime" : "")}
 					 style={this.state.overrideOutlineColor ?
@@ -132,7 +132,7 @@ export default class Main extends React.Component {
 			<div style={containerStyle}>
 				<div style={{
 					flex: 1,
-					overflow: "scroll",
+					overflowY: "scroll",
 					overscrollBehaviorY: "contain",
 				}}>
 					<div style={{

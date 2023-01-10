@@ -299,10 +299,18 @@ export class GameState {
 		let rsc = this.resources.get(buffName);
 		// only ley lines can be enabled / disabled. Everything else will just be canceled
 		if (buffName === ResourceType.LeyLines) {
-			rsc.enabled = !rsc.enabled;
+			if (rsc.available(1)) {
+				rsc.enabled = false;
+				return true;
+			} else {
+				// todo: what to do if trying to apply an edited timeline but LL buff is already gone?
+				rsc.enabled = true;
+				return true;
+			}
 		} else {
 			rsc.consume(rsc.availableAmount());
 			rsc.removeTimer();
+			return true;
 		}
 	}
 

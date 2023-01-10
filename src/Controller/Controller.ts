@@ -91,6 +91,62 @@ class Controller {
 		}
 	}
 
+	#sandboxEnvironment(fn: ()=>void) {
+		this.displayingUpToDateGameState = false;
+		this.#bCalculatingHistoricalState = true;
+		setOverrideOutlineColor("darkorange");
+		let tmpGame = this.game;
+		let tmpRecord = this.record;
+		this.lastAttemptedSkill = "";
+		//============^ stashed states ^============
+
+		fn();
+
+		//============v pop stashed states v============
+		this.#bCalculatingHistoricalState = false;
+		this.savedHistoricalGame = this.game;
+		this.savedHistoricalRecord = this.record;
+		this.game = tmpGame;
+		this.record = tmpRecord;
+	}
+
+	checkRecordValidity(inRecord: Record) {
+
+		console.assert(inRecord.config !== undefined);
+
+		let result: {isValid: boolean, firstInvalidAction: ActionNode | undefined, invalidReason: string | undefined} = {
+			isValid: true,
+			firstInvalidAction: undefined,
+			invalidReason: undefined
+		}
+
+		this.#sandboxEnvironment(()=>{
+
+			// create environment
+			let cfg = inRecord.config ?? this.gameConfig;
+			this.game = new GameState(cfg);
+			this.record = new Record();
+			this.record.config = cfg;
+
+			// apply resource overrides
+			this.#applyResourceOverrides(this.record.config);
+
+			// replay skills sequence
+			let status = this.#replay({
+				line: inRecord,
+				replayMode: ReplayMode.Edited,
+				suppressLog: true,
+			});
+
+			result.isValid = status.success;
+			result.firstInvalidAction = status.firstInvalidNode;
+			result.invalidReason = status.invalidReason;
+		});
+
+		return result;
+
+	}
+
 	// max replay time; cutoff action
 	displayHistoricalState(time: number, cutoffAction?: ActionNode) {
 		this.displayingUpToDateGameState = false;
@@ -233,6 +289,26 @@ class Controller {
 		console.assert(replayResult.success);
 	}
 
+	applyEditedRecord(newRecord : Record) {
+		if (!newRecord.config) {
+			console.assert(false);
+			return;
+		}
+		this.gameConfig = newRecord.config;
+		this.record = new Record();
+		this.record.config = newRecord.config;
+		this.#requestRestart();
+		this.#applyResourceOverrides(this.gameConfig);
+		// replay actions
+		let replayResult = this.#replay({
+			line: newRecord,
+			replayMode: ReplayMode.Edited,
+			removeTrailingIdleTime: true
+		});
+		console.assert(replayResult.success);
+		this.autoSave();
+	}
+
 	updateCumulativeStatsDisplay() {
 		let cumulativePotency = this.game.getCumulativePotency();
 		let totalTime = this.game.getLastDamageApplicationDisplayTime();
@@ -344,7 +420,24 @@ class Controller {
 
 	updateTimelineDisplay() {
 		this.timeline.setTimeSegment(0, this.game.time);
-		this.onTimelineSelectionChanged();
+
+		//this.onTimelineSelectionChanged();
+		let selectionStart = 0;
+		let selectionEnd = 0;
+		if (this.record.getFirstSelection()) {
+			selectionStart = this.record.getFirstSelection()?.tmp_startLockTime ?? 0;
+			selectionEnd = this.record.getLastSelection()?.tmp_endLockTime ?? 0;
+		} else {
+			updateStatsDisplay({
+				selectedPotency: 0,
+				selectedDuration: 0,
+			});
+		}
+		updateSelectionDisplay(
+			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
+		updateSkillSequencePresetsView();
+		refreshTimelineEditor();
+
 		this.timeline.updateElem({
 			type: ElemType.s_Cursor,
 			time: this.game.time,
@@ -559,7 +652,9 @@ class Controller {
 		cutoffAction?: ActionNode
 	}) : {
 		success: boolean,
-		firstAddedNode: ActionNode | undefined
+		firstAddedNode: ActionNode | undefined,
+		firstInvalidNode: ActionNode | undefined,
+		invalidReason: SkillReadyStatus | undefined
 	} {
 		// default input, if not provided
 		if (props.suppressLog===undefined) props.suppressLog = false;
@@ -569,7 +664,9 @@ class Controller {
 		let itr = props.line.getFirstAction();
 		if (!itr) return {
 			success: true,
-			firstAddedNode: undefined
+			firstAddedNode: undefined,
+			firstInvalidNode: undefined,
+			invalidReason: undefined
 		};
 
 		const oldTail = this.record.getLastAction();
@@ -577,6 +674,8 @@ class Controller {
 		while (itr && itr !== props.cutoffAction) {
 
 			let lastIter = false;
+			let firstInvalidNode : ActionNode | undefined = undefined;
+			let invalidReason : SkillReadyStatus | undefined = undefined;
 
 			// maxReplayTime is used for replay for displaying historical game states (only replay some given duration)
 			let waitDuration = itr.waitDuration;
@@ -584,68 +683,82 @@ class Controller {
 				props.maxReplayTime - this.game.time < waitDuration &&
 				props.replayMode === ReplayMode.Exact
 			) {
+				// hit specified max replay time; everything's valid so far
 				waitDuration = props.maxReplayTime - this.game.time;
 				lastIter = true;
 			}
 
-			// only Exact mode replays wait nodes
-			if (itr.type === ActionType.Wait && props.replayMode === ReplayMode.Exact) {
+			// only Exact & validity replays wait nodes
+			if (itr.type === ActionType.Wait && (props.replayMode === ReplayMode.Exact || props.replayMode === ReplayMode.Edited)) {
 				this.#requestTick({
 					deltaTime: waitDuration,
 					suppressLog: props.suppressLog
 				});
+				// wait nodes are always valid
 			}
 
 			// skill nodes
 			else if (itr.type === ActionType.Skill) {
 
-				let waitFirst = props.replayMode === ReplayMode.Tight; // false for exact replay
+				let waitFirst = props.replayMode === ReplayMode.SkillSequence || props.replayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
 				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, props.suppressLog, TickMode.Manual);
 
 				if (props.replayMode === ReplayMode.Exact) {
-					console.assert(status.status === SkillReadyStatus.Ready);
-
-					let deltaTime = 0;
-					if (props.maxReplayTime >= 0) {
-						deltaTime = waitDuration;
-					} else {
-						if (props.removeTrailingIdleTime) {
-							deltaTime = (itr===props.line.getLastAction() ? this.game.timeTillAnySkillAvailable() : waitDuration);
-						} else {
+					if (status.status === SkillReadyStatus.Ready) {
+						let deltaTime = 0;
+						if (props.maxReplayTime >= 0) {
 							deltaTime = waitDuration;
+						} else {
+							if (props.removeTrailingIdleTime) {
+								deltaTime = (itr===props.line.getLastAction() ? this.game.timeTillAnySkillAvailable() : waitDuration);
+							} else {
+								deltaTime = waitDuration;
+							}
 						}
-					}
 
-					this.#requestTick({
-						deltaTime: deltaTime,
-						suppressLog: props.suppressLog
-					});
+						this.#requestTick({
+							deltaTime: deltaTime,
+							suppressLog: props.suppressLog
+						});
+					}
 				}
-				else if (props.replayMode === ReplayMode.Tight) {
+				else if (props.replayMode === ReplayMode.SkillSequence || props.replayMode === ReplayMode.Edited) {
 					this.#requestTick({
 						deltaTime: this.game.timeTillAnySkillAvailable(),
 						suppressLog: props.suppressLog
 					});
 				}
 				else {
+					lastIter = true;
 					console.assert(false);
 				}
 
 				if (status.status !== SkillReadyStatus.Ready) {
 					lastIter = true;
+					firstInvalidNode = itr;
+					invalidReason = status.status;
 				}
-				if (this.#bInterrupted) {
+
+				if (this.#bInterrupted) {// likely because enochian dropped before a cast snapshots
 					this.#bInterrupted = false;
 					lastIter = true;
+					firstInvalidNode = itr;
+					invalidReason = status.status;
 				}
 			}
-			// buff enable/disable also only supported by exact replay
-			else if (itr.type === ActionType.SetResourceEnabled && props.replayMode === ReplayMode.Exact) {
-				this.requestToggleBuff(itr.buffName as ResourceType);
-				this.#requestTick({
-					deltaTime: waitDuration,
-					suppressLog: props.suppressLog
-				});
+			// buff enable/disable also only supported by exact / edited replay
+			else if (itr.type === ActionType.SetResourceEnabled && (props.replayMode === ReplayMode.Exact || props.replayMode === ReplayMode.Edited)) {
+				let success = this.requestToggleBuff(itr.buffName as ResourceType);
+				if (success) {
+					this.#requestTick({
+						deltaTime: waitDuration,
+						suppressLog: props.suppressLog
+					});
+				} else {
+					lastIter = true;
+					firstInvalidNode = itr;
+					invalidReason = SkillReadyStatus.BuffNoLongerAvailable;
+				}
 			}
 			else {
 				console.assert(false);
@@ -659,7 +772,9 @@ class Controller {
 			if (lastIter) {
 				return {
 					success: false,
-					firstAddedNode: firstAddedNode
+					firstAddedNode: firstAddedNode,
+					firstInvalidNode: firstInvalidNode,
+					invalidReason: invalidReason
 				};
 			} else {
 				itr = itr.next;
@@ -668,7 +783,9 @@ class Controller {
 		}
 		return {
 			success: true,
-			firstAddedNode: firstAddedNode
+			firstAddedNode: firstAddedNode,
+			firstInvalidNode: undefined,
+			invalidReason: undefined
 		};
 	}
 
@@ -686,12 +803,12 @@ class Controller {
 	}
 
 	// generally used for trying to add a line to the current timeline
-	tryAddLine(line: Line, replayMode=ReplayMode.Tight) {
+	tryAddLine(line: Line, replayMode=ReplayMode.SkillSequence) {
 		this.#bAddingLine = true;
 
 		let replayResult = this.#replay({line: line, replayMode: replayMode});
 		if (!replayResult.success) {
-			this.rewindUntilBefore(replayResult.firstAddedNode);
+			this.rewindUntilBefore(replayResult.firstAddedNode, false);
 			window.alert('Failed to add line "' + line.name + '" due to insufficient resources and/or stats mismatch.');
 			this.#bAddingLine = false;
 			return false;
@@ -725,7 +842,7 @@ class Controller {
 		} else {
 			let currentTime = this.game.time;
 			let currentLoop = this.shouldLoop;
-			this.rewindUntilBefore(props.failNode);
+			this.rewindUntilBefore(props.failNode, false);
 			this.autoSave();
 			this.#requestTick({
 				deltaTime: currentTime - this.game.time,
@@ -736,11 +853,9 @@ class Controller {
 	}
 
 	// basically restart the game and play till here:
-	rewindUntilBefore(node: ActionNode | undefined) {
+	// if node is undefined, replay the whole thing.
+	rewindUntilBefore(node: ActionNode | undefined, removeTrailingIdleTime: boolean) {
 		let replayRecord = this.record;
-
-		// replaying the whole thing := just leave it as is
-		if (node === undefined) return;
 
 		let newTail: ActionNode | undefined;
 		if (replayRecord.getFirstAction() === node) {
@@ -748,12 +863,10 @@ class Controller {
 			newTail = undefined;
 		} else {
 			console.assert(replayRecord.getFirstAction() !== undefined);
-			console.assert(node !== undefined);
 			newTail = replayRecord.getFirstAction();
 			while ((newTail as ActionNode).next !== node) {
 				newTail = (newTail as ActionNode).next;
 			}
-			console.assert((newTail as ActionNode).next === node);
 		}
 
 		this.record = new Record();
@@ -765,7 +878,12 @@ class Controller {
 		if (newTail) {
 			replayRecord.tail = newTail;
 			replayRecord.tail.next = undefined;
-			this.#replay({line: replayRecord, replayMode: ReplayMode.Exact, suppressLog: true});
+			this.#replay({
+				line: replayRecord,
+				replayMode: ReplayMode.Exact,
+				suppressLog: true,
+				removeTrailingIdleTime: removeTrailingIdleTime
+			});
 		}
 	}
 
@@ -773,41 +891,12 @@ class Controller {
 
 		// first remove any non-skill nodes in the end
 		let lastSkill = this.record.getLastAction(node=>{ return node.type === ActionType.Skill; });
-		if (lastSkill && lastSkill.next) { // there are nodes after the last skill
-			this.rewindUntilBefore(lastSkill.next);
+		if (!lastSkill) {
+			// no skill has been used yet - delete everything.
+			this.rewindUntilBefore(this.record.getFirstAction(), true);
+		} else { // there are nodes after the last skill
+			this.rewindUntilBefore(lastSkill.next, true);
 		}
-
-		// now replay the rest
-		let replayRecord = this.record;
-		this.record = new Record();
-		this.record.config = this.gameConfig;
-		this.#requestRestart();
-		this.#applyResourceOverrides(this.gameConfig);
-		this.#replay({
-			line: replayRecord,
-			replayMode: ReplayMode.Exact,
-			suppressLog: true,
-			removeTrailingIdleTime: true
-		});
-	}
-
-	onTimelineSelectionChanged() {
-		let selectionStart = 0;
-		let selectionEnd = 0;
-		if (this.record.getFirstSelection()) {
-			selectionStart = this.record.getFirstSelection()?.tmp_startLockTime ?? 0;
-			selectionEnd = this.record.getLastSelection()?.tmp_endLockTime ?? 0;
-		} else {
-			updateStatsDisplay({
-				selectedPotency: 0,
-				selectedDuration: 0,
-			});
-		}
-		updateSelectionDisplay(
-			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
-		updateSkillSequencePresetsView();
-
-		refreshTimelineEditor();
 	}
 
 	requestUseSkill(props: { skillName: SkillName; }) {
@@ -829,13 +918,14 @@ class Controller {
 	}
 
 	requestToggleBuff(buffName: ResourceType) {
-		this.game.requestToggleBuff(buffName);
+		let success = this.game.requestToggleBuff(buffName);
+		if (!success) return false;
+
 		let node = new ActionNode(ActionType.SetResourceEnabled);
 		node.buffName = buffName;
 		this.record.addActionNode(node);
-		this.updateStatusDisplay(this.game);
-		this.updateSkillButtons(this.game);
-		this.autoSave();
+
+		return true;
 	}
 
 	scrollToTime(t?: number) {
@@ -922,12 +1012,12 @@ class Controller {
 		requestAnimationFrame(loopFn);
 	}
 
+	// todo: add an option to explicitly add a wait node
 	step(t: number) {
 		this.#requestTick({deltaTime: t, suppressLog: false});
 		this.updateAllDisplay();
 	}
 
-	// TODO: update display?
 	#handleKeyboardEvent_RealTime(evt: { keyCode: number; }) {
 		if (evt.keyCode===32) { // space
 			this.#playPause({shouldLoop: !this.shouldLoop});
@@ -937,7 +1027,7 @@ class Controller {
 		if (this.shouldLoop) return;
 
 		if (evt.keyCode===85) { // u (undo)
-			this.rewindUntilBefore(this.record.getLastAction());
+			this.rewindUntilBefore(this.record.getLastAction(), false);
 			this.updateAllDisplay();
 			this.autoSave();
 		}
@@ -949,7 +1039,7 @@ class Controller {
 			this.autoSave();
 		}
 		else if (evt.keyCode===85) { // u (undo)
-			this.rewindUntilBefore(this.record.getLastAction());
+			this.rewindUntilBefore(this.record.getLastAction(), false);
 			this.updateAllDisplay();
 			this.autoSave();
 		}

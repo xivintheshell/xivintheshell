@@ -8,7 +8,8 @@ export const enum LogCategory {
 
 export const enum ReplayMode {
 	Exact = "Exact",
-	Tight = "Tight",
+	SkillSequence = "SkillSequence",
+	Edited = "Edited"
 }
 
 export const enum FileType {

@@ -55,6 +55,7 @@ export const enum SkillReadyStatus {
 	Blocked = "blocked by CD, animation lock or caster tax",
 	NotEnoughMP = "not enough MP",
 	RequirementsNotMet = "requirements not met",
+	BuffNoLongerAvailable = "buff no longer available"
 }
 
 export const enum ResourceType {

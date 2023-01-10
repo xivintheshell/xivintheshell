@@ -2,11 +2,15 @@
 import {updateStatsDisplay, updateTimelineContent} from "../Components/Timeline";
 // @ts-ignore
 import {controller} from "./Controller";
+// @ts-ignore
+import {updateSelectionDisplay} from "../Components/Timeline";
 import {SkillName} from "../Game/Common";
-import {ActionNode, ActionType} from "./Record";
+import {ActionNode} from "./Record";
 import {FileType} from "./Common";
 import {updateMarkers_TimelineMarkers} from "../Components/TimelineMarkers";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
+import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
+import {refreshTimelineEditor} from "../Components/TimelineEditor";
 
 export const enum ElemType {
 	s_Cursor = "s_Cursor",
@@ -212,7 +216,17 @@ export class Timeline {
 	// scale=1 := 100px represents 1s
 	setHorizontalScale(inScale: number) {
 		this.scale = inScale;
-		controller.onTimelineSelectionChanged();
+
+		//controller.onTimelineSelectionChanged();
+		let selectionStart = 0;
+		let selectionEnd = 0;
+		if (controller.record.getFirstSelection()) {
+			selectionStart = controller.record.getFirstSelection()?.tmp_startLockTime ?? 0;
+			selectionEnd = controller.record.getLastSelection()?.tmp_endLockTime ?? 0;
+		}
+		updateSelectionDisplay(
+			controller.timeline.positionFromTime(selectionStart), controller.timeline.positionFromTime(selectionEnd));
+
 		this.drawElements();
 	}
 
@@ -255,19 +269,24 @@ export class Timeline {
 		updateMarkers_TimelineMarkerPresets(M);
 	}
 
-	onClickAction(node: ActionNode, bShift: boolean) {
-		let potency, duration;
-		if (bShift) {
-			[potency, duration] = controller.record.selectUntil(node);
-		} else {
-			[potency, duration] = controller.record.selectSingle(node);
-		}
-		controller.onTimelineSelectionChanged();
+	onClickTimelineAction(node: ActionNode, bShift: boolean) {
+
+		let selectResult = controller.record.onClickNode(node, bShift);
+
+		// potency stats
 		updateStatsDisplay({
-			selectedPotency: potency,
-			selectedDuration: duration,
+			selectedPotency: selectResult.selectedPotency,
+			selectedDuration: selectResult.selectionEndTime - selectResult.selectionStartTime,
 		});
 
+		// selection range indicator
+		updateSelectionDisplay(
+			controller.timeline.positionFromTime(selectResult.selectionStartTime), controller.timeline.positionFromTime(selectResult.selectionEndTime));
+
+		updateSkillSequencePresetsView();
+		refreshTimelineEditor();
+
+		// historical state
 		let firstNode = controller.record.getFirstSelection();
 		if (firstNode) {
 			controller.displayHistoricalState(-1, firstNode);

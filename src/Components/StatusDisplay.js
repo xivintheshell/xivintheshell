@@ -77,6 +77,9 @@ function Buff(props) {
 		}} onClickFn={()=>{
 			if (props.onSelf) {
 				controller.requestToggleBuff(props.rscType);
+				controller.updateStatusDisplay(controller.game);
+				controller.updateSkillButtons(controller.game);
+				controller.autoSave();
 			}
 		}}/>
 		<span className={"buff-label"}>{props.timeRemaining}</span>

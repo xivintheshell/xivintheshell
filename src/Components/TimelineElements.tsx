@@ -180,7 +180,7 @@ export function TimelineSkill(props: {
 			tabIndex={-1}
 			onKeyDown={(e) => {
 				if (e.key === "Backspace") {
-					controller.rewindUntilBefore(controller.record.getFirstSelection());
+					controller.rewindUntilBefore(controller.record.getFirstSelection(), false);
 					controller.displayCurrentState();
 					controller.updateAllDisplay();
 					controller.autoSave();
@@ -191,7 +191,8 @@ export function TimelineSkill(props: {
 	</div>;
 	let icon = <Clickable key={node.getNodeIndex()} content={iconImg} onClickFn={(e) => {
 		bHandledSkillSelectionThisFrame = true;
-		controller.timeline.onClickAction(node, e.shiftKey);
+		controller.timeline.onClickTimelineAction(node, e.shiftKey);
+
 	}}/>
 
 	return <div style={componentStyle} className={"timeline-elem skill"}>

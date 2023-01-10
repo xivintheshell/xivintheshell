@@ -68,7 +68,7 @@ function PresetLine(props: { line: Line }) {
 	};
 	return <div style={{marginBottom: "8px"}}>
 		<Clickable content={clickableContent} style={addLineStyle} onClickFn={controller.displayingUpToDateGameState ? (() => {
-			controller.tryAddLine(line, ReplayMode.Tight);
+			controller.tryAddLine(line, ReplayMode.SkillSequence);
 			controller.updateAllDisplay();
 			controller.scrollToTime();
 		}) : undefined}/>
