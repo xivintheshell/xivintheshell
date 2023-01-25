@@ -1,4 +1,4 @@
-import {Expandable} from "./Common";
+import {Expandable, Help} from "./Common";
 import React, {CSSProperties} from "react";
 import {controller} from "../Controller/Controller";
 import {ActionNode, ActionType, Record, RecordValidStatus} from "../Controller/Record";
@@ -8,7 +8,8 @@ export let refreshTimelineEditor = ()=>{};
 
 function TimelineActionElement(props: {
 	node: ActionNode,
-	belongingRecord: Record
+	belongingRecord: Record,
+	isFirstInvalid: boolean
 }) {
 	let recordIsDirty = props.belongingRecord !== controller.record;
 	let bgColor = props.node.isSelected() ? "rgba(151,111,246,0.25)" : "transparent";
@@ -25,7 +26,7 @@ function TimelineActionElement(props: {
 	if (props.node.type === ActionType.Skill) {
 		name = props.node.skillName ?? "(unknown skill)";
 	} else if (props.node.type === ActionType.Wait) {
-		name = "(wait for " + props.node.waitDuration + "s)";
+		name = "(wait for " + props.node.waitDuration.toFixed(2) + "s)";
 	} else if (props.node.type === ActionType.SetResourceEnabled) {
 		name = "(toggle resource: " + props.node.buffName + ")";
 	}
@@ -37,7 +38,10 @@ function TimelineActionElement(props: {
 		} else {
 			controller.timeline.onClickTimelineAction(props.node, e.shiftKey);
 		}
-    }}>{name}</div>
+    }}>
+	    {props.isFirstInvalid ? <span style={{marginRight: 6, padding: "0 4px", backgroundColor: "pink"}}>&rarr;</span> : undefined}
+	    <span>{name}</span>
+    </div>
 }
 
 class TimelineEditor extends React.Component {
@@ -76,6 +80,17 @@ class TimelineEditor extends React.Component {
 		});
 	}
 
+	discardEditsBtn() {
+		return <button style={{display: "block", marginTop: 10}} onClick={e=>{
+			setHandledSkillSelectionThisFrame(true);
+			// discard edits
+			if (!this.state.editedRecord) {
+				console.assert(false);
+			}
+			this.markClean();
+		}}>discard edits</button>
+	}
+
 	getRecordCopy() {
 		if (this.state.editedRecord) {
 			return this.state.editedRecord;
@@ -94,8 +109,8 @@ class TimelineEditor extends React.Component {
 			if (this.isDirty()) {
 				if (this.isValid()) {
 					return <div>
-						<span>This edited sequence is valid. </span>
-						<button onClick={e=>{
+						<div style={{backgroundColor: "rgba(255, 220, 0, 0.25)"}}>This edited sequence is valid.</div>
+						<button style={{display: "block", marginTop: 10}} onClick={e=>{
 							setHandledSkillSelectionThisFrame(true);
 
 							// apply edits to timeline
@@ -108,7 +123,8 @@ class TimelineEditor extends React.Component {
 
 							controller.record.unselectAll();
 							controller.displayCurrentState();
-						}}>apply edits to timeline</button>
+						}}>apply edits to timeline and save</button>
+						{this.discardEditsBtn()}
 					</div>
 				} else {
 					let node = this.state.recordValidStatus?.firstInvalidAction;
@@ -122,10 +138,9 @@ class TimelineEditor extends React.Component {
 							nodeName = node.skillName ?? "(unknown skill)";
 						}
 					}
-					return  <div>
-						This sequence contains invalid actions! Check: {
-						nodeName + " (" + (this.state.recordValidStatus?.invalidReason ?? "(unknown)") + ")"
-					}
+					return <div>
+						<div style={{backgroundColor: "pink"}}>This sequence contains invalid actions! Check: {nodeName + " (" + (this.state.recordValidStatus?.invalidReason ?? "(unknown)") + ")"}</div>
+						{this.discardEditsBtn()}
 					</div>
 				}
 			} else {
@@ -143,52 +158,35 @@ class TimelineEditor extends React.Component {
 
 			<div style={{marginBottom: 6, flex: 1}}>
 				<button style={buttonStyle} onClick={e=>{
-					setHandledSkillSelectionThisFrame(true);
-					// move selected skills up
-					let copy = this.getRecordCopy();
-					copy.moveSelected(-1);
-					let status = controller.checkRecordValidity(copy);
-					// select first invalid
-					if (!status.isValid) {
-						if (status.firstInvalidAction) {
-							copy.selectSingle(status.firstInvalidAction);
-						}
+					if (displayedRecord.getFirstSelection()) {
+						setHandledSkillSelectionThisFrame(true);
+						// move selected skills up
+						let copy = this.getRecordCopy();
+						copy.moveSelected(-1);
+						let status = controller.checkRecordValidity(copy);
+						this.setState({recordValidStatus: status});
 					}
-					this.setState({recordValidStatus: status});
-
 				}}>move up</button>
 
 				<button style={buttonStyle} onClick={e=>{
-					setHandledSkillSelectionThisFrame(true);
-					// move selected skills down
-					let copy = this.getRecordCopy();
-					copy.moveSelected(1);
-					let status = controller.checkRecordValidity(copy);
-					// select first invalid
-					if (!status.isValid) {
-						if (status.firstInvalidAction) {
-							copy.selectSingle(status.firstInvalidAction);
-						}
+					if (displayedRecord.getFirstSelection()) {
+						setHandledSkillSelectionThisFrame(true);
+						// move selected skills down
+						let copy = this.getRecordCopy();
+						copy.moveSelected(1);
+						let status = controller.checkRecordValidity(copy);
+						this.setState({recordValidStatus: status});
 					}
-					this.setState({recordValidStatus: status});
 				}}>move down</button>
 
 				<button style={buttonStyle} onClick={e=>{
-					setHandledSkillSelectionThisFrame(true);
-
-					let copy = this.getRecordCopy();
-					copy.deleteSelected();
-
-					let status = controller.checkRecordValidity(copy);
-
-					// select first invalid
-					if (!status.isValid) {
-						if (status.firstInvalidAction) {
-							copy.selectSingle(status.firstInvalidAction);
-						}
+					if (displayedRecord.getFirstSelection()) {
+						setHandledSkillSelectionThisFrame(true);
+						let copy = this.getRecordCopy();
+						copy.deleteSelected();
+						let status = controller.checkRecordValidity(copy);
+						this.setState({recordValidStatus: status});
 					}
-
-					this.setState({recordValidStatus: status});
 				}}>delete selected</button>
 			</div>
 		</div>
@@ -197,7 +195,11 @@ class TimelineEditor extends React.Component {
 		let actionsList = [];
 		let itr = displayedRecord.getFirstAction();
 		while (itr) {
-			actionsList.push(<TimelineActionElement key={itr.getNodeIndex()} node={itr} belongingRecord={displayedRecord}/>);
+			actionsList.push(<TimelineActionElement
+				key={itr.getNodeIndex()}
+				node={itr}
+				belongingRecord={displayedRecord}
+				isFirstInvalid={this.state.recordValidStatus?.firstInvalidAction===itr}/>);
 			itr = itr.next;
 		}
 		let content = <div style={{display: "flex", flexDirection: "row", position: "relative"}} onClick={
@@ -224,7 +226,10 @@ class TimelineEditor extends React.Component {
 		</div>;
 		return <Expandable
 			title="Timeline editor"
-			titleNode={<span>Timeline editor</span>}
+			titleNode={<span>{"Timeline editor (in-development) "}<Help topic={"timeline editor"} content={<div>
+				<div className={"paragraph"} style={{color: "orangered"}}><b>Has the bare minimum features but might still be buggy (let me know). Would recommend going over Instructions/Troubleshoot first, plus saving data to drive in case bugs mess up the entire tool</b></div>
+				<div className={"paragraph"}>I hope it's otherwise self-explanatory. Note that edits made here are not saved until they're applied to the actual timeline.</div>
+			</div>}/></span>}
 			content={content}
 			defaultShow={false}/>
 	}

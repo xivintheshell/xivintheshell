@@ -1,5 +1,11 @@
 [
 	{
+		"date": "1/24/23",
+		"changes": [
+			"minimal timeline editing features"
+		]
+	},
+	{
 		"date": "12/20/22",
 		"changes": [
 			"bugfix: misc fixes related to resource overrides (ty sotsu); also can now add override to polyglot timer"

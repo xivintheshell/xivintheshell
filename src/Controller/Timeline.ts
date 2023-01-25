@@ -256,7 +256,6 @@ export class Timeline {
 			this.getCanvasWidth(),
 			this.elements);
 
-		// TODO: make bins
 		let M = new Map<number, MarkerElem[]>();
 		this.markers.forEach(marker=>{
 			let trackBin = M.get(marker.track);

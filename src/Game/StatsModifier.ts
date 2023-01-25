@@ -62,7 +62,6 @@ export class StatsModifier
 		return ret;
 	}
 
-	// FIXME
 	static fromResourceState(resources: ResourceState)
 	{
 		let base = StatsModifier.base();

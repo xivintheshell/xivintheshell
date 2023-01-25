@@ -239,7 +239,7 @@ class Controller {
 		return this.#presetLinesManager.serialized();
 	}
 
-	// TODO: cleanup?
+	// todo: cleanup?
 	addSelectionToPreset(name="(untitled)") {
 		console.assert(this.record.getFirstSelection());
 		let line = new Line();
@@ -455,6 +455,7 @@ class Controller {
 	#requestTick(props: {
 		deltaTime: number,
 		suppressLog: boolean,
+		separateNode: boolean,
 		prematureStopCondition?: () => boolean,
 	}) {
 		if (props.deltaTime > 0) {
@@ -471,7 +472,7 @@ class Controller {
 
 			// add this tick to game record
 			let lastAction = this.record.getLastAction();
-			if (lastAction) {
+			if (lastAction && !props.separateNode) {
 				lastAction.waitDuration += timeTicked;
 			} else {
 				let waitNode = new ActionNode(ActionType.Wait);
@@ -543,7 +544,7 @@ class Controller {
 
 	#fastForward() {
 		let deltaTime: number = this.game.timeTillAnySkillAvailable();
-		this.#requestTick({deltaTime: deltaTime, suppressLog: false});
+		this.#requestTick({deltaTime: deltaTime, suppressLog: false, separateNode: false});
 	}
 
 	#useSkill(
@@ -555,7 +556,7 @@ class Controller {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
 		if (bWaitFirst) {
-			this.#requestTick({deltaTime: status.timeTillAvailable, suppressLog: bSuppressLog});
+			this.#requestTick({deltaTime: status.timeTillAvailable, suppressLog: bSuppressLog, separateNode: false});
 			// automatically turn F1/B1 into paradox if conditions are met
 			if ((skillName === SkillName.Fire || skillName === SkillName.Blizzard)
 				&& this.game.resources.get(ResourceType.Paradox).available(1)) {
@@ -692,7 +693,8 @@ class Controller {
 			if (itr.type === ActionType.Wait && (props.replayMode === ReplayMode.Exact || props.replayMode === ReplayMode.Edited)) {
 				this.#requestTick({
 					deltaTime: waitDuration,
-					suppressLog: props.suppressLog
+					suppressLog: props.suppressLog,
+					separateNode: true,
 				});
 				// wait nodes are always valid
 			}
@@ -718,14 +720,16 @@ class Controller {
 
 						this.#requestTick({
 							deltaTime: deltaTime,
-							suppressLog: props.suppressLog
+							suppressLog: props.suppressLog,
+							separateNode: false
 						});
 					}
 				}
 				else if (props.replayMode === ReplayMode.SkillSequence || props.replayMode === ReplayMode.Edited) {
 					this.#requestTick({
 						deltaTime: this.game.timeTillAnySkillAvailable(),
-						suppressLog: props.suppressLog
+						suppressLog: props.suppressLog,
+						separateNode: false
 					});
 				}
 				else {
@@ -752,7 +756,8 @@ class Controller {
 				if (success) {
 					this.#requestTick({
 						deltaTime: waitDuration,
-						suppressLog: props.suppressLog
+						suppressLog: props.suppressLog,
+						separateNode: false
 					});
 				} else {
 					lastIter = true;
@@ -846,7 +851,8 @@ class Controller {
 			this.autoSave();
 			this.#requestTick({
 				deltaTime: currentTime - this.game.time,
-				suppressLog: true
+				suppressLog: true,
+				separateNode: false,
 			});
 			this.shouldLoop = currentLoop;
 		}
@@ -980,18 +986,21 @@ class Controller {
 				ctrl.#requestTick({
 					deltaTime : dt,
 					suppressLog: true,
+					separateNode: false,
 					prematureStopCondition: ()=>{ return !loopCondition(); }
 				});
 			} else {
 				ctrl.#requestTick({
 					deltaTime : timeTillAnySkillAvailable,
 					suppressLog: true,
+					separateNode: false,
 					prematureStopCondition: ()=>{ return !loopCondition(); }
 				});
 				tryDequeueSkill(); // potentially sandwich another skill here
 				ctrl.#requestTick({
 					deltaTime : dt - timeTillAnySkillAvailable,
 					suppressLog: true,
+					separateNode: false,
 					prematureStopCondition: ()=>{ return !loopCondition(); }
 				});
 			}
@@ -1014,7 +1023,7 @@ class Controller {
 
 	// todo: add an option to explicitly add a wait node
 	step(t: number) {
-		this.#requestTick({deltaTime: t, suppressLog: false});
+		this.#requestTick({deltaTime: t, suppressLog: false, separateNode: true});
 		this.updateAllDisplay();
 	}
 

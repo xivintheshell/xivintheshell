@@ -100,7 +100,7 @@ type ClickableProps = {
 	style?: CSSProperties
 }
 
-// TODO: bind hotkeys to them?
+// todo: bind hotkeys to them?
 export function Clickable(props: ClickableProps) {
 	return <div
 		className={"clickable"}
