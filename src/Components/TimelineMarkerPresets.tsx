@@ -70,6 +70,7 @@ function PresetButtons() {
 		<LoadCombinedTracksBtn displayName={"P1S Aetherial Shackles first"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P2S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s.txt"}/>
 		<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/dsr_p7.txt"}/>
+		<LoadCombinedTracksBtn displayName={"TOP P1 by Santa"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/top_p1.txt"}/>
 	</div>
 }
 

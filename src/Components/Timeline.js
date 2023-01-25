@@ -1,7 +1,7 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
-import {Expandable, Help, Slider} from "./Common";
+import {ButtonIndicator, Expandable, Help, Slider} from "./Common";
 import {
 	Cursor,
 	MPTickMark,
@@ -325,4 +325,4 @@ class Timeline extends React.Component {
 	}
 }
 
-export const timeline = <Timeline />;
+export const timeline = <Timeline/>;

@@ -2,6 +2,8 @@
 	{
 		"date": "1/24/23",
 		"changes": [
+			"added TOP P1 markers by Santa (thank you!)",
+			"added instruction: you can shift-scroll the timeline",
 			"minimal timeline editing features"
 		]
 	},

@@ -44,6 +44,7 @@ export function IntroSection(props: {}) {
 					<b>Timeline</b>
 				</div>
 				<ul>
+					<li style={smallGap}>Holding <ButtonIndicator text={"shift"}/> lets you scroll horizontally</li>
 					<li style={smallGap}>Click to select a skill on the timeline. Shift click to select a sequence of skills</li>
 					<li style={smallGap}><ButtonIndicator text={"backspace"}/> to delete the selected skill and everything after it</li>
 					<li style={smallGap}>Click on the timeline's ruler-like header to view historical game states.
