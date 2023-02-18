@@ -88,7 +88,7 @@ class TimelineEditor extends React.Component {
 				console.assert(false);
 			}
 			this.markClean();
-		}}>discard edits</button>
+		}}>discard changes</button>
 	}
 
 	getRecordCopy() {
@@ -123,7 +123,7 @@ class TimelineEditor extends React.Component {
 
 							controller.record.unselectAll();
 							controller.displayCurrentState();
-						}}>apply edits to timeline and save</button>
+						}}>apply changes to timeline and save</button>
 						{this.discardEditsBtn()}
 					</div>
 				} else {

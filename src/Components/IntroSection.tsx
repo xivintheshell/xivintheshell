@@ -1,5 +1,6 @@
 import React, {CSSProperties} from 'react';
 import {Expandable, Help, ButtonIndicator} from "./Common";
+import {localize} from "./Localization";
 import {DebugOptions} from "./DebugOptions";
 import changelog from "../changelog.json"
 
@@ -32,7 +33,7 @@ export function IntroSection(props: {}) {
 				<Help topic={"expandable"} content={"click me to expand or collapse"}/></span>}
 			content={<div>
 				<div className="paragraph">
-					<b>General usage</b>
+					<b>{localize({en: "General Usage", zh: "基本用法", ja: "使い方"})}</b>
 				</div>
 				<ul>
 					<li style={smallGap}>Set your stats in <b>Config/Edit</b> on the right, then <ButtonIndicator text={"apply and reset"}/></li>
@@ -86,7 +87,7 @@ export function IntroSection(props: {}) {
 				<ul>
 					<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
 					<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
-					<li><b>Turtle, Spider,</b> and many other players who contributed feature suggestions, timeline markers, bug reports, or in any other way</li>
+					<li><b>Turtle, Spider, Santa,</b> and many other players who contributed feature suggestions, timeline markers, bug reports, or in any other way</li>
 				</ul>
 				<div className="paragraph">
 					If you have questions,

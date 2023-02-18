@@ -144,6 +144,17 @@ export class Timeline {
 		return false;
 	}
 
+	#sortAndRemoveDuplicateMarkers() {
+		this.markers.sort((a, b)=>{
+			return a.time - b.time;
+		});
+		for (let i = this.markers.length - 1; i > 0; i--) {
+			if (Math.abs(this.markers[i].time - this.markers[i-1].time) < 0.0001 && this.markers[i].description === this.markers[i-1].description) {
+				this.markers.splice(i, 1);
+			}
+		}
+	}
+
 	// assumes input is valid
 	#appendMarkersPreset(preset: Fixme, track: number) {
 		this.markers = this.markers.concat(preset.markers.map((m: SerializedMarker): MarkerElem=>{
@@ -157,6 +168,7 @@ export class Timeline {
 				showText: m.showText===undefined ? false : m.showText,
 			};
 		}));
+		//this.#sortAndRemoveDuplicateMarkers();
 		this.#save();
 	}
 

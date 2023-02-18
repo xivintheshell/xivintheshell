@@ -13,6 +13,7 @@ import {LoadSave} from "./LoadSave";
 import {skillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../changelog.json"
+import {SelectLanguage} from "./Localization"
 
 export let setRealTime = (inRealTime: boolean) => {};
 export let setOverrideOutlineColor = (outlineColor?: string)=>{};
@@ -39,6 +40,8 @@ function handleUrlCommands(command?: string) {
 		console.log("unrecognized command '" + command + "'");
 	}
 }
+
+export let forceUpdateAll = ()=>{};
 
 export default class Main extends React.Component {
 
@@ -82,6 +85,10 @@ export default class Main extends React.Component {
 		setOverrideOutlineColor = ((col?: string)=>{
 			this.setState({ overrideOutlineColor: col });
 		}).bind(this);
+
+		forceUpdateAll = (()=>{
+			this.forceUpdate();
+		}).bind(this);
 	}
 
 	componentDidMount() {
@@ -101,6 +108,7 @@ export default class Main extends React.Component {
 	componentWillUnmount() {
 		setRealTime = inRealTime=>{};
 		setOverrideOutlineColor = outlineColor=>{};
+		forceUpdateAll = ()=>{};
 	}
 
 	// tabs: https://reactcommunity.org/react-tabs/
@@ -136,12 +144,14 @@ export default class Main extends React.Component {
 					overscrollBehaviorY: "contain",
 				}}>
 					<div style={{
+						position: "relative",
 						maxWidth: 1060,
 						margin: "0 auto",
 						marginTop: 40,
 					}}>
+						<SelectLanguage/>
 						<div>
-							<h3 style={{marginBottom: 6}}>Black Mage in the Shell</h3>
+							<h3 style={{marginTop: 20, marginBottom: 6}}>Black Mage in the Shell</h3>
 							<div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
 								tool/Changelog</b>) (see my <a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>roadmap</a>)
 							</div>

@@ -1,6 +1,7 @@
 import React, {ChangeEvent, CSSProperties, ReactNode} from "react";
 import jQuery from 'jquery';
 import ReactTooltip from "react-tooltip";
+import {GrLanguage} from "react-icons/gr";
 
 function getBlobUrl(content: object) {
 	let blob = new Blob([JSON.stringify(content)], {type: "text/plain;charset=utf-8"});
@@ -69,6 +70,7 @@ export function asyncFetch(
 	jQuery.ajax({
 		type: 'GET',
 		url: url,
+		//dataType: "text",
 		success: (data)=>{
 			callback(data);
 			fetchCache.set(url, data);
@@ -414,3 +416,4 @@ export function ButtonIndicator(props: {text: string}) {
 		background: "#efefef"
 	}}>{props.text}</span>
 }
+
