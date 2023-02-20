@@ -13,7 +13,7 @@ import {LoadSave} from "./LoadSave";
 import {skillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../changelog.json"
-import {SelectLanguage} from "./Localization"
+import {localize, SelectLanguage} from "./Localization"
 
 export let setRealTime = (inRealTime: boolean) => {};
 export let setOverrideOutlineColor = (outlineColor?: string)=>{};
@@ -152,9 +152,13 @@ export default class Main extends React.Component {
 						<SelectLanguage/>
 						<div>
 							<h3 style={{marginTop: 20, marginBottom: 6}}>Black Mage in the Shell</h3>
-							<div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
-								tool/Changelog</b>) (see my <a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>roadmap</a>)
-							</div>
+							{localize({
+								en: <div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
+									tool/Changelog</b>) (see my <a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>roadmap</a>)
+								</div>,
+								zh: <div style={{marginBottom: 16}}>最近更新（月日年）：{changelog[0].date}（详见<b>关于/更新日志</b>）（<a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>开发计划</a>）</div>
+							})}
+
 							<IntroSection/>
 						</div>
 						<div style={{

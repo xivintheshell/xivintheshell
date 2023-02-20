@@ -1,5 +1,12 @@
 [
 	{
+		"date": "2/18/23",
+		"changes": [
+			"added localization framework; Chinese translation work in progress & added my contact QQ under About in Chinese ver. Was kinda surprised that this tool gets a significant portion of traffic from China :0",
+			"才发现好像国服有人用这个东西:0 本地化在做了在做了，好怪啊我译我自己。。在中文版的关于里放了我的联系QQ。"
+		]
+	},
+	{
 		"date": "2/17/23",
 		"changes": [
 			"updated TOP markers from Santa"

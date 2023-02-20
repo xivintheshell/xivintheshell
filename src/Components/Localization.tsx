@@ -23,7 +23,7 @@ export function localize(content: LocalizedContent) {
 
 function LanguageOption(props: {lang: Language}) {
 	let text = "English";
-	if (props.lang === "zh") text = "中文";
+	if (props.lang === "zh") text = "中文(陆续更新中)";
 	if (props.lang === "ja") text = "日本語";
 	return <div style={{
 		display: "inline-block",
@@ -59,9 +59,14 @@ export class SelectLanguage extends React.Component {
 		setCurrentLanguage = ((lang: Language)=>{
 			this.setState({lang: lang})
 			localStorage.setItem("language", lang);
-			forceUpdateAll();
 		}).bind(this);
 	}
+	componentDidUpdate(prevProps: Readonly<{}>, prevState: Readonly<{lang: Language}>, snapshot?: any) {
+		if (prevState.lang !== this.state.lang) {
+			forceUpdateAll();
+		}
+	}
+
 	componentWillUnmount() {
 		getCurrentLanguage = ()=>{return "en"}
 		setCurrentLanguage = (lang) => {}
@@ -76,8 +81,7 @@ export class SelectLanguage extends React.Component {
 			<span style={{display: "inline-block", fontSize: 20, position: "relative", marginRight: 6}}><GrLanguage/></span>
 			<div style={{display: "inline-block", fontSize: 15, position: "relative", top: -5}}>
 				<LanguageOption lang={"en"}/>|
-				<LanguageOption lang={"zh"}/>|
-				<LanguageOption lang={"ja"}/>
+				<LanguageOption lang={"zh"}/>
 			</div>
 		</div>
 	}
