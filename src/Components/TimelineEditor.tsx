@@ -44,7 +44,7 @@ function TimelineActionElement(props: {
     </div>
 }
 
-class TimelineEditor extends React.Component {
+export class TimelineEditor extends React.Component {
 	state: {
 		editedRecord: Record | undefined
 		recordValidStatus: RecordValidStatus | undefined
@@ -234,5 +234,3 @@ class TimelineEditor extends React.Component {
 			defaultShow={false}/>
 	}
 }
-
-export let timelineEditor = <TimelineEditor/>

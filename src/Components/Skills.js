@@ -171,7 +171,7 @@ const WaitSince = {
 };
 
 export var updateSkillButtons = (statusList)=>{}
-class SkillsWindow extends React.Component {
+export class SkillsWindow extends React.Component {
 	constructor(props) {
 		super(props);
 		updateSkillButtons = ((statusList)=>{
@@ -328,5 +328,3 @@ class SkillsWindow extends React.Component {
 		</div>
 	}
 }
-
-export const skillsWindow = <SkillsWindow />;

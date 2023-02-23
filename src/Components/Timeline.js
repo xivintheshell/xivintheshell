@@ -1,7 +1,7 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
-import {ButtonIndicator, Expandable, Help, Slider} from "./Common";
+import {Expandable, Help, Slider} from "./Common";
 import {
 	Cursor,
 	MPTickMark,
@@ -11,9 +11,9 @@ import {
 	displayTime,
 	setHandledSkillSelectionThisFrame, bHandledSkillSelectionThisFrame
 } from "./TimelineElements";
-import {getTimelineMarkersHeight, timelineMarkers} from "./TimelineMarkers";
-import {timelineMarkerPresets} from "./TimelineMarkerPresets";
-import {timelineEditor} from "./TimelineEditor";
+import {getTimelineMarkersHeight, TimelineMarkers} from "./TimelineMarkers";
+import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
+import {TimelineEditor} from "./TimelineEditor";
 
 export let updateSelectionDisplay = (startX, endX)=>{}
 
@@ -95,7 +95,7 @@ function TimelineHeader(props) {
 		}}><div>{displayTime((i - countdownPadding) / props.pixelPerSecond, 0)}</div></div>;})}
 	</div>
 	return <div ref={props.divref} style={{
-		//zIndex: -3,
+		zIndex: 1,
 		position: "relative",
 		width: "100%",
 		height: "30px",
@@ -198,7 +198,7 @@ class TimelineMain extends React.Component {
 				pixelPerSecond={controller.timeline.scale * 100}
 				countdown={controller.gameConfig.countdown}
 			/>
-			{timelineMarkers}
+			<TimelineMarkers/>
 			<div style={contentStyle}>{elemComponents}</div>
 		</div>
 	}
@@ -286,7 +286,7 @@ class StatsDisplay extends React.Component {
 	}
 }
 
-class Timeline extends React.Component {
+export class Timeline extends React.Component {
 	constructor(props) {
 		super(props);
 		this.initialDisplayScale = 0.4;
@@ -319,10 +319,8 @@ class Timeline extends React.Component {
 						controller.timeline.setHorizontalScale(parseFloat(newVal));
 						localStorage.setItem("timelineDisplayScale", newVal);
 					}}/>
-			{timelineMarkerPresets}
-			{timelineEditor}
+			<TimelineMarkerPresets/>
+			<TimelineEditor/>
 		</div>
 	}
 }
-
-export const timeline = <Timeline/>;

@@ -736,7 +736,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 							if (game.getFireStacks() > 0) return; // not tick during fire
 							game.resources.get(ResourceType.Mana).gain(550);
 							let currentMP = game.resources.get(ResourceType.Mana).availableAmount();
-							let reportText = "Lucid@" + skillTime.toFixed(2) + " (" + index + "/7) (MP=" + currentMP + ")";
+							let reportText = "+550 Lucid@" + skillTime.toFixed(2) + "(" + index + "/7) (MP=" + currentMP + ")";
 							controller.reportLucidTick(game.time, reportText);
 						};
 

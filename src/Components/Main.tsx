@@ -1,16 +1,16 @@
 import React, {CSSProperties} from 'react';
 // @ts-ignore
-import {timeline} from "./Timeline";
+import {Timeline} from "./Timeline";
 // @ts-ignore
-import { skillsWindow } from "./Skills";
+import { SkillsWindow } from "./Skills";
 // @ts-ignore
 import { Config, TimeControl } from "./PlaybackControl";
 // @ts-ignore
-import { statusDisplay } from "./StatusDisplay";
+import { StatusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import 'react-tabs/style/react-tabs.css';
 import {LoadSave} from "./LoadSave";
-import {skillSequencePresets} from "./SkillSequencePresets";
+import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../changelog.json"
 import {localize, SelectLanguage} from "./Localization"
@@ -129,8 +129,8 @@ export default class Main extends React.Component {
 					 onKeyDown={this.gameplayKeyCapture}
 					 onClick={this.gameplayMouseCapture}
 				>
-					{statusDisplay}
-					{skillsWindow}
+					<StatusDisplay/>
+					<SkillsWindow/>
 				</div>
 			</div>;
 		return <div style={{
@@ -180,10 +180,10 @@ export default class Main extends React.Component {
 								<LoadSave/>
 							</div>
 						</div>
-						{skillSequencePresets}
+						<SkillSequencePresets/>
 					</div>
 				</div>
-				{timeline}
+				<Timeline/>
 			</div>
 		</div>;
 	}

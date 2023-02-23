@@ -12,7 +12,7 @@ type TimelineMarkersState = {
 	trackBins: Map<number, MarkerElem[]>;
 }
 
-class TimelineMarkers extends React.Component {
+export class TimelineMarkers extends React.Component {
 	myRef: React.RefObject<HTMLDivElement>;
 	state: TimelineMarkersState;
 
@@ -123,5 +123,3 @@ class TimelineMarkers extends React.Component {
 		}}>{tracks}</div>;
 	}
 }
-
-export let timelineMarkers = <TimelineMarkers/>;

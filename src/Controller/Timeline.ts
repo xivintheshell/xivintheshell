@@ -55,10 +55,12 @@ type DamageMarkElem = TimelineElemBase & {
 }
 type LucidMarkElem = TimelineElemBase & {
 	type: ElemType.LucidMark;
+	displayTime: number;
 	source: string;
 }
 type MPTickMarkElem = TimelineElemBase & {
 	type: ElemType.MPTickMark;
+	displayTime: number;
 	source: string;
 }
 type SkillElem = TimelineElemBase & {

@@ -40,19 +40,27 @@ export function Cursor(props: {
 
 export function MPTickMark(props: {
 	vOffset: number;
-	elem: { time: number; };
+	elem: {
+		time: number;
+		displayTime: number;
+		source: string
+	};
 	elemID: string;
 }) {
-	let style={
+	let style : CSSProperties = {
+		position: "absolute",
 		top: props.vOffset,
 		left: controller.timeline.positionFromTime(props.elem.time) - 3,
-		zIndex: -1
 	};
-	return <div style={style} className={"timeline-elem MPTickMark"} >
-		<svg width={6} height={MAX_HEIGHT} data-tip data-for={`${props.elemID}`}>
-			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"#caebf6"}/>
-		</svg>
-		{/*<ReactTooltip id={`${props.elemID}`}>{props.elem.source}</ReactTooltip>*/}
+	return <div style={style} className={"timeline-elem MPTickMark"}>
+		<div data-tip data-for={`${props.elemID}`}>
+			<svg width={6} height={MAX_HEIGHT}>
+				<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"#caebf6"}/>
+			</svg>
+		</div>
+		<ReactTooltip id={`${props.elemID}`}>
+			<span>[{props.elem.displayTime.toFixed(2)}] {props.elem.source}</span>
+		</ReactTooltip>
 	</div>;
 }
 export function DamageMark(props: {
@@ -67,6 +75,7 @@ export function DamageMark(props: {
 	let style={
 		top: props.vOffset,
 		left: controller.timeline.positionFromTime(props.elem.time) - 3,
+		zIndex: 1
 	};
 	let hoverText = "[" + (props.elem.time - controller.gameConfig.countdown).toFixed(2) + "] " + props.elem.potency.toFixed(2) + " (" + props.elem.source + ")";
 	return <div style={style} className={"timeline-elem damageMark"} data-tip data-for={`${props.elemID}`}>
@@ -81,6 +90,7 @@ export function LucidMark(props: {
 	vOffset: number;
 	elem: {
 		time: number;
+		displayTime: number;
 		source: string;
 	};
 	elemID: string;
@@ -88,12 +98,13 @@ export function LucidMark(props: {
 	let style={
 		top: props.vOffset,
 		left: controller.timeline.positionFromTime(props.elem.time)-3,
+		zIndex: 1
 	};
 	return <div style={style} className={"timeline-elem lucidMark"} data-tip data-for={`${props.elemID}`}>
 		<svg width={6} height={6}>
 			<polygon points="0,0 6,0 3,6" fill="#88cae0" stroke="none"/>
 		</svg>
-		<ReactTooltip id={`${props.elemID}`}>{props.elem.source}</ReactTooltip>
+		<ReactTooltip id={`${props.elemID}`}>[{props.elem.displayTime.toFixed(2)}] {props.elem.source}</ReactTooltip>
 	</div>;
 }
 
@@ -158,6 +169,7 @@ export function TimelineSkill(props: {
 	let componentStyle={
 		left: controller.timeline.positionFromTime(props.elem.time),
 		top: props.elem.isGCD ? 14 : 0,
+		zIndex: 1
 	};
 	let potency = node.tmp_capturedPotency;
 	let lockDuration = 0;

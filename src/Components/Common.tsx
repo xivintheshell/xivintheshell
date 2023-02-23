@@ -2,6 +2,7 @@ import React, {ChangeEvent, CSSProperties, ReactNode} from "react";
 import jQuery from 'jquery';
 import ReactTooltip from "react-tooltip";
 import {GrLanguage} from "react-icons/gr";
+import {localize} from "./Localization";
 
 function getBlobUrl(content: object) {
 	let blob = new Blob([JSON.stringify(content)], {type: "text/plain;charset=utf-8"});
@@ -353,7 +354,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 		};
 		return <div>
 			<div>
-				<span>Load from file: </span>
+				<span>{localize({en: "Load from file: ", zh: "从文件载入："})}</span>
 				<input
 					style={{
 						width: "110px",
@@ -366,14 +367,14 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 			{
 				this.props.allowLoadFromUrl ?
 					<form>
-						<span>Load from URL: </span>
+						<span>{localize({en: "Load from URL: ", zh: "从URL载入："})}</span>
 						<input defaultValue={this.loadUrl} style={longInputStyle}
 							   onChange={this.onLoadUrlChange}/>
 						<span> </span>
 						<button type={"submit"} onClick={e => {
 							this.onLoadUrl();
 							e.preventDefault();
-						}}>load</button>
+						}}>{localize({en: "load", zh: "加载"})}</button>
 					</form> : undefined
 			}
 		</div>

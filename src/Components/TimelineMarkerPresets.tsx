@@ -3,6 +3,7 @@ import {Expandable, Input, LoadJsonFromFileOrUrl, asyncFetch, SaveToFile, parseT
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
 import {FileType} from "../Controller/Common";
+import {localize} from "./Localization";
 
 /*
 	For the sake of simplicity, tracks be like:
@@ -65,16 +66,25 @@ function LoadCombinedTracksBtn(props: {displayName: string, url: string}) {
 function PresetButtons() {
 	// https://github.com/quisquous/cactbot/blob/main/ui/raidboss/data/06-ew/raid/
 	return <div>
-		<span>Presets: </span>
+		<div style={{marginBottom: 10}}>{localize({en: "Presets: ", zh: "预设文件："})}</div>
 		<LoadCombinedTracksBtn displayName={"P1S Shackles of Time first"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P1S Aetherial Shackles first"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P2S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s.txt"}/>
+		<br/>
 		<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/dsr_p7.txt"}/>
 		<LoadCombinedTracksBtn displayName={"TOP by Santa (WIP, mechanics up to P4)"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/TOP_2023_02_16.track"}/>
+		<br/>
+		<span>{localize({en: "From 不打冰3攻略组, in Chinese: ", zh: "来自不打冰3攻略组："})}</span>
+		<LoadCombinedTracksBtn displayName={"P5S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p5s_zh.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P6S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p6s_zh.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P7S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p7s_zh.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P8S门神蛇轴"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p8s_p1_snake_zh.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P8S门神车轴"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p8s_p1_beast_zh.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P8S本体"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p8s_p2_zh.txt"}/>
 	</div>
 }
 
-class TimelineMarkerPresets extends React.Component {
+export class TimelineMarkerPresets extends React.Component {
 	saveFilename = "markers";
 	state: TimelineMarkerPresetsState;
 
@@ -183,16 +193,16 @@ class TimelineMarkerPresets extends React.Component {
 		let content = <div>
 			<button style={{marginBottom: 10}} onClick={()=>{
 				controller.timeline.deleteAllMarkers();
-			}}>clear all markers</button>
+			}}>{localize({en: "clear all markers", zh: "清空"})}</button>
 			<PresetButtons/>
 			<Expandable
 				title={"Load tracks"}
 				titleNode={<span>
-					Load tracks <Help topic={"load tracks"} content={"when loading additional markers, no current markers will be deleted"}/></span>}
+					{localize({en: "Load tracks", zh: "载入"})} <Help topic={"load tracks"} content={localize({en: "when loading additional markers, current markers will not be deleted", zh: "载入新的标记时，时间轴上的已有标记不会被删除"})}/></span>}
 				defaultShow={false}
 				content={
 				<div>
-					<div className={"paragraph"}><b>Multiple tracks combined</b></div>
+					<div className={"paragraph"}><b>{localize({en: "Multiple tracks combined", zh: "多轨文件"})}</b></div>
 					<LoadJsonFromFileOrUrl
 						allowLoadFromUrl={false}
 						loadUrlOnMount={false}
@@ -201,9 +211,9 @@ class TimelineMarkerPresets extends React.Component {
 							controller.timeline.loadCombinedTracksPreset(content);
 							controller.timeline.drawElements();
 						}}/>
-					<div className={"paragraph"}><b>Individual track</b></div>
+					<div className={"paragraph"}><b>{localize({en: "Individual track", zh: "单轨文件"})}</b></div>
 					<div className={"paragraph"}>
-						<Input defaultValue={this.state.loadTrackDest} description={"Track: "} width={8} style={inlineDiv}
+						<Input defaultValue={this.state.loadTrackDest} description={localize({en: "Track: ", zh: "轨道序号："})} width={8} style={inlineDiv}
 							   onChange={this.setLoadTrackDest}/>
 						<LoadJsonFromFileOrUrl
 							allowLoadFromUrl={false}
@@ -294,9 +304,8 @@ class TimelineMarkerPresets extends React.Component {
 		</div>;
 		return <Expandable
 			title="Timeline markers"
-			titleNode={<span>Timeline markers</span>}
+			titleNode={<span>{localize({en: "Timeline markers", zh: "时间轴标记"})}</span>}
 			content={content}
 			defaultShow={false}/>
 	}
 }
-export let timelineMarkerPresets = <TimelineMarkerPresets/>;

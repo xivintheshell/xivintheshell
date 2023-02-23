@@ -342,6 +342,7 @@ class Controller {
 			this.timeline.addElement({
 				type: ElemType.LucidMark,
 				time: time,
+				displayTime: this.game.getDisplayTime(),
 				source: source,
 			});
 		}
@@ -352,6 +353,7 @@ class Controller {
 			this.timeline.addElement({
 				type: ElemType.MPTickMark,
 				time: time,
+				displayTime: this.game.getDisplayTime(),
 				source: source,
 			});
 		}

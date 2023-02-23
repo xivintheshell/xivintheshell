@@ -79,7 +79,7 @@ function PresetLine(props: { line: Line }) {
 	</div>
 }
 
-class SkillSequencePresets extends React.Component {
+export class SkillSequencePresets extends React.Component {
 	constructor(props: Readonly<{}>) {
 		super(props);
 		updateSkillSequencePresetsView = this.unboundUpdatePresetsView.bind(this);
@@ -127,5 +127,3 @@ class SkillSequencePresets extends React.Component {
 			defaultShow={false}/>
 	}
 }
-
-export let skillSequencePresets = <SkillSequencePresets/>;

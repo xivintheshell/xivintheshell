@@ -335,7 +335,7 @@ function ResourcesDisplay(props) {
 }
 
 export var updateStatusDisplay = (data)=>{};
-class StatusDisplay extends React.Component {
+export class StatusDisplay extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -380,5 +380,3 @@ class StatusDisplay extends React.Component {
 		</div>
 	}
 }
-
-export const statusDisplay = <StatusDisplay/>;

@@ -1,5 +1,11 @@
 [
 	{
+		"date": "2/23/23",
+		"changes": [
+			"added p5s-p8s markers in Chinese by 不打冰3攻略组. Thank you all!!"
+		]
+	},
+	{
 		"date": "2/18/23",
 		"changes": [
 			"added localization framework; Chinese translation work in progress & added my contact QQ under About in Chinese ver. Was kinda surprised that this tool gets a significant portion of traffic from China :0",
