@@ -193,7 +193,6 @@ export class Record extends Line {
 	}
 	// assume node is actually in this recording
 	selectSingle(node: ActionNode) {
-		console.log(node);
 		this.unselectAll();
 		node.select();
 		this.selectionStart = node;

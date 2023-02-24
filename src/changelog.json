@@ -1,12 +1,19 @@
 [
 	{
+		"date": "2/24/23",
+		"changes": [
+			"hover over mp tick mark to see tick info",
+			"delete key now also deletes timeline actions",
+			"skills implementation: aetherial manip & between the lines animation lock -> 0.8s, manafont skill application delay -> 0.88s",
+			"indicate which spells are covered by LL: when skill is ready and hovered and when it's used on the timeline（with a yellow underline)",
+			"make it an option to proc probabilistically/always/never",
+			"(more small changes coming in the next few days; for now I'm heading to bed)"
+		]
+	},
+	{
 		"date": "2/23/23",
 		"changes": [
-			"added p5s-p8s markers in Chinese by 不打冰3攻略组. Thank you all!!",
-			"hover over mp tick mark to see some info",
-			"delete key now also deletes actions",
-			"skills implementation: aetherial manip & between the lines animation lock -> 0.8s, manafont skill application delay -> 0.88s",
-			"indicate which spells are covered by LL: when skill is ready and hovered and when it's used on the timeline"
+			"added p5s-p8s markers in Chinese by 不打冰3攻略组. Thank you all!!"
 		]
 	},
 	{

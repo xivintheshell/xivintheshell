@@ -1,4 +1,4 @@
-import {Aspect, ResourceType, SkillName} from './Common'
+import {Aspect, ProcMode, ResourceType, SkillName} from './Common'
 // @ts-ignore
 import {controller} from "../Controller/Controller";
 import {addLog, Color, LogCategory} from "../Controller/Common";
@@ -236,7 +236,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				sc.removeTimer();
 			} else {
 				let rand = game.rng(); // firestarter proc
-				if (game.config.rngProcs && rand < 0.4) gainFirestarterProc(game);
+				if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && rand < 0.4)) gainFirestarterProc(game);
 			}
 		}
 
@@ -319,15 +319,15 @@ export class SkillsList extends Map<SkillName, Skill> {
 			// define stuff
 			let recurringThunderTick = (remainingTicks: number, capturedTickPotency: number)=> {
 				if (remainingTicks===0) return;
+				if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && game.rng() < 0.1)) {// thundercloud proc
+					gainThundercloudProc(game);
+				}
 				game.resources.addResourceEvent(
 					ResourceType.ThunderDoTTick,
 					"recurring thunder tick " + (numTicks+1-remainingTicks) + "/" + numTicks, 3, (rsc: Resource) =>{
 						game.reportPotency(node, capturedTickPotency, "DoT");
 						game.dealDamage(capturedTickPotency, "DoT");
 						recurringThunderTick(remainingTicks - 1, capturedTickPotency);
-						if (game.config.rngProcs && game.rng() < 0.1) {// thundercloud proc
-							gainThundercloudProc(game);
-						}
 					}, Color.Thunder);
 			};
 			let dot = game.resources.get(ResourceType.ThunderDoT);

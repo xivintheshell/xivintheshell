@@ -331,7 +331,7 @@ export class GameState {
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 		let capturedCast = this.captureSpellCastTime(skillInfo.aspect, this.config.adjustedCastTime(skillInfo.baseCastTime));
 		let capturedCastTime = capturedCast.castTime;
-		if (capturedCast.llCovered && capturedCastTime > Debug.epsilon) {
+		if (capturedCast.llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
 			node.tmp_llCovered = true;
 		}
 
@@ -444,7 +444,6 @@ export class GameState {
 
 		// recast
 		cd.useStack(this);
-		//cd.setRecastTimeScale(recastTimeScale)
 
 		// caster tax
 		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
@@ -463,12 +462,16 @@ export class GameState {
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let sourceName = skillInfo.name+"@"+skillTime.toFixed(2);
 
+		let llCovered = this.captureSpellCastTime(skillInfo.aspect, 0).llCovered;
+		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
+			props.node.tmp_llCovered = true;
+		}
+
 		let capturedDamage = 0;
 		if (props.dealDamage) {
 			capturedDamage = this.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 			this.reportPotency(props.node, capturedDamage, sourceName);
 		}
-		//let recastTimeScale = this.captureRecastTimeScale();
 
 		if (props.onCapture) props.onCapture();
 
@@ -484,7 +487,6 @@ export class GameState {
 
 		// recast
 		cd.useStack(this);
-		//if (skillInfo.isSpell) cd.setRecastTimeScale(recastTimeScale);
 
 		// animation lock
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(props.skillName));

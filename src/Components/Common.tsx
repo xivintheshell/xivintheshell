@@ -1,7 +1,6 @@
 import React, {ChangeEvent, CSSProperties, ReactNode} from "react";
 import jQuery from 'jquery';
 import ReactTooltip from "react-tooltip";
-import {GrLanguage} from "react-icons/gr";
 import {localize} from "./Localization";
 
 function getBlobUrl(content: object) {

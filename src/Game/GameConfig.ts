@@ -1,4 +1,4 @@
-import {Debug, SkillName} from "./Common";
+import {Debug, SkillName, ProcMode} from "./Common";
 import {ResourceOverride} from "./Resources";
 
 export class GameConfig {
@@ -8,7 +8,7 @@ export class GameConfig {
     casterTax = 0.06;
     animationLock = 0.66;
     timeTillFirstManaTick = 1.2;
-    rngProcs = true;
+    procMode = ProcMode.RNG;
     extendedBuffTimes = false;
     initialResourceOverrides: ResourceOverride[] = [];
 
@@ -20,7 +20,7 @@ export class GameConfig {
         casterTax: number,
         animationLock: number,
         timeTillFirstManaTick: number,
-        rngProcs: boolean,
+        procMode: ProcMode,
         extendedBuffTimes: boolean,
         initialResourceOverrides: any[]
     }) {
@@ -31,7 +31,7 @@ export class GameConfig {
             this.casterTax = props.casterTax;
             this.animationLock = props.animationLock;
             this.timeTillFirstManaTick = props.timeTillFirstManaTick;
-            this.rngProcs = props.rngProcs;
+            this.procMode = props.procMode;
             this.extendedBuffTimes = props.extendedBuffTimes;
             if (props.initialResourceOverrides) {
                 this.initialResourceOverrides = props.initialResourceOverrides.map(obj=>{
@@ -59,7 +59,7 @@ export class GameConfig {
                 this.casterTax === other.casterTax &&
                 this.animationLock === other.animationLock &&
                 this.timeTillFirstManaTick === other.timeTillFirstManaTick &&
-                this.rngProcs === other.rngProcs &&
+                this.procMode === other.procMode &&
                 this.extendedBuffTimes === other.extendedBuffTimes;
         } else {
             return false;
@@ -100,7 +100,7 @@ export class GameConfig {
             casterTax: this.casterTax,
             animationLock: this.animationLock,
             timeTillFirstManaTick: this.timeTillFirstManaTick,
-            rngProcs: this.rngProcs,
+            procMode: this.procMode,
             extendedBuffTimes: this.extendedBuffTimes,
             initialResourceOverrides: this.initialResourceOverrides.map(override=>{ return override.serialized(); })
         };

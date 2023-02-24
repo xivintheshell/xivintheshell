@@ -2,7 +2,7 @@ import React from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
 import {TickMode} from "../Controller/Common";
-import {ResourceType} from "../Game/Common";
+import {ProcMode, ResourceType} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 
 export class TimeControl extends React.Component {
@@ -128,12 +128,12 @@ function ConfigSummary(props) {
 	let ct_2_5 = controller.gameConfig.adjustedCastTime(2.5).toFixed(2);
 	let lucidTickOffset = controller.game.actorTickOffset.toFixed(2);
 	let offsetDesc = "The random time offset of actor (lucid dreaming) ticks relative to MP ticks";
-	let rngProc = controller.gameConfig.rngProcs;
+	let procMode = controller.gameConfig.procMode;
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	return <div>
 		GCD: {ct_2_5}
 		<br/>Actor tick offset <Help topic={"actorTickOffset"} content={offsetDesc}/>: {lucidTickOffset}
-		{rngProc ? undefined : <span style={{color: "mediumpurple"}}><br/>No rng procs</span>}
+		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
 		{numOverrides === 0 ? undefined : <span style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</span>}
 	</div>
 }
@@ -175,7 +175,7 @@ export class Config extends React.Component {
 			timeTillFirstManaTick: 0,
 			countdown: 0,
 			randomSeed: "",
-			rngProcs: true,
+			procMode: ProcMode.RNG,
 			extendedBuffTimes: false,
 			initialResourceOverrides: [],
 			/////////
@@ -203,7 +203,7 @@ export class Config extends React.Component {
 					countdown: this.state.countdown,
 					timeTillFirstManaTick: this.state.timeTillFirstManaTick,
 					randomSeed: seed,
-					rngProcs: this.state.rngProcs,
+					procMode: this.state.procMode,
 					extendedBuffTimes: this.state.extendedBuffTimes,
 					initialResourceOverrides: this.state.initialResourceOverrides // info only
 				};
@@ -241,8 +241,8 @@ export class Config extends React.Component {
 			this.setState({extendedBuffTimes: evt.target.checked, dirty: true});
 		}).bind(this);
 
-		this.setrngProcs = (evt => {
-			this.setState({rngProcs: evt.target.checked, dirty: true});
+		this.setProcMode = (evt => {
+			this.setState({procMode: evt.target.value, dirty: true});
 		}).bind(this);
 
 		this.setOverrideTimer = (val => {
@@ -566,7 +566,7 @@ export class Config extends React.Component {
 			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
 			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed.trim(),
-			rngProcs: config.rngProcs,
+			procMode: config.procMode,
 			extendedBuffTimes: config.extendedBuffTimes,
 			initialResourceOverrides: config.initialResourceOverrides // info only
 		});
@@ -590,12 +590,14 @@ export class Config extends React.Component {
 					"can be anything, or leave empty to get 4 random digits."
 				}/>: </span>} onChange={this.setRandomSeed}/>
 			<div>
-				<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}
-					   checked={this.state.rngProcs}
-					   onChange={this.setrngProcs}/>
-				<span>rng procs <Help topic={"rngProcs"} content={
-					"turning off rng procs will force you to sharpcast everything."
-				}/></span>
+				<span>proc mode <Help topic={"procMode"} content={
+					"Default RNG: 40% Firestarter, 10% Thundercloud"
+				}/>: </span>
+				<select style={{outline: "none"}} value={this.state.procMode} onChange={this.setProcMode}>
+					<option key={ProcMode.RNG} value={ProcMode.RNG}>RNG</option>
+					<option key={ProcMode.Never} value={ProcMode.Never}>Never</option>
+					<option key={ProcMode.Always} value={ProcMode.Always}>Always</option>
+				</select>
 			</div>
 			<div>
 				<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}

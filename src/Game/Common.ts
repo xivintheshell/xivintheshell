@@ -13,6 +13,12 @@ export const enum Aspect {
 	Other = "Other"
 }
 
+export const enum ProcMode {
+	RNG = "RNG",
+	Never = "Never",
+	Always = "Always"
+}
+
 export const enum SkillName {
 	Blizzard = "Blizzard",
 	Fire = "Fire",

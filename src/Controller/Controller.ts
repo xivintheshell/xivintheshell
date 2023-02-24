@@ -1,6 +1,6 @@
 import {addLog, Color, LogCategory, ReplayMode, TickMode} from "./Common";
 import {GameState} from "../Game/GameState";
-import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
+import {ProcMode, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
 // @ts-ignore
 import {updateStatusDisplay} from "../Components/StatusDisplay";
@@ -63,7 +63,7 @@ class Controller {
 		this.gameConfig.casterTax = 0.1;
 		this.gameConfig.animationLock = 0.7;
 		this.gameConfig.timeTillFirstManaTick = 1.2;
-		this.gameConfig.rngProcs = true;
+		this.gameConfig.procMode = ProcMode.RNG;
 		this.gameConfig.extendedBuffTimes = false;
 		this.game = new GameState(this.gameConfig);
 
@@ -262,6 +262,13 @@ class Controller {
 	loadBattleRecordFromFile(content: Fixme) {
 		if (content.config.extendedBuffTimes === undefined) {
 			content.config.extendedBuffTimes = false;
+		}
+		if (content.config.procMode === undefined) { // for backward compatibility
+			if (content.config.rngProcs!==undefined) {
+				content.config.procMode = content.config.rngProcs ? ProcMode.RNG : ProcMode.Never;
+			} else {
+				content.config.procMode = ProcMode.RNG;
+			}
 		}
 		let gameConfig = new GameConfig(content.config);
 
@@ -500,7 +507,7 @@ class Controller {
 		timeTillFirstManaTick: 0.3,
 		countdown: 5,
 		randomSeed: "hello.",
-		rngProcs: true,
+		procMode: ProcMode.RNG,
 		extendedBuffTimes: false,
 		initialResourceOverrides: []
 	}) {
