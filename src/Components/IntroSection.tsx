@@ -85,18 +85,26 @@ export function IntroSection(props: {}) {
 					en: <div className="paragraph">Hover over <Help topic={"sampleTips"} content={"sample tip"}/> everywhere to see more tips.</div>,
 					zh: <div className="paragraph">鼠标悬浮在各处的 <Help topic={"sampleTips"} content={"我是一个说明"}/> 上查看更多使用说明。</div>,
 				})}
-
 				<div className="paragraph" style={{marginTop: 16}}>
-					<Expandable title={"Troubleshoot"} titleNode={<b>Troubleshoot</b>} content={
-						<div className="paragraph">
+					<Expandable title={"Troubleshoot"} titleNode={localize({en: <b>troubleshoot</b>, zh: <b>常见问题</b>})} content={
+						localize({
+						en: <div className="paragraph">
 							If the browser cache is somehow messed up (likely due to invalid game states), this is how to reset it:<br/>
 							Enter this tool from <b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b> replacing <b>{"{command}"}</b> with one of the following:
 							<ul>
 								<li style={smallGap}><b>resetResourceOverrides</b>: delete all resource overrides and all actions on the current timeline.</li>
 								<li style={smallGap}><b>resetAll</b>: delete all browser-cached settings.</li>
 							</ul>
+						</div>,
+						zh: <div className="paragraph">
+							如果浏览器缓存因不明原因出问题（比如预设了又是冰状态又是火状态或是打完绝望满蓝这样的“非法状态”），请尝试用以下方法重置浏览器缓存：<br/>
+							用以下链接进入本工具：<b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b>，然后把<b>{"{command}"}</b>替换成以下两个指令之一：
+							<ul>
+								<li style={smallGap}><b>resetResourceOverrides</b>: 删除当前时间线上的所有资源预设和技能</li>
+								<li style={smallGap}><b>resetAll</b>: 删除所有本工具相关的浏览器缓存</li>
+							</ul>
 						</div>
-					}/>
+						})}/>
 				</div>
 			</div>}
 		/>
