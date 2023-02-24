@@ -81,6 +81,8 @@ export class GameConfig {
     getSkillAnimationLock(skillName : SkillName) : number {
         if (skillName === SkillName.Tincture) {
             return 1.16;
+        } else if (skillName === SkillName.AetherialManipulation || skillName === SkillName.BetweenTheLines) {
+            return 0.8; // from: https://nga.178.com/read.php?tid=21233094&rand=761
         } else {
             return this.animationLock;
         }

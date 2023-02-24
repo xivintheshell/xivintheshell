@@ -1,6 +1,6 @@
 import React from 'react'
 import {Clickable, Help, parseTime} from "./Common";
-import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
+import {Debug, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import ReactTooltip from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
@@ -128,12 +128,16 @@ class SkillButton extends React.Component {
 			}
 			// if ready, also show captured cast time & time till damage application
 			let actualCastTime = info.instantCast ? 0 : info.castTime;
+			let infoString = "";
+			if (info.status === SkillReadyStatus.Ready) {
+				infoString += "cast: " + actualCastTime.toFixed(2);
+				if (info.llCovered && actualCastTime > Debug.epsilon) infoString += " (LL)";
+				infoString += ", cast+delay: " + info.timeTillDamageApplication.toFixed(3);
+			}
 			let content = <div style={{color: controller.displayingUpToDateGameState ? "white" : "darkorange"}}>
 				<div className="paragraph">{this.props.skillName}</div>
 				<div className="paragraph">{s}</div>
-				{info.status===SkillReadyStatus.Ready ?
-					<div className="paragraph">{"cast: " + actualCastTime.toFixed(2) + ", cast+delay: " + info.timeTillDamageApplication.toFixed(3)}</div> : undefined
-				}
+				{infoString}
 			</div>;
 			setSkillInfoText(content);
 			this.setState({skillDescription: content});

@@ -14,6 +14,7 @@ export class StatsModifier
 	manaCostIce = 1;
 	CH = 1;
 	DH = 1;
+	llApplied = false;
 	manaRegen = 0;
 	uhConsumption = 0;
 
@@ -34,6 +35,9 @@ export class StatsModifier
 		// additive constant
 		this.manaRegen = 0;
 		this.uhConsumption = 0;
+
+		// OR
+		this.llApplied = false;
 	}
 
 	// StatsModifier -> ()
@@ -53,6 +57,8 @@ export class StatsModifier
 
 		this.manaRegen += other.manaRegen;
 		this.uhConsumption += other.uhConsumption;
+
+		this.llApplied = this.llApplied || other.llApplied;
 	}
 
 	static base()
@@ -124,6 +130,7 @@ export class StatsModifier
 		if (ll.available(1)) {
 			llMod.castTimeBase = 0.85;
 			llMod.spellRecastTimeScale = 0.85;
+			llMod.llApplied = true;
 		}
 		modifiers.push(llMod);
 

@@ -271,7 +271,10 @@ export class GameState {
 		if (aspect === Aspect.Fire) castTime *= mod.castTimeFire;
 		else if (aspect === Aspect.Ice) castTime *= mod.castTimeIce;
 
-		return castTime;
+		return {
+			castTime,
+			llCovered: mod.llApplied
+		};
 	}
 
 	captureRecastTimeScale() {
@@ -326,8 +329,11 @@ export class GameState {
 		console.assert(skillInfo.isSpell);
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
-		let capturedCastTime = this.captureSpellCastTime(skillInfo.aspect, this.config.adjustedCastTime(skillInfo.baseCastTime));
-		//let recastTimeScale = this.captureRecastTimeScale();
+		let capturedCast = this.captureSpellCastTime(skillInfo.aspect, this.config.adjustedCastTime(skillInfo.baseCastTime));
+		let capturedCastTime = capturedCast.castTime;
+		if (capturedCast.llCovered && capturedCastTime > Debug.epsilon) {
+			node.tmp_llCovered = true;
+		}
 
 		let skillTime = this.getDisplayTime();
 
@@ -542,7 +548,8 @@ export class GameState {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
 		let [capturedManaCost, uhConsumption] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
-		let capturedCastTime = this.captureSpellCastTime(skill.info.aspect, this.config.adjustedCastTime(skill.info.baseCastTime));
+		let capturedCast = this.captureSpellCastTime(skill.info.aspect, this.config.adjustedCastTime(skill.info.baseCastTime));
+		let capturedCastTime = capturedCast.castTime;
 		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1)
 			|| this.resources.get(ResourceType.Swiftcast).available(1)
 			|| (skillName===SkillName.Paradox && this.getIceStacks()>0)
@@ -599,7 +606,8 @@ export class GameState {
 			timeTillAvailable: timeTillAvailable,
 			timeTillDamageApplication: timeTillDamageApplication,
 			capturedManaCost: capturedManaCost,
-			highlight: highlight
+			highlight: highlight,
+			llCovered: capturedCast.llCovered
 		};
 	}
 

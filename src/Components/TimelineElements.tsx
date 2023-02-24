@@ -155,7 +155,8 @@ export function TimelineSkill(props: {
 		height: 14,
 		top: 0,
 		left: controller.timeline.positionFromTime(props.elem.relativeSnapshotTime),
-		borderLeft: "1px solid " + "rgba(151,85,239,0.2)"
+		borderLeft: "1px solid " + "rgba(151,85,239,0.2)",
+		zIndex: 1
 	}
 	let snapshotIndicator = <div style={snapshotIndicatorStyle}/>
 
@@ -164,10 +165,15 @@ export function TimelineSkill(props: {
 		top: 0,
 		width: 28,
 		height: 28,
-		zIndex: 1
+		zIndex: 1,
 	};
+	if (node.tmp_llCovered) {
+		iconStyle.borderBottom = "4px solid";
+		iconStyle.borderColor = "#ffdc4f";
+	}
 	let iconPath = skillIcons.get(props.elem.skillName);
 	let description = props.elem.skillName + "@" + (props.elem.displayTime).toFixed(2);
+	if (node.tmp_llCovered) description += " (LL)";
 	let hoverText = <span>{description}</span>;
 	let componentStyle={
 		left: controller.timeline.positionFromTime(props.elem.time),
@@ -185,14 +191,14 @@ export function TimelineSkill(props: {
 			<span>{"duration: " + lockDuration.toFixed(2)}</span>
 		</div>;
 	}
-	let iconImg = <div style={iconStyle} className={"timeline-elem-skill-icon"} data-tip data-for={`${props.elemID}`}>
+	let iconImg = <div style={iconStyle} className={"timeline-elem-skill-icon"}>
 		<img
-			style={{display: "block", width: "100%", height: "100%"}}
+			style={{display: "block", outline: "none", width: "100%", height: "100%"}}
 			src={iconPath}
 			alt={props.elem.skillName}
 			tabIndex={-1}
 			onKeyDown={(e) => {
-				if (e.key === "Backspace") {
+				if (e.key === "Backspace" || e.key === "Delete") {
 					controller.rewindUntilBefore(controller.record.getFirstSelection(), false);
 					controller.displayCurrentState();
 					controller.updateAllDisplay();
@@ -201,11 +207,11 @@ export function TimelineSkill(props: {
 			}}
 		/>
 	</div>;
-	let icon = <Clickable key={node.getNodeIndex()} content={iconImg} onClickFn={(e) => {
+	let icon = <div data-tip data-for={`${props.elemID}`}><Clickable key={node.getNodeIndex()} content={iconImg} onClickFn={(e) => {
 		bHandledSkillSelectionThisFrame = true;
 		controller.timeline.onClickTimelineAction(node, e.shiftKey);
 
-	}}/>
+	}}/></div>
 
 	return <div style={componentStyle} className={"timeline-elem skill"}>
 		{lockBar}

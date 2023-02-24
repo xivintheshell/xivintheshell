@@ -198,7 +198,7 @@ export class TimelineMarkerPresets extends React.Component {
 			<Expandable
 				title={"Load tracks"}
 				titleNode={<span>
-					{localize({en: "Load tracks", zh: "载入"})} <Help topic={"load tracks"} content={localize({en: "when loading additional markers, current markers will not be deleted", zh: "载入新的标记时，时间轴上的已有标记不会被删除"})}/></span>}
+					{localize({en: "Load tracks", zh: "导入"})} <Help topic={"load tracks"} content={localize({en: "when loading additional markers, current markers will not be deleted", zh: "载入新的标记时，时间轴上的已有标记不会被删除"})}/></span>}
 				defaultShow={false}
 				content={
 				<div>

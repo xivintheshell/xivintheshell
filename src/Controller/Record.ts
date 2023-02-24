@@ -39,6 +39,7 @@ export class ActionNode {
 	tmp_startLockTime?: number;
 	tmp_endLockTime?: number;
 	tmp_capturedPotency?: number;
+	tmp_llCovered?: boolean;
 
 	constructor(actionType: ActionType) {
 		this.type = actionType;
@@ -192,6 +193,7 @@ export class Record extends Line {
 	}
 	// assume node is actually in this recording
 	selectSingle(node: ActionNode) {
+		console.log(node);
 		this.unselectAll();
 		node.select();
 		this.selectionStart = node;

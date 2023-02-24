@@ -60,7 +60,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false,
 		0, 0, 0, 1.114),// delayed
 	new SkillInfo(SkillName.Manafont, ResourceType.cd_Manafont, Aspect.Other, false,
-		0, 0, 0, 0.6),// ? (there's def a delay but I don't know how much)
+		0, 0, 0, 0.88),// delayed, test by manafont->desp from 0 mana
 	new SkillInfo(SkillName.Fire3, ResourceType.cd_GCD, Aspect.Fire, true,
 		3.5, 2000, 260, 1.292),
 	new SkillInfo(SkillName.Blizzard3, ResourceType.cd_GCD, Aspect.Ice, true,
@@ -406,7 +406,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.useInstantSkill({
 					skillName: SkillName.Manafont,
-					onCapture: () => {
+					onApplication: () => {
 						game.resources.get(ResourceType.Mana).gain(3000);
 						addLog(LogCategory.Event, "manafont effect: mana +3000", game.getDisplayTime());
 					},

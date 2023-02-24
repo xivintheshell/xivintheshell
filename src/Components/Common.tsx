@@ -354,7 +354,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 		};
 		return <div>
 			<div>
-				<span>{localize({en: "Load from file: ", zh: "从文件载入："})}</span>
+				<span>{localize({en: "Load from file: ", zh: "从文件导入："})}</span>
 				<input
 					style={{
 						width: "110px",
@@ -367,7 +367,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 			{
 				this.props.allowLoadFromUrl ?
 					<form>
-						<span>{localize({en: "Load from URL: ", zh: "从URL载入："})}</span>
+						<span>{localize({en: "Load from URL: ", zh: "从URL导入："})}</span>
 						<input defaultValue={this.loadUrl} style={longInputStyle}
 							   onChange={this.onLoadUrlChange}/>
 						<span> </span>

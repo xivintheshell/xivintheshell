@@ -286,7 +286,9 @@ class Controller {
 			line.addActionNode(node);
 		}
 		let replayResult = this.#replay({line: line, replayMode: ReplayMode.Exact});
-		console.assert(replayResult.success);
+		if (!replayResult.success) {
+			console.log(replayResult);
+		}
 	}
 
 	applyEditedRecord(newRecord : Record) {
@@ -619,7 +621,7 @@ class Controller {
 			node.tmp_startLockTime = this.game.time;
 			node.tmp_endLockTime = this.game.time + lockDuration;
 
-			if (!this.#bCalculatingHistoricalState) { // true when replaying to display historical game state
+			if (!this.#bCalculatingHistoricalState) { // this block is run when NOT viewing historical state (aka receiving input)
 				let newStatus = this.game.getSkillAvailabilityStatus(skillName); // refresh to get re-captured recast time
 				let skillInfo = this.game.skillsList.get(skillName).info;
 				let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
@@ -709,6 +711,8 @@ class Controller {
 
 				if (props.replayMode === ReplayMode.Exact) {
 					if (status.status === SkillReadyStatus.Ready) {
+						//======== tick wait block ========
+						// todo: clean up this code...
 						let deltaTime = 0;
 						if (props.maxReplayTime >= 0) {
 							deltaTime = waitDuration;
@@ -719,12 +723,12 @@ class Controller {
 								deltaTime = waitDuration;
 							}
 						}
-
 						this.#requestTick({
 							deltaTime: deltaTime,
 							suppressLog: props.suppressLog,
 							separateNode: false
 						});
+						//======== tick wait block ========
 					}
 				}
 				else if (props.replayMode === ReplayMode.SkillSequence || props.replayMode === ReplayMode.Edited) {
@@ -740,6 +744,7 @@ class Controller {
 				}
 
 				if (status.status !== SkillReadyStatus.Ready) {
+					console.log(this.game.timeTillAnySkillAvailable());
 					lastIter = true;
 					firstInvalidNode = itr;
 					invalidReason = status.status;
@@ -755,9 +760,12 @@ class Controller {
 			// buff enable/disable also only supported by exact / edited replay
 			else if (itr.type === ActionType.SetResourceEnabled && (props.replayMode === ReplayMode.Exact || props.replayMode === ReplayMode.Edited)) {
 				let success = this.requestToggleBuff(itr.buffName as ResourceType);
+				const exact = props.replayMode === ReplayMode.Exact;
 				if (success) {
 					this.#requestTick({
-						deltaTime: waitDuration,
+						// waitDuration gets auto filled when this node is moved around and causes unwanted gaps on the timeline..
+						// current workaround: auto decide whether to respect this info in the record. Could be a bit too hacky..
+						deltaTime: exact ? waitDuration : Math.min(waitDuration, this.game.timeTillAnySkillAvailable()),
 						suppressLog: props.suppressLog,
 						separateNode: false
 					});
