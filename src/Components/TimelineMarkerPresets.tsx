@@ -193,7 +193,7 @@ export class TimelineMarkerPresets extends React.Component {
 		let content = <div>
 			<button style={{marginBottom: 10}} onClick={()=>{
 				controller.timeline.deleteAllMarkers();
-			}}>{localize({en: "clear all markers", zh: "清空"})}</button>
+			}}>{localize({en: "clear all markers", zh: "清空当前"})}</button>
 			<PresetButtons/>
 			<Expandable
 				title={"Load tracks"}

@@ -4,7 +4,7 @@ import {updateStatsDisplay, updateTimelineContent} from "../Components/Timeline"
 import {controller} from "./Controller";
 // @ts-ignore
 import {updateSelectionDisplay} from "../Components/Timeline";
-import {SkillName} from "../Game/Common";
+import {Debug, SkillName} from "../Game/Common";
 import {ActionNode} from "./Record";
 import {FileType} from "./Common";
 import {updateMarkers_TimelineMarkers} from "../Components/TimelineMarkers";
@@ -127,6 +127,21 @@ export class Timeline {
 		this.elements.push(elem);
 	}
 
+	#markersAreEqual(m1: MarkerElem, m2: MarkerElem) : boolean {
+		let almostEq = function(a: number, b: number) {
+			return Math.abs(a - b) < Debug.epsilon;
+		}
+
+		if (!almostEq(m1.time, m2.time)) return false;
+		if (!almostEq(m1.duration, m2.duration)) return false;
+		if (m1.color !== m2.color) return false;
+		if (m1.track !== m2.track) return false;
+		if (m1.showText !== m2.showText) return false;
+		if (m1.description !== m2.description) return false;
+
+		return true;
+	}
+
 	// assumes valid
 	addMarker(marker: MarkerElem) {
 		this.markers.push(marker);
@@ -151,7 +166,7 @@ export class Timeline {
 			return a.time - b.time;
 		});
 		for (let i = this.markers.length - 1; i > 0; i--) {
-			if (Math.abs(this.markers[i].time - this.markers[i-1].time) < 0.0001 && this.markers[i].description === this.markers[i-1].description) {
+			if (this.#markersAreEqual(this.markers[i], this.markers[i-1])) {
 				this.markers.splice(i, 1);
 			}
 		}

@@ -134,6 +134,7 @@ export function TimelineSkill(props: {
 		background: props.elem.isSpellCast ? "#e7d9ee" : "#9d9d9d",
 		width: lockBarWidth,
 		height: props.elem.isSpellCast ? 14 : 28,
+		zIndex: 1
 	};
 	let lockBar = <div style={lockBarStyle}/>
 
@@ -143,7 +144,8 @@ export function TimelineSkill(props: {
 		top: 14,
 		background: "#dbf3d6",
 		width: recastBarWidth,
-		height: 14
+		height: 14,
+		zIndex: 1
 	};
 	let recastBar = <div style={recastBarStyle}/>
 
@@ -162,6 +164,7 @@ export function TimelineSkill(props: {
 		top: 0,
 		width: 28,
 		height: 28,
+		zIndex: 1
 	};
 	let iconPath = skillIcons.get(props.elem.skillName);
 	let description = props.elem.skillName + "@" + (props.elem.displayTime).toFixed(2);
@@ -169,7 +172,6 @@ export function TimelineSkill(props: {
 	let componentStyle={
 		left: controller.timeline.positionFromTime(props.elem.time),
 		top: props.elem.isGCD ? 14 : 0,
-		zIndex: 1
 	};
 	let potency = node.tmp_capturedPotency;
 	let lockDuration = 0;
@@ -183,12 +185,11 @@ export function TimelineSkill(props: {
 			<span>{"duration: " + lockDuration.toFixed(2)}</span>
 		</div>;
 	}
-	let iconImg = <div style={iconStyle} className={"timeline-elem-skill-icon"}>
+	let iconImg = <div style={iconStyle} className={"timeline-elem-skill-icon"} data-tip data-for={`${props.elemID}`}>
 		<img
 			style={{display: "block", width: "100%", height: "100%"}}
 			src={iconPath}
 			alt={props.elem.skillName}
-			data-tip data-for={`${props.elemID}`}
 			tabIndex={-1}
 			onKeyDown={(e) => {
 				if (e.key === "Backspace") {
@@ -199,7 +200,6 @@ export function TimelineSkill(props: {
 				}
 			}}
 		/>
-		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
 	</div>;
 	let icon = <Clickable key={node.getNodeIndex()} content={iconImg} onClickFn={(e) => {
 		bHandledSkillSelectionThisFrame = true;
@@ -212,5 +212,6 @@ export function TimelineSkill(props: {
 		{props.elem.isGCD ? recastBar : <div/>}
 		{snapshotIndicator}
 		{icon}
+		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
 	</div>;
 }

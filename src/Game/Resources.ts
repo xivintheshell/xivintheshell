@@ -63,7 +63,11 @@ export class Resource {
 		return this.enabled ? this.#currentValue : 0;
 	}
 	consume(amount: number) {
-		if (!this.available(amount)) console.warn("invalid resource consumption: " + this.type);
+		if (this.#currentValue < amount - Debug.epsilon) {
+			console.warn("invalid resource consumption: " + this.type);
+			console.log(amount);
+			console.log(this);
+		}
 		this.#currentValue = Math.max(this.#currentValue - amount, 0);
 	}
 	gain(amount: number) {

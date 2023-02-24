@@ -138,9 +138,10 @@ export class GameState {
 	tick(deltaTime: number, prematureStopCondition=()=>{ return false; }) {
 		//======== events ========
 		let cumulativeDeltaTime = 0;
+		//console.log(this.eventsQueue.length);
 		while (cumulativeDeltaTime < deltaTime && this.eventsQueue.length > 0 && !prematureStopCondition())
 		{
-			// make sure events are in proper order
+			// make sure events are in proper order (todo: optimize using a priority queue...)
 			this.eventsQueue.sort((a, b)=>{return a.timeTillEvent - b.timeTillEvent;})
 
 			// time to safely advance without skipping anything or ticking past deltaTime
@@ -299,7 +300,6 @@ export class GameState {
 		let rsc = this.resources.get(buffName);
 		// only ley lines can be enabled / disabled. Everything else will just be canceled
 		if (buffName === ResourceType.LeyLines) {
-			console.log("toggle ll");
 			if (rsc.available(1)) { // buff exists and enabled
 				rsc.enabled = false;
 				return true;
