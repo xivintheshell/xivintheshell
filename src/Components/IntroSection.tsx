@@ -145,7 +145,7 @@ export function IntroSection(props: {}) {
 					<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
 						BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
 				</ul>
-				<div className="paragraph"><Expandable title={"Implementation notes"} defaultShow={false} content={
+				<div className="paragraph"><Expandable title={"Implementation notes"} titleNode={localize({en: "Implementation notes", zh: "更新日志", ja: "実装日志"})} defaultShow={false} content={
 					<div>
 						<div className="paragraph">
 							Galahad found that slidecast window size is linear with respect to cast time. I made a <a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>script</a>, parsed
