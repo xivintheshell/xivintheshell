@@ -1,7 +1,7 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
-import {Expandable, Help, Input, Slider} from "./Common";
+import {Expandable, FileFormat, Help, Input, SaveToFile, Slider} from "./Common";
 import {
 	Cursor,
 	MPTickMark,
@@ -265,18 +265,23 @@ class StatsDisplay extends React.Component {
 					</div>
 				</div>
 			}/>: {this.state.cumulativeDuration <= 0 ? "N/A" : (this.state.cumulativePotency / this.state.cumulativeDuration).toFixed(2)}</span><br/>
+			<div>
+				<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
+					return controller.getStatsCsv();
+				}} filename={"stats"} displayName={"download damage log CSV"}/>
+			</div>
 		</div>
 
 		let statsBySkillEntries = [];
-		this.state.statsBySkill.forEach((potency, skillName)=>{
-			if (potency > 0) {
-				statsBySkillEntries.push({skillName: skillName, portion: (potency / this.state.cumulativePotency)});
+		this.state.statsBySkill.forEach((skill, skillName)=>{
+			if (skill.potencySum > 0) {
+				statsBySkillEntries.push({skillName: skillName, potencySum: skill.potencySum, count: skill.count});
 			}
 		});
-		statsBySkillEntries.sort((a, b)=>{ return b.portion - a.portion });
+		statsBySkillEntries.sort((a, b)=>{ return b.potencySum - a.potencySum });
 		let statsBySkill = <div style={{flex: 1, color: this.state.historical ? "darkorange" : "black"}}>
 			{statsBySkillEntries.map(skill=><div style={{display: "inline-block", width: "50%"}} key={skill.skillName}>{
-				skill.skillName + ": " + (skill.portion * 100).toFixed(2) + "%"
+				skill.skillName + " (" + skill.count + "): " + skill.potencySum.toFixed(2)
 			}</div>)}
 		</div>
 
@@ -311,11 +316,11 @@ class TimelineDisplaySettings extends React.Component {
 		// tincture buff percentage
 		str = localStorage.getItem("tinctureBuffPercentage");
 		if (str !== null) {
-			this.state.tinctureBuffPercentage = str;
+			this.state.tinctureBuffPercentageStr = str;
 		}
 
 		// functions
-		this.setTinctureBuffPercentage = (val=>{
+		this.setTinctureBuffPercentageStr = (val=>{
 			this.setState({tinctureBuffPercentageStr: val});
 
 			let percentage = parseFloat(val);
@@ -326,7 +331,7 @@ class TimelineDisplaySettings extends React.Component {
 		}).bind(this);
 	}
 	componentDidMount() {
-		this.setTinctureBuffPercentage(this.state.tinctureBuffPercentage);
+		this.setTinctureBuffPercentageStr(this.state.tinctureBuffPercentageStr);
 	}
 
 	render() {
@@ -338,7 +343,7 @@ class TimelineDisplaySettings extends React.Component {
 						controller.timeline.setHorizontalScale(parseFloat(newVal));
 						localStorage.setItem("timelineDisplayScale", newVal);
 					}}/>
-			<Input defaultValue={this.state.tinctureBuffPercentageStr} description=" tincture potency buff " onChange={this.setTinctureBuffPercentage} width={2} style={{display: "inline"}}/>
+			<Input defaultValue={this.state.tinctureBuffPercentageStr} description=" tincture potency buff " onChange={this.setTinctureBuffPercentageStr} width={2} style={{display: "inline"}}/>
 			<span>%</span>
 		</div>
 	}

@@ -1,5 +1,5 @@
 import React from 'react'
-import {loadFromFile, SaveToFile} from "./Common";
+import {FileFormat, loadFromFile, SaveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType} from "../Controller/Common";
 
@@ -34,7 +34,7 @@ export class LoadSave extends React.Component {
 	render() {
 		return <div className={"loadSave"}>
 			<div>
-				<SaveToFile getContentFn={()=>{
+				<SaveToFile fileFormat={FileFormat.Json} getContentFn={()=>{
 					return controller.record.serialized();
 				}} filename={"fight"} displayName={"download fight record"}/>
 			</div>

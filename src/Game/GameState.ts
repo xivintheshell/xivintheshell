@@ -310,7 +310,6 @@ export class GameState {
 
 		controller.reportDamage({
 			potency: potency,
-			time: this.time,
 			buffs: buffs,
 			source: source
 		});

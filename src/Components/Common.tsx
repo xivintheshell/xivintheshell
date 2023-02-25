@@ -8,29 +8,56 @@ function getBlobUrl(content: object) {
 	return window.URL.createObjectURL(blob);
 }
 
+function getCsvUrl(rawContent: object) {
+	let csvString = "";
+	let content = rawContent as Array<Array<any>>;
+	content.forEach(row=>{
+		for (let i = 0; i < row.length; i++) {
+			csvString += row[i].toString();
+			if (i < row.length - 1) csvString += ",";
+		}
+		csvString += "\n";
+	})
+	let blob = new Blob([csvString], {type: "text/csv;charset=utf-8"});
+	return window.URL.createObjectURL(blob);
+}
+
+export const enum FileFormat {
+	Json = "JSON",
+	Csv = "CSV"
+}
+
 type SaveToFileProps = {
 	getContentFn: () => object,
 	filename: string,
+	fileFormat: FileFormat,
 	displayName?: string
 };
 export class SaveToFile extends React.Component{
 	props: SaveToFileProps;
-	state: { content: object }
+	state: { jsonContent: object, csvContent: Array<Array<any>> }
 	constructor(props: SaveToFileProps) {
 		super(props);
 		this.props = props;
 		this.state = {
-			content: {}
+			jsonContent: {},
+			csvContent: []
 		};
 	}
 	updateContent() {
 		let newContent = this.props.getContentFn();
-		this.setState({content: newContent});
+		if (this.props.fileFormat===FileFormat.Json) this.setState({jsonContent: newContent});
+		else if (this.props.fileFormat===FileFormat.Csv) this.setState({csvContent: newContent});
+		else console.assert(false);
 	}
 	render() {
+		let url = "";
+		if (this.props.fileFormat === FileFormat.Json) url = getBlobUrl(this.state.jsonContent);
+		else if (this.props.fileFormat === FileFormat.Csv) url = getCsvUrl(this.state.csvContent);
+		else (console.assert(false));
 		return <a
 			style={{color: "darkolivegreen", marginRight: 6}}
-			href={getBlobUrl(this.state.content)}
+			href={url}
 			download={this.props.filename}
 			onClick={()=>{ this.updateContent(); }}
 			onContextMenu={()=>{ this.updateContent(); }}
@@ -170,7 +197,7 @@ export class Input extends React.Component {
 		return <div style={style}>
 			<span>{this.props.description/* + "(" + this.state.value + ")"*/}</span>
 			<input className={"textInput"} size={width} type="text"
-				   value={this.props.defaultValue} onChange={this.onChange}/>
+				   value={this.state.value} onChange={this.onChange}/>
 		</div>
 	}
 }

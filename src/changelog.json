@@ -2,8 +2,12 @@
 	{
 		"date": "2/25/23",
 		"changes": [
-			"make the cumulative stats orange when showing historical game state",
-			"let tincture affect potency calculation (display only)"
+			"let tincture affect potency calculation- display only; not saved to record files",
+			"make the stats orange when showing historical game state",
+			"display damage stats by skill",
+			"can now download damage log as csv file",
+			"remove duplicate markers button",
+			"updated Instructions/Troubleshoot"
 		]
 	},
 	{

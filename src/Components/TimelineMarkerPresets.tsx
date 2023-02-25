@@ -1,5 +1,5 @@
 import React, {ChangeEvent, CSSProperties} from 'react'
-import {Expandable, Input, LoadJsonFromFileOrUrl, asyncFetch, SaveToFile, parseTime, Help} from "./Common";
+import {Expandable, Input, LoadJsonFromFileOrUrl, asyncFetch, SaveToFile, parseTime, Help, FileFormat} from "./Common";
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
 import {FileType} from "../Controller/Common";
@@ -177,6 +177,7 @@ export class TimelineMarkerPresets extends React.Component {
 		let saveTrackLinks: JSX.Element[] = [];
 		saveTrackLinks.push(<SaveToFile
 			key={"combined"}
+			fileFormat={FileFormat.Json}
 			getContentFn={()=>{return controller.timeline.serializedCombinedMarkerTracks();}}
 			filename={"tracks_all"}
 			displayName={"all tracks combined"}
@@ -184,16 +185,26 @@ export class TimelineMarkerPresets extends React.Component {
 		trackIndices.forEach(trackIndex=>{
 			saveTrackLinks.push(<SaveToFile
 				key={trackIndex}
+				fileFormat={FileFormat.Json}
 				getContentFn={()=>{ return controller.timeline.serializedSeparateMarkerTracks()[trackIndex]; }}
 				filename={"track_" + trackIndex}
 				displayName={"track " + trackIndex}
 			/>);
 		});
 
+		let btnStyle = {marginBottom: 10, marginRight: 4};
 		let content = <div>
-			<button style={{marginBottom: 10}} onClick={()=>{
+			<button style={btnStyle} onClick={()=>{
 				controller.timeline.deleteAllMarkers();
 			}}>{localize({en: "clear all markers", zh: "清空当前"})}</button>
+			<button style={btnStyle} onClick={()=>{
+				let count = controller.timeline.sortAndRemoveDuplicateMarkers();
+				if (count > 0) {
+					alert("removed " + count + " duplicate markers");
+				} else {
+					alert("no duplicate markers found");
+				}
+			}}>{localize({en: "remove duplicates", zh: "删除重复标记"})}</button>
 			<PresetButtons/>
 			<Expandable
 				title={"Load tracks"}

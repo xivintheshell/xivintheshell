@@ -55,6 +55,7 @@ export class TimelineMarkers extends React.Component {
 				left: -radius,
 				width: absWidth + 2 * radius,
 				height: 2 * radius,
+				zIndex: 1
 			};
 			let colorBarStyleWithText: CSSProperties = {
 				position: "absolute",
@@ -63,20 +64,21 @@ export class TimelineMarkers extends React.Component {
 				background: marker.color + "7f",
 				width: absWidth,
 				height: "100%",
+				zIndex: 1
 			}
 			let containerStyle: CSSProperties = {
 				position: "absolute",
 				top: absTop,
 				left: leftPos,
 				height: this.trackHeight,
-				//outline: "1px solid orange",
 				fontSize: this.fontSize,
 			}
 			let textStyle: CSSProperties = {
 				marginLeft: this.trackHeight / 2,
 				position: "absolute",
 				whiteSpace: "nowrap",
-				pointerEvents: "none"
+				pointerEvents: "none",
+				zIndex: 1
 			}
 			let id = "timelineMarker-" + key;
 			return <div key={key} style={containerStyle} >

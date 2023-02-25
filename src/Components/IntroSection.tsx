@@ -5,7 +5,7 @@ import {DebugOptions} from "./DebugOptions";
 import changelog from "../changelog.json"
 
 function Changelog() {
-	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={localize({en: "Implementation notes", zh: "更新日志", ja: "実装日志"})} defaultShow={false} content={
+	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={localize({en: "Changelog", zh: "更新日志", ja: "実装日志"})} defaultShow={false} content={
 		<div>
 			{
 				changelog.map(entry => {
@@ -88,21 +88,33 @@ export function IntroSection(props: {}) {
 				<div className="paragraph" style={{marginTop: 16}}>
 					<Expandable title={"Troubleshoot"} titleNode={localize({en: <b>troubleshoot</b>, zh: <b>常见问题</b>})} content={
 						localize({
-						en: <div className="paragraph">
-							If the browser cache is somehow messed up (likely due to invalid game states), this is how to reset it:<br/>
-							Enter this tool from <b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b> replacing <b>{"{command}"}</b> with one of the following:
-							<ul>
-								<li style={smallGap}><b>resetResourceOverrides</b>: delete all resource overrides and all actions on the current timeline.</li>
-								<li style={smallGap}><b>resetAll</b>: delete all browser-cached settings.</li>
-							</ul>
+						en: <div>
+								<div className="paragraph">
+									I can't guarantee that my updates are always backward compatible. If your fight record files aren't loading properly, you can open the browser console (Ctrl+Shift+I on chrome) and see if the log message is helpful.
+									Or contact me and I'll try my best to help.
+								</div>
+								<div className="paragraph">
+								If the browser cache is somehow messed up (likely due to invalid game states), this is how to reset it:<br/>
+								Enter this tool from <b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b> replacing <b>{"{command}"}</b> with one of the following:
+								<ul>
+									<li style={smallGap}><b>resetResourceOverrides</b>: delete all resource overrides and all actions on the current timeline.</li>
+									<li style={smallGap}><b>resetAll</b>: delete all browser-cached settings.</li>
+								</ul>
+							</div>
 						</div>,
-						zh: <div className="paragraph">
-							如果浏览器缓存因不明原因出问题（比如预设了又是冰状态又是火状态或是打完绝望满蓝这样的“非法状态”），请尝试用以下方法重置浏览器缓存：<br/>
-							用以下链接进入本工具：<b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b>，然后把<b>{"{command}"}</b>替换成以下两个指令之一：
-							<ul>
-								<li style={smallGap}><b>resetResourceOverrides</b>: 删除当前时间线上的所有资源预设和技能</li>
-								<li style={smallGap}><b>resetAll</b>: 删除所有本工具相关的浏览器缓存</li>
-							</ul>
+						zh: <div>
+							<div className="paragraph">
+								I can't guarantee that my updates are always backward compatible. If your fight record files aren't loading properly, you can open the browser console (Ctrl+Shift+I on chrome) and see if the log message is helpful.
+								Or contact me and I'll try my best to help.
+							</div>
+							<div className="paragraph">
+								如果浏览器缓存因不明原因出问题（比如预设了又是冰状态又是火状态或是打完绝望满蓝这样的“非法状态”），请尝试用以下方法重置浏览器缓存：<br/>
+								用以下链接进入本工具：<b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b>，然后把<b>{"{command}"}</b>替换成以下两个指令之一：
+								<ul>
+									<li style={smallGap}><b>resetResourceOverrides</b>: 删除当前时间线上的所有资源预设和技能</li>
+									<li style={smallGap}><b>resetAll</b>: 删除所有本工具相关的浏览器缓存</li>
+								</ul>
+							</div>
 						</div>
 						})}/>
 				</div>

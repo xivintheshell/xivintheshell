@@ -160,15 +160,19 @@ export class Timeline {
 		return false;
 	}
 
-	#sortAndRemoveDuplicateMarkers() {
+	sortAndRemoveDuplicateMarkers() {
 		this.markers.sort((a, b)=>{
 			return a.time - b.time;
 		});
+		let count = 0;
 		for (let i = this.markers.length - 1; i > 0; i--) {
 			if (this.#markersAreEqual(this.markers[i], this.markers[i-1])) {
 				this.markers.splice(i, 1);
+				count++;
 			}
 		}
+		this.#save();
+		return count;
 	}
 
 	// assumes input is valid
@@ -184,7 +188,6 @@ export class Timeline {
 				showText: m.showText===undefined ? false : m.showText,
 			};
 		}));
-		//this.#sortAndRemoveDuplicateMarkers();
 		this.#save();
 	}
 

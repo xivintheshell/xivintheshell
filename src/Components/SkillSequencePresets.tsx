@@ -1,11 +1,10 @@
 import React from 'react'
-import {Clickable, Expandable, Input, LoadJsonFromFileOrUrl, SaveToFile} from "./Common";
+import {Clickable, Expandable, FileFormat, Input, LoadJsonFromFileOrUrl, SaveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType, ReplayMode} from "../Controller/Common";
 // @ts-ignore
 import {skillIcons} from "./Skills";
-import {ActionType} from "../Controller/Record";
-import {Line} from "../Controller/Record";
+import {ActionType, Line} from "../Controller/Record";
 
 type Fixme = any;
 
@@ -115,7 +114,7 @@ export class SkillSequencePresets extends React.Component {
 				})}
 				<SaveAsPreset enabled={hasSelection}/>
 				<div style={{marginTop: 16}}>
-					<SaveToFile getContentFn={()=>{
+					<SaveToFile fileFormat={FileFormat.Json} getContentFn={()=>{
 						return controller.serializedPresets();
 					}} filename={"presets"} displayName={"download presets to file"}/>
 				</div>

@@ -33,6 +33,12 @@ class Controller {
 	gameConfig;
 	record;
 	game;
+	#statsCsv : {
+		time: number,
+		damageSource: string,
+		potency: number,
+		buffs: ResourceType[]
+	}[] = [];
 
 	savedHistoricalGame: GameState;
 	savedHistoricalRecord: Record;
@@ -218,6 +224,7 @@ class Controller {
 		this.#playPause({shouldLoop: false});
 		this.timeline.reset();
 		this.record.unselectAll();
+		this.#statsCsv = [];
 		this.#bAddingLine = false;
 		this.#bInterrupted = false;
 		this.displayingUpToDateGameState = true;
@@ -322,12 +329,13 @@ class Controller {
 	}
 
 	#getPotencyStatsBySkill() {
-		let m = new Map<SkillName, number>();
+		let m = new Map<SkillName, {count: number, potencySum: number}>();
 		this.record.iterateAll(node=>{
 			if (node.skillName!==undefined) {
-				let potencySum = m.get(node.skillName) ?? 0;
-				potencySum += node.getPotency() * (node.hasBuff(ResourceType.Tincture) ? this.game.getTincturePotencyMultiplier() : 1);
-				m.set(node.skillName, potencySum);
+				let entry = m.get(node.skillName) ?? {count: 0, potencySum: 0};
+				entry.count += 1;
+				entry.potencySum += node.getPotency() * (node.hasBuff(ResourceType.Tincture) ? this.game.getTincturePotencyMultiplier() : 1);
+				m.set(node.skillName, entry);
 			}
 		});
 		return m;
@@ -367,7 +375,6 @@ class Controller {
 
 	reportDamage(props: {
 		potency: number,
-		time: number,
 		source: string,
 		buffs: ResourceType[]
 	}) {
@@ -376,8 +383,16 @@ class Controller {
 				type: ElemType.DamageMark,
 				potency: props.potency,
 				buffs: props.buffs,
-				time: props.time,
+				time: this.game.time,
 				source: props.source
+			});
+
+			// time, damageSource, potency, cumulativePotency
+			this.#statsCsv.push({
+				time: this.game.getDisplayTime(),
+				damageSource: props.source,
+				potency: props.potency,
+				buffs: props.buffs
 			});
 		}
 
@@ -857,6 +872,19 @@ class Controller {
 			let content = JSON.parse(str);
 			this.loadBattleRecordFromFile(content);
 		}
+	}
+
+	getStatsCsv() : any[][] {
+		let csvRows = this.#statsCsv.map(row=>{
+			let pot = false;
+			row.buffs.forEach(b=>{
+				if (b===ResourceType.Tincture) pot = true;
+			});
+			let potency = row.potency;
+			if (pot) potency *= this.game.getTincturePotencyMultiplier();
+			return [row.time, row.damageSource, potency];
+		});
+		return [["time", "damageSource", "potency"]].concat(csvRows as any[][]);
 	}
 
 	// generally used for trying to add a line to the current timeline
