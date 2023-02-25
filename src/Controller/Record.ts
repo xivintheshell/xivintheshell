@@ -114,13 +114,6 @@ export class Line {
 			itr = itr.next;
 		}
 	}
-	getPotencySum() {
-		let potency = 0;
-		this.iterateAll(node=>{
-			potency += node.getPotency();
-		});
-		return potency;
-	}
 	getFirstAction() {
 		return this.head;
 	}
@@ -194,14 +187,7 @@ export class Record extends Line {
 		}
 	}
 
-	getSelectedPotencySum() {
-		let potency = 0;
-		this.iterateSelected(node=>{
-			potency += node.getPotency();
-		});
-		return potency;
-	}
-
+	/*
 	#getSelectionStats() {
 		let potency = 0;
 		let duration = 0;
@@ -222,14 +208,14 @@ export class Record extends Line {
 		console.assert(!isNaN(potency));
 		console.assert(!isNaN(duration));
 		return [potency, duration];
-	}
+	}*/
 	// assume node is actually in this recording
 	selectSingle(node: ActionNode) {
 		this.unselectAll();
 		node.select();
 		this.selectionStart = node;
 		this.selectionEnd = node;
-		return this.#getSelectionStats();
+		//return this.#getSelectionStats();
 	}
 	unselectAll() {
 		this.iterateAll(itr=>{
@@ -245,7 +231,7 @@ export class Record extends Line {
 		this.iterateSelected(itr=>{
 			itr.select();
 		})
-		return this.#getSelectionStats();
+		//return this.#getSelectionStats();
 	}
 	selectUntil(node: ActionNode) {
 		// proceed only if there's currently exactly 1 node selected
@@ -253,29 +239,33 @@ export class Record extends Line {
 			let itr: ActionNode | undefined;
 			for (itr = this.selectionStart; itr; itr = itr.next) {
 				if (itr === node) {
-					return this.#selectSequence(this.selectionStart, node);
+					this.#selectSequence(this.selectionStart, node);
 				}
 			}
 			// failed to find node from going down the currently selected list
 			for (itr = node; itr; itr = itr.next) {
 				if (itr === this.selectionStart) {
-					return this.#selectSequence(node, this.selectionStart);
+					this.#selectSequence(node, this.selectionStart);
 				}
 			}
 			// failed both ways (shouldn't get here)
 			console.assert(false);
-			return [0, 0];
-		} else {
+			//return [0, 0];
+		} /*else {
 			return this.selectSingle(node);
-		}
+		}*/
 	}
-	onClickNode(node: ActionNode, bShift: boolean) {
-		let potency, duration;
+	onClickNode(node: ActionNode, bShift: boolean, tincturePotencyMultiplier: number) {
 		if (bShift) {
-			[potency, duration] = this.selectUntil(node);
+			this.selectUntil(node);
 		} else {
-			[potency, duration] = this.selectSingle(node);
+			this.selectSingle(node);
 		}
+		let potency = 0;
+		this.iterateSelected(node=>{
+			potency += node.getPotency() * (node.hasBuff(ResourceType.Tincture) ? tincturePotencyMultiplier : 1);
+		});
+
 		let selectionStart = this.getFirstSelection()?.tmp_startLockTime ?? 0;
 		let selectionEnd = this.getLastSelection()?.tmp_endLockTime ?? 0;
 		return {

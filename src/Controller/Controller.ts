@@ -335,8 +335,13 @@ class Controller {
 			tincturePotencyMultiplier: inMultiplier
 		});
 		// refresh stats
+		let selectedPotency = 0;
+		this.record.iterateSelected(node=>{
+			selectedPotency += node.getPotency() * (node.hasBuff(ResourceType.Tincture) ? inMultiplier : 1);
+		});
 		updateStatsDisplay({
-			cumulativePotency: this.game.getCumulativePotency()
+			cumulativePotency: this.game.getCumulativePotency(),
+			selectedPotency: selectedPotency
 		});
 		this.displayCurrentState();
 	}

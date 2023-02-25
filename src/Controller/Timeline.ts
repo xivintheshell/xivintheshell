@@ -1,9 +1,8 @@
 // @ts-ignore
-import {updateStatsDisplay, updateTimelineContent} from "../Components/Timeline";
+// @ts-ignore
+import {updateSelectionDisplay, updateStatsDisplay, updateTimelineContent} from "../Components/Timeline";
 // @ts-ignore
 import {controller} from "./Controller";
-// @ts-ignore
-import {updateSelectionDisplay} from "../Components/Timeline";
 import {Debug, ResourceType, SkillName} from "../Game/Common";
 import {ActionNode} from "./Record";
 import {FileType} from "./Common";
@@ -300,7 +299,7 @@ export class Timeline {
 
 	onClickTimelineAction(node: ActionNode, bShift: boolean) {
 
-		let selectResult = controller.record.onClickNode(node, bShift);
+		let selectResult = controller.record.onClickNode(node, bShift, controller.game.getTincturePotencyMultiplier());
 
 		// potency stats
 		updateStatsDisplay({
