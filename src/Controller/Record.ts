@@ -28,6 +28,7 @@ export class ActionNode {
 	#nodeIndex: number;
 	#capturedBuffs: Set<ResourceType>;
 	#capturedPotency: number;
+	#resolved: boolean;
 
 	type: ActionType;
 	waitDuration: number = 0;
@@ -46,6 +47,7 @@ export class ActionNode {
 		this.#nodeIndex = ActionNode._gNodeIndex;
 		this.#capturedBuffs = new Set<ResourceType>();
 		this.#capturedPotency = 0;
+		this.#resolved = false;
 		ActionNode._gNodeIndex++;
 	}
 
@@ -69,7 +71,9 @@ export class ActionNode {
 		return this.#capturedBuffs.has(rsc);
 	}
 
-	getPotency() { return this.#capturedPotency}
+	resolve() { this.#resolved = true; }
+
+	getPotency() { return this.#resolved ? this.#capturedPotency : 0; }
 
 	addPotency(amount : number) {
 		this.#capturedPotency += amount;
@@ -187,35 +191,11 @@ export class Record extends Line {
 		}
 	}
 
-	/*
-	#getSelectionStats() {
-		let potency = 0;
-		let duration = 0;
-
-		this.iterateSelected(itr=>{
-			if (itr.type === ActionType.Skill) {
-				// potency
-				potency += itr.getPotency();
-				// duration
-				if (itr !== this.selectionEnd) {
-					duration += itr.waitDuration;
-				} else {
-					duration += (itr.tmp_endLockTime ?? 0) - (itr.tmp_startLockTime ?? 0);
-				}
-			}
-		});
-
-		console.assert(!isNaN(potency));
-		console.assert(!isNaN(duration));
-		return [potency, duration];
-	}*/
-	// assume node is actually in this recording
 	selectSingle(node: ActionNode) {
 		this.unselectAll();
 		node.select();
 		this.selectionStart = node;
 		this.selectionEnd = node;
-		//return this.#getSelectionStats();
 	}
 	unselectAll() {
 		this.iterateAll(itr=>{
@@ -231,7 +211,6 @@ export class Record extends Line {
 		this.iterateSelected(itr=>{
 			itr.select();
 		})
-		//return this.#getSelectionStats();
 	}
 	selectUntil(node: ActionNode) {
 		// proceed only if there's currently exactly 1 node selected
@@ -240,20 +219,19 @@ export class Record extends Line {
 			for (itr = this.selectionStart; itr; itr = itr.next) {
 				if (itr === node) {
 					this.#selectSequence(this.selectionStart, node);
+					return;
 				}
 			}
 			// failed to find node from going down the currently selected list
 			for (itr = node; itr; itr = itr.next) {
 				if (itr === this.selectionStart) {
 					this.#selectSequence(node, this.selectionStart);
+					return;
 				}
 			}
 			// failed both ways (shouldn't get here)
 			console.assert(false);
-			//return [0, 0];
-		} /*else {
-			return this.selectSingle(node);
-		}*/
+		}
 	}
 	onClickNode(node: ActionNode, bShift: boolean, tincturePotencyMultiplier: number) {
 		if (bShift) {

@@ -14,6 +14,7 @@ import {
 import {getTimelineMarkersHeight, TimelineMarkers} from "./TimelineMarkers";
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
+import {SkillName} from "../Game/Common";
 
 export let updateSelectionDisplay = (startX, endX)=>{}
 
@@ -238,8 +239,9 @@ class StatsDisplay extends React.Component {
 			cumulativePotency: 0,
 			cumulativeDuration: 0,
 			selectedPotency: 0,
-			selectedDuration: 0
-		}
+			selectedDuration: 0,
+			statsBySkill: new Map()
+		};
 		updateStatsDisplay = this.unboundUpdateStatsDisplay.bind(this);
 	}
 	componentWillUnmount() {
@@ -247,6 +249,7 @@ class StatsDisplay extends React.Component {
 	}
 	unboundUpdateStatsDisplay(props) {
 		this.setState(props);
+		this.forceUpdate();
 	}
 	render() {
 		let cumulative = <div style={{flex: 1, color: this.state.historical ? "darkorange" : "black"}}>
@@ -263,15 +266,26 @@ class StatsDisplay extends React.Component {
 				</div>
 			}/>: {this.state.cumulativeDuration <= 0 ? "N/A" : (this.state.cumulativePotency / this.state.cumulativeDuration).toFixed(2)}</span><br/>
 		</div>
-		let statsBySkill = <div style={{flex: 1}}>
-			hello hello
+
+		let statsBySkillEntries = [];
+		this.state.statsBySkill.forEach((potency, skillName)=>{
+			if (potency > 0) {
+				statsBySkillEntries.push({skillName: skillName, portion: (potency / this.state.cumulativePotency)});
+			}
+		});
+		statsBySkillEntries.sort((a, b)=>{ return b.portion - a.portion });
+		let statsBySkill = <div style={{flex: 1, color: this.state.historical ? "darkorange" : "black"}}>
+			{statsBySkillEntries.map(skill=><div style={{display: "inline-block", width: "50%"}} key={skill.skillName}>{
+				skill.skillName + ": " + (skill.portion * 100).toFixed(2) + "%"
+			}</div>)}
 		</div>
+
 		let selected = <div style={{flex: 1}}>
 			<span>Duration (selected): {this.state.selectedDuration.toFixed(2)}</span><br/>
 			<span>Potency (selected): {this.state.selectedPotency.toFixed(2)}</span><br/>
 			<span>PPS (selected): {(this.state.selectedPotency / this.state.selectedDuration).toFixed(2)}</span>
 		</div>
-		return <div style={{ height: 48, display: "flex", flexDirection: "row" }}>
+		return <div style={{ display: "flex", flexDirection: "row" }}>
 			{cumulative}
 			{statsBySkill}
 			{this.state.selectedDuration > 0 ? selected : <div style={{flex: 1}}/>}

@@ -26,6 +26,7 @@ export class GameState {
 	skillsList: SkillsList;
 
 	#lastDamageApplicationTime: number;
+	// todo: can now get rid of this and let record handle cumulative potency...
 	#potencyList: {amount:number, pot:boolean}[];
 	#cumulativePotency: number;
 	#tincturePotencyMultiplier: number;
@@ -299,6 +300,7 @@ export class GameState {
 	dealDamage(node: ActionNode, potency: number, source="unknown") {
 		this.#lastDamageApplicationTime = this.time;
 
+		node.resolve();
 		const pot = node.hasBuff(ResourceType.Tincture);
 		this.#potencyList.push({amount: potency, pot: pot});
 		this.#cumulativePotency += potency * (pot ? this.#tincturePotencyMultiplier : 1);

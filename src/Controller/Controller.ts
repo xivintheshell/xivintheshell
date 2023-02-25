@@ -164,6 +164,9 @@ class Controller {
 		// apply resource overrides
 		this.#applyResourceOverrides(this.record.config);
 
+		// clear stats
+		this.updateCumulativeStatsDisplay();
+
 		// replay skills sequence
 		this.#replay({
 			line: tmpRecord,
@@ -318,13 +321,28 @@ class Controller {
 		this.autoSave();
 	}
 
+	#getPotencyStatsBySkill() {
+		let m = new Map<SkillName, number>();
+		this.record.iterateAll(node=>{
+			if (node.skillName!==undefined) {
+				let potencySum = m.get(node.skillName) ?? 0;
+				potencySum += node.getPotency() * (node.hasBuff(ResourceType.Tincture) ? this.game.getTincturePotencyMultiplier() : 1);
+				m.set(node.skillName, potencySum);
+			}
+		});
+		return m;
+	}
+
+	// called by reset, reportDamage, displayCurrentState
 	updateCumulativeStatsDisplay() {
 		let cumulativePotency = this.game.getCumulativePotency();
 		let totalTime = this.game.getLastDamageApplicationDisplayTime();
+
 		updateStatsDisplay({
 			cumulativePotency: cumulativePotency,
 			cumulativeDuration: Math.max(0, totalTime),
-			historical: this.#bCalculatingHistoricalState
+			historical: this.#bCalculatingHistoricalState,
+			statsBySkill: this.#getPotencyStatsBySkill()
 		});
 	}
 	setTincturePotencyMultiplier(inMultiplier: number) {
@@ -341,7 +359,8 @@ class Controller {
 		});
 		updateStatsDisplay({
 			cumulativePotency: this.game.getCumulativePotency(),
-			selectedPotency: selectedPotency
+			selectedPotency: selectedPotency,
+			statsBySkill: this.#getPotencyStatsBySkill()
 		});
 		this.displayCurrentState();
 	}
@@ -451,7 +470,6 @@ class Controller {
 	updateTimelineDisplay() {
 		this.timeline.setTimeSegment(0, this.game.time);
 
-		//this.onTimelineSelectionChanged();
 		let selectionStart = 0;
 		let selectionEnd = 0;
 		if (this.record.getFirstSelection()) {
