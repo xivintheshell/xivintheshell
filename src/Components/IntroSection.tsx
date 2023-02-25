@@ -64,7 +64,7 @@ export function IntroSection(props: {}) {
 					</ul>,
 					zh: <ul>
 						<li style={smallGap}>按住 <ButtonIndicator text={"shift"}/> 时滑动鼠标滚轮可以横向滚动时间线。</li>
-						<li style={smallGap}>单击选中时间轴上的技能。已经选中一个技能时，按住 <ButtonIndicator text={"shift"}/> 点击另一个技能会选中期间的所有操作。</li>
+						<li style={smallGap}>单击可以选中时间轴上的技能。已经选中一个技能时，按住 <ButtonIndicator text={"shift"}/> 点击另一个技能会选中期间的所有操作。</li>
 						<li style={smallGap}>按 <ButtonIndicator text={"backspace"}/> 删除选中技能及其之后的所有操作。</li>
 						<li style={smallGap}>选中某技能或者刻度上的某时间时，可以看到相应时间的职业资源状态。此时控制区域边框变为<b style={{color: "darkorange"}}>橙色</b>且无法使用技能。点击控制区域或时间轴空白处取消。
 						</li>
@@ -78,7 +78,7 @@ export function IntroSection(props: {}) {
 
 				{localize({
 					en: <div className="paragraph">Most edits are automatically saved in your browser cache, so it's generally okay to refresh the page and not worry about losing progress.</div>,
-					zh: <div className="paragraph">大部分编辑都会被保存在浏览器缓存，所以除非特别叮嘱，否则一般不用太担心刷新丢失编辑进度。</div>
+					zh: <div className="paragraph">大部分编辑都会被保存在浏览器缓存，一般情况下刷新网页也不会影响进度，请放心刷新。</div>
 				})}
 
 				{localize({
@@ -145,6 +145,8 @@ export function IntroSection(props: {}) {
 				})}</div>
 
 				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接："})}</div>
+				{localize({
+					en:
 				<ul>
 					<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
 					<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation of this tool for Save the Queens areas by <b>A'zhek Silvaire @ Zalera</b></li>
@@ -152,30 +154,79 @@ export function IntroSection(props: {}) {
 						guide</a></li>
 					<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
 						BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
-				</ul>
+
+				</ul>,
+					zh:
+						<ul>
+						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github页面</a></li>
+						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>博兹雅版云黑魔（Black Mage in the Bozjan Shell）</a>: 本工具的博兹雅/天佑女王版。制作者： <b>A'zhek Silvaire @ Zalera</b></li>
+						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>官方的黑魔法师职业介绍</a></li>
+						<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
+							The Balance服务器里的黑魔频道</a> （需要先加入Discord服务器）</li>
+
+					</ul>
+				})}
+
 				<div className="paragraph"><Expandable title={"Implementation notes"} titleNode={localize({en: "Implementation notes", zh: "更新日志", ja: "実装日志"})} defaultShow={false} content={
+
 					<div>
-						<div className="paragraph">
-							Galahad found that slidecast window size is linear with respect to cast time. I made a <a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>script</a>, parsed
-							a few logs and confirmed this. Albeit the slope is tiny (~0.02) so I'm just using 0.5s here
-							for simplicity.
-						</div>
-						<div className="paragraph">
-							Astral fire / umbral ice refresh happens at slidecast timing (0.5s before cast finishes)
-						</div>
-						<div className="paragraph">
-							Thanks to Galahad and Blink, skill application delays (see the last function
-							argument <a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>here</a>)
-							should be pretty accurate now: looking at the logs, the ones for spells are between "prepare XX" to actual damage,
-							the others from between "casts XX" to whatever the effect is (mostly buff apply/refresh times).
-							Please contact me if you know how to measure the rest of missing data.
-						</div>
-						<div className="paragraph">
-							Lucid dreaming ticks happen on actor ticks, which have a random offset relative to MP tick.
-							The earliest first tick time is 0.3s after you press the skill button. It ticks 7 times.
-						</div>
+						{localize({
+							en:
+								<div className="paragraph">
+									Galahad found that slidecast window size is linear with respect to cast time. I made a <a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>script</a>, parsed
+									a few logs and confirmed this. Albeit the slope is tiny (~0.02) so I'm just using 0.5s here
+									for simplicity.
+								</div>,
+							zh:
+								<div className="paragraph">
+									根据加拉哈德的一个理论，滑步窗口长度和读条时间呈线性关系；我写了这个脚本去扒logs记录，证明此理论是基本准确的：<a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>script</a>
+									由于这个理论的实际影响非常小（斜率0.02），实际的滑步窗口还是被设置成了恒定的0.5秒。
+							</div>
+						})}
+						{localize({
+							en:
+								<div className="paragraph">
+									Astral fire / umbral ice refresh happens at slidecast timing (0.5s before cast finishes)
+								</div>,
+							zh:
+								<div className="paragraph">
+									天语状态会在滑步窗口开始时刷新，也就是读条结束前0.5秒。
+								</div>
+						})}
+						{localize({
+							en:
+								<div className="paragraph">
+									Thanks to Galahad and Blink, skill application delays (see the last function
+									argument <a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>here</a>)
+									should be pretty accurate now: looking at the logs, the ones for spells are between "prepare XX" to actual damage,
+									the others from between "casts XX" to whatever the effect is (mostly buff apply/refresh times).
+									Please contact me if you know how to measure the rest of missing data.
+								</div>,
+							zh:
+								<div className="paragraph">
+									感谢Blink和加拉哈德提供的各种技能后摇/生效延迟数据（详细数据参见这里：<a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>here</a>
+									根据参考log来对比技能释放时间/buff生效刷新时间，数据总得来说是比较准确的）。
+									欢迎联系我来查漏补缺。
+								</div>
+							})}
+						{localize ({
+							en:
+								<div className="paragraph">
+									Lucid dreaming ticks happen on actor ticks, which have a random offset relative to
+									MP tick.
+									The earliest first tick time is 0.3s after you press the skill button. It ticks 7
+									times.
+								</div>,
+							zh:
+								<div className="paragraph">
+									醒梦的跳蓝时间是独立的，因此会导致他和普通跳蓝之间存在一个纯随机的时间差。
+									醒梦后的第一跳蓝最早会出现在技能释放后的0.3秒，总计7跳。
+								</div>,
+						})}
 					</div>
-				}/></div>
+
+				}/>
+				</div>
 				<Changelog/>
 				<Expandable
 					defaultShow={false}
