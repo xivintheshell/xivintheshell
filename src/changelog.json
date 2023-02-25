@@ -1,5 +1,12 @@
 [
 	{
+		"date": "2/25/23",
+		"changes": [
+			"make the cumulative stats orange when showing historical game state",
+			"let tincture affect potency calculation (display only)"
+		]
+	},
+	{
 		"date": "2/24/23",
 		"changes": [
 			"hover over mp tick mark to see tick info",
@@ -7,7 +14,7 @@
 			"skills implementation: aetherial manip & between the lines animation lock -> 0.8s, manafont skill application delay -> 0.88s",
 			"indicate which spells are covered by LL: when skill is ready and hovered and when it's used on the timeline（with a yellow underline)",
 			"make it an option to proc probabilistically/always/never",
-			"(more small changes coming in the next few days; for now I'm heading to bed)"
+			"misc bug fixes"
 		]
 	},
 	{

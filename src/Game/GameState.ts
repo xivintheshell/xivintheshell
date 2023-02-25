@@ -26,9 +26,11 @@ export class GameState {
 	skillsList: SkillsList;
 
 	#lastDamageApplicationTime: number;
+	#potencyList: {amount:number, pot:boolean}[];
 	#cumulativePotency: number;
+	#tincturePotencyMultiplier: number;
 
-	constructor(config: GameConfig) {
+	constructor(config: GameConfig, tincturePotencyMultiplier: number) {
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
 		this.#nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
@@ -45,7 +47,7 @@ export class GameState {
 		this.resources.set(ResourceType.UmbralIce, new Resource(ResourceType.UmbralIce, 3, 0));
 		this.resources.set(ResourceType.UmbralHeart, new Resource(ResourceType.UmbralHeart, 3, 0));
 
-		this.resources.set(ResourceType.LeyLines, new Resource(ResourceType.LeyLines, 1, 0));
+		this.resources.set(ResourceType.LeyLines, new Resource(ResourceType.LeyLines, 1, 0)); // capture
 		this.resources.set(ResourceType.Sharpcast, new Resource(ResourceType.Sharpcast, 1, 0));
 		this.resources.set(ResourceType.Enochian, new Resource(ResourceType.Enochian, 1, 0));
 		this.resources.set(ResourceType.Paradox, new Resource(ResourceType.Paradox, 1, 0));
@@ -60,7 +62,7 @@ export class GameState {
 		this.resources.set(ResourceType.LucidDreaming, new Resource(ResourceType.LucidDreaming, 1, 0));
 		this.resources.set(ResourceType.LucidTick, new Resource(ResourceType.LucidDreaming, 1, 0));
 		this.resources.set(ResourceType.Surecast, new Resource(ResourceType.Surecast, 1, 0));
-		this.resources.set(ResourceType.Tincture, new Resource(ResourceType.Tincture, 1, 0));
+		this.resources.set(ResourceType.Tincture, new Resource(ResourceType.Tincture, 1, 0)); // capture
 		this.resources.set(ResourceType.Sprint, new Resource(ResourceType.Sprint, 1, 0));
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
@@ -100,7 +102,9 @@ export class GameState {
 		this.skillsList = new SkillsList(this);
 
 		this.#lastDamageApplicationTime = 0;
+		this.#potencyList = [];
 		this.#cumulativePotency = 0;
+		this.#tincturePotencyMultiplier = tincturePotencyMultiplier;
 
 		this.#init();
 	}
@@ -198,6 +202,16 @@ export class GameState {
 		return (this.time - this.config.countdown);
 	}
 
+	setTincturePotencyMultiplier(val: number) {
+		this.#tincturePotencyMultiplier = val;
+		// now have to update cumulative potency
+		let newPotencySum = 0;
+		this.#potencyList.forEach(p=>{
+			newPotencySum += p.amount * (p.pot ? this.#tincturePotencyMultiplier : 1);
+		});
+		this.#cumulativePotency = newPotencySum;
+	}
+
 	switchToAForUI(rscType: ResourceType, numStacks: number) {
 		let af = this.resources.get(ResourceType.AstralFire);
 		let ui = this.resources.get(ResourceType.UmbralIce);
@@ -282,12 +296,20 @@ export class GameState {
 		return mod.spellRecastTimeScale;
 	}
 
-	dealDamage(potency: number, source="unknown") {
+	dealDamage(node: ActionNode, potency: number, source="unknown") {
 		this.#lastDamageApplicationTime = this.time;
-		this.#cumulativePotency += potency;
+
+		const pot = node.hasBuff(ResourceType.Tincture);
+		this.#potencyList.push({amount: potency, pot: pot});
+		this.#cumulativePotency += potency * (pot ? this.#tincturePotencyMultiplier : 1);
+
+		let buffs: ResourceType[] = [];
+		if (pot) buffs.push(ResourceType.Tincture);
+
 		controller.reportDamage({
 			potency: potency,
 			time: this.time,
+			buffs: buffs,
 			source: source
 		});
 	}
@@ -296,7 +318,7 @@ export class GameState {
 	getCumulativePotency() { return this.#cumulativePotency; }
 
 	reportPotency(node: ActionNode, potency: number, source: string) {
-		node.tmp_capturedPotency = (node.tmp_capturedPotency ?? 0) + potency;
+		node.addPotency(potency);
 	}
 
 	requestToggleBuff(buffName: ResourceType) {
@@ -318,6 +340,8 @@ export class GameState {
 		}
 	}
 
+	getTincturePotencyMultiplier() { return this.#tincturePotencyMultiplier; }
+
 	castSpell(
 		skillName: SkillName,
 		onCapture: (cap: SkillCaptureCallbackInfo)=>void,
@@ -332,7 +356,7 @@ export class GameState {
 		let capturedCast = this.captureSpellCastTime(skillInfo.aspect, this.config.adjustedCastTime(skillInfo.baseCastTime));
 		let capturedCastTime = capturedCast.castTime;
 		if (capturedCast.llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
-			node.tmp_llCovered = true;
+			node.addBuff(ResourceType.LeyLines);
 		}
 
 		let skillTime = this.getDisplayTime();
@@ -353,8 +377,15 @@ export class GameState {
 				if (capturedManaCost > 0)
 					addLog(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.getDisplayTime());
 
+				// potency
 				let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 				game.reportPotency(node, capturedPotency, sourceName);
+
+				// tincture
+				if (game.resources.get(ResourceType.Tincture).available(1)) {
+					node.addBuff(ResourceType.Tincture);
+				}
+
 				let captureInfo: SkillCaptureCallbackInfo = {
 					capturedManaCost: capturedManaCost
 					//...
@@ -366,7 +397,7 @@ export class GameState {
 					skillInfo.name + " applied",
 					skillInfo.skillApplicationDelay,
 					()=>{
-						game.dealDamage(capturedPotency, sourceName);
+						game.dealDamage(node, capturedPotency, sourceName);
 						let applicationInfo: SkillApplicationCallbackInfo = {
 							//...
 						};
@@ -381,9 +412,6 @@ export class GameState {
 					skillName + " cast failed! Resources no longer available.",
 					game.getDisplayTime(),
 					Color.Error);
-				// unlock movement and casting
-				//game.resources.get(ResourceType.NotCasterTaxed).gain(1);
-				//game.resources.get(ResourceType.NotCasterTaxed).removeTimer();
 				return false;
 			}
 		}
@@ -396,7 +424,6 @@ export class GameState {
 
 			// recast
 			cd.useStack(game);
-			//cd.setRecastTimeScale(recastTimeScale)
 
 			// animation lock
 			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(skillName));
@@ -464,13 +491,19 @@ export class GameState {
 
 		let llCovered = this.captureSpellCastTime(skillInfo.aspect, 0).llCovered;
 		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
-			props.node.tmp_llCovered = true;
+			props.node.addBuff(ResourceType.LeyLines);
 		}
 
+		// potency
 		let capturedDamage = 0;
 		if (props.dealDamage) {
 			capturedDamage = this.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 			this.reportPotency(props.node, capturedDamage, sourceName);
+		}
+
+		// tincture
+		if (this.resources.get(ResourceType.Tincture).available(1)) {
+			props.node.addBuff(ResourceType.Tincture);
 		}
 
 		if (props.onCapture) props.onCapture();
@@ -479,7 +512,7 @@ export class GameState {
 			skillInfo.name + " captured",
 			skillInfo.skillApplicationDelay,
 			()=>{
-				if (props.dealDamage) this.dealDamage(capturedDamage, sourceName);
+				if (props.dealDamage) this.dealDamage(props.node, capturedDamage, sourceName);
 				if (props.onApplication) props.onApplication();
 			}
 			, Color.Text);

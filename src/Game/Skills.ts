@@ -326,7 +326,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					ResourceType.ThunderDoTTick,
 					"recurring thunder tick " + (numTicks+1-remainingTicks) + "/" + numTicks, 3, (rsc: Resource) =>{
 						game.reportPotency(node, capturedTickPotency, "DoT");
-						game.dealDamage(capturedTickPotency, "DoT");
+						game.dealDamage(node, capturedTickPotency, "DoT");
 						recurringThunderTick(remainingTicks - 1, capturedTickPotency);
 					}, Color.Thunder);
 			};
@@ -361,7 +361,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					game.useInstantSkill({
 						skillName: SkillName.Thunder3,
 						onApplication: () => {
-							game.dealDamage(capturedInitialPotency, sourceName);
+							game.dealDamage(node, capturedInitialPotency, sourceName);
 							applyThunderDoT(game, node, capturedTickPotency, 10);
 						},
 						dealDamage: false,

@@ -4,7 +4,7 @@ import {updateStatsDisplay, updateTimelineContent} from "../Components/Timeline"
 import {controller} from "./Controller";
 // @ts-ignore
 import {updateSelectionDisplay} from "../Components/Timeline";
-import {Debug, SkillName} from "../Game/Common";
+import {Debug, ResourceType, SkillName} from "../Game/Common";
 import {ActionNode} from "./Record";
 import {FileType} from "./Common";
 import {updateMarkers_TimelineMarkers} from "../Components/TimelineMarkers";
@@ -51,6 +51,7 @@ type ViewOnlyCursorElem = TimelineElemBase & {
 type DamageMarkElem = TimelineElemBase & {
 	type: ElemType.DamageMark;
 	potency: number;
+	buffs: ResourceType[];
 	source: string;
 }
 type LucidMarkElem = TimelineElemBase & {
@@ -72,7 +73,6 @@ type SkillElem = TimelineElemBase & {
 	relativeSnapshotTime: number;
 	lockDuration: number;
 	recastDuration: number;
-	capturedPotency: number;
 	node: ActionNode;
 }
 export type MarkerElem = TimelineElemBase & {
@@ -281,9 +281,10 @@ export class Timeline {
 
 	drawElements() {
 
-		updateTimelineContent(
-			this.getCanvasWidth(),
-			this.elements);
+		updateTimelineContent({
+			canvasWidth: this.getCanvasWidth(),
+			elements: this.elements
+		});
 
 		let M = new Map<number, MarkerElem[]>();
 		this.markers.forEach(marker=>{

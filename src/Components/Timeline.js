@@ -1,7 +1,7 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
-import {Expandable, Help, Slider} from "./Common";
+import {Expandable, Help, Input, Slider} from "./Common";
 import {
 	Cursor,
 	MPTickMark,
@@ -121,19 +121,18 @@ class TimelineMain extends React.Component {
 		super(props);
 		this.state = {
 			canvasWidth: 300,
+			tincturePotencyMultiplier: 1,
 			elements: []
 		}
 		this.timelineHeaderRef = React.createRef();
-		updateTimelineContent = ((canvasWidth, data) => {
-			this.setState({
-				canvasWidth: canvasWidth,
-				elements: data
-			});
+		updateTimelineContent = (newState => {
+			this.setState(newState);
 		}).bind(this);
 	}
 	componentDidMount() {
 		this.setState({
 			canvasWidth: controller.timeline.getCanvasWidth(),
+			//tincturePotencyMultiplier will be set when timeline display settings is mounted
 			elements: controller.timeline.elements,
 		});
 	}
@@ -152,7 +151,7 @@ class TimelineMain extends React.Component {
 				if (e.enabled) elemComponents.push(<Cursor key={i} elem={e} elemID={"elemID-"+i} color={"darkorange"} vOffset={verticalOffset}/>)
 			}
 			else if (e.type === ElemType.DamageMark) {
-				elemComponents.push(<DamageMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
+				elemComponents.push(<DamageMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset} tincturePotencyMultiplier={this.state.tincturePotencyMultiplier}/>)
 			}
 			else if (e.type === ElemType.LucidMark) {
 				elemComponents.push(<LucidMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
@@ -161,7 +160,7 @@ class TimelineMain extends React.Component {
 				elemComponents.push(<MPTickMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
 			}
 			else if (e.type === ElemType.Skill) {
-				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i} />)
+				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i} tincturePotencyMultiplier={this.state.tincturePotencyMultiplier} />)
 			}
 		}
 		let countdownBgStyle = {
@@ -229,17 +228,13 @@ class FixedRightColumn extends React.Component {
 	}
 }
 
-export let updateStatsDisplay = (props={
-	cumulativePotency: 0,
-	cumulativeDuration: 0,
-	selectedPotency: 0,
-	selectedDuration: 0
-})=>{}
+export let updateStatsDisplay = ()=>{}
 
 class StatsDisplay extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			historical: false,
 			cumulativePotency: 0,
 			cumulativeDuration: 0,
 			selectedPotency: 0,
@@ -248,31 +243,28 @@ class StatsDisplay extends React.Component {
 		updateStatsDisplay = this.unboundUpdateStatsDisplay.bind(this);
 	}
 	componentWillUnmount() {
-		updateStatsDisplay = (props={
-			cumulativePotency: 0,
-			cumulativeDuration: 0,
-			selectedPotency: 0,
-			selectedDuration: 0
-		})=>{};
+		updateStatsDisplay = ()=>{};
 	}
-	// selectedPotency, selectedDuration
 	unboundUpdateStatsDisplay(props) {
 		this.setState(props);
 	}
 	render() {
-		let cumulative = <div style={{flex: 1}}>
-			<span>Last damage application time since pull: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
-			<span>Cumulative potency: {(this.state.cumulativePotency).toFixed(2)}</span><br/>
+		let cumulative = <div style={{flex: 1, color: this.state.historical ? "darkorange" : "black"}}>
+			<span>Last damage application time: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
+			<span>Total applied potency: {(this.state.cumulativePotency).toFixed(2)}</span><br/>
 			<span>PPS <Help topic={"ppsNotes"} content={
 				<div className={"toolTip"}>
 					<div className="paragraph">
-						cumulative potency divided by last damage application time since pull (0s).
+						total applied potency divided by last damage application time since pull (0s).
 					</div>
 					<div className="paragraph">
 						could be inaccurate if any damage happens before pull
 					</div>
 				</div>
 			}/>: {this.state.cumulativeDuration <= 0 ? "N/A" : (this.state.cumulativePotency / this.state.cumulativeDuration).toFixed(2)}</span><br/>
+		</div>
+		let statsBySkill = <div style={{flex: 1}}>
+			hello hello
 		</div>
 		let selected = <div style={{flex: 1}}>
 			<span>Duration (selected): {this.state.selectedDuration.toFixed(2)}</span><br/>
@@ -281,19 +273,66 @@ class StatsDisplay extends React.Component {
 		</div>
 		return <div style={{ height: 48, display: "flex", flexDirection: "row" }}>
 			{cumulative}
-			{this.state.selectedDuration > 0 ? selected : <div/>}
+			{statsBySkill}
+			{this.state.selectedDuration > 0 ? selected : <div style={{flex: 1}}/>}
 		</div>;
+	}
+}
+
+class TimelineDisplaySettings extends React.Component {
+	constructor(props) {
+		super(props);
+		// display scale
+		this.initialDisplayScale = 0.4;
+		let str = localStorage.getItem("timelineDisplayScale");
+		if (str !== null) {
+			this.initialDisplayScale = parseFloat(str);
+		}
+
+		// state
+		this.state = {
+			tinctureBuffPercentageStr: "8"
+		}
+
+		// tincture buff percentage
+		str = localStorage.getItem("tinctureBuffPercentage");
+		if (str !== null) {
+			this.state.tinctureBuffPercentage = str;
+		}
+
+		// functions
+		this.setTinctureBuffPercentage = (val=>{
+			this.setState({tinctureBuffPercentageStr: val});
+
+			let percentage = parseFloat(val);
+			if (!isNaN(percentage)) {
+				controller.setTincturePotencyMultiplier(1 + percentage * 0.01);
+				localStorage.setItem("tinctureBuffPercentage", val);
+			}
+		}).bind(this);
+	}
+	componentDidMount() {
+		this.setTinctureBuffPercentage(this.state.tinctureBuffPercentage);
+	}
+
+	render() {
+		return <div>
+			<span>Display settings: </span>
+			<Slider description={"horizontal scale "}
+					defaultValue={this.initialDisplayScale.toString()}
+					onChange={(newVal)=>{
+						controller.timeline.setHorizontalScale(parseFloat(newVal));
+						localStorage.setItem("timelineDisplayScale", newVal);
+					}}/>
+			<Input defaultValue={this.state.tinctureBuffPercentageStr} description=" tincture potency buff " onChange={this.setTinctureBuffPercentage} width={2} style={{display: "inline"}}/>
+			<span>%</span>
+		</div>
 	}
 }
 
 export class Timeline extends React.Component {
 	constructor(props) {
 		super(props);
-		this.initialDisplayScale = 0.4;
-		let str = localStorage.getItem("timelineDisplayScale");
-		if (str !== null) {
-			this.initialDisplayScale = parseFloat(str);
-		}
 	}
 	render() {
 		return <div style={{
@@ -313,12 +352,7 @@ export class Timeline extends React.Component {
 			<div className={"timeline timelineTab"}>
 				<FixedRightColumn/>
 			</div>
-			<Slider description={"display scale: "}
-					defaultValue={this.initialDisplayScale.toString()}
-					onChange={(newVal)=>{
-						controller.timeline.setHorizontalScale(parseFloat(newVal));
-						localStorage.setItem("timelineDisplayScale", newVal);
-					}}/>
+			<TimelineDisplaySettings/>
 			<TimelineMarkerPresets/>
 			<TimelineEditor/>
 		</div>

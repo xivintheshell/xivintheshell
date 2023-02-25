@@ -5,6 +5,7 @@ import {skillIcons} from "./Skills";
 import {Clickable} from "./Common";
 import ReactTooltip from 'react-tooltip';
 import {ActionNode} from "../Controller/Record";
+import {ResourceType} from "../Game/Common";
 
 export let displayTime = (time: number, fractionDigits: number) => {
 	let absTime = Math.abs(time);
@@ -64,12 +65,14 @@ export function MPTickMark(props: {
 	</div>;
 }
 export function DamageMark(props: {
-	vOffset: number;
+	vOffset: number,
 	elem: {
-		time: number;
-		potency: number;
-		source: string;
-	};
+		time: number,
+		potency: number,
+		source: string,
+		buffs: ResourceType[]
+	},
+	tincturePotencyMultiplier: number,
 	elemID: string;
 }) {
 	let style={
@@ -77,7 +80,17 @@ export function DamageMark(props: {
 		left: controller.timeline.positionFromTime(props.elem.time) - 3,
 		zIndex: 1
 	};
-	let hoverText = "[" + (props.elem.time - controller.gameConfig.countdown).toFixed(2) + "] " + props.elem.potency.toFixed(2) + " (" + props.elem.source + ")";
+	// pot?
+	let pot = false;
+	props.elem.buffs.forEach(b=>{
+		if (b===ResourceType.Tincture) pot = true;
+	});
+	// potency
+	let potency = props.elem.potency;
+	if (pot) potency *= props.tincturePotencyMultiplier;
+	// hover text
+	let hoverText = "[" + (props.elem.time - controller.gameConfig.countdown).toFixed(2) + "] " + potency.toFixed(2) + " (" + props.elem.source + ")";
+	if (pot) hoverText += " (pot)"
 	return <div style={style} className={"timeline-elem damageMark"} data-tip data-for={`${props.elemID}`}>
 		<svg width={6} height={6}>
 			<polygon points="0,0 6,0 3,6" fill="red" stroke="none"/>
@@ -124,6 +137,7 @@ export function TimelineSkill(props: {
 		time: number;
 		isGCD: boolean;
 	};
+	tincturePotencyMultiplier: number;
 	elemID: string;
 }) {
 	let node = props.elem.node;
@@ -167,24 +181,28 @@ export function TimelineSkill(props: {
 		height: 28,
 		zIndex: 1,
 	};
-	if (node.tmp_llCovered) {
+	if (node.hasBuff(ResourceType.LeyLines)) {
 		iconStyle.borderBottom = "4px solid";
 		iconStyle.borderColor = "#ffdc4f";
 	}
 	let iconPath = skillIcons.get(props.elem.skillName);
 	let description = props.elem.skillName + "@" + (props.elem.displayTime).toFixed(2);
-	if (node.tmp_llCovered) description += " (LL)";
+	if (node.hasBuff(ResourceType.LeyLines)) description += " (LL)";
+	if (node.hasBuff(ResourceType.Tincture)) description += " (pot)";
 	let hoverText = <span>{description}</span>;
 	let componentStyle={
 		left: controller.timeline.positionFromTime(props.elem.time),
 		top: props.elem.isGCD ? 14 : 0,
 	};
-	let potency = node.tmp_capturedPotency;
 	let lockDuration = 0;
 	if (node.tmp_endLockTime!==undefined && node.tmp_startLockTime!==undefined) {
 		lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
 	}
-	if (potency !== undefined && potency > 0) {
+	let potency = node.getPotency();
+	if (potency > 0) {
+		if (node.hasBuff(ResourceType.Tincture))  {
+			potency *= props.tincturePotencyMultiplier;
+		}
 		hoverText = <div>
 			{hoverText}<br/>
 			<span>{"potency: " + potency.toFixed(2)}</span><br/>

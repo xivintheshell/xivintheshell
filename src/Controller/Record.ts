@@ -1,7 +1,6 @@
 import {FileType} from "./Common";
 import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
-import {controller} from "./Controller";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -13,7 +12,6 @@ function verifyActionNode(action: ActionNode) {
 	console.assert(typeof action !== "undefined");
 	if (action.type === ActionType.Skill) {
 		console.assert(typeof action.skillName === "string");
-		console.assert(typeof action.tmp_capturedPotency === "number");
 		return;
 	} else if (action.type === ActionType.Wait) {
 		console.assert(!isNaN(action.waitDuration));
@@ -28,22 +26,26 @@ function verifyActionNode(action: ActionNode) {
 export class ActionNode {
 	static _gNodeIndex: number = 0;
 	#nodeIndex: number;
+	#capturedBuffs: Set<ResourceType>;
+	#capturedPotency: number;
 
 	type: ActionType;
 	waitDuration: number = 0;
 	skillName?: SkillName;
 	buffName? : ResourceType;
+
 	next?: ActionNode = undefined;
+
 	#selected = false;
 
 	tmp_startLockTime?: number;
 	tmp_endLockTime?: number;
-	tmp_capturedPotency?: number;
-	tmp_llCovered?: boolean;
 
 	constructor(actionType: ActionType) {
 		this.type = actionType;
 		this.#nodeIndex = ActionNode._gNodeIndex;
+		this.#capturedBuffs = new Set<ResourceType>();
+		this.#capturedPotency = 0;
 		ActionNode._gNodeIndex++;
 	}
 
@@ -58,6 +60,21 @@ export class ActionNode {
 	getNodeIndex() { return this.#nodeIndex; }
 
 	isSelected() { return this.#selected; }
+
+	addBuff(rsc: ResourceType) {
+		this.#capturedBuffs.add(rsc);
+	}
+
+	hasBuff(rsc: ResourceType) {
+		return this.#capturedBuffs.has(rsc);
+	}
+
+	getPotency() { return this.#capturedPotency}
+
+	addPotency(amount : number) {
+		this.#capturedPotency += amount;
+	}
+
 	select() {
 		this.#selected = true;
 	}
@@ -96,6 +113,13 @@ export class Line {
 			fn(itr);
 			itr = itr.next;
 		}
+	}
+	getPotencySum() {
+		let potency = 0;
+		this.iterateAll(node=>{
+			potency += node.getPotency();
+		});
+		return potency;
 	}
 	getFirstAction() {
 		return this.head;
@@ -170,6 +194,14 @@ export class Record extends Line {
 		}
 	}
 
+	getSelectedPotencySum() {
+		let potency = 0;
+		this.iterateSelected(node=>{
+			potency += node.getPotency();
+		});
+		return potency;
+	}
+
 	#getSelectionStats() {
 		let potency = 0;
 		let duration = 0;
@@ -177,7 +209,7 @@ export class Record extends Line {
 		this.iterateSelected(itr=>{
 			if (itr.type === ActionType.Skill) {
 				// potency
-				potency += itr.tmp_capturedPotency ?? 0;
+				potency += itr.getPotency();
 				// duration
 				if (itr !== this.selectionEnd) {
 					duration += itr.waitDuration;

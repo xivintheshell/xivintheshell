@@ -5,7 +5,7 @@ import {DebugOptions} from "./DebugOptions";
 import changelog from "../changelog.json"
 
 function Changelog() {
-	return <div className={"paragraph"}><Expandable title={"Changelog"} defaultShow={false} content={
+	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={localize({en: "Implementation notes", zh: "更新日志", ja: "実装日志"})} defaultShow={false} content={
 		<div>
 			{
 				changelog.map(entry => {

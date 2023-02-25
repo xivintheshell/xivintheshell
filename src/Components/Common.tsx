@@ -205,7 +205,7 @@ export class Slider extends React.Component {
 		if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
 	}
 	render() {
-		return <div className={"sliderInputContainer"}>
+		return <div style={{display: "inline-block"}}>
 			<span>{this.props.description ?? ""}</span>
 			<input
 				className={"sliderInput"}
@@ -214,7 +214,8 @@ export class Slider extends React.Component {
 				min={0.05}
 				max={1}
 				step={0.05}
-				onChange={this.onChange}/>
+				onChange={this.onChange}
+				style={{position: "relative", top: 5}}/>
 		</div>
 	}
 }

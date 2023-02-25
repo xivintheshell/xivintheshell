@@ -12,7 +12,7 @@ import {updateConfigDisplay} from "../Components/PlaybackControl"
 import {setOverrideOutlineColor, setRealTime} from "../Components/Main";
 import {ElemType, Timeline} from "./Timeline"
 // @ts-ignore
-import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay} from "../Components/Timeline";
+import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay, updateTimelineContent} from "../Components/Timeline";
 import {ActionNode, ActionType, Line, Record} from "./Record";
 import {PresetLinesManager} from "./PresetLinesManager";
 // @ts-ignore
@@ -65,7 +65,7 @@ class Controller {
 		this.gameConfig.timeTillFirstManaTick = 1.2;
 		this.gameConfig.procMode = ProcMode.RNG;
 		this.gameConfig.extendedBuffTimes = false;
-		this.game = new GameState(this.gameConfig);
+		this.game = new GameState(this.gameConfig, 1);
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;
@@ -124,7 +124,7 @@ class Controller {
 
 			// create environment
 			let cfg = inRecord.config ?? this.gameConfig;
-			this.game = new GameState(cfg);
+			this.game = new GameState(cfg, 1);
 			this.record = new Record();
 			this.record.config = cfg;
 
@@ -157,7 +157,7 @@ class Controller {
 		this.lastAttemptedSkill = "";
 		//============^ stashed states ^============
 
-		this.game = new GameState(this.gameConfig);
+		this.game = new GameState(this.gameConfig, this.game.getTincturePotencyMultiplier());
 		this.record = new Record();
 		this.record.config = this.gameConfig;
 
@@ -211,7 +211,7 @@ class Controller {
 
 	#requestRestart() {
 		this.lastAttemptedSkill = ""
-		this.game = new GameState(this.gameConfig);
+		this.game = new GameState(this.gameConfig, this.game.getTincturePotencyMultiplier());
 		this.#playPause({shouldLoop: false});
 		this.timeline.reset();
 		this.record.unselectAll();
@@ -322,28 +322,42 @@ class Controller {
 		let cumulativePotency = this.game.getCumulativePotency();
 		let totalTime = this.game.getLastDamageApplicationDisplayTime();
 		updateStatsDisplay({
-			cumulativePotency: cumulativePotency,//totalTime > 0 ? cumulativePotency / totalTime : 0,
+			cumulativePotency: cumulativePotency,
 			cumulativeDuration: Math.max(0, totalTime),
+			historical: this.#bCalculatingHistoricalState
 		});
 	}
+	setTincturePotencyMultiplier(inMultiplier: number) {
+		// updates cumulative sum
+		this.game.setTincturePotencyMultiplier(inMultiplier);
+		// refresh timeline hover
+		updateTimelineContent({
+			tincturePotencyMultiplier: inMultiplier
+		});
+		// refresh stats
+		updateStatsDisplay({
+			cumulativePotency: this.game.getCumulativePotency()
+		});
+		this.displayCurrentState();
+	}
 
-	reportDamage(props: { potency: number; time: number; source: string; }) {
+	reportDamage(props: {
+		potency: number,
+		time: number,
+		source: string,
+		buffs: ResourceType[]
+	}) {
 		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.DamageMark,
 				potency: props.potency,
+				buffs: props.buffs,
 				time: props.time,
 				source: props.source
 			});
 		}
 
 		this.updateCumulativeStatsDisplay();
-
-		addLog(
-			LogCategory.Event,
-			"reporting damage of potency " + props.potency.toFixed(1),
-			props.time,
-			Color.Damage);
 	}
 
 	reportLucidTick(time: number, source: string) {
@@ -610,7 +624,6 @@ class Controller {
 
 		if (status.status === SkillReadyStatus.Ready) {
 			let node = new ActionNode(ActionType.Skill);
-			node.tmp_capturedPotency = 0;
 			node.skillName = skillName;
 			node.waitDuration = 0;
 			this.record.addActionNode(node);
@@ -640,7 +653,6 @@ class Controller {
 					skillName: skillName,
 					isGCD: isGCD,
 					isSpellCast: isSpellCast,
-					capturedPotency: node.tmp_capturedPotency,
 					time: this.game.time,
 					relativeSnapshotTime: snapshotTime,
 					lockDuration: lockDuration,
@@ -1038,7 +1050,6 @@ class Controller {
 		requestAnimationFrame(loopFn);
 	}
 
-	// todo: add an option to explicitly add a wait node
 	step(t: number) {
 		this.#requestTick({deltaTime: t, suppressLog: false, separateNode: true});
 		this.updateAllDisplay();

@@ -257,6 +257,7 @@ export class TimelineMarkerPresets extends React.Component {
 							colorOption(MarkerColor.Cyan, "cyan"),
 							colorOption(MarkerColor.Blue, "blue"),
 							colorOption(MarkerColor.Purple, "purple"),
+							colorOption(MarkerColor.Pink, "pink") // lol forgot abt this earlier
 						]}</select>
 						<div style={{
 							background: this.state.nextMarkerColor,
