@@ -91,7 +91,7 @@ export type SerializedMarker = TimelineElemBase & {
 	description: string;
 }
 
-type TimelineElem =
+export type TimelineElem =
 	CursorElem |
 	ViewOnlyCursorElem |
 	DamageMarkElem |
@@ -274,6 +274,10 @@ export class Timeline {
 		return secondsToDraw * 100 * this.scale;
 	}
 
+	getCanvasHeight() {
+		return 30 + 14*this.getNumMarkerTracks() + 6 + 54;
+	}
+
 	positionFromTime(time: number) {
 		return time * this.scale * 100;
 	}
@@ -286,6 +290,7 @@ export class Timeline {
 
 		updateTimelineContent({
 			canvasWidth: this.getCanvasWidth(),
+			canvasHeight: this.getCanvasHeight(),
 			elements: this.elements
 		});
 

@@ -14,7 +14,8 @@ import {
 import {getTimelineMarkersHeight, TimelineMarkers} from "./TimelineMarkers";
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
-import {SkillName} from "../Game/Common";
+import {StaticTimeline} from "./StaticTimeline";
+import {drawStaticTimeline} from "./StaticTimeline";
 
 export let updateSelectionDisplay = (startX, endX)=>{}
 
@@ -116,15 +117,18 @@ function TimelineHeader(props) {
 
 export let updateTimelineContent = function(canvasWidth, data) {}
 
+// the actual timeline canvas
 class TimelineMain extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
 			canvasWidth: 300,
+			canvasHeight: 180,
 			tincturePotencyMultiplier: 1,
-			elements: []
+			elements: [],
 		}
 		this.timelineHeaderRef = React.createRef();
+		this.canvasVersion = 0; // such a hack....
 		updateTimelineContent = (newState => {
 			this.setState(newState);
 		}).bind(this);
@@ -132,14 +136,21 @@ class TimelineMain extends React.Component {
 	componentDidMount() {
 		this.setState({
 			canvasWidth: controller.timeline.getCanvasWidth(),
+			canvasHeight: controller.timeline.getCanvasHeight(),
 			//tincturePotencyMultiplier will be set when timeline display settings is mounted
 			elements: controller.timeline.elements,
 		});
 	}
+
 	componentWillUnmount() {
-		updateTimelineContent = (canvasWidth, data)=>{};
+		updateTimelineContent = (canvasWidth, canvasHeight, data)=>{};
 	}
 	render() {
+
+		//console.log("render (out)");
+		this.canvasVersion++;
+		return <StaticTimeline width={this.state.canvasWidth} height={this.state.canvasHeight} elements={this.state.elements} version={this.canvasVersion}/>;
+
 		let elemComponents = [];
 		let verticalOffset = "-" + (getTimelineMarkersHeight() + 30) + "px";
 		for (let i = 0; i < this.state.elements.length; i++) {
@@ -184,7 +195,7 @@ class TimelineMain extends React.Component {
 			height: "54px"
 		};
 		let countdownGrey = <div style={countdownBgStyle}/>;
-		return <div className="timeline-main" style={{width: this.state.canvasWidth}} onClick={
+		return <div className="timeline-main" style={{width: this.state.canvasWidth, height: this.state.canvasHeight}} onClick={
 			(evt)=>{
 				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
 					controller.record.unselectAll();

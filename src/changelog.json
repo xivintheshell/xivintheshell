@@ -3,7 +3,8 @@
 		"date": "2/25/23(2)",
 		"changes": [
 			"translation updates by Eshiya",
-			"fix config section showing all 0s (fuak how did I..)"
+			"fix config section showing all 0s",
+			"a bit performance optimization"
 		]
 	},
 	{
