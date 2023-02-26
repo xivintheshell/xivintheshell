@@ -389,6 +389,7 @@ class Controller {
 				potency: props.potency,
 				buffs: props.buffs,
 				time: this.game.time,
+				displayTime: this.game.getDisplayTime(),
 				source: props.source
 			});
 

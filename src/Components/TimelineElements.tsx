@@ -40,10 +40,10 @@ export function Cursor(props: {
 	</div>;
 }
 
-export function MPTickMark(props: {
+export let MPTickMark = React.memo(function(props: {
 	vOffset: number;
+	positionFromTime: number;
 	elem: {
-		time: number;
 		displayTime: number;
 		source: string
 	};
@@ -52,7 +52,7 @@ export function MPTickMark(props: {
 	let style : CSSProperties = {
 		position: "absolute",
 		top: props.vOffset,
-		left: controller.timeline.positionFromTime(props.elem.time) - 3,
+		left: props.positionFromTime - 3,
 	};
 	return <div style={style} className={"timeline-elem MPTickMark"}>
 		<div data-tip data-for={`${props.elemID}`}>
@@ -64,11 +64,13 @@ export function MPTickMark(props: {
 			<span>[{props.elem.displayTime.toFixed(2)}] {props.elem.source}</span>
 		</ReactTooltip>
 	</div>;
-}
-export function DamageMark(props: {
+});
+
+export let DamageMark = React.memo(function(props: {
+	positionFromTime: number;
 	vOffset: number,
 	elem: {
-		time: number,
+		displayTime: number,
 		potency: number,
 		source: string,
 		buffs: ResourceType[]
@@ -78,7 +80,7 @@ export function DamageMark(props: {
 }) {
 	let style={
 		top: props.vOffset,
-		left: controller.timeline.positionFromTime(props.elem.time) - 3,
+		left: props.positionFromTime - 3,
 		zIndex: 1
 	};
 	// pot?
@@ -90,7 +92,7 @@ export function DamageMark(props: {
 	let potency = props.elem.potency;
 	if (pot) potency *= props.tincturePotencyMultiplier;
 	// hover text
-	let hoverText = "[" + (props.elem.time - controller.gameConfig.countdown).toFixed(2) + "] " + potency.toFixed(2) + " (" + props.elem.source + ")";
+	let hoverText = "[" + props.elem.displayTime.toFixed(2) + "] " + potency.toFixed(2) + " (" + props.elem.source + ")";
 	if (pot) hoverText += " (pot)"
 	return <div style={style} className={"timeline-elem damageMark"} data-tip data-for={`${props.elemID}`}>
 		<svg width={6} height={6}>
@@ -98,12 +100,12 @@ export function DamageMark(props: {
 		</svg>
 		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
 	</div>;
-}
+});
 
-export function LucidMark(props: {
+export let LucidMark = React.memo(function(props: {
+	positionFromTime: number;
 	vOffset: number;
 	elem: {
-		time: number;
 		displayTime: number;
 		source: string;
 	};
@@ -111,7 +113,7 @@ export function LucidMark(props: {
 }) {
 	let style={
 		top: props.vOffset,
-		left: controller.timeline.positionFromTime(props.elem.time)-3,
+		left: props.positionFromTime - 3,
 		zIndex: 1
 	};
 	return <div style={style} className={"timeline-elem lucidMark"} data-tip data-for={`${props.elemID}`}>
@@ -120,7 +122,7 @@ export function LucidMark(props: {
 		</svg>
 		<ReactTooltip id={`${props.elemID}`}>[{props.elem.displayTime.toFixed(2)}] {props.elem.source}</ReactTooltip>
 	</div>;
-}
+});
 
 export let bHandledSkillSelectionThisFrame : boolean = false;
 export function setHandledSkillSelectionThisFrame(handled : boolean) {
@@ -229,7 +231,6 @@ export function TimelineSkill(props: {
 	let icon = <div data-tip data-for={`${props.elemID}`}><Clickable key={node.getNodeIndex()} content={iconImg} onClickFn={(e) => {
 		bHandledSkillSelectionThisFrame = true;
 		controller.timeline.onClickTimelineAction(node, e.shiftKey);
-
 	}}/></div>
 
 	return <div style={componentStyle} className={"timeline-elem skill"}>

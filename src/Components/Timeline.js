@@ -152,13 +152,19 @@ class TimelineMain extends React.Component {
 				if (e.enabled) elemComponents.push(<Cursor key={i} elem={e} elemID={"elemID-"+i} color={"darkorange"} vOffset={verticalOffset}/>)
 			}
 			else if (e.type === ElemType.DamageMark) {
-				elemComponents.push(<DamageMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset} tincturePotencyMultiplier={this.state.tincturePotencyMultiplier}/>)
+				elemComponents.push(<DamageMark
+					positionFromTime={controller.timeline.positionFromTime(e.time)}
+					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset} tincturePotencyMultiplier={this.state.tincturePotencyMultiplier}/>)
 			}
 			else if (e.type === ElemType.LucidMark) {
-				elemComponents.push(<LucidMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
+				elemComponents.push(<LucidMark
+					positionFromTime={controller.timeline.positionFromTime(e.time)}
+					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
 			}
 			else if (e.type === ElemType.MPTickMark) {
-				elemComponents.push(<MPTickMark key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
+				elemComponents.push(<MPTickMark
+					positionFromTime={controller.timeline.positionFromTime(e.time)}
+					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
 			}
 			else if (e.type === ElemType.Skill) {
 				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i} tincturePotencyMultiplier={this.state.tincturePotencyMultiplier} />)

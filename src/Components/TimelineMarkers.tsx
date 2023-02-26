@@ -12,6 +12,67 @@ type TimelineMarkersState = {
 	trackBins: Map<number, MarkerElem[]>;
 }
 
+let Marker = React.memo(function(props: {
+	markerID: number | string,
+	markerElem: MarkerElem,
+}) {
+	const trackHeight = 14;
+	const fontSize = 11;
+
+	let marker = props.markerElem;
+	let radius = marker.duration === 0 ? 4 : 2;
+	let leftPos = controller.timeline.positionFromTime(marker.time + controller.gameConfig.countdown);
+	let absTop = 0;//(maxTrack - marker.track) * this.trackHeight;
+	let absWidth = controller.timeline.positionFromTime(marker.duration);
+	let colorBarStyleWithoutText: CSSProperties = {
+		position: "absolute",
+		background: marker.color,
+		borderRadius: radius,
+		top: trackHeight / 2 - radius,
+		left: -radius,
+		width: absWidth + 2 * radius,
+		height: 2 * radius,
+		zIndex: 1
+	};
+	let colorBarStyleWithText: CSSProperties = {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		background: marker.color + "7f",
+		width: absWidth,
+		height: "100%",
+		zIndex: 1
+	}
+	let containerStyle: CSSProperties = {
+		position: "absolute",
+		top: absTop,
+		left: leftPos,
+		height: trackHeight,
+		fontSize: fontSize,
+	}
+	let textStyle: CSSProperties = {
+		marginLeft: trackHeight / 2,
+		position: "absolute",
+		whiteSpace: "nowrap",
+		pointerEvents: "none",
+		zIndex: 1
+	}
+	let fullID = "timelineMarker-" + props.markerID;
+	return <div key={props.markerID} style={containerStyle} >
+		<div data-tip data-for={fullID}
+		     style={(marker.showText && marker.duration > 0) ? colorBarStyleWithText : colorBarStyleWithoutText}
+		     onClick={()=>{
+			     let success = controller.timeline.deleteMarker(marker);
+			     console.assert(success);
+			     setEditingMarkerValues(marker);
+		     }}/>
+		<div style={textStyle}>{
+			marker.showText ? marker.description : ""
+		}</div>
+		<ReactTooltip id={fullID}>{marker.description}</ReactTooltip>
+	</div>;
+});
+
 export class TimelineMarkers extends React.Component {
 	myRef: React.RefObject<HTMLDivElement>;
 	state: TimelineMarkersState;
@@ -41,82 +102,31 @@ export class TimelineMarkers extends React.Component {
 		updateMarkers_TimelineMarkers = (trackBins: Map<number, MarkerElem[]>) => {};
 	}
 
-	render() {
-		let makeMarker = (marker: MarkerElem, key: number | string) => {
-			let radius = marker.duration === 0 ? 4 : 2;
-			let leftPos = controller.timeline.positionFromTime(marker.time + controller.gameConfig.countdown);
-			let absTop = 0;//(maxTrack - marker.track) * this.trackHeight;
-			let absWidth = controller.timeline.positionFromTime(marker.duration);
-			let colorBarStyleWithoutText: CSSProperties = {
-				position: "absolute",
-				background: marker.color,
-				borderRadius: radius,
-				top: this.trackHeight / 2 - radius,
-				left: -radius,
-				width: absWidth + 2 * radius,
-				height: 2 * radius,
-				zIndex: 1
-			};
-			let colorBarStyleWithText: CSSProperties = {
-				position: "absolute",
-				top: 0,
-				left: 0,
-				background: marker.color + "7f",
-				width: absWidth,
-				height: "100%",
-				zIndex: 1
+	makeTrack(numTracks: number, trackIndex: number, key: number) {
+		let track: JSX.Element[] = [];
+		let trackBin = this.state.trackBins.get(trackIndex);
+		if (trackBin) {
+			for (let i = 0; i < trackBin.length; i++) {
+				let id = trackIndex + "-" + i;
+				track.push(<Marker markerElem={trackBin[i]} key={id} markerID={id}/>);
 			}
-			let containerStyle: CSSProperties = {
-				position: "absolute",
-				top: absTop,
-				left: leftPos,
-				height: this.trackHeight,
-				fontSize: this.fontSize,
-			}
-			let textStyle: CSSProperties = {
-				marginLeft: this.trackHeight / 2,
-				position: "absolute",
-				whiteSpace: "nowrap",
-				pointerEvents: "none",
-				zIndex: 1
-			}
-			let id = "timelineMarker-" + key;
-			return <div key={key} style={containerStyle} >
-				<div data-tip data-for={id}
-					 style={(marker.showText && marker.duration > 0) ? colorBarStyleWithText : colorBarStyleWithoutText}
-					 onClick={()=>{
-					let success = controller.timeline.deleteMarker(marker);
-					console.assert(success);
-					setEditingMarkerValues(marker);
-				}}/>
-				<div style={textStyle}>{
-					marker.showText ? marker.description : ""
-				}</div>
-				<ReactTooltip id={id}>{marker.description}</ReactTooltip>
-			</div>;
-		};
-
-		let makeTrack = (trackIndex: number, key: number) => {
-			let track: JSX.Element[] = [];
-			let trackBin = this.state.trackBins.get(trackIndex);
-			if (trackBin) {
-				for (let i = 0; i < trackBin.length; i++) {
-					track.push(makeMarker(trackBin[i], trackIndex + "-" + i));
-				}
-			}
-			return <div key={key} style={{
-				position: "absolute",
-				top: (numTracks - 1 - trackIndex) * this.trackHeight,
-				width: "100%",
-				height: this.trackHeight,
-				background: trackIndex % 2 === 0 ? "#f3f3f3" : "#ffffff"
-			}}>{track}</div>
 		}
+		return <div key={key} style={{
+			position: "absolute",
+			top: (numTracks - 1 - trackIndex) * this.trackHeight,
+			width: "100%",
+			height: this.trackHeight,
+			background: trackIndex % 2 === 0 ? "#f3f3f3" : "#ffffff"
+		}}>{track}</div>
+	}
+
+	render() {
 
 		let numTracks = controller.timeline.getNumMarkerTracks();
+
 		let tracks: JSX.Element[] = [];
 		for (let i = 0; i < numTracks; i++) {
-			tracks.push(makeTrack(i, i));
+			tracks.push(this.makeTrack(numTracks, i, i));
 		}
 
 		return <div ref={this.myRef} style={{

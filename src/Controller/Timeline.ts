@@ -49,6 +49,7 @@ type ViewOnlyCursorElem = TimelineElemBase & {
 }
 type DamageMarkElem = TimelineElemBase & {
 	type: ElemType.DamageMark;
+	displayTime: number;
 	potency: number;
 	buffs: ResourceType[];
 	source: string;
