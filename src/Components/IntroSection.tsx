@@ -90,8 +90,7 @@ export function IntroSection(props: {}) {
 						localize({
 						en: <div>
 								<div className="paragraph">
-									I can't guarantee that my updates are always backward compatible. If your fight record files aren't loading properly, you can open the browser console (Ctrl+Shift+I on chrome) and see if the log message is helpful.
-									Or contact me and I'll try my best to help.
+									I can't guarantee that my updates are always backward compatible. If your fight record files aren't loading properly but you don't understand why, contact me and I'll try my best to help.
 								</div>
 								<div className="paragraph">
 								If the browser cache is somehow messed up (likely due to invalid game states), this is how to reset it:<br/>
@@ -104,11 +103,10 @@ export function IntroSection(props: {}) {
 						</div>,
 						zh: <div>
 							<div className="paragraph">
-								I can't guarantee that my updates are always backward compatible. If your fight record files aren't loading properly, you can open the browser console (Ctrl+Shift+I on chrome) and see if the log message is helpful.
-								Or contact me and I'll try my best to help.
+								我无法保证每次更新都能兼容已有的战斗记录文件。如果你的战斗记录无法被正常导入但你不清楚原因，可以联系我，我会尽力帮一起看。
 							</div>
 							<div className="paragraph">
-								如果浏览器缓存因不明原因出问题（比如预设了又是冰状态又是火状态或是打完绝望满蓝这样的“非法状态”），请尝试用以下方法重置浏览器缓存：<br/>
+								如果浏览器缓存因不明原因出问题（比如预设了刚打完绝望满蓝这样的“非法状态”），可尝试用以下方法重置浏览器缓存：<br/>
 								用以下链接进入本工具：<b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b>，然后把<b>{"{command}"}</b>替换成以下两个指令之一：
 								<ul>
 									<li style={smallGap}><b>resetResourceOverrides</b>: 删除当前时间线上的所有资源预设和技能</li>
@@ -147,7 +145,7 @@ export function IntroSection(props: {}) {
 						fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
 					</div>,
 					zh: <div className={"paragraph"}>
-						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可QQ联系（870340705），加时请注明来意。如果是反馈bug，最好把能够复现bug的时间轴记录文件（从右侧下载的fight.txt）一起发给我。
+						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可QQ联系（870340705），加时请注明来意。如果是反馈bug，最好把能够复现bug的战斗记录文件（从右侧下载的fight.txt）一起发给我。
 					</div>,
 				})}
 
@@ -179,7 +177,7 @@ export function IntroSection(props: {}) {
 					</ul>
 				})}
 
-				<div className="paragraph"><Expandable title={"Implementation notes"} titleNode={localize({en: "Implementation notes", zh: "更新日志", ja: "実装日志"})} defaultShow={false} content={
+				<div className="paragraph"><Expandable title={"Implementation notes"} titleNode={localize({en: "Implementation notes", zh: "实现细节"})} defaultShow={false} content={
 
 					<div>
 						{localize({
@@ -191,8 +189,7 @@ export function IntroSection(props: {}) {
 								</div>,
 							zh:
 								<div className="paragraph">
-									根据加拉哈德的一个理论，滑步窗口长度和读条时间呈线性关系；我写了这个脚本去扒logs记录，证明此理论是基本准确的：<a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>script</a>
-									由于这个理论的实际影响非常小（斜率0.02），实际的滑步窗口还是被设置成了恒定的0.5秒。
+									根据加拉哈德的一个理论，滑步窗口长度和读条时间呈线性关系；我写了<a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>这个脚本</a>去扒logs记录，证明此理论是基本准确的。由于这个理论的实际影响非常小（斜率约0.02），实际的滑步窗口还是被设置成了恒定的0.5秒。
 							</div>
 						})}
 						{localize({
@@ -216,9 +213,7 @@ export function IntroSection(props: {}) {
 								</div>,
 							zh:
 								<div className="paragraph">
-									感谢Blink和加拉哈德提供的各种技能后摇/生效延迟数据（详细数据参见这里：<a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>here</a>
-									根据参考log来对比技能释放时间/buff生效刷新时间，数据总得来说是比较准确的）。
-									欢迎联系我来查漏补缺。
+									感谢Blink和加拉哈德提供的各种技能后摇/生效延迟数据，详见<a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>这里最后一个函数变量</a> 。这些通过log来对比技能释放时间/buff生效刷新时间获得的数据，总的来说是比较准确的。欢迎联系我来查漏补缺。
 								</div>
 							})}
 						{localize ({
@@ -231,8 +226,7 @@ export function IntroSection(props: {}) {
 								</div>,
 							zh:
 								<div className="paragraph">
-									醒梦的跳蓝时间是独立的，因此会导致他和普通跳蓝之间存在一个纯随机的时间差。
-									醒梦后的第一跳蓝最早会出现在技能释放后的0.3秒，总计7跳。
+									醒梦的跳蓝时间是独立的，因此会导致他和普通跳蓝之间存在一个随机的时间差。醒梦后的第一跳蓝最早会出现在技能释放后的0.3秒，总计7跳。
 								</div>,
 						})}
 					</div>

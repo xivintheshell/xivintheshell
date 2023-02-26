@@ -5,7 +5,8 @@ import {skillIcons} from "./Skills";
 import {Clickable} from "./Common";
 import ReactTooltip from 'react-tooltip';
 import {ActionNode} from "../Controller/Record";
-import {ResourceType} from "../Game/Common";
+import {ResourceType, SkillName} from "../Game/Common";
+import {localizeSkillName} from "./Localization";
 
 export let displayTime = (time: number, fractionDigits: number) => {
 	let absTime = Math.abs(time);
@@ -132,7 +133,7 @@ export function TimelineSkill(props: {
 		isSpellCast: boolean;
 		recastDuration: number;
 		relativeSnapshotTime: number;
-		skillName: string;
+		skillName: SkillName;
 		displayTime: number;
 		time: number;
 		isGCD: boolean;
@@ -186,7 +187,7 @@ export function TimelineSkill(props: {
 		iconStyle.borderColor = "#ffdc4f";
 	}
 	let iconPath = skillIcons.get(props.elem.skillName);
-	let description = props.elem.skillName + "@" + (props.elem.displayTime).toFixed(2);
+	let description = localizeSkillName(props.elem.skillName) + "@" + (props.elem.displayTime).toFixed(2);
 	if (node.hasBuff(ResourceType.LeyLines)) description += " (LL)";
 	if (node.hasBuff(ResourceType.Tincture)) description += " (pot)";
 	let hoverText = <span>{description}</span>;

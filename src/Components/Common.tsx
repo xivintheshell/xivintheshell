@@ -173,21 +173,13 @@ type InputProps = {
 	width?: number,
 	style?: CSSProperties,
 }
-type InputState = {
-	value: string,
-}
 export class Input extends React.Component {
 	props: InputProps;
-	state: InputState;
 	onChange;
 	constructor(inProps : InputProps) {
 		super(inProps);
 		this.props = inProps;
-		this.state = {
-			value: inProps.defaultValue ?? ""
-		}
 		this.onChange = ((e: ChangeEvent<{value: string}>)=>{
-			this.setState({value: e.target.value});
 			if (this.props.onChange) this.props.onChange(e.target.value);
 		}).bind(this);
 	}
@@ -196,8 +188,7 @@ export class Input extends React.Component {
 		let style = this.props.style;
 		return <div style={style}>
 			<span>{this.props.description/* + "(" + this.state.value + ")"*/}</span>
-			<input className={"textInput"} size={width} type="text"
-				   value={this.state.value} onChange={this.onChange}/>
+			<input className={"textInput"} size={width} type="text" value={this.props.defaultValue} onChange={this.onChange}/>
 		</div>
 	}
 }

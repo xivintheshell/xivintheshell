@@ -4,6 +4,7 @@ import {Debug, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import ReactTooltip from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
+import {localize, localizeSkillName} from "./Localization";
 
 export let displayedSkills = [
 	SkillName.Blizzard,
@@ -115,9 +116,11 @@ class SkillButton extends React.Component {
 
 			let s = "";
 			if (info.status === SkillReadyStatus.Ready) {
-				s += "ready (" + info.stacksAvailable + " stack";
-				if (info.stacksAvailable > 1) s += "s";
-				s += ")";
+				let en = "ready (" + info.stacksAvailable + " stack";
+				if (info.stacksAvailable > 1) en += "s";
+				en += ")";
+				let zh = "可释放 (" + info.stacksAvailable + ")";
+				s = localize({en: en, zh: zh});
 			}
 			else if (info.status === SkillReadyStatus.RequirementsNotMet) {
 				s += " skill requirement(s) not satisfied";
@@ -130,12 +133,12 @@ class SkillButton extends React.Component {
 			let actualCastTime = info.instantCast ? 0 : info.castTime;
 			let infoString = "";
 			if (info.status === SkillReadyStatus.Ready) {
-				infoString += "cast: " + actualCastTime.toFixed(2);
+				infoString += localize({en: "cast: ", zh: "读条："}) + actualCastTime.toFixed(2);
 				if (info.llCovered && actualCastTime > Debug.epsilon) infoString += " (LL)";
-				infoString += ", cast+delay: " + info.timeTillDamageApplication.toFixed(3);
+				infoString += localize({en: ", cast+delay: ", zh: " 读条+生效延迟："}) + info.timeTillDamageApplication.toFixed(3);
 			}
 			let content = <div style={{color: controller.displayingUpToDateGameState ? "white" : "darkorange"}}>
-				<div className="paragraph">{this.props.skillName}</div>
+				<div className="paragraph">{localizeSkillName(this.props.skillName)}</div>
 				<div className="paragraph">{s}</div>
 				{infoString}
 			</div>;

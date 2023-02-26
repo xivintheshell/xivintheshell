@@ -304,7 +304,12 @@ class Controller {
 		}
 		let replayResult = this.#replay({line: line, replayMode: ReplayMode.Exact});
 		if (!replayResult.success) {
-			console.log(replayResult);
+			let msg = "Failed to load the entire record- \n";
+			if (replayResult.firstInvalidNode) {
+				msg += "Stopped here because the next action " + (replayResult.firstInvalidNode.skillName ?? "(unknown)") + " can't be added: ";
+			}
+			msg += replayResult.invalidReason;
+			window.alert(msg);
 		}
 	}
 
@@ -801,7 +806,6 @@ class Controller {
 				}
 
 				if (status.status !== SkillReadyStatus.Ready) {
-					console.log(this.game.timeTillAnySkillAvailable());
 					lastIter = true;
 					firstInvalidNode = itr;
 					invalidReason = status.status;

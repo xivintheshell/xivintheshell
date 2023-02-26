@@ -1,6 +1,7 @@
 import React, {ReactNode} from "react";
 import {GrLanguage} from "react-icons/gr";
 import {forceUpdateAll} from "./Main";
+import {SkillName, SkillReadyStatus} from "../Game/Common";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -20,6 +21,27 @@ export function localize(content: LocalizedContent) {
 	}
 }
 
+const skillsZh = new Map<SkillName, string>([
+	[SkillName.Blizzard, "冰1"],
+	[SkillName.Fire4, "火4"],
+	[SkillName.LeyLines, "黑魔纹"]
+	// todo
+]);
+
+const skillsJa = new Map<SkillName, string>([
+	// todo
+]);
+
+export function localizeSkillName(text: SkillName) : string {
+	let currentLang = getCurrentLanguage();
+	if (currentLang === "zh") {
+		return skillsZh.get(text) ?? text;
+	} else if (currentLang === "ja") {
+		return skillsJa.get(text) ?? text;
+	} else {
+		return text;
+	}
+}
 
 function LanguageOption(props: {lang: Language}) {
 	let text = "English";
@@ -38,8 +60,6 @@ function LanguageOption(props: {lang: Language}) {
 export let getCurrentLanguage : ()=>Language = () => {return "en"}
 export let setCurrentLanguage : (lang: Language)=>void = (lang) => {}
 
-
-// todo: when language changed refresh page.
 export class SelectLanguage extends React.Component {
 	state: {
 		lang: Language
