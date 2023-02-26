@@ -128,6 +128,49 @@ export let bHandledSkillSelectionThisFrame : boolean = false;
 export function setHandledSkillSelectionThisFrame(handled : boolean) {
 	bHandledSkillSelectionThisFrame = handled;
 }
+let TimelineSkillStaticPart = React.memo(function(props:{
+	lockBarWidth: number,
+	isSpellCast: boolean,
+	isGCD: boolean,
+	recastBarWidth: number,
+	snapshotRelativePositionX: number
+}){
+	let lockBarStyle: CSSProperties = {
+		position: "absolute",
+		top: 0,
+		background: props.isSpellCast ? "#e7d9ee" : "#9d9d9d",
+		width: props.lockBarWidth,
+		height: props.isSpellCast ? 14 : 28,
+		zIndex: 1
+	};
+	let lockBar = <div style={lockBarStyle}/>
+	let recastBarStyle: CSSProperties = {
+		position: "absolute",
+		top: 14,
+		background: "#dbf3d6",
+		width: props.recastBarWidth,
+		height: 14,
+		zIndex: 1
+	};
+	let recastBar = <div style={recastBarStyle}/>
+	let snapshotIndicatorStyle: CSSProperties = {
+		position: "absolute",
+		width: 0,
+		height: 14,
+		top: 0,
+		left: props.snapshotRelativePositionX,
+		borderLeft: "1px solid " + "rgba(151,85,239,0.2)",
+		zIndex: 1
+	}
+	let snapshotIndicator = <div style={snapshotIndicatorStyle}/>
+
+	return <div>
+		{lockBar}
+		{props.isGCD ? recastBar : <div/>}
+		{snapshotIndicator}
+	</div>
+});
+
 export function TimelineSkill(props: {
 	elem: {
 		node: ActionNode;
@@ -145,37 +188,8 @@ export function TimelineSkill(props: {
 }) {
 	let node = props.elem.node;
 	let lockBarWidth = controller.timeline.positionFromTime(props.elem.lockDuration);
-	let lockBarStyle: CSSProperties = {
-		position: "absolute",
-		top: 0,
-		background: props.elem.isSpellCast ? "#e7d9ee" : "#9d9d9d",
-		width: lockBarWidth,
-		height: props.elem.isSpellCast ? 14 : 28,
-		zIndex: 1
-	};
-	let lockBar = <div style={lockBarStyle}/>
-
 	let recastBarWidth = controller.timeline.positionFromTime(props.elem.recastDuration);
-	let recastBarStyle: CSSProperties = {
-		position: "absolute",
-		top: 14,
-		background: "#dbf3d6",
-		width: recastBarWidth,
-		height: 14,
-		zIndex: 1
-	};
-	let recastBar = <div style={recastBarStyle}/>
-
-	let snapshotIndicatorStyle: CSSProperties = {
-		position: "absolute",
-		width: 0,
-		height: 14,
-		top: 0,
-		left: controller.timeline.positionFromTime(props.elem.relativeSnapshotTime),
-		borderLeft: "1px solid " + "rgba(151,85,239,0.2)",
-		zIndex: 1
-	}
-	let snapshotIndicator = <div style={snapshotIndicatorStyle}/>
+	let snapshotRelativePositionX = controller.timeline.positionFromTime(props.elem.relativeSnapshotTime);
 
 	let iconStyle: CSSProperties = {
 		position: "absolute",
@@ -234,9 +248,7 @@ export function TimelineSkill(props: {
 	}}/></div>
 
 	return <div style={componentStyle} className={"timeline-elem skill"}>
-		{lockBar}
-		{props.elem.isGCD ? recastBar : <div/>}
-		{snapshotIndicator}
+		<TimelineSkillStaticPart lockBarWidth={lockBarWidth} isSpellCast={props.elem.isSpellCast} isGCD={props.elem.isGCD} recastBarWidth={recastBarWidth} snapshotRelativePositionX={snapshotRelativePositionX}/>
 		{icon}
 		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
 	</div>;

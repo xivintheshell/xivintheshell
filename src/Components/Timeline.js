@@ -53,7 +53,7 @@ class TimelineSelection extends React.Component {
 	}
 }
 
-function TimelineHeader(props) {
+let TimelineRuler = React.memo(function(props){
 	let countdownPadding = props.countdown * props.pixelPerSecond;
 	let marks_1sec = [];
 	let marks_5sec = [];
@@ -70,11 +70,7 @@ function TimelineHeader(props) {
 	for (let i = -props.pixelPerSecond * 5; i >= -countdownPadding; i -= props.pixelPerSecond * 5) {
 		marks_5sec.push(i + countdownPadding);
 	}
-	/*
-	for (let i = 0; i < props.canvasWidth; i += props.pixelPerSecond * 60) {
-		marks_1min.push(i);
-	}*/
-	let ruler = <div style={{pointerEvents: "none"}}>
+	return <div style={{pointerEvents: "none"}}>
 		<svg width={props.canvasWidth} height="100%">
 			{marks_1sec.map(i=>{
 				return <line key={"1sec-"+i} stroke="black" strokeWidth="1" x1={i} y1="0" x2={i} y2="6"/>
@@ -94,7 +90,10 @@ function TimelineHeader(props) {
 			width: "48px",
 			display: "inline-block",
 		}}><div>{displayTime((i - countdownPadding) / props.pixelPerSecond, 0)}</div></div>;})}
-	</div>
+	</div>;
+});
+
+function TimelineHeader(props) {
 	return <div ref={props.divref} style={{
 		zIndex: 1,
 		position: "relative",
@@ -112,7 +111,7 @@ function TimelineHeader(props) {
 				controller.displayCurrentState();
 			}
 		}
-	}}>{ruler}</div>
+	}}><TimelineRuler canvasWidth={props.canvasWidth} countdown={props.countdown} pixelPerSecond={props.pixelPerSecond}/></div>
 }
 
 export let updateTimelineContent = function(canvasWidth, data) {}
