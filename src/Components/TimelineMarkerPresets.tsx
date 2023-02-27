@@ -4,6 +4,7 @@ import {controller} from "../Controller/Controller";
 import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
 import {FileType} from "../Controller/Common";
 import {localize} from "./Localization";
+import {updateMarkers_TimelineMarkers} from "./TimelineMarkers";
 
 /*
 	For the sake of simplicity, tracks be like:
@@ -204,6 +205,7 @@ export class TimelineMarkerPresets extends React.Component {
 				} else {
 					alert("no duplicate markers found");
 				}
+				controller.timeline.updateTimelineMarkers();
 			}}>{localize({en: "remove duplicates", zh: "删除重复标记"})}</button>
 			<PresetButtons/>
 			<Expandable

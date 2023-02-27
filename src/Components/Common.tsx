@@ -78,7 +78,18 @@ export function loadFromFile(fileObject: Blob, callback=(content: object)=>{cons
 	fileReader.readAsText(fileObject, "UTF-8");
 }
 
-
+export const StaticFn =  {
+	positionFromTimeAndScale: function(time: number, scale: number): number {
+		return time * scale * 100;
+	},
+	displayTime: function(time: number, fractionDigits: number) {
+		let absTime = Math.abs(time);
+		let minute = Math.floor(absTime / 60);
+		let second = absTime - 60 * minute;
+		return (time < 0 ? "-" : "") +
+			minute.toString() + ":" + (second < 10 ? "0" : "") + second.toFixed(fractionDigits).toString();
+	}
+};
 
 let genericErrorHandler = function(err: object) {
 	console.log("[asyncFetch] some error occurred");

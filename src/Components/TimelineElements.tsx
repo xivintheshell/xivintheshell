@@ -8,14 +8,6 @@ import {ActionNode} from "../Controller/Record";
 import {ResourceType, SkillName} from "../Game/Common";
 import {localizeSkillName} from "./Localization";
 
-export let displayTime = (time: number, fractionDigits: number) => {
-	let absTime = Math.abs(time);
-	let minute = Math.floor(absTime / 60);
-	let second = absTime - 60 * minute;
-	return (time < 0 ? "-" : "") +
-		minute.toString() + ":" + (second < 10 ? "0" : "") + second.toFixed(fractionDigits).toString();
-}
-
 const MAX_HEIGHT = 400;
 export function Cursor(props: {
 	vOffset: number;

@@ -1,5 +1,11 @@
 [
 	{
+		"date": "2/26/23",
+		"changes": [
+			"fix markers not updating when timeline scale changes"
+		]
+	},
+	{
 		"date": "2/25/23(2)",
 		"changes": [
 			"translation updates by Eshiya",

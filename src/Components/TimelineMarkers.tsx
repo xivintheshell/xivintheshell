@@ -3,27 +3,30 @@ import {MarkerElem} from "../Controller/Timeline";
 import {controller} from "../Controller/Controller";
 import ReactTooltip from "react-tooltip";
 import {setEditingMarkerValues} from "./TimelineMarkerPresets";
+import {StaticFn} from "./Common";
 
 export let getTimelineMarkersHeight = () => { return 0 };
 
-export let updateMarkers_TimelineMarkers = (trackBins: Map<number, MarkerElem[]>) => {};
+export let updateMarkers_TimelineMarkers = (horizontalScale: number, trackBins: Map<number, MarkerElem[]>) => {};
 
 type TimelineMarkersState = {
+	horizontalScale: number,
 	trackBins: Map<number, MarkerElem[]>;
 }
 
 let Marker = React.memo(function(props: {
 	markerID: number | string,
 	markerElem: MarkerElem,
+	horizontalScale: number
 }) {
 	const trackHeight = 14;
 	const fontSize = 11;
 
 	let marker = props.markerElem;
 	let radius = marker.duration === 0 ? 4 : 2;
-	let leftPos = controller.timeline.positionFromTime(marker.time + controller.gameConfig.countdown);
+	let leftPos = StaticFn.positionFromTimeAndScale(marker.time + controller.gameConfig.countdown, props.horizontalScale);
 	let absTop = 0;//(maxTrack - marker.track) * this.trackHeight;
-	let absWidth = controller.timeline.positionFromTime(marker.duration);
+	let absWidth = StaticFn.positionFromTimeAndScale(marker.duration, props.horizontalScale);
 	let colorBarStyleWithoutText: CSSProperties = {
 		position: "absolute",
 		background: marker.color,
@@ -85,6 +88,7 @@ export class TimelineMarkers extends React.Component {
 		super(props);
 		this.myRef = React.createRef();
 		this.state = {
+			horizontalScale: 0.4,
 			trackBins: new Map()
 		};
 
@@ -92,14 +96,14 @@ export class TimelineMarkers extends React.Component {
 			return controller.timeline.getNumMarkerTracks() * this.trackHeight + this.marginBottom;
 		};
 
-		updateMarkers_TimelineMarkers = ((trackBins: Map<number, MarkerElem[]>) => {
-			this.setState({trackBins: trackBins});
+		updateMarkers_TimelineMarkers = ((horizontalScale: number, trackBins: Map<number, MarkerElem[]>) => {
+			this.setState({horizontalScale: horizontalScale, trackBins: trackBins});
 		}).bind(this);
 	}
 
 	componentWillUnmount() {
 		getTimelineMarkersHeight = () => { return 0 };
-		updateMarkers_TimelineMarkers = (trackBins: Map<number, MarkerElem[]>) => {};
+		updateMarkers_TimelineMarkers = (horizontalScale: number, trackBins: Map<number, MarkerElem[]>) => {};
 	}
 
 	makeTrack(numTracks: number, trackIndex: number, key: number) {
@@ -108,7 +112,7 @@ export class TimelineMarkers extends React.Component {
 		if (trackBin) {
 			for (let i = 0; i < trackBin.length; i++) {
 				let id = trackIndex + "-" + i;
-				track.push(<Marker markerElem={trackBin[i]} key={id} markerID={id}/>);
+				track.push(<Marker horizontalScale={this.state.horizontalScale} markerElem={trackBin[i]} key={id} markerID={id}/>);
 			}
 		}
 		return <div key={key} style={{

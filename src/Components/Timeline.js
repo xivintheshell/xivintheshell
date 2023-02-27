@@ -1,7 +1,7 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
 import {ElemType} from "../Controller/Timeline";
-import {Expandable, FileFormat, Help, Input, SaveToFile, Slider} from "./Common";
+import {Expandable, FileFormat, Help, Input, SaveToFile, Slider, StaticFn} from "./Common";
 import {
 	Cursor,
 	MPTickMark,
@@ -14,8 +14,8 @@ import {
 import {getTimelineMarkersHeight, TimelineMarkers} from "./TimelineMarkers";
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
-import {StaticTimeline} from "./StaticTimeline";
-import {drawStaticTimeline} from "./StaticTimeline";
+import {TimelineCanvas} from "./TimelineCanvas";
+import {drawStaticTimeline} from "./TimelineCanvas";
 
 export let updateSelectionDisplay = (startX, endX)=>{}
 
@@ -79,9 +79,6 @@ let TimelineRuler = React.memo(function(props){
 			{marks_5sec.map(i=>{
 				return <line key={"5sec-"+i} stroke="black" strokeWidth="1" x1={i} y1="0" x2={i} y2="10"/>
 			})}
-			{/*marks_1min.map(i=>{
-				return <line key={"1min-"+i} stroke="grey" strokeWidth="1" x1={i} y1="0" x2={i} y2="50"/>
-			})*/}
 		</svg>
 		{props.pixelPerSecond < 6 ? <div/> : marks_5sec.map(i=>{return<div key={i} style={{
 			textAlign: "center",
@@ -90,7 +87,7 @@ let TimelineRuler = React.memo(function(props){
 			left: `${i - 24}px`,
 			width: "48px",
 			display: "inline-block",
-		}}><div>{displayTime((i - countdownPadding) / props.pixelPerSecond, 0)}</div></div>;})}
+		}}><div>{StaticFn.displayTime((i - countdownPadding) / props.pixelPerSecond, 0)}</div></div>;})}
 	</div>;
 });
 
@@ -100,7 +97,7 @@ function TimelineHeader(props) {
 		position: "relative",
 		width: "100%",
 		height: "30px",
-		background: "#ececec",
+		background: "transparent"//"#ececec",
 	}} onClick={(e)=>{
 		if (e.target) {
 			let rect = e.target.getBoundingClientRect();
@@ -112,10 +109,10 @@ function TimelineHeader(props) {
 				controller.displayCurrentState();
 			}
 		}
-	}}><TimelineRuler canvasWidth={props.canvasWidth} countdown={props.countdown} pixelPerSecond={props.pixelPerSecond}/></div>
+	}}/>
 }
 
-export let updateTimelineContent = function(canvasWidth, data) {}
+export let updateTimelineContent = function() {}
 
 // the actual timeline canvas
 class TimelineMain extends React.Component {
@@ -124,6 +121,7 @@ class TimelineMain extends React.Component {
 		this.state = {
 			canvasWidth: 300,
 			canvasHeight: 180,
+			scale: 1,
 			tincturePotencyMultiplier: 1,
 			elements: [],
 		}
@@ -143,13 +141,19 @@ class TimelineMain extends React.Component {
 	}
 
 	componentWillUnmount() {
-		updateTimelineContent = (canvasWidth, canvasHeight, data)=>{};
+		updateTimelineContent = ()=>{};
 	}
 	render() {
 
-		//console.log("render (out)");
 		this.canvasVersion++;
-		return <StaticTimeline width={this.state.canvasWidth} height={this.state.canvasHeight} elements={this.state.elements} version={this.canvasVersion}/>;
+		let canvas = <TimelineCanvas
+			width={this.state.canvasWidth}
+			height={this.state.canvasHeight}
+			countdown={controller.gameConfig.countdown}
+			scale={this.state.scale}
+			elements={this.state.elements}
+			version={this.canvasVersion}
+		/>;
 
 		let elemComponents = [];
 		let verticalOffset = "-" + (getTimelineMarkersHeight() + 30) + "px";
@@ -206,6 +210,7 @@ class TimelineMain extends React.Component {
 				setHandledSkillSelectionThisFrame(false);
 			}
 		}>
+			{canvas}
 			<TimelineSelection/>
 			{countdownGrey}
 			<TimelineHeader

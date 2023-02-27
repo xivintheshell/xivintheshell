@@ -291,9 +291,14 @@ export class Timeline {
 		updateTimelineContent({
 			canvasWidth: this.getCanvasWidth(),
 			canvasHeight: this.getCanvasHeight(),
-			elements: this.elements
+			elements: this.elements,
+			scale: this.scale
 		});
 
+		this.updateTimelineMarkers();
+	}
+
+	updateTimelineMarkers() {
 		let M = new Map<number, MarkerElem[]>();
 		this.markers.forEach(marker=>{
 			let trackBin = M.get(marker.track);
@@ -302,7 +307,7 @@ export class Timeline {
 			M.set(marker.track, trackBin);
 		});
 
-		updateMarkers_TimelineMarkers(M);
+		updateMarkers_TimelineMarkers(this.scale, M);
 		updateMarkers_TimelineMarkerPresets(M);
 	}
 
