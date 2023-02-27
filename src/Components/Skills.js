@@ -2,7 +2,7 @@ import React from 'react'
 import {Clickable, Help, parseTime} from "./Common";
 import {Debug, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
-import ReactTooltip from 'react-tooltip';
+import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
 import {localize, localizeSkillName} from "./Localization";
 import {redrawTimelineCanvas} from "./Timeline";

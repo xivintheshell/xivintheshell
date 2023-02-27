@@ -3,7 +3,7 @@ import {controller} from "../Controller/Controller";
 // @ts-ignore
 import {skillIcons} from "./Skills";
 import {Clickable} from "./Common";
-import ReactTooltip from 'react-tooltip';
+import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionNode} from "../Controller/Record";
 import {ResourceType, SkillName} from "../Game/Common";
 import {localizeSkillName} from "./Localization";

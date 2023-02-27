@@ -1,6 +1,6 @@
 import React, {ChangeEvent, CSSProperties, ReactNode} from "react";
 import jQuery from 'jquery';
-import ReactTooltip from "react-tooltip";
+import {Tooltip as ReactTooltip} from "react-tooltip";
 import {localize} from "./Localization";
 
 function getBlobUrl(content: object) {
@@ -411,6 +411,14 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 }
 
 export function Help(props: {topic: string, content: ReactNode}) {
+	/*
+	effect={"solid"}
+	border={true}
+	borderColor={"#000"}
+	backgroundColor={"#fff"}
+	arrowColor={"#000"}
+	textColor={"#000"}
+	 */
 	return <span style={{display: "inline-block"}}>
 		<span data-tip data-for={"help-" + props.topic} style={{
 			display: "block",
@@ -426,12 +434,6 @@ export function Help(props: {topic: string, content: ReactNode}) {
 			verticalAlign: "middle",
 		}}><span style={{position: "relative", top: -1, color: "white"}}>&#63;</span></span>
 		<ReactTooltip
-			effect={"solid"}
-			border={true}
-			borderColor={"#000"}
-			backgroundColor={"#fff"}
-			arrowColor={"#000"}
-			textColor={"#000"}
 			id={"help-" + props.topic}>
 			{props.content}
 		</ReactTooltip>

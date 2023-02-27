@@ -8,14 +8,13 @@ import {
 	DamageMark,
 	LucidMark,
 	TimelineSkill,
-	displayTime,
 	setHandledSkillSelectionThisFrame, bHandledSkillSelectionThisFrame
 } from "./TimelineElements";
 import {getTimelineMarkersHeight, TimelineMarkers} from "./TimelineMarkers";
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
 import {TimelineCanvas} from "./TimelineCanvas";
-import ReactTooltip from "react-tooltip";
+import {Tooltip as ReactTooltip} from "react-tooltip";
 
 export let updateSelectionDisplay = (startX, endX)=>{}
 
