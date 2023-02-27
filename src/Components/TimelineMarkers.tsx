@@ -7,9 +7,7 @@ import {StaticFn} from "./Common";
 
 export let getTimelineMarkersHeight = () => { return 0 };
 
-export let updateMarkers_TimelineMarkers = (horizontalScale: number, trackBins: Map<number, MarkerElem[]>) => {};
-
-type TimelineMarkersState = {
+type TimelineMarkersProps = {
 	horizontalScale: number,
 	trackBins: Map<number, MarkerElem[]>;
 }
@@ -72,47 +70,42 @@ let Marker = React.memo(function(props: {
 		<div style={textStyle}>{
 			marker.showText ? marker.description : ""
 		}</div>
-		<ReactTooltip id={fullID}>{marker.description}</ReactTooltip>
+		<ReactTooltip id={fullID}>{"[" + marker.time + "] " + marker.description}</ReactTooltip>
 	</div>;
 });
 
 export class TimelineMarkers extends React.Component {
 	myRef: React.RefObject<HTMLDivElement>;
-	state: TimelineMarkersState;
-
 	trackHeight = 14;
 	fontSize = 11;
 	marginBottom = 6;
+	props: TimelineMarkersProps = {
+		horizontalScale: 1,
+		trackBins: new Map()
+	};
 
-	constructor(props: {}) {
+	constructor(props: TimelineMarkersProps) {
 		super(props);
+		this.props = props;
 		this.myRef = React.createRef();
-		this.state = {
-			horizontalScale: 0.4,
-			trackBins: new Map()
-		};
 
 		getTimelineMarkersHeight = ()=>{
 			return controller.timeline.getNumMarkerTracks() * this.trackHeight + this.marginBottom;
 		};
 
-		updateMarkers_TimelineMarkers = ((horizontalScale: number, trackBins: Map<number, MarkerElem[]>) => {
-			this.setState({horizontalScale: horizontalScale, trackBins: trackBins});
-		}).bind(this);
 	}
 
 	componentWillUnmount() {
 		getTimelineMarkersHeight = () => { return 0 };
-		updateMarkers_TimelineMarkers = (horizontalScale: number, trackBins: Map<number, MarkerElem[]>) => {};
 	}
 
 	makeTrack(numTracks: number, trackIndex: number, key: number) {
 		let track: JSX.Element[] = [];
-		let trackBin = this.state.trackBins.get(trackIndex);
+		let trackBin = this.props.trackBins.get(trackIndex);
 		if (trackBin) {
 			for (let i = 0; i < trackBin.length; i++) {
 				let id = trackIndex + "-" + i;
-				track.push(<Marker horizontalScale={this.state.horizontalScale} markerElem={trackBin[i]} key={id} markerID={id}/>);
+				track.push(<Marker horizontalScale={this.props.horizontalScale} markerElem={trackBin[i]} key={id} markerID={id}/>);
 			}
 		}
 		return <div key={key} style={{
@@ -120,7 +113,7 @@ export class TimelineMarkers extends React.Component {
 			top: (numTracks - 1 - trackIndex) * this.trackHeight,
 			width: "100%",
 			height: this.trackHeight,
-			background: trackIndex % 2 === 0 ? "#f3f3f3" : "#ffffff"
+			background: "transparent"
 		}}>{track}</div>
 	}
 

@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from 'react'
-import {TimelineElem} from "../Controller/Timeline";
+import {MarkerElem, TimelineElem} from "../Controller/Timeline";
 import {StaticFn} from "./Common";
 
 type BackgroundProps = [
@@ -8,21 +8,24 @@ type BackgroundProps = [
 	number,
 	number,
 	number,
-	number
+	number,
+	Map<number, MarkerElem[]>
 ];
 
 // background layer:
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
-function drawTimelineBackground(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHeight, visibleLeft, visibleWidth, countdown, scale]: BackgroundProps) {
-	console.log("clear");
+function drawTimelineBackground(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHeight, visibleLeft, visibleWidth, countdown, scale, trackBins]: BackgroundProps) {
+	ctx.beginPath();
+
+	let timelineOrigin = -visibleLeft;
 
 	// background white
 	ctx.fillStyle = "white";
-	ctx.fillRect(0, 0, timelineWidth, timelineHeight);
+	ctx.fillRect(0, 0, visibleWidth, timelineHeight);
 
 	// ruler bg
 	ctx.fillStyle = "#ececec";
-	ctx.fillRect(0, 0, timelineWidth, 30);
+	ctx.fillRect(0, 0, visibleWidth, 30);
 
 	// ruler marks
 	let pixelsPerSecond = scale * 100;
@@ -33,30 +36,59 @@ function drawTimelineBackground(ctx: CanvasRenderingContext2D, [timelineWidth, t
 	ctx.font = "13px monospace";
 	ctx.textAlign = "center";
 	ctx.fillStyle = "black";
-	ctx.beginPath();
+	const cullThreshold = 50;
 	if (pixelsPerSecond >= 6) {
 		for (let x = 0; x < timelineWidth - countdownPadding; x += pixelsPerSecond) {
-			ctx.moveTo(x + countdownPadding, 0);
-			ctx.lineTo(x + countdownPadding, 6);
+			let pos = timelineOrigin + x + countdownPadding;
+			if (pos >= -cullThreshold && pos <= visibleWidth + cullThreshold) {
+				ctx.moveTo(pos, 0);
+				ctx.lineTo(pos, 6);
+			}
 		}
 		for (let x = -pixelsPerSecond; x >= -countdownPadding; x -= pixelsPerSecond) {
-			ctx.moveTo(x + countdownPadding, 0);
-			ctx.lineTo(x + countdownPadding, 6);
+			let pos = timelineOrigin + x + countdownPadding;
+			if (pos >= -cullThreshold && pos <= visibleWidth + cullThreshold) {
+				ctx.moveTo(pos, 0);
+				ctx.lineTo(pos, 6);
+			}
 		}
 	}
 	for (let x = 0; x < timelineWidth - countdownPadding; x += pixelsPerSecond * 5) {
-		ctx.moveTo(x + countdownPadding, 0);
-		ctx.lineTo(x + countdownPadding, 10);
-		ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), x + countdownPadding, 23);
+		let pos = timelineOrigin + x + countdownPadding;
+		if (pos >= -cullThreshold && pos <= visibleWidth + cullThreshold) {
+			ctx.moveTo(pos, 0);
+			ctx.lineTo(pos, 10);
+			ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), pos, 23);
+		}
 	}
 	for (let x = -pixelsPerSecond * 5; x >= -countdownPadding; x -= pixelsPerSecond * 5) {
-		ctx.moveTo(x + countdownPadding, 0);
-		ctx.lineTo(x + countdownPadding, 10);
-		ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), x + countdownPadding, 23);
+		let pos = timelineOrigin + x + countdownPadding;
+		if (pos >= -cullThreshold && pos <= visibleWidth + cullThreshold) {
+			ctx.moveTo(pos, 0);
+			ctx.lineTo(pos, 10);
+			ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), pos, 23);
+		}
 	}
 	ctx.stroke();
 
+	// tracks background
+	const trackHeight = 14;
+	let numTracks = 0;
+	for (let k of trackBins.keys()) {
+		numTracks = Math.max(numTracks, k + 1);
+	}
+	let markerTracksOriginY = 30 + numTracks * trackHeight;
+	ctx.fillStyle = "#f3f3f3";
+	for (let i = 0; i < numTracks; i += 2) {
+		let top = markerTracksOriginY - (i + 1) * trackHeight;
+		ctx.fillRect(0, top, visibleWidth, trackHeight);
+	}
+	const trackBottomMargin = 6;
+
+	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(countdown, scale);
+	ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+	ctx.fillRect(timelineOrigin, 0, countdownWidth, timelineHeight);
 }
 
 function drawTimelineElements(ctx: CanvasRenderingContext2D, width: number, height: number, elements: TimelineElem[]) {
@@ -83,10 +115,11 @@ export function TimelineCanvas(props: {
 	countdown: number,
 	scale: number,
 	elements: TimelineElem[],
+	trackBins: Map<number, MarkerElem[]>
 	version: number
 }) {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
-	let scaledWidth = props.timelineWidth;
+	let scaledWidth = props.visibleWidth;
 	let scaledHeight = props.timelineHeight;
 	const dpr = window.devicePixelRatio;
 	const rect = canvasRef.current?.getBoundingClientRect();
@@ -102,7 +135,8 @@ export function TimelineCanvas(props: {
 		props.visibleLeft,
 		props.visibleWidth,
 		props.countdown,
-		props.scale
+		props.scale,
+		props.trackBins
 	];
 	useEffect(()=>{
 		let ctx = canvasRef.current?.getContext("2d", {alpha: false});
@@ -124,7 +158,7 @@ export function TimelineCanvas(props: {
 	 */
 
 	return <canvas ref={canvasRef} width={scaledWidth} height={scaledHeight} style={{
-		width: props.timelineWidth,
+		width: props.visibleWidth,
 		height: props.timelineHeight,
 		position: "absolute",
 		zIndex: -1,

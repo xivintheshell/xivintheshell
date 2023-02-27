@@ -1,16 +1,13 @@
 // @ts-ignore
-// @ts-ignore
-import {updateSelectionDisplay, updateStatsDisplay, updateTimelineContent} from "../Components/Timeline";
+import {updateSelectionDisplay, updateStatsDisplay, updateTimelineContent, updateMarkers_TimelineMarkers} from "../Components/Timeline";
 // @ts-ignore
 import {controller} from "./Controller";
 import {Debug, ResourceType, SkillName} from "../Game/Common";
 import {ActionNode} from "./Record";
 import {FileType} from "./Common";
-import {updateMarkers_TimelineMarkers} from "../Components/TimelineMarkers";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
-import {StaticFn} from "../Components/Common";
 
 export const enum ElemType {
 	s_Cursor = "s_Cursor",
@@ -308,7 +305,7 @@ export class Timeline {
 			M.set(marker.track, trackBin);
 		});
 
-		updateMarkers_TimelineMarkers(this.scale, M);
+		updateMarkers_TimelineMarkers(M);
 		updateMarkers_TimelineMarkerPresets(M);
 	}
 

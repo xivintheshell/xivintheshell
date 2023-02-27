@@ -114,6 +114,8 @@ function TimelineHeader(props) {
 
 export let updateTimelineContent = function() {}
 
+export let updateMarkers_TimelineMarkers = (trackBins) => {};
+
 // the actual timeline canvas
 class TimelineMain extends React.Component {
 	constructor(props) {
@@ -124,6 +126,7 @@ class TimelineMain extends React.Component {
 			scale: 1,
 			tincturePotencyMultiplier: 1,
 			elements: [],
+			trackBins: new Map()
 		}
 		this.timelineHeaderRef = React.createRef();
 		this.canvasVersion = 0; // such a hack....
@@ -138,11 +141,18 @@ class TimelineMain extends React.Component {
 			//tincturePotencyMultiplier will be set when timeline display settings is mounted
 			elements: controller.timeline.elements,
 		});
+		updateMarkers_TimelineMarkers = (trackBins=>{
+			this.setState({trackBins: trackBins});
+		}).bind(this);
 	}
 
 	componentWillUnmount() {
-		updateTimelineContent = ()=>{};
+		updateTimelineContent = () => {
+		};
+		updateMarkers_TimelineMarkers = () => {
+		};
 	}
+
 	render() {
 
 		this.canvasVersion++;
@@ -154,6 +164,7 @@ class TimelineMain extends React.Component {
 			countdown={controller.gameConfig.countdown}
 			scale={this.state.scale}
 			elements={this.state.elements}
+			trackBins={this.state.trackBins}
 			version={this.canvasVersion}
 		/>;
 
@@ -195,13 +206,14 @@ class TimelineMain extends React.Component {
 			zIndex: 2,
 			pointerEvents: "none"
 		};
+		//let countdownGrey = <div style={countdownBgStyle}/>;
 		let contentStyle = {
 			position: "relative",
 			width: "100%",
 			height: "54px"
 		};
-		let countdownGrey = <div style={countdownBgStyle}/>;
-		return <div className="timeline-main" style={{width: this.state.timelineWidth, height: this.state.timelineHeight}} onClick={
+
+		let interactiveLayer = <div className="timeline-main" style={{width: this.state.timelineWidth, height: this.state.timelineHeight}} onClick={
 			(evt)=>{
 				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
 					controller.record.unselectAll();
@@ -212,17 +224,20 @@ class TimelineMain extends React.Component {
 				setHandledSkillSelectionThisFrame(false);
 			}
 		}>
-			{canvas}
 			<TimelineSelection/>
-			{countdownGrey}
 			<TimelineHeader
 				divref={this.timelineHeaderRef}
 				timelineWidth={this.state.timelineWidth}
 				pixelPerSecond={controller.timeline.scale * 100}
 				countdown={controller.gameConfig.countdown}
 			/>
-			<TimelineMarkers/>
+			<TimelineMarkers horizontalScale={this.state.scale} trackBins={this.state.trackBins}/>
 			<div style={contentStyle}>{elemComponents}</div>
+		</div>
+
+		return <div>
+			{canvas}
+			{interactiveLayer}
 		</div>
 	}
 }

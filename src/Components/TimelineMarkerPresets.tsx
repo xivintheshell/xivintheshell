@@ -2,9 +2,7 @@ import React, {ChangeEvent, CSSProperties} from 'react'
 import {Expandable, Input, LoadJsonFromFileOrUrl, asyncFetch, SaveToFile, parseTime, Help, FileFormat} from "./Common";
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
-import {FileType} from "../Controller/Common";
 import {localize} from "./Localization";
-import {updateMarkers_TimelineMarkers} from "./TimelineMarkers";
 
 /*
 	For the sake of simplicity, tracks be like:
