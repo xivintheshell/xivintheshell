@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from 'react'
-import {MarkerElem, TimelineElem} from "../Controller/Timeline";
+import {ElemType, MarkerElem, SkillElem, TimelineElem} from "../Controller/Timeline";
 import {StaticFn} from "./Common";
 
 type BackgroundProps = [
@@ -9,13 +9,118 @@ type BackgroundProps = [
 	number,
 	number,
 	number,
-	Map<number, MarkerElem[]>
+	Map<number, MarkerElem[]>,
+	TimelineElem[]
 ];
+
+const trackHeight = 14;
+const maxTimelineHeight = 400;
+
+// todo: optimize by sorting and batching?
+function drawMarkers(
+	ctx: CanvasRenderingContext2D,
+	countdown: number,
+	scale: number,
+	markerTracksBottomY: number, // bottom Y of track 0
+	timelineOrigin: number,
+	trackBins: Map<number, MarkerElem[]>
+) {
+	// markers
+	ctx.lineCap = "round";
+	ctx.lineWidth = 4;
+	ctx.font = "11px monospace";
+	ctx.textAlign = "left";
+	trackBins.forEach((elems, track)=>{
+		let top = markerTracksBottomY - (track + 1) * trackHeight;
+		for (let i = 0; i < elems.length; i++) {
+			let m = elems[i];
+			let left = timelineOrigin + StaticFn.positionFromTimeAndScale(m.time + countdown, scale);
+			if (m.duration > 0) {
+				let markerWidth = StaticFn.positionFromTimeAndScale(m.duration, scale);
+				if (m.showText) {
+					ctx.fillStyle = m.color + "7f";
+					ctx.fillRect(left, top, markerWidth, trackHeight);
+					ctx.fillStyle = "black";
+					ctx.fillText(m.description, left + trackHeight / 2, top + 10);
+				} else {
+					ctx.strokeStyle = m.color;
+					ctx.moveTo(left, top + trackHeight / 2);
+					ctx.lineTo(left + markerWidth, top + trackHeight / 2);
+					ctx.stroke();
+				}
+			} else {
+				ctx.fillStyle = m.color;
+				ctx.beginPath();
+				ctx.ellipse(left, top + trackHeight / 2, 4, 4, 0, 0, 2 * Math.PI);
+				ctx.fill();
+				if (m.showText) {
+					ctx.fillStyle = "black";
+					ctx.fillText(m.description, left + trackHeight / 2, top + 10);
+				}
+			}
+		}
+	});
+}
+
+function drawMPTickMarks(
+	ctx: CanvasRenderingContext2D,
+	countdown: number,
+	scale: number,
+	timelineOrigin: number,
+	elems: TimelineElem[]
+) {
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = "#caebf6";
+	ctx.beginPath();
+	elems.forEach(tick=>{
+		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(tick.time, scale);
+		ctx.moveTo(x, 30);
+		ctx.lineTo(x, maxTimelineHeight);
+	});
+	ctx.stroke();
+}
+
+function drawDamageMarks(
+	ctx: CanvasRenderingContext2D,
+	countdown: number,
+	scale: number,
+	timelineOrigin: number,
+	elems: TimelineElem[]
+) {
+	ctx.fillStyle = "red";
+	elems.forEach(mark=>{
+		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(mark.time, scale);
+		ctx.beginPath();
+		ctx.moveTo(x-3, 0);
+		ctx.lineTo(x+3, 0);
+		ctx.lineTo(x, 6);
+		ctx.fill();
+	});
+}
+
+type Rect = {x: number, y: number ,w: number, h: number};
+function drawSkills(
+	ctx: CanvasRenderingContext2D,
+	countdown: number,
+	scale: number,
+	timelineOrigin: number,
+	skillsTopY: number,
+	elems: TimelineElem[]
+) {
+	let greyLockBars: Rect[] = [];
+	let purpleLockBars: Rect[] = [];
+	let gcdBars: Rect[] = [];
+	let snapshots: number[] = [];
+	let llCovers: Rect[] = [];
+	elems.forEach(e=>{
+		let skill = e as SkillElem;
+
+	});
+}
 
 // background layer:
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
-function drawTimelineBackground(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHeight, visibleLeft, visibleWidth, countdown, scale, trackBins]: BackgroundProps) {
-	ctx.beginPath();
+function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHeight, visibleLeft, visibleWidth, countdown, scale, trackBins, elements]: BackgroundProps) {
 
 	let timelineOrigin = -visibleLeft;
 
@@ -28,6 +133,8 @@ function drawTimelineBackground(ctx: CanvasRenderingContext2D, [timelineWidth, t
 	ctx.fillRect(0, 0, visibleWidth, 30);
 
 	// ruler marks
+	ctx.lineCap = "butt";
+	ctx.beginPath();
 	let pixelsPerSecond = scale * 100;
 	let countdownPadding = countdown * pixelsPerSecond;
 	ctx.lineWidth = 1;
@@ -72,7 +179,7 @@ function drawTimelineBackground(ctx: CanvasRenderingContext2D, [timelineWidth, t
 	ctx.stroke();
 
 	// tracks background
-	const trackHeight = 14;
+	ctx.beginPath();
 	let numTracks = 0;
 	for (let k of trackBins.keys()) {
 		numTracks = Math.max(numTracks, k + 1);
@@ -81,25 +188,32 @@ function drawTimelineBackground(ctx: CanvasRenderingContext2D, [timelineWidth, t
 	ctx.fillStyle = "#f3f3f3";
 	for (let i = 0; i < numTracks; i += 2) {
 		let top = markerTracksOriginY - (i + 1) * trackHeight;
-		ctx.fillRect(0, top, visibleWidth, trackHeight);
+		ctx.rect(0, top, visibleWidth, trackHeight);
 	}
+	ctx.fill();
+
+	drawMarkers(ctx, countdown, scale, markerTracksOriginY, timelineOrigin, trackBins);
+
 	const trackBottomMargin = 6;
+
+	// organize elems into bins
+	let elemBins = new Map<ElemType, TimelineElem[]>();
+	elements.forEach(e=>{
+		let arr = elemBins.get(e.type) ?? [];
+		arr.push(e);
+		elemBins.set(e.type, arr);
+	});
+
+	// mp tick marks
+	drawMPTickMarks(ctx, countdown, scale, timelineOrigin, elemBins.get(ElemType.MPTickMark) ?? []);
+
+	// damage marks
+	drawDamageMarks(ctx, countdown, scale, timelineOrigin, elemBins.get(ElemType.DamageMark) ?? []);
 
 	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(countdown, scale);
 	ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
 	ctx.fillRect(timelineOrigin, 0, countdownWidth, timelineHeight);
-}
-
-function drawTimelineElements(ctx: CanvasRenderingContext2D, width: number, height: number, elements: TimelineElem[]) {
-	//console.log("rerender elems");
-	/*
-	ctx.fillStyle = "red";
-	elements.forEach(elem=>{
-		ctx.rect(controller.timeline.positionFromTime(elem.time), 10, 5, 10);
-	});
-	ctx.fill();
-	 */
 }
 
 // background layer: white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
@@ -136,26 +250,17 @@ export function TimelineCanvas(props: {
 		props.visibleWidth,
 		props.countdown,
 		props.scale,
-		props.trackBins
+		props.trackBins,
+		props.elements
 	];
 	useEffect(()=>{
 		let ctx = canvasRef.current?.getContext("2d", {alpha: false});
 		if (ctx) {
 			ctx.scale(dpr, dpr);
-			drawTimelineBackground(ctx, bgProps);
+			drawTimeline(ctx, bgProps);
 			ctx.scale(1 / dpr, 1 / dpr);
 		}
 	}, bgProps);
-
-	/*
-	useEffect(()=>{
-		let ctx = canvasRef.current?.getContext("2d");
-		if (ctx) {
-			drawTimelineElements(ctx, props.width, props.height, props.elements);
-		}
-	}, [props.width, props.height, props.version]);
-	//console.log("draw static");
-	 */
 
 	return <canvas ref={canvasRef} width={scaledWidth} height={scaledHeight} style={{
 		width: props.visibleWidth,

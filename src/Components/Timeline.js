@@ -276,7 +276,6 @@ class FixedRightColumn extends React.Component {
 	}
 
 	render() {
-		//console.log(this.state);
 		return <div ref={this.myRef} className={"timeline-fixedRightColumn staticScrollbar"} onScroll={e=>{
 			this.updateVisibleRange();
 		}}>

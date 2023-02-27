@@ -62,7 +62,7 @@ type MPTickMarkElem = TimelineElemBase & {
 	displayTime: number;
 	source: string;
 }
-type SkillElem = TimelineElemBase & {
+export type SkillElem = TimelineElemBase & {
 	type: ElemType.Skill;
 	displayTime: number;
 	skillName: SkillName;

@@ -18,58 +18,44 @@ let Marker = React.memo(function(props: {
 	horizontalScale: number
 }) {
 	const trackHeight = 14;
-	const fontSize = 11;
 
 	let marker = props.markerElem;
-	let radius = marker.duration === 0 ? 4 : 2;
 	let leftPos = StaticFn.positionFromTimeAndScale(marker.time + controller.gameConfig.countdown, props.horizontalScale);
 	let absTop = 0;//(maxTrack - marker.track) * this.trackHeight;
 	let absWidth = StaticFn.positionFromTimeAndScale(marker.duration, props.horizontalScale);
-	let colorBarStyleWithoutText: CSSProperties = {
-		position: "absolute",
-		background: marker.color,
-		borderRadius: radius,
-		top: trackHeight / 2 - radius,
-		left: -radius,
-		width: absWidth + 2 * radius,
-		height: 2 * radius,
-		zIndex: 1
-	};
-	let colorBarStyleWithText: CSSProperties = {
+	let colorBarStyle: CSSProperties = {
 		position: "absolute",
 		top: 0,
 		left: 0,
-		background: marker.color + "7f",
+		background: "transparent",
 		width: absWidth,
 		height: "100%",
-		zIndex: 1
+		zIndex: 1,
+	}
+	let colorDotStyle: CSSProperties = {
+		position: "absolute",
+		top: 0,
+		left: -trackHeight / 2,
+		background: "transparent",
+		width: trackHeight,
+		height: "100%",
+		zIndex: 1,
 	}
 	let containerStyle: CSSProperties = {
 		position: "absolute",
 		top: absTop,
 		left: leftPos,
 		height: trackHeight,
-		fontSize: fontSize,
-	}
-	let textStyle: CSSProperties = {
-		marginLeft: trackHeight / 2,
-		position: "absolute",
-		whiteSpace: "nowrap",
-		pointerEvents: "none",
-		zIndex: 1
 	}
 	let fullID = "timelineMarker-" + props.markerID;
 	return <div key={props.markerID} style={containerStyle} >
 		<div data-tip data-for={fullID}
-		     style={(marker.showText && marker.duration > 0) ? colorBarStyleWithText : colorBarStyleWithoutText}
+		     style={(marker.duration > 0) ? colorBarStyle : colorDotStyle}
 		     onClick={()=>{
 			     let success = controller.timeline.deleteMarker(marker);
 			     console.assert(success);
 			     setEditingMarkerValues(marker);
 		     }}/>
-		<div style={textStyle}>{
-			marker.showText ? marker.description : ""
-		}</div>
 		<ReactTooltip id={fullID}>{"[" + marker.time + "] " + marker.description}</ReactTooltip>
 	</div>;
 });

@@ -44,14 +44,11 @@ export let MPTickMark = React.memo(function(props: {
 	let style : CSSProperties = {
 		position: "absolute",
 		top: props.vOffset,
-		left: props.positionFromTime - 3,
+		left: props.positionFromTime - 2,
+		width: 4,
+		height: MAX_HEIGHT,
 	};
-	return <div style={style} className={"timeline-elem MPTickMark"}>
-		<div data-tip data-for={`${props.elemID}`}>
-			<svg width={6} height={MAX_HEIGHT}>
-				<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={"#caebf6"}/>
-			</svg>
-		</div>
+	return <div style={style} className={"timeline-elem MPTickMark"} data-tip data-for={`${props.elemID}`}>
 		<ReactTooltip id={`${props.elemID}`}>
 			<span>[{props.elem.displayTime.toFixed(2)}] {props.elem.source}</span>
 		</ReactTooltip>
@@ -73,6 +70,8 @@ export let DamageMark = React.memo(function(props: {
 	let style={
 		top: props.vOffset,
 		left: props.positionFromTime - 3,
+		width: 6,
+		height: 6,
 		zIndex: 1
 	};
 	// pot?
@@ -87,9 +86,6 @@ export let DamageMark = React.memo(function(props: {
 	let hoverText = "[" + props.elem.displayTime.toFixed(2) + "] " + potency.toFixed(2) + " (" + props.elem.source + ")";
 	if (pot) hoverText += " (pot)"
 	return <div style={style} className={"timeline-elem damageMark"} data-tip data-for={`${props.elemID}`}>
-		<svg width={6} height={6}>
-			<polygon points="0,0 6,0 3,6" fill="red" stroke="none"/>
-		</svg>
 		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
 	</div>;
 });
