@@ -3,7 +3,7 @@ import {updateSelectionDisplay, updateStatsDisplay, updateTimelineContent, updat
 // @ts-ignore
 import {controller} from "./Controller";
 import {Debug, ResourceType, SkillName} from "../Game/Common";
-import {ActionNode} from "./Record";
+import {ActionNode, ActionType} from "./Record";
 import {FileType} from "./Common";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
@@ -36,7 +36,7 @@ type TimelineElemBase = {
 
 type Fixme = any;
 
-type CursorElem = TimelineElemBase & {
+export type CursorElem = TimelineElemBase & {
 	type: ElemType.s_Cursor;
 	displayTime: number;
 }
@@ -313,10 +313,19 @@ export class Timeline {
 
 		let selectResult = controller.record.onClickNode(node, bShift, controller.game.getTincturePotencyMultiplier());
 
+		let gcdSkills = 0;
+		controller.record.iterateSelected(node=>{
+			if (node.type === ActionType.Skill && node.resolved() && node.skillName) {
+				let skillInfo = controller.game.skillsList.get(node.skillName);
+				if (skillInfo.info.cdName === ResourceType.cd_GCD) gcdSkills++;
+			}
+		});
+
 		// potency stats
 		updateStatsDisplay({
 			selectedPotency: selectResult.selectedPotency,
 			selectedDuration: selectResult.selectionEndTime - selectResult.selectionStartTime,
+			selectedGcdCount: gcdSkills,
 		});
 
 		// selection range indicator

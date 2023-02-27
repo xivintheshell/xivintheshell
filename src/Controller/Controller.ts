@@ -352,11 +352,20 @@ class Controller {
 		let cumulativePotency = this.game.getCumulativePotency();
 		let totalTime = this.game.getLastDamageApplicationDisplayTime();
 
+		let gcdSkills = 0;
+		this.record.iterateAll(node=>{
+			if (node.type === ActionType.Skill && node.resolved() && node.skillName) {
+				let skillInfo = this.game.skillsList.get(node.skillName);
+				if (skillInfo.info.cdName === ResourceType.cd_GCD) gcdSkills++;
+			}
+		});
+
 		updateStatsDisplay({
 			cumulativePotency: cumulativePotency,
 			cumulativeDuration: Math.max(0, totalTime),
 			historical: this.#bCalculatingHistoricalState,
-			statsBySkill: this.#getPotencyStatsBySkill()
+			statsBySkill: this.#getPotencyStatsBySkill(),
+			gcdCount: gcdSkills
 		});
 	}
 	setTincturePotencyMultiplier(inMultiplier: number) {

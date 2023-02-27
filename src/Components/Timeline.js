@@ -15,7 +15,7 @@ import {getTimelineMarkersHeight, TimelineMarkers} from "./TimelineMarkers";
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
 import {TimelineCanvas} from "./TimelineCanvas";
-import {drawStaticTimeline} from "./TimelineCanvas";
+import ReactTooltip from "react-tooltip";
 
 export let updateSelectionDisplay = (startX, endX)=>{}
 
@@ -91,26 +91,45 @@ let TimelineRuler = React.memo(function(props){
 	</div>;
 });
 
-function TimelineHeader(props) {
-	return <div ref={props.divref} style={{
-		zIndex: 1,
-		position: "relative",
-		width: "100%",
-		height: "30px",
-		background: "transparent"//"#ececec",
-	}} onClick={(e)=>{
-		if (e.target) {
-			let rect = e.target.getBoundingClientRect();
-			let x = e.clientX - rect.left;
-			let t = controller.timeline.timeFromPosition(x);
-			if (t < controller.game.time) {
-				controller.displayHistoricalState(t, undefined); // replay the actions as-is
-			} else {
-				controller.displayCurrentState();
+class TimelineHeader extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			displayTime: "0"
+		};
+	}
+	render() {
+		return <div ref={this.props.divref} style={{
+			zIndex: 1,
+			position: "relative",
+			width: "100%",
+			height: "30px",
+			background: "transparent"//"#ececec",
+		}} onMouseMove={(e)=>{
+			if (e.target) {
+				let rect = e.target.getBoundingClientRect();
+				let x = e.clientX - rect.left;
+				let t = controller.timeline.timeFromPosition(x);
+				this.setState({displayTime: (t - controller.gameConfig.countdown).toFixed(2)});
 			}
-		}
-	}}/>
+		}} onClick={(e)=>{
+			if (e.target) {
+				let rect = e.target.getBoundingClientRect();
+				let x = e.clientX - rect.left;
+				let t = controller.timeline.timeFromPosition(x);
+				if (t < controller.game.time) {
+					controller.displayHistoricalState(t, undefined); // replay the actions as-is
+				} else {
+					controller.displayCurrentState();
+				}
+			}
+		}} data-tip data-for="timeline-header">
+			<ReactTooltip id="timeline-header">{this.state.displayTime}</ReactTooltip>
+		</div>
+	}
 }
+
+export let redrawTimelineCanvas = function() {}
 
 export let updateTimelineContent = function() {}
 
@@ -144,12 +163,17 @@ class TimelineMain extends React.Component {
 		updateMarkers_TimelineMarkers = (trackBins=>{
 			this.setState({trackBins: trackBins});
 		}).bind(this);
+		redrawTimelineCanvas = (()=>{
+			this.forceUpdate();
+		}).bind(this);
 	}
 
 	componentWillUnmount() {
 		updateTimelineContent = () => {
 		};
 		updateMarkers_TimelineMarkers = () => {
+		};
+		redrawTimelineCanvas = () => {
 		};
 	}
 
@@ -170,6 +194,7 @@ class TimelineMain extends React.Component {
 
 		let elemComponents = [];
 		let verticalOffset = "-" + (getTimelineMarkersHeight() + 30) + "px";
+		// todo
 		for (let i = 0; i < this.state.elements.length; i++) {
 			let e = this.state.elements[i];
 			if (e.type === ElemType.s_Cursor) {
@@ -178,15 +203,15 @@ class TimelineMain extends React.Component {
 			else if (e.type === ElemType.s_ViewOnlyCursor) {
 				if (e.enabled) elemComponents.push(<Cursor key={i} elem={e} elemID={"elemID-"+i} color={"darkorange"} vOffset={verticalOffset}/>)
 			}
-			else if (e.type === ElemType.DamageMark) {
-				elemComponents.push(<DamageMark
-					positionFromTime={controller.timeline.positionFromTime(e.time)}
-					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset} tincturePotencyMultiplier={this.state.tincturePotencyMultiplier}/>)
-			}
 			else if (e.type === ElemType.LucidMark) {
 				elemComponents.push(<LucidMark
 					positionFromTime={controller.timeline.positionFromTime(e.time)}
 					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
+			}
+			else if (e.type === ElemType.DamageMark) {
+				elemComponents.push(<DamageMark
+					positionFromTime={controller.timeline.positionFromTime(e.time)}
+					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset} tincturePotencyMultiplier={this.state.tincturePotencyMultiplier}/>)
 			}
 			else if (e.type === ElemType.MPTickMark) {
 				elemComponents.push(<MPTickMark
@@ -197,16 +222,6 @@ class TimelineMain extends React.Component {
 				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i} tincturePotencyMultiplier={this.state.tincturePotencyMultiplier} />)
 			}
 		}
-		let countdownBgStyle = {
-			background: "rgba(0,0,0,0.1)",
-			position: "absolute",
-			left: "0",
-			height: "100%",
-			width: controller.timeline.positionFromTime(controller.gameConfig.countdown),
-			zIndex: 2,
-			pointerEvents: "none"
-		};
-		//let countdownGrey = <div style={countdownBgStyle}/>;
 		let contentStyle = {
 			position: "relative",
 			width: "100%",
@@ -293,8 +308,10 @@ class StatsDisplay extends React.Component {
 			historical: false,
 			cumulativePotency: 0,
 			cumulativeDuration: 0,
+			gcdCount: 0,
 			selectedPotency: 0,
 			selectedDuration: 0,
+			selectedGcdCount: 0,
 			statsBySkill: new Map()
 		};
 		updateStatsDisplay = this.unboundUpdateStatsDisplay.bind(this);
@@ -320,6 +337,7 @@ class StatsDisplay extends React.Component {
 					</div>
 				</div>
 			}/>: {this.state.cumulativeDuration <= 0 ? "N/A" : (this.state.cumulativePotency / this.state.cumulativeDuration).toFixed(2)}</span><br/>
+			<span>Applied GCD skills: {this.state.gcdCount}</span><br/>
 			<div>
 				<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
 					return controller.getStatsCsv();
@@ -329,21 +347,22 @@ class StatsDisplay extends React.Component {
 
 		let statsBySkillEntries = [];
 		this.state.statsBySkill.forEach((skill, skillName)=>{
-			if (skill.potencySum > 0) {
-				statsBySkillEntries.push({skillName: skillName, potencySum: skill.potencySum, count: skill.count});
-			}
+			statsBySkillEntries.push({skillName: skillName, potencySum: skill.potencySum, count: skill.count});
 		});
 		statsBySkillEntries.sort((a, b)=>{ return b.potencySum - a.potencySum });
 		let statsBySkill = <div style={{flex: 1, color: this.state.historical ? "darkorange" : "black"}}>
-			{statsBySkillEntries.map(skill=><div style={{display: "inline-block", width: "50%"}} key={skill.skillName}>{
-				skill.skillName + " (" + skill.count + "): " + skill.potencySum.toFixed(2)
-			}</div>)}
+			{statsBySkillEntries.map(skill => {
+				let statsStr = skill.skillName + " (" + skill.count + ")";
+				if (skill.potencySum > 0) statsStr += ": " + skill.potencySum.toFixed(2);
+				return <div style={{display: "inline-block", width: "50%"}} key={skill.skillName}>{statsStr}</div>
+			})}
 		</div>
 
 		let selected = <div style={{flex: 1}}>
 			<span>Duration (selected): {this.state.selectedDuration.toFixed(2)}</span><br/>
-			<span>Potency (selected): {this.state.selectedPotency.toFixed(2)}</span><br/>
-			<span>PPS (selected): {(this.state.selectedPotency / this.state.selectedDuration).toFixed(2)}</span>
+			<span>Applied potency (selected): {this.state.selectedPotency.toFixed(2)}</span><br/>
+			<span>PPS (selected): {(this.state.selectedPotency / this.state.selectedDuration).toFixed(2)}</span><br/>
+			<span>Applied GCD skills (selected): {this.state.selectedGcdCount}</span>
 		</div>
 		return <div style={{ display: "flex", flexDirection: "row" }}>
 			{cumulative}

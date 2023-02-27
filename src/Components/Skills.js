@@ -5,6 +5,7 @@ import {controller} from "../Controller/Controller";
 import ReactTooltip from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
 import {localize, localizeSkillName} from "./Localization";
+import {redrawTimelineCanvas} from "./Timeline";
 
 export let displayedSkills = [
 	SkillName.Blizzard,
@@ -73,6 +74,16 @@ skillIcons.set(SkillName.LucidDreaming, require("./Asset/lucidDreaming.png"));
 skillIcons.set(SkillName.Surecast, require("./Asset/surecast.png"));
 skillIcons.set(SkillName.Tincture, require("./Asset/tincture.png"));
 skillIcons.set(SkillName.Sprint, require("./Asset/sprint.png"));
+
+export const skillIconImages = new Map();
+skillIcons.forEach((path, skillName)=>{
+	let imgObj = new Image();
+	imgObj.src = path;
+	imgObj.onload = function() {
+		redrawTimelineCanvas();
+	}
+	skillIconImages.set(skillName, imgObj);
+});
 
 let setSkillInfoText = (text)=>{};
 function ProgressCircle(props={

@@ -73,6 +73,8 @@ export class ActionNode {
 
 	resolve() { this.#resolved = true; }
 
+	resolved() { return this.#resolved; }
+
 	getPotency() { return this.#resolved ? this.#capturedPotency : 0; }
 
 	addPotency(amount : number) {

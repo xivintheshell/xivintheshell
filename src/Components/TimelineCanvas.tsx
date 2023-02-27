@@ -1,6 +1,9 @@
 import React, {useEffect, useRef} from 'react'
-import {ElemType, MarkerElem, SkillElem, TimelineElem} from "../Controller/Timeline";
+import {CursorElem, ElemType, MarkerElem, SkillElem, TimelineElem} from "../Controller/Timeline";
 import {StaticFn} from "./Common";
+import {ResourceType} from "../Game/Common";
+// @ts-ignore
+import {skillIconImages} from "./Skills";
 
 type BackgroundProps = [
 	number,
@@ -14,6 +17,7 @@ type BackgroundProps = [
 ];
 
 const trackHeight = 14;
+const trackBottomMargin = 6;
 const maxTimelineHeight = 400;
 
 // todo: optimize by sorting and batching?
@@ -112,10 +116,94 @@ function drawSkills(
 	let gcdBars: Rect[] = [];
 	let snapshots: number[] = [];
 	let llCovers: Rect[] = [];
+	let skillIcons: {img: HTMLImageElement, x: number, y: number}[] = []; // tmp
 	elems.forEach(e=>{
 		let skill = e as SkillElem;
-
+		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(skill.time, scale);
+		let y = skill.isGCD ? (skillsTopY + 14) : skillsTopY;
+		// purple/grey bar
+		let lockbarWidth = StaticFn.positionFromTimeAndScale(skill.lockDuration, scale);
+		if (skill.isSpellCast) {
+			purpleLockBars.push({x: x, y: y, w: lockbarWidth, h: 14});
+			snapshots.push(x + StaticFn.positionFromTimeAndScale(skill.relativeSnapshotTime, scale));
+		} else {
+			greyLockBars.push({x: x, y: y, w: lockbarWidth, h: 28});
+		}
+		// green gcd recast bar
+		if (skill.isGCD) {
+			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
+			gcdBars.push({x: x, y: y + 14, w: recastWidth, h: 14});
+		}
+		if (skill.node.hasBuff(ResourceType.LeyLines)) {
+			llCovers.push({x: x, y: y + 28, w: 28, h: 4});
+		}
+		// skill icon
+		let img = skillIconImages.get(skill.skillName);
+		if (img) skillIcons.push({img: img, x: x, y: y});
 	});
+
+	// purple
+	ctx.fillStyle = "#e7d9ee";
+	ctx.beginPath();
+	purpleLockBars.forEach(r=>{
+		ctx.rect(r.x, r.y, r.w, r.h);
+	});
+	ctx.fill();
+
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = "rgba(151, 85, 239, 0.2)";
+	ctx.beginPath();
+	snapshots.forEach(x=>{
+		ctx.moveTo(x, skillsTopY + 14);
+		ctx.lineTo(x, skillsTopY + 28);
+	});
+	ctx.stroke();
+
+	// green
+	ctx.fillStyle = "#dbf3d6";
+	ctx.beginPath();
+	gcdBars.forEach(r=>{
+		ctx.rect(r.x, r.y, r.w, r.h);
+	});
+	ctx.fill();
+
+	// grey
+	ctx.fillStyle = "#9d9d9d";
+	ctx.beginPath();
+	greyLockBars.forEach(r=>{
+		ctx.rect(r.x, r.y, r.w, r.h);
+	});
+	ctx.fill();
+
+	// llCovers
+	ctx.fillStyle = "#ffdc4f";
+	ctx.beginPath();
+	llCovers.forEach(r=>{
+		ctx.rect(r.x, r.y, r.w, r.h);
+	});
+	ctx.fill();
+
+	// icons
+	ctx.beginPath();
+	skillIcons.forEach(img=>{
+		ctx.drawImage(img.img, img.x, img.y, 28, 28);
+	});
+}
+
+function drawCursor(ctx: CanvasRenderingContext2D, x: number, color: string) {
+	ctx.fillStyle = color;
+	ctx.beginPath();
+	ctx.moveTo(x-3, 0);
+	ctx.lineTo(x+3, 0);
+	ctx.lineTo(x, 6);
+	ctx.fill();
+
+	ctx.strokeStyle = color;
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(x, 0);
+	ctx.lineTo(x, maxTimelineHeight);
+	ctx.stroke();
 }
 
 // background layer:
@@ -192,10 +280,6 @@ function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHei
 	}
 	ctx.fill();
 
-	drawMarkers(ctx, countdown, scale, markerTracksOriginY, timelineOrigin, trackBins);
-
-	const trackBottomMargin = 6;
-
 	// organize elems into bins
 	let elemBins = new Map<ElemType, TimelineElem[]>();
 	elements.forEach(e=>{
@@ -207,13 +291,32 @@ function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHei
 	// mp tick marks
 	drawMPTickMarks(ctx, countdown, scale, timelineOrigin, elemBins.get(ElemType.MPTickMark) ?? []);
 
+	// timeline markers
+	drawMarkers(ctx, countdown, scale, markerTracksOriginY, timelineOrigin, trackBins);
+
 	// damage marks
 	drawDamageMarks(ctx, countdown, scale, timelineOrigin, elemBins.get(ElemType.DamageMark) ?? []);
+
+	// skills
+	let skillsTopY = 30 + numTracks * trackHeight + trackBottomMargin;
+	drawSkills(ctx, countdown, scale, timelineOrigin, skillsTopY, elemBins.get(ElemType.Skill) ?? []);
 
 	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(countdown, scale);
 	ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
 	ctx.fillRect(timelineOrigin, 0, countdownWidth, timelineHeight);
+
+	// view only cursor
+	(elemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach(cursor=>{
+		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, scale);
+		drawCursor(ctx, x, "darkorange");
+	});
+
+	// cursor
+	(elemBins.get(ElemType.s_Cursor) ?? []).forEach(cursor=>{
+		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, scale);
+		drawCursor(ctx, x, "black");
+	});
 }
 
 // background layer: white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey

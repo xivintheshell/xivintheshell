@@ -19,15 +19,18 @@ export function Cursor(props: {
 	color: string;
 }) {
 	let style={
+		width: 6,
+		height: MAX_HEIGHT,
 		top: props.vOffset,
 		left: controller.timeline.positionFromTime(props.elem.time) - 3,
 		zIndex: 2,
 	};
 	return <div style={style} className={"timeline-elem cursor"} data-tip data-for={`${props.elemID}`}>
+		{/*
 		<svg width={6} height={MAX_HEIGHT}>
 			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={props.color}/>
 			<polygon points="0,0 6,0 3,6" fill={props.color} stroke="none"/>
-		</svg>
+		</svg>*/}
 		<ReactTooltip id={`${props.elemID}`}>{props.elem.displayTime.toFixed(2)}</ReactTooltip>
 	</div>;
 }
@@ -175,22 +178,15 @@ export function TimelineSkill(props: {
 	elemID: string;
 }) {
 	let node = props.elem.node;
-	let lockBarWidth = controller.timeline.positionFromTime(props.elem.lockDuration);
-	let recastBarWidth = controller.timeline.positionFromTime(props.elem.recastDuration);
-	let snapshotRelativePositionX = controller.timeline.positionFromTime(props.elem.relativeSnapshotTime);
 
 	let iconStyle: CSSProperties = {
 		position: "absolute",
 		top: 0,
 		width: 28,
 		height: 28,
+		outline: "none",
 		zIndex: 1,
 	};
-	if (node.hasBuff(ResourceType.LeyLines)) {
-		iconStyle.borderBottom = "4px solid";
-		iconStyle.borderColor = "#ffdc4f";
-	}
-	let iconPath = skillIcons.get(props.elem.skillName);
 	let description = localizeSkillName(props.elem.skillName) + "@" + (props.elem.displayTime).toFixed(2);
 	if (node.hasBuff(ResourceType.LeyLines)) description += " (LL)";
 	if (node.hasBuff(ResourceType.Tincture)) description += " (pot)";
@@ -214,30 +210,20 @@ export function TimelineSkill(props: {
 			<span>{"duration: " + lockDuration.toFixed(2)}</span>
 		</div>;
 	}
-	let iconImg = <div style={iconStyle} className={"timeline-elem-skill-icon"}>
-		<img
-			style={{display: "block", outline: "none", width: "100%", height: "100%"}}
-			src={iconPath}
-			alt={props.elem.skillName}
-			tabIndex={-1}
-			onKeyDown={(e) => {
-				if (e.key === "Backspace" || e.key === "Delete") {
-					controller.rewindUntilBefore(controller.record.getFirstSelection(), false);
-					controller.displayCurrentState();
-					controller.updateAllDisplay();
-					controller.autoSave();
-				}
-			}}
-		/>
+	let iconImg = <div style={iconStyle} tabIndex={0} className={"timeline-elem-skill-icon"} onKeyDown={e => {
+		if (e.key === "Backspace" || e.key === "Delete") {
+			controller.rewindUntilBefore(controller.record.getFirstSelection(), false);
+			controller.displayCurrentState();
+			controller.updateAllDisplay();
+			controller.autoSave();
+		}
+	}}>
 	</div>;
-	let icon = <div data-tip data-for={`${props.elemID}`}><Clickable key={node.getNodeIndex()} content={iconImg} onClickFn={(e) => {
-		bHandledSkillSelectionThisFrame = true;
-		controller.timeline.onClickTimelineAction(node, e.shiftKey);
-	}}/></div>
-
-	return <div style={componentStyle} className={"timeline-elem skill"}>
-		<TimelineSkillStaticPart lockBarWidth={lockBarWidth} isSpellCast={props.elem.isSpellCast} isGCD={props.elem.isGCD} recastBarWidth={recastBarWidth} snapshotRelativePositionX={snapshotRelativePositionX}/>
-		{icon}
+	return <div style={componentStyle} className={"timeline-elem skill"} data-tip data-for={`${props.elemID}`}>
+		<Clickable key={node.getNodeIndex()} content={iconImg} onClickFn={(e) => {
+			bHandledSkillSelectionThisFrame = true;
+			controller.timeline.onClickTimelineAction(node, e.shiftKey);
+		}}/>
 		<ReactTooltip id={`${props.elemID}`}>{hoverText}</ReactTooltip>
 	</div>;
 }

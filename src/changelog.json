@@ -1,5 +1,13 @@
 [
 	{
+		"date": "2/27/23",
+		"changes": [
+			"performance optimization prep work: move most of timeline rendering to canvas and use DOM only for interaction",
+			"total & selected GCD skills count",
+			"hover on timeline header & markers to see exact time"
+		]
+	},
+	{
 		"date": "2/26/23",
 		"changes": [
 			"fix markers not updating when timeline scale changes"
