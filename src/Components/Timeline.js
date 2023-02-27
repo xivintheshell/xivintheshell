@@ -119,8 +119,8 @@ class TimelineMain extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			canvasWidth: 300,
-			canvasHeight: 180,
+			timelineWidth: 300,
+			timelineHeight: 180,
 			scale: 1,
 			tincturePotencyMultiplier: 1,
 			elements: [],
@@ -133,8 +133,8 @@ class TimelineMain extends React.Component {
 	}
 	componentDidMount() {
 		this.setState({
-			canvasWidth: controller.timeline.getCanvasWidth(),
-			canvasHeight: controller.timeline.getCanvasHeight(),
+			timelineWidth: controller.timeline.getCanvasWidth(),
+			timelineHeight: controller.timeline.getCanvasHeight(),
 			//tincturePotencyMultiplier will be set when timeline display settings is mounted
 			elements: controller.timeline.elements,
 		});
@@ -147,8 +147,10 @@ class TimelineMain extends React.Component {
 
 		this.canvasVersion++;
 		let canvas = <TimelineCanvas
-			width={this.state.canvasWidth}
-			height={this.state.canvasHeight}
+			timelineWidth={this.state.timelineWidth}
+			timelineHeight={this.state.timelineHeight}
+			visibleLeft={this.props.visibleLeft}
+			visibleWidth={this.props.visibleWidth}
 			countdown={controller.gameConfig.countdown}
 			scale={this.state.scale}
 			elements={this.state.elements}
@@ -199,7 +201,7 @@ class TimelineMain extends React.Component {
 			height: "54px"
 		};
 		let countdownGrey = <div style={countdownBgStyle}/>;
-		return <div className="timeline-main" style={{width: this.state.canvasWidth, height: this.state.canvasHeight}} onClick={
+		return <div className="timeline-main" style={{width: this.state.timelineWidth, height: this.state.timelineHeight}} onClick={
 			(evt)=>{
 				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
 					controller.record.unselectAll();
@@ -215,7 +217,7 @@ class TimelineMain extends React.Component {
 			{countdownGrey}
 			<TimelineHeader
 				divref={this.timelineHeaderRef}
-				canvasWidth={this.state.canvasWidth}
+				timelineWidth={this.state.timelineWidth}
 				pixelPerSecond={controller.timeline.scale * 100}
 				countdown={controller.gameConfig.countdown}
 			/>
@@ -231,6 +233,10 @@ class FixedRightColumn extends React.Component {
 	constructor(props) {
 		super(props);
 		this.myRef = React.createRef();
+		this.state = {
+			visibleLeft: 0,
+			visibleWidth: 0
+		}
 	}
 	componentDidMount() {
 		scrollTimelineTo = ((positionX)=>{
@@ -238,14 +244,28 @@ class FixedRightColumn extends React.Component {
 				let clientWidth = this.myRef.current.clientWidth;
 				this.myRef.current.scrollLeft = positionX - clientWidth * 0.6;
 			}
+			this.updateVisibleRange();
 		}).bind(this);
+		this.updateVisibleRange();
 	}
 	componentWillUnmount() {
 		scrollTimelineTo = (positionX)=>{};
 	}
+	updateVisibleRange() {
+		if (this.myRef.current) {
+			this.setState({
+				visibleLeft: this.myRef.current.scrollLeft,
+				visibleWidth: this.myRef.current.clientWidth
+			});
+		}
+	}
+
 	render() {
-		return <div ref={this.myRef} className={"timeline-fixedRightColumn staticScrollbar"}>
-			<TimelineMain/>
+		//console.log(this.state);
+		return <div ref={this.myRef} className={"timeline-fixedRightColumn staticScrollbar"} onScroll={e=>{
+			this.updateVisibleRange();
+		}}>
+			<TimelineMain visibleLeft={this.state.visibleLeft} visibleWidth={this.state.visibleWidth}/>
 		</div>
 	}
 }

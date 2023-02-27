@@ -10,6 +10,7 @@ import {updateMarkers_TimelineMarkers} from "../Components/TimelineMarkers";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
+import {StaticFn} from "../Components/Common";
 
 export const enum ElemType {
 	s_Cursor = "s_Cursor",
@@ -289,8 +290,8 @@ export class Timeline {
 	drawElements() {
 
 		updateTimelineContent({
-			canvasWidth: this.getCanvasWidth(),
-			canvasHeight: this.getCanvasHeight(),
+			timelineWidth: this.getCanvasWidth(),
+			timelineHeight: this.getCanvasHeight(),
 			elements: this.elements,
 			scale: this.scale
 		});

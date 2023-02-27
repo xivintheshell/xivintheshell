@@ -18,6 +18,7 @@ import {PresetLinesManager} from "./PresetLinesManager";
 // @ts-ignore
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
+import {StaticFn} from "../Components/Common";
 
 type Fixme = any;
 
@@ -1023,7 +1024,7 @@ class Controller {
 		let targetT = t === undefined ? this.game.time : t;
 		// the most adhoc hack ever...
 		setTimeout(()=>{
-			scrollTimelineTo(this.timeline.positionFromTime(targetT));
+			scrollTimelineTo(StaticFn.positionFromTimeAndScale(targetT, this.timeline.scale));
 		}, 0);
 	}
 

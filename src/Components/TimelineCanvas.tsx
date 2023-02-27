@@ -6,21 +6,23 @@ type BackgroundProps = [
 	number,
 	number,
 	number,
+	number,
+	number,
 	number
 ];
 
 // background layer:
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
-function drawTimelineBackground(ctx: CanvasRenderingContext2D, [width, height, countdown, scale]: BackgroundProps) {
+function drawTimelineBackground(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHeight, visibleLeft, visibleWidth, countdown, scale]: BackgroundProps) {
 	console.log("clear");
 
 	// background white
 	ctx.fillStyle = "white";
-	ctx.fillRect(0, 0, width, height);
+	ctx.fillRect(0, 0, timelineWidth, timelineHeight);
 
 	// ruler bg
 	ctx.fillStyle = "#ececec";
-	ctx.fillRect(0, 0, width, 30);
+	ctx.fillRect(0, 0, timelineWidth, 30);
 
 	// ruler marks
 	let pixelsPerSecond = scale * 100;
@@ -32,25 +34,25 @@ function drawTimelineBackground(ctx: CanvasRenderingContext2D, [width, height, c
 	ctx.textAlign = "center";
 	ctx.fillStyle = "black";
 	ctx.beginPath();
-	for (let x = 0; x < width - countdownPadding; x += pixelsPerSecond) {
-		ctx.moveTo(x + countdownPadding, 0);
-		ctx.lineTo(x + countdownPadding, 6);
-	}
-	for (let x = -pixelsPerSecond; x >= -countdownPadding; x -= pixelsPerSecond) {
-		ctx.moveTo(x + countdownPadding, 0);
-		ctx.lineTo(x + countdownPadding, 6);
-	}
 	if (pixelsPerSecond >= 6) {
-		for (let x = 0; x < width - countdownPadding; x += pixelsPerSecond * 5) {
+		for (let x = 0; x < timelineWidth - countdownPadding; x += pixelsPerSecond) {
 			ctx.moveTo(x + countdownPadding, 0);
-			ctx.lineTo(x + countdownPadding, 10);
-			ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), x + countdownPadding, 23);
+			ctx.lineTo(x + countdownPadding, 6);
 		}
-		for (let x = -pixelsPerSecond * 5; x >= -countdownPadding; x -= pixelsPerSecond * 5) {
+		for (let x = -pixelsPerSecond; x >= -countdownPadding; x -= pixelsPerSecond) {
 			ctx.moveTo(x + countdownPadding, 0);
-			ctx.lineTo(x + countdownPadding, 10);
-			ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), x + countdownPadding, 23);
+			ctx.lineTo(x + countdownPadding, 6);
 		}
+	}
+	for (let x = 0; x < timelineWidth - countdownPadding; x += pixelsPerSecond * 5) {
+		ctx.moveTo(x + countdownPadding, 0);
+		ctx.lineTo(x + countdownPadding, 10);
+		ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), x + countdownPadding, 23);
+	}
+	for (let x = -pixelsPerSecond * 5; x >= -countdownPadding; x -= pixelsPerSecond * 5) {
+		ctx.moveTo(x + countdownPadding, 0);
+		ctx.lineTo(x + countdownPadding, 10);
+		ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), x + countdownPadding, 23);
 	}
 	ctx.stroke();
 
@@ -74,16 +76,18 @@ function drawTimelineElements(ctx: CanvasRenderingContext2D, width: number, heig
 // transparent interactive layer: only render when not in real time, html DOM
 
 export function TimelineCanvas(props: {
-	width: number,
-	height: number,
+	timelineWidth: number,
+	timelineHeight: number,
+	visibleLeft: number,
+	visibleWidth: number,
 	countdown: number,
 	scale: number,
 	elements: TimelineElem[],
 	version: number
 }) {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
-	let scaledWidth = props.width;
-	let scaledHeight = props.height;
+	let scaledWidth = props.timelineWidth;
+	let scaledHeight = props.timelineHeight;
 	const dpr = window.devicePixelRatio;
 	const rect = canvasRef.current?.getBoundingClientRect();
 	if (rect) {
@@ -93,16 +97,19 @@ export function TimelineCanvas(props: {
 
 	// background layer
 	let bgProps : BackgroundProps = [
-		props.width,
-		props.height,
+		props.timelineWidth,
+		props.timelineHeight,
+		props.visibleLeft,
+		props.visibleWidth,
 		props.countdown,
 		props.scale
 	];
 	useEffect(()=>{
 		let ctx = canvasRef.current?.getContext("2d", {alpha: false});
 		if (ctx) {
-			if (rect) ctx.scale(dpr, dpr);
+			ctx.scale(dpr, dpr);
 			drawTimelineBackground(ctx, bgProps);
+			ctx.scale(1 / dpr, 1 / dpr);
 		}
 	}, bgProps);
 
@@ -117,8 +124,8 @@ export function TimelineCanvas(props: {
 	 */
 
 	return <canvas ref={canvasRef} width={scaledWidth} height={scaledHeight} style={{
-		width: props.width,
-		height: props.height,
+		width: props.timelineWidth,
+		height: props.timelineHeight,
 		position: "absolute",
 		zIndex: -1,
 	}}/>;
