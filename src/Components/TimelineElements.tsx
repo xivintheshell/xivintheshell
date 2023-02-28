@@ -60,6 +60,7 @@ export let DamageMark = React.memo(function(props: {
 		displayTime: number,
 		potency: number,
 		source: string,
+		tincturePotencyMultiplier: number,
 		buffs: ResourceType[]
 	},
 	tincturePotencyMultiplier: number,
@@ -79,7 +80,7 @@ export let DamageMark = React.memo(function(props: {
 	});
 	// potency
 	let potency = props.elem.potency;
-	if (pot) potency *= props.tincturePotencyMultiplier;
+	if (pot) potency *= props.elem.tincturePotencyMultiplier;
 	// hover text
 	let hoverText = "[" + props.elem.displayTime.toFixed(2) + "] " + potency.toFixed(2) + " (" + props.elem.source + ")";
 	if (pot) hoverText += " (pot)"
@@ -164,6 +165,7 @@ export function TimelineSkill(props: {
 		isSpellCast: boolean;
 		recastDuration: number;
 		relativeSnapshotTime: number;
+		tincturePotencyMultiplier: number;
 		skillName: SkillName;
 		displayTime: number;
 		time: number;

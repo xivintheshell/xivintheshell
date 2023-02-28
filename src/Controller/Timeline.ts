@@ -40,24 +40,24 @@ export type CursorElem = TimelineElemBase & {
 	type: ElemType.s_Cursor;
 	displayTime: number;
 }
-type ViewOnlyCursorElem = TimelineElemBase & {
+export type ViewOnlyCursorElem = TimelineElemBase & {
 	type: ElemType.s_ViewOnlyCursor;
 	displayTime: number;
 	enabled: boolean;
 }
-type DamageMarkElem = TimelineElemBase & {
+export type DamageMarkElem = TimelineElemBase & {
 	type: ElemType.DamageMark;
 	displayTime: number;
 	potency: number;
 	buffs: ResourceType[];
 	source: string;
 }
-type LucidMarkElem = TimelineElemBase & {
+export type LucidMarkElem = TimelineElemBase & {
 	type: ElemType.LucidMark;
 	displayTime: number;
 	source: string;
 }
-type MPTickMarkElem = TimelineElemBase & {
+export type MPTickMarkElem = TimelineElemBase & {
 	type: ElemType.MPTickMark;
 	displayTime: number;
 	source: string;

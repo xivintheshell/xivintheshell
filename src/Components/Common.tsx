@@ -87,6 +87,9 @@ export const StaticFn =  {
 	positionFromTimeAndScale: function(time: number, scale: number): number {
 		return time * scale * 100;
 	},
+	timeFromPositionAndScale: function(x: number, scale: number): number {
+		return x / (scale * 100);
+	},
 	displayTime: function(time: number, fractionDigits: number) {
 		let absTime = Math.abs(time);
 		let minute = Math.floor(absTime / 60);

@@ -1,9 +1,20 @@
 import React, {useEffect, useRef, useState} from 'react'
-import {ElemType, MarkerElem, SkillElem, TimelineElem} from "../Controller/Timeline";
+import {
+	CursorElem,
+	DamageMarkElem,
+	ElemType, LucidMarkElem,
+	MarkerElem,
+	MPTickMarkElem,
+	SkillElem,
+	TimelineElem,
+	ViewOnlyCursorElem
+} from "../Controller/Timeline";
 import {StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
 // @ts-ignore
 import {skillIconImages} from "./Skills";
+import {controller} from "../Controller/Controller";
+import {localizeSkillName} from "./Localization";
 
 type BackgroundProps = [
 	number,
@@ -16,24 +27,54 @@ type BackgroundProps = [
 	TimelineElem[],
 	number,
 	number,
-	boolean
+	number,
+	boolean,
+	number
 ];
 
 const trackHeight = 14;
 const trackBottomMargin = 6;
 const maxTimelineHeight = 400;
 
-function drawTip(ctx: CanvasRenderingContext2D, lines: string[], x: number, y: number, canvasWidth: number, canvasHeight: number) {
+let g_isClickUpdate = false;
+let g_mouseX = 0;
+let g_mouseY = 0;
+
+let g_activeHoverTip: string[] | undefined = undefined;
+let g_activeOnClick: (()=>void) | undefined = undefined;
+
+let g_tincturePotencyMultiplier = 1;
+
+let readback_pointerMouse = false;
+
+// all coordinates in canvas space
+function testInteraction(
+	rect: Rect,
+	hoverTip?: string[],
+	onClick?: ()=>void,
+	pointerMouse?: boolean)
+{
+	if (g_mouseX >= rect.x && g_mouseX < rect.x + rect.w && g_mouseY >= rect.y && g_mouseY < rect.y + rect.h) {
+		g_activeHoverTip = hoverTip;
+		g_activeOnClick = onClick;
+		if (pointerMouse === true) readback_pointerMouse = true;
+	}
+}
+
+function drawTip(ctx: CanvasRenderingContext2D, lines: string[], canvasWidth: number, canvasHeight: number) {
 	if (!lines.length) return;
 
 	const lineHeight = 14;
-	const horizontalPadding = 6;
-	const verticalPadding = 3;
+	const horizontalPadding = 8;
+	const verticalPadding = 4;
 	ctx.font = "12px monospace";
 
 	let maxLineWidth = -1;
 	lines.forEach(l=>{ maxLineWidth = Math.max(maxLineWidth, ctx.measureText(l).width); });
 	let [boxWidth, boxHeight] = [maxLineWidth + 2 * horizontalPadding, lineHeight * lines.length + 2 * verticalPadding];
+
+	let x = g_mouseX;
+	let y = g_mouseY;
 
 	// compute optimal box position
 	const boxToMousePadding = 4;
@@ -117,7 +158,7 @@ function drawMPTickMarks(
 	countdown: number,
 	scale: number,
 	timelineOrigin: number,
-	elems: TimelineElem[]
+	elems: MPTickMarkElem[]
 ) {
 	ctx.lineWidth = 1;
 	ctx.strokeStyle = "#caebf6";
@@ -126,6 +167,11 @@ function drawMPTickMarks(
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(tick.time, scale);
 		ctx.moveTo(x, 30);
 		ctx.lineTo(x, maxTimelineHeight);
+
+		testInteraction(
+			{x: x-2, y: 30, w: 4, h: maxTimelineHeight-30},
+			[tick.displayTime.toFixed(2) + " " + tick.source]
+		);
 	});
 	ctx.stroke();
 }
@@ -135,7 +181,7 @@ function drawDamageMarks(
 	countdown: number,
 	scale: number,
 	timelineOrigin: number,
-	elems: TimelineElem[]
+	elems: DamageMarkElem[]
 ) {
 	ctx.fillStyle = "red";
 	elems.forEach(mark=>{
@@ -145,6 +191,47 @@ function drawDamageMarks(
 		ctx.lineTo(x+3, 0);
 		ctx.lineTo(x, 6);
 		ctx.fill();
+
+		let dm = mark;
+		// pot?
+		let pot = false;
+		dm.buffs.forEach(b=>{
+			if (b===ResourceType.Tincture) pot = true;
+		});
+		// potency
+		let potency = dm.potency;
+		if (pot) potency *= g_tincturePotencyMultiplier;
+		// hover text
+		let hoverText = "[" + dm.displayTime.toFixed(2) + "] " + potency.toFixed(2) + " (" + dm.source + ")";
+		if (pot) hoverText += " (pot)"
+		testInteraction(
+			{x: x-3, y: 0, w: 6, h: 6},
+			[hoverText]
+		);
+	});
+}
+function drawLucidMarks(
+	ctx: CanvasRenderingContext2D,
+	countdown: number,
+	scale: number,
+	timelineOrigin: number,
+	elems: LucidMarkElem[]
+) {
+	ctx.fillStyle = "#88cae0";
+	elems.forEach(mark=>{
+		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(mark.time, scale);
+		ctx.beginPath();
+		ctx.moveTo(x-3, 0);
+		ctx.lineTo(x+3, 0);
+		ctx.lineTo(x, 6);
+		ctx.fill();
+
+		// hover text
+		let hoverText = "[" + mark.displayTime.toFixed(2) + "] " + mark.source;
+		testInteraction(
+			{x: x-3, y: 0, w: 6, h: 6},
+			[hoverText]
+		);
 	});
 }
 
@@ -155,14 +242,14 @@ function drawSkills(
 	scale: number,
 	timelineOrigin: number,
 	skillsTopY: number,
-	elems: TimelineElem[]
+	elems: SkillElem[]
 ) {
 	let greyLockBars: Rect[] = [];
 	let purpleLockBars: Rect[] = [];
 	let gcdBars: Rect[] = [];
 	let snapshots: number[] = [];
 	let llCovers: Rect[] = [];
-	let skillIcons: {img: HTMLImageElement, x: number, y: number}[] = []; // tmp
+	let skillIcons: {elem: SkillElem, x: number, y: number}[] = []; // tmp
 	elems.forEach(e=>{
 		let skill = e as SkillElem;
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(skill.time, scale);
@@ -185,7 +272,7 @@ function drawSkills(
 		}
 		// skill icon
 		let img = skillIconImages.get(skill.skillName);
-		if (img) skillIcons.push({img: img, x: x, y: y});
+		if (img) skillIcons.push({elem: e, x: x, y: y});
 	});
 
 	// purple
@@ -193,9 +280,11 @@ function drawSkills(
 	ctx.beginPath();
 	purpleLockBars.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
+		testInteraction(r);
 	});
 	ctx.fill();
 
+	// snapshot bar
 	ctx.lineWidth = 1;
 	ctx.strokeStyle = "rgba(151, 85, 239, 0.2)";
 	ctx.beginPath();
@@ -210,6 +299,7 @@ function drawSkills(
 	ctx.beginPath();
 	gcdBars.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
+		testInteraction(r);
 	});
 	ctx.fill();
 
@@ -218,6 +308,7 @@ function drawSkills(
 	ctx.beginPath();
 	greyLockBars.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
+		testInteraction(r);
 	});
 	ctx.fill();
 
@@ -226,17 +317,43 @@ function drawSkills(
 	ctx.beginPath();
 	llCovers.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
+		testInteraction(r);
 	});
 	ctx.fill();
 
 	// icons
 	ctx.beginPath();
-	skillIcons.forEach(img=>{
-		ctx.drawImage(img.img, img.x, img.y, 28, 28);
+	skillIcons.forEach(icon=>{
+		ctx.drawImage(skillIconImages.get(icon.elem.skillName), icon.x, icon.y, 28, 28);
+		let node = icon.elem.node;
+		let description = localizeSkillName(icon.elem.skillName) + "@" + (icon.elem.displayTime).toFixed(2);
+		if (node.hasBuff(ResourceType.LeyLines)) description += " (LL)";
+		if (node.hasBuff(ResourceType.Tincture)) description += " (pot)";
+		let lines = [description];
+		let potency = node.getPotency();
+		if (potency > 0) {
+			if (node.hasBuff(ResourceType.Tincture))  {
+				potency *= g_tincturePotencyMultiplier;
+			}
+			lines.push("potency: " + potency.toFixed(2));
+			let lockDuration = 0;
+			if (node.tmp_endLockTime!==undefined && node.tmp_startLockTime!==undefined) {
+				lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
+			}
+			lines.push("duration: " + lockDuration.toFixed(2));
+		}
+		testInteraction(
+			{x: icon.x, y: icon.y, w: 28, h: 28},
+			lines,
+			()=>{
+
+			},
+			true
+		);
 	});
 }
 
-function drawCursor(ctx: CanvasRenderingContext2D, x: number, color: string) {
+function drawCursor(ctx: CanvasRenderingContext2D, x: number, color: string, tip: string) {
 	ctx.fillStyle = color;
 	ctx.beginPath();
 	ctx.moveTo(x-3, 0);
@@ -250,21 +367,39 @@ function drawCursor(ctx: CanvasRenderingContext2D, x: number, color: string) {
 	ctx.moveTo(x, 0);
 	ctx.lineTo(x, maxTimelineHeight);
 	ctx.stroke();
+
+	testInteraction({x: x-3, y: 0, w: 6, h: maxTimelineHeight}, [tip]);
 }
 
 // background layer:
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
-function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHeight, visibleLeft, visibleWidth, countdown, scale, trackBins, elements, mouseX, mouseY, mouseHovered]: BackgroundProps) {
+function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHeight, visibleLeft, visibleWidth, countdown, scale, trackBins, elements, tincturePotencyMultiplier, mouseX, mouseY, mouseHovered, clickCounter]: BackgroundProps) {
 
 	let timelineOrigin = -visibleLeft;
 
 	// background white
 	ctx.fillStyle = "white";
 	ctx.fillRect(0, 0, visibleWidth, timelineHeight);
+	testInteraction({x: 0, y: 0, w: visibleWidth, h: maxTimelineHeight}, undefined, ()=>{
+		// clicked on background:
+		controller.record.unselectAll();
+		controller.displayCurrentState();
+	});
 
 	// ruler bg
 	ctx.fillStyle = "#ececec";
 	ctx.fillRect(0, 0, visibleWidth, 30);
+	let t = StaticFn.timeFromPositionAndScale(mouseX - timelineOrigin, scale);
+	testInteraction(
+		{x: 0, y: 0, w: visibleWidth, h: 30},
+		[(t - countdown).toFixed(2)],
+		()=>{
+			if (t < controller.game.time) {
+				controller.displayHistoricalState(t, undefined); // replay the actions as-is
+			} else {
+				controller.displayCurrentState();
+			}
+		});
 
 	// ruler marks
 	ctx.lineCap = "butt";
@@ -336,17 +471,20 @@ function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHei
 	});
 
 	// mp tick marks
-	drawMPTickMarks(ctx, countdown, scale, timelineOrigin, elemBins.get(ElemType.MPTickMark) ?? []);
+	drawMPTickMarks(ctx, countdown, scale, timelineOrigin, elemBins.get(ElemType.MPTickMark) as MPTickMarkElem[] ?? []);
 
 	// timeline markers
 	drawMarkers(ctx, countdown, scale, markerTracksOriginY, timelineOrigin, trackBins);
 
 	// damage marks
-	drawDamageMarks(ctx, countdown, scale, timelineOrigin, elemBins.get(ElemType.DamageMark) ?? []);
+	drawDamageMarks(ctx, countdown, scale, timelineOrigin, elemBins.get(ElemType.DamageMark) as DamageMarkElem[] ?? []);
+
+	// lucid marks
+	drawLucidMarks(ctx, countdown, scale, timelineOrigin, elemBins.get(ElemType.LucidMark) as LucidMarkElem[] ?? []);
 
 	// skills
 	let skillsTopY = 30 + numTracks * trackHeight + trackBottomMargin;
-	drawSkills(ctx, countdown, scale, timelineOrigin, skillsTopY, elemBins.get(ElemType.Skill) ?? []);
+	drawSkills(ctx, countdown, scale, timelineOrigin, skillsTopY, elemBins.get(ElemType.Skill) as SkillElem[] ?? []);
 
 	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(countdown, scale);
@@ -355,19 +493,28 @@ function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHei
 
 	// view only cursor
 	(elemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach(cursor=>{
-		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, scale);
-		drawCursor(ctx, x, "darkorange");
+		let vcursor = cursor as ViewOnlyCursorElem
+		if (vcursor.enabled) {
+			let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, scale);
+			drawCursor(ctx, x, "darkorange", vcursor.displayTime.toFixed(2));
+		}
 	});
 
 	// cursor
-	(elemBins.get(ElemType.s_Cursor) ?? []).forEach(cursor=>{
+	(elemBins.get(ElemType.s_Cursor) ?? []).forEach(elem=>{
+		let cursor = elem as CursorElem;
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, scale);
-		drawCursor(ctx, x, "black");
+		drawCursor(ctx, x, "black", cursor.displayTime.toFixed(2));
 	});
 
 	// interactive layer
 	if (mouseHovered) {
-		drawTip(ctx, ["first line", "second line"], mouseX, mouseY, visibleWidth, timelineHeight);
+		if (g_activeHoverTip) {
+			drawTip(ctx, g_activeHoverTip, visibleWidth, timelineHeight);
+		}
+		if (g_isClickUpdate && g_activeOnClick) {
+			g_activeOnClick();
+		}
 	}
 }
 
@@ -383,6 +530,7 @@ export function TimelineCanvas(props: {
 	visibleWidth: number,
 	countdown: number,
 	scale: number,
+	tincturePotencyMultiplier: number,
 	elements: TimelineElem[],
 	trackBins: Map<number, MarkerElem[]>
 	version: number
@@ -395,6 +543,7 @@ export function TimelineCanvas(props: {
 	const [mouseX, setMouseX] = useState(0);
 	const [mouseY, setMouseY] = useState(0);
 	const [mouseHovered, setMouseHovered] = useState(false);
+	const [clickCounter, setClickCounter] = useState(0);
 
 	// background layer
 	let bgProps : BackgroundProps = [
@@ -406,15 +555,22 @@ export function TimelineCanvas(props: {
 		props.scale,
 		props.trackBins,
 		props.elements,
-		mouseX, mouseY, mouseHovered
+		props.tincturePotencyMultiplier,
+		mouseX, mouseY, mouseHovered, clickCounter
 	];
 	useEffect(()=>{
+		g_activeHoverTip = undefined;
+		g_activeOnClick = undefined;
+		g_tincturePotencyMultiplier = props.tincturePotencyMultiplier;
+		readback_pointerMouse = false;
 		let ctx = canvasRef.current?.getContext("2d", {alpha: false});
 		if (ctx) {
 			ctx.scale(dpr, dpr);
 			drawTimeline(ctx, bgProps);
 			ctx.scale(1 / dpr, 1 / dpr);
 		}
+		// reset click flag
+		g_isClickUpdate = false;
 	}, bgProps);
 
 	return <canvas ref={canvasRef} width={scaledWidth} height={scaledHeight} style={{
@@ -423,15 +579,36 @@ export function TimelineCanvas(props: {
 		position: "absolute",
 		top: 0,
 		left: props.visibleLeft,
+		cursor: readback_pointerMouse ? "pointer" : "default"
 	}} onMouseMove={e=>{
 		if (canvasRef.current) {
 			let rect = canvasRef.current.getBoundingClientRect();
-			setMouseX(e.clientX - rect.left);
-			setMouseY(e.clientY - rect.top);
+			g_mouseX = e.clientX - rect.left;
+			g_mouseY = e.clientY - rect.top;
+			setMouseX(g_mouseX);
+			setMouseY(g_mouseY);
 		}
 	}} onMouseEnter={e=>{
 		setMouseHovered(true);
 	}} onMouseLeave={e=>{
 		setMouseHovered(false);
+	}} onClick={e=>{
+		setClickCounter(clickCounter + 1);
+		g_isClickUpdate = true;
 	}}/>;
 }
+
+/*
+Interactive element:
+has a bounding box which is also its interactive area
+
+when attempting to draw, check its bbox. If outside of canvas, just do nothing.
+otherwise, draw it normally.
+then check if mouse is on top. If so, set is as the focused element.
+After all interactive elements are drawn, interact with the focused element:
+ - if it was a mouseMoved event, draw its tip
+ - if it was a mouseDown event, call its function
+
+If all elements are drawn and no focused element detected, just return.
+
+ */

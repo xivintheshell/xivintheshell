@@ -188,6 +188,7 @@ class TimelineMain extends React.Component {
 			visibleWidth={this.props.visibleWidth}
 			countdown={controller.gameConfig.countdown}
 			scale={this.state.scale}
+			tincturePotencyMultiplier={this.state.tincturePotencyMultiplier}
 			elements={this.state.elements}
 			trackBins={this.state.trackBins}
 			version={this.canvasVersion}
@@ -212,7 +213,7 @@ class TimelineMain extends React.Component {
 			else if (e.type === ElemType.DamageMark) {
 				elemComponents.push(<DamageMark
 					positionFromTime={controller.timeline.positionFromTime(e.time)}
-					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset} tincturePotencyMultiplier={this.state.tincturePotencyMultiplier}/>)
+					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
 			}
 			else if (e.type === ElemType.MPTickMark) {
 				elemComponents.push(<MPTickMark
@@ -220,7 +221,7 @@ class TimelineMain extends React.Component {
 					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
 			}
 			else if (e.type === ElemType.Skill) {
-				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i} tincturePotencyMultiplier={this.state.tincturePotencyMultiplier} />)
+				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i}/>)
 			}
 		}
 		let contentStyle = {
