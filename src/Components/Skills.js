@@ -1,11 +1,12 @@
 import React from 'react'
-import {Clickable, Help, parseTime} from "./Common";
+import {Clickable, Help, Info, parseTime} from "./Common";
 import {Debug, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
 import {localize, localizeSkillName} from "./Localization";
 import {redrawTimelineCanvas} from "./Timeline";
+import * as ReactDOMServer from 'react-dom/server';
 
 export let displayedSkills = [
 	SkillName.Blizzard,
@@ -119,7 +120,7 @@ class SkillButton extends React.Component {
 		this.state = {
 			skillDescription: <div/>
 		};
-		this.handleMouseEnter = ((evt)=>{
+		this.handleMouseEnter = (()=>{
 			let info = controller.getSkillInfo({
 				game: controller.getDisplayedGame(),
 				skillName: this.props.skillName
@@ -153,7 +154,6 @@ class SkillButton extends React.Component {
 				<div className="paragraph">{s}</div>
 				{infoString}
 			</div>;
-			setSkillInfoText(content);
 			this.setState({skillDescription: content});
 		}).bind(this);
 	}
@@ -170,15 +170,21 @@ class SkillButton extends React.Component {
 			}}/>
 		</div>;
 		let progressCircle = <ProgressCircle className="cdProgress" diameter={40} progress={this.props.cdProgress} color={"rgba(255,255,255,0.7)"}/>;
-		return <span title={this.skillName} className={"skillButton"} data-tip data-for={"skillButton-" + this.props.skillName}>
+		return <span
+			title={this.skillName}
+			className={"skillButton"}
+			data-tooltip-offset={8}
+			data-tooltip-html={
+				ReactDOMServer.renderToStaticMarkup(this.state.skillDescription)
+			} data-tooltip-id={"skillButton-" + this.props.skillName}>
 			{this.props.cdProgress === 1 ? "" : progressCircle}
-			<Clickable onClickFn={controller.displayingUpToDateGameState ? ()=>{
+			<Clickable onClickFn={controller.displayingUpToDateGameState ? () => {
 				controller.requestUseSkill({skillName: this.props.skillName});
 				controller.updateAllDisplay();
-			} : undefined} content={icon} style={controller.displayingUpToDateGameState ? {} : { cursor: "not-allowed" }}/>
-			<ReactTooltip id={"skillButton-" + this.props.skillName}>
-				{this.state.skillDescription}
-			</ReactTooltip>
+			} : undefined} content={icon}
+					   style={controller.displayingUpToDateGameState ? {} : {cursor: "not-allowed"}}/>
+			<ReactTooltip id={"skillButton-" + this.props.skillName} className="info-tooltip"
+						  classNameArrow="info-tooltip-arrow"/>
 		</span>
 	}
 }

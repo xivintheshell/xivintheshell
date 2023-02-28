@@ -415,7 +415,19 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 	}
 }
 
+export function ButtonIndicator(props: {text: string}) {
+	return <span style={{
+		fontSize: 10,
+		border: "1px solid #444",
+		borderRadius: 2,
+		padding: "1px 4px",
+		background: "#efefef"
+	}}>{props.text}</span>
+}
+
 let setGlobalHelpTooltipContent = (newContent: ContentNode)=>{};
+let setGlobalInfoTooltipContent = (newContent: ContentNode)=>{};
+
 export function GlobalHelpTooltip(props: {
 	content: ContentNode
 }) {
@@ -432,11 +444,26 @@ export function GlobalHelpTooltip(props: {
 	</ReactTooltip>
 }
 
+export function GlobalInfoTooltip(props: {
+	content: ContentNode
+}) {
+	const [tipContent, setTipContent] = useState(props.content);
+	// hook up update function
+	useEffect(()=>{
+		setGlobalInfoTooltipContent = (newContent: ContentNode)=>{
+			setTipContent(newContent);
+		};
+	}, []);
+
+	return <ReactTooltip anchorSelect=".global-info-tooltip" className="info-tooltip" classNameArrow="info-tooltip-arrow">
+		{tipContent}
+	</ReactTooltip>
+}
+
 export function Help(props: {topic: string, content: ContentNode}) {
 	let style: CSSProperties = {
-		display: "block",
+		display: "inline-block",
 		position: "relative",
-		top: 2,
 		width: 12,
 		height: 12,
 		cursor: "help",
@@ -445,22 +472,15 @@ export function Help(props: {topic: string, content: ContentNode}) {
 		textAlign: "center",
 		verticalAlign: "middle",
 	};
-	return <span className="help-icon global-help-tooltip" style={{display: "inline-block"}} data-tooltip-offset={4} onMouseEnter={()=>{
+	return <span className="help-icon global-help-tooltip" style={style} data-tooltip-offset={4} onMouseEnter={()=>{
 		setGlobalHelpTooltipContent(props.content);
 	}}>
-		<span style={style}>
-			<span style={{position: "relative", top: -1, color: "white"}}>&#63;</span>
-		</span>
+		<span style={{position: "relative", top: -1, color: "white"}}>&#63;</span>
 	</span>
 }
 
-export function ButtonIndicator(props: {text: string}) {
-	return <span style={{
-		fontSize: 10,
-		border: "1px solid #444",
-		borderRadius: 2,
-		padding: "1px 4px",
-		background: "#efefef"
-	}}>{props.text}</span>
+export function Info(props: {hoverableNode: ContentNode, getInfoFn: ()=>ContentNode}) {
+	return <div className="global-info-tooltip" data-tooltip-offset={4} onMouseEnter={()=>{
+		setGlobalInfoTooltipContent(props.getInfoFn());
+	}}>{props.hoverableNode}</div>
 }
-

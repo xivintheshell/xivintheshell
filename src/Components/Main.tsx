@@ -15,7 +15,7 @@ import {IntroSection} from "./IntroSection";
 import changelog from "../changelog.json"
 import {localize, SelectLanguage} from "./Localization"
 import {Tooltip as ReactTooltip} from "react-tooltip";
-import {GlobalHelpTooltip} from "./Common";
+import {GlobalHelpTooltip, GlobalInfoTooltip} from "./Common";
 
 export let setRealTime = (inRealTime: boolean) => {};
 export let setOverrideOutlineColor = (outlineColor?: string)=>{};
@@ -187,6 +187,7 @@ export default class Main extends React.Component {
 				</div>
 				<Timeline/>
 				<GlobalHelpTooltip content={"initial content"}/>
+				<GlobalInfoTooltip content={"initial content"}/>
 			</div>
 		</div>;
 	}

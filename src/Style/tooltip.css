@@ -11,3 +11,13 @@
 .help-tooltip-arrow {
     display: none;
 }
+
+.info-tooltip {
+    color: white;
+    background-color: black;
+    opacity: 0.96;
+    max-width: 300px;
+    transition: none;
+    font-size: 100%;
+    z-index: 9;
+}
