@@ -1,7 +1,12 @@
-import React, {ChangeEvent, CSSProperties, ReactNode} from "react";
+import React, {ChangeEvent, CSSProperties, ReactNode, useEffect, useState} from "react";
 import jQuery from 'jquery';
-import {Tooltip as ReactTooltip} from "react-tooltip";
 import {localize} from "./Localization";
+import {Tooltip as ReactTooltip} from "react-tooltip";
+import 'react-tooltip/dist/react-tooltip.css';
+import '../Style/tooltip.css';
+import * as ReactDOMServer from 'react-dom/server'
+
+export type ContentNode = JSX.Element | string;
 
 function getBlobUrl(content: object) {
 	let blob = new Blob([JSON.stringify(content)], {type: "text/plain;charset=utf-8"});
@@ -410,35 +415,45 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 	}
 }
 
-export function Help(props: {topic: string, content: ReactNode}) {
-	/*
-	effect={"solid"}
-	border={true}
-	borderColor={"#000"}
-	backgroundColor={"#fff"}
-	arrowColor={"#000"}
-	textColor={"#000"}
-	 */
-	return <span style={{display: "inline-block"}}>
-		<span data-tip data-for={"help-" + props.topic} style={{
-			display: "block",
-			position: "relative",
-			top: 2,
-			width: 12,
-			height: 12,
-			cursor: "help",
-			//background: "#217ff5",
-			background: "#c2c2c2",
-			borderRadius: 6,
-			textAlign: "center",
-			verticalAlign: "middle",
-		}}><span style={{position: "relative", top: -1, color: "white"}}>&#63;</span></span>
-		<ReactTooltip
-			id={"help-" + props.topic}>
-			{props.content}
-		</ReactTooltip>
+let setGlobalHelpTooltipContent = (newContent: ContentNode)=>{};
+export function GlobalHelpTooltip(props: {
+	content: ContentNode
+}) {
+	const [tipContent, setTipContent] = useState(props.content);
+	// hook up update function
+	useEffect(()=>{
+		setGlobalHelpTooltipContent = (newContent: ContentNode)=>{
+			setTipContent(newContent);
+		};
+	}, []);
+
+	return <ReactTooltip anchorSelect=".global-help-tooltip" className="help-tooltip" classNameArrow="help-tooltip-arrow">
+		{tipContent}
+	</ReactTooltip>
+}
+
+export function Help(props: {topic: string, content: ContentNode}) {
+	let style: CSSProperties = {
+		display: "block",
+		position: "relative",
+		top: 2,
+		width: 12,
+		height: 12,
+		cursor: "help",
+		background: "#c2c2c2",
+		borderRadius: 6,
+		textAlign: "center",
+		verticalAlign: "middle",
+	};
+	return <span className="help-icon global-help-tooltip" style={{display: "inline-block"}} data-tooltip-offset={4} onMouseEnter={()=>{
+		setGlobalHelpTooltipContent(props.content);
+	}}>
+		<span style={style}>
+			<span style={{position: "relative", top: -1, color: "white"}}>&#63;</span>
+		</span>
 	</span>
 }
+
 export function ButtonIndicator(props: {text: string}) {
 	return <span style={{
 		fontSize: 10,

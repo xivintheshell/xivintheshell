@@ -2,12 +2,13 @@ import React, {ReactNode} from "react";
 import {GrLanguage} from "react-icons/gr";
 import {forceUpdateAll} from "./Main";
 import {SkillName, SkillReadyStatus} from "../Game/Common";
+import {ContentNode} from "./Common";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
-	en: ReactNode,
-	zh?: ReactNode,
-	ja?: ReactNode
+	en: ContentNode,
+	zh?: ContentNode,
+	ja?: ContentNode
 };
 
 export function localize(content: LocalizedContent) {

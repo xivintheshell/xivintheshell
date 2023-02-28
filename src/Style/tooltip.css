@@ -1,0 +1,13 @@
+.help-tooltip {
+    color: black;
+    background-color: white;
+    opacity: 0.96;
+    max-width: 300px;
+    outline: 1px solid black;
+    transition: none;
+    font-size: 100%;
+    z-index: 10;
+}
+.help-tooltip-arrow {
+    display: none;
+}

@@ -14,6 +14,8 @@ import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../changelog.json"
 import {localize, SelectLanguage} from "./Localization"
+import {Tooltip as ReactTooltip} from "react-tooltip";
+import {GlobalHelpTooltip} from "./Common";
 
 export let setRealTime = (inRealTime: boolean) => {};
 export let setOverrideOutlineColor = (outlineColor?: string)=>{};
@@ -173,7 +175,7 @@ export default class Main extends React.Component {
 								marginLeft: 6,
 								position: "relative",
 								verticalAlign: "top",
-								overflowY: "scroll"
+								overflowY: "scroll",
 							}}>
 								<Config/>
 								<TimeControl/>
@@ -184,6 +186,7 @@ export default class Main extends React.Component {
 					</div>
 				</div>
 				<Timeline/>
+				<GlobalHelpTooltip content={"initial content"}/>
 			</div>
 		</div>;
 	}
