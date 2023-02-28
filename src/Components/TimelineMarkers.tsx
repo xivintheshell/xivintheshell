@@ -3,7 +3,7 @@ import {MarkerElem} from "../Controller/Timeline";
 import {controller} from "../Controller/Controller";
 import {Tooltip as ReactTooltip} from "react-tooltip";
 import {setEditingMarkerValues} from "./TimelineMarkerPresets";
-import {StaticFn} from "./Common";
+import {Info, StaticFn} from "./Common";
 
 export let getTimelineMarkersHeight = () => { return 0 };
 
@@ -47,16 +47,17 @@ let Marker = React.memo(function(props: {
 		left: leftPos,
 		height: trackHeight,
 	}
-	let fullID = "timelineMarker-" + props.markerID;
 	return <div key={props.markerID} style={containerStyle} >
-		<div data-tip data-for={fullID}
-		     style={(marker.duration > 0) ? colorBarStyle : colorDotStyle}
-		     onClick={()=>{
-			     let success = controller.timeline.deleteMarker(marker);
-			     console.assert(success);
-			     setEditingMarkerValues(marker);
-		     }}/>
-		<ReactTooltip id={fullID}>{"[" + marker.time + "] " + marker.description}</ReactTooltip>
+		<Info hoverableNode={
+			<div key={props.markerID}
+			     style={(marker.duration > 0) ? colorBarStyle : colorDotStyle}
+			     onClick={()=>{
+				     let success = controller.timeline.deleteMarker(marker);
+				     console.assert(success);
+				     setEditingMarkerValues(marker);
+			     }}/>
+		} getInfoFn={()=>{return "[" + props.markerElem.time + "] " + props.markerElem.description}}/>
+
 	</div>;
 });
 

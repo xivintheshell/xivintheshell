@@ -1,5 +1,5 @@
-import React, {useEffect, useRef} from 'react'
-import {CursorElem, ElemType, MarkerElem, SkillElem, TimelineElem} from "../Controller/Timeline";
+import React, {useEffect, useRef, useState} from 'react'
+import {ElemType, MarkerElem, SkillElem, TimelineElem} from "../Controller/Timeline";
 import {StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
 // @ts-ignore
@@ -13,12 +13,57 @@ type BackgroundProps = [
 	number,
 	number,
 	Map<number, MarkerElem[]>,
-	TimelineElem[]
+	TimelineElem[],
+	number,
+	number,
+	boolean
 ];
 
 const trackHeight = 14;
 const trackBottomMargin = 6;
 const maxTimelineHeight = 400;
+
+function drawTip(ctx: CanvasRenderingContext2D, lines: string[], x: number, y: number, canvasWidth: number, canvasHeight: number) {
+	if (!lines.length) return;
+
+	const lineHeight = 14;
+	const horizontalPadding = 6;
+	const verticalPadding = 3;
+	ctx.font = "12px monospace";
+
+	let maxLineWidth = -1;
+	lines.forEach(l=>{ maxLineWidth = Math.max(maxLineWidth, ctx.measureText(l).width); });
+	let [boxWidth, boxHeight] = [maxLineWidth + 2 * horizontalPadding, lineHeight * lines.length + 2 * verticalPadding];
+
+	// compute optimal box position
+	const boxToMousePadding = 4;
+	const estimatedMouseHeight = 11;
+	if (y >= boxHeight + boxToMousePadding) { // put on top
+		y = y - boxHeight - boxToMousePadding;
+	} else {
+		y = y + estimatedMouseHeight + boxToMousePadding;
+	}
+	if (x - boxWidth / 2 >= 0 && x + boxWidth / 2 < canvasWidth) {
+		x = x - boxWidth / 2;
+	} else if (x - boxWidth / 2 < 0) {
+		x = 0;
+	} else {
+		x = canvasWidth - boxWidth;
+	}
+
+	// start drawing
+	ctx.strokeStyle = "grey";
+	ctx.lineWidth = 1;
+	ctx.fillStyle = "rgba(255, 255, 255, 0.96)";
+	ctx.fillRect(x, y, boxWidth, boxHeight);
+	ctx.strokeRect(x, y, boxWidth, boxHeight);
+
+	ctx.fillStyle = "black";
+	ctx.textBaseline = "top";
+	for (let i = 0; i < lines.length; i++) {
+		ctx.fillText(lines[i], x + horizontalPadding, y + i * lineHeight + 2 + verticalPadding);
+	}
+}
 
 // todo: optimize by sorting and batching?
 function drawMarkers(
@@ -59,6 +104,7 @@ function drawMarkers(
 				ctx.fill();
 				if (m.showText) {
 					ctx.fillStyle = "black";
+					ctx.beginPath()
 					ctx.fillText(m.description, left + trackHeight / 2, top + 10);
 				}
 			}
@@ -208,7 +254,7 @@ function drawCursor(ctx: CanvasRenderingContext2D, x: number, color: string) {
 
 // background layer:
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
-function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHeight, visibleLeft, visibleWidth, countdown, scale, trackBins, elements]: BackgroundProps) {
+function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHeight, visibleLeft, visibleWidth, countdown, scale, trackBins, elements, mouseX, mouseY, mouseHovered]: BackgroundProps) {
 
 	let timelineOrigin = -visibleLeft;
 
@@ -227,6 +273,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHei
 	let countdownPadding = countdown * pixelsPerSecond;
 	ctx.lineWidth = 1;
 	ctx.strokeStyle = "black";
+	ctx.textBaseline = "alphabetic";
 
 	ctx.font = "13px monospace";
 	ctx.textAlign = "center";
@@ -317,6 +364,11 @@ function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHei
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, scale);
 		drawCursor(ctx, x, "black");
 	});
+
+	// interactive layer
+	if (mouseHovered) {
+		drawTip(ctx, ["first line", "second line"], mouseX, mouseY, visibleWidth, timelineHeight);
+	}
 }
 
 // background layer: white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
@@ -336,14 +388,13 @@ export function TimelineCanvas(props: {
 	version: number
 }) {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
-	let scaledWidth = props.visibleWidth;
-	let scaledHeight = props.timelineHeight;
 	const dpr = window.devicePixelRatio;
-	const rect = canvasRef.current?.getBoundingClientRect();
-	if (rect) {
-		scaledWidth *= dpr;
-		scaledHeight *= dpr;
-	}
+	let scaledWidth = props.visibleWidth * dpr;
+	let scaledHeight = props.timelineHeight * dpr;
+
+	const [mouseX, setMouseX] = useState(0);
+	const [mouseY, setMouseY] = useState(0);
+	const [mouseHovered, setMouseHovered] = useState(false);
 
 	// background layer
 	let bgProps : BackgroundProps = [
@@ -354,7 +405,8 @@ export function TimelineCanvas(props: {
 		props.countdown,
 		props.scale,
 		props.trackBins,
-		props.elements
+		props.elements,
+		mouseX, mouseY, mouseHovered
 	];
 	useEffect(()=>{
 		let ctx = canvasRef.current?.getContext("2d", {alpha: false});
@@ -369,6 +421,17 @@ export function TimelineCanvas(props: {
 		width: props.visibleWidth,
 		height: props.timelineHeight,
 		position: "absolute",
-		zIndex: -1,
+		top: 0,
+		left: props.visibleLeft,
+	}} onMouseMove={e=>{
+		if (canvasRef.current) {
+			let rect = canvasRef.current.getBoundingClientRect();
+			setMouseX(e.clientX - rect.left);
+			setMouseY(e.clientY - rect.top);
+		}
+	}} onMouseEnter={e=>{
+		setMouseHovered(true);
+	}} onMouseLeave={e=>{
+		setMouseHovered(false);
 	}}/>;
 }

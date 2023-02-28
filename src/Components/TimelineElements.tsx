@@ -2,7 +2,7 @@ import React, {CSSProperties} from 'react'
 import {controller} from "../Controller/Controller";
 // @ts-ignore
 import {skillIcons} from "./Skills";
-import {Clickable} from "./Common";
+import {Clickable, Info} from "./Common";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionNode} from "../Controller/Record";
 import {ResourceType, SkillName} from "../Game/Common";
@@ -26,11 +26,6 @@ export function Cursor(props: {
 		zIndex: 2,
 	};
 	return <div style={style} className={"timeline-elem cursor"} data-tip data-for={`${props.elemID}`}>
-		{/*
-		<svg width={6} height={MAX_HEIGHT}>
-			<line x1="3" y1="0" x2="3" y2={`${MAX_HEIGHT}`} stroke={props.color}/>
-			<polygon points="0,0 6,0 3,6" fill={props.color} stroke="none"/>
-		</svg>*/}
 		<ReactTooltip id={`${props.elemID}`}>{props.elem.displayTime.toFixed(2)}</ReactTooltip>
 	</div>;
 }

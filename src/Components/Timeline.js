@@ -144,7 +144,9 @@ class TimelineMain extends React.Component {
 			scale: 1,
 			tincturePotencyMultiplier: 1,
 			elements: [],
-			trackBins: new Map()
+			trackBins: new Map(),
+			timelineMouseX: 0,
+			timelineMouseY: 0
 		}
 		this.timelineHeaderRef = React.createRef();
 		this.canvasVersion = 0; // such a hack....
@@ -249,9 +251,12 @@ class TimelineMain extends React.Component {
 			<div style={contentStyle}>{elemComponents}</div>
 		</div>
 
-		return <div>
+		return <div style={{position: "relative", }}>
+			{
+				<div className="timeline-main" style={{backgroundColor: "transparent", width: this.state.timelineWidth, height: this.state.timelineHeight}}/>
+				//interactiveLayer
+			}
 			{canvas}
-			{interactiveLayer}
 		</div>
 	}
 }
