@@ -1,132 +1,11 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
-import {ElemType} from "../Controller/Timeline";
 import {Expandable, FileFormat, Help, Input, SaveToFile, Slider, StaticFn} from "./Common";
-import {
-	Cursor,
-	MPTickMark,
-	DamageMark,
-	LucidMark,
-	TimelineSkill,
-	setHandledSkillSelectionThisFrame, bHandledSkillSelectionThisFrame
-} from "./TimelineElements";
-import {getTimelineMarkersHeight, TimelineMarkers} from "./TimelineMarkers";
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
 import {TimelineCanvas} from "./TimelineCanvas";
-import {Tooltip as ReactTooltip} from "react-tooltip";
 
 export let updateSelectionDisplay = (startX, endX)=>{}
-
-class TimelineSelection extends React.Component {
-	constructor(props) {
-		super(props);
-		updateSelectionDisplay = this.unboundUpdateSelectionDisplay.bind(this);
-		this.state={
-			startX: 0,
-			endX: 0
-		};
-	}
-	componentWillUnmount() {
-		updateSelectionDisplay = (startX, endX)=>{}
-	}
-	unboundUpdateSelectionDisplay(startX, endX) {
-		this.setState({
-			startX: startX,
-			endX: endX
-		});
-	}
-	render() {
-		let style = {
-			position: "absolute",
-			display: this.state.endX <= this.state.startX ? "none" : "block",
-			backgroundColor: "rgba(151,111,246,0.1)",
-			borderLeft: "1px solid mediumpurple",
-			borderRight: "1px solid mediumpurple",
-			left: this.state.startX,
-			width: Math.max(0, this.state.endX - this.state.startX - 2),
-			height: "100%",
-			zIndex: 2,
-			pointerEvents: "none"
-		};
-		return <div style={style}/>;
-	}
-}
-
-let TimelineRuler = React.memo(function(props){
-	let countdownPadding = props.countdown * props.pixelPerSecond;
-	let marks_1sec = [];
-	let marks_5sec = [];
-	//let marks_1min = [];
-	for (let i = 0; i < props.canvasWidth - countdownPadding; i += props.pixelPerSecond) {
-		marks_1sec.push(i + countdownPadding);
-	}
-	for (let i = -props.pixelPerSecond; i >= -countdownPadding; i -= props.pixelPerSecond) {
-		marks_1sec.push(i + countdownPadding);
-	}
-	for (let i = 0; i < props.canvasWidth - countdownPadding; i += props.pixelPerSecond * 5) {
-		marks_5sec.push(i + countdownPadding);
-	}
-	for (let i = -props.pixelPerSecond * 5; i >= -countdownPadding; i -= props.pixelPerSecond * 5) {
-		marks_5sec.push(i + countdownPadding);
-	}
-	return <div style={{pointerEvents: "none"}}>
-		<svg width={props.canvasWidth} height="100%">
-			{marks_1sec.map(i=>{
-				return <line key={"1sec-"+i} stroke="black" strokeWidth="1" x1={i} y1="0" x2={i} y2="6"/>
-			})}
-			{marks_5sec.map(i=>{
-				return <line key={"5sec-"+i} stroke="black" strokeWidth="1" x1={i} y1="0" x2={i} y2="10"/>
-			})}
-		</svg>
-		{props.pixelPerSecond < 6 ? <div/> : marks_5sec.map(i=>{return<div key={i} style={{
-			textAlign: "center",
-			position: "absolute",
-			top: "11px",
-			left: `${i - 24}px`,
-			width: "48px",
-			display: "inline-block",
-		}}><div>{StaticFn.displayTime((i - countdownPadding) / props.pixelPerSecond, 0)}</div></div>;})}
-	</div>;
-});
-
-class TimelineHeader extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			displayTime: "0"
-		};
-	}
-	render() {
-		return <div ref={this.props.divref} style={{
-			zIndex: 1,
-			position: "relative",
-			width: "100%",
-			height: "30px",
-			background: "transparent"//"#ececec",
-		}} onMouseMove={(e)=>{
-			if (e.target) {
-				let rect = e.target.getBoundingClientRect();
-				let x = e.clientX - rect.left;
-				let t = controller.timeline.timeFromPosition(x);
-				this.setState({displayTime: (t - controller.gameConfig.countdown).toFixed(2)});
-			}
-		}} onClick={(e)=>{
-			if (e.target) {
-				let rect = e.target.getBoundingClientRect();
-				let x = e.clientX - rect.left;
-				let t = controller.timeline.timeFromPosition(x);
-				if (t < controller.game.time) {
-					controller.displayHistoricalState(t, undefined); // replay the actions as-is
-				} else {
-					controller.displayCurrentState();
-				}
-			}
-		}} data-tip data-for="timeline-header">
-			<ReactTooltip id="timeline-header">{this.state.displayTime}</ReactTooltip>
-		</div>
-	}
-}
 
 export let redrawTimelineCanvas = function() {}
 
@@ -146,7 +25,9 @@ class TimelineMain extends React.Component {
 			elements: [],
 			trackBins: new Map(),
 			timelineMouseX: 0,
-			timelineMouseY: 0
+			timelineMouseY: 0,
+			selectionStartX: 0,
+			selectionEndX: 0
 		}
 		this.timelineHeaderRef = React.createRef();
 		this.canvasVersion = 0; // such a hack....
@@ -167,6 +48,12 @@ class TimelineMain extends React.Component {
 		redrawTimelineCanvas = (()=>{
 			this.forceUpdate();
 		}).bind(this);
+		updateSelectionDisplay = ((startX, endX)=>{
+			this.setState({
+				selectionStartX: startX,
+				selectionEndX: endX
+			})
+		}).bind(this);
 	}
 
 	componentWillUnmount() {
@@ -176,10 +63,11 @@ class TimelineMain extends React.Component {
 		};
 		redrawTimelineCanvas = () => {
 		};
+		updateSelectionDisplay = () => {
+		};
 	}
 
 	render() {
-
 		this.canvasVersion++;
 		let canvas = <TimelineCanvas
 			timelineWidth={this.state.timelineWidth}
@@ -191,66 +79,10 @@ class TimelineMain extends React.Component {
 			tincturePotencyMultiplier={this.state.tincturePotencyMultiplier}
 			elements={this.state.elements}
 			trackBins={this.state.trackBins}
+			selectionStartX={this.state.selectionStartX}
+			selectionEndX={this.state.selectionEndX}
 			version={this.canvasVersion}
 		/>;
-
-		let elemComponents = [];
-		let verticalOffset = "-" + (getTimelineMarkersHeight() + 30) + "px";
-		// todo
-		for (let i = 0; i < this.state.elements.length; i++) {
-			let e = this.state.elements[i];
-			if (e.type === ElemType.s_Cursor) {
-				elemComponents.push(<Cursor key={i} elem={e} elemID={"elemID-"+i} color="black" vOffset={verticalOffset}/>)
-			}
-			else if (e.type === ElemType.s_ViewOnlyCursor) {
-				if (e.enabled) elemComponents.push(<Cursor key={i} elem={e} elemID={"elemID-"+i} color={"darkorange"} vOffset={verticalOffset}/>)
-			}
-			else if (e.type === ElemType.LucidMark) {
-				elemComponents.push(<LucidMark
-					positionFromTime={controller.timeline.positionFromTime(e.time)}
-					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
-			}
-			else if (e.type === ElemType.DamageMark) {
-				elemComponents.push(<DamageMark
-					positionFromTime={controller.timeline.positionFromTime(e.time)}
-					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
-			}
-			else if (e.type === ElemType.MPTickMark) {
-				elemComponents.push(<MPTickMark
-					positionFromTime={controller.timeline.positionFromTime(e.time)}
-					key={i} elem={e} elemID={"elemID-"+i} vOffset={verticalOffset}/>)
-			}
-			else if (e.type === ElemType.Skill) {
-				elemComponents.push(<TimelineSkill key={i} elem={e} elemID={"elemID-"+i}/>)
-			}
-		}
-		let contentStyle = {
-			position: "relative",
-			width: "100%",
-			height: "54px"
-		};
-
-		let interactiveLayer = <div className="timeline-main" style={{width: this.state.timelineWidth, height: this.state.timelineHeight}} onClick={
-			(evt)=>{
-				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
-					controller.record.unselectAll();
-					if (evt.target !== this.timelineHeaderRef.current) {
-						controller.displayCurrentState();
-					}
-				}
-				setHandledSkillSelectionThisFrame(false);
-			}
-		}>
-			<TimelineSelection/>
-			<TimelineHeader
-				divref={this.timelineHeaderRef}
-				timelineWidth={this.state.timelineWidth}
-				pixelPerSecond={controller.timeline.scale * 100}
-				countdown={controller.gameConfig.countdown}
-			/>
-			<TimelineMarkers horizontalScale={this.state.scale} trackBins={this.state.trackBins}/>
-			<div style={contentStyle}>{elemComponents}</div>
-		</div>
 
 		return <div style={{position: "relative", }}>
 			{

@@ -2,9 +2,13 @@ import {Expandable, Help} from "./Common";
 import React, {CSSProperties} from "react";
 import {controller} from "../Controller/Controller";
 import {ActionNode, ActionType, Record, RecordValidStatus} from "../Controller/Record";
-import {bHandledSkillSelectionThisFrame, setHandledSkillSelectionThisFrame} from "./TimelineElements";
 
 export let refreshTimelineEditor = ()=>{};
+
+let bHandledSkillSelectionThisFrame : boolean = false;
+function setHandledSkillSelectionThisFrame(handled : boolean) {
+	bHandledSkillSelectionThisFrame = handled;
+}
 
 function TimelineActionElement(props: {
 	node: ActionNode,

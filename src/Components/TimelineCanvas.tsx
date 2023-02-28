@@ -15,6 +15,7 @@ import {ResourceType} from "../Game/Common";
 import {skillIconImages} from "./Skills";
 import {controller} from "../Controller/Controller";
 import {localizeSkillName} from "./Localization";
+import {setEditingMarkerValues} from "./TimelineMarkerPresets";
 
 type BackgroundProps = [
 	number,
@@ -28,6 +29,8 @@ type BackgroundProps = [
 	number,
 	number,
 	number,
+	number,
+	number,
 	boolean,
 	number
 ];
@@ -37,6 +40,7 @@ const trackBottomMargin = 6;
 const maxTimelineHeight = 400;
 
 let g_isClickUpdate = false;
+let g_clickEvent: any = undefined; // valid when isClickUpdate is true
 let g_mouseX = 0;
 let g_mouseY = 0;
 
@@ -125,6 +129,11 @@ function drawMarkers(
 		for (let i = 0; i < elems.length; i++) {
 			let m = elems[i];
 			let left = timelineOrigin + StaticFn.positionFromTimeAndScale(m.time + countdown, scale);
+			let onClick = ()=>{
+				let success = controller.timeline.deleteMarker(m);
+				console.assert(success);
+				setEditingMarkerValues(m);
+			};
 			if (m.duration > 0) {
 				let markerWidth = StaticFn.positionFromTimeAndScale(m.duration, scale);
 				if (m.showText) {
@@ -138,6 +147,10 @@ function drawMarkers(
 					ctx.lineTo(left + markerWidth, top + trackHeight / 2);
 					ctx.stroke();
 				}
+				testInteraction(
+					{x: left, y: top, w: Math.max(markerWidth, trackHeight), h: trackHeight},
+					["[" + m.time + "] " + m.description],
+					onClick);
 			} else {
 				ctx.fillStyle = m.color;
 				ctx.beginPath();
@@ -148,6 +161,10 @@ function drawMarkers(
 					ctx.beginPath()
 					ctx.fillText(m.description, left + trackHeight / 2, top + 10);
 				}
+				testInteraction(
+					{x: left - trackHeight / 2, y: top, w: trackHeight, h: trackHeight},
+					["[" + m.time + "] " + m.description],
+					onClick);
 			}
 		}
 	});
@@ -346,7 +363,7 @@ function drawSkills(
 			{x: icon.x, y: icon.y, w: 28, h: 28},
 			lines,
 			()=>{
-
+				controller.timeline.onClickTimelineAction(node, g_clickEvent ? g_clickEvent.shiftKey : false);
 			},
 			true
 		);
@@ -373,7 +390,7 @@ function drawCursor(ctx: CanvasRenderingContext2D, x: number, color: string, tip
 
 // background layer:
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
-function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHeight, visibleLeft, visibleWidth, countdown, scale, trackBins, elements, tincturePotencyMultiplier, mouseX, mouseY, mouseHovered, clickCounter]: BackgroundProps) {
+function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHeight, visibleLeft, visibleWidth, countdown, scale, trackBins, elements, selectionStartX, selectionEndX, tincturePotencyMultiplier, mouseX, mouseY, mouseHovered, clickCounter]: BackgroundProps) {
 
 	let timelineOrigin = -visibleLeft;
 
@@ -491,6 +508,20 @@ function drawTimeline(ctx: CanvasRenderingContext2D, [timelineWidth, timelineHei
 	ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
 	ctx.fillRect(timelineOrigin, 0, countdownWidth, timelineHeight);
 
+	// selection rect
+	ctx.fillStyle = "rgba(147, 112, 219, 0.1)";
+	let selectionLeftPx = timelineOrigin + selectionStartX;
+	let selectionWidthPx = selectionEndX - selectionStartX;
+	ctx.fillRect(selectionLeftPx, 0, selectionWidthPx, maxTimelineHeight);
+	ctx.strokeStyle = "rgba(147, 112, 219, 0.5)";
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(selectionLeftPx, 0);
+	ctx.lineTo(selectionLeftPx, maxTimelineHeight);
+	ctx.moveTo(selectionLeftPx + selectionWidthPx, 0);
+	ctx.lineTo(selectionLeftPx + selectionWidthPx, maxTimelineHeight);
+	ctx.stroke();
+
 	// view only cursor
 	(elemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach(cursor=>{
 		let vcursor = cursor as ViewOnlyCursorElem
@@ -532,7 +563,9 @@ export function TimelineCanvas(props: {
 	scale: number,
 	tincturePotencyMultiplier: number,
 	elements: TimelineElem[],
-	trackBins: Map<number, MarkerElem[]>
+	trackBins: Map<number, MarkerElem[]>,
+	selectionStartX: number,
+	selectionEndX: number
 	version: number
 }) {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -555,6 +588,8 @@ export function TimelineCanvas(props: {
 		props.scale,
 		props.trackBins,
 		props.elements,
+		props.selectionStartX,
+		props.selectionEndX,
 		props.tincturePotencyMultiplier,
 		mouseX, mouseY, mouseHovered, clickCounter
 	];
@@ -595,20 +630,6 @@ export function TimelineCanvas(props: {
 	}} onClick={e=>{
 		setClickCounter(clickCounter + 1);
 		g_isClickUpdate = true;
+		g_clickEvent = e;
 	}}/>;
 }
-
-/*
-Interactive element:
-has a bounding box which is also its interactive area
-
-when attempting to draw, check its bbox. If outside of canvas, just do nothing.
-otherwise, draw it normally.
-then check if mouse is on top. If so, set is as the focused element.
-After all interactive elements are drawn, interact with the focused element:
- - if it was a mouseMoved event, draw its tip
- - if it was a mouseDown event, call its function
-
-If all elements are drawn and no focused element detected, just return.
-
- */
