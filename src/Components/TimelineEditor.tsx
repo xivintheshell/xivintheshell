@@ -129,6 +129,8 @@ export class TimelineEditor extends React.Component {
 
 							controller.record.unselectAll();
 							controller.displayCurrentState();
+
+							controller.scrollToTime();
 						}}>apply changes to timeline and save</button>
 						{this.discardEditsBtn()}
 					</div>

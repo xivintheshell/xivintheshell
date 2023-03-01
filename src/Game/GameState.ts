@@ -2,7 +2,7 @@ import {Aspect, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
 import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
-import {CoolDown, CoolDownState, Event, Resource, ResourceState} from "./Resources"
+import {CoolDown, CoolDownState, Event, LucidDreamingBuff, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
 import {addLog, Color, LogCategory} from "../Controller/Common";
@@ -60,8 +60,7 @@ export class GameState {
 		this.resources.set(ResourceType.Triplecast, new Resource(ResourceType.Triplecast, 3, 0));
 		this.resources.set(ResourceType.Addle, new Resource(ResourceType.Addle, 1, 0));
 		this.resources.set(ResourceType.Swiftcast, new Resource(ResourceType.Swiftcast, 1, 0));
-		this.resources.set(ResourceType.LucidDreaming, new Resource(ResourceType.LucidDreaming, 1, 0));
-		this.resources.set(ResourceType.LucidTick, new Resource(ResourceType.LucidDreaming, 1, 0));
+		this.resources.set(ResourceType.LucidDreaming, new LucidDreamingBuff(ResourceType.LucidDreaming, 1, 0));
 		this.resources.set(ResourceType.Surecast, new Resource(ResourceType.Surecast, 1, 0));
 		this.resources.set(ResourceType.Tincture, new Resource(ResourceType.Tincture, 1, 0)); // capture
 		this.resources.set(ResourceType.Sprint, new Resource(ResourceType.Sprint, 1, 0));
@@ -122,14 +121,37 @@ export class GameState {
 				mana.gain(gainAmount);
 				let currentAmount = mana.availableAmount();
 				controller.reportManaTick(game.time, "+" + gainAmount + " (MP="+currentAmount+")");
-				addLog(LogCategory.Event, "mana tick +" + gainAmount, this.getDisplayTime(), Color.ManaTick);
 				// queue the next tick
 				this.resources.addResourceEvent(ResourceType.Mana, "mana tick", 3, rsc=>{
 					recurringManaRegen();
-				}, Color.ManaTick, false);
+				});
 			};
-			this.resources.addResourceEvent(ResourceType.Mana, "initial mana tick", this.config.timeTillFirstManaTick, recurringManaRegen, Color.ManaTick, false);
+			this.resources.addResourceEvent(ResourceType.Mana, "initial mana tick", this.config.timeTillFirstManaTick, recurringManaRegen);
 		}
+
+		// and actor ticks
+		let recurringActorTick = ()=>{
+			// do whatever work at actor tick: lucid dreaming tick for example
+			let lucid = this.resources.get(ResourceType.LucidDreaming) as LucidDreamingBuff;
+			if (lucid.available(1)) {
+				lucid.tickCount++;
+				if (this.getFireStacks() === 0) {
+					let mana = this.resources.get(ResourceType.Mana);
+					mana.gain(550);
+					let msg = "+550 " + lucid.sourceSkill;
+					if (lucid.sourceSkill !== "(unknown)") msg += " (" + lucid.tickCount + "/7)";
+					msg += " (MP=" + mana.availableAmount() + ")";
+					controller.reportLucidTick(this.time, msg);
+				}
+			}
+			// queue the next tick
+			this.addEvent(new Event("actor tick", 3, ()=>{
+				recurringActorTick();
+			}));
+		};
+		let timeTillFirstActorTick = this.config.timeTillFirstManaTick + this.actorTickOffset;
+		while (timeTillFirstActorTick > 3) timeTillFirstActorTick -= 3;
+		this.addEvent(new Event("initial actor tick", timeTillFirstActorTick, recurringActorTick));
 
 		// also polyglot
 		let recurringPolyglotGain = (rsc: Resource)=>{
@@ -143,7 +165,6 @@ export class GameState {
 	tick(deltaTime: number, prematureStopCondition=()=>{ return false; }) {
 		//======== events ========
 		let cumulativeDeltaTime = 0;
-		//console.log(this.eventsQueue.length);
 		while (cumulativeDeltaTime < deltaTime && this.eventsQueue.length > 0 && !prematureStopCondition())
 		{
 			// make sure events are in proper order (todo: optimize using a priority queue...)
@@ -173,7 +194,6 @@ export class GameState {
 				{
 					if (!e.canceled)
 					{
-						if (e.shouldLog) addLog(LogCategory.Event, e.name, this.getDisplayTime(), e.logColor);
 						e.effectFn();
 					}
 					executedEvents++;
@@ -403,8 +423,7 @@ export class GameState {
 							//...
 						};
 						onApplication(applicationInfo);
-					},
-					Color.Text));
+					}));
 				return true;
 			} else {
 				//console.log(skillName + " failed; rewinding game...");
@@ -515,8 +534,7 @@ export class GameState {
 			()=>{
 				if (props.dealDamage) this.dealDamage(props.node, capturedDamage, sourceName);
 				if (props.onApplication) props.onApplication();
-			}
-			, Color.Text);
+			});
 		this.addEvent(skillEvent);
 
 		// recast

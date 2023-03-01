@@ -73,25 +73,30 @@ class TimelineMain extends React.Component {
 		let canvas = <TimelineCanvas
 			timelineHeight={this.state.timelineHeight}
 			visibleLeft={this.state.visibleLeft}
-			visibleWidth={this.state.visibleWidth}
+			visibleWidth={this.state.visibleWidth - 1}
 			version={this.state.version}
 		/>;
 
-		return <div className={"timeline staticScrollbar"} style={{
+		return <div className={"staticScrollbar"} style={{
 			position: "relative",
 			width: "100%",
 			overflowX: "scroll",
 			overflowY: "clip",
+			outline: "1px solid lightgrey",
+			margin: "10px 0"
 		}} ref={this.myRef} onScroll={e=>{
 			if (this.myRef.current) {
+				this.myRef.current.scrollLeft = Math.min(this.myRef.current.scrollWidth - this.myRef.current.clientWidth, this.myRef.current.scrollLeft);
 				this.setState({
 					visibleLeft: this.myRef.current.scrollLeft,
 					visibleWidth: this.myRef.current.clientWidth
 				});
 			}
 		}}>
-			<div className="timeline-main" style={{
+			<div style={{
+				position: "relative",
 				backgroundColor: "transparent",
+				outline: "1px solid red",
 				width: this.state.timelineWidth,
 				height: this.state.timelineHeight,
 			}}/>
@@ -113,7 +118,8 @@ class StatsDisplay extends React.Component {
 			selectedPotency: 0,
 			selectedDuration: 0,
 			selectedGcdCount: 0,
-			statsBySkill: new Map()
+			statsBySkill: new Map(),
+			selectedStatsBySkill: new Map()
 		};
 		updateStatsDisplay = (newState=>{
 			this.setState(newState);
@@ -156,6 +162,9 @@ class StatsDisplay extends React.Component {
 				return <div style={{display: "inline-block", width: "50%"}} key={skill.skillName}>{statsStr}</div>
 			})}
 		</div>
+
+		// selected
+		// todo
 
 		let selected = <div style={{flex: 1}}>
 			<span>Duration (selected): {this.state.selectedDuration.toFixed(2)}</span><br/>

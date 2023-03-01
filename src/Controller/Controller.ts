@@ -335,16 +335,21 @@ class Controller {
 		this.autoSave();
 	}
 
-	#getPotencyStatsBySkill() {
+	#getPotencyStatsBySkill(selectedOnly: boolean) {
 		let m = new Map<SkillName, {count: number, potencySum: number}>();
-		this.record.iterateAll(node=>{
+		let fn = (node: ActionNode)=>{
 			if (node.skillName!==undefined && node.resolved()) {
 				let entry = m.get(node.skillName) ?? {count: 0, potencySum: 0};
 				entry.count += 1;
 				entry.potencySum += node.getPotency() * (node.hasBuff(ResourceType.Tincture) ? this.game.getTincturePotencyMultiplier() : 1);
 				m.set(node.skillName, entry);
 			}
-		});
+		};
+		if (selectedOnly) {
+			this.record.iterateSelected(fn);
+		} else {
+			this.record.iterateAll(fn);
+		}
 		return m;
 	}
 
@@ -354,6 +359,7 @@ class Controller {
 		let totalTime = this.game.getLastDamageApplicationDisplayTime();
 
 		let gcdSkills = 0;
+		let selectedGcdSkills = 0;
 		this.record.iterateAll(node=>{
 			if (node.type === ActionType.Skill && node.resolved() && node.skillName) {
 				let skillInfo = this.game.skillsList.get(node.skillName);
@@ -365,7 +371,8 @@ class Controller {
 			cumulativePotency: cumulativePotency,
 			cumulativeDuration: Math.max(0, totalTime),
 			historical: this.#bCalculatingHistoricalState,
-			statsBySkill: this.#getPotencyStatsBySkill(),
+			statsBySkill: this.#getPotencyStatsBySkill(false),
+			selectedStatsBySkill: this.#getPotencyStatsBySkill(true),
 			gcdCount: gcdSkills
 		});
 	}
@@ -380,7 +387,8 @@ class Controller {
 		updateStatsDisplay({
 			cumulativePotency: this.game.getCumulativePotency(),
 			selectedPotency: selectedPotency,
-			statsBySkill: this.#getPotencyStatsBySkill()
+			statsBySkill: this.#getPotencyStatsBySkill(false),
+			seledtedStatsBySkill: this.#getPotencyStatsBySkill(true)
 		});
 		this.displayCurrentState();
 		updateTimelineView();

@@ -8,19 +8,14 @@ export class Event {
 	delay: number;
 	effectFn: () => void;
 	canceled: boolean;
-	shouldLog: boolean;
-	logColor: Color;
 
 	// effectFn : () -> ()
-	constructor(name: string, delay: number, effectFn: ()=>void, logColor=Color.Text, shouldLog=true)
-	{
+	constructor(name: string, delay: number, effectFn: ()=>void) {
 		this.name = name;
 		this.timeTillEvent = delay;
 		this.delay = delay;
 		this.effectFn = effectFn;
 		this.canceled = false;
-		this.shouldLog = shouldLog;
-		this.logColor = logColor;
 	}
 }
 
@@ -75,6 +70,14 @@ export class Resource {
 	}
 	overrideCurrentValue(amount: number) {
 		this.#currentValue = amount;
+	}
+}
+
+export class LucidDreamingBuff extends Resource {
+	tickCount: number = 0;
+	sourceSkill: string = "(unknown)";
+	constructor(type: ResourceType, maxValue: number, initialValue: number) {
+		super(type, maxValue, initialValue);
 	}
 }
 
@@ -177,14 +180,13 @@ export class ResourceState extends Map<ResourceType, Resource> {
 		rscType: ResourceType,
 		name: string,
 		delay: number,
-		fnOnRsc: (rsc: Resource)=>void,
-		logColor=Color.Text, shouldLog=true)
+		fnOnRsc: (rsc: Resource)=>void)
 	{
 		let rsc = this.get(rscType);
 		 let evt = new Event(name, delay, ()=>{
 			 rsc.pendingChange = undefined; // unregister self from resource
 			 fnOnRsc(rsc); // before the scheduled event takes effect
-		 }, logColor, shouldLog);
+		 });
 		 rsc.pendingChange = evt; // register to resource
 		 this.game.addEvent(evt); // register to events master list
 	}
@@ -194,7 +196,7 @@ export class ResourceState extends Map<ResourceType, Resource> {
 		this.get(rscType).consume(1);
 		addLog(LogCategory.Event, "[resource locked] " + rscType, this.game.getDisplayTime(), Color.Grey);
 		this.addResourceEvent(
-			rscType, "[resource ready] " + rscType, delay, rsc=>{ rsc.gain(1); }, Color.Grey);
+			rscType, "[resource ready] " + rscType, delay, rsc=>{ rsc.gain(1); });
 	}
 }
 

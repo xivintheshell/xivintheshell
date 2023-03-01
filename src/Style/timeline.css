@@ -22,9 +22,6 @@ svg {
     overflow-y: clip;
     vertical-align: bottom;
 }
-.timeline-main {
-    position: relative;
-}
 
 .timeline-elem{
     position: absolute;

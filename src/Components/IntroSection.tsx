@@ -221,7 +221,7 @@ export function IntroSection(props: {}) {
 								<div className="paragraph">
 									Lucid dreaming ticks happen on actor ticks, which have a random offset relative to
 									MP tick.
-									The earliest first tick time is 0.3s after you press the skill button. It ticks 7
+									The earliest first tick time is 0.623s after you press the skill button. It ticks 7
 									times.
 								</div>,
 							zh:

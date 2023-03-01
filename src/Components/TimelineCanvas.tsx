@@ -579,7 +579,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 		let vcursor = cursor as ViewOnlyCursorElem
 		if (vcursor.enabled) {
 			let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, renderingProps.scale);
-			drawCursor(ctx, x, "darkorange", vcursor.displayTime.toFixed(2));
+			drawCursor(ctx, x, "darkorange", "cursor: " + vcursor.displayTime.toFixed(2));
 		}
 	});
 
@@ -587,7 +587,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	(elemBins.get(ElemType.s_Cursor) ?? []).forEach(elem=>{
 		let cursor = elem as CursorElem;
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, renderingProps.scale);
-		drawCursor(ctx, x, "black", cursor.displayTime.toFixed(2));
+		drawCursor(ctx, x, "black", "cursor: " + cursor.displayTime.toFixed(2));
 	});
 
 	// interactive layer
@@ -655,7 +655,7 @@ export function TimelineCanvas(props: {
 		g_isKeyboardUpdate = false;
 	}, bgProps);
 
-	return <canvas ref={canvasRef} width={scaledWidth} height={scaledHeight} tabIndex={0} style={{
+	return <canvas ref={canvasRef} width={Math.ceil(scaledWidth)} height={Math.ceil(scaledHeight)} tabIndex={0} style={{
 		width: props.visibleWidth,
 		height: props.timelineHeight,
 		position: "absolute",

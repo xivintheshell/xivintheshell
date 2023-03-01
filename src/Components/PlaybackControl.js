@@ -209,6 +209,7 @@ export class Config extends React.Component {
 				};
 				this.setConfigAndRestart(config);
 				this.setState({dirty: false});
+				controller.scrollToTime();
 			}
 			event.preventDefault();
 		}).bind(this);
