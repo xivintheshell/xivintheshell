@@ -9,6 +9,8 @@ export let updateTimelineView = () => {};
 
 export let scrollTimelineTo = (positionX)=>{}
 
+let getVisibleRangeX = () => {}
+
 // the actual timeline canvas
 class TimelineMain extends React.Component {
 	constructor(props) {
@@ -51,6 +53,12 @@ class TimelineMain extends React.Component {
 			}
 			this.updateVisibleRange();
 		}).bind(this);
+
+		getVisibleRangeX = (()=>{return {
+			left: this.state.visibleLeft,
+			width: this.state.visibleWidth
+		}}).bind(this);
+
 		this.updateVisibleRange();
 	}
 
@@ -58,6 +66,7 @@ class TimelineMain extends React.Component {
 		updateTimelineView = () => {
 		};
 		scrollTimelineTo = (positionX)=>{};
+		getVisibleRangeX = ()=>{};
 	}
 
 	render() {
@@ -205,6 +214,11 @@ class TimelineDisplaySettings extends React.Component {
 					defaultValue={this.initialDisplayScale.toString()}
 					onChange={(newVal)=>{
 						controller.timeline.setHorizontalScale(parseFloat(newVal));
+						//let range = getVisibleRangeX();
+						//let mid = controller.timeline.timeFromPosition(range.left + range.width / 2);
+						//console.log(range);
+						//console.log(mid);
+						controller.scrollToTime();
 						localStorage.setItem("timelineDisplayScale", newVal);
 					}}/>
 			<Input defaultValue={this.state.tinctureBuffPercentageStr} description=" tincture potency buff " onChange={this.setTinctureBuffPercentageStr} width={2} style={{display: "inline"}}/>

@@ -1,7 +1,6 @@
 import React, {CSSProperties} from 'react'
 import {MarkerElem} from "../Controller/Timeline";
 import {controller} from "../Controller/Controller";
-import {Tooltip as ReactTooltip} from "react-tooltip";
 import {setEditingMarkerValues} from "./TimelineMarkerPresets";
 import {Info, StaticFn} from "./Common";
 

@@ -39,12 +39,15 @@ let g_visibleLeft = 0;
 let g_visibleWidth = 0;
 let g_isClickUpdate = false;
 let g_clickEvent: any = undefined; // valid when isClickUpdate is true
+let g_isKeyboardUpdate = false;
+let g_keyboardEvent: any = undefined;
 let g_mouseX = 0;
 let g_mouseY = 0;
 let g_mouseHovered = false;
 
 let g_activeHoverTip: string[] | undefined = undefined;
 let g_activeOnClick: (()=>void) | undefined = undefined;
+let g_activeOnKeyDown: (()=>void) | undefined = undefined;
 
 let renderingProps: TimelineRenderingProps = {
 	timelineWidth: 0,
@@ -60,17 +63,20 @@ let renderingProps: TimelineRenderingProps = {
 
 let readback_pointerMouse = false;
 
+// todo: event capture mask? So can provide a layer that overwrites keyboard event only and not affect the rest
 // all coordinates in canvas space
 function testInteraction(
 	rect: Rect,
 	hoverTip?: string[],
 	onClick?: ()=>void,
-	pointerMouse?: boolean)
+	pointerMouse?: boolean,
+	onKeyDown?: ()=>void)
 {
 	if (g_mouseX >= rect.x && g_mouseX < rect.x + rect.w && g_mouseY >= rect.y && g_mouseY < rect.y + rect.h) {
 		g_activeHoverTip = hoverTip;
 		g_activeOnClick = onClick;
 		if (pointerMouse === true) readback_pointerMouse = true;
+		g_activeOnKeyDown = onKeyDown;
 	}
 }
 
@@ -374,7 +380,15 @@ function drawSkills(
 			()=>{
 				controller.timeline.onClickTimelineAction(node, g_clickEvent ? g_clickEvent.shiftKey : false);
 			},
-			true
+			true,
+			()=>{
+				if (g_keyboardEvent.key === "Backspace" || g_keyboardEvent.key === "Delete") {
+					controller.rewindUntilBefore(controller.record.getFirstSelection(), false);
+					controller.displayCurrentState();
+					controller.updateAllDisplay();
+					controller.autoSave();
+				}
+			}
 		);
 	});
 }
@@ -565,6 +579,10 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 		if (g_isClickUpdate && g_activeOnClick) {
 			g_activeOnClick();
 		}
+		if (g_isKeyboardUpdate && g_activeOnKeyDown) {
+			g_activeOnKeyDown();
+		}
+
 	}
 }
 
@@ -588,14 +606,16 @@ export function TimelineCanvas(props: {
 	const [mouseY, setMouseY] = useState(0);
 	const [mouseHovered, setMouseHovered] = useState(false);
 	const [clickCounter, setClickCounter] = useState(0);
+	const [keyCounter, setKeyCounter] = useState(0);
 
 	// background layer
 	let bgProps = [
-		props.visibleLeft, props.visibleWidth, mouseX, mouseY, mouseHovered, clickCounter, props.version
+		props.visibleLeft, props.visibleWidth, mouseX, mouseY, mouseHovered, clickCounter, keyCounter, props.version
 	];
 	useEffect(()=>{
 		g_activeHoverTip = undefined;
 		g_activeOnClick = undefined;
+		g_activeOnKeyDown = undefined;
 		g_visibleLeft = props.visibleLeft;
 		g_visibleWidth = props.visibleWidth;
 
@@ -612,16 +632,18 @@ export function TimelineCanvas(props: {
 			ctx.scale(1 / dpr, 1 / dpr);
 		}
 
-		// reset click flag
+		// reset event flags
 		g_isClickUpdate = false;
+		g_isKeyboardUpdate = false;
 	}, bgProps);
 
-	return <canvas ref={canvasRef} width={scaledWidth} height={scaledHeight} style={{
+	return <canvas ref={canvasRef} width={scaledWidth} height={scaledHeight} tabIndex={0} style={{
 		width: props.visibleWidth,
 		height: props.timelineHeight,
 		position: "absolute",
 		top: 0,
 		left: props.visibleLeft,
+		outline: "none",
 		cursor: readback_pointerMouse ? "pointer" : "default"
 	}} onMouseMove={e=>{
 		if (canvasRef.current) {
@@ -641,5 +663,9 @@ export function TimelineCanvas(props: {
 		setClickCounter(clickCounter + 1);
 		g_isClickUpdate = true;
 		g_clickEvent = e;
+	}} onKeyDown={e=>{
+		setKeyCounter(keyCounter + 1);
+		g_isKeyboardUpdate = true;
+		g_keyboardEvent = e;
 	}}/>;
 }
