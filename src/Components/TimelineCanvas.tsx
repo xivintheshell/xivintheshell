@@ -11,7 +11,7 @@ import {
 } from "../Controller/Timeline";
 // @ts-ignore
 import {updateStatsDisplay} from "./Timeline"
-import {ContentNode, StaticFn} from "./Common";
+import {StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
 // @ts-ignore
 import {skillIconImages} from "./Skills";
@@ -283,6 +283,7 @@ function drawSkills(
 	let gcdBars: Rect[] = [];
 	let snapshots: number[] = [];
 	let llCovers: Rect[] = [];
+	let potCovers: Rect[] = [];
 	let skillIcons: {elem: SkillElem, x: number, y: number}[] = []; // tmp
 	elems.forEach(e=>{
 		let skill = e as SkillElem;
@@ -301,9 +302,16 @@ function drawSkills(
 			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
 			gcdBars.push({x: x, y: y + 14, w: recastWidth, h: 14});
 		}
+		// ll cover
 		if (skill.node.hasBuff(ResourceType.LeyLines)) {
 			llCovers.push({x: x, y: y + 28, w: 28, h: 4});
+			if (skill.node.hasBuff(ResourceType.Tincture)) {
+				potCovers.push({x: x, y: y + 32, w: 28, h: 4});
+			}
+		} else if (skill.node.hasBuff(ResourceType.Tincture)) {
+			potCovers.push({x: x, y: y + 28, w: 28, h: 4});
 		}
+		// pot cover
 		// skill icon
 		let img = skillIconImages.get(skill.skillName);
 		if (img) skillIcons.push({elem: e, x: x, y: y});
@@ -347,9 +355,18 @@ function drawSkills(
 	ctx.fill();
 
 	// llCovers
-	ctx.fillStyle = "#ffdc4f";
+	ctx.fillStyle = "#aff19b";
 	ctx.beginPath();
 	llCovers.forEach(r=>{
+		ctx.rect(r.x, r.y, r.w, r.h);
+		testInteraction(r);
+	});
+	ctx.fill();
+
+	// potCovers
+	ctx.fillStyle = "#ffa490";
+	ctx.beginPath();
+	potCovers.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
 		testInteraction(r);
 	});

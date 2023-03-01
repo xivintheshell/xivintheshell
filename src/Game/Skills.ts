@@ -358,7 +358,12 @@ export class SkillsList extends Map<SkillName, Skill> {
 					let skillTime = game.getDisplayTime();
 					let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
 					let capturedTickPotency = game.captureDamage(Aspect.Other, game.config.adjustedDoTPotency(35));
+					// tincture
+					if (game.resources.get(ResourceType.Tincture).available(1)) {
+						node.addBuff(ResourceType.Tincture);
+					}
 					let sourceName = "Thunder 3@"+skillTime.toFixed(2);
+
 					game.reportPotency(node, capturedInitialPotency, sourceName);
 					game.useInstantSkill({
 						skillName: SkillName.Thunder3,
@@ -383,6 +388,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 					let capturedTickPotency: number;
 					game.castSpell(SkillName.Thunder3, (cap: SkillCaptureCallbackInfo) => {
 						capturedTickPotency = game.captureDamage(Aspect.Lightning, game.config.adjustedDoTPotency(35));
+						// tincture
+						if (game.resources.get(ResourceType.Tincture).available(1)) {
+							node.addBuff(ResourceType.Tincture);
+						}
 						// if there's a sharpcast stack, consume it and gain (a potentially new) proc
 						let sc = game.resources.get(ResourceType.Sharpcast);
 						if (sc.available(1)) {

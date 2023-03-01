@@ -383,7 +383,7 @@ export class GameState {
 				game.reportPotency(node, capturedPotency, sourceName);
 
 				// tincture
-				if (game.resources.get(ResourceType.Tincture).available(1)) {
+				if (game.resources.get(ResourceType.Tincture).available(1) && capturedPotency > 0) {
 					node.addBuff(ResourceType.Tincture);
 				}
 
@@ -503,7 +503,7 @@ export class GameState {
 		}
 
 		// tincture
-		if (this.resources.get(ResourceType.Tincture).available(1)) {
+		if (this.resources.get(ResourceType.Tincture).available(1) && capturedDamage > 0) {
 			props.node.addBuff(ResourceType.Tincture);
 		}
 
@@ -590,7 +590,9 @@ export class GameState {
 			|| this.resources.get(ResourceType.Swiftcast).available(1)
 			|| (skillName===SkillName.Paradox && this.getIceStacks()>0)
 			|| (skillName===SkillName.Thunder3 && this.resources.get(ResourceType.Thundercloud).available(1))
-			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)));
+			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)))
+			|| (skillName===SkillName.Xenoglossy && this.resources.get(ResourceType.Polyglot).available(1)
+			|| (skillName===SkillName.UmbralSoul && this.getIceStacks()>0)); // lmfao why does this count as a spell
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana
