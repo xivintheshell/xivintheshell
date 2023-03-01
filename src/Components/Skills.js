@@ -152,7 +152,7 @@ class SkillButton extends React.Component {
 			let content = <div style={{color: controller.displayingUpToDateGameState ? "white" : "darkorange"}}>
 				<div className="paragraph">{localizeSkillName(this.props.skillName)}</div>
 				<div className="paragraph">{s}</div>
-				{infoString}
+				<div className="paragraph">{infoString}</div>
 			</div>;
 			this.setState({skillDescription: content});
 		}).bind(this);
