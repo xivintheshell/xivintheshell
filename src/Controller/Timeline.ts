@@ -1,5 +1,5 @@
 // @ts-ignore
-import {updateSelectionDisplay, updateStatsDisplay, updateTimelineContent, updateMarkers_TimelineMarkers} from "../Components/Timeline";
+import {updateStatsDisplay, updateTimelineView} from "../Components/Timeline";
 // @ts-ignore
 import {controller} from "./Controller";
 import {Debug, ResourceType, SkillName} from "../Game/Common";
@@ -246,17 +246,6 @@ export class Timeline {
 	// scale=1 := 100px represents 1s
 	setHorizontalScale(inScale: number) {
 		this.scale = inScale;
-
-		//controller.onTimelineSelectionChanged();
-		let selectionStart = 0;
-		let selectionEnd = 0;
-		if (controller.record.getFirstSelection()) {
-			selectionStart = controller.record.getFirstSelection()?.tmp_startLockTime ?? 0;
-			selectionEnd = controller.record.getLastSelection()?.tmp_endLockTime ?? 0;
-		}
-		updateSelectionDisplay(
-			controller.timeline.positionFromTime(selectionStart), controller.timeline.positionFromTime(selectionEnd));
-
 		this.drawElements();
 	}
 
@@ -286,17 +275,13 @@ export class Timeline {
 
 	drawElements() {
 
-		updateTimelineContent({
-			timelineWidth: this.getCanvasWidth(),
-			timelineHeight: this.getCanvasHeight(),
-			elements: this.elements,
-			scale: this.scale
-		});
+		updateTimelineView();
 
 		this.updateTimelineMarkers();
 	}
 
 	updateTimelineMarkers() {
+		updateTimelineView();
 		let M = new Map<number, MarkerElem[]>();
 		this.markers.forEach(marker=>{
 			let trackBin = M.get(marker.track);
@@ -304,8 +289,6 @@ export class Timeline {
 			trackBin.push(marker);
 			M.set(marker.track, trackBin);
 		});
-
-		updateMarkers_TimelineMarkers(M);
 		updateMarkers_TimelineMarkerPresets(M);
 	}
 
@@ -327,10 +310,6 @@ export class Timeline {
 			selectedDuration: selectResult.selectionEndTime - selectResult.selectionStartTime,
 			selectedGcdCount: gcdSkills,
 		});
-
-		// selection range indicator
-		updateSelectionDisplay(
-			controller.timeline.positionFromTime(selectResult.selectionStartTime), controller.timeline.positionFromTime(selectResult.selectionEndTime));
 
 		updateSkillSequencePresetsView();
 		refreshTimelineEditor();

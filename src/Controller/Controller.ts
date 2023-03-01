@@ -12,13 +12,14 @@ import {updateConfigDisplay} from "../Components/PlaybackControl"
 import {setOverrideOutlineColor, setRealTime} from "../Components/Main";
 import {ElemType, Timeline} from "./Timeline"
 // @ts-ignore
-import {scrollTimelineTo, updateSelectionDisplay, updateStatsDisplay, updateTimelineContent} from "../Components/Timeline";
+import {scrollTimelineTo, updateStatsDisplay, updateTimelineView} from "../Components/Timeline";
 import {ActionNode, ActionType, Line, Record} from "./Record";
 import {PresetLinesManager} from "./PresetLinesManager";
 // @ts-ignore
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {StaticFn} from "../Components/Common";
+import {TimelineRenderingProps} from "../Components/TimelineCanvas";
 
 type Fixme = any;
 
@@ -337,7 +338,7 @@ class Controller {
 	#getPotencyStatsBySkill() {
 		let m = new Map<SkillName, {count: number, potencySum: number}>();
 		this.record.iterateAll(node=>{
-			if (node.skillName!==undefined) {
+			if (node.skillName!==undefined && node.resolved()) {
 				let entry = m.get(node.skillName) ?? {count: 0, potencySum: 0};
 				entry.count += 1;
 				entry.potencySum += node.getPotency() * (node.hasBuff(ResourceType.Tincture) ? this.game.getTincturePotencyMultiplier() : 1);
@@ -371,10 +372,6 @@ class Controller {
 	setTincturePotencyMultiplier(inMultiplier: number) {
 		// updates cumulative sum
 		this.game.setTincturePotencyMultiplier(inMultiplier);
-		// refresh timeline hover
-		updateTimelineContent({
-			tincturePotencyMultiplier: inMultiplier
-		});
 		// refresh stats
 		let selectedPotency = 0;
 		this.record.iterateSelected(node=>{
@@ -386,7 +383,23 @@ class Controller {
 			statsBySkill: this.#getPotencyStatsBySkill()
 		});
 		this.displayCurrentState();
+		updateTimelineView();
 	}
+
+	getTimelineRenderingProps(): TimelineRenderingProps {
+		return {
+			timelineWidth: this.timeline.getCanvasWidth(),
+			timelineHeight: this.timeline.getCanvasHeight(),
+			countdown: this.gameConfig.countdown,
+			scale: this.timeline.scale,
+			tincturePotencyMultiplier: this.game.getTincturePotencyMultiplier(),
+			elements: this.timeline.elements,
+			markers: this.timeline.markers,
+			selectionStartX: this.timeline.positionFromTime(this.record.getFirstSelection()?.tmp_startLockTime ?? 0),
+			selectionEndX: this.timeline.positionFromTime(this.record.getLastSelection()?.tmp_endLockTime ?? 0)
+		};
+	}
+
 
 	reportDamage(props: {
 		potency: number,
@@ -501,19 +514,6 @@ class Controller {
 	updateTimelineDisplay() {
 		this.timeline.setTimeSegment(0, this.game.time);
 
-		let selectionStart = 0;
-		let selectionEnd = 0;
-		if (this.record.getFirstSelection()) {
-			selectionStart = this.record.getFirstSelection()?.tmp_startLockTime ?? 0;
-			selectionEnd = this.record.getLastSelection()?.tmp_endLockTime ?? 0;
-		} else {
-			updateStatsDisplay({
-				selectedPotency: 0,
-				selectedDuration: 0,
-			});
-		}
-		updateSelectionDisplay(
-			this.timeline.positionFromTime(selectionStart), this.timeline.positionFromTime(selectionEnd));
 		updateSkillSequencePresetsView();
 		refreshTimelineEditor();
 

@@ -5,7 +5,7 @@ import {controller} from "../Controller/Controller";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
 import {localize, localizeSkillName} from "./Localization";
-import {redrawTimelineCanvas} from "./Timeline";
+import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
 
 export let displayedSkills = [
@@ -81,7 +81,7 @@ skillIcons.forEach((path, skillName)=>{
 	let imgObj = new Image();
 	imgObj.src = path;
 	imgObj.onload = function() {
-		redrawTimelineCanvas();
+		updateTimelineView();
 	}
 	skillIconImages.set(skillName, imgObj);
 });

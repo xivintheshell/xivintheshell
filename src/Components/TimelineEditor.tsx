@@ -2,6 +2,8 @@ import {Expandable, Help} from "./Common";
 import React, {CSSProperties} from "react";
 import {controller} from "../Controller/Controller";
 import {ActionNode, ActionType, Record, RecordValidStatus} from "../Controller/Record";
+// @ts-ignore
+import {updateStatsDisplay} from "./Timeline"
 
 export let refreshTimelineEditor = ()=>{};
 
@@ -212,6 +214,7 @@ export class TimelineEditor extends React.Component {
 					if (!this.isDirty()) {
 						controller.record.unselectAll();
 						controller.displayCurrentState();
+						updateStatsDisplay({selectedDuration: 0});
 					} else {
 						refreshTimelineEditor();
 						this.state.editedRecord?.unselectAll();

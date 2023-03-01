@@ -5,107 +5,45 @@ import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
 import {TimelineCanvas} from "./TimelineCanvas";
 
-export let updateSelectionDisplay = (startX, endX)=>{}
+export let updateTimelineView = () => {};
 
-export let redrawTimelineCanvas = function() {}
-
-export let updateTimelineContent = function() {}
-
-export let updateMarkers_TimelineMarkers = (trackBins) => {};
+export let scrollTimelineTo = (positionX)=>{}
 
 // the actual timeline canvas
 class TimelineMain extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			timelineWidth: 300,
-			timelineHeight: 180,
-			scale: 1,
-			tincturePotencyMultiplier: 1,
-			elements: [],
-			trackBins: new Map(),
-			timelineMouseX: 0,
-			timelineMouseY: 0,
-			selectionStartX: 0,
-			selectionEndX: 0
+			timelineWidth: 11,
+			timelineHeight: 300,
+			visibleLeft: 23,
+			visibleWidth: 66,
+			version: 0
 		}
-		this.timelineHeaderRef = React.createRef();
-		this.canvasVersion = 0; // such a hack....
-		updateTimelineContent = (newState => {
-			this.setState(newState);
+		this.myRef = React.createRef();
+
+		this.updateVisibleRange = (()=>{
+			if (this.myRef.current) {
+				this.setState({
+					visibleLeft: this.myRef.current.scrollLeft,
+					visibleWidth: this.myRef.current.clientWidth
+				});
+			}
 		}).bind(this);
 	}
 	componentDidMount() {
 		this.setState({
 			timelineWidth: controller.timeline.getCanvasWidth(),
 			timelineHeight: controller.timeline.getCanvasHeight(),
-			//tincturePotencyMultiplier will be set when timeline display settings is mounted
-			elements: controller.timeline.elements,
 		});
-		updateMarkers_TimelineMarkers = (trackBins=>{
-			this.setState({trackBins: trackBins});
-		}).bind(this);
-		redrawTimelineCanvas = (()=>{
-			this.forceUpdate();
-		}).bind(this);
-		updateSelectionDisplay = ((startX, endX)=>{
+		updateTimelineView = (() => {
 			this.setState({
-				selectionStartX: startX,
-				selectionEndX: endX
-			})
+				timelineWidth: controller.timeline.getCanvasWidth(),
+				timelineHeight: controller.timeline.getCanvasHeight(),
+				version: this.state.version + 1
+			});
 		}).bind(this);
-	}
 
-	componentWillUnmount() {
-		updateTimelineContent = () => {
-		};
-		updateMarkers_TimelineMarkers = () => {
-		};
-		redrawTimelineCanvas = () => {
-		};
-		updateSelectionDisplay = () => {
-		};
-	}
-
-	render() {
-		this.canvasVersion++;
-		let canvas = <TimelineCanvas
-			timelineWidth={this.state.timelineWidth}
-			timelineHeight={this.state.timelineHeight}
-			visibleLeft={this.props.visibleLeft}
-			visibleWidth={this.props.visibleWidth}
-			countdown={controller.gameConfig.countdown}
-			scale={this.state.scale}
-			tincturePotencyMultiplier={this.state.tincturePotencyMultiplier}
-			elements={this.state.elements}
-			trackBins={this.state.trackBins}
-			selectionStartX={this.state.selectionStartX}
-			selectionEndX={this.state.selectionEndX}
-			version={this.canvasVersion}
-		/>;
-
-		return <div style={{position: "relative", }}>
-			{
-				<div className="timeline-main" style={{backgroundColor: "transparent", width: this.state.timelineWidth, height: this.state.timelineHeight}}/>
-				//interactiveLayer
-			}
-			{canvas}
-		</div>
-	}
-}
-
-export let scrollTimelineTo = (positionX)=>{}
-
-class FixedRightColumn extends React.Component {
-	constructor(props) {
-		super(props);
-		this.myRef = React.createRef();
-		this.state = {
-			visibleLeft: 0,
-			visibleWidth: 0
-		}
-	}
-	componentDidMount() {
 		scrollTimelineTo = ((positionX)=>{
 			if (this.myRef.current != null) {
 				let clientWidth = this.myRef.current.clientWidth;
@@ -115,23 +53,40 @@ class FixedRightColumn extends React.Component {
 		}).bind(this);
 		this.updateVisibleRange();
 	}
+
 	componentWillUnmount() {
+		updateTimelineView = () => {
+		};
 		scrollTimelineTo = (positionX)=>{};
-	}
-	updateVisibleRange() {
-		if (this.myRef.current) {
-			this.setState({
-				visibleLeft: this.myRef.current.scrollLeft,
-				visibleWidth: this.myRef.current.clientWidth
-			});
-		}
 	}
 
 	render() {
-		return <div ref={this.myRef} className={"timeline-fixedRightColumn staticScrollbar"} onScroll={e=>{
-			this.updateVisibleRange();
+		let canvas = <TimelineCanvas
+			timelineHeight={this.state.timelineHeight}
+			visibleLeft={this.state.visibleLeft}
+			visibleWidth={this.state.visibleWidth}
+			version={this.state.version}
+		/>;
+
+		return <div className={"timeline staticScrollbar"} style={{
+			position: "relative",
+			width: "100%",
+			overflowX: "scroll",
+			overflowY: "clip",
+		}} ref={this.myRef} onScroll={e=>{
+			if (this.myRef.current) {
+				this.setState({
+					visibleLeft: this.myRef.current.scrollLeft,
+					visibleWidth: this.myRef.current.clientWidth
+				});
+			}
 		}}>
-			<TimelineMain visibleLeft={this.state.visibleLeft} visibleWidth={this.state.visibleWidth}/>
+			<div className="timeline-main" style={{
+				backgroundColor: "transparent",
+				width: this.state.timelineWidth,
+				height: this.state.timelineHeight,
+			}}/>
+			{canvas}
 		</div>
 	}
 }
@@ -151,14 +106,12 @@ class StatsDisplay extends React.Component {
 			selectedGcdCount: 0,
 			statsBySkill: new Map()
 		};
-		updateStatsDisplay = this.unboundUpdateStatsDisplay.bind(this);
+		updateStatsDisplay = (newState=>{
+			this.setState(newState);
+		}).bind(this);
 	}
 	componentWillUnmount() {
 		updateStatsDisplay = ()=>{};
-	}
-	unboundUpdateStatsDisplay(props) {
-		this.setState(props);
-		this.forceUpdate();
 	}
 	render() {
 		let cumulative = <div style={{flex: 1, color: this.state.historical ? "darkorange" : "black"}}>
@@ -279,9 +232,7 @@ export class Timeline extends React.Component {
 				defaultShow={false}
 				content={<StatsDisplay/>}
 			/>
-			<div className={"timeline timelineTab"}>
-				<FixedRightColumn/>
-			</div>
+			<TimelineMain/>
 			<TimelineDisplaySettings/>
 			<TimelineMarkerPresets/>
 			<TimelineEditor/>

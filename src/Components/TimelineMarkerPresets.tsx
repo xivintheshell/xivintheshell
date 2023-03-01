@@ -21,7 +21,7 @@ export let setEditingMarkerValues = (marker: MarkerElem)=>{};
 
 export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
 
-type TimelineMarkerPresetsProp = {}
+type TimelineMarkerPresetsProp = {};
 type TimelineMarkerPresetsState = {
 	nextMarkerColor: MarkerColor,
 	nextMarkerTime: string,

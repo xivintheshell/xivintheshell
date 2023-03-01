@@ -153,7 +153,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			instant: boolean,
 			duration: number
 		}) {
-			let takeEffect = () => {
+			let takeEffect = (node: ActionNode) => {
 				let resource = game.resources.get(props.rscType);
 				if (resource.available(1)) {
 					resource.overrideTimer(game, props.duration);
@@ -165,6 +165,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 							rsc.consume(1);
 						});
 				}
+				node.resolve();
 			};
 			skillsList.set(props.skillName, new Skill(props.skillName,
 				() => {
@@ -173,8 +174,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 				(game, node) => {
 					game.useInstantSkill({
 						skillName: props.skillName,
-						onCapture: props.instant ? takeEffect : undefined,
-						onApplication: props.instant ? undefined : takeEffect,
+						onCapture: props.instant ? ()=>takeEffect(node) : undefined,
+						onApplication: props.instant ? undefined : ()=>takeEffect(node),
 						dealDamage: false,
 						node: node
 					});
@@ -287,6 +288,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					dealDamage: false,
 					node: node
 				});
+				node.resolve();
 			}
 		));
 
@@ -409,6 +411,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					onApplication: () => {
 						game.resources.get(ResourceType.Mana).gain(3000);
 						addLog(LogCategory.Event, "manafont effect: mana +3000", game.getDisplayTime());
+						node.resolve();
 					},
 					dealDamage: false,
 					node: node
@@ -528,6 +531,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.useInstantSkill({
 					skillName: SkillName.BetweenTheLines,
 					dealDamage: false,
+					onCapture: ()=>{node.resolve()},
 					node: node
 				});
 			}
@@ -542,6 +546,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.useInstantSkill({
 					skillName: SkillName.AetherialManipulation,
 					dealDamage: false,
+					onCapture: ()=>{node.resolve()},
 					node: node
 				});
 			}
@@ -564,6 +569,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 							"drop remaining Triple charges", game.config.extendedBuffTimes ? 15.7 : 15, (rsc: Resource) => {
 								rsc.consume(rsc.availableAmount());
 							});
+						node.resolve();
 					},
 					dealDamage: false,
 					node: node
@@ -617,6 +623,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.resources.get(ResourceType.UmbralIce).gain(1);
 						game.resources.get(ResourceType.UmbralHeart).gain(1);
 						game.startOrRefreshEnochian();
+						node.resolve();
 					},
 					dealDamage: false,
 					node: node
@@ -681,6 +688,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					dealDamage: false,
 					node: node
 				});
+				node.resolve();
 			}
 		));
 
@@ -777,6 +785,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 							},
 							Color.ManaTick);
 						game.addEvent(startLucidEvt);
+
+						node.resolve();
 					},
 					dealDamage: false,
 					node: node
