@@ -11,7 +11,7 @@ import {
 } from "../Controller/Timeline";
 // @ts-ignore
 import {updateStatsDisplay} from "./Timeline"
-import {StaticFn} from "./Common";
+import {ContentNode, StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
 // @ts-ignore
 import {skillIconImages} from "./Skills";
@@ -45,8 +45,10 @@ let g_mouseX = 0;
 let g_mouseY = 0;
 let g_mouseHovered = false;
 
+// updated on mouse enter/leave, updated and reset on every draw
 let g_activeHoverTip: string[] | undefined = undefined;
 let g_activeOnClick: (()=>void) | undefined = undefined;
+// updated on mouse click, updated only when clicked
 let g_activeOnKeyDown: (()=>void) | undefined = undefined;
 
 let renderingProps: TimelineRenderingProps = {
@@ -76,7 +78,7 @@ function testInteraction(
 		g_activeHoverTip = hoverTip;
 		g_activeOnClick = onClick;
 		if (pointerMouse === true) readback_pointerMouse = true;
-		g_activeOnKeyDown = onKeyDown;
+		if (g_isClickUpdate) g_activeOnKeyDown = onKeyDown;
 	}
 }
 
@@ -615,7 +617,6 @@ export function TimelineCanvas(props: {
 	useEffect(()=>{
 		g_activeHoverTip = undefined;
 		g_activeOnClick = undefined;
-		g_activeOnKeyDown = undefined;
 		g_visibleLeft = props.visibleLeft;
 		g_visibleWidth = props.visibleWidth;
 
