@@ -2,6 +2,7 @@ import React from 'react';
 import {Clickable, Help, ProgressBar} from "./Common";
 import {ResourceType} from "../Game/Common";
 import {controller} from "../Controller/Controller";
+import {localize} from "./Localization";
 
 // color, value
 function ResourceStack(props) {
@@ -285,40 +286,65 @@ function ResourcesDisplay(props) {
 		value={Math.floor(data.mana) + "/10000"}
 		width={100}/>;
 	let manaTick = <ResourceBar
-		name={"MP tick"}
+		name={localize({
+		en: "MP tick",
+		zh: "跳蓝时间"
+		})}
 		color={"#c2eaff"}
 		progress={1 - data.timeTillNextManaTick / 3}
 		value={(3 - data.timeTillNextManaTick).toFixed(2) + "/3"}
 		width={100}/>;
 	let enochian = <ResourceBar
-		name={"enochian"}
+		name={localize({
+			en: "enochian",
+			zh: "天语"
+		})}
 		color={"#f5cf96"}
 		progress={data.enochianCountdown / 15}
 		value={`${data.enochianCountdown.toFixed(2)}`}
 		width={100}/>;
 	let afui = <ResourceCounter
-		name={"AF/UI"}
+		name={localize({
+			en: "AF/UI",
+			zh: "冰火层数"
+		})}
 		color={data.astralFire > 0 ? "#f63" : "#6bf"}
 		currentStacks={data.astralFire > 0 ? data.astralFire : data.umbralIce}
 		maxStacks={3}/>;
 	let uh = <ResourceCounter
-		name={"hearts"}
+		name={
+		localize({
+			en: "hearts",
+			zh: "冰针",
+		})}
 		color={"#95dae3"}
 		currentStacks={data.umbralHearts}
 		maxStacks={3}/>;
 	let paradox = <ResourceCounter
-		name={"paradox"}
+		name={
+		localize({
+			en: "paradox",
+			zh: "悖论"
+	})}
 		color={"#d953ee"}
 		currentStacks={data.paradox}
 		maxStacks={1}/>;
 	let polyTimer = <ResourceBar
-		name={"poly timer"}
+		name={
+		localize({
+			en: "poly timer",
+			zh: "通晓计时",
+		})}
 		color={"#d5bbf1"}
 		progress={1 - data.polyglotCountdown / 30}
 		value={`${data.polyglotCountdown.toFixed(2)}`}
 		width={100}/>;
 	let poly = <ResourceCounter
-		name={"poly stacks"}
+		name={
+		localize({
+			en: "poly stacks",
+			zh: "通晓层数"
+		})}
 		color={"#b138ee"}
 		currentStacks={data.polyglotStacks}
 		maxStacks={2}/>;
@@ -369,7 +395,7 @@ export class StatusDisplay extends React.Component {
 				</div>
 			}/></div>
 			<div className={"-left"}>
-				<span style={{display: "block", marginBottom: 10}}>time: {this.state.time.toFixed(2)}</span>
+				<span style={{display: "block", marginBottom: 10}}>{localize({en: "time: ", zh: "战斗时间："})}{this.state.time.toFixed(2)}</span>
 				<ResourcesDisplay data={this.state.resources}/>
 			</div>
 			<div className={"-right"}>

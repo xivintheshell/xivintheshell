@@ -2,6 +2,7 @@ import React from 'react'
 import {FileFormat, loadFromFile, SaveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType} from "../Controller/Common";
+import {localize} from "./Localization";
 
 type Fixme = any;
 
@@ -36,10 +37,14 @@ export class LoadSave extends React.Component {
 			<div>
 				<SaveToFile fileFormat={FileFormat.Json} getContentFn={()=>{
 					return controller.record.serialized();
-				}} filename={"fight"} displayName={"download fight record"}/>
+				}} filename={"fight"} displayName={
+					localize({
+						en: "download fight record",
+						zh: "下载战斗记录"})
+					}/>
 			</div>
 			<div style={{marginTop: 10}}>
-				<span>Load from: </span>
+				<span>{localize({en: "Load from file: ", zh: "从文件加载战斗记录："})}</span>
 				<input
 					style={{
 						width: "110px",

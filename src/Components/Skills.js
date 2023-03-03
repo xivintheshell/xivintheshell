@@ -308,7 +308,7 @@ export class SkillsWindow extends React.Component {
 		}
 
 		let waitUntilHelp = <Help topic="waitUntilInputFormat" content={<div>
-			<div className="paragraph">Examples:</div>
+			<div className="paragraph">{localize({en: "Examples:", zh: "时间格式举例："})}</div>
 			<div className="paragraph">
 				12 <br/>
 				1.5 <br/>
@@ -329,24 +329,40 @@ export class SkillsWindow extends React.Component {
 				{skillButtons}
 				<div style={{margin: "10px 0"}}>
 					<div style={{display: "flex", flexDirection: "row", marginBottom: 6}}>
-						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-							Wait until <input type={"text"} style={{
-							width: 30, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
-						}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) since <select
-							style={{display: "inline-block", outline: "none"}}
-							value={this.state.waitSince}
-							onChange={this.onWaitSinceChange}>
-							<option value={WaitSince.Now}>now</option>
-							<option value={WaitSince.LastSkill}>last skill</option>
-						</select> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
-						</form>
+
+						{localize({
+							en:<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+								Wait until <input type={"text"} style={{
+								width: 30, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
+							}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) since <select
+								style={{display: "inline-block", outline: "none"}}
+								value={this.state.waitSince}
+								onChange={this.onWaitSinceChange}>
+								<option value={WaitSince.Now}>now</option>
+								<option value={WaitSince.LastSkill}>last skill</option>
+							</select> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
+							</form>,
+							zh:<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+								快进至 <select
+									style={{display: "inline-block", outline: "none"}}
+									value={this.state.waitSince}
+									onChange={this.onWaitSinceChange}>
+									<option value={WaitSince.Now}>当前</option>
+									<option value={WaitSince.LastSkill}>上次使用技能</option>
+								</select> 后的 <input type={"text"} style={{
+								width: 30, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
+							}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> 秒 <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
+							</form>
+						})}
+
 						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
-							Wait until {waitUntilHelp} <input type={"text"} style={{
+							{localize({en: "Wait until", zh: "快进至指定时间"})} {waitUntilHelp} <input type={"text"} style={{
 							width: 60, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
 						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange}/> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
 						</form>
+
 					</div>
-					<button onClick={this.onRemoveTrailingIdleTime}>remove trailing idle time</button>
+					<button onClick={this.onRemoveTrailingIdleTime}>{localize({en: "remove trailing idle time", zh: "去除时间轴末尾的发呆时间"})}</button>
 				</div>
 			</div>
 		</div>

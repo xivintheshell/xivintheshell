@@ -4,6 +4,7 @@ import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
 import {TickMode} from "../Controller/Common";
 import {ProcMode, ResourceType} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
+import {localize} from "./Localization";
 
 export class TimeControl extends React.Component {
 	constructor(props) {
@@ -76,18 +77,27 @@ export class TimeControl extends React.Component {
 	render() {
 		return <div className={"timeControl"}>
 			<div style={{marginBottom: 5}}>
-				<div style={{marginBottom: 5}}><b>Control</b></div>
+				<div style={{marginBottom: 5}}><b>{localize({en: "Control", zh: "战斗时间控制"})}</b></div>
 				<label className={"tickModeOption"}>
 					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
 						   value={TickMode.RealTime}
 						   checked={this.state.tickMode === TickMode.RealTime}
 						   name={"tick mode"}/>
-					{"real-time"}
+					{localize({
+						en: "real-time",
+						zh: "实时"
+					})}
 				</label>
 				<Help topic={"ctrl-realTime"} content={
 					<div className="toolTip">
-						<div className="paragraph">- click to use a skill</div>
-						<div className="paragraph">- <ButtonIndicator text={"space"}/> to play/pause. game time is elapsing when the main region has a green border</div>
+						{localize({
+							en: <div className="paragraph">- click to use a skill</div>,
+							zh: <div className="paragraph">- 点击图标使用技能</div>,
+						})}
+						{localize({
+							en: <div className="paragraph">- <ButtonIndicator text={"space"}/> to play/pause. game time is elapsing when the main region has a green border</div>,
+							zh: <div className="paragraph">- 按 <ButtonIndicator text={"空格"}/> 来暂停/继续战斗。操作区有绿色边框的时候代表时间轴正在实时前进。</div>
+						})}
 					</div>
 				}/><br/>
 				<label className={"tickModeOption"}>
@@ -95,12 +105,21 @@ export class TimeControl extends React.Component {
 						   value={TickMode.RealTimeAutoPause}
 						   checked={this.state.tickMode===TickMode.RealTimeAutoPause}
 						   name={"tick mode"}/>
-					{"real-time auto pause"}
+					{localize({
+						en: "real-time auto pause",
+						zh: "实时(带自动暂停）"
+					})}
 				</label>
 				<Help topic={"ctrl-realTimeAutoPause"} content={
 					<div className="toolTip">
-						<div className="paragraph">*Recommended*</div>
-						<div className="paragraph">- click to use a skill. or if it's not ready, click again to wait then retry</div>
+						{localize({
+							en: <div className="paragraph">*Recommended*</div>,
+							zh: <div className="paragraph">*推荐设置*</div>
+						})}
+						{localize({
+							en: <div className="paragraph">- click to use a skill. or if it's not ready, click again to wait then retry</div>,
+							zh: <div className="paragraph">- 点击图标使用技能; 战斗时间会按下方设置的倍速自动前进直到可释放下一个技能。如果点击的技能CD没有转好，再次点击会快进到它CD转好并重试。</div>
+						})}
 					</div>
 				}/><br/>
 				<label className={"tickModeOption"}>
@@ -108,17 +127,28 @@ export class TimeControl extends React.Component {
 						   value={TickMode.Manual}
 						   checked={this.state.tickMode===TickMode.Manual}
 						   name={"tick mode"}/>
-					{"manual"}
+					{localize({
+						en: "manual",
+						zh: "手动"
+					})}
 				</label>
 				<Help topic={"ctrl-manual"} content={
 					<div className="toolTip">
-						<div className="paragraph">- click to use a skill. or if it's not ready, click again to wait then retry</div>
-						<div className="paragraph">- <ButtonIndicator text={"space"}/> to advance game time to the earliest possible time for the next skill</div>
+						{localize({
+							en: <div className="paragraph">- click to use a skill. or if it's not ready, click again to wait then retry</div>,
+							zh: <div className="paragraph">- 点击图标使用技能; 战斗时间会自动快进至可释放下一个技能。如果点击的技能CD没有转好，再次点击可以快进到它CD转好并重试。</div>
+						})}
+						{localize({
+							en:<div className="paragraph">- <ButtonIndicator text={"space"}/> to advance game time to the earliest possible time for the next skill</div>,
+							zh: <div className="paragraph">- 点击 <ButtonIndicator text={"空格"}/> 来快进到下一个可释放技能的时间点。</div>
+						})}
 					</div>
 				}/><br/>
 			</div>
-			<Input defaultValue={this.state.timeScale} description={<span>time scale <Help topic={"timeScale"} content={
-				<div>rate at which game time advances automatically (aka when in real-time)</div>
+			<Input defaultValue={this.state.timeScale} description={<span>{localize({en: "time scale ", zh: "倍速 "})}<Help topic={"timeScale"} content={
+				<div>{localize({
+					en: "rate at which game time advances automatically (aka when in real-time)",
+					zh: "战斗时间自动前进的速度"})}</div>
 			}/>: </span>} onChange={this.setTimeScale}/>
 		</div>
 	}
@@ -127,12 +157,15 @@ export class TimeControl extends React.Component {
 function ConfigSummary(props) {
 	let ct_2_5 = controller.gameConfig.adjustedCastTime(2.5).toFixed(2);
 	let lucidTickOffset = controller.game.actorTickOffset.toFixed(2);
-	let offsetDesc = "The random time offset of actor (lucid dreaming) ticks relative to MP ticks";
+	let offsetDesc = localize({
+		en: "The random time offset of actor (lucid dreaming) ticks relative to MP ticks",
+		zh: "醒梦BUFF期间，每次跳蓝后多久后跳醒梦"
+	});
 	let procMode = controller.gameConfig.procMode;
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	return <div>
 		GCD: {ct_2_5}
-		<br/>Actor tick offset <Help topic={"actorTickOffset"} content={offsetDesc}/>: {lucidTickOffset}
+		<br/>{localize({en: "Actor tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"actorTickOffset"} content={offsetDesc}/>: {lucidTickOffset}
 		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
 		{numOverrides === 0 ? undefined : <span style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</span>}
 	</div>
@@ -581,18 +614,25 @@ export class Config extends React.Component {
 
 	render() {
 		let editSection = <div>
-			<Input defaultValue={this.state.spellSpeed} description="spell speed: " onChange={this.setSpellSpeed}/>
-			<Input defaultValue={this.state.animationLock} description="animation lock: " onChange={this.setAnimationLock}/>
-			<Input defaultValue={this.state.casterTax} description="caster tax: " onChange={this.setCasterTax}/>
-			<Input defaultValue={this.state.timeTillFirstManaTick} description="time till first MP tick: " onChange={this.setTimeTillFirstManaTick}/>
-			<Input defaultValue={this.state.countdown} description="countdown: " onChange={this.setCountdown}/>
+			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
+			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
+			<Input defaultValue={this.state.casterTax} description={localize({en: "caster tax: ", zh: "读条税："})} onChange={this.setCasterTax}/>
+			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "还有多久首次跳蓝："})} onChange={this.setTimeTillFirstManaTick}/>
+			<Input defaultValue={this.state.countdown} description={localize({en: "countdown: ", zh: "倒数时间："})} onChange={this.setCountdown}/>
 			<Input defaultValue={this.state.randomSeed} description={
-				<span>random seed <Help topic={"randomSeed"} content={
-					"can be anything, or leave empty to get 4 random digits."
+				<span>{localize({en: "random seed ", zh: "随机种子 "})}<Help topic={"randomSeed"} content={
+					localize({
+						en: "can be anything, or leave empty to get 4 random digits.",
+						zh: "可以是任意字符串，或者留空，会获得4个随机数字"
+					})
 				}/>: </span>} onChange={this.setRandomSeed}/>
 			<div>
-				<span>proc mode <Help topic={"procMode"} content={
-					"Default RNG: 40% Firestarter, 10% Thundercloud"
+				<span>{localize({en: "proc mode ", zh: "随机BUFF获取方式 "})}<Help topic={"procMode"} content={
+
+					localize({
+					en: "Default RNG: 40% Firestarter, 10% Thundercloud",
+					zh: "RNG会像游戏内一样，相应技能40%概率获得火苗，10%概率获得雷云"
+				})
 				}/>: </span>
 				<select style={{outline: "none"}} value={this.state.procMode} onChange={this.setProcMode}>
 					<option key={ProcMode.RNG} value={ProcMode.RNG}>RNG</option>
@@ -615,13 +655,13 @@ export class Config extends React.Component {
 				}/></span>
 			</div>
 			{this.#resourceOverridesSection()}
-			<button onClick={this.handleSubmit}>apply and reset</button>
+			<button onClick={this.handleSubmit}>{localize({en: "apply and reset", zh: "应用并重置时间轴"})}</button>
 		</div>;
 		return (
 			<div className={"config"} style={{marginBottom: 16}}>
-				<div style={{marginBottom: 5}}><b>Config</b></div>
+				<div style={{marginBottom: 5}}><b>{localize({en: "Config", zh: "设置"})}</b></div>
 				<ConfigSummary/> {/* retrieves data from global controller */}
-				<Expandable title={"Edit" + (this.state.dirty ? "*" : "")} content={editSection}/>
+				<Expandable title={"Edit"} titleNode={localize({en: "Edit", zh: "编辑"}) + (this.state.dirty ? "*" : "")} content={editSection}/>
 			</div>
 		)}
 }

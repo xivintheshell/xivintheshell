@@ -4,7 +4,6 @@ import {localize} from "./Localization";
 import {Tooltip as ReactTooltip} from "react-tooltip";
 import 'react-tooltip/dist/react-tooltip.css';
 import '../Style/tooltip.css';
-import * as ReactDOMServer from 'react-dom/server'
 
 export type ContentNode = JSX.Element | string;
 
@@ -36,7 +35,7 @@ type SaveToFileProps = {
 	getContentFn: () => object,
 	filename: string,
 	fileFormat: FileFormat,
-	displayName?: string
+	displayName?: ContentNode
 };
 export class SaveToFile extends React.Component{
 	props: SaveToFileProps;
@@ -187,7 +186,7 @@ export function ProgressBar(props: {
 
 type InputProps = {
 	defaultValue?: string,
-	description: ReactNode,
+	description: ContentNode,
 	onChange?: (newVal: string) => void,
 	width?: number,
 	style?: CSSProperties,
@@ -418,7 +417,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 	}
 }
 
-export function ButtonIndicator(props: {text: string}) {
+export function ButtonIndicator(props: {text: ContentNode}) {
 	return <span style={{
 		fontSize: 10,
 		border: "1px solid #444",

@@ -3,6 +3,7 @@ import {GrLanguage} from "react-icons/gr";
 import {forceUpdateAll} from "./Main";
 import {SkillName, SkillReadyStatus} from "../Game/Common";
 import {ContentNode} from "./Common";
+import {Skill} from "../Game/Skills";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -25,8 +26,35 @@ export function localize(content: LocalizedContent) {
 const skillsZh = new Map<SkillName, string>([
 	[SkillName.Blizzard, "冰1"],
 	[SkillName.Fire4, "火4"],
-	[SkillName.LeyLines, "黑魔纹"]
-	// todo
+	[SkillName.Transpose, "星灵位移"],
+	[SkillName.Thunder3, "雷3"],
+	[SkillName.Manaward, "魔罩"],
+	[SkillName.Manafont, "魔泉"],
+	[SkillName.Fire3, "火3"],
+	[SkillName.Blizzard3, "冰3"],
+	[SkillName.Freeze, "冰冻"],
+	[SkillName.Flare, "核爆"],
+	[SkillName.LeyLines, "黑魔纹"],
+	[SkillName.Sharpcast, "激情咏唱"],
+	[SkillName.Blizzard4, "冰4"],
+	[SkillName.BetweenTheLines, "魔纹步"],
+	[SkillName.AetherialManipulation, "以太步"],
+	[SkillName.Triplecast, "三连咏唱"],
+	[SkillName.Foul, "秽浊"],
+	[SkillName.Despair, "绝望"],
+	[SkillName.UmbralSoul, "灵极魂"],
+	[SkillName.Xenoglossy, "异言"],
+	[SkillName.HighFire2, "高火2"],
+	[SkillName.HighBlizzard2, "高冰冻2"],
+	[SkillName.Amplifier, "详述"],
+	[SkillName.Addle, "病毒"],
+	[SkillName.Swiftcast, "即刻咏唱"],
+	[SkillName.LucidDreaming, "醒梦"],
+	[SkillName.Surecast, "沉稳咏唱"],
+	[SkillName.Tincture, "爆发药"],
+	[SkillName.Paradox, "悖论"],
+	[SkillName.Sprint, "疾跑"]
+	//all names updated
 ]);
 
 const skillsJa = new Map<SkillName, string>([
