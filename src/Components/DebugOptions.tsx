@@ -1,5 +1,6 @@
 import React from 'react';
 import {Debug} from "../Game/Common";
+import {localize} from "./Localization";
 
 type DebugSettings = {
 	noEnochian: boolean;
@@ -95,7 +96,9 @@ export class DebugOptions extends React.Component {
 				<button style={{color: "#be0f0f"}} onClick={()=>{
 					localStorage.clear();
 					window.location.reload();
-				}}>[DANGER!] clear browser cache and reload</button>
+				}}>{localize({
+					en: "[DANGER!] clear browser cache and reload",
+					zh: "[谨慎操作] 清除缓存并刷新"})}</button>
 			</div>
 		</div>
 	}

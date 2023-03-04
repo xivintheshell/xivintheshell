@@ -5,6 +5,7 @@ import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
 import {TimelineCanvas} from "./TimelineCanvas";
 import {localizeSkillName} from "./Localization";
+import {getCurrentThemeColors} from "./ColorTheme";
 
 export let updateTimelineView = () => {};
 
@@ -83,7 +84,7 @@ class TimelineMain extends React.Component {
 			width: "100%",
 			overflowX: "scroll",
 			overflowY: "clip",
-			outline: "1px solid lightgrey",
+			outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
 			margin: "10px 0"
 		}} ref={this.myRef} onScroll={e=>{
 			if (this.myRef.current) {
@@ -131,7 +132,8 @@ class StatsDisplay extends React.Component {
 		updateStatsDisplay = ()=>{};
 	}
 	render() {
-		let cumulative = <div style={{flex: 1, color: this.state.historical ? "darkorange" : "black"}}>
+		let colors = getCurrentThemeColors();
+		let cumulative = <div style={{flex: 1, color: this.state.historical ? colors.historical : colors.text}}>
 			<span>Last damage application time: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
 			<span>Total applied potency: {(this.state.cumulativePotency).toFixed(2)}</span><br/>
 			<span>PPS <Help topic={"ppsNotes"} content={
@@ -157,7 +159,7 @@ class StatsDisplay extends React.Component {
 			statsBySkillEntries.push({skillName: skillName, potencySum: skill.potencySum, count: skill.count});
 		});
 		statsBySkillEntries.sort((a, b)=>{ return b.potencySum - a.potencySum });
-		let statsBySkill = <div style={{flex: 1, color: this.state.historical ? "darkorange" : "black"}}>
+		let statsBySkill = <div style={{flex: 1, color: this.state.historical ? colors.historical : colors.text}}>
 			{statsBySkillEntries.map(skill => {
 				let statsStr = localizeSkillName(skill.skillName) + " (" + skill.count + ")";
 				if (skill.potencySum > 0) statsStr += ": " + skill.potencySum.toFixed(2);
@@ -249,7 +251,7 @@ export class Timeline extends React.Component {
 			right: 0,
 			paddingLeft: 6,
 			paddingRight: 6,
-			borderTop: "2px solid darkgrey",
+			borderTop: "2px solid " + getCurrentThemeColors().bgHighContrast,
 			flex: 0
 		}}>
 			<Expandable

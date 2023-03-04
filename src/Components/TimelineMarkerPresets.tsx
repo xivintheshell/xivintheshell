@@ -1,8 +1,18 @@
 import React, {ChangeEvent, CSSProperties} from 'react'
-import {Expandable, Input, LoadJsonFromFileOrUrl, asyncFetch, SaveToFile, parseTime, Help, FileFormat} from "./Common";
+import {
+	Expandable,
+	Input,
+	LoadJsonFromFileOrUrl,
+	asyncFetch,
+	SaveToFile,
+	parseTime,
+	Help,
+	FileFormat
+} from "./Common";
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
 import {localize} from "./Localization";
+import {getCurrentThemeColors} from "./ColorTheme";
 
 /*
 	For the sake of simplicity, tracks be like:
@@ -244,7 +254,7 @@ export class TimelineMarkerPresets extends React.Component {
 			}/>
 			<Expandable title={"Add marker"} defaultShow={false} content={
 				<form style={{
-					outline: "1px solid lightgrey",
+					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
 					padding: "10px",
 				}}>
 					<Input defaultValue={this.state.nextMarkerTime} description={"Time: "} width={8} style={inlineDiv}

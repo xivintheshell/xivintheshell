@@ -5,6 +5,7 @@ import {TickMode} from "../Controller/Common";
 import {ProcMode, ResourceType} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 import {localize} from "./Localization";
+import {getCurrentThemeColors} from "./ColorTheme";
 
 export class TimeControl extends React.Component {
 	constructor(props) {
@@ -75,11 +76,21 @@ export class TimeControl extends React.Component {
 		controller.setTimeControlSettings({tickMode: this.state.tickMode, timeScale: this.state.timeScale});
 	}
 	render() {
-		return <div className={"timeControl"}>
+		//let colors = getCurrentThemeColors();
+		let radioStyle = {
+			position: "relative",
+			top: 3,
+			marginRight: "0.25em"
+		};
+		let tickModeOptionStyle = {
+			display: "inline-block",
+			marginRight: "0.5em"
+		};
+		return <div style={{display: "inline-block", marginBottom: 15}}>
 			<div style={{marginBottom: 5}}>
 				<div style={{marginBottom: 5}}><b>{localize({en: "Control", zh: "战斗时间控制"})}</b></div>
-				<label className={"tickModeOption"}>
-					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
+				<label style={tickModeOptionStyle}>
+					<input style={radioStyle} type={"radio"} onChange={this.setTickMode}
 						   value={TickMode.RealTime}
 						   checked={this.state.tickMode === TickMode.RealTime}
 						   name={"tick mode"}/>
@@ -100,8 +111,8 @@ export class TimeControl extends React.Component {
 						})}
 					</div>
 				}/><br/>
-				<label className={"tickModeOption"}>
-					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
+				<label style={tickModeOptionStyle}>
+					<input style={radioStyle} type={"radio"} onChange={this.setTickMode}
 						   value={TickMode.RealTimeAutoPause}
 						   checked={this.state.tickMode===TickMode.RealTimeAutoPause}
 						   name={"tick mode"}/>
@@ -122,8 +133,8 @@ export class TimeControl extends React.Component {
 						})}
 					</div>
 				}/><br/>
-				<label className={"tickModeOption"}>
-					<input className={"radioButton"} type={"radio"} onChange={this.setTickMode}
+				<label style={tickModeOptionStyle}>
+					<input style={radioStyle} type={"radio"} onChange={this.setTickMode}
 						   value={TickMode.Manual}
 						   checked={this.state.tickMode===TickMode.Manual}
 						   name={"tick mode"}/>
@@ -533,7 +544,7 @@ export class Config extends React.Component {
 				});
 				evt.preventDefault();
 			}}
-			style={{marginTop: 16, outline: "1px solid lightgrey", outlineOffset: 6}}>
+			style={{marginTop: 16, outline: "1px solid " + getCurrentThemeColors().bgMediumContrast, outlineOffset: 6}}>
 			<select value={this.state.selectedOverrideResource}
 					onChange={evt => {
 						if (evt.target) {
@@ -613,6 +624,7 @@ export class Config extends React.Component {
 	}
 
 	render() {
+		let colors = getCurrentThemeColors();
 		let editSection = <div>
 			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>

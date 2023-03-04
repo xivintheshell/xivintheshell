@@ -5,6 +5,7 @@ import {FileType, ReplayMode} from "../Controller/Common";
 // @ts-ignore
 import {skillIcons} from "./Skills";
 import {ActionType, Line} from "../Controller/Record";
+import {getCurrentThemeColors} from "./ColorTheme";
 
 type Fixme = any;
 
@@ -105,7 +106,7 @@ export class SkillSequencePresets extends React.Component {
 					}
 				}}/>
 			<div style={{
-				outline: "1px solid lightgrey",
+				outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
 				margin: "10px 0",
 				padding: "10px",
 			}}>

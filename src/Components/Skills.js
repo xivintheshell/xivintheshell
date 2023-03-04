@@ -1,5 +1,5 @@
 import React from 'react'
-import {Clickable, Help, Info, parseTime} from "./Common";
+import {Clickable, Help, parseTime} from "./Common";
 import {Debug, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
@@ -7,6 +7,7 @@ import {ActionType} from "../Controller/Record";
 import {localize, localizeSkillName} from "./Localization";
 import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
+import {getCurrentThemeColors} from "./ColorTheme";
 
 export let displayedSkills = [
 	SkillName.Blizzard,
@@ -125,7 +126,7 @@ class SkillButton extends React.Component {
 				game: controller.getDisplayedGame(),
 				skillName: this.props.skillName
 			});
-
+			let colors = getCurrentThemeColors();
 			let s = "";
 			if (info.status === SkillReadyStatus.Ready) {
 				let en = "ready (" + info.stacksAvailable + " stack";
@@ -149,7 +150,7 @@ class SkillButton extends React.Component {
 				if (info.llCovered && actualCastTime > Debug.epsilon) infoString += " (LL)";
 				infoString += localize({en: ", cast+delay: ", zh: " 读条+生效延迟："}) + info.timeTillDamageApplication.toFixed(3);
 			}
-			let content = <div style={{color: controller.displayingUpToDateGameState ? "white" : "darkorange"}}>
+			let content = <div style={{color: controller.displayingUpToDateGameState ? colors.text : colors.historical}}>
 				<div className="paragraph">{localizeSkillName(this.props.skillName)}</div>
 				<div className="paragraph">{s}</div>
 				<div className="paragraph">{infoString}</div>
@@ -183,8 +184,7 @@ class SkillButton extends React.Component {
 				controller.updateAllDisplay();
 			} : undefined} content={icon}
 					   style={controller.displayingUpToDateGameState ? {} : {cursor: "not-allowed"}}/>
-			<ReactTooltip id={"skillButton-" + this.props.skillName} className="info-tooltip"
-						  classNameArrow="info-tooltip-arrow"/>
+			{/*<ReactTooltip id={"skillButton-" + this.props.skillName} className="info-tooltip" classNameArrow="info-tooltip-arrow"/>*/}
 		</span>
 	}
 }
@@ -267,7 +267,7 @@ export class SkillsWindow extends React.Component {
 			this.setState({waitSince: e.target.value});
 		}).bind(this);
 
-		this.onRemoveTrailingIdleTime = (e=>{
+		this.onRemoveTrailingIdleTime = (()=>{
 			controller.removeTrailingIdleTime();
 		}).bind(this);
 
@@ -324,16 +324,39 @@ export class SkillsWindow extends React.Component {
 			//border: "1px solid red",
 		};
 
+		let colors = getCurrentThemeColors();
+		let textInputFieldStyle = {
+			outline: "none",
+			border: "none",
+			borderBottom: "1px solid " + colors.text,
+			borderRadius: 0,
+			background: "transparent",
+			color: colors.text
+		};
 		return <div className={"skillsWindow"}>
-			<div data-tip data-for="SkillDescription" className={"skillIcons"}>
+			<div className={"skillIcons"}>
+				<style>{`
+					.info-tooltip {
+						color: ${colors.text};
+						background-color: ${colors.bgLowContrast};
+						opacity: 0.98;
+						max-width: 300px;
+						outline: 1px solid ${colors.bgHighContrast};
+						transition: none;
+						font-size: 100%;
+						z-index: 10;
+					}
+					.info-tooltip-arrow { display: none; }
+				`}</style>
 				{skillButtons}
+				<ReactTooltip anchorSelect={".skillButton"} className={"info-tooltip"} classNameArrow={"info-tooltip-arrow"}/>
 				<div style={{margin: "10px 0"}}>
 					<div style={{display: "flex", flexDirection: "row", marginBottom: 6}}>
 
 						{localize({
-							en:<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+							en: <form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
 								Wait until <input type={"text"} style={{
-								width: 30, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
+								...{width: 30}, ...textInputFieldStyle
 							}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) since <select
 								style={{display: "inline-block", outline: "none"}}
 								value={this.state.waitSince}
@@ -350,14 +373,14 @@ export class SkillsWindow extends React.Component {
 									<option value={WaitSince.Now}>当前</option>
 									<option value={WaitSince.LastSkill}>上次使用技能</option>
 								</select> 后的 <input type={"text"} style={{
-								width: 30, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
+								...{width: 30}, ...textInputFieldStyle
 							}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> 秒 <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
 							</form>
 						})}
 
 						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
 							{localize({en: "Wait until", zh: "快进至指定时间"})} {waitUntilHelp} <input type={"text"} style={{
-							width: 60, outline: "none", border: "none", borderBottom: "1px solid black", borderRadius: 0
+							...{width: 60}, ...textInputFieldStyle
 						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange}/> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
 						</form>
 

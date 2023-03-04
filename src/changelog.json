@@ -3,7 +3,8 @@
 		"date": "3/3/23",
 		"changes": [
 			"translation updates mostly by Eshiya",
-			"bugfix: previously need to mouseover the timeline to delete skills"
+			"bugfix: previously need to mouseover the timeline to delete skills",
+			"bugfix: couldn't hide F1/B1/Paradox skill description"
 		]
 	},
 	{

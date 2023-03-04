@@ -9,7 +9,7 @@ import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 // @ts-ignore
 import {updateConfigDisplay} from "../Components/PlaybackControl"
 // @ts-ignore
-import {setOverrideOutlineColor, setRealTime} from "../Components/Main";
+import {setHistorical, setRealTime} from "../Components/Main";
 import {ElemType, Timeline} from "./Timeline"
 // @ts-ignore
 import {scrollTimelineTo, updateStatsDisplay, updateTimelineView} from "../Components/Timeline";
@@ -102,7 +102,6 @@ class Controller {
 	#sandboxEnvironment(fn: ()=>void) {
 		this.displayingUpToDateGameState = false;
 		this.#bCalculatingHistoricalState = true;
-		setOverrideOutlineColor("darkorange");
 		let tmpGame = this.game;
 		let tmpRecord = this.record;
 		this.lastAttemptedSkill = "";
@@ -159,7 +158,7 @@ class Controller {
 	displayHistoricalState(time: number, cutoffAction?: ActionNode) {
 		this.displayingUpToDateGameState = false;
 		this.#bCalculatingHistoricalState = true;
-		setOverrideOutlineColor("darkorange");
+		setHistorical(true);
 		let tmpGame = this.game;
 		let tmpRecord = this.record;
 		this.lastAttemptedSkill = "";
@@ -215,7 +214,7 @@ class Controller {
 			time: 0,
 			displayTime: 0
 		});
-		setOverrideOutlineColor(undefined);
+		setHistorical(false);
 		this.updateAllDisplay(this.game);
 		this.updateCumulativeStatsDisplay();
 	}

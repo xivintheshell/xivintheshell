@@ -1,9 +1,9 @@
-import React, {ReactNode} from "react";
-import {GrLanguage} from "react-icons/gr";
+import React from "react";
 import {forceUpdateAll} from "./Main";
-import {SkillName, SkillReadyStatus} from "../Game/Common";
+import {SkillName} from "../Game/Common";
 import {ContentNode} from "./Common";
-import {Skill} from "../Game/Skills";
+import {MdLanguage} from "react-icons/md";
+import {getCurrentThemeColors} from "./ColorTheme";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -79,11 +79,13 @@ function LanguageOption(props: {lang: Language}) {
 	let text = "English";
 	if (props.lang === "zh") text = "中文(陆续更新中)";
 	if (props.lang === "ja") text = "日本語";
+	let colors = getCurrentThemeColors();
 	return <div style={{
 		display: "inline-block",
 		cursor: "pointer",
+		verticalAlign: "middle",
 		textDecoration: props.lang === getCurrentLanguage() ? "none" : "underline",
-		borderTop: props.lang === getCurrentLanguage() ? "1px solid black" : "none"
+		borderTop: props.lang === getCurrentLanguage() ? "1px solid " + colors.text : "none"
 	}} onClick={()=>{
 		setCurrentLanguage(props.lang);
 	}}>{text}</div>
@@ -125,10 +127,10 @@ export class SelectLanguage extends React.Component {
 		return <div style={{
 			display: "inline-block",
 			position: "absolute",
-			right: 10,
+			right: 68,
 		}}>
-			<span style={{display: "inline-block", fontSize: 16, position: "relative", marginRight: 6}}><GrLanguage/></span>
-			<div style={{display: "inline-block", fontSize: 14, position: "relative", top: -5}}>
+			<span style={{display: "inline-block", fontSize: 17, position: "relative", marginRight: 2}}><MdLanguage/></span>
+			<div style={{display: "inline-block", fontSize: 14, position: "relative", top: -4}}>
 				<LanguageOption lang={"en"}/>|
 				<LanguageOption lang={"zh"}/>
 			</div>

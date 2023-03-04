@@ -3,6 +3,7 @@ import {Expandable, Help, ButtonIndicator} from "./Common";
 import {localize} from "./Localization";
 import {DebugOptions} from "./DebugOptions";
 import changelog from "../changelog.json"
+import {getCurrentThemeColors} from "./ColorTheme";
 
 function Changelog() {
 	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={localize({en: "Changelog", zh: "更新日志", ja: "実装日志"})} defaultShow={false} content={
@@ -25,6 +26,7 @@ function Changelog() {
 
 export function IntroSection(props: {}) {
 	let smallGap: CSSProperties = { marginBottom: 5 };
+	let colors = getCurrentThemeColors();
 	return <div>
 		<Expandable
 			defaultShow={true}
@@ -72,8 +74,8 @@ export function IntroSection(props: {}) {
 				})}
 
 				{localize({
-					en: <div className={"paragraph"}><span style={{color: "darkolivegreen", cursor: "pointer"}}><u>[these]</u></span> are file download links. Click to download, or right click to choose save location.</div>,
-					zh: <div className={"paragraph"}><span style={{color: "darkolivegreen", cursor: "pointer"}}><u>[这样的按钮]</u></span> 是文件下载链接，可以点击直接下载也可以右键另存为。</div>
+					en: <div className={"paragraph"}><span style={{color: colors.fileDownload, cursor: "pointer"}}><u>[these]</u></span> are file download links. Click to download, or right click to choose save location.</div>,
+					zh: <div className={"paragraph"}><span style={{color: colors.fileDownload, cursor: "pointer"}}><u>[这样的按钮]</u></span> 是文件下载链接，可以点击直接下载也可以右键另存为。</div>
 				})}
 
 				{localize({

@@ -4,6 +4,7 @@ import {localize} from "./Localization";
 import {Tooltip as ReactTooltip} from "react-tooltip";
 import 'react-tooltip/dist/react-tooltip.css';
 import '../Style/tooltip.css';
+import {getCurrentThemeColors} from "./ColorTheme";
 
 export type ContentNode = JSX.Element | string;
 
@@ -60,7 +61,7 @@ export class SaveToFile extends React.Component{
 		else if (this.props.fileFormat === FileFormat.Csv) url = getCsvUrl(this.state.csvContent);
 		else (console.assert(false));
 		return <a
-			style={{color: "darkolivegreen", marginRight: 6}}
+			style={{color: getCurrentThemeColors().fileDownload, marginRight: 6}}
 			href={url}
 			download={this.props.filename}
 			onClick={()=>{ this.updateContent(); }}
@@ -157,30 +158,31 @@ export function Clickable(props: ClickableProps) {
 }
 
 export function ProgressBar(props: {
-	progress?: number,
+	progress: number,
 	backgroundColor?: string,
-	width?: number,
-	label?: string,
+	width: number,
 	labelColor?: string,
-	offsetY?: number,
+	offsetY: number,
 }) {
+	let colors = getCurrentThemeColors();
 	const containerStyle: CSSProperties = {
-		top: `${props.offsetY ?? 0}px`,
-		width: `${props.width ?? 100}px`,
+		position: "relative",
+		display: "inline-block",
+		verticalAlign: "top",
+		border: "1px solid " + colors.bgHighContrast,
+		borderRadius: 4,
+		height: 8,
+		top: props.offsetY,
+		width: props.width
 	};
 	const fillerStyle: CSSProperties = {
 		background: `${props.backgroundColor}`,
 		height: "100%",
 		borderRadius: "inherit",
-		width: `${(props.progress ?? 0.5) * 100}%`,
+		width: `${props.progress * 100}%`,
 	};
-	const labelStyle: CSSProperties = {
-		color: props.labelColor,
-	}
-	return <div className={"progressBar"} style={containerStyle}>
-		<div style={fillerStyle}>
-			<span style={labelStyle}>{props.label}</span>
-		</div>
+	return <div style={containerStyle}>
+		<div style={fillerStyle}/>
 	</div>
 }
 
@@ -203,10 +205,18 @@ export class Input extends React.Component {
 	}
 	render() {
 		let width = this.props.width ?? 5;
-		let style = this.props.style;
-		return <div style={style}>
+		let colors = getCurrentThemeColors();
+		let inputStyle: CSSProperties = {
+			color: colors.text,
+			backgroundColor: "transparent",
+			outline: "none",
+			border: "none",
+			borderBottom: "1px solid " + colors.text
+		};
+		let overrideStyle = this.props.style ?? {};
+		return <div style={overrideStyle}>
 			<span>{this.props.description/* + "(" + this.state.value + ")"*/}</span>
-			<input className={"textInput"} size={width} type="text" value={this.props.defaultValue} onChange={this.onChange}/>
+			<input style={inputStyle} size={width} type="text" value={this.props.defaultValue} onChange={this.onChange}/>
 		</div>
 	}
 }
@@ -244,14 +254,13 @@ export class Slider extends React.Component {
 		return <div style={{display: "inline-block"}}>
 			<span>{this.props.description ?? ""}</span>
 			<input
-				className={"sliderInput"}
 				size={10} type="range"
 				value={this.state.value}
 				min={0.05}
 				max={1}
 				step={0.05}
 				onChange={this.onChange}
-				style={{position: "relative", top: 5}}/>
+				style={{position: "relative", outline: "none"}}/>
 		</div>
 	}
 }
@@ -382,10 +391,13 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 		if (this.props.loadUrlOnMount) this.onLoadUrl();
 	}
 	render() {
+		let colors = getCurrentThemeColors();
 		let longInputStyle = {
+			color: colors.text,
+			background: "transparent",
 			outline: "none",
 			border: "none",
-			borderBottom: "1px solid black",
+			borderBottom: "1px solid " + colors.text,
 			width: "30em",
 		};
 		return <div>
@@ -418,12 +430,13 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 }
 
 export function ButtonIndicator(props: {text: ContentNode}) {
+	let colors = getCurrentThemeColors();
 	return <span style={{
-		fontSize: 10,
-		border: "1px solid #444",
+		fontSize: 11,
+		border: "1px solid " + colors.bgHighContrast,
 		borderRadius: 2,
 		padding: "1px 4px",
-		background: "#efefef"
+		background: colors.bgLowContrast,
 	}}>{props.text}</span>
 }
 
@@ -441,9 +454,24 @@ export function GlobalHelpTooltip(props: {
 		};
 	}, []);
 
-	return <ReactTooltip anchorSelect=".global-help-tooltip" className="help-tooltip" classNameArrow="help-tooltip-arrow">
-		{tipContent}
-	</ReactTooltip>
+	let colors = getCurrentThemeColors();
+
+	return <div>
+		<style>{`
+			.help-tooltip {
+				color: ${colors.text};
+				background-color: ${colors.bgLowContrast};
+				opacity: 0.98;
+				max-width: 300px;
+				outline: 1px solid ${colors.bgHighContrast};
+				transition: none;
+				font-size: 100%;
+				z-index: 10;
+			}
+			.help-tooltip-arrow { display: none; }
+		`}</style>
+		<ReactTooltip anchorSelect=".global-help-tooltip" className="help-tooltip" classNameArrow="help-tooltip-arrow">{tipContent}</ReactTooltip>
+	</div>
 }
 
 export function GlobalInfoTooltip(props: {
@@ -463,13 +491,14 @@ export function GlobalInfoTooltip(props: {
 }
 
 export function Help(props: {topic: string, content: ContentNode}) {
+	let colors = getCurrentThemeColors();
 	let style: CSSProperties = {
 		display: "inline-block",
 		position: "relative",
 		width: 12,
 		height: 12,
 		cursor: "help",
-		background: "#c2c2c2",
+		background: colors.bgMediumContrast,
 		borderRadius: 6,
 		textAlign: "center",
 		verticalAlign: "middle",

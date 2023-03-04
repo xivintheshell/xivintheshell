@@ -1,65 +1,5 @@
 
-/* Overall */
-.staticScrollbar::-webkit-scrollbar {
-    -webkit-appearance: none;
-    background-color: #e8e8e8;
-    height: 5px;
-    width: 5px;
-}
-.staticScrollbar::-webkit-scrollbar-thumb {
-    background-color: darkgray;
-}
-
 /*======== sections ========*/
-
-/* keyboard-controlled area */
-
-.keyboardControlled {
-    display: inline-block;
-    padding: 8px;
-    marginBottom: 16px;
-    outline: 1px solid lightgrey;
-}
-
-.keyboardControlled:focus {
-    outline: mediumpurple solid 2px;
-}
-
-.keyboardControlled.realTime:focus {
-    outline: mediumseagreen solid 2px;
-}
-
-/* playback control */
-
-.timeControl {
-    display: inline-block;
-    margin-bottom: 15px;
-}
-@media(min-width: 768px) {
-    .config,.timeControl {
-    }
-}
-.textInput {
-    outline: none;
-    border: none;
-    border-bottom: 1px solid black;
-}
-.sliderInput {
-    position: relative;
-    top: 4px;
-}
-.tickModeOption {
-    display: inline-block;
-    margin-right: 0.5em;
-}
-.tickModeDescription {
-    padding: 1em 2em;
-}
-.radioButton {
-    position: relative;
-    top: 3px;
-    margin-right: 0.25em;
-}
 
 /* Status display */
 
@@ -80,66 +20,6 @@
     float: right;
     width: 50%;
 }
-/* resource bar & counter */
-.resourceDisplay {
-    text-align: left;
-}
-
-.resourceLocksDisplay {
-    position: absolute;
-}
-
-.resource {
-    margin-bottom: 4px;
-    line-height: 1.5em;
-}
-.resource.hidden {
-    display: none;
-}
-.resource-name, .resource-stacks, .resource-value {
-    display: inline-block;
-    height: 100%;
-}
-.resource-name {
-    width: 108px;
-    horiz-align: left;
-}
-.resource-stacksOrBarAndValue {
-    width: 200px;
-    display: inline-block;
-}
-.resource-stacks {
-}
-.resource>.progressBar {
-    width: 100%;
-}
-.resource-stacks>.resourceStack {
-    position: relative;
-    top: 1px;
-    margin-right: 8px;
-}
-.resource-value {
-    margin-left: 6px;
-}
-/* resource stack */
-.resourceStack {
-    position: relative;
-    width: 16px;
-    height: 16px;
-    border-radius: 8px;
-    display: inline-block;
-    border: 1px solid grey;
-    vertical-align: top;
-}
-.resourceStackInner {
-    position: absolute;
-    top: 2px;
-    bottom: 2px;
-    left: 2px;
-    right: 2px;
-    border-radius: inherit;
-}
-
 /* buffs */
 .buffsDisplay {
     height: 54px;
@@ -187,7 +67,7 @@
     display: inline-block;
 }
 .skillIcon.notReady {
-    filter: brightness(0.5);
+    filter: brightness(0.4);
 }
 .skillIcon>img {
     width: 40px;
@@ -220,15 +100,6 @@
 }
 .clickable:hover {
     cursor: pointer;
-}
-
-.progressBar {
-    position: relative;
-    display: inline-block;
-    vertical-align: top;
-    border: 1px solid grey;
-    border-radius: 4px;
-    height: 8px;
 }
 
 .paragraph {
