@@ -18,6 +18,7 @@ import {skillIconImages} from "./Skills";
 import {controller} from "../Controller/Controller";
 import {localizeSkillName} from "./Localization";
 import {setEditingMarkerValues} from "./TimelineMarkerPresets";
+import {getCurrentThemeColors, ThemeColors} from "./ColorTheme";
 
 export type TimelineRenderingProps = {
 	timelineWidth: number,
@@ -34,6 +35,7 @@ export type TimelineRenderingProps = {
 const trackHeight = 14;
 const trackBottomMargin = 6;
 const maxTimelineHeight = 400;
+const barsOffset = 2;
 
 let g_visibleLeft = 0;
 let g_visibleWidth = 0;
@@ -44,6 +46,8 @@ let g_keyboardEvent: any = undefined;
 let g_mouseX = 0;
 let g_mouseY = 0;
 let g_mouseHovered = false;
+
+let g_colors: ThemeColors;
 
 // updated on mouse enter/leave, updated and reset on every draw
 let g_activeHoverTip: string[] | undefined = undefined;
@@ -110,13 +114,13 @@ function drawTip(ctx: CanvasRenderingContext2D, lines: string[], canvasWidth: nu
 	}
 
 	// start drawing
-	ctx.strokeStyle = "grey";
+	ctx.strokeStyle = g_colors.bgHighContrast;
 	ctx.lineWidth = 1;
-	ctx.fillStyle = "rgba(255, 255, 255, 0.96)";
+	ctx.fillStyle = g_colors.tipBackground;
 	ctx.fillRect(x, y, boxWidth, boxHeight);
 	ctx.strokeRect(x, y, boxWidth, boxHeight);
 
-	ctx.fillStyle = "black";
+	ctx.fillStyle = g_colors.emphasis;
 	ctx.textBaseline = "top";
 	for (let i = 0; i < lines.length; i++) {
 		ctx.fillText(lines[i], x + horizontalPadding, y + i * lineHeight + 2 + verticalPadding);
@@ -150,9 +154,9 @@ function drawMarkers(
 			if (m.duration > 0) {
 				let markerWidth = StaticFn.positionFromTimeAndScale(m.duration, scale);
 				if (m.showText) {
-					ctx.fillStyle = m.color + "7f";
+					ctx.fillStyle = m.color + g_colors.timeline.markerAlpha;
 					ctx.fillRect(left, top, markerWidth, trackHeight);
-					ctx.fillStyle = "black";
+					ctx.fillStyle = g_colors.emphasis;
 					ctx.fillText(m.description, left + trackHeight / 2, top + 10);
 				} else {
 					ctx.strokeStyle = m.color;
@@ -170,7 +174,7 @@ function drawMarkers(
 				ctx.ellipse(left, top + trackHeight / 2, 4, 4, 0, 0, 2 * Math.PI);
 				ctx.fill();
 				if (m.showText) {
-					ctx.fillStyle = "black";
+					ctx.fillStyle = g_colors.emphasis;
 					ctx.beginPath()
 					ctx.fillText(m.description, left + trackHeight / 2, top + 10);
 				}
@@ -191,7 +195,7 @@ function drawMPTickMarks(
 	elems: MPTickMarkElem[]
 ) {
 	ctx.lineWidth = 1;
-	ctx.strokeStyle = "#caebf6";
+	ctx.strokeStyle = g_colors.timeline.mpTickMark;
 	ctx.beginPath();
 	elems.forEach(tick=>{
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(tick.time, scale);
@@ -213,7 +217,7 @@ function drawDamageMarks(
 	timelineOrigin: number,
 	elems: DamageMarkElem[]
 ) {
-	ctx.fillStyle = "red";
+	ctx.fillStyle = g_colors.timeline.damageMark;
 	elems.forEach(mark=>{
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(mark.time, scale);
 		ctx.beginPath();
@@ -247,7 +251,7 @@ function drawLucidMarks(
 	timelineOrigin: number,
 	elems: LucidMarkElem[]
 ) {
-	ctx.fillStyle = "#88cae0";
+	ctx.fillStyle = g_colors.timeline.lucidTickMark;
 	elems.forEach(mark=>{
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(mark.time, scale);
 		ctx.beginPath();
@@ -288,15 +292,15 @@ function drawSkills(
 		// purple/grey bar
 		let lockbarWidth = StaticFn.positionFromTimeAndScale(skill.lockDuration, scale);
 		if (skill.isSpellCast) {
-			purpleLockBars.push({x: x, y: y, w: lockbarWidth, h: 14});
+			purpleLockBars.push({x: x+barsOffset, y: y, w: lockbarWidth-barsOffset, h: 14});
 			snapshots.push(x + StaticFn.positionFromTimeAndScale(skill.relativeSnapshotTime, scale));
 		} else {
-			greyLockBars.push({x: x, y: y, w: lockbarWidth, h: 28});
+			greyLockBars.push({x: x+barsOffset, y: y, w: lockbarWidth-barsOffset, h: 28});
 		}
 		// green gcd recast bar
 		if (skill.isGCD) {
 			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
-			gcdBars.push({x: x, y: y + 14, w: recastWidth, h: 14});
+			gcdBars.push({x: x+barsOffset, y: y + 14, w: recastWidth-barsOffset, h: 14});
 		}
 		// ll cover
 		if (skill.node.hasBuff(ResourceType.LeyLines)) {
@@ -314,7 +318,7 @@ function drawSkills(
 	});
 
 	// purple
-	ctx.fillStyle = "#e7d9ee";
+	ctx.fillStyle = g_colors.timeline.castBar;
 	ctx.beginPath();
 	purpleLockBars.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
@@ -324,7 +328,7 @@ function drawSkills(
 
 	// snapshot bar
 	ctx.lineWidth = 1;
-	ctx.strokeStyle = "rgba(151, 85, 239, 0.2)";
+	ctx.strokeStyle = "rgba(151, 85, 239, 0.4)";
 	ctx.beginPath();
 	snapshots.forEach(x=>{
 		ctx.moveTo(x, skillsTopY + 14);
@@ -333,7 +337,7 @@ function drawSkills(
 	ctx.stroke();
 
 	// green
-	ctx.fillStyle = "#dbf3d6";
+	ctx.fillStyle = g_colors.timeline.gcdBar;
 	ctx.beginPath();
 	gcdBars.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
@@ -342,7 +346,7 @@ function drawSkills(
 	ctx.fill();
 
 	// grey
-	ctx.fillStyle = "#9d9d9d";
+	ctx.fillStyle = g_colors.timeline.lockBar;
 	ctx.beginPath();
 	greyLockBars.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
@@ -351,7 +355,7 @@ function drawSkills(
 	ctx.fill();
 
 	// llCovers
-	ctx.fillStyle = "#aff19b";
+	ctx.fillStyle = g_colors.timeline.llCover;
 	ctx.beginPath();
 	llCovers.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
@@ -360,7 +364,7 @@ function drawSkills(
 	ctx.fill();
 
 	// potCovers
-	ctx.fillStyle = "#ffa490";
+	ctx.fillStyle = g_colors.timeline.potCover;
 	ctx.beginPath();
 	potCovers.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
@@ -424,7 +428,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	let timelineOrigin = -g_visibleLeft;
 
 	// background white
-	ctx.fillStyle = "white";
+	ctx.fillStyle = g_colors.background;
 	ctx.fillRect(0, 0, g_visibleWidth, renderingProps.timelineHeight);
 	testInteraction({x: 0, y: 0, w: g_visibleWidth, h: maxTimelineHeight}, undefined, ()=>{
 		// clicked on background:
@@ -434,7 +438,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	});
 
 	// ruler bg
-	ctx.fillStyle = "#ececec";
+	ctx.fillStyle = g_colors.timeline.ruler;
 	ctx.fillRect(0, 0, g_visibleWidth, 30);
 	let t = StaticFn.timeFromPositionAndScale(g_mouseX - timelineOrigin, renderingProps.scale);
 	testInteraction(
@@ -454,12 +458,12 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	let pixelsPerSecond = renderingProps.scale * 100;
 	let countdownPadding = renderingProps.countdown * pixelsPerSecond;
 	ctx.lineWidth = 1;
-	ctx.strokeStyle = "black";
+	ctx.strokeStyle = g_colors.text;
 	ctx.textBaseline = "alphabetic";
 
 	ctx.font = "13px monospace";
 	ctx.textAlign = "center";
-	ctx.fillStyle = "black";
+	ctx.fillStyle = g_colors.text;
 	const cullThreshold = 50;
 	if (pixelsPerSecond >= 6) {
 		for (let x = 0; x < renderingProps.timelineWidth - countdownPadding; x += pixelsPerSecond) {
@@ -511,7 +515,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 		numTracks = Math.max(numTracks, k + 1);
 	}
 	let markerTracksOriginY = 30 + numTracks * trackHeight;
-	ctx.fillStyle = "#f3f3f3";
+	ctx.fillStyle = g_colors.timeline.tracks;
 	for (let i = 0; i < numTracks; i += 2) {
 		let top = markerTracksOriginY - (i + 1) * trackHeight;
 		ctx.rect(0, top, g_visibleWidth, trackHeight);
@@ -544,11 +548,11 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 
 	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(renderingProps.countdown, renderingProps.scale);
-	ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+	ctx.fillStyle = g_colors.timeline.countdown;
 	ctx.fillRect(timelineOrigin, 0, countdownWidth, renderingProps.timelineHeight);
 
 	// selection rect
-	ctx.fillStyle = "rgba(147, 112, 219, 0.1)";
+	ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
 	let selectionLeftPx = timelineOrigin + renderingProps.selectionStartX;
 	let selectionWidthPx = renderingProps.selectionEndX - renderingProps.selectionStartX;
 	ctx.fillRect(selectionLeftPx, 0, selectionWidthPx, maxTimelineHeight);
@@ -566,7 +570,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 		let vcursor = cursor as ViewOnlyCursorElem
 		if (vcursor.enabled) {
 			let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, renderingProps.scale);
-			drawCursor(ctx, x, "darkorange", "cursor: " + vcursor.displayTime.toFixed(2));
+			drawCursor(ctx, x, g_colors.historical, "cursor: " + vcursor.displayTime.toFixed(2));
 		}
 	});
 
@@ -574,7 +578,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	(elemBins.get(ElemType.s_Cursor) ?? []).forEach(elem=>{
 		let cursor = elem as CursorElem;
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, renderingProps.scale);
-		drawCursor(ctx, x, "black", "cursor: " + cursor.displayTime.toFixed(2));
+		drawCursor(ctx, x, g_colors.emphasis, "cursor: " + cursor.displayTime.toFixed(2));
 	});
 
 	// interactive layer
@@ -619,6 +623,7 @@ export function TimelineCanvas(props: {
 		g_activeOnClick = undefined;
 		g_visibleLeft = props.visibleLeft;
 		g_visibleWidth = props.visibleWidth;
+		g_colors = getCurrentThemeColors();
 
 		readback_pointerMouse = false;
 

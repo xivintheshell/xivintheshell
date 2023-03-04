@@ -460,7 +460,7 @@ export function GlobalHelpTooltip(props: {
 		<style>{`
 			.help-tooltip {
 				color: ${colors.text};
-				background-color: ${colors.bgLowContrast};
+				background-color: ${colors.tipBackground};
 				opacity: 0.98;
 				max-width: 300px;
 				outline: 1px solid ${colors.bgHighContrast};
@@ -498,7 +498,7 @@ export function Help(props: {topic: string, content: ContentNode}) {
 		width: 12,
 		height: 12,
 		cursor: "help",
-		background: colors.bgMediumContrast,
+		background: colors.bgHighContrast,
 		borderRadius: 6,
 		textAlign: "center",
 		verticalAlign: "middle",

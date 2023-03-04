@@ -5,6 +5,7 @@ import {ActionNode, ActionType, Record, RecordValidStatus} from "../Controller/R
 // @ts-ignore
 import {updateStatsDisplay} from "./Timeline"
 import {localize, localizeSkillName} from "./Localization";
+import {getCurrentThemeColors} from "./ColorTheme";
 
 export let refreshTimelineEditor = ()=>{};
 
@@ -52,7 +53,7 @@ function TimelineActionElement(props: {
 			controller.timeline.onClickTimelineAction(props.node, e.shiftKey);
 		}
     }}>
-	    {props.isFirstInvalid ? <span style={{marginRight: 6, padding: "0 4px", backgroundColor: "pink"}}>&rarr;</span> : undefined}
+	    {props.isFirstInvalid ? <span style={{marginRight: 6, padding: "0 4px", backgroundColor: "rgba(255, 0, 0, 0.25)"}}>&rarr;</span> : undefined}
 	    <span>{name}</span>
     </div>
 }
@@ -154,7 +155,7 @@ export class TimelineEditor extends React.Component {
 						}
 					}
 					return <div>
-						<div style={{backgroundColor: "pink"}}>This sequence contains invalid actions! Check: {nodeName + " (" + (this.state.recordValidStatus?.invalidReason ?? "(unknown)") + ")"}</div>
+						<div style={{backgroundColor: "rgba(255, 0, 0, 0.25)"}}>This sequence contains invalid actions! Check: {nodeName + " (" + (this.state.recordValidStatus?.invalidReason ?? "(unknown)") + ")"}</div>
 						{this.discardEditsBtn()}
 					</div>
 				}
@@ -217,6 +218,7 @@ export class TimelineEditor extends React.Component {
 				isFirstInvalid={this.state.recordValidStatus?.firstInvalidAction===itr}/>);
 			itr = itr.next;
 		}
+		let colors = getCurrentThemeColors();
 		let content = <div style={{display: "flex", flexDirection: "row", position: "relative"}} onClick={
 			(evt)=>{
 				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
@@ -233,10 +235,10 @@ export class TimelineEditor extends React.Component {
 			}
 		}>
 			{toolbar}
-			<div className={"staticScrollbar"} style={{border: "1px solid lightgrey", flex: 6, height: 200, marginRight: 10, position: "relative", verticalAlign: "top", overflowY: "scroll"}}>
+			<div className={"staticScrollbar"} style={{border: "1px solid " + colors.bgMediumContrast, flex: 6, height: 200, marginRight: 10, position: "relative", verticalAlign: "top", overflowY: "scroll"}}>
 				{actionsList}
 			</div>
-			<div style={{border: "1px solid lightgrey", flex: 6, height: 200, position: "relative", verticalAlign: "top", overflowY: "hidden"}}>
+			<div style={{border: "1px solid " + colors.bgMediumContrast, flex: 6, height: 200, position: "relative", verticalAlign: "top", overflowY: "hidden"}}>
 				{applySection()}
 			</div>
 		</div>;

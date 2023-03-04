@@ -151,7 +151,7 @@ class SkillButton extends React.Component {
 				infoString += localize({en: ", cast+delay: ", zh: " 读条+生效延迟："}) + info.timeTillDamageApplication.toFixed(3);
 			}
 			let content = <div style={{color: controller.displayingUpToDateGameState ? colors.text : colors.historical}}>
-				<div className="paragraph">{localizeSkillName(this.props.skillName)}</div>
+				<div className="paragraph"><b>{localizeSkillName(this.props.skillName)}</b></div>
 				<div className="paragraph">{s}</div>
 				<div className="paragraph">{infoString}</div>
 			</div>;
@@ -174,7 +174,7 @@ class SkillButton extends React.Component {
 		return <span
 			title={this.skillName}
 			className={"skillButton"}
-			data-tooltip-offset={8}
+			data-tooltip-offset={3}
 			data-tooltip-html={
 				ReactDOMServer.renderToStaticMarkup(this.state.skillDescription)
 			} data-tooltip-id={"skillButton-" + this.props.skillName}>
@@ -338,7 +338,7 @@ export class SkillsWindow extends React.Component {
 				<style>{`
 					.info-tooltip {
 						color: ${colors.text};
-						background-color: ${colors.bgLowContrast};
+						background-color: ${colors.tipBackground};
 						opacity: 0.98;
 						max-width: 300px;
 						outline: 1px solid ${colors.bgHighContrast};

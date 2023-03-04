@@ -1,6 +1,6 @@
 import React, {CSSProperties} from 'react';
 // @ts-ignore
-import {Timeline} from "./Timeline";
+import {Timeline, updateTimelineView} from "./Timeline";
 // @ts-ignore
 import { SkillsWindow } from "./Skills";
 // @ts-ignore
@@ -92,6 +92,7 @@ export default class Main extends React.Component {
 
 		forceUpdateAll = (()=>{
 			this.forceUpdate();
+			updateTimelineView();
 		}).bind(this);
 	}
 
@@ -174,6 +175,9 @@ export default class Main extends React.Component {
 				}
 				a {
 					color: ${colors.accent};
+				}
+				b, h1, h2, h3, h4 {
+					color: ${colors.emphasis};
 				}
 				::selection {
 					background: rgba(147, 112, 219, 0.4);
