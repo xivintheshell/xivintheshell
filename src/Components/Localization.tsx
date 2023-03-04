@@ -72,6 +72,9 @@ export function localizeSkillName(text: SkillName) : string {
 	}
 }
 
+export let getCurrentLanguage : ()=>Language = () => {return "en"}
+let setCurrentLanguage : (lang: Language)=>void = (lang) => {}
+
 function LanguageOption(props: {lang: Language}) {
 	let text = "English";
 	if (props.lang === "zh") text = "中文(陆续更新中)";
@@ -85,9 +88,6 @@ function LanguageOption(props: {lang: Language}) {
 		setCurrentLanguage(props.lang);
 	}}>{text}</div>
 }
-
-export let getCurrentLanguage : ()=>Language = () => {return "en"}
-export let setCurrentLanguage : (lang: Language)=>void = (lang) => {}
 
 export class SelectLanguage extends React.Component {
 	state: {
@@ -127,8 +127,8 @@ export class SelectLanguage extends React.Component {
 			position: "absolute",
 			right: 10,
 		}}>
-			<span style={{display: "inline-block", fontSize: 20, position: "relative", marginRight: 6}}><GrLanguage/></span>
-			<div style={{display: "inline-block", fontSize: 15, position: "relative", top: -5}}>
+			<span style={{display: "inline-block", fontSize: 16, position: "relative", marginRight: 6}}><GrLanguage/></span>
+			<div style={{display: "inline-block", fontSize: 14, position: "relative", top: -5}}>
 				<LanguageOption lang={"en"}/>|
 				<LanguageOption lang={"zh"}/>
 			</div>

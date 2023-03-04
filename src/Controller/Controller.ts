@@ -1,4 +1,4 @@
-import {addLog, Color, LogCategory, ReplayMode, TickMode} from "./Common";
+import {ReplayMode, TickMode} from "./Common";
 import {GameState} from "../Game/GameState";
 import {ProcMode, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
@@ -231,16 +231,6 @@ class Controller {
 		this.#bInterrupted = false;
 		this.displayingUpToDateGameState = true;
 		let gcd = this.game.config.adjustedCastTime(2.5).toFixed(2);
-		addLog(
-			LogCategory.Action,
-			"======== RESET (GCD=" + gcd + ") ========",
-			this.game.getDisplayTime(),
-			Color.Grey);
-		addLog(
-			LogCategory.Event,
-			"======== RESET (GCD=" + gcd + ") ========",
-			this.game.getDisplayTime(),
-			Color.Grey);
 	}
 
 	getPresetLines() {
@@ -549,13 +539,6 @@ class Controller {
 			let timeTicked = this.game.tick(
 				props.deltaTime,
 				props.prematureStopCondition ? props.prematureStopCondition : ()=>{ return false; });
-			if (!props.suppressLog) {
-				addLog(
-					LogCategory.Action,
-					"wait for " + props.deltaTime.toFixed(3) + "s",
-					this.game.getDisplayTime(),
-					Color.Grey);
-			}
 
 			// add this tick to game record
 			let lastAction = this.record.getLastAction();
@@ -620,12 +603,9 @@ class Controller {
 		this.shouldLoop = newShouldLoop;
 
 		if (this.shouldLoop) {
-			addLog(LogCategory.Action, "starting real-time control", this.game.getDisplayTime(), Color.Success);
 			this.#runLoop(()=>{
 				return this.shouldLoop
 			});
-		} else {
-			addLog(LogCategory.Action, "paused", this.game.getDisplayTime(), Color.Success);
 		}
 	}
 
@@ -653,35 +633,8 @@ class Controller {
 			this.lastAttemptedSkill = "";
 		}
 
-		let logString = "";
-		let logColor = Color.Text;
-
-		if (status.status === SkillReadyStatus.Ready) {
-			logString = "use skill [" + skillName + "]";
-			logColor = Color.Success;
-		}
-		else if (status.status === SkillReadyStatus.Blocked) {
-			logString = "["+skillName+"] is not available yet. might be ready in ";
-			logString += status.timeTillAvailable.toFixed(3) + ". press again to wait until then and retry";
-			logColor = Color.Warning;
+		if (status.status === SkillReadyStatus.Blocked) {
 			this.lastAttemptedSkill = skillName;
-		}
-		else if (status.status === SkillReadyStatus.NotEnoughMP) {
-			logString = "["+skillName+"] is not ready (not enough MP)";
-			logColor = Color.Error;
-		}
-		else if (status.status === SkillReadyStatus.RequirementsNotMet) {
-			logString = "["+skillName+"] requirements are not met";
-			if (status.description.length > 0)
-				logString += " (need: " + status.description + ")";
-			logColor = Color.Error;
-		}
-
-		if (!bSuppressLog || status.status === SkillReadyStatus.Ready) {
-			addLog(LogCategory.Action, logString, this.game.getDisplayTime(), logColor);
-			if (status.status === SkillReadyStatus.Ready) {
-				addLog(LogCategory.Event, logString, this.game.getDisplayTime(), logColor);
-			}
 		}
 
 		if (status.status === SkillReadyStatus.Ready) {

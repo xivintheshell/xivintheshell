@@ -1,4 +1,3 @@
-import {addLog, Color, LogCategory} from "../Controller/Common";
 import {Debug, ResourceType} from "./Common"
 import {GameState} from "./GameState";
 
@@ -194,7 +193,6 @@ export class ResourceState extends Map<ResourceType, Resource> {
 	// useful for binary resources
 	takeResourceLock(rscType: ResourceType, delay: number) {
 		this.get(rscType).consume(1);
-		addLog(LogCategory.Event, "[resource locked] " + rscType, this.game.getDisplayTime(), Color.Grey);
 		this.addResourceEvent(
 			rscType, "[resource ready] " + rscType, delay, rsc=>{ rsc.gain(1); });
 	}

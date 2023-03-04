@@ -1,40 +1,5 @@
-.textColor {
-    color: #111;
-}
-.fireColor {
-    color: darkorange;
-}
-.iceColor {
-    color: deepskyblue;
-}
-.thunderColor {
-    color: mediumpurple;
-}
-.manaTickColor {
-    color: lightblue;
-}
-.damageColor {
-    color: crimson;
-}
-.greyColor {
-    color: lightgray;
-}
-.successColor {
-    color: mediumseagreen;
-}
-.warningColor {
-    color: darkorange;
-}
-.errorColor {
-    color: red;
-}
 
 /* Overall */
-.__react_component_tooltip {
-    z-index: 10;
-    opacity: 0.96 !important;
-    max-width: 300px;
-}
 .staticScrollbar::-webkit-scrollbar {
     -webkit-appearance: none;
     background-color: #e8e8e8;
@@ -43,58 +8,6 @@
 }
 .staticScrollbar::-webkit-scrollbar-thumb {
     background-color: darkgray;
-}
-
-/* Logging */
-
-.logsAll {
-    position: relative;
-    width: 100%;
-}
-
-.logWindow {
-    margin-bottom: 8px;
-    border: 1px solid grey;
-    text-align: left;
-    padding: 0.5em 0.5em 10px;
-    overflow-y: scroll;
-}
-
-.logWindow.actions {
-    height: 100px;
-}
-
-.logWindow.events {
-    height: 300px;
-}
-
-@media(min-width: 768px) {
-
-    .logsAll {
-        height: 400px;
-    }
-
-    .logWindow {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-    }
-
-    .logWindow.actions {
-        left: 0;
-        right: 50.5%;
-        height: 100%;
-    }
-    .logWindow.events {
-        left: 50.5%;
-        right: 0;
-        height: 100%;
-    }
-}
-
-.logEntry {
-    font-family: monospace;
-    font-weight: bold;
 }
 
 /*======== sections ========*/

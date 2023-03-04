@@ -1,7 +1,6 @@
 import {Aspect, ProcMode, ResourceType, SkillName} from './Common'
 // @ts-ignore
 import {controller} from "../Controller/Controller";
-import {addLog, Color, LogCategory} from "../Controller/Common";
 import {LucidDreamingBuff, Resource} from "./Resources";
 import {ActionNode} from "../Controller/Record";
 import {GameState} from "./GameState";
@@ -212,14 +211,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 			let duration = game.config.extendedBuffTimes ? 31 : 30;
 			if (fs.available(1)) {
 				fs.overrideTimer(game, duration);
-				addLog(LogCategory.Event,
-					"Firestarter proc! Overriding an existing one",
-					game.getDisplayTime(), Color.Fire);
 			} else {
 				fs.gain(1);
-				addLog(LogCategory.Event,
-					"Firestarter proc!",
-					game.getDisplayTime(), Color.Fire);
 				game.resources.addResourceEvent(
 					ResourceType.Firestarter,
 					"drop firestarter proc", duration, (rsc: Resource)=>{
@@ -275,7 +268,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 					skillName: SkillName.Transpose,
 					onCapture: () => {
 						if (game.getFireStacks() === 0 && game.getIceStacks() === 0) {
-							addLog(LogCategory.Event, "transpose failed; AF/UI just fell off", game.getDisplayTime(), Color.Error);
 							return;
 						}
 						if (game.getFireStacks() > 0) {
@@ -304,10 +296,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 			let duration = game.config.extendedBuffTimes ? 41 : 40;
 			if (thundercloud.available(1)) { // already has a proc; reset its timer
 				thundercloud.overrideTimer(game, duration);
-				addLog(LogCategory.Event, "Thundercloud proc! overriding an existing one", game.getDisplayTime(), Color.Thunder);
 			} else { // there's currently no proc. gain one.
 				thundercloud.gain(1);
-				addLog(LogCategory.Event, "Thundercloud proc!", game.getDisplayTime(), Color.Thunder);
 				game.resources.addResourceEvent(
 					ResourceType.Thundercloud,
 					"drop thundercloud proc", duration, (rsc: Resource) => {
@@ -419,7 +409,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 					skillName: SkillName.Manafont,
 					onApplication: () => {
 						game.resources.get(ResourceType.Mana).gain(3000);
-						addLog(LogCategory.Event, "manafont effect: mana +3000", game.getDisplayTime());
 						node.resolve();
 					},
 					dealDamage: false,

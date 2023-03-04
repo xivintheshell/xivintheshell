@@ -5,7 +5,6 @@ import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from
 import {CoolDown, CoolDownState, Event, LucidDreamingBuff, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
-import {addLog, Color, LogCategory} from "../Controller/Common";
 import {ActionNode} from "../Controller/Record";
 
 //https://www.npmjs.com/package/seedrandom
@@ -243,7 +242,6 @@ export class GameState {
 			af.gain(numStacks);
 			if (ui.available(3) && uh.available(3)) {
 				paradox.gain(1);
-				addLog(LogCategory.Event, "Paradox! (UI -> AF)", this.getDisplayTime());
 			}
 			ui.consume(ui.availableAmount());
 		}
@@ -252,7 +250,6 @@ export class GameState {
 			ui.gain(numStacks);
 			if (af.available(3)) {
 				paradox.gain(1);
-				addLog(LogCategory.Event, "Paradox! (AF -> UI)", this.getDisplayTime());
 			}
 			af.consume(af.availableAmount());
 		}
@@ -395,9 +392,6 @@ export class GameState {
 					if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
 				}
 
-				if (capturedManaCost > 0)
-					addLog(LogCategory.Event, skillName + " cost " + capturedManaCost + "MP", game.getDisplayTime());
-
 				// potency
 				let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
 				game.reportPotency(node, capturedPotency, sourceName);
@@ -426,19 +420,11 @@ export class GameState {
 					}));
 				return true;
 			} else {
-				//console.log(skillName + " failed; rewinding game...");
-				addLog(
-					LogCategory.Event,
-					skillName + " cast failed! Resources no longer available.",
-					game.getDisplayTime(),
-					Color.Error);
 				return false;
 			}
 		}
 
 		let instantCast = function(game: GameState, rsc?: Resource) {
-			let instantCastReason = rsc ? rsc.type : "(unknown, paradox?)";
-			addLog(LogCategory.Event, "a cast is made instant via " + instantCastReason, game.getDisplayTime(), Color.Success);
 			if (rsc) rsc.consume(1);
 			takeEffect(game);
 
@@ -469,7 +455,6 @@ export class GameState {
 			instantCast(this, triple);
 			if (!triple.available(1)) {
 				triple.removeTimer();
-				addLog(LogCategory.Event, "all triple charges used", this.getDisplayTime());
 			}
 			return;
 		}
@@ -558,7 +543,6 @@ export class GameState {
 		if (enochian.available(1)) {
 			// refresh
 			enochian.overrideTimer(this, 15);
-			addLog(LogCategory.Event, "refresh enochian timer", this.getDisplayTime());
 
 		} else {
 			// fresh gain
@@ -569,7 +553,6 @@ export class GameState {
 				this.loseEnochian();
 			});
 
-			addLog(LogCategory.Event, "override poly timer to 30", this.getDisplayTime(), Color.Text);
 			// reset polyglot countdown to 30s
 			this.resources.get(ResourceType.Polyglot).overrideTimer(this, 30);
 		}
