@@ -48,8 +48,6 @@ let g_mouseHovered = false;
 // updated on mouse enter/leave, updated and reset on every draw
 let g_activeHoverTip: string[] | undefined = undefined;
 let g_activeOnClick: (()=>void) | undefined = undefined;
-// updated on mouse click, updated only when clicked
-let g_activeOnKeyDown: (()=>void) | undefined = undefined;
 
 let renderingProps: TimelineRenderingProps = {
 	timelineWidth: 0,
@@ -71,14 +69,12 @@ function testInteraction(
 	rect: Rect,
 	hoverTip?: string[],
 	onClick?: ()=>void,
-	pointerMouse?: boolean,
-	onKeyDown?: ()=>void)
+	pointerMouse?: boolean)
 {
 	if (g_mouseX >= rect.x && g_mouseX < rect.x + rect.w && g_mouseY >= rect.y && g_mouseY < rect.y + rect.h) {
 		g_activeHoverTip = hoverTip;
 		g_activeOnClick = onClick;
 		if (pointerMouse === true) readback_pointerMouse = true;
-		if (g_isClickUpdate) g_activeOnKeyDown = onKeyDown;
 	}
 }
 
@@ -399,16 +395,7 @@ function drawSkills(
 			()=>{
 				controller.timeline.onClickTimelineAction(node, g_clickEvent ? g_clickEvent.shiftKey : false);
 			},
-			true,
-			()=>{
-				if (g_keyboardEvent.key === "Backspace" || g_keyboardEvent.key === "Delete") {
-					controller.rewindUntilBefore(controller.record.getFirstSelection(), false);
-					controller.displayCurrentState();
-					controller.updateAllDisplay();
-					controller.autoSave();
-				}
-			}
-		);
+			true);
 	});
 }
 
@@ -598,10 +585,6 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 		if (g_isClickUpdate && g_activeOnClick) {
 			g_activeOnClick();
 		}
-		if (g_isKeyboardUpdate && g_activeOnKeyDown) {
-			g_activeOnKeyDown();
-		}
-
 	}
 }
 
@@ -685,5 +668,14 @@ export function TimelineCanvas(props: {
 		setKeyCounter(keyCounter + 1);
 		g_isKeyboardUpdate = true;
 		g_keyboardEvent = e;
+		if (g_keyboardEvent.key === "Backspace" || g_keyboardEvent.key === "Delete") {
+			let firstSelected = controller.record.getFirstSelection();
+			if (firstSelected) {
+				controller.rewindUntilBefore(firstSelected, false);
+				controller.displayCurrentState();
+				controller.updateAllDisplay();
+				controller.autoSave();
+			}
+		}
 	}}/>;
 }

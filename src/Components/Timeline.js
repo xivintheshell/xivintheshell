@@ -4,6 +4,7 @@ import {Expandable, FileFormat, Help, Input, SaveToFile, Slider, StaticFn} from 
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
 import {TimelineCanvas} from "./TimelineCanvas";
+import {localizeSkillName} from "./Localization";
 
 export let updateTimelineView = () => {};
 
@@ -99,6 +100,7 @@ class TimelineMain extends React.Component {
 				outline: "1px solid red",
 				width: this.state.timelineWidth,
 				height: this.state.timelineHeight,
+				pointerEvents: "none"
 			}}/>
 			{canvas}
 		</div>
@@ -157,7 +159,7 @@ class StatsDisplay extends React.Component {
 		statsBySkillEntries.sort((a, b)=>{ return b.potencySum - a.potencySum });
 		let statsBySkill = <div style={{flex: 1, color: this.state.historical ? "darkorange" : "black"}}>
 			{statsBySkillEntries.map(skill => {
-				let statsStr = skill.skillName + " (" + skill.count + ")";
+				let statsStr = localizeSkillName(skill.skillName) + " (" + skill.count + ")";
 				if (skill.potencySum > 0) statsStr += ": " + skill.potencySum.toFixed(2);
 				return <div style={{display: "inline-block", width: "50%"}} key={skill.skillName}>{statsStr}</div>
 			})}

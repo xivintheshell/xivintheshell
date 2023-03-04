@@ -1,5 +1,12 @@
 [
 	{
+		"date": "3/3/23",
+		"changes": [
+			"translation updates mostly by Eshiya",
+			"bugfix: previously need to mouseover the timeline to delete skills"
+		]
+	},
+	{
 		"date": "2/28/23",
 		"changes": [
 			"updated TOP markers from Santa",

@@ -44,7 +44,7 @@ export class LoadSave extends React.Component {
 					}/>
 			</div>
 			<div style={{marginTop: 10}}>
-				<span>{localize({en: "Load from file: ", zh: "从文件加载战斗记录："})}</span>
+				<span>{localize({en: "Load from file: ", zh: "从文件导入战斗记录："})}</span>
 				<input
 					style={{
 						width: "110px",

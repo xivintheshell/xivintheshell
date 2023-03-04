@@ -159,7 +159,7 @@ function ConfigSummary(props) {
 	let lucidTickOffset = controller.game.actorTickOffset.toFixed(2);
 	let offsetDesc = localize({
 		en: "The random time offset of actor (lucid dreaming) ticks relative to MP ticks",
-		zh: "醒梦BUFF期间，每次跳蓝后多久后跳醒梦"
+		zh: "醒梦BUFF期间，每次跳蓝后多久跳醒梦"
 	});
 	let procMode = controller.gameConfig.procMode;
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
@@ -617,7 +617,7 @@ export class Config extends React.Component {
 			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<Input defaultValue={this.state.casterTax} description={localize({en: "caster tax: ", zh: "读条税："})} onChange={this.setCasterTax}/>
-			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "还有多久首次跳蓝："})} onChange={this.setTimeTillFirstManaTick}/>
+			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "距首次跳蓝时间："})} onChange={this.setTimeTillFirstManaTick}/>
 			<Input defaultValue={this.state.countdown} description={localize({en: "countdown: ", zh: "倒数时间："})} onChange={this.setCountdown}/>
 			<Input defaultValue={this.state.randomSeed} description={
 				<span>{localize({en: "random seed ", zh: "随机种子 "})}<Help topic={"randomSeed"} content={
@@ -627,11 +627,11 @@ export class Config extends React.Component {
 					})
 				}/>: </span>} onChange={this.setRandomSeed}/>
 			<div>
-				<span>{localize({en: "proc mode ", zh: "随机BUFF获取方式 "})}<Help topic={"procMode"} content={
+				<span>{localize({en: "proc mode ", zh: "随机BUFF获取 "})}<Help topic={"procMode"} content={
 
 					localize({
 					en: "Default RNG: 40% Firestarter, 10% Thundercloud",
-					zh: "RNG会像游戏内一样，相应技能40%概率获得火苗，10%概率获得雷云"
+					zh: "RNG会像游戏内一样，相应技能40%概率获得火苗，10%概率获得雷云，Always则每次都会触发火苗/雷云，Never则从不触发。"
 				})
 				}/>: </span>
 				<select style={{outline: "none"}} value={this.state.procMode} onChange={this.setProcMode}>

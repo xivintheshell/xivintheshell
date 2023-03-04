@@ -4,6 +4,7 @@ import {controller} from "../Controller/Controller";
 import {ActionNode, ActionType, Record, RecordValidStatus} from "../Controller/Record";
 // @ts-ignore
 import {updateStatsDisplay} from "./Timeline"
+import {localize, localizeSkillName} from "./Localization";
 
 export let refreshTimelineEditor = ()=>{};
 
@@ -28,13 +29,19 @@ function TimelineActionElement(props: {
         userSelect: "none",
         background: bgColor
     };
-    let name = "(other)";
+    let name = localize({en: "(other)", zh: "（其它）"});
 	if (props.node.type === ActionType.Skill) {
-		name = props.node.skillName ?? "(unknown skill)";
+		name = props.node.skillName ? localizeSkillName(props.node.skillName) : localize({en: "(unknown skill)", zh: "未知技能"});
 	} else if (props.node.type === ActionType.Wait) {
-		name = "(wait for " + props.node.waitDuration.toFixed(2) + "s)";
+		name = localize({
+			en: "(wait for " + props.node.waitDuration.toFixed(2) + "s)",
+			zh: "（等" + props.node.waitDuration.toFixed(2) + "秒）"
+		});
 	} else if (props.node.type === ActionType.SetResourceEnabled) {
-		name = "(toggle resource: " + props.node.buffName + ")";
+		name = localize({
+			en: "(toggle resource: " + props.node.buffName + ")",
+			zh: "（开关或去除BUFF：" + props.node.buffName + "）"
+		});
 	}
     return <div style={style} onClick={(e)=>{
         setHandledSkillSelectionThisFrame(true);
@@ -235,7 +242,7 @@ export class TimelineEditor extends React.Component {
 		</div>;
 		return <Expandable
 			title="Timeline editor"
-			titleNode={<span>{"Timeline editor (in-development) "}<Help topic={"timeline editor"} content={<div>
+			titleNode={<span>{localize({en: "Timeline editor (in-development) ", zh: "时间轴编辑器（开发中）"})}<Help topic={"timeline editor"} content={<div>
 				<div className={"paragraph"} style={{color: "orangered"}}><b>Has the bare minimum features but might still be buggy (let me know). Would recommend going over Instructions/Troubleshoot first, plus saving data to drive in case bugs mess up the entire tool</b></div>
 				<div className={"paragraph"}>I hope it's otherwise self-explanatory. Note that edits made here are not saved until they're applied to the actual timeline.</div>
 			</div>}/></span>}
