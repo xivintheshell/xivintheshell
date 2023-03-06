@@ -82,6 +82,13 @@ function testInteraction(
 	}
 }
 
+const onClickTimelineBackground = ()=>{
+	// clicked on background:
+	controller.record.unselectAll();
+	controller.displayCurrentState();
+	updateStatsDisplay({selectedDuration: 0})
+};
+
 function drawTip(ctx: CanvasRenderingContext2D, lines: string[], canvasWidth: number, canvasHeight: number) {
 	if (!lines.length) return;
 
@@ -322,7 +329,7 @@ function drawSkills(
 	ctx.beginPath();
 	purpleLockBars.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
-		testInteraction(r);
+		testInteraction(r, undefined, onClickTimelineBackground);
 	});
 	ctx.fill();
 
@@ -341,7 +348,7 @@ function drawSkills(
 	ctx.beginPath();
 	gcdBars.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
-		testInteraction(r);
+		testInteraction(r, undefined, onClickTimelineBackground);
 	});
 	ctx.fill();
 
@@ -350,7 +357,7 @@ function drawSkills(
 	ctx.beginPath();
 	greyLockBars.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
-		testInteraction(r);
+		testInteraction(r, undefined, onClickTimelineBackground);
 	});
 	ctx.fill();
 
@@ -359,7 +366,7 @@ function drawSkills(
 	ctx.beginPath();
 	llCovers.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
-		testInteraction(r);
+		testInteraction(r, undefined, onClickTimelineBackground);
 	});
 	ctx.fill();
 
@@ -368,7 +375,7 @@ function drawSkills(
 	ctx.beginPath();
 	potCovers.forEach(r=>{
 		ctx.rect(r.x, r.y, r.w, r.h);
-		testInteraction(r);
+		testInteraction(r, undefined, onClickTimelineBackground);
 	});
 	ctx.fill();
 
@@ -429,13 +436,9 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 
 	// background white
 	ctx.fillStyle = g_colors.background;
-	ctx.fillRect(0, 0, g_visibleWidth, renderingProps.timelineHeight);
-	testInteraction({x: 0, y: 0, w: g_visibleWidth, h: maxTimelineHeight}, undefined, ()=>{
-		// clicked on background:
-		controller.record.unselectAll();
-		controller.displayCurrentState();
-		updateStatsDisplay({selectedDuration: 0});
-	});
+	// add 1 here because this scaled dimension from dpr may not perfectly cover the entire canvas
+	ctx.fillRect(0, 0, g_visibleWidth + 1, renderingProps.timelineHeight + 1);
+	testInteraction({x: 0, y: 0, w: g_visibleWidth, h: maxTimelineHeight}, undefined, onClickTimelineBackground);
 
 	// ruler bg
 	ctx.fillStyle = g_colors.timeline.ruler;
@@ -650,7 +653,7 @@ export function TimelineCanvas(props: {
 		top: 0,
 		left: props.visibleLeft,
 		outline: "none",
-		cursor: readback_pointerMouse ? "pointer" : "default"
+		cursor: readback_pointerMouse ? "pointer" : "default",
 	}} onMouseMove={e=>{
 		if (canvasRef.current) {
 			let rect = canvasRef.current.getBoundingClientRect();

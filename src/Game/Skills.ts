@@ -311,29 +311,29 @@ export class SkillsList extends Map<SkillName, Skill> {
 			// define stuff
 			let recurringThunderTick = (remainingTicks: number, capturedTickPotency: number)=> {
 				if (remainingTicks===0) return;
-				if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && game.rng() < 0.1)) {// thundercloud proc
-					gainThundercloudProc(game);
-				}
 				game.resources.addResourceEvent(
 					ResourceType.ThunderDoTTick,
 					"recurring thunder tick " + (numTicks+1-remainingTicks) + "/" + numTicks, 3, (rsc: Resource) =>{
-						game.reportPotency(node, capturedTickPotency, "DoT");
-						game.dealDamage(node, capturedTickPotency, "DoT");
+						let damageSource = "DoT " + (numTicks+1-remainingTicks) + "/" + numTicks;
+						game.reportPotency(node, capturedTickPotency, damageSource);
+						game.dealDamage(node, capturedTickPotency, damageSource);
+						if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && game.rng() < 0.1)) {// thundercloud proc
+							gainThundercloudProc(game);
+						}
 						recurringThunderTick(remainingTicks - 1, capturedTickPotency);
 					});
 			};
 			let dot = game.resources.get(ResourceType.ThunderDoT);
 			let tick = game.resources.get(ResourceType.ThunderDoTTick);
-			if (tick.pendingChange) {
-				// if already has thunder applied; cancel the remaining ticks now.
-				dot.removeTimer();
-				tick.removeTimer();
-			}
-			// order of events:
+			// if already has thunder applied; cancel the remaining ticks now.
+			dot.removeTimer();
+			tick.removeTimer();
+			// order of events: gain buff, add "remove" event,
 			dot.gain(1);
 			game.resources.addResourceEvent(ResourceType.ThunderDoT, "drop DoT", 30, (dot: Resource)=>{
 				dot.consume(1);
 			});
+			// what this function does: wait for 3s and do a tick
 			recurringThunderTick(numTicks, capturedTickPotency);
 		};
 

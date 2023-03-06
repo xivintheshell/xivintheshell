@@ -88,7 +88,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				damageMark: "#f00",
 				mpTickMark: "#32525e",
 				lucidTickMark: "#56b3d5",
-				countdown: "rgba(0, 0, 0, 0.35)",
+				countdown: "rgba(15, 15, 15, 0.4)",
 				markerAlpha: "4f"
 			}
 		};

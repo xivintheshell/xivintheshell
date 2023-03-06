@@ -71,7 +71,7 @@ class Controller {
 		this.gameConfig.casterTax = 0.1;
 		this.gameConfig.animationLock = 0.7;
 		this.gameConfig.timeTillFirstManaTick = 1.2;
-		this.gameConfig.procMode = ProcMode.RNG;
+		this.gameConfig.procMode = ProcMode.Never;
 		this.gameConfig.extendedBuffTimes = false;
 		this.game = new GameState(this.gameConfig, 1);
 
@@ -104,7 +104,6 @@ class Controller {
 		this.#bCalculatingHistoricalState = true;
 		let tmpGame = this.game;
 		let tmpRecord = this.record;
-		this.lastAttemptedSkill = "";
 		//============^ stashed states ^============
 
 		fn();
@@ -156,54 +155,46 @@ class Controller {
 
 	// max replay time; cutoff action
 	displayHistoricalState(time: number, cutoffAction?: ActionNode) {
-		this.displayingUpToDateGameState = false;
-		this.#bCalculatingHistoricalState = true;
-		setHistorical(true);
-		let tmpGame = this.game;
-		let tmpRecord = this.record;
+
+		this.#sandboxEnvironment(()=>{
+			let tmpRecord = this.record;
+			this.game = new GameState(this.gameConfig, this.game.getTincturePotencyMultiplier());
+			this.record = new Record();
+			this.record.config = this.gameConfig;
+
+			// apply resource overrides
+			this.#applyResourceOverrides(this.record.config);
+
+			// clear stats
+			this.updateCumulativeStatsDisplay();
+
+			// replay skills sequence
+			this.#replay({
+				line: tmpRecord,
+				replayMode: ReplayMode.Exact,
+				suppressLog: true,
+				maxReplayTime: time,
+				cutoffAction: cutoffAction
+			});
+
+			// view only cursor
+			this.timeline.updateElem({
+				type: ElemType.s_ViewOnlyCursor,
+				time: this.game.time, // is actually historical state
+				displayTime: this.game.getDisplayTime(),
+				enabled: true
+			});
+
+			// update display
+			this.updateStatusDisplay(this.game);
+			this.updateSkillButtons(this.game);
+			updateSkillSequencePresetsView();
+			// timeline
+			this.timeline.drawElements();
+		});
+
 		this.lastAttemptedSkill = "";
-		//============^ stashed states ^============
-
-		this.game = new GameState(this.gameConfig, this.game.getTincturePotencyMultiplier());
-		this.record = new Record();
-		this.record.config = this.gameConfig;
-
-		// apply resource overrides
-		this.#applyResourceOverrides(this.record.config);
-
-		// clear stats
-		this.updateCumulativeStatsDisplay();
-
-		// replay skills sequence
-		this.#replay({
-			line: tmpRecord,
-			replayMode: ReplayMode.Exact,
-			suppressLog: true,
-			maxReplayTime: time,
-			cutoffAction: cutoffAction
-		});
-
-		// view only cursor
-		this.timeline.updateElem({
-			type: ElemType.s_ViewOnlyCursor,
-			time: this.game.time, // is actually historical state
-			displayTime: this.game.getDisplayTime(),
-			enabled: true
-		});
-
-		// update display
-		this.updateStatusDisplay(this.game);
-		this.updateSkillButtons(this.game);
-		updateSkillSequencePresetsView();
-		// timeline
-		this.timeline.drawElements();
-
-		//============v pop stashed states v============
-		this.#bCalculatingHistoricalState = false;
-		this.savedHistoricalGame = this.game;
-		this.savedHistoricalRecord = this.record;
-		this.game = tmpGame;
-		this.record = tmpRecord;
+		setHistorical(true);
 	}
 
 	displayCurrentState() {
@@ -888,14 +879,13 @@ class Controller {
 	}
 
 	reportInterruption(props: {failNode: ActionNode}) {
-		if (this.tickMode !== TickMode.RealTime) {
+		if (this.tickMode !== TickMode.RealTime && !this.#bCalculatingHistoricalState) {
 			window.alert("cast failed! Resources for " + props.failNode.skillName + " are no longer available");
+			console.warn("failed: " + props.failNode.skillName);
 		}
 		// if adding from a line, invalidate the whole line
 		// if loading from file (shouldn't happen)
 		// if real-time / using a skill directly: get rid of this node but don't scrub time back
-
-		console.warn("failed: " + props.failNode.skillName);
 
 		if (this.#bAddingLine) {
 			this.#bInterrupted = true;
