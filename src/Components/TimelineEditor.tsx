@@ -17,7 +17,8 @@ function setHandledSkillSelectionThisFrame(handled : boolean) {
 function TimelineActionElement(props: {
 	node: ActionNode,
 	belongingRecord: Record,
-	isFirstInvalid: boolean
+	isFirstInvalid: boolean,
+	refObj?: React.RefObject<HTMLDivElement>
 }) {
 	let recordIsDirty = props.belongingRecord !== controller.record;
 	let bgColor = props.node.isSelected() ? "rgba(151,111,246,0.25)" : "transparent";
@@ -44,13 +45,16 @@ function TimelineActionElement(props: {
 			zh: "（开关或去除BUFF：" + props.node.buffName + "）"
 		});
 	}
-    return <div style={style} onClick={(e)=>{
+    return <div style={style} ref={props.refObj ?? null} onClick={(e)=>{
         setHandledSkillSelectionThisFrame(true);
 		if (recordIsDirty) {
 			props.belongingRecord.onClickNode(props.node, e.shiftKey, controller.game.getTincturePotencyMultiplier());
 			refreshTimelineEditor();
 		} else {
 			controller.timeline.onClickTimelineAction(props.node, e.shiftKey);
+			if (props.node.tmp_startLockTime) {
+				controller.scrollToTime(props.node.tmp_startLockTime);
+			}
 		}
     }}>
 	    {props.isFirstInvalid ? <span style={{marginRight: 6, padding: "0 4px", backgroundColor: "rgba(255, 0, 0, 0.25)"}}>&rarr;</span> : undefined}
@@ -58,22 +62,34 @@ function TimelineActionElement(props: {
     </div>
 }
 
+export let scrollEditorToFirstSelected = () => {};
+
 export class TimelineEditor extends React.Component {
 	state: {
 		editedRecord: Record | undefined
 		recordValidStatus: RecordValidStatus | undefined
 	}
+	firstSelected: React.RefObject<HTMLDivElement>;
 	constructor(props: {}) {
 		super(props);
 		this.state = {
 			editedRecord: undefined,
 			recordValidStatus: undefined
 		}
+		this.firstSelected = React.createRef();
 	}
 	componentDidMount() {
 		refreshTimelineEditor = () => {
 			this.forceUpdate();
 		};
+		scrollEditorToFirstSelected = (()=>{
+			// lmfao this dirty hack again
+			setTimeout(()=>{
+				if (this.firstSelected.current) {
+					this.firstSelected.current.scrollIntoView();
+				}
+			}, 0);
+		}).bind(this);
 	}
 	componentWillUnmount() {
 		refreshTimelineEditor = () => {};
@@ -211,11 +227,14 @@ export class TimelineEditor extends React.Component {
 		let actionsList = [];
 		let itr = displayedRecord.getFirstAction();
 		while (itr) {
+			const isFirstSelected = !this.isDirty() && itr === displayedRecord.getFirstSelection();
 			actionsList.push(<TimelineActionElement
 				key={itr.getNodeIndex()}
 				node={itr}
 				belongingRecord={displayedRecord}
-				isFirstInvalid={this.state.recordValidStatus?.firstInvalidAction===itr}/>);
+				isFirstInvalid={this.state.recordValidStatus?.firstInvalidAction===itr}
+				refObj={isFirstSelected ? this.firstSelected : undefined}
+			/>);
 			itr = itr.next;
 		}
 		let colors = getCurrentThemeColors();

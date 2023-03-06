@@ -1,5 +1,11 @@
 [
 	{
+		"date": "3/6/23",
+		"changes": [
+			"qol: auto scroll editor when clicked on a skill on timeline and vice versa (only works for skills though)"
+		]
+	},
+	{
 		"date": "3/4/23",
 		"changes": [
 			"dark mode",

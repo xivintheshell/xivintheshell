@@ -19,6 +19,7 @@ import {controller} from "../Controller/Controller";
 import {localizeSkillName} from "./Localization";
 import {setEditingMarkerValues} from "./TimelineMarkerPresets";
 import {getCurrentThemeColors, ThemeColors} from "./ColorTheme";
+import {scrollEditorToFirstSelected} from "./TimelineEditor";
 
 export type TimelineRenderingProps = {
 	timelineWidth: number,
@@ -405,6 +406,7 @@ function drawSkills(
 			lines,
 			()=>{
 				controller.timeline.onClickTimelineAction(node, g_clickEvent ? g_clickEvent.shiftKey : false);
+				scrollEditorToFirstSelected();
 			},
 			true);
 	});

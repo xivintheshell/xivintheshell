@@ -578,7 +578,7 @@ export class Config extends React.Component {
 			<Expandable title="overrideInitialResources" titleNode={<span>
 				Override initial resources <Help topic="overrideInitialResources"content={<div>
 				<div className={"paragraph"} style={{color: "orangered"}}><b>Can create invalid game states. Go over Instructions/Troubleshoot first and use carefully at your own risk!</b></div>
-				<div className={"paragraph"}>Also, currently thunder dot and lucid dreaming buffs created with such overrides don't actually tick. They just show remaining buff timers.</div>
+				<div className={"paragraph"}>Also, currently thunder dot buff created this way doesn't actually tick. It just shows the remaining buff timer.</div>
 				<div className={"paragraph"}>I would recommend saving settings (stats, lines presets, timeline markers etc.) to files first, in case invalid game states really mess up the tool and a complete reset is required.</div>
 			</div>}/>
 			</span>} content={<div>
