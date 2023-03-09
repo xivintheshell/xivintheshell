@@ -29,6 +29,7 @@ function TimelineActionElement(props: {
         flex: 1,
         position: "relative",
         userSelect: "none",
+	    padding: "0.075em 6px",
         background: bgColor
     };
     let name = localize({en: "(other)", zh: "（其它）"});
@@ -86,7 +87,10 @@ export class TimelineEditor extends React.Component {
 			// lmfao this dirty hack again
 			setTimeout(()=>{
 				if (this.firstSelected.current) {
-					this.firstSelected.current.scrollIntoView();
+					this.firstSelected.current.scrollIntoView({
+						behavior: "smooth",
+						block: "nearest",
+					});
 				}
 			}, 0);
 		}).bind(this);
@@ -139,7 +143,7 @@ export class TimelineEditor extends React.Component {
 			if (this.isDirty()) {
 				if (this.isValid()) {
 					return <div>
-						<div style={{backgroundColor: "rgba(255, 220, 0, 0.25)"}}>This edited sequence is valid.</div>
+						<div style={{backgroundColor: "rgba(255, 220, 0, 0.25)"}}>{localize({en: "This edited sequence is valid.", zh: "此编辑可被应用。"})}</div>
 						<button style={{display: "block", marginTop: 10}} onClick={e=>{
 							setHandledSkillSelectionThisFrame(true);
 
@@ -177,14 +181,15 @@ export class TimelineEditor extends React.Component {
 				}
 			} else {
 				return <div>
-					timeline is up to date.
+					{localize({en: "timeline is up to date.", zh: "时间轴已与编辑器同步。"})}
 				</div>
 			}
 		};
 		let buttonStyle : CSSProperties= {
 			display: "block",
 			width: "100%",
-			marginBottom: 10
+			marginBottom: 10,
+			padding: 3
 		}
 		let toolbar = <div style={{display: "flex", flexDirection: "column", flex: 2, height: 200, marginRight: 10, position: "relative", verticalAlign: "top", overflowY: "hidden"}}>
 
@@ -198,7 +203,7 @@ export class TimelineEditor extends React.Component {
 						let status = controller.checkRecordValidity(copy);
 						this.setState({recordValidStatus: status});
 					}
-				}}>move up</button>
+				}}>{localize({en: "move up", zh: "上移"})}</button>
 
 				<button style={buttonStyle} onClick={e=>{
 					if (displayedRecord.getFirstSelection()) {
@@ -209,7 +214,7 @@ export class TimelineEditor extends React.Component {
 						let status = controller.checkRecordValidity(copy);
 						this.setState({recordValidStatus: status});
 					}
-				}}>move down</button>
+				}}>{localize({en: "move down", zh: "下移"})}</button>
 
 				<button style={buttonStyle} onClick={e=>{
 					if (displayedRecord.getFirstSelection()) {
@@ -219,7 +224,7 @@ export class TimelineEditor extends React.Component {
 						let status = controller.checkRecordValidity(copy);
 						this.setState({recordValidStatus: status});
 					}
-				}}>delete selected</button>
+				}}>{localize({en: "delete selected", zh: "删除所选"})}</button>
 			</div>
 		</div>
 

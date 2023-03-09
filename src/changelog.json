@@ -1,8 +1,16 @@
 [
 	{
+		"date": "3/9/23",
+		"changes": [
+			"bugfix: addressed a situation that may cause the timeline editor to incorrectly scream abt invalid edits",
+			"a few translation updates"
+		]
+	},
+	{
 		"date": "3/6/23",
 		"changes": [
-			"qol: auto scroll editor when clicked on a skill on timeline and vice versa (only works for skills though)"
+			"qol: auto scroll editor when clicked on a skill on timeline and vice versa (only works for skills though)",
+			"updated TOP markers form Santa"
 		]
 	},
 	{

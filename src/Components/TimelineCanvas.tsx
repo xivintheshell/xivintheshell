@@ -16,7 +16,7 @@ import {ResourceType} from "../Game/Common";
 // @ts-ignore
 import {skillIconImages} from "./Skills";
 import {controller} from "../Controller/Controller";
-import {localizeSkillName} from "./Localization";
+import {localize, localizeSkillName} from "./Localization";
 import {setEditingMarkerValues} from "./TimelineMarkerPresets";
 import {getCurrentThemeColors, ThemeColors} from "./ColorTheme";
 import {scrollEditorToFirstSelected} from "./TimelineEditor";
@@ -386,20 +386,20 @@ function drawSkills(
 		ctx.drawImage(skillIconImages.get(icon.elem.skillName), icon.x, icon.y, 28, 28);
 		let node = icon.elem.node;
 		let description = localizeSkillName(icon.elem.skillName) + "@" + (icon.elem.displayTime).toFixed(2);
-		if (node.hasBuff(ResourceType.LeyLines)) description += " (LL)";
-		if (node.hasBuff(ResourceType.Tincture)) description += " (pot)";
+		if (node.hasBuff(ResourceType.LeyLines)) description += localize({en: " (LL)", zh: " (黑魔纹)"});
+		if (node.hasBuff(ResourceType.Tincture)) description += localize({en: " (pot)", zh: "(爆发药)"});
 		let lines = [description];
 		let potency = node.getPotency();
 		if (potency > 0) {
 			if (node.hasBuff(ResourceType.Tincture))  {
 				potency *= renderingProps.tincturePotencyMultiplier;
 			}
-			lines.push("potency: " + potency.toFixed(2));
+			lines.push(localize({en: "potency: ", zh: "威力："}) + potency.toFixed(2));
 			let lockDuration = 0;
 			if (node.tmp_endLockTime!==undefined && node.tmp_startLockTime!==undefined) {
 				lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
 			}
-			lines.push("duration: " + lockDuration.toFixed(2));
+			lines.push(localize({en: "duration: ", zh: "用时："}) + lockDuration.toFixed(2));
 		}
 		testInteraction(
 			{x: icon.x, y: icon.y, w: 28, h: 28},
@@ -575,7 +575,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 		let vcursor = cursor as ViewOnlyCursorElem
 		if (vcursor.enabled) {
 			let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, renderingProps.scale);
-			drawCursor(ctx, x, g_colors.historical, "cursor: " + vcursor.displayTime.toFixed(2));
+			drawCursor(ctx, x, g_colors.historical, localize({en: "cursor: ", zh: "光标："}) + vcursor.displayTime.toFixed(2));
 		}
 	});
 
@@ -583,7 +583,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	(elemBins.get(ElemType.s_Cursor) ?? []).forEach(elem=>{
 		let cursor = elem as CursorElem;
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, renderingProps.scale);
-		drawCursor(ctx, x, g_colors.emphasis, "cursor: " + cursor.displayTime.toFixed(2));
+		drawCursor(ctx, x, g_colors.emphasis, localize({en: "cursor: ", zh: "光标："}) + cursor.displayTime.toFixed(2));
 	});
 
 	// interactive layer

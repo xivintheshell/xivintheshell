@@ -4,7 +4,7 @@ import {Expandable, FileFormat, Help, Input, SaveToFile, Slider, StaticFn} from 
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
 import {TimelineCanvas} from "./TimelineCanvas";
-import {localizeSkillName} from "./Localization";
+import {localize, localizeSkillName} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 
 export let updateTimelineView = () => {};
@@ -222,19 +222,20 @@ class TimelineDisplaySettings extends React.Component {
 
 	render() {
 		return <div>
-			<span>Display settings: </span>
-			<Slider description={"horizontal scale "}
+			<span>{localize({en: "Display settings: ", zh: "显示设置："})}</span>
+			<Slider description={localize({en: "horizontal scale ", zh: "水平缩放 "})}
 					defaultValue={this.initialDisplayScale.toString()}
 					onChange={(newVal)=>{
 						controller.timeline.setHorizontalScale(parseFloat(newVal));
-						//let range = getVisibleRangeX();
+						//let range = getVisibleRangeX()
 						//let mid = controller.timeline.timeFromPosition(range.left + range.width / 2);
 						//console.log(range);
 						//console.log(mid);
 						controller.scrollToTime();
 						localStorage.setItem("timelineDisplayScale", newVal);
 					}}/>
-			<Input defaultValue={this.state.tinctureBuffPercentageStr} description=" tincture potency buff " onChange={this.setTinctureBuffPercentageStr} width={2} style={{display: "inline"}}/>
+			<span>{localize({en: "; ", zh: "；"})}</span>
+			<Input defaultValue={this.state.tinctureBuffPercentageStr} description={localize({en: " tincture potency buff ", zh: "爆发药威力加成 "})} onChange={this.setTinctureBuffPercentageStr} width={2} style={{display: "inline"}}/>
 			<span>%</span>
 		</div>
 	}

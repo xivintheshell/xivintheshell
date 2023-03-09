@@ -224,7 +224,7 @@ export class Input extends React.Component {
 type SliderProps = {
 	onChange?: (e: string) => void,
 	defaultValue?: string,
-	description?: string
+	description?: ContentNode
 }
 type SliderState = {
 	value: string,

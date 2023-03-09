@@ -733,7 +733,8 @@ class Controller {
 				let waitFirst = props.replayMode === ReplayMode.SkillSequence || props.replayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
 				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, props.suppressLog, TickMode.Manual);
 
-				if (props.replayMode === ReplayMode.Exact) {
+				let bEditedTimelineShouldWaitAfterSkill = props.replayMode === ReplayMode.Edited && (itr.next && itr.next.type === ActionType.Wait);
+				if (props.replayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
 					if (status.status === SkillReadyStatus.Ready) {
 						//======== tick wait block ========
 						// todo: clean up this code...

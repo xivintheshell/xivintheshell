@@ -7,7 +7,7 @@ import {
 	SaveToFile,
 	parseTime,
 	Help,
-	FileFormat
+	FileFormat, ContentNode
 } from "./Common";
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
@@ -81,7 +81,7 @@ function PresetButtons() {
 		<LoadCombinedTracksBtn displayName={"P2S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s.txt"}/>
 		<br/>
 		<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/dsr_p7.txt"}/>
-		<LoadCombinedTracksBtn displayName={"TOP by Santa (WIP, mechanics up to P4, updated 2/28)"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/TOP_2023_02_28.track"}/>
+		<LoadCombinedTracksBtn displayName={"TOP by Santa (WIP, mechanics up to P5, updated 3/6)"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/TOP_2023_03_06.track"}/>
 		<br/>
 		<span>{localize({en: "From 不打冰3攻略组, in Chinese: ", zh: "来自不打冰3攻略组："})}</span>
 		<LoadCombinedTracksBtn displayName={"P5S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p5s_zh.txt"}/>
@@ -143,7 +143,7 @@ export class TimelineMarkerPresets extends React.Component {
 			nextMarkerTime: "0",
 			nextMarkerDuration: "1",
 			nextMarkerTrack: "0",
-			nextMarkerDescription: "default description",
+			nextMarkerDescription: "",
 			nextMarkerShowText: false,
 			loadTrackDest: "0",
 			durationInputMode: DurationInputMode.Duration,
@@ -173,7 +173,7 @@ export class TimelineMarkerPresets extends React.Component {
 
 	render() {
 		let inlineDiv = {display: "inline-block", marginRight: "1em", marginBottom: 6};
-		let colorOption = function(markerColor: MarkerColor, displayName: string) {
+		let colorOption = function(markerColor: MarkerColor, displayName: ContentNode) {
 			return <option key={markerColor} value={markerColor}>{displayName}</option>
 		}
 
@@ -189,7 +189,7 @@ export class TimelineMarkerPresets extends React.Component {
 			fileFormat={FileFormat.Json}
 			getContentFn={()=>{return controller.timeline.serializedCombinedMarkerTracks();}}
 			filename={"tracks_all"}
-			displayName={"all tracks combined"}
+			displayName={localize({en: "all tracks combined", zh: "所有轨道"})}
 		/>);
 		trackIndices.forEach(trackIndex=>{
 			saveTrackLinks.push(<SaveToFile
@@ -197,7 +197,7 @@ export class TimelineMarkerPresets extends React.Component {
 				fileFormat={FileFormat.Json}
 				getContentFn={()=>{ return controller.timeline.serializedSeparateMarkerTracks()[trackIndex]; }}
 				filename={"track_" + trackIndex}
-				displayName={"track " + trackIndex}
+				displayName={localize({en: "track ", zh: "轨"}) + trackIndex.toString()}
 			/>);
 		});
 
@@ -252,33 +252,33 @@ export class TimelineMarkerPresets extends React.Component {
 					</div>
 				</div>
 			}/>
-			<Expandable title={"Add marker"} defaultShow={false} content={
+			<Expandable title={"Add marker"} titleNode={localize({en: "Add marker", zh: "添加标记"})} defaultShow={false} content={
 				<form style={{
 					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
 					padding: "10px",
 				}}>
-					<Input defaultValue={this.state.nextMarkerTime} description={"Time: "} width={8} style={inlineDiv}
+					<Input defaultValue={this.state.nextMarkerTime} description={localize({en: "Time: ", zh: "时间："})} width={8} style={inlineDiv}
 						   onChange={this.setTime}/>
-					<Input defaultValue={this.state.nextMarkerDuration} description={"Duration: "} width={8}
+					<Input defaultValue={this.state.nextMarkerDuration} description={localize({en: "Duration: ", zh: "持续时长："})} width={8}
 						   style={inlineDiv} onChange={this.setDuration}/>
 
-					<Input defaultValue={this.state.nextMarkerDescription} description={"Description: "} width={40}
+					<Input defaultValue={this.state.nextMarkerDescription} description={localize({en: "Description: ", zh: "描述："})} width={40}
 						   onChange={this.setDescription}/>
-					<Input defaultValue={this.state.nextMarkerTrack} description={"Track: "} width={4}
+					<Input defaultValue={this.state.nextMarkerTrack} description={localize({en: "Track: ", zh: "轨道序号："})} width={4}
 						   style={inlineDiv} onChange={this.setTrack}/>
 					<div style={{display: "inline-block", marginTop: "4px"}}>
-						<span>Color: </span>
+						<span>{localize({en: "Color: ", zh: "颜色："})}</span>
 						<select style={{display: "inline-block", outline: "none"}}
 								value={this.state.nextMarkerColor}
 								onChange={this.onColorChange}>{[
-							colorOption(MarkerColor.Red, "red"),
-							colorOption(MarkerColor.Orange, "orange"),
-							colorOption(MarkerColor.Yellow, "yellow"),
-							colorOption(MarkerColor.Green, "green"),
-							colorOption(MarkerColor.Cyan, "cyan"),
-							colorOption(MarkerColor.Blue, "blue"),
-							colorOption(MarkerColor.Purple, "purple"),
-							colorOption(MarkerColor.Pink, "pink") // lol forgot abt this earlier
+							colorOption(MarkerColor.Red, localize({en: "red", zh: "红"})),
+							colorOption(MarkerColor.Orange, localize({en: "orange", zh: "橙"})),
+							colorOption(MarkerColor.Yellow, localize({en: "yellow", zh: "黄"})),
+							colorOption(MarkerColor.Green, localize({en: "green", zh: "绿"})),
+							colorOption(MarkerColor.Cyan, localize({en: "cyan", zh: "青"})),
+							colorOption(MarkerColor.Blue, localize({en: "blue", zh: "蓝"})),
+							colorOption(MarkerColor.Purple, localize({en: "purple", zh: "紫"})),
+							colorOption(MarkerColor.Pink, localize({en: "pink", zh: "粉"})) // lol forgot abt this earlier
 						]}</select>
 						<div style={{
 							background: this.state.nextMarkerColor,
@@ -291,7 +291,7 @@ export class TimelineMarkerPresets extends React.Component {
 					</div>
 					<div style={{display: "inline-block", marginTop: "4px", marginLeft: "10px"}}>
 						<input type="checkbox" style={{position: "relative", top: 3}} checked={this.state.nextMarkerShowText} onChange={this.onShowTextChange}/>
-						<span style={{marginLeft: 4}}>show text</span>
+						<span style={{marginLeft: 4}}>{localize({en: "show text", zh: "显示文字描述"})}</span>
 					</div>
 					<button
 						type={"submit"}
@@ -315,12 +315,12 @@ export class TimelineMarkerPresets extends React.Component {
 							}
 							controller.timeline.addMarker(marker);
 							e.preventDefault();
-						}}>add marker
+						}}>{localize({en: "add marker", zh: "添加标记"})}
 					</button>
 				</form>
 			}/>
 			<div>
-				<span>Save marker tracks to file: </span>
+				<span>{localize({en: "Save marker tracks to file: ", zh: "保存标记到文件："})}</span>
 				{saveTrackLinks}
 			</div>
 		</div>;

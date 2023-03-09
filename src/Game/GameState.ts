@@ -118,6 +118,7 @@ export class GameState {
 				let mana = this.resources.get(ResourceType.Mana);
 				let gainAmount = this.captureManaRegenAmount();
 				mana.gain(gainAmount);
+				//console.log("[" + (this.time - this.config.countdown) + "] mp tick: +" + gainAmount);
 				let currentAmount = mana.availableAmount();
 				controller.reportManaTick(game.time, "+" + gainAmount + " (MP="+currentAmount+")");
 				// queue the next tick

@@ -182,12 +182,17 @@ export class ResourceState extends Map<ResourceType, Resource> {
 		fnOnRsc: (rsc: Resource)=>void)
 	{
 		let rsc = this.get(rscType);
-		 let evt = new Event(name, delay, ()=>{
-			 rsc.pendingChange = undefined; // unregister self from resource
-			 fnOnRsc(rsc); // before the scheduled event takes effect
-		 });
-		 rsc.pendingChange = evt; // register to resource
-		 this.game.addEvent(evt); // register to events master list
+		/*
+		if (rscType===ResourceType.Mana) {
+			console.log("[" + this.game.getDisplayTime() + "] queue next mana tick after " + delay);
+		}
+		 */
+		let evt = new Event(name, delay, () => {
+			rsc.pendingChange = undefined; // unregister self from resource
+			fnOnRsc(rsc); // before the scheduled event takes effect
+		});
+		rsc.pendingChange = evt; // register to resource
+		this.game.addEvent(evt); // register to events master list
 	}
 
 	// useful for binary resources
