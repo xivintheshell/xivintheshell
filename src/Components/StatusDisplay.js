@@ -68,6 +68,8 @@ function ResourceCounter(props) {
 }
 const buffIcons = new Map();
 buffIcons.set(ResourceType.Triplecast, require("./Asset/buff_triplecast.png"));
+buffIcons.set(ResourceType.Triplecast + "2", require("./Asset/buff_triplecast2.png"));
+buffIcons.set(ResourceType.Triplecast + "3", require("./Asset/buff_triplecast3.png"));
 buffIcons.set(ResourceType.Sharpcast, require("./Asset/buff_sharpcast.png"));
 buffIcons.set(ResourceType.Firestarter, require("./Asset/buff_firestarter.png"));
 buffIcons.set(ResourceType.Thundercloud, require("./Asset/buff_thundercloud.png"));
@@ -83,9 +85,14 @@ buffIcons.set(ResourceType.Sprint, require("./Asset/buff_sprint.png"));
 
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props) {
+	let assetName = props.rscType;
+	if (props.rscType === ResourceType.Triplecast) {
+		if (props.stacks === 2) assetName += "2";
+		else if (props.stacks === 3) assetName += "3";
+	}
 	return <div title={props.rscType} className={props.className + " buff " + props.rscType}>
 		<Clickable content={
-			<img style={{height: 40}} src={buffIcons.get(props.rscType)} alt={props.rscType}/>
+			<img style={{height: 40}} src={buffIcons.get(assetName)} alt={props.rscType}/>
 		} style={{
 			display: "inline-block",
 			verticalAlign: "top",
@@ -108,6 +115,7 @@ function BuffsDisplay(props) {
 		leyLinesCountdown: 0,
 		sharpcastCountdown: 0,
 		triplecastCountdown: 0,
+		triplecastStacks: 0,
 		firestarterCountdown: 0,
 		thundercloudCountdown: 0,
 		manawardCountdown: 0,
@@ -138,7 +146,7 @@ function BuffsDisplay(props) {
 		rscType: ResourceType.Triplecast,
 		onSelf: true,
 		enabled: true,
-		stacks:1,
+		stacks: data.triplecastStacks,
 		timeRemaining: data.triplecastCountdown.toFixed(2),
 		className: data.triplecastCountdown > 0 ? "" : "hidden"
 	});

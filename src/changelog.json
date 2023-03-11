@@ -1,8 +1,16 @@
 [
 	{
+		"date": "3/10/23",
+		"changes": [
+			"negative countdown to start from a specific time",
+			"modified triplecast buff icon to show 2 & 3 stacks"
+		]
+	},
+	{
 		"date": "3/9/23",
 		"changes": [
 			"bugfix: addressed a situation that may cause the timeline editor to incorrectly scream abt invalid edits",
+			"↑ (later today) changed this a bit more: auto-apply valid edits & prevent edits from affecting earlier parts of the timeline",
 			"a few translation updates"
 		]
 	},

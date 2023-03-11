@@ -629,7 +629,11 @@ export class Config extends React.Component {
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<Input defaultValue={this.state.casterTax} description={localize({en: "caster tax: ", zh: "读条税："})} onChange={this.setCasterTax}/>
 			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "距首次跳蓝时间："})} onChange={this.setTimeTillFirstManaTick}/>
-			<Input defaultValue={this.state.countdown} description={localize({en: "countdown: ", zh: "倒数时间："})} onChange={this.setCountdown}/>
+			<Input defaultValue={this.state.countdown} description={
+				<span>{
+					localize({en: "countdown ", zh: "倒数时间 "})
+				}<Help topic={"countdown"} content={localize({en: "can use a negative countdown to start from a specific time of fight", zh: "可以是负数，时间轴会从战斗中途某个时间开始显示"})}/>: </span>
+			} onChange={this.setCountdown}/>
 			<Input defaultValue={this.state.randomSeed} description={
 				<span>{localize({en: "random seed ", zh: "随机种子 "})}<Help topic={"randomSeed"} content={
 					localize({

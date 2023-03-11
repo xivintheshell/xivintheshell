@@ -116,7 +116,7 @@ class Controller {
 		this.record = tmpRecord;
 	}
 
-	checkRecordValidity(inRecord: Record) {
+	checkRecordValidity(inRecord: Record, firstEditedNode: ActionNode | undefined) {
 
 		console.assert(inRecord.config !== undefined);
 
@@ -124,6 +124,12 @@ class Controller {
 			isValid: true,
 			firstInvalidAction: undefined,
 			invalidReason: undefined
+		}
+
+		// no edit happened
+		if (!firstEditedNode) {
+			console.log("no edit happened");
+			return result;
 		}
 
 		this.#sandboxEnvironment(()=>{
@@ -141,7 +147,7 @@ class Controller {
 			let status = this.#replay({
 				line: inRecord,
 				replayMode: ReplayMode.Edited,
-				suppressLog: true,
+				firstEditedNode: firstEditedNode
 			});
 
 			result.isValid = status.success;
@@ -172,7 +178,6 @@ class Controller {
 			this.#replay({
 				line: tmpRecord,
 				replayMode: ReplayMode.Exact,
-				suppressLog: true,
 				maxReplayTime: time,
 				cutoffAction: cutoffAction
 			});
@@ -295,7 +300,7 @@ class Controller {
 		}
 	}
 
-	applyEditedRecord(newRecord : Record) {
+	applyEditedRecord(newRecord : Record, firstEditedNode: ActionNode | undefined) {
 		if (!newRecord.config) {
 			console.assert(false);
 			return;
@@ -309,9 +314,29 @@ class Controller {
 		let replayResult = this.#replay({
 			line: newRecord,
 			replayMode: ReplayMode.Edited,
-			removeTrailingIdleTime: true
+			removeTrailingIdleTime: true,
+			firstEditedNode: firstEditedNode
 		});
 		console.assert(replayResult.success);
+
+		// copy selection
+		let displayedItr = this.record.getFirstAction();
+		let inItr = newRecord.getFirstAction();
+		let firstSelected : ActionNode | undefined = undefined;
+		let lastSelected : ActionNode | undefined = undefined;
+		while (inItr && displayedItr) {
+			if (inItr === newRecord.getFirstSelection()) firstSelected = displayedItr;
+			if (inItr === newRecord.getLastSelection()) lastSelected = displayedItr;
+			displayedItr = displayedItr.next;
+			inItr = inItr.next;
+		}
+		if (firstSelected && lastSelected) {
+			this.record.selectSingle(firstSelected);
+			this.record.selectUntil(lastSelected);
+		} else {
+			console.assert(false);
+		}
+
 		this.autoSave();
 	}
 
@@ -479,6 +504,7 @@ class Controller {
 			leyLinesCountdown: game.resources.timeTillReady(ResourceType.LeyLines),
 			sharpcastCountdown: game.resources.timeTillReady(ResourceType.Sharpcast),
 			triplecastCountdown: game.resources.timeTillReady(ResourceType.Triplecast),
+			triplecastStacks: game.resources.get(ResourceType.Triplecast).availableAmount(),
 			firestarterCountdown: game.resources.timeTillReady(ResourceType.Firestarter),
 			thundercloudCountdown: game.resources.timeTillReady(ResourceType.Thundercloud),
 			manawardCountdown: game.resources.timeTillReady(ResourceType.Manaward),
@@ -521,7 +547,6 @@ class Controller {
 
 	#requestTick(props: {
 		deltaTime: number,
-		suppressLog: boolean,
 		separateNode: boolean,
 		prematureStopCondition?: () => boolean,
 	}) {
@@ -601,7 +626,7 @@ class Controller {
 
 	#fastForward() {
 		let deltaTime: number = this.game.timeTillAnySkillAvailable();
-		this.#requestTick({deltaTime: deltaTime, suppressLog: false, separateNode: false});
+		this.#requestTick({deltaTime: deltaTime, separateNode: false});
 	}
 
 	#useSkill(
@@ -613,11 +638,19 @@ class Controller {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
 		if (bWaitFirst) {
-			this.#requestTick({deltaTime: status.timeTillAvailable, suppressLog: bSuppressLog, separateNode: false});
-			// automatically turn F1/B1 into paradox if conditions are met
+			this.#requestTick({deltaTime: status.timeTillAvailable, separateNode: false});
+
 			if ((skillName === SkillName.Fire || skillName === SkillName.Blizzard)
-				&& this.game.resources.get(ResourceType.Paradox).available(1)) {
+				&& this.game.resources.get(ResourceType.Paradox).available(1))
+			{
+				// automatically turn F1/B1 into paradox if conditions are met
 				skillName = SkillName.Paradox;
+			} else if (skillName === SkillName.Paradox
+				&& !this.game.resources.get(ResourceType.Paradox).available(1))
+			{
+				// and vice versa
+				if (this.game.getIceStacks() > 0) skillName = SkillName.Blizzard;
+				else if (this.game.getFireStacks() > 0) skillName = SkillName.Fire;
 			}
 			status = this.game.getSkillAvailabilityStatus(skillName);
 			this.lastAttemptedSkill = "";
@@ -675,10 +708,10 @@ class Controller {
 	#replay(props: {
 		line: Line,
 		replayMode: ReplayMode,
-		suppressLog?: boolean,
 		removeTrailingIdleTime?: boolean,
 		maxReplayTime?: number,
-		cutoffAction?: ActionNode
+		cutoffAction?: ActionNode,
+		firstEditedNode?: ActionNode, // for ReplayMode.Edited: everything before this should instead use ReplayMode.Exact
 	}) : {
 		success: boolean,
 		firstAddedNode: ActionNode | undefined,
@@ -686,9 +719,12 @@ class Controller {
 		invalidReason: SkillReadyStatus | undefined
 	} {
 		// default input, if not provided
-		if (props.suppressLog===undefined) props.suppressLog = false;
 		if (props.removeTrailingIdleTime===undefined) props.removeTrailingIdleTime = false;
 		if (props.maxReplayTime===undefined) props.maxReplayTime = -1;
+
+		// when checking record validity as well as final application (ReplayMode.Edited), replay exactly until the first edited node
+		let currentRelayMode = props.replayMode;
+		if (props.replayMode === ReplayMode.Edited) currentRelayMode = ReplayMode.Exact;
 
 		let itr = props.line.getFirstAction();
 		if (!itr) return {
@@ -702,6 +738,11 @@ class Controller {
 		let firstAddedNode = undefined;
 		while (itr && itr !== props.cutoffAction) {
 
+			// switch to edited replay past the first edited node
+			if (props.replayMode === ReplayMode.Edited && (itr===props.firstEditedNode || itr.next===props.firstEditedNode)) {
+				currentRelayMode = ReplayMode.Edited;
+			}
+
 			let lastIter = false;
 			let firstInvalidNode : ActionNode | undefined = undefined;
 			let invalidReason : SkillReadyStatus | undefined = undefined;
@@ -710,7 +751,7 @@ class Controller {
 			let waitDuration = itr.waitDuration;
 			if (props.maxReplayTime >= 0 &&
 				props.maxReplayTime - this.game.time < waitDuration &&
-				props.replayMode === ReplayMode.Exact
+				currentRelayMode === ReplayMode.Exact
 			) {
 				// hit specified max replay time; everything's valid so far
 				waitDuration = props.maxReplayTime - this.game.time;
@@ -718,10 +759,9 @@ class Controller {
 			}
 
 			// only Exact & validity replays wait nodes
-			if (itr.type === ActionType.Wait && (props.replayMode === ReplayMode.Exact || props.replayMode === ReplayMode.Edited)) {
+			if (itr.type === ActionType.Wait && (currentRelayMode === ReplayMode.Exact || currentRelayMode === ReplayMode.Edited)) {
 				this.#requestTick({
 					deltaTime: waitDuration,
-					suppressLog: props.suppressLog,
 					separateNode: true,
 				});
 				// wait nodes are always valid
@@ -730,11 +770,11 @@ class Controller {
 			// skill nodes
 			else if (itr.type === ActionType.Skill) {
 
-				let waitFirst = props.replayMode === ReplayMode.SkillSequence || props.replayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
-				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, props.suppressLog, TickMode.Manual);
+				let waitFirst = currentRelayMode === ReplayMode.SkillSequence || currentRelayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
+				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, true, TickMode.Manual);
 
-				let bEditedTimelineShouldWaitAfterSkill = props.replayMode === ReplayMode.Edited && (itr.next && itr.next.type === ActionType.Wait);
-				if (props.replayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
+				let bEditedTimelineShouldWaitAfterSkill = currentRelayMode === ReplayMode.Edited && (itr.next && itr.next.type === ActionType.Wait);
+				if (currentRelayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
 					if (status.status === SkillReadyStatus.Ready) {
 						//======== tick wait block ========
 						// todo: clean up this code...
@@ -750,16 +790,14 @@ class Controller {
 						}
 						this.#requestTick({
 							deltaTime: deltaTime,
-							suppressLog: props.suppressLog,
 							separateNode: false
 						});
 						//======== tick wait block ========
 					}
 				}
-				else if (props.replayMode === ReplayMode.SkillSequence || props.replayMode === ReplayMode.Edited) {
+				else if (currentRelayMode === ReplayMode.SkillSequence || currentRelayMode === ReplayMode.Edited) {
 					this.#requestTick({
 						deltaTime: this.game.timeTillAnySkillAvailable(),
-						suppressLog: props.suppressLog,
 						separateNode: false
 					});
 				}
@@ -782,15 +820,14 @@ class Controller {
 				}
 			}
 			// buff enable/disable also only supported by exact / edited replay
-			else if (itr.type === ActionType.SetResourceEnabled && (props.replayMode === ReplayMode.Exact || props.replayMode === ReplayMode.Edited)) {
+			else if (itr.type === ActionType.SetResourceEnabled && (currentRelayMode === ReplayMode.Exact || currentRelayMode === ReplayMode.Edited)) {
 				let success = this.requestToggleBuff(itr.buffName as ResourceType);
-				const exact = props.replayMode === ReplayMode.Exact;
+				const exact = currentRelayMode === ReplayMode.Exact;
 				if (success) {
 					this.#requestTick({
 						// waitDuration gets auto filled when this node is moved around and causes unwanted gaps on the timeline..
 						// current workaround: auto decide whether to respect this info in the record. Could be a bit too hacky..
 						deltaTime: exact ? waitDuration : Math.min(waitDuration, this.game.timeTillAnySkillAvailable()),
-						suppressLog: props.suppressLog,
 						separateNode: false
 					});
 				} else {
@@ -897,7 +934,6 @@ class Controller {
 			this.autoSave();
 			this.#requestTick({
 				deltaTime: currentTime - this.game.time,
-				suppressLog: true,
 				separateNode: false,
 			});
 			this.shouldLoop = currentLoop;
@@ -933,7 +969,6 @@ class Controller {
 			this.#replay({
 				line: replayRecord,
 				replayMode: ReplayMode.Exact,
-				suppressLog: true,
 				removeTrailingIdleTime: removeTrailingIdleTime
 			});
 		}
@@ -1031,21 +1066,18 @@ class Controller {
 			if (timeTillAnySkillAvailable >= dt) {
 				ctrl.#requestTick({
 					deltaTime : dt,
-					suppressLog: true,
 					separateNode: false,
 					prematureStopCondition: ()=>{ return !loopCondition(); }
 				});
 			} else {
 				ctrl.#requestTick({
 					deltaTime : timeTillAnySkillAvailable,
-					suppressLog: true,
 					separateNode: false,
 					prematureStopCondition: ()=>{ return !loopCondition(); }
 				});
 				tryDequeueSkill(); // potentially sandwich another skill here
 				ctrl.#requestTick({
 					deltaTime : dt - timeTillAnySkillAvailable,
-					suppressLog: true,
 					separateNode: false,
 					prematureStopCondition: ()=>{ return !loopCondition(); }
 				});
@@ -1068,7 +1100,7 @@ class Controller {
 	}
 
 	step(t: number) {
-		this.#requestTick({deltaTime: t, suppressLog: false, separateNode: true});
+		this.#requestTick({deltaTime: t, separateNode: true});
 		this.updateAllDisplay();
 	}
 

@@ -147,7 +147,9 @@ export class TimelineEditor extends React.Component {
 						<button style={{display: "block", marginTop: 10}} onClick={e=>{
 							setHandledSkillSelectionThisFrame(true);
 
+							// todo: would show only after editing properties
 							// apply edits to timeline
+							/*
 							if (this.state.editedRecord) {
 								controller.applyEditedRecord(this.state.editedRecord);
 							} else {
@@ -157,8 +159,9 @@ export class TimelineEditor extends React.Component {
 
 							controller.record.unselectAll();
 							controller.displayCurrentState();
+							 */
 
-							controller.scrollToTime();
+							//controller.scrollToTime();
 						}}>apply changes to timeline and save</button>
 						{this.discardEditsBtn()}
 					</div>
@@ -199,9 +202,14 @@ export class TimelineEditor extends React.Component {
 						setHandledSkillSelectionThisFrame(true);
 						// move selected skills up
 						let copy = this.getRecordCopy();
-						copy.moveSelected(-1);
-						let status = controller.checkRecordValidity(copy);
+						let firstEditedNode = copy.moveSelected(-1);
+						let status = controller.checkRecordValidity(copy, firstEditedNode);
 						this.setState({recordValidStatus: status});
+						if (status.isValid) {
+							controller.applyEditedRecord(copy, firstEditedNode);
+							controller.displayCurrentState();
+							this.markClean();
+						}
 					}
 				}}>{localize({en: "move up", zh: "上移"})}</button>
 
@@ -210,9 +218,14 @@ export class TimelineEditor extends React.Component {
 						setHandledSkillSelectionThisFrame(true);
 						// move selected skills down
 						let copy = this.getRecordCopy();
-						copy.moveSelected(1);
-						let status = controller.checkRecordValidity(copy);
+						let firstEditedNode = copy.moveSelected(1);
+						let status = controller.checkRecordValidity(copy, firstEditedNode);
 						this.setState({recordValidStatus: status});
+						if (status.isValid) {
+							controller.applyEditedRecord(copy, firstEditedNode);
+							controller.displayCurrentState();
+							this.markClean();
+						}
 					}
 				}}>{localize({en: "move down", zh: "下移"})}</button>
 
@@ -220,8 +233,8 @@ export class TimelineEditor extends React.Component {
 					if (displayedRecord.getFirstSelection()) {
 						setHandledSkillSelectionThisFrame(true);
 						let copy = this.getRecordCopy();
-						copy.deleteSelected();
-						let status = controller.checkRecordValidity(copy);
+						let firstEditedNode = copy.deleteSelected();
+						let status = controller.checkRecordValidity(copy, firstEditedNode);
 						this.setState({recordValidStatus: status});
 					}
 				}}>{localize({en: "delete selected", zh: "删除所选"})}</button>

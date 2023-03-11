@@ -254,11 +254,11 @@ export class Record extends Line {
 			selectionEndTime: selectionEnd
 		};
 	}
-	moveSelected(offset: number) { // positive: move forward; negative: move backward
-		if (offset === 0) return;
+	moveSelected(offset: number) { // positive: move right; negative: move left
+		if (offset === 0) return undefined;
 		let firstSelected = this.getFirstSelection();
 		let lastSelected = this.getLastSelection();
-		if (!firstSelected || !lastSelected) return;
+		if (!firstSelected || !lastSelected) return undefined;
 
 		let oldNodeBeforeSelection: ActionNode | undefined = undefined;
 		let itr = this.getFirstAction();
@@ -308,6 +308,13 @@ export class Record extends Line {
 			lastSelected.next = this.head;
 			this.head = firstSelected;
 		}
+		let firstEditedNode;
+		if (offset < 0) firstEditedNode = this.getFirstSelection();
+		else {
+			if (nodeBeforeSelectionIdx >= 0) firstEditedNode = nodesArray[nodeBeforeSelectionIdx].next;
+			else firstEditedNode = this.head;
+		}
+		return firstEditedNode;
 	}
 	deleteSelected() {
 		let firstSelected = this.getFirstSelection();
@@ -334,6 +341,7 @@ export class Record extends Line {
 		if (firstBeforeSelected) {
 			firstBeforeSelected.next = lastSelected?.next;
 		}
+		return firstBeforeSelected ? firstBeforeSelected.next : this.head;
 	}
 	serialized() {
 		console.assert(this.config);
