@@ -1,5 +1,11 @@
 [
 	{
+		"date": "3/14/23",
+		"changes": [
+			"quick patch: put back 'apply changes' button"
+		]
+	},
+	{
 		"date": "3/10/23",
 		"changes": [
 			"negative countdown to start from a specific time",

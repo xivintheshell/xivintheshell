@@ -69,13 +69,15 @@ export class TimelineEditor extends React.Component {
 	state: {
 		editedRecord: Record | undefined
 		recordValidStatus: RecordValidStatus | undefined
+		firstEditedNode: ActionNode | undefined
 	}
 	firstSelected: React.RefObject<HTMLDivElement>;
 	constructor(props: {}) {
 		super(props);
 		this.state = {
 			editedRecord: undefined,
-			recordValidStatus: undefined
+			recordValidStatus: undefined,
+			firstEditedNode: undefined
 		}
 		this.firstSelected = React.createRef();
 	}
@@ -149,9 +151,8 @@ export class TimelineEditor extends React.Component {
 
 							// todo: would show only after editing properties
 							// apply edits to timeline
-							/*
 							if (this.state.editedRecord) {
-								controller.applyEditedRecord(this.state.editedRecord);
+								controller.applyEditedRecord(this.state.editedRecord, this.state.firstEditedNode);
 							} else {
 								console.assert(false);
 							}
@@ -159,7 +160,6 @@ export class TimelineEditor extends React.Component {
 
 							controller.record.unselectAll();
 							controller.displayCurrentState();
-							 */
 
 							//controller.scrollToTime();
 						}}>apply changes to timeline and save</button>
@@ -204,12 +204,17 @@ export class TimelineEditor extends React.Component {
 						let copy = this.getRecordCopy();
 						let firstEditedNode = copy.moveSelected(-1);
 						let status = controller.checkRecordValidity(copy, firstEditedNode);
-						this.setState({recordValidStatus: status});
+						this.setState({
+							recordValidStatus: status,
+							firstEditedNode: firstEditedNode
+						});
+						/*
 						if (status.isValid) {
 							controller.applyEditedRecord(copy, firstEditedNode);
 							controller.displayCurrentState();
 							this.markClean();
 						}
+						 */
 					}
 				}}>{localize({en: "move up", zh: "上移"})}</button>
 
@@ -220,12 +225,17 @@ export class TimelineEditor extends React.Component {
 						let copy = this.getRecordCopy();
 						let firstEditedNode = copy.moveSelected(1);
 						let status = controller.checkRecordValidity(copy, firstEditedNode);
-						this.setState({recordValidStatus: status});
+						this.setState({
+							recordValidStatus: status,
+							firstEditedNode: firstEditedNode
+						});
+						/*
 						if (status.isValid) {
 							controller.applyEditedRecord(copy, firstEditedNode);
 							controller.displayCurrentState();
 							this.markClean();
 						}
+						 */
 					}
 				}}>{localize({en: "move down", zh: "下移"})}</button>
 
@@ -235,7 +245,10 @@ export class TimelineEditor extends React.Component {
 						let copy = this.getRecordCopy();
 						let firstEditedNode = copy.deleteSelected();
 						let status = controller.checkRecordValidity(copy, firstEditedNode);
-						this.setState({recordValidStatus: status});
+						this.setState({
+							recordValidStatus: status,
+							firstEditedNOde: firstEditedNode
+						});
 					}
 				}}>{localize({en: "delete selected", zh: "删除所选"})}</button>
 			</div>
