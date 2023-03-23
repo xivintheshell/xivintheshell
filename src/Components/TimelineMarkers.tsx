@@ -60,7 +60,7 @@ let Marker = React.memo(function(props: {
 	</div>;
 });
 
-export class TimelineMarkers extends React.Component {
+class TimelineMarkers extends React.Component {
 	myRef: React.RefObject<HTMLDivElement>;
 	trackHeight = 14;
 	fontSize = 11;

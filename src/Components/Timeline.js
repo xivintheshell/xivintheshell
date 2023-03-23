@@ -36,6 +36,14 @@ class TimelineMain extends React.Component {
 		}).bind(this);
 	}
 	componentDidMount() {
+		/*
+		// not desirable, because scrolling is not smooth...
+		if (this.myRef.current!==null) {
+			this.myRef.current.addEventListener("wheel", evt=>{
+				this.myRef.current.scrollLeft += evt.deltaY;
+				evt.preventDefault();
+			});
+		}*/
 		this.setState({
 			timelineWidth: controller.timeline.getCanvasWidth(),
 			timelineHeight: controller.timeline.getCanvasHeight(),

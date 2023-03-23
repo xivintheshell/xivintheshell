@@ -136,11 +136,17 @@ class SkillButton extends React.Component {
 				s = localize({en: en, zh: zh});
 			}
 			else if (info.status === SkillReadyStatus.RequirementsNotMet) {
-				s += " skill requirement(s) not satisfied";
+				s += localize({en: " skill requirement(s) not satisfied", zh: " 未满足释放条件"});
 			} else if (info.status === SkillReadyStatus.NotEnoughMP) {
-				s += " not enough MP (needs " + info.capturedManaCost + ")";
+				s += localize({
+					en: " not enough MP (needs " + info.capturedManaCost + ")",
+					zh: " MP不足（需" + info.capturedManaCost + "）"
+				});
 			} else if (info.status === SkillReadyStatus.Blocked) {
-				s += "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (CD ready in " + info.cdReadyCountdown.toFixed(2) + ")";
+				s += localize({
+					en: "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (CD ready in " + info.cdReadyCountdown.toFixed(2) + ")",
+					zh: "预计" + info.timeTillAvailable.toFixed(2) + "秒后可释放（" + info.cdReadyCountdown.toFixed(2) + "秒后转好CD）"
+				});
 			}
 			// if ready, also show captured cast time & time till damage application
 			let actualCastTime = info.instantCast ? 0 : info.castTime;
