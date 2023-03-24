@@ -16,6 +16,7 @@ import changelog from "../changelog.json"
 import {localize, SelectLanguage} from "./Localization"
 import {GlobalHelpTooltip} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
+import {DamageStatistics} from "./DamageStatistics";
 
 export let setRealTime = (inRealTime: boolean) => {};
 export let setHistorical = (inHistorical: boolean) => {};
@@ -283,6 +284,7 @@ export default class Main extends React.Component {
 							</div>
 						</div>
 						<SkillSequencePresets/>
+						<DamageStatistics/>
 					</div>
 				</div>
 				<Timeline/>

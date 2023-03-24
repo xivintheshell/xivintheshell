@@ -4,6 +4,7 @@ import {controller} from "../Controller/Controller";
 import {LucidDreamingBuff, Resource} from "./Resources";
 import {ActionNode} from "../Controller/Record";
 import {GameState} from "./GameState";
+import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
 
 export interface SkillCaptureCallbackInfo {
 	capturedManaCost: number
@@ -164,7 +165,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 							rsc.consume(1);
 						});
 				}
-				node.resolve();
+				node.resolveAll(game.time);
 			};
 			skillsList.set(props.skillName, new Skill(props.skillName,
 				() => {
@@ -280,7 +281,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					dealDamage: false,
 					node: node
 				});
-				node.resolve();
+				node.resolveAll(game.time);
 			}
 		));
 
@@ -307,20 +308,21 @@ export class SkillsList extends Map<SkillName, Skill> {
 		}
 
 		// called at the time of APPLICATION (not snapshot)
-		let applyThunderDoT = function(game: GameState, node: ActionNode, capturedTickPotency: number, numTicks: number) {
+		let applyThunderDoT = function(game: GameState, node: ActionNode) {
 			// define stuff
-			let recurringThunderTick = (remainingTicks: number, capturedTickPotency: number)=> {
+			let recurringThunderTick = (remainingTicks: number)=> {
 				if (remainingTicks===0) return;
 				game.resources.addResourceEvent(
 					ResourceType.ThunderDoTTick,
-					"recurring thunder tick " + (numTicks+1-remainingTicks) + "/" + numTicks, 3, (rsc: Resource) =>{
-						let damageSource = "DoT " + (numTicks+1-remainingTicks) + "/" + numTicks;
-						game.reportPotency(node, capturedTickPotency, damageSource);
-						game.dealDamage(node, capturedTickPotency, damageSource);
+					"recurring thunder tick", 3, (rsc: Resource) =>{
+						let idx = 10 - remainingTicks + 1;
+						let p = node.getPotencies()[idx];
+						controller.resolvePotency(p);
+
 						if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && game.rng() < 0.1)) {// thundercloud proc
 							gainThundercloudProc(game);
 						}
-						recurringThunderTick(remainingTicks - 1, capturedTickPotency);
+						recurringThunderTick(remainingTicks - 1);
 					});
 			};
 			let dot = game.resources.get(ResourceType.ThunderDoT);
@@ -334,8 +336,35 @@ export class SkillsList extends Map<SkillName, Skill> {
 				dot.consume(1);
 			});
 			// what this function does: wait for 3s and do a tick
-			recurringThunderTick(numTicks, capturedTickPotency);
+			recurringThunderTick(10);
 		};
+
+		let addInitialT3Potencies = function(node: ActionNode) {
+			let mods = getPotencyModifiersFromResourceState(game.resources, Aspect.Lightning);
+			// initial potency
+			let pInitial = new Potency({
+				sourceTime: game.time,
+				sourceSkill: SkillName.Thunder3,
+				aspect: Aspect.Lightning,
+				basePotency: 50,
+				snapshotTime: undefined,
+			});
+			pInitial.modifiers = mods;
+			node.addPotency(pInitial);
+			// dots
+			for (let i = 0; i < 10; i++) {
+				let pDot = new Potency({
+					sourceTime: game.time,
+					sourceSkill: SkillName.Thunder3,
+					aspect: Aspect.Lightning,
+					basePotency: game.config.adjustedDoTPotency(35),
+					snapshotTime: undefined,
+					description: "DoT " + (i+1) + "/10"
+				});
+				pDot.modifiers = mods;
+				node.addPotency(pDot);
+			}
+		}
 
 		// Thunder 3
 		skillsList.set(SkillName.Thunder3, new Skill(SkillName.Thunder3,
@@ -345,21 +374,21 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				if (game.resources.get(ResourceType.Thundercloud).available(1)) // made instant via thundercloud
 				{
-					let skillTime = game.getDisplayTime();
-					let capturedInitialPotency = game.captureDamage(Aspect.Other, 400);
-					let capturedTickPotency = game.captureDamage(Aspect.Other, game.config.adjustedDoTPotency(35));
+					// potency
+					addInitialT3Potencies(node);
+					node.getPotencies()[0].base = 400;
+					node.getPotencies().forEach(p=>{ p.snapshotTime = game.time; });
+
 					// tincture
 					if (game.resources.get(ResourceType.Tincture).available(1)) {
 						node.addBuff(ResourceType.Tincture);
 					}
-					let sourceName = "Thunder 3@"+skillTime.toFixed(2);
 
-					game.reportPotency(node, capturedInitialPotency, sourceName);
 					game.useInstantSkill({
 						skillName: SkillName.Thunder3,
 						onApplication: () => {
-							game.dealDamage(node, capturedInitialPotency, sourceName);
-							applyThunderDoT(game, node, capturedTickPotency, 10);
+							controller.resolvePotency(node.getPotencies()[0]);
+							applyThunderDoT(game, node);
 						},
 						dealDamage: false,
 						node: node
@@ -375,9 +404,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 						sc.removeTimer();
 					}
 				} else {
-					let capturedTickPotency: number;
+					// potency
+					addInitialT3Potencies(node);
+
 					game.castSpell(SkillName.Thunder3, (cap: SkillCaptureCallbackInfo) => {
-						capturedTickPotency = game.captureDamage(Aspect.Lightning, game.config.adjustedDoTPotency(35));
+
+						// potency snapshot time
+						node.getPotencies().forEach(p=>{ p.snapshotTime = game.time });
+
 						// tincture
 						if (game.resources.get(ResourceType.Tincture).available(1)) {
 							node.addBuff(ResourceType.Tincture);
@@ -390,7 +424,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 							sc.removeTimer();
 						}
 					}, (app: SkillApplicationCallbackInfo) => {
-						applyThunderDoT(game, node, capturedTickPotency, 10);
+						applyThunderDoT(game, node);
 					}, node);
 				}
 			}
@@ -409,7 +443,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					skillName: SkillName.Manafont,
 					onApplication: () => {
 						game.resources.get(ResourceType.Mana).gain(3000);
-						node.resolve();
+						node.resolveAll(game.time);
 					},
 					dealDamage: false,
 					node: node
@@ -529,7 +563,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.useInstantSkill({
 					skillName: SkillName.BetweenTheLines,
 					dealDamage: false,
-					onCapture: ()=>{node.resolve()},
+					onCapture: ()=>{node.resolveAll(game.time)},
 					node: node
 				});
 			}
@@ -544,7 +578,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.useInstantSkill({
 					skillName: SkillName.AetherialManipulation,
 					dealDamage: false,
-					onCapture: ()=>{node.resolve()},
+					onCapture: ()=>{node.resolveAll(game.time)},
 					node: node
 				});
 			}
@@ -567,7 +601,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 							"drop remaining Triple charges", game.config.extendedBuffTimes ? 15.7 : 15, (rsc: Resource) => {
 								rsc.consume(rsc.availableAmount());
 							});
-						node.resolve();
+						node.resolveAll(game.time);
 					},
 					dealDamage: false,
 					node: node
@@ -621,7 +655,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.resources.get(ResourceType.UmbralIce).gain(1);
 						game.resources.get(ResourceType.UmbralHeart).gain(1);
 						game.startOrRefreshEnochian();
-						node.resolve();
+						node.resolveAll(game.time);
 					},
 					dealDamage: false,
 					node: node
@@ -686,7 +720,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					dealDamage: false,
 					node: node
 				});
-				node.resolve();
+				node.resolveAll(game.time);
 			}
 		));
 
@@ -745,7 +779,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					dealDamage: false,
 					node: node
 				});
-				node.resolve();
+				node.resolveAll(game.time);
 			}))
 
 		// Surecast

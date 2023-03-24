@@ -176,8 +176,6 @@ class StatsDisplay extends React.Component {
 		</div>
 
 		// selected
-		// todo
-
 		let selected = <div style={{flex: 1}}>
 			<span>Duration (selected): {this.state.selectedDuration.toFixed(2)}</span><br/>
 			<span>Applied potency (selected): {this.state.selectedPotency.toFixed(2)}</span><br/>

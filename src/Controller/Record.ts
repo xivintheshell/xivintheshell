@@ -1,6 +1,7 @@
 import {FileType} from "./Common";
 import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
+import {InitialPotencyProps, Potency} from "../Game/Potency";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -27,8 +28,9 @@ export class ActionNode {
 	static _gNodeIndex: number = 0;
 	#nodeIndex: number;
 	#capturedBuffs: Set<ResourceType>;
-	#capturedPotency: number;
-	#resolved: boolean;
+	//#capturedPotency: number;
+	//#resolved: boolean;
+	#potencies: Potency[];
 
 	type: ActionType;
 	waitDuration: number = 0;
@@ -46,8 +48,9 @@ export class ActionNode {
 		this.type = actionType;
 		this.#nodeIndex = ActionNode._gNodeIndex;
 		this.#capturedBuffs = new Set<ResourceType>();
-		this.#capturedPotency = 0;
-		this.#resolved = false;
+		//this.#capturedPotency = 0;
+		//this.#resolved = false;
+		this.#potencies = [];
 		ActionNode._gNodeIndex++;
 	}
 
@@ -71,14 +74,35 @@ export class ActionNode {
 		return this.#capturedBuffs.has(rsc);
 	}
 
-	resolve() { this.#resolved = true; }
+	resolveAll(t: number) {
+		this.#potencies.forEach(p=>{
+			p.resolve(t);
+		});
+	}
 
-	resolved() { return this.#resolved; }
+	// true if empty or any damage is resolved.
+	resolved() {
+		this.#potencies.forEach(p=>{
+			if (p.hasResolved()) return true;
+		});
+		return this.#potencies.length === 0;
+	}
 
-	getPotency() { return this.#resolved ? this.#capturedPotency : 0; }
+	getPotency(props: {tincturePotencyMultiplier: number}) {
+		//return this.#resolved ? this.#capturedPotency : 0;
+		let sum = 0;
+		this.#potencies.forEach(p=>{
+			if (p.hasResolved()) sum += p.getAmount(props);
+		});
+		return sum;
+	}
 
-	addPotency(amount : number) {
-		this.#capturedPotency += amount;
+	getPotencies() {
+		return this.#potencies;
+	}
+
+	addPotency(p: Potency) {
+		this.#potencies.push(p);
 	}
 
 	select() {
@@ -243,7 +267,7 @@ export class Record extends Line {
 		}
 		let potency = 0;
 		this.iterateSelected(node=>{
-			potency += node.getPotency() * (node.hasBuff(ResourceType.Tincture) ? tincturePotencyMultiplier : 1);
+			potency += node.getPotency({tincturePotencyMultiplier: tincturePotencyMultiplier});
 		});
 
 		let selectionStart = this.getFirstSelection()?.tmp_startLockTime ?? 0;

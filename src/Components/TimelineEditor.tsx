@@ -151,7 +151,7 @@ export class TimelineEditor extends React.Component {
 						<button style={{display: "block", marginTop: 10}} onClick={e=>{
 							setHandledSkillSelectionThisFrame(true);
 
-							// todo: would show only after editing properties
+							// would show only after editing properties
 							// apply edits to timeline
 							if (this.state.editedRecord) {
 								controller.applyEditedRecord(this.state.editedRecord, this.state.firstEditedNode);

@@ -6,6 +6,7 @@ import {CoolDown, CoolDownState, Event, LucidDreamingBuff, Resource, ResourceSta
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
+import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -25,9 +26,6 @@ export class GameState {
 	skillsList: SkillsList;
 
 	#lastDamageApplicationTime: number;
-	// todo: can now get rid of this and let record handle cumulative potency...
-	#potencyList: {amount:number, pot:boolean}[];
-	#cumulativePotency: number;
 	#tincturePotencyMultiplier: number;
 
 	constructor(config: GameConfig, tincturePotencyMultiplier: number) {
@@ -101,8 +99,8 @@ export class GameState {
 		this.skillsList = new SkillsList(this);
 
 		this.#lastDamageApplicationTime = 0;
-		this.#potencyList = [];
-		this.#cumulativePotency = 0;
+		//this.#potencyList = [];
+		//this.#cumulativePotency = 0;
 		this.#tincturePotencyMultiplier = tincturePotencyMultiplier;
 
 		this.#init();
@@ -172,7 +170,7 @@ export class GameState {
 		let cumulativeDeltaTime = 0;
 		while (cumulativeDeltaTime < deltaTime && this.eventsQueue.length > 0 && !prematureStopCondition())
 		{
-			// make sure events are in proper order (todo: optimize using a priority queue...)
+			// make sure events are in proper order (qol: optimize using a priority queue...)
 			this.eventsQueue.sort((a, b)=>{return a.timeTillEvent - b.timeTillEvent;})
 
 			// time to safely advance without skipping anything or ticking past deltaTime
@@ -230,12 +228,7 @@ export class GameState {
 
 	setTincturePotencyMultiplier(val: number) {
 		this.#tincturePotencyMultiplier = val;
-		// now have to update cumulative potency
-		let newPotencySum = 0;
-		this.#potencyList.forEach(p=>{
-			newPotencySum += p.amount * (p.pot ? this.#tincturePotencyMultiplier : 1);
-		});
-		this.#cumulativePotency = newPotencySum;
+		// todo: now have to update cumulative potency?
 	}
 
 	switchToAForUI(rscType: ResourceType, numStacks: number) {
@@ -259,23 +252,6 @@ export class GameState {
 			}
 			af.consume(af.availableAmount());
 		}
-	}
-
-	// number -> number
-	captureDamage(aspect: Aspect, basePotency: number) {
-		let mod = StatsModifier.fromResourceState(this.resources);
-
-		let potency = basePotency * mod.damageBase;
-
-		if (aspect === Aspect.Fire)
-		{
-			potency *= mod.damageFire;
-		}
-		else if (aspect === Aspect.Ice)
-		{
-			potency *= mod.damageIce;
-		}
-		return potency;
 	}
 
 	captureManaCostAndUHConsumption(aspect: Aspect, baseManaCost: number) {
@@ -320,30 +296,7 @@ export class GameState {
 		return mod.spellRecastTimeScale;
 	}
 
-	dealDamage(node: ActionNode, potency: number, source="unknown") {
-		this.#lastDamageApplicationTime = this.time;
-
-		node.resolve();
-		const pot = node.hasBuff(ResourceType.Tincture);
-		this.#potencyList.push({amount: potency, pot: pot});
-		this.#cumulativePotency += potency * (pot ? this.#tincturePotencyMultiplier : 1);
-
-		let buffs: ResourceType[] = [];
-		if (pot) buffs.push(ResourceType.Tincture);
-
-		controller.reportDamage({
-			potency: potency,
-			buffs: buffs,
-			source: source
-		});
-	}
-
 	getLastDamageApplicationDisplayTime() { return this.#lastDamageApplicationTime - this.config.countdown; }
-	getCumulativePotency() { return this.#cumulativePotency; }
-
-	reportPotency(node: ActionNode, potency: number, source: string) {
-		node.addPotency(potency);
-	}
 
 	requestToggleBuff(buffName: ResourceType) {
 		let rsc = this.resources.get(buffName);
@@ -383,6 +336,7 @@ export class GameState {
 			node.addBuff(ResourceType.LeyLines);
 		}
 
+		let skillTimeRaw = this.time;
 		let skillTime = this.getDisplayTime();
 
 		let takeEffect = function(game: GameState) {
@@ -399,11 +353,19 @@ export class GameState {
 				}
 
 				// potency
-				let capturedPotency = game.captureDamage(skillInfo.aspect, skillInfo.basePotency);
-				game.reportPotency(node, capturedPotency, sourceName);
+				let potency = new Potency({
+					sourceTime: skillTimeRaw,
+					sourceSkill: skillName,
+					aspect: skillInfo.aspect,
+					basePotency: skillInfo.basePotency,
+					snapshotTime:game.time,
+					description: "some description",
+				});
+				potency.modifiers = getPotencyModifiersFromResourceState(game.resources, skillInfo.aspect);
+				node.addPotency(potency);
 
 				// tincture
-				if (game.resources.get(ResourceType.Tincture).available(1) && capturedPotency > 0) {
+				if (game.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
 					node.addBuff(ResourceType.Tincture);
 				}
 
@@ -418,7 +380,7 @@ export class GameState {
 					skillInfo.name + " applied",
 					skillInfo.skillApplicationDelay,
 					()=>{
-						game.dealDamage(node, capturedPotency, sourceName);
+						controller.resolvePotency(potency);
 						let applicationInfo: SkillApplicationCallbackInfo = {
 							//...
 						};
@@ -506,14 +468,22 @@ export class GameState {
 		}
 
 		// potency
-		let capturedDamage = 0;
+		let potency : Potency | undefined = undefined;
 		if (props.dealDamage) {
-			capturedDamage = this.captureDamage(skillInfo.aspect, skillInfo.basePotency);
-			this.reportPotency(props.node, capturedDamage, sourceName);
+			potency = new Potency({
+				sourceTime: this.time,
+				sourceSkill: skillInfo.name,
+				aspect: skillInfo.aspect,
+				basePotency: skillInfo.basePotency,
+				snapshotTime: this.time,
+				description: "some description",
+			});
+			potency.modifiers = getPotencyModifiersFromResourceState(this.resources, skillInfo.aspect);
+			props.node.addPotency(potency);
 		}
 
 		// tincture
-		if (this.resources.get(ResourceType.Tincture).available(1) && capturedDamage > 0) {
+		if (this.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
 			props.node.addBuff(ResourceType.Tincture);
 		}
 
@@ -523,7 +493,7 @@ export class GameState {
 			skillInfo.name + " captured",
 			skillInfo.skillApplicationDelay,
 			()=>{
-				if (props.dealDamage) this.dealDamage(props.node, capturedDamage, sourceName);
+				if (props.dealDamage && potency) controller.resolvePotency(potency);//this.dealDamage(props.node, capturedDamage, sourceName);
 				if (props.onApplication) props.onApplication();
 			});
 		this.addEvent(skillEvent);

@@ -98,7 +98,7 @@ export const enum ResourceType {
 	// CDs
 	cd_GCD = "cd_GCD", // [0, Constant.gcd]
 	cd_Transpose = "cd_Transpose", // [0, 1x]
-	cd_Sharpcast = "cd_Sharpcast", // [0, 2x] // todo: figure out how this works
+	cd_Sharpcast = "cd_Sharpcast", // [0, 2x]
 	cd_LeyLines = "cd_LeyLines", // [0, 1x]
 	cd_Manaward = "cd_Manaward", // [0, 1x]
 	cd_BetweenTheLines = "cd_BetweenTheLines", // [0, 1x]

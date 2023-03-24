@@ -20,6 +20,7 @@ import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {StaticFn} from "../Components/Common";
 import {TimelineRenderingProps} from "../Components/TimelineCanvas";
+import {Potency} from "../Game/Potency";
 
 type Fixme = any;
 
@@ -241,7 +242,7 @@ class Controller {
 		return this.#presetLinesManager.serialized();
 	}
 
-	// todo: cleanup?
+	// qol: cleanup?
 	addSelectionToPreset(name="(untitled)") {
 		console.assert(this.record.getFirstSelection());
 		let line = new Line();
@@ -351,7 +352,7 @@ class Controller {
 			if (node.skillName!==undefined && node.resolved()) {
 				let entry = m.get(node.skillName) ?? {count: 0, potencySum: 0};
 				entry.count += 1;
-				entry.potencySum += node.getPotency() * (node.hasBuff(ResourceType.Tincture) ? this.game.getTincturePotencyMultiplier() : 1);
+				entry.potencySum += node.getPotency({tincturePotencyMultiplier: this.game.getTincturePotencyMultiplier()});
 				m.set(node.skillName, entry);
 			}
 		};
@@ -365,7 +366,8 @@ class Controller {
 
 	// called by reset, reportDamage, displayCurrentState
 	updateCumulativeStatsDisplay() {
-		let cumulativePotency = this.game.getCumulativePotency();
+		// todo
+		let cumulativePotency = -233;//this.game.getCumulativePotency();
 		let totalTime = this.game.getLastDamageApplicationDisplayTime();
 
 		let gcdSkills = 0;
@@ -392,10 +394,11 @@ class Controller {
 		// refresh stats
 		let selectedPotency = 0;
 		this.record.iterateSelected(node=>{
-			selectedPotency += node.getPotency() * (node.hasBuff(ResourceType.Tincture) ? inMultiplier : 1);
+			selectedPotency += node.getPotency({tincturePotencyMultiplier: inMultiplier});
 		});
 		updateStatsDisplay({
-			cumulativePotency: this.game.getCumulativePotency(),
+			// todo
+			cumulativePotency: -233,//this.game.getCumulativePotency(),
 			selectedPotency: selectedPotency,
 			statsBySkill: this.#getPotencyStatsBySkill(false),
 			seledtedStatsBySkill: this.#getPotencyStatsBySkill(true)
@@ -429,27 +432,30 @@ class Controller {
 		}
 	}
 
-	reportDamage(props: {
-		potency: number,
-		source: string,
-		buffs: ResourceType[]
-	}) {
+	resolvePotency(p: Potency) {
+		p.resolve(this.game.time);
+
+		let pot = false;
+		p.modifiers.forEach(m=>{
+			if (m.source==="pot") pot = true;
+		});
+
 		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.DamageMark,
-				potency: props.potency,
-				buffs: props.buffs,
+				potency: p.getAmount({tincturePotencyMultiplier: this.game.getTincturePotencyMultiplier()}),
+				buffs: pot ? [ResourceType.Tincture] : [],
 				time: this.game.time,
 				displayTime: this.game.getDisplayTime(),
-				source: props.source
+				source: p.sourceSkill + "@" + (p.sourceTime - this.gameConfig.countdown).toFixed(2)
 			});
 
 			// time, damageSource, potency, cumulativePotency
 			this.#statsCsv.push({
 				time: this.game.getDisplayTime(),
-				damageSource: props.source,
-				potency: props.potency,
-				buffs: props.buffs
+				damageSource: p.sourceSkill + "@" + p.sourceTime,
+				potency: p.getAmount({tincturePotencyMultiplier: this.game.getTincturePotencyMultiplier()}),
+				buffs: pot ? [ResourceType.Tincture] : [],
 			});
 		}
 
@@ -798,7 +804,7 @@ class Controller {
 				if (currentReplayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
 					if (status.status === SkillReadyStatus.Ready) {
 						//======== tick wait block ========
-						// todo: clean up this code...
+						// qol: clean up this code...
 						let deltaTime = 0;
 						if (props.maxReplayTime >= 0) {
 							deltaTime = waitDuration;

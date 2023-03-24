@@ -70,7 +70,7 @@ let renderingProps: TimelineRenderingProps = {
 
 let readback_pointerMouse = false;
 
-// todo: event capture mask? So can provide a layer that overwrites keyboard event only and not affect the rest
+// qol: event capture mask? So can provide a layer that overwrites keyboard event only and not affect the rest
 // all coordinates in canvas space
 function testInteraction(
 	rect: Rect,
@@ -277,11 +277,8 @@ function drawDamageMarks(
 		dm.buffs.forEach(b=>{
 			if (b===ResourceType.Tincture) pot = true;
 		});
-		// potency
-		let potency = dm.potency;
-		if (pot) potency *= renderingProps.tincturePotencyMultiplier;
 		// hover text
-		let hoverText = "[" + dm.displayTime.toFixed(2) + "] " + potency.toFixed(2) + " (" + dm.source + ")";
+		let hoverText = "[" + dm.displayTime.toFixed(2) + "] " + dm.potency.toFixed(2) + " (" + dm.source + ")";
 		if (pot) hoverText += " (pot)"
 		testInteraction(
 			{x: x-3, y: 0, w: 6, h: 6},
@@ -426,11 +423,8 @@ function drawSkills(
 		if (node.hasBuff(ResourceType.LeyLines)) description += localize({en: " (LL)", zh: " (黑魔纹)"});
 		if (node.hasBuff(ResourceType.Tincture)) description += localize({en: " (pot)", zh: "(爆发药)"});
 		let lines = [description];
-		let potency = node.getPotency();
+		let potency = node.getPotency({tincturePotencyMultiplier: renderingProps.tincturePotencyMultiplier});
 		if (potency > 0) {
-			if (node.hasBuff(ResourceType.Tincture))  {
-				potency *= renderingProps.tincturePotencyMultiplier;
-			}
 			lines.push(localize({en: "potency: ", zh: "威力："}) + potency.toFixed(2));
 			let lockDuration = 0;
 			if (node.tmp_endLockTime!==undefined && node.tmp_startLockTime!==undefined) {
