@@ -89,12 +89,16 @@ export class ActionNode {
 	}
 
 	getPotency(props: {tincturePotencyMultiplier: number}) {
-		//return this.#resolved ? this.#capturedPotency : 0;
-		let sum = 0;
+		let applied = 0;
+		let unapplied = 0;
 		this.#potencies.forEach(p=>{
-			if (p.hasResolved()) sum += p.getAmount(props);
+			if (p.hasResolved()) applied += p.getAmount(props);
+			else unapplied += p.getAmount(props);
 		});
-		return sum;
+		return {
+			applied: applied,
+			unapplied: unapplied
+		};
 	}
 
 	getPotencies() {
@@ -159,6 +163,15 @@ export class Line {
 			});
 			return lastMatch;
 		}
+	}
+	getTotalPotency(props: {tincturePotencyMultiplier: number}) {
+		let res = {applied: 0, unapplied: 0};
+		this.iterateAll(node => {
+			let p = node.getPotency(props);
+			res.applied += p.applied;
+			res.unapplied += p.unapplied;
+		});
+		return res;
 	}
 	serialized(): {name: string, actions: object[]} {
 		let list = [];
@@ -267,7 +280,7 @@ export class Record extends Line {
 		}
 		let potency = 0;
 		this.iterateSelected(node=>{
-			potency += node.getPotency({tincturePotencyMultiplier: tincturePotencyMultiplier});
+			potency += node.getPotency({tincturePotencyMultiplier: tincturePotencyMultiplier}).applied;
 		});
 
 		let selectionStart = this.getFirstSelection()?.tmp_startLockTime ?? 0;

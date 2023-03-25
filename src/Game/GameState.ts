@@ -26,9 +26,8 @@ export class GameState {
 	skillsList: SkillsList;
 
 	#lastDamageApplicationTime: number;
-	#tincturePotencyMultiplier: number;
 
-	constructor(config: GameConfig, tincturePotencyMultiplier: number) {
+	constructor(config: GameConfig) {
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
 		this.#nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
@@ -99,9 +98,6 @@ export class GameState {
 		this.skillsList = new SkillsList(this);
 
 		this.#lastDamageApplicationTime = 0;
-		//this.#potencyList = [];
-		//this.#cumulativePotency = 0;
-		this.#tincturePotencyMultiplier = tincturePotencyMultiplier;
 
 		this.#init();
 	}
@@ -226,11 +222,6 @@ export class GameState {
 		return (this.time - this.config.countdown);
 	}
 
-	setTincturePotencyMultiplier(val: number) {
-		this.#tincturePotencyMultiplier = val;
-		// todo: now have to update cumulative potency?
-	}
-
 	switchToAForUI(rscType: ResourceType, numStacks: number) {
 		let af = this.resources.get(ResourceType.AstralFire);
 		let ui = this.resources.get(ResourceType.UmbralIce);
@@ -316,8 +307,6 @@ export class GameState {
 			return true;
 		}
 	}
-
-	getTincturePotencyMultiplier() { return this.#tincturePotencyMultiplier; }
 
 	castSpell(
 		skillName: SkillName,

@@ -423,7 +423,7 @@ function drawSkills(
 		if (node.hasBuff(ResourceType.LeyLines)) description += localize({en: " (LL)", zh: " (黑魔纹)"});
 		if (node.hasBuff(ResourceType.Tincture)) description += localize({en: " (pot)", zh: "(爆发药)"});
 		let lines = [description];
-		let potency = node.getPotency({tincturePotencyMultiplier: renderingProps.tincturePotencyMultiplier});
+		let potency = node.getPotency({tincturePotencyMultiplier: renderingProps.tincturePotencyMultiplier}).applied;
 		if (potency > 0) {
 			lines.push(localize({en: "potency: ", zh: "威力："}) + potency.toFixed(2));
 			let lockDuration = 0;

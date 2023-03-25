@@ -49,9 +49,7 @@ function TimelineActionElement(props: {
     return <div style={style} ref={props.refObj ?? null} onClick={(e)=>{
         setHandledSkillSelectionThisFrame(true);
 		if (recordIsDirty) {
-			props.belongingRecord.onClickNode(props.node, e.shiftKey, controller.game.getTincturePotencyMultiplier());
-			console.log("clicked: ");
-			console.log(props.node.getNodeIndex());
+			props.belongingRecord.onClickNode(props.node, e.shiftKey, controller.getTincturePotencyMultiplier());
 			refreshTimelineEditor();
 		} else {
 			controller.timeline.onClickTimelineAction(props.node, e.shiftKey);

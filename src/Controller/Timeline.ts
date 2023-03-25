@@ -301,7 +301,7 @@ export class Timeline {
 
 	onClickTimelineAction(node: ActionNode, bShift: boolean) {
 
-		let selectResult = controller.record.onClickNode(node, bShift, controller.game.getTincturePotencyMultiplier());
+		let selectResult = controller.record.onClickNode(node, bShift, controller.getTincturePotencyMultiplier());
 
 		let gcdSkills = 0;
 		controller.record.iterateSelected(node=>{
