@@ -1,7 +1,7 @@
 import {FileType} from "./Common";
 import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
-import {InitialPotencyProps, Potency} from "../Game/Potency";
+import {Potency} from "../Game/Potency";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -82,23 +82,30 @@ export class ActionNode {
 
 	// true if empty or any damage is resolved.
 	resolved() {
-		this.#potencies.forEach(p=>{
-			if (p.hasResolved()) return true;
-		});
-		return this.#potencies.length === 0;
+		if (this.#potencies.length === 0) return true;
+		if (this.#potencies.length === 1) return this.#potencies[0].hasResolved();
+
+		return this.#potencies[0].hasResolved();
 	}
 
 	getPotency(props: {tincturePotencyMultiplier: number}) {
-		let applied = 0;
-		let unapplied = 0;
-		this.#potencies.forEach(p=>{
-			if (p.hasResolved()) applied += p.getAmount(props);
-			else unapplied += p.getAmount(props);
-		});
-		return {
-			applied: applied,
-			unapplied: unapplied
+		let res = {
+			applied: 0,
+			snapshottedButPending: 0
 		};
+		this.#potencies.forEach(p=>{
+			if (p.hasResolved()) res.applied += p.getAmount(props);
+			else if (p.hasSnapshotted()) res.snapshottedButPending += p.getAmount(props);
+		});
+		return res;
+	}
+
+	removeUnresolvedPotencies() {
+		for (let i = this.#potencies.length - 1; i >= 0; i--) {
+			if (!this.#potencies[i].hasResolved()) {
+				this.#potencies.splice(i, 1);
+			}
+		}
 	}
 
 	getPotencies() {
@@ -165,11 +172,11 @@ export class Line {
 		}
 	}
 	getTotalPotency(props: {tincturePotencyMultiplier: number}) {
-		let res = {applied: 0, unapplied: 0};
+		let res = {applied: 0, snapshottedButPending: 0};
 		this.iterateAll(node => {
 			let p = node.getPotency(props);
 			res.applied += p.applied;
-			res.unapplied += p.unapplied;
+			res.snapshottedButPending += p.snapshottedButPending;
 		});
 		return res;
 	}

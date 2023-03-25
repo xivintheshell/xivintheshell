@@ -616,7 +616,6 @@ export class Config extends React.Component {
 			initialResourceOverrides: config.initialResourceOverrides // info only
 		});
 		controller.updateAllDisplay();
-		controller.updateCumulativeStatsDisplay();
 	}
 
 	componentWillUnmount() {

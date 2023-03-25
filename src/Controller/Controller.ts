@@ -21,6 +21,7 @@ import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {StaticFn} from "../Components/Common";
 import {TimelineRenderingProps} from "../Components/TimelineCanvas";
 import {Potency} from "../Game/Potency";
+import {updateDamageStats} from "../Components/DamageStatistics";
 
 type Fixme = any;
 
@@ -36,7 +37,8 @@ class Controller {
 	gameConfig;
 	record;
 	game;
-	#tincturePotencyMultiplier = 1;
+	#tinctureBuffPercentage = 0;
+	#lastDamageApplicationTime;
 	#statsCsv : {
 		time: number,
 		damageSource: string,
@@ -80,6 +82,8 @@ class Controller {
 		this.record = new Record();
 		this.record.config = this.gameConfig;
 
+		this.#lastDamageApplicationTime = -this.gameConfig.countdown; // left of timeline origin
+
 		// meaningless at the beginning
 		this.savedHistoricalGame = this.game;
 		this.savedHistoricalRecord = this.record;
@@ -92,6 +96,7 @@ class Controller {
 		this.updateStatusDisplay(game);
 		this.updateSkillButtons(game);
 		this.updateTimelineDisplay();
+		this.#updateDamageStats();
 	}
 
 	#applyResourceOverrides(gameConfig: GameConfig) {
@@ -106,6 +111,7 @@ class Controller {
 		this.#bCalculatingHistoricalState = true;
 		let tmpGame = this.game;
 		let tmpRecord = this.record;
+		let tmpLastDamageApplicationTime = this.#lastDamageApplicationTime;
 		//============^ stashed states ^============
 
 		fn();
@@ -116,6 +122,7 @@ class Controller {
 		this.savedHistoricalRecord = this.record;
 		this.game = tmpGame;
 		this.record = tmpRecord;
+		this.#lastDamageApplicationTime = tmpLastDamageApplicationTime;
 	}
 
 	checkRecordValidity(inRecord: Record, firstEditedNode: ActionNode | undefined) {
@@ -142,6 +149,7 @@ class Controller {
 			this.game = new GameState(cfg);
 			this.record = new Record();
 			this.record.config = cfg;
+			this.#lastDamageApplicationTime = -cfg.countdown;
 
 			// apply resource overrides
 			this.#applyResourceOverrides(this.record.config);
@@ -174,12 +182,13 @@ class Controller {
 			this.game = new GameState(this.gameConfig);
 			this.record = new Record();
 			this.record.config = this.gameConfig;
+			this.#lastDamageApplicationTime = -this.gameConfig.countdown;
 
 			// apply resource overrides
 			this.#applyResourceOverrides(this.record.config);
 
 			// clear stats
-			this.updateCumulativeStatsDisplay();
+			this.#updateDamageStats();
 
 			// replay skills sequence
 			this.#replay({
@@ -201,6 +210,7 @@ class Controller {
 			this.updateStatusDisplay(this.game);
 			this.updateSkillButtons(this.game);
 			updateSkillSequencePresetsView();
+			this.#updateDamageStats();
 			// timeline
 			this.timeline.drawElements();
 		});
@@ -219,7 +229,6 @@ class Controller {
 		});
 		setHistorical(false);
 		this.updateAllDisplay(this.game);
-		this.updateCumulativeStatsDisplay();
 	}
 
 	#requestRestart() {
@@ -228,11 +237,11 @@ class Controller {
 		this.#playPause({shouldLoop: false});
 		this.timeline.reset();
 		this.record.unselectAll();
+		this.#lastDamageApplicationTime = -this.gameConfig.countdown;
 		this.#statsCsv = [];
 		this.#bAddingLine = false;
 		this.#bInterrupted = false;
 		this.displayingUpToDateGameState = true;
-		let gcd = this.game.config.adjustedCastTime(2.5).toFixed(2);
 	}
 
 	getPresetLines() {
@@ -353,7 +362,7 @@ class Controller {
 			if (node.skillName!==undefined && node.resolved()) {
 				let entry = m.get(node.skillName) ?? {count: 0, potencySum: 0};
 				entry.count += 1;
-				entry.potencySum += node.getPotency({tincturePotencyMultiplier: this.#tincturePotencyMultiplier}).applied;
+				entry.potencySum += node.getPotency({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}).applied;
 				m.set(node.skillName, entry);
 			}
 		};
@@ -365,48 +374,51 @@ class Controller {
 		return m;
 	}
 
-	// called by reset, reportDamage, displayCurrentState
-	updateCumulativeStatsDisplay() {
-		let cumulativePotency = this.record.getTotalPotency({tincturePotencyMultiplier: this.#tincturePotencyMultiplier}).applied;
-		let totalTime = this.game.getLastDamageApplicationDisplayTime();
+	// called by reset, resolvePotency, displayCurrentState
+	#updateDamageStats() {
+		let totalPotency = this.record.getTotalPotency({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()});
 
-		let gcdSkills = 0;
-		let selectedGcdSkills = 0;
+		let gcdSkills = {applied: 0, pending: 0};
 		this.record.iterateAll(node=>{
-			if (node.type === ActionType.Skill && node.resolved() && node.skillName) {
+			if (node.type === ActionType.Skill && node.skillName) {
 				let skillInfo = this.game.skillsList.get(node.skillName);
-				if (skillInfo.info.cdName === ResourceType.cd_GCD) gcdSkills++;
+				if (skillInfo.info.cdName === ResourceType.cd_GCD) {
+					if (node.resolved()) gcdSkills.applied++;
+					else gcdSkills.pending++;
+				}
 			}
 		});
 
-		updateStatsDisplay({
-			cumulativePotency: cumulativePotency,
-			cumulativeDuration: Math.max(0, totalTime),
-			historical: this.#bCalculatingHistoricalState,
-			statsBySkill: this.#getPotencyStatsBySkill(false),
-			selectedStatsBySkill: this.#getPotencyStatsBySkill(true),
-			gcdCount: gcdSkills
+		updateDamageStats({
+			tinctureBuffPercentage: this.#tinctureBuffPercentage,
+			totalPotency: {applied: totalPotency.applied, pending: totalPotency.snapshottedButPending},
+			lastDamageApplicationTime: this.#lastDamageApplicationTime,
+			countdown: this.gameConfig.countdown,
+			gcdSkills: gcdSkills
 		});
 	}
-	setTincturePotencyMultiplier(inMultiplier: number) {
+	getTincturePotencyMultiplier() {
+		return 1 + this.#tinctureBuffPercentage * 0.01;
+	}
+	setTinctureBuffPercentage(percentage: number) {
 		// updates cumulative sum
-		this.#tincturePotencyMultiplier = inMultiplier;
+		this.#tinctureBuffPercentage = percentage;
 		// refresh stats
 		let selectedPotency = 0;
 		this.record.iterateSelected(node=>{
-			selectedPotency += node.getPotency({tincturePotencyMultiplier: inMultiplier}).applied;
+			selectedPotency += node.getPotency({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}).applied;
 		});
+		/*
 		updateStatsDisplay({
-			cumulativePotency: this.record.getTotalPotency({tincturePotencyMultiplier: this.#tincturePotencyMultiplier}),
+			cumulativePotency: this.record.getTotalPotency({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}),
 			selectedPotency: selectedPotency,
 			statsBySkill: this.#getPotencyStatsBySkill(false),
 			selectedStatsBySkill: this.#getPotencyStatsBySkill(true)
 		});
+		 */
 		this.displayCurrentState();
 		updateTimelineView();
 	}
-
-	getTincturePotencyMultiplier() { return this.#tincturePotencyMultiplier; }
 
 	getTimelineRenderingProps(): TimelineRenderingProps {
 		return {
@@ -414,7 +426,7 @@ class Controller {
 			timelineHeight: this.timeline.getCanvasHeight(),
 			countdown: this.gameConfig.countdown,
 			scale: this.timeline.scale,
-			tincturePotencyMultiplier: this.#tincturePotencyMultiplier,
+			tincturePotencyMultiplier: this.getTincturePotencyMultiplier(),
 			elements: this.timeline.elements,
 			markers: this.timeline.markers,
 			selectionStartX: this.timeline.positionFromTime(this.record.getFirstSelection()?.tmp_startLockTime ?? 0),
@@ -435,6 +447,7 @@ class Controller {
 
 	resolvePotency(p: Potency) {
 		p.resolve(this.game.time);
+		this.#lastDamageApplicationTime = this.game.time;
 
 		let pot = false;
 		p.modifiers.forEach(m=>{
@@ -444,7 +457,7 @@ class Controller {
 		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.DamageMark,
-				potency: p.getAmount({tincturePotencyMultiplier: this.#tincturePotencyMultiplier}),
+				potency: p.getAmount({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}),
 				buffs: pot ? [ResourceType.Tincture] : [],
 				time: this.game.time,
 				displayTime: this.game.getDisplayTime(),
@@ -455,12 +468,12 @@ class Controller {
 			this.#statsCsv.push({
 				time: this.game.getDisplayTime(),
 				damageSource: p.sourceSkill + "@" + p.sourceTime,
-				potency: p.getAmount({tincturePotencyMultiplier: this.#tincturePotencyMultiplier}),
+				potency: p.getAmount({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}),
 				buffs: pot ? [ResourceType.Tincture] : [],
 			});
 		}
 
-		this.updateCumulativeStatsDisplay();
+		this.#updateDamageStats();
 	}
 
 	reportLucidTick(time: number, source: string) {
@@ -925,7 +938,7 @@ class Controller {
 				if (b===ResourceType.Tincture) pot = true;
 			});
 			let potency = row.potency;
-			if (pot) potency *= this.#tincturePotencyMultiplier;
+			if (pot) potency *= this.getTincturePotencyMultiplier();
 			return [row.time, row.damageSource, potency];
 		});
 		return [["time", "damageSource", "potency"]].concat(csvRows as any[][]);

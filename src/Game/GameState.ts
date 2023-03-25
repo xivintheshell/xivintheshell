@@ -25,8 +25,6 @@ export class GameState {
 	eventsQueue: Event[];
 	skillsList: SkillsList;
 
-	#lastDamageApplicationTime: number;
-
 	constructor(config: GameConfig) {
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
@@ -96,8 +94,6 @@ export class GameState {
 
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = new SkillsList(this);
-
-		this.#lastDamageApplicationTime = 0;
 
 		this.#init();
 	}
@@ -287,8 +283,6 @@ export class GameState {
 		return mod.spellRecastTimeScale;
 	}
 
-	getLastDamageApplicationDisplayTime() { return this.#lastDamageApplicationTime - this.config.countdown; }
-
 	requestToggleBuff(buffName: ResourceType) {
 		let rsc = this.resources.get(buffName);
 		// only ley lines can be enabled / disabled. Everything else will just be canceled
@@ -308,13 +302,14 @@ export class GameState {
 		}
 	}
 
-	castSpell(
+	castSpell(props: {
 		skillName: SkillName,
+		onButtonPress?: ()=>void, // used by T3, after main potency node is attached
 		onCapture: (cap: SkillCaptureCallbackInfo)=>void,
 		onApplication: (app: SkillApplicationCallbackInfo)=>void,
-		node: ActionNode)
+		node: ActionNode})
 	{
-		let skill = this.skillsList.get(skillName);
+		let skill = this.skillsList.get(props.skillName);
 		let skillInfo = skill.info;
 		console.assert(skillInfo.isSpell);
 		let cd = this.cooldowns.get(skillInfo.cdName);
@@ -322,47 +317,51 @@ export class GameState {
 		let capturedCast = this.captureSpellCastTime(skillInfo.aspect, this.config.adjustedCastTime(skillInfo.baseCastTime));
 		let capturedCastTime = capturedCast.castTime;
 		if (capturedCast.llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
-			node.addBuff(ResourceType.LeyLines);
+			props.node.addBuff(ResourceType.LeyLines);
 		}
 
 		let skillTimeRaw = this.time;
-		let skillTime = this.getDisplayTime();
+
+		// attach potency node
+		let potency = new Potency({
+			sourceTime: skillTimeRaw,
+			sourceSkill: props.skillName,
+			aspect: skillInfo.aspect,
+			basePotency: skillInfo.basePotency,
+			snapshotTime: undefined,
+			description: "some description",
+		});
+		props.node.addPotency(potency);
+
+		// used by T3 only
+		if (props.onButtonPress) props.onButtonPress();
 
 		let takeEffect = function(game: GameState) {
 			let resourcesStillAvailable = skill.available();
-			let sourceName = skillInfo.name + "@"+skillTime.toFixed(2)
 			if (resourcesStillAvailable) {
 				// re-capture them here, since game state might've changed (say, AF/UI fell off)
 				[capturedManaCost, uhConsumption] = game.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 
 				// actually deduct resources (except some special ones like Paradox, Despair and Flare that deduct resources in onCapture fn)
-				if (skillName !== SkillName.Flare && skillName !== SkillName.Despair) {
-					if (!(skillName===SkillName.Paradox && game.getIceStacks()>0)) game.resources.get(ResourceType.Mana).consume(capturedManaCost);
+				if (props.skillName !== SkillName.Flare && props.skillName !== SkillName.Despair) {
+					if (!(props.skillName===SkillName.Paradox && game.getIceStacks()>0)) game.resources.get(ResourceType.Mana).consume(capturedManaCost);
 					if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
 				}
 
 				// potency
-				let potency = new Potency({
-					sourceTime: skillTimeRaw,
-					sourceSkill: skillName,
-					aspect: skillInfo.aspect,
-					basePotency: skillInfo.basePotency,
-					snapshotTime:game.time,
-					description: "some description",
-				});
+				potency.snapshotTime = game.time;
 				potency.modifiers = getPotencyModifiersFromResourceState(game.resources, skillInfo.aspect);
-				node.addPotency(potency);
 
 				// tincture
 				if (game.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
-					node.addBuff(ResourceType.Tincture);
+					props.node.addBuff(ResourceType.Tincture);
 				}
 
 				let captureInfo: SkillCaptureCallbackInfo = {
 					capturedManaCost: capturedManaCost
 					//...
 				};
-				onCapture(captureInfo);
+				props.onCapture(captureInfo);
 
 				// effect application
 				game.addEvent(new Event(
@@ -373,7 +372,7 @@ export class GameState {
 						let applicationInfo: SkillApplicationCallbackInfo = {
 							//...
 						};
-						onApplication(applicationInfo);
+						props.onApplication(applicationInfo);
 					}));
 				return true;
 			} else {
@@ -389,11 +388,11 @@ export class GameState {
 			cd.useStack(game);
 
 			// animation lock
-			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(skillName));
+			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(props.skillName));
 		}
 
 		// Paradox made instant via UI
-		if (skillName === SkillName.Paradox && this.getIceStacks() > 0) {
+		if (props.skillName === SkillName.Paradox && this.getIceStacks() > 0) {
 			instantCast(this, undefined);
 			return;
 		}
@@ -426,7 +425,7 @@ export class GameState {
 			let success = takeEffect(this);
 			if (!success) {
 				controller.reportInterruption({
-					failNode: node
+					failNode: props.node
 				});
 			}
 		}));

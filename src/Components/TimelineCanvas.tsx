@@ -216,7 +216,7 @@ function drawMPTickMarks(
 
 		testInteraction(
 			{x: x-2, y: 30, w: 4, h: maxTimelineHeight-30},
-			[tick.displayTime.toFixed(2) + " " + tick.source]
+			["[" + tick.displayTime.toFixed(2) + "] " + tick.source]
 		);
 	});
 	ctx.stroke();

@@ -105,4 +105,6 @@ export class Potency {
 	}
 
 	hasResolved() { return this.applicationTime!==undefined; }
+
+	hasSnapshotted() { return this.snapshotTime !== undefined; }
 }

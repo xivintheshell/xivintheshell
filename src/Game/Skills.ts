@@ -191,18 +191,18 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game: GameState, node: ActionNode) => {
 				if (game.getFireStacks() === 0) // no AF
 				{
-					game.castSpell(SkillName.Blizzard, (cap: SkillCaptureCallbackInfo) => {
+					game.castSpell({skillName: SkillName.Blizzard, onCapture: (cap: SkillCaptureCallbackInfo) => {
 						game.resources.get(ResourceType.UmbralIce).gain(1);
 						game.startOrRefreshEnochian();
-					}, (app: SkillApplicationCallbackInfo) => {
-					}, node);
+					}, onApplication: (app: SkillApplicationCallbackInfo) => {
+					}, node: node});
 				} else // in AF
 				{
-					game.castSpell(SkillName.Blizzard, (cap: SkillCaptureCallbackInfo) => {
+					game.castSpell({skillName: SkillName.Blizzard, onCapture: (cap: SkillCaptureCallbackInfo) => {
 						game.resources.get(ResourceType.Enochian).removeTimer();
 						game.loseEnochian();
-					}, (app: SkillApplicationCallbackInfo) => {
-					}, node);
+					}, onApplication: (app: SkillApplicationCallbackInfo) => {
+					}, node: node});
 				}
 			}
 		));
@@ -242,19 +242,19 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				if (game.getIceStacks() === 0) { // in fire or no enochian
-					game.castSpell(SkillName.Fire, (cap: SkillCaptureCallbackInfo) => {
+					game.castSpell({skillName: SkillName.Fire, onCapture: (cap: SkillCaptureCallbackInfo) => {
 						game.resources.get(ResourceType.AstralFire).gain(1);
 						game.startOrRefreshEnochian();
 						potentiallyGainFirestarter(game);
-					}, (app: SkillApplicationCallbackInfo) => {
-					}, node);
+					}, onApplication: (app: SkillApplicationCallbackInfo) => {
+					}, node: node});
 				} else {
-					game.castSpell(SkillName.Fire, (cap: SkillCaptureCallbackInfo) => {
+					game.castSpell({skillName: SkillName.Fire, onCapture: (cap: SkillCaptureCallbackInfo) => {
 						game.resources.get(ResourceType.Enochian).removeTimer();
 						game.loseEnochian();
 						potentiallyGainFirestarter(game);
-					}, (app: SkillApplicationCallbackInfo) => {
-					}, node);
+					}, onApplication: (app: SkillApplicationCallbackInfo) => {
+					}, node: node});
 				}
 			}
 		));
@@ -330,6 +330,12 @@ export class SkillsList extends Map<SkillName, Skill> {
 			// if already has thunder applied; cancel the remaining ticks now.
 			dot.removeTimer();
 			tick.removeTimer();
+			// for all existing T3, remove unapplied potencies
+			controller.record.iterateAll(n=>{
+				if (n !== node && n.skillName === SkillName.Thunder3) {
+					n.removeUnresolvedPotencies();
+				}
+			});
 			// order of events: gain buff, add "remove" event,
 			dot.gain(1);
 			game.resources.addResourceEvent(ResourceType.ThunderDoT, "drop DoT", 30, (dot: Resource)=>{
@@ -339,18 +345,20 @@ export class SkillsList extends Map<SkillName, Skill> {
 			recurringThunderTick(10);
 		};
 
-		let addInitialT3Potencies = function(node: ActionNode) {
+		let addT3Potencies = function(node: ActionNode, includeInitial: boolean) {
 			let mods = getPotencyModifiersFromResourceState(game.resources, Aspect.Lightning);
-			// initial potency
-			let pInitial = new Potency({
-				sourceTime: game.time,
-				sourceSkill: SkillName.Thunder3,
-				aspect: Aspect.Lightning,
-				basePotency: 50,
-				snapshotTime: undefined,
-			});
-			pInitial.modifiers = mods;
-			node.addPotency(pInitial);
+			if (includeInitial) {
+				// initial potency
+				let pInitial = new Potency({
+					sourceTime: game.time,
+					sourceSkill: SkillName.Thunder3,
+					aspect: Aspect.Lightning,
+					basePotency: 50,
+					snapshotTime: undefined,
+				});
+				pInitial.modifiers = mods;
+				node.addPotency(pInitial);
+			}
 			// dots
 			for (let i = 0; i < 10; i++) {
 				let pDot = new Potency({
@@ -375,8 +383,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 				if (game.resources.get(ResourceType.Thundercloud).available(1)) // made instant via thundercloud
 				{
 					// potency
-					addInitialT3Potencies(node);
-					node.getPotencies()[0].base = 400;
+					addT3Potencies(node, true);
+					let p0 = node.getPotencies()[0];
+					p0.base = 400;
 					node.getPotencies().forEach(p=>{ p.snapshotTime = game.time; });
 
 					// tincture
@@ -387,7 +396,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					game.useInstantSkill({
 						skillName: SkillName.Thunder3,
 						onApplication: () => {
-							controller.resolvePotency(node.getPotencies()[0]);
+							controller.resolvePotency(p0);
 							applyThunderDoT(game, node);
 						},
 						dealDamage: false,
@@ -404,10 +413,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 						sc.removeTimer();
 					}
 				} else {
-					// potency
-					addInitialT3Potencies(node);
-
-					game.castSpell(SkillName.Thunder3, (cap: SkillCaptureCallbackInfo) => {
+					game.castSpell({skillName: SkillName.Thunder3, onButtonPress: () => {
+							// potency
+							addT3Potencies(node, false);
+						}, onCapture: (cap: SkillCaptureCallbackInfo) => {
 
 						// potency snapshot time
 						node.getPotencies().forEach(p=>{ p.snapshotTime = game.time });
@@ -423,9 +432,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 							sc.consume(1);
 							sc.removeTimer();
 						}
-					}, (app: SkillApplicationCallbackInfo) => {
+					}, onApplication: (app: SkillApplicationCallbackInfo) => {
 						applyThunderDoT(game, node);
-					}, node);
+					}, node: node});
 				}
 			}
 		));
@@ -468,11 +477,11 @@ export class SkillsList extends Map<SkillName, Skill> {
 					game.resources.get(ResourceType.Firestarter).consume(1);
 					game.resources.get(ResourceType.Firestarter).removeTimer();
 				} else {
-					game.castSpell(SkillName.Fire3, (cap: SkillCaptureCallbackInfo) => {
+					game.castSpell({skillName: SkillName.Fire3, onCapture: (cap: SkillCaptureCallbackInfo) => {
 						game.switchToAForUI(ResourceType.AstralFire, 3);
 						game.startOrRefreshEnochian();
-					}, (app: SkillApplicationCallbackInfo) => {
-					}, node);
+					}, onApplication: (app: SkillApplicationCallbackInfo) => {
+					}, node: node});
 				}
 			}
 		));
@@ -483,11 +492,11 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				game.castSpell(SkillName.Blizzard3, (cap: SkillCaptureCallbackInfo) => {
+				game.castSpell({skillName: SkillName.Blizzard3, onCapture: (cap: SkillCaptureCallbackInfo) => {
 					game.switchToAForUI(ResourceType.UmbralIce, 3);
 					game.startOrRefreshEnochian();
-				}, (app: SkillApplicationCallbackInfo) => {
-				}, node);
+				}, onApplication: (app: SkillApplicationCallbackInfo) => {
+				}, node: node});
 			}
 		));
 
@@ -497,10 +506,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return game.getIceStacks() > 0; // in UI
 			},
 			(game, node) => {
-				game.castSpell(SkillName.Freeze, (cap: SkillCaptureCallbackInfo) => {
+				game.castSpell({skillName: SkillName.Freeze, onCapture: (cap: SkillCaptureCallbackInfo) => {
 					game.resources.get(ResourceType.UmbralHeart).gain(3);
-				}, (app: SkillApplicationCallbackInfo) => {
-				}, node);
+				}, onApplication: (app: SkillApplicationCallbackInfo) => {
+				}, node: node});
 			}
 		));
 
@@ -511,7 +520,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					game.getMP() >= 800;
 			},
 			(game, node) => {
-				game.castSpell(SkillName.Flare, (cap: SkillCaptureCallbackInfo) => {
+				game.castSpell({skillName: SkillName.Flare, onCapture: (cap: SkillCaptureCallbackInfo) => {
 					let uh = game.resources.get(ResourceType.UmbralHeart);
 					let mana = game.resources.get(ResourceType.Mana);
 					let manaCost = uh.available(1) ? mana.availableAmount() * 0.66 : mana.availableAmount();
@@ -521,8 +530,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 					// +3 AF; refresh enochian
 					game.resources.get(ResourceType.AstralFire).gain(3);
 					game.startOrRefreshEnochian();
-				}, (app: SkillApplicationCallbackInfo) => {
-				}, node);
+				}, onApplication: (app: SkillApplicationCallbackInfo) => {
+				}, node: node});
 			}
 		));
 
@@ -535,10 +544,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return game.getIceStacks() > 0; // in UI
 			},
 			(game, node) => {
-				game.castSpell(SkillName.Blizzard4, (cap: SkillCaptureCallbackInfo) => {
+				game.castSpell({skillName: SkillName.Blizzard4, onCapture: (cap: SkillCaptureCallbackInfo) => {
 					game.resources.get(ResourceType.UmbralHeart).gain(3);
-				}, (app: SkillApplicationCallbackInfo) => {
-				}, node);
+				}, onApplication: (app: SkillApplicationCallbackInfo) => {
+				}, node: node});
 			}
 		));
 
@@ -548,9 +557,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return game.getFireStacks() > 0; // in AF
 			},
 			(game, node) => {
-				game.castSpell(SkillName.Fire4, (cap: SkillCaptureCallbackInfo) => {
-				}, (app: SkillApplicationCallbackInfo) => {
-				}, node);
+				game.castSpell({skillName: SkillName.Fire4, onCapture: (cap: SkillCaptureCallbackInfo) => {
+				}, onApplication: (app: SkillApplicationCallbackInfo) => {
+				}, node: node});
 			}
 		));
 
@@ -631,15 +640,15 @@ export class SkillsList extends Map<SkillName, Skill> {
 					game.getMP() >= 800;
 			},
 			(game, node) => {
-				game.castSpell(SkillName.Despair, (cap: SkillCaptureCallbackInfo) => {
+				game.castSpell({skillName: SkillName.Despair, onCapture: (cap: SkillCaptureCallbackInfo) => {
 					let mana = game.resources.get(ResourceType.Mana);
 					// mana
 					mana.consume(mana.availableAmount());
 					// +3 AF; refresh enochian
 					game.resources.get(ResourceType.AstralFire).gain(3);
 					game.startOrRefreshEnochian();
-				}, (app: SkillApplicationCallbackInfo) => {
-				}, node);
+				}, onApplication: (app: SkillApplicationCallbackInfo) => {
+				}, node: node});
 			}
 		));
 
@@ -684,11 +693,11 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				game.castSpell(SkillName.HighFire2, (cap: SkillCaptureCallbackInfo) => {
+				game.castSpell({skillName: SkillName.HighFire2, onCapture: (cap: SkillCaptureCallbackInfo) => {
 					game.switchToAForUI(ResourceType.AstralFire, 3);
 					game.startOrRefreshEnochian();
-				}, (app: SkillApplicationCallbackInfo) => {
-				}, node);
+				}, onApplication: (app: SkillApplicationCallbackInfo) => {
+				}, node: node});
 			}
 		));
 
@@ -698,11 +707,11 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				game.castSpell(SkillName.HighBlizzard2, (cap: SkillCaptureCallbackInfo) => {
+				game.castSpell({skillName: SkillName.HighBlizzard2, onCapture: (cap: SkillCaptureCallbackInfo) => {
 					game.switchToAForUI(ResourceType.UmbralIce, 3);
 					game.startOrRefreshEnochian();
-				}, (app: SkillApplicationCallbackInfo) => {
-				}, node);
+				}, onApplication: (app: SkillApplicationCallbackInfo) => {
+				}, node: node});
 			}
 		));
 
@@ -730,7 +739,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return game.resources.get(ResourceType.Paradox).available(1);
 			},
 			(game, node) => {
-				game.castSpell(SkillName.Paradox, (cap: SkillCaptureCallbackInfo) => {
+				game.castSpell({skillName: SkillName.Paradox, onCapture: (cap: SkillCaptureCallbackInfo) => {
 					game.resources.get(ResourceType.Paradox).consume(1);
 					// enochian (refresh only
 					if (game.hasEnochian()) {
@@ -743,8 +752,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.resources.get(ResourceType.AstralFire).gain(1);
 						potentiallyGainFirestarter(game);
 					}
-				}, (app: SkillApplicationCallbackInfo) => {
-				}, node);
+				}, onApplication: (app: SkillApplicationCallbackInfo) => {
+				}, node: node});
 			}
 		));
 

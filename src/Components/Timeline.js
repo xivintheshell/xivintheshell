@@ -118,6 +118,7 @@ class TimelineMain extends React.Component {
 
 export let updateStatsDisplay = ()=>{}
 
+/*
 class StatsDisplay extends React.Component {
 	constructor(props) {
 		super(props);
@@ -189,6 +190,7 @@ class StatsDisplay extends React.Component {
 		</div>;
 	}
 }
+ */
 
 class TimelineDisplaySettings extends React.Component {
 	constructor(props) {
@@ -217,7 +219,7 @@ class TimelineDisplaySettings extends React.Component {
 
 			let percentage = parseFloat(val);
 			if (!isNaN(percentage)) {
-				controller.setTincturePotencyMultiplier(1 + percentage * 0.01);
+				controller.setTinctureBuffPercentage(percentage);
 				localStorage.setItem("tinctureBuffPercentage", val);
 			}
 		}).bind(this);
@@ -261,11 +263,12 @@ export class Timeline extends React.Component {
 			borderTop: "2px solid " + getCurrentThemeColors().bgHighContrast,
 			flex: 0
 		}}>
+			{/*
 			<Expandable
 				title={"Damage stats"}
 				defaultShow={false}
 				content={<StatsDisplay/>}
-			/>
+			/>*/}
 			<TimelineMain/>
 			<TimelineDisplaySettings/>
 			<TimelineMarkerPresets/>
