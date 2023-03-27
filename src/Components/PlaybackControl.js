@@ -193,7 +193,7 @@ function ResourceOverrideDisplay(props) {
 		if (props.rscInfo.maxValue > 1) str += " (amount: " + props.override.stacks + ")";
 		if (props.rscInfo.maxTimeout >= 0) {
 			if (props.override.type === ResourceType.Polyglot) {
-				str += " next stack ready in " + props.override.timeTillFullOrDrop + "s";
+				if (props.override.timeTillFullOrDrop > 0) str += " next stack ready in " + props.override.timeTillFullOrDrop + "s";
 			} else {
 				str += " drops in " + props.override.timeTillFullOrDrop + "s";
 			}
@@ -405,6 +405,12 @@ export class Config extends React.Component {
 		let inputOverrideTimer = parseFloat(this.state.overrideTimer);
 		let inputOverrideStacks = parseInt(this.state.overrideStacks);
 		let inputOverrideEnabled = this.state.overrideEnabled;
+
+		// an exception for polyglot: leave empty := no timer set
+		if (rscType === ResourceType.Polyglot && this.state.overrideTimer === "") {
+			inputOverrideTimer = 0;
+		}
+
 		if (isNaN(inputOverrideStacks) || isNaN(inputOverrideTimer)) {
 			window.alert("some inputs are not numbers!");
 			return;
@@ -461,7 +467,7 @@ export class Config extends React.Component {
 		let S = new Set();
 		this.state.initialResourceOverrides.forEach(override=>{
 			S.add(override.type);
-		})
+		});
 
 		let counter = 0;
 		for (let k of resourceInfos.keys()) {
@@ -507,11 +513,15 @@ export class Config extends React.Component {
 				showEnabled = (rscType === ResourceType.LeyLines);
 			}
 
+			let timerDesc;
+			if (info.isCoolDown) timerDesc = "Time till full: ";
+			else if (rscType === ResourceType.Polyglot) timerDesc = "Time till next stack: ";
+			else timerDesc = "Time till drop: ";
 			inputSection = <div style={{margin: "6px 0"}}>
 
 				{/*timer*/}
 				<div hidden={!showTimer}>
-					<Input description={info.isCoolDown ? "Time till full: " : (rscType===ResourceType.Polyglot ? "Time till next stack: " : "Time till drop: ")}
+					<Input description={timerDesc}
 						   defaultValue={timerDefaultValue}
 						   onChange={timerOnChange}/>
 				</div>

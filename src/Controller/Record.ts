@@ -171,15 +171,6 @@ export class Line {
 			return lastMatch;
 		}
 	}
-	getTotalPotency(props: {tincturePotencyMultiplier: number}) {
-		let res = {applied: 0, snapshottedButPending: 0};
-		this.iterateAll(node => {
-			let p = node.getPotency(props);
-			res.applied += p.applied;
-			res.snapshottedButPending += p.snapshottedButPending;
-		});
-		return res;
-	}
 	serialized(): {name: string, actions: object[]} {
 		let list = [];
 		let itr = this.head;
@@ -227,6 +218,16 @@ export class Record extends Line {
 	}
 	addActionNodeWithoutVerify(actionNode: ActionNode) {
 		super.addActionNode(actionNode);
+	}
+
+	getTotalPotency(props: {tincturePotencyMultiplier: number}) {
+		let res = {applied: 0, snapshottedButPending: 0};
+		this.iterateAll(node => {
+			let p = node.getPotency(props);
+			res.applied += p.applied;
+			res.snapshottedButPending += p.snapshottedButPending;
+		});
+		return res;
 	}
 
 	iterateSelected(fn: (node: ActionNode) => void): void {
