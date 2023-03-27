@@ -399,7 +399,7 @@ function drawSkills(
 			if (node.tmp_endLockTime!==undefined && node.tmp_startLockTime!==undefined) {
 				lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
 			}
-			lines.push(localize({en: "duration: ", zh: "用时："}) + lockDuration.toFixed(2));
+			lines.push(localize({en: "duration: ", zh: "耗时："}) + lockDuration.toFixed(2));
 		}
 		testInteraction(
 			{x: icon.x, y: icon.y, w: 28, h: 28},

@@ -8,6 +8,7 @@ import {localize, localizeSkillName} from "./Localization";
 import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
 import {getCurrentThemeColors} from "./ColorTheme";
+import {Skill} from "../Game/Skills";
 
 export let displayedSkills = [
 	SkillName.Blizzard,
@@ -129,10 +130,14 @@ class SkillButton extends React.Component {
 			let colors = getCurrentThemeColors();
 			let s = "";
 			if (info.status === SkillReadyStatus.Ready) {
-				let en = "ready (" + info.stacksAvailable + " stack";
-				if (info.stacksAvailable > 1) en += "s";
+				let en = "ready (" + info.stacksAvailable;
+				let zh = "可释放 (" + info.stacksAvailable;
+				if (info.timeTillNextStackReady > 0) {
+					en += ") (next stack ready in " + info.timeTillNextStackReady.toFixed(2);
+					zh += ") (下一层" + info.timeTillNextStackReady.toFixed(2) + "秒后转好";
+				}
 				en += ")";
-				let zh = "可释放 (" + info.stacksAvailable + ")";
+				zh += ")";
 				s = localize({en: en, zh: zh});
 			}
 			else if (info.status === SkillReadyStatus.RequirementsNotMet) {
@@ -144,8 +149,8 @@ class SkillButton extends React.Component {
 				});
 			} else if (info.status === SkillReadyStatus.Blocked) {
 				s += localize({
-					en: "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (CD ready in " + info.cdReadyCountdown.toFixed(2) + ")",
-					zh: "预计" + info.timeTillAvailable.toFixed(2) + "秒后可释放（" + info.cdReadyCountdown.toFixed(2) + "秒后转好CD）"
+					en: "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (next stack ready in " + info.timeTillNextStackReady.toFixed(2) + ")",
+					zh: "预计" + info.timeTillAvailable.toFixed(2) + "秒后可释放（" + info.timeTillNextStackReady.toFixed(2) + "秒后转好下一层CD）"
 				});
 			}
 			// if ready, also show captured cast time & time till damage application
@@ -166,17 +171,64 @@ class SkillButton extends React.Component {
 	}
 	render() {
 		let iconPath = skillIcons.get(this.props.skillName);
+		let iconStyle = {
+			width: 48,
+			height: 48,
+			verticalAlign: "top",
+			position: "relative",
+			display: "inline-block"
+		};
+		let iconImgStyle = {
+			width: 40,
+			height: 40,
+			position: "absolute",
+			top: 2,
+			left: "50%",
+			marginLeft: -20,
+			//filter: this.props.ready ? "none" : "brightness(0.6)"
+		};
+		let readyOverlay = "transparent";
+		if (!this.props.ready) {
+			readyOverlay = "rgba(0, 0, 0, 0.6)";
+		} else if (this.props.cdProgress !== 1) {
+			//readyOverlay = "radial-gradient(40px, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 1))";
+			readyOverlay = "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 85%, rgba(0,0,0,0.6) 100%)"
+		}
 		let icon = <div onMouseEnter={this.handleMouseEnter}>
-			<div className={"skillIcon" + (this.props.ready ? "" : " notReady")}><img src={iconPath} alt={this.props.skillName}/></div>
-			<img hidden = {!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" style={{
+			<div className={"skillIcon"} style={iconStyle}>
+				<img style={iconImgStyle} src={iconPath} alt={this.props.skillName}/>
+				<div style={{ // skill icon border
+					position: "absolute",
+					width: 48,
+					height: 48,
+					background: "url('https://miyehn.me/ffxiv-blm-rotation/misc/skillIcon_overlay.png') no-repeat"
+				}}></div>
+				<div style={{ // grey out
+					position: "absolute",
+					width: 40,
+					height: 41,
+					top: 1,
+					left: "50%",
+					marginLeft: -20,
+					borderRadius: 3,
+					zIndex: 1,
+					background: readyOverlay
+				}}></div>
+			</div>
+			<img hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" style={{
 				position: "absolute",
 				width: 44,
 				height: 44,
 				top: 0,
-				left: 2
+				left: 2,
+				zIndex: 1
 			}}/>
 		</div>;
-		let progressCircle = <ProgressCircle className="cdProgress" diameter={40} progress={this.props.cdProgress} color={"rgba(255,255,255,0.7)"}/>;
+		let progressCircle = <ProgressCircle
+			className="cdProgress"
+			diameter={40}
+			progress={this.props.cdProgress}
+			color={this.props.ready ? "rgba(255, 255, 255, 0.7)" : "rgba(255,255,255,0.7)"}/>;
 		return <span
 			title={this.skillName}
 			className={"skillButton"}
@@ -184,13 +236,12 @@ class SkillButton extends React.Component {
 			data-tooltip-html={
 				ReactDOMServer.renderToStaticMarkup(this.state.skillDescription)
 			} data-tooltip-id={"skillButton-" + this.props.skillName}>
-			{this.props.cdProgress === 1 ? "" : progressCircle}
 			<Clickable onClickFn={controller.displayingUpToDateGameState ? () => {
 				controller.requestUseSkill({skillName: this.props.skillName});
 				controller.updateAllDisplay();
 			} : undefined} content={icon}
 					   style={controller.displayingUpToDateGameState ? {} : {cursor: "not-allowed"}}/>
-			{/*<ReactTooltip id={"skillButton-" + this.props.skillName} className="info-tooltip" classNameArrow="info-tooltip-arrow"/>*/}
+			{this.props.cdProgress === 1 ? undefined : progressCircle}
 		</span>
 	}
 }
@@ -308,7 +359,7 @@ export class SkillsWindow extends React.Component {
 				highlight={info ? info.highlight : false}
 				skillName={skillName}
 				ready={info ? info.status===SkillReadyStatus.Ready : false}
-				cdProgress={info ? 1 - info.cdReadyCountdown / info.cdRecastTime : 1}
+				cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
 				/>
 			skillButtons.push(btn);
 		}

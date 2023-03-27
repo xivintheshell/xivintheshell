@@ -572,8 +572,8 @@ export class GameState {
 	#timeTillSkillAvailable(skillName: SkillName) {
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.info.cdName;
-		let tillNextCDStack = this.cooldowns.timeTillNextStackAvailable(cdName);
-		return Math.max(this.timeTillAnySkillAvailable(), tillNextCDStack);
+		let tillAnyCDStack = this.cooldowns.timeTillAnyStackAvailable(cdName);
+		return Math.max(this.timeTillAnySkillAvailable(), tillAnyCDStack);
 	}
 
 	timeTillAnySkillAvailable() {
@@ -608,7 +608,7 @@ export class GameState {
 		else if (!reqsMet) status = SkillReadyStatus.RequirementsNotMet;
 
 		let cd = this.cooldowns.get(skill.info.cdName);
-		let cdReadyCountdown = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
+		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
 		let cdRecastTime = cd.currentStackCd();
 
 		// to be displayed together when hovered on a skill
@@ -642,7 +642,7 @@ export class GameState {
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
 			cdRecastTime: cdRecastTime,
-			cdReadyCountdown: cdReadyCountdown,
+			timeTillNextStackReady: timeTillNextStackReady,
 			timeTillAvailable: timeTillAvailable,
 			timeTillDamageApplication: timeTillDamageApplication,
 			capturedManaCost: capturedManaCost,

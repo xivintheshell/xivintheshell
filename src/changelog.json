@@ -1,5 +1,12 @@
 [
 	{
+		"date": "3/27/23",
+		"changes": [
+			"always show recast progress bar when cd is not full (for skills with multiple stacks)",
+			"bugfix: another scenario that breaks the editor orz (moving around a sharpcast in a sequence of umbral souls)"
+		]
+	},
+	{
 		"date": "3/14/23",
 		"changes": [
 			"quick patch: put back 'apply changes' button"

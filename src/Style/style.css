@@ -59,31 +59,6 @@
     user-select: none;
     position: relative;
 }
-.skillIcon {
-    width: 48px;
-    height: 48px;
-    vertical-align: top;
-    position: relative;
-    display: inline-block;
-}
-.skillIcon.notReady {
-    filter: brightness(0.4);
-}
-.skillIcon>img {
-    width: 40px;
-    height: 40px;
-    position: absolute;
-    top: 2px;
-    left: 50%;
-    margin-left: -20px;
-}
-.skillIcon::after {
-    content: "";
-    background: url("https://miyehn.me/ffxiv-blm-rotation/misc/skillIcon_overlay.png") no-repeat;
-    width: 48px;
-    height: 48px;
-    position: absolute;
-}
 .cdProgress {
     position: absolute;
     z-index: 1;

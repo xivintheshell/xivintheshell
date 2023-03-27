@@ -50,6 +50,8 @@ function TimelineActionElement(props: {
         setHandledSkillSelectionThisFrame(true);
 		if (recordIsDirty) {
 			props.belongingRecord.onClickNode(props.node, e.shiftKey, controller.game.getTincturePotencyMultiplier());
+			console.log("clicked: ");
+			console.log(props.node.getNodeIndex());
 			refreshTimelineEditor();
 		} else {
 			controller.timeline.onClickTimelineAction(props.node, e.shiftKey);
@@ -204,17 +206,15 @@ export class TimelineEditor extends React.Component {
 						let copy = this.getRecordCopy();
 						let firstEditedNode = copy.moveSelected(-1);
 						let status = controller.checkRecordValidity(copy, firstEditedNode);
+						if (firstEditedNode && status.straightenedIfValid) {
+							this.setState({
+								editedRecord: status.straightenedIfValid
+							});
+						}
 						this.setState({
 							recordValidStatus: status,
 							firstEditedNode: firstEditedNode
 						});
-						/*
-						if (status.isValid) {
-							controller.applyEditedRecord(copy, firstEditedNode);
-							controller.displayCurrentState();
-							this.markClean();
-						}
-						 */
 					}
 				}}>{localize({en: "move up", zh: "上移"})}</button>
 
@@ -225,17 +225,15 @@ export class TimelineEditor extends React.Component {
 						let copy = this.getRecordCopy();
 						let firstEditedNode = copy.moveSelected(1);
 						let status = controller.checkRecordValidity(copy, firstEditedNode);
+						if (firstEditedNode && status.straightenedIfValid) {
+							this.setState({
+								editedRecord: status.straightenedIfValid
+							});
+						}
 						this.setState({
 							recordValidStatus: status,
 							firstEditedNode: firstEditedNode
 						});
-						/*
-						if (status.isValid) {
-							controller.applyEditedRecord(copy, firstEditedNode);
-							controller.displayCurrentState();
-							this.markClean();
-						}
-						 */
 					}
 				}}>{localize({en: "move down", zh: "下移"})}</button>
 
@@ -245,6 +243,11 @@ export class TimelineEditor extends React.Component {
 						let copy = this.getRecordCopy();
 						let firstEditedNode = copy.deleteSelected();
 						let status = controller.checkRecordValidity(copy, firstEditedNode);
+						if (firstEditedNode && status.straightenedIfValid) {
+							this.setState({
+								editedRecord: status.straightenedIfValid
+							});
+						}
 						this.setState({
 							recordValidStatus: status,
 							firstEditedNOde: firstEditedNode

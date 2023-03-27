@@ -114,9 +114,8 @@ export class CoolDown extends Resource {
 		}
 	}
 	timeTillNextStackAvailable() {
-		let currentStacks = this.stacksAvailable();
-		if (currentStacks > 0) return 0;
-		return (this.#cdPerStack - this.availableAmount()) * this.#recastTimeScale;
+		if (this.availableAmount() === this.maxValue) return 0;
+		return (this.#cdPerStack - this.availableAmount() % this.#cdPerStack) * this.#recastTimeScale;
 	}
 }
 
@@ -146,6 +145,11 @@ export class CoolDownState extends Map<ResourceType, CoolDown> {
 	}
 	timeTillNextStackAvailable(cdName: ResourceType) {
 		let cd = this.get(cdName);
+		return cd.timeTillNextStackAvailable();
+	}
+	timeTillAnyStackAvailable(cdName: ResourceType) {
+		let cd = this.get(cdName);
+		if (cd.stacksAvailable() > 0) return 0;
 		return cd.timeTillNextStackAvailable();
 	}
 }

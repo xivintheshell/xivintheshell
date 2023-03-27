@@ -120,11 +120,12 @@ class Controller {
 
 		console.assert(inRecord.config !== undefined);
 
-		let result: {isValid: boolean, firstInvalidAction: ActionNode | undefined, invalidReason: string | undefined} = {
+		let result: {isValid: boolean, firstInvalidAction: ActionNode | undefined, invalidReason: string | undefined, straightenedIfValid: Record | undefined} = {
 			isValid: true,
 			firstInvalidAction: undefined,
-			invalidReason: undefined
-		}
+			invalidReason: undefined,
+			straightenedIfValid: undefined
+		};
 
 		// no edit happened
 		if (!firstEditedNode) {
@@ -147,16 +148,20 @@ class Controller {
 			let status = this.#replay({
 				line: inRecord,
 				replayMode: ReplayMode.Edited,
-				firstEditedNode: firstEditedNode
+				firstEditedNode: firstEditedNode,
+				selectionStart: inRecord.getFirstSelection(),
+				selectionEnd: inRecord.getLastSelection()
 			});
 
 			result.isValid = status.success;
 			result.firstInvalidAction = status.firstInvalidNode;
 			result.invalidReason = status.invalidReason;
+			if (status.success) {
+				result.straightenedIfValid = this.record;
+			}
 		});
 
 		return result;
-
 	}
 
 	// max replay time; cutoff action
@@ -484,7 +489,7 @@ class Controller {
 		let resourceLocksData = {
 			gcdReady: gcd.stacksAvailable() > 0,
 			gcd: gcd.currentStackCd(),
-			timeTillGCDReady: game.cooldowns.timeTillNextStackAvailable(ResourceType.cd_GCD),
+			timeTillGCDReady: game.cooldowns.timeTillAnyStackAvailable(ResourceType.cd_GCD),
 			castLocked: game.resources.timeTillReady(ResourceType.NotCasterTaxed) > 0,
 			castLockTotalDuration: cast.pendingChange ? cast.pendingChange.delay : 0,
 			castLockCountdown: game.resources.timeTillReady(ResourceType.NotCasterTaxed),
@@ -712,6 +717,8 @@ class Controller {
 		maxReplayTime?: number,
 		cutoffAction?: ActionNode,
 		firstEditedNode?: ActionNode, // for ReplayMode.Edited: everything before this should instead use ReplayMode.Exact
+		selectionStart?: ActionNode,
+		selectionEnd?: ActionNode
 	}) : {
 		success: boolean,
 		firstAddedNode: ActionNode | undefined,
@@ -723,8 +730,12 @@ class Controller {
 		if (props.maxReplayTime===undefined) props.maxReplayTime = -1;
 
 		// when checking record validity as well as final application (ReplayMode.Edited), replay exactly until the first edited node
-		let currentRelayMode = props.replayMode;
-		if (props.replayMode === ReplayMode.Edited) currentRelayMode = ReplayMode.Exact;
+		// and also copy over selection status
+		//let firstSelected: ActionNode | undefined = undefined;
+		let currentReplayMode = props.replayMode;
+		if (props.replayMode === ReplayMode.Edited) {
+			currentReplayMode = ReplayMode.Exact;
+		}
 
 		let itr = props.line.getFirstAction();
 		if (!itr) return {
@@ -740,7 +751,7 @@ class Controller {
 
 			// switch to edited replay past the first edited node
 			if (props.replayMode === ReplayMode.Edited && (itr===props.firstEditedNode || itr.next===props.firstEditedNode)) {
-				currentRelayMode = ReplayMode.Edited;
+				currentReplayMode = ReplayMode.Edited;
 			}
 
 			let lastIter = false;
@@ -751,7 +762,7 @@ class Controller {
 			let waitDuration = itr.waitDuration;
 			if (props.maxReplayTime >= 0 &&
 				props.maxReplayTime - this.game.time < waitDuration &&
-				currentRelayMode === ReplayMode.Exact
+				currentReplayMode === ReplayMode.Exact
 			) {
 				// hit specified max replay time; everything's valid so far
 				waitDuration = props.maxReplayTime - this.game.time;
@@ -759,7 +770,7 @@ class Controller {
 			}
 
 			// only Exact & validity replays wait nodes
-			if (itr.type === ActionType.Wait && (currentRelayMode === ReplayMode.Exact || currentRelayMode === ReplayMode.Edited)) {
+			if (itr.type === ActionType.Wait && (currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)) {
 				this.#requestTick({
 					deltaTime: waitDuration,
 					separateNode: true,
@@ -770,11 +781,11 @@ class Controller {
 			// skill nodes
 			else if (itr.type === ActionType.Skill) {
 
-				let waitFirst = currentRelayMode === ReplayMode.SkillSequence || currentRelayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
+				let waitFirst = currentReplayMode === ReplayMode.SkillSequence || currentReplayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
 				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, true, TickMode.Manual);
 
-				let bEditedTimelineShouldWaitAfterSkill = currentRelayMode === ReplayMode.Edited && (itr.next && itr.next.type === ActionType.Wait);
-				if (currentRelayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
+				let bEditedTimelineShouldWaitAfterSkill = currentReplayMode === ReplayMode.Edited && (itr.next && itr.next.type === ActionType.Wait);
+				if (currentReplayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
 					if (status.status === SkillReadyStatus.Ready) {
 						//======== tick wait block ========
 						// todo: clean up this code...
@@ -795,7 +806,7 @@ class Controller {
 						//======== tick wait block ========
 					}
 				}
-				else if (currentRelayMode === ReplayMode.SkillSequence || currentRelayMode === ReplayMode.Edited) {
+				else if (currentReplayMode === ReplayMode.SkillSequence || currentReplayMode === ReplayMode.Edited) {
 					this.#requestTick({
 						deltaTime: this.game.timeTillAnySkillAvailable(),
 						separateNode: false
@@ -820,9 +831,9 @@ class Controller {
 				}
 			}
 			// buff enable/disable also only supported by exact / edited replay
-			else if (itr.type === ActionType.SetResourceEnabled && (currentRelayMode === ReplayMode.Exact || currentRelayMode === ReplayMode.Edited)) {
+			else if (itr.type === ActionType.SetResourceEnabled && (currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)) {
 				let success = this.requestToggleBuff(itr.buffName as ResourceType);
-				const exact = currentRelayMode === ReplayMode.Exact;
+				const exact = currentReplayMode === ReplayMode.Exact;
 				if (success) {
 					this.#requestTick({
 						// waitDuration gets auto filled when this node is moved around and causes unwanted gaps on the timeline..
@@ -838,6 +849,18 @@ class Controller {
 			}
 			else {
 				console.assert(false);
+			}
+
+			// now added whatever node it needs to add.
+
+			// for edited replay mode, copy selection:
+			if (props.replayMode === ReplayMode.Edited) {
+				let lastAdded = this.record.getLastAction() ;
+				if (itr === props.selectionStart && lastAdded) {
+					this.record.selectSingle(lastAdded);
+				} else if (itr === props.selectionEnd && lastAdded) {
+					this.record.selectUntil(lastAdded);
+				}
 			}
 
 			// this iteration just added something, but firstAddedNode is still empty:
