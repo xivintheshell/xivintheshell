@@ -1,6 +1,6 @@
 import {ReplayMode, TickMode} from "./Common";
 import {GameState} from "../Game/GameState";
-import {ProcMode, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
+import {ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
 // @ts-ignore
 import {updateStatusDisplay} from "../Components/StatusDisplay";
@@ -338,7 +338,7 @@ class Controller {
 		if (firstSelected && lastSelected) {
 			this.record.selectSingle(firstSelected);
 			this.record.selectUntil(lastSelected);
-		} else {
+		} else if (firstSelected || lastSelected) {
 			console.assert(false);
 		}
 
@@ -418,6 +418,16 @@ class Controller {
 		};
 	}
 
+	reportWarning(type: WarningType) {
+		if (!this.#bCalculatingHistoricalState) {
+			this.timeline.addElement({
+				type: ElemType.WarningMark,
+				warningType: type,
+				time: this.game.time,
+				displayTime: this.game.getDisplayTime(),
+			});
+		}
+	}
 
 	reportDamage(props: {
 		potency: number,

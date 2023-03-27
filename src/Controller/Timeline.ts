@@ -2,7 +2,7 @@
 import {updateStatsDisplay, updateTimelineView} from "../Components/Timeline";
 // @ts-ignore
 import {controller} from "./Controller";
-import {Debug, ResourceType, SkillName} from "../Game/Common";
+import {Debug, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {ActionNode, ActionType} from "./Record";
 import {FileType} from "./Common";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
@@ -17,6 +17,7 @@ export const enum ElemType {
 	MPTickMark = "MPTickMark",
 	Skill = "Skill",
 	Marker = "Marker",
+	WarningMark = "WarningMark"
 }
 
 export const enum MarkerColor {
@@ -62,6 +63,11 @@ export type MPTickMarkElem = TimelineElemBase & {
 	displayTime: number;
 	source: string;
 }
+export type WarningMarkElem = TimelineElemBase & {
+	type: ElemType.WarningMark;
+	warningType: WarningType;
+	displayTime: number;
+}
 export type SkillElem = TimelineElemBase & {
 	type: ElemType.Skill;
 	displayTime: number;
@@ -95,6 +101,7 @@ export type TimelineElem =
 	DamageMarkElem |
 	LucidMarkElem |
 	MPTickMarkElem |
+	WarningMarkElem |
 	SkillElem |
 	MarkerElem
 	;

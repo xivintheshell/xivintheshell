@@ -2,17 +2,19 @@ import React, {useEffect, useRef, useState} from 'react'
 import {
 	CursorElem,
 	DamageMarkElem,
-	ElemType, LucidMarkElem,
+	ElemType,
+	LucidMarkElem,
 	MarkerElem,
 	MPTickMarkElem,
 	SkillElem,
 	TimelineElem,
-	ViewOnlyCursorElem
+	ViewOnlyCursorElem,
+	WarningMarkElem
 } from "../Controller/Timeline";
 // @ts-ignore
 import {updateStatsDisplay} from "./Timeline"
 import {StaticFn} from "./Common";
-import {ResourceType} from "../Game/Common";
+import {ResourceType, WarningType} from "../Game/Common";
 // @ts-ignore
 import {skillIconImages} from "./Skills";
 import {controller} from "../Controller/Controller";
@@ -130,6 +132,7 @@ function drawTip(ctx: CanvasRenderingContext2D, lines: string[], canvasWidth: nu
 
 	ctx.fillStyle = g_colors.emphasis;
 	ctx.textBaseline = "top";
+	ctx.textAlign = "left";
 	for (let i = 0; i < lines.length; i++) {
 		ctx.fillText(lines[i], x + horizontalPadding, y + i * lineHeight + 2 + verticalPadding);
 	}
@@ -216,6 +219,39 @@ function drawMPTickMarks(
 		);
 	});
 	ctx.stroke();
+}
+
+function drawWarningMarks(
+	ctx: CanvasRenderingContext2D,
+	countdown: number,
+	scale: number,
+	timelineOrigin: number,
+	elems: WarningMarkElem[]
+) {
+	ctx.font = "bold 10px monospace";
+	elems.forEach(mark=>{
+		const x = timelineOrigin + StaticFn.positionFromTimeAndScale(mark.time, scale);
+		const y = 30;
+		const sideLength = 12;
+		ctx.beginPath();
+		ctx.textAlign = "center";
+		ctx.moveTo(x, y-sideLength);
+		ctx.lineTo(x-sideLength/2, y);
+		ctx.lineTo(x+sideLength/2, y);
+		ctx.fillStyle = g_colors.timeline.warningMark;
+		ctx.fill();
+		ctx.fillStyle = "white";
+		ctx.fillText("!", x, y-1);
+
+		let message: string = "[" + mark.displayTime.toFixed(2) + "] ";
+		if (mark.warningType === WarningType.PolyglotOvercap) {
+			message += localize({en: "polyglot overcap!", zh: "通晓溢出！"});
+		}
+
+		testInteraction(
+			{x: x-sideLength/2, y: y-sideLength, w: sideLength, h: sideLength}, [message]
+		);
+	});
 }
 
 function drawDamageMarks(
@@ -546,6 +582,9 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 
 	// lucid marks
 	drawLucidMarks(ctx, renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.LucidMark) as LucidMarkElem[] ?? []);
+
+	// warning marks (polyglot overcap)
+	drawWarningMarks(ctx, renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.WarningMark) as WarningMarkElem[] ?? []);
 
 	// skills
 	let skillsTopY = 30 + numTracks * trackHeight + trackBottomMargin;

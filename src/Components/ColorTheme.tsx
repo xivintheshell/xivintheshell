@@ -43,6 +43,7 @@ export type ThemeColors = {
 		potCover: string,
 		damageMark: string,
 		mpTickMark: string,
+		warningMark: string,
 		lucidTickMark: string,
 		countdown: string,
 		markerAlpha: string,
@@ -87,6 +88,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				potCover: "#c4543a",
 				damageMark: "#f00",
 				mpTickMark: "#32525e",
+				warningMark: "#9d7103",
 				lucidTickMark: "#56b3d5",
 				countdown: "rgba(15, 15, 15, 0.4)",
 				markerAlpha: "4f"
@@ -128,6 +130,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				potCover: "#faa68b",
 				damageMark: "#f00",
 				mpTickMark: "#b6dfea",
+				warningMark: "#ffbb29",
 				lucidTickMark: "#88cae0",
 				countdown: "rgba(0, 0, 0, 0.1)",
 				markerAlpha: "7f"

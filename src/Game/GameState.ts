@@ -1,4 +1,4 @@
-import {Aspect, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
+import {Aspect, Debug, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
 import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
@@ -155,7 +155,12 @@ export class GameState {
 
 		// also polyglot
 		let recurringPolyglotGain = (rsc: Resource)=>{
-			if (this.hasEnochian()) rsc.gain(1);
+			if (this.hasEnochian()) {
+				if (rsc.availableAmount() === rsc.maxValue) {
+					controller.reportWarning(WarningType.PolyglotOvercap);
+				}
+				rsc.gain(1);
+			}
 			this.resources.addResourceEvent(ResourceType.Polyglot, "gain polyglot if currently has enochian", 30, recurringPolyglotGain);
 		};
 		recurringPolyglotGain(this.resources.get(ResourceType.Polyglot));

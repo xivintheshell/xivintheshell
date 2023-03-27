@@ -24,6 +24,7 @@ export function localize(content: LocalizedContent) {
 }
 
 const skillsZh = new Map<SkillName, string>([
+	[SkillName.Fire, "火1"],
 	[SkillName.Blizzard, "冰1"],
 	[SkillName.Fire4, "火4"],
 	[SkillName.Transpose, "星灵位移"],

@@ -115,3 +115,7 @@ export const enum ResourceType {
 
 	Never = "Never",
 }
+
+export const enum WarningType {
+	PolyglotOvercap = "polyglot overcap"
+}

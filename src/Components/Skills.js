@@ -287,7 +287,7 @@ export class SkillsWindow extends React.Component {
 					let stepTime = waitTime - timeSinceLastSkill;
 					if (stepTime <= 0) {
 						window.alert("Invalid input: trying to jump to " + waitTime +
-							"s since the last skill is used, but " + timeSinceLastSkill +
+							"s since the last action, but " + timeSinceLastSkill +
 							"s has already elapsed.");
 					} else {
 						controller.step(stepTime);
@@ -419,7 +419,7 @@ export class SkillsWindow extends React.Component {
 								value={this.state.waitSince}
 								onChange={this.onWaitSinceChange}>
 								<option value={WaitSince.Now}>now</option>
-								<option value={WaitSince.LastSkill}>last skill</option>
+								<option value={WaitSince.LastSkill}>last action</option>
 							</select> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
 							</form>,
 							zh:<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
@@ -428,7 +428,7 @@ export class SkillsWindow extends React.Component {
 									value={this.state.waitSince}
 									onChange={this.onWaitSinceChange}>
 									<option value={WaitSince.Now}>当前</option>
-									<option value={WaitSince.LastSkill}>上次使用技能</option>
+									<option value={WaitSince.LastSkill}>上次操作</option>
 								</select> 后的 <input type={"text"} style={{
 								...{width: 30}, ...textInputFieldStyle
 							}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> 秒 <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>

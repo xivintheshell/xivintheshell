@@ -3,6 +3,7 @@
 		"date": "3/27/23",
 		"changes": [
 			"always show recast progress bar when cd is not full (for skills with multiple stacks)",
+			"show a warning mark on timeline when polyglot overcaps",
 			"bugfix: another scenario that breaks the editor orz (moving around a sharpcast in a sequence of umbral souls)"
 		]
 	},
