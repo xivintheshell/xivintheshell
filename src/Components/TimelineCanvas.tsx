@@ -171,6 +171,7 @@ function drawMarkers(
 					ctx.fillText(m.description, left + trackHeight / 2, top + 10);
 				} else {
 					ctx.strokeStyle = m.color;
+					ctx.beginPath();
 					ctx.moveTo(left, top + trackHeight / 2);
 					ctx.lineTo(left + markerWidth, top + trackHeight / 2);
 					ctx.stroke();
