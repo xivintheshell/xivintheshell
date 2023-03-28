@@ -1,0 +1,200 @@
+// making another file just so I don't keep clustering Controller.ts
+import {controller as ctl} from "./Controller";
+import {ActionNode, ActionType} from "./Record";
+import {ResourceType, SkillName} from "../Game/Common";
+import {DamageStatisticsData, DamageStatsMainTableEntry} from "../Components/DamageStatistics";
+import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
+
+const AFUISkills = new Set<SkillName>([
+	SkillName.Blizzard,
+	SkillName.Fire,
+	SkillName.Fire3,
+	SkillName.Blizzard3,
+	SkillName.Freeze,
+	SkillName.Flare,
+	SkillName.Blizzard4,
+	SkillName.Fire4,
+	SkillName.Despair,
+	SkillName.HighFire2,
+	SkillName.HighBlizzard2
+]);
+
+const enoSkills = new Set<SkillName>([
+	SkillName.Foul,
+	SkillName.Xenoglossy,
+	SkillName.Paradox
+]);
+
+const abilities = new Set<SkillName>([
+	SkillName.Transpose,
+	SkillName.Manaward,
+	SkillName.Manafont,
+	SkillName.LeyLines,
+	SkillName.Sharpcast,
+	SkillName.BetweenTheLines,
+	SkillName.AetherialManipulation,
+	SkillName.Triplecast,
+	SkillName.UmbralSoul,
+	SkillName.Amplifier,
+	SkillName.Addle,
+	SkillName.Swiftcast,
+	SkillName.LucidDreaming,
+	SkillName.Surecast,
+	SkillName.Tincture,
+	SkillName.Sprint
+]);
+
+type ExpandedNode = {
+	displayedModifiers: PotencyModifierType[],
+	basePotency: number,
+	calculationModifiers: PotencyModifier[],
+};
+
+function expandNode(node: ActionNode) : ExpandedNode {
+	let res: ExpandedNode = {
+		basePotency: 0,
+		displayedModifiers: [],
+		calculationModifiers: []
+	}
+	if (node.type === ActionType.Skill && node.skillName) {
+		if (AFUISkills.has(node.skillName)) {
+			console.assert(node.getPotencies().length > 0);
+			// use the one that's not enochian or pot (then must be one of af123, ui123)
+			let mainPotency = node.getPotencies()[0];
+			for (let i = 0; i < mainPotency.modifiers.length; i++) {
+				let tag = mainPotency.modifiers[i].source;
+				if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
+					res.basePotency = mainPotency.base;
+					res.displayedModifiers = [tag];
+					res.calculationModifiers = mainPotency.modifiers;
+					break;
+				}
+			}
+		} else if (enoSkills.has(node.skillName)) {
+			console.assert(node.getPotencies().length > 0);
+			// use enochian if it has one. Otherwise empty.
+			let mainPotency = node.getPotencies()[0];
+			for (let i = 0; i < mainPotency.modifiers.length; i++) {
+				let tag = mainPotency.modifiers[i].source;
+				if (tag === PotencyModifierType.ENO) {
+					res.basePotency = mainPotency.base;
+					res.displayedModifiers = [tag];
+					res.calculationModifiers = mainPotency.modifiers;
+					break;
+				}
+			}
+		} else if (abilities.has(node.skillName)) {
+		} else {
+			console.assert(node.skillName === SkillName.Thunder3)
+			res.basePotency = node.getPotencies()[0].base;
+		}
+		return res;
+	} else {
+		console.assert(false);
+		return res;
+	}
+}
+
+function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
+
+	let tagsAreEqual = function(a: PotencyModifierType[], b: PotencyModifierType[]) {
+		if (a.length !== b.length) return false;
+		for (let i = 0; i < a.length; i++) {
+			if (a[i] !== b[i]) return false;
+		}
+		return true;
+	}
+
+	let expanded = expandNode(node);
+	let res = {
+		mainTableIndex: -1,
+		expandedNode: expanded
+	};
+
+	for (let i = 0; i < table.length; i++) {
+		if (node.skillName === table[i].skillName && tagsAreEqual(expanded.displayedModifiers, table[i].displayedModifiers)) {
+			res.mainTableIndex = i;
+			return res;
+		}
+	}
+
+	return res;
+}
+
+export function calculateDamageStats(props: {
+	tinctureBuffPercentage: number,
+	lastDamageApplicationTime: number
+}): DamageStatisticsData {
+	let totalPotency = ctl.record.getTotalPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()});
+	let gcdSkills = {applied: 0, pending: 0};
+
+	// has a list of entries, initially empty
+	// take each skill node, find its corresponding entry and add itself to it
+	// - depending on the specific skill, rules for dividing / finding entries could be different (some need AF123, some just eno)
+	// - if there's no existing entry, create one.
+	// sort the entries according to some rule, then return.
+
+	let mainTable: DamageStatsMainTableEntry[] = [];
+
+	ctl.record.iterateAll(node=>{
+		if (node.type === ActionType.Skill && node.skillName) {
+			// gcd count
+			let skillInfo = ctl.game.skillsList.get(node.skillName);
+			if (skillInfo.info.cdName === ResourceType.cd_GCD) {
+				if (node.resolved()) gcdSkills.applied++;
+				else gcdSkills.pending++;
+			}
+			// main table
+			if (node.resolved()) {
+				let q = expandAndMatch(mainTable, node);
+				if (q.mainTableIndex < 0) { // create an entry if doesn't have one already
+					mainTable.push({
+						skillName: node.skillName,
+						displayedModifiers: q.expandedNode.displayedModifiers,
+						basePotency: q.expandedNode.basePotency,
+						calculationModifiers: q.expandedNode.calculationModifiers,
+						count: 0,
+						totalPotencyWithoutPot: 0,
+						potPotency: 0,
+						potCount: 0
+					});
+					q.mainTableIndex = mainTable.length - 1;
+				}
+				let potencyWithoutPot = node.getPotency({tincturePotencyMultiplier: 1}).applied;
+				let potencyWithPot = node.getPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()}).applied;
+				mainTable[q.mainTableIndex].count += 1;
+				mainTable[q.mainTableIndex].totalPotencyWithoutPot += potencyWithoutPot;
+				mainTable[q.mainTableIndex].potPotency += (potencyWithPot - potencyWithoutPot);
+				if (node.hasBuff(ResourceType.Tincture)) {
+					mainTable[q.mainTableIndex].potCount += 1;
+				}
+
+			}
+		}
+	});
+
+	mainTable.sort((a, b)=>{
+		if (a.skillName !== b.skillName) {
+			return b.totalPotencyWithoutPot - a.totalPotencyWithoutPot;
+		} else {
+			if (a.displayedModifiers.length !== b.displayedModifiers.length) {
+				return b.displayedModifiers.length - a.displayedModifiers.length;
+			} else {
+				for (let i = 0; i < a.displayedModifiers.length; i++) {
+					let diff = a.displayedModifiers[i] - b.displayedModifiers[i];
+					if (diff !== 0) return diff;
+				}
+				return 0;
+			}
+		}
+	});
+
+	return {
+		tinctureBuffPercentage: props.tinctureBuffPercentage,
+		totalPotency: {applied: totalPotency.applied, pending: totalPotency.snapshottedButPending},
+		lastDamageApplicationTime: props.lastDamageApplicationTime,
+		countdown: ctl.gameConfig.countdown,
+		gcdSkills: gcdSkills,
+		mainTable: mainTable
+	};
+}

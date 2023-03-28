@@ -1,6 +1,19 @@
 import React from 'react'
 import {Expandable, Help} from "./Common";
 import {localize} from "./Localization";
+import {SkillName} from "../Game/Common";
+import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
+
+export type DamageStatsMainTableEntry = {
+	skillName: SkillName,
+	displayedModifiers: PotencyModifierType[],
+	basePotency: number,
+	calculationModifiers: PotencyModifier[],
+	count: number,
+	totalPotencyWithoutPot: number,
+	potPotency: number,
+	potCount: number
+};
 
 export type DamageStatisticsData = {
 	tinctureBuffPercentage: number,
@@ -13,7 +26,8 @@ export type DamageStatisticsData = {
 	gcdSkills: {
 		applied: number,
 		pending: number
-	}
+	},
+	mainTable: DamageStatsMainTableEntry[]
 }
 
 export let updateDamageStats = (data: DamageStatisticsData) => {};
@@ -25,6 +39,7 @@ export class DamageStatistics extends React.Component {
 		totalPotency: {applied: 0, pending: 0},
 		lastDamageApplicationTime: 0,
 		gcdSkills: {applied: 0, pending: 0},
+		mainTable: []
 	};
 
 	constructor(props: {}) {
@@ -57,22 +72,23 @@ export class DamageStatistics extends React.Component {
 			gcdStr += " (+" + this.data.gcdSkills.pending + " not yet applied)";
 		}
 
-		return <Expandable title={"damageStatistics"} titleNode={localize({en: "Damage statistics", zh: "输出统计"})} content={
-			<div>
-				<span>Last damage application time: {lastDamageApplicationTimeDisplay}</span><br/>
-				<span>{potencyStr}</span><br/>
-				<span>PPS <Help topic={"ppsNotes"} content={
-					<div className={"toolTip"}>
-						<div className="paragraph">
-							total applied potency divided by last damage application time since pull (0s).
-						</div>
-						<div className="paragraph">
-							could be inaccurate if any damage happens before pull
-						</div>
+		let main = <div style={{marginBottom: 20}}>
+			<span>Last damage application time: {lastDamageApplicationTimeDisplay}</span><br/>
+			<span>{potencyStr}</span><br/>
+			<span>PPS <Help topic={"ppsNotes"} content={
+				<div className={"toolTip"}>
+					<div className="paragraph">
+						total applied potency divided by last damage application time since pull (0s).
 					</div>
-				}/>: {ppsAvailable ? (this.data.totalPotency.applied / lastDisplay).toFixed(2) : "N/A"}</span><br/>
-				<span>{gcdStr}</span>
-			</div>
-		}/>
+					<div className="paragraph">
+						could be inaccurate if any damage happens before pull
+					</div>
+				</div>
+			}/>: {ppsAvailable ? (this.data.totalPotency.applied / lastDisplay).toFixed(2) : "N/A"}</span><br/>
+			<span>{gcdStr}</span>
+		</div>;
+
+		return main;
+		//return <Expandable title={"damageStatistics"} titleNode={localize({en: "Damage statistics", zh: "输出统计"})} content={main}/>
 	}
 }

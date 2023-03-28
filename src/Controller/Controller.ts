@@ -20,8 +20,9 @@ import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {StaticFn} from "../Components/Common";
 import {TimelineRenderingProps} from "../Components/TimelineCanvas";
-import {Potency} from "../Game/Potency";
+import {Potency, PotencyModifierType} from "../Game/Potency";
 import {updateDamageStats} from "../Components/DamageStatistics";
+import {calculateDamageStats} from "./DamageStatistics";
 
 type Fixme = any;
 
@@ -376,26 +377,13 @@ class Controller {
 
 	// called by reset, resolvePotency, displayCurrentState
 	#updateDamageStats() {
-		let totalPotency = this.record.getTotalPotency({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()});
 
-		let gcdSkills = {applied: 0, pending: 0};
-		this.record.iterateAll(node=>{
-			if (node.type === ActionType.Skill && node.skillName) {
-				let skillInfo = this.game.skillsList.get(node.skillName);
-				if (skillInfo.info.cdName === ResourceType.cd_GCD) {
-					if (node.resolved()) gcdSkills.applied++;
-					else gcdSkills.pending++;
-				}
-			}
-		});
-
-		updateDamageStats({
+		let damageStats = calculateDamageStats({
 			tinctureBuffPercentage: this.#tinctureBuffPercentage,
-			totalPotency: {applied: totalPotency.applied, pending: totalPotency.snapshottedButPending},
-			lastDamageApplicationTime: this.#lastDamageApplicationTime,
-			countdown: this.gameConfig.countdown,
-			gcdSkills: gcdSkills
+			lastDamageApplicationTime: this.#lastDamageApplicationTime
 		});
+
+		updateDamageStats(damageStats);
 	}
 	getTincturePotencyMultiplier() {
 		return 1 + this.#tinctureBuffPercentage * 0.01;
@@ -408,14 +396,6 @@ class Controller {
 		this.record.iterateSelected(node=>{
 			selectedPotency += node.getPotency({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}).applied;
 		});
-		/*
-		updateStatsDisplay({
-			cumulativePotency: this.record.getTotalPotency({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}),
-			selectedPotency: selectedPotency,
-			statsBySkill: this.#getPotencyStatsBySkill(false),
-			selectedStatsBySkill: this.#getPotencyStatsBySkill(true)
-		});
-		 */
 		this.displayCurrentState();
 		updateTimelineView();
 	}
@@ -451,7 +431,7 @@ class Controller {
 
 		let pot = false;
 		p.modifiers.forEach(m=>{
-			if (m.source==="pot") pot = true;
+			if (m.source===PotencyModifierType.POT) pot = true;
 		});
 
 		if (!this.#bCalculatingHistoricalState) {

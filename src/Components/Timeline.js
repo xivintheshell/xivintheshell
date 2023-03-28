@@ -116,7 +116,7 @@ class TimelineMain extends React.Component {
 	}
 }
 
-export let updateStatsDisplay = ()=>{}
+let updateStatsDisplay = ()=>{}
 
 /*
 class StatsDisplay extends React.Component {

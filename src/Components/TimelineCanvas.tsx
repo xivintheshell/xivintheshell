@@ -11,8 +11,6 @@ import {
 	ViewOnlyCursorElem,
 	WarningMarkElem
 } from "../Controller/Timeline";
-// @ts-ignore
-import {updateStatsDisplay} from "./Timeline"
 import {StaticFn} from "./Common";
 import {ResourceType, WarningType} from "../Game/Common";
 // @ts-ignore
@@ -89,7 +87,6 @@ const onClickTimelineBackground = ()=>{
 	// clicked on background:
 	controller.record.unselectAll();
 	controller.displayCurrentState();
-	updateStatsDisplay({selectedDuration: 0})
 };
 
 function drawTip(ctx: CanvasRenderingContext2D, lines: string[], canvasWidth: number, canvasHeight: number) {

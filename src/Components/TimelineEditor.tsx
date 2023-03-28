@@ -3,7 +3,6 @@ import React, {CSSProperties} from "react";
 import {controller} from "../Controller/Controller";
 import {ActionNode, ActionType, Record, RecordValidStatus} from "../Controller/Record";
 // @ts-ignore
-import {updateStatsDisplay} from "./Timeline"
 import {localize, localizeSkillName} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 
@@ -275,7 +274,6 @@ export class TimelineEditor extends React.Component {
 					if (!this.isDirty()) {
 						controller.record.unselectAll();
 						controller.displayCurrentState();
-						updateStatsDisplay({selectedDuration: 0});
 					} else {
 						refreshTimelineEditor();
 						this.state.editedRecord?.unselectAll();

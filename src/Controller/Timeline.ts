@@ -1,5 +1,5 @@
 // @ts-ignore
-import {updateStatsDisplay, updateTimelineView} from "../Components/Timeline";
+import {updateTimelineView} from "../Components/Timeline";
 // @ts-ignore
 import {controller} from "./Controller";
 import {Debug, ResourceType, SkillName, WarningType} from "../Game/Common";
@@ -309,13 +309,6 @@ export class Timeline {
 				let skillInfo = controller.game.skillsList.get(node.skillName);
 				if (skillInfo.info.cdName === ResourceType.cd_GCD) gcdSkills++;
 			}
-		});
-
-		// potency stats
-		updateStatsDisplay({
-			selectedPotency: selectResult.selectedPotency,
-			selectedDuration: selectResult.selectionEndTime - selectResult.selectionStartTime,
-			selectedGcdCount: gcdSkills,
 		});
 
 		updateSkillSequencePresetsView();
