@@ -1,5 +1,5 @@
 import React, {CSSProperties} from 'react'
-import {ContentNode, Help} from "./Common";
+import {ContentNode, FileFormat, Help, SaveToFile} from "./Common";
 import {SkillName} from "../Game/Common";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 import {getCurrentThemeColors} from "./ColorTheme";
@@ -27,7 +27,20 @@ export type DamageStatsT3TableEntry = {
 	potPotency: number
 }
 
+export type SelectedStatisticsData = {
+	duration: number,
+	potency: {
+		applied: number,
+		pending: number
+	},
+	gcdSkills: {
+		applied: number,
+		pending: number
+	}
+}
+
 export type DamageStatisticsData = {
+	time: number,
 	tinctureBuffPercentage: number,
 	countdown: number,
 	totalPotency: {
@@ -45,9 +58,12 @@ export type DamageStatisticsData = {
 		potPotency: number
 	}
 	t3Table: DamageStatsT3TableEntry[],
+	historical: boolean,
+	statsCsv: any[][]
 }
 
 export let updateDamageStats = (data: DamageStatisticsData) => {};
+export let updateSelectedStats = (data: SelectedStatisticsData) => {};
 
 function buffName(buff: PotencyModifierType) {
 	let text = "";
@@ -125,7 +141,13 @@ function PotencyDisplay(props: {basePotency: number, helpTopic: string, calc: Po
 const rowGap = "0.375em 0.75em";
 
 export class DamageStatistics extends React.Component {
+	selected: SelectedStatisticsData = {
+		duration: 0,
+		potency: {applied: 0, pending: 0},
+		gcdSkills: {applied: 0, pending: 0}
+	}
 	data: DamageStatisticsData = {
+		time: 0,
 		tinctureBuffPercentage: 0,
 		countdown: 0,
 		totalPotency: {applied: 0, pending: 0},
@@ -134,12 +156,18 @@ export class DamageStatistics extends React.Component {
 		mainTable: [],
 		mainTableTotalPotency: {withoutPot: 0, potPotency: 0},
 		t3Table: [],
+		historical: false,
+		statsCsv: []
 	};
 
 	constructor(props: {}) {
 		super(props);
 		updateDamageStats = ((data: DamageStatisticsData) => {
 			this.data = data;
+			this.forceUpdate();
+		}).bind(this);
+		updateSelectedStats = ((selected: SelectedStatisticsData) => {
+			this.selected = selected;
 			this.forceUpdate();
 		}).bind(this);
 	}
@@ -150,42 +178,80 @@ export class DamageStatistics extends React.Component {
 
 	render() {
 
+		let colors = getCurrentThemeColors();
+
 		//////////////////// Summary ///////////////////////
+
+		const colon = localize({en: ": ", zh: "："}) as string;
+		const lparen = localize({en: " (", zh: "（"}) as string;
+		const rparen = localize({en: ") ", zh: "）"}) as string;
 
 		let lastDisplay = this.data.lastDamageApplicationTime - this.data.countdown;
 		let ppsAvailable = this.data.lastDamageApplicationTime > -this.data.countdown;
 		let lastDamageApplicationTimeDisplay = ppsAvailable ? lastDisplay.toFixed(2).toString() : "N/A";
-		let potencyStr = "Total potency";
+		let potencyStr = localize({en: "Total potency", zh: "总威力"}) as string;
+		let selectedPotencyStr = localize({en: "Selected potency", zh: "选中威力"}) as string;
 		if (this.data.tinctureBuffPercentage > 0) {
-			potencyStr += " (pot +" + this.data.tinctureBuffPercentage + "%)";
+			let s = lparen + (localize({en: "pot +", zh: "爆发药 +"}) as string) + this.data.tinctureBuffPercentage + "%" + rparen;
+			potencyStr += s;
+			selectedPotencyStr += s;
 		}
-		potencyStr += ": " + this.data.totalPotency.applied.toFixed(2);
+		potencyStr += colon + this.data.totalPotency.applied.toFixed(2);
+		selectedPotencyStr += colon + this.selected.potency.applied.toFixed(2);
 		if (this.data.totalPotency.pending > 0) {
-			potencyStr += " (" + this.data.totalPotency.pending.toFixed(2) + " pending)";
+			potencyStr += lparen + this.data.totalPotency.pending.toFixed(2) + (localize({en: " pending", zh: "未结算"}) as string) + rparen;
+		}
+		if (this.selected.potency.pending > 0) {
+			selectedPotencyStr += lparen + this.selected.potency.pending.toFixed(2) + (localize({en: " pending", zh: "未结算"}) as string) + rparen;
 		}
 
-		let gcdStr = "GCD skills: " + this.data.gcdSkills.applied;
+		let gcdStr = localize({en: "GCD skills", zh: "GCD技能"}) + colon + this.data.gcdSkills.applied;
+		let selectedGcdStr = localize({en:"Selected GCD skills", zh:"选中GCD技能"}) + colon + this.selected.gcdSkills.applied;
 		if (this.data.gcdSkills.pending > 0) {
-			gcdStr += " (+" + this.data.gcdSkills.pending + " not yet applied)";
+			gcdStr += lparen + "+" + this.data.gcdSkills.pending + (localize({en: " not yet applied", zh: "未结算"}) as string) + rparen;
+		}
+		if (this.selected.gcdSkills.pending > 0) {
+			selectedGcdStr += lparen + "+" + this.selected.gcdSkills.pending + (localize({en: " not yet applied", zh: "未结算"}) as string) + rparen;
 		}
 
-		let summary = <div style={{marginBottom: 10}}>
-			<span>Last damage application time: {lastDamageApplicationTimeDisplay}</span><br/>
-			<span>{potencyStr}</span><br/>
-			<span>PPS <Help topic={"ppsNotes"} content={
-				<div className={"toolTip"}>
-					<div className="paragraph">
-						total applied potency divided by last damage application time since pull (0s).
-					</div>
-					<div className="paragraph">
-						could be inaccurate if any damage happens before pull
-					</div>
-				</div>
-			}/>: {ppsAvailable ? (this.data.totalPotency.applied / lastDisplay).toFixed(2) : "N/A"}</span><br/>
-			<span>{gcdStr}</span>
-		</div>;
+		let selected: React.ReactNode | undefined = undefined;
+		if (this.selected.duration > 0) {
+			selected = <div style={{flex: 1}}>
+				<div>{localize({en: "Duration (selected)", zh: "选中时长"})}{colon}{this.selected.duration.toFixed(2)}</div>
+				<div>{selectedPotencyStr}</div>
+				<div>PPS{colon}{(this.selected.potency.applied / this.selected.duration).toFixed(2)}</div>
+				<div>{selectedGcdStr}</div>
+			</div>
+		}
 
-		let colors = getCurrentThemeColors();
+		let summary = <div style={{display: "flex", marginBottom: 10, flexDirection: "row"}}>
+			<div style={{flex: 1, color: this.data.historical ? colors.historical : colors.text}}>
+				<div>{localize({en: "Last damage application time", zh: "最后伤害结算时间"})}{colon}{lastDamageApplicationTimeDisplay}</div>
+				<div>{potencyStr}</div>
+				<div>PPS <Help topic={"ppsNotes"} content={
+					<div className={"toolTip"}>
+						<div className="paragraph">{localize({
+							en: "total applied potency divided by last damage application time.",
+							zh: "已结算总威力 / 最后伤害结算时间。"
+						})}</div>
+						<div className="paragraph">{localize({
+							en: "could be inaccurate if any damage happens before pull",
+							zh: "如果有伤害在0s之前结算，则此PPS不准确"
+						})}</div>
+					</div>
+				}/>{colon}{ppsAvailable ? (this.data.totalPotency.applied / lastDisplay).toFixed(2) : "N/A"}</div>
+				<div>{gcdStr}</div>
+				<div>
+					<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
+						return this.data.statsCsv;
+					}} filename={"stats"} displayName={localize({
+						en: "download detailed damage log as CSV file",
+						zh: "下载详细伤害结算记录（CSV格式）"
+					})}/>
+				</div>
+			</div>
+			{selected}
+		</div>;
 
 		///////////////////////// Main table //////////////////////////
 
@@ -300,8 +366,8 @@ export class DamageStatistics extends React.Component {
 				position: "relative",
 				borderTop: "1px solid " + colors.bgMediumContrast
 			}}>
-				<div style={cell(13)}>{props.row.time.toFixed(2)}</div>
-				<div style={cell(12)}>{tags}</div>
+				<div style={cell(10)}>{props.row.time.toFixed(2)}</div>
+				<div style={cell(15)}>{tags}</div>
 				<div style={cell(15)}>{mainPotencyNode}</div>
 				<div style={cell(15)}>{dotPotencyNode}</div>
 				<div style={cell(10)}>{props.row.numTicks}</div>
@@ -323,6 +389,17 @@ export class DamageStatistics extends React.Component {
 			display: "inline-block",
 			padding: rowGap,
 		};
+		let mainHeaderStr = localize({en: "Applied Skills", zh: "技能统计"});
+		let t3HeaderStr = localize({en: "Thunder 3", zh: "雷3统计"});
+		if (this.data.historical) {
+			let t = (this.data.time - this.data.countdown).toFixed(2) + "s";
+			let upTillStr = lparen + localize({
+				en: "up till " + t,
+				zh: "截至" + t
+			}) + rparen;
+			mainHeaderStr += upTillStr;
+			t3HeaderStr += upTillStr;
+		}
 		let mainTable = <div style={{
 			position: "relative",
 			margin: "0 auto",
@@ -330,7 +407,7 @@ export class DamageStatistics extends React.Component {
 			maxWidth: 800,
 		}}>
 			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
-				<b>{localize({en: "skills used", zh: "技能使用统计"})}</b>
+				<b style={this.data.historical ? {color: colors.historical}:undefined}>{mainHeaderStr}</b>
 			</div>
 			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
 				<div>
@@ -365,7 +442,7 @@ export class DamageStatistics extends React.Component {
 			maxWidth: 800,
 		}}>
 			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
-				<b>{localize({en: "Thunder 3", zh: "雷3统计"})}</b>
+				<b style={this.data.historical ? {color: colors.historical}:undefined}>{t3HeaderStr}</b>
 			</div>
 			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
 				<div>

@@ -2,7 +2,12 @@
 import {controller as ctl} from "./Controller";
 import {ActionNode, ActionType} from "./Record";
 import {ResourceType, SkillName} from "../Game/Common";
-import {DamageStatisticsData, DamageStatsMainTableEntry, DamageStatsT3TableEntry} from "../Components/DamageStatistics";
+import {
+	DamageStatisticsData,
+	DamageStatsMainTableEntry,
+	DamageStatsT3TableEntry,
+	SelectedStatisticsData
+} from "../Components/DamageStatistics";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 
 const AFUISkills = new Set<SkillName>([
@@ -163,11 +168,42 @@ function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 	return res;
 }
 
+export function calculateSelectedStats(props: {
+	tinctureBuffPercentage: number,
+	lastDamageApplicationTime: number
+}): SelectedStatisticsData {
+	let selected = {
+		duration: 0,
+		potency: {applied: 0, pending: 0},
+		gcdSkills: {applied: 0, pending: 0}
+	};
+
+	let firstSelected = ctl.record.getFirstSelection();
+	let lastSelected = ctl.record.getLastSelection();
+	if (firstSelected && lastSelected) {
+		if (firstSelected.tmp_startLockTime!==undefined && lastSelected.tmp_endLockTime!==undefined) {
+			selected.duration = lastSelected.tmp_endLockTime - firstSelected.tmp_startLockTime;
+		}
+	}
+
+	ctl.record.iterateSelected(node=>{
+		// gcd count
+		if (node.resolved()) selected.gcdSkills.applied++;
+		else selected.gcdSkills.pending++;
+		// potency
+		let p = node.getPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()});
+		selected.potency.applied += p.applied;
+		selected.potency.pending += p.snapshottedButPending;
+	});
+
+	return selected;
+}
+
 export function calculateDamageStats(props: {
 	tinctureBuffPercentage: number,
 	lastDamageApplicationTime: number
 }): DamageStatisticsData {
-	let totalPotency = ctl.record.getTotalPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()});
+	let totalPotency = {applied: 0, pending: 0};
 	let gcdSkills = {applied: 0, pending: 0};
 
 	// has a list of entries, initially empty
@@ -194,6 +230,12 @@ export function calculateDamageStats(props: {
 				if (node.resolved()) gcdSkills.applied++;
 				else gcdSkills.pending++;
 			}
+
+			// potency
+			let p = node.getPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()});
+			totalPotency.applied += p.applied;
+			totalPotency.pending += p.snapshottedButPending;
+
 			// main table
 			if (node.resolved()) {
 				let q = expandAndMatch(mainTable, node);
@@ -255,13 +297,16 @@ export function calculateDamageStats(props: {
 	});
 
 	return {
+		time: ctl.game.time,
 		tinctureBuffPercentage: props.tinctureBuffPercentage,
-		totalPotency: {applied: totalPotency.applied, pending: totalPotency.snapshottedButPending},
+		totalPotency: totalPotency,
 		lastDamageApplicationTime: props.lastDamageApplicationTime,
 		countdown: ctl.gameConfig.countdown,
 		gcdSkills: gcdSkills,
 		mainTable: mainTable,
 		mainTableTotalPotency: mainTableTotalPotency,
-		t3Table: t3Table
+		t3Table: t3Table,
+		historical: !ctl.displayingUpToDateGameState,
+		statsCsv: ctl.getStatsCsv()
 	};
 }

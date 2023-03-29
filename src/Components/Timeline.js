@@ -1,10 +1,10 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
-import {Expandable, FileFormat, Help, Input, SaveToFile, Slider, StaticFn} from "./Common";
+import {Input, Slider} from "./Common";
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
 import {TimelineCanvas} from "./TimelineCanvas";
-import {localize, localizeSkillName} from "./Localization";
+import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 
 export let updateTimelineView = () => {};
@@ -114,82 +114,6 @@ class TimelineMain extends React.Component {
 		</div>
 	}
 }
-
-let updateStatsDisplay = ()=>{}
-
-/*
-class StatsDisplay extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			historical: false,
-			cumulativePotency: 0,
-			cumulativeDuration: 0,
-			gcdCount: 0,
-			selectedPotency: 0,
-			selectedDuration: 0,
-			selectedGcdCount: 0,
-			statsBySkill: new Map(),
-			selectedStatsBySkill: new Map()
-		};
-		updateStatsDisplay = (newState=>{
-			this.setState(newState);
-		}).bind(this);
-	}
-	componentWillUnmount() {
-		updateStatsDisplay = ()=>{};
-	}
-	render() {
-		let colors = getCurrentThemeColors();
-		let cumulative = <div style={{flex: 1, color: this.state.historical ? colors.historical : colors.text}}>
-			<span>Last damage application time: {this.state.cumulativeDuration.toFixed(2)}</span><br/>
-			<span>Total applied potency: {(this.state.cumulativePotency).toFixed(2)}</span><br/>
-			<span>PPS <Help topic={"ppsNotes"} content={
-				<div className={"toolTip"}>
-					<div className="paragraph">
-						total applied potency divided by last damage application time since pull (0s).
-					</div>
-					<div className="paragraph">
-						could be inaccurate if any damage happens before pull
-					</div>
-				</div>
-			}/>: {this.state.cumulativeDuration <= 0 ? "N/A" : (this.state.cumulativePotency / this.state.cumulativeDuration).toFixed(2)}</span><br/>
-			<span>Applied GCD skills: {this.state.gcdCount}</span><br/>
-			<div>
-				<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
-					return controller.getStatsCsv();
-				}} filename={"stats"} displayName={"download damage log CSV"}/>
-			</div>
-		</div>
-
-		let statsBySkillEntries = [];
-		this.state.statsBySkill.forEach((skill, skillName)=>{
-			statsBySkillEntries.push({skillName: skillName, potencySum: skill.potencySum, count: skill.count});
-		});
-		statsBySkillEntries.sort((a, b)=>{ return b.potencySum - a.potencySum });
-		let statsBySkill = <div style={{flex: 1, color: this.state.historical ? colors.historical : colors.text}}>
-			{statsBySkillEntries.map(skill => {
-				let statsStr = localizeSkillName(skill.skillName) + " (" + skill.count + ")";
-				if (skill.potencySum > 0) statsStr += ": " + skill.potencySum.toFixed(2);
-				return <div style={{display: "inline-block", width: "50%"}} key={skill.skillName}>{statsStr}</div>
-			})}
-		</div>
-
-		// selected
-		let selected = <div style={{flex: 1}}>
-			<span>Duration (selected): {this.state.selectedDuration.toFixed(2)}</span><br/>
-			<span>Applied potency (selected): {this.state.selectedPotency.toFixed(2)}</span><br/>
-			<span>PPS (selected): {(this.state.selectedPotency / this.state.selectedDuration).toFixed(2)}</span><br/>
-			<span>Applied GCD skills (selected): {this.state.selectedGcdCount}</span>
-		</div>
-		return <div style={{ display: "flex", flexDirection: "row" }}>
-			{cumulative}
-			{statsBySkill}
-			{this.state.selectedDuration > 0 ? selected : <div style={{flex: 1}}/>}
-		</div>;
-	}
-}
- */
 
 class TimelineDisplaySettings extends React.Component {
 	constructor(props) {

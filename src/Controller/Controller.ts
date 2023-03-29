@@ -21,8 +21,8 @@ import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {StaticFn} from "../Components/Common";
 import {TimelineRenderingProps} from "../Components/TimelineCanvas";
 import {Potency, PotencyModifierType} from "../Game/Potency";
-import {updateDamageStats} from "../Components/DamageStatistics";
-import {calculateDamageStats} from "./DamageStatistics";
+import {updateDamageStats, updateSelectedStats} from "../Components/DamageStatistics";
+import {calculateDamageStats, calculateSelectedStats} from "./DamageStatistics";
 
 type Fixme = any;
 
@@ -97,7 +97,8 @@ class Controller {
 		this.updateStatusDisplay(game);
 		this.updateSkillButtons(game);
 		this.updateTimelineDisplay();
-		this.#updateDamageStats();
+		this.#updateTotalDamageStats();
+		this.#updateSelectedDamageStats();
 	}
 
 	#applyResourceOverrides(gameConfig: GameConfig) {
@@ -188,9 +189,6 @@ class Controller {
 			// apply resource overrides
 			this.#applyResourceOverrides(this.record.config);
 
-			// clear stats
-			this.#updateDamageStats();
-
 			// replay skills sequence
 			this.#replay({
 				line: tmpRecord,
@@ -211,13 +209,15 @@ class Controller {
 			this.updateStatusDisplay(this.game);
 			this.updateSkillButtons(this.game);
 			updateSkillSequencePresetsView();
-			this.#updateDamageStats();
+			this.#updateTotalDamageStats();
 			// timeline
 			this.timeline.drawElements();
 		});
 
 		this.lastAttemptedSkill = "";
 		setHistorical(true);
+
+		this.#updateSelectedDamageStats();
 	}
 
 	displayCurrentState() {
@@ -375,16 +375,22 @@ class Controller {
 		return m;
 	}
 
-	// called by reset, resolvePotency, displayCurrentState
-	#updateDamageStats() {
-
+	#updateTotalDamageStats() {
 		let damageStats = calculateDamageStats({
 			tinctureBuffPercentage: this.#tinctureBuffPercentage,
 			lastDamageApplicationTime: this.#lastDamageApplicationTime
 		});
-
 		updateDamageStats(damageStats);
 	}
+
+	#updateSelectedDamageStats() {
+		let stats = calculateSelectedStats({
+			tinctureBuffPercentage: this.#tinctureBuffPercentage,
+			lastDamageApplicationTime: this.#lastDamageApplicationTime
+		});
+		updateSelectedStats(stats);
+	}
+
 	getTincturePotencyMultiplier() {
 		return 1 + this.#tinctureBuffPercentage * 0.01;
 	}
@@ -453,7 +459,7 @@ class Controller {
 			});
 		}
 
-		this.#updateDamageStats();
+		this.#updateTotalDamageStats();
 	}
 
 	reportLucidTick(time: number, source: string) {

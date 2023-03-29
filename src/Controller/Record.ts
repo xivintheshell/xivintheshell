@@ -220,16 +220,6 @@ export class Record extends Line {
 		super.addActionNode(actionNode);
 	}
 
-	getTotalPotency(props: {tincturePotencyMultiplier: number}) {
-		let res = {applied: 0, snapshottedButPending: 0};
-		this.iterateAll(node => {
-			let p = node.getPotency(props);
-			res.applied += p.applied;
-			res.snapshottedButPending += p.snapshottedButPending;
-		});
-		return res;
-	}
-
 	iterateSelected(fn: (node: ActionNode) => void): void {
 		let itr: ActionNode | undefined = this.selectionStart;
 		while (itr && itr !== (this.selectionEnd?.next ?? undefined)) {
@@ -280,24 +270,12 @@ export class Record extends Line {
 			console.assert(false);
 		}
 	}
-	onClickNode(node: ActionNode, bShift: boolean, tincturePotencyMultiplier: number) {
+	onClickNode(node: ActionNode, bShift: boolean) {
 		if (bShift) {
 			this.selectUntil(node);
 		} else {
 			this.selectSingle(node);
 		}
-		let potency = 0;
-		this.iterateSelected(node=>{
-			potency += node.getPotency({tincturePotencyMultiplier: tincturePotencyMultiplier}).applied;
-		});
-
-		let selectionStart = this.getFirstSelection()?.tmp_startLockTime ?? 0;
-		let selectionEnd = this.getLastSelection()?.tmp_endLockTime ?? 0;
-		return {
-			selectedPotency: potency,
-			selectionStartTime: selectionStart,
-			selectionEndTime: selectionEnd
-		};
 	}
 	moveSelected(offset: number) { // positive: move right; negative: move left
 		if (offset === 0) return undefined;
