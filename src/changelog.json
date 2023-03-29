@@ -1,5 +1,11 @@
 [
 	{
+		"date": "3/29/23",
+		"changes": [
+			"rewrote damage statistics section"
+		]
+	},
+	{
 		"date": "3/27/23",
 		"changes": [
 			"always show recast progress bar when cd is not full (for skills with multiple stacks)",
