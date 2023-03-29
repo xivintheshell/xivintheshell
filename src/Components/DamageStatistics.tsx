@@ -16,6 +16,17 @@ export type DamageStatsMainTableEntry = {
 	potCount: number
 };
 
+export type DamageStatsT3TableEntry = {
+	time: number,
+	displayedModifiers: PotencyModifierType[],
+	baseMainPotency: number,
+	baseDotPotency: number,
+	calculationModifiers: PotencyModifier[],
+	numTicks: number,
+	potencyWithoutPot: number,
+	potPotency: number
+}
+
 export type DamageStatisticsData = {
 	tinctureBuffPercentage: number,
 	countdown: number,
@@ -33,6 +44,7 @@ export type DamageStatisticsData = {
 		withoutPot: number,
 		potPotency: number
 	}
+	t3Table: DamageStatsT3TableEntry[],
 }
 
 export let updateDamageStats = (data: DamageStatisticsData) => {};
@@ -59,7 +71,7 @@ function buffName(buff: PotencyModifierType) {
 	return text;
 }
 
-function BuffTag(props: {buff: PotencyModifierType}) {
+function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	let colors = getCurrentThemeColors();
 	let text: ContentNode = "";
 	let color: string = "#66ccff";
@@ -84,14 +96,30 @@ function BuffTag(props: {buff: PotencyModifierType}) {
 	} else if (props.buff === PotencyModifierType.ENO) {
 		text = localize({en: "ENO", zh: "天语"});
 		color = colors.resources.enochian;
+	} else if (props.tc) {
+		text = localize({en: "TC", zh: "雷云"});
+		color = colors.resources.thundercloud;
 	}
 	return <span style={{
 		borderRadius: 2,
 		border: "1px solid " + color,
 		fontSize: 11,
+		marginRight: 4,
 		padding: "1px 4px",
 		background: color + "1f"
 	}}><b style={{color: color}}>{text}</b></span>
+}
+
+function PotencyDisplay(props: {basePotency: number, helpTopic: string, calc: PotencyModifier[]}) {
+	let potency = props.basePotency;
+	let potencyExplanation = props.basePotency.toFixed(2) + (localize({en: "(base)", zh: "(基础威力)"}) as string);
+	props.calc.forEach(m=>{
+		potency *= m.factor;
+		if (m.factor !== 1) {
+			potencyExplanation += " × " + m.factor + "(" + buffName(m.source) + ")"
+		}
+	});
+	return <span>{potency.toFixed(2)} <Help topic={props.helpTopic} content={potencyExplanation}/></span>
 }
 
 const rowGap = "0.375em 0.75em";
@@ -104,7 +132,8 @@ export class DamageStatistics extends React.Component {
 		lastDamageApplicationTime: 0,
 		gcdSkills: {applied: 0, pending: 0},
 		mainTable: [],
-		mainTableTotalPotency: {withoutPot: 0, potPotency: 0}
+		mainTableTotalPotency: {withoutPot: 0, potPotency: 0},
+		t3Table: [],
 	};
 
 	constructor(props: {}) {
@@ -120,6 +149,9 @@ export class DamageStatistics extends React.Component {
 	}
 
 	render() {
+
+		//////////////////// Summary ///////////////////////
+
 		let lastDisplay = this.data.lastDamageApplicationTime - this.data.countdown;
 		let ppsAvailable = this.data.lastDamageApplicationTime > -this.data.countdown;
 		let lastDamageApplicationTimeDisplay = ppsAvailable ? lastDisplay.toFixed(2).toString() : "N/A";
@@ -155,6 +187,17 @@ export class DamageStatistics extends React.Component {
 
 		let colors = getCurrentThemeColors();
 
+		///////////////////////// Main table //////////////////////////
+
+		let cell = function(widthPercentage: number): CSSProperties {
+			return {
+				boxSizing: "border-box",
+				display: "inline-block",
+				width: widthPercentage + "%",
+				padding: rowGap,
+			};
+		}
+
 		let makeRow = function(props: {
 			lastRowSkill?: SkillName,
 			row: DamageStatsMainTableEntry,
@@ -162,17 +205,6 @@ export class DamageStatistics extends React.Component {
 		}) {
 			const sameAsLast = props.row.skillName === props.lastRowSkill;
 
-			const style: CSSProperties = {
-				padding:  rowGap,
-				display: "inline-block"
-			};
-
-			let w = function(widthPercentage: number): CSSProperties {
-				return {
-					display: "inline-block",
-					width: widthPercentage + "%"
-				};
-			}
 			let tags: React.ReactNode[] = [];
 			for (let i = 0; i < props.row.displayedModifiers.length; i++) {
 				tags.push(<BuffTag key={i} buff={props.row.displayedModifiers[i]}/>);
@@ -181,7 +213,7 @@ export class DamageStatistics extends React.Component {
 			// skill name node
 			let skillNameNode: React.ReactNode | undefined = undefined;
 			if (!sameAsLast) {
-				skillNameNode = <span style={style}>
+				skillNameNode = <span>
 					{localizeSkillName(props.row.skillName)} {props.row.skillName===SkillName.Thunder3 ?
 					<Help topic={"potencyStats-t3"} content={localize({en: "See Thunder 3 table below for details", zh: "详见下方雷3表格"})}/>
 					: undefined}
@@ -189,23 +221,18 @@ export class DamageStatistics extends React.Component {
 			}
 
 			// potency
-			let potency = props.row.basePotency;
-			let potencyExplanation = props.row.basePotency + (localize({en: "(base)", zh: "(基础威力)"}) as string);
-			props.row.calculationModifiers.forEach(m=>{
-				potency *= m.factor;
-				if (m.factor !== 1) {
-					potencyExplanation += " × " + m.factor + "(" + buffName(m.source) + ")"
-				}
-			});
 			let potencyNode: React.ReactNode | undefined = undefined;
-			if (potency > 0 && props.row.skillName !== SkillName.Thunder3) {
-				potencyNode = <span style={style}>{potency.toFixed(2)} <Help topic={"potencyCalc-"+props.key} content={potencyExplanation}/></span>
+			if (props.row.basePotency > 0 && props.row.skillName !== SkillName.Thunder3) {
+				potencyNode = <PotencyDisplay
+					basePotency={props.row.basePotency}
+					helpTopic={"mainTable-potencyCalc-"+props.key}
+					calc={props.row.calculationModifiers}/>;
 			}
 
 			// total potency
 			let totalPotencyNode: React.ReactNode | undefined = undefined;
 			if (props.row.totalPotencyWithoutPot + props.row.potPotency > 0) {
-				totalPotencyNode = <span style={style}>
+				totalPotencyNode = <span>
 					{props.row.totalPotencyWithoutPot.toFixed(2)}
 					{props.row.potPotency > 0 ? <span style={{
 						color: colors.timeline.potCover
@@ -216,12 +243,13 @@ export class DamageStatistics extends React.Component {
 			return <div key={props.key} style={{
 				textAlign: "left",
 				position: "relative",
-				borderTop: sameAsLast ? "none" : "1px solid " + colors.bgMediumContrast}}>
-				<div style={w(20)}>{skillNameNode}</div>
-				<div style={w(15)}><span style={style}>{tags}</span></div>
-				<div style={w(22)}>{potencyNode}</div>
-				<div style={w(8)}><span style={style}>{props.row.count}</span></div>
-				<div style={w(35)}>{totalPotencyNode}</div>
+				borderTop: sameAsLast ? "none" : "1px solid " + colors.bgMediumContrast
+			}}>
+				<div style={cell(20)}>{skillNameNode}</div>
+				<div style={cell(15)}>{tags}</div>
+				<div style={cell(20)}>{potencyNode}</div>
+				<div style={cell(10)}>{props.row.count}</div>
+				<div style={cell(35)}>{totalPotencyNode}</div>
 			</div>
 		}
 		let tableRows: React.ReactNode[] = [];
@@ -233,6 +261,64 @@ export class DamageStatistics extends React.Component {
 			}));
 		}
 
+		////////////////////// T3 Table ////////////////////////
+
+		let makeT3Row = function(props: {
+			row: DamageStatsT3TableEntry,
+			key: number
+		}) {
+
+			// tags
+			let tags: React.ReactNode[] = [];
+			for (let i = 0; i < props.row.displayedModifiers.length; i++) {
+				tags.push(<BuffTag key={i} buff={props.row.displayedModifiers[i]}/>);
+			}
+			if (props.row.baseMainPotency === 400) {
+				tags.push(<BuffTag key={tags.length} tc={true}/>);
+			}
+
+			// potency
+			let mainPotencyNode = <PotencyDisplay
+				basePotency={props.row.baseMainPotency}
+				helpTopic={"t3Table-main-"+props.key}
+				calc={props.row.calculationModifiers}/>
+			let dotPotencyNode = <PotencyDisplay
+				basePotency={props.row.baseDotPotency}
+				helpTopic={"t3Table-dot-"+props.key}
+				calc={props.row.calculationModifiers}/>
+
+			// total potency
+			let totalPotencyNode = <span>
+				{props.row.potencyWithoutPot.toFixed(2)}
+				{props.row.potPotency > 0 ? <span style={{
+					color: colors.timeline.potCover
+				}}> +{props.row.potPotency.toFixed(2)}({localize({en: "pot", zh: "爆发药"})})</span> : undefined}
+			</span>
+
+			return <div key={props.key} style={{
+				textAlign: "left",
+				position: "relative",
+				borderTop: "1px solid " + colors.bgMediumContrast
+			}}>
+				<div style={cell(13)}>{props.row.time.toFixed(2)}</div>
+				<div style={cell(12)}>{tags}</div>
+				<div style={cell(15)}>{mainPotencyNode}</div>
+				<div style={cell(15)}>{dotPotencyNode}</div>
+				<div style={cell(10)}>{props.row.numTicks}</div>
+				<div style={cell(35)}>{totalPotencyNode}</div>
+			</div>
+		}
+
+		let t3TableRows: React.ReactNode[] = [];
+		for (let i = 0; i < this.data.t3Table.length; i++) {
+			t3TableRows.push(makeT3Row({
+				row: this.data.t3Table[i],
+				key: i
+			}));
+		}
+
+		//////////////////////////////////////////////////////////
+
 		let headerCellStyle: CSSProperties = {
 			display: "inline-block",
 			padding: rowGap,
@@ -242,29 +328,33 @@ export class DamageStatistics extends React.Component {
 			margin: "0 auto",
 			marginBottom: 40,
 			maxWidth: 800,
-			outline: "1px solid " + colors.bgMediumContrast
 		}}>
-			<div>
-				<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}><b>skill</b></span></div>
-				<div style={{display: "inline-block", width: "22%"}}><span style={headerCellStyle}><b>potency</b></span></div>
-				<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>count</b></span></div>
-				<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}><b>total</b></span></div>
+			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
+				<b>{localize({en: "skills used", zh: "技能使用统计"})}</b>
 			</div>
-			{tableRows}
-			<div style={{
-				textAlign: "left",
-				position: "relative",
-				borderTop: "1px solid " + colors.bgMediumContrast
-			}}>
-				<div style={{display: "inline-block", width: "65%"}}/>
-				<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}>
+			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
+				<div>
+					<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}><b>{localize({en: "skill", zh: "技能"})}</b></span></div>
+					<div style={{display: "inline-block", width: "20%"}}><span style={headerCellStyle}><b>{localize({en: "potency", zh: "单次威力"})}</b></span></div>
+					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "count", zh: "数量"})}</b></span></div>
+					<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
+				</div>
+				{tableRows}
+				<div style={{
+					textAlign: "left",
+					position: "relative",
+					borderTop: "1px solid " + colors.bgMediumContrast
+				}}>
+					<div style={{display: "inline-block", width: "65%"}}/>
+					<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}>
 					{this.data.mainTableTotalPotency.withoutPot.toFixed(2)}
-					{this.data.mainTableTotalPotency.potPotency>0 ?
-						<span style={{color: colors.timeline.potCover}}> +{this.data.mainTableTotalPotency.potPotency.toFixed(2)}{localize({
-							en: "(pot +" + this.data.tinctureBuffPercentage + "%)",
-							zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)"
-						})}</span> : undefined}
+						{this.data.mainTableTotalPotency.potPotency>0 ?
+							<span style={{color: colors.timeline.potCover}}> +{this.data.mainTableTotalPotency.potPotency.toFixed(2)}{localize({
+								en: "(pot +" + this.data.tinctureBuffPercentage + "%)",
+								zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)"
+							})}</span> : undefined}
 				</span></div>
+				</div>
 			</div>
 		</div>
 
@@ -273,14 +363,19 @@ export class DamageStatistics extends React.Component {
 			margin: "0 auto",
 			marginBottom: 40,
 			maxWidth: 800,
-			outline: "1px solid " + colors.bgMediumContrast
 		}}>
-			<div>
-				<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>time</b></span></div>
-				<div style={{display: "inline-block", width: "22%"}}><span style={headerCellStyle}><b>initial potency</b></span></div>
-				<div style={{display: "inline-block", width: "22%"}}><span style={headerCellStyle}><b>DoT potency</b></span></div>
-				<div style={{display: "inline-block", width: "13%"}}><span style={headerCellStyle}><b>ticks</b></span></div>
-				<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}><b>total</b></span></div>
+			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
+				<b>{localize({en: "Thunder 3", zh: "雷3统计"})}</b>
+			</div>
+			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
+				<div>
+					<div style={{display: "inline-block", width: "25%"}}><span style={headerCellStyle}><b>{localize({en: "time", zh: "时间"})}</b></span></div>
+					<div style={{display: "inline-block", width: "15%"}}><span style={headerCellStyle}><b>{localize({en: "initial", zh: "初始威力"})}</b></span></div>
+					<div style={{display: "inline-block", width: "15%"}}><span style={headerCellStyle}><b>{localize({en: "DoT potency", zh: "DoT威力"})}</b></span></div>
+					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "ticks", zh: "跳雷次数"})}</b></span></div>
+					<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
+				</div>
+				{t3TableRows}
 			</div>
 		</div>
 

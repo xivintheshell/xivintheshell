@@ -2,7 +2,7 @@
 import {controller as ctl} from "./Controller";
 import {ActionNode, ActionType} from "./Record";
 import {ResourceType, SkillName} from "../Game/Common";
-import {DamageStatisticsData, DamageStatsMainTableEntry} from "../Components/DamageStatistics";
+import {DamageStatisticsData, DamageStatsMainTableEntry, DamageStatsT3TableEntry} from "../Components/DamageStatistics";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 
 const AFUISkills = new Set<SkillName>([
@@ -49,6 +49,48 @@ type ExpandedNode = {
 	basePotency: number,
 	calculationModifiers: PotencyModifier[],
 };
+
+function expandT3Node(node: ActionNode) {
+	console.assert(node.getPotencies().length > 0);
+	console.assert(node.skillName === SkillName.Thunder3);
+	let entry: DamageStatsT3TableEntry = {
+		time: (node.tmp_startLockTime ?? ctl.gameConfig.countdown) - ctl.gameConfig.countdown,
+		displayedModifiers: [],
+		baseMainPotency: 0,
+		baseDotPotency: 0,
+		calculationModifiers: [],
+		numTicks: 0,
+		potencyWithoutPot: 0,
+		potPotency: 0
+	};
+
+	let mainPotency = node.getPotencies()[0];
+	entry.baseMainPotency = mainPotency.base;
+	entry.calculationModifiers = mainPotency.modifiers;
+
+	for (let i = 0; i < mainPotency.modifiers.length; i++) {
+		if (mainPotency.modifiers[i].source === PotencyModifierType.ENO) {
+			entry.displayedModifiers.push(PotencyModifierType.ENO)
+		}
+	}
+
+	for (let i = 0; i < node.getPotencies().length; i++) {
+		if (i > 0) {
+			let p = node.getPotencies()[i];
+			if (p.hasResolved()) {
+				entry.baseDotPotency = p.base;
+				entry.numTicks += 1;
+			}
+		}
+	}
+
+	let potencyWithoutPot = node.getPotency({tincturePotencyMultiplier: 1}).applied;
+	let potencyWithPot = node.getPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()}).applied;
+	entry.potencyWithoutPot = potencyWithPot;
+	entry.potPotency = potencyWithPot - potencyWithoutPot;
+
+	return entry;
+}
 
 function expandNode(node: ActionNode) : ExpandedNode {
 	let res: ExpandedNode = {
@@ -140,6 +182,8 @@ export function calculateDamageStats(props: {
 		potPotency: 0
 	};
 
+	let t3Table: DamageStatsT3TableEntry[] = [];
+
 	let skillPotencies: Map<SkillName, number> = new Map();
 
 	ctl.record.iterateAll(node=>{
@@ -183,6 +227,11 @@ export function calculateDamageStats(props: {
 				// and main table total
 				mainTableTotalPotency.withoutPot += potencyWithoutPot;
 				mainTableTotalPotency.potPotency += (potencyWithPot - potencyWithoutPot);
+
+				// t3 table
+				if (node.skillName === SkillName.Thunder3) {
+					t3Table.push(expandT3Node(node));
+				}
 			}
 		}
 	});
@@ -212,6 +261,7 @@ export function calculateDamageStats(props: {
 		countdown: ctl.gameConfig.countdown,
 		gcdSkills: gcdSkills,
 		mainTable: mainTable,
-		mainTableTotalPotency: mainTableTotalPotency
+		mainTableTotalPotency: mainTableTotalPotency,
+		t3Table: t3Table
 	};
 }

@@ -31,7 +31,8 @@ export type ThemeColors = {
 		umbralHeart: string,
 		paradox: string,
 		polyTimer: string,
-		polyStacks: string
+		polyStacks: string,
+		thundercloud: string,
 	},
 	timeline: {
 		ruler: string,
@@ -76,7 +77,8 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				umbralHeart: "#8fced5",
 				paradox: "#d953ee",
 				polyTimer: "#594472",
-				polyStacks: "#b138ee"
+				polyStacks: "#b138ee",
+				thundercloud: "#9e90ff"
 			},
 			timeline: {
 				ruler: "#2d2d2d",
@@ -118,7 +120,8 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				umbralHeart: "#95dae3",
 				paradox: "#d953ee",
 				polyTimer: "#d5bbf1",
-				polyStacks: "#b138ee"
+				polyStacks: "#b138ee",
+				thundercloud: "#9e90ff"
 			},
 			timeline: {
 				ruler: "#e9e9e9",
@@ -127,7 +130,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				lockBar: "#9d9d9d",
 				gcdBar: "#ccefc6",
 				llCover: "#87ec71",
-				potCover: "#faa68b",
+				potCover: "#ff865c",
 				damageMark: "#ff0000",
 				mpTickMark: "#b6dfea",
 				warningMark: "#ffbb29",
