@@ -26,14 +26,17 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 	let ui = resources.get(ResourceType.UmbralIce);
 	if (ui.availableAmount() === 1) {
 		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI1, factor: 0.9});
+		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI1, factor: 1});
 	}
 	// ui2
 	else if (ui.availableAmount() === 2) {
 		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI2, factor: 0.8});
+		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI2, factor: 1});
 	}
 	// ui3
 	else if (ui.availableAmount() === 3) {
 		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI3, factor: 0.7});
+		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI3, factor: 1});
 	}
 
 	// af1

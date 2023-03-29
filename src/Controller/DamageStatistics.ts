@@ -61,10 +61,10 @@ function expandNode(node: ActionNode) : ExpandedNode {
 			console.assert(node.getPotencies().length > 0);
 			// use the one that's not enochian or pot (then must be one of af123, ui123)
 			let mainPotency = node.getPotencies()[0];
+			res.basePotency = mainPotency.base;
 			for (let i = 0; i < mainPotency.modifiers.length; i++) {
 				let tag = mainPotency.modifiers[i].source;
 				if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
-					res.basePotency = mainPotency.base;
 					res.displayedModifiers = [tag];
 					res.calculationModifiers = mainPotency.modifiers;
 					break;
@@ -135,6 +135,12 @@ export function calculateDamageStats(props: {
 	// sort the entries according to some rule, then return.
 
 	let mainTable: DamageStatsMainTableEntry[] = [];
+	let mainTableTotalPotency = {
+		withoutPot: 0,
+		potPotency: 0
+	};
+
+	let skillPotencies: Map<SkillName, number> = new Map();
 
 	ctl.record.iterateAll(node=>{
 		if (node.type === ActionType.Skill && node.skillName) {
@@ -169,13 +175,23 @@ export function calculateDamageStats(props: {
 					mainTable[q.mainTableIndex].potCount += 1;
 				}
 
+				// also get contrib of each skill
+				let skillPotency = skillPotencies.get(node.skillName) ?? 0;
+				skillPotency += potencyWithPot;
+				skillPotencies.set(node.skillName, skillPotency);
+
+				// and main table total
+				mainTableTotalPotency.withoutPot += potencyWithoutPot;
+				mainTableTotalPotency.potPotency += (potencyWithPot - potencyWithoutPot);
 			}
 		}
 	});
 
 	mainTable.sort((a, b)=>{
 		if (a.skillName !== b.skillName) {
-			return b.totalPotencyWithoutPot - a.totalPotencyWithoutPot;
+			let pa = skillPotencies.get(a.skillName) ?? 0;
+			let pb = skillPotencies.get(b.skillName) ?? 0;
+			return pb - pa;
 		} else {
 			if (a.displayedModifiers.length !== b.displayedModifiers.length) {
 				return b.displayedModifiers.length - a.displayedModifiers.length;
@@ -195,6 +211,7 @@ export function calculateDamageStats(props: {
 		lastDamageApplicationTime: props.lastDamageApplicationTime,
 		countdown: ctl.gameConfig.countdown,
 		gcdSkills: gcdSkills,
-		mainTable: mainTable
+		mainTable: mainTable,
+		mainTableTotalPotency: mainTableTotalPotency
 	};
 }

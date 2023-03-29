@@ -148,7 +148,6 @@ export default class Main extends React.Component {
 				style={{
 					display: "inline-block",
 					padding: 8,
-					marginBottom: 16,
 					outline: borderColor
 				}}
 				tabIndex={-1}
@@ -268,7 +267,7 @@ export default class Main extends React.Component {
 							display: "flex",
 							flexDirection: "row",
 							position: "relative",
-							marginBottom: "16px"}}>
+							marginBottom: "20px"}}>
 							{mainControlRegion}
 							<div className={"staticScrollbar"} style={{
 								flex: 3,
@@ -284,6 +283,11 @@ export default class Main extends React.Component {
 							</div>
 						</div>
 						<SkillSequencePresets/>
+						<hr style={{
+							margin: "30px 0px",
+							border: "none",
+							borderTop: "1px solid " + colors.bgHighContrast,
+						}}/>
 						<DamageStatistics/>
 					</div>
 				</div>

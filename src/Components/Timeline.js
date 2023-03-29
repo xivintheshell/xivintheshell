@@ -93,7 +93,7 @@ class TimelineMain extends React.Component {
 			overflowX: "scroll",
 			overflowY: "clip",
 			outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
-			margin: "10px 0"
+			marginBottom: 10
 		}} ref={this.myRef} onScroll={e=>{
 			if (this.myRef.current) {
 				this.myRef.current.scrollLeft = Math.min(this.myRef.current.scrollWidth - this.myRef.current.clientWidth, this.myRef.current.scrollLeft);
@@ -106,7 +106,6 @@ class TimelineMain extends React.Component {
 			<div style={{
 				position: "relative",
 				backgroundColor: "transparent",
-				outline: "1px solid red",
 				width: this.state.timelineWidth,
 				height: this.state.timelineHeight,
 				pointerEvents: "none"
@@ -263,12 +262,6 @@ export class Timeline extends React.Component {
 			borderTop: "2px solid " + getCurrentThemeColors().bgHighContrast,
 			flex: 0
 		}}>
-			{/*
-			<Expandable
-				title={"Damage stats"}
-				defaultShow={false}
-				content={<StatsDisplay/>}
-			/>*/}
 			<TimelineMain/>
 			<TimelineDisplaySettings/>
 			<TimelineMarkerPresets/>
