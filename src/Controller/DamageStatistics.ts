@@ -187,13 +187,18 @@ export function calculateSelectedStats(props: {
 	}
 
 	ctl.record.iterateSelected(node=>{
-		// gcd count
-		if (node.resolved()) selected.gcdSkills.applied++;
-		else selected.gcdSkills.pending++;
-		// potency
-		let p = node.getPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()});
-		selected.potency.applied += p.applied;
-		selected.potency.pending += p.snapshottedButPending;
+		if (node.type === ActionType.Skill && node.skillName) {
+			// gcd count
+			let skillInfo = ctl.game.skillsList.get(node.skillName);
+			if (skillInfo.info.cdName === ResourceType.cd_GCD) {
+				if (node.resolved()) selected.gcdSkills.applied++;
+				else selected.gcdSkills.pending++;
+			}
+			// potency
+			let p = node.getPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()});
+			selected.potency.applied += p.applied;
+			selected.potency.pending += p.snapshottedButPending;
+		}
 	});
 
 	return selected;

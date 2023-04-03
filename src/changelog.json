@@ -1,5 +1,25 @@
 [
 	{
+		"date": "4/2/23",
+		"changes": [
+			"updated complete TOP markers by Santa",
+			"fixed selected GCD skills accidentally counting abilities",
+			"fixed another bizarre bug related to timeline editing.."
+		]
+	},
+	{
+		"date": "4/1/23",
+		"changes": [
+			"bugfix: make Between the Lines also available when outside of LL (oops...)"
+		]
+	},
+	{
+		"date": "3/31/23",
+		"changes": [
+			"made Between the Lines only available when there's LL"
+		]
+	},
+	{
 		"date": "3/29/23",
 		"changes": [
 			"rewrote damage statistics section"
@@ -38,7 +58,7 @@
 		"date": "3/6/23",
 		"changes": [
 			"qol: auto scroll editor when clicked on a skill on timeline and vice versa (only works for skills though)",
-			"updated TOP markers form Santa"
+			"updated TOP markers from Santa"
 		]
 	},
 	{

@@ -81,7 +81,7 @@ function PresetButtons() {
 		<LoadCombinedTracksBtn displayName={"P2S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s.txt"}/>
 		<br/>
 		<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/dsr_p7.txt"}/>
-		<LoadCombinedTracksBtn displayName={"TOP by Santa (WIP, mechanics up to P5, updated 3/6)"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/TOP_2023_03_06.track"}/>
+		<LoadCombinedTracksBtn displayName={"TOP by Santa"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/TOP_2023_04_02.track"}/>
 		<br/>
 		<span>{localize({en: "From 不打冰3攻略组, in Chinese: ", zh: "来自不打冰3攻略组："})}</span>
 		<LoadCombinedTracksBtn displayName={"P5S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p5s_zh.txt"}/>

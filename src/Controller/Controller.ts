@@ -127,7 +127,7 @@ class Controller {
 		this.#lastDamageApplicationTime = tmpLastDamageApplicationTime;
 	}
 
-	checkRecordValidity(inRecord: Record, firstEditedNode: ActionNode | undefined) {
+	checkRecordValidity(inRecord: Record, editedNodes: ActionNode[]) {
 
 		console.assert(inRecord.config !== undefined);
 
@@ -139,7 +139,7 @@ class Controller {
 		};
 
 		// no edit happened
-		if (!firstEditedNode) {
+		if (editedNodes.length === 0) {
 			console.log("no edit happened");
 			return result;
 		}
@@ -157,13 +157,15 @@ class Controller {
 			this.#applyResourceOverrides(this.record.config);
 
 			// replay skills sequence
+			this.#bAddingLine = true;
 			let status = this.#replay({
 				line: inRecord,
 				replayMode: ReplayMode.Edited,
-				firstEditedNode: firstEditedNode,
+				editedNodes: editedNodes,
 				selectionStart: inRecord.getFirstSelection(),
 				selectionEnd: inRecord.getLastSelection()
 			});
+			this.#bAddingLine = false;
 
 			result.isValid = status.success;
 			result.firstInvalidAction = status.firstInvalidNode;
@@ -317,7 +319,8 @@ class Controller {
 		}
 	}
 
-	applyEditedRecord(newRecord : Record, firstEditedNode: ActionNode | undefined) {
+	// assumes newRecord can be replayed exactly
+	applyEditedRecord(newRecord : Record) {
 		if (!newRecord.config) {
 			console.assert(false);
 			return;
@@ -330,9 +333,8 @@ class Controller {
 		// replay actions
 		let replayResult = this.#replay({
 			line: newRecord,
-			replayMode: ReplayMode.Edited,
-			removeTrailingIdleTime: true,
-			firstEditedNode: firstEditedNode
+			replayMode: ReplayMode.Exact,
+			removeTrailingIdleTime: true
 		});
 		console.assert(replayResult.success);
 
@@ -355,24 +357,6 @@ class Controller {
 		}
 
 		this.autoSave();
-	}
-
-	#getPotencyStatsBySkill(selectedOnly: boolean) {
-		let m = new Map<SkillName, {count: number, potencySum: number}>();
-		let fn = (node: ActionNode)=>{
-			if (node.skillName!==undefined && node.resolved()) {
-				let entry = m.get(node.skillName) ?? {count: 0, potencySum: 0};
-				entry.count += 1;
-				entry.potencySum += node.getPotency({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}).applied;
-				m.set(node.skillName, entry);
-			}
-		};
-		if (selectedOnly) {
-			this.record.iterateSelected(fn);
-		} else {
-			this.record.iterateAll(fn);
-		}
-		return m;
 	}
 
 	#updateTotalDamageStats() {
@@ -725,6 +709,14 @@ class Controller {
 		return status;
 	}
 
+	#inArray(n: ActionNode | undefined, l: ActionNode[] | undefined) {
+		if (!l) return false;
+		for (let i = 0; i < l.length; i++) {
+			if (n === l[i]) return true;
+		}
+		return false;
+	}
+
 	// returns true on success
 	#replay(props: {
 		line: Line,
@@ -732,7 +724,7 @@ class Controller {
 		removeTrailingIdleTime?: boolean,
 		maxReplayTime?: number,
 		cutoffAction?: ActionNode,
-		firstEditedNode?: ActionNode, // for ReplayMode.Edited: everything before this should instead use ReplayMode.Exact
+		editedNodes?: ActionNode[], // for ReplayMode.Edited: everything before this should instead use ReplayMode.Exact
 		selectionStart?: ActionNode,
 		selectionEnd?: ActionNode
 	}) : {
@@ -766,7 +758,10 @@ class Controller {
 		while (itr && itr !== props.cutoffAction) {
 
 			// switch to edited replay past the first edited node
-			if (props.replayMode === ReplayMode.Edited && (itr===props.firstEditedNode || itr.next===props.firstEditedNode)) {
+			if (props.replayMode === ReplayMode.Edited
+				&& currentReplayMode === ReplayMode.Exact
+				&& (this.#inArray(itr, props.editedNodes) || this.#inArray(itr.next, props.editedNodes)))
+			{
 				currentReplayMode = ReplayMode.Edited;
 			}
 

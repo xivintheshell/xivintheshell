@@ -342,7 +342,7 @@ export class Record extends Line {
 	deleteSelected() {
 		let firstSelected = this.getFirstSelection();
 		let lastSelected = this.getLastSelection();
-		if (!firstSelected) return;
+		if (!firstSelected) return undefined;
 		this.unselectAll();
 
 		let firstBeforeSelected : ActionNode | undefined = undefined;
@@ -364,7 +364,10 @@ export class Record extends Line {
 		if (firstBeforeSelected) {
 			firstBeforeSelected.next = lastSelected?.next;
 		}
-		return firstBeforeSelected ? firstBeforeSelected.next : this.head;
+		if (firstBeforeSelected) {
+			return firstBeforeSelected===this.tail ? this.tail : firstBeforeSelected.next;
+		}
+		return this.head;
 	}
 	serialized() {
 		console.assert(this.config);

@@ -566,7 +566,12 @@ export class SkillsList extends Map<SkillName, Skill> {
 		// Between the Lines
 		skillsList.set(SkillName.BetweenTheLines, new Skill(SkillName.BetweenTheLines,
 			() => {
-				return true;
+				let ll = game.resources.get(ResourceType.LeyLines);
+				let cachedEnabled = ll.enabled;
+				ll.enabled = true;
+				let hasLL = ll.available(1); // gets raw amount
+				ll.enabled = cachedEnabled;
+				return hasLL;
 			},
 			(game, node) => {
 				game.useInstantSkill({

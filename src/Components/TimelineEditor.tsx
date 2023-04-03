@@ -68,7 +68,7 @@ export class TimelineEditor extends React.Component {
 	state: {
 		editedRecord: Record | undefined
 		recordValidStatus: RecordValidStatus | undefined
-		firstEditedNode: ActionNode | undefined
+		editedNodes: ActionNode[]
 	}
 	firstSelected: React.RefObject<HTMLDivElement>;
 	constructor(props: {}) {
@@ -76,7 +76,7 @@ export class TimelineEditor extends React.Component {
 		this.state = {
 			editedRecord: undefined,
 			recordValidStatus: undefined,
-			firstEditedNode: undefined
+			editedNodes: []
 		}
 		this.firstSelected = React.createRef();
 	}
@@ -111,7 +111,8 @@ export class TimelineEditor extends React.Component {
 	markClean() {
 		this.setState({
 			editedRecord: undefined,
-			recordValidStatus: undefined
+			recordValidStatus: undefined,
+			editedNodes: []
 		});
 	}
 
@@ -151,13 +152,14 @@ export class TimelineEditor extends React.Component {
 							// would show only after editing properties
 							// apply edits to timeline
 							if (this.state.editedRecord) {
-								controller.applyEditedRecord(this.state.editedRecord, this.state.firstEditedNode);
+								// this.state.editedRecord should always update to something that can be replayed exactly
+								// because it comes from status.straightenedIfValid
+								controller.applyEditedRecord(this.state.editedRecord);
 							} else {
 								console.assert(false);
 							}
 							this.markClean();
 
-							//controller.record.unselectAll();
 							controller.displayCurrentState();
 
 						}}>apply changes to timeline and save</button>
@@ -200,16 +202,22 @@ export class TimelineEditor extends React.Component {
 						setHandledSkillSelectionThisFrame(true);
 						// move selected skills up
 						let copy = this.getRecordCopy();
+						let editedNodes = this.state.editedNodes;
 						let firstEditedNode = copy.moveSelected(-1);
-						let status = controller.checkRecordValidity(copy, firstEditedNode);
+						if (firstEditedNode) editedNodes.push(firstEditedNode);
+						let status = controller.checkRecordValidity(copy, editedNodes);
 						if (firstEditedNode && status.straightenedIfValid) {
 							this.setState({
-								editedRecord: status.straightenedIfValid
+								editedRecord: status.straightenedIfValid,
+								editedNodes: []
+							});
+						} else {
+							this.setState({
+								editedNodes: editedNodes
 							});
 						}
 						this.setState({
 							recordValidStatus: status,
-							firstEditedNode: firstEditedNode
 						});
 					}
 				}}>{localize({en: "move up", zh: "上移"})}</button>
@@ -219,16 +227,22 @@ export class TimelineEditor extends React.Component {
 						setHandledSkillSelectionThisFrame(true);
 						// move selected skills down
 						let copy = this.getRecordCopy();
+						let editedNodes = this.state.editedNodes;
 						let firstEditedNode = copy.moveSelected(1);
-						let status = controller.checkRecordValidity(copy, firstEditedNode);
+						if (firstEditedNode) editedNodes.push(firstEditedNode);
+						let status = controller.checkRecordValidity(copy, editedNodes);
 						if (firstEditedNode && status.straightenedIfValid) {
 							this.setState({
-								editedRecord: status.straightenedIfValid
+								editedRecord: status.straightenedIfValid,
+								editedNodes: []
+							});
+						} else {
+							this.setState({
+								editedNodes: editedNodes
 							});
 						}
 						this.setState({
 							recordValidStatus: status,
-							firstEditedNode: firstEditedNode
 						});
 					}
 				}}>{localize({en: "move down", zh: "下移"})}</button>
@@ -237,16 +251,22 @@ export class TimelineEditor extends React.Component {
 					if (displayedRecord.getFirstSelection()) {
 						setHandledSkillSelectionThisFrame(true);
 						let copy = this.getRecordCopy();
+						let editedNodes = this.state.editedNodes;
 						let firstEditedNode = copy.deleteSelected();
-						let status = controller.checkRecordValidity(copy, firstEditedNode);
+						if (firstEditedNode) editedNodes.push(firstEditedNode);
+						let status = controller.checkRecordValidity(copy, editedNodes);
 						if (firstEditedNode && status.straightenedIfValid) {
 							this.setState({
-								editedRecord: status.straightenedIfValid
+								editedRecord: status.straightenedIfValid,
+								editedNodes: []
+							});
+						} else {
+							this.setState({
+								editedNodes: editedNodes
 							});
 						}
 						this.setState({
 							recordValidStatus: status,
-							firstEditedNOde: firstEditedNode
 						});
 					}
 				}}>{localize({en: "delete selected", zh: "删除所选"})}</button>
