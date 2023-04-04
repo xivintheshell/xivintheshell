@@ -23,6 +23,7 @@ import {TimelineRenderingProps} from "../Components/TimelineCanvas";
 import {Potency, PotencyModifierType} from "../Game/Potency";
 import {updateDamageStats, updateSelectedStats} from "../Components/DamageStatistics";
 import {calculateDamageStats, calculateSelectedStats} from "./DamageStatistics";
+import {localizeSkillName} from "../Components/Localization";
 
 type Fixme = any;
 
@@ -39,6 +40,7 @@ class Controller {
 	record;
 	game;
 	#tinctureBuffPercentage = 0;
+	#untargetableMask = true;
 	#lastDamageApplicationTime;
 	#statsCsv : {
 		time: number,
@@ -92,13 +94,17 @@ class Controller {
 		this.#requestRestart();
 	}
 
+	updateStats() {
+		this.#updateTotalDamageStats();
+		this.#updateSelectedDamageStats();
+	}
+
 	updateAllDisplay(game: GameState = this.game) {
 		updateConfigDisplay(game.config.serialized());
 		this.updateStatusDisplay(game);
 		this.updateSkillButtons(game);
 		this.updateTimelineDisplay();
-		this.#updateTotalDamageStats();
-		this.#updateSelectedDamageStats();
+		this.updateStats();
 	}
 
 	#applyResourceOverrides(gameConfig: GameConfig) {
@@ -382,13 +388,15 @@ class Controller {
 		// updates cumulative sum
 		this.#tinctureBuffPercentage = percentage;
 		// refresh stats
-		let selectedPotency = 0;
-		this.record.iterateSelected(node=>{
-			selectedPotency += node.getPotency({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}).applied;
-		});
 		this.displayCurrentState();
 		updateTimelineView();
 	}
+	setUntargetableMask(useMask: boolean) {
+		this.#untargetableMask = useMask;
+		this.displayCurrentState();
+		updateTimelineView();
+	}
+	getUntargetableMask() { return this.#untargetableMask; }
 
 	getTimelineRenderingProps(): TimelineRenderingProps {
 		return {
@@ -397,8 +405,10 @@ class Controller {
 			countdown: this.gameConfig.countdown,
 			scale: this.timeline.scale,
 			tincturePotencyMultiplier: this.getTincturePotencyMultiplier(),
+			untargetableMask: this.#untargetableMask,
 			elements: this.timeline.elements,
-			markers: this.timeline.markers,
+			allMarkers: this.timeline.getAllMarkers(),
+			untargetableMarkers: this.timeline.getUntargetableMarkers(),
 			selectionStartX: this.timeline.positionFromTime(this.record.getFirstSelection()?.tmp_startLockTime ?? 0),
 			selectionEndX: this.timeline.positionFromTime(this.record.getLastSelection()?.tmp_endLockTime ?? 0)
 		};
@@ -427,11 +437,11 @@ class Controller {
 		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.DamageMark,
-				potency: p.getAmount({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}),
+				potency: p,//p.getAmount({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}),
 				buffs: pot ? [ResourceType.Tincture] : [],
 				time: this.game.time,
 				displayTime: this.game.getDisplayTime(),
-				source: p.sourceSkill + "@" + (p.sourceTime - this.gameConfig.countdown).toFixed(2)
+				source: localizeSkillName(p.sourceSkill) + "@" + (p.sourceTime - this.gameConfig.countdown).toFixed(2)
 			});
 
 			// time, damageSource, potency, cumulativePotency

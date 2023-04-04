@@ -96,7 +96,9 @@ export class Potency {
 		this.description = props.description;
 	}
 
-	getAmount(props: {tincturePotencyMultiplier: number}) {
+	getAmount(props: {
+		tincturePotencyMultiplier: number,
+	}) {
 		let potency = this.base;
 		this.modifiers.forEach(m=>{
 			if (m.source===PotencyModifierType.POT) potency *= props.tincturePotencyMultiplier;
@@ -111,7 +113,11 @@ export class Potency {
 		this.applicationTime = t;
 	}
 
-	hasResolved() { return this.applicationTime!==undefined; }
+	hasResolved() { return this.applicationTime !== undefined; }
+
+	hasHitBoss(untargetable: (t: number) => boolean) {
+		return this.applicationTime !== undefined && !untargetable(this.applicationTime);
+	}
 
 	hasSnapshotted() { return this.snapshotTime !== undefined; }
 }

@@ -10,8 +10,10 @@ export type DamageStatsMainTableEntry = {
 	displayedModifiers: PotencyModifierType[],
 	basePotency: number,
 	calculationModifiers: PotencyModifier[],
-	count: number,
+	usageCount: number,
+	hitCount: number,
 	totalPotencyWithoutPot: number,
+	showPotency: boolean,
 	potPotency: number,
 	potCount: number
 };
@@ -19,10 +21,12 @@ export type DamageStatsMainTableEntry = {
 export type DamageStatsT3TableEntry = {
 	time: number,
 	displayedModifiers: PotencyModifierType[],
+	mainPotencyHit: boolean,
 	baseMainPotency: number,
 	baseDotPotency: number,
 	calculationModifiers: PotencyModifier[],
-	numTicks: number,
+	totalNumTicks: number,
+	numHitTicks: number,
 	potencyWithoutPot: number,
 	potPotency: number
 }
@@ -126,9 +130,17 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	}}><b style={{color: color}}>{text}</b></span>
 }
 
-function PotencyDisplay(props: {basePotency: number, helpTopic: string, calc: PotencyModifier[]}) {
+function PotencyDisplay(props: {
+	basePotency: number,
+	helpTopic: string,
+	explainUntargetable?: boolean,
+	calc: PotencyModifier[]})
+{
 	let potency = props.basePotency;
 	let potencyExplanation = props.basePotency.toFixed(2) + (localize({en: "(base)", zh: "(基础威力)"}) as string);
+	if (props.explainUntargetable) {
+		potencyExplanation += localize({en: "(untargetable)", zh: "(不可选中)"});
+	}
 	props.calc.forEach(m=>{
 		potency *= m.factor;
 		if (m.factor !== 1) {
@@ -295,9 +307,18 @@ export class DamageStatistics extends React.Component {
 					calc={props.row.calculationModifiers}/>;
 			}
 
+			// usage count node
+			let unhitUsages = props.row.usageCount - props.row.hitCount;
+			let usageCountNode = <span>
+				{props.row.hitCount}
+				{unhitUsages>0 ? <span style={{color: colors.timeline.untargetableDamageMark + "af"}}> +{unhitUsages} <Help
+					topic={"mainTable-numUntargetableUsages-"+props.key}
+					content={localize({en: "usage(s) when untargetable", zh: "Boss上天期间使用次数"})}/></span> : undefined}
+			</span>
+
 			// total potency
 			let totalPotencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.totalPotencyWithoutPot + props.row.potPotency > 0) {
+			if (props.row.showPotency) {
 				totalPotencyNode = <span>
 					{props.row.totalPotencyWithoutPot.toFixed(2)}
 					{props.row.potPotency > 0 ? <span style={{
@@ -314,7 +335,7 @@ export class DamageStatistics extends React.Component {
 				<div style={cell(20)}>{skillNameNode}</div>
 				<div style={cell(15)}>{tags}</div>
 				<div style={cell(20)}>{potencyNode}</div>
-				<div style={cell(10)}>{props.row.count}</div>
+				<div style={cell(10)}>{usageCountNode}</div>
 				<div style={cell(35)}>{totalPotencyNode}</div>
 			</div>
 		}
@@ -345,13 +366,23 @@ export class DamageStatistics extends React.Component {
 
 			// potency
 			let mainPotencyNode = <PotencyDisplay
-				basePotency={props.row.baseMainPotency}
+				basePotency={props.row.mainPotencyHit ? props.row.baseMainPotency : 0}
+				explainUntargetable={!props.row.mainPotencyHit}
 				helpTopic={"t3Table-main-"+props.key}
 				calc={props.row.calculationModifiers}/>
 			let dotPotencyNode = <PotencyDisplay
 				basePotency={props.row.baseDotPotency}
 				helpTopic={"t3Table-dot-"+props.key}
 				calc={props.row.calculationModifiers}/>
+
+			// num ticks node
+			let unhitTicks = props.row.totalNumTicks-props.row.numHitTicks;
+			let numTicksNode = <span>
+				{props.row.numHitTicks}
+				{unhitTicks>0 ? <span style={{color: colors.timeline.untargetableDamageMark + "af"}}> +{unhitTicks} <Help
+					topic={"t3Table-numUntargetableTicks-"+props.key}
+					content={localize({en: "tick(s) when untargetable", zh: "Boss上天期间跳雷次数"})}/></span> : undefined}
+			</span>
 
 			// total potency
 			let totalPotencyNode = <span>
@@ -370,7 +401,7 @@ export class DamageStatistics extends React.Component {
 				<div style={cell(15)}>{tags}</div>
 				<div style={cell(15)}>{mainPotencyNode}</div>
 				<div style={cell(15)}>{dotPotencyNode}</div>
-				<div style={cell(10)}>{props.row.numTicks}</div>
+				<div style={cell(10)}>{numTicksNode}</div>
 				<div style={cell(35)}>{totalPotencyNode}</div>
 			</div>
 		}

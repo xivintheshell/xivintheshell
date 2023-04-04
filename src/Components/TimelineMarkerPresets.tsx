@@ -1,16 +1,17 @@
 import React, {ChangeEvent, CSSProperties} from 'react'
 import {
+	asyncFetch,
+	ContentNode,
 	Expandable,
+	FileFormat,
+	Help,
 	Input,
 	LoadJsonFromFileOrUrl,
-	asyncFetch,
-	SaveToFile,
 	parseTime,
-	Help,
-	FileFormat, ContentNode
+	SaveToFile
 } from "./Common";
 import {controller} from "../Controller/Controller";
-import {ElemType, MarkerColor, MarkerElem} from "../Controller/Timeline";
+import {ElemType, MarkerColor, MarkerElem, MarkerType, UntargetableMarkerTrack} from "../Controller/Timeline";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 
@@ -33,6 +34,7 @@ export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerE
 
 type TimelineMarkerPresetsProp = {};
 type TimelineMarkerPresetsState = {
+	nextMarkerType: MarkerType,
 	nextMarkerColor: MarkerColor,
 	nextMarkerTime: string,
 	nextMarkerDuration: string,
@@ -61,7 +63,6 @@ let asyncFetchJson = function(url: string, callback: (content: any)=>void) {
 
 function LoadCombinedTracksBtn(props: {displayName: string, url: string}) {
 	let style: CSSProperties = {
-		marginBottom: 10,
 		marginRight: 4,
 	};
 	return <button style={style} onClick={()=>{
@@ -74,8 +75,7 @@ function LoadCombinedTracksBtn(props: {displayName: string, url: string}) {
 
 function PresetButtons() {
 	// https://github.com/quisquous/cactbot/blob/main/ui/raidboss/data/06-ew/raid/
-	return <div>
-		<div style={{marginBottom: 10}}>{localize({en: "Presets: ", zh: "预设文件："})}</div>
+	let content = <div style={{lineHeight: "2em"}}>
 		<LoadCombinedTracksBtn displayName={"P1S Shackles of Time first"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P1S Aetherial Shackles first"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P2S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s.txt"}/>
@@ -91,6 +91,7 @@ function PresetButtons() {
 		<LoadCombinedTracksBtn displayName={"P8S门神车轴"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p8s_p1_beast_zh.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P8S本体"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p8s_p2_zh.txt"}/>
 	</div>
+	return <Expandable title={"preset buttons"} titleNode={localize({en: "Presets", zh: "预设文件"})} defaultShow={true} content={content}/>
 }
 
 export class TimelineMarkerPresets extends React.Component {
@@ -113,14 +114,23 @@ export class TimelineMarkerPresets extends React.Component {
 	constructor(props: TimelineMarkerPresetsProp) {
 		super(props);
 		setEditingMarkerValues = ((marker: MarkerElem)=>{
-			this.setState({
-				nextMarkerColor: marker.color,
-				nextMarkerTime: marker.time.toString(),
-				nextMarkerDuration: marker.duration.toString(),
-				nextMarkerTrack: marker.track.toString(),
-				nextMarkerDescription: marker.description,
-				nextMarkerShowText: marker.showText,
-			});
+			if (marker.markerType === MarkerType.Info) {
+				this.setState({
+					nextMarkerType: marker.markerType,
+					nextMarkerColor: marker.color,
+					nextMarkerTime: marker.time.toString(),
+					nextMarkerDuration: marker.duration.toString(),
+					nextMarkerTrack: marker.track.toString(),
+					nextMarkerDescription: marker.description,
+					nextMarkerShowText: marker.showText,
+				});
+			} else {
+				this.setState({
+					nextMarkerType: marker.markerType,
+					nextMarkerTime: marker.time.toString(),
+					nextMarkerDuration: marker.duration.toString(),
+				});
+			}
 		}).bind(this);
 		this.onSaveFilenameChange = ((evt: ChangeEvent<{value: string}>)=>{
 			if (evt.target) this.saveFilename = evt.target.value;
@@ -139,6 +149,7 @@ export class TimelineMarkerPresets extends React.Component {
 		}).bind(this);
 
 		this.state = {
+			nextMarkerType: MarkerType.Info,
 			nextMarkerColor: MarkerColor.Blue,
 			nextMarkerTime: "0",
 			nextMarkerDuration: "1",
@@ -192,19 +203,73 @@ export class TimelineMarkerPresets extends React.Component {
 			displayName={localize({en: "all tracks combined", zh: "所有轨道"})}
 		/>);
 		trackIndices.forEach(trackIndex=>{
+			let filePostfix: string = trackIndex >= 0 ? trackIndex.toString() : "untargetable";
+			let displayName: ContentNode = localize({en: "track ", zh: "轨"}) + trackIndex.toString();
+			if (trackIndex === UntargetableMarkerTrack) {
+				displayName = localize({en: "track untargetable", zh: "不可选中标记轨"});
+			}
 			saveTrackLinks.push(<SaveToFile
 				key={trackIndex}
 				fileFormat={FileFormat.Json}
-				getContentFn={()=>{ return controller.timeline.serializedSeparateMarkerTracks()[trackIndex]; }}
-				filename={"track_" + trackIndex}
-				displayName={localize({en: "track ", zh: "轨"}) + trackIndex.toString()}
+				getContentFn={()=>{
+					let files = controller.timeline.serializedSeparateMarkerTracks();
+					for (let i = 0; i < files.length; i++) {
+						if (files[i].track === trackIndex) return files[i];
+					}
+					console.assert(false);
+					return [];
+				}}
+				filename={"track_" + filePostfix}
+				displayName={displayName}
 			/>);
 		});
 
 		let btnStyle = {marginBottom: 10, marginRight: 4};
+
+		let infoOnlySection = <div>
+			<Input defaultValue={this.state.nextMarkerDescription} description={localize({en: "Description: ", zh: "描述："})} width={40}
+			       onChange={this.setDescription}/>
+			<Input defaultValue={this.state.nextMarkerTrack} description={localize({en: "Track: ", zh: "轨道序号："})} width={4}
+			       style={inlineDiv} onChange={this.setTrack}/>
+			<div style={{display: "inline-block", marginTop: "4px"}}>
+				<span>{localize({en: "Color: ", zh: "颜色："})}</span>
+				<select style={{display: "inline-block", outline: "none"}}
+				        value={this.state.nextMarkerColor}
+				        onChange={this.onColorChange}>{[
+					colorOption(MarkerColor.Red, localize({en: "red", zh: "红"})),
+					colorOption(MarkerColor.Orange, localize({en: "orange", zh: "橙"})),
+					colorOption(MarkerColor.Yellow, localize({en: "yellow", zh: "黄"})),
+					colorOption(MarkerColor.Green, localize({en: "green", zh: "绿"})),
+					colorOption(MarkerColor.Cyan, localize({en: "cyan", zh: "青"})),
+					colorOption(MarkerColor.Blue, localize({en: "blue", zh: "蓝"})),
+					colorOption(MarkerColor.Purple, localize({en: "purple", zh: "紫"})),
+					colorOption(MarkerColor.Pink, localize({en: "pink", zh: "粉"})) // lol forgot abt this earlier
+				]}</select>
+				<div style={{
+					background: this.state.nextMarkerColor,
+					marginLeft: "4px",
+					display: "inline-block",
+					verticalAlign: "middle",
+					height: "1em",
+					width: "4em",
+				}}/>
+			</div>
+			<div style={{display: "inline-block", marginTop: "4px", marginLeft: "10px"}}>
+				<input type="checkbox" style={{position: "relative", top: 3}} checked={this.state.nextMarkerShowText} onChange={this.onShowTextChange}/>
+				<span style={{marginLeft: 4}}>{localize({en: "show text", zh: "显示文字描述"})}</span>
+			</div>
+		</div>
+		/*
+		let untargetableOnlySection = <div>{localize({
+			en: "When the boss is untargetable, all hits are considered 0 potency.",
+			zh: "期间所有结算的伤害按0威力计算。"
+		})}</div>
+		 */
+
 		let content = <div>
 			<button style={btnStyle} onClick={()=>{
 				controller.timeline.deleteAllMarkers();
+				controller.updateStats();
 			}}>{localize({en: "clear all markers", zh: "清空当前"})}</button>
 			<button style={btnStyle} onClick={()=>{
 				let count = controller.timeline.sortAndRemoveDuplicateMarkers();
@@ -230,6 +295,7 @@ export class TimelineMarkerPresets extends React.Component {
 						defaultLoadUrl={""}
 						onLoadFn={(content: any)=>{
 							controller.timeline.loadCombinedTracksPreset(content);
+							controller.updateStats();
 							controller.timeline.drawElements();
 						}}/>
 					<div className={"paragraph"}><b>{localize({en: "Individual track", zh: "单轨文件"})}</b></div>
@@ -247,6 +313,7 @@ export class TimelineMarkerPresets extends React.Component {
 									return;
 								}
 								controller.timeline.loadIndividualTrackPreset(content, track);
+								controller.updateStats();
 								controller.timeline.drawElements();
 							}}/>
 					</div>
@@ -257,48 +324,32 @@ export class TimelineMarkerPresets extends React.Component {
 					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
 					padding: "10px",
 				}}>
+					<span>{localize({en: "Type: ", zh: "类型："})}</span>
+					<select value={this.state.nextMarkerType}
+					        onChange={evt => {
+								if (evt.target) {
+									this.setState({
+										nextMarkerType: evt.target.value as MarkerType
+									});
+								}
+							}}>
+						<option value={MarkerType.Info}>{localize({en: "Info", zh: "备注信息"})}</option>
+						<option value={MarkerType.Untargetable}>{localize({en: "Untargetable", zh: "不可选中"})}</option>
+					</select>
+					<span> </span>
 					<Input defaultValue={this.state.nextMarkerTime} description={localize({en: "Time: ", zh: "时间："})} width={8} style={inlineDiv}
 						   onChange={this.setTime}/>
 					<Input defaultValue={this.state.nextMarkerDuration} description={localize({en: "Duration: ", zh: "持续时长："})} width={8}
 						   style={inlineDiv} onChange={this.setDuration}/>
 
-					<Input defaultValue={this.state.nextMarkerDescription} description={localize({en: "Description: ", zh: "描述："})} width={40}
-						   onChange={this.setDescription}/>
-					<Input defaultValue={this.state.nextMarkerTrack} description={localize({en: "Track: ", zh: "轨道序号："})} width={4}
-						   style={inlineDiv} onChange={this.setTrack}/>
-					<div style={{display: "inline-block", marginTop: "4px"}}>
-						<span>{localize({en: "Color: ", zh: "颜色："})}</span>
-						<select style={{display: "inline-block", outline: "none"}}
-								value={this.state.nextMarkerColor}
-								onChange={this.onColorChange}>{[
-							colorOption(MarkerColor.Red, localize({en: "red", zh: "红"})),
-							colorOption(MarkerColor.Orange, localize({en: "orange", zh: "橙"})),
-							colorOption(MarkerColor.Yellow, localize({en: "yellow", zh: "黄"})),
-							colorOption(MarkerColor.Green, localize({en: "green", zh: "绿"})),
-							colorOption(MarkerColor.Cyan, localize({en: "cyan", zh: "青"})),
-							colorOption(MarkerColor.Blue, localize({en: "blue", zh: "蓝"})),
-							colorOption(MarkerColor.Purple, localize({en: "purple", zh: "紫"})),
-							colorOption(MarkerColor.Pink, localize({en: "pink", zh: "粉"})) // lol forgot abt this earlier
-						]}</select>
-						<div style={{
-							background: this.state.nextMarkerColor,
-							marginLeft: "4px",
-							display: "inline-block",
-							verticalAlign: "middle",
-							height: "1em",
-							width: "4em",
-						}}/>
-					</div>
-					<div style={{display: "inline-block", marginTop: "4px", marginLeft: "10px"}}>
-						<input type="checkbox" style={{position: "relative", top: 3}} checked={this.state.nextMarkerShowText} onChange={this.onShowTextChange}/>
-						<span style={{marginLeft: 4}}>{localize({en: "show text", zh: "显示文字描述"})}</span>
-					</div>
+					{this.state.nextMarkerType === MarkerType.Info ? infoOnlySection : undefined}
 					<button
 						type={"submit"}
 						style={{display: "block", marginTop: "0.5em"}}
 						onClick={(e) => {
 							let marker: MarkerElem = {
 								type: ElemType.Marker,
+								markerType: this.state.nextMarkerType,
 								time: parseTime(this.state.nextMarkerTime),
 								duration: parseFloat(this.state.nextMarkerDuration),
 								color: this.state.nextMarkerColor,
@@ -306,14 +357,21 @@ export class TimelineMarkerPresets extends React.Component {
 								description: this.state.nextMarkerDescription,
 								showText: this.state.nextMarkerShowText,
 							};
+							if (this.state.nextMarkerType === MarkerType.Untargetable) {
+								marker.color = MarkerColor.Grey;
+								marker.track = UntargetableMarkerTrack;
+								marker.description = "";
+								marker.showText = true;
+							}
 							if (isNaN(marker.duration) ||
 								isNaN(marker.time) ||
 								isNaN(marker.track)) {
-								window.alert("some input(s) are invalid");
+								window.alert(localize({en: "some input(s) are invalid", zh: "部分输入格式不对"}));
 								e.preventDefault();
 								return;
 							}
 							controller.timeline.addMarker(marker);
+							controller.updateStats();
 							e.preventDefault();
 						}}>{localize({en: "add marker", zh: "添加标记"})}
 					</button>

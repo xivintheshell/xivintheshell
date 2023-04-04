@@ -88,14 +88,27 @@ export class ActionNode {
 		return this.#potencies[0].hasResolved();
 	}
 
-	getPotency(props: {tincturePotencyMultiplier: number}) {
+	hitBoss(untargetable: (t: number) => boolean) {
+		if (this.#potencies.length === 0) return true;
+		if (this.#potencies.length === 1) return this.#potencies[0].hasHitBoss(untargetable);
+
+		return this.#potencies[0].hasHitBoss(untargetable);
+	}
+
+	getPotency(props: {
+		tincturePotencyMultiplier: number,
+		untargetable: (t: number) => boolean
+	}) {
 		let res = {
 			applied: 0,
 			snapshottedButPending: 0
 		};
 		this.#potencies.forEach(p=>{
-			if (p.hasResolved()) res.applied += p.getAmount(props);
-			else if (p.hasSnapshotted()) res.snapshottedButPending += p.getAmount(props);
+			if (p.hasHitBoss(props.untargetable)) {
+				res.applied += p.getAmount(props);
+			} else if (!p.hasResolved() && p.hasSnapshotted()) {
+				res.snapshottedButPending += p.getAmount(props);
+			}
 		});
 		return res;
 	}

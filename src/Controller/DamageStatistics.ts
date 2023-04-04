@@ -55,16 +55,22 @@ type ExpandedNode = {
 	calculationModifiers: PotencyModifier[],
 };
 
+const bossIsUntargetable = (t: number) => {
+	return ctl.getUntargetableMask() && ctl.timeline.duringUntargetable(t)
+}
+
 function expandT3Node(node: ActionNode) {
 	console.assert(node.getPotencies().length > 0);
 	console.assert(node.skillName === SkillName.Thunder3);
 	let entry: DamageStatsT3TableEntry = {
 		time: (node.tmp_startLockTime ?? ctl.gameConfig.countdown) - ctl.gameConfig.countdown,
 		displayedModifiers: [],
+		mainPotencyHit: true,
 		baseMainPotency: 0,
 		baseDotPotency: 0,
 		calculationModifiers: [],
-		numTicks: 0,
+		totalNumTicks: 0,
+		numHitTicks: 0,
 		potencyWithoutPot: 0,
 		potPotency: 0
 	};
@@ -72,6 +78,7 @@ function expandT3Node(node: ActionNode) {
 	let mainPotency = node.getPotencies()[0];
 	entry.baseMainPotency = mainPotency.base;
 	entry.calculationModifiers = mainPotency.modifiers;
+	entry.mainPotencyHit = mainPotency.hasHitBoss(bossIsUntargetable);
 
 	for (let i = 0; i < mainPotency.modifiers.length; i++) {
 		if (mainPotency.modifiers[i].source === PotencyModifierType.ENO) {
@@ -83,14 +90,23 @@ function expandT3Node(node: ActionNode) {
 		if (i > 0) {
 			let p = node.getPotencies()[i];
 			if (p.hasResolved()) {
+				entry.totalNumTicks += 1;
 				entry.baseDotPotency = p.base;
-				entry.numTicks += 1;
+				if (p.hasHitBoss(bossIsUntargetable)) {
+					entry.numHitTicks += 1;
+				}
 			}
 		}
 	}
 
-	let potencyWithoutPot = node.getPotency({tincturePotencyMultiplier: 1}).applied;
-	let potencyWithPot = node.getPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()}).applied;
+	let potencyWithoutPot = node.getPotency({
+		tincturePotencyMultiplier: 1,
+		untargetable: bossIsUntargetable
+	}).applied;
+	let potencyWithPot = node.getPotency({
+		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
+		untargetable: bossIsUntargetable
+	}).applied;
 	entry.potencyWithoutPot = potencyWithPot;
 	entry.potPotency = potencyWithPot - potencyWithoutPot;
 
@@ -144,7 +160,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 
 function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 
-	let tagsAreEqual = function(a: PotencyModifierType[], b: PotencyModifierType[]) {
+	const tagsAreEqual = function(a: PotencyModifierType[], b: PotencyModifierType[]) {
 		if (a.length !== b.length) return false;
 		for (let i = 0; i < a.length; i++) {
 			if (a[i] !== b[i]) return false;
@@ -191,11 +207,14 @@ export function calculateSelectedStats(props: {
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
 			if (skillInfo.info.cdName === ResourceType.cd_GCD) {
-				if (node.resolved()) selected.gcdSkills.applied++;
-				else selected.gcdSkills.pending++;
+				if (node.hitBoss(bossIsUntargetable)) selected.gcdSkills.applied++;
+				else if (!node.resolved()) selected.gcdSkills.pending++;
 			}
 			// potency
-			let p = node.getPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()});
+			let p = node.getPotency({
+				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
+				untargetable: bossIsUntargetable
+			});
 			selected.potency.applied += p.applied;
 			selected.potency.pending += p.snapshottedButPending;
 		}
@@ -232,12 +251,18 @@ export function calculateDamageStats(props: {
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
 			if (skillInfo.info.cdName === ResourceType.cd_GCD) {
-				if (node.resolved()) gcdSkills.applied++;
-				else gcdSkills.pending++;
+				if (node.hitBoss(bossIsUntargetable)) {
+					gcdSkills.applied++;
+				} else if (!node.resolved()) {
+					gcdSkills.pending++;
+				}
 			}
 
 			// potency
-			let p = node.getPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()});
+			let p = node.getPotency({
+				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
+				untargetable: bossIsUntargetable
+			});
 			totalPotency.applied += p.applied;
 			totalPotency.pending += p.snapshottedButPending;
 
@@ -250,19 +275,31 @@ export function calculateDamageStats(props: {
 						displayedModifiers: q.expandedNode.displayedModifiers,
 						basePotency: q.expandedNode.basePotency,
 						calculationModifiers: q.expandedNode.calculationModifiers,
-						count: 0,
+						usageCount: 0,
+						hitCount: 0,
 						totalPotencyWithoutPot: 0,
+						showPotency: node.getPotencies().length > 0,
 						potPotency: 0,
 						potCount: 0
 					});
 					q.mainTableIndex = mainTable.length - 1;
 				}
-				let potencyWithoutPot = node.getPotency({tincturePotencyMultiplier: 1}).applied;
-				let potencyWithPot = node.getPotency({tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier()}).applied;
-				mainTable[q.mainTableIndex].count += 1;
+				let potencyWithoutPot = node.getPotency({
+					tincturePotencyMultiplier: 1,
+					untargetable: bossIsUntargetable
+				}).applied;
+				let potencyWithPot = node.getPotency({
+					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
+					untargetable: bossIsUntargetable
+				}).applied;
+				const hit = node.hitBoss(bossIsUntargetable);
+				mainTable[q.mainTableIndex].usageCount += 1;
+				if (hit) {
+					mainTable[q.mainTableIndex].hitCount += 1;
+				}
 				mainTable[q.mainTableIndex].totalPotencyWithoutPot += potencyWithoutPot;
 				mainTable[q.mainTableIndex].potPotency += (potencyWithPot - potencyWithoutPot);
-				if (node.hasBuff(ResourceType.Tincture)) {
+				if (hit && node.hasBuff(ResourceType.Tincture)) {
 					mainTable[q.mainTableIndex].potCount += 1;
 				}
 
@@ -284,7 +321,11 @@ export function calculateDamageStats(props: {
 	});
 
 	mainTable.sort((a, b)=>{
-		if (a.skillName !== b.skillName) {
+		if (a.showPotency !== b.showPotency) {
+			let na = a.showPotency ? 1 : 0;
+			let nb = b.showPotency ? 1 : 0;
+			return nb - na;
+		} else if (a.skillName !== b.skillName) {
 			let pa = skillPotencies.get(a.skillName) ?? 0;
 			let pb = skillPotencies.get(b.skillName) ?? 0;
 			return pb - pa;

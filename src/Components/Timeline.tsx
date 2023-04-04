@@ -1,6 +1,6 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
-import {Input, Slider} from "./Common";
+import {Help, Input, Slider} from "./Common";
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
 import {TimelineCanvas} from "./TimelineCanvas";
@@ -9,13 +9,22 @@ import {getCurrentThemeColors} from "./ColorTheme";
 
 export let updateTimelineView = () => {};
 
-export let scrollTimelineTo = (positionX)=>{}
+export let scrollTimelineTo = (positionX: number)=>{}
 
 let getVisibleRangeX = () => {}
 
 // the actual timeline canvas
 class TimelineMain extends React.Component {
-	constructor(props) {
+	myRef: React.RefObject<HTMLDivElement>;
+	updateVisibleRange: () => void;
+	state: {
+		timelineWidth: number,
+		timelineHeight: number,
+		visibleLeft: number,
+		visibleWidth: number,
+		version: number
+	};
+	constructor(props: {}) {
 		super(props);
 		this.state = {
 			timelineWidth: 11,
@@ -56,7 +65,7 @@ class TimelineMain extends React.Component {
 			});
 		}).bind(this);
 
-		scrollTimelineTo = ((positionX)=>{
+		scrollTimelineTo = ((positionX: number)=>{
 			if (this.myRef.current != null) {
 				let clientWidth = this.myRef.current.clientWidth;
 				this.myRef.current.scrollLeft = positionX - clientWidth * 0.6;
@@ -116,7 +125,14 @@ class TimelineMain extends React.Component {
 }
 
 class TimelineDisplaySettings extends React.Component {
-	constructor(props) {
+	initialDisplayScale: number;
+	state: {
+		tinctureBuffPercentageStr: string,
+		untargetableMask: boolean
+	};
+	setTinctureBuffPercentageStr: (val: string) => void;
+	setUntargetableMask: (val: boolean) => void;
+	constructor(props: {}) {
 		super(props);
 		// display scale
 		this.initialDisplayScale = 0.4;
@@ -127,7 +143,8 @@ class TimelineDisplaySettings extends React.Component {
 
 		// state
 		this.state = {
-			tinctureBuffPercentageStr: "8"
+			tinctureBuffPercentageStr: "8",
+			untargetableMask: true
 		}
 
 		// tincture buff percentage
@@ -136,8 +153,14 @@ class TimelineDisplaySettings extends React.Component {
 			this.state.tinctureBuffPercentageStr = str;
 		}
 
+		// untargetable mask
+		str = localStorage.getItem("untargetableMask");
+		if (str !== null) {
+			this.state.untargetableMask = parseInt(str) > 0;
+		}
+
 		// functions
-		this.setTinctureBuffPercentageStr = (val=>{
+		this.setTinctureBuffPercentageStr = ((val: string)=>{
 			this.setState({tinctureBuffPercentageStr: val});
 
 			let percentage = parseFloat(val);
@@ -146,9 +169,16 @@ class TimelineDisplaySettings extends React.Component {
 				localStorage.setItem("tinctureBuffPercentage", val);
 			}
 		}).bind(this);
+		this.setUntargetableMask = ((val: boolean)=>{
+			this.setState({untargetableMask: val});
+
+			controller.setUntargetableMask(val);
+			localStorage.setItem("untargetableMask", val ? "1" : "0");
+		}).bind(this);
 	}
 	componentDidMount() {
 		this.setTinctureBuffPercentageStr(this.state.tinctureBuffPercentageStr);
+		this.setUntargetableMask(this.state.untargetableMask);
 	}
 
 	render() {
@@ -165,15 +195,29 @@ class TimelineDisplaySettings extends React.Component {
 						controller.scrollToTime();
 						localStorage.setItem("timelineDisplayScale", newVal);
 					}}/>
-			<span>{localize({en: "; ", zh: "；"})}</span>
+			<span> | </span>
 			<Input defaultValue={this.state.tinctureBuffPercentageStr} description={localize({en: " tincture potency buff ", zh: "爆发药威力加成 "})} onChange={this.setTinctureBuffPercentageStr} width={2} style={{display: "inline"}}/>
-			<span>%</span>
+			<span>% | </span>
+			<span>
+				<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}
+				       checked={this.state.untargetableMask}
+				       onChange={evt => {this.setUntargetableMask(evt.target.checked)}}/>
+				<span>{localize({en: "exclude damage when untargetable", zh: "Boss上天期间威力按0计算"})} <Help topic={"untargetableMask"} content={
+					<div>
+						<div className={"paragraph"}>{localize({en: "Having this checked will exclude damages from untargetable phases.", zh: "勾选时，统计将不包括Boss上天期间造成的伤害。"})}</div>
+						<div className={"paragraph"}>{localize({en: "You can mark up such phases using timeline markers of type \"Untargetable\".", zh: "可在下方用 “不可选中” 类型的时间轴标记来指定时间区间。"})}</div>
+						<div className={"paragraph"}>{localize({
+							en: "This is just a statistics helper though. For example it doesn't prevent you from using skills when the boss is untargetable.",
+							zh: "此功能只是一个统计用的工具，在标注了 “不可选中” 的时间里其实也能正常使用技能。"})}</div>
+					</div>
+				}/></span>
+			</span>
 		</div>
 	}
 }
 
 export class Timeline extends React.Component {
-	constructor(props) {
+	constructor(props: {}) {
 		super(props);
 	}
 	render() {

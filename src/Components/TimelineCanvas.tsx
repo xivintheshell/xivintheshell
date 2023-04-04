@@ -7,7 +7,7 @@ import {
 	MarkerElem,
 	MPTickMarkElem,
 	SkillElem,
-	TimelineElem,
+	TimelineElem, UntargetableMarkerTrack,
 	ViewOnlyCursorElem,
 	WarningMarkElem
 } from "../Controller/Timeline";
@@ -26,8 +26,10 @@ export type TimelineRenderingProps = {
 	timelineHeight: number,
 	countdown: number,
 	scale: number,
-	tincturePotencyMultiplier: number
-	markers: MarkerElem[],
+	tincturePotencyMultiplier: number,
+	untargetableMask: boolean,
+	allMarkers: MarkerElem[],
+	untargetableMarkers: MarkerElem[],
 	elements: TimelineElem[],
 	selectionStartX: number,
 	selectionEndX: number,
@@ -60,7 +62,9 @@ let renderingProps: TimelineRenderingProps = {
 	countdown: 0,
 	scale: 1,
 	tincturePotencyMultiplier: 1,
-	markers: [],
+	allMarkers: [],
+	untargetableMarkers: [],
+	untargetableMask: true,
 	elements: [],
 	selectionStartX: 0,
 	selectionEndX: 0,
@@ -139,11 +143,11 @@ function drawMarkers(
 	ctx: CanvasRenderingContext2D,
 	countdown: number,
 	scale: number,
+	markerTracksTopY: number,
 	markerTracksBottomY: number, // bottom Y of track 0
 	timelineOrigin: number,
-	trackBins: Map<number, MarkerElem[]>
+	trackBins: Map<number, MarkerElem[]>,
 ) {
-
 	// markers
 	ctx.lineCap = "round";
 	ctx.lineWidth = 4;
@@ -151,12 +155,17 @@ function drawMarkers(
 	ctx.textAlign = "left";
 	trackBins.forEach((elems, track)=>{
 		let top = markerTracksBottomY - (track + 1) * trackHeight;
+		if (track === UntargetableMarkerTrack) {
+			top = markerTracksTopY;
+		}
 		for (let i = 0; i < elems.length; i++) {
 			let m = elems[i];
+			if (track === UntargetableMarkerTrack) m.description = localize({en: "Untargetable", zh: "不可选中"}) as string;
 			let left = timelineOrigin + StaticFn.positionFromTimeAndScale(m.time + countdown, scale);
 			let onClick = ()=>{
 				let success = controller.timeline.deleteMarker(m);
 				console.assert(success);
+				controller.updateStats();
 				setEditingMarkerValues(m);
 			};
 			if (m.duration > 0) {
@@ -173,9 +182,10 @@ function drawMarkers(
 					ctx.lineTo(left + markerWidth, top + trackHeight / 2);
 					ctx.stroke();
 				}
+				let timeStr = m.time + " - " + parseFloat((m.time + m.duration).toFixed(3));
 				testInteraction(
 					{x: left, y: top, w: Math.max(markerWidth, trackHeight), h: trackHeight},
-					["[" + m.time + "] " + m.description],
+					["[" + timeStr + "] " + m.description],
 					onClick);
 			} else {
 				ctx.fillStyle = m.color;
@@ -252,6 +262,15 @@ function drawWarningMarks(
 	});
 }
 
+function bossIsUntargetable(t: number) {
+	if (!renderingProps.untargetableMask) return false;
+	for (let i = 0; i < renderingProps.untargetableMarkers.length; i++) {
+		let m = renderingProps.untargetableMarkers[i];
+		if (t >= m.time && t < m.time + m.duration) return true;
+	}
+	return false;
+}
+
 function drawDamageMarks(
 	ctx: CanvasRenderingContext2D,
 	countdown: number,
@@ -259,8 +278,9 @@ function drawDamageMarks(
 	timelineOrigin: number,
 	elems: DamageMarkElem[]
 ) {
-	ctx.fillStyle = g_colors.timeline.damageMark;
 	elems.forEach(mark=>{
+		let untargetable = bossIsUntargetable(mark.time - countdown);
+		ctx.fillStyle = untargetable ? g_colors.timeline.untargetableDamageMark : g_colors.timeline.damageMark;
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(mark.time, scale);
 		ctx.beginPath();
 		ctx.moveTo(x-3, 0);
@@ -275,11 +295,19 @@ function drawDamageMarks(
 			if (b===ResourceType.Tincture) pot = true;
 		});
 		// hover text
-		let hoverText = "[" + dm.displayTime.toFixed(2) + "] " + dm.potency.toFixed(2) + " (" + dm.source + ")";
-		if (pot) hoverText += " (pot)"
+		let time = "[" + dm.displayTime.toFixed(2) + "] ";
+		let untargetableStr = localize({en: "Untargetable", zh: "不可选中"}) as string;
+		let info = "";
+		if (untargetable) {
+			info = (0).toFixed(2) + " (" + dm.source + ")";
+		} else {
+			info = dm.potency.getAmount({tincturePotencyMultiplier: renderingProps.tincturePotencyMultiplier}).toFixed(2) + " (" + dm.source + ")";
+			if (pot) info += " (" + localize({en: "pot", zh: "爆发药"}) + ")";
+		}
+
 		testInteraction(
 			{x: x-3, y: 0, w: 6, h: 6},
-			[hoverText]
+			untargetable ? [time + info, untargetableStr] : [time + info]
 		);
 	});
 }
@@ -416,19 +444,25 @@ function drawSkills(
 	skillIcons.forEach(icon=>{
 		ctx.drawImage(skillIconImages.get(icon.elem.skillName), icon.x, icon.y, 28, 28);
 		let node = icon.elem.node;
+		// 1. description
 		let description = localizeSkillName(icon.elem.skillName) + "@" + (icon.elem.displayTime).toFixed(2);
 		if (node.hasBuff(ResourceType.LeyLines)) description += localize({en: " (LL)", zh: " (黑魔纹)"});
 		if (node.hasBuff(ResourceType.Tincture)) description += localize({en: " (pot)", zh: "(爆发药)"});
 		let lines = [description];
-		let potency = node.getPotency({tincturePotencyMultiplier: renderingProps.tincturePotencyMultiplier}).applied;
-		if (potency > 0) {
+		let potency = node.getPotency({
+			tincturePotencyMultiplier: renderingProps.tincturePotencyMultiplier,
+			untargetable: bossIsUntargetable
+		}).applied;
+		// 2. potency
+		if (node.getPotencies().length > 0) {
 			lines.push(localize({en: "potency: ", zh: "威力："}) + potency.toFixed(2));
-			let lockDuration = 0;
-			if (node.tmp_endLockTime!==undefined && node.tmp_startLockTime!==undefined) {
-				lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
-			}
-			lines.push(localize({en: "duration: ", zh: "耗时："}) + lockDuration.toFixed(2));
 		}
+		// 3. duration
+		let lockDuration = 0;
+		if (node.tmp_endLockTime!==undefined && node.tmp_startLockTime!==undefined) {
+			lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
+		}
+		lines.push(localize({en: "duration: ", zh: "耗时："}) + lockDuration.toFixed(2));
 		testInteraction(
 			{x: icon.x, y: icon.y, w: 28, h: 28},
 			lines,
@@ -534,7 +568,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 
 	// make trackbins
 	let trackBins = new Map<number, MarkerElem[]>();
-	renderingProps.markers.forEach(marker=>{
+	renderingProps.allMarkers.forEach(marker=>{
 		let trackBin = trackBins.get(marker.track);
 		if (trackBin === undefined) trackBin = [];
 		trackBin.push(marker);
@@ -544,13 +578,17 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	// tracks background
 	ctx.beginPath();
 	let numTracks = 0;
+	let hasUntargetableTrack = false;
 	for (let k of trackBins.keys()) {
 		numTracks = Math.max(numTracks, k + 1);
+		if (k === UntargetableMarkerTrack) hasUntargetableTrack = true;
 	}
-	let markerTracksOriginY = 30 + numTracks * trackHeight;
+	if (hasUntargetableTrack) numTracks += 1;
+	let markerTracksTopY = 30;
+	let markerTracksBottomY = 30 + numTracks * trackHeight;
 	ctx.fillStyle = g_colors.timeline.tracks;
 	for (let i = 0; i < numTracks; i += 2) {
-		let top = markerTracksOriginY - (i + 1) * trackHeight;
+		let top = markerTracksBottomY - (i + 1) * trackHeight;
 		ctx.rect(0, top, g_visibleWidth, trackHeight);
 	}
 	ctx.fill();
@@ -567,7 +605,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	drawMPTickMarks(ctx, renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.MPTickMark) as MPTickMarkElem[] ?? []);
 
 	// timeline markers
-	drawMarkers(ctx, renderingProps.countdown, renderingProps.scale, markerTracksOriginY, timelineOrigin, trackBins);
+	drawMarkers(ctx, renderingProps.countdown, renderingProps.scale, markerTracksTopY, markerTracksBottomY, timelineOrigin, trackBins);
 
 	// damage marks
 	drawDamageMarks(ctx, renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.DamageMark) as DamageMarkElem[] ?? []);

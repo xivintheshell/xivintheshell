@@ -1,7 +1,6 @@
 import React from "react";
 import {forceUpdateAll} from "./Main";
 import {MdDarkMode, MdLightMode} from "react-icons/md";
-import {localize} from "./Localization";
 
 export type ColorTheme = "Light" | "Dark";
 
@@ -43,6 +42,7 @@ export type ThemeColors = {
 		llCover: string,
 		potCover: string,
 		damageMark: string,
+		untargetableDamageMark: string,
 		mpTickMark: string,
 		warningMark: string,
 		lucidTickMark: string,
@@ -89,6 +89,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				llCover: "#5ea647",
 				potCover: "#c4543a",
 				damageMark: "#ff0000",
+				untargetableDamageMark: "#7f7f7f",
 				mpTickMark: "#32525e",
 				warningMark: "#9d7103",
 				lucidTickMark: "#56b3d5",
@@ -132,6 +133,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				llCover: "#87ec71",
 				potCover: "#ff865c",
 				damageMark: "#ff0000",
+				untargetableDamageMark: "#7f7f7f",
 				mpTickMark: "#b6dfea",
 				warningMark: "#ffbb29",
 				lucidTickMark: "#88cae0",

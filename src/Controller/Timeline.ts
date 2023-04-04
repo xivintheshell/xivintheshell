@@ -8,6 +8,7 @@ import {FileType} from "./Common";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
+import {Potency} from "../Game/Potency";
 
 export const enum ElemType {
 	s_Cursor = "s_Cursor",
@@ -20,6 +21,13 @@ export const enum ElemType {
 	WarningMark = "WarningMark"
 }
 
+export const UntargetableMarkerTrack = -1;
+
+export const enum MarkerType {
+	Info = "Info",
+	Untargetable = "Untargetable"
+}
+
 export const enum MarkerColor {
 	Red = "#f64141",
 	Orange = "#e89b5f",
@@ -28,7 +36,8 @@ export const enum MarkerColor {
 	Cyan = "#53e5e5",
 	Blue = "#217ff5",
 	Purple = "#9755ef",
-	Pink = "#ee79ee"
+	Pink = "#ee79ee",
+	Grey = "#6f6f6f"
 }
 
 type TimelineElemBase = {
@@ -49,7 +58,7 @@ export type ViewOnlyCursorElem = TimelineElemBase & {
 export type DamageMarkElem = TimelineElemBase & {
 	type: ElemType.DamageMark;
 	displayTime: number;
-	potency: number;
+	potency: Potency;
 	buffs: ResourceType[];
 	source: string;
 }
@@ -81,6 +90,7 @@ export type SkillElem = TimelineElemBase & {
 }
 export type MarkerElem = TimelineElemBase & {
 	type: ElemType.Marker;
+	markerType: MarkerType;
 	duration: number;
 	color: MarkerColor;
 	track: number;
@@ -89,6 +99,7 @@ export type MarkerElem = TimelineElemBase & {
 }
 
 export type SerializedMarker = TimelineElemBase & {
+	markerType: MarkerType;
 	duration: number;
 	showText: boolean;
 	color: MarkerColor;
@@ -112,14 +123,16 @@ export class Timeline {
 	startTime: number;
 	elapsedTime: number;
 	elements: TimelineElem[];
-	markers: MarkerElem[];
+	#allMarkers: MarkerElem[];
+	#untargetableMarkers: MarkerElem[];
 
 	constructor() {
 		this.scale = 0.25;
 		this.startTime = 0;
 		this.elapsedTime = 0;
 		this.elements = [];
-		this.markers = [];
+		this.#allMarkers = [];
+		this.#untargetableMarkers = [];
 		this.#load();
 	}
 
@@ -131,6 +144,10 @@ export class Timeline {
 	addElement(elem: TimelineElem) {
 		this.elements.push(elem);
 	}
+
+	getAllMarkers() { return this.#allMarkers; }
+
+	getUntargetableMarkers() { return this.#untargetableMarkers; }
 
 	#markersAreEqual(m1: MarkerElem, m2: MarkerElem) : boolean {
 		let almostEq = function(a: number, b: number) {
@@ -149,51 +166,67 @@ export class Timeline {
 
 	// assumes valid
 	addMarker(marker: MarkerElem) {
-		this.markers.push(marker);
+		this.#allMarkers.push(marker);
+		if (marker.markerType === MarkerType.Untargetable) {
+			this.#untargetableMarkers.push(marker);
+		}
 		this.drawElements();
 		this.#save();
 	}
 
 	deleteMarker(marker: MarkerElem) {
-		for (let i = 0; i < this.markers.length; i++) {
-			if (marker === this.markers[i]) {
-				this.markers.splice(i, 1);
+		let deleted = false;
+		for (let i = 0; i < this.#allMarkers.length; i++) {
+			if (marker === this.#allMarkers[i]) {
+				this.#allMarkers.splice(i, 1);
 				this.drawElements();
 				this.#save();
-				return true;
+				deleted = true;
 			}
 		}
-		return false;
+		this.#recreateUntargetableList();
+		return deleted;
+	}
+
+	#recreateUntargetableList() {
+		this.#untargetableMarkers = [];
+		this.#allMarkers.forEach(m => {
+			if (m.markerType === MarkerType.Untargetable) this.#untargetableMarkers.push(m);
+		})
 	}
 
 	sortAndRemoveDuplicateMarkers() {
-		this.markers.sort((a, b)=>{
+		this.#allMarkers.sort((a, b)=>{
 			return a.time - b.time;
 		});
 		let count = 0;
-		for (let i = this.markers.length - 1; i > 0; i--) {
-			if (this.#markersAreEqual(this.markers[i], this.markers[i-1])) {
-				this.markers.splice(i, 1);
+		for (let i = this.#allMarkers.length - 1; i > 0; i--) {
+			if (this.#markersAreEqual(this.#allMarkers[i], this.#allMarkers[i-1])) {
+				this.#allMarkers.splice(i, 1);
 				count++;
 			}
 		}
+		this.#recreateUntargetableList();
 		this.#save();
 		return count;
 	}
 
 	// assumes input is valid
 	#appendMarkersPreset(preset: Fixme, track: number) {
-		this.markers = this.markers.concat(preset.markers.map((m: SerializedMarker): MarkerElem=>{
+		let newMarkers = preset.markers.map((m: SerializedMarker): MarkerElem=>{
 			return {
 				time: m.time,
 				duration: m.duration,
 				color: m.color,
 				description: m.description,
-				track: track,
+				track: m.markerType === MarkerType.Untargetable ? UntargetableMarkerTrack : track,
 				type: ElemType.Marker,
-				showText: m.showText===undefined ? false : m.showText,
+				markerType: m.markerType ?? MarkerType.Info,
+				showText: m.showText ?? false
 			};
-		}));
+		});
+		this.#allMarkers = this.#allMarkers.concat(newMarkers);
+		this.#recreateUntargetableList();
 		this.#save();
 	}
 
@@ -216,7 +249,8 @@ export class Timeline {
 	}
 
 	deleteAllMarkers() {
-		this.markers = [];
+		this.#allMarkers = [];
+		this.#untargetableMarkers = [];
 		this.drawElements();
 		this.#save();
 	}
@@ -260,7 +294,7 @@ export class Timeline {
 		// this.elapsedTime := this.game.time
 		let rightMostTime = Math.max(0, this.elapsedTime);
 		let countdown = controller.gameConfig.countdown;
-		this.markers.forEach(marker=>{
+		this.#allMarkers.forEach(marker=>{
 			let endDisplayTime = marker.time + marker.duration;
 			rightMostTime = Math.max(rightMostTime, endDisplayTime + countdown);
 		});
@@ -290,7 +324,7 @@ export class Timeline {
 	updateTimelineMarkers() {
 		updateTimelineView();
 		let M = new Map<number, MarkerElem[]>();
-		this.markers.forEach(marker=>{
+		this.#allMarkers.forEach(marker=>{
 			let trackBin = M.get(marker.track);
 			if (trackBin === undefined) trackBin = [];
 			trackBin.push(marker);
@@ -323,10 +357,21 @@ export class Timeline {
 
 	getNumMarkerTracks() {
 		let maxTrack = -1;
-		for (let i = 0; i < this.markers.length; i++) {
-			maxTrack = Math.max(maxTrack, this.markers[i].track);
+		let hasUntargetableTrack = false;
+		for (let i = 0; i < this.#allMarkers.length; i++) {
+			maxTrack = Math.max(maxTrack, this.#allMarkers[i].track);
+			if (this.#allMarkers[i].track === UntargetableMarkerTrack) hasUntargetableTrack = true;
 		}
+		if (hasUntargetableTrack) return maxTrack + 2;
 		return maxTrack + 1;
+	}
+
+	duringUntargetable(t: number) {
+		for (let i = 0; i < this.#untargetableMarkers.length; i++) {
+			let m = this.#untargetableMarkers[i];
+			if (t >= m.time && t < m.time + m.duration) return true;
+		}
+		return false;
 	}
 
 	#save() {
@@ -348,28 +393,36 @@ export class Timeline {
 	serializedSeparateMarkerTracks() {
 		let maxTrack = this.getNumMarkerTracks() - 1;
 
-		let markerTracks: SerializedMarker[][] = [];
-		for (let i = 0; i < maxTrack + 1; i++) {
-			markerTracks.push([]);
+		let markerTracks: Map<number, SerializedMarker[]> = new Map();
+		for (let i = UntargetableMarkerTrack; i < maxTrack + 1; i++) {
+			markerTracks.set(i, []);
 		}
 
-		this.markers.forEach(marker=>{
-			markerTracks[marker.track].push({
-				time: marker.time,
-				duration: marker.duration,
-				description: marker.description,
-				color: marker.color,
-				showText: marker.showText
-			});
+		this.#allMarkers.forEach(marker=>{
+			let bin = markerTracks.get(marker.track);
+			console.assert(bin);
+			if (bin) {
+				bin.push({
+					time: marker.time,
+					markerType: marker.markerType,
+					duration: marker.duration,
+					description: marker.description,
+					color: marker.color,
+					showText: marker.showText
+				});
+				markerTracks.set(marker.track, bin);
+			}
 		});
 		let files: Fixme[] = [];
-		for (let i = 0; i < markerTracks.length; i++) {
-			files.push({
-				fileType: FileType.MarkerTrackIndividual,
-				track: i,
-				markers: markerTracks[i]
-			});
-		}
+		markerTracks.forEach((bin, i)=>{
+			if (bin.length > 0) {
+				files.push({
+					fileType: FileType.MarkerTrackIndividual,
+					track: i,
+					markers: bin
+				});
+			}
+		});
 		return files;
 	}
 
