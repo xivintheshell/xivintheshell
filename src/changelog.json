@@ -1,5 +1,11 @@
 [
 	{
+		"date": "5/10/23",
+		"changes": [
+			"bugfix: using T3 consecutively should no longer break (ty moxian for the report!)"
+		]
+	},
+	{
 		"date": "4/3/23",
 		"changes": [
 			"\"Untargetable\" type timeline markers"

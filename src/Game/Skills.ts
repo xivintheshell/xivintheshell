@@ -331,11 +331,15 @@ export class SkillsList extends Map<SkillName, Skill> {
 			dot.removeTimer();
 			tick.removeTimer();
 			// for all existing T3, remove unapplied potencies
-			controller.record.iterateAll(n=>{
-				if (n !== node && n.skillName === SkillName.Thunder3) {
-					n.removeUnresolvedPotencies();
+			// NOTE: can't simply iterateAll here because want to bail out once we reach the currently applying node
+			let itr = controller.record.getFirstAction();
+			while (itr) {
+				if (itr === node) break;
+				if (itr.skillName === SkillName.Thunder3) {
+					itr.removeUnresolvedPotencies();
 				}
-			});
+				itr = itr.next;
+			}
 			// order of events: gain buff, add "remove" event,
 			dot.gain(1);
 			game.resources.addResourceEvent(ResourceType.ThunderDoT, "drop DoT", 30, (dot: Resource)=>{
