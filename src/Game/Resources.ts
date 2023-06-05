@@ -285,6 +285,24 @@ export class ResourceOverride {
 			a.enabled === b.enabled;
 	}
 
+	static fromGameState(game: GameState)
+	{
+		let overrides: ResourceOverride[] = [];
+		// CDs
+		game.cooldowns.forEach((cd: CoolDown, cdName: ResourceType) => {
+			cd.availableAmount();
+			overrides.push(new ResourceOverride({
+				type: cdName,
+				timeTillFullOrDrop: cd.maxValue - cd.availableAmount(),
+				stacks: 0, // not used
+				enabled: true // not used
+			}));
+		});
+		// other resources: todo
+
+		return overrides;
+	}
+
 	// CDs: time till full
 	// LL: enabled, time till full
 	// Triplecast: stacks, time till drop

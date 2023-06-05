@@ -1,5 +1,18 @@
 [
 	{
+		"date": "6/4/23",
+		"changes": [
+			"additional note about untargetable marker (specifically, you may still get procs from DoT)",
+			"bugfix: untargetable marker was causing some damage statistics error. also why didn't people tell me this earlier D:"
+		]
+	},
+	{
+		"date": "5/23/23",
+		"changes": [
+			"patch 6.4 potency changes: enochian -> 23% buff, xenoglossy -> 880"
+		]
+	},
+	{
 		"date": "5/10/23",
 		"changes": [
 			"bugfix: using T3 consecutively should no longer break (ty moxian for the report!)"

@@ -366,10 +366,12 @@ export class Timeline {
 		return maxTrack + 1;
 	}
 
-	duringUntargetable(t: number) {
+	duringUntargetable(t: number/* raw time */, countdown: number) {
 		for (let i = 0; i < this.#untargetableMarkers.length; i++) {
 			let m = this.#untargetableMarkers[i];
-			if (t >= m.time && t < m.time + m.duration) return true;
+			let mStart = m.time + countdown;
+			let mEnd = m.time + m.duration + countdown;
+			if (t >= mStart && t < mEnd) return true;
 		}
 		return false;
 	}

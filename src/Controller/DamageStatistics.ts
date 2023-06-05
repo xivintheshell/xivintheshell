@@ -55,8 +55,8 @@ type ExpandedNode = {
 	calculationModifiers: PotencyModifier[],
 };
 
-const bossIsUntargetable = (t: number) => {
-	return ctl.getUntargetableMask() && ctl.timeline.duringUntargetable(t)
+const bossIsUntargetable = (rawTime: number) => {
+	return ctl.getUntargetableMask() && ctl.timeline.duringUntargetable(rawTime, ctl.gameConfig.countdown)
 }
 
 function expandT3Node(node: ActionNode) {

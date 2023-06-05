@@ -92,7 +92,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.UmbralSoul, ResourceType.cd_GCD, Aspect.Ice, true,
 		0, 0, 0),// ? (assumed to be instant)
 	new SkillInfo(SkillName.Xenoglossy, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 0, 800, 0.63),
+		0, 0, 880, 0.63),
 
 	new SkillInfo(SkillName.HighFire2, ResourceType.cd_GCD, Aspect.Fire, true,
 		3, 1500, 140, 1.154),

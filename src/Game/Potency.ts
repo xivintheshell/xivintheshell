@@ -19,7 +19,7 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 
 	// eno
 	if (resources.get(ResourceType.Enochian).available(1)) {
-		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, factor: 1.21});
+		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, factor: 1.23});
 	}
 
 	// ui1
@@ -78,7 +78,7 @@ export type InitialPotencyProps = {
 }
 
 export class Potency {
-	sourceTime: number;
+	sourceTime: number; // raw time (not display time)
 	sourceSkill: SkillName;
 	aspect: Aspect;
 	description?: string;
