@@ -353,6 +353,5 @@ export function calculateDamageStats(props: {
 		mainTableTotalPotency: mainTableTotalPotency,
 		t3Table: t3Table,
 		historical: !ctl.displayingUpToDateGameState,
-		statsCsv: ctl.getStatsCsv()
 	};
 }

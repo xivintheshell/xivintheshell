@@ -167,8 +167,8 @@ export class TimeControl extends React.Component {
 
 function ConfigSummary(props) {
 	let ct_2_5 = controller.gameConfig.adjustedCastTime(2.5).toFixed(2);
-	let lucidTickOffset = controller.game.actorTickOffset.toFixed(2);
-	let offsetDesc = localize({
+	let lucidTickOffset = controller.game.lucidTickOffset.toFixed(2);
+	let lucidOffsetDesc = localize({
 		en: "The random time offset of actor (lucid dreaming) ticks relative to MP ticks",
 		zh: "醒梦BUFF期间，每次跳蓝后多久跳醒梦"
 	});
@@ -176,7 +176,7 @@ function ConfigSummary(props) {
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	return <div>
 		GCD: {ct_2_5}
-		<br/>{localize({en: "Actor tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"actorTickOffset"} content={offsetDesc}/>: {lucidTickOffset}
+		<br/>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
 		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
 		{numOverrides === 0 ? undefined : <span style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</span>}
 	</div>

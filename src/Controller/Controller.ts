@@ -42,11 +42,16 @@ class Controller {
 	#tinctureBuffPercentage = 0;
 	#untargetableMask = true;
 	#lastDamageApplicationTime;
-	#statsCsv : {
+	#damageLogCsv : {
 		time: number,
 		damageSource: string,
 		potency: number,
 		buffs: ResourceType[]
+	}[] = [];
+	#actionsLogCsv : {
+		time: number,
+		action: string,
+		isGCD: number
 	}[] = [];
 
 	savedHistoricalGame: GameState;
@@ -247,7 +252,8 @@ class Controller {
 		this.timeline.reset();
 		this.record.unselectAll();
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown;
-		this.#statsCsv = [];
+		this.#damageLogCsv = [];
+		this.#actionsLogCsv = [];
 		this.#bAddingLine = false;
 		this.#bInterrupted = false;
 		this.displayingUpToDateGameState = true;
@@ -445,10 +451,11 @@ class Controller {
 			});
 
 			// time, damageSource, potency, cumulativePotency
-			this.#statsCsv.push({
+			this.#damageLogCsv.push({
 				time: this.game.getDisplayTime(),
 				damageSource: p.sourceSkill + "@" + p.sourceTime,
-				potency: p.getAmount({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}),
+				// tincture is applied when actually exporting for download.
+				potency: p.getAmount({tincturePotencyMultiplier: 1}),
 				buffs: pot ? [ResourceType.Tincture] : [],
 			});
 		}
@@ -694,7 +701,7 @@ class Controller {
 			node.tmp_startLockTime = this.game.time;
 			node.tmp_endLockTime = this.game.time + lockDuration;
 
-			if (!this.#bCalculatingHistoricalState) { // this block is run when NOT viewing historical state (aka receiving input)
+			if (!this.#bCalculatingHistoricalState) { // this block is run when NOT viewing historical state (aka run when receiving input)
 				let newStatus = this.game.getSkillAvailabilityStatus(skillName); // refresh to get re-captured recast time
 				let skillInfo = this.game.skillsList.get(skillName).info;
 				let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
@@ -711,6 +718,11 @@ class Controller {
 					lockDuration: lockDuration,
 					recastDuration: newStatus.cdRecastTime,
 					node: node,
+				});
+				this.#actionsLogCsv.push({
+					time: this.game.getDisplayTime(),
+					action: skillName,
+					isGCD: isGCD ? 1 : 0
 				});
 			}
 
@@ -922,8 +934,8 @@ class Controller {
 		}
 	}
 
-	getStatsCsv() : any[][] {
-		let csvRows = this.#statsCsv.map(row=>{
+	getDamageLogCsv() : any[][] {
+		let csvRows = this.#damageLogCsv.map(row=>{
 			let pot = false;
 			row.buffs.forEach(b=>{
 				if (b===ResourceType.Tincture) pot = true;
@@ -933,6 +945,15 @@ class Controller {
 			return [row.time, row.damageSource, potency];
 		});
 		return [["time", "damageSource", "potency"]].concat(csvRows as any[][]);
+	}
+
+	getActionsLogCsv() : any[][] {
+		let csvRows = this.#actionsLogCsv.map(row=>{ return [
+			row.time,
+			row.action,
+			row.isGCD
+		]; });
+		return [["time", "action", "isGCD"]].concat(csvRows as any[][]);
 	}
 
 	// generally used for trying to add a line to the current timeline
@@ -1030,6 +1051,11 @@ class Controller {
 		}
 	}
 
+	waitTillNextMpOrLucidTick() {
+		this.#requestTick({deltaTime: this.game.timeTillNextMpOrLucidTick(), separateNode: true});
+		this.updateAllDisplay();
+	}
+
 	requestUseSkill(props: { skillName: SkillName; }) {
 		if (this.tickMode === TickMode.RealTime && this.shouldLoop) {
 			this.skillsQueue.push({
@@ -1049,12 +1075,18 @@ class Controller {
 	}
 
 	requestToggleBuff(buffName: ResourceType) {
-		let success = this.game.requestToggleBuff(buffName);
+		let success = this.game.requestToggleBuff(buffName); // currently always succeeds
 		if (!success) return false;
 
 		let node = new ActionNode(ActionType.SetResourceEnabled);
 		node.buffName = buffName;
 		this.record.addActionNode(node);
+
+		this.#actionsLogCsv.push({
+			time: this.game.getDisplayTime(),
+			action: "Toggle buff: " + buffName,
+			isGCD: 0
+		});
 
 		return true;
 	}

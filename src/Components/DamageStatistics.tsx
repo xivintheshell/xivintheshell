@@ -4,6 +4,7 @@ import {SkillName} from "../Game/Common";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {localize, localizeSkillName} from "./Localization";
+import {controller} from "../Controller/Controller";
 
 export type DamageStatsMainTableEntry = {
 	skillName: SkillName,
@@ -63,7 +64,6 @@ export type DamageStatisticsData = {
 	}
 	t3Table: DamageStatsT3TableEntry[],
 	historical: boolean,
-	statsCsv: any[][]
 }
 
 export let updateDamageStats = (data: DamageStatisticsData) => {};
@@ -169,7 +169,6 @@ export class DamageStatistics extends React.Component {
 		mainTableTotalPotency: {withoutPot: 0, potPotency: 0},
 		t3Table: [],
 		historical: false,
-		statsCsv: []
 	};
 
 	constructor(props: {}) {
@@ -255,8 +254,8 @@ export class DamageStatistics extends React.Component {
 				<div>{gcdStr}</div>
 				<div>
 					<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
-						return this.data.statsCsv;
-					}} filename={"stats"} displayName={localize({
+						return controller.getDamageLogCsv();
+					}} filename={"damage-log"} displayName={localize({
 						en: "download detailed damage log as CSV file",
 						zh: "下载详细伤害结算记录（CSV格式）"
 					})}/>

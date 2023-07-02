@@ -328,6 +328,10 @@ export class SkillsWindow extends React.Component {
 			controller.removeTrailingIdleTime();
 		}).bind(this);
 
+		this.onWaitTillNextMpOrLucidTick = (()=>{
+			controller.waitTillNextMpOrLucidTick();
+		}).bind(this);
+
 		this.state = {
 			statusList: undefined,
 			paradoxInfo: undefined,
@@ -442,6 +446,7 @@ export class SkillsWindow extends React.Component {
 						</form>
 
 					</div>
+					<button onClick={this.onWaitTillNextMpOrLucidTick}>{localize({en: "Wait until next MP or lucid tick", zh: "快进至下次跳蓝或跳醒梦"})}</button><span> </span>
 					<button onClick={this.onRemoveTrailingIdleTime}>{localize({en: "remove trailing idle time", zh: "去除时间轴末尾的发呆时间"})}</button>
 				</div>
 			</div>

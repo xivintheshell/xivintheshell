@@ -1,9 +1,23 @@
 [
 	{
+		"date": "7/1/23",
+		"changes": [
+			"added p9s and p12s p1 markers by Yara"
+		]
+	},
+	{
+		"date": "6/25/23",
+		"changes": [
+			"bugfix for stats.csv double counting tincture buff",
+			"new export option fight.csv"
+		]
+	},
+	{
 		"date": "6/4/23",
 		"changes": [
-			"additional note about untargetable marker (specifically, you may still get procs from DoT)",
-			"bugfix: untargetable marker was causing some damage statistics error. also why didn't people tell me this earlier D:"
+			"additional notes about untargetable marker (specifically, you may still get procs from DoT)",
+			"bugfix: untargetable marker was causing some damage statistics error. also why didn't people tell me this earlier D:",
+			"\"wait till next MP or lucid tick\" button"
 		]
 	},
 	{

@@ -61,7 +61,7 @@ let asyncFetchJson = function(url: string, callback: (content: any)=>void) {
 	});
 }
 
-function LoadCombinedTracksBtn(props: {displayName: string, url: string}) {
+function LoadCombinedTracksBtn(props: {displayName: ContentNode, url: string}) {
 	let style: CSSProperties = {
 		marginRight: 4,
 	};
@@ -90,6 +90,9 @@ function PresetButtons() {
 		<LoadCombinedTracksBtn displayName={"P8S门神蛇轴"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p8s_p1_snake_zh.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P8S门神车轴"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p8s_p1_beast_zh.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P8S本体"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p8s_p2_zh.txt"}/>
+		<br/>
+		<LoadCombinedTracksBtn displayName={"P9S by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p9s.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P12S P1 by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p1.txt"}/>
 	</div>
 	return <Expandable title={"preset buttons"} titleNode={localize({en: "Presets", zh: "预设文件"})} defaultShow={true} content={content}/>
 }

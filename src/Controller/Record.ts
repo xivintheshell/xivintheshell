@@ -204,6 +204,12 @@ export class Line {
 			actions: list
 		};
 	}
+	// format: []
+	exportCsv(): any[][] {
+		// todo
+		let result: any[][] = [];
+		return result;
+	}
 }
 
 export type RecordValidStatus = {

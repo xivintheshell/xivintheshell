@@ -18,7 +18,8 @@ export class GameState {
 	config: GameConfig
 	rng: RNG;
 	#nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
-	actorTickOffset: number;
+	lucidTickOffset: number;
+	thunderTickOffset: number;
 	time: number;
 	resources: ResourceState;
 	cooldowns: CoolDownState;
@@ -29,7 +30,8 @@ export class GameState {
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
 		this.#nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
-		this.actorTickOffset = this.#nonProcRng() * 3.0;
+		this.lucidTickOffset = this.#nonProcRng() * 3.0;
+		this.thunderTickOffset = this.#nonProcRng() * 3.0;
 
 		// TIME
 		this.time = 0;
@@ -120,7 +122,7 @@ export class GameState {
 		}
 
 		// and actor ticks
-		let recurringActorTick = ()=>{
+		let recurringLucidTick = ()=>{
 			// do whatever work at actor tick: lucid dreaming tick for example
 			let lucid = this.resources.get(ResourceType.LucidDreaming) as LucidDreamingBuff;
 			if (lucid.available(1)) {
@@ -136,12 +138,12 @@ export class GameState {
 			}
 			// queue the next tick
 			this.addEvent(new Event("actor tick", 3, ()=>{
-				recurringActorTick();
+				recurringLucidTick();
 			}));
 		};
-		let timeTillFirstActorTick = this.config.timeTillFirstManaTick + this.actorTickOffset;
-		while (timeTillFirstActorTick > 3) timeTillFirstActorTick -= 3;
-		this.addEvent(new Event("initial actor tick", timeTillFirstActorTick, recurringActorTick));
+		let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
+		while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;
+		this.addEvent(new Event("initial actor tick", timeTillFirstLucidTick, recurringLucidTick));
 
 		// also polyglot
 		let recurringPolyglotGain = (rsc: Resource)=>{
@@ -543,6 +545,26 @@ export class GameState {
 		let tillNotAnimationLocked = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
 		let tillNotCasterTaxed = this.resources.timeTillReady(ResourceType.NotCasterTaxed);
 		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed);
+	}
+
+	timeTillNextMpOrLucidTick() {
+		let timeSinceFirstMpTick = this.time - this.config.timeTillFirstManaTick;
+		let timeTillNextMpTick = (timeSinceFirstMpTick < 0) ? (-timeSinceFirstMpTick) : (3 - timeSinceFirstMpTick % 3);
+		if (timeTillNextMpTick < Debug.epsilon) timeTillNextMpTick += 3;
+
+		let timeSinceFirstLucidTick = timeSinceFirstMpTick - this.lucidTickOffset;
+		let timeTillNextLucidTick = (timeSinceFirstLucidTick < 0) ? (-timeSinceFirstLucidTick) : (3 - timeSinceFirstLucidTick % 3);
+		if (timeTillNextLucidTick < Debug.epsilon) timeTillNextLucidTick += 3;
+
+		let lucid = this.resources.get(ResourceType.LucidDreaming);
+		if (lucid.available(1) && lucid.pendingChange) {
+			let timeTillDropLucid = lucid.pendingChange.timeTillEvent;
+			if (timeTillNextLucidTick < timeTillDropLucid && timeTillNextLucidTick < timeTillNextMpTick) {
+				return timeTillNextLucidTick;
+			}
+		}
+
+		return timeTillNextMpTick;
 	}
 
 	getSkillAvailabilityStatus(skillName: SkillName) {
