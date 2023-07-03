@@ -443,7 +443,7 @@ class Controller {
 		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.DamageMark,
-				potency: p,//p.getAmount({tincturePotencyMultiplier: this.getTincturePotencyMultiplier()}),
+				potency: p,
 				buffs: pot ? [ResourceType.Tincture] : [],
 				time: this.game.time,
 				displayTime: this.game.getDisplayTime(),

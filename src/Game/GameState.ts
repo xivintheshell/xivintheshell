@@ -1,8 +1,8 @@
-import {Aspect, Debug, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
+import {Aspect, Debug, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
 import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
-import {CoolDown, CoolDownState, Event, LucidDreamingBuff, Resource, ResourceState} from "./Resources"
+import {CoolDown, CoolDownState, Event, DoTBuff, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
@@ -51,12 +51,12 @@ export class GameState {
 		this.resources.set(ResourceType.Firestarter, new Resource(ResourceType.Firestarter, 1, 0));
 		this.resources.set(ResourceType.Thundercloud, new Resource(ResourceType.Thundercloud, 1, 0));
 		this.resources.set(ResourceType.ThunderDoTTick, new Resource(ResourceType.ThunderDoTTick, 1, 0));
-		this.resources.set(ResourceType.ThunderDoT, new Resource(ResourceType.ThunderDoT, 1, 0));
+		this.resources.set(ResourceType.ThunderDoT, new DoTBuff(ResourceType.ThunderDoT, 1, 0));
 		this.resources.set(ResourceType.Manaward, new Resource(ResourceType.Manaward, 1, 0));
 		this.resources.set(ResourceType.Triplecast, new Resource(ResourceType.Triplecast, 3, 0));
 		this.resources.set(ResourceType.Addle, new Resource(ResourceType.Addle, 1, 0));
 		this.resources.set(ResourceType.Swiftcast, new Resource(ResourceType.Swiftcast, 1, 0));
-		this.resources.set(ResourceType.LucidDreaming, new LucidDreamingBuff(ResourceType.LucidDreaming, 1, 0));
+		this.resources.set(ResourceType.LucidDreaming, new DoTBuff(ResourceType.LucidDreaming, 1, 0));
 		this.resources.set(ResourceType.Surecast, new Resource(ResourceType.Surecast, 1, 0));
 		this.resources.set(ResourceType.Tincture, new Resource(ResourceType.Tincture, 1, 0)); // capture
 		this.resources.set(ResourceType.Sprint, new Resource(ResourceType.Sprint, 1, 0));
@@ -121,29 +121,61 @@ export class GameState {
 			this.resources.addResourceEvent(ResourceType.Mana, "initial mana tick", this.config.timeTillFirstManaTick, recurringManaRegen);
 		}
 
-		// and actor ticks
-		let recurringLucidTick = ()=>{
-			// do whatever work at actor tick: lucid dreaming tick for example
-			let lucid = this.resources.get(ResourceType.LucidDreaming) as LucidDreamingBuff;
+		// lucid ticks
+		let recurringLucidTick = () => {
+			// do work at lucid tick
+			let lucid = this.resources.get(ResourceType.LucidDreaming) as DoTBuff;
 			if (lucid.available(1)) {
 				lucid.tickCount++;
 				if (this.getFireStacks() === 0) {
 					let mana = this.resources.get(ResourceType.Mana);
 					mana.gain(550);
-					let msg = "+550 " + lucid.sourceSkill;
-					if (lucid.sourceSkill !== "(unknown)") msg += " (" + lucid.tickCount + "/7)";
+					let msg = "+550";
+					console.assert(lucid.node !== undefined);
+					if (lucid.node) {
+						let t = "??";
+						if (lucid.node.tmp_startLockTime) {
+							t = (lucid.node.tmp_startLockTime - this.config.countdown).toFixed(2);
+						}
+						msg += " " + lucid.node.skillName + "@" + t;
+						msg += " (" + lucid.tickCount + "/7)";
+					}
 					msg += " (MP=" + mana.availableAmount() + ")";
 					controller.reportLucidTick(this.time, msg);
 				}
 			}
 			// queue the next tick
-			this.addEvent(new Event("actor tick", 3, ()=>{
+			this.addEvent(new Event("lucid tick", 3, ()=>{
 				recurringLucidTick();
 			}));
 		};
 		let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
 		while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;
-		this.addEvent(new Event("initial actor tick", timeTillFirstLucidTick, recurringLucidTick));
+		this.addEvent(new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick));
+
+		// thunder DoT tick
+		let recurringThunderTick = () => {
+			let thunder = this.resources.get(ResourceType.ThunderDoT) as DoTBuff;
+			if (thunder.available(1)) {// dot buff is effective
+				thunder.tickCount++;
+				console.assert(thunder.node !== undefined);
+				if (thunder.node) {
+					// access potencies at index [1, 10] (since 0 is initial potency)
+					let p = thunder.node.getPotencies()[thunder.tickCount];
+					controller.resolvePotency(p);
+					if (this.config.procMode===ProcMode.Always || (this.config.procMode===ProcMode.RNG && this.rng() < 0.1)) {
+						this.gainThundercloudProc();
+					}
+				}
+			}
+			// queue the next tick
+			this.addEvent(new Event("thunder DoT tick", 3, ()=>{
+				recurringThunderTick();
+			}));
+		};
+		let timeTillFirstThunderTick = this.config.timeTillFirstManaTick + this.thunderTickOffset;
+		while (timeTillFirstThunderTick > 3) timeTillFirstThunderTick -= 3;
+		this.addEvent(new Event("initial thunder DoT tick", timeTillFirstThunderTick, recurringThunderTick));
 
 		// also polyglot
 		let recurringPolyglotGain = (rsc: Resource)=>{
@@ -218,6 +250,22 @@ export class GameState {
 
 	getDisplayTime() {
 		return (this.time - this.config.countdown);
+	}
+
+	// could happen from sharpcasted T3, or from a tick
+	gainThundercloudProc() {
+		let thundercloud = this.resources.get(ResourceType.Thundercloud);
+		let duration = this.config.extendedBuffTimes ? 41 : 40;
+		if (thundercloud.available(1)) { // already has a proc; reset its timer
+			thundercloud.overrideTimer(this, duration);
+		} else { // there's currently no proc. gain one.
+			thundercloud.gain(1);
+			this.resources.addResourceEvent(
+				ResourceType.Thundercloud,
+				"drop thundercloud proc", duration, (rsc: Resource) => {
+					rsc.consume(1);
+				});
+		}
 	}
 
 	switchToAForUI(rscType: ResourceType, numStacks: number) {

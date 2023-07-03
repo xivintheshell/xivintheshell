@@ -1,7 +1,7 @@
 import {Aspect, ProcMode, ResourceType, SkillName} from './Common'
 // @ts-ignore
 import {controller} from "../Controller/Controller";
-import {LucidDreamingBuff, Resource} from "./Resources";
+import {DoTBuff, Resource} from "./Resources";
 import {ActionNode} from "../Controller/Record";
 import {GameState} from "./GameState";
 import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
@@ -292,62 +292,19 @@ export class SkillsList extends Map<SkillName, Skill> {
 			instant: false,
 			duration: 30});
 
-		let gainThundercloudProc = function (game: GameState) {
-			let thundercloud = game.resources.get(ResourceType.Thundercloud);
-			let duration = game.config.extendedBuffTimes ? 41 : 40;
-			if (thundercloud.available(1)) { // already has a proc; reset its timer
-				thundercloud.overrideTimer(game, duration);
-			} else { // there's currently no proc. gain one.
-				thundercloud.gain(1);
-				game.resources.addResourceEvent(
-					ResourceType.Thundercloud,
-					"drop thundercloud proc", duration, (rsc: Resource) => {
-						rsc.consume(1);
-					});
-			}
-		}
-
-		// called at the time of APPLICATION (not snapshot)
 		let applyThunderDoT = function(game: GameState, node: ActionNode) {
-			// define stuff
-			let recurringThunderTick = (remainingTicks: number)=> {
-				if (remainingTicks===0) return;
-				game.resources.addResourceEvent(
-					ResourceType.ThunderDoTTick,
-					"recurring thunder tick", 3, (rsc: Resource) =>{
-						let idx = 10 - remainingTicks + 1;
-						let p = node.getPotencies()[idx];
-						controller.resolvePotency(p);
-
-						if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && game.rng() < 0.1)) {// thundercloud proc
-							gainThundercloudProc(game);
-						}
-						recurringThunderTick(remainingTicks - 1);
-					});
-			};
-			let dot = game.resources.get(ResourceType.ThunderDoT);
-			let tick = game.resources.get(ResourceType.ThunderDoTTick);
-			// if already has thunder applied; cancel the remaining ticks now.
-			dot.removeTimer();
-			tick.removeTimer();
-			// for all existing T3, remove unapplied potencies
-			// NOTE: can't simply iterateAll here because want to bail out once we reach the currently applying node
-			let itr = controller.record.getFirstAction();
-			while (itr) {
-				if (itr === node) break;
-				if (itr.skillName === SkillName.Thunder3) {
-					itr.removeUnresolvedPotencies();
-				}
-				itr = itr.next;
+			let thunder = game.resources.get(ResourceType.ThunderDoT) as DoTBuff;
+			if (thunder.available(1)) {
+				thunder.overrideTimer(game, 30);
+			} else {
+				thunder.gain(1);
+				game.resources.addResourceEvent(ResourceType.ThunderDoT, "drop thunder DoT", 30, rsc=>{
+					rsc.consume(1);
+				});
 			}
-			// order of events: gain buff, add "remove" event,
-			dot.gain(1);
-			game.resources.addResourceEvent(ResourceType.ThunderDoT, "drop DoT", 30, (dot: Resource)=>{
-				dot.consume(1);
-			});
-			// what this function does: wait for 3s and do a tick
-			recurringThunderTick(10);
-		};
+			thunder.node = node;
+			thunder.tickCount = 0;
+		}
 
 		let addT3Potencies = function(node: ActionNode, includeInitial: boolean) {
 			let mods = getPotencyModifiersFromResourceState(game.resources, Aspect.Lightning);
@@ -412,7 +369,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					// if there's a sharpcast stack, consume it and gain (a potentially new) proc
 					let sc = game.resources.get(ResourceType.Sharpcast);
 					if (sc.available(1)) {
-						gainThundercloudProc(game);
+						game.gainThundercloudProc();
 						sc.consume(1);
 						sc.removeTimer();
 					}
@@ -432,7 +389,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						// if there's a sharpcast stack, consume it and gain (a potentially new) proc
 						let sc = game.resources.get(ResourceType.Sharpcast);
 						if (sc.available(1)) {
-							gainThundercloudProc(game);
+							game.gainThundercloudProc();
 							sc.consume(1);
 							sc.removeTimer();
 						}
@@ -776,11 +733,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 		skillsList.set(SkillName.LucidDreaming, new Skill(SkillName.LucidDreaming,
 			() => { return true; },
 			(game, node) => {
-				const skillTime = game.getDisplayTime();
 				game.useInstantSkill({
 					skillName: SkillName.LucidDreaming,
 					onApplication: () => {
-						let lucid = game.resources.get(ResourceType.LucidDreaming) as LucidDreamingBuff;
+						let lucid = game.resources.get(ResourceType.LucidDreaming) as DoTBuff;
 						if (lucid.available(1)) {
 							lucid.overrideTimer(game, 21);
 						} else {
@@ -791,7 +747,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 									rsc.consume(1);
 								});
 						}
-						lucid.sourceSkill = "Lucid@"+skillTime.toFixed(2);
+						lucid.node = node;
 						lucid.tickCount = 0;
 					},
 					dealDamage: false,

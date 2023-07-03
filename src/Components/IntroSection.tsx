@@ -221,14 +221,14 @@ export function IntroSection(props: {}) {
 						{localize ({
 							en:
 								<div className="paragraph">
-									Lucid dreaming ticks happen on actor ticks, which have a random offset relative to
-									MP tick.
-									The earliest first tick time is 0.623s after you press the skill button. It ticks 7
+									Lucid dreaming and thunder ticks have independent tick timers. They each have a random time offset relative to
+									MP ticks. See Config section for the current offsets.
+									For lucid dreaming, the earliest first tick time is 0.623s after you press the skill button. It ticks 7
 									times.
 								</div>,
 							zh:
 								<div className="paragraph">
-									醒梦的跳蓝时间是独立的，因此会导致他和普通跳蓝之间存在一个随机的时间差。醒梦后的第一跳蓝最早会出现在技能释放后的0.3秒，总计7跳。
+									跳雷和跳醒梦的时间都是独立计算的，它们和普通跳蓝之间存在一个随机的时间差，这个时间差可以在右侧的设置界面查看。醒梦后的第一跳蓝最早会出现在技能释放后的0.623秒，总计7跳。
 								</div>,
 						})}
 					</div>

@@ -1,5 +1,6 @@
 import {Debug, ResourceType} from "./Common"
 import {GameState} from "./GameState";
+import {ActionNode} from "../Controller/Record";
 
 export class Event {
 	name: string;
@@ -72,9 +73,10 @@ export class Resource {
 	}
 }
 
-export class LucidDreamingBuff extends Resource {
+export class DoTBuff extends Resource {
+	node?: ActionNode = undefined;
 	tickCount: number = 0;
-	sourceSkill: string = "(unknown)";
+	//sourceSkill: string = "(unknown)";
 	constructor(type: ResourceType, maxValue: number, initialValue: number) {
 		super(type, maxValue, initialValue);
 	}

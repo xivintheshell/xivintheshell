@@ -77,8 +77,15 @@ export function loadFromFile(fileObject: Blob, callback=(content: object)=>{cons
 	let fileReader = new FileReader();
 	fileReader.onload = function(fileLoadedEvent) {
 		let str: string = fileLoadedEvent.target?.result?.toString() ?? "";
-		let json = JSON.parse(str);
-		callback(json);
+		try {
+			let json = JSON.parse(str);
+			callback(json);
+		} catch (e) {
+			window.alert(localize({
+				en: "Parse error! Are you sure this is the correct file? This tool only reads text files in JSON format.",
+				zh: "解析出错- 你确定文件没选错吗？本工具只读取JSON格式的文本文件"
+			}))
+		}
 	};
 	fileReader.readAsText(fileObject, "UTF-8");
 }
