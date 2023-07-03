@@ -376,6 +376,7 @@ class Controller {
 			tinctureBuffPercentage: this.#tinctureBuffPercentage,
 			lastDamageApplicationTime: this.#lastDamageApplicationTime
 		});
+		// display
 		updateDamageStats(damageStats);
 	}
 
@@ -384,6 +385,7 @@ class Controller {
 			tinctureBuffPercentage: this.#tinctureBuffPercentage,
 			lastDamageApplicationTime: this.#lastDamageApplicationTime
 		});
+		// display
 		updateSelectedStats(stats);
 	}
 

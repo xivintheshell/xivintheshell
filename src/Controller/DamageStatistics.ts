@@ -49,6 +49,9 @@ const abilities = new Set<SkillName>([
 	SkillName.Sprint
 ]);
 
+// source of truth
+const excludedFromStats = new Set<SkillName | "DoT">([]);
+
 type ExpandedNode = {
 	displayedModifiers: PotencyModifierType[],
 	basePotency: number,
@@ -107,7 +110,7 @@ function expandT3Node(node: ActionNode) {
 		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 		untargetable: bossIsUntargetable
 	}).applied;
-	entry.potencyWithoutPot = potencyWithPot;
+	entry.potencyWithoutPot = potencyWithoutPot;
 	entry.potPotency = potencyWithPot - potencyWithoutPot;
 
 	return entry;
@@ -158,15 +161,15 @@ function expandNode(node: ActionNode) : ExpandedNode {
 	}
 }
 
-function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
-
-	const tagsAreEqual = function(a: PotencyModifierType[], b: PotencyModifierType[]) {
-		if (a.length !== b.length) return false;
-		for (let i = 0; i < a.length; i++) {
-			if (a[i] !== b[i]) return false;
-		}
-		return true;
+function tagsAreEqual(a: PotencyModifierType[], b: PotencyModifierType[]) {
+	if (a.length !== b.length) return false;
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) return false;
 	}
+	return true;
+}
+
+function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 
 	let expanded = expandNode(node);
 	let res = {
@@ -182,6 +185,36 @@ function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 	}
 
 	return res;
+}
+
+export function getSkillOrDotInclude(skillNameOrDoT: SkillName | "DoT") {
+	return !excludedFromStats.has(skillNameOrDoT);
+}
+
+export function allSkillsAreIncluded() {
+	return excludedFromStats.size === 0;
+}
+
+export function updateSkillOrDoTInclude(props: {
+	skillNameOrDoT: SkillName | "DoT",
+	include: boolean
+}) {
+	if (props.include && excludedFromStats.has(props.skillNameOrDoT)) {
+		excludedFromStats.delete(props.skillNameOrDoT);
+		// it doesn't make sense to include DoT but not base potency of T3
+		if (props.skillNameOrDoT === "DoT") {
+			excludedFromStats.delete(SkillName.Thunder3);
+		} else if (props.skillNameOrDoT === SkillName.Thunder3) {
+			excludedFromStats.delete("DoT");
+		}
+	} else {
+		excludedFromStats.add(props.skillNameOrDoT);
+		if (props.skillNameOrDoT === SkillName.Thunder3) {
+			excludedFromStats.add("DoT");
+		}
+	}
+	ctl.displayCurrentState();
+	ctl.updateStats();
 }
 
 export function calculateSelectedStats(props: {
@@ -204,19 +237,23 @@ export function calculateSelectedStats(props: {
 
 	ctl.record.iterateSelected(node=>{
 		if (node.type === ActionType.Skill && node.skillName) {
+			const checked = getSkillOrDotInclude(node.skillName);
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
-			if (skillInfo.info.cdName === ResourceType.cd_GCD) {
+			if (skillInfo.info.cdName === ResourceType.cd_GCD && checked) {
 				if (node.hitBoss(bossIsUntargetable)) selected.gcdSkills.applied++;
 				else if (!node.resolved()) selected.gcdSkills.pending++;
 			}
 			// potency
 			let p = node.getPotency({
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
-				untargetable: bossIsUntargetable
+				untargetable: bossIsUntargetable,
+				excludeDoT: node.skillName===SkillName.Thunder3 && !getSkillOrDotInclude("DoT")
 			});
-			selected.potency.applied += p.applied;
-			selected.potency.pending += p.snapshottedButPending;
+			if (checked) {
+				selected.potency.applied += p.applied;
+				selected.potency.pending += p.snapshottedButPending;
+			}
 		}
 	});
 
@@ -248,9 +285,12 @@ export function calculateDamageStats(props: {
 
 	ctl.record.iterateAll(node=>{
 		if (node.type === ActionType.Skill && node.skillName) {
+
+			const checked = getSkillOrDotInclude(node.skillName);
+
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
-			if (skillInfo.info.cdName === ResourceType.cd_GCD) {
+			if (skillInfo.info.cdName === ResourceType.cd_GCD && checked) {
 				if (node.hitBoss(bossIsUntargetable)) {
 					gcdSkills.applied++;
 				} else if (!node.resolved()) {
@@ -263,8 +303,10 @@ export function calculateDamageStats(props: {
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable
 			});
-			totalPotency.applied += p.applied;
-			totalPotency.pending += p.snapshottedButPending;
+			if (checked) {
+				totalPotency.applied += p.applied;
+				totalPotency.pending += p.snapshottedButPending;
+			}
 
 			// main table
 			if (node.resolved()) {
@@ -286,11 +328,13 @@ export function calculateDamageStats(props: {
 				}
 				let potencyWithoutPot = node.getPotency({
 					tincturePotencyMultiplier: 1,
-					untargetable: bossIsUntargetable
+					untargetable: bossIsUntargetable,
+					excludeDoT: node.skillName===SkillName.Thunder3 && !getSkillOrDotInclude("DoT")
 				}).applied;
 				let potencyWithPot = node.getPotency({
 					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
-					untargetable: bossIsUntargetable
+					untargetable: bossIsUntargetable,
+					excludeDoT: node.skillName===SkillName.Thunder3 && !getSkillOrDotInclude("DoT")
 				}).applied;
 				const hit = node.hitBoss(bossIsUntargetable);
 				mainTable[q.mainTableIndex].usageCount += 1;
@@ -308,9 +352,11 @@ export function calculateDamageStats(props: {
 				skillPotency += potencyWithPot;
 				skillPotencies.set(node.skillName, skillPotency);
 
-				// and main table total
-				mainTableTotalPotency.withoutPot += potencyWithoutPot;
-				mainTableTotalPotency.potPotency += (potencyWithPot - potencyWithoutPot);
+				// and main table total (only if checked)
+				if (checked) {
+					mainTableTotalPotency.withoutPot += potencyWithoutPot;
+					mainTableTotalPotency.potPotency += (potencyWithPot - potencyWithoutPot);
+				}
 
 				// t3 table
 				if (node.skillName === SkillName.Thunder3) {

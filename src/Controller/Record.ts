@@ -97,19 +97,23 @@ export class ActionNode {
 
 	getPotency(props: {
 		tincturePotencyMultiplier: number,
-		untargetable: (t: number) => boolean
+		untargetable: (t: number) => boolean,
+		excludeDoT?: boolean
 	}) {
 		let res = {
 			applied: 0,
 			snapshottedButPending: 0
 		};
-		this.#potencies.forEach(p=>{
-			if (p.hasHitBoss(props.untargetable)) {
-				res.applied += p.getAmount(props);
-			} else if (!p.hasResolved() && p.hasSnapshotted()) {
-				res.snapshottedButPending += p.getAmount(props);
+		for (let i = 0; i < this.#potencies.length; i++) {
+			if (i === 0 || !props.excludeDoT) {
+				let p = this.#potencies[i];
+				if (p.hasHitBoss(props.untargetable)) {
+					res.applied += p.getAmount(props);
+				} else if (!p.hasResolved() && p.hasSnapshotted()) {
+					res.snapshottedButPending += p.getAmount(props);
+				}
 			}
-		});
+		}
 		return res;
 	}
 

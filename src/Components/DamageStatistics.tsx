@@ -5,6 +5,7 @@ import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {localize, localizeSkillName} from "./Localization";
 import {controller} from "../Controller/Controller";
+import {allSkillsAreIncluded, getSkillOrDotInclude, updateSkillOrDoTInclude} from "../Controller/DamageStatistics";
 
 export type DamageStatsMainTableEntry = {
 	skillName: SkillName,
@@ -133,6 +134,7 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 function PotencyDisplay(props: {
 	basePotency: number,
 	helpTopic: string,
+	includeInStats: boolean,
 	explainUntargetable?: boolean,
 	calc: PotencyModifier[]})
 {
@@ -147,7 +149,7 @@ function PotencyDisplay(props: {
 			potencyExplanation += " × " + m.factor + "(" + buffName(m.source) + ")"
 		}
 	});
-	return <span>{potency.toFixed(2)} <Help topic={props.helpTopic} content={potencyExplanation}/></span>
+	return <span style={{textDecoration: props.includeInStats ? "none" : "line-through"}}>{potency.toFixed(2)} <Help topic={props.helpTopic} content={potencyExplanation}/></span>
 }
 
 const rowGap = "0.375em 0.75em";
@@ -190,12 +192,14 @@ export class DamageStatistics extends React.Component {
 	render() {
 
 		let colors = getCurrentThemeColors();
+		const allIncluded = allSkillsAreIncluded();
 
 		//////////////////// Summary ///////////////////////
 
 		const colon = localize({en: ": ", zh: "："}) as string;
 		const lparen = localize({en: " (", zh: "（"}) as string;
 		const rparen = localize({en: ") ", zh: "）"}) as string;
+		const checkedOnlyStr = allIncluded ? "" : localize({en: " (checked only)", zh: "（勾选部分）"}) as string;
 
 		let lastDisplay = this.data.lastDamageApplicationTime - this.data.countdown;
 		let ppsAvailable = this.data.lastDamageApplicationTime > -this.data.countdown;
@@ -207,6 +211,9 @@ export class DamageStatistics extends React.Component {
 			potencyStr += s;
 			selectedPotencyStr += s;
 		}
+		potencyStr += checkedOnlyStr;
+		selectedPotencyStr += checkedOnlyStr;
+
 		potencyStr += colon + this.data.totalPotency.applied.toFixed(2);
 		selectedPotencyStr += colon + this.selected.potency.applied.toFixed(2);
 		if (this.data.totalPotency.pending > 0) {
@@ -216,8 +223,8 @@ export class DamageStatistics extends React.Component {
 			selectedPotencyStr += lparen + this.selected.potency.pending.toFixed(2) + (localize({en: " pending", zh: "未结算"}) as string) + rparen;
 		}
 
-		let gcdStr = localize({en: "GCD skills", zh: "GCD技能"}) + colon + this.data.gcdSkills.applied;
-		let selectedGcdStr = localize({en:"Selected GCD skills", zh:"选中GCD技能"}) + colon + this.selected.gcdSkills.applied;
+		let gcdStr = localize({en: "GCD skills", zh: "GCD技能"}) + checkedOnlyStr + colon + this.data.gcdSkills.applied;
+		let selectedGcdStr = localize({en:"Selected GCD skills", zh:"选中GCD技能"}) + checkedOnlyStr + colon + this.selected.gcdSkills.applied;
 		if (this.data.gcdSkills.pending > 0) {
 			gcdStr += lparen + "+" + this.data.gcdSkills.pending + (localize({en: " not yet applied", zh: "未结算"}) as string) + rparen;
 		}
@@ -228,9 +235,9 @@ export class DamageStatistics extends React.Component {
 		let selected: React.ReactNode | undefined = undefined;
 		if (this.selected.duration > 0) {
 			selected = <div style={{flex: 1}}>
-				<div>{localize({en: "Duration (selected)", zh: "选中时长"})}{colon}{this.selected.duration.toFixed(2)}</div>
+				<div>{localize({en: "Selected duration", zh: "选中时长"})}{colon}{this.selected.duration.toFixed(2)}</div>
 				<div>{selectedPotencyStr}</div>
-				<div>PPS{colon}{(this.selected.potency.applied / this.selected.duration).toFixed(2)}</div>
+				<div>PPS{checkedOnlyStr + colon}{(this.selected.potency.applied / this.selected.duration).toFixed(2)}</div>
 				<div>{selectedGcdStr}</div>
 			</div>
 		}
@@ -239,7 +246,7 @@ export class DamageStatistics extends React.Component {
 			<div style={{flex: 1, color: this.data.historical ? colors.historical : colors.text}}>
 				<div>{localize({en: "Last damage application time", zh: "最后伤害结算时间"})}{colon}{lastDamageApplicationTimeDisplay}</div>
 				<div>{potencyStr}</div>
-				<div>PPS <Help topic={"ppsNotes"} content={
+				<div>PPS{checkedOnlyStr} <Help topic={"ppsNotes"} content={
 					<div className={"toolTip"}>
 						<div className="paragraph">{localize({
 							en: "total applied potency divided by last damage application time.",
@@ -268,6 +275,7 @@ export class DamageStatistics extends React.Component {
 
 		let cell = function(widthPercentage: number): CSSProperties {
 			return {
+				verticalAlign: "middle",
 				boxSizing: "border-box",
 				display: "inline-block",
 				width: widthPercentage + "%",
@@ -287,13 +295,39 @@ export class DamageStatistics extends React.Component {
 				tags.push(<BuffTag key={i} buff={props.row.displayedModifiers[i]}/>);
 			}
 
+			const includeInStats = getSkillOrDotInclude(props.row.skillName);
+
+			// include checkbox
+			let includeCheckboxes: React.ReactNode[] = [];
+			if (!sameAsLast && props.row.basePotency > 0) {
+				includeCheckboxes.push(<input key="main" type={"checkbox"} style={{position: "relative", top: 2, marginRight: 10}} checked={includeInStats} onChange={()=>{
+					updateSkillOrDoTInclude({skillNameOrDoT: props.row.skillName, include: !includeInStats});
+				}}/>);
+			}
+			// additional checkbox for DoT
+			if (props.row.skillName === SkillName.Thunder3) {
+				includeCheckboxes.push(<input key="dot" type={"checkbox"} style={{position: "relative", top: 2, marginRight: 10}} checked={
+					getSkillOrDotInclude("DoT")
+				} onChange={()=>{
+					updateSkillOrDoTInclude({skillNameOrDoT: "DoT", include: !getSkillOrDotInclude("DoT")});
+				}}/>);
+			}
+
 			// skill name node
 			let skillNameNode: React.ReactNode | undefined = undefined;
 			if (!sameAsLast) {
 				skillNameNode = <span>
-					{localizeSkillName(props.row.skillName)} {props.row.skillName===SkillName.Thunder3 ?
-					<Help topic={"potencyStats-t3"} content={localize({en: "See Thunder 3 table below for details", zh: "详见下方雷3表格"})}/>
-					: undefined}
+					<span style={{textDecoration: includeInStats ? "none" : "line-through", color: includeInStats ? colors.text : colors.bgHighContrast}}>
+						{localizeSkillName(props.row.skillName)} {props.row.skillName===SkillName.Thunder3 ?
+							<Help topic={"potencyStats-t3"} content={localize({en: "See Thunder 3 table below for details", zh: "详见下方雷3表格"})}/>
+							: undefined}
+					</span>
+					{props.row.skillName===SkillName.Thunder3 ? <span style={{
+						textDecoration: getSkillOrDotInclude("DoT") ? "none" : "line-through",
+						color: getSkillOrDotInclude("DoT") ? colors.text : colors.bgHighContrast
+					}}><br/>
+						{localize({en: "(DoT)", zh: "（跳雷）"})}
+					</span> : undefined}
 				</span>;
 			}
 
@@ -301,6 +335,7 @@ export class DamageStatistics extends React.Component {
 			let potencyNode: React.ReactNode | undefined = undefined;
 			if (props.row.basePotency > 0 && props.row.skillName !== SkillName.Thunder3) {
 				potencyNode = <PotencyDisplay
+					includeInStats={includeInStats}
 					basePotency={props.row.basePotency}
 					helpTopic={"mainTable-potencyCalc-"+props.key}
 					calc={props.row.calculationModifiers}/>;
@@ -308,7 +343,7 @@ export class DamageStatistics extends React.Component {
 
 			// usage count node
 			let unhitUsages = props.row.usageCount - props.row.hitCount;
-			let usageCountNode = <span>
+			let usageCountNode = <span style={{textDecoration: includeInStats ? "none" : "line-through"}}>
 				{props.row.hitCount}
 				{unhitUsages>0 ? <span style={{color: colors.timeline.untargetableDamageMark + "af"}}> +{unhitUsages} <Help
 					topic={"mainTable-numUntargetableUsages-"+props.key}
@@ -318,21 +353,25 @@ export class DamageStatistics extends React.Component {
 			// total potency
 			let totalPotencyNode: React.ReactNode | undefined = undefined;
 			if (props.row.showPotency) {
-				totalPotencyNode = <span>
+				totalPotencyNode = <span style={{textDecoration: includeInStats ? "none" : "line-through"}}>
 					{props.row.totalPotencyWithoutPot.toFixed(2)}
 					{props.row.potPotency > 0 ? <span style={{
-						color: colors.timeline.potCover
+						color: includeInStats ? colors.timeline.potCover : colors.bgHighContrast
 					}}> +{props.row.potPotency.toFixed(2)}({localize({en: "pot", zh: "爆发药"})})({props.row.potCount})</span> : undefined}
 				</span>
 			}
-
-			return <div key={props.key} style={{
+			let rowStyle: CSSProperties = {
 				textAlign: "left",
 				position: "relative",
-				borderTop: sameAsLast ? "none" : "1px solid " + colors.bgMediumContrast
-			}}>
-				<div style={cell(20)}>{skillNameNode}</div>
-				<div style={cell(15)}>{tags}</div>
+				borderTop: sameAsLast ? "none" : "1px solid " + colors.bgMediumContrast,
+			};
+			if (!includeInStats) {
+				rowStyle.color = colors.bgHighContrast;
+			}
+			return <div key={props.key} style={rowStyle}>
+				<div style={cell(3)}>{includeCheckboxes}</div>
+				<div style={cell(22)}>{skillNameNode}</div>
+				<div style={cell(10)}>{tags}</div>
 				<div style={cell(20)}>{potencyNode}</div>
 				<div style={cell(10)}>{usageCountNode}</div>
 				<div style={cell(35)}>{totalPotencyNode}</div>
@@ -366,11 +405,13 @@ export class DamageStatistics extends React.Component {
 			// potency
 			let mainPotencyNode = <PotencyDisplay
 				basePotency={props.row.mainPotencyHit ? props.row.baseMainPotency : 0}
+				includeInStats={true}
 				explainUntargetable={!props.row.mainPotencyHit}
 				helpTopic={"t3Table-main-"+props.key}
 				calc={props.row.calculationModifiers}/>
 			let dotPotencyNode = <PotencyDisplay
 				basePotency={props.row.baseDotPotency}
+				includeInStats={true}
 				helpTopic={"t3Table-dot-"+props.key}
 				calc={props.row.calculationModifiers}/>
 
@@ -419,7 +460,9 @@ export class DamageStatistics extends React.Component {
 			display: "inline-block",
 			padding: rowGap,
 		};
-		let mainHeaderStr = localize({en: "Applied Skills", zh: "技能统计"});
+		let mainHeaderStr = allIncluded ?
+			localize({en: "Applied Skills", zh: "技能统计"}) :
+			localize({en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）"});
 		let t3HeaderStr = localize({en: "Thunder 3", zh: "雷3统计"});
 		if (this.data.historical) {
 			let t = (this.data.time - this.data.countdown).toFixed(2) + "s";

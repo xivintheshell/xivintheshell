@@ -1,8 +1,10 @@
 [
 	{
-		"date": "7/2/23",
+		"date": "7/3/23",
 		"changes": [
-			"Thunder DoT tick time offset is now fixed relative to mp ticks; see config, under lucid tick offset. This MAY break old fights with proc mode RNG. If one of your old files broke, you might be able to restore it by text editing the record and setting proc mode to Always. Or send it to me and I might be able to help.",
+			"added p12S p2 markers by Yara",
+			"thunder DoT tick time offset is now fixed relative to mp ticks; see config, under lucid tick offset. This MAY break old fights with proc mode RNG. If one of your old files broke, you might be able to restore it by text editing the record and setting proc mode to Always. Or send it to me and I might be able to help.",
+			"checkboxes for which skills/DoT to include in damage stats",
 			"catch input file parse error"
 		]
 	},

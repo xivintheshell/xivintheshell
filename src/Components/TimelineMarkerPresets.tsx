@@ -93,6 +93,7 @@ function PresetButtons() {
 		<br/>
 		<LoadCombinedTracksBtn displayName={"P9S by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p9s.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P12S P1 by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p1.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P12S P2 by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p2.txt"}/>
 	</div>
 	return <Expandable title={"preset buttons"} titleNode={localize({en: "Presets", zh: "预设文件"})} defaultShow={true} content={content}/>
 }
@@ -262,12 +263,6 @@ export class TimelineMarkerPresets extends React.Component {
 				<span style={{marginLeft: 4}}>{localize({en: "show text", zh: "显示文字描述"})}</span>
 			</div>
 		</div>
-		/*
-		let untargetableOnlySection = <div>{localize({
-			en: "When the boss is untargetable, all hits are considered 0 potency.",
-			zh: "期间所有结算的伤害按0威力计算。"
-		})}</div>
-		 */
 
 		let content = <div>
 			<button style={btnStyle} onClick={()=>{
