@@ -78,7 +78,7 @@ let setCurrentLanguage : (lang: Language)=>void = (lang) => {}
 
 function LanguageOption(props: {lang: Language}) {
 	let text = "English";
-	if (props.lang === "zh") text = "中文(陆续更新中)";
+	if (props.lang === "zh") text = "中文";
 	if (props.lang === "ja") text = "日本語";
 	let colors = getCurrentThemeColors();
 	return <div style={{

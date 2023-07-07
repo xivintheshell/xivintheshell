@@ -62,12 +62,14 @@ const bossIsUntargetable = (rawTime: number) => {
 	return ctl.getUntargetableMask() && ctl.timeline.duringUntargetable(rawTime, ctl.gameConfig.countdown)
 }
 
-function expandT3Node(node: ActionNode) {
+function expandT3Node(lastNode: ActionNode | undefined, node: ActionNode) {
 	console.assert(node.getPotencies().length > 0);
 	console.assert(node.skillName === SkillName.Thunder3);
 	let entry: DamageStatsT3TableEntry = {
 		time: (node.tmp_startLockTime ?? ctl.gameConfig.countdown) - ctl.gameConfig.countdown,
 		displayedModifiers: [],
+		gap: { current: 0, cumulative: 0 },
+		override: { current: 0, cumulative: 0 },
 		mainPotencyHit: true,
 		baseMainPotency: 0,
 		baseDotPotency: 0,
@@ -77,6 +79,8 @@ function expandT3Node(node: ActionNode) {
 		potencyWithoutPot: 0,
 		potPotency: 0
 	};
+
+	// todo (23/7/6): gap & override & cumulative
 
 	let mainPotency = node.getPotencies()[0];
 	entry.baseMainPotency = mainPotency.base;
@@ -283,6 +287,7 @@ export function calculateDamageStats(props: {
 
 	let skillPotencies: Map<SkillName, number> = new Map();
 
+	let lastT3 : ActionNode | undefined = undefined; // for tracking DoT gap / override
 	ctl.record.iterateAll(node=>{
 		if (node.type === ActionType.Skill && node.skillName) {
 
@@ -301,7 +306,8 @@ export function calculateDamageStats(props: {
 			// potency
 			let p = node.getPotency({
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
-				untargetable: bossIsUntargetable
+				untargetable: bossIsUntargetable,
+				excludeDoT: node.skillName===SkillName.Thunder3 && !getSkillOrDotInclude("DoT")
 			});
 			if (checked) {
 				totalPotency.applied += p.applied;
@@ -360,7 +366,8 @@ export function calculateDamageStats(props: {
 
 				// t3 table
 				if (node.skillName === SkillName.Thunder3) {
-					t3Table.push(expandT3Node(node));
+					t3Table.push(expandT3Node(lastT3, node));
+					lastT3 = node;
 				}
 			}
 		}

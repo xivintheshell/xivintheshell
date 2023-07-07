@@ -81,7 +81,6 @@ export const enum ResourceType {
 	Firestarter = "Firestarter", // [0, 1]
 	Thundercloud = "Thundercloud", // [0, 1]
 	ThunderDoT = "ThunderDoT", // [0, 1] is actually used for display timing only
-	ThunderDoTTick = "ThunderDoTTick", // [0, 1]
 	Manaward = "Manaward", // [0, 1]
 	Addle = "Addle", // [0, 1]
 	Swiftcast = "Swiftcast", // [0, 1]

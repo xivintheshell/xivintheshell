@@ -50,7 +50,6 @@ export class GameState {
 		this.resources.set(ResourceType.Paradox, new Resource(ResourceType.Paradox, 1, 0));
 		this.resources.set(ResourceType.Firestarter, new Resource(ResourceType.Firestarter, 1, 0));
 		this.resources.set(ResourceType.Thundercloud, new Resource(ResourceType.Thundercloud, 1, 0));
-		this.resources.set(ResourceType.ThunderDoTTick, new Resource(ResourceType.ThunderDoTTick, 1, 0));
 		this.resources.set(ResourceType.ThunderDoT, new DoTBuff(ResourceType.ThunderDoT, 1, 0));
 		this.resources.set(ResourceType.Manaward, new Resource(ResourceType.Manaward, 1, 0));
 		this.resources.set(ResourceType.Triplecast, new Resource(ResourceType.Triplecast, 3, 0));

@@ -23,6 +23,14 @@ export type DamageStatsMainTableEntry = {
 export type DamageStatsT3TableEntry = {
 	time: number,
 	displayedModifiers: PotencyModifierType[],
+	gap: {
+		current: number,
+		cumulative: number
+	},
+	override: {
+		current: number,
+		cumulative: number
+	},
 	mainPotencyHit: boolean,
 	baseMainPotency: number,
 	baseDotPotency: number,
@@ -372,8 +380,8 @@ export class DamageStatistics extends React.Component {
 				<div style={cell(3)}>{includeCheckboxes}</div>
 				<div style={cell(22)}>{skillNameNode}</div>
 				<div style={cell(10)}>{tags}</div>
-				<div style={cell(20)}>{potencyNode}</div>
-				<div style={cell(10)}>{usageCountNode}</div>
+				<div style={cell(16)}>{potencyNode}</div>
+				<div style={cell(14)}>{usageCountNode}</div>
 				<div style={cell(35)}>{totalPotencyNode}</div>
 			</div>
 		}
@@ -401,6 +409,14 @@ export class DamageStatistics extends React.Component {
 			if (props.row.baseMainPotency === 400) {
 				tags.push(<BuffTag key={tags.length} tc={true}/>);
 			}
+
+			// gap
+			let gapStr = props.row.gap.current.toFixed(2) + "/" + props.row.gap.cumulative.toFixed(2);
+			let gapNode = props.row.gap.current > 0 ? <b>{gapStr}</b> : <span>{gapStr}</span>;
+
+			// override
+			let overrideStr = props.row.override.current.toFixed(2) + "/" + props.row.override.cumulative.toFixed(2);
+			let overrideNode = props.row.override.current > 0 ? <b>{overrideStr}</b> : <span>{overrideStr}</span>;
 
 			// potency
 			let mainPotencyNode = <PotencyDisplay
@@ -437,12 +453,14 @@ export class DamageStatistics extends React.Component {
 				position: "relative",
 				borderTop: "1px solid " + colors.bgMediumContrast
 			}}>
-				<div style={cell(10)}>{props.row.time.toFixed(2)}</div>
-				<div style={cell(15)}>{tags}</div>
-				<div style={cell(15)}>{mainPotencyNode}</div>
-				<div style={cell(15)}>{dotPotencyNode}</div>
+				<div style={cell(8)}>{props.row.time.toFixed(2)}</div>
+				<div style={cell(12)}>{tags}</div>
+				<div style={cell(14)}>{gapNode}</div>
+				<div style={cell(14)}>{overrideNode}</div>
+				<div style={cell(11)}>{mainPotencyNode}</div>
+				<div style={cell(11)}>{dotPotencyNode}</div>
 				<div style={cell(10)}>{numTicksNode}</div>
-				<div style={cell(35)}>{totalPotencyNode}</div>
+				<div style={cell(20)}>{totalPotencyNode}</div>
 			</div>
 		}
 
@@ -485,8 +503,8 @@ export class DamageStatistics extends React.Component {
 			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
 				<div>
 					<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}><b>{localize({en: "skill", zh: "技能"})}</b></span></div>
-					<div style={{display: "inline-block", width: "20%"}}><span style={headerCellStyle}><b>{localize({en: "potency", zh: "单次威力"})}</b></span></div>
-					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "count", zh: "数量"})}</b></span></div>
+					<div style={{display: "inline-block", width: "16%"}}><span style={headerCellStyle}><b>{localize({en: "potency", zh: "单次威力"})}</b></span></div>
+					<div style={{display: "inline-block", width: "14%"}}><span style={headerCellStyle}><b>{localize({en: "count", zh: "数量"})}</b></span></div>
 					<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
 				</div>
 				{tableRows}
@@ -519,11 +537,19 @@ export class DamageStatistics extends React.Component {
 			</div>
 			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
 				<div>
-					<div style={{display: "inline-block", width: "25%"}}><span style={headerCellStyle}><b>{localize({en: "time", zh: "时间"})}</b></span></div>
-					<div style={{display: "inline-block", width: "15%"}}><span style={headerCellStyle}><b>{localize({en: "initial", zh: "初始威力"})}</b></span></div>
-					<div style={{display: "inline-block", width: "15%"}}><span style={headerCellStyle}><b>{localize({en: "DoT potency", zh: "DoT威力"})}</b></span></div>
+					<div style={{display: "inline-block", width: "20%"}}><span style={headerCellStyle}><b>{localize({en: "time", zh: "时间"})}</b></span></div>
+					<div style={{display: "inline-block", width: "14%"}}><span style={headerCellStyle}>
+						<b>{localize({en: "gap", zh: "buff间隔"})} </b>
+						<Help topic={"t3table-gap-title"} content={localize({en: "placeholder"})}/>
+					</span></div>
+					<div style={{display: "inline-block", width: "14%"}}><span style={headerCellStyle}>
+						<b>{localize({en: "override", zh: "buff覆盖"})} </b>
+						<Help topic={"t3table-override-title"} content={localize({en: "placeholder"})}/>
+					</span></div>
+					<div style={{display: "inline-block", width: "11%"}}><span style={headerCellStyle}><b>{localize({en: "initial", zh: "初始威力"})}</b></span></div>
+					<div style={{display: "inline-block", width: "11%"}}><span style={headerCellStyle}><b>{localize({en: "DoT", zh: "DoT威力"})}</b></span></div>
 					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "ticks", zh: "跳雷次数"})}</b></span></div>
-					<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
+					<div style={{display: "inline-block", width: "20%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
 				</div>
 				{t3TableRows}
 			</div>

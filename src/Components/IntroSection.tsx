@@ -79,8 +79,8 @@ export function IntroSection(props: {}) {
 				})}
 
 				{localize({
-					en: <div className="paragraph">Most edits are automatically saved in your browser cache, so it's generally okay to refresh the page and not worry about losing progress.</div>,
-					zh: <div className="paragraph">大部分编辑都会被保存在浏览器缓存，一般情况下刷新网页也不会影响进度。</div>
+					en: <div className="paragraph">You can save/load fight records from the right, under <b>Control</b> section. Most edits are also automatically saved in your browser cache, so it's generally okay to refresh the page and not worry about losing progress.</div>,
+					zh: <div className="paragraph">右侧最下方有链接可以保存/加载战斗记录。大部分编辑也都会被保存在浏览器缓存，所以一般情况下刷新网页也不会影响进度。</div>
 				})}
 
 				{localize({

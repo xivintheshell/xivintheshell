@@ -344,7 +344,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				if (game.resources.get(ResourceType.Thundercloud).available(1)) // made instant via thundercloud
 				{
 					// potency
-					addT3Potencies(node, true);
+					addT3Potencies(node, true); // should call on capture
 					let p0 = node.getPotencies()[0];
 					p0.base = 400;
 					node.getPotencies().forEach(p=>{ p.snapshotTime = game.time; });
@@ -375,9 +375,11 @@ export class SkillsList extends Map<SkillName, Skill> {
 					}
 				} else {
 					game.castSpell({skillName: SkillName.Thunder3, onButtonPress: () => {
-							// potency
-							addT3Potencies(node, false);
+						// nothing here really
 						}, onCapture: (cap: SkillCaptureCallbackInfo) => {
+
+						// potency
+						addT3Potencies(node, false);
 
 						// potency snapshot time
 						node.getPotencies().forEach(p=>{ p.snapshotTime = game.time });
