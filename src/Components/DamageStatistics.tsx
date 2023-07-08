@@ -539,12 +539,18 @@ export class DamageStatistics extends React.Component {
 				<div>
 					<div style={{display: "inline-block", width: "20%"}}><span style={headerCellStyle}><b>{localize({en: "time", zh: "时间"})}</b></span></div>
 					<div style={{display: "inline-block", width: "14%"}}><span style={headerCellStyle}>
-						<b>{localize({en: "gap", zh: "buff间隔"})} </b>
-						<Help topic={"t3table-gap-title"} content={localize({en: "placeholder"})}/>
+						<b>{localize({en: "gap", zh: "DoT间隙"})} </b>
+						<Help topic={"t3table-gap-title"} content={localize({
+							en: <div>DoT coverage gap since previous T3 (current T3 / cumulative)</div>,
+							zh: <div>雷DoT覆盖间隙（本次技能 / 累计）</div>,
+						})}/>
 					</span></div>
 					<div style={{display: "inline-block", width: "14%"}}><span style={headerCellStyle}>
-						<b>{localize({en: "override", zh: "buff覆盖"})} </b>
-						<Help topic={"t3table-override-title"} content={localize({en: "placeholder"})}/>
+						<b>{localize({en: "override", zh: "DoT覆盖"})} </b>
+						<Help topic={"t3table-override-title"} content={localize({
+							en: <div>Overridden DoT time from previous T3 (current T3 / cumulative)</div>,
+							zh: <div>提前覆盖雷DoT时长（本次技能 / 累计）</div>,
+						})}/>
 					</span></div>
 					<div style={{display: "inline-block", width: "11%"}}><span style={headerCellStyle}><b>{localize({en: "initial", zh: "初始威力"})}</b></span></div>
 					<div style={{display: "inline-block", width: "11%"}}><span style={headerCellStyle}><b>{localize({en: "DoT", zh: "DoT威力"})}</b></span></div>

@@ -62,7 +62,7 @@ const bossIsUntargetable = (rawTime: number) => {
 	return ctl.getUntargetableMask() && ctl.timeline.duringUntargetable(rawTime, ctl.gameConfig.countdown)
 }
 
-function expandT3Node(lastNode: ActionNode | undefined, node: ActionNode) {
+function expandT3Node(node: ActionNode, lastNode?: ActionNode, lastRow?: DamageStatsT3TableEntry) {
 	console.assert(node.getPotencies().length > 0);
 	console.assert(node.skillName === SkillName.Thunder3);
 	let entry: DamageStatsT3TableEntry = {
@@ -80,7 +80,26 @@ function expandT3Node(lastNode: ActionNode | undefined, node: ActionNode) {
 		potPotency: 0
 	};
 
-	// todo (23/7/6): gap & override & cumulative
+	if (lastRow) {
+		entry.gap.cumulative = lastRow.gap.cumulative;
+		entry.override.cumulative = lastRow.override.cumulative;
+	}
+	if (lastNode) {
+		let lastP = lastNode.getPotencies()[0];
+		let thisP = node.getPotencies()[0];
+		if (lastP.hasResolved() && thisP.hasResolved()) {
+			if (lastP.applicationTime && thisP.applicationTime) {
+				let timeSinceLast30 = thisP.applicationTime - lastP.applicationTime - 30;
+				if (timeSinceLast30 > 0) {
+					entry.gap.current = timeSinceLast30;
+					entry.gap.cumulative += timeSinceLast30;
+				} else if (timeSinceLast30 < 0) {
+					entry.override.current = -timeSinceLast30;
+					entry.override.cumulative -= timeSinceLast30;
+				}
+			}
+		}
+	}
 
 	let mainPotency = node.getPotencies()[0];
 	entry.baseMainPotency = mainPotency.base;
@@ -366,7 +385,7 @@ export function calculateDamageStats(props: {
 
 				// t3 table
 				if (node.skillName === SkillName.Thunder3) {
-					t3Table.push(expandT3Node(lastT3, node));
+					t3Table.push(expandT3Node(node, lastT3, t3Table.length>0 ? t3Table[t3Table.length-1] : undefined));
 					lastT3 = node;
 				}
 			}

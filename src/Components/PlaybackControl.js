@@ -170,12 +170,12 @@ function ConfigSummary(props) {
 	let lucidTickOffset = controller.game.lucidTickOffset.toFixed(2);
 	let lucidOffsetDesc = localize({
 		en: "the random time offset of lucid dreaming ticks relative to mp ticks",
-		zh: "醒梦buff期间，每次跳蓝后多久跳醒梦"
+		zh: "醒梦buff期间，每次跳蓝后多久跳醒梦（由随机种子决定）"
 	});
 	let thunderTickOffset = controller.game.thunderTickOffset.toFixed(2);
 	let thunderOffsetDesc = localize({
 		en: "the random time offset of thunder DoT ticks relative to mp ticks",
-		zh: "雷DoT期间，每次跳蓝后多久跳雷"
+		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）"
 	});
 	let procMode = controller.gameConfig.procMode;
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;

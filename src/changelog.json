@@ -1,5 +1,11 @@
 [
 	{
+		"date": "7/7/23",
+		"changes": [
+			"DoT coverage gap / override times in T3 table"
+		]
+	},
+	{
 		"date": "7/3/23",
 		"changes": [
 			"added p12S p2 markers by Yara",
