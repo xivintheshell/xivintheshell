@@ -495,7 +495,7 @@ export class DamageStatistics extends React.Component {
 			position: "relative",
 			margin: "0 auto",
 			marginBottom: 40,
-			maxWidth: 800,
+			maxWidth: 880,
 		}}>
 			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
 				<b style={this.data.historical ? {color: colors.historical}:undefined}>{mainHeaderStr}</b>
@@ -530,7 +530,7 @@ export class DamageStatistics extends React.Component {
 			position: "relative",
 			margin: "0 auto",
 			marginBottom: 40,
-			maxWidth: 800,
+			maxWidth: 880,
 		}}>
 			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
 				<b style={this.data.historical ? {color: colors.historical}:undefined}>{t3HeaderStr}</b>
