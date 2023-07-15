@@ -435,7 +435,7 @@ export class Config extends React.Component {
 			props = {
 				type: rscType,
 				timeTillFullOrDrop: inputOverrideTimer,
-				stacks: info.maxValue > 1 ? inputOverrideStacks : 1,
+				stacks: info.maxStacks > 1 ? inputOverrideStacks : 1,
 				enabled: rscType === ResourceType.LeyLines ? inputOverrideEnabled : true,
 			};
 		}
