@@ -21,16 +21,11 @@ export type DamageStatsMainTableEntry = {
 };
 
 export type DamageStatsT3TableEntry = {
-	time: number,
+	castTime: number,
+	applicationTime: number,
 	displayedModifiers: PotencyModifierType[],
-	gap: {
-		current: number,
-		cumulative: number
-	},
-	override: {
-		current: number,
-		cumulative: number
-	},
+	gap: number,
+	override: number,
 	mainPotencyHit: boolean,
 	baseMainPotency: number,
 	baseDotPotency: number,
@@ -67,11 +62,20 @@ export type DamageStatisticsData = {
 		pending: number
 	},
 	mainTable: DamageStatsMainTableEntry[],
-	mainTableTotalPotency: {
-		withoutPot: number,
-		potPotency: number
-	}
+	mainTableSummary: {
+		totalPotencyWithoutPot: number,
+		totalPotPotency: number
+	},
 	t3Table: DamageStatsT3TableEntry[],
+	t3TableSummary: {
+		cumulativeGap: number,
+		cumulativeOverride: number,
+		timeSinceLastDoTDropped: number,
+		totalTicks: number,
+		theoreticalMaxTicks: number,
+		totalPotencyWithoutPot: number,
+		totalPotPotency: number,
+	},
 	historical: boolean,
 }
 
@@ -176,8 +180,17 @@ export class DamageStatistics extends React.Component {
 		lastDamageApplicationTime: 0,
 		gcdSkills: {applied: 0, pending: 0},
 		mainTable: [],
-		mainTableTotalPotency: {withoutPot: 0, potPotency: 0},
+		mainTableSummary: {totalPotencyWithoutPot: 0, totalPotPotency: 0},
 		t3Table: [],
+		t3TableSummary: {
+			cumulativeGap: 0,
+			cumulativeOverride: 0,
+			timeSinceLastDoTDropped: 0,
+			totalTicks: 0,
+			theoreticalMaxTicks: 0,
+			totalPotencyWithoutPot: 0,
+			totalPotPotency: 0
+		},
 		historical: false,
 	};
 
@@ -411,12 +424,12 @@ export class DamageStatistics extends React.Component {
 			}
 
 			// gap
-			let gapStr = props.row.gap.current.toFixed(2) + "/" + props.row.gap.cumulative.toFixed(2);
-			let gapNode = props.row.gap.current > 0 ? <b>{gapStr}</b> : <span>{gapStr}</span>;
+			let gapStr = props.row.gap.toFixed(2);
+			let gapNode = props.row.gap > 0 ? <span>{gapStr}</span> : <span/>;
 
 			// override
-			let overrideStr = props.row.override.current.toFixed(2) + "/" + props.row.override.cumulative.toFixed(2);
-			let overrideNode = props.row.override.current > 0 ? <b>{overrideStr}</b> : <span>{overrideStr}</span>;
+			let overrideStr = props.row.override.toFixed(2);
+			let overrideNode = props.row.override > 0 ? <span>{overrideStr}</span> : <span/>;
 
 			// potency
 			let mainPotencyNode = <PotencyDisplay
@@ -453,14 +466,15 @@ export class DamageStatistics extends React.Component {
 				position: "relative",
 				borderTop: "1px solid " + colors.bgMediumContrast
 			}}>
-				<div style={cell(8)}>{props.row.time.toFixed(2)}</div>
+				<div style={cell(8)}>{props.row.castTime.toFixed(2)}</div>
+				<div style={cell(8)}>{props.row.applicationTime.toFixed(2)}</div>
 				<div style={cell(12)}>{tags}</div>
-				<div style={cell(14)}>{gapNode}</div>
-				<div style={cell(14)}>{overrideNode}</div>
-				<div style={cell(11)}>{mainPotencyNode}</div>
-				<div style={cell(11)}>{dotPotencyNode}</div>
-				<div style={cell(10)}>{numTicksNode}</div>
-				<div style={cell(20)}>{totalPotencyNode}</div>
+				<div style={cell(10)}>{gapNode}</div>
+				<div style={cell(10)}>{overrideNode}</div>
+				<div style={cell(10)}>{mainPotencyNode}</div>
+				<div style={cell(10)}>{dotPotencyNode}</div>
+				<div style={cell(8)}>{numTicksNode}</div>
+				<div style={cell(24)}>{totalPotencyNode}</div>
 			</div>
 		}
 
@@ -495,7 +509,7 @@ export class DamageStatistics extends React.Component {
 			position: "relative",
 			margin: "0 auto",
 			marginBottom: 40,
-			maxWidth: 880,
+			maxWidth: 960,
 		}}>
 			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
 				<b style={this.data.historical ? {color: colors.historical}:undefined}>{mainHeaderStr}</b>
@@ -513,12 +527,12 @@ export class DamageStatistics extends React.Component {
 					position: "relative",
 					borderTop: "1px solid " + colors.bgMediumContrast
 				}}>
-					<div style={{display: "inline-block", width: "65%"}}/>
-					<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}>
-					{this.data.mainTableTotalPotency.withoutPot.toFixed(2)}
-						{this.data.mainTableTotalPotency.potPotency>0 ?
-							<span style={{color: colors.timeline.potCover}}> +{this.data.mainTableTotalPotency.potPotency.toFixed(2)}{localize({
-								en: "(pot +" + this.data.tinctureBuffPercentage + "%)",
+					<div style={cell(65)}/>
+					<div style={cell(35)}><span>
+					{this.data.mainTableSummary.totalPotencyWithoutPot.toFixed(2)}
+						{this.data.mainTableSummary.totalPotPotency>0 ?
+							<span style={{color: colors.timeline.potCover}}> +{this.data.mainTableSummary.totalPotPotency.toFixed(2)}{localize({
+								en: " (pot +" + this.data.tinctureBuffPercentage + "%)",
 								zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)"
 							})}</span> : undefined}
 				</span></div>
@@ -530,34 +544,58 @@ export class DamageStatistics extends React.Component {
 			position: "relative",
 			margin: "0 auto",
 			marginBottom: 40,
-			maxWidth: 880,
+			maxWidth: 960,
 		}}>
 			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
 				<b style={this.data.historical ? {color: colors.historical}:undefined}>{t3HeaderStr}</b>
 			</div>
 			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
 				<div>
-					<div style={{display: "inline-block", width: "20%"}}><span style={headerCellStyle}><b>{localize({en: "time", zh: "时间"})}</b></span></div>
-					<div style={{display: "inline-block", width: "14%"}}><span style={headerCellStyle}>
+					<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "cast time", zh: "读条时间"})}</b></span></div>
+					<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "application time", zh: "结算时间"})}</b></span></div>
+					<div style={{display: "inline-block", width: "12%"}}><span style={headerCellStyle}/></div>
+					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
 						<b>{localize({en: "gap", zh: "DoT间隙"})} </b>
 						<Help topic={"t3table-gap-title"} content={localize({
-							en: <div>DoT coverage gap since previous T3 (current T3 / cumulative)</div>,
-							zh: <div>雷DoT覆盖间隙（本次技能 / 累计）</div>,
+							en: <div>
+								<div className={"paragraph"}>DoT coverage time gap since pull or previous T3</div>
+								<div className={"paragraph"}>The last row also includes gap at the beginning and end of the fight</div>
+							</div>,
+							zh: <div>雷DoT覆盖间隙，最后一行也包括战斗开始和结束时没有雷DoT的时间</div>,
 						})}/>
 					</span></div>
-					<div style={{display: "inline-block", width: "14%"}}><span style={headerCellStyle}>
+					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
 						<b>{localize({en: "override", zh: "DoT覆盖"})} </b>
 						<Help topic={"t3table-override-title"} content={localize({
-							en: <div>Overridden DoT time from previous T3 (current T3 / cumulative)</div>,
-							zh: <div>提前覆盖雷DoT时长（本次技能 / 累计）</div>,
+							en: <div>Overridden DoT time from previous T3</div>,
+							zh: <div>提前覆盖雷DoT时长</div>,
 						})}/>
 					</span></div>
-					<div style={{display: "inline-block", width: "11%"}}><span style={headerCellStyle}><b>{localize({en: "initial", zh: "初始威力"})}</b></span></div>
-					<div style={{display: "inline-block", width: "11%"}}><span style={headerCellStyle}><b>{localize({en: "DoT", zh: "DoT威力"})}</b></span></div>
-					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "ticks", zh: "跳雷次数"})}</b></span></div>
-					<div style={{display: "inline-block", width: "20%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
+					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "initial", zh: "初始威力"})}</b></span></div>
+					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "DoT", zh: "DoT威力"})}</b></span></div>
+					<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "ticks", zh: "跳雷次数"})}</b></span></div>
+					<div style={{display: "inline-block", width: "24%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
 				</div>
 				{t3TableRows}
+				<div style={{
+					textAlign: "left",
+					position: "relative",
+					borderTop: "1px solid " + colors.bgMediumContrast,
+				}}>
+					<div style={cell(28)}/>
+					<div style={cell(10)}>{this.data.t3TableSummary.cumulativeGap.toFixed(2)}</div>
+					<div style={cell(10)}>{this.data.t3TableSummary.cumulativeOverride.toFixed(2)}</div>
+					<div style={cell(20)}/>
+					<div style={cell(8)}>{this.data.t3TableSummary.totalTicks}</div>
+					<div style={cell(24)}>
+						{this.data.t3TableSummary.totalPotencyWithoutPot.toFixed(2)}
+						{this.data.t3TableSummary.totalPotPotency>0 ?
+							<span style={{color: colors.timeline.potCover}}> +{this.data.t3TableSummary.totalPotPotency.toFixed(2)}{localize({
+								en: " (pot +" + this.data.tinctureBuffPercentage + "%)",
+								zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)"
+							})}</span> : undefined}
+					</div>
+				</div>
 			</div>
 		</div>
 

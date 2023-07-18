@@ -65,11 +65,13 @@ const bossIsUntargetable = (rawTime: number) => {
 function expandT3Node(node: ActionNode, lastNode?: ActionNode, lastRow?: DamageStatsT3TableEntry) {
 	console.assert(node.getPotencies().length > 0);
 	console.assert(node.skillName === SkillName.Thunder3);
+	let mainPotency = node.getPotencies()[0];
 	let entry: DamageStatsT3TableEntry = {
-		time: (node.tmp_startLockTime ?? ctl.gameConfig.countdown) - ctl.gameConfig.countdown,
+		castTime: node.tmp_startLockTime ? node.tmp_startLockTime - ctl.gameConfig.countdown : 0,
+		applicationTime: mainPotency.hasResolved() ? (mainPotency.applicationTime as number) - ctl.gameConfig.countdown : 0,
 		displayedModifiers: [],
-		gap: { current: 0, cumulative: 0 },
-		override: { current: 0, cumulative: 0 },
+		gap: 0,
+		override: 0,
 		mainPotencyHit: true,
 		baseMainPotency: 0,
 		baseDotPotency: 0,
@@ -80,28 +82,25 @@ function expandT3Node(node: ActionNode, lastNode?: ActionNode, lastRow?: DamageS
 		potPotency: 0
 	};
 
-	if (lastRow) {
-		entry.gap.cumulative = lastRow.gap.cumulative;
-		entry.override.cumulative = lastRow.override.cumulative;
-	}
-	if (lastNode) {
+	if (lastNode && lastRow) {
 		let lastP = lastNode.getPotencies()[0];
 		let thisP = node.getPotencies()[0];
-		if (lastP.hasResolved() && thisP.hasResolved()) {
-			if (lastP.applicationTime && thisP.applicationTime) {
-				let timeSinceLast30 = thisP.applicationTime - lastP.applicationTime - 30;
-				if (timeSinceLast30 > 0) {
-					entry.gap.current = timeSinceLast30;
-					entry.gap.cumulative += timeSinceLast30;
-				} else if (timeSinceLast30 < 0) {
-					entry.override.current = -timeSinceLast30;
-					entry.override.cumulative -= timeSinceLast30;
-				}
-			}
+		console.assert(lastP.hasResolved() && thisP.hasResolved());
+		let timeSinceLastMinus30 = (thisP.applicationTime as number) - (lastP.applicationTime as number) - 30;
+		if (timeSinceLastMinus30 > 0) {
+			entry.gap = timeSinceLastMinus30;
+		} else if (timeSinceLastMinus30 < 0) {
+			entry.override = -timeSinceLastMinus30;
 		}
+	} else {
+		// first T3 of this fight
+		console.assert(!lastNode && !lastRow)
+		let thisP = node.getPotencies()[0];
+		let countdown = ctl.game.config.countdown;
+		console.assert(thisP.hasResolved());
+		entry.gap = Math.max(0, (thisP.applicationTime as number) - countdown);
 	}
 
-	let mainPotency = node.getPotencies()[0];
 	entry.baseMainPotency = mainPotency.base;
 	entry.calculationModifiers = mainPotency.modifiers;
 	entry.mainPotencyHit = mainPotency.hasHitBoss(bossIsUntargetable);
@@ -297,12 +296,21 @@ export function calculateDamageStats(props: {
 	// sort the entries according to some rule, then return.
 
 	let mainTable: DamageStatsMainTableEntry[] = [];
-	let mainTableTotalPotency = {
-		withoutPot: 0,
-		potPotency: 0
+	let mainTableSummary = {
+		totalPotencyWithoutPot: 0,
+		totalPotPotency: 0
 	};
 
 	let t3Table: DamageStatsT3TableEntry[] = [];
+	let t3TableSummary = {
+		cumulativeGap: 0,
+		cumulativeOverride: 0,
+		timeSinceLastDoTDropped: 0,
+		totalTicks: 0,
+		theoreticalMaxTicks: 0,
+		totalPotencyWithoutPot: 0,
+		totalPotPotency: 0
+	};
 
 	let skillPotencies: Map<SkillName, number> = new Map();
 
@@ -379,18 +387,40 @@ export function calculateDamageStats(props: {
 
 				// and main table total (only if checked)
 				if (checked) {
-					mainTableTotalPotency.withoutPot += potencyWithoutPot;
-					mainTableTotalPotency.potPotency += (potencyWithPot - potencyWithoutPot);
+					mainTableSummary.totalPotencyWithoutPot += potencyWithoutPot;
+					mainTableSummary.totalPotPotency += (potencyWithPot - potencyWithoutPot);
 				}
 
 				// t3 table
 				if (node.skillName === SkillName.Thunder3) {
-					t3Table.push(expandT3Node(node, lastT3, t3Table.length>0 ? t3Table[t3Table.length-1] : undefined));
+					let t3TableEntry = expandT3Node(node, lastT3, t3Table.length>0 ? t3Table[t3Table.length-1] : undefined);
+					t3Table.push(t3TableEntry);
 					lastT3 = node;
+					t3TableSummary.cumulativeGap += t3TableEntry.gap;
+					t3TableSummary.cumulativeOverride += t3TableEntry.override;
+					t3TableSummary.totalTicks += t3TableEntry.totalNumTicks;
+					t3TableSummary.totalPotencyWithoutPot += t3TableEntry.potencyWithoutPot;
+					t3TableSummary.totalPotPotency += t3TableEntry.potPotency;
 				}
 			}
 		}
 	});
+
+	if (lastT3) {
+		// last T3 so far
+		let mainP = (lastT3 as ActionNode).getPotencies()[0];
+		console.assert(mainP.hasResolved());
+		let timeSinceLastDoTDropped = ctl.game.time - (mainP.applicationTime as number) - 30;
+		if (timeSinceLastDoTDropped > 0) {
+			t3TableSummary.cumulativeGap += timeSinceLastDoTDropped;
+			t3TableSummary.timeSinceLastDoTDropped = timeSinceLastDoTDropped;
+		}
+	} else {
+		// no T3 was used so far
+		let gap = Math.max(0, ctl.game.getDisplayTime());
+		t3TableSummary.cumulativeGap = gap
+		t3TableSummary.timeSinceLastDoTDropped = gap;
+	}
 
 	mainTable.sort((a, b)=>{
 		if (a.showPotency !== b.showPotency) {
@@ -422,8 +452,9 @@ export function calculateDamageStats(props: {
 		countdown: ctl.gameConfig.countdown,
 		gcdSkills: gcdSkills,
 		mainTable: mainTable,
-		mainTableTotalPotency: mainTableTotalPotency,
+		mainTableSummary: mainTableSummary,
 		t3Table: t3Table,
+		t3TableSummary: t3TableSummary,
 		historical: !ctl.displayingUpToDateGameState,
 	};
 }
