@@ -59,10 +59,16 @@ type ExpandedNode = {
 };
 
 const bossIsUntargetable = (rawTime: number) => {
-	return ctl.getUntargetableMask() && ctl.timeline.duringUntargetable(rawTime, ctl.gameConfig.countdown)
+	return ctl.getUntargetableMask() &&
+		ctl.timeline.duringUntargetable(rawTime - ctl.gameConfig.countdown)
 }
 
-function expandT3Node(node: ActionNode, lastNode?: ActionNode, lastRow?: DamageStatsT3TableEntry) {
+function getTargetableDurationBetween(startDisplayTime: number, endDisplayTime: number) {
+	return ctl.getUntargetableMask() ?
+		ctl.timeline.getTargetableDurationBetween(startDisplayTime, endDisplayTime) : endDisplayTime - startDisplayTime;
+}
+
+function expandT3Node(node: ActionNode, lastNode?: ActionNode) {
 	console.assert(node.getPotencies().length > 0);
 	console.assert(node.skillName === SkillName.Thunder3);
 	let mainPotency = node.getPotencies()[0];
@@ -82,23 +88,24 @@ function expandT3Node(node: ActionNode, lastNode?: ActionNode, lastRow?: DamageS
 		potPotency: 0
 	};
 
-	if (lastNode && lastRow) {
+	if (lastNode) {
 		let lastP = lastNode.getPotencies()[0];
 		let thisP = node.getPotencies()[0];
 		console.assert(lastP.hasResolved() && thisP.hasResolved());
-		let timeSinceLastMinus30 = (thisP.applicationTime as number) - (lastP.applicationTime as number) - 30;
-		if (timeSinceLastMinus30 > 0) {
-			entry.gap = timeSinceLastMinus30;
-		} else if (timeSinceLastMinus30 < 0) {
-			entry.override = -timeSinceLastMinus30;
+		let lastDotDropDisplayTime = lastP.applicationTime as number + 30 - ctl.gameConfig.countdown;
+		let thisDotApplicationDisplayTime = thisP.applicationTime as number - ctl.gameConfig.countdown;
+		if (thisDotApplicationDisplayTime - lastDotDropDisplayTime > 0) {
+			entry.gap = getTargetableDurationBetween(lastDotDropDisplayTime, thisDotApplicationDisplayTime);
+		} else if (thisDotApplicationDisplayTime - lastDotDropDisplayTime < 0) {
+			entry.override = lastDotDropDisplayTime - thisDotApplicationDisplayTime;
 		}
 	} else {
 		// first T3 of this fight
-		console.assert(!lastNode && !lastRow)
+		console.assert(!lastNode)
 		let thisP = node.getPotencies()[0];
 		let countdown = ctl.game.config.countdown;
-		console.assert(thisP.hasResolved());
-		entry.gap = Math.max(0, (thisP.applicationTime as number) - countdown);
+		let thisDotApplicationDisplayTime = thisP.applicationTime as number - countdown;
+		entry.gap = getTargetableDurationBetween(0, Math.max(0, thisDotApplicationDisplayTime));
 	}
 
 	entry.baseMainPotency = mainPotency.base;
@@ -393,7 +400,7 @@ export function calculateDamageStats(props: {
 
 				// t3 table
 				if (node.skillName === SkillName.Thunder3) {
-					let t3TableEntry = expandT3Node(node, lastT3, t3Table.length>0 ? t3Table[t3Table.length-1] : undefined);
+					let t3TableEntry = expandT3Node(node, lastT3);
 					t3Table.push(t3TableEntry);
 					lastT3 = node;
 					t3TableSummary.cumulativeGap += t3TableEntry.gap;
@@ -410,15 +417,18 @@ export function calculateDamageStats(props: {
 		// last T3 so far
 		let mainP = (lastT3 as ActionNode).getPotencies()[0];
 		console.assert(mainP.hasResolved());
-		let timeSinceLastDoTDropped = ctl.game.time - (mainP.applicationTime as number) - 30;
+		let lastDotDropTime = (mainP.applicationTime as number - ctl.game.config.countdown) + 30;
+		let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
+
+		let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
 		if (timeSinceLastDoTDropped > 0) {
-			t3TableSummary.cumulativeGap += timeSinceLastDoTDropped;
+			t3TableSummary.cumulativeGap += gap;
 			t3TableSummary.timeSinceLastDoTDropped = timeSinceLastDoTDropped;
 		}
 	} else {
 		// no T3 was used so far
-		let gap = Math.max(0, ctl.game.getDisplayTime());
-		t3TableSummary.cumulativeGap = gap
+		let gap = getTargetableDurationBetween(0, Math.max(0, ctl.game.getDisplayTime()));
+		t3TableSummary.cumulativeGap = gap;
 		t3TableSummary.timeSinceLastDoTDropped = gap;
 	}
 

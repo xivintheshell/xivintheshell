@@ -366,14 +366,50 @@ export class Timeline {
 		return maxTrack + 1;
 	}
 
-	duringUntargetable(t: number/* raw time */, countdown: number) {
+	duringUntargetable(displayTime: number) {
 		for (let i = 0; i < this.#untargetableMarkers.length; i++) {
 			let m = this.#untargetableMarkers[i];
-			let mStart = m.time + countdown;
-			let mEnd = m.time + m.duration + countdown;
-			if (t >= mStart && t < mEnd) return true;
+			let mStart = m.time;
+			let mEnd = m.time + m.duration;
+			if (displayTime >= mStart && displayTime < mEnd) return true;
 		}
 		return false;
+	}
+
+	// inputs are displayed numbers
+	getTargetableDurationBetween(tStart: number, tEnd: number) {
+
+		let cut = function([targetA, targetB]: [number, number], [srcA, srcB]: [number, number]) {
+			let res: [number, number][] = [];
+			if (targetA < srcA) {
+				res.push([targetA, Math.min(targetB, srcA)]);
+			}
+			if (srcB < targetB) {
+				res.push([Math.max(srcB, targetA), targetB]);
+			}
+			return res;
+		}
+
+		let remainings: [number, number][] = [[tStart, tEnd]];
+
+		for (let i = 0; i < this.#untargetableMarkers.length; i++) {
+			let m = this.#untargetableMarkers[i];
+			let mStart = m.time;
+			let mEnd = m.time + m.duration;
+
+			let newRemainings: [number, number][] = [];
+			remainings.forEach(rem => {
+				newRemainings = newRemainings.concat(cut(rem, [mStart, mEnd]));
+			})
+			remainings = newRemainings;
+		}
+
+		let remainingTime = 0;
+		remainings.forEach(rem => {
+			remainingTime += rem[1] - rem[0];
+		});
+
+		return remainingTime;
 	}
 
 	#save() {

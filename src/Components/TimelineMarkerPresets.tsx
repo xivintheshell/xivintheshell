@@ -68,6 +68,7 @@ function LoadCombinedTracksBtn(props: {displayName: ContentNode, url: string}) {
 	return <button style={style} onClick={()=>{
 		asyncFetchJson(props.url, content => {
 			controller.timeline.loadCombinedTracksPreset(content);
+			controller.updateStats();
 			controller.timeline.drawElements();
 		});
 	}}>{props.displayName}</button>

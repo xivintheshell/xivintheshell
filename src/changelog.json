@@ -1,5 +1,12 @@
 [
 	{
+		"date": "7/24/23",
+		"changes": [
+			"T3 table: gap times no longer count untargetable times",
+			"minor code cleanup"
+		]
+	},
+	{
 		"date": "7/17/23",
 		"changes": [
 			"a bunch of T3 table improvements"
