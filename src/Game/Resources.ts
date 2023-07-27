@@ -76,7 +76,6 @@ export class Resource {
 export class DoTBuff extends Resource {
 	node?: ActionNode = undefined;
 	tickCount: number = 0;
-	//sourceSkill: string = "(unknown)";
 	constructor(type: ResourceType, maxValue: number, initialValue: number) {
 		super(type, maxValue, initialValue);
 	}

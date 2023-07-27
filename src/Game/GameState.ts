@@ -495,9 +495,7 @@ export class GameState {
 	}) {
 		console.assert(props.node);
 		let skillInfo = this.skillsList.get(props.skillName).info;
-		let skillTime = this.getDisplayTime();
 		let cd = this.cooldowns.get(skillInfo.cdName);
-		let sourceName = skillInfo.name+"@"+skillTime.toFixed(2);
 
 		let llCovered = this.captureSpellCastTime(skillInfo.aspect, 0).llCovered;
 		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
@@ -542,8 +540,7 @@ export class GameState {
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(props.skillName));
 	}
 
-	hasEnochian()
-	{
+	hasEnochian() {
 		// lasts a teeny bit longer to allow simultaneous events catch its effect
 		let enochian = this.resources.get(ResourceType.Enochian);
 		return enochian.available(1);

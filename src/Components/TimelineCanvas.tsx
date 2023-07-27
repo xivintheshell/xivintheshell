@@ -20,6 +20,7 @@ import {localize, localizeSkillName} from "./Localization";
 import {setEditingMarkerValues} from "./TimelineMarkerPresets";
 import {getCurrentThemeColors, ThemeColors} from "./ColorTheme";
 import {scrollEditorToFirstSelected} from "./TimelineEditor";
+import {bossIsUntargetable} from "../Controller/DamageStatistics";
 
 export type TimelineRenderingProps = {
 	timelineWidth: number,
@@ -262,15 +263,6 @@ function drawWarningMarks(
 	});
 }
 
-function bossIsUntargetable(t: number) {
-	if (!renderingProps.untargetableMask) return false;
-	for (let i = 0; i < renderingProps.untargetableMarkers.length; i++) {
-		let m = renderingProps.untargetableMarkers[i];
-		if (t >= m.time && t < m.time + m.duration) return true;
-	}
-	return false;
-}
-
 function drawDamageMarks(
 	ctx: CanvasRenderingContext2D,
 	countdown: number,
@@ -279,7 +271,7 @@ function drawDamageMarks(
 	elems: DamageMarkElem[]
 ) {
 	elems.forEach(mark=>{
-		let untargetable = bossIsUntargetable(mark.time - countdown);
+		let untargetable = bossIsUntargetable(mark.time);
 		ctx.fillStyle = untargetable ? g_colors.timeline.untargetableDamageMark : g_colors.timeline.damageMark;
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(mark.time, scale);
 		ctx.beginPath();
@@ -666,6 +658,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	}
 }
 
+// (layers for optimization, in case one day rendering becomes the performance bottleneck again: )
 // background layer: white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
 // skills, damage marks, mp and lucid ticks: update when new elems added
 // cursor, selection: can update in real time; on top of everything else

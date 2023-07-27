@@ -58,7 +58,7 @@ type ExpandedNode = {
 	calculationModifiers: PotencyModifier[],
 };
 
-const bossIsUntargetable = (rawTime: number) => {
+export const bossIsUntargetable = (rawTime: number) => {
 	return ctl.getUntargetableMask() &&
 		ctl.timeline.duringUntargetable(rawTime - ctl.gameConfig.countdown)
 }

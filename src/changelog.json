@@ -1,5 +1,12 @@
 [
 	{
+		"date": "7/26/23",
+		"changes": [
+			"bugfix: overridden thunder ticks still counted as pending",
+			"bugfix: potency for hovered skills on timeline could misalign with untargetable marker"
+		]
+	},
+	{
 		"date": "7/24/23",
 		"changes": [
 			"T3 table: gap times no longer count untargetable times",

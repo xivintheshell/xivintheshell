@@ -295,6 +295,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 		let applyThunderDoT = function(game: GameState, node: ActionNode) {
 			let thunder = game.resources.get(ResourceType.ThunderDoT) as DoTBuff;
 			if (thunder.available(1)) {
+				console.assert(thunder.node);
+				(thunder.node as ActionNode).removeUnresolvedPotencies();
 				thunder.overrideTimer(game, 30);
 			} else {
 				thunder.gain(1);
