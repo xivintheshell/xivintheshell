@@ -1,6 +1,6 @@
 import {ReplayMode, TickMode} from "./Common";
 import {GameState} from "../Game/GameState";
-import {ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
+import {Debug, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
 // @ts-ignore
 import {updateStatusDisplay} from "../Components/StatusDisplay";
@@ -8,21 +8,23 @@ import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 // @ts-ignore
 import {updateConfigDisplay} from "../Components/PlaybackControl"
-// @ts-ignore
 import {setHistorical, setRealTime} from "../Components/Main";
 import {ElemType, Timeline} from "./Timeline"
-// @ts-ignore
-import {scrollTimelineTo, updateStatsDisplay, updateTimelineView} from "../Components/Timeline";
+import {scrollTimelineTo, updateTimelineView} from "../Components/Timeline";
 import {ActionNode, ActionType, Line, Record} from "./Record";
 import {PresetLinesManager} from "./PresetLinesManager";
-// @ts-ignore
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {StaticFn} from "../Components/Common";
 import {TimelineRenderingProps} from "../Components/TimelineCanvas";
 import {Potency, PotencyModifierType} from "../Game/Potency";
 import {updateDamageStats, updateSelectedStats} from "../Components/DamageStatistics";
-import {calculateDamageStats, calculateSelectedStats} from "./DamageStatistics";
+import {
+	bossIsUntargetable,
+	calculateDamageStats,
+	calculateSelectedStats,
+	getTargetableDurationBetween
+} from "./DamageStatistics";
 import {localizeSkillName} from "../Components/Localization";
 
 type Fixme = any;
@@ -42,6 +44,8 @@ class Controller {
 	#tinctureBuffPercentage = 0;
 	#untargetableMask = true;
 	#lastDamageApplicationTime;
+
+	// todo: should probably move these items to somewhere else: in Record maybe?
 	#damageLogCsv : {
 		time: number,
 		damageSource: string,
@@ -53,6 +57,8 @@ class Controller {
 		action: string,
 		isGCD: number
 	}[] = [];
+	#thunderDotTickTimes: number[] = [];
+	#thunderDoTCoverageTimes: {tStartDisplay: number, tEndDisplay?: number}[] = [];
 
 	savedHistoricalGame: GameState;
 	savedHistoricalRecord: Record;
@@ -254,6 +260,8 @@ class Controller {
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown;
 		this.#damageLogCsv = [];
 		this.#actionsLogCsv = [];
+		this.#thunderDotTickTimes = [];
+		this.#thunderDoTCoverageTimes = [];
 		this.#bAddingLine = false;
 		this.#bInterrupted = false;
 		this.displayingUpToDateGameState = true;
@@ -406,6 +414,31 @@ class Controller {
 	}
 	getUntargetableMask() { return this.#untargetableMask; }
 
+	getMaxTicks(untilRawTime: number) {
+		let cnt = 0;
+		this.#thunderDotTickTimes.forEach(rt => {
+			if (!bossIsUntargetable(rt) && rt <= untilRawTime) {
+				cnt++;
+			}
+		});
+		return cnt;
+	}
+
+	getDotCoverageTimeFraction(untilDisplayTime: number) {
+		if (untilDisplayTime <= Debug.epsilon) return 0;
+		let coveredTime = 0;
+		this.#thunderDoTCoverageTimes.forEach(section=>{
+			if (section.tStartDisplay <= untilDisplayTime) {
+				let startTime = Math.max(0, section.tStartDisplay);
+				let endTime = (section.tEndDisplay!==undefined && section.tEndDisplay <= untilDisplayTime) ? section.tEndDisplay : untilDisplayTime;
+				endTime = Math.max(0, endTime);
+				coveredTime += getTargetableDurationBetween(startTime, endTime);
+			}
+		});
+		let totalTime = getTargetableDurationBetween(0, untilDisplayTime);
+		return coveredTime / totalTime;
+	}
+
 	getTimelineRenderingProps(): TimelineRenderingProps {
 		return {
 			timelineWidth: this.timeline.getCanvasWidth(),
@@ -484,6 +517,32 @@ class Controller {
 				displayTime: this.game.getDisplayTime(),
 				source: source,
 			});
+		}
+	}
+
+	reportDotTick(rawTime: number) {
+		if (!this.#bCalculatingHistoricalState) {
+			this.#thunderDotTickTimes.push(rawTime)
+			this.updateStats();
+		}
+	}
+
+	reportDotStart(displayTime: number) {
+		if (!this.#bCalculatingHistoricalState) {
+			let len = this.#thunderDoTCoverageTimes.length;
+			console.assert(len === 0 || this.#thunderDoTCoverageTimes[len-1].tEndDisplay!==undefined);
+			this.#thunderDoTCoverageTimes.push({
+				tStartDisplay: displayTime,
+				tEndDisplay: undefined
+			});
+		}
+	}
+
+	reportDotDrop(displayTime: number) {
+		if (!this.#bCalculatingHistoricalState) {
+			let len = this.#thunderDoTCoverageTimes.length;
+			console.assert(len > 0 && this.#thunderDoTCoverageTimes[len-1].tEndDisplay===undefined);
+			this.#thunderDoTCoverageTimes[len-1].tEndDisplay = displayTime;
 		}
 	}
 

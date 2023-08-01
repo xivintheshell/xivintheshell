@@ -20,7 +20,7 @@ export class GameState {
 	#nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
 	lucidTickOffset: number;
 	thunderTickOffset: number;
-	time: number;
+	time: number; // raw time which starts at 0 regardless of countdown
 	resources: ResourceState;
 	cooldowns: CoolDownState;
 	eventsQueue: Event[];
@@ -33,7 +33,7 @@ export class GameState {
 		this.lucidTickOffset = this.#nonProcRng() * 3.0;
 		this.thunderTickOffset = this.#nonProcRng() * 3.0;
 
-		// TIME
+		// TIME (raw time which starts at 0 regardless of countdown)
 		this.time = 0;
 
 		// RESOURCES (checked when using skills)
@@ -99,7 +99,7 @@ export class GameState {
 		this.#init();
 	}
 
-	// get mp tick and polyglot rolling
+	// get mp tick, lucid tick, thunder DoT tick and polyglot rolling
 	#init() {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
@@ -157,8 +157,7 @@ export class GameState {
 			let thunder = this.resources.get(ResourceType.ThunderDoT) as DoTBuff;
 			if (thunder.available(1)) {// dot buff is effective
 				thunder.tickCount++;
-				console.assert(thunder.node !== undefined);
-				if (thunder.node) {
+				if (thunder.node) { // aka this buff is applied by a skill (and not just from an override)
 					// access potencies at index [1, 10] (since 0 is initial potency)
 					let p = thunder.node.getPotencies()[thunder.tickCount];
 					controller.resolvePotency(p);
@@ -166,6 +165,10 @@ export class GameState {
 						this.gainThundercloudProc();
 					}
 				}
+			}
+			// increment count
+			if (this.getDisplayTime() >= 0) {
+				controller.reportDotTick(this.time);
 			}
 			// queue the next tick
 			this.addEvent(new Event("thunder DoT tick", 3, ()=>{

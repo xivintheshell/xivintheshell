@@ -300,8 +300,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 				thunder.overrideTimer(game, 30);
 			} else {
 				thunder.gain(1);
+				controller.reportDotStart(game.getDisplayTime());
 				game.resources.addResourceEvent(ResourceType.ThunderDoT, "drop thunder DoT", 30, rsc=>{
 					rsc.consume(1);
+					controller.reportDotDrop(game.getDisplayTime());
 				});
 			}
 			thunder.node = node;

@@ -28,8 +28,6 @@ export class ActionNode {
 	static _gNodeIndex: number = 0;
 	#nodeIndex: number;
 	#capturedBuffs: Set<ResourceType>;
-	//#capturedPotency: number;
-	//#resolved: boolean;
 	#potencies: Potency[];
 
 	type: ActionType;
@@ -48,8 +46,6 @@ export class ActionNode {
 		this.type = actionType;
 		this.#nodeIndex = ActionNode._gNodeIndex;
 		this.#capturedBuffs = new Set<ResourceType>();
-		//this.#capturedPotency = 0;
-		//this.#resolved = false;
 		this.#potencies = [];
 		ActionNode._gNodeIndex++;
 	}

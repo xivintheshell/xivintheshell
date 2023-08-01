@@ -1,5 +1,11 @@
 [
 	{
+		"date": "8/1/23",
+		"changes": [
+			"stats: thunder DoT coverage time & num ticks"
+		]
+	},
+	{
 		"date": "7/26/23",
 		"changes": [
 			"bugfix: overridden thunder ticks still counted as pending",

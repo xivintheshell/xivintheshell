@@ -72,6 +72,8 @@ export type DamageStatisticsData = {
 		cumulativeOverride: number,
 		timeSinceLastDoTDropped: number,
 		totalTicks: number,
+		maxTicks: number,
+		dotCoverageTimeFraction: number,
 		theoreticalMaxTicks: number,
 		totalPotencyWithoutPot: number,
 		totalPotPotency: number,
@@ -187,6 +189,8 @@ export class DamageStatistics extends React.Component {
 			cumulativeOverride: 0,
 			timeSinceLastDoTDropped: 0,
 			totalTicks: 0,
+			maxTicks: 0,
+			dotCoverageTimeFraction: 0,
 			theoreticalMaxTicks: 0,
 			totalPotencyWithoutPot: 0,
 			totalPotPotency: 0
@@ -253,6 +257,9 @@ export class DamageStatistics extends React.Component {
 			selectedGcdStr += lparen + "+" + this.selected.gcdSkills.pending + (localize({en: " not yet applied", zh: "未结算"}) as string) + rparen;
 		}
 
+		let dotStr = localize({en: "Thunder DoT uptime", zh: "雷覆盖时间"}) + colon + (this.data.t3TableSummary.dotCoverageTimeFraction*100).toFixed(2) + "%";
+		dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + this.data.t3TableSummary.totalTicks + "/" + this.data.t3TableSummary.maxTicks + rparen;
+
 		let selected: React.ReactNode | undefined = undefined;
 		if (this.selected.duration > 0) {
 			selected = <div style={{flex: 1}}>
@@ -280,6 +287,7 @@ export class DamageStatistics extends React.Component {
 					</div>
 				}/>{colon}{ppsAvailable ? (this.data.totalPotency.applied / lastDisplay).toFixed(2) : "N/A"}</div>
 				<div>{gcdStr}</div>
+				<div>{dotStr}</div>
 				<div>
 					<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
 						return controller.getDamageLogCsv();
@@ -586,7 +594,7 @@ export class DamageStatistics extends React.Component {
 					<div style={cell(10)}>{this.data.t3TableSummary.cumulativeGap.toFixed(2)}</div>
 					<div style={cell(10)}>{this.data.t3TableSummary.cumulativeOverride.toFixed(2)}</div>
 					<div style={cell(20)}/>
-					<div style={cell(8)}>{this.data.t3TableSummary.totalTicks}</div>
+					<div style={cell(8)}>{this.data.t3TableSummary.totalTicks}/{this.data.t3TableSummary.maxTicks}</div>
 					<div style={cell(24)}>
 						{this.data.t3TableSummary.totalPotencyWithoutPot.toFixed(2)}
 						{this.data.t3TableSummary.totalPotPotency>0 ?

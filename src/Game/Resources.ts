@@ -286,6 +286,7 @@ export class ResourceOverride {
 			a.enabled === b.enabled;
 	}
 
+	// todo
 	static fromGameState(game: GameState)
 	{
 		let overrides: ResourceOverride[] = [];

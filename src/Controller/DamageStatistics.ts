@@ -63,7 +63,7 @@ export const bossIsUntargetable = (rawTime: number) => {
 		ctl.timeline.duringUntargetable(rawTime - ctl.gameConfig.countdown)
 }
 
-function getTargetableDurationBetween(startDisplayTime: number, endDisplayTime: number) {
+export const getTargetableDurationBetween = (startDisplayTime: number, endDisplayTime: number) => {
 	return ctl.getUntargetableMask() ?
 		ctl.timeline.getTargetableDurationBetween(startDisplayTime, endDisplayTime) : endDisplayTime - startDisplayTime;
 }
@@ -314,6 +314,8 @@ export function calculateDamageStats(props: {
 		cumulativeOverride: 0,
 		timeSinceLastDoTDropped: 0,
 		totalTicks: 0,
+		maxTicks: ctl.getMaxTicks(ctl.game.time),
+		dotCoverageTimeFraction: ctl.getDotCoverageTimeFraction(ctl.game.getDisplayTime()),
 		theoreticalMaxTicks: 0,
 		totalPotencyWithoutPot: 0,
 		totalPotPotency: 0

@@ -8,7 +8,6 @@ import {localize, localizeSkillName} from "./Localization";
 import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
 import {getCurrentThemeColors} from "./ColorTheme";
-import {Skill} from "../Game/Skills";
 
 export let displayedSkills = [
 	SkillName.Blizzard,
