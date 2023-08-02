@@ -407,7 +407,7 @@ export function calculateDamageStats(props: {
 					lastT3 = node;
 					t3TableSummary.cumulativeGap += t3TableEntry.gap;
 					t3TableSummary.cumulativeOverride += t3TableEntry.override;
-					t3TableSummary.totalTicks += t3TableEntry.totalNumTicks;
+					t3TableSummary.totalTicks += t3TableEntry.numHitTicks;
 					t3TableSummary.totalPotencyWithoutPot += t3TableEntry.potencyWithoutPot;
 					t3TableSummary.totalPotPotency += t3TableEntry.potPotency;
 				}
