@@ -763,7 +763,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			}))
 
 		// Surecast
-		addResourceAbility({skillName: SkillName.Surecast, rscType: ResourceType.Surecast, instant: true, duration: 10});
+		addResourceAbility({skillName: SkillName.Surecast, rscType: ResourceType.Surecast, instant: true, duration: 6});
 
 		// Tincture
 		addResourceAbility({skillName: SkillName.Tincture, rscType: ResourceType.Tincture, instant: false, duration: 30});

@@ -1,5 +1,11 @@
 [
 	{
+		"date": "8/9/23",
+		"changes": [
+			"bugfix: Surecast lasts 6s"
+		]
+	},
+	{
 		"date": "8/1/23",
 		"changes": [
 			"stats: thunder DoT coverage time & num ticks"
