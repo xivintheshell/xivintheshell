@@ -79,6 +79,7 @@ function PresetButtons() {
 	let content = <div style={{lineHeight: "2em"}}>
 		<span>{localize({en: "Current tier: ", zh: "当前版本："})}</span>
 		<LoadCombinedTracksBtn displayName={"P9S by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p9s.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P10S by Tischel"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p10s.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P11S by Lilian"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p11s.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P12S P1 by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p1.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P12S P2 by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p2.txt"}/>

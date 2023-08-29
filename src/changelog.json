@@ -1,5 +1,13 @@
 [
 	{
+		"date": "8/29/23",
+		"changes": [
+			"added p10s markers by Tischel",
+			"added castTime to csv log output",
+			"added a note about cast/recast time under LL in About/Implementation Notes"
+		]
+	},
+	{
 		"date": "8/9/23",
 		"changes": [
 			"bugfix: Surecast lasts 6s"

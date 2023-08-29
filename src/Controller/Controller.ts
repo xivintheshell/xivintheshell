@@ -55,7 +55,8 @@ class Controller {
 	#actionsLogCsv : {
 		time: number,
 		action: string,
-		isGCD: number
+		isGCD: number,
+		castTime: number
 	}[] = [];
 	#thunderDotTickTimes: number[] = [];
 	#thunderDoTCoverageTimes: {tStartDisplay: number, tEndDisplay?: number}[] = [];
@@ -715,7 +716,6 @@ class Controller {
 	#useSkill(
 		skillName: SkillName,
 		bWaitFirst: boolean,
-		bSuppressLog: boolean = false,
 		overrideTickMode: TickMode = this.tickMode
 	) {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
@@ -783,7 +783,8 @@ class Controller {
 				this.#actionsLogCsv.push({
 					time: this.game.getDisplayTime(),
 					action: skillName,
-					isGCD: isGCD ? 1 : 0
+					isGCD: isGCD ? 1 : 0,
+					castTime: status.castTime
 				});
 			}
 
@@ -876,7 +877,7 @@ class Controller {
 			else if (itr.type === ActionType.Skill) {
 
 				let waitFirst = currentReplayMode === ReplayMode.SkillSequence || currentReplayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
-				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, true, TickMode.Manual);
+				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, TickMode.Manual);
 
 				let bEditedTimelineShouldWaitAfterSkill = currentReplayMode === ReplayMode.Edited && (itr.next && itr.next.type === ActionType.Wait);
 				if (currentReplayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
@@ -1012,9 +1013,10 @@ class Controller {
 		let csvRows = this.#actionsLogCsv.map(row=>{ return [
 			row.time,
 			row.action,
-			row.isGCD
+			row.isGCD,
+			row.castTime
 		]; });
-		return [["time", "action", "isGCD"]].concat(csvRows as any[][]);
+		return [["time", "action", "isGCD", "castTime"]].concat(csvRows as any[][]);
 	}
 
 	// generally used for trying to add a line to the current timeline
@@ -1146,7 +1148,8 @@ class Controller {
 		this.#actionsLogCsv.push({
 			time: this.game.getDisplayTime(),
 			action: "Toggle buff: " + buffName,
-			isGCD: 0
+			isGCD: 0,
+			castTime: 0
 		});
 
 		return true;
@@ -1183,7 +1186,7 @@ class Controller {
 			let tryDequeueSkill = ()=>{
 				let numSkillsProcessed = 0;
 				for (let i = 0; i < ctrl.skillsQueue.length; i++) {
-					let status = ctrl.#useSkill(ctrl.skillsQueue[i].skillName, false, true);
+					let status = ctrl.#useSkill(ctrl.skillsQueue[i].skillName, true);
 					if (status.status === SkillReadyStatus.Ready) {
 						ctrl.scrollToTime(ctrl.game.time);
 						ctrl.autoSave();

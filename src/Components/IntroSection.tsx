@@ -231,6 +231,18 @@ export function IntroSection(props: {}) {
 									跳雷和跳醒梦的时间都是独立计算的，它们和普通跳蓝之间存在一个随机的时间差，这个时间差可以在右侧的设置界面查看。醒梦后的第一跳蓝最早会出现在技能释放后的0.623秒，总计7跳。
 								</div>,
 						})}
+						{localize ({
+							en:
+								<div className="paragraph">
+									8/29/23: Cast and recast times under LL are technically wrong. Currently it's just implemented as base time * 0.85 which can have at most 0.01s error. Vanilla Milksmoothie proposed a formula
+									that gives what matches the game exactly, but I don't have time to implement it at this moment plus it might break legacy txt files.
+									Let me know if this is causing problems for you, and I'll put it back onto my agenda.
+								</div>,
+							zh:
+								<div className="paragraph">
+									8/29/23: 目前黑魔纹里的咏唱/回转时间计算方式是简单粗暴的基础时间*0.85，跟游戏里的实际时间有微小（0.01s以内）的误差。牛奶冰沙给了更精确的计算公式，但是我暂时没做因为 1) 近期没时间 2) 可能会导致旧txt文件无法读取。如果这个误差导致你排轴受阻，请联系我，我再抽空把它提上日程。
+								</div>,
+						})}
 					</div>
 
 				}/>
