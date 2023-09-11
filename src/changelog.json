@@ -1,5 +1,17 @@
 [
 	{
+		"date": "9/11/23",
+		"changes": [
+			"let PPS calculation exclude untargetable times"
+		]
+	},
+	{
+		"date": "9/7/23",
+		"changes": [
+			"added current tier's markers in Chinese, all from 不打冰3攻略组"
+		]
+	},
+	{
 		"date": "8/29/23",
 		"changes": [
 			"added p10s markers by Tischel",

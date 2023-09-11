@@ -251,7 +251,8 @@ export function calculateSelectedStats(props: {
 	lastDamageApplicationTime: number
 }): SelectedStatisticsData {
 	let selected = {
-		duration: 0,
+		totalDuration: 0,
+		targetableDuration: 0,
 		potency: {applied: 0, pending: 0},
 		gcdSkills: {applied: 0, pending: 0}
 	};
@@ -260,7 +261,9 @@ export function calculateSelectedStats(props: {
 	let lastSelected = ctl.record.getLastSelection();
 	if (firstSelected && lastSelected) {
 		if (firstSelected.tmp_startLockTime!==undefined && lastSelected.tmp_endLockTime!==undefined) {
-			selected.duration = lastSelected.tmp_endLockTime - firstSelected.tmp_startLockTime;
+			selected.totalDuration = lastSelected.tmp_endLockTime - firstSelected.tmp_startLockTime;
+			let countdown = ctl.gameConfig.countdown;
+			selected.targetableDuration = getTargetableDurationBetween(firstSelected.tmp_startLockTime - countdown, lastSelected.tmp_endLockTime - countdown);
 		}
 	}
 

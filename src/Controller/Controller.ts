@@ -784,7 +784,7 @@ class Controller {
 					time: this.game.getDisplayTime(),
 					action: skillName,
 					isGCD: isGCD ? 1 : 0,
-					castTime: status.castTime
+					castTime: status.instantCast ? 0 : status.castTime
 				});
 			}
 

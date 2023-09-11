@@ -77,12 +77,19 @@ function LoadCombinedTracksBtn(props: {displayName: ContentNode, url: string}) {
 function PresetButtons() {
 	// https://github.com/quisquous/cactbot/blob/main/ui/raidboss/data/06-ew/raid/
 	let content = <div style={{lineHeight: "2em"}}>
-		<span>{localize({en: "Current tier: ", zh: "当前版本："})}</span>
+		<span>{localize({en: "Current tier (en): ", zh: "当前版本（英文）："})}</span>
 		<LoadCombinedTracksBtn displayName={"P9S by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p9s.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P10S by Tischel"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p10s.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P11S by Lilian"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p11s.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P12S P1 by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p1.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P12S P2 by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p2.txt"}/>
+		<br/>
+		<span>{localize({en: "Current tier (zh), from 不打冰3攻略组: ", zh: "当前版本（中文），来自不打冰3攻略组："})}</span>
+		<LoadCombinedTracksBtn displayName={"P9S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p9s_zh.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P10S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p10s_zh.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P11S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p11s_zh.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P12S门神"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p1_zh.txt"}/>
+		<LoadCombinedTracksBtn displayName={"P12S本体"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p2_zh.txt"}/>
 		<br/>
 		<LoadCombinedTracksBtn displayName={"P1S Shackles of Time first"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first.txt"}/>
 		<LoadCombinedTracksBtn displayName={"P1S Aetherial Shackles first"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first.txt"}/>

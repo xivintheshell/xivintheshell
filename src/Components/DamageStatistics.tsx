@@ -5,7 +5,12 @@ import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {localize, localizeSkillName} from "./Localization";
 import {controller} from "../Controller/Controller";
-import {allSkillsAreIncluded, getSkillOrDotInclude, updateSkillOrDoTInclude} from "../Controller/DamageStatistics";
+import {
+	allSkillsAreIncluded,
+	getSkillOrDotInclude,
+	getTargetableDurationBetween,
+	updateSkillOrDoTInclude
+} from "../Controller/DamageStatistics";
 
 export type DamageStatsMainTableEntry = {
 	skillName: SkillName,
@@ -37,7 +42,8 @@ export type DamageStatsT3TableEntry = {
 }
 
 export type SelectedStatisticsData = {
-	duration: number,
+	totalDuration: number,
+	targetableDuration: number,
 	potency: {
 		applied: number,
 		pending: number
@@ -170,7 +176,8 @@ const rowGap = "0.375em 0.75em";
 
 export class DamageStatistics extends React.Component {
 	selected: SelectedStatisticsData = {
-		duration: 0,
+		totalDuration: 0,
+		targetableDuration: 0,
 		potency: {applied: 0, pending: 0},
 		gcdSkills: {applied: 0, pending: 0}
 	}
@@ -227,6 +234,7 @@ export class DamageStatistics extends React.Component {
 		const checkedOnlyStr = allIncluded ? "" : localize({en: " (checked only)", zh: "（勾选部分）"}) as string;
 
 		let lastDisplay = this.data.lastDamageApplicationTime - this.data.countdown;
+		let targetableDurationTilLastDisplay  = getTargetableDurationBetween(0, lastDisplay);
 		let ppsAvailable = this.data.lastDamageApplicationTime > -this.data.countdown;
 		let lastDamageApplicationTimeDisplay = ppsAvailable ? lastDisplay.toFixed(2).toString() : "N/A";
 		let potencyStr = localize({en: "Total potency", zh: "总威力"}) as string;
@@ -261,11 +269,12 @@ export class DamageStatistics extends React.Component {
 		dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + this.data.t3TableSummary.totalTicks + "/" + this.data.t3TableSummary.maxTicks + rparen;
 
 		let selected: React.ReactNode | undefined = undefined;
-		if (this.selected.duration > 0) {
+		let selectedPPSAvailable = this.selected.targetableDuration > 0;
+		if (this.selected.totalDuration > 0) {
 			selected = <div style={{flex: 1}}>
-				<div>{localize({en: "Selected duration", zh: "选中时长"})}{colon}{this.selected.duration.toFixed(2)}</div>
+				<div>{localize({en: "Selected duration", zh: "选中时长"})}{colon}{this.selected.totalDuration.toFixed(2)}</div>
 				<div>{selectedPotencyStr}</div>
-				<div>PPS{checkedOnlyStr + colon}{(this.selected.potency.applied / this.selected.duration).toFixed(2)}</div>
+				<div>PPS{checkedOnlyStr + colon}{selectedPPSAvailable ? (this.selected.potency.applied / this.selected.targetableDuration).toFixed(2) : "N/A"}</div>
 				<div>{selectedGcdStr}</div>
 			</div>
 		}
@@ -277,15 +286,15 @@ export class DamageStatistics extends React.Component {
 				<div>PPS{checkedOnlyStr} <Help topic={"ppsNotes"} content={
 					<div className={"toolTip"}>
 						<div className="paragraph">{localize({
-							en: "total applied potency divided by last damage application time.",
-							zh: "已结算总威力 / 最后伤害结算时间。"
+							en: "(total applied potency) / (total targetable duration until last damage application time).",
+							zh: "已结算总威力 / (最后伤害结算时间 - 不可选中总时长)。"
 						})}</div>
 						<div className="paragraph">{localize({
 							en: "could be inaccurate if any damage happens before pull",
 							zh: "如果有伤害在0s之前结算，则此PPS不准确"
 						})}</div>
 					</div>
-				}/>{colon}{ppsAvailable ? (this.data.totalPotency.applied / lastDisplay).toFixed(2) : "N/A"}</div>
+				}/>{colon}{ppsAvailable ? (this.data.totalPotency.applied / targetableDurationTilLastDisplay).toFixed(2) : "N/A"}</div>
 				<div>{gcdStr}</div>
 				<div>{dotStr}</div>
 				<div>
