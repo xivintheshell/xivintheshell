@@ -1,7 +1,7 @@
 import {Aspect, ProcMode, ResourceType, SkillName} from './Common'
 // @ts-ignore
 import {controller} from "../Controller/Controller";
-import {DoTBuff, Resource} from "./Resources";
+import {DoTBuff, EventTag, Resource} from "./Resources";
 import {ActionNode} from "../Controller/Record";
 import {GameState} from "./GameState";
 import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
@@ -159,11 +159,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 					resource.overrideTimer(game, props.duration);
 				} else {
 					resource.gain(1);
-					game.resources.addResourceEvent(
-						props.rscType,
-						"drop " + props.rscType, props.duration, (rsc: Resource) => {
+					game.resources.addResourceEvent({
+						rscType: props.rscType,
+						name: "drop " + props.rscType,
+						delay: props.duration,
+						fnOnRsc: (rsc: Resource) => {
 							rsc.consume(1);
-						});
+						}
+					});
 				}
 				node.resolveAll(game.time);
 			};
@@ -214,11 +217,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 				fs.overrideTimer(game, duration);
 			} else {
 				fs.gain(1);
-				game.resources.addResourceEvent(
-					ResourceType.Firestarter,
-					"drop firestarter proc", duration, (rsc: Resource)=>{
+				game.resources.addResourceEvent({
+					rscType: ResourceType.Firestarter,
+					name: "drop firestarter proc",
+					delay: duration,
+					fnOnRsc: (rsc: Resource)=>{
 						rsc.consume(1);
-					});
+					}
+				});
 			}
 		}
 
@@ -301,9 +307,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 			} else {
 				thunder.gain(1);
 				controller.reportDotStart(game.getDisplayTime());
-				game.resources.addResourceEvent(ResourceType.ThunderDoT, "drop thunder DoT", 30, rsc=>{
-					rsc.consume(1);
-					controller.reportDotDrop(game.getDisplayTime());
+				game.resources.addResourceEvent({
+					rscType: ResourceType.ThunderDoT,
+					name: "drop thunder DoT",
+					delay: 30,
+					fnOnRsc: rsc=>{
+						  rsc.consume(1);
+						  controller.reportDotDrop(game.getDisplayTime());
+					 }
 				});
 			}
 			thunder.node = node;
@@ -415,7 +426,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				game.useInstantSkill({
+				let useSkillEvent = game.useInstantSkill({
 					skillName: SkillName.Manafont,
 					onApplication: () => {
 						game.resources.get(ResourceType.Mana).gain(3000);
@@ -424,6 +435,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					dealDamage: false,
 					node: node
 				});
+				useSkillEvent.addTag(EventTag.ManaGain);
 			}
 		));
 
@@ -577,11 +589,12 @@ export class SkillsList extends Map<SkillName, Skill> {
 						let triple = game.resources.get(ResourceType.Triplecast);
 						if (triple.pendingChange) triple.removeTimer(); // should never need this, but just in case
 						triple.gain(3);
-						game.resources.addResourceEvent(
-							ResourceType.Triplecast,
-							"drop remaining Triple charges", game.config.extendedBuffTimes ? 15.7 : 15, (rsc: Resource) => {
+						game.resources.addResourceEvent({
+							rscType: ResourceType.Triplecast,
+							name: "drop remaining Triple charges", delay: game.config.extendedBuffTimes ? 15.7 : 15, fnOnRsc:(rsc: Resource) => {
 								rsc.consume(rsc.availableAmount());
-							});
+							}
+						});
 						node.resolveAll(game.time);
 					},
 					dealDamage: false,
@@ -747,14 +760,19 @@ export class SkillsList extends Map<SkillName, Skill> {
 							lucid.overrideTimer(game, 21);
 						} else {
 							lucid.gain(1);
-							game.resources.addResourceEvent(
-								ResourceType.LucidDreaming,
-								"drop lucid dreaming", 21, (rsc: Resource) => {
+							game.resources.addResourceEvent({
+								rscType: ResourceType.LucidDreaming,
+								name: "drop lucid dreaming", delay: 21, fnOnRsc: (rsc: Resource) => {
 									rsc.consume(1);
-								});
+								}
+							});
 						}
 						lucid.node = node;
 						lucid.tickCount = 0;
+						let nextLucidTickEvt = game.findNextQueuedEventByTag(EventTag.LucidTick);
+						if (nextLucidTickEvt) {
+							nextLucidTickEvt.addTag(EventTag.ManaGain);
+						}
 					},
 					dealDamage: false,
 					node: node

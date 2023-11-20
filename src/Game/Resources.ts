@@ -2,8 +2,15 @@ import {Debug, ResourceType} from "./Common"
 import {GameState} from "./GameState";
 import {ActionNode} from "../Controller/Record";
 
+export enum EventTag {
+	ManaGain,
+	MpTick,
+	LucidTick
+}
+
 export class Event {
 	name: string;
+	#tags: EventTag[];
 	timeTillEvent: number;
 	delay: number;
 	effectFn: () => void;
@@ -12,10 +19,22 @@ export class Event {
 	// effectFn : () -> ()
 	constructor(name: string, delay: number, effectFn: ()=>void) {
 		this.name = name;
+		this.#tags = [];
 		this.timeTillEvent = delay;
 		this.delay = delay;
 		this.effectFn = effectFn;
 		this.canceled = false;
+	}
+	hasTag(tag: EventTag): boolean {
+		for (let i = 0; i < this.#tags.length; i++) {
+			if (tag === this.#tags[i]) return true;
+		}
+		return false;
+	}
+	addTag(tag: EventTag) {
+		if (!this.hasTag(tag)) {
+			this.#tags.push(tag);
+		}
 	}
 }
 
@@ -180,31 +199,37 @@ export class ResourceState extends Map<ResourceType, Resource> {
 	}
 
 	// fnOnRsc : Resource -> ()
-	addResourceEvent(
+	addResourceEvent(props: {
 		rscType: ResourceType,
 		name: string,
 		delay: number,
-		fnOnRsc: (rsc: Resource)=>void)
+		fnOnRsc: (rsc: Resource)=>void,
+		tags?: EventTag[]
+	})
 	{
-		let rsc = this.get(rscType);
-		/*
-		if (rscType===ResourceType.Mana) {
-			console.log("[" + this.game.getDisplayTime() + "] queue next mana tick after " + delay);
-		}
-		 */
-		let evt = new Event(name, delay, () => {
+		let rsc = this.get(props.rscType);
+		let evt = new Event(props.name, props.delay, () => {
 			rsc.pendingChange = undefined; // unregister self from resource
-			fnOnRsc(rsc); // before the scheduled event takes effect
+			props.fnOnRsc(rsc); // before the scheduled event takes effect
 		});
 		rsc.pendingChange = evt; // register to resource
+		if (props.tags) {
+			props.tags.forEach(tag => {
+				evt.addTag(tag);
+			});
+		}
 		this.game.addEvent(evt); // register to events master list
 	}
 
 	// useful for binary resources
 	takeResourceLock(rscType: ResourceType, delay: number) {
 		this.get(rscType).consume(1);
-		this.addResourceEvent(
-			rscType, "[resource ready] " + rscType, delay, rsc=>{ rsc.gain(1); });
+		this.addResourceEvent({
+			rscType: rscType,
+			name: "[resource ready] " + rscType,
+			delay: delay,
+			fnOnRsc: rsc=>{ rsc.gain(1); }
+		});
 	}
 }
 
@@ -330,12 +355,17 @@ export class ResourceOverride {
 
 			let overrideDropRscTimer = (newTimer: number) => {
 				rsc.removeTimer();
-				game.resources.addResourceEvent(rsc.type, "drop " + rsc.type, newTimer, (r: Resource) => {
-					if (rsc.type === ResourceType.Enochian) { // since enochian should also take away AF/UI/UH stacks
-						game.loseEnochian();
-					} else {
-						r.consume(r.availableAmount());
-					}
+				game.resources.addResourceEvent({
+					rscType: rsc.type,
+					name: "drop " + rsc.type,
+					delay: newTimer,
+					fnOnRsc: (r: Resource) => {
+						  if (rsc.type === ResourceType.Enochian) { // since enochian should also take away AF/UI/UH stacks
+							  game.loseEnochian();
+						  } else {
+							  r.consume(r.availableAmount());
+						  }
+					 }
 				});
 			};
 

@@ -445,8 +445,8 @@ export class SkillsWindow extends React.Component {
 						</form>
 
 					</div>
-					<button onClick={this.onWaitTillNextMpOrLucidTick}>{localize({en: "Wait until next MP or lucid tick", zh: "快进至下次跳蓝或跳醒梦"})}</button><span> </span>
-					<button onClick={this.onRemoveTrailingIdleTime}>{localize({en: "remove trailing idle time", zh: "去除时间轴末尾的发呆时间"})}</button>
+					<button onClick={this.onWaitTillNextMpOrLucidTick}>{localize({en: "Wait until Manafont / MP tick / lucid tick", zh: "快进至魔泉生效/跳蓝/跳醒梦"})}</button><span> </span>
+					<button onClick={this.onRemoveTrailingIdleTime}>{localize({en: "Remove trailing idle time", zh: "去除时间轴末尾的发呆时间"})}</button>
 				</div>
 			</div>
 		</div>

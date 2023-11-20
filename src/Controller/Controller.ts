@@ -1115,7 +1115,7 @@ class Controller {
 	}
 
 	waitTillNextMpOrLucidTick() {
-		this.#requestTick({deltaTime: this.game.timeTillNextMpOrLucidTick(), separateNode: true});
+		this.#requestTick({deltaTime: this.game.timeTillNextMpGainEvent(), separateNode: true});
 		this.updateAllDisplay();
 	}
 

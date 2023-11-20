@@ -2,7 +2,7 @@ import {Aspect, Debug, ProcMode, ResourceType, SkillName, SkillReadyStatus, Warn
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
 import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
-import {CoolDown, CoolDownState, Event, DoTBuff, Resource, ResourceState} from "./Resources"
+import {CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
@@ -113,11 +113,25 @@ export class GameState {
 				let currentAmount = mana.availableAmount();
 				controller.reportManaTick(game.time, "+" + gainAmount + " (MP="+currentAmount+")");
 				// queue the next tick
-				this.resources.addResourceEvent(ResourceType.Mana, "mana tick", 3, rsc=>{
-					recurringManaRegen();
+				this.resources.addResourceEvent({
+					rscType: ResourceType.Mana,
+					name: "mana tick",
+					delay: 3,
+					fnOnRsc: rsc=>{
+						recurringManaRegen();
+					},
+					// would ideally want to only have ManaGain tag if there's no AF... too much work for now
+					tags: [EventTag.MpTick, EventTag.ManaGain]
 				});
 			};
-			this.resources.addResourceEvent(ResourceType.Mana, "initial mana tick", this.config.timeTillFirstManaTick, recurringManaRegen);
+			this.resources.addResourceEvent({
+				rscType: ResourceType.Mana,
+				name: "initial mana tick",
+				delay: this.config.timeTillFirstManaTick,
+				fnOnRsc: recurringManaRegen,
+				// would ideally want to only have ManaGain tag if there's no AF... too much work for now
+				tags: [EventTag.MpTick, EventTag.ManaGain]
+			});
 		}
 
 		// lucid ticks
@@ -144,13 +158,24 @@ export class GameState {
 				}
 			}
 			// queue the next tick
-			this.addEvent(new Event("lucid tick", 3, ()=>{
+			let recurringLucidTickEvt = new Event("lucid tick", 3, ()=>{
 				recurringLucidTick();
-			}));
+			});
+			recurringLucidTickEvt.addTag(EventTag.LucidTick);
+			// potentially also give mp gain tag
+			if (lucid.available(1) && lucid.pendingChange) {
+				let timeTillDropLucid = lucid.pendingChange.timeTillEvent;
+				if (timeTillDropLucid >= 3) {
+					recurringLucidTickEvt.addTag(EventTag.ManaGain);
+				}
+			}
+			this.addEvent(recurringLucidTickEvt);
 		};
 		let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
 		while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;
-		this.addEvent(new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick));
+		let firstLucidTickEvt = new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick);
+		firstLucidTickEvt.addTag(EventTag.LucidTick);
+		this.addEvent(firstLucidTickEvt);
 
 		// thunder DoT tick
 		let recurringThunderTick = () => {
@@ -187,7 +212,12 @@ export class GameState {
 				}
 				rsc.gain(1);
 			}
-			this.resources.addResourceEvent(ResourceType.Polyglot, "gain polyglot if currently has enochian", 30, recurringPolyglotGain);
+			this.resources.addResourceEvent({
+				rscType: ResourceType.Polyglot,
+				name: "gain polyglot if currently has enochian",
+				delay: 30,
+				fnOnRsc: recurringPolyglotGain
+			});
 		};
 		recurringPolyglotGain(this.resources.get(ResourceType.Polyglot));
 	}
@@ -262,11 +292,14 @@ export class GameState {
 			thundercloud.overrideTimer(this, duration);
 		} else { // there's currently no proc. gain one.
 			thundercloud.gain(1);
-			this.resources.addResourceEvent(
-				ResourceType.Thundercloud,
-				"drop thundercloud proc", duration, (rsc: Resource) => {
+			this.resources.addResourceEvent({
+				rscType: ResourceType.Thundercloud,
+				name: "drop thundercloud proc",
+				delay: duration,
+				fnOnRsc: (rsc: Resource) => {
 					rsc.consume(1);
-				});
+				}
+			});
 		}
 	}
 
@@ -541,6 +574,8 @@ export class GameState {
 
 		// animation lock
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(props.skillName));
+
+		return skillEvent;
 	}
 
 	hasEnochian() {
@@ -562,8 +597,13 @@ export class GameState {
 			enochian.gain(1);
 
 			// add the event for losing it
-			this.resources.addResourceEvent(ResourceType.Enochian, "lose enochian, clear all AF, UI, UH, stop poly timer", 15, rsc=>{
-				this.loseEnochian();
+			this.resources.addResourceEvent({
+				rscType: ResourceType.Enochian,
+				name: "lose enochian, clear all AF, UI, UH, stop poly timer",
+				delay: 15,
+				fnOnRsc: rsc=>{
+					this.loseEnochian();
+				}
 			});
 
 			// reset polyglot countdown to 30s
@@ -594,24 +634,17 @@ export class GameState {
 		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed);
 	}
 
-	timeTillNextMpOrLucidTick() {
-		let timeSinceFirstMpTick = this.time - this.config.timeTillFirstManaTick;
-		let timeTillNextMpTick = (timeSinceFirstMpTick < 0) ? (-timeSinceFirstMpTick) : (3 - timeSinceFirstMpTick % 3);
-		if (timeTillNextMpTick < Debug.epsilon) timeTillNextMpTick += 3;
-
-		let timeSinceFirstLucidTick = timeSinceFirstMpTick - this.lucidTickOffset;
-		let timeTillNextLucidTick = (timeSinceFirstLucidTick < 0) ? (-timeSinceFirstLucidTick) : (3 - timeSinceFirstLucidTick % 3);
-		if (timeTillNextLucidTick < Debug.epsilon) timeTillNextLucidTick += 3;
-
-		let lucid = this.resources.get(ResourceType.LucidDreaming);
-		if (lucid.available(1) && lucid.pendingChange) {
-			let timeTillDropLucid = lucid.pendingChange.timeTillEvent;
-			if (timeTillNextLucidTick < timeTillDropLucid && timeTillNextLucidTick < timeTillNextMpTick) {
-				return timeTillNextLucidTick;
-			}
+	findNextQueuedEventByTag(tag : EventTag) {
+		for (let i = 0; i < this.eventsQueue.length; i++) {
+			let evt = this.eventsQueue[i];
+			if (evt.hasTag(tag)) return evt;
 		}
+		return undefined;
+	}
 
-		return timeTillNextMpTick;
+	timeTillNextMpGainEvent() {
+		let foundEvt = this.findNextQueuedEventByTag(EventTag.ManaGain);
+		return foundEvt ? foundEvt.timeTillEvent : 0;
 	}
 
 	getSkillAvailabilityStatus(skillName: SkillName) {
