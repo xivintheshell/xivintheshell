@@ -41,6 +41,8 @@ const trackBottomMargin = 6;
 const maxTimelineHeight = 400;
 const barsOffset = 2;
 
+let g_ctx : CanvasRenderingContext2D;
+
 let g_visibleLeft = 0;
 let g_visibleWidth = 0;
 let g_isClickUpdate = false;
@@ -94,16 +96,16 @@ const onClickTimelineBackground = ()=>{
 	controller.displayCurrentState();
 };
 
-function drawTip(ctx: CanvasRenderingContext2D, lines: string[], canvasWidth: number, canvasHeight: number) {
+function drawTip(lines: string[], canvasWidth: number, canvasHeight: number) {
 	if (!lines.length) return;
 
 	const lineHeight = 14;
 	const horizontalPadding = 8;
 	const verticalPadding = 4;
-	ctx.font = "12px monospace";
+	g_ctx.font = "12px monospace";
 
 	let maxLineWidth = -1;
-	lines.forEach(l=>{ maxLineWidth = Math.max(maxLineWidth, ctx.measureText(l).width); });
+	lines.forEach(l=>{ maxLineWidth = Math.max(maxLineWidth, g_ctx.measureText(l).width); });
 	let [boxWidth, boxHeight] = [maxLineWidth + 2 * horizontalPadding, lineHeight * lines.length + 2 * verticalPadding];
 
 	let x = g_mouseX;
@@ -126,22 +128,21 @@ function drawTip(ctx: CanvasRenderingContext2D, lines: string[], canvasWidth: nu
 	}
 
 	// start drawing
-	ctx.strokeStyle = g_colors.bgHighContrast;
-	ctx.lineWidth = 1;
-	ctx.fillStyle = g_colors.tipBackground;
-	ctx.fillRect(x, y, boxWidth, boxHeight);
-	ctx.strokeRect(x, y, boxWidth, boxHeight);
+	g_ctx.strokeStyle = g_colors.bgHighContrast;
+	g_ctx.lineWidth = 1;
+	g_ctx.fillStyle = g_colors.tipBackground;
+	g_ctx.fillRect(x, y, boxWidth, boxHeight);
+	g_ctx.strokeRect(x, y, boxWidth, boxHeight);
 
-	ctx.fillStyle = g_colors.emphasis;
-	ctx.textBaseline = "top";
-	ctx.textAlign = "left";
+	g_ctx.fillStyle = g_colors.emphasis;
+	g_ctx.textBaseline = "top";
+	g_ctx.textAlign = "left";
 	for (let i = 0; i < lines.length; i++) {
-		ctx.fillText(lines[i], x + horizontalPadding, y + i * lineHeight + 2 + verticalPadding);
+		g_ctx.fillText(lines[i], x + horizontalPadding, y + i * lineHeight + 2 + verticalPadding);
 	}
 }
 
 function drawMarkers(
-	ctx: CanvasRenderingContext2D,
 	countdown: number,
 	scale: number,
 	markerTracksTopY: number,
@@ -150,10 +151,10 @@ function drawMarkers(
 	trackBins: Map<number, MarkerElem[]>,
 ) {
 	// markers
-	ctx.lineCap = "round";
-	ctx.lineWidth = 4;
-	ctx.font = "11px monospace";
-	ctx.textAlign = "left";
+	g_ctx.lineCap = "round";
+	g_ctx.lineWidth = 4;
+	g_ctx.font = "11px monospace";
+	g_ctx.textAlign = "left";
 	trackBins.forEach((elems, track)=>{
 		let top = markerTracksBottomY - (track + 1) * trackHeight;
 		if (track === UntargetableMarkerTrack) {
@@ -172,16 +173,16 @@ function drawMarkers(
 			if (m.duration > 0) {
 				let markerWidth = StaticFn.positionFromTimeAndScale(m.duration, scale);
 				if (m.showText) {
-					ctx.fillStyle = m.color + g_colors.timeline.markerAlpha;
-					ctx.fillRect(left, top, markerWidth, trackHeight);
-					ctx.fillStyle = g_colors.emphasis;
-					ctx.fillText(m.description, left + trackHeight / 2, top + 10);
+					g_ctx.fillStyle = m.color + g_colors.timeline.markerAlpha;
+					g_ctx.fillRect(left, top, markerWidth, trackHeight);
+					g_ctx.fillStyle = g_colors.emphasis;
+					g_ctx.fillText(m.description, left + trackHeight / 2, top + 10);
 				} else {
-					ctx.strokeStyle = m.color;
-					ctx.beginPath();
-					ctx.moveTo(left, top + trackHeight / 2);
-					ctx.lineTo(left + markerWidth, top + trackHeight / 2);
-					ctx.stroke();
+					g_ctx.strokeStyle = m.color;
+					g_ctx.beginPath();
+					g_ctx.moveTo(left, top + trackHeight / 2);
+					g_ctx.lineTo(left + markerWidth, top + trackHeight / 2);
+					g_ctx.stroke();
 				}
 				let timeStr = m.time + " - " + parseFloat((m.time + m.duration).toFixed(3));
 				testInteraction(
@@ -189,14 +190,14 @@ function drawMarkers(
 					["[" + timeStr + "] " + m.description],
 					onClick);
 			} else {
-				ctx.fillStyle = m.color;
-				ctx.beginPath();
-				ctx.ellipse(left, top + trackHeight / 2, 4, 4, 0, 0, 2 * Math.PI);
-				ctx.fill();
+				g_ctx.fillStyle = m.color;
+				g_ctx.beginPath();
+				g_ctx.ellipse(left, top + trackHeight / 2, 4, 4, 0, 0, 2 * Math.PI);
+				g_ctx.fill();
 				if (m.showText) {
-					ctx.fillStyle = g_colors.emphasis;
-					ctx.beginPath()
-					ctx.fillText(m.description, left + trackHeight / 2, top + 10);
+					g_ctx.fillStyle = g_colors.emphasis;
+					g_ctx.beginPath()
+					g_ctx.fillText(m.description, left + trackHeight / 2, top + 10);
 				}
 				testInteraction(
 					{x: left - trackHeight / 2, y: top, w: trackHeight, h: trackHeight},
@@ -208,49 +209,47 @@ function drawMarkers(
 }
 
 function drawMPTickMarks(
-	ctx: CanvasRenderingContext2D,
 	countdown: number,
 	scale: number,
 	timelineOrigin: number,
 	elems: MPTickMarkElem[]
 ) {
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = g_colors.timeline.mpTickMark;
-	ctx.beginPath();
+	g_ctx.lineWidth = 1;
+	g_ctx.strokeStyle = g_colors.timeline.mpTickMark;
+	g_ctx.beginPath();
 	elems.forEach(tick=>{
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(tick.time, scale);
-		ctx.moveTo(x, 30);
-		ctx.lineTo(x, maxTimelineHeight);
+		g_ctx.moveTo(x, 30);
+		g_ctx.lineTo(x, maxTimelineHeight);
 
 		testInteraction(
 			{x: x-2, y: 30, w: 4, h: maxTimelineHeight-30},
 			["[" + tick.displayTime.toFixed(2) + "] " + tick.source]
 		);
 	});
-	ctx.stroke();
+	g_ctx.stroke();
 }
 
 function drawWarningMarks(
-	ctx: CanvasRenderingContext2D,
 	countdown: number,
 	scale: number,
 	timelineOrigin: number,
 	elems: WarningMarkElem[]
 ) {
-	ctx.font = "bold 10px monospace";
+	g_ctx.font = "bold 10px monospace";
 	elems.forEach(mark=>{
 		const x = timelineOrigin + StaticFn.positionFromTimeAndScale(mark.time, scale);
 		const y = 30;
 		const sideLength = 12;
-		ctx.beginPath();
-		ctx.textAlign = "center";
-		ctx.moveTo(x, y-sideLength);
-		ctx.lineTo(x-sideLength/2, y);
-		ctx.lineTo(x+sideLength/2, y);
-		ctx.fillStyle = g_colors.timeline.warningMark;
-		ctx.fill();
-		ctx.fillStyle = "white";
-		ctx.fillText("!", x, y-1);
+		g_ctx.beginPath();
+		g_ctx.textAlign = "center";
+		g_ctx.moveTo(x, y-sideLength);
+		g_ctx.lineTo(x-sideLength/2, y);
+		g_ctx.lineTo(x+sideLength/2, y);
+		g_ctx.fillStyle = g_colors.timeline.warningMark;
+		g_ctx.fill();
+		g_ctx.fillStyle = "white";
+		g_ctx.fillText("!", x, y-1);
 
 		let message: string = "[" + mark.displayTime.toFixed(2) + "] ";
 		if (mark.warningType === WarningType.PolyglotOvercap) {
@@ -264,7 +263,6 @@ function drawWarningMarks(
 }
 
 function drawDamageMarks(
-	ctx: CanvasRenderingContext2D,
 	countdown: number,
 	scale: number,
 	timelineOrigin: number,
@@ -272,13 +270,13 @@ function drawDamageMarks(
 ) {
 	elems.forEach(mark=>{
 		let untargetable = bossIsUntargetable(mark.time);
-		ctx.fillStyle = untargetable ? g_colors.timeline.untargetableDamageMark : g_colors.timeline.damageMark;
+		g_ctx.fillStyle = untargetable ? g_colors.timeline.untargetableDamageMark : g_colors.timeline.damageMark;
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(mark.time, scale);
-		ctx.beginPath();
-		ctx.moveTo(x-3, 0);
-		ctx.lineTo(x+3, 0);
-		ctx.lineTo(x, 6);
-		ctx.fill();
+		g_ctx.beginPath();
+		g_ctx.moveTo(x-3, 0);
+		g_ctx.lineTo(x+3, 0);
+		g_ctx.lineTo(x, 6);
+		g_ctx.fill();
 
 		let dm = mark;
 		// pot?
@@ -304,20 +302,19 @@ function drawDamageMarks(
 	});
 }
 function drawLucidMarks(
-	ctx: CanvasRenderingContext2D,
 	countdown: number,
 	scale: number,
 	timelineOrigin: number,
 	elems: LucidMarkElem[]
 ) {
-	ctx.fillStyle = g_colors.timeline.lucidTickMark;
+	g_ctx.fillStyle = g_colors.timeline.lucidTickMark;
 	elems.forEach(mark=>{
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(mark.time, scale);
-		ctx.beginPath();
-		ctx.moveTo(x-3, 0);
-		ctx.lineTo(x+3, 0);
-		ctx.lineTo(x, 6);
-		ctx.fill();
+		g_ctx.beginPath();
+		g_ctx.moveTo(x-3, 0);
+		g_ctx.lineTo(x+3, 0);
+		g_ctx.lineTo(x, 6);
+		g_ctx.fill();
 
 		// hover text
 		let hoverText = "[" + mark.displayTime.toFixed(2) + "] " + mark.source;
@@ -330,7 +327,6 @@ function drawLucidMarks(
 
 type Rect = {x: number, y: number ,w: number, h: number};
 function drawSkills(
-	ctx: CanvasRenderingContext2D,
 	countdown: number,
 	scale: number,
 	timelineOrigin: number,
@@ -377,64 +373,64 @@ function drawSkills(
 	});
 
 	// purple
-	ctx.fillStyle = g_colors.timeline.castBar;
-	ctx.beginPath();
+	g_ctx.fillStyle = g_colors.timeline.castBar;
+	g_ctx.beginPath();
 	purpleLockBars.forEach(r=>{
-		ctx.rect(r.x, r.y, r.w, r.h);
+		g_ctx.rect(r.x, r.y, r.w, r.h);
 		testInteraction(r, undefined, onClickTimelineBackground);
 	});
-	ctx.fill();
+	g_ctx.fill();
 
 	// snapshot bar
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = "rgba(151, 85, 239, 0.4)";
-	ctx.beginPath();
+	g_ctx.lineWidth = 1;
+	g_ctx.strokeStyle = "rgba(151, 85, 239, 0.4)";
+	g_ctx.beginPath();
 	snapshots.forEach(x=>{
-		ctx.moveTo(x, skillsTopY + 14);
-		ctx.lineTo(x, skillsTopY + 28);
+		g_ctx.moveTo(x, skillsTopY + 14);
+		g_ctx.lineTo(x, skillsTopY + 28);
 	});
-	ctx.stroke();
+	g_ctx.stroke();
 
 	// green
-	ctx.fillStyle = g_colors.timeline.gcdBar;
-	ctx.beginPath();
+	g_ctx.fillStyle = g_colors.timeline.gcdBar;
+	g_ctx.beginPath();
 	gcdBars.forEach(r=>{
-		ctx.rect(r.x, r.y, r.w, r.h);
+		g_ctx.rect(r.x, r.y, r.w, r.h);
 		testInteraction(r, undefined, onClickTimelineBackground);
 	});
-	ctx.fill();
+	g_ctx.fill();
 
 	// grey
-	ctx.fillStyle = g_colors.timeline.lockBar;
-	ctx.beginPath();
+	g_ctx.fillStyle = g_colors.timeline.lockBar;
+	g_ctx.beginPath();
 	greyLockBars.forEach(r=>{
-		ctx.rect(r.x, r.y, r.w, r.h);
+		g_ctx.rect(r.x, r.y, r.w, r.h);
 		testInteraction(r, undefined, onClickTimelineBackground);
 	});
-	ctx.fill();
+	g_ctx.fill();
 
 	// llCovers
-	ctx.fillStyle = g_colors.timeline.llCover;
-	ctx.beginPath();
+	g_ctx.fillStyle = g_colors.timeline.llCover;
+	g_ctx.beginPath();
 	llCovers.forEach(r=>{
-		ctx.rect(r.x, r.y, r.w, r.h);
+		g_ctx.rect(r.x, r.y, r.w, r.h);
 		testInteraction(r, undefined, onClickTimelineBackground);
 	});
-	ctx.fill();
+	g_ctx.fill();
 
 	// potCovers
-	ctx.fillStyle = g_colors.timeline.potCover;
-	ctx.beginPath();
+	g_ctx.fillStyle = g_colors.timeline.potCover;
+	g_ctx.beginPath();
 	potCovers.forEach(r=>{
-		ctx.rect(r.x, r.y, r.w, r.h);
+		g_ctx.rect(r.x, r.y, r.w, r.h);
 		testInteraction(r, undefined, onClickTimelineBackground);
 	});
-	ctx.fill();
+	g_ctx.fill();
 
 	// icons
-	ctx.beginPath();
+	g_ctx.beginPath();
 	skillIcons.forEach(icon=>{
-		ctx.drawImage(skillIconImages.get(icon.elem.skillName), icon.x, icon.y, 28, 28);
+		g_ctx.drawImage(skillIconImages.get(icon.elem.skillName), icon.x, icon.y, 28, 28);
 		let node = icon.elem.node;
 		// 1. description
 		let description = localizeSkillName(icon.elem.skillName) + "@" + (icon.elem.displayTime).toFixed(2);
@@ -466,40 +462,29 @@ function drawSkills(
 	});
 }
 
-function drawCursor(ctx: CanvasRenderingContext2D, x: number, color: string, tip: string) {
-	ctx.fillStyle = color;
-	ctx.beginPath();
-	ctx.moveTo(x-3, 0);
-	ctx.lineTo(x+3, 0);
-	ctx.lineTo(x, 6);
-	ctx.fill();
+function drawCursor(x: number, color: string, tip: string) {
+	g_ctx.fillStyle = color;
+	g_ctx.beginPath();
+	g_ctx.moveTo(x-3, 0);
+	g_ctx.lineTo(x+3, 0);
+	g_ctx.lineTo(x, 6);
+	g_ctx.fill();
 
-	ctx.strokeStyle = color;
-	ctx.lineWidth = 1;
-	ctx.beginPath();
-	ctx.moveTo(x, 0);
-	ctx.lineTo(x, maxTimelineHeight);
-	ctx.stroke();
+	g_ctx.strokeStyle = color;
+	g_ctx.lineWidth = 1;
+	g_ctx.beginPath();
+	g_ctx.moveTo(x, 0);
+	g_ctx.lineTo(x, maxTimelineHeight);
+	g_ctx.stroke();
 
 	testInteraction({x: x-3, y: 0, w: 6, h: maxTimelineHeight}, [tip]);
 }
 
-// background layer:
-// white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
-function drawTimeline(ctx: CanvasRenderingContext2D) {
-
-	let timelineOrigin = -g_visibleLeft;
-
-	// background white
-	ctx.fillStyle = g_colors.background;
-	// add 1 here because this scaled dimension from dpr may not perfectly cover the entire canvas
-	ctx.fillRect(0, 0, g_visibleWidth + 1, renderingProps.timelineHeight + 1);
-	testInteraction({x: 0, y: 0, w: g_visibleWidth, h: maxTimelineHeight}, undefined, onClickTimelineBackground);
-
+function drawRuler(originX: number) : number {
 	// ruler bg
-	ctx.fillStyle = g_colors.timeline.ruler;
-	ctx.fillRect(0, 0, g_visibleWidth, 30);
-	let t = StaticFn.timeFromPositionAndScale(g_mouseX - timelineOrigin, renderingProps.scale);
+	g_ctx.fillStyle = g_colors.timeline.ruler;
+	g_ctx.fillRect(0, 0, g_visibleWidth, 30);
+	let t = StaticFn.timeFromPositionAndScale(g_mouseX - originX, renderingProps.scale);
 	testInteraction(
 		{x: 0, y: 0, w: g_visibleWidth, h: 30},
 		[(t - renderingProps.countdown).toFixed(2)],
@@ -512,52 +497,56 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 		});
 
 	// ruler marks
-	ctx.lineCap = "butt";
-	ctx.beginPath();
+	g_ctx.lineCap = "butt";
+	g_ctx.beginPath();
 	let pixelsPerSecond = renderingProps.scale * 100;
 	let countdownPadding = renderingProps.countdown * pixelsPerSecond;
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = g_colors.text;
-	ctx.textBaseline = "alphabetic";
+	g_ctx.lineWidth = 1;
+	g_ctx.strokeStyle = g_colors.text;
+	g_ctx.textBaseline = "alphabetic";
 
-	ctx.font = "13px monospace";
-	ctx.textAlign = "center";
-	ctx.fillStyle = g_colors.text;
+	g_ctx.font = "13px monospace";
+	g_ctx.textAlign = "center";
+	g_ctx.fillStyle = g_colors.text;
 	const cullThreshold = 50;
 	if (pixelsPerSecond >= 6) {
 		for (let x = 0; x < renderingProps.timelineWidth - countdownPadding; x += pixelsPerSecond) {
-			let pos = timelineOrigin + x + countdownPadding;
+			let pos = originX + x + countdownPadding;
 			if (pos >= -cullThreshold && pos <= g_visibleWidth + cullThreshold) {
-				ctx.moveTo(pos, 0);
-				ctx.lineTo(pos, 6);
+				g_ctx.moveTo(pos, 0);
+				g_ctx.lineTo(pos, 6);
 			}
 		}
 		for (let x = -pixelsPerSecond; x >= -countdownPadding; x -= pixelsPerSecond) {
-			let pos = timelineOrigin + x + countdownPadding;
+			let pos = originX + x + countdownPadding;
 			if (pos >= -cullThreshold && pos <= g_visibleWidth + cullThreshold) {
-				ctx.moveTo(pos, 0);
-				ctx.lineTo(pos, 6);
+				g_ctx.moveTo(pos, 0);
+				g_ctx.lineTo(pos, 6);
 			}
 		}
 	}
 	for (let x = 0; x < renderingProps.timelineWidth - countdownPadding; x += pixelsPerSecond * 5) {
-		let pos = timelineOrigin + x + countdownPadding;
+		let pos = originX + x + countdownPadding;
 		if (pos >= -cullThreshold && pos <= g_visibleWidth + cullThreshold) {
-			ctx.moveTo(pos, 0);
-			ctx.lineTo(pos, 10);
-			ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), pos, 23);
+			g_ctx.moveTo(pos, 0);
+			g_ctx.lineTo(pos, 10);
+			g_ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), pos, 23);
 		}
 	}
 	for (let x = -pixelsPerSecond * 5; x >= -countdownPadding; x -= pixelsPerSecond * 5) {
-		let pos = timelineOrigin + x + countdownPadding;
+		let pos = originX + x + countdownPadding;
 		if (pos >= -cullThreshold && pos <= g_visibleWidth + cullThreshold) {
-			ctx.moveTo(pos, 0);
-			ctx.lineTo(pos, 10);
-			ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), pos, 23);
+			g_ctx.moveTo(pos, 0);
+			g_ctx.lineTo(pos, 10);
+			g_ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), pos, 23);
 		}
 	}
-	ctx.stroke();
+	g_ctx.stroke();
 
+	return 30;
+}
+
+function drawMarkerTracks(originX: number, originY: number) : number {
 	// make trackbins
 	let trackBins = new Map<number, MarkerElem[]>();
 	renderingProps.allMarkers.forEach(marker=>{
@@ -568,7 +557,7 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	});
 
 	// tracks background
-	ctx.beginPath();
+	g_ctx.beginPath();
 	let numTracks = 0;
 	let hasUntargetableTrack = false;
 	for (let k of trackBins.keys()) {
@@ -576,14 +565,39 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 		if (k === UntargetableMarkerTrack) hasUntargetableTrack = true;
 	}
 	if (hasUntargetableTrack) numTracks += 1;
-	let markerTracksTopY = 30;
-	let markerTracksBottomY = 30 + numTracks * trackHeight;
-	ctx.fillStyle = g_colors.timeline.tracks;
+	let markerTracksBottomY = originY + numTracks * trackHeight;
+	g_ctx.fillStyle = g_colors.timeline.tracks;
 	for (let i = 0; i < numTracks; i += 2) {
 		let top = markerTracksBottomY - (i + 1) * trackHeight;
-		ctx.rect(0, top, g_visibleWidth, trackHeight);
+		g_ctx.rect(0, top, g_visibleWidth, trackHeight);
 	}
-	ctx.fill();
+	g_ctx.fill();
+
+	// timeline markers
+	drawMarkers(renderingProps.countdown, renderingProps.scale, originY, markerTracksBottomY, originX, trackBins);
+	return numTracks * trackHeight;
+}
+
+function drawTimeline(originX:  number, originY: number) : number {
+	return 0;
+}
+
+// background layer:
+// white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
+function drawEverything() {
+
+	let timelineOrigin = -g_visibleLeft;
+	let currentHeight = 0;
+
+	// background white
+	g_ctx.fillStyle = g_colors.background;
+	// add 1 here because this scaled dimension from dpr may not perfectly cover the entire canvas
+	g_ctx.fillRect(0, 0, g_visibleWidth + 1, renderingProps.timelineHeight + 1);
+	testInteraction({x: 0, y: 0, w: g_visibleWidth, h: maxTimelineHeight}, undefined, onClickTimelineBackground);
+
+	currentHeight += drawRuler(timelineOrigin);
+
+	currentHeight += drawMarkerTracks(timelineOrigin, currentHeight);
 
 	// organize elems into bins
 	let elemBins = new Map<ElemType, TimelineElem[]>();
@@ -594,49 +608,46 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	});
 
 	// mp tick marks
-	drawMPTickMarks(ctx, renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.MPTickMark) as MPTickMarkElem[] ?? []);
-
-	// timeline markers
-	drawMarkers(ctx, renderingProps.countdown, renderingProps.scale, markerTracksTopY, markerTracksBottomY, timelineOrigin, trackBins);
+	drawMPTickMarks(renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.MPTickMark) as MPTickMarkElem[] ?? []);
 
 	// damage marks
-	drawDamageMarks(ctx, renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.DamageMark) as DamageMarkElem[] ?? []);
+	drawDamageMarks(renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.DamageMark) as DamageMarkElem[] ?? []);
 
 	// lucid marks
-	drawLucidMarks(ctx, renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.LucidMark) as LucidMarkElem[] ?? []);
+	drawLucidMarks(renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.LucidMark) as LucidMarkElem[] ?? []);
 
 	// warning marks (polyglot overcap)
-	drawWarningMarks(ctx, renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.WarningMark) as WarningMarkElem[] ?? []);
+	drawWarningMarks(renderingProps.countdown, renderingProps.scale, timelineOrigin, elemBins.get(ElemType.WarningMark) as WarningMarkElem[] ?? []);
 
 	// skills
-	let skillsTopY = 30 + numTracks * trackHeight + trackBottomMargin;
-	drawSkills(ctx, renderingProps.countdown, renderingProps.scale, timelineOrigin, skillsTopY, elemBins.get(ElemType.Skill) as SkillElem[] ?? []);
+	let skillsTopY = currentHeight + trackBottomMargin;
+	drawSkills(renderingProps.countdown, renderingProps.scale, timelineOrigin, skillsTopY, elemBins.get(ElemType.Skill) as SkillElem[] ?? []);
 
 	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(renderingProps.countdown, renderingProps.scale);
-	ctx.fillStyle = g_colors.timeline.countdown;
-	ctx.fillRect(timelineOrigin, 0, countdownWidth, renderingProps.timelineHeight);
+	g_ctx.fillStyle = g_colors.timeline.countdown;
+	g_ctx.fillRect(timelineOrigin, 0, countdownWidth, renderingProps.timelineHeight);
 
 	// selection rect
-	ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
+	g_ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
 	let selectionLeftPx = timelineOrigin + renderingProps.selectionStartX;
 	let selectionWidthPx = renderingProps.selectionEndX - renderingProps.selectionStartX;
-	ctx.fillRect(selectionLeftPx, 0, selectionWidthPx, maxTimelineHeight);
-	ctx.strokeStyle = "rgba(147, 112, 219, 0.5)";
-	ctx.lineWidth = 1;
-	ctx.beginPath();
-	ctx.moveTo(selectionLeftPx, 0);
-	ctx.lineTo(selectionLeftPx, maxTimelineHeight);
-	ctx.moveTo(selectionLeftPx + selectionWidthPx, 0);
-	ctx.lineTo(selectionLeftPx + selectionWidthPx, maxTimelineHeight);
-	ctx.stroke();
+	g_ctx.fillRect(selectionLeftPx, 0, selectionWidthPx, maxTimelineHeight);
+	g_ctx.strokeStyle = "rgba(147, 112, 219, 0.5)";
+	g_ctx.lineWidth = 1;
+	g_ctx.beginPath();
+	g_ctx.moveTo(selectionLeftPx, 0);
+	g_ctx.lineTo(selectionLeftPx, maxTimelineHeight);
+	g_ctx.moveTo(selectionLeftPx + selectionWidthPx, 0);
+	g_ctx.lineTo(selectionLeftPx + selectionWidthPx, maxTimelineHeight);
+	g_ctx.stroke();
 
 	// view only cursor
 	(elemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach(cursor=>{
 		let vcursor = cursor as ViewOnlyCursorElem
 		if (vcursor.enabled) {
 			let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, renderingProps.scale);
-			drawCursor(ctx, x, g_colors.historical, localize({en: "cursor: ", zh: "光标："}) + vcursor.displayTime.toFixed(2));
+			drawCursor(x, g_colors.historical, localize({en: "cursor: ", zh: "光标："}) + vcursor.displayTime.toFixed(2));
 		}
 	});
 
@@ -644,13 +655,13 @@ function drawTimeline(ctx: CanvasRenderingContext2D) {
 	(elemBins.get(ElemType.s_Cursor) ?? []).forEach(elem=>{
 		let cursor = elem as CursorElem;
 		let x = timelineOrigin + StaticFn.positionFromTimeAndScale(cursor.time, renderingProps.scale);
-		drawCursor(ctx, x, g_colors.emphasis, localize({en: "cursor: ", zh: "光标："}) + cursor.displayTime.toFixed(2));
+		drawCursor(x, g_colors.emphasis, localize({en: "cursor: ", zh: "光标："}) + cursor.displayTime.toFixed(2));
 	});
 
 	// interactive layer
 	if (g_mouseHovered) {
 		if (g_activeHoverTip) {
-			drawTip(ctx, g_activeHoverTip, g_visibleWidth, renderingProps.timelineHeight);
+			drawTip(g_activeHoverTip, g_visibleWidth, renderingProps.timelineHeight);
 		}
 		if (g_isClickUpdate && g_activeOnClick) {
 			g_activeOnClick();
@@ -698,11 +709,12 @@ export function TimelineCanvas(props: {
 		renderingProps = controller.getTimelineRenderingProps();
 
 		// draw
-		let ctx = canvasRef.current?.getContext("2d", {alpha: false});
-		if (ctx) {
-			ctx.scale(dpr, dpr);
-			drawTimeline(ctx);
-			ctx.scale(1 / dpr, 1 / dpr);
+		let currentContext = canvasRef.current?.getContext("2d", {alpha: false});
+		if (currentContext) {
+			g_ctx = currentContext;
+			g_ctx.scale(dpr, dpr);
+			drawEverything();
+			g_ctx.scale(1 / dpr, 1 / dpr);
 		}
 
 		// reset event flags
@@ -715,7 +727,7 @@ export function TimelineCanvas(props: {
 		height: props.timelineHeight,
 		position: "absolute",
 		top: 0,
-		left: props.visibleLeft,
+		left: props.visibleLeft, // the parent elem is a huge html div. Want to make the entire canvas region visible
 		outline: "none",
 		cursor: readback_pointerMouse ? "pointer" : "default",
 	}} onMouseMove={e=>{

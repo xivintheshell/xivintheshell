@@ -142,8 +142,8 @@ export function IntroSection(props: {}) {
 				{localize({
 					en: <div className={"paragraph"}>
 						If you have questions,
-						encountered bugs, or would like to suggest features, you can find me (miyehn) on discord
-						(miyehn#5857), or via email (rainduym@gmail.com). In case of sending me a bug report, attaching the
+						encountered bugs, or would like to suggest features, you can find me on discord
+						(miyehn), or via email (rainduym@gmail.com). In case of sending me a bug report, attaching the
 						fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
 					</div>,
 					zh: <div className={"paragraph"}>

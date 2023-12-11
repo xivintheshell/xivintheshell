@@ -303,7 +303,10 @@ export class Timeline {
 	}
 
 	getCanvasHeight() {
-		return 30 + 14*this.getNumMarkerTracks() + 6 + 54;
+		let ruler = 30;
+		let markers = 14 * this.getNumMarkerTracks();
+		let timeline = 12 + 54;
+		return ruler + markers + timeline;
 	}
 
 	positionFromTime(time: number) {
