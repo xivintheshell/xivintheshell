@@ -624,9 +624,10 @@ class Controller {
 	}
 
 	updateSkillButtons(game: GameState) {
+		let paradoxReady = game.resources.get(ResourceType.Paradox).availableAmount() > 0;
 		updateSkillButtons(displayedSkills.map((skillName: SkillName) => {
 			return game.getSkillAvailabilityStatus(skillName);
-		}));
+		}), paradoxReady);
 	}
 
 	#requestTick(props: {

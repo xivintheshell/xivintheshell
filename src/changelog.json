@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/10/23",
+		"changes": [
+			"fix paradox skill icon doesn't show up when displaying historical state"
+		]
+	},
+	{
 		"date": "11/20/23",
 		"changes": [
 			"let the old \"wait till next mp or lucid tick\" button also account for mp gain from manafont"

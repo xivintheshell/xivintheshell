@@ -250,14 +250,15 @@ const WaitSince = {
 	LastSkill: "LastSkill"
 };
 
-export var updateSkillButtons = (statusList)=>{}
+export var updateSkillButtons = (statusList, paradoxReady)=>{}
 export class SkillsWindow extends React.Component {
 	constructor(props) {
 		super(props);
-		updateSkillButtons = ((statusList)=>{
+		updateSkillButtons = ((statusList, paradoxReady)=>{
 			this.setState({
 				statusList: statusList,
 				paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
+				paradoxReady: paradoxReady
 			});
 		}).bind(this);
 
@@ -351,12 +352,11 @@ export class SkillsWindow extends React.Component {
 
 	render() {
 		let skillButtons = [];
-		let para = controller.getResourceValue({rscType: ResourceType.Paradox});
 		for (let i = 0; i < displayedSkills.length; i++) {
 			let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
-			let skillName = (isF1B1 && para) ? SkillName.Paradox : displayedSkills[i];
+			let skillName = (isF1B1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
 			let info = undefined;
-			if (this.state.paradoxInfo) info = (isF1B1 && para) ? this.state.paradoxInfo : this.state.statusList[i];
+			if (this.state.paradoxInfo) info = (isF1B1 && this.state.paradoxReady) ? this.state.paradoxInfo : this.state.statusList[i];
 			let btn = <SkillButton
 				key={i}
 				highlight={info ? info.highlight : false}
