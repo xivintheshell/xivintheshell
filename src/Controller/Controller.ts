@@ -441,6 +441,7 @@ class Controller {
 	}
 
 	getTimelineRenderingProps(): TimelineRenderingProps {
+		let showSelection : boolean = this.record.getFirstSelection() != null && this.record.getLastSelection() != null;
 		return {
 			timelineWidth: this.timeline.getCanvasWidth(),
 			timelineHeight: this.timeline.getCanvasHeight(),
@@ -451,6 +452,7 @@ class Controller {
 			elements: this.timeline.elements,
 			allMarkers: this.timeline.getAllMarkers(),
 			untargetableMarkers: this.timeline.getUntargetableMarkers(),
+			showSelection: showSelection,
 			selectionStartX: this.timeline.positionFromTime(this.record.getFirstSelection()?.tmp_startLockTime ?? 0),
 			selectionEndX: this.timeline.positionFromTime(this.record.getLastSelection()?.tmp_endLockTime ?? 0)
 		};

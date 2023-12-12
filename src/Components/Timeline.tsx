@@ -3,7 +3,12 @@ import {controller} from "../Controller/Controller";
 import {Help, Input, Slider} from "./Common";
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
-import {TimelineCanvas} from "./TimelineCanvas";
+import {
+	TimelineCanvas, timelineCanvasGetPointerMouse, timelineCanvasOnClick, timelineCanvasOnKeyDown,
+	timelineCanvasOnMouseEnter,
+	timelineCanvasOnMouseLeave,
+	timelineCanvasOnMouseMove
+} from "./TimelineCanvas";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 
@@ -92,34 +97,52 @@ class TimelineMain extends React.Component {
 		let canvas = <TimelineCanvas
 			timelineHeight={this.state.timelineHeight}
 			visibleLeft={this.state.visibleLeft}
-			visibleWidth={this.state.visibleWidth - 1}
+			visibleWidth={this.state.visibleWidth}
 			version={this.state.version}
 		/>;
 
-		return <div className={"staticScrollbar"} style={{
-			position: "relative",
-			width: "100%",
-			overflowX: "scroll",
-			overflowY: "clip",
-			outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
-			marginBottom: 10
-		}} ref={this.myRef} onScroll={e=>{
-			if (this.myRef.current) {
-				this.myRef.current.scrollLeft = Math.min(this.myRef.current.scrollWidth - this.myRef.current.clientWidth, this.myRef.current.scrollLeft);
-				this.setState({
-					visibleLeft: this.myRef.current.scrollLeft,
-					visibleWidth: this.myRef.current.clientWidth
-				});
-			}
-		}}>
-			<div style={{
-				position: "relative",
-				backgroundColor: "transparent",
-				width: this.state.timelineWidth,
-				height: this.state.timelineHeight,
-				pointerEvents: "none"
-			}}/>
+		return <div style={{position: "relative"}}>
 			{canvas}
+			<div className={"staticScrollbar"} style={{
+				position: "relative",
+				width: "100%",
+				overflowX: "scroll",
+				overflowY: "clip",
+				outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
+				marginBottom: 10,
+				cursor: timelineCanvasGetPointerMouse() ? "pointer" : "default",
+			}} ref={this.myRef} onScroll={e => {
+				if (this.myRef.current) {
+					this.myRef.current.scrollLeft = Math.min(this.myRef.current.scrollWidth - this.myRef.current.clientWidth, this.myRef.current.scrollLeft);
+					this.setState({
+						visibleLeft: this.myRef.current.scrollLeft,
+						visibleWidth: this.myRef.current.clientWidth
+					});
+				}
+			}} onMouseMove={e=>{
+				if (this.myRef.current) {
+					let rect = this.myRef.current.getBoundingClientRect();
+					let x = e.clientX - rect.left;
+					let y = e.clientY - rect.top;
+					timelineCanvasOnMouseMove(x, y);
+				}
+			}} onMouseEnter={e=>{
+				timelineCanvasOnMouseEnter();
+			}} onMouseLeave={e=>{
+				timelineCanvasOnMouseLeave();
+			}} onClick={e=>{
+				timelineCanvasOnClick(e);
+			}} onKeyDown={e=>{
+				timelineCanvasOnKeyDown(e);
+			}}>
+				<div style={{
+					position: "relative",
+					backgroundColor: "transparent",
+					width: this.state.timelineWidth,
+					height: this.state.timelineHeight,
+					pointerEvents: "none"
+				}}/>
+			</div>
 		</div>
 	}
 }
