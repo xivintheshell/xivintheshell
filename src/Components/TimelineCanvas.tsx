@@ -42,6 +42,7 @@ const c_trackHeight = 14;
 const c_timelineHeight = 12 + 54;
 const c_maxTimelineHeight = 400;
 const c_barsOffset = 2;
+const c_leftBufferWidth = 20;
 
 let g_ctx : CanvasRenderingContext2D;
 
@@ -557,6 +558,7 @@ function drawRuler(originX: number) : number {
 
 function drawMarkerTracks(originX: number, originY: number) : number {
 
+	/*
 	// don't even have to let controller know of collapse/expand state
 	// because it's purely a display thing.
 	let bDrawMarkers = false;
@@ -568,8 +570,9 @@ function drawMarkerTracks(originX: number, originY: number) : number {
 		localStorage.setItem("timelineDisplay_drawMarkers", (bDrawMarkers ? 0 : 1).toString());
 		updateTimelineView();
 	};
+	 */
 
-	if (bDrawMarkers) {
+	//if (bDrawMarkers) {
 		// make trackbins
 		let trackBins = new Map<number, MarkerElem[]>();
 		g_renderingProps.allMarkers.forEach(marker=>{
@@ -601,6 +604,7 @@ function drawMarkerTracks(originX: number, originY: number) : number {
 
 		let markersHeight = numTracks * c_trackHeight;
 
+		/*
 		// collapse bar on the left
 		let handle: Rect = {
 			x: 0,
@@ -617,9 +621,11 @@ function drawMarkerTracks(originX: number, originY: number) : number {
 		g_ctx.lineTo(c_trackHeight/2, originY + c_trackHeight/2 + 3);
 		g_ctx.fill();
 		testInteraction(handle, ["click to collapse"], collapseBarOnClick, true);
+		 */
 
 		return markersHeight;
-	}
+	//}
+	/*
 	else {
 		let handle: Rect = {
 			x: 0,
@@ -641,6 +647,7 @@ function drawMarkerTracks(originX: number, originY: number) : number {
 
 		return c_trackHeight;
 	}
+	 */
 
 }
 
@@ -672,7 +679,8 @@ function drawTimeline(originX:  number, originY: number) : number {
 	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
 	g_ctx.fillStyle = g_colors.timeline.countdown;
-	g_ctx.fillRect(originX, 0, countdownWidth, g_renderingProps.timelineHeight);
+	// make it cover the left padding as well:
+	g_ctx.fillRect(originX - c_leftBufferWidth, 0, countdownWidth + c_leftBufferWidth, g_renderingProps.timelineHeight);
 
 	// selection rect
 	if (g_renderingProps.showSelection) {
@@ -713,7 +721,7 @@ function drawTimeline(originX:  number, originY: number) : number {
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
 function drawEverything() {
 
-	let timelineOrigin = -g_visibleLeft + 20; // fragCoord.x (...) of time=0.
+	let timelineOrigin = -g_visibleLeft + c_leftBufferWidth; // fragCoord.x (...) of time=0.
 	let currentHeight = 0;
 
 	// background white
@@ -809,7 +817,7 @@ export function TimelineCanvas(props: {
 
 	// update when dependency props change
 	let bgProps = [
-		props.visibleLeft, props.visibleWidth, mouseX, mouseY, mouseHovered, clickCounter, keyCounter, props.version
+		props.visibleLeft, props.visibleWidth, mouseX, mouseY, mouseHovered, clickCounter, keyCounter, props.version, dpr
 	];
 	useEffect(()=>{
 		g_activeHoverTip = undefined;
