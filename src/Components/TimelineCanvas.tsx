@@ -572,96 +572,36 @@ function drawRuler(originX: number) : number {
 
 function drawMarkerTracks(originX: number, originY: number) : number {
 
-	/*
-	// don't even have to let controller know of collapse/expand state
-	// because it's purely a display thing.
-	let bDrawMarkers = false;
-	let str = localStorage.getItem("timelineDisplay_drawMarkers");
-	if (str !== null) {
-		bDrawMarkers = parseInt(str) > 0;
+	// make trackbins
+	let trackBins = new Map<number, MarkerElem[]>();
+	g_renderingProps.allMarkers.forEach(marker => {
+		let trackBin = trackBins.get(marker.track);
+		if (trackBin === undefined) trackBin = [];
+		trackBin.push(marker);
+		trackBins.set(marker.track, trackBin);
+	});
+
+	// tracks background
+	g_ctx.beginPath();
+	let numTracks = 0;
+	let hasUntargetableTrack = false;
+	for (let k of trackBins.keys()) {
+		numTracks = Math.max(numTracks, k + 1);
+		if (k === UntargetableMarkerTrack) hasUntargetableTrack = true;
 	}
-	let collapseBarOnClick = ()=>{
-		localStorage.setItem("timelineDisplay_drawMarkers", (bDrawMarkers ? 0 : 1).toString());
-		updateTimelineView();
-	};
-	 */
-
-	//if (bDrawMarkers) {
-		// make trackbins
-		let trackBins = new Map<number, MarkerElem[]>();
-		g_renderingProps.allMarkers.forEach(marker=>{
-			let trackBin = trackBins.get(marker.track);
-			if (trackBin === undefined) trackBin = [];
-			trackBin.push(marker);
-			trackBins.set(marker.track, trackBin);
-		});
-
-		// tracks background
-		g_ctx.beginPath();
-		let numTracks = 0;
-		let hasUntargetableTrack = false;
-		for (let k of trackBins.keys()) {
-			numTracks = Math.max(numTracks, k + 1);
-			if (k === UntargetableMarkerTrack) hasUntargetableTrack = true;
-		}
-		if (hasUntargetableTrack) numTracks += 1;
-		let markerTracksBottomY = originY + numTracks * c_trackHeight;
-		g_ctx.fillStyle = g_colors.timeline.tracks;
-		for (let i = 0; i < numTracks; i += 2) {
-			let top = markerTracksBottomY - (i + 1) * c_trackHeight;
-			g_ctx.rect(0, top, g_visibleWidth, c_trackHeight);
-		}
-		g_ctx.fill();
-
-		// timeline markers
-		drawMarkers(g_renderingProps.countdown, g_renderingProps.scale, originY, markerTracksBottomY, originX, trackBins);
-
-		let markersHeight = numTracks * c_trackHeight;
-
-		/*
-		// collapse bar on the left
-		let handle: Rect = {
-			x: 0,
-			y: originY,
-			w: c_trackHeight,
-			h: markersHeight
-		};
-		g_ctx.fillStyle = g_colors.bgMediumContrast;
-		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
-		g_ctx.fillStyle = g_colors.emphasis;
-		g_ctx.beginPath();
-		g_ctx.moveTo(c_trackHeight/2 - 3, originY + c_trackHeight/2 - 3);
-		g_ctx.lineTo(c_trackHeight/2 + 3, originY + c_trackHeight/2 - 3);
-		g_ctx.lineTo(c_trackHeight/2, originY + c_trackHeight/2 + 3);
-		g_ctx.fill();
-		testInteraction(handle, ["click to collapse"], collapseBarOnClick, true);
-		 */
-
-		return markersHeight;
-	//}
-	/*
-	else {
-		let handle: Rect = {
-			x: 0,
-			y: originY,
-			w: g_visibleWidth,
-			h: c_trackHeight
-		};
-		g_ctx.fillStyle = g_colors.bgMediumContrast;
-		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
-		g_ctx.fillStyle = g_colors.emphasis;
-		g_ctx.beginPath();
-		g_ctx.moveTo(c_trackHeight/2 + 3, originY + c_trackHeight/2);
-		g_ctx.lineTo(c_trackHeight/2 - 3, originY + c_trackHeight/2 - 3);
-		g_ctx.lineTo(c_trackHeight/2 - 3, originY + c_trackHeight/2 + 3);
-		g_ctx.fill();
-		g_ctx.textAlign = "left";
-		g_ctx.fillText("Timeline markers", c_trackHeight + 5, originY + 10);
-		testInteraction(handle, ["click to expand"], collapseBarOnClick, true);
-
-		return c_trackHeight;
+	if (hasUntargetableTrack) numTracks += 1;
+	let markerTracksBottomY = originY + numTracks * c_trackHeight;
+	g_ctx.fillStyle = g_colors.timeline.tracks;
+	for (let i = 0; i < numTracks; i += 2) {
+		let top = markerTracksBottomY - (i + 1) * c_trackHeight;
+		g_ctx.rect(0, top, g_visibleWidth, c_trackHeight);
 	}
-	 */
+	g_ctx.fill();
+
+	// timeline markers
+	drawMarkers(g_renderingProps.countdown, g_renderingProps.scale, originY, markerTracksBottomY, originX, trackBins);
+
+	return numTracks * c_trackHeight;
 
 }
 
