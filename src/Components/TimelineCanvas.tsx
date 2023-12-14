@@ -661,9 +661,11 @@ function drawTimelines(originX:  number, originY: number) : number {
 	}
 	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
+	let countdownHeight = c_timelineHeight * g_renderingProps.slotElements.length;
+	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) countdownHeight += c_trackHeight;
 	g_ctx.fillStyle = g_colors.timeline.countdown;
 	// make it cover the left padding as well:
-	g_ctx.fillRect(originX - c_leftBufferWidth, originY, countdownWidth + c_leftBufferWidth, c_timelineHeight * g_renderingProps.slotElements.length);
+	g_ctx.fillRect(originX - c_leftBufferWidth, originY, countdownWidth + c_leftBufferWidth, countdownHeight);
 
 	// view only cursor
 	(sharedElemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach(cursor=>{
@@ -687,7 +689,7 @@ function drawTimelines(originX:  number, originY: number) : number {
 		let handle : Rect = {
 			x: 0,
 			y: currentY + 1,
-			w: 10,
+			w: 14,
 			h: c_timelineHeight - 2
 		};
 		g_ctx.fillStyle = slot === g_renderingProps.activeSlotIndex ? g_colors.accent : g_colors.bgMediumContrast;
@@ -695,10 +697,52 @@ function drawTimelines(originX:  number, originY: number) : number {
 		testInteraction(handle, ["set active"], () => {
 			controller.setActiveSlot(slot);
 		}, true);
-		// todo: delete btn
+
+		// delete btn
+		if (g_renderingProps.slotElements.length > 1) {
+			g_ctx.fillStyle = g_colors.emphasis;
+			g_ctx.font = "bold 14px monospace";
+			g_ctx.textAlign = "center";
+			g_ctx.fillText("×", handle.x + handle.w/2, handle.y + handle.h - 4);
+			let deleteBtn : Rect = {
+				x: handle.x,
+				y: handle.y + handle.h - handle.w,
+				w: handle.w,
+				h: handle.w
+			};
+			testInteraction(deleteBtn, ["delete"], () => {
+				controller.timeline.removeSlot(slot);
+				controller.displayCurrentState();
+			}, true);
+		}
+	}
+	let timelineSectionHeight = c_timelineHeight * g_renderingProps.slotElements.length;
+
+	// add button
+	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) {
+		let currentY = originY + g_renderingProps.slotElements.length * c_timelineHeight;
+		let handle : Rect = {
+			x: 0,
+			y: currentY + 1,
+			w: 200,
+			h: c_trackHeight - 2
+		};
+		g_ctx.fillStyle = g_colors.bgMediumContrast;
+		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
+		g_ctx.font = "12px monospace";
+		g_ctx.fillStyle = g_colors.emphasis;
+		g_ctx.textAlign = "center";
+		g_ctx.fillText("> Add timeline slot <", handle.x + handle.w/2, handle.y + handle.h - 2);
+
+		testInteraction(handle, ["add"], () => {
+			controller.timeline.addSlot();
+			controller.displayCurrentState();
+		}, true);
+
+		timelineSectionHeight += c_trackHeight;
 	}
 
-	return c_timelineHeight * g_renderingProps.slotElements.length;
+	return timelineSectionHeight;
 }
 
 // background layer:

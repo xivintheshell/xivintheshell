@@ -999,7 +999,7 @@ class Controller {
 			console.log("saving existing record to slot 0");
 			localStorage.setItem("gameRecord0", str);
 		}
-		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
+		for (let i = 0; i < this.timeline.numSlots; i++) {
 			this.timeline.loadSlot(i);
 		}
 		 this.setActiveSlot(0);
