@@ -16,7 +16,6 @@ export const enum FileType {
 	MarkerTracksCombined = "MarkerTracksCombined"
 }
 
-
 export const enum TickMode {
 	RealTime = 0,
 	RealTimeAutoPause = 1,

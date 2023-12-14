@@ -9,7 +9,7 @@ import {displayedSkills, updateSkillButtons} from "../Components/Skills";
 // @ts-ignore
 import {updateConfigDisplay} from "../Components/PlaybackControl"
 import {setHistorical, setRealTime} from "../Components/Main";
-import {ElemType, Timeline} from "./Timeline"
+import {ElemType, MAX_TIMELINE_SLOTS, Timeline} from "./Timeline"
 import {scrollTimelineTo, updateTimelineView} from "../Components/Timeline";
 import {ActionNode, ActionType, Line, Record} from "./Record";
 import {PresetLinesManager} from "./PresetLinesManager";
@@ -445,11 +445,13 @@ class Controller {
 		return {
 			timelineWidth: this.timeline.getCanvasWidth(),
 			timelineHeight: this.timeline.getCanvasHeight(),
-			countdown: this.gameConfig.countdown,
 			scale: this.timeline.scale,
+			countdown: this.gameConfig.countdown,
 			tincturePotencyMultiplier: this.getTincturePotencyMultiplier(),
 			untargetableMask: this.#untargetableMask,
-			elements: this.timeline.elements,
+			sharedElements: this.timeline.sharedElements,
+			slotElements: this.timeline.slots,
+			activeSlotIndex: this.timeline.activeSlotIndex,
 			allMarkers: this.timeline.getAllMarkers(),
 			untargetableMarkers: this.timeline.getUntargetableMarkers(),
 			showSelection: showSelection,
@@ -988,15 +990,30 @@ class Controller {
 
 	autoSave() {
 		let serializedRecord = this.record.serialized();
-		localStorage.setItem("gameRecord", JSON.stringify(serializedRecord));
+		this.timeline.saveCurrentSlot(JSON.stringify(serializedRecord));
 	}
 
 	tryAutoLoad() {
 		let str = localStorage.getItem("gameRecord");
 		if (str !== null) {
-			let content = JSON.parse(str);
-			this.loadBattleRecordFromFile(content);
+			console.log("saving existing record to slot 0");
+			localStorage.setItem("gameRecord0", str);
 		}
+		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
+			this.timeline.loadSlot(i);
+		}
+		 this.setActiveSlot(0);
+	}
+
+	setActiveSlot(slot: number) {
+		// cancel real time
+		this.shouldLoop = false;
+		this.autoSave();
+		setRealTime(false);
+
+		this.record.unselectAll();
+		this.timeline.loadSlot(slot);
+		this.displayCurrentState();
 	}
 
 	getDamageLogCsv() : any[][] {

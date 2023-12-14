@@ -17,6 +17,7 @@ import {localize, SelectLanguage} from "./Localization"
 import {GlobalHelpTooltip} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
 import {DamageStatistics} from "./DamageStatistics";
+import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
 
 export let setRealTime = (inRealTime: boolean) => {};
 export let setHistorical = (inHistorical: boolean) => {};
@@ -27,15 +28,19 @@ function handleUrlCommands(command?: string) {
 		window.location.href = "/ffxiv-blm-rotation";
 	}
 	else if (command === "resetResourceOverrides") {
-		let str = localStorage.getItem("gameRecord");
-		if (str !== null) {
-			let content = JSON.parse(str);
-			console.log(content);
-			if (content.config) {
-				content.config.initialResourceOverrides = [];
+		let strOld = localStorage.getItem("gameRecord");
+		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
+			let str = localStorage.getItem("gameRecord" + i.toString());
+			if (i === 0 && str === null && strOld !== null) str = strOld; // backward compatible
+			if (str !== null) {
+				let content = JSON.parse(str);
+				console.log(content);
+				if (content.config) {
+					content.config.initialResourceOverrides = [];
+				}
+				content.actions = [];
+				localStorage.setItem("gameRecord" + i.toString(), JSON.stringify(content));
 			}
-			content.actions = [];
-			localStorage.setItem("gameRecord", JSON.stringify(content));
 		}
 		window.location.href = "/ffxiv-blm-rotation";
 	}

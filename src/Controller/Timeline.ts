@@ -10,6 +10,8 @@ import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {Potency} from "../Game/Potency";
 
+export const MAX_TIMELINE_SLOTS = 4;
+
 export const enum ElemType {
 	s_Cursor = "s_Cursor",
 	s_ViewOnlyCursor = "s_ViewOnlyCursor",
@@ -106,23 +108,33 @@ export type SerializedMarker = TimelineElemBase & {
 	description: string;
 }
 
-export type TimelineElem =
+export type SharedTimelineElem =
 	CursorElem |
-	ViewOnlyCursorElem |
+	ViewOnlyCursorElem;
+
+export type SlotTimelineElem =
 	DamageMarkElem |
 	LucidMarkElem |
 	MPTickMarkElem |
 	WarningMarkElem |
-	SkillElem |
-	MarkerElem
+	SkillElem
 	;
+
+function isSharedElem(elem: TimelineElem) {
+	return elem.type === ElemType.s_Cursor ||
+		elem.type === ElemType.s_ViewOnlyCursor;
+}
+
+export type TimelineElem = SharedTimelineElem | SlotTimelineElem;
 
 export class Timeline {
 
 	scale: number;
 	startTime: number;
 	elapsedTime: number;
-	elements: TimelineElem[];
+	sharedElements: SharedTimelineElem[];
+	slots: SlotTimelineElem[][];
+	activeSlotIndex: number;
 	#allMarkers: MarkerElem[];
 	#untargetableMarkers: MarkerElem[];
 
@@ -130,7 +142,9 @@ export class Timeline {
 		this.scale = 0.25;
 		this.startTime = 0;
 		this.elapsedTime = 0;
-		this.elements = [];
+		this.sharedElements = [];
+		this.slots = [];
+		this.activeSlotIndex = -1;
 		this.#allMarkers = [];
 		this.#untargetableMarkers = [];
 		this.#load();
@@ -142,7 +156,12 @@ export class Timeline {
 	}
 
 	addElement(elem: TimelineElem) {
-		this.elements.push(elem);
+		if (isSharedElem(elem)) {
+			this.sharedElements.push(elem as SharedTimelineElem);
+		} else {
+			console.assert(this.slots.length > 0);
+			this.slots[this.activeSlotIndex].push(elem as SlotTimelineElem);
+		}
 	}
 
 	getAllMarkers() { return this.#allMarkers; }
@@ -255,10 +274,42 @@ export class Timeline {
 		this.#save();
 	}
 
+	// todo: read up from here
+
+	addSlot() {
+		this.slots.push([]);
+		if (this.activeSlotIndex < 0) {
+			this.activeSlotIndex = 0;
+		}
+	}
+
+	saveCurrentSlot(serializedRecord: string) {
+		localStorage.setItem("gameRecord" + this.activeSlotIndex.toString(), serializedRecord);
+	}
+
+	loadSlot(index: number) {
+		// make sure the slot exists
+		while (this.slots.length <= index) {
+			this.slots.push([]);
+		}
+		this.activeSlotIndex = index;
+		let str = localStorage.getItem("gameRecord" + index.toString());
+		if (str !== null) {
+			let content = JSON.parse(str);
+			controller.loadBattleRecordFromFile(content);
+		} else {
+			// nothing found at this slot; save an empty record here.
+			controller.autoSave();
+		}
+	}
+
 	reset() {
 		this.startTime = 0;
 		this.elapsedTime = 0;
-		this.elements = [];
+		if (this.slots.length > 0) {
+			this.slots[this.activeSlotIndex] = [];
+		}
+		this.sharedElements = [];
 		this.addElement({
 			type: ElemType.s_Cursor,
 			time: 0,
@@ -275,9 +326,9 @@ export class Timeline {
 	// can only update singletons this way
 	updateElem(elem: TimelineElem) {
 		console.assert(elem && elem.type.substring(0, 2)==="s_");
-		for (let i = 0; i < this.elements.length; i++) {
-			if (this.elements[i].type === elem.type) {
-				this.elements[i] = elem;
+		for (let i = 0; i < this.sharedElements.length; i++) {
+			if (this.sharedElements[i].type === elem.type) {
+				this.sharedElements[i] = elem;
 				return;
 			}
 		}
@@ -291,7 +342,6 @@ export class Timeline {
 	}
 
 	getCanvasWidth() {
-		// this.elapsedTime := this.game.time
 		let rightMostTime = Math.max(0, this.elapsedTime);
 		let countdown = controller.gameConfig.countdown;
 		this.#allMarkers.forEach(marker=>{
@@ -306,7 +356,7 @@ export class Timeline {
 		let ruler = 30;
 		let markers = 14 * this.getNumMarkerTracks();
 		let timeline = 12 + 54;
-		return ruler + markers + timeline;
+		return ruler + markers + timeline * this.slots.length;
 	}
 
 	positionFromTime(time: number) {
@@ -319,8 +369,11 @@ export class Timeline {
 
 	drawElements() {
 
+		// this call signals a redraw. Exact elements are queried
+		// at the start of the actual redraw (controller.getTimelineRenderingProps)
 		updateTimelineView();
 
+		// this is for refreshing the save track(s) buttons
 		this.updateTimelineMarkers();
 	}
 

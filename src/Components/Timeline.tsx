@@ -103,7 +103,7 @@ class TimelineMain extends React.Component {
 
 		return <div style={{position: "relative"}}>
 			{canvas}
-			<div className={"staticScrollbar"} style={{
+			<div tabIndex={0} className={"staticScrollbar"} style={{
 				position: "relative",
 				width: "100%",
 				overflowX: "scroll",
