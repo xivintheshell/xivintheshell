@@ -70,9 +70,9 @@ export class ActionNode {
 		return this.#capturedBuffs.has(rsc);
 	}
 
-	resolveAll(t: number) {
+	resolveAll(displayTime: number) {
 		this.#potencies.forEach(p=>{
-			p.resolve(t);
+			p.resolve(displayTime);
 		});
 	}
 
@@ -84,7 +84,7 @@ export class ActionNode {
 		return this.#potencies[0].hasResolved();
 	}
 
-	hitBoss(untargetable: (t: number) => boolean) {
+	hitBoss(untargetable: (displayTime: number) => boolean) {
 		if (this.#potencies.length === 0) return true;
 		if (this.#potencies.length === 1) return this.#potencies[0].hasHitBoss(untargetable);
 

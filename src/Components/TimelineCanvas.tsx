@@ -228,7 +228,7 @@ function drawMPTickMarks(
 	g_ctx.strokeStyle = g_colors.timeline.mpTickMark;
 	g_ctx.beginPath();
 	elems.forEach(tick=>{
-		let x = originX + StaticFn.positionFromTimeAndScale(tick.time, scale);
+		let x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
 		g_ctx.moveTo(x, originY);
 		g_ctx.lineTo(x, originY + c_timelineHeight);
 
@@ -249,7 +249,7 @@ function drawWarningMarks(
 ) {
 	g_ctx.font = "bold 10px monospace";
 	elems.forEach(mark=>{
-		const x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.time, scale);
+		const x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.displayTime, scale);
 		const sideLength = 12;
 		const bottomY = timelineOriginY + sideLength;
 		g_ctx.beginPath();
@@ -281,9 +281,9 @@ function drawDamageMarks(
 	elems: DamageMarkElem[]
 ) {
 	elems.forEach(mark=>{
-		let untargetable = bossIsUntargetable(mark.time);
+		let untargetable = bossIsUntargetable(mark.displayTime);
 		g_ctx.fillStyle = untargetable ? g_colors.timeline.untargetableDamageMark : g_colors.timeline.damageMark;
-		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.time, scale);
+		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.displayTime, scale);
 		g_ctx.beginPath();
 		g_ctx.moveTo(x-3, timelineOriginY);
 		g_ctx.lineTo(x+3, timelineOriginY);
@@ -322,7 +322,7 @@ function drawLucidMarks(
 ) {
 	g_ctx.fillStyle = g_colors.timeline.lucidTickMark;
 	elems.forEach(mark=>{
-		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.time, scale);
+		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.displayTime, scale);
 		g_ctx.beginPath();
 		g_ctx.moveTo(x-3, timelineOriginY);
 		g_ctx.lineTo(x+3, timelineOriginY);
@@ -357,7 +357,7 @@ function drawSkills(
 	let skillsTopY = timelineOriginY + 14;
 	elems.forEach(e=>{
 		let skill = e as SkillElem;
-		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(skill.time, scale);
+		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(skill.displayTime, scale);
 		let y = skill.isGCD ? (skillsTopY + 14) : skillsTopY;
 		// purple/grey bar
 		let lockbarWidth = StaticFn.positionFromTimeAndScale(skill.lockDuration, scale);
@@ -605,7 +605,7 @@ function drawMarkerTracks(originX: number, originY: number) : number {
 
 }
 
-function drawTimeline(originX:  number, originY: number) : number {
+function drawTimelines(originX:  number, originY: number) : number {
 
 	let sharedElemBins = new Map<ElemType, TimelineElem[]>();
 	g_renderingProps.sharedElements.forEach(e=>{
@@ -625,20 +625,22 @@ function drawTimeline(originX:  number, originY: number) : number {
 		});
 		let currentY = originY + slot * c_timelineHeight;
 
+		let displayOriginX = originX + StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
+
 		// mp tick marks
-		drawMPTickMarks(g_renderingProps.countdown, g_renderingProps.scale, originX, currentY, elemBins.get(ElemType.MPTickMark) as MPTickMarkElem[] ?? []);
+		drawMPTickMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.MPTickMark) as MPTickMarkElem[] ?? []);
 
 		// damage marks
-		drawDamageMarks(g_renderingProps.countdown, g_renderingProps.scale, originX, currentY, elemBins.get(ElemType.DamageMark) as DamageMarkElem[] ?? []);
+		drawDamageMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.DamageMark) as DamageMarkElem[] ?? []);
 
 		// lucid marks
-		drawLucidMarks(g_renderingProps.countdown, g_renderingProps.scale, originX, currentY, elemBins.get(ElemType.LucidMark) as LucidMarkElem[] ?? []);
+		drawLucidMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.LucidMark) as LucidMarkElem[] ?? []);
 
 		// warning marks (polyglot overcap)
-		drawWarningMarks(g_renderingProps.countdown, g_renderingProps.scale, originX, currentY, elemBins.get(ElemType.WarningMark) as WarningMarkElem[] ?? []);
+		drawWarningMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.WarningMark) as WarningMarkElem[] ?? []);
 
 		// skills
-		drawSkills(g_renderingProps.countdown, g_renderingProps.scale, originX, currentY, elemBins.get(ElemType.Skill) as SkillElem[] ?? [], isActiveSlot);
+		drawSkills(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.Skill) as SkillElem[] ?? [], isActiveSlot);
 
 		// selection rect
 		if (g_renderingProps.showSelection && isActiveSlot) {
@@ -684,9 +686,9 @@ function drawTimeline(originX:  number, originY: number) : number {
 		let currentY = originY + slot * c_timelineHeight;
 		let handle : Rect = {
 			x: 0,
-			y: currentY,
+			y: currentY + 1,
 			w: 10,
-			h: c_timelineHeight
+			h: c_timelineHeight - 2
 		};
 		g_ctx.fillStyle = slot === g_renderingProps.activeSlotIndex ? g_colors.accent : g_colors.bgMediumContrast;
 		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
@@ -703,7 +705,7 @@ function drawTimeline(originX:  number, originY: number) : number {
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
 function drawEverything() {
 
-	let timelineOrigin = -g_visibleLeft + c_leftBufferWidth; // fragCoord.x (...) of time=0.
+	let timelineOrigin = -g_visibleLeft + c_leftBufferWidth; // fragCoord.x (...) of rawTime=0.
 	let currentHeight = 0;
 
 	// background white
@@ -716,7 +718,7 @@ function drawEverything() {
 
 	currentHeight += drawMarkerTracks(timelineOrigin, currentHeight);
 
-	currentHeight += drawTimeline(timelineOrigin, currentHeight);
+	currentHeight += drawTimelines(timelineOrigin, currentHeight);
 
 	// interactive layer
 	if (g_mouseHovered) {

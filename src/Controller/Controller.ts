@@ -418,7 +418,7 @@ class Controller {
 	getMaxTicks(untilRawTime: number) {
 		let cnt = 0;
 		this.#thunderDotTickTimes.forEach(rt => {
-			if (!bossIsUntargetable(rt) && rt <= untilRawTime) {
+			if (!bossIsUntargetable(rt - this.gameConfig.countdown) && rt <= untilRawTime) {
 				cnt++;
 			}
 		});
@@ -472,7 +472,7 @@ class Controller {
 	}
 
 	resolvePotency(p: Potency) {
-		p.resolve(this.game.time);
+		p.resolve(this.game.getDisplayTime());
 		this.#lastDamageApplicationTime = this.game.time;
 
 		let pot = false;
@@ -487,7 +487,7 @@ class Controller {
 				buffs: pot ? [ResourceType.Tincture] : [],
 				time: this.game.time,
 				displayTime: this.game.getDisplayTime(),
-				source: localizeSkillName(p.sourceSkill) + "@" + (p.sourceTime - this.gameConfig.countdown).toFixed(2)
+				source: localizeSkillName(p.sourceSkill) + "@" + p.sourceTime.toFixed(2)
 			});
 
 			// time, damageSource, potency, cumulativePotency

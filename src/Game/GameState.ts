@@ -405,11 +405,9 @@ export class GameState {
 			props.node.addBuff(ResourceType.LeyLines);
 		}
 
-		let skillTimeRaw = this.time;
-
 		// attach potency node
 		let potency = new Potency({
-			sourceTime: skillTimeRaw,
+			sourceTime: this.getDisplayTime(),
 			sourceSkill: props.skillName,
 			aspect: skillInfo.aspect,
 			basePotency: skillInfo.basePotency,
@@ -434,7 +432,7 @@ export class GameState {
 				}
 
 				// potency
-				potency.snapshotTime = game.time;
+				potency.snapshotTime = game.getDisplayTime();
 				potency.modifiers = getPotencyModifiersFromResourceState(game.resources, skillInfo.aspect);
 
 				// tincture
@@ -542,11 +540,11 @@ export class GameState {
 		let potency : Potency | undefined = undefined;
 		if (props.dealDamage) {
 			potency = new Potency({
-				sourceTime: this.time,
+				sourceTime: this.getDisplayTime(),
 				sourceSkill: skillInfo.name,
 				aspect: skillInfo.aspect,
 				basePotency: skillInfo.basePotency,
-				snapshotTime: this.time,
+				snapshotTime: this.getDisplayTime(),
 				description: "some description",
 			});
 			potency.modifiers = getPotencyModifiersFromResourceState(this.resources, skillInfo.aspect);

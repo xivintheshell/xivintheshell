@@ -168,7 +168,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						}
 					});
 				}
-				node.resolveAll(game.time);
+				node.resolveAll(game.getDisplayTime());
 			};
 			skillsList.set(props.skillName, new Skill(props.skillName,
 				() => {
@@ -287,7 +287,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					dealDamage: false,
 					node: node
 				});
-				node.resolveAll(game.time);
+				node.resolveAll(game.getDisplayTime());
 			}
 		));
 
@@ -326,7 +326,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			if (includeInitial) {
 				// initial potency
 				let pInitial = new Potency({
-					sourceTime: game.time,
+					sourceTime: game.getDisplayTime(),
 					sourceSkill: SkillName.Thunder3,
 					aspect: Aspect.Lightning,
 					basePotency: 50,
@@ -338,7 +338,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			// dots
 			for (let i = 0; i < 10; i++) {
 				let pDot = new Potency({
-					sourceTime: game.time,
+					sourceTime: game.getDisplayTime(),
 					sourceSkill: SkillName.Thunder3,
 					aspect: Aspect.Lightning,
 					basePotency: game.config.adjustedDoTPotency(35),
@@ -362,7 +362,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					addT3Potencies(node, true); // should call on capture
 					let p0 = node.getPotencies()[0];
 					p0.base = 400;
-					node.getPotencies().forEach(p=>{ p.snapshotTime = game.time; });
+					node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
 
 					// tincture
 					if (game.resources.get(ResourceType.Tincture).available(1)) {
@@ -397,7 +397,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						addT3Potencies(node, false);
 
 						// potency snapshot time
-						node.getPotencies().forEach(p=>{ p.snapshotTime = game.time });
+						node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime() });
 
 						// tincture
 						if (game.resources.get(ResourceType.Tincture).available(1)) {
@@ -430,7 +430,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					skillName: SkillName.Manafont,
 					onApplication: () => {
 						game.resources.get(ResourceType.Mana).gain(3000);
-						node.resolveAll(game.time);
+						node.resolveAll(game.getDisplayTime());
 					},
 					dealDamage: false,
 					node: node
@@ -556,7 +556,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.useInstantSkill({
 					skillName: SkillName.BetweenTheLines,
 					dealDamage: false,
-					onCapture: ()=>{node.resolveAll(game.time)},
+					onCapture: ()=>{node.resolveAll(game.getDisplayTime())},
 					node: node
 				});
 			}
@@ -571,7 +571,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.useInstantSkill({
 					skillName: SkillName.AetherialManipulation,
 					dealDamage: false,
-					onCapture: ()=>{node.resolveAll(game.time)},
+					onCapture: ()=>{node.resolveAll(game.getDisplayTime())},
 					node: node
 				});
 			}
@@ -595,7 +595,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 								rsc.consume(rsc.availableAmount());
 							}
 						});
-						node.resolveAll(game.time);
+						node.resolveAll(game.getDisplayTime());
 					},
 					dealDamage: false,
 					node: node
@@ -649,7 +649,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.resources.get(ResourceType.UmbralIce).gain(1);
 						game.resources.get(ResourceType.UmbralHeart).gain(1);
 						game.startOrRefreshEnochian();
-						node.resolveAll(game.time);
+						node.resolveAll(game.getDisplayTime());
 					},
 					dealDamage: false,
 					node: node
@@ -714,7 +714,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					dealDamage: false,
 					node: node
 				});
-				node.resolveAll(game.time);
+				node.resolveAll(game.getDisplayTime());
 			}
 		));
 
@@ -777,7 +777,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					dealDamage: false,
 					node: node
 				});
-				node.resolveAll(game.time);
+				node.resolveAll(game.getDisplayTime());
 			}))
 
 		// Surecast

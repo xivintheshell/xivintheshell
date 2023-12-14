@@ -58,9 +58,9 @@ type ExpandedNode = {
 	calculationModifiers: PotencyModifier[],
 };
 
-export const bossIsUntargetable = (rawTime: number) => {
+export const bossIsUntargetable = (displayTime: number) => {
 	return ctl.getUntargetableMask() &&
-		ctl.timeline.duringUntargetable(rawTime - ctl.gameConfig.countdown)
+		ctl.timeline.duringUntargetable(displayTime)
 }
 
 export const getTargetableDurationBetween = (startDisplayTime: number, endDisplayTime: number) => {
@@ -74,7 +74,7 @@ function expandT3Node(node: ActionNode, lastNode?: ActionNode) {
 	let mainPotency = node.getPotencies()[0];
 	let entry: DamageStatsT3TableEntry = {
 		castTime: node.tmp_startLockTime ? node.tmp_startLockTime - ctl.gameConfig.countdown : 0,
-		applicationTime: mainPotency.hasResolved() ? (mainPotency.applicationTime as number) - ctl.gameConfig.countdown : 0,
+		applicationTime: mainPotency.hasResolved() ? (mainPotency.applicationTime as number) : 0,
 		displayedModifiers: [],
 		gap: 0,
 		override: 0,
@@ -92,8 +92,8 @@ function expandT3Node(node: ActionNode, lastNode?: ActionNode) {
 		let lastP = lastNode.getPotencies()[0];
 		let thisP = node.getPotencies()[0];
 		console.assert(lastP.hasResolved() && thisP.hasResolved());
-		let lastDotDropDisplayTime = lastP.applicationTime as number + 30 - ctl.gameConfig.countdown;
-		let thisDotApplicationDisplayTime = thisP.applicationTime as number - ctl.gameConfig.countdown;
+		let lastDotDropDisplayTime = lastP.applicationTime as number + 30;
+		let thisDotApplicationDisplayTime = thisP.applicationTime as number;
 		if (thisDotApplicationDisplayTime - lastDotDropDisplayTime > 0) {
 			entry.gap = getTargetableDurationBetween(lastDotDropDisplayTime, thisDotApplicationDisplayTime);
 		} else if (thisDotApplicationDisplayTime - lastDotDropDisplayTime < 0) {
@@ -103,8 +103,7 @@ function expandT3Node(node: ActionNode, lastNode?: ActionNode) {
 		// first T3 of this fight
 		console.assert(!lastNode)
 		let thisP = node.getPotencies()[0];
-		let countdown = ctl.game.config.countdown;
-		let thisDotApplicationDisplayTime = thisP.applicationTime as number - countdown;
+		let thisDotApplicationDisplayTime = thisP.applicationTime as number;
 		entry.gap = getTargetableDurationBetween(0, Math.max(0, thisDotApplicationDisplayTime));
 	}
 
@@ -422,7 +421,7 @@ export function calculateDamageStats(props: {
 		// last T3 so far
 		let mainP = (lastT3 as ActionNode).getPotencies()[0];
 		console.assert(mainP.hasResolved());
-		let lastDotDropTime = (mainP.applicationTime as number - ctl.game.config.countdown) + 30;
+		let lastDotDropTime = (mainP.applicationTime as number) + 30;
 		let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
 
 		let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;

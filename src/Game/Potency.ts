@@ -78,7 +78,7 @@ export type InitialPotencyProps = {
 }
 
 export class Potency {
-	sourceTime: number; // raw time (not display time)
+	sourceTime: number; // display time
 	sourceSkill: SkillName;
 	aspect: Aspect;
 	description?: string;
@@ -107,15 +107,15 @@ export class Potency {
 		return potency;
 	}
 
-	resolve(t: number) {
+	resolve(displayTime: number) {
 		console.assert(this.snapshotTime !== undefined);
 		console.assert(this.applicationTime === undefined);
-		this.applicationTime = t;
+		this.applicationTime = displayTime;
 	}
 
 	hasResolved() { return this.applicationTime !== undefined; }
 
-	hasHitBoss(untargetable: (t: number) => boolean) {
+	hasHitBoss(untargetable: (displayTime: number) => boolean) {
 		return this.applicationTime !== undefined && !untargetable(this.applicationTime);
 	}
 
