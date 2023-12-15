@@ -1,8 +1,9 @@
 [
 	{
-		"date": "12/10/23",
+		"date": "12/12/23",
 		"changes": [
-			"fix paradox skill icon doesn't show up when displaying historical state"
+			"fix paradox skill icon doesn't show up when displaying historical state",
+			"refactored timeline renderer a bit"
 		]
 	},
 	{
