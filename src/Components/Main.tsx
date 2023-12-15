@@ -141,7 +141,7 @@ export default class Main extends React.Component {
 			borderColor = "2px solid " + colors.historical;
 		} else if (!this.state.hasFocus) {
 			borderColor = "1px solid " + colors.bgMediumContrast;
-		} else if (controller.shouldLoop) {
+		} else if (this.state.realTime) {
 			borderColor = "2px solid " + colors.realTime;
 		} else {
 			borderColor = "2px solid " + colors.accent;

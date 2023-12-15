@@ -41,6 +41,7 @@ export type TimelineRenderingProps = {
 }
 
 const c_trackHeight = 14;
+const c_buttonHeight = 20;
 const c_timelineHeight = 12 + 54;
 const c_maxTimelineHeight = 400;
 const c_barsOffset = 2;
@@ -662,7 +663,7 @@ function drawTimelines(originX:  number, originY: number) : number {
 	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
 	let countdownHeight = c_timelineHeight * g_renderingProps.slotElements.length;
-	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) countdownHeight += c_trackHeight;
+	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) countdownHeight += c_buttonHeight;
 	g_ctx.fillStyle = g_colors.timeline.countdown;
 	// make it cover the left padding as well:
 	g_ctx.fillRect(originX - c_leftBufferWidth, originY, countdownWidth + c_leftBufferWidth, countdownHeight);
@@ -722,24 +723,27 @@ function drawTimelines(originX:  number, originY: number) : number {
 	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) {
 		let currentY = originY + g_renderingProps.slotElements.length * c_timelineHeight;
 		let handle : Rect = {
-			x: 0,
-			y: currentY + 1,
-			w: 200,
-			h: c_trackHeight - 2
+			x: 4,
+			y: currentY + 2,
+			w: 192,
+			h: c_buttonHeight - 4
 		};
-		g_ctx.fillStyle = g_colors.bgMediumContrast;
+		g_ctx.fillStyle = g_colors.bgLowContrast;
 		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
-		g_ctx.font = "12px monospace";
-		g_ctx.fillStyle = g_colors.emphasis;
+		g_ctx.strokeStyle = g_colors.bgHighContrast;
+		g_ctx.lineWidth = 1;
+		g_ctx.strokeRect(handle.x, handle.y, handle.w, handle.h);
+		g_ctx.font = "13px monospace";
+		g_ctx.fillStyle = g_colors.text;
 		g_ctx.textAlign = "center";
-		g_ctx.fillText("> Add timeline slot <", handle.x + handle.w/2, handle.y + handle.h - 2);
+		g_ctx.fillText("Add timeline slot", handle.x + handle.w/2, handle.y + handle.h - 4);
 
 		testInteraction(handle, ["add"], () => {
 			controller.timeline.addSlot();
 			controller.displayCurrentState();
 		}, true);
 
-		timelineSectionHeight += c_trackHeight;
+		timelineSectionHeight += c_buttonHeight;
 	}
 
 	return timelineSectionHeight;
@@ -822,22 +826,27 @@ export function TimelineCanvas(props: {
 			setMouseHovered(false);
 			g_mouseHovered = false;
 		};
+		// ignore KB & M input when in the middle of using a skill (for simplicity)
 		timelineCanvasOnClick = (e: any) => {
-			setClickCounter(c => c + 1);
-			g_isClickUpdate = true;
-			g_clickEvent = e;
+			if (!controller.shouldLoop) {
+				setClickCounter(c => c + 1);
+				g_isClickUpdate = true;
+				g_clickEvent = e;
+			}
 		};
 		timelineCanvasOnKeyDown = (e: any) => {
-			setKeyCounter(k => k + 1);
-			g_isKeyboardUpdate = true;
-			g_keyboardEvent = e;
-			if (g_keyboardEvent.key === "Backspace" || g_keyboardEvent.key === "Delete") {
-				let firstSelected = controller.record.getFirstSelection();
-				if (firstSelected) {
-					controller.rewindUntilBefore(firstSelected, false);
-					controller.displayCurrentState();
-					controller.updateAllDisplay();
-					controller.autoSave();
+			if (!controller.shouldLoop) {
+				setKeyCounter(k => k + 1);
+				g_isKeyboardUpdate = true;
+				g_keyboardEvent = e;
+				if (g_keyboardEvent.key === "Backspace" || g_keyboardEvent.key === "Delete") {
+					let firstSelected = controller.record.getFirstSelection();
+					if (firstSelected) {
+						controller.rewindUntilBefore(firstSelected, false);
+						controller.displayCurrentState();
+						controller.updateAllDisplay();
+						controller.autoSave();
+					}
 				}
 			}
 		};

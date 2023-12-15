@@ -76,7 +76,6 @@ export class TimeControl extends React.Component {
 		controller.setTimeControlSettings({tickMode: this.state.tickMode, timeScale: this.state.timeScale});
 	}
 	render() {
-		//let colors = getCurrentThemeColors();
 		let radioStyle = {
 			position: "relative",
 			top: 3,
@@ -89,28 +88,6 @@ export class TimeControl extends React.Component {
 		return <div style={{display: "inline-block", marginBottom: 15}}>
 			<div style={{marginBottom: 5}}>
 				<div style={{marginBottom: 5}}><b>{localize({en: "Control", zh: "战斗时间控制"})}</b></div>
-				<label style={tickModeOptionStyle}>
-					<input style={radioStyle} type={"radio"} onChange={this.setTickMode}
-						   value={TickMode.RealTime}
-						   checked={this.state.tickMode === TickMode.RealTime}
-						   name={"tick mode"}/>
-					{localize({
-						en: "real-time",
-						zh: "实时"
-					})}
-				</label>
-				<Help topic={"ctrl-realTime"} content={
-					<div className="toolTip">
-						{localize({
-							en: <div className="paragraph">- click to use a skill</div>,
-							zh: <div className="paragraph">- 点击图标使用技能</div>,
-						})}
-						{localize({
-							en: <div className="paragraph">- <ButtonIndicator text={"space"}/> to play/pause. game time is elapsing when the main region has a green border</div>,
-							zh: <div className="paragraph">- 按 <ButtonIndicator text={"空格"}/> 来暂停/继续战斗。操作区有绿色边框的时候代表时间轴正在实时前进。</div>
-						})}
-					</div>
-				}/><br/>
 				<label style={tickModeOptionStyle}>
 					<input style={radioStyle} type={"radio"} onChange={this.setTickMode}
 						   value={TickMode.RealTimeAutoPause}

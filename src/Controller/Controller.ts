@@ -252,6 +252,11 @@ class Controller {
 		this.updateAllDisplay(this.game);
 	}
 
+	restart() {
+		this.#requestRestart();
+		this.#applyResourceOverrides(this.gameConfig);
+	}
+
 	#requestRestart() {
 		this.lastAttemptedSkill = ""
 		this.game = new GameState(this.gameConfig);
@@ -999,20 +1004,19 @@ class Controller {
 			console.log("saving existing record to slot 0");
 			localStorage.setItem("gameRecord0", str);
 		}
-		for (let i = 0; i < this.timeline.numSlots; i++) {
+		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
 			this.timeline.loadSlot(i);
 		}
-		 this.setActiveSlot(0);
+		this.setActiveSlot(0);
 	}
 
 	setActiveSlot(slot: number) {
 		// cancel real time
-		this.shouldLoop = false;
+		this.#playPause({shouldLoop: false});
 		this.autoSave();
-		setRealTime(false);
 
 		this.record.unselectAll();
-		this.timeline.loadSlot(slot);
+		console.assert(this.timeline.loadSlot(slot));
 		this.displayCurrentState();
 	}
 
@@ -1065,7 +1069,7 @@ class Controller {
 	}
 
 	reportInterruption(props: {failNode: ActionNode}) {
-		if (this.tickMode !== TickMode.RealTime && !this.#bCalculatingHistoricalState) {
+		if (!this.#bCalculatingHistoricalState) {
 			window.alert("cast failed! Resources for " + props.failNode.skillName + " are no longer available");
 			console.warn("failed: " + props.failNode.skillName);
 		}
@@ -1140,12 +1144,7 @@ class Controller {
 	}
 
 	requestUseSkill(props: { skillName: SkillName; }) {
-		if (this.tickMode === TickMode.RealTime && this.shouldLoop) {
-			this.skillsQueue.push({
-				skillName: props.skillName,
-				timeInQueue: 0
-			});
-		} else if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
+		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {
 			let waitFirst = props.skillName === this.lastAttemptedSkill;
@@ -1248,7 +1247,9 @@ class Controller {
 
 			// end of frame
 			prevTime = time;
-			if (loopCondition()) requestAnimationFrame(loopFn);
+			if (loopCondition()) {
+				requestAnimationFrame(loopFn);
+			}
 			else {
 				ctrl.shouldLoop = false;
 				ctrl.autoSave();
@@ -1264,11 +1265,6 @@ class Controller {
 		this.updateAllDisplay();
 	}
 
-	#handleKeyboardEvent_RealTime(evt: { keyCode: number; }) {
-		if (evt.keyCode===32) { // space
-			this.#playPause({shouldLoop: !this.shouldLoop});
-		}
-	}
 	#handleKeyboardEvent_RealTimeAutoPause(evt: { shiftKey: boolean; keyCode: number; }) {
 		if (this.shouldLoop) return;
 
@@ -1294,9 +1290,7 @@ class Controller {
 	handleKeyboardEvent(evt: { keyCode: number; shiftKey: boolean; }) {
 		// console.log(evt.keyCode);
 		if (this.displayingUpToDateGameState) {
-			if (this.tickMode === TickMode.RealTime) {
-				this.#handleKeyboardEvent_RealTime(evt);
-			} else if (this.tickMode === TickMode.RealTimeAutoPause) {
+			if (this.tickMode === TickMode.RealTimeAutoPause) {
 				this.#handleKeyboardEvent_RealTimeAutoPause(evt);
 			} else if (this.tickMode === TickMode.Manual) {
 				this.#handleKeyboardEvent_Manual(evt);

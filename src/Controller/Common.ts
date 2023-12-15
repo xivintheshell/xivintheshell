@@ -17,7 +17,7 @@ export const enum FileType {
 }
 
 export const enum TickMode {
-	RealTime = 0,
+	RealTime = 0, // deleted feature
 	RealTimeAutoPause = 1,
 	Manual = 2
 }

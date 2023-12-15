@@ -134,7 +134,6 @@ export class Timeline {
 	elapsedTime: number;
 	sharedElements: SharedTimelineElem[];
 	slots: SlotTimelineElem[][];
-	numSlots: number;
 	activeSlotIndex: number;
 	#allMarkers: MarkerElem[];
 	#untargetableMarkers: MarkerElem[];
@@ -145,7 +144,6 @@ export class Timeline {
 		this.elapsedTime = 0;
 		this.sharedElements = [];
 		this.slots = [];
-		this.numSlots = 1;
 		this.activeSlotIndex = -1;
 		this.#allMarkers = [];
 		this.#untargetableMarkers = [];
@@ -279,17 +277,17 @@ export class Timeline {
 	// todo: read up from here
 
 	addSlot() {
-		this.numSlots++;
-		localStorage.setItem("numTimelineSlots", this.numSlots.toString());
-		console.assert(this.numSlots <= MAX_TIMELINE_SLOTS);
 		this.slots.push([]);
-		localStorage.removeItem("gameRecord" + (this.numSlots-1).toString());
-		this.loadSlot(this.numSlots - 1);
+		console.assert(this.slots.length <= MAX_TIMELINE_SLOTS);
+		this.activeSlotIndex = this.slots.length - 1;
+		controller.record = new Record();
+		controller.record.config = controller.gameConfig;
+		controller.restart();
+		controller.autoSave();
 	}
 
 	removeSlot(idx: number) {
-		console.assert(idx < this.numSlots);
-		// shift records forward
+		console.assert(idx < this.slots.length);
 		for (let i = idx; i < MAX_TIMELINE_SLOTS; i++) {
 			let str = localStorage.getItem("gameRecord" + (i + 1).toString());
 			if (str !== null) {
@@ -297,13 +295,10 @@ export class Timeline {
 			}
 		}
 		this.slots.splice(idx, 1);
-		this.numSlots--;
-		localStorage.setItem("numTimelineSlots", this.numSlots.toString());
-		for (let i = this.numSlots; i < MAX_TIMELINE_SLOTS; i++) {
+		for (let i = this.slots.length; i < MAX_TIMELINE_SLOTS; i++) {
 			localStorage.removeItem("gameRecord" + i.toString());
 		}
 		if (this.activeSlotIndex >= idx) this.activeSlotIndex -= 1;
-		console.assert(this.numSlots > 0);
 		this.loadSlot(this.activeSlotIndex);
 	}
 
@@ -311,21 +306,20 @@ export class Timeline {
 		localStorage.setItem("gameRecord" + this.activeSlotIndex.toString(), serializedRecord);
 	}
 
-	loadSlot(index: number) {
-		// make sure the slot exists
-		while (this.slots.length <= index) {
-			this.slots.push([]);
-		}
-		this.activeSlotIndex = index;
+	loadSlot(index: number): boolean {
 		let str = localStorage.getItem("gameRecord" + index.toString());
 		if (str !== null) {
+			// found record; make sure the slot exists
+			this.activeSlotIndex = index;
+			while (this.slots.length <= index) {
+				this.slots.push([]);
+			}
 			let content = JSON.parse(str);
 			controller.loadBattleRecordFromFile(content);
+			return true;
 		} else {
-			// nothing found at this slot; save an empty record here (with the current config).
-			controller.record = new Record();
-			controller.record.config = controller.gameConfig;
-			controller.autoSave();
+			// nothing found here
+			return false;
 		}
 	}
 
@@ -383,7 +377,7 @@ export class Timeline {
 		let markers = 14 * this.getNumMarkerTracks();
 		let timeline = 12 + 54;
 		let result = ruler + markers + timeline * this.slots.length;
-		if (this.numSlots < MAX_TIMELINE_SLOTS) result += 14;
+		if (this.slots.length < MAX_TIMELINE_SLOTS) result += 20;
 		return result;
 	}
 
@@ -508,10 +502,6 @@ export class Timeline {
 			files.forEach((f: Fixme)=>{
 				this.#appendMarkersPreset(f, f.track);
 			});
-		}
-		str = localStorage.getItem("numTimelineSlots");
-		if (str !== null) {
-			this.numSlots = parseInt(str);
 		}
 	}
 
