@@ -197,7 +197,9 @@ class Controller {
 	}
 
 	// max replay time; cutoff action
-	displayHistoricalState(time: number, cutoffAction?: ActionNode) {
+	displayHistoricalState(displayTime: number, cutoffAction?: ActionNode) {
+
+		let rawTime = displayTime + this.gameConfig.countdown;
 
 		this.#sandboxEnvironment(()=>{
 			let tmpRecord = this.record;
@@ -213,7 +215,7 @@ class Controller {
 			this.#replay({
 				line: tmpRecord,
 				replayMode: ReplayMode.Exact,
-				maxReplayTime: time,
+				maxReplayTime: rawTime,
 				cutoffAction: cutoffAction
 			});
 
@@ -447,11 +449,17 @@ class Controller {
 
 	getTimelineRenderingProps(): TimelineRenderingProps {
 		let showSelection : boolean = this.record.getFirstSelection() != null && this.record.getLastSelection() != null;
+		let countdown = this.gameConfig.countdown;
+		// and other slots
+		let allSlotsTimeInfo = this.timeline.getAllSlotsTimeInfo();
+		if (allSlotsTimeInfo !== null) {
+			countdown = Math.max(countdown, allSlotsTimeInfo.countdown);
+		}
 		return {
 			timelineWidth: this.timeline.getCanvasWidth(),
 			timelineHeight: this.timeline.getCanvasHeight(),
 			scale: this.timeline.scale,
-			countdown: this.gameConfig.countdown,
+			countdown: countdown,
 			tincturePotencyMultiplier: this.getTincturePotencyMultiplier(),
 			untargetableMask: this.#untargetableMask,
 			sharedElements: this.timeline.sharedElements,
@@ -460,8 +468,8 @@ class Controller {
 			allMarkers: this.timeline.getAllMarkers(),
 			untargetableMarkers: this.timeline.getUntargetableMarkers(),
 			showSelection: showSelection,
-			selectionStartX: this.timeline.positionFromTime(this.record.getFirstSelection()?.tmp_startLockTime ?? 0),
-			selectionEndX: this.timeline.positionFromTime(this.record.getLastSelection()?.tmp_endLockTime ?? 0)
+			selectionStartDisplayTime: (this.record.getFirstSelection()?.tmp_startLockTime ?? 0) - this.gameConfig.countdown,
+			selectionEndDisplayTime: (this.record.getLastSelection()?.tmp_endLockTime ?? 0) - this.gameConfig.countdown
 		};
 	}
 
@@ -995,14 +1003,15 @@ class Controller {
 
 	autoSave() {
 		let serializedRecord = this.record.serialized();
-		this.timeline.saveCurrentSlot(JSON.stringify(serializedRecord));
+		this.timeline.saveCurrentSlot(serializedRecord, this.gameConfig.countdown, this.game.time);
 	}
 
 	tryAutoLoad() {
 		let str = localStorage.getItem("gameRecord");
 		if (str !== null) {
-			console.log("saving existing record to slot 0");
+			console.log("migrating existing record to slot 0");
 			localStorage.setItem("gameRecord0", str);
+			localStorage.removeItem("gameRecord");
 		}
 		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
 			this.timeline.loadSlot(i);

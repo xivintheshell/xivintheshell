@@ -184,13 +184,11 @@ class SkillButton extends React.Component {
 			top: 2,
 			left: "50%",
 			marginLeft: -20,
-			//filter: this.props.ready ? "none" : "brightness(0.6)"
 		};
 		let readyOverlay = "transparent";
 		if (!this.props.ready) {
 			readyOverlay = "rgba(0, 0, 0, 0.6)";
-		} else if (this.props.cdProgress !== 1) {
-			//readyOverlay = "radial-gradient(40px, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 1))";
+		} else if (this.props.cdProgress <= 1 - Debug.epsilon) {
 			readyOverlay = "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 85%, rgba(0,0,0,0.6) 100%)"
 		}
 		let icon = <div onMouseEnter={this.handleMouseEnter}>
@@ -240,7 +238,7 @@ class SkillButton extends React.Component {
 				controller.updateAllDisplay();
 			} : undefined} content={icon}
 					   style={controller.displayingUpToDateGameState ? {} : {cursor: "not-allowed"}}/>
-			{this.props.cdProgress === 1 ? undefined : progressCircle}
+			{this.props.cdProgress > 1 - Debug.epsilon ? undefined : progressCircle}
 		</span>
 	}
 }

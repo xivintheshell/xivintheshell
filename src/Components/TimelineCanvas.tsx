@@ -36,8 +36,8 @@ export type TimelineRenderingProps = {
 	slotElements: SlotTimelineElem[][],
 	activeSlotIndex: number,
 	showSelection: boolean,
-	selectionStartX: number,
-	selectionEndX: number,
+	selectionStartDisplayTime: number,
+	selectionEndDisplayTime: number,
 }
 
 const c_trackHeight = 14;
@@ -78,8 +78,8 @@ let g_renderingProps: TimelineRenderingProps = {
 	slotElements: [],
 	activeSlotIndex: 0,
 	showSelection: false,
-	selectionStartX: 0,
-	selectionEndX: 0,
+	selectionStartDisplayTime: 0,
+	selectionEndDisplayTime: 0,
 };
 
 let cachedPointerMouse = false;
@@ -508,14 +508,14 @@ function drawRuler(originX: number) : number {
 	// ruler bg
 	g_ctx.fillStyle = g_colors.timeline.ruler;
 	g_ctx.fillRect(0, 0, g_visibleWidth, 30);
-	let t = StaticFn.timeFromPositionAndScale(g_mouseX - originX, g_renderingProps.scale);
+	let displayTime = StaticFn.timeFromPositionAndScale(g_mouseX - originX, g_renderingProps.scale) - g_renderingProps.countdown;
 	// leave the left most section not clickable
 	testInteraction(
 		{x: c_leftBufferWidth, y: 0, w: g_visibleWidth - c_leftBufferWidth, h: 30},
-		[(t - g_renderingProps.countdown).toFixed(2)],
+		[displayTime.toFixed(2)],
 		()=>{
-			if (t < controller.game.time) {
-				controller.displayHistoricalState(t, undefined); // replay the actions as-is
+			if (displayTime < controller.game.getDisplayTime() && displayTime >= -controller.game.config.countdown) {
+				controller.displayHistoricalState(displayTime, undefined); // replay the actions as-is
 			} else {
 				controller.displayCurrentState();
 			}
@@ -615,6 +615,9 @@ function drawTimelines(originX:  number, originY: number) : number {
 		sharedElemBins.set(e.type, arr);
 	});
 
+	// fracCoord.x of displayTime=0
+	let displayOriginX = originX + StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
+
 	for (let slot = 0; slot < g_renderingProps.slotElements.length; slot++) {
 
 		let isActiveSlot = slot === g_renderingProps.activeSlotIndex;
@@ -625,8 +628,6 @@ function drawTimelines(originX:  number, originY: number) : number {
 			elemBins.set(e.type, arr);
 		});
 		let currentY = originY + slot * c_timelineHeight;
-
-		let displayOriginX = originX + StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
 
 		// mp tick marks
 		drawMPTickMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.MPTickMark) as MPTickMarkElem[] ?? []);
@@ -646,8 +647,8 @@ function drawTimelines(originX:  number, originY: number) : number {
 		// selection rect
 		if (g_renderingProps.showSelection && isActiveSlot) {
 			g_ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
-			let selectionLeftPx = originX + g_renderingProps.selectionStartX;
-			let selectionWidthPx = g_renderingProps.selectionEndX - g_renderingProps.selectionStartX;
+			let selectionLeftPx = displayOriginX + StaticFn.positionFromTimeAndScale(g_renderingProps.selectionStartDisplayTime, g_renderingProps.scale);
+			let selectionWidthPx = StaticFn.positionFromTimeAndScale(g_renderingProps.selectionEndDisplayTime - g_renderingProps.selectionStartDisplayTime, g_renderingProps.scale);
 			g_ctx.fillRect(selectionLeftPx, currentY, selectionWidthPx, c_timelineHeight);
 			g_ctx.strokeStyle = "rgba(147, 112, 219, 0.5)";
 			g_ctx.lineWidth = 1;
@@ -672,7 +673,7 @@ function drawTimelines(originX:  number, originY: number) : number {
 	(sharedElemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach(cursor=>{
 		let vcursor = cursor as ViewOnlyCursorElem
 		if (vcursor.enabled) {
-			let x = originX + StaticFn.positionFromTimeAndScale(cursor.time, g_renderingProps.scale);
+			let x = displayOriginX + StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
 			drawCursor(x, g_colors.historical, localize({en: "cursor: ", zh: "光标："}) + vcursor.displayTime.toFixed(2));
 		}
 	});
@@ -680,7 +681,7 @@ function drawTimelines(originX:  number, originY: number) : number {
 	// cursor
 	(sharedElemBins.get(ElemType.s_Cursor) ?? []).forEach(elem=>{
 		let cursor = elem as CursorElem;
-		let x = originX + StaticFn.positionFromTimeAndScale(cursor.time, g_renderingProps.scale);
+		let x = displayOriginX + StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
 		drawCursor(x, g_colors.emphasis, localize({en: "cursor: ", zh: "光标："}) + cursor.displayTime.toFixed(2));
 	});
 
@@ -695,7 +696,7 @@ function drawTimelines(originX:  number, originY: number) : number {
 		};
 		g_ctx.fillStyle = slot === g_renderingProps.activeSlotIndex ? g_colors.accent : g_colors.bgMediumContrast;
 		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
-		testInteraction(handle, ["set active"], () => {
+		testInteraction(handle, slot===g_renderingProps.activeSlotIndex ? undefined : [localize({en: "set active", zh: "设为当前"}) as string], () => {
 			controller.setActiveSlot(slot);
 		}, true);
 
@@ -711,7 +712,7 @@ function drawTimelines(originX:  number, originY: number) : number {
 				w: handle.w,
 				h: handle.w
 			};
-			testInteraction(deleteBtn, ["delete"], () => {
+			testInteraction(deleteBtn, [localize({en: "delete", zh: "删除"}) as string], () => {
 				controller.timeline.removeSlot(slot);
 				controller.displayCurrentState();
 			}, true);
@@ -736,9 +737,9 @@ function drawTimelines(originX:  number, originY: number) : number {
 		g_ctx.font = "13px monospace";
 		g_ctx.fillStyle = g_colors.text;
 		g_ctx.textAlign = "center";
-		g_ctx.fillText("Add timeline slot", handle.x + handle.w/2, handle.y + handle.h - 4);
+		g_ctx.fillText(localize({en: "Add timeline slot", zh: "添加时间轴"}) as string, handle.x + handle.w/2, handle.y + handle.h - 4);
 
-		testInteraction(handle, ["add"], () => {
+		testInteraction(handle, undefined, () => {
 			controller.timeline.addSlot();
 			controller.displayCurrentState();
 		}, true);

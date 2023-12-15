@@ -131,7 +131,7 @@ export class Timeline {
 
 	scale: number;
 	startTime: number;
-	elapsedTime: number;
+	elapsedTime: number; // raw time (starts from 0)
 	sharedElements: SharedTimelineElem[];
 	slots: SlotTimelineElem[][];
 	activeSlotIndex: number;
@@ -288,22 +288,32 @@ export class Timeline {
 
 	removeSlot(idx: number) {
 		console.assert(idx < this.slots.length);
+		// shift save slots
 		for (let i = idx; i < MAX_TIMELINE_SLOTS; i++) {
 			let str = localStorage.getItem("gameRecord" + (i + 1).toString());
 			if (str !== null) {
 				localStorage.setItem("gameRecord" + i.toString(), str);
 			}
+			str = localStorage.getItem("gameTimeInfo" + (i + 1).toString());
+			if (str !== null) {
+				localStorage.setItem("gameTimeInfo" + i.toString(), str);
+			}
 		}
 		this.slots.splice(idx, 1);
 		for (let i = this.slots.length; i < MAX_TIMELINE_SLOTS; i++) {
 			localStorage.removeItem("gameRecord" + i.toString());
+			localStorage.removeItem("gameTimeInfo" + i.toString());
 		}
-		if (this.activeSlotIndex >= idx) this.activeSlotIndex -= 1;
+		if (this.activeSlotIndex >= idx) this.activeSlotIndex = Math.max(0, this.activeSlotIndex - 1);
 		this.loadSlot(this.activeSlotIndex);
 	}
 
-	saveCurrentSlot(serializedRecord: string) {
-		localStorage.setItem("gameRecord" + this.activeSlotIndex.toString(), serializedRecord);
+	saveCurrentSlot(serializedRecord: any, countdown: number, elapsedTime: number) {
+		localStorage.setItem("gameRecord" + this.activeSlotIndex.toString(), JSON.stringify(serializedRecord));
+		localStorage.setItem("gameTimeInfo" + this.activeSlotIndex.toString(), JSON.stringify({
+			countdown: countdown,
+			elapsedTime: elapsedTime
+		}));
 	}
 
 	loadSlot(index: number): boolean {
@@ -361,9 +371,42 @@ export class Timeline {
 		this.drawElements();
 	}
 
+	getAllSlotsTimeInfo() {
+		let countdown = 0;
+		let rightMostTime = 0;
+		let hasRecord = false;
+		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
+			let str = localStorage.getItem("gameTimeInfo" + i.toString());
+			if (str !== null) {
+				let info = JSON.parse(str) as {
+					countdown: number,
+					elapsedTime: number
+				};
+				countdown = Math.max(countdown, info.countdown);
+				rightMostTime = Math.max(rightMostTime, info.elapsedTime);
+				hasRecord = true;
+			}
+		}
+		if (hasRecord) {
+			return {
+				countdown: countdown,
+				rightMostTime: rightMostTime
+			};
+		} else {
+			return null;
+		}
+	}
+
 	getCanvasWidth() {
 		let rightMostTime = Math.max(0, this.elapsedTime);
 		let countdown = controller.gameConfig.countdown;
+		// and other slots
+		let allSlotsTimeInfo = this.getAllSlotsTimeInfo();
+		if (allSlotsTimeInfo !== null) {
+			countdown = Math.max(countdown, allSlotsTimeInfo.countdown);
+			rightMostTime = Math.max(rightMostTime, allSlotsTimeInfo.rightMostTime);
+		}
+		// and include markers
 		this.#allMarkers.forEach(marker=>{
 			let endDisplayTime = marker.time + marker.duration;
 			rightMostTime = Math.max(rightMostTime, endDisplayTime + countdown);
@@ -429,7 +472,7 @@ export class Timeline {
 		// historical state
 		let firstNode = controller.record.getFirstSelection();
 		if (firstNode) {
-			controller.displayHistoricalState(-1, firstNode);
+			controller.displayHistoricalState(-Infinity, firstNode);
 		}
 	}
 

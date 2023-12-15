@@ -1,5 +1,12 @@
 [
 	{
+		"date": "12/14/23",
+		"changes": [
+			"Support up to 4 timeline slots. Have just 1 active at a time and let the other one(s) be references. This is a medium-large update so lmk if I accidentally broke something.",
+			"QoL update: let the timeline window be large enough to show all slots and all markers"
+		]
+	},
+	{
 		"date": "12/12/23",
 		"changes": [
 			"fix paradox skill icon doesn't show up when displaying historical state",
