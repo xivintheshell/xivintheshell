@@ -1,5 +1,11 @@
 [
 	{
+		"date": "2/27/24",
+		"changes": [
+			"Let there be an empty timeline slot if none is loaded from localStorage. This should fix the issue that causes new user (browser) to get stuck when trying to use skills but there's no timeline."
+		]
+	},
+	{
 		"date": "12/14/23",
 		"changes": [
 			"Support up to 4 timeline slots. Have just 1 active at a time and let the other one(s) be references. This is a medium-large update so lmk if I accidentally broke something.",

@@ -274,8 +274,6 @@ export class Timeline {
 		this.#save();
 	}
 
-	// todo: read up from here
-
 	addSlot() {
 		this.slots.push([]);
 		console.assert(this.slots.length <= MAX_TIMELINE_SLOTS);

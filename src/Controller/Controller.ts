@@ -1016,6 +1016,12 @@ class Controller {
 		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
 			this.timeline.loadSlot(i);
 		}
+
+		let hasAtLeastOneSlot = this.timeline.slots.length > 0;
+		if (!hasAtLeastOneSlot) {
+			this.timeline.addSlot();
+		}
+
 		this.setActiveSlot(0);
 	}
 
