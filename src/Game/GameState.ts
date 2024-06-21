@@ -331,6 +331,17 @@ export class GameState {
 		}
 	}
 
+	gainUmbralMana() {
+		let mpToGain = 0;
+		switch(this.resources.get(ResourceType.UmbralIce).availableAmount()) {
+			case 1: mpToGain = 2500;  break;
+			case 2: mpToGain = 5000;  break;
+			case 3: mpToGain = 10000; break;
+			default: mpToGain = 0; break;
+		}
+		this.resources.get(ResourceType.Mana).gain(mpToGain);
+	}
+
 	captureManaCostAndUHConsumption(aspect: Aspect, baseManaCost: number) {
 		let mod = StatsModifier.fromResourceState(this.resources);
 

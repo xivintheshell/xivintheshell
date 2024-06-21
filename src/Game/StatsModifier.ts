@@ -61,20 +61,12 @@ export class StatsModifier
 		// umbral ice
 		let ui = resources.get(ResourceType.UmbralIce);
 		let uiMod = new StatsModifier();
-		if (ui.availableAmount() === 1) {
-			uiMod.manaRegen = 3000;
-			uiMod.manaCostFire = 0;
-			uiMod.manaCostIce = 0.75;
-		} else if (ui.availableAmount() === 2) {
-			uiMod.manaRegen = 4500;
-			uiMod.manaCostFire = 0;
-			uiMod.manaCostIce = 0.5;
-		} else if (ui.availableAmount() === 3) {
-			uiMod.manaRegen = 6000;
+		if (ui.availableAmount() > 0) {
 			uiMod.manaCostFire = 0;
 			uiMod.manaCostIce = 0;
-			uiMod.castTimeFire = 0.5;
-		}
+			if (ui.availableAmount() === 3)
+				uiMod.castTimeFire = 0;
+		} 
 		modifiers.push(uiMod);
 
 		// astral fire & umbral hearts
