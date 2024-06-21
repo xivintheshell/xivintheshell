@@ -44,6 +44,7 @@ export class GameState {
 		this.resources.set(ResourceType.AstralFire, new Resource(ResourceType.AstralFire, 3, 0));
 		this.resources.set(ResourceType.UmbralIce, new Resource(ResourceType.UmbralIce, 3, 0));
 		this.resources.set(ResourceType.UmbralHeart, new Resource(ResourceType.UmbralHeart, 3, 0));
+		this.resources.set(ResourceType.AstralSoul, new Resource(ResourceType.AstralSoul, 6, 0));
 
 		this.resources.set(ResourceType.LeyLines, new Resource(ResourceType.LeyLines, 1, 0)); // capture
 		this.resources.set(ResourceType.Enochian, new Resource(ResourceType.Enochian, 1, 0));
@@ -302,6 +303,7 @@ export class GameState {
 		let ui = this.resources.get(ResourceType.UmbralIce);
 		let uh = this.resources.get(ResourceType.UmbralHeart);
 		let paradox = this.resources.get(ResourceType.Paradox);
+		let as = this.resources.get(ResourceType.AstralSoul);
 
 		if (ui.available(0) && af.available(0)) {
 			this.gainThunderhead();
@@ -312,10 +314,12 @@ export class GameState {
 			af.gain(numStacks);
 			if (ui.availableAmount() > 0) {
 				this.gainThunderhead();
+				as.consume(as.availableAmount());
 			}
 			if (ui.available(3) && uh.available(3)) {
 				paradox.gain(1);
 			}  
+
 			ui.consume(ui.availableAmount());
 		}
 		else if (rscType===ResourceType.UmbralIce)
@@ -612,10 +616,13 @@ export class GameState {
 		let ui = this.resources.get(ResourceType.UmbralIce);
 		let uh = this.resources.get(ResourceType.UmbralHeart);
 		let paradox = this.resources.get(ResourceType.Paradox);
+		let as = this.resources.get(ResourceType.AstralSoul);
+
 		af.consume(af.availableAmount());
 		ui.consume(ui.availableAmount());
 		uh.consume(uh.availableAmount());
 		paradox.consume(paradox.availableAmount());
+		as.consume(as.availableAmount());
 	}
 
 	#timeTillSkillAvailable(skillName: SkillName) {
@@ -691,6 +698,8 @@ export class GameState {
 			if (this.resources.get(ResourceType.Thunderhead).available(1)) highlight = true;
 		} else if (skillName === SkillName.Foul || skillName === SkillName.Xenoglossy) {// polyglot
 			if (this.resources.get(ResourceType.Polyglot).available(1)) highlight = true;
+		} else if (skillName === SkillName.FlareStar) {
+			if (this.resources.get(ResourceType.AstralSoul).available(6)) highlight = true;
 		}
 
 		return {

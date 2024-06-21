@@ -21,7 +21,8 @@ const AFUISkills = new Set<SkillName>([
 	SkillName.Fire4,
 	SkillName.Despair,
 	SkillName.HighFire2,
-	SkillName.HighBlizzard2
+	SkillName.HighBlizzard2,
+	SkillName.FlareStar,
 ]);
 
 const enoSkills = new Set<SkillName>([

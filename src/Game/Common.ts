@@ -45,6 +45,7 @@ export const enum SkillName {
 	HighBlizzard2 = "High Blizzard 2",
 	Amplifier = "Amplifier",
 	Paradox = "Paradox",
+	FlareStar = "Flare Star",
 	Addle = "Addle",
 	Swiftcast = "Swiftcast",
 	LucidDreaming = "Lucid Dreaming",
@@ -72,6 +73,7 @@ export const enum ResourceType {
 	UmbralHeart = "UmbralHeart", // [0, 3]
 	Enochian = "Enochian", // [0, 1]
 	Paradox = "Paradox", // [0, 1]
+	AstralSoul = "Astral Soul", // [0, 6]
 
 	// buffs & states
 	LeyLines = "Ley Lines", // [0, 1]
