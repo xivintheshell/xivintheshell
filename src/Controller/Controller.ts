@@ -575,6 +575,7 @@ class Controller {
 			umbralIce: game.getIceStacks(),
 			umbralHearts: game.resources.get(ResourceType.UmbralHeart).availableAmount(),
 			paradox: game.resources.get(ResourceType.Paradox).availableAmount(),
+			astralSoul: game.resources.get(ResourceType.AstralSoul).availableAmount(),
 			polyglotCountdown: eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30,
 			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount()
 		};

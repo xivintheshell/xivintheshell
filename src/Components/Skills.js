@@ -34,6 +34,7 @@ export let displayedSkills = [
 	SkillName.HighBlizzard2,
 	SkillName.Amplifier,
 	//SkillName.Paradox, // display paradox at F1/B1
+	SkillName.FlareStar,
 	SkillName.Addle,
 	SkillName.Swiftcast,
 	SkillName.LucidDreaming,
@@ -68,6 +69,8 @@ skillIcons.set(SkillName.HighFire2, require("./Asset/highFire2.png"));
 skillIcons.set(SkillName.HighBlizzard2, require("./Asset/highBlizzard2.png"));
 skillIcons.set(SkillName.Amplifier, require("./Asset/amplifier.png"));
 skillIcons.set(SkillName.Paradox, require("./Asset/paradox.png"));
+skillIcons.set(SkillName.FlareStar, require("./Asset/placeholder_flarestar.png"));
+
 skillIcons.set(SkillName.Addle, require("./Asset/addle.png"));
 skillIcons.set(SkillName.Swiftcast, require("./Asset/swiftcast.png"));
 skillIcons.set(SkillName.LucidDreaming, require("./Asset/lucidDreaming.png"));

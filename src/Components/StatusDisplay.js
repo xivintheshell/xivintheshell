@@ -292,6 +292,7 @@ function ResourcesDisplay(props) {
 		umbralIce: 0,
 		umbralHearts: 0,
 		paradox: 0,
+		astralSoul: 0,
 		polyglotCountdown: 30,
 		polyglotStacks: 0
 	}
@@ -341,10 +342,19 @@ function ResourcesDisplay(props) {
 		localize({
 			en: "paradox",
 			zh: "悖论"
-	})}
+		})}
 		color={colors.resources.paradox}
 		currentStacks={data.paradox}
 		maxStacks={1}/>;
+	let soul = <ResourceCounter
+		name={
+		localize({
+			en: "astral soul",
+			zh: "Needs Translation"
+		})}
+		color={colors.resources.astralFire}
+		currentStacks={data.astralSoul}
+		maxStacks={6}/>;
 	let polyTimer = <ResourceBar
 		name={
 		localize({
@@ -370,6 +380,7 @@ function ResourcesDisplay(props) {
 		{afui}
 		{uh}
 		{paradox}
+		{soul}
 		{enochian}
 		{polyTimer}
 		{poly}

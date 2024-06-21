@@ -100,6 +100,8 @@ const skillInfos = [
 		0, 0, 0), // ? (assumed to be instant)
 	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true,
 		2.5, 1600, 500, 0.624),
+	new SkillInfo(SkillName.FlareStar, ResourceType.cd_GCD, Aspect.Fire, true,
+		3, 0, 400, 1.15), /* Get actual delay after release */
 
 	new SkillInfo(SkillName.Addle, ResourceType.cd_Addle, Aspect.Other, false,
 		0, 0, 0, 0.621),// delayed
@@ -463,6 +465,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					uh.consume(uh.availableAmount());
 					// +3 AF; refresh enochian
 					game.resources.get(ResourceType.AstralFire).gain(3);
+					game.resources.get(ResourceType.AstralSoul).gain(3);
 					game.startOrRefreshEnochian();
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
@@ -489,6 +492,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				game.castSpell({skillName: SkillName.Fire4, onCapture: (cap: SkillCaptureCallbackInfo) => {
+					game.resources.get(ResourceType.AstralSoul).gain(1);
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
 			}
@@ -686,6 +690,19 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.resources.get(ResourceType.AstralFire).gain(1);
 						gainFirestarterProc(game);
 					}
+				}, onApplication: (app: SkillApplicationCallbackInfo) => {
+				}, node: node});
+			}
+		));
+
+		// Flare Star
+		skillsList.set(SkillName.FlareStar, new Skill(SkillName.FlareStar,
+			() => {
+				return game.resources.get(ResourceType.AstralSoul).available(6);
+			},
+			(game, node) => {
+				game.castSpell({skillName: SkillName.FlareStar, onCapture: (cap: SkillCaptureCallbackInfo) => {
+					game.resources.get(ResourceType.AstralSoul).consume(6);
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
 			}
