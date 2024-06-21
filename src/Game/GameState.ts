@@ -319,9 +319,7 @@ export class GameState {
 		else if (rscType===ResourceType.UmbralIce)
 		{
 			ui.gain(numStacks);
-			if (af.available(3)) {
-				paradox.gain(1);
-			}
+			paradox.consume(paradox.availableAmount());
 			af.consume(af.availableAmount());
 		}
 	}
@@ -427,7 +425,7 @@ export class GameState {
 
 				// actually deduct resources (except some special ones like Paradox, Despair and Flare that deduct resources in onCapture fn)
 				if (props.skillName !== SkillName.Flare && props.skillName !== SkillName.Despair) {
-					if (!(props.skillName===SkillName.Paradox && game.getIceStacks()>0)) game.resources.get(ResourceType.Mana).consume(capturedManaCost);
+					game.resources.get(ResourceType.Mana).consume(capturedManaCost);
 					if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
 				}
 
@@ -474,8 +472,8 @@ export class GameState {
 			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(props.skillName));
 		}
 
-		// Paradox made instant via UI
-		if (props.skillName === SkillName.Paradox && this.getIceStacks() > 0) {
+		// Paradox made instant via Dawntrail
+		if (props.skillName === SkillName.Paradox) {
 			instantCast(this, undefined);
 			return;
 		}
@@ -614,9 +612,11 @@ export class GameState {
 		let af = this.resources.get(ResourceType.AstralFire);
 		let ui = this.resources.get(ResourceType.UmbralIce);
 		let uh = this.resources.get(ResourceType.UmbralHeart);
+		let paradox = this.resources.get(ResourceType.Paradox);
 		af.consume(af.availableAmount());
 		ui.consume(ui.availableAmount());
 		uh.consume(uh.availableAmount());
+		paradox.consume(paradox.availableAmount());
 	}
 
 	#timeTillSkillAvailable(skillName: SkillName) {
@@ -653,7 +653,6 @@ export class GameState {
 		let capturedCastTime = capturedCast.castTime;
 		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1)
 			|| this.resources.get(ResourceType.Swiftcast).available(1)
-			|| (skillName===SkillName.Paradox && this.getIceStacks()>0)
 			|| (skillName===SkillName.Thunder3 && this.resources.get(ResourceType.Thundercloud).available(1))
 			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)))
 			|| (skillName===SkillName.Xenoglossy && this.resources.get(ResourceType.Polyglot).available(1)
@@ -661,7 +660,6 @@ export class GameState {
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana
-			|| (skillName===SkillName.Paradox && this.getIceStacks()>0)
 			|| (skillName===SkillName.Thunder3 && this.resources.get(ResourceType.Thundercloud).available(1))
 			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)));
 		let reqsMet = skill.available();
