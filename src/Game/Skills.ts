@@ -55,8 +55,8 @@ const skillInfos = [
 		2.5, 800, 180, 1.871),
 	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false,
 		0, 0, 0), // instant
-	new SkillInfo(SkillName.Thunder3, ResourceType.cd_GCD, Aspect.Lightning, true,
-		0, 400, 50, 1.025),
+	new SkillInfo(SkillName.HighThunder, ResourceType.cd_GCD, Aspect.Lightning, true,
+		0, 0, 200, 1.025),
 	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false,
 		0, 0, 0, 1.114),// delayed
 	new SkillInfo(SkillName.Manafont, ResourceType.cd_Manafont, Aspect.Other, false,
@@ -311,15 +311,16 @@ export class SkillsList extends Map<SkillName, Skill> {
 			thunder.tickCount = 0;
 		}
 
-		let addT3Potencies = function(node: ActionNode, includeInitial: boolean) {
+		let addThunderPotencies = function(node: ActionNode, includeInitial: boolean) {
 			let mods = getPotencyModifiersFromResourceState(game.resources, Aspect.Lightning);
+			let highThunder = skillsList.get(SkillName.HighThunder);
 			if (includeInitial) {
 				// initial potency
 				let pInitial = new Potency({
 					sourceTime: game.getDisplayTime(),
-					sourceSkill: SkillName.Thunder3,
+					sourceSkill: SkillName.HighThunder,
 					aspect: Aspect.Lightning,
-					basePotency: 50,
+					basePotency: highThunder.info.basePotency,
 					snapshotTime: undefined,
 				});
 				pInitial.modifiers = mods;
@@ -329,9 +330,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 			for (let i = 0; i < 10; i++) {
 				let pDot = new Potency({
 					sourceTime: game.getDisplayTime(),
-					sourceSkill: SkillName.Thunder3,
+					sourceSkill: SkillName.HighThunder,
 					aspect: Aspect.Lightning,
-					basePotency: game.config.adjustedDoTPotency(35),
+					basePotency: game.config.adjustedDoTPotency(50),
 					snapshotTime: undefined,
 					description: "DoT " + (i+1) + "/10"
 				});
@@ -340,14 +341,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 			}
 		}
 
-		// Thunder 3
-		skillsList.set(SkillName.Thunder3, new Skill(SkillName.Thunder3,
+		// Thunder
+		skillsList.set(SkillName.HighThunder, new Skill(SkillName.HighThunder,
 			() => {
 				return game.resources.get(ResourceType.Thunderhead).available(1);
 			},
 			(game, node) => {
 				// potency
-				addT3Potencies(node, true); // should call on capture
+				addThunderPotencies(node, true); // should call on capture
 				let onHitPotency = node.getPotencies()[0];
 				node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
 
@@ -357,7 +358,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				}
 
 				game.useInstantSkill({
-					skillName: SkillName.Thunder3,
+					skillName: SkillName.HighThunder,
 					onApplication: () => {
 						controller.resolvePotency(onHitPotency);
 						applyThunderDoT(game, node);

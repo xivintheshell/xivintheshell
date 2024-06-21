@@ -23,7 +23,7 @@ export const enum SkillName {
 	Blizzard = "Blizzard",
 	Fire = "Fire",
 	Transpose = "Transpose",
-	Thunder3 = "Thunder 3",
+	HighThunder = "High Thunder",
 	Manaward = "Manaward",
 	Manafont = "Manafont",
 	LeyLines = "Ley Lines",
