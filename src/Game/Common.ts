@@ -77,7 +77,6 @@ export const enum ResourceType {
 	LeyLines = "Ley Lines", // [0, 1]
 	Triplecast = "Triplecast", // [0, 3]
 	Firestarter = "Firestarter", // [0, 1]
-	Thundercloud = "Thundercloud", // [0, 1]
 	ThunderDoT = "ThunderDoT", // [0, 1] is actually used for display timing only
 	Manaward = "Manaward", // [0, 1]
 	Addle = "Addle", // [0, 1]

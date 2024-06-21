@@ -222,7 +222,7 @@ class TimelineDisplaySettings extends React.Component {
 						<div className={"paragraph"}>{localize({en: "Having this checked will exclude damages from untargetable phases.", zh: "勾选时，统计将不包括Boss上天期间造成的伤害。"})}</div>
 						<div className={"paragraph"}>{localize({en: "You can mark up such phases using timeline markers of type \"Untargetable\".", zh: "可在下方用 “不可选中” 类型的时间轴标记来指定时间区间。"})}</div>
 						<div className={"paragraph"}>{localize({
-							en: "This is just a statistics helper though. For example it doesn't prevent you from using skills when the boss is untargetable. Nor does it prevent procs that grant you Thundercloud. If you get an undesired Thundercloud, you'll have to remove it manually.",
+							en: "This is just a statistics helper though. For example it doesn't prevent you from using skills when the boss is untargetable.",
 							zh: "此功能只是一个统计用的工具，在标注了 “不可选中” 的时间里其实也能正常使用技能，也可能因为跳DoT而被刷新雷云。如果刷了不想要的雷云，可以在结束上天之后手动点掉。"})}</div>
 					</div>
 				}/></span>

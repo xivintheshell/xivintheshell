@@ -137,9 +137,6 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	} else if (props.buff === PotencyModifierType.ENO) {
 		text = localize({en: "ENO", zh: "天语"});
 		color = colors.resources.enochian;
-	} else if (props.tc) {
-		text = localize({en: "TC", zh: "雷云"});
-		color = colors.resources.thundercloud;
 	}
 	return <span style={{
 		borderRadius: 2,

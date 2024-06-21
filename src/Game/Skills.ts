@@ -56,7 +56,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false,
 		0, 0, 0), // instant
 	new SkillInfo(SkillName.Thunder3, ResourceType.cd_GCD, Aspect.Lightning, true,
-		2.5, 400, 50, 1.025),
+		0, 400, 50, 1.025),
 	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false,
 		0, 0, 0, 1.114),// delayed
 	new SkillInfo(SkillName.Manafont, ResourceType.cd_Manafont, Aspect.Other, false,
@@ -346,50 +346,25 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return true;
 			},
 			(game, node) => {
-				if (game.resources.get(ResourceType.Thundercloud).available(1)) // made instant via thundercloud
-				{
-					// potency
-					addT3Potencies(node, true); // should call on capture
-					let p0 = node.getPotencies()[0];
-					p0.base = 400;
-					node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
+				// potency
+				addT3Potencies(node, true); // should call on capture
+				let onHitPotency = node.getPotencies()[0];
+				node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
 
-					// tincture
-					if (game.resources.get(ResourceType.Tincture).available(1)) {
-						node.addBuff(ResourceType.Tincture);
-					}
-
-					game.useInstantSkill({
-						skillName: SkillName.Thunder3,
-						onApplication: () => {
-							controller.resolvePotency(p0);
-							applyThunderDoT(game, node);
-						},
-						dealDamage: false,
-						node: node
-					});
-					let thundercloud = game.resources.get(ResourceType.Thundercloud);
-					thundercloud.consume(1);
-					thundercloud.removeTimer();
-				} else {
-					game.castSpell({skillName: SkillName.Thunder3, onButtonPress: () => {
-						// nothing here really
-						}, onCapture: (cap: SkillCaptureCallbackInfo) => {
-
-						// potency
-						addT3Potencies(node, false);
-
-						// potency snapshot time
-						node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime() });
-
-						// tincture
-						if (game.resources.get(ResourceType.Tincture).available(1)) {
-							node.addBuff(ResourceType.Tincture);
-						}
-					}, onApplication: (app: SkillApplicationCallbackInfo) => {
-						applyThunderDoT(game, node);
-					}, node: node});
+				// tincture
+				if (game.resources.get(ResourceType.Tincture).available(1)) {
+					node.addBuff(ResourceType.Tincture);
 				}
+
+				game.useInstantSkill({
+					skillName: SkillName.Thunder3,
+					onApplication: () => {
+						controller.resolvePotency(onHitPotency);
+						applyThunderDoT(game, node);
+					},
+					dealDamage: false,
+					node: node
+				});
 			}
 		));
 
