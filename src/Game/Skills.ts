@@ -730,12 +730,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 					if (game.hasEnochian()) {
 						game.startOrRefreshEnochian();
 					}
-					if (game.getIceStacks() > 0) {
-						game.resources.get(ResourceType.UmbralIce).gain(1);
-					}
 					if (game.getFireStacks() > 0) {// firestarter proc
 						game.resources.get(ResourceType.AstralFire).gain(1);
-						potentiallyGainFirestarter(game);
+						gainFirestarterProc(game);
 					}
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
