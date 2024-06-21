@@ -49,6 +49,7 @@ export class GameState {
 		this.resources.set(ResourceType.Enochian, new Resource(ResourceType.Enochian, 1, 0));
 		this.resources.set(ResourceType.Paradox, new Resource(ResourceType.Paradox, 1, 0));
 		this.resources.set(ResourceType.Firestarter, new Resource(ResourceType.Firestarter, 1, 0));
+		this.resources.set(ResourceType.Thunderhead, new Resource(ResourceType.Thunderhead, 1, 0));
 		this.resources.set(ResourceType.ThunderDoT, new DoTBuff(ResourceType.ThunderDoT, 1, 0));
 		this.resources.set(ResourceType.Manaward, new Resource(ResourceType.Manaward, 1, 0));
 		this.resources.set(ResourceType.Triplecast, new Resource(ResourceType.Triplecast, 3, 0));
@@ -278,23 +279,50 @@ export class GameState {
 		return (this.time - this.config.countdown);
 	}
 
+	gainThunderhead() {
+		let thunderhead = this.resources.get(ResourceType.Thunderhead);
+		let duration = this.config.extendedBuffTimes ? 31 : 30; // Check if this is still true
+		if (thunderhead.available(1)) { // already has a proc; reset its timer
+			thunderhead.overrideTimer(this, duration);
+		} else { // there's currently no proc. gain one.
+			thunderhead.gain(1);
+			this.resources.addResourceEvent({
+				rscType: ResourceType.Thunderhead,
+				name: "drop thunderhead",
+				delay: duration,
+				fnOnRsc: (rsc: Resource) => {
+					rsc.consume(1);
+				}
+			});
+		}
+	}
+
 	switchToAForUI(rscType: ResourceType, numStacks: number) {
 		let af = this.resources.get(ResourceType.AstralFire);
 		let ui = this.resources.get(ResourceType.UmbralIce);
 		let uh = this.resources.get(ResourceType.UmbralHeart);
 		let paradox = this.resources.get(ResourceType.Paradox);
+
+		if (ui.available(0) && af.available(0)) {
+			this.gainThunderhead();
+		}
+
 		if (rscType===ResourceType.AstralFire)
 		{
 			af.gain(numStacks);
+			if (ui.availableAmount() > 0) {
+				this.gainThunderhead();
+			}
 			if (ui.available(3) && uh.available(3)) {
 				paradox.gain(1);
-			}
+			}  
 			ui.consume(ui.availableAmount());
 		}
 		else if (rscType===ResourceType.UmbralIce)
 		{
 			ui.gain(numStacks);
 			paradox.consume(paradox.availableAmount());
+			this.gainThunderhead();
 			af.consume(af.availableAmount());
 		}
 	}
@@ -663,6 +691,8 @@ export class GameState {
 			highlight = true;
 		} else if (skillName === SkillName.Fire3) {// F3P
 			if (this.resources.get(ResourceType.Firestarter).available(1)) highlight = true;
+		} else if (skillName === SkillName.Thunder3) {// T3P
+			if (this.resources.get(ResourceType.Thunderhead).available(1)) highlight = true;
 		} else if (skillName === SkillName.Foul || skillName === SkillName.Xenoglossy) {// polyglot
 			if (this.resources.get(ResourceType.Polyglot).available(1)) highlight = true;
 		}

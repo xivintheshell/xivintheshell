@@ -343,7 +343,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		// Thunder 3
 		skillsList.set(SkillName.Thunder3, new Skill(SkillName.Thunder3,
 			() => {
-				return true;
+				return game.resources.get(ResourceType.Thunderhead).available(1);
 			},
 			(game, node) => {
 				// potency
@@ -365,6 +365,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 					dealDamage: false,
 					node: node
 				});
+				let thunderhead = game.resources.get(ResourceType.Thunderhead);
+				thunderhead.consume(1);
+				thunderhead.removeTimer();
 			}
 		));
 

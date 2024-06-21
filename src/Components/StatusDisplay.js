@@ -71,6 +71,7 @@ buffIcons.set(ResourceType.Triplecast, require("./Asset/buff_triplecast.png"));
 buffIcons.set(ResourceType.Triplecast + "2", require("./Asset/buff_triplecast2.png"));
 buffIcons.set(ResourceType.Triplecast + "3", require("./Asset/buff_triplecast3.png"));
 buffIcons.set(ResourceType.Firestarter, require("./Asset/buff_firestarter.png"));
+buffIcons.set(ResourceType.Thunderhead, require("./Asset/buff_thundercloud.png"));
 buffIcons.set(ResourceType.ThunderDoT, require("./Asset/buff_thunder3.png"));
 buffIcons.set(ResourceType.LeyLines, require("./Asset/buff_leyLines.png"));
 buffIcons.set(ResourceType.Manaward, require("./Asset/buff_manaward.png"));
@@ -115,6 +116,7 @@ function BuffsDisplay(props) {
 		triplecastCountdown: 0,
 		triplecastStacks: 0,
 		firestarterCountdown: 0,
+		thunderheadCountdown: 0,
 		manawardCountdown: 0,
 		swiftcastCountdown: 0,
 		lucidDreamingCountdown: 0,
@@ -146,6 +148,14 @@ function BuffsDisplay(props) {
 		stacks:1,
 		timeRemaining: data.firestarterCountdown.toFixed(2),
 		className: data.firestarterCountdown > 0 ? "" : "hidden"
+	});
+	buffs.push({
+		rscType: ResourceType.Thunderhead,
+		onSelf: true,
+		enabled: true,
+		stacks:1,
+		timeRemaining: data.thunderheadCountdown.toFixed(2),
+		className: data.thunderheadCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Manaward,
