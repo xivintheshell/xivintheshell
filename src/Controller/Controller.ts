@@ -603,7 +603,6 @@ class Controller {
 		let selfBuffsData = {
 			leyLinesEnabled: game.resources.get(ResourceType.LeyLines).enabled,
 			leyLinesCountdown: game.resources.timeTillReady(ResourceType.LeyLines),
-			sharpcastCountdown: game.resources.timeTillReady(ResourceType.Sharpcast),
 			triplecastCountdown: game.resources.timeTillReady(ResourceType.Triplecast),
 			triplecastStacks: game.resources.get(ResourceType.Triplecast).availableAmount(),
 			firestarterCountdown: game.resources.timeTillReady(ResourceType.Firestarter),

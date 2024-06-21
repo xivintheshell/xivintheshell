@@ -36,7 +36,6 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.Freeze, "玄冰"],
 	[SkillName.Flare, "核爆"],
 	[SkillName.LeyLines, "黑魔纹"],
-	[SkillName.Sharpcast, "激情咏唱"],
 	[SkillName.Blizzard4, "冰4"],
 	[SkillName.BetweenTheLines, "魔纹步"],
 	[SkillName.AetherialManipulation, "以太步"],
