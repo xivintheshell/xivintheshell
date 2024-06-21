@@ -13,7 +13,7 @@ export let displayedSkills = [
 	SkillName.Blizzard,
 	SkillName.Fire,
 	SkillName.Transpose,
-	SkillName.Thunder3,
+	SkillName.HighThunder,
 	SkillName.Manaward,
 	SkillName.Manafont,
 	SkillName.Fire3,
@@ -47,7 +47,7 @@ export const skillIcons = new Map();
 skillIcons.set(SkillName.Blizzard, require("./Asset/blizzard.png"));
 skillIcons.set(SkillName.Fire, require("./Asset/fire.png"));
 skillIcons.set(SkillName.Transpose, require("./Asset/transpose.png"));
-skillIcons.set(SkillName.Thunder3, require("./Asset/thunder3.png"));
+skillIcons.set(SkillName.HighThunder, require("./Asset/thunder3.png"));
 skillIcons.set(SkillName.Manaward, require("./Asset/manaward.png"));
 skillIcons.set(SkillName.Manafont, require("./Asset/manafont.png"));
 skillIcons.set(SkillName.Fire3, require("./Asset/fire3.png"));

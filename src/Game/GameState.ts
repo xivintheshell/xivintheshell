@@ -390,7 +390,6 @@ export class GameState {
 
 	castSpell(props: {
 		skillName: SkillName,
-		onButtonPress?: ()=>void, // used by T3, after main potency node is attached
 		onCapture: (cap: SkillCaptureCallbackInfo)=>void,
 		onApplication: (app: SkillApplicationCallbackInfo)=>void,
 		node: ActionNode})
@@ -416,9 +415,6 @@ export class GameState {
 			description: "some description",
 		});
 		props.node.addPotency(potency);
-
-		// used by T3 only
-		if (props.onButtonPress) props.onButtonPress();
 
 		let takeEffect = function(game: GameState) {
 			let resourcesStillAvailable = skill.available();
@@ -691,7 +687,7 @@ export class GameState {
 			highlight = true;
 		} else if (skillName === SkillName.Fire3) {// F3P
 			if (this.resources.get(ResourceType.Firestarter).available(1)) highlight = true;
-		} else if (skillName === SkillName.Thunder3) {// T3P
+		} else if (skillName === SkillName.HighThunder) {
 			if (this.resources.get(ResourceType.Thunderhead).available(1)) highlight = true;
 		} else if (skillName === SkillName.Foul || skillName === SkillName.Xenoglossy) {// polyglot
 			if (this.resources.get(ResourceType.Polyglot).available(1)) highlight = true;

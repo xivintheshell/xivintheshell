@@ -28,7 +28,7 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.Blizzard, "冰1"],
 	[SkillName.Fire4, "火4"],
 	[SkillName.Transpose, "星灵移位"],
-	[SkillName.Thunder3, "雷3"],
+	[SkillName.HighThunder, "雷3"],
 	[SkillName.Manaward, "魔罩"],
 	[SkillName.Manafont, "魔泉"],
 	[SkillName.Fire3, "火3"],

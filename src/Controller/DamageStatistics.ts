@@ -5,7 +5,7 @@ import {ResourceType, SkillName} from "../Game/Common";
 import {
 	DamageStatisticsData,
 	DamageStatsMainTableEntry,
-	DamageStatsT3TableEntry,
+	DamageStatsThunderTableEntry,
 	SelectedStatisticsData
 } from "../Components/DamageStatistics";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
@@ -67,11 +67,11 @@ export const getTargetableDurationBetween = (startDisplayTime: number, endDispla
 		ctl.timeline.getTargetableDurationBetween(startDisplayTime, endDisplayTime) : endDisplayTime - startDisplayTime;
 }
 
-function expandT3Node(node: ActionNode, lastNode?: ActionNode) {
+function expandThunderNode(node: ActionNode, lastNode?: ActionNode) {
 	console.assert(node.getPotencies().length > 0);
-	console.assert(node.skillName === SkillName.Thunder3);
+	console.assert(node.skillName === SkillName.HighThunder);
 	let mainPotency = node.getPotencies()[0];
-	let entry: DamageStatsT3TableEntry = {
+	let entry: DamageStatsThunderTableEntry = {
 		castTime: node.tmp_startLockTime ? node.tmp_startLockTime - ctl.gameConfig.countdown : 0,
 		applicationTime: mainPotency.hasResolved() ? (mainPotency.applicationTime as number) : 0,
 		displayedModifiers: [],
@@ -99,7 +99,7 @@ function expandT3Node(node: ActionNode, lastNode?: ActionNode) {
 			entry.override = lastDotDropDisplayTime - thisDotApplicationDisplayTime;
 		}
 	} else {
-		// first T3 of this fight
+		// first Thunder of this fight
 		console.assert(!lastNode)
 		let thisP = node.getPotencies()[0];
 		let thisDotApplicationDisplayTime = thisP.applicationTime as number;
@@ -178,7 +178,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 			}
 		} else if (abilities.has(node.skillName)) {
 		} else {
-			console.assert(node.skillName === SkillName.Thunder3)
+			console.assert(node.skillName === SkillName.HighThunder)
 			res.basePotency = node.getPotencies()[0].base;
 		}
 		return res;
@@ -228,15 +228,15 @@ export function updateSkillOrDoTInclude(props: {
 }) {
 	if (props.include && excludedFromStats.has(props.skillNameOrDoT)) {
 		excludedFromStats.delete(props.skillNameOrDoT);
-		// it doesn't make sense to include DoT but not base potency of T3
+		// it doesn't make sense to include DoT but not base potency of Thunder
 		if (props.skillNameOrDoT === "DoT") {
-			excludedFromStats.delete(SkillName.Thunder3);
-		} else if (props.skillNameOrDoT === SkillName.Thunder3) {
+			excludedFromStats.delete(SkillName.HighThunder);
+		} else if (props.skillNameOrDoT === SkillName.HighThunder) {
 			excludedFromStats.delete("DoT");
 		}
 	} else {
 		excludedFromStats.add(props.skillNameOrDoT);
-		if (props.skillNameOrDoT === SkillName.Thunder3) {
+		if (props.skillNameOrDoT === SkillName.HighThunder) {
 			excludedFromStats.add("DoT");
 		}
 	}
@@ -278,7 +278,7 @@ export function calculateSelectedStats(props: {
 			let p = node.getPotency({
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
-				excludeDoT: node.skillName===SkillName.Thunder3 && !getSkillOrDotInclude("DoT")
+				excludeDoT: node.skillName===SkillName.HighThunder && !getSkillOrDotInclude("DoT")
 			});
 			if (checked) {
 				selected.potency.applied += p.applied;
@@ -309,8 +309,8 @@ export function calculateDamageStats(props: {
 		totalPotPotency: 0
 	};
 
-	let t3Table: DamageStatsT3TableEntry[] = [];
-	let t3TableSummary = {
+	let thunderTable: DamageStatsThunderTableEntry[] = [];
+	let thunderTableSummary = {
 		cumulativeGap: 0,
 		cumulativeOverride: 0,
 		timeSinceLastDoTDropped: 0,
@@ -324,7 +324,7 @@ export function calculateDamageStats(props: {
 
 	let skillPotencies: Map<SkillName, number> = new Map();
 
-	let lastT3 : ActionNode | undefined = undefined; // for tracking DoT gap / override
+	let lastThunder : ActionNode | undefined = undefined; // for tracking DoT gap / override
 	ctl.record.iterateAll(node=>{
 		if (node.type === ActionType.Skill && node.skillName) {
 
@@ -344,7 +344,7 @@ export function calculateDamageStats(props: {
 			let p = node.getPotency({
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
-				excludeDoT: node.skillName===SkillName.Thunder3 && !getSkillOrDotInclude("DoT")
+				excludeDoT: node.skillName===SkillName.HighThunder && !getSkillOrDotInclude("DoT")
 			});
 			if (checked) {
 				totalPotency.applied += p.applied;
@@ -372,12 +372,12 @@ export function calculateDamageStats(props: {
 				let potencyWithoutPot = node.getPotency({
 					tincturePotencyMultiplier: 1,
 					untargetable: bossIsUntargetable,
-					excludeDoT: node.skillName===SkillName.Thunder3 && !getSkillOrDotInclude("DoT")
+					excludeDoT: node.skillName===SkillName.HighThunder && !getSkillOrDotInclude("DoT")
 				}).applied;
 				let potencyWithPot = node.getPotency({
 					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 					untargetable: bossIsUntargetable,
-					excludeDoT: node.skillName===SkillName.Thunder3 && !getSkillOrDotInclude("DoT")
+					excludeDoT: node.skillName===SkillName.HighThunder && !getSkillOrDotInclude("DoT")
 				}).applied;
 				const hit = node.hitBoss(bossIsUntargetable);
 				mainTable[q.mainTableIndex].usageCount += 1;
@@ -401,38 +401,38 @@ export function calculateDamageStats(props: {
 					mainTableSummary.totalPotPotency += (potencyWithPot - potencyWithoutPot);
 				}
 
-				// t3 table
-				if (node.skillName === SkillName.Thunder3) {
-					let t3TableEntry = expandT3Node(node, lastT3);
-					t3Table.push(t3TableEntry);
-					lastT3 = node;
-					t3TableSummary.cumulativeGap += t3TableEntry.gap;
-					t3TableSummary.cumulativeOverride += t3TableEntry.override;
-					t3TableSummary.totalTicks += t3TableEntry.numHitTicks;
-					t3TableSummary.totalPotencyWithoutPot += t3TableEntry.potencyWithoutPot;
-					t3TableSummary.totalPotPotency += t3TableEntry.potPotency;
+				// Thunder table
+				if (node.skillName === SkillName.HighThunder) {
+					let thunderTableEntry = expandThunderNode(node, lastThunder);
+					thunderTable.push(thunderTableEntry);
+					lastThunder = node;
+					thunderTableSummary.cumulativeGap += thunderTableEntry.gap;
+					thunderTableSummary.cumulativeOverride += thunderTableEntry.override;
+					thunderTableSummary.totalTicks += thunderTableEntry.numHitTicks;
+					thunderTableSummary.totalPotencyWithoutPot += thunderTableEntry.potencyWithoutPot;
+					thunderTableSummary.totalPotPotency += thunderTableEntry.potPotency;
 				}
 			}
 		}
 	});
 
-	if (lastT3) {
-		// last T3 so far
-		let mainP = (lastT3 as ActionNode).getPotencies()[0];
+	if (lastThunder) {
+		// last Thunder so far
+		let mainP = (lastThunder as ActionNode).getPotencies()[0];
 		console.assert(mainP.hasResolved());
 		let lastDotDropTime = (mainP.applicationTime as number) + 30;
 		let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
 
 		let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
 		if (timeSinceLastDoTDropped > 0) {
-			t3TableSummary.cumulativeGap += gap;
-			t3TableSummary.timeSinceLastDoTDropped = timeSinceLastDoTDropped;
+			thunderTableSummary.cumulativeGap += gap;
+			thunderTableSummary.timeSinceLastDoTDropped = timeSinceLastDoTDropped;
 		}
 	} else {
-		// no T3 was used so far
+		// no Thunder was used so far
 		let gap = getTargetableDurationBetween(0, Math.max(0, ctl.game.getDisplayTime()));
-		t3TableSummary.cumulativeGap = gap;
-		t3TableSummary.timeSinceLastDoTDropped = gap;
+		thunderTableSummary.cumulativeGap = gap;
+		thunderTableSummary.timeSinceLastDoTDropped = gap;
 	}
 
 	mainTable.sort((a, b)=>{
@@ -466,8 +466,8 @@ export function calculateDamageStats(props: {
 		gcdSkills: gcdSkills,
 		mainTable: mainTable,
 		mainTableSummary: mainTableSummary,
-		t3Table: t3Table,
-		t3TableSummary: t3TableSummary,
+		thunderTable: thunderTable,
+		thunderTableSummary: thunderTableSummary,
 		historical: !ctl.displayingUpToDateGameState,
 	};
 }
