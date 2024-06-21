@@ -21,7 +21,6 @@ export let displayedSkills = [
 	SkillName.Freeze,
 	SkillName.Flare,
 	SkillName.LeyLines,
-	SkillName.Sharpcast,
 	SkillName.Blizzard4,
 	SkillName.Fire4,
 	SkillName.BetweenTheLines,
@@ -57,7 +56,6 @@ skillIcons.set(SkillName.Freeze, require("./Asset/freeze.png"));
 skillIcons.set(SkillName.AetherialManipulation, require("./Asset/aetherialManipulation.png"));
 skillIcons.set(SkillName.Flare, require("./Asset/flare.png"));
 skillIcons.set(SkillName.LeyLines, require("./Asset/leyLines.png"));
-skillIcons.set(SkillName.Sharpcast, require("./Asset/sharpcast.png"));
 skillIcons.set(SkillName.Blizzard4, require("./Asset/blizzard4.png"));
 skillIcons.set(SkillName.Fire4, require("./Asset/fire4.png"));
 skillIcons.set(SkillName.BetweenTheLines, require("./Asset/betweenTheLines.png"));

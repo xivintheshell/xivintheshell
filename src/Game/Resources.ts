@@ -256,7 +256,6 @@ resourceInfos.set(ResourceType.UmbralIce, { isCoolDown: false, defaultValue: 0, 
 resourceInfos.set(ResourceType.UmbralHeart, { isCoolDown: false, defaultValue: 0, maxValue: 3, maxTimeout: -1 });
 
 resourceInfos.set(ResourceType.LeyLines, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 30 });
-resourceInfos.set(ResourceType.Sharpcast, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 30 });
 resourceInfos.set(ResourceType.Enochian, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 15 }); // controls AF, UI, UH
 resourceInfos.set(ResourceType.Paradox, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: -1 });
 resourceInfos.set(ResourceType.Firestarter, { isCoolDown: false, defaultValue: 0, maxValue: 1, maxTimeout: 30 });
@@ -273,7 +272,6 @@ resourceInfos.set(ResourceType.Sprint, { isCoolDown: false, defaultValue: 0, max
 
 // CDs
 resourceInfos.set(ResourceType.cd_GCD, { isCoolDown: true, maxStacks: 1, cdPerStack: 2.5 });
-resourceInfos.set(ResourceType.cd_Sharpcast, { isCoolDown: true, maxStacks: 2, cdPerStack: 30 });
 resourceInfos.set(ResourceType.cd_LeyLines, { isCoolDown: true, maxStacks: 1, cdPerStack: 120 });
 resourceInfos.set(ResourceType.cd_Transpose, { isCoolDown: true, maxStacks: 1, cdPerStack: 5 });
 resourceInfos.set(ResourceType.cd_Manaward, { isCoolDown: true, maxStacks: 1, cdPerStack: 120 });

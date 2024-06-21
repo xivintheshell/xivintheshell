@@ -31,7 +31,6 @@ export const enum SkillName {
 	Blizzard3 = "Blizzard 3",
 	Freeze = "Freeze",
 	Flare = "Flare",
-	Sharpcast = "Sharpcast",
 	Blizzard4 = "Blizzard 4",
 	Fire4 = "Fire 4",
 	BetweenTheLines = "Between the Lines",
@@ -76,7 +75,6 @@ export const enum ResourceType {
 
 	// buffs & states
 	LeyLines = "Ley Lines", // [0, 1]
-	Sharpcast = "Sharpcast", // [0, 1]
 	Triplecast = "Triplecast", // [0, 3]
 	Firestarter = "Firestarter", // [0, 1]
 	Thundercloud = "Thundercloud", // [0, 1]
@@ -97,7 +95,6 @@ export const enum ResourceType {
 	// CDs
 	cd_GCD = "cd_GCD", // [0, Constant.gcd]
 	cd_Transpose = "cd_Transpose", // [0, 1x]
-	cd_Sharpcast = "cd_Sharpcast", // [0, 2x]
 	cd_LeyLines = "cd_LeyLines", // [0, 1x]
 	cd_Manaward = "cd_Manaward", // [0, 1x]
 	cd_BetweenTheLines = "cd_BetweenTheLines", // [0, 1x]

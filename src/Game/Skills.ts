@@ -72,8 +72,6 @@ const skillInfos = [
 
 	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false,
 		0, 0, 0, 0.49),// delayed
-	new SkillInfo(SkillName.Sharpcast, ResourceType.cd_Sharpcast, Aspect.Other,false,
-		0, 0, 0), // instant
 	new SkillInfo(SkillName.Blizzard4, ResourceType.cd_GCD, Aspect.Ice, true,
 		2.5, 800, 310, 1.156),
 	new SkillInfo(SkillName.Fire4, ResourceType.cd_GCD, Aspect.Fire, true,
@@ -229,16 +227,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 		}
 
 		let potentiallyGainFirestarter = function(game: GameState) {
-			// firestarter
-			let sc = game.resources.get(ResourceType.Sharpcast);
-			if (sc.available(1)) {
-				gainFirestarterProc(game);
-				sc.consume(1);
-				sc.removeTimer();
-			} else {
-				let rand = game.rng(); // firestarter proc
-				if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && rand < 0.4)) gainFirestarterProc(game);
-			}
+			let rand = game.rng(); // firestarter proc
+			if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && rand < 0.4)) gainFirestarterProc(game);
 		}
 
 		// Fire
@@ -381,13 +371,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 					let thundercloud = game.resources.get(ResourceType.Thundercloud);
 					thundercloud.consume(1);
 					thundercloud.removeTimer();
-					// if there's a sharpcast stack, consume it and gain (a potentially new) proc
-					let sc = game.resources.get(ResourceType.Sharpcast);
-					if (sc.available(1)) {
-						game.gainThundercloudProc();
-						sc.consume(1);
-						sc.removeTimer();
-					}
 				} else {
 					game.castSpell({skillName: SkillName.Thunder3, onButtonPress: () => {
 						// nothing here really
@@ -402,13 +385,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 						// tincture
 						if (game.resources.get(ResourceType.Tincture).available(1)) {
 							node.addBuff(ResourceType.Tincture);
-						}
-						// if there's a sharpcast stack, consume it and gain (a potentially new) proc
-						let sc = game.resources.get(ResourceType.Sharpcast);
-						if (sc.available(1)) {
-							game.gainThundercloudProc();
-							sc.consume(1);
-							sc.removeTimer();
 						}
 					}, onApplication: (app: SkillApplicationCallbackInfo) => {
 						applyThunderDoT(game, node);
@@ -513,9 +489,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 				}, node: node});
 			}
 		));
-
-		// Sharpcast
-		addResourceAbility({skillName: SkillName.Sharpcast, rscType: ResourceType.Sharpcast, instant: true, duration: 30});
 
 		// Blizzard 4
 		skillsList.set(SkillName.Blizzard4, new Skill(SkillName.Blizzard4,
