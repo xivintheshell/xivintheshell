@@ -606,7 +606,6 @@ class Controller {
 			triplecastCountdown: game.resources.timeTillReady(ResourceType.Triplecast),
 			triplecastStacks: game.resources.get(ResourceType.Triplecast).availableAmount(),
 			firestarterCountdown: game.resources.timeTillReady(ResourceType.Firestarter),
-			thundercloudCountdown: game.resources.timeTillReady(ResourceType.Thundercloud),
 			manawardCountdown: game.resources.timeTillReady(ResourceType.Manaward),
 			swiftcastCountdown: game.resources.timeTillReady(ResourceType.Swiftcast),
 			lucidDreamingCountdown: game.resources.timeTillReady(ResourceType.LucidDreaming),
