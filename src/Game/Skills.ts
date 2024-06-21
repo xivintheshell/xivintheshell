@@ -380,13 +380,18 @@ export class SkillsList extends Map<SkillName, Skill> {
 		// Manafont
 		skillsList.set(SkillName.Manafont, new Skill(SkillName.Manafont,
 			() => {
-				return true;
+				return game.resources.get(ResourceType.AstralFire).availableAmount() > 0;
 			},
 			(game, node) => {
 				let useSkillEvent = game.useInstantSkill({
 					skillName: SkillName.Manafont,
 					onApplication: () => {
-						game.resources.get(ResourceType.Mana).gain(3000);
+						game.resources.get(ResourceType.Mana).gain(10000);
+						game.resources.get(ResourceType.AstralFire).gain(3);
+						game.resources.get(ResourceType.UmbralHeart).gain(3);
+						game.resources.get(ResourceType.Paradox).gain(1);
+						game.gainThunderhead();
+						game.startOrRefreshEnochian();
 						node.resolveAll(game.getDisplayTime());
 					},
 					dealDamage: false,
