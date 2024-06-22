@@ -1,5 +1,12 @@
 [
 	{
+		"date": "6/21/24",
+		"changes": [
+			"Fixed a tiny bug (yeah I'm back): when switching language, source of damage on the timeline now updates just like the rest of UI",
+			"Some housekeeping stuff: a dependency package update, repository README.md"
+		]
+	},
+	{
 		"date": "2/27/24",
 		"changes": [
 			"Let there be an empty timeline slot if none is loaded from localStorage. This should fix the issue that causes new user (browser) to get stuck when trying to use skills but there's no timeline."

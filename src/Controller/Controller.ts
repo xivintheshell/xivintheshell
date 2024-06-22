@@ -500,7 +500,8 @@ class Controller {
 				buffs: pot ? [ResourceType.Tincture] : [],
 				time: this.game.time,
 				displayTime: this.game.getDisplayTime(),
-				source: localizeSkillName(p.sourceSkill) + "@" + p.sourceTime.toFixed(2)
+				sourceDesc: "{skill}@" + p.sourceTime.toFixed(2),
+				sourceSkill: p.sourceSkill
 			});
 
 			// time, damageSource, potency, cumulativePotency
@@ -516,24 +517,24 @@ class Controller {
 		this.#updateTotalDamageStats();
 	}
 
-	reportLucidTick(time: number, source: string) {
+	reportLucidTick(time: number, sourceDesc: string) {
 		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.LucidMark,
 				time: time,
 				displayTime: this.game.getDisplayTime(),
-				source: source,
+				sourceDesc: sourceDesc,
 			});
 		}
 	}
 
-	reportManaTick(time: number, source: string) {
+	reportManaTick(time: number, sourceDesc: string) {
 		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.MPTickMark,
 				time: time,
 				displayTime: this.game.getDisplayTime(),
-				source: source,
+				sourceDesc: sourceDesc,
 			});
 		}
 	}

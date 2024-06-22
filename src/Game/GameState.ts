@@ -7,6 +7,7 @@ import {CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceSta
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
 import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
+import {localizeSkillName} from "../Components/Localization";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -109,7 +110,6 @@ export class GameState {
 				let mana = this.resources.get(ResourceType.Mana);
 				let gainAmount = this.captureManaRegenAmount();
 				mana.gain(gainAmount);
-				//console.log("[" + (this.time - this.config.countdown) + "] mp tick: +" + gainAmount);
 				let currentAmount = mana.availableAmount();
 				controller.reportManaTick(game.time, "+" + gainAmount + " (MP="+currentAmount+")");
 				// queue the next tick
@@ -150,7 +150,7 @@ export class GameState {
 						if (lucid.node.tmp_startLockTime) {
 							t = (lucid.node.tmp_startLockTime - this.config.countdown).toFixed(2);
 						}
-						msg += " " + lucid.node.skillName + "@" + t;
+						msg += " {skill}@" + t;
 						msg += " (" + lucid.tickCount + "/7)";
 					}
 					msg += " (MP=" + mana.availableAmount() + ")";
@@ -562,7 +562,7 @@ export class GameState {
 			skillInfo.name + " captured",
 			skillInfo.skillApplicationDelay,
 			()=>{
-				if (props.dealDamage && potency) controller.resolvePotency(potency);//this.dealDamage(props.node, capturedDamage, sourceName);
+				if (props.dealDamage && potency) controller.resolvePotency(potency);
 				if (props.onApplication) props.onApplication();
 			});
 		this.addEvent(skillEvent);
