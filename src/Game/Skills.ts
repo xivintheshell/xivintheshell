@@ -62,13 +62,13 @@ const skillInfos = [
 	new SkillInfo(SkillName.Manafont, ResourceType.cd_Manafont, Aspect.Other, false,
 		0, 0, 0, 0.88),// delayed, test by manafont->desp from 0 mana
 	new SkillInfo(SkillName.Fire3, ResourceType.cd_GCD, Aspect.Fire, true,
-		3.5, 2000, 260, 1.292),
+		3.5, 2000, 280, 1.292),
 	new SkillInfo(SkillName.Blizzard3, ResourceType.cd_GCD, Aspect.Ice, true,
-		3.5, 800, 260, 0.89),
+		3.5, 800, 280, 0.89),
 	new SkillInfo(SkillName.Freeze, ResourceType.cd_GCD, Aspect.Ice, true,
 		2.8, 1000, 120, 0.664),
 	new SkillInfo(SkillName.Flare, ResourceType.cd_GCD, Aspect.Fire, true,
-		4, 0, 280, 1.157), // mana is handled separately
+		4, 0, 240, 1.157), // mana is handled separately
 
 	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false,
 		0, 0, 0, 0.49),// delayed
@@ -93,9 +93,9 @@ const skillInfos = [
 		0, 0, 880, 0.63),
 
 	new SkillInfo(SkillName.HighFire2, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 1500, 140, 1.154),
+		3, 1500, 100, 1.154),
 	new SkillInfo(SkillName.HighBlizzard2, ResourceType.cd_GCD, Aspect.Ice, true,
-		3, 800, 140, 1.158),
+		3, 800, 100, 1.158),
 	new SkillInfo(SkillName.Amplifier, ResourceType.cd_Amplifier, Aspect.Other, false,
 		0, 0, 0), // ? (assumed to be instant)
 	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true,
