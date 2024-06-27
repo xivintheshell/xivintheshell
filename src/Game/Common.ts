@@ -67,7 +67,7 @@ export const enum SkillReadyStatus {
 export const enum ResourceType {
 	// job resources
 	Mana = "Mana", // [0, 10000]
-	Polyglot = "Polyglot", // [0, 2]
+	Polyglot = "Polyglot", // [0, 3]
 	AstralFire = "AstralFire", // [0, 3]
 	UmbralIce = "UmbralIce", // [0, 3]
 	UmbralHeart = "UmbralHeart", // [0, 3]

@@ -373,7 +373,7 @@ function ResourcesDisplay(props) {
 		})}
 		color={colors.resources.polyStacks}
 		currentStacks={data.polyglotStacks}
-		maxStacks={2}/>;
+		maxStacks={3}/>;
 	return <div style={{textAlign: "left"}}>
 		{manaBar}
 		{manaTick}
