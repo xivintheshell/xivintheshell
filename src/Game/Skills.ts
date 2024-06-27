@@ -335,7 +335,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					sourceTime: game.getDisplayTime(),
 					sourceSkill: SkillName.HighThunder,
 					aspect: Aspect.Lightning,
-					basePotency: game.config.adjustedDoTPotency(50),
+					basePotency: game.config.adjustedDoTPotency(55),
 					snapshotTime: undefined,
 					description: "DoT " + (i+1) + "/10"
 				});
