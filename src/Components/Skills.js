@@ -35,6 +35,7 @@ export let displayedSkills = [
 	SkillName.Amplifier,
 	//SkillName.Paradox, // display paradox at F1/B1
 	SkillName.FlareStar,
+	// SkillName.Retrace, // display retrace at LL
 	SkillName.Addle,
 	SkillName.Swiftcast,
 	SkillName.LucidDreaming,
@@ -70,6 +71,7 @@ skillIcons.set(SkillName.HighBlizzard2, require("./Asset/highBlizzard2.png"));
 skillIcons.set(SkillName.Amplifier, require("./Asset/amplifier.png"));
 skillIcons.set(SkillName.Paradox, require("./Asset/paradox.png"));
 skillIcons.set(SkillName.FlareStar, require("./Asset/flareStar.png"));
+skillIcons.set(SkillName.Retrace, require("./Asset/retrace.png"));
 
 skillIcons.set(SkillName.Addle, require("./Asset/addle.png"));
 skillIcons.set(SkillName.Swiftcast, require("./Asset/swiftcast.png"));
@@ -249,15 +251,17 @@ const WaitSince = {
 	LastSkill: "LastSkill"
 };
 
-export var updateSkillButtons = (statusList, paradoxReady)=>{}
+export var updateSkillButtons = (statusList, paradoxReady, retraceReady)=>{}
 export class SkillsWindow extends React.Component {
 	constructor(props) {
 		super(props);
-		updateSkillButtons = ((statusList, paradoxReady)=>{
+		updateSkillButtons = ((statusList, paradoxReady, retraceReady)=>{
 			this.setState({
 				statusList: statusList,
 				paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
-				paradoxReady: paradoxReady
+				paradoxReady: paradoxReady,
+				retraceInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Retrace}),
+				retraceReady: retraceReady,
 			});
 		}).bind(this);
 
@@ -346,6 +350,7 @@ export class SkillsWindow extends React.Component {
 				return controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: sn});
 			}),
 			paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
+			retraceInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Retrace}),
 		});
 	}
 
@@ -355,7 +360,14 @@ export class SkillsWindow extends React.Component {
 			let isF1 = displayedSkills[i] === SkillName.Fire;
 			let skillName = (isF1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
 			let info = undefined;
-			if (this.state.paradoxInfo) info = (isF1 && this.state.paradoxReady) ? this.state.paradoxInfo : this.state.statusList[i];
+			if (this.state.paradoxInfo) 
+				info = (isF1 && this.state.paradoxReady) ? this.state.paradoxInfo : this.state.statusList[i];
+
+			let isLL = (displayedSkills[i] === SkillName.LeyLines);
+			skillName = (isLL && this.state.retraceReady) ? SkillName.Retrace : skillName;
+			if (this.state.retraceInfo)
+				info = (isLL && this.state.retraceReady) ? this.state.retraceInfo : info;
+
 			let btn = <SkillButton
 				key={i}
 				highlight={info ? info.highlight : false}

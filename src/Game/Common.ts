@@ -46,6 +46,7 @@ export const enum SkillName {
 	Amplifier = "Amplifier",
 	Paradox = "Paradox",
 	FlareStar = "Flare Star",
+	Retrace = "Retrace",
 	Addle = "Addle",
 	Swiftcast = "Swiftcast",
 	LucidDreaming = "Lucid Dreaming",
@@ -104,6 +105,7 @@ export const enum ResourceType {
 	cd_Triplecast = "cd_Triplecast", // [0, 2x]
 	cd_Manafont = "cd_Manafont", // [0, 1x]
 	cd_Amplifier = "cd_Amplifier", // [0, 1x]
+	cd_Retrace = "cd_Retrace", // [0, 1x]
 	cd_Addle = "cd_Addle", // [0, 1x]
 	cd_Swiftcast = "cd_Swiftcast", // [0, 1x]
 	cd_LucidDreaming = "cd_LucidDreaming", // [0, 1x]
