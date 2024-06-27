@@ -48,7 +48,7 @@ export const skillIcons = new Map();
 skillIcons.set(SkillName.Blizzard, require("./Asset/blizzard.png"));
 skillIcons.set(SkillName.Fire, require("./Asset/fire.png"));
 skillIcons.set(SkillName.Transpose, require("./Asset/transpose.png"));
-skillIcons.set(SkillName.HighThunder, require("./Asset/thunder3.png"));
+skillIcons.set(SkillName.HighThunder, require("./Asset/highThunder.png"));
 skillIcons.set(SkillName.Manaward, require("./Asset/manaward.png"));
 skillIcons.set(SkillName.Manafont, require("./Asset/manafont.png"));
 skillIcons.set(SkillName.Fire3, require("./Asset/fire3.png"));
@@ -69,7 +69,7 @@ skillIcons.set(SkillName.HighFire2, require("./Asset/highFire2.png"));
 skillIcons.set(SkillName.HighBlizzard2, require("./Asset/highBlizzard2.png"));
 skillIcons.set(SkillName.Amplifier, require("./Asset/amplifier.png"));
 skillIcons.set(SkillName.Paradox, require("./Asset/paradox.png"));
-skillIcons.set(SkillName.FlareStar, require("./Asset/placeholder_flarestar.png"));
+skillIcons.set(SkillName.FlareStar, require("./Asset/flareStar.png"));
 
 skillIcons.set(SkillName.Addle, require("./Asset/addle.png"));
 skillIcons.set(SkillName.Swiftcast, require("./Asset/swiftcast.png"));
