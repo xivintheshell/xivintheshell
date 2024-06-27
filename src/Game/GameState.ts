@@ -438,7 +438,7 @@ export class GameState {
 				[capturedManaCost, uhConsumption] = game.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 
 				// actually deduct resources (except some special ones like Paradox, Despair and Flare that deduct resources in onCapture fn)
-				if (props.skillName !== SkillName.Flare && props.skillName !== SkillName.Despair) {
+				if (props.skillName !== SkillName.Flare && props.skillName !== SkillName.Despair && props.skillName !== SkillName.FlareStar) {
 					game.resources.get(ResourceType.Mana).consume(capturedManaCost);
 					if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
 				}
