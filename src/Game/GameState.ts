@@ -39,7 +39,7 @@ export class GameState {
 		// RESOURCES (checked when using skills)
 		this.resources = new ResourceState(this);
 		this.resources.set(ResourceType.Mana, new Resource(ResourceType.Mana, 10000, 10000));
-		this.resources.set(ResourceType.Polyglot, new Resource(ResourceType.Polyglot, 2, 0));
+		this.resources.set(ResourceType.Polyglot, new Resource(ResourceType.Polyglot, 3, 0));
 		this.resources.set(ResourceType.AstralFire, new Resource(ResourceType.AstralFire, 3, 0));
 		this.resources.set(ResourceType.UmbralIce, new Resource(ResourceType.UmbralIce, 3, 0));
 		this.resources.set(ResourceType.UmbralHeart, new Resource(ResourceType.UmbralHeart, 3, 0));
