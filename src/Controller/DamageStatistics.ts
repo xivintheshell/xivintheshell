@@ -41,6 +41,7 @@ const abilities = new Set<SkillName>([
 	SkillName.Triplecast,
 	SkillName.UmbralSoul,
 	SkillName.Amplifier,
+	SkillName.Retrace,
 	SkillName.Addle,
 	SkillName.Swiftcast,
 	SkillName.LucidDreaming,

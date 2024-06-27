@@ -102,6 +102,8 @@ const skillInfos = [
 		2.5, 1600, 500, 0.624),
 	new SkillInfo(SkillName.FlareStar, ResourceType.cd_GCD, Aspect.Fire, true,
 		3, 0, 400, 1.15), /* Get actual delay after release */
+	new SkillInfo(SkillName.Retrace, ResourceType.cd_Retrace, Aspect.Other, false,
+		0, 0, 0), // ? (assumed to be instant)
 
 	new SkillInfo(SkillName.Addle, ResourceType.cd_Addle, Aspect.Other, false,
 		0, 0, 0, 0.621),// delayed
@@ -715,6 +717,24 @@ export class SkillsList extends Map<SkillName, Skill> {
 					game.resources.get(ResourceType.AstralSoul).consume(6);
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
+			}
+		));
+
+		// Retrace
+		skillsList.set(SkillName.Retrace, new Skill(SkillName.Retrace,
+			() => {
+				return game.resources.get(ResourceType.LeyLines).available(1);
+			},
+			(game, node) => {
+				game.useInstantSkill({
+					skillName: SkillName.Retrace,
+					onCapture: () => {
+						game.resources.get(ResourceType.LeyLines).enabled = true;
+					},
+					dealDamage: false,
+					node: node
+				});
+				node.resolveAll(game.getDisplayTime());
 			}
 		));
 
