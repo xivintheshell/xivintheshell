@@ -65,7 +65,7 @@ export class StatsModifier
 			uiMod.manaCostFire = 0;
 			uiMod.manaCostIce = 0;
 			if (ui.availableAmount() === 3)
-				uiMod.castTimeFire = 0;
+				uiMod.castTimeFire = 0.5;
 		} 
 		modifiers.push(uiMod);
 
