@@ -6,7 +6,7 @@ import changelog from "../changelog.json"
 import {getCurrentThemeColors} from "./ColorTheme";
 
 function Changelog() {
-	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={localize({en: "Changelog", zh: "更新日志", ja: "実装日志"})} defaultShow={false} content={
+	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={localize({en: "Changelog", zh: "更新日志", ja: "更新履歴"})} defaultShow={false} content={
 		<div>
 			{
 				changelog.map(entry => {
@@ -31,11 +31,11 @@ export function IntroSection(props: {}) {
 		<Expandable
 			defaultShow={true}
 			title={"instructions"}
-			titleNode={<span>{localize({en: "Instructions ", zh: "使用说明 ", ja: "使い方"})}
-				<Help topic={"expandable"} content={localize({en:"click me to expand or collapse", zh: "点击展开/折叠"})}/></span>}
+			titleNode={<span>{localize({en: "Instructions ", zh: "使用说明 ", ja: "説明 "})}
+				<Help topic={"expandable"} content={localize({en:"click me to expand or collapse", zh: "点击展开/折叠", ja: "クリックして開閉する"})}/></span>}
 			content={<div>
 				<div className="paragraph">
-					<b>{localize({en: "General Usage", zh: "基本用法"})}</b>
+					<b>{localize({en: "General Usage", zh: "基本用法", ja: "使い方"})}</b>
 				</div>
 				{localize({
 					en: <ul>
@@ -49,10 +49,16 @@ export function IntroSection(props: {}) {
 						<li style={smallGap}>单击使用技能，如果CD还没转好，可以再次点击，会自动等到转好然后重试。</li>
 						<li style={smallGap}>按 <ButtonIndicator text={"u"}/> 删除时间线上的最后一个操作（实时模式下此操作无效）。</li>
 						<li style={smallGap}>左键单击可以移除自己身上的buff。黑魔纹除外，黑魔纹在单击关闭后可以被再次点击开启。</li>
-					</ul>
+					</ul>,
+					ja: <ul>
+						<li style={smallGap}>右側にある<b>設定/編集</b>でステータスをセットしてから<ButtonIndicator text={"適用とリセット"}/>をクリックしてください。</li>
+						<li style={smallGap}>実行したいアクションをクリックしてください。リキャストが戻ってきていないアクションをクリックすると使用可能な時間まで待って再実行します。</li>
+						<li style={smallGap}><ButtonIndicator text={"u"}/>を押すと最後に追加されたアクションを削除できます。</li>
+						<li style={smallGap}>黒魔紋以外のバフをクリックすると削除できます。黒魔紋はバフの有効無効を切り替えられます。</li>
+					</ul>,
 				})}
 				<div className="paragraph">
-					<b>{localize({en: "Timeline", zh: "时间轴"})}</b>
+					<b>{localize({en: "Timeline", zh: "时间轴", ja: "タイムライン"})}</b>
 				</div>
 				{localize({
 					en: <ul>
@@ -70,25 +76,36 @@ export function IntroSection(props: {}) {
 						<li style={smallGap}>按 <ButtonIndicator text={"backspace"}/> 或 <ButtonIndicator text={"delete"}/> 删除选中技能及其之后的所有操作。</li>
 						<li style={smallGap}>选中某技能或者刻度上的某时间时，可以看到相应时间的职业资源状态。此时控制区域边框变为<b style={{color: "darkorange"}}>橙色</b>且无法使用技能。点击控制区域或时间轴空白处取消。
 						</li>
+					</ul>,
+					ja: <ul>
+						<li style={smallGap}><ButtonIndicator text={"shift"}/>を押しながらスクロールすると横スクロールできます。</li>
+						<li style={smallGap}>タイムライン上のアクションをクリックすると選択できます。<ButtonIndicator text={"shift"}/>を押しながらクリックすると複数選択できます。</li>
+						<li style={smallGap}><ButtonIndicator text={"backspace"}/>か<ButtonIndicator text={"delete"}/>を押すと選択中のアクションとそれ以降のアクションを全て削除します。</li>
+						<li style={smallGap}>タイムラインの経過時間が表示されているヘッダー部分をクリックするとメインコントロールの枠が<b style={{color: "darkorange"}}>オレンジ</b>になり、その瞬間の状態を確認できます。
+              その間はアクションを実行できません。他の場所をクリックするとキャンセルされ通常モードに戻ります。
+						</li>
 					</ul>
 				})}
 
 				{localize({
 					en: <div className={"paragraph"}><span style={{color: colors.fileDownload, cursor: "pointer"}}><u>[these]</u></span> are file download links. Click to download, or right click to choose save location.</div>,
-					zh: <div className={"paragraph"}><span style={{color: colors.fileDownload, cursor: "pointer"}}><u>[这样的按钮]</u></span> 是文件下载链接，可以点击直接下载也可以右键另存为。</div>
+					zh: <div className={"paragraph"}><span style={{color: colors.fileDownload, cursor: "pointer"}}><u>[这样的按钮]</u></span> 是文件下载链接，可以点击直接下载也可以右键另存为。</div>,
+					ja: <div className={"paragraph"}><span style={{color: colors.fileDownload, cursor: "pointer"}}><u>[このように表示されている部分]</u></span>はダウンロードリンクです。クリックしてダウンロードするか右クリックで場所を指定してダウンロードできます。</div>,
 				})}
 
 				{localize({
 					en: <div className="paragraph">You can save/load fight records from the right, under <b>Control</b> section. Most edits are also automatically saved in your browser cache, so it's generally okay to refresh the page and not worry about losing progress.</div>,
-					zh: <div className="paragraph">右侧最下方有链接可以保存/加载战斗记录。大部分编辑也都会被保存在浏览器缓存，所以一般情况下刷新网页也不会影响进度。</div>
+					zh: <div className="paragraph">右侧最下方有链接可以保存/加载战斗记录。大部分编辑也都会被保存在浏览器缓存，所以一般情况下刷新网页也不会影响进度。</div>,
+					ja: <div className="paragraph">右側の最下部からデータのセーブとロードができます。ほとんどの編集内容はブラウザのキャッシュにも保存されるためページをリロードをしても失われることはありません。</div>,
 				})}
 
 				{localize({
 					en: <div className="paragraph">Hover over <Help topic={"sampleTips"} content={"sample tip"}/> everywhere to see more tips.</div>,
 					zh: <div className="paragraph">鼠标悬浮在各处的 <Help topic={"sampleTips"} content={"我是一个说明"}/> 上查看更多使用说明。</div>,
+					ja: <div className="paragraph"><Help topic={"sampleTips"} content={"サンプルのヘルプテキストです"}/>をホバーするとヘルプテキストを確認できます。</div>,
 				})}
 				<div className="paragraph" style={{marginTop: 16}}>
-					<Expandable title={"Troubleshoot"} titleNode={localize({en: <b>troubleshoot</b>, zh: <b>常见问题</b>})} content={
+					<Expandable title={"Troubleshoot"} titleNode={localize({en: <b>troubleshoot</b>, zh: <b>常见问题</b>, ja: <b>トラブルシューティング</b>})} content={
 						localize({
 						en: <div>
 								<div className="paragraph">
@@ -115,7 +132,20 @@ export function IntroSection(props: {}) {
 									<li style={smallGap}><b>resetAll</b>: 删除所有本工具相关的浏览器缓存</li>
 								</ul>
 							</div>
-						</div>
+						</div>,
+						ja: <div>
+								<div className="paragraph">
+                  後方互換性があるとは限りません。保存したファイルが正しく読み込まれず、その理由がわからない場合はお問い合わせください。できる限りお手伝いします。
+								</div>
+								<div className="paragraph">
+                  ブラウザのキャッシュが何らかの理由で壊れている場合、次の方法でリセットできます。<br/>
+                  <b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b> にアクセスし、<b>{"{command}"}</b> を以下のいずれかに置き換えます：
+								<ul>
+									<li style={smallGap}><b>resetResourceOverrides</b>: 全てのリソースとタイムライン上のアクションを上書きします。</li>
+                  <li style={smallGap}><b>resetAll</b>: 全てのブラウザキャッシュを削除します。</li>
+								</ul>
+							</div>
+						</div>,
 						})}/>
 				</div>
 			</div>}
@@ -123,10 +153,10 @@ export function IntroSection(props: {}) {
 		<Expandable
 			defaultShow={false}
 			title={"About this tool"}
-			titleNode={localize({en: "About this tool", zh: "关于"})}
+			titleNode={localize({en: "About this tool", zh: "关于", ja: "このツールについて"})}
 			content={<div>
-				<div className="paragraph">{localize({en: "This is a FFXIV black mage simulator & rotation planner.", zh: "是个黑魔模拟器/排轴工具。"})}</div>
-				<div className="paragraph">{localize({en: "This tool is made by:", zh: "作者："})}</div>
+				<div className="paragraph">{localize({en: "This is a FFXIV black mage simulator & rotation planner.", zh: "是个黑魔模拟器/排轴工具。", ja: "FF14 黒魔道士のスキルローテーションシミュレーターです。"})}</div>
+				<div className="paragraph">{localize({en: "This tool is made by:", zh: "作者：", ja: "作者："})}</div>
 				{localize({
 					en: <ul>
 						<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
@@ -137,7 +167,12 @@ export function IntroSection(props: {}) {
 						<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
 						<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：程序；是个云黑魔玩家</li>
 						<li><b>Turtle, Spider, Santa</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
-					</ul>
+					</ul>,
+					ja: <ul>
+						<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: プロダクトマネージャー、凄腕黒魔道士</li>
+						<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: ソフトウェア開発者、しがない黒魔道士</li>
+						<li><b>Turtle, Spider, Santa,</b> そして新機能やバグ報告などで貢献してくださった多くのFF14プレーヤーの皆さん</li>
+					</ul>,
 				})}
 				{localize({
 					en: <div className={"paragraph"}>
@@ -149,25 +184,28 @@ export function IntroSection(props: {}) {
 					zh: <div className={"paragraph"}>
 						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可QQ联系（870340705），加时请注明来意。如果是反馈bug，最好把能够复现bug的战斗记录文件（从右侧下载的fight.txt）一起发给我。
 					</div>,
+					ja: <div className={"paragraph"}>
+            質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（rainduym@gail.com）でお問い合わせください。
+            バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
+					</div>,
 				})}
 
 				<div className="paragraph">{localize({
 					en: "Also, consider contributing! I'm not raiding this tier so I can't make the timeline markers..",
-					zh: "贡献大欢迎！时间轴标记文件摩多摩多！孩子很久没打高难了，自己做是不可能了。"
+					zh: "贡献大欢迎！时间轴标记文件摩多摩多！孩子很久没打高难了，自己做是不可能了。",
+					ja: "また、ぜひ貢献も考えてください！最近高難易度にコンテンツに行っていないのでタイムラインマーカーが作れません...",
 				})}</div>
 
-				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接："})}</div>
+				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接：", ja: "リンク集"})}</div>
 				{localize({
 					en:
-				<ul>
-					<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
-					<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation of this tool for Save the Queens areas by <b>A'zhek Silvaire @ Zalera</b></li>
-					<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job
-						guide</a></li>
-					<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
-						BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
-
-				</ul>,
+            <ul>
+              <li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
+              <li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation of this tool for Save the Queens areas by <b>A'zhek Silvaire @ Zalera</b></li>
+              <li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
+              <li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
+                BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
+            </ul>,
 					zh:
 						<ul>
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github页面</a></li>
@@ -175,11 +213,18 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>官方的黑魔法师职业介绍</a></li>
 						<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
 							The Balance服务器里的黑魔频道</a> （需要先加入Discord服务器）</li>
-
-					</ul>
+					</ul>,
+          ja:
+            <ul>
+              <li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
+              <li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: 南方ボズヤ戦線向けのツール。作者：<b>A'zhek Silvaire @ Zalera</b></li>
+              <li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
+              <li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
+                BLM resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
+            </ul>,
 				})}
 
-				<div className="paragraph"><Expandable title={"Implementation notes"} titleNode={localize({en: "Implementation notes", zh: "实现细节"})} defaultShow={false} content={
+				<div className="paragraph"><Expandable title={"Implementation notes"} titleNode={localize({en: "Implementation notes", zh: "实现细节", ja: "実装に関するメモ"})} defaultShow={false} content={
 
 					<div>
 						{localize({
@@ -192,7 +237,10 @@ export function IntroSection(props: {}) {
 							zh:
 								<div className="paragraph">
 									根据加拉哈德的一个理论，滑步窗口长度和读条时间呈线性关系；我写了<a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>这个脚本</a>去扒logs记录，证明此理论是基本准确的。由于这个理论的实际影响非常小（斜率约0.02），实际的滑步窗口还是被设置成了恒定的0.5秒。
-							</div>
+							</div>,
+							ja:
+								<div className="paragraph">
+									Galahad によると滑り撃ちの有効時間がキャスト時間に比例するため、私は<a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>スクリプト</a>を作成していくつかのログを解析して確認しました。傾きは~0.02と非常に小さいため単純化して0.5秒としました。</div>,
 						})}
 						{localize({
 							en:
@@ -202,7 +250,11 @@ export function IntroSection(props: {}) {
 							zh:
 								<div className="paragraph">
 									天语状态会在滑步窗口开始时刷新，也就是读条结束前0.5秒。
-								</div>
+								</div>,
+							ja:
+								<div className="paragraph">
+                  AFとUBの更新は滑り撃ちが可能な時間と同じタイミング（キャスト終了の0.5秒前）で発生します。
+								</div>,
 						})}
 						{localize({
 							en:
@@ -216,7 +268,13 @@ export function IntroSection(props: {}) {
 							zh:
 								<div className="paragraph">
 									感谢Blink和加拉哈德提供的各种技能后摇/生效延迟数据，详见<a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>这里最后一个函数变量</a> 。这些通过log来对比技能释放时间/buff生效刷新时间获得的数据，总的来说是比较准确的。欢迎联系我来查漏补缺。
-								</div>
+								</div>,
+							ja:
+								<div className="paragraph">
+									Galahad と Blink のおかげでアクション適用までの遅延時間の計算はかなり正確になりました（<a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>こちら</a>の関数の最後の引数を参照）。
+                  ログを確認すると、魔法は「prepare XX」から実際のダメージまで、その他の場合は「casts XX」から効果が発生するまでの間です（主にバフの適用/更新時間）。
+                  その他のデータの計測方法をご存知の場合はお知らせください。
+								</div>,
 							})}
 						{localize ({
 							en:
@@ -230,6 +288,11 @@ export function IntroSection(props: {}) {
 								<div className="paragraph">
 									跳雷和跳醒梦的时间都是独立计算的，它们和普通跳蓝之间存在一个随机的时间差，这个时间差可以在右侧的设置界面查看。醒梦后的第一跳蓝最早会出现在技能释放后的0.623秒，总计7跳。
 								</div>,
+							ja:
+								<div className="paragraph">
+                  ルーシッドドリームとサンダー系のティックは独立したタイマーを持っています。それぞれMPティックとは異なるランダムな時間のオフセットがあります。現在のオフセットについては設定セクションを参照してください。
+                  ルーシッドドリームの場合、最初のティックはスキルボタンを押してから0.623秒後に発生し7回ティックします。
+								</div>,
 						})}
 						{localize ({
 							en:
@@ -241,6 +304,10 @@ export function IntroSection(props: {}) {
 							zh:
 								<div className="paragraph">
 									8/29/23: 目前黑魔纹里的咏唱/回转时间计算方式是简单粗暴的基础时间*0.85，跟游戏里的实际时间有微小（0.01s以内）的误差。牛奶冰沙给了更精确的计算公式，但是我暂时没做因为 1) 近期没时间 2) 可能会导致旧txt文件无法读取。如果这个误差导致你排轴受阻，请联系我，我再抽空把它提上日程。
+								</div>,
+							ja:
+								<div className="paragraph">
+                  2024/8/29: 黒魔紋上のキャストとリキャスト時間が誤っていました。現在は単純に0.85倍にしていますが、最大で0.01秒の誤差があります。Vanilla Milksmoothie が正確な値を提案してくれましたが現在は実装する時間がないため、または過去のtxtファイルが壊れる可能性があるため、実装していません。問題がある場合はお知らせください。
 								</div>,
 						})}
 					</div>

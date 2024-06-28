@@ -23,6 +23,18 @@ export function localize(content: LocalizedContent) {
 	}
 }
 
+// Expect date in format "mm/dd/yy" which is in changelog.
+export function localizeDate(date: string, lang: Language): string {
+  if (lang === "zh" || lang === "en") return date
+
+  if (lang === "ja") {
+    let [month, day, year] = date.split("/");
+    return `20${year}年${month}月${day}日`;
+  }
+
+  return date
+}
+
 const skillsZh = new Map<SkillName, string>([
 	[SkillName.Fire, "火1"],
 	[SkillName.Blizzard, "冰1"],
@@ -59,7 +71,37 @@ const skillsZh = new Map<SkillName, string>([
 ]);
 
 const skillsJa = new Map<SkillName, string>([
-	// todo
+	[SkillName.Fire, "ファイア"],
+	[SkillName.Blizzard, "ブリザド"],
+	[SkillName.Fire4, "ファイジャ"],
+	[SkillName.Transpose, "トランス"],
+	[SkillName.Thunder3, "サンダガ"],
+	[SkillName.Manaward, "マバリア"],
+	[SkillName.Manafont, "マナフォント"],
+	[SkillName.Fire3, "ファイガ"],
+	[SkillName.Blizzard3, "ブリザガ"],
+	[SkillName.Freeze, "フリーズ"],
+	[SkillName.Flare, "フレア"],
+	[SkillName.LeyLines, "黒魔紋"],
+	[SkillName.Sharpcast, "激成魔"],
+	[SkillName.Blizzard4, "ブリザジャ"],
+	[SkillName.BetweenTheLines, "ラインズステップ"],
+	[SkillName.AetherialManipulation, "エーテリアルテップ"],
+	[SkillName.Triplecast, "三連魔"],
+	[SkillName.Foul, "ファウル"],
+	[SkillName.Despair, "デスペア"],
+	[SkillName.UmbralSoul, "アンブラルソウル"],
+	[SkillName.Xenoglossy, "ゼノグロシー"],
+	[SkillName.HighFire2, "ハイファイラ"],
+	[SkillName.HighBlizzard2, "ハイブリザラ"],
+	[SkillName.Amplifier, "アンプリファイア"],
+	[SkillName.Addle, "アドル"],
+	[SkillName.Swiftcast, "迅速魔"],
+	[SkillName.LucidDreaming, "ルーシッドドリーム"],
+	[SkillName.Surecast, "堅実魔"],
+	[SkillName.Tincture, "薬"],
+	[SkillName.Paradox, "パラドックス"],
+	[SkillName.Sprint, "スプリント"]
 ]);
 
 export function localizeSkillName(text: SkillName) : string {
@@ -133,7 +175,8 @@ export class SelectLanguage extends React.Component {
 			<span style={{display: "inline-block", fontSize: 17, position: "relative", marginRight: 2}}><MdLanguage/></span>
 			<div style={{display: "inline-block", fontSize: 14, position: "relative", top: -4}}>
 				<LanguageOption lang={"en"}/>|
-				<LanguageOption lang={"zh"}/>
+				<LanguageOption lang={"zh"}/>|
+				<LanguageOption lang={"ja"}/>
 			</div>
 		</div>
 	}
