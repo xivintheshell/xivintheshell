@@ -1,7 +1,7 @@
 import React from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
-import {TickMode} from "../Controller/Common";
+import {getCachedValue, setCachedValue, TickMode} from "../Controller/Common";
 import {ProcMode, ResourceType} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 import {localize} from "./Localization";
@@ -16,11 +16,11 @@ export class TimeControl extends React.Component {
 				tickMode: settings.tickMode,
 				timeScale: settings.timeScale
 			});
-			localStorage.setItem("playbackSettings", str);
+			setCachedValue("playbackSettings", str);
 		}
 
 		this.loadSettings = ()=>{
-			let str = localStorage.getItem("playbackSettings");
+			let str = getCachedValue("playbackSettings");
 			if (str) {
 				let settings = JSON.parse(str);
 				return settings;
@@ -59,7 +59,7 @@ export class TimeControl extends React.Component {
 			}
 		}).bind(this);
 
-		let settings = this.loadSettings();//LocalStorage.loadPlaybackSettings();
+		let settings = this.loadSettings();
 		if (settings) {
 			this.state = {
 				tickMode: settings.tickMode,

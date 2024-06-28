@@ -18,19 +18,20 @@ import {Expandable, GlobalHelpTooltip} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
 import {DamageStatistics} from "./DamageStatistics";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
+import {clearCachedValues, getCachedValue, setCachedValue, containsEwCacheContent} from "../Controller/Common";
 
 export let setRealTime = (inRealTime: boolean) => {};
 export let setHistorical = (inHistorical: boolean) => {};
 
 function handleUrlCommands(command?: string) {
 	if (command === "resetAll") {
-		localStorage.clear();
+		clearCachedValues();
 		window.location.href = "/ffxiv-blm-rotation";
 	}
 	else if (command === "resetResourceOverrides") {
-		let strOld = localStorage.getItem("gameRecord");
+		let strOld = getCachedValue("gameRecord");
 		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
-			let str = localStorage.getItem("gameRecord" + i.toString());
+			let str = getCachedValue("gameRecord" + i.toString());
 			if (i === 0 && str === null && strOld !== null) str = strOld; // backward compatible
 			if (str !== null) {
 				let content = JSON.parse(str);
@@ -39,7 +40,7 @@ function handleUrlCommands(command?: string) {
 					content.config.initialResourceOverrides = [];
 				}
 				content.actions = [];
-				localStorage.setItem("gameRecord" + i.toString(), JSON.stringify(content));
+				setCachedValue("gameRecord" + i.toString(), JSON.stringify(content));
 			}
 		}
 		window.location.href = "/ffxiv-blm-rotation";
@@ -268,7 +269,7 @@ export default class Main extends React.Component {
 
 							{/* PSA */}
 							<div style={{
-								padding: "5px 10px",
+								padding: "0 10px",
 								border: "1px solid " + colors.accent,
 								borderRadius: 4
 							}}>
@@ -308,6 +309,22 @@ export default class Main extends React.Component {
 									</div>
 								}/>
 							</div>
+
+							{/* EW cached content warning*/}
+							{containsEwCacheContent() ? <div style={{
+								margin: "10px 0",
+								padding: "10px",
+								border: "1px solid " + colors.warning,
+								color: colors.warning,
+								borderRadius: 4
+							}}>{ localize({
+								en: <div>
+									NOTE: Your browser cache contains data from BLM in the Shell before it's updated for Dawntrail.
+									Visit the Endwalker archive at <a style={{color: colors.warning}} href={"https://miyehn.me/ffxiv-blm-rotation-endwalker"}>miyehn.me/ffxiv-blm-rotation-endwalker</a> to access and automatically re-save it.
+									Once you do that, this notice will also go away.
+								</div>,
+								zh: <div>提示：</div>
+							}) }</div> : undefined}
 
 							<IntroSection/>
 						</div>

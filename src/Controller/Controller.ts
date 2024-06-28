@@ -1,4 +1,4 @@
-import {ReplayMode, TickMode} from "./Common";
+import {getCachedValue, removeCachedValue, ReplayMode, setCachedValue, TickMode} from "./Common";
 import {GameState} from "../Game/GameState";
 import {Debug, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
@@ -1009,11 +1009,11 @@ class Controller {
 	}
 
 	tryAutoLoad() {
-		let str = localStorage.getItem("gameRecord");
+		let str = getCachedValue("gameRecord");
 		if (str !== null) {
 			console.log("migrating existing record to slot 0");
-			localStorage.setItem("gameRecord0", str);
-			localStorage.removeItem("gameRecord");
+			setCachedValue("gameRecord0", str);
+			removeCachedValue("gameRecord");
 		}
 		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
 			this.timeline.loadSlot(i);

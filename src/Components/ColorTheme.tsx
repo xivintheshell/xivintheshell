@@ -1,6 +1,7 @@
 import React from "react";
 import {forceUpdateAll} from "./Main";
 import {MdDarkMode, MdLightMode} from "react-icons/md";
+import {getCachedValue, setCachedValue} from "../Controller/Common";
 
 export type ColorTheme = "Light" | "Dark";
 
@@ -14,6 +15,7 @@ export type ThemeColors = {
 	fileDownload: string,
 	text: string,
 	emphasis: string,
+	warning: string,
 	background: string,
 	tipBackground: string,
 	bgLowContrast: string,
@@ -60,6 +62,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 			fileDownload: "#798c3f",
 			text: "#b0b0b0",
 			emphasis: "#dadada",
+			warning: "#d2a330",
 			background: "#1f1f21",
 			tipBackground: "#2a2a2a",
 			bgLowContrast: "#333",
@@ -103,6 +106,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 			fileDownload: "#798c3f",
 			text: "black",
 			emphasis: "black",
+			warning: "#dc8f00",
 			background: "white",
 			tipBackground: "white",
 			bgLowContrast: "#efefef",
@@ -163,7 +167,7 @@ export class SelectColorTheme extends React.Component {
 	constructor(props: {}) {
 		super(props);
 		let colorTheme: ColorTheme = "Light";
-		let savedColorTheme: string | null = localStorage.getItem("colorTheme");
+		let savedColorTheme: string | null = getCachedValue("colorTheme");
 		if (savedColorTheme === "Light" || savedColorTheme === "Dark") colorTheme = savedColorTheme;
 		this.state = {
 			colorTheme: colorTheme
@@ -174,7 +178,7 @@ export class SelectColorTheme extends React.Component {
 		getCurrentColorTheme = (()=>{return this.state.colorTheme}).bind(this);
 		setCurrentColorTheme = ((colorTheme: ColorTheme)=>{
 			this.setState({colorTheme: colorTheme})
-			localStorage.setItem("colorTheme", colorTheme);
+			setCachedValue("colorTheme", colorTheme);
 		}).bind(this);
 	}
 	componentDidUpdate(prevProps: Readonly<{}>, prevState: Readonly<{colorTheme: ColorTheme}>, snapshot?: any) {

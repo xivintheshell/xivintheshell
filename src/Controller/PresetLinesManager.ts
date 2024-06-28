@@ -1,4 +1,4 @@
-import {FileType} from "./Common";
+import {FileType, getCachedValue, setCachedValue} from "./Common";
 import {ActionNode, Line} from "./Record";
 import {asyncFetch} from "../Components/Common";
 // @ts-ignore
@@ -11,6 +11,7 @@ export class PresetLinesManager {
 
     constructor() {
         let loadLocalSuccess = this.#load();
+
         if (!loadLocalSuccess) {
             asyncFetch(
                 "https://miyehn.me/ffxiv-blm-rotation/presets/lines/default.txt",
@@ -22,11 +23,11 @@ export class PresetLinesManager {
     }
 
     #save() {
-        localStorage.setItem("presetLines", JSON.stringify(this.serialized()));
+        setCachedValue("presetLines", JSON.stringify(this.serialized()));
     }
 
     #load() {
-        let data = localStorage.getItem("presetLines");
+        let data = getCachedValue("presetLines");
         if (data !== null) {
             let content = JSON.parse(data);
             this.deserializeAndAppend(content);

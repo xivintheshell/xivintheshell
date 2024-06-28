@@ -4,6 +4,7 @@ import {SkillName} from "../Game/Common";
 import {ContentNode} from "./Common";
 import {MdLanguage} from "react-icons/md";
 import {getCurrentThemeColors} from "./ColorTheme";
+import {getCachedValue, setCachedValue} from "../Controller/Common";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -98,7 +99,7 @@ export class SelectLanguage extends React.Component {
 	constructor(props: {}) {
 		super(props);
 		let lang: Language = "en";
-		let savedLang = localStorage.getItem("language");
+		let savedLang = getCachedValue("language");
 		if (savedLang === "zh" || savedLang === "ja") lang = savedLang;
 		this.state = {
 			lang: lang
@@ -109,7 +110,7 @@ export class SelectLanguage extends React.Component {
 		getCurrentLanguage = (()=>{return this.state.lang}).bind(this);
 		setCurrentLanguage = ((lang: Language)=>{
 			this.setState({lang: lang})
-			localStorage.setItem("language", lang);
+			setCachedValue("language", lang);
 		}).bind(this);
 	}
 	componentDidUpdate(prevProps: Readonly<{}>, prevState: Readonly<{lang: Language}>, snapshot?: any) {

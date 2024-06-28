@@ -11,6 +11,7 @@ import {
 } from "./TimelineCanvas";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+import {getCachedValue, setCachedValue} from "../Controller/Common";
 
 export let updateTimelineView = () => {};
 
@@ -151,7 +152,7 @@ class TimelineDisplaySettings extends React.Component {
 		super(props);
 		// display scale
 		this.initialDisplayScale = 0.4;
-		let str = localStorage.getItem("timelineDisplayScale");
+		let str = getCachedValue("timelineDisplayScale");
 		if (str !== null) {
 			this.initialDisplayScale = parseFloat(str);
 		}
@@ -163,13 +164,13 @@ class TimelineDisplaySettings extends React.Component {
 		}
 
 		// tincture buff percentage
-		str = localStorage.getItem("tinctureBuffPercentage");
+		str = getCachedValue("tinctureBuffPercentage");
 		if (str !== null) {
 			this.state.tinctureBuffPercentageStr = str;
 		}
 
 		// untargetable mask
-		str = localStorage.getItem("untargetableMask");
+		str = getCachedValue("untargetableMask");
 		if (str !== null) {
 			this.state.untargetableMask = parseInt(str) > 0;
 		}
@@ -181,14 +182,14 @@ class TimelineDisplaySettings extends React.Component {
 			let percentage = parseFloat(val);
 			if (!isNaN(percentage)) {
 				controller.setTinctureBuffPercentage(percentage);
-				localStorage.setItem("tinctureBuffPercentage", val);
+				setCachedValue("tinctureBuffPercentage", val);
 			}
 		}).bind(this);
 		this.setUntargetableMask = ((val: boolean)=>{
 			this.setState({untargetableMask: val});
 
 			controller.setUntargetableMask(val);
-			localStorage.setItem("untargetableMask", val ? "1" : "0");
+			setCachedValue("untargetableMask", val ? "1" : "0");
 		}).bind(this);
 	}
 	componentDidMount() {
@@ -203,12 +204,8 @@ class TimelineDisplaySettings extends React.Component {
 					defaultValue={this.initialDisplayScale.toString()}
 					onChange={(newVal)=>{
 						controller.timeline.setHorizontalScale(parseFloat(newVal));
-						//let range = getVisibleRangeX()
-						//let mid = controller.timeline.timeFromPosition(range.left + range.width / 2);
-						//console.log(range);
-						//console.log(mid);
 						controller.scrollToTime();
-						localStorage.setItem("timelineDisplayScale", newVal);
+						setCachedValue("timelineDisplayScale", newVal);
 					}}/>
 			<span> | </span>
 			<Input defaultValue={this.state.tinctureBuffPercentageStr} description={localize({en: " tincture potency buff ", zh: "爆发药威力加成 "})} onChange={this.setTinctureBuffPercentageStr} width={2} style={{display: "inline"}}/>

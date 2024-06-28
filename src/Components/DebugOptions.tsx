@@ -1,6 +1,7 @@
 import React from 'react';
 import {Debug} from "../Game/Common";
 import {localize} from "./Localization";
+import {clearCachedValues, getCachedValue, setCachedValue} from "../Controller/Common";
 
 type DebugSettings = {
 	noEnochian: boolean;
@@ -18,10 +19,10 @@ export class DebugOptions extends React.Component {
 		super(props);
 		this.saveSettings = (settings: DebugSettings)=>{
 			let str: string = JSON.stringify(settings);
-			localStorage.setItem("debugOptions", str);
+			setCachedValue("debugOptions", str);
 		}
 		this.loadSettings = ()=>{
-			let str = localStorage.getItem("debugOptions");
+			let str = getCachedValue("debugOptions");
 			if (str) {
 				let content = JSON.parse(str);
 				let settings: DebugSettings = {
@@ -94,7 +95,7 @@ export class DebugOptions extends React.Component {
 			</div>
 			<div>
 				<button style={{color: "#be0f0f"}} onClick={()=>{
-					localStorage.clear();
+					clearCachedValues();
 					window.location.reload();
 				}}>{localize({
 					en: "[DANGER!] clear browser cache and reload",
