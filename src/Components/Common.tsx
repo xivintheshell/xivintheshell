@@ -30,7 +30,8 @@ function getCsvUrl(rawContent: object) {
 
 export const enum FileFormat {
 	Json = "JSON",
-	Csv = "CSV"
+	Csv = "CSV",
+	Png = "PNG",
 }
 
 type SaveToFileProps = {
@@ -41,25 +42,32 @@ type SaveToFileProps = {
 };
 export class SaveToFile extends React.Component{
 	props: SaveToFileProps;
-	state: { jsonContent: object, csvContent: Array<Array<any>> }
+	state: { jsonContent: object, csvContent: Array<Array<any>>, pngContent?: HTMLCanvasElement }
 	constructor(props: SaveToFileProps) {
 		super(props);
 		this.props = props;
 		this.state = {
 			jsonContent: {},
-			csvContent: []
+			csvContent: [],
+			pngContent: undefined,
 		};
 	}
 	updateContent() {
 		let newContent = this.props.getContentFn();
 		if (this.props.fileFormat===FileFormat.Json) this.setState({jsonContent: newContent});
 		else if (this.props.fileFormat===FileFormat.Csv) this.setState({csvContent: newContent});
+		else if (this.props.fileFormat === FileFormat.Png) {
+			this.setState({pngContent: newContent});
+		}
 		else console.assert(false);
 	}
 	render() {
 		let url = "";
 		if (this.props.fileFormat === FileFormat.Json) url = getBlobUrl(this.state.jsonContent);
 		else if (this.props.fileFormat === FileFormat.Csv) url = getCsvUrl(this.state.csvContent);
+		else if (this.props.fileFormat === FileFormat.Png) {
+			url = this.state.pngContent?.toDataURL() ?? "";
+		}
 		else (console.assert(false));
 		return <a
 			style={{color: getCurrentThemeColors().fileDownload, marginRight: 6}}

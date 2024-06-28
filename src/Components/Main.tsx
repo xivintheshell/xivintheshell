@@ -9,6 +9,7 @@ import { StatusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import 'react-tabs/style/react-tabs.css';
 import {LoadSave} from "./LoadSave";
+import {ImageExport} from "./ImageExport";
 import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../changelog.json"
@@ -308,6 +309,7 @@ export default class Main extends React.Component {
 								<Config/>
 								<TimeControl/>
 								<LoadSave/>
+								<ImageExport/>
 							</div>
 						</div>
 						<SkillSequencePresets/>

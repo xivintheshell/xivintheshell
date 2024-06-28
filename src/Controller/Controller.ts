@@ -20,6 +20,7 @@ import {setHistorical, setRealTime} from "../Components/Main";
 import {ElemType, MAX_TIMELINE_SLOTS, Timeline} from "./Timeline"
 import {scrollTimelineTo, updateTimelineView} from "../Components/Timeline";
 import {ActionNode, ActionType, Line, Record} from "./Record";
+import {ImageExportConfig} from "./ImageExportConfig";
 import {PresetLinesManager} from "./PresetLinesManager";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
@@ -47,6 +48,7 @@ class Controller {
 	#presetLinesManager;
 	gameConfig;
 	record;
+	imageExportConfig: ImageExportConfig;
 	game;
 	#tinctureBuffPercentage = 0;
 	#untargetableMask = true;
@@ -95,6 +97,13 @@ class Controller {
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;
+		this.imageExportConfig = {
+			wrapThresholdSeconds: JSON.parse(getCachedValue("img: wrapThresholdSeconds") ?? "0"),
+		    includeMPTicks: JSON.parse(getCachedValue("img: includeMPTicks") ?? "false"),
+		    includeDamageApplication: JSON.parse(getCachedValue("img: includeDamageApplication") ?? "false"),
+		    includeTime: JSON.parse(getCachedValue("img: includeTime") ?? "true"),
+			includeBuffIndicators: JSON.parse(getCachedValue("img: includeBuffIndicators") ?? "true"),
+		};
 
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown; // left of timeline origin
 
@@ -1328,6 +1337,16 @@ class Controller {
 				this.#handleKeyboardEvent_Manual(evt);
 			}
 		}
+	}
+
+	setImageExportConfig(newConfig: ImageExportConfig) {
+		this.imageExportConfig = newConfig;
+	}
+
+	generateTimelineImageURL(): string {
+		// TODO don't make this hacky
+		let canvas = document.getElementsByTagName("canvas")[0];
+		return canvas.toDataURL("image/png");
 	}
 }
 export const controller = new Controller();

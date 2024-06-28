@@ -1,5 +1,11 @@
 [
 	{
+		"date": "9/1/24",
+		"changes": [
+			"Add image export feature"
+		]
+	},
+	{
 		"date": "8/25/24",
 		"changes": [
 			"Remove \"extended buff duration\" config option and now triple always lasts 15.7s and firestarter lasts 30.5s",

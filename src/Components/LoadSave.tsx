@@ -55,7 +55,7 @@ export class LoadSave extends React.Component {
 					zh: "只有txt可以被导入，csv是导出给excel等外部工具用的"
 				})}/>
 			</div>
-			<div style={{marginTop: 10}}>
+			<div style={{marginTop: 10, marginBottom: 15}}>
 				<span>{localize({en: "Load from file: ", zh: "从文件导入战斗记录："})}</span>
 				<input
 					style={{
