@@ -1,8 +1,14 @@
 [
 	{
+		"date": "6/27/24",
+		"changes": [
+			"6/26 PSA before Dawntrail & 6/27 quick update"
+		]
+	},
+	{
 		"date": "6/21/24",
 		"changes": [
-			"Fixed a tiny bug (yeah I'm back): when switching language, source of damage on the timeline now updates just like the rest of UI",
+			"Fixed a tiny bug: when switching language, source of damage on the timeline now updates just like the rest of UI",
 			"Some housekeeping stuff: a dependency package update, repository README.md"
 		]
 	},

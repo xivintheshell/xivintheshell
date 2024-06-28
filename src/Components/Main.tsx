@@ -14,7 +14,7 @@ import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../changelog.json"
 import {localize, SelectLanguage} from "./Localization"
-import {GlobalHelpTooltip} from "./Common";
+import {Expandable, GlobalHelpTooltip} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
 import {DamageStatistics} from "./DamageStatistics";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
@@ -265,6 +265,49 @@ export default class Main extends React.Component {
 								</div>,
 								zh: <div style={{marginBottom: 16}}>最近更新（月日年）：{changelog[0].date}（详见<b>关于/更新日志</b>）（<a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>开发计划</a>）</div>
 							})}
+
+							{/* PSA */}
+							<div style={{
+								padding: "5px 10px",
+								border: "1px solid " + colors.accent,
+								borderRadius: 4
+							}}>
+								<Expandable title={"psa-062624"} titleNode={<b style={{color: colors.accent}}>[6/26/24] PSA from miyehn</b>} content={
+									<div>
+										<div className={"paragraph"}>
+											Hi black mages, as Dawntrail is around the corner, here are a couple of things regarding Black Mage in the Shell.
+										</div>
+										<div className={"paragraph"}>
+											[6/27 update] Thanks to Turtle, updates to LV100 will be available here in the next day or two.
+											Meanwhile, the Endwalker archive is now live at <a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>.
+										</div>
+
+										<h4>Archiving Endwalker BLM in the Shell</h4>
+										<div className={"paragraph"}>
+											I'll make a fork of this tool and let it be a record of Endwalker BLM, which will also allow people to playback existing fight records.
+										</div>
+										<div className={"paragraph"}>
+											Also, if anyone has interesting records that you are willing to make public, you can send them to me and I will put them on display on the archived BLM in the Shell.
+											If you do that, it would be helpful if you also include the corresponding timeline markers, logs link (if any & willing to share), video (if any).
+											I know some CN black mages are sending me some soon-ish, so look forward to that :)
+										</div>
+
+										<h4>Updating to Dawntrail BLM</h4>
+										<div className={"paragraph"}>
+											Yes it will be updated to match LV100 BLM.
+											I will be pretty free in the next 10 days or so but I will not be the fastest in reaching LV100 BLM (I'm not a BLM main in game lol).
+											It will take me a little while and will ask a ton of questions, maybe even ask people to test things out for me (I'm not sure where.
+											In questions channel on The Balance maybe, until it gets too cluttered and we make a thread or something).
+											And the initial updates will almost definitely be very buggy, but bear with me it will get there. Send me bug reports if you find any, tysm!
+										</div>
+										<div className={"paragraph"}>
+											After that, I can work on other commonly requested features like party buffs and importing from logs.
+											If people strongly prefer one over the other, let me know, or suggest other features for DT BLM in the Shell and I'll consider as well, depending on implementation difficulty.
+											I don't make guarantees to any of these items though, as this is still a hobby project.
+										</div>
+									</div>
+								}/>
+							</div>
 
 							<IntroSection/>
 						</div>
