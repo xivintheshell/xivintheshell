@@ -99,7 +99,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Amplifier, ResourceType.cd_Amplifier, Aspect.Other, false,
 		0, 0, 0), // ? (assumed to be instant)
 	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true,
-		2.5, 1600, 500, 0.624),
+		0, 1600, 500, 0.624),
 	new SkillInfo(SkillName.FlareStar, ResourceType.cd_GCD, Aspect.Fire, true,
 		3, 0, 400, 1.15), /* Get actual delay after release */
 	new SkillInfo(SkillName.Retrace, ResourceType.cd_Retrace, Aspect.Other, false,
