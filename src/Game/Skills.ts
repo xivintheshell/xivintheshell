@@ -739,7 +739,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		));
 
 		// Addle
-		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 10});
+		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 15});
 
 		// Swiftcast
 		addResourceAbility({skillName: SkillName.Swiftcast, rscType: ResourceType.Swiftcast, instant: true, duration: 10});
