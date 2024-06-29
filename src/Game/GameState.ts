@@ -422,15 +422,18 @@ export class GameState {
 		}
 
 		// attach potency node
-		let potency = new Potency({
-			sourceTime: this.getDisplayTime(),
-			sourceSkill: props.skillName,
-			aspect: skillInfo.aspect,
-			basePotency: skillInfo.basePotency,
-			snapshotTime: undefined,
-			description: "some description",
-		});
-		props.node.addPotency(potency);
+		let potency: Potency | undefined = undefined;
+		if (skillInfo.basePotency > 0) {
+			potency = new Potency({
+				sourceTime: this.getDisplayTime(),
+				sourceSkill: props.skillName,
+				aspect: skillInfo.aspect,
+				basePotency: skillInfo.basePotency,
+				snapshotTime: undefined,
+				description: "some description",
+			});
+			props.node.addPotency(potency);
+		}
 
 		let takeEffect = function(game: GameState) {
 			let resourcesStillAvailable = skill.available();
@@ -445,12 +448,19 @@ export class GameState {
 				}
 
 				// potency
-				potency.snapshotTime = game.getDisplayTime();
-				potency.modifiers = getPotencyModifiersFromResourceState(game.resources, skillInfo.aspect);
+				if (potency) {
+					potency.snapshotTime = game.getDisplayTime();
+					potency.modifiers = getPotencyModifiersFromResourceState(game.resources, skillInfo.aspect);
+				}
 
 				// tincture
 				if (game.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
 					props.node.addBuff(ResourceType.Tincture);
+				}
+
+				// ice spells: gain mana if in UI
+				if (skillInfo.aspect === Aspect.Ice) {
+					game.gainUmbralMana();
 				}
 
 				let captureInfo: SkillCaptureCallbackInfo = {
@@ -464,7 +474,9 @@ export class GameState {
 					skillInfo.name + " applied",
 					skillInfo.skillApplicationDelay,
 					()=>{
-						controller.resolvePotency(potency);
+						if (potency) {
+							controller.resolvePotency(potency);
+						}
 						let applicationInfo: SkillApplicationCallbackInfo = {
 							//...
 						};
@@ -488,7 +500,7 @@ export class GameState {
 		}
 
 		// Paradox made instant via Dawntrail
-		if (props.skillName === SkillName.Paradox) {
+		if (props.skillName === SkillName.Paradox || props.skillName === SkillName.UmbralSoul) {
 			instantCast(this, undefined);
 			return;
 		}

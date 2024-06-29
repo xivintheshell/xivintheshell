@@ -108,8 +108,11 @@ export class Potency {
 	}
 
 	resolve(displayTime: number) {
+		if (this.base < 1) {
+			console.warn(this);
+		}
 		console.assert(this.snapshotTime !== undefined);
-		console.assert(this.applicationTime === undefined);
+		console.assert(this.applicationTime === undefined, this.sourceSkill);
 		this.applicationTime = displayTime;
 	}
 

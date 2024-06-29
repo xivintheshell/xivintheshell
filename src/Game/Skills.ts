@@ -197,7 +197,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 				if (game.getFireStacks() === 0) // no AF
 				{
 					game.castSpell({skillName: SkillName.Blizzard, onCapture: (cap: SkillCaptureCallbackInfo) => {
-						game.gainUmbralMana();
 						game.resources.get(ResourceType.UmbralIce).gain(1);
 						game.startOrRefreshEnochian();
 					}, onApplication: (app: SkillApplicationCallbackInfo) => {
@@ -437,7 +436,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				game.castSpell({skillName: SkillName.Blizzard3, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.gainUmbralMana();
 					game.switchToAForUI(ResourceType.UmbralIce, 3);
 					game.startOrRefreshEnochian();
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
@@ -452,7 +450,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				game.castSpell({skillName: SkillName.Freeze, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.gainUmbralMana();
 					game.resources.get(ResourceType.UmbralHeart).gain(3);
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
@@ -489,7 +486,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				game.castSpell({skillName: SkillName.Blizzard4, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.gainUmbralMana();
 					game.resources.get(ResourceType.UmbralHeart).gain(3);
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
@@ -610,16 +606,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return game.getIceStacks() > 0;
 			},
 			(game, node) => {
-				game.useInstantSkill({
+				game.castSpell({
 					skillName: SkillName.UmbralSoul,
 					onCapture: () => {
-						game.gainUmbralMana();
 						game.resources.get(ResourceType.UmbralIce).gain(1);
 						game.resources.get(ResourceType.UmbralHeart).gain(1);
 						game.startOrRefreshEnochian();
-						node.resolveAll(game.getDisplayTime());
 					},
-					dealDamage: false,
+					onApplication: (app: SkillApplicationCallbackInfo) => {},
 					node: node
 				});
 			}
