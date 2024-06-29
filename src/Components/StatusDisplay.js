@@ -71,7 +71,7 @@ buffIcons.set(ResourceType.Triplecast, require("./Asset/buff_triplecast.png"));
 buffIcons.set(ResourceType.Triplecast + "2", require("./Asset/buff_triplecast2.png"));
 buffIcons.set(ResourceType.Triplecast + "3", require("./Asset/buff_triplecast3.png"));
 buffIcons.set(ResourceType.Firestarter, require("./Asset/buff_firestarter.png"));
-buffIcons.set(ResourceType.Thunderhead, require("./Asset/buff_thundercloud.png"));
+buffIcons.set(ResourceType.Thunderhead, require("./Asset/buff_thunderhead.png"));
 buffIcons.set(ResourceType.ThunderDoT, require("./Asset/buff_thunder3.png"));
 buffIcons.set(ResourceType.LeyLines, require("./Asset/buff_leyLines.png"));
 buffIcons.set(ResourceType.Manaward, require("./Asset/buff_manaward.png"));
