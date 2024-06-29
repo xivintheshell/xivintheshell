@@ -1,9 +1,10 @@
 [
 	{
-		"date": "6/28/24",
+		"date": "6/29/24",
 		"changes": [
-			"preliminary 7.0 job changes update",
-			"localStorage refactor & migration related changes (there should be a notice that links to the EW version when there's obsolete data)"
+			"preliminary 7.0 job changes",
+			"localStorage refactor & migration (there should be a notice that links to the EW version when there's obsolete data)",
+			"update PSA and \"About this tool\""
 		]
 	},
 	{

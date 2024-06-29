@@ -131,47 +131,50 @@ export function IntroSection(props: {}) {
 					en: <ul>
 						<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
 						<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
-						<li><b>Turtle, Spider, Santa,</b> and many other players who contributed feature suggestions, timeline markers, bug reports, or in any other way</li>
+						<li><b>Turtle</b>, who did the heavy work of updating this tool from Endwalker to Dawntrail</li>
+						<li><b>Yara, Spider, Santa,</b> and many other players who contributed feature suggestions, timeline markers, bug reports, or in any other way</li>
 					</ul>,
 					zh: <ul>
 						<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
 						<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：程序；是个云黑魔玩家</li>
-						<li><b>Turtle, Spider, Santa</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
+						<li><b>Turtle</b>, 把本工具从6.0更新到7.0的大功臣</li>
+						<li><b>Yara, Spider, Santa</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
 					</ul>
 				})}
 				{localize({
 					en: <div className={"paragraph"}>
-						If you have questions,
-						encountered bugs, or would like to suggest features, you can find me on discord
-						(miyehn), or via email (rainduym@gmail.com). In case of sending me a bug report, attaching the
+						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={"https://discord.com/channels/277897135515762698/1255782490862387360"}>this thread in The Balance</a>.
+						You can also find me directly on discord (miyehn), or via email (rainduym@gmail.com). In case of sending a bug report, attaching the
 						fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
 					</div>,
 					zh: <div className={"paragraph"}>
-						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可QQ联系（870340705），加时请注明来意。如果是反馈bug，最好把能够复现bug的战斗记录文件（从右侧下载的fight.txt）一起发给我。
+						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从右侧下载的fight.txt）一起发过来。
 					</div>,
 				})}
 
 				<div className="paragraph">{localize({
-					en: "Also, consider contributing! I'm not raiding this tier so I can't make the timeline markers..",
-					zh: "贡献大欢迎！时间轴标记文件摩多摩多！孩子很久没打高难了，自己做是不可能了。"
+					en: "Also, consider contributing! I'm not raiding lately so I can't make the timeline markers..",
+					zh: "贡献大欢迎！比如给我发时间轴标记文件！我自己很久没打高难了，自己做是不可能了。"
 				})}</div>
 
 				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接："})}</div>
 				{localize({
-					en:
-				<ul>
-					<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
-					<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation of this tool for Save the Queens areas by <b>A'zhek Silvaire @ Zalera</b></li>
-					<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job
-						guide</a></li>
-					<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
-						BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
+					en: <ul>
+						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
+						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>Black Mage in the Shell (Dawntrail at LV90)</a>: a variation for planning fights at LV90, created by <b>Akairyu</b></li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>: a snapshot of this tool at the end of Endwalker. In a few days it will also display some notable fight plans from Endwalker, as memoir.</li>
+						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation for Save the Queens areas, created by <b>A'zhek Silvaire @ Zalera</b></li>
+						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job
+							guide</a></li>
+						<li><a target={"_blank"} href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
+							BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
 
-				</ul>,
-					zh:
-						<ul>
+					</ul>,
+					zh: <ul>
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github页面</a></li>
-						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>博兹雅版云黑魔（Black Mage in the Bozjan Shell）</a>: 本工具的博兹雅/天佑女王版。制作者： <b>A'zhek Silvaire @ Zalera</b></li>
+						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>7.0版排轴器（90级）</a>，可以用来给TOP等副本排轴，作者是<b>Akairyu</b></li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.0版排轴器</a>，历史版本，几天后还会在那里展出一些6.0时期的轴，作为纪念。</li>
+						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>博兹雅版排轴器（Black Mage in the Bozjan Shell）</a>: 本工具的博兹雅/天佑女王版。制作者： <b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>官方的黑魔法师职业介绍</a></li>
 						<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
 							The Balance服务器里的黑魔频道</a> （需要先加入Discord服务器）</li>
