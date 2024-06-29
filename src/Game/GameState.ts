@@ -299,24 +299,20 @@ export class GameState {
 		}
 	}
 
-	switchToAForUI(rscType: ResourceType, numStacks: number) {
+	switchToAForUI(rscType: ResourceType, numStacksToGain: number) {
 		let af = this.resources.get(ResourceType.AstralFire);
 		let ui = this.resources.get(ResourceType.UmbralIce);
 		let uh = this.resources.get(ResourceType.UmbralHeart);
 		let paradox = this.resources.get(ResourceType.Paradox);
 		let as = this.resources.get(ResourceType.AstralSoul);
 
-		if (ui.available(0) && af.available(0)) {
-			this.gainThunderhead();
-		}
-
 		if (rscType===ResourceType.AstralFire)
 		{
-			af.gain(numStacks);
-			if (ui.availableAmount() > 0) {
+			if (af.availableAmount() === 0) {
 				this.gainThunderhead();
-				as.consume(as.availableAmount());
 			}
+			af.gain(numStacksToGain);
+
 			if (ui.available(3) && uh.available(3)) {
 				paradox.gain(1);
 			}  
@@ -325,10 +321,14 @@ export class GameState {
 		}
 		else if (rscType===ResourceType.UmbralIce)
 		{
-			ui.gain(numStacks);
+			if (ui.availableAmount() === 0) {
+				this.gainThunderhead();
+			}
+			ui.gain(numStacksToGain);
+
 			paradox.consume(paradox.availableAmount());
-			this.gainThunderhead();
 			af.consume(af.availableAmount());
+			as.consume(as.availableAmount());
 		}
 	}
 

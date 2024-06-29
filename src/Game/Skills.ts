@@ -197,7 +197,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				if (game.getFireStacks() === 0) // no AF
 				{
 					game.castSpell({skillName: SkillName.Blizzard, onCapture: (cap: SkillCaptureCallbackInfo) => {
-						game.resources.get(ResourceType.UmbralIce).gain(1);
+						game.switchToAForUI(ResourceType.UmbralIce, 1);
 						game.startOrRefreshEnochian();
 					}, onApplication: (app: SkillApplicationCallbackInfo) => {
 					}, node: node});
@@ -243,7 +243,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				if (game.getIceStacks() === 0) { // in fire or no enochian
 					game.castSpell({skillName: SkillName.Fire, onCapture: (cap: SkillCaptureCallbackInfo) => {
-						game.resources.get(ResourceType.AstralFire).gain(1);
+						game.switchToAForUI(ResourceType.AstralFire, 1);
 						game.startOrRefreshEnochian();
 						potentiallyGainFirestarter(game);
 					}, onApplication: (app: SkillApplicationCallbackInfo) => {
