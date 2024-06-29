@@ -352,7 +352,7 @@ function ResourcesDisplay(props) {
 			en: "astral soul",
 			zh: "星极魂"
 		})}
-		color={colors.resources.astralFire}
+		color={colors.resources.astralSoul}
 		currentStacks={data.astralSoul}
 		maxStacks={6}/>;
 	let polyTimer = <ResourceBar
