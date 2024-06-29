@@ -315,21 +315,21 @@ export class SkillsList extends Map<SkillName, Skill> {
 			thunder.tickCount = 0;
 		}
 
-		let addThunderPotencies = function(node: ActionNode, includeInitial: boolean) {
+		let addThunderPotencies = function(node: ActionNode) {
 			let mods = getPotencyModifiersFromResourceState(game.resources, Aspect.Lightning);
 			let highThunder = skillsList.get(SkillName.HighThunder);
-			if (includeInitial) {
-				// initial potency
-				let pInitial = new Potency({
-					sourceTime: game.getDisplayTime(),
-					sourceSkill: SkillName.HighThunder,
-					aspect: Aspect.Lightning,
-					basePotency: highThunder.info.basePotency,
-					snapshotTime: undefined,
-				});
-				pInitial.modifiers = mods;
-				node.addPotency(pInitial);
-			}
+
+			// initial potency
+			let pInitial = new Potency({
+				sourceTime: game.getDisplayTime(),
+				sourceSkill: SkillName.HighThunder,
+				aspect: Aspect.Lightning,
+				basePotency: highThunder.info.basePotency,
+				snapshotTime: undefined,
+			});
+			pInitial.modifiers = mods;
+			node.addPotency(pInitial);
+
 			// dots
 			for (let i = 0; i < 10; i++) {
 				let pDot = new Potency({
@@ -345,14 +345,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 			}
 		}
 
-		// Thunder
+		// Thunder // High Thunder
 		skillsList.set(SkillName.HighThunder, new Skill(SkillName.HighThunder,
 			() => {
 				return game.resources.get(ResourceType.Thunderhead).available(1);
 			},
 			(game, node) => {
 				// potency
-				addThunderPotencies(node, true); // should call on capture
+				addThunderPotencies(node); // should call on capture
 				let onHitPotency = node.getPotencies()[0];
 				node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
 
@@ -688,14 +688,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.castSpell({skillName: SkillName.Paradox, onCapture: (cap: SkillCaptureCallbackInfo) => {
 					game.resources.get(ResourceType.Paradox).consume(1);
-					// enochian (refresh only
+					// enochian (refresh only)
 					if (game.hasEnochian()) {
 						game.startOrRefreshEnochian();
 					}
-					if (game.getFireStacks() > 0) {// firestarter proc
-						game.resources.get(ResourceType.AstralFire).gain(1);
-						gainFirestarterProc(game);
-					}
+					console.assert(game.getFireStacks() > 0);
+					// firestarter proc
+					game.resources.get(ResourceType.AstralFire).gain(1);
+					gainFirestarterProc(game);
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
 			}

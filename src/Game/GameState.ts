@@ -299,7 +299,7 @@ export class GameState {
 		}
 	}
 
-	switchToAForUI(rscType: ResourceType, numStacksToGain: number) {
+	switchToAForUI(rscType: ResourceType.AstralFire | ResourceType.UmbralIce, numStacksToGain: number) {
 		let af = this.resources.get(ResourceType.AstralFire);
 		let ui = this.resources.get(ResourceType.UmbralIce);
 		let uh = this.resources.get(ResourceType.UmbralHeart);
@@ -441,7 +441,7 @@ export class GameState {
 				// re-capture them here, since game state might've changed (say, AF/UI fell off)
 				[capturedManaCost, uhConsumption] = game.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 
-				// actually deduct resources (except some special ones like Paradox, Despair and Flare that deduct resources in onCapture fn)
+				// actually deduct MP and UH (except some special ones like Despair, Flare and Flare Star that deduct resources in onCapture fn)
 				if (props.skillName !== SkillName.Flare && props.skillName !== SkillName.Despair && props.skillName !== SkillName.FlareStar) {
 					game.resources.get(ResourceType.Mana).consume(capturedManaCost);
 					if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
