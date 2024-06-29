@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/ffxiv-blm-rotation/static/css/main.cd88a18d.css",
-    "main.js": "/ffxiv-blm-rotation/static/js/main.f65ddade.js",
+    "main.js": "/ffxiv-blm-rotation/static/js/main.ef3d81cd.js",
     "static/media/tincture.png": "/ffxiv-blm-rotation/static/media/tincture.30918e122174e90fe254.png",
     "static/media/sprint.png": "/ffxiv-blm-rotation/static/media/sprint.337bd2225fa4fad61ec8.png",
     "static/media/xenoglossy.png": "/ffxiv-blm-rotation/static/media/xenoglossy.921b357e81afd074a7aa.png",
@@ -14,9 +14,10 @@
     "static/media/flare.png": "/ffxiv-blm-rotation/static/media/flare.9501510d1c45cf0d17fe.png",
     "static/media/manaward.png": "/ffxiv-blm-rotation/static/media/manaward.6fd1d6cef472516a193e.png",
     "static/media/swiftcast.png": "/ffxiv-blm-rotation/static/media/swiftcast.e433fb178345604b9e50.png",
-    "static/media/thunder3.png": "/ffxiv-blm-rotation/static/media/thunder3.b5e83bcf804d33a22d34.png",
+    "static/media/retrace.png": "/ffxiv-blm-rotation/static/media/retrace.1e3217dde6a5b5aa0eb8.png",
     "static/media/umbralSoul.png": "/ffxiv-blm-rotation/static/media/umbralSoul.9d4e9d72ccc8ef56ac0c.png",
     "static/media/blizzard4.png": "/ffxiv-blm-rotation/static/media/blizzard4.cd1db6a8c5c170b4ce20.png",
+    "static/media/flareStar.png": "/ffxiv-blm-rotation/static/media/flareStar.30975925c96b946bd81e.png",
     "static/media/triplecast.png": "/ffxiv-blm-rotation/static/media/triplecast.939f022e8d197b32f88a.png",
     "static/media/lucidDreaming.png": "/ffxiv-blm-rotation/static/media/lucidDreaming.239cadd6a0db8d5dbcba.png",
     "static/media/paradox.png": "/ffxiv-blm-rotation/static/media/paradox.e14a95a7c1723ae817f1.png",
@@ -27,18 +28,18 @@
     "static/media/leyLines.png": "/ffxiv-blm-rotation/static/media/leyLines.4164da2c59d93f7d6233.png",
     "static/media/despair.png": "/ffxiv-blm-rotation/static/media/despair.971bbc0d87e1da23634b.png",
     "static/media/manafont.png": "/ffxiv-blm-rotation/static/media/manafont.5b0766b2e1e378668fd5.png",
-    "static/media/sharpcast.png": "/ffxiv-blm-rotation/static/media/sharpcast.3da306e7fd1bd8b185fa.png",
     "static/media/addle.png": "/ffxiv-blm-rotation/static/media/addle.fd12666abb7d2f733052.png",
     "static/media/blizzard.png": "/ffxiv-blm-rotation/static/media/blizzard.70db69c2064f97a7d95c.png",
     "static/media/fire4.png": "/ffxiv-blm-rotation/static/media/fire4.f4c1812321337c3f3681.png",
     "static/media/freeze.png": "/ffxiv-blm-rotation/static/media/freeze.a4db103ed900d1c80b48.png",
     "static/media/fire.png": "/ffxiv-blm-rotation/static/media/fire.ab81ab59487e92139ead.png",
+    "static/media/highThunder.png": "/ffxiv-blm-rotation/static/media/highThunder.2f9a4fc75c14b8e97af7.png",
     "index.html": "/ffxiv-blm-rotation/index.html",
     "main.cd88a18d.css.map": "/ffxiv-blm-rotation/static/css/main.cd88a18d.css.map",
-    "main.f65ddade.js.map": "/ffxiv-blm-rotation/static/js/main.f65ddade.js.map"
+    "main.ef3d81cd.js.map": "/ffxiv-blm-rotation/static/js/main.ef3d81cd.js.map"
   },
   "entrypoints": [
     "static/css/main.cd88a18d.css",
-    "static/js/main.f65ddade.js"
+    "static/js/main.ef3d81cd.js"
   ]
 }
