@@ -310,7 +310,11 @@ export default class Main extends React.Component {
 								}/>
 							</div>
 
-							{/* EW cached content warning*/}
+							{/*
+							EW cached content warning
+							Note to devs: this wouldn't work for locally hosted versions though.
+							You'll need to manually delete the old key-value pairs in localStorage
+							*/}
 							{containsEwCacheContent() ? <div style={{
 								margin: "10px 0",
 								padding: "10px",
@@ -323,7 +327,7 @@ export default class Main extends React.Component {
 									Visit the Endwalker archive at <a style={{color: colors.warning}} href={"https://miyehn.me/ffxiv-blm-rotation-endwalker"}>miyehn.me/ffxiv-blm-rotation-endwalker</a> to access and automatically re-save it.
 									Once you do that, this notice will also go away.
 								</div>,
-								zh: <div>提示：</div>
+								zh: <div>提示：你的浏览器缓存里有排轴器更新到7.0前的数据，它们在这里已经不可用。请访问6.0历史版本（链接：<a style={{color: colors.warning}} href={"https://miyehn.me/ffxiv-blm-rotation-endwalker"}>miyehn.me/ffxiv-blm-rotation-endwalker</a>），数据会在那边被重新自动保存。访问过一次后，这个提示也会消失。</div>
 							}) }</div> : undefined}
 
 							<IntroSection/>

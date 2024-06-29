@@ -1,5 +1,12 @@
 [
 	{
+		"date": "6/28/24",
+		"changes": [
+			"preliminary 7.0 job changes update",
+			"localStorage refactor & migration related changes (there should be a notice that links to the EW version when there's obsolete data)"
+		]
+	},
+	{
 		"date": "6/27/24",
 		"changes": [
 			"6/26 PSA before Dawntrail & 6/27 quick update"

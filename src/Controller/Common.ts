@@ -44,8 +44,15 @@ export function getCachedValue(key: string): string | null {
 
 		if (thisExpansion === Expansion.DT) {
 			// prompt user to go to the archive version to convert these
-			bContainsEwCacheContent = true;
-			return current;
+
+			if (key === "exp: psa-062624") { // TEMPORARY HACK (delete this if branch when psa is taken down)
+				setCachedValue(key, noPrefix);
+				localStorage.removeItem(key);
+				return noPrefix;
+			} else {
+				bContainsEwCacheContent = true;
+				return current;
+			}
 
 		} else if (thisExpansion === Expansion.EW) {
 			// we are in archive (EW): convert to EW and return
