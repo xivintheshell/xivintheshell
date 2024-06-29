@@ -350,7 +350,7 @@ function ResourcesDisplay(props) {
 		name={
 		localize({
 			en: "astral soul",
-			zh: "Needs Translation"
+			zh: "星极魂"
 		})}
 		color={colors.resources.astralFire}
 		currentStacks={data.astralSoul}

@@ -29,7 +29,7 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.Blizzard, "冰1"],
 	[SkillName.Fire4, "火4"],
 	[SkillName.Transpose, "星灵移位"],
-	[SkillName.HighThunder, "雷3"],
+	[SkillName.HighThunder, "高暴雷"],
 	[SkillName.Manaward, "魔罩"],
 	[SkillName.Manafont, "魔泉"],
 	[SkillName.Fire3, "火3"],
@@ -54,8 +54,9 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.Surecast, "沉稳咏唱"],
 	[SkillName.Tincture, "爆发药"],
 	[SkillName.Paradox, "悖论"],
-	[SkillName.Sprint, "疾跑"]
-	//all names updated
+	[SkillName.Sprint, "疾跑"],
+	[SkillName.Retrace, "Retrace"], // todo: when there's a common translation in the community
+	[SkillName.FlareStar, "耀星"]
 ]);
 
 const skillsJa = new Map<SkillName, string>([

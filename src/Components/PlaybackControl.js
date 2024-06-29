@@ -638,7 +638,7 @@ export class Config extends React.Component {
 
 					localize({
 					en: "Default RNG: 40% Firestarter",
-					zh: "RNG会像游戏内一样，相应技能40%概率获得火苗，Always则每次都会触发火苗/雷云，Never则从不触发。"
+					zh: "RNG会像游戏内一样，相应技能40%概率获得火苗，Always则每次都会触发火苗，Never则从不触发。"
 				})
 				}/>: </span>
 				<select style={{outline: "none"}} value={this.state.procMode} onChange={this.setProcMode}>
@@ -655,6 +655,7 @@ export class Config extends React.Component {
 					<div>
 						<div className={"paragraph"}>Many buffs actually last longer than listed in the skill descriptions. I got some rough numbers from logs and screen captures but please contact me if you have more accurate data.</div>
 						<div className={"paragraph"}>Having this checked will give the following duration overrides:</div>
+						<div className={"paragraph"}> - Thunderhead: 31s (todo: verify in game)</div>
 						<div className={"paragraph"}> - Triplecast: 15.7s</div>
 						<div className={"paragraph"}> - Firestarter: 31s</div>
 					</div>
