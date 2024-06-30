@@ -188,6 +188,37 @@ export function IntroSection(props: {}) {
 						{localize({
 							en:
 								<div className="paragraph">
+									[DT] Ice spells seem to grant MP when they land on target(s), aka skillApplicationDelay seconds after snapshot. See <a href={"https://drive.google.com/file/d/1fnjBoXlbIQR1StFlfrwH6eQYE90rV1V5/view?usp=drive_link"}>this screen recording</a>.
+									Note that Umbral Soul also has ~0.633s skill application delay.
+								</div>,
+							zh:
+								<div className="paragraph">
+									[7.0] 从录屏（<a href={"https://drive.google.com/file/d/1fnjBoXlbIQR1StFlfrwH6eQYE90rV1V5/view?usp=drive_link"}>Google Drive</a>）来看，冰技能是在伤害判定的瞬间回蓝。顺便，灵极魂也有0.633秒左右的技能生效延迟，按下技能后需要等待相应时间才有回蓝。
+								</div>
+						})}
+						{localize({
+							en:
+								<div className="paragraph">
+									[DT] Manafont now has a much shorter (~0.2s) skill application delay compared to in EW. In fact only MP regen from Manafont has this delay; all other effects seem instant.
+								</div>,
+							zh:
+								<div className="paragraph">
+									[7.0] 魔泉的生效延迟跟6.0相比缩短了很多，目前只有0.2秒左右。而且只有回蓝受这个延迟影响，其它效果都是瞬发。
+								</div>
+						})}
+						{localize({
+							en:
+								<div className="paragraph">
+									[DT] I re-measured some buff timings from <a href={"https://drive.google.com/drive/folders/1Jp6UEGRLlruERpyQ9CuEMXFsOaVixx48?usp=drive_link"}>screen recordings</a>. They affect things when you have "extended buff times" checked. Lmk if you have something more exact.
+								</div>,
+							zh:
+								<div className="paragraph">
+									[7.0] 我通过录屏（<a href={"https://drive.google.com/drive/folders/1Jp6UEGRLlruERpyQ9CuEMXFsOaVixx48?usp=drive_link"}>Google Drive</a>）的方式重新测量了几个buff的实际持续时长（有的实际时长比技能描述稍长一些），在右侧可以自行勾选 "extended buff times" 使它们生效。如果你有更准确的数据，请务必联系我。
+								</div>
+						})}
+						{localize({
+							en:
+								<div className="paragraph">
 									Galahad found that slidecast window size is linear with respect to cast time. I made a <a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>script</a>, parsed
 									a few logs and confirmed this. Albeit the slope is tiny (~0.02) so I'm just using 0.5s here
 									for simplicity.

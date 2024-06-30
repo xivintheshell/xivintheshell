@@ -59,8 +59,11 @@ const skillInfos = [
 		0, 0, 200, 1.025),
 	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false,
 		0, 0, 0, 1.114),// delayed
+	// Manafont: application delay 0.88s -> 0.2s since Dawntrail
+	// infact most effects seem instant but MP gain is delayed.
+	// see screen recording: https://drive.google.com/file/d/1zGhU9egAKJ3PJiPVjuRBBMkKdxxHLS9b/view?usp=drive_link
 	new SkillInfo(SkillName.Manafont, ResourceType.cd_Manafont, Aspect.Other, false,
-		0, 0, 0, 0.88),// delayed, test by manafont->desp from 0 mana
+		0, 0, 0, 0.2),
 	new SkillInfo(SkillName.Fire3, ResourceType.cd_GCD, Aspect.Fire, true,
 		3.5, 2000, 280, 1.292),
 	new SkillInfo(SkillName.Blizzard3, ResourceType.cd_GCD, Aspect.Ice, true,
@@ -87,8 +90,10 @@ const skillInfos = [
 		0, 0, 600, 1.158),
 	new SkillInfo(SkillName.Despair, ResourceType.cd_GCD, Aspect.Fire, true,
 		3, 0, 340, 0.556),
+	// Umbral Soul: immediate snapshot & UH gain; delayed MP gain
+	// see screen recording: https://drive.google.com/file/d/1nsO69O7lgc8V_R_To4X0TGalPsCus1cg/view?usp=drive_link
 	new SkillInfo(SkillName.UmbralSoul, ResourceType.cd_GCD, Aspect.Ice, true,
-		0, 0, 0),// ? (assumed to be instant)
+		0, 0, 0, 0.633),
 	new SkillInfo(SkillName.Xenoglossy, ResourceType.cd_GCD, Aspect.Other, true,
 		0, 0, 880, 0.63),
 
@@ -214,7 +219,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 
 		let gainFirestarterProc = function(game: GameState) {
 			let fs = game.resources.get(ResourceType.Firestarter);
-			let duration = game.config.extendedBuffTimes ? 31 : 30;
+			// re-measured in DT, screen recording at: https://drive.google.com/file/d/1MEFnd-m59qx1yIaZeehSsAxjhLMsWBuw/view?usp=drive_link
+			let duration = game.config.extendedBuffTimes ? 30.5 : 30;
 			if (fs.available(1)) {
 				fs.overrideTimer(game, duration);
 			} else {
@@ -387,14 +393,16 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				let useSkillEvent = game.useInstantSkill({
 					skillName: SkillName.Manafont,
-					onApplication: () => {
-						game.resources.get(ResourceType.Mana).gain(10000);
+					onCapture: () => {
 						game.resources.get(ResourceType.AstralFire).gain(3);
 						game.resources.get(ResourceType.UmbralHeart).gain(3);
 						game.resources.get(ResourceType.Paradox).gain(1);
 						game.gainThunderhead();
 						game.startOrRefreshEnochian();
 						node.resolveAll(game.getDisplayTime());
+					},
+					onApplication: () => {
+						game.resources.get(ResourceType.Mana).gain(10000);
 					},
 					dealDamage: false,
 					node: node
@@ -552,6 +560,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						let triple = game.resources.get(ResourceType.Triplecast);
 						if (triple.pendingChange) triple.removeTimer(); // should never need this, but just in case
 						triple.gain(3);
+						// 15.7s: see screen recording: https://drive.google.com/file/d/1qoIpAMK2KAKETgID6a3p5dqkeWRcNDdB/view?usp=drive_link
 						game.resources.addResourceEvent({
 							rscType: ResourceType.Triplecast,
 							name: "drop remaining Triple charges", delay: game.config.extendedBuffTimes ? 15.7 : 15, fnOnRsc:(rsc: Resource) => {

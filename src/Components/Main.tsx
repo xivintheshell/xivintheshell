@@ -279,7 +279,7 @@ export default class Main extends React.Component {
 											en: <div/>,
 											zh: <div>
 												<div className={"paragraph"}>
-													黑魔排轴器已经更新到7.0了，国服的黑魔们要给6.0黑魔排轴的话，请去这个历史版本：<a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>。以下的英文通知内容暂时还不适用国服。
+													黑魔排轴器已经更新到7.0了，国服的黑魔们要给6.0黑魔排轴的话，请去这个历史版本：<a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>。以下的英文通知内容暂时还不适用于国服。
 												</div>
 												<div className={"paragraph"}>
 													对了，那个历史版本里将会展出一些6.0时期有纪念意义的轴，愿意投稿的话可以发给我 (miyehn) 或者小絮。除了txt文件之外，最好也备注下对应的时间轴标记（markers），如果愿意公开视频和logs链接的话也可以加上。

@@ -283,7 +283,9 @@ export class GameState {
 
 	gainThunderhead() {
 		let thunderhead = this.resources.get(ResourceType.Thunderhead);
-		let duration = this.config.extendedBuffTimes ? 31 : 30; // Check if this is still true
+		// [6/29/24] note: from screen recording it looks more like: button press (0.1s) gain buff (30.0s) lose buff
+		// see: https://drive.google.com/file/d/11KEAEjgezCKxhvUsaLTjugKAH_D1glmy/view?usp=sharing
+		let duration = 30;
 		if (thunderhead.available(1)) { // already has a proc; reset its timer
 			thunderhead.overrideTimer(this, duration);
 		} else { // there's currently no proc. gain one.
@@ -332,7 +334,7 @@ export class GameState {
 		}
 	}
 
-	gainUmbralMana() {
+	gainUmbralMana(effectApplicationDelay: number = 0) {
 		let mpToGain = 0;
 		switch(this.resources.get(ResourceType.UmbralIce).availableAmount()) {
 			case 1: mpToGain = 2500;  break;
@@ -340,7 +342,12 @@ export class GameState {
 			case 3: mpToGain = 10000; break;
 			default: mpToGain = 0; break;
 		}
-		this.resources.get(ResourceType.Mana).gain(mpToGain);
+		this.addEvent(new Event(
+			"gain umbral mana",
+				effectApplicationDelay,
+			() => {
+				this.resources.get(ResourceType.Mana).gain(mpToGain);
+			}));
 	}
 
 	captureManaCostAndUHConsumption(aspect: Aspect, baseManaCost: number) {
@@ -460,7 +467,7 @@ export class GameState {
 
 				// ice spells: gain mana if in UI
 				if (skillInfo.aspect === Aspect.Ice) {
-					game.gainUmbralMana();
+					game.gainUmbralMana(skillInfo.skillApplicationDelay);
 				}
 
 				let captureInfo: SkillCaptureCallbackInfo = {
@@ -694,8 +701,8 @@ export class GameState {
 		let reqsMet = skill.available();
 		let status = SkillReadyStatus.Ready;
 		if (!notBlocked) status = SkillReadyStatus.Blocked;
-		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
 		else if (!reqsMet) status = SkillReadyStatus.RequirementsNotMet;
+		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
 
 		let cd = this.cooldowns.get(skill.info.cdName);
 		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
