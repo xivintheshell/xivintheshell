@@ -1,5 +1,11 @@
 [
 	{
+		"date": "7/10/24",
+		"changes": [
+			"Update SPS and dot potency formulae to match 7.0 (by Turtle)"
+		]
+	},
+	{
 		"date": "6/29/24 (2)",
 		"changes": [
 			"Let ice spells grant MP when on hit (as opposed to on snapshot). This is closer to what I observed in screen recordings.",
