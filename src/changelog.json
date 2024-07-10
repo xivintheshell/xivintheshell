@@ -2,7 +2,8 @@
 	{
 		"date": "7/10/24",
 		"changes": [
-			"Update SPS and dot potency formulae to match 7.0 (by Turtle)"
+			"Update SPS and dot potency formulae to match Dawntrail (by Turtle)",
+			"Adjust potion animation lock to normal instead of long 1.14s"
 		]
 	},
 	{
