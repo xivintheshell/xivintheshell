@@ -67,12 +67,12 @@ export class GameConfig {
     }
 
     adjustedDoTPotency(inPotency : number) {
-        let dotStrength = (1000 + Math.floor((this.spellSpeed - 400) * 130 / 1900.0)) * 0.001;
+        let dotStrength = (1000 + Math.floor((this.spellSpeed - 420) * 130 / 2780.0)) * 0.001;
         return inPotency * dotStrength;
     }
 
     adjustedCastTime(inCastTime : number) {
-        let ceil = Math.ceil((400.0 - this.spellSpeed) * 130 / 1900.0);
+        let ceil = Math.ceil((420.0 - this.spellSpeed) * 130 / 2780.0);
         let pts = Math.floor(inCastTime * (1000.0 + ceil));
 
         return Math.floor(pts / 10) * 0.01;
