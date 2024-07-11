@@ -75,7 +75,7 @@ export class GameConfig {
         let ceil = Math.ceil((420.0 - this.spellSpeed) * 130 / 2780.0);
         let pts = Math.floor(inCastTime * (1000.0 + ceil));
 
-        return Math.floor(pts / 10) * 0.01;
+        return Math.floor(pts / 10) / 100;
     }
 
     getSkillAnimationLock(skillName : SkillName) : number {
