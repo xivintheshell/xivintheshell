@@ -467,6 +467,7 @@ class Controller {
 			activeSlotIndex: this.timeline.activeSlotIndex,
 			allMarkers: this.timeline.getAllMarkers(),
 			untargetableMarkers: this.timeline.getUntargetableMarkers(),
+			buffMarkers: this.timeline.getBuffMarkers(),
 			showSelection: showSelection,
 			selectionStartDisplayTime: (this.record.getFirstSelection()?.tmp_startLockTime ?? 0) - this.gameConfig.countdown,
 			selectionEndDisplayTime: (this.record.getLastSelection()?.tmp_endLockTime ?? 0) - this.gameConfig.countdown

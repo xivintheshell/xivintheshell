@@ -4,7 +4,7 @@ import {
 	DamageMarkElem,
 	ElemType,
 	LucidMarkElem,
-	MarkerElem, MAX_TIMELINE_SLOTS,
+	MarkerElem, MarkerType, MAX_TIMELINE_SLOTS,
 	MPTickMarkElem, SharedTimelineElem,
 	SkillElem, SlotTimelineElem,
 	TimelineElem, UntargetableMarkerTrack,
@@ -12,9 +12,11 @@ import {
 	WarningMarkElem
 } from "../Controller/Timeline";
 import {StaticFn} from "./Common";
-import {ResourceType, SkillName, WarningType} from "../Game/Common";
+import {BuffName, ResourceType, SkillName, WarningType} from "../Game/Common";
 // @ts-ignore
 import {skillIconImages} from "./Skills";
+// @ts-ignore
+import {buffIconImages} from "./Buffs";
 import {controller} from "../Controller/Controller";
 import {localize, localizeSkillName} from "./Localization";
 import {setEditingMarkerValues} from "./TimelineMarkerPresets";
@@ -32,6 +34,7 @@ export type TimelineRenderingProps = {
 	untargetableMask: boolean,
 	allMarkers: MarkerElem[],
 	untargetableMarkers: MarkerElem[],
+	buffMarkers: MarkerElem[],
 	sharedElements: SharedTimelineElem[],
 	slotElements: SlotTimelineElem[][],
 	activeSlotIndex: number,
@@ -73,6 +76,7 @@ let g_renderingProps: TimelineRenderingProps = {
 	tincturePotencyMultiplier: 1,
 	allMarkers: [],
 	untargetableMarkers: [],
+	buffMarkers: [],
 	untargetableMask: true,
 	sharedElements: [],
 	slotElements: [],
@@ -182,7 +186,16 @@ function drawMarkers(
 			};
 			if (m.duration > 0) {
 				let markerWidth = StaticFn.positionFromTimeAndScale(m.duration, scale);
-				if (m.showText) {
+				if (m.markerType === MarkerType.Buff) {
+					let img = buffIconImages.get(m.description);
+					if (img) g_ctx.drawImage(img, left, top, c_trackHeight, c_trackHeight);
+					
+					g_ctx.fillStyle = m.color + g_colors.timeline.markerAlpha;
+					g_ctx.fillRect(left + c_trackHeight, top, markerWidth, c_trackHeight);
+					g_ctx.fillStyle = g_colors.emphasis;
+					g_ctx.fillText(m.description, left + (c_trackHeight * 1.5), top + 10);
+				}
+				else if (m.showText) {
 					g_ctx.fillStyle = m.color + g_colors.timeline.markerAlpha;
 					g_ctx.fillRect(left, top, markerWidth, c_trackHeight);
 					g_ctx.fillStyle = g_colors.emphasis;
@@ -576,11 +589,12 @@ function drawMarkerTracks(originX: number, originY: number) : number {
 
 	// make trackbins
 	let trackBins = new Map<number, MarkerElem[]>();
-	g_renderingProps.allMarkers.forEach(marker => {
-		let trackBin = trackBins.get(marker.track);
-		if (trackBin === undefined) trackBin = [];
-		trackBin.push(marker);
-		trackBins.set(marker.track, trackBin);
+	g_renderingProps.allMarkers
+		.forEach(marker => {
+			let trackBin = trackBins.get(marker.track);
+			if (trackBin === undefined) trackBin = [];
+			trackBin.push(marker);
+			trackBins.set(marker.track, trackBin);
 	});
 
 	// tracks background
@@ -897,3 +911,4 @@ export function TimelineCanvas(props: {
 		cursor: readback_pointerMouse ? "pointer" : "default",
 	}}/>;
 }
+
