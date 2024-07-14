@@ -2,6 +2,7 @@ import {FileType} from "./Common";
 import {BuffType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
 import {Potency} from "../Game/Potency";
+import {controller} from "./Controller";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -71,24 +72,21 @@ export class ActionNode {
 	}
 
 	hasPartyBuff() {
-		let hasPartyBuff = false;
-		for (let buff of this.#capturedBuffs) {
-			if (buff !== BuffType.LeyLines && buff !== BuffType.Tincture) {
-				hasPartyBuff = true;
-				break;
-			}
-		}
-		return hasPartyBuff;
+		let snapshotTime;
+		if (this.#potencies.length === 0) return false
+		if (this.#potencies.length > 0) 
+			snapshotTime = this.#potencies[0].snapshotTime;
+
+		return controller.game.getPartyBuffs(snapshotTime).size > 0;
 	}
 
 	getPartyBuffs() {
-		let buffList = [];
-		for (let buffType of this.#capturedBuffs) {
-			if (buffType !== BuffType.LeyLines && buffType !== BuffType.Tincture) {
-				buffList.push(buffType);
-			}
-		}
-		return buffList;
+		let snapshotTime;
+		if (this.#potencies.length === 0) return [];
+		if (this.#potencies.length > 0) 
+			snapshotTime = this.#potencies[0].snapshotTime;
+
+		return [...controller.game.getPartyBuffs(snapshotTime).keys()];
 	}
 
 	resolveAll(displayTime: number) {

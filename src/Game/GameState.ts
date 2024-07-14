@@ -1,4 +1,4 @@
-import {Aspect, BuffType, Debug, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
+import {Aspect, BuffType, Debug, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
 import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
@@ -6,7 +6,8 @@ import {CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceSta
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
-import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
+import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
+import {Buff} from "./Buffs";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -467,10 +468,6 @@ export class GameState {
 				if (game.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
 					props.node.addBuff(BuffType.Tincture);
 				}
-				
-				if (skillInfo.basePotency > 0) {
-					game.#addPartyBuffs(props.node);
-				}
 
 				// ice spells: gain mana if in UI
 				if (skillInfo.aspect === Aspect.Ice) {
@@ -595,10 +592,6 @@ export class GameState {
 			props.node.addBuff(BuffType.Tincture);
 		}
 
-		if (skillInfo.basePotency > 0) {
-			this.#addPartyBuffs(props.node);
-		}
-
 		if (props.onCapture) props.onCapture();
 
 		let skillEvent = new Event(
@@ -617,16 +610,6 @@ export class GameState {
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(props.skillName));
 
 		return skillEvent;
-	}
-
-	#addPartyBuffs(node: ActionNode) {
-		const buffMarkers = controller.timeline.getBuffMarkers();
-		buffMarkers.filter(marker => {
-			const adjustedTime = this.getDisplayTime();
-			return marker.time <= adjustedTime && (marker.time + marker.duration) >= adjustedTime;
-		}).forEach(marker => {
-			node.addBuff(marker.description as BuffType);
-		});
 	}
 
 	hasEnochian() {
@@ -776,6 +759,29 @@ export class GameState {
 	useSkill(skillName: SkillName, node: ActionNode) {
 		let skill = this.skillsList.get(skillName);
 		skill.use(this, node);
+	}
+
+	getPartyBuffs(time?: number) {
+		const buffCollection = new Map<string, PotencyModifier>();
+		if (!time) return buffCollection;
+
+		const buffMarkers = controller.timeline.getBuffMarkers();
+		buffMarkers.filter(marker => {
+			return marker.time <= time && (marker.time + marker.duration) >= time;
+		}).forEach(marker => {
+			const buff = new Buff(marker.description as BuffType);
+			if (!buffCollection.has(buff.name)) {
+				buffCollection.set(buff.name, {
+					source: PotencyModifierType.PARTY, 
+					buffType: buff.name,
+					damageFactor: buff.info.damageBonus,
+					critFactor: buff.info.critBonus,
+					dhFactor: buff.info.dhBonus,
+				});
+			}
+		})
+
+		return buffCollection;
 	}
 
 	toString() {

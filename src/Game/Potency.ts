@@ -1,5 +1,4 @@
 import {controller} from "../Controller/Controller";
-import { Buff } from "./Buffs";
 import {Aspect, BuffType, Debug, ResourceType, SkillName} from "./Common";
 import {ResourceState} from "./Resources";
 
@@ -70,21 +69,6 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 		}
 	}
 
-	const buffMarkers = controller.timeline.getBuffMarkers();
-	buffMarkers.filter(marker => {
-		const adjustedTime = resources.game.time - resources.game.config.countdown;
-		return marker.time <= adjustedTime && (marker.time + marker.duration) >= adjustedTime;
-	}).forEach(marker => {
-		const buff = new Buff(marker.description as BuffType);
-		mods.push({
-			source: PotencyModifierType.PARTY, 
-			buffType: buff.name,
-			damageFactor: buff.info.damageBonus,
-			critFactor: buff.info.critBonus,
-			dhFactor: buff.info.dhBonus,
-		});
-	})
-	
 	return mods;
 }
 
@@ -124,33 +108,24 @@ export class Potency {
 		let totalCritFactor = 0;
 		let totalDhFactor = 0;
 
-		const buffCollection = new Map<string, PotencyModifier>();
-
 		this.modifiers.forEach(m=>{
 			if (m.source===PotencyModifierType.POT) totalDamageFactor *= props.tincturePotencyMultiplier;
-			else if (m.source===PotencyModifierType.PARTY) {
-				if (props.includePartyBuffs && m.buffType) {
-					if (!buffCollection.has(m.buffType)) {
-						buffCollection.set(m.buffType, m);
-					}
-				}
-			}
 			else totalDamageFactor *= m.damageFactor;
 		});
 
-		buffCollection.forEach(buff => {
-			totalDamageFactor *= buff.damageFactor;
-			totalCritFactor += buff.critFactor ?? 0;
-			totalDhFactor += buff.dhFactor ?? 0;
-		});
+		if (props.includePartyBuffs) {
+			controller.game.getPartyBuffs(this.snapshotTime).forEach(buff => {
+				totalDamageFactor *= buff.damageFactor;
+				totalCritFactor += buff.critFactor ?? 0;
+				totalDhFactor += buff.dhFactor ?? 0;
+			});
+		}
 
 		return this.base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor);
 	}
 
 	getPartyBuffs() {
-		return this.modifiers
-			.filter(m => m.source === PotencyModifierType.PARTY)
-			.map(m => m.buffType);
+		return [...controller.game.getPartyBuffs(this.snapshotTime).keys()];
 	}
 
 	resolve(displayTime: number) {
