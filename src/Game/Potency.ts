@@ -1,13 +1,15 @@
-import {Aspect, Debug, ResourceType, SkillName} from "./Common";
+import {controller} from "../Controller/Controller";
+import { Buff } from "./Buffs";
+import {Aspect, BuffName, Debug, ResourceType, SkillName} from "./Common";
 import {ResourceState} from "./Resources";
 
 export const enum PotencyModifierType {
-	AF3, AF2, AF1, UI3, UI2, UI1, ENO, POT
+	AF3, AF2, AF1, UI3, UI2, UI1, ENO, POT, PARTY
 }
 
 export type PotencyModifier = {
-	factor: number,
-	source: PotencyModifierType
+	source: PotencyModifierType,
+	factor: number
 }
 
 export function getPotencyModifiersFromResourceState(resources: ResourceState, aspect: Aspect) : PotencyModifier[] {
@@ -65,6 +67,15 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 		}
 	}
 
+	const buffMarkers = controller.timeline.getBuffMarkers();
+	buffMarkers.filter(marker => {
+		const adjustedTime = resources.game.time - resources.game.config.countdown;
+		return marker.time <= adjustedTime && (marker.time + marker.duration) >= adjustedTime;
+	}).forEach(marker => {
+		const buff = new Buff(marker.description as BuffName);
+		mods.push({source: PotencyModifierType.PARTY, factor: buff.info.potencyFactor})
+	})
+	
 	return mods;
 }
 
@@ -98,10 +109,12 @@ export class Potency {
 
 	getAmount(props: {
 		tincturePotencyMultiplier: number,
+		includePartyBuffs: boolean
 	}) {
 		let potency = this.base;
 		this.modifiers.forEach(m=>{
 			if (m.source===PotencyModifierType.POT) potency *= props.tincturePotencyMultiplier;
+			else if (m.source===PotencyModifierType.PARTY) potency *= props.includePartyBuffs ? m.factor : 1;
 			else potency *= m.factor;
 		});
 		return potency;

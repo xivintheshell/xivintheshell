@@ -94,6 +94,7 @@ export class ActionNode {
 	getPotency(props: {
 		tincturePotencyMultiplier: number,
 		untargetable: (t: number) => boolean,
+		includePartyBuffs: boolean,
 		excludeDoT?: boolean
 	}) {
 		let res = {

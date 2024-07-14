@@ -510,7 +510,7 @@ class Controller {
 				time: this.game.getDisplayTime(),
 				damageSource: p.sourceSkill + "@" + p.sourceTime,
 				// tincture is applied when actually exporting for download.
-				potency: p.getAmount({tincturePotencyMultiplier: 1}),
+				potency: p.getAmount({tincturePotencyMultiplier: 1, includePartyBuffs: true}),
 				buffs: pot ? [ResourceType.Tincture] : [],
 			});
 		}
