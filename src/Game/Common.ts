@@ -81,8 +81,27 @@ export enum BuffType {
 	LeyLines = "Ley Lines",
 	Tincture = "Tincture",
 
-	Mug = "Mug",
+	ArcaneCircle = "Arcane Circle",
+	ArmysPaeon = "Army's Paeon",
+	BattleLitany = "Battle Litany",
+	BattleVoice = "Battle Voice",
+	Brotherhood = "Brotherhood",
+	Card_TheBalance = "Card - The Balance",
+	Card_TheSpear = "Card - The Spear",
+	ChainStratagem = "Chain Stratagem",
+	Devilment = "Devilment",
+	Divination = "Divination",
+	Dokumori = "Dokumori",
+	Embolden = "Embolden",
+	MagesBallad = "Mage's Ballad",
+	RadiantFinale1 = "Radiant Finale (1)",
+	RadiantFinale2 = "Radiant Finale (2)",
+	RadiantFinale3 = "Radiant Finale (3)",
+	SearingLight = "Searing Light",
+	StandardStep = "Standard Step",
+	StarryMuse = "Starry Muse",
 	TechnicalStep = "Technical Step",
+	WanderersMinuet = "Wanderer's Minuet",
 }
 
 export const enum ResourceType {
