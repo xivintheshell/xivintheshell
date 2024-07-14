@@ -1,5 +1,5 @@
 import {FileType} from "./Common";
-import {ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
+import {BuffType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
 import {Potency} from "../Game/Potency";
 
@@ -27,13 +27,13 @@ function verifyActionNode(action: ActionNode) {
 export class ActionNode {
 	static _gNodeIndex: number = 0;
 	#nodeIndex: number;
-	#capturedBuffs: Set<ResourceType>;
+	#capturedBuffs: Set<BuffType>;
 	#potencies: Potency[];
 
 	type: ActionType;
 	waitDuration: number = 0;
 	skillName?: SkillName;
-	buffName? : ResourceType;
+	buffName? : string;
 
 	next?: ActionNode = undefined;
 
@@ -45,7 +45,7 @@ export class ActionNode {
 	constructor(actionType: ActionType) {
 		this.type = actionType;
 		this.#nodeIndex = ActionNode._gNodeIndex;
-		this.#capturedBuffs = new Set<ResourceType>();
+		this.#capturedBuffs = new Set<BuffType>();
 		this.#potencies = [];
 		ActionNode._gNodeIndex++;
 	}
@@ -62,12 +62,33 @@ export class ActionNode {
 
 	isSelected() { return this.#selected; }
 
-	addBuff(rsc: ResourceType) {
+	addBuff(rsc: BuffType) {
 		this.#capturedBuffs.add(rsc);
 	}
 
-	hasBuff(rsc: ResourceType) {
+	hasBuff(rsc: BuffType) {
 		return this.#capturedBuffs.has(rsc);
+	}
+
+	hasPartyBuff() {
+		let hasPartyBuff = false;
+		for (let buff of this.#capturedBuffs) {
+			if (buff !== BuffType.LeyLines && buff !== BuffType.Tincture) {
+				hasPartyBuff = true;
+				break;
+			}
+		}
+		return hasPartyBuff;
+	}
+
+	getPartyBuffs() {
+		let buffList = [];
+		for (let buffType of this.#capturedBuffs) {
+			if (buffType !== BuffType.LeyLines && buffType !== BuffType.Tincture) {
+				buffList.push(buffType);
+			}
+		}
+		return buffList;
 	}
 
 	resolveAll(displayTime: number) {

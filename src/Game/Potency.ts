@@ -1,6 +1,6 @@
 import {controller} from "../Controller/Controller";
 import { Buff } from "./Buffs";
-import {Aspect, BuffName, Debug, ResourceType, SkillName} from "./Common";
+import {Aspect, BuffType, Debug, ResourceType, SkillName} from "./Common";
 import {ResourceState} from "./Resources";
 
 export const enum PotencyModifierType {
@@ -9,6 +9,7 @@ export const enum PotencyModifierType {
 
 export type PotencyModifier = {
 	source: PotencyModifierType,
+	buffType?: BuffType,
 	factor: number
 }
 
@@ -72,8 +73,8 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 		const adjustedTime = resources.game.time - resources.game.config.countdown;
 		return marker.time <= adjustedTime && (marker.time + marker.duration) >= adjustedTime;
 	}).forEach(marker => {
-		const buff = new Buff(marker.description as BuffName);
-		mods.push({source: PotencyModifierType.PARTY, factor: buff.info.potencyFactor})
+		const buff = new Buff(marker.description as BuffType);
+		mods.push({source: PotencyModifierType.PARTY, buffType: buff.name, factor: buff.info.potencyFactor})
 	})
 	
 	return mods;
@@ -118,6 +119,12 @@ export class Potency {
 			else potency *= m.factor;
 		});
 		return potency;
+	}
+
+	getPartyBuffs() {
+		return this.modifiers
+			.filter(m => m.source === PotencyModifierType.PARTY)
+			.map(m => m.buffType);
 	}
 
 	resolve(displayTime: number) {

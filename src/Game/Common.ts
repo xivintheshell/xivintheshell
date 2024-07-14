@@ -77,9 +77,12 @@ export const enum SkillReadyStatus {
 	BuffNoLongerAvailable = "buff no longer available"
 }
 
-export enum BuffName {
-	TechnicalStep = "Technical Step",
+export enum BuffType {
+	LeyLines = "Ley Lines",
+	Tincture = "Tincture",
+
 	Mug = "Mug",
+	TechnicalStep = "Technical Step",
 }
 
 export const enum ResourceType {

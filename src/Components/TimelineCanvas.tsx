@@ -12,7 +12,7 @@ import {
 	WarningMarkElem
 } from "../Controller/Timeline";
 import {StaticFn} from "./Common";
-import {BuffName, ResourceType, SkillName, WarningType} from "../Game/Common";
+import {BuffType, ResourceType, SkillName, WarningType} from "../Game/Common";
 // @ts-ignore
 import {skillIconImages} from "./Skills";
 // @ts-ignore
@@ -66,6 +66,7 @@ let g_colors: ThemeColors;
 
 // updated on mouse enter/leave, updated and reset on every draw
 let g_activeHoverTip: string[] | undefined = undefined;
+let g_activeHoverTipImages: any[] | undefined = undefined;
 let g_activeOnClick: (()=>void) | undefined = undefined;
 
 let g_renderingProps: TimelineRenderingProps = {
@@ -95,10 +96,12 @@ function testInteraction(
 	rect: Rect,
 	hoverTip?: string[],
 	onClick?: ()=>void,
-	pointerMouse?: boolean)
+	pointerMouse?: boolean,
+	hoverImages?: any[])
 {
 	if (g_mouseX >= rect.x && g_mouseX < rect.x + rect.w && g_mouseY >= rect.y && g_mouseY < rect.y + rect.h) {
 		g_activeHoverTip = hoverTip;
+		g_activeHoverTipImages = hoverImages;
 		g_activeOnClick = onClick;
 		readback_pointerMouse = pointerMouse === true;
 	}
@@ -110,10 +113,11 @@ const onClickTimelineBackground = ()=>{
 	controller.displayCurrentState();
 };
 
-function drawTip(lines: string[], canvasWidth: number, canvasHeight: number) {
+function drawTip(lines: string[], canvasWidth: number, canvasHeight: number, images?: any[]) {
 	if (!lines.length) return;
 
 	const lineHeight = 14;
+	const imageDimensions = 20;
 	const horizontalPadding = 8;
 	const verticalPadding = 4;
 	g_ctx.font = "12px monospace";
@@ -121,6 +125,11 @@ function drawTip(lines: string[], canvasWidth: number, canvasHeight: number) {
 	let maxLineWidth = -1;
 	lines.forEach(l=>{ maxLineWidth = Math.max(maxLineWidth, g_ctx.measureText(l).width); });
 	let [boxWidth, boxHeight] = [maxLineWidth + 2 * horizontalPadding, lineHeight * lines.length + 2 * verticalPadding];
+
+	if (images && images.length > 0) {
+		boxWidth = Math.max(boxWidth, horizontalPadding + images.length * (imageDimensions + horizontalPadding))
+		boxHeight += imageDimensions + verticalPadding;
+	}
 
 	let x = g_mouseX;
 	let y = g_mouseY;
@@ -153,6 +162,16 @@ function drawTip(lines: string[], canvasWidth: number, canvasHeight: number) {
 	g_ctx.textAlign = "left";
 	for (let i = 0; i < lines.length; i++) {
 		g_ctx.fillText(lines[i], x + horizontalPadding, y + i * lineHeight + 2 + verticalPadding);
+	}
+	let initialImageX = x + horizontalPadding 
+	let initialImageY = y + lines.length * lineHeight + 2 + verticalPadding;
+	if (images) {
+		for (let i = 0; i < images.length; i++) {
+			if (images[i]) 
+			{
+				g_ctx.drawImage(images[i], initialImageX + i * (imageDimensions + horizontalPadding), initialImageY, imageDimensions, imageDimensions)
+			}
+		}
 	}
 }
 
@@ -315,19 +334,25 @@ function drawDamageMarks(
 		let untargetableStr = localize({en: "Untargetable", zh: "不可选中"}) as string;
 		let info = "";
 		let sourceStr = dm.sourceDesc.replace("{skill}", localizeSkillName(dm.sourceSkill));
+		let buffImages = [];
 		if (untargetable) {
 			info = (0).toFixed(2) + " (" + sourceStr + ")";
 		} else {
-			const withoutBuffs = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, includePartyBuffs: false});
-			const withBuffs = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, includePartyBuffs: true});
-			info = withBuffs.toFixed(2) + " (" + sourceStr + ")";
-			if (pot) info += " (" + localize({en: "pot", zh: "爆发药"}) + ")";
-			if (withoutBuffs !== withBuffs) info += " (" + localize({en: "party", zh: "TODO"}) + ")";
+			const potency = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, includePartyBuffs: true});
+			info = potency.toFixed(2) + " (" + sourceStr + ")";
+			if (pot) buffImages.push(skillIconImages.get(SkillName.Tincture));
+			
+			dm.potency.getPartyBuffs().forEach(desc => {
+				buffImages.push(buffIconImages.get(desc));
+			});
 		}
 
 		testInteraction(
 			{x: x-3, y: timelineOriginY, w: 6, h: 6},
-			untargetable ? [time + info, untargetableStr] : [time + info]
+			untargetable ? [time + info, untargetableStr] : [time + info], 
+			undefined, 
+			undefined, 
+			buffImages
 		);
 	});
 }
@@ -371,6 +396,7 @@ function drawSkills(
 	let snapshots: number[] = [];
 	let llCovers: Rect[] = [];
 	let potCovers: Rect[] = [];
+	let buffCovers: Rect[] = [];
 	let skillIcons: {elem: SkillElem, x: number, y: number}[] = []; // tmp
 	let skillsTopY = timelineOriginY + 14;
 	elems.forEach(e=>{
@@ -390,15 +416,20 @@ function drawSkills(
 			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
 			gcdBars.push({x: x+c_barsOffset, y: y + 14, w: recastWidth-c_barsOffset, h: 14});
 		}
-		// ll cover
-		if (skill.node.hasBuff(ResourceType.LeyLines)) {
-			llCovers.push({x: x, y: y + 28, w: 28, h: 4});
-			if (skill.node.hasBuff(ResourceType.Tincture)) {
-				potCovers.push({x: x, y: y + 32, w: 28, h: 4});
-			}
-		} else if (skill.node.hasBuff(ResourceType.Tincture)) {
-			potCovers.push({x: x, y: y + 28, w: 28, h: 4});
+
+		let nodeCoverCount = 0;
+		if (skill.node.hasBuff(BuffType.LeyLines))
+			nodeCoverCount += buildCover(nodeCoverCount, llCovers);
+		if (skill.node.hasBuff(BuffType.Tincture))
+			nodeCoverCount += buildCover(nodeCoverCount, potCovers);
+		if (skill.node.hasPartyBuff())
+			buildCover(nodeCoverCount, buffCovers);
+
+		function buildCover(existingCovers: number, collection: Rect[]) {
+			collection.push({x: x, y: y + 28 + existingCovers*4, w: 28, h: 4});
+			return 1;
 		}
+		
 		// pot cover
 		// skill icon
 		let img = skillIconImages.get(skill.skillName);
@@ -460,6 +491,15 @@ function drawSkills(
 	});
 	g_ctx.fill();
 
+	// buffCovers
+	g_ctx.fillStyle = g_colors.timeline.buffCover;
+	g_ctx.beginPath();
+	buffCovers.forEach(r=>{
+		g_ctx.rect(r.x, r.y, r.w, r.h);
+		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
+	});
+	g_ctx.fill();
+
 	// icons
 	g_ctx.beginPath();
 	skillIcons.forEach(icon=>{
@@ -467,24 +507,23 @@ function drawSkills(
 		let node = icon.elem.node;
 		// 1. description
 		let description = localizeSkillName(icon.elem.skillName) + "@" + (icon.elem.displayTime).toFixed(2);
-		if (node.hasBuff(ResourceType.LeyLines)) description += localize({en: " (LL)", zh: " (黑魔纹)"});
-		if (node.hasBuff(ResourceType.Tincture)) description += localize({en: " (pot)", zh: "(爆发药)"});
+		let buffImages: any[] = [];
 
-		const withoutBuffs = node.getPotency({
-			tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, 
-			includePartyBuffs: false, 
-			untargetable: bossIsUntargetable}).applied;
-		const withBuffs = node.getPotency({
+		if (node.hasBuff(BuffType.LeyLines)) buffImages.push(skillIconImages.get(SkillName.LeyLines));
+		if (node.hasBuff(BuffType.Tincture)) buffImages.push(skillIconImages.get(SkillName.Tincture));
+		node.getPartyBuffs().forEach(buffType => {
+			buffImages.push(buffIconImages.get(buffType));
+		});
+
+		const potency = node.getPotency({
 			tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, 
 			includePartyBuffs: true, 
 			untargetable: bossIsUntargetable}).applied;
 
-		if (withoutBuffs !== withBuffs) description += localize({en: " (party)", zh: "(TODO)"});
-
 		let lines = [description];
 		// 2. potency
 		if (node.getPotencies().length > 0) {
-			lines.push(localize({en: "potency: ", zh: "威力："}) + withBuffs.toFixed(2));
+			lines.push(localize({en: "potency: ", zh: "威力："}) + potency.toFixed(2));
 		}
 		// 3. duration
 		let lockDuration = 0;
@@ -500,13 +539,15 @@ function drawSkills(
 					controller.timeline.onClickTimelineAction(node, g_clickEvent ? g_clickEvent.shiftKey : false);
 					scrollEditorToFirstSelected();
 				},
-				true);
+				true,
+				buffImages);
 		} else {
 			testInteraction(
 				{x: icon.x, y: icon.y, w: 28, h: 28},
 				lines,
 				() => {},
-				false);
+				false,
+				buffImages);
 		}
 	});
 }
@@ -798,7 +839,7 @@ function drawEverything() {
 	// interactive layer
 	if (g_mouseHovered) {
 		if (g_activeHoverTip) {
-			drawTip(g_activeHoverTip, g_visibleWidth, g_renderingProps.timelineHeight);
+			drawTip(g_activeHoverTip, g_visibleWidth, g_renderingProps.timelineHeight, g_activeHoverTipImages);
 		}
 		if (g_isClickUpdate && g_activeOnClick) {
 			g_activeOnClick();

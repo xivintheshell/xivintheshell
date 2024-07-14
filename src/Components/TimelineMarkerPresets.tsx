@@ -15,7 +15,7 @@ import {ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack} from "../Cont
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import { Buff, buffConstants } from '../Game/Buffs';
-import { BuffName, MarkerColor } from '../Game/Common';
+import { BuffType, MarkerColor } from '../Game/Common';
 
 /*
 	For the sake of simplicity, tracks be like:
@@ -43,7 +43,7 @@ type TimelineMarkerPresetsState = {
 	nextMarkerTrack: string,
 	nextMarkerDescription: string,
 	nextMarkerShowText: boolean,
-	nextMarkerBuff: BuffName,
+	nextMarkerBuff: BuffType,
 	loadTrackDest: string,
 	durationInputMode: DurationInputMode,
 	/////////
@@ -126,7 +126,7 @@ export class TimelineMarkerPresets extends React.Component {
 	setDuration: (val: string) => void;
 	setTrack: (val: string) => void;
 	setDescription: (val: string) => void;
-	setBuff: (val: BuffName) => void;
+	setBuff: (val: BuffType) => void;
 
 	setLoadTrackDest: (val: string) => void;
 	setDurationInputMode: (val: string) => void;
@@ -155,7 +155,7 @@ export class TimelineMarkerPresets extends React.Component {
 					nextMarkerType: marker.markerType,
 					nextMarkerTrack: marker.track.toString(),
 					nextMarkerTime: marker.time.toString(),
-					nextMarkerBuff: marker.description as BuffName
+					nextMarkerBuff: marker.description as BuffType
 				})
 			}
 		}).bind(this);
@@ -183,7 +183,7 @@ export class TimelineMarkerPresets extends React.Component {
 			nextMarkerTrack: "0",
 			nextMarkerDescription: "",
 			nextMarkerShowText: false,
-			nextMarkerBuff: BuffName.TechnicalStep,
+			nextMarkerBuff: BuffType.TechnicalStep,
 			loadTrackDest: "0",
 			durationInputMode: DurationInputMode.Duration,
 			///////
@@ -193,7 +193,7 @@ export class TimelineMarkerPresets extends React.Component {
 		this.setDuration = ((val: string)=>{this.setState({nextMarkerDuration: val})}).bind(this);
 		this.setTrack = ((val: string)=>{this.setState({nextMarkerTrack: val})}).bind(this);
 		this.setDescription = ((val: string)=>{this.setState({nextMarkerDescription: val})}).bind(this);
-		this.setBuff = ((val: BuffName)=>{this.setState({nextMarkerBuff: val})}).bind(this);
+		this.setBuff = ((val: BuffType)=>{this.setState({nextMarkerBuff: val})}).bind(this);
 
 		this.setLoadTrackDest = ((val: string)=>{this.setState({loadTrackDest: val})}).bind(this);
 
@@ -299,7 +299,7 @@ export class TimelineMarkerPresets extends React.Component {
 			<select value={this.state.nextMarkerBuff}
 					onChange={evt => {
 						if (evt.target) {
-							this.setBuff(evt.target.value as BuffName);
+							this.setBuff(evt.target.value as BuffType);
 						}
 					}}>{buffCollection}
 			</select>
