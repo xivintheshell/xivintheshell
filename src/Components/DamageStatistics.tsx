@@ -165,7 +165,7 @@ function PotencyDisplay(props: {
 		potencyExplanation += localize({en: "(untargetable)", zh: "(不可选中)"});
 	}
 	props.calc.forEach(m=>{
-		if (m.damageFactor !== 1 && m.source !== PotencyModifierType.PARTY) {
+		if (m.damageFactor !== 1) {
 			potency *= m.damageFactor;
 			potencyExplanation += " × " + m.damageFactor + "(" + buffName(m.source) + ")"
 		}
