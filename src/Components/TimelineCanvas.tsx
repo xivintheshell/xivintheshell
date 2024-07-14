@@ -318,8 +318,11 @@ function drawDamageMarks(
 		if (untargetable) {
 			info = (0).toFixed(2) + " (" + sourceStr + ")";
 		} else {
-			info = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier}).toFixed(2) + " (" + sourceStr + ")";
+			const withoutBuffs = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, includePartyBuffs: false});
+			const withBuffs = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, includePartyBuffs: true});
+			info = withBuffs.toFixed(2) + " (" + sourceStr + ")";
 			if (pot) info += " (" + localize({en: "pot", zh: "爆发药"}) + ")";
+			if (withoutBuffs !== withBuffs) info += " (" + localize({en: "party", zh: "TODO"}) + ")";
 		}
 
 		testInteraction(
@@ -466,14 +469,22 @@ function drawSkills(
 		let description = localizeSkillName(icon.elem.skillName) + "@" + (icon.elem.displayTime).toFixed(2);
 		if (node.hasBuff(ResourceType.LeyLines)) description += localize({en: " (LL)", zh: " (黑魔纹)"});
 		if (node.hasBuff(ResourceType.Tincture)) description += localize({en: " (pot)", zh: "(爆发药)"});
+
+		const withoutBuffs = node.getPotency({
+			tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, 
+			includePartyBuffs: false, 
+			untargetable: bossIsUntargetable}).applied;
+		const withBuffs = node.getPotency({
+			tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, 
+			includePartyBuffs: true, 
+			untargetable: bossIsUntargetable}).applied;
+
+		if (withoutBuffs !== withBuffs) description += localize({en: " (party)", zh: "(TODO)"});
+
 		let lines = [description];
-		let potency = node.getPotency({
-			tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
-			untargetable: bossIsUntargetable
-		}).applied;
 		// 2. potency
 		if (node.getPotencies().length > 0) {
-			lines.push(localize({en: "potency: ", zh: "威力："}) + potency.toFixed(2));
+			lines.push(localize({en: "potency: ", zh: "威力："}) + withBuffs.toFixed(2));
 		}
 		// 3. duration
 		let lockDuration = 0;
