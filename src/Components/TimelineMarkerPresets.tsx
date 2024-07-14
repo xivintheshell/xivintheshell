@@ -11,9 +11,11 @@ import {
 	SaveToFile
 } from "./Common";
 import {controller} from "../Controller/Controller";
-import {ElemType, MarkerColor, MarkerElem, MarkerType, UntargetableMarkerTrack} from "../Controller/Timeline";
+import {ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack} from "../Controller/Timeline";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+import { Buff, buffConstants } from '../Game/Buffs';
+import { BuffName, MarkerColor } from '../Game/Common';
 
 /*
 	For the sake of simplicity, tracks be like:
@@ -41,6 +43,7 @@ type TimelineMarkerPresetsState = {
 	nextMarkerTrack: string,
 	nextMarkerDescription: string,
 	nextMarkerShowText: boolean,
+	nextMarkerBuff: BuffName,
 	loadTrackDest: string,
 	durationInputMode: DurationInputMode,
 	/////////
@@ -123,6 +126,7 @@ export class TimelineMarkerPresets extends React.Component {
 	setDuration: (val: string) => void;
 	setTrack: (val: string) => void;
 	setDescription: (val: string) => void;
+	setBuff: (val: BuffName) => void;
 
 	setLoadTrackDest: (val: string) => void;
 	setDurationInputMode: (val: string) => void;
@@ -140,12 +144,19 @@ export class TimelineMarkerPresets extends React.Component {
 					nextMarkerDescription: marker.description,
 					nextMarkerShowText: marker.showText,
 				});
-			} else {
+			} else if (marker.markerType === MarkerType.Untargetable) {
 				this.setState({
 					nextMarkerType: marker.markerType,
 					nextMarkerTime: marker.time.toString(),
 					nextMarkerDuration: marker.duration.toString(),
 				});
+			} else {
+				this.setState({
+					nextMarkerType: marker.markerType,
+					nextMarkerTrack: marker.track.toString(),
+					nextMarkerTime: marker.time.toString(),
+					nextMarkerBuff: marker.description as BuffName
+				})
 			}
 		}).bind(this);
 		this.onSaveFilenameChange = ((evt: ChangeEvent<{value: string}>)=>{
@@ -172,6 +183,7 @@ export class TimelineMarkerPresets extends React.Component {
 			nextMarkerTrack: "0",
 			nextMarkerDescription: "",
 			nextMarkerShowText: false,
+			nextMarkerBuff: BuffName.TechnicalStep,
 			loadTrackDest: "0",
 			durationInputMode: DurationInputMode.Duration,
 			///////
@@ -181,6 +193,7 @@ export class TimelineMarkerPresets extends React.Component {
 		this.setDuration = ((val: string)=>{this.setState({nextMarkerDuration: val})}).bind(this);
 		this.setTrack = ((val: string)=>{this.setState({nextMarkerTrack: val})}).bind(this);
 		this.setDescription = ((val: string)=>{this.setState({nextMarkerDescription: val})}).bind(this);
+		this.setBuff = ((val: BuffName)=>{this.setState({nextMarkerBuff: val})}).bind(this);
 
 		this.setLoadTrackDest = ((val: string)=>{this.setState({loadTrackDest: val})}).bind(this);
 
@@ -276,6 +289,27 @@ export class TimelineMarkerPresets extends React.Component {
 			</div>
 		</div>
 
+		let buffCollection: JSX.Element[] = [];
+		buffConstants.buffInfos.forEach(info => {
+			buffCollection.push(<option key={info.name} value={info.name}>{info.name}</option>)
+		});
+
+		let buffOnlySection = <div>
+			<span>{localize({en: "Buff: ", zh: "TODO: "})}</span>
+			<select value={this.state.nextMarkerBuff}
+					onChange={evt => {
+						if (evt.target) {
+							this.setBuff(evt.target.value as BuffName);
+						}
+					}}>{buffCollection}
+			</select>
+
+			<div>
+				<Input defaultValue={this.state.nextMarkerTrack} description={localize({en: "Track: ", zh: "轨道序号："})} width={4}
+						style={inlineDiv} onChange={this.setTrack}/>
+			</div>
+		</div>
+
 		let content = <div>
 			<button style={btnStyle} onClick={()=>{
 				controller.timeline.deleteAllMarkers();
@@ -345,14 +379,19 @@ export class TimelineMarkerPresets extends React.Component {
 							}}>
 						<option value={MarkerType.Info}>{localize({en: "Info", zh: "备注信息"})}</option>
 						<option value={MarkerType.Untargetable}>{localize({en: "Untargetable", zh: "不可选中"})}</option>
+						<option value={MarkerType.Buff}>{localize({en: "Buff", zh: "TODO - Translation"})}</option>
 					</select>
 					<span> </span>
 					<Input defaultValue={this.state.nextMarkerTime} description={localize({en: "Time: ", zh: "时间："})} width={8} style={inlineDiv}
 						   onChange={this.setTime}/>
-					<Input defaultValue={this.state.nextMarkerDuration} description={localize({en: "Duration: ", zh: "持续时长："})} width={8}
-						   style={inlineDiv} onChange={this.setDuration}/>
+
+					{this.state.nextMarkerType === MarkerType.Buff ? undefined : 
+						<Input defaultValue={this.state.nextMarkerDuration} description={localize({en: "Duration: ", zh: "持续时长："})} width={8}
+							style={inlineDiv} onChange={this.setDuration}/>
+					}
 
 					{this.state.nextMarkerType === MarkerType.Info ? infoOnlySection : undefined}
+					{this.state.nextMarkerType === MarkerType.Buff ? buffOnlySection : undefined}
 					<button
 						type={"submit"}
 						style={{display: "block", marginTop: "0.5em"}}
@@ -371,6 +410,13 @@ export class TimelineMarkerPresets extends React.Component {
 								marker.color = MarkerColor.Grey;
 								marker.track = UntargetableMarkerTrack;
 								marker.description = "";
+								marker.showText = true;
+							}
+							if (this.state.nextMarkerType === MarkerType.Buff) {
+								const buff = new Buff(this.state.nextMarkerBuff);
+								marker.color = buff.info.color;
+								marker.description = buff.name;
+								marker.duration = buff.info.duration;
 								marker.showText = true;
 							}
 							if (isNaN(marker.duration) ||
