@@ -165,9 +165,9 @@ function PotencyDisplay(props: {
 		potencyExplanation += localize({en: "(untargetable)", zh: "(不可选中)"});
 	}
 	props.calc.forEach(m=>{
-		if (m.factor !== 1 && m.source !== PotencyModifierType.PARTY) {
-			potency *= m.factor;
-			potencyExplanation += " × " + m.factor + "(" + buffName(m.source) + ")"
+		if (m.damageFactor !== 1 && m.source !== PotencyModifierType.PARTY) {
+			potency *= m.damageFactor;
+			potencyExplanation += " × " + m.damageFactor + "(" + buffName(m.source) + ")"
 		}
 	});
 	return <span style={{textDecoration: props.includeInStats ? "none" : "line-through"}}>{potency.toFixed(2)} <Help topic={props.helpTopic} content={potencyExplanation}/></span>
