@@ -1,7 +1,7 @@
 // making another file just so I don't keep clustering Controller.ts
 import {controller as ctl} from "./Controller";
 import {ActionNode, ActionType} from "./Record";
-import {ResourceType, SkillName} from "../Game/Common";
+import {BuffType, ResourceType, SkillName} from "../Game/Common";
 import {
 	DamageStatisticsData,
 	DamageStatsMainTableEntry,
@@ -418,7 +418,7 @@ export function calculateDamageStats(props: {
 				mainTable[q.mainTableIndex].potPotency += (potencyWithPot - potencyWithoutPot);
 				mainTable[q.mainTableIndex].partyBuffPotency += (potencyWithPartyBuffs - potencyWithPot);
 
-				if (hit && node.hasBuff(ResourceType.Tincture)) {
+				if (hit && node.hasBuff(BuffType.Tincture)) {
 					mainTable[q.mainTableIndex].potCount += 1;
 				}
 

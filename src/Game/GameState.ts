@@ -1,4 +1,4 @@
-import {Aspect, Debug, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
+import {Aspect, BuffType, Debug, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
 import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
@@ -428,7 +428,7 @@ export class GameState {
 			skillInfo.aspect,
 			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered));
 		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
-			props.node.addBuff(ResourceType.LeyLines);
+			props.node.addBuff(BuffType.LeyLines);
 		}
 
 		// attach potency node
@@ -465,7 +465,11 @@ export class GameState {
 
 				// tincture
 				if (game.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
-					props.node.addBuff(ResourceType.Tincture);
+					props.node.addBuff(BuffType.Tincture);
+				}
+				
+				if (skillInfo.basePotency > 0) {
+					game.#addPartyBuffs(props.node);
 				}
 
 				// ice spells: gain mana if in UI
@@ -568,7 +572,7 @@ export class GameState {
 
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
 		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
-			props.node.addBuff(ResourceType.LeyLines);
+			props.node.addBuff(BuffType.LeyLines);
 		}
 
 		// potency
@@ -588,7 +592,11 @@ export class GameState {
 
 		// tincture
 		if (this.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
-			props.node.addBuff(ResourceType.Tincture);
+			props.node.addBuff(BuffType.Tincture);
+		}
+
+		if (skillInfo.basePotency > 0) {
+			this.#addPartyBuffs(props.node);
 		}
 
 		if (props.onCapture) props.onCapture();
@@ -609,6 +617,16 @@ export class GameState {
 		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(props.skillName));
 
 		return skillEvent;
+	}
+
+	#addPartyBuffs(node: ActionNode) {
+		const buffMarkers = controller.timeline.getBuffMarkers();
+		buffMarkers.filter(marker => {
+			const adjustedTime = this.getDisplayTime();
+			return marker.time <= adjustedTime && (marker.time + marker.duration) >= adjustedTime;
+		}).forEach(marker => {
+			node.addBuff(marker.description as BuffType);
+		});
 	}
 
 	hasEnochian() {
