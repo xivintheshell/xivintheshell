@@ -3,6 +3,8 @@ import {ResourceOverride} from "./Resources";
 
 export class GameConfig {
     spellSpeed = 400;
+    criticalHit = 420;
+    directHit = 420;
     countdown = 0;
     randomSeed = "hello.";
     casterTax = 0.06;
@@ -15,6 +17,8 @@ export class GameConfig {
     // DEBUG
     constructor(props?: {
         spellSpeed: number,
+        criticalHit: number,
+        directHit: number,
         countdown: number,
         randomSeed: string,
         casterTax: number,
@@ -26,6 +30,8 @@ export class GameConfig {
     }) {
         if (props) {
             this.spellSpeed = props.spellSpeed;
+            this.criticalHit = props.criticalHit ?? 420;
+            this.directHit = props.directHit ?? 420;
             this.countdown = props.countdown;
             this.randomSeed = props.randomSeed;
             this.casterTax = props.casterTax;
@@ -54,6 +60,8 @@ export class GameConfig {
                 }
             }
             return this.spellSpeed === other.spellSpeed &&
+                this.criticalHit === other.criticalHit &&
+                this.directHit === other.directHit &&
                 this.countdown === other.countdown &&
                 this.randomSeed === other.randomSeed &&
                 this.casterTax === other.casterTax &&
@@ -99,6 +107,8 @@ export class GameConfig {
     serialized() {
         return {
             spellSpeed: this.spellSpeed,
+            criticalHit: this.criticalHit,
+            directHit: this.directHit,
             countdown: this.countdown,
             randomSeed: this.randomSeed,
             casterTax: this.casterTax,
