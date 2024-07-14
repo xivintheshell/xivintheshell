@@ -197,6 +197,8 @@ export class Config extends React.Component {
 		this.state = { // NOT DEFAULTS
 			stepSize : 0,
 			spellSpeed: 0,
+			criticalHit: 0,
+			directHit: 0,
 			animationLock: 0,
 			casterTax: 0,
 			timeTillFirstManaTick: 0,
@@ -225,6 +227,8 @@ export class Config extends React.Component {
 				}
 				let config = {
 					spellSpeed: this.state.spellSpeed,
+					criticalHit: this.state.criticalHit,
+					directHit: this.state.directHit,
 					animationLock: this.state.animationLock,
 					casterTax: this.state.casterTax,
 					countdown: this.state.countdown,
@@ -243,6 +247,14 @@ export class Config extends React.Component {
 
 		this.setSpellSpeed = (val => {
 			this.setState({spellSpeed: val, dirty: true});
+		}).bind(this);
+
+		this.setCriticalHit = (val => {
+			this.setState({criticalHit: val, dirty: true});
+		}).bind(this);
+
+		this.setDirectHit = (val => {
+			this.setState({directHit: val, dirty: true});
 		}).bind(this);
 
 		this.setAnimationLock = (val => {
@@ -587,6 +599,8 @@ export class Config extends React.Component {
 
 	setConfigAndRestart(config) {
 		if (isNaN(parseFloat(config.spellSpeed)) ||
+			isNaN(parseFloat(config.criticalHit)) ||
+			isNaN(parseFloat(config.directHit)) ||
 			isNaN(parseFloat(config.animationLock)) ||
 			isNaN(parseFloat(config.casterTax)) ||
 			isNaN(parseFloat(config.timeTillFirstManaTick)) ||
@@ -599,6 +613,8 @@ export class Config extends React.Component {
 		}
 		controller.setConfigAndRestart({
 			spellSpeed: parseFloat(config.spellSpeed),
+			criticalHit: parseFloat(config.criticalHit),
+			directHit: parseFloat(config.directHit),
 			animationLock: parseFloat(config.animationLock),
 			casterTax: parseFloat(config.casterTax),
 			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
@@ -618,6 +634,8 @@ export class Config extends React.Component {
 	render() {
 		let editSection = <div>
 			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
+			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: " , zh: "："})} onChange={this.setCriticalHit}/>
+			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "："})} onChange={this.setDirectHit}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<Input defaultValue={this.state.casterTax} description={localize({en: "caster tax: ", zh: "读条税："})} onChange={this.setCasterTax}/>
 			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "距首次跳蓝时间："})} onChange={this.setTimeTillFirstManaTick}/>

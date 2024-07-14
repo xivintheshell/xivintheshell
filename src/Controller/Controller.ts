@@ -85,6 +85,8 @@ class Controller {
 
 		this.gameConfig = new GameConfig();
 		this.gameConfig.spellSpeed = 1532;
+		this.gameConfig.criticalHit = 420;
+		this.gameConfig.directHit = 420;
 		this.gameConfig.countdown = 5;
 		this.gameConfig.randomSeed = "sup";
 		this.gameConfig.casterTax = 0.1;
@@ -682,6 +684,8 @@ class Controller {
 
 	setConfigAndRestart(props={
 		spellSpeed: 1268,
+		criticalHit: 420,
+		directHit: 420,
 		animationLock: 0.66,
 		casterTax: 0.06,
 		timeTillFirstManaTick: 0.3,
