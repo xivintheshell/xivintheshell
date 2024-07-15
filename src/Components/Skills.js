@@ -159,7 +159,7 @@ class SkillButton extends React.Component {
 			let actualCastTime = info.instantCast ? 0 : info.castTime;
 			let infoString = "";
 			if (info.status === SkillReadyStatus.Ready) {
-				infoString += localize({en: "cast: ", zh: "读条："}) + actualCastTime.toFixed(2);
+				infoString += localize({en: "cast: ", zh: "读条："}) + actualCastTime.toFixed(3);
 				if (info.llCovered && actualCastTime > Debug.epsilon) infoString += " (LL)";
 				infoString += localize({en: ", cast+delay: ", zh: " 读条+生效延迟："}) + info.timeTillDamageApplication.toFixed(3);
 			}

@@ -116,7 +116,7 @@ export class CoolDown extends Resource {
 	}
 	setRecastTimeScale(timeScale: number) { this.#recastTimeScale = timeScale; }
 	#reCaptureRecastTimeScale(game: GameState) {
-		this.#recastTimeScale = this.type === ResourceType.cd_GCD ? game.captureRecastTimeScale() : 1;
+		this.#recastTimeScale = this.type === ResourceType.cd_GCD ? game.gcdRecastTimeScale() : 1;
 	}
 	restore(game: GameState, deltaTime: number) {
 		let stacksBefore = this.stacksAvailable();

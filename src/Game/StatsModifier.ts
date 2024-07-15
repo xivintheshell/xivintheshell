@@ -1,49 +1,37 @@
-import {Debug, ResourceType} from "./Common"
+import {ResourceType} from "./Common"
 import {ResourceState} from "./Resources";
 
 export class StatsModifier
 {
-	castTimeBase = 1;
 	castTimeFire = 1;
 	castTimeIce = 1;
-	spellRecastTimeScale = 1;
 	manaCostFire = 1;
 	manaCostIce = 1;
-	llApplied = false;
 	manaRegen = 0;
 	uhConsumption = 0;
 
 	reset()
 	{
-		this.castTimeBase = 1;
 		this.castTimeFire = 1;
 		this.castTimeIce = 1;
-		this.spellRecastTimeScale = 1;
 		this.manaCostFire = 1;
 		this.manaCostIce = 1;
 
 		// additive constant
 		this.manaRegen = 0;
 		this.uhConsumption = 0;
-
-		// OR
-		this.llApplied = false;
 	}
 
 	// StatsModifier -> ()
 	apply(other: StatsModifier)
 	{
-		this.castTimeBase *= other.castTimeBase;
 		this.castTimeFire *= other.castTimeFire;
 		this.castTimeIce *= other.castTimeIce;
-		this.spellRecastTimeScale *= other.spellRecastTimeScale;
 		this.manaCostFire *= other.manaCostFire;
 		this.manaCostIce *= other.manaCostIce;
 
 		this.manaRegen += other.manaRegen;
 		this.uhConsumption += other.uhConsumption;
-
-		this.llApplied = this.llApplied || other.llApplied;
 	}
 
 	static base()
@@ -91,16 +79,6 @@ export class StatsModifier
 			afMod.castTimeIce = 0.5;
 		}
 		modifiers.push(afMod);
-
-		// ley lines
-		let ll = resources.get(ResourceType.LeyLines);
-		let llMod = new StatsModifier();
-		if (ll.available(1)) {
-			llMod.castTimeBase = 0.85;
-			llMod.spellRecastTimeScale = 0.85;
-			llMod.llApplied = true;
-		}
-		modifiers.push(llMod);
 
 		//======== combine and return ========
 

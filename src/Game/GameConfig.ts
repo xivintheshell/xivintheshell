@@ -71,11 +71,12 @@ export class GameConfig {
         return inPotency * dotStrength;
     }
 
-    adjustedCastTime(inCastTime : number) {
+    // todo: might want to change to 0.001s precision, if we confirm that's the actual case despite only shows 2 digits after decimal pt are displayed
+    adjustedCastTime(inCastTime : number, hasLL: boolean) {
         let ceil = Math.ceil((420.0 - this.spellSpeed) * 130 / 2780.0);
         let pts = Math.floor(inCastTime * (1000.0 + ceil));
-
-        return Math.floor(pts / 10) / 100;
+        let llFactor = hasLL ? 0.85 : 1; // see scripts/sps-LL/test.js
+        return Math.floor(llFactor * pts / 10) / 100;
     }
 
     getSkillAnimationLock(skillName : SkillName) : number {

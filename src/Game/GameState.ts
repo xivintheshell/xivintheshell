@@ -1,4 +1,4 @@
-import {Aspect, Debug, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
+import {Aspect, Debug, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
 import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
@@ -7,7 +7,6 @@ import {CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceSta
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
 import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
-import {localizeSkillName} from "../Components/Localization";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -67,7 +66,7 @@ export class GameState {
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.adjustedCastTime(2.5), 1, 1));
+		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.adjustedCastTime(2.5, false), 1, 1));
 		this.cooldowns.set(ResourceType.cd_LeyLines, new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Transpose, new CoolDown(ResourceType.cd_Transpose, 5, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Manaward, new CoolDown(ResourceType.cd_Manaward, 120, 1, 1));
@@ -374,22 +373,24 @@ export class GameState {
 		return mod.manaRegen;
 	}
 
-	captureSpellCastTime(aspect: Aspect, baseCastTime: number) {
+	captureSpellCastTimeAFUI(aspect: Aspect, llAdjustedCastTime: number) {
 		let mod = StatsModifier.fromResourceState(this.resources);
 
-		let castTime = baseCastTime * mod.castTimeBase;
+		let castTime = llAdjustedCastTime;
 		if (aspect === Aspect.Fire) castTime *= mod.castTimeFire;
 		else if (aspect === Aspect.Ice) castTime *= mod.castTimeIce;
 
-		return {
-			castTime,
-			llCovered: mod.llApplied
-		};
+		return castTime;
 	}
 
-	captureRecastTimeScale() {
-		let mod = StatsModifier.fromResourceState(this.resources);
-		return mod.spellRecastTimeScale;
+	gcdRecastTimeScale() {
+		let ll = this.resources.get(ResourceType.LeyLines);
+		if (ll.available(1)) {
+			// should be approximately 0.85
+			return this.config.adjustedCastTime(2.5, true) / this.config.adjustedCastTime(2.5, false);
+		} else {
+			return 1;
+		}
 	}
 
 	requestToggleBuff(buffName: ResourceType) {
@@ -422,9 +423,11 @@ export class GameState {
 		console.assert(skillInfo.isSpell);
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
-		let capturedCast = this.captureSpellCastTime(skillInfo.aspect, this.config.adjustedCastTime(skillInfo.baseCastTime));
-		let capturedCastTime = capturedCast.castTime;
-		if (capturedCast.llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
+		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
+		let capturedCastTime = this.captureSpellCastTimeAFUI(
+			skillInfo.aspect,
+			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered));
+		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
 			props.node.addBuff(ResourceType.LeyLines);
 		}
 
@@ -563,7 +566,7 @@ export class GameState {
 		let skillInfo = this.skillsList.get(props.skillName).info;
 		let cd = this.cooldowns.get(skillInfo.cdName);
 
-		let llCovered = this.captureSpellCastTime(skillInfo.aspect, 0).llCovered;
+		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
 		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
 			props.node.addBuff(ResourceType.LeyLines);
 		}
@@ -686,8 +689,10 @@ export class GameState {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
 		let [capturedManaCost, uhConsumption] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
-		let capturedCast = this.captureSpellCastTime(skill.info.aspect, this.config.adjustedCastTime(skill.info.baseCastTime));
-		let capturedCastTime = capturedCast.castTime;
+		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
+		let capturedCastTime = this.captureSpellCastTimeAFUI(
+			skill.info.aspect,
+			this.config.adjustedCastTime(skill.info.baseCastTime, llCovered));
 		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1)
 			|| this.resources.get(ResourceType.Swiftcast).available(1)
 			|| skillName===SkillName.Paradox
@@ -746,7 +751,7 @@ export class GameState {
 			timeTillDamageApplication: timeTillDamageApplication,
 			capturedManaCost: capturedManaCost,
 			highlight: highlight,
-			llCovered: capturedCast.llCovered
+			llCovered: llCovered
 		};
 	}
 

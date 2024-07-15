@@ -13,6 +13,9 @@ function adjustedCastTime(spellSpeed, baseRecastTime, LL) {
 	return Math.floor(llFactor * pts / 10) / 100;
 }
 
+// TODO: test 3 digit precision formulae
+// see (in Chinese): https://bbs.nga.cn/read.php?tid=39051224&rand=972
+
 let baseRecastTimes = [1.5, 2.0, 2.5, 2.8, 3.0, 3.5, 4.0];
 let LL = true;
 
