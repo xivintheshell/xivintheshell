@@ -45,7 +45,7 @@ export type TimelineRenderingProps = {
 
 const c_trackHeight = 14;
 const c_buttonHeight = 20;
-const c_timelineHeight = 12 + 54;
+const c_timelineHeight = 12 + 58;
 const c_maxTimelineHeight = 400;
 const c_barsOffset = 2;
 const c_leftBufferWidth = 20;
