@@ -1,7 +1,7 @@
 import React from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
-import {TickMode} from "../Controller/Common";
+import {getCachedValue, setCachedValue, TickMode} from "../Controller/Common";
 import {ProcMode, ResourceType} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 import {localize} from "./Localization";
@@ -16,11 +16,11 @@ export class TimeControl extends React.Component {
 				tickMode: settings.tickMode,
 				timeScale: settings.timeScale
 			});
-			localStorage.setItem("playbackSettings", str);
+			setCachedValue("playbackSettings", str);
 		}
 
 		this.loadSettings = ()=>{
-			let str = localStorage.getItem("playbackSettings");
+			let str = getCachedValue("playbackSettings");
 			if (str) {
 				let settings = JSON.parse(str);
 				return settings;
@@ -59,7 +59,7 @@ export class TimeControl extends React.Component {
 			}
 		}).bind(this);
 
-		let settings = this.loadSettings();//LocalStorage.loadPlaybackSettings();
+		let settings = this.loadSettings();
 		if (settings) {
 			this.state = {
 				tickMode: settings.tickMode,
@@ -638,7 +638,7 @@ export class Config extends React.Component {
 
 					localize({
 					en: "Default RNG: 40% Firestarter",
-					zh: "RNG会像游戏内一样，相应技能40%概率获得火苗，Always则每次都会触发火苗/雷云，Never则从不触发。"
+					zh: "RNG会像游戏内一样，相应技能40%概率获得火苗，Always则每次都会触发火苗，Never则从不触发。"
 				})
 				}/>: </span>
 				<select style={{outline: "none"}} value={this.state.procMode} onChange={this.setProcMode}>
@@ -652,11 +652,12 @@ export class Config extends React.Component {
 					   checked={this.state.extendedBuffTimes}
 					   onChange={this.setExtendedBuffTimes}/>
 				<span>extended buff times <Help topic={"extendedBuffTimes"} content={
+					// Thunderhead and LL durations seem exact
 					<div>
 						<div className={"paragraph"}>Many buffs actually last longer than listed in the skill descriptions. I got some rough numbers from logs and screen captures but please contact me if you have more accurate data.</div>
 						<div className={"paragraph"}>Having this checked will give the following duration overrides:</div>
 						<div className={"paragraph"}> - Triplecast: 15.7s</div>
-						<div className={"paragraph"}> - Firestarter: 31s</div>
+						<div className={"paragraph"}> - Firestarter: 30.5s</div>
 					</div>
 				}/></span>
 			</div>

@@ -82,7 +82,7 @@ export function IntroSection(props: {}) {
 						<li style={smallGap}>タイムライン上のアクションをクリックすると選択できます。<ButtonIndicator text={"shift"}/>を押しながらクリックすると複数選択できます。</li>
 						<li style={smallGap}><ButtonIndicator text={"backspace"}/>か<ButtonIndicator text={"delete"}/>を押すと選択中のアクションとそれ以降のアクションを全て削除します。</li>
 						<li style={smallGap}>タイムラインの経過時間が表示されているヘッダー部分をクリックするとメインコントロールの枠が<b style={{color: "darkorange"}}>オレンジ</b>になり、その瞬間の状態を確認できます。
-              その間はアクションを実行できません。他の場所をクリックするとキャンセルされ通常モードに戻ります。
+							その間はアクションを実行できません。他の場所をクリックするとキャンセルされ通常モードに戻ります。
 						</li>
 					</ul>
 				})}
@@ -135,14 +135,14 @@ export function IntroSection(props: {}) {
 						</div>,
 						ja: <div>
 								<div className="paragraph">
-                  後方互換性があるとは限りません。保存したファイルが正しく読み込まれず、その理由がわからない場合はお問い合わせください。できる限りお手伝いします。
+									後方互換性があるとは限りません。保存したファイルが正しく読み込まれず、その理由がわからない場合はお問い合わせください。できる限りお手伝いします。
 								</div>
 								<div className="paragraph">
-                  ブラウザのキャッシュが何らかの理由で壊れている場合、次の方法でリセットできます。<br/>
-                  <b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b> にアクセスし、<b>{"{command}"}</b> を以下のいずれかに置き換えます：
+									ブラウザのキャッシュが何らかの理由で壊れている場合、次の方法でリセットできます。<br/>
+									<b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b> にアクセスし、<b>{"{command}"}</b> を以下のいずれかに置き換えます：
 								<ul>
 									<li style={smallGap}><b>resetResourceOverrides</b>: 全てのリソースとタイムライン上のアクションを上書きします。</li>
-                  <li style={smallGap}><b>resetAll</b>: 全てのブラウザキャッシュを削除します。</li>
+									<li style={smallGap}><b>resetAll</b>: 全てのブラウザキャッシュを削除します。</li>
 								</ul>
 							</div>
 						</div>,
@@ -159,74 +159,110 @@ export function IntroSection(props: {}) {
 				<div className="paragraph">{localize({en: "This tool is made by:", zh: "作者：", ja: "作者："})}</div>
 				{localize({
 					en: <ul>
-						<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
-						<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
-						<li><b>Turtle, Spider, Santa,</b> and many other players who contributed feature suggestions, timeline markers, bug reports, or in any other way</li>
-					</ul>,
+							<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
+							<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
+							<li><b>Turtle</b>, who did the heavy work of updating this tool from Endwalker to Dawntrail</li>
+							<li><b>Yara, Spider, Santa,</b> and many other players who contributed feature suggestions, timeline markers, bug reports, or in any other way</li>
+						</ul>,
 					zh: <ul>
-						<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
-						<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：程序；是个云黑魔玩家</li>
-						<li><b>Turtle, Spider, Santa</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
-					</ul>,
+							<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
+							<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：程序；是个云黑魔玩家</li>
+							<li><b>Turtle</b>, 把本工具从6.0更新到7.0的大功臣</li>
+							<li><b>Yara, Spider, Santa</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
+						</ul>
 					ja: <ul>
-						<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: プロダクトマネージャー、凄腕黒魔道士</li>
-						<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: ソフトウェア開発者、しがない黒魔道士</li>
-						<li><b>Turtle, Spider, Santa,</b> そして新機能やバグ報告などで貢献してくださった多くのFF14プレーヤーの皆さん</li>
-					</ul>,
+							<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: プロダクトマネージャー、凄腕黒魔道士</li>
+							<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: ソフトウェア開発者、しがない黒魔道士</li>
+							<li><b>Turtle</b>: 黄金のレガシーへのアップデートを担当</li>
+							<li><b>Yara, Spider, Santa,</b> そして新機能やバグ報告などで貢献してくださった多くのFF14プレーヤーの皆さん</li>
+						</ul>,
 				})}
 				{localize({
 					en: <div className={"paragraph"}>
-						If you have questions,
-						encountered bugs, or would like to suggest features, you can find me on discord
-						(miyehn), or via email (rainduym@gmail.com). In case of sending me a bug report, attaching the
+						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={"https://discord.com/channels/277897135515762698/1255782490862387360"}>this thread in The Balance</a>.
+						You can also find me directly on discord (miyehn), or via email (rainduym@gmail.com). In case of sending a bug report, attaching the
 						fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
 					</div>,
 					zh: <div className={"paragraph"}>
-						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可QQ联系（870340705），加时请注明来意。如果是反馈bug，最好把能够复现bug的战斗记录文件（从右侧下载的fight.txt）一起发给我。
+						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从右侧下载的fight.txt）一起发过来。
 					</div>,
 					ja: <div className={"paragraph"}>
-            質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（rainduym@gail.com）でお問い合わせください。
-            バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
+						質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（rainduym@gail.com）でお問い合わせください。
+						バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
 					</div>,
 				})}
 
 				<div className="paragraph">{localize({
-					en: "Also, consider contributing! I'm not raiding this tier so I can't make the timeline markers..",
-					zh: "贡献大欢迎！时间轴标记文件摩多摩多！孩子很久没打高难了，自己做是不可能了。",
+					en: "Also, consider contributing! I'm not raiding lately so I can't make the timeline markers..",
+					zh: "贡献大欢迎！比如给我发时间轴标记文件！我自己很久没打高难了，自己做是不可能了。",
 					ja: "また、ぜひ貢献も考えてください！最近高難易度にコンテンツに行っていないのでタイムラインマーカーが作れません...",
 				})}</div>
 
 				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接：", ja: "リンク集"})}</div>
 				{localize({
-					en:
-            <ul>
-              <li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
-              <li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation of this tool for Save the Queens areas by <b>A'zhek Silvaire @ Zalera</b></li>
-              <li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
-              <li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
-                BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
-            </ul>,
-					zh:
-						<ul>
+					en: <ul>
+						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
+						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>Black Mage in the Shell (Dawntrail at LV90)</a>: a variation for planning fights at LV90, created by <b>Akairyu</b></li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>: a snapshot of this tool at the end of Endwalker. In a few days it will also display some notable fight plans from Endwalker, as memoir.</li>
+						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation for Save the Queens areas, created by <b>A'zhek Silvaire @ Zalera</b></li>
+						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job
+							guide</a></li>
+						<li><a target={"_blank"} href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
+							BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
+					</ul>,
+					zh: <ul>
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github页面</a></li>
-						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>博兹雅版云黑魔（Black Mage in the Bozjan Shell）</a>: 本工具的博兹雅/天佑女王版。制作者： <b>A'zhek Silvaire @ Zalera</b></li>
+						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>7.0版排轴器（90级）</a>，可以用来给TOP等副本排轴，作者是<b>Akairyu</b></li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.0版排轴器</a>，历史版本，几天后还会在那里展出一些6.0时期的轴，作为纪念。</li>
+						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>博兹雅版排轴器（Black Mage in the Bozjan Shell）</a>: 本工具的博兹雅/天佑女王版。制作者： <b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>官方的黑魔法师职业介绍</a></li>
 						<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
 							The Balance服务器里的黑魔频道</a> （需要先加入Discord服务器）</li>
 					</ul>,
-          ja:
-            <ul>
-              <li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
-              <li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: 南方ボズヤ戦線向けのツール。作者：<b>A'zhek Silvaire @ Zalera</b></li>
-              <li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
-              <li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
-                BLM resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
-            </ul>,
+					ja:
+						<ul>
+						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
+						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: 南方ボズヤ戦線向けのツール。作者：<b>A'zhek Silvaire @ Zalera</b></li>
+						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
+						<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
+							BLM resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
+					</ul>,
 				})}
 
 				<div className="paragraph"><Expandable title={"Implementation notes"} titleNode={localize({en: "Implementation notes", zh: "实现细节", ja: "実装に関するメモ"})} defaultShow={false} content={
 
 					<div>
+						{localize({
+							en:
+								<div className="paragraph">
+									[DT] Ice spells seem to grant MP when they land on target(s), aka skillApplicationDelay seconds after snapshot. See <a href={"https://drive.google.com/file/d/1fnjBoXlbIQR1StFlfrwH6eQYE90rV1V5/view?usp=drive_link"}>this screen recording</a>.
+									Note that Umbral Soul also has ~0.633s skill application delay.
+								</div>,
+							zh:
+								<div className="paragraph">
+									[7.0] 从录屏（<a href={"https://drive.google.com/file/d/1fnjBoXlbIQR1StFlfrwH6eQYE90rV1V5/view?usp=drive_link"}>Google Drive</a>）来看，冰技能是在伤害判定的瞬间回蓝。顺便，灵极魂也有0.633秒左右的技能生效延迟，按下技能后需要等待相应时间才有回蓝。
+								</div>
+						})}
+						{localize({
+							en:
+								<div className="paragraph">
+									[DT] Manafont now has a much shorter (~0.2s) skill application delay compared to in EW. In fact only MP regen from Manafont has this delay; all other effects seem instant.
+								</div>,
+							zh:
+								<div className="paragraph">
+									[7.0] 魔泉的生效延迟跟6.0相比缩短了很多，目前只有0.2秒左右。而且只有回蓝受这个延迟影响，其它效果都是瞬发。
+								</div>
+						})}
+						{localize({
+							en:
+								<div className="paragraph">
+									[DT] I re-measured some buff timings from <a href={"https://drive.google.com/drive/folders/1Jp6UEGRLlruERpyQ9CuEMXFsOaVixx48?usp=drive_link"}>screen recordings</a>. They affect things when you have "extended buff times" checked. Lmk if you have something more exact.
+								</div>,
+							zh:
+								<div className="paragraph">
+									[7.0] 我通过录屏（<a href={"https://drive.google.com/drive/folders/1Jp6UEGRLlruERpyQ9CuEMXFsOaVixx48?usp=drive_link"}>Google Drive</a>）的方式重新测量了几个buff的实际持续时长（有的实际时长比技能描述稍长一些），在右侧可以自行勾选 "extended buff times" 使它们生效。如果你有更准确的数据，请务必联系我。
+								</div>
+						})}
 						{localize({
 							en:
 								<div className="paragraph">
@@ -253,7 +289,7 @@ export function IntroSection(props: {}) {
 								</div>,
 							ja:
 								<div className="paragraph">
-                  AFとUBの更新は滑り撃ちが可能な時間と同じタイミング（キャスト終了の0.5秒前）で発生します。
+									AFとUBの更新は滑り撃ちが可能な時間と同じタイミング（キャスト終了の0.5秒前）で発生します。
 								</div>,
 						})}
 						{localize({
@@ -272,8 +308,8 @@ export function IntroSection(props: {}) {
 							ja:
 								<div className="paragraph">
 									Galahad と Blink のおかげでアクション適用までの遅延時間の計算はかなり正確になりました（<a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>こちら</a>の関数の最後の引数を参照）。
-                  ログを確認すると、魔法は「prepare XX」から実際のダメージまで、その他の場合は「casts XX」から効果が発生するまでの間です（主にバフの適用/更新時間）。
-                  その他のデータの計測方法をご存知の場合はお知らせください。
+									ログを確認すると、魔法は「prepare XX」から実際のダメージまで、その他の場合は「casts XX」から効果が発生するまでの間です（主にバフの適用/更新時間）。
+									その他のデータの計測方法をご存知の場合はお知らせください。
 								</div>,
 							})}
 						{localize ({
@@ -290,8 +326,8 @@ export function IntroSection(props: {}) {
 								</div>,
 							ja:
 								<div className="paragraph">
-                  ルーシッドドリームとサンダー系のティックは独立したタイマーを持っています。それぞれMPティックとは異なるランダムな時間のオフセットがあります。現在のオフセットについては設定セクションを参照してください。
-                  ルーシッドドリームの場合、最初のティックはスキルボタンを押してから0.623秒後に発生し7回ティックします。
+									ルーシッドドリームとサンダー系のティックは独立したタイマーを持っています。それぞれMPティックとは異なるランダムな時間のオフセットがあります。現在のオフセットについては設定セクションを参照してください。
+									ルーシッドドリームの場合、最初のティックはスキルボタンを押してから0.623秒後に発生し7回ティックします。
 								</div>,
 						})}
 						{localize ({
@@ -307,7 +343,7 @@ export function IntroSection(props: {}) {
 								</div>,
 							ja:
 								<div className="paragraph">
-                  2024/8/29: 黒魔紋上のキャストとリキャスト時間が誤っていました。現在は単純に0.85倍にしていますが、最大で0.01秒の誤差があります。Vanilla Milksmoothie が正確な値を提案してくれましたが現在は実装する時間がないため、または過去のtxtファイルが壊れる可能性があるため、実装していません。問題がある場合はお知らせください。
+									2024/8/29: 黒魔紋上のキャストとリキャスト時間が誤っていました。現在は単純に0.85倍にしていますが、最大で0.01秒の誤差があります。Vanilla Milksmoothie が正確な値を提案してくれましたが現在は実装する時間がないため、または過去のtxtファイルが壊れる可能性があるため、実装していません。問題がある場合はお知らせください。
 								</div>,
 						})}
 					</div>

@@ -5,6 +5,7 @@ import {Tooltip as ReactTooltip} from "react-tooltip";
 import 'react-tooltip/dist/react-tooltip.css';
 import '../Style/tooltip.css';
 import {getCurrentThemeColors} from "./ColorTheme";
+import {getCachedValue, setCachedValue} from "../Controller/Common";
 
 export type ContentNode = JSX.Element | string;
 
@@ -315,10 +316,10 @@ export class Expandable extends React.Component {
 			this.setState({show: newShow});
 			if (this.props.onExpand && newShow) this.props.onExpand();
 			if (this.props.onCollapse && !newShow) this.props.onCollapse();
-			localStorage.setItem("exp: " + inProps.title, (newShow ? 1 : 0).toString());
+			setCachedValue("exp: " + inProps.title, (newShow ? 1 : 0).toString());
 		}).bind(this);
 
-		let expanded = localStorage.getItem("exp: " + inProps.title);
+		let expanded = getCachedValue("exp: " + inProps.title);
 		let show: boolean = inProps.defaultShow ?? false;
 		if (expanded !== null) {
 			show = parseInt(expanded) === 1;

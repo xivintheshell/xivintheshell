@@ -67,21 +67,25 @@ export class GameConfig {
     }
 
     adjustedDoTPotency(inPotency : number) {
-        let dotStrength = (1000 + Math.floor((this.spellSpeed - 400) * 130 / 1900.0)) * 0.001;
+        let dotStrength = (1000 + Math.floor((this.spellSpeed - 420) * 130 / 2780.0)) * 0.001;
         return inPotency * dotStrength;
     }
 
-    adjustedCastTime(inCastTime : number) {
-        let ceil = Math.ceil((400.0 - this.spellSpeed) * 130 / 1900.0);
+    // todo: might want to change to 0.001s precision, if we confirm that's the actual case despite only shows 2 digits after decimal pt are displayed
+    adjustedCastTime(inCastTime : number, hasLL: boolean) {
+        let ceil = Math.ceil((420.0 - this.spellSpeed) * 130 / 2780.0);
         let pts = Math.floor(inCastTime * (1000.0 + ceil));
-
-        return Math.floor(pts / 10) * 0.01;
+        let llFactor = hasLL ? 0.85 : 1; // see scripts/sps-LL/test.js
+        return Math.floor(llFactor * pts / 10) / 100;
     }
 
     getSkillAnimationLock(skillName : SkillName) : number {
+        /* see: https://discord.com/channels/277897135515762698/1256614366674161705
         if (skillName === SkillName.Tincture) {
             return 1.16;
-        } else if (skillName === SkillName.AetherialManipulation || skillName === SkillName.BetweenTheLines) {
+        }
+         */
+        if (skillName === SkillName.AetherialManipulation || skillName === SkillName.BetweenTheLines) {
             return 0.8; // from: https://nga.178.com/read.php?tid=21233094&rand=761
         } else {
             return this.animationLock;

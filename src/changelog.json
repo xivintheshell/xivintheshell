@@ -1,8 +1,40 @@
 [
 	{
+		"date": "7/10/24",
+		"changes": [
+			"Update SPS and dot potency formulae to match Dawntrail (by Turtle)",
+			"Adjust potion animation lock to normal instead of long 1.14s"
+		]
+	},
+	{
+		"date": "6/29/24 (2)",
+		"changes": [
+			"Let ice spells grant MP when on hit (as opposed to on snapshot). This is closer to what I observed in screen recordings.",
+			"Umbral Soul has ~0.633s delay for MP gain, not instant.",
+			"Manafont skill application delay is significantly shortened",
+			"Thunderhead duration seems to be exact so \"extended buff times\" shouldn't change that",
+			"Also put the above notes into \"About this tool/Implementation notes\" section",
+			"A bit code cleanup"
+		]
+	},
+	{
+		"date": "6/29/24",
+		"changes": [
+			"preliminary 7.0 job changes",
+			"localStorage refactor & migration (there should be a notice that links to the EW version when there's obsolete data)",
+			"update PSA and \"About this tool\""
+		]
+	},
+	{
+		"date": "6/27/24",
+		"changes": [
+			"6/26 PSA before Dawntrail & 6/27 quick update"
+		]
+	},
+	{
 		"date": "6/21/24",
 		"changes": [
-			"Fixed a tiny bug (yeah I'm back): when switching language, source of damage on the timeline now updates just like the rest of UI",
+			"Fixed a tiny bug: when switching language, source of damage on the timeline now updates just like the rest of UI",
 			"Some housekeeping stuff: a dependency package update, repository README.md"
 		]
 	},

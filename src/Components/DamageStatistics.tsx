@@ -354,7 +354,7 @@ export class DamageStatistics extends React.Component {
 				skillNameNode = <span>
 					<span style={{textDecoration: includeInStats ? "none" : "line-through", color: includeInStats ? colors.text : colors.bgHighContrast}}>
 						{localizeSkillName(props.row.skillName)} {props.row.skillName===SkillName.HighThunder ?
-							<Help topic={"potencyStats-thunder"} content={localize({en: "See Thunder table below for details", zh: "详见下方雷3表格"})}/>
+							<Help topic={"potencyStats-thunder"} content={localize({en: "See Thunder table below for details", zh: "详见下方高暴雷表格"})}/>
 							: undefined}
 					</span>
 					{props.row.skillName===SkillName.HighThunder ? <span style={{
@@ -509,7 +509,7 @@ export class DamageStatistics extends React.Component {
 		let mainHeaderStr = allIncluded ?
 			localize({en: "Applied Skills", zh: "技能统计"}) :
 			localize({en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）"});
-		let thunderHeaderStr = localize({en: "High Thunder", zh: "雷3统计"}); /* Needs retranslation */
+		let thunderHeaderStr = localize({en: "High Thunder", zh: "高暴雷统计"});
 		if (this.data.historical) {
 			let t = (this.data.time - this.data.countdown).toFixed(2) + "s";
 			let upTillStr = lparen + localize({

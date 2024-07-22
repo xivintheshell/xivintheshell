@@ -95,7 +95,7 @@ export class SkillSequencePresets extends React.Component {
 				controller.deleteAllLines();
 			}}>clear all presets</button>
 			<LoadJsonFromFileOrUrl
-				allowLoadFromUrl={true}
+				allowLoadFromUrl={false} // disabled for now, until when/if people have some common openers
 				loadUrlOnMount={false}
 				defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/lines/default.txt"}
 				onLoadFn={(content: Fixme)=>{

@@ -24,3 +24,5 @@ yarn-error.log*
 
 .idea
 *.clip
+
+/screen_recordings

@@ -4,6 +4,7 @@ import {SkillName} from "../Game/Common";
 import {ContentNode} from "./Common";
 import {MdLanguage} from "react-icons/md";
 import {getCurrentThemeColors} from "./ColorTheme";
+import {getCachedValue, setCachedValue} from "../Controller/Common";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -40,7 +41,7 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.Blizzard, "冰1"],
 	[SkillName.Fire4, "火4"],
 	[SkillName.Transpose, "星灵移位"],
-	[SkillName.HighThunder, "雷3"],
+	[SkillName.HighThunder, "高暴雷"],
 	[SkillName.Manaward, "魔罩"],
 	[SkillName.Manafont, "魔泉"],
 	[SkillName.Fire3, "火3"],
@@ -65,8 +66,9 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.Surecast, "沉稳咏唱"],
 	[SkillName.Tincture, "爆发药"],
 	[SkillName.Paradox, "悖论"],
-	[SkillName.Sprint, "疾跑"]
-	//all names updated
+	[SkillName.Sprint, "疾跑"],
+	[SkillName.Retrace, "Retrace"], // todo: when there's a common translation in the community
+	[SkillName.FlareStar, "耀星"]
 ]);
 
 const skillsJa = new Map<SkillName, string>([
@@ -140,7 +142,7 @@ export class SelectLanguage extends React.Component {
 	constructor(props: {}) {
 		super(props);
 		let lang: Language = "en";
-		let savedLang = localStorage.getItem("language");
+		let savedLang = getCachedValue("language");
 		if (savedLang === "zh" || savedLang === "ja") lang = savedLang;
 		this.state = {
 			lang: lang
@@ -151,7 +153,7 @@ export class SelectLanguage extends React.Component {
 		getCurrentLanguage = (()=>{return this.state.lang}).bind(this);
 		setCurrentLanguage = ((lang: Language)=>{
 			this.setState({lang: lang})
-			localStorage.setItem("language", lang);
+			setCachedValue("language", lang);
 		}).bind(this);
 	}
 	componentDidUpdate(prevProps: Readonly<{}>, prevState: Readonly<{lang: Language}>, snapshot?: any) {

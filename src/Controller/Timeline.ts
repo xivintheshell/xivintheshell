@@ -4,7 +4,7 @@ import {updateTimelineView} from "../Components/Timeline";
 import {controller} from "./Controller";
 import {Debug, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {ActionNode, ActionType, Record} from "./Record";
-import {FileType} from "./Common";
+import {FileType, getCachedValue, removeCachedValue, setCachedValue} from "./Common";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
@@ -289,34 +289,34 @@ export class Timeline {
 		console.assert(idx < this.slots.length);
 		// shift save slots
 		for (let i = idx; i < MAX_TIMELINE_SLOTS; i++) {
-			let str = localStorage.getItem("gameRecord" + (i + 1).toString());
+			let str = getCachedValue("gameRecord" + (i + 1).toString());
 			if (str !== null) {
-				localStorage.setItem("gameRecord" + i.toString(), str);
+				setCachedValue("gameRecord" + i.toString(), str);
 			}
-			str = localStorage.getItem("gameTimeInfo" + (i + 1).toString());
+			str = getCachedValue("gameTimeInfo" + (i + 1).toString());
 			if (str !== null) {
-				localStorage.setItem("gameTimeInfo" + i.toString(), str);
+				setCachedValue("gameTimeInfo" + i.toString(), str);
 			}
 		}
 		this.slots.splice(idx, 1);
 		for (let i = this.slots.length; i < MAX_TIMELINE_SLOTS; i++) {
-			localStorage.removeItem("gameRecord" + i.toString());
-			localStorage.removeItem("gameTimeInfo" + i.toString());
+			removeCachedValue("gameRecord" + i.toString());
+			removeCachedValue("gameTimeInfo" + i.toString());
 		}
 		if (this.activeSlotIndex >= idx) this.activeSlotIndex = Math.max(0, this.activeSlotIndex - 1);
 		this.loadSlot(this.activeSlotIndex);
 	}
 
 	saveCurrentSlot(serializedRecord: any, countdown: number, elapsedTime: number) {
-		localStorage.setItem("gameRecord" + this.activeSlotIndex.toString(), JSON.stringify(serializedRecord));
-		localStorage.setItem("gameTimeInfo" + this.activeSlotIndex.toString(), JSON.stringify({
+		setCachedValue("gameRecord" + this.activeSlotIndex.toString(), JSON.stringify(serializedRecord));
+		setCachedValue("gameTimeInfo" + this.activeSlotIndex.toString(), JSON.stringify({
 			countdown: countdown,
 			elapsedTime: elapsedTime
 		}));
 	}
 
 	loadSlot(index: number): boolean {
-		let str = localStorage.getItem("gameRecord" + index.toString());
+		let str = getCachedValue("gameRecord" + index.toString());
 		if (str !== null) {
 			// found record; make sure the slot exists
 			this.activeSlotIndex = index;
@@ -375,7 +375,7 @@ export class Timeline {
 		let rightMostTime = 0;
 		let hasRecord = false;
 		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
-			let str = localStorage.getItem("gameTimeInfo" + i.toString());
+			let str = getCachedValue("gameTimeInfo" + i.toString());
 			if (str !== null) {
 				let info = JSON.parse(str) as {
 					countdown: number,
@@ -534,11 +534,11 @@ export class Timeline {
 
 	#save() {
 		let files = this.serializedSeparateMarkerTracks();
-		localStorage.setItem("timelineMarkers", JSON.stringify(files));
+		setCachedValue("timelineMarkers", JSON.stringify(files));
 	}
 
 	#load() {
-		let str = localStorage.getItem("timelineMarkers");
+		let str = getCachedValue("timelineMarkers");
 		if (str !== null) {
 			let files = JSON.parse(str);
 			files.forEach((f: Fixme)=>{
