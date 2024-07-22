@@ -169,7 +169,7 @@ export function IntroSection(props: {}) {
 							<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：程序；是个云黑魔玩家</li>
 							<li><b>Turtle</b>, 把本工具从6.0更新到7.0的大功臣</li>
 							<li><b>Yara, Spider, Santa</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
-						</ul>
+						</ul>,
 					ja: <ul>
 							<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: プロダクトマネージャー、凄腕黒魔道士</li>
 							<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: ソフトウェア開発者、しがない黒魔道士</li>

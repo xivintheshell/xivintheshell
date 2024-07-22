@@ -76,7 +76,7 @@ const skillsJa = new Map<SkillName, string>([
 	[SkillName.Blizzard, "ブリザド"],
 	[SkillName.Fire4, "ファイジャ"],
 	[SkillName.Transpose, "トランス"],
-	[SkillName.Thunder3, "サンダガ"],
+	[SkillName.HighThunder, "ハイサンダー"],
 	[SkillName.Manaward, "マバリア"],
 	[SkillName.Manafont, "マナフォント"],
 	[SkillName.Fire3, "ファイガ"],
@@ -84,7 +84,6 @@ const skillsJa = new Map<SkillName, string>([
 	[SkillName.Freeze, "フリーズ"],
 	[SkillName.Flare, "フレア"],
 	[SkillName.LeyLines, "黒魔紋"],
-	[SkillName.Sharpcast, "激成魔"],
 	[SkillName.Blizzard4, "ブリザジャ"],
 	[SkillName.BetweenTheLines, "ラインズステップ"],
 	[SkillName.AetherialManipulation, "エーテリアルテップ"],
@@ -176,8 +175,7 @@ export class SelectLanguage extends React.Component {
 			<span style={{display: "inline-block", fontSize: 17, position: "relative", marginRight: 2}}><MdLanguage/></span>
 			<div style={{display: "inline-block", fontSize: 14, position: "relative", top: -4}}>
 				<LanguageOption lang={"en"}/>|
-				<LanguageOption lang={"zh"}/>|
-				<LanguageOption lang={"ja"}/>
+				<LanguageOption lang={"zh"}/>
 			</div>
 		</div>
 	}
