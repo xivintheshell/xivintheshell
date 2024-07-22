@@ -500,7 +500,8 @@ class Controller {
 				buffs: pot ? [ResourceType.Tincture] : [],
 				time: this.game.time,
 				displayTime: this.game.getDisplayTime(),
-				source: localizeSkillName(p.sourceSkill) + "@" + p.sourceTime.toFixed(2)
+				sourceDesc: "{skill}@" + p.sourceTime.toFixed(2),
+				sourceSkill: p.sourceSkill
 			});
 
 			// time, damageSource, potency, cumulativePotency
@@ -516,24 +517,24 @@ class Controller {
 		this.#updateTotalDamageStats();
 	}
 
-	reportLucidTick(time: number, source: string) {
+	reportLucidTick(time: number, sourceDesc: string) {
 		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.LucidMark,
 				time: time,
 				displayTime: this.game.getDisplayTime(),
-				source: source,
+				sourceDesc: sourceDesc,
 			});
 		}
 	}
 
-	reportManaTick(time: number, source: string) {
+	reportManaTick(time: number, sourceDesc: string) {
 		if (!this.#bCalculatingHistoricalState) {
 			this.timeline.addElement({
 				type: ElemType.MPTickMark,
 				time: time,
 				displayTime: this.game.getDisplayTime(),
-				source: source,
+				sourceDesc: sourceDesc,
 			});
 		}
 	}
@@ -575,6 +576,7 @@ class Controller {
 			umbralIce: game.getIceStacks(),
 			umbralHearts: game.resources.get(ResourceType.UmbralHeart).availableAmount(),
 			paradox: game.resources.get(ResourceType.Paradox).availableAmount(),
+			astralSoul: game.resources.get(ResourceType.AstralSoul).availableAmount(),
 			polyglotCountdown: eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30,
 			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount()
 		};
@@ -603,11 +605,10 @@ class Controller {
 		let selfBuffsData = {
 			leyLinesEnabled: game.resources.get(ResourceType.LeyLines).enabled,
 			leyLinesCountdown: game.resources.timeTillReady(ResourceType.LeyLines),
-			sharpcastCountdown: game.resources.timeTillReady(ResourceType.Sharpcast),
 			triplecastCountdown: game.resources.timeTillReady(ResourceType.Triplecast),
 			triplecastStacks: game.resources.get(ResourceType.Triplecast).availableAmount(),
 			firestarterCountdown: game.resources.timeTillReady(ResourceType.Firestarter),
-			thundercloudCountdown: game.resources.timeTillReady(ResourceType.Thundercloud),
+			thunderheadCountdown: game.resources.timeTillReady(ResourceType.Thunderhead),
 			manawardCountdown: game.resources.timeTillReady(ResourceType.Manaward),
 			swiftcastCountdown: game.resources.timeTillReady(ResourceType.Swiftcast),
 			lucidDreamingCountdown: game.resources.timeTillReady(ResourceType.LucidDreaming),
@@ -642,9 +643,11 @@ class Controller {
 
 	updateSkillButtons(game: GameState) {
 		let paradoxReady = game.resources.get(ResourceType.Paradox).availableAmount() > 0;
+		let retraceReady = game.resources.get(ResourceType.LeyLines).availableAmount() > 0;
+
 		updateSkillButtons(displayedSkills.map((skillName: SkillName) => {
 			return game.getSkillAvailabilityStatus(skillName);
-		}), paradoxReady);
+		}), paradoxReady, retraceReady);
 	}
 
 	#requestTick(props: {
@@ -741,17 +744,16 @@ class Controller {
 		if (bWaitFirst) {
 			this.#requestTick({deltaTime: status.timeTillAvailable, separateNode: false});
 
-			if ((skillName === SkillName.Fire || skillName === SkillName.Blizzard)
+			if (skillName === SkillName.Fire
 				&& this.game.resources.get(ResourceType.Paradox).available(1))
 			{
-				// automatically turn F1/B1 into paradox if conditions are met
+				// automatically turn F1 into paradox if conditions are met
 				skillName = SkillName.Paradox;
 			} else if (skillName === SkillName.Paradox
 				&& !this.game.resources.get(ResourceType.Paradox).available(1))
 			{
 				// and vice versa
-				if (this.game.getIceStacks() > 0) skillName = SkillName.Blizzard;
-				else if (this.game.getFireStacks() > 0) skillName = SkillName.Fire;
+				if (this.game.getFireStacks() > 0) skillName = SkillName.Fire;
 			}
 			status = this.game.getSkillAvailabilityStatus(skillName);
 			this.lastAttemptedSkill = "";

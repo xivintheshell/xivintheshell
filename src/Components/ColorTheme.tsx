@@ -31,7 +31,6 @@ export type ThemeColors = {
 		paradox: string,
 		polyTimer: string,
 		polyStacks: string,
-		thundercloud: string,
 	},
 	timeline: {
 		ruler: string,
@@ -78,7 +77,6 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				paradox: "#d953ee",
 				polyTimer: "#594472",
 				polyStacks: "#b138ee",
-				thundercloud: "#9e90ff"
 			},
 			timeline: {
 				ruler: "#2d2d2d",
@@ -122,7 +120,6 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				paradox: "#d953ee",
 				polyTimer: "#d5bbf1",
 				polyStacks: "#b138ee",
-				thundercloud: "#9e90ff"
 			},
 			timeline: {
 				ruler: "#e9e9e9",

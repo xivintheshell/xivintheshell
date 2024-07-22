@@ -637,8 +637,8 @@ export class Config extends React.Component {
 				<span>{localize({en: "proc mode ", zh: "随机BUFF获取 "})}<Help topic={"procMode"} content={
 
 					localize({
-					en: "Default RNG: 40% Firestarter, 10% Thundercloud",
-					zh: "RNG会像游戏内一样，相应技能40%概率获得火苗，10%概率获得雷云，Always则每次都会触发火苗/雷云，Never则从不触发。"
+					en: "Default RNG: 40% Firestarter",
+					zh: "RNG会像游戏内一样，相应技能40%概率获得火苗，Always则每次都会触发火苗/雷云，Never则从不触发。"
 				})
 				}/>: </span>
 				<select style={{outline: "none"}} value={this.state.procMode} onChange={this.setProcMode}>
@@ -657,7 +657,6 @@ export class Config extends React.Component {
 						<div className={"paragraph"}>Having this checked will give the following duration overrides:</div>
 						<div className={"paragraph"}> - Triplecast: 15.7s</div>
 						<div className={"paragraph"}> - Firestarter: 31s</div>
-						<div className={"paragraph"}> - Thundercloud: 41s</div>
 					</div>
 				}/></span>
 			</div>

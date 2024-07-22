@@ -12,7 +12,7 @@ import {
 	WarningMarkElem
 } from "../Controller/Timeline";
 import {StaticFn} from "./Common";
-import {ResourceType, WarningType} from "../Game/Common";
+import {ResourceType, SkillName, WarningType} from "../Game/Common";
 // @ts-ignore
 import {skillIconImages} from "./Skills";
 import {controller} from "../Controller/Controller";
@@ -235,7 +235,7 @@ function drawMPTickMarks(
 
 		testInteraction(
 			{x: x-2, y: originY, w: 4, h: c_timelineHeight},
-			["[" + tick.displayTime.toFixed(2) + "] " + tick.source]
+			["[" + tick.displayTime.toFixed(2) + "] " + tick.sourceDesc]
 		);
 	});
 	g_ctx.stroke();
@@ -301,10 +301,11 @@ function drawDamageMarks(
 		let time = "[" + dm.displayTime.toFixed(2) + "] ";
 		let untargetableStr = localize({en: "Untargetable", zh: "不可选中"}) as string;
 		let info = "";
+		let sourceStr = dm.sourceDesc.replace("{skill}", localizeSkillName(dm.sourceSkill));
 		if (untargetable) {
-			info = (0).toFixed(2) + " (" + dm.source + ")";
+			info = (0).toFixed(2) + " (" + sourceStr + ")";
 		} else {
-			info = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier}).toFixed(2) + " (" + dm.source + ")";
+			info = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier}).toFixed(2) + " (" + sourceStr + ")";
 			if (pot) info += " (" + localize({en: "pot", zh: "爆发药"}) + ")";
 		}
 
@@ -331,7 +332,7 @@ function drawLucidMarks(
 		g_ctx.fill();
 
 		// hover text
-		let hoverText = "[" + mark.displayTime.toFixed(2) + "] " + mark.source;
+		let hoverText = "[" + mark.displayTime.toFixed(2) + "] " + mark.sourceDesc.replace("{skill}", localizeSkillName(SkillName.LucidDreaming));
 		testInteraction(
 			{x: x-3, y: timelineOriginY, w: 6, h: 6},
 			[hoverText]

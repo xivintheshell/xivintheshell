@@ -62,17 +62,18 @@ export type DamageMarkElem = TimelineElemBase & {
 	displayTime: number;
 	potency: Potency;
 	buffs: ResourceType[];
-	source: string;
+	sourceDesc: string;
+	sourceSkill: SkillName;
 }
 export type LucidMarkElem = TimelineElemBase & {
 	type: ElemType.LucidMark;
 	displayTime: number;
-	source: string;
+	sourceDesc: string;
 }
 export type MPTickMarkElem = TimelineElemBase & {
 	type: ElemType.MPTickMark;
 	displayTime: number;
-	source: string;
+	sourceDesc: string;
 }
 export type WarningMarkElem = TimelineElemBase & {
 	type: ElemType.WarningMark;

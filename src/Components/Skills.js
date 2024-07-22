@@ -10,37 +10,38 @@ import * as ReactDOMServer from 'react-dom/server';
 import { getCurrentThemeColors } from "./ColorTheme";
 
 export let displayedSkills = [
-  SkillName.Blizzard,
-  SkillName.Fire,
-  SkillName.Transpose,
-  SkillName.Thunder3,
-  SkillName.Manaward,
-  SkillName.Manafont,
-  SkillName.Fire3,
-  SkillName.Blizzard3,
-  SkillName.Freeze,
-  SkillName.Flare,
-  SkillName.LeyLines,
-  SkillName.Sharpcast,
-  SkillName.Blizzard4,
-  SkillName.Fire4,
-  SkillName.BetweenTheLines,
-  SkillName.AetherialManipulation,
-  SkillName.Triplecast,
-  SkillName.Foul,
-  SkillName.Despair,
-  SkillName.UmbralSoul,
-  SkillName.Xenoglossy,
-  SkillName.HighFire2,
-  SkillName.HighBlizzard2,
-  SkillName.Amplifier,
-  //SkillName.Paradox, // display paradox at F1/B1
-  SkillName.Addle,
-  SkillName.Swiftcast,
-  SkillName.LucidDreaming,
-  SkillName.Surecast,
-  SkillName.Tincture,
-  SkillName.Sprint
+	SkillName.Blizzard,
+	SkillName.Fire,
+	SkillName.Transpose,
+	SkillName.HighThunder,
+	SkillName.Manaward,
+	SkillName.Manafont,
+	SkillName.Fire3,
+	SkillName.Blizzard3,
+	SkillName.Freeze,
+	SkillName.Flare,
+	SkillName.LeyLines,
+	SkillName.Blizzard4,
+	SkillName.Fire4,
+	SkillName.BetweenTheLines,
+	SkillName.AetherialManipulation,
+	SkillName.Triplecast,
+	SkillName.Foul,
+	SkillName.Despair,
+	SkillName.UmbralSoul,
+	SkillName.Xenoglossy,
+	SkillName.HighFire2,
+	SkillName.HighBlizzard2,
+	SkillName.Amplifier,
+	//SkillName.Paradox, // display paradox at F1/B1
+	SkillName.FlareStar,
+	// SkillName.Retrace, // display retrace at LL
+	SkillName.Addle,
+	SkillName.Swiftcast,
+	SkillName.LucidDreaming,
+	SkillName.Surecast,
+	SkillName.Tincture,
+	SkillName.Sprint
 ];
 
 // seems useful: https://na.finalfantasyxiv.com/lodestone/special/fankit/icon/
@@ -48,7 +49,7 @@ export const skillIcons = new Map();
 skillIcons.set(SkillName.Blizzard, require("./Asset/blizzard.png"));
 skillIcons.set(SkillName.Fire, require("./Asset/fire.png"));
 skillIcons.set(SkillName.Transpose, require("./Asset/transpose.png"));
-skillIcons.set(SkillName.Thunder3, require("./Asset/thunder3.png"));
+skillIcons.set(SkillName.HighThunder, require("./Asset/highThunder.png"));
 skillIcons.set(SkillName.Manaward, require("./Asset/manaward.png"));
 skillIcons.set(SkillName.Manafont, require("./Asset/manafont.png"));
 skillIcons.set(SkillName.Fire3, require("./Asset/fire3.png"));
@@ -57,7 +58,6 @@ skillIcons.set(SkillName.Freeze, require("./Asset/freeze.png"));
 skillIcons.set(SkillName.AetherialManipulation, require("./Asset/aetherialManipulation.png"));
 skillIcons.set(SkillName.Flare, require("./Asset/flare.png"));
 skillIcons.set(SkillName.LeyLines, require("./Asset/leyLines.png"));
-skillIcons.set(SkillName.Sharpcast, require("./Asset/sharpcast.png"));
 skillIcons.set(SkillName.Blizzard4, require("./Asset/blizzard4.png"));
 skillIcons.set(SkillName.Fire4, require("./Asset/fire4.png"));
 skillIcons.set(SkillName.BetweenTheLines, require("./Asset/betweenTheLines.png"));
@@ -70,6 +70,9 @@ skillIcons.set(SkillName.HighFire2, require("./Asset/highFire2.png"));
 skillIcons.set(SkillName.HighBlizzard2, require("./Asset/highBlizzard2.png"));
 skillIcons.set(SkillName.Amplifier, require("./Asset/amplifier.png"));
 skillIcons.set(SkillName.Paradox, require("./Asset/paradox.png"));
+skillIcons.set(SkillName.FlareStar, require("./Asset/flareStar.png"));
+skillIcons.set(SkillName.Retrace, require("./Asset/retrace.png"));
+
 skillIcons.set(SkillName.Addle, require("./Asset/addle.png"));
 skillIcons.set(SkillName.Swiftcast, require("./Asset/swiftcast.png"));
 skillIcons.set(SkillName.LucidDreaming, require("./Asset/lucidDreaming.png"));
@@ -248,17 +251,19 @@ const WaitSince = {
   LastSkill: "LastSkill"
 };
 
-export var updateSkillButtons = (statusList, paradoxReady) => { }
+export var updateSkillButtons = (statusList, paradoxReady, retraceReady)=>{}
 export class SkillsWindow extends React.Component {
-  constructor(props) {
-    super(props);
-    updateSkillButtons = ((statusList, paradoxReady) => {
-      this.setState({
-        statusList: statusList,
-        paradoxInfo: controller.getSkillInfo({ game: controller.getDisplayedGame(), skillName: SkillName.Paradox }),
-        paradoxReady: paradoxReady
-      });
-    }).bind(this);
+	constructor(props) {
+		super(props);
+		updateSkillButtons = ((statusList, paradoxReady, retraceReady)=>{
+			this.setState({
+				statusList: statusList,
+				paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
+				paradoxReady: paradoxReady,
+				retraceInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Retrace}),
+				retraceReady: retraceReady,
+			});
+		}).bind(this);
 
     setSkillInfoText = ((text) => {
       this.setState({ tooltipContent: text });
@@ -330,40 +335,48 @@ export class SkillsWindow extends React.Component {
       controller.waitTillNextMpOrLucidTick();
     }).bind(this);
 
-    this.state = {
-      statusList: undefined,
-      paradoxInfo: undefined,
-      tooltipContent: "",
-      waitTime: "1",
-      waitSince: WaitSince.Now,
-      waitUntil: "0:00"
-    }
-  }
-  componentDidMount() {
-    this.setState({
-      statusList: displayedSkills.map(sn => {
-        return controller.getSkillInfo({ game: controller.getDisplayedGame(), skillName: sn });
-      }),
-      paradoxInfo: controller.getSkillInfo({ game: controller.getDisplayedGame(), skillName: SkillName.Paradox }),
-    });
-  }
+		this.state = {
+			statusList: undefined,
+			paradoxInfo: undefined,
+			tooltipContent: "",
+			waitTime: "1",
+			waitSince: WaitSince.Now,
+			waitUntil: "0:00"
+		}
+	}
+	componentDidMount() {
+		this.setState({
+			statusList: displayedSkills.map(sn=>{
+				return controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: sn});
+			}),
+			paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
+			retraceInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Retrace}),
+		});
+	}
 
-  render() {
-    let skillButtons = [];
-    for (let i = 0; i < displayedSkills.length; i++) {
-      let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
-      let skillName = (isF1B1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
-      let info = undefined;
-      if (this.state.paradoxInfo) info = (isF1B1 && this.state.paradoxReady) ? this.state.paradoxInfo : this.state.statusList[i];
-      let btn = <SkillButton
-        key={i}
-        highlight={info ? info.highlight : false}
-        skillName={skillName}
-        ready={info ? info.status === SkillReadyStatus.Ready : false}
-        cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
-      />
-      skillButtons.push(btn);
-    }
+	render() {
+		let skillButtons = [];
+		for (let i = 0; i < displayedSkills.length; i++) {
+			let isF1 = displayedSkills[i] === SkillName.Fire;
+			let skillName = (isF1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
+			let info = undefined;
+			if (this.state.paradoxInfo) 
+				info = (isF1 && this.state.paradoxReady) ? this.state.paradoxInfo : this.state.statusList[i];
+
+			let isLL = (displayedSkills[i] === SkillName.LeyLines);
+			skillName = (isLL && this.state.retraceReady) ? SkillName.Retrace : skillName;
+			if (this.state.retraceInfo)
+				info = (isLL && this.state.retraceReady) ? this.state.retraceInfo : info;
+
+			let btn = <SkillButton
+				key={i}
+				highlight={info ? info.highlight : false}
+				skillName={skillName}
+				ready={info ? info.status===SkillReadyStatus.Ready : false}
+				cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
+				/>
+			skillButtons.push(btn);
+		}
 
     let waitUntilHelp = <Help topic="waitUntilInputFormat" content={<div>
       <div className="paragraph">{localize({ en: "Examples:", zh: "时间格式举例：" })}</div>

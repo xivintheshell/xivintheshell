@@ -70,9 +70,8 @@ const buffIcons = new Map();
 buffIcons.set(ResourceType.Triplecast, require("./Asset/buff_triplecast.png"));
 buffIcons.set(ResourceType.Triplecast + "2", require("./Asset/buff_triplecast2.png"));
 buffIcons.set(ResourceType.Triplecast + "3", require("./Asset/buff_triplecast3.png"));
-buffIcons.set(ResourceType.Sharpcast, require("./Asset/buff_sharpcast.png"));
 buffIcons.set(ResourceType.Firestarter, require("./Asset/buff_firestarter.png"));
-buffIcons.set(ResourceType.Thundercloud, require("./Asset/buff_thundercloud.png"));
+buffIcons.set(ResourceType.Thunderhead, require("./Asset/buff_thundercloud.png"));
 buffIcons.set(ResourceType.ThunderDoT, require("./Asset/buff_thunder3.png"));
 buffIcons.set(ResourceType.LeyLines, require("./Asset/buff_leyLines.png"));
 buffIcons.set(ResourceType.Manaward, require("./Asset/buff_manaward.png"));
@@ -117,7 +116,7 @@ function BuffsDisplay(props) {
 		triplecastCountdown: 0,
 		triplecastStacks: 0,
 		firestarterCountdown: 0,
-		thundercloudCountdown: 0,
+		thunderheadCountdown: 0,
 		manawardCountdown: 0,
 		swiftcastCountdown: 0,
 		lucidDreamingCountdown: 0,
@@ -133,14 +132,6 @@ function BuffsDisplay(props) {
 		stacks:1,
 		timeRemaining: data.leyLinesCountdown.toFixed(2),
 		className: data.leyLinesCountdown > 0 ? "" : "hidden"
-	});
-	buffs.push({
-		rscType: ResourceType.Sharpcast,
-		onSelf: true,
-		enabled: true,
-		stacks:1,
-		timeRemaining: data.sharpcastCountdown.toFixed(2),
-		className: data.sharpcastCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Triplecast,
@@ -159,12 +150,12 @@ function BuffsDisplay(props) {
 		className: data.firestarterCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
-		rscType: ResourceType.Thundercloud,
+		rscType: ResourceType.Thunderhead,
 		onSelf: true,
 		enabled: true,
 		stacks:1,
-		timeRemaining: data.thundercloudCountdown.toFixed(2),
-		className: data.thundercloudCountdown > 0 ? "" : "hidden"
+		timeRemaining: data.thunderheadCountdown.toFixed(2),
+		className: data.thunderheadCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Manaward,
@@ -301,6 +292,7 @@ function ResourcesDisplay(props) {
 		umbralIce: 0,
 		umbralHearts: 0,
 		paradox: 0,
+		astralSoul: 0,
 		polyglotCountdown: 30,
 		polyglotStacks: 0
 	}
@@ -353,11 +345,20 @@ function ResourcesDisplay(props) {
 		localize({
 			en: "paradox",
 			zh: "悖论",
-      ja: "パラドックス"
-	})}
+			ja: "パラドックス"
+		})}
 		color={colors.resources.paradox}
 		currentStacks={data.paradox}
 		maxStacks={1}/>;
+	let soul = <ResourceCounter
+		name={
+		localize({
+			en: "astral soul",
+			zh: "Needs Translation"
+		})}
+		color={colors.resources.astralFire}
+		currentStacks={data.astralSoul}
+		maxStacks={6}/>;
 	let polyTimer = <ResourceBar
 		name={
 		localize({
@@ -378,13 +379,14 @@ function ResourcesDisplay(props) {
 		})}
 		color={colors.resources.polyStacks}
 		currentStacks={data.polyglotStacks}
-		maxStacks={2}/>;
+		maxStacks={3}/>;
 	return <div style={{textAlign: "left"}}>
 		{manaBar}
 		{manaTick}
 		{afui}
 		{uh}
 		{paradox}
+		{soul}
 		{enochian}
 		{polyTimer}
 		{poly}

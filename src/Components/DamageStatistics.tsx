@@ -25,7 +25,7 @@ export type DamageStatsMainTableEntry = {
 	potCount: number
 };
 
-export type DamageStatsT3TableEntry = {
+export type DamageStatsThunderTableEntry = {
 	castTime: number,
 	applicationTime: number,
 	displayedModifiers: PotencyModifierType[],
@@ -72,8 +72,8 @@ export type DamageStatisticsData = {
 		totalPotencyWithoutPot: number,
 		totalPotPotency: number
 	},
-	t3Table: DamageStatsT3TableEntry[],
-	t3TableSummary: {
+	thunderTable: DamageStatsThunderTableEntry[],
+	thunderTableSummary: {
 		cumulativeGap: number,
 		cumulativeOverride: number,
 		timeSinceLastDoTDropped: number,
@@ -137,9 +137,6 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	} else if (props.buff === PotencyModifierType.ENO) {
 		text = localize({en: "ENO", zh: "天语"});
 		color = colors.resources.enochian;
-	} else if (props.tc) {
-		text = localize({en: "TC", zh: "雷云"});
-		color = colors.resources.thundercloud;
 	}
 	return <span style={{
 		borderRadius: 2,
@@ -190,8 +187,8 @@ export class DamageStatistics extends React.Component {
 		gcdSkills: {applied: 0, pending: 0},
 		mainTable: [],
 		mainTableSummary: {totalPotencyWithoutPot: 0, totalPotPotency: 0},
-		t3Table: [],
-		t3TableSummary: {
+		thunderTable: [],
+		thunderTableSummary: {
 			cumulativeGap: 0,
 			cumulativeOverride: 0,
 			timeSinceLastDoTDropped: 0,
@@ -265,8 +262,8 @@ export class DamageStatistics extends React.Component {
 			selectedGcdStr += lparen + "+" + this.selected.gcdSkills.pending + (localize({en: " not yet applied", zh: "未结算"}) as string) + rparen;
 		}
 
-		let dotStr = localize({en: "Thunder DoT uptime", zh: "雷覆盖时间"}) + colon + (this.data.t3TableSummary.dotCoverageTimeFraction*100).toFixed(2) + "%";
-		dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + this.data.t3TableSummary.totalTicks + "/" + this.data.t3TableSummary.maxTicks + rparen;
+		let dotStr = localize({en: "Thunder DoT uptime", zh: "雷覆盖时间"}) + colon + (this.data.thunderTableSummary.dotCoverageTimeFraction*100).toFixed(2) + "%";
+		dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + this.data.thunderTableSummary.totalTicks + "/" + this.data.thunderTableSummary.maxTicks + rparen;
 
 		let selected: React.ReactNode | undefined = undefined;
 		let selectedPPSAvailable = this.selected.targetableDuration > 0;
@@ -343,7 +340,7 @@ export class DamageStatistics extends React.Component {
 				}}/>);
 			}
 			// additional checkbox for DoT
-			if (props.row.skillName === SkillName.Thunder3) {
+			if (props.row.skillName === SkillName.HighThunder) {
 				includeCheckboxes.push(<input key="dot" type={"checkbox"} style={{position: "relative", top: 2, marginRight: 10}} checked={
 					getSkillOrDotInclude("DoT")
 				} onChange={()=>{
@@ -356,11 +353,11 @@ export class DamageStatistics extends React.Component {
 			if (!sameAsLast) {
 				skillNameNode = <span>
 					<span style={{textDecoration: includeInStats ? "none" : "line-through", color: includeInStats ? colors.text : colors.bgHighContrast}}>
-						{localizeSkillName(props.row.skillName)} {props.row.skillName===SkillName.Thunder3 ?
-							<Help topic={"potencyStats-t3"} content={localize({en: "See Thunder 3 table below for details", zh: "详见下方雷3表格"})}/>
+						{localizeSkillName(props.row.skillName)} {props.row.skillName===SkillName.HighThunder ?
+							<Help topic={"potencyStats-thunder"} content={localize({en: "See Thunder table below for details", zh: "详见下方雷3表格"})}/>
 							: undefined}
 					</span>
-					{props.row.skillName===SkillName.Thunder3 ? <span style={{
+					{props.row.skillName===SkillName.HighThunder ? <span style={{
 						textDecoration: getSkillOrDotInclude("DoT") ? "none" : "line-through",
 						color: getSkillOrDotInclude("DoT") ? colors.text : colors.bgHighContrast
 					}}><br/>
@@ -371,7 +368,7 @@ export class DamageStatistics extends React.Component {
 
 			// potency
 			let potencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.basePotency > 0 && props.row.skillName !== SkillName.Thunder3) {
+			if (props.row.basePotency > 0 && props.row.skillName !== SkillName.HighThunder) {
 				potencyNode = <PotencyDisplay
 					includeInStats={includeInStats}
 					basePotency={props.row.basePotency}
@@ -424,10 +421,10 @@ export class DamageStatistics extends React.Component {
 			}));
 		}
 
-		////////////////////// T3 Table ////////////////////////
+		////////////////////// Thunder Table ////////////////////////
 
-		let makeT3Row = function(props: {
-			row: DamageStatsT3TableEntry,
+		let makeThunderRow = function(props: {
+			row: DamageStatsThunderTableEntry,
 			key: number
 		}) {
 
@@ -453,12 +450,12 @@ export class DamageStatistics extends React.Component {
 				basePotency={props.row.mainPotencyHit ? props.row.baseMainPotency : 0}
 				includeInStats={true}
 				explainUntargetable={!props.row.mainPotencyHit}
-				helpTopic={"t3Table-main-"+props.key}
+				helpTopic={"thunderTable-main-"+props.key}
 				calc={props.row.calculationModifiers}/>
 			let dotPotencyNode = <PotencyDisplay
 				basePotency={props.row.baseDotPotency}
 				includeInStats={true}
-				helpTopic={"t3Table-dot-"+props.key}
+				helpTopic={"thunderTable-dot-"+props.key}
 				calc={props.row.calculationModifiers}/>
 
 			// num ticks node
@@ -466,7 +463,7 @@ export class DamageStatistics extends React.Component {
 			let numTicksNode = <span>
 				{props.row.numHitTicks}
 				{unhitTicks>0 ? <span style={{color: colors.timeline.untargetableDamageMark + "af"}}> +{unhitTicks} <Help
-					topic={"t3Table-numUntargetableTicks-"+props.key}
+					topic={"thunderTable-numUntargetableTicks-"+props.key}
 					content={localize({en: "tick(s) when untargetable", zh: "Boss上天期间跳雷次数"})}/></span> : undefined}
 			</span>
 
@@ -495,10 +492,10 @@ export class DamageStatistics extends React.Component {
 			</div>
 		}
 
-		let t3TableRows: React.ReactNode[] = [];
-		for (let i = 0; i < this.data.t3Table.length; i++) {
-			t3TableRows.push(makeT3Row({
-				row: this.data.t3Table[i],
+		let thunderTableRows: React.ReactNode[] = [];
+		for (let i = 0; i < this.data.thunderTable.length; i++) {
+			thunderTableRows.push(makeThunderRow({
+				row: this.data.thunderTable[i],
 				key: i
 			}));
 		}
@@ -512,7 +509,7 @@ export class DamageStatistics extends React.Component {
 		let mainHeaderStr = allIncluded ?
 			localize({en: "Applied Skills", zh: "技能统计"}) :
 			localize({en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）"});
-		let t3HeaderStr = localize({en: "Thunder 3", zh: "雷3统计"});
+		let thunderHeaderStr = localize({en: "High Thunder", zh: "雷3统计"}); /* Needs retranslation */
 		if (this.data.historical) {
 			let t = (this.data.time - this.data.countdown).toFixed(2) + "s";
 			let upTillStr = lparen + localize({
@@ -520,7 +517,7 @@ export class DamageStatistics extends React.Component {
 				zh: "截至" + t
 			}) + rparen;
 			mainHeaderStr += upTillStr;
-			t3HeaderStr += upTillStr;
+			thunderHeaderStr += upTillStr;
 		}
 		let mainTable = <div style={{
 			position: "relative",
@@ -557,14 +554,14 @@ export class DamageStatistics extends React.Component {
 			</div>
 		</div>
 
-		let t3Table = <div style={{
+		let thunderTable = <div style={{
 			position: "relative",
 			margin: "0 auto",
 			marginBottom: 40,
 			maxWidth: 960,
 		}}>
 			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
-				<b style={this.data.historical ? {color: colors.historical}:undefined}>{t3HeaderStr}</b>
+				<b style={this.data.historical ? {color: colors.historical}:undefined}>{thunderHeaderStr}</b>
 			</div>
 			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
 				<div>
@@ -573,9 +570,9 @@ export class DamageStatistics extends React.Component {
 					<div style={{display: "inline-block", width: "12%"}}><span style={headerCellStyle}/></div>
 					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
 						<b>{localize({en: "gap", zh: "DoT间隙"})} </b>
-						<Help topic={"t3table-gap-title"} content={localize({
+						<Help topic={"thunderTable-gap-title"} content={localize({
 							en: <div>
-								<div className={"paragraph"}>DoT coverage time gap since pull or previous T3</div>
+								<div className={"paragraph"}>DoT coverage time gap since pull or previous Thunder</div>
 								<div className={"paragraph"}>The last row also includes gap at the beginning and end of the fight</div>
 							</div>,
 							zh: <div>雷DoT覆盖间隙，最后一行也包括战斗开始和结束时没有雷DoT的时间</div>,
@@ -583,8 +580,8 @@ export class DamageStatistics extends React.Component {
 					</span></div>
 					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
 						<b>{localize({en: "override", zh: "DoT覆盖"})} </b>
-						<Help topic={"t3table-override-title"} content={localize({
-							en: <div>Overridden DoT time from previous T3</div>,
+						<Help topic={"thunderTable-override-title"} content={localize({
+							en: <div>Overridden DoT time from previous Thunder</div>,
 							zh: <div>提前覆盖雷DoT时长</div>,
 						})}/>
 					</span></div>
@@ -593,21 +590,21 @@ export class DamageStatistics extends React.Component {
 					<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "ticks", zh: "跳雷次数"})}</b></span></div>
 					<div style={{display: "inline-block", width: "24%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
 				</div>
-				{t3TableRows}
+				{thunderTableRows}
 				<div style={{
 					textAlign: "left",
 					position: "relative",
 					borderTop: "1px solid " + colors.bgMediumContrast,
 				}}>
 					<div style={cell(28)}/>
-					<div style={cell(10)}>{this.data.t3TableSummary.cumulativeGap.toFixed(2)}</div>
-					<div style={cell(10)}>{this.data.t3TableSummary.cumulativeOverride.toFixed(2)}</div>
+					<div style={cell(10)}>{this.data.thunderTableSummary.cumulativeGap.toFixed(2)}</div>
+					<div style={cell(10)}>{this.data.thunderTableSummary.cumulativeOverride.toFixed(2)}</div>
 					<div style={cell(20)}/>
-					<div style={cell(8)}>{this.data.t3TableSummary.totalTicks}/{this.data.t3TableSummary.maxTicks}</div>
+					<div style={cell(8)}>{this.data.thunderTableSummary.totalTicks}/{this.data.thunderTableSummary.maxTicks}</div>
 					<div style={cell(24)}>
-						{this.data.t3TableSummary.totalPotencyWithoutPot.toFixed(2)}
-						{this.data.t3TableSummary.totalPotPotency>0 ?
-							<span style={{color: colors.timeline.potCover}}> +{this.data.t3TableSummary.totalPotPotency.toFixed(2)}{localize({
+						{this.data.thunderTableSummary.totalPotencyWithoutPot.toFixed(2)}
+						{this.data.thunderTableSummary.totalPotPotency>0 ?
+							<span style={{color: colors.timeline.potCover}}> +{this.data.thunderTableSummary.totalPotPotency.toFixed(2)}{localize({
 								en: " (pot +" + this.data.tinctureBuffPercentage + "%)",
 								zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)"
 							})}</span> : undefined}
@@ -620,7 +617,7 @@ export class DamageStatistics extends React.Component {
 			{summary}
 			<div>
 				{mainTable}
-				{t3Table}
+				{thunderTable}
 			</div>
 		</div>
 	}

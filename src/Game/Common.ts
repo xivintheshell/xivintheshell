@@ -23,7 +23,7 @@ export const enum SkillName {
 	Blizzard = "Blizzard",
 	Fire = "Fire",
 	Transpose = "Transpose",
-	Thunder3 = "Thunder 3",
+	HighThunder = "High Thunder",
 	Manaward = "Manaward",
 	Manafont = "Manafont",
 	LeyLines = "Ley Lines",
@@ -31,7 +31,6 @@ export const enum SkillName {
 	Blizzard3 = "Blizzard 3",
 	Freeze = "Freeze",
 	Flare = "Flare",
-	Sharpcast = "Sharpcast",
 	Blizzard4 = "Blizzard 4",
 	Fire4 = "Fire 4",
 	BetweenTheLines = "Between the Lines",
@@ -46,6 +45,8 @@ export const enum SkillName {
 	HighBlizzard2 = "High Blizzard 2",
 	Amplifier = "Amplifier",
 	Paradox = "Paradox",
+	FlareStar = "Flare Star",
+	Retrace = "Retrace",
 	Addle = "Addle",
 	Swiftcast = "Swiftcast",
 	LucidDreaming = "Lucid Dreaming",
@@ -67,19 +68,19 @@ export const enum SkillReadyStatus {
 export const enum ResourceType {
 	// job resources
 	Mana = "Mana", // [0, 10000]
-	Polyglot = "Polyglot", // [0, 2]
+	Polyglot = "Polyglot", // [0, 3]
 	AstralFire = "AstralFire", // [0, 3]
 	UmbralIce = "UmbralIce", // [0, 3]
 	UmbralHeart = "UmbralHeart", // [0, 3]
 	Enochian = "Enochian", // [0, 1]
 	Paradox = "Paradox", // [0, 1]
+	AstralSoul = "Astral Soul", // [0, 6]
 
 	// buffs & states
 	LeyLines = "Ley Lines", // [0, 1]
-	Sharpcast = "Sharpcast", // [0, 1]
 	Triplecast = "Triplecast", // [0, 3]
 	Firestarter = "Firestarter", // [0, 1]
-	Thundercloud = "Thundercloud", // [0, 1]
+	Thunderhead = "Thunderhead", // [0, 1]
 	ThunderDoT = "ThunderDoT", // [0, 1] is actually used for display timing only
 	Manaward = "Manaward", // [0, 1]
 	Addle = "Addle", // [0, 1]
@@ -97,7 +98,6 @@ export const enum ResourceType {
 	// CDs
 	cd_GCD = "cd_GCD", // [0, Constant.gcd]
 	cd_Transpose = "cd_Transpose", // [0, 1x]
-	cd_Sharpcast = "cd_Sharpcast", // [0, 2x]
 	cd_LeyLines = "cd_LeyLines", // [0, 1x]
 	cd_Manaward = "cd_Manaward", // [0, 1x]
 	cd_BetweenTheLines = "cd_BetweenTheLines", // [0, 1x]
@@ -105,6 +105,7 @@ export const enum ResourceType {
 	cd_Triplecast = "cd_Triplecast", // [0, 2x]
 	cd_Manafont = "cd_Manafont", // [0, 1x]
 	cd_Amplifier = "cd_Amplifier", // [0, 1x]
+	cd_Retrace = "cd_Retrace", // [0, 1x]
 	cd_Addle = "cd_Addle", // [0, 1x]
 	cd_Swiftcast = "cd_Swiftcast", // [0, 1x]
 	cd_LucidDreaming = "cd_LucidDreaming", // [0, 1x]
