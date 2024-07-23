@@ -100,7 +100,8 @@ export class DebugOptions extends React.Component {
 				}}>{localize({
 					en: "[DANGER!] clear browser cache and reload",
 					zh: "[谨慎操作] 清除缓存并刷新",
-        })}</button>
+					ja: "[キケン！] ブラウザキャッシュをクリアしてリロード",
+    			})}</button>
 			</div>
 		</div>
 	}

@@ -1,13 +1,13 @@
 import React from 'react'
-import { Clickable, Help, parseTime } from "./Common";
-import { Debug, ResourceType, SkillName, SkillReadyStatus } from "../Game/Common";
-import { controller } from "../Controller/Controller";
-import { Tooltip as ReactTooltip } from 'react-tooltip';
-import { ActionType } from "../Controller/Record";
-import { localize, localizeSkillName } from "./Localization";
-import { updateTimelineView } from "./Timeline";
+import {Clickable, Help, parseTime} from "./Common";
+import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
+import {controller} from "../Controller/Controller";
+import {Tooltip as ReactTooltip} from 'react-tooltip';
+import {ActionType} from "../Controller/Record";
+import {localize, localizeSkillName} from "./Localization";
+import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
-import { getCurrentThemeColors } from "./ColorTheme";
+import {getCurrentThemeColors} from "./ColorTheme";
 
 export let displayedSkills = [
 	SkillName.Blizzard,
@@ -81,41 +81,41 @@ skillIcons.set(SkillName.Tincture, require("./Asset/tincture.png"));
 skillIcons.set(SkillName.Sprint, require("./Asset/sprint.png"));
 
 export const skillIconImages = new Map();
-skillIcons.forEach((path, skillName) => {
-  let imgObj = new Image();
-  imgObj.src = path;
-  imgObj.onload = function() {
-    updateTimelineView();
-  }
-  skillIconImages.set(skillName, imgObj);
+skillIcons.forEach((path, skillName)=>{
+	let imgObj = new Image();
+	imgObj.src = path;
+	imgObj.onload = function() {
+		updateTimelineView();
+	}
+	skillIconImages.set(skillName, imgObj);
 });
 
-let setSkillInfoText = (text) => { };
-function ProgressCircle(props = {
-  className: "",
-  diameter: 50,
-  progress: 0.7,
-  color: "rgba(255,255,255,0.5)",
+let setSkillInfoText = (text)=>{};
+function ProgressCircle(props={
+	className: "",
+	diameter: 50,
+	progress: 0.7,
+	color: "rgba(255,255,255,0.5)",
 }) {
-  let elemRadius = props.diameter / 2.0;
-  let outRadius = props.diameter * 0.35;
-  let outCircumference = 2 * Math.PI * outRadius;
-  let outFillLength = outCircumference * props.progress;
-  let outGapLength = outCircumference - outFillLength;
-  let outDasharray = outFillLength + "," + outGapLength;
-  let outlineCircle = <circle
-    r={outRadius}
-    cx={elemRadius}
-    cy={elemRadius}
-    fill="none"
-    stroke={props.color}
-    strokeWidth="6"
-    strokeDasharray={outDasharray}
-    strokeDashoffset={outCircumference / 4} />
+	let elemRadius = props.diameter / 2.0;
+	let outRadius = props.diameter * 0.35;
+	let outCircumference = 2 * Math.PI * outRadius;
+	let outFillLength = outCircumference * props.progress;
+	let outGapLength = outCircumference - outFillLength;
+	let outDasharray = outFillLength + "," + outGapLength;
+	let outlineCircle = <circle
+		r={outRadius}
+		cx={elemRadius}
+		cy={elemRadius}
+		fill="none"
+		stroke={props.color}
+		strokeWidth="6"
+		strokeDasharray={outDasharray}
+		strokeDashoffset={outCircumference / 4}/>
 
-  return <svg className={props.className} width={props.diameter} height={props.diameter}>
-    {outlineCircle}
-  </svg>
+	return <svg className={props.className} width={props.diameter} height={props.diameter}>
+		{outlineCircle}
+	</svg>
 }
 
 class SkillButton extends React.Component {
@@ -247,8 +247,8 @@ class SkillButton extends React.Component {
 }
 
 const WaitSince = {
-  Now: "Now",
-  LastSkill: "LastSkill"
+	Now: "Now",
+	LastSkill: "LastSkill"
 };
 
 export var updateSkillButtons = (statusList, paradoxReady, retraceReady)=>{}
@@ -265,75 +265,75 @@ export class SkillsWindow extends React.Component {
 			});
 		}).bind(this);
 
-    setSkillInfoText = ((text) => {
-      this.setState({ tooltipContent: text });
-    }).bind(this);
+		setSkillInfoText = ((text)=>{
+			this.setState({tooltipContent: text});
+		}).bind(this);
 
-    this.onWaitTimeChange = ((e) => {
-      if (!e || !e.target) return;
-      this.setState({ waitTime: e.target.value });
-    }).bind(this);
+		this.onWaitTimeChange = ((e)=>{
+			if (!e || !e.target) return;
+			this.setState({waitTime: e.target.value});
+		}).bind(this);
 
-    this.onWaitTimeSubmit = ((e) => {
-      let waitTime = parseFloat(this.state.waitTime);
-      if (!isNaN(waitTime)) {
-        if (this.state.waitSince === WaitSince.Now) {
-          controller.step(waitTime);
-        } else if (this.state.waitSince === WaitSince.LastSkill) {
-          let timeSinceLastSkill = 0;
-          let lastAction = controller.record.getLastAction(node => {
-            return node.type === ActionType.Wait || node.type === ActionType.Skill;
-          });
-          if (lastAction) {
-            timeSinceLastSkill = lastAction.waitDuration;
-          }
-          let stepTime = waitTime - timeSinceLastSkill;
-          if (stepTime <= 0) {
-            window.alert("Invalid input: trying to jump to " + waitTime +
-              "s since the last action, but " + timeSinceLastSkill +
-              "s has already elapsed.");
-          } else {
-            controller.step(stepTime);
-          }
-        } else {
-          console.assert(false);
-        }
-        controller.autoSave();
-      }
-      e.preventDefault();
-    }).bind(this);
+		this.onWaitTimeSubmit = ((e)=>{
+			let waitTime = parseFloat(this.state.waitTime);
+			if (!isNaN(waitTime)) {
+				if (this.state.waitSince === WaitSince.Now) {
+					controller.step(waitTime);
+				} else if (this.state.waitSince === WaitSince.LastSkill) {
+					let timeSinceLastSkill = 0;
+					let lastAction = controller.record.getLastAction(node=>{
+						return node.type === ActionType.Wait || node.type === ActionType.Skill;
+					});
+					if (lastAction) {
+						timeSinceLastSkill = lastAction.waitDuration;
+					}
+					let stepTime = waitTime - timeSinceLastSkill;
+					if (stepTime <= 0) {
+						window.alert("Invalid input: trying to jump to " + waitTime +
+							"s since the last action, but " + timeSinceLastSkill +
+							"s has already elapsed.");
+					} else {
+						controller.step(stepTime);
+					}
+				} else {
+					console.assert(false);
+				}
+				controller.autoSave();
+			}
+			e.preventDefault();
+		}).bind(this);
 
-    this.onWaitUntilChange = (e => {
-      if (!e || !e.target) return;
-      this.setState({ waitUntil: e.target.value });
-    }).bind(this);
+		this.onWaitUntilChange = (e=>{
+			if (!e || !e.target) return;
+			this.setState({waitUntil: e.target.value});
+		}).bind(this);
 
-    this.onWaitUntilSubmit = (e => {
-      let targetTime = parseTime(this.state.waitUntil);
-      if (!isNaN(targetTime)) {
-        let currentTime = controller.game.getDisplayTime();
-        if (targetTime > currentTime) {
-          let elapse = targetTime - currentTime;
-          controller.step(elapse);
-          controller.autoSave();
-        } else {
-          window.alert("Can only jump to a time in the future!");
-        }
-      }
-      e.preventDefault();
-    }).bind(this);
+		this.onWaitUntilSubmit = (e=>{
+			let targetTime = parseTime(this.state.waitUntil);
+			if (!isNaN(targetTime)) {
+				let currentTime = controller.game.getDisplayTime();
+				if (targetTime > currentTime) {
+					let elapse = targetTime - currentTime;
+					controller.step(elapse);
+					controller.autoSave();
+				} else {
+					window.alert("Can only jump to a time in the future!");
+				}
+			}
+			e.preventDefault();
+		}).bind(this);
 
-    this.onWaitSinceChange = (e => {
-      this.setState({ waitSince: e.target.value });
-    }).bind(this);
+		this.onWaitSinceChange = (e=>{
+			this.setState({waitSince: e.target.value});
+		}).bind(this);
 
-    this.onRemoveTrailingIdleTime = (() => {
-      controller.removeTrailingIdleTime();
-    }).bind(this);
+		this.onRemoveTrailingIdleTime = (()=>{
+			controller.removeTrailingIdleTime();
+		}).bind(this);
 
-    this.onWaitTillNextMpOrLucidTick = (() => {
-      controller.waitTillNextMpOrLucidTick();
-    }).bind(this);
+		this.onWaitTillNextMpOrLucidTick = (()=>{
+			controller.waitTillNextMpOrLucidTick();
+		}).bind(this);
 
 		this.state = {
 			statusList: undefined,
@@ -378,35 +378,35 @@ export class SkillsWindow extends React.Component {
 			skillButtons.push(btn);
 		}
 
-    let waitUntilHelp = <Help topic="waitUntilInputFormat" content={<div>
-      <div className="paragraph">{localize({ en: "Examples:", zh: "时间格式举例：" })}</div>
-      <div className="paragraph">
-        12 <br />
-        1.5 <br />
-        10:04.2 <br />
-        -0:03
-      </div>
-    </div>} />;
+		let waitUntilHelp = <Help topic="waitUntilInputFormat" content={<div>
+			<div className="paragraph">{localize({en: "Examples:", zh: "时间格式举例："})}</div>
+			<div className="paragraph">
+				12 <br/>
+				1.5 <br/>
+				10:04.2 <br/>
+				-0:03
+			</div>
+		</div>}/>;
 
-    let textInputStyle = {
-      display: "inline-block",
-      flex: "auto",
-      //marginRight: 10,
-      //border: "1px solid red",
-    };
+		let textInputStyle = {
+			display: "inline-block",
+			flex: "auto",
+			//marginRight: 10,
+			//border: "1px solid red",
+		};
 
-    let colors = getCurrentThemeColors();
-    let textInputFieldStyle = {
-      outline: "none",
-      border: "none",
-      borderBottom: "1px solid " + colors.text,
-      borderRadius: 0,
-      background: "transparent",
-      color: colors.text
-    };
-    return <div className={"skillsWindow"}>
-      <div className={"skillIcons"}>
-        <style>{`
+		let colors = getCurrentThemeColors();
+		let textInputFieldStyle = {
+			outline: "none",
+			border: "none",
+			borderBottom: "1px solid " + colors.text,
+			borderRadius: 0,
+			background: "transparent",
+			color: colors.text
+		};
+		return <div className={"skillsWindow"}>
+			<div className={"skillIcons"}>
+				<style>{`
 					.info-tooltip {
 						color: ${colors.text};
 						background-color: ${colors.tipBackground};
@@ -419,88 +419,87 @@ export class SkillsWindow extends React.Component {
 					}
 					.info-tooltip-arrow { display: none; }
 				`}</style>
-        {skillButtons}
-        <ReactTooltip anchorSelect={".skillButton"} className={"info-tooltip"} classNameArrow={"info-tooltip-arrow"} />
-        <div style={{ margin: "10px 0" }}>
-          <div style={{ display: "flex", flexDirection: "row", marginBottom: 6 }}>
+				{skillButtons}
+				<ReactTooltip anchorSelect={".skillButton"} className={"info-tooltip"} classNameArrow={"info-tooltip-arrow"} />
+				<div style={{ margin: "10px 0" }}>
+				<div style={{ display: "flex", flexDirection: "row", marginBottom: 6 }}>
+					{localize({
+					en:
+						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+						Wait until <input type={"text"} style={{
+							...{ width: 30 }, ...textInputFieldStyle
+						}} value={this.state.waitTime} onChange={this.onWaitTimeChange} /> second(s) since <select
+							style={{ display: "inline-block", outline: "none" }}
+							value={this.state.waitSince}
+							onChange={this.onWaitSinceChange}>
+							<option value={WaitSince.Now}>now</option>
+							<option value={WaitSince.LastSkill}>last action</option>
+						</select> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
+						</form>,
+					zh:
+						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+						快进至 <select
+							style={{ display: "inline-block", outline: "none" }}
+							value={this.state.waitSince}
+							onChange={this.onWaitSinceChange}>
+							<option value={WaitSince.Now}>当前</option>
+							<option value={WaitSince.LastSkill}>上次操作</option>
+						</select> 后的 <input type={"text"} style={{
+							...{ width: 30 }, ...textInputFieldStyle
+						}} value={this.state.waitTime} onChange={this.onWaitTimeChange} /> 秒 <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
+						</form>,
+					ja:
+						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+						<select
+							style={{ display: "inline-block", outline: "none", marginRight: "4px" }}
+							value={this.state.waitSince}
+							onChange={this.onWaitSinceChange}
+						>
+							<option value={WaitSince.Now}>現在のカーソルの位置</option>
+							<option value={WaitSince.LastSkill}>最後のアクション</option>
+						</select>
+						から
+						<input
+							type={"text"}
+							style={{
+							...{ width: 30 }, ...textInputFieldStyle
+							}}
+							value={this.state.waitTime}
+							onChange={this.onWaitTimeChange}
+						/>
+						秒進む
+						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
+						</form>,
+					})}
+					{localize({
+					en:
+						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
+						Wait until {waitUntilHelp} <input type={"text"} style={{
+							...{ width: 60 }, ...textInputFieldStyle
+						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
+						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
+						</form>,
+					zh:
+						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
+						快进至指定时间 {waitUntilHelp} <input type={"text"} style={{
+							...{ width: 60 }, ...textInputFieldStyle
+						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
+						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
+						</form>,
+					ja:
+						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
+						指定した時間まで進む {waitUntilHelp} <input type={"text"} style={{
+							...{ width: 60 }, ...textInputFieldStyle
+						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
+						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
+						</form>
+					})}
 
-            {localize({
-              en:
-                <form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-                  Wait until <input type={"text"} style={{
-                    ...{ width: 30 }, ...textInputFieldStyle
-                  }} value={this.state.waitTime} onChange={this.onWaitTimeChange} /> second(s) since <select
-                    style={{ display: "inline-block", outline: "none" }}
-                    value={this.state.waitSince}
-                    onChange={this.onWaitSinceChange}>
-                    <option value={WaitSince.Now}>now</option>
-                    <option value={WaitSince.LastSkill}>last action</option>
-                  </select> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-                </form>,
-              zh:
-                <form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-                  快进至 <select
-                    style={{ display: "inline-block", outline: "none" }}
-                    value={this.state.waitSince}
-                    onChange={this.onWaitSinceChange}>
-                    <option value={WaitSince.Now}>当前</option>
-                    <option value={WaitSince.LastSkill}>上次操作</option>
-                  </select> 后的 <input type={"text"} style={{
-                    ...{ width: 30 }, ...textInputFieldStyle
-                  }} value={this.state.waitTime} onChange={this.onWaitTimeChange} /> 秒 <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-                </form>,
-              ja:
-                <form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-                  <select
-                    style={{ display: "inline-block", outline: "none", marginRight: "4px" }}
-                    value={this.state.waitSince}
-                    onChange={this.onWaitSinceChange}
-                  >
-                    <option value={WaitSince.Now}>現在のカーソルの位置</option>
-                    <option value={WaitSince.LastSkill}>最後のアクション</option>
-                  </select>
-                  から
-                  <input
-                    type={"text"}
-                    style={{
-                      ...{ width: 30 }, ...textInputFieldStyle
-                    }}
-                    value={this.state.waitTime}
-                    onChange={this.onWaitTimeChange}
-                  />
-                  秒進む
-                  <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-                </form>,
-            })}
-            {localize({
-              en:
-                <form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
-                  Wait until {waitUntilHelp} <input type={"text"} style={{
-                    ...{ width: 60 }, ...textInputFieldStyle
-                  }} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
-                  <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-                </form>,
-              zh:
-                <form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
-                  快进至指定时间 {waitUntilHelp} <input type={"text"} style={{
-                    ...{ width: 60 }, ...textInputFieldStyle
-                  }} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
-                  <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-                </form>,
-              ja:
-                <form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
-                  指定した時間まで進む {waitUntilHelp} <input type={"text"} style={{
-                    ...{ width: 60 }, ...textInputFieldStyle
-                  }} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
-                  <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-                </form>
-            })}
-
-          </div>
-          <button onClick={this.onWaitTillNextMpOrLucidTick}>{localize({ en: "Wait until Manafont / MP tick / lucid tick", zh: "快进至魔泉生效/跳蓝/跳醒梦" })}</button><span> </span>
-          <button onClick={this.onRemoveTrailingIdleTime}>{localize({ en: "Remove trailing idle time", zh: "去除时间轴末尾的发呆时间" })}</button>
-        </div>
-      </div>
-    </div>
-  }
+				</div>
+		  		<button onClick={this.onWaitTillNextMpOrLucidTick}>{localize({ en: "Wait until Manafont / MP tick / lucid tick", zh: "快进至魔泉生效/跳蓝/跳醒梦" })}</button><span> </span>
+		  		<button onClick={this.onRemoveTrailingIdleTime}>{localize({ en: "Remove trailing idle time", zh: "去除时间轴末尾的发呆时间" })}</button>
+				</div>
+	  		</div>
+		</div>
+	}
 }

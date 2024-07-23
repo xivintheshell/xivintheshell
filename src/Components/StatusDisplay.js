@@ -304,8 +304,9 @@ function ResourcesDisplay(props) {
 		width={100}/>;
 	let manaTick = <ResourceBar
 		name={localize({
-		en: "MP tick",
-		zh: "跳蓝时间"
+			en: "MP tick",
+			zh: "跳蓝时间",
+			ja: "MPティック"
 		})}
 		color={colors.resources.manaTick}
 		progress={1 - data.timeTillNextManaTick / 3}
@@ -315,7 +316,7 @@ function ResourcesDisplay(props) {
 		name={localize({
 			en: "enochian",
 			zh: "天语",
-      ja: "エノキアン"
+			ja: "エノキアン"
 		})}
 		color={colors.resources.enochian}
 		progress={data.enochianCountdown / 15}
@@ -325,7 +326,7 @@ function ResourcesDisplay(props) {
 		name={localize({
 			en: "AF/UI",
 			zh: "冰火层数",
-      ja: "AF/UB"
+			ja: "AF/UB"
 		})}
 		color={data.astralFire > 0 ? colors.resources.astralFire : colors.resources.umbralIce}
 		currentStacks={data.astralFire > 0 ? data.astralFire : data.umbralIce}
@@ -335,7 +336,7 @@ function ResourcesDisplay(props) {
 		localize({
 			en: "hearts",
 			zh: "冰针",
-      ja: "アンブラルハート"
+			ja: "アンブラルハート"
 		})}
 		color={colors.resources.umbralHeart}
 		currentStacks={data.umbralHearts}
@@ -354,7 +355,8 @@ function ResourcesDisplay(props) {
 		name={
 		localize({
 			en: "astral soul",
-			zh: "星极魂"
+			zh: "星极魂",
+			ja: "アストラルソウル"
 		})}
 		color={colors.resources.astralSoul}
 		currentStacks={data.astralSoul}
@@ -364,7 +366,7 @@ function ResourcesDisplay(props) {
 		localize({
 			en: "poly timer",
 			zh: "通晓计时",
-      ja: "エノキ継続時間"
+			ja: "エノキ継続時間"
 		})}
 		color={colors.resources.polyTimer}
 		progress={1 - data.polyglotCountdown / 30}
@@ -375,7 +377,7 @@ function ResourcesDisplay(props) {
 		localize({
 			en: "poly stacks",
 			zh: "通晓层数",
-      ja: "ポリグロット"
+			ja: "ポリグロット"
 		})}
 		color={colors.resources.polyStacks}
 		currentStacks={data.polyglotStacks}
