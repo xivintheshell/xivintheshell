@@ -304,8 +304,9 @@ function ResourcesDisplay(props) {
 		width={100}/>;
 	let manaTick = <ResourceBar
 		name={localize({
-		en: "MP tick",
-		zh: "跳蓝时间"
+			en: "MP tick",
+			zh: "跳蓝时间",
+			ja: "MPティック"
 		})}
 		color={colors.resources.manaTick}
 		progress={1 - data.timeTillNextManaTick / 3}
@@ -314,7 +315,8 @@ function ResourcesDisplay(props) {
 	let enochian = <ResourceBar
 		name={localize({
 			en: "enochian",
-			zh: "天语"
+			zh: "天语",
+			ja: "エノキアン"
 		})}
 		color={colors.resources.enochian}
 		progress={data.enochianCountdown / 15}
@@ -323,7 +325,8 @@ function ResourcesDisplay(props) {
 	let afui = <ResourceCounter
 		name={localize({
 			en: "AF/UI",
-			zh: "冰火层数"
+			zh: "冰火层数",
+			ja: "AF/UB"
 		})}
 		color={data.astralFire > 0 ? colors.resources.astralFire : colors.resources.umbralIce}
 		currentStacks={data.astralFire > 0 ? data.astralFire : data.umbralIce}
@@ -333,6 +336,7 @@ function ResourcesDisplay(props) {
 		localize({
 			en: "hearts",
 			zh: "冰针",
+			ja: "アンブラルハート"
 		})}
 		color={colors.resources.umbralHeart}
 		currentStacks={data.umbralHearts}
@@ -341,7 +345,8 @@ function ResourcesDisplay(props) {
 		name={
 		localize({
 			en: "paradox",
-			zh: "悖论"
+			zh: "悖论",
+			ja: "パラドックス"
 		})}
 		color={colors.resources.paradox}
 		currentStacks={data.paradox}
@@ -350,7 +355,8 @@ function ResourcesDisplay(props) {
 		name={
 		localize({
 			en: "astral soul",
-			zh: "星极魂"
+			zh: "星极魂",
+			ja: "アストラルソウル"
 		})}
 		color={colors.resources.astralSoul}
 		currentStacks={data.astralSoul}
@@ -360,6 +366,7 @@ function ResourcesDisplay(props) {
 		localize({
 			en: "poly timer",
 			zh: "通晓计时",
+			ja: "エノキ継続時間"
 		})}
 		color={colors.resources.polyTimer}
 		progress={1 - data.polyglotCountdown / 30}
@@ -369,7 +376,8 @@ function ResourcesDisplay(props) {
 		name={
 		localize({
 			en: "poly stacks",
-			zh: "通晓层数"
+			zh: "通晓层数",
+			ja: "ポリグロット"
 		})}
 		color={colors.resources.polyStacks}
 		currentStacks={data.polyglotStacks}
@@ -415,14 +423,26 @@ export class StatusDisplay extends React.Component {
 		return <div className={"statusDisplay"}>
 			<div style={{position: "absolute", top: -8, right: 0, zIndex: 1}}><Help topic={"mainControlRegion"} content={
 				<div className="toolTip">
-					<div className="paragraph"><span style={{color: "lightgray"}}>grey</span> border: not focused</div>
-					<div className="paragraph"><b style={{color: "mediumpurple"}}>purple</b> border: receiving input</div>
-					<div className="paragraph"><b style={{color: "mediumseagreen"}}>green</b> border: real-time</div>
-					<div className="paragraph"><b style={{color: "darkorange"}}>orange</b> border: viewing historical state, not receiving input</div>
+          {localize({
+            en: 
+              <>
+                <div className="paragraph"><span style={{color: "lightgray"}}>grey</span> border: not focused</div>
+                <div className="paragraph"><b style={{color: "mediumpurple"}}>purple</b> border: receiving input</div>
+                <div className="paragraph"><b style={{color: "mediumseagreen"}}>green</b> border: real-time</div>
+                <div className="paragraph"><b style={{color: "darkorange"}}>orange</b> border: viewing historical state, not receiving input</div>
+              </>,
+            ja:
+              <>
+                <div className="paragraph"><span style={{color: "lightgray"}}>グレー</span> : 未選択</div>
+                <div className="paragraph"><b style={{color: "mediumpurple"}}>紫</b> : 入力可</div>
+                <div className="paragraph"><b style={{color: "mediumseagreen"}}>緑</b> : リアルタイム</div>
+                <div className="paragraph"><b style={{color: "darkorange"}}>オレンジ</b> : 任意の時点の状態を確認中。入力不可</div>
+              </>,
+          })}
 				</div>
 			}/></div>
 			<div className={"-left"}>
-				<span style={{display: "block", marginBottom: 10}}>{localize({en: "time: ", zh: "战斗时间："})}{this.state.time.toFixed(2)}</span>
+				<span style={{display: "block", marginBottom: 10}}>{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}{this.state.time.toFixed(2)}</span>
 				<ResourcesDisplay data={this.state.resources}/>
 			</div>
 			<div className={"-right"}>

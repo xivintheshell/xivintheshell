@@ -1,6 +1,6 @@
 import React from 'react'
 import {Clickable, Help, parseTime} from "./Common";
-import {Debug, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
+import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
@@ -420,46 +420,86 @@ export class SkillsWindow extends React.Component {
 					.info-tooltip-arrow { display: none; }
 				`}</style>
 				{skillButtons}
-				<ReactTooltip anchorSelect={".skillButton"} className={"info-tooltip"} classNameArrow={"info-tooltip-arrow"}/>
-				<div style={{margin: "10px 0"}}>
-					<div style={{display: "flex", flexDirection: "row", marginBottom: 6}}>
-
-						{localize({
-							en: <form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-								Wait until <input type={"text"} style={{
-								...{width: 30}, ...textInputFieldStyle
-							}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> second(s) since <select
-								style={{display: "inline-block", outline: "none"}}
-								value={this.state.waitSince}
-								onChange={this.onWaitSinceChange}>
-								<option value={WaitSince.Now}>now</option>
-								<option value={WaitSince.LastSkill}>last action</option>
-							</select> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
-							</form>,
-							zh:<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-								快进至 <select
-									style={{display: "inline-block", outline: "none"}}
-									value={this.state.waitSince}
-									onChange={this.onWaitSinceChange}>
-									<option value={WaitSince.Now}>当前</option>
-									<option value={WaitSince.LastSkill}>上次操作</option>
-								</select> 后的 <input type={"text"} style={{
-								...{width: 30}, ...textInputFieldStyle
-							}} value={this.state.waitTime} onChange={this.onWaitTimeChange}/> 秒 <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
-							</form>
-						})}
-
+				<ReactTooltip anchorSelect={".skillButton"} className={"info-tooltip"} classNameArrow={"info-tooltip-arrow"} />
+				<div style={{ margin: "10px 0" }}>
+				<div style={{ display: "flex", flexDirection: "row", marginBottom: 6 }}>
+					{localize({
+					en:
+						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+						Wait until <input type={"text"} style={{
+							...{ width: 30 }, ...textInputFieldStyle
+						}} value={this.state.waitTime} onChange={this.onWaitTimeChange} /> second(s) since <select
+							style={{ display: "inline-block", outline: "none" }}
+							value={this.state.waitSince}
+							onChange={this.onWaitSinceChange}>
+							<option value={WaitSince.Now}>now</option>
+							<option value={WaitSince.LastSkill}>last action</option>
+						</select> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
+						</form>,
+					zh:
+						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+						快进至 <select
+							style={{ display: "inline-block", outline: "none" }}
+							value={this.state.waitSince}
+							onChange={this.onWaitSinceChange}>
+							<option value={WaitSince.Now}>当前</option>
+							<option value={WaitSince.LastSkill}>上次操作</option>
+						</select> 后的 <input type={"text"} style={{
+							...{ width: 30 }, ...textInputFieldStyle
+						}} value={this.state.waitTime} onChange={this.onWaitTimeChange} /> 秒 <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
+						</form>,
+					ja:
+						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+						<select
+							style={{ display: "inline-block", outline: "none", marginRight: "4px" }}
+							value={this.state.waitSince}
+							onChange={this.onWaitSinceChange}
+						>
+							<option value={WaitSince.Now}>現在のカーソルの位置</option>
+							<option value={WaitSince.LastSkill}>最後のアクション</option>
+						</select>
+						から
+						<input
+							type={"text"}
+							style={{
+							...{ width: 30 }, ...textInputFieldStyle
+							}}
+							value={this.state.waitTime}
+							onChange={this.onWaitTimeChange}
+						/>
+						秒進む
+						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
+						</form>,
+					})}
+					{localize({
+					en:
 						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
-							{localize({en: "Wait until", zh: "快进至指定时间"})} {waitUntilHelp} <input type={"text"} style={{
-							...{width: 60}, ...textInputFieldStyle
-						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange}/> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO"/>
+						Wait until {waitUntilHelp} <input type={"text"} style={{
+							...{ width: 60 }, ...textInputFieldStyle
+						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
+						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
+						</form>,
+					zh:
+						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
+						快进至指定时间 {waitUntilHelp} <input type={"text"} style={{
+							...{ width: 60 }, ...textInputFieldStyle
+						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
+						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
+						</form>,
+					ja:
+						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
+						指定した時間まで進む {waitUntilHelp} <input type={"text"} style={{
+							...{ width: 60 }, ...textInputFieldStyle
+						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
+						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
 						</form>
+					})}
 
-					</div>
-					<button onClick={this.onWaitTillNextMpOrLucidTick}>{localize({en: "Wait until Manafont / MP tick / lucid tick", zh: "快进至魔泉生效/跳蓝/跳醒梦"})}</button><span> </span>
-					<button onClick={this.onRemoveTrailingIdleTime}>{localize({en: "Remove trailing idle time", zh: "去除时间轴末尾的发呆时间"})}</button>
 				</div>
-			</div>
+		  		<button onClick={this.onWaitTillNextMpOrLucidTick}>{localize({ en: "Wait until Manafont / MP tick / lucid tick", zh: "快进至魔泉生效/跳蓝/跳醒梦" })}</button><span> </span>
+		  		<button onClick={this.onRemoveTrailingIdleTime}>{localize({ en: "Remove trailing idle time", zh: "去除时间轴末尾的发呆时间" })}</button>
+				</div>
+	  		</div>
 		</div>
 	}
 }
