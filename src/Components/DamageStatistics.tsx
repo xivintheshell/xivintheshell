@@ -233,7 +233,7 @@ export class DamageStatistics extends React.Component {
 		let lastDisplay = this.data.lastDamageApplicationTime - this.data.countdown;
 		let targetableDurationTilLastDisplay  = getTargetableDurationBetween(0, lastDisplay);
 		let ppsAvailable = this.data.lastDamageApplicationTime > -this.data.countdown;
-		let lastDamageApplicationTimeDisplay = ppsAvailable ? lastDisplay.toFixed(2).toString() : "N/A";
+		let lastDamageApplicationTimeDisplay = ppsAvailable ? lastDisplay.toFixed(3).toString() : "N/A";
 		let potencyStr = localize({en: "Total potency", zh: "总威力"}) as string;
 		let selectedPotencyStr = localize({en: "Selected potency", zh: "选中威力"}) as string;
 		if (this.data.tinctureBuffPercentage > 0) {
@@ -269,7 +269,7 @@ export class DamageStatistics extends React.Component {
 		let selectedPPSAvailable = this.selected.targetableDuration > 0;
 		if (this.selected.totalDuration > 0) {
 			selected = <div style={{flex: 1}}>
-				<div>{localize({en: "Selected duration", zh: "选中时长"})}{colon}{this.selected.totalDuration.toFixed(2)}</div>
+				<div>{localize({en: "Selected duration", zh: "选中时长"})}{colon}{this.selected.totalDuration.toFixed(3)}</div>
 				<div>{selectedPotencyStr}</div>
 				<div>PPS{checkedOnlyStr + colon}{selectedPPSAvailable ? (this.selected.potency.applied / this.selected.targetableDuration).toFixed(2) : "N/A"}</div>
 				<div>{selectedGcdStr}</div>
@@ -438,11 +438,11 @@ export class DamageStatistics extends React.Component {
 			}
 
 			// gap
-			let gapStr = props.row.gap.toFixed(2);
+			let gapStr = props.row.gap.toFixed(3);
 			let gapNode = props.row.gap > 0 ? <span>{gapStr}</span> : <span/>;
 
 			// override
-			let overrideStr = props.row.override.toFixed(2);
+			let overrideStr = props.row.override.toFixed(3);
 			let overrideNode = props.row.override > 0 ? <span>{overrideStr}</span> : <span/>;
 
 			// potency
@@ -480,8 +480,8 @@ export class DamageStatistics extends React.Component {
 				position: "relative",
 				borderTop: "1px solid " + colors.bgMediumContrast
 			}}>
-				<div style={cell(8)}>{props.row.castTime.toFixed(2)}</div>
-				<div style={cell(8)}>{props.row.applicationTime.toFixed(2)}</div>
+				<div style={cell(8)}>{props.row.castTime.toFixed(3)}</div>
+				<div style={cell(8)}>{props.row.applicationTime.toFixed(3)}</div>
 				<div style={cell(12)}>{tags}</div>
 				<div style={cell(10)}>{gapNode}</div>
 				<div style={cell(10)}>{overrideNode}</div>
@@ -511,7 +511,7 @@ export class DamageStatistics extends React.Component {
 			localize({en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）"});
 		let thunderHeaderStr = localize({en: "High Thunder", zh: "高暴雷统计"});
 		if (this.data.historical) {
-			let t = (this.data.time - this.data.countdown).toFixed(2) + "s";
+			let t = (this.data.time - this.data.countdown).toFixed(3) + "s";
 			let upTillStr = lparen + localize({
 				en: "up till " + t,
 				zh: "截至" + t
@@ -597,8 +597,8 @@ export class DamageStatistics extends React.Component {
 					borderTop: "1px solid " + colors.bgMediumContrast,
 				}}>
 					<div style={cell(28)}/>
-					<div style={cell(10)}>{this.data.thunderTableSummary.cumulativeGap.toFixed(2)}</div>
-					<div style={cell(10)}>{this.data.thunderTableSummary.cumulativeOverride.toFixed(2)}</div>
+					<div style={cell(10)}>{this.data.thunderTableSummary.cumulativeGap.toFixed(3)}</div>
+					<div style={cell(10)}>{this.data.thunderTableSummary.cumulativeOverride.toFixed(3)}</div>
 					<div style={cell(20)}/>
 					<div style={cell(8)}>{this.data.thunderTableSummary.totalTicks}/{this.data.thunderTableSummary.maxTicks}</div>
 					<div style={cell(24)}>

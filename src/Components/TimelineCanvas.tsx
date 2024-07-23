@@ -235,7 +235,7 @@ function drawMPTickMarks(
 
 		testInteraction(
 			{x: x-2, y: originY, w: 4, h: c_timelineHeight},
-			["[" + tick.displayTime.toFixed(2) + "] " + tick.sourceDesc]
+			["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc]
 		);
 	});
 	g_ctx.stroke();
@@ -263,7 +263,7 @@ function drawWarningMarks(
 		g_ctx.fillStyle = "white";
 		g_ctx.fillText("!", x, bottomY-1);
 
-		let message: string = "[" + mark.displayTime.toFixed(2) + "] ";
+		let message: string = "[" + mark.displayTime.toFixed(3) + "] ";
 		if (mark.warningType === WarningType.PolyglotOvercap) {
 			message += localize({en: "polyglot overcap!", zh: "通晓溢出！"});
 		}
@@ -298,12 +298,12 @@ function drawDamageMarks(
 			if (b===ResourceType.Tincture) pot = true;
 		});
 		// hover text
-		let time = "[" + dm.displayTime.toFixed(2) + "] ";
+		let time = "[" + dm.displayTime.toFixed(3) + "] ";
 		let untargetableStr = localize({en: "Untargetable", zh: "不可选中"}) as string;
 		let info = "";
 		let sourceStr = dm.sourceDesc.replace("{skill}", localizeSkillName(dm.sourceSkill));
 		if (untargetable) {
-			info = (0).toFixed(2) + " (" + sourceStr + ")";
+			info = (0).toFixed(3) + " (" + sourceStr + ")";
 		} else {
 			info = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier}).toFixed(2) + " (" + sourceStr + ")";
 			if (pot) info += " (" + localize({en: "pot", zh: "爆发药"}) + ")";
@@ -332,7 +332,7 @@ function drawLucidMarks(
 		g_ctx.fill();
 
 		// hover text
-		let hoverText = "[" + mark.displayTime.toFixed(2) + "] " + mark.sourceDesc.replace("{skill}", localizeSkillName(SkillName.LucidDreaming));
+		let hoverText = "[" + mark.displayTime.toFixed(3) + "] " + mark.sourceDesc.replace("{skill}", localizeSkillName(SkillName.LucidDreaming));
 		testInteraction(
 			{x: x-3, y: timelineOriginY, w: 6, h: 6},
 			[hoverText]
@@ -450,7 +450,7 @@ function drawSkills(
 		g_ctx.drawImage(skillIconImages.get(icon.elem.skillName), icon.x, icon.y, 28, 28);
 		let node = icon.elem.node;
 		// 1. description
-		let description = localizeSkillName(icon.elem.skillName) + "@" + (icon.elem.displayTime).toFixed(2);
+		let description = localizeSkillName(icon.elem.skillName) + "@" + (icon.elem.displayTime).toFixed(3);
 		if (node.hasBuff(ResourceType.LeyLines)) description += localize({en: " (LL)", zh: " (黑魔纹)"});
 		if (node.hasBuff(ResourceType.Tincture)) description += localize({en: " (pot)", zh: "(爆发药)"});
 		let lines = [description];
@@ -467,7 +467,7 @@ function drawSkills(
 		if (node.tmp_endLockTime!==undefined && node.tmp_startLockTime!==undefined) {
 			lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
 		}
-		lines.push(localize({en: "duration: ", zh: "耗时："}) + lockDuration.toFixed(2));
+		lines.push(localize({en: "duration: ", zh: "耗时："}) + lockDuration.toFixed(3));
 		if (interactive) {
 			testInteraction(
 				{x: icon.x, y: icon.y, w: 28, h: 28},
@@ -513,7 +513,7 @@ function drawRuler(originX: number) : number {
 	// leave the left most section not clickable
 	testInteraction(
 		{x: c_leftBufferWidth, y: 0, w: g_visibleWidth - c_leftBufferWidth, h: 30},
-		[displayTime.toFixed(2)],
+		[displayTime.toFixed(3)],
 		()=>{
 			if (displayTime < controller.game.getDisplayTime() && displayTime >= -controller.game.config.countdown) {
 				controller.displayHistoricalState(displayTime, undefined); // replay the actions as-is
@@ -675,7 +675,7 @@ function drawTimelines(originX:  number, originY: number) : number {
 		let vcursor = cursor as ViewOnlyCursorElem
 		if (vcursor.enabled) {
 			let x = displayOriginX + StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
-			drawCursor(x, g_colors.historical, localize({en: "cursor: ", zh: "光标："}) + vcursor.displayTime.toFixed(2));
+			drawCursor(x, g_colors.historical, localize({en: "cursor: ", zh: "光标："}) + vcursor.displayTime.toFixed(3));
 		}
 	});
 
@@ -683,7 +683,7 @@ function drawTimelines(originX:  number, originY: number) : number {
 	(sharedElemBins.get(ElemType.s_Cursor) ?? []).forEach(elem=>{
 		let cursor = elem as CursorElem;
 		let x = displayOriginX + StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
-		drawCursor(x, g_colors.emphasis, localize({en: "cursor: ", zh: "光标："}) + cursor.displayTime.toFixed(2));
+		drawCursor(x, g_colors.emphasis, localize({en: "cursor: ", zh: "光标："}) + cursor.displayTime.toFixed(3));
 	});
 
 	// slot selection bars

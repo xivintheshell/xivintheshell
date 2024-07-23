@@ -500,7 +500,7 @@ class Controller {
 				buffs: pot ? [ResourceType.Tincture] : [],
 				time: this.game.time,
 				displayTime: this.game.getDisplayTime(),
-				sourceDesc: "{skill}@" + p.sourceTime.toFixed(2),
+				sourceDesc: "{skill}@" + p.sourceTime.toFixed(3),
 				sourceSkill: p.sourceSkill
 			});
 

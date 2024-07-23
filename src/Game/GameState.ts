@@ -147,7 +147,7 @@ export class GameState {
 					if (lucid.node) {
 						let t = "??";
 						if (lucid.node.tmp_startLockTime) {
-							t = (lucid.node.tmp_startLockTime - this.config.countdown).toFixed(2);
+							t = (lucid.node.tmp_startLockTime - this.config.countdown).toFixed(3);
 						}
 						msg += " {skill}@" + t;
 						msg += " (" + lucid.tickCount + "/7)";

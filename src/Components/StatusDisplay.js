@@ -130,7 +130,7 @@ function BuffsDisplay(props) {
 		onSelf: true,
 		enabled: data.leyLinesEnabled,
 		stacks:1,
-		timeRemaining: data.leyLinesCountdown.toFixed(2),
+		timeRemaining: data.leyLinesCountdown.toFixed(3),
 		className: data.leyLinesCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
@@ -138,7 +138,7 @@ function BuffsDisplay(props) {
 		onSelf: true,
 		enabled: true,
 		stacks: data.triplecastStacks,
-		timeRemaining: data.triplecastCountdown.toFixed(2),
+		timeRemaining: data.triplecastCountdown.toFixed(3),
 		className: data.triplecastCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
@@ -146,7 +146,7 @@ function BuffsDisplay(props) {
 		onSelf: true,
 		enabled: true,
 		stacks:1,
-		timeRemaining: data.firestarterCountdown.toFixed(2),
+		timeRemaining: data.firestarterCountdown.toFixed(3),
 		className: data.firestarterCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
@@ -154,7 +154,7 @@ function BuffsDisplay(props) {
 		onSelf: true,
 		enabled: true,
 		stacks:1,
-		timeRemaining: data.thunderheadCountdown.toFixed(2),
+		timeRemaining: data.thunderheadCountdown.toFixed(3),
 		className: data.thunderheadCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
@@ -162,7 +162,7 @@ function BuffsDisplay(props) {
 		onSelf: true,
 		enabled: true,
 		stacks:1,
-		timeRemaining: data.manawardCountdown.toFixed(2),
+		timeRemaining: data.manawardCountdown.toFixed(3),
 		className: data.manawardCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
@@ -170,7 +170,7 @@ function BuffsDisplay(props) {
 		onSelf: true,
 		enabled: true,
 		stacks:1,
-		timeRemaining: data.swiftcastCountdown.toFixed(2),
+		timeRemaining: data.swiftcastCountdown.toFixed(3),
 		className: data.swiftcastCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
@@ -178,7 +178,7 @@ function BuffsDisplay(props) {
 		onSelf: true,
 		enabled: true,
 		stacks:1,
-		timeRemaining: data.lucidDreamingCountdown.toFixed(2),
+		timeRemaining: data.lucidDreamingCountdown.toFixed(3),
 		className: data.lucidDreamingCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
@@ -186,7 +186,7 @@ function BuffsDisplay(props) {
 		onSelf: true,
 		enabled: true,
 		stacks:1,
-		timeRemaining: data.surecastCountdown.toFixed(2),
+		timeRemaining: data.surecastCountdown.toFixed(3),
 		className: data.surecastCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
@@ -194,7 +194,7 @@ function BuffsDisplay(props) {
 		onSelf: true,
 		enabled: true,
 		stacks:1,
-		timeRemaining: data.tinctureCountdown.toFixed(2),
+		timeRemaining: data.tinctureCountdown.toFixed(3),
 		className: data.tinctureCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
@@ -202,7 +202,7 @@ function BuffsDisplay(props) {
 		onSelf: true,
 		enabled: true,
 		stacks:1,
-		timeRemaining: data.sprintCountdown.toFixed(2),
+		timeRemaining: data.sprintCountdown.toFixed(3),
 		className: data.sprintCountdown > 0 ? "" : "hidden"
 	});
 
@@ -223,14 +223,14 @@ function EnemyBuffsDisplay(props)
 		rscType: ResourceType.ThunderDoT,
 		enabled: true,
 		stacks:1,
-		timeRemaining: data.DoTCountdown.toFixed(2),
+		timeRemaining: data.DoTCountdown.toFixed(3),
 		className: data.DoTCountdown > 0 ? "" : "hidden"
 	});
 	buffs.push({
 		rscType: ResourceType.Addle,
 		enabled: true,
 		stacks:1,
-		timeRemaining: data.addleCountdown.toFixed(2),
+		timeRemaining: data.addleCountdown.toFixed(3),
 		className: data.addleCountdown > 0 ? "" : "hidden"
 	});
 
@@ -258,21 +258,21 @@ function ResourceLocksDisplay(props) {
 		name={"GCD"}
 		color={colors.resources.gcdBar}
 		progress={data.gcdReady ? 0 : 1 - data.timeTillGCDReady / data.gcd}
-		value={data.timeTillGCDReady.toFixed(2)}
+		value={data.timeTillGCDReady.toFixed(3)}
 		width={100}
 		hidden={data.gcdReady}/>;
 	let tax = <ResourceBar
 		name={"casting/taxed"}
 		color={data.canMove ? colors.resources.gcdBar : colors.resources.lockBar}
 		progress={data.castLocked ? 1 - data.castLockCountdown / data.castLockTotalDuration : 0}
-		value={data.castLockCountdown.toFixed(2)}
+		value={data.castLockCountdown.toFixed(3)}
 		width={100}
 		hidden={!data.castLocked}/>;
 	let anim = <ResourceBar
 		name={"using skill"}
 		color={colors.resources.lockBar}
 		progress={data.animLocked ? 1 - data.animLockCountdown / data.animLockTotalDuration : 0}
-		value={data.animLockCountdown.toFixed(2)}
+		value={data.animLockCountdown.toFixed(3)}
 		width={100}
 		hidden={!data.animLocked}/>;
 	return <div style={{position: "absolute"}}>
@@ -310,7 +310,7 @@ function ResourcesDisplay(props) {
 		})}
 		color={colors.resources.manaTick}
 		progress={1 - data.timeTillNextManaTick / 3}
-		value={(3 - data.timeTillNextManaTick).toFixed(2) + "/3"}
+		value={(3 - data.timeTillNextManaTick).toFixed(3) + "/3"}
 		width={100}/>;
 	let enochian = <ResourceBar
 		name={localize({
@@ -320,7 +320,7 @@ function ResourcesDisplay(props) {
 		})}
 		color={colors.resources.enochian}
 		progress={data.enochianCountdown / 15}
-		value={`${data.enochianCountdown.toFixed(2)}`}
+		value={`${data.enochianCountdown.toFixed(3)}`}
 		width={100}/>;
 	let afui = <ResourceCounter
 		name={localize({
@@ -370,7 +370,7 @@ function ResourcesDisplay(props) {
 		})}
 		color={colors.resources.polyTimer}
 		progress={1 - data.polyglotCountdown / 30}
-		value={`${data.polyglotCountdown.toFixed(2)}`}
+		value={`${data.polyglotCountdown.toFixed(3)}`}
 		width={100}/>;
 	let poly = <ResourceCounter
 		name={
@@ -442,7 +442,7 @@ export class StatusDisplay extends React.Component {
 				</div>
 			}/></div>
 			<div className={"-left"}>
-				<span style={{display: "block", marginBottom: 10}}>{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}{this.state.time.toFixed(2)}</span>
+				<span style={{display: "block", marginBottom: 10}}>{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}{this.state.time.toFixed(3)}</span>
 				<ResourcesDisplay data={this.state.resources}/>
 			</div>
 			<div className={"-right"}>
