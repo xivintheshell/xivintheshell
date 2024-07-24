@@ -48,6 +48,8 @@ export class SkillInfo {
 // ref logs
 // https://www.fflogs.com/reports/KVgxmW9fC26qhNGt#fight=16&type=summary&view=events&source=6
 // https://www.fflogs.com/reports/rK87bvMFN2R3Hqpy#fight=1&type=casts&source=7
+// https://www.fflogs.com/reports/cNpjtRXHhZ8Az2V3#fight=last&type=damage-done&view=events&ability=36987
+// https://www.fflogs.com/reports/7NMQkxLzcbptw3Xd#fight=15&type=damage-done&source=116&view=events&ability=36986
 const skillInfos = [
 	new SkillInfo(SkillName.Blizzard, ResourceType.cd_GCD, Aspect.Ice, true,
 		2.5, 400, 180, 0.846),
@@ -56,7 +58,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false,
 		0, 0, 0), // instant
 	new SkillInfo(SkillName.HighThunder, ResourceType.cd_GCD, Aspect.Lightning, true,
-		0, 0, 200, 1.025),
+		0, 0, 200, 0.757),
 	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false,
 		0, 0, 0, 1.114),// delayed
 	// Manafont: application delay 0.88s -> 0.2s since Dawntrail
@@ -106,7 +108,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true,
 		0, 1600, 500, 0.624),
 	new SkillInfo(SkillName.FlareStar, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 0, 400, 1.15), /* Get actual delay after release */
+		3, 0, 400, 0.622), /* Get actual delay after release */
 	new SkillInfo(SkillName.Retrace, ResourceType.cd_Retrace, Aspect.Other, false,
 		0, 0, 0), // ? (assumed to be instant)
 
