@@ -761,10 +761,8 @@ export class GameState {
 		skill.use(this, node);
 	}
 
-	getPartyBuffs(time?: number) {
+	getPartyBuffs(time: number) {
 		const buffCollection = new Map<string, PotencyModifier>();
-		if (!time) return buffCollection;
-
 		const buffMarkers = controller.timeline.getBuffMarkers();
 		buffMarkers.filter(marker => {
 			return marker.time <= time && (marker.time + marker.duration) >= time;

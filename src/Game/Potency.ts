@@ -10,62 +10,62 @@ export type PotencyModifier = {
 	source: PotencyModifierType,
 	buffType?: BuffType,
 	damageFactor: number,
-	critFactor?: number,
-	dhFactor?: number,
+	critFactor: number,
+	dhFactor: number,
 }
 
 export function getPotencyModifiersFromResourceState(resources: ResourceState, aspect: Aspect) : PotencyModifier[] {
 	let mods : PotencyModifier[] = [];
 	// pot
 	if (resources.get(ResourceType.Tincture).available(1)) {
-		mods.push({source: PotencyModifierType.POT, damageFactor: 1});
+		mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
 	}
 
 	// eno
 	if (resources.get(ResourceType.Enochian).available(1)) {
-		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: 1.30});
+		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: 1.30, critFactor: 0, dhFactor: 0});
 	}
 
 	// ui1
 	let ui = resources.get(ResourceType.UmbralIce);
 	if (ui.availableAmount() === 1) {
-		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI1, damageFactor: 0.9});
-		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI1, damageFactor: 1});
+		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI1, damageFactor: 0.9, critFactor: 0, dhFactor: 0});
+		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI1, damageFactor: 1, critFactor: 0, dhFactor: 0});
 	}
 	// ui2
 	else if (ui.availableAmount() === 2) {
-		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI2, damageFactor: 0.8});
-		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI2, damageFactor: 1});
+		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI2, damageFactor: 0.8, critFactor: 0, dhFactor: 0});
+		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI2, damageFactor: 1, critFactor: 0, dhFactor: 0});
 	}
 	// ui3
 	else if (ui.availableAmount() === 3) {
-		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI3, damageFactor: 0.7});
-		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI3, damageFactor: 1});
+		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI3, damageFactor: 0.7, critFactor: 0, dhFactor: 0});
+		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI3, damageFactor: 1, critFactor: 0, dhFactor: 0});
 	}
 
 	// af1
 	let af = resources.get(ResourceType.AstralFire);
 	if (af.availableAmount() === 1) {
 		if (aspect === Aspect.Ice) {
-			mods.push({source: PotencyModifierType.AF1, damageFactor: 0.9});
+			mods.push({source: PotencyModifierType.AF1, damageFactor: 0.9, critFactor: 0, dhFactor: 0});
 		}  else if (aspect === Aspect.Fire) {
-			mods.push({source: PotencyModifierType.AF1, damageFactor: 1.4});
+			mods.push({source: PotencyModifierType.AF1, damageFactor: 1.4, critFactor: 0, dhFactor: 0});
 		}
 	}
 	// af2
 	else if (af.availableAmount() === 2) {
 		if (aspect === Aspect.Ice) {
-			mods.push({source: PotencyModifierType.AF2, damageFactor: 0.8});
+			mods.push({source: PotencyModifierType.AF2, damageFactor: 0.8, critFactor: 0, dhFactor: 0});
 		}  else if (aspect === Aspect.Fire) {
-			mods.push({source: PotencyModifierType.AF2, damageFactor: 1.6});
+			mods.push({source: PotencyModifierType.AF2, damageFactor: 1.6, critFactor: 0, dhFactor: 0});
 		}
 	}
 	// af3
 	else if (af.availableAmount() === 3) {
 		if (aspect === Aspect.Ice) {
-			mods.push({source: PotencyModifierType.AF3, damageFactor: 0.7});
+			mods.push({source: PotencyModifierType.AF3, damageFactor: 0.7, critFactor: 0, dhFactor: 0});
 		}  else if (aspect === Aspect.Fire) {
-			mods.push({source: PotencyModifierType.AF3, damageFactor: 1.8});
+			mods.push({source: PotencyModifierType.AF3, damageFactor: 1.8, critFactor: 0, dhFactor: 0});
 		}
 	}
 
@@ -113,7 +113,7 @@ export class Potency {
 			else totalDamageFactor *= m.damageFactor;
 		});
 
-		if (props.includePartyBuffs) {
+		if (props.includePartyBuffs && this.snapshotTime) {
 			controller.game.getPartyBuffs(this.snapshotTime).forEach(buff => {
 				totalDamageFactor *= buff.damageFactor;
 				totalCritFactor += buff.critFactor ?? 0;
@@ -125,7 +125,7 @@ export class Potency {
 	}
 
 	getPartyBuffs() {
-		return [...controller.game.getPartyBuffs(this.snapshotTime).keys()];
+		return (this.snapshotTime) ? [...controller.game.getPartyBuffs(this.snapshotTime).keys()] : [];
 	}
 
 	resolve(displayTime: number) {
@@ -145,21 +145,18 @@ export class Potency {
 
 	hasSnapshotted() { return this.snapshotTime !== undefined; }
 
-	#calculatePotencyModifier(damageBonus?: number, critBonus?: number, dhBonus?: number) {
-		const base = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit);
-		const buffed = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, damageBonus, critBonus, dhBonus);
+	#calculatePotencyModifier(damageFactor: number, critBonus: number, dhBonus: number) {
+		const base = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, 1, 0, 0);
+		const buffed = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, damageFactor, critBonus, dhBonus);
 
 		return buffed / base;
 	}
 
-	#calculateDamage(crit: number, dh: number, damageBonus?: number, critBonus?: number, dhBonus?: number) {
-		let modifier = 1;
-		if (damageBonus) modifier *= damageBonus;
+	#calculateDamage(crit: number, dh: number, damageFactor: number, critBonus: number, dhBonus: number) {
+		let modifier = damageFactor;
 				
-		let critRate = this.#criticalHitRate(crit)
-		if (critBonus) critRate += critBonus;
-		let dhRate = this.#directHitRate(dh);
-		if (dhBonus) dhRate += dhBonus;
+		let critRate = this.#criticalHitRate(crit) + critBonus;
+		let dhRate = this.#directHitRate(dh) + dhBonus;
 
 		const critDHRate = critRate * dhRate;
 		const normalRate = 1 - critRate - dhRate + critDHRate;
@@ -180,6 +177,6 @@ export class Potency {
 	}
 
 	#directHitRate(dh: number) {
-		return Math.floor(550 * (dh - 420) / 2780) * 0.001;
+		return Math.floor(550 * (dh-420) / 2780) * 0.001;
 	}
 }

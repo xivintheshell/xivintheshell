@@ -77,7 +77,7 @@ export class ActionNode {
 		if (this.#potencies.length > 0) 
 			snapshotTime = this.#potencies[0].snapshotTime;
 
-		return controller.game.getPartyBuffs(snapshotTime).size > 0;
+		return snapshotTime && controller.game.getPartyBuffs(snapshotTime).size > 0;
 	}
 
 	getPartyBuffs() {
@@ -86,7 +86,7 @@ export class ActionNode {
 		if (this.#potencies.length > 0) 
 			snapshotTime = this.#potencies[0].snapshotTime;
 
-		return [...controller.game.getPartyBuffs(snapshotTime).keys()];
+		return (snapshotTime) ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
 	}
 
 	resolveAll(displayTime: number) {

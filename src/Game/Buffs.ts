@@ -1,4 +1,5 @@
-import { BuffType, MarkerColor } from "./Common";
+import { MarkerColor } from "../Components/ColorTheme";
+import { BuffType } from "./Common";
 
 export class BuffInfo {
 	readonly name: BuffType;
@@ -18,7 +19,7 @@ export class BuffInfo {
 	}
 }
 
-const buffInfos = [
+export const buffInfos = [
 	new BuffInfo(BuffType.ArcaneCircle, MarkerColor.Pink, 20, 1.03, 0, 0),
 	new BuffInfo(BuffType.ArmysPaeon, MarkerColor.Yellow, 45, 1, 0, 0.03),
 	new BuffInfo(BuffType.BattleLitany, MarkerColor.Blue, 20, 1, 0.10, 0),
@@ -60,8 +61,4 @@ export class Buff {
 		}
 		this.info = info;
 	}
-}
-
-export var buffConstants = {
-	buffInfos
 }

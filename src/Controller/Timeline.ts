@@ -2,13 +2,14 @@
 import {updateTimelineView} from "../Components/Timeline";
 // @ts-ignore
 import {controller} from "./Controller";
-import {Debug, MarkerColor, ResourceType, SkillName, WarningType} from "../Game/Common";
+import {Debug, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {ActionNode, ActionType, Record} from "./Record";
 import {FileType, getCachedValue, removeCachedValue, setCachedValue} from "./Common";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {Potency} from "../Game/Potency";
+import {MarkerColor} from "../Components/ColorTheme";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
