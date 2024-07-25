@@ -6,18 +6,6 @@ export const Debug = {
 	constantSlidecastWindow: true,
 };
 
-export const enum MarkerColor {
-	Red = "#f64141",
-	Orange = "#e89b5f",
-	Yellow = "#ffd535",
-	Green = "#50c53d",
-	Cyan = "#53e5e5",
-	Blue = "#217ff5",
-	Purple = "#9755ef",
-	Pink = "#ee79ee",
-	Grey = "#6f6f6f"
-}
-
 export const enum Aspect {
 	Fire = "Fire",
 	Ice = "Ice",

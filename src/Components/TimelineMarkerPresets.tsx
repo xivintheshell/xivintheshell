@@ -13,9 +13,9 @@ import {
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack} from "../Controller/Timeline";
 import {localize} from "./Localization";
-import {getCurrentThemeColors} from "./ColorTheme";
-import { Buff, buffConstants } from '../Game/Buffs';
-import { BuffType, MarkerColor } from '../Game/Common';
+import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
+import {Buff, buffInfos} from '../Game/Buffs';
+import {BuffType} from '../Game/Common';
 
 /*
 	For the sake of simplicity, tracks be like:
@@ -290,7 +290,7 @@ export class TimelineMarkerPresets extends React.Component {
 		</div>
 
 		let buffCollection: JSX.Element[] = [];
-		buffConstants.buffInfos.forEach(info => {
+		buffInfos.forEach(info => {
 			buffCollection.push(<option key={info.name} value={info.name}>{info.name}</option>)
 		});
 
