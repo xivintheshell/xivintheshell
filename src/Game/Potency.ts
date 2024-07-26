@@ -1,5 +1,7 @@
 import {controller} from "../Controller/Controller";
+import { Record } from "../Controller/Record";
 import {Aspect, BuffType, Debug, ResourceType, SkillName} from "./Common";
+import { GameConfig } from "./GameConfig";
 import {ResourceState} from "./Resources";
 
 export const enum PotencyModifierType {
@@ -73,6 +75,7 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 }
 
 export type InitialPotencyProps = {
+	config: GameConfig;
 	sourceTime: number,
 	sourceSkill: SkillName,
 	aspect: Aspect,
@@ -82,6 +85,7 @@ export type InitialPotencyProps = {
 }
 
 export class Potency {
+	config: GameConfig;
 	sourceTime: number; // display time
 	sourceSkill: SkillName;
 	aspect: Aspect;
@@ -92,6 +96,7 @@ export class Potency {
 	modifiers: PotencyModifier[] = [];
 
 	constructor(props: InitialPotencyProps) {
+		this.config = props.config;
 		this.sourceTime = props.sourceTime;
 		this.sourceSkill = props.sourceSkill;
 		this.aspect = props.aspect;
@@ -146,8 +151,11 @@ export class Potency {
 	hasSnapshotted() { return this.snapshotTime !== undefined; }
 
 	#calculatePotencyModifier(damageFactor: number, critBonus: number, dhBonus: number) {
-		const base = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, 1, 0, 0);
-		const buffed = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, damageFactor, critBonus, dhBonus);
+		const critStat = this.config.criticalHit;
+		const dhStat = this.config.directHit;
+
+		const base = this.#calculateDamage(critStat, dhStat, 1, 0, 0);
+		const buffed = this.#calculateDamage(critStat, dhStat, damageFactor, critBonus, dhBonus);
 
 		return buffed / base;
 	}

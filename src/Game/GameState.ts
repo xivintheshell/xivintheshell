@@ -436,6 +436,7 @@ export class GameState {
 		let potency: Potency | undefined = undefined;
 		if (skillInfo.basePotency > 0) {
 			potency = new Potency({
+				config: this.config,
 				sourceTime: this.getDisplayTime(),
 				sourceSkill: props.skillName,
 				aspect: skillInfo.aspect,
@@ -576,6 +577,7 @@ export class GameState {
 		let potency : Potency | undefined = undefined;
 		if (props.dealDamage) {
 			potency = new Potency({
+				config: this.config,
 				sourceTime: this.getDisplayTime(),
 				sourceSkill: skillInfo.name,
 				aspect: skillInfo.aspect,
