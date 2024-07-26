@@ -125,10 +125,6 @@ export class Potency {
 
 		this.modifiers.forEach(m=>{
 			if (m.source===PotencyModifierType.POT) totalDamageFactor *= props.tincturePotencyMultiplier;
-			else if (m.source === PotencyModifierType.HAMMER) {
-				totalCritFactor = 1.0;
-				totalDhFactor = 1.0;
-			}
 			else totalDamageFactor *= m.damageFactor;
 		});
 
@@ -140,7 +136,9 @@ export class Potency {
 			});
 		}
 
-		return this.base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor);
+		let amt = this.base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor)
+		if (this.aspect === Aspect.Hammer) amt *= this.#calculateAutoCDHModifier(totalCritFactor, totalDhFactor)
+		return amt;
 	}
 
 	getPartyBuffs() {
@@ -174,20 +172,32 @@ export class Potency {
 		return buffed / base;
 	}
 
+	#calculateAutoCDHModifier(critBonus: number, dhBonus: number) {
+		const base = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, 1, critBonus, dhBonus);
+		const buffed = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, 1, 1+critBonus, 1+dhBonus);
+
+		return buffed / base;
+	}
+
 	#calculateDamage(crit: number, dh: number, damageFactor: number, critBonus: number, dhBonus: number) {
 		let modifier = damageFactor;
+				
+		const critRate = (critBonus >= 1) ? critBonus : this.#criticalHitRate(crit) + critBonus;
+		const dhRate = (critBonus >= 1) ? dhBonus : this.#directHitRate(dh) + dhBonus;
 
-		let critRate = Math.min(1.0, this.#criticalHitRate(crit) + critBonus);
-		let dhRate = Math.min(1.0, this.#directHitRate(dh) + dhBonus);
-
-		const critDHRate = critRate * dhRate;
-		const normalRate = 1 - critRate - dhRate + critDHRate;
+        const clampedCritRate = Math.min(critRate, 1);
+        const clampedDHRate = Math.min(dhRate, 1);
+		const critDHRate = clampedCritRate * clampedDHRate;
+		const normalRate = 1 - clampedCritRate - clampedDHRate + critDHRate;
 		
-		const critDamage = modifier * this.#criticalHitStrength(crit);
-		const dhDamage = modifier * 1.25;
+		const autoCritModifier = (critRate > 1) ? 1 + ((critRate - 1) * (this.#criticalHitStrength(crit) - 1)) : 1;
+		const autoDHModifier  = dhRate > 1 ? 1 + ((dhRate - 1) * 0.25) : 1;
+
+		const critDamage = modifier * this.#criticalHitStrength(crit) * autoCritModifier;
+		const dhDamage = modifier * 1.25 * autoDHModifier;
 		const critDHDamage = critDamage * 1.25;
 
-		return modifier * normalRate + critDamage * (critRate-critDHRate) + dhDamage * (dhRate-critDHRate) + critDHDamage * critDHRate; 
+		return modifier * normalRate + critDamage * (clampedCritRate-critDHRate) + dhDamage * (clampedDHRate-critDHRate) + critDHDamage * critDHRate; 
 	}
 
 	#criticalHitRate(crit: number) {
