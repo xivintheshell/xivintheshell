@@ -327,6 +327,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 
 			// initial potency
 			let pInitial = new Potency({
+				config: controller.record.config ?? controller.gameConfig,
 				sourceTime: game.getDisplayTime(),
 				sourceSkill: SkillName.HighThunder,
 				aspect: Aspect.Lightning,
@@ -339,6 +340,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			// dots
 			for (let i = 0; i < 10; i++) {
 				let pDot = new Potency({
+					config: controller.record.config ?? controller.gameConfig,
 					sourceTime: game.getDisplayTime(),
 					sourceSkill: SkillName.HighThunder,
 					aspect: Aspect.Lightning,
