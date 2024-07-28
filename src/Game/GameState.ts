@@ -67,7 +67,7 @@ export class GameState {
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.adjustedCastTime(2.5, false), 1, 1));
+		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.adjustedGCD(false), 1, 1));
 		this.cooldowns.set(ResourceType.cd_LeyLines, new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Transpose, new CoolDown(ResourceType.cd_Transpose, 5, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Manaward, new CoolDown(ResourceType.cd_Manaward, 120, 1, 1));
@@ -148,7 +148,7 @@ export class GameState {
 					if (lucid.node) {
 						let t = "??";
 						if (lucid.node.tmp_startLockTime) {
-							t = (lucid.node.tmp_startLockTime - this.config.countdown).toFixed(2);
+							t = (lucid.node.tmp_startLockTime - this.config.countdown).toFixed(3);
 						}
 						msg += " {skill}@" + t;
 						msg += " (" + lucid.tickCount + "/7)";
@@ -388,7 +388,7 @@ export class GameState {
 		let ll = this.resources.get(ResourceType.LeyLines);
 		if (ll.available(1)) {
 			// should be approximately 0.85
-			return this.config.adjustedCastTime(2.5, true) / this.config.adjustedCastTime(2.5, false);
+			return this.config.adjustedGCD(true) / this.config.adjustedGCD(false);
 		} else {
 			return 1;
 		}

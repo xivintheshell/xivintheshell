@@ -143,13 +143,17 @@ export class TimeControl extends React.Component {
 }
 
 function ConfigSummary(props) {
-	let ct_2_5 = controller.gameConfig.adjustedCastTime(2.5).toFixed(2);
-	let lucidTickOffset = controller.game.lucidTickOffset.toFixed(2);
+	let gcd = controller.gameConfig.adjustedGCD(false);
+	let b1CastTime = controller.gameConfig.adjustedCastTime(2.5, false);
+	let b1CastTimeDesc = localize({
+		en: "(todo)"
+	});
+	let lucidTickOffset = controller.game.lucidTickOffset.toFixed(3);
 	let lucidOffsetDesc = localize({
 		en: "the random time offset of lucid dreaming ticks relative to mp ticks",
 		zh: "醒梦buff期间，每次跳蓝后多久跳醒梦（由随机种子决定）"
 	});
-	let thunderTickOffset = controller.game.thunderTickOffset.toFixed(2);
+	let thunderTickOffset = controller.game.thunderTickOffset.toFixed(3);
 	let thunderOffsetDesc = localize({
 		en: "the random time offset of thunder DoT ticks relative to mp ticks",
 		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）"
@@ -157,7 +161,8 @@ function ConfigSummary(props) {
 	let procMode = controller.gameConfig.procMode;
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	return <div>
-		GCD: {ct_2_5}
+		GCD: {gcd}
+		<br/>{localize({en: "B1 cast time ", zh: "冰1咏唱时间 "})}<Help topic={"b1CastTime"} content={b1CastTimeDesc}/>: {b1CastTime}
 		<br/>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
 		<br/>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
 		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}

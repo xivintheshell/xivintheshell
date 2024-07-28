@@ -135,8 +135,8 @@ class SkillButton extends React.Component {
 				let en = "ready (" + info.stacksAvailable;
 				let zh = "可释放 (" + info.stacksAvailable;
 				if (info.timeTillNextStackReady > 0) {
-					en += ") (next stack ready in " + info.timeTillNextStackReady.toFixed(2);
-					zh += ") (下一层" + info.timeTillNextStackReady.toFixed(2) + "秒后转好";
+					en += ") (next stack ready in " + info.timeTillNextStackReady.toFixed(3);
+					zh += ") (下一层" + info.timeTillNextStackReady.toFixed(3) + "秒后转好";
 				}
 				en += ")";
 				zh += ")";
@@ -151,8 +151,8 @@ class SkillButton extends React.Component {
 				});
 			} else if (info.status === SkillReadyStatus.Blocked) {
 				s += localize({
-					en: "possibly ready in " + info.timeTillAvailable.toFixed(2) + " (next stack ready in " + info.timeTillNextStackReady.toFixed(2) + ")",
-					zh: "预计" + info.timeTillAvailable.toFixed(2) + "秒后可释放（" + info.timeTillNextStackReady.toFixed(2) + "秒后转好下一层CD）"
+					en: "possibly ready in " + info.timeTillAvailable.toFixed(3) + " (next stack ready in " + info.timeTillNextStackReady.toFixed(3) + ")",
+					zh: "预计" + info.timeTillAvailable.toFixed(3) + "秒后可释放（" + info.timeTillNextStackReady.toFixed(3) + "秒后转好下一层CD）"
 				});
 			}
 			// if ready, also show captured cast time & time till damage application
@@ -427,7 +427,7 @@ export class SkillsWindow extends React.Component {
 					en:
 						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
 						Wait until <input type={"text"} style={{
-							...{ width: 30 }, ...textInputFieldStyle
+							...{ width: 40 }, ...textInputFieldStyle
 						}} value={this.state.waitTime} onChange={this.onWaitTimeChange} /> second(s) since <select
 							style={{ display: "inline-block", outline: "none" }}
 							value={this.state.waitSince}
