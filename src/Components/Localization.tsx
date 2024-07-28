@@ -1,6 +1,6 @@
 import React from "react";
 import {forceUpdateAll} from "./Main";
-import {SkillName} from "../Game/Common";
+import {SkillName, BuffType} from "../Game/Common";
 import {ContentNode} from "./Common";
 import {MdLanguage} from "react-icons/md";
 import {getCurrentThemeColors} from "./ColorTheme";
@@ -26,14 +26,14 @@ export function localize(content: LocalizedContent) {
 
 // Expect date in format "mm/dd/yy" which is in changelog.
 export function localizeDate(date: string, lang: Language): string {
-  if (lang === "zh" || lang === "en") return date
+	if (lang === "zh" || lang === "en") return date
 
-  if (lang === "ja") {
-    let [month, day, year] = date.split("/");
-    return `20${year}年${month}月${day}日`;
-  }
+	if (lang === "ja") {
+		let [month, day, year] = date.split("/");
+		return `20${year}年${month}月${day}日`;
+	}
 
-  return date
+	return date
 }
 
 const skillsZh = new Map<SkillName, string>([
@@ -110,6 +110,29 @@ export function localizeSkillName(text: SkillName) : string {
 		return skillsZh.get(text) ?? text;
 	} else if (currentLang === "ja") {
 		return skillsJa.get(text) ?? text;
+	} else {
+		return text;
+	}
+}
+
+const buffsZh = new Map<BuffType, string>([
+	[BuffType.LeyLines, "黑魔纹"],
+	[BuffType.WanderersMinuet, "放浪神的小步舞曲"],
+	[BuffType.MagesBallad, "贤者的叙事谣"],
+	[BuffType.ArmysPaeon, "军神的赞美歌歌"]
+	// todo
+]);
+
+const buffsJa = new Map<BuffType, string>([
+	// todo
+]);
+
+export function localizeBuffType(text: BuffType) : string {
+	let currentLang = getCurrentLanguage();
+	if (currentLang === "zh") {
+		return buffsZh.get(text) ?? text;
+	} else if (currentLang === "ja") {
+		return buffsJa.get(text) ?? text;
 	} else {
 		return text;
 	}

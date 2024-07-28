@@ -292,7 +292,7 @@ export function calculateSelectedStats(props: {
 			let p = node.getPotency({
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
-				includePartyBuffs: false,
+				includePartyBuffs: true,
 				excludeDoT: node.skillName===SkillName.HighThunder && !getSkillOrDotInclude("DoT")
 			});
 			if (checked) {

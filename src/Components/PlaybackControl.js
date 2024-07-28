@@ -639,8 +639,8 @@ export class Config extends React.Component {
 	render() {
 		let editSection = <div>
 			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
-			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: " , zh: "："})} onChange={this.setCriticalHit}/>
-			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "："})} onChange={this.setDirectHit}/>
+			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: " , zh: "暴击："})} onChange={this.setCriticalHit}/>
+			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<Input defaultValue={this.state.casterTax} description={localize({en: "caster tax: ", zh: "读条税："})} onChange={this.setCasterTax}/>
 			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "距首次跳蓝时间："})} onChange={this.setTimeTillFirstManaTick}/>

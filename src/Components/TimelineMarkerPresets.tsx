@@ -12,7 +12,7 @@ import {
 } from "./Common";
 import {controller} from "../Controller/Controller";
 import {ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack} from "../Controller/Timeline";
-import {localize} from "./Localization";
+import {localize, localizeBuffType} from "./Localization";
 import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
 import {Buff, buffInfos} from '../Game/Buffs';
 import {BuffType} from '../Game/Common';
@@ -291,11 +291,11 @@ export class TimelineMarkerPresets extends React.Component {
 
 		let buffCollection: JSX.Element[] = [];
 		buffInfos.forEach(info => {
-			buffCollection.push(<option key={info.name} value={info.name}>{info.name}</option>)
+			buffCollection.push(<option key={info.name} value={info.name}>{localizeBuffType(info.name)}</option>)
 		});
 
 		let buffOnlySection = <div>
-			<span>{localize({en: "Buff: ", zh: "TODO: "})}</span>
+			<span>{localize({en: "Buff: ", zh: "团辅："})}</span>
 			<select value={this.state.nextMarkerBuff}
 					onChange={evt => {
 						if (evt.target) {
@@ -304,7 +304,7 @@ export class TimelineMarkerPresets extends React.Component {
 					}}>{buffCollection}
 			</select>
 
-			<div>
+			<div style={{marginTop: 5}}>
 				<Input defaultValue={this.state.nextMarkerTrack} description={localize({en: "Track: ", zh: "轨道序号："})} width={4}
 						style={inlineDiv} onChange={this.setTrack}/>
 			</div>
@@ -379,7 +379,7 @@ export class TimelineMarkerPresets extends React.Component {
 							}}>
 						<option value={MarkerType.Info}>{localize({en: "Info", zh: "备注信息"})}</option>
 						<option value={MarkerType.Untargetable}>{localize({en: "Untargetable", zh: "不可选中"})}</option>
-						<option value={MarkerType.Buff}>{localize({en: "Buff", zh: "TODO - Translation"})}</option>
+						<option value={MarkerType.Buff}>{localize({en: "Buff", zh: "团辅"})}</option>
 					</select>
 					<span> </span>
 					<Input defaultValue={this.state.nextMarkerTime} description={localize({en: "Time: ", zh: "时间："})} width={8} style={inlineDiv}

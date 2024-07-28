@@ -89,7 +89,7 @@ export type MarkerElem = TimelineElemBase & {
 	color: MarkerColor;
 	track: number;
 	showText: boolean;
-	description: string;
+	description: string; // if markerType is Buff, description holds BuffType as string, and is localized on render
 }
 
 export type SerializedMarker = TimelineElemBase & {
@@ -169,6 +169,7 @@ export class Timeline {
 			return Math.abs(a - b) < Debug.epsilon;
 		}
 
+		if (m1.markerType !== m2.markerType) return false;
 		if (!almostEq(m1.time, m2.time)) return false;
 		if (!almostEq(m1.duration, m2.duration)) return false;
 		if (m1.color !== m2.color) return false;

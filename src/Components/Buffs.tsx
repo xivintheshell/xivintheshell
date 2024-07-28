@@ -25,7 +25,7 @@ buffIcons.set(BuffType.StarryMuse, require("./Asset/OtherJobs/temp_starry_muse.p
 buffIcons.set(BuffType.TechnicalStep, require("./Asset/OtherJobs/technical_step.png"));
 buffIcons.set(BuffType.WanderersMinuet, require("./Asset/OtherJobs/the_wanderer's_minuet.png"));
 
-export const buffIconImages = new Map();
+export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName)=>{
 	let imgObj = new Image();
 	imgObj.src = path;

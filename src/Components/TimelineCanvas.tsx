@@ -15,10 +15,9 @@ import {StaticFn} from "./Common";
 import {BuffType, ResourceType, SkillName, WarningType} from "../Game/Common";
 // @ts-ignore
 import {skillIconImages} from "./Skills";
-// @ts-ignore
 import {buffIconImages} from "./Buffs";
 import {controller} from "../Controller/Controller";
-import {localize, localizeSkillName} from "./Localization";
+import {localize, localizeBuffType, localizeSkillName} from "./Localization";
 import {setEditingMarkerValues} from "./TimelineMarkerPresets";
 import {getCurrentThemeColors, ThemeColors} from "./ColorTheme";
 import {scrollEditorToFirstSelected} from "./TimelineEditor";
@@ -195,7 +194,11 @@ function drawMarkers(
 		}
 		for (let i = 0; i < elems.length; i++) {
 			let m = elems[i];
-			if (track === UntargetableMarkerTrack) m.description = localize({en: "Untargetable", zh: "不可选中"}) as string;
+
+			let localizedDescription = m.description;
+			if (m.markerType === MarkerType.Untargetable) localizedDescription = localize({en: "Untargetable", zh: "不可选中"}) as string;
+			else if (m.markerType === MarkerType.Buff) localizedDescription = (localizeBuffType(m.description as BuffType));
+
 			let left = timelineOrigin + StaticFn.positionFromTimeAndScale(m.time + countdown, scale);
 			let onClick = ()=>{
 				let success = controller.timeline.deleteMarker(m);
@@ -206,19 +209,18 @@ function drawMarkers(
 			if (m.duration > 0) {
 				let markerWidth = StaticFn.positionFromTimeAndScale(m.duration, scale);
 				if (m.markerType === MarkerType.Buff) {
-					let img = buffIconImages.get(m.description);
-					if (img) g_ctx.drawImage(img, left, top, c_trackHeight, c_trackHeight);
-
 					g_ctx.fillStyle = m.color + g_colors.timeline.markerAlpha;
-					g_ctx.fillRect(left + c_trackHeight, top, markerWidth, c_trackHeight);
+					g_ctx.fillRect(left, top, markerWidth, c_trackHeight);
+					let img = buffIconImages.get(m.description as BuffType);
+					if (img) g_ctx.drawImage(img, left, top, c_trackHeight, c_trackHeight);
 					g_ctx.fillStyle = g_colors.emphasis;
-					g_ctx.fillText(m.description, left + (c_trackHeight * 1.5), top + 10);
+					g_ctx.fillText(localizedDescription, left + (c_trackHeight * 1.5), top + 10);
 				}
 				else if (m.showText) {
 					g_ctx.fillStyle = m.color + g_colors.timeline.markerAlpha;
 					g_ctx.fillRect(left, top, markerWidth, c_trackHeight);
 					g_ctx.fillStyle = g_colors.emphasis;
-					g_ctx.fillText(m.description, left + c_trackHeight / 2, top + 10);
+					g_ctx.fillText(localizedDescription, left + c_trackHeight / 2, top + 10);
 				} else {
 					g_ctx.strokeStyle = m.color;
 					g_ctx.beginPath();
@@ -229,7 +231,7 @@ function drawMarkers(
 				let timeStr = m.time + " - " + parseFloat((m.time + m.duration).toFixed(3));
 				testInteraction(
 					{x: left, y: top, w: Math.max(markerWidth, c_trackHeight), h: c_trackHeight},
-					["[" + timeStr + "] " + m.description],
+					["[" + timeStr + "] " + localizedDescription],
 					onClick);
 			} else {
 				g_ctx.fillStyle = m.color;
@@ -239,11 +241,11 @@ function drawMarkers(
 				if (m.showText) {
 					g_ctx.fillStyle = g_colors.emphasis;
 					g_ctx.beginPath()
-					g_ctx.fillText(m.description, left + c_trackHeight / 2, top + 10);
+					g_ctx.fillText(localizedDescription, left + c_trackHeight / 2, top + 10);
 				}
 				testInteraction(
 					{x: left - c_trackHeight / 2, y: top, w: c_trackHeight, h: c_trackHeight},
-					["[" + m.time + "] " + m.description],
+					["[" + m.time + "] " + localizedDescription],
 					onClick);
 			}
 		}
@@ -417,6 +419,7 @@ function drawSkills(
 			gcdBars.push({x: x+c_barsOffset, y: y + 14, w: recastWidth-c_barsOffset, h: 14});
 		}
 
+		// node covers (LL, pot, party buff)
 		let nodeCoverCount = 0;
 		if (skill.node.hasBuff(BuffType.LeyLines))
 			nodeCoverCount += buildCover(nodeCoverCount, llCovers);
@@ -430,7 +433,6 @@ function drawSkills(
 			return 1;
 		}
 
-		// pot cover
 		// skill icon
 		let img = skillIconImages.get(skill.skillName);
 		if (img) skillIcons.push({elem: e, x: x, y: y});
@@ -505,32 +507,38 @@ function drawSkills(
 	skillIcons.forEach(icon=>{
 		g_ctx.drawImage(skillIconImages.get(icon.elem.skillName), icon.x, icon.y, 28, 28);
 		let node = icon.elem.node;
+
+		let lines: string[] = [];
+		let buffImages: HTMLImageElement[] = [];
+
 		// 1. description
 		let description = localizeSkillName(icon.elem.skillName) + "@" + (icon.elem.displayTime).toFixed(3);
-		let buffImages: any[] = [];
+		lines.push(description);
 
-		if (node.hasBuff(BuffType.LeyLines)) buffImages.push(skillIconImages.get(SkillName.LeyLines));
-		if (node.hasBuff(BuffType.Tincture)) buffImages.push(skillIconImages.get(SkillName.Tincture));
-		node.getPartyBuffs().forEach(buffType => {
-			buffImages.push(buffIconImages.get(buffType));
-		});
-
+		// 2. potency
 		const potency = node.getPotency({
 			tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 			includePartyBuffs: true,
 			untargetable: bossIsUntargetable}).applied;
-
-		let lines = [description];
-		// 2. potency
 		if (node.getPotencies().length > 0) {
 			lines.push(localize({en: "potency: ", zh: "威力："}) + potency.toFixed(2));
 		}
+
 		// 3. duration
 		let lockDuration = 0;
 		if (node.tmp_endLockTime!==undefined && node.tmp_startLockTime!==undefined) {
 			lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
 		}
 		lines.push(localize({en: "duration: ", zh: "耗时："}) + lockDuration.toFixed(3));
+
+		// 4. buff images
+		if (node.hasBuff(BuffType.LeyLines)) buffImages.push(skillIconImages.get(SkillName.LeyLines));
+		if (node.hasBuff(BuffType.Tincture)) buffImages.push(skillIconImages.get(SkillName.Tincture));
+		node.getPartyBuffs().forEach(buffType => {
+			let img = buffIconImages.get(buffType);
+			if (img) buffImages.push(img);
+		});
+
 		if (interactive) {
 			testInteraction(
 				{x: icon.x, y: icon.y, w: 28, h: 28},

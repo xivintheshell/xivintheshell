@@ -112,6 +112,8 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({en: "enochian", zh: "天语"}) as string;
 	} else if (buff === PotencyModifierType.POT) {
 		text = localize({en: "pot", zh: "爆发药"}) as string;
+	} else if (buff === PotencyModifierType.PARTY) {
+		text = localize({en: "party", zh: "团辅"}) as string;
 	}
 	return text;
 }
@@ -403,7 +405,7 @@ export class DamageStatistics extends React.Component {
 						color: includeInStats ? colors.timeline.potCover : colors.bgHighContrast
 					}}> +{props.row.potPotency.toFixed(2)}({localize({en: "pot", zh: "爆发药"})})({props.row.potCount})</span> : undefined}
 					{props.row.partyBuffPotency > 0 ? 
-						<span style={{color: includeInStats ? colors.accent : colors.bgHighContrast}}> +{props.row.partyBuffPotency.toFixed(2)}({localize({en: "party"})})</span> : undefined}
+						<span style={{color: includeInStats ? colors.accent : colors.bgHighContrast}}> +{props.row.partyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
 				</span>
 			}
 			let rowStyle: CSSProperties = {
@@ -485,7 +487,7 @@ export class DamageStatistics extends React.Component {
 					color: colors.timeline.potCover
 				}}> +{props.row.potPotency.toFixed(2)}({localize({en: "pot", zh: "爆发药"})})</span> : undefined}
 				{props.row.partyBuffPotency > 0 ? 
-					<span style={{color: colors.accent}}> +{props.row.partyBuffPotency.toFixed(2)}({localize({en: "party"})})</span> : undefined}
+					<span style={{color: colors.accent}}> +{props.row.partyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
 			</span>
 
 			return <div key={props.key} style={{
@@ -564,7 +566,7 @@ export class DamageStatistics extends React.Component {
 							})}</span> : undefined}
 
 					{this.data.mainTableSummary.totalPartyBuffPotency > 0 ? 
-						<span style={{color: colors.accent}}> +{this.data.mainTableSummary.totalPartyBuffPotency.toFixed(2)}({localize({en: "party"})})</span> : undefined}
+						<span style={{color: colors.accent}}> +{this.data.mainTableSummary.totalPartyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
 				</span></div>
 				</div>
 			</div>
@@ -621,12 +623,12 @@ export class DamageStatistics extends React.Component {
 						{this.data.thunderTableSummary.totalPotencyWithoutPot.toFixed(2)}
 						{this.data.thunderTableSummary.totalPotPotency>0 ?
 							<span style={{color: colors.timeline.potCover}}> +{this.data.thunderTableSummary.totalPotPotency.toFixed(2)}{localize({
-								en: " (pot +" + this.data.tinctureBuffPercentage + "%)",
+								en: "(pot +" + this.data.tinctureBuffPercentage + "%)",
 								zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)"
 							})}</span> : undefined}
 
 						{this.data.thunderTableSummary.totalPartyBuffPotency > 0 ? 
-							<span style={{color: colors.accent}}> +{this.data.thunderTableSummary.totalPartyBuffPotency.toFixed(2)}({localize({en: "party"})})</span> : undefined}
+							<span style={{color: colors.accent}}> +{this.data.thunderTableSummary.totalPartyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
 					</div>
 				</div>
 			</div>

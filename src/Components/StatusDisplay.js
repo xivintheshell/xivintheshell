@@ -1,5 +1,5 @@
 import React from 'react';
-import {Clickable, Help, ProgressBar} from "./Common";
+import {Clickable, Help, ProgressBar, StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {localize} from "./Localization";
@@ -442,7 +442,10 @@ export class StatusDisplay extends React.Component {
 				</div>
 			}/></div>
 			<div className={"-left"}>
-				<span style={{display: "block", marginBottom: 10}}>{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}{this.state.time.toFixed(3)}</span>
+				<span style={{display: "block", marginBottom: 10}}>
+					{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}
+					{`${StaticFn.displayTime(this.state.time, 3)} (${this.state.time.toFixed(3)})`}
+				</span>
 				<ResourcesDisplay data={this.state.resources}/>
 			</div>
 			<div className={"-right"}>
