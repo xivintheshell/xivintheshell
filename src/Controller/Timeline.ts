@@ -426,7 +426,7 @@ export class Timeline {
 	getCanvasHeight() {
 		let ruler = 30;
 		let markers = 14 * this.getNumMarkerTracks();
-		let timeline = 12 + 54;
+		let timeline = 12 + 58;
 		let result = ruler + markers + timeline * this.slots.length;
 		if (this.slots.length < MAX_TIMELINE_SLOTS) result += 20;
 		return result;
