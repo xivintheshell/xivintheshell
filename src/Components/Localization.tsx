@@ -117,10 +117,29 @@ export function localizeSkillName(text: SkillName) : string {
 
 const buffsZh = new Map<BuffType, string>([
 	[BuffType.LeyLines, "黑魔纹"],
-	[BuffType.WanderersMinuet, "放浪神的小步舞曲"],
+	[BuffType.Tincture, "爆发药"],
+
+	[BuffType.ArcaneCircle, "神秘纹"],
+	[BuffType.ArmysPaeon, "军神的赞美歌歌"],
+	[BuffType.BattleLitany, "战斗连祷"],
+	[BuffType.BattleVoice, "战斗之声"],
+	[BuffType.Brotherhood, "义结金兰"],
+	[BuffType.Card_TheBalance, "太阳神之衡"],
+	[BuffType.Card_TheSpear, "战斗神之枪"],
+	[BuffType.ChainStratagem, "连环计"],
+	[BuffType.Devilment, "进攻之探戈"],
+	[BuffType.Divination, "占卜"],
+	[BuffType.Dokumori, "毒盛"],
+	[BuffType.Embolden, "鼓励"],
 	[BuffType.MagesBallad, "贤者的叙事谣"],
-	[BuffType.ArmysPaeon, "军神的赞美歌歌"]
-	// todo
+	[BuffType.RadiantFinale1, "光明神的最终乐章1"],
+	[BuffType.RadiantFinale2, "光明神的最终乐章2"],
+	[BuffType.RadiantFinale3, "光明神的最终乐章3"],
+	[BuffType.SearingLight, "灼热之光"],
+	[BuffType.StandardStep, "标准舞步"],
+	[BuffType.StarryMuse, "绘出星空"],
+	[BuffType.TechnicalStep, "技巧舞步"],
+	[BuffType.WanderersMinuet, "放浪神的小步舞曲"],
 ]);
 
 const buffsJa = new Map<BuffType, string>([

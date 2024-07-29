@@ -1,29 +1,31 @@
 import {BuffType} from "../Game/Common";
 import {updateTimelineView} from "./Timeline";
 
-// seems useful: https://na.finalfantasyxiv.com/lodestone/special/fankit/icon/
+// grabbed most of them from xivanalysis
 export const buffIcons = new Map();
-buffIcons.set(BuffType.ArcaneCircle, require("./Asset/OtherJobs/arcane_circle.png"));
-buffIcons.set(BuffType.ArmysPaeon, require("./Asset/OtherJobs/army's_paeon.png"));
-buffIcons.set(BuffType.BattleLitany, require("./Asset/OtherJobs/battle_litany.png"));
-buffIcons.set(BuffType.BattleVoice, require("./Asset/OtherJobs/battle_voice.png"));
-buffIcons.set(BuffType.Brotherhood, require("./Asset/OtherJobs/brotherhood.png"));
-buffIcons.set(BuffType.Card_TheBalance, require("./Asset/OtherJobs/the_balance.png"));
-buffIcons.set(BuffType.Card_TheSpear, require("./Asset/OtherJobs/the_spear.png"));
-buffIcons.set(BuffType.ChainStratagem, require("./Asset/OtherJobs/chain_stratagem.png"));
-buffIcons.set(BuffType.Devilment, require("./Asset/OtherJobs/devilment.png"));
-buffIcons.set(BuffType.Divination, require("./Asset/OtherJobs/divination.png"));
-buffIcons.set(BuffType.Dokumori, require("./Asset/OtherJobs/temp_dokumori.png"));			// Asset not available in Fan Kit
-buffIcons.set(BuffType.Embolden, require("./Asset/OtherJobs/embolden.png"));
-buffIcons.set(BuffType.MagesBallad, require("./Asset/OtherJobs/mage's_ballad.png"));
-buffIcons.set(BuffType.RadiantFinale1, require("./Asset/OtherJobs/radiant_finale.png"));
-buffIcons.set(BuffType.RadiantFinale2, require("./Asset/OtherJobs/radiant_finale.png"));
-buffIcons.set(BuffType.RadiantFinale3, require("./Asset/OtherJobs/radiant_finale.png"));
-buffIcons.set(BuffType.SearingLight, require("./Asset/OtherJobs/searing_light.png"));
-buffIcons.set(BuffType.StandardStep, require("./Asset/OtherJobs/standard_step.png"));
-buffIcons.set(BuffType.StarryMuse, require("./Asset/OtherJobs/temp_starry_muse.png"));		// Asset not available in Fan Kit
-buffIcons.set(BuffType.TechnicalStep, require("./Asset/OtherJobs/technical_step.png"));
-buffIcons.set(BuffType.WanderersMinuet, require("./Asset/OtherJobs/the_wanderer's_minuet.png"));
+buffIcons.set(BuffType.LeyLines, require("./Asset/PartyBuffs/leylines.png"));
+buffIcons.set(BuffType.Tincture, require("./Asset/PartyBuffs/tincture.png"));
+buffIcons.set(BuffType.ArcaneCircle, require("./Asset/PartyBuffs/arcane_circle.png"));
+buffIcons.set(BuffType.ArmysPaeon, require("./Asset/PartyBuffs/armys_paeon.png"));
+buffIcons.set(BuffType.BattleLitany, require("./Asset/PartyBuffs/battle_litany.png"));
+buffIcons.set(BuffType.BattleVoice, require("./Asset/PartyBuffs/battle_voice.png"));
+buffIcons.set(BuffType.Brotherhood, require("./Asset/PartyBuffs/brotherhood.png"));
+buffIcons.set(BuffType.Card_TheBalance, require("./Asset/PartyBuffs/the_balance.png"));
+buffIcons.set(BuffType.Card_TheSpear, require("./Asset/PartyBuffs/the_spear.png"));
+buffIcons.set(BuffType.ChainStratagem, require("./Asset/PartyBuffs/chain_stratagem.png"));
+buffIcons.set(BuffType.Devilment, require("./Asset/PartyBuffs/devilment.png"));
+buffIcons.set(BuffType.Divination, require("./Asset/PartyBuffs/divination.png"));
+buffIcons.set(BuffType.Dokumori, require("./Asset/PartyBuffs/dokumori.png"));
+buffIcons.set(BuffType.Embolden, require("./Asset/PartyBuffs/embolden.png"));
+buffIcons.set(BuffType.MagesBallad, require("./Asset/PartyBuffs/mages_ballad.png"));
+buffIcons.set(BuffType.RadiantFinale1, require("./Asset/PartyBuffs/radiant_finale.png"));
+buffIcons.set(BuffType.RadiantFinale2, require("./Asset/PartyBuffs/radiant_finale.png"));
+buffIcons.set(BuffType.RadiantFinale3, require("./Asset/PartyBuffs/radiant_finale.png"));
+buffIcons.set(BuffType.SearingLight, require("./Asset/PartyBuffs/searing_light.png"));
+buffIcons.set(BuffType.StandardStep, require("./Asset/PartyBuffs/standard_step.png"));
+buffIcons.set(BuffType.StarryMuse, require("./Asset/PartyBuffs/starry_muse.png"));
+buffIcons.set(BuffType.TechnicalStep, require("./Asset/PartyBuffs/technical_step.png"));
+buffIcons.set(BuffType.WanderersMinuet, require("./Asset/PartyBuffs/wanderers_minuet.png"));
 
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName)=>{

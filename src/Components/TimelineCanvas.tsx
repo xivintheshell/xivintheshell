@@ -116,7 +116,7 @@ function drawTip(lines: string[], canvasWidth: number, canvasHeight: number, ima
 	if (!lines.length) return;
 
 	const lineHeight = 14;
-	const imageDimensions = 20;
+	const imageDimensions = 24;
 	const horizontalPadding = 8;
 	const verticalPadding = 4;
 	g_ctx.font = "12px monospace";
@@ -168,7 +168,7 @@ function drawTip(lines: string[], canvasWidth: number, canvasHeight: number, ima
 		for (let i = 0; i < images.length; i++) {
 			if (images[i])
 			{
-				g_ctx.drawImage(images[i], initialImageX + i * (imageDimensions + horizontalPadding), initialImageY, imageDimensions, imageDimensions)
+				g_ctx.drawImage(images[i], initialImageX + i * imageDimensions, initialImageY, imageDimensions * 0.75, imageDimensions)
 			}
 		}
 	}
@@ -212,7 +212,7 @@ function drawMarkers(
 					g_ctx.fillStyle = m.color + g_colors.timeline.markerAlpha;
 					g_ctx.fillRect(left, top, markerWidth, c_trackHeight);
 					let img = buffIconImages.get(m.description as BuffType);
-					if (img) g_ctx.drawImage(img, left, top, c_trackHeight, c_trackHeight);
+					if (img) g_ctx.drawImage(img, left, top, c_trackHeight * 0.75, c_trackHeight);
 					g_ctx.fillStyle = g_colors.emphasis;
 					g_ctx.fillText(localizedDescription, left + (c_trackHeight * 1.5), top + 10);
 				}
@@ -342,7 +342,7 @@ function drawDamageMarks(
 		} else {
 			const potency = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, includePartyBuffs: true});
 			info = potency.toFixed(2) + " (" + sourceStr + ")";
-			if (pot) buffImages.push(skillIconImages.get(SkillName.Tincture));
+			if (pot) buffImages.push(buffIconImages.get(BuffType.Tincture));
 
 			dm.potency.getPartyBuffs().forEach(desc => {
 				buffImages.push(buffIconImages.get(desc));
@@ -532,8 +532,8 @@ function drawSkills(
 		lines.push(localize({en: "duration: ", zh: "耗时："}) + lockDuration.toFixed(3));
 
 		// 4. buff images
-		if (node.hasBuff(BuffType.LeyLines)) buffImages.push(skillIconImages.get(SkillName.LeyLines));
-		if (node.hasBuff(BuffType.Tincture)) buffImages.push(skillIconImages.get(SkillName.Tincture));
+		if (node.hasBuff(BuffType.LeyLines)) buffImages.push(buffIconImages.get(BuffType.LeyLines) as HTMLImageElement);
+		if (node.hasBuff(BuffType.Tincture)) buffImages.push(buffIconImages.get(BuffType.Tincture) as HTMLImageElement);
 		node.getPartyBuffs().forEach(buffType => {
 			let img = buffIconImages.get(buffType);
 			if (img) buffImages.push(img);
