@@ -162,7 +162,7 @@ export function IntroSection(props: {}) {
 							<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
 							<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
 							<li><b>Turtle</b>, who did the heavy work of updating this tool from Endwalker to Dawntrail</li>
-							<li><b>Yara, Spider, Santa,</b> and many other players who contributed feature suggestions, timeline markers, bug reports, or in any other way</li>
+							<li><b>Yara, Spider, Santa, shanzhe</b>, and many other players who contributed feature suggestions, timeline markers, bug reports, etc.</li>
 						</ul>,
 					zh: <ul>
 							<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
@@ -333,17 +333,19 @@ export function IntroSection(props: {}) {
 						{localize ({
 							en:
 								<div className="paragraph">
-									8/29/23: Cast and recast times under LL are technically wrong. Currently it's just implemented as base time * 0.85 which can have at most 0.01s error. Vanilla Milksmoothie proposed a formula
-									that gives what matches the game exactly, but I don't have time to implement it at this moment plus it might break legacy txt files.
-									Let me know if this is causing problems for you, and I'll put it back onto my agenda.
+									7/29/24 cast time formula update: Unlike GCDs with 2 digits of precision, cast times are now updated to use 3 digits of precision, because it matches with the game more closely.
+									Here is an <a href={"https://docs.google.com/spreadsheets/d/18IN-ygAXd2zCR1A3umV3efYcy8xz6O3f/edit?usp=sharing&ouid=104672178485330237849&rtpof=true&sd=true"}>updated full SPS chart</a>. I also <a href={"https://docs.google.com/spreadsheets/d/1d_oPA34tZ-ZOxZSMI6JQDssLiXHUIVv6qmvMTFzoqL8/edit?usp=sharing"}>spammed some spells</a> and the results are in line with this chart.
+									If you are curious and can read Chinese, here are some more resources:&nbsp;
+									<a href={"https://www.bilibili.com/read/cv29822181/?jump_opus=1"}>Writeup about this finding by Vanilla Milksmoothie et al.</a>,&nbsp;
+									<a href={"/ffxiv-blm-rotation/misc/关于读条技能与瞬发技能取整精度的猜想与实验.pdf"}>Some tests results from them and steps to reproduce</a>.
 								</div>,
 							zh:
 								<div className="paragraph">
-									8/29/23: 目前黑魔纹里的咏唱/回转时间计算方式是简单粗暴的基础时间*0.85，跟游戏里的实际时间有微小（0.01s以内）的误差。牛奶冰沙给了更精确的计算公式，但是我暂时没做因为 1) 近期没时间 2) 可能会导致旧txt文件无法读取。如果这个误差导致你排轴受阻，请联系我，我再抽空把它提上日程。
+									7/29/24 咏唱时间更新：(todo: 困了。。明天再来写这个的中文)
 								</div>,
 							ja:
 								<div className="paragraph">
-									2024/8/29: 黒魔紋上のキャストとリキャスト時間が誤っていました。現在は単純に0.85倍にしていますが、最大で0.01秒の誤差があります。Vanilla Milksmoothie が正確な値を提案してくれましたが現在は実装する時間がないため、または過去のtxtファイルが壊れる可能性があるため、実装していません。問題がある場合はお知らせください。
+									(outdated){/*2024/8/29: 黒魔紋上のキャストとリキャスト時間が誤っていました。現在は単純に0.85倍にしていますが、最大で0.01秒の誤差があります。Vanilla Milksmoothie が正確な値を提案してくれましたが現在は実装する時間がないため、または過去のtxtファイルが壊れる可能性があるため、実装していません。問題がある場合はお知らせください。*/}
 								</div>,
 						})}
 					</div>

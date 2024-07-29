@@ -5,15 +5,15 @@ export class BuffInfo {
 	readonly name: BuffType;
 	readonly duration: number;
 	readonly color: MarkerColor;
-	readonly damageBonus: number;
+	readonly damageFactor: number;
 	readonly critBonus: number;
 	readonly dhBonus: number;
 
-	constructor(name: BuffType, color: MarkerColor, duration: number, damageBonus: number, critBonus: number, dhBonus: number) {
+	constructor(name: BuffType, color: MarkerColor, duration: number, damageFactor: number, critBonus: number, dhBonus: number) {
 		this.name = name;
 		this.duration = duration;
 		this.color = color;
-		this.damageBonus = damageBonus;
+		this.damageFactor = damageFactor;
 		this.critBonus = critBonus;
 		this.dhBonus = dhBonus;
 	}
@@ -37,9 +37,9 @@ export const buffInfos = [
 	new BuffInfo(BuffType.RadiantFinale2, MarkerColor.Purple, 20, 1.04, 0, 0),
 	new BuffInfo(BuffType.RadiantFinale3, MarkerColor.Purple, 20, 1.06, 0, 0),
 	new BuffInfo(BuffType.SearingLight, MarkerColor.Blue, 20, 1.05, 0, 0),
-	new BuffInfo(BuffType.StandardStep, MarkerColor.Yellow, 30, 1.05, 0, 0),
+	new BuffInfo(BuffType.StandardFinish, MarkerColor.Yellow, 60, 1.05, 0, 0),
 	new BuffInfo(BuffType.StarryMuse, MarkerColor.Purple, 20, 1.05, 0, 0),
-	new BuffInfo(BuffType.TechnicalStep, MarkerColor.Blue, 20, 1.05, 0, 0),
+	new BuffInfo(BuffType.TechnicalFinish, MarkerColor.Blue, 20, 1.05, 0, 0),
 	new BuffInfo(BuffType.WanderersMinuet, MarkerColor.Green, 45, 1, 0.02, 0),
 ];
 

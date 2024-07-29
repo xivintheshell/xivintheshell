@@ -269,47 +269,6 @@ export default class Main extends React.Component {
 							})}
 
 							{/* PSA */}
-							<div style={{
-								padding: "0 10px",
-								border: "1px solid " + colors.accent,
-								borderRadius: 4
-							}}>
-								<Expandable title={"psa-062924"} defaultShow={true} titleNode={<b style={{color: colors.accent}}>[6/29/24] PSA from miyehn</b>} content={
-									<div>
-										{localize({
-											en: <div/>,
-											zh: <div>
-												<div className={"paragraph"}>
-													黑魔排轴器已经更新到7.0了，国服的黑魔们要给6.0黑魔排轴的话，请去这个历史版本：<a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>。以下的英文通知内容暂时还不适用于国服。
-												</div>
-												<div className={"paragraph"}>
-													对了，那个历史版本里将会展出一些6.0时期有纪念意义的轴，愿意投稿的话可以发给我 (miyehn) 或者小絮。除了txt文件之外，最好也备注下对应的时间轴标记（markers），如果愿意公开视频和logs链接的话也可以加上。
-												</div>
-												<div className={"paragraph"}>
-													那就愿大家好好享受最后几个月的6.0黑魔了🙏
-												</div>
-											</div>
-										})}
-										<div className={"paragraph"}>
-											Dawntrail is out now, so is this updated BLM in the Shell!
-											It is probably still very unstable, so expect hiccups and <b>save your work frequently elsewhere</b> - don't even trust downloaded files yet,
-											there will almost definitely be some breaking changes in the next few days.
-											<b> If you encounter bugs, please let me know asap! Message in <a target={"_blank"} href={"https://discord.com/channels/277897135515762698/1255782490862387360"}>this thread</a> or DM me directly!</b>
-										</div>
-
-										<h4>Archiving Endwalker BLM in the Shell</h4>
-										<div className={"paragraph"}>
-											The archive version is now live at <a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>. You can use it to view fight plans from Endwalker.
-											In the next few days I'm also putting up a gallery of Endwalker fight plans, as a way of remembering this job in its full glory.
-										</div>
-										<div className={"paragraph"}>
-											I'm still accepting submissions, so if you have interesting plans that you are willing to make public, please send them to me.
-											If you do that, it would be helpful if you also include the corresponding timeline markers, logs link (if any & willing to share), video (if any).
-											I know some CN black mages are sending me some soon-ish, so look forward to that :)
-										</div>
-									</div>
-								}/>
-							</div>
 
 							{/*
 							EW cached content warning

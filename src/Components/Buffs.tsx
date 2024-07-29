@@ -22,9 +22,9 @@ buffIcons.set(BuffType.RadiantFinale1, require("./Asset/PartyBuffs/radiant_final
 buffIcons.set(BuffType.RadiantFinale2, require("./Asset/PartyBuffs/radiant_finale.png"));
 buffIcons.set(BuffType.RadiantFinale3, require("./Asset/PartyBuffs/radiant_finale.png"));
 buffIcons.set(BuffType.SearingLight, require("./Asset/PartyBuffs/searing_light.png"));
-buffIcons.set(BuffType.StandardStep, require("./Asset/PartyBuffs/standard_step.png"));
+buffIcons.set(BuffType.StandardFinish, require("./Asset/PartyBuffs/standard_step.png"));
 buffIcons.set(BuffType.StarryMuse, require("./Asset/PartyBuffs/starry_muse.png"));
-buffIcons.set(BuffType.TechnicalStep, require("./Asset/PartyBuffs/technical_step.png"));
+buffIcons.set(BuffType.TechnicalFinish, require("./Asset/PartyBuffs/technical_step.png"));
 buffIcons.set(BuffType.WanderersMinuet, require("./Asset/PartyBuffs/wanderers_minuet.png"));
 
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();

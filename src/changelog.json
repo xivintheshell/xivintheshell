@@ -1,5 +1,14 @@
 [
 	{
+		"date": "7/29/24",
+		"changes": [
+			"New timeline marker type: party buffs! Huge thanks to Turtle for making this feature, and Galahad for their help with translation and proofreading.",
+			"Updated High Thunder and Flare Star application delays, thanks to shanzhe.",
+			"Updated cast time formula: cast times now have 3 digits of precision. See About this tool/Implementation notes for details.",
+			"Updated most time-related UI to show 3 decimal places."
+		]
+	},
+	{
 		"date": "7/10/24",
 		"changes": [
 			"Update SPS and dot potency formulae to match Dawntrail (by Turtle)",

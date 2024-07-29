@@ -183,7 +183,7 @@ export class TimelineMarkerPresets extends React.Component {
 			nextMarkerTrack: "0",
 			nextMarkerDescription: "",
 			nextMarkerShowText: false,
-			nextMarkerBuff: BuffType.TechnicalStep,
+			nextMarkerBuff: BuffType.TechnicalFinish,
 			loadTrackDest: "0",
 			durationInputMode: DurationInputMode.Duration,
 			///////

@@ -136,9 +136,9 @@ const buffsZh = new Map<BuffType, string>([
 	[BuffType.RadiantFinale2, "光明神的最终乐章2"],
 	[BuffType.RadiantFinale3, "光明神的最终乐章3"],
 	[BuffType.SearingLight, "灼热之光"],
-	[BuffType.StandardStep, "标准舞步"],
+	[BuffType.StandardFinish, "标准舞步结束"],
 	[BuffType.StarryMuse, "绘出星空"],
-	[BuffType.TechnicalStep, "技巧舞步"],
+	[BuffType.TechnicalFinish, "技巧舞步结束"],
 	[BuffType.WanderersMinuet, "放浪神的小步舞曲"],
 ]);
 

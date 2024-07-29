@@ -86,9 +86,9 @@ export enum BuffType {
 	RadiantFinale2 = "Radiant Finale (2)",
 	RadiantFinale3 = "Radiant Finale (3)",
 	SearingLight = "Searing Light",
-	StandardStep = "Standard Step",
+	StandardFinish = "Standard Finish",
 	StarryMuse = "Starry Muse",
-	TechnicalStep = "Technical Step",
+	TechnicalFinish = "Technical Finish",
 	WanderersMinuet = "Wanderer's Minuet",
 }
 

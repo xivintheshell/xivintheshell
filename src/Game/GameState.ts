@@ -774,7 +774,7 @@ export class GameState {
 				buffCollection.set(buff.name, {
 					source: PotencyModifierType.PARTY, 
 					buffType: buff.name,
-					damageFactor: buff.info.damageBonus,
+					damageFactor: buff.info.damageFactor,
 					critFactor: buff.info.critBonus,
 					dhFactor: buff.info.dhBonus,
 				});

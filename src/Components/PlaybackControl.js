@@ -146,7 +146,8 @@ function ConfigSummary(props) {
 	let gcd = controller.gameConfig.adjustedGCD(false);
 	let b1CastTime = controller.gameConfig.adjustedCastTime(2.5, false);
 	let b1CastTimeDesc = localize({
-		en: "(todo)"
+		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
+		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节"
 	});
 	let lucidTickOffset = controller.game.lucidTickOffset.toFixed(3);
 	let lucidOffsetDesc = localize({
