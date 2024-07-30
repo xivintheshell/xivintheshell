@@ -341,11 +341,14 @@ export function IntroSection(props: {}) {
 								</div>,
 							zh:
 								<div className="paragraph">
-									7/29/24 咏唱时间更新：(todo: 困了。。明天再来写这个的中文)
+									7/29/24 咏唱时间更新：不同于精确到小数点后2位的GCD公式，现在咏唱时间的计算公式精确到小数点后3位。经测试，这个精度更吻合游戏内实际的咏唱时间。
+									关于这个新的咏唱时间公式，可以详见牛奶冰沙等人的<a href={"https://www.bilibili.com/read/cv29822181/?jump_opus=1"}>这篇文章</a>。<a href={"/ffxiv-blm-rotation/misc/关于读条技能与瞬发技能取整精度的猜想与实验.pdf"}>此处</a>有部分测试结果和详细的复现步骤。<br/>
+									附：目前完整的咏速表（<a
+									href={"https://docs.google.com/spreadsheets/d/18IN-ygAXd2zCR1A3umV3efYcy8xz6O3f/edit?usp=sharing&ouid=104672178485330237849&rtpof=true&sd=true"}>Google Sheets</a>）。我个人做了一些测试，logs结果也符合这个改动（<a href={"https://docs.google.com/spreadsheets/d/1d_oPA34tZ-ZOxZSMI6JQDssLiXHUIVv6qmvMTFzoqL8/edit?usp=sharing"}>Google Sheets</a>）。
 								</div>,
 							ja:
 								<div className="paragraph">
-									(outdated){/*2024/8/29: 黒魔紋上のキャストとリキャスト時間が誤っていました。現在は単純に0.85倍にしていますが、最大で0.01秒の誤差があります。Vanilla Milksmoothie が正確な値を提案してくれましたが現在は実装する時間がないため、または過去のtxtファイルが壊れる可能性があるため、実装していません。問題がある場合はお知らせください。*/}
+									(translation outdated){/*2024/8/29: 黒魔紋上のキャストとリキャスト時間が誤っていました。現在は単純に0.85倍にしていますが、最大で0.01秒の誤差があります。Vanilla Milksmoothie が正確な値を提案してくれましたが現在は実装する時間がないため、または過去のtxtファイルが壊れる可能性があるため、実装していません。問題がある場合はお知らせください。*/}
 								</div>,
 						})}
 					</div>
