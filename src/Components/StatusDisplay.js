@@ -208,7 +208,7 @@ function BuffsDisplay(props) {
 
 	for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
 	return <div className={"buffsDisplay self"}>
-		 {buffs.map(obj=>{return <Buff {...obj}/>;})}
+		{buffs.map(obj=>{return <Buff {...obj}/>;})}
 	</div>
 }
 
@@ -236,7 +236,7 @@ function EnemyBuffsDisplay(props)
 
 	for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
 	return <div className={"buffsDisplay enemy"}>
-		 {buffs.map(obj=>{return <Buff {...obj}/>;})}
+		{buffs.map(obj=>{return <Buff {...obj}/>;})}
 	</div>
 }
 
@@ -333,52 +333,52 @@ function ResourcesDisplay(props) {
 		maxStacks={3}/>;
 	let uh = <ResourceCounter
 		name={
-		localize({
-			en: "hearts",
-			zh: "冰针",
-			ja: "アンブラルハート"
-		})}
+			localize({
+				en: "hearts",
+				zh: "冰针",
+				ja: "アンブラルハート"
+			})}
 		color={colors.resources.umbralHeart}
 		currentStacks={data.umbralHearts}
 		maxStacks={3}/>;
 	let paradox = <ResourceCounter
 		name={
-		localize({
-			en: "paradox",
-			zh: "悖论",
-			ja: "パラドックス"
-		})}
+			localize({
+				en: "paradox",
+				zh: "悖论",
+				ja: "パラドックス"
+			})}
 		color={colors.resources.paradox}
 		currentStacks={data.paradox}
 		maxStacks={1}/>;
 	let soul = <ResourceCounter
 		name={
-		localize({
-			en: "astral soul",
-			zh: "星极魂",
-			ja: "アストラルソウル"
-		})}
+			localize({
+				en: "astral soul",
+				zh: "星极魂",
+				ja: "アストラルソウル"
+			})}
 		color={colors.resources.astralSoul}
 		currentStacks={data.astralSoul}
 		maxStacks={6}/>;
 	let polyTimer = <ResourceBar
 		name={
-		localize({
-			en: "poly timer",
-			zh: "通晓计时",
-			ja: "エノキ継続時間"
-		})}
+			localize({
+				en: "poly timer",
+				zh: "通晓计时",
+				ja: "エノキ継続時間"
+			})}
 		color={colors.resources.polyTimer}
 		progress={1 - data.polyglotCountdown / 30}
 		value={`${data.polyglotCountdown.toFixed(3)}`}
 		width={100}/>;
 	let poly = <ResourceCounter
 		name={
-		localize({
-			en: "poly stacks",
-			zh: "通晓层数",
-			ja: "ポリグロット"
-		})}
+			localize({
+				en: "poly stacks",
+				zh: "通晓层数",
+				ja: "ポリグロット"
+			})}
 		color={colors.resources.polyStacks}
 		currentStacks={data.polyglotStacks}
 		maxStacks={3}/>;
@@ -423,22 +423,22 @@ export class StatusDisplay extends React.Component {
 		return <div className={"statusDisplay"}>
 			<div style={{position: "absolute", top: -8, right: 0, zIndex: 1}}><Help topic={"mainControlRegion"} content={
 				<div className="toolTip">
-          {localize({
-            en: 
-              <>
-                <div className="paragraph"><span style={{color: "lightgray"}}>grey</span> border: not focused</div>
-                <div className="paragraph"><b style={{color: "mediumpurple"}}>purple</b> border: receiving input</div>
-                <div className="paragraph"><b style={{color: "mediumseagreen"}}>green</b> border: real-time</div>
-                <div className="paragraph"><b style={{color: "darkorange"}}>orange</b> border: viewing historical state, not receiving input</div>
-              </>,
-            ja:
-              <>
-                <div className="paragraph"><span style={{color: "lightgray"}}>グレー</span> : 未選択</div>
-                <div className="paragraph"><b style={{color: "mediumpurple"}}>紫</b> : 入力可</div>
-                <div className="paragraph"><b style={{color: "mediumseagreen"}}>緑</b> : リアルタイム</div>
-                <div className="paragraph"><b style={{color: "darkorange"}}>オレンジ</b> : 任意の時点の状態を確認中。入力不可</div>
-              </>,
-          })}
+					{localize({
+						en:
+							<>
+								<div className="paragraph"><span style={{color: "lightgray"}}>grey</span> border: not focused</div>
+								<div className="paragraph"><b style={{color: "mediumpurple"}}>purple</b> border: receiving input</div>
+								<div className="paragraph"><b style={{color: "mediumseagreen"}}>green</b> border: real-time</div>
+								<div className="paragraph"><b style={{color: "darkorange"}}>orange</b> border: viewing historical state, not receiving input</div>
+							</>,
+						ja:
+							<>
+								<div className="paragraph"><span style={{color: "lightgray"}}>グレー</span> : 未選択</div>
+								<div className="paragraph"><b style={{color: "mediumpurple"}}>紫</b> : 入力可</div>
+								<div className="paragraph"><b style={{color: "mediumseagreen"}}>緑</b> : リアルタイム</div>
+								<div className="paragraph"><b style={{color: "darkorange"}}>オレンジ</b> : 任意の時点の状態を確認中。入力不可</div>
+							</>,
+					})}
 				</div>
 			}/></div>
 			<div className={"-left"}>

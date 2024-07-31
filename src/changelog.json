@@ -1,5 +1,11 @@
 [
 	{
+		"date": "7/31/24",
+		"changes": [
+			"patch 7.05 job changes"
+		]
+	},
+	{
 		"date": "7/29/24",
 		"changes": [
 			"New timeline marker type: party buffs! Huge thanks to Turtle for making this feature, and Galahad for their help with translation and proofreading.",
