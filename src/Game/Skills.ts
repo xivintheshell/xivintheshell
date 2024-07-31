@@ -625,6 +625,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.resources.get(ResourceType.UmbralIce).gain(1);
 						game.resources.get(ResourceType.UmbralHeart).gain(1);
 						game.startOrRefreshEnochian();
+						// halt
+						let enochian = game.resources.get(ResourceType.Enochian);
+						enochian.removeTimer();
 					},
 					onApplication: (app: SkillApplicationCallbackInfo) => {},
 					node: node
@@ -701,7 +704,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.castSpell({skillName: SkillName.Paradox, onCapture: (cap: SkillCaptureCallbackInfo) => {
 					game.resources.get(ResourceType.Paradox).consume(1);
-					// enochian (refresh only) (todo: halt timer)
+					// enochian (refresh only) (which also clears the halt status)
 					if (game.hasEnochian()) {
 						game.startOrRefreshEnochian();
 					}

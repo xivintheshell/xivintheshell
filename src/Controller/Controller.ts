@@ -571,10 +571,17 @@ class Controller {
 	updateStatusDisplay(game: GameState) {
 		// resources
 		let eno = game.resources.get(ResourceType.Enochian);
+		let enoCountdown: number;
+		if (eno.available(1) && !eno.pendingChange) {
+			enoCountdown = 15;
+		} else {
+			enoCountdown = game.resources.timeTillReady(ResourceType.Enochian);
+		}
+
 		let resourcesData = {
 			mana: game.resources.get(ResourceType.Mana).availableAmount(),
 			timeTillNextManaTick: game.resources.timeTillReady(ResourceType.Mana),
-			enochianCountdown: game.resources.timeTillReady(ResourceType.Enochian),
+			enochianCountdown: enoCountdown,
 			astralFire: game.getFireStacks(),
 			umbralIce: game.getIceStacks(),
 			umbralHearts: game.resources.get(ResourceType.UmbralHeart).availableAmount(),

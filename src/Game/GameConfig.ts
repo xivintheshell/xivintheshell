@@ -41,6 +41,11 @@ export class GameConfig {
             this.extendedBuffTimes = props.extendedBuffTimes;
             if (props.initialResourceOverrides) {
                 this.initialResourceOverrides = props.initialResourceOverrides.map(obj=>{
+                    if (obj.effectOrTimerEnabled === undefined) {
+                        // backward compatibility:
+                        if (obj.enabled === undefined) obj.effectOrTimerEnabled = true;
+                        else obj.effectOrTimerEnabled = obj.enabled;
+                    }
                     return new ResourceOverride(obj);
                 });
             }

@@ -301,7 +301,10 @@ export class GameState {
 		}
 	}
 
+	// call this whenever gaining af or ui from a different af/ui/unaspected state
 	switchToAForUI(rscType: ResourceType.AstralFire | ResourceType.UmbralIce, numStacksToGain: number) {
+		console.assert(numStacksToGain > 0);
+
 		let af = this.resources.get(ResourceType.AstralFire);
 		let ui = this.resources.get(ResourceType.UmbralIce);
 		let uh = this.resources.get(ResourceType.UmbralHeart);
@@ -627,12 +630,12 @@ export class GameState {
 	startOrRefreshEnochian() {
 		let enochian = this.resources.get(ResourceType.Enochian);
 
-		if (enochian.available(1)) {
-			// refresh
+		if (enochian.available(1) && enochian.pendingChange) {
+			// refresh timer (if there's already a timer)
 			enochian.overrideTimer(this, 15);
 
 		} else {
-			// fresh gain
+			// either fresh gain, or there's enochian but no timer
 			enochian.gain(1);
 
 			// add the event for losing it

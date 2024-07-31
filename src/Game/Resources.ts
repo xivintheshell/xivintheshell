@@ -293,7 +293,7 @@ type ResourceOverrideProps = {
 	type: ResourceType,
 	timeTillFullOrDrop: number, // CDs (full), buff/procs (drop)
 	stacks: number, // Triplecast, MP, AF, UI, UH, Paradox, Polyglot
-	enabled: boolean, // LL
+	effectOrTimerEnabled: boolean, // LL, halt
 };
 
 export class ResourceOverride {
@@ -308,7 +308,7 @@ export class ResourceOverride {
 		return a.type === b.type &&
 			a.timeTillFullOrDrop === b.timeTillFullOrDrop &&
 			a.stacks === b.stacks &&
-			a.enabled === b.enabled;
+			a.effectOrTimerEnabled === b.effectOrTimerEnabled;
 	}
 
 	// todo
@@ -322,7 +322,7 @@ export class ResourceOverride {
 				type: cdName,
 				timeTillFullOrDrop: cd.maxValue - cd.availableAmount(),
 				stacks: 0, // not used
-				enabled: true // not used
+				effectOrTimerEnabled: true // not used
 			}));
 		});
 		// other resources: todo
@@ -332,8 +332,9 @@ export class ResourceOverride {
 
 	// CDs: time till full
 	// LL: enabled, time till full
+	// Enochian: enabled, time till drop
 	// Triplecast: stacks, time till drop
-	// other buffs & enochian: time till drop
+	// other buffs: time till drop
 	// MP, AF, UI, UH, Paradox, Polyglot: amount (stacks)
 	applyTo(game: GameState) {
 
@@ -375,7 +376,17 @@ export class ResourceOverride {
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(1);
 				overrideDropRscTimer(this.props.timeTillFullOrDrop);
-				rsc.enabled = this.props.enabled;
+				rsc.enabled = this.props.effectOrTimerEnabled;
+			}
+
+			// Enochian (timer + enabled)
+			else if (rsc.type === ResourceType.Enochian)
+			{
+				rsc.consume(rsc.availableAmount());
+				rsc.gain(1);
+				if (this.props.effectOrTimerEnabled) {
+					overrideDropRscTimer(this.props.timeTillFullOrDrop);
+				}
 			}
 
 			// Polyglot (refresh timer + stacks)

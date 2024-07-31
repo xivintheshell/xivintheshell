@@ -178,13 +178,16 @@ function ResourceOverrideDisplay(props) {
 		str = props.override.type + " full in " + props.override.timeTillFullOrDrop + "s";
 	} else {
 		str = props.override.type;
-		if (props.override.type === ResourceType.LeyLines) str += " (" + (props.override.enabled ? "enabled" : "disabled") + ")";
+		if (props.override.type === ResourceType.LeyLines) str += " (" + (props.override.effectOrTimerEnabled ? "enabled" : "disabled") + ")";
+		if (props.override.type === ResourceType.Enochian) str += " (" + (props.override.effectOrTimerEnabled ? "timer enabled" : "timer disabled") + ")";
 		if (props.rscInfo.maxValue > 1) str += " (amount: " + props.override.stacks + ")";
 		if (props.rscInfo.maxTimeout >= 0) {
 			if (props.override.type === ResourceType.Polyglot) {
 				if (props.override.timeTillFullOrDrop > 0) str += " next stack ready in " + props.override.timeTillFullOrDrop + "s";
 			} else {
-				str += " drops in " + props.override.timeTillFullOrDrop + "s";
+				if (props.override.type !== ResourceType.Enochian || props.override.effectOrTimerEnabled) {
+					str += " drops in " + props.override.timeTillFullOrDrop + "s";
+				}
 			}
 		}
 	}
@@ -385,6 +388,18 @@ export class Config extends React.Component {
 				window.alert("since there's enochian, there should be at least one AF/UI stack");
 				return false;
 			}
+			// if enochian drop halted, must be in ui and have timer at 15s
+			let enochian = M.get(ResourceType.Enochian);
+			if (!enochian.effectOrTimerEnabled) {
+				if (enochian.timeTillFullOrDrop < 15) {
+					window.alert("Because the only way to disable Enochian timer (Umbral Soul) also refreshes Enochian, remaining time must be 15 when timer is disabled");
+					return false;
+				}
+				if (ui === 0) {
+					window.alert("Enochian timer can only be disabled when in Umbral Ice (the only skill that does this is Umbral Soul)");
+					return false;
+				}
+			}
 		}
 
 		// if polyglot timer is set (>0), must have enochian
@@ -431,7 +446,7 @@ export class Config extends React.Component {
 				type: rscType,
 				timeTillFullOrDrop: inputOverrideTimer,
 				stacks: info.maxStacks > 1 ? inputOverrideStacks : 1,
-				enabled: rscType === ResourceType.LeyLines ? inputOverrideEnabled : true,
+				effectOrTimerEnabled: true,
 			};
 		}
 		else
@@ -453,7 +468,8 @@ export class Config extends React.Component {
 				type: rscType,
 				timeTillFullOrDrop: info.maxTimeout >= 0 ? inputOverrideTimer : -1,
 				stacks: info.maxValue > 1 ? inputOverrideStacks : 1,
-				enabled: rscType === ResourceType.LeyLines ? inputOverrideEnabled : true,
+				effectOrTimerEnabled: (rscType === ResourceType.LeyLines || rscType === ResourceType.Enochian) ?
+					inputOverrideEnabled : true,
 			};
 		}
 		// end validation
@@ -511,13 +527,17 @@ export class Config extends React.Component {
 				}
 
 				// enabled
-				showEnabled = (rscType === ResourceType.LeyLines);
+				showEnabled = (rscType === ResourceType.LeyLines || rscType === ResourceType.Enochian);
 			}
 
 			let timerDesc;
 			if (info.isCoolDown) timerDesc = "Time till full: ";
 			else if (rscType === ResourceType.Polyglot) timerDesc = "Time till next stack: ";
 			else timerDesc = "Time till drop: ";
+
+			let enabledDesc = "enabled";
+			if (rscType === ResourceType.Enochian) enabledDesc = "timer enabled";
+
 			inputSection = <div style={{margin: "6px 0"}}>
 
 				{/*timer*/}
@@ -540,7 +560,7 @@ export class Config extends React.Component {
 						   type="checkbox"
 						   checked={this.state.overrideEnabled}
 						   onChange={this.setOverrideEnabled}
-					/><span>enabled</span>
+					/><span>{enabledDesc}</span>
 				</div>
 
 			</div>
