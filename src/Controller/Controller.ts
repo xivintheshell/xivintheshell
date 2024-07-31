@@ -749,16 +749,17 @@ class Controller {
 		if (bWaitFirst) {
 			this.#requestTick({deltaTime: status.timeTillAvailable, separateNode: false});
 
-			if (skillName === SkillName.Fire
+			if ((skillName === SkillName.Fire || skillName === SkillName.Blizzard)
 				&& this.game.resources.get(ResourceType.Paradox).available(1))
 			{
-				// automatically turn F1 into paradox if conditions are met
+				// automatically turn F1/B1 into paradox if conditions are met
 				skillName = SkillName.Paradox;
 			} else if (skillName === SkillName.Paradox
 				&& !this.game.resources.get(ResourceType.Paradox).available(1))
 			{
 				// and vice versa
 				if (this.game.getFireStacks() > 0) skillName = SkillName.Fire;
+				else if (this.game.getIceStacks() > 0) skillName = SkillName.Blizzard;
 			}
 			status = this.game.getSkillAvailabilityStatus(skillName);
 			this.lastAttemptedSkill = "";

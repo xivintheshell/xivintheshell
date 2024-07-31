@@ -357,11 +357,11 @@ export class SkillsWindow extends React.Component {
 	render() {
 		let skillButtons = [];
 		for (let i = 0; i < displayedSkills.length; i++) {
-			let isF1 = displayedSkills[i] === SkillName.Fire;
-			let skillName = (isF1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
+			let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
+			let skillName = (isF1B1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
 			let info = undefined;
 			if (this.state.paradoxInfo) 
-				info = (isF1 && this.state.paradoxReady) ? this.state.paradoxInfo : this.state.statusList[i];
+				info = (isF1B1 && this.state.paradoxReady) ? this.state.paradoxInfo : this.state.statusList[i];
 
 			let isLL = (displayedSkills[i] === SkillName.LeyLines);
 			skillName = (isLL && this.state.retraceReady) ? SkillName.Retrace : skillName;

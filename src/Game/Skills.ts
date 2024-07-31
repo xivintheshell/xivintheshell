@@ -58,7 +58,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false,
 		0, 0, 0), // instant
 	new SkillInfo(SkillName.HighThunder, ResourceType.cd_GCD, Aspect.Lightning, true,
-		0, 0, 200, 0.757),
+		0, 0, 150, 0.757),
 	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false,
 		0, 0, 0, 1.114),// delayed
 	// Manafont: application delay 0.88s -> 0.2s since Dawntrail
@@ -78,9 +78,9 @@ const skillInfos = [
 	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false,
 		0, 0, 0, 0.49),// delayed
 	new SkillInfo(SkillName.Blizzard4, ResourceType.cd_GCD, Aspect.Ice, true,
-		2.5, 800, 310, 1.156),
+		2.5, 800, 320, 1.156),
 	new SkillInfo(SkillName.Fire4, ResourceType.cd_GCD, Aspect.Fire, true,
-		2.8, 800, 310, 1.159),
+		2.8, 800, 320, 1.159),
 	new SkillInfo(SkillName.BetweenTheLines, ResourceType.cd_BetweenTheLines, Aspect.Other, false,
 		0, 0, 0), // ?
 	new SkillInfo(SkillName.AetherialManipulation, ResourceType.cd_AetherialManipulation, Aspect.Other, false,
@@ -91,7 +91,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Foul, ResourceType.cd_GCD, Aspect.Other, true,
 		0, 0, 600, 1.158),
 	new SkillInfo(SkillName.Despair, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 0, 340, 0.556),
+		3, 0, 350, 0.556),
 	// Umbral Soul: immediate snapshot & UH gain; delayed MP gain
 	// see screen recording: https://drive.google.com/file/d/1nsO69O7lgc8V_R_To4X0TGalPsCus1cg/view?usp=drive_link
 	new SkillInfo(SkillName.UmbralSoul, ResourceType.cd_GCD, Aspect.Ice, true,
@@ -106,7 +106,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Amplifier, ResourceType.cd_Amplifier, Aspect.Other, false,
 		0, 0, 0), // ? (assumed to be instant)
 	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 1600, 500, 0.624),
+		0, 1600, 520, 0.624),
 	new SkillInfo(SkillName.FlareStar, ResourceType.cd_GCD, Aspect.Fire, true,
 		3, 0, 400, 0.622), /* Get actual delay after release */
 	new SkillInfo(SkillName.Retrace, ResourceType.cd_Retrace, Aspect.Other, false,
@@ -346,7 +346,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					sourceTime: game.getDisplayTime(),
 					sourceSkill: SkillName.HighThunder,
 					aspect: Aspect.Lightning,
-					basePotency: game.config.adjustedDoTPotency(55),
+					basePotency: game.config.adjustedDoTPotency(60),
 					snapshotTime: undefined,
 					description: "DoT " + (i+1) + "/10"
 				});
@@ -701,14 +701,18 @@ export class SkillsList extends Map<SkillName, Skill> {
 			(game, node) => {
 				game.castSpell({skillName: SkillName.Paradox, onCapture: (cap: SkillCaptureCallbackInfo) => {
 					game.resources.get(ResourceType.Paradox).consume(1);
-					// enochian (refresh only)
+					// enochian (refresh only) (todo: halt timer)
 					if (game.hasEnochian()) {
 						game.startOrRefreshEnochian();
 					}
-					console.assert(game.getFireStacks() > 0);
-					// firestarter proc
-					game.resources.get(ResourceType.AstralFire).gain(1);
-					gainFirestarterProc(game);
+					if (game.getIceStacks() > 0) {
+						game.resources.get(ResourceType.UmbralIce).gain(1);
+					} else if (game.getFireStacks() > 0) {// firestarter proc
+						game.resources.get(ResourceType.AstralFire).gain(1);
+						gainFirestarterProc(game);
+					} else {
+						console.assert(false);
+					}
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
 			}

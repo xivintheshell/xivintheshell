@@ -25,7 +25,7 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 
 	// eno
 	if (resources.get(ResourceType.Enochian).available(1)) {
-		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: 1.30, critFactor: 0, dhFactor: 0});
+		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: 1.33, critFactor: 0, dhFactor: 0});
 	}
 
 	// ui1

@@ -328,7 +328,10 @@ export class GameState {
 			}
 			ui.gain(numStacksToGain);
 
-			paradox.consume(paradox.availableAmount());
+			if (af.available(3)) {
+				paradox.gain(1);
+			}
+
 			af.consume(af.availableAmount());
 			as.consume(as.availableAmount());
 		}
