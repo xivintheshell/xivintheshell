@@ -461,7 +461,9 @@ export class GameState {
 
 				// actually deduct MP and UH (except some special ones like Despair, Flare and Flare Star that deduct resources in onCapture fn)
 				if (props.skillName !== SkillName.Flare && props.skillName !== SkillName.Despair && props.skillName !== SkillName.FlareStar) {
-					game.resources.get(ResourceType.Mana).consume(capturedManaCost);
+					if (!(props.skillName===SkillName.Paradox && game.getIceStacks()>0)) {
+						game.resources.get(ResourceType.Mana).consume(capturedManaCost);
+					}
 					if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
 				}
 
@@ -711,6 +713,7 @@ export class GameState {
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana
+			|| (skillName===SkillName.Paradox && this.getIceStacks() > 0)
 			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)));
 		let reqsMet = skill.available();
 		let status = SkillReadyStatus.Ready;
