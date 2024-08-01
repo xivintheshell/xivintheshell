@@ -258,9 +258,9 @@ export class SkillsWindow extends React.Component {
 		updateSkillButtons = ((statusList, paradoxReady, retraceReady)=>{
 			this.setState({
 				statusList: statusList,
-				paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
+				paradoxInfo: controller.getSkillInfo({game: controller.game, skillName: SkillName.Paradox}),
 				paradoxReady: paradoxReady,
-				retraceInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Retrace}),
+				retraceInfo: controller.getSkillInfo({game: controller.game, skillName: SkillName.Retrace}),
 				retraceReady: retraceReady,
 			});
 		}).bind(this);

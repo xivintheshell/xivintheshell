@@ -81,7 +81,7 @@ export type InitialPotencyProps = {
 	aspect: Aspect,
 	basePotency: number,
 	snapshotTime?: number,
-	description?: string,
+	description: string,
 }
 
 export class Potency {
@@ -89,7 +89,7 @@ export class Potency {
 	sourceTime: number; // display time
 	sourceSkill: SkillName;
 	aspect: Aspect;
-	description?: string;
+	description: string;
 	base: number;
 	snapshotTime?: number;
 	applicationTime?: number;

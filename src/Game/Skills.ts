@@ -160,7 +160,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 			skillName: SkillName,
 			rscType: ResourceType,
 			instant: boolean,
-			duration: number
+			duration: number,
+			additionalEffect?: () => void
 		}) {
 			let takeEffect = (node: ActionNode) => {
 				let resource = game.resources.get(props.rscType);
@@ -178,6 +179,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 					});
 				}
 				node.resolveAll(game.getDisplayTime());
+				if (props.additionalEffect) {
+					props.additionalEffect();
+				}
 			};
 			skillsList.set(props.skillName, new Skill(props.skillName,
 				() => {
@@ -298,7 +302,11 @@ export class SkillsList extends Map<SkillName, Skill> {
 			skillName: SkillName.LeyLines,
 			rscType: ResourceType.LeyLines,
 			instant: false,
-			duration: 30});
+			duration: 30,
+			additionalEffect: () => {
+				game.resources.get(ResourceType.LeyLines).enabled = true;
+			}
+		});
 
 		let applyThunderDoT = function(game: GameState, node: ActionNode) {
 			let thunder = game.resources.get(ResourceType.ThunderDoT) as DoTBuff;
@@ -335,6 +343,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				aspect: Aspect.Lightning,
 				basePotency: highThunder.info.basePotency,
 				snapshotTime: undefined,
+				description: ""
 			});
 			pInitial.modifiers = mods;
 			node.addPotency(pInitial);
@@ -521,11 +530,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		skillsList.set(SkillName.BetweenTheLines, new Skill(SkillName.BetweenTheLines,
 			() => {
 				let ll = game.resources.get(ResourceType.LeyLines);
-				let cachedEnabled = ll.enabled;
-				ll.enabled = true;
-				let hasLL = ll.available(1); // gets raw amount
-				ll.enabled = cachedEnabled;
-				return hasLL;
+				return ll.availableAmountIncludingDisabled() > 0;
 			},
 			(game, node) => {
 				game.useInstantSkill({
@@ -737,7 +742,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		// Retrace
 		skillsList.set(SkillName.Retrace, new Skill(SkillName.Retrace,
 			() => {
-				return game.resources.get(ResourceType.LeyLines).available(1);
+				return game.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0;
 			},
 			(game, node) => {
 				game.useInstantSkill({

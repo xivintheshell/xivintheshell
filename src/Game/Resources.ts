@@ -76,6 +76,9 @@ export class Resource {
 	availableAmount() {
 		return this.enabled ? this.#currentValue : 0;
 	}
+	availableAmountIncludingDisabled(): number {// used for checking LL existence: if Retrace should replace its button
+		return this.#currentValue;
+	}
 	consume(amount: number) {
 		if (this.#currentValue < amount - Debug.epsilon) {
 			console.warn("invalid resource consumption: " + this.type);

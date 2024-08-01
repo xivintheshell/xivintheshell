@@ -448,7 +448,7 @@ export class GameState {
 				aspect: skillInfo.aspect,
 				basePotency: skillInfo.basePotency,
 				snapshotTime: undefined,
-				description: "some description",
+				description: "",
 			});
 			props.node.addPotency(potency);
 		}
@@ -591,7 +591,7 @@ export class GameState {
 				aspect: skillInfo.aspect,
 				basePotency: skillInfo.basePotency,
 				snapshotTime: this.getDisplayTime(),
-				description: "some description",
+				description: "",
 			});
 			potency.modifiers = getPotencyModifiersFromResourceState(this.resources, skillInfo.aspect);
 			props.node.addPotency(potency);

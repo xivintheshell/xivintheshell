@@ -25,7 +25,6 @@ import {
 	calculateSelectedStats,
 	getTargetableDurationBetween
 } from "./DamageStatistics";
-import {localizeSkillName} from "../Components/Localization";
 
 type Fixme = any;
 
@@ -497,13 +496,15 @@ class Controller {
 		});
 
 		if (!this.#bCalculatingHistoricalState) {
+			let sourceDesc = "{skill}@" + p.sourceTime.toFixed(3);
+			if (p.description.length > 0) sourceDesc += " " + p.description;
 			this.timeline.addElement({
 				type: ElemType.DamageMark,
 				potency: p,
 				buffs: pot ? [ResourceType.Tincture] : [],
 				time: this.game.time,
 				displayTime: this.game.getDisplayTime(),
-				sourceDesc: "{skill}@" + p.sourceTime.toFixed(3),
+				sourceDesc: sourceDesc,
 				sourceSkill: p.sourceSkill
 			});
 
@@ -653,7 +654,7 @@ class Controller {
 
 	updateSkillButtons(game: GameState) {
 		let paradoxReady = game.resources.get(ResourceType.Paradox).availableAmount() > 0;
-		let retraceReady = game.resources.get(ResourceType.LeyLines).availableAmount() > 0;
+		let retraceReady = game.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0;
 
 		updateSkillButtons(displayedSkills.map((skillName: SkillName) => {
 			return game.getSkillAvailabilityStatus(skillName);

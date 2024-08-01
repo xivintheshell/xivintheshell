@@ -2,7 +2,11 @@
 	{
 		"date": "7/31/24",
 		"changes": [
-			"patch 7.05 job changes"
+			"patch 7.05 job changes",
+			"bugfix: paradox sometimes not showing as \"available\" when looking at historical game states",
+			"bugfix: retrace not available when LL buff exists but is disabled",
+			"make LL enable itself when using LL",
+			"show thunder tick number when hovering over damage mark"
 		]
 	},
 	{
