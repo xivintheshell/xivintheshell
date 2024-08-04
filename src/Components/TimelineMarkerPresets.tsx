@@ -78,37 +78,10 @@ function LoadCombinedTracksBtn(props: {displayName: ContentNode, url: string}) {
 }
 
 function PresetButtons() {
-	// https://github.com/quisquous/cactbot/blob/main/ui/raidboss/data/06-ew/raid/
+	// https://github.com/OverlayPlugin/cactbot/tree/main/ui/raidboss/data/07-dt
 	let content = <div style={{lineHeight: "2em"}}>
-		<span>{localize({en: "Current tier (en): ", zh: "当前版本（英文）："})}</span>
-		<LoadCombinedTracksBtn displayName={"P9S by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p9s.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P10S by Tischel"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p10s.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P11S by Lilian"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p11s.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P12S P1 by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p1.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P12S P2 by Yara"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p2.txt"}/>
-		<br/>
-		<span>{localize({en: "Current tier (zh), from 不打冰3攻略组: ", zh: "当前版本（中文），来自不打冰3攻略组："})}</span>
-		<LoadCombinedTracksBtn displayName={"P9S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p9s_zh.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P10S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p10s_zh.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P11S（错误较多）"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p11s_zh.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P12S门神"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p1_zh.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P12S本体"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p12s_p2_zh.txt"}/>
-		<br/>
-		<LoadCombinedTracksBtn displayName={"P1S Shackles of Time first"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P1S Aetherial Shackles first"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_aetherial_shackles_first.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P2S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p2s.txt"}/>
-		<br/>
-		<LoadCombinedTracksBtn displayName={"DSR P6 by Tischel"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/dsr_p6.txt"}/>
-		<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/dsr_p7.txt"}/>
-		<LoadCombinedTracksBtn displayName={"TOP by Santa"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/TOP_2023_04_02.track"}/>
-		<br/>
-		<span>{localize({en: "From 不打冰3攻略组, in Chinese: ", zh: "来自不打冰3攻略组："})}</span>
-		<LoadCombinedTracksBtn displayName={"P5S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p5s_zh.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P6S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p6s_zh.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P7S"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p7s_zh.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P8S门神蛇轴"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p8s_p1_snake_zh.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P8S门神车轴"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p8s_p1_beast_zh.txt"}/>
-		<LoadCombinedTracksBtn displayName={"P8S本体"} url={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p8s_p2_zh.txt"}/>
+		<span>{localize({en: "Current tier: ", zh: "当前版本（英文）："})}</span>
+		<LoadCombinedTracksBtn displayName={"M4S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m4s.txt"}/>
 	</div>
 	return <Expandable title={"preset buttons"} titleNode={localize({en: "Presets", zh: "预设文件"})} defaultShow={true} content={content}/>
 }

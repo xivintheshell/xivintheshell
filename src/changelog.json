@@ -1,5 +1,11 @@
 [
 	{
+		"date": "8/4/24",
+		"changes": [
+			"Added M4S markers by shanzhe and removed presets from Endwalker."
+		]
+	},
+	{
 		"date": "7/31/24",
 		"changes": [
 			"patch 7.05 job changes",
