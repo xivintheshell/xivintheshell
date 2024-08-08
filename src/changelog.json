@@ -1,5 +1,11 @@
 [
 	{
+		"date": "8/8/24",
+		"changes": [
+			"Added M2S markers and log CSV parsing script by shanzhe"
+		]
+	},
+	{
 		"date": "8/4/24",
 		"changes": [
 			"Added M4S markers by shanzhe and removed presets from Endwalker."
