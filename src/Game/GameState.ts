@@ -637,6 +637,11 @@ export class GameState {
 			enochian.overrideTimer(this, 15);
 
 		} else {
+			// reset polyglot countdown to 30s if enochian wasn't actually active
+			if (!enochian.available(1)) {
+				this.resources.get(ResourceType.Polyglot).overrideTimer(this, 30);
+			}
+
 			// either fresh gain, or there's enochian but no timer
 			enochian.gain(1);
 
@@ -649,9 +654,6 @@ export class GameState {
 					this.loseEnochian();
 				}
 			});
-
-			// reset polyglot countdown to 30s
-			this.resources.get(ResourceType.Polyglot).overrideTimer(this, 30);
 		}
 	}
 
