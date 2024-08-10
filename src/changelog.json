@@ -1,5 +1,11 @@
 [
 	{
+		"date": "8/9/24",
+		"changes": [
+			"Akairyu - Fix a bug with Polyglot timer handling when Enochian resumes after an Umbral Soul pause"
+		]
+	},
+	{
 		"date": "8/8/24",
 		"changes": [
 			"Added M2S markers and log CSV parsing script by shanzhe"
