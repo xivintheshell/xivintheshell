@@ -710,8 +710,8 @@ export class GameState {
 			|| this.resources.get(ResourceType.Swiftcast).available(1)
 			|| skillName===SkillName.Paradox
 			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)))
-			|| (skillName===SkillName.Xenoglossy && this.resources.get(ResourceType.Polyglot).available(1)
-			|| (skillName===SkillName.UmbralSoul && this.getIceStacks()>0)); // lmfao why does this count as a spell
+			|| (skillName===SkillName.Xenoglossy && this.resources.get(ResourceType.Polyglot).available(1))
+			|| (skillName===SkillName.UmbralSoul && this.getIceStacks()>0); // lmfao why does this count as a spell
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana
