@@ -406,7 +406,7 @@ export class Config extends React.Component {
 		if (M.has(ResourceType.Polyglot)) {
 			let polyTimer = M.get(ResourceType.Polyglot).timeTillFullOrDrop;
 			if (polyTimer > 0 && !M.has(ResourceType.Enochian)) {
-				window.alert("since a timer for polyglot is set, there must also be Enochian");
+				window.alert("since a timer for polyglot is set (time till next stack > 0), there must also be Enochian");
 				return false;
 			}
 		}

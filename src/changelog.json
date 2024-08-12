@@ -1,5 +1,11 @@
 [
 	{
+		"date": "8/11/24",
+		"changes": [
+			"Revise PPS description and description for polyglot resource override condition"
+		]
+	},
+	{
 		"date": "8/9/24",
 		"changes": [
 			"Akairyu - Fix a bug with Polyglot timer handling when Enochian resumes after an Umbral Soul pause"

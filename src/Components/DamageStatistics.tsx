@@ -282,7 +282,7 @@ export class DamageStatistics extends React.Component {
 			selected = <div style={{flex: 1}}>
 				<div>{localize({en: "Selected duration", zh: "选中时长"})}{colon}{this.selected.totalDuration.toFixed(3)}</div>
 				<div>{selectedPotencyStr}</div>
-				<div>PPS{checkedOnlyStr + colon}{selectedPPSAvailable ? (this.selected.potency.applied / this.selected.targetableDuration).toFixed(2) : "N/A"}</div>
+				<div>{localize({en: "Selected PPS", zh: "选中部分PPS"})}{colon}{selectedPPSAvailable ? (this.selected.potency.applied / this.selected.targetableDuration).toFixed(2) : "N/A"}</div>
 				<div>{selectedGcdStr}</div>
 			</div>
 		}
@@ -291,15 +291,15 @@ export class DamageStatistics extends React.Component {
 			<div style={{flex: 1, color: this.data.historical ? colors.historical : colors.text}}>
 				<div>{localize({en: "Last damage application time", zh: "最后伤害结算时间"})}{colon}{lastDamageApplicationTimeDisplay}</div>
 				<div>{potencyStr}</div>
-				<div>PPS{checkedOnlyStr} <Help topic={"ppsNotes"} content={
+				<div>PPS <Help topic={"ppsNotes"} content={
 					<div className={"toolTip"}>
 						<div className="paragraph">{localize({
-							en: "(total applied potency) / (total targetable duration until last damage application time).",
-							zh: "已结算总威力 / (最后伤害结算时间 - 不可选中总时长)。"
+							en: "(total applied potency of checked skills) / (total targetable duration from 0s until last damage application time).",
+							zh: "统计表中勾选技能的已结算总威力 / (从0s到最后伤害结算时间 - 不可选中总时长)。"
 						})}</div>
 						<div className="paragraph">{localize({
-							en: "could be inaccurate if any damage happens before pull",
-							zh: "如果有伤害在0s之前结算，则此PPS不准确"
+							en: "could be inaccurate if any damage happens before pull, or if some damage's not applied yet",
+							zh: "如果有伤害在0s之前结算，或者当前有的伤害还未结算，那么此PPS可能会不准确"
 						})}</div>
 					</div>
 				}/>{colon}{ppsAvailable ? (this.data.totalPotency.applied / targetableDurationTilLastDisplay).toFixed(2) : "N/A"}</div>
