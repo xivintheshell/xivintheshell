@@ -54,6 +54,55 @@ export const enum SkillName {
 	Tincture = "Tincture",
 	Sprint = "Sprint",
 
+	// picto stuff
+	FireInRed = "Fire in Red",
+	AeroInGreen = "Aero in Green",
+	WaterInBlue = "Water in Blue",
+	Fire2InRed = "Fire II in Red",
+	Aero2InGreen = "Aero II in Green",
+	Water2InBlue = "Water II in Blue",
+	BlizzardInCyan = "Blizzard In Cyan",
+	ThunderInMagenta = "Thunder In Magenta",
+	StoneInYellow = "Stone in Yellow",
+	Blizzard2InCyan = "Blizzard II In Cyan",
+	Stone2InYellow = "Stone II in Yellow",
+	Thunder2InMagenta = "Thunder II In Magenta",
+	HolyInWhite = "Holy in White",
+	CometInBlack = "Comet in Black",
+	RainbowDrip = "Rainbow Drip",
+	StarPrism = "Star Prism",
+
+	TemperaCoat = "Tempera Coat",
+	TemperaGrassa = "Tempera Grassa",
+	Smudge = "Smudge",
+	SubtractivePalette = "Subtractive Palette",
+
+	CreatureMotif = "Creature Motif",
+	PomMotif = "Pom Motif",
+	WingMotif = "Wing Motif",
+	ClawMotif = "Claw Motif",
+	MawMotif = "Maw Motif",
+	LivingMuse = "Living Muse",
+	PomMuse = "Pom Muse",
+	WingedMuse = "Winged Muse",
+	ClawedMuse = "Clawed Muse",
+	FangedMuse = "Fanged Muse",
+	MogOfTheAges = "Mog of the Ages",
+	RetributionOfTheMadeen = "Retribution of the Madeen",
+
+	WeaponMotif = "Weapon Motif",
+	SteelMuse = "Steel Muse",
+	HammerMotif = "Hammer Motif",
+	StrikingMuse = "Striking Muse",
+	HammerStamp = "Hammer Stamp",
+	HammerBrush = "Hammer Brush",
+	PolishingHammer = "Polishing Hammer",
+
+	LandscapeMotif = "Landscape Motif",
+	ScenicMuse = "Scenic Muse",
+	StarrySkyMotif = "Starry Sky Motif",
+	StarryMuse = "Starry Muse",
+
 	Never = "Never",
 }
 
@@ -103,6 +152,14 @@ export const enum ResourceType {
 	Paradox = "Paradox", // [0, 1]
 	AstralSoul = "Astral Soul", // [0, 6]
 
+	Portrait = "Portrait", // [0, 2] 1 = moogle, 2 = madeen
+	Depictions = "Depictions", // [0, 3] used to show which creature motifs have been drawn
+	CreatureCanvas = "Creature Canvas", // [0, 1]
+	WeaponCanvas = "Weapon Canvas", // [0, 1]
+	LandscapeCanvas = "Landscape Canvas", // [0, 1]
+	PaletteGauge = "Palette Gauge", // [0, 100]
+	Paint = "Paint", // [0, 5]
+
 	// buffs & states
 	LeyLines = "Ley Lines", // [0, 1]
 	Triplecast = "Triplecast", // [0, 3]
@@ -116,6 +173,16 @@ export const enum ResourceType {
 	Surecast = "Surecast", // [0, 1]
 	Tincture = "Tincture", // [0, 1]
 	Sprint = "Sprint", // [0, 1]
+
+	Aetherhues = "Aetherhues", // [0, 2]
+	MonochromeTones = "Monochrome Tones", // [0, 1]
+	SubtractivePalette = "Subtractive Palette", // [0, 3]
+	HammerTime = "Hammer Time", // [0, 3]
+	Inspiration = "Inspiration", // [0, 1]
+	SubtractiveSpectrum = "Subtractive Spectrum", // [0, 1]
+	Hyperphantasia = "Hyperphantasia", // [0, 5]
+	RainbowBright = "Rainbow Bright", // [0, 1]
+	Starstruck = "Starstruck", // [0, 1]
 
 	// special
 	Movement = "Movement", // [0, 1]
@@ -140,9 +207,20 @@ export const enum ResourceType {
 	cd_Tincture = "cd_Tincture", // [0, 1x]
 	cd_Sprint = "cd_Sprint", // [0, 1x]
 
+	cd_TemperaCoat = "cd_TemperaCoat", // [0, 120]
+	cd_Smudge = "cd_Smudge", // [0, 20]
+	cd_LivingMuse = "cd_LivingMuse", // [0, 40]
+	cd_Portrait = "cd_Portrait", // [0, 30]
+	cd_SteelMuse = "cd_SteelMuse", // [0, 60]
+	cd_ScenicMuse = "cd_ScenicMuse", // [0, 120]
+	cd_Subtractive = "cd_Subtractive", // [0, 1], not real
+	cd_Grassa = "cd_Grassa", // [0, 1], not real
+
 	Never = "Never",
 }
 
 export const enum WarningType {
-	PolyglotOvercap = "polyglot overcap"
+	PolyglotOvercap = "polyglot overcap",
+
+	PaletteOvercap = "palette gauge overcap",
 }

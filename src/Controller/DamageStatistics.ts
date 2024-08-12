@@ -191,8 +191,10 @@ function expandNode(node: ActionNode) : ExpandedNode {
 				}
 			}
 		} else if (abilities.has(node.skillName)) {
-		} else {
+		} else if (node.skillName === SkillName.HighThunder) {
 			console.assert(node.skillName === SkillName.HighThunder)
+			res.basePotency = node.getPotencies()[0].base;
+		} else {
 			res.basePotency = node.getPotencies()[0].base;
 		}
 		return res;

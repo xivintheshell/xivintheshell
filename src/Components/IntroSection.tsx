@@ -156,47 +156,14 @@ export function IntroSection(props: {}) {
 			titleNode={localize({en: "About this tool", zh: "关于", ja: "このツールについて"})}
 			content={<div>
 				<div className="paragraph">{localize({en: "This is a FFXIV black mage simulator & rotation planner.", zh: "是个黑魔模拟器/排轴工具。", ja: "FF14 黒魔道士のスキルローテーションシミュレーターです。"})}</div>
-				<div className="paragraph">{localize({en: "This tool is made by:", zh: "作者：", ja: "作者："})}</div>
-				{localize({
-					en: <ul>
-							<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
-							<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
-							<li><b>Turtle</b>, who did the heavy work of updating this tool from Endwalker to Dawntrail</li>
-							<li><b>Yara, Spider, Santa, shanzhe</b>, and many other players who contributed feature suggestions, timeline markers, bug reports, etc.</li>
-						</ul>,
-					zh: <ul>
-							<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
-							<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：程序；是个云黑魔玩家</li>
-							<li><b>Turtle</b>, 把本工具从6.0更新到7.0的大功臣</li>
-							<li><b>Yara, Spider, Santa</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
-						</ul>,
-					ja: <ul>
-							<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: プロダクトマネージャー、凄腕黒魔道士</li>
-							<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: ソフトウェア開発者、しがない黒魔道士</li>
-							<li><b>Turtle</b>: 黄金のレガシーへのアップデートを担当</li>
-							<li><b>Yara, Spider, Santa,</b> そして新機能やバグ報告などで貢献してくださった多くのFF14プレーヤーの皆さん</li>
-						</ul>,
-				})}
-				{localize({
-					en: <div className={"paragraph"}>
-						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={"https://discord.com/channels/277897135515762698/1255782490862387360"}>this thread in The Balance</a>.
-						You can also find me directly on discord (miyehn), or via email (rainduym@gmail.com). In case of sending a bug report, attaching the
-						fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
-					</div>,
-					zh: <div className={"paragraph"}>
-						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从右侧下载的fight.txt）一起发过来。
-					</div>,
-					ja: <div className={"paragraph"}>
-						質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（rainduym@gail.com）でお問い合わせください。
-						バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
-					</div>,
-				})}
-
-				<div className="paragraph">{localize({
-					en: "Also, consider contributing! I'm not raiding lately so I can't make the timeline markers..",
-					zh: "贡献大欢迎！比如给我发时间轴标记文件！我自己很久没打高难了，自己做是不可能了。",
-					ja: "また、ぜひ貢献も考えてください！最近高難易度にコンテンツに行っていないのでタイムラインマーカーが作れません...",
-				})}</div>
+				<div className="paragraph">
+					{localize({en: "This tool is made by ", zh: "作者：", ja: "作者："})}
+					<b>shanzhe (Shanzhe Qi @ Seraph)</b>,
+					{localize({
+						en: " adapted from BLM in the shell by miyehn.",
+						zh: "从miyehn创作的BLM in the shell而改编。",
+					})}
+				</div>
 
 				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接：", ja: "リンク集"})}</div>
 				{localize({

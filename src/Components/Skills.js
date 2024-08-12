@@ -1,6 +1,6 @@
 import React from 'react'
 import {Clickable, Help, parseTime} from "./Common";
-import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
+import {Debug, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
@@ -10,32 +10,27 @@ import * as ReactDOMServer from 'react-dom/server';
 import {getCurrentThemeColors} from "./ColorTheme";
 
 export let displayedSkills = [
-	SkillName.Blizzard,
-	SkillName.Fire,
-	SkillName.Transpose,
-	SkillName.HighThunder,
-	SkillName.Manaward,
-	SkillName.Manafont,
-	SkillName.Fire3,
-	SkillName.Blizzard3,
-	SkillName.Freeze,
-	SkillName.Flare,
-	SkillName.LeyLines,
-	SkillName.Blizzard4,
-	SkillName.Fire4,
-	SkillName.BetweenTheLines,
-	SkillName.AetherialManipulation,
-	SkillName.Triplecast,
-	SkillName.Foul,
-	SkillName.Despair,
-	SkillName.UmbralSoul,
-	SkillName.Xenoglossy,
-	SkillName.HighFire2,
-	SkillName.HighBlizzard2,
-	SkillName.Amplifier,
-	//SkillName.Paradox, // display paradox at F1/B1
-	SkillName.FlareStar,
-	// SkillName.Retrace, // display retrace at LL
+	SkillName.FireInRed,
+	SkillName.Fire2InRed,
+	// SkillName.BlizzardInCyan,
+	// SkillName.Blizzard2InCyan,
+	// SkillName.HolyInWhite,
+	// SkillName.CometInBlack,
+	// SkillName.RainbowDrip,
+	// SkillName.StarPrism,
+	// SkillName.TemperaCoat,
+	// SkillName.TemperaGrassa,
+	// SkillName.Smudge,
+	// SkillName.SubtractivePalette,
+	// SkillName.CreatureMotif,
+	// SkillName.LivingMuse,
+	// SkillName.MogOfTheAges,
+	// SkillName.WeaponMotif,
+	// SkillName.StrikingMuse,
+	// SkillName.HammerStamp,
+	// SkillName.LandscapeMotif,
+	// SkillName.ScenicMuse,
+
 	SkillName.Addle,
 	SkillName.Swiftcast,
 	SkillName.LucidDreaming,
@@ -46,32 +41,54 @@ export let displayedSkills = [
 
 // seems useful: https://na.finalfantasyxiv.com/lodestone/special/fankit/icon/
 export const skillIcons = new Map();
-skillIcons.set(SkillName.Blizzard, require("./Asset/blizzard.png"));
-skillIcons.set(SkillName.Fire, require("./Asset/fire.png"));
-skillIcons.set(SkillName.Transpose, require("./Asset/transpose.png"));
-skillIcons.set(SkillName.HighThunder, require("./Asset/highThunder.png"));
-skillIcons.set(SkillName.Manaward, require("./Asset/manaward.png"));
-skillIcons.set(SkillName.Manafont, require("./Asset/manafont.png"));
-skillIcons.set(SkillName.Fire3, require("./Asset/fire3.png"));
-skillIcons.set(SkillName.Blizzard3, require("./Asset/blizzard3.png"));
-skillIcons.set(SkillName.Freeze, require("./Asset/freeze.png"));
-skillIcons.set(SkillName.AetherialManipulation, require("./Asset/aetherialManipulation.png"));
-skillIcons.set(SkillName.Flare, require("./Asset/flare.png"));
-skillIcons.set(SkillName.LeyLines, require("./Asset/leyLines.png"));
-skillIcons.set(SkillName.Blizzard4, require("./Asset/blizzard4.png"));
-skillIcons.set(SkillName.Fire4, require("./Asset/fire4.png"));
-skillIcons.set(SkillName.BetweenTheLines, require("./Asset/betweenTheLines.png"));
-skillIcons.set(SkillName.Triplecast, require("./Asset/triplecast.png"));
-skillIcons.set(SkillName.Foul, require("./Asset/foul.png"));
-skillIcons.set(SkillName.Despair, require("./Asset/despair.png"));
-skillIcons.set(SkillName.UmbralSoul, require("./Asset/umbralSoul.png"));
-skillIcons.set(SkillName.Xenoglossy, require("./Asset/xenoglossy.png"));
-skillIcons.set(SkillName.HighFire2, require("./Asset/highFire2.png"));
-skillIcons.set(SkillName.HighBlizzard2, require("./Asset/highBlizzard2.png"));
-skillIcons.set(SkillName.Amplifier, require("./Asset/amplifier.png"));
-skillIcons.set(SkillName.Paradox, require("./Asset/paradox.png"));
-skillIcons.set(SkillName.FlareStar, require("./Asset/flareStar.png"));
-skillIcons.set(SkillName.Retrace, require("./Asset/retrace.png"));
+let pctSkills = [
+	"aero2InGreen",
+	"aeroInGreen",
+	"blizzard2InCyan",
+	"blizzardInCyan",
+	"clawedMotif",
+	"clawedMuse",
+	"cometInBlack",
+	"creatureMotif",
+	"fangedMuse",
+	"fire2InRed",
+	"fireInRed",
+	"hammerBrush",
+	"hammerMotif",
+	"hammerMuse",
+	"hammerStamp",
+	"holyInWhite",
+	"landscapeMotif",
+	"livingMuse",
+	"mawMotif",
+	"mogOfTheAges",
+	"polishingHammer",
+	"pomMotif",
+	"pomMuse",
+	"rainbowDrip",
+	"retributionOfTheMadeen",
+	"scenicMuse",
+	"smudge",
+	"starPrism",
+	"starrySky",
+	"starrySkyMotif",
+	"strikingMuse",
+	"stone2InYellow",
+	"stoneInYellow",
+	"subtractivePalette",
+	"temperaCoat",
+	"temperaGrassa",
+	"thunder2InMagenta",
+	"thunderInMagenta",
+	"water2InBlue",
+	"waterInBlue",
+	"weaponMotif",
+	"wingedMotif",
+	"wingedMuse",
+];
+for (let name of pctSkills) {
+	skillIcons.set(SkillName[name[0].toUpperCase() + name.slice(1)], require("./Asset/picto/" + name + ".png"));
+}
 
 skillIcons.set(SkillName.Addle, require("./Asset/addle.png"));
 skillIcons.set(SkillName.Swiftcast, require("./Asset/swiftcast.png"));
@@ -258,10 +275,11 @@ export class SkillsWindow extends React.Component {
 		updateSkillButtons = ((statusList, paradoxReady, retraceReady)=>{
 			this.setState({
 				statusList: statusList,
-				paradoxInfo: controller.getSkillInfo({game: controller.game, skillName: SkillName.Paradox}),
 				paradoxReady: paradoxReady,
-				retraceInfo: controller.getSkillInfo({game: controller.game, skillName: SkillName.Retrace}),
+				paradoxInfo: undefined,
 				retraceReady: retraceReady,
+				retraceInfo: undefined,
+				aetherhuesStacks: controller.game.resources.get(ResourceType.Aetherhues).availableAmount(),
 			});
 		}).bind(this);
 
@@ -349,24 +367,47 @@ export class SkillsWindow extends React.Component {
 			statusList: displayedSkills.map(sn=>{
 				return controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: sn});
 			}),
-			paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
-			retraceInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Retrace}),
+			paradoxInfo: undefined,
+			retraceInfo: undefined,
+			aetherhuesStacks: controller.game.resources.get(ResourceType.Aetherhues).availableAmount(),
 		});
 	}
 
 	render() {
 		let skillButtons = [];
 		for (let i = 0; i < displayedSkills.length; i++) {
-			let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
-			let skillName = (isF1B1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
-			let info = undefined;
-			if (this.state.paradoxInfo) 
-				info = (isF1B1 && this.state.paradoxReady) ? this.state.paradoxInfo : this.state.statusList[i];
+			let skillName = displayedSkills[i];
+			let info = this.state.statusList ? this.state.statusList[i] : undefined;
 
-			let isLL = (displayedSkills[i] === SkillName.LeyLines);
-			skillName = (isLL && this.state.retraceReady) ? SkillName.Retrace : skillName;
-			if (this.state.retraceInfo)
-				info = (isLL && this.state.retraceReady) ? this.state.retraceInfo : info;
+			// picto filler
+			if (skillName === SkillName.FireInRed) {
+				if (this.state.aetherhuesStacks === 1) {
+					skillName = SkillName.AeroInGreen;
+				} else if (this.state.aetherhuesStacks === 2) {
+					skillName = SkillName.WaterInBlue;
+				}
+			} else if (skillName === SkillName.Fire2InRed) {
+				if (this.state.aetherhuesStacks === 1) {
+					skillName = SkillName.Aero2InGreen;
+				} else if (this.state.aetherhuesStacks === 2) {
+					skillName = SkillName.Water2InBlue;
+				}
+			}
+			// picto subtractive
+			if (skillName === SkillName.BlizzardInCyan) {
+				if (this.state.aetherhuesStacks === 1) {
+					skillName = SkillName.StoneInYellow;
+				} else if (this.state.aetherhuesStacks === 2) {
+					SkillName = SkillName.ThunderInMagenta;
+				}
+			} else if (skillName === SkillName.Blizzard2InCyan) {
+				if (this.state.aetherhuesStacks === 1) {
+					skillName = SkillName.Stone2InYellow;
+				} else if (this.state.aetherhuesStacks === 2) {
+					SkillName = SkillName.Thunder2InMagenta;
+				}
+			}
+			// picto creature muse + motif
 
 			let btn = <SkillButton
 				key={i}

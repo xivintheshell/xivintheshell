@@ -625,7 +625,10 @@ class Controller {
 			lucidDreamingCountdown: game.resources.timeTillReady(ResourceType.LucidDreaming),
 			surecastCountdown: game.resources.timeTillReady(ResourceType.Surecast),
 			tinctureCountdown: game.resources.timeTillReady(ResourceType.Tincture),
-			sprintCountdown: game.resources.timeTillReady(ResourceType.Sprint)
+			sprintCountdown: game.resources.timeTillReady(ResourceType.Sprint),
+
+			aetherhuesCountdown: game.resources.timeTillReady(ResourceType.Aetherhues),
+			aetherhuesStacks: game.resources.get(ResourceType.Aetherhues).availableAmount(),
 		};
 		if (typeof updateStatusDisplay !== "undefined") {
 			updateStatusDisplay({

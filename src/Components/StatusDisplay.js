@@ -67,14 +67,9 @@ function ResourceCounter(props) {
 	</div>;
 }
 const buffIcons = new Map();
-buffIcons.set(ResourceType.Triplecast, require("./Asset/buff_triplecast.png"));
-buffIcons.set(ResourceType.Triplecast + "2", require("./Asset/buff_triplecast2.png"));
-buffIcons.set(ResourceType.Triplecast + "3", require("./Asset/buff_triplecast3.png"));
-buffIcons.set(ResourceType.Firestarter, require("./Asset/buff_firestarter.png"));
-buffIcons.set(ResourceType.Thunderhead, require("./Asset/buff_thunderhead.png"));
-buffIcons.set(ResourceType.ThunderDoT, require("./Asset/buff_thunder3.png"));
-buffIcons.set(ResourceType.LeyLines, require("./Asset/buff_leyLines.png"));
-buffIcons.set(ResourceType.Manaward, require("./Asset/buff_manaward.png"));
+buffIcons.set(ResourceType.Aetherhues, require("./Asset/picto/buffs/aetherhues_1.png"));
+buffIcons.set(ResourceType.Aetherhues + "2", require("./Asset/picto/buffs/aetherhues_2.png"));
+
 buffIcons.set(ResourceType.Addle, require("./Asset/buff_addle.png"));
 buffIcons.set(ResourceType.Swiftcast, require("./Asset/buff_swiftcast.png"));
 buffIcons.set(ResourceType.LucidDreaming, require("./Asset/buff_lucidDreaming.png"));
@@ -85,9 +80,8 @@ buffIcons.set(ResourceType.Sprint, require("./Asset/buff_sprint.png"));
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props) {
 	let assetName = props.rscType;
-	if (props.rscType === ResourceType.Triplecast) {
+	if (props.rscType === ResourceType.Aetherhues) {
 		if (props.stacks === 2) assetName += "2";
-		else if (props.stacks === 3) assetName += "3";
 	}
 	return <div title={props.rscType} className={props.className + " buff " + props.rscType}>
 		<Clickable content={
@@ -122,7 +116,10 @@ function BuffsDisplay(props) {
 		lucidDreamingCountdown: 0,
 		surecastCountdown: 0,
 		tinctureCountdown: 0,
-		sprintCountdown: 0
+		sprintCountdown: 0,
+
+		aetherhuesCountdown: 0,
+		aetherhuesStacks: 0,
 	};
 	let buffs = [];
 	buffs.push({
@@ -205,6 +202,15 @@ function BuffsDisplay(props) {
 		timeRemaining: data.sprintCountdown.toFixed(3),
 		className: data.sprintCountdown > 0 ? "" : "hidden"
 	});
+
+	buffs.push({
+		rscType: ResourceType.Aetherhues,
+		onSelf: true,
+		enabled: true,
+		stacks: data.aetherhuesStacks,
+		timeRemaining: data.aetherhuesCountdown.toFixed(3),
+		className: "" //data.aetherhuesCountdown > 0 ? "" : "hidden"
+	})
 
 	for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
 	return <div className={"buffsDisplay self"}>

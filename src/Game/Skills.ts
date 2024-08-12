@@ -20,6 +20,7 @@ export class SkillInfo {
 	readonly aspect: Aspect;
 	readonly isSpell: boolean;
 	readonly baseCastTime: number;
+	readonly baseRecastTime: number;
 	readonly baseManaCost: number;
 	readonly basePotency: number;
 	readonly skillApplicationDelay: number;
@@ -32,13 +33,16 @@ export class SkillInfo {
 		baseCastTime: number,
 		baseManaCost: number,
 		basePotency: number,
-		skillApplicationDelay?: number)
+		skillApplicationDelay?: number,
+		baseRecastTime?: number,
+		)
 	{
 		this.name = skillName;
 		this.cdName = cdName;
 		this.aspect = aspect;
 		this.isSpell = isSpell;
 		this.baseCastTime = baseCastTime;
+		this.baseRecastTime = baseRecastTime ?? 2.5;
 		this.baseManaCost = baseManaCost;
 		this.basePotency = basePotency;
 		this.skillApplicationDelay = skillApplicationDelay===undefined ? 0 : skillApplicationDelay;
@@ -51,67 +55,6 @@ export class SkillInfo {
 // https://www.fflogs.com/reports/cNpjtRXHhZ8Az2V3#fight=last&type=damage-done&view=events&ability=36987
 // https://www.fflogs.com/reports/7NMQkxLzcbptw3Xd#fight=15&type=damage-done&source=116&view=events&ability=36986
 const skillInfos = [
-	new SkillInfo(SkillName.Blizzard, ResourceType.cd_GCD, Aspect.Ice, true,
-		2.5, 400, 180, 0.846),
-	new SkillInfo(SkillName.Fire, ResourceType.cd_GCD, Aspect.Fire, true,
-		2.5, 800, 180, 1.871),
-	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false,
-		0, 0, 0), // instant
-	new SkillInfo(SkillName.HighThunder, ResourceType.cd_GCD, Aspect.Lightning, true,
-		0, 0, 150, 0.757),
-	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false,
-		0, 0, 0, 1.114),// delayed
-	// Manafont: application delay 0.88s -> 0.2s since Dawntrail
-	// infact most effects seem instant but MP gain is delayed.
-	// see screen recording: https://drive.google.com/file/d/1zGhU9egAKJ3PJiPVjuRBBMkKdxxHLS9b/view?usp=drive_link
-	new SkillInfo(SkillName.Manafont, ResourceType.cd_Manafont, Aspect.Other, false,
-		0, 0, 0, 0.2),
-	new SkillInfo(SkillName.Fire3, ResourceType.cd_GCD, Aspect.Fire, true,
-		3.5, 2000, 280, 1.292),
-	new SkillInfo(SkillName.Blizzard3, ResourceType.cd_GCD, Aspect.Ice, true,
-		3.5, 800, 280, 0.89),
-	new SkillInfo(SkillName.Freeze, ResourceType.cd_GCD, Aspect.Ice, true,
-		2.8, 1000, 120, 0.664),
-	new SkillInfo(SkillName.Flare, ResourceType.cd_GCD, Aspect.Fire, true,
-		4, 0, 240, 1.157), // mana is handled separately
-
-	new SkillInfo(SkillName.LeyLines, ResourceType.cd_LeyLines, Aspect.Other, false,
-		0, 0, 0, 0.49),// delayed
-	new SkillInfo(SkillName.Blizzard4, ResourceType.cd_GCD, Aspect.Ice, true,
-		2.5, 800, 320, 1.156),
-	new SkillInfo(SkillName.Fire4, ResourceType.cd_GCD, Aspect.Fire, true,
-		2.8, 800, 320, 1.159),
-	new SkillInfo(SkillName.BetweenTheLines, ResourceType.cd_BetweenTheLines, Aspect.Other, false,
-		0, 0, 0), // ?
-	new SkillInfo(SkillName.AetherialManipulation, ResourceType.cd_AetherialManipulation, Aspect.Other, false,
-		0, 0, 0), // ?
-	new SkillInfo(SkillName.Triplecast, ResourceType.cd_Triplecast, Aspect.Other, false,
-		0, 0, 0), // instant
-
-	new SkillInfo(SkillName.Foul, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 0, 600, 1.158),
-	new SkillInfo(SkillName.Despair, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 0, 350, 0.556),
-	// Umbral Soul: immediate snapshot & UH gain; delayed MP gain
-	// see screen recording: https://drive.google.com/file/d/1nsO69O7lgc8V_R_To4X0TGalPsCus1cg/view?usp=drive_link
-	new SkillInfo(SkillName.UmbralSoul, ResourceType.cd_GCD, Aspect.Ice, true,
-		0, 0, 0, 0.633),
-	new SkillInfo(SkillName.Xenoglossy, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 0, 880, 0.63),
-
-	new SkillInfo(SkillName.HighFire2, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 1500, 100, 1.154),
-	new SkillInfo(SkillName.HighBlizzard2, ResourceType.cd_GCD, Aspect.Ice, true,
-		3, 800, 100, 1.158),
-	new SkillInfo(SkillName.Amplifier, ResourceType.cd_Amplifier, Aspect.Other, false,
-		0, 0, 0), // ? (assumed to be instant)
-	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 1600, 520, 0.624),
-	new SkillInfo(SkillName.FlareStar, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 0, 400, 0.622), /* Get actual delay after release */
-	new SkillInfo(SkillName.Retrace, ResourceType.cd_Retrace, Aspect.Other, false,
-		0, 0, 0), // ? (assumed to be instant)
-
 	new SkillInfo(SkillName.Addle, ResourceType.cd_Addle, Aspect.Other, false,
 		0, 0, 0, 0.621),// delayed
 	new SkillInfo(SkillName.Swiftcast, ResourceType.cd_Swiftcast, Aspect.Other, false,
@@ -123,7 +66,96 @@ const skillInfos = [
 	new SkillInfo(SkillName.Tincture, ResourceType.cd_Tincture, Aspect.Other, false,
 		0, 0, 0, 0.891),// delayed
 	new SkillInfo(SkillName.Sprint, ResourceType.cd_Sprint, Aspect.Other, false,
-		0, 0, 0, 0.133)// delayed
+		0, 0, 0, 0.133), // delayed
+
+	// TODO get 3rd digit of precision
+	// https://docs.google.com/spreadsheets/d/1Emevsz5_oJdmkXy23hZQUXimirZQaoo5BejSzL3hZ9I/edit?gid=543259752#gid=543259752
+	new SkillInfo(SkillName.FireInRed, ResourceType.cd_GCD, Aspect.Other, true,
+		1.5, 300, 440, 0.84),
+	new SkillInfo(SkillName.AeroInGreen, ResourceType.cd_GCD, Aspect.Other, true,
+		1.5, 300, 480, 0.01),
+	new SkillInfo(SkillName.TemperaCoat, ResourceType.cd_TemperaCoat, Aspect.Other, false,
+		0, 0, 0, 0.01),// delayed
+	new SkillInfo(SkillName.WaterInBlue, ResourceType.cd_GCD, Aspect.Other, true,
+		1.5, 300, 520, 0.01),
+	new SkillInfo(SkillName.Smudge, ResourceType.cd_Smudge, Aspect.Other, false,
+		0, 0, 0, 0.01),// delayed
+	new SkillInfo(SkillName.Fire2InRed, ResourceType.cd_GCD, Aspect.Other, true,
+		1.5, 300, 120, 0.01),
+	new SkillInfo(SkillName.CreatureMotif, ResourceType.cd_GCD, Aspect.Other, true,
+		3, 0, 0, 0.01, 4),
+	new SkillInfo(SkillName.LivingMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
+		0, 0, 0, 0.01),
+	new SkillInfo(SkillName.MogOfTheAges, ResourceType.cd_Portrait, Aspect.Other, false,
+		0, 0, 1300, 0.01),
+	new SkillInfo(SkillName.PomMotif, ResourceType.cd_GCD, Aspect.Other, true,
+		3, 0, 0, 0.00, 4),
+	new SkillInfo(SkillName.WingMotif, ResourceType.cd_GCD, Aspect.Other, true,
+		3, 0, 0, 0.00, 4),
+	new SkillInfo(SkillName.PomMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
+		0, 0, 1100, 0.01),
+	new SkillInfo(SkillName.WingedMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
+		0, 0, 1100, 0.01),
+	new SkillInfo(SkillName.Aero2InGreen, ResourceType.cd_GCD, Aspect.Other, true,
+		1.5, 300, 140, 0.01),
+	new SkillInfo(SkillName.Water2InBlue, ResourceType.cd_GCD, Aspect.Other, true,
+		1.5, 300, 160, 0.01),
+	new SkillInfo(SkillName.WeaponMotif, ResourceType.cd_GCD, Aspect.Other, true,
+		3, 0, 0, 0.00, 4),
+	new SkillInfo(SkillName.SteelMuse, ResourceType.cd_SteelMuse, Aspect.Other, false,
+		0, 0, 0, 0.01),
+	new SkillInfo(SkillName.HammerMotif, ResourceType.cd_GCD, Aspect.Other, true,
+		3, 0, 0, 0.00, 4),
+	new SkillInfo(SkillName.StrikingMuse, ResourceType.cd_SteelMuse, Aspect.Other, false,
+		0, 0, 0, 0.01),
+	new SkillInfo(SkillName.BlizzardInCyan, ResourceType.cd_GCD, Aspect.Other, true,
+		2.3, 400, 800, 0.01, 3.3),
+	new SkillInfo(SkillName.Blizzard2InCyan, ResourceType.cd_GCD, Aspect.Other, true,
+		2.3, 400, 240, 0.01, 3.3),
+	new SkillInfo(SkillName.SubtractivePalette, ResourceType.cd_Subtractive, Aspect.Other, false,
+		0, 0, 0, 0.00),
+	new SkillInfo(SkillName.StoneInYellow, ResourceType.cd_GCD, Aspect.Other, true,
+		2.3, 400, 840, 0.01, 3.3),
+	new SkillInfo(SkillName.Stone2InYellow, ResourceType.cd_GCD, Aspect.Other, true,
+		2.3, 400, 260, 0.01, 3.3),
+	new SkillInfo(SkillName.ThunderInMagenta, ResourceType.cd_GCD, Aspect.Other, true,
+		2.3, 400, 880, 0.01, 3.3),
+	new SkillInfo(SkillName.Thunder2InMagenta, ResourceType.cd_GCD, Aspect.Other, true,
+		2.3, 400, 280, 0.01, 3.3),
+	new SkillInfo(SkillName.LandscapeMotif, ResourceType.cd_GCD, Aspect.Other, true,
+		3, 0, 0, 0.00, 4),
+	new SkillInfo(SkillName.ScenicMuse, ResourceType.cd_ScenicMuse, Aspect.Other, false,
+		0, 0, 0, 0.01),
+	new SkillInfo(SkillName.StarrySkyMotif, ResourceType.cd_GCD, Aspect.Other, true,
+		3, 0, 0, 0.00, 4),
+	new SkillInfo(SkillName.StarryMuse, ResourceType.cd_ScenicMuse, Aspect.Other, false,
+		0, 0, 0, 0.01),
+	new SkillInfo(SkillName.HolyInWhite, ResourceType.cd_GCD, Aspect.Other, true,
+		0, 300, 520, 0.01),
+	new SkillInfo(SkillName.HammerStamp, ResourceType.cd_GCD, Aspect.Other, true,
+		0, 300, 560, 0.01),
+	new SkillInfo(SkillName.HammerBrush, ResourceType.cd_GCD, Aspect.Other, true,
+		0, 300, 620, 0.01),
+	new SkillInfo(SkillName.PolishingHammer, ResourceType.cd_GCD, Aspect.Other, true,
+		0, 300, 680, 0.01),
+	new SkillInfo(SkillName.TemperaGrassa, ResourceType.cd_Grassa, Aspect.Other, false,
+		0, 0, 0, 0.01),
+	new SkillInfo(SkillName.CometInBlack, ResourceType.cd_GCD, Aspect.Other, true,
+		0, 400, 880, 0.01, 3.3),
+	new SkillInfo(SkillName.RainbowDrip, ResourceType.cd_GCD, Aspect.Other, true,
+		4, 400, 1000, 0.01, 6),
+	new SkillInfo(SkillName.ClawMotif, ResourceType.cd_GCD, Aspect.Other, true,
+		3, 0, 0, 0.00, 4),
+	new SkillInfo(SkillName.ClawedMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
+		0, 0, 1100, 0.01),
+	new SkillInfo(SkillName.MawMotif, ResourceType.cd_GCD, Aspect.Other, true,
+		3, 0, 0, 0.00, 4),
+	new SkillInfo(SkillName.FangedMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
+		0, 0, 1100, 0.01),
+	new SkillInfo(SkillName.RetributionOfTheMadeen, ResourceType.cd_Portrait, Aspect.Other, false,
+		0, 0, 1400, 0.01),
+	new SkillInfo(SkillName.StarPrism, ResourceType.cd_GCD, Aspect.Other, true,
+		0, 0, 0, 0.00),
 ];
 
 const skillInfosMap: Map<SkillName, SkillInfo> = new Map();
@@ -199,568 +231,45 @@ export class SkillsList extends Map<SkillName, Skill> {
 			));
 		}
 
-		// Blizzard
-		skillsList.set(SkillName.Blizzard, new Skill(SkillName.Blizzard,
-			() => {
-				return true;
-			},
-			(game: GameState, node: ActionNode) => {
-				if (game.getFireStacks() === 0) // no AF
-				{
-					game.castSpell({skillName: SkillName.Blizzard, onCapture: (cap: SkillCaptureCallbackInfo) => {
-						game.switchToAForUI(ResourceType.UmbralIce, 1);
-						game.startOrRefreshEnochian();
-					}, onApplication: (app: SkillApplicationCallbackInfo) => {
-					}, node: node});
-				} else // in AF
-				{
-					game.castSpell({skillName: SkillName.Blizzard, onCapture: (cap: SkillCaptureCallbackInfo) => {
-						game.resources.get(ResourceType.Enochian).removeTimer();
-						game.loseEnochian();
-					}, onApplication: (app: SkillApplicationCallbackInfo) => {
-					}, node: node});
-				}
-			}
-		));
-
-		let gainFirestarterProc = function(game: GameState) {
-			let fs = game.resources.get(ResourceType.Firestarter);
-			// re-measured in DT, screen recording at: https://drive.google.com/file/d/1MEFnd-m59qx1yIaZeehSsAxjhLMsWBuw/view?usp=drive_link
-			let duration = game.config.extendedBuffTimes ? 30.5 : 30;
-			if (fs.available(1)) {
-				fs.overrideTimer(game, duration);
-			} else {
-				fs.gain(1);
-				game.resources.addResourceEvent({
-					rscType: ResourceType.Firestarter,
-					name: "drop firestarter proc",
-					delay: duration,
-					fnOnRsc: (rsc: Resource)=>{
-						rsc.consume(1);
+		// Basic filler
+		let addBasicFiller = function(skillName: SkillName) {
+			skillsList.set(skillName, new Skill(skillName,
+				() => {
+					// TODO ensure we are not in subtractive
+					let aetherhueCount = game.resources.get(ResourceType.Aetherhues).availableAmount();
+					switch (aetherhueCount) {
+					case 0: return skillName.includes("Fire");
+					case 1: return skillName.includes("Aero");
+					default: return skillName.includes("Water");
 					}
-				});
-			}
-		}
-
-		let potentiallyGainFirestarter = function(game: GameState) {
-			let rand = game.rng(); // firestarter proc
-			if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && rand < 0.4)) gainFirestarterProc(game);
-		}
-
-		// Fire
-		skillsList.set(SkillName.Fire, new Skill(SkillName.Fire,
-			() => {
-				return true;
-			},
-			(game, node) => {
-				if (game.getIceStacks() === 0) { // in fire or no enochian
-					game.castSpell({skillName: SkillName.Fire, onCapture: (cap: SkillCaptureCallbackInfo) => {
-						game.switchToAForUI(ResourceType.AstralFire, 1);
-						game.startOrRefreshEnochian();
-						potentiallyGainFirestarter(game);
-					}, onApplication: (app: SkillApplicationCallbackInfo) => {
-					}, node: node});
-				} else {
-					game.castSpell({skillName: SkillName.Fire, onCapture: (cap: SkillCaptureCallbackInfo) => {
-						game.resources.get(ResourceType.Enochian).removeTimer();
-						game.loseEnochian();
-						potentiallyGainFirestarter(game);
-					}, onApplication: (app: SkillApplicationCallbackInfo) => {
-					}, node: node});
-				}
-			}
-		));
-
-		// Transpose
-		skillsList.set(SkillName.Transpose, new Skill(SkillName.Transpose,
-			() => {
-				return game.getFireStacks() > 0 || game.getIceStacks() > 0; // has UI or AF
-			},
-			(game, node) => {
-				game.useInstantSkill({
-					skillName: SkillName.Transpose,
-					onCapture: () => {
-						if (game.getFireStacks() === 0 && game.getIceStacks() === 0) {
-							return;
-						}
-						if (game.getFireStacks() > 0) {
-							game.switchToAForUI(ResourceType.UmbralIce, 1);
-						} else {
-							game.switchToAForUI(ResourceType.AstralFire, 1);
-						}
-						game.startOrRefreshEnochian();
-					},
-					dealDamage: false,
-					node: node
-				});
-				node.resolveAll(game.getDisplayTime());
-			}
-		));
-
-		// Ley Lines
-		addResourceAbility({
-			skillName: SkillName.LeyLines,
-			rscType: ResourceType.LeyLines,
-			instant: false,
-			duration: 30,
-			additionalEffect: () => {
-				game.resources.get(ResourceType.LeyLines).enabled = true;
-			}
-		});
-
-		let applyThunderDoT = function(game: GameState, node: ActionNode) {
-			let thunder = game.resources.get(ResourceType.ThunderDoT) as DoTBuff;
-			if (thunder.available(1)) {
-				console.assert(thunder.node);
-				(thunder.node as ActionNode).removeUnresolvedPotencies();
-				thunder.overrideTimer(game, 30);
-			} else {
-				thunder.gain(1);
-				controller.reportDotStart(game.getDisplayTime());
-				game.resources.addResourceEvent({
-					rscType: ResourceType.ThunderDoT,
-					name: "drop thunder DoT",
-					delay: 30,
-					fnOnRsc: rsc=>{
-						  rsc.consume(1);
-						  controller.reportDotDrop(game.getDisplayTime());
-					 }
-				});
-			}
-			thunder.node = node;
-			thunder.tickCount = 0;
-		}
-
-		let addThunderPotencies = function(node: ActionNode) {
-			let mods = getPotencyModifiersFromResourceState(game.resources, Aspect.Lightning);
-			let highThunder = skillsList.get(SkillName.HighThunder);
-
-			// initial potency
-			let pInitial = new Potency({
-				config: controller.record.config ?? controller.gameConfig,
-				sourceTime: game.getDisplayTime(),
-				sourceSkill: SkillName.HighThunder,
-				aspect: Aspect.Lightning,
-				basePotency: highThunder.info.basePotency,
-				snapshotTime: undefined,
-				description: ""
-			});
-			pInitial.modifiers = mods;
-			node.addPotency(pInitial);
-
-			// dots
-			for (let i = 0; i < 10; i++) {
-				let pDot = new Potency({
-					config: controller.record.config ?? controller.gameConfig,
-					sourceTime: game.getDisplayTime(),
-					sourceSkill: SkillName.HighThunder,
-					aspect: Aspect.Lightning,
-					basePotency: game.config.adjustedDoTPotency(60),
-					snapshotTime: undefined,
-					description: "DoT " + (i+1) + "/10"
-				});
-				pDot.modifiers = mods;
-				node.addPotency(pDot);
-			}
-		}
-
-		// Thunder // High Thunder
-		skillsList.set(SkillName.HighThunder, new Skill(SkillName.HighThunder,
-			() => {
-				return game.resources.get(ResourceType.Thunderhead).available(1);
-			},
-			(game, node) => {
-				// potency
-				addThunderPotencies(node); // should call on capture
-				let onHitPotency = node.getPotencies()[0];
-				node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
-
-				// tincture
-				if (game.resources.get(ResourceType.Tincture).available(1)) {
-					node.addBuff(BuffType.Tincture);
-				}
-
-				game.useInstantSkill({
-					skillName: SkillName.HighThunder,
-					onApplication: () => {
-						controller.resolvePotency(onHitPotency);
-						applyThunderDoT(game, node);
-					},
-					dealDamage: false,
-					node: node
-				});
-				let thunderhead = game.resources.get(ResourceType.Thunderhead);
-				thunderhead.consume(1);
-				thunderhead.removeTimer();
-			}
-		));
-
-		// Manaward
-		addResourceAbility({skillName: SkillName.Manaward, rscType: ResourceType.Manaward, instant: false, duration: 20});
-
-		// Manafont
-		skillsList.set(SkillName.Manafont, new Skill(SkillName.Manafont,
-			() => {
-				return game.resources.get(ResourceType.AstralFire).availableAmount() > 0;
-			},
-			(game, node) => {
-				let useSkillEvent = game.useInstantSkill({
-					skillName: SkillName.Manafont,
-					onCapture: () => {
-						game.resources.get(ResourceType.AstralFire).gain(3);
-						game.resources.get(ResourceType.UmbralHeart).gain(3);
-						game.resources.get(ResourceType.Paradox).gain(1);
-						game.gainThunderhead();
-						game.startOrRefreshEnochian();
-						node.resolveAll(game.getDisplayTime());
-					},
-					onApplication: () => {
-						game.resources.get(ResourceType.Mana).gain(10000);
-					},
-					dealDamage: false,
-					node: node
-				});
-				useSkillEvent.addTag(EventTag.ManaGain);
-			}
-		));
-
-		// Fire 3
-		skillsList.set(SkillName.Fire3, new Skill(SkillName.Fire3,
-			() => {
-				return true;
-			},
-			(game, node) => {
-				if (game.resources.get(ResourceType.Firestarter).available(1)) {
-					game.useInstantSkill({
-						skillName: SkillName.Fire3,
-						dealDamage: true,
-						node: node
-					});
-					game.switchToAForUI(ResourceType.AstralFire, 3);
-					game.startOrRefreshEnochian();
-					game.resources.get(ResourceType.Firestarter).consume(1);
-					game.resources.get(ResourceType.Firestarter).removeTimer();
-				} else {
-					game.castSpell({skillName: SkillName.Fire3, onCapture: (cap: SkillCaptureCallbackInfo) => {
-						game.switchToAForUI(ResourceType.AstralFire, 3);
-						game.startOrRefreshEnochian();
-					}, onApplication: (app: SkillApplicationCallbackInfo) => {
-					}, node: node});
-				}
-			}
-		));
-
-		// Blizzard 3
-		skillsList.set(SkillName.Blizzard3, new Skill(SkillName.Blizzard3,
-			() => {
-				return true;
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.Blizzard3, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.switchToAForUI(ResourceType.UmbralIce, 3);
-					game.startOrRefreshEnochian();
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
-
-		// Freeze
-		skillsList.set(SkillName.Freeze, new Skill(SkillName.Freeze,
-			() => {
-				return game.getIceStacks() > 0; // in UI
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.Freeze, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.resources.get(ResourceType.UmbralHeart).gain(3);
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
-
-		// Flare
-		skillsList.set(SkillName.Flare, new Skill(SkillName.Flare,
-			() => {
-				return game.getFireStacks() > 0 && // in AF
-					game.getMP() >= 800;
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.Flare, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					let uh = game.resources.get(ResourceType.UmbralHeart);
-					let mana = game.resources.get(ResourceType.Mana);
-					let manaCost = uh.available(1) ? mana.availableAmount() * 0.66 : mana.availableAmount();
-					// mana
-					game.resources.get(ResourceType.Mana).consume(manaCost);
-					uh.consume(uh.availableAmount());
-					// +3 AF; refresh enochian
-					game.resources.get(ResourceType.AstralFire).gain(3);
-					game.resources.get(ResourceType.AstralSoul).gain(3);
-					game.startOrRefreshEnochian();
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
-
-		// Blizzard 4
-		skillsList.set(SkillName.Blizzard4, new Skill(SkillName.Blizzard4,
-			() => {
-				return game.getIceStacks() > 0; // in UI
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.Blizzard4, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.resources.get(ResourceType.UmbralHeart).gain(3);
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
-
-		// Fire 4
-		skillsList.set(SkillName.Fire4, new Skill(SkillName.Fire4,
-			() => {
-				return game.getFireStacks() > 0; // in AF
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.Fire4, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.resources.get(ResourceType.AstralSoul).gain(1);
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
-
-		// Between the Lines
-		skillsList.set(SkillName.BetweenTheLines, new Skill(SkillName.BetweenTheLines,
-			() => {
-				let ll = game.resources.get(ResourceType.LeyLines);
-				return ll.availableAmountIncludingDisabled() > 0;
-			},
-			(game, node) => {
-				game.useInstantSkill({
-					skillName: SkillName.BetweenTheLines,
-					dealDamage: false,
-					onCapture: ()=>{node.resolveAll(game.getDisplayTime())},
-					node: node
-				});
-			}
-		));
-
-		// Aetherial Manipulation
-		skillsList.set(SkillName.AetherialManipulation, new Skill(SkillName.AetherialManipulation,
-			() => {
-				return true;
-			},
-			(game, node) => {
-				game.useInstantSkill({
-					skillName: SkillName.AetherialManipulation,
-					dealDamage: false,
-					onCapture: ()=>{node.resolveAll(game.getDisplayTime())},
-					node: node
-				});
-			}
-		));
-
-		// Triplecast
-		skillsList.set(SkillName.Triplecast, new Skill(SkillName.Triplecast,
-			() => {
-				return true;
-			},
-			(game, node) => {
-				game.useInstantSkill({
-					skillName: SkillName.Triplecast,
-					onCapture: () => {
-						let triple = game.resources.get(ResourceType.Triplecast);
-						if (triple.pendingChange) triple.removeTimer(); // should never need this, but just in case
-						triple.gain(3);
-						// 15.7s: see screen recording: https://drive.google.com/file/d/1qoIpAMK2KAKETgID6a3p5dqkeWRcNDdB/view?usp=drive_link
-						game.resources.addResourceEvent({
-							rscType: ResourceType.Triplecast,
-							name: "drop remaining Triple charges", delay: game.config.extendedBuffTimes ? 15.7 : 15, fnOnRsc:(rsc: Resource) => {
-								rsc.consume(rsc.availableAmount());
+				},
+				(game: GameState, node: ActionNode) => {
+					game.castSpell({
+						skillName: skillName,
+						// TODO check if this happens on cast or on application
+						onCapture: (cap: SkillCaptureCallbackInfo) => {
+							game.cycleAetherhues();
+							game.tryConsumeHyperphantasia();
+							if (skillName === SkillName.WaterInBlue
+								|| skillName === SkillName.Water2InBlue) {
+								// TODO report warning on gauge overcap
+								game.resources.get(ResourceType.PaletteGauge).gain(25);
+								game.resources.get(ResourceType.Paint).gain(1);
 							}
-						});
-						node.resolveAll(game.getDisplayTime());
-					},
-					dealDamage: false,
-					node: node
-				});
-			}
-		));
+						},
+						onApplication: (app: SkillApplicationCallbackInfo) => {},
+						node: node,
+					});
+				}
+			));
+		};
 
-		// Foul
-		skillsList.set(SkillName.Foul, new Skill(SkillName.Foul,
-			() => {
-				return game.resources.get(ResourceType.Polyglot).available(1);
-			},
-			(game, node) => {
-				game.resources.get(ResourceType.Polyglot).consume(1);
-				game.useInstantSkill({
-					skillName: SkillName.Foul,
-					dealDamage: true,
-					node: node
-				});
-			}
-		));
-
-		// Despair
-		skillsList.set(SkillName.Despair, new Skill(SkillName.Despair,
-			() => {
-				return game.getFireStacks() > 0 && // in AF
-					game.getMP() >= 800;
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.Despair, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					let mana = game.resources.get(ResourceType.Mana);
-					// mana
-					mana.consume(mana.availableAmount());
-					// +3 AF; refresh enochian
-					game.resources.get(ResourceType.AstralFire).gain(3);
-					game.startOrRefreshEnochian();
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
-
-		// Umbral Soul
-		skillsList.set(SkillName.UmbralSoul, new Skill(SkillName.UmbralSoul,
-			() => {
-				return game.getIceStacks() > 0;
-			},
-			(game, node) => {
-				game.castSpell({
-					skillName: SkillName.UmbralSoul,
-					onCapture: () => {
-						game.resources.get(ResourceType.UmbralIce).gain(1);
-						game.resources.get(ResourceType.UmbralHeart).gain(1);
-						game.startOrRefreshEnochian();
-						// halt
-						let enochian = game.resources.get(ResourceType.Enochian);
-						enochian.removeTimer();
-					},
-					onApplication: (app: SkillApplicationCallbackInfo) => {},
-					node: node
-				});
-			}
-		));
-
-		// Xenoglossy
-		skillsList.set(SkillName.Xenoglossy, new Skill(SkillName.Xenoglossy,
-			() => {
-				return game.resources.get(ResourceType.Polyglot).available(1);
-			},
-			(game, node) => {
-				game.resources.get(ResourceType.Polyglot).consume(1);
-				game.useInstantSkill({
-					skillName: SkillName.Xenoglossy,
-					dealDamage: true,
-					node: node
-				});
-			}
-		));
-
-		// High Fire 2
-		skillsList.set(SkillName.HighFire2, new Skill(SkillName.HighFire2,
-			() => {
-				return true;
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.HighFire2, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.switchToAForUI(ResourceType.AstralFire, 3);
-					game.startOrRefreshEnochian();
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
-
-		// High Blizzard 2
-		skillsList.set(SkillName.HighBlizzard2, new Skill(SkillName.HighBlizzard2,
-			() => {
-				return true;
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.HighBlizzard2, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.switchToAForUI(ResourceType.UmbralIce, 3);
-					game.startOrRefreshEnochian();
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
-
-		// Amplifier
-		skillsList.set(SkillName.Amplifier, new Skill(SkillName.Amplifier,
-			() => {
-				return game.getIceStacks() > 0 || game.getFireStacks() > 0;
-			},
-			(game, node) => {
-				game.useInstantSkill({
-					skillName: SkillName.Amplifier,
-					onCapture: () => {
-						let polyglot = game.resources.get(ResourceType.Polyglot);
-						if (polyglot.available(polyglot.maxValue)) {
-							controller.reportWarning(WarningType.PolyglotOvercap)
-						}
-						polyglot.gain(1);
-					},
-					dealDamage: false,
-					node: node
-				});
-				node.resolveAll(game.getDisplayTime());
-			}
-		));
-
-		// Paradox
-		skillsList.set(SkillName.Paradox, new Skill(SkillName.Paradox,
-			() => {
-				return game.resources.get(ResourceType.Paradox).available(1);
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.Paradox, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.resources.get(ResourceType.Paradox).consume(1);
-					// enochian (refresh only) (which also clears the halt status)
-					if (game.hasEnochian()) {
-						game.startOrRefreshEnochian();
-					}
-					if (game.getIceStacks() > 0) {
-						game.resources.get(ResourceType.UmbralIce).gain(1);
-					} else if (game.getFireStacks() > 0) {// firestarter proc
-						game.resources.get(ResourceType.AstralFire).gain(1);
-						gainFirestarterProc(game);
-					} else {
-						console.assert(false);
-					}
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
-
-		// Flare Star
-		skillsList.set(SkillName.FlareStar, new Skill(SkillName.FlareStar,
-			() => {
-				return game.resources.get(ResourceType.AstralSoul).available(6);
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.FlareStar, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.resources.get(ResourceType.AstralSoul).consume(6);
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
-
-		// Retrace
-		skillsList.set(SkillName.Retrace, new Skill(SkillName.Retrace,
-			() => {
-				return game.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0;
-			},
-			(game, node) => {
-				game.useInstantSkill({
-					skillName: SkillName.Retrace,
-					onCapture: () => {
-						game.resources.get(ResourceType.LeyLines).enabled = true;
-					},
-					dealDamage: false,
-					node: node
-				});
-				node.resolveAll(game.getDisplayTime());
-			}
-		));
-
+		[
+			SkillName.FireInRed, SkillName.Fire2InRed,
+			SkillName.AeroInGreen, SkillName.Aero2InGreen,
+			SkillName.WaterInBlue, SkillName.Water2InBlue,
+		].forEach(addBasicFiller);
+		
 		// Addle
 		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 15});
 

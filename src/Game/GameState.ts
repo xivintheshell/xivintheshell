@@ -46,6 +46,15 @@ export class GameState {
 		this.resources.set(ResourceType.UmbralHeart, new Resource(ResourceType.UmbralHeart, 3, 0));
 		this.resources.set(ResourceType.AstralSoul, new Resource(ResourceType.AstralSoul, 6, 0));
 
+		this.resources.set(ResourceType.Portrait, new Resource(ResourceType.Portrait, 2, 0));
+		this.resources.set(ResourceType.Depictions, new Resource(ResourceType.Depictions, 3, 0));
+		// automatically do prepull draws
+		this.resources.set(ResourceType.CreatureCanvas, new Resource(ResourceType.CreatureCanvas, 1, 1));
+		this.resources.set(ResourceType.WeaponCanvas, new Resource(ResourceType.WeaponCanvas, 1, 1));
+		this.resources.set(ResourceType.LandscapeCanvas, new Resource(ResourceType.LandscapeCanvas, 1, 1));
+		this.resources.set(ResourceType.PaletteGauge, new Resource(ResourceType.PaletteGauge, 100, 0));
+		this.resources.set(ResourceType.Paint, new Resource(ResourceType.Paint, 5, 0));
+
 		this.resources.set(ResourceType.LeyLines, new Resource(ResourceType.LeyLines, 1, 0)); // capture
 		this.resources.set(ResourceType.Enochian, new Resource(ResourceType.Enochian, 1, 0));
 		this.resources.set(ResourceType.Paradox, new Resource(ResourceType.Paradox, 1, 0));
@@ -60,6 +69,16 @@ export class GameState {
 		this.resources.set(ResourceType.Surecast, new Resource(ResourceType.Surecast, 1, 0));
 		this.resources.set(ResourceType.Tincture, new Resource(ResourceType.Tincture, 1, 0)); // capture
 		this.resources.set(ResourceType.Sprint, new Resource(ResourceType.Sprint, 1, 0));
+
+		this.resources.set(ResourceType.Aetherhues, new Resource(ResourceType.Aetherhues, 2, 0));
+		this.resources.set(ResourceType.MonochromeTones, new Resource(ResourceType.MonochromeTones, 0, 1));
+		this.resources.set(ResourceType.SubtractivePalette, new Resource(ResourceType.SubtractivePalette, 0, 3));
+		this.resources.set(ResourceType.HammerTime, new Resource(ResourceType.HammerTime, 0, 3));
+		this.resources.set(ResourceType.Inspiration, new Resource(ResourceType.Inspiration, 0, 1));
+		this.resources.set(ResourceType.SubtractiveSpectrum, new Resource(ResourceType.SubtractiveSpectrum, 0, 1));
+		this.resources.set(ResourceType.Hyperphantasia, new Resource(ResourceType.Hyperphantasia, 0, 5));
+		this.resources.set(ResourceType.RainbowBright, new Resource(ResourceType.RainbowBright, 0, 1));
+		this.resources.set(ResourceType.Starstruck, new Resource(ResourceType.Starstruck, 0, 1));
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
@@ -83,6 +102,16 @@ export class GameState {
 		this.cooldowns.set(ResourceType.cd_Surecast, new CoolDown(ResourceType.cd_Surecast, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Tincture, new CoolDown(ResourceType.cd_Tincture, 270, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Sprint, new CoolDown(ResourceType.cd_Sprint, 60, 1, 1));
+
+		this.cooldowns.set(ResourceType.cd_TemperaCoat, new CoolDown(ResourceType.cd_TemperaCoat, 120, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Smudge, new CoolDown(ResourceType.cd_Smudge, 20, 1, 1));
+		this.cooldowns.set(ResourceType.cd_LivingMuse, new CoolDown(ResourceType.cd_LivingMuse, 40, 3, 3));
+		this.cooldowns.set(ResourceType.cd_Portrait, new CoolDown(ResourceType.cd_Portrait, 30, 1, 1));
+		this.cooldowns.set(ResourceType.cd_SteelMuse, new CoolDown(ResourceType.cd_SteelMuse, 60, 1, 1));
+		this.cooldowns.set(ResourceType.cd_ScenicMuse, new CoolDown(ResourceType.cd_ScenicMuse, 120, 1, 1));
+		// TODO handle these differently
+		this.cooldowns.set(ResourceType.cd_Subtractive, new CoolDown(ResourceType.cd_Subtractive, 1, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Grassa, new CoolDown(ResourceType.cd_Grassa, 1, 1, 1));
 
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
@@ -626,6 +655,47 @@ export class GameState {
 		// lasts a teeny bit longer to allow simultaneous events catch its effect
 		let enochian = this.resources.get(ResourceType.Enochian);
 		return enochian.available(1);
+	}
+
+	// falls off after 30 seconds unless next spell is resolved
+	// (for now ignore edge case of buff falling off mid-cast)
+	cycleAetherhues() {
+		let aetherhues = this.resources.get(ResourceType.Aetherhues);
+		if (aetherhues.available(2) && aetherhues.pendingChange) {
+			// reset timer and reset value to 0
+			aetherhues.overrideCurrentValue(0);
+			aetherhues.removeTimer();
+		} else if (aetherhues.available(1) && aetherhues.pendingChange) {
+			// refresh timer if it was already running
+			aetherhues.overrideTimer(this, 30);
+			aetherhues.gain(1);
+		} else {
+			// we were at 0 aetherhues, so increment and start the timer anew
+			aetherhues.gain(1);
+			this.resources.addResourceEvent({
+				rscType: ResourceType.Aetherhues,
+				name: "reset aetherhues status",
+				delay: 30,
+				fnOnRsc: rsc => this.resources.get(ResourceType.Aetherhues).overrideCurrentValue(0),
+			});
+		}
+	}
+
+	// when inspiration + hyperphantasia stacks are available, the cast/recast of paint spells
+	// are greatly reduced
+	// when all 5 phantasia stacks are consumed, then inspiration is also removed
+	tryConsumeHyperphantasia() {
+		let hyperphantasia = this.resources.get(ResourceType.Hyperphantasia);
+		let inspiration = this.resources.get(ResourceType.Inspiration);
+		if (inspiration.available(1) && hyperphantasia.available(1) && hyperphantasia.pendingChange) {
+			// consume a stack
+			hyperphantasia.consume(1);
+			// if all stacks are consumed, stop timers
+			if (hyperphantasia.availableAmount() === 0) {
+				hyperphantasia.removeTimer();
+				inspiration.removeTimer();
+			}
+		}
 	}
 
 	// falls off after 15s unless refreshed by AF / UI
