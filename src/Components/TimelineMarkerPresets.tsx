@@ -82,6 +82,7 @@ function PresetButtons() {
 	let content = <div style={{lineHeight: "2em"}}>
 		<span>{localize({en: "Current tier: ", zh: "当前版本（英文）："})}</span>
 		<LoadCombinedTracksBtn displayName={"M2S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m2s.txt"}/>
+		<LoadCombinedTracksBtn displayName={"M3S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m3s.txt"}/>
 		<LoadCombinedTracksBtn displayName={"M4S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m4s.txt"}/>
 	</div>
 	return <Expandable title={"preset buttons"} titleNode={localize({en: "Presets", zh: "预设文件"})} defaultShow={true} content={content}/>
