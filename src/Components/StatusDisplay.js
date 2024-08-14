@@ -130,7 +130,10 @@ function Buff(props) {
 				controller.autoSave();
 			}
 		}}/>
-		{props.timeRemaining !== undefined && <span className={"buff-label"}>{props.timeRemaining}</span>}
+		{/* When the buff has no timer, we still want it to align with other buffs, so just pad some empty space */}
+		<span className={"buff-label"} style={{visibility: props.timeRemaining === undefined ? "hidden" : ""}}>
+			{props.timeRemaining ? props.timeRemaining : "0.000"}
+		</span>
 	</div>
 }
 
@@ -261,7 +264,6 @@ function BuffsDisplay(props) {
 		stacks: data.subtractivePalette,
 		className: data.subtractivePalette ? "" : "hidden"
 	});
-	console.log(data.subtractivePalette);
 
 	// buffs.push({
 	// 	rscType: ResourceType.HammerTime,
@@ -492,6 +494,7 @@ function ResourcesDisplay(props) {
 				en: "creature",
 			})
 		}
+		color={colors.resources.polyStacks}
 		currentStacks={data.creatureCanvas}
 		maxStacks={1}
 	/>;
@@ -502,6 +505,7 @@ function ResourcesDisplay(props) {
 				en: "weapon",
 			})
 		}
+		color={colors.resources.polyStacks}
 		currentStacks={data.weaponCanvas}
 		maxStacks={1}
 	/>;
@@ -512,6 +516,7 @@ function ResourcesDisplay(props) {
 				en: "landscape",
 			})
 		}
+		color={colors.resources.polyStacks}
 		currentStacks={data.landscapeCanvas}
 		maxStacks={1}
 	/>;
@@ -535,6 +540,7 @@ function ResourcesDisplay(props) {
 				en: "paint gauge",
 			})
 		}
+		color={colors.resources.polyStacks}
 		currentStacks={data.paint}
 		maxStacks={5}
 	/>;

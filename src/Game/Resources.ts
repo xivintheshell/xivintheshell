@@ -106,28 +106,35 @@ export class DoTBuff extends Resource {
 export class CoolDown extends Resource {
 	readonly #cdPerStack: number;
 	#recastTimeScale: number;
+	#currentBaseRecast: number;
 	constructor(type: ResourceType, cdPerStack: number, maxStacks: number, initialNumStacks: number) {
 		super(type, maxStacks * cdPerStack, initialNumStacks * cdPerStack);
 		this.#cdPerStack = cdPerStack;
+		this.#currentBaseRecast = cdPerStack; // special case for mixed-recast spells
 		this.#recastTimeScale = 1; // effective for the next stack (i.e. 0.85 if captured LL)
 	}
-	currentStackCd() { return this.#cdPerStack * this.#recastTimeScale; }
-	stacksAvailable() { return Math.floor((this.availableAmount() + Debug.epsilon) / this.#cdPerStack); }
+	currentStackCd() { return this.#currentBaseRecast * this.#recastTimeScale; }
+	stacksAvailable() { return Math.floor((this.availableAmount() + Debug.epsilon) / this.#currentBaseRecast); }
 	useStack(game: GameState) {
 		this.consume(this.#cdPerStack);
 		this.#reCaptureRecastTimeScale(game);
 	}
 	useStackWithRecast(game: GameState, recast: number) {
 		// roll the GCD with a special recast value
+		this.consume(this.#currentBaseRecast);
+		this.maxValue = recast;
 		// LL/HP modifier
 		this.#reCaptureRecastTimeScale(game);
 		// scale for spells with longer cast/recast
-		this.#recastTimeScale *= recast / 2.5;
+		this.#currentBaseRecast = recast;
 	}
 	useStackWithFixedRecast(game: GameState, recast: number) {
 		// roll the GCD with a special recast value for spells that are unaffected
 		// by haste buffs or sps (i.e. picto motifs)
-		this.#recastTimeScale = recast / 2.5;
+		this.consume(this.#currentBaseRecast);
+		this.maxValue = recast;
+		this.#recastTimeScale = 1;
+		this.#currentBaseRecast = recast;
 	}
 	setRecastTimeScale(timeScale: number) { this.#recastTimeScale = timeScale; }
 	#reCaptureRecastTimeScale(game: GameState) {
@@ -135,7 +142,7 @@ export class CoolDown extends Resource {
 	}
 	restore(game: GameState, deltaTime: number) {
 		let stacksBefore = this.stacksAvailable();
-		let unscaledTimeTillNextStack = (stacksBefore + 1) * this.#cdPerStack - this.availableAmount();
+		let unscaledTimeTillNextStack = (stacksBefore + 1) * this.#currentBaseRecast - this.availableAmount();
 		let scaledTimeTillNextStack = unscaledTimeTillNextStack * this.#recastTimeScale;
 		if (deltaTime >= scaledTimeTillNextStack) {// upon return, will have gained another stack
 			// part before stack gain
@@ -150,7 +157,7 @@ export class CoolDown extends Resource {
 	}
 	timeTillNextStackAvailable() {
 		if (this.availableAmount() === this.maxValue) return 0;
-		return (this.#cdPerStack - this.availableAmount() % this.#cdPerStack) * this.#recastTimeScale;
+		return (this.#currentBaseRecast - this.availableAmount() % this.#currentBaseRecast) * this.#recastTimeScale;
 	}
 }
 

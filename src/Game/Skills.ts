@@ -254,7 +254,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 							game.tryConsumeHyperphantasia();
 							if (skillName === SkillName.WaterInBlue
 								|| skillName === SkillName.Water2InBlue) {
-								// TODO report warning on gauge overcap
+								if (game.resources.get(ResourceType.PaletteGauge).available(100)) {
+									controller.reportWarning(WarningType.PaletteOvercap);
+								}
 								game.resources.get(ResourceType.PaletteGauge).gain(25);
 								game.resources.get(ResourceType.Paint).gain(1);
 							}
@@ -335,6 +337,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 							paletteGauge.consume(50);
 						}
 						// gain comet (caps at 1)
+						if (game.resources.get(ResourceType.MonochromeTones).available(1)) {
+							controller.reportWarning(WarningType.CometOverwrite);
+						}
 						game.resources.get(ResourceType.MonochromeTones).gain(1);
 						game.resources.get(ResourceType.SubtractivePalette).gain(3);
 					},
@@ -342,6 +347,40 @@ export class SkillsList extends Map<SkillName, Skill> {
 					node: node,
 				});
 				node.resolveAll(game.getDisplayTime());
+			}
+		));
+
+
+		// Holy in White
+		skillsList.set(SkillName.HolyInWhite, new Skill(SkillName.HolyInWhite,
+			() => game.resources.get(ResourceType.Paint).available(1) && !game.resources.get(ResourceType.MonochromeTones).available(1),
+			(game: GameState, node: ActionNode) => {
+				game.castSpell({
+					skillName: SkillName.HolyInWhite,
+					onCapture: (cap: SkillCaptureCallbackInfo) => {
+						game.resources.get(ResourceType.Paint).consume(1);
+						game.tryConsumeHyperphantasia();
+					},
+					onApplication: (app: SkillApplicationCallbackInfo) => {},
+					node: node,
+				})
+			}
+		));
+
+		// Comet in Black
+		skillsList.set(SkillName.CometInBlack, new Skill(SkillName.CometInBlack,
+			() => game.resources.get(ResourceType.Paint).available(1) && game.resources.get(ResourceType.MonochromeTones).available(1),
+			(game: GameState, node: ActionNode) => {
+				game.castSpell({
+					skillName: SkillName.CometInBlack,
+					onCapture: (cap: SkillCaptureCallbackInfo) => {
+						game.resources.get(ResourceType.Paint).consume(1);
+						game.resources.get(ResourceType.MonochromeTones).consume(1);
+						game.tryConsumeHyperphantasia();
+					},
+					onApplication: (app: SkillApplicationCallbackInfo) => {},
+					node: node,
+				})
 			}
 		));
 		

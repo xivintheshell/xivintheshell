@@ -546,10 +546,16 @@ export class GameState {
 			takeEffect(game);
 
 			// recast
-			cd.useStackWithRecast(game, skillInfo.baseRecastTime);
+			cd.useStackWithRecast(game, game.config.adjustedCastTime(skillInfo.baseRecastTime, false, false));
 
 			// animation lock
 			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(props.skillName));
+		}
+
+		// Picto's litany of instant casts
+		if (skillInfo.baseCastTime === 0) {
+			instantCast(this, undefined);
+			return;
 		}
 
 		// Paradox made instant via Dawntrail
@@ -592,7 +598,7 @@ export class GameState {
 		}));
 
 		// recast
-		cd.useStackWithRecast(this, skillInfo.baseRecastTime);
+		cd.useStackWithRecast(this, this.config.adjustedCastTime(skillInfo.baseRecastTime, false, false));
 
 		// caster tax
 		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
