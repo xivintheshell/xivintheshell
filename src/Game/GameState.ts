@@ -71,14 +71,14 @@ export class GameState {
 		this.resources.set(ResourceType.Sprint, new Resource(ResourceType.Sprint, 1, 0));
 
 		this.resources.set(ResourceType.Aetherhues, new Resource(ResourceType.Aetherhues, 2, 0));
-		this.resources.set(ResourceType.MonochromeTones, new Resource(ResourceType.MonochromeTones, 0, 1));
-		this.resources.set(ResourceType.SubtractivePalette, new Resource(ResourceType.SubtractivePalette, 0, 3));
-		this.resources.set(ResourceType.HammerTime, new Resource(ResourceType.HammerTime, 0, 3));
-		this.resources.set(ResourceType.Inspiration, new Resource(ResourceType.Inspiration, 0, 1));
-		this.resources.set(ResourceType.SubtractiveSpectrum, new Resource(ResourceType.SubtractiveSpectrum, 0, 1));
-		this.resources.set(ResourceType.Hyperphantasia, new Resource(ResourceType.Hyperphantasia, 0, 5));
-		this.resources.set(ResourceType.RainbowBright, new Resource(ResourceType.RainbowBright, 0, 1));
-		this.resources.set(ResourceType.Starstruck, new Resource(ResourceType.Starstruck, 0, 1));
+		this.resources.set(ResourceType.MonochromeTones, new Resource(ResourceType.MonochromeTones, 1, 0));
+		this.resources.set(ResourceType.SubtractivePalette, new Resource(ResourceType.SubtractivePalette, 3, 0));
+		this.resources.set(ResourceType.HammerTime, new Resource(ResourceType.HammerTime, 3, 0));
+		this.resources.set(ResourceType.Inspiration, new Resource(ResourceType.Inspiration, 1, 0));
+		this.resources.set(ResourceType.SubtractiveSpectrum, new Resource(ResourceType.SubtractiveSpectrum, 1, 0));
+		this.resources.set(ResourceType.Hyperphantasia, new Resource(ResourceType.Hyperphantasia, 5, 0));
+		this.resources.set(ResourceType.RainbowBright, new Resource(ResourceType.RainbowBright, 1, 0));
+		this.resources.set(ResourceType.Starstruck, new Resource(ResourceType.Starstruck, 1, 0));
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
@@ -420,10 +420,11 @@ export class GameState {
 	}
 
 	gcdRecastTimeScale() {
-		let ll = this.resources.get(ResourceType.LeyLines);
-		if (ll.available(1)) {
-			// should be approximately 0.85
-			return this.config.adjustedGCD(true) / this.config.adjustedGCD(false);
+		let llAvailable = this.resources.get(ResourceType.LeyLines).available(1);
+		let hpAvailable = this.resources.get(ResourceType.Hyperphantasia).available(1);
+		if (llAvailable || hpAvailable) {
+			// should be approximately 0.85 for LL, 0.75 for hyperphantasia
+			return this.config.adjustedGCD(llAvailable, hpAvailable) / this.config.adjustedGCD(false);
 		} else {
 			return 1;
 		}
@@ -460,9 +461,12 @@ export class GameState {
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
+		let hpCovered = this.resources.get(ResourceType.Hyperphantasia).available(1);
+		// TODO whitelist spells affected by hyperphantasia
 		let capturedCastTime = this.captureSpellCastTimeAFUI(
 			skillInfo.aspect,
-			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered));
+			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered, hpCovered));
+		let capturedRecastTime = this.config.adjustedCastTime(skillInfo.baseRecastTime, llCovered, hpCovered);
 		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
 			props.node.addBuff(BuffType.LeyLines);
 		}
@@ -542,7 +546,7 @@ export class GameState {
 			takeEffect(game);
 
 			// recast
-			cd.useStack(game);
+			cd.useStackWithRecast(game, skillInfo.baseRecastTime);
 
 			// animation lock
 			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(props.skillName));
@@ -588,7 +592,7 @@ export class GameState {
 		}));
 
 		// recast
-		cd.useStack(this);
+		cd.useStackWithRecast(this, skillInfo.baseRecastTime);
 
 		// caster tax
 		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
@@ -773,9 +777,10 @@ export class GameState {
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
 		let [capturedManaCost, uhConsumption] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
+		let hpCovered = this.resources.get(ResourceType.Hyperphantasia).available(1);
 		let capturedCastTime = this.captureSpellCastTimeAFUI(
 			skill.info.aspect,
-			this.config.adjustedCastTime(skill.info.baseCastTime, llCovered));
+			this.config.adjustedCastTime(skill.info.baseCastTime, llCovered, hpCovered));
 		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1)
 			|| this.resources.get(ResourceType.Swiftcast).available(1)
 			|| skillName===SkillName.Paradox

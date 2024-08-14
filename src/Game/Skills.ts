@@ -235,12 +235,14 @@ export class SkillsList extends Map<SkillName, Skill> {
 		let addBasicFiller = function(skillName: SkillName) {
 			skillsList.set(skillName, new Skill(skillName,
 				() => {
-					// TODO ensure we are not in subtractive
+					if (game.resources.get(ResourceType.SubtractivePalette).available(1)) {
+						return false;
+					}
 					let aetherhueCount = game.resources.get(ResourceType.Aetherhues).availableAmount();
 					switch (aetherhueCount) {
-					case 0: return skillName.includes("Fire");
-					case 1: return skillName.includes("Aero");
-					default: return skillName.includes("Water");
+						case 0: return skillName.includes("Fire");
+						case 1: return skillName.includes("Aero");
+						default: return skillName.includes("Water");
 					}
 				},
 				(game: GameState, node: ActionNode) => {
@@ -264,11 +266,84 @@ export class SkillsList extends Map<SkillName, Skill> {
 			));
 		};
 
+		// Subtractive spells
+		let addSubtractiveFiller = function(skillName: SkillName) {
+			skillsList.set(skillName, new Skill(skillName,
+				() => {
+					if (!game.resources.get(ResourceType.SubtractivePalette).available(1)) {
+						return false;
+					}
+					let aetherhueCount = game.resources.get(ResourceType.Aetherhues).availableAmount();
+					switch (aetherhueCount) {
+						case 0: return skillName.includes("Blizzard");
+						case 1: return skillName.includes("Stone");
+						default: return skillName.includes("Thunder");
+					}
+				},
+				(game: GameState, node: ActionNode) => {
+					game.castSpell({
+						skillName: skillName,
+						// TODO check if this happens on cast or on application
+						onCapture: (cap: SkillCaptureCallbackInfo) => {
+							game.cycleAetherhues();
+							game.resources.get(ResourceType.SubtractivePalette).consume(1);
+							game.tryConsumeHyperphantasia();
+							if (skillName === SkillName.ThunderInMagenta
+								|| skillName === SkillName.Thunder2InMagenta) {
+								game.resources.get(ResourceType.Paint).gain(1);
+							}
+						},
+						onApplication: (app: SkillApplicationCallbackInfo) => {},
+						node: node,
+					});
+				}
+			));
+		};
+
 		[
 			SkillName.FireInRed, SkillName.Fire2InRed,
 			SkillName.AeroInGreen, SkillName.Aero2InGreen,
 			SkillName.WaterInBlue, SkillName.Water2InBlue,
 		].forEach(addBasicFiller);
+		[
+			SkillName.BlizzardInCyan, SkillName.Blizzard2InCyan,
+			SkillName.StoneInYellow, SkillName.Stone2InYellow,
+			SkillName.ThunderInMagenta, SkillName.Thunder2InMagenta,
+		].forEach(addSubtractiveFiller);
+
+		// Subtractive Palette
+		skillsList.set(SkillName.SubtractivePalette, new Skill(SkillName.SubtractivePalette,
+			() => (
+				// Check we are not already in subtractive
+				!game.resources.get(ResourceType.SubtractivePalette).available(1) &&
+				// Check if free subtractive from starry muse or 50 gauge is available
+				(
+					game.resources.get(ResourceType.SubtractiveSpectrum).available(1) ||
+					game.resources.get(ResourceType.PaletteGauge).available(50)
+				)
+			),
+			(game: GameState, node: ActionNode) => {
+				game.useInstantSkill({
+					skillName: SkillName.SubtractivePalette,
+					onCapture: () => {
+						let subtractiveSpectrum = game.resources.get(ResourceType.SubtractiveSpectrum);
+						let paletteGauge = game.resources.get(ResourceType.PaletteGauge);
+						if (subtractiveSpectrum.available(1)) {
+							subtractiveSpectrum.consume(1);
+							subtractiveSpectrum.removeTimer();
+						} else {
+							paletteGauge.consume(50);
+						}
+						// gain comet (caps at 1)
+						game.resources.get(ResourceType.MonochromeTones).gain(1);
+						game.resources.get(ResourceType.SubtractivePalette).gain(3);
+					},
+					dealDamage: false,
+					node: node,
+				});
+				node.resolveAll(game.getDisplayTime());
+			}
+		));
 		
 		// Addle
 		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 15});

@@ -66,9 +66,36 @@ function ResourceCounter(props) {
 		</div>
 	</div>;
 }
+
+function ResourceText(props) {
+	return <div className={props.className} style={{marginBottom: 4, lineHeight: "1.5em"}}>
+		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
+		<div style={{width: 200, display: "inline-block"}}>
+			<div style={{display: "inline-block", marginLeft: 6}}>{props.text}</div>
+		</div>
+	</div>;
+}
+
 const buffIcons = new Map();
 buffIcons.set(ResourceType.Aetherhues, require("./Asset/picto/buffs/aetherhues_1.png"));
 buffIcons.set(ResourceType.Aetherhues + "2", require("./Asset/picto/buffs/aetherhues_2.png"));
+buffIcons.set(ResourceType.MonochromeTones, require("./Asset/picto/buffs/monochromeTones.png"));
+// buffs with numbers come from the 018000 category on xivapi
+buffIcons.set(ResourceType.HammerTime, require("./Asset/picto/buffs/hammer_1.png"))
+buffIcons.set(ResourceType.HammerTime + "2", require("./Asset/picto/buffs/hammer_2.png"))
+buffIcons.set(ResourceType.HammerTime + "3", require("./Asset/picto/buffs/hammer_3.png"))
+buffIcons.set(ResourceType.Inspiration, require("./Asset/picto/buffs/inspiration.png"))
+buffIcons.set(ResourceType.SubtractivePalette, require("./Asset/picto/buffs/subtractive_1.png"))
+buffIcons.set(ResourceType.SubtractivePalette + "2", require("./Asset/picto/buffs/subtractive_2.png"))
+buffIcons.set(ResourceType.SubtractivePalette + "3", require("./Asset/picto/buffs/subtractive_3.png"))
+buffIcons.set(ResourceType.SubtractiveSpectrum, require("./Asset/picto/buffs/subtractiveSpectrum.png"))
+buffIcons.set(ResourceType.Hyperphantasia, require("./Asset/picto/buffs/hyperphantasia_1.png"))
+buffIcons.set(ResourceType.Hyperphantasia + "2", require("./Asset/picto/buffs/hyperphantasia_2.png"))
+buffIcons.set(ResourceType.Hyperphantasia + "3", require("./Asset/picto/buffs/hyperphantasia_3.png"))
+buffIcons.set(ResourceType.Hyperphantasia + "4", require("./Asset/picto/buffs/hyperphantasia_4.png"))
+buffIcons.set(ResourceType.Hyperphantasia + "5", require("./Asset/picto/buffs/hyperphantasia_5.png"))
+buffIcons.set(ResourceType.RainbowBright, require("./Asset/picto/buffs/rainbowBright.png"))
+buffIcons.set(ResourceType.StarStruck, require("./Asset/picto/buffs/starStruck.png"))
 
 buffIcons.set(ResourceType.Addle, require("./Asset/buff_addle.png"));
 buffIcons.set(ResourceType.Swiftcast, require("./Asset/buff_swiftcast.png"));
@@ -80,8 +107,13 @@ buffIcons.set(ResourceType.Sprint, require("./Asset/buff_sprint.png"));
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props) {
 	let assetName = props.rscType;
-	if (props.rscType === ResourceType.Aetherhues) {
-		if (props.stacks === 2) assetName += "2";
+	if ([
+			ResourceType.Aetherhues,
+			ResourceType.SubtractivePalette,
+			ResourceType.HammerTime,
+			ResourceType.Hyperphantasia
+		].includes(props.rscType)) {
+		if (props.stacks > 1) assetName += props.stacks.toFixed(0);
 	}
 	return <div title={props.rscType} className={props.className + " buff " + props.rscType}>
 		<Clickable content={
@@ -98,7 +130,7 @@ function Buff(props) {
 				controller.autoSave();
 			}
 		}}/>
-		<span className={"buff-label"}>{props.timeRemaining}</span>
+		{props.timeRemaining !== undefined && <span className={"buff-label"}>{props.timeRemaining}</span>}
 	</div>
 }
 
@@ -120,6 +152,8 @@ function BuffsDisplay(props) {
 
 		aetherhuesCountdown: 0,
 		aetherhuesStacks: 0,
+		monochromeTones: 0,
+		subtractivePalette: 0,
 	};
 	let buffs = [];
 	buffs.push({
@@ -209,8 +243,40 @@ function BuffsDisplay(props) {
 		enabled: true,
 		stacks: data.aetherhuesStacks,
 		timeRemaining: data.aetherhuesCountdown.toFixed(3),
-		className: "" //data.aetherhuesCountdown > 0 ? "" : "hidden"
-	})
+		className: data.aetherhuesCountdown > 0 ? "" : "hidden"
+	});
+
+	buffs.push({
+		rscType: ResourceType.MonochromeTones,
+		onSelf: true,
+		enabled: true,
+		stacks: data.monochromeTones,
+		className: data.monochromeTones ? "" : "hidden"
+	});
+
+	buffs.push({
+		rscType: ResourceType.SubtractivePalette,
+		onSelf: true,
+		enabled: true,
+		stacks: data.subtractivePalette,
+		className: data.subtractivePalette ? "" : "hidden"
+	});
+	console.log(data.subtractivePalette);
+
+	// buffs.push({
+	// 	rscType: ResourceType.HammerTime,
+	// 	onSelf: true,
+	// 	enabled: true,
+	// 	stacks: data.hammerTimeStacks,
+	// 	timer: data.hammerTimeCountdown,
+	// 	className: data.hammerTimeCountdown ? "" : "hidden"
+	// });
+
+	// TODO inspiration
+	// TODO subtractive spectrum
+	// TODO hyperphantasia
+	// TODO rainbowbright
+	// TODO starstruck
 
 	for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
 	return <div className={"buffsDisplay self"}>
@@ -300,7 +366,15 @@ function ResourcesDisplay(props) {
 		paradox: 0,
 		astralSoul: 0,
 		polyglotCountdown: 30,
-		polyglotStacks: 0
+		polyglotStacks: 0,
+
+		portrait: 0,
+		depictions: 0,
+		creatureCanvas: 0,
+		weaponCanvas: 0,
+		landscapeCanvas: 0,
+		paletteGauge: 0,
+		paint: 0,
 	}
 	let manaBar = <ResourceBar
 		name={"MP"}
@@ -388,16 +462,93 @@ function ResourcesDisplay(props) {
 		color={colors.resources.polyStacks}
 		currentStacks={data.polyglotStacks}
 		maxStacks={3}/>;
+
+
+	let portrait = <ResourceText
+		name={
+			localize({
+				en: "portrait",
+			})
+		}
+		text={data.portrait === 0 ? "/" : (data.portrait === 1 ? "moogle" : "madeen")}
+	/>;
+	let depictions = <ResourceText
+		name={
+			localize({
+				en: "depictions",
+			})
+		}
+		text={
+			data.depictions === 0 ? "/" :
+				(data.depictions === 1 ? "pom" :
+					(data.depictions === 2 ? "wing" :
+						(data.depictions === 3 ? "fang" : "maw")))
+		}
+	/>;
+
+	let creatureCanvas = <ResourceCounter
+		name={
+			localize({
+				en: "creature",
+			})
+		}
+		currentStacks={data.creatureCanvas}
+		maxStacks={1}
+	/>;
+
+	let weaponCanvas = <ResourceCounter
+		name={
+			localize({
+				en: "weapon",
+			})
+		}
+		currentStacks={data.weaponCanvas}
+		maxStacks={1}
+	/>;
+
+	let landscapeCanvas = <ResourceCounter
+		name={
+			localize({
+				en: "landscape",
+			})
+		}
+		currentStacks={data.landscapeCanvas}
+		maxStacks={1}
+	/>;
+
+	let paletteGauge = <ResourceBar
+		name={
+			localize({
+				en: "palette gauge",
+			})
+		}
+		color={colors.resources.paradox} // TODO
+		progress={data.paletteGauge / 100}
+		value={data.paletteGauge.toFixed(0)}
+		width={100}
+	/>;
+
+	// TODO display black paint differently
+	let paint = <ResourceCounter
+		name={
+			localize({
+				en: "paint gauge",
+			})
+		}
+		currentStacks={data.paint}
+		maxStacks={5}
+	/>;
+		
 	return <div style={{textAlign: "left"}}>
 		{manaBar}
 		{manaTick}
-		{afui}
-		{uh}
-		{paradox}
-		{soul}
-		{enochian}
-		{polyTimer}
-		{poly}
+		{portrait}
+		{depictions}
+		{creatureCanvas}
+		{weaponCanvas}
+		{landscapeCanvas}
+		{paletteGauge}
+		{paint}
 	</div>;
 }
 

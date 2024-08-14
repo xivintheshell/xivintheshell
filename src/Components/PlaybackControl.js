@@ -594,6 +594,8 @@ export class Config extends React.Component {
 	}
 
 	#resourceOverridesSection() {
+		return <div></div>;
+		
 		let resourceOverridesDisplayNodes = [];
 		for (let i = 0; i < this.state.initialResourceOverrides.length; i++) {
 			let override = this.state.initialResourceOverrides[i];

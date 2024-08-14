@@ -222,5 +222,6 @@ export const enum ResourceType {
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",
 
+	CometOverwrite = "comet overwrite",
 	PaletteOvercap = "palette gauge overcap",
 }

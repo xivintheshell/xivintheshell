@@ -117,6 +117,18 @@ export class CoolDown extends Resource {
 		this.consume(this.#cdPerStack);
 		this.#reCaptureRecastTimeScale(game);
 	}
+	useStackWithRecast(game: GameState, recast: number) {
+		// roll the GCD with a special recast value
+		// LL/HP modifier
+		this.#reCaptureRecastTimeScale(game);
+		// scale for spells with longer cast/recast
+		this.#recastTimeScale *= recast / 2.5;
+	}
+	useStackWithFixedRecast(game: GameState, recast: number) {
+		// roll the GCD with a special recast value for spells that are unaffected
+		// by haste buffs or sps (i.e. picto motifs)
+		this.#recastTimeScale = recast / 2.5;
+	}
 	setRecastTimeScale(timeScale: number) { this.#recastTimeScale = timeScale; }
 	#reCaptureRecastTimeScale(game: GameState) {
 		this.#recastTimeScale = this.type === ResourceType.cd_GCD ? game.gcdRecastTimeScale() : 1;

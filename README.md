@@ -13,3 +13,10 @@ And many thanks to the players from The Balance discord for their invaluable fee
 ---
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+
+## Pictomancer in the Shell
+edge cases not handled
+- clicking off subtractive or aetherhues (not possible in game)
+- aetherhues expiring off mid-cast (should cancel the cast)
+- hammer expiring (will maintain combo into next hammer usage)

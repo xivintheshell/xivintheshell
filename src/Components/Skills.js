@@ -12,8 +12,8 @@ import {getCurrentThemeColors} from "./ColorTheme";
 export let displayedSkills = [
 	SkillName.FireInRed,
 	SkillName.Fire2InRed,
-	// SkillName.BlizzardInCyan,
-	// SkillName.Blizzard2InCyan,
+	SkillName.BlizzardInCyan,
+	SkillName.Blizzard2InCyan,
 	// SkillName.HolyInWhite,
 	// SkillName.CometInBlack,
 	// SkillName.RainbowDrip,
@@ -21,7 +21,7 @@ export let displayedSkills = [
 	// SkillName.TemperaCoat,
 	// SkillName.TemperaGrassa,
 	// SkillName.Smudge,
-	// SkillName.SubtractivePalette,
+	SkillName.SubtractivePalette,
 	// SkillName.CreatureMotif,
 	// SkillName.LivingMuse,
 	// SkillName.MogOfTheAges,
@@ -398,13 +398,13 @@ export class SkillsWindow extends React.Component {
 				if (this.state.aetherhuesStacks === 1) {
 					skillName = SkillName.StoneInYellow;
 				} else if (this.state.aetherhuesStacks === 2) {
-					SkillName = SkillName.ThunderInMagenta;
+					skillName = SkillName.ThunderInMagenta;
 				}
 			} else if (skillName === SkillName.Blizzard2InCyan) {
 				if (this.state.aetherhuesStacks === 1) {
 					skillName = SkillName.Stone2InYellow;
 				} else if (this.state.aetherhuesStacks === 2) {
-					SkillName = SkillName.Thunder2InMagenta;
+					skillName = SkillName.Thunder2InMagenta;
 				}
 			}
 			// picto creature muse + motif

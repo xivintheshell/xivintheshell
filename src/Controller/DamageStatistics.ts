@@ -42,6 +42,12 @@ const abilities = new Set<SkillName>([
 	SkillName.UmbralSoul,
 	SkillName.Amplifier,
 	SkillName.Retrace,
+
+	SkillName.TemperaCoat,
+	SkillName.TemperaGrassa,
+	SkillName.Smudge,
+	SkillName.SubtractivePalette,
+
 	SkillName.Addle,
 	SkillName.Swiftcast,
 	SkillName.LucidDreaming,

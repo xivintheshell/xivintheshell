@@ -304,7 +304,6 @@ export class DamageStatistics extends React.Component {
 					</div>
 				}/>{colon}{ppsAvailable ? (this.data.totalPotency.applied / targetableDurationTilLastDisplay).toFixed(2) : "N/A"}</div>
 				<div>{gcdStr}</div>
-				<div>{dotStr}</div>
 				<div>
 					<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
 						return controller.getDamageLogCsv();
@@ -638,7 +637,6 @@ export class DamageStatistics extends React.Component {
 			{summary}
 			<div>
 				{mainTable}
-				{thunderTable}
 			</div>
 		</div>
 	}

@@ -589,7 +589,15 @@ class Controller {
 			paradox: game.resources.get(ResourceType.Paradox).availableAmount(),
 			astralSoul: game.resources.get(ResourceType.AstralSoul).availableAmount(),
 			polyglotCountdown: eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30,
-			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount()
+			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount(),
+
+			portrait: game.resources.get(ResourceType.Portrait).availableAmount(),
+			depictions: game.resources.get(ResourceType.Depictions).availableAmount(),
+			creatureCanvas: game.resources.get(ResourceType.CreatureCanvas).availableAmount(),
+			weaponCanvas: game.resources.get(ResourceType.WeaponCanvas).availableAmount(),
+			landscapeCanvas: game.resources.get(ResourceType.LandscapeCanvas).availableAmount(),
+			paletteGauge: game.resources.get(ResourceType.PaletteGauge).availableAmount(),
+			paint: game.resources.get(ResourceType.Paint).availableAmount(),
 		};
 		// locks
 		let cast = game.resources.get(ResourceType.NotCasterTaxed);
@@ -629,6 +637,8 @@ class Controller {
 
 			aetherhuesCountdown: game.resources.timeTillReady(ResourceType.Aetherhues),
 			aetherhuesStacks: game.resources.get(ResourceType.Aetherhues).availableAmount(),
+			monochromeTones: game.resources.get(ResourceType.MonochromeTones).availableAmount(),
+			subtractivePalette: game.resources.get(ResourceType.SubtractivePalette).availableAmount(),
 		};
 		if (typeof updateStatusDisplay !== "undefined") {
 			updateStatusDisplay({
