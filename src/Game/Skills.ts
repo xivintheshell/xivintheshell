@@ -1,4 +1,4 @@
-import {Aspect, BuffType, ProcMode, ResourceType, SkillName} from './Common'
+import {Aspect, BuffType, ProcMode, ResourceType, SkillName, WarningType} from './Common'
 // @ts-ignore
 import {controller} from "../Controller/Controller";
 import {DoTBuff, EventTag, Resource} from "./Resources";
@@ -692,7 +692,11 @@ export class SkillsList extends Map<SkillName, Skill> {
 				game.useInstantSkill({
 					skillName: SkillName.Amplifier,
 					onCapture: () => {
-						game.resources.get(ResourceType.Polyglot).gain(1);
+						let polyglot = game.resources.get(ResourceType.Polyglot);
+						if (polyglot.available(polyglot.maxValue)) {
+							controller.reportWarning(WarningType.PolyglotOvercap)
+						}
+						polyglot.gain(1);
 					},
 					dealDamage: false,
 					node: node
