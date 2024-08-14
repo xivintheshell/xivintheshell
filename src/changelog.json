@@ -1,5 +1,11 @@
 [
 	{
+		"date": "8/14/24",
+		"changes": [
+			"Raise warning when Amplifier is used at max polyglot stacks"
+		]
+	},
+	{
 		"date": "8/11/24",
 		"changes": [
 			"Revise PPS description and description for polyglot resource override condition",
