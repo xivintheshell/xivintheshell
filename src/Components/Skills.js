@@ -386,18 +386,19 @@ export class SkillsWindow extends React.Component {
 		for (let i = 0; i < displayedSkills.length; i++) {
 			let skillName = displayedSkills[i];
 			let info = this.state.statusList ? this.state.statusList[i] : undefined;
-			let highlight = false; // hacky since i'm too lazy to mess with getSkillAvailabilityStatus
+			// hacky since i'm too lazy to mess with getSkillAvailabilityStatus for replacement buttons
+			let highlight = false;
 
 			// picto filler
 			if (skillName === SkillName.FireInRed) {
-				highlight = this.state.aetherhuesStacks > 0;
+				highlight = this.state.aetherhuesStacks > 0 && !this.state.subtractiveReady;
 				if (this.state.aetherhuesStacks === 1) {
 					skillName = SkillName.AeroInGreen;
 				} else if (this.state.aetherhuesStacks === 2) {
 					skillName = SkillName.WaterInBlue;
 				}
 			} else if (skillName === SkillName.Fire2InRed) {
-				highlight = this.state.aetherhuesStacks > 0;
+				highlight = this.state.aetherhuesStacks > 0 && !this.state.subtractiveReady;
 				if (this.state.aetherhuesStacks === 1) {
 					skillName = SkillName.Aero2InGreen;
 				} else if (this.state.aetherhuesStacks === 2) {

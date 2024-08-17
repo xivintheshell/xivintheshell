@@ -462,19 +462,39 @@ export class GameState {
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
-		let hpCovered = this.resources.get(ResourceType.Hyperphantasia).available(1);
-		// TODO whitelist spells affected by hyperphantasia
+		const hpSkills = [
+			SkillName.FireInRed,
+			SkillName.Fire2InRed,
+			SkillName.AeroInGreen,
+			SkillName.Aero2InGreen,
+			SkillName.WaterInBlue,
+			SkillName.Water2InBlue,
+			SkillName.HolyInWhite,
+			SkillName.BlizzardInCyan,
+			SkillName.Blizzard2InCyan,
+			SkillName.StoneInYellow,
+			SkillName.Stone2InYellow,
+			SkillName.ThunderInMagenta,
+			SkillName.Thunder2InMagenta,
+			SkillName.CometInBlack,
+			SkillName.StarPrism,
+			SkillName.RainbowDrip, // probably?
+		];
+		let hpCovered = this.resources.get(ResourceType.Hyperphantasia).available(1) && hpSkills.includes(props.skillName);
 		let capturedCastTime = this.captureSpellCastTimeAFUI(
 			skillInfo.aspect,
 			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered, hpCovered));
 		let capturedRecastTime = this.config.adjustedCastTime(skillInfo.baseRecastTime, llCovered, hpCovered);
-		// hack for motifs
+		// hack for motifs, which are not affected by sps
 		if (props.skillName.includes("Motif")) {
 			capturedCastTime = skillInfo.baseCastTime;
 			capturedRecastTime = skillInfo.baseRecastTime;
 		}
 		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
 			props.node.addBuff(BuffType.LeyLines);
+		}
+		if (hpCovered) {
+			props.node.addBuff(BuffType.Hyperphantasia);
 		}
 
 		// attach potency node
@@ -515,6 +535,11 @@ export class GameState {
 				// tincture
 				if (game.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
 					props.node.addBuff(BuffType.Tincture);
+				}
+
+				// starry muse
+				if (game.resources.get(ResourceType.StarryMuse).available(1) && skillInfo.basePotency > 0) {
+					props.node.addBuff(BuffType.StarryMuse);
 				}
 
 				// ice spells: gain mana if in UI
@@ -653,6 +678,11 @@ export class GameState {
 			props.node.addBuff(BuffType.Tincture);
 		}
 
+		// starry muse
+		if (this.resources.get(ResourceType.StarryMuse).available(1) && skillInfo.basePotency > 0) {
+			props.node.addBuff(BuffType.StarryMuse);
+		}
+
 		if (props.onCapture) props.onCapture();
 
 		let skillEvent = new Event(
@@ -712,10 +742,16 @@ export class GameState {
 		if (inspiration.available(1) && hyperphantasia.available(1) && hyperphantasia.pendingChange) {
 			// consume a stack
 			hyperphantasia.consume(1);
-			// if all stacks are consumed, stop timers
+			// if all stacks are consumed, stop timers and gain rainbow bright
 			if (hyperphantasia.availableAmount() === 0) {
+				inspiration.consume(1);
 				hyperphantasia.removeTimer();
 				inspiration.removeTimer();
+				this.resources.get(ResourceType.RainbowBright).gain(1);
+				this.resources.addResourceEvent({
+					rscType: ResourceType.RainbowBright,
+					name: "drop rainbow bright", delay: 30, fnOnRsc: (rsc: Resource) => rsc.consume(1),
+				});
 			}
 		}
 	}
@@ -822,6 +858,9 @@ export class GameState {
 		let cd = this.cooldowns.get(skill.info.cdName);
 		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
 		let cdRecastTime = cd.currentStackCd();
+		if (skillName.includes("Motif")) {
+			cdRecastTime = skill.info.baseRecastTime;
+		}
 
 		// to be displayed together when hovered on a skill
 		let timeTillDamageApplication = 0;

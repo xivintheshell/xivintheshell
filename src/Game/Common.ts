@@ -10,6 +10,7 @@ export const enum Aspect {
 	Fire = "Fire",
 	Ice = "Ice",
 	Lightning = "Lightning",
+	Hammer = "Hammer",
 	Other = "Other"
 }
 

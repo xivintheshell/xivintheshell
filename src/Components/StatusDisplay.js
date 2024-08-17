@@ -95,7 +95,7 @@ buffIcons.set(ResourceType.Hyperphantasia + "3", require("./Asset/picto/buffs/hy
 buffIcons.set(ResourceType.Hyperphantasia + "4", require("./Asset/picto/buffs/hyperphantasia_4.png"))
 buffIcons.set(ResourceType.Hyperphantasia + "5", require("./Asset/picto/buffs/hyperphantasia_5.png"))
 buffIcons.set(ResourceType.RainbowBright, require("./Asset/picto/buffs/rainbowBright.png"))
-buffIcons.set(ResourceType.StarStruck, require("./Asset/picto/buffs/starStruck.png"))
+buffIcons.set(ResourceType.Starstruck, require("./Asset/picto/buffs/starstruck.png"))
 
 buffIcons.set(ResourceType.Addle, require("./Asset/buff_addle.png"));
 buffIcons.set(ResourceType.Swiftcast, require("./Asset/buff_swiftcast.png"));
@@ -157,6 +157,15 @@ function BuffsDisplay(props) {
 		aetherhuesStacks: 0,
 		monochromeTones: 0,
 		subtractivePalette: 0,
+		subtractiveSpectrumCountdown: 0,
+		starryMuseCountdown: 0,
+		hyperphantasiaCountdown: 0,
+		hyperphantasiaStacks: 0,
+		inspirationCountdown: 0,
+		rainbowBrightCountdown: 0,
+		starstruckCountdown: 0,
+		hammerTimeCountdown: 0,
+		hammerTimeStacks: 0,
 	};
 	let buffs = [];
 	buffs.push({
@@ -199,6 +208,39 @@ function BuffsDisplay(props) {
 		timeRemaining: data.manawardCountdown.toFixed(3),
 		className: data.manawardCountdown > 0 ? "" : "hidden"
 	});
+
+	let pushPictoTimer = function(rscType, stacks, cd) {
+		buffs.push({
+			rscType: rscType,
+			onSelf: true,
+			enabled: true,
+			stacks: stacks,
+			timeRemaining: cd.toFixed(3),
+			className: cd > 0 ? "" : "hidden"
+		});
+	};
+
+	let pushPictoIndefinite = function(rscType, stacks) {
+		buffs.push({
+			rscType: rscType,
+			onSelf: true,
+			enabled: true,
+			stacks: stacks,
+			className: stacks ? "" : "hidden",
+		});
+	};
+
+	// TODO check order
+	pushPictoTimer(ResourceType.RainbowBright, 1, data.rainbowBrightCountdown);
+	pushPictoTimer(ResourceType.Hyperphantasia, data.hyperphantasiaStacks, data.hyperphantasiaCountdown);
+	pushPictoTimer(ResourceType.Inspiration, 1, data.inspirationCountdown);
+	pushPictoTimer(ResourceType.SubtractiveSpectrum, 1, data.subtractiveSpectrumCountdown);
+	pushPictoTimer(ResourceType.HammerTime, data.hammerTimeStacks, data.hammerTimeCountdown);
+	pushPictoTimer(ResourceType.Starstruck, 1, data.starstruckCountdown);
+	pushPictoTimer(ResourceType.Aetherhues, data.aetherhuesStacks, data.aetherhuesCountdown);
+	pushPictoIndefinite(ResourceType.MonochromeTones, data.monochromeTones);
+	pushPictoIndefinite(ResourceType.SubtractivePalette, data.subtractivePalette);
+
 	buffs.push({
 		rscType: ResourceType.Swiftcast,
 		onSelf: true,
@@ -239,46 +281,6 @@ function BuffsDisplay(props) {
 		timeRemaining: data.sprintCountdown.toFixed(3),
 		className: data.sprintCountdown > 0 ? "" : "hidden"
 	});
-
-	buffs.push({
-		rscType: ResourceType.Aetherhues,
-		onSelf: true,
-		enabled: true,
-		stacks: data.aetherhuesStacks,
-		timeRemaining: data.aetherhuesCountdown.toFixed(3),
-		className: data.aetherhuesCountdown > 0 ? "" : "hidden"
-	});
-
-	buffs.push({
-		rscType: ResourceType.MonochromeTones,
-		onSelf: true,
-		enabled: true,
-		stacks: data.monochromeTones,
-		className: data.monochromeTones ? "" : "hidden"
-	});
-
-	buffs.push({
-		rscType: ResourceType.SubtractivePalette,
-		onSelf: true,
-		enabled: true,
-		stacks: data.subtractivePalette,
-		className: data.subtractivePalette ? "" : "hidden"
-	});
-
-	// buffs.push({
-	// 	rscType: ResourceType.HammerTime,
-	// 	onSelf: true,
-	// 	enabled: true,
-	// 	stacks: data.hammerTimeStacks,
-	// 	timer: data.hammerTimeCountdown,
-	// 	className: data.hammerTimeCountdown ? "" : "hidden"
-	// });
-
-	// TODO inspiration
-	// TODO subtractive spectrum
-	// TODO hyperphantasia
-	// TODO rainbowbright
-	// TODO starstruck
 
 	for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
 	return <div className={"buffsDisplay self"}>

@@ -465,7 +465,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 		// Starry Sky Motif + fake landscape motif
 		let addLandscape = function(motifName: SkillName) {
 			skillsList.set(motifName, new Skill(motifName,
-				() => !game.resources.get(ResourceType.LandscapeCanvas).available(1),
+				() => !game.resources.get(ResourceType.LandscapeCanvas).available(1) &&
+					!game.resources.get(ResourceType.StarryMuse).available(1),
 				(game: GameState, node: ActionNode) => {
 					game.castSpell({
 						skillName: motifName,
@@ -485,6 +486,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					game.useInstantSkill({
 						skillName: museName,
 						onCapture: () => {
+							game.resources.get(ResourceType.LandscapeCanvas).consume(1);
 							// It is not possible to have an existing starry/hyperphantasia active
 							// unless someone added starry muse via the party buff menu.
 							// Since this fork is hacky we just ignore this case for now.

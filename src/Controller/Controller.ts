@@ -639,6 +639,15 @@ class Controller {
 			aetherhuesStacks: game.resources.get(ResourceType.Aetherhues).availableAmount(),
 			monochromeTones: game.resources.get(ResourceType.MonochromeTones).availableAmount(),
 			subtractivePalette: game.resources.get(ResourceType.SubtractivePalette).availableAmount(),
+			subtractiveSpectrumCountdown: game.resources.timeTillReady(ResourceType.SubtractiveSpectrum),
+			starryMuseCountdown: game.resources.timeTillReady(ResourceType.StarryMuse),
+			hyperphantasiaCountdown: game.resources.timeTillReady(ResourceType.Hyperphantasia),
+			hyperphantasiaStacks: game.resources.get(ResourceType.Hyperphantasia).availableAmount(),
+			inspirationCountdown: game.resources.timeTillReady(ResourceType.Inspiration),
+			rainbowBrightCountdown: game.resources.timeTillReady(ResourceType.RainbowBright),
+			starstruckCountdown: game.resources.timeTillReady(ResourceType.Starstruck),
+			hammerTimeCountdown: game.resources.timeTillReady(ResourceType.HammerTime),
+			hammerTimeStacks: game.resources.get(ResourceType.HammerTime).availableAmount(),
 		};
 		if (typeof updateStatusDisplay !== "undefined") {
 			updateStatusDisplay({

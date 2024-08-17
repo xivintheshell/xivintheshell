@@ -20,3 +20,4 @@ edge cases not handled
 - clicking off subtractive or aetherhues (not possible in game)
 - aetherhues expiring off mid-cast (should cancel the cast)
 - hammer expiring (will maintain combo into next hammer usage)
+- hyperphantasia expiring mid-cast should not give rainbow bright

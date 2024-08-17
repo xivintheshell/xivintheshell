@@ -5,7 +5,7 @@ import { GameConfig } from "./GameConfig";
 import {ResourceState} from "./Resources";
 
 export const enum PotencyModifierType {
-	AF3, AF2, AF1, UI3, UI2, UI1, ENO, POT, PARTY
+	AF3, AF2, AF1, UI3, UI2, UI1, ENO, POT, STARRY, HAMMER, PARTY
 }
 
 export type PotencyModifier = {
@@ -21,6 +21,16 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 	// pot
 	if (resources.get(ResourceType.Tincture).available(1)) {
 		mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
+	}
+
+	// starry muse
+	if (resources.get(ResourceType.StarryMuse).available(1)) {
+		mods.push({source: PotencyModifierType.STARRY, damageFactor: 1.05, critFactor: 0, dhFactor: 0});
+	}
+
+	// hammer autocrit/dh
+	if (aspect === Aspect.Hammer) {
+		mods.push({source: PotencyModifierType.HAMMER, damageFactor: 1, critFactor: 1.0, dhFactor: 1.0});
 	}
 
 	// eno
@@ -162,9 +172,9 @@ export class Potency {
 
 	#calculateDamage(crit: number, dh: number, damageFactor: number, critBonus: number, dhBonus: number) {
 		let modifier = damageFactor;
-				
-		let critRate = this.#criticalHitRate(crit) + critBonus;
-		let dhRate = this.#directHitRate(dh) + dhBonus;
+
+		let critRate = Math.min(1.0, this.#criticalHitRate(crit) + critBonus);
+		let dhRate = Math.min(1.0, this.#directHitRate(dh) + dhBonus);
 
 		const critDHRate = critRate * dhRate;
 		const normalRate = 1 - critRate - dhRate + critDHRate;
