@@ -155,31 +155,35 @@ export function IntroSection(props: {}) {
 			title={"About this tool"}
 			titleNode={localize({en: "About this tool", zh: "关于", ja: "このツールについて"})}
 			content={<div>
-				<div className="paragraph">{localize({en: "This is a FFXIV black mage simulator & rotation planner.", zh: "是个黑魔模拟器/排轴工具。", ja: "FF14 黒魔道士のスキルローテーションシミュレーターです。"})}</div>
+				<div className="paragraph">{localize({
+					en: "This is a FFXIV pictomancer simulator & rotation planner.",
+					zh: "是个画图魔（？我不知道怎么翻译）模拟器/排轴工具。",
+					ja: "FF14 ピクトマンサーのスキルローテーションシミュレーターです。"})}
+				</div>
 				<div className="paragraph">
 					{localize({en: "This tool is made by ", zh: "作者：", ja: "作者："})}
 					<b>shanzhe (Shanzhe Qi @ Seraph)</b>,
 					{localize({
-						en: " adapted from BLM in the Shell by miyehn.",
-						zh: "从miyehn创作的BLM in the Shell而改编。",
+						en: <> adapted from <a href={"https://miyehn.me/ffxiv-blm-rotation/"}>BLM in the Shell</a> by <b>miyehn</b>.</>,
+						zh: <>从<b>miyehn</b>创作的<a href={"https://miyehn.me/ffxiv-blm-rotation/"}>BLM in the Shell</a>而改编。</>,
 					})}
 				</div>
 
 				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接：", ja: "リンク集"})}</div>
 				{localize({
 					en: <ul>
-						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
+						<li><a href={"https://github.com/zqsz-xiv/ffxiv-blm-rotation/tree/sz/picto-in-the-shell"}>Github repository</a></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/pictomancer/"}>Official FFXIV pictomancer job
 							guide</a></li>
 					</ul>,
 					zh: <ul>
-						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github页面</a></li>
+						<li><a href={"https://github.com/zqsz-xiv/ffxiv-blm-rotation/tree/sz/picto-in-the-shell"}>Github页面</a></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
 					</ul>,
 					ja:
 						<ul>
-						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
+						<li><a href={"https://github.com/zqsz-xiv/ffxiv-blm-rotation/tree/sz/picto-in-the-shell"}>Github repository</a></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
 					</ul>,
 				})}
