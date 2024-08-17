@@ -422,10 +422,9 @@ export class GameState {
 
 	gcdRecastTimeScale() {
 		let llAvailable = this.resources.get(ResourceType.LeyLines).available(1);
-		let hpAvailable = this.resources.get(ResourceType.Hyperphantasia).available(1);
-		if (llAvailable || hpAvailable) {
-			// should be approximately 0.85 for LL, 0.75 for hyperphantasia
-			return this.config.adjustedGCD(llAvailable, hpAvailable) / this.config.adjustedGCD(false);
+		if (llAvailable) {
+			// should be approximately 0.85 for LL
+			return this.config.adjustedGCD(llAvailable) / this.config.adjustedGCD(false);
 		} else {
 			return 1;
 		}
@@ -478,7 +477,6 @@ export class GameState {
 			SkillName.Thunder2InMagenta,
 			SkillName.CometInBlack,
 			SkillName.StarPrism,
-			SkillName.RainbowDrip, // probably?
 		];
 		let hpCovered = this.resources.get(ResourceType.Hyperphantasia).available(1) && hpSkills.includes(props.skillName);
 		let capturedCastTime = this.captureSpellCastTimeAFUI(
@@ -577,10 +575,17 @@ export class GameState {
 			takeEffect(game);
 
 			// recast
-			cd.useStackWithRecast(
-				game,
-				props.skillName.includes("Motif") ? skillInfo.baseRecastTime : game.config.adjustedCastTime(skillInfo.baseRecastTime, false, false)
-			);
+			let recastTime = props.skillName.includes("Motif")
+				? skillInfo.baseRecastTime
+				: (
+					rsc && rsc.type === ResourceType.RainbowBright
+						// when rainbow bright is affecting rainbow drip, base cast is always 2.5
+						? game.config.adjustedCastTime(2.5, false, false)
+						// unlike LL, we need to account for hyperphantasia here because the hyperphantasia buff
+						// would be consumed before the Resource object can check the recast
+						: game.config.adjustedCastTime(skillInfo.baseRecastTime, false, hpCovered)
+				);
+			cd.useStackWithRecast(game, recastTime);
 
 			// animation lock
 			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(props.skillName));
@@ -589,6 +594,14 @@ export class GameState {
 		// Picto's litany of instant casts
 		if (skillInfo.baseCastTime === 0) {
 			instantCast(this, undefined);
+			return;
+		}
+
+		// Rainbow Drip made instant via Rainbow Bright
+		let rainbowBright = this.resources.get(ResourceType.RainbowBright);
+		if (props.skillName === SkillName.RainbowDrip && rainbowBright.available(1)) {
+			rainbowBright.removeTimer();
+			instantCast(this, rainbowBright);
 			return;
 		}
 
@@ -632,9 +645,11 @@ export class GameState {
 		}));
 
 		// recast
+		// unlike LL, we need to account for hyperphantasia here because the hyperphantasia buff
+		// would be consumed before the Resource object can check the recast
 		cd.useStackWithRecast(
 			this,
-			skillInfo.name.includes("Motif") ? skillInfo.baseRecastTime : this.config.adjustedCastTime(skillInfo.baseRecastTime, false, false)
+			skillInfo.name.includes("Motif") ? skillInfo.baseRecastTime : this.config.adjustedCastTime(skillInfo.baseRecastTime, false, hpCovered)
 		);
 
 		// caster tax
@@ -843,7 +858,9 @@ export class GameState {
 			|| skillName===SkillName.Paradox
 			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)))
 			|| (skillName===SkillName.Xenoglossy && this.resources.get(ResourceType.Polyglot).available(1))
-			|| (skillName===SkillName.UmbralSoul && this.getIceStacks()>0); // lmfao why does this count as a spell
+			|| (skillName===SkillName.UmbralSoul && this.getIceStacks()>0) // lmfao why does this count as a spell
+			|| (skillName === SkillName.StarPrism && this.resources.get(ResourceType.Starstruck).available(1))
+			|| (skillName === SkillName.RainbowDrip && this.resources.get(ResourceType.RainbowBright).available(1));
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana
@@ -860,6 +877,8 @@ export class GameState {
 		let cdRecastTime = cd.currentStackCd();
 		if (skillName.includes("Motif")) {
 			cdRecastTime = skill.info.baseRecastTime;
+		} else if (skillName === SkillName.RainbowDrip && this.resources.get(ResourceType.RainbowBright).available(1)) {
+			cdRecastTime = this.config.adjustedCastTime(2.5, false, false);
 		}
 
 		// to be displayed together when hovered on a skill
@@ -900,6 +919,10 @@ export class GameState {
 			highlight = this.resources.get(ResourceType.Portrait).available(1);
 		} else if (skill.info.aspect === Aspect.Hammer) {
 			highlight = this.resources.get(ResourceType.HammerTime).available(1);
+		} else if (skillName === SkillName.RainbowDrip) {
+			highlight = this.resources.get(ResourceType.RainbowBright).available(1);
+		} else if (skillName === SkillName.StarPrism) {
+			highlight = this.resources.get(ResourceType.Starstruck).available(1);
 		}
 
 		return {

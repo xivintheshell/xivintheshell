@@ -17,7 +17,8 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Pictomancer in the Shell
 edge cases not handled
-- clicking off subtractive or aetherhues (not possible in game)
+- clicking off subtractive or aetherhues or monochrome tones (not possible in game)
+- certain abilities being available only in combat
 - aetherhues expiring off mid-cast (should cancel the cast)
 - hammer expiring (will maintain combo into next hammer usage)
 - hyperphantasia expiring mid-cast should not give rainbow bright

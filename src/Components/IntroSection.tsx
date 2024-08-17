@@ -160,8 +160,8 @@ export function IntroSection(props: {}) {
 					{localize({en: "This tool is made by ", zh: "作者：", ja: "作者："})}
 					<b>shanzhe (Shanzhe Qi @ Seraph)</b>,
 					{localize({
-						en: " adapted from BLM in the shell by miyehn.",
-						zh: "从miyehn创作的BLM in the shell而改编。",
+						en: " adapted from BLM in the Shell by miyehn.",
+						zh: "从miyehn创作的BLM in the Shell而改编。",
 					})}
 				</div>
 
@@ -169,160 +169,21 @@ export function IntroSection(props: {}) {
 				{localize({
 					en: <ul>
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
-						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>Black Mage in the Shell (Dawntrail at LV90)</a>: a variation for planning fights at LV90, created by <b>Akairyu</b></li>
-						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>: a snapshot of this tool at the end of Endwalker. In a few days it will also display some notable fight plans from Endwalker, as memoir.</li>
-						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation for Save the Queens areas, created by <b>A'zhek Silvaire @ Zalera</b></li>
-						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
+						<li><a href={"https://na.finalfantasyxiv.com/jobguide/pictomancer/"}>Official FFXIV pictomancer job
 							guide</a></li>
-						<li><a target={"_blank"} href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
-							BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
 					</ul>,
 					zh: <ul>
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github页面</a></li>
-						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>7.0版排轴器（90级）</a>，可以用来给TOP等副本排轴，作者是<b>Akairyu</b></li>
-						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.0版排轴器</a>，历史版本，几天后还会在那里展出一些6.0时期的轴，作为纪念。</li>
-						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>博兹雅版排轴器（Black Mage in the Bozjan Shell）</a>: 本工具的博兹雅/天佑女王版。制作者： <b>A'zhek Silvaire @ Zalera</b></li>
-						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>官方的黑魔法师职业介绍</a></li>
-						<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
-							The Balance服务器里的黑魔频道</a> （需要先加入Discord服务器）</li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
 					</ul>,
 					ja:
 						<ul>
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
-						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: 南方ボズヤ戦線向けのツール。作者：<b>A'zhek Silvaire @ Zalera</b></li>
-						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
-						<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
-							BLM resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
 					</ul>,
 				})}
 
-				<div className="paragraph"><Expandable title={"Implementation notes"} titleNode={localize({en: "Implementation notes", zh: "实现细节", ja: "実装に関するメモ"})} defaultShow={false} content={
-
-					<div>
-						{localize({
-							en:
-								<div className="paragraph">
-									[DT] Ice spells seem to grant MP when they land on target(s), aka skillApplicationDelay seconds after snapshot. See <a href={"https://drive.google.com/file/d/1fnjBoXlbIQR1StFlfrwH6eQYE90rV1V5/view?usp=drive_link"}>this screen recording</a>.
-									Note that Umbral Soul also has ~0.633s skill application delay.
-								</div>,
-							zh:
-								<div className="paragraph">
-									[7.0] 从录屏（<a href={"https://drive.google.com/file/d/1fnjBoXlbIQR1StFlfrwH6eQYE90rV1V5/view?usp=drive_link"}>Google Drive</a>）来看，冰技能是在伤害判定的瞬间回蓝。顺便，灵极魂也有0.633秒左右的技能生效延迟，按下技能后需要等待相应时间才有回蓝。
-								</div>
-						})}
-						{localize({
-							en:
-								<div className="paragraph">
-									[DT] Manafont now has a much shorter (~0.2s) skill application delay compared to in EW. In fact only MP regen from Manafont has this delay; all other effects seem instant.
-								</div>,
-							zh:
-								<div className="paragraph">
-									[7.0] 魔泉的生效延迟跟6.0相比缩短了很多，目前只有0.2秒左右。而且只有回蓝受这个延迟影响，其它效果都是瞬发。
-								</div>
-						})}
-						{localize({
-							en:
-								<div className="paragraph">
-									[DT] I re-measured some buff timings from <a href={"https://drive.google.com/drive/folders/1Jp6UEGRLlruERpyQ9CuEMXFsOaVixx48?usp=drive_link"}>screen recordings</a>. They affect things when you have "extended buff times" checked. Lmk if you have something more exact.
-								</div>,
-							zh:
-								<div className="paragraph">
-									[7.0] 我通过录屏（<a href={"https://drive.google.com/drive/folders/1Jp6UEGRLlruERpyQ9CuEMXFsOaVixx48?usp=drive_link"}>Google Drive</a>）的方式重新测量了几个buff的实际持续时长（有的实际时长比技能描述稍长一些），在右侧可以自行勾选 "extended buff times" 使它们生效。如果你有更准确的数据，请务必联系我。
-								</div>
-						})}
-						{localize({
-							en:
-								<div className="paragraph">
-									Galahad found that slidecast window size is linear with respect to cast time. I made a <a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>script</a>, parsed
-									a few logs and confirmed this. Albeit the slope is tiny (~0.02) so I'm just using 0.5s here
-									for simplicity.
-								</div>,
-							zh:
-								<div className="paragraph">
-									根据加拉哈德的一个理论，滑步窗口长度和读条时间呈线性关系；我写了<a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>这个脚本</a>去扒logs记录，证明此理论是基本准确的。由于这个理论的实际影响非常小（斜率约0.02），实际的滑步窗口还是被设置成了恒定的0.5秒。
-							</div>,
-							ja:
-								<div className="paragraph">
-									Galahad によると滑り撃ちの有効時間がキャスト時間に比例するため、私は<a href={"https://github.com/miyehn/ffxiv-blm-rotation/tree/main/scripts"}>スクリプト</a>を作成していくつかのログを解析して確認しました。傾きは~0.02と非常に小さいため単純化して0.5秒としました。</div>,
-						})}
-						{localize({
-							en:
-								<div className="paragraph">
-									Astral fire / umbral ice refresh happens at slidecast timing (0.5s before cast finishes)
-								</div>,
-							zh:
-								<div className="paragraph">
-									天语状态会在滑步窗口开始时刷新，也就是读条结束前0.5秒。
-								</div>,
-							ja:
-								<div className="paragraph">
-									AFとUBの更新は滑り撃ちが可能な時間と同じタイミング（キャスト終了の0.5秒前）で発生します。
-								</div>,
-						})}
-						{localize({
-							en:
-								<div className="paragraph">
-									Thanks to Galahad and Blink, skill application delays (see the last function
-									argument <a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>here</a>)
-									should be pretty accurate now: looking at the logs, the ones for spells are between "prepare XX" to actual damage,
-									the others from between "casts XX" to whatever the effect is (mostly buff apply/refresh times).
-									Please contact me if you know how to measure the rest of missing data.
-								</div>,
-							zh:
-								<div className="paragraph">
-									感谢Blink和加拉哈德提供的各种技能后摇/生效延迟数据，详见<a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>这里最后一个函数变量</a> 。这些通过log来对比技能释放时间/buff生效刷新时间获得的数据，总的来说是比较准确的。欢迎联系我来查漏补缺。
-								</div>,
-							ja:
-								<div className="paragraph">
-									Galahad と Blink のおかげでアクション適用までの遅延時間の計算はかなり正確になりました（<a href={"https://github.com/miyehn/ffxiv-blm-rotation/blob/main/src/Game/Skills.ts#L48"}>こちら</a>の関数の最後の引数を参照）。
-									ログを確認すると、魔法は「prepare XX」から実際のダメージまで、その他の場合は「casts XX」から効果が発生するまでの間です（主にバフの適用/更新時間）。
-									その他のデータの計測方法をご存知の場合はお知らせください。
-								</div>,
-							})}
-						{localize ({
-							en:
-								<div className="paragraph">
-									Lucid dreaming and thunder ticks have independent tick timers. They each have a random time offset relative to
-									MP ticks. See Config section for the current offsets.
-									For lucid dreaming, the earliest first tick time is 0.623s after you press the skill button. It ticks 7
-									times.
-								</div>,
-							zh:
-								<div className="paragraph">
-									跳雷和跳醒梦的时间都是独立计算的，它们和普通跳蓝之间存在一个随机的时间差，这个时间差可以在右侧的设置界面查看。醒梦后的第一跳蓝最早会出现在技能释放后的0.623秒，总计7跳。
-								</div>,
-							ja:
-								<div className="paragraph">
-									ルーシッドドリームとサンダー系のティックは独立したタイマーを持っています。それぞれMPティックとは異なるランダムな時間のオフセットがあります。現在のオフセットについては設定セクションを参照してください。
-									ルーシッドドリームの場合、最初のティックはスキルボタンを押してから0.623秒後に発生し7回ティックします。
-								</div>,
-						})}
-						{localize ({
-							en:
-								<div className="paragraph">
-									7/29/24 cast time formula update: Unlike GCDs with 2 digits of precision, cast times are now updated to use 3 digits of precision, because it matches with the game more closely.
-									Here is an <a href={"https://docs.google.com/spreadsheets/d/18IN-ygAXd2zCR1A3umV3efYcy8xz6O3f/edit?usp=sharing&ouid=104672178485330237849&rtpof=true&sd=true"}>updated full SPS chart</a>. I also <a href={"https://docs.google.com/spreadsheets/d/1d_oPA34tZ-ZOxZSMI6JQDssLiXHUIVv6qmvMTFzoqL8/edit?usp=sharing"}>spammed some spells</a> and the results are in line with this chart.
-									If you are curious and can read Chinese, here are some more resources:&nbsp;
-									<a href={"https://www.bilibili.com/read/cv29822181/?jump_opus=1"}>Writeup about this finding by Vanilla Milksmoothie et al.</a>,&nbsp;
-									<a href={"/ffxiv-blm-rotation/misc/关于读条技能与瞬发技能取整精度的猜想与实验.pdf"}>Some tests results from them and steps to reproduce</a>.
-								</div>,
-							zh:
-								<div className="paragraph">
-									7/29/24 咏唱时间更新：不同于精确到小数点后2位的GCD公式，现在咏唱时间的计算公式精确到小数点后3位。经测试，这个精度更吻合游戏内实际的咏唱时间。
-									关于这个新的咏唱时间公式，可以详见牛奶冰沙等人的<a href={"https://www.bilibili.com/read/cv29822181/?jump_opus=1"}>这篇文章</a>。<a href={"/ffxiv-blm-rotation/misc/关于读条技能与瞬发技能取整精度的猜想与实验.pdf"}>此处</a>有部分测试结果和详细的复现步骤。<br/>
-									附：目前完整的咏速表（<a
-									href={"https://docs.google.com/spreadsheets/d/18IN-ygAXd2zCR1A3umV3efYcy8xz6O3f/edit?usp=sharing&ouid=104672178485330237849&rtpof=true&sd=true"}>Google Sheets</a>）。我个人做了一些测试，logs结果也符合这个改动（<a href={"https://docs.google.com/spreadsheets/d/1d_oPA34tZ-ZOxZSMI6JQDssLiXHUIVv6qmvMTFzoqL8/edit?usp=sharing"}>Google Sheets</a>）。
-								</div>,
-							ja:
-								<div className="paragraph">
-									(translation outdated){/*2024/8/29: 黒魔紋上のキャストとリキャスト時間が誤っていました。現在は単純に0.85倍にしていますが、最大で0.01秒の誤差があります。Vanilla Milksmoothie が正確な値を提案してくれましたが現在は実装する時間がないため、または過去のtxtファイルが壊れる可能性があるため、実装していません。問題がある場合はお知らせください。*/}
-								</div>,
-						})}
-					</div>
-
-				}/>
-				</div>
-				<Changelog/>
 				<Expandable
 					defaultShow={false}
 					title={"Debug"}

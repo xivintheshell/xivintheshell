@@ -155,7 +155,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.RetributionOfTheMadeen, ResourceType.cd_Portrait, Aspect.Other, false,
 		0, 0, 1400, 1.30),
 	new SkillInfo(SkillName.StarPrism, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 0, 0, 1.25),
+		0, 0, 1400, 1.25),
 ];
 
 const skillInfosMap: Map<SkillName, SkillInfo> = new Map();
@@ -587,6 +587,40 @@ export class SkillsList extends Map<SkillName, Skill> {
 		addStriking(SkillName.SteelMuse);
 		addStriking(SkillName.StrikingMuse);
 		[SkillName.HammerStamp, SkillName.HammerBrush, SkillName.PolishingHammer].forEach(addHammer);
+
+		// Rainbow Drip
+		skillsList.set(SkillName.RainbowDrip, new Skill(SkillName.RainbowDrip,
+			() => true,
+			(game: GameState, node: ActionNode) => {
+				game.castSpell({
+					skillName: SkillName.RainbowDrip,
+					onCapture: (cap: SkillCaptureCallbackInfo) => {
+						// gain a holy stack
+						game.resources.get(ResourceType.Paint).gain(1);
+						// rainbow bright consumption is handled by GameState instant cast logic
+					},
+					onApplication: (app: SkillApplicationCallbackInfo) => {},
+					node: node,
+				});
+			}
+		));
+
+		// Star Prism
+		skillsList.set(SkillName.StarPrism, new Skill(SkillName.StarPrism,
+			() => game.resources.get(ResourceType.Starstruck).available(1),
+			(game: GameState, node: ActionNode) => {
+				game.castSpell({
+					skillName: SkillName.StarPrism,
+					onCapture: (cap: SkillCaptureCallbackInfo) => {
+						game.resources.get(ResourceType.Starstruck).consume(1)
+						game.resources.get(ResourceType.Starstruck).removeTimer();
+						game.tryConsumeHyperphantasia();
+					},
+					onApplication: (app: SkillApplicationCallbackInfo) => {},
+					node: node,
+				});
+			}
+		));
 
 		// Addle
 		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 15});
