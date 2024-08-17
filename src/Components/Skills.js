@@ -22,9 +22,9 @@ export let displayedSkills = [
 	// SkillName.TemperaGrassa,
 	// SkillName.Smudge,
 	SkillName.SubtractivePalette,
-	// SkillName.CreatureMotif,
-	// SkillName.LivingMuse,
-	// SkillName.MogOfTheAges,
+	SkillName.CreatureMotif,
+	SkillName.LivingMuse,
+	SkillName.MogOfTheAges,
 	// SkillName.WeaponMotif,
 	// SkillName.StrikingMuse,
 	// SkillName.HammerStamp,
@@ -46,7 +46,7 @@ let pctSkills = [
 	"aeroInGreen",
 	"blizzard2InCyan",
 	"blizzardInCyan",
-	"clawedMotif",
+	"clawMotif",
 	"clawedMuse",
 	"cometInBlack",
 	"creatureMotif",
@@ -83,7 +83,7 @@ let pctSkills = [
 	"water2InBlue",
 	"waterInBlue",
 	"weaponMotif",
-	"wingedMotif",
+	"wingMotif",
 	"wingedMuse",
 ];
 for (let name of pctSkills) {
@@ -280,6 +280,9 @@ export class SkillsWindow extends React.Component {
 				retraceReady: retraceReady,
 				retraceInfo: undefined,
 				aetherhuesStacks: controller.game.resources.get(ResourceType.Aetherhues).availableAmount(),
+				creatureReady: controller.game.resources.get(ResourceType.CreatureCanvas).available(1),
+				depictions: controller.game.resources.get(ResourceType.Depictions).availableAmount(),
+				portrait: controller.game.resources.get(ResourceType.Portrait).availableAmount(),
 			});
 		}).bind(this);
 
@@ -370,6 +373,9 @@ export class SkillsWindow extends React.Component {
 			paradoxInfo: undefined,
 			retraceInfo: undefined,
 			aetherhuesStacks: controller.game.resources.get(ResourceType.Aetherhues).availableAmount(),
+			creatureReady: controller.game.resources.get(ResourceType.CreatureCanvas).available(1),
+			depictions: controller.game.resources.get(ResourceType.Depictions).availableAmount(),
+			portrait: controller.game.resources.get(ResourceType.Portrait).availableAmount(),
 		});
 	}
 
@@ -408,6 +414,51 @@ export class SkillsWindow extends React.Component {
 				}
 			}
 			// picto creature muse + motif
+			if (skillName === SkillName.CreatureMotif && !this.state.creatureReady) {
+				switch (this.state.depictions) {
+					case 0:
+						skillName = SkillName.PomMotif;
+						break;
+					case 1:
+						skillName = SkillName.WingMotif;
+						break;
+					case 2:
+						skillName = SkillName.ClawMotif;
+						break;
+					case 3:
+						skillName = SkillName.MawMotif;
+						break;
+				}
+			}
+
+			if (skillName === SkillName.LivingMuse) {
+				if (this.state.creatureReady) {
+					info.highlight = true;
+				}
+				switch (this.state.depictions) {
+					case 0:
+						skillName = SkillName.PomMuse;
+						break;
+					case 1:
+						skillName = SkillName.WingedMuse;
+						break;
+					case 2:
+						skillName = SkillName.ClawedMuse;
+						break;
+					case 3:
+						skillName = SkillName.FangedMuse;
+						break;
+				}
+			}
+
+			if (skillName === SkillName.MogOfTheAges) {
+				if (this.state.portrait > 0) {
+					info.highlight = true;
+				}
+				if (this.state.portrait === 2) {
+					skillName = SkillName.RetributionOfTheMadeen;
+				}
+			}
 
 			let btn = <SkillButton
 				key={i}

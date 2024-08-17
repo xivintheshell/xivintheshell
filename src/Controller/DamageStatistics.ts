@@ -25,6 +25,37 @@ const AFUISkills = new Set<SkillName>([
 	SkillName.FlareStar,
 ]);
 
+const pictoDamageSkills = new Set<SkillName>([
+	SkillName.FireInRed,
+	SkillName.Fire2InRed,
+	SkillName.BlizzardInCyan,
+	SkillName.Blizzard2InCyan,
+	SkillName.HolyInWhite,
+	SkillName.CometInBlack,
+	SkillName.RainbowDrip,
+	SkillName.StarPrism,
+
+	SkillName.PomMuse,
+	SkillName.WingedMuse,
+	SkillName.ClawedMuse,
+	SkillName.FangedMuse,
+	SkillName.MogOfTheAges,
+	SkillName.RetributionOfTheMadeen,
+]);
+
+const hammerSkills = new Set<SkillName>([
+
+]);
+
+const pictoMotifs = new Set<SkillName>([
+	SkillName.HammerMotif,
+	SkillName.PomMotif,
+	SkillName.WingMotif,
+	SkillName.ClawMotif,
+	SkillName.MawMotif,
+	SkillName.StarrySkyMotif,
+]);
+
 const enoSkills = new Set<SkillName>([
 	SkillName.Foul,
 	SkillName.Xenoglossy,
@@ -43,6 +74,8 @@ const abilities = new Set<SkillName>([
 	SkillName.Amplifier,
 	SkillName.Retrace,
 
+	SkillName.StrikingMuse,
+	SkillName.StarryMuse,
 	SkillName.TemperaCoat,
 	SkillName.TemperaGrassa,
 	SkillName.Smudge,
@@ -170,7 +203,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 		calculationModifiers: []
 	}
 	if (node.type === ActionType.Skill && node.skillName) {
-		if (AFUISkills.has(node.skillName)) {
+		if (pictoDamageSkills.has(node.skillName)) {
 			console.assert(node.getPotencies().length > 0);
 			// use the one that's not enochian or pot (then must be one of af123, ui123)
 			let mainPotency = node.getPotencies()[0];
@@ -196,7 +229,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 					break;
 				}
 			}
-		} else if (abilities.has(node.skillName)) {
+		} else if (abilities.has(node.skillName) || pictoMotifs.has(node.skillName)) {
 		} else if (node.skillName === SkillName.HighThunder) {
 			console.assert(node.skillName === SkillName.HighThunder)
 			res.basePotency = node.getPotencies()[0].base;

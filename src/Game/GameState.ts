@@ -467,6 +467,11 @@ export class GameState {
 			skillInfo.aspect,
 			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered, hpCovered));
 		let capturedRecastTime = this.config.adjustedCastTime(skillInfo.baseRecastTime, llCovered, hpCovered);
+		// hack for motifs
+		if (props.skillName.includes("Motif")) {
+			capturedCastTime = skillInfo.baseCastTime;
+			capturedRecastTime = skillInfo.baseRecastTime;
+		}
 		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
 			props.node.addBuff(BuffType.LeyLines);
 		}
@@ -546,7 +551,10 @@ export class GameState {
 			takeEffect(game);
 
 			// recast
-			cd.useStackWithRecast(game, game.config.adjustedCastTime(skillInfo.baseRecastTime, false, false));
+			cd.useStackWithRecast(
+				game,
+				props.skillName.includes("Motif") ? skillInfo.baseRecastTime : game.config.adjustedCastTime(skillInfo.baseRecastTime, false, false)
+			);
 
 			// animation lock
 			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(props.skillName));
@@ -598,7 +606,10 @@ export class GameState {
 		}));
 
 		// recast
-		cd.useStackWithRecast(this, this.config.adjustedCastTime(skillInfo.baseRecastTime, false, false));
+		cd.useStackWithRecast(
+			this,
+			skillInfo.name.includes("Motif") ? skillInfo.baseRecastTime : this.config.adjustedCastTime(skillInfo.baseRecastTime, false, false)
+		);
 
 		// caster tax
 		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
@@ -787,6 +798,9 @@ export class GameState {
 		let capturedCastTime = this.captureSpellCastTimeAFUI(
 			skill.info.aspect,
 			this.config.adjustedCastTime(skill.info.baseCastTime, llCovered, hpCovered));
+		if (skillName.includes("Motif")) {
+			capturedCastTime = skill.info.baseCastTime;
+		}
 		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1)
 			|| this.resources.get(ResourceType.Swiftcast).available(1)
 			|| skillName===SkillName.Paradox

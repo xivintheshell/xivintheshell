@@ -73,89 +73,89 @@ const skillInfos = [
 	new SkillInfo(SkillName.FireInRed, ResourceType.cd_GCD, Aspect.Other, true,
 		1.5, 300, 440, 0.84),
 	new SkillInfo(SkillName.AeroInGreen, ResourceType.cd_GCD, Aspect.Other, true,
-		1.5, 300, 480, 0.01),
+		1.5, 300, 480, 0.89),
 	new SkillInfo(SkillName.TemperaCoat, ResourceType.cd_TemperaCoat, Aspect.Other, false,
-		0, 0, 0, 0.01),// delayed
+		0, 0, 0), // instant
 	new SkillInfo(SkillName.WaterInBlue, ResourceType.cd_GCD, Aspect.Other, true,
-		1.5, 300, 520, 0.01),
+		1.5, 300, 520, 0.98),
 	new SkillInfo(SkillName.Smudge, ResourceType.cd_Smudge, Aspect.Other, false,
-		0, 0, 0, 0.01),// delayed
+		0, 0, 0), // instant (buff application)
 	new SkillInfo(SkillName.Fire2InRed, ResourceType.cd_GCD, Aspect.Other, true,
-		1.5, 300, 120, 0.01),
+		1.5, 300, 120, 0.84),
 	new SkillInfo(SkillName.CreatureMotif, ResourceType.cd_GCD, Aspect.Other, true,
-		3, 0, 0, 0.01, 4),
+		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.LivingMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
-		0, 0, 0, 0.01),
+		0, 0, 0),
 	new SkillInfo(SkillName.MogOfTheAges, ResourceType.cd_Portrait, Aspect.Other, false,
-		0, 0, 1300, 0.01),
+		0, 0, 1300, 1.15),
 	new SkillInfo(SkillName.PomMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.WingMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.PomMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
-		0, 0, 1100, 0.01),
+		0, 0, 1100, 0.62),
 	new SkillInfo(SkillName.WingedMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
-		0, 0, 1100, 0.01),
+		0, 0, 1100, 0.98),
 	new SkillInfo(SkillName.Aero2InGreen, ResourceType.cd_GCD, Aspect.Other, true,
-		1.5, 300, 140, 0.01),
+		1.5, 300, 140, 0.89),
 	new SkillInfo(SkillName.Water2InBlue, ResourceType.cd_GCD, Aspect.Other, true,
-		1.5, 300, 160, 0.01),
+		1.5, 300, 160, 0.98),
 	new SkillInfo(SkillName.WeaponMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.SteelMuse, ResourceType.cd_SteelMuse, Aspect.Other, false,
-		0, 0, 0, 0.01),
+		0, 0, 0),
 	new SkillInfo(SkillName.HammerMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.StrikingMuse, ResourceType.cd_SteelMuse, Aspect.Other, false,
-		0, 0, 0, 0.01),
+		0, 0, 0),
 	new SkillInfo(SkillName.BlizzardInCyan, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 800, 0.01, 3.3),
+		2.3, 400, 800, 0.75, 3.3),
 	new SkillInfo(SkillName.Blizzard2InCyan, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 240, 0.01, 3.3),
+		2.3, 400, 240, 0.75, 3.3),
 	new SkillInfo(SkillName.SubtractivePalette, ResourceType.cd_Subtractive, Aspect.Other, false,
-		0, 0, 0, 0.00),
+		0, 0, 0),
 	new SkillInfo(SkillName.StoneInYellow, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 840, 0.01, 3.3),
+		2.3, 400, 840, 0.80, 3.3),
 	new SkillInfo(SkillName.Stone2InYellow, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 260, 0.01, 3.3),
+		2.3, 400, 260, 0.80, 3.3),
 	new SkillInfo(SkillName.ThunderInMagenta, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 880, 0.01, 3.3),
+		2.3, 400, 880, 0.85, 3.3),
 	new SkillInfo(SkillName.Thunder2InMagenta, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 280, 0.01, 3.3),
+		2.3, 400, 280, 0.85, 3.3),
 	new SkillInfo(SkillName.LandscapeMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.ScenicMuse, ResourceType.cd_ScenicMuse, Aspect.Other, false,
-		0, 0, 0, 0.01),
+		0, 0, 0),
 	new SkillInfo(SkillName.StarrySkyMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.StarryMuse, ResourceType.cd_ScenicMuse, Aspect.Other, false,
-		0, 0, 0, 0.01),
+		0, 0, 0), // raid buff is instant, but cast buff is delayed by 0.62
 	new SkillInfo(SkillName.HolyInWhite, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 300, 520, 0.01),
+		0, 300, 520, 1.34),
 	new SkillInfo(SkillName.HammerStamp, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 300, 560, 0.01),
+		0, 300, 560, 1.38),
 	new SkillInfo(SkillName.HammerBrush, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 300, 620, 0.01),
+		0, 300, 620, 1.25),
 	new SkillInfo(SkillName.PolishingHammer, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 300, 680, 0.01),
+		0, 300, 680, 2.10),
 	new SkillInfo(SkillName.TemperaGrassa, ResourceType.cd_Grassa, Aspect.Other, false,
-		0, 0, 0, 0.01),
+		0, 0, 0),
 	new SkillInfo(SkillName.CometInBlack, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 400, 880, 0.01, 3.3),
+		0, 400, 880, 1.87, 3.3),
 	new SkillInfo(SkillName.RainbowDrip, ResourceType.cd_GCD, Aspect.Other, true,
-		4, 400, 1000, 0.01, 6),
+		4, 400, 1000, 1.24, 6),
 	new SkillInfo(SkillName.ClawMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.ClawedMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
-		0, 0, 1100, 0.01),
+		0, 0, 1100, 0.98),
 	new SkillInfo(SkillName.MawMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.FangedMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
-		0, 0, 1100, 0.01),
+		0, 0, 1100, 1.16),
 	new SkillInfo(SkillName.RetributionOfTheMadeen, ResourceType.cd_Portrait, Aspect.Other, false,
-		0, 0, 1400, 0.01),
+		0, 0, 1400, 1.30),
 	new SkillInfo(SkillName.StarPrism, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 0, 0, 0.00),
+		0, 0, 0, 1.25),
 ];
 
 const skillInfosMap: Map<SkillName, SkillInfo> = new Map();
@@ -350,7 +350,6 @@ export class SkillsList extends Map<SkillName, Skill> {
 			}
 		));
 
-
 		// Holy in White
 		skillsList.set(SkillName.HolyInWhite, new Skill(SkillName.HolyInWhite,
 			() => game.resources.get(ResourceType.Paint).available(1) && !game.resources.get(ResourceType.MonochromeTones).available(1),
@@ -383,6 +382,88 @@ export class SkillsList extends Map<SkillName, Skill> {
 				})
 			}
 		));
+
+		// Creature Motif (and variants)
+		let addCreatureMotif = function(motifName: SkillName) {
+			skillsList.set(motifName, new Skill(motifName,
+				() => !game.resources.get(ResourceType.CreatureCanvas).available(1),
+				(game: GameState, node: ActionNode) => {
+					game.castSpell({
+						skillName: motifName,
+						onCapture: (cap: SkillCaptureCallbackInfo) => {
+							game.resources.get(ResourceType.CreatureCanvas).gain(1);
+						},
+						onApplication: (app: SkillApplicationCallbackInfo) => {},
+						node: node,
+					})
+				}
+			));
+		};
+
+		// Living Muse (and variants)
+		let addLivingMuse = function(museName: SkillName) {
+			skillsList.set(museName, new Skill(museName,
+				() => game.resources.get(ResourceType.CreatureCanvas).available(1),
+				(game: GameState, node: ActionNode) => {
+					game.useInstantSkill({
+						skillName: museName,
+						onCapture: () => {
+							let depictions = game.resources.get(ResourceType.Depictions);
+							let portraits = game.resources.get(ResourceType.Portrait);
+							game.resources.get(ResourceType.CreatureCanvas).consume(1);
+							depictions.gain(1);
+							// wing: make moogle portrait available (overwrites madeen)
+							if (museName === SkillName.WingedMuse) {
+								portraits.overrideCurrentValue(1);
+							}
+							// maw: make madeen portrait available (overwrites moogle)
+							// reset depictions to empty
+							if (museName === SkillName.FangedMuse) {
+								portraits.overrideCurrentValue(2);
+								depictions.overrideCurrentValue(0);
+							}
+						},
+						dealDamage: true,
+						node: node,
+					});
+				}
+			));
+		};
+
+		// Mog of the Ages + Retribution of the Madeen
+		let addLaser = function(laserName: SkillName) {
+			skillsList.set(laserName, new Skill(laserName,
+				() => game.resources.get(ResourceType.Portrait).available(laserName === SkillName.MogOfTheAges ? 1 : 2),
+				(game :GameState, node: ActionNode) => {
+					game.useInstantSkill({
+						skillName: laserName,
+						// It is not possible to madeen with 2 depictions, as the cast of
+						// winged muse would immediately transform madeen into moogle
+						onCapture: () => game.resources.get(ResourceType.Portrait).overrideCurrentValue(0),
+						dealDamage: true,
+						node: node,
+					})
+				},
+			));
+		};
+
+		[
+			SkillName.CreatureMotif,
+			SkillName.PomMotif,
+			SkillName.WingMotif,
+			SkillName.ClawMotif,
+			SkillName.MawMotif,
+		].forEach(addCreatureMotif);
+		[
+			SkillName.LivingMuse,
+			SkillName.PomMuse,
+			SkillName.WingedMuse,
+			SkillName.ClawedMuse,
+			SkillName.FangedMuse,
+		].forEach(addLivingMuse);
+		addLaser(SkillName.MogOfTheAges);
+		addLaser(SkillName.RetributionOfTheMadeen);
+
 		
 		// Addle
 		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 15});
