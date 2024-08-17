@@ -898,6 +898,8 @@ export class GameState {
 				this.resources.get(ResourceType.PaletteGauge).available(50);
 		} else if (skillName === SkillName.MogOfTheAges) {
 			highlight = this.resources.get(ResourceType.Portrait).available(1);
+		} else if (skill.info.aspect === Aspect.Hammer) {
+			highlight = this.resources.get(ResourceType.HammerTime).available(1);
 		}
 
 		return {

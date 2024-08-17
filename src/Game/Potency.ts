@@ -125,6 +125,10 @@ export class Potency {
 
 		this.modifiers.forEach(m=>{
 			if (m.source===PotencyModifierType.POT) totalDamageFactor *= props.tincturePotencyMultiplier;
+			else if (m.source === PotencyModifierType.HAMMER) {
+				totalCritFactor = 1.0;
+				totalDhFactor = 1.0;
+			}
 			else totalDamageFactor *= m.damageFactor;
 		});
 

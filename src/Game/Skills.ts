@@ -132,11 +132,11 @@ const skillInfos = [
 		0, 0, 0), // raid buff is instant, but cast buff is delayed by 0.62
 	new SkillInfo(SkillName.HolyInWhite, ResourceType.cd_GCD, Aspect.Other, true,
 		0, 300, 520, 1.34),
-	new SkillInfo(SkillName.HammerStamp, ResourceType.cd_GCD, Aspect.Other, true,
+	new SkillInfo(SkillName.HammerStamp, ResourceType.cd_GCD, Aspect.Hammer, true,
 		0, 300, 560, 1.38),
-	new SkillInfo(SkillName.HammerBrush, ResourceType.cd_GCD, Aspect.Other, true,
+	new SkillInfo(SkillName.HammerBrush, ResourceType.cd_GCD, Aspect.Hammer, true,
 		0, 300, 620, 1.25),
-	new SkillInfo(SkillName.PolishingHammer, ResourceType.cd_GCD, Aspect.Other, true,
+	new SkillInfo(SkillName.PolishingHammer, ResourceType.cd_GCD, Aspect.Hammer, true,
 		0, 300, 680, 2.10),
 	new SkillInfo(SkillName.TemperaGrassa, ResourceType.cd_Grassa, Aspect.Other, false,
 		0, 0, 0),
@@ -529,6 +529,64 @@ export class SkillsList extends Map<SkillName, Skill> {
 		addLandscape(SkillName.StarrySkyMotif);
 		addScenic(SkillName.ScenicMuse);
 		addScenic(SkillName.StarryMuse);
+
+		// hammer and hammer accessories
+		let addWeapon = function(motifName: SkillName) {
+			skillsList.set(motifName, new Skill(motifName,
+				() => !game.resources.get(ResourceType.WeaponCanvas).available(1) &&
+					!game.resources.get(ResourceType.HammerTime).available(1),
+				(game: GameState, node: ActionNode) => {
+					game.castSpell({
+						skillName: motifName,
+						onCapture: (cap: SkillCaptureCallbackInfo) => game.resources.get(ResourceType.WeaponCanvas).gain(1),
+						onApplication: (app: SkillApplicationCallbackInfo) => {},
+						node: node,
+					});
+				}
+			));
+		};
+
+		let addStriking = function(museName: SkillName) {
+			skillsList.set(museName, new Skill(museName,
+				() => game.resources.get(ResourceType.WeaponCanvas).available(1),
+				(game: GameState, node: ActionNode) => {
+					game.useInstantSkill({
+						skillName: museName,
+						onCapture: () => {
+							game.resources.get(ResourceType.WeaponCanvas).consume(1);
+							game.resources.get(ResourceType.HammerTime).gain(3);
+							game.resources.addResourceEvent({
+								rscType: ResourceType.HammerTime,
+								name: "drop hammer time", delay: 30, fnOnRsc: (rsc: Resource) => rsc.overrideCurrentValue(0),
+							});
+							node.resolveAll(game.getDisplayTime());
+						},
+						dealDamage: false,
+						node: node,
+					});
+				}
+			));
+		};
+
+		let addHammer = function(hammerName: SkillName) {
+			skillsList.set(hammerName, new Skill(hammerName,
+				() => game.resources.get(ResourceType.HammerTime).available(1),
+				(game: GameState, node: ActionNode) => {
+					game.castSpell({
+						skillName: hammerName,
+						onCapture: (cap: SkillCaptureCallbackInfo) => game.resources.get(ResourceType.HammerTime).consume(1),
+						onApplication: (app: SkillApplicationCallbackInfo) => {},
+						node: node,
+					});
+				}
+			));
+		};
+
+		addWeapon(SkillName.WeaponMotif);
+		addWeapon(SkillName.HammerMotif);
+		addStriking(SkillName.SteelMuse);
+		addStriking(SkillName.StrikingMuse);
+		[SkillName.HammerStamp, SkillName.HammerBrush, SkillName.PolishingHammer].forEach(addHammer);
 
 		// Addle
 		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 15});

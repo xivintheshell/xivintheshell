@@ -49,10 +49,10 @@ const pictoDamageSkills = new Set<SkillName>([
 	SkillName.FangedMuse,
 	SkillName.MogOfTheAges,
 	SkillName.RetributionOfTheMadeen,
-]);
 
-const hammerSkills = new Set<SkillName>([
-
+	SkillName.HammerStamp,
+	SkillName.HammerBrush,
+	SkillName.PolishingHammer,
 ]);
 
 const pictoMotifs = new Set<SkillName>([
@@ -219,9 +219,8 @@ function expandNode(node: ActionNode) : ExpandedNode {
 			for (let i = 0; i < mainPotency.modifiers.length; i++) {
 				let tag = mainPotency.modifiers[i].source;
 				if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
-					res.displayedModifiers = [tag];
-					res.calculationModifiers = mainPotency.modifiers;
-					break;
+					res.displayedModifiers.push(tag);
+					res.calculationModifiers.push(mainPotency.modifiers[i]);
 				}
 			}
 		} else if (enoSkills.has(node.skillName)) {

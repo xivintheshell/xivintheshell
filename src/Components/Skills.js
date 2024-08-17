@@ -25,9 +25,9 @@ export let displayedSkills = [
 	SkillName.CreatureMotif,
 	SkillName.LivingMuse,
 	SkillName.MogOfTheAges,
-	// SkillName.WeaponMotif,
-	// SkillName.StrikingMuse,
-	// SkillName.HammerStamp,
+	SkillName.WeaponMotif,
+	SkillName.SteelMuse,
+	SkillName.HammerStamp,
 	SkillName.LandscapeMotif,
 	SkillName.ScenicMuse,
 
@@ -55,7 +55,6 @@ let pctSkills = [
 	"fireInRed",
 	"hammerBrush",
 	"hammerMotif",
-	"hammerMuse",
 	"hammerStamp",
 	"holyInWhite",
 	"landscapeMotif",
@@ -72,6 +71,7 @@ let pctSkills = [
 	"starPrism",
 	"starryMuse",
 	"starrySkyMotif",
+	"steelMuse",
 	"strikingMuse",
 	"stone2InYellow",
 	"stoneInYellow",
@@ -284,6 +284,8 @@ export class SkillsWindow extends React.Component {
 				creatureReady: controller.game.resources.get(ResourceType.CreatureCanvas).available(1),
 				depictions: controller.game.resources.get(ResourceType.Depictions).availableAmount(),
 				landscapeReady: controller.game.resources.get(ResourceType.LandscapeCanvas).available(1),
+				hammerReady: controller.game.resources.get(ResourceType.WeaponCanvas).available(1),
+				hammerStacks: controller.game.resources.get(ResourceType.HammerTime).availableAmount(),
 			});
 		}).bind(this);
 
@@ -378,6 +380,8 @@ export class SkillsWindow extends React.Component {
 			creatureReady: controller.game.resources.get(ResourceType.CreatureCanvas).available(1),
 			depictions: controller.game.resources.get(ResourceType.Depictions).availableAmount(),
 			landscapeReady: controller.game.resources.get(ResourceType.LandscapeCanvas).available(1),
+			hammerReady: controller.game.resources.get(ResourceType.WeaponCanvas).available(1),
+			hammerStacks: controller.game.resources.get(ResourceType.HammerTime).availableAmount(),
 		});
 	}
 
@@ -469,6 +473,28 @@ export class SkillsWindow extends React.Component {
 				if (this.state.landscapeReady) {
 					highlight = true;
 					skillName = SkillName.StarryMuse;
+				}
+			}
+
+			// hammer and hammer accessories
+
+			if (skillName === SkillName.WeaponMotif) {
+				skillName = SkillName.HammerMotif;
+			}
+
+			if (skillName === SkillName.SteelMuse) {
+				if (this.state.hammerReady) {
+					highlight = true;
+					skillName = SkillName.StrikingMuse;
+				}
+			}
+
+			if (skillName === SkillName.HammerStamp) {
+				// TODO handle combo drop
+				if (this.state.hammerStacks === 2) {
+					skillName = SkillName.HammerBrush;
+				} else if (this.state.hammerStacks === 1) {
+					skillName = SkillName.PolishingHammer;
 				}
 			}
 

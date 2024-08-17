@@ -546,6 +546,7 @@ function drawSkills(
 		// 4. buff images
 		if (node.hasBuff(BuffType.LeyLines)) buffImages.push(buffIconImages.get(BuffType.LeyLines) as HTMLImageElement);
 		if (node.hasBuff(BuffType.Tincture)) buffImages.push(buffIconImages.get(BuffType.Tincture) as HTMLImageElement);
+		if (node.hasBuff(BuffType.StarryMuse)) buffImages.push(buffIconImages.get(BuffType.StarryMuse) as HTMLImageElement);
 		node.getPartyBuffs().forEach(buffType => {
 			let img = buffIconImages.get(buffType);
 			if (img) buffImages.push(img);

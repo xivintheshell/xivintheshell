@@ -21,3 +21,4 @@ edge cases not handled
 - aetherhues expiring off mid-cast (should cancel the cast)
 - hammer expiring (will maintain combo into next hammer usage)
 - hyperphantasia expiring mid-cast should not give rainbow bright
+- explain CDH "effective potency" conversion
