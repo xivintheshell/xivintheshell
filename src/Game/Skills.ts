@@ -390,9 +390,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				(game: GameState, node: ActionNode) => {
 					game.castSpell({
 						skillName: motifName,
-						onCapture: (cap: SkillCaptureCallbackInfo) => {
-							game.resources.get(ResourceType.CreatureCanvas).gain(1);
-						},
+						onCapture: (cap: SkillCaptureCallbackInfo) => game.resources.get(ResourceType.CreatureCanvas).gain(1),
 						onApplication: (app: SkillApplicationCallbackInfo) => {},
 						node: node,
 					})
@@ -434,7 +432,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		let addLaser = function(laserName: SkillName) {
 			skillsList.set(laserName, new Skill(laserName,
 				() => game.resources.get(ResourceType.Portrait).available(laserName === SkillName.MogOfTheAges ? 1 : 2),
-				(game :GameState, node: ActionNode) => {
+				(game: GameState, node: ActionNode) => {
 					game.useInstantSkill({
 						skillName: laserName,
 						// It is not possible to madeen with 2 depictions, as the cast of
@@ -464,7 +462,72 @@ export class SkillsList extends Map<SkillName, Skill> {
 		addLaser(SkillName.MogOfTheAges);
 		addLaser(SkillName.RetributionOfTheMadeen);
 
-		
+		// Starry Sky Motif + fake landscape motif
+		let addLandscape = function(motifName: SkillName) {
+			skillsList.set(motifName, new Skill(motifName,
+				() => !game.resources.get(ResourceType.LandscapeCanvas).available(1),
+				(game: GameState, node: ActionNode) => {
+					game.castSpell({
+						skillName: motifName,
+						onCapture: (cap: SkillCaptureCallbackInfo) => game.resources.get(ResourceType.LandscapeCanvas).gain(1),
+						onApplication: (app: SkillApplicationCallbackInfo) => {},
+						node: node,
+					});
+				}
+			));
+		};
+
+		// Starry Muse + fake scenic muse
+		let addScenic = function(museName: SkillName) {
+			skillsList.set(museName, new Skill(museName,
+				() => game.resources.get(ResourceType.LandscapeCanvas).available(1),
+				(game: GameState, node: ActionNode) => {
+					game.useInstantSkill({
+						skillName: museName,
+						onCapture: () => {
+							// It is not possible to have an existing starry/hyperphantasia active
+							// unless someone added starry muse via the party buff menu.
+							// Since this fork is hacky we just ignore this case for now.
+							game.resources.get(ResourceType.StarryMuse).gain(1);
+							// Technically, hyperphantasia is gained on a delay, but whatever
+							game.resources.get(ResourceType.Hyperphantasia).gain(5);
+							game.resources.get(ResourceType.Inspiration).gain(1);
+							game.resources.get(ResourceType.Starstruck).gain(1);
+							game.resources.get(ResourceType.SubtractiveSpectrum).gain(1);
+							game.resources.addResourceEvent({
+								rscType: ResourceType.StarryMuse,
+								name: "drop starry muse", delay: 20, fnOnRsc: (rsc: Resource) => rsc.consume(1),
+							});
+							game.resources.addResourceEvent({
+								rscType: ResourceType.Hyperphantasia,
+								name: "drop hyperphantasia", delay: 30, fnOnRsc: (rsc: Resource) => rsc.overrideCurrentValue(0),
+							});
+							game.resources.addResourceEvent({
+								rscType: ResourceType.Inspiration,
+								name: "drop inspiration", delay: 30, fnOnRsc: (rsc: Resource) => rsc.consume(1),
+							});
+							game.resources.addResourceEvent({
+								rscType: ResourceType.Starstruck,
+								name: "drop starstruck", delay: 20, fnOnRsc: (rsc: Resource) => rsc.consume(1),
+							});
+							game.resources.addResourceEvent({
+								rscType: ResourceType.SubtractiveSpectrum,
+								name: "drop subtractive spectrum", delay: 30, fnOnRsc: (rsc: Resource) => rsc.consume(1),
+							});
+							node.resolveAll(game.getDisplayTime());
+						},
+						dealDamage: false,
+						node: node,
+					});
+				}
+			));
+		};
+
+		addLandscape(SkillName.LandscapeMotif);
+		addLandscape(SkillName.StarrySkyMotif);
+		addScenic(SkillName.ScenicMuse);
+		addScenic(SkillName.StarryMuse);
+
 		// Addle
 		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 15});
 

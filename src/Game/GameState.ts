@@ -79,6 +79,7 @@ export class GameState {
 		this.resources.set(ResourceType.Hyperphantasia, new Resource(ResourceType.Hyperphantasia, 5, 0));
 		this.resources.set(ResourceType.RainbowBright, new Resource(ResourceType.RainbowBright, 1, 0));
 		this.resources.set(ResourceType.Starstruck, new Resource(ResourceType.Starstruck, 1, 0));
+		this.resources.set(ResourceType.StarryMuse, new Resource(ResourceType.StarryMuse, 1, 0));
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
@@ -846,6 +847,18 @@ export class GameState {
 			if (this.resources.get(ResourceType.Polyglot).available(1)) highlight = true;
 		} else if (skillName === SkillName.FlareStar) {
 			if (this.resources.get(ResourceType.AstralSoul).available(6)) highlight = true;
+		} else if (skillName === SkillName.CometInBlack) {
+			// if comet is ready, it glows regardless of paint status
+			highlight = this.resources.get(ResourceType.MonochromeTones).available(1);
+		} else if (skillName === SkillName.HolyInWhite) {
+			// holy doesn't glow if comet is ready
+			highlight = !this.resources.get(ResourceType.MonochromeTones).available(1)
+				&& this.resources.get(ResourceType.Paint).available(1);
+		} else if (skillName === SkillName.SubtractivePalette) {
+			highlight = this.resources.get(ResourceType.SubtractiveSpectrum).available(1) ||
+				this.resources.get(ResourceType.PaletteGauge).available(50);
+		} else if (skillName === SkillName.MogOfTheAges) {
+			highlight = this.resources.get(ResourceType.Portrait).available(1);
 		}
 
 		return {

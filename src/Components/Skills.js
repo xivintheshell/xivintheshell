@@ -28,8 +28,8 @@ export let displayedSkills = [
 	// SkillName.WeaponMotif,
 	// SkillName.StrikingMuse,
 	// SkillName.HammerStamp,
-	// SkillName.LandscapeMotif,
-	// SkillName.ScenicMuse,
+	SkillName.LandscapeMotif,
+	SkillName.ScenicMuse,
 
 	SkillName.Addle,
 	SkillName.Swiftcast,
@@ -70,7 +70,7 @@ let pctSkills = [
 	"scenicMuse",
 	"smudge",
 	"starPrism",
-	"starrySky",
+	"starryMuse",
 	"starrySkyMotif",
 	"strikingMuse",
 	"stone2InYellow",
@@ -279,10 +279,11 @@ export class SkillsWindow extends React.Component {
 				paradoxInfo: undefined,
 				retraceReady: retraceReady,
 				retraceInfo: undefined,
+				subtractiveReady: controller.game.resources.get(ResourceType.SubtractivePalette).available(1),
 				aetherhuesStacks: controller.game.resources.get(ResourceType.Aetherhues).availableAmount(),
 				creatureReady: controller.game.resources.get(ResourceType.CreatureCanvas).available(1),
 				depictions: controller.game.resources.get(ResourceType.Depictions).availableAmount(),
-				portrait: controller.game.resources.get(ResourceType.Portrait).availableAmount(),
+				landscapeReady: controller.game.resources.get(ResourceType.LandscapeCanvas).available(1),
 			});
 		}).bind(this);
 
@@ -372,10 +373,11 @@ export class SkillsWindow extends React.Component {
 			}),
 			paradoxInfo: undefined,
 			retraceInfo: undefined,
+			subtractiveReady: controller.game.resources.get(ResourceType.SubtractivePalette).available(1),
 			aetherhuesStacks: controller.game.resources.get(ResourceType.Aetherhues).availableAmount(),
 			creatureReady: controller.game.resources.get(ResourceType.CreatureCanvas).available(1),
 			depictions: controller.game.resources.get(ResourceType.Depictions).availableAmount(),
-			portrait: controller.game.resources.get(ResourceType.Portrait).availableAmount(),
+			landscapeReady: controller.game.resources.get(ResourceType.LandscapeCanvas).available(1),
 		});
 	}
 
@@ -384,35 +386,42 @@ export class SkillsWindow extends React.Component {
 		for (let i = 0; i < displayedSkills.length; i++) {
 			let skillName = displayedSkills[i];
 			let info = this.state.statusList ? this.state.statusList[i] : undefined;
+			let highlight = false; // hacky since i'm too lazy to mess with getSkillAvailabilityStatus
 
 			// picto filler
 			if (skillName === SkillName.FireInRed) {
+				highlight = this.state.aetherhuesStacks > 0;
 				if (this.state.aetherhuesStacks === 1) {
 					skillName = SkillName.AeroInGreen;
 				} else if (this.state.aetherhuesStacks === 2) {
 					skillName = SkillName.WaterInBlue;
 				}
 			} else if (skillName === SkillName.Fire2InRed) {
+				highlight = this.state.aetherhuesStacks > 0;
 				if (this.state.aetherhuesStacks === 1) {
 					skillName = SkillName.Aero2InGreen;
 				} else if (this.state.aetherhuesStacks === 2) {
 					skillName = SkillName.Water2InBlue;
 				}
 			}
+
 			// picto subtractive
 			if (skillName === SkillName.BlizzardInCyan) {
+				highlight = this.state.subtractiveReady;
 				if (this.state.aetherhuesStacks === 1) {
 					skillName = SkillName.StoneInYellow;
 				} else if (this.state.aetherhuesStacks === 2) {
 					skillName = SkillName.ThunderInMagenta;
 				}
 			} else if (skillName === SkillName.Blizzard2InCyan) {
+				highlight = this.state.subtractiveReady;
 				if (this.state.aetherhuesStacks === 1) {
 					skillName = SkillName.Stone2InYellow;
 				} else if (this.state.aetherhuesStacks === 2) {
 					skillName = SkillName.Thunder2InMagenta;
 				}
 			}
+
 			// picto creature muse + motif
 			if (skillName === SkillName.CreatureMotif && !this.state.creatureReady) {
 				switch (this.state.depictions) {
@@ -433,7 +442,7 @@ export class SkillsWindow extends React.Component {
 
 			if (skillName === SkillName.LivingMuse) {
 				if (this.state.creatureReady) {
-					info.highlight = true;
+					highlight = true;
 				}
 				switch (this.state.depictions) {
 					case 0:
@@ -451,18 +460,20 @@ export class SkillsWindow extends React.Component {
 				}
 			}
 
-			if (skillName === SkillName.MogOfTheAges) {
-				if (this.state.portrait > 0) {
-					info.highlight = true;
-				}
-				if (this.state.portrait === 2) {
-					skillName = SkillName.RetributionOfTheMadeen;
+			if (skillName === SkillName.LandscapeMotif && !this.state.landscapeReady) {
+				skillName = SkillName.StarrySkyMotif;
+			}
+
+			if (skillName === SkillName.ScenicMuse) {
+				if (this.state.landscapeReady) {
+					highlight = true;
+					skillName = SkillName.StarryMuse;
 				}
 			}
 
 			let btn = <SkillButton
 				key={i}
-				highlight={info ? info.highlight : false}
+				highlight={highlight || (info && info.highlight)}
 				skillName={skillName}
 				ready={info ? info.status===SkillReadyStatus.Ready : false}
 				cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}

@@ -116,6 +116,7 @@ export const enum SkillReadyStatus {
 
 export enum BuffType {
 	LeyLines = "Ley Lines",
+	Hyperphantasia = "Hyperphantasia",
 	Tincture = "Tincture",
 
 	ArcaneCircle = "Arcane Circle",
@@ -183,6 +184,7 @@ export const enum ResourceType {
 	Hyperphantasia = "Hyperphantasia", // [0, 5]
 	RainbowBright = "Rainbow Bright", // [0, 1]
 	Starstruck = "Starstruck", // [0, 1]
+	StarryMuse = "Starry Muse", // [0, 1]
 
 	// special
 	Movement = "Movement", // [0, 1]

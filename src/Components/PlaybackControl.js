@@ -163,10 +163,7 @@ function ConfigSummary(props) {
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	return <div>
 		GCD: {gcd}
-		<br/>{localize({en: "B1 cast time ", zh: "冰1咏唱时间 "})}<Help topic={"b1CastTime"} content={b1CastTimeDesc}/>: {b1CastTime}
 		<br/>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
-		<br/>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
-		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
 		{numOverrides === 0 ? undefined : <span style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</span>}
 	</div>
 }
