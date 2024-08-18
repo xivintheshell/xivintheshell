@@ -1,7 +1,7 @@
 import {getCachedValue, removeCachedValue, ReplayMode, setCachedValue, TickMode} from "./Common";
 import {GameState} from "../Game/GameState";
 import {Debug, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
-import {GameConfig} from "../Game/GameConfig"
+import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 // @ts-ignore
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 // @ts-ignore
@@ -83,16 +83,6 @@ class Controller {
 		this.#presetLinesManager = new PresetLinesManager();
 
 		this.gameConfig = new GameConfig();
-		this.gameConfig.spellSpeed = 1532;
-		this.gameConfig.criticalHit = 420;
-		this.gameConfig.directHit = 420;
-		this.gameConfig.countdown = 5;
-		this.gameConfig.randomSeed = "sup";
-		this.gameConfig.casterTax = 0.1;
-		this.gameConfig.animationLock = 0.7;
-		this.gameConfig.timeTillFirstManaTick = 1.2;
-		this.gameConfig.procMode = ProcMode.Never;
-		this.gameConfig.extendedBuffTimes = false;
 		this.game = new GameState(this.gameConfig);
 
 		this.record = new Record();
@@ -691,17 +681,17 @@ class Controller {
 	}
 
 	setConfigAndRestart(props={
-		spellSpeed: 1268,
-		criticalHit: 420,
-		directHit: 420,
-		animationLock: 0.66,
-		casterTax: 0.06,
-		timeTillFirstManaTick: 0.3,
-		countdown: 5,
-		randomSeed: "hello.",
-		procMode: ProcMode.RNG,
-		extendedBuffTimes: false,
-		initialResourceOverrides: []
+		spellSpeed: DEFAULT_CONFIG.spellSpeed,
+		criticalHit: DEFAULT_CONFIG.criticalHit,
+		directHit: DEFAULT_CONFIG.directHit,
+		animationLock: DEFAULT_CONFIG.animationLock,
+		casterTax: DEFAULT_CONFIG.casterTax,
+		timeTillFirstManaTick: DEFAULT_CONFIG.timeTillFirstManaTick,
+		countdown: DEFAULT_CONFIG.countdown,
+		randomSeed: DEFAULT_CONFIG.randomSeed,
+		procMode: DEFAULT_CONFIG.procMode,
+		extendedBuffTimes: DEFAULT_CONFIG.extendedBuffTimes,
+		initialResourceOverrides: [],
 	}) {
 		this.gameConfig = new GameConfig(props);
 
