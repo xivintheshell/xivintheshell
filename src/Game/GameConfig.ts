@@ -1,17 +1,31 @@
 import {Debug, SkillName, ProcMode} from "./Common";
 import {ResourceOverride} from "./Resources";
 
+export const DEFAULT_CONFIG = {
+	// 2.37 GCD
+	spellSpeed: 1532,
+	criticalHit: 420,
+	directHit: 420,
+	countdown: 5,
+	randomSeed: "sup",
+	casterTax: 0.1,
+	animationLock: 0.7,
+	timeTillFirstManaTick: 1.2,
+	procMode: ProcMode.Never,
+	extendedBuffTimes: false,
+};
+
 export class GameConfig {
-	spellSpeed = 400;
-	criticalHit = 420;
-	directHit = 420;
-	countdown = 0;
-	randomSeed = "hello.";
-	casterTax = 0.06;
-	animationLock = 0.66;
-	timeTillFirstManaTick = 1.2;
-	procMode = ProcMode.RNG;
-	extendedBuffTimes = false;
+	spellSpeed = DEFAULT_CONFIG.spellSpeed;
+	criticalHit = DEFAULT_CONFIG.criticalHit;
+	directHit = DEFAULT_CONFIG.directHit;
+	countdown = DEFAULT_CONFIG.countdown;
+	randomSeed = DEFAULT_CONFIG.randomSeed;
+	casterTax = DEFAULT_CONFIG.casterTax;
+	animationLock = DEFAULT_CONFIG.animationLock;
+	timeTillFirstManaTick = DEFAULT_CONFIG.timeTillFirstManaTick;
+	procMode = DEFAULT_CONFIG.procMode;
+	extendedBuffTimes = DEFAULT_CONFIG.extendedBuffTimes;
 	initialResourceOverrides: ResourceOverride[] = [];
 
 	// DEBUG
@@ -30,8 +44,8 @@ export class GameConfig {
 	}) {
 		if (props) {
 			this.spellSpeed = props.spellSpeed;
-			this.criticalHit = props.criticalHit ?? 420;
-			this.directHit = props.directHit ?? 420;
+			this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
+			this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
 			this.countdown = props.countdown;
 			this.randomSeed = props.randomSeed;
 			this.casterTax = props.casterTax;
