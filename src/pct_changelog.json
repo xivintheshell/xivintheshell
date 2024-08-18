@@ -7,7 +7,7 @@
             "Allow party buffs to last shorter than max duration (changed upstream)",
             "Allow Inspiration to be toggled like Ley Lines (thanks turtle)",
             "Prevent Aetherhues, Subtractive Palette, and Hammer Time from being clicked off",
-            "Fixed tooltip-displayed application delays for Holy in White and Comet in Black (thanks one more time yuyuyuyuka)"
+            "Fixed tooltip-displayed application delays for Holy in White, Comet in Black, and Hammers (thanks one more time yuyuyuyuka)"
         ]
     },
     {

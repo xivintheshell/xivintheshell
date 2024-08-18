@@ -894,6 +894,7 @@ export class GameState {
 			|| (skillName === SkillName.StarPrism && this.resources.get(ResourceType.Starstruck).available(1))
 			|| (skillName === SkillName.RainbowDrip && this.resources.get(ResourceType.RainbowBright).available(1))
 			|| ((skillName === SkillName.HolyInWhite || skillName === SkillName.CometInBlack) && this.resources.get(ResourceType.Paint).available(1))
+			|| (skill.info.aspect === Aspect.Hammer && this.resources.get(ResourceType.HammerTime).available(1))
 			;
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
