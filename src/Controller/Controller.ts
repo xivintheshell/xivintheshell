@@ -598,6 +598,7 @@ class Controller {
 			landscapeCanvas: game.resources.get(ResourceType.LandscapeCanvas).availableAmount(),
 			paletteGauge: game.resources.get(ResourceType.PaletteGauge).availableAmount(),
 			paint: game.resources.get(ResourceType.Paint).availableAmount(),
+			hasComet: game.resources.get(ResourceType.MonochromeTones).available(1),
 		};
 		// locks
 		let cast = game.resources.get(ResourceType.NotCasterTaxed);

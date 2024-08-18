@@ -67,6 +67,24 @@ function ResourceCounter(props) {
 	</div>;
 }
 
+// copy of ResourceCounter specialized for the paint gauge
+// name, holyColor, cometColor, currentStacks, maxStacks, hasComet
+function PaintGaugeCounter(props) {
+	let stacks = [];
+	for (let i = 0; i < 5; i++) {
+		// dip the last one in black paint
+		let isComet = props.hasComet && i === props.currentStacks - 1;
+		stacks.push(<ResourceStack key={i} color={isComet ? props.cometColor : props.holyColor} value={i < props.currentStacks}/>)
+	}
+	return <div className={props.className} style={{marginBottom: 4, lineHeight: "1.5em"}}>
+		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
+		<div style={{width: 200, display: "inline-block"}}>
+			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
+			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{props.currentStacks + "/" + props.maxStacks}</div>
+		</div>
+	</div>;
+}
+
 function ResourceText(props) {
 	return <div className={props.className} style={{marginBottom: 4, lineHeight: "1.5em"}}>
 		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
@@ -381,6 +399,7 @@ function ResourcesDisplay(props) {
 		landscapeCanvas: 0,
 		paletteGauge: 0,
 		paint: 0,
+		hasComet: 0,
 	}
 	let manaBar = <ResourceBar
 		name={"MP"}
@@ -498,7 +517,7 @@ function ResourcesDisplay(props) {
 				en: "creature",
 			})
 		}
-		color={colors.resources.polyStacks}
+		color={colors.resources.creatureCanvas}
 		currentStacks={data.creatureCanvas}
 		maxStacks={1}
 	/>;
@@ -509,7 +528,7 @@ function ResourcesDisplay(props) {
 				en: "weapon",
 			})
 		}
-		color={colors.resources.polyStacks}
+		color={colors.resources.weaponCanvas}
 		currentStacks={data.weaponCanvas}
 		maxStacks={1}
 	/>;
@@ -520,7 +539,7 @@ function ResourcesDisplay(props) {
 				en: "landscape",
 			})
 		}
-		color={colors.resources.polyStacks}
+		color={colors.resources.landscapeCanvas}
 		currentStacks={data.landscapeCanvas}
 		maxStacks={1}
 	/>;
@@ -531,22 +550,24 @@ function ResourcesDisplay(props) {
 				en: "palette gauge",
 			})
 		}
-		color={colors.resources.paradox} // TODO
+		color={colors.resources.paletteGauge}
 		progress={data.paletteGauge / 100}
 		value={data.paletteGauge.toFixed(0)}
 		width={100}
 	/>;
 
-	// TODO display black paint differently
-	let paint = <ResourceCounter
+	// name, holyColor, cometColor, currentStacks, maxStacks, hasComet
+	let paint = <PaintGaugeCounter
 		name={
 			localize({
 				en: "paint gauge",
 			})
 		}
-		color={colors.resources.polyStacks}
+		holyColor={colors.resources.holyPaint}
+		cometColor={colors.resources.cometPaint}
 		currentStacks={data.paint}
 		maxStacks={5}
+		hasComet={data.hasComet}
 	/>;
 		
 	return <div style={{textAlign: "left"}}>
