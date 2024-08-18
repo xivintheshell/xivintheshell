@@ -1,0 +1,10 @@
+[
+    {
+        "date": "8/17/24",
+        "changes": [
+            "Initial fork! Below bugfixes are caught between first deployment and public announcements.",
+            "Incorporate Turtle's auto CDH code",
+            "Fix hammer only having 1 stack (thanks Turtle)"
+        ]
+    }
+]

@@ -108,7 +108,7 @@ export class GameState {
 		this.cooldowns.set(ResourceType.cd_Smudge, new CoolDown(ResourceType.cd_Smudge, 20, 1, 1));
 		this.cooldowns.set(ResourceType.cd_LivingMuse, new CoolDown(ResourceType.cd_LivingMuse, 40, 3, 3));
 		this.cooldowns.set(ResourceType.cd_Portrait, new CoolDown(ResourceType.cd_Portrait, 30, 1, 1));
-		this.cooldowns.set(ResourceType.cd_SteelMuse, new CoolDown(ResourceType.cd_SteelMuse, 60, 1, 1));
+		this.cooldowns.set(ResourceType.cd_SteelMuse, new CoolDown(ResourceType.cd_SteelMuse, 60, 2, 2));
 		this.cooldowns.set(ResourceType.cd_ScenicMuse, new CoolDown(ResourceType.cd_ScenicMuse, 120, 1, 1));
 		// TODO handle these differently
 		this.cooldowns.set(ResourceType.cd_Subtractive, new CoolDown(ResourceType.cd_Subtractive, 1, 1, 1));
