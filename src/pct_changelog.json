@@ -3,7 +3,8 @@
         "date": "8/18/24",
         "changes": [
             "Fix Madeen not displaying (thank you yuyuyuyuka)",
-            "Add extended buffs for Aetherhues and Starry Muse (thanks also yuyuyuyuka)"
+            "Add extended buffs for Aetherhues and Starry Muse (thanks also yuyuyuyuka)",
+            "Allow party buffs to last shorter than max duration (changed upstream)"
         ]
     },
     {
