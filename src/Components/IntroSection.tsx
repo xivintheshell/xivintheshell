@@ -5,6 +5,9 @@ import {DebugOptions} from "./DebugOptions";
 import changelog from "../pic_changelog.json"
 import {getCurrentThemeColors} from "./ColorTheme";
 
+const HELP_CHANNEL_URL = "https://discord.com/channels/277897135515762698/1274591512902238270";
+const RESOURCE_CHANNEL_URL = "https://discord.com/channels/277897135515762698/1246222197488615524";
+
 function Changelog() {
 	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={localize({en: "Changelog", zh: "更新日志", ja: "更新履歴"})} defaultShow={false} content={
 		<div>
@@ -169,6 +172,14 @@ export function IntroSection(props: {}) {
 					})}
 				</div>
 
+				{localize({
+					en: <div className={"paragraph"}>
+						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL}>this thread in The Balance</a>.
+						You can also find me directly on discord (@shanzhe in The Balance), or file an issue on GitHub (link below). In case of sending a bug report, attaching the
+						fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
+					</div>
+				})}
+
 				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接：", ja: "リンク集"})}</div>
 				{localize({
 					en: <ul>
@@ -176,15 +187,21 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/pictomancer/"}>Official FFXIV pictomancer job
 							guide</a></li>
+						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL}>
+							PCT resources channel on The Balance</a> (make sure you've already joined the server)</li>
 					</ul>,
 					zh: <ul>
 						<li><a href={"https://github.com/zqsz-xiv/ffxiv-blm-rotation/tree/sz/picto-in-the-shell"}>Github页面</a></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
+						<li><a href={RESOURCE_CHANNEL_URL}>
+							The Balance服务器里的PIC频道</a> （需要先加入Discord服务器）</li>
 					</ul>,
 					ja:
 						<ul>
 						<li><a href={"https://github.com/zqsz-xiv/ffxiv-blm-rotation/tree/sz/picto-in-the-shell"}>Github repository</a></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
+						<li><a href={RESOURCE_CHANNEL_URL}>
+							PCT resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
 					</ul>,
 				})}
 				<div className="paragraph"><Expandable title={"Known issues"} titleNode={localize({en: "Known issues"})} defaultShow={false} content={

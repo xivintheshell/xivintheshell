@@ -6,7 +6,8 @@
             "Incorporate Turtle's auto CDH code",
             "Fix hammer only having 1 stack (thanks Turtle)",
             "Require being in combat to cast striking/starry",
-            "Display comet in gauge and clean up gauge display"
+            "Display comet in gauge and clean up gauge display",
+            "Fix Hammer Time buff persisting after all hammers (thanks again Turtle)"
         ]
     }
 ]

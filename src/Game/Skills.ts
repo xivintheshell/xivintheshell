@@ -574,7 +574,13 @@ export class SkillsList extends Map<SkillName, Skill> {
 				(game: GameState, node: ActionNode) => {
 					game.castSpell({
 						skillName: hammerName,
-						onCapture: (cap: SkillCaptureCallbackInfo) => game.resources.get(ResourceType.HammerTime).consume(1),
+						onCapture: (cap: SkillCaptureCallbackInfo) => {
+							let hammerTime = game.resources.get(ResourceType.HammerTime);
+							hammerTime.consume(1);
+							if (!hammerTime.available(1)) {
+								hammerTime.removeTimer();
+							}
+						},
 						onApplication: (app: SkillApplicationCallbackInfo) => {},
 						node: node,
 					});
