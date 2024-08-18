@@ -634,6 +634,7 @@ class Controller {
 			starryMuseCountdown: game.resources.timeTillReady(ResourceType.StarryMuse),
 			hyperphantasiaCountdown: game.resources.timeTillReady(ResourceType.Hyperphantasia),
 			hyperphantasiaStacks: game.resources.get(ResourceType.Hyperphantasia).availableAmount(),
+			inspirationEnabled: game.resources.get(ResourceType.Inspiration).enabled,
 			inspirationCountdown: game.resources.timeTillReady(ResourceType.Inspiration),
 			rainbowBrightCountdown: game.resources.timeTillReady(ResourceType.RainbowBright),
 			starstruckCountdown: game.resources.timeTillReady(ResourceType.Starstruck),

@@ -176,6 +176,7 @@ function ResourceOverrideDisplay(props) {
 	} else {
 		str = props.override.type;
 		if (props.override.type === ResourceType.LeyLines) str += " (" + (props.override.effectOrTimerEnabled ? "enabled" : "disabled") + ")";
+		if (props.override.type === ResourceType.Inspiration) str += " (" + (props.override.effectOrTimerEnabled ? "enabled" : "disabled") + ")";
 		if (props.override.type === ResourceType.Enochian) str += " (" + (props.override.effectOrTimerEnabled ? "timer enabled" : "timer disabled") + ")";
 		if (props.rscInfo.maxValue > 1) str += " (amount: " + props.override.stacks + ")";
 		if (props.rscInfo.maxTimeout >= 0) {

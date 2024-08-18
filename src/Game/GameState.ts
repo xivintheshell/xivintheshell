@@ -435,7 +435,7 @@ export class GameState {
 	requestToggleBuff(buffName: ResourceType) {
 		let rsc = this.resources.get(buffName);
 		// only ley lines can be enabled / disabled. Everything else will just be canceled
-		if (buffName === ResourceType.LeyLines) {
+		if (buffName === ResourceType.LeyLines || buffName === ResourceType.Inspiration) {
 			if (rsc.available(1)) { // buff exists and enabled
 				rsc.enabled = false;
 				return true;
@@ -463,7 +463,7 @@ export class GameState {
 		let cd = this.cooldowns.get(skillInfo.cdName);
 		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
-		const hpSkills = [
+		const inspireSkills = [
 			SkillName.FireInRed,
 			SkillName.Fire2InRed,
 			SkillName.AeroInGreen,
@@ -480,11 +480,11 @@ export class GameState {
 			SkillName.CometInBlack,
 			SkillName.StarPrism,
 		];
-		let hpCovered = this.resources.get(ResourceType.Hyperphantasia).available(1) && hpSkills.includes(props.skillName);
+		let inspired = this.resources.get(ResourceType.Inspiration).available(1) && inspireSkills.includes(props.skillName);
 		let capturedCastTime = this.captureSpellCastTimeAFUI(
 			skillInfo.aspect,
-			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered, hpCovered));
-		let capturedRecastTime = this.config.adjustedCastTime(skillInfo.baseRecastTime, llCovered, hpCovered);
+			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered, inspired));
+		let capturedRecastTime = this.config.adjustedCastTime(skillInfo.baseRecastTime, llCovered, inspired);
 		// hack for motifs, which are not affected by sps
 		if (props.skillName.includes("Motif")) {
 			capturedCastTime = skillInfo.baseCastTime;
@@ -493,7 +493,7 @@ export class GameState {
 		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
 			props.node.addBuff(BuffType.LeyLines);
 		}
-		if (hpCovered) {
+		if (inspired) {
 			props.node.addBuff(BuffType.Hyperphantasia);
 		}
 
@@ -593,7 +593,7 @@ export class GameState {
 						? game.config.adjustedCastTime(2.5, false, false)
 						// unlike LL, we need to account for hyperphantasia here because the hyperphantasia buff
 						// would be consumed before the Resource object can check the recast
-						: game.config.adjustedCastTime(skillInfo.baseRecastTime, false, hpCovered)
+						: game.config.adjustedCastTime(skillInfo.baseRecastTime, false, inspired)
 				);
 			cd.useStackWithRecast(game, recastTime);
 
@@ -659,7 +659,7 @@ export class GameState {
 		// would be consumed before the Resource object can check the recast
 		cd.useStackWithRecast(
 			this,
-			skillInfo.name.includes("Motif") ? skillInfo.baseRecastTime : this.config.adjustedCastTime(skillInfo.baseRecastTime, false, hpCovered)
+			skillInfo.name.includes("Motif") ? skillInfo.baseRecastTime : this.config.adjustedCastTime(skillInfo.baseRecastTime, false, inspired)
 		);
 
 		// caster tax
@@ -869,10 +869,10 @@ export class GameState {
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
 		let [capturedManaCost, uhConsumption] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
-		let hpCovered = this.resources.get(ResourceType.Hyperphantasia).available(1);
+		let inspired = this.resources.get(ResourceType.Inspiration).available(1);
 		let capturedCastTime = this.captureSpellCastTimeAFUI(
 			skill.info.aspect,
-			this.config.adjustedCastTime(skill.info.baseCastTime, llCovered, hpCovered));
+			this.config.adjustedCastTime(skill.info.baseCastTime, llCovered, inspired));
 		if (skillName.includes("Motif")) {
 			capturedCastTime = skill.info.baseCastTime;
 		}

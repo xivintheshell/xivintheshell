@@ -106,8 +106,8 @@ export class GameConfig {
 		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(this.spellSpeed-420)/2780+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
 	}
 
-	adjustedCastTime(inCastTime : number, hasLL: boolean, hasHP?: boolean) {
-		let subtractLL = hasHP ? 25 : (hasLL ? 15 : 0);
+	adjustedCastTime(inCastTime : number, hasLL: boolean, inspired?: boolean) {
+		let subtractLL = inspired ? 25 : (hasLL ? 15 : 0);
 		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(this.spellSpeed-420)/2780+1000))*(1000*inCastTime)/1000)/100)*100/100)/1000;
 	}
 

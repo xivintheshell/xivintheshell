@@ -180,6 +180,7 @@ function BuffsDisplay(props) {
 		starryMuseCountdown: 0,
 		hyperphantasiaCountdown: 0,
 		hyperphantasiaStacks: 0,
+		inspirationEnabled: true,
 		inspirationCountdown: 0,
 		rainbowBrightCountdown: 0,
 		starstruckCountdown: 0,
@@ -229,10 +230,11 @@ function BuffsDisplay(props) {
 	});
 
 	let pushPictoTimer = function(rscType, stacks, cd) {
+		let enabled = (rscType === ResourceType.Inspiration) ? data.inspirationEnabled : true;
 		buffs.push({
 			rscType: rscType,
 			onSelf: true,
-			enabled: true,
+			enabled: enabled,
 			stacks: stacks,
 			timeRemaining: cd.toFixed(3),
 			className: cd > 0 ? "" : "hidden"
