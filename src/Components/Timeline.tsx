@@ -48,7 +48,7 @@ class TimelineMain extends React.Component {
 					visibleWidth: this.myRef.current.clientWidth
 				});
 			}
-		}).bind(this);
+		});
 	}
 	componentDidMount() {
 		this.setState({
@@ -61,7 +61,7 @@ class TimelineMain extends React.Component {
 				timelineHeight: controller.timeline.getCanvasHeight(),
 				version: this.state.version + 1
 			});
-		}).bind(this);
+		});
 
 		scrollTimelineTo = ((positionX: number)=>{
 			if (this.myRef.current != null) {
@@ -69,12 +69,12 @@ class TimelineMain extends React.Component {
 				this.myRef.current.scrollLeft = positionX - clientWidth * 0.6;
 			}
 			this.updateVisibleRange();
-		}).bind(this);
+		});
 
 		getVisibleRangeX = (()=>{return {
 			left: this.state.visibleLeft,
 			width: this.state.visibleWidth
-		}}).bind(this);
+		}});
 
 		this.updateVisibleRange();
 	}
@@ -184,13 +184,13 @@ class TimelineDisplaySettings extends React.Component {
 				controller.setTinctureBuffPercentage(percentage);
 				setCachedValue("tinctureBuffPercentage", val);
 			}
-		}).bind(this);
+		});
 		this.setUntargetableMask = ((val: boolean)=>{
 			this.setState({untargetableMask: val});
 
 			controller.setUntargetableMask(val);
 			setCachedValue("untargetableMask", val ? "1" : "0");
-		}).bind(this);
+		});
 	}
 	componentDidMount() {
 		this.setTinctureBuffPercentageStr(this.state.tinctureBuffPercentageStr);

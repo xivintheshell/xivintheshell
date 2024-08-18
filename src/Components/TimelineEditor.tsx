@@ -94,7 +94,7 @@ export class TimelineEditor extends React.Component {
 					});
 				}
 			}, 0);
-		}).bind(this);
+		});
 	}
 	componentWillUnmount() {
 		refreshTimelineEditor = () => {};

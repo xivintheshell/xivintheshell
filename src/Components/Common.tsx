@@ -209,7 +209,7 @@ export class Input extends React.Component {
 		this.props = inProps;
 		this.onChange = ((e: ChangeEvent<{value: string}>)=>{
 			if (this.props.onChange) this.props.onChange(e.target.value);
-		}).bind(this);
+		});
 	}
 	render() {
 		let width = this.props.width ?? 5;
@@ -253,7 +253,7 @@ export class Slider extends React.Component {
 		this.onChange = ((e: ChangeEvent<{value: string}>)=>{
 			this.setState({value: e.target.value});
 			if (typeof this.props.onChange !== "undefined") this.props.onChange(e.target.value);
-		}).bind(this);
+		});
 	}
 	componentDidMount() {
 		if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
@@ -317,7 +317,7 @@ export class Expandable extends React.Component {
 			if (this.props.onExpand && newShow) this.props.onExpand();
 			if (this.props.onCollapse && !newShow) this.props.onCollapse();
 			setCachedValue("exp: " + inProps.title, (newShow ? 1 : 0).toString());
-		}).bind(this);
+		});
 
 		let expanded = getCachedValue("exp: " + inProps.title);
 		let show: boolean = inProps.defaultShow ?? false;
@@ -366,7 +366,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 
 		this.onLoadUrlChange = ((evt: ChangeEvent<{value: string}>)=>{
 			if (evt.target) this.loadUrl = evt.target.value;
-		}).bind(this);
+		});
 
 		this.onLoadPresetFile = (()=>{
 			let cur = this.fileSelectorRef.current;
@@ -377,7 +377,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 				});
 				cur.value = "";
 			}
-		}).bind(this);
+		});
 
 		this.onLoadUrl = (()=>{
 			let errorHandler = function(e: any) {
@@ -393,7 +393,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 			}, (e)=>{
 				errorHandler(e);
 			});
-		}).bind(this);
+		});
 	}
 	componentDidMount() {
 		if (this.props.loadUrlOnMount) this.onLoadUrl();

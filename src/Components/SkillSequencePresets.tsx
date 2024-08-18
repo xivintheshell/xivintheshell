@@ -20,7 +20,7 @@ class SaveAsPreset extends React.Component {
 		this.props = props;
 		this.onChange = ((val: string)=>{
 			this.setState({filename: val});
-		}).bind(this);
+		});
 
 		this.state = {
 			filename: "(untitled)"

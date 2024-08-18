@@ -179,7 +179,7 @@ export function IntroSection(props: {}) {
 				})}
 				{localize({
 					en: <div className={"paragraph"}>
-						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={"https://discord.com/channels/277897135515762698/1255782490862387360"}>this thread in The Balance</a>.
+						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={"https://discord.com/channels/277897135515762698/1255782490862387360"} rel="noreferrer">this thread in The Balance</a>.
 						You can also find me directly on discord (miyehn), or via email (rainduym@gmail.com). In case of sending a bug report, attaching the
 						fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
 					</div>,
@@ -208,7 +208,7 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation for Save the Queens areas, created by <b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job
 							guide</a></li>
-						<li><a target={"_blank"} href={"https://discordapp.com/channels/277897135515762698/1255595442926915584"}>
+						<li><a target={"_blank"} href={"https://discordapp.com/channels/277897135515762698/1255595442926915584"} rel="noreferrer">
 							BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
 					</ul>,
 					zh: <ul>
@@ -218,7 +218,7 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.x版排轴器</a>，历史版本，几天后还会在那里展出一些6.0时期的轴，作为纪念。</li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>博兹雅版排轴器（Black Mage in the Bozjan Shell）</a>: 本工具的博兹雅/天佑女王版。制作者： <b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>官方的黑魔法师职业介绍</a></li>
-						<li><a target={"_blank"} href={"https://discordapp.com/channels/277897135515762698/1255595442926915584"}>
+						<li><a target={"_blank"} href={"https://discordapp.com/channels/277897135515762698/1255595442926915584"} rel="noreferrer">
 							The Balance服务器里的黑魔频道</a> （需要先加入Discord服务器）</li>
 					</ul>,
 					ja:
@@ -226,7 +226,7 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: 南方ボズヤ戦線向けのツール。作者：<b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
-						<li><a target={"_blank"} href={"https://discordapp.com/channels/277897135515762698/1255595442926915584"}>
+						<li><a target={"_blank"} href={"https://discordapp.com/channels/277897135515762698/1255595442926915584"} rel="noreferrer">
 							BLM resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
 					</ul>,
 				})}

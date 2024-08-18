@@ -42,7 +42,7 @@ export class TimeControl extends React.Component {
 					timeScale: this.state.timeScale
 				});
 			}
-		}).bind(this);
+		});
 
 		this.setTimeScale = ((val)=>{
 			this.setState({timeScale: val});
@@ -57,7 +57,7 @@ export class TimeControl extends React.Component {
 					timeScale: numVal
 				});
 			}
-		}).bind(this);
+		});
 
 		let settings = this.loadSettings();
 		if (settings) {
@@ -252,57 +252,57 @@ export class Config extends React.Component {
 				controller.scrollToTime();
 			}
 			event.preventDefault();
-		}).bind(this);
+		});
 
 		this.setSpellSpeed = (val => {
 			this.setState({spellSpeed: val, dirty: true});
-		}).bind(this);
+		});
 
 		this.setCriticalHit = (val => {
 			this.setState({criticalHit: val, dirty: true});
-		}).bind(this);
+		});
 
 		this.setDirectHit = (val => {
 			this.setState({directHit: val, dirty: true});
-		}).bind(this);
+		});
 
 		this.setAnimationLock = (val => {
 			this.setState({animationLock: val, dirty: true});
-		}).bind(this);
+		});
 
 		this.setCasterTax = (val => {
 			this.setState({casterTax: val, dirty: true});
-		}).bind(this);
+		});
 
 		this.setTimeTillFirstManaTick = (val => {
 			this.setState({timeTillFirstManaTick: val, dirty: true});
-		}).bind(this);
+		});
 
 		this.setCountdown = (val => {
 			this.setState({countdown: val, dirty: true});
-		}).bind(this);
+		});
 
 		this.setRandomSeed = (val => {
 			this.setState({randomSeed: val, dirty: true});
-		}).bind(this);
+		});
 
 		this.setExtendedBuffTimes = (evt => {
 			this.setState({extendedBuffTimes: evt.target.checked, dirty: true});
-		}).bind(this);
+		});
 
 		this.setProcMode = (evt => {
 			this.setState({procMode: evt.target.value, dirty: true});
-		}).bind(this);
+		});
 
 		this.setOverrideTimer = (val => {
 			this.setState({overrideTimer: val})
-		}).bind(this);
+		});
 		this.setOverrideStacks = (val => {
 			this.setState({overrideStacks: val})
-		}).bind(this);
+		});
 		this.setOverrideEnabled = (evt => {
 			this.setState({overrideEnabled: evt.target.checked})
-		}).bind(this);
+		});
 		this.deleteResourceOverride = (rscType => {
 			let overrides = this.state.initialResourceOverrides;
 			for (let i = 0; i < overrides.length; i++) {
@@ -312,7 +312,7 @@ export class Config extends React.Component {
 				}
 			}
 			this.setState({initialResourceOverrides: overrides, dirty: true});
-		}).bind(this);
+		});
 	}
 
 	// call this whenver the list of options has potentially changed
@@ -338,7 +338,7 @@ export class Config extends React.Component {
 				dirty: false,
 				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides)
 			});
-		}).bind(this);
+		});
 	}
 
 	#resourceOverridesAreValid() {

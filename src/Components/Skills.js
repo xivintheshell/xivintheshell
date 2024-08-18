@@ -169,7 +169,7 @@ class SkillButton extends React.Component {
 				<div className="paragraph">{infoString}</div>
 			</div>;
 			this.setState({skillDescription: content});
-		}).bind(this);
+		});
 	}
 	render() {
 		let iconPath = skillIcons.get(this.props.skillName);
@@ -263,16 +263,16 @@ export class SkillsWindow extends React.Component {
 				retraceInfo: controller.getSkillInfo({game: controller.game, skillName: SkillName.Retrace}),
 				retraceReady: retraceReady,
 			});
-		}).bind(this);
+		});
 
 		setSkillInfoText = ((text)=>{
 			this.setState({tooltipContent: text});
-		}).bind(this);
+		});
 
 		this.onWaitTimeChange = ((e)=>{
 			if (!e || !e.target) return;
 			this.setState({waitTime: e.target.value});
-		}).bind(this);
+		});
 
 		this.onWaitTimeSubmit = ((e)=>{
 			let waitTime = parseFloat(this.state.waitTime);
@@ -301,12 +301,12 @@ export class SkillsWindow extends React.Component {
 				controller.autoSave();
 			}
 			e.preventDefault();
-		}).bind(this);
+		});
 
 		this.onWaitUntilChange = (e=>{
 			if (!e || !e.target) return;
 			this.setState({waitUntil: e.target.value});
-		}).bind(this);
+		});
 
 		this.onWaitUntilSubmit = (e=>{
 			let targetTime = parseTime(this.state.waitUntil);
@@ -321,19 +321,19 @@ export class SkillsWindow extends React.Component {
 				}
 			}
 			e.preventDefault();
-		}).bind(this);
+		});
 
 		this.onWaitSinceChange = (e=>{
 			this.setState({waitSince: e.target.value});
-		}).bind(this);
+		});
 
 		this.onRemoveTrailingIdleTime = (()=>{
 			controller.removeTrailingIdleTime();
-		}).bind(this);
+		});
 
 		this.onWaitTillNextMpOrLucidTick = (()=>{
 			controller.waitTillNextMpOrLucidTick();
-		}).bind(this);
+		});
 
 		this.state = {
 			statusList: undefined,
