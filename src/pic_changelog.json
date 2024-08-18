@@ -4,7 +4,8 @@
         "changes": [
             "Initial fork! Below bugfixes are caught between first deployment and public announcements.",
             "Incorporate Turtle's auto CDH code",
-            "Fix hammer only having 1 stack (thanks Turtle)"
+            "Fix hammer only having 1 stack (thanks Turtle)",
+            "Require being in combat to cast striking/starry"
         ]
     }
 ]

@@ -84,6 +84,8 @@ export class GameState {
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
 		this.resources.set(ResourceType.NotCasterTaxed, new Resource(ResourceType.NotCasterTaxed, 1, 1));
+		// begin the encounter not in combat by default
+		this.resources.set(ResourceType.InCombat, new Resource(ResourceType.InCombat, 1, 0));
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
@@ -564,6 +566,14 @@ export class GameState {
 						};
 						props.onApplication(applicationInfo);
 					}));
+				if (potency) {
+					game.resources.addResourceEvent({
+						rscType: ResourceType.InCombat,
+						name: "begin combat if necessary",
+						delay: skillInfo.skillApplicationDelay,
+						fnOnRsc: (rsc: Resource) => rsc.gain(1),
+					});
+				}
 				return true;
 			} else {
 				return false;
@@ -707,6 +717,14 @@ export class GameState {
 				if (props.dealDamage && potency) controller.resolvePotency(potency);
 				if (props.onApplication) props.onApplication();
 			});
+		if (props.dealDamage && potency) {
+			this.resources.addResourceEvent({
+				rscType: ResourceType.InCombat,
+				name: "begin combat if necessary",
+				delay: skillInfo.skillApplicationDelay,
+				fnOnRsc: (rsc: Resource) => rsc.gain(1),
+			});
+		}
 		this.addEvent(skillEvent);
 
 		// recast
@@ -841,6 +859,11 @@ export class GameState {
 		return foundEvt ? foundEvt.timeTillEvent : 0;
 	}
 
+	timeTillNextDamageEvent() {
+		// Find when the next damage event is. Used to block starry + striking muse when out of combat.
+		return this.resources.timeTillReady(ResourceType.InCombat);
+	}
+
 	getSkillAvailabilityStatus(skillName: SkillName) {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
@@ -871,6 +894,11 @@ export class GameState {
 		if (!notBlocked) status = SkillReadyStatus.Blocked;
 		else if (!reqsMet) status = SkillReadyStatus.RequirementsNotMet;
 		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
+		// Special case for striking/starry muse, which require being in combat
+		if ([SkillName.StrikingMuse, SkillName.StarryMuse].includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
+			status = SkillReadyStatus.NotInCombat;
+			timeTillAvailable = this.timeTillNextDamageEvent();
+		}
 
 		let cd = this.cooldowns.get(skill.info.cdName);
 		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);

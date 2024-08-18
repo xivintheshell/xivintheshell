@@ -795,7 +795,7 @@ class Controller {
 			this.lastAttemptedSkill = "";
 		}
 
-		if (status.status === SkillReadyStatus.Blocked) {
+		if (status.status === SkillReadyStatus.Blocked || status.status === SkillReadyStatus.NotInCombat) {
 			this.lastAttemptedSkill = skillName;
 		}
 

@@ -111,6 +111,7 @@ export const enum SkillReadyStatus {
 	Ready = "ready",
 	Blocked = "blocked by CD, animation lock or caster tax",
 	NotEnoughMP = "not enough MP",
+	NotInCombat = "must be in combat (after first damage application)",
 	RequirementsNotMet = "requirements not met",
 	BuffNoLongerAvailable = "buff no longer available"
 }
@@ -191,6 +192,8 @@ export const enum ResourceType {
 	Movement = "Movement", // [0, 1]
 	NotAnimationLocked = "NotAnimationLocked", // [0, 1]
 	NotCasterTaxed = "NotCasterTaxed", // [0, 1]
+
+	InCombat = "InCombat", // [0, 1], used for abilities that can only execute in combat
 
 	// CDs
 	cd_GCD = "cd_GCD", // [0, Constant.gcd]

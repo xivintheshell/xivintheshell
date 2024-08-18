@@ -481,7 +481,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		// Starry Muse + fake scenic muse
 		let addScenic = function(museName: SkillName) {
 			skillsList.set(museName, new Skill(museName,
-				() => game.resources.get(ResourceType.LandscapeCanvas).available(1),
+				() => game.resources.get(ResourceType.LandscapeCanvas).available(1) && game.resources.get(ResourceType.InCombat).available(1),
 				(game: GameState, node: ActionNode) => {
 					game.useInstantSkill({
 						skillName: museName,
@@ -548,7 +548,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 
 		let addStriking = function(museName: SkillName) {
 			skillsList.set(museName, new Skill(museName,
-				() => game.resources.get(ResourceType.WeaponCanvas).available(1),
+				() => game.resources.get(ResourceType.WeaponCanvas).available(1) && game.resources.get(ResourceType.InCombat).available(1),
 				(game: GameState, node: ActionNode) => {
 					game.useInstantSkill({
 						skillName: museName,
