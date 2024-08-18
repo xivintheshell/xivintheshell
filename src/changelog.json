@@ -2,7 +2,8 @@
 	{
 		"date": "8/18/24",
 		"changes": [
-			"Tincture application delay -> 0.64s"
+			"Tincture application delay -> 0.64s",
+			"Add back ultimates markers presets"
 		]
 	},
 	{
