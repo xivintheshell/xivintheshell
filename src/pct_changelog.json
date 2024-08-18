@@ -1,5 +1,11 @@
 [
     {
+        "date": "8/18/24",
+        "changes": [
+            "Fix Madeen not displaying (thank you yuyuyuyuka)"
+        ]
+    },
+    {
         "date": "8/17/24",
         "changes": [
             "Initial fork! Below bugfixes are caught between first deployment and public announcements.",

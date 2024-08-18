@@ -287,6 +287,7 @@ export class SkillsWindow extends React.Component {
 				aetherhuesStacks: controller.game.resources.get(ResourceType.Aetherhues).availableAmount(),
 				creatureReady: controller.game.resources.get(ResourceType.CreatureCanvas).available(1),
 				depictions: controller.game.resources.get(ResourceType.Depictions).availableAmount(),
+				portrait: controller.game.resources.get(ResourceType.Portrait).availableAmount(),
 				landscapeReady: controller.game.resources.get(ResourceType.LandscapeCanvas).available(1),
 				hammerReady: controller.game.resources.get(ResourceType.WeaponCanvas).available(1),
 				hammerStacks: controller.game.resources.get(ResourceType.HammerTime).availableAmount(),
@@ -383,6 +384,7 @@ export class SkillsWindow extends React.Component {
 			aetherhuesStacks: controller.game.resources.get(ResourceType.Aetherhues).availableAmount(),
 			creatureReady: controller.game.resources.get(ResourceType.CreatureCanvas).available(1),
 			depictions: controller.game.resources.get(ResourceType.Depictions).availableAmount(),
+			portrait: controller.game.resources.get(ResourceType.Portrait).availableAmount(),
 			landscapeReady: controller.game.resources.get(ResourceType.LandscapeCanvas).available(1),
 			hammerReady: controller.game.resources.get(ResourceType.WeaponCanvas).available(1),
 			hammerStacks: controller.game.resources.get(ResourceType.HammerTime).availableAmount(),
@@ -466,6 +468,12 @@ export class SkillsWindow extends React.Component {
 					case 3:
 						skillName = SkillName.FangedMuse;
 						break;
+				}
+			}
+
+			if (skillName === SkillName.MogOfTheAges) {
+				if (this.state.portrait === 2) {
+					skillName = SkillName.RetributionOfTheMadeen;
 				}
 			}
 
