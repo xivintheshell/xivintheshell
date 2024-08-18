@@ -171,6 +171,10 @@ class SkillButton extends React.Component {
 					en: "possibly ready in " + info.timeTillAvailable.toFixed(3) + " (next stack ready in " + info.timeTillNextStackReady.toFixed(3) + ")",
 					zh: "预计" + info.timeTillAvailable.toFixed(3) + "秒后可释放（" + info.timeTillNextStackReady.toFixed(3) + "秒后转好下一层CD）"
 				});
+			} else if (info.status === SkillReadyStatus.NotInCombat) {
+				s += localize({
+					en: "not in combat (wait for first damage application)",
+				});
 			}
 			// if ready, also show captured cast time & time till damage application
 			let actualCastTime = info.instantCast ? 0 : info.castTime;
