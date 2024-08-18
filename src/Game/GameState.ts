@@ -892,7 +892,9 @@ export class GameState {
 			|| (skillName===SkillName.Xenoglossy && this.resources.get(ResourceType.Polyglot).available(1))
 			|| (skillName===SkillName.UmbralSoul && this.getIceStacks()>0) // lmfao why does this count as a spell
 			|| (skillName === SkillName.StarPrism && this.resources.get(ResourceType.Starstruck).available(1))
-			|| (skillName === SkillName.RainbowDrip && this.resources.get(ResourceType.RainbowBright).available(1));
+			|| (skillName === SkillName.RainbowDrip && this.resources.get(ResourceType.RainbowBright).available(1))
+			|| ((skillName === SkillName.HolyInWhite || skillName === SkillName.CometInBlack) && this.resources.get(ResourceType.Paint).available(1))
+			;
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana
