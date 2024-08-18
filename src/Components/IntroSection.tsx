@@ -203,6 +203,12 @@ export function IntroSection(props: {}) {
 							<li className="paragraph">
 								Hammer auto crit/DH is implemented in final potency calculations, but the multiplier is not currently displayed in self-buffs.
 							</li>
+							<li className="paragraph">
+								Starry Muse is removed from the party buff list, even though a second Pictomancer can stagger their buff with yours. We will revisit this behavior at a later date.
+							</li>
+							<li className="paragraph">
+								Resource overrides (initial palette/paint gauge, drawn motifs) are currently disabled. They will be enabled at a later date.
+							</li>
 						</ul>
 					})}
 					</div>

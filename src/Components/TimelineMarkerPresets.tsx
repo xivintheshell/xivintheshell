@@ -266,7 +266,10 @@ export class TimelineMarkerPresets extends React.Component {
 
 		let buffCollection: JSX.Element[] = [];
 		buffInfos.forEach(info => {
-			buffCollection.push(<option key={info.name} value={info.name}>{localizeBuffType(info.name)}</option>)
+			// prevent starry from being selectable since we're the pictomancer now
+			if (info.name !== BuffType.StarryMuse) {
+				buffCollection.push(<option key={info.name} value={info.name}>{localizeBuffType(info.name)}</option>)
+			}
 		});
 
 		let buffOnlySection = <div>

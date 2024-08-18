@@ -25,3 +25,4 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 - hammer expiring (will maintain combo into next hammer usage)
 - hyperphantasia expiring mid-cast should not give rainbow bright (haven't tested)
 - explain CDH "effective potency" conversion
+- second, staggered starry muse in the party
