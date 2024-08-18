@@ -1,5 +1,12 @@
 [
 	{
+		"date": "8/17/24",
+		"changes": [
+			"Allow party buffs to last shorter than max duration",
+			"Add link to Pictomancer in the Shell"
+		]
+	},
+	{
 		"date": "8/14/24",
 		"changes": [
 			"Raise warning when Amplifier is used at max polyglot stacks"
