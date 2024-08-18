@@ -26,7 +26,6 @@ export let setHistorical = (inHistorical: boolean) => {};
 function handleUrlCommands(command?: string) {
 	if (command === "resetAll") {
 		clearCachedValues();
-		window.location.href = "/ffxiv-pic-rotation";
 	}
 	else if (command === "resetResourceOverrides") {
 		let strOld = getCachedValue("gameRecord");
@@ -43,7 +42,6 @@ function handleUrlCommands(command?: string) {
 				setCachedValue("gameRecord" + i.toString(), JSON.stringify(content));
 			}
 		}
-		window.location.href = "/ffxiv-pic-rotation";
 	}
 	else if (command !== undefined) {
 		console.log("unrecognized command '" + command + "'");
