@@ -12,7 +12,7 @@ import 'react-tabs/style/react-tabs.css';
 import {LoadSave} from "./LoadSave";
 import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
-import changelog from "../changelog.json"
+import changelog from "../pct_changelog.json"
 import {localize, localizeDate, SelectLanguage} from "./Localization"
 import {Expandable, GlobalHelpTooltip} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";

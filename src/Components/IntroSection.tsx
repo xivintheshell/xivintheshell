@@ -2,7 +2,7 @@ import React, {CSSProperties} from 'react';
 import {Expandable, Help, ButtonIndicator} from "./Common";
 import {localize} from "./Localization";
 import {DebugOptions} from "./DebugOptions";
-import changelog from "../pic_changelog.json"
+import changelog from "../pct_changelog.json"
 import {getCurrentThemeColors} from "./ColorTheme";
 
 const HELP_CHANNEL_URL = "https://discord.com/channels/277897135515762698/1274591512902238270";
