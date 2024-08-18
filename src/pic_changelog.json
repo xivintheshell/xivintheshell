@@ -7,7 +7,8 @@
             "Fix hammer only having 1 stack (thanks Turtle)",
             "Require being in combat to cast striking/starry",
             "Display comet in gauge and clean up gauge display",
-            "Fix Hammer Time buff persisting after all hammers (thanks again Turtle)"
+            "Fix Hammer Time buff persisting after all hammers (thanks again Turtle)",
+            "Change default config to match patch 7.05 2.5 gcd bis"
         ]
     }
 ]

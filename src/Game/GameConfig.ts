@@ -1,18 +1,33 @@
 import {Debug, SkillName, ProcMode} from "./Common";
 import {ResourceOverride} from "./Resources";
 
+export const DEFAULT_CONFIG = {
+	// 7.05 2.5 GCD bis https://xivgear.app/?page=sl%7C4c102326-839a-43c8-84ae-11ffdb6ef4a2
+	spellSpeed: 420,
+	criticalHit: 3140,
+	directHit: 1993,
+	countdown: 4.5,
+	randomSeed: "sup",
+	casterTax: 0.1,
+	animationLock: 0.7,
+	timeTillFirstManaTick: 1.2,
+	procMode: ProcMode.Never,
+	extendedBuffTimes: false,
+	initialResourceOverrides: [],
+};
+
 export class GameConfig {
-	spellSpeed = 400;
-	criticalHit = 420;
-	directHit = 420;
-	countdown = 0;
-	randomSeed = "hello.";
-	casterTax = 0.06;
-	animationLock = 0.66;
-	timeTillFirstManaTick = 1.2;
-	procMode = ProcMode.RNG;
-	extendedBuffTimes = false;
-	initialResourceOverrides: ResourceOverride[] = [];
+	spellSpeed = DEFAULT_CONFIG.spellSpeed;
+	criticalHit = DEFAULT_CONFIG.criticalHit;
+	directHit = DEFAULT_CONFIG.directHit;
+	countdown = DEFAULT_CONFIG.countdown;
+	randomSeed = DEFAULT_CONFIG.randomSeed;
+	casterTax = DEFAULT_CONFIG.casterTax;
+	animationLock = DEFAULT_CONFIG.animationLock;
+	timeTillFirstManaTick = DEFAULT_CONFIG.timeTillFirstManaTick;
+	procMode = DEFAULT_CONFIG.procMode;
+	extendedBuffTimes = DEFAULT_CONFIG.extendedBuffTimes;
+	initialResourceOverrides: ResourceOverride[] = DEFAULT_CONFIG.initialResourceOverrides;
 
 	// DEBUG
 	constructor(props?: {
@@ -30,8 +45,8 @@ export class GameConfig {
 	}) {
 		if (props) {
 			this.spellSpeed = props.spellSpeed;
-			this.criticalHit = props.criticalHit ?? 420;
-			this.directHit = props.directHit ?? 420;
+			this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
+			this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
 			this.countdown = props.countdown;
 			this.randomSeed = props.randomSeed;
 			this.casterTax = props.casterTax;
