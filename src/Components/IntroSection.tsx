@@ -116,7 +116,7 @@ export function IntroSection(props: {}) {
 								</div>
 								<div className="paragraph">
 								If the browser cache is somehow messed up (likely due to invalid game states), this is how to reset it:<br/>
-								Enter this tool from <b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b> replacing <b>{"{command}"}</b> with one of the following:
+								Enter this tool from <b>{"https://picto.zqsz.me/#/{command}"}</b> replacing <b>{"{command}"}</b> with one of the following:
 								<ul>
 									<li style={smallGap}><b>resetResourceOverrides</b>: delete all resource overrides and all actions on the current timeline.</li>
 									<li style={smallGap}><b>resetAll</b>: delete all browser-cached settings.</li>
@@ -129,7 +129,7 @@ export function IntroSection(props: {}) {
 							</div>
 							<div className="paragraph">
 								如果浏览器缓存因不明原因出问题（比如预设了刚打完绝望满蓝这样的“非法状态”），可尝试用以下方法重置浏览器缓存：<br/>
-								用以下链接进入本工具：<b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b>，然后把<b>{"{command}"}</b>替换成以下两个指令之一：
+								用以下链接进入本工具：<b>{"https://picto.zqsz.me/#/{command}"}</b>，然后把<b>{"{command}"}</b>替换成以下两个指令之一：
 								<ul>
 									<li style={smallGap}><b>resetResourceOverrides</b>: 删除当前时间线上的所有资源预设和技能</li>
 									<li style={smallGap}><b>resetAll</b>: 删除所有本工具相关的浏览器缓存</li>
@@ -142,7 +142,7 @@ export function IntroSection(props: {}) {
 								</div>
 								<div className="paragraph">
 									ブラウザのキャッシュが何らかの理由で壊れている場合、次の方法でリセットできます。<br/>
-									<b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b> にアクセスし、<b>{"{command}"}</b> を以下のいずれかに置き換えます：
+									<b>{"https://picto.zqsz.me/#/{command}"}</b> にアクセスし、<b>{"{command}"}</b> を以下のいずれかに置き換えます：
 								<ul>
 									<li style={smallGap}><b>resetResourceOverrides</b>: 全てのリソースとタイムライン上のアクションを上書きします。</li>
 									<li style={smallGap}><b>resetAll</b>: 全てのブラウザキャッシュを削除します。</li>
