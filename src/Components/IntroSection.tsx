@@ -162,13 +162,13 @@ export function IntroSection(props: {}) {
 							<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
 							<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
 							<li><b>Turtle</b>, who did the heavy work of updating this tool from Endwalker to Dawntrail</li>
-							<li><b>Yara, Spider, Santa, shanzhe</b>, and many other players who contributed feature suggestions, timeline markers, bug reports, etc.</li>
+							<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b>, and many other players who contributed feature suggestions, timeline markers, bug reports, etc.</li>
 						</ul>,
 					zh: <ul>
 							<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
 							<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：程序；是个云黑魔玩家</li>
 							<li><b>Turtle</b>, 把本工具从6.0更新到7.0的大功臣</li>
-							<li><b>Yara, Spider, Santa</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
+							<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
 						</ul>,
 					ja: <ul>
 							<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: プロダクトマネージャー、凄腕黒魔道士</li>
@@ -202,21 +202,23 @@ export function IntroSection(props: {}) {
 				{localize({
 					en: <ul>
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
+						<li><a href={"https://picto.zqsz.me/"}>Pictomancer in the Shell</a> by <b>shanzhe</b>, for those of you who picked up the paint brush</li>
 						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>Black Mage in the Shell (Dawntrail at LV90)</a>: a variation for planning fights at LV90, created by <b>Akairyu</b></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>: a snapshot of this tool at the end of Endwalker. In a few days it will also display some notable fight plans from Endwalker, as memoir.</li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation for Save the Queens areas, created by <b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job
 							guide</a></li>
-						<li><a target={"_blank"} href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
+						<li><a target={"_blank"} href={"https://discordapp.com/channels/277897135515762698/1255595442926915584"}>
 							BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
 					</ul>,
 					zh: <ul>
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github页面</a></li>
-						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>7.0版排轴器（90级）</a>，可以用来给TOP等副本排轴，作者是<b>Akairyu</b></li>
-						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.0版排轴器</a>，历史版本，几天后还会在那里展出一些6.0时期的轴，作为纪念。</li>
+						<li><a href={"https://picto.zqsz.me/"}>绘灵法师排轴器</a>，由<b>shanzhe</b>制作并维护，给那些拾起了画笔的黑黑</li>
+						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>7.x版排轴器（90级）</a>，可以用来给TOP等副本排轴，作者是<b>Akairyu</b></li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.x版排轴器</a>，历史版本，几天后还会在那里展出一些6.0时期的轴，作为纪念。</li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>博兹雅版排轴器（Black Mage in the Bozjan Shell）</a>: 本工具的博兹雅/天佑女王版。制作者： <b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>官方的黑魔法师职业介绍</a></li>
-						<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
+						<li><a target={"_blank"} href={"https://discordapp.com/channels/277897135515762698/1255595442926915584"}>
 							The Balance服务器里的黑魔频道</a> （需要先加入Discord服务器）</li>
 					</ul>,
 					ja:
@@ -224,7 +226,7 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: 南方ボズヤ戦線向けのツール。作者：<b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
-						<li><a href={"https://discord.com/channels/277897135515762698/592613187245834260"}>
+						<li><a target={"_blank"} href={"https://discordapp.com/channels/277897135515762698/1255595442926915584"}>
 							BLM resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
 					</ul>,
 				})}
