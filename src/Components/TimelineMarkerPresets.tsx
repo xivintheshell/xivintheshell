@@ -17,19 +17,6 @@ import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
 import {Buff, buffInfos} from '../Game/Buffs';
 import {BuffType} from '../Game/Common';
 
-/*
-	For the sake of simplicity, tracks be like:
-
-	track 0
-	track 1
-	...
-	track -1 (auto)*
-
-	*implement later
-
-	put auto markers to a separate pool, so they can be cleared with battle reset
- */
-
 export let setEditingMarkerValues = (marker: MarkerElem)=>{};
 
 export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
@@ -89,13 +76,12 @@ function PresetButtons() {
 }
 
 export class TimelineMarkerPresets extends React.Component {
-	saveFilename = "markers";
+
 	state: TimelineMarkerPresetsState;
 
-	onSaveFilenameChange: (evt: ChangeEvent<{value: string}>) => void;
-	//onSave: () => void;
 	onColorChange: (evt: ChangeEvent<{value: string}>) => void;
 	onShowTextChange: React.ChangeEventHandler<HTMLInputElement>;
+	onEnterBuffEdit: (buffType: BuffType) => void;
 
 	setTime: (val: string) => void;
 	setDuration: (val: string) => void;
@@ -130,25 +116,28 @@ export class TimelineMarkerPresets extends React.Component {
 					nextMarkerType: marker.markerType,
 					nextMarkerTrack: marker.track.toString(),
 					nextMarkerTime: marker.time.toString(),
+					nextMarkerDuration: marker.duration.toString(),
 					nextMarkerBuff: marker.description as BuffType
 				})
 			}
 		}).bind(this);
-		this.onSaveFilenameChange = ((evt: ChangeEvent<{value: string}>)=>{
-			if (evt.target) this.saveFilename = evt.target.value;
-		}).bind(this);
 
-		this.onColorChange = ((evt: ChangeEvent<{value: string}>)=>{
+		this.onColorChange = (evt: ChangeEvent<{value: string}>)=>{
 			if (evt.target) {
 				this.setState({nextMarkerColor: evt.target.value});
 			}
-		}).bind(this);
+		};
 
-		this.onShowTextChange = ((evt: ChangeEvent<HTMLInputElement>)=>{
+		this.onShowTextChange = (evt: ChangeEvent<HTMLInputElement>)=>{
 			if (evt.target) {
 				this.setState({nextMarkerShowText: evt.target.checked});
 			}
-		}).bind(this);
+		};
+
+		this.onEnterBuffEdit = (buffType) => {
+			const buff = new Buff(buffType);
+			this.setState({nextMarkerDuration: buff.info.duration});
+		}
 
 		this.state = {
 			nextMarkerType: MarkerType.Info,
@@ -164,17 +153,17 @@ export class TimelineMarkerPresets extends React.Component {
 			///////
 			trackBins: new Map()
 		};
-		this.setTime = ((val: string)=>{this.setState({nextMarkerTime: val})}).bind(this);
-		this.setDuration = ((val: string)=>{this.setState({nextMarkerDuration: val})}).bind(this);
-		this.setTrack = ((val: string)=>{this.setState({nextMarkerTrack: val})}).bind(this);
-		this.setDescription = ((val: string)=>{this.setState({nextMarkerDescription: val})}).bind(this);
-		this.setBuff = ((val: BuffType)=>{this.setState({nextMarkerBuff: val})}).bind(this);
+		this.setTime = (val: string)=>{this.setState({nextMarkerTime: val})};
+		this.setDuration = (val: string)=>{this.setState({nextMarkerDuration: val})};
+		this.setTrack = (val: string)=>{this.setState({nextMarkerTrack: val})};
+		this.setDescription = (val: string)=>{this.setState({nextMarkerDescription: val})};
+		this.setBuff = (val: BuffType)=>{this.setState({nextMarkerBuff: val})};
 
-		this.setLoadTrackDest = ((val: string)=>{this.setState({loadTrackDest: val})}).bind(this);
+		this.setLoadTrackDest = (val: string)=>{this.setState({loadTrackDest: val})};
 
-		this.setDurationInputMode = ((val: string)=>{
+		this.setDurationInputMode = (val: string)=>{
 			this.setState({durationInputMode: val});
-		}).bind(this);
+		};
 
 		updateMarkers_TimelineMarkerPresets = ((trackBins: Map<number, MarkerElem[]>) => {
 			this.setState({trackBins: trackBins});
@@ -274,7 +263,9 @@ export class TimelineMarkerPresets extends React.Component {
 			<select value={this.state.nextMarkerBuff}
 					onChange={evt => {
 						if (evt.target) {
-							this.setBuff(evt.target.value as BuffType);
+							const buffType = evt.target.value as BuffType;
+							this.setBuff(buffType);
+							this.onEnterBuffEdit(buffType);
 						}
 					}}>{buffCollection}
 			</select>
@@ -347,9 +338,13 @@ export class TimelineMarkerPresets extends React.Component {
 					<select value={this.state.nextMarkerType}
 					        onChange={evt => {
 								if (evt.target) {
+									const markerType = evt.target.value as MarkerType;
 									this.setState({
-										nextMarkerType: evt.target.value as MarkerType
+										nextMarkerType: markerType
 									});
+									if (markerType === MarkerType.Buff) {
+										this.onEnterBuffEdit(this.state.nextMarkerBuff);
+									}
 								}
 							}}>
 						<option value={MarkerType.Info}>{localize({en: "Info", zh: "备注信息"})}</option>
@@ -360,10 +355,8 @@ export class TimelineMarkerPresets extends React.Component {
 					<Input defaultValue={this.state.nextMarkerTime} description={localize({en: "Time: ", zh: "时间："})} width={8} style={inlineDiv}
 						   onChange={this.setTime}/>
 
-					{this.state.nextMarkerType === MarkerType.Buff ? undefined : 
-						<Input defaultValue={this.state.nextMarkerDuration} description={localize({en: "Duration: ", zh: "持续时长："})} width={8}
-							style={inlineDiv} onChange={this.setDuration}/>
-					}
+					<Input defaultValue={this.state.nextMarkerDuration} description={localize({en: "Duration: ", zh: "持续时长："})} width={8}
+						style={inlineDiv} onChange={this.setDuration}/>
 
 					{this.state.nextMarkerType === MarkerType.Info ? infoOnlySection : undefined}
 					{this.state.nextMarkerType === MarkerType.Buff ? buffOnlySection : undefined}
@@ -381,6 +374,7 @@ export class TimelineMarkerPresets extends React.Component {
 								description: this.state.nextMarkerDescription,
 								showText: this.state.nextMarkerShowText,
 							};
+							let err: ContentNode | undefined = undefined;
 							if (this.state.nextMarkerType === MarkerType.Untargetable) {
 								marker.color = MarkerColor.Grey;
 								marker.track = UntargetableMarkerTrack;
@@ -389,15 +383,25 @@ export class TimelineMarkerPresets extends React.Component {
 							}
 							if (this.state.nextMarkerType === MarkerType.Buff) {
 								const buff = new Buff(this.state.nextMarkerBuff);
+								const duration = parseFloat(this.state.nextMarkerDuration);
+								if (!isNaN(duration) && duration > buff.info.duration) {
+									err = localize({
+										en: `this buff can't last longer than ${buff.info.duration}s`,
+										zh: `此团辅持续时间不能超过${buff.info.duration}秒`
+									});
+								}
 								marker.color = buff.info.color;
 								marker.description = buff.name;
-								marker.duration = buff.info.duration;
+								marker.duration = duration;
 								marker.showText = true;
 							}
 							if (isNaN(marker.duration) ||
 								isNaN(marker.time) ||
 								isNaN(marker.track)) {
-								window.alert(localize({en: "some input(s) are invalid", zh: "部分输入格式不对"}));
+								err = localize({en: "some input(s) are invalid", zh: "部分输入格式不对"});
+							}
+							if (err) {
+								window.alert(err);
 								e.preventDefault();
 								return;
 							}
