@@ -444,6 +444,15 @@ export class GameState {
 				rsc.enabled = true;
 				return true;
 			}
+		} else if ([
+			ResourceType.HammerTime,
+			ResourceType.Aetherhues,
+			ResourceType.SubtractivePalette,
+		].includes(buffName)) {
+			// subtractive spectrum, starstruck, monochrome tones, rainbow drip,
+			// tempera coat/grassa, smudge can be clicked off
+			// but these buffs cannot be
+			return true;
 		} else {
 			rsc.consume(rsc.availableAmount());
 			rsc.removeTimer();
