@@ -4,10 +4,11 @@
         "changes": [
             "Fix Madeen not displaying (thank you yuyuyuyuka)",
             "Add extended buffs for Aetherhues and Starry Muse (thanks also yuyuyuyuka)",
-            "Allow party buffs to last shorter than max duration (changed upstream)",
+            "[merge] Allow party buffs to last shorter than max duration",
             "Allow Inspiration to be toggled like Ley Lines (thanks turtle)",
             "Prevent Aetherhues, Subtractive Palette, and Hammer Time from being clicked off",
-            "Fixed tooltip-displayed application delays for Holy in White, Comet in Black, and Hammers (thanks one more time yuyuyuyuka)"
+            "Fixed tooltip-displayed application delays for Holy in White, Comet in Black, and Hammers (thanks one more time yuyuyuyuka)",
+            "[merge] Update tincture application delay and add back TOP/DSR tracks"
         ]
     },
     {
