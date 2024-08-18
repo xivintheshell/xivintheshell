@@ -7,8 +7,9 @@
             "[merge] Allow party buffs to last shorter than max duration",
             "Allow Inspiration to be toggled like Ley Lines (thanks turtle)",
             "Prevent Aetherhues, Subtractive Palette, and Hammer Time from being clicked off",
-            "Fixed tooltip-displayed application delays for Holy in White, Comet in Black, and Hammers (thanks one more time yuyuyuyuka)",
-            "[merge] Update tincture application delay and add back TOP/DSR tracks"
+            "Fix tooltip-displayed application delays for Holy in White, Comet in Black, and Hammers (thanks one more time yuyuyuyuka)",
+            "[merge] Update tincture application delay and add back TOP/DSR tracks",
+            "Fix warning text rendering for comet + palette gauge (thanks sterling)"
         ]
     },
     {

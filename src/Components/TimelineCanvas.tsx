@@ -301,6 +301,12 @@ function drawWarningMarks(
 		if (mark.warningType === WarningType.PolyglotOvercap) {
 			message += localize({en: "polyglot overcap!", zh: "通晓溢出！"});
 		}
+		if (mark.warningType === WarningType.CometOverwrite) {
+			message += localize({en: "comet overwrite!", zh: "彗星覆写！"});
+		}
+		if (mark.warningType === WarningType.PaletteOvercap) {
+			message += localize({en: "palette gauge overcap!", zh: "调色板溢出！"});
+		}
 
 		testInteraction(
 			{x: x-sideLength/2, y: bottomY-sideLength, w: sideLength, h: sideLength}, [message]
