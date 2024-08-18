@@ -71,8 +71,14 @@ function PresetButtons() {
 		<LoadCombinedTracksBtn displayName={"M2S by shanzhe"} url={"/presets/markers/m2s.txt"}/>
 		<LoadCombinedTracksBtn displayName={"M3S by shanzhe"} url={"/presets/markers/m3s.txt"}/>
 		<LoadCombinedTracksBtn displayName={"M4S by shanzhe"} url={"/presets/markers/m4s.txt"}/>
+		<br/>
+		<span>{localize({en: "Ultimates: ", zh: "绝本（英文）："})}</span>
+		<LoadCombinedTracksBtn displayName={"DSR P6 by Tischel"} url={"/presets/markers/dsr_p6.txt"}/>
+		<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={"/presets/markers/dsr_p7.txt"}/>
+		<LoadCombinedTracksBtn displayName={"TOP by Santa"} url={"/presets/markers/TOP_2023_04_02.track"}/>
 	</div>
-	return <Expandable title={"preset buttons"} titleNode={localize({en: "Presets", zh: "预设文件"})} defaultShow={true} content={content}/>
+	return <Expandable title={"preset buttons"} titleNode={localize({en: "Presets", zh: "预设文件"})} defaultShow={true}
+					   content={content}/>
 }
 
 export class TimelineMarkerPresets extends React.Component {

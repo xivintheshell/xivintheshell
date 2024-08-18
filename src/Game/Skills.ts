@@ -64,7 +64,7 @@ const skillInfos = [
 	new SkillInfo(SkillName.Surecast, ResourceType.cd_Surecast, Aspect.Other, false,
 		0, 0, 0), // surprisingly instant because arms length is not
 	new SkillInfo(SkillName.Tincture, ResourceType.cd_Tincture, Aspect.Other, false,
-		0, 0, 0, 0.891),// delayed
+		0, 0, 0, 0.64),// delayed // somewhere in the midrange of what's seen in logs
 	new SkillInfo(SkillName.Sprint, ResourceType.cd_Sprint, Aspect.Other, false,
 		0, 0, 0, 0.133), // delayed
 
