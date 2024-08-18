@@ -12,7 +12,7 @@ export const DEFAULT_CONFIG = {
 	animationLock: 0.7,
 	timeTillFirstManaTick: 1.2,
 	procMode: ProcMode.Never,
-	extendedBuffTimes: false,
+	extendedBuffTimes: true,
 	initialResourceOverrides: [],
 };
 

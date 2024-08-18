@@ -742,7 +742,7 @@ export class GameState {
 		return enochian.available(1);
 	}
 
-	// falls off after 30 seconds unless next spell is resolved
+	// falls off after 30 (or 30.8) seconds unless next spell is resolved
 	// (for now ignore edge case of buff falling off mid-cast)
 	cycleAetherhues() {
 		let aetherhues = this.resources.get(ResourceType.Aetherhues);
@@ -752,7 +752,7 @@ export class GameState {
 			aetherhues.removeTimer();
 		} else if (aetherhues.available(1) && aetherhues.pendingChange) {
 			// refresh timer if it was already running
-			aetherhues.overrideTimer(this, 30);
+			aetherhues.overrideTimer(this, this.config.extendedBuffTimes ? 30.8 : 30);
 			aetherhues.gain(1);
 		} else {
 			// we were at 0 aetherhues, so increment and start the timer anew
