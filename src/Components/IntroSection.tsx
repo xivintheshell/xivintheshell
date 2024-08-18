@@ -195,9 +195,6 @@ export function IntroSection(props: {}) {
 								Buffs like Aetherhues, Subtractive Palette, and Monochrome Tones can be clicked off, when they canot be clicked off in game.
 							</li>
 							<li className="paragraph">
-								Abilities that are only available in combat do not check if you are in combat.
-							</li>
-							<li className="paragraph">
 								We haven't tested what happens when buffs like Hyperphantasia and Aetherhues fall off mid-cast. Hopefully nothing bad.
 							</li>
 							<li className="paragraph">

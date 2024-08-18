@@ -256,6 +256,12 @@ export default class Main extends React.Component {
 					}}>
 						<SelectLanguage/>
 						<SelectColorTheme/>
+						{localize({
+							en: <div style={{marginBottom: 16}}>Last updated: {changelog[0].date}
+							</div>,
+							zh: <div style={{marginBottom: 16}}>最近更新（月日年）：{changelog[0].date}</div>,
+							ja: <div style={{marginBottom: 16}}>最終更新日：{localizeDate(changelog[0].date, "ja")}</div>,
+						})}
 						<div>
 							<h3 style={{marginTop: 20, marginBottom: 6}}>Pictomancer in the Shell</h3>
 							{/*localize({
