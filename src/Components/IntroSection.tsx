@@ -2,7 +2,7 @@ import React, {CSSProperties} from 'react';
 import {Expandable, Help, ButtonIndicator} from "./Common";
 import {localize} from "./Localization";
 import {DebugOptions} from "./DebugOptions";
-import changelog from "../changelog.json"
+import changelog from "../pic_changelog.json"
 import {getCurrentThemeColors} from "./ColorTheme";
 
 function Changelog() {
@@ -187,7 +187,31 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
 					</ul>,
 				})}
-
+				<div className="paragraph"><Expandable title={"Known issues"} titleNode={localize({en: "Known issues"})} defaultShow={false} content={
+					<div>
+					{localize({
+						en: <ul>
+							<li className="paragraph">
+								Buffs like Aetherhues, Subtractive Palette, and Monochrome Tones can be clicked off, when they canot be clicked off in game.
+							</li>
+							<li className="paragraph">
+								Abilities that are only available in combat do not check if you are in combat.
+							</li>
+							<li className="paragraph">
+								We haven't tested what happens when buffs like Hyperphantasia and Aetherhues fall off mid-cast. Hopefully nothing bad.
+							</li>
+							<li className="paragraph">
+								If Hammer Time expires, the combo should remain preserved (i.e. your next hammer would start on Polishing Hammer). We haven't implemented this.
+							</li>
+							<li className="paragraph">
+								Hammer auto crit/DH is implemented in final potency calculations, but the multiplier is not currently displayed in self-buffs.
+							</li>
+						</ul>
+					})}
+					</div>
+				}/>
+				</div>
+				<Changelog/>
 				<Expandable
 					defaultShow={false}
 					title={"Debug"}
