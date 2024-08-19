@@ -17,6 +17,7 @@ export let updateTimelineView = () => {};
 
 export let scrollTimelineTo = (positionX: number)=>{}
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let getVisibleRangeX = () => {}
 
 // the actual timeline canvas
@@ -229,9 +230,6 @@ class TimelineDisplaySettings extends React.Component {
 }
 
 export class Timeline extends React.Component {
-	constructor(props: {}) {
-		super(props);
-	}
 	render() {
 		return <div style={{
 			bottom: 0,

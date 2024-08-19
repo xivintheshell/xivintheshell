@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import React, {useEffect, useRef, useState} from 'react'
 import {
 	CursorElem,
@@ -928,10 +930,6 @@ export function TimelineCanvas(props: {
 		};
 	}, []);
 
-	// update when dependency props change
-	let bgProps = [
-		props.visibleLeft, props.visibleWidth, mouseX, mouseY, mouseHovered, clickCounter, keyCounter, props.version, dpr
-	];
 	useEffect(()=>{
 		g_activeHoverTip = undefined;
 		g_activeOnClick = undefined;
@@ -961,7 +959,10 @@ export function TimelineCanvas(props: {
 		// reset event flags
 		g_isClickUpdate = false;
 		g_isKeyboardUpdate = false;
-	}, bgProps);
+	}, [
+		// update when dependency props change
+		props.visibleLeft, props.visibleWidth, mouseX, mouseY, mouseHovered, clickCounter, keyCounter, props.version, dpr
+	]);
 
 	return <canvas ref={canvasRef} width={Math.ceil(scaledWidth)} height={Math.ceil(scaledHeight)} tabIndex={0} style={{
 		width: props.visibleWidth,

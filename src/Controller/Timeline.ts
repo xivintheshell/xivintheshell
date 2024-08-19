@@ -3,7 +3,7 @@ import {updateTimelineView} from "../Components/Timeline";
 // @ts-ignore
 import {controller} from "./Controller";
 import {Debug, ResourceType, SkillName, WarningType} from "../Game/Common";
-import {ActionNode, ActionType, Record} from "./Record";
+import {ActionNode, Record} from "./Record";
 import {FileType, getCachedValue, removeCachedValue, setCachedValue} from "./Common";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
@@ -465,14 +465,6 @@ export class Timeline {
 	onClickTimelineAction(node: ActionNode, bShift: boolean) {
 
 		controller.record.onClickNode(node, bShift);
-
-		let gcdSkills = 0;
-		controller.record.iterateSelected(node=>{
-			if (node.type === ActionType.Skill && node.resolved() && node.skillName) {
-				let skillInfo = controller.game.skillsList.get(node.skillName);
-				if (skillInfo.info.cdName === ResourceType.cd_GCD) gcdSkills++;
-			}
-		});
 
 		updateSkillSequencePresetsView();
 		refreshTimelineEditor();

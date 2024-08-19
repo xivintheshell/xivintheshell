@@ -90,7 +90,8 @@ skillIcons.forEach((path, skillName)=>{
 	skillIconImages.set(skillName, imgObj);
 });
 
-let setSkillInfoText = (text)=>{};
+// eslint-disable-next-line no-unused-vars
+let setSkillInfoText = (text)=>{}; // text: skill info tooltip content
 function ProgressCircle(props={
 	className: "",
 	diameter: 50,
@@ -215,7 +216,8 @@ class SkillButton extends React.Component {
 					background: readyOverlay
 				}}></div>
 			</div>
-			<img hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" style={{
+			<img
+				hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" alt="skill proc" style={{
 				position: "absolute",
 				width: 44,
 				height: 44,
