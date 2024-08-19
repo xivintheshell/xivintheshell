@@ -14,7 +14,7 @@ import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../pct_changelog.json"
 import {localize, localizeDate, SelectLanguage} from "./Localization"
-import {Expandable, GlobalHelpTooltip} from "./Common";
+import {GlobalHelpTooltip} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
 import {DamageStatistics} from "./DamageStatistics";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
@@ -83,24 +83,24 @@ export default class Main extends React.Component {
 				controller.handleKeyboardEvent(evt);
 				evt.preventDefault();
 			}
-		}).bind(this);
+		});
 
 		this.gameplayMouseCapture = ((evt: React.MouseEvent)=>{
 			controller.displayCurrentState();
-		}).bind(this);
+		});
 
 		setRealTime = ((rt: boolean)=>{
 			this.setState({realTime: rt});
-		}).bind(this);
+		});
 
 		setHistorical = ((hi: boolean)=>{
 			this.setState({historical: hi});
-		}).bind(this);
+		});
 
 		forceUpdateAll = (()=>{
 			this.forceUpdate();
 			updateTimelineView();
-		}).bind(this);
+		});
 	}
 
 	componentDidMount() {

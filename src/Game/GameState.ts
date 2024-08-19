@@ -876,7 +876,7 @@ export class GameState {
 	getSkillAvailabilityStatus(skillName: SkillName) {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
-		let [capturedManaCost, uhConsumption] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
+		let [capturedManaCost] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
 		let inspired = this.resources.get(ResourceType.Inspiration).available(1);
 		let capturedCastTime = this.captureSpellCastTimeAFUI(

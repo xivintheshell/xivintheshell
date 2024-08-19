@@ -173,7 +173,7 @@ export function IntroSection(props: {}) {
 				</div>
 				{localize({
 					en: <div className={"paragraph"}>
-						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL}>this thread in The Balance</a>.
+						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
 						You can also find me directly on discord (@shanzhe in The Balance), or file an issue on GitHub (link below). In case of sending a bug report, attaching the
 						fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
 					</div>
@@ -193,7 +193,7 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://github.com/zqsz-xiv/ffxiv-blm-rotation/tree/sz/picto-in-the-shell"}>Github页面</a></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
 						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL}>
-							The Balance服务器里的PIC频道</a> （需要先加入Discord服务器）</li>
+							The Balance服务器里的PCT频道</a> （需要先加入Discord服务器）</li>
 					</ul>,
 					ja:
 						<ul>

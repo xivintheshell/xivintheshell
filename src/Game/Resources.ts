@@ -98,9 +98,6 @@ export class Resource {
 export class DoTBuff extends Resource {
 	node?: ActionNode = undefined;
 	tickCount: number = 0;
-	constructor(type: ResourceType, maxValue: number, initialValue: number) {
-		super(type, maxValue, initialValue);
-	}
 }
 
 export class CoolDown extends Resource {

@@ -13,7 +13,6 @@ export const DEFAULT_CONFIG = {
 	timeTillFirstManaTick: 1.2,
 	procMode: ProcMode.Never,
 	extendedBuffTimes: true,
-	initialResourceOverrides: [],
 };
 
 export class GameConfig {
@@ -27,7 +26,7 @@ export class GameConfig {
 	timeTillFirstManaTick = DEFAULT_CONFIG.timeTillFirstManaTick;
 	procMode = DEFAULT_CONFIG.procMode;
 	extendedBuffTimes = DEFAULT_CONFIG.extendedBuffTimes;
-	initialResourceOverrides: ResourceOverride[] = DEFAULT_CONFIG.initialResourceOverrides;
+	initialResourceOverrides: ResourceOverride[] = [];
 
 	// DEBUG
 	constructor(props?: {

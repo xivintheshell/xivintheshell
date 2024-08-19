@@ -191,11 +191,11 @@ export class SelectLanguage extends React.Component {
 	}
 
 	componentDidMount() {
-		getCurrentLanguage = (()=>{return this.state.lang}).bind(this);
+		getCurrentLanguage = (()=>{return this.state.lang});
 		setCurrentLanguage = ((lang: Language)=>{
 			this.setState({lang: lang})
 			setCachedValue("language", lang);
-		}).bind(this);
+		});
 	}
 	componentDidUpdate(prevProps: Readonly<{}>, prevState: Readonly<{lang: Language}>, snapshot?: any) {
 		if (prevState.lang !== this.state.lang) {

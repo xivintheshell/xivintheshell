@@ -126,7 +126,7 @@ export class TimelineMarkerPresets extends React.Component {
 					nextMarkerBuff: marker.description as BuffType
 				})
 			}
-		}).bind(this);
+		});
 
 		this.onColorChange = (evt: ChangeEvent<{value: string}>)=>{
 			if (evt.target) {
@@ -173,7 +173,7 @@ export class TimelineMarkerPresets extends React.Component {
 
 		updateMarkers_TimelineMarkerPresets = ((trackBins: Map<number, MarkerElem[]>) => {
 			this.setState({trackBins: trackBins});
-		}).bind(this);
+		});
 	}
 
 	componentWillUnmount() {

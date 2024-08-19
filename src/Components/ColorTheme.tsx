@@ -211,11 +211,11 @@ export class SelectColorTheme extends React.Component {
 	}
 
 	componentDidMount() {
-		getCurrentColorTheme = (()=>{return this.state.colorTheme}).bind(this);
+		getCurrentColorTheme = (()=>{return this.state.colorTheme});
 		setCurrentColorTheme = ((colorTheme: ColorTheme)=>{
 			this.setState({colorTheme: colorTheme})
 			setCachedValue("colorTheme", colorTheme);
-		}).bind(this);
+		});
 	}
 	componentDidUpdate(prevProps: Readonly<{}>, prevState: Readonly<{colorTheme: ColorTheme}>, snapshot?: any) {
 		if (prevState.colorTheme !== this.state.colorTheme) {

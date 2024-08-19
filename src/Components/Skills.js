@@ -107,7 +107,8 @@ skillIcons.forEach((path, skillName)=>{
 	skillIconImages.set(skillName, imgObj);
 });
 
-let setSkillInfoText = (text)=>{};
+// eslint-disable-next-line no-unused-vars
+let setSkillInfoText = (text)=>{}; // text: skill info tooltip content
 function ProgressCircle(props={
 	className: "",
 	diameter: 50,
@@ -190,7 +191,7 @@ class SkillButton extends React.Component {
 				<div className="paragraph">{infoString}</div>
 			</div>;
 			this.setState({skillDescription: content});
-		}).bind(this);
+		});
 	}
 	render() {
 		let iconPath = skillIcons.get(this.props.skillName);
@@ -236,7 +237,8 @@ class SkillButton extends React.Component {
 					background: readyOverlay
 				}}></div>
 			</div>
-			<img hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" style={{
+			<img
+				hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" alt="skill proc" style={{
 				position: "absolute",
 				width: 44,
 				height: 44,
@@ -292,16 +294,16 @@ export class SkillsWindow extends React.Component {
 				hammerReady: controller.game.resources.get(ResourceType.WeaponCanvas).available(1),
 				hammerStacks: controller.game.resources.get(ResourceType.HammerTime).availableAmount(),
 			});
-		}).bind(this);
+		});
 
 		setSkillInfoText = ((text)=>{
 			this.setState({tooltipContent: text});
-		}).bind(this);
+		});
 
 		this.onWaitTimeChange = ((e)=>{
 			if (!e || !e.target) return;
 			this.setState({waitTime: e.target.value});
-		}).bind(this);
+		});
 
 		this.onWaitTimeSubmit = ((e)=>{
 			let waitTime = parseFloat(this.state.waitTime);
@@ -330,12 +332,12 @@ export class SkillsWindow extends React.Component {
 				controller.autoSave();
 			}
 			e.preventDefault();
-		}).bind(this);
+		});
 
 		this.onWaitUntilChange = (e=>{
 			if (!e || !e.target) return;
 			this.setState({waitUntil: e.target.value});
-		}).bind(this);
+		});
 
 		this.onWaitUntilSubmit = (e=>{
 			let targetTime = parseTime(this.state.waitUntil);
@@ -350,19 +352,19 @@ export class SkillsWindow extends React.Component {
 				}
 			}
 			e.preventDefault();
-		}).bind(this);
+		});
 
 		this.onWaitSinceChange = (e=>{
 			this.setState({waitSince: e.target.value});
-		}).bind(this);
+		});
 
 		this.onRemoveTrailingIdleTime = (()=>{
 			controller.removeTrailingIdleTime();
-		}).bind(this);
+		});
 
 		this.onWaitTillNextMpOrLucidTick = (()=>{
 			controller.waitTillNextMpOrLucidTick();
-		}).bind(this);
+		});
 
 		this.state = {
 			statusList: undefined,

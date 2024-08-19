@@ -715,7 +715,7 @@ class Controller {
 		randomSeed: DEFAULT_CONFIG.randomSeed,
 		procMode: DEFAULT_CONFIG.procMode,
 		extendedBuffTimes: DEFAULT_CONFIG.extendedBuffTimes,
-		initialResourceOverrides: []
+		initialResourceOverrides: [],
 	}) {
 		this.gameConfig = new GameConfig(props);
 
