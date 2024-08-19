@@ -1,5 +1,11 @@
 [
     {
+        "date": "8/19/24",
+        "changes": [
+            "Updated CDH potency modifier calculations (thanks Turtle)"
+        ]
+    },
+    {
         "date": "8/18/24",
         "changes": [
             "Fix Madeen not displaying (thank you yuyuyuyuka)",
