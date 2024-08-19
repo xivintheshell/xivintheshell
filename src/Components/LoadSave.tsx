@@ -28,7 +28,7 @@ export class LoadSave extends React.Component {
 				});
 				cur.value = "";
 			}
-		}).bind(this);
+		});
 
 		this.fileSelectorRef = React.createRef();
 	}

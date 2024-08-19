@@ -1,5 +1,4 @@
 import {controller} from "../Controller/Controller";
-import { Record } from "../Controller/Record";
 import {Aspect, BuffType, Debug, ResourceType, SkillName} from "./Common";
 import { GameConfig } from "./GameConfig";
 import {ResourceState} from "./Resources";

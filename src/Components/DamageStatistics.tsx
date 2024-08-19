@@ -218,11 +218,11 @@ export class DamageStatistics extends React.Component {
 		updateDamageStats = ((data: DamageStatisticsData) => {
 			this.data = data;
 			this.forceUpdate();
-		}).bind(this);
+		});
 		updateSelectedStats = ((selected: SelectedStatisticsData) => {
 			this.selected = selected;
 			this.forceUpdate();
-		}).bind(this);
+		});
 	}
 
 	componentWillUnmount() {

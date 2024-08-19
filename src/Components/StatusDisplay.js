@@ -414,7 +414,7 @@ export class StatusDisplay extends React.Component {
 				selfBuffs: newData.selfBuffs,
 				enemyBuffs: newData.enemyBuffs
 			});
-		}).bind(this);
+		});
 	}
 	componentDidMount() {
 		controller.updateStatusDisplay(controller.game);
