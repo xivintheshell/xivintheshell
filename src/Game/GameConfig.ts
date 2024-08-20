@@ -6,6 +6,7 @@ export const DEFAULT_CONFIG = {
 	spellSpeed: 420,
 	criticalHit: 3140,
 	directHit: 1993,
+	determination: 2269,
 	countdown: 4.5,
 	randomSeed: "sup",
 	casterTax: 0.1,
@@ -19,6 +20,7 @@ export class GameConfig {
 	spellSpeed = DEFAULT_CONFIG.spellSpeed;
 	criticalHit = DEFAULT_CONFIG.criticalHit;
 	directHit = DEFAULT_CONFIG.directHit;
+	determination = DEFAULT_CONFIG.determination;
 	countdown = DEFAULT_CONFIG.countdown;
 	randomSeed = DEFAULT_CONFIG.randomSeed;
 	casterTax = DEFAULT_CONFIG.casterTax;
@@ -33,6 +35,7 @@ export class GameConfig {
 		spellSpeed: number,
 		criticalHit: number,
 		directHit: number,
+		determination: number,
 		countdown: number,
 		randomSeed: string,
 		casterTax: number,
@@ -46,6 +49,7 @@ export class GameConfig {
 			this.spellSpeed = props.spellSpeed;
 			this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
 			this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
+			this.determination = props.determination ?? DEFAULT_CONFIG.determination;
 			this.countdown = props.countdown;
 			this.randomSeed = props.randomSeed;
 			this.casterTax = props.casterTax;
@@ -81,6 +85,7 @@ export class GameConfig {
 			return this.spellSpeed === other.spellSpeed &&
 				this.criticalHit === other.criticalHit &&
 				this.directHit === other.directHit &&
+				this.determination === other.determination &&
 				this.countdown === other.countdown &&
 				this.randomSeed === other.randomSeed &&
 				this.casterTax === other.casterTax &&
@@ -132,6 +137,7 @@ export class GameConfig {
 			spellSpeed: this.spellSpeed,
 			criticalHit: this.criticalHit,
 			directHit: this.directHit,
+			determination: this.determination,
 			countdown: this.countdown,
 			randomSeed: this.randomSeed,
 			casterTax: this.casterTax,

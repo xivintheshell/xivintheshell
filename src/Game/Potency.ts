@@ -164,41 +164,45 @@ export class Potency {
 	#calculatePotencyModifier(damageFactor: number, critBonus: number, dhBonus: number) {
 		const critStat = this.config.criticalHit;
 		const dhStat = this.config.directHit;
+		const det = this.config.determination;
 
-		const base = this.#calculateDamage(critStat, dhStat, 1, 0, 0);
-		const buffed = this.#calculateDamage(critStat, dhStat, damageFactor, critBonus, dhBonus);
+		const base = this.#calculateDamage(critStat, dhStat, det, 1, 0, 0);
+		const buffed = this.#calculateDamage(critStat, dhStat, det, damageFactor, critBonus, dhBonus);
 
 		return buffed / base;
 	}
 
 	#calculateAutoCDHModifier(critBonus: number, dhBonus: number) {
-		const base = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, 1, critBonus, dhBonus);
-		const buffed = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, 1, 1+critBonus, 1+dhBonus);
+		const base = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, critBonus, dhBonus);
+		const buffed = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, 1+critBonus, 1+dhBonus);
 
 		return buffed / base;
 	}
 
-	#calculateDamage(crit: number, dh: number, damageFactor: number, critBonus: number, dhBonus: number) {
+	#calculateDamage(crit: number, dh: number, det: number, damageFactor: number, critBonus: number, dhBonus: number) {
 		let modifier = damageFactor;
 
-		const critRate = this.#criticalHitRate(crit) + critBonus;
-		const dhRate = this.#directHitRate(dh) + dhBonus;
+		const critRate = (critBonus >= 1) ? critBonus : this.#criticalHitRate(crit) + critBonus;
+		const dhRate = (critBonus >= 1) ? dhBonus : this.#directHitRate(dh) + dhBonus;
 		const critDamageMult =  this.#criticalHitStrength(crit);
 
 		const autoCDH = critRate >= 1 && dhRate >= 1;
 		const critMod = critRate > 1 ? 1 + ((critRate - 1) * critDamageMult) : 1;
-		//const dhMod = dhRate > 1 ? 1 + ((dhRate - 1) * 1.25) : 1;
+		const dhMod = dhRate > 1 ? 1 + ((dhRate - 1) * 1.25) : 1;
 		const clampedCritRate = critRate > 1 ? 1 : critRate;
 		const clampedDHRate   = dhRate   > 1 ? 1 : dhRate;
 
-		if (autoCDH) modifier *= (1 + this.#autoMultiDH(dh));
+		if (autoCDH) 
+			modifier *= (1 + this.#autoMultiDet(det) + this.#autoMultiDH(dh));
+		else
+			modifier *= (1 + this.#autoMultiDet(det));
 
 		const critDamage = modifier * critMod * critDamageMult;
-		const dhDamage = modifier * 1.25;
-		const critDHDamage = critDamage * 1.25;
+		const dhDamage = modifier * 1.25 * dhMod;
+		const critDHDamage = critDamage * 1.25 * dhMod;
 		const critDHRate = clampedCritRate * clampedDHRate;
 		const normalRate = 1 - clampedCritRate - clampedDHRate + critDHRate;
-		
+
 		return modifier * normalRate + critDamage * (clampedCritRate-critDHRate) + dhDamage * (clampedDHRate-critDHRate) + critDHDamage * critDHRate; 
 	}
 
@@ -216,5 +220,9 @@ export class Potency {
 
 	#autoMultiDH(dh: number) {
 		return Math.floor(140 * (dh-420) / 2780) * 0.001;
+	}
+
+	#autoMultiDet(det: number) {
+		return Math.floor(140 * (det-440) / 2780) * 0.001;
 	}
 }

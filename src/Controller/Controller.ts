@@ -708,6 +708,7 @@ class Controller {
 		spellSpeed: DEFAULT_CONFIG.spellSpeed,
 		criticalHit: DEFAULT_CONFIG.criticalHit,
 		directHit: DEFAULT_CONFIG.directHit,
+		determination: DEFAULT_CONFIG.determination,
 		animationLock: DEFAULT_CONFIG.animationLock,
 		casterTax: DEFAULT_CONFIG.casterTax,
 		timeTillFirstManaTick: DEFAULT_CONFIG.timeTillFirstManaTick,
