@@ -213,13 +213,13 @@ export class Input extends React.Component {
 	}
 	render() {
 		let width = this.props.width ?? 5;
-		let colors = getCurrentThemeColors();
+		let color = (this.props.style?.color) ?? getCurrentThemeColors().text;
 		let inputStyle: CSSProperties = {
-			color: colors.text,
+			color: color,
 			backgroundColor: "transparent",
 			outline: "none",
 			border: "none",
-			borderBottom: "1px solid " + colors.text
+			borderBottom: "1px solid " + color
 		};
 		let overrideStyle = this.props.style ?? {};
 		return <div style={overrideStyle}>

@@ -1,11 +1,12 @@
 import React from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
-import {getCachedValue, setCachedValue, TickMode} from "../Controller/Common";
+import {getCachedValue, setCachedValue, ShellVersion, TickMode} from "../Controller/Common";
 import {ProcMode, ResourceType} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+import {DEFAULT_CONFIG} from "../Game/GameConfig";
 
 export class TimeControl extends React.Component {
 	constructor(props) {
@@ -161,7 +162,13 @@ function ConfigSummary(props) {
 	});
 	let procMode = controller.gameConfig.procMode;
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
+	const legacyCasterTax = controller.gameConfig.legacy_casterTax;
+	let legacyCasterTaxBlurb = <div style={{color: getCurrentThemeColors().warning}}>{localize({
+		en: "WARNING: " + legacyCasterTax,
+		zh: "noo"
+	})}</div>;
 	return <div>
+		{controller.gameConfig.shellVersion<ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
 		GCD: {gcd}
 		<br/>{localize({en: "B1 cast time ", zh: "冰1咏唱时间 "})}<Help topic={"b1CastTime"} content={b1CastTimeDesc}/>: {b1CastTime}
 		<br/>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
@@ -209,7 +216,8 @@ export class Config extends React.Component {
 			criticalHit: 0,
 			directHit: 0,
 			animationLock: 0,
-			casterTax: 0,
+			fps: 0,
+			castTimeCorrection: 0,
 			timeTillFirstManaTick: 0,
 			countdown: 0,
 			randomSeed: "",
@@ -239,7 +247,8 @@ export class Config extends React.Component {
 					criticalHit: this.state.criticalHit,
 					directHit: this.state.directHit,
 					animationLock: this.state.animationLock,
-					casterTax: this.state.casterTax,
+					fps: this.state.fps,
+					castTimeCorrection: this.state.castTimeCorrection,
 					countdown: this.state.countdown,
 					timeTillFirstManaTick: this.state.timeTillFirstManaTick,
 					randomSeed: seed,
@@ -270,8 +279,12 @@ export class Config extends React.Component {
 			this.setState({animationLock: val, dirty: true});
 		});
 
-		this.setCasterTax = (val => {
-			this.setState({casterTax: val, dirty: true});
+		this.setFps = (val => {
+			this.setState({fps: val, dirty: true});
+		});
+
+		this.setCastTimeCorrection = (val => {
+			this.setState({castTimeCorrection: val, dirty: true});
 		});
 
 		this.setTimeTillFirstManaTick = (val => {
@@ -315,7 +328,7 @@ export class Config extends React.Component {
 		});
 	}
 
-	// call this whenver the list of options has potentially changed
+	// call this whenever the list of options has potentially changed
 	#getFirstAddable(overridesList) {
 		let firstAddableRsc = "aba aba";
 		let S = new Set();
@@ -628,7 +641,8 @@ export class Config extends React.Component {
 			isNaN(parseFloat(config.criticalHit)) ||
 			isNaN(parseFloat(config.directHit)) ||
 			isNaN(parseFloat(config.animationLock)) ||
-			isNaN(parseFloat(config.casterTax)) ||
+			isNaN(parseFloat(config.fps)) ||
+			isNaN(parseFloat(config.castTimeCorrection)) ||
 			isNaN(parseFloat(config.timeTillFirstManaTick)) ||
 			isNaN(parseFloat(config.countdown))) {
 			window.alert("Some config fields are not numbers!");
@@ -642,7 +656,8 @@ export class Config extends React.Component {
 			criticalHit: parseFloat(config.criticalHit),
 			directHit: parseFloat(config.directHit),
 			animationLock: parseFloat(config.animationLock),
-			casterTax: parseFloat(config.casterTax),
+			fps: parseFloat(config.fps),
+			castTimeCorrection: parseFloat(config.castTimeCorrection),
 			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
 			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed.trim(),
@@ -658,12 +673,22 @@ export class Config extends React.Component {
 	}
 
 	render() {
+		let colors = getCurrentThemeColors();
+		let fpsAndCorrectionColor = this.state.shellVersion>=ShellVersion.FpsTax ? colors.text : colors.warning;
 		let editSection = <div>
 			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
 			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: " , zh: "暴击："})} onChange={this.setCriticalHit}/>
 			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
-			<Input defaultValue={this.state.casterTax} description={localize({en: "caster tax: ", zh: "读条税："})} onChange={this.setCasterTax}/>
+			<Input style={{color: fpsAndCorrectionColor}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>
+			<Input
+				style={{color: fpsAndCorrectionColor}}
+				defaultValue={this.state.castTimeCorrection}
+				description={<span>{localize({en: "cast time correction", zh: "读条时间修正"})} <Help topic={"cast-time-correction"} content={localize({
+					en: "dubabubadi",
+					zh: "dubidub"
+				})}/>: </span>}
+				onChange={this.setCastTimeCorrection}/>
 			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "距首次跳蓝时间："})} onChange={this.setTimeTillFirstManaTick}/>
 			<Input defaultValue={this.state.countdown} description={
 				<span>{

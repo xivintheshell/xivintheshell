@@ -562,7 +562,7 @@ export class GameState {
 		cd.useStack(this);
 
 		// caster tax
-		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
+		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.getCasterPlusFpsTax(capturedCastTime));
 	}
 
 	useInstantSkill(props: {

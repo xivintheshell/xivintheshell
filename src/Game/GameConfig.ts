@@ -1,69 +1,79 @@
 import {Debug, SkillName, ProcMode} from "./Common";
 import {ResourceOverride} from "./Resources";
+import {ShellInfo, ShellVersion} from "../Controller/Common";
 
 export const DEFAULT_CONFIG = {
 	// 2.37 GCD
+	shellVersion: ShellInfo.version,
 	spellSpeed: 1532,
 	criticalHit: 420,
 	directHit: 420,
 	countdown: 5,
 	randomSeed: "sup",
-	casterTax: 0.1,
+	fps: 60,
+	castTimeCorrection: 0,
 	animationLock: 0.7,
 	timeTillFirstManaTick: 1.2,
 	procMode: ProcMode.Never,
 	extendedBuffTimes: false,
+	initialResourceOverrides: []
 };
 
 export class GameConfig {
-	spellSpeed = DEFAULT_CONFIG.spellSpeed;
-	criticalHit = DEFAULT_CONFIG.criticalHit;
-	directHit = DEFAULT_CONFIG.directHit;
-	countdown = DEFAULT_CONFIG.countdown;
-	randomSeed = DEFAULT_CONFIG.randomSeed;
-	casterTax = DEFAULT_CONFIG.casterTax;
-	animationLock = DEFAULT_CONFIG.animationLock;
-	timeTillFirstManaTick = DEFAULT_CONFIG.timeTillFirstManaTick;
-	procMode = DEFAULT_CONFIG.procMode;
-	extendedBuffTimes = DEFAULT_CONFIG.extendedBuffTimes;
-	initialResourceOverrides: ResourceOverride[] = [];
 
-	// DEBUG
-	constructor(props?: {
+	readonly shellVersion = ShellInfo.version;
+	readonly spellSpeed: number;
+	readonly criticalHit: number;
+	readonly directHit: number;
+	readonly countdown: number;
+	readonly randomSeed: string;
+	readonly fps: number;
+	readonly castTimeCorrection: number;
+	readonly animationLock: number;
+	readonly timeTillFirstManaTick: number;
+	readonly procMode: ProcMode;
+	readonly extendedBuffTimes: boolean;
+	readonly initialResourceOverrides: ResourceOverride[];
+	readonly legacy_casterTax: number;
+
+	constructor(props: {
+		shellVersion: ShellVersion,
 		spellSpeed: number,
 		criticalHit: number,
 		directHit: number,
 		countdown: number,
 		randomSeed: string,
-		casterTax: number,
+		fps: number,
+		castTimeCorrection: number,
 		animationLock: number,
 		timeTillFirstManaTick: number,
 		procMode: ProcMode,
 		extendedBuffTimes: boolean,
-		initialResourceOverrides: any[]
+		initialResourceOverrides: any[],
+		casterTax?: number, // legacy
 	}) {
-		if (props) {
-			this.spellSpeed = props.spellSpeed;
-			this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
-			this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
-			this.countdown = props.countdown;
-			this.randomSeed = props.randomSeed;
-			this.casterTax = props.casterTax;
-			this.animationLock = props.animationLock;
-			this.timeTillFirstManaTick = props.timeTillFirstManaTick;
-			this.procMode = props.procMode;
-			this.extendedBuffTimes = props.extendedBuffTimes;
-			if (props.initialResourceOverrides) {
-				this.initialResourceOverrides = props.initialResourceOverrides.map(obj=>{
-					if (obj.effectOrTimerEnabled === undefined) {
-						// backward compatibility:
-						if (obj.enabled === undefined) obj.effectOrTimerEnabled = true;
-						else obj.effectOrTimerEnabled = obj.enabled;
-					}
-					return new ResourceOverride(obj);
-				});
+		this.shellVersion = props.shellVersion;
+		this.spellSpeed = props.spellSpeed;
+		this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
+		this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
+		this.countdown = props.countdown;
+		this.randomSeed = props.randomSeed;
+		this.fps = props.fps;
+		this.castTimeCorrection = props.castTimeCorrection;
+		this.animationLock = props.animationLock;
+		this.timeTillFirstManaTick = props.timeTillFirstManaTick;
+		this.procMode = props.procMode;
+		this.extendedBuffTimes = props.extendedBuffTimes;
+		this.initialResourceOverrides = props.initialResourceOverrides.map(obj=>{
+			if (obj.effectOrTimerEnablled === undefined) {
+				// backward compatibility:
+				if (obj.enabled === undefined) obj.effectOrTimerEnabled = true;
+				else obj.effectOrTimerEnabled = obj.enabled;
 			}
-		}
+			return new ResourceOverride(obj);
+		});
+		// backward compatibility for caster tax:
+		this.legacy_casterTax = props?.casterTax ?? 0;
 	}
 
 	equals(other : GameConfig) {
@@ -78,12 +88,14 @@ export class GameConfig {
 					return false;
 				}
 			}
-			return this.spellSpeed === other.spellSpeed &&
+			return this.shellVersion === other.shellVersion &&
+				this.spellSpeed === other.spellSpeed &&
 				this.criticalHit === other.criticalHit &&
 				this.directHit === other.directHit &&
 				this.countdown === other.countdown &&
 				this.randomSeed === other.randomSeed &&
-				this.casterTax === other.casterTax &&
+				this.fps === other.fps &&
+				this.castTimeCorrection === other.castTimeCorrection &&
 				this.animationLock === other.animationLock &&
 				this.timeTillFirstManaTick === other.timeTillFirstManaTick &&
 				this.procMode === other.procMode &&
@@ -123,18 +135,29 @@ export class GameConfig {
 		}
 	}
 
+	getCasterPlusFpsTax(capturedCastTime: number) {
+		if (this.shellVersion < ShellVersion.FpsTax) {
+			return this.legacy_casterTax;
+		}
+		return (Math.floor(capturedCastTime * this.fps + 1) + Math.floor(0.1 * this.fps + 1)) / this.fps
+			+ this.castTimeCorrection - capturedCastTime;
+	}
+
 	static getSlidecastWindow(castTime : number) {
 		return Debug.constantSlidecastWindow ? 0.5 : 0.46 + 0.02 * castTime;
 	}
 
 	serialized() {
 		return {
+			shellVersion: this.shellVersion,
 			spellSpeed: this.spellSpeed,
 			criticalHit: this.criticalHit,
 			directHit: this.directHit,
 			countdown: this.countdown,
 			randomSeed: this.randomSeed,
-			casterTax: this.casterTax,
+			casterTax: this.legacy_casterTax, // still want this bc don't want to break cached timelines
+			fps: this.fps,
+			castTimeCorrection: this.castTimeCorrection,
 			animationLock: this.animationLock,
 			timeTillFirstManaTick: this.timeTillFirstManaTick,
 			procMode: this.procMode,
