@@ -168,7 +168,7 @@ function ConfigSummary(props) {
 		zh: "noo"
 	})}</div>;
 	return <div>
-		{controller.gameConfig.shellVersion<ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
+		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
 		GCD: {gcd}
 		<br/>{localize({en: "B1 cast time ", zh: "冰1咏唱时间 "})}<Help topic={"b1CastTime"} content={b1CastTimeDesc}/>: {b1CastTime}
 		<br/>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
