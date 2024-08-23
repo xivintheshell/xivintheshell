@@ -638,7 +638,8 @@ class Controller {
 				resources: resourcesData,
 				resourceLocks: resourceLocksData,
 				enemyBuffs: enemyBuffsData,
-				selfBuffs: selfBuffsData
+				selfBuffs: selfBuffsData,
+				gameState: game
 			});
 		}
 	}

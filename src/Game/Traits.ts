@@ -8,7 +8,7 @@ export class Trait {
     }
 }
 
-const enum TraitName {
+export const enum TraitName {
     EnhancedEnochianII,
     EnhancedPolyglot,
     EnhancedFoul,
@@ -32,7 +32,6 @@ export class TraitsList extends Map<TraitName, Trait> {
         super();
 
         let traitsList = this;
-
         traitsList.set(TraitName.EnhancedEnochianII, new Trait(TraitName.EnhancedEnochianII, 78));
         traitsList.set(TraitName.EnhancedPolyglot, new Trait(TraitName.EnhancedPolyglot, 80));
         traitsList.set(TraitName.EnhancedFoul, new Trait(TraitName.EnhancedFoul, 80));

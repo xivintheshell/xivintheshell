@@ -8,6 +8,7 @@ import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
 import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
+import { TraitName, TraitsList } from "./Traits";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -26,6 +27,7 @@ export class GameState {
 	cooldowns: CoolDownState;
 	eventsQueue: Event[];
 	skillsList: SkillsList;
+	traitsList: TraitsList;
 
 	constructor(config: GameConfig) {
 		this.config = config;
@@ -37,15 +39,21 @@ export class GameState {
 		// TIME (raw time which starts at 0 regardless of countdown)
 		this.time = 0;
 
+		this.traitsList = new TraitsList();
+
 		// RESOURCES (checked when using skills)
 		this.resources = new ResourceState(this);
 		this.resources.set(ResourceType.Mana, new Resource(ResourceType.Mana, 10000, 10000));
-		this.resources.set(ResourceType.Polyglot, new Resource(ResourceType.Polyglot, 3, 0));
+
+		const polyglotStacks = 
+			(this.hasUnlockedTrait(TraitName.EnhancedPolyglotII) && 3) ||
+			(this.hasUnlockedTrait(TraitName.EnhancedPolyglot) && 2) ||
+			1;
+		this.resources.set(ResourceType.Polyglot, new Resource(ResourceType.Polyglot, polyglotStacks, 0));
 		this.resources.set(ResourceType.AstralFire, new Resource(ResourceType.AstralFire, 3, 0));
 		this.resources.set(ResourceType.UmbralIce, new Resource(ResourceType.UmbralIce, 3, 0));
 		this.resources.set(ResourceType.UmbralHeart, new Resource(ResourceType.UmbralHeart, 3, 0));
 		this.resources.set(ResourceType.AstralSoul, new Resource(ResourceType.AstralSoul, 6, 0));
-
 		this.resources.set(ResourceType.LeyLines, new Resource(ResourceType.LeyLines, 1, 0)); // capture
 		this.resources.set(ResourceType.Enochian, new Resource(ResourceType.Enochian, 1, 0));
 		this.resources.set(ResourceType.Paradox, new Resource(ResourceType.Paradox, 1, 0));
@@ -74,11 +82,15 @@ export class GameState {
 		this.cooldowns.set(ResourceType.cd_BetweenTheLines, new CoolDown(ResourceType.cd_BetweenTheLines, 3, 1, 1));
 		this.cooldowns.set(ResourceType.cd_AetherialManipulation, new CoolDown(ResourceType.cd_AetherialManipulation, 10, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Triplecast, new CoolDown(ResourceType.cd_Triplecast, 60, 2, 2));
-		this.cooldowns.set(ResourceType.cd_Manafont, new CoolDown(ResourceType.cd_Manafont, 100, 1, 1));
+
+		const manafontCooldown = (this.hasUnlockedTrait(TraitName.EnhancedManafont) && 100) || 180;
+		this.cooldowns.set(ResourceType.cd_Manafont, new CoolDown(ResourceType.cd_Manafont, manafontCooldown, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Amplifier, new CoolDown(ResourceType.cd_Amplifier, 120, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Retrace, new CoolDown(ResourceType.cd_Amplifier, 40, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Retrace, new CoolDown(ResourceType.cd_Retrace, 40, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Addle, new CoolDown(ResourceType.cd_Addle, 90, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Swiftcast, new CoolDown(ResourceType.cd_Swiftcast, 40, 1, 1));
+
+		const swiftcastCooldown = (this.hasUnlockedTrait(TraitName.EnhancedSwiftcast) && 40) || 60;
+		this.cooldowns.set(ResourceType.cd_Swiftcast, new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1));
 		this.cooldowns.set(ResourceType.cd_LucidDreaming, new CoolDown(ResourceType.cd_LucidDreaming, 60, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Surecast, new CoolDown(ResourceType.cd_Surecast, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Tincture, new CoolDown(ResourceType.cd_Tincture, 270, 1, 1));
@@ -318,9 +330,11 @@ export class GameState {
 			}
 			af.gain(numStacksToGain);
 
-			if (ui.available(3) && uh.available(3)) {
-				paradox.gain(1);
-			}  
+			if (this.hasUnlockedTrait(TraitName.AspectMasteryV)) {
+				if (ui.available(3) && uh.available(3)) {
+					paradox.gain(1);
+				}  
+			}
 
 			ui.consume(ui.availableAmount());
 		}
@@ -331,8 +345,10 @@ export class GameState {
 			}
 			ui.gain(numStacksToGain);
 
-			if (af.available(3)) {
-				paradox.gain(1);
+			if (this.hasUnlockedTrait(TraitName.AspectMasteryV)) {
+				if (af.available(3)) {
+					paradox.gain(1);
+				}
 			}
 
 			af.consume(af.availableAmount());
@@ -795,6 +811,10 @@ export class GameState {
 		})
 
 		return buffCollection;
+	}
+
+	hasUnlockedTrait(name: TraitName) {
+		return parseInt(this.config.level) >= this.traitsList.get(name).level;
 	}
 
 	toString() {
