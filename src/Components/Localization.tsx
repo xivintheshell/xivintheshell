@@ -39,6 +39,8 @@ export function localizeDate(date: string, lang: Language): string {
 const skillsZh = new Map<SkillName, string>([
 	[SkillName.Fire, "火1"],
 	[SkillName.Blizzard, "冰1"],
+	[SkillName.Fire2, "火2"],
+	[SkillName.Blizzard2, "冰2"],
 	[SkillName.Fire4, "火4"],
 	[SkillName.Transpose, "星灵移位"],
 	[SkillName.HighThunder, "高暴雷"],
@@ -74,6 +76,8 @@ const skillsZh = new Map<SkillName, string>([
 const skillsJa = new Map<SkillName, string>([
 	[SkillName.Fire, "ファイア"],
 	[SkillName.Blizzard, "ブリザド"],
+	[SkillName.Fire2, ""],	// TODO
+	[SkillName.Blizzard2, ""], // TODO
 	[SkillName.Fire4, "ファイジャ"],
 	[SkillName.Transpose, "トランス"],
 	[SkillName.HighThunder, "ハイサンダー"],

@@ -14,6 +14,8 @@ import { TraitName } from '../Game/Traits';
 export const skillIcons = new Map();
 skillIcons.set(SkillName.Blizzard, require("./Asset/blizzard.png"));
 skillIcons.set(SkillName.Fire, require("./Asset/fire.png"));
+skillIcons.set(SkillName.Blizzard2, require("./Asset/blizzard2.png"));
+skillIcons.set(SkillName.Fire2, require("./Asset/fire2.png"));
 skillIcons.set(SkillName.Transpose, require("./Asset/transpose.png"));
 skillIcons.set(SkillName.HighThunder, require("./Asset/highThunder.png"));
 skillIcons.set(SkillName.Manaward, require("./Asset/manaward.png"));
@@ -329,7 +331,7 @@ export class SkillsWindow extends React.Component {
 			let skillName = displayedSkills[i];
 			let info = this.state.statusList ? this.state.statusList[i] : undefined;
 
-			if (controller.game.traitsList.UnlockedTrait(TraitName.AspectMasteryIV)) {
+			if (controller.game.traitsList.UnlockedTrait(TraitName.AspectMasteryV)) {
 				let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
 				skillName = (isF1B1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
 				if (this.state.paradoxInfo) 
@@ -341,6 +343,13 @@ export class SkillsWindow extends React.Component {
 				skillName = (isLL && this.state.retraceReady) ? SkillName.Retrace : skillName;
 				if (this.state.retraceInfo)
 					info = (isLL && this.state.retraceReady) ? this.state.retraceInfo : info;
+			}
+
+			if (controller.game.traitsList.UnlockedTrait(TraitName.AspectMasteryIV)) {
+				if (displayedSkills[i] === SkillName.Fire2)
+					skillName = SkillName.HighFire2;
+				else if (displayedSkills[i] === SkillName.Blizzard2)
+					skillName = SkillName.HighBlizzard2;
 			}
 
 			let btn = <SkillButton
