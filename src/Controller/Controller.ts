@@ -681,6 +681,7 @@ class Controller {
 	}
 
 	setConfigAndRestart(props={
+		level: DEFAULT_CONFIG.level,
 		spellSpeed: DEFAULT_CONFIG.spellSpeed,
 		criticalHit: DEFAULT_CONFIG.criticalHit,
 		directHit: DEFAULT_CONFIG.directHit,

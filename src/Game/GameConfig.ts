@@ -1,7 +1,8 @@
-import {Debug, SkillName, ProcMode} from "./Common";
+import {Debug, SkillName, ProcMode, LevelSync} from "./Common";
 import {ResourceOverride} from "./Resources";
 
 export const DEFAULT_CONFIG = {
+	level: LevelSync.lvl100,
 	// 2.37 GCD
 	spellSpeed: 1532,
 	criticalHit: 420,
@@ -16,6 +17,7 @@ export const DEFAULT_CONFIG = {
 };
 
 export class GameConfig {
+	level = DEFAULT_CONFIG.level;
 	spellSpeed = DEFAULT_CONFIG.spellSpeed;
 	criticalHit = DEFAULT_CONFIG.criticalHit;
 	directHit = DEFAULT_CONFIG.directHit;
@@ -30,6 +32,7 @@ export class GameConfig {
 
 	// DEBUG
 	constructor(props?: {
+		level: LevelSync,
 		spellSpeed: number,
 		criticalHit: number,
 		directHit: number,
@@ -43,6 +46,7 @@ export class GameConfig {
 		initialResourceOverrides: any[]
 	}) {
 		if (props) {
+			this.level = props.level;
 			this.spellSpeed = props.spellSpeed;
 			this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
 			this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
@@ -78,7 +82,8 @@ export class GameConfig {
 					return false;
 				}
 			}
-			return this.spellSpeed === other.spellSpeed &&
+			return this.level === other.level &&
+				this.spellSpeed === other.spellSpeed &&
 				this.criticalHit === other.criticalHit &&
 				this.directHit === other.directHit &&
 				this.countdown === other.countdown &&
@@ -129,6 +134,7 @@ export class GameConfig {
 
 	serialized() {
 		return {
+			level: this.level,
 			spellSpeed: this.spellSpeed,
 			criticalHit: this.criticalHit,
 			directHit: this.directHit,
