@@ -8,7 +8,7 @@ import {
 	TickMode
 } from "./Common";
 import {GameState} from "../Game/GameState";
-import {Debug, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
+import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 // @ts-ignore
 import {updateStatusDisplay} from "../Components/StatusDisplay";
@@ -696,6 +696,7 @@ class Controller {
 	}
 
 	setConfigAndRestart(props: {
+		level: LevelSync,
 		spellSpeed: number,
 		criticalHit: number,
 		directHit: number,

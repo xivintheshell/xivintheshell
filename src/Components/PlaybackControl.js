@@ -2,7 +2,7 @@ import React from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
 import {getCachedValue, setCachedValue, ShellVersion, TickMode} from "../Controller/Common";
-import {FIXED_BASE_CASTER_TAX, ProcMode, ResourceType, XIVMath} from "../Game/Common";
+import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType, XIVMath} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
@@ -309,6 +309,7 @@ export class Config extends React.Component {
 		super(props);
 		this.state = { // NOT DEFAULTS
 			stepSize : 0,
+			level: LevelSync.lvl100,
 			spellSpeed: 0,
 			criticalHit: 0,
 			directHit: 0,
@@ -352,6 +353,7 @@ export class Config extends React.Component {
 					this.setState({randomSeed: seed});
 				}
 				let config = {
+					level: this.state.level,
 					spellSpeed: this.state.spellSpeed,
 					criticalHit: this.state.criticalHit,
 					directHit: this.state.directHit,
@@ -374,6 +376,10 @@ export class Config extends React.Component {
 		this.setSpellSpeed = (val => {
 			this.setState({spellSpeed: val, dirty: true});
 			this.updateTaxPreview(val, this.state.fps);
+		});
+
+		this.setLevel = (evt => {
+			this.setState({level: evt.target.value, dirty: true});
 		});
 
 		this.setCriticalHit = (val => {
@@ -759,6 +765,7 @@ export class Config extends React.Component {
 			config.initialResourceOverrides = [];
 		}
 		controller.setConfigAndRestart({
+			level: config.level,
 			spellSpeed: parseFloat(config.spellSpeed),
 			criticalHit: parseFloat(config.criticalHit),
 			directHit: parseFloat(config.directHit),
@@ -817,6 +824,15 @@ export class Config extends React.Component {
 			</table>
 		</div>
 		let editSection = <div>
+			<div>
+				<span>{localize({en: "level: ", zh: "lvl："})}</span>
+				<select style={{outline: "none"}} value={this.state.level} onChange={this.setLevel}>
+					<option key={LevelSync.lvl100} value={LevelSync.lvl100}>100</option>
+					<option key={LevelSync.lvl90} value={LevelSync.lvl90}>90</option>
+					<option key={LevelSync.lvl80} value={LevelSync.lvl80}>80</option>
+					<option key={LevelSync.lvl70} value={LevelSync.lvl70}>70</option>
+				</select>
+			</div>
 			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
 			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: " , zh: "暴击："})} onChange={this.setCriticalHit}/>
 			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>

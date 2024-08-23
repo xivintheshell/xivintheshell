@@ -1,8 +1,9 @@
-import {Debug, SkillName, ProcMode, XIVMath, FIXED_BASE_CASTER_TAX} from "./Common";
+import {Debug, SkillName, ProcMode, LevelSync, XIVMath, FIXED_BASE_CASTER_TAX} from "./Common";
 import {ResourceOverride} from "./Resources";
 import {ShellInfo, ShellVersion} from "../Controller/Common";
 
 export const DEFAULT_CONFIG = {
+	level: LevelSync.lvl100,
 	// 2.37 GCD
 	shellVersion: ShellInfo.version,
 	spellSpeed: 1532,
@@ -19,8 +20,8 @@ export const DEFAULT_CONFIG = {
 };
 
 export class GameConfig {
-
 	readonly shellVersion = ShellInfo.version;
+	readonly level: LevelSync;
 	readonly spellSpeed: number;
 	readonly criticalHit: number;
 	readonly directHit: number;
@@ -36,6 +37,7 @@ export class GameConfig {
 
 	constructor(props: {
 		shellVersion: ShellVersion,
+		level: LevelSync,
 		spellSpeed: number,
 		criticalHit: number,
 		directHit: number,
@@ -50,6 +52,7 @@ export class GameConfig {
 		casterTax?: number, // legacy
 	}) {
 		this.shellVersion = props.shellVersion;
+		this.level = props.level;
 		this.spellSpeed = props.spellSpeed;
 		this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
 		this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
@@ -85,6 +88,7 @@ export class GameConfig {
 				}
 			}
 			return this.shellVersion === other.shellVersion &&
+				this.level === other.level &&
 				this.spellSpeed === other.spellSpeed &&
 				this.criticalHit === other.criticalHit &&
 				this.directHit === other.directHit &&
@@ -149,6 +153,7 @@ export class GameConfig {
 	serialized() {
 		return {
 			shellVersion: this.shellVersion,
+			level: this.level,
 			spellSpeed: this.spellSpeed,
 			criticalHit: this.criticalHit,
 			directHit: this.directHit,

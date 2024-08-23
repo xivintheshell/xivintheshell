@@ -6,6 +6,13 @@ export const Debug = {
 	constantSlidecastWindow: true,
 };
 
+export const enum LevelSync {
+	lvl70 = "70",
+	lvl80 = "80",
+	lvl90 = "90",
+	lvl100 = "100",
+}
+
 export const FIXED_BASE_CASTER_TAX = 0.1;
 
 export const XIVMath = {
