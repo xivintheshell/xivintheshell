@@ -17,7 +17,7 @@ skillIcons.set(SkillName.Fire, require("./Asset/fire.png"));
 skillIcons.set(SkillName.Blizzard2, require("./Asset/blizzard2.png"));
 skillIcons.set(SkillName.Fire2, require("./Asset/fire2.png"));
 skillIcons.set(SkillName.Transpose, require("./Asset/transpose.png"));
-skillIcons.set(SkillName.HighThunder, require("./Asset/highThunder.png"));
+skillIcons.set(SkillName.Thunder3, require("./Asset/thunder3.png"));
 skillIcons.set(SkillName.Manaward, require("./Asset/manaward.png"));
 skillIcons.set(SkillName.Manafont, require("./Asset/manafont.png"));
 skillIcons.set(SkillName.Fire3, require("./Asset/fire3.png"));
@@ -38,6 +38,7 @@ skillIcons.set(SkillName.HighFire2, require("./Asset/highFire2.png"));
 skillIcons.set(SkillName.HighBlizzard2, require("./Asset/highBlizzard2.png"));
 skillIcons.set(SkillName.Amplifier, require("./Asset/amplifier.png"));
 skillIcons.set(SkillName.Paradox, require("./Asset/paradox.png"));
+skillIcons.set(SkillName.HighThunder, require("./Asset/highThunder.png"));
 skillIcons.set(SkillName.FlareStar, require("./Asset/flareStar.png"));
 skillIcons.set(SkillName.Retrace, require("./Asset/retrace.png"));
 
@@ -350,6 +351,11 @@ export class SkillsWindow extends React.Component {
 					skillName = SkillName.HighFire2;
 				else if (displayedSkills[i] === SkillName.Blizzard2)
 					skillName = SkillName.HighBlizzard2;
+			}
+
+			if (controller.game.traitsList.UnlockedTrait(TraitName.ThunderMasteryIII)) {
+				if (displayedSkills[i] === SkillName.Thunder3)
+					skillName = SkillName.HighThunder;
 			}
 
 			let btn = <SkillButton

@@ -73,7 +73,7 @@ export const getTargetableDurationBetween = (startDisplayTime: number, endDispla
 
 function expandThunderNode(node: ActionNode, lastNode?: ActionNode) {
 	console.assert(node.getPotencies().length > 0);
-	console.assert(node.skillName === SkillName.HighThunder);
+	console.assert(node.skillName === SkillName.HighThunder || node.skillName === SkillName.Thunder3);
 	let mainPotency = node.getPotencies()[0];
 	let entry: DamageStatsThunderTableEntry = {
 		castTime: node.tmp_startLockTime ? node.tmp_startLockTime - ctl.gameConfig.countdown : 0,
@@ -194,7 +194,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 			}
 		} else if (abilities.has(node.skillName)) {
 		} else {
-			console.assert(node.skillName === SkillName.HighThunder)
+			console.assert(node.skillName === SkillName.HighThunder || node.skillName === SkillName.Thunder3)
 			res.basePotency = node.getPotencies()[0].base;
 		}
 		return res;
@@ -247,12 +247,15 @@ export function updateSkillOrDoTInclude(props: {
 		// it doesn't make sense to include DoT but not base potency of Thunder
 		if (props.skillNameOrDoT === "DoT") {
 			excludedFromStats.delete(SkillName.HighThunder);
-		} else if (props.skillNameOrDoT === SkillName.HighThunder) {
+			excludedFromStats.delete(SkillName.Thunder3);
+		} else if (props.skillNameOrDoT === SkillName.HighThunder ||
+				   props.skillNameOrDoT === SkillName.Thunder3) {
 			excludedFromStats.delete("DoT");
 		}
 	} else {
 		excludedFromStats.add(props.skillNameOrDoT);
-		if (props.skillNameOrDoT === SkillName.HighThunder) {
+		if (props.skillNameOrDoT === SkillName.HighThunder || 
+			props.skillNameOrDoT === SkillName.Thunder3) {
 			excludedFromStats.add("DoT");
 		}
 	}
@@ -295,7 +298,7 @@ export function calculateSelectedStats(props: {
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
 				includePartyBuffs: true,
-				excludeDoT: node.skillName===SkillName.HighThunder && !getSkillOrDotInclude("DoT")
+				excludeDoT: (node.skillName===SkillName.HighThunder || node.skillName===SkillName.Thunder3) && !getSkillOrDotInclude("DoT")
 			});
 			if (checked) {
 				selected.potency.applied += p.applied;
@@ -364,7 +367,7 @@ export function calculateDamageStats(props: {
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
 				includePartyBuffs: true,
-				excludeDoT: node.skillName===SkillName.HighThunder && !getSkillOrDotInclude("DoT")
+				excludeDoT: (node.skillName===SkillName.HighThunder || node.skillName===SkillName.Thunder3) && !getSkillOrDotInclude("DoT")
 			});
 			if (checked) {
 				totalPotency.applied += p.applied;
@@ -394,21 +397,21 @@ export function calculateDamageStats(props: {
 					tincturePotencyMultiplier: 1,
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: false,
-					excludeDoT: node.skillName===SkillName.HighThunder && !getSkillOrDotInclude("DoT")
+					excludeDoT: (node.skillName===SkillName.HighThunder || node.skillName===SkillName.Thunder3) && !getSkillOrDotInclude("DoT")
 				}).applied;
 				
 				let potencyWithPot = node.getPotency({
 					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: false,
-					excludeDoT: node.skillName===SkillName.HighThunder && !getSkillOrDotInclude("DoT")
+					excludeDoT: (node.skillName===SkillName.HighThunder || node.skillName===SkillName.Thunder3) && !getSkillOrDotInclude("DoT")
 				}).applied;
 
 				let potencyWithPartyBuffs = node.getPotency({
 					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: true,
-					excludeDoT: node.skillName===SkillName.HighThunder && !getSkillOrDotInclude("DoT")
+					excludeDoT: (node.skillName===SkillName.HighThunder || node.skillName===SkillName.Thunder3) && !getSkillOrDotInclude("DoT")
 				}).applied;
 
 				const hit = node.hitBoss(bossIsUntargetable);
@@ -437,7 +440,7 @@ export function calculateDamageStats(props: {
 				}
 
 				// Thunder table
-				if (node.skillName === SkillName.HighThunder) {
+				if (node.skillName === SkillName.HighThunder || node.skillName === SkillName.Thunder3) {
 					let thunderTableEntry = expandThunderNode(node, lastThunder);
 					thunderTable.push(thunderTableEntry);
 					lastThunder = node;

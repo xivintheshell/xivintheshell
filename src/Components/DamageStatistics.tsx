@@ -351,7 +351,7 @@ export class DamageStatistics extends React.Component {
 				}}/>);
 			}
 			// additional checkbox for DoT
-			if (props.row.skillName === SkillName.HighThunder) {
+			if (props.row.skillName === SkillName.HighThunder || props.row.skillName === SkillName.Thunder3) {
 				includeCheckboxes.push(<input key="dot" type={"checkbox"} style={{position: "relative", top: 2, marginRight: 10}} checked={
 					getSkillOrDotInclude("DoT")
 				} onChange={()=>{
@@ -364,11 +364,11 @@ export class DamageStatistics extends React.Component {
 			if (!sameAsLast) {
 				skillNameNode = <span>
 					<span style={{textDecoration: includeInStats ? "none" : "line-through", color: includeInStats ? colors.text : colors.bgHighContrast}}>
-						{localizeSkillName(props.row.skillName)} {props.row.skillName===SkillName.HighThunder ?
+						{localizeSkillName(props.row.skillName)} {(props.row.skillName===SkillName.HighThunder || props.row.skillName===SkillName.Thunder3) ?
 							<Help topic={"potencyStats-thunder"} content={localize({en: "See Thunder table below for details", zh: "详见下方高暴雷表格"})}/>
 							: undefined}
 					</span>
-					{props.row.skillName===SkillName.HighThunder ? <span style={{
+					{(props.row.skillName===SkillName.HighThunder || props.row.skillName===SkillName.Thunder3) ? <span style={{
 						textDecoration: getSkillOrDotInclude("DoT") ? "none" : "line-through",
 						color: getSkillOrDotInclude("DoT") ? colors.text : colors.bgHighContrast
 					}}><br/>
@@ -379,7 +379,7 @@ export class DamageStatistics extends React.Component {
 
 			// potency
 			let potencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.basePotency > 0 && props.row.skillName !== SkillName.HighThunder) {
+			if (props.row.basePotency > 0 && props.row.skillName !== SkillName.HighThunder && props.row.skillName !== SkillName.Thunder3) {
 				potencyNode = <PotencyDisplay
 					includeInStats={includeInStats}
 					basePotency={props.row.basePotency}
@@ -524,7 +524,7 @@ export class DamageStatistics extends React.Component {
 		let mainHeaderStr = allIncluded ?
 			localize({en: "Applied Skills", zh: "技能统计"}) :
 			localize({en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）"});
-		let thunderHeaderStr = localize({en: "High Thunder", zh: "高暴雷统计"});
+		let thunderHeaderStr = localize({en: "Thunder", zh: "高暴雷统计"}); // TODO
 		if (this.data.historical) {
 			let t = (this.data.time - this.data.countdown).toFixed(3) + "s";
 			let upTillStr = lparen + localize({
