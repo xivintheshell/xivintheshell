@@ -1,3 +1,4 @@
+import { Calculations } from "./Calculations";
 import {Debug, SkillName, ProcMode, LevelSync} from "./Common";
 import {ResourceOverride} from "./Resources";
 
@@ -99,20 +100,16 @@ export class GameConfig {
 	}
 
 	adjustedDoTPotency(inPotency : number) {
-		let dotStrength = (1000 + Math.floor((this.spellSpeed - 420) * 130 / 2780.0)) * 0.001;
+		let dotStrength = Calculations.doTStrength(this.level, this.spellSpeed);
 		return inPotency * dotStrength;
 	}
 
-	// 7/22/24: about the difference between adjustedGCD and adjustedCastTime, see scripts/sps-LL/test.js
 	adjustedGCD(hasLL: boolean) {
-		let baseGCD = 2.5;
-		let subtractLL = hasLL ? 15 : 0;
-		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(this.spellSpeed-420)/2780+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
+		return Calculations.adjustedGCD(this.level, this.spellSpeed, hasLL);
 	}
 
 	adjustedCastTime(inCastTime : number, hasLL: boolean) {
-		let subtractLL = hasLL ? 15 : 0;
-		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(this.spellSpeed-420)/2780+1000))*(1000*inCastTime)/1000)/100)*100/100)/1000;
+		return Calculations.adjustedCastTime(this.level, this.spellSpeed, inCastTime, hasLL);
 	}
 
 	getSkillAnimationLock(skillName : SkillName) : number {
