@@ -5,6 +5,7 @@ import {DoTBuff, EventTag, Resource} from "./Resources";
 import {ActionNode} from "../Controller/Record";
 import {GameState} from "./GameState";
 import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
+import { TraitName } from './Traits';
 
 export interface SkillCaptureCallbackInfo {
 	capturedManaCost: number
@@ -89,7 +90,7 @@ const skillInfos = [
 		0, 0, 0), // instant
 
 	new SkillInfo(SkillName.Foul, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 0, 600, 1.158),
+		2.5, 0, 600, 1.158),
 	new SkillInfo(SkillName.Despair, ResourceType.cd_GCD, Aspect.Fire, true,
 		3, 0, 350, 0.556),
 	// Umbral Soul: immediate snapshot & UH gain; delayed MP gain
@@ -409,7 +410,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 					onCapture: () => {
 						game.resources.get(ResourceType.AstralFire).gain(3);
 						game.resources.get(ResourceType.UmbralHeart).gain(3);
-						game.resources.get(ResourceType.Paradox).gain(1);
+
+						if (game.traitsList.UnlockedTrait(TraitName.AspectMasteryV))
+							game.resources.get(ResourceType.Paradox).gain(1);
+
 						game.gainThunderhead();
 						game.startOrRefreshEnochian();
 						node.resolveAll(game.getDisplayTime());
@@ -493,7 +497,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 					uh.consume(uh.availableAmount());
 					// +3 AF; refresh enochian
 					game.resources.get(ResourceType.AstralFire).gain(3);
-					game.resources.get(ResourceType.AstralSoul).gain(3);
+
+					if (game.traitsList.UnlockedTrait(TraitName.EnhancedAstralFire))
+						game.resources.get(ResourceType.AstralSoul).gain(3);
+
 					game.startOrRefreshEnochian();
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
@@ -520,7 +527,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				game.castSpell({skillName: SkillName.Fire4, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.resources.get(ResourceType.AstralSoul).gain(1);
+					if (game.traitsList.UnlockedTrait(TraitName.EnhancedAstralFire))
+						game.resources.get(ResourceType.AstralSoul).gain(1);
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
 			}
@@ -590,12 +598,20 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return game.resources.get(ResourceType.Polyglot).available(1);
 			},
 			(game, node) => {
-				game.resources.get(ResourceType.Polyglot).consume(1);
-				game.useInstantSkill({
-					skillName: SkillName.Foul,
-					dealDamage: true,
-					node: node
-				});
+				if (game.traitsList.UnlockedTrait(TraitName.EnhancedFoul)) {
+					game.resources.get(ResourceType.Polyglot).consume(1);
+					game.useInstantSkill({
+						skillName: SkillName.Foul,
+						dealDamage: true,
+						node: node
+					});
+				}
+				else {
+					game.castSpell({skillName: SkillName.Foul, onCapture: (cap: SkillCaptureCallbackInfo) => {
+						game.resources.get(ResourceType.Polyglot).consume(1);
+					}, onApplication: (app: SkillApplicationCallbackInfo) => {
+					}, node: node});
+				}
 			}
 		));
 
@@ -746,7 +762,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 		// Retrace
 		skillsList.set(SkillName.Retrace, new Skill(SkillName.Retrace,
 			() => {
-				return game.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0;
+				return game.traitsList.UnlockedTrait(TraitName.EnhancedLeyLines) &&
+					game.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0;
 			},
 			(game, node) => {
 				game.useInstantSkill({
@@ -762,7 +779,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 		));
 
 		// Addle
-		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 15});
+		const addleDuration = (game.traitsList.UnlockedTrait(TraitName.EnhancedAddle) && 15) || 10;
+		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: addleDuration});
 
 		// Swiftcast
 		addResourceAbility({skillName: SkillName.Swiftcast, rscType: ResourceType.Swiftcast, instant: true, duration: 10});

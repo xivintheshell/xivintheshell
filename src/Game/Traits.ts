@@ -1,3 +1,5 @@
+import { LevelSync } from "./Common";
+
 export class Trait {
     readonly name: TraitName;
 	readonly level: number;
@@ -8,7 +10,7 @@ export class Trait {
     }
 }
 
-const enum TraitName {
+export const enum TraitName {
     EnhancedEnochianII,
     EnhancedPolyglot,
     EnhancedFoul,
@@ -28,9 +30,11 @@ const enum TraitName {
 }
 
 export class TraitsList extends Map<TraitName, Trait> {
-    constructor() {
+    private level: number;
+    constructor(levelSync: LevelSync) {
         super();
 
+        this.level = parseInt(levelSync);
         let traitsList = this;
 
         traitsList.set(TraitName.EnhancedEnochianII, new Trait(TraitName.EnhancedEnochianII, 78));
@@ -57,4 +61,8 @@ export class TraitsList extends Map<TraitName, Trait> {
 			return new Trait(TraitName.Never, 1);
 		};
 	}
+
+    UnlockedTrait(name: TraitName) {
+        return this.level >= this.get(name).level;
+    }
 }

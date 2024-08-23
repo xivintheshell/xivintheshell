@@ -2,6 +2,7 @@ import {controller} from "../Controller/Controller";
 import {Aspect, BuffType, Debug, ResourceType, SkillName} from "./Common";
 import { GameConfig } from "./GameConfig";
 import {ResourceState} from "./Resources";
+import { TraitName } from "./Traits";
 
 export const enum PotencyModifierType {
 	AF3, AF2, AF1, UI3, UI2, UI1, ENO, POT, PARTY
@@ -24,7 +25,13 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 
 	// eno
 	if (resources.get(ResourceType.Enochian).available(1)) {
-		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: 1.33, critFactor: 0, dhFactor: 0});
+		const enochianModifier = 
+			(controller.game.traitsList.UnlockedTrait(TraitName.EnhancedEnochianIV) && 1.33) ||
+			(controller.game.traitsList.UnlockedTrait(TraitName.EnhancedEnochianIII) && 1.25) ||
+			(controller.game.traitsList.UnlockedTrait(TraitName.EnhancedEnochianII) && 1.15) ||
+			1.10;
+
+		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: enochianModifier, critFactor: 0, dhFactor: 0});
 	}
 
 	// ui1
