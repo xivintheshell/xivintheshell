@@ -5,7 +5,7 @@ import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 // @ts-ignore
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 // @ts-ignore
-import {displayedSkills, updateSkillButtons} from "../Components/Skills";
+import {updateSkillButtons} from "../Components/Skills";
 // @ts-ignore
 import {updateConfigDisplay} from "../Components/PlaybackControl"
 import {setHistorical, setRealTime} from "../Components/Main";
@@ -647,7 +647,7 @@ class Controller {
 		let paradoxReady = game.resources.get(ResourceType.Paradox).availableAmount() > 0;
 		let retraceReady = game.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0;
 
-		updateSkillButtons(displayedSkills.map((skillName: SkillName) => {
+		updateSkillButtons(this.game.displayedSkills.map((skillName: SkillName) => {
 			return game.getSkillAvailabilityStatus(skillName);
 		}), paradoxReady, retraceReady);
 	}

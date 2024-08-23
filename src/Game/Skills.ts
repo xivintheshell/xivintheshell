@@ -1,4 +1,4 @@
-import {Aspect, BuffType, ProcMode, ResourceType, SkillName, WarningType} from './Common'
+import {Aspect, BuffType, LevelSync, ProcMode, ResourceType, SkillName, WarningType} from './Common'
 // @ts-ignore
 import {controller} from "../Controller/Controller";
 import {DoTBuff, EventTag, Resource} from "./Resources";
@@ -838,5 +838,58 @@ export class SkillsList extends Map<SkillName, Skill> {
 				()=>{return false},
 				(game: GameState, node: ActionNode)=>{});
 		}
+	}
+}
+
+export class DisplayedSkills extends Array<SkillName> {
+	constructor(levelSync: LevelSync) {
+		super();
+
+		const level = parseInt(levelSync);
+
+		this.push(SkillName.Blizzard);
+		this.push(SkillName.Fire);
+		this.push(SkillName.Transpose);
+		this.push(SkillName.HighThunder);
+		this.push(SkillName.Manaward);
+		this.push(SkillName.Manafont);
+		this.push(SkillName.Fire3);
+		this.push(SkillName.Blizzard3);
+		this.push(SkillName.Freeze);
+		this.push(SkillName.Flare);
+		this.push(SkillName.LeyLines);
+		this.push(SkillName.Blizzard4);
+		this.push(SkillName.Fire4);
+		this.push(SkillName.BetweenTheLines);
+		this.push(SkillName.AetherialManipulation);
+		this.push(SkillName.Triplecast);
+		this.push(SkillName.Foul);
+
+		if (level >= 80) {
+			this.push(SkillName.Despair);
+			this.push(SkillName.UmbralSoul);
+			this.push(SkillName.Xenoglossy);
+		}
+		else {
+			this.push(SkillName.UmbralSoul);
+		}
+
+		this.push(SkillName.HighFire2);
+		this.push(SkillName.HighBlizzard2);
+
+		if (level >= 90) {
+			this.push(SkillName.Amplifier);
+		}
+
+		if (level >= 100) {
+			this.push(SkillName.FlareStar);
+		}
+
+		this.push(SkillName.Addle);
+		this.push(SkillName.Swiftcast);
+		this.push(SkillName.LucidDreaming);
+		this.push(SkillName.Surecast);
+		this.push(SkillName.Tincture);
+		this.push(SkillName.Sprint);
 	}
 }

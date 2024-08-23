@@ -1,7 +1,7 @@
 import {Aspect, BuffType, Debug, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
-import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
+import {DisplayedSkills, SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
 import {CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
@@ -27,6 +27,7 @@ export class GameState {
 	cooldowns: CoolDownState;
 	eventsQueue: Event[];
 	skillsList: SkillsList;
+	displayedSkills: DisplayedSkills;
 	traitsList: TraitsList;
 
 	constructor(config: GameConfig) {
@@ -38,8 +39,10 @@ export class GameState {
 
 		// TIME (raw time which starts at 0 regardless of countdown)
 		this.time = 0;
-
+		
+		// LEVEL SYNC
 		this.traitsList = new TraitsList(this.config.level);
+		this.displayedSkills = new DisplayedSkills(config.level);
 
 		// RESOURCES (checked when using skills)
 		this.resources = new ResourceState(this);
