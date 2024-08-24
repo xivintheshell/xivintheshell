@@ -148,9 +148,11 @@ export class GameConfig {
 			+ this.gcdSkillCorrection;
 	}
 
+	// for casts
 	getAfterTaxCastTime(capturedCastTime: number) {
 		if (this.shellVersion < ShellVersion.FpsTax) {
-			return this.legacy_casterTax;
+			//console.assert(typeof this.legacy_casterTax === 'number');
+			return this.legacy_casterTax + capturedCastTime;
 		}
 		return (Math.floor(capturedCastTime * this.fps + 1) + Math.floor(FIXED_BASE_CASTER_TAX * this.fps + 1)) / this.fps
 			+ this.gcdSkillCorrection;

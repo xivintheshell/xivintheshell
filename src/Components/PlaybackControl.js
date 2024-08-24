@@ -145,15 +145,16 @@ export class TimeControl extends React.Component {
 function ConfigSummary(props) {
 	let gcd = controller.gameConfig.adjustedGCD(false);
 	let gcdAfterTax = controller.gameConfig.getAfterTaxGCD(gcd).toFixed(3);
-	let b1CastTime = controller.gameConfig.adjustedCastTime(2.5, false).toFixed(3);
 	let b1CastTimeDesc = localize({
 		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
 		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节"
 	});
-	const totalTableColumns = 6;
 	let preTaxFn = t => { return controller.gameConfig.adjustedCastTime(t, false).toFixed(3); }
-	let afterTaxFn = t => { return controller.gameConfig.getAfterTaxCastTime(preTaxFn(t)).toFixed(3) };
-	let castTimesChart = <div>
+	let afterTaxFn = t => {
+		let preTax = controller.gameConfig.adjustedCastTime(t, false);
+		return controller.gameConfig.getAfterTaxCastTime(preTax).toFixed(3);
+	};
+	let castTimesChart =<div>
 		<style>{`
 			table {
 				border-collapse: collapse;
@@ -161,41 +162,45 @@ function ConfigSummary(props) {
 			}
 			th, td {
 				text-align: center;
+				padding: 0.15em;
 				border: 1px solid ${getCurrentThemeColors().bgHighContrast};
+				width: 33%
 			}
 		`}</style>
-		<div className={"paragraph"}>{b1CastTimeDesc}</div>
-		{controller.gameConfig.shellVersion >= ShellVersion.FpsTax ? <table>
-			<thead>
-			<tr><th colSpan={totalTableColumns}>{localize({en: "Cast Times Table", zh: "咏唱时间表"})}</th></tr>
-			</thead>
+		<table>
 			<tbody>
 			<tr>
 				<th>{localize({en: "Base", zh: "基准"})}</th>
-				<th>2.5</th>
-				<th>2.8</th>
-				<th>3.0</th>
-				<th>3.5</th>
-				<th>4.0</th>
-			</tr>
-			<tr>
 				<th>{localize({en: "Pre-tax", zh: "税前"})}</th>
-				<td>{preTaxFn(2.5)}</td>
-				<td>{preTaxFn(2.8)}</td>
-				<td>{preTaxFn(3.0)}</td>
-				<td>{preTaxFn(3.5)}</td>
-				<td>{preTaxFn(4.0)}</td>
+				<th>{localize({en: "After-tax", zh: "税后"})}</th>
 			</tr>
 			<tr>
-				<th>{localize({en: "After-tax", zh: "税后"})}</th>
+				<th>2.5</th>
+				<td>{preTaxFn(2.5)}</td>
 				<td>{afterTaxFn(2.5)}</td>
+			</tr>
+			<tr>
+				<td>2.8</td>
+				<td>{preTaxFn(2.8)}</td>
 				<td>{afterTaxFn(2.8)}</td>
+			</tr>
+			<tr>
+				<td>3.0</td>
+				<td>{preTaxFn(3.0)}</td>
 				<td>{afterTaxFn(3.0)}</td>
+			</tr>
+			<tr>
+				<td>3.5</td>
+				<td>{preTaxFn(3.5)}</td>
 				<td>{afterTaxFn(3.5)}</td>
+			</tr>
+			<tr>
+				<td>4.0</td>
+				<td>{preTaxFn(4.0)}</td>
 				<td>{afterTaxFn(4.0)}</td>
 			</tr>
 			</tbody>
-		</table> : undefined}
+		</table>
 	</div>
 	let lucidTickOffset = controller.game.lucidTickOffset.toFixed(3);
 	let lucidOffsetDesc = localize({
@@ -247,8 +252,10 @@ function ConfigSummary(props) {
 				})
 			}/> : undefined
 		}
-		<br/>{localize({en: "B1 cast time ", zh: "冰1咏唱时间 "})}<Help topic={"b1CastTime"} content={castTimesChart}/>: {b1CastTime}
-		<br/>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
+		<Expandable
+			title={"Cast times table"}
+			titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help topic={"castTimesTable"} content={b1CastTimeDesc}/></span>} defaultExpanded={true} content={castTimesChart}/>
+		{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
 		<br/>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
 		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
 		{numOverrides === 0 ? undefined : <span style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</span>}
