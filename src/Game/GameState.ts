@@ -348,8 +348,10 @@ export class GameState {
 			}
 			ui.gain(numStacksToGain);
 
-			if (af.available(3)) {
-				paradox.gain(1);
+			if (this.traitsList.UnlockedTrait(TraitName.AspectMasteryV)) {
+				if (af.available(3)) {
+					paradox.gain(1);
+				}
 			}
 
 			af.consume(af.availableAmount());
