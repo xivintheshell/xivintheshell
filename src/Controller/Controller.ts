@@ -316,8 +316,8 @@ class Controller {
 		if (content.config.fps === undefined) {
 			content.config.fps = DEFAULT_CONFIG.fps;
 		}
-		if (content.config.gcdCorrection === undefined) {
-			content.config.gcdCorrection = DEFAULT_CONFIG.gcdCorrection;
+		if (content.config.gcdSkillCorrection === undefined) {
+			content.config.gcdSkillCorrection = DEFAULT_CONFIG.gcdSkillCorrection;
 		}
 		if (content.config.shellVersion === undefined) {
 			content.config.shellVersion = ShellVersion.Initial;
@@ -704,7 +704,7 @@ class Controller {
 		directHit: number,
 		animationLock: number,
 		fps: number,
-		gcdCorrection: number,
+		gcdSkillCorrection: number,
 		timeTillFirstManaTick: number,
 		countdown: number,
 		randomSeed: string,

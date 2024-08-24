@@ -11,7 +11,7 @@ export const DEFAULT_CONFIG = {
 	countdown: 5,
 	randomSeed: "sup",
 	fps: 60,
-	gcdCorrection: 0,
+	gcdSkillCorrection: 0,
 	animationLock: 0.7,
 	timeTillFirstManaTick: 1.2,
 	procMode: ProcMode.Never,
@@ -30,7 +30,7 @@ export class GameConfig {
 	readonly countdown: number;
 	readonly randomSeed: string;
 	readonly fps: number;
-	readonly gcdCorrection: number;
+	readonly gcdSkillCorrection: number;
 	readonly animationLock: number;
 	readonly timeTillFirstManaTick: number;
 	readonly procMode: ProcMode;
@@ -46,7 +46,7 @@ export class GameConfig {
 		countdown: number,
 		randomSeed: string,
 		fps: number,
-		gcdCorrection: number,
+		gcdSkillCorrection: number,
 		animationLock: number,
 		timeTillFirstManaTick: number,
 		procMode: ProcMode,
@@ -61,7 +61,7 @@ export class GameConfig {
 		this.countdown = props.countdown;
 		this.randomSeed = props.randomSeed;
 		this.fps = props.fps;
-		this.gcdCorrection = props.gcdCorrection;
+		this.gcdSkillCorrection = props.gcdSkillCorrection;
 		this.animationLock = props.animationLock;
 		this.timeTillFirstManaTick = props.timeTillFirstManaTick;
 		this.procMode = props.procMode;
@@ -97,7 +97,7 @@ export class GameConfig {
 				this.countdown === other.countdown &&
 				this.randomSeed === other.randomSeed &&
 				this.fps === other.fps &&
-				this.gcdCorrection === other.gcdCorrection &&
+				this.gcdSkillCorrection === other.gcdSkillCorrection &&
 				this.animationLock === other.animationLock &&
 				this.timeTillFirstManaTick === other.timeTillFirstManaTick &&
 				this.procMode === other.procMode &&
@@ -145,7 +145,7 @@ export class GameConfig {
 			return beforeTaxGCD;
 		}
 		return Math.floor(beforeTaxGCD * this.fps + 1) / this.fps
-			+ this.gcdCorrection;
+			+ this.gcdSkillCorrection;
 	}
 
 	getAfterTaxCastTime(capturedCastTime: number) {
@@ -153,7 +153,7 @@ export class GameConfig {
 			return this.legacy_casterTax;
 		}
 		return (Math.floor(capturedCastTime * this.fps + 1) + Math.floor(FIXED_BASE_CASTER_TAX * this.fps + 1)) / this.fps
-			+ this.gcdCorrection;
+			+ this.gcdSkillCorrection;
 	}
 
 	static getSlidecastWindow(castTime : number) {
@@ -170,7 +170,7 @@ export class GameConfig {
 			randomSeed: this.randomSeed,
 			casterTax: this.legacy_casterTax, // still want this bc don't want to break cached timelines
 			fps: this.fps,
-			gcdCorrection: this.gcdCorrection,
+			gcdSkillCorrection: this.gcdSkillCorrection,
 			animationLock: this.animationLock,
 			timeTillFirstManaTick: this.timeTillFirstManaTick,
 			procMode: this.procMode,
