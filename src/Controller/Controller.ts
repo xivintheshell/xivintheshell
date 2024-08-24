@@ -624,7 +624,7 @@ class Controller {
 				resourceLocks: resourceLocksData,
 				enemyBuffs: enemyBuffsData,
 				selfBuffs: selfBuffsData,
-				traitsList: game.traitsList
+				gameState: game
 			});
 		}
 	}

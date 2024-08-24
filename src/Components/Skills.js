@@ -332,28 +332,28 @@ export class SkillsWindow extends React.Component {
 			let skillName = displayedSkills[i];
 			let info = this.state.statusList ? this.state.statusList[i] : undefined;
 
-			if (controller.game.traitsList.UnlockedTrait(TraitName.AspectMasteryV)) {
+			if (controller.game.hasUnlockedTrait(TraitName.AspectMasteryV)) {
 				let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
 				skillName = (isF1B1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
 				if (this.state.paradoxInfo) 
 					info = (isF1B1 && this.state.paradoxReady) ? this.state.paradoxInfo : info;
 			}
 
-			if (controller.game.traitsList.UnlockedTrait(TraitName.EnhancedLeyLines)) {
+			if (controller.game.hasUnlockedTrait(TraitName.EnhancedLeyLines)) {
 				let isLL = (displayedSkills[i] === SkillName.LeyLines);
 				skillName = (isLL && this.state.retraceReady) ? SkillName.Retrace : skillName;
 				if (this.state.retraceInfo)
 					info = (isLL && this.state.retraceReady) ? this.state.retraceInfo : info;
 			}
 
-			if (controller.game.traitsList.UnlockedTrait(TraitName.AspectMasteryIV)) {
+			if (controller.game.hasUnlockedTrait(TraitName.AspectMasteryIV)) {
 				if (displayedSkills[i] === SkillName.Fire2)
 					skillName = SkillName.HighFire2;
 				else if (displayedSkills[i] === SkillName.Blizzard2)
 					skillName = SkillName.HighBlizzard2;
 			}
 
-			if (controller.game.traitsList.UnlockedTrait(TraitName.ThunderMasteryIII)) {
+			if (controller.game.hasUnlockedTrait(TraitName.ThunderMasteryIII)) {
 				if (displayedSkills[i] === SkillName.Thunder3)
 					skillName = SkillName.HighThunder;
 			}

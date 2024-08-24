@@ -298,7 +298,7 @@ function ResourcesDisplay(props) {
 		polyglotCountdown: 30,
 		polyglotStacks: 0
 	}
-	let traitsList = data.traitsList;
+	let gameState = data.gameState;
 
 	let manaBar = <ResourceBar
 		name={"MP"}
@@ -345,7 +345,7 @@ function ResourcesDisplay(props) {
 		color={colors.resources.umbralHeart}
 		currentStacks={resources.umbralHearts}
 		maxStacks={3}/>;
-	let paradox = traitsList && traitsList.UnlockedTrait(TraitName.AspectMasteryIV) ?
+	let paradox = gameState && gameState.hasUnlockedTrait(TraitName.AspectMasteryIV) ?
 		<ResourceCounter
 			name={
 				localize({
@@ -357,7 +357,7 @@ function ResourcesDisplay(props) {
 			currentStacks={resources.paradox}
 			maxStacks={1}/>
 		: undefined;
-	let soul = traitsList && traitsList.UnlockedTrait(TraitName.EnhancedAstralFire) ?
+	let soul = gameState && gameState.hasUnlockedTrait(TraitName.EnhancedAstralFire) ?
 		<ResourceCounter
 			name={
 				localize({
@@ -382,8 +382,8 @@ function ResourcesDisplay(props) {
 		width={100}/>;
 	
 	const polyglotStacks = 
-		(traitsList && traitsList.UnlockedTrait(TraitName.EnhancedPolyglotII) && 3) ||
-		(traitsList && traitsList.UnlockedTrait(TraitName.EnhancedPolyglot) && 2) ||
+		(gameState && gameState.hasUnlockedTrait(TraitName.EnhancedPolyglotII) && 3) ||
+		(gameState && gameState.hasUnlockedTrait(TraitName.EnhancedPolyglot) && 2) ||
 		1;
 	let poly = <ResourceCounter
 		name={
@@ -418,7 +418,7 @@ export class StatusDisplay extends React.Component {
 			resourceLocks: null,
 			selfBuffs: null,
 			enemyBuffs: null,
-			traitsList: null,
+			gameState: null,
 		}
 		updateStatusDisplay = ((newData)=>{
 			this.setState({
@@ -427,7 +427,7 @@ export class StatusDisplay extends React.Component {
 				resourceLocks: newData.resourceLocks,
 				selfBuffs: newData.selfBuffs,
 				enemyBuffs: newData.enemyBuffs,
-				traitsList: newData.traitsList,
+				gameState: newData.gameState,
 			});
 		});
 	}

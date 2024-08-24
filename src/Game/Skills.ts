@@ -424,7 +424,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.resources.get(ResourceType.AstralFire).gain(3);
 						game.resources.get(ResourceType.UmbralHeart).gain(3);
 
-						if (game.traitsList.UnlockedTrait(TraitName.AspectMasteryV))
+						if (game.hasUnlockedTrait(TraitName.AspectMasteryV))
 							game.resources.get(ResourceType.Paradox).gain(1);
 
 						game.gainThunderhead();
@@ -511,7 +511,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					// +3 AF; refresh enochian
 					game.resources.get(ResourceType.AstralFire).gain(3);
 
-					if (game.traitsList.UnlockedTrait(TraitName.EnhancedAstralFire))
+					if (game.hasUnlockedTrait(TraitName.EnhancedAstralFire))
 						game.resources.get(ResourceType.AstralSoul).gain(3);
 
 					game.startOrRefreshEnochian();
@@ -540,7 +540,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				game.castSpell({skillName: SkillName.Fire4, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					if (game.traitsList.UnlockedTrait(TraitName.EnhancedAstralFire))
+					if (game.hasUnlockedTrait(TraitName.EnhancedAstralFire))
 						game.resources.get(ResourceType.AstralSoul).gain(1);
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
@@ -611,7 +611,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return game.resources.get(ResourceType.Polyglot).available(1);
 			},
 			(game, node) => {
-				if (game.traitsList.UnlockedTrait(TraitName.EnhancedFoul)) {
+				if (game.hasUnlockedTrait(TraitName.EnhancedFoul)) {
 					game.useInstantSkill({
 						skillName: SkillName.Foul,
 						dealDamage: true,
@@ -772,7 +772,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		// Retrace
 		skillsList.set(SkillName.Retrace, new Skill(SkillName.Retrace,
 			() => {
-				return game.traitsList.UnlockedTrait(TraitName.EnhancedLeyLines) &&
+				return game.hasUnlockedTrait(TraitName.EnhancedLeyLines) &&
 					game.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0;
 			},
 			(game, node) => {
@@ -789,7 +789,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		));
 
 		// Addle
-		const addleDuration = (game.traitsList.UnlockedTrait(TraitName.EnhancedAddle) && 15) || 10;
+		const addleDuration = (game.hasUnlockedTrait(TraitName.EnhancedAddle) && 15) || 10;
 		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: addleDuration});
 
 		// Swiftcast

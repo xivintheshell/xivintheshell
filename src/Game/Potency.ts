@@ -27,9 +27,9 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 	// eno
 	if (resources.get(ResourceType.Enochian).available(1)) {
 		const enochianModifier = 
-			(controller.game.traitsList.UnlockedTrait(TraitName.EnhancedEnochianIV) && 1.33) ||
-			(controller.game.traitsList.UnlockedTrait(TraitName.EnhancedEnochianIII) && 1.25) ||
-			(controller.game.traitsList.UnlockedTrait(TraitName.EnhancedEnochianII) && 1.15) ||
+			(controller.game.hasUnlockedTrait(TraitName.EnhancedEnochianIV) && 1.33) ||
+			(controller.game.hasUnlockedTrait(TraitName.EnhancedEnochianIII) && 1.25) ||
+			(controller.game.hasUnlockedTrait(TraitName.EnhancedEnochianII) && 1.15) ||
 			1.10;
 
 		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: enochianModifier, critFactor: 0, dhFactor: 0});
