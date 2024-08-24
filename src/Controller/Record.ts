@@ -1,4 +1,4 @@
-import {FileType, ShellInfo} from "./Common";
+import {FileType} from "./Common";
 import {BuffType, SkillName, SkillReadyStatus} from "../Game/Common";
 import {GameConfig} from "../Game/GameConfig"
 import {Potency} from "../Game/Potency";

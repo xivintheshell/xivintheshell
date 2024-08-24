@@ -11,13 +11,15 @@ export const DEFAULT_CONFIG = {
 	countdown: 5,
 	randomSeed: "sup",
 	fps: 60,
-	castTimeCorrection: 0,
+	gcdCorrection: 0,
 	animationLock: 0.7,
 	timeTillFirstManaTick: 1.2,
 	procMode: ProcMode.Never,
 	extendedBuffTimes: false,
 	initialResourceOverrides: []
 };
+
+const FIXED_BASE_CASTER_TAX = 0.1;
 
 export class GameConfig {
 
@@ -28,7 +30,7 @@ export class GameConfig {
 	readonly countdown: number;
 	readonly randomSeed: string;
 	readonly fps: number;
-	readonly castTimeCorrection: number;
+	readonly gcdCorrection: number;
 	readonly animationLock: number;
 	readonly timeTillFirstManaTick: number;
 	readonly procMode: ProcMode;
@@ -44,7 +46,7 @@ export class GameConfig {
 		countdown: number,
 		randomSeed: string,
 		fps: number,
-		castTimeCorrection: number,
+		gcdCorrection: number,
 		animationLock: number,
 		timeTillFirstManaTick: number,
 		procMode: ProcMode,
@@ -59,7 +61,7 @@ export class GameConfig {
 		this.countdown = props.countdown;
 		this.randomSeed = props.randomSeed;
 		this.fps = props.fps;
-		this.castTimeCorrection = props.castTimeCorrection;
+		this.gcdCorrection = props.gcdCorrection;
 		this.animationLock = props.animationLock;
 		this.timeTillFirstManaTick = props.timeTillFirstManaTick;
 		this.procMode = props.procMode;
@@ -95,7 +97,7 @@ export class GameConfig {
 				this.countdown === other.countdown &&
 				this.randomSeed === other.randomSeed &&
 				this.fps === other.fps &&
-				this.castTimeCorrection === other.castTimeCorrection &&
+				this.gcdCorrection === other.gcdCorrection &&
 				this.animationLock === other.animationLock &&
 				this.timeTillFirstManaTick === other.timeTillFirstManaTick &&
 				this.procMode === other.procMode &&
@@ -111,12 +113,14 @@ export class GameConfig {
 	}
 
 	// 7/22/24: about the difference between adjustedGCD and adjustedCastTime, see scripts/sps-LL/test.js
+	// returns GCD before FPS tax
 	adjustedGCD(hasLL: boolean) {
 		let baseGCD = 2.5;
 		let subtractLL = hasLL ? 15 : 0;
 		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(this.spellSpeed-420)/2780+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
 	}
 
+	// returns cast time before FPS and caster tax
 	adjustedCastTime(inCastTime : number, hasLL: boolean) {
 		let subtractLL = hasLL ? 15 : 0;
 		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(this.spellSpeed-420)/2780+1000))*(1000*inCastTime)/1000)/100)*100/100)/1000;
@@ -135,12 +139,21 @@ export class GameConfig {
 		}
 	}
 
-	getCasterPlusFpsTax(capturedCastTime: number) {
+	// for gcd
+	getAfterTaxGCD(beforeTaxGCD: number) {
+		if (this.shellVersion < ShellVersion.FpsTax) {
+			return beforeTaxGCD;
+		}
+		return Math.floor(beforeTaxGCD * this.fps + 1) / this.fps
+			+ this.gcdCorrection;
+	}
+
+	getAfterTaxCastTime(capturedCastTime: number) {
 		if (this.shellVersion < ShellVersion.FpsTax) {
 			return this.legacy_casterTax;
 		}
-		return (Math.floor(capturedCastTime * this.fps + 1) + Math.floor(0.1 * this.fps + 1)) / this.fps
-			+ this.castTimeCorrection - capturedCastTime;
+		return (Math.floor(capturedCastTime * this.fps + 1) + Math.floor(FIXED_BASE_CASTER_TAX * this.fps + 1)) / this.fps
+			+ this.gcdCorrection;
 	}
 
 	static getSlidecastWindow(castTime : number) {
@@ -157,7 +170,7 @@ export class GameConfig {
 			randomSeed: this.randomSeed,
 			casterTax: this.legacy_casterTax, // still want this bc don't want to break cached timelines
 			fps: this.fps,
-			castTimeCorrection: this.castTimeCorrection,
+			gcdCorrection: this.gcdCorrection,
 			animationLock: this.animationLock,
 			timeTillFirstManaTick: this.timeTillFirstManaTick,
 			procMode: this.procMode,

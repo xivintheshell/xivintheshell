@@ -6,7 +6,6 @@ import {ProcMode, ResourceType} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
-import {DEFAULT_CONFIG} from "../Game/GameConfig";
 
 export class TimeControl extends React.Component {
 	constructor(props) {
@@ -163,10 +162,33 @@ function ConfigSummary(props) {
 	let procMode = controller.gameConfig.procMode;
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	const legacyCasterTax = controller.gameConfig.legacy_casterTax;
-	let legacyCasterTaxBlurb = <div style={{color: getCurrentThemeColors().warning}}>{localize({
-		en: "WARNING: " + legacyCasterTax,
-		zh: "noo"
-	})}</div>;
+	let excerpt = localize({
+		en: `WARNING: this record was created in an earlier version of BLM in the Shell and uses the deprecated caster tax of ${legacyCasterTax}s instead of calculating from your FPS input below. Hover for details: `,
+		zh: `警告：此时间轴文件创建于一个更早版本的排轴器，因此计算读条时间时使用的是当时手动输入的读条税${legacyCasterTax}秒（现已过时），而非由下方的“帧率”和“读条时间修正”计算得来。更多信息：`
+	});
+	let warningColor = getCurrentThemeColors().warning;
+	let blurb = localize({
+		en: <div>
+				<div className={"paragraph"}>
+					The caster tax config is now replaced by 0.1s + FPS tax and is more precise.
+					You can read more about FPS tax in About this tool/Implementation notes.
+				</div>
+				<div className={"paragraph"} style={{color: warningColor}}>
+					You are strongly encouraged to create a new record (from 'apply and reset') and migrate your fight plan.
+					Support for loading legacy files might drop in the future.
+				</div>
+			</div>,
+		zh: <div>
+			<div className={"paragraph"}>
+				现在的“读条税”由固定的0.1s加自动计算的帧率税构成，模拟结果也更精确。有关帧率税的更多信息详见 关于/实现细节。
+			</div>
+			<div className={"paragraph"} style={{color: warningColor}}>
+				排轴器今后的更新可能会导致无法加载过时的文件，所以强烈建议将此时间轴迁移到一个新建的存档中（应用并重置时间轴）。
+			</div>
+		</div>
+	});
+
+	let legacyCasterTaxBlurb = <div style={{color: warningColor}}>{excerpt} <Help topic={"legacy-caster-tax"} content={blurb}/></div>;
 	return <div>
 		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
 		GCD: {gcd}
@@ -217,7 +239,7 @@ export class Config extends React.Component {
 			directHit: 0,
 			animationLock: 0,
 			fps: 0,
-			castTimeCorrection: 0,
+			gcdCorrection: 0,
 			timeTillFirstManaTick: 0,
 			countdown: 0,
 			randomSeed: "",
@@ -248,7 +270,7 @@ export class Config extends React.Component {
 					directHit: this.state.directHit,
 					animationLock: this.state.animationLock,
 					fps: this.state.fps,
-					castTimeCorrection: this.state.castTimeCorrection,
+					gcdCorrection: this.state.gcdCorrection,
 					countdown: this.state.countdown,
 					timeTillFirstManaTick: this.state.timeTillFirstManaTick,
 					randomSeed: seed,
@@ -283,8 +305,8 @@ export class Config extends React.Component {
 			this.setState({fps: val, dirty: true});
 		});
 
-		this.setCastTimeCorrection = (val => {
-			this.setState({castTimeCorrection: val, dirty: true});
+		this.setGcdCorrection = (val => {
+			this.setState({gcdCorrection: val, dirty: true});
 		});
 
 		this.setTimeTillFirstManaTick = (val => {
@@ -642,7 +664,7 @@ export class Config extends React.Component {
 			isNaN(parseFloat(config.directHit)) ||
 			isNaN(parseFloat(config.animationLock)) ||
 			isNaN(parseFloat(config.fps)) ||
-			isNaN(parseFloat(config.castTimeCorrection)) ||
+			isNaN(parseFloat(config.gcdCorrection)) ||
 			isNaN(parseFloat(config.timeTillFirstManaTick)) ||
 			isNaN(parseFloat(config.countdown))) {
 			window.alert("Some config fields are not numbers!");
@@ -657,7 +679,7 @@ export class Config extends React.Component {
 			directHit: parseFloat(config.directHit),
 			animationLock: parseFloat(config.animationLock),
 			fps: parseFloat(config.fps),
-			castTimeCorrection: parseFloat(config.castTimeCorrection),
+			gcdCorrection: parseFloat(config.gcdCorrection),
 			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
 			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed.trim(),
@@ -683,12 +705,12 @@ export class Config extends React.Component {
 			<Input style={{color: fpsAndCorrectionColor}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>
 			<Input
 				style={{color: fpsAndCorrectionColor}}
-				defaultValue={this.state.castTimeCorrection}
-				description={<span>{localize({en: "cast time correction", zh: "读条时间修正"})} <Help topic={"cast-time-correction"} content={localize({
-					en: "dubabubadi",
-					zh: "dubidub"
+				defaultValue={this.state.gcdCorrection}
+				description={<span>{localize({en: "GCD correction", zh: "GCD时长修正"})} <Help topic={"cast-time-correction"} content={localize({
+					en: "Leaving this at 0 will probably give you the most accurate simulation. But if you want to manually correct your GCD duration for whatever reason, you can put a small number",
+					zh: "正常情况下填0即能得到最精确的模拟结果。如果实在需要修正的话，这里输入的时长会被加到你的每个GCD里"
 				})}/>: </span>}
-				onChange={this.setCastTimeCorrection}/>
+				onChange={this.setGcdCorrection}/>
 			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "距首次跳蓝时间："})} onChange={this.setTimeTillFirstManaTick}/>
 			<Input defaultValue={this.state.countdown} description={
 				<span>{
