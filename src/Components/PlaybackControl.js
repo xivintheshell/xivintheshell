@@ -144,11 +144,59 @@ export class TimeControl extends React.Component {
 
 function ConfigSummary(props) {
 	let gcd = controller.gameConfig.adjustedGCD(false);
-	let b1CastTime = controller.gameConfig.adjustedCastTime(2.5, false);
+	let gcdAfterTax = controller.gameConfig.getAfterTaxGCD(gcd).toFixed(3);
+	let b1CastTime = controller.gameConfig.adjustedCastTime(2.5, false).toFixed(3);
 	let b1CastTimeDesc = localize({
 		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
 		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节"
 	});
+	const totalTableColumns = 6;
+	let preTaxFn = t => { return controller.gameConfig.adjustedCastTime(t, false).toFixed(3); }
+	let afterTaxFn = t => { return controller.gameConfig.getAfterTaxCastTime(preTaxFn(t)).toFixed(3) };
+	let castTimesChart = <div>
+		<style>{`
+			table {
+				border-collapse: collapse;
+				width: 100%;
+			}
+			th, td {
+				text-align: center;
+				border: 1px solid ${getCurrentThemeColors().bgHighContrast};
+			}
+		`}</style>
+		<div className={"paragraph"}>{b1CastTimeDesc}</div>
+		{controller.gameConfig.shellVersion >= ShellVersion.FpsTax ? <table>
+			<thead>
+			<tr><th colSpan={totalTableColumns}>{localize({en: "Cast Times Table", zh: "咏唱时间表"})}</th></tr>
+			</thead>
+			<tbody>
+			<tr>
+				<th>{localize({en: "Base", zh: "基准"})}</th>
+				<th>2.5</th>
+				<th>2.8</th>
+				<th>3.0</th>
+				<th>3.5</th>
+				<th>4.0</th>
+			</tr>
+			<tr>
+				<th>{localize({en: "Pre-tax", zh: "税前"})}</th>
+				<td>{preTaxFn(2.5)}</td>
+				<td>{preTaxFn(2.8)}</td>
+				<td>{preTaxFn(3.0)}</td>
+				<td>{preTaxFn(3.5)}</td>
+				<td>{preTaxFn(4.0)}</td>
+			</tr>
+			<tr>
+				<th>{localize({en: "After-tax", zh: "税后"})}</th>
+				<td>{afterTaxFn(2.5)}</td>
+				<td>{afterTaxFn(2.8)}</td>
+				<td>{afterTaxFn(3.0)}</td>
+				<td>{afterTaxFn(3.5)}</td>
+				<td>{afterTaxFn(4.0)}</td>
+			</tr>
+			</tbody>
+		</table> : undefined}
+	</div>
 	let lucidTickOffset = controller.game.lucidTickOffset.toFixed(3);
 	let lucidOffsetDesc = localize({
 		en: "the random time offset of lucid dreaming ticks relative to mp ticks",
@@ -187,12 +235,19 @@ function ConfigSummary(props) {
 			</div>
 		</div>
 	});
-
-	let legacyCasterTaxBlurb = <div style={{color: warningColor}}>{excerpt} <Help topic={"legacy-caster-tax"} content={blurb}/></div>;
+	let legacyCasterTaxBlurb = <div className={"paragraph"} style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={blurb}/></div>;
 	return <div>
 		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
-		GCD: {gcd}
-		<br/>{localize({en: "B1 cast time ", zh: "冰1咏唱时间 "})}<Help topic={"b1CastTime"} content={b1CastTimeDesc}/>: {b1CastTime}
+		{localize({en: "Displayed GCD", zh: "游戏内显示的GCD"})}: {gcd}&nbsp;
+		{
+			controller.gameConfig.shellVersion >= ShellVersion.FpsTax ? <Help topic={"displayedGcd"} content={
+				localize({
+					en: `Measured average GCD should be ${gcdAfterTax} due to FPS tax`,
+					zh: `由于帧率税的影响，测量得到的平均GCD为${gcdAfterTax}`
+				})
+			}/> : undefined
+		}
+		<br/>{localize({en: "B1 cast time ", zh: "冰1咏唱时间 "})}<Help topic={"b1CastTime"} content={castTimesChart}/>: {b1CastTime}
 		<br/>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
 		<br/>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
 		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
