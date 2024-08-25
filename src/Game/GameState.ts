@@ -497,7 +497,7 @@ export class GameState {
 		let capturedCastTime = this.captureSpellCastTimeAFUI(
 			skillInfo.aspect,
 			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered, inspired));
-		let capturedRecastTime = this.config.adjustedCastTime(skillInfo.baseRecastTime, llCovered, inspired);
+		let capturedRecastTime = this.config.adjustedGCD(llCovered, inspired, skillInfo.baseRecastTime);
 		// hack for motifs, which are not affected by sps
 		if (props.skillName.includes("Motif")) {
 			capturedCastTime = skillInfo.baseCastTime;
@@ -603,10 +603,10 @@ export class GameState {
 				: (
 					rsc && rsc.type === ResourceType.RainbowBright
 						// when rainbow bright is affecting rainbow drip, base cast is always 2.5
-						? game.config.adjustedCastTime(2.5, false, false)
+						? game.config.adjustedGCD(false, false, 2.5)
 						// unlike LL, we need to account for hyperphantasia here because the hyperphantasia buff
 						// would be consumed before the Resource object can check the recast
-						: game.config.adjustedCastTime(skillInfo.baseRecastTime, false, inspired)
+						: game.config.adjustedGCD(false, inspired, skillInfo.baseRecastTime)
 				);
 			cd.useStackWithRecast(game, recastTime);
 
@@ -672,7 +672,7 @@ export class GameState {
 		// would be consumed before the Resource object can check the recast
 		cd.useStackWithRecast(
 			this,
-			skillInfo.name.includes("Motif") ? skillInfo.baseRecastTime : this.config.adjustedCastTime(skillInfo.baseRecastTime, false, inspired)
+			skillInfo.name.includes("Motif") ? skillInfo.baseRecastTime : this.config.adjustedGCD(false, inspired, skillInfo.baseRecastTime)
 		);
 
 		// caster tax
@@ -922,7 +922,7 @@ export class GameState {
 		if (skillName.includes("Motif")) {
 			cdRecastTime = skill.info.baseRecastTime;
 		} else if (skillName === SkillName.RainbowDrip && this.resources.get(ResourceType.RainbowBright).available(1)) {
-			cdRecastTime = this.config.adjustedCastTime(2.5, false, false);
+			cdRecastTime = this.config.adjustedGCD(false, false, 2.5);
 		}
 
 		// to be displayed together when hovered on a skill

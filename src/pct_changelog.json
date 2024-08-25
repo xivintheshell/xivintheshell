@@ -1,5 +1,12 @@
 [
     {
+        "date": "8/25/24",
+        "changes": [
+            "Add Smudge, Tempera Coat, and Tempera Grassa",
+            "Correct precision of GCD formula (should not break existing timelines)"
+        ]
+    },
+    {
         "date": "8/19/24",
         "changes": [
             "Updated CDH potency modifier calculations (thanks Turtle)"
