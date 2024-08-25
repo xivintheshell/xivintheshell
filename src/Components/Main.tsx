@@ -1,5 +1,4 @@
 import React, {CSSProperties} from 'react';
-// @ts-ignore
 import {Timeline, updateTimelineView} from "./Timeline";
 // @ts-ignore
 import { SkillsWindow } from "./Skills";

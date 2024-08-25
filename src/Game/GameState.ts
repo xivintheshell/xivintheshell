@@ -67,7 +67,7 @@ export class GameState {
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.adjustedGCD(false), 1, 1));
+		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD(false)), 1, 1));
 		this.cooldowns.set(ResourceType.cd_LeyLines, new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Transpose, new CoolDown(ResourceType.cd_Transpose, 5, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Manaward, new CoolDown(ResourceType.cd_Manaward, 120, 1, 1));
@@ -394,7 +394,9 @@ export class GameState {
 		let ll = this.resources.get(ResourceType.LeyLines);
 		if (ll.available(1)) {
 			// should be approximately 0.85
-			return this.config.adjustedGCD(true) / this.config.adjustedGCD(false);
+			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(true));
+			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(false));
+			return num / denom;
 		} else {
 			return 1;
 		}
@@ -562,7 +564,7 @@ export class GameState {
 		cd.useStack(this);
 
 		// caster tax
-		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
+		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, this.config.getAfterTaxCastTime(capturedCastTime));
 	}
 
 	useInstantSkill(props: {

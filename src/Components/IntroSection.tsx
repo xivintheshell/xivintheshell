@@ -338,22 +338,32 @@ export function IntroSection(props: {}) {
 						{localize ({
 							en:
 								<div className="paragraph">
-									7/29/24 cast time formula update: Unlike GCDs with 2 digits of precision, cast times are now updated to use 3 digits of precision, because it matches with the game more closely.
+									7/29/24 cast time precision update: Unlike GCDs with 2 digits of precision, cast times are now updated to use 3 digits of precision, because it matches with the game more closely.
 									Here is an <a href={"https://docs.google.com/spreadsheets/d/18IN-ygAXd2zCR1A3umV3efYcy8xz6O3f/edit?usp=sharing&ouid=104672178485330237849&rtpof=true&sd=true"}>updated full SPS chart</a>. I also <a href={"https://docs.google.com/spreadsheets/d/1d_oPA34tZ-ZOxZSMI6JQDssLiXHUIVv6qmvMTFzoqL8/edit?usp=sharing"}>spammed some spells</a> and the results are in line with this chart.
-									If you are curious and can read Chinese, here are some more resources:&nbsp;
-									<a href={"https://www.bilibili.com/read/cv29822181/?jump_opus=1"}>Writeup about this finding by Vanilla Milksmoothie et al.</a>,&nbsp;
-									<a href={"/ffxiv-blm-rotation/misc/关于读条技能与瞬发技能取整精度的猜想与实验.pdf"}>Some tests results from them and steps to reproduce</a>.
+									If you would like to learn more, here it is:&nbsp;
+									<a href={"https://docs.google.com/document/d/1zxUd7vFfs24cGteOeCnEsoCzfDxIvKNROIvDUqG-6no/pub"}>writeup by 米露可丝沐希@延夏 et al. translated to English by shanzhe</a>. More resources (in Chinese):&nbsp;
+									<a href={"/ffxiv-blm-rotation/misc/关于读条技能与瞬发技能取整精度的猜想与实验.pdf"}>some tests results and steps to reproduce</a>.
 								</div>,
 							zh:
 								<div className="paragraph">
-									7/29/24 咏唱时间更新：不同于精确到小数点后2位的GCD公式，现在咏唱时间的计算公式精确到小数点后3位。经测试，这个精度更吻合游戏内实际的咏唱时间。
-									关于这个新的咏唱时间公式，可以详见牛奶冰沙等人的<a href={"https://www.bilibili.com/read/cv29822181/?jump_opus=1"}>这篇文章</a>。<a href={"/ffxiv-blm-rotation/misc/关于读条技能与瞬发技能取整精度的猜想与实验.pdf"}>此处</a>有部分测试结果和详细的复现步骤。<br/>
+									7/29/24 咏唱时间精度更新：不同于精确到小数点后2位的GCD公式，现在咏唱时间的计算公式精确到小数点后3位。经测试，这个精度更吻合游戏内实际的咏唱时间。
+									关于这个新的咏唱时间公式，可以详见米露可丝沐希@延夏等人的<a href={"https://www.bilibili.com/read/cv29822181/?jump_opus=1"}>这篇文章</a>。<a href={"/ffxiv-blm-rotation/misc/关于读条技能与瞬发技能取整精度的猜想与实验.pdf"}>此处</a>有部分测试结果和详细的复现步骤。<br/>
 									附：目前完整的咏速表（<a
 									href={"https://docs.google.com/spreadsheets/d/18IN-ygAXd2zCR1A3umV3efYcy8xz6O3f/edit?usp=sharing&ouid=104672178485330237849&rtpof=true&sd=true"}>Google Sheets</a>）。我个人做了一些测试，logs结果也符合这个改动（<a href={"https://docs.google.com/spreadsheets/d/1d_oPA34tZ-ZOxZSMI6JQDssLiXHUIVv6qmvMTFzoqL8/edit?usp=sharing"}>Google Sheets</a>）。
 								</div>,
 							ja:
 								<div className="paragraph">
 									(translation outdated){/*2024/8/29: 黒魔紋上のキャストとリキャスト時間が誤っていました。現在は単純に0.85倍にしていますが、最大で0.01秒の誤差があります。Vanilla Milksmoothie が正確な値を提案してくれましたが現在は実装する時間がないため、または過去のtxtファイルが壊れる可能性があるため、実装していません。問題がある場合はお知らせください。*/}
+								</div>,
+						})}
+						{localize({
+							en:
+								<div className="paragraph">
+									8/23/24 FPS tax: the previous "caster tax" config is now replaced by 0.1s + FPS tax, which is also explained in the above writeup. <a href={"https://docs.google.com/document/d/1zxUd7vFfs24cGteOeCnEsoCzfDxIvKNROIvDUqG-6no/pub"}>Linking here again</a>.
+								</div>,
+							zh:
+								<div className="paragraph">
+									8/23/24 帧率税：以往的“读条税”设置现已被更精确的 0.1s + 帧率税 取代，更多信息详见上文提到的<a href={"https://www.bilibili.com/read/cv29822181/?jump_opus=1"}>米露可丝沐希@延夏等人的文章</a>。
 								</div>,
 						})}
 					</div>
