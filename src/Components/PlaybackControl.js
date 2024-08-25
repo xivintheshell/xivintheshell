@@ -319,7 +319,6 @@ export class Config extends React.Component {
 			countdown: 0,
 			randomSeed: "",
 			procMode: ProcMode.RNG,
-			extendedBuffTimes: false,
 			initialResourceOverrides: [],
 			/////////
 			selectedOverrideResource: ResourceType.Mana,
@@ -363,7 +362,6 @@ export class Config extends React.Component {
 					timeTillFirstManaTick: this.state.timeTillFirstManaTick,
 					randomSeed: seed,
 					procMode: this.state.procMode,
-					extendedBuffTimes: this.state.extendedBuffTimes,
 					initialResourceOverrides: this.state.initialResourceOverrides // info only
 				};
 				this.setConfigAndRestart(config);
@@ -409,10 +407,6 @@ export class Config extends React.Component {
 
 		this.setRandomSeed = (val => {
 			this.setState({randomSeed: val, dirty: true});
-		});
-
-		this.setExtendedBuffTimes = (evt => {
-			this.setState({extendedBuffTimes: evt.target.checked, dirty: true});
 		});
 
 		this.setProcMode = (evt => {
@@ -775,7 +769,6 @@ export class Config extends React.Component {
 			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed.trim(),
 			procMode: config.procMode,
-			extendedBuffTimes: config.extendedBuffTimes,
 			initialResourceOverrides: config.initialResourceOverrides // info only
 		});
 		controller.updateAllDisplay();
@@ -865,20 +858,6 @@ export class Config extends React.Component {
 					<option key={ProcMode.Never} value={ProcMode.Never}>Never</option>
 					<option key={ProcMode.Always} value={ProcMode.Always}>Always</option>
 				</select>
-			</div>
-			<div>
-				<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}
-					   checked={this.state.extendedBuffTimes}
-					   onChange={this.setExtendedBuffTimes}/>
-				<span>extended buff times <Help topic={"extendedBuffTimes"} content={
-					// Thunderhead and LL durations seem exact
-					<div>
-						<div className={"paragraph"}>Many buffs actually last longer than listed in the skill descriptions. I got some rough numbers from logs and screen captures but please contact me if you have more accurate data.</div>
-						<div className={"paragraph"}>Having this checked will give the following duration overrides:</div>
-						<div className={"paragraph"}> - Triplecast: 15.7s</div>
-						<div className={"paragraph"}> - Firestarter: 30.5s</div>
-					</div>
-				}/></span>
 			</div>
 			{this.#resourceOverridesSection()}
 			<button onClick={this.handleSubmit}>{localize({en: "apply and reset", zh: "应用并重置时间轴"})}</button>

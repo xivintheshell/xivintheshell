@@ -183,14 +183,14 @@ export function IntroSection(props: {}) {
 				{localize({
 					en: <div className={"paragraph"}>
 						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
-						You can also find me directly on discord (miyehn), or via email (rainduym@gmail.com). In case of sending a bug report, attaching the
+						You can also find me directly on discord (miyehn), or via email (ellyn.waterford@gmail.com). In case of sending a bug report, attaching the
 						fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
 					</div>,
 					zh: <div className={"paragraph"}>
 						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从右侧下载的fight.txt）一起发过来。
 					</div>,
 					ja: <div className={"paragraph"}>
-						質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（rainduym@gail.com）でお問い合わせください。
+						質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
 						バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
 					</div>,
 				})}
@@ -261,11 +261,11 @@ export function IntroSection(props: {}) {
 						{localize({
 							en:
 								<div className="paragraph">
-									[DT] I re-measured some buff timings from <a href={"https://drive.google.com/drive/folders/1Jp6UEGRLlruERpyQ9CuEMXFsOaVixx48?usp=drive_link"}>screen recordings</a>. They affect things when you have "extended buff times" checked. Lmk if you have something more exact.
+									[DT] I re-measured some buff timings from <a href={"https://drive.google.com/drive/folders/1Jp6UEGRLlruERpyQ9CuEMXFsOaVixx48?usp=drive_link"}>screen recordings</a>. Lmk if you have something more exact.
 								</div>,
 							zh:
 								<div className="paragraph">
-									[7.0] 我通过录屏（<a href={"https://drive.google.com/drive/folders/1Jp6UEGRLlruERpyQ9CuEMXFsOaVixx48?usp=drive_link"}>Google Drive</a>）的方式重新测量了几个buff的实际持续时长（有的实际时长比技能描述稍长一些），在右侧可以自行勾选 "extended buff times" 使它们生效。如果你有更准确的数据，请务必联系我。
+									[7.0] 我通过录屏（<a href={"https://drive.google.com/drive/folders/1Jp6UEGRLlruERpyQ9CuEMXFsOaVixx48?usp=drive_link"}>Google Drive</a>）的方式重新测量了几个buff的实际持续时长（有的实际时长比技能描述稍长一些）。如果你有更准确的数据，请务必联系我。
 								</div>
 						})}
 						{localize({

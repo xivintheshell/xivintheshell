@@ -226,7 +226,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		let gainFirestarterProc = function(game: GameState) {
 			let fs = game.resources.get(ResourceType.Firestarter);
 			// re-measured in DT, screen recording at: https://drive.google.com/file/d/1MEFnd-m59qx1yIaZeehSsAxjhLMsWBuw/view?usp=drive_link
-			let duration = game.config.extendedBuffTimes ? 30.5 : 30;
+			let duration = 30.5;
 			if (fs.available(1)) {
 				fs.overrideTimer(game, duration);
 			} else {
@@ -572,7 +572,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						// 15.7s: see screen recording: https://drive.google.com/file/d/1qoIpAMK2KAKETgID6a3p5dqkeWRcNDdB/view?usp=drive_link
 						game.resources.addResourceEvent({
 							rscType: ResourceType.Triplecast,
-							name: "drop remaining Triple charges", delay: game.config.extendedBuffTimes ? 15.7 : 15, fnOnRsc:(rsc: Resource) => {
+							name: "drop remaining Triple charges", delay: 15.7, fnOnRsc:(rsc: Resource) => {
 								rsc.consume(rsc.availableAmount());
 							}
 						});

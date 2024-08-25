@@ -15,7 +15,6 @@ export const DEFAULT_CONFIG = {
 	animationLock: 0.7,
 	timeTillFirstManaTick: 1.2,
 	procMode: ProcMode.Never,
-	extendedBuffTimes: false,
 	initialResourceOverrides: []
 };
 
@@ -32,7 +31,6 @@ export class GameConfig {
 	readonly animationLock: number;
 	readonly timeTillFirstManaTick: number;
 	readonly procMode: ProcMode;
-	readonly extendedBuffTimes: boolean;
 	readonly initialResourceOverrides: ResourceOverride[];
 	readonly legacy_casterTax: number;
 
@@ -48,7 +46,6 @@ export class GameConfig {
 		animationLock: number,
 		timeTillFirstManaTick: number,
 		procMode: ProcMode,
-		extendedBuffTimes: boolean,
 		initialResourceOverrides: any[],
 		casterTax?: number, // legacy
 	}) {
@@ -63,7 +60,6 @@ export class GameConfig {
 		this.animationLock = props.animationLock;
 		this.timeTillFirstManaTick = props.timeTillFirstManaTick;
 		this.procMode = props.procMode;
-		this.extendedBuffTimes = props.extendedBuffTimes;
 		this.initialResourceOverrides = props.initialResourceOverrides.map(obj=>{
 			if (obj.effectOrTimerEnablled === undefined) {
 				// backward compatibility:
@@ -98,8 +94,7 @@ export class GameConfig {
 				this.gcdSkillCorrection === other.gcdSkillCorrection &&
 				this.animationLock === other.animationLock &&
 				this.timeTillFirstManaTick === other.timeTillFirstManaTick &&
-				this.procMode === other.procMode &&
-				this.extendedBuffTimes === other.extendedBuffTimes;
+				this.procMode === other.procMode
 		} else {
 			return false;
 		}
@@ -165,7 +160,6 @@ export class GameConfig {
 			animationLock: this.animationLock,
 			timeTillFirstManaTick: this.timeTillFirstManaTick,
 			procMode: this.procMode,
-			extendedBuffTimes: this.extendedBuffTimes,
 			initialResourceOverrides: this.initialResourceOverrides.map(override=>{ return override.serialized(); })
 		};
 	}

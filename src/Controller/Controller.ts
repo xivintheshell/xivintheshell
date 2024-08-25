@@ -303,9 +303,6 @@ class Controller {
 	}
 
 	loadBattleRecordFromFile(content: Fixme) {
-		if (content.config.extendedBuffTimes === undefined) {
-			content.config.extendedBuffTimes = false;
-		}
 		if (content.config.procMode === undefined) { // for backward compatibility
 			if (content.config.rngProcs!==undefined) {
 				content.config.procMode = content.config.rngProcs ? ProcMode.RNG : ProcMode.Never;
@@ -709,7 +706,6 @@ class Controller {
 		countdown: number,
 		randomSeed: string,
 		procMode: ProcMode,
-		extendedBuffTimes: boolean
 		initialResourceOverrides: any[],
 	}) {
 		this.gameConfig = new GameConfig({
