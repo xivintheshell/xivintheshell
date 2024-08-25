@@ -294,7 +294,12 @@ function ResourceOverrideDisplay(props) {
 export let updateConfigDisplay = (config)=>{};
 
 // helper that prob won't be used elsewhere
-function getTaxPreview(baseCastTime, sps, fps) {
+function getTaxPreview(baseCastTime, spsStr, fpsStr) {
+	let sps = parseFloat(spsStr);
+	let fps = parseFloat(fpsStr);
+	if (isNaN(sps) || isNaN(fps)) {
+		return "n/a";
+	}
 	let adjustedCastTime = XIVMath.preTaxCastTime(sps, baseCastTime, false);
 	return (XIVMath.afterFpsTax(fps, adjustedCastTime) - adjustedCastTime + XIVMath.afterFpsTax(fps, 0.1)).toFixed(3);
 }
