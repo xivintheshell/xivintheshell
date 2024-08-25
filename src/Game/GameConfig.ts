@@ -1,4 +1,4 @@
-import {Debug, SkillName, ProcMode} from "./Common";
+import {Debug, SkillName, ProcMode, XIVMath} from "./Common";
 import {ResourceOverride} from "./Resources";
 import {ShellInfo, ShellVersion} from "../Controller/Common";
 
@@ -108,30 +108,21 @@ export class GameConfig {
 	}
 
 	adjustedDoTPotency(inPotency : number) {
-		let dotStrength = (1000 + Math.floor((this.spellSpeed - 420) * 130 / 2780.0)) * 0.001;
-		return inPotency * dotStrength;
+		return XIVMath.dotPotency(this.spellSpeed, inPotency);
 	}
 
 	// 7/22/24: about the difference between adjustedGCD and adjustedCastTime, see scripts/sps-LL/test.js
 	// returns GCD before FPS tax
 	adjustedGCD(hasLL: boolean) {
-		let baseGCD = 2.5;
-		let subtractLL = hasLL ? 15 : 0;
-		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(this.spellSpeed-420)/2780+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
+		return XIVMath.preTaxGcd(this.spellSpeed, hasLL);
 	}
 
 	// returns cast time before FPS and caster tax
 	adjustedCastTime(inCastTime : number, hasLL: boolean) {
-		let subtractLL = hasLL ? 15 : 0;
-		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(this.spellSpeed-420)/2780+1000))*(1000*inCastTime)/1000)/100)*100/100)/1000;
+		return XIVMath.preTaxCastTime(this.spellSpeed, inCastTime, hasLL);
 	}
 
 	getSkillAnimationLock(skillName : SkillName) : number {
-		/* see: https://discord.com/channels/277897135515762698/1256614366674161705
-		if (skillName === SkillName.Tincture) {
-			return 1.16;
-		}
-		 */
 		if (skillName === SkillName.AetherialManipulation || skillName === SkillName.BetweenTheLines) {
 			return 0.8; // from: https://nga.178.com/read.php?tid=21233094&rand=761
 		} else {
@@ -144,17 +135,17 @@ export class GameConfig {
 		if (this.shellVersion < ShellVersion.FpsTax) {
 			return beforeTaxGCD;
 		}
-		return Math.floor(beforeTaxGCD * this.fps + 1) / this.fps
+		return XIVMath.afterFpsTax(this.fps, beforeTaxGCD)
 			+ this.gcdSkillCorrection;
 	}
 
 	// for casts
 	getAfterTaxCastTime(capturedCastTime: number) {
 		if (this.shellVersion < ShellVersion.FpsTax) {
-			//console.assert(typeof this.legacy_casterTax === 'number');
 			return this.legacy_casterTax + capturedCastTime;
 		}
-		return (Math.floor(capturedCastTime * this.fps + 1) + Math.floor(FIXED_BASE_CASTER_TAX * this.fps + 1)) / this.fps
+		return XIVMath.afterFpsTax(this.fps, capturedCastTime)
+			+ XIVMath.afterFpsTax(this.fps, FIXED_BASE_CASTER_TAX)
 			+ this.gcdSkillCorrection;
 	}
 
