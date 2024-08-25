@@ -612,6 +612,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				if (game.hasUnlockedTrait(TraitName.EnhancedFoul)) {
+					game.resources.get(ResourceType.Polyglot).consume(1);
 					game.useInstantSkill({
 						skillName: SkillName.Foul,
 						dealDamage: true,
