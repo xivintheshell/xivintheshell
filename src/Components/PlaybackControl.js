@@ -229,7 +229,7 @@ function ConfigSummary(props) {
 					You can read more about FPS tax in About this tool/Implementation notes.
 				</div>
 				<div className={"paragraph"} style={{color: warningColor}}>
-					You are strongly encouraged to create a new record (from 'apply and reset') and migrate your fight plan.
+					You are strongly encouraged to create a new record (in another timeline slot or from 'apply and reset') and migrate your fight plan.
 					Support for loading legacy files might drop in the future.
 				</div>
 			</div>,
@@ -238,7 +238,7 @@ function ConfigSummary(props) {
 				现在的“读条税”由固定的0.1s加自动计算的帧率税构成，模拟结果也更精确。有关帧率税的更多信息详见 关于/实现细节。
 			</div>
 			<div className={"paragraph"} style={{color: warningColor}}>
-				排轴器今后的更新可能会导致无法加载过时的文件，所以强烈建议将此时间轴迁移到一个新建的存档中（应用并重置时间轴）。
+				排轴器今后的更新可能会导致无法加载过时的文件，所以强烈建议将此时间轴迁移到一个新建的存档中（添加时间轴，或者应用并重置时间轴）。
 			</div>
 		</div>
 	});

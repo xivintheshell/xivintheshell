@@ -2,7 +2,8 @@
 	{
 		"date": "8/25/24",
 		"changes": [
-			"Remove \"extended buff time\" config option and now triple always lasts 15.7s and firestarter lasts 30.5s",
+			"Remove \"extended buff duration\" config option and now triple always lasts 15.7s and firestarter lasts 30.5s",
+			"Implement FPS tax and deprecate caster tax config option",
 			"Update my contact email"
 		]
 	},
