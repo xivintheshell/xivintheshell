@@ -2,7 +2,7 @@ import React from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
 import {getCachedValue, setCachedValue, ShellVersion, TickMode} from "../Controller/Common";
-import {ProcMode, ResourceType, XIVMath} from "../Game/Common";
+import {FIXED_BASE_CASTER_TAX, ProcMode, ResourceType, XIVMath} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
@@ -301,7 +301,7 @@ function getTaxPreview(baseCastTime, spsStr, fpsStr) {
 		return "n/a";
 	}
 	let adjustedCastTime = XIVMath.preTaxCastTime(sps, baseCastTime, false);
-	return (XIVMath.afterFpsTax(fps, adjustedCastTime) - adjustedCastTime + XIVMath.afterFpsTax(fps, 0.1)).toFixed(3);
+	return (XIVMath.afterFpsTax(fps, adjustedCastTime) - adjustedCastTime + XIVMath.afterFpsTax(fps, FIXED_BASE_CASTER_TAX)).toFixed(3);
 }
 
 export class Config extends React.Component {

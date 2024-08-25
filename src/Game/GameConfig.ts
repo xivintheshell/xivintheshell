@@ -1,4 +1,4 @@
-import {Debug, SkillName, ProcMode, XIVMath} from "./Common";
+import {Debug, SkillName, ProcMode, XIVMath, FIXED_BASE_CASTER_TAX} from "./Common";
 import {ResourceOverride} from "./Resources";
 import {ShellInfo, ShellVersion} from "../Controller/Common";
 
@@ -18,8 +18,6 @@ export const DEFAULT_CONFIG = {
 	extendedBuffTimes: false,
 	initialResourceOverrides: []
 };
-
-const FIXED_BASE_CASTER_TAX = 0.1;
 
 export class GameConfig {
 

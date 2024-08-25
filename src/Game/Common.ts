@@ -6,7 +6,10 @@ export const Debug = {
 	constantSlidecastWindow: true,
 };
 
+export const FIXED_BASE_CASTER_TAX = 0.1;
+
 export const XIVMath = {
+
 	preTaxGcd: (sps: number, hasLL: boolean): number => {
 		const baseGCD = 2.5;
 		let subtractLL = hasLL ? 15 : 0;
