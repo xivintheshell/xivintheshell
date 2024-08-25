@@ -76,6 +76,8 @@ const skillInfos = [
 		1.5, 300, 480, 0.89),
 	new SkillInfo(SkillName.TemperaCoat, ResourceType.cd_TemperaCoat, Aspect.Other, false,
 		0, 0, 0), // instant
+	new SkillInfo(SkillName.TemperaCoatPop, ResourceType.cd_TemperaPop, Aspect.Other, false,
+		0, 0, 0), // fake skill to represent breaking the coat shield
 	new SkillInfo(SkillName.WaterInBlue, ResourceType.cd_GCD, Aspect.Other, true,
 		1.5, 300, 520, 0.98),
 	new SkillInfo(SkillName.Smudge, ResourceType.cd_Smudge, Aspect.Other, false,
@@ -140,6 +142,8 @@ const skillInfos = [
 		0, 300, 680, 2.10),
 	new SkillInfo(SkillName.TemperaGrassa, ResourceType.cd_Grassa, Aspect.Other, false,
 		0, 0, 0),
+	new SkillInfo(SkillName.TemperaGrassaPop, ResourceType.cd_TemperaPop, Aspect.Other, false,
+		0, 0, 0), // fake skill to represent breaking the grassa shield
 	new SkillInfo(SkillName.CometInBlack, ResourceType.cd_GCD, Aspect.Other, true,
 		0, 400, 880, 1.87, 3.3),
 	new SkillInfo(SkillName.RainbowDrip, ResourceType.cd_GCD, Aspect.Other, true,
@@ -629,6 +633,84 @@ export class SkillsList extends Map<SkillName, Skill> {
 			}
 		));
 
+		// Tempera Coat, Tempera Grassa, and corresponding "pop" abilities
+		addResourceAbility({skillName: SkillName.TemperaCoat, rscType: ResourceType.TemperaCoat, instant: true, duration: 10});
+
+		skillsList.set(SkillName.TemperaGrassa, new Skill(SkillName.TemperaGrassa,
+			() => game.resources.get(ResourceType.TemperaCoat).available(1),
+			(game: GameState, node: ActionNode) => {
+				game.useInstantSkill({
+					skillName: SkillName.TemperaGrassa,
+					onCapture: () => {
+						// goodbye, tempera coat
+						game.resources.get(ResourceType.TemperaCoat).consume(1);
+						game.resources.get(ResourceType.TemperaCoat).removeTimer();
+						// hello, tempera grassa
+						game.resources.get(ResourceType.TemperaGrassa).gain(1);
+						game.resources.addResourceEvent({
+							rscType: ResourceType.TemperaGrassa,
+							name: "drop " + ResourceType.TemperaGrassa,
+							delay: 10,
+							fnOnRsc: (rsc: Resource) => {
+								rsc.consume(1);
+							}
+						});
+					},
+					dealDamage: false,
+					node: node,
+				});
+			}
+		));
+
+		skillsList.set(SkillName.TemperaCoatPop, new Skill(SkillName.TemperaCoatPop,
+			// can only be cast when the tempera coat shield is active
+			() => game.resources.get(ResourceType.TemperaCoat).available(1),
+			(game: GameState, node: ActionNode) => {
+				game.useInstantSkill({
+					skillName: SkillName.TemperaCoatPop,
+					onCapture: () => {
+						game.resources.get(ResourceType.TemperaCoat).consume(1);
+						game.resources.get(ResourceType.TemperaCoat).removeTimer();
+						// Reduce the cooldown of tempera coat by 60s
+						let coatElapsed = game.cooldowns.get(ResourceType.cd_TemperaCoat).timeTillNextStackAvailable();
+						console.assert(
+							coatElapsed > 0,
+							"attempted to pop Tempera Coat when no timer for Tempera Coat CD was active"
+						);
+						game.cooldowns.get(ResourceType.cd_TemperaCoat).overrideCurrentValue(180 - coatElapsed);
+					},
+					dealDamage: false,
+					node: node,
+				});
+			}
+		));
+
+		skillsList.set(SkillName.TemperaGrassaPop, new Skill(SkillName.TemperaGrassaPop,
+			// can only be cast when the tempera grassa shield is active
+			() => game.resources.get(ResourceType.TemperaGrassa).available(1),
+			(game: GameState, node: ActionNode) => {
+				game.useInstantSkill({
+					skillName: SkillName.TemperaGrassaPop,
+					onCapture: () => {
+						game.resources.get(ResourceType.TemperaGrassa).consume(1);
+						game.resources.get(ResourceType.TemperaGrassa).removeTimer();
+						// Reduce the cooldown of tempera coat by 30s
+						let coatElapsed = game.cooldowns.get(ResourceType.cd_TemperaCoat).timeTillNextStackAvailable();
+						console.assert(
+							coatElapsed > 0,
+							"attempted to pop Tempera Grassa when no timer for Tempera Coat CD was active"
+						);
+						game.cooldowns.get(ResourceType.cd_TemperaCoat).overrideCurrentValue(150 - coatElapsed);
+					},
+					dealDamage: false,
+					node: node,
+				});
+			}
+		));
+
+		// Smudge
+		addResourceAbility({skillName: SkillName.Smudge, rscType: ResourceType.Smudge, instant: true, duration: 5});
+
 		// Addle
 		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 15});
 
@@ -682,7 +764,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		let skill = super.get(key);
 		if (skill) return skill;
 		else {
-			console.assert(false);
+			console.error("cannot find skill", key, "in skillsList");
 			return new Skill(
 				SkillName.Never,
 				()=>{return false},

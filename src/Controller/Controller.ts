@@ -640,6 +640,9 @@ class Controller {
 			starstruckCountdown: game.resources.timeTillReady(ResourceType.Starstruck),
 			hammerTimeCountdown: game.resources.timeTillReady(ResourceType.HammerTime),
 			hammerTimeStacks: game.resources.get(ResourceType.HammerTime).availableAmount(),
+			temperaCoatCountdown: game.resources.timeTillReady(ResourceType.TemperaCoat),
+			temperaGrassaCountdown: game.resources.timeTillReady(ResourceType.TemperaGrassa),
+			smudgeCountdown: game.resources.timeTillReady(ResourceType.Smudge),
 		};
 		if (typeof updateStatusDisplay !== "undefined") {
 			updateStatusDisplay({

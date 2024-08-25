@@ -80,6 +80,9 @@ export class GameState {
 		this.resources.set(ResourceType.RainbowBright, new Resource(ResourceType.RainbowBright, 1, 0));
 		this.resources.set(ResourceType.Starstruck, new Resource(ResourceType.Starstruck, 1, 0));
 		this.resources.set(ResourceType.StarryMuse, new Resource(ResourceType.StarryMuse, 1, 0));
+		this.resources.set(ResourceType.TemperaCoat, new Resource(ResourceType.TemperaCoat, 1, 0));
+		this.resources.set(ResourceType.TemperaGrassa, new Resource(ResourceType.TemperaGrassa, 1, 0));
+		this.resources.set(ResourceType.Smudge, new Resource(ResourceType.Smudge, 1, 0));
 
 		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
@@ -115,6 +118,7 @@ export class GameState {
 		// TODO handle these differently
 		this.cooldowns.set(ResourceType.cd_Subtractive, new CoolDown(ResourceType.cd_Subtractive, 1, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Grassa, new CoolDown(ResourceType.cd_Grassa, 1, 1, 1));
+		this.cooldowns.set(ResourceType.cd_TemperaPop, new CoolDown(ResourceType.cd_TemperaPop, 1, 1, 1));
 
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
@@ -963,6 +967,10 @@ export class GameState {
 			highlight = this.resources.get(ResourceType.RainbowBright).available(1);
 		} else if (skillName === SkillName.StarPrism) {
 			highlight = this.resources.get(ResourceType.Starstruck).available(1);
+		} else if (skillName === SkillName.TemperaGrassa || skillName === SkillName.TemperaCoatPop) {
+			highlight = this.resources.get(ResourceType.TemperaCoat).available(1);
+		} else if (skillName === SkillName.TemperaGrassaPop) {
+			highlight = this.resources.get(ResourceType.TemperaGrassa).available(1);
 		}
 
 		return {

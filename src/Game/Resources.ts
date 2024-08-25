@@ -204,7 +204,7 @@ export class ResourceState extends Map<ResourceType, Resource> {
 		let rsc = super.get(rscType);
 		if (rsc) return rsc;
 		else {
-			console.assert(false);
+			console.error("cannot find resource", rscType, "in current GameState");
 			return new Resource(ResourceType.Never, 0, 0);
 		}
 	}

@@ -85,7 +85,9 @@ const abilities = new Set<SkillName>([
 	SkillName.StrikingMuse,
 	SkillName.StarryMuse,
 	SkillName.TemperaCoat,
+	SkillName.TemperaCoatPop,
 	SkillName.TemperaGrassa,
+	SkillName.TemperaGrassaPop,
 	SkillName.Smudge,
 	SkillName.SubtractivePalette,
 

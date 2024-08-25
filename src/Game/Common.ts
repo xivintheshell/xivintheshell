@@ -75,6 +75,8 @@ export const enum SkillName {
 
 	TemperaCoat = "Tempera Coat",
 	TemperaGrassa = "Tempera Grassa",
+	TemperaCoatPop = "Pop Tempera Coat",
+	TemperaGrassaPop = "Pop Tempera Grassa",
 	Smudge = "Smudge",
 	SubtractivePalette = "Subtractive Palette",
 
@@ -187,6 +189,9 @@ export const enum ResourceType {
 	RainbowBright = "Rainbow Bright", // [0, 1]
 	Starstruck = "Starstruck", // [0, 1]
 	StarryMuse = "Starry Muse", // [0, 1]
+	TemperaCoat = "Tempera Coat",
+	TemperaGrassa = "Tempera Grassa",
+	Smudge = "Smudge",
 
 	// special
 	Movement = "Movement", // [0, 1]
@@ -221,6 +226,7 @@ export const enum ResourceType {
 	cd_ScenicMuse = "cd_ScenicMuse", // [0, 120]
 	cd_Subtractive = "cd_Subtractive", // [0, 1], not real
 	cd_Grassa = "cd_Grassa", // [0, 1], not real
+	cd_TemperaPop = "cd_TemperaPop", // [0, 1], also not real
 
 	Never = "Never",
 }

@@ -115,6 +115,9 @@ buffIcons.set(ResourceType.Hyperphantasia + "5", require("./Asset/picto/buffs/hy
 buffIcons.set(ResourceType.RainbowBright, require("./Asset/picto/buffs/rainbowBright.png"));
 buffIcons.set(ResourceType.Starstruck, require("./Asset/picto/buffs/starstruck.png"));
 buffIcons.set(ResourceType.StarryMuse, require("./Asset/PartyBuffs/starry_muse.png"));
+buffIcons.set(ResourceType.TemperaCoat, require("./Asset/picto/buffs/temperaCoat.png"));
+buffIcons.set(ResourceType.TemperaGrassa, require("./Asset/picto/buffs/temperaGrassa.png"));
+buffIcons.set(ResourceType.Smudge, require("./Asset/picto/buffs/smudge.png"));
 
 buffIcons.set(ResourceType.Addle, require("./Asset/buff_addle.png"));
 buffIcons.set(ResourceType.Swiftcast, require("./Asset/buff_swiftcast.png"));
@@ -186,6 +189,9 @@ function BuffsDisplay(props) {
 		starstruckCountdown: 0,
 		hammerTimeCountdown: 0,
 		hammerTimeStacks: 0,
+		temperaCoatCountdown: 0,
+		temperaGrassaCountdown: 0,
+		smudgeCountdown: 0,
 	};
 	let buffs = [];
 	buffs.push({
@@ -262,6 +268,9 @@ function BuffsDisplay(props) {
 	pushPictoIndefinite(ResourceType.MonochromeTones, data.monochromeTones);
 	pushPictoIndefinite(ResourceType.SubtractivePalette, data.subtractivePalette);
 	pushPictoTimer(ResourceType.StarryMuse, 1, data.starryMuseCountdown);
+	pushPictoTimer(ResourceType.TemperaCoat, 1, data.temperaCoatCountdown);
+	pushPictoTimer(ResourceType.TemperaGrassa, 1, data.temperaGrassaCountdown);
+	pushPictoTimer(ResourceType.Smudge, 1, data.smudgeCountdown);
 
 	buffs.push({
 		rscType: ResourceType.Swiftcast,

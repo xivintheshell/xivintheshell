@@ -18,9 +18,6 @@ export let displayedSkills = [
 	SkillName.CometInBlack,
 	SkillName.RainbowDrip,
 	SkillName.StarPrism,
-	// SkillName.TemperaCoat,
-	// SkillName.TemperaGrassa,
-	// SkillName.Smudge,
 	SkillName.SubtractivePalette,
 	SkillName.CreatureMotif,
 	SkillName.LivingMuse,
@@ -30,6 +27,10 @@ export let displayedSkills = [
 	SkillName.HammerStamp,
 	SkillName.LandscapeMotif,
 	SkillName.ScenicMuse,
+
+	SkillName.TemperaCoat,
+	SkillName.TemperaGrassa,
+	SkillName.Smudge,
 
 	SkillName.Addle,
 	SkillName.Swiftcast,
@@ -77,7 +78,9 @@ let pctSkills = [
 	"stoneInYellow",
 	"subtractivePalette",
 	"temperaCoat",
+	"temperaCoatPop",
 	"temperaGrassa",
+	"temperaGrassaPop",
 	"thunder2InMagenta",
 	"thunderInMagenta",
 	"water2InBlue",
@@ -293,6 +296,8 @@ export class SkillsWindow extends React.Component {
 				landscapeReady: controller.game.resources.get(ResourceType.LandscapeCanvas).available(1),
 				hammerReady: controller.game.resources.get(ResourceType.WeaponCanvas).available(1),
 				hammerStacks: controller.game.resources.get(ResourceType.HammerTime).availableAmount(),
+				hasTemperaCoat: controller.game.resources.get(ResourceType.TemperaCoat).available(1),
+				hasTemperaGrassa: controller.game.resources.get(ResourceType.TemperaGrassa).available(1),
 			});
 		});
 
@@ -390,6 +395,8 @@ export class SkillsWindow extends React.Component {
 			landscapeReady: controller.game.resources.get(ResourceType.LandscapeCanvas).available(1),
 			hammerReady: controller.game.resources.get(ResourceType.WeaponCanvas).available(1),
 			hammerStacks: controller.game.resources.get(ResourceType.HammerTime).availableAmount(),
+			hasTemperaCoat: controller.game.resources.get(ResourceType.TemperaCoat).available(1),
+			hasTemperaGrassa: controller.game.resources.get(ResourceType.TemperaGrassa).available(1),
 		});
 	}
 
@@ -509,6 +516,23 @@ export class SkillsWindow extends React.Component {
 					skillName = SkillName.HammerBrush;
 				} else if (this.state.hammerStacks === 1) {
 					skillName = SkillName.PolishingHammer;
+				}
+			}
+
+			// temperas coat, grassa, and corresponding "pop"s
+			if (skillName === SkillName.TemperaCoat) {
+				// replace coat with pop (grassa is a separate button)
+				if (this.state.hasTemperaCoat) {
+					info = controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.TemperaCoatPop});
+					skillName = SkillName.TemperaCoatPop;
+				}
+			}
+
+			if (skillName === SkillName.TemperaGrassa) {
+				// replace grassa with pop
+				if (this.state.hasTemperaGrassa) {
+					info = controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.TemperaGrassaPop});
+					skillName = SkillName.TemperaGrassaPop;
 				}
 			}
 
