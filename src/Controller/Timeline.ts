@@ -288,10 +288,10 @@ export class Timeline {
 		this.slots.push([]);
 		console.assert(this.slots.length <= MAX_TIMELINE_SLOTS);
 		this.activeSlotIndex = this.slots.length - 1;
+		const currentConfig = controller.gameConfig;
 		controller.record = new Record();
-		controller.record.config = controller.gameConfig;
-		controller.restart();
-		controller.autoSave();
+		controller.record.config = currentConfig;
+		controller.setConfigAndRestart(currentConfig);
 	}
 
 	removeSlot(idx: number) {

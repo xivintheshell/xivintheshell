@@ -6,6 +6,28 @@ export const Debug = {
 	constantSlidecastWindow: true,
 };
 
+export const FIXED_BASE_CASTER_TAX = 0.1;
+
+export const XIVMath = {
+
+	preTaxGcd: (sps: number, hasLL: boolean, inspired?: boolean, recast?: number): number => {
+		const baseGCD = recast || 2.5;
+		let subtractLL = inspired ? 25 : (hasLL ? 15 : 0);
+		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(sps-420)/2780+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
+	},
+	dotPotency: (sps: number, basePotency: number): number => {
+		let dotStrength = (1000 + Math.floor((sps - 420) * 130 / 2780.0)) * 0.001;
+		return basePotency * dotStrength;
+	},
+	preTaxCastTime: (sps: number, baseCastTime: number, hasLL: boolean, inspired?: boolean): number => {
+		let subtractLL = inspired ? 25 : (hasLL ? 15 : 0);
+		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(sps-420)/2780+1000))*(1000*baseCastTime)/1000)/100)*100/100)/1000;
+	},
+	afterFpsTax: (fps: number, baseDuration: number): number => {
+		return Math.floor(baseDuration * fps + 1) / fps;
+	}
+};
+
 export const enum Aspect {
 	Fire = "Fire",
 	Ice = "Ice",

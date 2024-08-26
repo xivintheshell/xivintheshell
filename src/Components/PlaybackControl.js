@@ -1,11 +1,24 @@
 import React from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
-import {getCachedValue, setCachedValue, TickMode} from "../Controller/Common";
-import {ProcMode, ResourceType} from "../Game/Common";
+import {getCachedValue, setCachedValue, ShellVersion, TickMode} from "../Controller/Common";
+import {FIXED_BASE_CASTER_TAX, ProcMode, ResourceType, XIVMath} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+
+const tableStyle = `
+	table {
+		border-collapse: collapse;
+		width: 100%;
+	}
+	th, td {
+		text-align: center;
+		padding: 0.15em;
+		border: 1px solid ${getCurrentThemeColors().bgHighContrast};
+		width: 33%
+	}
+`
 
 export class TimeControl extends React.Component {
 	constructor(props) {
@@ -144,11 +157,53 @@ export class TimeControl extends React.Component {
 
 function ConfigSummary(props) {
 	let gcd = controller.gameConfig.adjustedGCD(false);
-	let b1CastTime = controller.gameConfig.adjustedCastTime(2.5, false);
-	let b1CastTimeDesc = localize({
+	let gcdAfterTax = controller.gameConfig.getAfterTaxGCD(gcd).toFixed(3);
+	let castTimesTableDesc = localize({
 		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
 		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节"
 	});
+	let preTaxFn = t => { return controller.gameConfig.adjustedCastTime(t, false).toFixed(3); }
+	let afterTaxFn = t => {
+		let preTax = controller.gameConfig.adjustedCastTime(t, false);
+		return controller.gameConfig.getAfterTaxCastTime(preTax).toFixed(3);
+	};
+	let castTimesChart =<div>
+		<style>{tableStyle}</style>
+		<table>
+			<tbody>
+			<tr>
+				<th>{localize({en: "Base", zh: "基准"})}</th>
+				<th>{localize({en: "Pre-tax", zh: "税前"})}</th>
+				<th>{localize({en: "After-tax", zh: "税后"})}</th>
+			</tr>
+			<tr>
+				<td>2.5</td>
+				<td>{preTaxFn(2.5)}</td>
+				<td>{afterTaxFn(2.5)}</td>
+			</tr>
+			<tr>
+				<td>2.8</td>
+				<td>{preTaxFn(2.8)}</td>
+				<td>{afterTaxFn(2.8)}</td>
+			</tr>
+			<tr>
+				<td>3.0</td>
+				<td>{preTaxFn(3.0)}</td>
+				<td>{afterTaxFn(3.0)}</td>
+			</tr>
+			<tr>
+				<td>3.5</td>
+				<td>{preTaxFn(3.5)}</td>
+				<td>{afterTaxFn(3.5)}</td>
+			</tr>
+			<tr>
+				<td>4.0</td>
+				<td>{preTaxFn(4.0)}</td>
+				<td>{afterTaxFn(4.0)}</td>
+			</tr>
+			</tbody>
+		</table>
+	</div>
 	let lucidTickOffset = controller.game.lucidTickOffset.toFixed(3);
 	let lucidOffsetDesc = localize({
 		en: "the random time offset of lucid dreaming ticks relative to mp ticks",
@@ -161,9 +216,46 @@ function ConfigSummary(props) {
 	});
 	let procMode = controller.gameConfig.procMode;
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
+	const legacyCasterTax = controller.gameConfig.legacy_casterTax;
+	let excerpt = localize({
+		en: `WARNING: this record was created in an earlier version of PCT in the Shell and uses the deprecated caster tax of ${legacyCasterTax}s instead of calculating from your FPS input below. Hover for details: `,
+		zh: `警告：此时间轴文件创建于一个更早版本的排轴器，因此计算读条时间时使用的是当时手动输入的读条税${legacyCasterTax}秒（现已过时），而非由下方的“帧率”和“读条时间修正”计算得来。更多信息：`
+	});
+	let warningColor = getCurrentThemeColors().warning;
+	let blurb = localize({
+		en: <div>
+				<div className={"paragraph"}>
+					GCD calculations now include FPS adjustment and is more precise.
+				</div>
+				<div className={"paragraph"} style={{color: warningColor}}>
+					You are strongly encouraged to create a new record (in another timeline slot or from 'apply and reset') and migrate your fight plan.
+					Support for loading legacy files might drop in the future.
+				</div>
+			</div>,
+		zh: <div>
+			<div className={"paragraph"}>
+				现在所有的GCD加上自动计算的帧率税构成，模拟结果也更精确。
+			</div>
+			<div className={"paragraph"} style={{color: warningColor}}>
+				排轴器今后的更新可能会导致无法加载过时的文件，所以强烈建议将此时间轴迁移到一个新建的存档中（添加时间轴，或者应用并重置时间轴）。
+			</div>
+		</div>
+	});
+	let legacyCasterTaxBlurb = <div className={"paragraph"} style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={blurb}/></div>;
 	return <div>
-		GCD: {gcd}
-		<br/>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
+		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
+		{localize({en: "Displayed GCD", zh: "游戏内显示的GCD"})}: {gcd}&nbsp;
+		{
+			controller.gameConfig.shellVersion >= ShellVersion.FpsTax ? <Help topic={"displayedGcd"} content={
+				localize({
+					en: `Measured average GCD should be ${gcdAfterTax} due to FPS tax`,
+					zh: `由于帧率税的影响，测量得到的平均GCD为${gcdAfterTax}`
+				})
+			}/> : undefined
+		}
+		{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
+		<br/>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
+		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
 		{numOverrides === 0 ? undefined : <span style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</span>}
 	</div>
 }
@@ -198,6 +290,17 @@ function ResourceOverrideDisplay(props) {
 
 export let updateConfigDisplay = (config)=>{};
 
+// helper that prob won't be used elsewhere
+function getTaxPreview(baseCastTime, spsStr, fpsStr) {
+	let sps = parseFloat(spsStr);
+	let fps = parseFloat(fpsStr);
+	if (isNaN(sps) || isNaN(fps)) {
+		return "n/a";
+	}
+	let adjustedCastTime = XIVMath.preTaxCastTime(sps, baseCastTime, false);
+	return (XIVMath.afterFpsTax(fps, adjustedCastTime) - adjustedCastTime + XIVMath.afterFpsTax(fps, FIXED_BASE_CASTER_TAX)).toFixed(3);
+}
+
 export class Config extends React.Component {
 	constructor(props) {
 		super(props);
@@ -208,12 +311,12 @@ export class Config extends React.Component {
 			directHit: 0,
 			determination: 0,
 			animationLock: 0,
-			casterTax: 0,
+			fps: 0,
+			gcdSkillCorrection: 0,
 			timeTillFirstManaTick: 0,
 			countdown: 0,
 			randomSeed: "",
 			procMode: ProcMode.RNG,
-			extendedBuffTimes: false,
 			initialResourceOverrides: [],
 			/////////
 			selectedOverrideResource: ResourceType.Mana,
@@ -222,7 +325,20 @@ export class Config extends React.Component {
 			overrideEnabled: true,
 			/////////
 			dirty: false,
+			b1TaxPreview: "n/a"
 		};
+
+		this.updateTaxPreview = (spsStr, fpsStr) => {
+			let b1TaxPreview;
+			let sps = parseFloat(spsStr);
+			let fps = parseFloat(fpsStr);
+			if (!isNaN(fps) && !isNaN(sps)) {
+				b1TaxPreview = getTaxPreview(2.5, sps, fps);
+			} else {
+				b1TaxPreview = "n/a"
+			}
+			this.setState({b1TaxPreview: b1TaxPreview});
+		}
 
 		this.handleSubmit = (event => {
 			if (this.#resourceOverridesAreValid()) {
@@ -239,12 +355,12 @@ export class Config extends React.Component {
 					directHit: this.state.directHit,
 					determination: this.state.determination,
 					animationLock: this.state.animationLock,
-					casterTax: this.state.casterTax,
+					fps: this.state.fps,
+					gcdSkillCorrection: this.state.gcdSkillCorrection,
 					countdown: this.state.countdown,
 					timeTillFirstManaTick: this.state.timeTillFirstManaTick,
 					randomSeed: seed,
 					procMode: this.state.procMode,
-					extendedBuffTimes: this.state.extendedBuffTimes,
 					initialResourceOverrides: this.state.initialResourceOverrides // info only
 				};
 				this.setConfigAndRestart(config);
@@ -256,6 +372,7 @@ export class Config extends React.Component {
 
 		this.setSpellSpeed = (val => {
 			this.setState({spellSpeed: val, dirty: true});
+			this.updateTaxPreview(val, this.state.fps);
 		});
 
 		this.setCriticalHit = (val => {
@@ -274,8 +391,13 @@ export class Config extends React.Component {
 			this.setState({animationLock: val, dirty: true});
 		});
 
-		this.setCasterTax = (val => {
-			this.setState({casterTax: val, dirty: true});
+		this.setFps = (val => {
+			this.setState({fps: val, dirty: true});
+			this.updateTaxPreview(this.state.spellSpeed, val);
+		});
+
+		this.setGcdSkillCorrection = (val => {
+			this.setState({gcdSkillCorrection: val, dirty: true});
 		});
 
 		this.setTimeTillFirstManaTick = (val => {
@@ -288,10 +410,6 @@ export class Config extends React.Component {
 
 		this.setRandomSeed = (val => {
 			this.setState({randomSeed: val, dirty: true});
-		});
-
-		this.setExtendedBuffTimes = (evt => {
-			this.setState({extendedBuffTimes: evt.target.checked, dirty: true});
 		});
 
 		this.setProcMode = (evt => {
@@ -319,7 +437,7 @@ export class Config extends React.Component {
 		});
 	}
 
-	// call this whenver the list of options has potentially changed
+	// call this whenever the list of options has potentially changed
 	#getFirstAddable(overridesList) {
 		let firstAddableRsc = "aba aba";
 		let S = new Set();
@@ -340,6 +458,7 @@ export class Config extends React.Component {
 			this.setState(config);
 			this.setState({
 				dirty: false,
+				b1TaxPreview: getTaxPreview(2.5, config.spellSpeed, config.fps),
 				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides)
 			});
 		});
@@ -635,7 +754,8 @@ export class Config extends React.Component {
 			isNaN(parseFloat(config.directHit)) ||
 			isNaN(parseFloat(config.determination)) ||
 			isNaN(parseFloat(config.animationLock)) ||
-			isNaN(parseFloat(config.casterTax)) ||
+			isNaN(parseFloat(config.fps)) ||
+			isNaN(parseFloat(config.gcdSkillCorrection)) ||
 			isNaN(parseFloat(config.timeTillFirstManaTick)) ||
 			isNaN(parseFloat(config.countdown))) {
 			window.alert("Some config fields are not numbers!");
@@ -650,12 +770,12 @@ export class Config extends React.Component {
 			directHit: parseFloat(config.directHit),
 			determination: parseFloat(config.determination),
 			animationLock: parseFloat(config.animationLock),
-			casterTax: parseFloat(config.casterTax),
+			fps: parseFloat(config.fps),
+			gcdSkillCorrection: parseFloat(config.gcdSkillCorrection),
 			timeTillFirstManaTick: parseFloat(config.timeTillFirstManaTick),
 			countdown: parseFloat(config.countdown),
 			randomSeed: config.randomSeed.trim(),
 			procMode: config.procMode,
-			extendedBuffTimes: config.extendedBuffTimes,
 			initialResourceOverrides: config.initialResourceOverrides // info only
 		});
 		controller.updateAllDisplay();
@@ -666,13 +786,61 @@ export class Config extends React.Component {
 	}
 
 	render() {
+		let colors = getCurrentThemeColors();
+		let fpsAndCorrectionColor = this.state.shellVersion >= ShellVersion.FpsTax ? colors.text : colors.warning;
+		let b1TaxDesc = <div>
+			<style>{tableStyle}</style>
+			<div className={"paragraph"}>{localize({
+				en: "Preview numbers based on your current spell speed and FPS input:",
+				zh: "根据当前输入的咏速和帧率，你将得到如下读条+帧率税："
+			})}</div>
+			<table>
+				<tbody>
+				<tr>
+					<th>{localize({en: "Base cast time", zh: "基础读条时间"})}</th>
+					<th>{localize({en: "Caster + FPS tax", zh: "读条税+帧率税"})}</th>
+				</tr>
+				<tr>
+					<td>2.5</td>
+					<td>{this.state.b1TaxPreview}</td>
+				</tr>
+				<tr>
+					<td>2.8</td>
+					<td>{getTaxPreview(2.8, this.state.spellSpeed, this.state.fps)}</td>
+				</tr>
+				<tr>
+					<td>3.0</td>
+					<td>{getTaxPreview(3.0, this.state.spellSpeed, this.state.fps)}</td>
+				</tr>
+				<tr>
+					<td>3.5</td>
+					<td>{getTaxPreview(3.5, this.state.spellSpeed, this.state.fps)}</td>
+				</tr>
+				<tr>
+					<td>4.0</td>
+					<td>{getTaxPreview(4.0, this.state.spellSpeed, this.state.fps)}</td>
+				</tr>
+				</tbody>
+			</table>
+		</div>
 		let editSection = <div>
 			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
 			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: " , zh: "暴击："})} onChange={this.setCriticalHit}/>
 			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>
 			<Input defaultValue={this.state.determination} description={localize({en: "determination: " , zh: "det:"})} onChange={this.setDetermination}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
-			<Input defaultValue={this.state.casterTax} description={localize({en: "caster tax: ", zh: "读条税："})} onChange={this.setCasterTax}/>
+			<div>
+				<Input style={{display: "inline-block", color: fpsAndCorrectionColor}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>
+				<span> ({localize({en: "B1 tax", zh: "冰1税"})}: {this.state.b1TaxPreview} <Help topic={"b1TaxPreview"} content={b1TaxDesc}/>)</span>
+			</div>
+			<Input
+				style={{color: fpsAndCorrectionColor}}
+				defaultValue={this.state.gcdSkillCorrection}
+				description={<span>{localize({en: "GCD correction", zh: "GCD时长修正"})} <Help topic={"cast-time-correction"} content={localize({
+					en: "Leaving this at 0 will probably give you the most accurate simulation. But if you want to manually correct your GCD skill durations (including casts) for whatever reason, you can put a small number",
+					zh: "正常情况下填0即能得到最精确的模拟结果。如果实在需要修正的话，这里输入的时长会被加到你的每个GCD技能（包括读条）耗时里"
+				})}/>: </span>}
+				onChange={this.setGcdSkillCorrection}/>
 			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "距首次跳蓝时间："})} onChange={this.setTimeTillFirstManaTick}/>
 			<Input defaultValue={this.state.countdown} description={
 				<span>{
@@ -688,31 +856,16 @@ export class Config extends React.Component {
 				}/>: </span>} onChange={this.setRandomSeed}/>
 			<div>
 				<span>{localize({en: "proc mode ", zh: "随机BUFF获取 "})}<Help topic={"procMode"} content={
-
 					localize({
-					en: "Default RNG: 40% Firestarter",
-					zh: "RNG会像游戏内一样，相应技能40%概率获得火苗，Always则每次都会触发火苗，Never则从不触发。"
-				})
+						en: "Default RNG: 40% Firestarter",
+						zh: "RNG会像游戏内一样，相应技能40%概率获得火苗，Always则每次都会触发火苗，Never则从不触发。"
+					})
 				}/>: </span>
 				<select style={{outline: "none"}} value={this.state.procMode} onChange={this.setProcMode}>
 					<option key={ProcMode.RNG} value={ProcMode.RNG}>RNG</option>
 					<option key={ProcMode.Never} value={ProcMode.Never}>Never</option>
 					<option key={ProcMode.Always} value={ProcMode.Always}>Always</option>
 				</select>
-			</div>
-			<div>
-				<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}
-					   checked={this.state.extendedBuffTimes}
-					   onChange={this.setExtendedBuffTimes}/>
-				<span>extended buff times <Help topic={"extendedBuffTimes"} content={
-					// Thunderhead and LL durations seem exact
-					<div>
-						<div className={"paragraph"}>Many buffs actually last longer than listed in the skill descriptions. I got some rough numbers from logs and screen captures but please contact me if you have more accurate data.</div>
-						<div className={"paragraph"}>Having this checked will give the following duration overrides:</div>
-						<div className={"paragraph"}> - Starry Muse: 20.5s</div>
-						<div className={"paragraph"}> - Aetherhues: 30.8s</div>
-					</div>
-				}/></span>
 			</div>
 			{this.#resourceOverridesSection()}
 			<button onClick={this.handleSubmit}>{localize({en: "apply and reset", zh: "应用并重置时间轴"})}</button>

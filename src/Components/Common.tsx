@@ -213,13 +213,13 @@ export class Input extends React.Component {
 	}
 	render() {
 		let width = this.props.width ?? 5;
-		let colors = getCurrentThemeColors();
+		let color = (this.props.style?.color) ?? getCurrentThemeColors().text;
 		let inputStyle: CSSProperties = {
-			color: colors.text,
+			color: color,
 			backgroundColor: "transparent",
 			outline: "none",
 			border: "none",
-			borderBottom: "1px solid " + colors.text
+			borderBottom: "1px solid " + color
 		};
 		let overrideStyle = this.props.style ?? {};
 		return <div style={overrideStyle}>
@@ -293,6 +293,7 @@ export class ScrollAnchor extends React.Component {
 type ExpandableProps = {
 	title: string,
 	autoIndent?: boolean,
+	noMargin?: boolean,
 	titleNode?: ReactNode,
 	defaultShow?: boolean,
 	content?: ReactNode,
@@ -330,7 +331,7 @@ export class Expandable extends React.Component {
 	}
 	render() {
 		let indentDivStyle = this.autoIndent ? {margin: 10, paddingLeft: 6, marginBottom: 20}: {};
-		return <div style={{marginTop: 10, marginBottom: 10}}>
+		return <div style={this.props.noMargin ? {} : {marginTop: 10, marginBottom: 10}}>
 			<Clickable content={<span>
 				<span>{this.state.show ? '- ' : '+ '}</span>
 				{(this.props.titleNode ? this.props.titleNode : this.props.title)}

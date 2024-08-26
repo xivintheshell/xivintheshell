@@ -503,7 +503,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 							// TODO check actual lengths on other buffs (don't really matter as much)
 							game.resources.addResourceEvent({
 								rscType: ResourceType.StarryMuse,
-								name: "drop starry muse", delay: game.config.extendedBuffTimes ? 20.5 : 20, fnOnRsc: (rsc: Resource) => rsc.consume(1),
+								name: "drop starry muse", delay: 20.5, fnOnRsc: (rsc: Resource) => rsc.consume(1),
 							});
 							game.resources.addResourceEvent({
 								rscType: ResourceType.Hyperphantasia,

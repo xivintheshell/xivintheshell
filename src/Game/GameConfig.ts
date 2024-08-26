@@ -1,73 +1,79 @@
-import {Debug, SkillName, ProcMode} from "./Common";
+import {Debug, SkillName, ProcMode, XIVMath, FIXED_BASE_CASTER_TAX} from "./Common";
 import {ResourceOverride} from "./Resources";
+import {ShellInfo, ShellVersion} from "../Controller/Common";
 
 export const DEFAULT_CONFIG = {
 	// 7.05 2.5 GCD bis https://xivgear.app/?page=sl%7C4c102326-839a-43c8-84ae-11ffdb6ef4a2
+	shellVersion: ShellInfo.version,
 	spellSpeed: 420,
 	criticalHit: 3140,
 	directHit: 1993,
 	determination: 2269,
 	countdown: 4.5,
 	randomSeed: "sup",
-	casterTax: 0.1,
+	fps: 60,
+	gcdSkillCorrection: 0,
 	animationLock: 0.7,
 	timeTillFirstManaTick: 1.2,
 	procMode: ProcMode.Never,
-	extendedBuffTimes: true,
+	initialResourceOverrides: []
 };
 
 export class GameConfig {
-	spellSpeed = DEFAULT_CONFIG.spellSpeed;
-	criticalHit = DEFAULT_CONFIG.criticalHit;
-	directHit = DEFAULT_CONFIG.directHit;
-	determination = DEFAULT_CONFIG.determination;
-	countdown = DEFAULT_CONFIG.countdown;
-	randomSeed = DEFAULT_CONFIG.randomSeed;
-	casterTax = DEFAULT_CONFIG.casterTax;
-	animationLock = DEFAULT_CONFIG.animationLock;
-	timeTillFirstManaTick = DEFAULT_CONFIG.timeTillFirstManaTick;
-	procMode = DEFAULT_CONFIG.procMode;
-	extendedBuffTimes = DEFAULT_CONFIG.extendedBuffTimes;
-	initialResourceOverrides: ResourceOverride[] = [];
 
-	// DEBUG
-	constructor(props?: {
+	readonly shellVersion = ShellInfo.version;
+	readonly spellSpeed: number;
+	readonly criticalHit: number;
+	readonly directHit: number;
+	readonly determination: number;
+	readonly countdown: number;
+	readonly randomSeed: string;
+	readonly fps: number;
+	readonly gcdSkillCorrection: number;
+	readonly animationLock: number;
+	readonly timeTillFirstManaTick: number;
+	readonly procMode: ProcMode;
+	readonly initialResourceOverrides: ResourceOverride[];
+	readonly legacy_casterTax: number;
+
+	constructor(props: {
+		shellVersion: ShellVersion,
 		spellSpeed: number,
 		criticalHit: number,
 		directHit: number,
 		determination: number,
 		countdown: number,
 		randomSeed: string,
-		casterTax: number,
+		fps: number,
+		gcdSkillCorrection: number,
 		animationLock: number,
 		timeTillFirstManaTick: number,
 		procMode: ProcMode,
-		extendedBuffTimes: boolean,
-		initialResourceOverrides: any[]
+		initialResourceOverrides: any[],
+		casterTax?: number, // legacy
 	}) {
-		if (props) {
-			this.spellSpeed = props.spellSpeed;
-			this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
-			this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
-			this.determination = props.determination ?? DEFAULT_CONFIG.determination;
-			this.countdown = props.countdown;
-			this.randomSeed = props.randomSeed;
-			this.casterTax = props.casterTax;
-			this.animationLock = props.animationLock;
-			this.timeTillFirstManaTick = props.timeTillFirstManaTick;
-			this.procMode = props.procMode;
-			this.extendedBuffTimes = props.extendedBuffTimes;
-			if (props.initialResourceOverrides) {
-				this.initialResourceOverrides = props.initialResourceOverrides.map(obj=>{
-					if (obj.effectOrTimerEnabled === undefined) {
-						// backward compatibility:
-						if (obj.enabled === undefined) obj.effectOrTimerEnabled = true;
-						else obj.effectOrTimerEnabled = obj.enabled;
-					}
-					return new ResourceOverride(obj);
-				});
+		this.shellVersion = props.shellVersion;
+		this.spellSpeed = props.spellSpeed;
+		this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
+		this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
+		this.determination = props.determination ?? DEFAULT_CONFIG.determination;
+		this.countdown = props.countdown;
+		this.randomSeed = props.randomSeed;
+		this.fps = props.fps;
+		this.gcdSkillCorrection = props.gcdSkillCorrection;
+		this.animationLock = props.animationLock;
+		this.timeTillFirstManaTick = props.timeTillFirstManaTick;
+		this.procMode = props.procMode;
+		this.initialResourceOverrides = props.initialResourceOverrides.map(obj=>{
+			if (obj.effectOrTimerEnablled === undefined) {
+				// backward compatibility:
+				if (obj.enabled === undefined) obj.effectOrTimerEnabled = true;
+				else obj.effectOrTimerEnabled = obj.enabled;
 			}
-		}
+			return new ResourceOverride(obj);
+		});
+		// backward compatibility for caster tax:
+		this.legacy_casterTax = props?.casterTax ?? 0;
 	}
 
 	equals(other : GameConfig) {
@@ -82,45 +88,38 @@ export class GameConfig {
 					return false;
 				}
 			}
-			return this.spellSpeed === other.spellSpeed &&
+			return this.shellVersion === other.shellVersion &&
+				this.spellSpeed === other.spellSpeed &&
 				this.criticalHit === other.criticalHit &&
 				this.directHit === other.directHit &&
 				this.determination === other.determination &&
 				this.countdown === other.countdown &&
 				this.randomSeed === other.randomSeed &&
-				this.casterTax === other.casterTax &&
+				this.fps === other.fps &&
+				this.gcdSkillCorrection === other.gcdSkillCorrection &&
 				this.animationLock === other.animationLock &&
 				this.timeTillFirstManaTick === other.timeTillFirstManaTick &&
-				this.procMode === other.procMode &&
-				this.extendedBuffTimes === other.extendedBuffTimes;
+				this.procMode === other.procMode
 		} else {
 			return false;
 		}
 	}
 
 	adjustedDoTPotency(inPotency : number) {
-		let dotStrength = (1000 + Math.floor((this.spellSpeed - 420) * 130 / 2780.0)) * 0.001;
-		return inPotency * dotStrength;
+		return XIVMath.dotPotency(this.spellSpeed, inPotency);
 	}
 
-	// 7/22/24: about the difference between adjustedGCD and adjustedCastTime, see scripts/sps-LL/test.js
+	// returns GCD before FPS tax
 	adjustedGCD(hasLL: boolean, inspired?: boolean, recast?: number) {
-		let baseGCD = recast || 2.5;
-		let subtractLL = inspired ? 25 : (hasLL ? 15 : 0);
-		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(this.spellSpeed-420)/2780+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
+		return XIVMath.preTaxGcd(this.spellSpeed, hasLL, inspired, recast);
 	}
 
+	// returns cast time before FPS and caster tax
 	adjustedCastTime(inCastTime : number, hasLL: boolean, inspired?: boolean) {
-		let subtractLL = inspired ? 25 : (hasLL ? 15 : 0);
-		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(this.spellSpeed-420)/2780+1000))*(1000*inCastTime)/1000)/100)*100/100)/1000;
+		return XIVMath.preTaxCastTime(this.spellSpeed, inCastTime, hasLL, inspired);
 	}
 
 	getSkillAnimationLock(skillName : SkillName) : number {
-		/* see: https://discord.com/channels/277897135515762698/1256614366674161705
-		if (skillName === SkillName.Tincture) {
-			return 1.16;
-		}
-		 */
 		if (skillName === SkillName.AetherialManipulation
 			|| skillName === SkillName.BetweenTheLines
 			|| skillName === SkillName.Smudge) {
@@ -133,23 +132,44 @@ export class GameConfig {
 		}
 	}
 
+	// for gcd
+	getAfterTaxGCD(beforeTaxGCD: number) {
+		if (this.shellVersion < ShellVersion.FpsTax) {
+			return beforeTaxGCD;
+		}
+		return XIVMath.afterFpsTax(this.fps, beforeTaxGCD)
+			+ this.gcdSkillCorrection;
+	}
+
+	// for casts
+	getAfterTaxCastTime(capturedCastTime: number) {
+		if (this.shellVersion < ShellVersion.FpsTax) {
+			return this.legacy_casterTax + capturedCastTime;
+		}
+		return XIVMath.afterFpsTax(this.fps, capturedCastTime)
+			+ XIVMath.afterFpsTax(this.fps, FIXED_BASE_CASTER_TAX)
+			+ this.gcdSkillCorrection;
+	}
+
 	static getSlidecastWindow(castTime : number) {
 		return Debug.constantSlidecastWindow ? 0.5 : 0.46 + 0.02 * castTime;
 	}
 
 	serialized() {
 		return {
+			shellVersion: this.shellVersion,
 			spellSpeed: this.spellSpeed,
 			criticalHit: this.criticalHit,
 			directHit: this.directHit,
 			determination: this.determination,
 			countdown: this.countdown,
 			randomSeed: this.randomSeed,
-			casterTax: this.casterTax,
+			casterTax: this.legacy_casterTax, // still want this bc don't want to break cached timelines
+			fps: this.fps,
+			gcdSkillCorrection: this.gcdSkillCorrection,
 			animationLock: this.animationLock,
 			timeTillFirstManaTick: this.timeTillFirstManaTick,
 			procMode: this.procMode,
-			extendedBuffTimes: this.extendedBuffTimes,
 			initialResourceOverrides: this.initialResourceOverrides.map(override=>{ return override.serialized(); })
 		};
 	}

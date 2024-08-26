@@ -1,4 +1,12 @@
-import {getCachedValue, removeCachedValue, ReplayMode, setCachedValue, TickMode} from "./Common";
+import {
+	getCachedValue,
+	removeCachedValue,
+	ReplayMode,
+	setCachedValue,
+	ShellInfo,
+	ShellVersion,
+	TickMode
+} from "./Common";
 import {GameState} from "../Game/GameState";
 import {Debug, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
@@ -82,7 +90,7 @@ class Controller {
 
 		this.#presetLinesManager = new PresetLinesManager();
 
-		this.gameConfig = new GameConfig();
+		this.gameConfig = new GameConfig(DEFAULT_CONFIG);
 		this.game = new GameState(this.gameConfig);
 
 		this.record = new Record();
@@ -295,9 +303,6 @@ class Controller {
 	}
 
 	loadBattleRecordFromFile(content: Fixme) {
-		if (content.config.extendedBuffTimes === undefined) {
-			content.config.extendedBuffTimes = false;
-		}
 		if (content.config.procMode === undefined) { // for backward compatibility
 			if (content.config.rngProcs!==undefined) {
 				content.config.procMode = content.config.rngProcs ? ProcMode.RNG : ProcMode.Never;
@@ -305,6 +310,16 @@ class Controller {
 				content.config.procMode = ProcMode.RNG;
 			}
 		}
+		if (content.config.fps === undefined) {
+			content.config.fps = DEFAULT_CONFIG.fps;
+		}
+		if (content.config.gcdSkillCorrection === undefined) {
+			content.config.gcdSkillCorrection = DEFAULT_CONFIG.gcdSkillCorrection;
+		}
+		if (content.config.shellVersion === undefined) {
+			content.config.shellVersion = ShellVersion.Initial;
+		}
+
 		let gameConfig = new GameConfig(content.config);
 
 		this.gameConfig = gameConfig;
@@ -707,21 +722,24 @@ class Controller {
 		this.lastAttemptedSkill = "";
 	}
 
-	setConfigAndRestart(props={
-		spellSpeed: DEFAULT_CONFIG.spellSpeed,
-		criticalHit: DEFAULT_CONFIG.criticalHit,
-		directHit: DEFAULT_CONFIG.directHit,
-		determination: DEFAULT_CONFIG.determination,
-		animationLock: DEFAULT_CONFIG.animationLock,
-		casterTax: DEFAULT_CONFIG.casterTax,
-		timeTillFirstManaTick: DEFAULT_CONFIG.timeTillFirstManaTick,
-		countdown: DEFAULT_CONFIG.countdown,
-		randomSeed: DEFAULT_CONFIG.randomSeed,
-		procMode: DEFAULT_CONFIG.procMode,
-		extendedBuffTimes: DEFAULT_CONFIG.extendedBuffTimes,
-		initialResourceOverrides: [],
+	setConfigAndRestart(props: {
+		spellSpeed: number,
+		criticalHit: number,
+		directHit: number,
+		determination: number,
+		animationLock: number,
+		fps: number,
+		gcdSkillCorrection: number,
+		timeTillFirstManaTick: number,
+		countdown: number,
+		randomSeed: string,
+		procMode: ProcMode,
+		initialResourceOverrides: any[],
 	}) {
-		this.gameConfig = new GameConfig(props);
+		this.gameConfig = new GameConfig({
+			...props,
+			shellVersion: ShellInfo.version,
+		});
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;
@@ -738,13 +756,6 @@ class Controller {
 
 	getSkillInfo(props: {game: GameState, skillName: SkillName}) {
 		return props.game.getSkillAvailabilityStatus(props.skillName);
-	}
-
-	getResourceValue(props: {rscType: ResourceType}) {
-		if (props.rscType) {
-			return this.game.resources.get(props.rscType).availableAmount();
-		}
-		return -1;
 	}
 
 	#playPause(props: { shouldLoop: boolean; }) {

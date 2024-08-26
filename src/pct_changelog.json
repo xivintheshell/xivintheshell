@@ -3,7 +3,8 @@
         "date": "8/25/24",
         "changes": [
             "Add Smudge, Tempera Coat, and Tempera Grassa",
-            "Correct precision of GCD formula (should not break existing timelines)"
+            "Correct precision of GCD formula (should not break existing timelines)",
+            "[merge] Account for FPS alignment"
         ]
     },
     {

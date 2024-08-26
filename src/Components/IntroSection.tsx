@@ -176,7 +176,7 @@ export function IntroSection(props: {}) {
 						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
 						You can also find me directly on discord (@shanzhe in The Balance), or file an issue on GitHub (link below). In case of sending a bug report, attaching the
 						fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
-					</div>
+						</div>
 				})}
 
 				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接：", ja: "リンク集"})}</div>

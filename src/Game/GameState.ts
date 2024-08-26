@@ -92,7 +92,7 @@ export class GameState {
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.adjustedGCD(false), 1, 1));
+		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD(false)), 1, 1));
 		this.cooldowns.set(ResourceType.cd_LeyLines, new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Transpose, new CoolDown(ResourceType.cd_Transpose, 5, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Manaward, new CoolDown(ResourceType.cd_Manaward, 120, 1, 1));
@@ -427,10 +427,12 @@ export class GameState {
 	}
 
 	gcdRecastTimeScale() {
-		let llAvailable = this.resources.get(ResourceType.LeyLines).available(1);
-		if (llAvailable) {
-			// should be approximately 0.85 for LL
-			return this.config.adjustedGCD(llAvailable) / this.config.adjustedGCD(false);
+		let ll = this.resources.get(ResourceType.LeyLines);
+		if (ll.available(1)) {
+			// should be approximately 0.85
+			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(true));
+			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(false));
+			return num / denom;
 		} else {
 			return 1;
 		}
@@ -497,11 +499,9 @@ export class GameState {
 		let capturedCastTime = this.captureSpellCastTimeAFUI(
 			skillInfo.aspect,
 			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered, inspired));
-		let capturedRecastTime = this.config.adjustedGCD(llCovered, inspired, skillInfo.baseRecastTime);
 		// hack for motifs, which are not affected by sps
 		if (props.skillName.includes("Motif")) {
 			capturedCastTime = skillInfo.baseCastTime;
-			capturedRecastTime = skillInfo.baseRecastTime;
 		}
 		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
 			props.node.addBuff(BuffType.LeyLines);
@@ -608,7 +608,7 @@ export class GameState {
 						// would be consumed before the Resource object can check the recast
 						: game.config.adjustedGCD(false, inspired, skillInfo.baseRecastTime)
 				);
-			cd.useStackWithRecast(game, recastTime);
+			cd.useStackWithRecast(game, game.config.getAfterTaxGCD(recastTime));
 
 			// animation lock
 			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(props.skillName));
@@ -672,11 +672,13 @@ export class GameState {
 		// would be consumed before the Resource object can check the recast
 		cd.useStackWithRecast(
 			this,
-			skillInfo.name.includes("Motif") ? skillInfo.baseRecastTime : this.config.adjustedGCD(false, inspired, skillInfo.baseRecastTime)
+			this.config.getAfterTaxGCD(
+				skillInfo.name.includes("Motif") ? skillInfo.baseRecastTime : this.config.adjustedGCD(false, inspired, skillInfo.baseRecastTime)
+			)
 		);
 
 		// caster tax
-		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, capturedCastTime + this.config.casterTax);
+		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, this.config.getAfterTaxCastTime(capturedCastTime));
 	}
 
 	useInstantSkill(props: {
@@ -765,7 +767,7 @@ export class GameState {
 			aetherhues.removeTimer();
 		} else if (aetherhues.available(1) && aetherhues.pendingChange) {
 			// refresh timer if it was already running
-			aetherhues.overrideTimer(this, this.config.extendedBuffTimes ? 30.8 : 30);
+			aetherhues.overrideTimer(this, 30.8);
 			aetherhues.gain(1);
 		} else {
 			// we were at 0 aetherhues, so increment and start the timer anew

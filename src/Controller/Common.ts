@@ -1,8 +1,3 @@
-export const enum LogCategory {
-	Action = "Action",
-	Event = "Event",
-}
-
 export const enum ReplayMode {
 	Exact = "Exact",
 	SkillSequence = "SkillSequence",
@@ -22,10 +17,26 @@ export const enum TickMode {
 	Manual = 2
 }
 
+export const enum ShellVersion {
+	Initial = 0,
+	FpsTax = 1
+}
+
+export const enum ShellJob {
+	BLM = 0,
+	PCT = 1
+}
+
 export const enum Expansion {
 	EW = "EW",
 	DT = "DT"
 }
+
+export const ShellInfo = {
+	version: ShellVersion.FpsTax,
+	job: ShellJob.PCT
+	// thisExpansion is not exported so it stays local outside
+};
 
 let bContainsEwCacheContent: boolean = false;
 export function containsEwCacheContent(): boolean {

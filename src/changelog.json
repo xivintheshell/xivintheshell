@@ -1,5 +1,13 @@
 [
 	{
+		"date": "8/25/24",
+		"changes": [
+			"Remove \"extended buff duration\" config option and now triple always lasts 15.7s and firestarter lasts 30.5s",
+			"Implement FPS tax and deprecate caster tax config option",
+			"Update my contact email"
+		]
+	},
+	{
 		"date": "8/18/24",
 		"changes": [
 			"Tincture application delay -> 0.64s",
