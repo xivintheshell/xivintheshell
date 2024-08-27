@@ -766,7 +766,7 @@ export class GameState {
 			highlight = true;
 		} else if (skillName === SkillName.Fire3) {// F3P
 			if (this.resources.get(ResourceType.Firestarter).available(1)) highlight = true;
-		} else if (skillName === SkillName.HighThunder) {
+		} else if (skillName === SkillName.Thunder3 || skillName === SkillName.HighThunder) {
 			if (this.resources.get(ResourceType.Thunderhead).available(1)) highlight = true;
 		} else if (skillName === SkillName.Foul || skillName === SkillName.Xenoglossy) {// polyglot
 			if (this.resources.get(ResourceType.Polyglot).available(1)) highlight = true;

@@ -19,6 +19,7 @@ const blmSkills = [
 	SkillName.Blizzard2,
 	SkillName.Fire2,
 	SkillName.Transpose,
+	SkillName.Thunder3,
 	SkillName.HighThunder,
 	SkillName.Manaward,
 	SkillName.Manafont,
@@ -364,6 +365,11 @@ export class SkillsWindow extends React.Component {
 					skillName = SkillName.HighFire2;
 				else if (displayedSkills[i] === SkillName.Blizzard2)
 					skillName = SkillName.HighBlizzard2;
+			}
+
+			if (controller.game.hasUnlockedTrait(TraitName.ThunderMasteryIII)) {
+				if (displayedSkills[i] === SkillName.Thunder3)
+					skillName = SkillName.HighThunder;
 			}
 
 			let btn = <SkillButton

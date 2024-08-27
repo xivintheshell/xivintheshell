@@ -62,8 +62,8 @@ const skillInfos = [
 		3, 1500, 80, 1.154), // Unknown damage application, copied from HF2
 	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false,
 		0, 0, 0), // instant
-	new SkillInfo(SkillName.HighThunder, ResourceType.cd_GCD, Aspect.Lightning, true,
-		0, 0, 150, 0.757),
+	new SkillInfo(SkillName.Thunder3, ResourceType.cd_GCD, Aspect.Lightning, true,
+		0, 0, 120, 0.757), // Unknown damage application, copied from HT
 	new SkillInfo(SkillName.Manaward, ResourceType.cd_Manaward, Aspect.Other, false,
 		0, 0, 0, 1.114),// delayed
 	// Manafont: application delay 0.88s -> 0.2s since Dawntrail
@@ -112,6 +112,8 @@ const skillInfos = [
 		0, 0, 0), // ? (assumed to be instant)
 	new SkillInfo(SkillName.Paradox, ResourceType.cd_GCD, Aspect.Other, true,
 		0, 1600, 520, 0.624),
+	new SkillInfo(SkillName.HighThunder, ResourceType.cd_GCD, Aspect.Lightning, true,
+		0, 0, 150, 0.757),
 	new SkillInfo(SkillName.FlareStar, ResourceType.cd_GCD, Aspect.Fire, true,
 		3, 0, 400, 0.622), /* Get actual delay after release */
 	new SkillInfo(SkillName.Retrace, ResourceType.cd_Retrace, Aspect.Other, false,
@@ -313,19 +315,21 @@ export class SkillsList extends Map<SkillName, Skill> {
 			}
 		});
 
-		let applyThunderDoT = function(game: GameState, node: ActionNode) {
+		let applyThunderDoT = function(game: GameState, node: ActionNode, skillName: SkillName) {
 			let thunder = game.resources.get(ResourceType.ThunderDoT) as DoTBuff;
+			const thunderDuration = (skillName === SkillName.Thunder3 && 27) || 30;
 			if (thunder.available(1)) {
 				console.assert(thunder.node);
 				(thunder.node as ActionNode).removeUnresolvedPotencies();
-				thunder.overrideTimer(game, 30);
+
+				thunder.overrideTimer(game, thunderDuration);
 			} else {
 				thunder.gain(1);
 				controller.reportDotStart(game.getDisplayTime());
 				game.resources.addResourceEvent({
 					rscType: ResourceType.ThunderDoT,
 					name: "drop thunder DoT",
-					delay: 30,
+					delay: thunderDuration,
 					fnOnRsc: rsc=>{
 						  rsc.consume(1);
 						  controller.reportDotDrop(game.getDisplayTime());
@@ -336,17 +340,17 @@ export class SkillsList extends Map<SkillName, Skill> {
 			thunder.tickCount = 0;
 		}
 
-		let addThunderPotencies = function(node: ActionNode) {
+		let addThunderPotencies = function(node: ActionNode, skillName: SkillName.Thunder3 | SkillName.HighThunder) {
 			let mods = getPotencyModifiersFromResourceState(game.resources, Aspect.Lightning);
-			let highThunder = skillsList.get(SkillName.HighThunder);
+			let thunder = skillsList.get(skillName);
 
 			// initial potency
 			let pInitial = new Potency({
 				config: controller.record.config ?? controller.gameConfig,
 				sourceTime: game.getDisplayTime(),
-				sourceSkill: SkillName.HighThunder,
+				sourceSkill: skillName,
 				aspect: Aspect.Lightning,
-				basePotency: highThunder.info.basePotency,
+				basePotency: thunder ? thunder.info.basePotency : 150,
 				snapshotTime: undefined,
 				description: ""
 			});
@@ -354,51 +358,56 @@ export class SkillsList extends Map<SkillName, Skill> {
 			node.addPotency(pInitial);
 
 			// dots
-			for (let i = 0; i < 10; i++) {
+			const thunderTicks = (skillName === SkillName.Thunder3 && 9) || 10;
+			const thunderTickPotency = (skillName === SkillName.Thunder3 && 50) || 60;
+			for (let i = 0; i < thunderTicks; i++) {
 				let pDot = new Potency({
 					config: controller.record.config ?? controller.gameConfig,
 					sourceTime: game.getDisplayTime(),
-					sourceSkill: SkillName.HighThunder,
+					sourceSkill: skillName,
 					aspect: Aspect.Lightning,
-					basePotency: game.config.adjustedDoTPotency(60),
+					basePotency: game.config.adjustedDoTPotency(thunderTickPotency),
 					snapshotTime: undefined,
-					description: "DoT " + (i+1) + "/10"
+					description: "DoT " + (i+1) + `/${thunderTicks}`
 				});
 				pDot.modifiers = mods;
 				node.addPotency(pDot);
 			}
 		}
 
-		// Thunder // High Thunder
-		skillsList.set(SkillName.HighThunder, new Skill(SkillName.HighThunder,
-			() => {
-				return game.resources.get(ResourceType.Thunderhead).available(1);
-			},
-			(game, node) => {
-				// potency
-				addThunderPotencies(node); // should call on capture
-				let onHitPotency = node.getPotencies()[0];
-				node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
-
-				// tincture
-				if (game.resources.get(ResourceType.Tincture).available(1)) {
-					node.addBuff(BuffType.Tincture);
+		let addThunders = function(skillName: SkillName.Thunder3 | SkillName.HighThunder) {
+			skillsList.set(skillName, new Skill(skillName,
+				() => {
+					return game.resources.get(ResourceType.Thunderhead).available(1);
+				},
+				(game, node) => {
+					// potency
+					addThunderPotencies(node, skillName); // should call on capture
+					let onHitPotency = node.getPotencies()[0];
+					node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
+	
+					// tincture
+					if (game.resources.get(ResourceType.Tincture).available(1)) {
+						node.addBuff(BuffType.Tincture);
+					}
+	
+					game.useInstantSkill({
+						skillName: skillName,
+						onApplication: () => {
+							controller.resolvePotency(onHitPotency);
+							applyThunderDoT(game, node, skillName);
+						},
+						dealDamage: false,
+						node: node
+					});
+					let thunderhead = game.resources.get(ResourceType.Thunderhead);
+					thunderhead.consume(1);
+					thunderhead.removeTimer();
 				}
-
-				game.useInstantSkill({
-					skillName: SkillName.HighThunder,
-					onApplication: () => {
-						controller.resolvePotency(onHitPotency);
-						applyThunderDoT(game, node);
-					},
-					dealDamage: false,
-					node: node
-				});
-				let thunderhead = game.resources.get(ResourceType.Thunderhead);
-				thunderhead.consume(1);
-				thunderhead.removeTimer();
-			}
-		));
+			));
+		}
+		addThunders(SkillName.Thunder3);
+		addThunders(SkillName.HighThunder);
 
 		// Manaward
 		addResourceAbility({skillName: SkillName.Manaward, rscType: ResourceType.Manaward, instant: false, duration: 20});
@@ -852,7 +861,7 @@ export class DisplayedSkills extends Array<SkillName> {
 		this.push(SkillName.Blizzard);
 		this.push(SkillName.Fire);
 		this.push(SkillName.Transpose);
-		this.push(SkillName.HighThunder);
+		this.push(SkillName.Thunder3);
 		this.push(SkillName.Manaward);
 		this.push(SkillName.Manafont);
 		this.push(SkillName.Fire3);
