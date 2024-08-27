@@ -1,4 +1,5 @@
 import {controller} from "../Controller/Controller";
+import {XIVMath} from "./XIVMath";
 import {Aspect, BuffType, Debug, ResourceType, SkillName} from "./Common";
 import { GameConfig } from "./GameConfig";
 import {ResourceState} from "./Resources";
@@ -157,40 +158,13 @@ export class Potency {
 	hasSnapshotted() { return this.snapshotTime !== undefined; }
 
 	#calculatePotencyModifier(damageFactor: number, critBonus: number, dhBonus: number) {
+		const level = this.config.level;
 		const critStat = this.config.criticalHit;
 		const dhStat = this.config.directHit;
 
-		const base = this.#calculateDamage(critStat, dhStat, 1, 0, 0);
-		const buffed = this.#calculateDamage(critStat, dhStat, damageFactor, critBonus, dhBonus);
+		const base = XIVMath.calculateDamage(level, critStat, dhStat, 1, 0, 0);
+		const buffed = XIVMath.calculateDamage(level, critStat, dhStat, damageFactor, critBonus, dhBonus);
 
 		return buffed / base;
-	}
-
-	#calculateDamage(crit: number, dh: number, damageFactor: number, critBonus: number, dhBonus: number) {
-		let modifier = damageFactor;
-				
-		let critRate = this.#criticalHitRate(crit) + critBonus;
-		let dhRate = this.#directHitRate(dh) + dhBonus;
-
-		const critDHRate = critRate * dhRate;
-		const normalRate = 1 - critRate - dhRate + critDHRate;
-		
-		const critDamage = modifier * this.#criticalHitStrength(crit);
-		const dhDamage = modifier * 1.25;
-		const critDHDamage = critDamage * 1.25;
-
-		return modifier * normalRate + critDamage * (critRate-critDHRate) + dhDamage * (dhRate-critDHRate) + critDHDamage * critDHRate; 
-	}
-
-	#criticalHitRate(crit: number) {
-		return (Math.floor(200 * (crit-420) / 2780) + 50) * 0.001;
-	}
-
-	#criticalHitStrength(crit: number) {
-		return (Math.floor(200 * (crit-420) / 2780) + 1400) * 0.001;
-	}
-
-	#directHitRate(dh: number) {
-		return Math.floor(550 * (dh-420) / 2780) * 0.001;
 	}
 }

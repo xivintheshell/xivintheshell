@@ -1,6 +1,7 @@
-import {Debug, SkillName, ProcMode, LevelSync, XIVMath, FIXED_BASE_CASTER_TAX} from "./Common";
+import {Debug, SkillName, ProcMode, LevelSync, FIXED_BASE_CASTER_TAX} from "./Common";
 import {ResourceOverride} from "./Resources";
 import {ShellInfo, ShellVersion} from "../Controller/Common";
+import {XIVMath} from "./XIVMath";
 
 export const DEFAULT_CONFIG = {
 	level: LevelSync.lvl100,
@@ -105,18 +106,17 @@ export class GameConfig {
 	}
 
 	adjustedDoTPotency(inPotency : number) {
-		return XIVMath.dotPotency(this.spellSpeed, inPotency);
+		return XIVMath.dotPotency(this.level, this.spellSpeed, inPotency);
 	}
 
-	// 7/22/24: about the difference between adjustedGCD and adjustedCastTime, see scripts/sps-LL/test.js
 	// returns GCD before FPS tax
 	adjustedGCD(hasLL: boolean) {
-		return XIVMath.preTaxGcd(this.spellSpeed, hasLL);
+		return XIVMath.preTaxGcd(this.level, this.spellSpeed, hasLL);
 	}
 
 	// returns cast time before FPS and caster tax
 	adjustedCastTime(inCastTime : number, hasLL: boolean) {
-		return XIVMath.preTaxCastTime(this.spellSpeed, inCastTime, hasLL);
+		return XIVMath.preTaxCastTime(this.level, this.spellSpeed, inCastTime, hasLL);
 	}
 
 	getSkillAnimationLock(skillName : SkillName) : number {

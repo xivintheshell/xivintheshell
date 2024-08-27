@@ -2,10 +2,11 @@ import React from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
 import {getCachedValue, setCachedValue, ShellVersion, TickMode} from "../Controller/Common";
-import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType, XIVMath} from "../Game/Common";
+import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+import {XIVMath} from '../Game/XIVMath';
 
 const tableStyle = `
 	table {
@@ -294,13 +295,13 @@ function ResourceOverrideDisplay(props) {
 export let updateConfigDisplay = (config)=>{};
 
 // helper that prob won't be used elsewhere
-function getTaxPreview(baseCastTime, spsStr, fpsStr) {
+function getTaxPreview(level, baseCastTime, spsStr, fpsStr) {
 	let sps = parseFloat(spsStr);
 	let fps = parseFloat(fpsStr);
 	if (isNaN(sps) || isNaN(fps)) {
 		return "n/a";
 	}
-	let adjustedCastTime = XIVMath.preTaxCastTime(sps, baseCastTime, false);
+	let adjustedCastTime = XIVMath.preTaxCastTime(level, sps, baseCastTime, false);
 	return (XIVMath.afterFpsTax(fps, adjustedCastTime) - adjustedCastTime + XIVMath.afterFpsTax(fps, FIXED_BASE_CASTER_TAX)).toFixed(3);
 }
 
@@ -336,7 +337,7 @@ export class Config extends React.Component {
 			let sps = parseFloat(spsStr);
 			let fps = parseFloat(fpsStr);
 			if (!isNaN(fps) && !isNaN(sps)) {
-				b1TaxPreview = getTaxPreview(2.5, sps, fps);
+				b1TaxPreview = getTaxPreview(this.state.level, 2.5, sps, fps);
 			} else {
 				b1TaxPreview = "n/a"
 			}
@@ -461,7 +462,7 @@ export class Config extends React.Component {
 			this.setState(config);
 			this.setState({
 				dirty: false,
-				b1TaxPreview: getTaxPreview(2.5, config.spellSpeed, config.fps),
+				b1TaxPreview: getTaxPreview(config.level, 2.5, config.spellSpeed, config.fps),
 				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides)
 			});
 		});
@@ -806,19 +807,19 @@ export class Config extends React.Component {
 				</tr>
 				<tr>
 					<td>2.8</td>
-					<td>{getTaxPreview(2.8, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(this.state.level, 2.8, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				<tr>
 					<td>3.0</td>
-					<td>{getTaxPreview(3.0, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(this.state.level, 3.0, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				<tr>
 					<td>3.5</td>
-					<td>{getTaxPreview(3.5, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(this.state.level, 3.5, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				<tr>
 					<td>4.0</td>
-					<td>{getTaxPreview(4.0, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(this.state.level, 4.0, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				</tbody>
 			</table>
