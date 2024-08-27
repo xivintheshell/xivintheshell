@@ -66,21 +66,38 @@ function ResourceCounter(props) {
 		</div>
 	</div>;
 }
+
 const buffIcons = new Map();
-buffIcons.set(ResourceType.Triplecast, require("./Asset/buff_triplecast.png"));
-buffIcons.set(ResourceType.Triplecast + "2", require("./Asset/buff_triplecast2.png"));
-buffIcons.set(ResourceType.Triplecast + "3", require("./Asset/buff_triplecast3.png"));
-buffIcons.set(ResourceType.Firestarter, require("./Asset/buff_firestarter.png"));
-buffIcons.set(ResourceType.Thunderhead, require("./Asset/buff_thunderhead.png"));
-buffIcons.set(ResourceType.ThunderDoT, require("./Asset/buff_thunder3.png"));
-buffIcons.set(ResourceType.LeyLines, require("./Asset/buff_leyLines.png"));
-buffIcons.set(ResourceType.Manaward, require("./Asset/buff_manaward.png"));
-buffIcons.set(ResourceType.Addle, require("./Asset/buff_addle.png"));
-buffIcons.set(ResourceType.Swiftcast, require("./Asset/buff_swiftcast.png"));
-buffIcons.set(ResourceType.LucidDreaming, require("./Asset/buff_lucidDreaming.png"));
-buffIcons.set(ResourceType.Surecast, require("./Asset/buff_surecast.png"));
-buffIcons.set(ResourceType.Tincture, require("./Asset/buff_tincture.png"));
-buffIcons.set(ResourceType.Sprint, require("./Asset/buff_sprint.png"));
+
+const blmBuffResources = [
+	ResourceType.Triplecast,
+	ResourceType.Triplecast + "2",
+	ResourceType.Triplecast + "3",
+	ResourceType.Firestarter,
+	ResourceType.Thunderhead,
+	ResourceType.ThunderDoT,
+	ResourceType.LeyLines,
+	ResourceType.Manaward,
+];
+
+const casterRoleBuffResources = [
+	ResourceType.Addle,
+	ResourceType.Swiftcast,
+	ResourceType.LucidDreaming,
+	ResourceType.Surecast,
+	ResourceType.Tincture,
+];
+
+
+blmBuffResources.forEach(
+	(buff) => buffIcons.set(buff, require(`./Asset/Buffs/BLM/${buff}.png`))
+);
+
+casterRoleBuffResources.forEach(
+	(buff) => buffIcons.set(buff, require(`./Asset/Buffs/CasterRole/${buff}.png`))
+);
+
+buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
 
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props) {

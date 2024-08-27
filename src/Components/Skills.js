@@ -46,39 +46,53 @@ export let displayedSkills = [
 
 // seems useful: https://na.finalfantasyxiv.com/lodestone/special/fankit/icon/
 export const skillIcons = new Map();
-skillIcons.set(SkillName.Blizzard, require("./Asset/blizzard.png"));
-skillIcons.set(SkillName.Fire, require("./Asset/fire.png"));
-skillIcons.set(SkillName.Transpose, require("./Asset/transpose.png"));
-skillIcons.set(SkillName.HighThunder, require("./Asset/highThunder.png"));
-skillIcons.set(SkillName.Manaward, require("./Asset/manaward.png"));
-skillIcons.set(SkillName.Manafont, require("./Asset/manafont.png"));
-skillIcons.set(SkillName.Fire3, require("./Asset/fire3.png"));
-skillIcons.set(SkillName.Blizzard3, require("./Asset/blizzard3.png"));
-skillIcons.set(SkillName.Freeze, require("./Asset/freeze.png"));
-skillIcons.set(SkillName.AetherialManipulation, require("./Asset/aetherialManipulation.png"));
-skillIcons.set(SkillName.Flare, require("./Asset/flare.png"));
-skillIcons.set(SkillName.LeyLines, require("./Asset/leyLines.png"));
-skillIcons.set(SkillName.Blizzard4, require("./Asset/blizzard4.png"));
-skillIcons.set(SkillName.Fire4, require("./Asset/fire4.png"));
-skillIcons.set(SkillName.BetweenTheLines, require("./Asset/betweenTheLines.png"));
-skillIcons.set(SkillName.Triplecast, require("./Asset/triplecast.png"));
-skillIcons.set(SkillName.Foul, require("./Asset/foul.png"));
-skillIcons.set(SkillName.Despair, require("./Asset/despair.png"));
-skillIcons.set(SkillName.UmbralSoul, require("./Asset/umbralSoul.png"));
-skillIcons.set(SkillName.Xenoglossy, require("./Asset/xenoglossy.png"));
-skillIcons.set(SkillName.HighFire2, require("./Asset/highFire2.png"));
-skillIcons.set(SkillName.HighBlizzard2, require("./Asset/highBlizzard2.png"));
-skillIcons.set(SkillName.Amplifier, require("./Asset/amplifier.png"));
-skillIcons.set(SkillName.Paradox, require("./Asset/paradox.png"));
-skillIcons.set(SkillName.FlareStar, require("./Asset/flareStar.png"));
-skillIcons.set(SkillName.Retrace, require("./Asset/retrace.png"));
 
-skillIcons.set(SkillName.Addle, require("./Asset/addle.png"));
-skillIcons.set(SkillName.Swiftcast, require("./Asset/swiftcast.png"));
-skillIcons.set(SkillName.LucidDreaming, require("./Asset/lucidDreaming.png"));
-skillIcons.set(SkillName.Surecast, require("./Asset/surecast.png"));
-skillIcons.set(SkillName.Tincture, require("./Asset/tincture.png"));
-skillIcons.set(SkillName.Sprint, require("./Asset/sprint.png"));
+const blmSkills = [
+	SkillName.Blizzard,
+	SkillName.Fire,
+	SkillName.Transpose,
+	SkillName.HighThunder,
+	SkillName.Manaward,
+	SkillName.Manafont,
+	SkillName.Fire3,
+	SkillName.Blizzard3,
+	SkillName.Freeze,
+	SkillName.AetherialManipulation,
+	SkillName.Flare,
+	SkillName.LeyLines,
+	SkillName.Blizzard4,
+	SkillName.Fire4,
+	SkillName.BetweenTheLines,
+	SkillName.Triplecast,
+	SkillName.Foul,
+	SkillName.Despair,
+	SkillName.UmbralSoul,
+	SkillName.Xenoglossy,
+	SkillName.HighFire2,
+	SkillName.HighBlizzard2,
+	SkillName.Amplifier,
+	SkillName.Paradox,
+	SkillName.FlareStar,
+	SkillName.Retrace,
+];
+
+const casterRoleSkills = [
+	SkillName.Addle,
+	SkillName.Swiftcast,
+	SkillName.LucidDreaming,
+	SkillName.Surecast,
+	SkillName.Tincture,
+];
+
+blmSkills.forEach(
+	(skill) => skillIcons.set(skill, require(`./Asset/Skills/BLM/${skill}.png`))
+);
+
+casterRoleSkills.forEach(
+	(skill) => skillIcons.set(skill, require(`./Asset/Skills/CasterRole/${skill}.png`))
+);
+
+skillIcons.set(SkillName.Sprint, require("./Asset/Skills/General/Sprint.png"));
 
 export const skillIconImages = new Map();
 skillIcons.forEach((path, skillName)=>{
