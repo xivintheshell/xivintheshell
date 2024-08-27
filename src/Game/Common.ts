@@ -51,6 +51,8 @@ export const enum ProcMode {
 export const enum SkillName {
 	Blizzard = "Blizzard",
 	Fire = "Fire",
+	Blizzard2 = "Blizzard 2",
+	Fire2 = "Fire 2",
 	Transpose = "Transpose",
 	HighThunder = "High Thunder",
 	Manaward = "Manaward",

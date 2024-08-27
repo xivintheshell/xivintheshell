@@ -56,6 +56,10 @@ const skillInfos = [
 		2.5, 400, 180, 0.846),
 	new SkillInfo(SkillName.Fire, ResourceType.cd_GCD, Aspect.Fire, true,
 		2.5, 800, 180, 1.871),
+	new SkillInfo(SkillName.Blizzard2, ResourceType.cd_GCD, Aspect.Ice, true,
+		3, 800, 80, 1.158), // Unknown damage application, copied from HB2
+	new SkillInfo(SkillName.Fire2, ResourceType.cd_GCD, Aspect.Fire, true,
+		3, 1500, 80, 1.154), // Unknown damage application, copied from HF2
 	new SkillInfo(SkillName.Transpose, ResourceType.cd_Transpose, Aspect.Other, false,
 		0, 0, 0), // instant
 	new SkillInfo(SkillName.HighThunder, ResourceType.cd_GCD, Aspect.Lightning, true,
@@ -671,33 +675,31 @@ export class SkillsList extends Map<SkillName, Skill> {
 			}
 		));
 
-		// High Fire 2
-		skillsList.set(SkillName.HighFire2, new Skill(SkillName.HighFire2,
-			() => {
-				return true;
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.HighFire2, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.switchToAForUI(ResourceType.AstralFire, 3);
-					game.startOrRefreshEnochian();
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
+		let addFire2 = function(skillName: SkillName) {
+			skillsList.set(skillName, new Skill(skillName,
+				() => { return true; },
+				(game, node) => {
+					game.castSpell({skillName: skillName, onCapture: (cap: SkillCaptureCallbackInfo) => {
+						game.switchToAForUI(ResourceType.AstralFire, 3);
+						game.startOrRefreshEnochian();
+					}, onApplication: (app: SkillApplicationCallbackInfo) => {
+					}, node: node});
+				}
+			))};
+		[SkillName.Fire2, SkillName.HighFire2].forEach(addFire2);
 
-		// High Blizzard 2
-		skillsList.set(SkillName.HighBlizzard2, new Skill(SkillName.HighBlizzard2,
-			() => {
-				return true;
-			},
-			(game, node) => {
-				game.castSpell({skillName: SkillName.HighBlizzard2, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					game.switchToAForUI(ResourceType.UmbralIce, 3);
-					game.startOrRefreshEnochian();
-				}, onApplication: (app: SkillApplicationCallbackInfo) => {
-				}, node: node});
-			}
-		));
+		let addBlizzard2 = function(skillName: SkillName) {
+			skillsList.set(skillName, new Skill(skillName,
+				() => { return true; },
+				(game, node) => {
+					game.castSpell({skillName: skillName, onCapture: (cap: SkillCaptureCallbackInfo) => {
+						game.switchToAForUI(ResourceType.UmbralIce, 3);
+						game.startOrRefreshEnochian();
+					}, onApplication: (app: SkillApplicationCallbackInfo) => {
+					}, node: node});
+				}
+			))};
+		[SkillName.Blizzard2, SkillName.HighBlizzard2].forEach(addBlizzard2);
 
 		// Amplifier
 		skillsList.set(SkillName.Amplifier, new Skill(SkillName.Amplifier,
@@ -874,8 +876,8 @@ export class DisplayedSkills extends Array<SkillName> {
 			this.push(SkillName.UmbralSoul);
 		}
 
-		this.push(SkillName.HighFire2);
-		this.push(SkillName.HighBlizzard2);
+		this.push(SkillName.Fire2);
+		this.push(SkillName.Blizzard2);
 
 		if (level >= 90) {
 			this.push(SkillName.Amplifier);

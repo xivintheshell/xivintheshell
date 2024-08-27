@@ -16,6 +16,8 @@ export const skillIcons = new Map();
 const blmSkills = [
 	SkillName.Blizzard,
 	SkillName.Fire,
+	SkillName.Blizzard2,
+	SkillName.Fire2,
 	SkillName.Transpose,
 	SkillName.HighThunder,
 	SkillName.Manaward,
@@ -355,6 +357,13 @@ export class SkillsWindow extends React.Component {
 				skillName = (isLL && this.state.retraceReady) ? SkillName.Retrace : skillName;
 				if (this.state.retraceInfo)
 					info = (isLL && this.state.retraceReady) ? this.state.retraceInfo : info;
+			}
+
+			if (controller.game.hasUnlockedTrait(TraitName.AspectMasteryIV)) {
+				if (displayedSkills[i] === SkillName.Fire2)
+					skillName = SkillName.HighFire2;
+				else if (displayedSkills[i] === SkillName.Blizzard2)
+					skillName = SkillName.HighBlizzard2;
 			}
 
 			let btn = <SkillButton

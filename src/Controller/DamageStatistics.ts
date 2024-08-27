@@ -13,6 +13,8 @@ import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 const AFUISkills = new Set<SkillName>([
 	SkillName.Blizzard,
 	SkillName.Fire,
+	SkillName.Blizzard2,
+	SkillName.Fire2,
 	SkillName.Fire3,
 	SkillName.Blizzard3,
 	SkillName.Freeze,
