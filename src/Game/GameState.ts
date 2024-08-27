@@ -775,7 +775,7 @@ export class GameState {
 			this.resources.addResourceEvent({
 				rscType: ResourceType.Aetherhues,
 				name: "reset aetherhues status",
-				delay: 30,
+				delay: 30.8,
 				fnOnRsc: rsc => this.resources.get(ResourceType.Aetherhues).overrideCurrentValue(0),
 			});
 		}
