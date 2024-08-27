@@ -1,6 +1,6 @@
 import React from 'react'
 import {Clickable, Help, parseTime} from "./Common";
-import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
+import {Debug, LevelSync, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
@@ -9,41 +9,6 @@ import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
 import {getCurrentThemeColors} from "./ColorTheme";
 import { TraitName } from '../Game/Traits';
-
-export let displayedSkills = [
-	SkillName.Blizzard,
-	SkillName.Fire,
-	SkillName.Transpose,
-	SkillName.HighThunder,
-	SkillName.Manaward,
-	SkillName.Manafont,
-	SkillName.Fire3,
-	SkillName.Blizzard3,
-	SkillName.Freeze,
-	SkillName.Flare,
-	SkillName.LeyLines,
-	SkillName.Blizzard4,
-	SkillName.Fire4,
-	SkillName.BetweenTheLines,
-	SkillName.AetherialManipulation,
-	SkillName.Triplecast,
-	SkillName.Foul,
-	SkillName.Despair,
-	SkillName.UmbralSoul,
-	SkillName.Xenoglossy,
-	SkillName.HighFire2,
-	SkillName.HighBlizzard2,
-	SkillName.Amplifier,
-	//SkillName.Paradox, // display paradox at F1/B1
-	SkillName.FlareStar,
-	// SkillName.Retrace, // display retrace at LL
-	SkillName.Addle,
-	SkillName.Swiftcast,
-	SkillName.LucidDreaming,
-	SkillName.Surecast,
-	SkillName.Tincture,
-	SkillName.Sprint
-];
 
 // seems useful: https://na.finalfantasyxiv.com/lodestone/special/fankit/icon/
 export const skillIcons = new Map();
@@ -363,7 +328,7 @@ export class SkillsWindow extends React.Component {
 	}
 	componentDidMount() {
 		this.setState({
-			statusList: displayedSkills.map(sn=>{
+			statusList: controller.game.displayedSkills.map(sn=>{
 				return controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: sn});
 			}),
 			paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
@@ -373,6 +338,7 @@ export class SkillsWindow extends React.Component {
 
 	render() {
 		let skillButtons = [];
+		let displayedSkills = controller.game.displayedSkills;
 		for (let i = 0; i < displayedSkills.length; i++) {
 			let skillName = displayedSkills[i];
 			let info = this.state.statusList ? this.state.statusList[i] : undefined;
