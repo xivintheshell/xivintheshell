@@ -42,63 +42,71 @@ export let displayedSkills = [
 
 // seems useful: https://na.finalfantasyxiv.com/lodestone/special/fankit/icon/
 export const skillIcons = new Map();
-let pctSkills = [
-	"aero2InGreen",
-	"aeroInGreen",
-	"blizzard2InCyan",
-	"blizzardInCyan",
-	"clawMotif",
-	"clawedMuse",
-	"cometInBlack",
-	"creatureMotif",
-	"fangedMuse",
-	"fire2InRed",
-	"fireInRed",
-	"hammerBrush",
-	"hammerMotif",
-	"hammerStamp",
-	"holyInWhite",
-	"landscapeMotif",
-	"livingMuse",
-	"mawMotif",
-	"mogOfTheAges",
-	"polishingHammer",
-	"pomMotif",
-	"pomMuse",
-	"rainbowDrip",
-	"retributionOfTheMadeen",
-	"scenicMuse",
-	"smudge",
-	"starPrism",
-	"starryMuse",
-	"starrySkyMotif",
-	"steelMuse",
-	"strikingMuse",
-	"stone2InYellow",
-	"stoneInYellow",
-	"subtractivePalette",
-	"temperaCoat",
-	"temperaCoatPop",
-	"temperaGrassa",
-	"temperaGrassaPop",
-	"thunder2InMagenta",
-	"thunderInMagenta",
-	"water2InBlue",
-	"waterInBlue",
-	"weaponMotif",
-	"wingMotif",
-	"wingedMuse",
+const pctSkills = [
+	SkillName.Aero2InGreen,
+	SkillName.AeroInGreen,
+	SkillName.Blizzard2InCyan,
+	SkillName.BlizzardInCyan,
+	SkillName.ClawMotif,
+	SkillName.ClawedMuse,
+	SkillName.CometInBlack,
+	SkillName.CreatureMotif,
+	SkillName.FangedMuse,
+	SkillName.Fire2InRed,
+	SkillName.FireInRed,
+	SkillName.HammerBrush,
+	SkillName.HammerMotif,
+	SkillName.HammerStamp,
+	SkillName.HolyInWhite,
+	SkillName.LandscapeMotif,
+	SkillName.LivingMuse,
+	SkillName.MawMotif,
+	SkillName.MogOfTheAges,
+	SkillName.PolishingHammer,
+	SkillName.PomMotif,
+	SkillName.PomMuse,
+	SkillName.RainbowDrip,
+	SkillName.RetributionOfTheMadeen,
+	SkillName.ScenicMuse,
+	SkillName.Smudge,
+	SkillName.StarPrism,
+	SkillName.StarryMuse,
+	SkillName.StarrySkyMotif,
+	SkillName.SteelMuse,
+	SkillName.StrikingMuse,
+	SkillName.Stone2InYellow,
+	SkillName.StoneInYellow,
+	SkillName.SubtractivePalette,
+	SkillName.TemperaCoat,
+	SkillName.TemperaCoatPop,
+	SkillName.TemperaGrassa,
+	SkillName.TemperaGrassaPop,
+	SkillName.Thunder2InMagenta,
+	SkillName.ThunderInMagenta,
+	SkillName.Water2InBlue,
+	SkillName.WaterInBlue,
+	SkillName.WeaponMotif,
+	SkillName.WingMotif,
+	SkillName.WingedMuse,
 ];
-for (let name of pctSkills) {
-	skillIcons.set(SkillName[name[0].toUpperCase() + name.slice(1)], require("./Asset/picto/" + name + ".png"));
-}
 
-skillIcons.set(SkillName.Addle, require("./Asset/addle.png"));
-skillIcons.set(SkillName.Swiftcast, require("./Asset/swiftcast.png"));
-skillIcons.set(SkillName.LucidDreaming, require("./Asset/lucidDreaming.png"));
-skillIcons.set(SkillName.Surecast, require("./Asset/surecast.png"));
-skillIcons.set(SkillName.Tincture, require("./Asset/tincture.png"));
-skillIcons.set(SkillName.Sprint, require("./Asset/sprint.png"));
+const casterRoleSkills = [
+	SkillName.Addle,
+	SkillName.Swiftcast,
+	SkillName.LucidDreaming,
+	SkillName.Surecast,
+	SkillName.Tincture,
+];
+
+pctSkills.forEach(
+	(skill) => skillIcons.set(skill, require(`./Asset/Skills/PCT/${skill}.png`))
+);
+
+casterRoleSkills.forEach(
+	(skill) => skillIcons.set(skill, require(`./Asset/Skills/CasterRole/${skill}.png`))
+);
+
+skillIcons.set(SkillName.Sprint, require("./Asset/Skills/General/Sprint.png"));
 
 export const skillIconImages = new Map();
 skillIcons.forEach((path, skillName)=>{

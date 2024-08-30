@@ -84,12 +84,13 @@ export const enum SkillName {
 	Fire2InRed = "Fire II in Red",
 	Aero2InGreen = "Aero II in Green",
 	Water2InBlue = "Water II in Blue",
-	BlizzardInCyan = "Blizzard In Cyan",
-	ThunderInMagenta = "Thunder In Magenta",
+	// due to a typo, "In" is capitalized erroneously, and any changes to this would require migrating users
+	BlizzardInCyan = "Blizzard In Cyan", 
+	ThunderInMagenta = "Thunder In Magenta", // "In"
 	StoneInYellow = "Stone in Yellow",
-	Blizzard2InCyan = "Blizzard II In Cyan",
+	Blizzard2InCyan = "Blizzard II In Cyan", // "In"
 	Stone2InYellow = "Stone II in Yellow",
-	Thunder2InMagenta = "Thunder II In Magenta",
+	Thunder2InMagenta = "Thunder II In Magenta", // "In"
 	HolyInWhite = "Holy in White",
 	CometInBlack = "Comet in Black",
 	RainbowDrip = "Rainbow Drip",

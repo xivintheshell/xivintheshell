@@ -95,36 +95,49 @@ function ResourceText(props) {
 }
 
 const buffIcons = new Map();
-buffIcons.set(ResourceType.Aetherhues, require("./Asset/picto/buffs/aetherhues_1.png"));
-buffIcons.set(ResourceType.Aetherhues + "2", require("./Asset/picto/buffs/aetherhues_2.png"));
-buffIcons.set(ResourceType.MonochromeTones, require("./Asset/picto/buffs/monochromeTones.png"));
-// buffs with numbers come from the 018000 category on xivapi
-buffIcons.set(ResourceType.HammerTime, require("./Asset/picto/buffs/hammer_1.png"));
-buffIcons.set(ResourceType.HammerTime + "2", require("./Asset/picto/buffs/hammer_2.png"));
-buffIcons.set(ResourceType.HammerTime + "3", require("./Asset/picto/buffs/hammer_3.png"));
-buffIcons.set(ResourceType.Inspiration, require("./Asset/picto/buffs/inspiration.png"));
-buffIcons.set(ResourceType.SubtractivePalette, require("./Asset/picto/buffs/subtractive_1.png"));
-buffIcons.set(ResourceType.SubtractivePalette + "2", require("./Asset/picto/buffs/subtractive_2.png"));
-buffIcons.set(ResourceType.SubtractivePalette + "3", require("./Asset/picto/buffs/subtractive_3.png"));
-buffIcons.set(ResourceType.SubtractiveSpectrum, require("./Asset/picto/buffs/subtractiveSpectrum.png"));
-buffIcons.set(ResourceType.Hyperphantasia, require("./Asset/picto/buffs/hyperphantasia_1.png"));
-buffIcons.set(ResourceType.Hyperphantasia + "2", require("./Asset/picto/buffs/hyperphantasia_2.png"));
-buffIcons.set(ResourceType.Hyperphantasia + "3", require("./Asset/picto/buffs/hyperphantasia_3.png"));
-buffIcons.set(ResourceType.Hyperphantasia + "4", require("./Asset/picto/buffs/hyperphantasia_4.png"));
-buffIcons.set(ResourceType.Hyperphantasia + "5", require("./Asset/picto/buffs/hyperphantasia_5.png"));
-buffIcons.set(ResourceType.RainbowBright, require("./Asset/picto/buffs/rainbowBright.png"));
-buffIcons.set(ResourceType.Starstruck, require("./Asset/picto/buffs/starstruck.png"));
-buffIcons.set(ResourceType.StarryMuse, require("./Asset/PartyBuffs/starry_muse.png"));
-buffIcons.set(ResourceType.TemperaCoat, require("./Asset/picto/buffs/temperaCoat.png"));
-buffIcons.set(ResourceType.TemperaGrassa, require("./Asset/picto/buffs/temperaGrassa.png"));
-buffIcons.set(ResourceType.Smudge, require("./Asset/picto/buffs/smudge.png"));
 
-buffIcons.set(ResourceType.Addle, require("./Asset/buff_addle.png"));
-buffIcons.set(ResourceType.Swiftcast, require("./Asset/buff_swiftcast.png"));
-buffIcons.set(ResourceType.LucidDreaming, require("./Asset/buff_lucidDreaming.png"));
-buffIcons.set(ResourceType.Surecast, require("./Asset/buff_surecast.png"));
-buffIcons.set(ResourceType.Tincture, require("./Asset/buff_tincture.png"));
-buffIcons.set(ResourceType.Sprint, require("./Asset/buff_sprint.png"));
+const pctBuffResources = [
+	ResourceType.Aetherhues,
+	ResourceType.Aetherhues + "2",
+	ResourceType.MonochromeTones,
+	ResourceType.HammerTime,
+	ResourceType.HammerTime + "2",
+	ResourceType.HammerTime + "3",
+	ResourceType.Inspiration,
+	ResourceType.SubtractivePalette,
+	ResourceType.SubtractivePalette + "2",
+	ResourceType.SubtractivePalette + "3",
+	ResourceType.SubtractiveSpectrum,
+	ResourceType.Hyperphantasia,
+	ResourceType.Hyperphantasia + "2",
+	ResourceType.Hyperphantasia + "3",
+	ResourceType.Hyperphantasia + "4",
+	ResourceType.Hyperphantasia + "5",
+	ResourceType.RainbowBright,
+	ResourceType.Starstruck,
+	ResourceType.StarryMuse,
+	ResourceType.TemperaGrassa,
+	ResourceType.Smudge,
+];
+
+const casterRoleBuffResources = [
+	ResourceType.Addle,
+	ResourceType.Swiftcast,
+	ResourceType.LucidDreaming,
+	ResourceType.Surecast,
+	ResourceType.Tincture,
+];
+
+
+pctBuffResources.forEach(
+	(buff) => buffIcons.set(buff, require(`./Asset/Buffs/PCT/${buff}.png`))
+);
+
+casterRoleBuffResources.forEach(
+	(buff) => buffIcons.set(buff, require(`./Asset/Buffs/CasterRole/${buff}.png`))
+);
+
+buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
 
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props) {

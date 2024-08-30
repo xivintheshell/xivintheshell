@@ -543,7 +543,7 @@ export class DamageStatistics extends React.Component {
 			mainHeaderStr += upTillStr;
 			thunderHeaderStr += upTillStr;
 		}
-		let mainTable = <div style={{
+		let mainTable = <div id="damageTable" style={{
 			position: "relative",
 			margin: "0 auto",
 			marginBottom: 40,

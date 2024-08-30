@@ -123,7 +123,6 @@ export class GameConfig {
 		if (skillName === SkillName.AetherialManipulation
 			|| skillName === SkillName.BetweenTheLines
 			|| skillName === SkillName.Smudge) {
-			// all movement skills have a lock of 0.8s
 			return 0.8; // from: https://nga.178.com/read.php?tid=21233094&rand=761
 		} else if (skillName === SkillName.TemperaCoatPop || skillName === SkillName.TemperaGrassaPop) {
 			return 0.01; // not real abilities, animation lock is fake
