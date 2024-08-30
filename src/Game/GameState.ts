@@ -602,8 +602,9 @@ export class GameState {
 				? skillInfo.baseRecastTime
 				: (
 					rsc && rsc.type === ResourceType.RainbowBright
-						// when rainbow bright is affecting rainbow drip, base cast is always 2.5
-						? game.config.adjustedGCD(false, false, 2.5)
+						// when rainbow bright is affecting rainbow drip, treat it as a 6s cast
+						// then subtract 3.5s from the result
+						? game.config.adjustedGCD(false, false, 6) - 3.5
 						// unlike LL, we need to account for hyperphantasia here because the hyperphantasia buff
 						// would be consumed before the Resource object can check the recast
 						: game.config.adjustedGCD(false, inspired, skillInfo.baseRecastTime)
