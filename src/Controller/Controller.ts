@@ -639,7 +639,7 @@ class Controller {
 				resourceLocks: resourceLocksData,
 				enemyBuffs: enemyBuffsData,
 				selfBuffs: selfBuffsData,
-				gameState: game
+				level: game.config.level,
 			});
 		}
 	}

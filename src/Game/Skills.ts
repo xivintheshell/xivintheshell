@@ -5,7 +5,7 @@ import {DoTBuff, EventTag, Resource} from "./Resources";
 import {ActionNode} from "../Controller/Record";
 import {GameState} from "./GameState";
 import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
-import { TraitName } from './Traits';
+import {TraitName, Traits} from './Traits';
 
 export interface SkillCaptureCallbackInfo {
 	capturedManaCost: number
@@ -424,7 +424,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 						game.resources.get(ResourceType.AstralFire).gain(3);
 						game.resources.get(ResourceType.UmbralHeart).gain(3);
 
-						if (game.hasUnlockedTrait(TraitName.AspectMasteryV))
+						if (Traits.hasUnlocked(TraitName.AspectMasteryV, game.config.level))
 							game.resources.get(ResourceType.Paradox).gain(1);
 
 						game.gainThunderhead();
@@ -511,7 +511,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 					// +3 AF; refresh enochian
 					game.resources.get(ResourceType.AstralFire).gain(3);
 
-					if (game.hasUnlockedTrait(TraitName.EnhancedAstralFire))
+					if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, game.config.level))
 						game.resources.get(ResourceType.AstralSoul).gain(3);
 
 					game.startOrRefreshEnochian();
@@ -540,7 +540,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			},
 			(game, node) => {
 				game.castSpell({skillName: SkillName.Fire4, onCapture: (cap: SkillCaptureCallbackInfo) => {
-					if (game.hasUnlockedTrait(TraitName.EnhancedAstralFire))
+					if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, game.config.level))
 						game.resources.get(ResourceType.AstralSoul).gain(1);
 				}, onApplication: (app: SkillApplicationCallbackInfo) => {
 				}, node: node});
@@ -611,7 +611,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 				return game.resources.get(ResourceType.Polyglot).available(1);
 			},
 			(game, node) => {
-				if (game.hasUnlockedTrait(TraitName.EnhancedFoul)) {
+				if (Traits.hasUnlocked(TraitName.EnhancedFoul, game.config.level)) {
 					game.resources.get(ResourceType.Polyglot).consume(1);
 					game.useInstantSkill({
 						skillName: SkillName.Foul,
@@ -773,7 +773,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		// Retrace
 		skillsList.set(SkillName.Retrace, new Skill(SkillName.Retrace,
 			() => {
-				return game.hasUnlockedTrait(TraitName.EnhancedLeyLines) &&
+				return Traits.hasUnlocked(TraitName.EnhancedLeyLines, game.config.level) &&
 					game.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0;
 			},
 			(game, node) => {
@@ -790,7 +790,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 		));
 
 		// Addle
-		const addleDuration = (game.hasUnlockedTrait(TraitName.EnhancedAddle) && 15) || 10;
+		const addleDuration = (Traits.hasUnlocked(TraitName.EnhancedAddle, game.config.level) && 15) || 10;
 		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: addleDuration});
 
 		// Swiftcast

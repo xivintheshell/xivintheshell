@@ -4,7 +4,7 @@ import {ResourceType} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
-import { TraitName } from '../Game/Traits';
+import {TraitName, Traits} from '../Game/Traits';
 
 // color, value
 function ResourceStack(props) {
@@ -315,7 +315,6 @@ function ResourcesDisplay(props) {
 		polyglotCountdown: 30,
 		polyglotStacks: 0
 	}
-	let gameState = data.gameState;
 
 	let manaBar = <ResourceBar
 		name={"MP"}
@@ -362,7 +361,7 @@ function ResourcesDisplay(props) {
 		color={colors.resources.umbralHeart}
 		currentStacks={resources.umbralHearts}
 		maxStacks={3}/>;
-	let paradox = gameState && gameState.hasUnlockedTrait(TraitName.AspectMasteryIV) ?
+	let paradox = data.level && Traits.hasUnlocked(TraitName.AspectMasteryIV, data.level) ?
 		<ResourceCounter
 			name={
 				localize({
@@ -374,7 +373,7 @@ function ResourcesDisplay(props) {
 			currentStacks={resources.paradox}
 			maxStacks={1}/>
 		: undefined;
-	let soul = gameState && gameState.hasUnlockedTrait(TraitName.EnhancedAstralFire) ?
+	let soul = data.level && Traits.hasUnlocked(TraitName.EnhancedAstralFire, data.level) ?
 		<ResourceCounter
 			name={
 				localize({
@@ -399,8 +398,8 @@ function ResourcesDisplay(props) {
 		width={100}/>;
 	
 	const polyglotStacks = 
-		(gameState && gameState.hasUnlockedTrait(TraitName.EnhancedPolyglotII) && 3) ||
-		(gameState && gameState.hasUnlockedTrait(TraitName.EnhancedPolyglot) && 2) ||
+		(data.level && Traits.hasUnlocked(TraitName.EnhancedPolyglotII, data.level) && 3) ||
+		(data.level && Traits.hasUnlocked(TraitName.EnhancedPolyglot, data.level) && 2) ||
 		1;
 	let poly = <ResourceCounter
 		name={
@@ -435,7 +434,7 @@ export class StatusDisplay extends React.Component {
 			resourceLocks: null,
 			selfBuffs: null,
 			enemyBuffs: null,
-			gameState: null,
+			level: null,
 		}
 		updateStatusDisplay = ((newData)=>{
 			this.setState({
@@ -444,7 +443,7 @@ export class StatusDisplay extends React.Component {
 				resourceLocks: newData.resourceLocks,
 				selfBuffs: newData.selfBuffs,
 				enemyBuffs: newData.enemyBuffs,
-				gameState: newData.gameState,
+				level: newData.level,
 			});
 		});
 	}
@@ -455,6 +454,7 @@ export class StatusDisplay extends React.Component {
 		return <div className={"statusDisplay"}>
 			<div style={{position: "absolute", top: -8, right: 0, zIndex: 1}}><Help topic={"mainControlRegion"} content={
 				<div className="toolTip">
+
 					{localize({
 						en:
 							<>

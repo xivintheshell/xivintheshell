@@ -1,6 +1,6 @@
 import React from 'react'
 import {Clickable, Help, parseTime} from "./Common";
-import {Debug, LevelSync, SkillName, SkillReadyStatus} from "../Game/Common";
+import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
@@ -8,7 +8,7 @@ import {localize, localizeSkillName} from "./Localization";
 import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
 import {getCurrentThemeColors} from "./ColorTheme";
-import { TraitName } from '../Game/Traits';
+import {TraitName, Traits} from '../Game/Traits';
 
 // seems useful: https://na.finalfantasyxiv.com/lodestone/special/fankit/icon/
 export const skillIcons = new Map();
@@ -345,29 +345,30 @@ export class SkillsWindow extends React.Component {
 		for (let i = 0; i < displayedSkills.length; i++) {
 			let skillName = displayedSkills[i];
 			let info = this.state.statusList ? this.state.statusList[i] : undefined;
+			let level = controller.game.config.level;
 
-			if (controller.game.hasUnlockedTrait(TraitName.AspectMasteryV)) {
+			if (Traits.hasUnlocked(TraitName.AspectMasteryV, level)) {
 				let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
 				skillName = (isF1B1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
 				if (this.state.paradoxInfo) 
 					info = (isF1B1 && this.state.paradoxReady) ? this.state.paradoxInfo : info;
 			}
 
-			if (controller.game.hasUnlockedTrait(TraitName.EnhancedLeyLines)) {
+			if (Traits.hasUnlocked(TraitName.EnhancedLeyLines, level)) {
 				let isLL = (displayedSkills[i] === SkillName.LeyLines);
 				skillName = (isLL && this.state.retraceReady) ? SkillName.Retrace : skillName;
 				if (this.state.retraceInfo)
 					info = (isLL && this.state.retraceReady) ? this.state.retraceInfo : info;
 			}
 
-			if (controller.game.hasUnlockedTrait(TraitName.AspectMasteryIV)) {
+			if (Traits.hasUnlocked(TraitName.AspectMasteryIV, level)) {
 				if (displayedSkills[i] === SkillName.Fire2)
 					skillName = SkillName.HighFire2;
 				else if (displayedSkills[i] === SkillName.Blizzard2)
 					skillName = SkillName.HighBlizzard2;
 			}
 
-			if (controller.game.hasUnlockedTrait(TraitName.ThunderMasteryIII)) {
+			if (Traits.hasUnlocked(TraitName.ThunderMasteryIII, level)) {
 				if (displayedSkills[i] === SkillName.Thunder3)
 					skillName = SkillName.HighThunder;
 			}

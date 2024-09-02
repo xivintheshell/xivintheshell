@@ -1,59 +1,57 @@
+import {LevelSync} from "./Common";
+
 export class Trait {
-    readonly name: TraitName;
+	readonly name: TraitName;
 	readonly level: number;
 
-    constructor(name: TraitName, level: number) {
-        this.name = name;
-        this.level = level;
-    }
+	constructor(name: TraitName, level: number) {
+		this.name = name;
+		this.level = level;
+	}
 }
 
 export const enum TraitName {
-    EnhancedEnochianII,
-    EnhancedPolyglot,
-    EnhancedFoul,
-    AspectMasteryIV,
-    EnhancedManafont,
-    EnhancedEnochianIII,
-    AspectMasteryV,
-    ThunderMasteryIII,
-    EnhancedSwiftcast,
-    EnhancedLeyLines,
-    EnhancedEnochianIV,
-    EnhancedPolyglotII,
-    EnhancedAddle,
-    EnhancedAstralFire,
+	EnhancedEnochianII,
+	EnhancedPolyglot,
+	EnhancedFoul,
+	AspectMasteryIV,
+	EnhancedManafont,
+	EnhancedEnochianIII,
+	AspectMasteryV,
+	ThunderMasteryIII,
+	EnhancedSwiftcast,
+	EnhancedLeyLines,
+	EnhancedEnochianIV,
+	EnhancedPolyglotII,
+	EnhancedAddle,
+	EnhancedAstralFire,
 
-    Never,
+	Never,
 }
 
-export class TraitsList extends Map<TraitName, Trait> {
-    constructor() {
-        super();
+export class Traits {
+	static list: Map<TraitName, Trait> = this.buildList();
+	static buildList() {
+		return new Map<TraitName, Trait>([
+			[TraitName.EnhancedEnochianII, new Trait(TraitName.EnhancedEnochianII, 78)],
+			[TraitName.EnhancedPolyglot, new Trait(TraitName.EnhancedPolyglot, 80)],
+			[TraitName.EnhancedFoul, new Trait(TraitName.EnhancedFoul, 80)],
+			[TraitName.AspectMasteryIV, new Trait(TraitName.AspectMasteryIV, 82)],
+			[TraitName.EnhancedManafont, new Trait(TraitName.EnhancedManafont, 84)],
+			[TraitName.EnhancedEnochianIII, new Trait(TraitName.EnhancedEnochianIII, 86)],
+			[TraitName.AspectMasteryV, new Trait(TraitName.AspectMasteryV, 90)],
+			[TraitName.ThunderMasteryIII, new Trait(TraitName.ThunderMasteryIII, 92)],
+			[TraitName.EnhancedSwiftcast, new Trait(TraitName.EnhancedSwiftcast, 94)],
+			[TraitName.EnhancedLeyLines, new Trait(TraitName.EnhancedLeyLines, 96)],
+			[TraitName.EnhancedEnochianIV, new Trait(TraitName.EnhancedEnochianIV, 96)],
+			[TraitName.EnhancedPolyglotII, new Trait(TraitName.EnhancedPolyglotII, 98)],
+			[TraitName.EnhancedAddle, new Trait(TraitName.EnhancedAddle, 98)],
+			[TraitName.EnhancedAstralFire, new Trait(TraitName.EnhancedAstralFire, 100)],
+		]);
+	}
 
-        let traitsList = this;
-        traitsList.set(TraitName.EnhancedEnochianII, new Trait(TraitName.EnhancedEnochianII, 78));
-        traitsList.set(TraitName.EnhancedPolyglot, new Trait(TraitName.EnhancedPolyglot, 80));
-        traitsList.set(TraitName.EnhancedFoul, new Trait(TraitName.EnhancedFoul, 80));
-        traitsList.set(TraitName.AspectMasteryIV, new Trait(TraitName.AspectMasteryIV, 82));
-        traitsList.set(TraitName.EnhancedManafont, new Trait(TraitName.EnhancedManafont, 84));
-        traitsList.set(TraitName.EnhancedEnochianIII, new Trait(TraitName.EnhancedEnochianIII, 86));
-        traitsList.set(TraitName.AspectMasteryV, new Trait(TraitName.AspectMasteryV, 90));
-        traitsList.set(TraitName.ThunderMasteryIII, new Trait(TraitName.ThunderMasteryIII, 92));
-        traitsList.set(TraitName.EnhancedSwiftcast, new Trait(TraitName.EnhancedSwiftcast, 94));
-        traitsList.set(TraitName.EnhancedLeyLines, new Trait(TraitName.EnhancedLeyLines, 96));
-        traitsList.set(TraitName.EnhancedEnochianIV, new Trait(TraitName.EnhancedEnochianIV, 96));
-        traitsList.set(TraitName.EnhancedPolyglotII, new Trait(TraitName.EnhancedPolyglotII, 98));
-        traitsList.set(TraitName.EnhancedAddle, new Trait(TraitName.EnhancedAddle, 98));
-        traitsList.set(TraitName.EnhancedAstralFire, new Trait(TraitName.EnhancedAstralFire, 100));
-    }
-
-    get(key: TraitName): Trait {
-		let skill = super.get(key);
-		if (skill) return skill;
-		else {
-			console.assert(false);
-			return new Trait(TraitName.Never, 1);
-		};
+	static hasUnlocked(traitName: TraitName, level: LevelSync) {
+		const trait = this.list.get(traitName) || new Trait(TraitName.Never, 1);
+		return parseInt(level) >= trait.level;
 	}
 }

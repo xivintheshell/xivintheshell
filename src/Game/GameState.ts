@@ -8,7 +8,7 @@ import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
 import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
-import { TraitName, TraitsList } from "./Traits";
+import {TraitName, Traits} from "./Traits";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -28,7 +28,6 @@ export class GameState {
 	eventsQueue: Event[];
 	skillsList: SkillsList;
 	displayedSkills: DisplayedSkills;
-	traitsList: TraitsList;
 
 	constructor(config: GameConfig) {
 		this.config = config;
@@ -40,8 +39,6 @@ export class GameState {
 		// TIME (raw time which starts at 0 regardless of countdown)
 		this.time = 0;
 
-		// LEVEL SYNC
-		this.traitsList = new TraitsList();
 		this.displayedSkills = new DisplayedSkills(config.level);
 
 		// RESOURCES (checked when using skills)
@@ -49,8 +46,8 @@ export class GameState {
 		this.resources.set(ResourceType.Mana, new Resource(ResourceType.Mana, 10000, 10000));
 
 		const polyglotStacks = 
-			(this.hasUnlockedTrait(TraitName.EnhancedPolyglotII) && 3) ||
-			(this.hasUnlockedTrait(TraitName.EnhancedPolyglot) && 2) ||
+			(Traits.hasUnlocked(TraitName.EnhancedPolyglotII, this.config.level) && 3) ||
+			(Traits.hasUnlocked(TraitName.EnhancedPolyglot, this.config.level) && 2) ||
 			1;
 		this.resources.set(ResourceType.Polyglot, new Resource(ResourceType.Polyglot, polyglotStacks, 0));
 		this.resources.set(ResourceType.AstralFire, new Resource(ResourceType.AstralFire, 3, 0));
@@ -86,13 +83,13 @@ export class GameState {
 		this.cooldowns.set(ResourceType.cd_AetherialManipulation, new CoolDown(ResourceType.cd_AetherialManipulation, 10, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Triplecast, new CoolDown(ResourceType.cd_Triplecast, 60, 2, 2));
 
-		const manafontCooldown = (this.hasUnlockedTrait(TraitName.EnhancedManafont) && 100) || 180;
+		const manafontCooldown = (Traits.hasUnlocked(TraitName.EnhancedManafont, this.config.level) && 100) || 180;
 		this.cooldowns.set(ResourceType.cd_Manafont, new CoolDown(ResourceType.cd_Manafont, manafontCooldown, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Amplifier, new CoolDown(ResourceType.cd_Amplifier, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Retrace, new CoolDown(ResourceType.cd_Retrace, 40, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Addle, new CoolDown(ResourceType.cd_Addle, 90, 1, 1));
 
-		const swiftcastCooldown = (this.hasUnlockedTrait(TraitName.EnhancedSwiftcast) && 40) || 60;
+		const swiftcastCooldown = (Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level) && 40) || 60;
 		this.cooldowns.set(ResourceType.cd_Swiftcast, new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1));
 		this.cooldowns.set(ResourceType.cd_LucidDreaming, new CoolDown(ResourceType.cd_LucidDreaming, 60, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Surecast, new CoolDown(ResourceType.cd_Surecast, 120, 1, 1));
@@ -333,7 +330,7 @@ export class GameState {
 			}
 			af.gain(numStacksToGain);
 
-			if (this.hasUnlockedTrait(TraitName.AspectMasteryV)) {
+			if (Traits.hasUnlocked(TraitName.AspectMasteryV, this.config.level)) {
 				if (ui.available(3) && uh.available(3)) {
 					paradox.gain(1);
 				}  
@@ -348,7 +345,7 @@ export class GameState {
 			}
 			ui.gain(numStacksToGain);
 
-			if (this.hasUnlockedTrait(TraitName.AspectMasteryV)) {
+			if (Traits.hasUnlocked(TraitName.AspectMasteryV, this.config.level)) {
 				if (af.available(3)) {
 					paradox.gain(1);
 				}
@@ -814,10 +811,6 @@ export class GameState {
 		})
 
 		return buffCollection;
-	}
-
-	hasUnlockedTrait(name: TraitName) {
-		return parseInt(this.config.level) >= this.traitsList.get(name).level;
 	}
 
 	toString() {
