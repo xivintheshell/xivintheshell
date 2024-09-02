@@ -74,7 +74,7 @@ export class GameConfig {
 
 	equals(other : GameConfig) {
 		let sortFn = (a: ResourceOverride, b: ResourceOverride)=>{
-			return a.props.type < b.props.type ? -1 : 1;
+			return a.type < b.type ? -1 : 1;
 		};
 		let thisSortedOverrides = this.initialResourceOverrides.sort(sortFn);
 		let otherSortedOverrides = other.initialResourceOverrides.sort(sortFn);

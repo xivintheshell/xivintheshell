@@ -3,7 +3,7 @@ import {updateTimelineView} from "../Components/Timeline";
 // @ts-ignore
 import {controller} from "./Controller";
 import {Debug, ResourceType, SkillName, WarningType} from "../Game/Common";
-import {ActionNode, Record} from "./Record";
+import {ActionNode} from "./Record";
 import {FileType, getCachedValue, removeCachedValue, setCachedValue} from "./Common";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
@@ -288,10 +288,7 @@ export class Timeline {
 		this.slots.push([]);
 		console.assert(this.slots.length <= MAX_TIMELINE_SLOTS);
 		this.activeSlotIndex = this.slots.length - 1;
-		const currentConfig = controller.gameConfig;
-		controller.record = new Record();
-		controller.record.config = currentConfig;
-		controller.setConfigAndRestart(currentConfig);
+		controller.setConfigAndRestart(controller.gameConfig);
 	}
 
 	removeSlot(idx: number) {
