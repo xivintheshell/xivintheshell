@@ -53,7 +53,7 @@ export class GameConfig {
 		casterTax?: number, // legacy
 	}) {
 		this.shellVersion = props.shellVersion;
-		this.level = props.level;
+		this.level = props.level ?? DEFAULT_CONFIG.level;
 		this.spellSpeed = props.spellSpeed;
 		this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
 		this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
