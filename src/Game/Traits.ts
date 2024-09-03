@@ -52,6 +52,6 @@ export class Traits {
 
 	static hasUnlocked(traitName: TraitName, level: LevelSync) {
 		const trait = this.list.get(traitName) || new Trait(TraitName.Never, 1);
-		return parseInt(level) >= trait.level;
+		return level >= trait.level;
 	}
 }

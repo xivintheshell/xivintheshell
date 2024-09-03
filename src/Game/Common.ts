@@ -7,10 +7,10 @@ export const Debug = {
 };
 
 export const enum LevelSync {
-	lvl70 = "70",
-	lvl80 = "80",
-	lvl90 = "90",
-	lvl100 = "100",
+	lvl70 = 70,
+	lvl80 = 80,
+	lvl90 = 90,
+	lvl100 = 100,
 }
 
 export const FIXED_BASE_CASTER_TAX = 0.1;

@@ -758,7 +758,8 @@ export class Config extends React.Component {
 			isNaN(parseFloat(config.fps)) ||
 			isNaN(parseFloat(config.gcdSkillCorrection)) ||
 			isNaN(parseFloat(config.timeTillFirstManaTick)) ||
-			isNaN(parseFloat(config.countdown))) {
+			isNaN(parseFloat(config.countdown)) ||
+			isNaN(parseFloat(config.level))) {
 			window.alert("Some config fields are not numbers!");
 			return;
 		}
@@ -766,7 +767,7 @@ export class Config extends React.Component {
 			config.initialResourceOverrides = [];
 		}
 		controller.setConfigAndRestart({
-			level: config.level,
+			level: parseFloat(config.level),
 			spellSpeed: parseFloat(config.spellSpeed),
 			criticalHit: parseFloat(config.criticalHit),
 			directHit: parseFloat(config.directHit),

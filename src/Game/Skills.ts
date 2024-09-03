@@ -853,10 +853,8 @@ export class SkillsList extends Map<SkillName, Skill> {
 }
 
 export class DisplayedSkills extends Array<SkillName> {
-	constructor(levelSync: LevelSync) {
+	constructor(level: LevelSync) {
 		super();
-
-		const level = parseInt(levelSync);
 
 		this.push(SkillName.Blizzard);
 		this.push(SkillName.Fire);
