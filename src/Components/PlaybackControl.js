@@ -826,7 +826,7 @@ export class Config extends React.Component {
 		</div>
 		let editSection = <div>
 			<div>
-				<span>{localize({en: "level: ", zh: "lvl："})}</span>
+				<span>{localize({en: "level: ", zh: "等级："})}</span>
 				<select style={{outline: "none"}} value={this.state.level} onChange={this.setLevel}>
 					<option key={LevelSync.lvl100} value={LevelSync.lvl100}>100</option>
 					<option key={LevelSync.lvl90} value={LevelSync.lvl90}>90</option>
