@@ -316,6 +316,9 @@ class Controller {
 		if (content.config.gcdSkillCorrection === undefined) {
 			content.config.gcdSkillCorrection = DEFAULT_CONFIG.gcdSkillCorrection;
 		}
+		if (content.config.level) {
+			content.config.level = parseInt(content.config.level);
+		}
 		if (content.config.shellVersion === undefined) {
 			content.config.shellVersion = ShellVersion.Initial;
 		}

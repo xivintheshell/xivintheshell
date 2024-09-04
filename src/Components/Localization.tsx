@@ -77,11 +77,11 @@ const skillsZh = new Map<SkillName, string>([
 const skillsJa = new Map<SkillName, string>([
 	[SkillName.Fire, "ファイア"],
 	[SkillName.Blizzard, "ブリザド"],
-	[SkillName.Fire2, ""],	// TODO
-	[SkillName.Blizzard2, ""], // TODO
+	[SkillName.Fire2, "ファイラ"],
+	[SkillName.Blizzard2, "ブリザラ"],
 	[SkillName.Fire4, "ファイジャ"],
 	[SkillName.Transpose, "トランス"],
-	[SkillName.Thunder3, ""], // TODO
+	[SkillName.Thunder3, "サンダガ"],
 	[SkillName.Manaward, "マバリア"],
 	[SkillName.Manafont, "マナフォント"],
 	[SkillName.Fire3, "ファイガ"],
