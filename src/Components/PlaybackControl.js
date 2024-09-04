@@ -847,8 +847,8 @@ export class Config extends React.Component {
 				style={{color: fpsAndCorrectionColor}}
 				defaultValue={this.state.gcdSkillCorrection}
 				description={<span>{localize({en: "GCD correction", zh: "GCD时长修正"})} <Help topic={"cast-time-correction"} content={localize({
-					en: "Leaving this at 0 will probably give you the most accurate simulation. But if you want to manually correct your GCD skill durations (including casts) for whatever reason, you can put a small number",
-					zh: "正常情况下填0即能得到最精确的模拟结果。如果实在需要修正的话，这里输入的时长会被加到你的每个GCD技能（包括读条）耗时里"
+					en: "Leaving this at 0 will probably give you the most accurate simulation. But if you want to manually correct your GCD skill durations (including casts) for whatever reason, you can put a small number (can be negative)",
+					zh: "正常情况下填0即能得到最精确的模拟结果。如果实在需要修正的话，这里输入的时长会被加到你的每个GCD技能（包括读条）耗时里（可以为负）"
 				})}/>: </span>}
 				onChange={this.setGcdSkillCorrection}/>
 			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "距首次跳蓝时间："})} onChange={this.setTimeTillFirstManaTick}/>

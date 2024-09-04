@@ -207,7 +207,7 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
 						<li><a href={"https://picto.zqsz.me/"}>Pictomancer in the Shell</a> by <b>shanzhe</b>, for those of you who picked up the paint brush</li>
 						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>Black Mage in the Shell (Dawntrail at LV90)</a>: a variation for planning fights at LV90, created by <b>Akairyu</b></li>
-						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>: a snapshot of this tool at the end of Endwalker. In a few days it will also display some notable fight plans from Endwalker, as memoir.</li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>: a snapshot of this tool at the end of Endwalker. It also contains some notable fight plans from Endwalker, as memoir.</li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation for Save the Queens areas, created by <b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job
 							guide</a></li>
@@ -218,7 +218,7 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github页面</a></li>
 						<li><a href={"https://picto.zqsz.me/"}>绘灵法师排轴器</a>，由<b>shanzhe</b>制作并维护，给那些拾起了画笔的黑黑</li>
 						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>7.x版排轴器（90级）</a>，可以用来给TOP等副本排轴，作者是<b>Akairyu</b></li>
-						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.x版排轴器</a>，历史版本，几天后还会在那里展出一些6.0时期的轴，作为纪念。</li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.x版排轴器</a>，历史版本。那里也公开展示着一些6.x时期的轴作为纪念。</li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>博兹雅版排轴器（Black Mage in the Bozjan Shell）</a>: 本工具的博兹雅/天佑女王版。制作者： <b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>官方的黑魔法师职业介绍</a></li>
 						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL} rel="noreferrer">

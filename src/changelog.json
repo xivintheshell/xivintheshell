@@ -1,5 +1,11 @@
 [
 	{
+		"date": "9/3/24",
+		"changes": [
+			"Level sync for levels 70, 80, 90 - Thank you Turtle!!"
+		]
+	},
+	{
 		"date": "9/1/24",
 		"changes": [
 			"Bug fix: when the current slot contains resource override(s), adding a new slot crashes the tool (ty shanzhe and Turtle)",
