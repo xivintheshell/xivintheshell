@@ -8,41 +8,7 @@ import {localize, localizeSkillName} from "./Localization";
 import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
 import {getCurrentThemeColors} from "./ColorTheme";
-
-export let displayedSkills = [
-	SkillName.Blizzard,
-	SkillName.Fire,
-	SkillName.Transpose,
-	SkillName.HighThunder,
-	SkillName.Manaward,
-	SkillName.Manafont,
-	SkillName.Fire3,
-	SkillName.Blizzard3,
-	SkillName.Freeze,
-	SkillName.Flare,
-	SkillName.LeyLines,
-	SkillName.Blizzard4,
-	SkillName.Fire4,
-	SkillName.BetweenTheLines,
-	SkillName.AetherialManipulation,
-	SkillName.Triplecast,
-	SkillName.Foul,
-	SkillName.Despair,
-	SkillName.UmbralSoul,
-	SkillName.Xenoglossy,
-	SkillName.HighFire2,
-	SkillName.HighBlizzard2,
-	SkillName.Amplifier,
-	//SkillName.Paradox, // display paradox at F1/B1
-	SkillName.FlareStar,
-	// SkillName.Retrace, // display retrace at LL
-	SkillName.Addle,
-	SkillName.Swiftcast,
-	SkillName.LucidDreaming,
-	SkillName.Surecast,
-	SkillName.Tincture,
-	SkillName.Sprint
-];
+import {TraitName, Traits} from '../Game/Traits';
 
 // seems useful: https://na.finalfantasyxiv.com/lodestone/special/fankit/icon/
 export const skillIcons = new Map();
@@ -50,7 +16,10 @@ export const skillIcons = new Map();
 const blmSkills = [
 	SkillName.Blizzard,
 	SkillName.Fire,
+	SkillName.Blizzard2,
+	SkillName.Fire2,
 	SkillName.Transpose,
+	SkillName.Thunder3,
 	SkillName.HighThunder,
 	SkillName.Manaward,
 	SkillName.Manafont,
@@ -362,7 +331,7 @@ export class SkillsWindow extends React.Component {
 	}
 	componentDidMount() {
 		this.setState({
-			statusList: displayedSkills.map(sn=>{
+			statusList: controller.game.displayedSkills.map(sn=>{
 				return controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: sn});
 			}),
 			paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
@@ -372,17 +341,37 @@ export class SkillsWindow extends React.Component {
 
 	render() {
 		let skillButtons = [];
+		let displayedSkills = controller.game.displayedSkills;
 		for (let i = 0; i < displayedSkills.length; i++) {
-			let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
-			let skillName = (isF1B1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
-			let info = undefined;
-			if (this.state.paradoxInfo) 
-				info = (isF1B1 && this.state.paradoxReady) ? this.state.paradoxInfo : this.state.statusList[i];
+			let skillName = displayedSkills[i];
+			let info = this.state.statusList ? this.state.statusList[i] : undefined;
+			let level = controller.game.config.level;
 
-			let isLL = (displayedSkills[i] === SkillName.LeyLines);
-			skillName = (isLL && this.state.retraceReady) ? SkillName.Retrace : skillName;
-			if (this.state.retraceInfo)
-				info = (isLL && this.state.retraceReady) ? this.state.retraceInfo : info;
+			if (Traits.hasUnlocked(TraitName.AspectMasteryV, level)) {
+				let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
+				skillName = (isF1B1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
+				if (this.state.paradoxInfo) 
+					info = (isF1B1 && this.state.paradoxReady) ? this.state.paradoxInfo : info;
+			}
+
+			if (Traits.hasUnlocked(TraitName.EnhancedLeyLines, level)) {
+				let isLL = (displayedSkills[i] === SkillName.LeyLines);
+				skillName = (isLL && this.state.retraceReady) ? SkillName.Retrace : skillName;
+				if (this.state.retraceInfo)
+					info = (isLL && this.state.retraceReady) ? this.state.retraceInfo : info;
+			}
+
+			if (Traits.hasUnlocked(TraitName.AspectMasteryIV, level)) {
+				if (displayedSkills[i] === SkillName.Fire2)
+					skillName = SkillName.HighFire2;
+				else if (displayedSkills[i] === SkillName.Blizzard2)
+					skillName = SkillName.HighBlizzard2;
+			}
+
+			if (Traits.hasUnlocked(TraitName.ThunderMasteryIII, level)) {
+				if (displayedSkills[i] === SkillName.Thunder3)
+					skillName = SkillName.HighThunder;
+			}
 
 			let btn = <SkillButton
 				key={i}

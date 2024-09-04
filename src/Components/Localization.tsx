@@ -39,9 +39,11 @@ export function localizeDate(date: string, lang: Language): string {
 const skillsZh = new Map<SkillName, string>([
 	[SkillName.Fire, "火1"],
 	[SkillName.Blizzard, "冰1"],
+	[SkillName.Fire2, "火2"],
+	[SkillName.Blizzard2, "冰2"],
 	[SkillName.Fire4, "火4"],
 	[SkillName.Transpose, "星灵移位"],
-	[SkillName.HighThunder, "高暴雷"],
+	[SkillName.Thunder3, "雷3"],
 	[SkillName.Manaward, "魔罩"],
 	[SkillName.Manafont, "魔泉"],
 	[SkillName.Fire3, "火3"],
@@ -66,6 +68,7 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.Surecast, "沉稳咏唱"],
 	[SkillName.Tincture, "爆发药"],
 	[SkillName.Paradox, "悖论"],
+	[SkillName.HighThunder, "高暴雷"],
 	[SkillName.Sprint, "疾跑"],
 	[SkillName.Retrace, "Retrace"], // todo: when there's a common translation in the community
 	[SkillName.FlareStar, "耀星"]
@@ -74,9 +77,11 @@ const skillsZh = new Map<SkillName, string>([
 const skillsJa = new Map<SkillName, string>([
 	[SkillName.Fire, "ファイア"],
 	[SkillName.Blizzard, "ブリザド"],
+	[SkillName.Fire2, "ファイラ"],
+	[SkillName.Blizzard2, "ブリザラ"],
 	[SkillName.Fire4, "ファイジャ"],
 	[SkillName.Transpose, "トランス"],
-	[SkillName.HighThunder, "ハイサンダー"],
+	[SkillName.Thunder3, "サンダガ"],
 	[SkillName.Manaward, "マバリア"],
 	[SkillName.Manafont, "マナフォント"],
 	[SkillName.Fire3, "ファイガ"],
@@ -101,6 +106,7 @@ const skillsJa = new Map<SkillName, string>([
 	[SkillName.Surecast, "堅実魔"],
 	[SkillName.Tincture, "薬"],
 	[SkillName.Paradox, "パラドックス"],
+	[SkillName.HighThunder, "ハイサンダー"],
 	[SkillName.Sprint, "スプリント"]
 ]);
 
