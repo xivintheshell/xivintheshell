@@ -1,9 +1,10 @@
 {
   "files": {
     "main.css": "/ffxiv-blm-rotation/static/css/main.dba0d2a7.css",
-    "main.js": "/ffxiv-blm-rotation/static/js/main.41b84ecb.js",
+    "main.js": "/ffxiv-blm-rotation/static/js/main.004426dc.js",
     "static/media/Tincture.png": "/ffxiv-blm-rotation/static/media/Tincture.30918e122174e90fe254.png",
     "static/media/Sprint.png": "/ffxiv-blm-rotation/static/media/Sprint.337bd2225fa4fad61ec8.png",
+    "static/media/Blizzard 2.png": "/ffxiv-blm-rotation/static/media/Blizzard 2.f2c1ac2f60d6abc82db2.png",
     "static/media/Xenoglossy.png": "/ffxiv-blm-rotation/static/media/Xenoglossy.921b357e81afd074a7aa.png",
     "static/media/Foul.png": "/ffxiv-blm-rotation/static/media/Foul.da4ca9de7a96c96e9c52.png",
     "static/media/Blizzard 3.png": "/ffxiv-blm-rotation/static/media/Blizzard 3.7bcf294e278198abd72a.png",
@@ -31,6 +32,7 @@
     "static/media/Manafont.png": "/ffxiv-blm-rotation/static/media/Manafont.5b0766b2e1e378668fd5.png",
     "static/media/Sharpcast.png": "/ffxiv-blm-rotation/static/media/Sharpcast.3da306e7fd1bd8b185fa.png",
     "static/media/Addle.png": "/ffxiv-blm-rotation/static/media/Addle.fd12666abb7d2f733052.png",
+    "static/media/Fire 2.png": "/ffxiv-blm-rotation/static/media/Fire 2.06b09c1813df6d814633.png",
     "static/media/Blizzard.png": "/ffxiv-blm-rotation/static/media/Blizzard.70db69c2064f97a7d95c.png",
     "static/media/Fire 4.png": "/ffxiv-blm-rotation/static/media/Fire 4.f4c1812321337c3f3681.png",
     "static/media/Freeze.png": "/ffxiv-blm-rotation/static/media/Freeze.a4db103ed900d1c80b48.png",
@@ -38,10 +40,10 @@
     "static/media/High Thunder.png": "/ffxiv-blm-rotation/static/media/High Thunder.2f9a4fc75c14b8e97af7.png",
     "index.html": "/ffxiv-blm-rotation/index.html",
     "main.dba0d2a7.css.map": "/ffxiv-blm-rotation/static/css/main.dba0d2a7.css.map",
-    "main.41b84ecb.js.map": "/ffxiv-blm-rotation/static/js/main.41b84ecb.js.map"
+    "main.004426dc.js.map": "/ffxiv-blm-rotation/static/js/main.004426dc.js.map"
   },
   "entrypoints": [
     "static/css/main.dba0d2a7.css",
-    "static/js/main.41b84ecb.js"
+    "static/js/main.004426dc.js"
   ]
 }
