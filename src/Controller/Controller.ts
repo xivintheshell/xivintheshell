@@ -99,9 +99,9 @@ class Controller {
 		this.record.config = this.gameConfig;
 		this.imageExportConfig = {
 			wrapThresholdSeconds: JSON.parse(getCachedValue("img: wrapThresholdSeconds") ?? "0"),
-		    includeMPTicks: JSON.parse(getCachedValue("img: includeMPTicks") ?? "false"),
-		    includeDamageApplication: JSON.parse(getCachedValue("img: includeDamageApplication") ?? "false"),
-		    includeTime: JSON.parse(getCachedValue("img: includeTime") ?? "true"),
+			includeMPTicks: JSON.parse(getCachedValue("img: includeMPTicks") ?? "false"),
+			includeDamageApplication: JSON.parse(getCachedValue("img: includeDamageApplication") ?? "false"),
+			includeTime: JSON.parse(getCachedValue("img: includeTime") ?? "true"),
 			includeBuffIndicators: JSON.parse(getCachedValue("img: includeBuffIndicators") ?? "true"),
 		};
 
