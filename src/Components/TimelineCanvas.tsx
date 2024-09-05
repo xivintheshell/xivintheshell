@@ -393,10 +393,8 @@ function drawSkills(
 	timelineOriginY: number,
 	elems: SkillElem[],
 	interactive: boolean,
-	drawBuffCovers?: boolean,
+	drawBuffCovers: boolean
 ) {
-	// Flag used exclusively by image export feature -- should always be true in normal rendering
-	drawBuffCovers = drawBuffCovers === true || drawBuffCovers === undefined;
 	let greyLockBars: Rect[] = [];
 	let purpleLockBars: Rect[] = [];
 	let gcdBars: Rect[] = [];
@@ -585,9 +583,9 @@ function drawCursor(x: number, color: string, tip: string) {
 	testInteraction({x: x-3, y: 0, w: 6, h: c_maxTimelineHeight}, [tip]);
 }
 
-export function drawRuler(originX: number, ignoreVisibleX?: boolean) : number {
+export function drawRuler(originX: number, ignoreVisibleX = false) : number {
 	// If we're in image export mode, ignore the visibility limit
-	const xUpperBound = ignoreVisibleX === true
+	const xUpperBound = ignoreVisibleX
 		? StaticFn.positionFromTimeAndScale(controller.game.time + g_renderingProps.countdown, g_renderingProps.scale)
 		: g_visibleWidth;
 	// ruler bg
@@ -656,9 +654,9 @@ export function drawRuler(originX: number, ignoreVisibleX?: boolean) : number {
 	return 30;
 }
 
-export function drawMarkerTracks(originX: number, originY: number, ignoreVisibleX?: boolean) : number {
+export function drawMarkerTracks(originX: number, originY: number, ignoreVisibleX = false) : number {
 	// If we're in image export mode, ignore the visibility limit
-	const xUpperBound = ignoreVisibleX === true
+	const xUpperBound = ignoreVisibleX
 		? StaticFn.positionFromTimeAndScale(controller.game.time + g_renderingProps.countdown, g_renderingProps.scale)
 		: g_visibleWidth;
 	// make trackbins
