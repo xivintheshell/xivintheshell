@@ -159,19 +159,21 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 						<span>{
 							localize({
 								en: "seconds before wrapping ",
+								zh: "每行秒数 "
 							})}
 							<Help topic={"png-wrap"} content={localize({
 								en: "number of elapsed seconds, including the countdown, in each row in the image (set to 0 to never wrap)",
+								zh: "从开始倒计时算起，每显示多少秒换一次行。如果填0则从不换行。"
 							})}/>
 						: </span>
 					}
 					onChange={this.setWrapThresholdSeconds}
 				/>
 			</div>
-			{this.checkbox("includeMPAndLucidTicks", {en: "include MP and Lucid ticks"})}
-			{this.checkbox("includeDamageApplication", {en: "include damage applications"})}
-			{this.checkbox("includeTime", {en: "include time and markers"})}
-			{this.checkbox("includeBuffIndicators", {en: "include buff indicators"})}
+			{this.checkbox("includeMPAndLucidTicks", {en: "include MP and Lucid ticks", zh: "显示跳蓝和跳醒梦"})}
+			{this.checkbox("includeDamageApplication", {en: "include damage applications", zh: "显示伤害结算标记"})}
+			{this.checkbox("includeTime", {en: "include time and markers", zh: "显示时间刻度和时间轴标记"})}
+			{this.checkbox("includeBuffIndicators", {en: "include buff indicators", zh: "显示buff快照标记"})}
 		</>
 		return <div className={"imageExport"}>
 			<div style={{marginBottom: 5}}>
