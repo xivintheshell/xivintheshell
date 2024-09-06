@@ -38,7 +38,7 @@ export const buffInfos = [
 	new BuffInfo(BuffType.RadiantFinale3, MarkerColor.Purple, 20, 1.06, 0, 0),
 	new BuffInfo(BuffType.SearingLight, MarkerColor.Blue, 20, 1.05, 0, 0),
 	new BuffInfo(BuffType.StandardFinish, MarkerColor.Yellow, 60, 1.05, 0, 0),
-	new BuffInfo(BuffType.StarryMuse, MarkerColor.Purple, 20, 1.05, 0, 0),
+	new BuffInfo(BuffType.StarryMuse, MarkerColor.Purple, 20.5, 1.05, 0, 0),
 	new BuffInfo(BuffType.TechnicalFinish, MarkerColor.Blue, 20, 1.05, 0, 0),
 	new BuffInfo(BuffType.WanderersMinuet, MarkerColor.Green, 45, 1, 0.02, 0),
 ];

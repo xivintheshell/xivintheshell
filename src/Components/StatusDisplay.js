@@ -4,6 +4,7 @@ import {ResourceType} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+import {TraitName, Traits} from '../Game/Traits';
 
 // color, value
 function ResourceStack(props) {
@@ -301,7 +302,8 @@ function ResourceLocksDisplay(props) {
 
 function ResourcesDisplay(props) {
 	let colors = getCurrentThemeColors();
-	let data = (props && props.data) ? props.data : {
+	let data = (props && props.data) ? props.data : undefined;
+	let resources = (data && data.resources) ?? {
 		mana: 10000,
 		timeTillNextManaTick: 0.8,
 		enochianCountdown: 0,
@@ -313,11 +315,12 @@ function ResourcesDisplay(props) {
 		polyglotCountdown: 30,
 		polyglotStacks: 0
 	}
+
 	let manaBar = <ResourceBar
 		name={"MP"}
 		color={colors.resources.mana}
-		progress={data.mana / 10000}
-		value={Math.floor(data.mana) + "/10000"}
+		progress={resources.mana / 10000}
+		value={Math.floor(resources.mana) + "/10000"}
 		width={100}/>;
 	let manaTick = <ResourceBar
 		name={localize({
@@ -326,8 +329,8 @@ function ResourcesDisplay(props) {
 			ja: "MPティック"
 		})}
 		color={colors.resources.manaTick}
-		progress={1 - data.timeTillNextManaTick / 3}
-		value={(3 - data.timeTillNextManaTick).toFixed(3) + "/3"}
+		progress={1 - resources.timeTillNextManaTick / 3}
+		value={(3 - resources.timeTillNextManaTick).toFixed(3) + "/3"}
 		width={100}/>;
 	let enochian = <ResourceBar
 		name={localize({
@@ -336,8 +339,8 @@ function ResourcesDisplay(props) {
 			ja: "エノキアン"
 		})}
 		color={colors.resources.enochian}
-		progress={data.enochianCountdown / 15}
-		value={`${data.enochianCountdown.toFixed(3)}`}
+		progress={resources.enochianCountdown / 15}
+		value={`${resources.enochianCountdown.toFixed(3)}`}
 		width={100}/>;
 	let afui = <ResourceCounter
 		name={localize({
@@ -345,8 +348,8 @@ function ResourcesDisplay(props) {
 			zh: "冰火层数",
 			ja: "AF/UB"
 		})}
-		color={data.astralFire > 0 ? colors.resources.astralFire : colors.resources.umbralIce}
-		currentStacks={data.astralFire > 0 ? data.astralFire : data.umbralIce}
+		color={resources.astralFire > 0 ? colors.resources.astralFire : colors.resources.umbralIce}
+		currentStacks={resources.astralFire > 0 ? resources.astralFire : resources.umbralIce}
 		maxStacks={3}/>;
 	let uh = <ResourceCounter
 		name={
@@ -356,28 +359,32 @@ function ResourcesDisplay(props) {
 				ja: "アンブラルハート"
 			})}
 		color={colors.resources.umbralHeart}
-		currentStacks={data.umbralHearts}
+		currentStacks={resources.umbralHearts}
 		maxStacks={3}/>;
-	let paradox = <ResourceCounter
-		name={
-			localize({
-				en: "paradox",
-				zh: "悖论",
-				ja: "パラドックス"
-			})}
-		color={colors.resources.paradox}
-		currentStacks={data.paradox}
-		maxStacks={1}/>;
-	let soul = <ResourceCounter
-		name={
-			localize({
-				en: "astral soul",
-				zh: "星极魂",
-				ja: "アストラルソウル"
-			})}
-		color={colors.resources.astralSoul}
-		currentStacks={data.astralSoul}
-		maxStacks={6}/>;
+	let paradox = data.level && Traits.hasUnlocked(TraitName.AspectMasteryIV, data.level) ?
+		<ResourceCounter
+			name={
+				localize({
+					en: "paradox",
+					zh: "悖论",
+					ja: "パラドックス"
+				})}
+			color={colors.resources.paradox}
+			currentStacks={resources.paradox}
+			maxStacks={1}/>
+		: undefined;
+	let soul = data.level && Traits.hasUnlocked(TraitName.EnhancedAstralFire, data.level) ?
+		<ResourceCounter
+			name={
+				localize({
+					en: "astral soul",
+					zh: "星极魂",
+					ja: "アストラルソウル"
+				})}
+			color={colors.resources.astralSoul}
+			currentStacks={resources.astralSoul}
+			maxStacks={6}/>
+		: undefined;
 	let polyTimer = <ResourceBar
 		name={
 			localize({
@@ -386,9 +393,14 @@ function ResourcesDisplay(props) {
 				ja: "エノキ継続時間"
 			})}
 		color={colors.resources.polyTimer}
-		progress={1 - data.polyglotCountdown / 30}
-		value={`${data.polyglotCountdown.toFixed(3)}`}
+		progress={1 - resources.polyglotCountdown / 30}
+		value={`${resources.polyglotCountdown.toFixed(3)}`}
 		width={100}/>;
+	
+	const polyglotStacks = 
+		(data.level && Traits.hasUnlocked(TraitName.EnhancedPolyglotII, data.level) && 3) ||
+		(data.level && Traits.hasUnlocked(TraitName.EnhancedPolyglot, data.level) && 2) ||
+		1;
 	let poly = <ResourceCounter
 		name={
 			localize({
@@ -397,8 +409,8 @@ function ResourcesDisplay(props) {
 				ja: "ポリグロット"
 			})}
 		color={colors.resources.polyStacks}
-		currentStacks={data.polyglotStacks}
-		maxStacks={3}/>;
+		currentStacks={resources.polyglotStacks}
+		maxStacks={polyglotStacks}/>;
 	return <div style={{textAlign: "left"}}>
 		{manaBar}
 		{manaTick}
@@ -421,7 +433,8 @@ export class StatusDisplay extends React.Component {
 			resources: null,
 			resourceLocks: null,
 			selfBuffs: null,
-			enemyBuffs: null
+			enemyBuffs: null,
+			level: null,
 		}
 		updateStatusDisplay = ((newData)=>{
 			this.setState({
@@ -429,7 +442,8 @@ export class StatusDisplay extends React.Component {
 				resources: newData.resources,
 				resourceLocks: newData.resourceLocks,
 				selfBuffs: newData.selfBuffs,
-				enemyBuffs: newData.enemyBuffs
+				enemyBuffs: newData.enemyBuffs,
+				level: newData.level,
 			});
 		});
 	}
@@ -440,6 +454,7 @@ export class StatusDisplay extends React.Component {
 		return <div className={"statusDisplay"}>
 			<div style={{position: "absolute", top: -8, right: 0, zIndex: 1}}><Help topic={"mainControlRegion"} content={
 				<div className="toolTip">
+
 					{localize({
 						en:
 							<>
@@ -463,7 +478,7 @@ export class StatusDisplay extends React.Component {
 					{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}
 					{`${StaticFn.displayTime(this.state.time, 3)} (${this.state.time.toFixed(3)})`}
 				</span>
-				<ResourcesDisplay data={this.state.resources}/>
+				<ResourcesDisplay data={this.state}/>
 			</div>
 			<div className={"-right"}>
 				<ResourceLocksDisplay data={this.state.resourceLocks}/>

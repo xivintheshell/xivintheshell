@@ -107,14 +107,12 @@ export default class Main extends React.Component {
 		controller.tryAutoLoad();
 		controller.updateAllDisplay();
 
-		let handleResize = ()=>{
-			let cur = this.controlRegionRef.current;
-			if (cur) {
-				this.setState({controlRegionHeight: cur.clientHeight});
-			}
+		if (this.controlRegionRef.current) {
+			new ResizeObserver(() => {
+				let height = this.controlRegionRef.current?.clientHeight ?? 0;
+				this.setState({controlRegionHeight: height});
+			}).observe(this.controlRegionRef.current);
 		}
-		handleResize();
-		window.addEventListener("resize", handleResize);
 	}
 
 	componentWillUnmount() {

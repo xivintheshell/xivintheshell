@@ -8,8 +8,19 @@ import Main from "./Components/Main";
 // Need to mock window.URL.createObjectURL
 // https://stackoverflow.com/questions/52968969/jest-url-createobjecturl-is-not-a-function
 // https://stackoverflow.com/questions/61593774/how-do-i-test-code-that-uses-requestanimationframe-in-jest
+
+// [myn] and also mock ResizeObserver
+// https://stackoverflow.com/questions/64558062/how-to-mock-resizeobserver-to-work-in-unit-tests-using-react-testing-library
+
+class ResizeObserver {
+    observe() {}
+    unobserver() {}
+    disconnect() {}
+}
+
 beforeEach(() => {
     window.URL.createObjectURL = jest.fn();
+    window.ResizeObserver = ResizeObserver;
 });
 
 afterEach(() => {
