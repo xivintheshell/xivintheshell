@@ -99,7 +99,7 @@ class Controller {
 		this.record.config = this.gameConfig;
 		this.imageExportConfig = {
 			wrapThresholdSeconds: JSON.parse(getCachedValue("img: wrapThresholdSeconds") ?? "0"),
-			includeMPTicks: JSON.parse(getCachedValue("img: includeMPTicks") ?? "false"),
+			includeMPAndLucidTicks: JSON.parse(getCachedValue("img: includeMPAndLucidTicks") ?? "false"),
 			includeDamageApplication: JSON.parse(getCachedValue("img: includeDamageApplication") ?? "false"),
 			includeTime: JSON.parse(getCachedValue("img: includeTime") ?? "true"),
 			includeBuffIndicators: JSON.parse(getCachedValue("img: includeBuffIndicators") ?? "true"),
@@ -1346,12 +1346,6 @@ class Controller {
 
 	setImageExportConfig(newConfig: ImageExportConfig) {
 		this.imageExportConfig = newConfig;
-	}
-
-	generateTimelineImageURL(): string {
-		// TODO don't make this hacky
-		let canvas = document.getElementsByTagName("canvas")[0];
-		return canvas.toDataURL("image/png");
 	}
 }
 export const controller = new Controller();

@@ -115,7 +115,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 					currentHeight += drawMarkerTracks(timelineOrigin, currentHeight, true);
 				}
 				drawTimelines(timelineOrigin, currentHeight, {
-					drawMPTicks: this.state.includeMPTicks,
+					drawMPTicks: this.state.includeMPAndLucidTicks,
 					drawDamageMarks: this.state.includeDamageApplication,
 					drawBuffCovers: this.state.includeBuffIndicators,
 				})
@@ -168,7 +168,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 					onChange={this.setWrapThresholdSeconds}
 				/>
 			</div>
-			{this.checkbox("includeMPTicks", {en: "include MP and Lucid ticks"})}
+			{this.checkbox("includeMPAndLucidTicks", {en: "include MP and Lucid ticks"})}
 			{this.checkbox("includeDamageApplication", {en: "include damage applications"})}
 			{this.checkbox("includeTime", {en: "include time and markers"})}
 			{this.checkbox("includeBuffIndicators", {en: "include buff indicators"})}
@@ -197,7 +197,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 				})}
 			/>
 			<Expandable
-				title={"Settings"}
+				title={"PngExportSettings"}
 				titleNode={localize({en: "Settings", zh: "设置"})}
 				content={settingsSection}
 			/>
