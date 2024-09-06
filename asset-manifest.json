@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/ffxiv-blm-rotation/static/css/main.dba0d2a7.css",
-    "main.js": "/ffxiv-blm-rotation/static/js/main.004426dc.js",
+    "main.js": "/ffxiv-blm-rotation/static/js/main.97be7b8e.js",
     "static/media/Tincture.png": "/ffxiv-blm-rotation/static/media/Tincture.30918e122174e90fe254.png",
     "static/media/Sprint.png": "/ffxiv-blm-rotation/static/media/Sprint.337bd2225fa4fad61ec8.png",
     "static/media/Blizzard 2.png": "/ffxiv-blm-rotation/static/media/Blizzard 2.f2c1ac2f60d6abc82db2.png",
@@ -40,10 +40,10 @@
     "static/media/High Thunder.png": "/ffxiv-blm-rotation/static/media/High Thunder.2f9a4fc75c14b8e97af7.png",
     "index.html": "/ffxiv-blm-rotation/index.html",
     "main.dba0d2a7.css.map": "/ffxiv-blm-rotation/static/css/main.dba0d2a7.css.map",
-    "main.004426dc.js.map": "/ffxiv-blm-rotation/static/js/main.004426dc.js.map"
+    "main.97be7b8e.js.map": "/ffxiv-blm-rotation/static/js/main.97be7b8e.js.map"
   },
   "entrypoints": [
     "static/css/main.dba0d2a7.css",
-    "static/js/main.004426dc.js"
+    "static/js/main.97be7b8e.js"
   ]
 }
