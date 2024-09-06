@@ -1,5 +1,11 @@
 [
 	{
+		"date": "9/5/24",
+		"changes": [
+			"Add image export feature"
+		]
+	},
+	{
 		"date": "9/3/24",
 		"changes": [
 			"Level sync for levels 70, 80, 90 - Thank you Turtle!!"
