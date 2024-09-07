@@ -1,9 +1,11 @@
-import {Debug, SkillName, ProcMode, XIVMath, FIXED_BASE_CASTER_TAX} from "./Common";
+import {Debug, SkillName, ProcMode, LevelSync, FIXED_BASE_CASTER_TAX} from "./Common";
 import {ResourceOverride} from "./Resources";
 import {ShellInfo, ShellVersion} from "../Controller/Common";
+import {XIVMath} from "./XIVMath";
 
 export const DEFAULT_CONFIG = {
 	// 7.05 2.5 GCD bis https://xivgear.app/?page=sl%7C4c102326-839a-43c8-84ae-11ffdb6ef4a2
+	level: LevelSync.lvl100,
 	shellVersion: ShellInfo.version,
 	spellSpeed: 420,
 	criticalHit: 3140,
@@ -20,8 +22,8 @@ export const DEFAULT_CONFIG = {
 };
 
 export class GameConfig {
-
 	readonly shellVersion = ShellInfo.version;
+	readonly level: LevelSync;
 	readonly spellSpeed: number;
 	readonly criticalHit: number;
 	readonly directHit: number;
@@ -38,6 +40,7 @@ export class GameConfig {
 
 	constructor(props: {
 		shellVersion: ShellVersion,
+		level: LevelSync,
 		spellSpeed: number,
 		criticalHit: number,
 		directHit: number,
@@ -53,6 +56,7 @@ export class GameConfig {
 		casterTax?: number, // legacy
 	}) {
 		this.shellVersion = props.shellVersion;
+		this.level = props.level ?? DEFAULT_CONFIG.level;
 		this.spellSpeed = props.spellSpeed;
 		this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
 		this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
@@ -78,7 +82,7 @@ export class GameConfig {
 
 	equals(other : GameConfig) {
 		let sortFn = (a: ResourceOverride, b: ResourceOverride)=>{
-			return a.props.type < b.props.type ? -1 : 1;
+			return a.type < b.type ? -1 : 1;
 		};
 		let thisSortedOverrides = this.initialResourceOverrides.sort(sortFn);
 		let otherSortedOverrides = other.initialResourceOverrides.sort(sortFn);
@@ -89,6 +93,7 @@ export class GameConfig {
 				}
 			}
 			return this.shellVersion === other.shellVersion &&
+				this.level === other.level &&
 				this.spellSpeed === other.spellSpeed &&
 				this.criticalHit === other.criticalHit &&
 				this.directHit === other.directHit &&
@@ -106,17 +111,17 @@ export class GameConfig {
 	}
 
 	adjustedDoTPotency(inPotency : number) {
-		return XIVMath.dotPotency(this.spellSpeed, inPotency);
+		return XIVMath.dotPotency(this.level, this.spellSpeed, inPotency);
 	}
 
 	// returns GCD before FPS tax
-	adjustedGCD(hasLL: boolean, inspired?: boolean, recast?: number) {
-		return XIVMath.preTaxGcd(this.spellSpeed, hasLL, inspired, recast);
+	adjustedGCD(hasLL: boolean, inspired: boolean, recast?: number) {
+		return XIVMath.preTaxGcd(this.level, this.spellSpeed, hasLL, inspired, recast);
 	}
 
 	// returns cast time before FPS and caster tax
-	adjustedCastTime(inCastTime : number, hasLL: boolean, inspired?: boolean) {
-		return XIVMath.preTaxCastTime(this.spellSpeed, inCastTime, hasLL, inspired);
+	adjustedCastTime(inCastTime : number, hasLL: boolean, inspired: boolean) {
+		return XIVMath.preTaxCastTime(this.level, this.spellSpeed, inCastTime, hasLL, inspired);
 	}
 
 	getSkillAnimationLock(skillName : SkillName) : number {
@@ -157,6 +162,7 @@ export class GameConfig {
 	serialized() {
 		return {
 			shellVersion: this.shellVersion,
+			level: this.level,
 			spellSpeed: this.spellSpeed,
 			criticalHit: this.criticalHit,
 			directHit: this.directHit,

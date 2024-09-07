@@ -8,18 +8,19 @@ import {
 	TickMode
 } from "./Common";
 import {GameState} from "../Game/GameState";
-import {Debug, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
+import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 // @ts-ignore
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 // @ts-ignore
-import {displayedSkills, updateSkillButtons} from "../Components/Skills";
+import {updateSkillButtons} from "../Components/Skills";
 // @ts-ignore
 import {updateConfigDisplay} from "../Components/PlaybackControl"
 import {setHistorical, setRealTime} from "../Components/Main";
 import {ElemType, MAX_TIMELINE_SLOTS, Timeline} from "./Timeline"
 import {scrollTimelineTo, updateTimelineView} from "../Components/Timeline";
 import {ActionNode, ActionType, Line, Record} from "./Record";
+import {ImageExportConfig} from "./ImageExportConfig";
 import {PresetLinesManager} from "./PresetLinesManager";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
@@ -47,6 +48,7 @@ class Controller {
 	#presetLinesManager;
 	gameConfig;
 	record;
+	imageExportConfig: ImageExportConfig;
 	game;
 	#tinctureBuffPercentage = 0;
 	#untargetableMask = true;
@@ -95,6 +97,13 @@ class Controller {
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;
+		this.imageExportConfig = {
+			wrapThresholdSeconds: JSON.parse(getCachedValue("img: wrapThresholdSeconds") ?? "0"),
+			includeMPAndLucidTicks: JSON.parse(getCachedValue("img: includeMPAndLucidTicks") ?? "false"),
+			includeDamageApplication: JSON.parse(getCachedValue("img: includeDamageApplication") ?? "false"),
+			includeTime: JSON.parse(getCachedValue("img: includeTime") ?? "true"),
+			includeBuffIndicators: JSON.parse(getCachedValue("img: includeBuffIndicators") ?? "true"),
+		};
 
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown; // left of timeline origin
 
@@ -315,6 +324,9 @@ class Controller {
 		}
 		if (content.config.gcdSkillCorrection === undefined) {
 			content.config.gcdSkillCorrection = DEFAULT_CONFIG.gcdSkillCorrection;
+		}
+		if (content.config.level) {
+			content.config.level = parseInt(content.config.level);
 		}
 		if (content.config.shellVersion === undefined) {
 			content.config.shellVersion = ShellVersion.Initial;
@@ -665,7 +677,8 @@ class Controller {
 				resources: resourcesData,
 				resourceLocks: resourceLocksData,
 				enemyBuffs: enemyBuffsData,
-				selfBuffs: selfBuffsData
+				selfBuffs: selfBuffsData,
+				level: game.config.level,
 			});
 		}
 	}
@@ -688,7 +701,7 @@ class Controller {
 		let paradoxReady = game.resources.get(ResourceType.Paradox).availableAmount() > 0;
 		let retraceReady = game.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0;
 
-		updateSkillButtons(displayedSkills.map((skillName: SkillName) => {
+		updateSkillButtons(this.game.displayedSkills.map((skillName: SkillName) => {
 			return game.getSkillAvailabilityStatus(skillName);
 		}), paradoxReady, retraceReady);
 	}
@@ -723,6 +736,7 @@ class Controller {
 	}
 
 	setConfigAndRestart(props: {
+		level: LevelSync,
 		spellSpeed: number,
 		criticalHit: number,
 		directHit: number,
@@ -1356,6 +1370,10 @@ class Controller {
 				this.#handleKeyboardEvent_Manual(evt);
 			}
 		}
+	}
+
+	setImageExportConfig(newConfig: ImageExportConfig) {
+		this.imageExportConfig = newConfig;
 	}
 }
 export const controller = new Controller();

@@ -1,13 +1,14 @@
 import {Aspect, BuffType, Debug, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
-import {SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
+import {DisplayedSkills, SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
 import {CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
 import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
+import {TraitName, Traits} from "./Traits";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -26,6 +27,7 @@ export class GameState {
 	cooldowns: CoolDownState;
 	eventsQueue: Event[];
 	skillsList: SkillsList;
+	displayedSkills: DisplayedSkills;
 
 	constructor(config: GameConfig) {
 		this.config = config;
@@ -37,10 +39,17 @@ export class GameState {
 		// TIME (raw time which starts at 0 regardless of countdown)
 		this.time = 0;
 
+		this.displayedSkills = new DisplayedSkills(config.level);
+
 		// RESOURCES (checked when using skills)
 		this.resources = new ResourceState(this);
 		this.resources.set(ResourceType.Mana, new Resource(ResourceType.Mana, 10000, 10000));
-		this.resources.set(ResourceType.Polyglot, new Resource(ResourceType.Polyglot, 3, 0));
+
+		const polyglotStacks = 
+			(Traits.hasUnlocked(TraitName.EnhancedPolyglotII, this.config.level) && 3) ||
+			(Traits.hasUnlocked(TraitName.EnhancedPolyglot, this.config.level) && 2) ||
+			1;
+		this.resources.set(ResourceType.Polyglot, new Resource(ResourceType.Polyglot, polyglotStacks, 0));
 		this.resources.set(ResourceType.AstralFire, new Resource(ResourceType.AstralFire, 3, 0));
 		this.resources.set(ResourceType.UmbralIce, new Resource(ResourceType.UmbralIce, 3, 0));
 		this.resources.set(ResourceType.UmbralHeart, new Resource(ResourceType.UmbralHeart, 3, 0));
@@ -92,18 +101,22 @@ export class GameState {
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD(false)), 1, 1));
+		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD(false, false)), 1, 1));
 		this.cooldowns.set(ResourceType.cd_LeyLines, new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Transpose, new CoolDown(ResourceType.cd_Transpose, 5, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Manaward, new CoolDown(ResourceType.cd_Manaward, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_BetweenTheLines, new CoolDown(ResourceType.cd_BetweenTheLines, 3, 1, 1));
 		this.cooldowns.set(ResourceType.cd_AetherialManipulation, new CoolDown(ResourceType.cd_AetherialManipulation, 10, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Triplecast, new CoolDown(ResourceType.cd_Triplecast, 60, 2, 2));
-		this.cooldowns.set(ResourceType.cd_Manafont, new CoolDown(ResourceType.cd_Manafont, 100, 1, 1));
+
+		const manafontCooldown = (Traits.hasUnlocked(TraitName.EnhancedManafont, this.config.level) && 100) || 180;
+		this.cooldowns.set(ResourceType.cd_Manafont, new CoolDown(ResourceType.cd_Manafont, manafontCooldown, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Amplifier, new CoolDown(ResourceType.cd_Amplifier, 120, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Retrace, new CoolDown(ResourceType.cd_Amplifier, 40, 1, 1));
+		this.cooldowns.set(ResourceType.cd_Retrace, new CoolDown(ResourceType.cd_Retrace, 40, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Addle, new CoolDown(ResourceType.cd_Addle, 90, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Swiftcast, new CoolDown(ResourceType.cd_Swiftcast, 40, 1, 1));
+
+		const swiftcastCooldown = (Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level) && 40) || 60;
+		this.cooldowns.set(ResourceType.cd_Swiftcast, new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1));
 		this.cooldowns.set(ResourceType.cd_LucidDreaming, new CoolDown(ResourceType.cd_LucidDreaming, 60, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Surecast, new CoolDown(ResourceType.cd_Surecast, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Tincture, new CoolDown(ResourceType.cd_Tincture, 270, 1, 1));
@@ -111,9 +124,11 @@ export class GameState {
 
 		this.cooldowns.set(ResourceType.cd_TemperaCoat, new CoolDown(ResourceType.cd_TemperaCoat, 120, 1, 1));
 		this.cooldowns.set(ResourceType.cd_Smudge, new CoolDown(ResourceType.cd_Smudge, 20, 1, 1));
-		this.cooldowns.set(ResourceType.cd_LivingMuse, new CoolDown(ResourceType.cd_LivingMuse, 40, 3, 3));
+		const livingMuseStacks = Traits.hasUnlocked(TraitName.EnhancedPictomancyIV, this.config.level) ? 3 : 2;
+		this.cooldowns.set(ResourceType.cd_LivingMuse, new CoolDown(ResourceType.cd_LivingMuse, 40, livingMuseStacks, livingMuseStacks));
 		this.cooldowns.set(ResourceType.cd_Portrait, new CoolDown(ResourceType.cd_Portrait, 30, 1, 1));
-		this.cooldowns.set(ResourceType.cd_SteelMuse, new CoolDown(ResourceType.cd_SteelMuse, 60, 2, 2));
+		const hammerStacks = Traits.hasUnlocked(TraitName.EnhancedPictomancyII, this.config.level) ? 2 : 1;
+		this.cooldowns.set(ResourceType.cd_SteelMuse, new CoolDown(ResourceType.cd_SteelMuse, 60, hammerStacks, hammerStacks));
 		this.cooldowns.set(ResourceType.cd_ScenicMuse, new CoolDown(ResourceType.cd_ScenicMuse, 120, 1, 1));
 		// TODO handle these differently
 		this.cooldowns.set(ResourceType.cd_Subtractive, new CoolDown(ResourceType.cd_Subtractive, 1, 1, 1));
@@ -354,9 +369,11 @@ export class GameState {
 			}
 			af.gain(numStacksToGain);
 
-			if (ui.available(3) && uh.available(3)) {
-				paradox.gain(1);
-			}  
+			if (Traits.hasUnlocked(TraitName.AspectMasteryV, this.config.level)) {
+				if (ui.available(3) && uh.available(3)) {
+					paradox.gain(1);
+				}  
+			}
 
 			ui.consume(ui.availableAmount());
 		}
@@ -367,8 +384,10 @@ export class GameState {
 			}
 			ui.gain(numStacksToGain);
 
-			if (af.available(3)) {
-				paradox.gain(1);
+			if (Traits.hasUnlocked(TraitName.AspectMasteryV, this.config.level)) {
+				if (af.available(3)) {
+					paradox.gain(1);
+				}
 			}
 
 			af.consume(af.availableAmount());
@@ -430,8 +449,8 @@ export class GameState {
 		let ll = this.resources.get(ResourceType.LeyLines);
 		if (ll.available(1)) {
 			// should be approximately 0.85
-			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(true));
-			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(false));
+			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(true, false));
+			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(false, false));
 			return num / denom;
 		} else {
 			return 1;
@@ -796,11 +815,13 @@ export class GameState {
 				inspiration.consume(1);
 				hyperphantasia.removeTimer();
 				inspiration.removeTimer();
-				this.resources.get(ResourceType.RainbowBright).gain(1);
-				this.resources.addResourceEvent({
-					rscType: ResourceType.RainbowBright,
-					name: "drop rainbow bright", delay: 30, fnOnRsc: (rsc: Resource) => rsc.consume(1),
-				});
+				if (Traits.hasUnlocked(TraitName.EnhancedPictomancyIII, this.config.level)) {
+					this.resources.get(ResourceType.RainbowBright).gain(1);
+					this.resources.addResourceEvent({
+						rscType: ResourceType.RainbowBright,
+						name: "drop rainbow bright", delay: 30, fnOnRsc: (rsc: Resource) => rsc.consume(1),
+					});
+				}
 			}
 		}
 	}
@@ -946,7 +967,7 @@ export class GameState {
 			highlight = true;
 		} else if (skillName === SkillName.Fire3) {// F3P
 			if (this.resources.get(ResourceType.Firestarter).available(1)) highlight = true;
-		} else if (skillName === SkillName.HighThunder) {
+		} else if (skillName === SkillName.Thunder3 || skillName === SkillName.HighThunder) {
 			if (this.resources.get(ResourceType.Thunderhead).available(1)) highlight = true;
 		} else if (skillName === SkillName.Foul || skillName === SkillName.Xenoglossy) {// polyglot
 			if (this.resources.get(ResourceType.Polyglot).available(1)) highlight = true;

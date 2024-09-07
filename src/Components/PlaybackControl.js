@@ -2,10 +2,11 @@ import React from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
 import {getCachedValue, setCachedValue, ShellVersion, TickMode} from "../Controller/Common";
-import {FIXED_BASE_CASTER_TAX, ProcMode, ResourceType, XIVMath} from "../Game/Common";
+import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
 import {resourceInfos} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+import {XIVMath} from '../Game/XIVMath';
 
 const tableStyle = `
 	table {
@@ -291,13 +292,13 @@ function ResourceOverrideDisplay(props) {
 export let updateConfigDisplay = (config)=>{};
 
 // helper that prob won't be used elsewhere
-function getTaxPreview(baseCastTime, spsStr, fpsStr) {
+function getTaxPreview(level, baseCastTime, spsStr, fpsStr) {
 	let sps = parseFloat(spsStr);
 	let fps = parseFloat(fpsStr);
 	if (isNaN(sps) || isNaN(fps)) {
 		return "n/a";
 	}
-	let adjustedCastTime = XIVMath.preTaxCastTime(sps, baseCastTime, false);
+	let adjustedCastTime = XIVMath.preTaxCastTime(level, sps, baseCastTime, false);
 	return (XIVMath.afterFpsTax(fps, adjustedCastTime) - adjustedCastTime + XIVMath.afterFpsTax(fps, FIXED_BASE_CASTER_TAX)).toFixed(3);
 }
 
@@ -306,6 +307,7 @@ export class Config extends React.Component {
 		super(props);
 		this.state = { // NOT DEFAULTS
 			stepSize : 0,
+			level: LevelSync.lvl100,
 			spellSpeed: 0,
 			criticalHit: 0,
 			directHit: 0,
@@ -333,7 +335,7 @@ export class Config extends React.Component {
 			let sps = parseFloat(spsStr);
 			let fps = parseFloat(fpsStr);
 			if (!isNaN(fps) && !isNaN(sps)) {
-				b1TaxPreview = getTaxPreview(2.5, sps, fps);
+				b1TaxPreview = getTaxPreview(this.state.level, 2.5, sps, fps);
 			} else {
 				b1TaxPreview = "n/a"
 			}
@@ -350,6 +352,7 @@ export class Config extends React.Component {
 					this.setState({randomSeed: seed});
 				}
 				let config = {
+					level: this.state.level,
 					spellSpeed: this.state.spellSpeed,
 					criticalHit: this.state.criticalHit,
 					directHit: this.state.directHit,
@@ -373,6 +376,10 @@ export class Config extends React.Component {
 		this.setSpellSpeed = (val => {
 			this.setState({spellSpeed: val, dirty: true});
 			this.updateTaxPreview(val, this.state.fps);
+		});
+
+		this.setLevel = (evt => {
+			this.setState({level: evt.target.value, dirty: true});
 		});
 
 		this.setCriticalHit = (val => {
@@ -458,7 +465,7 @@ export class Config extends React.Component {
 			this.setState(config);
 			this.setState({
 				dirty: false,
-				b1TaxPreview: getTaxPreview(2.5, config.spellSpeed, config.fps),
+				b1TaxPreview: getTaxPreview(config.level, 2.5, config.spellSpeed, config.fps),
 				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides)
 			});
 		});
@@ -757,7 +764,8 @@ export class Config extends React.Component {
 			isNaN(parseFloat(config.fps)) ||
 			isNaN(parseFloat(config.gcdSkillCorrection)) ||
 			isNaN(parseFloat(config.timeTillFirstManaTick)) ||
-			isNaN(parseFloat(config.countdown))) {
+			isNaN(parseFloat(config.countdown)) ||
+			isNaN(parseFloat(config.level))) {
 			window.alert("Some config fields are not numbers!");
 			return;
 		}
@@ -765,6 +773,7 @@ export class Config extends React.Component {
 			config.initialResourceOverrides = [];
 		}
 		controller.setConfigAndRestart({
+			level: parseFloat(config.level),
 			spellSpeed: parseFloat(config.spellSpeed),
 			criticalHit: parseFloat(config.criticalHit),
 			directHit: parseFloat(config.directHit),
@@ -806,24 +815,33 @@ export class Config extends React.Component {
 				</tr>
 				<tr>
 					<td>2.8</td>
-					<td>{getTaxPreview(2.8, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(this.state.level, 2.8, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				<tr>
 					<td>3.0</td>
-					<td>{getTaxPreview(3.0, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(this.state.level, 3.0, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				<tr>
 					<td>3.5</td>
-					<td>{getTaxPreview(3.5, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(this.state.level, 3.5, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				<tr>
 					<td>4.0</td>
-					<td>{getTaxPreview(4.0, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(this.state.level, 4.0, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				</tbody>
 			</table>
 		</div>
 		let editSection = <div>
+			<div>
+				<span>{localize({en: "level: ", zh: "等级："})}</span>
+				<select style={{outline: "none"}} value={this.state.level} onChange={this.setLevel}>
+					<option key={LevelSync.lvl100} value={LevelSync.lvl100}>100</option>
+					<option key={LevelSync.lvl90} value={LevelSync.lvl90}>90</option>
+					<option key={LevelSync.lvl80} value={LevelSync.lvl80}>80</option>
+					<option key={LevelSync.lvl70} value={LevelSync.lvl70}>70</option>
+				</select>
+			</div>
 			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
 			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: " , zh: "暴击："})} onChange={this.setCriticalHit}/>
 			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>
@@ -837,8 +855,8 @@ export class Config extends React.Component {
 				style={{color: fpsAndCorrectionColor}}
 				defaultValue={this.state.gcdSkillCorrection}
 				description={<span>{localize({en: "GCD correction", zh: "GCD时长修正"})} <Help topic={"cast-time-correction"} content={localize({
-					en: "Leaving this at 0 will probably give you the most accurate simulation. But if you want to manually correct your GCD skill durations (including casts) for whatever reason, you can put a small number",
-					zh: "正常情况下填0即能得到最精确的模拟结果。如果实在需要修正的话，这里输入的时长会被加到你的每个GCD技能（包括读条）耗时里"
+					en: "Leaving this at 0 will probably give you the most accurate simulation. But if you want to manually correct your GCD skill durations (including casts) for whatever reason, you can put a small number (can be negative)",
+					zh: "正常情况下填0即能得到最精确的模拟结果。如果实在需要修正的话，这里输入的时长会被加到你的每个GCD技能（包括读条）耗时里（可以为负）"
 				})}/>: </span>}
 				onChange={this.setGcdSkillCorrection}/>
 			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "距首次跳蓝时间："})} onChange={this.setTimeTillFirstManaTick}/>

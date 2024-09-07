@@ -316,18 +316,24 @@ type ResourceOverrideProps = {
 };
 
 export class ResourceOverride {
-	props: ResourceOverrideProps;
+
+	type: ResourceType;
+	timeTillFullOrDrop: number; // CDs (full), buff/procs (drop)
+	stacks: number; // Triplecast, MP, AF, UI, UH, Paradox, Polyglot
+	effectOrTimerEnabled: boolean; // LL, halt
+
 	constructor(props: ResourceOverrideProps) {
-		this.props = props;
+		this.type = props.type;
+		this.timeTillFullOrDrop = props.timeTillFullOrDrop;
+		this.stacks = props.stacks;
+		this.effectOrTimerEnabled = props.effectOrTimerEnabled;
 	}
 
 	equals(other: ResourceOverride) {
-		let a = this.props;
-		let b = other.props;
-		return a.type === b.type &&
-			a.timeTillFullOrDrop === b.timeTillFullOrDrop &&
-			a.stacks === b.stacks &&
-			a.effectOrTimerEnabled === b.effectOrTimerEnabled;
+		return this.type === other.type &&
+			this.timeTillFullOrDrop === other.timeTillFullOrDrop &&
+			this.stacks === other.stacks &&
+			this.effectOrTimerEnabled === other.effectOrTimerEnabled;
 	}
 
 	// todo
@@ -357,7 +363,7 @@ export class ResourceOverride {
 	// MP, AF, UI, UH, Paradox, Polyglot: amount (stacks)
 	applyTo(game: GameState) {
 
-		let info = resourceInfos.get(this.props.type);
+		let info = resourceInfos.get(this.type);
 		if (!info) {
 			console.assert(false);
 			return;
@@ -365,13 +371,13 @@ export class ResourceOverride {
 
 		// CD
 		if (info.isCoolDown) {
-			let cd = game.cooldowns.get(this.props.type);
-			cd.overrideCurrentValue(cd.maxValue - this.props.timeTillFullOrDrop);
+			let cd = game.cooldowns.get(this.type);
+			cd.overrideCurrentValue(cd.maxValue - this.timeTillFullOrDrop);
 		}
 
 		// resource
 		else {
-			let rsc = game.resources.get(this.props.type);
+			let rsc = game.resources.get(this.type);
 
 			let overrideDropRscTimer = (newTimer: number) => {
 				rsc.removeTimer();
@@ -394,8 +400,8 @@ export class ResourceOverride {
 			{
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(1);
-				overrideDropRscTimer(this.props.timeTillFullOrDrop);
-				rsc.enabled = this.props.effectOrTimerEnabled;
+				overrideDropRscTimer(this.timeTillFullOrDrop);
+				rsc.enabled = this.effectOrTimerEnabled;
 			}
 
 			// Enochian (timer + enabled)
@@ -403,8 +409,8 @@ export class ResourceOverride {
 			{
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(1);
-				if (this.props.effectOrTimerEnabled) {
-					overrideDropRscTimer(this.props.timeTillFullOrDrop);
+				if (this.effectOrTimerEnabled) {
+					overrideDropRscTimer(this.timeTillFullOrDrop);
 				}
 			}
 
@@ -412,11 +418,11 @@ export class ResourceOverride {
 			else if (rsc.type === ResourceType.Polyglot)
 			{
 				// stacks
-				let stacks = this.props.stacks;
+				let stacks = this.stacks;
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(stacks);
 				// timer
-				let timer = this.props.timeTillFullOrDrop;
+				let timer = this.timeTillFullOrDrop;
 				if (timer > 0) { // timer is set
 					rsc.overrideTimer(game, timer);
 				}
@@ -426,12 +432,12 @@ export class ResourceOverride {
 			else {
 
 				// stacks
-				let stacks = this.props.stacks;
+				let stacks = this.stacks;
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(stacks);
 
 				// timer
-				let timer = this.props.timeTillFullOrDrop;
+				let timer = this.timeTillFullOrDrop;
 				if (stacks > 0 && info.maxTimeout >= 0) { // may expire
 					overrideDropRscTimer(timer);
 				}
@@ -440,6 +446,11 @@ export class ResourceOverride {
 	}
 
 	serialized() {
-		return this.props;
+		return {
+			type: this.type,
+			timeTillFullOrDrop: this.timeTillFullOrDrop,
+			stacks: this.stacks,
+			effectOrTimerEnabled: this.effectOrTimerEnabled
+		};
 	}
 }

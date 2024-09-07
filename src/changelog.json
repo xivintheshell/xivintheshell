@@ -1,5 +1,24 @@
 [
 	{
+		"date": "9/5/24",
+		"changes": [
+			"Add image export feature"
+		]
+	},
+	{
+		"date": "9/3/24",
+		"changes": [
+			"Level sync for levels 70, 80, 90 - Thank you Turtle!!"
+		]
+	},
+	{
+		"date": "9/1/24",
+		"changes": [
+			"Bug fix: when the current slot contains resource override(s), adding a new slot crashes the tool (ty shanzhe and Turtle)",
+			"Change Starry Muse party buff duration to 20.5s"
+		]
+	},
+	{
 		"date": "8/25/24",
 		"changes": [
 			"Remove \"extended buff duration\" config option and now triple always lasts 15.7s and firestarter lasts 30.5s",

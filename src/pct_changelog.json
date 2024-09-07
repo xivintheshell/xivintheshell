@@ -1,5 +1,13 @@
 [
     {
+        "date": "9/7/24",
+        "changes": [
+            "[merge] Fix crash when creating a new slot with resource overrides (thanks miyehn)",
+            "[merge] Add level sync option (thanks Turtle)",
+            "[merge] Add image export feature"
+        ]
+    },
+    {
         "date": "8/29/24",
         "changes": [
             "[merge] Remove \"Extended buff duration\" config option",

@@ -1,7 +1,9 @@
 import {controller} from "../Controller/Controller";
+import {XIVMath} from "./XIVMath";
 import {Aspect, BuffType, Debug, ResourceType, SkillName} from "./Common";
-import { GameConfig } from "./GameConfig";
+import {GameConfig} from "./GameConfig";
 import {ResourceState} from "./Resources";
+import {TraitName, Traits} from "./Traits";
 
 export const enum PotencyModifierType {
 	AF3, AF2, AF1, UI3, UI2, UI1, ENO, POT, STARRY, HAMMER, PARTY
@@ -34,7 +36,13 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 
 	// eno
 	if (resources.get(ResourceType.Enochian).available(1)) {
-		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: 1.33, critFactor: 0, dhFactor: 0});
+		const enochianModifier = 
+			(Traits.hasUnlocked(TraitName.EnhancedEnochianIV, controller.game.config.level) && 1.33) ||
+			(Traits.hasUnlocked(TraitName.EnhancedEnochianIII, controller.game.config.level) && 1.25) ||
+			(Traits.hasUnlocked(TraitName.EnhancedEnochianII, controller.game.config.level) && 1.15) ||
+			1.10;
+
+		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: enochianModifier, critFactor: 0, dhFactor: 0});
 	}
 
 	// ui1
@@ -161,68 +169,23 @@ export class Potency {
 
 	hasSnapshotted() { return this.snapshotTime !== undefined; }
 
+	#calculateAutoCDHModifier(critBonus: number, dhBonus: number) {
+		const level = this.config.level;
+		const base = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, critBonus, dhBonus);
+		const buffed = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, 1+critBonus, 1+dhBonus);
+
+		return buffed / base;
+	}
+
 	#calculatePotencyModifier(damageFactor: number, critBonus: number, dhBonus: number) {
+		const level = this.config.level;
 		const critStat = this.config.criticalHit;
 		const dhStat = this.config.directHit;
 		const det = this.config.determination;
 
-		const base = this.#calculateDamage(critStat, dhStat, det, 1, 0, 0);
-		const buffed = this.#calculateDamage(critStat, dhStat, det, damageFactor, critBonus, dhBonus);
+		const base = XIVMath.calculateDamage(level, critStat, dhStat, det, 1, 0, 0);
+		const buffed = XIVMath.calculateDamage(level, critStat, dhStat, det, damageFactor, critBonus, dhBonus);
 
 		return buffed / base;
-	}
-
-	#calculateAutoCDHModifier(critBonus: number, dhBonus: number) {
-		const base = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, critBonus, dhBonus);
-		const buffed = this.#calculateDamage(controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, 1+critBonus, 1+dhBonus);
-
-		return buffed / base;
-	}
-
-	#calculateDamage(crit: number, dh: number, det: number, damageFactor: number, critBonus: number, dhBonus: number) {
-		let modifier = damageFactor;
-
-		const critRate = (critBonus >= 1) ? critBonus : this.#criticalHitRate(crit) + critBonus;
-		const dhRate = (critBonus >= 1) ? dhBonus : this.#directHitRate(dh) + dhBonus;
-		const critDamageMult =  this.#criticalHitStrength(crit);
-
-		const autoCDH = critRate >= 1 && dhRate >= 1;
-		const critMod = critRate > 1 ? 1 + ((critRate - 1) * critDamageMult) : 1;
-		const dhMod = dhRate > 1 ? 1 + ((dhRate - 1) * 1.25) : 1;
-		const clampedCritRate = critRate > 1 ? 1 : critRate;
-		const clampedDHRate   = dhRate   > 1 ? 1 : dhRate;
-
-		if (autoCDH) 
-			modifier *= (1 + this.#autoMultiDet(det) + this.#autoMultiDH(dh));
-		else
-			modifier *= (1 + this.#autoMultiDet(det));
-
-		const critDamage = modifier * critMod * critDamageMult;
-		const dhDamage = modifier * 1.25 * dhMod;
-		const critDHDamage = critDamage * 1.25 * dhMod;
-		const critDHRate = clampedCritRate * clampedDHRate;
-		const normalRate = 1 - clampedCritRate - clampedDHRate + critDHRate;
-
-		return modifier * normalRate + critDamage * (clampedCritRate-critDHRate) + dhDamage * (clampedDHRate-critDHRate) + critDHDamage * critDHRate; 
-	}
-
-	#criticalHitRate(crit: number) {
-		return (Math.floor(200 * (crit-420) / 2780) + 50) * 0.001;
-	}
-
-	#criticalHitStrength(crit: number) {
-		return (Math.floor(200 * (crit-420) / 2780) + 1400) * 0.001;
-	}
-
-	#directHitRate(dh: number) {
-		return Math.floor(550 * (dh-420) / 2780) * 0.001;
-	}
-
-	#autoMultiDH(dh: number) {
-		return Math.floor(140 * (dh-420) / 2780) * 0.001;
-	}
-
-	#autoMultiDet(det: number) {
-		return Math.floor(140 * (det-440) / 2780) * 0.001;
 	}
 }

@@ -398,7 +398,8 @@ function drawSkills(
 	timelineOriginX: number,
 	timelineOriginY: number,
 	elems: SkillElem[],
-	interactive: boolean
+	interactive: boolean,
+	drawBuffCovers: boolean
 ) {
 	let greyLockBars: Rect[] = [];
 	let purpleLockBars: Rect[] = [];
@@ -440,7 +441,9 @@ function drawSkills(
 			buildCover(nodeCoverCount, buffCovers);
 
 		function buildCover(existingCovers: number, collection: Rect[]) {
-			collection.push({x: x, y: y + 28 + existingCovers*4, w: 28, h: 4});
+			if (drawBuffCovers) {
+				collection.push({x: x, y: y + 28 + existingCovers*4, w: 28, h: 4});
+			}
 			return 1;
 		}
 
@@ -599,14 +602,18 @@ function drawCursor(x: number, color: string, tip: string) {
 	testInteraction({x: x-3, y: 0, w: 6, h: c_maxTimelineHeight}, [tip]);
 }
 
-function drawRuler(originX: number) : number {
+export function drawRuler(originX: number, ignoreVisibleX = false) : number {
+	// If we're in image export mode, ignore the visibility limit
+	const xUpperBound = ignoreVisibleX
+		? StaticFn.positionFromTimeAndScale(controller.game.time + g_renderingProps.countdown, g_renderingProps.scale)
+		: g_visibleWidth;
 	// ruler bg
 	g_ctx.fillStyle = g_colors.timeline.ruler;
-	g_ctx.fillRect(0, 0, g_visibleWidth, 30);
+	g_ctx.fillRect(0, 0, xUpperBound, 30);
 	let displayTime = StaticFn.timeFromPositionAndScale(g_mouseX - originX, g_renderingProps.scale) - g_renderingProps.countdown;
 	// leave the left most section not clickable
 	testInteraction(
-		{x: c_leftBufferWidth, y: 0, w: g_visibleWidth - c_leftBufferWidth, h: 30},
+		{x: c_leftBufferWidth, y: 0, w: xUpperBound - c_leftBufferWidth, h: 30},
 		[displayTime.toFixed(3)],
 		()=>{
 			if (displayTime < controller.game.getDisplayTime() && displayTime >= -controller.game.config.countdown) {
@@ -632,14 +639,14 @@ function drawRuler(originX: number) : number {
 	if (pixelsPerSecond >= 6) {
 		for (let x = 0; x < g_renderingProps.timelineWidth - countdownPadding; x += pixelsPerSecond) {
 			let pos = originX + x + countdownPadding;
-			if (pos >= -cullThreshold && pos <= g_visibleWidth + cullThreshold) {
+			if (pos >= -cullThreshold && pos <= xUpperBound + cullThreshold) {
 				g_ctx.moveTo(pos, 0);
 				g_ctx.lineTo(pos, 6);
 			}
 		}
 		for (let x = -pixelsPerSecond; x >= -countdownPadding; x -= pixelsPerSecond) {
 			let pos = originX + x + countdownPadding;
-			if (pos >= -cullThreshold && pos <= g_visibleWidth + cullThreshold) {
+			if (pos >= -cullThreshold && pos <= xUpperBound + cullThreshold) {
 				g_ctx.moveTo(pos, 0);
 				g_ctx.lineTo(pos, 6);
 			}
@@ -647,7 +654,7 @@ function drawRuler(originX: number) : number {
 	}
 	for (let x = 0; x < g_renderingProps.timelineWidth - countdownPadding; x += pixelsPerSecond * 5) {
 		let pos = originX + x + countdownPadding;
-		if (pos >= -cullThreshold && pos <= g_visibleWidth + cullThreshold) {
+		if (pos >= -cullThreshold && pos <= xUpperBound + cullThreshold) {
 			g_ctx.moveTo(pos, 0);
 			g_ctx.lineTo(pos, 10);
 			g_ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), pos, 23);
@@ -655,7 +662,7 @@ function drawRuler(originX: number) : number {
 	}
 	for (let x = -pixelsPerSecond * 5; x >= -countdownPadding; x -= pixelsPerSecond * 5) {
 		let pos = originX + x + countdownPadding;
-		if (pos >= -cullThreshold && pos <= g_visibleWidth + cullThreshold) {
+		if (pos >= -cullThreshold && pos <= xUpperBound + cullThreshold) {
 			g_ctx.moveTo(pos, 0);
 			g_ctx.lineTo(pos, 10);
 			g_ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), pos, 23);
@@ -666,8 +673,11 @@ function drawRuler(originX: number) : number {
 	return 30;
 }
 
-function drawMarkerTracks(originX: number, originY: number) : number {
-
+export function drawMarkerTracks(originX: number, originY: number, ignoreVisibleX = false) : number {
+	// If we're in image export mode, ignore the visibility limit
+	const xUpperBound = ignoreVisibleX
+		? StaticFn.positionFromTimeAndScale(controller.game.time + g_renderingProps.countdown, g_renderingProps.scale)
+		: g_visibleWidth;
 	// make trackbins
 	let trackBins = new Map<number, MarkerElem[]>();
 	g_renderingProps.allMarkers
@@ -691,7 +701,7 @@ function drawMarkerTracks(originX: number, originY: number) : number {
 	g_ctx.fillStyle = g_colors.timeline.tracks;
 	for (let i = 0; i < numTracks; i += 2) {
 		let top = markerTracksBottomY - (i + 1) * c_trackHeight;
-		g_ctx.rect(0, top, g_visibleWidth, c_trackHeight);
+		g_ctx.rect(0, top, xUpperBound, c_trackHeight);
 	}
 	g_ctx.fill();
 
@@ -702,7 +712,17 @@ function drawMarkerTracks(originX: number, originY: number) : number {
 
 }
 
-function drawTimelines(originX:  number, originY: number) : number {
+export function drawTimelines(originX: number, originY: number, imageExportSettings?: {
+	drawMPTicks: boolean,
+	drawDamageMarks: boolean,
+	drawBuffCovers: boolean,
+}): number {
+	// Flags used by the image export feature -- if this function is just called during normal
+	// timeline rendering, these should all be drawn.
+	const isImageExportMode = imageExportSettings !== undefined;
+	const shouldDrawMPTicks = imageExportSettings?.drawMPTicks ?? true;
+	const shouldDrawDamageMarks = imageExportSettings?.drawDamageMarks ?? true;
+	const shouldDrawBuffCovers = imageExportSettings?.drawBuffCovers ?? true;
 
 	let sharedElemBins = new Map<ElemType, TimelineElem[]>();
 	g_renderingProps.sharedElements.forEach(e=>{
@@ -718,30 +738,44 @@ function drawTimelines(originX:  number, originY: number) : number {
 
 		let isActiveSlot = slot === g_renderingProps.activeSlotIndex;
 		let elemBins = new Map<ElemType, TimelineElem[]>();
+		if (isImageExportMode && !isActiveSlot) {
+			// Only draw the active timeline in export mode
+			continue;
+		}
 		g_renderingProps.slotElements[slot].forEach(e=>{
 			let arr = elemBins.get(e.type) ?? [];
 			arr.push(e);
 			elemBins.set(e.type, arr);
 		});
 		let currentY = originY + slot * c_timelineHeight;
+		if (isImageExportMode) {
+			// Only draw the active timeline in export mode
+			currentY = originY;
+		}
 
 		// mp tick marks
-		drawMPTickMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.MPTickMark) as MPTickMarkElem[] ?? []);
+		if (shouldDrawMPTicks) {
+			drawMPTickMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.MPTickMark) as MPTickMarkElem[] ?? []);
+		}
 
 		// damage marks
-		drawDamageMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.DamageMark) as DamageMarkElem[] ?? []);
+		if (shouldDrawDamageMarks) {
+			drawDamageMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.DamageMark) as DamageMarkElem[] ?? []);
+		}
 
 		// lucid marks
-		drawLucidMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.LucidMark) as LucidMarkElem[] ?? []);
+		if (shouldDrawMPTicks) {
+			drawLucidMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.LucidMark) as LucidMarkElem[] ?? []);
+		}
 
 		// warning marks (polyglot overcap)
 		drawWarningMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.WarningMark) as WarningMarkElem[] ?? []);
 
 		// skills
-		drawSkills(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.Skill) as SkillElem[] ?? [], isActiveSlot);
+		drawSkills(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.Skill) as SkillElem[] ?? [], isActiveSlot, shouldDrawBuffCovers);
 
 		// selection rect
-		if (g_renderingProps.showSelection && isActiveSlot) {
+		if (g_renderingProps.showSelection && isActiveSlot && !isImageExportMode) { 
 			g_ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
 			let selectionLeftPx = displayOriginX + StaticFn.positionFromTimeAndScale(g_renderingProps.selectionStartDisplayTime, g_renderingProps.scale);
 			let selectionWidthPx = StaticFn.positionFromTimeAndScale(g_renderingProps.selectionEndDisplayTime - g_renderingProps.selectionStartDisplayTime, g_renderingProps.scale);
@@ -764,6 +798,11 @@ function drawTimelines(originX:  number, originY: number) : number {
 	g_ctx.fillStyle = g_colors.timeline.countdown;
 	// make it cover the left padding as well:
 	g_ctx.fillRect(originX - c_leftBufferWidth, originY, countdownWidth + c_leftBufferWidth, countdownHeight);
+
+	if (isImageExportMode) {
+		// In image export mode, don't render slot selection bars
+		return c_timelineHeight;
+	}
 
 	// view only cursor
 	(sharedElemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach(cursor=>{
@@ -992,3 +1031,12 @@ export function TimelineCanvas(props: {
 	}}/>;
 }
 
+/**
+ * Save the current g_ctx, execute a callback, then restore the saved g_ctx.
+ */
+export function swapCtx(new_ctx: CanvasRenderingContext2D, callback: () => void) {
+	let temp_ctx = g_ctx;
+	g_ctx = new_ctx;
+	callback();
+	g_ctx = temp_ctx;
+}

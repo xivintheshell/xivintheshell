@@ -1,10 +1,11 @@
-import {Aspect, BuffType, ProcMode, ResourceType, SkillName, WarningType} from './Common'
+import {Aspect, BuffType, LevelSync, ProcMode, ResourceType, SkillName, WarningType} from './Common'
 // @ts-ignore
 import {controller} from "../Controller/Controller";
 import {DoTBuff, EventTag, Resource} from "./Resources";
 import {ActionNode} from "../Controller/Record";
 import {GameState} from "./GameState";
 import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
+import {TraitName, Traits} from './Traits';
 
 export interface SkillCaptureCallbackInfo {
 	capturedManaCost: number
@@ -46,6 +47,21 @@ export class SkillInfo {
 		this.baseManaCost = baseManaCost;
 		this.basePotency = basePotency;
 		this.skillApplicationDelay = skillApplicationDelay===undefined ? 0 : skillApplicationDelay;
+	}
+
+	/** Create a copy of this SkillInfo with all properties the same, except for the new basePotency value. */
+	replacePotency(newPotency: number) {
+		return new SkillInfo(
+			this.name,
+			this.cdName,
+			this.aspect,
+			this.isSpell,
+			this.baseCastTime,
+			this.baseManaCost,
+			newPotency,
+			this.skillApplicationDelay,
+			this.baseRecastTime,
+		);
 	}
 }
 
@@ -262,7 +278,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 									controller.reportWarning(WarningType.PaletteOvercap);
 								}
 								game.resources.get(ResourceType.PaletteGauge).gain(25);
-								game.resources.get(ResourceType.Paint).gain(1);
+								if (Traits.hasUnlocked(TraitName.EnhancedArtistry, game.config.level)) {
+									game.resources.get(ResourceType.Paint).gain(1);
+								}
 							}
 						},
 						onApplication: (app: SkillApplicationCallbackInfo) => {},
@@ -294,8 +312,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 							game.cycleAetherhues();
 							game.resources.get(ResourceType.SubtractivePalette).consume(1);
 							game.tryConsumeHyperphantasia();
-							if (skillName === SkillName.ThunderInMagenta
-								|| skillName === SkillName.Thunder2InMagenta) {
+							if (Traits.hasUnlocked(TraitName.EnhancedArtistry, game.config.level)
+								&& (skillName === SkillName.ThunderInMagenta
+									|| skillName === SkillName.Thunder2InMagenta)) {
 								game.resources.get(ResourceType.Paint).gain(1);
 							}
 						},
@@ -344,7 +363,9 @@ export class SkillsList extends Map<SkillName, Skill> {
 						if (game.resources.get(ResourceType.MonochromeTones).available(1)) {
 							controller.reportWarning(WarningType.CometOverwrite);
 						}
-						game.resources.get(ResourceType.MonochromeTones).gain(1);
+						if (Traits.hasUnlocked(TraitName.EnhancedPalette, game.config.level)) {
+							game.resources.get(ResourceType.MonochromeTones).gain(1);
+						}
 						game.resources.get(ResourceType.SubtractivePalette).gain(3);
 					},
 					dealDamage: false,
@@ -417,6 +438,10 @@ export class SkillsList extends Map<SkillName, Skill> {
 							// wing: make moogle portrait available (overwrites madeen)
 							if (museName === SkillName.WingedMuse) {
 								portraits.overrideCurrentValue(1);
+								// below lvl 94, there's no madeen, so wrap depictions back to 0
+								if (!Traits.hasUnlocked(TraitName.EnhancedPictomancyIV, game.config.level)) {
+									depictions.overrideCurrentValue(0);
+								}
 							}
 							// maw: make madeen portrait available (overwrites moogle)
 							// reset depictions to empty
@@ -496,27 +521,32 @@ export class SkillsList extends Map<SkillName, Skill> {
 							// Since this fork is hacky we just ignore this case for now.
 							game.resources.get(ResourceType.StarryMuse).gain(1);
 							// Technically, hyperphantasia is gained on a delay, but whatever
-							game.resources.get(ResourceType.Hyperphantasia).gain(5);
-							game.resources.get(ResourceType.Inspiration).gain(1);
-							game.resources.get(ResourceType.Starstruck).gain(1);
+							if (Traits.hasUnlocked(TraitName.EnhancedPictomancy, game.config.level)) {
+								game.resources.get(ResourceType.Hyperphantasia).gain(5);
+								game.resources.get(ResourceType.Inspiration).gain(1);
+								game.resources.addResourceEvent({
+									rscType: ResourceType.Hyperphantasia,
+									name: "drop hyperphantasia", delay: 30, fnOnRsc: (rsc: Resource) => rsc.overrideCurrentValue(0),
+								});
+								game.resources.addResourceEvent({
+									rscType: ResourceType.Inspiration,
+									name: "drop inspiration", delay: 30, fnOnRsc: (rsc: Resource) => rsc.consume(1),
+								});
+							}
+							if (Traits.hasUnlocked(TraitName.EnhancedPictomancyV, game.config.level)) {
+								game.resources.get(ResourceType.Starstruck).gain(1);
+								game.resources.addResourceEvent({
+									rscType: ResourceType.Starstruck,
+									name: "drop starstruck", delay: 20, fnOnRsc: (rsc: Resource) => rsc.consume(1),
+								});
+							}
 							game.resources.get(ResourceType.SubtractiveSpectrum).gain(1);
 							// TODO check actual lengths on other buffs (don't really matter as much)
 							game.resources.addResourceEvent({
 								rscType: ResourceType.StarryMuse,
 								name: "drop starry muse", delay: 20.5, fnOnRsc: (rsc: Resource) => rsc.consume(1),
 							});
-							game.resources.addResourceEvent({
-								rscType: ResourceType.Hyperphantasia,
-								name: "drop hyperphantasia", delay: 30, fnOnRsc: (rsc: Resource) => rsc.overrideCurrentValue(0),
-							});
-							game.resources.addResourceEvent({
-								rscType: ResourceType.Inspiration,
-								name: "drop inspiration", delay: 30, fnOnRsc: (rsc: Resource) => rsc.consume(1),
-							});
-							game.resources.addResourceEvent({
-								rscType: ResourceType.Starstruck,
-								name: "drop starstruck", delay: 20, fnOnRsc: (rsc: Resource) => rsc.consume(1),
-							});
+							
 							game.resources.addResourceEvent({
 								rscType: ResourceType.SubtractiveSpectrum,
 								name: "drop subtractive spectrum", delay: 30, fnOnRsc: (rsc: Resource) => rsc.consume(1),
@@ -709,10 +739,29 @@ export class SkillsList extends Map<SkillName, Skill> {
 		));
 
 		// Smudge
-		addResourceAbility({skillName: SkillName.Smudge, rscType: ResourceType.Smudge, instant: true, duration: 5});
+		skillsList.set(SkillName.Smudge, new Skill(SkillName.Smudge,
+			() => { return true; },
+			(game, node) => {
+				game.useInstantSkill({
+					skillName: SkillName.Smudge,
+					onCapture: () => {
+						if (Traits.hasUnlocked(TraitName.EnhancedSmudge, game.config.level)) {
+							game.resources.get(ResourceType.Smudge).gain(1);
+							game.resources.addResourceEvent({
+								rscType: ResourceType.Smudge,
+								name: "drop smudge", delay: 5, fnOnRsc: (rsc: Resource) => rsc.consume(1),
+							});
+						}
+					},
+					dealDamage: false,
+					node: node,
+				})
+			})
+		);
 
 		// Addle
-		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: 15});
+		const addleDuration = (Traits.hasUnlocked(TraitName.EnhancedAddle, game.config.level) && 15) || 10;
+		addResourceAbility({skillName: SkillName.Addle, rscType: ResourceType.Addle, instant: false, duration: addleDuration});
 
 		// Swiftcast
 		addResourceAbility({skillName: SkillName.Swiftcast, rscType: ResourceType.Swiftcast, instant: true, duration: 10});
@@ -770,5 +819,101 @@ export class SkillsList extends Map<SkillName, Skill> {
 				()=>{return false},
 				(game: GameState, node: ActionNode)=>{});
 		}
+	}
+}
+
+export class DisplayedSkills extends Array<SkillName> {
+	constructor(level: LevelSync) {
+		super();
+		this.push(
+			SkillName.FireInRed,
+			SkillName.Fire2InRed,
+			SkillName.BlizzardInCyan,
+			SkillName.Blizzard2InCyan,
+		);
+		if (Traits.hasUnlocked(TraitName.EnhancedArtistry, level)) this.push(SkillName.HolyInWhite);
+		if (Traits.hasUnlocked(TraitName.EnhancedPalette, level)) this.push(SkillName.CometInBlack);
+		if (Traits.hasUnlocked(TraitName.EnhancedPictomancyIII, level)) this.push(SkillName.RainbowDrip);
+		if (Traits.hasUnlocked(TraitName.EnhancedPictomancyV, level)) this.push(SkillName.StarPrism);
+
+		this.push(
+			SkillName.SubtractivePalette,
+			SkillName.CreatureMotif,
+			SkillName.LivingMuse,
+			SkillName.MogOfTheAges,
+			SkillName.WeaponMotif,
+			SkillName.SteelMuse,
+			SkillName.HammerStamp,
+			SkillName.LandscapeMotif,
+			SkillName.ScenicMuse,
+			SkillName.TemperaCoat
+		);
+
+		if (Traits.hasUnlocked(TraitName.EnhancedTempera, level)) this.push(SkillName.TemperaGrassa);
+
+		this.push(SkillName.Smudge);
+
+		this.push(
+			SkillName.Addle,
+			SkillName.Swiftcast,
+			SkillName.LucidDreaming,
+			SkillName.Surecast,
+			SkillName.Tincture,
+			SkillName.Sprint
+		);
+
+		// Dynamically modify potencies of SkillInfo objects according to traits. Maybe a little hacky.
+		let potenciesToReplace = new Map();
+		if (!Traits.hasUnlocked(TraitName.PictomancyMasteryII, level)) { // below lvl 74
+			potenciesToReplace.set(SkillName.FireInRed, 280);
+			potenciesToReplace.set(SkillName.AeroInGreen, 320);
+			potenciesToReplace.set(SkillName.WaterInBlue, 360);
+			potenciesToReplace.set(SkillName.Fire2InRed, 80);
+			potenciesToReplace.set(SkillName.Aero2InGreen, 100);
+			potenciesToReplace.set(SkillName.Water2InBlue, 120);
+			potenciesToReplace.set(SkillName.HammerStamp, 380);
+			potenciesToReplace.set(SkillName.BlizzardInCyan, 520);
+			potenciesToReplace.set(SkillName.StoneInYellow, 560);
+			potenciesToReplace.set(SkillName.ThunderInMagenta, 600);
+			potenciesToReplace.set(SkillName.Blizzard2InCyan, 180);
+			potenciesToReplace.set(SkillName.Stone2InYellow, 200);
+			potenciesToReplace.set(SkillName.Thunder2InMagenta, 220);
+		} else if (!Traits.hasUnlocked(TraitName.PictomancyMasteryIII, level)) { // below lvl 84
+			potenciesToReplace.set(SkillName.FireInRed, 340);
+			potenciesToReplace.set(SkillName.AeroInGreen, 380);
+			potenciesToReplace.set(SkillName.WaterInBlue, 420);
+			potenciesToReplace.set(SkillName.PomMuse, 1000);
+			potenciesToReplace.set(SkillName.WingedMuse, 1000);
+			potenciesToReplace.set(SkillName.MogOfTheAges, 1100);
+			potenciesToReplace.set(SkillName.HammerStamp, 480);
+			potenciesToReplace.set(SkillName.BlizzardInCyan, 630);
+			potenciesToReplace.set(SkillName.StoneInYellow, 670);
+			potenciesToReplace.set(SkillName.ThunderInMagenta, 710);
+		} else if (!Traits.hasUnlocked(TraitName.PictomancyMasteryIV, level)) { // below lvl 94
+			potenciesToReplace.set(SkillName.FireInRed, 380);
+			potenciesToReplace.set(SkillName.AeroInGreen, 420);
+			potenciesToReplace.set(SkillName.WaterInBlue, 460);
+			potenciesToReplace.set(SkillName.Fire2InRed, 100);
+			potenciesToReplace.set(SkillName.Aero2InGreen, 120);
+			potenciesToReplace.set(SkillName.Water2InBlue, 140);
+			potenciesToReplace.set(SkillName.HammerStamp, 520);
+			potenciesToReplace.set(SkillName.BlizzardInCyan, 700);
+			potenciesToReplace.set(SkillName.StoneInYellow, 740);
+			potenciesToReplace.set(SkillName.ThunderInMagenta, 780);
+			potenciesToReplace.set(SkillName.Blizzard2InCyan, 220);
+			potenciesToReplace.set(SkillName.Stone2InYellow, 240);
+			potenciesToReplace.set(SkillName.Thunder2InMagenta, 260);
+			potenciesToReplace.set(SkillName.HolyInWhite, 460);
+			potenciesToReplace.set(SkillName.HammerBrush, 580);
+			potenciesToReplace.set(SkillName.PolishingHammer, 640);
+			potenciesToReplace.set(SkillName.CometInBlack, 780);
+		}
+
+		potenciesToReplace.forEach((newPotency, skillName) => {
+			skillInfosMap.set(
+				skillName,
+				skillInfosMap.get(skillName)!.replacePotency(newPotency)
+			);
+		});
 	}
 }

@@ -9,6 +9,7 @@ import { StatusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import 'react-tabs/style/react-tabs.css';
 import {LoadSave} from "./LoadSave";
+import {ImageExport} from "./ImageExport";
 import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../pct_changelog.json"
@@ -106,14 +107,12 @@ export default class Main extends React.Component {
 		controller.tryAutoLoad();
 		controller.updateAllDisplay();
 
-		let handleResize = ()=>{
-			let cur = this.controlRegionRef.current;
-			if (cur) {
-				this.setState({controlRegionHeight: cur.clientHeight});
-			}
+		if (this.controlRegionRef.current) {
+			new ResizeObserver(() => {
+				let height = this.controlRegionRef.current?.clientHeight ?? 0;
+				this.setState({controlRegionHeight: height});
+			}).observe(this.controlRegionRef.current);
 		}
-		handleResize();
-		window.addEventListener("resize", handleResize);
 	}
 
 	componentWillUnmount() {
@@ -317,6 +316,7 @@ export default class Main extends React.Component {
 								<Config/>
 								<TimeControl/>
 								<LoadSave/>
+								<ImageExport/>
 							</div>
 						</div>
 						<SkillSequencePresets/>
