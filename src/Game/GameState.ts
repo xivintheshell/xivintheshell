@@ -531,13 +531,14 @@ export class GameState {
 
 		// attach potency node
 		let potency: Potency | undefined = undefined;
-		if (skillInfo.basePotency > 0) {
+		const syncedPotency = skillInfo.basePotency(this.config.level);
+		if (syncedPotency > 0) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
 				sourceSkill: props.skillName,
 				aspect: skillInfo.aspect,
-				basePotency: skillInfo.basePotency,
+				basePotency: syncedPotency,
 				snapshotTime: undefined,
 				description: "",
 			});
@@ -565,12 +566,12 @@ export class GameState {
 				}
 
 				// tincture
-				if (game.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
+				if (game.resources.get(ResourceType.Tincture).available(1) && syncedPotency > 0) {
 					props.node.addBuff(BuffType.Tincture);
 				}
 
 				// starry muse
-				if (game.resources.get(ResourceType.StarryMuse).available(1) && skillInfo.basePotency > 0) {
+				if (game.resources.get(ResourceType.StarryMuse).available(1) && syncedPotency > 0) {
 					props.node.addBuff(BuffType.StarryMuse);
 				}
 
@@ -718,6 +719,7 @@ export class GameState {
 		}
 
 		// potency
+		const syncedPotency = skillInfo.basePotency(this.config.level);
 		let potency : Potency | undefined = undefined;
 		if (props.dealDamage) {
 			potency = new Potency({
@@ -725,7 +727,7 @@ export class GameState {
 				sourceTime: this.getDisplayTime(),
 				sourceSkill: skillInfo.name,
 				aspect: skillInfo.aspect,
-				basePotency: skillInfo.basePotency,
+				basePotency: syncedPotency,
 				snapshotTime: this.getDisplayTime(),
 				description: "",
 			});
@@ -734,12 +736,12 @@ export class GameState {
 		}
 
 		// tincture
-		if (this.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
+		if (this.resources.get(ResourceType.Tincture).available(1) && syncedPotency > 0) {
 			props.node.addBuff(BuffType.Tincture);
 		}
 
 		// starry muse
-		if (this.resources.get(ResourceType.StarryMuse).available(1) && skillInfo.basePotency > 0) {
+		if (this.resources.get(ResourceType.StarryMuse).available(1) && syncedPotency > 0) {
 			props.node.addBuff(BuffType.StarryMuse);
 		}
 

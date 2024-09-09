@@ -23,7 +23,7 @@ export class SkillInfo {
 	readonly baseCastTime: number;
 	readonly baseRecastTime: number;
 	readonly baseManaCost: number;
-	readonly basePotency: number;
+	readonly basePotency: (level: LevelSync) => number;
 	readonly skillApplicationDelay: number;
 
 	constructor(
@@ -33,7 +33,11 @@ export class SkillInfo {
 		isSpell: boolean,
 		baseCastTime: number,
 		baseManaCost: number,
-		basePotency: number,
+		// basePotency can either be a number (flat potency),
+		// or array of TraitName -> number (identifying the potency of the ability _after_ a trait is unlocked)
+		// If an array is specified, the keys must be in ascending order, with Never specifying
+		// the potency below the lowest supported trait.
+		basePotency: number | Array<[TraitName, number]>,
 		skillApplicationDelay?: number,
 		baseRecastTime?: number,
 		)
@@ -45,23 +49,25 @@ export class SkillInfo {
 		this.baseCastTime = baseCastTime;
 		this.baseRecastTime = baseRecastTime ?? 2.5;
 		this.baseManaCost = baseManaCost;
-		this.basePotency = basePotency;
+		if (typeof basePotency === "number") {
+			this.basePotency = (_level) => basePotency;
+		} else {
+			// basePotency is an array
+			console.assert(basePotency.length > 0, `invalid potency array: ${basePotency}`);
+			this.basePotency = (level) => {
+				let currPotency = undefined;
+				// this iteration assumes the highest level trait is last, and is a little algorithmically
+				// inefficient but who cares
+				for (const [traitName, potency] of basePotency) {
+					if (Traits.hasUnlocked(traitName, level)) {
+						currPotency = potency;
+					}
+				}
+				console.assert(currPotency !== undefined, `no applicable potency at level ${level} found in array ${basePotency}`)
+				return currPotency || 0;
+			};
+		}
 		this.skillApplicationDelay = skillApplicationDelay===undefined ? 0 : skillApplicationDelay;
-	}
-
-	/** Create a copy of this SkillInfo with all properties the same, except for the new basePotency value. */
-	replacePotency(newPotency: number) {
-		return new SkillInfo(
-			this.name,
-			this.cdName,
-			this.aspect,
-			this.isSpell,
-			this.baseCastTime,
-			this.baseManaCost,
-			newPotency,
-			this.skillApplicationDelay,
-			this.baseRecastTime,
-		);
 	}
 }
 
@@ -87,37 +93,73 @@ const skillInfos = [
 	// TODO get 3rd digit of precision
 	// https://docs.google.com/spreadsheets/d/1Emevsz5_oJdmkXy23hZQUXimirZQaoo5BejSzL3hZ9I/edit?gid=543259752#gid=543259752
 	new SkillInfo(SkillName.FireInRed, ResourceType.cd_GCD, Aspect.Other, true,
-		1.5, 300, 440, 0.84),
+		1.5, 300, [
+			[TraitName.Never, 280],
+			[TraitName.PictomancyMasteryII, 340],
+			[TraitName.PictomancyMasteryIII, 380],
+			[TraitName.PictomancyMasteryIV, 440],
+		], 0.84),
 	new SkillInfo(SkillName.AeroInGreen, ResourceType.cd_GCD, Aspect.Other, true,
-		1.5, 300, 480, 0.89),
+		1.5, 300, [
+			[TraitName.Never, 320],
+			[TraitName.PictomancyMasteryII, 380],
+			[TraitName.PictomancyMasteryIII, 420],
+			[TraitName.PictomancyMasteryIV, 480],
+		], 0.89),
 	new SkillInfo(SkillName.TemperaCoat, ResourceType.cd_TemperaCoat, Aspect.Other, false,
 		0, 0, 0), // instant
 	new SkillInfo(SkillName.TemperaCoatPop, ResourceType.cd_TemperaPop, Aspect.Other, false,
 		0, 0, 0), // fake skill to represent breaking the coat shield
 	new SkillInfo(SkillName.WaterInBlue, ResourceType.cd_GCD, Aspect.Other, true,
-		1.5, 300, 520, 0.98),
+		1.5, 300, [
+			[TraitName.Never, 360],
+			[TraitName.PictomancyMasteryII, 420],
+			[TraitName.PictomancyMasteryIII, 460],
+			[TraitName.PictomancyMasteryIV, 520],
+		], 0.98),
 	new SkillInfo(SkillName.Smudge, ResourceType.cd_Smudge, Aspect.Other, false,
 		0, 0, 0), // instant (buff application)
 	new SkillInfo(SkillName.Fire2InRed, ResourceType.cd_GCD, Aspect.Other, true,
-		1.5, 300, 120, 0.84),
+		1.5, 300, [
+			[TraitName.Never, 80],
+			[TraitName.PictomancyMasteryII, 100],
+			[TraitName.PictomancyMasteryIV, 120],
+		], 0.84),
 	new SkillInfo(SkillName.CreatureMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.LivingMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
 		0, 0, 0),
 	new SkillInfo(SkillName.MogOfTheAges, ResourceType.cd_Portrait, Aspect.Other, false,
-		0, 0, 1300, 1.15),
+		0, 0, [
+			[TraitName.Never, 1100],
+			[TraitName.PictomancyMasteryIII, 1300],
+		], 1.15),
 	new SkillInfo(SkillName.PomMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.WingMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.PomMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
-		0, 0, 1100, 0.62),
+		0, 0, [
+			[TraitName.Never, 1000],
+			[TraitName.PictomancyMasteryIII, 1100],
+		], 0.62),
 	new SkillInfo(SkillName.WingedMuse, ResourceType.cd_LivingMuse, Aspect.Other, false,
-		0, 0, 1100, 0.98),
+		0, 0, [
+			[TraitName.Never, 1000],
+			[TraitName.PictomancyMasteryIII, 1100],
+		], 0.98),
 	new SkillInfo(SkillName.Aero2InGreen, ResourceType.cd_GCD, Aspect.Other, true,
-		1.5, 300, 140, 0.89),
+		1.5, 300, [
+			[TraitName.Never, 100],
+			[TraitName.PictomancyMasteryII, 120],
+			[TraitName.PictomancyMasteryIV, 140],
+		], 0.89),
 	new SkillInfo(SkillName.Water2InBlue, ResourceType.cd_GCD, Aspect.Other, true,
-		1.5, 300, 160, 0.98),
+		1.5, 300, [
+			[TraitName.Never, 120],
+			[TraitName.PictomancyMasteryII, 140],
+			[TraitName.PictomancyMasteryIV, 160],
+		], 0.98),
 	new SkillInfo(SkillName.WeaponMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.SteelMuse, ResourceType.cd_SteelMuse, Aspect.Other, false,
@@ -127,19 +169,46 @@ const skillInfos = [
 	new SkillInfo(SkillName.StrikingMuse, ResourceType.cd_SteelMuse, Aspect.Other, false,
 		0, 0, 0),
 	new SkillInfo(SkillName.BlizzardInCyan, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 800, 0.75, 3.3),
+		2.3, 400, [
+			[TraitName.Never, 520],
+			[TraitName.PictomancyMasteryII, 630],
+			[TraitName.PictomancyMasteryIII, 700],
+			[TraitName.PictomancyMasteryIV, 800],
+		], 0.75, 3.3),
 	new SkillInfo(SkillName.Blizzard2InCyan, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 240, 0.75, 3.3),
+		2.3, 400, [
+			[TraitName.Never, 180],
+			[TraitName.PictomancyMasteryII, 220],
+			[TraitName.PictomancyMasteryIV, 240],
+		], 0.75, 3.3),
 	new SkillInfo(SkillName.SubtractivePalette, ResourceType.cd_Subtractive, Aspect.Other, false,
 		0, 0, 0),
 	new SkillInfo(SkillName.StoneInYellow, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 840, 0.80, 3.3),
+		2.3, 400, [
+			[TraitName.Never, 560],
+			[TraitName.PictomancyMasteryII, 670],
+			[TraitName.PictomancyMasteryIII, 740],
+			[TraitName.PictomancyMasteryIV, 840],
+		], 0.80, 3.3),
 	new SkillInfo(SkillName.Stone2InYellow, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 260, 0.80, 3.3),
+		2.3, 400, [
+			[TraitName.Never, 200],
+			[TraitName.PictomancyMasteryII, 240],
+			[TraitName.PictomancyMasteryIV, 260],
+		], 0.80, 3.3),
 	new SkillInfo(SkillName.ThunderInMagenta, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 880, 0.85, 3.3),
+		2.3, 400, [
+			[TraitName.Never, 600],
+			[TraitName.PictomancyMasteryII, 710],
+			[TraitName.PictomancyMasteryIII, 780],
+			[TraitName.PictomancyMasteryIV, 880],
+		], 0.85, 3.3),
 	new SkillInfo(SkillName.Thunder2InMagenta, ResourceType.cd_GCD, Aspect.Other, true,
-		2.3, 400, 280, 0.85, 3.3),
+		2.3, 400, [
+			[TraitName.Never, 220],
+			[TraitName.PictomancyMasteryII, 260],
+			[TraitName.PictomancyMasteryIV, 280],
+		], 0.85, 3.3),
 	new SkillInfo(SkillName.LandscapeMotif, ResourceType.cd_GCD, Aspect.Other, true,
 		3, 0, 0, 0.00, 4),
 	new SkillInfo(SkillName.ScenicMuse, ResourceType.cd_ScenicMuse, Aspect.Other, false,
@@ -149,19 +218,37 @@ const skillInfos = [
 	new SkillInfo(SkillName.StarryMuse, ResourceType.cd_ScenicMuse, Aspect.Other, false,
 		0, 0, 0), // raid buff is instant, but cast buff is delayed by 0.62
 	new SkillInfo(SkillName.HolyInWhite, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 300, 520, 1.34),
+		0, 300, [
+			[TraitName.Never, 420],
+			[TraitName.PictomancyMasteryIII, 460],
+			[TraitName.PictomancyMasteryIV, 520],
+		], 1.34),
 	new SkillInfo(SkillName.HammerStamp, ResourceType.cd_GCD, Aspect.Hammer, true,
-		0, 300, 560, 1.38),
+		0, 300, [
+			[TraitName.Never, 380],
+			[TraitName.PictomancyMasteryII, 480],
+			[TraitName.PictomancyMasteryIII, 520],
+			[TraitName.PictomancyMasteryIV, 560],
+		], 1.38),
 	new SkillInfo(SkillName.HammerBrush, ResourceType.cd_GCD, Aspect.Hammer, true,
-		0, 300, 620, 1.25),
+		0, 300, [
+			[TraitName.Never, 580],
+			[TraitName.PictomancyMasteryIV, 620],
+		], 1.25),
 	new SkillInfo(SkillName.PolishingHammer, ResourceType.cd_GCD, Aspect.Hammer, true,
-		0, 300, 680, 2.10),
+		0, 300, [
+			[TraitName.Never, 640],
+			[TraitName.PictomancyMasteryIV, 680],
+		], 2.10),
 	new SkillInfo(SkillName.TemperaGrassa, ResourceType.cd_Grassa, Aspect.Other, false,
 		0, 0, 0),
 	new SkillInfo(SkillName.TemperaGrassaPop, ResourceType.cd_TemperaPop, Aspect.Other, false,
 		0, 0, 0), // fake skill to represent breaking the grassa shield
 	new SkillInfo(SkillName.CometInBlack, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 400, 880, 1.87, 3.3),
+		0, 400, [
+			[TraitName.Never, 780],
+			[TraitName.PictomancyMasteryIV, 880],
+		], 1.87, 3.3),
 	new SkillInfo(SkillName.RainbowDrip, ResourceType.cd_GCD, Aspect.Other, true,
 		4, 400, 1000, 1.24, 6),
 	new SkillInfo(SkillName.ClawMotif, ResourceType.cd_GCD, Aspect.Other, true,
@@ -861,59 +948,5 @@ export class DisplayedSkills extends Array<SkillName> {
 			SkillName.Tincture,
 			SkillName.Sprint
 		);
-
-		// Dynamically modify potencies of SkillInfo objects according to traits. Maybe a little hacky.
-		let potenciesToReplace = new Map();
-		if (!Traits.hasUnlocked(TraitName.PictomancyMasteryII, level)) { // below lvl 74
-			potenciesToReplace.set(SkillName.FireInRed, 280);
-			potenciesToReplace.set(SkillName.AeroInGreen, 320);
-			potenciesToReplace.set(SkillName.WaterInBlue, 360);
-			potenciesToReplace.set(SkillName.Fire2InRed, 80);
-			potenciesToReplace.set(SkillName.Aero2InGreen, 100);
-			potenciesToReplace.set(SkillName.Water2InBlue, 120);
-			potenciesToReplace.set(SkillName.HammerStamp, 380);
-			potenciesToReplace.set(SkillName.BlizzardInCyan, 520);
-			potenciesToReplace.set(SkillName.StoneInYellow, 560);
-			potenciesToReplace.set(SkillName.ThunderInMagenta, 600);
-			potenciesToReplace.set(SkillName.Blizzard2InCyan, 180);
-			potenciesToReplace.set(SkillName.Stone2InYellow, 200);
-			potenciesToReplace.set(SkillName.Thunder2InMagenta, 220);
-		} else if (!Traits.hasUnlocked(TraitName.PictomancyMasteryIII, level)) { // below lvl 84
-			potenciesToReplace.set(SkillName.FireInRed, 340);
-			potenciesToReplace.set(SkillName.AeroInGreen, 380);
-			potenciesToReplace.set(SkillName.WaterInBlue, 420);
-			potenciesToReplace.set(SkillName.PomMuse, 1000);
-			potenciesToReplace.set(SkillName.WingedMuse, 1000);
-			potenciesToReplace.set(SkillName.MogOfTheAges, 1100);
-			potenciesToReplace.set(SkillName.HammerStamp, 480);
-			potenciesToReplace.set(SkillName.BlizzardInCyan, 630);
-			potenciesToReplace.set(SkillName.StoneInYellow, 670);
-			potenciesToReplace.set(SkillName.ThunderInMagenta, 710);
-		} else if (!Traits.hasUnlocked(TraitName.PictomancyMasteryIV, level)) { // below lvl 94
-			potenciesToReplace.set(SkillName.FireInRed, 380);
-			potenciesToReplace.set(SkillName.AeroInGreen, 420);
-			potenciesToReplace.set(SkillName.WaterInBlue, 460);
-			potenciesToReplace.set(SkillName.Fire2InRed, 100);
-			potenciesToReplace.set(SkillName.Aero2InGreen, 120);
-			potenciesToReplace.set(SkillName.Water2InBlue, 140);
-			potenciesToReplace.set(SkillName.HammerStamp, 520);
-			potenciesToReplace.set(SkillName.BlizzardInCyan, 700);
-			potenciesToReplace.set(SkillName.StoneInYellow, 740);
-			potenciesToReplace.set(SkillName.ThunderInMagenta, 780);
-			potenciesToReplace.set(SkillName.Blizzard2InCyan, 220);
-			potenciesToReplace.set(SkillName.Stone2InYellow, 240);
-			potenciesToReplace.set(SkillName.Thunder2InMagenta, 260);
-			potenciesToReplace.set(SkillName.HolyInWhite, 460);
-			potenciesToReplace.set(SkillName.HammerBrush, 580);
-			potenciesToReplace.set(SkillName.PolishingHammer, 640);
-			potenciesToReplace.set(SkillName.CometInBlack, 780);
-		}
-
-		potenciesToReplace.forEach((newPotency, skillName) => {
-			skillInfosMap.set(
-				skillName,
-				skillInfosMap.get(skillName)!.replacePotency(newPotency)
-			);
-		});
 	}
 }

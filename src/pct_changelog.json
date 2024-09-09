@@ -1,5 +1,11 @@
 [
     {
+        "date": "9/8/24",
+        "changes": [
+            "Fix incorrect potencies from trait syncing (thanks miyehn and yuyuka)"
+        ]
+    },
+    {
         "date": "9/7/24",
         "changes": [
             "[merge] Fix crash when creating a new slot with resource overrides (thanks miyehn)",
