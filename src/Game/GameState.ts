@@ -736,8 +736,10 @@ export class GameState {
 			|| (skillName===SkillName.Paradox && this.getIceStacks() > 0)
 			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)));
 		let reqsMet = skill.available();
+		let skillUnlocked = this.config.level >= skill.info.level;
 		let status = SkillReadyStatus.Ready;
 		if (!notBlocked) status = SkillReadyStatus.Blocked;
+		else if (!skillUnlocked) status = SkillReadyStatus.SkillNotUnlocked;
 		else if (!reqsMet) status = SkillReadyStatus.RequirementsNotMet;
 		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
 
