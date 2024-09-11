@@ -1,13 +1,69 @@
 import React from 'react';
-import {Clickable, Help, ProgressBar, StaticFn} from "./Common";
+import {Clickable, ContentNode, Help, ProgressBar, StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {TraitName, Traits} from '../Game/Traits';
 
+type StatusResourcesViewProps = {
+	mana: number,
+	timeTillNextManaTick: number,
+	enochianCountdown: number,
+	astralFire: number,
+	umbralIce: number,
+	umbralHearts: number,
+	paradox: number,
+	astralSoul: number,
+	polyglotCountdown: number,
+	polyglotStacks: number,
+}
+
+type StatusResourceLocksViewProps = {
+	gcdReady: boolean,
+	gcd: number,
+	timeTillGCDReady: number,
+	castLocked: boolean,
+	castLockTotalDuration: number,
+	castLockCountdown: number,
+	animLocked: boolean,
+	animLockTotalDuration: number,
+	animLockCountdown: number,
+	canMove: boolean
+}
+
+type StatusEnemyBuffsViewProps = {
+	DoTCountdown: number,
+	addleCountdown: number
+}
+
+type StatusSelfBuffsViewProps = {
+	leyLinesEnabled: boolean,
+	leyLinesCountdown: number,
+	triplecastCountdown: number,
+	triplecastStacks: number,
+	firestarterCountdown: number,
+	thunderheadCountdown: number,
+	manawardCountdown: number,
+	swiftcastCountdown: number,
+	lucidDreamingCountdown: number,
+	surecastCountdown: number,
+	tinctureCountdown: number,
+	sprintCountdown: number
+}
+
+// everything should be required here except that'll require repeating all those lines to give default values
+type StatusViewProps = {
+	time: number,
+	resources?: StatusResourcesViewProps,
+	resourceLocks?: StatusResourceLocksViewProps,
+	enemyBuffs?: StatusEnemyBuffsViewProps,
+	selfBuffs?: StatusSelfBuffsViewProps,
+	level: number
+}
+
 // color, value
-function ResourceStack(props) {
+function ResourceStack(props: {color: string, value: boolean}) {
 	let colors = getCurrentThemeColors();
 	return <div style={{
 		top: 1,
@@ -34,14 +90,14 @@ function ResourceStack(props) {
 
 // name, color, value, progress, width, className
 function ResourceBar(props = {
-	name: "placeholder",
+	name: "placeholder" as ContentNode,
 	color: "#6cf",
 	value: "0.34/1.00",
 	progress: 0.34,
 	width: 100,
 	hidden: false
 }) {
-	return <div className={props.className} hidden={props.hidden} style={{marginBottom: 4, lineHeight: "1.5em"}}>
+	return <div hidden={props.hidden} style={{marginBottom: 4, lineHeight: "1.5em"}}>
 		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
 		<div style={{width: 200, display: "inline-block"}}>
 			<ProgressBar backgroundColor={props.color}
@@ -54,7 +110,13 @@ function ResourceBar(props = {
 }
 
 // name, color, currentStacks, maxStacks
-function ResourceCounter(props) {
+function ResourceCounter(props: {
+	name: ContentNode,
+	color: string,
+	currentStacks: number,
+	maxStacks: number,
+	className?: string
+}) {
 	let stacks = [];
 	for (let i = 0; i < props.maxStacks; i++) {
 		stacks.push(<ResourceStack key={i} color={props.color} value={i < props.currentStacks}/>)
@@ -101,8 +163,15 @@ casterRoleBuffResources.forEach(
 buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
 
 // rscType, stacks, timeRemaining, onSelf, enabled
-function Buff(props) {
-	let assetName = props.rscType;
+function Buff(props: {
+	rscType: ResourceType,
+	onSelf: boolean,
+	enabled: boolean,
+	stacks: number,
+	timeRemaining: string,
+	className: string
+}) {
+	let assetName: string = props.rscType;
 	if (props.rscType === ResourceType.Triplecast) {
 		if (props.stacks === 2) assetName += "2";
 		else if (props.stacks === 3) assetName += "3";
@@ -126,22 +195,10 @@ function Buff(props) {
 	</div>
 }
 
-function BuffsDisplay(props) {
-	let data = (props && props.data) ? props.data : {
-		leyLinesEnabled: true,
-		leyLinesCountdown: 0,
-		sharpcastCountdown: 0,
-		triplecastCountdown: 0,
-		triplecastStacks: 0,
-		firestarterCountdown: 0,
-		thunderheadCountdown: 0,
-		manawardCountdown: 0,
-		swiftcastCountdown: 0,
-		lucidDreamingCountdown: 0,
-		surecastCountdown: 0,
-		tinctureCountdown: 0,
-		sprintCountdown: 0
-	};
+function BuffsDisplay(props: {
+	data: StatusSelfBuffsViewProps
+}) {
+	let data = props.data;
 	let buffs = [];
 	buffs.push({
 		rscType: ResourceType.LeyLines,
@@ -224,21 +281,24 @@ function BuffsDisplay(props) {
 		className: data.sprintCountdown > 0 ? "" : "hidden"
 	});
 
-	for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
+	let buffElems: React.ReactNode[] = [];
+	for (let i = 0; i < buffs.length; i++) {
+		buffElems.push(<Buff key={i} {...buffs[i]}/>);
+	}
+
 	return <div className={"buffsDisplay self"}>
-		{buffs.map(obj=>{return <Buff {...obj}/>;})}
+		{buffElems}
 	</div>
 }
 
-function EnemyBuffsDisplay(props)
-{
-	let data = (props && props.data) ? props.data : {
-		DoTCountdown: 0,
-		addleCountdown: 0
-	};
+function EnemyBuffsDisplay(props: {
+	data: StatusEnemyBuffsViewProps
+}) {
+	let data = props.data;
 	let buffs = [];
 	buffs.push({
 		rscType: ResourceType.ThunderDoT,
+		onSelf: false,
 		enabled: true,
 		stacks:1,
 		timeRemaining: data.DoTCountdown.toFixed(3),
@@ -246,32 +306,27 @@ function EnemyBuffsDisplay(props)
 	});
 	buffs.push({
 		rscType: ResourceType.Addle,
+		onSelf: false,
 		enabled: true,
 		stacks:1,
 		timeRemaining: data.addleCountdown.toFixed(3),
 		className: data.addleCountdown > 0 ? "" : "hidden"
 	});
 
-	for (let i = 0; i < buffs.length; i++) buffs[i].key=i;
+	let buffElems: React.ReactNode[] = [];
+	for (let i = 0; i < buffs.length; i++) {
+		buffElems.push(<Buff key={i} {...buffs[i]}/>);
+	}
 	return <div className={"buffsDisplay enemy"}>
-		{buffs.map(obj=>{return <Buff {...obj}/>;})}
+		{buffElems}
 	</div>
 }
 
-function ResourceLocksDisplay(props) {
+function ResourceLocksDisplay(props: {
+	data: StatusResourceLocksViewProps
+}) {
 	let colors = getCurrentThemeColors();
-	let data = (props && props.data) ? props.data : {
-		gcdReady: true,
-		gcd: 2.5,
-		timeTillGCDReady: 0,
-		castLocked: false,
-		castLockTotalDuration: 0,
-		castLockCountdown: 0,
-		animLocked: false,
-		animLockTotalDuration: 0,
-		animLockCountdown: 0,
-		canMove: true
-	};
+	let data = props.data;
 	let gcd = <ResourceBar
 		name={"GCD"}
 		color={colors.resources.gcdBar}
@@ -300,28 +355,24 @@ function ResourceLocksDisplay(props) {
 	</div>
 }
 
-function ResourcesDisplay(props) {
-	let colors = getCurrentThemeColors();
-	let data = (props && props.data) ? props.data : undefined;
-	let resources = (data && data.resources) ?? {
-		mana: 10000,
-		timeTillNextManaTick: 0.8,
-		enochianCountdown: 0,
-		astralFire: 0,
-		umbralIce: 0,
-		umbralHearts: 0,
-		paradox: 0,
-		astralSoul: 0,
-		polyglotCountdown: 30,
-		polyglotStacks: 0
+function ResourcesDisplay(props: {
+	data: {
+		level: number,
+		resources: StatusResourcesViewProps
 	}
+}) {
+	let colors = getCurrentThemeColors();
+	let data = props.data;
+	let resources = props.data.resources;
 
 	let manaBar = <ResourceBar
 		name={"MP"}
 		color={colors.resources.mana}
 		progress={resources.mana / 10000}
 		value={Math.floor(resources.mana) + "/10000"}
-		width={100}/>;
+		width={100}
+		hidden={false}
+	/>;
 	let manaTick = <ResourceBar
 		name={localize({
 			en: "MP tick",
@@ -331,7 +382,9 @@ function ResourcesDisplay(props) {
 		color={colors.resources.manaTick}
 		progress={1 - resources.timeTillNextManaTick / 3}
 		value={(3 - resources.timeTillNextManaTick).toFixed(3) + "/3"}
-		width={100}/>;
+		width={100}
+		hidden={false}
+	/>;
 	let enochian = <ResourceBar
 		name={localize({
 			en: "enochian",
@@ -341,7 +394,9 @@ function ResourcesDisplay(props) {
 		color={colors.resources.enochian}
 		progress={resources.enochianCountdown / 15}
 		value={`${resources.enochianCountdown.toFixed(3)}`}
-		width={100}/>;
+		width={100}
+		hidden={false}
+	/>;
 	let afui = <ResourceCounter
 		name={localize({
 			en: "AF/UI",
@@ -395,7 +450,9 @@ function ResourcesDisplay(props) {
 		color={colors.resources.polyTimer}
 		progress={1 - resources.polyglotCountdown / 30}
 		value={`${resources.polyglotCountdown.toFixed(3)}`}
-		width={100}/>;
+		width={100}
+		hidden={false}
+	/>;
 	
 	const polyglotStacks = 
 		(data.level && Traits.hasUnlocked(TraitName.EnhancedPolyglotII, data.level) && 3) ||
@@ -424,17 +481,14 @@ function ResourcesDisplay(props) {
 	</div>;
 }
 
-export var updateStatusDisplay = (data)=>{};
+export var updateStatusDisplay = (data: StatusViewProps)=>{};
 export class StatusDisplay extends React.Component {
-	constructor(props) {
+	state: StatusViewProps;
+	constructor(props: StatusViewProps) {
 		super(props);
 		this.state = {
 			time: 0,
-			resources: null,
-			resourceLocks: null,
-			selfBuffs: null,
-			enemyBuffs: null,
-			level: null,
+			level: 100,
 		}
 		updateStatusDisplay = ((newData)=>{
 			this.setState({
@@ -478,12 +532,15 @@ export class StatusDisplay extends React.Component {
 					{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}
 					{`${StaticFn.displayTime(this.state.time, 3)} (${this.state.time.toFixed(3)})`}
 				</span>
-				<ResourcesDisplay data={this.state}/>
+				{this.state.resources ? <ResourcesDisplay data={{
+					level: this.state.level,
+					resources: this.state.resources
+				}}/> : undefined}
 			</div>
 			<div className={"-right"}>
-				<ResourceLocksDisplay data={this.state.resourceLocks}/>
-				<EnemyBuffsDisplay data={this.state.enemyBuffs}/>
-				<BuffsDisplay data={this.state.selfBuffs}/>
+				{this.state.resourceLocks ? <ResourceLocksDisplay data={this.state.resourceLocks}/> : undefined}
+				{this.state.enemyBuffs ? <EnemyBuffsDisplay data={this.state.enemyBuffs}/> : undefined}
+				{this.state.selfBuffs ? <BuffsDisplay data={this.state.selfBuffs}/>: undefined}
 			</div>
 		</div>
 	}
