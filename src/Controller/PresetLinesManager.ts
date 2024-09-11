@@ -49,8 +49,6 @@ export class PresetLinesManager {
 			}
 			this.addLine(line);
 		}
-		updateSkillSequencePresetsView();
-		this.#save();
 	}
 
 	addLine(line: Line) {

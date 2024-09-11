@@ -15,9 +15,18 @@ export interface SkillApplicationCallbackInfo {
 
 }
 
+// if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
+// if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
+type SkillAutoReplace = {
+	trait: TraitName,
+	otherSkill: SkillName
+}
+
 export class SkillInfo {
 	readonly name: SkillName;
 	readonly level: number;
+	readonly autoUpgrade?: SkillAutoReplace;
+	readonly autoDowngrade?: SkillAutoReplace;
 	readonly cdName: ResourceType;
 	readonly aspect: Aspect;
 	readonly isSpell: boolean;
@@ -35,7 +44,10 @@ export class SkillInfo {
 		baseCastTime: number,
 		baseManaCost: number,
 		basePotency: number,
-		skillApplicationDelay?: number)
+		skillApplicationDelay?: number,
+		autoUpgrade?: SkillAutoReplace,
+		autoDowngrade?: SkillAutoReplace,
+		)
 	{
 		this.name = skillName;
 		this.level = level;
@@ -46,6 +58,8 @@ export class SkillInfo {
 		this.baseManaCost = baseManaCost;
 		this.basePotency = basePotency;
 		this.skillApplicationDelay = skillApplicationDelay===undefined ? 0 : skillApplicationDelay;
+		this.autoUpgrade = autoUpgrade;
+		this.autoDowngrade = autoDowngrade;
 	}
 }
 
@@ -60,13 +74,16 @@ const skillInfos = [
 	new SkillInfo(SkillName.Fire, 2, ResourceType.cd_GCD, Aspect.Fire, true,
 		2.5, 800, 180, 1.871),
 	new SkillInfo(SkillName.Blizzard2, 12, ResourceType.cd_GCD, Aspect.Ice, true,
-		3, 800, 80, 1.158), // Unknown damage application, copied from HB2
+		3, 800, 80, 1.158, // Unknown damage application, copied from HB2
+		{ trait: TraitName.AspectMasteryIV, otherSkill: SkillName.HighBlizzard2 }),
 	new SkillInfo(SkillName.Fire2, 18, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 1500, 80, 1.154), // Unknown damage application, copied from HF2
+		3, 1500, 80, 1.154, // Unknown damage application, copied from HF2
+		{ trait: TraitName.AspectMasteryIV, otherSkill: SkillName.HighFire2 }),
 	new SkillInfo(SkillName.Transpose, 4, ResourceType.cd_Transpose, Aspect.Other, false,
 		0, 0, 0), // instant
 	new SkillInfo(SkillName.Thunder3, 45, ResourceType.cd_GCD, Aspect.Lightning, true,
-		0, 0, 120, 0.757), // Unknown damage application, copied from HT
+		0, 0, 120, 0.757, // Unknown damage application, copied from HT
+		{ trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder }),
 	new SkillInfo(SkillName.Manaward, 30, ResourceType.cd_Manaward, Aspect.Other, false,
 		0, 0, 0, 1.114),// delayed
 	// Manafont: application delay 0.88s -> 0.2s since Dawntrail
@@ -108,15 +125,18 @@ const skillInfos = [
 		0, 0, 880, 0.63),
 
 	new SkillInfo(SkillName.HighFire2, 82, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 1500, 100, 1.154),
+		3, 1500, 100, 1.154,
+		undefined, { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.Fire2 }),
 	new SkillInfo(SkillName.HighBlizzard2, 82, ResourceType.cd_GCD, Aspect.Ice, true,
-		3, 800, 100, 1.158),
+		3, 800, 100, 1.158,
+		undefined, { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.Blizzard2 }),
 	new SkillInfo(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, Aspect.Other, false,
 		0, 0, 0), // ? (assumed to be instant)
 	new SkillInfo(SkillName.Paradox, 90, ResourceType.cd_GCD, Aspect.Other, true,
 		0, 1600, 520, 0.624),
 	new SkillInfo(SkillName.HighThunder, 92, ResourceType.cd_GCD, Aspect.Lightning, true,
-		0, 0, 150, 0.757),
+		0, 0, 150, 0.757,
+		undefined, { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.Thunder3 }),
 	new SkillInfo(SkillName.FlareStar, 100, ResourceType.cd_GCD, Aspect.Fire, true,
 		3, 0, 400, 0.622), /* Get actual delay after release */
 	new SkillInfo(SkillName.Retrace, 96, ResourceType.cd_Retrace, Aspect.Other, false,
@@ -852,6 +872,18 @@ export class SkillsList extends Map<SkillName, Skill> {
 				()=>{return false},
 				(game: GameState, node: ActionNode)=>{});
 		}
+	}
+	getAutoReplaced(key: SkillName, level: number): Skill {
+		let skill = this.get(key);
+		// upgrade: if level >= upgrade options
+		while (skill.info.autoUpgrade && Traits.hasUnlocked(skill.info.autoUpgrade.trait, level)) {
+			skill = this.getAutoReplaced(skill.info.autoUpgrade.otherSkill, level);
+		}
+		// downgrade: if level < current skill required level
+		while (skill.info.autoDowngrade && level < skill.info.level) {
+			skill = this.getAutoReplaced(skill.info.autoDowngrade.otherSkill, level);
+		}
+		return skill;
 	}
 }
 

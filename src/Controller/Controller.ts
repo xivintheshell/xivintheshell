@@ -926,7 +926,13 @@ class Controller {
 			else if (itr.type === ActionType.Skill) {
 
 				let waitFirst = currentReplayMode === ReplayMode.SkillSequence || currentReplayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
-				let status = this.#useSkill(itr.skillName as SkillName, waitFirst, TickMode.Manual);
+				let skillName = itr.skillName as SkillName;
+				if (props.replayMode === ReplayMode.SkillSequence) {
+					// auto-replace as much as possible
+					let replacedSkill = this.game.skillsList.getAutoReplaced(skillName, this.gameConfig.level);
+					skillName = replacedSkill.name;
+				}
+				let status = this.#useSkill(skillName, waitFirst, TickMode.Manual);
 
 				let bEditedTimelineShouldWaitAfterSkill = currentReplayMode === ReplayMode.Edited && (itr.next && itr.next.type === ActionType.Wait);
 				if (currentReplayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
