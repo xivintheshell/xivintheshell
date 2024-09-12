@@ -3,7 +3,8 @@
 import {controller} from "./Controller/Controller";
 import {TickMode} from "./Controller/Common";
 import {DEFAULT_CONFIG, GameConfig} from "./Game/GameConfig";
-import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
+import {PotencyModifier, PotencyModifierType} from "./Game/Potency";
+import {SkillName} from "./Game/Common";
 import {DamageStatisticsData} from "./Components/DamageStatistics";
 
 const DamageStatistics = require("./Components/DamageStatistics");
@@ -45,18 +46,20 @@ beforeEach(() => {
         tickMode: TickMode.Manual,
     });
     // monkeypatch the updateDamageStats function to avoid needing to initialize the frontend
-    DamageStatistics.exports.updateDamageStats = (newData) => {
+    DamageStatistics.exports.updateDamageStats = (newData: DamageStatisticsData) => {
         damageData = newData;
     };
 });
 
 // Run a test with the provided partial GameConfig and test function
 // Leave `params`` as an empty object to use the default config
-const testWithConfig = (params: Partial<GameConfig>, testFn: () => undefined) => {
-    const newConfig = {...DEFAULT_CONFIG};
-    Object.defineProperties(newConfig, params);
-    controller.setConfigAndRestart(newConfig);
-    testFn();
+const testWithConfig = (params: Partial<GameConfig>, testFn: () => void) => {
+    return () => {
+        const newConfig = {...DEFAULT_CONFIG};
+        Object.defineProperties(newConfig, params);
+        controller.setConfigAndRestart(newConfig);
+        testFn();
+    };
 };
 
 const applySkill = (skillName: SkillName) => {
