@@ -8,18 +8,20 @@ import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {XIVMath} from '../Game/XIVMath';
 
-const tableStyle = `
-	table {
-		border-collapse: collapse;
-		width: 100%;
-	}
-	th, td {
-		text-align: center;
-		padding: 0.15em;
-		border: 1px solid ${getCurrentThemeColors().bgHighContrast};
-		width: 33%
-	}
-`
+function getTableStyle(bgHighContraxtColor) {
+	return `
+		table {
+			border-collapse: collapse;
+			width: 100%;
+		}
+		th, td {
+			text-align: center;
+			padding: 0.15em;
+			border: 1px solid ${bgHighContraxtColor};
+			width: 33%
+		}
+	`;
+}
 
 export class TimeControl extends React.Component {
 	constructor(props) {
@@ -169,7 +171,7 @@ function ConfigSummary(props) {
 		return controller.gameConfig.getAfterTaxCastTime(preTax).toFixed(3);
 	};
 	let castTimesChart =<div>
-		<style>{tableStyle}</style>
+		<style>{getTableStyle(getCurrentThemeColors().bgHighContrast)}</style>
 		<table>
 			<tbody>
 			<tr>
@@ -791,7 +793,7 @@ export class Config extends React.Component {
 		let colors = getCurrentThemeColors();
 		let fpsAndCorrectionColor = this.state.shellVersion >= ShellVersion.FpsTax ? colors.text : colors.warning;
 		let b1TaxDesc = <div>
-			<style>{tableStyle}</style>
+			<style>{getTableStyle(colors.bgHighContrast)}</style>
 			<div className={"paragraph"}>{localize({
 				en: "Preview numbers based on your current spell speed and FPS input:",
 				zh: "根据当前输入的咏速和帧率，你将得到如下读条+帧率税："
