@@ -1,13 +1,33 @@
 // Tests for potencies and basic job gauge validation for BLM.
+// These tests each reset the global controller object and add actions to the timeline.
+// If/when we ever get around to de-globaling the controller, the tests can be paramaterized
+//
+// TODO other things to test:
+// - lines near sps breakpoints
+// - lines that require a lucid/mp tick
+// - exact potency numbers under modifiers + buffs
+// - cast time modifiers (instant cast abilities, LL)
+// - umbral soul stops timer
+// - polyglot generation
+// - replacement skills + invalid skills on record loads when level synced (T3 <-> HT, F2 <-> HF2, etc.)
+// - timeline load/unload
+// - using spells that require AF/UI outside of AF/UI
+// - using triplecast when there are already triplecast stacks
 
+import fs from "node:fs";
 import {controller} from "./Controller/Controller";
 import {TickMode} from "./Controller/Common";
 import {DEFAULT_CONFIG, GameConfig} from "./Game/GameConfig";
-import {PotencyModifier, PotencyModifierType} from "./Game/Potency";
-import {SkillName} from "./Game/Common";
+import {PotencyModifierType} from "./Game/Potency";
+import {ResourceType, SkillName} from "./Game/Common";
 import {DamageStatisticsData, mockDamageStatUpdateFn} from "./Components/DamageStatistics";
 
-// fake object to track damage statistics
+
+// If this configuration flag is set to `true`, then the fight record of each test run
+// will be exported locally to "$TEST_NAME.txt".
+const SAVE_FIGHT_RECORD = false;
+
+// Fake object to track damage statistics
 let damageData: DamageStatisticsData;
 
 const resetDamageData = () => {
@@ -42,8 +62,8 @@ const resetDamageData = () => {
 };
 
 beforeEach(() => {
-    // for simplicity, always use "manual" advance mode to avoid any time shenanigans
-    // we eventually should test real-time mode as well
+    // For simplicity, always use "manual" advance mode to avoid any time shenanigans
+    // We eventually should test real-time mode as well
     controller.setTimeControlSettings({
         timeScale: 2,
         tickMode: TickMode.Manual,
@@ -57,6 +77,16 @@ beforeEach(() => {
     mockDamageStatUpdateFn((newData: DamageStatisticsData) => {
         damageData = newData;
     });
+    // config reset is handled in testWithConfig helper
+});
+
+afterEach(() => {
+    if (SAVE_FIGHT_RECORD) {
+        const testName = expect.getState().currentTestName;
+        const record = controller.record.serialized();
+        fs.writeFileSync(`${testName}.txt`, JSON.stringify(record));
+    }
+    jest.restoreAllMocks();
 });
 
 // Run a test with the provided partial GameConfig and test function
@@ -64,7 +94,7 @@ beforeEach(() => {
 const testWithConfig = (params: Partial<GameConfig>, testFn: () => void) => {
     return () => {
         const newConfig = {...DEFAULT_CONFIG};
-        Object.defineProperties(newConfig, params as any);
+        Object.assign(newConfig, params);
         controller.setConfigAndRestart(newConfig);
         testFn();
     };
@@ -97,10 +127,14 @@ const compareDamageTables = (expectedDamageEntries: Array<ShortDamageEntry>) => 
     // so we instead just sort the two arrays and do an equality check
     const damageEntryComparator = (a: ShortDamageEntry, b: ShortDamageEntry) => {
         const nameCmp = a.skillName.localeCompare(b.skillName);
-        // TODO the same skill can appear with different modifiers, in which case
-        // we need to compare on their displayedModifiers field
-        // sz: this isn't needed yet so i'll just not write it since it sounds annoying,
-        // i apologize in advance if it becomes a problem
+        // The same skill can appear with different modifiers, in which case
+        // we need to compare on their displayedModifiers field.
+        // Since the modifiers lists are short, just concat them and treat that as a string.
+        if (nameCmp === 0) {
+            return a.displayedModifiers.map((x) => x.toString()).join().localeCompare(
+                b.displayedModifiers.map((x) => x.toString()).join()
+            );
+        }
         return nameCmp;
     };
     actualDamageEntries.sort(damageEntryComparator);
@@ -165,12 +199,107 @@ it("accepts the standard rotation", testWithConfig({}, () => {
     ]);
 }));
 
+it("drops enochian with fast F3 + 4xF4 + despair", testWithConfig({spellSpeed: 420}, () => {
+    let alertMsg = "";
+    let warnMsg = "";
+    const alert = jest.spyOn(window, "alert").mockImplementation((msg) => { alertMsg = msg; });
+    const warn = jest.spyOn(console, "warn").mockImplementation((msg) => { warnMsg = msg; });
+    // at min sps (420), 4xF4 after a fast F3 will drop enochian during the 
+    // castbar of despair
+    [
+        // needed to make F3 fast
+        SkillName.Blizzard3,
+        SkillName.Fire3,
+        SkillName.Fire4,
+        SkillName.Fire4,
+        SkillName.Fire4,
+        SkillName.Fire4,
+        SkillName.Despair,
+    ].forEach(applySkill);
+    // wait 4 seconds for cast finish + damage application
+    controller.step(4);
+    expect(alert).toHaveBeenCalled();
+    expect(warn).toHaveBeenCalled();
+    expect(alertMsg).toEqual("cast failed! Resources for Despair are no longer available");
+    expect(warnMsg).toEqual("failed: Despair");
+    expect(controller.game.hasEnochian()).toBeFalsy();
+    compareDamageTables([ 
+        {
+            skillName: SkillName.Blizzard3,
+            displayedModifiers: [],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.Fire3,
+            displayedModifiers: [PotencyModifierType.UI3],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.Fire4,
+            displayedModifiers: [PotencyModifierType.AF3],
+            hitCount: 4,
+        },
+    ]);
+}));
 
-// things to test:
-// enochian-dropping lines
-// lines near sps breakpoints
-// lines that don't have enough mp
-// potency modifiers (AF3, UI3, etc.)
-// umbral soul stops timer
-// polyglot generation
-// level synced potency values + replaced skills like HT/T3
+it("removes paradox on enochian drop", testWithConfig({ spellSpeed : 420 }, () => {
+    [SkillName.Fire3, SkillName.Swiftcast, SkillName.Blizzard3].forEach(applySkill)
+    expect(controller.game.hasEnochian()).toBeTruthy();
+    expect(controller.game.resources.get(ResourceType.Paradox).available(1)).toBeTruthy();
+    controller.step(15.01); // wait just a tiny bit after the enochian drop
+    expect(controller.game.hasEnochian()).toBeFalsy();
+    expect(controller.game.resources.get(ResourceType.Paradox).available(0)).toBeTruthy();
+}));
+
+
+it("has different F1 potencies at different AF/UI states", testWithConfig({}, () => {
+    [
+        SkillName.Fire, // no eno
+        SkillName.Fire, // AF1
+        SkillName.Fire, // AF2
+        SkillName.Fire, // AF3
+        SkillName.Blizzard3, // AF3
+        SkillName.Paradox, // eno
+        SkillName.Fire, // UI3
+    ].forEach(applySkill);
+    // wait for cast time + damage application
+    controller.step(4);
+    expect(controller.game.hasEnochian()).toBeFalsy();
+    compareDamageTables([
+        {
+            skillName: SkillName.Fire,
+            displayedModifiers: [],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.Fire,
+            displayedModifiers: [PotencyModifierType.AF1],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.Fire,
+            displayedModifiers: [PotencyModifierType.AF2],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.Fire,
+            displayedModifiers: [PotencyModifierType.AF3],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.Blizzard3,
+            displayedModifiers: [PotencyModifierType.AF3],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.Paradox,
+            displayedModifiers: [PotencyModifierType.ENO],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.Fire,
+            displayedModifiers: [PotencyModifierType.UI3],
+            hitCount: 1,
+        },
+    ]);
+}));
