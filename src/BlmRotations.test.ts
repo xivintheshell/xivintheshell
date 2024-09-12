@@ -252,7 +252,7 @@ it("removes paradox on enochian drop", testWithConfig({ spellSpeed : 420 }, () =
 }));
 
 
-it("has different F1 potencies at different AF/UI states", testWithConfig({}, () => {
+it("has different F1 modifiers at different AF/UI states", testWithConfig({}, () => {
     [
         SkillName.Fire, // no eno
         SkillName.Fire, // AF1
