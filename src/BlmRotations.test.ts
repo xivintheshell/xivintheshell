@@ -5,37 +5,40 @@ import {TickMode} from "./Controller/Common";
 import {DEFAULT_CONFIG, GameConfig} from "./Game/GameConfig";
 import {PotencyModifier, PotencyModifierType} from "./Game/Potency";
 import {SkillName} from "./Game/Common";
-import {DamageStatisticsData} from "./Components/DamageStatistics";
+import {DamageStatisticsData, mockDamageStatUpdateFn} from "./Components/DamageStatistics";
 
-const DamageStatistics = require("./Components/DamageStatistics");
+// fake object to track damage statistics
+let damageData: DamageStatisticsData;
 
-let damageData: DamageStatisticsData = {
-    time: 0,
-    tinctureBuffPercentage: 0,
-    countdown: 0,
-    totalPotency: {applied: 0, pending: 0},
-    lastDamageApplicationTime: 0,
-    gcdSkills: {applied: 0, pending: 0},
-    mainTable: [],
-    mainTableSummary: {
-        totalPotencyWithoutPot: 0, 
-        totalPotPotency: 0,
-        totalPartyBuffPotency: 0,
-    },
-    thunderTable: [],
-    thunderTableSummary: {
-        cumulativeGap: 0,
-        cumulativeOverride: 0,
-        timeSinceLastDoTDropped: 0,
-        totalTicks: 0,
-        maxTicks: 0,
-        dotCoverageTimeFraction: 0,
-        theoreticalMaxTicks: 0,
-        totalPotencyWithoutPot: 0,
-        totalPotPotency: 0,
-        totalPartyBuffPotency: 0,
-    },
-    historical: false,
+const resetDamageData = () => {
+    damageData = {
+        time: 0,
+        tinctureBuffPercentage: 0,
+        countdown: 0,
+        totalPotency: {applied: 0, pending: 0},
+        lastDamageApplicationTime: 0,
+        gcdSkills: {applied: 0, pending: 0},
+        mainTable: [],
+        mainTableSummary: {
+            totalPotencyWithoutPot: 0, 
+            totalPotPotency: 0,
+            totalPartyBuffPotency: 0,
+        },
+        thunderTable: [],
+        thunderTableSummary: {
+            cumulativeGap: 0,
+            cumulativeOverride: 0,
+            timeSinceLastDoTDropped: 0,
+            totalTicks: 0,
+            maxTicks: 0,
+            dotCoverageTimeFraction: 0,
+            theoreticalMaxTicks: 0,
+            totalPotencyWithoutPot: 0,
+            totalPotPotency: 0,
+            totalPartyBuffPotency: 0,
+        },
+        historical: false,
+    };
 };
 
 beforeEach(() => {
@@ -45,10 +48,15 @@ beforeEach(() => {
         timeScale: 2,
         tickMode: TickMode.Manual,
     });
+    if (controller.timeline.slots.length === 0) {
+        controller.timeline.addSlot()
+    }
+    // clear stats from the last run
+    resetDamageData();
     // monkeypatch the updateDamageStats function to avoid needing to initialize the frontend
-    DamageStatistics.exports.updateDamageStats = (newData: DamageStatisticsData) => {
+    mockDamageStatUpdateFn((newData: DamageStatisticsData) => {
         damageData = newData;
-    };
+    });
 });
 
 // Run a test with the provided partial GameConfig and test function
@@ -56,7 +64,7 @@ beforeEach(() => {
 const testWithConfig = (params: Partial<GameConfig>, testFn: () => void) => {
     return () => {
         const newConfig = {...DEFAULT_CONFIG};
-        Object.defineProperties(newConfig, params);
+        Object.defineProperties(newConfig, params as any);
         controller.setConfigAndRestart(newConfig);
         testFn();
     };
@@ -68,6 +76,36 @@ const applySkill = (skillName: SkillName) => {
     // to ensure that trailing wait times are always omitted
     controller.lastAttemptedSkill = skillName;
     controller.requestUseSkill({skillName: skillName});
+};
+
+type ShortDamageEntry = {
+    skillName: SkillName,
+    displayedModifiers: PotencyModifierType[],
+    hitCount: number,
+};
+
+const compareDamageTables = (expectedDamageEntries: Array<ShortDamageEntry>) => {
+    const actualDamageEntries = [];
+    for (const entry of damageData.mainTable) {
+        actualDamageEntries.push({
+            skillName: entry.skillName,
+            displayedModifiers: entry.displayedModifiers,
+            hitCount: entry.hitCount,
+        });
+    }
+    // sz: whatever version of node i'm on apparently doesn't support Set.difference/symmetricDifference,
+    // so we instead just sort the two arrays and do an equality check
+    const damageEntryComparator = (a: ShortDamageEntry, b: ShortDamageEntry) => {
+        const nameCmp = a.skillName.localeCompare(b.skillName);
+        // TODO the same skill can appear with different modifiers, in which case
+        // we need to compare on their displayedModifiers field
+        // sz: this isn't needed yet so i'll just not write it since it sounds annoying,
+        // i apologize in advance if it becomes a problem
+        return nameCmp;
+    };
+    actualDamageEntries.sort(damageEntryComparator);
+    expectedDamageEntries.sort(damageEntryComparator);
+    expect(actualDamageEntries).toEqual(expectedDamageEntries);
 };
 
 it("accepts the standard rotation", testWithConfig({}, () => {
@@ -87,7 +125,7 @@ it("accepts the standard rotation", testWithConfig({}, () => {
     ].forEach(applySkill);
     // wait 4 seconds for cast finish + damage application
     controller.step(4);
-    const expectedDamageEntries = new Set([
+    compareDamageTables([
         {
             skillName: SkillName.Blizzard3,
             displayedModifiers: [], // unaspected
@@ -110,7 +148,8 @@ it("accepts the standard rotation", testWithConfig({}, () => {
         },
         {
             skillName: SkillName.Paradox,
-            displayedModifiers: [],
+            // unaspected spell under enochian
+            displayedModifiers: [PotencyModifierType.ENO],
             hitCount: 1,
         },
         {
@@ -124,16 +163,6 @@ it("accepts the standard rotation", testWithConfig({}, () => {
             hitCount: 1,
         },
     ]);
-    const actualDamageEntries = new Set();
-    for (const entry of damageData.mainTable) {
-        actualDamageEntries.add({
-            skillName: entry.skillName,
-            displayedModifiers: entry.displayedModifiers,
-            hitCount: entry.hitCount,
-        });
-    }
-    expect(actualDamageEntries.size).toEqual(expectedDamageEntries.size);
-    expect(actualDamageEntries.difference(expectedDamageEntries).size).toEqual(0);
 }));
 
 

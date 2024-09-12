@@ -94,6 +94,11 @@ export type DamageStatisticsData = {
 export let updateDamageStats = (data: DamageStatisticsData) => {};
 export let updateSelectedStats = (data: SelectedStatisticsData) => {};
 
+// hook for tests to access damage stats
+export const mockDamageStatUpdateFn = (updateFn: (update: DamageStatisticsData) => void) => {
+	updateDamageStats = updateFn;
+};
+
 function buffName(buff: PotencyModifierType) {
 	let text = "";
 	if (buff === PotencyModifierType.AF3) {
