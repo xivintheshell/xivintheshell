@@ -264,7 +264,7 @@ makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, 
 	applicationDelay: 0, // ?
 });
 
-makeAbility_BLM(SkillName.AetherialManipulation, 52, ResourceType.cd_AetherialManipulation, {
+makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialManipulation, {
 	applicationDelay: 0, // ?
 });
 
