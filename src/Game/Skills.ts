@@ -1,6 +1,7 @@
 import {Aspect, BuffType, LevelSync, ProcMode, ResourceType, SkillName, WarningType} from './Common'
 // @ts-ignore
 import {controller} from "../Controller/Controller";
+import {ShellJob, ShellInfo} from "../Controller/Common";
 import {DoTBuff, EventTag, Resource} from "./Resources";
 import {ActionNode} from "../Controller/Record";
 import {GameState} from "./GameState";
@@ -17,14 +18,17 @@ export interface SkillApplicationCallbackInfo {
 
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
-type SkillAutoReplace = {
+export type SkillAutoReplace = {
 	trait: TraitName,
-	otherSkill: SkillName
+	otherSkill: SkillName,
 }
 
-export class SkillInfo {
+
+// TODO split this interface between GCDs + oGCD abilities, as some properties are only relevant
+// to one or the other
+export interface SkillInfo {
 	readonly name: SkillName;
-	readonly level: number;
+	readonly unlockLevel: number;
 	readonly autoUpgrade?: SkillAutoReplace;
 	readonly autoDowngrade?: SkillAutoReplace;
 	readonly cdName: ResourceType;
@@ -33,133 +37,126 @@ export class SkillInfo {
 	readonly baseCastTime: number;
 	readonly baseManaCost: number;
 	readonly basePotency: number;
-	readonly skillApplicationDelay: number;
-
-	constructor(
-		skillName: SkillName,
-		level: number,
-		cdName: ResourceType,
-		aspect: Aspect,
-		isSpell: boolean,
-		baseCastTime: number,
-		baseManaCost: number,
-		basePotency: number,
-		skillApplicationDelay?: number,
-		autoUpgrade?: SkillAutoReplace,
-		autoDowngrade?: SkillAutoReplace,
-		)
-	{
-		this.name = skillName;
-		this.level = level;
-		this.cdName = cdName;
-		this.aspect = aspect;
-		this.isSpell = isSpell;
-		this.baseCastTime = baseCastTime;
-		this.baseManaCost = baseManaCost;
-		this.basePotency = basePotency;
-		this.skillApplicationDelay = skillApplicationDelay===undefined ? 0 : skillApplicationDelay;
-		this.autoUpgrade = autoUpgrade;
-		this.autoDowngrade = autoDowngrade;
-	}
+	readonly applicationDelay: number;
+	readonly onCapture: any;  // TODO
+	readonly onApplication: any;  // TODO
+	readonly assetPath: string; // path relative to the Components/Asset/Skills folder 
 }
 
-// ref logs
-// https://www.fflogs.com/reports/KVgxmW9fC26qhNGt#fight=16&type=summary&view=events&source=6
-// https://www.fflogs.com/reports/rK87bvMFN2R3Hqpy#fight=1&type=casts&source=7
-// https://www.fflogs.com/reports/cNpjtRXHhZ8Az2V3#fight=last&type=damage-done&view=events&ability=36987
-// https://www.fflogs.com/reports/7NMQkxLzcbptw3Xd#fight=15&type=damage-done&source=116&view=events&ability=36986
-const skillInfos = [
-	new SkillInfo(SkillName.Blizzard, 1, ResourceType.cd_GCD, Aspect.Ice, true,
-		2.5, 400, 180, 0.846),
-	new SkillInfo(SkillName.Fire, 2, ResourceType.cd_GCD, Aspect.Fire, true,
-		2.5, 800, 180, 1.871),
-	new SkillInfo(SkillName.Blizzard2, 12, ResourceType.cd_GCD, Aspect.Ice, true,
-		3, 800, 80, 1.158, // Unknown damage application, copied from HB2
-		{ trait: TraitName.AspectMasteryIV, otherSkill: SkillName.HighBlizzard2 }),
-	new SkillInfo(SkillName.Fire2, 18, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 1500, 80, 1.154, // Unknown damage application, copied from HF2
-		{ trait: TraitName.AspectMasteryIV, otherSkill: SkillName.HighFire2 }),
-	new SkillInfo(SkillName.Transpose, 4, ResourceType.cd_Transpose, Aspect.Other, false,
-		0, 0, 0), // instant
-	new SkillInfo(SkillName.Thunder3, 45, ResourceType.cd_GCD, Aspect.Lightning, true,
-		0, 0, 120, 0.757, // Unknown damage application, copied from HT
-		{ trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder }),
-	new SkillInfo(SkillName.Manaward, 30, ResourceType.cd_Manaward, Aspect.Other, false,
-		0, 0, 0, 1.114),// delayed
-	// Manafont: application delay 0.88s -> 0.2s since Dawntrail
-	// infact most effects seem instant but MP gain is delayed.
-	// see screen recording: https://drive.google.com/file/d/1zGhU9egAKJ3PJiPVjuRBBMkKdxxHLS9b/view?usp=drive_link
-	new SkillInfo(SkillName.Manafont, 30, ResourceType.cd_Manafont, Aspect.Other, false,
-		0, 0, 0, 0.2),
-	new SkillInfo(SkillName.Fire3, 35, ResourceType.cd_GCD, Aspect.Fire, true,
-		3.5, 2000, 280, 1.292),
-	new SkillInfo(SkillName.Blizzard3, 35, ResourceType.cd_GCD, Aspect.Ice, true,
-		3.5, 800, 280, 0.89),
-	new SkillInfo(SkillName.Freeze, 40, ResourceType.cd_GCD, Aspect.Ice, true,
-		2.8, 1000, 120, 0.664),
-	new SkillInfo(SkillName.Flare, 50, ResourceType.cd_GCD, Aspect.Fire, true,
-		4, 0, 240, 1.157), // mana is handled separately
 
-	new SkillInfo(SkillName.LeyLines, 52, ResourceType.cd_LeyLines, Aspect.Other, false,
-		0, 0, 0, 0.49),// delayed
-	new SkillInfo(SkillName.Blizzard4, 58, ResourceType.cd_GCD, Aspect.Ice, true,
-		2.5, 800, 320, 1.156),
-	new SkillInfo(SkillName.Fire4, 60, ResourceType.cd_GCD, Aspect.Fire, true,
-		2.8, 800, 320, 1.159),
-	new SkillInfo(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, Aspect.Other, false,
-		0, 0, 0), // ?
-	new SkillInfo(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialManipulation, Aspect.Other, false,
-		0, 0, 0), // ?
-	new SkillInfo(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, Aspect.Other, false,
-		0, 0, 0), // instant
+// Map tracking skills for each job.
+// This is automatically populated by the makeGCD and makeAbility helper functions.
+export const skillInfosMap: Map<ShellJob, Map<SkillName, SkillInfo>> = new Map();
 
-	new SkillInfo(SkillName.Foul, 70, ResourceType.cd_GCD, Aspect.Other, true,
-		2.5, 0, 600, 1.158),
-	new SkillInfo(SkillName.Despair, 72, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 0, 350, 0.556),
-	// Umbral Soul: immediate snapshot & UH gain; delayed MP gain
-	// see screen recording: https://drive.google.com/file/d/1nsO69O7lgc8V_R_To4X0TGalPsCus1cg/view?usp=drive_link
-	new SkillInfo(SkillName.UmbralSoul, 35, ResourceType.cd_GCD, Aspect.Ice, true,
-		0, 0, 0, 0.633),
-	new SkillInfo(SkillName.Xenoglossy, 80, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 0, 880, 0.63),
+// can't iterate over a const enum so just populate manually :/
+[
+	ShellJob.BLM,
+	ShellJob.PCT,
+].forEach((job) => skillInfosMap.set(job, new Map()));
 
-	new SkillInfo(SkillName.HighFire2, 82, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 1500, 100, 1.154,
-		undefined, { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.Fire2 }),
-	new SkillInfo(SkillName.HighBlizzard2, 82, ResourceType.cd_GCD, Aspect.Ice, true,
-		3, 800, 100, 1.158,
-		undefined, { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.Blizzard2 }),
-	new SkillInfo(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, Aspect.Other, false,
-		0, 0, 0), // ? (assumed to be instant)
-	new SkillInfo(SkillName.Paradox, 90, ResourceType.cd_GCD, Aspect.Other, true,
-		0, 1600, 520, 0.624),
-	new SkillInfo(SkillName.HighThunder, 92, ResourceType.cd_GCD, Aspect.Lightning, true,
-		0, 0, 150, 0.757,
-		undefined, { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.Thunder3 }),
-	new SkillInfo(SkillName.FlareStar, 100, ResourceType.cd_GCD, Aspect.Fire, true,
-		3, 0, 400, 0.622), /* Get actual delay after release */
-	new SkillInfo(SkillName.Retrace, 96, ResourceType.cd_Retrace, Aspect.Other, false,
-		0, 0, 0), // ? (assumed to be instant)
 
-	new SkillInfo(SkillName.Addle, 8, ResourceType.cd_Addle, Aspect.Other, false,
-		0, 0, 0, 0.621),// delayed
-	new SkillInfo(SkillName.Swiftcast, 18, ResourceType.cd_Swiftcast, Aspect.Other, false,
-		0, 0, 0), // instant
-	new SkillInfo(SkillName.LucidDreaming, 14, ResourceType.cd_LucidDreaming, Aspect.Other, false,
-		0, 0, 0, 0.623), // delayed
-	new SkillInfo(SkillName.Surecast, 44, ResourceType.cd_Surecast, Aspect.Other, false,
-		0, 0, 0), // surprisingly instant because arms length is not
-	new SkillInfo(SkillName.Tincture, 1, ResourceType.cd_Tincture, Aspect.Other, false,
-		0, 0, 0, 0.64),// delayed // somewhere in the midrange of what's seen in logs
-	new SkillInfo(SkillName.Sprint, 1, ResourceType.cd_Sprint, Aspect.Other, false,
-		0, 0, 0, 0.133)// delayed
-];
+/**
+ * Declare a GCD skill.
+ *
+ * Only the skill's name and unlock level are mandatory. All optional params default as follows:
+ * - autoUpgrade + autoDowngrade: remain undefined
+ * - aspect: Aspect.Other
+ * - baseCastTime: 2.5
+ * - baseManaCost: 0
+ * - basePotency: 0
+ * - applicationDelay: 0
+ * - onCapture: empty function
+ * - onApplication: empty function
+ * - assetPath: if `jobs` is a single job, then "$JOB/$SKILLNAME.png"; otherwise "General/Missing.png"
+ * 
+ * TODO: If we ever branch out to non-BLM/PCT jobs, we should distinguish between
+ * spells and weaponskills for sps/sks calculation purposes.
+ */
+export const makeGCD = (jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, params: Partial<{
+	autoUpgrade: SkillAutoReplace,
+	autoDowngrade: SkillAutoReplace,
+	aspect: Aspect,
+	baseCastTime: number,
+	baseManaCost: number,
+	basePotency: number,
+	applicationDelay: number,
+	onCapture: any,  // TODO
+	onApplication: any,  // TODO
+	assetPath: string,
+}>): SkillInfo => {
+	if (!Array.isArray(jobs)) {
+		jobs = [jobs];
+	}
+	const info = {
+		name: name,
+		unlockLevel: unlockLevel,
+		autoUpgrade: params.autoUpgrade,
+		autoDowngrade: params.autoDowngrade,
+		cdName: ResourceType.cd_GCD,
+		aspect: params.aspect ?? Aspect.Other,
+		isSpell: true,
+		baseCastTime: params.baseCastTime ?? 2.5,
+		baseManaCost: params.baseManaCost ?? 0,
+		basePotency: params.basePotency ?? 0,
+		applicationDelay: params.applicationDelay ?? 0,
+		onCapture: params.onCapture ?? (() => {}),
+		onApplication: params.onApplication ?? (() => {}),
+		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
+	};
+	jobs.forEach((job) => skillInfosMap.get(job)!.set(info.name, info));
+	return info;
+};
 
-const skillInfosMap: Map<SkillName, SkillInfo> = new Map();
-skillInfos.forEach(info=>{
-	skillInfosMap.set(info.name, info);
-});
+
+/**
+ * Declare an oGCD ability.
+ *
+ * Only the ability's name, unlock level, and cooldown are mandatory. All optional params default as follows:
+ * - autoUpgrade + autoDowngrade: remain undefined
+ * - basePotency: applicationInfo will be undefined
+ * - applicationDelay: 0 if basePotency is defined, otherwise left undefined
+ * - onCapture: empty function
+ * - onApplication: empty function
+ * - assetPath: if `jobs` is a single job, then "$JOB/$SKILLNAME.png"; otherwise "General/Missing.png"
+ *
+ * Cast time and mana cost are only relevant for BLU (as far as I [sz] know). Let us pray we never
+ * cross that particular bridge.
+ */
+export const makeAbility = (jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, cdName: ResourceType, params: Partial<{
+	autoUpgrade: SkillAutoReplace,
+	autoDowngrade: SkillAutoReplace,
+	basePotency: number,
+	applicationDelay: number,
+	onCapture: any,  // TODO
+	onApplication: any,  // TODO
+	assetPath: string,
+}>): SkillInfo => {
+	if (!Array.isArray(jobs)) {
+		jobs = [jobs];
+	}
+	const info = {
+		name: name,
+		unlockLevel: unlockLevel,
+		autoUpgrade: params.autoUpgrade,
+		autoDowngrade: params.autoDowngrade,
+		cdName: cdName,
+		aspect: Aspect.Other,
+		isSpell: false,
+		baseCastTime: 0,
+		baseManaCost: 0,
+		basePotency: params.basePotency ?? 0,
+		applicationDelay: params.applicationDelay ?? 0,
+		onCapture: params.onCapture ?? (() => {}),
+		onApplication: params.onApplication ?? (() => {}),
+		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
+	};
+	jobs.forEach((job) => skillInfosMap.get(job)!.set(info.name, info));
+	return info;
+}
+
+// Dummy skill to avoid a hard crash when a skill info isn't found
+const NEVER_SKILL = makeGCD([], SkillName.Never, 1, {});
+
 
 export class Skill {
 	readonly name: SkillName;
@@ -171,10 +168,10 @@ export class Skill {
 		this.name = name;
 		this.available = requirementFn;
 		this.use = effectFn;
-		let info = skillInfosMap.get(name);
+		let info = skillInfosMap.get(ShellInfo.job)!.get(name);
 		if (!info) {
-			info = skillInfos[0];
-			console.error("Skill info not found!");
+			info = NEVER_SKILL;
+			console.error(`Skill info for ${name} not found!`);
 		}
 		this.info = info;
 	}
@@ -880,7 +877,7 @@ export class SkillsList extends Map<SkillName, Skill> {
 			skill = this.getAutoReplaced(skill.info.autoUpgrade.otherSkill, level);
 		}
 		// downgrade: if level < current skill required level
-		while (skill.info.autoDowngrade && level < skill.info.level) {
+		while (skill.info.autoDowngrade && level < skill.info.unlockLevel) {
 			skill = this.getAutoReplaced(skill.info.autoDowngrade.otherSkill, level);
 		}
 		return skill;
@@ -890,50 +887,23 @@ export class SkillsList extends Map<SkillName, Skill> {
 export class DisplayedSkills extends Array<SkillName> {
 	constructor(level: LevelSync) {
 		super();
-
-		this.push(SkillName.Blizzard);
-		this.push(SkillName.Fire);
-		this.push(SkillName.Transpose);
-		this.push(SkillName.Thunder3);
-		this.push(SkillName.Manaward);
-		this.push(SkillName.Manafont);
-		this.push(SkillName.Fire3);
-		this.push(SkillName.Blizzard3);
-		this.push(SkillName.Freeze);
-		this.push(SkillName.Flare);
-		this.push(SkillName.LeyLines);
-		this.push(SkillName.Blizzard4);
-		this.push(SkillName.Fire4);
-		this.push(SkillName.BetweenTheLines);
-		this.push(SkillName.AetherialManipulation);
-		this.push(SkillName.Triplecast);
-		this.push(SkillName.Foul);
-
-		if (level >= 80) {
-			this.push(SkillName.Despair);
-			this.push(SkillName.UmbralSoul);
-			this.push(SkillName.Xenoglossy);
+		console.assert(skillInfosMap.has(ShellInfo.job), `No skill map found for job: ${ShellInfo.job}`)
+		// TODO move contextual hotbar info (paradox, retrace) to here
+		const hotbarExcludeSkills = [
+			SkillName.Paradox,
+			SkillName.Retrace
+		];
+		for (const skillInfo of skillInfosMap.get(ShellInfo.job)!.values()) {
+			// Leave off abilities that are above the current level sync.
+			// Also leave off any abilities that auto-downgrade, like HF2/HB2/HT,
+			// since their downgrade versions will already be on the hotbar.
+			if (
+				level >= skillInfo.unlockLevel
+				&& !hotbarExcludeSkills.includes(skillInfo.name)
+				&& skillInfo.autoDowngrade === undefined
+			) {
+				this.push(skillInfo.name);
+			}
 		}
-		else {
-			this.push(SkillName.UmbralSoul);
-		}
-
-		this.push(SkillName.Fire2);
-		this.push(SkillName.Blizzard2);
-
-		if (level >= 90) {
-			this.push(SkillName.Amplifier);
-		}
-
-		if (level >= 100) {
-			this.push(SkillName.FlareStar);
-		}
-
-		this.push(SkillName.Addle);
-		this.push(SkillName.Swiftcast);
-		this.push(SkillName.LucidDreaming);
-		this.push(SkillName.Surecast);
-		this.push(SkillName.Tincture);
-		this.push(SkillName.Sprint);
 	}
 }

@@ -2,6 +2,7 @@ import React from 'react'
 import {Clickable, Help, parseTime} from "./Common";
 import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
+import {ShellInfo} from "../Controller/Common";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
 import {localize, localizeSkillName} from "./Localization";
@@ -9,59 +10,20 @@ import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
 import {getCurrentThemeColors} from "./ColorTheme";
 import {TraitName, Traits} from '../Game/Traits';
+import {skillInfosMap} from "../Game/Skills";
+
+// Imports of Game/Jobs/* must come after Game/Skills is initialized.
+import "../Game/Jobs/BLM";
+import "../Game/Jobs/RoleActions";
 
 // seems useful: https://na.finalfantasyxiv.com/lodestone/special/fankit/icon/
 export const skillIcons = new Map();
 
-const blmSkills = [
-	SkillName.Blizzard,
-	SkillName.Fire,
-	SkillName.Blizzard2,
-	SkillName.Fire2,
-	SkillName.Transpose,
-	SkillName.Thunder3,
-	SkillName.HighThunder,
-	SkillName.Manaward,
-	SkillName.Manafont,
-	SkillName.Fire3,
-	SkillName.Blizzard3,
-	SkillName.Freeze,
-	SkillName.AetherialManipulation,
-	SkillName.Flare,
-	SkillName.LeyLines,
-	SkillName.Blizzard4,
-	SkillName.Fire4,
-	SkillName.BetweenTheLines,
-	SkillName.Triplecast,
-	SkillName.Foul,
-	SkillName.Despair,
-	SkillName.UmbralSoul,
-	SkillName.Xenoglossy,
-	SkillName.HighFire2,
-	SkillName.HighBlizzard2,
-	SkillName.Amplifier,
-	SkillName.Paradox,
-	SkillName.FlareStar,
-	SkillName.Retrace,
-];
-
-const casterRoleSkills = [
-	SkillName.Addle,
-	SkillName.Swiftcast,
-	SkillName.LucidDreaming,
-	SkillName.Surecast,
-	SkillName.Tincture,
-];
-
-blmSkills.forEach(
-	(skill) => skillIcons.set(skill, require(`./Asset/Skills/BLM/${skill}.png`))
+// Only import necessary skills
+// TODO: change this if we serve multiple jobs off the same site
+skillInfosMap.get(ShellInfo.job).forEach(
+	(skillInfo) => skillIcons.set(skillInfo.name, require(`./Asset/Skills/${skillInfo.assetPath}`)),
 );
-
-casterRoleSkills.forEach(
-	(skill) => skillIcons.set(skill, require(`./Asset/Skills/CasterRole/${skill}.png`))
-);
-
-skillIcons.set(SkillName.Sprint, require("./Asset/Skills/General/Sprint.png"));
 
 export const skillIconImages = new Map();
 skillIcons.forEach((path, skillName)=>{

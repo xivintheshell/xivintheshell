@@ -1,4 +1,4 @@
-import {Aspect, BuffType, Debug, ResourceType, SkillName, SkillReadyStatus, WarningType} from "./Common"
+import {Aspect, BuffType, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
 import {DisplayedSkills, SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
@@ -6,35 +6,75 @@ import {CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceSta
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
+import {ShellInfo, ShellJob} from "../Controller/Common";
 import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
 import {TraitName, Traits} from "./Traits";
+
+import {BLMState} from "./Jobs/BLM";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
 
 type RNG = any;
 
+// Job-specific resource and state representation.
+// All implementors of JobState should initialize their own resources within the constructor.
+export interface JobState {
+	gameState: GameState;
+	config: GameConfig;
+	rng: RNG;
+	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
+	resources: ResourceState;
+	cooldowns: CoolDownState;
+	eventsQueue: Event[];
+
+	// Register persistent timers, like BLM's Polyglot gauge.
+	registerRecurringEvents(): void;
+};
+
+
+class EmptyJobState implements JobState {
+	gameState: GameState;
+	config: GameConfig;
+	rng: RNG;
+	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
+	resources: ResourceState;
+	cooldowns: CoolDownState;
+	eventsQueue: Event[];
+	
+	constructor(gameState: GameState) {
+		this.gameState = gameState;
+		this.config = gameState.config;
+		this.rng = gameState.rng;
+		this.nonProcRng = gameState.nonProcRng;
+		this.resources = gameState.resources;
+		this.cooldowns = gameState.cooldowns;
+		this.eventsQueue = gameState.eventsQueue;
+	}
+
+	registerRecurringEvents() {};
+}
+
 // GameState := resources + events queue
 export class GameState {
-	config: GameConfig
+	config: GameConfig;
 	rng: RNG;
-	#nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
+	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
 	lucidTickOffset: number;
-	thunderTickOffset: number;
 	time: number; // raw time which starts at 0 regardless of countdown
 	resources: ResourceState;
 	cooldowns: CoolDownState;
 	eventsQueue: Event[];
 	skillsList: SkillsList;
 	displayedSkills: DisplayedSkills;
+	jobState: JobState;
 
 	constructor(config: GameConfig) {
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
-		this.#nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
-		this.lucidTickOffset = this.#nonProcRng() * 3.0;
-		this.thunderTickOffset = this.#nonProcRng() * 3.0;
+		this.nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
+		this.lucidTickOffset = this.nonProcRng() * 3.0;
 
 		// TIME (raw time which starts at 0 regardless of countdown)
 		this.time = 0;
@@ -43,58 +83,17 @@ export class GameState {
 
 		// RESOURCES (checked when using skills)
 		this.resources = new ResourceState(this);
-		this.resources.set(ResourceType.Mana, new Resource(ResourceType.Mana, 10000, 10000));
+		this.resources.set(new Resource(ResourceType.Mana, 10000, 10000));
+		this.resources.set(new Resource(ResourceType.Sprint, 1, 0));
 
-		const polyglotStacks = 
-			(Traits.hasUnlocked(TraitName.EnhancedPolyglotII, this.config.level) && 3) ||
-			(Traits.hasUnlocked(TraitName.EnhancedPolyglot, this.config.level) && 2) ||
-			1;
-		this.resources.set(ResourceType.Polyglot, new Resource(ResourceType.Polyglot, polyglotStacks, 0));
-		this.resources.set(ResourceType.AstralFire, new Resource(ResourceType.AstralFire, 3, 0));
-		this.resources.set(ResourceType.UmbralIce, new Resource(ResourceType.UmbralIce, 3, 0));
-		this.resources.set(ResourceType.UmbralHeart, new Resource(ResourceType.UmbralHeart, 3, 0));
-		this.resources.set(ResourceType.AstralSoul, new Resource(ResourceType.AstralSoul, 6, 0));
-		this.resources.set(ResourceType.LeyLines, new Resource(ResourceType.LeyLines, 1, 0)); // capture
-		this.resources.set(ResourceType.Enochian, new Resource(ResourceType.Enochian, 1, 0));
-		this.resources.set(ResourceType.Paradox, new Resource(ResourceType.Paradox, 1, 0));
-		this.resources.set(ResourceType.Firestarter, new Resource(ResourceType.Firestarter, 1, 0));
-		this.resources.set(ResourceType.Thunderhead, new Resource(ResourceType.Thunderhead, 1, 0));
-		this.resources.set(ResourceType.ThunderDoT, new DoTBuff(ResourceType.ThunderDoT, 1, 0));
-		this.resources.set(ResourceType.Manaward, new Resource(ResourceType.Manaward, 1, 0));
-		this.resources.set(ResourceType.Triplecast, new Resource(ResourceType.Triplecast, 3, 0));
-		this.resources.set(ResourceType.Addle, new Resource(ResourceType.Addle, 1, 0));
-		this.resources.set(ResourceType.Swiftcast, new Resource(ResourceType.Swiftcast, 1, 0));
-		this.resources.set(ResourceType.LucidDreaming, new DoTBuff(ResourceType.LucidDreaming, 1, 0));
-		this.resources.set(ResourceType.Surecast, new Resource(ResourceType.Surecast, 1, 0));
-		this.resources.set(ResourceType.Tincture, new Resource(ResourceType.Tincture, 1, 0)); // capture
-		this.resources.set(ResourceType.Sprint, new Resource(ResourceType.Sprint, 1, 0));
-
-		this.resources.set(ResourceType.Movement, new Resource(ResourceType.Movement, 1, 1));
-		this.resources.set(ResourceType.NotAnimationLocked, new Resource(ResourceType.NotAnimationLocked, 1, 1));
-		this.resources.set(ResourceType.NotCasterTaxed, new Resource(ResourceType.NotCasterTaxed, 1, 1));
+		this.resources.set(new Resource(ResourceType.Movement, 1, 1));
+		this.resources.set(new Resource(ResourceType.NotAnimationLocked, 1, 1));
+		this.resources.set(new Resource(ResourceType.NotCasterTaxed, 1, 1));
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(ResourceType.cd_GCD, new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD(false)), 1, 1));
-		this.cooldowns.set(ResourceType.cd_LeyLines, new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Transpose, new CoolDown(ResourceType.cd_Transpose, 5, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Manaward, new CoolDown(ResourceType.cd_Manaward, 120, 1, 1));
-		this.cooldowns.set(ResourceType.cd_BetweenTheLines, new CoolDown(ResourceType.cd_BetweenTheLines, 3, 1, 1));
-		this.cooldowns.set(ResourceType.cd_AetherialManipulation, new CoolDown(ResourceType.cd_AetherialManipulation, 10, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Triplecast, new CoolDown(ResourceType.cd_Triplecast, 60, 2, 2));
-
-		const manafontCooldown = (Traits.hasUnlocked(TraitName.EnhancedManafont, this.config.level) && 100) || 180;
-		this.cooldowns.set(ResourceType.cd_Manafont, new CoolDown(ResourceType.cd_Manafont, manafontCooldown, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Amplifier, new CoolDown(ResourceType.cd_Amplifier, 120, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Retrace, new CoolDown(ResourceType.cd_Retrace, 40, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Addle, new CoolDown(ResourceType.cd_Addle, 90, 1, 1));
-
-		const swiftcastCooldown = (Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level) && 40) || 60;
-		this.cooldowns.set(ResourceType.cd_Swiftcast, new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1));
-		this.cooldowns.set(ResourceType.cd_LucidDreaming, new CoolDown(ResourceType.cd_LucidDreaming, 60, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Surecast, new CoolDown(ResourceType.cd_Surecast, 120, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Tincture, new CoolDown(ResourceType.cd_Tincture, 270, 1, 1));
-		this.cooldowns.set(ResourceType.cd_Sprint, new CoolDown(ResourceType.cd_Sprint, 60, 1, 1));
+		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD(false)), 1, 1));
+		this.cooldowns.set(new CoolDown(ResourceType.cd_Sprint, 60, 1, 1));
 
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
@@ -108,6 +107,15 @@ export class GameState {
 
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = new SkillsList(this);
+
+		switch (ShellInfo.job) {
+			case ShellJob.BLM:
+				this.jobState = new BLMState(this);
+				break;
+			default:
+				console.error(`Could not construct job state for job: ${ShellInfo.job}`)
+				this.jobState = new EmptyJobState(this);
+		}
 
 		this.#init();
 	}
@@ -189,46 +197,7 @@ export class GameState {
 		firstLucidTickEvt.addTag(EventTag.LucidTick);
 		this.addEvent(firstLucidTickEvt);
 
-		// thunder DoT tick
-		let recurringThunderTick = () => {
-			let thunder = this.resources.get(ResourceType.ThunderDoT) as DoTBuff;
-			if (thunder.available(1)) {// dot buff is effective
-				thunder.tickCount++;
-				if (thunder.node) { // aka this buff is applied by a skill (and not just from an override)
-					// access potencies at index [1, 10] (since 0 is initial potency)
-					let p = thunder.node.getPotencies()[thunder.tickCount];
-					controller.resolvePotency(p);
-				}
-			}
-			// increment count
-			if (this.getDisplayTime() >= 0) {
-				controller.reportDotTick(this.time);
-			}
-			// queue the next tick
-			this.addEvent(new Event("thunder DoT tick", 3, ()=>{
-				recurringThunderTick();
-			}));
-		};
-		let timeTillFirstThunderTick = this.config.timeTillFirstManaTick + this.thunderTickOffset;
-		while (timeTillFirstThunderTick > 3) timeTillFirstThunderTick -= 3;
-		this.addEvent(new Event("initial thunder DoT tick", timeTillFirstThunderTick, recurringThunderTick));
-
-		// also polyglot
-		let recurringPolyglotGain = (rsc: Resource)=>{
-			if (this.hasEnochian()) {
-				if (rsc.availableAmount() === rsc.maxValue) {
-					controller.reportWarning(WarningType.PolyglotOvercap);
-				}
-				rsc.gain(1);
-			}
-			this.resources.addResourceEvent({
-				rscType: ResourceType.Polyglot,
-				name: "gain polyglot if currently has enochian",
-				delay: 30,
-				fnOnRsc: recurringPolyglotGain
-			});
-		};
-		recurringPolyglotGain(this.resources.get(ResourceType.Polyglot));
+		this.jobState.registerRecurringEvents();
 	}
 
 	// advance game state by this much time
@@ -498,7 +467,7 @@ export class GameState {
 
 				// ice spells: gain mana if in UI
 				if (skillInfo.aspect === Aspect.Ice) {
-					game.gainUmbralMana(skillInfo.skillApplicationDelay);
+					game.gainUmbralMana(skillInfo.applicationDelay);
 				}
 
 				let captureInfo: SkillCaptureCallbackInfo = {
@@ -510,7 +479,7 @@ export class GameState {
 				// effect application
 				game.addEvent(new Event(
 					skillInfo.name + " applied",
-					skillInfo.skillApplicationDelay,
+					skillInfo.applicationDelay,
 					()=>{
 						if (potency) {
 							controller.resolvePotency(potency);
@@ -624,7 +593,7 @@ export class GameState {
 
 		let skillEvent = new Event(
 			skillInfo.name + " captured",
-			skillInfo.skillApplicationDelay,
+			skillInfo.applicationDelay,
 			()=>{
 				if (props.dealDamage && potency) controller.resolvePotency(potency);
 				if (props.onApplication) props.onApplication();
@@ -736,7 +705,7 @@ export class GameState {
 			|| (skillName===SkillName.Paradox && this.getIceStacks() > 0)
 			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)));
 		let reqsMet = skill.available();
-		let skillUnlocked = this.config.level >= skill.info.level;
+		let skillUnlocked = this.config.level >= skill.info.unlockLevel;
 		let status = SkillReadyStatus.Ready;
 		if (!notBlocked) status = SkillReadyStatus.Blocked;
 		else if (!skillUnlocked) status = SkillReadyStatus.SkillNotUnlocked;
@@ -752,9 +721,9 @@ export class GameState {
 		if (status === SkillReadyStatus.Ready) {
 			if (skill.info.isSpell) {
 				let timeTillCapture = instantCastAvailable ? 0 : (capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
-				timeTillDamageApplication = timeTillCapture + skill.info.skillApplicationDelay;
+				timeTillDamageApplication = timeTillCapture + skill.info.applicationDelay;
 			} else {
-				timeTillDamageApplication = skill.info.skillApplicationDelay;
+				timeTillDamageApplication = skill.info.applicationDelay;
 			}
 		}
 
