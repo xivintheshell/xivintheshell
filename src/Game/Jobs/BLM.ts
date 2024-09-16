@@ -268,7 +268,7 @@ makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialMa
 	applicationDelay: 0, // ?
 });
 
-makeAbility_BLM(SkillName.Triplecast, 52, ResourceType.cd_Triplecast, {
+makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
 	applicationDelay: 0, // instant
 });
 
