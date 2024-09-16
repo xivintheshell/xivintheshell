@@ -9,6 +9,7 @@ import {Traits, TraitName} from "../Traits";
 import {JobState, GameState} from "../GameState";
 import {CoolDown, CoolDownState, DoTBuff, Event, Resource, ResourceState} from "../Resources"
 import {GameConfig} from "../GameConfig";
+import {GameState} from "../GameState";
 
 type RNG = any;
 
@@ -24,8 +25,7 @@ export class BLMState implements JobState {
 
 	thunderTickOffset: number;
 
-	// @ts-ignore
-	constructor(gameState) {
+	constructor(gameState: GameState) {
 		this.gameState = gameState;
 		this.config = gameState.config;
 		this.rng = gameState.rng;

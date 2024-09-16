@@ -113,7 +113,7 @@ export const makeGCD = (jobs: ShellJob | ShellJob[], name: SkillName, unlockLeve
  *
  * Only the ability's name, unlock level, and cooldown are mandatory. All optional params default as follows:
  * - autoUpgrade + autoDowngrade: remain undefined
- * - basePotency: applicationInfo will be undefined
+ * - basePotency: 0
  * - applicationDelay: 0 if basePotency is defined, otherwise left undefined
  * - onCapture: empty function
  * - onApplication: empty function
