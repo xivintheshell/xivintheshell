@@ -61,7 +61,7 @@ export class Resource {
 			));
 			this.pendingChange.timeTillEvent = newTime;
 		} else {
-			console.assert(false);
+			console.error(`Failed to override non-pending resource timer for resource: ${this.type}`);
 		}
 	}
 	removeTimer() {
@@ -139,22 +139,33 @@ export class CoolDown extends Resource {
 	}
 }
 
-export class CoolDownState extends Map<ResourceType, CoolDown> {
+export class CoolDownState {
 	game: GameState;
+	#map: Map<ResourceType, CoolDown>;
 	constructor(game: GameState) {
-		super();
 		this.game = game;
+		this.#map = new Map();
 	}
+
+	forEach(fn: (cd: CoolDown, cdName: ResourceType) => void) {
+		this.#map.forEach(fn);
+	}
+
 	get(rscType: ResourceType): CoolDown {
-		let rsc = super.get(rscType);
+		let rsc = this.#map.get(rscType);
 		if (rsc) return rsc;
 		else {
 			console.assert(false);
 			return new CoolDown(ResourceType.Never, 0, 0, 0);
 		}
 	}
+
+	set(cd: CoolDown) {
+		this.#map.set(cd.type, cd);
+	}
+
 	tick(deltaTime: number) {
-		for (const cd of this.values()) cd.restore(this.game, deltaTime);
+		for (const cd of this.#map.values()) cd.restore(this.game, deltaTime);
 	}
 	stacksAvailable(rscType: ResourceType): number {
 		return this.get(rscType).stacksAvailable();
@@ -174,20 +185,25 @@ export class CoolDownState extends Map<ResourceType, CoolDown> {
 	}
 }
 
-export class ResourceState extends Map<ResourceType, Resource> {
+export class ResourceState {
 	game: GameState;
+	#map: Map<ResourceType, Resource>;
 	constructor(game: GameState) {
-		super();
 		this.game = game;
+		this.#map = new Map();
 	}
 
 	get(rscType: ResourceType): Resource {
-		let rsc = super.get(rscType);
+		let rsc = this.#map.get(rscType);
 		if (rsc) return rsc;
 		else {
 			console.assert(false);
 			return new Resource(ResourceType.Never, 0, 0);
 		}
+	}
+
+	set(resource: Resource) {
+		this.#map.set(resource.type, resource);
 	}
 
 	timeTillReady(rscType: ResourceType): number {
@@ -368,7 +384,8 @@ export class ResourceOverride {
 					delay: newTimer,
 					fnOnRsc: (r: Resource) => {
 						  if (rsc.type === ResourceType.Enochian) { // since enochian should also take away AF/UI/UH stacks
-							  game.loseEnochian();
+						  		// TODO move to job-specific code
+								game.loseEnochian();
 						  } else {
 							  r.consume(r.availableAmount());
 						  }

@@ -23,8 +23,8 @@ export const enum ShellVersion {
 }
 
 export const enum ShellJob {
-	BLM = 0,
-	PCT = 1
+	BLM = "BLM",
+	PCT = "PCT",
 }
 
 export const enum Expansion {

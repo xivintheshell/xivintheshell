@@ -212,7 +212,8 @@ function ConfigSummary(props) {
 		en: "the random time offset of lucid dreaming ticks relative to mp ticks",
 		zh: "醒梦buff期间，每次跳蓝后多久跳醒梦（由随机种子决定）"
 	});
-	let thunderTickOffset = controller.game.thunderTickOffset.toFixed(3);
+	// TODO specialize for BLM
+	let thunderTickOffset = controller.game.jobState.thunderTickOffset.toFixed(3);
 	let thunderOffsetDesc = localize({
 		en: "the random time offset of thunder DoT ticks relative to mp ticks",
 		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）"
