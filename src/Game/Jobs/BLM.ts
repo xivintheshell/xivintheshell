@@ -9,7 +9,6 @@ import {Traits, TraitName} from "../Traits";
 import {JobState, GameState} from "../GameState";
 import {CoolDown, CoolDownState, DoTBuff, Event, Resource, ResourceState} from "../Resources"
 import {GameConfig} from "../GameConfig";
-import {GameState} from "../GameState";
 
 type RNG = any;
 
