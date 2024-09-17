@@ -1,4 +1,4 @@
-import { LevelSync } from "./Common";
+import { LevelSync, ResourceType } from "./Common";
 
 export class XIVMath {
 	static getMainstatBase(level: LevelSync) {
@@ -78,6 +78,7 @@ export class XIVMath {
 			return 15;
 		}
 		console.error("No speed modifier for buff: ", buff);
+		return 0;
 	}
 
 	static preTaxGcd(level: LevelSync, spellSpeed: number, baseGCD: number, speedBuff?: ResourceType) {

@@ -7,7 +7,7 @@ import {
 	ShellVersion,
 	TickMode
 } from "./Common";
-import {GameState} from "../Game/GameState";
+import {GameState, newGameState} from "../Game/GameState";
 import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 // @ts-ignore
@@ -93,7 +93,7 @@ class Controller {
 		this.#presetLinesManager = new PresetLinesManager();
 
 		this.gameConfig = new GameConfig(DEFAULT_CONFIG);
-		this.game = new GameState(this.gameConfig);
+		this.game = newGameState(this.gameConfig);
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;
@@ -174,7 +174,7 @@ class Controller {
 
 			// create environment
 			let cfg = inRecord.config ?? this.gameConfig;
-			this.game = new GameState(cfg);
+			this.game = newGameState(cfg);
 			this.record = new Record();
 			this.record.config = cfg;
 			this.#lastDamageApplicationTime = -cfg.countdown;
@@ -211,7 +211,7 @@ class Controller {
 
 		this.#sandboxEnvironment(()=>{
 			let tmpRecord = this.record;
-			this.game = new GameState(this.gameConfig);
+			this.game = newGameState(this.gameConfig);
 			this.record = new Record();
 			this.record.config = this.gameConfig;
 			this.#lastDamageApplicationTime = -this.gameConfig.countdown;
@@ -269,7 +269,7 @@ class Controller {
 
 	#requestRestart() {
 		this.lastAttemptedSkill = ""
-		this.game = new GameState(this.gameConfig);
+		this.game = newGameState(this.gameConfig);
 		this.#playPause({shouldLoop: false});
 		this.timeline.reset();
 		this.record.unselectAll();

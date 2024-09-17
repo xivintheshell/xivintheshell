@@ -20,6 +20,7 @@ import {TickMode} from "./Controller/Common";
 import {DEFAULT_CONFIG, GameConfig} from "./Game/GameConfig";
 import {PotencyModifierType} from "./Game/Potency";
 import {ResourceType, SkillName} from "./Game/Common";
+import {BLMState} from "./Game/Jobs/BLM";
 import {DamageStatisticsData, mockDamageStatUpdateFn} from "./Components/DamageStatistics";
 
 
@@ -142,7 +143,7 @@ const compareDamageTables = (expectedDamageEntries: Array<ShortDamageEntry>) => 
 	expect(actualDamageEntries).toEqual(expectedDamageEntries);
 };
 
-const checkEnochian = () => controller.game.hasEnochian();;
+const checkEnochian = () => (controller.game as BLMState).hasEnochian();;
 
 it("accepts the standard rotation", testWithConfig({}, () => {
 	[

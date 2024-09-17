@@ -1,5 +1,5 @@
 import {Debug, ResourceType} from "./Common"
-import {GameState} from "./GameState";
+import {PlayerState, GameState} from "./GameState";
 import {ActionNode} from "../Controller/Record";
 
 export enum EventTag {
@@ -8,12 +8,12 @@ export enum EventTag {
 	LucidTick
 }
 
-export class Event {
+export class Event<T extends PlayerState> {
 	name: string;
 	#tags: EventTag[];
 	timeTillEvent: number;
 	delay: number;
-	effectFn: () => void;
+	effectFn: (state: T, node?: ActionNode) => void;
 	canceled: boolean;
 
 	// effectFn : () -> ()

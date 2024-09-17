@@ -18,46 +18,9 @@ let SeedRandom = require('seedrandom');
 
 type RNG = any;
 
-// Job-specific resource and state representation.
-// All implementors of JobState should initialize their own resources within the constructor.
-export interface JobState {
-	gameState: GameState;
-	config: GameConfig;
-	rng: RNG;
-	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
-	resources: ResourceState;
-	cooldowns: CoolDownState;
-	eventsQueue: Event[];
-
-	// Register persistent timers, like BLM's Polyglot gauge.
-	registerRecurringEvents(): void;
-};
-
-
-class EmptyJobState implements JobState {
-	gameState: GameState;
-	config: GameConfig;
-	rng: RNG;
-	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
-	resources: ResourceState;
-	cooldowns: CoolDownState;
-	eventsQueue: Event[];
-	
-	constructor(gameState: GameState) {
-		this.gameState = gameState;
-		this.config = gameState.config;
-		this.rng = gameState.rng;
-		this.nonProcRng = gameState.nonProcRng;
-		this.resources = gameState.resources;
-		this.cooldowns = gameState.cooldowns;
-		this.eventsQueue = gameState.eventsQueue;
-	}
-
-	registerRecurringEvents() {};
-}
 
 // GameState := resources + events queue
-export class GameState {
+export abstract class GameState {
 	config: GameConfig;
 	rng: RNG;
 	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
@@ -65,10 +28,9 @@ export class GameState {
 	time: number; // raw time which starts at 0 regardless of countdown
 	resources: ResourceState;
 	cooldowns: CoolDownState;
-	eventsQueue: Event[];
-	skillsList: SkillsList;
+	eventsQueue: Event<GameState>[];
+	skillsList: SkillsList<GameState>;
 	displayedSkills: DisplayedSkills;
-	jobState: JobState;
 
 	constructor(config: GameConfig) {
 		this.config = config;
@@ -108,17 +70,10 @@ export class GameState {
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = new SkillsList(this);
 
-		switch (ShellInfo.job) {
-			case ShellJob.BLM:
-				this.jobState = new BLMState(this);
-				break;
-			default:
-				console.error(`Could not construct job state for job: ${ShellInfo.job}`)
-				this.jobState = new EmptyJobState(this);
-		}
-
 		this.#init();
 	}
+
+	abstract registerRecurringEvents(): void;
 
 	// get mp tick, lucid tick, thunder DoT tick and polyglot rolling
 	#init() {
@@ -253,126 +208,13 @@ export class GameState {
 		this.eventsQueue.push(evt);
 	}
 
-	getFireStacks() { return this.resources.get(ResourceType.AstralFire).availableAmount(); }
-	getIceStacks() { return this.resources.get(ResourceType.UmbralIce).availableAmount(); }
-	getUmbralHearts() { return this.resources.get(ResourceType.UmbralHeart).availableAmount(); }
-	getMP() { return this.resources.get(ResourceType.Mana).availableAmount(); }
-
 	getDisplayTime() {
 		return (this.time - this.config.countdown);
-	}
-
-	gainThunderhead() {
-		let thunderhead = this.resources.get(ResourceType.Thunderhead);
-		// [6/29/24] note: from screen recording it looks more like: button press (0.1s) gain buff (30.0s) lose buff
-		// see: https://drive.google.com/file/d/11KEAEjgezCKxhvUsaLTjugKAH_D1glmy/view?usp=sharing
-		let duration = 30;
-		if (thunderhead.available(1)) { // already has a proc; reset its timer
-			thunderhead.overrideTimer(this, duration);
-		} else { // there's currently no proc. gain one.
-			thunderhead.gain(1);
-			this.resources.addResourceEvent({
-				rscType: ResourceType.Thunderhead,
-				name: "drop thunderhead",
-				delay: duration,
-				fnOnRsc: (rsc: Resource) => {
-					rsc.consume(1);
-				}
-			});
-		}
-	}
-
-	// call this whenever gaining af or ui from a different af/ui/unaspected state
-	switchToAForUI(rscType: ResourceType.AstralFire | ResourceType.UmbralIce, numStacksToGain: number) {
-		console.assert(numStacksToGain > 0);
-
-		let af = this.resources.get(ResourceType.AstralFire);
-		let ui = this.resources.get(ResourceType.UmbralIce);
-		let uh = this.resources.get(ResourceType.UmbralHeart);
-		let paradox = this.resources.get(ResourceType.Paradox);
-		let as = this.resources.get(ResourceType.AstralSoul);
-
-		if (rscType===ResourceType.AstralFire)
-		{
-			if (af.availableAmount() === 0) {
-				this.gainThunderhead();
-			}
-			af.gain(numStacksToGain);
-
-			if (Traits.hasUnlocked(TraitName.AspectMasteryV, this.config.level)) {
-				if (ui.available(3) && uh.available(3)) {
-					paradox.gain(1);
-				}  
-			}
-
-			ui.consume(ui.availableAmount());
-		}
-		else if (rscType===ResourceType.UmbralIce)
-		{
-			if (ui.availableAmount() === 0) {
-				this.gainThunderhead();
-			}
-			ui.gain(numStacksToGain);
-
-			if (Traits.hasUnlocked(TraitName.AspectMasteryV, this.config.level)) {
-				if (af.available(3)) {
-					paradox.gain(1);
-				}
-			}
-
-			af.consume(af.availableAmount());
-			as.consume(as.availableAmount());
-		}
-	}
-
-	gainUmbralMana(effectApplicationDelay: number = 0) {
-		let mpToGain = 0;
-		switch(this.resources.get(ResourceType.UmbralIce).availableAmount()) {
-			case 1: mpToGain = 2500;  break;
-			case 2: mpToGain = 5000;  break;
-			case 3: mpToGain = 10000; break;
-			default: mpToGain = 0; break;
-		}
-		this.addEvent(new Event(
-			"gain umbral mana",
-				effectApplicationDelay,
-			() => {
-				this.resources.get(ResourceType.Mana).gain(mpToGain);
-			}));
-	}
-
-	captureManaCostAndUHConsumption(aspect: Aspect, baseManaCost: number) {
-		let mod = StatsModifier.fromResourceState(this.resources);
-
-		let manaCost;
-		let uhConsumption = 0;
-
-		if (aspect === Aspect.Fire) {
-			manaCost = baseManaCost * mod.manaCostFire;
-			uhConsumption = mod.uhConsumption;
-		}
-		else if (aspect === Aspect.Ice) {
-			manaCost = baseManaCost * mod.manaCostIce;
-		}
-		else {
-			manaCost = baseManaCost;
-		}
-		return [manaCost, uhConsumption];
 	}
 
 	captureManaRegenAmount() {
 		let mod = StatsModifier.fromResourceState(this.resources);
 		return mod.manaRegen;
-	}
-
-	captureSpellCastTimeAFUI(aspect: Aspect, llAdjustedCastTime: number) {
-		let mod = StatsModifier.fromResourceState(this.resources);
-
-		let castTime = llAdjustedCastTime;
-		if (aspect === Aspect.Fire) castTime *= mod.castTimeFire;
-		else if (aspect === Aspect.Ice) castTime *= mod.castTimeIce;
-
-		return castTime;
 	}
 
 	gcdRecastTimeScale() {
@@ -609,56 +451,6 @@ export class GameState {
 		return skillEvent;
 	}
 
-	hasEnochian() {
-		// lasts a teeny bit longer to allow simultaneous events catch its effect
-		let enochian = this.resources.get(ResourceType.Enochian);
-		return enochian.available(1);
-	}
-
-	// falls off after 15s unless refreshed by AF / UI
-	startOrRefreshEnochian() {
-		let enochian = this.resources.get(ResourceType.Enochian);
-
-		if (enochian.available(1) && enochian.pendingChange) {
-			// refresh timer (if there's already a timer)
-			enochian.overrideTimer(this, 15);
-
-		} else {
-			// reset polyglot countdown to 30s if enochian wasn't actually active
-			if (!enochian.available(1)) {
-				this.resources.get(ResourceType.Polyglot).overrideTimer(this, 30);
-			}
-
-			// either fresh gain, or there's enochian but no timer
-			enochian.gain(1);
-
-			// add the event for losing it
-			this.resources.addResourceEvent({
-				rscType: ResourceType.Enochian,
-				name: "lose enochian, clear all AF, UI, UH, stop poly timer",
-				delay: 15,
-				fnOnRsc: rsc=>{
-					this.loseEnochian();
-				}
-			});
-		}
-	}
-
-	loseEnochian() {
-		this.resources.get(ResourceType.Enochian).consume(1);
-		let af = this.resources.get(ResourceType.AstralFire);
-		let ui = this.resources.get(ResourceType.UmbralIce);
-		let uh = this.resources.get(ResourceType.UmbralHeart);
-		let paradox = this.resources.get(ResourceType.Paradox);
-		let as = this.resources.get(ResourceType.AstralSoul);
-
-		af.consume(af.availableAmount());
-		ui.consume(ui.availableAmount());
-		uh.consume(uh.availableAmount());
-		paradox.consume(paradox.availableAmount());
-		as.consume(as.availableAmount());
-	}
-
 	#timeTillSkillAvailable(skillName: SkillName) {
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.info.cdName;
@@ -784,6 +576,21 @@ export class GameState {
 		return buffCollection;
 	}
 
+	// Attempt to consume 1 stack of the specified resource.
+	// When cancelTimerIfEmpty is set, then remove any associated timers if the last stack of
+	// the resource was consumed.
+	tryConsumeResource(rscType: ResourceType, removeTimerIfEmpty=true) {
+		const resource = this.resources.get(rscType);
+		if (resource.available(1)) {
+			resource.consume(1);
+			if (removeTimerIfEmpty && !resource.available(1)) {
+				resource.removeTimer();
+			}
+			return true;
+		}
+		return false;
+	}
+
 	toString() {
 		let s = "======== " + this.time.toFixed(3) + "s ========\n";
 		s += "MP:\t" + this.resources.get(ResourceType.Mana).availableAmount() + "\n";
@@ -798,3 +605,13 @@ export class GameState {
 		return s;
 	}
 }
+
+export const newGameState = (config: GameConfig): GameState => {
+	// TODO specialize
+	return new BLMState(config);
+};
+
+// TODO if we ever support multiple jobs running in parallel, then we will need to move a lot of
+// elements out onto per-player state.
+// This type alias is placed here for now to make this possible future refactor easier.
+export type PlayerState = GameState;
