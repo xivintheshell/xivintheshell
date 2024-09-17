@@ -70,22 +70,32 @@ export class XIVMath {
 		return basePotency * dotStrength;
 	}
 
-	static preTaxGcd(level: LevelSync, spellSpeed: number, hasLL: boolean) {
-		const subStat = this.getSubstatBase(level);
-		const div = this.getStatDiv(level);
-
-		let baseGCD = 2.5;
-		let subtractLL = hasLL ? 15 : 0;
-
-		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(spellSpeed-subStat)/div+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
+	// Return the speed modifier granted by a specific buff.
+	// For example, for the 15% reduction granted by Circle of Power (which we just call Ley Lines),
+	// return the integer 15.
+	static getSpeedModifier(buff: ResourceType) {
+		if (buff === ResourceType.LeyLines) {
+			return 15;
+		}
+		console.error("No speed modifier for buff: ", buff);
 	}
 
-	static preTaxCastTime(level: LevelSync, spellSpeed: number, baseCastTime: number, hasLL: boolean) {
+	static preTaxGcd(level: LevelSync, spellSpeed: number, baseGCD: number, speedBuff?: ResourceType) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
 
-		let subtractLL = hasLL ? 15 : 0;
-		return Math.floor(Math.floor(Math.floor((100-subtractLL)*100/100)*Math.floor((2000-Math.floor(130*(spellSpeed-subStat)/div+1000))*(1000*baseCastTime)/1000)/100)*100/100)/1000;
+		// let us pray we never need to stack haste buffs
+		let subtractSpeed = speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff);
+
+		return Math.floor(Math.floor(Math.floor((100-subtractSpeed)*100/100)*Math.floor((2000-Math.floor(130*(spellSpeed-subStat)/div+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
+	}
+
+	static preTaxCastTime(level: LevelSync, spellSpeed: number, baseCastTime: number, speedBuff?: ResourceType) {
+		const subStat = this.getSubstatBase(level);
+		const div = this.getStatDiv(level);
+
+		let subtractSpeed = speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff);
+		return Math.floor(Math.floor(Math.floor((100-subtractSpeed)*100/100)*Math.floor((2000-Math.floor(130*(spellSpeed-subStat)/div+1000))*(1000*baseCastTime)/1000)/100)*100/100)/1000;
 	}
 
 	static afterFpsTax(fps: number, baseDuration: number) {

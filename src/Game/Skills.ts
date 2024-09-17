@@ -2,7 +2,7 @@ import {Aspect, BuffType, LevelSync, ProcMode, ResourceType, SkillName, WarningT
 // @ts-ignore
 import {controller} from "../Controller/Controller";
 import {ShellJob, ShellInfo} from "../Controller/Common";
-import {DoTBuff, EventTag, Resource} from "./Resources";
+import {Event, DoTBuff, EventTag, Resource} from "./Resources";
 import {ActionNode} from "../Controller/Record";
 import {GameState} from "./GameState";
 import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
@@ -16,6 +16,15 @@ export interface SkillApplicationCallbackInfo {
 
 }
 
+export interface SkillError {
+	message: string; // TODO localize
+}
+
+// Represent the result of attempting to perform a skill. If an error occurs (for example, enochian
+// dropped after the start of an F4 cast but before the cast confirm window), then return a
+// SkillError. If the skill succeeded, then return a list of events to be enqueued.
+export type SkillResult = Event[] | SkillError;
+
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
 export type SkillAutoReplace = {
@@ -23,85 +32,165 @@ export type SkillAutoReplace = {
 	otherSkill: SkillName,
 }
 
+export type ResourceCalculationFn<T> = (state: ReadOnly<T>) => number;
+export type ValidateAttemptFn<T> = (state: ReadOnly<T>) => SkillError?;
+export type IsInstantFn<T> = (state: T) => bool;
+export type EffectFn<T> = (state: ReadOnly<T>) => SkillResult;
+
 
 // TODO split this interface between GCDs + oGCD abilities, as some properties are only relevant
 // to one or the other
-export interface SkillInfo {
+export interface Skill<T extends GameState> {
+	// === COSMETIC PROPERTIES ===
 	readonly name: SkillName;
+	readonly assetPath: string; // path relative to the Components/Asset/Skills folder 
 	readonly unlockLevel: number;
 	readonly autoUpgrade?: SkillAutoReplace;
 	readonly autoDowngrade?: SkillAutoReplace;
 	readonly cdName: ResourceType;
 	readonly aspect: Aspect;
 	readonly isSpell: boolean;
-	readonly baseCastTime: number;
-	readonly baseManaCost: number;
-	readonly basePotency: number;
+
+	/* === RESOURCE VALIDATION ===
+	 * The following functions are all called when a skill usage is attempted, and determine properties
+	 * like cast time, recast time, mana cost, and potency based on the current game state.
+	 * They should not actually consume any resources, as those are only consumed when the skill
+	 * usage is confirmed.
+	 */
+	readonly castTimeFn: ResourceCalculationFn;
+	readonly recastTimeFn: ResourceCalculationFn;
+	// TODO can MP cost ever change between cast start + confirm, e.g. if you use an ether kit or
+	// lost font of magic and cast flare with hearts?
+	readonly manaCostFn: ResourceCalculationFn;
+	// Determine the potency of the ability before any party buffs or modifiers.
+	readonly potencyFn: ResourceCalculationFn;
+
+	// Determine whether the skill can be executed in the current state.
+	// Should be called when the button is pressed.
+	readonly validateAttempt: ValidateAttemptFn;
+
+	/*
+	 * Consume any resource that would make this skill instant cast, and return
+	 * true if the skill is instant. 
+	 * 	
+	 * This function should be called when determining whether to perform `onConfirm` immediately;
+	 * `onApplication` will still only be called after the application delay of this skill.
+	 *	
+	 * Unlike the cast time/MP cost functions, this function SHOULD consume resources (such as
+	 * the Swiftcast buff) from the GameState. This should always be called directly after `validateAttempt`,
+	 * so the GameState should be valid, and this lets us define resource consumption priority
+	 * for each individual skill without repetition.
+	 *	
+	 * Because this may mutate the state, this function must be called only ONCE per skill usage.
+	 */
+	readonly isInstantFn: IsInstantFn;
+
+	/* === EFFECTS ===
+	 * The following functions determine the effects of using a skill.
+	 * On success, they will return a list of events to be applied.
+	 * On failure, they will return an error that should be propagated.
+	 * 
+	 * Return a list of Event objects when the action is applied.
+	 * If the action became invalid between the start of the cast and the cast confirmation,
+	 * then return a SkillError instead.
+	 * This should be called at the function's cast confirm window.
+	 *
+	 * If this is a spell that is normally hardcast, but was somehow made instant,
+	 * then the game loop will call `onConfirm` immediately after validation.
+	 */
+	readonly onConfirm: EffectFn;
+
+	/* Return a list of events to apply at the time of skill application. This includes
+	 * damage events and buffs/debuffs.
+	 * If `onConfirm` did not error, then the game loop MUST automatically enqueue this function,
+	 * rather than `onConfirm` itself enqueuing an `onApplication` event.
+	 */
+	readonly onApplication: EffectFn;
+
+	// The simulation delay, in seconds, between which `onConfirm` and `onApplication` are called.
 	readonly applicationDelay: number;
-	readonly onCapture: any;  // TODO
-	readonly onApplication: any;  // TODO
-	readonly assetPath: string; // path relative to the Components/Asset/Skills folder 
 }
 
 
 // Map tracking skills for each job.
 // This is automatically populated by the makeGCD and makeAbility helper functions.
-export const skillInfosMap: Map<ShellJob, Map<SkillName, SkillInfo>> = new Map();
+// Unfortunately, I [sz] don't really know of a good way to encode the relationship between
+// the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
+export const skillMap: Map<ShellJob, Map<SkillName, Skill<GenericState>>> = new Map();
 
 // can't iterate over a const enum so just populate manually :/
 [
 	ShellJob.BLM,
 	ShellJob.PCT,
-].forEach((job) => skillInfosMap.set(job, new Map()));
+].forEach((job) => skillMap.set(job, new Map()));
 
 
 /**
  * Declare a GCD skill.
  *
  * Only the skill's name and unlock level are mandatory. All optional params default as follows:
+ * - assetPath: if `jobs` is a single job, then "$JOB/$SKILLNAME.png"; otherwise "General/Missing.png"
  * - autoUpgrade + autoDowngrade: remain undefined
  * - aspect: Aspect.Other
- * - baseCastTime: 2.5
- * - baseManaCost: 0
- * - basePotency: 0
+ * - castTime: 0
+ * - recastTime: 2.5
+ * - manaCost: 0
+ * - potency: 0
  * - applicationDelay: 0
- * - onCapture: empty function
- * - onApplication: empty function
- * - assetPath: if `jobs` is a single job, then "$JOB/$SKILLNAME.png"; otherwise "General/Missing.png"
+ * - validateAttempt: function always returning undefined (no error)
+ * - isInstantFn: function consuming no resources and always returning true
+ * - onConfirm: function always returning empty list (no events enqueued)
+ * - onApplication: function returning a damage event if `basePotency` is a non-zero scalar, else empty list
  * 
  * TODO: If we ever branch out to non-BLM/PCT jobs, we should distinguish between
  * spells and weaponskills for sps/sks calculation purposes.
  */
-export const makeGCD = (jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, params: Partial<{
+export const makeGCD<T> = (jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, params: Partial<{
+	assetPath: string,
 	autoUpgrade: SkillAutoReplace,
 	autoDowngrade: SkillAutoReplace,
 	aspect: Aspect,
-	baseCastTime: number,
-	baseManaCost: number,
-	basePotency: number,
+	castTime: number | ResourceCalculationFn,
+	recastTime: number | ResourceCalculationFn,
+	manaCost: number | ResourceCalculationFn,
+	potency: number | ResourceCalculationFn,
 	applicationDelay: number,
-	onCapture: any,  // TODO
-	onApplication: any,  // TODO
-	assetPath: string,
-}>): SkillInfo => {
+	validateAttempt: ValidateAttemptFn,
+	isInstantFn: IsInstantFn,
+	onConfirm: EffectFn,
+	onApplication: EffectFn,
+}>): Skill<T> => {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
+	const fnify = (arg?: number | ResourceCalculationFn, defaultValue: number): ResourceCalculationFn => {
+		if (arg === undefined) {
+			return (state) => defaultValue;
+		} else if (typeof arg === "number") {
+			return (state) => arg;
+		} else {
+			return arg;
+		}
+	};
 	const info = {
 		name: name,
+		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		cdName: ResourceType.cd_GCD,
 		aspect: params.aspect ?? Aspect.Other,
 		isSpell: true,
-		baseCastTime: params.baseCastTime ?? 2.5,
-		baseManaCost: params.baseManaCost ?? 0,
-		basePotency: params.basePotency ?? 0,
+		castTimeFn: fnify(params.castTime, 0),
+		recastTimeFn: fnify(params.recastTime, 2.5),
+		manaCostFn: fnify(params.manaCost, 0),
+		potencyFn: fnify(params.potency, 0),
+		validateAttempt: params.validateAttempt ?? ((state) => undefined);
+		isInstantFn: params.isInstant ?? ((state) => true);
+		onConfirm: params.onConfirm ?? ((state) => []);
+		// TODO encode damage event
+		onApplication: params.onApplication ?? ((state) => []);
 		applicationDelay: params.applicationDelay ?? 0,
-		onCapture: params.onCapture ?? (() => {}),
-		onApplication: params.onApplication ?? (() => {}),
-		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
 	};
 	jobs.forEach((job) => skillInfosMap.get(job)!.set(info.name, info));
 	return info;

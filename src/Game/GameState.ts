@@ -92,7 +92,7 @@ export class GameState {
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD(false)), 1, 1));
+		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD()), 1, 1));
 		this.cooldowns.set(new CoolDown(ResourceType.cd_Sprint, 60, 1, 1));
 
 		// EVENTS QUEUE (events decide future changes to resources)
@@ -379,8 +379,8 @@ export class GameState {
 		let ll = this.resources.get(ResourceType.LeyLines);
 		if (ll.available(1)) {
 			// should be approximately 0.85
-			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(true));
-			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(false));
+			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.LL));
+			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.LL));
 			return num / denom;
 		} else {
 			return 1;
@@ -420,7 +420,7 @@ export class GameState {
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
 		let capturedCastTime = this.captureSpellCastTimeAFUI(
 			skillInfo.aspect,
-			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered));
+			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered ? ResourceType.LeyLines : undefined));
 		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
 			props.node.addBuff(BuffType.LeyLines);
 		}
@@ -692,7 +692,7 @@ export class GameState {
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
 		let capturedCastTime = this.captureSpellCastTimeAFUI(
 			skill.info.aspect,
-			this.config.adjustedCastTime(skill.info.baseCastTime, llCovered));
+			this.config.adjustedCastTime(skill.info.baseCastTime, llCovered ? ResourceType.LeyLines : undefined));
 		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1)
 			|| this.resources.get(ResourceType.Swiftcast).available(1)
 			|| skillName===SkillName.Paradox
