@@ -293,7 +293,7 @@ export function calculateSelectedStats(props: {
 			const checked = getSkillOrDotInclude(node.skillName);
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
-			if (skillInfo.info.cdName === ResourceType.cd_GCD && checked) {
+			if (skillInfo.cdName === ResourceType.cd_GCD && checked) {
 				if (node.hitBoss(bossIsUntargetable)) selected.gcdSkills.applied++;
 				else if (!node.resolved()) selected.gcdSkills.pending++;
 			}
@@ -358,7 +358,7 @@ export function calculateDamageStats(props: {
 
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
-			if (skillInfo.info.cdName === ResourceType.cd_GCD && checked) {
+			if (skillInfo.cdName === ResourceType.cd_GCD && checked) {
 				if (node.hitBoss(bossIsUntargetable)) {
 					gcdSkills.applied++;
 				} else if (!node.resolved()) {

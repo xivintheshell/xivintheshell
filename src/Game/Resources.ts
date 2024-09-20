@@ -2,6 +2,7 @@ import {Debug, ResourceType} from "./Common"
 import {EffectFn} from "./Skills";
 import {PlayerState, GameState} from "./GameState";
 import {ActionNode} from "../Controller/Record";
+import {BLMState} from "./Jobs/BLM";
 
 export enum EventTag {
 	ManaGain,
@@ -384,13 +385,13 @@ export class ResourceOverride {
 					name: "drop " + rsc.type,
 					delay: newTimer,
 					fnOnRsc: (r: Resource) => {
-						  if (rsc.type === ResourceType.Enochian) { // since enochian should also take away AF/UI/UH stacks
-						  		// TODO move to job-specific code
-								game.loseEnochian();
-						  } else {
-							  r.consume(r.availableAmount());
-						  }
-					 }
+						if (rsc.type === ResourceType.Enochian) { // since enochian should also take away AF/UI/UH stacks
+							// TODO move to job-specific code
+							(game as BLMState).loseEnochian();
+						} else {
+							r.consume(r.availableAmount());
+						}
+					}
 				});
 			};
 

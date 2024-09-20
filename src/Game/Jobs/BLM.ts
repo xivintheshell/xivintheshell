@@ -1,21 +1,25 @@
 // Skill and state declarations for BLM.
 
+import {StatsModifier} from "../StatsModifier";
 import {controller} from "../../Controller/Controller";
-
+import {ActionNode} from "../../Controller/Record";
 import {ShellJob} from "../../Controller/Common";
-import {SkillName, Aspect, ResourceType, WarningType} from "../Common";
+import {SkillName, BuffType, Aspect, ResourceType, ProcMode, WarningType} from "../Common";
+import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "../Potency";
 import {
 	makeAbility,
 	makeSpell,
 	makeResourceAbility,
 	validateOrSkillError,
+	skillMap,
 	SkillAutoReplace,
-	Skill,
+	Spell,
+	Ability,
 	ValidateAttemptFn,
 	EffectFn,
 } from "../Skills";
 import {Traits, TraitName} from "../Traits";
-import {JobState, PlayerState, GameState} from "../GameState";
+import {PlayerState, GameState} from "../GameState";
 import {CoolDown, CoolDownState, DoTBuff, Event, Resource, ResourceState} from "../Resources"
 import {GameConfig} from "../GameConfig";
 
@@ -23,14 +27,6 @@ type RNG = any;
 
 // === JOB GAUGE AND STATE ===
 export class BLMState extends GameState {
-	gameState: GameState;
-	config: GameConfig;
-	rng: RNG;
-	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
-	resources: ResourceState;
-	cooldowns: CoolDownState;
-	eventsQueue: Event<BLMState>[];
-
 	thunderTickOffset: number;
 
 	constructor(config: GameConfig) {
@@ -100,8 +96,8 @@ export class BLMState extends GameState {
 				}
 			}
 			// increment count
-			if (this.gameState.getDisplayTime() >= 0) {
-				controller.reportDotTick(this.gameState.time);
+			if (this.getDisplayTime() >= 0) {
+				controller.reportDotTick(this.time);
 			}
 			// queue the next tick
 			this.addEvent(new Event("thunder DoT tick", 3, ()=>{
@@ -114,7 +110,7 @@ export class BLMState extends GameState {
 
 		// also polyglot
 		let recurringPolyglotGain = (rsc: Resource)=>{
-			if (this.gameState.hasEnochian()) {
+			if (this.hasEnochian()) {
 				if (rsc.availableAmount() === rsc.maxValue) {
 					controller.reportWarning(WarningType.PolyglotOvercap);
 				}
@@ -214,7 +210,8 @@ export class BLMState extends GameState {
 			}));
 	}
 
-	captureManaCostAndUHConsumption(aspect: Aspect, baseManaCost: number) {
+	captureManaCost(aspect: Aspect, baseManaCost: number) {
+		// TODO handle flare/despair MP here
 		let mod = StatsModifier.fromResourceState(this.resources);
 
 		let manaCost;
@@ -222,7 +219,6 @@ export class BLMState extends GameState {
 
 		if (aspect === Aspect.Fire) {
 			manaCost = baseManaCost * mod.manaCostFire;
-			uhConsumption = mod.uhConsumption;
 		}
 		else if (aspect === Aspect.Ice) {
 			manaCost = baseManaCost * mod.manaCostIce;
@@ -230,10 +226,23 @@ export class BLMState extends GameState {
 		else {
 			manaCost = baseManaCost;
 		}
-		return [manaCost, uhConsumption];
+		return manaCost;
 	}
 
-	captureSpellCastTimeAFUI(aspect: Aspect, llAdjustedCastTime: number) {
+	// Attempt to consume MP for the given skill. Assumes the skill is fire-aspected.
+	tryConsumeUH(skillName: SkillName) {
+		if (skill.skillName !== SkillName.Despair &&
+			skill.skillName !== SkillName.FlareStar) {
+			this.resources.get(ResourceType.UmbralHeart).consume(1);
+		}
+	}
+
+	captureSpellCastTimeAFUI(baseCastTime: number, aspect: Aspect) {
+		// Apply AF/UI multiplier after ley lines
+		const llAdjustedCastTime = this.config.adjustedCastTime(
+			baseCastTime,
+			this.resources.get(ResourceType.LeyLines).available(1) ? ResourceType.LeyLines : undefined
+		);
 		let mod = StatsModifier.fromResourceState(this.resources);
 
 		let castTime = llAdjustedCastTime;
@@ -308,53 +317,60 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 	baseManaCost: number,
 	basePotency: number,
 	applicationDelay: number,
-	validateAttempt: ValidateAttemptFn,
-	onConfirm: EffectFn,
-	onApplication: EffectFn,
-}>): Skill<BLMState> => makeSpell(ShellJob.BLM, name, unlockLevel, {
-	autoUpgrade: params.autoUpgrade,
-	autoDowngrade: params.autoDowngrade,
-	aspect: params.aspect,
-	castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime ?? 0),
-	// TODO split up UH consumption
-	manaCost: (state) => state.captureManaCostAndUHConsumption(params.aspect ?? Aspect.other, params.baseManaCost ?? 0)[0],
-	// TODO apply AFUI modifiers?
-	potency: (state) => basePotency,
-	applicationDelay: params.applicationDelay,
-	isInstantFn: (state) => (
-		// The expressions here are very sensitive to order, as the short-circuiting logic determines 
-		// which buffs to consume first.
-		// Priority of instant cast buff consumption:
-		// 0. Always instant: Scathe (lol), Umbral Soul
-		// 1. Instant with specific resources: Paradox, Xeno/Foul, F3P, T3P (rip).
-		//    Do not consume para marker/polyglot yet here, since at lvl 70 Foul still consumes poly despite not being instant.
-		// 2. Swift
-		// 3. Triple
+	validateAttempt: ValidateAttemptFn<BLMState>,
+	onConfirm: EffectFn<BLMState>,
+	onApplication: EffectFn<BLMState>,
+}>): Spell<BLMState> => {
+	const aspect = params.aspect ?? Aspect.Other;
+	let onConfirm: EffectFn<BLMState> = undefined;
+	if (params.onConfirm === undefined) {
+		onConfirm
+	}
+	return makeSpell(ShellJob.BLM, name, unlockLevel, {
+		autoUpgrade: params.autoUpgrade,
+		autoDowngrade: params.autoDowngrade,
+		aspect: aspect,
+		castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime ?? 0, aspect),
+		manaCost: (state) => state.captureManaCost(aspect, params.baseManaCost ?? 0),
+		// TODO apply AFUI modifiers?
+		potency: (state) => params.basePotency ?? 0,
+		applicationDelay: params.applicationDelay,
+		isInstantFn: (state) => (
+			// The expressions here are very sensitive to order, as the short-circuiting logic determines 
+			// which buffs to consume first.
+			// Priority of instant cast buff consumption:
+			// 0. Always instant: Scathe (lol), Umbral Soul
+			// 1. Instant with specific resources: Paradox, Xeno/Foul, F3P, T3P (rip).
+			//    Do not consume para marker/polyglot yet here, since at lvl 70 Foul still consumes poly despite not being instant.
+			// 2. Swift
+			// 3. Triple
 
-		// Paradox made instant via Dawntrail
-		(name === SkillName.UmbralSoul || name === SkillName.Paradox) ||
-		// Xenoglossy and Foul after lvl 80; consume polyglot if available
-		(
-			((name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
-				name === SkillName.Xenoglossy)
-		) ||
-		// F3P
-		(name === SkillName.Fire3 && state.tryConsumeResource(ResourceType.Firestarter)) ||
-		// Swift
-		state.tryConsumeResource(ResourceType.Swift) ||
-		// Triple
-		state.tryConsumeResource(ResourceType.Triple)
-	),
-	onConfirm: params.onConfirm,
-	onApplication: params.onApplication,
+			// Paradox made instant via Dawntrail
+			(name === SkillName.UmbralSoul || name === SkillName.Paradox) ||
+			// Xenoglossy and Foul after lvl 80; consume polyglot if available
+			(
+				((name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
+					name === SkillName.Xenoglossy)
+			) ||
+			// F3P
+			(name === SkillName.Fire3 && state.tryConsumeResource(ResourceType.Firestarter)) ||
+			// Swift
+			state.tryConsumeResource(ResourceType.Swiftcast) ||
+			// Triple
+			state.tryConsumeResource(ResourceType.Triplecast)
+		),
+		onConfirm: onConfirm,
+		onApplication: params.onApplication,
+	};
 });
 
 
 const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceType, params: Partial<{
 	applicationDelay: number,
-	onConfirm: EffectFn,
-	onApplication: EffectFn,
-}>): Skill<BLMState> => makeAbility(ShellJob.BLM, name, unlockLevel, cdName, params);
+	validateAttempt: ValidateAttemptFn<BLMState>,
+	onConfirm: EffectFn<BLMState>,
+	onApplication: EffectFn<BLMState>,
+}>): Ability<BLMState> => makeAbility(ShellJob.BLM, name, unlockLevel, cdName, params);
 
 
 // ref logs
@@ -368,7 +384,7 @@ makeGCD_BLM(SkillName.Blizzard, 1, {
 	baseManaCost: 400,
 	basePotency: 180,
 	applicationDelay: 0.846,
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		// Refresh Enochian and gain a UI stack at the cast confirm window, not the damage application.
 		// MP is regained on damage application (TODO)
 		if (state.getFireStacks() === 0) { // no AF
@@ -381,19 +397,19 @@ makeGCD_BLM(SkillName.Blizzard, 1, {
 	},
 });
 
-const gainFirestarterProc = (game: PlayerState): Event<BLMState>[] => {
+const gainFirestarterProc = (game: PlayerState): Event[] => {
 	// re-measured in DT, screen recording at: https://drive.google.com/file/d/1MEFnd-m59qx1yIaZeehSsAxjhLMsWBuw/view?usp=drive_link
 	let duration = 30.5;
 	if (game.resources.get(ResourceType.Firestarter).available(1)) {
-		state.resources.get(ResourceType.Firestarter).overrideTimer(state, duration);
+		game.resources.get(ResourceType.Firestarter).overrideTimer(game, duration);
 		return [];
 	} else {
-		state.resources.get(ResourceType.Firestarter).gain(1);
-		return [new Event("drop firestarter proc", duration, (state) => state.resources.get(ResourceType.Firestarter).consume(1))];
+		game.resources.get(ResourceType.Firestarter).gain(1);
+		return [new Event("drop firestarter proc", duration, (state, node) => state.resources.get(ResourceType.Firestarter).consume(1))];
 	}
 };
 
-const potentiallyGainFirestarter = (game: PlayerState): Event<BLMState>[] => {
+const potentiallyGainFirestarter = (game: PlayerState): Event[] => {
 	let rand = game.rng();
 	if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && rand < 0.4)) {
 		return gainFirestarterProc(game);
@@ -409,7 +425,7 @@ makeGCD_BLM(SkillName.Fire, 2, {
 	basePotency: 180,
 	applicationDelay: 1.871,
 	// TODO make sure MP cost is figured out
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		// Refresh Enochian and gain a UI stack at the cast confirm window, not the damage application.
 		const f3p = potentiallyGainFirestarter(state);
 		if (state.getIceStacks() === 0) { // in fire or no enochian
@@ -429,11 +445,11 @@ makeAbility_BLM(SkillName.Transpose, 4, ResourceType.cd_Transpose, {
 		(state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
 		"must be in AF or UI to cast Transpose"
 	),
-	onApplication: (state) => {
+	onApplication: (state, node) => {
 		if (state.getFireStacks() === 0 && state.getIceStacks() === 0) {
 			return [];
 		}
-		state.switchToAForUI(state.getFireStacks() > 0 ? Resource.UmbralIce : Resource.AstralFire, 1);
+		state.switchToAForUI(state.getFireStacks() > 0 ? ResourceType.UmbralIce : ResourceType.AstralFire, 1);
 		state.startOrRefreshEnochian();
 		return [];
 	},
@@ -465,9 +481,9 @@ const applyThunderDoT = (game: PlayerState, node: ActionNode, skillName: SkillNa
 	thunder.tickCount = 0;
 };
 
-const addThunderPotencies = (node: ActionNode, skillName: SkillName.Thunder3 | SkillName.HighThunder) => {
+const addThunderPotencies = (game: PlayerState, node: ActionNode, skillName: SkillName.Thunder3 | SkillName.HighThunder) => {
 	let mods = getPotencyModifiersFromResourceState(game.resources, Aspect.Lightning);
-	let thunder = skillsList.get(skillName);
+	let thunder = skillMap.get(ShellJob.BLM)!.get(skillName)!;
 
 	// initial potency
 	let pInitial = new Potency({
@@ -475,7 +491,7 @@ const addThunderPotencies = (node: ActionNode, skillName: SkillName.Thunder3 | S
 		sourceTime: game.getDisplayTime(),
 		sourceSkill: skillName,
 		aspect: Aspect.Lightning,
-		basePotency: thunder ? thunder.info.basePotency : 150,
+		basePotency: thunder ? thunder.potencyFn(game) : 150,
 		snapshotTime: undefined,
 		description: ""
 	});
@@ -503,7 +519,7 @@ const addThunderPotencies = (node: ActionNode, skillName: SkillName.Thunder3 | S
 const thunderConfirm = (skillName: SkillName.Thunder3 | SkillName.HighThunder) => (
 	(game: PlayerState, node: ActionNode) => {
 		// potency
-		addThunderPotencies(node, skillName); // should call on capture
+		addThunderPotencies(game, node, skillName); // should call on capture
 		let onHitPotency = node.getPotencies()[0];
 		node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
 
@@ -524,10 +540,10 @@ makeGCD_BLM(SkillName.Thunder3, 45, {
 	baseManaCost: 0,
 	basePotency: 120,
 	applicationDelay: 0.757, // Unknown damage application, copied from HT
-	onConfirm: thunderConfirm(Skill.Thunder3),
+	onConfirm: thunderConfirm(SkillName.Thunder3),
 	onApplication: (state, node) => {
-		controller.resolvePotency(onHitPotency);
-		applyThunderDoT(game, node, skillName);
+		controller.resolvePotency(node.getPotencies()[0]);
+		applyThunderDoT(state, node, SkillName.Thunder3);
 	},
 	autoUpgrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder },
 });
@@ -541,13 +557,14 @@ makeResourceAbility(ShellJob.BLM, SkillName.Manaward, 30, ResourceType.cd_Manawa
 // Manafont: application delay 0.88s -> 0.2s since Dawntrail
 // infact most effects seem instant but MP gain is delayed.
 // see screen recording: https://drive.google.com/file/d/1zGhU9egAKJ3PJiPVjuRBBMkKdxxHLS9b/view?usp=drive_link
-makeResourceAbility(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
+makeAbility_BLM(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
 	applicationDelay: 0.2, // delayed
 	validateAttempt: validateOrSkillError(
 		(state) => state.resources.get(ResourceType.AstralFire).availableAmount() > 0,
 		"must be in AF to cast Manafont",
 	),
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
+		state = state as BLMState;
 		state.resources.get(ResourceType.AstralFire).gain(3);
 		state.resources.get(ResourceType.UmbralHeart).gain(3);
 
@@ -557,7 +574,7 @@ makeResourceAbility(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
 		state.gainThunderhead();
 		state.startOrRefreshEnochian();
 	},
-	onApplication: (state) => {
+	onApplication: (state, node) => {
 		state.resources.get(ResourceType.Mana).gain(10000)
 	},
 });
@@ -568,7 +585,7 @@ makeGCD_BLM(SkillName.Fire3, 35, {
 	baseManaCost: 2000,
 	basePotency: 280,
 	applicationDelay: 1.292,
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		// Firestarter consumption is handled in makeGCD_BLM
 		state.switchToAForUI(ResourceType.AstralFire, 3);
 		state.startOrRefreshEnochian();
@@ -581,7 +598,7 @@ makeGCD_BLM(SkillName.Blizzard3, 35, {
 	baseManaCost: 800,
 	basePotency: 280,
 	applicationDelay: 0.89,
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		state.switchToAForUI(ResourceType.UmbralIce, 3);
 		state.startOrRefreshEnochian();
 	},
@@ -594,7 +611,7 @@ makeGCD_BLM(SkillName.Freeze, 40, {
 	basePotency: 120,
 	applicationDelay: 0.664,
 	validateAttempt: validateOrSkillError((state) => state.getIceStacks() > 0, "must be in UI to cast Freeze"),
-	onConfirm: (state) => state.resources.get(ResourceType.UmbralHeart).gain(3),
+	onConfirm: (state, node) => state.resources.get(ResourceType.UmbralHeart).gain(3),
 });
 
 makeGCD_BLM(SkillName.Flare, 50, {
@@ -611,7 +628,7 @@ makeGCD_BLM(SkillName.Flare, 50, {
 		}
 		return undefined; // no errors
 	},
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		let uh = state.resources.get(ResourceType.UmbralHeart);
 		let mana = state.resources.get(ResourceType.Mana);
 		let manaCost = uh.available(1) ? mana.availableAmount() * 0.66 : mana.availableAmount();
@@ -621,7 +638,7 @@ makeGCD_BLM(SkillName.Flare, 50, {
 		// +3 AF; refresh enochian
 		state.resources.get(ResourceType.AstralFire).gain(3);
 
-		if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, game.config.level))
+		if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level))
 			state.resources.get(ResourceType.AstralSoul).gain(3);
 
 		state.startOrRefreshEnochian();
@@ -632,7 +649,7 @@ makeResourceAbility(ShellJob.BLM, SkillName.LeyLines, 52, ResourceType.cd_LeyLin
 	rscType: ResourceType.LeyLines,
 	applicationDelay: 0.49, // delayed
 	duration: 30,
-	onApplication: (state) => {
+	onApplication: (state, node) => {
 		state.resources.get(ResourceType.LeyLines).enabled = true
 	},
 });
@@ -644,7 +661,7 @@ makeGCD_BLM(SkillName.Blizzard4, 58, {
 	basePotency: 320,
 	applicationDelay: 1.156,
 	validateAttempt: validateOrSkillError((state) => state.getIceStacks() > 0, "must be in UI to cast Blizzard 4"),
-	onConfirm: (state) => state.resources.get(ResourceType.UmbralHeart).gain(3),
+	onConfirm: (state, node) => state.resources.get(ResourceType.UmbralHeart).gain(3),
 });
 
 makeGCD_BLM(SkillName.Fire4, 60, {
@@ -654,7 +671,7 @@ makeGCD_BLM(SkillName.Fire4, 60, {
 	basePotency: 320,
 	applicationDelay: 1.159,
 	validateAttempt: validateOrSkillError((state) => state.getFireStacks() > 0, "must be in AF to cast Fire 4"),
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level))
 			state.resources.get(ResourceType.AstralSoul).gain(1);
 	},
@@ -674,14 +691,14 @@ makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialMa
 
 makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
 	applicationDelay: 0, // instant
-	onApplication: (state) => {
+	onApplication: (state, node) => {
 		const triple = state.resources.get(ResourceType.Triplecast)
-		if (triple.pendingChaing) triple.removeTimer();
+		if (triple.pendingChange) triple.removeTimer();
 		triple.gain(3);
 		return [new Event(
 			"drop remaining triplecast charges",
 			15.7, // 15.7s: see screen recording: https://drive.google.com/file/d/1qoIpAMK2KAKETgID6a3p5dqkeWRcNDdB/view?usp=drive_link
-			(state) => {
+			(state, node) => {
 				const rsc = state.resources.get(ResourceType.Triplecast);
 				rsc.consume(rsc.availableAmount());
 			},
@@ -698,7 +715,7 @@ makeGCD_BLM(SkillName.Foul, 70, {
 		(state) => state.resources.get(ResourceType.Polyglot).available(1),
 		"must have Polyglot stacks to cast Foul",
 	),
-	onConfirm: (state) => state.resources.get(ResourceType.Polyglot).consume(1),
+	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
 });
 
 makeGCD_BLM(SkillName.Despair, 72, {
@@ -726,12 +743,12 @@ makeGCD_BLM(SkillName.UmbralSoul, 35, {
 	basePotency: 0,
 	applicationDelay: 0.633,
 	validateAttempt: validateOrSkillError((state) => state.getIceStacks() > 0, "must be in UI to cast Umbral Soul"),
-	onConfirm: (state) => {
-		state.resources.get(ResourceType.UmralIce).gain(1);
+	onConfirm: (state, node) => {
+		state.resources.get(ResourceType.UmbralIce).gain(1);
 		state.resources.get(ResourceType.UmbralHeart).gain(1);
-		game.startOrRefreshEnochian();
+		state.startOrRefreshEnochian();
 		// halt
-		let enochian = game.resources.get(ResourceType.Enochian);
+		let enochian = state.resources.get(ResourceType.Enochian);
 		enochian.removeTimer();
 	},
 });
@@ -745,7 +762,7 @@ makeGCD_BLM(SkillName.Xenoglossy, 80, {
 		(state) => state.resources.get(ResourceType.Polyglot).available(1),
 		"must have Polyglot stacks to cast Xenoglossy",
 	),
-	onConfirm: (state) => state.resources.get(ResourceType.Polyglot).consume(1),
+	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
 });
 
 makeGCD_BLM(SkillName.Fire2, 18, {
@@ -755,7 +772,7 @@ makeGCD_BLM(SkillName.Fire2, 18, {
 	basePotency: 80,
 	applicationDelay: 1.154, // Unknown damage application, copied from HF2
 	autoUpgrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.HighFire2 },
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		state.switchToAForUI(ResourceType.AstralFire, 3);
 		state.startOrRefreshEnochian();
 	},
@@ -768,7 +785,7 @@ makeGCD_BLM(SkillName.Blizzard2, 12, {
 	basePotency: 80,
 	applicationDelay: 1.158, // Unknown damage application, copied from HB2
 	autoUpgrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.HighBlizzard2 },
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		state.switchToAForUI(ResourceType.UmbralIce, 3);
 		state.startOrRefreshEnochian();
 	},
@@ -781,7 +798,7 @@ makeGCD_BLM(SkillName.HighFire2, 82, {
 	basePotency: 100,
 	applicationDelay: 1.154,
 	autoDowngrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.Fire2 },
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		state.switchToAForUI(ResourceType.AstralFire, 3);
 		state.startOrRefreshEnochian();
 	},
@@ -794,7 +811,7 @@ makeGCD_BLM(SkillName.HighBlizzard2, 82, {
 	basePotency: 100,
 	applicationDelay: 1.158,
 	autoDowngrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.Blizzard2 },
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		state.switchToAForUI(ResourceType.UmbralIce, 3);
 		state.startOrRefreshEnochian();
 	},
@@ -806,7 +823,7 @@ makeAbility_BLM(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, {
 		(state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
 		"must be in AF or UI to cast Amplifier"
 	),
-	onApplication: (state) => {
+	onApplication: (state, node) => {
 		let polyglot = state.resources.get(ResourceType.Polyglot);
 		if (polyglot.available(polyglot.maxValue)) {
 			controller.reportWarning(WarningType.PolyglotOvercap)
@@ -824,16 +841,16 @@ makeGCD_BLM(SkillName.Paradox, 90, {
 		(state) => state.resources.get(ResourceType.Paradox).available(1),
 		"must have Paradox marker to cast Paradox"
 	),
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		state.resources.get(ResourceType.Paradox).consume(1);
 		if (state.hasEnochian()) {
 			state.startOrRefreshEnochian();
 		}
-		if (game.getIceStacks() > 0) {
-			game.resources.get(ResourceType.UmbralIce).gain(1);
-		} else if (game.getFireStacks() > 0) {
-			game.resources.get(ResourceType.AstralFire).gain(1);
-			return gainFirestarterProc(game);
+		if (state.getIceStacks() > 0) {
+			state.resources.get(ResourceType.UmbralIce).gain(1);
+		} else if (state.getFireStacks() > 0) {
+			state.resources.get(ResourceType.AstralFire).gain(1);
+			return gainFirestarterProc(state);
 		} else {
 			console.error("cannot cast Paradox outside of AF/UI");
 		}
@@ -847,10 +864,10 @@ makeGCD_BLM(SkillName.HighThunder, 92, {
 	baseManaCost: 0,
 	basePotency: 150,
 	applicationDelay: 0.757,
-	onConfirm: thunderConfirm,
+	onConfirm: thunderConfirm(SkillName.HighThunder),
 	onApplication: (state, node) => {
-		controller.resolvePotency(onHitPotency);
-		applyThunderDoT(game, node, skillName);
+		controller.resolvePotency(node.getPotencies()[0]);
+		applyThunderDoT(state, node, SkillName.HighThunder);
 	},
 	autoDowngrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder },
 });
@@ -865,7 +882,7 @@ makeGCD_BLM(SkillName.FlareStar, 100, {
 		(state) => state.resources.get(ResourceType.AstralSoul).available(6),
 		"must have 6 Astral Souls to cast Paradox"
 	),
-	onConfirm: (state) => state.resources.get(ResourceType.AstralSoul).consume(6),
+	onConfirm: (state, node) => state.resources.get(ResourceType.AstralSoul).consume(6),
 });
 
 makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
@@ -875,7 +892,7 @@ makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
 			state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0),
 		"must have active Ley Lines in order to cast Retrace",
 	),
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		state.resources.get(ResourceType.LeyLines).enabled = true;
 	},
 });

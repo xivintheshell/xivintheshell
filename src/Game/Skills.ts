@@ -22,8 +22,13 @@ export interface SkillError {
 
 // Represent the result of attempting to perform a skill. If an error occurs (for example, enochian
 // dropped after the start of an F4 cast but before the cast confirm window), then return a
-// SkillError. If the skill succeeded, then return undefined or a list of events to be enqueued.
+// SkillError. If the skill succeeded, then return a list of events to be enqueued, possibly empty.
+// If a skill will always succeed, then returning void is acceptable for convenience.
 export type SkillResult = Event[] | undefined | SkillError;
+
+export function isSkillError(obj: SkillResult): obj is SkillError {
+	return obj !== undefined && "message" in obj;
+}
 
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
@@ -41,7 +46,27 @@ export type SkillAutoReplace = {
 export type ResourceCalculationFn<T> = (state: Readonly<T>) => number;
 export type ValidateAttemptFn<T> = (state: Readonly<T>) => SkillError | undefined;
 export type IsInstantFn<T> = (state: T) => boolean;
-export type EffectFn<T> = (state: T, node?: ActionNode) => SkillResult;
+export type EffectFn<T> = (state: T, node: ActionNode) => SkillResult;
+
+/**
+ * Create a new EffectFn that performs f1, and if f1 does not produce an error, then performs f2.
+ */
+export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, f2: EffectFn<T>): EffectFn<T> {
+	return (state: T, node: ActionNode) => {
+		let result1 = f1(state, node) ?? [];
+		if (isSkillError(result1)) {
+			// f1 errored out, so short-circuit
+			return result1;
+		}
+		const result2 = f2(state, node) ?? [];
+		if (isSkillError(result2)) {
+			return result2;
+		}
+		if (Array.isArray(result2)) {
+			return result1.concat(result2);
+		}
+	};
+}
 
 
 type CondType<T> = (state: Readonly<T>) => boolean;
@@ -67,7 +92,7 @@ export function validateOrSkillError<T extends PlayerState>(cond: CondType<T>, e
  *   // castTimeFn, recastTimeFn, etc. are valid here
  * }
  */
-export interface Skill<T extends PlayerState> {
+interface BaseSkill<T extends PlayerState> {
 	// === COSMETIC PROPERTIES ===
 	readonly name: SkillName;
 	readonly assetPath: string; // path relative to the Components/Asset/Skills folder 
@@ -118,7 +143,7 @@ export interface Skill<T extends PlayerState> {
 }
 
 
-export type GCD<T extends PlayerState> = Skill<T> & {
+export type GCD<T extends PlayerState> = BaseSkill<T> & {
 	// GCDs have cast/recast + MP cost, but oGCDs do not.
 	// The only exception is BLU (as far as I [sz] know). Let us pray we never cross that particular bridge.
 	readonly castTimeFn: ResourceCalculationFn<T>;
@@ -155,10 +180,12 @@ export type Weaponskill<T extends PlayerState> = GCD<T> & {
 }
 
 
-export type Ability<T extends PlayerState> = Skill<T> & {
+export type Ability<T extends PlayerState> = BaseSkill<T> & {
 	kind: "ability";
 }
 
+
+export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T>;
 
 // Map tracking skills for each job.
 // This is automatically populated by the makeWeaponskill, makeSpell, and makeAbility helper functions.
@@ -243,7 +270,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		onApplication: params.onApplication ?? ((state, node) => []),
 		applicationDelay: params.applicationDelay ?? 0,
 	};
-	jobs.forEach((job) => skillMap.get(job)!.set(info.name, info));
+	jobs.forEach((job) => skillMap.get(job)!.set(info.name, info as Spell<PlayerState>));
 	return info;
 };
 
@@ -288,7 +315,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		onConfirm: params.onConfirm ?? ((state, node) => []),
 		onApplication: params.onApplication ?? ((state, node) => []),
 	};
-	jobs.forEach((job) => skillMap.get(job)!.set(info.name, info));
+	jobs.forEach((job) => skillMap.get(job)!.set(info.name, info as Ability<PlayerState>));
 	return info;
 }
 
@@ -322,22 +349,23 @@ export function makeResourceAbility<T extends PlayerState>(
 	// When the ability is applied, enqueue two events:
 	// 1. An immediate resource gain event
 	// 2. A resource drop event after a duration, overriding an existing timer if it exists
-	const onApplication = (state: T, node?: ActionNode) => {
-		state.resources.get(params.rscType).gain(1);
-		// TODO tell scheduler to override existing drop event if necessary
-		const duration = params.duration;
-		const durationFn: ResourceCalculationFn<T> = (typeof duration === "number") ? ((state: T) => duration) : duration;
-		const otherApplication = (params?.onApplication === undefined) ? [] : (params.onApplication(state, node) ?? []);
-		if ("message" in otherApplication) {
-			// error case
-			return otherApplication;
-		}
-		return [new Event(
-			"drop " + params.rscType,
-			durationFn(state),
-			(state: T) => state.resources.get(params.rscType).consume(1),
-		)].concat(otherApplication);
-	};
+	const onApplication = combineEffects(
+		(state: T, node: ActionNode) => {
+			state.resources.get(params.rscType).gain(1);
+			// TODO tell scheduler to override existing drop event if necessary
+			const duration = params.duration;
+			const durationFn: ResourceCalculationFn<T> = (typeof duration === "number") ? ((state: T) => duration) : duration;
+			return [new Event(
+				"drop " + params.rscType,
+				durationFn(state),
+				(state: GameState, node) => {
+					state.resources.get(params.rscType).consume(1)
+					return [];
+				},
+			)];
+		},
+		params?.onApplication ?? ((state: T, node: ActionNode) => []), 
+	);
 	return makeAbility(jobs, name, unlockLevel, cdName, {
 		potency: params.potency,
 		applicationDelay: params.applicationDelay,

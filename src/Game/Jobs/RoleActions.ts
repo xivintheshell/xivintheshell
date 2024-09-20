@@ -2,6 +2,7 @@ import {ShellJob} from "../../Controller/Common";
 import {SkillName, ResourceType} from "../Common";
 import {makeAbility, makeResourceAbility} from "../Skills";
 import {DoTBuff, EventTag} from "../Resources"
+import {Traits, TraitName} from "../Traits";
 
 const CASTER_JOBS = [ShellJob.BLM, ShellJob.PCT];
 
@@ -28,7 +29,7 @@ makeResourceAbility(CASTER_JOBS, SkillName.LucidDreaming, 14, ResourceType.cd_Lu
 		let lucid = state.resources.get(ResourceType.LucidDreaming) as DoTBuff;
 		lucid.node = node;
 		lucid.tickCount = 0;
-		let nextLucidTickEvt = game.findNextQueuedEventByTag(EventTag.LucidTick);
+		let nextLucidTickEvt = state.findNextQueuedEventByTag(EventTag.LucidTick);
 		if (nextLucidTickEvt) {
 			nextLucidTickEvt.addTag(EventTag.ManaGain);
 		}
