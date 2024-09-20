@@ -110,31 +110,31 @@ export abstract class GameState {
 		}
 
 		// lucid ticks
-		let recurringLucidTick = () => {
+		let recurringLucidTick = (state: GameState, node: ActionNode) => {
 			// do work at lucid tick
-			let lucid = this.resources.get(ResourceType.LucidDreaming) as DoTBuff;
+			let lucid = state.resources.get(ResourceType.LucidDreaming) as DoTBuff;
 			if (lucid.available(1)) {
 				lucid.tickCount++;
-				if (this.getFireStacks() === 0) {
-					let mana = this.resources.get(ResourceType.Mana);
+				if (!(state.config.job === ShellInfo.BLM && (state as BLMState).getFireStacks() === 0)) {
+					let mana = state.resources.get(ResourceType.Mana);
 					mana.gain(550);
 					let msg = "+550";
 					console.assert(lucid.node !== undefined);
 					if (lucid.node) {
 						let t = "??";
 						if (lucid.node.tmp_startLockTime) {
-							t = (lucid.node.tmp_startLockTime - this.config.countdown).toFixed(3);
+							t = (lucid.node.tmp_startLockTime - state.config.countdown).toFixed(3);
 						}
 						msg += " {skill}@" + t;
 						msg += " (" + lucid.tickCount + "/7)";
 					}
 					msg += " (MP=" + mana.availableAmount() + ")";
-					controller.reportLucidTick(this.time, msg);
+					controller.reportLucidTick(state.time, msg);
 				}
 			}
 			// queue the next tick
-			let recurringLucidTickEvt = new Event("lucid tick", 3, ()=>{
-				recurringLucidTick();
+			let recurringLucidTickEvt = new Event("lucid tick", 3, (state: GameState, node: ActionNode) => {
+				recurringLucidTick(state, node);
 			});
 			recurringLucidTickEvt.addTag(EventTag.LucidTick);
 			// potentially also give mp gain tag
@@ -144,7 +144,7 @@ export abstract class GameState {
 					recurringLucidTickEvt.addTag(EventTag.ManaGain);
 				}
 			}
-			this.addEvent(recurringLucidTickEvt);
+			state.addEvent(recurringLucidTickEvt);
 		};
 		let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
 		while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;

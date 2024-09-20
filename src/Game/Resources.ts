@@ -1,4 +1,5 @@
 import {Debug, ResourceType} from "./Common"
+import {EffectFn} from "./Skills";
 import {PlayerState, GameState} from "./GameState";
 import {ActionNode} from "../Controller/Record";
 
@@ -8,16 +9,16 @@ export enum EventTag {
 	LucidTick
 }
 
-export class Event<T extends PlayerState> {
+export class Event {
 	name: string;
 	#tags: EventTag[];
 	timeTillEvent: number;
 	delay: number;
-	effectFn: (state: T, node?: ActionNode) => void;
+	effectFn: EffectFn<PlayerState>;
 	canceled: boolean;
 
 	// effectFn : () -> ()
-	constructor(name: string, delay: number, effectFn: ()=>void) {
+	constructor(name: string, delay: number, effectFn: EffectFn<PlayerState>) {
 		this.name = name;
 		this.#tags = [];
 		this.timeTillEvent = delay;

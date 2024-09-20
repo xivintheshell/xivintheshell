@@ -23,7 +23,7 @@ export interface SkillError {
 // Represent the result of attempting to perform a skill. If an error occurs (for example, enochian
 // dropped after the start of an F4 cast but before the cast confirm window), then return a
 // SkillError. If the skill succeeded, then return undefined or a list of events to be enqueued.
-export type SkillResult<T extends PlayerState> = Event<T>[] | undefined | SkillError;
+export type SkillResult = Event[] | undefined | SkillError;
 
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
@@ -41,7 +41,7 @@ export type SkillAutoReplace = {
 export type ResourceCalculationFn<T> = (state: Readonly<T>) => number;
 export type ValidateAttemptFn<T> = (state: Readonly<T>) => SkillError | undefined;
 export type IsInstantFn<T> = (state: T) => boolean;
-export type EffectFn<T> = (state: T, node?: ActionNode) => SkillResult<T>;
+export type EffectFn<T> = (state: T, node?: ActionNode) => SkillResult;
 
 
 type CondType<T> = (state: Readonly<T>) => boolean;
@@ -49,9 +49,9 @@ type CondType<T> = (state: Readonly<T>) => boolean;
  * Helper function to create a ValidateAttemptFn that returns a SkillError containing 
  * `emsg` when `cond` evaluates to false.
  */
-export const validateOrSkillError = (cond: CondType, emsg: string) => (
-	(state) => cond(state) ? undefined : { message: emsg }
-);
+export function validateOrSkillError<T extends PlayerState>(cond: CondType<T>, emsg: string): ValidateAttemptFn<T> {
+	return (state) => cond(state) ? undefined : { message: emsg }
+};
 
 /**
  * A Skill represents an action that a player can take.
@@ -174,9 +174,10 @@ export const skillMap: Map<ShellJob, Map<SkillName, Skill<PlayerState>>> = new M
 
 
 // Helper function to transform an optional<number | function> that has a default number value into a function.
-function fnify<T extends PlayerState>(arg?: number | ResourceCalculationFn<T>, defaultValue: number): ResourceCalculationFn<T> {
+// If no default is provided, 0 is used instead.
+function fnify<T extends PlayerState>(arg?: number | ResourceCalculationFn<T>, defaultValue?: number): ResourceCalculationFn<T> {
 	if (arg === undefined) {
-		return (state) => defaultValue;
+		return (state) => defaultValue || 0;
 	} else if (typeof arg === "number") {
 		return (state) => arg;
 	} else {
@@ -222,7 +223,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
-	const info = {
+	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
 		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
@@ -236,7 +237,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: fnify(params.potency, 0),
 		validateAttempt: params.validateAttempt ?? ((state) => undefined),
-		isInstantFn: params.isInstant ?? ((state) => true),
+		isInstantFn: params.isInstantFn ?? ((state) => true),
 		onConfirm: params.onConfirm ?? ((state, node) => []),
 		// TODO encode damage event
 		onApplication: params.onApplication ?? ((state, node) => []),
@@ -281,9 +282,9 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		autoDowngrade: params.autoDowngrade,
 		cdName: cdName,
 		aspect: Aspect.Other,
-		potencyFn: fnify(params.basePotency, 0),
+		potencyFn: fnify(params.potency, 0),
 		applicationDelay: params.applicationDelay ?? 0,
-		validateAttempt: ValidateAttemptFn ?? ((state) => undefined),
+		validateAttempt: params.validateAttempt ?? ((state) => undefined),
 		onConfirm: params.onConfirm ?? ((state, node) => []),
 		onApplication: params.onApplication ?? ((state, node) => []),
 	};
@@ -324,13 +325,18 @@ export function makeResourceAbility<T extends PlayerState>(
 	const onApplication = (state: T, node?: ActionNode) => {
 		state.resources.get(params.rscType).gain(1);
 		// TODO tell scheduler to override existing drop event if necessary
-		const durationFn = (typeof params.duration === "number") ? ((state: T) => params.duration) : params.duration;
+		const duration = params.duration;
+		const durationFn: ResourceCalculationFn<T> = (typeof duration === "number") ? ((state: T) => duration) : duration;
 		const otherApplication = (params?.onApplication === undefined) ? [] : (params.onApplication(state, node) ?? []);
+		if ("message" in otherApplication) {
+			// error case
+			return otherApplication;
+		}
 		return [new Event(
 			"drop " + params.rscType,
 			durationFn(state),
 			(state: T) => state.resources.get(params.rscType).consume(1),
-		)].concat(otherList);
+		)].concat(otherApplication);
 	};
 	return makeAbility(jobs, name, unlockLevel, cdName, {
 		potency: params.potency,

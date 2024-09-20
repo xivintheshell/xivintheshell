@@ -1,6 +1,7 @@
 import {ShellJob} from "../../Controller/Common";
-import {SkillName, ResourceType} from "../../Game/Common";
+import {SkillName, ResourceType} from "../Common";
 import {makeAbility, makeResourceAbility} from "../Skills";
+import {DoTBuff, EventTag} from "../Resources"
 
 const CASTER_JOBS = [ShellJob.BLM, ShellJob.PCT];
 
