@@ -12,6 +12,7 @@ import {Buff} from "./Buffs";
 import {TraitName, Traits} from "./Traits";
 
 import {BLMState} from "./Jobs/BLM";
+import {SkillButtonViewInfo} from "../Components/Skills";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -685,7 +686,7 @@ export class GameState {
 		return foundEvt ? foundEvt.timeTillEvent : 0;
 	}
 
-	getSkillAvailabilityStatus(skillName: SkillName) {
+	getSkillAvailabilityStatus(skillName: SkillName): SkillButtonViewInfo {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
 		let [capturedManaCost] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
@@ -743,8 +744,8 @@ export class GameState {
 		}
 
 		return {
+			skillName: skill.name,
 			status: status,
-			description: "",
 			stacksAvailable: cd.stacksAvailable(),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
