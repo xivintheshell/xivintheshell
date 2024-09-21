@@ -340,7 +340,7 @@ export class Config extends React.Component {
 			let sps = parseFloat(spsStr);
 			let fps = parseFloat(fpsStr);
 			if (!isNaN(fps) && !isNaN(sps)) {
-				b1TaxPreview = getTaxPreview(this.state.level, 2.5, sps, fps);
+				b1TaxPreview = getTaxPreview(parseFloat(this.state.level), 2.5, sps, fps);
 			} else {
 				b1TaxPreview = "n/a"
 			}
@@ -384,6 +384,7 @@ export class Config extends React.Component {
 
 		this.setLevel = (evt => {
 			this.setState({level: evt.target.value, dirty: true});
+			this.updateTaxPreview(this.state.spellSpeed, this.state.fps);
 		});
 
 		this.setCriticalHit = (val => {
@@ -793,6 +794,7 @@ export class Config extends React.Component {
 	render() {
 		let colors = getCurrentThemeColors();
 		let fpsAndCorrectionColor = this.state.shellVersion >= ShellVersion.FpsTax ? colors.text : colors.warning;
+		let level = parseFloat(this.state.level);
 		let b1TaxDesc = <div>
 			<style>{getTableStyle(colors.bgHighContrast)}</style>
 			<div className={"paragraph"}>{localize({
@@ -811,19 +813,19 @@ export class Config extends React.Component {
 				</tr>
 				<tr>
 					<td>2.8</td>
-					<td>{getTaxPreview(this.state.level, 2.8, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(level, 2.8, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				<tr>
 					<td>3.0</td>
-					<td>{getTaxPreview(this.state.level, 3.0, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(level, 3.0, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				<tr>
 					<td>3.5</td>
-					<td>{getTaxPreview(this.state.level, 3.5, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(level, 3.5, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				<tr>
 					<td>4.0</td>
-					<td>{getTaxPreview(this.state.level, 4.0, this.state.spellSpeed, this.state.fps)}</td>
+					<td>{getTaxPreview(level, 4.0, this.state.spellSpeed, this.state.fps)}</td>
 				</tr>
 				</tbody>
 			</table>
