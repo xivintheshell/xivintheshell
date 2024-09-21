@@ -325,8 +325,11 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 		(state, node) => {
 			// put this before the spell's onConfirm to ensure F3P and other buffs aren't prematurely consumed
 			// fire spells: attempt to consume umbral hearts
-			if (aspect === Aspect.Fire && name !== SkillName.Despair && name !== SkillName.FlareStar &&
-				!(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter))) {
+			if (
+				state.getFireStacks() > 0 &&
+				aspect === Aspect.Fire && name !== SkillName.Despair && name !== SkillName.FlareStar &&
+				!(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter))
+			) {
 				state.tryConsumeResource(ResourceType.UmbralHeart)
 			}
 			// ice spells: gain mana on spell application if in UI
