@@ -1,12 +1,9 @@
-import {Aspect, BuffType, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
+import {BuffType, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
 import {
 	DisplayedSkills,
-	SkillApplicationCallbackInfo,
-	SkillCaptureCallbackInfo,
 	SkillsList,
-	Skill,
 	Spell,
 	Ability,
 } from "./Skills"
@@ -17,9 +14,8 @@ import {ActionNode} from "../Controller/Record";
 import {ShellInfo, ShellJob} from "../Controller/Common";
 import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
-import {TraitName, Traits} from "./Traits";
 
-import {BLMState} from "./Jobs/BLM";
+import type {BLMState} from "./Jobs/BLM";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -79,14 +75,18 @@ export abstract class GameState {
 
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = new SkillsList(this);
-
-		this.#init();
 	}
 
 	abstract registerRecurringEvents(): void;
 
-	// get mp tick, lucid tick, thunder DoT tick and polyglot rolling
-	#init() {
+	/**
+	 * Get mp tick, lucid tick, and class-specific recurring timers rolling.
+	 *
+	 * This cannot be called by the base GameState constructor because sub-classes
+	 * have not yet initialized their resource/cooldown objects. Instead, all
+	 * sub-classes must explicitly call this at the end of their constructor.
+	 */
+	protected initializeTimers() {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
@@ -241,7 +241,7 @@ export abstract class GameState {
 		if (ll.available(1)) {
 			// should be approximately 0.85
 			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.LeyLines));
-			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.LeyLines));
+			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
 			return num / denom;
 		} else {
 			return 1;
@@ -442,7 +442,7 @@ export abstract class GameState {
 	}
 
 	hasResourceAvailable(rscType: ResourceType, atLeast?: number): boolean {
-		return this.resources.get(rscType).available(1);
+		return this.resources.get(rscType).available(atLeast ?? 1);
 	}
 
 	enqueueResourceDrop(

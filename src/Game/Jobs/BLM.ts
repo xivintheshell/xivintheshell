@@ -82,6 +82,8 @@ export class BLMState extends GameState {
 			new CoolDown(ResourceType.cd_Surecast, 120, 1, 1),
 			new CoolDown(ResourceType.cd_Tincture, 270, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
+
+		this.initializeTimers();
 	}
 
 	registerRecurringEvents() {
@@ -223,13 +225,6 @@ export class BLMState extends GameState {
 		}
 	}
 
-	// Attempt to consume MP for the given skill. Assumes the skill is fire-aspected.
-	tryConsumeUH(skillName: SkillName) {
-		if (skillName !== SkillName.Despair && skillName !== SkillName.FlareStar) {
-			this.resources.get(ResourceType.UmbralHeart).consume(1);
-		}
-	}
-
 	captureSpellCastTimeAFUI(baseCastTime: number, aspect: Aspect) {
 		// Apply AF/UI multiplier after ley lines
 		const llAdjustedCastTime = this.config.adjustedCastTime(
@@ -315,9 +310,9 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 }>): Spell<BLMState> => {
 	const aspect = params.aspect ?? Aspect.Other;
 	let onConfirm: EffectFn<BLMState> = params.onConfirm ?? NO_EFFECT;
-	if (aspect === Aspect.Fire) {
+	if (aspect === Aspect.Fire && name !== SkillName.Despair) {
 		// fire spells: attempt to consume umbral hearts
-		onConfirm = combineEffects(onConfirm, (state, node) => state.tryConsumeUH(name));
+		onConfirm = combineEffects(onConfirm, (state, node) => state.tryConsumeResource(ResourceType.UmbralHeart));
 	}
 	let onApplication: EffectFn<BLMState> = params.onApplication ?? NO_EFFECT;
 	if (aspect === Aspect.Ice) {
@@ -332,6 +327,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 		manaCost: (state) => state.captureManaCost(name, aspect, params.baseManaCost ?? 0),
 		// TODO apply AFUI modifiers?
 		potency: (state) => params.basePotency ?? 0,
+		validateAttempt: params.validateAttempt,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => (
 			// Foul after lvl 80

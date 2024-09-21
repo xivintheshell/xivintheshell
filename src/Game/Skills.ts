@@ -1,21 +1,8 @@
-import {Aspect, BuffType, LevelSync, ProcMode, ResourceType, SkillName, WarningType} from './Common'
-// @ts-ignore
-import {controller} from "../Controller/Controller";
+import {Aspect, LevelSync, ResourceType, SkillName} from './Common'
 import {ShellJob, ShellInfo} from "../Controller/Common";
-import {Event, DoTBuff, EventTag, Resource} from "./Resources";
 import {ActionNode} from "../Controller/Record";
 import {PlayerState, GameState} from "./GameState";
-import {getPotencyModifiersFromResourceState, Potency} from "./Potency";
 import {TraitName, Traits} from './Traits';
-
-export interface SkillCaptureCallbackInfo {
-	capturedManaCost: number
-}
-
-export interface SkillApplicationCallbackInfo {
-
-}
-
 
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
