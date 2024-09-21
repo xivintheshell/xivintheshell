@@ -16,19 +16,6 @@ export interface SkillApplicationCallbackInfo {
 
 }
 
-export interface SkillError {
-	message: string; // TODO localize
-}
-
-// Represent the result of attempting to perform a skill. If an error occurs (for example, enochian
-// dropped after the start of an F4 cast but before the cast confirm window), then return a
-// SkillError. If the skill succeeded, then return a list of events to be enqueued, possibly empty.
-// If a skill will always succeed, then returning void is acceptable for convenience.
-export type SkillResult = Event[] | undefined | SkillError;
-
-export function isSkillError(obj: SkillResult): obj is SkillError {
-	return obj !== undefined && "message" in obj;
-}
 
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
@@ -44,39 +31,24 @@ export type SkillAutoReplace = {
  * usage is confirmed.
  */
 export type ResourceCalculationFn<T> = (state: Readonly<T>) => number;
-export type ValidateAttemptFn<T> = (state: Readonly<T>) => SkillError | undefined;
+// TODO encode graceful error handling into these types
+export type ValidateAttemptFn<T> = (state: Readonly<T>) => boolean;
 export type IsInstantFn<T> = (state: T) => boolean;
-export type EffectFn<T> = (state: T, node: ActionNode) => SkillResult;
+export type EffectFn<T> = (state: T, node: ActionNode) => void;
+
+// empty function
+export function NO_EFFECT<T extends PlayerState>(state: T, node: ActionNode) {};
 
 /**
- * Create a new EffectFn that performs f1, and if f1 does not produce an error, then performs f2.
+ * Create a new EffectFn that performs f1 followed by f2.
  */
 export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, f2: EffectFn<T>): EffectFn<T> {
 	return (state: T, node: ActionNode) => {
-		let result1 = f1(state, node) ?? [];
-		if (isSkillError(result1)) {
-			// f1 errored out, so short-circuit
-			return result1;
-		}
-		const result2 = f2(state, node) ?? [];
-		if (isSkillError(result2)) {
-			return result2;
-		}
-		if (Array.isArray(result2)) {
-			return result1.concat(result2);
-		}
+		f1(state, node);
+		f2(state, node);
 	};
 }
 
-
-type CondType<T> = (state: Readonly<T>) => boolean;
-/**
- * Helper function to create a ValidateAttemptFn that returns a SkillError containing 
- * `emsg` when `cond` evaluates to false.
- */
-export function validateOrSkillError<T extends PlayerState>(cond: CondType<T>, emsg: string): ValidateAttemptFn<T> {
-	return (state) => cond(state) ? undefined : { message: emsg }
-};
 
 /**
  * A Skill represents an action that a player can take.
@@ -224,9 +196,9 @@ function fnify<T extends PlayerState>(arg?: number | ResourceCalculationFn<T>, d
  * - manaCost: 0
  * - potency: 0
  * - applicationDelay: 0
- * - validateAttempt: function always returning undefined (no error)
+ * - validateAttempt: function always returning true (valid)
  * - isInstantFn: function consuming no resources and always returning true
- * - onConfirm: function always returning empty list (no events enqueued)
+ * - onConfirm: empty function
  * - onApplication: function returning a damage event if `basePotency` is a non-zero scalar, else empty list
  * 
  * TODO: If we ever branch out to non-BLM/PCT jobs, we should distinguish between
@@ -263,11 +235,11 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		recastTimeFn: fnify(params.recastTime, 2.5),
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: fnify(params.potency, 0),
-		validateAttempt: params.validateAttempt ?? ((state) => undefined),
+		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true),
-		onConfirm: params.onConfirm ?? ((state, node) => []),
+		onConfirm: params.onConfirm ?? NO_EFFECT,
 		// TODO encode damage event
-		onApplication: params.onApplication ?? ((state, node) => []),
+		onApplication: params.onApplication ?? NO_EFFECT,
 		applicationDelay: params.applicationDelay ?? 0,
 	};
 	jobs.forEach((job) => skillMap.get(job)!.set(info.name, info as Spell<PlayerState>));
@@ -283,8 +255,8 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
  * - autoUpgrade + autoDowngrade: remain undefined
  * - potency: 0
  * - applicationDelay: 0 if basePotency is defined, otherwise left undefined
- * - validateAttempt: function always returning undefined (no error)
- * - onConfirm: function always returning empty list (no events enqueued)
+ * - validateAttempt: function always returning true (no error)
+ * - onConfirm: empty function
  * - onApplication: function returning a damage event if `basePotency` is a non-zero scalar, else empty list
  */
 export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, cdName: ResourceType, params: Partial<{
@@ -311,9 +283,9 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		aspect: Aspect.Other,
 		potencyFn: fnify(params.potency, 0),
 		applicationDelay: params.applicationDelay ?? 0,
-		validateAttempt: params.validateAttempt ?? ((state) => undefined),
-		onConfirm: params.onConfirm ?? ((state, node) => []),
-		onApplication: params.onApplication ?? ((state, node) => []),
+		validateAttempt: params.validateAttempt ?? ((state) => true),
+		onConfirm: params.onConfirm ?? NO_EFFECT,
+		onApplication: params.onApplication ?? NO_EFFECT,
 	};
 	jobs.forEach((job) => skillMap.get(job)!.set(info.name, info as Ability<PlayerState>));
 	return info;
@@ -355,14 +327,10 @@ export function makeResourceAbility<T extends PlayerState>(
 			// TODO tell scheduler to override existing drop event if necessary
 			const duration = params.duration;
 			const durationFn: ResourceCalculationFn<T> = (typeof duration === "number") ? ((state: T) => duration) : duration;
-			return [new Event(
-				"drop " + params.rscType,
+			state.enqueueResourceDrop(
+				params.rscType,
 				durationFn(state),
-				(state: GameState, node) => {
-					state.resources.get(params.rscType).consume(1)
-					return [];
-				},
-			)];
+			);
 		},
 		params?.onApplication ?? ((state: T, node: ActionNode) => []), 
 	);

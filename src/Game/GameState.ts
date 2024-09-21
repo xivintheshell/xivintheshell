@@ -30,6 +30,7 @@ type RNG = any;
 // GameState := resources + events queue
 export abstract class GameState {
 	config: GameConfig;
+	job: ShellJob;
 	rng: RNG;
 	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
 	lucidTickOffset: number;
@@ -42,6 +43,7 @@ export abstract class GameState {
 
 	constructor(config: GameConfig) {
 		this.config = config;
+		this.job = ShellInfo.job; // TODO make this configurable
 		this.rng = new SeedRandom(config.randomSeed);
 		this.nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
 		this.lucidTickOffset = this.nonProcRng() * 3.0;
@@ -118,31 +120,31 @@ export abstract class GameState {
 		}
 
 		// lucid ticks
-		let recurringLucidTick = (state: GameState, node: ActionNode) => {
+		let recurringLucidTick = () => {
 			// do work at lucid tick
-			let lucid = state.resources.get(ResourceType.LucidDreaming) as DoTBuff;
+			let lucid = this.resources.get(ResourceType.LucidDreaming) as DoTBuff;
 			if (lucid.available(1)) {
 				lucid.tickCount++;
-				if (!(ShellInfo.job === ShellJob.BLM && (state as BLMState).getFireStacks() === 0)) {
-					let mana = state.resources.get(ResourceType.Mana);
+				if (!(this.isBLMState() && this.getFireStacks() === 0)) {
+					let mana = this.resources.get(ResourceType.Mana);
 					mana.gain(550);
 					let msg = "+550";
 					console.assert(lucid.node !== undefined);
 					if (lucid.node) {
 						let t = "??";
 						if (lucid.node.tmp_startLockTime) {
-							t = (lucid.node.tmp_startLockTime - state.config.countdown).toFixed(3);
+							t = (lucid.node.tmp_startLockTime - this.config.countdown).toFixed(3);
 						}
 						msg += " {skill}@" + t;
 						msg += " (" + lucid.tickCount + "/7)";
 					}
 					msg += " (MP=" + mana.availableAmount() + ")";
-					controller.reportLucidTick(state.time, msg);
+					controller.reportLucidTick(this.time, msg);
 				}
 			}
 			// queue the next tick
-			let recurringLucidTickEvt = new Event("lucid tick", 3, (state: GameState, node: ActionNode) => {
-				recurringLucidTick(state, node);
+			let recurringLucidTickEvt = new Event("lucid tick", 3, () => {
+				recurringLucidTick();
 			});
 			recurringLucidTickEvt.addTag(EventTag.LucidTick);
 			// potentially also give mp gain tag
@@ -152,7 +154,7 @@ export abstract class GameState {
 					recurringLucidTickEvt.addTag(EventTag.ManaGain);
 				}
 			}
-			state.addEvent(recurringLucidTickEvt);
+			this.addEvent(recurringLucidTickEvt);
 		};
 		let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
 		while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;
@@ -338,7 +340,7 @@ export abstract class GameState {
 				game.addEvent(new Event(
 					skill.name + " applied",
 					skill.applicationDelay,
-					(state, node)=>{
+					()=>{
 						if (potency) {
 							controller.resolvePotency(potency);
 						}
@@ -394,7 +396,7 @@ export abstract class GameState {
 		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
 
 		// (basically done casting) deduct MP, calc damage, queue damage
-		this.addEvent(new Event(skill.name + " captured", capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime), (state, node)=>{
+		this.addEvent(new Event(skill.name + " captured", capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime), ()=>{
 			let success = takeEffect(this);
 			if (!success) {
 				controller.reportInterruption({
@@ -453,7 +455,7 @@ export abstract class GameState {
 		let skillEvent = new Event(
 			skill.name + " captured",
 			skill.applicationDelay,
-			(state, node) => {
+			() => {
 				if (props.dealDamage && potency) controller.resolvePotency(potency);
 				if (props.onApplication) props.onApplication();
 			});
@@ -487,6 +489,22 @@ export abstract class GameState {
 			if (evt.hasTag(tag)) return evt;
 		}
 		return undefined;
+	}
+
+	enqueueResourceDrop(
+		rscType: ResourceType,
+		delay: number,
+		consumeAmount?: number,
+	) {
+		const name = (consumeAmount === undefined ? "drop all " : `drop ${consumeAmount} `) + rscType;
+		this.resources.addResourceEvent({
+			rscType: rscType,
+			name: name,
+			delay: delay,
+			fnOnRsc: (rsc: Resource) => {
+				rsc.consume(consumeAmount ?? rsc.availableAmount());
+			}
+		})
 	}
 
 	timeTillNextMpGainEvent() {
@@ -618,6 +636,10 @@ export abstract class GameState {
 		s += "GCD:\t" + this.cooldowns.get(ResourceType.cd_GCD).availableAmount().toFixed(3) + "\n";
 		s += "LLCD:\t" + this.cooldowns.get(ResourceType.cd_LeyLines).availableAmount().toFixed(3) + "\n";
 		return s;
+	}
+
+	isBLMState(): this is BLMState {
+		return this.job === ShellJob.BLM;
 	}
 }
 

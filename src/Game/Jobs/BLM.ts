@@ -10,13 +10,13 @@ import {
 	makeAbility,
 	makeSpell,
 	makeResourceAbility,
-	validateOrSkillError,
 	skillMap,
 	SkillAutoReplace,
 	Spell,
 	Ability,
 	ValidateAttemptFn,
 	EffectFn,
+	NO_EFFECT,
 } from "../Skills";
 import {Traits, TraitName} from "../Traits";
 import {PlayerState, GameState} from "../GameState";
@@ -231,8 +231,7 @@ export class BLMState extends GameState {
 
 	// Attempt to consume MP for the given skill. Assumes the skill is fire-aspected.
 	tryConsumeUH(skillName: SkillName) {
-		if (skill.skillName !== SkillName.Despair &&
-			skill.skillName !== SkillName.FlareStar) {
+		if (skillName !== SkillName.Despair && skillName !== SkillName.FlareStar) {
 			this.resources.get(ResourceType.UmbralHeart).consume(1);
 		}
 	}
@@ -322,10 +321,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 	onApplication: EffectFn<BLMState>,
 }>): Spell<BLMState> => {
 	const aspect = params.aspect ?? Aspect.Other;
-	let onConfirm: EffectFn<BLMState> = undefined;
-	if (params.onConfirm === undefined) {
-		onConfirm
-	}
+	let onConfirm: EffectFn<BLMState> = params.onConfirm ?? NO_EFFECT;
 	return makeSpell(ShellJob.BLM, name, unlockLevel, {
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
@@ -361,8 +357,8 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 		),
 		onConfirm: onConfirm,
 		onApplication: params.onApplication,
-	};
-});
+	});
+};
 
 
 const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceType, params: Partial<{
@@ -397,24 +393,21 @@ makeGCD_BLM(SkillName.Blizzard, 1, {
 	},
 });
 
-const gainFirestarterProc = (game: PlayerState): Event[] => {
+const gainFirestarterProc = (state: PlayerState) => {
 	// re-measured in DT, screen recording at: https://drive.google.com/file/d/1MEFnd-m59qx1yIaZeehSsAxjhLMsWBuw/view?usp=drive_link
 	let duration = 30.5;
-	if (game.resources.get(ResourceType.Firestarter).available(1)) {
-		game.resources.get(ResourceType.Firestarter).overrideTimer(game, duration);
-		return [];
+	if (state.resources.get(ResourceType.Firestarter).available(1)) {
+		state.resources.get(ResourceType.Firestarter).overrideTimer(state, duration);
 	} else {
-		game.resources.get(ResourceType.Firestarter).gain(1);
-		return [new Event("drop firestarter proc", duration, (state, node) => state.resources.get(ResourceType.Firestarter).consume(1))];
+		state.resources.get(ResourceType.Firestarter).gain(1);
+		state.enqueueResourceDrop(ResourceType.Firestarter, duration);
 	}
 };
 
-const potentiallyGainFirestarter = (game: PlayerState): Event[] => {
+const potentiallyGainFirestarter = (game: PlayerState) => {
 	let rand = game.rng();
 	if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && rand < 0.4)) {
-		return gainFirestarterProc(game);
-	} else {
-		return [];
+		gainFirestarterProc(game);
 	}
 };
 
@@ -427,7 +420,7 @@ makeGCD_BLM(SkillName.Fire, 2, {
 	// TODO make sure MP cost is figured out
 	onConfirm: (state, node) => {
 		// Refresh Enochian and gain a UI stack at the cast confirm window, not the damage application.
-		const f3p = potentiallyGainFirestarter(state);
+		potentiallyGainFirestarter(state);
 		if (state.getIceStacks() === 0) { // in fire or no enochian
 			state.switchToAForUI(ResourceType.AstralFire, 1);
 			state.startOrRefreshEnochian();
@@ -435,23 +428,17 @@ makeGCD_BLM(SkillName.Fire, 2, {
 			state.resources.get(ResourceType.Enochian).removeTimer();
 			state.loseEnochian()
 		}
-		return f3p;
 	},
 });
 
 makeAbility_BLM(SkillName.Transpose, 4, ResourceType.cd_Transpose, {
 	applicationDelay: 0, // instant
-	validateAttempt: validateOrSkillError(
-		(state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
-		"must be in AF or UI to cast Transpose"
-	),
+	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
 	onApplication: (state, node) => {
-		if (state.getFireStacks() === 0 && state.getIceStacks() === 0) {
-			return [];
+		if (state.getFireStacks() !== 0 || state.getIceStacks() !== 0) {
+			state.switchToAForUI(state.getFireStacks() > 0 ? ResourceType.UmbralIce : ResourceType.AstralFire, 1);
+			state.startOrRefreshEnochian();
 		}
-		state.switchToAForUI(state.getFireStacks() > 0 ? ResourceType.UmbralIce : ResourceType.AstralFire, 1);
-		state.startOrRefreshEnochian();
-		return [];
 	},
 });
 
@@ -559,10 +546,7 @@ makeResourceAbility(ShellJob.BLM, SkillName.Manaward, 30, ResourceType.cd_Manawa
 // see screen recording: https://drive.google.com/file/d/1zGhU9egAKJ3PJiPVjuRBBMkKdxxHLS9b/view?usp=drive_link
 makeAbility_BLM(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
 	applicationDelay: 0.2, // delayed
-	validateAttempt: validateOrSkillError(
-		(state) => state.resources.get(ResourceType.AstralFire).availableAmount() > 0,
-		"must be in AF to cast Manafont",
-	),
+	validateAttempt: (state) => state.resources.get(ResourceType.AstralFire).availableAmount() > 0,
 	onConfirm: (state, node) => {
 		state = state as BLMState;
 		state.resources.get(ResourceType.AstralFire).gain(3);
@@ -610,7 +594,7 @@ makeGCD_BLM(SkillName.Freeze, 40, {
 	baseManaCost: 1000,
 	basePotency: 120,
 	applicationDelay: 0.664,
-	validateAttempt: validateOrSkillError((state) => state.getIceStacks() > 0, "must be in UI to cast Freeze"),
+	validateAttempt: (state) => state.getIceStacks() > 0,
 	onConfirm: (state, node) => state.resources.get(ResourceType.UmbralHeart).gain(3),
 });
 
@@ -620,14 +604,7 @@ makeGCD_BLM(SkillName.Flare, 50, {
 	baseManaCost: 0,  // mana is handled separately
 	basePotency: 240,
 	applicationDelay: 1.157,
-	validateAttempt: (state) => {
-		if (state.getFireStacks() === 0) {
-			return { message: "must be in AF to cast Flare" };
-		} else if (state.getMP() < 800) {
-			return { message: "must have at least 800 MP to cast Flare" };
-		}
-		return undefined; // no errors
-	},
+	validateAttempt: (state) => state.getFireStacks() > 0 && state.getMP() >= 800,
 	onConfirm: (state, node) => {
 		let uh = state.resources.get(ResourceType.UmbralHeart);
 		let mana = state.resources.get(ResourceType.Mana);
@@ -660,7 +637,7 @@ makeGCD_BLM(SkillName.Blizzard4, 58, {
 	baseManaCost: 800,
 	basePotency: 320,
 	applicationDelay: 1.156,
-	validateAttempt: validateOrSkillError((state) => state.getIceStacks() > 0, "must be in UI to cast Blizzard 4"),
+	validateAttempt: (state) => state.getIceStacks() > 0,
 	onConfirm: (state, node) => state.resources.get(ResourceType.UmbralHeart).gain(3),
 });
 
@@ -670,7 +647,7 @@ makeGCD_BLM(SkillName.Fire4, 60, {
 	baseManaCost: 800,
 	basePotency: 320,
 	applicationDelay: 1.159,
-	validateAttempt: validateOrSkillError((state) => state.getFireStacks() > 0, "must be in AF to cast Fire 4"),
+	validateAttempt: (state) => state.getFireStacks() > 0,
 	onConfirm: (state, node) => {
 		if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level))
 			state.resources.get(ResourceType.AstralSoul).gain(1);
@@ -679,10 +656,7 @@ makeGCD_BLM(SkillName.Fire4, 60, {
 
 makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, {
 	applicationDelay: 0, // ?
-	validateAttempt: validateOrSkillError(
-		(state) => state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0,
-		"must have active Ley Lines to cast Between the Lines",
-	),
+	validateAttempt: (state) => state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0,
 });
 
 makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialManipulation, {
@@ -695,14 +669,8 @@ makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
 		const triple = state.resources.get(ResourceType.Triplecast)
 		if (triple.pendingChange) triple.removeTimer();
 		triple.gain(3);
-		return [new Event(
-			"drop remaining triplecast charges",
-			15.7, // 15.7s: see screen recording: https://drive.google.com/file/d/1qoIpAMK2KAKETgID6a3p5dqkeWRcNDdB/view?usp=drive_link
-			(state, node) => {
-				const rsc = state.resources.get(ResourceType.Triplecast);
-				rsc.consume(rsc.availableAmount());
-			},
-		)];
+		// 15.7s: see screen recording: https://drive.google.com/file/d/1qoIpAMK2KAKETgID6a3p5dqkeWRcNDdB/view?usp=drive_link
+		state.enqueueResourceDrop(ResourceType.Triplecast, 15.7);
 	},
 });
 
@@ -711,10 +679,7 @@ makeGCD_BLM(SkillName.Foul, 70, {
 	baseManaCost: 0,
 	basePotency: 600,
 	applicationDelay: 1.158,
-	validateAttempt: validateOrSkillError(
-		(state) => state.resources.get(ResourceType.Polyglot).available(1),
-		"must have Polyglot stacks to cast Foul",
-	),
+	validateAttempt: (state) => state.resources.get(ResourceType.Polyglot).available(1),
 	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
 });
 
@@ -724,14 +689,7 @@ makeGCD_BLM(SkillName.Despair, 72, {
 	baseManaCost: 0, // mana handled separately, like flare
 	basePotency: 350,
 	applicationDelay: 0.556,
-	validateAttempt: (state) => {
-		if (state.getFireStacks() === 0) {
-			return { message: "must be in AF to cast Despair" };
-		} else if (state.getMP() < 800) {
-			return { message: "must have at least 800 MP to cast Despair" };
-		}
-		return undefined; // no error
-	},
+	validateAttempt: (state) => state.getFireStacks() > 0 && state.getMP() >= 800,
 });
 
 // Umbral Soul: immediate snapshot & UH gain; delayed MP gain
@@ -742,7 +700,7 @@ makeGCD_BLM(SkillName.UmbralSoul, 35, {
 	baseManaCost: 0,
 	basePotency: 0,
 	applicationDelay: 0.633,
-	validateAttempt: validateOrSkillError((state) => state.getIceStacks() > 0, "must be in UI to cast Umbral Soul"),
+	validateAttempt: (state) => state.getIceStacks() > 0,
 	onConfirm: (state, node) => {
 		state.resources.get(ResourceType.UmbralIce).gain(1);
 		state.resources.get(ResourceType.UmbralHeart).gain(1);
@@ -758,10 +716,7 @@ makeGCD_BLM(SkillName.Xenoglossy, 80, {
 	baseManaCost: 0,
 	basePotency: 880,
 	applicationDelay: 0.63,
-	validateAttempt: validateOrSkillError(
-		(state) => state.resources.get(ResourceType.Polyglot).available(1),
-		"must have Polyglot stacks to cast Xenoglossy",
-	),
+	validateAttempt: (state) => state.resources.get(ResourceType.Polyglot).available(1),
 	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
 });
 
@@ -819,10 +774,7 @@ makeGCD_BLM(SkillName.HighBlizzard2, 82, {
 
 makeAbility_BLM(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, {
 	applicationDelay: 0, // ? (assumed to be instant)
-	validateAttempt: validateOrSkillError(
-		(state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
-		"must be in AF or UI to cast Amplifier"
-	),
+	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
 	onApplication: (state, node) => {
 		let polyglot = state.resources.get(ResourceType.Polyglot);
 		if (polyglot.available(polyglot.maxValue)) {
@@ -837,10 +789,7 @@ makeGCD_BLM(SkillName.Paradox, 90, {
 	baseManaCost: 1600,
 	basePotency: 520,
 	applicationDelay: 0.624,
-	validateAttempt: validateOrSkillError(
-		(state) => state.resources.get(ResourceType.Paradox).available(1),
-		"must have Paradox marker to cast Paradox"
-	),
+	validateAttempt: (state) => state.resources.get(ResourceType.Paradox).available(1),
 	onConfirm: (state, node) => {
 		state.resources.get(ResourceType.Paradox).consume(1);
 		if (state.hasEnochian()) {
@@ -850,11 +799,10 @@ makeGCD_BLM(SkillName.Paradox, 90, {
 			state.resources.get(ResourceType.UmbralIce).gain(1);
 		} else if (state.getFireStacks() > 0) {
 			state.resources.get(ResourceType.AstralFire).gain(1);
-			return gainFirestarterProc(state);
+			gainFirestarterProc(state);
 		} else {
 			console.error("cannot cast Paradox outside of AF/UI");
 		}
-		return [];
 	},
 });
 
@@ -878,19 +826,15 @@ makeGCD_BLM(SkillName.FlareStar, 100, {
 	baseManaCost: 0,
 	basePotency: 400,
 	applicationDelay: 0.622,
-	validateAttempt: validateOrSkillError(
-		(state) => state.resources.get(ResourceType.AstralSoul).available(6),
-		"must have 6 Astral Souls to cast Paradox"
-	),
+	validateAttempt: (state) => state.resources.get(ResourceType.AstralSoul).available(6),
 	onConfirm: (state, node) => state.resources.get(ResourceType.AstralSoul).consume(6),
 });
 
 makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
 	applicationDelay: 0, // ? (assumed to be instant)
-	validateAttempt: validateOrSkillError(
-		(state) => (Traits.hasUnlocked(TraitName.EnhancedLeyLines, state.config.level) &&
-			state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0),
-		"must have active Ley Lines in order to cast Retrace",
+	validateAttempt: (state) => (
+		Traits.hasUnlocked(TraitName.EnhancedLeyLines, state.config.level) &&
+		state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0
 	),
 	onConfirm: (state, node) => {
 		state.resources.get(ResourceType.LeyLines).enabled = true;

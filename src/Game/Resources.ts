@@ -1,5 +1,4 @@
 import {Debug, ResourceType} from "./Common"
-import {EffectFn} from "./Skills";
 import {PlayerState, GameState} from "./GameState";
 import {ActionNode} from "../Controller/Record";
 import {BLMState} from "./Jobs/BLM";
@@ -15,11 +14,11 @@ export class Event {
 	#tags: EventTag[];
 	timeTillEvent: number;
 	delay: number;
-	effectFn: EffectFn<PlayerState>;
+	effectFn: () => void;
 	canceled: boolean;
 
 	// effectFn : () -> ()
-	constructor(name: string, delay: number, effectFn: EffectFn<PlayerState>) {
+	constructor(name: string, delay: number, effectFn: () => void) {
 		this.name = name;
 		this.#tags = [];
 		this.timeTillEvent = delay;
