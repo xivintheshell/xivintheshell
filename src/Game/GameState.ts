@@ -181,7 +181,6 @@ export abstract class GameState {
 			this.cooldowns.tick(timeToTick);
 			if (Debug.consoleLogEvents) console.log("====== tick " + timeToTick + " now at " + this.time);
 
-			const newEventsToQueue: Event[] = [];
 			// make a deep copy of events to advance for this round...
 			const eventsToExecuteOld = [];
 			for (let i = 0; i < this.eventsQueue.length; i++)
@@ -204,8 +203,6 @@ export abstract class GameState {
 			});
 			// remove the executed events from the master list
 			this.eventsQueue.splice(0, executedEvents);
-			// add newly queued events
-			this.eventsQueue.concat(newEventsToQueue);
 		}
 		if (Debug.consoleLogEvents) {
 			console.log(this.toString());

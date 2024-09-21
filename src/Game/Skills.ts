@@ -39,18 +39,9 @@ export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, ...fs: Ar
 }
 
 /**
- * A Skill represents an action that a player can take.
- * 
- * Skills are distinguished by a "kind" field, which should be assigned by each sub-type's
- * corresponding helper constructor function. Switching on this kind field lets us apply
- * different behavior for GCDs and oGCDs with the type checker's blessing, for example:
- * 
- * if (skill.kind === "ability") {
- *   // do something with oGCDs
- * } else if (skill.kind === "weaponskill" || skill.kind === "spell") {
- *   // do something with GCDs 
- *   // castTimeFn, recastTimeFn, etc. are valid here
- * }
+ * Base interface for common properties between different kinds of skills.
+ *
+ * Use the `Skill` type in type annotations instead of this interface.
  */
 interface BaseSkill<T extends PlayerState> {
 	// === COSMETIC PROPERTIES ===
@@ -61,6 +52,8 @@ interface BaseSkill<T extends PlayerState> {
 	readonly autoDowngrade?: SkillAutoReplace;
 	readonly cdName: ResourceType;
 	readonly aspect: Aspect;
+
+	// === VALIDATION ===
 
 	// TODO can MP cost ever change between cast start + confirm, e.g. if you use an ether kit or
 	// lost font of magic and cast flare with hearts?
@@ -73,39 +66,27 @@ interface BaseSkill<T extends PlayerState> {
 	// Should be called when the button is pressed.
 	readonly validateAttempt: ValidateAttemptFn<T>;
 
-	/* === EFFECTS ===
-	 * The following functions determine the effects of using a skill.
-	 * On success, they will return a list of future events to be applied
-	 * (an undefined return is treated as the empty list).
-	 * On failure, they will return an error that should be propagated.
-	 *
-	 * Immediate effects should be expressed through the function's side effects, but future
-	 * queued events (such as timer drops) should be returned as event objects.
-	 * Because they are stateful, you can also directly enqueue a future event without returning,
-	 * an Event, but doing so makes control flow harder to follow.
-	 */
+	// === EFFECTS ===
 
-	/* Return a list of future Event objects when the action is applied.
-	 * If the action became invalid between the start of the cast and the cast confirmation,
-	 * then return a SkillError instead.
-	 * This should be called at the function's cast confirm window.
-	 *
-	 * If this is a spell that is normally hardcast, but was somehow made instant,
-	 * then the game loop will call `onConfirm` immediately after validation.
-	 */
+	// Perform side effects that occur on the cast confirm window.
+	// If the action became invalid between the start of the cast and the cast confirmation,
+	// then return a SkillError instead.
+	//
+	// Universal effects like MP consumption and queueing the damage application event should not
+	// be specified here, and are automatically handled in GameState.useSkill.
 	readonly onConfirm: EffectFn<T>;
 
-	/* Return a list of events to apply at the time of skill application. This includes
-	 * damage events and buffs/debuffs.
-	 * If `onConfirm` did not error, then the game loop MUST automatically enqueue this function,
-	 * rather than `onConfirm` itself enqueuing an `onApplication` event.
-	 */
+
+	// Perform events at skill application. This function should always be called `applicationDelay`
+	// simulation seconds after `onConfirm`, assuming `onConfirm` did not produce any errors.
+	//
+	// Universal effects like damage application should not be specified here, and are automatically
+	// handled in GameState.useSkill.
 	readonly onApplication: EffectFn<T>;
 
 	// The simulation delay, in seconds, between which `onConfirm` and `onApplication` are called.
 	readonly applicationDelay: number;
 }
-
 
 export type GCD<T extends PlayerState> = BaseSkill<T> & {
 	// GCDs have cast/recast + MP cost, but oGCDs do not.
@@ -113,9 +94,7 @@ export type GCD<T extends PlayerState> = BaseSkill<T> & {
 	readonly castTimeFn: ResourceCalculationFn<T>;
 	readonly recastTimeFn: ResourceCalculationFn<T>;
 
-	/**
-	 * Determine whether or not this cast can be made instant, based on the current game state.
-	 */
+	// Determine whether or not this cast can be made instant, based on the current game state.
 	readonly isInstantFn: IsInstantFn<T>;
 }
 
@@ -123,17 +102,28 @@ export type Spell<T extends PlayerState> = GCD<T> & {
 	kind: "spell";
 }
 
-
 export type Weaponskill<T extends PlayerState> = GCD<T> & {
 	kind: "weaponskill";
 }
-
 
 export type Ability<T extends PlayerState> = BaseSkill<T> & {
 	kind: "ability";
 }
 
-
+/**
+ * A Skill represents an action that a player can take.
+ * 
+ * Each sub-type has a `kind` field, which should be assigned in the type's corresponding helper
+ * constructor function. Switching on `kind` lets us apply different behavior for GCDs and oGCDs
+ * with the type checker's blessing, for example:
+ * 
+ * if (skill.kind === "ability") {
+ *   // do something with oGCDs
+ * } else if (skill.kind === "weaponskill" || skill.kind === "spell") {
+ *   // do something with GCDs 
+ *   // castTimeFn, recastTimeFn, etc. are valid here
+ * }
+ */
 export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T>;
 
 // Map tracking skills for each job.
@@ -142,7 +132,7 @@ export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T
 // the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
 export const skillMap: Map<ShellJob, Map<SkillName, Skill<PlayerState>>> = new Map();
 
-// can't iterate over a const enum so just populate manually :/
+// can't iterate over the onst enum ShellJob so just populate manually :/
 [
 	ShellJob.BLM,
 	ShellJob.PCT,
@@ -176,7 +166,7 @@ function fnify<T extends PlayerState>(arg?: number | ResourceCalculationFn<T>, d
  * - validateAttempt: function always returning true (valid)
  * - isInstantFn: function always returning true
  * - onConfirm: empty function
- * - onApplication: function returning a damage event if `basePotency` is a non-zero scalar, else empty list
+ * - onApplication: empty function
  * 
  * TODO: If we ever branch out to non-BLM/PCT jobs, we should distinguish between
  * spells and weaponskills for sps/sks calculation purposes.
@@ -215,7 +205,6 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true),
 		onConfirm: params.onConfirm ?? NO_EFFECT,
-		// TODO encode damage event
 		onApplication: params.onApplication ?? NO_EFFECT,
 		applicationDelay: params.applicationDelay ?? 0,
 	};
@@ -227,14 +216,14 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 /**
  * Declare an oGCD ability.
  *
- * Only the ability's name, unlock level, and cooldown are mandatory. All optional params default as follows:
+ * Only the ability's name, unlock level, and cooldown name are mandatory. All optional params default as follows:
  * - assetPath: if `jobs` is a single job, then "$JOB/$SKILLNAME.png"; otherwise "General/Missing.png"
  * - autoUpgrade + autoDowngrade: remain undefined
  * - potency: 0
  * - applicationDelay: 0 if basePotency is defined, otherwise left undefined
  * - validateAttempt: function always returning true (no error)
  * - onConfirm: empty function
- * - onApplication: function returning a damage event if `basePotency` is a non-zero scalar, else empty list
+ * - onApplication: empty function
  */
 export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, cdName: ResourceType, params: Partial<{
 	assetPath: string,
@@ -272,7 +261,6 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 // Dummy skill to avoid a hard crash when a skill info isn't found
 const NEVER_SKILL = makeSpell([], SkillName.Never, 1, {});
 
-
 /**
  * Helper function to create an Ability that applies a buff or debuff (`rscType`) for a certain duration.
  *
@@ -296,9 +284,9 @@ export function makeResourceAbility<T extends PlayerState>(
 		assetPath?: string,
 	}
 ): Ability<T> {
-	// When the ability is applied, enqueue two events:
-	// 1. An immediate resource gain event
-	// 2. A resource drop event after a duration, overriding an existing timer if it exists
+	// When the ability is applied:
+	// 1. Immediate gain resources
+	// 2. Enqueue a resource drop event after a duration, overriding an existing timer if needed
 	const onApplication = combineEffects(
 		(state: T, node: ActionNode) => {
 			const resource = state.resources.get(params.rscType);
