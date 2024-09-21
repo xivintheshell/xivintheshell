@@ -267,170 +267,123 @@ export abstract class GameState {
 		}
 	}
 
-	castSpell(props: {
-		skillName: SkillName,
-		onCapture: (cap: SkillCaptureCallbackInfo)=>void,
-		onApplication: (app: SkillApplicationCallbackInfo)=>void,
-		node: ActionNode})
-	{
-		let skill = this.skillsList.get(props.skillName) as Spell<PlayerState>;
-		console.assert(skill.kind === "spell");
+	/**
+	 * Attempt to use a spell. Assumes that resources for the spell are currently available,
+	 * i.e. `skill.validateAttempt` succeeded.
+	 *
+	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
+	 * it performs the confirmation immediately.
+	 */
+	useSpell(skill: Spell<PlayerState>, node: ActionNode) {
 		let cd = this.cooldowns.get(skill.cdName);
 		let capturedManaCost = skill.manaCostFn(this);
-		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
+		let llCovered = this.hasResourceAvailable(ResourceType.LeyLines);
 		let capturedCastTime = skill.castTimeFn(this);
-		if (llCovered && skill.cdName===ResourceType.cd_GCD) {
-			props.node.addBuff(BuffType.LeyLines);
+		if (llCovered && skill.cdName === ResourceType.cd_GCD) {
+			node.addBuff(BuffType.LeyLines);
 		}
 
-		// attach potency node
+		// create potency node object (snapshotted buffs will populate on confirm)
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
 		if (potencyNumber > 0) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
-				sourceSkill: props.skillName,
+				sourceSkill: skill.name,
 				aspect: skill.aspect,
 				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
 			});
-			props.node.addPotency(potency);
+			node.addPotency(potency);
 		}
 
-		let takeEffect = function(game: GameState) {
-			// TODO propagate error
-			let resourcesStillAvailable = skill.validateAttempt(game);
-			if (resourcesStillAvailable) {
-				// re-capture them here, since game state might've changed (say, AF/UI fell off)
-				capturedManaCost = skill.manaCostFn(game);
+		/**
+		 * Perform operations common to casting a spell (consuming mana, rolling the GCD).
+		 *
+		 * This should be called at the timestamp of the cast confirm window.
+		 *
+		 * Also snapshot potencies and enqueue the spell application event.
+		 */
+		const onSpellConfirm = () => {
+			// actually deduct MP
+			// special cases like Flare/Despair should set their base MP to 0 and perform
+			// this deduction in their onCapture function
+			if (capturedManaCost > 0) {
+				this.resources.get(ResourceType.Mana).consume(capturedManaCost);
+			}
 
-				// actually deduct MP and UH (except some special ones like Despair, Flare and Flare Star that deduct resources in onCapture fn)
-				if (props.skillName !== SkillName.Flare && props.skillName !== SkillName.Despair && props.skillName !== SkillName.FlareStar) {
-					if (!(props.skillName===SkillName.Paradox && game.getIceStacks()>0)) {
-						game.resources.get(ResourceType.Mana).consume(capturedManaCost);
+			// potency
+			if (potency) {
+				potency.snapshotTime = this.getDisplayTime();
+				potency.modifiers = getPotencyModifiersFromResourceState(this.resources, skill.aspect);
+			}
+
+			// tincture
+			if (this.hasResourceAvailable(ResourceType.Tincture) && skill.potencyFn(this) > 0) {
+				node.addBuff(BuffType.Tincture);
+			}
+
+			// Perform additional side effects
+			skill.onConfirm(this, node);
+
+			// Enqueue effect application
+			this.addEvent(new Event(
+				skill.name + " applied",
+				skill.applicationDelay,
+				() => {
+					if (potency) {
+						controller.resolvePotency(potency);
 					}
+					skill.onApplication(this, node);
 				}
+			));
+		};
 
-				// potency
-				if (potency) {
-					potency.snapshotTime = game.getDisplayTime();
-					potency.modifiers = getPotencyModifiersFromResourceState(game.resources, skill.aspect);
-				}
-
-				// tincture
-				if (game.resources.get(ResourceType.Tincture).available(1) && skill.potencyFn(game) > 0) {
-					props.node.addBuff(BuffType.Tincture);
-				}
-
-				// ice spells: gain mana if in UI
-				if (skill.aspect === Aspect.Ice) {
-					game.gainUmbralMana(skill.applicationDelay);
-				}
-
-				let captureInfo: SkillCaptureCallbackInfo = {
-					capturedManaCost: capturedManaCost
-					//...
-				};
-				props.onCapture(captureInfo);
-
-				// effect application
-				game.addEvent(new Event(
-					skill.name + " applied",
-					skill.applicationDelay,
-					()=>{
-						if (potency) {
-							controller.resolvePotency(potency);
-						}
-						let applicationInfo: SkillApplicationCallbackInfo = {
-							//...
-						};
-						props.onApplication(applicationInfo);
-					}));
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		let instantCast = function(game: GameState, rsc?: Resource) {
-			if (rsc) rsc.consume(1);
-			takeEffect(game);
-
-			// recast
-			cd.useStack(game);
-
+		const isInstant = capturedCastTime === 0 || skill.consumeInstantResources(this, node);
+		if (isInstant) {
 			// animation lock
-			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(props.skillName));
+			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(skill.name));
+			// Immediately do confirmation (no need to validate again)
+			onSpellConfirm();
+		} else {
+			// movement lock
+			this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
+			// caster tax
+			this.resources.takeResourceLock(ResourceType.NotCasterTaxed, this.config.getAfterTaxCastTime(capturedCastTime));
+			const timeToConfirmation = capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime)
+			// Enqueue confirm event
+			this.addEvent(new Event(skill.name + " captured", timeToConfirmation, () => {
+				// TODO propagate error more cleanly
+				if (skill.validateAttempt(this)) {
+					onSpellConfirm();
+				} else {
+					controller.reportInterruption({
+						failNode: node,
+					});
+				}
+			}));
 		}
-
-		// Paradox made instant via Dawntrail
-		if (props.skillName === SkillName.Paradox || props.skillName === SkillName.UmbralSoul) {
-			instantCast(this, undefined);
-			return;
-		}
-
-		// Swiftcast
-		let swift = this.resources.get(ResourceType.Swiftcast);
-		if (swift.available(1)) {
-			swift.removeTimer();
-			instantCast(this, swift);
-			return;
-		}
-
-		// Triplecast charge
-		let triple = this.resources.get(ResourceType.Triplecast);
-		if (triple.available(1)) {
-			instantCast(this, triple);
-			if (!triple.available(1)) {
-				triple.removeTimer();
-			}
-			return;
-		}
-
-		// there are no triplecast charges. cast and apply effect
-
-		// movement lock
-		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
-
-		// (basically done casting) deduct MP, calc damage, queue damage
-		this.addEvent(new Event(skill.name + " captured", capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime), ()=>{
-			let success = takeEffect(this);
-			if (!success) {
-				controller.reportInterruption({
-					failNode: props.node
-				});
-			}
-		}));
-
 		// recast
 		cd.useStack(this);
-
-		// caster tax
-		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, this.config.getAfterTaxCastTime(capturedCastTime));
 	}
 
-	useInstantSkill(props: {
-		skillName: SkillName,
-		onCapture?: () => void,
-		onApplication?: () => void,
-		dealDamage: boolean,
-		node: ActionNode
-	}) {
-		console.assert(props.node);
-		let skill = this.skillsList.get(props.skillName);
+	/**
+	 * Attempt to use an ability. Assumes that resources for the ability are currently available,
+	 * i.e. `skill.validateAttempt` succeeded.
+	 *
+	 * Because abilities have no cast time, this function snapshots potencies and enqueues the
+	 * application event immediately.
+	 */
+	useAbility(skill: Ability<PlayerState>, node: ActionNode) {
+		console.assert(node);
 		let cd = this.cooldowns.get(skill.cdName);
-
-		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
-		if (llCovered && skill.cdName===ResourceType.cd_GCD) {
-			props.node.addBuff(BuffType.LeyLines);
-		}
 
 		// potency
 		const potencyNumber = skill.potencyFn(this);
 		let potency : Potency | undefined = undefined;
-		if (props.dealDamage) {
+		if (potencyNumber > 0) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
@@ -441,32 +394,30 @@ export abstract class GameState {
 				description: "",
 			});
 			potency.modifiers = getPotencyModifiersFromResourceState(this.resources, skill.aspect);
-			props.node.addPotency(potency);
+			node.addPotency(potency);
 		}
 
 		// tincture
-		if (this.resources.get(ResourceType.Tincture).available(1) && potencyNumber > 0) {
-			props.node.addBuff(BuffType.Tincture);
+		if (this.hasResourceAvailable(ResourceType.Tincture) && potencyNumber > 0) {
+			node.addBuff(BuffType.Tincture);
 		}
 
-		if (props.onCapture) props.onCapture();
+		skill.onConfirm(this, node);
 
-		let skillEvent = new Event(
-			skill.name + " captured",
+		this.addEvent(new Event(
+			skill.name + " applied",
 			skill.applicationDelay,
 			() => {
-				if (props.dealDamage && potency) controller.resolvePotency(potency);
-				if (props.onApplication) props.onApplication();
-			});
-		this.addEvent(skillEvent);
+				if (potency) controller.resolvePotency(potency);
+				skill.onApplication(this, node);
+			}
+		));
 
 		// recast
 		cd.useStack(this);
 
 		// animation lock
-		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(props.skillName));
-
-		return skillEvent;
+		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(skill.name));
 	}
 
 	#timeTillSkillAvailable(skillName: SkillName) {
@@ -521,17 +472,10 @@ export abstract class GameState {
 		let capturedManaCost = skill.manaCostFn(this);
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
 		let capturedCastTime = skill.kind === "weaponskill" || skill.kind === "spell" ? skill.castTimeFn(this) : 0;
-		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1)
-			|| this.resources.get(ResourceType.Swiftcast).available(1)
-			|| skillName===SkillName.Paradox
-			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)))
-			|| (skillName===SkillName.Xenoglossy && this.resources.get(ResourceType.Polyglot).available(1))
-			|| (skillName===SkillName.UmbralSoul && this.getIceStacks()>0); // lmfao why does this count as a spell
+		let instantCastAvailable = capturedCastTime === 0 || skill.kind === "ability" || skill.isInstantFn(this);
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
-		let enoughMana = capturedManaCost <= currentMana
-			|| (skillName===SkillName.Paradox && this.getIceStacks() > 0)
-			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)));
+		let enoughMana = capturedManaCost <= currentMana;
 		let reqsMet = skill.validateAttempt(this);
 		let skillUnlocked = this.config.level >= skill.unlockLevel;
 		let status = SkillReadyStatus.Ready;
@@ -588,7 +532,12 @@ export abstract class GameState {
 
 	useSkill(skillName: SkillName, node: ActionNode) {
 		let skill = this.skillsList.get(skillName);
-		skill.onConfirm(this, node);
+		// TODO implement weaponskills
+		if (skill.kind === "spell") {
+			this.useSpell(skill, node);
+		} else if (skill.kind === "ability") {
+			this.useAbility(skill, node);
+		}
 	}
 
 	getPartyBuffs(time: number) {
@@ -645,11 +594,6 @@ export abstract class GameState {
 		return this.job === ShellJob.BLM;
 	}
 }
-
-export const newGameState = (config: GameConfig): GameState => {
-	// TODO specialize
-	return new BLMState(config);
-};
 
 // TODO if we ever support multiple jobs running in parallel, then we will need to move a lot of
 // elements out onto per-player state.

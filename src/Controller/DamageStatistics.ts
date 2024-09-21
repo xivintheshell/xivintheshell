@@ -171,7 +171,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 	}
 	if (node.type === ActionType.Skill && node.skillName) {
 		if (AFUISkills.has(node.skillName)) {
-			console.assert(node.getPotencies().length > 0);
+			console.assert(node.getPotencies().length > 0, "no potencies for " + node.skillName);
 			// use the one that's not enochian or pot (then must be one of af123, ui123)
 			let mainPotency = node.getPotencies()[0];
 			res.basePotency = mainPotency.base;

@@ -141,14 +141,7 @@ export class BLMState extends GameState {
 			thunderhead.overrideTimer(this, duration);
 		} else { // there's currently no proc. gain one.
 			thunderhead.gain(1);
-			this.resources.addResourceEvent({
-				rscType: ResourceType.Thunderhead,
-				name: "drop thunderhead",
-				delay: duration,
-				fnOnRsc: (rsc: Resource) => {
-					rsc.consume(1);
-				}
-			});
+			this.enqueueResourceDrop(ResourceType.Thunderhead, duration);
 		}
 	}
 
@@ -211,9 +204,15 @@ export class BLMState extends GameState {
 			}));
 	}
 
-	captureManaCost(aspect: Aspect, baseManaCost: number) {
-		// TODO handle flare/despair MP here
+	captureManaCost(name: SkillName, aspect: Aspect, baseManaCost: number) {
+		// TODO handle flare/despair MP here instead of individual skills
 		let mod = StatsModifier.fromResourceState(this.resources);
+
+		if ((name === SkillName.Paradox && this.getIceStacks() > 0) ||
+			(name === SkillName.Fire3 && this.hasResourceAvailable(ResourceType.Firestarter))
+		) {
+			return 0;
+		}
 
 		if (aspect === Aspect.Fire) {
 			return baseManaCost * mod.manaCostFire;
@@ -235,7 +234,7 @@ export class BLMState extends GameState {
 		// Apply AF/UI multiplier after ley lines
 		const llAdjustedCastTime = this.config.adjustedCastTime(
 			baseCastTime,
-			this.resources.get(ResourceType.LeyLines).available(1) ? ResourceType.LeyLines : undefined
+			this.hasResourceAvailable(ResourceType.LeyLines) ? ResourceType.LeyLines : undefined
 		);
 		let mod = StatsModifier.fromResourceState(this.resources);
 
@@ -248,8 +247,7 @@ export class BLMState extends GameState {
 
 	hasEnochian() {
 		// lasts a teeny bit longer to allow simultaneous events catch its effect
-		let enochian = this.resources.get(ResourceType.Enochian);
-		return enochian.available(1);
+		return this.hasResourceAvailable(ResourceType.Enochian);
 	}
 
 	// falls off after 15s unless refreshed by AF / UI
@@ -318,25 +316,26 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 	const aspect = params.aspect ?? Aspect.Other;
 	let onConfirm: EffectFn<BLMState> = params.onConfirm ?? NO_EFFECT;
 	if (aspect === Aspect.Fire) {
+		// fire spells: attempt to consume umbral hearts
 		onConfirm = combineEffects(onConfirm, (state, node) => state.tryConsumeUH(name));
+	}
+	let onApplication: EffectFn<BLMState> = params.onApplication ?? NO_EFFECT;
+	if (aspect === Aspect.Ice) {
+		// ice spells: gain mana if in UI
+		onApplication = combineEffects(onApplication, (state, node) => state.gainUmbralMana());
 	}
 	return makeSpell(ShellJob.BLM, name, unlockLevel, {
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		aspect: aspect,
 		castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime ?? 0, aspect),
-		manaCost: (state) => state.captureManaCost(aspect, params.baseManaCost ?? 0),
+		manaCost: (state) => state.captureManaCost(name, aspect, params.baseManaCost ?? 0),
 		// TODO apply AFUI modifiers?
 		potency: (state) => params.basePotency ?? 0,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => (
-			// Paradox made instant via Dawntrail
-			(name === SkillName.UmbralSoul || name === SkillName.Paradox) ||
-			// Xenoglossy and Foul after lvl 80
-			(
-				((name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
-					name === SkillName.Xenoglossy)
-			) ||
+			// Foul after lvl 80
+			(name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
 			// F3P
 			(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter)) ||
 			// Swift
@@ -348,19 +347,11 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 			// The expressions here are very sensitive to order, as the short-circuiting logic determines 
 			// which buffs to consume first.
 			// Priority of instant cast buff consumption:
-			// 0. Always instant: Scathe (lol), Umbral Soul
-			// 1. Instant with specific resources: Paradox, Xeno/Foul, F3P, T3P (rip).
-			//    Do not consume para marker/polyglot yet here, since at lvl 70 Foul still consumes poly despite not being instant.
+			// 0. Always instant spells
+			// 1. Instant with specific resources: Foul above lvl 80, F3P
 			// 2. Swift
 			// 3. Triple
-
-			// Paradox made instant via Dawntrail
-			(name === SkillName.UmbralSoul || name === SkillName.Paradox) ||
-			// Xenoglossy and Foul after lvl 80; leave polyglot consumption for each skill's onConfirm
-			(
-				((name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
-					name === SkillName.Xenoglossy)
-			) ||
+			(name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
 			// F3P
 			(name === SkillName.Fire3 && state.tryConsumeResource(ResourceType.Firestarter)) ||
 			// Swift
@@ -369,7 +360,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 			state.tryConsumeResource(ResourceType.Triplecast)
 		},
 		onConfirm: onConfirm,
-		onApplication: params.onApplication,
+		onApplication: onApplication,
 	});
 };
 
@@ -524,7 +515,7 @@ const thunderConfirm = (skillName: SkillName.Thunder3 | SkillName.HighThunder) =
 		node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
 
 		// tincture
-		if (game.resources.get(ResourceType.Tincture).available(1)) {
+		if (game.hasResourceAvailable(ResourceType.Tincture)) {
 			node.addBuff(BuffType.Tincture);
 		}
 
@@ -692,7 +683,7 @@ makeGCD_BLM(SkillName.Foul, 70, {
 	baseManaCost: 0,
 	basePotency: 600,
 	applicationDelay: 1.158,
-	validateAttempt: (state) => state.resources.get(ResourceType.Polyglot).available(1),
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
 });
 
@@ -729,7 +720,7 @@ makeGCD_BLM(SkillName.Xenoglossy, 80, {
 	baseManaCost: 0,
 	basePotency: 880,
 	applicationDelay: 0.63,
-	validateAttempt: (state) => state.resources.get(ResourceType.Polyglot).available(1),
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
 });
 
@@ -798,11 +789,12 @@ makeAbility_BLM(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, {
 });
 
 makeGCD_BLM(SkillName.Paradox, 90, {
+	// Paradox made instant via Dawntrail
 	baseCastTime: 0,
 	baseManaCost: 1600,
 	basePotency: 520,
 	applicationDelay: 0.624,
-	validateAttempt: (state) => state.resources.get(ResourceType.Paradox).available(1),
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Paradox),
 	onConfirm: (state, node) => {
 		state.resources.get(ResourceType.Paradox).consume(1);
 		if (state.hasEnochian()) {
@@ -839,7 +831,7 @@ makeGCD_BLM(SkillName.FlareStar, 100, {
 	baseManaCost: 0,
 	basePotency: 400,
 	applicationDelay: 0.622,
-	validateAttempt: (state) => state.resources.get(ResourceType.AstralSoul).available(6),
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.AstralSoul, 6),
 	onConfirm: (state, node) => state.resources.get(ResourceType.AstralSoul).consume(6),
 });
 
@@ -853,3 +845,8 @@ makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
 		state.resources.get(ResourceType.LeyLines).enabled = true;
 	},
 });
+
+// TODO this function is kept here to avoid circular imports, but should probably be moved
+export function newGameState(config: GameConfig) {
+	return new BLMState(config);
+}

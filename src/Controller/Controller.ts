@@ -7,8 +7,8 @@ import {
 	ShellVersion,
 	TickMode
 } from "./Common";
-import {GameState, newGameState} from "../Game/GameState";
-import {BLMState} from "../Game/Jobs/BLM";
+import {GameState} from "../Game/GameState";
+import {newGameState, BLMState} from "../Game/Jobs/BLM";
 import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 // @ts-ignore
