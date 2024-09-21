@@ -306,3 +306,78 @@ it("has different F1 modifiers at different AF/UI states", testWithConfig({}, ()
 		},
 	]);
 }));
+
+
+it("accepts the standard aoe rotation", testWithConfig({}, () => {
+	[
+		SkillName.HighBlizzard2, // no eno
+		SkillName.Freeze, // UI3
+		SkillName.HighFire2, // UI3
+		// it's optimal for dps to skip these, but we're testing resource consumption here
+		SkillName.HighFire2, // AF3
+		SkillName.HighFire2, // AF3
+		// hard clip triplecast
+		SkillName.Triplecast,
+		SkillName.Flare, // AF3
+
+	].forEach(applySkill);
+	// wait for cast time + damage application
+	controller.step(4);
+	expect(checkEnochian()).toBeTruthy();
+	expect((controller.game as BLMState).resources.get(ResourceType.Mana).availableAmount()).toEqual(2380);
+	expect((controller.game as BLMState).resources.get(ResourceType.UmbralHeart).availableAmount()).toEqual(0);
+	[
+		SkillName.Flare, // AF3
+		SkillName.FlareStar, // Flare
+		SkillName.Manafont,
+		SkillName.Triplecast,
+		SkillName.Flare, // AF3
+		SkillName.Flare, // AF3
+		SkillName.FlareStar, // Flare
+	].forEach(applySkill);
+	controller.step(4);
+	expect(checkEnochian()).toBeTruthy();
+	expect((controller.game as BLMState).resources.get(ResourceType.Mana).availableAmount()).toEqual(0);
+	compareDamageTables([
+		{
+			skillName: SkillName.Flare,
+			displayedModifiers: [PotencyModifierType.AF3],
+			hitCount: 4,
+		},
+		{
+			skillName: SkillName.FlareStar,
+			displayedModifiers: [PotencyModifierType.AF3],
+			hitCount: 2,
+		},
+		{
+			skillName: SkillName.HighFire2,
+			displayedModifiers: [PotencyModifierType.AF3],
+			hitCount: 2,
+		},
+		{
+			skillName: SkillName.HighFire2,
+			displayedModifiers: [PotencyModifierType.UI3],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Freeze,
+			displayedModifiers: [PotencyModifierType.UI3],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.HighBlizzard2,
+			displayedModifiers: [],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Manafont,
+			displayedModifiers: [],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Triplecast,
+			displayedModifiers: [],
+			hitCount: 2,
+		},
+	]);
+}));
