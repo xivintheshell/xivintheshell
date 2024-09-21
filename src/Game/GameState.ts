@@ -276,7 +276,7 @@ export abstract class GameState {
 		let skill = this.skillsList.get(props.skillName) as Spell<PlayerState>;
 		console.assert(skill.kind === "spell");
 		let cd = this.cooldowns.get(skill.cdName);
-		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skill.aspect, skill.manaCostFn(this));
+		let capturedManaCost = skill.manaCostFn(this);
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
 		let capturedCastTime = skill.castTimeFn(this);
 		if (llCovered && skill.cdName===ResourceType.cd_GCD) {
@@ -301,17 +301,16 @@ export abstract class GameState {
 
 		let takeEffect = function(game: GameState) {
 			// TODO propagate error
-			let resourcesStillAvailable = skill.validateAttempt(game) === undefined;
+			let resourcesStillAvailable = skill.validateAttempt(game);
 			if (resourcesStillAvailable) {
 				// re-capture them here, since game state might've changed (say, AF/UI fell off)
-				[capturedManaCost, uhConsumption] = game.captureManaCostAndUHConsumption(skill.aspect, skill.manaCostFn(game));
+				capturedManaCost = skill.manaCostFn(game);
 
 				// actually deduct MP and UH (except some special ones like Despair, Flare and Flare Star that deduct resources in onCapture fn)
 				if (props.skillName !== SkillName.Flare && props.skillName !== SkillName.Despair && props.skillName !== SkillName.FlareStar) {
 					if (!(props.skillName===SkillName.Paradox && game.getIceStacks()>0)) {
 						game.resources.get(ResourceType.Mana).consume(capturedManaCost);
 					}
-					if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
 				}
 
 				// potency
@@ -491,18 +490,22 @@ export abstract class GameState {
 		return undefined;
 	}
 
+	hasResourceAvailable(rscType: ResourceType, atLeast?: number): boolean {
+		return this.resources.get(rscType).available(1);
+	}
+
 	enqueueResourceDrop(
 		rscType: ResourceType,
 		delay: number,
-		consumeAmount?: number,
+		toConsume?: number,
 	) {
-		const name = (consumeAmount === undefined ? "drop all " : `drop ${consumeAmount} `) + rscType;
+		const name = (toConsume === undefined ? "drop all " : `drop ${toConsume} `) + rscType;
 		this.resources.addResourceEvent({
 			rscType: rscType,
 			name: name,
 			delay: delay,
 			fnOnRsc: (rsc: Resource) => {
-				rsc.consume(consumeAmount ?? rsc.availableAmount());
+				rsc.consume(toConsume ?? rsc.availableAmount());
 			}
 		})
 	}
@@ -515,9 +518,9 @@ export abstract class GameState {
 	getSkillAvailabilityStatus(skillName: SkillName) {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
-		let [capturedManaCost] = skill.kind === "spell" ? this.captureManaCostAndUHConsumption(skill.aspect, skill.manaCostFn(this)) : [0,0];
+		let capturedManaCost = skill.manaCostFn(this);
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
-		let capturedCastTime = skill.castTimeFn(this);
+		let capturedCastTime = skill.kind === "weaponskill" || skill.kind === "spell" ? skill.castTimeFn(this) : 0;
 		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1)
 			|| this.resources.get(ResourceType.Swiftcast).available(1)
 			|| skillName===SkillName.Paradox
@@ -529,7 +532,7 @@ export abstract class GameState {
 		let enoughMana = capturedManaCost <= currentMana
 			|| (skillName===SkillName.Paradox && this.getIceStacks() > 0)
 			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)));
-		let reqsMet = skill.validateAttempt(this) !== undefined;
+		let reqsMet = skill.validateAttempt(this);
 		let skillUnlocked = this.config.level >= skill.unlockLevel;
 		let status = SkillReadyStatus.Ready;
 		if (!notBlocked) status = SkillReadyStatus.Blocked;

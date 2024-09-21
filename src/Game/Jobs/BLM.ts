@@ -7,6 +7,7 @@ import {ShellJob} from "../../Controller/Common";
 import {SkillName, BuffType, Aspect, ResourceType, ProcMode, WarningType} from "../Common";
 import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "../Potency";
 import {
+	combineEffects,
 	makeAbility,
 	makeSpell,
 	makeResourceAbility,
@@ -214,19 +215,13 @@ export class BLMState extends GameState {
 		// TODO handle flare/despair MP here
 		let mod = StatsModifier.fromResourceState(this.resources);
 
-		let manaCost;
-		let uhConsumption = 0;
-
 		if (aspect === Aspect.Fire) {
-			manaCost = baseManaCost * mod.manaCostFire;
+			return baseManaCost * mod.manaCostFire;
+		} else if (aspect === Aspect.Ice) {
+			return baseManaCost * mod.manaCostIce;
+		} else {
+			return baseManaCost;
 		}
-		else if (aspect === Aspect.Ice) {
-			manaCost = baseManaCost * mod.manaCostIce;
-		}
-		else {
-			manaCost = baseManaCost;
-		}
-		return manaCost;
 	}
 
 	// Attempt to consume MP for the given skill. Assumes the skill is fire-aspected.
@@ -322,6 +317,9 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 }>): Spell<BLMState> => {
 	const aspect = params.aspect ?? Aspect.Other;
 	let onConfirm: EffectFn<BLMState> = params.onConfirm ?? NO_EFFECT;
+	if (aspect === Aspect.Fire) {
+		onConfirm = combineEffects(onConfirm, (state, node) => state.tryConsumeUH(name));
+	}
 	return makeSpell(ShellJob.BLM, name, unlockLevel, {
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
@@ -332,6 +330,21 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 		potency: (state) => params.basePotency ?? 0,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => (
+			// Paradox made instant via Dawntrail
+			(name === SkillName.UmbralSoul || name === SkillName.Paradox) ||
+			// Xenoglossy and Foul after lvl 80
+			(
+				((name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
+					name === SkillName.Xenoglossy)
+			) ||
+			// F3P
+			(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter)) ||
+			// Swift
+			state.hasResourceAvailable(ResourceType.Swiftcast) ||
+			// Triple
+			state.hasResourceAvailable(ResourceType.Triplecast)
+		),
+		consumeInstantResources: (state) => {
 			// The expressions here are very sensitive to order, as the short-circuiting logic determines 
 			// which buffs to consume first.
 			// Priority of instant cast buff consumption:
@@ -343,7 +356,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 
 			// Paradox made instant via Dawntrail
 			(name === SkillName.UmbralSoul || name === SkillName.Paradox) ||
-			// Xenoglossy and Foul after lvl 80; consume polyglot if available
+			// Xenoglossy and Foul after lvl 80; leave polyglot consumption for each skill's onConfirm
 			(
 				((name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
 					name === SkillName.Xenoglossy)
@@ -354,7 +367,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 			state.tryConsumeResource(ResourceType.Swiftcast) ||
 			// Triple
 			state.tryConsumeResource(ResourceType.Triplecast)
-		),
+		},
 		onConfirm: onConfirm,
 		onApplication: params.onApplication,
 	});

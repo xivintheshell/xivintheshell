@@ -8,6 +8,7 @@ import {
 	TickMode
 } from "./Common";
 import {GameState, newGameState} from "../Game/GameState";
+import {BLMState} from "../Game/Jobs/BLM";
 import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 // @ts-ignore
@@ -600,8 +601,8 @@ class Controller {
 			mana: game.resources.get(ResourceType.Mana).availableAmount(),
 			timeTillNextManaTick: game.resources.timeTillReady(ResourceType.Mana),
 			enochianCountdown: enoCountdown,
-			astralFire: game.getFireStacks(),
-			umbralIce: game.getIceStacks(),
+			astralFire: (game as BLMState).getFireStacks(),
+			umbralIce: (game as BLMState).getIceStacks(),
 			umbralHearts: game.resources.get(ResourceType.UmbralHeart).availableAmount(),
 			paradox: game.resources.get(ResourceType.Paradox).availableAmount(),
 			astralSoul: game.resources.get(ResourceType.AstralSoul).availableAmount(),
@@ -781,8 +782,8 @@ class Controller {
 				&& !this.game.resources.get(ResourceType.Paradox).available(1))
 			{
 				// and vice versa
-				if (this.game.getFireStacks() > 0) skillName = SkillName.Fire;
-				else if (this.game.getIceStacks() > 0) skillName = SkillName.Blizzard;
+				if ((this.game as BLMState).getFireStacks() > 0) skillName = SkillName.Fire;
+				else if ((this.game as BLMState).getIceStacks() > 0) skillName = SkillName.Blizzard;
 			}
 			status = this.game.getSkillAvailabilityStatus(skillName);
 			this.lastAttemptedSkill = "";
@@ -813,8 +814,8 @@ class Controller {
 
 			if (!this.#bCalculatingHistoricalState) { // this block is run when NOT viewing historical state (aka run when receiving input)
 				let newStatus = this.game.getSkillAvailabilityStatus(skillName); // refresh to get re-captured recast time
-				let skillInfo = this.game.skillsList.get(skillName).info;
-				let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
+				let skill = this.game.skillsList.get(skillName);
+				let isGCD = skill.cdName === ResourceType.cd_GCD;
 				let isSpellCast = status.castTime > 0 && !status.instantCast;
 				let snapshotTime = isSpellCast ? status.castTime - GameConfig.getSlidecastWindow(status.castTime) : 0;
 				this.timeline.addElement({
