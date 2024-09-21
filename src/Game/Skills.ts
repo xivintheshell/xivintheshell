@@ -27,15 +27,16 @@ export type EffectFn<T> = (state: T, node: ActionNode) => void;
 export function NO_EFFECT<T extends PlayerState>(state: T, node: ActionNode) {};
 
 /**
- * Create a new EffectFn that performs f1 followed by f2.
+ * Create a new EffectFn that performs f1 followed by each function in fs.
  */
-export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, f2: EffectFn<T>): EffectFn<T> {
+export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, ...fs: Array<EffectFn<T>>): EffectFn<T> {
 	return (state: T, node: ActionNode) => {
 		f1(state, node);
-		f2(state, node);
+		for (const fn of fs) {
+			fn(state, node);
+		}
 	};
 }
-
 
 /**
  * A Skill represents an action that a player can take.
@@ -116,17 +117,6 @@ export type GCD<T extends PlayerState> = BaseSkill<T> & {
 	 * Determine whether or not this cast can be made instant, based on the current game state.
 	 */
 	readonly isInstantFn: IsInstantFn<T>;
-	/*
-	 * Consume any resource that would make this skill instant cast, and return true if the skill
-	 * is instant.
-	 *	
-	 * This is distinct from `isInstantFn` because the frontend needs a stateless function to determine
-	 * whether the next usage of any ability will be instant. This mutating function is needed
-	 * to encode resource consumption priorities, e.g. F3P should be used before swift/triplecast.
-	 *
-	 * Because this may mutate the state, this function must be called only ONCE per skill usage.
-	 */
-	readonly consumeInstantResources: EffectFn<T>;
 }
 
 export type Spell<T extends PlayerState> = GCD<T> & {
@@ -185,7 +175,6 @@ function fnify<T extends PlayerState>(arg?: number | ResourceCalculationFn<T>, d
  * - applicationDelay: 0
  * - validateAttempt: function always returning true (valid)
  * - isInstantFn: function always returning true
- * - consumeInstantResources: function consuming no resources and always returning true
  * - onConfirm: empty function
  * - onApplication: function returning a damage event if `basePotency` is a non-zero scalar, else empty list
  * 
@@ -204,7 +193,6 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	applicationDelay: number,
 	validateAttempt: ValidateAttemptFn<T>,
 	isInstantFn: IsInstantFn<T>,
-	consumeInstantResources: EffectFn<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 }>): Spell<T> {
@@ -226,7 +214,6 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		potencyFn: fnify(params.potency, 0),
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true),
-		consumeInstantResources: params.consumeInstantResources ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		// TODO encode damage event
 		onApplication: params.onApplication ?? NO_EFFECT,
@@ -314,21 +301,25 @@ export function makeResourceAbility<T extends PlayerState>(
 	// 2. A resource drop event after a duration, overriding an existing timer if it exists
 	const onApplication = combineEffects(
 		(state: T, node: ActionNode) => {
-			state.resources.get(params.rscType).gain(1);
-			// TODO tell scheduler to override existing drop event if necessary
+			const resource = state.resources.get(params.rscType);
 			const duration = params.duration;
 			const durationFn: ResourceCalculationFn<T> = (typeof duration === "number") ? ((state: T) => duration) : duration;
-			state.enqueueResourceDrop(
-				params.rscType,
-				durationFn(state),
-			);
+			// TODO automatically tell scheduler to override existing drop event if necessary
+			if (resource.available(1)) {
+				resource.overrideTimer(state, durationFn(state));
+			} else {
+				resource.gain(1);
+				state.enqueueResourceDrop(
+					params.rscType,
+					durationFn(state),
+				);
+			}
 		},
-		params?.onApplication ?? ((state: T, node: ActionNode) => []), 
+		params?.onApplication ?? NO_EFFECT, 
 	);
 	return makeAbility(jobs, name, unlockLevel, cdName, {
 		potency: params.potency,
 		applicationDelay: params.applicationDelay,
-		// TODO (state) => state.resources.get(cdName).available(1),
 		validateAttempt: params.validateAttempt,
 		onConfirm: params.onConfirm,
 		onApplication: onApplication,
@@ -340,8 +331,8 @@ export function makeResourceAbility<T extends PlayerState>(
 export class SkillsList<T extends PlayerState> {
 	job: ShellJob;
 
-	constructor(_state: GameState /* TODO remove */) {
-		this.job = ShellInfo.job;
+	constructor(state: GameState) {
+		this.job = state.job;
 	}
 
 	get(key: SkillName): Skill<T> {

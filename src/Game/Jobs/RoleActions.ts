@@ -1,6 +1,6 @@
 import {ShellJob} from "../../Controller/Common";
 import {SkillName, ResourceType} from "../Common";
-import {makeAbility, makeResourceAbility} from "../Skills";
+import {makeResourceAbility} from "../Skills";
 import {DoTBuff, EventTag} from "../Resources"
 import {Traits, TraitName} from "../Traits";
 

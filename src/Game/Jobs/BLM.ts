@@ -5,7 +5,7 @@ import {controller} from "../../Controller/Controller";
 import {ActionNode} from "../../Controller/Record";
 import {ShellJob} from "../../Controller/Common";
 import {SkillName, BuffType, Aspect, ResourceType, ProcMode, WarningType} from "../Common";
-import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "../Potency";
+import {getPotencyModifiersFromResourceState, Potency} from "../Potency";
 import {
 	combineEffects,
 	makeAbility,
@@ -21,10 +21,8 @@ import {
 } from "../Skills";
 import {Traits, TraitName} from "../Traits";
 import {PlayerState, GameState} from "../GameState";
-import {CoolDown, CoolDownState, DoTBuff, Event, Resource, ResourceState} from "../Resources"
+import {CoolDown, DoTBuff, Event, Resource} from "../Resources"
 import {GameConfig} from "../GameConfig";
-
-type RNG = any;
 
 // === JOB GAUGE AND STATE ===
 export class BLMState extends GameState {
@@ -83,10 +81,11 @@ export class BLMState extends GameState {
 			new CoolDown(ResourceType.cd_Tincture, 270, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		this.initializeTimers();
+		this.registerRecurringEvents();
 	}
 
 	registerRecurringEvents() {
+		super.registerRecurringEvents();
 		// thunder DoT tick
 		let recurringThunderTick = () => {
 			let thunder = this.resources.get(ResourceType.ThunderDoT) as DoTBuff;
@@ -296,37 +295,58 @@ export class BLMState extends GameState {
 // `autoDowngrade` (i.e. it replaces a previous ability on the hotbar), it will not have its own
 // slot and instead take the place of the downgrade ability.
 
-const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
-	autoUpgrade: SkillAutoReplace,
-	autoDowngrade: SkillAutoReplace,
-	aspect: Aspect,
+const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
+	autoUpgrade?: SkillAutoReplace,
+	autoDowngrade?: SkillAutoReplace,
+	aspect?: Aspect,
 	baseCastTime: number,
 	baseManaCost: number,
 	basePotency: number,
 	applicationDelay: number,
-	validateAttempt: ValidateAttemptFn<BLMState>,
-	onConfirm: EffectFn<BLMState>,
-	onApplication: EffectFn<BLMState>,
-}>): Spell<BLMState> => {
+	validateAttempt?: ValidateAttemptFn<BLMState>,
+	onConfirm?: EffectFn<BLMState>,
+	onApplication?: EffectFn<BLMState>,
+}): Spell<BLMState> => {
 	const aspect = params.aspect ?? Aspect.Other;
-	let onConfirm: EffectFn<BLMState> = params.onConfirm ?? NO_EFFECT;
-	if (aspect === Aspect.Fire && name !== SkillName.Despair) {
-		// fire spells: attempt to consume umbral hearts
-		onConfirm = combineEffects(onConfirm, (state, node) => state.tryConsumeResource(ResourceType.UmbralHeart));
-	}
-	let onApplication: EffectFn<BLMState> = params.onApplication ?? NO_EFFECT;
-	if (aspect === Aspect.Ice) {
-		// ice spells: gain mana if in UI
-		onApplication = combineEffects(onApplication, (state, node) => state.gainUmbralMana());
-	}
+	let onConfirm: EffectFn<BLMState> = combineEffects(
+		(state, node) => {
+			// Consume swift/triple before anything else happens.
+			// The code here is dependent on short-circuiting logic to consume the correct resources.
+			// Non-swift/triple resources are consumed separately because they have secondary
+			// implications on resource generation. However, they still need to be checked here
+			// to avoid improperly spending swift/triple on an already-instant spell.
+			params.baseCastTime === 0 ||
+			(name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
+			(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter)) ||
+			// Consume Swift before Triple.
+			state.tryConsumeResource(ResourceType.Swiftcast) ||
+			state.tryConsumeResource(ResourceType.Triplecast)
+		},
+		(state, node) => {
+			// put this before the spell's onConfirm to ensure F3P and other buffs aren't prematurely consumed
+			// fire spells: attempt to consume umbral hearts
+			if (aspect === Aspect.Fire && name !== SkillName.Despair && name !== SkillName.FlareStar &&
+				!(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter))) {
+				state.tryConsumeResource(ResourceType.UmbralHeart)
+			}
+			// ice spells: gain mana on spell application if in UI
+			// umbral mana amount snapshots the state at the cast confirm window,
+			// not the new UI level after the spell is cast
+			if (aspect === Aspect.Ice) {
+				state.gainUmbralMana(params.applicationDelay);
+			}
+		},
+		params.onConfirm ?? NO_EFFECT,
+	);
+	const onApplication: EffectFn<BLMState> = params.onApplication ?? NO_EFFECT;
 	return makeSpell(ShellJob.BLM, name, unlockLevel, {
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		aspect: aspect,
-		castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime ?? 0, aspect),
-		manaCost: (state) => state.captureManaCost(name, aspect, params.baseManaCost ?? 0),
+		castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime, aspect),
+		manaCost: (state) => state.captureManaCost(name, aspect, params.baseManaCost),
 		// TODO apply AFUI modifiers?
-		potency: (state) => params.basePotency ?? 0,
+		potency: (state) => params.basePotency,
 		validateAttempt: params.validateAttempt,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => (
@@ -339,22 +359,6 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: Partial<{
 			// Triple
 			state.hasResourceAvailable(ResourceType.Triplecast)
 		),
-		consumeInstantResources: (state) => {
-			// The expressions here are very sensitive to order, as the short-circuiting logic determines 
-			// which buffs to consume first.
-			// Priority of instant cast buff consumption:
-			// 0. Always instant spells
-			// 1. Instant with specific resources: Foul above lvl 80, F3P
-			// 2. Swift
-			// 3. Triple
-			(name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
-			// F3P
-			(name === SkillName.Fire3 && state.tryConsumeResource(ResourceType.Firestarter)) ||
-			// Swift
-			state.tryConsumeResource(ResourceType.Swiftcast) ||
-			// Triple
-			state.tryConsumeResource(ResourceType.Triplecast)
-		},
 		onConfirm: onConfirm,
 		onApplication: onApplication,
 	});
@@ -417,7 +421,6 @@ makeGCD_BLM(SkillName.Fire, 2, {
 	baseManaCost: 800,
 	basePotency: 180,
 	applicationDelay: 1.871,
-	// TODO make sure MP cost is figured out
 	onConfirm: (state, node) => {
 		// Refresh Enochian and gain a UI stack at the cast confirm window, not the damage application.
 		potentiallyGainFirestarter(state);
@@ -453,7 +456,6 @@ const applyThunderDoT = (game: PlayerState, node: ActionNode, skillName: SkillNa
 	} else {
 		thunder.gain(1);
 		controller.reportDotStart(game.getDisplayTime());
-		// TODO return this instead of using a side effect
 		game.resources.addResourceEvent({
 			rscType: ResourceType.ThunderDoT,
 			name: "drop thunder DoT",
@@ -507,7 +509,6 @@ const thunderConfirm = (skillName: SkillName.Thunder3 | SkillName.HighThunder) =
 	(game: PlayerState, node: ActionNode) => {
 		// potency
 		addThunderPotencies(game, node, skillName); // should call on capture
-		let onHitPotency = node.getPotencies()[0];
 		node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
 
 		// tincture
@@ -527,8 +528,10 @@ makeGCD_BLM(SkillName.Thunder3, 45, {
 	baseManaCost: 0,
 	basePotency: 120,
 	applicationDelay: 0.757, // Unknown damage application, copied from HT
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 	onConfirm: thunderConfirm(SkillName.Thunder3),
 	onApplication: (state, node) => {
+		// resolve the on-hit potency element (always the first of the node)
 		controller.resolvePotency(node.getPotencies()[0]);
 		applyThunderDoT(state, node, SkillName.Thunder3);
 	},
@@ -546,7 +549,7 @@ makeResourceAbility(ShellJob.BLM, SkillName.Manaward, 30, ResourceType.cd_Manawa
 // see screen recording: https://drive.google.com/file/d/1zGhU9egAKJ3PJiPVjuRBBMkKdxxHLS9b/view?usp=drive_link
 makeAbility_BLM(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
 	applicationDelay: 0.2, // delayed
-	validateAttempt: (state) => state.resources.get(ResourceType.AstralFire).availableAmount() > 0,
+	validateAttempt: (state) => state.getFireStacks() > 0,
 	onConfirm: (state, node) => {
 		state = state as BLMState;
 		state.resources.get(ResourceType.AstralFire).gain(3);
@@ -570,7 +573,7 @@ makeGCD_BLM(SkillName.Fire3, 35, {
 	basePotency: 280,
 	applicationDelay: 1.292,
 	onConfirm: (state, node) => {
-		// Firestarter consumption is handled in makeGCD_BLM
+		state.tryConsumeResource(ResourceType.Firestarter);
 		state.switchToAForUI(ResourceType.AstralFire, 3);
 		state.startOrRefreshEnochian();
 	},
@@ -690,6 +693,15 @@ makeGCD_BLM(SkillName.Despair, 72, {
 	basePotency: 350,
 	applicationDelay: 0.556,
 	validateAttempt: (state) => state.getFireStacks() > 0 && state.getMP() >= 800,
+	onConfirm: (state, node) => {
+		const mana = state.resources.get(ResourceType.Mana);
+		const availableMana = mana.availableAmount();
+		console.assert(availableMana >= 800, `tried to confirm despair at ${availableMana} MP`);
+		mana.consume(availableMana);
+		// +3 AF; refresh enochian
+		state.resources.get(ResourceType.AstralFire).gain(3);
+		state.startOrRefreshEnochian();
+	},
 });
 
 // Umbral Soul: immediate snapshot & UH gain; delayed MP gain
@@ -813,8 +825,10 @@ makeGCD_BLM(SkillName.HighThunder, 92, {
 	baseManaCost: 0,
 	basePotency: 150,
 	applicationDelay: 0.757,
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 	onConfirm: thunderConfirm(SkillName.HighThunder),
 	onApplication: (state, node) => {
+		// resolve the on-hit potency element (always the first of the node)
 		controller.resolvePotency(node.getPotencies()[0]);
 		applyThunderDoT(state, node, SkillName.HighThunder);
 	},

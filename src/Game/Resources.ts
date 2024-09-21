@@ -1,5 +1,5 @@
 import {Debug, ResourceType} from "./Common"
-import {PlayerState, GameState} from "./GameState";
+import {GameState} from "./GameState";
 import {ActionNode} from "../Controller/Record";
 import {BLMState} from "./Jobs/BLM";
 

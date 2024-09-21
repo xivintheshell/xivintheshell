@@ -1,4 +1,4 @@
-import {BuffType, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
+import {Aspect, BuffType, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
 import {
@@ -77,7 +77,6 @@ export abstract class GameState {
 		this.skillsList = new SkillsList(this);
 	}
 
-	abstract registerRecurringEvents(): void;
 
 	/**
 	 * Get mp tick, lucid tick, and class-specific recurring timers rolling.
@@ -86,7 +85,7 @@ export abstract class GameState {
 	 * have not yet initialized their resource/cooldown objects. Instead, all
 	 * sub-classes must explicitly call this at the end of their constructor.
 	 */
-	protected initializeTimers() {
+	protected registerRecurringEvents() {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
@@ -125,7 +124,8 @@ export abstract class GameState {
 			let lucid = this.resources.get(ResourceType.LucidDreaming) as DoTBuff;
 			if (lucid.available(1)) {
 				lucid.tickCount++;
-				if (!(this.isBLMState() && this.getFireStacks() === 0)) {
+				if (!(this.isBLMState() && this.getFireStacks() > 0)) {
+					// Block lucid ticks for BLM in fire
 					let mana = this.resources.get(ResourceType.Mana);
 					mana.gain(550);
 					let msg = "+550";
@@ -161,8 +161,6 @@ export abstract class GameState {
 		let firstLucidTickEvt = new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick);
 		firstLucidTickEvt.addTag(EventTag.LucidTick);
 		this.addEvent(firstLucidTickEvt);
-
-		this.registerRecurringEvents();
 	}
 
 	// advance game state by this much time
@@ -199,13 +197,7 @@ export abstract class GameState {
 				{
 					if (!e.canceled)
 					{
-						// TODO access node here
-						const effectResult = e.effectFn();
-						// TODO handle error case
-						// TODO check if any new events have a delay of 0
-						if (Array.isArray(effectResult)) {
-							newEventsToQueue.concat(effectResult);
-						}
+						e.effectFn();
 					}
 					executedEvents++;
 				}
@@ -286,7 +278,10 @@ export abstract class GameState {
 		// create potency node object (snapshotted buffs will populate on confirm)
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
-		if (potencyNumber > 0) {
+		// Potency object for DoT effects was already created separately
+		if (skill.aspect === Aspect.Lightning) {
+			potency = node.getPotencies()[0];
+		} else if (potencyNumber > 0) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
@@ -341,9 +336,8 @@ export abstract class GameState {
 			));
 		};
 
-		const isInstant = capturedCastTime === 0 || skill.consumeInstantResources(this, node);
+		const isInstant = capturedCastTime === 0 || skill.isInstantFn(this);
 		if (isInstant) {
-			// animation lock
 			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(skill.name));
 			// Immediately do confirmation (no need to validate again)
 			onSpellConfirm();
@@ -404,14 +398,19 @@ export abstract class GameState {
 
 		skill.onConfirm(this, node);
 
-		this.addEvent(new Event(
-			skill.name + " applied",
-			skill.applicationDelay,
-			() => {
-				if (potency) controller.resolvePotency(potency);
-				skill.onApplication(this, node);
-			}
-		));
+		if (skill.applicationDelay > 0) {
+			this.addEvent(new Event(
+				skill.name + " applied",
+				skill.applicationDelay,
+				() => {
+					if (potency) controller.resolvePotency(potency);
+					skill.onApplication(this, node);
+				}
+			));
+		} else {
+			if (potency) controller.resolvePotency(potency);
+			skill.onApplication(this, node);
+		}
 
 		// recast
 		cd.useStack(this);
