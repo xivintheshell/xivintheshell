@@ -77,6 +77,7 @@ class Controller {
 	#bInterrupted: boolean = false;
 	#bCalculatingHistoricalState: boolean = false;
 
+	#skipViewUpdates: boolean = false;
 	displayingUpToDateGameState = true;
 
 	constructor() {
@@ -406,21 +407,25 @@ class Controller {
 	}
 
 	#updateTotalDamageStats() {
-		let damageStats = calculateDamageStats({
-			tinctureBuffPercentage: this.#tinctureBuffPercentage,
-			lastDamageApplicationTime: this.#lastDamageApplicationTime
-		});
-		// display
-		updateDamageStats(damageStats);
+		if (!this.#skipViewUpdates) {
+			let damageStats = calculateDamageStats({
+				tinctureBuffPercentage: this.#tinctureBuffPercentage,
+				lastDamageApplicationTime: this.#lastDamageApplicationTime
+			});
+			// display
+			updateDamageStats(damageStats);
+		}
 	}
 
 	#updateSelectedDamageStats() {
-		let stats = calculateSelectedStats({
-			tinctureBuffPercentage: this.#tinctureBuffPercentage,
-			lastDamageApplicationTime: this.#lastDamageApplicationTime
-		});
-		// display
-		updateSelectedStats(stats);
+		if (!this.#skipViewUpdates) {
+			let stats = calculateSelectedStats({
+				tinctureBuffPercentage: this.#tinctureBuffPercentage,
+				lastDamageApplicationTime: this.#lastDamageApplicationTime
+			});
+			// display
+			updateSelectedStats(stats);
+		}
 	}
 
 	getTincturePotencyMultiplier() {
@@ -837,7 +842,10 @@ class Controller {
 				});
 			}
 
-			refreshTimelineEditor();
+			// If this was called within a line load, do not refresh the timeline view
+			if (!this.#skipViewUpdates) {
+				refreshTimelineEditor();
+			}
 		}
 		return status;
 	}
@@ -866,6 +874,8 @@ class Controller {
 		firstInvalidNode: ActionNode | undefined,
 		invalidReason: SkillReadyStatus | undefined
 	} {
+		// Prevent UI updates from occuring until the final action
+		this.#skipViewUpdates = true;
 		// default input, if not provided
 		if (props.removeTrailingIdleTime===undefined) props.removeTrailingIdleTime = false;
 		if (props.maxReplayTime===undefined) props.maxReplayTime = -1;
@@ -879,12 +889,16 @@ class Controller {
 		}
 
 		let itr = props.line.getFirstAction();
-		if (!itr) return {
-			success: true,
-			firstAddedNode: undefined,
-			firstInvalidNode: undefined,
-			invalidReason: undefined
-		};
+		if (!itr) {
+			// Empty line, no need to call re-render here
+			this.#skipViewUpdates = false;
+			return {
+				success: true,
+				firstAddedNode: undefined,
+				firstInvalidNode: undefined,
+				invalidReason: undefined
+			};
+		}
 
 		const oldTail = this.record.getLastAction();
 		let firstAddedNode = undefined;
@@ -1019,6 +1033,9 @@ class Controller {
 			}
 
 			if (lastIter) {
+				// Re-enable UI updates
+				this.#skipViewUpdates = false;
+				this.updateAllDisplay();
 				return {
 					success: false,
 					firstAddedNode: firstAddedNode,
@@ -1030,6 +1047,9 @@ class Controller {
 			}
 
 		}
+		// Re-enable UI updates
+		this.#skipViewUpdates = false;
+		this.updateAllDisplay();
 		return {
 			success: true,
 			firstAddedNode: firstAddedNode,
