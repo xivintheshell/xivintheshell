@@ -71,7 +71,58 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.HighThunder, "高暴雷"],
 	[SkillName.Sprint, "疾跑"],
 	[SkillName.Retrace, "Retrace"], // todo: when there's a common translation in the community
-	[SkillName.FlareStar, "耀星"]
+	[SkillName.FlareStar, "耀星"],
+
+	// picto stuff
+	[SkillName.FireInRed, "火炎之红"],
+	[SkillName.AeroInGreen, "疾风之绿"],
+	[SkillName.WaterInBlue, "流水之蓝"],
+	[SkillName.Fire2InRed, "烈炎之红"],
+	[SkillName.Aero2InGreen, "疾风之绿"],
+	[SkillName.Water2InBlue, "激水之蓝"],
+	[SkillName.BlizzardInCyan, "冰结之蓝青"],
+	[SkillName.StoneInYellow, "飞石之纯黄"],
+	[SkillName.ThunderInMagenta, "闪雷之品红"],
+	[SkillName.Blizzard2InCyan, "冰冻之蓝青"],
+	[SkillName.Stone2InYellow, "坚石之纯黄"],
+	[SkillName.Thunder2InMagenta, "震雷之品红"],
+	[SkillName.HolyInWhite , "神圣之白"],
+	[SkillName.CometInBlack, "彗星之黑"],
+	[SkillName.RainbowDrip , "彩虹点滴"],
+	[SkillName.StarPrism, "天星棱光"],
+
+	[SkillName.TemperaCoat, "坦培拉涂层"],
+	[SkillName.TemperaGrassa, "油性坦培拉涂层"],
+	[SkillName.TemperaCoatPop, "点掉坦培拉涂层"],
+	[SkillName.TemperaGrassaPop, "点掉油性坦培拉涂层"],
+	[SkillName.Smudge, "速涂"],
+	[SkillName.SubtractivePalette, "减色混合"],
+
+	[SkillName.CreatureMotif, "动物彩绘"],
+	[SkillName.PomMotif, "绒球彩绘"],
+	[SkillName.WingMotif, "翅膀彩绘"],
+	[SkillName.ClawMotif, "兽爪彩绘"],
+	[SkillName.MawMotif, "尖牙彩绘"],
+	[SkillName.LivingMuse, "动物构想"],
+	[SkillName.PomMuse, "绒球构想"],
+	[SkillName.WingedMuse, "翅膀构想"],
+	[SkillName.ClawedMuse, "兽爪构想"],
+	[SkillName.FangedMuse, "尖牙构想"],
+	[SkillName.MogOfTheAges, "莫古力激流"],
+	[SkillName.RetributionOfTheMadeen, "马蒂恩惩罚"],
+
+	[SkillName.WeaponMotif, "武器彩绘"],
+	[SkillName.SteelMuse, "武器构想"],
+	[SkillName.HammerMotif, "重锤彩绘"],
+	[SkillName.StrikingMuse, "重锤构想"],
+	[SkillName.HammerStamp, "重锤敲章"],
+	[SkillName.HammerBrush, "重锤掠刷"],
+	[SkillName.PolishingHammer, "重锤抛光"],
+
+	[SkillName.LandscapeMotif, "风景彩绘"],
+	[SkillName.ScenicMuse, "风景构想"],
+	[SkillName.StarrySkyMotif, "星空彩绘"],
+	[SkillName.StarryMuse, "星空构想"]
 ]);
 
 const skillsJa = new Map<SkillName, string>([
@@ -143,7 +194,7 @@ const buffsZh = new Map<BuffType, string>([
 	[BuffType.RadiantFinale3, "光明神的最终乐章3"],
 	[BuffType.SearingLight, "灼热之光"],
 	[BuffType.StandardFinish, "标准舞步结束"],
-	[BuffType.StarryMuse, "绘出星空"],
+	[BuffType.StarryMuse, "星空构想"],
 	[BuffType.TechnicalFinish, "技巧舞步结束"],
 	[BuffType.WanderersMinuet, "放浪神的小步舞曲"],
 ]);
