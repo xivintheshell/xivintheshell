@@ -160,7 +160,7 @@ export function IntroSection(props: {}) {
 			content={<div>
 				<div className="paragraph">{localize({
 					en: "This is a FFXIV pictomancer simulator & rotation planner.",
-					zh: "是个画图魔（？我不知道怎么翻译）模拟器/排轴工具。",
+					zh: "是个绘灵法师模拟器/排轴工具。",
 					ja: "FF14 ピクトマンサーのスキルローテーションシミュレーターです。"})}
 				</div>
 				<div className="paragraph">

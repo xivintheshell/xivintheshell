@@ -530,7 +530,15 @@ function ResourcesDisplay(props) {
 				en: "portrait",
 			})
 		}
-		text={resources.portrait === 0 ? "/" : (resources.portrait === 1 ? "moogle" : "madeen")}
+		text={resources.portrait === 0 ? "/" : (
+			resources.portrait === 1 ? localize({
+				en: "moogle",
+				zh: "莫古力",
+			}) : localize({
+				en: "madeen",
+				zh: "马蒂恩",
+			})
+		)}
 	/>;
 	let depictions = <ResourceText
 		name={
@@ -540,9 +548,21 @@ function ResourcesDisplay(props) {
 		}
 		text={
 			resources.depictions === 0 ? "/" :
-				(resources.depictions === 1 ? "pom" :
-					(resources.depictions === 2 ? "wing" :
-						(resources.depictions === 3 ? "fang" : "maw")))
+				(resources.depictions === 1 ? localize({
+					en: "pom",
+					zh: "绒球",
+				}) :
+					(resources.depictions === 2 ? localize({
+						en: "wing",
+						zh: "翅膀",
+					}) :
+						(resources.depictions === 3 ? localize({
+							en: "fang",
+							zh: "兽爪",
+						}) : localize({
+							en: "maw",
+							zh: "尖牙",
+						}))))
 		}
 	/>;
 

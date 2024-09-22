@@ -1,5 +1,11 @@
 [
     {
+        "date": "9/22/24",
+        "changes": [
+            "Add Chinese skill translations from yuyuka"
+        ]
+    },
+    {
         "date": "9/21/24",
         "changes": [
             "[cherry-pick] Greatly reduce time needed to load a line"
