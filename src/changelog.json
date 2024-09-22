@@ -1,5 +1,11 @@
 [
 	{
+		"date": "9/21/24",
+		"changes": [
+			"Greatly reduced time needed to load a line"
+		]
+	},
+	{
 		"date": "9/10/24",
 		"changes": [
 			"Lines preset: when using a line created at a different level, adapt to current level by auto-converting equivalent skills if possible; throw an error otherwise"
