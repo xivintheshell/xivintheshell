@@ -19,8 +19,9 @@ export class LoadSave extends React.Component {
 				let fileToLoad = cur.files[0];
 				loadFromFile(fileToLoad, (content: Fixme)=>{
 					if (content.fileType === FileType.Record) {
+						// loadBattleRecordFromFile calls render methods, so no need to explicily
+						// invoke updateAllDisplay here
 						controller.loadBattleRecordFromFile(content);
-						controller.updateAllDisplay();
 						controller.autoSave();
 					} else {
 						window.alert("wrong file type '" + content.fileType + "'.");
