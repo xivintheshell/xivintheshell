@@ -1,5 +1,11 @@
 [
     {
+        "date": "9/21/24",
+        "changes": [
+            "[cherry-pick] Greatly reduce time needed to load a line"
+        ]
+    },
+    {
         "date": "9/8/24",
         "changes": [
             "Fix incorrect potencies from trait syncing (thanks miyehn and yuyuka)"
