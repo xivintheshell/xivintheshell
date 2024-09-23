@@ -1,6 +1,5 @@
 import {FileType, getCachedValue, setCachedValue} from "./Common";
 import {ActionNode, Line} from "./Record";
-// @ts-ignore
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 
 type Fixme = any;

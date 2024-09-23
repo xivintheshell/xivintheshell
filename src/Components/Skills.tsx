@@ -1,5 +1,5 @@
 import React, {FormEvent, FormEventHandler} from 'react'
-import {Clickable, ContentNode, Help, parseTime} from "./Common";
+import {Clickable, ContentNode, Help, parseTime, ValueChangeEvent} from "./Common";
 import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {ShellInfo} from "../Controller/Common";
@@ -209,8 +209,6 @@ enum WaitSince {
 	Now = "Now",
 	LastSkill = "LastSkill"
 }
-
-type ValueChangeEvent = React.ChangeEvent<{value: string}>;
 
 export type SkillButtonViewInfo = {
 	skillName: SkillName,

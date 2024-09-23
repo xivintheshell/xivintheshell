@@ -10,11 +10,8 @@ import {
 import {GameState} from "../Game/GameState";
 import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
-// @ts-ignore
 import {updateStatusDisplay} from "../Components/StatusDisplay";
-// @ts-ignore
 import {updateSkillButtons} from "../Components/Skills";
-// @ts-ignore
 import {updateConfigDisplay} from "../Components/PlaybackControl"
 import {setHistorical, setRealTime} from "../Components/Main";
 import {ElemType, MAX_TIMELINE_SLOTS, Timeline} from "./Timeline"

@@ -2,7 +2,6 @@ import React from 'react'
 import {Clickable, Expandable, FileFormat, Input, LoadJsonFromFileOrUrl, SaveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType, ReplayMode} from "../Controller/Common";
-// @ts-ignore
 import {skillIcons} from "./Skills";
 import {ActionType, Line} from "../Controller/Record";
 import {getCurrentThemeColors} from "./ColorTheme";

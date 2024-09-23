@@ -1,10 +1,7 @@
 import React, {CSSProperties} from 'react';
 import {Timeline, updateTimelineView} from "./Timeline";
-// @ts-ignore
 import { SkillsWindow } from "./Skills";
-// @ts-ignore
 import { Config, TimeControl } from "./PlaybackControl";
-// @ts-ignore
 import { StatusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import 'react-tabs/style/react-tabs.css';

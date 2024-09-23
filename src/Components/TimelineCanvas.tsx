@@ -15,7 +15,6 @@ import {
 } from "../Controller/Timeline";
 import {StaticFn} from "./Common";
 import {BuffType, ResourceType, SkillName, WarningType} from "../Game/Common";
-// @ts-ignore
 import {skillIconImages} from "./Skills";
 import {buffIconImages} from "./Buffs";
 import {controller} from "../Controller/Controller";

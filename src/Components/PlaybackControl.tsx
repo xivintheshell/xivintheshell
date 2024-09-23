@@ -1,14 +1,18 @@
-import React from 'react';
+import React, {MouseEventHandler} from 'react';
 import {controller} from '../Controller/Controller'
-import {ButtonIndicator, Clickable, Expandable, Help, Input} from "./Common";
-import {getCachedValue, setCachedValue, ShellVersion, TickMode} from "../Controller/Common";
+import {ButtonIndicator, Clickable, Expandable, Help, Input, ValueChangeEvent} from "./Common";
+import {getCachedValue, setCachedValue, ShellInfo, ShellVersion, TickMode} from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
-import {resourceInfos} from "../Game/Resources";
+import {resourceInfos, ResourceOrCoolDownInfo, ResourceOverrideData} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
-import {XIVMath} from '../Game/XIVMath';
+import {SerializedConfig} from "../Game/GameConfig";
+import {XIVMath} from "../Game/XIVMath";
+import {BLMState} from "../Game/Jobs/BLM";
 
-function getTableStyle(bgHighContraxtColor) {
+export let updateConfigDisplay = (config: SerializedConfig)=>{};
+
+function getTableStyle(bgHighContraxtColor: string) {
 	return `
 		table {
 			border-collapse: collapse;
@@ -23,11 +27,177 @@ function getTableStyle(bgHighContraxtColor) {
 	`;
 }
 
+// helper that prob won't be used elsewhere
+function getTaxPreview(level: LevelSync, baseCastTime: number, spsStr: string, fpsStr: string) {
+	let sps = parseFloat(spsStr);
+	let fps = parseFloat(fpsStr);
+	if (isNaN(sps) || isNaN(fps)) {
+		return "n/a";
+	}
+	let adjustedCastTime = XIVMath.preTaxCastTime(level, sps, baseCastTime, false);
+	return (XIVMath.afterFpsTax(fps, adjustedCastTime) - adjustedCastTime + XIVMath.afterFpsTax(fps, FIXED_BASE_CASTER_TAX)).toFixed(3);
+}
+
+// key, rscType, rscInfo
+export function ResourceOverrideDisplay(props: {
+	override: ResourceOverrideData,
+	rscInfo: ResourceOrCoolDownInfo,
+	deleteFn: (rsc: ResourceType) => void,
+}) {
+	let str: string = "";
+	if (props.rscInfo.isCoolDown) {
+		str = props.override.type + " full in " + props.override.timeTillFullOrDrop + "s";
+	} else {
+		str = props.override.type;
+		if (props.override.type === ResourceType.LeyLines) str += " (" + (props.override.effectOrTimerEnabled ? "enabled" : "disabled") + ")";
+		if (props.override.type === ResourceType.Enochian) str += " (" + (props.override.effectOrTimerEnabled ? "timer enabled" : "timer disabled") + ")";
+		if (props.rscInfo.maxValue > 1) str += " (amount: " + props.override.stacks + ")";
+		if (props.rscInfo.maxTimeout >= 0) {
+			if (props.override.type === ResourceType.Polyglot) {
+				if (props.override.timeTillFullOrDrop > 0) str += " next stack ready in " + props.override.timeTillFullOrDrop + "s";
+			} else {
+				if (props.override.type !== ResourceType.Enochian || props.override.effectOrTimerEnabled) {
+					str += " drops in " + props.override.timeTillFullOrDrop + "s";
+				}
+			}
+		}
+	}
+	str += " ";
+	return <div style={{marginTop: 10, color: "mediumpurple"}}>
+		{str}
+		<Clickable content="[x]" onClickFn={e=>{ props.deleteFn(props.override.type); }}/>
+	</div>;
+}
+
+export function ConfigSummary(props: {}) {
+	let gcd = controller.gameConfig.adjustedGCD(false);
+	let gcdAfterTax = controller.gameConfig.getAfterTaxGCD(gcd).toFixed(3);
+	let castTimesTableDesc = localize({
+		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
+		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节"
+	});
+	let preTaxFn = (t: number) => { return controller.gameConfig.adjustedCastTime(t, false).toFixed(3); }
+	let afterTaxFn = (t: number) => {
+		let preTax = controller.gameConfig.adjustedCastTime(t, false);
+		return controller.gameConfig.getAfterTaxCastTime(preTax).toFixed(3);
+	};
+	let castTimesChart =<div>
+		<style>{getTableStyle(getCurrentThemeColors().bgHighContrast)}</style>
+		<table>
+			<tbody>
+			<tr>
+				<th>{localize({en: "Base", zh: "基准"})}</th>
+				<th>{localize({en: "Pre-tax", zh: "税前"})}</th>
+				<th>{localize({en: "After-tax", zh: "税后"})}</th>
+			</tr>
+			<tr>
+				<td>2.5</td>
+				<td>{preTaxFn(2.5)}</td>
+				<td>{afterTaxFn(2.5)}</td>
+			</tr>
+			<tr>
+				<td>2.8</td>
+				<td>{preTaxFn(2.8)}</td>
+				<td>{afterTaxFn(2.8)}</td>
+			</tr>
+			<tr>
+				<td>3.0</td>
+				<td>{preTaxFn(3.0)}</td>
+				<td>{afterTaxFn(3.0)}</td>
+			</tr>
+			<tr>
+				<td>3.5</td>
+				<td>{preTaxFn(3.5)}</td>
+				<td>{afterTaxFn(3.5)}</td>
+			</tr>
+			<tr>
+				<td>4.0</td>
+				<td>{preTaxFn(4.0)}</td>
+				<td>{afterTaxFn(4.0)}</td>
+			</tr>
+			</tbody>
+		</table>
+	</div>
+	let lucidTickOffset = controller.game.lucidTickOffset.toFixed(3);
+	let lucidOffsetDesc = localize({
+		en: "the random time offset of lucid dreaming ticks relative to mp ticks",
+		zh: "醒梦buff期间，每次跳蓝后多久跳醒梦（由随机种子决定）"
+	});
+	// TODO specialize for BLM
+	// TODO (revisit): double check this forced cast
+	let thunderTickOffset = (controller.game.jobState as BLMState).thunderTickOffset.toFixed(3);
+	let thunderOffsetDesc = localize({
+		en: "the random time offset of thunder DoT ticks relative to mp ticks",
+		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）"
+	});
+	let procMode = controller.gameConfig.procMode;
+	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
+	const legacyCasterTax = controller.gameConfig.legacy_casterTax;
+	let excerpt = localize({
+		en: `WARNING: this record was created in an earlier version of BLM in the Shell and uses the deprecated caster tax of ${legacyCasterTax}s instead of calculating from your FPS input below. Hover for details: `,
+		zh: `警告：此时间轴文件创建于一个更早版本的排轴器，因此计算读条时间时使用的是当时手动输入的读条税${legacyCasterTax}秒（现已过时），而非由下方的“帧率”和“读条时间修正”计算得来。更多信息：`
+	});
+	let warningColor = getCurrentThemeColors().warning;
+	let blurb = localize({
+		en: <div>
+			<div className={"paragraph"}>
+				The caster tax config is now replaced by 0.1s + FPS tax and is more precise.
+				You can read more about FPS tax in About this tool/Implementation notes.
+			</div>
+			<div className={"paragraph"} style={{color: warningColor}}>
+				You are strongly encouraged to create a new record (in another timeline slot or from 'apply and reset') and migrate your fight plan.
+				Support for loading legacy files might drop in the future.
+			</div>
+		</div>,
+		zh: <div>
+			<div className={"paragraph"}>
+				现在的“读条税”由固定的0.1s加自动计算的帧率税构成，模拟结果也更精确。有关帧率税的更多信息详见 关于/实现细节。
+			</div>
+			<div className={"paragraph"} style={{color: warningColor}}>
+				排轴器今后的更新可能会导致无法加载过时的文件，所以强烈建议将此时间轴迁移到一个新建的存档中（添加时间轴，或者应用并重置时间轴）。
+			</div>
+		</div>
+	});
+	let legacyCasterTaxBlurb = <div className={"paragraph"} style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={blurb}/></div>;
+	return <div>
+		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
+		{localize({en: "Displayed GCD", zh: "游戏内显示的GCD"})}: {gcd}&nbsp;
+		{
+			controller.gameConfig.shellVersion >= ShellVersion.FpsTax ? <Help topic={"displayedGcd"} content={
+				localize({
+					en: `Measured average GCD should be ${gcdAfterTax} due to FPS tax`,
+					zh: `由于帧率税的影响，测量得到的平均GCD为${gcdAfterTax}`
+				})
+			}/> : undefined
+		}
+		<Expandable
+			title={"Cast times table"}
+			titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
+			defaultShow={true}
+			content={castTimesChart}/>
+		{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
+		<br/>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
+		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
+		{numOverrides === 0 ? undefined : <span style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</span>}
+	</div>
+}
+
+type TimeControlState = {
+	timeScale: number,
+	tickMode: TickMode
+}
+
 export class TimeControl extends React.Component {
-	constructor(props) {
+	state: TimeControlState;
+	setTickMode: (e: ValueChangeEvent) => void;
+	setTimeScale: (s: string) => void;
+	loadSettings: () => TimeControlState | undefined;
+	saveSettings: (settings: TimeControlState) => void;
+
+	constructor(props: {}) {
 		super(props);
 
-		this.saveSettings = (settings)=>{
+		this.saveSettings = (settings: TimeControlState)=>{
 			let str = JSON.stringify({
 				tickMode: settings.tickMode,
 				timeScale: settings.timeScale
@@ -38,13 +208,13 @@ export class TimeControl extends React.Component {
 		this.loadSettings = ()=>{
 			let str = getCachedValue("playbackSettings");
 			if (str) {
-				let settings = JSON.parse(str);
+				let settings: TimeControlState = JSON.parse(str);
 				return settings;
 			}
 			return undefined;
 		}
 
-		this.setTickMode = ((e)=>{
+		this.setTickMode = ((e: ValueChangeEvent)=>{
 			if (!e || !e.target || isNaN(parseInt(e.target.value))) return;
 			this.setState({tickMode: parseInt(e.target.value)});
 			let numVal = parseInt(e.target.value);
@@ -60,7 +230,7 @@ export class TimeControl extends React.Component {
 			}
 		});
 
-		this.setTimeScale = ((val)=>{
+		this.setTimeScale = ((val: string)=>{
 			this.setState({timeScale: val});
 			let numVal = parseFloat(val);
 			if (!isNaN(numVal)) {
@@ -92,7 +262,7 @@ export class TimeControl extends React.Component {
 		controller.setTimeControlSettings({tickMode: this.state.tickMode, timeScale: this.state.timeScale});
 	}
 	render() {
-		let radioStyle = {
+		let radioStyle: React.CSSProperties = {
 			position: "relative",
 			top: 3,
 			marginRight: "0.25em"
@@ -149,7 +319,7 @@ export class TimeControl extends React.Component {
 					</div>
 				}/><br/>
 			</div>
-			<Input defaultValue={this.state.timeScale} description={<span>{localize({en: "time scale ", zh: "倍速 "})}<Help topic={"timeScale"} content={
+			<Input defaultValue={`${this.state.timeScale}`} description={<span>{localize({en: "time scale ", zh: "倍速 "})}<Help topic={"timeScale"} content={
 				<div>{localize({
 					en: "rate at which game time advances automatically (aka when in real-time)",
 					zh: "战斗时间自动前进的速度"})}</div>
@@ -158,196 +328,85 @@ export class TimeControl extends React.Component {
 	}
 }
 
-function ConfigSummary(props) {
-	let gcd = controller.gameConfig.adjustedGCD(false);
-	let gcdAfterTax = controller.gameConfig.getAfterTaxGCD(gcd).toFixed(3);
-	let castTimesTableDesc = localize({
-		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
-		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节"
-	});
-	let preTaxFn = t => { return controller.gameConfig.adjustedCastTime(t, false).toFixed(3); }
-	let afterTaxFn = t => {
-		let preTax = controller.gameConfig.adjustedCastTime(t, false);
-		return controller.gameConfig.getAfterTaxCastTime(preTax).toFixed(3);
-	};
-	let castTimesChart =<div>
-		<style>{getTableStyle(getCurrentThemeColors().bgHighContrast)}</style>
-		<table>
-			<tbody>
-			<tr>
-				<th>{localize({en: "Base", zh: "基准"})}</th>
-				<th>{localize({en: "Pre-tax", zh: "税前"})}</th>
-				<th>{localize({en: "After-tax", zh: "税后"})}</th>
-			</tr>
-			<tr>
-				<td>2.5</td>
-				<td>{preTaxFn(2.5)}</td>
-				<td>{afterTaxFn(2.5)}</td>
-			</tr>
-			<tr>
-				<td>2.8</td>
-				<td>{preTaxFn(2.8)}</td>
-				<td>{afterTaxFn(2.8)}</td>
-			</tr>
-			<tr>
-				<td>3.0</td>
-				<td>{preTaxFn(3.0)}</td>
-				<td>{afterTaxFn(3.0)}</td>
-			</tr>
-			<tr>
-				<td>3.5</td>
-				<td>{preTaxFn(3.5)}</td>
-				<td>{afterTaxFn(3.5)}</td>
-			</tr>
-			<tr>
-				<td>4.0</td>
-				<td>{preTaxFn(4.0)}</td>
-				<td>{afterTaxFn(4.0)}</td>
-			</tr>
-			</tbody>
-		</table>
-	</div>
-	let lucidTickOffset = controller.game.lucidTickOffset.toFixed(3);
-	let lucidOffsetDesc = localize({
-		en: "the random time offset of lucid dreaming ticks relative to mp ticks",
-		zh: "醒梦buff期间，每次跳蓝后多久跳醒梦（由随机种子决定）"
-	});
-	// TODO specialize for BLM
-	let thunderTickOffset = controller.game.jobState.thunderTickOffset.toFixed(3);
-	let thunderOffsetDesc = localize({
-		en: "the random time offset of thunder DoT ticks relative to mp ticks",
-		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）"
-	});
-	let procMode = controller.gameConfig.procMode;
-	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
-	const legacyCasterTax = controller.gameConfig.legacy_casterTax;
-	let excerpt = localize({
-		en: `WARNING: this record was created in an earlier version of BLM in the Shell and uses the deprecated caster tax of ${legacyCasterTax}s instead of calculating from your FPS input below. Hover for details: `,
-		zh: `警告：此时间轴文件创建于一个更早版本的排轴器，因此计算读条时间时使用的是当时手动输入的读条税${legacyCasterTax}秒（现已过时），而非由下方的“帧率”和“读条时间修正”计算得来。更多信息：`
-	});
-	let warningColor = getCurrentThemeColors().warning;
-	let blurb = localize({
-		en: <div>
-				<div className={"paragraph"}>
-					The caster tax config is now replaced by 0.1s + FPS tax and is more precise.
-					You can read more about FPS tax in About this tool/Implementation notes.
-				</div>
-				<div className={"paragraph"} style={{color: warningColor}}>
-					You are strongly encouraged to create a new record (in another timeline slot or from 'apply and reset') and migrate your fight plan.
-					Support for loading legacy files might drop in the future.
-				</div>
-			</div>,
-		zh: <div>
-			<div className={"paragraph"}>
-				现在的“读条税”由固定的0.1s加自动计算的帧率税构成，模拟结果也更精确。有关帧率税的更多信息详见 关于/实现细节。
-			</div>
-			<div className={"paragraph"} style={{color: warningColor}}>
-				排轴器今后的更新可能会导致无法加载过时的文件，所以强烈建议将此时间轴迁移到一个新建的存档中（添加时间轴，或者应用并重置时间轴）。
-			</div>
-		</div>
-	});
-	let legacyCasterTaxBlurb = <div className={"paragraph"} style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={blurb}/></div>;
-	return <div>
-		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
-		{localize({en: "Displayed GCD", zh: "游戏内显示的GCD"})}: {gcd}&nbsp;
-		{
-			controller.gameConfig.shellVersion >= ShellVersion.FpsTax ? <Help topic={"displayedGcd"} content={
-				localize({
-					en: `Measured average GCD should be ${gcdAfterTax} due to FPS tax`,
-					zh: `由于帧率税的影响，测量得到的平均GCD为${gcdAfterTax}`
-				})
-			}/> : undefined
-		}
-		<Expandable
-			title={"Cast times table"}
-			titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help topic={"castTimesTable"} content={castTimesTableDesc}/></span>} defaultExpanded={true} content={castTimesChart}/>
-		{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
-		<br/>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
-		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
-		{numOverrides === 0 ? undefined : <span style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</span>}
-	</div>
-}
+// states are mostly strings here because those inputs are controlled by <Input ... />
+type ConfigState = {
+	shellVersion: ShellVersion,
+	level: string,
+	spellSpeed: string,
+	criticalHit: string,
+	directHit: string,
+	animationLock: string,
+	fps: string,
+	gcdSkillCorrection: string,
+	timeTillFirstManaTick: string,
+	countdown: string,
+	randomSeed: string,
+	procMode: ProcMode,
+	initialResourceOverrides: ResourceOverrideData[],
 
-// key, rscType, rscInfo
-function ResourceOverrideDisplay(props) {
-	let str;
-	if (props.rscInfo.isCoolDown) {
-		str = props.override.type + " full in " + props.override.timeTillFullOrDrop + "s";
-	} else {
-		str = props.override.type;
-		if (props.override.type === ResourceType.LeyLines) str += " (" + (props.override.effectOrTimerEnabled ? "enabled" : "disabled") + ")";
-		if (props.override.type === ResourceType.Enochian) str += " (" + (props.override.effectOrTimerEnabled ? "timer enabled" : "timer disabled") + ")";
-		if (props.rscInfo.maxValue > 1) str += " (amount: " + props.override.stacks + ")";
-		if (props.rscInfo.maxTimeout >= 0) {
-			if (props.override.type === ResourceType.Polyglot) {
-				if (props.override.timeTillFullOrDrop > 0) str += " next stack ready in " + props.override.timeTillFullOrDrop + "s";
-			} else {
-				if (props.override.type !== ResourceType.Enochian || props.override.effectOrTimerEnabled) {
-					str += " drops in " + props.override.timeTillFullOrDrop + "s";
-				}
-			}
-		}
-	}
-	str += " ";
-	return <div style={{marginTop: 10, color: "mediumpurple"}}>
-		{str}
-		<Clickable content="[x]" onClickFn={e=>{ props.deleteFn(props.override.type); }}/>
-	</div>;
-}
+	selectedOverrideResource: ResourceType,
+	overrideTimer: string,
+	overrideStacks: string,
+	overrideEnabled: boolean,
 
-export let updateConfigDisplay = (config)=>{};
-
-// helper that prob won't be used elsewhere
-function getTaxPreview(level, baseCastTime, spsStr, fpsStr) {
-	let sps = parseFloat(spsStr);
-	let fps = parseFloat(fpsStr);
-	if (isNaN(sps) || isNaN(fps)) {
-		return "n/a";
-	}
-	let adjustedCastTime = XIVMath.preTaxCastTime(level, sps, baseCastTime, false);
-	return (XIVMath.afterFpsTax(fps, adjustedCastTime) - adjustedCastTime + XIVMath.afterFpsTax(fps, FIXED_BASE_CASTER_TAX)).toFixed(3);
+	dirty: boolean,
+	b1TaxPreview: string
 }
 
 export class Config extends React.Component {
-	constructor(props) {
+
+	state: ConfigState;
+	updateTaxPreview: (spsStr: string, fpsStr: string) => void;
+	handleSubmit: MouseEventHandler;
+
+	setSpellSpeed: (val: string) => void;
+	setLevel: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
+	setCriticalHit: (val: string) => void;
+	setDirectHit: (val: string) => void;
+	setAnimationLock: (val: string) => void;
+	setFps: (val: string) => void;
+	setGcdSkillCorrection: (val: string) => void;
+	setTimeTillFirstManaTick: (val: string) => void;
+	setCountdown: (val: string) => void;
+	setRandomSeed: (val: string) => void;
+	setProcMode: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
+	setOverrideTimer: (val: string) => void;
+	setOverrideStacks: (val: string) => void;
+	setOverrideEnabled: (evt: React.ChangeEvent<{checked: boolean}>) => void;
+	deleteResourceOverride: (rsc: ResourceType) => void;
+
+	constructor(props: {}) {
 		super(props);
 		this.state = { // NOT DEFAULTS
-			stepSize : 0,
-			level: LevelSync.lvl100,
-			spellSpeed: 0,
-			criticalHit: 0,
-			directHit: 0,
-			animationLock: 0,
-			fps: 0,
-			gcdSkillCorrection: 0,
-			timeTillFirstManaTick: 0,
-			countdown: 0,
+			shellVersion: ShellInfo.version,
+			level: `${LevelSync.lvl100}`,
+			spellSpeed: "0",
+			criticalHit: "0",
+			directHit: "0",
+			animationLock: "0",
+			fps: "0",
+			gcdSkillCorrection: "0",
+			timeTillFirstManaTick: "0",
+			countdown: "0",
 			randomSeed: "",
 			procMode: ProcMode.RNG,
 			initialResourceOverrides: [],
 			/////////
 			selectedOverrideResource: ResourceType.Mana,
-			overrideTimer: 0,
-			overrideStacks: 0,
+			overrideTimer: "0",
+			overrideStacks: "0",
 			overrideEnabled: true,
 			/////////
 			dirty: false,
 			b1TaxPreview: "n/a"
 		};
 
-		this.updateTaxPreview = (spsStr, fpsStr) => {
-			let b1TaxPreview;
-			let sps = parseFloat(spsStr);
-			let fps = parseFloat(fpsStr);
-			if (!isNaN(fps) && !isNaN(sps)) {
-				b1TaxPreview = getTaxPreview(parseFloat(this.state.level), 2.5, sps, fps);
-			} else {
-				b1TaxPreview = "n/a"
-			}
+		this.updateTaxPreview = (spsStr: string, fpsStr: string) => {
+			let b1TaxPreview = getTaxPreview(parseFloat(this.state.level), 2.5, spsStr, fpsStr);
 			this.setState({b1TaxPreview: b1TaxPreview});
 		}
 
-		this.handleSubmit = (event => {
+		this.handleSubmit = (event: React.SyntheticEvent) => {
 			if (this.#resourceOverridesAreValid()) {
 				let seed = this.state.randomSeed;
 				if (seed.length === 0) {
@@ -356,84 +415,71 @@ export class Config extends React.Component {
 					}
 					this.setState({randomSeed: seed});
 				}
-				let config = {
-					level: this.state.level,
-					spellSpeed: this.state.spellSpeed,
-					criticalHit: this.state.criticalHit,
-					directHit: this.state.directHit,
-					animationLock: this.state.animationLock,
-					fps: this.state.fps,
-					gcdSkillCorrection: this.state.gcdSkillCorrection,
-					countdown: this.state.countdown,
-					timeTillFirstManaTick: this.state.timeTillFirstManaTick,
-					randomSeed: seed,
-					procMode: this.state.procMode,
-					initialResourceOverrides: this.state.initialResourceOverrides // info only
-				};
+				let config = {...this.state, ...{ randomSeed: seed }};
 				this.setConfigAndRestart(config);
 				this.setState({dirty: false});
 				controller.scrollToTime();
 			}
 			event.preventDefault();
-		});
+		};
 
-		this.setSpellSpeed = (val => {
+		this.setSpellSpeed = (val: string) => {
 			this.setState({spellSpeed: val, dirty: true});
 			this.updateTaxPreview(val, this.state.fps);
-		});
+		};
 
-		this.setLevel = (evt => {
+		this.setLevel = evt => {
 			this.setState({level: evt.target.value, dirty: true});
 			this.updateTaxPreview(this.state.spellSpeed, this.state.fps);
-		});
+		};
 
-		this.setCriticalHit = (val => {
+		this.setCriticalHit = (val: string) => {
 			this.setState({criticalHit: val, dirty: true});
-		});
+		};
 
-		this.setDirectHit = (val => {
+		this.setDirectHit = (val: string) => {
 			this.setState({directHit: val, dirty: true});
-		});
+		};
 
-		this.setAnimationLock = (val => {
+		this.setAnimationLock = (val: string) => {
 			this.setState({animationLock: val, dirty: true});
-		});
+		};
 
-		this.setFps = (val => {
+		this.setFps = (val: string) => {
 			this.setState({fps: val, dirty: true});
 			this.updateTaxPreview(this.state.spellSpeed, val);
-		});
+		};
 
-		this.setGcdSkillCorrection = (val => {
+		this.setGcdSkillCorrection = (val: string) => {
 			this.setState({gcdSkillCorrection: val, dirty: true});
-		});
+		};
 
-		this.setTimeTillFirstManaTick = (val => {
+		this.setTimeTillFirstManaTick = (val: string) => {
 			this.setState({timeTillFirstManaTick: val, dirty: true});
-		});
+		};
 
-		this.setCountdown = (val => {
+		this.setCountdown = (val: string) => {
 			this.setState({countdown: val, dirty: true});
-		});
+		};
 
-		this.setRandomSeed = (val => {
+		this.setRandomSeed = (val: string) => {
 			this.setState({randomSeed: val, dirty: true});
-		});
+		};
 
-		this.setProcMode = (evt => {
+		this.setProcMode = evt => {
 			this.setState({procMode: evt.target.value, dirty: true});
-		});
+		};
 
-		this.setOverrideTimer = (val => {
+		this.setOverrideTimer = (val: string) => {
 			this.setState({overrideTimer: val})
-		});
-		this.setOverrideStacks = (val => {
+		};
+		this.setOverrideStacks = (val: string) => {
 			this.setState({overrideStacks: val})
-		});
-		this.setOverrideEnabled = (evt => {
+		};
+		this.setOverrideEnabled = (evt: React.ChangeEvent<{checked: boolean}>) => {
 			this.setState({overrideEnabled: evt.target.checked})
-		});
-		this.deleteResourceOverride = (rscType => {
+		};
+		this.deleteResourceOverride = (rscType: ResourceType) => {
 			let overrides = this.state.initialResourceOverrides;
 			for (let i = 0; i < overrides.length; i++) {
 				if (overrides[i].type === rscType) {
@@ -442,13 +488,13 @@ export class Config extends React.Component {
 				}
 			}
 			this.setState({initialResourceOverrides: overrides, dirty: true});
-		});
+		};
 	}
 
 	// call this whenever the list of options has potentially changed
-	#getFirstAddable(overridesList) {
+	#getFirstAddable(overridesList: ResourceOverrideData[]) {
 		let firstAddableRsc = "aba aba";
-		let S = new Set();
+		let S = new Set<ResourceType>();
 		overridesList.forEach(ov=>{
 			S.add(ov.type);
 		});
@@ -466,7 +512,7 @@ export class Config extends React.Component {
 			this.setState(config);
 			this.setState({
 				dirty: false,
-				b1TaxPreview: getTaxPreview(config.level, 2.5, config.spellSpeed, config.fps),
+				b1TaxPreview: getTaxPreview(config.level, 2.5, `${config.spellSpeed}`, `${config.fps}`),
 				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides)
 			});
 		});
@@ -547,7 +593,7 @@ export class Config extends React.Component {
 
 	#addResourceOverride() {
 		let rscType = this.state.selectedOverrideResource;
-		let info = resourceInfos.get(rscType);
+		let info = resourceInfos.get(rscType)!;
 
 		let inputOverrideTimer = parseFloat(this.state.overrideTimer);
 		let inputOverrideStacks = parseInt(this.state.overrideStacks);
@@ -563,7 +609,7 @@ export class Config extends React.Component {
 			return;
 		}
 
-		let props = {};
+		let props: ResourceOverrideData;
 
 		if (info.isCoolDown)
 		{
@@ -728,7 +774,7 @@ export class Config extends React.Component {
 		let resourceOverridesDisplayNodes = [];
 		for (let i = 0; i < this.state.initialResourceOverrides.length; i++) {
 			let override = this.state.initialResourceOverrides[i];
-			let info = resourceInfos.get(override.type);
+			let info = resourceInfos.get(override.type)!;
 			resourceOverridesDisplayNodes.push(<ResourceOverrideDisplay
 				key={i}
 				override={override}
@@ -754,7 +800,7 @@ export class Config extends React.Component {
 		</div>;
 	}
 
-	setConfigAndRestart(config) {
+	setConfigAndRestart(config: ConfigState) {
 		if (isNaN(parseFloat(config.spellSpeed)) ||
 			isNaN(parseFloat(config.criticalHit)) ||
 			isNaN(parseFloat(config.directHit)) ||
