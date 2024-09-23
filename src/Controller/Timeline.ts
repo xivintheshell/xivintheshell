@@ -1,6 +1,4 @@
-// @ts-ignore
 import {updateTimelineView} from "../Components/Timeline";
-// @ts-ignore
 import {controller} from "./Controller";
 import {Debug, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {ActionNode} from "./Record";

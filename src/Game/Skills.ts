@@ -1,5 +1,4 @@
 import {Aspect, BuffType, LevelSync, ProcMode, ResourceType, SkillName, WarningType} from './Common'
-// @ts-ignore
 import {controller} from "../Controller/Controller";
 import {ShellJob, ShellInfo} from "../Controller/Common";
 import {DoTBuff, EventTag, Resource} from "./Resources";

@@ -9,6 +9,8 @@ import {getCachedValue, setCachedValue} from "../Controller/Common";
 
 export type ContentNode = JSX.Element | string;
 
+export type ValueChangeEvent = React.ChangeEvent<{value: string}>;
+
 function getBlobUrl(content: object) {
 	let blob = new Blob([JSON.stringify(content)], {type: "text/plain;charset=utf-8"});
 	return window.URL.createObjectURL(blob);
