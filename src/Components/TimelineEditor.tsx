@@ -2,7 +2,6 @@ import {Expandable, Help} from "./Common";
 import React, {CSSProperties} from "react";
 import {controller} from "../Controller/Controller";
 import {ActionNode, ActionType, Record, RecordValidStatus} from "../Controller/Record";
-// @ts-ignore
 import {localize, localizeSkillName} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 

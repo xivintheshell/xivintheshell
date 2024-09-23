@@ -1,5 +1,5 @@
-import React from 'react'
-import {Clickable, Help, parseTime} from "./Common";
+import React, {FormEvent, FormEventHandler} from 'react'
+import {Clickable, ContentNode, Help, parseTime, ValueChangeEvent} from "./Common";
 import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {ShellInfo} from "../Controller/Common";
@@ -21,7 +21,7 @@ export const skillIcons = new Map();
 
 // Only import necessary skills
 // TODO: change this if we serve multiple jobs off the same site
-skillMap.get(ShellInfo.job).forEach(
+skillMap.get(ShellInfo.job)!.forEach(
 	(skillInfo) => skillIcons.set(skillInfo.name, require(`./Asset/Skills/${skillInfo.assetPath}`)),
 );
 
@@ -35,8 +35,6 @@ skillIcons.forEach((path, skillName)=>{
 	skillIconImages.set(skillName, imgObj);
 });
 
-// eslint-disable-next-line no-unused-vars
-let setSkillInfoText = (text)=>{}; // text: skill info tooltip content
 function ProgressCircle(props={
 	className: "",
 	diameter: 50,
@@ -64,9 +62,23 @@ function ProgressCircle(props={
 	</svg>
 }
 
+type SkillButtonProps = {
+	highlight: boolean,
+	skillName: SkillName,
+	ready: boolean,
+	cdProgress: number
+};
+
 class SkillButton extends React.Component {
-	constructor(props) {
+	props: SkillButtonProps;
+	state: {
+		skillDescription: React.ReactElement;
+	};
+	handleMouseEnter: () => void;
+
+	constructor(props: SkillButtonProps) {
 		super(props);
+		this.props = props;
 		this.state = {
 			skillDescription: <div/>
 		};
@@ -76,7 +88,7 @@ class SkillButton extends React.Component {
 				skillName: this.props.skillName
 			});
 			let colors = getCurrentThemeColors();
-			let s = "";
+			let s: ContentNode = "";
 			if (info.status === SkillReadyStatus.Ready) {
 				let en = "ready (" + info.stacksAvailable;
 				let zh = "可释放 (" + info.stacksAvailable;
@@ -119,14 +131,14 @@ class SkillButton extends React.Component {
 	}
 	render() {
 		let iconPath = skillIcons.get(this.props.skillName);
-		let iconStyle = {
+		let iconStyle: React.CSSProperties = {
 			width: 48,
 			height: 48,
 			verticalAlign: "top",
 			position: "relative",
 			display: "inline-block"
 		};
-		let iconImgStyle = {
+		let iconImgStyle: React.CSSProperties = {
 			width: 40,
 			height: 40,
 			position: "absolute",
@@ -177,7 +189,7 @@ class SkillButton extends React.Component {
 			progress={this.props.cdProgress}
 			color={this.props.ready ? "rgba(255, 255, 255, 0.7)" : "rgba(255,255,255,0.7)"}/>;
 		return <span
-			title={this.skillName}
+			title={this.props.skillName}
 			className={"skillButton"}
 			data-tooltip-offset={3}
 			data-tooltip-html={
@@ -193,35 +205,61 @@ class SkillButton extends React.Component {
 	}
 }
 
-const WaitSince = {
-	Now: "Now",
-	LastSkill: "LastSkill"
+enum WaitSince {
+	Now = "Now",
+	LastSkill = "LastSkill"
+}
+
+export type SkillButtonViewInfo = {
+	skillName: SkillName,
+	status: SkillReadyStatus,
+	stacksAvailable: number,
+	castTime: number,
+	instantCast: boolean,
+	cdRecastTime: number,
+	timeTillNextStackReady: number,
+	timeTillAvailable: number,
+	timeTillDamageApplication: number,
+	capturedManaCost: number,
+	highlight: boolean,
+	llCovered: boolean
 };
 
-export var updateSkillButtons = (statusList, paradoxReady, retraceReady)=>{}
+export let updateSkillButtons = (statusList: SkillButtonViewInfo[], paradoxReady: boolean, retraceReady: boolean)=>{}
 export class SkillsWindow extends React.Component {
-	constructor(props) {
+	state: {
+		statusList: SkillButtonViewInfo[],
+		waitTime: string,
+		waitSince: WaitSince,
+		waitUntil: string,
+		paradoxInfo?: SkillButtonViewInfo
+		retraceInfo?: SkillButtonViewInfo
+	};
+
+	onWaitTimeChange: (e: ValueChangeEvent) => void;
+	onWaitTimeSubmit: FormEventHandler<HTMLFormElement>;
+	onWaitUntilChange: (e: ValueChangeEvent) => void;
+	onWaitUntilSubmit: FormEventHandler<HTMLFormElement>;
+	onWaitSinceChange: (e: ValueChangeEvent) => void;
+	onRemoveTrailingIdleTime: () => void;
+	onWaitTillNextMpOrLucidTick: () => void;
+
+	constructor(props: {}) {
 		super(props);
-		updateSkillButtons = ((statusList, paradoxReady, retraceReady)=>{
+		updateSkillButtons = ((statusList, paradoxReady, retraceReady) => {
 			this.setState({
 				statusList: statusList,
-				paradoxInfo: controller.getSkillInfo({game: controller.game, skillName: SkillName.Paradox}),
-				paradoxReady: paradoxReady,
-				retraceInfo: controller.getSkillInfo({game: controller.game, skillName: SkillName.Retrace}),
-				retraceReady: retraceReady,
+				paradoxInfo: paradoxReady ? controller.getSkillInfo({game: controller.game, skillName: SkillName.Paradox}) : undefined,
+				retraceInfo: retraceReady ? controller.getSkillInfo({game: controller.game, skillName: SkillName.Retrace}) : undefined,
 			});
 		});
 
-		setSkillInfoText = ((text)=>{
-			this.setState({tooltipContent: text});
-		});
-
-		this.onWaitTimeChange = ((e)=>{
+		this.onWaitTimeChange = (e: ValueChangeEvent) => {
 			if (!e || !e.target) return;
 			this.setState({waitTime: e.target.value});
-		});
+		};
 
-		this.onWaitTimeSubmit = ((e)=>{
+		this.onWaitTimeSubmit = (e: FormEvent<HTMLFormElement>) => {
 			let waitTime = parseFloat(this.state.waitTime);
 			if (!isNaN(waitTime)) {
 				if (this.state.waitSince === WaitSince.Now) {
@@ -248,14 +286,14 @@ export class SkillsWindow extends React.Component {
 				controller.autoSave();
 			}
 			e.preventDefault();
-		});
+		};
 
-		this.onWaitUntilChange = (e=>{
+		this.onWaitUntilChange = (e: ValueChangeEvent) => {
 			if (!e || !e.target) return;
 			this.setState({waitUntil: e.target.value});
-		});
+		};
 
-		this.onWaitUntilSubmit = (e=>{
+		this.onWaitUntilSubmit = (e: FormEvent<HTMLFormElement>) => {
 			let targetTime = parseTime(this.state.waitUntil);
 			if (!isNaN(targetTime)) {
 				let currentTime = controller.game.getDisplayTime();
@@ -268,70 +306,63 @@ export class SkillsWindow extends React.Component {
 				}
 			}
 			e.preventDefault();
-		});
+		};
 
-		this.onWaitSinceChange = (e=>{
+		this.onWaitSinceChange = (e: ValueChangeEvent) => {
 			this.setState({waitSince: e.target.value});
-		});
+		};
 
-		this.onRemoveTrailingIdleTime = (()=>{
+		this.onRemoveTrailingIdleTime = (() => {
 			controller.removeTrailingIdleTime();
 		});
 
-		this.onWaitTillNextMpOrLucidTick = (()=>{
+		this.onWaitTillNextMpOrLucidTick = (() => {
 			controller.waitTillNextMpOrLucidTick();
 		});
 
 		this.state = {
-			statusList: undefined,
-			paradoxInfo: undefined,
-			tooltipContent: "",
+			statusList: [],
 			waitTime: "1",
 			waitSince: WaitSince.Now,
-			waitUntil: "0:00"
+			waitUntil: "0:00",
+			paradoxInfo: undefined,
+			retraceInfo: undefined,
 		}
-	}
-	componentDidMount() {
-		this.setState({
-			statusList: controller.game.displayedSkills.map(sn=>{
-				return controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: sn});
-			}),
-			paradoxInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Paradox}),
-			retraceInfo: controller.getSkillInfo({game: controller.getDisplayedGame(), skillName: SkillName.Retrace}),
-		});
 	}
 
 	render() {
 		let skillButtons = [];
-		let displayedSkills = controller.game.displayedSkills;
-		for (let i = 0; i < displayedSkills.length; i++) {
-			let skillName = displayedSkills[i];
-			let info = this.state.statusList ? this.state.statusList[i] : undefined;
+		//let displayedSkills = controller.game.displayedSkills;
+		for (let i = 0; i < this.state.statusList.length; i++) {
+			let skillName = this.state.statusList[i].skillName;
+			let info = this.state.statusList[i];
 			let level = controller.game.config.level;
 
 			if (Traits.hasUnlocked(TraitName.AspectMasteryV, level)) {
-				let isF1B1 = displayedSkills[i] === SkillName.Fire || displayedSkills[i] === SkillName.Blizzard;
-				skillName = (isF1B1 && this.state.paradoxReady) ? SkillName.Paradox : displayedSkills[i];
-				if (this.state.paradoxInfo) 
-					info = (isF1B1 && this.state.paradoxReady) ? this.state.paradoxInfo : info;
+				let isF1B1 = skillName === SkillName.Fire || skillName === SkillName.Blizzard;
+				if (isF1B1 && this.state.paradoxInfo) {
+					skillName = SkillName.Paradox;
+					info = this.state.paradoxInfo;
+				}
 			}
 
 			if (Traits.hasUnlocked(TraitName.EnhancedLeyLines, level)) {
-				let isLL = (displayedSkills[i] === SkillName.LeyLines);
-				skillName = (isLL && this.state.retraceReady) ? SkillName.Retrace : skillName;
-				if (this.state.retraceInfo)
-					info = (isLL && this.state.retraceReady) ? this.state.retraceInfo : info;
+				let isLL = skillName === SkillName.LeyLines;
+				if (isLL && this.state.retraceInfo) {
+					skillName = SkillName.Retrace;
+					info = this.state.retraceInfo;
+				}
 			}
 
 			if (Traits.hasUnlocked(TraitName.AspectMasteryIV, level)) {
-				if (displayedSkills[i] === SkillName.Fire2)
+				if (skillName === SkillName.Fire2)
 					skillName = SkillName.HighFire2;
-				else if (displayedSkills[i] === SkillName.Blizzard2)
+				else if (skillName === SkillName.Blizzard2)
 					skillName = SkillName.HighBlizzard2;
 			}
 
 			if (Traits.hasUnlocked(TraitName.ThunderMasteryIII, level)) {
-				if (displayedSkills[i] === SkillName.Thunder3)
+				if (skillName === SkillName.Thunder3)
 					skillName = SkillName.HighThunder;
 			}
 

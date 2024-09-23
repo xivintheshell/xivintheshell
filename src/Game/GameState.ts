@@ -16,6 +16,7 @@ import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyM
 import {Buff} from "./Buffs";
 
 import type {BLMState} from "./Jobs/BLM";
+import {SkillButtonViewInfo} from "../Components/Skills";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -462,7 +463,7 @@ export abstract class GameState {
 		return foundEvt ? foundEvt.timeTillEvent : 0;
 	}
 
-	getSkillAvailabilityStatus(skillName: SkillName) {
+	getSkillAvailabilityStatus(skillName: SkillName): SkillButtonViewInfo {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
 		let capturedManaCost = skill.manaCostFn(this);
@@ -511,8 +512,8 @@ export abstract class GameState {
 		}
 
 		return {
+			skillName: skill.name,
 			status: status,
-			description: "",
 			stacksAvailable: cd.stacksAvailable(),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,

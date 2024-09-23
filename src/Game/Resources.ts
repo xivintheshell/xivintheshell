@@ -306,7 +306,7 @@ resourceInfos.set(ResourceType.cd_Surecast, { isCoolDown: true, maxStacks: 1, cd
 resourceInfos.set(ResourceType.cd_Tincture, { isCoolDown: true, maxStacks: 1, cdPerStack: 270 });
 resourceInfos.set(ResourceType.cd_Sprint, { isCoolDown: true, maxStacks: 1, cdPerStack: 60 });
 
-type ResourceOverrideProps = {
+export type ResourceOverrideData = {
 	type: ResourceType,
 	timeTillFullOrDrop: number, // CDs (full), buff/procs (drop)
 	stacks: number, // Triplecast, MP, AF, UI, UH, Paradox, Polyglot
@@ -320,7 +320,7 @@ export class ResourceOverride {
 	stacks: number; // Triplecast, MP, AF, UI, UH, Paradox, Polyglot
 	effectOrTimerEnabled: boolean; // LL, halt
 
-	constructor(props: ResourceOverrideProps) {
+	constructor(props: ResourceOverrideData) {
 		this.type = props.type;
 		this.timeTillFullOrDrop = props.timeTillFullOrDrop;
 		this.stacks = props.stacks;
@@ -444,7 +444,7 @@ export class ResourceOverride {
 		}
 	}
 
-	serialized() {
+	serialized(): ResourceOverrideData {
 		return {
 			type: this.type,
 			timeTillFullOrDrop: this.timeTillFullOrDrop,

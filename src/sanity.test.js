@@ -4,6 +4,7 @@ import "@testing-library/jest-dom";
 import {within} from "@testing-library/dom";
 
 import Main from "./Components/Main";
+import {act} from "react-dom/test-utils";
 
 // Need to mock window.URL.createObjectURL
 // https://stackoverflow.com/questions/52968969/jest-url-createobjecturl-is-not-a-function
@@ -29,9 +30,11 @@ afterEach(() => {
 
 // Basic sanity test to ensure the webpage doesn't crash on load,
 // https://create-react-app.dev/docs/running-tests/
-it("renders without crashing", () => {
+it("renders without crashing", async () => {
     const {container} = render(<Main />);
-    expect(container).toBeTruthy();
+    await act(async () => {
+        expect(container).toBeTruthy();
+    })
 });
 
 // Tests adding an ability to the timeline does not cause a crash

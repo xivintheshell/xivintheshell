@@ -1,12 +1,28 @@
 import {Debug, SkillName, ProcMode, LevelSync, ResourceType, FIXED_BASE_CASTER_TAX} from "./Common";
-import {ResourceOverride} from "./Resources";
+import {ResourceOverride, ResourceOverrideData} from "./Resources";
 import {ShellInfo, ShellVersion} from "../Controller/Common";
 import {XIVMath} from "./XIVMath";
 
-export const DEFAULT_CONFIG = {
+export type ConfigData = {
+	shellVersion: ShellVersion,
+	level: LevelSync,
+	spellSpeed: number,
+	criticalHit: number,
+	directHit: number,
+	countdown: number,
+	randomSeed: string,
+	fps: number,
+	gcdSkillCorrection: number,
+	animationLock: number,
+	timeTillFirstManaTick: number,
+	procMode: ProcMode,
+	initialResourceOverrides: ResourceOverrideData[]
+}
+
+export const DEFAULT_CONFIG: ConfigData = {
+	shellVersion: ShellInfo.version,
 	level: LevelSync.lvl100,
 	// 2.37 GCD
-	shellVersion: ShellInfo.version,
 	spellSpeed: 1532,
 	criticalHit: 420,
 	directHit: 420,
@@ -19,6 +35,10 @@ export const DEFAULT_CONFIG = {
 	procMode: ProcMode.Never,
 	initialResourceOverrides: []
 };
+
+export type SerializedConfig = ConfigData & {
+	casterTax: number, // still want this bc don't want to break cached timelines
+}
 
 export class GameConfig {
 	readonly shellVersion = ShellInfo.version;
@@ -49,7 +69,7 @@ export class GameConfig {
 		animationLock: number,
 		timeTillFirstManaTick: number,
 		procMode: ProcMode,
-		initialResourceOverrides: any[],
+		initialResourceOverrides: (ResourceOverrideData & {enabled?: boolean})[],
 		casterTax?: number, // legacy
 	}) {
 		this.shellVersion = props.shellVersion;
@@ -65,7 +85,7 @@ export class GameConfig {
 		this.timeTillFirstManaTick = props.timeTillFirstManaTick;
 		this.procMode = props.procMode;
 		this.initialResourceOverrides = props.initialResourceOverrides.map(obj=>{
-			if (obj.effectOrTimerEnablled === undefined) {
+			if (obj.effectOrTimerEnabled === undefined) {
 				// backward compatibility:
 				if (obj.enabled === undefined) obj.effectOrTimerEnabled = true;
 				else obj.effectOrTimerEnabled = obj.enabled;
@@ -74,35 +94,6 @@ export class GameConfig {
 		});
 		// backward compatibility for caster tax:
 		this.legacy_casterTax = props?.casterTax ?? 0;
-	}
-
-	equals(other : GameConfig) {
-		let sortFn = (a: ResourceOverride, b: ResourceOverride)=>{
-			return a.type < b.type ? -1 : 1;
-		};
-		let thisSortedOverrides = this.initialResourceOverrides.sort(sortFn);
-		let otherSortedOverrides = other.initialResourceOverrides.sort(sortFn);
-		if (thisSortedOverrides.length === otherSortedOverrides.length) {
-			for (let i = 0; i < thisSortedOverrides.length; i++) {
-				if (!thisSortedOverrides[i].equals(otherSortedOverrides[i])) {
-					return false;
-				}
-			}
-			return this.shellVersion === other.shellVersion &&
-				this.level === other.level &&
-				this.spellSpeed === other.spellSpeed &&
-				this.criticalHit === other.criticalHit &&
-				this.directHit === other.directHit &&
-				this.countdown === other.countdown &&
-				this.randomSeed === other.randomSeed &&
-				this.fps === other.fps &&
-				this.gcdSkillCorrection === other.gcdSkillCorrection &&
-				this.animationLock === other.animationLock &&
-				this.timeTillFirstManaTick === other.timeTillFirstManaTick &&
-				this.procMode === other.procMode
-		} else {
-			return false;
-		}
 	}
 
 	adjustedDoTPotency(inPotency : number) {
