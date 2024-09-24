@@ -156,7 +156,7 @@ export class CoolDownState {
 		let rsc = this.#map.get(rscType);
 		if (rsc) return rsc;
 		else {
-			console.assert(false);
+			console.assert(false, `no cooldown for resource ${rscType}`);
 			return new CoolDown(ResourceType.Never, 0, 0, 0);
 		}
 	}

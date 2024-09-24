@@ -27,6 +27,9 @@ export const enum ShellJob {
 	PCT = "PCT",
 }
 
+// can't get this automatically from a const enum
+export const ALL_JOBS = [ShellJob.BLM, ShellJob.PCT];
+
 export const enum Expansion {
 	EW = "EW",
 	DT = "DT"

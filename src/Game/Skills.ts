@@ -1,5 +1,5 @@
 import {Aspect, LevelSync, ResourceType, SkillName} from './Common'
-import {ShellJob, ShellInfo} from "../Controller/Common";
+import {ShellJob, ShellInfo, ALL_JOBS} from "../Controller/Common";
 import {ActionNode} from "../Controller/Record";
 import {PlayerState, GameState} from "./GameState";
 import {TraitName, Traits} from './Traits';
@@ -132,11 +132,7 @@ export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T
 // the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
 export const skillMap: Map<ShellJob, Map<SkillName, Skill<PlayerState>>> = new Map();
 
-// can't iterate over the onst enum ShellJob so just populate manually :/
-[
-	ShellJob.BLM,
-	ShellJob.PCT,
-].forEach((job) => skillMap.set(job, new Map()));
+ALL_JOBS.forEach((job) => skillMap.set(job, new Map()));
 
 
 // Helper function to transform an optional<number | function> that has a default number value into a function.
@@ -258,9 +254,6 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	return info;
 }
 
-// Dummy skill to avoid a hard crash when a skill info isn't found
-const NEVER_SKILL = makeSpell([], SkillName.Never, 1, {});
-
 /**
  * Helper function to create an Ability that applies a buff or debuff (`rscType`) for a certain duration.
  *
@@ -315,6 +308,10 @@ export function makeResourceAbility<T extends PlayerState>(
 	});
 };
 
+// Dummy skill to avoid a hard crash when a skill info isn't found
+const NEVER_SKILL = makeAbility(ALL_JOBS, SkillName.Never, 1, ResourceType.Never, {
+	validateAttempt: (state) => false,
+});
 
 export class SkillsList<T extends PlayerState> {
 	job: ShellJob;

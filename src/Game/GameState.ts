@@ -64,6 +64,8 @@ export abstract class GameState {
 		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD()), 1, 1));
 		this.cooldowns.set(new CoolDown(ResourceType.cd_Sprint, 60, 1, 1));
 
+		this.cooldowns.set(new CoolDown(ResourceType.Never, 0, 0, 0)); // dummy cooldown for invalid skills
+
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
 		// - damage calc (enqueues damage application)
