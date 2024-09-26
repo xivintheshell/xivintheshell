@@ -13,7 +13,7 @@ import {
 	ViewOnlyCursorElem,
 	WarningMarkElem
 } from "../Controller/Timeline";
-import {StaticFn} from "./Common";
+import {StaticFn, TimelineDimensions} from "./Common";
 import {BuffType, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {skillIconImages} from "./Skills";
 import {buffIconImages} from "./Buffs";
@@ -43,12 +43,7 @@ export type TimelineRenderingProps = {
 	selectionEndDisplayTime: number,
 }
 
-const c_trackHeight = 14;
-const c_buttonHeight = 20;
-const c_timelineHeight = 12 + 58;
 const c_maxTimelineHeight = 400;
-const c_barsOffset = 2;
-const c_leftBufferWidth = 20;
 
 let g_ctx : CanvasRenderingContext2D;
 
@@ -189,7 +184,7 @@ function drawMarkers(
 	g_ctx.font = "11px monospace";
 	g_ctx.textAlign = "left";
 	trackBins.forEach((elems, track)=>{
-		let top = markerTracksBottomY - (track + 1) * c_trackHeight;
+		let top = markerTracksBottomY - (track + 1) * TimelineDimensions.trackHeight;
 		if (track === UntargetableMarkerTrack) {
 			top = markerTracksTopY;
 		}
@@ -211,41 +206,41 @@ function drawMarkers(
 				let markerWidth = StaticFn.positionFromTimeAndScale(m.duration, scale);
 				if (m.markerType === MarkerType.Buff) {
 					g_ctx.fillStyle = m.color + g_colors.timeline.markerAlpha;
-					g_ctx.fillRect(left, top, markerWidth, c_trackHeight);
+					g_ctx.fillRect(left, top, markerWidth, TimelineDimensions.trackHeight);
 					let img = buffIconImages.get(m.description as BuffType);
-					if (img) g_ctx.drawImage(img, left, top, c_trackHeight * 0.75, c_trackHeight);
+					if (img) g_ctx.drawImage(img, left, top, TimelineDimensions.trackHeight * 0.75, TimelineDimensions.trackHeight);
 					g_ctx.fillStyle = g_colors.emphasis;
-					g_ctx.fillText(localizedDescription, left + (c_trackHeight * 1.5), top + 10);
+					g_ctx.fillText(localizedDescription, left + (TimelineDimensions.trackHeight * 1.5), top + 10);
 				}
 				else if (m.showText) {
 					g_ctx.fillStyle = m.color + g_colors.timeline.markerAlpha;
-					g_ctx.fillRect(left, top, markerWidth, c_trackHeight);
+					g_ctx.fillRect(left, top, markerWidth, TimelineDimensions.trackHeight);
 					g_ctx.fillStyle = g_colors.emphasis;
-					g_ctx.fillText(localizedDescription, left + c_trackHeight / 2, top + 10);
+					g_ctx.fillText(localizedDescription, left + TimelineDimensions.trackHeight / 2, top + 10);
 				} else {
 					g_ctx.strokeStyle = m.color;
 					g_ctx.beginPath();
-					g_ctx.moveTo(left, top + c_trackHeight / 2);
-					g_ctx.lineTo(left + markerWidth, top + c_trackHeight / 2);
+					g_ctx.moveTo(left, top + TimelineDimensions.trackHeight / 2);
+					g_ctx.lineTo(left + markerWidth, top + TimelineDimensions.trackHeight / 2);
 					g_ctx.stroke();
 				}
 				let timeStr = m.time + " - " + parseFloat((m.time + m.duration).toFixed(3));
 				testInteraction(
-					{x: left, y: top, w: Math.max(markerWidth, c_trackHeight), h: c_trackHeight},
+					{x: left, y: top, w: Math.max(markerWidth, TimelineDimensions.trackHeight), h: TimelineDimensions.trackHeight},
 					["[" + timeStr + "] " + localizedDescription],
 					onClick);
 			} else {
 				g_ctx.fillStyle = m.color;
 				g_ctx.beginPath();
-				g_ctx.ellipse(left, top + c_trackHeight / 2, 4, 4, 0, 0, 2 * Math.PI);
+				g_ctx.ellipse(left, top + TimelineDimensions.trackHeight / 2, 4, 4, 0, 0, 2 * Math.PI);
 				g_ctx.fill();
 				if (m.showText) {
 					g_ctx.fillStyle = g_colors.emphasis;
 					g_ctx.beginPath()
-					g_ctx.fillText(localizedDescription, left + c_trackHeight / 2, top + 10);
+					g_ctx.fillText(localizedDescription, left + TimelineDimensions.trackHeight / 2, top + 10);
 				}
 				testInteraction(
-					{x: left - c_trackHeight / 2, y: top, w: c_trackHeight, h: c_trackHeight},
+					{x: left - TimelineDimensions.trackHeight / 2, y: top, w: TimelineDimensions.trackHeight, h: TimelineDimensions.trackHeight},
 					["[" + m.time + "] " + localizedDescription],
 					onClick);
 			}
@@ -266,10 +261,10 @@ function drawMPTickMarks(
 	elems.forEach(tick=>{
 		let x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
 		g_ctx.moveTo(x, originY);
-		g_ctx.lineTo(x, originY + c_timelineHeight);
+		g_ctx.lineTo(x, originY + TimelineDimensions.slotHeight());
 
 		testInteraction(
-			{x: x-2, y: originY, w: 4, h: c_timelineHeight},
+			{x: x-2, y: originY, w: 4, h: TimelineDimensions.slotHeight()},
 			["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc]
 		);
 	});
@@ -402,23 +397,26 @@ function drawSkills(
 	let potCovers: Rect[] = [];
 	let buffCovers: Rect[] = [];
 	let skillIcons: {elem: SkillElem, x: number, y: number}[] = []; // tmp
-	let skillsTopY = timelineOriginY + 14;
+	let skillsTopY = timelineOriginY + TimelineDimensions.skillButtonHeight / 2;
 	elems.forEach(e=>{
 		let skill = e as SkillElem;
 		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(skill.displayTime, scale);
-		let y = skill.isGCD ? (skillsTopY + 14) : skillsTopY;
+		let y = skill.isGCD ? (skillsTopY + TimelineDimensions.skillButtonHeight / 2) : skillsTopY;
+		// offset the bar under skill button icon so it's completely invisible before the button
+		const barsOffset = 2;
 		// purple/grey bar
 		let lockbarWidth = StaticFn.positionFromTimeAndScale(skill.lockDuration, scale);
 		if (skill.isSpellCast) {
-			purpleLockBars.push({x: x+c_barsOffset, y: y, w: lockbarWidth-c_barsOffset, h: 14});
+			purpleLockBars.push({x: x+barsOffset, y: y, w: lockbarWidth-barsOffset, h: TimelineDimensions.skillButtonHeight / 2});
 			snapshots.push(x + StaticFn.positionFromTimeAndScale(skill.relativeSnapshotTime, scale));
 		} else {
-			greyLockBars.push({x: x+c_barsOffset, y: y, w: lockbarWidth-c_barsOffset, h: 28});
+			greyLockBars.push({x: x+barsOffset, y: y, w: lockbarWidth-barsOffset, h: TimelineDimensions.skillButtonHeight});
 		}
 		// green gcd recast bar
 		if (skill.isGCD) {
 			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
-			gcdBars.push({x: x+c_barsOffset, y: y + 14, w: recastWidth-c_barsOffset, h: 14});
+			gcdBars.push({x: x+barsOffset, y: y + TimelineDimensions.skillButtonHeight / 2,
+				w: recastWidth-barsOffset, h: TimelineDimensions.skillButtonHeight / 2});
 		}
 
 		// node covers (LL, pot, party buff)
@@ -589,11 +587,11 @@ export function drawRuler(originX: number, ignoreVisibleX = false) : number {
 		: g_visibleWidth;
 	// ruler bg
 	g_ctx.fillStyle = g_colors.timeline.ruler;
-	g_ctx.fillRect(0, 0, xUpperBound, 30);
+	g_ctx.fillRect(0, 0, xUpperBound, TimelineDimensions.rulerHeight);
 	let displayTime = StaticFn.timeFromPositionAndScale(g_mouseX - originX, g_renderingProps.scale) - g_renderingProps.countdown;
 	// leave the left most section not clickable
 	testInteraction(
-		{x: c_leftBufferWidth, y: 0, w: xUpperBound - c_leftBufferWidth, h: 30},
+		{x: TimelineDimensions.leftBufferWidth, y: 0, w: xUpperBound - TimelineDimensions.leftBufferWidth, h: TimelineDimensions.rulerHeight},
 		[displayTime.toFixed(3)],
 		()=>{
 			if (displayTime < controller.game.getDisplayTime() && displayTime >= -controller.game.config.countdown) {
@@ -650,7 +648,7 @@ export function drawRuler(originX: number, ignoreVisibleX = false) : number {
 	}
 	g_ctx.stroke();
 
-	return 30;
+	return TimelineDimensions.rulerHeight;
 }
 
 export function drawMarkerTracks(originX: number, originY: number, ignoreVisibleX = false) : number {
@@ -677,18 +675,18 @@ export function drawMarkerTracks(originX: number, originY: number, ignoreVisible
 		if (k === UntargetableMarkerTrack) hasUntargetableTrack = true;
 	}
 	if (hasUntargetableTrack) numTracks += 1;
-	let markerTracksBottomY = originY + numTracks * c_trackHeight;
+	let markerTracksBottomY = originY + numTracks * TimelineDimensions.trackHeight;
 	g_ctx.fillStyle = g_colors.timeline.tracks;
 	for (let i = 0; i < numTracks; i += 2) {
-		let top = markerTracksBottomY - (i + 1) * c_trackHeight;
-		g_ctx.rect(0, top, xUpperBound, c_trackHeight);
+		let top = markerTracksBottomY - (i + 1) * TimelineDimensions.trackHeight;
+		g_ctx.rect(0, top, xUpperBound, TimelineDimensions.trackHeight);
 	}
 	g_ctx.fill();
 
 	// timeline markers
 	drawMarkers(g_renderingProps.countdown, g_renderingProps.scale, originY, markerTracksBottomY, originX, trackBins);
 
-	return numTracks * c_trackHeight;
+	return numTracks * TimelineDimensions.trackHeight;
 
 }
 
@@ -711,7 +709,7 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 		sharedElemBins.set(e.type, arr);
 	});
 
-	// fracCoord.x of displayTime=0
+	// fragCoord.x of displayTime=0
 	let displayOriginX = originX + StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
 
 	for (let slot = 0; slot < g_renderingProps.slotElements.length; slot++) {
@@ -727,7 +725,7 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 			arr.push(e);
 			elemBins.set(e.type, arr);
 		});
-		let currentY = originY + slot * c_timelineHeight;
+		let currentY = originY + slot * TimelineDimensions.slotHeight();
 		if (isImageExportMode) {
 			// Only draw the active timeline in export mode
 			currentY = originY;
@@ -759,29 +757,29 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 			g_ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
 			let selectionLeftPx = displayOriginX + StaticFn.positionFromTimeAndScale(g_renderingProps.selectionStartDisplayTime, g_renderingProps.scale);
 			let selectionWidthPx = StaticFn.positionFromTimeAndScale(g_renderingProps.selectionEndDisplayTime - g_renderingProps.selectionStartDisplayTime, g_renderingProps.scale);
-			g_ctx.fillRect(selectionLeftPx, currentY, selectionWidthPx, c_timelineHeight);
+			g_ctx.fillRect(selectionLeftPx, currentY, selectionWidthPx, TimelineDimensions.slotHeight());
 			g_ctx.strokeStyle = "rgba(147, 112, 219, 0.5)";
 			g_ctx.lineWidth = 1;
 			g_ctx.beginPath();
 			g_ctx.moveTo(selectionLeftPx, currentY);
-			g_ctx.lineTo(selectionLeftPx, currentY + c_timelineHeight);
+			g_ctx.lineTo(selectionLeftPx, currentY + TimelineDimensions.slotHeight());
 			g_ctx.moveTo(selectionLeftPx + selectionWidthPx, currentY);
-			g_ctx.lineTo(selectionLeftPx + selectionWidthPx, currentY + c_timelineHeight);
+			g_ctx.lineTo(selectionLeftPx + selectionWidthPx, currentY + TimelineDimensions.slotHeight());
 			g_ctx.stroke();
 		}
 
 	}
 	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
-	let countdownHeight = c_timelineHeight * g_renderingProps.slotElements.length;
-	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) countdownHeight += c_buttonHeight;
+	let countdownHeight = TimelineDimensions.slotHeight() * g_renderingProps.slotElements.length;
+	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) countdownHeight += TimelineDimensions.addSlotButtonHeight;
 	g_ctx.fillStyle = g_colors.timeline.countdown;
 	// make it cover the left padding as well:
-	g_ctx.fillRect(originX - c_leftBufferWidth, originY, countdownWidth + c_leftBufferWidth, countdownHeight);
+	g_ctx.fillRect(originX - TimelineDimensions.leftBufferWidth, originY, countdownWidth + TimelineDimensions.leftBufferWidth, countdownHeight);
 
 	if (isImageExportMode) {
 		// In image export mode, don't render slot selection bars
-		return c_timelineHeight;
+		return TimelineDimensions.slotHeight();
 	}
 
 	// view only cursor
@@ -802,12 +800,12 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 
 	// slot selection bars
 	for (let slot = 0; slot < g_renderingProps.slotElements.length; slot++) {
-		let currentY = originY + slot * c_timelineHeight;
+		let currentY = originY + slot * TimelineDimensions.slotHeight();
 		let handle : Rect = {
 			x: 0,
 			y: currentY + 1,
 			w: 14,
-			h: c_timelineHeight - 2
+			h: TimelineDimensions.slotHeight() - 2
 		};
 		g_ctx.fillStyle = slot === g_renderingProps.activeSlotIndex ? g_colors.accent : g_colors.bgMediumContrast;
 		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
@@ -833,16 +831,16 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 			}, true);
 		}
 	}
-	let timelineSectionHeight = c_timelineHeight * g_renderingProps.slotElements.length;
+	let timelineSectionHeight = TimelineDimensions.slotHeight() * g_renderingProps.slotElements.length;
 
 	// add button
 	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) {
-		let currentY = originY + g_renderingProps.slotElements.length * c_timelineHeight;
+		let currentY = originY + g_renderingProps.slotElements.length * TimelineDimensions.slotHeight();
 		let handle : Rect = {
 			x: 4,
 			y: currentY + 2,
 			w: 192,
-			h: c_buttonHeight - 4
+			h: TimelineDimensions.addSlotButtonHeight - 4
 		};
 		g_ctx.fillStyle = g_colors.bgLowContrast;
 		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
@@ -859,7 +857,7 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 			controller.displayCurrentState();
 		}, true);
 
-		timelineSectionHeight += c_buttonHeight;
+		timelineSectionHeight += TimelineDimensions.addSlotButtonHeight;
 	}
 
 	return timelineSectionHeight;
@@ -869,7 +867,7 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
 function drawEverything() {
 
-	let timelineOrigin = -g_visibleLeft + c_leftBufferWidth; // fragCoord.x (...) of rawTime=0.
+	let timelineOrigin = -g_visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
 	let currentHeight = 0;
 
 	// background white

@@ -6,10 +6,42 @@ import 'react-tooltip/dist/react-tooltip.css';
 import '../Style/tooltip.css';
 import {getCurrentThemeColors} from "./ColorTheme";
 import {getCachedValue, setCachedValue} from "../Controller/Common";
+import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
 
 export type ContentNode = JSX.Element | string;
 
 export type ValueChangeEvent = React.ChangeEvent<{value: string}>;
+
+const MAX_BUFF_COVERS_COUNT = 3;
+export const TimelineDimensions = {
+
+	rulerHeight: 30,
+	trackHeight: 14,
+
+	slotPaddingTop: 12,
+	skillButtonHeight: 28,
+	buffCoverHeight: 4,
+	slotPaddingBottom: 4,
+	slotHeight: () => {
+		return TimelineDimensions.slotPaddingTop // 12
+			+ TimelineDimensions.skillButtonHeight * 1.5 // 42
+			+ TimelineDimensions.buffCoverHeight * MAX_BUFF_COVERS_COUNT // 12
+			+ TimelineDimensions.slotPaddingBottom; // 4
+	},
+	timelineCanvasHeight: (numMarkerTracks: number, numTimelineSlots: number) => {
+		let height = TimelineDimensions.rulerHeight;
+		height += TimelineDimensions.trackHeight * numMarkerTracks;
+		height += TimelineDimensions.slotHeight() * numTimelineSlots;
+		if (numTimelineSlots < MAX_TIMELINE_SLOTS) {
+			height += TimelineDimensions.addSlotButtonHeight;
+		}
+		return height;
+	},
+
+	leftBufferWidth: 20, // leave this much space on the left before starting to draw timeline (for timeline selection bar)
+	addSlotButtonHeight: 20, // will probably get rid of this soon
+
+}
 
 function getBlobUrl(content: object) {
 	let blob = new Blob([JSON.stringify(content)], {type: "text/plain;charset=utf-8"});

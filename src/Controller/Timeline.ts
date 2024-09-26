@@ -8,6 +8,7 @@ import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {Potency} from "../Game/Potency";
 import {MarkerColor} from "../Components/ColorTheme";
+import {TimelineDimensions} from "../Components/Common";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -419,12 +420,7 @@ export class Timeline {
 	}
 
 	getCanvasHeight() {
-		let ruler = 30;
-		let markers = 14 * this.getNumMarkerTracks();
-		let timeline = 12 + 58;
-		let result = ruler + markers + timeline * this.slots.length;
-		if (this.slots.length < MAX_TIMELINE_SLOTS) result += 20;
-		return result;
+		return TimelineDimensions.timelineCanvasHeight(this.getNumMarkerTracks(), this.slots.length);
 	}
 
 	positionFromTime(time: number) {
