@@ -117,6 +117,7 @@ const pctBuffResources = [
 	ResourceType.RainbowBright,
 	ResourceType.Starstruck,
 	ResourceType.StarryMuse,
+	ResourceType.TemperaCoat,
 	ResourceType.TemperaGrassa,
 	ResourceType.Smudge,
 ];
