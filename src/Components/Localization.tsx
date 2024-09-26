@@ -78,7 +78,7 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.AeroInGreen, "疾风之绿"],
 	[SkillName.WaterInBlue, "流水之蓝"],
 	[SkillName.Fire2InRed, "烈炎之红"],
-	[SkillName.Aero2InGreen, "疾风之绿"],
+	[SkillName.Aero2InGreen, "烈风之绿"],
 	[SkillName.Water2InBlue, "激水之蓝"],
 	[SkillName.BlizzardInCyan, "冰结之蓝青"],
 	[SkillName.StoneInYellow, "飞石之纯黄"],
@@ -93,8 +93,8 @@ const skillsZh = new Map<SkillName, string>([
 
 	[SkillName.TemperaCoat, "坦培拉涂层"],
 	[SkillName.TemperaGrassa, "油性坦培拉涂层"],
-	[SkillName.TemperaCoatPop, "点掉坦培拉涂层"],
-	[SkillName.TemperaGrassaPop, "点掉油性坦培拉涂层"],
+	[SkillName.TemperaCoatPop, "坦培拉涂层破盾"],
+	[SkillName.TemperaGrassaPop, "油性坦培拉涂层破盾"],
 	[SkillName.Smudge, "速涂"],
 	[SkillName.SubtractivePalette, "减色混合"],
 
