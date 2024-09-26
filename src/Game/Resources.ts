@@ -111,6 +111,7 @@ export class CoolDown extends Resource {
 	}
 	currentStackCd() { return this.#cdPerStack * this.#recastTimeScale; }
 	stacksAvailable() { return Math.floor((this.availableAmount() + Debug.epsilon) / this.#cdPerStack); }
+	maxStacks() { return this.maxValue / this.#cdPerStack; }
 	useStack(game: GameState) {
 		this.consume(this.#cdPerStack);
 		this.#reCaptureRecastTimeScale(game);
