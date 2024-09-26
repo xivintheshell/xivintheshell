@@ -1,4 +1,4 @@
-import {Debug, SkillName, ProcMode, LevelSync, FIXED_BASE_CASTER_TAX} from "./Common";
+import {Debug, SkillName, ProcMode, LevelSync, ResourceType, FIXED_BASE_CASTER_TAX} from "./Common";
 import {ResourceOverride, ResourceOverrideData} from "./Resources";
 import {ShellInfo, ShellVersion} from "../Controller/Common";
 import {XIVMath} from "./XIVMath";
@@ -101,13 +101,13 @@ export class GameConfig {
 	}
 
 	// returns GCD before FPS tax
-	adjustedGCD(hasLL: boolean) {
-		return XIVMath.preTaxGcd(this.level, this.spellSpeed, hasLL);
+	adjustedGCD(baseGCD: number = 2.5, speedBuff?: ResourceType) {
+		return XIVMath.preTaxGcd(this.level, this.spellSpeed, baseGCD, speedBuff);
 	}
 
 	// returns cast time before FPS and caster tax
-	adjustedCastTime(inCastTime : number, hasLL: boolean) {
-		return XIVMath.preTaxCastTime(this.level, this.spellSpeed, inCastTime, hasLL);
+	adjustedCastTime(inCastTime : number, speedBuff?: ResourceType) {
+		return XIVMath.preTaxCastTime(this.level, this.spellSpeed, inCastTime, speedBuff);
 	}
 
 	getSkillAnimationLock(skillName : SkillName) : number {

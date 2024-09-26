@@ -34,7 +34,7 @@ function getTaxPreview(level: LevelSync, baseCastTime: number, spsStr: string, f
 	if (isNaN(sps) || isNaN(fps)) {
 		return "n/a";
 	}
-	let adjustedCastTime = XIVMath.preTaxCastTime(level, sps, baseCastTime, false);
+	let adjustedCastTime = XIVMath.preTaxCastTime(level, sps, baseCastTime);
 	return (XIVMath.afterFpsTax(fps, adjustedCastTime) - adjustedCastTime + XIVMath.afterFpsTax(fps, FIXED_BASE_CASTER_TAX)).toFixed(3);
 }
 
@@ -70,15 +70,15 @@ export function ResourceOverrideDisplay(props: {
 }
 
 export function ConfigSummary(props: {}) {
-	let gcd = controller.gameConfig.adjustedGCD(false);
+	let gcd = controller.gameConfig.adjustedGCD();
 	let gcdAfterTax = controller.gameConfig.getAfterTaxGCD(gcd).toFixed(3);
 	let castTimesTableDesc = localize({
 		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
 		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节"
 	});
-	let preTaxFn = (t: number) => { return controller.gameConfig.adjustedCastTime(t, false).toFixed(3); }
+	let preTaxFn = (t: number) => { return controller.gameConfig.adjustedCastTime(t).toFixed(3); }
 	let afterTaxFn = (t: number) => {
-		let preTax = controller.gameConfig.adjustedCastTime(t, false);
+		let preTax = controller.gameConfig.adjustedCastTime(t);
 		return controller.gameConfig.getAfterTaxCastTime(preTax).toFixed(3);
 	};
 	let castTimesChart =<div>
@@ -125,7 +125,7 @@ export function ConfigSummary(props: {}) {
 	});
 	// TODO specialize for BLM
 	// TODO (revisit): double check this forced cast
-	let thunderTickOffset = (controller.game.jobState as BLMState).thunderTickOffset.toFixed(3);
+	let thunderTickOffset = (controller.game as BLMState).thunderTickOffset.toFixed(3);
 	let thunderOffsetDesc = localize({
 		en: "the random time offset of thunder DoT ticks relative to mp ticks",
 		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）"

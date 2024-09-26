@@ -144,8 +144,11 @@ export class Potency {
 		if (this.base < 1) {
 			console.warn(this);
 		}
-		console.assert(this.snapshotTime !== undefined);
-		console.assert(this.applicationTime === undefined, this.sourceSkill);
+		console.assert(this.snapshotTime !== undefined, `${this.sourceSkill} displayed at ${displayTime} did not have snapshotTime`);
+		console.assert(
+			this.applicationTime === undefined,
+			`${this.sourceSkill} displayed at ${displayTime} was already resolved at ${this.applicationTime}`
+		);
 		this.applicationTime = displayTime;
 	}
 

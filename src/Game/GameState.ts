@@ -1,7 +1,12 @@
 import {Aspect, BuffType, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {StatsModifier} from "./StatsModifier";
-import {DisplayedSkills, SkillApplicationCallbackInfo, SkillCaptureCallbackInfo, SkillsList} from "./Skills"
+import {
+	DisplayedSkills,
+	SkillsList,
+	Spell,
+	Ability,
+} from "./Skills"
 import {CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
@@ -9,9 +14,8 @@ import {ActionNode} from "../Controller/Record";
 import {ShellInfo, ShellJob} from "../Controller/Common";
 import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
-import {TraitName, Traits} from "./Traits";
 
-import {BLMState} from "./Jobs/BLM";
+import type {BLMState} from "./Jobs/BLM";
 import {SkillButtonViewInfo} from "../Components/Skills";
 
 //https://www.npmjs.com/package/seedrandom
@@ -19,47 +23,11 @@ let SeedRandom = require('seedrandom');
 
 type RNG = any;
 
-// Job-specific resource and state representation.
-// All implementors of JobState should initialize their own resources within the constructor.
-export interface JobState {
-	gameState: GameState;
-	config: GameConfig;
-	rng: RNG;
-	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
-	resources: ResourceState;
-	cooldowns: CoolDownState;
-	eventsQueue: Event[];
-
-	// Register persistent timers, like BLM's Polyglot gauge.
-	registerRecurringEvents(): void;
-};
-
-
-class EmptyJobState implements JobState {
-	gameState: GameState;
-	config: GameConfig;
-	rng: RNG;
-	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
-	resources: ResourceState;
-	cooldowns: CoolDownState;
-	eventsQueue: Event[];
-	
-	constructor(gameState: GameState) {
-		this.gameState = gameState;
-		this.config = gameState.config;
-		this.rng = gameState.rng;
-		this.nonProcRng = gameState.nonProcRng;
-		this.resources = gameState.resources;
-		this.cooldowns = gameState.cooldowns;
-		this.eventsQueue = gameState.eventsQueue;
-	}
-
-	registerRecurringEvents() {};
-}
 
 // GameState := resources + events queue
-export class GameState {
+export abstract class GameState {
 	config: GameConfig;
+	job: ShellJob;
 	rng: RNG;
 	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
 	lucidTickOffset: number;
@@ -67,12 +35,12 @@ export class GameState {
 	resources: ResourceState;
 	cooldowns: CoolDownState;
 	eventsQueue: Event[];
-	skillsList: SkillsList;
+	skillsList: SkillsList<GameState>;
 	displayedSkills: DisplayedSkills;
-	jobState: JobState;
 
 	constructor(config: GameConfig) {
 		this.config = config;
+		this.job = ShellInfo.job; // TODO make this configurable
 		this.rng = new SeedRandom(config.randomSeed);
 		this.nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
 		this.lucidTickOffset = this.nonProcRng() * 3.0;
@@ -93,8 +61,10 @@ export class GameState {
 
 		// skill CDs (also a form of resource)
 		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD(false)), 1, 1));
+		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD()), 1, 1));
 		this.cooldowns.set(new CoolDown(ResourceType.cd_Sprint, 60, 1, 1));
+
+		this.cooldowns.set(new CoolDown(ResourceType.Never, 0, 0, 0)); // dummy cooldown for invalid skills
 
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
@@ -108,21 +78,17 @@ export class GameState {
 
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = new SkillsList(this);
-
-		switch (ShellInfo.job) {
-			case ShellJob.BLM:
-				this.jobState = new BLMState(this);
-				break;
-			default:
-				console.error(`Could not construct job state for job: ${ShellInfo.job}`)
-				this.jobState = new EmptyJobState(this);
-		}
-
-		this.#init();
 	}
 
-	// get mp tick, lucid tick, thunder DoT tick and polyglot rolling
-	#init() {
+
+	/**
+	 * Get mp tick, lucid tick, and class-specific recurring timers rolling.
+	 *
+	 * This cannot be called by the base GameState constructor because sub-classes
+	 * have not yet initialized their resource/cooldown objects. Instead, all
+	 * sub-classes must explicitly call this at the end of their constructor.
+	 */
+	protected registerRecurringEvents() {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
@@ -161,7 +127,8 @@ export class GameState {
 			let lucid = this.resources.get(ResourceType.LucidDreaming) as DoTBuff;
 			if (lucid.available(1)) {
 				lucid.tickCount++;
-				if (this.getFireStacks() === 0) {
+				if (!(this.isBLMState() && this.getFireStacks() > 0)) {
+					// Block lucid ticks for BLM in fire
 					let mana = this.resources.get(ResourceType.Mana);
 					mana.gain(550);
 					let msg = "+550";
@@ -179,7 +146,7 @@ export class GameState {
 				}
 			}
 			// queue the next tick
-			let recurringLucidTickEvt = new Event("lucid tick", 3, ()=>{
+			let recurringLucidTickEvt = new Event("lucid tick", 3, () => {
 				recurringLucidTick();
 			});
 			recurringLucidTickEvt.addTag(EventTag.LucidTick);
@@ -197,8 +164,6 @@ export class GameState {
 		let firstLucidTickEvt = new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick);
 		firstLucidTickEvt.addTag(EventTag.LucidTick);
 		this.addEvent(firstLucidTickEvt);
-
-		this.jobState.registerRecurringEvents();
 	}
 
 	// advance game state by this much time
@@ -254,111 +219,8 @@ export class GameState {
 		this.eventsQueue.push(evt);
 	}
 
-	getFireStacks() { return this.resources.get(ResourceType.AstralFire).availableAmount(); }
-	getIceStacks() { return this.resources.get(ResourceType.UmbralIce).availableAmount(); }
-	getUmbralHearts() { return this.resources.get(ResourceType.UmbralHeart).availableAmount(); }
-	getMP() { return this.resources.get(ResourceType.Mana).availableAmount(); }
-
 	getDisplayTime() {
 		return (this.time - this.config.countdown);
-	}
-
-	gainThunderhead() {
-		let thunderhead = this.resources.get(ResourceType.Thunderhead);
-		// [6/29/24] note: from screen recording it looks more like: button press (0.1s) gain buff (30.0s) lose buff
-		// see: https://drive.google.com/file/d/11KEAEjgezCKxhvUsaLTjugKAH_D1glmy/view?usp=sharing
-		let duration = 30;
-		if (thunderhead.available(1)) { // already has a proc; reset its timer
-			thunderhead.overrideTimer(this, duration);
-		} else { // there's currently no proc. gain one.
-			thunderhead.gain(1);
-			this.resources.addResourceEvent({
-				rscType: ResourceType.Thunderhead,
-				name: "drop thunderhead",
-				delay: duration,
-				fnOnRsc: (rsc: Resource) => {
-					rsc.consume(1);
-				}
-			});
-		}
-	}
-
-	// call this whenever gaining af or ui from a different af/ui/unaspected state
-	switchToAForUI(rscType: ResourceType.AstralFire | ResourceType.UmbralIce, numStacksToGain: number) {
-		console.assert(numStacksToGain > 0);
-
-		let af = this.resources.get(ResourceType.AstralFire);
-		let ui = this.resources.get(ResourceType.UmbralIce);
-		let uh = this.resources.get(ResourceType.UmbralHeart);
-		let paradox = this.resources.get(ResourceType.Paradox);
-		let as = this.resources.get(ResourceType.AstralSoul);
-
-		if (rscType===ResourceType.AstralFire)
-		{
-			if (af.availableAmount() === 0) {
-				this.gainThunderhead();
-			}
-			af.gain(numStacksToGain);
-
-			if (Traits.hasUnlocked(TraitName.AspectMasteryV, this.config.level)) {
-				if (ui.available(3) && uh.available(3)) {
-					paradox.gain(1);
-				}  
-			}
-
-			ui.consume(ui.availableAmount());
-		}
-		else if (rscType===ResourceType.UmbralIce)
-		{
-			if (ui.availableAmount() === 0) {
-				this.gainThunderhead();
-			}
-			ui.gain(numStacksToGain);
-
-			if (Traits.hasUnlocked(TraitName.AspectMasteryV, this.config.level)) {
-				if (af.available(3)) {
-					paradox.gain(1);
-				}
-			}
-
-			af.consume(af.availableAmount());
-			as.consume(as.availableAmount());
-		}
-	}
-
-	gainUmbralMana(effectApplicationDelay: number = 0) {
-		let mpToGain = 0;
-		switch(this.resources.get(ResourceType.UmbralIce).availableAmount()) {
-			case 1: mpToGain = 2500;  break;
-			case 2: mpToGain = 5000;  break;
-			case 3: mpToGain = 10000; break;
-			default: mpToGain = 0; break;
-		}
-		this.addEvent(new Event(
-			"gain umbral mana",
-				effectApplicationDelay,
-			() => {
-				this.resources.get(ResourceType.Mana).gain(mpToGain);
-			}));
-	}
-
-	captureManaCostAndUHConsumption(aspect: Aspect, baseManaCost: number) {
-		let mod = StatsModifier.fromResourceState(this.resources);
-
-		let manaCost;
-		let uhConsumption = 0;
-
-		if (aspect === Aspect.Fire) {
-			manaCost = baseManaCost * mod.manaCostFire;
-			uhConsumption = mod.uhConsumption;
-		}
-		else if (aspect === Aspect.Ice) {
-			manaCost = baseManaCost * mod.manaCostIce;
-		}
-		else {
-			manaCost = baseManaCost;
-		}
-		return [manaCost, uhConsumption];
 	}
 
 	captureManaRegenAmount() {
@@ -366,22 +228,12 @@ export class GameState {
 		return mod.manaRegen;
 	}
 
-	captureSpellCastTimeAFUI(aspect: Aspect, llAdjustedCastTime: number) {
-		let mod = StatsModifier.fromResourceState(this.resources);
-
-		let castTime = llAdjustedCastTime;
-		if (aspect === Aspect.Fire) castTime *= mod.castTimeFire;
-		else if (aspect === Aspect.Ice) castTime *= mod.castTimeIce;
-
-		return castTime;
-	}
-
 	gcdRecastTimeScale() {
 		let ll = this.resources.get(ResourceType.LeyLines);
 		if (ll.available(1)) {
 			// should be approximately 0.85
-			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(true));
-			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(false));
+			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.LeyLines));
+			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
 			return num / denom;
 		} else {
 			return 1;
@@ -407,262 +259,169 @@ export class GameState {
 		}
 	}
 
-	castSpell(props: {
-		skillName: SkillName,
-		onCapture: (cap: SkillCaptureCallbackInfo)=>void,
-		onApplication: (app: SkillApplicationCallbackInfo)=>void,
-		node: ActionNode})
-	{
-		let skill = this.skillsList.get(props.skillName);
-		let skillInfo = skill.info;
-		console.assert(skillInfo.isSpell);
-		let cd = this.cooldowns.get(skillInfo.cdName);
-		let [capturedManaCost, uhConsumption] = this.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
-		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
-		let capturedCastTime = this.captureSpellCastTimeAFUI(
-			skillInfo.aspect,
-			this.config.adjustedCastTime(skillInfo.baseCastTime, llCovered));
-		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
-			props.node.addBuff(BuffType.LeyLines);
+	/**
+	 * Attempt to use a spell. Assumes that resources for the spell are currently available,
+	 * i.e. `skill.validateAttempt` succeeded.
+	 *
+	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
+	 * it performs the confirmation immediately.
+	 */
+	useSpell(skill: Spell<PlayerState>, node: ActionNode) {
+		let cd = this.cooldowns.get(skill.cdName);
+		let capturedManaCost = skill.manaCostFn(this);
+		let llCovered = this.hasResourceAvailable(ResourceType.LeyLines);
+		let capturedCastTime = skill.castTimeFn(this);
+		if (llCovered && skill.cdName === ResourceType.cd_GCD) {
+			node.addBuff(BuffType.LeyLines);
 		}
 
-		// attach potency node
+		// create potency node object (snapshotted buffs will populate on confirm)
+		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
-		if (skillInfo.basePotency > 0) {
+		// Potency object for DoT effects was already created separately
+		if (skill.aspect === Aspect.Lightning) {
+			potency = node.getPotencies()[0];
+		} else if (potencyNumber > 0) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
-				sourceSkill: props.skillName,
-				aspect: skillInfo.aspect,
-				basePotency: skillInfo.basePotency,
+				sourceSkill: skill.name,
+				aspect: skill.aspect,
+				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
 			});
-			props.node.addPotency(potency);
+			node.addPotency(potency);
 		}
 
-		let takeEffect = function(game: GameState) {
-			let resourcesStillAvailable = skill.available();
-			if (resourcesStillAvailable) {
-				// re-capture them here, since game state might've changed (say, AF/UI fell off)
-				[capturedManaCost, uhConsumption] = game.captureManaCostAndUHConsumption(skillInfo.aspect, skillInfo.baseManaCost);
+		/**
+		 * Perform operations common to casting a spell (consuming mana, rolling the GCD).
+		 *
+		 * This should be called at the timestamp of the cast confirm window.
+		 *
+		 * Also snapshot potencies and enqueue the spell application event.
+		 */
+		const onSpellConfirm = () => {
+			// actually deduct MP
+			// special cases like Flare/Despair should set their base MP to 0 and perform
+			// this deduction in their onCapture function
+			if (capturedManaCost > 0) {
+				this.resources.get(ResourceType.Mana).consume(capturedManaCost);
+			}
 
-				// actually deduct MP and UH (except some special ones like Despair, Flare and Flare Star that deduct resources in onCapture fn)
-				if (props.skillName !== SkillName.Flare && props.skillName !== SkillName.Despair && props.skillName !== SkillName.FlareStar) {
-					if (!(props.skillName===SkillName.Paradox && game.getIceStacks()>0)) {
-						game.resources.get(ResourceType.Mana).consume(capturedManaCost);
+			// potency
+			if (potency) {
+				potency.snapshotTime = this.getDisplayTime();
+				potency.modifiers = getPotencyModifiersFromResourceState(this.resources, skill.aspect);
+			}
+
+			// tincture
+			if (this.hasResourceAvailable(ResourceType.Tincture) && skill.potencyFn(this) > 0) {
+				node.addBuff(BuffType.Tincture);
+			}
+
+			// Perform additional side effects
+			skill.onConfirm(this, node);
+
+			// Enqueue effect application
+			this.addEvent(new Event(
+				skill.name + " applied",
+				skill.applicationDelay,
+				() => {
+					if (potency) {
+						controller.resolvePotency(potency);
 					}
-					if (uhConsumption > 0) game.resources.get(ResourceType.UmbralHeart).consume(uhConsumption);
+					skill.onApplication(this, node);
 				}
+			));
+		};
 
-				// potency
-				if (potency) {
-					potency.snapshotTime = game.getDisplayTime();
-					potency.modifiers = getPotencyModifiersFromResourceState(game.resources, skillInfo.aspect);
+		const isInstant = capturedCastTime === 0 || skill.isInstantFn(this);
+		if (isInstant) {
+			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(skill.name));
+			// Immediately do confirmation (no need to validate again)
+			onSpellConfirm();
+		} else {
+			// movement lock
+			this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
+			// caster tax
+			this.resources.takeResourceLock(ResourceType.NotCasterTaxed, this.config.getAfterTaxCastTime(capturedCastTime));
+			const timeToConfirmation = capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime)
+			// Enqueue confirm event
+			this.addEvent(new Event(skill.name + " captured", timeToConfirmation, () => {
+				// TODO propagate error more cleanly
+				if (skill.validateAttempt(this)) {
+					onSpellConfirm();
+				} else {
+					controller.reportInterruption({
+						failNode: node,
+					});
 				}
-
-				// tincture
-				if (game.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
-					props.node.addBuff(BuffType.Tincture);
-				}
-
-				// ice spells: gain mana if in UI
-				if (skillInfo.aspect === Aspect.Ice) {
-					game.gainUmbralMana(skillInfo.applicationDelay);
-				}
-
-				let captureInfo: SkillCaptureCallbackInfo = {
-					capturedManaCost: capturedManaCost
-					//...
-				};
-				props.onCapture(captureInfo);
-
-				// effect application
-				game.addEvent(new Event(
-					skillInfo.name + " applied",
-					skillInfo.applicationDelay,
-					()=>{
-						if (potency) {
-							controller.resolvePotency(potency);
-						}
-						let applicationInfo: SkillApplicationCallbackInfo = {
-							//...
-						};
-						props.onApplication(applicationInfo);
-					}));
-				return true;
-			} else {
-				return false;
-			}
+			}));
 		}
-
-		let instantCast = function(game: GameState, rsc?: Resource) {
-			if (rsc) rsc.consume(1);
-			takeEffect(game);
-
-			// recast
-			cd.useStack(game);
-
-			// animation lock
-			game.resources.takeResourceLock(ResourceType.NotAnimationLocked, game.config.getSkillAnimationLock(props.skillName));
-		}
-
-		// Paradox made instant via Dawntrail
-		if (props.skillName === SkillName.Paradox || props.skillName === SkillName.UmbralSoul) {
-			instantCast(this, undefined);
-			return;
-		}
-
-		// Swiftcast
-		let swift = this.resources.get(ResourceType.Swiftcast);
-		if (swift.available(1)) {
-			swift.removeTimer();
-			instantCast(this, swift);
-			return;
-		}
-
-		// Triplecast charge
-		let triple = this.resources.get(ResourceType.Triplecast);
-		if (triple.available(1)) {
-			instantCast(this, triple);
-			if (!triple.available(1)) {
-				triple.removeTimer();
-			}
-			return;
-		}
-
-		// there are no triplecast charges. cast and apply effect
-
-		// movement lock
-		this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
-
-		// (basically done casting) deduct MP, calc damage, queue damage
-		this.addEvent(new Event(skillInfo.name + " captured", capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime), ()=>{
-			let success = takeEffect(this);
-			if (!success) {
-				controller.reportInterruption({
-					failNode: props.node
-				});
-			}
-		}));
-
 		// recast
 		cd.useStack(this);
-
-		// caster tax
-		this.resources.takeResourceLock(ResourceType.NotCasterTaxed, this.config.getAfterTaxCastTime(capturedCastTime));
 	}
 
-	useInstantSkill(props: {
-		skillName: SkillName,
-		onCapture?: () => void,
-		onApplication?: () => void,
-		dealDamage: boolean,
-		node: ActionNode
-	}) {
-		console.assert(props.node);
-		let skillInfo = this.skillsList.get(props.skillName).info;
-		let cd = this.cooldowns.get(skillInfo.cdName);
-
-		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
-		if (llCovered && skillInfo.cdName===ResourceType.cd_GCD) {
-			props.node.addBuff(BuffType.LeyLines);
-		}
+	/**
+	 * Attempt to use an ability. Assumes that resources for the ability are currently available,
+	 * i.e. `skill.validateAttempt` succeeded.
+	 *
+	 * Because abilities have no cast time, this function snapshots potencies and enqueues the
+	 * application event immediately.
+	 */
+	useAbility(skill: Ability<PlayerState>, node: ActionNode) {
+		console.assert(node);
+		let cd = this.cooldowns.get(skill.cdName);
 
 		// potency
+		const potencyNumber = skill.potencyFn(this);
 		let potency : Potency | undefined = undefined;
-		if (props.dealDamage) {
+		if (potencyNumber > 0) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
-				sourceSkill: skillInfo.name,
-				aspect: skillInfo.aspect,
-				basePotency: skillInfo.basePotency,
+				sourceSkill: skill.name,
+				aspect: skill.aspect,
+				basePotency: potencyNumber,
 				snapshotTime: this.getDisplayTime(),
 				description: "",
 			});
-			potency.modifiers = getPotencyModifiersFromResourceState(this.resources, skillInfo.aspect);
-			props.node.addPotency(potency);
+			potency.modifiers = getPotencyModifiersFromResourceState(this.resources, skill.aspect);
+			node.addPotency(potency);
 		}
 
 		// tincture
-		if (this.resources.get(ResourceType.Tincture).available(1) && skillInfo.basePotency > 0) {
-			props.node.addBuff(BuffType.Tincture);
+		if (this.hasResourceAvailable(ResourceType.Tincture) && potencyNumber > 0) {
+			node.addBuff(BuffType.Tincture);
 		}
 
-		if (props.onCapture) props.onCapture();
+		skill.onConfirm(this, node);
 
-		let skillEvent = new Event(
-			skillInfo.name + " captured",
-			skillInfo.applicationDelay,
-			()=>{
-				if (props.dealDamage && potency) controller.resolvePotency(potency);
-				if (props.onApplication) props.onApplication();
-			});
-		this.addEvent(skillEvent);
+		if (skill.applicationDelay > 0) {
+			this.addEvent(new Event(
+				skill.name + " applied",
+				skill.applicationDelay,
+				() => {
+					if (potency) controller.resolvePotency(potency);
+					skill.onApplication(this, node);
+				}
+			));
+		} else {
+			if (potency) controller.resolvePotency(potency);
+			skill.onApplication(this, node);
+		}
 
 		// recast
 		cd.useStack(this);
 
 		// animation lock
-		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(props.skillName));
-
-		return skillEvent;
-	}
-
-	hasEnochian() {
-		// lasts a teeny bit longer to allow simultaneous events catch its effect
-		let enochian = this.resources.get(ResourceType.Enochian);
-		return enochian.available(1);
-	}
-
-	// falls off after 15s unless refreshed by AF / UI
-	startOrRefreshEnochian() {
-		let enochian = this.resources.get(ResourceType.Enochian);
-
-		if (enochian.available(1) && enochian.pendingChange) {
-			// refresh timer (if there's already a timer)
-			enochian.overrideTimer(this, 15);
-
-		} else {
-			// reset polyglot countdown to 30s if enochian wasn't actually active
-			if (!enochian.available(1)) {
-				this.resources.get(ResourceType.Polyglot).overrideTimer(this, 30);
-			}
-
-			// either fresh gain, or there's enochian but no timer
-			enochian.gain(1);
-
-			// add the event for losing it
-			this.resources.addResourceEvent({
-				rscType: ResourceType.Enochian,
-				name: "lose enochian, clear all AF, UI, UH, stop poly timer",
-				delay: 15,
-				fnOnRsc: rsc=>{
-					this.loseEnochian();
-				}
-			});
-		}
-	}
-
-	loseEnochian() {
-		this.resources.get(ResourceType.Enochian).consume(1);
-		let af = this.resources.get(ResourceType.AstralFire);
-		let ui = this.resources.get(ResourceType.UmbralIce);
-		let uh = this.resources.get(ResourceType.UmbralHeart);
-		let paradox = this.resources.get(ResourceType.Paradox);
-		let as = this.resources.get(ResourceType.AstralSoul);
-
-		af.consume(af.availableAmount());
-		ui.consume(ui.availableAmount());
-		uh.consume(uh.availableAmount());
-		paradox.consume(paradox.availableAmount());
-		as.consume(as.availableAmount());
+		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(skill.name));
 	}
 
 	#timeTillSkillAvailable(skillName: SkillName) {
 		let skill = this.skillsList.get(skillName);
-		let cdName = skill.info.cdName;
+		let cdName = skill.cdName;
 		let tillAnyCDStack = this.cooldowns.timeTillAnyStackAvailable(cdName);
 		return Math.max(this.timeTillAnySkillAvailable(), tillAnyCDStack);
 	}
@@ -681,6 +440,26 @@ export class GameState {
 		return undefined;
 	}
 
+	hasResourceAvailable(rscType: ResourceType, atLeast?: number): boolean {
+		return this.resources.get(rscType).available(atLeast ?? 1);
+	}
+
+	enqueueResourceDrop(
+		rscType: ResourceType,
+		delay: number,
+		toConsume?: number,
+	) {
+		const name = (toConsume === undefined ? "drop all " : `drop ${toConsume} `) + rscType;
+		this.resources.addResourceEvent({
+			rscType: rscType,
+			name: name,
+			delay: delay,
+			fnOnRsc: (rsc: Resource) => {
+				rsc.consume(toConsume ?? rsc.availableAmount());
+			}
+		})
+	}
+
 	timeTillNextMpGainEvent() {
 		let foundEvt = this.findNextQueuedEventByTag(EventTag.ManaGain);
 		return foundEvt ? foundEvt.timeTillEvent : 0;
@@ -688,43 +467,34 @@ export class GameState {
 
 	getSkillAvailabilityStatus(skillName: SkillName): SkillButtonViewInfo {
 		let skill = this.skillsList.get(skillName);
-		let timeTillAvailable = this.#timeTillSkillAvailable(skill.info.name);
-		let [capturedManaCost] = skill.info.isSpell ? this.captureManaCostAndUHConsumption(skill.info.aspect, skill.info.baseManaCost) : [0,0];
+		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
+		let capturedManaCost = skill.manaCostFn(this);
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
-		let capturedCastTime = this.captureSpellCastTimeAFUI(
-			skill.info.aspect,
-			this.config.adjustedCastTime(skill.info.baseCastTime, llCovered));
-		let instantCastAvailable = this.resources.get(ResourceType.Triplecast).available(1)
-			|| this.resources.get(ResourceType.Swiftcast).available(1)
-			|| skillName===SkillName.Paradox
-			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)))
-			|| (skillName===SkillName.Xenoglossy && this.resources.get(ResourceType.Polyglot).available(1))
-			|| (skillName===SkillName.UmbralSoul && this.getIceStacks()>0); // lmfao why does this count as a spell
+		let capturedCastTime = skill.kind === "weaponskill" || skill.kind === "spell" ? skill.castTimeFn(this) : 0;
+		let instantCastAvailable = capturedCastTime === 0 || skill.kind === "ability" || skill.isInstantFn(this);
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
-		let enoughMana = capturedManaCost <= currentMana
-			|| (skillName===SkillName.Paradox && this.getIceStacks() > 0)
-			|| (skillName===SkillName.Fire3 && this.resources.get(ResourceType.Firestarter).available((1)));
-		let reqsMet = skill.available();
-		let skillUnlocked = this.config.level >= skill.info.unlockLevel;
+		let enoughMana = capturedManaCost <= currentMana;
+		let reqsMet = skill.validateAttempt(this);
+		let skillUnlocked = this.config.level >= skill.unlockLevel;
 		let status = SkillReadyStatus.Ready;
 		if (!notBlocked) status = SkillReadyStatus.Blocked;
 		else if (!skillUnlocked) status = SkillReadyStatus.SkillNotUnlocked;
 		else if (!reqsMet) status = SkillReadyStatus.RequirementsNotMet;
 		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
 
-		let cd = this.cooldowns.get(skill.info.cdName);
-		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.info.cdName);
+		let cd = this.cooldowns.get(skill.cdName);
+		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.cdName);
 		let cdRecastTime = cd.currentStackCd();
 
 		// to be displayed together when hovered on a skill
 		let timeTillDamageApplication = 0;
 		if (status === SkillReadyStatus.Ready) {
-			if (skill.info.isSpell) {
+			if (skill.kind === "spell") {
 				let timeTillCapture = instantCastAvailable ? 0 : (capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
-				timeTillDamageApplication = timeTillCapture + skill.info.applicationDelay;
+				timeTillDamageApplication = timeTillCapture + skill.applicationDelay;
 			} else {
-				timeTillDamageApplication = skill.info.applicationDelay;
+				timeTillDamageApplication = skill.applicationDelay;
 			}
 		}
 
@@ -761,7 +531,12 @@ export class GameState {
 
 	useSkill(skillName: SkillName, node: ActionNode) {
 		let skill = this.skillsList.get(skillName);
-		skill.use(this, node);
+		// TODO implement weaponskills
+		if (skill.kind === "spell") {
+			this.useSpell(skill, node);
+		} else if (skill.kind === "ability") {
+			this.useAbility(skill, node);
+		}
 	}
 
 	getPartyBuffs(time: number) {
@@ -785,6 +560,21 @@ export class GameState {
 		return buffCollection;
 	}
 
+	// Attempt to consume 1 stack of the specified resource.
+	// When cancelTimerIfEmpty is set, then remove any associated timers if the last stack of
+	// the resource was consumed.
+	tryConsumeResource(rscType: ResourceType, removeTimerIfEmpty=true) {
+		const resource = this.resources.get(rscType);
+		if (resource.available(1)) {
+			resource.consume(1);
+			if (removeTimerIfEmpty && !resource.available(1)) {
+				resource.removeTimer();
+			}
+			return true;
+		}
+		return false;
+	}
+
 	toString() {
 		let s = "======== " + this.time.toFixed(3) + "s ========\n";
 		s += "MP:\t" + this.resources.get(ResourceType.Mana).availableAmount() + "\n";
@@ -798,4 +588,13 @@ export class GameState {
 		s += "LLCD:\t" + this.cooldowns.get(ResourceType.cd_LeyLines).availableAmount().toFixed(3) + "\n";
 		return s;
 	}
+
+	isBLMState(): this is BLMState {
+		return this.job === ShellJob.BLM;
+	}
 }
+
+// TODO if we ever support multiple jobs running in parallel, then we will need to move a lot of
+// elements out onto per-player state.
+// This type alias is placed here for now to make this possible future refactor easier.
+export type PlayerState = GameState;

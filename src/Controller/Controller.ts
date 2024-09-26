@@ -8,6 +8,7 @@ import {
 	TickMode
 } from "./Common";
 import {GameState} from "../Game/GameState";
+import {newGameState, BLMState} from "../Game/Jobs/BLM";
 import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 import {updateStatusDisplay} from "../Components/StatusDisplay";
@@ -91,7 +92,7 @@ class Controller {
 		this.#presetLinesManager = new PresetLinesManager();
 
 		this.gameConfig = new GameConfig(DEFAULT_CONFIG);
-		this.game = new GameState(this.gameConfig);
+		this.game = newGameState(this.gameConfig);
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;
@@ -172,7 +173,7 @@ class Controller {
 
 			// create environment
 			let cfg = inRecord.config ?? this.gameConfig;
-			this.game = new GameState(cfg);
+			this.game = newGameState(cfg);
 			this.record = new Record();
 			this.record.config = cfg;
 			this.#lastDamageApplicationTime = -cfg.countdown;
@@ -209,7 +210,7 @@ class Controller {
 
 		this.#sandboxEnvironment(()=>{
 			let tmpRecord = this.record;
-			this.game = new GameState(this.gameConfig);
+			this.game = newGameState(this.gameConfig);
 			this.record = new Record();
 			this.record.config = this.gameConfig;
 			this.#lastDamageApplicationTime = -this.gameConfig.countdown;
@@ -267,7 +268,7 @@ class Controller {
 
 	#requestRestart() {
 		this.lastAttemptedSkill = ""
-		this.game = new GameState(this.gameConfig);
+		this.game = newGameState(this.gameConfig);
 		this.#playPause({shouldLoop: false});
 		this.timeline.reset();
 		this.record.unselectAll();
@@ -602,8 +603,8 @@ class Controller {
 			mana: game.resources.get(ResourceType.Mana).availableAmount(),
 			timeTillNextManaTick: game.resources.timeTillReady(ResourceType.Mana),
 			enochianCountdown: enoCountdown,
-			astralFire: game.getFireStacks(),
-			umbralIce: game.getIceStacks(),
+			astralFire: (game as BLMState).getFireStacks(),
+			umbralIce: (game as BLMState).getIceStacks(),
 			umbralHearts: game.resources.get(ResourceType.UmbralHeart).availableAmount(),
 			paradox: game.resources.get(ResourceType.Paradox).availableAmount(),
 			astralSoul: game.resources.get(ResourceType.AstralSoul).availableAmount(),
@@ -785,8 +786,8 @@ class Controller {
 				&& !this.game.resources.get(ResourceType.Paradox).available(1))
 			{
 				// and vice versa
-				if (this.game.getFireStacks() > 0) skillName = SkillName.Fire;
-				else if (this.game.getIceStacks() > 0) skillName = SkillName.Blizzard;
+				if ((this.game as BLMState).getFireStacks() > 0) skillName = SkillName.Fire;
+				else if ((this.game as BLMState).getIceStacks() > 0) skillName = SkillName.Blizzard;
 			}
 			status = this.game.getSkillAvailabilityStatus(skillName);
 			this.lastAttemptedSkill = "";
@@ -817,8 +818,8 @@ class Controller {
 
 			if (!this.#bInSandbox) { // this block is run when NOT viewing historical state (aka run when receiving input)
 				let newStatus = this.game.getSkillAvailabilityStatus(skillName); // refresh to get re-captured recast time
-				let skillInfo = this.game.skillsList.get(skillName).info;
-				let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
+				let skill = this.game.skillsList.get(skillName);
+				let isGCD = skill.cdName === ResourceType.cd_GCD;
 				let isSpellCast = status.castTime > 0 && !status.instantCast;
 				let snapshotTime = isSpellCast ? status.castTime - GameConfig.getSlidecastWindow(status.castTime) : 0;
 				this.timeline.addElement({
