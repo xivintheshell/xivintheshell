@@ -72,7 +72,7 @@ class Controller {
 
 	#bAddingLine: boolean = false;
 	#bInterrupted: boolean = false;
-	#bCalculatingHistoricalState: boolean = false;
+	#bInSandbox: boolean = false;
 
 	#skipViewUpdates: boolean = false;
 	displayingUpToDateGameState = true;
@@ -134,7 +134,7 @@ class Controller {
 
 	#sandboxEnvironment(fn: ()=>void) {
 		this.displayingUpToDateGameState = false;
-		this.#bCalculatingHistoricalState = true;
+		this.#bInSandbox = true;
 		let tmpGame = this.game;
 		let tmpRecord = this.record;
 		let tmpLastDamageApplicationTime = this.#lastDamageApplicationTime;
@@ -143,7 +143,7 @@ class Controller {
 		fn();
 
 		//============v pop stashed states v============
-		this.#bCalculatingHistoricalState = false;
+		this.#bInSandbox = false;
 		this.savedHistoricalGame = this.game;
 		this.savedHistoricalRecord = this.record;
 		this.game = tmpGame;
@@ -495,7 +495,7 @@ class Controller {
 	}
 
 	reportWarning(type: WarningType) {
-		if (!this.#bCalculatingHistoricalState) {
+		if (!this.#bInSandbox) {
 			this.timeline.addElement({
 				type: ElemType.WarningMark,
 				warningType: type,
@@ -514,7 +514,7 @@ class Controller {
 			if (m.source===PotencyModifierType.POT) pot = true;
 		});
 
-		if (!this.#bCalculatingHistoricalState) {
+		if (!this.#bInSandbox) {
 			let sourceDesc = "{skill}@" + p.sourceTime.toFixed(3);
 			if (p.description.length > 0) sourceDesc += " " + p.description;
 			this.timeline.addElement({
@@ -541,7 +541,7 @@ class Controller {
 	}
 
 	reportLucidTick(time: number, sourceDesc: string) {
-		if (!this.#bCalculatingHistoricalState) {
+		if (!this.#bInSandbox) {
 			this.timeline.addElement({
 				type: ElemType.LucidMark,
 				time: time,
@@ -552,7 +552,7 @@ class Controller {
 	}
 
 	reportManaTick(time: number, sourceDesc: string) {
-		if (!this.#bCalculatingHistoricalState) {
+		if (!this.#bInSandbox) {
 			this.timeline.addElement({
 				type: ElemType.MPTickMark,
 				time: time,
@@ -563,14 +563,14 @@ class Controller {
 	}
 
 	reportDotTick(rawTime: number) {
-		if (!this.#bCalculatingHistoricalState) {
+		if (!this.#bInSandbox) {
 			this.#thunderDotTickTimes.push(rawTime)
 			this.updateStats();
 		}
 	}
 
 	reportDotStart(displayTime: number) {
-		if (!this.#bCalculatingHistoricalState) {
+		if (!this.#bInSandbox) {
 			let len = this.#thunderDoTCoverageTimes.length;
 			console.assert(len === 0 || this.#thunderDoTCoverageTimes[len-1].tEndDisplay!==undefined);
 			this.#thunderDoTCoverageTimes.push({
@@ -581,7 +581,7 @@ class Controller {
 	}
 
 	reportDotDrop(displayTime: number) {
-		if (!this.#bCalculatingHistoricalState) {
+		if (!this.#bInSandbox) {
 			let len = this.#thunderDoTCoverageTimes.length;
 			console.assert(len > 0 && this.#thunderDoTCoverageTimes[len-1].tEndDisplay===undefined);
 			this.#thunderDoTCoverageTimes[len-1].tEndDisplay = displayTime;
@@ -664,11 +664,13 @@ class Controller {
 		updateSkillSequencePresetsView();
 		refreshTimelineEditor();
 
-		this.timeline.updateElem({
-			type: ElemType.s_Cursor,
-			time: this.game.time,
-			displayTime: this.game.getDisplayTime()
-		});
+		if (!this.#bInSandbox) {
+			this.timeline.updateElem({
+				type: ElemType.s_Cursor,
+				time: this.game.time,
+				displayTime: this.game.getDisplayTime()
+			});
+		}
 		this.timeline.drawElements();
 	}
 
@@ -813,7 +815,7 @@ class Controller {
 			node.tmp_startLockTime = this.game.time;
 			node.tmp_endLockTime = this.game.time + lockDuration;
 
-			if (!this.#bCalculatingHistoricalState) { // this block is run when NOT viewing historical state (aka run when receiving input)
+			if (!this.#bInSandbox) { // this block is run when NOT viewing historical state (aka run when receiving input)
 				let newStatus = this.game.getSkillAvailabilityStatus(skillName); // refresh to get re-captured recast time
 				let skillInfo = this.game.skillsList.get(skillName).info;
 				let isGCD = skillInfo.cdName === ResourceType.cd_GCD;
@@ -1138,7 +1140,7 @@ class Controller {
 	}
 
 	reportInterruption(props: {failNode: ActionNode}) {
-		if (!this.#bCalculatingHistoricalState) {
+		if (!this.#bInSandbox) {
 			window.alert("cast failed! Resources for " + props.failNode.skillName + " are no longer available");
 			console.warn("failed: " + props.failNode.skillName);
 		}
