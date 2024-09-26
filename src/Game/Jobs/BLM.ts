@@ -11,7 +11,7 @@ import {
 	makeAbility,
 	makeSpell,
 	makeResourceAbility,
-	skillMap,
+	getSkill,
 	SkillAutoReplace,
 	Spell,
 	Ability,
@@ -477,7 +477,7 @@ const applyThunderDoT = (game: PlayerState, node: ActionNode, skillName: SkillNa
 
 const addThunderPotencies = (game: PlayerState, node: ActionNode, skillName: SkillName.Thunder3 | SkillName.HighThunder) => {
 	let mods = getPotencyModifiersFromResourceState(game.resources, Aspect.Lightning);
-	let thunder = skillMap.get(ShellJob.BLM)!.get(skillName)!;
+	let thunder = getSkill(ShellJob.BLM, skillName);
 
 	// initial potency
 	let pInitial = new Potency({

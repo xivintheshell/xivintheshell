@@ -10,7 +10,7 @@ import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
 import {getCurrentThemeColors} from "./ColorTheme";
 import {TraitName, Traits} from '../Game/Traits';
-import {skillMap} from "../Game/Skills";
+import {getAllSkills} from "../Game/Skills";
 
 // Imports of Game/Jobs/* must come after Game/Skills is initialized.
 import "../Game/Jobs/BLM";
@@ -21,7 +21,7 @@ export const skillIcons = new Map();
 
 // Only import necessary skills
 // TODO: change this if we serve multiple jobs off the same site
-skillMap.get(ShellInfo.job)!.forEach(
+getAllSkills(ShellInfo.job)!.forEach(
 	(skillInfo) => skillIcons.set(skillInfo.name, require(`./Asset/Skills/${skillInfo.assetPath}`)),
 );
 

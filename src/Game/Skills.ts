@@ -130,7 +130,19 @@ export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T
 // This is automatically populated by the makeWeaponskill, makeSpell, and makeAbility helper functions.
 // Unfortunately, I [sz] don't really know of a good way to encode the relationship between
 // the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
-export const skillMap: Map<ShellJob, Map<SkillName, Skill<PlayerState>>> = new Map();
+const skillMap: Map<ShellJob, Map<SkillName, Skill<PlayerState>>> = new Map();
+
+// Return a particular skill for a job.
+// Raises if the skill is not found.
+export function getSkill<T extends PlayerState>(job: ShellJob, skillName: SkillName): Skill<T> {
+	return skillMap.get(job)!.get(skillName)!;
+}
+
+// Return the map of all skills for a job.
+export function getAllSkills<T extends PlayerState>(job: ShellJob): Map<SkillName, Skill<T>> {
+	return skillMap.get(job)!;
+}
+
 
 ALL_JOBS.forEach((job) => skillMap.set(job, new Map()));
 
@@ -349,6 +361,7 @@ export class DisplayedSkills extends Array<SkillName> {
 		console.assert(skillMap.has(ShellInfo.job), `No skill map found for job: ${ShellInfo.job}`)
 		// TODO move contextual hotbar info (paradox, retrace) to here
 		const hotbarExcludeSkills = [
+			SkillName.Never, // never display Never
 			SkillName.Paradox,
 			SkillName.Retrace
 		];
