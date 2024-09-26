@@ -209,7 +209,6 @@ class SkillButton extends React.Component {
 		let stacksOverlay;
 		const skillBoxPx = 48;
 		if (maxStacks > 1) {
-			console.log(this.props.skillName, readyStacks, maxStacks)
 			stacksOverlay =	<div tabIndex={-1} style={{
 				// for readability, deliberately make the 0-stack black border thinner
 				WebkitTextStroke: readyStacks === 0 ? "0.8px black" : "1.2px red",
