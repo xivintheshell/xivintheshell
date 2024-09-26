@@ -197,13 +197,50 @@ class SkillButton extends React.Component {
 		} else if (this.props.cdProgress <= 1 - Debug.epsilon) {
 			readyOverlay = "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 85%, rgba(0,0,0,0.6) 100%)"
 		}
+		// The numbers used to indicate remaining stacks are an in-game font, and not an icon
+		// available in xivapi. We instead just pick a large sans serif font, and render the number
+		// in white w/ red border if there's at least 1 stack, and red w/ black border at 0 stacks.
+		const info = controller.getSkillInfo({
+			game: controller.getDisplayedGame(),
+			skillName: this.props.skillName
+		});
+		const readyStacks = info.stacksAvailable;
+		const maxStacks = info.maxStacks;
+		let stacksOverlay;
+		const skillBoxPx = 48;
+		if (maxStacks > 1) {
+			console.log(this.props.skillName, readyStacks, maxStacks)
+			stacksOverlay =	<div tabIndex={-1} style={{
+				// for readability, deliberately make the 0-stack black border thinner
+				WebkitTextStroke: readyStacks === 0 ? "0.8px black" : "1.2px red",
+				fontFamily: "sans-serif",
+				fontWeight: "bolder",
+				color: readyStacks === 0 ? "red" : "white",
+				// should take up a little over 1/3 of the icon
+				fontSize: `${skillBoxPx/3 + 4}px`,
+				// stretch the font slightly to be closer to in-game
+				transform: "scale(1.5, 1)",
+				// make the shadow thicker when readyStacks == maxStacks, since it's harder
+				// to see the text when the icon is not grayed out
+				textShadow: readyStacks === maxStacks ? "0px 0px 4px black" : "0px 0px 2px black",
+				// offset to account for stretch transformation + font size
+				bottom: 3,
+				right: 6,
+				zIndex: 2,
+				position: "absolute",
+			}}>
+				{readyStacks}
+			</div>;
+		} else {
+			stacksOverlay = <></>;
+		}
 		let icon = <div onMouseEnter={this.handleMouseEnter}>
 			<div className={"skillIcon"} style={iconStyle}>
 				<img style={iconImgStyle} src={iconPath} alt={this.props.skillName}/>
 				<div style={{ // skill icon border
 					position: "absolute",
-					width: 48,
-					height: 48,
+					width: skillBoxPx,
+					height: skillBoxPx,
 					background: "url('https://miyehn.me/ffxiv-blm-rotation/misc/skillIcon_overlay.png') no-repeat"
 				}}></div>
 				<div style={{ // grey out
@@ -227,6 +264,7 @@ class SkillButton extends React.Component {
 				left: 2,
 				zIndex: 1
 			}}/>
+			{stacksOverlay}
 		</div>;
 		let progressCircle = <ProgressCircle
 			className="cdProgress"
@@ -251,8 +289,8 @@ class SkillButton extends React.Component {
 }
 
 const WaitSince = {
-	Now: "Now",
-	LastSkill: "LastSkill"
+	"Now": "Now",
+	"LastSkill": "LastSkill"
 };
 
 export var updateSkillButtons = (statusList, paradoxReady, retraceReady)=>{}

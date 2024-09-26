@@ -1003,6 +1003,7 @@ export class GameState {
 			status: status,
 			description: "",
 			stacksAvailable: cd.stacksAvailable(),
+			maxStacks: cd.maxStacks(),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
 			cdRecastTime: cdRecastTime,
