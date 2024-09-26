@@ -517,6 +517,7 @@ export abstract class GameState {
 			skillName: skill.name,
 			status: status,
 			stacksAvailable: cd.stacksAvailable(),
+			maxStacks: cd.maxStacks(),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
 			cdRecastTime: cdRecastTime,
