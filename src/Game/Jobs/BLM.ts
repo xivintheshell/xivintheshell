@@ -4,23 +4,23 @@ import {StatsModifier} from "../StatsModifier";
 import {controller} from "../../Controller/Controller";
 import {ActionNode} from "../../Controller/Record";
 import {ShellJob} from "../../Controller/Common";
-import {SkillName, BuffType, Aspect, ResourceType, ProcMode, WarningType} from "../Common";
+import {Aspect, BuffType, ProcMode, ResourceType, SkillName, WarningType} from "../Common";
 import {getPotencyModifiersFromResourceState, Potency} from "../Potency";
 import {
+	Ability,
 	combineEffects,
-	makeAbility,
-	makeSpell,
-	makeResourceAbility,
+	EffectFn,
 	getSkill,
+	makeAbility,
+	makeResourceAbility,
+	makeSpell,
+	NO_EFFECT,
 	SkillAutoReplace,
 	Spell,
-	Ability,
 	ValidateAttemptFn,
-	EffectFn,
-	NO_EFFECT,
 } from "../Skills";
-import {Traits, TraitName} from "../Traits";
-import {PlayerState, GameState} from "../GameState";
+import {TraitName, Traits} from "../Traits";
+import {GameState, PlayerState} from "../GameState";
 import {CoolDown, DoTBuff, Event, Resource} from "../Resources"
 import {GameConfig} from "../GameConfig";
 
@@ -144,6 +144,9 @@ export class BLMState extends GameState {
 			thunderhead.gain(1);
 			this.enqueueResourceDrop(ResourceType.Thunderhead, duration);
 		}
+	}
+	getThunderDotDuration() {
+		return this.config.level >= getSkill(ShellJob.BLM, SkillName.HighThunder).unlockLevel ? 30 : 27;
 	}
 
 	// call this whenever gaining af or ui from a different af/ui/unaspected state

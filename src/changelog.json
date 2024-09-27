@@ -2,7 +2,8 @@
 	{
 		"date": "9/26/24",
 		"changes": [
-			"Style update for remaining stacks"
+			"Style update for remaining stacks",
+			"Fix thunder 3 lasting for 30s in thunder stats table"
 		]
 	},
 	{
