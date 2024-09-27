@@ -38,7 +38,7 @@ export const TimelineDimensions = {
 	},
 
 	leftBufferWidth: 20, // leave this much space on the left before starting to draw timeline (for timeline selection bar)
-	addSlotButtonHeight: 20,
+	addSlotButtonHeight: 20
 
 }
 
@@ -373,6 +373,7 @@ type SliderProps = {
 	onChange?: (e: string) => void,
 	defaultValue?: string,
 	description?: ContentNode
+	style?: CSSProperties
 }
 type SliderState = {
 	value: string,
@@ -399,7 +400,7 @@ export class Slider extends React.Component {
 		if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
 	}
 	render() {
-		return <div style={{display: "inline-block"}}>
+		return <div style={{...{display: "inline-block"}, ...this.props.style}}>
 			<span>{this.props.description ?? ""}</span>
 			<input
 				size={10} type="range"
