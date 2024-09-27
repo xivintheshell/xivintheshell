@@ -170,9 +170,10 @@ class SkillButton extends React.Component {
 		if (readyStacks > 0) {
 			// expensive but whatever if it ever becomes a performance problem I'll just turn the icons into a canvas
 			// the red/orange border
-			textShadow = "0 0 3px rgba(255, 50, 0, 1), 0 0 4px rgba(255, 100, 0, 1), 0 0 6px rgba(255, 100, 0, 1)";
+			textShadow = "0 0 2px rgba(255, 50, 0, 1), 0 0 3px rgba(255, 100, 0, 1), 0 0 5px rgba(255, 100, 0, 1)";
 			// darken background
-			for (let i = 0; i < 4; i++) {
+			const darkenLayers = readyStacks === maxStacks ? 5 : 3;
+			for (let i = 0; i < darkenLayers; i++) {
 				textShadow += `, 0 0 10px black`;
 			}
 			fontColor = "white";
