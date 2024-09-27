@@ -1,5 +1,17 @@
 [
 	{
+		"date": "9/26/24",
+		"changes": [
+			"Style update for remaining stacks"
+		]
+	},
+	{
+		"date": "9/25/24",
+		"changes": [
+			"Added number of remaining stacks of Triplecast on hotbar"
+		]
+	},
+	{
 		"date": "9/21/24",
 		"changes": [
 			"Greatly reduced time needed to load a line"

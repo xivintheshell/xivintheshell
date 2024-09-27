@@ -2,6 +2,12 @@
     {
         "date": "9/25/24",
         "changes": [
+            "[cherry-pick] Add nicer font for stack numbers"
+        ]
+    },
+    {
+        "date": "9/25/24",
+        "changes": [
             "Fix Chinese translation of pop Tempera Coat/Grassa, and Aero II in Green",
             "Add stack for Living/Striking Muses",
             "Fix missing Tempera Coat buff icon"

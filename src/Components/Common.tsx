@@ -3,7 +3,6 @@ import jQuery from 'jquery';
 import {localize} from "./Localization";
 import {Tooltip as ReactTooltip} from "react-tooltip";
 import 'react-tooltip/dist/react-tooltip.css';
-import '../Style/tooltip.css';
 import {getCurrentThemeColors} from "./ColorTheme";
 import {getCachedValue, setCachedValue} from "../Controller/Common";
 

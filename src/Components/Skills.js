@@ -208,23 +208,37 @@ class SkillButton extends React.Component {
 		const maxStacks = info.maxStacks;
 		let stacksOverlay;
 		const skillBoxPx = 48;
+		const fontSizePx = skillBoxPx/3 + 4;
+
+		let textShadow: string;
+		let fontColor: string;
+		if (readyStacks > 0) {
+			// expensive but whatever if it ever becomes a performance problem I'll just turn the icons into a canvas
+			// the red/orange border
+			textShadow = "0 0 3px rgba(255, 50, 0, 1), 0 0 4px rgba(255, 100, 0, 1), 0 0 6px rgba(255, 100, 0, 1)";
+			// darken background
+			for (let i = 0; i < 4; i++) {
+				textShadow += `, 0 0 10px black`;
+			}
+			fontColor = "white";
+		} else {
+			textShadow = "0 0 4px black, 0 0 8px black";
+			fontColor = "rgb(202,40,40)";
+		}
+
 		if (maxStacks > 1) {
 			stacksOverlay =	<div tabIndex={-1} style={{
-				// for readability, deliberately make the 0-stack black border thinner
-				WebkitTextStroke: readyStacks === 0 ? "0.8px black" : "1.2px red",
-				fontFamily: "sans-serif",
-				fontWeight: "bolder",
-				color: readyStacks === 0 ? "red" : "white",
+				fontFamily: "Goldman Regular",
+				color: fontColor,
 				// should take up a little over 1/3 of the icon
-				fontSize: `${skillBoxPx/3 + 4}px`,
-				// stretch the font slightly to be closer to in-game
-				transform: "scale(1.5, 1)",
-				// make the shadow thicker when readyStacks == maxStacks, since it's harder
-				// to see the text when the icon is not grayed out
-				textShadow: readyStacks === maxStacks ? "0px 0px 4px black" : "0px 0px 2px black",
+				fontSize: `${fontSizePx}px`,
+				textShadow: textShadow,
+				// center in this square
+				width: fontSizePx,
+				textAlign: "center",
 				// offset to account for stretch transformation + font size
-				bottom: 3,
-				right: 6,
+				bottom: 2,
+				right: 1,
 				zIndex: 2,
 				position: "absolute",
 			}}>
