@@ -179,7 +179,7 @@ class SkillButton extends React.Component {
 			fontColor = "white";
 		} else {
 			textShadow = "0 0 4px black, 0 0 8px black";
-			fontColor = "rgb(202,40,40)";
+			fontColor = "rgb(223,60,60)";
 		}
 
 		if (maxStacks > 1) {
