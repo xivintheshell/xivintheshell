@@ -1,3 +1,15 @@
+@font-face {
+    font-family: "Goldman Regular";
+    src: url("https://xivintheshell.github.io/resources/fonts/Goldman/Goldman-Regular.ttf");
+}
+@font-face {
+    font-family: "Goldman Bold";
+    src: url("https://xivintheshell.github.io/resources/fonts/Goldman/Goldman-Bold.ttf");
+}
+@font-face {
+    font-family: "Michroma";
+    src: url("https://xivintheshell.github.io/resources/fonts/Michroma/Michroma-Regular.ttf");
+}
 
 /*======== sections ========*/
 
