@@ -319,7 +319,6 @@ it("accepts the standard aoe rotation", testWithConfig({}, () => {
 		// hard clip triplecast
 		SkillName.Triplecast,
 		SkillName.Flare, // AF3
-
 	].forEach(applySkill);
 	// wait for cast time + damage application
 	controller.step(4);

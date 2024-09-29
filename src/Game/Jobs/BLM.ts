@@ -49,7 +49,7 @@ makeBLMResource(ResourceType.ThunderDoT, 1, {timeout: 30}); // TODO
 makeBLMResource(ResourceType.Manaward, 1, {timeout: 20});
 
 // 15.7s: see screen recording: https://drive.google.com/file/d/1qoIpAMK2KAKETgID6a3p5dqkeWRcNDdB/view?usp=drive_link
-makeBLMResource(ResourceType.Triplecast, 1, {timeout: 15.7});
+makeBLMResource(ResourceType.Triplecast, 3, {timeout: 15.7});
 makeBLMResource(ResourceType.Addle, 1, {timeout: 15});
 makeBLMResource(ResourceType.Swiftcast, 1, {timeout: 10});
 makeBLMResource(ResourceType.LucidDreaming, 1, {timeout: 21});
@@ -371,6 +371,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
 	applicationDelay?: number,
 	cooldown: number,
+	maxCharges?: number,
 	validateAttempt?: ValidateAttemptFn<BLMState>,
 	onConfirm?: EffectFn<BLMState>,
 	onApplication?: EffectFn<BLMState>,
@@ -676,6 +677,7 @@ makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialMa
 makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
 	applicationDelay: 0, // instant
 	cooldown: 60,
+	maxCharges: 2,
 	onApplication: (state, node) => {
 		const triple = state.resources.get(ResourceType.Triplecast)
 		if (triple.pendingChange) triple.removeTimer();
