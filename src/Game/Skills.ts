@@ -3,6 +3,7 @@ import {ShellJob, ShellInfo, ALL_JOBS} from "../Controller/Common";
 import {ActionNode} from "../Controller/Record";
 import {PlayerState, GameState} from "./GameState";
 import {TraitName, Traits} from './Traits';
+import {makeCooldown, getResourceInfo, ResourceInfo} from "./Resources";
 
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
@@ -232,6 +233,11 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
  * - validateAttempt: function always returning true (no error)
  * - onConfirm: empty function
  * - onApplication: empty function
+ *
+ * The following optional parameters are not stored with the Ability object, but instead used to populate
+ * the resourceInfos dictionary if present:
+ * - cooldown: the cooldown (in seconds) of the ability; no resourceInfos entry is added if this is unspecified
+ * - maxCharges: the maximum number of charges an ability has, default 1
  */
 export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, cdName: ResourceType, params: Partial<{
 	assetPath: string,
@@ -242,6 +248,8 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	validateAttempt: ValidateAttemptFn<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
+	cooldown: number,
+	maxCharges: number,
 }>): Ability<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -263,14 +271,18 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		onApplication: params.onApplication ?? NO_EFFECT,
 	};
 	jobs.forEach((job) => skillMap.get(job)!.set(info.name, info as Ability<PlayerState>));
+	if (params.cooldown !== undefined) {
+		jobs.forEach((job) => makeCooldown(job, cdName, params.cooldown!, params.maxCharges ?? 1));
+	}
 	return info;
 }
 
 /**
  * Helper function to create an Ability that applies a buff or debuff (`rscType`) for a certain duration.
  *
- * Any additional effects should be encoded in `additionalEvents`, a list of Event objects with
- * delay relative to the application of the ability.
+ * The duration is retrieved from `getResourceInfo`.
+ *
+ * Any additional effects should be encoded in `onConfirm` or `onApplication`.
  */
 // TODO allow specifying cooldown + number of charges here
 export function makeResourceAbility<T extends PlayerState>(
@@ -281,12 +293,14 @@ export function makeResourceAbility<T extends PlayerState>(
 	params: {
 		rscType: ResourceType,
 		applicationDelay: number,
-		duration: number | ResourceCalculationFn<T>,
+		duration?: number | ResourceCalculationFn<T>, // TODO push to resources
 		potency?: number | ResourceCalculationFn<T>,
 		validateAttempt?: ValidateAttemptFn<T>,
 		onConfirm?: EffectFn<T>,
 		onApplication?: EffectFn<T>,
 		assetPath?: string,
+		cooldown: number,
+		maxCharges?: number,
 	}
 ): Ability<T> {
 	// When the ability is applied:
@@ -295,7 +309,7 @@ export function makeResourceAbility<T extends PlayerState>(
 	const onApplication = combineEffects(
 		(state: T, node: ActionNode) => {
 			const resource = state.resources.get(params.rscType);
-			const duration = params.duration;
+			const duration = params.duration ?? (getResourceInfo(ShellInfo.job, params.rscType) as ResourceInfo).maxTimeout;
 			const durationFn: ResourceCalculationFn<T> = (typeof duration === "number") ? ((state: T) => duration) : duration;
 			// TODO automatically tell scheduler to override existing drop event if necessary
 			if (resource.available(1)) {
@@ -317,6 +331,8 @@ export function makeResourceAbility<T extends PlayerState>(
 		onConfirm: params.onConfirm,
 		onApplication: onApplication,
 		assetPath: params.assetPath,
+		cooldown: params.cooldown,
+		maxCharges: params.maxCharges,
 	});
 };
 
