@@ -1117,6 +1117,34 @@ class Controller {
 		return [["time", "action", "isGCD", "castTime"]].concat(csvRows as any[][]);
 	}
 
+	// return rows of a CSV to feed to Amarantine's combat sim
+	// https://github.com/Amarantine-xiv/Amas-FF14-Combat-Sim
+	getAmaSimCsv(): any[][] {
+		// TODO deal with buff toggle events
+		// TODO deal with party buffs
+		const normalizeName = (s: string) => {
+			const lower = s.toLocaleLowerCase();
+			if (lower === "tincture") {
+				return "Grade 2 Gemdraught";
+			} else {
+				return s.replace(" 3", " III").replace(" 4", " IV");
+			}
+			return s;
+		};
+		const csvRows = (
+			this.#actionsLogCsv
+				// sim currently doesn't track mp ticks or mp costs
+				.filter(row => row.action !== "Lucid Dreaming")
+				.map(row => [
+					row.time,
+					normalizeName(row.action),
+					"",
+					""
+				])
+		);
+		return [["Time", "skill_name", "job_class", "skill_conditional"]].concat(csvRows as any[][]);
+	}
+
 	// generally used for trying to add a line to the current timeline
 	tryAddLine(line: Line, replayMode=ReplayMode.SkillSequence) {
 		this.#bAddingLine = true;
