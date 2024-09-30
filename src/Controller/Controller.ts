@@ -10,7 +10,8 @@ import {
 import {GameState} from "../Game/GameState";
 import {getAutoReplacedSkillName, getConditionalReplacement} from "../Game/Skills";
 import {newGameState, BLMState} from "../Game/Jobs/BLM";
-import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
+import {Buff} from "../Game/Buffs";
+import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
@@ -1120,21 +1121,32 @@ class Controller {
 	// return rows of a CSV to feed to Amarantine's combat sim
 	// https://github.com/Amarantine-xiv/Amas-FF14-Combat-Sim
 	getAmaSimCsv(): any[][] {
-		// TODO deal with buff toggle events
-		// TODO deal with party buffs
 		const normalizeName = (s: string) => {
-			const lower = s.toLocaleLowerCase();
-			if (lower === "tincture") {
+			if (s === SkillName.Tincture) {
 				return "Grade 2 Gemdraught";
 			} else {
-				return s.replace(" 3", " III").replace(" 4", " IV");
+				return s.replace(" 2", "II").replace(" 3", " III").replace(" 4", " IV");
 			}
-			return s;
 		};
-		const csvRows = (
+		const buffRows = this.timeline.getBuffMarkers().map(
+			marker => {
+				const buff = new Buff(marker.description as BuffType);
+				return [
+					marker.time,
+					buff.info.name,
+					buff.info.job,
+					buff.info.name === BuffType.Dokumori ? "Debuff only" : ""
+				];
+			}
+		);
+		const actionRows = (
 			this.#actionsLogCsv
-				// sim currently doesn't track mp ticks or mp costs
-				.filter(row => row.action !== "Lucid Dreaming")
+				// sim currently doesn't track mp ticks or mp costs, so skip lucid dreaming
+				// also skip sprint and buff toggle events
+				.filter(
+					row => ![SkillName.Sprint as string, SkillName.LucidDreaming as string].includes(row.action) &&
+						!row.action.includes("Toggle buff")
+				)
 				.map(row => [
 					row.time,
 					normalizeName(row.action),
@@ -1142,7 +1154,7 @@ class Controller {
 					""
 				])
 		);
-		return [["Time", "skill_name", "job_class", "skill_conditional"]].concat(csvRows as any[][]);
+		return [["Time", "skill_name", "job_class", "skill_conditional"]].concat(buffRows as any[][], actionRows as any[][]);
 	}
 
 	// generally used for trying to add a line to the current timeline
