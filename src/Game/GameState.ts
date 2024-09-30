@@ -7,7 +7,7 @@ import {
 	Spell,
 	Ability,
 } from "./Skills"
-import {CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceState} from "./Resources"
+import {getAllResources, CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
@@ -22,7 +22,6 @@ import {SkillButtonViewInfo} from "../Components/Skills";
 let SeedRandom = require('seedrandom');
 
 type RNG = any;
-
 
 // GameState := resources + events queue
 export abstract class GameState {
@@ -51,18 +50,24 @@ export abstract class GameState {
 		this.displayedSkills = new DisplayedSkills(config.level);
 
 		// RESOURCES (checked when using skills)
+		// and skill CDs (also a form of resource)
 		this.resources = new ResourceState(this);
-		this.resources.set(new Resource(ResourceType.Mana, 10000, 10000));
-		this.resources.set(new Resource(ResourceType.Sprint, 1, 0));
+		this.cooldowns = new CoolDownState(this);
+		getAllResources(this.job).forEach((info, rsc) => {
+			if (info.isCoolDown) {
+				// always start cooldowns at their max stacks (overrides will be applied later)
+				this.cooldowns.set(new CoolDown(rsc, info.cdPerStack, info.maxStacks, info.maxStacks));
+			} else {
+				this.resources.set(new Resource(rsc, info.maxValue, info.defaultValue));
+			}
+		});
+		// GCD, movement, and animation locks are treated as special since they do not appear
+		// in resource overrides
+		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD()), 1, 1));
 
 		this.resources.set(new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(new Resource(ResourceType.NotAnimationLocked, 1, 1));
 		this.resources.set(new Resource(ResourceType.NotCasterTaxed, 1, 1));
-
-		// skill CDs (also a form of resource)
-		this.cooldowns = new CoolDownState(this);
-		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD()), 1, 1));
-		this.cooldowns.set(new CoolDown(ResourceType.cd_Sprint, 60, 1, 1));
 
 		this.cooldowns.set(new CoolDown(ResourceType.Never, 0, 0, 0)); // dummy cooldown for invalid skills
 

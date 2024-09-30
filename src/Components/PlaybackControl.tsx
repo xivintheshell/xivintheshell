@@ -3,7 +3,7 @@ import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input, ValueChangeEvent} from "./Common";
 import {getCachedValue, setCachedValue, ShellInfo, ShellVersion, TickMode} from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
-import {resourceInfos, ResourceOrCoolDownInfo, ResourceOverrideData} from "../Game/Resources";
+import {getAllResources, ResourceOrCoolDownInfo, ResourceOverrideData} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {SerializedConfig} from "../Game/GameConfig";
@@ -498,7 +498,7 @@ export class Config extends React.Component {
 		overridesList.forEach(ov=>{
 			S.add(ov.type);
 		});
-		for (let k of resourceInfos.keys()) {
+		for (let k of getAllResources(ShellInfo.job).keys()) {
 			if (!S.has(k)) {
 				firstAddableRsc = k;
 				break;
@@ -593,7 +593,7 @@ export class Config extends React.Component {
 
 	#addResourceOverride() {
 		let rscType = this.state.selectedOverrideResource;
-		let info = resourceInfos.get(rscType)!;
+		let info = getAllResources(ShellInfo.job).get(rscType)!;
 
 		let inputOverrideTimer = parseFloat(this.state.overrideTimer);
 		let inputOverrideStacks = parseInt(this.state.overrideStacks);
@@ -657,6 +657,7 @@ export class Config extends React.Component {
 	}
 
 	#addResourceOverrideNode() {
+		const resourceInfos = getAllResources(ShellInfo.job);
 		let resourceOptions = [];
 		let S = new Set();
 		this.state.initialResourceOverrides.forEach(override=>{
@@ -774,7 +775,7 @@ export class Config extends React.Component {
 		let resourceOverridesDisplayNodes = [];
 		for (let i = 0; i < this.state.initialResourceOverrides.length; i++) {
 			let override = this.state.initialResourceOverrides[i];
-			let info = resourceInfos.get(override.type)!;
+			let info = getAllResources(ShellInfo.job).get(override.type)!;
 			resourceOverridesDisplayNodes.push(<ResourceOverrideDisplay
 				key={i}
 				override={override}

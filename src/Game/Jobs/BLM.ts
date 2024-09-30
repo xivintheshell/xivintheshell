@@ -21,8 +21,39 @@ import {
 } from "../Skills";
 import {TraitName, Traits} from "../Traits";
 import {GameState, PlayerState} from "../GameState";
-import {CoolDown, DoTBuff, Event, Resource} from "../Resources"
+import {getResourceInfo, makeResource, CoolDown, DoTBuff, Event, Resource, ResourceInfo} from "../Resources"
 import {GameConfig} from "../GameConfig";
+
+// === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
+// TODO values changed by traits are handled in the class constructor, should be moved here
+const makeBLMResource = (rsc: ResourceType, maxValue: number, params?: {timeout: number}) => {
+	makeResource(ShellJob.BLM, rsc, maxValue, params ?? {});
+};
+
+makeBLMResource(ResourceType.Polyglot, 3, {timeout: 30});
+makeBLMResource(ResourceType.AstralFire, 3);
+makeBLMResource(ResourceType.UmbralIce, 3);
+makeBLMResource(ResourceType.UmbralHeart, 3);
+makeBLMResource(ResourceType.AstralSoul, 6);
+makeBLMResource(ResourceType.LeyLines, 1, {timeout: 30});
+makeBLMResource(ResourceType.Enochian, 1, {timeout: 15});
+makeBLMResource(ResourceType.Paradox, 1);
+
+// re-measured in DT, screen recording at: https://drive.google.com/file/d/1MEFnd-m59qx1yIaZeehSsAxjhLMsWBuw/view?usp=drive_link
+makeBLMResource(ResourceType.Firestarter, 1, {timeout: 30.5});
+
+// [6/29/24] note: from screen recording it looks more like: button press (0.1s) gain buff (30.0s) lose buff
+// see: https://drive.google.com/file/d/11KEAEjgezCKxhvUsaLTjugKAH_D1glmy/view?usp=sharing
+makeBLMResource(ResourceType.Thunderhead, 1, {timeout: 30});
+makeBLMResource(ResourceType.ThunderDoT, 1, {timeout: 30}); // TODO
+makeBLMResource(ResourceType.Manaward, 1, {timeout: 20});
+
+// 15.7s: see screen recording: https://drive.google.com/file/d/1qoIpAMK2KAKETgID6a3p5dqkeWRcNDdB/view?usp=drive_link
+makeBLMResource(ResourceType.Triplecast, 3, {timeout: 15.7});
+makeBLMResource(ResourceType.Addle, 1, {timeout: 15});
+makeBLMResource(ResourceType.Swiftcast, 1, {timeout: 10});
+makeBLMResource(ResourceType.LucidDreaming, 1, {timeout: 21});
+makeBLMResource(ResourceType.Surecast, 1, {timeout: 10});
 
 // === JOB GAUGE AND STATE ===
 export class BLMState extends GameState {
@@ -33,52 +64,18 @@ export class BLMState extends GameState {
 
 		this.thunderTickOffset = this.nonProcRng() * 3.0;
 
-		// RESOURCES (checked when using skills)
 		const polyglotStacks = 
 			(Traits.hasUnlocked(TraitName.EnhancedPolyglotII, this.config.level) && 3) ||
 			(Traits.hasUnlocked(TraitName.EnhancedPolyglot, this.config.level) && 2) ||
 			1;
-		[
-			new Resource(ResourceType.Polyglot, polyglotStacks, 0),
-			new Resource(ResourceType.AstralFire, 3, 0),
-			new Resource(ResourceType.UmbralIce, 3, 0),
-			new Resource(ResourceType.UmbralHeart, 3, 0),
-			new Resource(ResourceType.AstralSoul, 6, 0),
-			new Resource(ResourceType.LeyLines, 1, 0), // capture
-			new Resource(ResourceType.Enochian, 1, 0),
-			new Resource(ResourceType.Paradox, 1, 0),
-			new Resource(ResourceType.Firestarter, 1, 0),
-			new Resource(ResourceType.Thunderhead, 1, 0),
-			new DoTBuff(ResourceType.ThunderDoT, 1, 0),
-			new Resource(ResourceType.Manaward, 1, 0),
-			new Resource(ResourceType.Triplecast, 3, 0),
-			new Resource(ResourceType.Addle, 1, 0),
-			new Resource(ResourceType.Swiftcast, 1, 0),
-			new DoTBuff(ResourceType.LucidDreaming, 1, 0),
-			new Resource(ResourceType.Surecast, 1, 0),
-			new Resource(ResourceType.Tincture, 1, 0), // capture
-		].forEach((resource) => this.resources.set(resource));
+		this.resources.set(new Resource(ResourceType.Polyglot, polyglotStacks, 0));
 
 		// skill CDs (also a form of resource)
 		const manafontCooldown = (Traits.hasUnlocked(TraitName.EnhancedManafont, this.config.level) && 100) || 180;
 		const swiftcastCooldown = (Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level) && 40) || 60;
 		[
-			new CoolDown(ResourceType.cd_LeyLines, 120, 1, 1),
-			new CoolDown(ResourceType.cd_Transpose, 5, 1, 1),
-			new CoolDown(ResourceType.cd_Manaward, 120, 1, 1),
-			new CoolDown(ResourceType.cd_BetweenTheLines, 3, 1, 1),
-			new CoolDown(ResourceType.cd_AetherialManipulation, 10, 1, 1),
-			new CoolDown(ResourceType.cd_Triplecast, 60, 2, 2),
-
 			new CoolDown(ResourceType.cd_Manafont, manafontCooldown, 1, 1),
-			new CoolDown(ResourceType.cd_Amplifier, 120, 1, 1),
-			new CoolDown(ResourceType.cd_Retrace, 40, 1, 1),
-			new CoolDown(ResourceType.cd_Addle, 90, 1, 1),
-
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
-			new CoolDown(ResourceType.cd_LucidDreaming, 60, 1, 1),
-			new CoolDown(ResourceType.cd_Surecast, 120, 1, 1),
-			new CoolDown(ResourceType.cd_Tincture, 270, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
 		this.registerRecurringEvents();
@@ -135,9 +132,7 @@ export class BLMState extends GameState {
 
 	gainThunderhead() {
 		let thunderhead = this.resources.get(ResourceType.Thunderhead);
-		// [6/29/24] note: from screen recording it looks more like: button press (0.1s) gain buff (30.0s) lose buff
-		// see: https://drive.google.com/file/d/11KEAEjgezCKxhvUsaLTjugKAH_D1glmy/view?usp=sharing
-		let duration = 30;
+		let duration = (getResourceInfo(ShellJob.BLM, ResourceType.Thunderhead) as ResourceInfo).maxTimeout;
 		if (thunderhead.available(1)) { // already has a proc; reset its timer
 			thunderhead.overrideTimer(this, duration);
 		} else { // there's currently no proc. gain one.
@@ -373,12 +368,14 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 };
 
 
-const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceType, params: Partial<{
-	applicationDelay: number,
-	validateAttempt: ValidateAttemptFn<BLMState>,
-	onConfirm: EffectFn<BLMState>,
-	onApplication: EffectFn<BLMState>,
-}>): Ability<BLMState> => makeAbility(ShellJob.BLM, name, unlockLevel, cdName, params);
+const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
+	applicationDelay?: number,
+	cooldown: number,
+	maxCharges?: number,
+	validateAttempt?: ValidateAttemptFn<BLMState>,
+	onConfirm?: EffectFn<BLMState>,
+	onApplication?: EffectFn<BLMState>,
+}): Ability<BLMState> => makeAbility(ShellJob.BLM, name, unlockLevel, cdName, params);
 
 
 // ref logs
@@ -406,8 +403,7 @@ makeGCD_BLM(SkillName.Blizzard, 1, {
 });
 
 const gainFirestarterProc = (state: PlayerState) => {
-	// re-measured in DT, screen recording at: https://drive.google.com/file/d/1MEFnd-m59qx1yIaZeehSsAxjhLMsWBuw/view?usp=drive_link
-	let duration = 30.5;
+	let duration = (getResourceInfo(ShellJob.BLM, ResourceType.Firestarter) as ResourceInfo).maxTimeout;
 	if (state.resources.get(ResourceType.Firestarter).available(1)) {
 		state.resources.get(ResourceType.Firestarter).overrideTimer(state, duration);
 	} else {
@@ -444,6 +440,7 @@ makeGCD_BLM(SkillName.Fire, 2, {
 
 makeAbility_BLM(SkillName.Transpose, 4, ResourceType.cd_Transpose, {
 	applicationDelay: 0, // instant
+	cooldown: 5,
 	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
 	onApplication: (state, node) => {
 		if (state.getFireStacks() !== 0 || state.getIceStacks() !== 0) {
@@ -549,7 +546,7 @@ makeGCD_BLM(SkillName.Thunder3, 45, {
 makeResourceAbility(ShellJob.BLM, SkillName.Manaward, 30, ResourceType.cd_Manaward, {
 	rscType: ResourceType.Manaward,
 	applicationDelay: 1.114, // delayed
-	duration: 20,
+	cooldown: 120,
 });
 
 // Manafont: application delay 0.88s -> 0.2s since Dawntrail
@@ -557,6 +554,7 @@ makeResourceAbility(ShellJob.BLM, SkillName.Manaward, 30, ResourceType.cd_Manawa
 // see screen recording: https://drive.google.com/file/d/1zGhU9egAKJ3PJiPVjuRBBMkKdxxHLS9b/view?usp=drive_link
 makeAbility_BLM(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
 	applicationDelay: 0.2, // delayed
+	cooldown: 100, // set by trait in the constructor
 	validateAttempt: (state) => state.getFireStacks() > 0,
 	onConfirm: (state, node) => {
 		state = state as BLMState;
@@ -636,7 +634,7 @@ makeGCD_BLM(SkillName.Flare, 50, {
 makeResourceAbility(ShellJob.BLM, SkillName.LeyLines, 52, ResourceType.cd_LeyLines, {
 	rscType: ResourceType.LeyLines,
 	applicationDelay: 0.49, // delayed
-	duration: 30,
+	cooldown: 120,
 	onApplication: (state, node) => {
 		state.resources.get(ResourceType.LeyLines).enabled = true
 	},
@@ -667,21 +665,27 @@ makeGCD_BLM(SkillName.Fire4, 60, {
 
 makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, {
 	applicationDelay: 0, // ?
+	cooldown: 3,
 	validateAttempt: (state) => state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0,
 });
 
 makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialManipulation, {
 	applicationDelay: 0, // ?
+	cooldown: 10,
 });
 
 makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
 	applicationDelay: 0, // instant
+	cooldown: 60,
+	maxCharges: 2,
 	onApplication: (state, node) => {
 		const triple = state.resources.get(ResourceType.Triplecast)
 		if (triple.pendingChange) triple.removeTimer();
 		triple.gain(3);
-		// 15.7s: see screen recording: https://drive.google.com/file/d/1qoIpAMK2KAKETgID6a3p5dqkeWRcNDdB/view?usp=drive_link
-		state.enqueueResourceDrop(ResourceType.Triplecast, 15.7);
+		state.enqueueResourceDrop(
+			ResourceType.Triplecast,
+			(getResourceInfo(ShellJob.BLM, ResourceType.Triplecast) as ResourceInfo).maxTimeout,
+		);
 	},
 });
 
@@ -794,6 +798,7 @@ makeGCD_BLM(SkillName.HighBlizzard2, 82, {
 
 makeAbility_BLM(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, {
 	applicationDelay: 0, // ? (assumed to be instant)
+	cooldown: 120,
 	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
 	onApplication: (state, node) => {
 		let polyglot = state.resources.get(ResourceType.Polyglot);
@@ -855,6 +860,7 @@ makeGCD_BLM(SkillName.FlareStar, 100, {
 
 makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
 	applicationDelay: 0, // ? (assumed to be instant)
+	cooldown: 40,
 	validateAttempt: (state) => (
 		Traits.hasUnlocked(TraitName.EnhancedLeyLines, state.config.level) &&
 		state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0
