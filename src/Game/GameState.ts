@@ -7,11 +7,11 @@ import {
 	Spell,
 	Ability,
 } from "./Skills"
-import {makeResource, getAllResources, CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceState} from "./Resources"
+import {getAllResources, CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceState} from "./Resources"
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
-import {ShellInfo, ShellJob, ALL_JOBS} from "../Controller/Common";
+import {ShellInfo, ShellJob} from "../Controller/Common";
 import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
 
@@ -22,12 +22,6 @@ import {SkillButtonViewInfo} from "../Components/Skills";
 let SeedRandom = require('seedrandom');
 
 type RNG = any;
-
-ALL_JOBS.forEach((job) => {
-	makeResource(job, ResourceType.Mana, 10000, {default: 10000});
-	makeResource(job, ResourceType.Tincture, 1, {timeout: 30});
-	makeResource(job, ResourceType.Sprint, 1, {timeout: 10});
-});
 
 // GameState := resources + events queue
 export abstract class GameState {

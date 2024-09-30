@@ -267,13 +267,6 @@ export type ResourceOrCoolDownInfo = ResourceInfo | CoolDownInfo;
 
 const resourceInfos = new Map<ShellJob, Map<ResourceType, ResourceOrCoolDownInfo>>();
 
-ALL_JOBS.forEach((job) => resourceInfos.set(job, new Map([[ResourceType.cd_GCD, {
-	// special declaration for GCD override default
-	isCoolDown: true,
-	maxStacks: 1,
-	cdPerStack: 2.5
-}]])));
-
 export function getResourceInfo(job: ShellJob, rsc: ResourceType): ResourceOrCoolDownInfo {
 	const map = resourceInfos.get(job)!;
 	if (!map.has(rsc)) {
@@ -298,6 +291,19 @@ export function makeResource(job: ShellJob, rsc: ResourceType, maxValue: number,
 		maxTimeout: params.timeout ?? -1,
 	});
 }
+
+ALL_JOBS.forEach((job) => {
+	resourceInfos.set(job, new Map([[ResourceType.cd_GCD, {
+		// special declaration for GCD override default
+		isCoolDown: true,
+		maxStacks: 1,
+		cdPerStack: 2.5
+	}]]));
+	// MP, tincture buff, and sprint are common to all jobs
+	makeResource(job, ResourceType.Mana, 10000, {default: 10000});
+	makeResource(job, ResourceType.Tincture, 1, {timeout: 30});
+	makeResource(job, ResourceType.Sprint, 1, {timeout: 10});
+});
 
 // Add an ability to the resource map of the specified job.
 // Should only be called within the makeAbility constructor, except for the default GCD cooldown.
