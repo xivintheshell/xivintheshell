@@ -38,7 +38,7 @@ export const TimelineDimensions = {
 	},
 
 	leftBufferWidth: 20, // leave this much space on the left before starting to draw timeline (for timeline selection bar)
-	addSlotButtonHeight: 20, // will probably get rid of this soon
+	addSlotButtonHeight: 20,
 
 }
 
@@ -73,7 +73,7 @@ type SaveToFileProps = {
 	fileFormat: FileFormat,
 	displayName?: ContentNode
 };
-export class SaveToFile extends React.Component{
+export class SaveToFile extends React.Component {
 	props: SaveToFileProps;
 	state: { jsonContent: object, csvContent: Array<Array<any>>, pngContent?: HTMLCanvasElement }
 	constructor(props: SaveToFileProps) {
@@ -197,7 +197,6 @@ type ClickableProps = {
 	style?: CSSProperties
 }
 
-// todo: bind hotkeys to them?
 export function Clickable(props: ClickableProps) {
 	return <div
 		className={"clickable"}
@@ -232,6 +231,106 @@ export function ProgressBar(props: {
 	};
 	return <div style={containerStyle}>
 		<div style={fillerStyle}/>
+	</div>
+}
+
+export type TabItem = {
+	titleNode: ContentNode,
+	contentNode: ContentNode
+};
+
+export function Tabs(props: {
+	uniqueName: string,
+	content: TabItem[],
+	collapsible: boolean,
+	height: number,
+	defaultSelectedIndex: number | undefined,
+	style?: CSSProperties
+}) {
+
+	const titleHeight = 24;
+	const [selectedIndex, setSelectedIndex] = React.useState<number | undefined>(undefined);
+
+	// initialization
+	useEffect(() => {
+		let selected: number | undefined = props.defaultSelectedIndex;
+		// if a cached value exists, it will always override the default
+		let cachedSelected = getCachedValue(props.uniqueName + "SelectedTab");
+		if (cachedSelected !== null) {
+			if (cachedSelected === "none") {
+				selected = undefined;
+			} else {
+				selected = parseInt(cachedSelected);
+			}
+		}
+		setSelectedIndex(selected);
+	}, [props.defaultSelectedIndex, props.uniqueName]);
+
+	const colors = getCurrentThemeColors();
+
+	const tabStyle: (tabIndex: number) => CSSProperties = function(tabIndex) {
+		const borderColor: string = tabIndex===selectedIndex ? colors.bgHighContrast : colors.bgMediumContrast;
+		const visibleBorder = "1px solid " + borderColor;
+		const invisibleBorder = "1px solid " + colors.background;
+
+		let borderBottom: string = visibleBorder;
+		if (tabIndex===selectedIndex || selectedIndex===undefined) {
+			borderBottom = invisibleBorder;
+		}
+		let borderTop = tabIndex===selectedIndex ? visibleBorder : invisibleBorder;
+		let borderLeft = invisibleBorder;
+		let borderRight = invisibleBorder;
+		if (tabIndex===selectedIndex) {
+			borderLeft = visibleBorder;
+			borderRight = visibleBorder;
+		} else if (tabIndex > 0) {
+			borderLeft = visibleBorder
+		}
+		return {
+			margin: 0,
+			display: "inline-block",
+			boxSizing: "border-box",
+			padding: "0 12px",
+			borderBottom: borderBottom,
+			borderTop: borderTop,
+			borderLeft: borderLeft,
+			borderRight: borderRight,
+			lineHeight: `${titleHeight}px`,
+			color: tabIndex===selectedIndex ? colors.emphasis : colors.text,
+			cursor: (props.collapsible || tabIndex!==selectedIndex) ? "pointer" : "default",
+		};
+	}
+
+	const titles: ContentNode[] = [];
+	let content: ContentNode | undefined;
+	for (let i = 0; i < props.content.length; i++) {
+
+		const isSelectedTab = i === selectedIndex;
+
+		titles.push(<span key={i} style={tabStyle(i)} onClick={() => {
+			let newIndex: number | undefined = selectedIndex;
+			if (!isSelectedTab) { newIndex = i; }
+			else if (props.collapsible) { newIndex = undefined; }
+			setSelectedIndex(newIndex);
+			setCachedValue(props.uniqueName + "SelectedTab", newIndex===undefined ? "none" : `${newIndex}`);
+		}}>{props.content[i].titleNode}</span>);
+
+		if (isSelectedTab) {
+			content = props.content[i].contentNode;
+		}
+	}
+
+	return <div style={{...{
+		position: "relative",
+		height: props.height
+	}, ...props.style}}>
+		<div>{titles}</div>
+		<div className={"staticScrollbar"} style={{
+			height: props.height - titleHeight,
+			boxSizing: "border-box",
+			padding: "10px 5px",
+			overflowY: "scroll"
+		}}>{content}</div>
 	</div>
 }
 
@@ -491,7 +590,6 @@ export function ButtonIndicator(props: {text: ContentNode}) {
 }
 
 let setGlobalHelpTooltipContent = (newContent: ContentNode)=>{};
-let setGlobalInfoTooltipContent = (newContent: ContentNode)=>{};
 
 export function GlobalHelpTooltip(props: {
 	content: ContentNode
@@ -524,22 +622,6 @@ export function GlobalHelpTooltip(props: {
 	</div>
 }
 
-export function GlobalInfoTooltip(props: {
-	content: ContentNode
-}) {
-	const [tipContent, setTipContent] = useState(props.content);
-	// hook up update function
-	useEffect(()=>{
-		setGlobalInfoTooltipContent = (newContent: ContentNode)=>{
-			setTipContent(newContent);
-		};
-	}, []);
-
-	return <ReactTooltip anchorSelect=".global-info-tooltip" className="info-tooltip" classNameArrow="info-tooltip-arrow">
-		{tipContent}
-	</ReactTooltip>
-}
-
 export function Help(props: {topic: string, content: ContentNode}) {
 	let colors = getCurrentThemeColors();
 	let style: CSSProperties = {
@@ -558,10 +640,4 @@ export function Help(props: {topic: string, content: ContentNode}) {
 	}}>
 		<span style={{position: "relative", top: -1, color: "white"}}>&#63;</span>
 	</span>
-}
-
-export function Info(props: {hoverableNode: ContentNode, getInfoFn: ()=>ContentNode}) {
-	return <div className="global-info-tooltip" data-tooltip-offset={4} onMouseEnter={()=>{
-		setGlobalInfoTooltipContent(props.getInfoFn());
-	}}>{props.hoverableNode}</div>
 }
