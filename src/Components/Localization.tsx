@@ -107,7 +107,9 @@ const skillsJa = new Map<SkillName, string>([
 	[SkillName.Tincture, "薬"],
 	[SkillName.Paradox, "パラドックス"],
 	[SkillName.HighThunder, "ハイサンダー"],
-	[SkillName.Sprint, "スプリント"]
+	[SkillName.Sprint, "スプリント"],
+	[SkillName.Retrace, "魔紋再設置"],
+	[SkillName.FlareStar, "フレアスター"]
 ]);
 
 export function localizeSkillName(text: SkillName) : string {
@@ -149,7 +151,30 @@ const buffsZh = new Map<BuffType, string>([
 ]);
 
 const buffsJa = new Map<BuffType, string>([
-	// todo
+	[BuffType.LeyLines, "黒魔紋"],
+	[BuffType.Tincture, "薬"],
+
+	[BuffType.ArcaneCircle, "アルケインサークル"],
+	[BuffType.ArmysPaeon, "軍神のパイオン"],
+	[BuffType.BattleLitany, "バトルリタニー"],
+	[BuffType.BattleVoice, "バトルボイス"],
+	[BuffType.Brotherhood, "桃園結義"],
+	[BuffType.Card_TheBalance, "アーゼマの均衡"],
+	[BuffType.Card_TheSpear, "ハルオーネの槍"],
+	[BuffType.ChainStratagem, "連環計"],
+	[BuffType.Devilment, "攻めのタンゴ"],
+	[BuffType.Divination, "ディヴィネーション"],
+	[BuffType.Dokumori, "毒盛の術"],
+	[BuffType.Embolden, "エンボルデン"],
+	[BuffType.MagesBallad, "賢人のバラード"],
+	[BuffType.RadiantFinale1, "光神のフィナーレ1"],
+	[BuffType.RadiantFinale2, "光神のフィナーレ2"],
+	[BuffType.RadiantFinale3, "光神のフィナーレ3"],
+	[BuffType.SearingLight, "シアリングライト"],
+	[BuffType.StandardFinish, "スタンダードフィニッシュ"],
+	[BuffType.StarryMuse, "イマジンスカイ"],
+	[BuffType.TechnicalFinish, "テクニカルフィニッシュ"],
+	[BuffType.WanderersMinuet, "旅神のメヌエット"],
 ]);
 
 export function localizeBuffType(text: BuffType) : string {
@@ -223,7 +248,8 @@ export class SelectLanguage extends React.Component {
 			<span style={{display: "inline-block", fontSize: 17, position: "relative", marginRight: 2}}><MdLanguage/></span>
 			<div style={{display: "inline-block", fontSize: 14, position: "relative", top: -4}}>
 				<LanguageOption lang={"en"}/>|
-				<LanguageOption lang={"zh"}/>
+				<LanguageOption lang={"zh"}/>|
+				<LanguageOption lang={"ja"}/>
 			</div>
 		</div>
 	}
