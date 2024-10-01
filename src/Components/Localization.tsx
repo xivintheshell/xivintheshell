@@ -248,8 +248,7 @@ export class SelectLanguage extends React.Component {
 			<span style={{display: "inline-block", fontSize: 17, position: "relative", marginRight: 2}}><MdLanguage/></span>
 			<div style={{display: "inline-block", fontSize: 14, position: "relative", top: -4}}>
 				<LanguageOption lang={"en"}/>|
-				<LanguageOption lang={"zh"}/>|
-				<LanguageOption lang={"ja"}/>
+				<LanguageOption lang={"zh"}/>
 			</div>
 		</div>
 	}
