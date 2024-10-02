@@ -834,7 +834,6 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 	let timelineSectionHeight = TimelineDimensions.slotHeight() * g_renderingProps.slotElements.length;
 
 	// add button
-	/*
 	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) {
 		let currentY = originY + g_renderingProps.slotElements.length * TimelineDimensions.slotHeight();
 		let handle : Rect = {
@@ -860,7 +859,6 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 
 		timelineSectionHeight += TimelineDimensions.addSlotButtonHeight;
 	}
-	 */
 
 	return timelineSectionHeight;
 }
