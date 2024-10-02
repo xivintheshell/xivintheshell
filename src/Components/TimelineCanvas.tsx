@@ -297,6 +297,12 @@ function drawWarningMarks(
 		if (mark.warningType === WarningType.PolyglotOvercap) {
 			message += localize({en: "polyglot overcap!", zh: "通晓溢出！"});
 		}
+		if (mark.warningType === WarningType.CometOverwrite) {
+			message += localize({en: "comet overwrite!", zh: "彗星覆写！"});
+		}
+		if (mark.warningType === WarningType.PaletteOvercap) {
+			message += localize({en: "palette gauge overcap!", zh: "调色板溢出！"});
+		}
 
 		testInteraction(
 			{x: x-sideLength/2, y: bottomY-sideLength, w: sideLength, h: sideLength}, [message]
@@ -394,6 +400,7 @@ function drawSkills(
 	let gcdBars: Rect[] = [];
 	let snapshots: number[] = [];
 	let llCovers: Rect[] = [];
+	let starryCovers: Rect[] = [];
 	let potCovers: Rect[] = [];
 	let buffCovers: Rect[] = [];
 	let skillIcons: {elem: SkillElem, x: number, y: number}[] = []; // tmp
@@ -421,7 +428,9 @@ function drawSkills(
 
 		// node covers (LL, pot, party buff)
 		let nodeCoverCount = 0;
-		if (skill.node.hasBuff(BuffType.LeyLines))
+		if (skill.node.hasBuff(BuffType.StarryMuse))
+			nodeCoverCount += buildCover(nodeCoverCount, starryCovers);
+		if (skill.node.hasBuff(BuffType.LeyLines) || skill.node.hasBuff(BuffType.Hyperphantasia))
 			nodeCoverCount += buildCover(nodeCoverCount, llCovers);
 		if (skill.node.hasBuff(BuffType.Tincture))
 			nodeCoverCount += buildCover(nodeCoverCount, potCovers);
@@ -472,6 +481,15 @@ function drawSkills(
 	g_ctx.fillStyle = g_colors.timeline.lockBar;
 	g_ctx.beginPath();
 	greyLockBars.forEach(r=>{
+		g_ctx.rect(r.x, r.y, r.w, r.h);
+		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
+	});
+	g_ctx.fill();
+
+	// starryCovers
+	g_ctx.fillStyle = g_colors.timeline.buffCover;
+	g_ctx.beginPath();
+	starryCovers.forEach(r=>{
 		g_ctx.rect(r.x, r.y, r.w, r.h);
 		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
 	});
@@ -536,6 +554,7 @@ function drawSkills(
 		// 4. buff images
 		if (node.hasBuff(BuffType.LeyLines)) buffImages.push(buffIconImages.get(BuffType.LeyLines) as HTMLImageElement);
 		if (node.hasBuff(BuffType.Tincture)) buffImages.push(buffIconImages.get(BuffType.Tincture) as HTMLImageElement);
+		if (node.hasBuff(BuffType.StarryMuse)) buffImages.push(buffIconImages.get(BuffType.StarryMuse) as HTMLImageElement);	
 		node.getPartyBuffs().forEach(buffType => {
 			let img = buffIconImages.get(buffType);
 			if (img) buffImages.push(img);

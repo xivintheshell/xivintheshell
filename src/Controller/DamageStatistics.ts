@@ -11,6 +11,8 @@ import {
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 import {ShellJob} from "./Common";
 
+// TODO autogenerate everything here
+
 const AFUISkills = new Set<SkillName>([
 	SkillName.Blizzard,
 	SkillName.Fire,
@@ -51,6 +53,54 @@ const abilities = new Set<SkillName>([
 	SkillName.Surecast,
 	SkillName.Tincture,
 	SkillName.Sprint
+
+	SkillName.StrikingMuse,
+	SkillName.StarryMuse,
+	SkillName.TemperaCoat,
+	SkillName.TemperaCoatPop,
+	SkillName.TemperaGrassa,
+	SkillName.TemperaGrassaPop,
+	SkillName.Smudge,
+	SkillName.SubtractivePalette,
+]);
+
+const pictoDamageSkills = new Set<SkillName>([
+	SkillName.FireInRed,
+	SkillName.Fire2InRed,
+	SkillName.AeroInGreen,
+	SkillName.Aero2InGreen,
+	SkillName.WaterInBlue,
+	SkillName.Water2InBlue,
+	SkillName.BlizzardInCyan,
+	SkillName.Blizzard2InCyan,
+	SkillName.StoneInYellow,
+	SkillName.Stone2InYellow,
+	SkillName.ThunderInMagenta,
+	SkillName.Thunder2InMagenta,
+	SkillName.HolyInWhite,
+	SkillName.CometInBlack,
+	SkillName.RainbowDrip,
+	SkillName.StarPrism,
+
+	SkillName.PomMuse,
+	SkillName.WingedMuse,
+	SkillName.ClawedMuse,
+	SkillName.FangedMuse,
+	SkillName.MogOfTheAges,
+	SkillName.RetributionOfTheMadeen,
+
+	SkillName.HammerStamp,
+	SkillName.HammerBrush,
+	SkillName.PolishingHammer,
+]);
+
+const pictoMotifs = new Set<SkillName>([
+	SkillName.HammerMotif,
+	SkillName.PomMotif,
+	SkillName.WingMotif,
+	SkillName.ClawMotif,
+	SkillName.MawMotif,
+	SkillName.StarrySkyMotif,
 ]);
 
 // source of truth
@@ -171,7 +221,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 		calculationModifiers: []
 	}
 	if (node.type === ActionType.Skill && node.skillName) {
-		if (AFUISkills.has(node.skillName)) {
+		if (AFUISkills.has(node.skillName) || pictoDamageSkills.has(node.skillName)) {
 			console.assert(node.getPotencies().length > 0, "no potencies for " + node.skillName);
 			// use the one that's not enochian or pot (then must be one of af123, ui123)
 			let mainPotency = node.getPotencies()[0];
@@ -197,7 +247,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 					break;
 				}
 			}
-		} else if (abilities.has(node.skillName)) {
+		} else if (abilities.has(node.skillName) || pictoMotifs.has(node.skillName)) {
 		} else {
 			console.assert(isThunderNode(node))
 			res.basePotency = node.getPotencies()[0].base;

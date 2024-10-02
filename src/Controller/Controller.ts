@@ -611,6 +611,15 @@ class Controller {
 			astralSoul: game.resources.get(ResourceType.AstralSoul).availableAmount(),
 			polyglotCountdown: eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30,
 			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount()
+			// TODO split up
+			portrait: game.resources.get(ResourceType.Portrait).availableAmount(),
+			depictions: game.resources.get(ResourceType.Depictions).availableAmount(),
+			creatureCanvas: game.resources.get(ResourceType.CreatureCanvas).availableAmount(),
+			weaponCanvas: game.resources.get(ResourceType.WeaponCanvas).availableAmount(),
+			landscapeCanvas: game.resources.get(ResourceType.LandscapeCanvas).availableAmount(),
+			paletteGauge: game.resources.get(ResourceType.PaletteGauge).availableAmount(),
+			paint: game.resources.get(ResourceType.Paint).availableAmount(),
+			hasComet: game.resources.get(ResourceType.MonochromeTones).available(1),
 		};
 		// locks
 		let cast = game.resources.get(ResourceType.NotCasterTaxed);
@@ -647,6 +656,25 @@ class Controller {
 			surecastCountdown: game.resources.timeTillReady(ResourceType.Surecast),
 			tinctureCountdown: game.resources.timeTillReady(ResourceType.Tincture),
 			sprintCountdown: game.resources.timeTillReady(ResourceType.Sprint)
+
+			// TODO split up
+			aetherhuesCountdown: game.resources.timeTillReady(ResourceType.Aetherhues),
+			aetherhuesStacks: game.resources.get(ResourceType.Aetherhues).availableAmount(),
+			monochromeTones: game.resources.get(ResourceType.MonochromeTones).availableAmount(),
+			subtractivePalette: game.resources.get(ResourceType.SubtractivePalette).availableAmount(),
+			subtractiveSpectrumCountdown: game.resources.timeTillReady(ResourceType.SubtractiveSpectrum),
+			starryMuseCountdown: game.resources.timeTillReady(ResourceType.StarryMuse),
+			hyperphantasiaCountdown: game.resources.timeTillReady(ResourceType.Hyperphantasia),
+			hyperphantasiaStacks: game.resources.get(ResourceType.Hyperphantasia).availableAmount(),
+			inspirationEnabled: game.resources.get(ResourceType.Inspiration).enabled,
+			inspirationCountdown: game.resources.timeTillReady(ResourceType.Inspiration),
+			rainbowBrightCountdown: game.resources.timeTillReady(ResourceType.RainbowBright),
+			starstruckCountdown: game.resources.timeTillReady(ResourceType.Starstruck),
+			hammerTimeCountdown: game.resources.timeTillReady(ResourceType.HammerTime),
+			hammerTimeStacks: game.resources.get(ResourceType.HammerTime).availableAmount(),
+			temperaCoatCountdown: game.resources.timeTillReady(ResourceType.TemperaCoat),
+			temperaGrassaCountdown: game.resources.timeTillReady(ResourceType.TemperaGrassa),
+			smudgeCountdown: game.resources.timeTillReady(ResourceType.Smudge),
 		};
 		if (typeof updateStatusDisplay !== "undefined") {
 			updateStatusDisplay({
@@ -780,7 +808,7 @@ class Controller {
 			this.lastAttemptedSkill = "";
 		}
 
-		if (status.status === SkillReadyStatus.Blocked) {
+		if (status.status === SkillReadyStatus.Blocked || status.status === SkillReadyStatus.NotInCombat) {
 			this.lastAttemptedSkill = skillName;
 		}
 

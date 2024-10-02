@@ -1,0 +1,88 @@
+[
+    {
+        "date": "9/25/24",
+        "changes": [
+            "[cherry-pick] Add nicer font for stack numbers"
+        ]
+    },
+    {
+        "date": "9/25/24",
+        "changes": [
+            "Fix Chinese translation of pop Tempera Coat/Grassa, and Aero II in Green",
+            "Add stack for Living/Striking Muses",
+            "Fix missing Tempera Coat buff icon"
+        ]
+    },
+    {
+        "date": "9/22/24",
+        "changes": [
+            "Add Chinese skill translations from yuyuka"
+        ]
+    },
+    {
+        "date": "9/21/24",
+        "changes": [
+            "[cherry-pick] Greatly reduce time needed to load a line"
+        ]
+    },
+    {
+        "date": "9/8/24",
+        "changes": [
+            "Fix incorrect potencies from trait syncing (thanks miyehn and yuyuka)"
+        ]
+    },
+    {
+        "date": "9/7/24",
+        "changes": [
+            "[merge] Fix crash when creating a new slot with resource overrides (thanks miyehn)",
+            "[merge] Add level sync option (thanks Turtle)",
+            "[merge] Add image export feature"
+        ]
+    },
+    {
+        "date": "8/29/24",
+        "changes": [
+            "[merge] Remove \"Extended buff duration\" config option",
+            "Fix fast Rainbow Drip recast time being calculated incorrectly (thanks Wan Shott)"
+        ]
+    },
+    {
+        "date": "8/25/24",
+        "changes": [
+            "Add Smudge, Tempera Coat, and Tempera Grassa",
+            "Correct precision of GCD formula (should not break existing timelines)",
+            "[merge] Account for FPS alignment"
+        ]
+    },
+    {
+        "date": "8/19/24",
+        "changes": [
+            "Updated CDH potency modifier calculations (thanks Turtle)"
+        ]
+    },
+    {
+        "date": "8/18/24",
+        "changes": [
+            "Fix Madeen not displaying (thank you yuyuyuyuka)",
+            "Add extended buffs for Aetherhues and Starry Muse (thanks also yuyuyuyuka)",
+            "[merge] Allow party buffs to last shorter than max duration",
+            "Allow Inspiration to be toggled like Ley Lines (thanks turtle)",
+            "Prevent Aetherhues, Subtractive Palette, and Hammer Time from being clicked off",
+            "Fix tooltip-displayed application delays for Holy in White, Comet in Black, and Hammers (thanks one more time yuyuyuyuka)",
+            "[merge] Update tincture application delay and add back TOP/DSR tracks",
+            "Fix warning text rendering for comet + palette gauge (thanks sterling)"
+        ]
+    },
+    {
+        "date": "8/17/24",
+        "changes": [
+            "Initial fork! Below bugfixes are caught between first deployment and public announcements.",
+            "Incorporate Turtle's auto CDH code",
+            "Fix hammer only having 1 stack (thanks Turtle)",
+            "Require being in combat to cast striking/starry",
+            "Display comet in gauge and clean up gauge display",
+            "Fix Hammer Time buff persisting after all hammers (thanks again Turtle)",
+            "Change default config to match patch 7.05 2.5 gcd bis"
+        ]
+    }
+]

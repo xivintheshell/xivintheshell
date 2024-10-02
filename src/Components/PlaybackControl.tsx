@@ -1,7 +1,7 @@
 import React, {MouseEventHandler} from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input, ValueChangeEvent} from "./Common";
-import {getCachedValue, setCachedValue, ShellInfo, ShellVersion, TickMode} from "../Controller/Common";
+import {getCachedValue, setCachedValue, ShellInfo, ShellJob, ShellVersion, TickMode} from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
 import {getAllResources, ResourceOrCoolDownInfo, ResourceOverrideData} from "../Game/Resources";
 import {localize} from "./Localization";
@@ -134,7 +134,7 @@ export function ConfigSummary(props: {}) {
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	const legacyCasterTax = controller.gameConfig.legacy_casterTax;
 	let excerpt = localize({
-		en: `WARNING: this record was created in an earlier version of BLM in the Shell and uses the deprecated caster tax of ${legacyCasterTax}s instead of calculating from your FPS input below. Hover for details: `,
+		en: `WARNING: this record was created in an earlier version of FFXIV in the Shell and uses the deprecated caster tax of ${legacyCasterTax}s instead of calculating from your FPS input below. Hover for details: `,
 		zh: `警告：此时间轴文件创建于一个更早版本的排轴器，因此计算读条时间时使用的是当时手动输入的读条税${legacyCasterTax}秒（现已过时），而非由下方的“帧率”和“读条时间修正”计算得来。更多信息：`
 	});
 	let warningColor = getCurrentThemeColors().warning;
@@ -170,11 +170,14 @@ export function ConfigSummary(props: {}) {
 				})
 			}/> : undefined
 		}
+		{ShellInfo.job === ShellJob.BLM &&
+		// TODO modify for PCT
 		<Expandable
 			title={"Cast times table"}
 			titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
 			defaultShow={true}
 			content={castTimesChart}/>
+		}
 		{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
 		<br/>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
 		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
@@ -440,6 +443,10 @@ export class Config extends React.Component {
 		this.setDirectHit = (val: string) => {
 			this.setState({directHit: val, dirty: true});
 		};
+
+		this.setDetermination = (val: string) => {
+			this.setState({determination: val, dirty: true});
+		}
 
 		this.setAnimationLock = (val: string) => {
 			this.setState({animationLock: val, dirty: true});
@@ -805,6 +812,7 @@ export class Config extends React.Component {
 		if (isNaN(parseFloat(config.spellSpeed)) ||
 			isNaN(parseFloat(config.criticalHit)) ||
 			isNaN(parseFloat(config.directHit)) ||
+			isNaN(parseFloat(config.determination)) ||
 			isNaN(parseFloat(config.animationLock)) ||
 			isNaN(parseFloat(config.fps)) ||
 			isNaN(parseFloat(config.gcdSkillCorrection)) ||
@@ -822,6 +830,7 @@ export class Config extends React.Component {
 			spellSpeed: parseFloat(config.spellSpeed),
 			criticalHit: parseFloat(config.criticalHit),
 			directHit: parseFloat(config.directHit),
+			directHit: parseFloat(config.determination),
 			animationLock: parseFloat(config.animationLock),
 			fps: parseFloat(config.fps),
 			gcdSkillCorrection: parseFloat(config.gcdSkillCorrection),

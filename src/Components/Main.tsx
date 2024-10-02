@@ -9,7 +9,7 @@ import {LoadSave} from "./LoadSave";
 import {ImageExport} from "./ImageExport";
 import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
-import changelog from "../changelog.json"
+import changelog from "../pct_changelog.json"
 import {localize, localizeDate, SelectLanguage} from "./Localization"
 import {GlobalHelpTooltip} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
@@ -17,13 +17,14 @@ import {DamageStatistics} from "./DamageStatistics";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
 import {clearCachedValues, getCachedValue, setCachedValue, containsEwCacheContent} from "../Controller/Common";
 
+const ROADMAP_URL = "https://github.com/users/zqsz-xiv/projects/1";
+
 export let setRealTime = (inRealTime: boolean) => {};
 export let setHistorical = (inHistorical: boolean) => {};
 
 function handleUrlCommands(command?: string) {
 	if (command === "resetAll") {
 		clearCachedValues();
-		window.location.href = "/ffxiv-blm-rotation";
 	}
 	else if (command === "resetResourceOverrides") {
 		let strOld = getCachedValue("gameRecord");
@@ -40,7 +41,6 @@ function handleUrlCommands(command?: string) {
 				setCachedValue("gameRecord" + i.toString(), JSON.stringify(content));
 			}
 		}
-		window.location.href = "/ffxiv-blm-rotation";
 	}
 	else if (command !== undefined) {
 		console.log("unrecognized command '" + command + "'");
@@ -253,15 +253,24 @@ export default class Main extends React.Component {
 					}}>
 						<SelectLanguage/>
 						<SelectColorTheme/>
+						{localize({
+							en: <div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
+									tool/Changelog</b>) (see my <a href={ROADMAP_URL}>roadmap</a>)
+							</div>,
+							zh: <div style={{marginBottom: 16}}>最近更新（月日年）：{changelog[0].date}（详见<b>关于/更新日志</b>）（<a href={ROADMAP_URL}>开发计划</a>）
+							</div>,
+							ja: <div style={{marginBottom: 16}}>最終更新日：{localizeDate(changelog[0].date, "ja")}（<b>このツールについて/更新履歴</b>を参照）（<a href={ROADMAP_URL}>ロードマップ</a>）
+							</div>,
+						})}
 						<div>
-							<h3 style={{marginTop: 20, marginBottom: 6}}>Black Mage in the Shell</h3>
-							{localize({
+							<h3 style={{marginTop: 20, marginBottom: 6}}>Pictomancer in the Shell</h3>
+							{/*localize({
 								en: <div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
 									tool/Changelog</b>) (see my <a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>roadmap</a>)
 								</div>,
 								zh: <div style={{marginBottom: 16}}>最近更新（月日年）：{changelog[0].date}（详见<b>关于/更新日志</b>）（<a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>开发计划</a>）</div>,
 								ja: <div style={{marginBottom: 16}}>最終更新日：{localizeDate(changelog[0].date, "ja")}（<b>このツールについて/更新履歴</b>を参照）（<a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>ロードマップ</a>）</div>,
-							})}
+							})*/}
 
 							{/* PSA */}
 
