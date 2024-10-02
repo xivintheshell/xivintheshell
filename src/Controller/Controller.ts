@@ -8,6 +8,7 @@ import {
 	TickMode
 } from "./Common";
 import {GameState} from "../Game/GameState";
+import {getConditionalReplacement} from "../Game/Skills";
 import {newGameState, BLMState} from "../Game/Jobs/BLM";
 import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
@@ -676,12 +677,10 @@ class Controller {
 	}
 
 	updateSkillButtons(game: GameState) {
-		let paradoxReady = game.resources.get(ResourceType.Paradox).availableAmount() > 0;
-		let retraceReady = game.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0;
-
-		updateSkillButtons(this.game.displayedSkills.map((skillName: SkillName) => {
-			return game.getSkillAvailabilityStatus(skillName);
-		}), paradoxReady, retraceReady);
+		updateSkillButtons(
+			this.game.displayedSkills.getCurrentSkillNames(this.game)
+				.map((skillName: SkillName) => game.getSkillAvailabilityStatus(skillName))
+		);
 	}
 
 	#requestTick(props: {
@@ -776,19 +775,7 @@ class Controller {
 
 		if (bWaitFirst) {
 			this.#requestTick({deltaTime: status.timeTillAvailable, separateNode: false});
-
-			if ((skillName === SkillName.Fire || skillName === SkillName.Blizzard)
-				&& this.game.resources.get(ResourceType.Paradox).available(1))
-			{
-				// automatically turn F1/B1 into paradox if conditions are met
-				skillName = SkillName.Paradox;
-			} else if (skillName === SkillName.Paradox
-				&& !this.game.resources.get(ResourceType.Paradox).available(1))
-			{
-				// and vice versa
-				if ((this.game as BLMState).getFireStacks() > 0) skillName = SkillName.Fire;
-				else if ((this.game as BLMState).getIceStacks() > 0) skillName = SkillName.Blizzard;
-			}
+			skillName = getConditionalReplacement(skillName, this.game);
 			status = this.game.getSkillAvailabilityStatus(skillName);
 			this.lastAttemptedSkill = "";
 		}

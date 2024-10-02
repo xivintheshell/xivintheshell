@@ -9,7 +9,6 @@ import {localize, localizeSkillName} from "./Localization";
 import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
 import {getCurrentThemeColors} from "./ColorTheme";
-import {TraitName, Traits} from '../Game/Traits';
 import {getAllSkills} from "../Game/Skills";
 
 // Imports of Game/Jobs/* must come after Game/Skills is initialized.
@@ -278,15 +277,13 @@ export type SkillButtonViewInfo = {
 	llCovered: boolean
 };
 
-export let updateSkillButtons = (statusList: SkillButtonViewInfo[], paradoxReady: boolean, retraceReady: boolean)=>{}
+export let updateSkillButtons = (statusList: SkillButtonViewInfo[])=>{}
 export class SkillsWindow extends React.Component {
 	state: {
 		statusList: SkillButtonViewInfo[],
 		waitTime: string,
 		waitSince: WaitSince,
 		waitUntil: string,
-		paradoxInfo?: SkillButtonViewInfo
-		retraceInfo?: SkillButtonViewInfo
 	};
 
 	onWaitTimeChange: (e: ValueChangeEvent) => void;
@@ -299,11 +296,9 @@ export class SkillsWindow extends React.Component {
 
 	constructor(props: {}) {
 		super(props);
-		updateSkillButtons = ((statusList, paradoxReady, retraceReady) => {
+		updateSkillButtons = ((statusList) => {
 			this.setState({
 				statusList: statusList,
-				paradoxInfo: paradoxReady ? controller.getSkillInfo({game: controller.game, skillName: SkillName.Paradox}) : undefined,
-				retraceInfo: retraceReady ? controller.getSkillInfo({game: controller.game, skillName: SkillName.Retrace}) : undefined,
 			});
 		});
 
@@ -378,46 +373,14 @@ export class SkillsWindow extends React.Component {
 			waitTime: "1",
 			waitSince: WaitSince.Now,
 			waitUntil: "0:00",
-			paradoxInfo: undefined,
-			retraceInfo: undefined,
 		}
 	}
 
 	render() {
 		let skillButtons = [];
-		//let displayedSkills = controller.game.displayedSkills;
 		for (let i = 0; i < this.state.statusList.length; i++) {
 			let skillName = this.state.statusList[i].skillName;
 			let info = this.state.statusList[i];
-			let level = controller.game.config.level;
-
-			if (Traits.hasUnlocked(TraitName.AspectMasteryV, level)) {
-				let isF1B1 = skillName === SkillName.Fire || skillName === SkillName.Blizzard;
-				if (isF1B1 && this.state.paradoxInfo) {
-					skillName = SkillName.Paradox;
-					info = this.state.paradoxInfo;
-				}
-			}
-
-			if (Traits.hasUnlocked(TraitName.EnhancedLeyLines, level)) {
-				let isLL = skillName === SkillName.LeyLines;
-				if (isLL && this.state.retraceInfo) {
-					skillName = SkillName.Retrace;
-					info = this.state.retraceInfo;
-				}
-			}
-
-			if (Traits.hasUnlocked(TraitName.AspectMasteryIV, level)) {
-				if (skillName === SkillName.Fire2)
-					skillName = SkillName.HighFire2;
-				else if (skillName === SkillName.Blizzard2)
-					skillName = SkillName.HighBlizzard2;
-			}
-
-			if (Traits.hasUnlocked(TraitName.ThunderMasteryIII, level)) {
-				if (skillName === SkillName.Thunder3)
-					skillName = SkillName.HighThunder;
-			}
 
 			let btn = <SkillButton
 				key={i}

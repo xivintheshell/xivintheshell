@@ -254,7 +254,6 @@ it("removes paradox on enochian drop", testWithConfig({ spellSpeed : 420 }, () =
 	expect(controller.game.resources.get(ResourceType.Paradox).available(0)).toBeTruthy();
 }));
 
-
 it("has different F1 modifiers at different AF/UI states", testWithConfig({}, () => {
 	[
 		SkillName.Fire, // no eno
@@ -306,7 +305,6 @@ it("has different F1 modifiers at different AF/UI states", testWithConfig({}, ()
 		},
 	]);
 }));
-
 
 it("accepts the standard aoe rotation", testWithConfig({}, () => {
 	[
@@ -377,6 +375,91 @@ it("accepts the standard aoe rotation", testWithConfig({}, () => {
 			skillName: SkillName.Triplecast,
 			displayedModifiers: [],
 			hitCount: 2,
+		},
+	]);
+}));
+
+it("replaces paradox below level 90", testWithConfig({level: 80}, () => {
+	[
+		SkillName.Blizzard3,
+		SkillName.Blizzard4,
+		SkillName.Fire3,
+		SkillName.Paradox, // should be replaced by fire 1
+		SkillName.Blizzard3,
+		SkillName.Paradox, // should be replaced by blizzard 1
+	].forEach(applySkill);
+	// wait for cast time + damage application
+	controller.step(4);
+	compareDamageTables([
+		{
+			skillName: SkillName.Blizzard3,
+			displayedModifiers: [],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Blizzard4,
+			displayedModifiers: [PotencyModifierType.UI3],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Fire3,
+			displayedModifiers: [PotencyModifierType.UI3],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Fire,
+			displayedModifiers: [PotencyModifierType.AF3],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Blizzard3,
+			displayedModifiers: [PotencyModifierType.AF3],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Blizzard,
+			displayedModifiers: [PotencyModifierType.UI3],
+			hitCount: 1,
+		},
+	]);
+}));
+
+it("replaces f1/b1 with paradox when needed", testWithConfig({level: 100}, () => {
+	[
+		SkillName.Blizzard3,
+		SkillName.Blizzard4,
+		SkillName.Fire3,
+		SkillName.Fire, // should be replaced by paradox
+		SkillName.Blizzard3,
+		SkillName.Blizzard, // should be replaced by paradox
+	].forEach(applySkill);
+	// wait for cast time + damage application
+	controller.step(4);
+	compareDamageTables([
+		{
+			skillName: SkillName.Blizzard3,
+			displayedModifiers: [],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Blizzard4,
+			displayedModifiers: [PotencyModifierType.UI3],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Fire3,
+			displayedModifiers: [PotencyModifierType.UI3],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Paradox,
+			displayedModifiers: [PotencyModifierType.ENO],
+			hitCount: 2,
+		},
+		{
+			skillName: SkillName.Blizzard3,
+			displayedModifiers: [PotencyModifierType.AF3],
+			hitCount: 1,
 		},
 	]);
 }));

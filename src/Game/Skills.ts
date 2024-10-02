@@ -12,6 +12,15 @@ export type SkillAutoReplace = {
 	otherSkill: SkillName,
 }
 
+// Replace a skill on a hotbar, or replay, when a certain condition based on the game state is
+// satisfied the level requirement of the replacing skill is always checked before the condition;
+// multiple replacements for a single skill should have disjoint conditions.
+// This replacement check is NOT performed recursively.
+export type ConditionalSkillReplace<T extends PlayerState> = {
+	newSkill: SkillName,
+	condition: (state: Readonly<T>) => boolean,
+}
+
 /*
  * A ResourceCalculationFn is called when a skill usage is attempted, and determine properties
  * like cast time, recast time, mana cost, and potency based on the current game state.
@@ -53,6 +62,8 @@ interface BaseSkill<T extends PlayerState> {
 	readonly autoDowngrade?: SkillAutoReplace;
 	readonly cdName: ResourceType;
 	readonly aspect: Aspect;
+	readonly replaceIf: ConditionalSkillReplace<T>[]; // list of skills that can replace this one
+	readonly startOnHotbar: boolean; // false if this skill only replaces others (like paradox)
 
 	// === VALIDATION ===
 
@@ -185,6 +196,8 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	autoUpgrade: SkillAutoReplace,
 	autoDowngrade: SkillAutoReplace,
 	aspect: Aspect,
+	replaceIf: ConditionalSkillReplace<T>[],
+	startOnHotbar: boolean,
 	castTime: number | ResourceCalculationFn<T>,
 	recastTime: number | ResourceCalculationFn<T>,
 	manaCost: number | ResourceCalculationFn<T>,
@@ -207,6 +220,8 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		autoDowngrade: params.autoDowngrade,
 		cdName: ResourceType.cd_GCD,
 		aspect: params.aspect ?? Aspect.Other,
+		replaceIf: params.replaceIf ?? [],
+		startOnHotbar: params.startOnHotbar ?? true,
 		castTimeFn: fnify(params.castTime, 0),
 		recastTimeFn: fnify(params.recastTime, 2.5),
 		manaCostFn: fnify(params.manaCost, 0),
@@ -243,6 +258,8 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	assetPath: string,
 	autoUpgrade: SkillAutoReplace,
 	autoDowngrade: SkillAutoReplace,
+	replaceIf: ConditionalSkillReplace<T>[],
+	startOnHotbar: boolean,
 	potency: number | ResourceCalculationFn<T>,
 	applicationDelay: number,
 	validateAttempt: ValidateAttemptFn<T>,
@@ -263,6 +280,8 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		autoDowngrade: params.autoDowngrade,
 		cdName: cdName,
 		aspect: Aspect.Other,
+		replaceIf: params.replaceIf ?? [],
+		startOnHotbar: params.startOnHotbar ?? true,
 		manaCostFn: (state) => 0,
 		potencyFn: fnify(params.potency, 0),
 		applicationDelay: params.applicationDelay ?? 0,
@@ -292,6 +311,8 @@ export function makeResourceAbility<T extends PlayerState>(
 	cdName: ResourceType,
 	params: {
 		rscType: ResourceType,
+		replaceIf?: ConditionalSkillReplace<T>[],
+		startOnHotbar?: boolean,
 		applicationDelay: number,
 		duration?: number | ResourceCalculationFn<T>, // TODO push to resources
 		potency?: number | ResourceCalculationFn<T>,
@@ -326,6 +347,8 @@ export function makeResourceAbility<T extends PlayerState>(
 	);
 	return makeAbility(jobs, name, unlockLevel, cdName, {
 		potency: params.potency,
+		replaceIf: params.replaceIf,
+		startOnHotbar: params.startOnHotbar,
 		applicationDelay: params.applicationDelay,
 		validateAttempt: params.validateAttempt,
 		onConfirm: params.onConfirm,
@@ -371,27 +394,43 @@ export class SkillsList<T extends PlayerState> {
 	}
 }
 
-export class DisplayedSkills extends Array<SkillName> {
+export function getConditionalReplacement<T extends PlayerState>(key: SkillName, state: T): SkillName {
+	// Attempt to replace a skill if required by the current state
+	const skill = getSkill(state.job, key);
+	for (const candidate of skill.replaceIf) {
+		const candidateSkill = getSkill(state.job, candidate.newSkill);
+		if (state.config.level >= candidateSkill.unlockLevel && candidate.condition(state)) {
+			return candidate.newSkill;
+		}
+	}
+	return skill.name;
+}
+
+export class DisplayedSkills  {
+	#skills: SkillName[];
+
 	constructor(level: LevelSync) {
-		super();
+		this.#skills = [];
 		console.assert(skillMap.has(ShellInfo.job), `No skill map found for job: ${ShellInfo.job}`)
-		// TODO move contextual hotbar info (paradox, retrace) to here
-		const hotbarExcludeSkills = [
-			SkillName.Never, // never display Never
-			SkillName.Paradox,
-			SkillName.Retrace
-		];
 		for (const skillInfo of skillMap.get(ShellInfo.job)!.values()) {
 			// Leave off abilities that are above the current level sync.
 			// Also leave off any abilities that auto-downgrade, like HF2/HB2/HT,
 			// since their downgrade versions will already be on the hotbar.
 			if (
-				level >= skillInfo.unlockLevel
-				&& !hotbarExcludeSkills.includes(skillInfo.name)
+				skillInfo.name !== SkillName.Never
+				&& level >= skillInfo.unlockLevel
 				&& skillInfo.autoDowngrade === undefined
+				&& skillInfo.startOnHotbar
 			) {
-				this.push(skillInfo.name);
+				this.#skills.push(skillInfo.name);
 			}
 		}
+	}
+
+	// Get the list of skills to display in the current game state.
+	// `replaceIf` conditions are checked here.
+	// `autoUpgrade`/`autoDowngrade` are not checked here, and are checked in the constructor instead.
+	getCurrentSkillNames<T extends PlayerState>(state: T): SkillName[] {
+		return this.#skills.map((skillName) => getConditionalReplacement(skillName, state));
 	}
 }

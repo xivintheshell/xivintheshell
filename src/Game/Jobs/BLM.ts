@@ -9,6 +9,7 @@ import {getPotencyModifiersFromResourceState, Potency} from "../Potency";
 import {
 	Ability,
 	combineEffects,
+	ConditionalSkillReplace,
 	EffectFn,
 	getSkill,
 	makeAbility,
@@ -292,8 +293,19 @@ export class BLMState extends GameState {
 // Abilities will display on the hotbar in the order they are declared here. If an ability has an
 // `autoDowngrade` (i.e. it replaces a previous ability on the hotbar), it will not have its own
 // slot and instead take the place of the downgrade ability.
+//
+// If an ability appears on the hotbar only when replacing another ability, it should have
+// `startOnHotbar` set to false, and `replaceIf` set appropriately on the abilities to replace.
+
+const retraceCondition = (state: Readonly<BLMState>) => (
+	state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0
+);
+
+const paraCondition = (state: Readonly<BLMState>) => state.hasResourceAvailable(ResourceType.Paradox);
 
 const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
+	replaceIf?: ConditionalSkillReplace<BLMState>[],
+	startOnHotbar?: boolean,
 	autoUpgrade?: SkillAutoReplace,
 	autoDowngrade?: SkillAutoReplace,
 	aspect?: Aspect,
@@ -343,6 +355,8 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 	);
 	const onApplication: EffectFn<BLMState> = params.onApplication ?? NO_EFFECT;
 	return makeSpell(ShellJob.BLM, name, unlockLevel, {
+		replaceIf: params.replaceIf,
+		startOnHotbar: params.startOnHotbar,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		aspect: aspect,
@@ -369,6 +383,8 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 
 
 const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
+	replaceIf?: ConditionalSkillReplace<BLMState>[],
+	startOnHotbar?: boolean,
 	applicationDelay?: number,
 	cooldown: number,
 	maxCharges?: number,
@@ -400,6 +416,10 @@ makeGCD_BLM(SkillName.Blizzard, 1, {
 			state.loseEnochian()
 		}
 	},
+	replaceIf: [{
+		newSkill: SkillName.Paradox,
+		condition: paraCondition,
+	}],
 });
 
 const gainFirestarterProc = (state: PlayerState) => {
@@ -436,6 +456,10 @@ makeGCD_BLM(SkillName.Fire, 2, {
 			state.loseEnochian()
 		}
 	},
+	replaceIf: [{
+		newSkill: SkillName.Paradox,
+		condition: paraCondition,
+	}],
 });
 
 makeAbility_BLM(SkillName.Transpose, 4, ResourceType.cd_Transpose, {
@@ -638,6 +662,10 @@ makeResourceAbility(ShellJob.BLM, SkillName.LeyLines, 52, ResourceType.cd_LeyLin
 	onApplication: (state, node) => {
 		state.resources.get(ResourceType.LeyLines).enabled = true
 	},
+	replaceIf: [{
+		newSkill: SkillName.Retrace,
+		condition: retraceCondition,
+	}],
 });
 
 makeGCD_BLM(SkillName.Blizzard4, 58, {
@@ -815,7 +843,7 @@ makeGCD_BLM(SkillName.Paradox, 90, {
 	baseManaCost: 1600,
 	basePotency: 520,
 	applicationDelay: 0.624,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Paradox),
+	validateAttempt: paraCondition,
 	onConfirm: (state, node) => {
 		state.resources.get(ResourceType.Paradox).consume(1);
 		if (state.hasEnochian()) {
@@ -830,6 +858,14 @@ makeGCD_BLM(SkillName.Paradox, 90, {
 			console.error("cannot cast Paradox outside of AF/UI");
 		}
 	},
+	replaceIf: [{
+		newSkill: SkillName.Blizzard,
+		condition: (state) => !state.hasResourceAvailable(ResourceType.Paradox) && state.getIceStacks() > 0,
+	}, {
+		newSkill: SkillName.Fire,
+		condition: (state) => !state.hasResourceAvailable(ResourceType.Paradox) && state.getFireStacks() > 0,
+	}],
+	startOnHotbar: false,
 });
 
 makeGCD_BLM(SkillName.HighThunder, 92, {
@@ -861,13 +897,11 @@ makeGCD_BLM(SkillName.FlareStar, 100, {
 makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
 	applicationDelay: 0, // ? (assumed to be instant)
 	cooldown: 40,
-	validateAttempt: (state) => (
-		Traits.hasUnlocked(TraitName.EnhancedLeyLines, state.config.level) &&
-		state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0
-	),
+	validateAttempt: retraceCondition,
 	onConfirm: (state, node) => {
 		state.resources.get(ResourceType.LeyLines).enabled = true;
 	},
+	startOnHotbar: false,
 });
 
 // TODO this function is kept here to avoid circular imports, but should probably be moved
