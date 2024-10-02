@@ -1,9 +1,9 @@
-import {Expandable, Help} from "./Common";
 import React, {CSSProperties} from "react";
 import {controller} from "../Controller/Controller";
 import {ActionNode, ActionType, Record, RecordValidStatus} from "../Controller/Record";
 import {localize, localizeSkillName} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+import {TIMELINE_SETTINGS_HEIGHT} from "./Timeline";
 
 export let refreshTimelineEditor = ()=>{};
 
@@ -193,7 +193,15 @@ export class TimelineEditor extends React.Component {
 			marginBottom: 10,
 			padding: 3
 		}
-		let toolbar = <div style={{display: "flex", flexDirection: "column", flex: 2, height: 200, marginRight: 10, position: "relative", verticalAlign: "top", overflowY: "hidden"}}>
+		let toolbar = <div style={{
+			display: "flex",
+			flexDirection: "column",
+			flex: 2,
+			marginRight: 10,
+			position: "relative",
+			verticalAlign: "top",
+			overflowY: "hidden"
+		}}>
 
 			<div style={{marginBottom: 6, flex: 1}}>
 				<button style={buttonStyle} onClick={e=>{
@@ -287,7 +295,7 @@ export class TimelineEditor extends React.Component {
 			itr = itr.next;
 		}
 		let colors = getCurrentThemeColors();
-		let content = <div style={{display: "flex", flexDirection: "row", position: "relative"}} onClick={
+		return <div style={{display: "flex", flexDirection: "row", position: "relative", height: TIMELINE_SETTINGS_HEIGHT - 50}} onClick={
 			(evt)=>{
 				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
 					if (!this.isDirty()) {
@@ -302,20 +310,20 @@ export class TimelineEditor extends React.Component {
 			}
 		}>
 			{toolbar}
-			<div className={"staticScrollbar"} style={{border: "1px solid " + colors.bgMediumContrast, flex: 6, height: 200, marginRight: 10, position: "relative", verticalAlign: "top", overflowY: "scroll"}}>
+			<div className={"staticScrollbar"} style={{
+				border: "1px solid " + colors.bgMediumContrast,
+				flex: 6,
+				marginRight: 10,
+				position: "relative",
+				verticalAlign: "top",
+				overflowY: "scroll"
+			}}>
 				{actionsList}
 			</div>
-			<div style={{border: "1px solid " + colors.bgMediumContrast, flex: 6, height: 200, position: "relative", verticalAlign: "top", overflowY: "hidden"}}>
+			<div style={{
+				border: "1px solid " + colors.bgMediumContrast, flex: 6, position: "relative", verticalAlign: "top", overflowY: "hidden"}}>
 				{applySection()}
 			</div>
-		</div>;
-		return <Expandable
-			title="Timeline editor"
-			titleNode={<span>{localize({en: "Timeline editor ", zh: "时间轴编辑器 "})}<Help topic={"timeline editor"} content={<div>
-				<div className={"paragraph"} style={{color: "orangered"}}><b>Has the bare minimum features but might still be buggy (let me know). Would recommend going over Instructions/Troubleshoot first, plus saving data to drive in case bugs mess up the entire tool</b></div>
-				<div className={"paragraph"}>I hope it's otherwise self-explanatory. Note that edits made here are not saved until they're applied to the actual timeline.</div>
-			</div>}/></span>}
-			content={content}
-			defaultShow={false}/>
+		</div>
 	}
 }
