@@ -115,7 +115,6 @@ class TimelineMain extends React.Component {
 				overflowX: "scroll",
 				overflowY: "clip",
 				outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
-				//marginBottom: 10,
 				cursor: timelineCanvasGetPointerMouse() ? "pointer" : "default",
 			}} ref={this.myRef} onScroll={e => {
 				if (this.myRef.current) {
@@ -214,44 +213,42 @@ class TimelineSettings extends React.Component {
 	}
 
 	render() {
+		let displaySettings = <div>
+			<Input defaultValue={this.state.tinctureBuffPercentageStr}
+			       description={localize({en: " tincture potency buff ", zh: "爆发药威力加成 "})}
+			       onChange={this.setTinctureBuffPercentageStr} width={2} style={{display: "inline"}}/>
+			<span>%</span>
+			<div>
+				<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}
+				       checked={this.state.untargetableMask}
+				       onChange={evt => {
+					       this.setUntargetableMask(evt.target.checked)
+				       }}/>
+				<span>{localize({en: "exclude damage when untargetable", zh: "Boss上天期间威力按0计算"})} <Help
+					topic={"untargetableMask"} content={
+					<div>
+						<div className={"paragraph"}>{localize({
+							en: "Having this checked will exclude damages from untargetable phases.",
+							zh: "若勾选，统计将不包括Boss上天期间造成的伤害。"
+						})}</div>
+						<div className={"paragraph"}>{localize({
+							en: "You can mark up such phases using timeline markers of type \"Untargetable\".",
+							zh: "可在下方用 “不可选中” 类型的时间轴标记来指定时间区间。"
+						})}</div>
+						<div className={"paragraph"}>{localize({
+							en: "This is just a statistics helper though. For example it doesn't prevent you from using skills when the boss is untargetable.",
+							zh: "此功能只是一个统计用的工具，在标注了 “不可选中” 的时间里其实也能正常使用技能。"
+						})}</div>
+					</div>
+				}/></span>
+			</div>
+		</div>;
+
 		return <div style={{
 			position: "relative",
 			margin: 6
 		}}>
 			<Tabs uniqueName={"timeline"} content={[
-				{
-					titleNode: localize({en: "Display settings", zh: "显示设置"}),
-					contentNode: <div>
-						<Input defaultValue={this.state.tinctureBuffPercentageStr}
-						       description={localize({en: " tincture potency buff ", zh: "爆发药威力加成 "})}
-						       onChange={this.setTinctureBuffPercentageStr} width={2} style={{display: "inline"}}/>
-						<span>%</span>
-						<div>
-							<input type="checkbox" style={{position: "relative", top: 3, marginRight: 5}}
-							       checked={this.state.untargetableMask}
-							       onChange={evt => {
-								       this.setUntargetableMask(evt.target.checked)
-							       }}/>
-							<span>{localize({en: "exclude damage when untargetable", zh: "Boss上天期间威力按0计算"})} <Help
-								topic={"untargetableMask"} content={
-								<div>
-									<div className={"paragraph"}>{localize({
-										en: "Having this checked will exclude damages from untargetable phases.",
-										zh: "若勾选，统计将不包括Boss上天期间造成的伤害。"
-									})}</div>
-									<div className={"paragraph"}>{localize({
-										en: "You can mark up such phases using timeline markers of type \"Untargetable\".",
-										zh: "可在下方用 “不可选中” 类型的时间轴标记来指定时间区间。"
-									})}</div>
-									<div className={"paragraph"}>{localize({
-										en: "This is just a statistics helper though. For example it doesn't prevent you from using skills when the boss is untargetable.",
-										zh: "此功能只是一个统计用的工具，在标注了 “不可选中” 的时间里其实也能正常使用技能。"
-									})}</div>
-								</div>
-							}/></span>
-						</div>
-					</div>
-				},
 				{
 					titleNode: localize({en: "Timeline markers", zh: "时间轴标记"}),
 					contentNode: <TimelineMarkerPresets/>
@@ -274,7 +271,11 @@ class TimelineSettings extends React.Component {
 						<LoadSave/>
 						<ImageExport/>
 					</div>
-				}
+				},
+				{
+					titleNode: localize({en: "Display settings", zh: "显示设置"}),
+					contentNode: displaySettings
+				},
 			]} collapsible={true} height={TIMELINE_SETTINGS_HEIGHT} defaultSelectedIndex={undefined}/>
 			<Slider
 				description={localize({en: "horizontal scale ", zh: "水平缩放 "})}

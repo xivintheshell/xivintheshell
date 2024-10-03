@@ -250,7 +250,7 @@ export function Tabs(props: {
 	style?: CSSProperties
 }) {
 
-	const titleHeight = TABS_TITLE_HEIGHT - 2;
+	const titleHeight = TABS_TITLE_HEIGHT - 2; // the top and bottom border each takes up 1px
 	const [selectedIndex, setSelectedIndex] = React.useState<number | undefined>(undefined);
 
 	// initialization
