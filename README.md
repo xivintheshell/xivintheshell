@@ -6,9 +6,11 @@ Here: [https://miyehn.me/ffxiv-blm-rotation](https://miyehn.me/ffxiv-blm-rotatio
 
 Let me know if you encounter bugs and/or have questions or concerns.
 
-Developer: Ellyn Waterford @ Sargatanas (`miyehn`)  
 Initial idea & design advice (the big brain black mage behind this): Galahad Donnadieu @ Exodus (`ukitaeshiya`)  
-And many thanks to the players from The Balance discord for their invaluable feedback.
+Initial Developer: Ellyn Waterford @ Sargatanas (`miyehn`)  
+Currently maintained by: `@developers` of XIV in the Shell.
+
+Many thanks to the players from The Balance discord server for their invaluable feedback.
 
 ---
 
