@@ -1,14 +1,14 @@
-# Black Mage in the Shell
+# FFXIV in the Shell
 
-FFXIV black mage job simulator & rotation planner.
+FFXIV job simulators & rotation planners.
 
-Here: [https://miyehn.me/ffxiv-blm-rotation](https://miyehn.me/ffxiv-blm-rotation)
+(Deployment TBD)
 
-Let me know if you encounter bugs and/or have questions or concerns.
+Let us know if you encounter bugs and/or have questions or concerns.
 
-Initial idea & design advice (the big brain black mage behind this): Galahad Donnadieu @ Exodus (`ukitaeshiya`)  
-Initial Developer: Ellyn Waterford @ Sargatanas (`miyehn`)  
-Currently maintained by: `@developers` of XIV in the Shell.
+Initial idea: Galahad Donnadieu @ Exodus (`ukitaeshiya`)  
+Initial developer: Ellyn Waterford @ Sargatanas (`miyehn`)  
+Currently maintained by: [@developers](https://github.com/orgs/xivintheshell/teams/developers) of [FFXIV in the Shell](https://github.com/xivintheshell).
 
 Many thanks to the players from The Balance discord server for their invaluable feedback.
 
