@@ -35,11 +35,11 @@ export class LoadSave extends React.Component {
 	}
 	render() {
 		return <div className={"loadSave"}>
+			<div style={{marginBottom: 10}}><b>{localize({
+				en: "Export fight to file",
+				zh: "导出战斗到文件"
+			})}</b></div>
 			<div>
-				{localize({
-					en: "download fight record: ",
-					zh: "下载战斗记录："
-				})}
 				<SaveToFile fileFormat={FileFormat.Json} getContentFn={()=>{
 					return controller.record.serialized();
 				}} filename={"fight"} displayName={localize({
@@ -56,8 +56,12 @@ export class LoadSave extends React.Component {
 					zh: "只有txt可以被导入，csv是导出给excel等外部工具用的"
 				})}/>
 			</div>
-			<div style={{marginTop: 10, marginBottom: 15}}>
-				<span>{localize({en: "Load from file: ", zh: "从文件导入战斗记录："})}</span>
+			<div className={"paragraph"}><b>{localize({
+				en: "Import fight from file",
+				zh: "从文件导入战斗"
+			})}</b></div>
+			<div style={{marginBottom: 10}}>
+				<span>{localize({en: "Select file: ", zh: "选择文件："})}</span>
 				<input
 					style={{
 						width: "110px",

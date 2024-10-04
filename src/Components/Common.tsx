@@ -257,7 +257,7 @@ export function Tabs(props: {
 	useEffect(() => {
 		let selected: number | undefined = props.defaultSelectedIndex;
 		// if a cached value exists, it will always override the default
-		let cachedSelected = getCachedValue(props.uniqueName + "SelectedTab");
+		let cachedSelected = getCachedValue("tabs: " + props.uniqueName);
 		if (cachedSelected !== null) {
 			if (cachedSelected === "none") {
 				selected = undefined;
@@ -317,7 +317,7 @@ export function Tabs(props: {
 			if (!isSelectedTab) { newIndex = i; }
 			else if (props.collapsible) { newIndex = undefined; }
 			setSelectedIndex(newIndex);
-			setCachedValue(props.uniqueName + "SelectedTab", newIndex===undefined ? "none" : `${newIndex}`);
+			setCachedValue("tabs: " + props.uniqueName, newIndex===undefined ? "none" : `${newIndex}`);
 		}}>{props.content[i].titleNode}</span>);
 
 		content.push(<div key={i} style={{
@@ -328,7 +328,10 @@ export function Tabs(props: {
 	if (props.collapsible && selectedIndex !== undefined) {
 		titles.push(<span
 			key={titles.length}
-			onClick={() => {setSelectedIndex(undefined);}}
+			onClick={() => {
+				setSelectedIndex(undefined);
+				setCachedValue("tabs: " + props.uniqueName, "none");
+			}}
 		><LiaWindowMinimize style={{
 			marginLeft: 16,
 			fontSize: 14,
@@ -344,7 +347,7 @@ export function Tabs(props: {
 		<div>{titles}</div>
 		<div className={"staticScrollbar"} style={{
 			display: selectedIndex === undefined ? "none" : "block",
-			height: props.height - titleHeight,
+			height: props.height - TABS_TITLE_HEIGHT,
 			boxSizing: "border-box",
 			padding: "10px 5px",
 			overflowY: "scroll"
@@ -388,6 +391,7 @@ export class Input extends React.Component {
 }
 
 type SliderProps = {
+	uniqueName: string,
 	onChange?: (e: string) => void,
 	defaultValue?: string,
 	description?: ContentNode
@@ -398,6 +402,7 @@ type SliderState = {
 }
 export class Slider extends React.Component {
 	props: SliderProps = {
+		uniqueName: "anonSlider",
 		defaultValue: "default slider value",
 		description: "default description"
 	};
@@ -412,10 +417,19 @@ export class Slider extends React.Component {
 		this.onChange = ((e: ChangeEvent<{value: string}>)=>{
 			this.setState({value: e.target.value});
 			if (typeof this.props.onChange !== "undefined") this.props.onChange(e.target.value);
+			setCachedValue("slider: " + this.props.uniqueName, e.target.value)
 		});
 	}
 	componentDidMount() {
-		if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
+		let initialValue = this.state.value;
+		let str = getCachedValue("slider: " + this.props.uniqueName);
+		if (str !== null) {
+			initialValue = str;
+			this.setState({value: initialValue});
+		}
+		if (typeof this.props.onChange !== "undefined") {
+			this.props.onChange(initialValue);
+		}
 	}
 	render() {
 		return <div style={{...{display: "inline-block"}, ...this.props.style}}>
@@ -430,6 +444,43 @@ export class Slider extends React.Component {
 				style={{position: "relative", outline: "none"}}/>
 		</div>
 	}
+}
+
+export function Checkbox(props: {
+	uniqueName: string,
+	label: ContentNode,
+	onChange: (newValue: boolean) => void,
+	defaultChecked?: boolean,
+}) {
+	const [checked, setChecked] = useState<boolean>(false);
+	useEffect(() => {
+		let defaultChecked = props.defaultChecked ?? true;
+		let str = getCachedValue("checked: " + props.uniqueName);
+		if (str !== null) {
+			defaultChecked = parseInt(str) > 0;
+		}
+		setChecked(defaultChecked);
+		props.onChange(defaultChecked);
+	}, [props]);
+	const checkboxStyle: CSSProperties = {
+		position: "relative",
+		top: 3,
+		marginRight: "0.25em"
+	};
+	return <div style={{marginBottom: 5}}>
+		<input
+			type="checkbox"
+			onChange={e => {
+				let newVal = e.currentTarget.checked;
+				setChecked(newVal);
+				setCachedValue("checked: " + props.uniqueName, newVal ? "1" : "0");
+				props.onChange(newVal);
+			}}
+			checked={checked}
+			style={checkboxStyle}
+		/>
+		<span>{props.label}</span>
+	</div>
 }
 
 export class ScrollAnchor extends React.Component {

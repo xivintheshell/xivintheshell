@@ -81,7 +81,7 @@ export function ConfigSummary(props: {}) {
 		let preTax = controller.gameConfig.adjustedCastTime(t);
 		return controller.gameConfig.getAfterTaxCastTime(preTax).toFixed(3);
 	};
-	let castTimesChart =<div>
+	let castTimesChart = <div>
 		<style>{getTableStyle(getCurrentThemeColors().bgHighContrast)}</style>
 		<table>
 			<tbody>
@@ -170,11 +170,8 @@ export function ConfigSummary(props: {}) {
 				})
 			}/> : undefined
 		}
-		<Expandable
-			title={"Cast times table"}
-			titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
-			defaultShow={true}
-			content={castTimesChart}/>
+		<div>{<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help topic={"castTimesTable"} content={castTimesTableDesc}/></span>}</div>
+		{castTimesChart}
 		{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
 		<br/>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
 		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
@@ -930,13 +927,11 @@ export class Config extends React.Component {
 				</select>
 			</div>
 			{this.#resourceOverridesSection()}
-			<button onClick={this.handleSubmit}>{localize({en: "apply and reset", zh: "应用并重置时间轴"})}</button>
+			<button onClick={this.handleSubmit}>{localize({en: "apply and reset", zh: "应用并重置时间轴"})}{this.state.dirty ? "*" : ""}</button>
 		</div>;
 		return (
-			<div className={"config"} style={{marginBottom: 16}}>
-				<div style={{marginBottom: 5}}><b>{localize({en: "Config", zh: "设置"})}</b></div>
-				<ConfigSummary/> {/* retrieves data from global controller */}
-				<Expandable title={"Edit"} titleNode={localize({en: "Edit", zh: "编辑"}) + (this.state.dirty ? "*" : "")} content={editSection}/>
+			<div style={{marginBottom: 16}}>
+				{editSection}
 			</div>
 		)}
 }

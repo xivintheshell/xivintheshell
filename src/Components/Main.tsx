@@ -1,7 +1,7 @@
 import React, {CSSProperties} from 'react';
 import {Timeline, updateTimelineView} from "./Timeline";
 import { SkillsWindow } from "./Skills";
-import { Config, TimeControl } from "./PlaybackControl";
+import {Config, ConfigSummary, TimeControl} from "./PlaybackControl";
 import { StatusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import 'react-tabs/style/react-tabs.css';
@@ -9,7 +9,7 @@ import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../changelog.json"
 import {localize, localizeDate, SelectLanguage} from "./Localization"
-import {GlobalHelpTooltip} from "./Common";
+import {GlobalHelpTooltip, Tabs} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
 import {DamageStatistics} from "./DamageStatistics";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
@@ -46,6 +46,39 @@ function handleUrlCommands(command?: string) {
 }
 
 export let forceUpdateAll = ()=>{};
+
+function ConfigTabs(props: {
+	height: number
+}) {
+	return <div style={{
+		flex: 3,
+		height: props.height,
+		marginLeft: 6,
+		position: "relative",
+		verticalAlign: "top",
+	}}>
+		<Tabs uniqueName={"mainConfig"} content={[
+			{
+				titleNode: "Overview",
+				contentNode: <ConfigSummary/> // retrieves data from global controller
+			},
+			{
+				titleNode: "Config",
+				contentNode: <div>
+					<Config/>
+					<div>{localize({
+						en: "You can also import/export fights from/to local files at the bottom of the page.",
+						zh: "页面底部有导入和导出战斗文件相关选项。"
+					})}</div>
+				</div>
+			},
+			{
+				titleNode: "Control",
+				contentNode: <TimeControl/>
+			}
+		]} collapsible={false} height={props.height} defaultSelectedIndex={1}/>
+	</div>
+}
 
 export default class Main extends React.Component {
 
@@ -291,21 +324,7 @@ export default class Main extends React.Component {
 							position: "relative",
 							marginBottom: "20px"}}>
 							{mainControlRegion}
-							<div className={"staticScrollbar"} style={{
-								flex: 3,
-								height: this.state.controlRegionHeight,
-								marginLeft: 6,
-								position: "relative",
-								verticalAlign: "top",
-								overflowY: "scroll",
-							}}>
-								<Config/>
-								<TimeControl/>
-								<div>{localize({
-									en: "You can also import/export fights from/to local files at the bottom of the page.",
-									zh: "页面底部有导入和导出战斗文件相关选项。"
-								})}</div>
-							</div>
+							<ConfigTabs height={this.state.controlRegionHeight}/>
 						</div>
 						<SkillSequencePresets/>
 						<hr style={{

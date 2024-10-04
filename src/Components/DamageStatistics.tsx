@@ -1,5 +1,5 @@
 import React, {CSSProperties} from 'react'
-import {ContentNode, FileFormat, Help, SaveToFile} from "./Common";
+import {Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile} from "./Common";
 import {SkillName} from "../Game/Common";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 import {getCurrentThemeColors} from "./ColorTheme";
@@ -11,6 +11,7 @@ import {
 	getTargetableDurationBetween,
 	updateSkillOrDoTInclude
 } from "../Controller/DamageStatistics";
+import {getCachedValue, setCachedValue} from "../Controller/Common";
 
 export type DamageStatsMainTableEntry = {
 	skillName: SkillName,
@@ -180,6 +181,80 @@ function PotencyDisplay(props: {
 	return <span style={{textDecoration: props.includeInStats ? "none" : "line-through"}}>{potency.toFixed(2)} <Help topic={props.helpTopic} content={potencyExplanation}/></span>
 }
 
+class DamageStatsSettings extends React.Component {
+	initialDisplayScale: number;
+	state: {
+		tinctureBuffPercentageStr: string,
+	};
+	setTinctureBuffPercentageStr: (val: string) => void;
+
+	constructor(props: {}) {
+		super(props);
+		// display scale
+		this.initialDisplayScale = 0.4;
+		let str = getCachedValue("timelineDisplayScale");
+		if (str !== null) {
+			this.initialDisplayScale = parseFloat(str);
+		}
+
+		// state
+		this.state = {
+			tinctureBuffPercentageStr: "8",
+		}
+
+		// tincture buff percentage
+		str = getCachedValue("tinctureBuffPercentage");
+		if (str !== null) {
+			this.state.tinctureBuffPercentageStr = str;
+		}
+
+		// functions
+		this.setTinctureBuffPercentageStr = ((val: string) => {
+			this.setState({tinctureBuffPercentageStr: val});
+
+			let percentage = parseFloat(val);
+			if (!isNaN(percentage)) {
+				controller.setTinctureBuffPercentage(percentage);
+				setCachedValue("tinctureBuffPercentage", val);
+			}
+		});
+	}
+
+	componentDidMount() {
+		this.setTinctureBuffPercentageStr(this.state.tinctureBuffPercentageStr);
+	}
+
+	render() {
+		let checkboxLabel = <span>{localize({en: "exclude damage when untargetable", zh: "Boss上天期间威力按0计算"})} <Help
+			topic={"untargetableMask"} content={
+			<div>
+				<div className={"paragraph"}>{localize({
+					en: "Having this checked will exclude damages from untargetable phases.",
+					zh: "若勾选，统计将不包括Boss上天期间造成的伤害。"
+				})}</div>
+				<div className={"paragraph"}>{localize({
+					en: "You can mark up such phases using timeline markers of type \"Untargetable\".",
+					zh: "可在下方用 “不可选中” 类型的时间轴标记来指定时间区间。"
+				})}</div>
+				<div className={"paragraph"}>{localize({
+					en: "This is just a statistics helper though. For example it doesn't prevent you from using skills when the boss is untargetable.",
+					zh: "此功能只是一个统计用的工具，在标注了 “不可选中” 的时间里其实也能正常使用技能。"
+				})}</div>
+			</div>
+		}/></span>;
+		return <div>
+			<Input defaultValue={this.state.tinctureBuffPercentageStr}
+			       description={localize({en: " tincture potency buff ", zh: "爆发药威力加成 "})}
+			       onChange={this.setTinctureBuffPercentageStr} width={2} style={{display: "inline"}}/>
+			<span>%</span>
+			<Checkbox uniqueName={"untargetableMask"} label={checkboxLabel} onChange={val=>{
+				controller.setUntargetableMask(val);
+			}}/>
+		</div>;
+	}
+}
+
+
 const rowGap = "0.375em 0.75em";
 
 export class DamageStatistics extends React.Component {
@@ -293,24 +368,27 @@ export class DamageStatistics extends React.Component {
 		}
 
 		let summary = <div style={{display: "flex", marginBottom: 10, flexDirection: "row"}}>
-			<div style={{flex: 1, color: this.data.historical ? colors.historical : colors.text}}>
-				<div>{localize({en: "Last damage application time", zh: "最后伤害结算时间"})}{colon}{lastDamageApplicationTimeDisplay}</div>
-				<div>{potencyStr}</div>
-				<div>PPS <Help topic={"ppsNotes"} content={
-					<div className={"toolTip"}>
-						<div className="paragraph">{localize({
-							en: "(total applied potency of checked skills) / (total targetable duration from 0s until last damage application time).",
-							zh: "统计表中勾选技能的已结算总威力 / (从0s到最后伤害结算时间 - 不可选中总时长)。"
-						})}</div>
-						<div className="paragraph">{localize({
-							en: "could be inaccurate if any damage happens before pull, or if some damage's not applied yet",
-							zh: "如果有伤害在0s之前结算，或者当前有的伤害还未结算，那么此PPS可能会不准确"
-						})}</div>
-					</div>
-				}/>{colon}{ppsAvailable ? (this.data.totalPotency.applied / targetableDurationTilLastDisplay).toFixed(2) : "N/A"}</div>
-				<div>{gcdStr}</div>
-				<div>{dotStr}</div>
-				<div>
+			<div style={{flex: 1}}>
+				<div style={{color: this.data.historical ? colors.historical : colors.text}}>
+					<div>{localize({en: "Last damage application time", zh: "最后伤害结算时间"})}{colon}{lastDamageApplicationTimeDisplay}</div>
+					<div>{potencyStr}</div>
+					<div>PPS <Help topic={"ppsNotes"} content={
+						<div className={"toolTip"}>
+							<div className="paragraph">{localize({
+								en: "(total applied potency of checked skills) / (total targetable duration from 0s until last damage application time).",
+								zh: "统计表中勾选技能的已结算总威力 / (从0s到最后伤害结算时间 - 不可选中总时长)。"
+							})}</div>
+							<div className="paragraph">{localize({
+								en: "could be inaccurate if any damage happens before pull, or if some damage's not applied yet",
+								zh: "如果有伤害在0s之前结算，或者当前有的伤害还未结算，那么此PPS可能会不准确"
+							})}</div>
+						</div>
+					}/>{colon}{ppsAvailable ? (this.data.totalPotency.applied / targetableDurationTilLastDisplay).toFixed(2) : "N/A"}</div>
+					<div>{gcdStr}</div>
+					<div>{dotStr}</div>
+				</div>
+				<div style={{marginTop: 10}}>
+					<DamageStatsSettings/>
 					<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
 						return controller.getDamageLogCsv();
 					}} filename={"damage-log"} displayName={localize({
