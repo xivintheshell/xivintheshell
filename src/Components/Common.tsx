@@ -461,7 +461,9 @@ export function Checkbox(props: {
 		}
 		setChecked(defaultChecked);
 		props.onChange(defaultChecked);
-	}, [props]);
+		// myn: props really shouldn't update so should be fine to not have them in deps array..
+		// eslint-disable-next-line
+	}, []);
 	const checkboxStyle: CSSProperties = {
 		position: "relative",
 		top: 3,
