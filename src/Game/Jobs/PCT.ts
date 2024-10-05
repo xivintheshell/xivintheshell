@@ -1,38 +1,33 @@
 // Skill and state declarations for PCT.
 
-import {StatsModifier} from "../StatsModifier";
 import {controller} from "../../Controller/Controller";
-import {ActionNode} from "../../Controller/Record";
 import {ShellJob} from "../../Controller/Common";
-import {Aspect, BuffType, ProcMode, ResourceType, SkillName, WarningType} from "../Common";
-import {getPotencyModifiersFromResourceState, Potency} from "../Potency";
+import {Aspect, ResourceType, SkillName, WarningType} from "../Common";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
-	getSkill,
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
 	NO_EFFECT,
-	SkillAutoReplace,
 	Spell,
 	ValidateAttemptFn,
 } from "../Skills";
 import {TraitName, Traits} from "../Traits";
-import {GameState, PlayerState} from "../GameState";
-import {getResourceInfo, makeResource, CoolDown, DoTBuff, Event, Resource, ResourceInfo} from "../Resources"
+import {GameState} from "../GameState";
+import {getResourceInfo, makeResource, CoolDown, ResourceInfo} from "../Resources"
 import {GameConfig} from "../GameConfig";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
-const makePCTResource = (rsc: ResourceType, maxValue: number, params?: {timeout: number, defaultValue: number}) => {
+const makePCTResource = (rsc: ResourceType, maxValue: number, params?: {timeout?: number, defaultValue?: number}) => {
 	makeResource(ShellJob.PCT, rsc, maxValue, params ?? {});
 };
 
-makePCTResource(Resource.Portrait, 2);
-makePCTResource(Resource.Depictions, 3);
+makePCTResource(ResourceType.Portrait, 2);
+makePCTResource(ResourceType.Depictions, 3);
 // automatically do prepull draws
 makePCTResource(ResourceType.CreatureCanvas, 1, {defaultValue: 1});
 makePCTResource(ResourceType.WeaponCanvas, 1, {defaultValue: 1});
@@ -50,7 +45,7 @@ makePCTResource(ResourceType.Hyperphantasia, 5, {timeout: 30});
 makePCTResource(ResourceType.RainbowBright, 1, {timeout: 30});
 makePCTResource(ResourceType.Starstruck, 1, {timeout: 20});
 makePCTResource(ResourceType.StarryMuse, 1, {timeout: 20.5});
-makePCTResource(ResourceType.TemperaCoat, 1, {timeout: 10}});
+makePCTResource(ResourceType.TemperaCoat, 1, {timeout: 10});
 makePCTResource(ResourceType.TemperaGrassa, 1, {timeout: 10});
 makePCTResource(ResourceType.Smudge, 1, {timeout: 5});
 
@@ -95,10 +90,10 @@ export class PCTState extends GameState {
 			// rainbow drip is not affected by inspiration
 			// when rainbow bright is affecting rainbow drip, treat it as a 6s cast
 			// then subtract 3.5s from the result
-			let recast = this.config.adjustedRecastTime(baseRecastTime);
+			let recast = this.config.adjustedGCD(baseRecastTime);
 			return this.hasResourceAvailable(ResourceType.RainbowBright) ? recast - 3.5 : recast;
 		}
-		return this.config.adjustedRecastTime(
+		return this.config.adjustedGCD(
 			baseRecastTime,
 			this.hasResourceAvailable(ResourceType.Inspiration) ? ResourceType.Inspiration : undefined
 		);
@@ -178,7 +173,7 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 	baseCastTime: number,
 	baseRecastTime?: number,
 	baseManaCost?: number,
-	basePotency: number | Array<[TraitName, number]>,
+	basePotency?: number | Array<[TraitName, number]>,
 	applicationDelay: number,
 	validateAttempt?: ValidateAttemptFn<PCTState>,
 	onConfirm?: EffectFn<PCTState>,
@@ -200,18 +195,15 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 		},
 		params.onConfirm ?? NO_EFFECT,
 	);
-	const isMotif = name.includes("Motif");
 	const onApplication: EffectFn<PCTState> = params.onApplication ?? NO_EFFECT;
 	return makeSpell(ShellJob.PCT, name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
-		autoUpgrade: params.autoUpgrade,
-		autoDowngrade: params.autoDowngrade,
 		aspect: aspect,
-		castTime: (state) => state.captureSpellCastTime(params.baseCastTime, isMotif),
-		recastTime: (state) => state.captureSpellRecastTime(baseRecastTime, isMotif),
+		castTime: (state) => state.captureSpellCastTime(name, params.baseCastTime),
+		recastTime: (state) => state.captureSpellRecastTime(name, baseRecastTime),
 		manaCost: params.baseManaCost ?? 0,
-		potency: (state) => params.basePotency,
+		potency: params.basePotency,
 		validateAttempt: params.validateAttempt,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => (
@@ -248,11 +240,11 @@ const redCondition: ConditionalSkillReplace<PCTState> = {
 };
 const greenCondition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.AeroInGreen,
-	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
 };
 const blueCondition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.WaterInBlue,
-	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
+	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
 };
 const cyanCondition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.BlizzardInCyan,
@@ -260,11 +252,11 @@ const cyanCondition: ConditionalSkillReplace<PCTState> = {
 };
 const yellowCondition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.StoneInYellow,
-	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
 };
 const magentaCondition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.ThunderInMagenta,
-	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
+	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
 };
 
 const red2Condition: ConditionalSkillReplace<PCTState> = {
@@ -273,11 +265,11 @@ const red2Condition: ConditionalSkillReplace<PCTState> = {
 };
 const green2Condition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.Aero2InGreen,
-	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
 };
 const blue2Condition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.Water2InBlue,
-	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
+	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
 };
 const cyan2Condition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.Blizzard2InCyan,
@@ -285,11 +277,11 @@ const cyan2Condition: ConditionalSkillReplace<PCTState> = {
 };
 const yellow2Condition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.Stone2InYellow,
-	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
 };
 const magenta2Condition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.Thunder2InMagenta,
-	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
+	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
 };
 
 // use the creature motif icon when a creature is already drawn
@@ -361,11 +353,12 @@ const fangedMuseCondition: ConditionalSkillReplace<PCTState> = {
 
 const mogCondition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.MogOfTheAges,
-	condition: (state) => state.resources.get(ResourceType.Portrait) === 2,
+	// mog is shown when no portrait is available
+	condition: (state) => state.resources.get(ResourceType.Portrait).availableAmount() !== 2,
 };
 const madeenCondition: ConditionalSkillReplace<PCTState> = {
 	newSkill: SkillName.RetributionOfTheMadeen,
-	condition: (state) => state.resources.get(ResourceType.Portrait) === 2,
+	condition: (state) => state.resources.get(ResourceType.Portrait).availableAmount() === 2,
 };
 
 const weaponCondition: ConditionalSkillReplace<PCTState> = {
@@ -410,9 +403,9 @@ makeGCD_PCT(SkillName.FireInRed, 1, {
 	baseManaCost: 300,
 	basePotency: [
 		[TraitName.Never, 280],
-		[TraitName.PictoMancyMasteryII, 340],
-		[TraitName.PictoMancyMasteryIII, 380],
-		[TraitName.PictoMancyMasteryIV, 440],
+		[TraitName.PictomancyMasteryII, 340],
+		[TraitName.PictomancyMasteryIII, 380],
+		[TraitName.PictomancyMasteryIV, 440],
 	],
 	applicationDelay: 0.84,
 	validateAttempt: (state) => redCondition.condition(state) && !state.hasResourceAvailable(ResourceType.SubtractivePalette),
@@ -653,7 +646,7 @@ makeGCD_PCT(SkillName.StarPrism, 100, {
 	},
 });
 
-makeAbility_PCT(SkillName.SubtractivePalette, 60, cd_Subtractive, {
+makeAbility_PCT(SkillName.SubtractivePalette, 60, ResourceType.cd_Subtractive, {
 	cooldown: 1,
 	validateAttempt: (state) => (
 		// Check we are not already in subtractive
@@ -680,14 +673,16 @@ makeAbility_PCT(SkillName.SubtractivePalette, 60, cd_Subtractive, {
 });
 
 const creatureConditions = [creatureMotifCondition, pomMotifCondition, wingMotifCondition, clawMotifCondition, mawMotifCondition];
-[
+// [name, level, validation]
+const creatureInfos: Array<[SkillName, number, ValidateAttemptFn<PCTState>]> = [
 	// creature motif can never itself be cast
 	[SkillName.CreatureMotif, 30, (state) => false],
 	[SkillName.PomMotif, 30, pomMotifCondition.condition],
 	[SkillName.WingMotif, 30, wingMotifCondition.condition],
 	[SkillName.ClawMotif, 96, clawMotifCondition.condition],
 	[SkillName.MawMotif, 96, mawMotifCondition.condition],
-].forEach(([name, level, validateAttempt], i) => makeGCD_PCT(name, level, {
+];
+creatureInfos.forEach(([name, level, validateAttempt], i) => makeGCD_PCT(name, level, {
 	replaceIf: creatureConditions.slice(0, i).concat(creatureConditions.slice(i + 1)),
 	startOnHotbar: i === 0,
 	baseCastTime: 3,
@@ -699,7 +694,8 @@ const creatureConditions = [creatureMotifCondition, pomMotifCondition, wingMotif
 }));
 
 const livingConditions = [livingMuseCondition, pomMuseCondition, wingedMuseCondition, clawedMuseCondition, fangedMuseCondition];
-[
+// [name, level, potency, delay, validation]
+const livingMuseInfos: Array<[SkillName, number, number | Array<[TraitName, number]>, number, ValidateAttemptFn<PCTState>]> = [
 	// living muse can never itself be cast
 	[SkillName.LivingMuse, 30, 0, 0, (state) => false],
 	[SkillName.PomMuse, 30, 
@@ -710,7 +706,8 @@ const livingConditions = [livingMuseCondition, pomMuseCondition, wingedMuseCondi
 		0.98, wingedMuseCondition.condition],
 	[SkillName.ClawedMuse, 96, 1100, 0.98, clawedMuseCondition.condition],
 	[SkillName.FangedMuse, 96, 1100, 1.16, fangedMuseCondition.condition],
-].forEach(([name, level, potencies, applicationDelay, validateAttempt], i) => makeAbility(name, level, ResourceType.cd_LivingMuse, {
+];
+livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAttempt], i) => makeAbility_PCT(name, level, ResourceType.cd_LivingMuse, {
 	replaceIf: livingConditions.slice(0, i).concat(livingConditions.slice(i + 1)),
 	startOnHotbar: i === 0,
 	basePotency: potencies,
@@ -740,15 +737,25 @@ const livingConditions = [livingMuseCondition, pomMuseCondition, wingedMuseCondi
 	maxCharges: 3, // lower this value in the state constructor when level synced
 }));
 
-makeAbility_PCT(SkillName.MogOfTheAges, 30, ResourceType.cd_MogOfTheAges, {
+makeAbility_PCT(SkillName.MogOfTheAges, 30, ResourceType.cd_Portrait, {
 	replaceIf: [madeenCondition],
-	basePotency:  [
+	basePotency: [
 		[TraitName.Never, 1100],
 		[TraitName.PictomancyMasteryIII, 1300],
 	],
 	applicationDelay: 1.15,
 	validateAttempt: (state) => state.resources.get(ResourceType.Portrait).availableAmount() === 1,
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.Portrait),
+	cooldown: 30,
+});
+
+makeAbility_PCT(SkillName.RetributionOfTheMadeen, 30, ResourceType.cd_Portrait, {
+	replaceIf: [mogCondition],
+	basePotency: 1400,
+	applicationDelay: 1.30,
+	validateAttempt: (state) => state.resources.get(ResourceType.Portrait).availableAmount() === 2,
+	onConfirm: (state) => state.tryConsumeResource(ResourceType.Portrait),
+	cooldown: 30,
 });
 
 makeGCD_PCT(SkillName.WeaponMotif, 50, {
@@ -768,21 +775,21 @@ makeGCD_PCT(SkillName.HammerMotif, 50, {
 	baseManaCost: 0,
 	applicationDelay: 0,
 	validateAttempt: (state) => (
-		hammerCondition.condition(state),
+		hammerCondition.condition(state)
 		&& !state.hasResourceAvailable(ResourceType.HammerTime)
 	),
 	onConfirm: (state) => state.resources.get(ResourceType.WeaponCanvas).gain(1),
 });
 
-makeAbility_PCT(SkillName.SteelMuse, 50, cd_SteelMuse, {
+makeAbility_PCT(SkillName.SteelMuse, 50, ResourceType.cd_SteelMuse, {
 	replaceIf: [strikingCondition],
 	cooldown: 60,
 	maxCharges: 2, // lower this value in the state constructor when level synced
 	validateAttempt: (state) => false, // steel muse can never itself be cast
 });
 
-makeAbility_PCT(SkillName.StrikingMuse, 50, cd_SteelMuse, {
-	replaceIf: [strikingCondition],
+makeAbility_PCT(SkillName.StrikingMuse, 50, ResourceType.cd_SteelMuse, {
+	replaceIf: [steelCondition],
 	cooldown: 60,
 	maxCharges: 2, // lower this value in the state constructor when level synced
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.WeaponCanvas) && state.isInCombat(),
@@ -819,7 +826,8 @@ const hammerConditions: ConditionalSkillReplace<PCTState>[] = [
 		),
 	}
 ];
-[
+// [name, level, potency, delay]
+const hammerInfos: Array<[SkillName, number, number | Array<[TraitName, number]>, number]> = [
 	[SkillName.HammerStamp, 50, [
 			[TraitName.Never, 380],
 			[TraitName.PictomancyMasteryII, 480],
@@ -834,12 +842,13 @@ const hammerConditions: ConditionalSkillReplace<PCTState>[] = [
 			[TraitName.Never, 640],
 			[TraitName.PictomancyMasteryIV, 680],
 		], 2.10],
-].forEach(([name, level, potencies, applicationDelay], i) => makeGCD_PCT(name, level, {
-	replaceIf: hammerConditions.slice(0, i).concat(hammerReplaces.slice(i + 1)),
+];
+hammerInfos.forEach(([name, level, potencies, applicationDelay], i) => makeGCD_PCT(name, level, {
+	replaceIf: hammerConditions.slice(0, i).concat(hammerConditions.slice(i + 1)),
+	baseCastTime: 0,
 	startOnHotbar: i === 0,
 	basePotency: potencies,
 	applicationDelay: applicationDelay,
-	cooldown: 40,
 	validateAttempt: hammerConditions[i].condition,
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.HammerTime),
 }));
@@ -867,14 +876,14 @@ makeGCD_PCT(SkillName.StarrySkyMotif, 70, {
 	onConfirm: (state) => state.resources.get(ResourceType.LandscapeCanvas).gain(1),
 });
 
-makeAbility_PCT(SkillName.ScenicMuse, 70, cd_ScenicMuse, {
+makeAbility_PCT(SkillName.ScenicMuse, 70, ResourceType.cd_ScenicMuse, {
 	replaceIf: [starryMuseCondition],
 	applicationDelay: 0,
 	cooldown: 120,
 	validateAttempt: (state) => false, // scenic muse can never itself be cast
 });
 
-makeAbility_PCT(SkillName.ScenicMuse, 70, cd_ScenicMuse, {
+makeAbility_PCT(SkillName.ScenicMuse, 70, ResourceType.cd_ScenicMuse, {
 	replaceIf: [scenicCondition],
 	applicationDelay: 0, // raid buff is instant, but inspiration is delayed by 0.62s
 	cooldown: 120,
@@ -907,21 +916,21 @@ makeAbility_PCT(SkillName.ScenicMuse, 70, cd_ScenicMuse, {
 makeResourceAbility(ShellJob.PCT, SkillName.TemperaCoat, 10, ResourceType.cd_TemperaCoat, {
 	rscType: ResourceType.TemperaCoat,
 	replaceIf: [{
-		newSkill: SkillName.PopTemperaCoat,
+		newSkill: SkillName.TemperaCoatPop,
 		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
 	}],
 	applicationDelay: 0, // instant
 	cooldown: 120,
 });
 
-makeAbility_PCT(SkillName.TemperaGrassa, 88, ResourceType.cd_TemperaGrassa, {
+makeAbility_PCT(SkillName.TemperaGrassa, 88, ResourceType.cd_Grassa, {
 	replaceIf: [{
-		newSkill: SkillName.PopTemperaGrassa,
+		newSkill: SkillName.TemperaGrassaPop,
 		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
 	}],
 	applicationDelay: 0, // instant
 	cooldown: 120,
-	validateAttempt: (state) => state.hasResourceAvailable(SkillName.TemperaCoat),
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
 	onConfirm: (state) => {
 		// goodbye, tempera coat
 		state.tryConsumeResource(ResourceType.TemperaCoat);
@@ -932,15 +941,15 @@ makeAbility_PCT(SkillName.TemperaGrassa, 88, ResourceType.cd_TemperaGrassa, {
 });
 
 // fake skill to represent breaking the coat shield
-makeAbility_PCT(SkillName.PopTemperaCoat, 10, ResourceType.cd_TemperaPop, {
+makeAbility_PCT(SkillName.TemperaCoatPop, 10, ResourceType.cd_TemperaPop, {
 	replaceIf: [{
-		newSkill: SkillName.PopTemperaGrassa,
+		newSkill: SkillName.TemperaGrassaPop,
 		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
 	}],
 	startOnHotbar: false,
 	applicationDelay: 0,
 	cooldown: 1,
-	validateAttempt: (state) => state.hasResourceAvailable(SkillName.TemperaCoat),
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.TemperaCoat);
 		// Reduce the cooldown of tempera coat by 60s
@@ -954,15 +963,15 @@ makeAbility_PCT(SkillName.PopTemperaCoat, 10, ResourceType.cd_TemperaPop, {
 });
 
 // fake skill to represent breaking the grassa shield
-makeAbility_PCT(SkillName.PopTemperaGrassa, 10, ResourceType.cd_TemperaPop, {
+makeAbility_PCT(SkillName.TemperaGrassaPop, 10, ResourceType.cd_TemperaPop, {
 	replaceIf: [{
-		newSkill: SkillName.PopTemperaCoat,
+		newSkill: SkillName.TemperaCoatPop,
 		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
 	}],
 	startOnHotbar: false,
 	applicationDelay: 0,
 	cooldown: 1,
-	validateAttempt: (state) => state.hasResourceAvailable(SkillName.TemperaGrassa),
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.TemperaGrassa);
 		// Reduce the cooldown of tempera coat by 30s
@@ -975,7 +984,7 @@ makeAbility_PCT(SkillName.PopTemperaGrassa, 10, ResourceType.cd_TemperaPop, {
 	},
 });
 
-makeResourceAbility(ShellJob.PCT, 20, ResourceType.cd_Smudge, {
+makeResourceAbility(ShellJob.PCT, SkillName.Smudge, 20, ResourceType.cd_Smudge, {
 	rscType: ResourceType.Smudge,
 	applicationDelay: 0, // instant (buff application)
 	cooldown: 20,

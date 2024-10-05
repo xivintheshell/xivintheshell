@@ -7,7 +7,18 @@ import {
 	Spell,
 	Ability,
 } from "./Skills"
-import {getAllResources, CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceState} from "./Resources"
+import {
+	getAllResources,
+	getResourceInfo,
+	CoolDown,
+	CoolDownState,
+	DoTBuff,
+	Event,
+	EventTag,
+	Resource,
+	ResourceInfo,
+	ResourceState
+} from "./Resources"
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
@@ -305,13 +316,14 @@ export abstract class GameState {
 			SkillName.CometInBlack,
 			SkillName.StarPrism,
 		];
-		let inspired = this.resources.get(ResourceType.Inspiration).available(1) && inspireSkills.includes(props.skillName);
+		let inspired = this.resources.get(ResourceType.Inspiration).available(1) && inspireSkills.includes(skill.name);
 		let capturedCastTime = skill.castTimeFn(this);
+		const recastTime = skill.recastTimeFn(this);
 		if (llCovered && skill.cdName === ResourceType.cd_GCD) {
 			node.addBuff(BuffType.LeyLines);
 		}
 		if (inspired) {
-			props.node.addBuff(BuffType.Hyperphantasia);
+			node.addBuff(BuffType.Hyperphantasia);
 		}
 
 		// create potency node object (snapshotted buffs will populate on confirm)
@@ -451,7 +463,7 @@ export abstract class GameState {
 
 		// starry muse
 		if (this.resources.get(ResourceType.StarryMuse).available(1) && potencyNumber > 0) {
-			props.node.addBuff(BuffType.StarryMuse);
+			node.addBuff(BuffType.StarryMuse);
 		}
 
 		skill.onConfirm(this, node);
@@ -460,7 +472,7 @@ export abstract class GameState {
 			this.resources.addResourceEvent({
 				rscType: ResourceType.InCombat,
 				name: "begin combat if necessary",
-				delay: skillInfo.skillApplicationDelay,
+				delay: skill.applicationDelay,
 				fnOnRsc: (rsc: Resource) => rsc.gain(1),
 			});
 		}
@@ -522,7 +534,7 @@ export abstract class GameState {
 		if (delay === undefined) {
 			const rscInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
 			console.assert(rscInfo?.maxTimeout, `could not find timeout declaration for resource ${rscType}`)
-			delay = rscInfo.maxTimeout,
+			delay = rscInfo.maxTimeout;
 		}
 		const name = (toConsume === undefined ? "drop all " : `drop ${toConsume} `) + rscType;
 		this.resources.addResourceEvent({
@@ -550,7 +562,6 @@ export abstract class GameState {
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
 		let capturedManaCost = skill.manaCostFn(this);
 		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
-		let inspired = this.resources.get(ResourceType.Inspiration).available(1);
 		let capturedCastTime = skill.kind === "weaponskill" || skill.kind === "spell" ? skill.castTimeFn(this) : 0;
 		let instantCastAvailable = capturedCastTime === 0 || skill.kind === "ability" || skill.isInstantFn(this);
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
@@ -611,7 +622,7 @@ export abstract class GameState {
 				this.resources.get(ResourceType.PaletteGauge).available(50);
 		} else if (skillName === SkillName.MogOfTheAges) {
 			highlight = this.resources.get(ResourceType.Portrait).available(1);
-		} else if (skill.info.aspect === Aspect.Hammer) {
+		} else if (skill.aspect === Aspect.Hammer) {
 			highlight = this.resources.get(ResourceType.HammerTime).available(1);
 		} else if (skillName === SkillName.RainbowDrip) {
 			highlight = this.resources.get(ResourceType.RainbowBright).available(1);

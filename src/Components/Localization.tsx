@@ -159,11 +159,11 @@ const skillsJa = new Map<SkillName, string>([
 	[SkillName.Paradox, "パラドックス"],
 	[SkillName.HighThunder, "ハイサンダー"],
 	[SkillName.Retrace, "魔紋再設置"],
-	[SkillName.FlareStar, "フレアスター"]
+	[SkillName.FlareStar, "フレアスター"],
 
 	// TODO picto localization
 
-	[SkillName.Sprint, "スプリント"]
+	[SkillName.Sprint, "スプリント"],
 ]);
 
 export function localizeSkillName(text: SkillName) : string {

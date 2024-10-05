@@ -417,7 +417,7 @@ export function getConditionalReplacement<T extends PlayerState>(key: SkillName,
 	// Attempt to replace a skill if required by the current state
 	const skill = getSkill(state.job, key);
 	for (const candidate of skill.replaceIf) {
-		if (candidateSkill.newSkill === key) {
+		if (candidate.newSkill === key) {
 			console.error(`Skill ${key} tried to replace itself with the same skill`);
 		}
 		const candidateSkill = getSkill(state.job, candidate.newSkill);

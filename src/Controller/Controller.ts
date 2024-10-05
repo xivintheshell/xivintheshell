@@ -610,7 +610,7 @@ class Controller {
 			paradox: game.resources.get(ResourceType.Paradox).availableAmount(),
 			astralSoul: game.resources.get(ResourceType.AstralSoul).availableAmount(),
 			polyglotCountdown: eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30,
-			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount()
+			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount(),
 			// TODO split up
 			portrait: game.resources.get(ResourceType.Portrait).availableAmount(),
 			depictions: game.resources.get(ResourceType.Depictions).availableAmount(),
@@ -651,11 +651,6 @@ class Controller {
 			firestarterCountdown: game.resources.timeTillReady(ResourceType.Firestarter),
 			thunderheadCountdown: game.resources.timeTillReady(ResourceType.Thunderhead),
 			manawardCountdown: game.resources.timeTillReady(ResourceType.Manaward),
-			swiftcastCountdown: game.resources.timeTillReady(ResourceType.Swiftcast),
-			lucidDreamingCountdown: game.resources.timeTillReady(ResourceType.LucidDreaming),
-			surecastCountdown: game.resources.timeTillReady(ResourceType.Surecast),
-			tinctureCountdown: game.resources.timeTillReady(ResourceType.Tincture),
-			sprintCountdown: game.resources.timeTillReady(ResourceType.Sprint)
 
 			// TODO split up
 			aetherhuesCountdown: game.resources.timeTillReady(ResourceType.Aetherhues),
@@ -675,6 +670,12 @@ class Controller {
 			temperaCoatCountdown: game.resources.timeTillReady(ResourceType.TemperaCoat),
 			temperaGrassaCountdown: game.resources.timeTillReady(ResourceType.TemperaGrassa),
 			smudgeCountdown: game.resources.timeTillReady(ResourceType.Smudge),
+			
+			swiftcastCountdown: game.resources.timeTillReady(ResourceType.Swiftcast),
+			lucidDreamingCountdown: game.resources.timeTillReady(ResourceType.LucidDreaming),
+			surecastCountdown: game.resources.timeTillReady(ResourceType.Surecast),
+			tinctureCountdown: game.resources.timeTillReady(ResourceType.Tincture),
+			sprintCountdown: game.resources.timeTillReady(ResourceType.Sprint),
 		};
 		if (typeof updateStatusDisplay !== "undefined") {
 			updateStatusDisplay({
@@ -745,6 +746,7 @@ class Controller {
 		spellSpeed: number,
 		criticalHit: number,
 		directHit: number,
+		determination: number,
 		animationLock: number,
 		fps: number,
 		gcdSkillCorrection: number,

@@ -2,6 +2,7 @@ import React from 'react';
 import {Clickable, ContentNode, Help, ProgressBar, StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
 import {controller} from "../Controller/Controller";
+import {ShellInfo, ShellJob} from "../Controller/Common";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {TraitName, Traits} from '../Game/Traits';
@@ -18,14 +19,14 @@ type StatusResourcesViewProps = {
 	polyglotCountdown: number,
 	polyglotStacks: number,
 	// TODO split up by job
-	portrait: 0,
-	depictions: 0,
-	creatureCanvas: 0,
-	weaponCanvas: 0,
-	landscapeCanvas: 0,
-	paletteGauge: 0,
-	paint: 0,
-	hasComet: 0,
+	portrait: number,
+	depictions: number,
+	creatureCanvas: number,
+	weaponCanvas: number,
+	landscapeCanvas: number,
+	paletteGauge: number,
+	paint: number,
+	hasComet: boolean,
 }
 
 type StatusResourceLocksViewProps = {
@@ -54,12 +55,31 @@ type StatusSelfBuffsViewProps = {
 	firestarterCountdown: number,
 	thunderheadCountdown: number,
 	manawardCountdown: number,
+} & {
+	rainbowBrightCountdown: number,
+	hyperphantasiaStacks: number,
+	hyperphantasiaCountdown: number,
+	inspirationEnabled: boolean,
+	inspirationCountdown: number,
+	subtractiveSpectrumCountdown: number,
+	hammerTimeStacks: number,
+	hammerTimeCountdown: number,
+	starstruckCountdown: number,
+	aetherhuesStacks: number,
+	aetherhuesCountdown: number,
+	monochromeTones: number,
+	subtractivePalette: number,
+	starryMuseCountdown: number,
+	temperaCoatCountdown: number,
+	temperaGrassaCountdown: number,
+	smudgeCountdown: number,
+} & {
 	swiftcastCountdown: number,
 	lucidDreamingCountdown: number,
 	surecastCountdown: number,
 	tinctureCountdown: number,
 	sprintCountdown: number
-}
+};
 
 // everything should be required here except that'll require repeating all those lines to give default values
 type StatusViewProps = {
@@ -167,7 +187,7 @@ function PaintGaugeCounter(props: {
 
 function ResourceText(props: {
 	name: ContentNode,
-	text: string,
+	text: ContentNode,
 	className?: string,
 }) {
 	return <div className={props.className} style={{marginBottom: 4, lineHeight: "1.5em"}}>
@@ -247,7 +267,7 @@ function Buff(props: {
 	onSelf: boolean,
 	enabled: boolean,
 	stacks: number,
-	timeRemaining: string,
+	timeRemaining?: string,
 	className: string
 }) {
 	let assetName: string = props.rscType;
@@ -270,8 +290,8 @@ function Buff(props: {
 			}
 		}}/>
 		{/* When the buff has no timer, we still want it to align with other buffs, so just pad some empty space */}
-		<span className={"buff-label"} style={{visibility: props.timeRemaining === undefined ? "hidden" : ""}}>
-			{props.timeRemaining ? props.timeRemaining : "0.000"}
+		<span className={"buff-label"} style={{visibility: props.timeRemaining === undefined ? "hidden" : undefined}}>
+			{props.timeRemaining ?? "0.000"}
 		</span>
 	</div>
 }
@@ -322,7 +342,7 @@ function BuffsDisplay(props: {
 		className: data.manawardCountdown > 0 ? "" : "hidden"
 	});
 
-	let pushPictoTimer = function(rscType, stacks, cd) {
+	const pushPictoTimer = (rscType: ResourceType, stacks: number, cd: number) => {
 		let enabled = (rscType === ResourceType.Inspiration) ? data.inspirationEnabled : true;
 		buffs.push({
 			rscType: rscType,
@@ -334,7 +354,7 @@ function BuffsDisplay(props: {
 		});
 	};
 
-	let pushPictoIndefinite = function(rscType, stacks) {
+	const pushPictoIndefinite = (rscType: ResourceType, stacks: number) => {
 		buffs.push({
 			rscType: rscType,
 			onSelf: true,
@@ -345,19 +365,21 @@ function BuffsDisplay(props: {
 	};
 
 	// TODO check order
-	pushPictoTimer(ResourceType.RainbowBright, 1, data.rainbowBrightCountdown);
-	pushPictoTimer(ResourceType.Hyperphantasia, data.hyperphantasiaStacks, data.hyperphantasiaCountdown);
-	pushPictoTimer(ResourceType.Inspiration, 1, data.inspirationCountdown);
-	pushPictoTimer(ResourceType.SubtractiveSpectrum, 1, data.subtractiveSpectrumCountdown);
-	pushPictoTimer(ResourceType.HammerTime, data.hammerTimeStacks, data.hammerTimeCountdown);
-	pushPictoTimer(ResourceType.Starstruck, 1, data.starstruckCountdown);
-	pushPictoTimer(ResourceType.Aetherhues, data.aetherhuesStacks, data.aetherhuesCountdown);
-	pushPictoIndefinite(ResourceType.MonochromeTones, data.monochromeTones);
-	pushPictoIndefinite(ResourceType.SubtractivePalette, data.subtractivePalette);
-	pushPictoTimer(ResourceType.StarryMuse, 1, data.starryMuseCountdown);
-	pushPictoTimer(ResourceType.TemperaCoat, 1, data.temperaCoatCountdown);
-	pushPictoTimer(ResourceType.TemperaGrassa, 1, data.temperaGrassaCountdown);
-	pushPictoTimer(ResourceType.Smudge, 1, data.smudgeCountdown);
+	if (ShellInfo.job === ShellJob.PCT) {
+		pushPictoTimer(ResourceType.RainbowBright, 1, data.rainbowBrightCountdown);
+		pushPictoTimer(ResourceType.Hyperphantasia, data.hyperphantasiaStacks, data.hyperphantasiaCountdown);
+		pushPictoTimer(ResourceType.Inspiration, 1, data.inspirationCountdown);
+		pushPictoTimer(ResourceType.SubtractiveSpectrum, 1, data.subtractiveSpectrumCountdown);
+		pushPictoTimer(ResourceType.HammerTime, data.hammerTimeStacks, data.hammerTimeCountdown);
+		pushPictoTimer(ResourceType.Starstruck, 1, data.starstruckCountdown);
+		pushPictoTimer(ResourceType.Aetherhues, data.aetherhuesStacks, data.aetherhuesCountdown);
+		pushPictoIndefinite(ResourceType.MonochromeTones, data.monochromeTones);
+		pushPictoIndefinite(ResourceType.SubtractivePalette, data.subtractivePalette);
+		pushPictoTimer(ResourceType.StarryMuse, 1, data.starryMuseCountdown);
+		pushPictoTimer(ResourceType.TemperaCoat, 1, data.temperaCoatCountdown);
+		pushPictoTimer(ResourceType.TemperaGrassa, 1, data.temperaGrassaCountdown);
+		pushPictoTimer(ResourceType.Smudge, 1, data.smudgeCountdown);
+	}
 
 	buffs.push({
 		rscType: ResourceType.Swiftcast,
@@ -674,6 +696,7 @@ function ResourcesDisplay(props: {
 		progress={resources.paletteGauge / 100}
 		value={resources.paletteGauge.toFixed(0)}
 		width={100}
+		hidden={false}
 	/>;
 
 	// name, holyColor, cometColor, currentStacks, maxStacks, hasComet
@@ -694,6 +717,7 @@ function ResourcesDisplay(props: {
 		{manaBar}
 		{manaTick}
 		{ShellInfo.job === ShellJob.BLM &&
+		<>
 		{afui}
 		{uh}
 		{paradox}
@@ -701,8 +725,10 @@ function ResourcesDisplay(props: {
 		{enochian}
 		{polyTimer}
 		{poly}
+		</>
 		}
 		{ShellInfo.job === ShellJob.PCT &&
+		<>
 		{portrait}
 		{depictions}
 		{creatureCanvas}
@@ -710,6 +736,7 @@ function ResourcesDisplay(props: {
 		{landscapeCanvas}
 		{paletteGauge}
 		{paint}
+		</>
 		}
 	</div>;
 }

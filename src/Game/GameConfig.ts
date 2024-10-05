@@ -9,6 +9,7 @@ export type ConfigData = {
 	spellSpeed: number,
 	criticalHit: number,
 	directHit: number,
+	determination: number,
 	countdown: number,
 	randomSeed: string,
 	fps: number,
@@ -55,10 +56,10 @@ const DEFAULT_PCT_CONFIG: ConfigData = {
 	initialResourceOverrides: []
 };
 
-export const DEFAULT_CONFIG = {
+export const DEFAULT_CONFIG: ConfigData = {
 	[ShellJob.BLM]: DEFAULT_BLM_CONFIG,
 	[ShellJob.PCT]: DEFAULT_PCT_CONFIG,
-}[ShellInfo.Job];
+}[ShellInfo.job];
 
 export type SerializedConfig = ConfigData & {
 	casterTax: number, // still want this bc don't want to break cached timelines
@@ -133,7 +134,7 @@ export class GameConfig {
 	}
 
 	// returns cast time before FPS and caster tax
-	adjustedCastTime(inCastTime : number, speedBuff?: ResourceType) {
+	adjustedCastTime(inCastTime: number, speedBuff?: ResourceType) {
 		return XIVMath.preTaxCastTime(this.level, this.spellSpeed, inCastTime, speedBuff);
 	}
 

@@ -9,7 +9,7 @@ import {getCurrentThemeColors} from "./ColorTheme";
 const THIS_DOMAIN = {
 	[ShellJob.BLM]: "https://miyehn.me/ffxiv-blm-rotation",
 	[ShellJob.PCT]: "https://picto.zqsz.me",
-}[ShellInfo.job];
+}[ShellInfo.job]; // @ts-ignore
 
 const GITHUB_URL = "https://github.com/xivintheshell/xivintheshell";
 
@@ -19,8 +19,8 @@ const HELP_CHANNEL_URL = {
 }[ShellInfo.job];
 
 const RESOURCE_CHANNEL_URL = {
-	[ShellInfo.BLM]: "https://discordapp.com/channels/277897135515762698/1255595442926915584",
-	[ShellInfo.PCT]: "https://discordapp.com/channels/277897135515762698/1246222197488615524",
+	[ShellJob.BLM]: "https://discordapp.com/channels/277897135515762698/1255595442926915584",
+	[ShellJob.PCT]: "https://discordapp.com/channels/277897135515762698/1246222197488615524",
 }[ShellInfo.job];
 
 function Changelog() {
@@ -42,8 +42,8 @@ function Changelog() {
 	}/></div>
 }
 
-const acknowledgments = {
-	ShellJob.BLM: (
+const acknowledgements = {
+	[ShellJob.BLM]: (
 		<>
 		<div className="paragraph">{localize({en: "This tool is made by:", zh: "作者：", ja: "作者："})}</div>
 		{localize({
@@ -88,7 +88,7 @@ const acknowledgments = {
 		})}</div>
 		</>
 	),
-	ShellJob.PCT: (
+	[ShellJob.PCT]: (
 		<>
 		<div className="paragraph">
 			{localize({en: "This tool is made by ", zh: "作者：", ja: "作者："})}
@@ -98,13 +98,13 @@ const acknowledgments = {
 				zh: <>从<b>miyehn</b>创作的<a href={"https://miyehn.me/ffxiv-blm-rotation/"}>BLM in the Shell</a>而改编。</>,
 			})}
 		</div>
-		localize({
+		{localize({
 			en: <div className={"paragraph"}>
 				If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
 				You can also find me directly on discord (@shanzhe in The Balance), or file an issue on GitHub (link below). In case of sending a bug report, attaching the
 				fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
 				</div>
-		}
+		})}
 		</>
 	),
 }[ShellInfo.job];
@@ -250,7 +250,7 @@ export function IntroSection(props: {}) {
 						[ShellJob.PCT]: "绘灵法师",
 					}[ShellInfo.job] + "模拟器/排轴工具。",
 					ja: "FF14 " + {
-						[ShellJob.BLM]: "黒魔道士"
+						[ShellJob.BLM]: "黒魔道士",
 						[ShellJob.PCT]: "ピクトマンサー",
 					}[ShellInfo.job] + "のスキルローテーションシミュレーターです。"})}
 				</div>
@@ -285,7 +285,7 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/pictomancer/"}>Official FFXIV pictomancer job guide</a></li>
 						</>}
-						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL}>
+						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL} rel="noreferrer">
 							{ShellInfo.job} resources channel on The Balance</a> (make sure you've already joined the server)</li>
 					</ul>,
 					zh: <ul>
@@ -302,7 +302,7 @@ export function IntroSection(props: {}) {
 						{ShellInfo.job === ShellJob.PCT && <>
 						<li><a href={GITHUB_URL}>Github页面</a></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
-						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL}>
+						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL} rel="noreferrer">
 							The Balance服务器里的PCT频道</a> （需要先加入Discord服务器）</li>
 						</>}
 					</ul>,
@@ -317,7 +317,7 @@ export function IntroSection(props: {}) {
 						{ShellInfo.job === ShellJob.PCT && <>
 						<li><a href={GITHUB_URL}>Github repository</a></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
-						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL}>
+						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL} rel="noreferrer">
 							{ShellInfo.job} resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
 						</>}
 					</ul>,
@@ -345,8 +345,8 @@ export function IntroSection(props: {}) {
 				}/>
 				</div>
 				}
+				{ShellInfo.job === ShellJob.BLM &&
 				<div className="paragraph"><Expandable title={"Implementation notes"} titleNode={localize({en: "Implementation notes", zh: "实现细节", ja: "実装に関するメモ"})} defaultShow={false} content={
-
 					<div>
 						{localize({
 							en:
@@ -480,6 +480,8 @@ export function IntroSection(props: {}) {
 					</div>
 
 				}/>
+				</div>
+				}
 				<Changelog/>
 				<Expandable
 					defaultShow={false}

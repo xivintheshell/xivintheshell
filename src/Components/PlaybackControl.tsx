@@ -338,6 +338,7 @@ type ConfigState = {
 	spellSpeed: string,
 	criticalHit: string,
 	directHit: string,
+	determination: string,
 	animationLock: string,
 	fps: string,
 	gcdSkillCorrection: string,
@@ -366,6 +367,7 @@ export class Config extends React.Component {
 	setLevel: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
 	setCriticalHit: (val: string) => void;
 	setDirectHit: (val: string) => void;
+	setDetermination: (val: string) => void;
 	setAnimationLock: (val: string) => void;
 	setFps: (val: string) => void;
 	setGcdSkillCorrection: (val: string) => void;
@@ -386,6 +388,7 @@ export class Config extends React.Component {
 			spellSpeed: "0",
 			criticalHit: "0",
 			directHit: "0",
+			determination: "0",
 			animationLock: "0",
 			fps: "0",
 			gcdSkillCorrection: "0",
@@ -830,7 +833,7 @@ export class Config extends React.Component {
 			spellSpeed: parseFloat(config.spellSpeed),
 			criticalHit: parseFloat(config.criticalHit),
 			directHit: parseFloat(config.directHit),
-			directHit: parseFloat(config.determination),
+			determination: parseFloat(config.determination),
 			animationLock: parseFloat(config.animationLock),
 			fps: parseFloat(config.fps),
 			gcdSkillCorrection: parseFloat(config.gcdSkillCorrection),

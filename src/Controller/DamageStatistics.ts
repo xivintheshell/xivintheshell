@@ -47,12 +47,6 @@ const abilities = new Set<SkillName>([
 	SkillName.UmbralSoul,
 	SkillName.Amplifier,
 	SkillName.Retrace,
-	SkillName.Addle,
-	SkillName.Swiftcast,
-	SkillName.LucidDreaming,
-	SkillName.Surecast,
-	SkillName.Tincture,
-	SkillName.Sprint
 
 	SkillName.StrikingMuse,
 	SkillName.StarryMuse,
@@ -62,6 +56,13 @@ const abilities = new Set<SkillName>([
 	SkillName.TemperaGrassaPop,
 	SkillName.Smudge,
 	SkillName.SubtractivePalette,
+	
+	SkillName.Addle,
+	SkillName.Swiftcast,
+	SkillName.LucidDreaming,
+	SkillName.Surecast,
+	SkillName.Tincture,
+	SkillName.Sprint,
 ]);
 
 const pictoDamageSkills = new Set<SkillName>([

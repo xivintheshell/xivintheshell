@@ -133,6 +133,7 @@ export class BLMState extends GameState {
 
 	gainThunderhead() {
 		let thunderhead = this.resources.get(ResourceType.Thunderhead);
+		const duration = (getResourceInfo(ShellJob.BLM, ResourceType.Thunderhead) as ResourceInfo).maxTimeout;
 		if (thunderhead.available(1)) { // already has a proc; reset its timer
 			thunderhead.overrideTimer(this, duration);
 		} else { // there's currently no proc. gain one.
