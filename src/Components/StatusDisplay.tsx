@@ -3,7 +3,7 @@ import {Clickable, ContentNode, Help, ProgressBar, StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {ShellInfo, ShellJob} from "../Controller/Common";
-import {localize} from "./Localization";
+import {localize, localizeResourceType} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {TraitName, Traits} from '../Game/Traits';
 
@@ -274,9 +274,10 @@ function Buff(props: {
 	if (props.stacks > 1) {
 		assetName += props.stacks.toString();
 	}
-	return <div title={props.rscType} className={props.className + " buff " + props.rscType}>
+	const rscDisplayName = localizeResourceType(props.rscType);
+	return <div title={rscDisplayName} className={props.className + " buff " + props.rscType}>
 		<Clickable content={
-			<img style={{height: 40}} src={buffIcons.get(assetName)} alt={props.rscType}/>
+			<img style={{height: 40}} src={buffIcons.get(assetName)} alt={rscDisplayName}/>
 		} style={{
 			display: "inline-block",
 			verticalAlign: "top",
@@ -614,6 +615,7 @@ function ResourcesDisplay(props: {
 		name={
 			localize({
 				en: "portrait",
+				zh: "肖像标识",
 			})
 		}
 		text={resources.portrait === 0 ? "/" : (
@@ -631,6 +633,7 @@ function ResourcesDisplay(props: {
 		name={
 			localize({
 				en: "depictions",
+				zh: "动物标识",
 			})
 		}
 		text={
@@ -657,6 +660,7 @@ function ResourcesDisplay(props: {
 		name={
 			localize({
 				en: "creature",
+				zh: "动物",
 			})
 		}
 		color={colors.resources.creatureCanvas}
@@ -668,6 +672,7 @@ function ResourcesDisplay(props: {
 		name={
 			localize({
 				en: "weapon",
+				zh: "武器",
 			})
 		}
 		color={colors.resources.weaponCanvas}
@@ -679,6 +684,7 @@ function ResourcesDisplay(props: {
 		name={
 			localize({
 				en: "landscape",
+				zh: "风景",
 			})
 		}
 		color={colors.resources.landscapeCanvas}
@@ -690,6 +696,7 @@ function ResourcesDisplay(props: {
 		name={
 			localize({
 				en: "palette gauge",
+				zh: "调色量谱",
 			})
 		}
 		color={colors.resources.paletteGauge}
@@ -704,6 +711,7 @@ function ResourcesDisplay(props: {
 		name={
 			localize({
 				en: "paint gauge",
+				zh: "颜料量谱",
 			})
 		}
 		holyColor={colors.resources.holyPaint}

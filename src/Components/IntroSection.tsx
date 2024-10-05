@@ -121,7 +121,12 @@ const getAcknowledgements = () => {
 					If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
 					You can also find me directly on discord (@shanzhe in The Balance), or file an issue on GitHub (link below). In case of sending a bug report, attaching the
 					fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
-					</div>
+					</div>,
+				zh: <div className={"paragraph"}>
+					如果你遇到了任何问题或想提供建议，你可以在The Balance的discord频道中的【这个分支】留言。你也可以直接在discord上找到我（在The Balance的频道中@shanzhe），或者在GitHub上报问题（链接在下面）。
+					如果是反馈bug，最好把能够复现bug的战斗记录文件（下方的下载战斗记录-txt格式，随意命名）一起发过来。
+					如果不方便翻墙或者想用中文反馈，也可以联系yuyuka代为传达（QQ：865835107，加时请注明来意）
+				</div>
 			})}
 			</>
 		),
