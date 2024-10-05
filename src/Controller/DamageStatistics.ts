@@ -9,7 +9,8 @@ import {
 	SelectedStatisticsData
 } from "../Components/DamageStatistics";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
-import {ShellJob} from "./Common";
+import type {BLMState} from "../Game/Jobs/BLM";
+import {ShellInfo, ShellJob} from "./Common";
 
 // TODO autogenerate everything here
 
@@ -230,9 +231,12 @@ function expandNode(node: ActionNode) : ExpandedNode {
 			for (let i = 0; i < mainPotency.modifiers.length; i++) {
 				let tag = mainPotency.modifiers[i].source;
 				if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
-					res.displayedModifiers = [tag];
-					res.calculationModifiers = mainPotency.modifiers;
-					break;
+					res.displayedModifiers.push(tag);
+					res.calculationModifiers.push(mainPotency.modifiers[i]);
+					// TODO check why blm does a break; here
+					if (ShellInfo.job === ShellJob.BLM) {
+						break;
+					}
 				}
 			}
 		} else if (enoSkills.has(node.skillName)) {
@@ -516,7 +520,7 @@ export function calculateDamageStats(props: {
 		// last Thunder so far
 		let mainP = (lastThunder as ActionNode).getPotencies()[0];
 		console.assert(mainP.hasResolved());
-		let lastDotDropTime = (mainP.applicationTime as number) + ctl.game.getThunderDotDuration();
+		let lastDotDropTime = (mainP.applicationTime as number) + (ctl.game as BLMState).getThunderDotDuration();
 		let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
 
 		let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;

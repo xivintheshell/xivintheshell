@@ -99,6 +99,9 @@ export class XIVMath {
 		if (buff === ResourceType.LeyLines) {
 			return 15;
 		}
+		if (buff === ResourceType.Inspiration) {
+			return 25;
+		}
 		console.error("No speed modifier for buff: ", buff);
 		return 0;
 	}

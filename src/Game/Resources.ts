@@ -129,14 +129,6 @@ export class CoolDown extends Resource {
 		// scale for spells with longer cast/recast
 		this.#currentBaseRecast = recast;
 	}
-	useStackWithFixedRecast(game: GameState, recast: number) {
-		// roll the GCD with a special recast value for spells that are unaffected
-		// by haste buffs or sps (i.e. picto motifs)
-		this.consume(this.#currentBaseRecast);
-		this.maxValue = recast;
-		this.#recastTimeScale = 1;
-		this.#currentBaseRecast = recast;
-	}
 	setRecastTimeScale(timeScale: number) { this.#recastTimeScale = timeScale; }
 	#reCaptureRecastTimeScale(game: GameState) {
 		this.#recastTimeScale = this.type === ResourceType.cd_GCD ? game.gcdRecastTimeScale() : 1;
@@ -220,7 +212,8 @@ export class ResourceState {
 		let rsc = this.#map.get(rscType);
 		if (rsc) return rsc;
 		else {
-			console.error(`could not find resource ${rscType}`);
+			// TODO uncomment this once job-specific blm frontend is separated out
+			// console.error(`could not find resource ${rscType}`);
 			return new Resource(ResourceType.Never, 0, 0);
 		}
 	}

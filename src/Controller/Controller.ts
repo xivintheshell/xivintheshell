@@ -4,12 +4,14 @@ import {
 	ReplayMode,
 	setCachedValue,
 	ShellInfo,
+	ShellJob,
 	ShellVersion,
 	TickMode
 } from "./Common";
 import {GameState} from "../Game/GameState";
 import {getConditionalReplacement} from "../Game/Skills";
-import {newGameState, BLMState} from "../Game/Jobs/BLM";
+import {BLMState} from "../Game/Jobs/BLM";
+import {PCTState} from "../Game/Jobs/PCT";
 import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 import {updateStatusDisplay} from "../Components/StatusDisplay";
@@ -35,6 +37,13 @@ import {
 } from "./DamageStatistics";
 
 type Fixme = any;
+
+const newGameState = (config: GameConfig) => {
+	if (ShellInfo.job === ShellJob.PCT) {
+		return new PCTState(config);
+	}
+	return new BLMState(config);
+}
 
 class Controller {
 	timeScale;
@@ -592,24 +601,38 @@ class Controller {
 
 	updateStatusDisplay(game: GameState) {
 		// resources
-		let eno = game.resources.get(ResourceType.Enochian);
+		const isBLM = ShellInfo.job === ShellJob.BLM;
 		let enoCountdown: number;
-		if (eno.available(1) && !eno.pendingChange) {
-			enoCountdown = 15;
+		let polyglotCountdown: number;
+		let fireStacks: number;
+		let iceStacks: number;
+		if (isBLM) {
+			let eno = game.resources.get(ResourceType.Enochian);
+			if (eno.available(1) && !eno.pendingChange) {
+				enoCountdown = 15;
+			} else {
+				enoCountdown = game.resources.timeTillReady(ResourceType.Enochian);
+			}
+			polyglotCountdown = eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30;
+			fireStacks = (game as BLMState).getFireStacks();
+			iceStacks = (game as BLMState).getIceStacks();
 		} else {
-			enoCountdown = game.resources.timeTillReady(ResourceType.Enochian);
+			enoCountdown = 0;
+			polyglotCountdown = 0;
+			fireStacks = 0;
+			iceStacks = 0;
 		}
 
 		let resourcesData = {
 			mana: game.resources.get(ResourceType.Mana).availableAmount(),
 			timeTillNextManaTick: game.resources.timeTillReady(ResourceType.Mana),
 			enochianCountdown: enoCountdown,
-			astralFire: (game as BLMState).getFireStacks(),
-			umbralIce: (game as BLMState).getIceStacks(),
+			astralFire: fireStacks,
+			umbralIce: iceStacks,
 			umbralHearts: game.resources.get(ResourceType.UmbralHeart).availableAmount(),
 			paradox: game.resources.get(ResourceType.Paradox).availableAmount(),
 			astralSoul: game.resources.get(ResourceType.AstralSoul).availableAmount(),
-			polyglotCountdown: eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30,
+			polyglotCountdown: polyglotCountdown,
 			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount(),
 			// TODO split up
 			portrait: game.resources.get(ResourceType.Portrait).availableAmount(),

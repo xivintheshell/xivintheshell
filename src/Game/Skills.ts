@@ -171,7 +171,7 @@ function fnify<T extends PlayerState>(arg?: number | ResourceCalculationFn<T>, d
 	}
 };
 
-function parseTraitPotencyArray<T extends PlayerState>(arr: Array<[TraitName, number]>): ResourceCalculationFn<T> {
+function convertTraitPotencyArray<T extends PlayerState>(arr: Array<[TraitName, number]>): ResourceCalculationFn<T> {
 	console.assert(arr.length > 0, `invalid trait potency array: ${arr}`);
 	return (state) => {
 		let currPotency = undefined;
@@ -228,7 +228,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
-	let potencyFn = Array.isArray(params.potency) ? parseTraitPotencyArray(params.potency) : fnify(params.potency, 0);
+	let potencyFn = Array.isArray(params.potency) ? convertTraitPotencyArray(params.potency) : fnify(params.potency, 0);
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
@@ -289,7 +289,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
-	let potencyFn = Array.isArray(params.potency) ? parseTraitPotencyArray(params.potency) : fnify(params.potency, 0);
+	let potencyFn = Array.isArray(params.potency) ? convertTraitPotencyArray(params.potency) : fnify(params.potency, 0);
 	const info: Ability<T> = {
 		kind: "ability",
 		name: name,

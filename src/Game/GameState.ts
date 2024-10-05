@@ -424,7 +424,7 @@ export abstract class GameState {
 			}));
 		}
 		// recast
-		cd.useStackWithRecast(this, this.config.getAfterTaxGCD(recastTime)); // TODO
+		cd.useStackWithRecast(this, this.config.getAfterTaxGCD(recastTime));
 		cd.useStack(this);
 	}
 
@@ -632,6 +632,35 @@ export abstract class GameState {
 			highlight = this.resources.get(ResourceType.TemperaCoat).available(1);
 		} else if (skillName === SkillName.TemperaGrassaPop) {
 			highlight = this.resources.get(ResourceType.TemperaGrassa).available(1);
+		} else if ([
+			SkillName.PomMuse,
+			SkillName.WingedMuse,
+			SkillName.ClawedMuse,
+			SkillName.FangedMuse,
+		].includes(skillName)) {
+			highlight = this.resources.get(ResourceType.CreatureCanvas).available(1);
+		} else if ([SkillName.HammerStamp, SkillName.HammerBrush, SkillName.PolishingHammer].includes(skillName)) {
+			highlight = this.resources.get(ResourceType.HammerTime).available(1);
+		} else if (skillName === SkillName.StrikingMuse) {
+			highlight = this.resources.get(ResourceType.WeaponCanvas).available(1);
+		} else if (skillName === SkillName.StarryMuse) {
+			highlight = this.resources.get(ResourceType.LandscapeCanvas).available(1);
+		} else if ([
+			SkillName.AeroInGreen,
+			SkillName.Aero2InGreen,
+			SkillName.WaterInBlue,
+			SkillName.Water2InBlue,
+		].includes(skillName)) {
+			highlight = !this.resources.get(ResourceType.SubtractivePalette).available(1);
+		} else if ([
+			SkillName.BlizzardInCyan,
+			SkillName.Blizzard2InCyan,
+			SkillName.StoneInYellow,
+			SkillName.Stone2InYellow,
+			SkillName.ThunderInMagenta,
+			SkillName.Thunder2InMagenta,
+		].includes(skillName)) {
+			highlight = this.resources.get(ResourceType.SubtractivePalette).available(1);
 		}
 
 		return {

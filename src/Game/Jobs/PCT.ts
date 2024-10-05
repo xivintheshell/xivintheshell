@@ -22,16 +22,16 @@ import {GameConfig} from "../GameConfig";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
-const makePCTResource = (rsc: ResourceType, maxValue: number, params?: {timeout?: number, defaultValue?: number}) => {
+const makePCTResource = (rsc: ResourceType, maxValue: number, params?: {timeout?: number, default?: number}) => {
 	makeResource(ShellJob.PCT, rsc, maxValue, params ?? {});
 };
 
 makePCTResource(ResourceType.Portrait, 2);
 makePCTResource(ResourceType.Depictions, 3);
 // automatically do prepull draws
-makePCTResource(ResourceType.CreatureCanvas, 1, {defaultValue: 1});
-makePCTResource(ResourceType.WeaponCanvas, 1, {defaultValue: 1});
-makePCTResource(ResourceType.LandscapeCanvas, 1, {defaultValue: 1});
+makePCTResource(ResourceType.CreatureCanvas, 1, {default: 1});
+makePCTResource(ResourceType.WeaponCanvas, 1, {default: 1});
+makePCTResource(ResourceType.LandscapeCanvas, 1, {default: 1});
 makePCTResource(ResourceType.PaletteGauge, 100);
 makePCTResource(ResourceType.Paint, 5);
 
@@ -49,6 +49,11 @@ makePCTResource(ResourceType.TemperaCoat, 1, {timeout: 10});
 makePCTResource(ResourceType.TemperaGrassa, 1, {timeout: 10});
 makePCTResource(ResourceType.Smudge, 1, {timeout: 5});
 
+makePCTResource(ResourceType.Addle, 1, {timeout: 15});
+makePCTResource(ResourceType.Swiftcast, 1, {timeout: 10});
+makePCTResource(ResourceType.LucidDreaming, 1, {timeout: 21});
+makePCTResource(ResourceType.Surecast, 1, {timeout: 10});
+
 // === JOB GAUGE AND STATE ===
 export class PCTState extends GameState {
 	constructor(config: GameConfig) {
@@ -57,12 +62,12 @@ export class PCTState extends GameState {
 		[
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
+		const livingMuseStacks = Traits.hasUnlocked(TraitName.EnhancedPictomancyIV, config.level) ? 3 : 2;
+		this.cooldowns.set(new CoolDown(ResourceType.cd_LivingMuse, 40, livingMuseStacks, livingMuseStacks));
+		const steelMuseStacks = Traits.hasUnlocked(TraitName.EnhancedPictomancyII, config.level) ? 2 : 1;
+		this.cooldowns.set(new CoolDown(ResourceType.cd_SteelMuse, 40, steelMuseStacks, steelMuseStacks));
 
 		this.registerRecurringEvents();
-	}
-
-	registerRecurringEvents() {
-		super.registerRecurringEvents();
 	}
 
 	// apply hyperphantasia + sps adjustment without consuming any resources
@@ -92,6 +97,10 @@ export class PCTState extends GameState {
 			// then subtract 3.5s from the result
 			let recast = this.config.adjustedGCD(baseRecastTime);
 			return this.hasResourceAvailable(ResourceType.RainbowBright) ? recast - 3.5 : recast;
+		}
+		// hammers are not affected by inspiration
+		if (name.includes("Hammer")) {
+			return this.config.adjustedGCD(baseRecastTime);
 		}
 		return this.config.adjustedGCD(
 			baseRecastTime,
@@ -191,7 +200,7 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 			(name === SkillName.HolyInWhite) ||
 			(name === SkillName.CometInBlack) ||
 			(aspect === Aspect.Hammer) ||
-			state.hasResourceAvailable(ResourceType.Swiftcast)
+			state.tryConsumeResource(ResourceType.Swiftcast)
 		},
 		params.onConfirm ?? NO_EFFECT,
 	);
@@ -219,9 +228,8 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 	});
 };
 
-
 const makeAbility_PCT = (name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
-	basePotency?: number | Array<[TraitName, number]>,
+	potency?: number | Array<[TraitName, number]>,
 	replaceIf?: ConditionalSkillReplace<PCTState>[],
 	startOnHotbar?: boolean,
 	applicationDelay?: number,
@@ -231,7 +239,6 @@ const makeAbility_PCT = (name: SkillName, unlockLevel: number, cdName: ResourceT
 	onConfirm?: EffectFn<PCTState>,
 	onApplication?: EffectFn<PCTState>,
 }): Ability<PCTState> => makeAbility(ShellJob.PCT, name, unlockLevel, cdName, params);
-
 
 // Conditions for replacing RGB/CMY on hotbar
 const redCondition: ConditionalSkillReplace<PCTState> = {
@@ -441,7 +448,17 @@ makeGCD_PCT(SkillName.WaterInBlue, 15, {
 	],
 	applicationDelay: 0.98,
 	validateAttempt: (state) => blueCondition.condition(state) && !state.hasResourceAvailable(ResourceType.SubtractivePalette),
-	onConfirm: (state) => state.doFiller(),
+	onConfirm: (state) => {
+		state.doFiller()
+		const paletteGauge = state.resources.get(ResourceType.PaletteGauge);
+		if (paletteGauge.available(100)) {
+			controller.reportWarning(WarningType.PolyglotOvercap);
+		}
+		paletteGauge.gain(25);
+		if (Traits.hasUnlocked(TraitName.EnhancedArtistry, state.config.level)) {
+			state.resources.get(ResourceType.Paint).gain(1);
+		}
+	},
 });
 
 
@@ -486,7 +503,17 @@ makeGCD_PCT(SkillName.Water2InBlue, 45, {
 	],
 	applicationDelay: 0.89,
 	validateAttempt: (state) => blue2Condition.condition(state) && !state.hasResourceAvailable(ResourceType.SubtractivePalette),
-	onConfirm: (state) => state.doFiller(),
+	onConfirm: (state) => {
+		state.doFiller()
+		const paletteGauge = state.resources.get(ResourceType.PaletteGauge);
+		if (paletteGauge.available(100)) {
+			controller.reportWarning(WarningType.PolyglotOvercap);
+		}
+		paletteGauge.gain(25);
+		if (Traits.hasUnlocked(TraitName.EnhancedArtistry, state.config.level)) {
+			state.resources.get(ResourceType.Paint).gain(1);
+		}
+	},
 });
 
 makeGCD_PCT(SkillName.BlizzardInCyan, 60, {
@@ -507,6 +534,7 @@ makeGCD_PCT(SkillName.BlizzardInCyan, 60, {
 
 makeGCD_PCT(SkillName.StoneInYellow, 60, {
 	replaceIf: [cyanCondition, magentaCondition],
+	startOnHotbar: false,
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
@@ -523,6 +551,7 @@ makeGCD_PCT(SkillName.StoneInYellow, 60, {
 
 makeGCD_PCT(SkillName.ThunderInMagenta, 60, {
 	replaceIf: [cyanCondition, yellowCondition],
+	startOnHotbar: false,
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
@@ -534,7 +563,12 @@ makeGCD_PCT(SkillName.ThunderInMagenta, 60, {
 	],
 	applicationDelay: 0.80,
 	validateAttempt: (state) => magentaCondition.condition(state) && state.hasResourceAvailable(ResourceType.SubtractivePalette),
-	onConfirm: (state) => state.doFiller(),
+	onConfirm: (state) => {
+		state.doFiller();
+		if (Traits.hasUnlocked(TraitName.EnhancedArtistry, state.config.level)) {
+			state.resources.get(ResourceType.Paint).gain(1);
+		}
+	},
 });
 
 makeGCD_PCT(SkillName.Blizzard2InCyan, 60, {
@@ -554,6 +588,7 @@ makeGCD_PCT(SkillName.Blizzard2InCyan, 60, {
 
 makeGCD_PCT(SkillName.Stone2InYellow, 60, {
 	replaceIf: [cyan2Condition, magenta2Condition],
+	startOnHotbar: false,
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
@@ -569,6 +604,7 @@ makeGCD_PCT(SkillName.Stone2InYellow, 60, {
 
 makeGCD_PCT(SkillName.Thunder2InMagenta, 60, {
 	replaceIf: [cyan2Condition, yellow2Condition],
+	startOnHotbar: false,
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
@@ -579,7 +615,12 @@ makeGCD_PCT(SkillName.Thunder2InMagenta, 60, {
 	],
 	applicationDelay: 0.80,
 	validateAttempt: (state) => magenta2Condition.condition(state) && state.hasResourceAvailable(ResourceType.SubtractivePalette),
-	onConfirm: (state) => state.doFiller(),
+	onConfirm: (state) => {
+		state.doFiller();
+		if (Traits.hasUnlocked(TraitName.EnhancedArtistry, state.config.level)) {
+			state.resources.get(ResourceType.Paint).gain(1);
+		}
+	},
 });
 
 makeGCD_PCT(SkillName.HolyInWhite, 80, {
@@ -710,7 +751,7 @@ const livingMuseInfos: Array<[SkillName, number, number | Array<[TraitName, numb
 livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAttempt], i) => makeAbility_PCT(name, level, ResourceType.cd_LivingMuse, {
 	replaceIf: livingConditions.slice(0, i).concat(livingConditions.slice(i + 1)),
 	startOnHotbar: i === 0,
-	basePotency: potencies,
+	potency: potencies,
 	applicationDelay: applicationDelay,
 	cooldown: 40,
 	validateAttempt: validateAttempt,
@@ -739,7 +780,7 @@ livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAtte
 
 makeAbility_PCT(SkillName.MogOfTheAges, 30, ResourceType.cd_Portrait, {
 	replaceIf: [madeenCondition],
-	basePotency: [
+	potency: [
 		[TraitName.Never, 1100],
 		[TraitName.PictomancyMasteryIII, 1300],
 	],
@@ -751,7 +792,8 @@ makeAbility_PCT(SkillName.MogOfTheAges, 30, ResourceType.cd_Portrait, {
 
 makeAbility_PCT(SkillName.RetributionOfTheMadeen, 30, ResourceType.cd_Portrait, {
 	replaceIf: [mogCondition],
-	basePotency: 1400,
+	startOnHotbar: false,
+	potency: 1400,
 	applicationDelay: 1.30,
 	validateAttempt: (state) => state.resources.get(ResourceType.Portrait).availableAmount() === 2,
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.Portrait),
@@ -790,6 +832,7 @@ makeAbility_PCT(SkillName.SteelMuse, 50, ResourceType.cd_SteelMuse, {
 
 makeAbility_PCT(SkillName.StrikingMuse, 50, ResourceType.cd_SteelMuse, {
 	replaceIf: [steelCondition],
+	startOnHotbar: false,
 	cooldown: 60,
 	maxCharges: 2, // lower this value in the state constructor when level synced
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.WeaponCanvas) && state.isInCombat(),
@@ -804,9 +847,10 @@ const hammerConditions: ConditionalSkillReplace<PCTState>[] = [
 	{
 		newSkill: SkillName.HammerStamp,
 		condition: (state) => (
-			!Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level)
-			// TODO properly mimic combo behavior
-			|| state.getHammerStacks() === 1
+			Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level)
+				// TODO properly mimic combo behavior
+				? state.getHammerStacks() === 3
+				: state.getHammerStacks() > 0
 		),
 	},
 	{
@@ -822,7 +866,7 @@ const hammerConditions: ConditionalSkillReplace<PCTState>[] = [
 		condition: (state) => (
 			Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level)
 			// TODO properly mimic combo behavior
-			&& state.getHammerStacks() === 3
+			&& state.getHammerStacks() === 1
 		),
 	}
 ];
@@ -845,6 +889,7 @@ const hammerInfos: Array<[SkillName, number, number | Array<[TraitName, number]>
 ];
 hammerInfos.forEach(([name, level, potencies, applicationDelay], i) => makeGCD_PCT(name, level, {
 	replaceIf: hammerConditions.slice(0, i).concat(hammerConditions.slice(i + 1)),
+	aspect: Aspect.Hammer,
 	baseCastTime: 0,
 	startOnHotbar: i === 0,
 	basePotency: potencies,
@@ -883,8 +928,9 @@ makeAbility_PCT(SkillName.ScenicMuse, 70, ResourceType.cd_ScenicMuse, {
 	validateAttempt: (state) => false, // scenic muse can never itself be cast
 });
 
-makeAbility_PCT(SkillName.ScenicMuse, 70, ResourceType.cd_ScenicMuse, {
+makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
 	replaceIf: [scenicCondition],
+	startOnHotbar: false,
 	applicationDelay: 0, // raid buff is instant, but inspiration is delayed by 0.62s
 	cooldown: 120,
 	validateAttempt: (state) => starryMuseCondition.condition(state) && state.isInCombat(),

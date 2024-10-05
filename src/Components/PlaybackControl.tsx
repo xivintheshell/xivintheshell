@@ -125,7 +125,7 @@ export function ConfigSummary(props: {}) {
 	});
 	// TODO specialize for BLM
 	// TODO (revisit): double check this forced cast
-	let thunderTickOffset = (controller.game as BLMState).thunderTickOffset.toFixed(3);
+	let thunderTickOffset = ShellInfo.job === ShellJob.BLM ? (controller.game as BLMState).thunderTickOffset.toFixed(3) : "";
 	let thunderOffsetDesc = localize({
 		en: "the random time offset of thunder DoT ticks relative to mp ticks",
 		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）"
@@ -170,16 +170,22 @@ export function ConfigSummary(props: {}) {
 				})
 			}/> : undefined
 		}
-		{ShellInfo.job === ShellJob.BLM &&
-		// TODO modify for PCT
-		<Expandable
-			title={"Cast times table"}
-			titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
-			defaultShow={true}
-			content={castTimesChart}/>
+		{ShellInfo.job === ShellJob.BLM ?
+			// TODO modify for PCT
+			<Expandable
+				title={"Cast times table"}
+				titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
+				defaultShow={true}
+				content={castTimesChart}/>
+			: <br/>
 		}
 		{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
-		<br/>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
+		{ShellInfo.job === ShellJob.BLM &&
+		<>
+		<br/>
+		{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
+		</>
+		}
 		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
 		{numOverrides === 0 ? undefined : <span style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</span>}
 	</div>
@@ -902,10 +908,11 @@ export class Config extends React.Component {
 			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
 			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: " , zh: "暴击："})} onChange={this.setCriticalHit}/>
 			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>
+			<Input defaultValue={this.state.determination} description={localize({en: "determination: " , zh: "决心："})} onChange={this.setDetermination}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<div>
 				<Input style={{display: "inline-block", color: fpsAndCorrectionColor}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>
-				<span> ({localize({en: "B1 tax", zh: "冰1税"})}: {this.state.b1TaxPreview} <Help topic={"b1TaxPreview"} content={b1TaxDesc}/>)</span>
+				{ShellInfo.job === ShellJob.BLM && <span> ({localize({en: "B1 tax", zh: "冰1税"})}: {this.state.b1TaxPreview} <Help topic={"b1TaxPreview"} content={b1TaxDesc}/>)</span>}
 			</div>
 			<Input
 				style={{color: fpsAndCorrectionColor}}
