@@ -619,7 +619,7 @@ export abstract class GameState {
 		} else if (skillName === SkillName.SubtractivePalette) {
 			highlight = this.resources.get(ResourceType.SubtractiveSpectrum).available(1) ||
 				this.resources.get(ResourceType.PaletteGauge).available(50);
-		} else if (skillName === SkillName.MogOfTheAges) {
+		} else if (skillName === SkillName.MogOfTheAges || skillName === SkillName.RetributionOfTheMadeen) {
 			highlight = this.resources.get(ResourceType.Portrait).available(1);
 		} else if (skill.aspect === Aspect.Hammer) {
 			highlight = this.resources.get(ResourceType.HammerTime).available(1);

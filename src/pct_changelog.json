@@ -1,5 +1,15 @@
 [
     {
+        "date": "10/5/24",
+        "changes": [
+            "[cherry-pick] Use new tab-based layout",
+            "Allow switching of of RGB, CMY, living muse, and similar context-based skills in presets and timeline editor",
+            "Add Chinese buff and gauge translations from yuyuka",
+            "Add contact instructions in Chinese (thanks again yuyuka)",
+            "Introduced and fixed bugs where Tempera Grassa's CD was untethered from Tempera Coat, Striking Muse had a 40s cd, and Mog could be used immediately after Madeen (thanks MonoChrome)"
+        ]
+    },
+    {
         "date": "9/25/24",
         "changes": [
             "[cherry-pick] Add nicer font for stack numbers"

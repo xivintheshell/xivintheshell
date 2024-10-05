@@ -65,7 +65,7 @@ export class PCTState extends GameState {
 		const livingMuseStacks = Traits.hasUnlocked(TraitName.EnhancedPictomancyIV, config.level) ? 3 : 2;
 		this.cooldowns.set(new CoolDown(ResourceType.cd_LivingMuse, 40, livingMuseStacks, livingMuseStacks));
 		const steelMuseStacks = Traits.hasUnlocked(TraitName.EnhancedPictomancyII, config.level) ? 2 : 1;
-		this.cooldowns.set(new CoolDown(ResourceType.cd_SteelMuse, 40, steelMuseStacks, steelMuseStacks));
+		this.cooldowns.set(new CoolDown(ResourceType.cd_SteelMuse, 60, steelMuseStacks, steelMuseStacks));
 
 		this.registerRecurringEvents();
 	}
@@ -796,7 +796,7 @@ makeAbility_PCT(SkillName.RetributionOfTheMadeen, 30, ResourceType.cd_Portrait, 
 	potency: 1400,
 	applicationDelay: 1.30,
 	validateAttempt: (state) => state.resources.get(ResourceType.Portrait).availableAmount() === 2,
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.Portrait),
+	onConfirm: (state) => state.resources.get(ResourceType.Portrait).overrideCurrentValue(0),
 	cooldown: 30,
 });
 
@@ -975,7 +975,7 @@ makeAbility_PCT(SkillName.TemperaGrassa, 88, ResourceType.cd_Grassa, {
 		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
 	}],
 	applicationDelay: 0, // instant
-	cooldown: 120,
+	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
 	onConfirm: (state) => {
 		// goodbye, tempera coat
