@@ -84,21 +84,6 @@ const getAcknowledgements = () => {
 				</div>,
 			})}
 
-			{localize({
-				en: <div className={"paragraph"}>
-					If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
-					You can also find me directly on discord (miyehn), or via email (ellyn.waterford@gmail.com). In case of sending a bug report, attaching the
-					fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
-				</div>,
-				zh: <div className={"paragraph"}>
-					如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。
-				</div>,
-				ja: <div className={"paragraph"}>
-					[outdated (ja)] 質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
-					バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
-				</div>,
-			})}
-
 			<div className="paragraph">{localize({
 				en: "Also, consider contributing! I'm not raiding lately so I can't make the timeline markers..",
 				zh: "贡献大欢迎！比如给我发时间轴标记文件！我自己很久没打高难了，自己做是不可能了。",
@@ -123,7 +108,7 @@ const getAcknowledgements = () => {
 					fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
 					</div>,
 				zh: <div className={"paragraph"}>
-					如果你遇到了任何问题或想提供建议，你可以在The Balance的discord频道中的【这个分支】留言。你也可以直接在discord上找到我（在The Balance的频道中@shanzhe），或者在GitHub上报问题（链接在下面）。
+					如果你遇到了任何问题或想提供建议，你可以在The Balance的discord频道中的<a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">【这个分支】</a>留言。你也可以直接在discord上找到我（在The Balance的频道中@shanzhe），或者在GitHub上报问题（链接在下面）。
 					如果是反馈bug，最好把能够复现bug的战斗记录文件（下方的下载战斗记录-txt格式，随意命名）一起发过来。
 					如果不方便翻墙或者想用中文反馈，也可以联系yuyuka代为传达（QQ：865835107，加时请注明来意）
 				</div>
