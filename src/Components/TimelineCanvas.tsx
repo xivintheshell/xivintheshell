@@ -298,10 +298,10 @@ function drawWarningMarks(
 			message += localize({en: "polyglot overcap!", zh: "通晓溢出！"});
 		}
 		if (mark.warningType === WarningType.CometOverwrite) {
-			message += localize({en: "comet overwrite!", zh: "彗星覆写！"});
+			message += localize({en: "comet overwrite!", zh: "彗星之黑被覆盖！"});
 		}
 		if (mark.warningType === WarningType.PaletteOvercap) {
-			message += localize({en: "palette gauge overcap!", zh: "调色板溢出！"});
+			message += localize({en: "palette gauge overcap!", zh: "调色量值溢出！"});
 		}
 
 		testInteraction(
