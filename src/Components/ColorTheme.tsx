@@ -46,6 +46,12 @@ export type ThemeColors = {
 		paradox: string,
 		polyTimer: string,
 		polyStacks: string,
+		creatureCanvas: string,
+		weaponCanvas: string,
+		landscapeCanvas: string,
+		paletteGauge: string,
+		holyPaint: string,
+		cometPaint: string,
 	},
 	timeline: {
 		ruler: string,
@@ -95,6 +101,12 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				paradox: "#d953ee",
 				polyTimer: "#594472",
 				polyStacks: "#b138ee",
+				creatureCanvas: "#863ab5",
+				weaponCanvas: "#8d3741",
+				landscapeCanvas: "#264195",
+				paletteGauge: "#b69241",
+				holyPaint: "#dde0e5",  // blue-ish light gray
+				cometPaint: "#500050",  // purple-ish black
 			},
 			timeline: {
 				ruler: "#2d2d2d",
@@ -141,6 +153,12 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				paradox: "#d953ee",
 				polyTimer: "#d5bbf1",
 				polyStacks: "#b138ee",
+				creatureCanvas: "#863ab5",
+				weaponCanvas: "#8d3741",
+				landscapeCanvas: "#264195",
+				paletteGauge: "#b69241",
+				holyPaint: "#dde0e5",  // blue-ish light gray
+				cometPaint: "#500050",  // purple-ish black
 			},
 			timeline: {
 				ruler: "#e9e9e9",

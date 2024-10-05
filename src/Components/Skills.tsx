@@ -13,6 +13,7 @@ import {getAllSkills} from "../Game/Skills";
 
 // Imports of Game/Jobs/* must come after Game/Skills is initialized.
 import "../Game/Jobs/BLM";
+import "../Game/Jobs/PCT";
 import "../Game/Jobs/RoleActions";
 
 // seems useful: https://na.finalfantasyxiv.com/lodestone/special/fankit/icon/
@@ -110,6 +111,10 @@ class SkillButton extends React.Component {
 				s += localize({
 					en: "possibly ready in " + info.timeTillAvailable.toFixed(3) + " (next stack ready in " + info.timeTillNextStackReady.toFixed(3) + ")",
 					zh: "预计" + info.timeTillAvailable.toFixed(3) + "秒后可释放（" + info.timeTillNextStackReady.toFixed(3) + "秒后转好下一层CD）"
+				});
+			} else if (info.status === SkillReadyStatus.NotInCombat) {
+				s += localize({
+					en: "not in combat (wait for first damage application)",
 				});
 			}
 			// if ready, also show captured cast time & time till damage application

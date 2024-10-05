@@ -28,20 +28,31 @@ export class XIVMath {
 		}
 	}
 
-	static calculateDamage(level: LevelSync, crit: number, dh: number, damageFactor: number, critBonus: number, dhBonus: number) {
+	static calculateDamage(level: LevelSync, crit: number, dh: number, det: number, damageFactor: number, critBonus: number, dhBonus: number) {
 		let modifier = damageFactor;
-				
-		let critRate = XIVMath.#criticalHitRate(level, crit) + critBonus;
-		let dhRate = XIVMath.#directHitRate(level, dh) + dhBonus;
 
-		const critDHRate = critRate * dhRate;
-		const normalRate = 1 - critRate - dhRate + critDHRate;
+		const critRate = (critBonus >= 1) ? critBonus : XIVMath.#criticalHitRate(level, crit) + critBonus;
+		const dhRate = (critBonus >= 1) ? dhBonus : XIVMath.#directHitRate(level, dh) + dhBonus;
+		const critDamageMult =  XIVMath.#criticalHitStrength(level, crit);
 
-		const critDamage = modifier * XIVMath.#criticalHitStrength(level, crit);
-		const dhDamage = modifier * 1.25;
-		const critDHDamage = critDamage * 1.25;
+		const autoCDH = critRate >= 1 && dhRate >= 1;
+		const critMod = critRate > 1 ? 1 + ((critRate - 1) * critDamageMult) : 1;
+		const dhMod = dhRate > 1 ? 1 + ((dhRate - 1) * 1.25) : 1;
+		const clampedCritRate = critRate > 1 ? 1 : critRate;
+		const clampedDHRate   = dhRate   > 1 ? 1 : dhRate;
 
-		return modifier * normalRate + critDamage * (critRate-critDHRate) + dhDamage * (dhRate-critDHRate) + critDHDamage * critDHRate; 
+		if (autoCDH) 
+			modifier *= (1 + XIVMath.#autoMultiDet(level, det) + XIVMath.#autoMultiDH(level, dh));
+		else
+			modifier *= (1 + XIVMath.#autoMultiDet(level, det));
+
+		const critDamage = modifier * critMod * critDamageMult;
+		const dhDamage = modifier * 1.25 * dhMod;
+		const critDHDamage = critDamage * 1.25 * dhMod;
+		const critDHRate = clampedCritRate * clampedDHRate;
+		const normalRate = 1 - clampedCritRate - clampedDHRate + critDHRate;
+
+		return modifier * normalRate + critDamage * (clampedCritRate-critDHRate) + dhDamage * (clampedDHRate-critDHRate) + critDHDamage * critDHRate; 
 	}
 
 	static #criticalHitRate(level: LevelSync, crit: number) {
@@ -62,6 +73,17 @@ export class XIVMath {
 		return Math.floor(550 * (dh-subStat) / div) * 0.001;
 	}
 
+	static #autoMultiDH(level: LevelSync, dh: number) {
+		const subStat = this.getSubstatBase(level);
+		const div = this.getStatDiv(level);
+		return Math.floor(140 * (dh-subStat) / div) * 0.001;
+	}
+
+	static #autoMultiDet(level: LevelSync, det: number) {
+		const subStat = this.getSubstatBase(level);
+		const div = this.getStatDiv(level);
+		return Math.floor(140 * (det-subStat) / div) * 0.001;
+	}
 
 	static dotPotency(level: LevelSync, spellSpeed: number, basePotency: number) {
 		const subStat = this.getSubstatBase(level);
@@ -76,6 +98,9 @@ export class XIVMath {
 	static getSpeedModifier(buff: ResourceType) {
 		if (buff === ResourceType.LeyLines) {
 			return 15;
+		}
+		if (buff === ResourceType.Inspiration) {
+			return 25;
 		}
 		console.error("No speed modifier for buff: ", buff);
 		return 0;

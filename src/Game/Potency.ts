@@ -6,7 +6,7 @@ import {ResourceState} from "./Resources";
 import {TraitName, Traits} from "./Traits";
 
 export const enum PotencyModifierType {
-	AF3, AF2, AF1, UI3, UI2, UI1, ENO, POT, PARTY
+	AF3, AF2, AF1, UI3, UI2, UI1, ENO, POT, STARRY, HAMMER, PARTY
 }
 
 export type PotencyModifier = {
@@ -22,6 +22,16 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 	// pot
 	if (resources.get(ResourceType.Tincture).available(1)) {
 		mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
+	}
+
+	// starry muse
+	if (resources.get(ResourceType.StarryMuse).available(1)) {
+		mods.push({source: PotencyModifierType.STARRY, damageFactor: 1.05, critFactor: 0, dhFactor: 0});
+	}
+
+	// hammer autocrit/dh
+	if (aspect === Aspect.Hammer) {
+		mods.push({source: PotencyModifierType.HAMMER, damageFactor: 1, critFactor: 1.0, dhFactor: 1.0});
 	}
 
 	// eno
@@ -133,7 +143,9 @@ export class Potency {
 			});
 		}
 
-		return this.base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor);
+		let amt = this.base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor)
+		if (this.aspect === Aspect.Hammer) amt *= this.#calculateAutoCDHModifier(totalCritFactor, totalDhFactor)
+		return amt;
 	}
 
 	getPartyBuffs() {
@@ -160,13 +172,22 @@ export class Potency {
 
 	hasSnapshotted() { return this.snapshotTime !== undefined; }
 
+	#calculateAutoCDHModifier(critBonus: number, dhBonus: number) {
+		const level = this.config.level;
+		const base = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, critBonus, dhBonus);
+		const buffed = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, 1+critBonus, 1+dhBonus);
+
+		return buffed / base;
+	}
+
 	#calculatePotencyModifier(damageFactor: number, critBonus: number, dhBonus: number) {
 		const level = this.config.level;
 		const critStat = this.config.criticalHit;
 		const dhStat = this.config.directHit;
+		const det = this.config.determination;
 
-		const base = XIVMath.calculateDamage(level, critStat, dhStat, 1, 0, 0);
-		const buffed = XIVMath.calculateDamage(level, critStat, dhStat, damageFactor, critBonus, dhBonus);
+		const base = XIVMath.calculateDamage(level, critStat, dhStat, det, 1, 0, 0);
+		const buffed = XIVMath.calculateDamage(level, critStat, dhStat, det, damageFactor, critBonus, dhBonus);
 
 		return buffed / base;
 	}

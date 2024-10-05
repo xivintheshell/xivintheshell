@@ -4,12 +4,14 @@ import {
 	ReplayMode,
 	setCachedValue,
 	ShellInfo,
+	ShellJob,
 	ShellVersion,
 	TickMode
 } from "./Common";
 import {GameState} from "../Game/GameState";
 import {getConditionalReplacement} from "../Game/Skills";
-import {newGameState, BLMState} from "../Game/Jobs/BLM";
+import {BLMState} from "../Game/Jobs/BLM";
+import {PCTState} from "../Game/Jobs/PCT";
 import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 import {updateStatusDisplay} from "../Components/StatusDisplay";
@@ -35,6 +37,13 @@ import {
 } from "./DamageStatistics";
 
 type Fixme = any;
+
+const newGameState = (config: GameConfig) => {
+	if (ShellInfo.job === ShellJob.PCT) {
+		return new PCTState(config);
+	}
+	return new BLMState(config);
+}
 
 class Controller {
 	timeScale;
@@ -592,25 +601,48 @@ class Controller {
 
 	updateStatusDisplay(game: GameState) {
 		// resources
-		let eno = game.resources.get(ResourceType.Enochian);
+		const isBLM = ShellInfo.job === ShellJob.BLM;
 		let enoCountdown: number;
-		if (eno.available(1) && !eno.pendingChange) {
-			enoCountdown = 15;
+		let polyglotCountdown: number;
+		let fireStacks: number;
+		let iceStacks: number;
+		if (isBLM) {
+			let eno = game.resources.get(ResourceType.Enochian);
+			if (eno.available(1) && !eno.pendingChange) {
+				enoCountdown = 15;
+			} else {
+				enoCountdown = game.resources.timeTillReady(ResourceType.Enochian);
+			}
+			polyglotCountdown = eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30;
+			fireStacks = (game as BLMState).getFireStacks();
+			iceStacks = (game as BLMState).getIceStacks();
 		} else {
-			enoCountdown = game.resources.timeTillReady(ResourceType.Enochian);
+			enoCountdown = 0;
+			polyglotCountdown = 0;
+			fireStacks = 0;
+			iceStacks = 0;
 		}
 
 		let resourcesData = {
 			mana: game.resources.get(ResourceType.Mana).availableAmount(),
 			timeTillNextManaTick: game.resources.timeTillReady(ResourceType.Mana),
 			enochianCountdown: enoCountdown,
-			astralFire: (game as BLMState).getFireStacks(),
-			umbralIce: (game as BLMState).getIceStacks(),
+			astralFire: fireStacks,
+			umbralIce: iceStacks,
 			umbralHearts: game.resources.get(ResourceType.UmbralHeart).availableAmount(),
 			paradox: game.resources.get(ResourceType.Paradox).availableAmount(),
 			astralSoul: game.resources.get(ResourceType.AstralSoul).availableAmount(),
-			polyglotCountdown: eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30,
-			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount()
+			polyglotCountdown: polyglotCountdown,
+			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount(),
+			// TODO split up
+			portrait: game.resources.get(ResourceType.Portrait).availableAmount(),
+			depictions: game.resources.get(ResourceType.Depictions).availableAmount(),
+			creatureCanvas: game.resources.get(ResourceType.CreatureCanvas).availableAmount(),
+			weaponCanvas: game.resources.get(ResourceType.WeaponCanvas).availableAmount(),
+			landscapeCanvas: game.resources.get(ResourceType.LandscapeCanvas).availableAmount(),
+			paletteGauge: game.resources.get(ResourceType.PaletteGauge).availableAmount(),
+			paint: game.resources.get(ResourceType.Paint).availableAmount(),
+			hasComet: game.resources.get(ResourceType.MonochromeTones).available(1),
 		};
 		// locks
 		let cast = game.resources.get(ResourceType.NotCasterTaxed);
@@ -642,11 +674,31 @@ class Controller {
 			firestarterCountdown: game.resources.timeTillReady(ResourceType.Firestarter),
 			thunderheadCountdown: game.resources.timeTillReady(ResourceType.Thunderhead),
 			manawardCountdown: game.resources.timeTillReady(ResourceType.Manaward),
+
+			// TODO split up
+			aetherhuesCountdown: game.resources.timeTillReady(ResourceType.Aetherhues),
+			aetherhuesStacks: game.resources.get(ResourceType.Aetherhues).availableAmount(),
+			monochromeTones: game.resources.get(ResourceType.MonochromeTones).availableAmount(),
+			subtractivePalette: game.resources.get(ResourceType.SubtractivePalette).availableAmount(),
+			subtractiveSpectrumCountdown: game.resources.timeTillReady(ResourceType.SubtractiveSpectrum),
+			starryMuseCountdown: game.resources.timeTillReady(ResourceType.StarryMuse),
+			hyperphantasiaCountdown: game.resources.timeTillReady(ResourceType.Hyperphantasia),
+			hyperphantasiaStacks: game.resources.get(ResourceType.Hyperphantasia).availableAmount(),
+			inspirationEnabled: game.resources.get(ResourceType.Inspiration).enabled,
+			inspirationCountdown: game.resources.timeTillReady(ResourceType.Inspiration),
+			rainbowBrightCountdown: game.resources.timeTillReady(ResourceType.RainbowBright),
+			starstruckCountdown: game.resources.timeTillReady(ResourceType.Starstruck),
+			hammerTimeCountdown: game.resources.timeTillReady(ResourceType.HammerTime),
+			hammerTimeStacks: game.resources.get(ResourceType.HammerTime).availableAmount(),
+			temperaCoatCountdown: game.resources.timeTillReady(ResourceType.TemperaCoat),
+			temperaGrassaCountdown: game.resources.timeTillReady(ResourceType.TemperaGrassa),
+			smudgeCountdown: game.resources.timeTillReady(ResourceType.Smudge),
+			
 			swiftcastCountdown: game.resources.timeTillReady(ResourceType.Swiftcast),
 			lucidDreamingCountdown: game.resources.timeTillReady(ResourceType.LucidDreaming),
 			surecastCountdown: game.resources.timeTillReady(ResourceType.Surecast),
 			tinctureCountdown: game.resources.timeTillReady(ResourceType.Tincture),
-			sprintCountdown: game.resources.timeTillReady(ResourceType.Sprint)
+			sprintCountdown: game.resources.timeTillReady(ResourceType.Sprint),
 		};
 		if (typeof updateStatusDisplay !== "undefined") {
 			updateStatusDisplay({
@@ -717,6 +769,7 @@ class Controller {
 		spellSpeed: number,
 		criticalHit: number,
 		directHit: number,
+		determination: number,
 		animationLock: number,
 		fps: number,
 		gcdSkillCorrection: number,
@@ -780,7 +833,7 @@ class Controller {
 			this.lastAttemptedSkill = "";
 		}
 
-		if (status.status === SkillReadyStatus.Blocked) {
+		if (status.status === SkillReadyStatus.Blocked || status.status === SkillReadyStatus.NotInCombat) {
 			this.lastAttemptedSkill = skillName;
 		}
 
