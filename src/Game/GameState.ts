@@ -425,7 +425,6 @@ export abstract class GameState {
 		}
 		// recast
 		cd.useStackWithRecast(this, this.config.getAfterTaxGCD(recastTime));
-		cd.useStack(this);
 	}
 
 	/**

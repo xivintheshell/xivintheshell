@@ -68,14 +68,30 @@ const getAcknowledgements = () => {
 						<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b> そして新機能やバグ報告などで貢献してくださった多くのFF14プレーヤーの皆さん</li>
 					</ul>,
 			})}
+
 			{localize({
 				en: <div className={"paragraph"}>
 					If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
 					You can also find me directly on discord (miyehn), or via email (ellyn.waterford@gmail.com). In case of sending a bug report, attaching the
-					fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
+					fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
 				</div>,
 				zh: <div className={"paragraph"}>
-					如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从右侧下载的fight.txt）一起发过来。
+					如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。
+				</div>,
+				ja: <div className={"paragraph"}>
+					[outdated (ja)] 質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
+					バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
+				</div>,
+			})}
+
+			{localize({
+				en: <div className={"paragraph"}>
+					If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
+					You can also find me directly on discord (miyehn), or via email (ellyn.waterford@gmail.com). In case of sending a bug report, attaching the
+					fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
+				</div>,
+				zh: <div className={"paragraph"}>
+					如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。
 				</div>,
 				ja: <div className={"paragraph"}>
 					[outdated (ja)] 質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
@@ -104,7 +120,7 @@ const getAcknowledgements = () => {
 				en: <div className={"paragraph"}>
 					If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
 					You can also find me directly on discord (@shanzhe in The Balance), or file an issue on GitHub (link below). In case of sending a bug report, attaching the
-					fight record (download "fight.txt" from the right or name it anything else) would be very helpful.
+					fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
 					</div>
 			})}
 			</>
@@ -258,20 +274,6 @@ export function IntroSection(props: {}) {
 					}[ShellInfo.job] + "のスキルローテーションシミュレーターです。"})}
 				</div>
 				{getAcknowledgements()}
-				{localize({
-					en: <div className={"paragraph"}>
-						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
-						You can also find me directly on discord (miyehn), or via email (ellyn.waterford@gmail.com). In case of sending a bug report, attaching the
-						fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
-					</div>,
-					zh: <div className={"paragraph"}>
-						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。
-					</div>,
-					ja: <div className={"paragraph"}>
-						[outdated (ja)] 質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
-						バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
-					</div>,
-				})}
 				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接：", ja: "リンク集"})}</div>
 				{localize({
 					en: <ul>
