@@ -6,6 +6,7 @@ import 'react-tooltip/dist/react-tooltip.css';
 import {getCurrentThemeColors} from "./ColorTheme";
 import {getCachedValue, setCachedValue} from "../Controller/Common";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
+import {LiaWindowMinimize} from "react-icons/lia";
 
 export type ContentNode = JSX.Element | string;
 
@@ -38,7 +39,7 @@ export const TimelineDimensions = {
 	},
 
 	leftBufferWidth: 20, // leave this much space on the left before starting to draw timeline (for timeline selection bar)
-	addSlotButtonHeight: 20,
+	addSlotButtonHeight: 20
 
 }
 
@@ -239,6 +240,7 @@ export type TabItem = {
 	contentNode: ContentNode
 };
 
+export const TABS_TITLE_HEIGHT = 26;
 export function Tabs(props: {
 	uniqueName: string,
 	content: TabItem[],
@@ -248,7 +250,7 @@ export function Tabs(props: {
 	style?: CSSProperties
 }) {
 
-	const titleHeight = 24;
+	const titleHeight = TABS_TITLE_HEIGHT - 2; // the top and bottom border each takes up 1px
 	const [selectedIndex, setSelectedIndex] = React.useState<number | undefined>(undefined);
 
 	// initialization
@@ -283,7 +285,10 @@ export function Tabs(props: {
 		if (tabIndex===selectedIndex) {
 			borderLeft = visibleBorder;
 			borderRight = visibleBorder;
-		} else if (tabIndex > 0) {
+		} else if (
+			tabIndex > 0 && // not the first tab
+			(selectedIndex===undefined || selectedIndex + 1 !== tabIndex) // collapsed || not immediately to the right of selected
+		) {
 			borderLeft = visibleBorder
 		}
 		return {
@@ -302,7 +307,7 @@ export function Tabs(props: {
 	}
 
 	const titles: ContentNode[] = [];
-	let content: ContentNode | undefined;
+	let content: ContentNode[] = [];
 	for (let i = 0; i < props.content.length; i++) {
 
 		const isSelectedTab = i === selectedIndex;
@@ -315,17 +320,30 @@ export function Tabs(props: {
 			setCachedValue(props.uniqueName + "SelectedTab", newIndex===undefined ? "none" : `${newIndex}`);
 		}}>{props.content[i].titleNode}</span>);
 
-		if (isSelectedTab) {
-			content = props.content[i].contentNode;
-		}
+		content.push(<div key={i} style={{
+			display: isSelectedTab ? "block" : "none"
+		}}>{props.content[i].contentNode}</div>)
+	}
+
+	if (props.collapsible && selectedIndex !== undefined) {
+		titles.push(<span
+			key={titles.length}
+			onClick={() => {setSelectedIndex(undefined);}}
+		><LiaWindowMinimize style={{
+			marginLeft: 16,
+			fontSize: 14,
+			cursor: "pointer",
+			position: "relative",
+			top: 3
+		}}/></span>)
 	}
 
 	return <div style={{...{
 		position: "relative",
-		height: props.height
 	}, ...props.style}}>
 		<div>{titles}</div>
 		<div className={"staticScrollbar"} style={{
+			display: selectedIndex === undefined ? "none" : "block",
 			height: props.height - titleHeight,
 			boxSizing: "border-box",
 			padding: "10px 5px",
@@ -373,6 +391,7 @@ type SliderProps = {
 	onChange?: (e: string) => void,
 	defaultValue?: string,
 	description?: ContentNode
+	style?: CSSProperties
 }
 type SliderState = {
 	value: string,
@@ -399,14 +418,14 @@ export class Slider extends React.Component {
 		if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
 	}
 	render() {
-		return <div style={{display: "inline-block"}}>
+		return <div style={{...{display: "inline-block"}, ...this.props.style}}>
 			<span>{this.props.description ?? ""}</span>
 			<input
 				size={10} type="range"
 				value={this.state.value}
 				min={0.05}
 				max={1}
-				step={0.05}
+				step={0.025}
 				onChange={this.onChange}
 				style={{position: "relative", outline: "none"}}/>
 		</div>
@@ -629,6 +648,7 @@ export function Help(props: {topic: string, content: ContentNode}) {
 		position: "relative",
 		width: 12,
 		height: 12,
+		lineHeight: 1,
 		cursor: "help",
 		background: colors.bgHighContrast,
 		borderRadius: 6,

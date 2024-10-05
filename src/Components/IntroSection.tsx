@@ -63,7 +63,7 @@ const acknowledgments = {
 					<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: プロダクトマネージャー、凄腕黒魔道士</li>
 					<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: ソフトウェア開発者、しがない黒魔道士</li>
 					<li><b>Turtle</b>: 黄金のレガシーへのアップデートを担当</li>
-					<li><b>Yara, Spider, Santa,</b> そして新機能やバグ報告などで貢献してくださった多くのFF14プレーヤーの皆さん</li>
+					<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b> そして新機能やバグ報告などで貢献してくださった多くのFF14プレーヤーの皆さん</li>
 				</ul>,
 		})}
 		{localize({
@@ -76,7 +76,7 @@ const acknowledgments = {
 				如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从右侧下载的fight.txt）一起发过来。
 			</div>,
 			ja: <div className={"paragraph"}>
-				質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
+				[outdated (ja)] 質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
 				バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
 			</div>,
 		})}
@@ -179,9 +179,9 @@ export function IntroSection(props: {}) {
 				})}
 
 				{localize({
-					en: <div className="paragraph">You can save/load fight records from the right, under <b>Control</b> section. Most edits are also automatically saved in your browser cache, so it's generally okay to refresh the page and not worry about losing progress.</div>,
-					zh: <div className="paragraph">右侧最下方有链接可以保存/加载战斗记录。大部分编辑也都会被保存在浏览器缓存，所以一般情况下刷新网页也不会影响进度。</div>,
-					ja: <div className="paragraph">右側の最下部からデータのセーブとロードができます。ほとんどの編集内容はブラウザのキャッシュにも保存されるためページをリロードをしても失われることはありません。</div>,
+					en: <div className="paragraph">You can save/load fight records at the bottom, under the <b>Import/Export</b> tab. Most edits are also automatically saved in your browser cache, so it's generally okay to refresh the page and not worry about losing progress.</div>,
+					zh: <div className="paragraph">工具最下方的 <b>导入/导出</b> 区域有链接可以保存/加载战斗记录。大部分编辑也都会被保存在浏览器缓存，所以一般情况下刷新网页也不会丢失数据。</div>,
+					//ja: <div className="paragraph">[outdated (ja)] 右側の最下部からデータのセーブとロードができます。ほとんどの編集内容はブラウザのキャッシュにも保存されるためページをリロードをしても失われることはありません。</div>,
 				})}
 
 				{localize({
@@ -254,8 +254,21 @@ export function IntroSection(props: {}) {
 						[ShellJob.PCT]: "ピクトマンサー",
 					}[ShellInfo.job] + "のスキルローテーションシミュレーターです。"})}
 				</div>
-				{acknowledgements}				
-
+				{acknowledgements}
+				{localize({
+					en: <div className={"paragraph"}>
+						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
+						You can also find me directly on discord (miyehn), or via email (ellyn.waterford@gmail.com). In case of sending a bug report, attaching the
+						fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
+					</div>,
+					zh: <div className={"paragraph"}>
+						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。
+					</div>,
+					ja: <div className={"paragraph"}>
+						[outdated (ja)] 質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
+						バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
+					</div>,
+				})}
 				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接：", ja: "リンク集"})}</div>
 				{localize({
 					en: <ul>
@@ -451,7 +464,7 @@ export function IntroSection(props: {}) {
 								</div>,
 							ja:
 								<div className="paragraph">
-									(translation outdated){/*2024/8/29: 黒魔紋上のキャストとリキャスト時間が誤っていました。現在は単純に0.85倍にしていますが、最大で0.01秒の誤差があります。Vanilla Milksmoothie が正確な値を提案してくれましたが現在は実装する時間がないため、または過去のtxtファイルが壊れる可能性があるため、実装していません。問題がある場合はお知らせください。*/}
+									[outdated (ja)]{/*2024/8/29: 黒魔紋上のキャストとリキャスト時間が誤っていました。現在は単純に0.85倍にしていますが、最大で0.01秒の誤差があります。Vanilla Milksmoothie が正確な値を提案してくれましたが現在は実装する時間がないため、または過去のtxtファイルが壊れる可能性があるため、実装していません。問題がある場合はお知らせください。*/}
 								</div>,
 						})}
 						{localize({

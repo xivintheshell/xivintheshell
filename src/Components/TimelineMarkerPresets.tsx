@@ -286,7 +286,7 @@ export class TimelineMarkerPresets extends React.Component {
 			</div>
 		</div>
 
-		let content = <div>
+		return <div>
 			<button style={btnStyle} onClick={()=>{
 				controller.timeline.deleteAllMarkers();
 				controller.updateStats();
@@ -426,11 +426,6 @@ export class TimelineMarkerPresets extends React.Component {
 				<span>{localize({en: "Save marker tracks to file: ", zh: "保存标记到文件："})}</span>
 				{saveTrackLinks}
 			</div>
-		</div>;
-		return <Expandable
-			title="Timeline markers"
-			titleNode={<span>{localize({en: "Timeline markers", zh: "时间轴标记"})}</span>}
-			content={content}
-			defaultShow={false}/>
+		</div>
 	}
 }

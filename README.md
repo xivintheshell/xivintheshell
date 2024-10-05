@@ -1,19 +1,16 @@
 # FFXIV in the Shell
 
-FFXIV Black Mage and Pictomancer job simulator & rotation planner.
+FFXIV job simulators & rotation planners.
 
-Available here: [BLM](https://miyehn.me/ffxiv-blm-rotation) * [PCT](https://picto.zqsz.me/)
+(Deployment TBD)
 
-Let me know if you encounter bugs and/or have questions or concerns.
+Let us know if you encounter bugs and/or have questions or concerns.
 
-Developer: Ellyn Waterford @ Sargatanas (`miyehn`)
+Initial idea: Galahad Donnadieu @ Exodus (`ukitaeshiya`)  
+Initial developer: Ellyn Waterford @ Sargatanas (`miyehn`)  
+Currently maintained by: [@developers](https://github.com/orgs/xivintheshell/teams/developers) of [FFXIV in the Shell](https://github.com/xivintheshell).
 
-PCT developer and maintainer: Shanzhe Qi @ Seraph (`zqsz-xiv`)
-
-Initial idea & design advice (the big brain black mage behind this): Galahad Donnadieu @ Exodus (`ukitaeshiya`)
-
-And many thanks to the players from The Balance discord for their invaluable feedback.
-
+Many thanks to the players from The Balance discord server for their invaluable feedback.
 
 ---
 

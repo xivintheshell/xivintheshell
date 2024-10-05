@@ -5,8 +5,6 @@ import { Config, TimeControl } from "./PlaybackControl";
 import { StatusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import 'react-tabs/style/react-tabs.css';
-import {LoadSave} from "./LoadSave";
-import {ImageExport} from "./ImageExport";
 import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../pct_changelog.json"
@@ -266,9 +264,9 @@ export default class Main extends React.Component {
 							<h3 style={{marginTop: 20, marginBottom: 6}}>Pictomancer in the Shell</h3>
 							{/*localize({
 								en: <div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
-									tool/Changelog</b>) (see my <a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>roadmap</a>)
+									tool/Changelog</b>)
 								</div>,
-								zh: <div style={{marginBottom: 16}}>最近更新（月日年）：{changelog[0].date}（详见<b>关于/更新日志</b>）（<a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>开发计划</a>）</div>,
+								zh: <div style={{marginBottom: 16}}>最近更新（月日年）：{changelog[0].date}（详见<b>关于/更新日志</b>）</div>,
 								ja: <div style={{marginBottom: 16}}>最終更新日：{localizeDate(changelog[0].date, "ja")}（<b>このツールについて/更新履歴</b>を参照）（<a href={"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"}>ロードマップ</a>）</div>,
 							})*/}
 
@@ -312,8 +310,10 @@ export default class Main extends React.Component {
 							}}>
 								<Config/>
 								<TimeControl/>
-								<LoadSave/>
-								<ImageExport/>
+								<div>{localize({
+									en: "You can also import/export fights from/to local files at the bottom of the page.",
+									zh: "页面底部有导入和导出战斗文件相关选项。"
+								})}</div>
 							</div>
 						</div>
 						<SkillSequencePresets/>
