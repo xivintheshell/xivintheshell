@@ -123,7 +123,8 @@ export class CoolDown extends Resource {
 		// roll the GCD with a special recast value
 		this.consume(this.#currentBaseRecast);
 		this.maxValue = recast;
-		// LL/HP modifier
+		// LL modifier
+		// (PCT handles hyperphantasia logic separately)
 		this.#reCaptureRecastTimeScale(game);
 		// scale for spells with longer cast/recast
 		this.#currentBaseRecast = recast;
@@ -326,6 +327,7 @@ ALL_JOBS.forEach((job) => {
 
 // Add an ability to the resource map of the specified job.
 // Should only be called within the makeAbility constructor, except for the default GCD cooldown.
+// May be called multiple times if skills share a cooldown (such as picto living muse variants)
 export function makeCooldown(job: ShellJob, rsc: ResourceType, cdPerStack: number, maxStacks: number = 1) {
 	getAllResources(job).set(rsc, {
 		isCoolDown: true,

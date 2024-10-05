@@ -171,6 +171,23 @@ function fnify<T extends PlayerState>(arg?: number | ResourceCalculationFn<T>, d
 	}
 };
 
+function parseTraitPotencyArray<T extends PlayerState>(arr: Array<[TraitName, number]>): ResourceCalculationFn<T> {
+	console.assert(arr.length > 0, `invalid trait potency array: ${arr}`);
+	return (state) => {
+		let currPotency = undefined;
+		const level = state.config.level;
+		// this iteration assumes the highest level trait is last, and is a little algorithmically
+		// inefficient but who cares
+		for (const [traitName, potency] of arr) {
+			if (Traits.hasUnlocked(traitName, level)) {
+				currPotency = potency;
+			}
+		}
+		console.assert(currPotency !== undefined, `no applicable potency at level ${level} found in array ${arr}`)
+		return currPotency || 0;
+	};
+}
+
 /**
  * Declare a GCD skill.
  *
@@ -201,7 +218,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	castTime: number | ResourceCalculationFn<T>,
 	recastTime: number | ResourceCalculationFn<T>,
 	manaCost: number | ResourceCalculationFn<T>,
-	potency: number | ResourceCalculationFn<T>,
+	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 	applicationDelay: number,
 	validateAttempt: ValidateAttemptFn<T>,
 	isInstantFn: IsInstantFn<T>,
@@ -211,6 +228,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
+	let potencyFn = Array.isArray(params.potency) ? parseTraitPotencyArray(params.potency) : fnify(params.potency, 0);
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
@@ -225,7 +243,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		castTimeFn: fnify(params.castTime, 0),
 		recastTimeFn: fnify(params.recastTime, 2.5),
 		manaCostFn: fnify(params.manaCost, 0),
-		potencyFn: fnify(params.potency, 0),
+		potencyFn: potencyFn,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true),
 		onConfirm: params.onConfirm ?? NO_EFFECT,
@@ -260,7 +278,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	autoDowngrade: SkillAutoReplace,
 	replaceIf: ConditionalSkillReplace<T>[],
 	startOnHotbar: boolean,
-	potency: number | ResourceCalculationFn<T>,
+	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 	applicationDelay: number,
 	validateAttempt: ValidateAttemptFn<T>,
 	onConfirm: EffectFn<T>,
@@ -271,6 +289,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
+	let potencyFn = Array.isArray(params.potency) ? parseTraitPotencyArray(params.potency) : fnify(params.potency, 0);
 	const info: Ability<T> = {
 		kind: "ability",
 		name: name,
@@ -283,7 +302,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
 		manaCostFn: (state) => 0,
-		potencyFn: fnify(params.potency, 0),
+		potencyFn: potencyFn,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		onConfirm: params.onConfirm ?? NO_EFFECT,
@@ -315,7 +334,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		startOnHotbar?: boolean,
 		applicationDelay: number,
 		duration?: number | ResourceCalculationFn<T>, // TODO push to resources
-		potency?: number | ResourceCalculationFn<T>,
+		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 		validateAttempt?: ValidateAttemptFn<T>,
 		onConfirm?: EffectFn<T>,
 		onApplication?: EffectFn<T>,
@@ -398,6 +417,9 @@ export function getConditionalReplacement<T extends PlayerState>(key: SkillName,
 	// Attempt to replace a skill if required by the current state
 	const skill = getSkill(state.job, key);
 	for (const candidate of skill.replaceIf) {
+		if (candidateSkill.newSkill === key) {
+			console.error(`Skill ${key} tried to replace itself with the same skill`);
+		}
 		const candidateSkill = getSkill(state.job, candidate.newSkill);
 		if (state.config.level >= candidateSkill.unlockLevel && candidate.condition(state)) {
 			return candidate.newSkill;

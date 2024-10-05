@@ -31,8 +31,6 @@ const makePCTResource = (rsc: ResourceType, maxValue: number, params?: {timeout:
 	makeResource(ShellJob.PCT, rsc, maxValue, params ?? {});
 };
 
-makeBLMResource(ResourceType.Polyglot, 3, {timeout: 30});
-
 makePCTResource(Resource.Portrait, 2);
 makePCTResource(Resource.Depictions, 3);
 // automatically do prepull draws
@@ -42,24 +40,22 @@ makePCTResource(ResourceType.LandscapeCanvas, 1, {defaultValue: 1});
 makePCTResource(ResourceType.PaletteGauge, 100);
 makePCTResource(ResourceType.Paint, 5);
 
-makePCTResource(ResourceType.Aetherhues, 2); // TODO timeout
+makePCTResource(ResourceType.Aetherhues, 2, {timeout: 30.8});
 makePCTResource(ResourceType.MonochromeTones, 1);
 makePCTResource(ResourceType.SubtractivePalette, 3);
-makePCTResource(ResourceType.HammerTime, 3); // TODO timeout
+makePCTResource(ResourceType.HammerTime, 3, {timeout: 30});
 makePCTResource(ResourceType.Inspiration, 1);
-makePCTResource(ResourceType.SubtractiveSpectrum, 1);
-makePCTResource(ResourceType.Hyperphantasia, 5); // TODO timeout
-makePCTResource(ResourceType.RainbowBright, 1); // TODO timeout
-makePCTResource(ResourceType.Starstruck, 1); // TODO timeout
-makePCTResource(ResourceType.StarryMuse, 1); // TODO timeout
-makePCTResource(ResourceType.TemperaCoat, 1}); // TODO timeout
-makePCTResource(ResourceType.TemperaGrassa, 1); // TODO timeout
-makePCTResource(ResourceType.Smudge, 1); // TODO timeout
+makePCTResource(ResourceType.SubtractiveSpectrum, 1, {timeout: 30});
+makePCTResource(ResourceType.Hyperphantasia, 5, {timeout: 30});
+makePCTResource(ResourceType.RainbowBright, 1, {timeout: 30});
+makePCTResource(ResourceType.Starstruck, 1, {timeout: 20});
+makePCTResource(ResourceType.StarryMuse, 1, {timeout: 20.5});
+makePCTResource(ResourceType.TemperaCoat, 1, {timeout: 10}});
+makePCTResource(ResourceType.TemperaGrassa, 1, {timeout: 10});
+makePCTResource(ResourceType.Smudge, 1, {timeout: 5});
 
 // === JOB GAUGE AND STATE ===
 export class PCTState extends GameState {
-	thunderTickOffset: number;
-
 	constructor(config: GameConfig) {
 		super(config);
 		const swiftcastCooldown = (Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level) && 40) || 60;
@@ -74,17 +70,62 @@ export class PCTState extends GameState {
 		super.registerRecurringEvents();
 	}
 
+	// apply hyperphantasia + sps adjustment without consuming any resources
+	captureSpellCastTime(name: SkillName, baseCastTime: number): number {
+		if (name.includes("Motif")) {
+			// motifs are not affected by sps
+			return baseCastTime;
+		}
+		if (name === SkillName.RainbowDrip) {
+			// rainbow drip is not affected by inspiration
+			return this.hasResourceAvailable(ResourceType.RainbowBright) ? 0 : this.config.adjustedCastTime(baseCastTime);
+		}
+		return this.config.adjustedCastTime(
+			baseCastTime,
+			this.hasResourceAvailable(ResourceType.Inspiration) ? ResourceType.Inspiration : undefined
+		);
+	}
+
+	captureSpellRecastTime(name: SkillName, baseRecastTime: number): number {
+		if (name.includes("Motif")) {
+			// motifs are unaffected by sps
+			return baseRecastTime;
+		}
+		if (name === SkillName.RainbowDrip) {
+			// rainbow drip is not affected by inspiration
+			// when rainbow bright is affecting rainbow drip, treat it as a 6s cast
+			// then subtract 3.5s from the result
+			let recast = this.config.adjustedRecastTime(baseRecastTime);
+			return this.hasResourceAvailable(ResourceType.RainbowBright) ? recast - 3.5 : recast;
+		}
+		return this.config.adjustedRecastTime(
+			baseRecastTime,
+			this.hasResourceAvailable(ResourceType.Inspiration) ? ResourceType.Inspiration : undefined
+		);
+	}
+
+	getHammerStacks() {
+		return this.resources.get(ResourceType.HammerTime).availableAmount();
+	}
+
+	doFiller() {
+		this.cycleAetherhues();
+		this.tryConsumeHyperphantasia();
+		this.tryConsumeResource(ResourceType.SubtractivePalette);
+	}
+
 	// falls off after 30 (or 30.8) seconds unless next spell is resolved
 	// (for now ignore edge case of buff falling off mid-cast)
 	cycleAetherhues() {
-		let aetherhues = this.resources.get(ResourceType.Aetherhues);
+		const aetherhues = this.resources.get(ResourceType.Aetherhues);
+		const dropTime = (getResourceInfo(ShellJob.PCT, ResourceType.Aetherhues) as ResourceInfo).maxTimeout;
 		if (aetherhues.available(2) && aetherhues.pendingChange) {
 			// reset timer and reset value to 0
 			aetherhues.overrideCurrentValue(0);
 			aetherhues.removeTimer();
 		} else if (aetherhues.available(1) && aetherhues.pendingChange) {
 			// refresh timer if it was already running
-			aetherhues.overrideTimer(this, 30.8);
+			aetherhues.overrideTimer(this, dropTime);
 			aetherhues.gain(1);
 		} else {
 			// we were at 0 aetherhues, so increment and start the timer anew
@@ -92,7 +133,7 @@ export class PCTState extends GameState {
 			this.resources.addResourceEvent({
 				rscType: ResourceType.Aetherhues,
 				name: "reset aetherhues status",
-				delay: 30.8,
+				delay: dropTime,
 				fnOnRsc: rsc => this.resources.get(ResourceType.Aetherhues).overrideCurrentValue(0),
 			});
 		}
@@ -114,10 +155,7 @@ export class PCTState extends GameState {
 				inspiration.removeTimer();
 				if (Traits.hasUnlocked(TraitName.EnhancedPictomancyIII, this.config.level)) {
 					this.resources.get(ResourceType.RainbowBright).gain(1);
-					this.resources.addResourceEvent({
-						rscType: ResourceType.RainbowBright,
-						name: "drop rainbow bright", delay: 30, fnOnRsc: (rsc: Resource) => rsc.consume(1),
-					});
+					this.enqueueResourceDrop(ResourceType.RainbowBright);
 				}
 			}
 		}
@@ -133,84 +171,56 @@ export class PCTState extends GameState {
 // If an ability appears on the hotbar only when replacing another ability, it should have
 // `startOnHotbar` set to false, and `replaceIf` set appropriately on the abilities to replace.
 
-const retraceCondition = (state: Readonly<BLMState>) => (
-	state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0
-);
-
-const paraCondition = (state: Readonly<BLMState>) => state.hasResourceAvailable(ResourceType.Paradox);
-
-const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
-	replaceIf?: ConditionalSkillReplace<BLMState>[],
+const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
+	replaceIf?: ConditionalSkillReplace<PCTState>[],
 	startOnHotbar?: boolean,
-	autoUpgrade?: SkillAutoReplace,
-	autoDowngrade?: SkillAutoReplace,
 	aspect?: Aspect,
 	baseCastTime: number,
-	baseManaCost: number,
-	basePotency: number,
+	baseRecastTime?: number,
+	baseManaCost?: number,
+	basePotency: number | Array<[TraitName, number]>,
 	applicationDelay: number,
-	validateAttempt?: ValidateAttemptFn<BLMState>,
-	onConfirm?: EffectFn<BLMState>,
-	onApplication?: EffectFn<BLMState>,
-}): Spell<BLMState> => {
+	validateAttempt?: ValidateAttemptFn<PCTState>,
+	onConfirm?: EffectFn<PCTState>,
+	onApplication?: EffectFn<PCTState>,
+}): Spell<PCTState> => {
 	const aspect = params.aspect ?? Aspect.Other;
-	let onConfirm: EffectFn<BLMState> = combineEffects(
+	const baseRecastTime = params.baseRecastTime ?? 2.5;
+	let onConfirm: EffectFn<PCTState> = combineEffects(
 		(state, node) => {
 			// Consume swift/triple before anything else happens.
 			// The code here is dependent on short-circuiting logic to consume the correct resources.
-			// Non-swift/triple resources are consumed separately because they have secondary
-			// implications on resource generation. However, they still need to be checked here
-			// to avoid improperly spending swift/triple on an already-instant spell.
-			params.baseCastTime === 0 ||
-			(name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
-			(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter)) ||
-			// Consume Swift before Triple.
-			state.tryConsumeResource(ResourceType.Swiftcast) ||
-			state.tryConsumeResource(ResourceType.Triplecast)
-		},
-		(state, node) => {
-			// put this before the spell's onConfirm to ensure F3P and other buffs aren't prematurely consumed
-			// fire spells: attempt to consume umbral hearts
-			// flare is handled separately because it wipes all hearts
-			if (
-				state.getFireStacks() > 0 &&
-				aspect === Aspect.Fire &&
-				![SkillName.Despair, SkillName.FlareStar, SkillName.Flare].includes(name) &&
-				!(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter))
-			) {
-				state.tryConsumeResource(ResourceType.UmbralHeart)
-			}
-			// ice spells: gain mana on spell application if in UI
-			// umbral mana amount snapshots the state at the cast confirm window,
-			// not the new UI level after the spell is cast
-			if (aspect === Aspect.Ice) {
-				state.gainUmbralMana(params.applicationDelay);
-			}
+			// Don't consume non-swiftcast resources yet.
+			(name === SkillName.RainbowDrip && state.hasResourceAvailable(ResourceType.RainbowBright)) ||
+			(name === SkillName.StarPrism) ||
+			(name === SkillName.HolyInWhite) ||
+			(name === SkillName.CometInBlack) ||
+			(aspect === Aspect.Hammer) ||
+			state.hasResourceAvailable(ResourceType.Swiftcast)
 		},
 		params.onConfirm ?? NO_EFFECT,
 	);
-	const onApplication: EffectFn<BLMState> = params.onApplication ?? NO_EFFECT;
-	return makeSpell(ShellJob.BLM, name, unlockLevel, {
+	const isMotif = name.includes("Motif");
+	const onApplication: EffectFn<PCTState> = params.onApplication ?? NO_EFFECT;
+	return makeSpell(ShellJob.PCT, name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		aspect: aspect,
-		castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime, aspect),
-		manaCost: (state) => state.captureManaCost(name, aspect, params.baseManaCost),
-		// TODO apply AFUI modifiers?
+		castTime: (state) => state.captureSpellCastTime(params.baseCastTime, isMotif),
+		recastTime: (state) => state.captureSpellRecastTime(baseRecastTime, isMotif),
+		manaCost: params.baseManaCost ?? 0,
 		potency: (state) => params.basePotency,
 		validateAttempt: params.validateAttempt,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => (
-			// Foul after lvl 80
-			(name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
-			// F3P
-			(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter)) ||
-			// Swift
-			state.hasResourceAvailable(ResourceType.Swiftcast) ||
-			// Triple
-			state.hasResourceAvailable(ResourceType.Triplecast)
+			(name === SkillName.RainbowDrip && state.hasResourceAvailable(ResourceType.RainbowBright)) ||
+			(name === SkillName.StarPrism) ||
+			(name === SkillName.HolyInWhite) ||
+			(name === SkillName.CometInBlack) ||
+			(aspect === Aspect.Hammer) ||
+			state.hasResourceAvailable(ResourceType.Swiftcast)
 		),
 		onConfirm: onConfirm,
 		onApplication: onApplication,
@@ -218,529 +228,760 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 };
 
 
-const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
-	replaceIf?: ConditionalSkillReplace<BLMState>[],
+const makeAbility_PCT = (name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
+	basePotency?: number | Array<[TraitName, number]>,
+	replaceIf?: ConditionalSkillReplace<PCTState>[],
 	startOnHotbar?: boolean,
 	applicationDelay?: number,
 	cooldown: number,
 	maxCharges?: number,
-	validateAttempt?: ValidateAttemptFn<BLMState>,
-	onConfirm?: EffectFn<BLMState>,
-	onApplication?: EffectFn<BLMState>,
-}): Ability<BLMState> => makeAbility(ShellJob.BLM, name, unlockLevel, cdName, params);
+	validateAttempt?: ValidateAttemptFn<PCTState>,
+	onConfirm?: EffectFn<PCTState>,
+	onApplication?: EffectFn<PCTState>,
+}): Ability<PCTState> => makeAbility(ShellJob.PCT, name, unlockLevel, cdName, params);
 
 
-// ref logs
-// https://www.fflogs.com/reports/KVgxmW9fC26qhNGt#fight=16&type=summary&view=events&source=6
-// https://www.fflogs.com/reports/rK87bvMFN2R3Hqpy#fight=1&type=casts&source=7
-// https://www.fflogs.com/reports/cNpjtRXHhZ8Az2V3#fight=last&type=damage-done&view=events&ability=36987
-// https://www.fflogs.com/reports/7NMQkxLzcbptw3Xd#fight=15&type=damage-done&source=116&view=events&ability=36986
-makeGCD_BLM(SkillName.Blizzard, 1, {
-	aspect: Aspect.Ice,
-	baseCastTime: 2.5,
-	baseManaCost: 400,
-	basePotency: 180,
-	applicationDelay: 0.846,
-	onConfirm: (state, node) => {
-		// Refresh Enochian and gain a UI stack at the cast confirm window, not the damage application.
-		// MP is regained on damage application (TODO)
-		if (state.getFireStacks() === 0) { // no AF
-			state.switchToAForUI(ResourceType.UmbralIce, 1);
-			state.startOrRefreshEnochian();
-		} else { // in AF
-			state.resources.get(ResourceType.Enochian).removeTimer();
-			state.loseEnochian()
-		}
-	},
-	replaceIf: [{
-		newSkill: SkillName.Paradox,
-		condition: paraCondition,
-	}],
-});
-
-const gainFirestarterProc = (state: PlayerState) => {
-	let duration = (getResourceInfo(ShellJob.BLM, ResourceType.Firestarter) as ResourceInfo).maxTimeout;
-	if (state.resources.get(ResourceType.Firestarter).available(1)) {
-		state.resources.get(ResourceType.Firestarter).overrideTimer(state, duration);
-	} else {
-		state.resources.get(ResourceType.Firestarter).gain(1);
-		state.enqueueResourceDrop(ResourceType.Firestarter, duration);
-	}
+// Conditions for replacing RGB/CMY on hotbar
+const redCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.FireInRed,
+	condition: (state) => !state.hasResourceAvailable(ResourceType.Aetherhues),
+};
+const greenCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.AeroInGreen,
+	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+};
+const blueCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.WaterInBlue,
+	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
+};
+const cyanCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.BlizzardInCyan,
+	condition: (state) => !state.hasResourceAvailable(ResourceType.Aetherhues),
+};
+const yellowCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.StoneInYellow,
+	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+};
+const magentaCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.ThunderInMagenta,
+	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
 };
 
-const potentiallyGainFirestarter = (game: PlayerState) => {
-	let rand = game.rng();
-	if (game.config.procMode===ProcMode.Always || (game.config.procMode===ProcMode.RNG && rand < 0.4)) {
-		gainFirestarterProc(game);
-	}
+const red2Condition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.Fire2InRed,
+	condition: (state) => !state.hasResourceAvailable(ResourceType.Aetherhues),
+};
+const green2Condition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.Aero2InGreen,
+	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+};
+const blue2Condition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.Water2InBlue,
+	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
+};
+const cyan2Condition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.Blizzard2InCyan,
+	condition: (state) => !state.hasResourceAvailable(ResourceType.Aetherhues),
+};
+const yellow2Condition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.Stone2InYellow,
+	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+};
+const magenta2Condition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.Thunder2InMagenta,
+	condition: (state) => !state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
 };
 
-makeGCD_BLM(SkillName.Fire, 2, {
-	aspect: Aspect.Fire,
-	baseCastTime: 2.5,
-	baseManaCost: 800,
-	basePotency: 180,
-	applicationDelay: 1.871,
-	onConfirm: (state, node) => {
-		// Refresh Enochian and gain a UI stack at the cast confirm window, not the damage application.
-		potentiallyGainFirestarter(state);
-		if (state.getIceStacks() === 0) { // in fire or no enochian
-			state.switchToAForUI(ResourceType.AstralFire, 1);
-			state.startOrRefreshEnochian();
-		} else { // in UI
-			state.resources.get(ResourceType.Enochian).removeTimer();
-			state.loseEnochian()
-		}
-	},
-	replaceIf: [{
-		newSkill: SkillName.Paradox,
-		condition: paraCondition,
-	}],
-});
-
-makeAbility_BLM(SkillName.Transpose, 4, ResourceType.cd_Transpose, {
-	applicationDelay: 0, // instant
-	cooldown: 5,
-	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
-	onApplication: (state, node) => {
-		if (state.getFireStacks() !== 0 || state.getIceStacks() !== 0) {
-			state.switchToAForUI(state.getFireStacks() > 0 ? ResourceType.UmbralIce : ResourceType.AstralFire, 1);
-			state.startOrRefreshEnochian();
-		}
-	},
-});
-
-const applyThunderDoT = (game: PlayerState, node: ActionNode, skillName: SkillName) => {
-	let thunder = game.resources.get(ResourceType.ThunderDoT) as DoTBuff;
-	const thunderDuration = (skillName === SkillName.Thunder3 && 27) || 30;
-	if (thunder.available(1)) {
-		console.assert(thunder.node);
-		(thunder.node as ActionNode).removeUnresolvedPotencies();
-
-		thunder.overrideTimer(game, thunderDuration);
-	} else {
-		thunder.gain(1);
-		controller.reportDotStart(game.getDisplayTime());
-		game.resources.addResourceEvent({
-			rscType: ResourceType.ThunderDoT,
-			name: "drop thunder DoT",
-			delay: thunderDuration,
-			fnOnRsc: rsc=>{
-				  rsc.consume(1);
-				  controller.reportDotDrop(game.getDisplayTime());
-			 }
-		});
-	}
-	thunder.node = node;
-	thunder.tickCount = 0;
+// use the creature motif icon when a creature is already drawn
+const creatureMotifCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.CreatureMotif,
+	condition: (state) => state.hasResourceAvailable(ResourceType.CreatureCanvas),
+};
+const pomMotifCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.PomMotif,
+	condition: (state) => (
+		!state.hasResourceAvailable(ResourceType.CreatureCanvas)
+		&& state.resources.get(ResourceType.Depictions).availableAmount() === 0
+	),
+};
+const wingMotifCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.WingMotif,
+	condition: (state) => (
+		!state.hasResourceAvailable(ResourceType.CreatureCanvas)
+		&& state.resources.get(ResourceType.Depictions).availableAmount() === 1
+	),
+};
+const clawMotifCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.ClawMotif,
+	condition: (state) => (
+		!state.hasResourceAvailable(ResourceType.CreatureCanvas)
+		&& state.resources.get(ResourceType.Depictions).availableAmount() === 2
+	),
+};
+const mawMotifCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.MawMotif,
+	condition: (state) => (
+		!state.hasResourceAvailable(ResourceType.CreatureCanvas)
+		&& state.resources.get(ResourceType.Depictions).availableAmount() === 3
+	),
 };
 
-const addThunderPotencies = (game: PlayerState, node: ActionNode, skillName: SkillName.Thunder3 | SkillName.HighThunder) => {
-	let mods = getPotencyModifiersFromResourceState(game.resources, Aspect.Lightning);
-	let thunder = getSkill(ShellJob.BLM, skillName);
-
-	// initial potency
-	let pInitial = new Potency({
-		config: controller.record.config ?? controller.gameConfig,
-		sourceTime: game.getDisplayTime(),
-		sourceSkill: skillName,
-		aspect: Aspect.Lightning,
-		basePotency: thunder ? thunder.potencyFn(game) : 150,
-		snapshotTime: undefined,
-		description: ""
-	});
-	pInitial.modifiers = mods;
-	node.addPotency(pInitial);
-
-	// dots
-	const thunderTicks = (skillName === SkillName.Thunder3 && 9) || 10;
-	const thunderTickPotency = (skillName === SkillName.Thunder3 && 50) || 60;
-	for (let i = 0; i < thunderTicks; i++) {
-		let pDot = new Potency({
-			config: controller.record.config ?? controller.gameConfig,
-			sourceTime: game.getDisplayTime(),
-			sourceSkill: skillName,
-			aspect: Aspect.Lightning,
-			basePotency: game.config.adjustedDoTPotency(thunderTickPotency),
-			snapshotTime: undefined,
-			description: "DoT " + (i+1) + `/${thunderTicks}`
-		});
-		pDot.modifiers = mods;
-		node.addPotency(pDot);
-	}
+const livingMuseCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.LivingMuse,
+	condition: (state) => !state.hasResourceAvailable(ResourceType.CreatureCanvas),
+};
+const pomMuseCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.PomMuse,
+	condition: (state) => (
+		state.hasResourceAvailable(ResourceType.CreatureCanvas)
+		&& state.resources.get(ResourceType.Depictions).availableAmount() === 0
+	),
+};
+const wingedMuseCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.WingedMuse,
+	condition: (state) => (
+		state.hasResourceAvailable(ResourceType.CreatureCanvas)
+		&& state.resources.get(ResourceType.Depictions).availableAmount() === 1
+	),
+};
+const clawedMuseCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.ClawedMuse,
+	condition: (state) => (
+		state.hasResourceAvailable(ResourceType.CreatureCanvas)
+		&& state.resources.get(ResourceType.Depictions).availableAmount() === 2
+	),
+};
+const fangedMuseCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.FangedMuse,
+	condition: (state) => (
+		state.hasResourceAvailable(ResourceType.CreatureCanvas)
+		&& state.resources.get(ResourceType.Depictions).availableAmount() === 3
+	),
 };
 
-const thunderConfirm = (skillName: SkillName.Thunder3 | SkillName.HighThunder) => (
-	(game: PlayerState, node: ActionNode) => {
-		// potency
-		addThunderPotencies(game, node, skillName); // should call on capture
-		node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });
+const mogCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.MogOfTheAges,
+	condition: (state) => state.resources.get(ResourceType.Portrait) === 2,
+};
+const madeenCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.RetributionOfTheMadeen,
+	condition: (state) => state.resources.get(ResourceType.Portrait) === 2,
+};
 
-		// tincture
-		if (game.hasResourceAvailable(ResourceType.Tincture)) {
-			node.addBuff(BuffType.Tincture);
-		}
+const weaponCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.WeaponMotif,
+	condition: (state) => state.hasResourceAvailable(ResourceType.WeaponCanvas),
+};
+const hammerCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.HammerMotif,
+	condition: (state) => !state.hasResourceAvailable(ResourceType.WeaponCanvas),
+};
 
-		let thunderhead = game.resources.get(ResourceType.Thunderhead);
-		thunderhead.consume(1);
-		thunderhead.removeTimer();
-	}
-);
+const steelCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.SteelMuse,
+	condition: (state) => !state.hasResourceAvailable(ResourceType.WeaponCanvas),
+};
+const strikingCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.StrikingMuse,
+	condition: (state) => state.hasResourceAvailable(ResourceType.WeaponCanvas),
+};
 
-makeGCD_BLM(SkillName.Thunder3, 45, {
-	aspect: Aspect.Lightning,
-	baseCastTime: 0,
-	baseManaCost: 0,
-	basePotency: 120,
-	applicationDelay: 0.757, // Unknown damage application, copied from HT
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.Thunder3),
-	onApplication: (state, node) => {
-		// resolve the on-hit potency element (always the first of the node)
-		controller.resolvePotency(node.getPotencies()[0]);
-		applyThunderDoT(state, node, SkillName.Thunder3);
-	},
-	autoUpgrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder },
+const landscapeCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.LandscapeMotif,
+	condition: (state) => state.hasResourceAvailable(ResourceType.LandscapeCanvas),
+};
+const starrySkyCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.StarrySkyMotif,
+	condition: (state) => !state.hasResourceAvailable(ResourceType.LandscapeCanvas),
+};
+
+const scenicCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.ScenicMuse,
+	condition: (state) => !state.hasResourceAvailable(ResourceType.LandscapeCanvas),
+};
+const starryMuseCondition: ConditionalSkillReplace<PCTState> = {
+	newSkill: SkillName.StarryMuse,
+	condition: (state) => state.hasResourceAvailable(ResourceType.LandscapeCanvas),
+};
+
+makeGCD_PCT(SkillName.FireInRed, 1, {
+	replaceIf: [greenCondition, blueCondition],
+	baseCastTime: 1.5,
+	baseManaCost: 300,
+	basePotency: [
+		[TraitName.Never, 280],
+		[TraitName.PictoMancyMasteryII, 340],
+		[TraitName.PictoMancyMasteryIII, 380],
+		[TraitName.PictoMancyMasteryIV, 440],
+	],
+	applicationDelay: 0.84,
+	validateAttempt: (state) => redCondition.condition(state) && !state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
 });
 
-makeResourceAbility(ShellJob.BLM, SkillName.Manaward, 30, ResourceType.cd_Manaward, {
-	rscType: ResourceType.Manaward,
-	applicationDelay: 1.114, // delayed
-	cooldown: 120,
-});
-
-// Manafont: application delay 0.88s -> 0.2s since Dawntrail
-// infact most effects seem instant but MP gain is delayed.
-// see screen recording: https://drive.google.com/file/d/1zGhU9egAKJ3PJiPVjuRBBMkKdxxHLS9b/view?usp=drive_link
-makeAbility_BLM(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
-	applicationDelay: 0.2, // delayed
-	cooldown: 100, // set by trait in the constructor
-	validateAttempt: (state) => state.getFireStacks() > 0,
-	onConfirm: (state, node) => {
-		state = state as BLMState;
-		state.resources.get(ResourceType.AstralFire).gain(3);
-		state.resources.get(ResourceType.UmbralHeart).gain(3);
-
-		if (Traits.hasUnlocked(TraitName.AspectMasteryV, state.config.level))
-			state.resources.get(ResourceType.Paradox).gain(1);
-
-		state.gainThunderhead();
-		state.startOrRefreshEnochian();
-	},
-	onApplication: (state, node) => {
-		state.resources.get(ResourceType.Mana).gain(10000)
-	},
-});
-
-makeGCD_BLM(SkillName.Fire3, 35, {
-	aspect: Aspect.Fire,
-	baseCastTime: 3.5,
-	baseManaCost: 2000,
-	basePotency: 280,
-	applicationDelay: 1.292,
-	onConfirm: (state, node) => {
-		state.tryConsumeResource(ResourceType.Firestarter);
-		state.switchToAForUI(ResourceType.AstralFire, 3);
-		state.startOrRefreshEnochian();
-	},
-});
-
-makeGCD_BLM(SkillName.Blizzard3, 35, {
-	aspect: Aspect.Ice,
-	baseCastTime: 3.5,
-	baseManaCost: 800,
-	basePotency: 280,
+makeGCD_PCT(SkillName.AeroInGreen, 5, {
+	replaceIf: [redCondition, blueCondition],
+	startOnHotbar: false,
+	baseCastTime: 1.5,
+	baseManaCost: 300,
+	basePotency: [
+		[TraitName.Never, 320],
+		[TraitName.PictomancyMasteryII, 380],
+		[TraitName.PictomancyMasteryIII, 420],
+		[TraitName.PictomancyMasteryIV, 480],
+	],
 	applicationDelay: 0.89,
-	onConfirm: (state, node) => {
-		state.switchToAForUI(ResourceType.UmbralIce, 3);
-		state.startOrRefreshEnochian();
+	validateAttempt: (state) => greenCondition.condition(state) && !state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
+});
+
+makeGCD_PCT(SkillName.WaterInBlue, 15, {
+	replaceIf: [redCondition, greenCondition],
+	startOnHotbar: false,
+	baseCastTime: 1.5,
+	baseManaCost: 300,
+	basePotency: [
+		[TraitName.Never, 360],
+		[TraitName.PictomancyMasteryII, 420],
+		[TraitName.PictomancyMasteryIII, 460],
+		[TraitName.PictomancyMasteryIV, 520],
+	],
+	applicationDelay: 0.98,
+	validateAttempt: (state) => blueCondition.condition(state) && !state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
+});
+
+
+makeGCD_PCT(SkillName.Fire2InRed, 25, {
+	replaceIf: [green2Condition, blue2Condition],
+	baseCastTime: 1.5,
+	baseManaCost: 300,
+	basePotency: [
+		[TraitName.Never, 80],
+		[TraitName.PictomancyMasteryII, 100],
+		[TraitName.PictomancyMasteryIV, 120],
+	],
+	applicationDelay: 0.84,
+	validateAttempt: (state) => red2Condition.condition(state) && !state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
+});
+
+makeGCD_PCT(SkillName.Aero2InGreen, 35, {
+	replaceIf: [red2Condition, blue2Condition],
+	startOnHotbar: false,
+	baseCastTime: 1.5,
+	baseManaCost: 300,
+	basePotency: [
+		[TraitName.Never, 100],
+		[TraitName.PictomancyMasteryII, 120],
+		[TraitName.PictomancyMasteryIV, 140],
+	],
+	applicationDelay: 0.89,
+	validateAttempt: (state) => green2Condition.condition(state) && !state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
+});
+
+makeGCD_PCT(SkillName.Water2InBlue, 45, {
+	replaceIf: [red2Condition, green2Condition],
+	startOnHotbar: false,
+	baseCastTime: 1.5,
+	baseManaCost: 300,
+	basePotency: [
+		[TraitName.Never, 120],
+		[TraitName.PictomancyMasteryII, 140],
+		[TraitName.PictomancyMasteryIV, 160],
+	],
+	applicationDelay: 0.89,
+	validateAttempt: (state) => blue2Condition.condition(state) && !state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
+});
+
+makeGCD_PCT(SkillName.BlizzardInCyan, 60, {
+	replaceIf: [yellowCondition, magentaCondition],
+	baseCastTime: 2.3,
+	baseRecastTime: 3.3,
+	baseManaCost: 400,
+	basePotency: [
+		[TraitName.Never, 520],
+		[TraitName.PictomancyMasteryII, 630],
+		[TraitName.PictomancyMasteryIII, 700],
+		[TraitName.PictomancyMasteryIV, 800],
+	],
+	applicationDelay: 0.75,
+	validateAttempt: (state) => cyanCondition.condition(state) && state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
+});
+
+makeGCD_PCT(SkillName.StoneInYellow, 60, {
+	replaceIf: [cyanCondition, magentaCondition],
+	baseCastTime: 2.3,
+	baseRecastTime: 3.3,
+	baseManaCost: 400,
+	basePotency: [
+		[TraitName.Never, 560],
+		[TraitName.PictomancyMasteryII, 670],
+		[TraitName.PictomancyMasteryIII, 740],
+		[TraitName.PictomancyMasteryIV, 840],
+	],
+	applicationDelay: 0.80,
+	validateAttempt: (state) => yellowCondition.condition(state) && state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
+});
+
+makeGCD_PCT(SkillName.ThunderInMagenta, 60, {
+	replaceIf: [cyanCondition, yellowCondition],
+	baseCastTime: 2.3,
+	baseRecastTime: 3.3,
+	baseManaCost: 400,
+	basePotency: [
+		[TraitName.Never, 600],
+		[TraitName.PictomancyMasteryII, 710],
+		[TraitName.PictomancyMasteryIII, 780],
+		[TraitName.PictomancyMasteryIV, 880],
+	],
+	applicationDelay: 0.80,
+	validateAttempt: (state) => magentaCondition.condition(state) && state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
+});
+
+makeGCD_PCT(SkillName.Blizzard2InCyan, 60, {
+	replaceIf: [yellow2Condition, magenta2Condition],
+	baseCastTime: 2.3,
+	baseRecastTime: 3.3,
+	baseManaCost: 400,
+	basePotency: [
+		[TraitName.Never, 180],
+		[TraitName.PictomancyMasteryII, 220],
+		[TraitName.PictomancyMasteryIV, 240],
+	],
+	applicationDelay: 0.75,
+	validateAttempt: (state) => cyan2Condition.condition(state) && state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
+});
+
+makeGCD_PCT(SkillName.Stone2InYellow, 60, {
+	replaceIf: [cyan2Condition, magenta2Condition],
+	baseCastTime: 2.3,
+	baseRecastTime: 3.3,
+	baseManaCost: 400,
+	basePotency: [
+		[TraitName.Never, 200],
+		[TraitName.PictomancyMasteryII, 240],
+		[TraitName.PictomancyMasteryIV, 260],
+	],
+	applicationDelay: 0.80,
+	validateAttempt: (state) => yellow2Condition.condition(state) && state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
+});
+
+makeGCD_PCT(SkillName.Thunder2InMagenta, 60, {
+	replaceIf: [cyan2Condition, yellow2Condition],
+	baseCastTime: 2.3,
+	baseRecastTime: 3.3,
+	baseManaCost: 400,
+	basePotency: [
+		[TraitName.Never, 220],
+		[TraitName.PictomancyMasteryII, 260],
+		[TraitName.PictomancyMasteryIV, 280],
+	],
+	applicationDelay: 0.80,
+	validateAttempt: (state) => magenta2Condition.condition(state) && state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	onConfirm: (state) => state.doFiller(),
+});
+
+makeGCD_PCT(SkillName.HolyInWhite, 80, {
+	baseCastTime: 0,
+	baseManaCost: 300,
+	basePotency: [
+		[TraitName.Never, 420],
+		[TraitName.PictomancyMasteryIII, 460],
+		[TraitName.PictomancyMasteryIV, 520],
+	],
+	applicationDelay: 1.34,
+	validateAttempt: (state) => (
+		!state.hasResourceAvailable(ResourceType.MonochromeTones)
+		&& state.hasResourceAvailable(ResourceType.Paint)
+	),
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.Paint);
+		state.tryConsumeHyperphantasia();
 	},
 });
 
-makeGCD_BLM(SkillName.Freeze, 40, {
-	aspect: Aspect.Ice,
-	baseCastTime: 2.8,
-	baseManaCost: 1000,
-	basePotency: 120,
-	applicationDelay: 0.664,
-	validateAttempt: (state) => state.getIceStacks() > 0,
-	onConfirm: (state, node) => state.resources.get(ResourceType.UmbralHeart).gain(3),
+makeGCD_PCT(SkillName.CometInBlack, 90, {
+	baseCastTime: 0,
+	baseRecastTime: 3.3,
+	baseManaCost: 400,
+	basePotency: [
+		[TraitName.Never, 780],
+		[TraitName.PictomancyMasteryIV, 880],
+	],
+	applicationDelay: 1.87,
+	validateAttempt: (state) => (
+		state.hasResourceAvailable(ResourceType.MonochromeTones)
+		&& state.hasResourceAvailable(ResourceType.Paint)
+	),
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.Paint);
+		state.tryConsumeResource(ResourceType.MonochromeTones);
+		state.tryConsumeHyperphantasia();
+	},
 });
 
-makeGCD_BLM(SkillName.Flare, 50, {
-	aspect: Aspect.Fire,
+makeGCD_PCT(SkillName.RainbowDrip, 92, {
 	baseCastTime: 4,
-	baseManaCost: 0,  // mana is handled separately
-	basePotency: 240,
-	applicationDelay: 1.157,
-	validateAttempt: (state) => state.getFireStacks() > 0 && state.getMP() >= 800,
-	onConfirm: (state, node) => {
-		let uh = state.resources.get(ResourceType.UmbralHeart);
-		let mana = state.resources.get(ResourceType.Mana);
-		let manaCost = uh.available(1) ? mana.availableAmount() * 0.66 : mana.availableAmount();
-		// mana
-		state.resources.get(ResourceType.Mana).consume(manaCost);
-		uh.consume(uh.availableAmount());
-		// +3 AF; refresh enochian
-		state.resources.get(ResourceType.AstralFire).gain(3);
-
-		if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level))
-			state.resources.get(ResourceType.AstralSoul).gain(3);
-
-		state.startOrRefreshEnochian();
+	baseRecastTime: 6,
+	baseManaCost: 400,
+	basePotency: 1000,
+	applicationDelay: 1.24,
+	onConfirm: (state) => {
+		// gain a holy stack
+		state.resources.get(ResourceType.Paint).gain(1);
+		state.tryConsumeResource(ResourceType.RainbowBright);
 	},
 });
 
-makeResourceAbility(ShellJob.BLM, SkillName.LeyLines, 52, ResourceType.cd_LeyLines, {
-	rscType: ResourceType.LeyLines,
-	applicationDelay: 0.49, // delayed
-	cooldown: 120,
-	onApplication: (state, node) => {
-		state.resources.get(ResourceType.LeyLines).enabled = true
-	},
-	replaceIf: [{
-		newSkill: SkillName.Retrace,
-		condition: retraceCondition,
-	}],
-});
-
-makeGCD_BLM(SkillName.Blizzard4, 58, {
-	aspect: Aspect.Ice,
-	baseCastTime: 2.5,
-	baseManaCost: 800,
-	basePotency: 320,
-	applicationDelay: 1.156,
-	validateAttempt: (state) => state.getIceStacks() > 0,
-	onConfirm: (state, node) => state.resources.get(ResourceType.UmbralHeart).gain(3),
-});
-
-makeGCD_BLM(SkillName.Fire4, 60, {
-	aspect: Aspect.Fire,
-	baseCastTime: 2.8,
-	baseManaCost: 800,
-	basePotency: 320,
-	applicationDelay: 1.159,
-	validateAttempt: (state) => state.getFireStacks() > 0,
-	onConfirm: (state, node) => {
-		if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level))
-			state.resources.get(ResourceType.AstralSoul).gain(1);
-	},
-});
-
-makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, {
-	applicationDelay: 0, // ?
-	cooldown: 3,
-	validateAttempt: (state) => state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0,
-});
-
-makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialManipulation, {
-	applicationDelay: 0, // ?
-	cooldown: 10,
-});
-
-makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
-	applicationDelay: 0, // instant
-	cooldown: 60,
-	maxCharges: 2,
-	onApplication: (state, node) => {
-		const triple = state.resources.get(ResourceType.Triplecast)
-		if (triple.pendingChange) triple.removeTimer();
-		triple.gain(3);
-		state.enqueueResourceDrop(
-			ResourceType.Triplecast,
-			(getResourceInfo(ShellJob.BLM, ResourceType.Triplecast) as ResourceInfo).maxTimeout,
-		);
-	},
-});
-
-makeGCD_BLM(SkillName.Foul, 70, {
-	baseCastTime: 2.5,
-	baseManaCost: 0,
-	basePotency: 600,
-	applicationDelay: 1.158,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
-	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
-});
-
-makeGCD_BLM(SkillName.Despair, 72, {
-	aspect: Aspect.Fire,
-	baseCastTime: 3,
-	baseManaCost: 0, // mana handled separately, like flare
-	basePotency: 350,
-	applicationDelay: 0.556,
-	validateAttempt: (state) => state.getFireStacks() > 0 && state.getMP() >= 800,
-	onConfirm: (state, node) => {
-		const mana = state.resources.get(ResourceType.Mana);
-		const availableMana = mana.availableAmount();
-		console.assert(availableMana >= 800, `tried to confirm despair at ${availableMana} MP`);
-		mana.consume(availableMana);
-		// +3 AF; refresh enochian
-		state.resources.get(ResourceType.AstralFire).gain(3);
-		state.startOrRefreshEnochian();
-	},
-});
-
-// Umbral Soul: immediate snapshot & UH gain; delayed MP gain
-// see screen recording: https://drive.google.com/file/d/1nsO69O7lgc8V_R_To4X0TGalPsCus1cg/view?usp=drive_link
-makeGCD_BLM(SkillName.UmbralSoul, 35, {
-	aspect: Aspect.Ice,
+makeGCD_PCT(SkillName.StarPrism, 100, {
 	baseCastTime: 0,
 	baseManaCost: 0,
-	basePotency: 0,
-	applicationDelay: 0.633,
-	validateAttempt: (state) => state.getIceStacks() > 0,
-	onConfirm: (state, node) => {
-		state.resources.get(ResourceType.UmbralIce).gain(1);
-		state.resources.get(ResourceType.UmbralHeart).gain(1);
-		state.startOrRefreshEnochian();
-		// halt
-		let enochian = state.resources.get(ResourceType.Enochian);
-		enochian.removeTimer();
+	basePotency: 1400,
+	applicationDelay: 1.25,
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Starstruck),
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.Starstruck);
+		state.tryConsumeHyperphantasia();
 	},
 });
 
-makeGCD_BLM(SkillName.Xenoglossy, 80, {
-	baseCastTime: 0,
-	baseManaCost: 0,
-	basePotency: 880,
-	applicationDelay: 0.63,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
-	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
-});
-
-makeGCD_BLM(SkillName.Fire2, 18, {
-	aspect: Aspect.Fire,
-	baseCastTime: 3,
-	baseManaCost: 1500,
-	basePotency: 80,
-	applicationDelay: 1.154, // Unknown damage application, copied from HF2
-	autoUpgrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.HighFire2 },
-	onConfirm: (state, node) => {
-		state.switchToAForUI(ResourceType.AstralFire, 3);
-		state.startOrRefreshEnochian();
-	},
-});
-
-makeGCD_BLM(SkillName.Blizzard2, 12, {
-	aspect: Aspect.Ice,
-	baseCastTime: 3,
-	baseManaCost: 800,
-	basePotency: 80,
-	applicationDelay: 1.158, // Unknown damage application, copied from HB2
-	autoUpgrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.HighBlizzard2 },
-	onConfirm: (state, node) => {
-		state.switchToAForUI(ResourceType.UmbralIce, 3);
-		state.startOrRefreshEnochian();
-	},
-});
-
-makeGCD_BLM(SkillName.HighFire2, 82, {
-	aspect: Aspect.Fire,
-	baseCastTime: 3,
-	baseManaCost: 1500,
-	basePotency: 100,
-	applicationDelay: 1.154,
-	autoDowngrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.Fire2 },
-	onConfirm: (state, node) => {
-		state.switchToAForUI(ResourceType.AstralFire, 3);
-		state.startOrRefreshEnochian();
-	},
-});
-
-makeGCD_BLM(SkillName.HighBlizzard2, 82, {
-	aspect: Aspect.Ice,
-	baseCastTime: 3,
-	baseManaCost: 800,
-	basePotency: 100,
-	applicationDelay: 1.158,
-	autoDowngrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.Blizzard2 },
-	onConfirm: (state, node) => {
-		state.switchToAForUI(ResourceType.UmbralIce, 3);
-		state.startOrRefreshEnochian();
-	},
-});
-
-makeAbility_BLM(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, {
-	applicationDelay: 0, // ? (assumed to be instant)
-	cooldown: 120,
-	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
-	onApplication: (state, node) => {
-		let polyglot = state.resources.get(ResourceType.Polyglot);
-		if (polyglot.available(polyglot.maxValue)) {
-			controller.reportWarning(WarningType.PolyglotOvercap)
+makeAbility_PCT(SkillName.SubtractivePalette, 60, cd_Subtractive, {
+	cooldown: 1,
+	validateAttempt: (state) => (
+		// Check we are not already in subtractive
+		!state.hasResourceAvailable(ResourceType.SubtractivePalette) &&
+		// Check if free subtractive from starry muse or 50 gauge is available
+		(
+			state.hasResourceAvailable(ResourceType.SubtractiveSpectrum) ||
+			state.hasResourceAvailable(ResourceType.PaletteGauge, 50)
+		)
+	),
+	onConfirm: (state) => {
+		if (!state.tryConsumeResource(ResourceType.SubtractiveSpectrum)) {
+			state.resources.get(ResourceType.PaletteGauge).consume(50);
 		}
-		polyglot.gain(1);
-	},
-});
-
-makeGCD_BLM(SkillName.Paradox, 90, {
-	// Paradox made instant via Dawntrail
-	baseCastTime: 0,
-	baseManaCost: 1600,
-	basePotency: 520,
-	applicationDelay: 0.624,
-	validateAttempt: paraCondition,
-	onConfirm: (state, node) => {
-		state.resources.get(ResourceType.Paradox).consume(1);
-		if (state.hasEnochian()) {
-			state.startOrRefreshEnochian();
+		// gain comet (caps at 1)
+		if (state.hasResourceAvailable(ResourceType.MonochromeTones)) {
+			controller.reportWarning(WarningType.CometOverwrite);
 		}
-		if (state.getIceStacks() > 0) {
-			state.resources.get(ResourceType.UmbralIce).gain(1);
-		} else if (state.getFireStacks() > 0) {
-			state.resources.get(ResourceType.AstralFire).gain(1);
-			gainFirestarterProc(state);
-		} else {
-			console.error("cannot cast Paradox outside of AF/UI");
+		if (Traits.hasUnlocked(TraitName.EnhancedPalette, state.config.level)) {
+			state.resources.get(ResourceType.MonochromeTones).gain(1);
 		}
+		state.resources.get(ResourceType.SubtractivePalette).gain(3);
 	},
-	replaceIf: [{
-		newSkill: SkillName.Blizzard,
-		condition: (state) => !state.hasResourceAvailable(ResourceType.Paradox) && state.getIceStacks() > 0,
-	}, {
-		newSkill: SkillName.Fire,
-		condition: (state) => !state.hasResourceAvailable(ResourceType.Paradox) && state.getFireStacks() > 0,
-	}],
-	startOnHotbar: false,
 });
 
-makeGCD_BLM(SkillName.HighThunder, 92, {
-	aspect: Aspect.Lightning,
-	baseCastTime: 0,
-	baseManaCost: 0,
-	basePotency: 150,
-	applicationDelay: 0.757,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.HighThunder),
-	onApplication: (state, node) => {
-		// resolve the on-hit potency element (always the first of the node)
-		controller.resolvePotency(node.getPotencies()[0]);
-		applyThunderDoT(state, node, SkillName.HighThunder);
-	},
-	autoDowngrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder },
-});
-
-makeGCD_BLM(SkillName.FlareStar, 100, {
-	aspect: Aspect.Fire,
+const creatureConditions = [creatureMotifCondition, pomMotifCondition, wingMotifCondition, clawMotifCondition, mawMotifCondition];
+[
+	// creature motif can never itself be cast
+	[SkillName.CreatureMotif, 30, (state) => false],
+	[SkillName.PomMotif, 30, pomMotifCondition.condition],
+	[SkillName.WingMotif, 30, wingMotifCondition.condition],
+	[SkillName.ClawMotif, 96, clawMotifCondition.condition],
+	[SkillName.MawMotif, 96, mawMotifCondition.condition],
+].forEach(([name, level, validateAttempt], i) => makeGCD_PCT(name, level, {
+	replaceIf: creatureConditions.slice(0, i).concat(creatureConditions.slice(i + 1)),
+	startOnHotbar: i === 0,
 	baseCastTime: 3,
+	baseRecastTime: 4,
 	baseManaCost: 0,
-	basePotency: 400,
-	applicationDelay: 0.622,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.AstralSoul, 6),
-	onConfirm: (state, node) => state.resources.get(ResourceType.AstralSoul).consume(6),
-});
+	applicationDelay: 0,
+	validateAttempt: validateAttempt,
+	onConfirm: (state) => state.resources.get(ResourceType.CreatureCanvas).gain(1),
+}));
 
-makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
-	applicationDelay: 0, // ? (assumed to be instant)
+const livingConditions = [livingMuseCondition, pomMuseCondition, wingedMuseCondition, clawedMuseCondition, fangedMuseCondition];
+[
+	// living muse can never itself be cast
+	[SkillName.LivingMuse, 30, 0, 0, (state) => false],
+	[SkillName.PomMuse, 30, 
+		[[TraitName.Never, 1000], [TraitName.PictomancyMasteryIII, 1100]],
+		0.62, pomMuseCondition.condition],
+	[SkillName.WingedMuse, 30,
+		[[TraitName.Never, 1000], [TraitName.PictomancyMasteryIII, 1100]],
+		0.98, wingedMuseCondition.condition],
+	[SkillName.ClawedMuse, 96, 1100, 0.98, clawedMuseCondition.condition],
+	[SkillName.FangedMuse, 96, 1100, 1.16, fangedMuseCondition.condition],
+].forEach(([name, level, potencies, applicationDelay, validateAttempt], i) => makeAbility(name, level, ResourceType.cd_LivingMuse, {
+	replaceIf: livingConditions.slice(0, i).concat(livingConditions.slice(i + 1)),
+	startOnHotbar: i === 0,
+	basePotency: potencies,
+	applicationDelay: applicationDelay,
 	cooldown: 40,
-	validateAttempt: retraceCondition,
-	onConfirm: (state, node) => {
-		state.resources.get(ResourceType.LeyLines).enabled = true;
+	validateAttempt: validateAttempt,
+	onConfirm: (state) => {
+		let depictions = state.resources.get(ResourceType.Depictions);
+		let portraits = state.resources.get(ResourceType.Portrait);
+		state.tryConsumeResource(ResourceType.CreatureCanvas);
+		depictions.gain(1);
+		// wing: make moogle portrait available (overwrites madeen)
+		if (name === SkillName.WingedMuse) {
+			portraits.overrideCurrentValue(1);
+			// below lvl 94, there's no madeen, so wrap depictions back to 0
+			if (!Traits.hasUnlocked(TraitName.EnhancedPictomancyIV, state.config.level)) {
+				depictions.overrideCurrentValue(0);
+			}
+		}
+		// maw: make madeen portrait available (overwrites moogle)
+		// reset depictions to empty
+		if (name === SkillName.FangedMuse) {
+			portraits.overrideCurrentValue(2);
+			depictions.overrideCurrentValue(0);
+		}
 	},
+	maxCharges: 3, // lower this value in the state constructor when level synced
+}));
+
+makeAbility_PCT(SkillName.MogOfTheAges, 30, ResourceType.cd_MogOfTheAges, {
+	replaceIf: [madeenCondition],
+	basePotency:  [
+		[TraitName.Never, 1100],
+		[TraitName.PictomancyMasteryIII, 1300],
+	],
+	applicationDelay: 1.15,
+	validateAttempt: (state) => state.resources.get(ResourceType.Portrait).availableAmount() === 1,
+	onConfirm: (state) => state.tryConsumeResource(ResourceType.Portrait),
+});
+
+makeGCD_PCT(SkillName.WeaponMotif, 50, {
+	replaceIf: [hammerCondition],
+	baseCastTime: 3,
+	baseRecastTime: 4,
+	baseManaCost: 0,
+	applicationDelay: 0,
+	validateAttempt: (state) => false, // hammer motif can never itself be cast
+});
+
+makeGCD_PCT(SkillName.HammerMotif, 50, {
+	replaceIf: [weaponCondition],
 	startOnHotbar: false,
+	baseCastTime: 3,
+	baseRecastTime: 4,
+	baseManaCost: 0,
+	applicationDelay: 0,
+	validateAttempt: (state) => (
+		hammerCondition.condition(state),
+		&& !state.hasResourceAvailable(ResourceType.HammerTime)
+	),
+	onConfirm: (state) => state.resources.get(ResourceType.WeaponCanvas).gain(1),
+});
+
+makeAbility_PCT(SkillName.SteelMuse, 50, cd_SteelMuse, {
+	replaceIf: [strikingCondition],
+	cooldown: 60,
+	maxCharges: 2, // lower this value in the state constructor when level synced
+	validateAttempt: (state) => false, // steel muse can never itself be cast
+});
+
+makeAbility_PCT(SkillName.StrikingMuse, 50, cd_SteelMuse, {
+	replaceIf: [strikingCondition],
+	cooldown: 60,
+	maxCharges: 2, // lower this value in the state constructor when level synced
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.WeaponCanvas) && state.isInCombat(),
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.WeaponCanvas);
+		state.resources.get(ResourceType.HammerTime).gain(3);
+		state.enqueueResourceDrop(ResourceType.HammerTime);
+	},
+});
+
+const hammerConditions: ConditionalSkillReplace<PCTState>[] = [
+	{
+		newSkill: SkillName.HammerStamp,
+		condition: (state) => (
+			!Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level)
+			// TODO properly mimic combo behavior
+			|| state.getHammerStacks() === 1
+		),
+	},
+	{
+		newSkill: SkillName.HammerBrush,
+		condition: (state) => (
+			Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level)
+			// TODO properly mimic combo behavior
+			&& state.getHammerStacks() === 2
+		),
+	},
+	{
+		newSkill: SkillName.PolishingHammer,
+		condition: (state) => (
+			Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level)
+			// TODO properly mimic combo behavior
+			&& state.getHammerStacks() === 3
+		),
+	}
+];
+[
+	[SkillName.HammerStamp, 50, [
+			[TraitName.Never, 380],
+			[TraitName.PictomancyMasteryII, 480],
+			[TraitName.PictomancyMasteryIII, 520],
+			[TraitName.PictomancyMasteryIV, 560],
+		], 1.38],
+	[SkillName.HammerBrush, 86, [
+			[TraitName.Never, 580],
+			[TraitName.PictomancyMasteryIV, 620],
+		], 1.25],
+	[SkillName.PolishingHammer, 86, [
+			[TraitName.Never, 640],
+			[TraitName.PictomancyMasteryIV, 680],
+		], 2.10],
+].forEach(([name, level, potencies, applicationDelay], i) => makeGCD_PCT(name, level, {
+	replaceIf: hammerConditions.slice(0, i).concat(hammerReplaces.slice(i + 1)),
+	startOnHotbar: i === 0,
+	basePotency: potencies,
+	applicationDelay: applicationDelay,
+	cooldown: 40,
+	validateAttempt: hammerConditions[i].condition,
+	onConfirm: (state) => state.tryConsumeResource(ResourceType.HammerTime),
+}));
+
+makeGCD_PCT(SkillName.LandscapeMotif, 70, {
+	replaceIf: [starrySkyCondition],
+	baseCastTime: 3,
+	baseRecastTime: 4,
+	baseManaCost: 0,
+	applicationDelay: 0,
+	validateAttempt: (state) => false, // landscape motif can never itself be cast
+});
+
+makeGCD_PCT(SkillName.StarrySkyMotif, 70, {
+	replaceIf: [landscapeCondition],
+	startOnHotbar: false,
+	baseCastTime: 3,
+	baseRecastTime: 4,
+	baseManaCost: 0,
+	applicationDelay: 0,
+	validateAttempt: (state) => (
+		starrySkyCondition.condition(state)
+		&& !state.hasResourceAvailable(ResourceType.StarryMuse)
+	),
+	onConfirm: (state) => state.resources.get(ResourceType.LandscapeCanvas).gain(1),
+});
+
+makeAbility_PCT(SkillName.ScenicMuse, 70, cd_ScenicMuse, {
+	replaceIf: [starryMuseCondition],
+	applicationDelay: 0,
+	cooldown: 120,
+	validateAttempt: (state) => false, // scenic muse can never itself be cast
+});
+
+makeAbility_PCT(SkillName.ScenicMuse, 70, cd_ScenicMuse, {
+	replaceIf: [scenicCondition],
+	applicationDelay: 0, // raid buff is instant, but inspiration is delayed by 0.62s
+	cooldown: 120,
+	validateAttempt: (state) => starryMuseCondition.condition(state) && state.isInCombat(),
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.LandscapeCanvas);
+		// It is not possible to have an existing starry active
+		// unless someone added starry muse via the party buff menu.
+		// Since this fork is hacky we just ignore this case for now.
+		state.resources.get(ResourceType.StarryMuse).gain(1);
+		// Technically, hyperphantasia is gained on a delay, but whatever
+		if (Traits.hasUnlocked(TraitName.EnhancedPictomancy, state.config.level)) {
+			state.resources.get(ResourceType.Hyperphantasia).gain(5);
+			state.resources.get(ResourceType.Inspiration).gain(1);
+
+			const hpDuration = (getResourceInfo(ShellJob.PCT, ResourceType.Hyperphantasia) as ResourceInfo).maxTimeout;
+			state.enqueueResourceDrop(ResourceType.Hyperphantasia, hpDuration);
+			state.enqueueResourceDrop(ResourceType.Inspiration, hpDuration);
+		}
+		if (Traits.hasUnlocked(TraitName.EnhancedPictomancyV, state.config.level)) {
+			state.resources.get(ResourceType.Starstruck).gain(1);
+			state.enqueueResourceDrop(ResourceType.Starstruck);
+		}
+		state.resources.get(ResourceType.SubtractiveSpectrum).gain(1);
+		state.enqueueResourceDrop(ResourceType.StarryMuse);
+		state.enqueueResourceDrop(ResourceType.SubtractiveSpectrum);
+	},
+});
+
+makeResourceAbility(ShellJob.PCT, SkillName.TemperaCoat, 10, ResourceType.cd_TemperaCoat, {
+	rscType: ResourceType.TemperaCoat,
+	replaceIf: [{
+		newSkill: SkillName.PopTemperaCoat,
+		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
+	}],
+	applicationDelay: 0, // instant
+	cooldown: 120,
+});
+
+makeAbility_PCT(SkillName.TemperaGrassa, 88, ResourceType.cd_TemperaGrassa, {
+	replaceIf: [{
+		newSkill: SkillName.PopTemperaGrassa,
+		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
+	}],
+	applicationDelay: 0, // instant
+	cooldown: 120,
+	validateAttempt: (state) => state.hasResourceAvailable(SkillName.TemperaCoat),
+	onConfirm: (state) => {
+		// goodbye, tempera coat
+		state.tryConsumeResource(ResourceType.TemperaCoat);
+		// hello, tempera grassa
+		state.resources.get(ResourceType.TemperaGrassa).gain(1);
+		state.enqueueResourceDrop(ResourceType.TemperaGrassa);
+	},
+});
+
+// fake skill to represent breaking the coat shield
+makeAbility_PCT(SkillName.PopTemperaCoat, 10, ResourceType.cd_TemperaPop, {
+	replaceIf: [{
+		newSkill: SkillName.PopTemperaGrassa,
+		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
+	}],
+	startOnHotbar: false,
+	applicationDelay: 0,
+	cooldown: 1,
+	validateAttempt: (state) => state.hasResourceAvailable(SkillName.TemperaCoat),
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.TemperaCoat);
+		// Reduce the cooldown of tempera coat by 60s
+		let coatElapsed = state.cooldowns.get(ResourceType.cd_TemperaCoat).timeTillNextStackAvailable();
+		console.assert(
+			coatElapsed > 0,
+			"attempted to pop Tempera Coat when no timer for Tempera Coat CD was active"
+		);
+		state.cooldowns.get(ResourceType.cd_TemperaCoat).overrideCurrentValue(180 - coatElapsed);
+	},
+});
+
+// fake skill to represent breaking the grassa shield
+makeAbility_PCT(SkillName.PopTemperaGrassa, 10, ResourceType.cd_TemperaPop, {
+	replaceIf: [{
+		newSkill: SkillName.PopTemperaCoat,
+		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
+	}],
+	startOnHotbar: false,
+	applicationDelay: 0,
+	cooldown: 1,
+	validateAttempt: (state) => state.hasResourceAvailable(SkillName.TemperaGrassa),
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.TemperaGrassa);
+		// Reduce the cooldown of tempera coat by 30s
+		let coatElapsed = state.cooldowns.get(ResourceType.cd_TemperaCoat).timeTillNextStackAvailable();
+		console.assert(
+			coatElapsed > 0,
+			"attempted to pop Tempera Grassa when no timer for Tempera Coat CD was active"
+		);
+		state.cooldowns.get(ResourceType.cd_TemperaCoat).overrideCurrentValue(150 - coatElapsed);
+	},
+});
+
+makeResourceAbility(ShellJob.PCT, 20, ResourceType.cd_Smudge, {
+	rscType: ResourceType.Smudge,
+	applicationDelay: 0, // instant (buff application)
+	cooldown: 20,
 });
 
 // TODO this function is kept here to avoid circular imports, but should probably be moved
 export function newGameState(config: GameConfig) {
-	return new BLMState(config);
+	return new PCTState(config);
 }

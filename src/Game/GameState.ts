@@ -235,6 +235,7 @@ export abstract class GameState {
 		return mod.manaRegen;
 	}
 
+	// BLM uses this for LL GCD scaling, but PCT does not
 	gcdRecastTimeScale() {
 		let ll = this.resources.get(ResourceType.LeyLines);
 		if (ll.available(1)) {
@@ -510,11 +511,19 @@ export abstract class GameState {
 		return this.resources.get(rscType).available(atLeast ?? 1);
 	}
 
+	// Add a resource drop event after `delay` seconds.
+	// If `rscType` has a corresponding cooldown duration for the job, then that delay will be
+	// used by default.
 	enqueueResourceDrop(
 		rscType: ResourceType,
-		delay: number,
+		delay?: number,
 		toConsume?: number,
 	) {
+		if (delay === undefined) {
+			const rscInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
+			console.assert(rscInfo?.maxTimeout, `could not find timeout declaration for resource ${rscType}`)
+			delay = rscInfo.maxTimeout,
+		}
 		const name = (toConsume === undefined ? "drop all " : `drop ${toConsume} `) + rscType;
 		this.resources.addResourceEvent({
 			rscType: rscType,
@@ -675,6 +684,10 @@ export abstract class GameState {
 			return true;
 		}
 		return false;
+	}
+
+	isInCombat() {
+		return this.hasResourceAvailable(ResourceType.InCombat);
 	}
 
 	toString() {
