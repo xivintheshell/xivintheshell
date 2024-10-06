@@ -220,6 +220,10 @@ export default class Main extends React.Component {
 				b, h1, h2, h3, h4 {
 					color: ${colors.emphasis};
 				}
+				p {
+					margin-block-start: 10px;
+					margin-block-end: 10px;
+				}
 				::selection {
 					background: rgba(147, 112, 219, 0.4);
 				}

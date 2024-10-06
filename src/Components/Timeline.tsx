@@ -1,6 +1,6 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
-import {Columns, Help, Slider, Tabs, TABS_TITLE_HEIGHT} from "./Common";
+import {Help, Slider, Tabs, TABS_TITLE_HEIGHT} from "./Common";
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
 import {
@@ -12,7 +12,6 @@ import {
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 
-import {ImageExport} from "./ImageExport";
 import {LoadSave} from "./LoadSave";
 
 export let updateTimelineView = () => {
@@ -152,8 +151,8 @@ class TimelineMain extends React.Component {
 }
 
 export const TIMELINE_SETTINGS_HEIGHT = 320;
+export const TIMELINE_COLUMNS_HEIGHT = TIMELINE_SETTINGS_HEIGHT - 40;
 function TimelineTabs() {
-
 	return <div style={{
 		position: "relative",
 		margin: 6
@@ -179,12 +178,11 @@ function TimelineTabs() {
 				titleNode: localize({en: "Import/Export", zh: "导入/导出"}),
 				contentNode: <div>
 					<LoadSave/>
-					<ImageExport/>
 				</div>
 			},
 			{
 				titleNode: localize({en: "Display settings", zh: "显示设置"}),
-				contentNode: <Columns contentHeight={TIMELINE_SETTINGS_HEIGHT - 40} content={[]}/>
+				contentNode: "todo"
 			},
 		]} collapsible={true} scrollable={false} height={TIMELINE_SETTINGS_HEIGHT} defaultSelectedIndex={undefined}/>
 		<Slider

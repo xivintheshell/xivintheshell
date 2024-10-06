@@ -1,8 +1,10 @@
 import React from 'react'
-import {FileFormat, Help, loadFromFile, SaveToFile} from "./Common";
+import {Columns, FileFormat, loadFromFile, SaveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType} from "../Controller/Common";
 import {localize} from "./Localization";
+import {ImageExport} from "./ImageExport";
+import {TIMELINE_COLUMNS_HEIGHT} from "./Timeline";
 
 type Fixme = any;
 
@@ -13,7 +15,7 @@ export class LoadSave extends React.Component {
 	constructor(props: {} | Readonly<{}>) {
 		super(props);
 
-		this.onLoad = (()=>{
+		this.onLoad = (() => {
 			let cur = this.fileSelectorRef.current;
 			if (cur && cur.files!==null && cur.files.length > 0) {
 				let fileToLoad = cur.files[0];
@@ -33,44 +35,79 @@ export class LoadSave extends React.Component {
 
 		this.fileSelectorRef = React.createRef();
 	}
+
 	render() {
-		return <div className={"loadSave"}>
-			<div style={{marginBottom: 10}}><b>{localize({
-				en: "Export fight to file",
-				zh: "导出战斗到文件"
-			})}</b></div>
-			<div>
-				<SaveToFile fileFormat={FileFormat.Json} getContentFn={()=>{
-					return controller.record.serialized();
-				}} filename={"fight"} displayName={localize({
-					en: "txt format",
-					zh: "txt格式"
-				})}/>
-				<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
-					return controller.getActionsLogCsv();
-				}} filename={"fight"} displayName={localize({
-					en: "csv format",
-					zh: "csv格式"
-				})}/><Help topic={"fight-txt-csv"} content={localize({
-					en: "only txt can be imported later; csv is for using with external tools such as excel.",
-					zh: "只有txt可以被导入，csv是导出给excel等外部工具用的"
-				})}/>
-			</div>
-			<div className={"paragraph"}><b>{localize({
-				en: "Import fight from file",
-				zh: "从文件导入战斗"
-			})}</b></div>
-			<div style={{marginBottom: 10}}>
-				<span>{localize({en: "Select file: ", zh: "选择文件："})}</span>
-				<input
-					style={{
-						width: "110px",
-						color: "transparent"
-					}}
-					type="file"
-					ref={this.fileSelectorRef}
-					onChange={this.onLoad}/>
-			</div>
-		</div>
+		let textExportTitle = localize({
+			en: "Export fight to file",
+			zh: "导出战斗到文件"
+		});
+		let textExportContent = <div>
+			<p>{localize({
+				en: "for sharing and importing:",
+				zh: "用于分享和导入："
+			})}</p>
+			<SaveToFile fileFormat={FileFormat.Json} getContentFn={()=>{
+				return controller.record.serialized();
+			}} filename={"fight"} displayName={localize({
+				en: "txt format",
+				zh: "txt格式"
+			})}/>
+			<p>{localize({
+				en: <span>for external tools such as excel and <a href={"https://github.com/Tischel/BLMInTheShell"}>Tischel's plugin</a>:</span>,
+				zh: <span>用于excel，<a href={"https://github.com/Tischel/BLMInTheShell"}>Tischel的插件</a>等外部工具：</span>
+			})}</p>
+			<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
+				return controller.getActionsLogCsv();
+			}} filename={"fight"} displayName={localize({
+				en: "csv format",
+				zh: "csv格式"
+			})}/>
+		</div>;
+		let textImportTitle = localize({
+			en: "Import fight from file",
+			zh: "从文件导入战斗"
+		});
+		let textImportContent = <div style={{marginBottom: 10}}>
+			<span>{localize({en: "Select file: ", zh: "选择文件："})}</span>
+			<input
+				style={{
+					width: "110px",
+					color: "transparent"
+				}}
+				type="file"
+				ref={this.fileSelectorRef}
+				onChange={this.onLoad}/>
+		</div>;
+		let imageExportTitle = <>{localize({
+			en: "Image Export",
+			zh: "导出为图像"
+		})}</>
+
+		return <Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>{[
+			{
+				title: textExportTitle,
+				content: textExportContent,
+				defaultSize: 33.34,
+				minSize: 20
+			},
+			{
+				title: textImportTitle,
+				content: textImportContent,
+				defaultSize: 33.33,
+				minSize: 20
+			},
+			{
+				title: imageExportTitle,
+				content: <>
+					{localize({
+						en: "export the selected part of the timeline as a png, or the whole timeline if nothing is selected",
+						zh: "将时间轴内选择部分导出为png，如果无选择将整个时间轴导出"
+					})}
+					<ImageExport/>
+				</>,
+				defaultSize: 33.33,
+				minSize: 20
+			}
+		]}</Columns>
 	}
 }

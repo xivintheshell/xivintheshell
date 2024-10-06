@@ -176,22 +176,9 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 			{this.checkbox("includeTime", {en: "include time and markers", zh: "显示时间刻度和时间轴标记"})}
 			{this.checkbox("includeBuffIndicators", {en: "include buff indicators", zh: "显示buff快照标记"})}
 		</>
-		return <div className={"imageExport"}>
-			<div style={{marginBottom: 10}}>
-				<b>
-				{localize({
-					en: "Image Export",
-					zh: "导出为图像"
-				})}
-				</b>
-				<span> </span>
-				<Help topic={"fight-png"} content={localize({
-					en: "export the selected part of the timeline as a png, or the whole timeline if nothing is selected",
-					zh: "将时间轴内选择部分导出为png，如果无选择将整个时间轴导出"
-				})}/>
-			</div>
+		return <div>
 			{settingsSection}
-			<SaveToFile
+			<p><SaveToFile
 				filename={"fight"}
 				fileFormat={FileFormat.Png}
 				getContentFn={this.createMockCanvas.bind(this)}
@@ -199,7 +186,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 					en: "export selection as png",
 					zh: "将选择部分导出为png"
 				})}
-			/>
+			/></p>
 		</div>
 	}
 }

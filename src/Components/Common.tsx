@@ -1,4 +1,4 @@
-import React, {ChangeEvent, CSSProperties, ReactNode, useEffect, useRef, useState} from "react";
+import React, {ChangeEvent, CSSProperties, ReactNode, useEffect, useState} from "react";
 import jQuery from 'jquery';
 import {localize} from "./Localization";
 import {Tooltip as ReactTooltip} from "react-tooltip";
@@ -359,19 +359,35 @@ export function Tabs(props: {
 
 export function Columns(props: {
 	contentHeight: number,
-	content: ContentNode[]
+	children: {
+		content: ContentNode,
+		title?: ContentNode,
+		defaultSize?: number,
+		minSize?: number
+	}[]
 }) {
 	let colors = getCurrentThemeColors();
 	let children: React.ReactNode[] = [];
-	for (let i = 0; i < props.content.length; i++) {
-		children.push(<Panel key={`column-${i}`} className={"invisibleScrollbar"} style={{
-			height: props.contentHeight,
-			overflowY: "scroll",
-			paddingRight: 5
-		}}>{props.content[i]}</Panel>);
-		if (i < props.content.length - 1) {
+	for (let i = 0; i < props.children.length; i++) {
+		children.push(<Panel
+			key={`column-${i}`}
+			className={"invisibleScrollbar"}
+			defaultSize={props.children[i].defaultSize}
+			minSize={props.children[i].minSize}
+			style={{
+				height: props.contentHeight,
+				overflowY: "scroll",
+				paddingRight: 5
+			}
+		}>
+			{props.children[i].title ? <div style={{marginBottom: 10}}>
+				<b>{props.children[i].title}</b>
+			</div> : undefined}
+			{props.children[i].content}
+		</Panel>);
+		if (i < props.children.length - 1) {
 			children.push(<PanelResizeHandle key={`divider-${i}`} style={{
-				borderLeft: "1px solid " + colors.bgHighContrast,
+				borderLeft: "1px solid " + colors.bgMediumContrast,
 				margin: "0 15px 0 10px"
 			}}/>);
 		}
