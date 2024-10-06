@@ -76,7 +76,7 @@ function ConfigTabs(props: {
 				titleNode: "Control",
 				contentNode: <TimeControl/>
 			}
-		]} collapsible={false} height={props.height} defaultSelectedIndex={1}/>
+		]} collapsible={false} scrollable={true} height={props.height} defaultSelectedIndex={1}/>
 	</div>
 }
 
@@ -196,13 +196,22 @@ export default class Main extends React.Component {
 			top: 0, bottom: 0, left: 0, right: 0
 		}}>
 			<style>{`
-				.staticScrollbar::-webkit-scrollbar {
+				.visibleScrollbar::-webkit-scrollbar {
 					appearance: none;
 					background-color: ${colors.bgLowContrast};
 					height: 8px;
 					width: 5px;
 				}
-				.staticScrollbar::-webkit-scrollbar-thumb {
+				.visibleScrollbar::-webkit-scrollbar-thumb {
+					background-color: ${colors.bgHighContrast};
+				}
+				.invisibleScrollbar::-webkit-scrollbar {
+					appearance: none;
+					background-color: clear;
+					height: 8px;
+					width: 5px;
+				}
+				.invisibleScrollbar::-webkit-scrollbar-thumb {
 					background-color: ${colors.bgHighContrast};
 				}
 				a {

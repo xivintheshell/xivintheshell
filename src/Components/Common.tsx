@@ -1,4 +1,4 @@
-import React, {ChangeEvent, CSSProperties, ReactNode, useEffect, useState} from "react";
+import React, {ChangeEvent, CSSProperties, ReactNode, useEffect, useRef, useState} from "react";
 import jQuery from 'jquery';
 import {localize} from "./Localization";
 import {Tooltip as ReactTooltip} from "react-tooltip";
@@ -7,6 +7,7 @@ import {getCurrentThemeColors} from "./ColorTheme";
 import {getCachedValue, setCachedValue} from "../Controller/Common";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
 import {LiaWindowMinimize} from "react-icons/lia";
+import {Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
 
 export type ContentNode = JSX.Element | string;
 
@@ -133,7 +134,7 @@ export function loadFromFile(fileObject: Blob, callback=(content: object)=>{cons
 	fileReader.readAsText(fileObject, "UTF-8");
 }
 
-export const StaticFn =  {
+export const StaticFn = {
 	positionFromTimeAndScale: function(time: number, scale: number): number {
 		return time * scale * 100;
 	},
@@ -245,6 +246,7 @@ export function Tabs(props: {
 	uniqueName: string,
 	content: TabItem[],
 	collapsible: boolean,
+	scrollable: boolean,
 	height: number,
 	defaultSelectedIndex: number | undefined,
 	style?: CSSProperties
@@ -345,14 +347,36 @@ export function Tabs(props: {
 		position: "relative",
 	}, ...props.style}}>
 		<div>{titles}</div>
-		<div className={"staticScrollbar"} style={{
+		<div className={props.scrollable ? "visibleScrollbar" : undefined} style={{
 			display: selectedIndex === undefined ? "none" : "block",
 			height: props.height - TABS_TITLE_HEIGHT,
 			boxSizing: "border-box",
 			padding: "10px 5px",
-			overflowY: "scroll"
+			overflowY: props.scrollable ? "scroll" : "hidden"
 		}}>{content}</div>
 	</div>
+}
+
+export function Columns(props: {
+	contentHeight: number,
+	content: ContentNode[]
+}) {
+	let colors = getCurrentThemeColors();
+	let children: React.ReactNode[] = [];
+	for (let i = 0; i < props.content.length; i++) {
+		children.push(<Panel key={`column-${i}`} className={"invisibleScrollbar"} style={{
+			height: props.contentHeight,
+			overflowY: "scroll",
+			paddingRight: 5
+		}}>{props.content[i]}</Panel>);
+		if (i < props.content.length - 1) {
+			children.push(<PanelResizeHandle key={`divider-${i}`} style={{
+				borderLeft: "1px solid " + colors.bgHighContrast,
+				margin: "0 15px 0 10px"
+			}}/>);
+		}
+	}
+	return <PanelGroup direction="horizontal">{children}</PanelGroup>
 }
 
 type InputProps = {

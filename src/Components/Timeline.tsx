@@ -1,6 +1,6 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
-import {Help, Slider, Tabs, TABS_TITLE_HEIGHT} from "./Common";
+import {Columns, Help, Slider, Tabs, TABS_TITLE_HEIGHT} from "./Common";
 import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
 import {TimelineEditor} from "./TimelineEditor";
 import {
@@ -108,7 +108,7 @@ class TimelineMain extends React.Component {
 
 		return <div style={{position: "relative"}}>
 			{canvas}
-			<div tabIndex={0} className={"staticScrollbar"} style={{
+			<div tabIndex={0} className={"visibleScrollbar"} style={{
 				position: "relative",
 				width: "100%",
 				overflowX: "scroll",
@@ -184,9 +184,9 @@ function TimelineTabs() {
 			},
 			{
 				titleNode: localize({en: "Display settings", zh: "显示设置"}),
-				contentNode: "(todo)"
+				contentNode: <Columns contentHeight={TIMELINE_SETTINGS_HEIGHT - 40} content={[]}/>
 			},
-		]} collapsible={true} height={TIMELINE_SETTINGS_HEIGHT} defaultSelectedIndex={undefined}/>
+		]} collapsible={true} scrollable={false} height={TIMELINE_SETTINGS_HEIGHT} defaultSelectedIndex={undefined}/>
 		<Slider
 			uniqueName={"timelineDisplayScale"}
 			description={localize({en: "horizontal scale ", zh: "水平缩放 "})}

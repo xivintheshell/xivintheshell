@@ -295,7 +295,7 @@ export class TimelineEditor extends React.Component {
 			itr = itr.next;
 		}
 		let colors = getCurrentThemeColors();
-		return <div style={{display: "flex", flexDirection: "row", position: "relative", height: TIMELINE_SETTINGS_HEIGHT - 50}} onClick={
+		return <div style={{display: "flex", flexDirection: "row", position: "relative", height: TIMELINE_SETTINGS_HEIGHT - 40}} onClick={
 			(evt)=>{
 				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
 					if (!this.isDirty()) {
@@ -310,7 +310,7 @@ export class TimelineEditor extends React.Component {
 			}
 		}>
 			{toolbar}
-			<div className={"staticScrollbar"} style={{
+			<div className={"visibleScrollbar"} style={{
 				border: "1px solid " + colors.bgMediumContrast,
 				flex: 6,
 				marginRight: 10,
