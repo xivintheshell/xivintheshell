@@ -176,8 +176,15 @@ export class TimelineEditor extends React.Component {
 							nodeName = node.skillName ?? "(unknown skill)";
 						}
 					}
+					let errorMessage = "This sequence contains invalid actions! Check: " + nodeName;
+					if (this.state.recordValidStatus?.invalidTime) {
+						const minutes = Math.floor(this.state.recordValidStatus.invalidTime / 60);
+						const seconds = (this.state.recordValidStatus.invalidTime - (minutes * 60));
+						errorMessage += ` @ ${minutes.toFixed(0)}:${seconds.toFixed(3)}`;
+					}
+					errorMessage += ` (${this.state.recordValidStatus?.invalidReason ?? "(unknown)"})`;
 					return <div>
-						<div style={{backgroundColor: "rgba(255, 0, 0, 0.25)"}}>This sequence contains invalid actions! Check: {nodeName + " (" + (this.state.recordValidStatus?.invalidReason ?? "(unknown)") + ")"}</div>
+						<div style={{backgroundColor: "rgba(255, 0, 0, 0.25)"}}>{errorMessage}</div>
 						{this.discardEditsBtn()}
 					</div>
 				}

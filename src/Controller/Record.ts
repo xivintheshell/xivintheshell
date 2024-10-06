@@ -235,7 +235,8 @@ export class Line {
 export type RecordValidStatus = {
 	isValid: boolean,
 	firstInvalidAction: ActionNode | undefined,
-	invalidReason: SkillReadyStatus | undefined
+	invalidReason: SkillReadyStatus | undefined,
+	invalidTime: number | undefined,
 };
 
 // information abt a timeline
