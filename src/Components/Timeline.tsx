@@ -1,7 +1,7 @@
 import React from 'react'
 import {controller} from "../Controller/Controller";
 import {Help, Slider, Tabs, TABS_TITLE_HEIGHT} from "./Common";
-import {TimelineMarkerPresets} from "./TimelineMarkerPresets";
+import {TimelineMarkers} from "./TimelineMarkers";
 import {TimelineEditor} from "./TimelineEditor";
 import {
 	TimelineCanvas, timelineCanvasGetPointerMouse, timelineCanvasOnClick, timelineCanvasOnKeyDown,
@@ -160,7 +160,7 @@ function TimelineTabs() {
 		<Tabs uniqueName={"timeline"} content={[
 			{
 				titleNode: localize({en: "Timeline markers", zh: "时间轴标记"}),
-				contentNode: <TimelineMarkerPresets/>
+				contentNode: <TimelineMarkers/>
 			},
 			{
 				titleNode: <div style={{

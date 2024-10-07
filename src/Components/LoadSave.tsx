@@ -1,5 +1,5 @@
 import React from 'react'
-import {Columns, FileFormat, loadFromFile, SaveToFile} from "./Common";
+import {Columns, FileFormat, LoadJsonFromFileOrUrl, SaveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType} from "../Controller/Common";
 import {localize} from "./Localization";
@@ -9,31 +9,21 @@ import {TIMELINE_COLUMNS_HEIGHT} from "./Timeline";
 type Fixme = any;
 
 export class LoadSave extends React.Component {
-	private readonly onLoad: () => void;
-	private readonly fileSelectorRef: React.RefObject<HTMLInputElement>;
+	private readonly onLoad: (content: object) => void;
 
 	constructor(props: {} | Readonly<{}>) {
 		super(props);
 
-		this.onLoad = (() => {
-			let cur = this.fileSelectorRef.current;
-			if (cur && cur.files!==null && cur.files.length > 0) {
-				let fileToLoad = cur.files[0];
-				loadFromFile(fileToLoad, (content: Fixme)=>{
-					if (content.fileType === FileType.Record) {
-						// loadBattleRecordFromFile calls render methods, so no need to explicily
-						// invoke updateAllDisplay here
-						controller.loadBattleRecordFromFile(content);
-						controller.autoSave();
-					} else {
-						window.alert("wrong file type '" + content.fileType + "'.");
-					}
-				});
-				cur.value = "";
+		this.onLoad = (content: Fixme) => {
+			if (content.fileType === FileType.Record) {
+				// loadBattleRecordFromFile calls render methods, so no need to explicily
+				// invoke updateAllDisplay here
+				controller.loadBattleRecordFromFile(content);
+				controller.autoSave();
+			} else {
+				window.alert("wrong file type '" + content.fileType + "'.");
 			}
-		});
-
-		this.fileSelectorRef = React.createRef();
+		};
 	}
 
 	render() {
@@ -67,17 +57,7 @@ export class LoadSave extends React.Component {
 			en: "Import fight from file",
 			zh: "从文件导入战斗"
 		});
-		let textImportContent = <div style={{marginBottom: 10}}>
-			<span>{localize({en: "Select file: ", zh: "选择文件："})}</span>
-			<input
-				style={{
-					width: "110px",
-					color: "transparent"
-				}}
-				type="file"
-				ref={this.fileSelectorRef}
-				onChange={this.onLoad}/>
-		</div>;
+		let textImportContent = <LoadJsonFromFileOrUrl allowLoadFromUrl={false} loadUrlOnMount={false} onLoadFn={this.onLoad}/>;
 		let imageExportTitle = <>{localize({
 			en: "Image Export",
 			zh: "导出为图像"
@@ -85,18 +65,17 @@ export class LoadSave extends React.Component {
 
 		return <Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>{[
 			{
-				title: textExportTitle,
-				content: textExportContent,
-				defaultSize: 33.34,
-				minSize: 20
-			},
-			{
+				defaultSize: 25,
 				title: textImportTitle,
-				content: textImportContent,
-				defaultSize: 33.33,
-				minSize: 20
+				content: textImportContent
 			},
 			{
+				defaultSize: 30,
+				title: textExportTitle,
+				content: textExportContent
+			},
+			{
+				defaultSize: 45,
 				title: imageExportTitle,
 				content: <>
 					{localize({
@@ -104,9 +83,7 @@ export class LoadSave extends React.Component {
 						zh: "将时间轴内选择部分导出为png，如果无选择将整个时间轴导出"
 					})}
 					<ImageExport/>
-				</>,
-				defaultSize: 33.33,
-				minSize: 20
+				</>
 			}
 		]}</Columns>
 	}

@@ -373,7 +373,7 @@ export function Columns(props: {
 			key={`column-${i}`}
 			className={"invisibleScrollbar"}
 			defaultSize={props.children[i].defaultSize}
-			minSize={props.children[i].minSize}
+			minSize={props.children[i].minSize ?? 20}
 			style={{
 				height: props.contentHeight,
 				overflowY: "scroll",
@@ -599,8 +599,9 @@ export class Expandable extends React.Component {
 
 type LoadJsonFromFileOrUrlProps = {
 	allowLoadFromUrl: boolean;
-	defaultLoadUrl: string;
+	defaultLoadUrl?: string;
 	loadUrlOnMount: boolean;
+	label?: ContentNode;
 	onLoadFn: (content: object) => void;
 }
 export class LoadJsonFromFileOrUrl extends React.Component {
@@ -615,7 +616,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 		super(inProps);
 		this.props = inProps;
 		this.fileSelectorRef = React.createRef();
-		this.loadUrl = inProps.defaultLoadUrl;
+		this.loadUrl = inProps.defaultLoadUrl ?? "";
 
 		this.onLoadUrlChange = ((evt: ChangeEvent<{value: string}>)=>{
 			if (evt.target) this.loadUrl = evt.target.value;
@@ -663,7 +664,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 		};
 		return <div>
 			<div>
-				<span>{localize({en: "Load from file: ", zh: "从文件导入："})}</span>
+				<span>{this.props.label ?? localize({en: "Load from file: ", zh: "从文件导入："})}</span>
 				<input
 					style={{
 						width: "110px",

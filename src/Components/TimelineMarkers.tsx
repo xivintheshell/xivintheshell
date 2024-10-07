@@ -1,8 +1,7 @@
 import React, {ChangeEvent, CSSProperties} from 'react'
 import {
-	asyncFetch,
+	asyncFetch, Columns,
 	ContentNode,
-	Expandable,
 	FileFormat,
 	Help,
 	Input,
@@ -16,13 +15,14 @@ import {localize, localizeBuffType} from "./Localization";
 import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
 import {Buff, buffInfos} from '../Game/Buffs';
 import {BuffType} from '../Game/Common';
+import { TIMELINE_COLUMNS_HEIGHT } from './Timeline';
 
 export let setEditingMarkerValues = (marker: MarkerElem)=>{};
 
 export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
 
-type TimelineMarkerPresetsProp = {};
-type TimelineMarkerPresetsState = {
+type TimelineMarkersProp = {};
+type TimelineMarkersState = {
 	nextMarkerType: MarkerType,
 	nextMarkerColor: MarkerColor,
 	nextMarkerTime: string,
@@ -32,13 +32,8 @@ type TimelineMarkerPresetsState = {
 	nextMarkerShowText: boolean,
 	nextMarkerBuff: BuffType,
 	loadTrackDest: string,
-	durationInputMode: DurationInputMode,
 	/////////
 	trackBins: Map<number, MarkerElem[]>
-}
-const enum DurationInputMode {
-	Duration = "duration",
-	EndTime = "endTime"
 }
 let asyncFetchJson = function(url: string, callback: (content: any)=>void) {
 	asyncFetch(url, data=>{
@@ -64,26 +59,10 @@ function LoadCombinedTracksBtn(props: {displayName: ContentNode, url: string}) {
 	}}>{props.displayName}</button>
 }
 
-function PresetButtons() {
-	// https://github.com/OverlayPlugin/cactbot/tree/main/ui/raidboss/data/07-dt
-	let content = <div style={{lineHeight: "2em"}}>
-		<span>{localize({en: "Current tier: ", zh: "当前版本（英文）："})}</span>
-		<LoadCombinedTracksBtn displayName={"M2S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m2s.txt"}/>
-		<LoadCombinedTracksBtn displayName={"M3S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m3s.txt"}/>
-		<LoadCombinedTracksBtn displayName={"M4S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m4s.txt"}/>
-		<br/>
-		<span>{localize({en: "Ultimates: ", zh: "绝本（英文）："})}</span>
-		<LoadCombinedTracksBtn displayName={"DSR P6 by Tischel"} url={"/ffxiv-blm-rotation/presets/markers/dsr_p6.txt"}/>
-		<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={"/ffxiv-blm-rotation/presets/markers/dsr_p7.txt"}/>
-		<LoadCombinedTracksBtn displayName={"TOP by Santa"} url={"/ffxiv-blm-rotation/presets/markers/TOP_2023_04_02.track"}/>
-	</div>
-	return <Expandable title={"preset buttons"} titleNode={localize({en: "Presets", zh: "预设文件"})} defaultShow={true}
-					   content={content}/>
-}
 
-export class TimelineMarkerPresets extends React.Component {
+export class TimelineMarkers extends React.Component {
 
-	state: TimelineMarkerPresetsState;
+	state: TimelineMarkersState;
 
 	onColorChange: (evt: ChangeEvent<{value: string}>) => void;
 	onShowTextChange: React.ChangeEventHandler<HTMLInputElement>;
@@ -96,9 +75,8 @@ export class TimelineMarkerPresets extends React.Component {
 	setBuff: (val: BuffType) => void;
 
 	setLoadTrackDest: (val: string) => void;
-	setDurationInputMode: (val: string) => void;
 
-	constructor(props: TimelineMarkerPresetsProp) {
+	constructor(props: TimelineMarkersProp) {
 		super(props);
 		setEditingMarkerValues = ((marker: MarkerElem)=>{
 			if (marker.markerType === MarkerType.Info) {
@@ -155,7 +133,6 @@ export class TimelineMarkerPresets extends React.Component {
 			nextMarkerShowText: false,
 			nextMarkerBuff: BuffType.TechnicalFinish,
 			loadTrackDest: "0",
-			durationInputMode: DurationInputMode.Duration,
 			///////
 			trackBins: new Map()
 		};
@@ -166,10 +143,6 @@ export class TimelineMarkerPresets extends React.Component {
 		this.setBuff = (val: BuffType)=>{this.setState({nextMarkerBuff: val})};
 
 		this.setLoadTrackDest = (val: string)=>{this.setState({loadTrackDest: val})};
-
-		this.setDurationInputMode = (val: string)=>{
-			this.setState({durationInputMode: val});
-		};
 
 		updateMarkers_TimelineMarkerPresets = ((trackBins: Map<number, MarkerElem[]>) => {
 			this.setState({trackBins: trackBins});
@@ -223,7 +196,7 @@ export class TimelineMarkerPresets extends React.Component {
 			/>);
 		});
 
-		let btnStyle = {marginBottom: 10, marginRight: 4};
+		let btnStyle = {marginRight: 4};
 
 		let infoOnlySection = <div>
 			<Input defaultValue={this.state.nextMarkerDescription} description={localize({en: "Description: ", zh: "描述："})} width={40}
@@ -280,9 +253,9 @@ export class TimelineMarkerPresets extends React.Component {
 				<Input defaultValue={this.state.nextMarkerTrack} description={localize({en: "Track: ", zh: "轨道序号："})} width={4}
 						style={inlineDiv} onChange={this.setTrack}/>
 			</div>
-		</div>
+		</div>;
 
-		return <div>
+		let actionsSection = <>
 			<button style={btnStyle} onClick={()=>{
 				controller.timeline.deleteAllMarkers();
 				controller.updateStats();
@@ -296,132 +269,178 @@ export class TimelineMarkerPresets extends React.Component {
 				}
 				controller.timeline.updateTimelineMarkers();
 			}}>{localize({en: "remove duplicates", zh: "删除重复标记"})}</button>
-			<PresetButtons/>
-			<Expandable
-				title={"Load tracks"}
-				titleNode={<span>
-					{localize({en: "Load tracks", zh: "导入"})} <Help topic={"load tracks"} content={localize({en: "when loading additional markers, current markers will not be deleted", zh: "载入新的标记时，时间轴上的已有标记不会被删除"})}/></span>}
-				defaultShow={false}
-				content={
-				<div>
-					<div className={"paragraph"}><b>{localize({en: "Multiple tracks combined", zh: "多轨文件"})}</b></div>
-					<LoadJsonFromFileOrUrl
-						allowLoadFromUrl={false}
-						loadUrlOnMount={false}
-						defaultLoadUrl={""}
-						onLoadFn={(content: any)=>{
-							controller.timeline.loadCombinedTracksPreset(content);
-							controller.updateStats();
-							controller.timeline.drawElements();
-						}}/>
-					<div className={"paragraph"}><b>{localize({en: "Individual track", zh: "单轨文件"})}</b></div>
-					<div className={"paragraph"}>
-						<Input defaultValue={this.state.loadTrackDest} description={localize({en: "Track: ", zh: "轨道序号："})} width={8} style={inlineDiv}
-							   onChange={this.setLoadTrackDest}/>
-						<LoadJsonFromFileOrUrl
-							allowLoadFromUrl={false}
-							loadUrlOnMount={false}
-							defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/markers/p1s_shackles_of_time_first_0.txt"}
-							onLoadFn={(content: any)=>{
-								let track = parseInt(this.state.loadTrackDest);
-								if (isNaN(track)) {
-									window.alert("invalid track destination");
-									return;
-								}
-								controller.timeline.loadIndividualTrackPreset(content, track);
-								controller.updateStats();
-								controller.timeline.drawElements();
-							}}/>
-					</div>
-				</div>
-			}/>
-			<Expandable title={"Add marker"} titleNode={localize({en: "Add marker", zh: "添加标记"})} defaultShow={false} content={
-				<form style={{
-					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
-					padding: "10px",
-				}}>
-					<span>{localize({en: "Type: ", zh: "类型："})}</span>
-					<select value={this.state.nextMarkerType}
-					        onChange={evt => {
-								if (evt.target) {
-									const markerType = evt.target.value as MarkerType;
-									this.setState({
-										nextMarkerType: markerType
-									});
-									if (markerType === MarkerType.Buff) {
-										this.onEnterBuffEdit(this.state.nextMarkerBuff);
-									}
-								}
-							}}>
-						<option value={MarkerType.Info}>{localize({en: "Info", zh: "备注信息"})}</option>
-						<option value={MarkerType.Untargetable}>{localize({en: "Untargetable", zh: "不可选中"})}</option>
-						<option value={MarkerType.Buff}>{localize({en: "Buff", zh: "团辅"})}</option>
-					</select>
-					<span> </span>
-					<Input defaultValue={this.state.nextMarkerTime} description={localize({en: "Time: ", zh: "时间："})} width={8} style={inlineDiv}
-						   onChange={this.setTime}/>
+		</>;
 
-					<Input defaultValue={this.state.nextMarkerDuration} description={localize({en: "Duration: ", zh: "持续时长："})} width={8}
-						style={inlineDiv} onChange={this.setDuration}/>
-
-					{this.state.nextMarkerType === MarkerType.Info ? infoOnlySection : undefined}
-					{this.state.nextMarkerType === MarkerType.Buff ? buffOnlySection : undefined}
-					<button
-						type={"submit"}
-						style={{display: "block", marginTop: "0.5em"}}
-						onClick={(e) => {
-							let marker: MarkerElem = {
-								type: ElemType.Marker,
-								markerType: this.state.nextMarkerType,
-								time: parseTime(this.state.nextMarkerTime),
-								duration: parseFloat(this.state.nextMarkerDuration),
-								color: this.state.nextMarkerColor,
-								track: parseInt(this.state.nextMarkerTrack),
-								description: this.state.nextMarkerDescription,
-								showText: this.state.nextMarkerShowText,
-							};
-							let err: ContentNode | undefined = undefined;
-							if (this.state.nextMarkerType === MarkerType.Untargetable) {
-								marker.color = MarkerColor.Grey;
-								marker.track = UntargetableMarkerTrack;
-								marker.description = "";
-								marker.showText = true;
-							}
-							if (this.state.nextMarkerType === MarkerType.Buff) {
-								const buff = new Buff(this.state.nextMarkerBuff);
-								const duration = parseFloat(this.state.nextMarkerDuration);
-								if (!isNaN(duration) && duration > buff.info.duration) {
-									err = localize({
-										en: `this buff can't last longer than ${buff.info.duration}s`,
-										zh: `此团辅持续时间不能超过${buff.info.duration}秒`
-									});
-								}
-								marker.color = buff.info.color;
-								marker.description = buff.name;
-								marker.duration = duration;
-								marker.showText = true;
-							}
-							if (isNaN(marker.duration) ||
-								isNaN(marker.time) ||
-								isNaN(marker.track)) {
-								err = localize({en: "some input(s) are invalid", zh: "部分输入格式不对"});
-							}
-							if (err) {
-								window.alert(err);
-								e.preventDefault();
-								return;
-							}
-							controller.timeline.addMarker(marker);
-							controller.updateStats();
-							e.preventDefault();
-						}}>{localize({en: "add marker", zh: "添加标记"})}
-					</button>
-				</form>
-			}/>
-			<div>
-				<span>{localize({en: "Save marker tracks to file: ", zh: "保存标记到文件："})}</span>
-				{saveTrackLinks}
+		let textColor = getCurrentThemeColors().text;
+		let individualTrackInput = <input style={{
+			color: textColor,
+			backgroundColor: "transparent",
+			outline: "none",
+			border: "none",
+			borderBottom: "1px solid " + textColor
+		}} size={2} type={"text"} value={this.state.loadTrackDest} onChange={e=>{
+			this.setState({loadTrackDest: e.target.value})
+		}}/>
+		let individualTrackLabel = localize({
+			en: <span>Load individual track {individualTrackInput}: </span>,
+			zh: <span>载入第{individualTrackInput}轨：</span>
+		});
+		let loadTracksSection = <>
+			<LoadJsonFromFileOrUrl
+				allowLoadFromUrl={false}
+				loadUrlOnMount={false}
+				defaultLoadUrl={""}
+				label={localize({en: "Load multiple tracks combined: ", zh: "载入多轨文件："})}
+				onLoadFn={(content: any)=>{
+					controller.timeline.loadCombinedTracksPreset(content);
+					controller.updateStats();
+					controller.timeline.drawElements();
+				}}/>
+			<div className={"paragraph"}>
+				<LoadJsonFromFileOrUrl
+					allowLoadFromUrl={false}
+					loadUrlOnMount={false}
+					label={individualTrackLabel}
+					onLoadFn={(content: any)=>{
+						let track = parseInt(this.state.loadTrackDest);
+						if (isNaN(track)) {
+							window.alert("invalid track destination");
+							return;
+						}
+						controller.timeline.loadIndividualTrackPreset(content, track);
+						controller.updateStats();
+						controller.timeline.drawElements();
+					}}/>
 			</div>
+		</>;
+
+		let addColumn = <form>
+			<span>{localize({en: "Type: ", zh: "类型："})}</span>
+			<select value={this.state.nextMarkerType}
+			        onChange={evt => {
+				        if (evt.target) {
+					        const markerType = evt.target.value as MarkerType;
+					        this.setState({
+						        nextMarkerType: markerType
+					        });
+					        if (markerType === MarkerType.Buff) {
+						        this.onEnterBuffEdit(this.state.nextMarkerBuff);
+					        }
+				        }
+			        }}>
+				<option value={MarkerType.Info}>{localize({en: "Info", zh: "备注信息"})}</option>
+				<option value={MarkerType.Untargetable}>{localize({en: "Untargetable", zh: "不可选中"})}</option>
+				<option value={MarkerType.Buff}>{localize({en: "Buff", zh: "团辅"})}</option>
+			</select>
+			<span> </span>
+			<Input defaultValue={this.state.nextMarkerTime} description={localize({en: "Time: ", zh: "时间："})} width={8}
+			       style={inlineDiv}
+			       onChange={this.setTime}/>
+
+			<Input defaultValue={this.state.nextMarkerDuration} description={localize({en: "Duration: ", zh: "持续时长："})}
+			       width={8}
+			       style={inlineDiv} onChange={this.setDuration}/>
+
+			{this.state.nextMarkerType === MarkerType.Info ? infoOnlySection : undefined}
+			{this.state.nextMarkerType === MarkerType.Buff ? buffOnlySection : undefined}
+			<button
+				type={"submit"}
+				style={{display: "block", marginTop: "0.5em"}}
+				onClick={(e) => {
+					let marker: MarkerElem = {
+						type: ElemType.Marker,
+						markerType: this.state.nextMarkerType,
+						time: parseTime(this.state.nextMarkerTime),
+						duration: parseFloat(this.state.nextMarkerDuration),
+						color: this.state.nextMarkerColor,
+						track: parseInt(this.state.nextMarkerTrack),
+						description: this.state.nextMarkerDescription,
+						showText: this.state.nextMarkerShowText,
+					};
+					let err: ContentNode | undefined = undefined;
+					if (this.state.nextMarkerType === MarkerType.Untargetable) {
+						marker.color = MarkerColor.Grey;
+						marker.track = UntargetableMarkerTrack;
+						marker.description = "";
+						marker.showText = true;
+					}
+					if (this.state.nextMarkerType === MarkerType.Buff) {
+						const buff = new Buff(this.state.nextMarkerBuff);
+						const duration = parseFloat(this.state.nextMarkerDuration);
+						if (!isNaN(duration) && duration > buff.info.duration) {
+							err = localize({
+								en: `this buff can't last longer than ${buff.info.duration}s`,
+								zh: `此团辅持续时间不能超过${buff.info.duration}秒`
+							});
+						}
+						marker.color = buff.info.color;
+						marker.description = buff.name;
+						marker.duration = duration;
+						marker.showText = true;
+					}
+					if (isNaN(marker.duration) ||
+						isNaN(marker.time) ||
+						isNaN(marker.track)) {
+						err = localize({en: "some input(s) are invalid", zh: "部分输入格式不对"});
+					}
+					if (err) {
+						window.alert(err);
+						e.preventDefault();
+						return;
+					}
+					controller.timeline.addMarker(marker);
+					controller.updateStats();
+					e.preventDefault();
+				}}>{localize({en: "add marker", zh: "添加标记"})}
+			</button>
+		</form>;
+
+		// https://github.com/OverlayPlugin/cactbot/tree/main/ui/raidboss/data/07-dt
+		let presetsSection = <div style={{
+		}}>
+			<p>
+				<span>{localize({en: "Current tier: ", zh: "当前版本（英文）："})}</span>
+				<LoadCombinedTracksBtn displayName={"M2S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m2s.txt"}/>
+				<LoadCombinedTracksBtn displayName={"M3S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m3s.txt"}/>
+				<LoadCombinedTracksBtn displayName={"M4S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m4s.txt"}/>
+			</p>
+			<p>
+				<span>{localize({en: "Ultimates: ", zh: "绝本（英文）："})}</span>
+				<LoadCombinedTracksBtn displayName={"DSR P6 by Tischel"} url={"/ffxiv-blm-rotation/presets/markers/dsr_p6.txt"}/>
+				<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={"/ffxiv-blm-rotation/presets/markers/dsr_p7.txt"}/>
+				<LoadCombinedTracksBtn displayName={"TOP by Santa"} url={"/ffxiv-blm-rotation/presets/markers/TOP_2023_04_02.track"}/>
+			</p>
 		</div>
+
+		return <>
+			<Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>{[
+				{
+					defaultSize: 46,
+					content: <>
+						{actionsSection}
+						<p style={{marginTop: 16}}><b>{localize({en: "Presets", zh: "预设文件"})}</b></p>
+						{presetsSection}
+						<p style={{marginTop: 16}}><b>{localize({en: "Load from file", zh: "从文件导入"})}</b> <Help
+							topic={"load tracks"}
+							content={localize({
+								en: "when loading additional markers, current markers will not be deleted",
+								zh: "载入新的标记时，时间轴上的已有标记不会被删除"
+							})}/></p>
+						{loadTracksSection}
+					</>
+				},
+				{
+					defaultSize: 54,
+					content: <>
+						<p><b>{localize({en: "Create marker", zh: "添加标记"})}</b></p>
+						{addColumn}
+						<p style={{marginTop: 16}}>
+							<span>{localize({en: "Save marker tracks to file: ", zh: "保存标记到文件："})}</span>
+							{saveTrackLinks}
+						</p>
+					</>
+				},
+			]}</Columns>
+		</>;
 	}
 }
