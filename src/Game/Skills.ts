@@ -379,19 +379,19 @@ export class SkillsList<T extends PlayerState> {
 			return NEVER_SKILL;
 		}
 	}
+}
 
-	getAutoReplaced(key: SkillName, level: number): Skill<T> {
-		let skill = this.get(key);
-		// upgrade: if level >= upgrade options
-		while (skill.autoUpgrade && Traits.hasUnlocked(skill.autoUpgrade.trait, level)) {
-			skill = this.getAutoReplaced(skill.autoUpgrade.otherSkill, level);
-		}
-		// downgrade: if level < current skill required level
-		while (skill.autoDowngrade && level < skill.unlockLevel) {
-			skill = this.getAutoReplaced(skill.autoDowngrade.otherSkill, level);
-		}
-		return skill;
+export function getAutoReplacedSkillName(job: ShellJob, skillName: SkillName, level: LevelSync): SkillName {
+	let skill = getSkill(job, skillName);
+	// upgrade: if level >= upgrade options
+	while (skill.autoUpgrade && Traits.hasUnlocked(skill.autoUpgrade.trait, level)) {
+		skill = getSkill(job, getAutoReplacedSkillName(job, skill.autoUpgrade.otherSkill, level));
 	}
+	// downgrade: if level < current skill required level
+	while (skill.autoDowngrade && level < skill.unlockLevel) {
+		skill = getSkill(job, getAutoReplacedSkillName(job, skill.autoDowngrade.otherSkill, level));
+	}
+	return skill.name;
 }
 
 export function getConditionalReplacement<T extends PlayerState>(key: SkillName, state: T): SkillName {
@@ -409,7 +409,7 @@ export function getConditionalReplacement<T extends PlayerState>(key: SkillName,
 export class DisplayedSkills  {
 	#skills: SkillName[];
 
-	constructor(level: LevelSync) {
+	constructor(job: ShellJob, level: LevelSync) {
 		this.#skills = [];
 		console.assert(skillMap.has(ShellInfo.job), `No skill map found for job: ${ShellInfo.job}`)
 		for (const skillInfo of skillMap.get(ShellInfo.job)!.values()) {
@@ -422,7 +422,7 @@ export class DisplayedSkills  {
 				&& skillInfo.autoDowngrade === undefined
 				&& skillInfo.startOnHotbar
 			) {
-				this.#skills.push(skillInfo.name);
+				this.#skills.push(getAutoReplacedSkillName(job, skillInfo.name, level));
 			}
 		}
 	}

@@ -68,9 +68,9 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.Surecast, "沉稳咏唱"],
 	[SkillName.Tincture, "爆发药"],
 	[SkillName.Paradox, "悖论"],
-	[SkillName.HighThunder, "高暴雷"],
+	[SkillName.HighThunder, "高闪雷"],
 	[SkillName.Sprint, "疾跑"],
-	[SkillName.Retrace, "Retrace"], // todo: when there's a common translation in the community
+	[SkillName.Retrace, "魔纹重置"],
 	[SkillName.FlareStar, "耀星"]
 ]);
 

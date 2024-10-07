@@ -8,7 +8,7 @@ import {
 	TickMode
 } from "./Common";
 import {GameState} from "../Game/GameState";
-import {getConditionalReplacement} from "../Game/Skills";
+import {getAutoReplacedSkillName, getConditionalReplacement} from "../Game/Skills";
 import {newGameState, BLMState} from "../Game/Jobs/BLM";
 import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
@@ -941,8 +941,7 @@ class Controller {
 				let skillName = itr.skillName as SkillName;
 				if (props.replayMode === ReplayMode.SkillSequence) {
 					// auto-replace as much as possible
-					let replacedSkill = this.game.skillsList.getAutoReplaced(skillName, this.gameConfig.level);
-					skillName = replacedSkill.name;
+					skillName = getAutoReplacedSkillName(this.game.job, skillName, this.gameConfig.level);
 				}
 				let status = this.#useSkill(skillName, waitFirst, TickMode.Manual);
 
