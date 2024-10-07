@@ -191,7 +191,7 @@ export function ConfigSummary(props: {}) {
 
 		<p>{localize({en: "Procs", zh: "随机数模式"})}: {procMode}</p>
 
-		{numOverrides === 0 ? undefined : <p style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</p>}
+		{numOverrides === 0 ? undefined : <p style={{color: "mediumpurple"}}>{numOverrides} resource override(s)</p>}
 	</div>
 }
 
