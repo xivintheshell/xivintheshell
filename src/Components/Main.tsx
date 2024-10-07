@@ -59,21 +59,15 @@ function ConfigTabs(props: {
 	}}>
 		<Tabs uniqueName={"mainConfig"} content={[
 			{
-				titleNode: "Overview",
+				titleNode: localize({en: "Overview", zh: "属性预览"}),
 				contentNode: <ConfigSummary/> // retrieves data from global controller
 			},
 			{
-				titleNode: "Config",
-				contentNode: <div>
-					<Config/>
-					<div>{localize({
-						en: "You can also import/export fights from/to local files at the bottom of the page.",
-						zh: "页面底部有导入和导出战斗文件相关选项。"
-					})}</div>
-				</div>
+				titleNode: localize({en: "Config", zh: "属性设置"}),
+				contentNode: <Config/>
 			},
 			{
-				titleNode: "Control",
+				titleNode: localize({en: "Control", zh: "时间控制"}),
 				contentNode: <TimeControl/>
 			}
 		]} collapsible={false} scrollable={true} height={props.height} defaultSelectedIndex={1}/>
@@ -223,6 +217,9 @@ export default class Main extends React.Component {
 				p {
 					margin-block-start: 10px;
 					margin-block-end: 10px;
+				}
+				p:first-child {
+					margin-block-start: 0px;
 				}
 				::selection {
 					background: rgba(147, 112, 219, 0.4);

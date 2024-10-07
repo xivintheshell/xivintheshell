@@ -180,10 +180,13 @@ function TimelineTabs() {
 					<LoadSave/>
 				</div>
 			},
+			/*
+			// todo: add this back some time
 			{
 				titleNode: localize({en: "Display settings", zh: "显示设置"}),
 				contentNode: "todo"
 			},
+			 */
 		]} collapsible={true} scrollable={false} height={TIMELINE_SETTINGS_HEIGHT} defaultSelectedIndex={undefined}/>
 		<Slider
 			uniqueName={"timelineDisplayScale"}
