@@ -1,6 +1,7 @@
 import React, {CSSProperties} from "react";
 import {controller} from "../Controller/Controller";
 import {ActionNode, ActionType, Record, RecordValidStatus} from "../Controller/Record";
+import {StaticFn} from "./Common";
 import {localize, localizeSkillName} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {TIMELINE_SETTINGS_HEIGHT} from "./Timeline";
@@ -178,9 +179,8 @@ export class TimelineEditor extends React.Component {
 					}
 					let errorMessage = "This sequence contains invalid actions! Check: " + nodeName;
 					if (this.state.recordValidStatus?.invalidTime) {
-						const minutes = Math.floor(this.state.recordValidStatus.invalidTime / 60);
-						const seconds = (this.state.recordValidStatus.invalidTime - (minutes * 60));
-						errorMessage += ` @ ${minutes.toFixed(0)}:${seconds.toFixed(3)}`;
+						const timeStr = StaticFn.displayTime(this.state.recordValidStatus.invalidTime, 3);
+						errorMessage += ` @ ${timeStr}`;
 					}
 					errorMessage += ` (${this.state.recordValidStatus?.invalidReason ?? "(unknown)"})`;
 					return <div>
