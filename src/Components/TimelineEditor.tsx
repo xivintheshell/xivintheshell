@@ -1,6 +1,7 @@
 import React, {CSSProperties} from "react";
 import {controller} from "../Controller/Controller";
 import {ActionNode, ActionType, Record, RecordValidStatus} from "../Controller/Record";
+import {StaticFn} from "./Common";
 import {localize, localizeSkillName} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {TIMELINE_SETTINGS_HEIGHT} from "./Timeline";
@@ -176,8 +177,14 @@ export class TimelineEditor extends React.Component {
 							nodeName = node.skillName ?? "(unknown skill)";
 						}
 					}
+					let errorMessage = "This sequence contains invalid actions! Check: " + nodeName;
+					if (this.state.recordValidStatus?.invalidTime) {
+						const timeStr = StaticFn.displayTime(this.state.recordValidStatus.invalidTime, 3);
+						errorMessage += ` @ ${timeStr}`;
+					}
+					errorMessage += ` (${this.state.recordValidStatus?.invalidReason ?? "(unknown)"})`;
 					return <div>
-						<div style={{backgroundColor: "rgba(255, 0, 0, 0.25)"}}>This sequence contains invalid actions! Check: {nodeName + " (" + (this.state.recordValidStatus?.invalidReason ?? "(unknown)") + ")"}</div>
+						<div style={{backgroundColor: "rgba(255, 0, 0, 0.25)"}}>{errorMessage}</div>
 						{this.discardEditsBtn()}
 					</div>
 				}

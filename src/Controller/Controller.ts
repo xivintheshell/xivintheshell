@@ -157,10 +157,17 @@ class Controller {
 
 		console.assert(inRecord.config !== undefined);
 
-		let result: {isValid: boolean, firstInvalidAction: ActionNode | undefined, invalidReason: string | undefined, straightenedIfValid: Record | undefined} = {
+		let result: {
+			isValid: boolean,
+			firstInvalidAction: ActionNode | undefined,
+			invalidReason: string | undefined,
+			invalidTime: number | undefined,
+			straightenedIfValid: Record | undefined,
+		} = {
 			isValid: true,
 			firstInvalidAction: undefined,
 			invalidReason: undefined,
+			invalidTime: undefined,
 			straightenedIfValid: undefined
 		};
 
@@ -196,6 +203,7 @@ class Controller {
 			result.isValid = status.success;
 			result.firstInvalidAction = status.firstInvalidNode;
 			result.invalidReason = status.invalidReason;
+			result.invalidTime = status.invalidTime;
 			if (status.success) {
 				result.straightenedIfValid = this.record;
 			}
@@ -859,7 +867,8 @@ class Controller {
 		success: boolean,
 		firstAddedNode: ActionNode | undefined,
 		firstInvalidNode: ActionNode | undefined,
-		invalidReason: SkillReadyStatus | undefined
+		invalidReason: SkillReadyStatus | undefined,
+		invalidTime: number | undefined,
 	} {
 		// Prevent UI updates from occuring until the final action
 		this.#skipViewUpdates = true;
@@ -883,7 +892,8 @@ class Controller {
 				success: true,
 				firstAddedNode: undefined,
 				firstInvalidNode: undefined,
-				invalidReason: undefined
+				invalidReason: undefined,
+				invalidTime: undefined,
 			};
 		}
 
@@ -900,8 +910,9 @@ class Controller {
 			}
 
 			let lastIter = false;
-			let firstInvalidNode : ActionNode | undefined = undefined;
-			let invalidReason : SkillReadyStatus | undefined = undefined;
+			let firstInvalidNode: ActionNode | undefined = undefined;
+			let invalidReason: SkillReadyStatus | undefined = undefined;
+			let invalidTime: number | undefined = undefined;
 
 			// maxReplayTime is used for replay for displaying historical game states (only replay some given duration)
 			let waitDuration = itr.waitDuration;
@@ -972,6 +983,7 @@ class Controller {
 					lastIter = true;
 					firstInvalidNode = itr;
 					invalidReason = status.status;
+					invalidTime = this.game.getDisplayTime();
 				}
 
 				if (this.#bInterrupted) {// likely because enochian dropped before a cast snapshots
@@ -979,6 +991,7 @@ class Controller {
 					lastIter = true;
 					firstInvalidNode = itr;
 					invalidReason = status.status;
+					invalidTime = this.game.getDisplayTime();
 				}
 			}
 			// buff enable/disable also only supported by exact / edited replay
@@ -996,6 +1009,7 @@ class Controller {
 					lastIter = true;
 					firstInvalidNode = itr;
 					invalidReason = SkillReadyStatus.BuffNoLongerAvailable;
+					invalidTime = this.game.getDisplayTime();
 				}
 			}
 			else {
@@ -1027,7 +1041,8 @@ class Controller {
 					success: false,
 					firstAddedNode: firstAddedNode,
 					firstInvalidNode: firstInvalidNode,
-					invalidReason: invalidReason
+					invalidReason: invalidReason,
+					invalidTime: invalidTime,
 				};
 			} else {
 				itr = itr.next;
@@ -1041,7 +1056,8 @@ class Controller {
 			success: true,
 			firstAddedNode: firstAddedNode,
 			firstInvalidNode: undefined,
-			invalidReason: undefined
+			invalidReason: undefined,
+			invalidTime: undefined,
 		};
 	}
 
