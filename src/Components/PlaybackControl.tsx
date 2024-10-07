@@ -3,7 +3,7 @@ import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input, ValueChangeEvent} from "./Common";
 import {getCachedValue, setCachedValue, ShellInfo, ShellVersion, TickMode} from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
-import {getAllResources, ResourceOrCoolDownInfo, ResourceOverrideData} from "../Game/Resources";
+import {getAllResources, getResourceInfo, ResourceOverrideData} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {SerializedConfig} from "../Game/GameConfig";
@@ -41,18 +41,18 @@ function getTaxPreview(level: LevelSync, baseCastTime: number, spsStr: string, f
 // key, rscType, rscInfo
 export function ResourceOverrideDisplay(props: {
 	override: ResourceOverrideData,
-	rscInfo: ResourceOrCoolDownInfo,
-	deleteFn: (rsc: ResourceType) => void,
+	deleteFn?: (rsc: ResourceType) => void, // when null, this component is for display only
 }) {
-	let str: string = "";
-	if (props.rscInfo.isCoolDown) {
+	let rscInfo = getResourceInfo(ShellInfo.job, props.override.type);
+	let str: string;
+	if (rscInfo.isCoolDown) {
 		str = props.override.type + " full in " + props.override.timeTillFullOrDrop + "s";
 	} else {
 		str = props.override.type;
 		if (props.override.type === ResourceType.LeyLines) str += " (" + (props.override.effectOrTimerEnabled ? "enabled" : "disabled") + ")";
 		if (props.override.type === ResourceType.Enochian) str += " (" + (props.override.effectOrTimerEnabled ? "timer enabled" : "timer disabled") + ")";
-		if (props.rscInfo.maxValue > 1) str += " (amount: " + props.override.stacks + ")";
-		if (props.rscInfo.maxTimeout >= 0) {
+		if (rscInfo.maxValue > 1) str += " (amount: " + props.override.stacks + ")";
+		if (rscInfo.maxTimeout >= 0) {
 			if (props.override.type === ResourceType.Polyglot) {
 				if (props.override.timeTillFullOrDrop > 0) str += " next stack ready in " + props.override.timeTillFullOrDrop + "s";
 			} else {
@@ -63,9 +63,14 @@ export function ResourceOverrideDisplay(props: {
 		}
 	}
 	str += " ";
+	let deleteBtn: React.JSX.Element | undefined = undefined;
+	if (props.deleteFn) {
+		const deleteFn = props.deleteFn;
+		deleteBtn = <Clickable content="[x]" onClickFn={e=>{ deleteFn(props.override.type); }}/>;
+	}
 	return <div style={{marginTop: 10, color: "mediumpurple"}}>
 		{str}
-		<Clickable content="[x]" onClickFn={e=>{ props.deleteFn(props.override.type); }}/>
+		{deleteBtn}
 	</div>;
 }
 
@@ -78,12 +83,14 @@ export function ConfigSummary(props: {}) {
 	}, []);
 
 	let level = controller.gameConfig.level;
+	let sps = controller.gameConfig.spellSpeed;
 	let gcd = controller.gameConfig.adjustedGCD();
 	let gcdAfterTax = controller.gameConfig.getAfterTaxGCD(gcd).toFixed(3);
 	let castTimesTableDesc = localize({
 		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
 		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节"
 	});
+	let overrides = controller.gameConfig.initialResourceOverrides;
 	let preTaxFn = (t: number) => { return controller.gameConfig.adjustedCastTime(t).toFixed(3); }
 	let afterTaxFn = (t: number) => {
 		let preTax = controller.gameConfig.adjustedCastTime(t);
@@ -172,6 +179,8 @@ export function ConfigSummary(props: {}) {
 
 		<p>{localize({en: "Level", zh: "等级"})}: {level}</p>
 
+		<p>{localize({en: "SPS", zh: "咏速"})}: {sps}</p>
+
 		<p>{localize({en: "Displayed GCD", zh: "游戏内显示GCD"})}: {gcd}&nbsp; {
 			controller.gameConfig.shellVersion >= ShellVersion.FpsTax ? <Help topic={"displayedGcd"} content={
 				localize({
@@ -191,7 +200,12 @@ export function ConfigSummary(props: {}) {
 
 		<p>{localize({en: "Procs", zh: "随机数模式"})}: {procMode}</p>
 
-		{numOverrides === 0 ? undefined : <p style={{color: "mediumpurple"}}>{numOverrides} resource override(s)</p>}
+		{numOverrides === 0 ? undefined : <p style={{color: "mediumpurple"}}>{localize({
+			en: `${numOverrides} initial resource override(s):`,
+			zh: `${numOverrides}项初始资源覆盖：`
+		})}</p>}
+
+		<p style={{marginLeft: 16}}>{overrides.map(ov => <ResourceOverrideDisplay key={ov.type} override={ov}/>)}</p>
 	</div>
 }
 
@@ -802,17 +816,15 @@ export class Config extends React.Component {
 		let resourceOverridesDisplayNodes = [];
 		for (let i = 0; i < this.state.initialResourceOverrides.length; i++) {
 			let override = this.state.initialResourceOverrides[i];
-			let info = getAllResources(ShellInfo.job).get(override.type)!;
 			resourceOverridesDisplayNodes.push(<ResourceOverrideDisplay
 				key={i}
 				override={override}
-				rscInfo={info}
 				deleteFn={this.deleteResourceOverride}
 			/>);
 		}
 		return <div style={{marginTop: 10}}>
 			<Expandable title="overrideInitialResources" titleNode={<span>
-				Override initial resources <Help topic="overrideInitialResources"content={<div>
+				{localize({en:"Override initial resources", zh: "指定初始资源"})} <Help topic="overrideInitialResources"content={<div>
 				<div className={"paragraph"} style={{color: "orangered"}}><b>Can create invalid game states. Go over Instructions/Troubleshoot first and use carefully at your own risk!</b></div>
 				<div className={"paragraph"}>Also, currently thunder dot buff created this way doesn't actually tick. It just shows the remaining buff timer.</div>
 				<div className={"paragraph"}>I would recommend saving settings (stats, lines presets, timeline markers etc.) to files first, in case invalid game states really mess up the tool and a complete reset is required.</div>
@@ -821,7 +833,7 @@ export class Config extends React.Component {
 				<button onClick={evt=>{
 					this.setState({ initialResourceOverrides: [], dirty: true });
 					evt.preventDefault();
-				}}>clear all overrides</button>
+				}}>{localize({en: "clear all overrides", zh: "清除所有指定初始资源"})}</button>
 				{resourceOverridesDisplayNodes}
 				{this.#addResourceOverrideNode()}
 			</div>}/>

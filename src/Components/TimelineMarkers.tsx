@@ -282,7 +282,7 @@ export class TimelineMarkers extends React.Component {
 			this.setState({loadTrackDest: e.target.value})
 		}}/>
 		let individualTrackLabel = localize({
-			en: <span>Load individual track {individualTrackInput}: </span>,
+			en: <span>Load into individual track {individualTrackInput}: </span>,
 			zh: <span>载入第{individualTrackInput}轨：</span>
 		});
 		let loadTracksSection = <>
