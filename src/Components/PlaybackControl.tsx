@@ -12,7 +12,7 @@ import {BLMState} from "../Game/Jobs/BLM";
 
 export let updateConfigDisplay = (config: SerializedConfig)=>{};
 
-function getTableStyle(bgHighContraxtColor: string) {
+function getTableStyle(bgHighContrastColor: string) {
 	return `
 		table {
 			border-collapse: collapse;
@@ -21,7 +21,7 @@ function getTableStyle(bgHighContraxtColor: string) {
 		th, td {
 			text-align: center;
 			padding: 0.15em;
-			border: 1px solid ${bgHighContraxtColor};
+			border: 1px solid ${bgHighContrastColor};
 			width: 33%
 		}
 	`;

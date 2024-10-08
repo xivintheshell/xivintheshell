@@ -248,6 +248,7 @@ export function Tabs(props: {
 	collapsible: boolean,
 	scrollable: boolean,
 	height: number,
+	maxWidth?: number,
 	defaultSelectedIndex: number | undefined,
 	style?: CSSProperties
 }) {
@@ -312,6 +313,7 @@ export function Tabs(props: {
 	let content: ContentNode[] = [];
 	for (let i = 0; i < props.content.length; i++) {
 
+		const tab = props.content[i];
 		const isSelectedTab = i === selectedIndex;
 
 		titles.push(<span key={i} style={tabStyle(i)} onClick={() => {
@@ -320,11 +322,16 @@ export function Tabs(props: {
 			else if (props.collapsible) { newIndex = undefined; }
 			setSelectedIndex(newIndex);
 			setCachedValue("tabs: " + props.uniqueName, newIndex===undefined ? "none" : `${newIndex}`);
-		}}>{props.content[i].titleNode}</span>);
+		}}>{tab.titleNode}</span>);
 
-		content.push(<div key={i} style={{
+		const contentStyle: CSSProperties = {
 			display: isSelectedTab ? "block" : "none"
-		}}>{props.content[i].contentNode}</div>)
+		};
+		if (props.maxWidth !== undefined) {
+			contentStyle.maxWidth = props.maxWidth;
+			contentStyle.margin = "0 auto";
+		}
+		content.push(<div key={i} style={contentStyle}>{tab.contentNode}</div>);
 	}
 
 	if (props.collapsible && selectedIndex !== undefined) {
@@ -362,6 +369,7 @@ export function Columns(props: {
 	children: {
 		content: ContentNode,
 		title?: ContentNode,
+		fullBorder?: boolean,
 		defaultSize?: number,
 		minSize?: number
 	}[]
@@ -369,27 +377,34 @@ export function Columns(props: {
 	let colors = getCurrentThemeColors();
 	let children: React.ReactNode[] = [];
 	for (let i = 0; i < props.children.length; i++) {
+		const column = props.children[i];
+		const nextColumn = i < props.children.length - 1 ? props.children[i + 1] : undefined;
 		children.push(<Panel
 			key={`column-${i}`}
 			className={"invisibleScrollbar"}
-			defaultSize={props.children[i].defaultSize}
-			minSize={props.children[i].minSize ?? 20}
+			defaultSize={column.defaultSize}
+			minSize={column.minSize ?? 20}
 			style={{
+				border: column.fullBorder===true ? `1px solid ${colors.bgMediumContrast}` : undefined,
+				boxSizing: "border-box",
 				height: props.contentHeight,
 				overflowY: "scroll",
-				paddingRight: 5
-			}
-		}>
-			{props.children[i].title ? <div style={{marginBottom: 10}}>
-				<b>{props.children[i].title}</b>
+			}}>
+			{column.title ? <div style={{marginBottom: 10}}>
+				<b>{column.title}</b>
 			</div> : undefined}
-			{props.children[i].content}
+			{column.content}
 		</Panel>);
+
 		if (i < props.children.length - 1) {
-			children.push(<PanelResizeHandle key={`divider-${i}`} style={{
+			const adjacentToBorder: boolean = column.fullBorder===true || (nextColumn!==undefined && nextColumn.fullBorder===true);
+			const style: CSSProperties = adjacentToBorder ? {
+				margin: "0 5px"
+			} : {
 				borderLeft: "1px solid " + colors.bgMediumContrast,
 				margin: "0 15px 0 10px"
-			}}/>);
+			}
+			children.push(<PanelResizeHandle key={`divider-${i}`} style={style}/>);
 		}
 	}
 	return <PanelGroup direction="horizontal">{children}</PanelGroup>
@@ -456,7 +471,9 @@ export class Slider extends React.Component {
 		}
 		this.onChange = ((e: ChangeEvent<{value: string}>)=>{
 			this.setState({value: e.target.value});
-			if (typeof this.props.onChange !== "undefined") this.props.onChange(e.target.value);
+			if (this.props.onChange) {
+				this.props.onChange(e.target.value);
+			}
 			setCachedValue("slider: " + this.props.uniqueName, e.target.value);
 		});
 	}
@@ -467,7 +484,7 @@ export class Slider extends React.Component {
 			initialValue = str;
 			this.setState({value: initialValue});
 		}
-		if (typeof this.props.onChange !== "undefined") {
+		if (this.props.onChange) {
 			this.props.onChange(initialValue);
 		}
 	}

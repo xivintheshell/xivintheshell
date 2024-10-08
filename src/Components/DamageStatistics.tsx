@@ -421,9 +421,9 @@ export class DamageStatistics extends React.Component {
 			const sameAsLast = props.row.skillName === props.lastRowSkill;
 
 			let tags: React.ReactNode[] = [];
-			for (let i = 0; i < props.row.displayedModifiers.length; i++) {
-				tags.push(<BuffTag key={i} buff={props.row.displayedModifiers[i]}/>);
-			}
+			tags.push(props.row.displayedModifiers.map(
+				(tag, i) => <BuffTag key={i} buff={tag}/>)
+			);
 
 			const includeInStats = getSkillOrDotInclude(props.row.skillName);
 
@@ -527,9 +527,9 @@ export class DamageStatistics extends React.Component {
 
 			// tags
 			let tags: React.ReactNode[] = [];
-			for (let i = 0; i < props.row.displayedModifiers.length; i++) {
-				tags.push(<BuffTag key={i} buff={props.row.displayedModifiers[i]}/>);
-			}
+			tags.push(props.row.displayedModifiers.map(
+				(tag, i) => <BuffTag key={i} buff={tag}/>)
+			);
 			if (props.row.baseMainPotency === 400) {
 				tags.push(<BuffTag key={tags.length} tc={true}/>);
 			}

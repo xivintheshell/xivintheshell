@@ -157,7 +157,7 @@ function TimelineTabs() {
 		position: "relative",
 		margin: 6
 	}}>
-		<Tabs uniqueName={"timeline"} content={[
+		<Tabs uniqueName={"timeline"} maxWidth={1440/* arbitrary */} content={[
 			{
 				titleNode: localize({en: "Timeline markers", zh: "时间轴标记"}),
 				contentNode: <TimelineMarkers/>

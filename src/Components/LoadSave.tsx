@@ -79,7 +79,7 @@ export class LoadSave extends React.Component {
 				title: imageExportTitle,
 				content: <>
 					{localize({
-						en: "export the selected part of the timeline as a png, or the whole timeline if nothing is selected",
+						en: <span>export the selected part of the timeline as a png,<br/>or the whole timeline if nothing is selected</span>,
 						zh: "将时间轴内选择部分导出为png，如果无选择将整个时间轴导出"
 					})}
 					<ImageExport/>

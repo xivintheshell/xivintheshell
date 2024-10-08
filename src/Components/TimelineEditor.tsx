@@ -283,7 +283,7 @@ export class TimelineEditor extends React.Component {
 			/>);
 			itr = itr.next;
 		}
-		return <div style={{}} onClick={
+		return <div onClick={
 			(evt) => {
 				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
 					if (!this.isDirty()) {
@@ -304,11 +304,13 @@ export class TimelineEditor extends React.Component {
 				},
 				{
 					content: <>{actionsList}</>,
-					defaultSize: 40
+					defaultSize: 40,
+					fullBorder: true
 				},
 				{
 					content: applySection(),
-					defaultSize: 40
+					defaultSize: 40,
+					fullBorder: true
 				}
 			]}</Columns>
 		</div>
