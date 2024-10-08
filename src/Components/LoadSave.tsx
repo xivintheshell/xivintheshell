@@ -47,7 +47,7 @@ export class LoadSave extends React.Component {
 					zh: "txt格式"
 				})}/>
 				<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
-					return controller.getActionsLogCsv();
+					return controller.getAmaSimCsv();
 				}} filename={"fight"} displayName={localize({
 					en: "csv format",
 					zh: "csv格式"
