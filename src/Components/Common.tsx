@@ -457,7 +457,7 @@ export class Slider extends React.Component {
 		this.onChange = ((e: ChangeEvent<{value: string}>)=>{
 			this.setState({value: e.target.value});
 			if (typeof this.props.onChange !== "undefined") this.props.onChange(e.target.value);
-			setCachedValue("slider: " + this.props.uniqueName, e.target.value)
+			setCachedValue("slider: " + this.props.uniqueName, e.target.value);
 		});
 	}
 	componentDidMount() {
