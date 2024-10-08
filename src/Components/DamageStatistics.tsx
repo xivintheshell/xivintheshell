@@ -197,15 +197,12 @@ class DamageStatsSettings extends React.Component {
 			this.initialDisplayScale = parseFloat(str);
 		}
 
-		// state
-		this.state = {
-			tinctureBuffPercentageStr: "8",
-		}
-
 		// tincture buff percentage
 		str = getCachedValue("tinctureBuffPercentage");
-		if (str !== null) {
-			this.state.tinctureBuffPercentageStr = str;
+
+		// state
+		this.state = {
+			tinctureBuffPercentageStr: str ?? "8",
 		}
 
 		// functions
