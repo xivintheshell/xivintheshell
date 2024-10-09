@@ -82,15 +82,12 @@ export function ConfigSummary(props: {}) {
 		refreshConfigSummary = forceUpdate;
 	}, []);
 
-	let level = controller.gameConfig.level;
-	let sps = controller.gameConfig.spellSpeed;
 	let gcd = controller.gameConfig.adjustedGCD();
 	let gcdAfterTax = controller.gameConfig.getAfterTaxGCD(gcd).toFixed(3);
 	let castTimesTableDesc = localize({
 		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
 		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节"
 	});
-	let overrides = controller.gameConfig.initialResourceOverrides;
 	let preTaxFn = (t: number) => { return controller.gameConfig.adjustedCastTime(t).toFixed(3); }
 	let afterTaxFn = (t: number) => {
 		let preTax = controller.gameConfig.adjustedCastTime(t);
@@ -177,35 +174,32 @@ export function ConfigSummary(props: {}) {
 	return <div>
 		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
 
-		<p>{localize({en: "Level", zh: "等级"})}: {level}</p>
-
-		<p>{localize({en: "SPS", zh: "咏速"})}: {sps}</p>
-
-		<p>{localize({en: "Displayed GCD", zh: "游戏内显示GCD"})}: {gcd}&nbsp; {
+		<div>{localize({en: "Displayed GCD", zh: "游戏内显示GCD"})}: {gcd}&nbsp; {
 			controller.gameConfig.shellVersion >= ShellVersion.FpsTax ? <Help topic={"displayedGcd"} content={
 				localize({
 					en: `Measured average GCD should be ${gcdAfterTax} due to FPS tax`,
 					zh: `由于帧率税的影响，测量得到的平均GCD为${gcdAfterTax}`
 				})
 			}/> : undefined
-		}</p>
+		}</div>
 
-		<p>{<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help topic={"castTimesTable"} content={castTimesTableDesc}/></span>}</p>
+		<Expandable
+			title={"castTimesTable"}
+			titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help
+				topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
+			defaultShow={false}
+			content={castTimesChart}/>
 
-		{castTimesChart}
+		<div>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</div>
 
-		<p>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</p>
-
-		<p>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</p>
+		<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
 
 		<p>{localize({en: "Procs", zh: "随机数模式"})}: {procMode}</p>
 
 		{numOverrides === 0 ? undefined : <p style={{color: "mediumpurple"}}>{localize({
-			en: `${numOverrides} initial resource override(s):`,
-			zh: `${numOverrides}项初始资源覆盖：`
+			en: `${numOverrides} initial resource override(s)`,
+			zh: `${numOverrides}项初始资源覆盖`
 		})}</p>}
-
-		<p style={{marginLeft: 16}}>{overrides.map(ov => <ResourceOverrideDisplay key={ov.type} override={ov}/>)}</p>
 	</div>
 }
 
@@ -383,13 +377,15 @@ type ConfigState = {
 	overrideEnabled: boolean,
 
 	dirty: boolean,
-	b1TaxPreview: string
+	b1TaxPreview: string,
+	gcdPreview: string
 }
 
 export class Config extends React.Component {
 
 	state: ConfigState;
-	updateTaxPreview: (spsStr: string, fpsStr: string) => void;
+	updateTaxPreview: (spsStr: string, fpsStr: string, levelStr: string) => void;
+	updateGcdPreview: (spsStr: string, levelStr: string) => void;
 	handleSubmit: MouseEventHandler;
 
 	setSpellSpeed: (val: string) => void;
@@ -431,12 +427,25 @@ export class Config extends React.Component {
 			overrideEnabled: true,
 			/////////
 			dirty: false,
-			b1TaxPreview: "n/a"
+			b1TaxPreview: "n/a",
+			gcdPreview: "n/a"
 		};
 
-		this.updateTaxPreview = (spsStr: string, fpsStr: string) => {
-			let b1TaxPreview = getTaxPreview(parseFloat(this.state.level), 2.5, spsStr, fpsStr);
+		this.updateTaxPreview = (spsStr: string, fpsStr: string, levelStr: string) => {
+			let b1TaxPreview = getTaxPreview(parseFloat(levelStr), 2.5, spsStr, fpsStr);
 			this.setState({b1TaxPreview: b1TaxPreview});
+		}
+
+		this.updateGcdPreview = (spsStr: string, levelStr: string) => {
+			let gcd: string;
+			let level = parseFloat(levelStr);
+			let sps = parseFloat(spsStr);
+			if (isNaN(level) || isNaN(sps) || sps < 400) {
+				gcd = "n/a";
+			} else {
+				gcd = XIVMath.preTaxGcd(level as LevelSync, sps, 2.5).toFixed(2);
+			}
+			this.setState({gcdPreview: gcd});
 		}
 
 		this.handleSubmit = (event: React.SyntheticEvent) => {
@@ -458,12 +467,14 @@ export class Config extends React.Component {
 
 		this.setSpellSpeed = (val: string) => {
 			this.setState({spellSpeed: val, dirty: true});
-			this.updateTaxPreview(val, this.state.fps);
+			this.updateTaxPreview(val, this.state.fps, this.state.level);
+			this.updateGcdPreview(val, this.state.level);
 		};
 
 		this.setLevel = evt => {
 			this.setState({level: evt.target.value, dirty: true});
-			this.updateTaxPreview(this.state.spellSpeed, this.state.fps);
+			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, evt.target.value);
+			this.updateGcdPreview(this.state.spellSpeed, evt.target.value);
 		};
 
 		this.setCriticalHit = (val: string) => {
@@ -480,7 +491,7 @@ export class Config extends React.Component {
 
 		this.setFps = (val: string) => {
 			this.setState({fps: val, dirty: true});
-			this.updateTaxPreview(this.state.spellSpeed, val);
+			this.updateTaxPreview(this.state.spellSpeed, val, this.state.level);
 		};
 
 		this.setGcdSkillCorrection = (val: string) => {
@@ -546,6 +557,7 @@ export class Config extends React.Component {
 			this.setState({
 				dirty: false,
 				b1TaxPreview: getTaxPreview(config.level, 2.5, `${config.spellSpeed}`, `${config.fps}`),
+				gcdPreview: XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5),
 				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides)
 			});
 			refreshConfigSummary();
@@ -883,7 +895,7 @@ export class Config extends React.Component {
 		let level = parseFloat(this.state.level);
 		let b1TaxDesc = <div>
 			<style>{getTableStyle(colors.bgHighContrast)}</style>
-			<div className={"paragraph"}>{localize({
+			<div style={{marginBottom: 10}}>{localize({
 				en: "Preview numbers based on your current spell speed and FPS input:",
 				zh: "根据当前输入的咏速和帧率，你将得到如下读条+帧率税："
 			})}</div>
@@ -926,8 +938,16 @@ export class Config extends React.Component {
 					<option key={LevelSync.lvl70} value={LevelSync.lvl70}>70</option>
 				</select>
 			</p>
-			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
-			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: " , zh: "暴击："})} onChange={this.setCriticalHit}/>
+			<div>
+				<Input style={{display: "inline-block"}} defaultValue={this.state.spellSpeed}
+					   description={localize({en: "spell speed: ", zh: "咏速："})} onChange={this.setSpellSpeed}/>
+				<span> (GCD: {this.state.gcdPreview} <Help topic={"gcdPreview"} content={localize({
+					en: "preview of displayed GCD based on your SPS input",
+					zh: "当前咏速对应的游戏内显示的GCD"
+				})}/>)</span>
+			</div>
+			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: ", zh: "暴击："})}
+				   onChange={this.setCriticalHit}/>
 			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<div>
@@ -969,10 +989,14 @@ export class Config extends React.Component {
 				</select>
 			</div>
 			{this.#resourceOverridesSection()}
-			<button onClick={this.handleSubmit}>{localize({en: "apply and reset", zh: "应用并重置时间轴"})}{this.state.dirty ? "*" : ""}</button>
+			<button onClick={this.handleSubmit} style={{width: "100%"}}>
+				{localize({en: "apply and reset", zh: "应用并重置时间轴"})}{this.state.dirty ? "*" : ""}
+			</button>
 		</div>;
 		return (
-			<div style={{marginBottom: 16}}>
+			<div style={{marginBottom: 20}}>
+				<ConfigSummary/>
+				<hr style={{ border: "none", borderTop: `1px solid ${colors.bgHighContrast}`, margin: "16px 0"}}/>
 				{editSection}
 				<p>{localize({
 					en: "You can also import/export fights from/to local files at the bottom of the page.",

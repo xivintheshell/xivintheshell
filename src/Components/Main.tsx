@@ -1,7 +1,7 @@
 import React, {CSSProperties} from 'react';
 import {Timeline, updateTimelineView} from "./Timeline";
 import { SkillsWindow } from "./Skills";
-import {Config, ConfigSummary, TimeControl} from "./PlaybackControl";
+import {Config, TimeControl} from "./PlaybackControl";
 import { StatusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import 'react-tabs/style/react-tabs.css';
@@ -59,10 +59,6 @@ function ConfigTabs(props: {
 	}}>
 		<Tabs uniqueName={"mainConfig"} content={[
 			{
-				titleNode: localize({en: "Overview", zh: "属性预览"}),
-				contentNode: <ConfigSummary/> // retrieves data from global controller
-			},
-			{
 				titleNode: localize({en: "Config", zh: "属性设置"}),
 				contentNode: <Config/>
 			},
@@ -70,7 +66,7 @@ function ConfigTabs(props: {
 				titleNode: localize({en: "Control", zh: "时间控制"}),
 				contentNode: <TimeControl/>
 			}
-		]} collapsible={false} scrollable={true} height={props.height} defaultSelectedIndex={1}/>
+		]} collapsible={false} scrollable={true} height={props.height} defaultSelectedIndex={0}/>
 	</div>
 }
 
