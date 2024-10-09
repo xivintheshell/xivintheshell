@@ -82,8 +82,6 @@ export function ConfigSummary(props: {}) {
 		refreshConfigSummary = forceUpdate;
 	}, []);
 
-	let gcd = controller.gameConfig.adjustedGCD();
-	let gcdAfterTax = controller.gameConfig.getAfterTaxGCD(gcd).toFixed(3);
 	let castTimesTableDesc = localize({
 		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
 		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节"
@@ -174,14 +172,9 @@ export function ConfigSummary(props: {}) {
 	return <div>
 		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
 
-		<div>{localize({en: "Displayed GCD", zh: "游戏内显示GCD"})}: {gcd}&nbsp; {
-			controller.gameConfig.shellVersion >= ShellVersion.FpsTax ? <Help topic={"displayedGcd"} content={
-				localize({
-					en: `Measured average GCD should be ${gcdAfterTax} due to FPS tax`,
-					zh: `由于帧率税的影响，测量得到的平均GCD为${gcdAfterTax}`
-				})
-			}/> : undefined
-		}</div>
+		<div>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</div>
+
+		<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
 
 		<Expandable
 			title={"castTimesTable"}
@@ -189,10 +182,6 @@ export function ConfigSummary(props: {}) {
 				topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
 			defaultShow={false}
 			content={castTimesChart}/>
-
-		<div>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</div>
-
-		<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
 
 		<p>{localize({en: "Procs", zh: "随机数模式"})}: {procMode}</p>
 
@@ -378,14 +367,14 @@ type ConfigState = {
 
 	dirty: boolean,
 	b1TaxPreview: string,
-	gcdPreview: string
+	gcdPreview: string,
+	taxedGcdPreview: string
 }
 
 export class Config extends React.Component {
 
 	state: ConfigState;
 	updateTaxPreview: (spsStr: string, fpsStr: string, levelStr: string) => void;
-	updateGcdPreview: (spsStr: string, levelStr: string) => void;
 	handleSubmit: MouseEventHandler;
 
 	setSpellSpeed: (val: string) => void;
@@ -428,24 +417,33 @@ export class Config extends React.Component {
 			/////////
 			dirty: false,
 			b1TaxPreview: "n/a",
-			gcdPreview: "n/a"
+			gcdPreview: "n/a",
+			taxedGcdPreview: "n/a"
 		};
 
 		this.updateTaxPreview = (spsStr: string, fpsStr: string, levelStr: string) => {
-			let b1TaxPreview = getTaxPreview(parseFloat(levelStr), 2.5, spsStr, fpsStr);
-			this.setState({b1TaxPreview: b1TaxPreview});
-		}
-
-		this.updateGcdPreview = (spsStr: string, levelStr: string) => {
-			let gcd: string;
 			let level = parseFloat(levelStr);
 			let sps = parseFloat(spsStr);
-			if (isNaN(level) || isNaN(sps) || sps < 400) {
-				gcd = "n/a";
+			let fps = parseFloat(fpsStr);
+
+			let b1TaxPreview = getTaxPreview(parseFloat(levelStr), 2.5, spsStr, fpsStr);
+
+			let gcdStr: string;
+			let taxedGcdStr: string;
+			if (isNaN(level) || isNaN(sps) || isNaN(fps) || sps < 400) {
+				gcdStr = "n/a";
+				taxedGcdStr = "n/a";
 			} else {
-				gcd = XIVMath.preTaxGcd(level as LevelSync, sps, 2.5).toFixed(2);
+				let gcd = XIVMath.preTaxGcd(level as LevelSync, sps, 2.5);
+				gcdStr = gcd.toFixed(2);
+				taxedGcdStr = XIVMath.afterFpsTax(fps, gcd).toFixed(3);
 			}
-			this.setState({gcdPreview: gcd});
+
+			this.setState({
+				b1TaxPreview: b1TaxPreview,
+				gcdPreview: gcdStr,
+				taxedGcdPreview: taxedGcdStr,
+			});
 		}
 
 		this.handleSubmit = (event: React.SyntheticEvent) => {
@@ -468,13 +466,11 @@ export class Config extends React.Component {
 		this.setSpellSpeed = (val: string) => {
 			this.setState({spellSpeed: val, dirty: true});
 			this.updateTaxPreview(val, this.state.fps, this.state.level);
-			this.updateGcdPreview(val, this.state.level);
 		};
 
 		this.setLevel = evt => {
 			this.setState({level: evt.target.value, dirty: true});
 			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, evt.target.value);
-			this.updateGcdPreview(this.state.spellSpeed, evt.target.value);
 		};
 
 		this.setCriticalHit = (val: string) => {
@@ -554,10 +550,12 @@ export class Config extends React.Component {
 	componentDidMount() {
 		updateConfigDisplay = ((config)=>{
 			this.setState(config);
+			let gcd = XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5);
 			this.setState({
 				dirty: false,
 				b1TaxPreview: getTaxPreview(config.level, 2.5, `${config.spellSpeed}`, `${config.fps}`),
-				gcdPreview: XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5),
+				gcdPreview: gcd.toFixed(2),
+				taxedGcdPreview: XIVMath.afterFpsTax(config.fps, gcd).toFixed(3),
 				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides)
 			});
 			refreshConfigSummary();
@@ -929,7 +927,7 @@ export class Config extends React.Component {
 			</table>
 		</div>
 		let editSection = <div style={{marginBottom: 16}}>
-			<p>
+			<div>
 				<span>{localize({en: "level: ", zh: "等级："})}</span>
 				<select style={{outline: "none"}} value={this.state.level} onChange={this.setLevel}>
 					<option key={LevelSync.lvl100} value={LevelSync.lvl100}>100</option>
@@ -937,14 +935,22 @@ export class Config extends React.Component {
 					<option key={LevelSync.lvl80} value={LevelSync.lvl80}>80</option>
 					<option key={LevelSync.lvl70} value={LevelSync.lvl70}>70</option>
 				</select>
-			</p>
+			</div>
 			<div>
 				<Input style={{display: "inline-block"}} defaultValue={this.state.spellSpeed}
 					   description={localize({en: "spell speed: ", zh: "咏速："})} onChange={this.setSpellSpeed}/>
-				<span> (GCD: {this.state.gcdPreview} <Help topic={"gcdPreview"} content={localize({
-					en: "preview of displayed GCD based on your SPS input",
-					zh: "当前咏速对应的游戏内显示的GCD"
-				})}/>)</span>
+				<span> (GCD: {this.state.gcdPreview} <Help topic={"gcdPreview"} content={
+					<>
+						<p>{localize({
+							en: "Preview of displayed GCD based on your spell speed.",
+							zh: "当前咏速对应的游戏内显示的GCD."
+						})}</p>
+						<p>{localize({
+							en: `Measured average GCD should be ${this.state.taxedGcdPreview} due to FPS tax`,
+							zh: `由于帧率税的影响，测量得到的平均GCD为${this.state.taxedGcdPreview}`
+						})}</p>
+					</>
+				}/>)</span>
 			</div>
 			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: ", zh: "暴击："})}
 				   onChange={this.setCriticalHit}/>
