@@ -1,5 +1,11 @@
 [
 	{
+		"date": "10/10/24",
+		"changes": [
+			"Added ability to modify action selections made with shift-click"
+		]
+	},
+	{
 		"date": "10/9/24",
 		"changes": [
 			"Page layout updates",

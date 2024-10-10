@@ -243,6 +243,10 @@ export type RecordValidStatus = {
 export class Record extends Line {
 	selectionStart?: ActionNode;
 	selectionEnd?: ActionNode;
+	// Users can shift-click to re-adjust the currently selected bounds. When startIsPivot is true,
+	// selectionStart is kept as one of the new bounds; if startIsPivot is false, selectionEnd is
+	// kept instead.
+	startIsPivot: boolean = true;
 	config?: GameConfig;
 	getFirstSelection() {
 		if (this.selectionStart) console.assert(this.selectionEnd !== undefined);
@@ -273,6 +277,7 @@ export class Record extends Line {
 		node.select();
 		this.selectionStart = node;
 		this.selectionEnd = node;
+		this.startIsPivot = true;
 	}
 	unselectAll() {
 		this.iterateAll(itr=>{
@@ -280,6 +285,7 @@ export class Record extends Line {
 		})
 		this.selectionStart = undefined;
 		this.selectionEnd = undefined;
+		this.startIsPivot = true;
 	}
 	#selectSequence(first: ActionNode, last: ActionNode) {
 		this.unselectAll();
@@ -290,25 +296,38 @@ export class Record extends Line {
 		})
 	}
 	selectUntil(node: ActionNode) {
-		// proceed only if there's currently exactly 1 node selected
 		if (this.selectionStart && this.selectionStart === this.selectionEnd) {
+			// If there is only one node selected: extend the selection window between the current
+			// skill and the newly-selected one
+			// First, check if selectionStart comes before node
 			let itr: ActionNode | undefined;
 			for (itr = this.selectionStart; itr; itr = itr.next) {
 				if (itr === node) {
 					this.#selectSequence(this.selectionStart, node);
+					this.startIsPivot = true;
 					return;
 				}
 			}
-			// failed to find node from going down the currently selected list
+			// We didn't find the node forwards, so check that node is ahead of selectionStart
 			for (itr = node; itr; itr = itr.next) {
 				if (itr === this.selectionStart) {
 					this.#selectSequence(node, this.selectionStart);
+					this.startIsPivot = false;
 					return;
 				}
 			}
 			// failed both ways (shouldn't get here)
 			console.assert(false);
+		} else if (this.selectionStart && this.selectionStart !== this.selectionEnd) {
+			// If a multi-selection is already made, adjust its boundaries around the "pivot" node.
+			// This is the same behavior as if we had only selected the single "pivot" node, and
+			// then attempted a multi-select with the new node as a target.
+			const pivot = this.startIsPivot ? this.selectionStart : this.selectionEnd;
+			this.selectionStart = pivot;
+			this.selectionEnd = pivot;
+			this.selectUntil(node);
 		}
+		// do nothin if no node is selected
 	}
 	onClickNode(node: ActionNode, bShift: boolean) {
 		if (bShift) {
