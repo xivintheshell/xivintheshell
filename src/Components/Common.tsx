@@ -329,7 +329,6 @@ export function Tabs(props: {
 		};
 		if (props.maxWidth !== undefined) {
 			contentStyle.maxWidth = props.maxWidth;
-			contentStyle.margin = "0 auto";
 		}
 		content.push(<div key={i} style={contentStyle}>{tab.contentNode}</div>);
 	}
