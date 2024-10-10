@@ -1,5 +1,13 @@
 [
 	{
+		"date": "10/9/24",
+		"changes": [
+			"Page layout updates",
+			"Lots of underlying implementation updates but shouldn't affect behavior",
+			"A few Chinese localization updates"
+		]
+	},
+	{
 		"date": "9/26/24",
 		"changes": [
 			"Style update for remaining stacks",
