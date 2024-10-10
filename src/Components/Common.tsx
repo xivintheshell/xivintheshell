@@ -7,6 +7,7 @@ import {getCurrentThemeColors} from "./ColorTheme";
 import {getCachedValue, setCachedValue} from "../Controller/Common";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
 import {LiaWindowMinimize} from "react-icons/lia";
+import {Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
 
 export type ContentNode = JSX.Element | string;
 
@@ -133,7 +134,7 @@ export function loadFromFile(fileObject: Blob, callback=(content: object)=>{cons
 	fileReader.readAsText(fileObject, "UTF-8");
 }
 
-export const StaticFn =  {
+export const StaticFn = {
 	positionFromTimeAndScale: function(time: number, scale: number): number {
 		return time * scale * 100;
 	},
@@ -245,7 +246,9 @@ export function Tabs(props: {
 	uniqueName: string,
 	content: TabItem[],
 	collapsible: boolean,
+	scrollable: boolean,
 	height: number,
+	maxWidth?: number,
 	defaultSelectedIndex: number | undefined,
 	style?: CSSProperties
 }) {
@@ -257,7 +260,7 @@ export function Tabs(props: {
 	useEffect(() => {
 		let selected: number | undefined = props.defaultSelectedIndex;
 		// if a cached value exists, it will always override the default
-		let cachedSelected = getCachedValue(props.uniqueName + "SelectedTab");
+		let cachedSelected = getCachedValue("tabs: " + props.uniqueName);
 		if (cachedSelected !== null) {
 			if (cachedSelected === "none") {
 				selected = undefined;
@@ -310,6 +313,7 @@ export function Tabs(props: {
 	let content: ContentNode[] = [];
 	for (let i = 0; i < props.content.length; i++) {
 
+		const tab = props.content[i];
 		const isSelectedTab = i === selectedIndex;
 
 		titles.push(<span key={i} style={tabStyle(i)} onClick={() => {
@@ -317,18 +321,25 @@ export function Tabs(props: {
 			if (!isSelectedTab) { newIndex = i; }
 			else if (props.collapsible) { newIndex = undefined; }
 			setSelectedIndex(newIndex);
-			setCachedValue(props.uniqueName + "SelectedTab", newIndex===undefined ? "none" : `${newIndex}`);
-		}}>{props.content[i].titleNode}</span>);
+			setCachedValue("tabs: " + props.uniqueName, newIndex===undefined ? "none" : `${newIndex}`);
+		}}>{tab.titleNode}</span>);
 
-		content.push(<div key={i} style={{
+		const contentStyle: CSSProperties = {
 			display: isSelectedTab ? "block" : "none"
-		}}>{props.content[i].contentNode}</div>)
+		};
+		if (props.maxWidth !== undefined) {
+			contentStyle.maxWidth = props.maxWidth;
+		}
+		content.push(<div key={i} style={contentStyle}>{tab.contentNode}</div>);
 	}
 
 	if (props.collapsible && selectedIndex !== undefined) {
 		titles.push(<span
 			key={titles.length}
-			onClick={() => {setSelectedIndex(undefined);}}
+			onClick={() => {
+				setSelectedIndex(undefined);
+				setCachedValue("tabs: " + props.uniqueName, "none");
+			}}
 		><LiaWindowMinimize style={{
 			marginLeft: 16,
 			fontSize: 14,
@@ -342,14 +353,60 @@ export function Tabs(props: {
 		position: "relative",
 	}, ...props.style}}>
 		<div>{titles}</div>
-		<div className={"staticScrollbar"} style={{
+		<div className={props.scrollable ? "visibleScrollbar" : undefined} style={{
 			display: selectedIndex === undefined ? "none" : "block",
-			height: props.height - titleHeight,
+			height: props.height - TABS_TITLE_HEIGHT,
 			boxSizing: "border-box",
 			padding: "10px 5px",
-			overflowY: "scroll"
+			overflowY: props.scrollable ? "scroll" : "hidden"
 		}}>{content}</div>
 	</div>
+}
+
+export function Columns(props: {
+	contentHeight: number,
+	children: {
+		content: ContentNode,
+		title?: ContentNode,
+		fullBorder?: boolean,
+		defaultSize?: number,
+		minSize?: number
+	}[]
+}) {
+	let colors = getCurrentThemeColors();
+	let children: React.ReactNode[] = [];
+	for (let i = 0; i < props.children.length; i++) {
+		const column = props.children[i];
+		const nextColumn = i < props.children.length - 1 ? props.children[i + 1] : undefined;
+		children.push(<Panel
+			key={`column-${i}`}
+			className={"invisibleScrollbar"}
+			defaultSize={column.defaultSize}
+			minSize={column.minSize ?? 20}
+			style={{
+				border: column.fullBorder===true ? `1px solid ${colors.bgMediumContrast}` : undefined,
+				boxSizing: "border-box",
+				height: props.contentHeight,
+				overflowY: "scroll",
+			}}>
+			{column.title ? <div style={{marginBottom: 10}}>
+				<b>{column.title}</b>
+			</div> : undefined}
+			{column.content}
+		</Panel>);
+
+		if (i < props.children.length - 1) {
+			const adjacentToBorder: boolean = column.fullBorder===true || (nextColumn!==undefined && nextColumn.fullBorder===true);
+			const style: CSSProperties = adjacentToBorder ? {
+				margin: "0 5px"
+			} : {
+				borderLeft: "1px solid " + colors.bgMediumContrast,
+				margin: "0 15px 0 10px"
+			}
+			children.push(<PanelResizeHandle key={`divider-${i}`} style={style}/>);
+		}
+	}
+	return <PanelGroup direction="horizontal">{children}</PanelGroup>
 }
 
 type InputProps = {
@@ -388,6 +445,7 @@ export class Input extends React.Component {
 }
 
 type SliderProps = {
+	uniqueName: string,
 	onChange?: (e: string) => void,
 	defaultValue?: string,
 	description?: ContentNode
@@ -398,6 +456,7 @@ type SliderState = {
 }
 export class Slider extends React.Component {
 	props: SliderProps = {
+		uniqueName: "anonSlider",
 		defaultValue: "default slider value",
 		description: "default description"
 	};
@@ -411,11 +470,22 @@ export class Slider extends React.Component {
 		}
 		this.onChange = ((e: ChangeEvent<{value: string}>)=>{
 			this.setState({value: e.target.value});
-			if (typeof this.props.onChange !== "undefined") this.props.onChange(e.target.value);
+			if (this.props.onChange) {
+				this.props.onChange(e.target.value);
+			}
+			setCachedValue("slider: " + this.props.uniqueName, e.target.value);
 		});
 	}
 	componentDidMount() {
-		if (typeof this.props.onChange !== "undefined") this.props.onChange(this.state.value);
+		let initialValue = this.state.value;
+		let str = getCachedValue("slider: " + this.props.uniqueName);
+		if (str !== null) {
+			initialValue = str;
+			this.setState({value: initialValue});
+		}
+		if (this.props.onChange) {
+			this.props.onChange(initialValue);
+		}
 	}
 	render() {
 		return <div style={{...{display: "inline-block"}, ...this.props.style}}>
@@ -430,6 +500,45 @@ export class Slider extends React.Component {
 				style={{position: "relative", outline: "none"}}/>
 		</div>
 	}
+}
+
+export function Checkbox(props: {
+	uniqueName: string,
+	label: ContentNode,
+	onChange: (newValue: boolean) => void,
+	defaultChecked?: boolean,
+}) {
+	const [checked, setChecked] = useState<boolean>(false);
+	useEffect(() => {
+		let defaultChecked = props.defaultChecked ?? true;
+		let str = getCachedValue("checked: " + props.uniqueName);
+		if (str !== null) {
+			defaultChecked = parseInt(str) > 0;
+		}
+		setChecked(defaultChecked);
+		props.onChange(defaultChecked);
+		// myn: props really shouldn't update so should be fine to not have them in deps array..
+		// eslint-disable-next-line
+	}, []);
+	const checkboxStyle: CSSProperties = {
+		position: "relative",
+		top: 3,
+		marginRight: "0.25em"
+	};
+	return <div style={{marginBottom: 5}}>
+		<input
+			type="checkbox"
+			onChange={e => {
+				let newVal = e.currentTarget.checked;
+				setChecked(newVal);
+				setCachedValue("checked: " + props.uniqueName, newVal ? "1" : "0");
+				props.onChange(newVal);
+			}}
+			checked={checked}
+			style={checkboxStyle}
+		/>
+		<span>{props.label}</span>
+	</div>
 }
 
 export class ScrollAnchor extends React.Component {
@@ -506,8 +615,9 @@ export class Expandable extends React.Component {
 
 type LoadJsonFromFileOrUrlProps = {
 	allowLoadFromUrl: boolean;
-	defaultLoadUrl: string;
+	defaultLoadUrl?: string;
 	loadUrlOnMount: boolean;
+	label?: ContentNode;
 	onLoadFn: (content: object) => void;
 }
 export class LoadJsonFromFileOrUrl extends React.Component {
@@ -522,7 +632,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 		super(inProps);
 		this.props = inProps;
 		this.fileSelectorRef = React.createRef();
-		this.loadUrl = inProps.defaultLoadUrl;
+		this.loadUrl = inProps.defaultLoadUrl ?? "";
 
 		this.onLoadUrlChange = ((evt: ChangeEvent<{value: string}>)=>{
 			if (evt.target) this.loadUrl = evt.target.value;
@@ -570,7 +680,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 		};
 		return <div>
 			<div>
-				<span>{localize({en: "Load from file: ", zh: "从文件导入："})}</span>
+				<span>{this.props.label ?? localize({en: "Load from file: ", zh: "从文件导入："})}</span>
 				<input
 					style={{
 						width: "110px",

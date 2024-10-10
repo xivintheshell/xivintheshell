@@ -19,7 +19,7 @@ import {skillIconImages} from "./Skills";
 import {buffIconImages} from "./Buffs";
 import {controller} from "../Controller/Controller";
 import {localize, localizeBuffType, localizeSkillName} from "./Localization";
-import {setEditingMarkerValues} from "./TimelineMarkerPresets";
+import {setEditingMarkerValues} from "./TimelineMarkers";
 import {getCurrentThemeColors, ThemeColors} from "./ColorTheme";
 import {scrollEditorToFirstSelected} from "./TimelineEditor";
 import {bossIsUntargetable} from "../Controller/DamageStatistics";

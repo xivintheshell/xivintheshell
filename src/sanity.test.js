@@ -15,7 +15,7 @@ import {act} from "react-dom/test-utils";
 
 class ResizeObserver {
     observe() {}
-    unobserver() {}
+    unobserve() {}
     disconnect() {}
 }
 

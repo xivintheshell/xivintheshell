@@ -1,5 +1,5 @@
 import React from 'react';
-import {Help, Input, Expandable, SaveToFile, FileFormat} from "./Common";
+import {Help, Input, SaveToFile, FileFormat} from "./Common";
 import {localize, LocalizedContent} from "./Localization"
 import {ImageExportConfig} from "../Controller/ImageExportConfig";
 import {controller} from "../Controller/Controller";
@@ -168,6 +168,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 						: </span>
 					}
 					onChange={this.setWrapThresholdSeconds}
+					style={{margin: "10px 0"}}
 				/>
 			</div>
 			{this.checkbox("includeMPAndLucidTicks", {en: "include MP and Lucid ticks", zh: "显示跳蓝和跳醒梦"})}
@@ -175,21 +176,9 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 			{this.checkbox("includeTime", {en: "include time and markers", zh: "显示时间刻度和时间轴标记"})}
 			{this.checkbox("includeBuffIndicators", {en: "include buff indicators", zh: "显示buff快照标记"})}
 		</>
-		return <div className={"imageExport"}>
-			<div style={{marginBottom: 5}}>
-				<b>
-				{localize({
-					en: "Image Export",
-					zh: "导出为图像"
-				})}
-				</b>
-				<span> </span>
-				<Help topic={"fight-png"} content={localize({
-					en: "export the selected part of the timeline as a png, or the whole timeline if nothing is selected",
-					zh: "将时间轴内选择部分导出为png，如果无选择将整个时间轴导出"
-				})}/>
-			</div>
-			<SaveToFile
+		return <div>
+			{settingsSection}
+			<p><SaveToFile
 				filename={"fight"}
 				fileFormat={FileFormat.Png}
 				getContentFn={this.createMockCanvas.bind(this)}
@@ -197,12 +186,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 					en: "export selection as png",
 					zh: "将选择部分导出为png"
 				})}
-			/>
-			<Expandable
-				title={"PngExportSettings"}
-				titleNode={localize({en: "Settings", zh: "设置"})}
-				content={settingsSection}
-			/>
+			/></p>
 		</div>
 	}
 }

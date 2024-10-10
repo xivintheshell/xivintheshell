@@ -1,9 +1,9 @@
-import React, {MouseEventHandler} from 'react';
+import React, {MouseEventHandler, useEffect, useReducer} from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input, ValueChangeEvent} from "./Common";
 import {getCachedValue, setCachedValue, ShellInfo, ShellVersion, TickMode} from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
-import {getAllResources, ResourceOrCoolDownInfo, ResourceOverrideData} from "../Game/Resources";
+import {getAllResources, getResourceInfo, ResourceOverrideData} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {SerializedConfig} from "../Game/GameConfig";
@@ -12,7 +12,7 @@ import {BLMState} from "../Game/Jobs/BLM";
 
 export let updateConfigDisplay = (config: SerializedConfig)=>{};
 
-function getTableStyle(bgHighContraxtColor: string) {
+function getTableStyle(bgHighContrastColor: string) {
 	return `
 		table {
 			border-collapse: collapse;
@@ -21,7 +21,7 @@ function getTableStyle(bgHighContraxtColor: string) {
 		th, td {
 			text-align: center;
 			padding: 0.15em;
-			border: 1px solid ${bgHighContraxtColor};
+			border: 1px solid ${bgHighContrastColor};
 			width: 33%
 		}
 	`;
@@ -41,18 +41,18 @@ function getTaxPreview(level: LevelSync, baseCastTime: number, spsStr: string, f
 // key, rscType, rscInfo
 export function ResourceOverrideDisplay(props: {
 	override: ResourceOverrideData,
-	rscInfo: ResourceOrCoolDownInfo,
-	deleteFn: (rsc: ResourceType) => void,
+	deleteFn?: (rsc: ResourceType) => void, // when null, this component is for display only
 }) {
-	let str: string = "";
-	if (props.rscInfo.isCoolDown) {
+	let rscInfo = getResourceInfo(ShellInfo.job, props.override.type);
+	let str: string;
+	if (rscInfo.isCoolDown) {
 		str = props.override.type + " full in " + props.override.timeTillFullOrDrop + "s";
 	} else {
 		str = props.override.type;
 		if (props.override.type === ResourceType.LeyLines) str += " (" + (props.override.effectOrTimerEnabled ? "enabled" : "disabled") + ")";
 		if (props.override.type === ResourceType.Enochian) str += " (" + (props.override.effectOrTimerEnabled ? "timer enabled" : "timer disabled") + ")";
-		if (props.rscInfo.maxValue > 1) str += " (amount: " + props.override.stacks + ")";
-		if (props.rscInfo.maxTimeout >= 0) {
+		if (rscInfo.maxValue > 1) str += " (amount: " + props.override.stacks + ")";
+		if (rscInfo.maxTimeout >= 0) {
 			if (props.override.type === ResourceType.Polyglot) {
 				if (props.override.timeTillFullOrDrop > 0) str += " next stack ready in " + props.override.timeTillFullOrDrop + "s";
 			} else {
@@ -63,15 +63,25 @@ export function ResourceOverrideDisplay(props: {
 		}
 	}
 	str += " ";
+	let deleteBtn: React.JSX.Element | undefined = undefined;
+	if (props.deleteFn) {
+		const deleteFn = props.deleteFn;
+		deleteBtn = <Clickable content="[x]" onClickFn={e=>{ deleteFn(props.override.type); }}/>;
+	}
 	return <div style={{marginTop: 10, color: "mediumpurple"}}>
 		{str}
-		<Clickable content="[x]" onClickFn={e=>{ props.deleteFn(props.override.type); }}/>
+		{deleteBtn}
 	</div>;
 }
 
+let refreshConfigSummary = () => {};
 export function ConfigSummary(props: {}) {
-	let gcd = controller.gameConfig.adjustedGCD();
-	let gcdAfterTax = controller.gameConfig.getAfterTaxGCD(gcd).toFixed(3);
+
+	const [, forceUpdate] = useReducer(x => x + 1, 0);
+	useEffect(() => {
+		refreshConfigSummary = forceUpdate;
+	}, []);
+
 	let castTimesTableDesc = localize({
 		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
 		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节"
@@ -81,7 +91,7 @@ export function ConfigSummary(props: {}) {
 		let preTax = controller.gameConfig.adjustedCastTime(t);
 		return controller.gameConfig.getAfterTaxCastTime(preTax).toFixed(3);
 	};
-	let castTimesChart =<div>
+	let castTimesChart = <div>
 		<style>{getTableStyle(getCurrentThemeColors().bgHighContrast)}</style>
 		<table>
 			<tbody>
@@ -158,27 +168,27 @@ export function ConfigSummary(props: {}) {
 			</div>
 		</div>
 	});
-	let legacyCasterTaxBlurb = <div className={"paragraph"} style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={blurb}/></div>;
+	let legacyCasterTaxBlurb = <p className={"paragraph"} style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={blurb}/></p>;
 	return <div>
 		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
-		{localize({en: "Displayed GCD", zh: "游戏内显示的GCD"})}: {gcd}&nbsp;
-		{
-			controller.gameConfig.shellVersion >= ShellVersion.FpsTax ? <Help topic={"displayedGcd"} content={
-				localize({
-					en: `Measured average GCD should be ${gcdAfterTax} due to FPS tax`,
-					zh: `由于帧率税的影响，测量得到的平均GCD为${gcdAfterTax}`
-				})
-			}/> : undefined
-		}
+
+		<div>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</div>
+
+		<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
+
 		<Expandable
-			title={"Cast times table"}
-			titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
-			defaultShow={true}
+			title={"castTimesTable"}
+			titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help
+				topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
+			defaultShow={false}
 			content={castTimesChart}/>
-		{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}
-		<br/>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}
-		{procMode===ProcMode.RNG ? undefined : <span style={{color: "mediumpurple"}}><br/>Procs: {procMode}</span>}
-		{numOverrides === 0 ? undefined : <span style={{color: "mediumpurple"}}><br/>{numOverrides} resource override(s)</span>}
+
+		<p>{localize({en: "Procs", zh: "随机数模式"})}: {procMode}</p>
+
+		{numOverrides === 0 ? undefined : <p style={{color: "mediumpurple"}}>{localize({
+			en: `${numOverrides} initial resource override(s)`,
+			zh: `${numOverrides}项初始资源覆盖`
+		})}</p>}
 	</div>
 }
 
@@ -265,20 +275,19 @@ export class TimeControl extends React.Component {
 		let radioStyle: React.CSSProperties = {
 			position: "relative",
 			top: 3,
-			marginRight: "0.25em"
+			marginRight: "0.75em"
 		};
 		let tickModeOptionStyle = {
 			display: "inline-block",
 			marginRight: "0.5em"
 		};
-		return <div style={{display: "inline-block", marginBottom: 15}}>
-			<div style={{marginBottom: 5}}>
-				<div style={{marginBottom: 5}}><b>{localize({en: "Control", zh: "战斗时间控制"})}</b></div>
+		return <div>
+			<p>
 				<label style={tickModeOptionStyle}>
 					<input style={radioStyle} type={"radio"} onChange={this.setTickMode}
-						   value={TickMode.RealTimeAutoPause}
-						   checked={this.state.tickMode===TickMode.RealTimeAutoPause}
-						   name={"tick mode"}/>
+					       value={TickMode.RealTimeAutoPause}
+					       checked={this.state.tickMode === TickMode.RealTimeAutoPause}
+					       name={"tick mode"}/>
 					{localize({
 						en: "real-time auto pause",
 						zh: "实时(带自动暂停）"
@@ -291,16 +300,19 @@ export class TimeControl extends React.Component {
 							zh: <div className="paragraph">*推荐设置*</div>
 						})}
 						{localize({
-							en: <div className="paragraph">- click to use a skill. or if it's not ready, click again to wait then retry</div>,
-							zh: <div className="paragraph">- 点击图标使用技能; 战斗时间会按下方设置的倍速自动前进直到可释放下一个技能。如果点击的技能CD没有转好，再次点击会快进到它CD转好并重试。</div>
+							en: <div className="paragraph">- click to use a skill. or if it's not ready, click again
+								to wait then retry</div>,
+							zh: <div className="paragraph">- 点击图标使用技能;
+								战斗时间会按下方设置的倍速自动前进直到可释放下一个技能。如果点击的技能CD没有转好，再次点击会快进到它CD转好并重试。</div>
 						})}
 					</div>
-				}/><br/>
+				}/>
+				<br/>
 				<label style={tickModeOptionStyle}>
 					<input style={radioStyle} type={"radio"} onChange={this.setTickMode}
-						   value={TickMode.Manual}
-						   checked={this.state.tickMode===TickMode.Manual}
-						   name={"tick mode"}/>
+					       value={TickMode.Manual}
+					       checked={this.state.tickMode === TickMode.Manual}
+					       name={"tick mode"}/>
 					{localize({
 						en: "manual",
 						zh: "手动"
@@ -309,16 +321,20 @@ export class TimeControl extends React.Component {
 				<Help topic={"ctrl-manual"} content={
 					<div className="toolTip">
 						{localize({
-							en: <div className="paragraph">- click to use a skill. or if it's not ready, click again to wait then retry</div>,
-							zh: <div className="paragraph">- 点击图标使用技能; 战斗时间会自动快进至可释放下一个技能。如果点击的技能CD没有转好，再次点击可以快进到它CD转好并重试。</div>
+							en: <div className="paragraph">- click to use a skill. or if it's not ready, click again
+								to wait then retry</div>,
+							zh: <div className="paragraph">- 点击图标使用技能;
+								战斗时间会自动快进至可释放下一个技能。如果点击的技能CD没有转好，再次点击可以快进到它CD转好并重试。</div>
 						})}
 						{localize({
-							en:<div className="paragraph">- <ButtonIndicator text={"space"}/> to advance game time to the earliest possible time for the next skill</div>,
-							zh: <div className="paragraph">- 点击 <ButtonIndicator text={"空格"}/> 来快进到下一个可释放技能的时间点。</div>
+							en: <div className="paragraph">- <ButtonIndicator text={"space"}/> to advance game time
+								to the earliest possible time for the next skill</div>,
+							zh: <div className="paragraph">- 点击 <ButtonIndicator text={"空格"}/> 来快进到下一个可释放技能的时间点。
+							</div>
 						})}
 					</div>
-				}/><br/>
-			</div>
+				}/>
+			</p>
 			<Input defaultValue={`${this.state.timeScale}`} description={<span>{localize({en: "time scale ", zh: "倍速 "})}<Help topic={"timeScale"} content={
 				<div>{localize({
 					en: "rate at which game time advances automatically (aka when in real-time)",
@@ -350,13 +366,15 @@ type ConfigState = {
 	overrideEnabled: boolean,
 
 	dirty: boolean,
-	b1TaxPreview: string
+	b1TaxPreview: string,
+	gcdPreview: string,
+	taxedGcdPreview: string
 }
 
 export class Config extends React.Component {
 
 	state: ConfigState;
-	updateTaxPreview: (spsStr: string, fpsStr: string) => void;
+	updateTaxPreview: (spsStr: string, fpsStr: string, levelStr: string) => void;
 	handleSubmit: MouseEventHandler;
 
 	setSpellSpeed: (val: string) => void;
@@ -398,12 +416,34 @@ export class Config extends React.Component {
 			overrideEnabled: true,
 			/////////
 			dirty: false,
-			b1TaxPreview: "n/a"
+			b1TaxPreview: "n/a",
+			gcdPreview: "n/a",
+			taxedGcdPreview: "n/a"
 		};
 
-		this.updateTaxPreview = (spsStr: string, fpsStr: string) => {
-			let b1TaxPreview = getTaxPreview(parseFloat(this.state.level), 2.5, spsStr, fpsStr);
-			this.setState({b1TaxPreview: b1TaxPreview});
+		this.updateTaxPreview = (spsStr: string, fpsStr: string, levelStr: string) => {
+			let level = parseFloat(levelStr);
+			let sps = parseFloat(spsStr);
+			let fps = parseFloat(fpsStr);
+
+			let b1TaxPreview = getTaxPreview(parseFloat(levelStr), 2.5, spsStr, fpsStr);
+
+			let gcdStr: string;
+			let taxedGcdStr: string;
+			if (isNaN(level) || isNaN(sps) || isNaN(fps) || sps < 400) {
+				gcdStr = "n/a";
+				taxedGcdStr = "n/a";
+			} else {
+				let gcd = XIVMath.preTaxGcd(level as LevelSync, sps, 2.5);
+				gcdStr = gcd.toFixed(2);
+				taxedGcdStr = XIVMath.afterFpsTax(fps, gcd).toFixed(3);
+			}
+
+			this.setState({
+				b1TaxPreview: b1TaxPreview,
+				gcdPreview: gcdStr,
+				taxedGcdPreview: taxedGcdStr,
+			});
 		}
 
 		this.handleSubmit = (event: React.SyntheticEvent) => {
@@ -425,12 +465,12 @@ export class Config extends React.Component {
 
 		this.setSpellSpeed = (val: string) => {
 			this.setState({spellSpeed: val, dirty: true});
-			this.updateTaxPreview(val, this.state.fps);
+			this.updateTaxPreview(val, this.state.fps, this.state.level);
 		};
 
 		this.setLevel = evt => {
 			this.setState({level: evt.target.value, dirty: true});
-			this.updateTaxPreview(this.state.spellSpeed, this.state.fps);
+			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, evt.target.value);
 		};
 
 		this.setCriticalHit = (val: string) => {
@@ -447,7 +487,7 @@ export class Config extends React.Component {
 
 		this.setFps = (val: string) => {
 			this.setState({fps: val, dirty: true});
-			this.updateTaxPreview(this.state.spellSpeed, val);
+			this.updateTaxPreview(this.state.spellSpeed, val, this.state.level);
 		};
 
 		this.setGcdSkillCorrection = (val: string) => {
@@ -510,11 +550,15 @@ export class Config extends React.Component {
 	componentDidMount() {
 		updateConfigDisplay = ((config)=>{
 			this.setState(config);
+			let gcd = XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5);
 			this.setState({
 				dirty: false,
 				b1TaxPreview: getTaxPreview(config.level, 2.5, `${config.spellSpeed}`, `${config.fps}`),
+				gcdPreview: gcd.toFixed(2),
+				taxedGcdPreview: XIVMath.afterFpsTax(config.fps, gcd).toFixed(3),
 				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides)
 			});
+			refreshConfigSummary();
 		});
 	}
 
@@ -745,47 +789,52 @@ export class Config extends React.Component {
 
 		}
 
-		return <form
-			onSubmit={evt => {
-				this.#addResourceOverride();
-				this.setState({
-					selectedOverrideResource: this.#getFirstAddable(this.state.initialResourceOverrides)
-				});
-				evt.preventDefault();
-			}}
-			style={{marginTop: 16, outline: "1px solid " + getCurrentThemeColors().bgMediumContrast, outlineOffset: 6}}>
-			<select value={this.state.selectedOverrideResource}
+		return <div>
+			<form
+				onSubmit={evt => {
+					this.#addResourceOverride();
+					this.setState({
+						selectedOverrideResource: this.#getFirstAddable(this.state.initialResourceOverrides)
+					});
+					evt.preventDefault();
+				}}
+				style={{
+					marginTop: 16,
+					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
+					outlineOffset: 6
+				}}>
+				<select
+					value={this.state.selectedOverrideResource}
 					onChange={evt => {
 						if (evt.target) {
 							this.setState({
 								selectedOverrideResource: evt.target.value,
-								overrideEnabled: evt.target.value===ResourceType.LeyLines ?
+								overrideEnabled: evt.target.value === ResourceType.LeyLines ?
 									this.state.overrideEnabled : true
 							});
 						}
 					}}>
-				{resourceOptions}
-			</select>
-			{inputSection}
-			<input type="submit" value="add override"/>
-		</form>
+					{resourceOptions}
+				</select>
+				{inputSection}
+				<input type="submit" value="add override"/>
+			</form>
+		</div>
 	}
 
 	#resourceOverridesSection() {
 		let resourceOverridesDisplayNodes = [];
 		for (let i = 0; i < this.state.initialResourceOverrides.length; i++) {
 			let override = this.state.initialResourceOverrides[i];
-			let info = getAllResources(ShellInfo.job).get(override.type)!;
 			resourceOverridesDisplayNodes.push(<ResourceOverrideDisplay
 				key={i}
 				override={override}
-				rscInfo={info}
 				deleteFn={this.deleteResourceOverride}
 			/>);
 		}
 		return <div style={{marginTop: 10}}>
 			<Expandable title="overrideInitialResources" titleNode={<span>
-				Override initial resources <Help topic="overrideInitialResources"content={<div>
+				{localize({en:"Override initial resources", zh: "指定初始资源"})} <Help topic="overrideInitialResources"content={<div>
 				<div className={"paragraph"} style={{color: "orangered"}}><b>Can create invalid game states. Go over Instructions/Troubleshoot first and use carefully at your own risk!</b></div>
 				<div className={"paragraph"}>Also, currently thunder dot buff created this way doesn't actually tick. It just shows the remaining buff timer.</div>
 				<div className={"paragraph"}>I would recommend saving settings (stats, lines presets, timeline markers etc.) to files first, in case invalid game states really mess up the tool and a complete reset is required.</div>
@@ -794,7 +843,7 @@ export class Config extends React.Component {
 				<button onClick={evt=>{
 					this.setState({ initialResourceOverrides: [], dirty: true });
 					evt.preventDefault();
-				}}>clear all overrides</button>
+				}}>{localize({en: "clear all overrides", zh: "清除所有指定初始资源"})}</button>
 				{resourceOverridesDisplayNodes}
 				{this.#addResourceOverrideNode()}
 			</div>}/>
@@ -844,7 +893,7 @@ export class Config extends React.Component {
 		let level = parseFloat(this.state.level);
 		let b1TaxDesc = <div>
 			<style>{getTableStyle(colors.bgHighContrast)}</style>
-			<div className={"paragraph"}>{localize({
+			<div style={{marginBottom: 10}}>{localize({
 				en: "Preview numbers based on your current spell speed and FPS input:",
 				zh: "根据当前输入的咏速和帧率，你将得到如下读条+帧率税："
 			})}</div>
@@ -877,7 +926,7 @@ export class Config extends React.Component {
 				</tbody>
 			</table>
 		</div>
-		let editSection = <div>
+		let editSection = <div style={{marginBottom: 16}}>
 			<div>
 				<span>{localize({en: "level: ", zh: "等级："})}</span>
 				<select style={{outline: "none"}} value={this.state.level} onChange={this.setLevel}>
@@ -887,8 +936,24 @@ export class Config extends React.Component {
 					<option key={LevelSync.lvl70} value={LevelSync.lvl70}>70</option>
 				</select>
 			</div>
-			<Input defaultValue={this.state.spellSpeed} description={localize({en: "spell speed: " , zh: "咏速："})} onChange={this.setSpellSpeed}/>
-			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: " , zh: "暴击："})} onChange={this.setCriticalHit}/>
+			<div>
+				<Input style={{display: "inline-block"}} defaultValue={this.state.spellSpeed}
+					   description={localize({en: "spell speed: ", zh: "咏速："})} onChange={this.setSpellSpeed}/>
+				<span> (GCD: {this.state.gcdPreview} <Help topic={"gcdPreview"} content={
+					<>
+						<p>{localize({
+							en: "Preview of displayed GCD based on your spell speed.",
+							zh: "当前咏速对应的游戏内显示的GCD."
+						})}</p>
+						<p>{localize({
+							en: `Measured average GCD should be ${this.state.taxedGcdPreview} due to FPS tax`,
+							zh: `由于帧率税的影响，测量得到的平均GCD为${this.state.taxedGcdPreview}`
+						})}</p>
+					</>
+				}/>)</span>
+			</div>
+			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: ", zh: "暴击："})}
+				   onChange={this.setCriticalHit}/>
 			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<div>
@@ -930,13 +995,19 @@ export class Config extends React.Component {
 				</select>
 			</div>
 			{this.#resourceOverridesSection()}
-			<button onClick={this.handleSubmit}>{localize({en: "apply and reset", zh: "应用并重置时间轴"})}</button>
+			<button onClick={this.handleSubmit} style={{width: "100%"}}>
+				{localize({en: "apply and reset", zh: "应用并重置时间轴"})}{this.state.dirty ? "*" : ""}
+			</button>
 		</div>;
 		return (
-			<div className={"config"} style={{marginBottom: 16}}>
-				<div style={{marginBottom: 5}}><b>{localize({en: "Config", zh: "设置"})}</b></div>
-				<ConfigSummary/> {/* retrieves data from global controller */}
-				<Expandable title={"Edit"} titleNode={localize({en: "Edit", zh: "编辑"}) + (this.state.dirty ? "*" : "")} content={editSection}/>
+			<div style={{marginBottom: 20}}>
+				<ConfigSummary/>
+				<hr style={{ border: "none", borderTop: `1px solid ${colors.bgHighContrast}`, margin: "16px 0"}}/>
+				{editSection}
+				<p>{localize({
+					en: "You can also import/export fights from/to local files at the bottom of the page.",
+					zh: "页面底部有导入和导出战斗文件相关选项。"
+				})}</p>
 			</div>
 		)}
 }

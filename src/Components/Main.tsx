@@ -1,7 +1,7 @@
 import React, {CSSProperties} from 'react';
 import {Timeline, updateTimelineView} from "./Timeline";
 import { SkillsWindow } from "./Skills";
-import { Config, TimeControl } from "./PlaybackControl";
+import {Config, TimeControl} from "./PlaybackControl";
 import { StatusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import 'react-tabs/style/react-tabs.css';
@@ -9,7 +9,7 @@ import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
 import changelog from "../changelog.json"
 import {localize, localizeDate, SelectLanguage} from "./Localization"
-import {GlobalHelpTooltip} from "./Common";
+import {GlobalHelpTooltip, Tabs} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
 import {DamageStatistics} from "./DamageStatistics";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
@@ -46,6 +46,29 @@ function handleUrlCommands(command?: string) {
 }
 
 export let forceUpdateAll = ()=>{};
+
+function ConfigTabs(props: {
+	height: number
+}) {
+	return <div style={{
+		flex: 3,
+		height: props.height,
+		marginLeft: 6,
+		position: "relative",
+		verticalAlign: "top",
+	}}>
+		<Tabs uniqueName={"mainConfig"} content={[
+			{
+				titleNode: localize({en: "Config", zh: "属性设置"}),
+				contentNode: <Config/>
+			},
+			{
+				titleNode: localize({en: "Control", zh: "时间控制"}),
+				contentNode: <TimeControl/>
+			}
+		]} collapsible={false} scrollable={true} height={props.height} defaultSelectedIndex={0}/>
+	</div>
+}
 
 export default class Main extends React.Component {
 
@@ -163,13 +186,22 @@ export default class Main extends React.Component {
 			top: 0, bottom: 0, left: 0, right: 0
 		}}>
 			<style>{`
-				.staticScrollbar::-webkit-scrollbar {
+				.visibleScrollbar::-webkit-scrollbar {
 					appearance: none;
 					background-color: ${colors.bgLowContrast};
 					height: 8px;
 					width: 5px;
 				}
-				.staticScrollbar::-webkit-scrollbar-thumb {
+				.visibleScrollbar::-webkit-scrollbar-thumb {
+					background-color: ${colors.bgHighContrast};
+				}
+				.invisibleScrollbar::-webkit-scrollbar {
+					appearance: none;
+					background-color: clear;
+					height: 8px;
+					width: 5px;
+				}
+				.invisibleScrollbar::-webkit-scrollbar-thumb {
 					background-color: ${colors.bgHighContrast};
 				}
 				a {
@@ -177,6 +209,13 @@ export default class Main extends React.Component {
 				}
 				b, h1, h2, h3, h4 {
 					color: ${colors.emphasis};
+				}
+				p {
+					margin-block-start: 10px;
+					margin-block-end: 10px;
+				}
+				p:first-child {
+					margin-block-start: 0px;
 				}
 				::selection {
 					background: rgba(147, 112, 219, 0.4);
@@ -291,21 +330,7 @@ export default class Main extends React.Component {
 							position: "relative",
 							marginBottom: "20px"}}>
 							{mainControlRegion}
-							<div className={"staticScrollbar"} style={{
-								flex: 3,
-								height: this.state.controlRegionHeight,
-								marginLeft: 6,
-								position: "relative",
-								verticalAlign: "top",
-								overflowY: "scroll",
-							}}>
-								<Config/>
-								<TimeControl/>
-								<div>{localize({
-									en: "You can also import/export fights from/to local files at the bottom of the page.",
-									zh: "页面底部有导入和导出战斗文件相关选项。"
-								})}</div>
-							</div>
+							<ConfigTabs height={this.state.controlRegionHeight}/>
 						</div>
 						<SkillSequencePresets/>
 						<hr style={{

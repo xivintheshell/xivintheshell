@@ -3,7 +3,7 @@ import {controller} from "./Controller";
 import {Debug, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {ActionNode} from "./Record";
 import {FileType, getCachedValue, removeCachedValue, setCachedValue} from "./Common";
-import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkerPresets";
+import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkers";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {Potency} from "../Game/Potency";

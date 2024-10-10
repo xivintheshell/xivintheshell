@@ -3,8 +3,8 @@ import {controller} from "../Controller/Controller";
 import {ActionNode, ActionType, Record, RecordValidStatus} from "../Controller/Record";
 import {StaticFn} from "./Common";
 import {localize, localizeSkillName} from "./Localization";
-import {getCurrentThemeColors} from "./ColorTheme";
-import {TIMELINE_SETTINGS_HEIGHT} from "./Timeline";
+import {TIMELINE_COLUMNS_HEIGHT} from "./Timeline";
+import {Columns} from "./Common";
 
 export let refreshTimelineEditor = ()=>{};
 
@@ -200,91 +200,80 @@ export class TimelineEditor extends React.Component {
 			marginBottom: 10,
 			padding: 3
 		}
-		let toolbar = <div style={{
-			display: "flex",
-			flexDirection: "column",
-			flex: 2,
-			marginRight: 10,
-			position: "relative",
-			verticalAlign: "top",
-			overflowY: "hidden"
-		}}>
-
-			<div style={{marginBottom: 6, flex: 1}}>
-				<button style={buttonStyle} onClick={e=>{
-					if (displayedRecord.getFirstSelection()) {
-						setHandledSkillSelectionThisFrame(true);
-						// move selected skills up
-						let copy = this.getRecordCopy();
-						let editedNodes = this.state.editedNodes;
-						let firstEditedNode = copy.moveSelected(-1);
-						if (firstEditedNode) editedNodes.push(firstEditedNode);
-						let status = controller.checkRecordValidity(copy, editedNodes);
-						if (firstEditedNode && status.straightenedIfValid) {
-							this.setState({
-								editedRecord: status.straightenedIfValid,
-								editedNodes: []
-							});
-						} else {
-							this.setState({
-								editedNodes: editedNodes
-							});
-						}
+		let toolbar = <div style={{marginBottom: 6, flex: 1}}>
+			<button style={buttonStyle} onClick={e => {
+				if (displayedRecord.getFirstSelection()) {
+					setHandledSkillSelectionThisFrame(true);
+					// move selected skills up
+					let copy = this.getRecordCopy();
+					let editedNodes = this.state.editedNodes;
+					let firstEditedNode = copy.moveSelected(-1);
+					if (firstEditedNode) editedNodes.push(firstEditedNode);
+					let status = controller.checkRecordValidity(copy, editedNodes);
+					if (firstEditedNode && status.straightenedIfValid) {
 						this.setState({
-							recordValidStatus: status,
+							editedRecord: status.straightenedIfValid,
+							editedNodes: []
+						});
+					} else {
+						this.setState({
+							editedNodes: editedNodes
 						});
 					}
-				}}>{localize({en: "move up", zh: "上移"})}</button>
+					this.setState({
+						recordValidStatus: status,
+					});
+				}
+			}}>{localize({en: "move up", zh: "上移"})}</button>
 
-				<button style={buttonStyle} onClick={e=>{
-					if (displayedRecord.getFirstSelection()) {
-						setHandledSkillSelectionThisFrame(true);
-						// move selected skills down
-						let copy = this.getRecordCopy();
-						let editedNodes = this.state.editedNodes;
-						let firstEditedNode = copy.moveSelected(1);
-						if (firstEditedNode) editedNodes.push(firstEditedNode);
-						let status = controller.checkRecordValidity(copy, editedNodes);
-						if (firstEditedNode && status.straightenedIfValid) {
-							this.setState({
-								editedRecord: status.straightenedIfValid,
-								editedNodes: []
-							});
-						} else {
-							this.setState({
-								editedNodes: editedNodes
-							});
-						}
+			<button style={buttonStyle} onClick={e => {
+				if (displayedRecord.getFirstSelection()) {
+					setHandledSkillSelectionThisFrame(true);
+					// move selected skills down
+					let copy = this.getRecordCopy();
+					let editedNodes = this.state.editedNodes;
+					let firstEditedNode = copy.moveSelected(1);
+					if (firstEditedNode) editedNodes.push(firstEditedNode);
+					let status = controller.checkRecordValidity(copy, editedNodes);
+					if (firstEditedNode && status.straightenedIfValid) {
 						this.setState({
-							recordValidStatus: status,
+							editedRecord: status.straightenedIfValid,
+							editedNodes: []
+						});
+					} else {
+						this.setState({
+							editedNodes: editedNodes
 						});
 					}
-				}}>{localize({en: "move down", zh: "下移"})}</button>
+					this.setState({
+						recordValidStatus: status,
+					});
+				}
+			}}>{localize({en: "move down", zh: "下移"})}</button>
 
-				<button style={buttonStyle} onClick={e=>{
-					if (displayedRecord.getFirstSelection()) {
-						setHandledSkillSelectionThisFrame(true);
-						let copy = this.getRecordCopy();
-						let editedNodes = this.state.editedNodes;
-						let firstEditedNode = copy.deleteSelected();
-						if (firstEditedNode) editedNodes.push(firstEditedNode);
-						let status = controller.checkRecordValidity(copy, editedNodes);
-						if (firstEditedNode && status.straightenedIfValid) {
-							this.setState({
-								editedRecord: status.straightenedIfValid,
-								editedNodes: []
-							});
-						} else {
-							this.setState({
-								editedNodes: editedNodes
-							});
-						}
+			<button style={buttonStyle} onClick={e => {
+				if (displayedRecord.getFirstSelection()) {
+					setHandledSkillSelectionThisFrame(true);
+					let copy = this.getRecordCopy();
+					let editedNodes = this.state.editedNodes;
+					let firstEditedNode = copy.deleteSelected();
+					if (firstEditedNode) editedNodes.push(firstEditedNode);
+					let status = controller.checkRecordValidity(copy, editedNodes);
+					if (firstEditedNode && status.straightenedIfValid) {
 						this.setState({
-							recordValidStatus: status,
+							editedRecord: status.straightenedIfValid,
+							editedNodes: []
+						});
+					} else {
+						this.setState({
+							editedNodes: editedNodes
 						});
 					}
-				}}>{localize({en: "delete selected", zh: "删除所选"})}</button>
-			</div>
+					this.setState({
+						recordValidStatus: status,
+					});
+				}
+			}}>{localize({en: "delete selected", zh: "删除所选"})}</button>
 		</div>
 
 		// mid: actions list
@@ -301,9 +290,8 @@ export class TimelineEditor extends React.Component {
 			/>);
 			itr = itr.next;
 		}
-		let colors = getCurrentThemeColors();
-		return <div style={{display: "flex", flexDirection: "row", position: "relative", height: TIMELINE_SETTINGS_HEIGHT - 50}} onClick={
-			(evt)=>{
+		return <div onClick={
+			(evt) => {
 				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
 					if (!this.isDirty()) {
 						controller.record.unselectAll();
@@ -316,21 +304,22 @@ export class TimelineEditor extends React.Component {
 				setHandledSkillSelectionThisFrame(false);
 			}
 		}>
-			{toolbar}
-			<div className={"staticScrollbar"} style={{
-				border: "1px solid " + colors.bgMediumContrast,
-				flex: 6,
-				marginRight: 10,
-				position: "relative",
-				verticalAlign: "top",
-				overflowY: "scroll"
-			}}>
-				{actionsList}
-			</div>
-			<div style={{
-				border: "1px solid " + colors.bgMediumContrast, flex: 6, position: "relative", verticalAlign: "top", overflowY: "hidden"}}>
-				{applySection()}
-			</div>
+			<Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>{[
+				{
+					content: toolbar,
+					defaultSize: 20
+				},
+				{
+					content: <>{actionsList}</>,
+					defaultSize: 40,
+					fullBorder: true
+				},
+				{
+					content: applySection(),
+					defaultSize: 40,
+					fullBorder: true
+				}
+			]}</Columns>
 		</div>
 	}
 }
