@@ -695,6 +695,9 @@ makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, 
 	applicationDelay: 0, // ?
 	cooldown: 3,
 	validateAttempt: (state) => state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0,
+	onConfirm: (state, node) => {
+		state.resources.get(ResourceType.LeyLines).enabled = true;
+	},
 });
 
 makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialManipulation, {

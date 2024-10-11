@@ -2,7 +2,8 @@
 	{
 		"date": "10/10/24",
 		"changes": [
-			"Added ability to modify action selections made with shift-click"
+			"Added ability to modify action selections made with shift-click",
+			"Fixed a bug where Between the Lines did not re-enable Ley Lines if toggled"
 		]
 	},
 	{
