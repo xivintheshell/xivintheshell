@@ -9,7 +9,7 @@ import {
 } from "./Common";
 import {GameState} from "../Game/GameState";
 import {getAutoReplacedSkillName, getConditionalReplacement} from "../Game/Skills";
-import {newGameState, BLMState} from "../Game/Jobs/BLM";
+import {BLMState} from "../Game/Jobs/BLM";
 import {Buff} from "../Game/Buffs";
 import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
@@ -36,6 +36,11 @@ import {
 } from "./DamageStatistics";
 
 type Fixme = any;
+
+const newGameState = (config: GameConfig) => {
+	// TODO add PCT
+	return new BLMState(config);
+};
 
 class Controller {
 	timeScale;

@@ -62,6 +62,8 @@ type StatusViewProps = {
 	level: number
 }
 
+// TODO type StatusViewProps = BLMStatusViewProps | PCTStatusViewProps
+
 // color, value
 function ResourceStack(props: {color: string, value: boolean}) {
 	let colors = getCurrentThemeColors();
@@ -132,16 +134,9 @@ function ResourceCounter(props: {
 
 const buffIcons = new Map();
 
-const blmBuffResources = [
-	ResourceType.Triplecast,
-	ResourceType.Triplecast + "2",
-	ResourceType.Triplecast + "3",
-	ResourceType.Firestarter,
-	ResourceType.Thunderhead,
-	ResourceType.ThunderDoT,
-	ResourceType.LeyLines,
-	ResourceType.Manaward,
-];
+export function registerBuffIcon(buff: string, path: string) {
+	buffIcons.set(buff, require(path));
+}
 
 const casterRoleBuffResources = [
 	ResourceType.Addle,
@@ -150,11 +145,6 @@ const casterRoleBuffResources = [
 	ResourceType.Surecast,
 	ResourceType.Tincture,
 ];
-
-
-blmBuffResources.forEach(
-	(buff) => buffIcons.set(buff, require(`./Asset/Buffs/BLM/${buff}.png`))
-);
 
 casterRoleBuffResources.forEach(
 	(buff) => buffIcons.set(buff, require(`./Asset/Buffs/CasterRole/${buff}.png`))
@@ -361,124 +351,10 @@ function ResourcesDisplay(props: {
 		resources: StatusResourcesViewProps
 	}
 }) {
-	let colors = getCurrentThemeColors();
-	let data = props.data;
-	let resources = props.data.resources;
-
-	let manaBar = <ResourceBar
-		name={"MP"}
-		color={colors.resources.mana}
-		progress={resources.mana / 10000}
-		value={Math.floor(resources.mana) + "/10000"}
-		width={100}
-		hidden={false}
-	/>;
-	let manaTick = <ResourceBar
-		name={localize({
-			en: "MP tick",
-			zh: "跳蓝时间",
-			ja: "MPティック"
-		})}
-		color={colors.resources.manaTick}
-		progress={1 - resources.timeTillNextManaTick / 3}
-		value={(3 - resources.timeTillNextManaTick).toFixed(3) + "/3"}
-		width={100}
-		hidden={false}
-	/>;
-	let enochian = <ResourceBar
-		name={localize({
-			en: "enochian",
-			zh: "天语",
-			ja: "エノキアン"
-		})}
-		color={colors.resources.enochian}
-		progress={resources.enochianCountdown / 15}
-		value={`${resources.enochianCountdown.toFixed(3)}`}
-		width={100}
-		hidden={false}
-	/>;
-	let afui = <ResourceCounter
-		name={localize({
-			en: "AF/UI",
-			zh: "冰火层数",
-			ja: "AF/UB"
-		})}
-		color={resources.astralFire > 0 ? colors.resources.astralFire : colors.resources.umbralIce}
-		currentStacks={resources.astralFire > 0 ? resources.astralFire : resources.umbralIce}
-		maxStacks={3}/>;
-	let uh = <ResourceCounter
-		name={
-			localize({
-				en: "hearts",
-				zh: "冰针",
-				ja: "アンブラルハート"
-			})}
-		color={colors.resources.umbralHeart}
-		currentStacks={resources.umbralHearts}
-		maxStacks={3}/>;
-	let paradox = data.level && Traits.hasUnlocked(TraitName.AspectMasteryIV, data.level) ?
-		<ResourceCounter
-			name={
-				localize({
-					en: "paradox",
-					zh: "悖论",
-					ja: "パラドックス"
-				})}
-			color={colors.resources.paradox}
-			currentStacks={resources.paradox}
-			maxStacks={1}/>
-		: undefined;
-	let soul = data.level && Traits.hasUnlocked(TraitName.EnhancedAstralFire, data.level) ?
-		<ResourceCounter
-			name={
-				localize({
-					en: "astral soul",
-					zh: "星极魂",
-					ja: "アストラルソウル"
-				})}
-			color={colors.resources.astralSoul}
-			currentStacks={resources.astralSoul}
-			maxStacks={6}/>
-		: undefined;
-	let polyTimer = <ResourceBar
-		name={
-			localize({
-				en: "poly timer",
-				zh: "通晓计时",
-				ja: "エノキ継続時間"
-			})}
-		color={colors.resources.polyTimer}
-		progress={1 - resources.polyglotCountdown / 30}
-		value={`${resources.polyglotCountdown.toFixed(3)}`}
-		width={100}
-		hidden={false}
-	/>;
-	
-	const polyglotStacks = 
-		(data.level && Traits.hasUnlocked(TraitName.EnhancedPolyglotII, data.level) && 3) ||
-		(data.level && Traits.hasUnlocked(TraitName.EnhancedPolyglot, data.level) && 2) ||
-		1;
-	let poly = <ResourceCounter
-		name={
-			localize({
-				en: "poly stacks",
-				zh: "通晓层数",
-				ja: "ポリグロット"
-			})}
-		color={colors.resources.polyStacks}
-		currentStacks={resources.polyglotStacks}
-		maxStacks={polyglotStacks}/>;
+	const elements = BLMResourcesDisplay(props.data);
 	return <div style={{textAlign: "left"}}>
-		{manaBar}
-		{manaTick}
-		{afui}
-		{uh}
-		{paradox}
-		{soul}
-		{enochian}
-		{polyTimer}
-		{poly}
-	</div>;
+		{elements}
+	</div>
 }
 
 export var updateStatusDisplay = (data: StatusViewProps)=>{};

@@ -84,6 +84,10 @@ export abstract class GameState {
 		this.displayedSkills = new DisplayedSkills(this.job, config.level);
 	}
 
+	/**
+	 * Return a map of strings to numeric values to be rendered.
+	 */
+	abstract getStatusDisplayInfo(): Map<string, number>;
 
 	/**
 	 * Get mp tick, lucid tick, and class-specific recurring timers rolling.

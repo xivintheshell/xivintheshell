@@ -82,6 +82,29 @@ export class BLMState extends GameState {
 		this.registerRecurringEvents();
 	}
 
+	getStatusDisplayInfo() {
+		const eno = this.resources.get(ResourceType.Enochian);
+		let enoCountdown: number;
+		if (eno.available(1) && !eno.pendingChange) {
+			enoCountdown = 15;
+		} else {
+			enoCountdown = this.resources.timeTillReady(ResourceType.Enochian);
+		}
+
+		return new Map(Object.entries({
+			mana: this.resources.get(ResourceType.Mana).availableAmount(),
+			timeTillNextManaTick: this.resources.timeTillReady(ResourceType.Mana),
+			enochianCountdown: enoCountdown,
+			astralFire: this.getFireStacks(),
+			umbralIce: this.getIceStacks(),
+			umbralHearts: this.resources.get(ResourceType.UmbralHeart).availableAmount(),
+			paradox: this.resources.get(ResourceType.Paradox).availableAmount(),
+			astralSoul: this.resources.get(ResourceType.AstralSoul).availableAmount(),
+			polyglotCountdown: eno.available(1) ? this.resources.timeTillReady(ResourceType.Polyglot) : 30,
+			polyglotStacks: this.resources.get(ResourceType.Polyglot).availableAmount()
+		}));
+	}
+
 	registerRecurringEvents() {
 		super.registerRecurringEvents();
 		// thunder DoT tick
@@ -906,8 +929,3 @@ makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
 	},
 	startOnHotbar: false,
 });
-
-// TODO this function is kept here to avoid circular imports, but should probably be moved
-export function newGameState(config: GameConfig) {
-	return new BLMState(config);
-}
