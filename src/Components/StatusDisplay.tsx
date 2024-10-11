@@ -4,20 +4,6 @@ import {ResourceType} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
-import {TraitName, Traits} from '../Game/Traits';
-
-type StatusResourcesViewProps = {
-	mana: number,
-	timeTillNextManaTick: number,
-	enochianCountdown: number,
-	astralFire: number,
-	umbralIce: number,
-	umbralHearts: number,
-	paradox: number,
-	astralSoul: number,
-	polyglotCountdown: number,
-	polyglotStacks: number,
-}
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean,
@@ -32,37 +18,45 @@ type StatusResourceLocksViewProps = {
 	canMove: boolean
 }
 
-type StatusEnemyBuffsViewProps = {
-	DoTCountdown: number,
-	addleCountdown: number
-}
+export type BuffProps = {
+	rscType: ResourceType,
+	onSelf: boolean,
+	enabled: boolean,
+	stacks: number,
+	timeRemaining: string,
+	className: string
+};
 
-type StatusSelfBuffsViewProps = {
-	leyLinesEnabled: boolean,
-	leyLinesCountdown: number,
-	triplecastCountdown: number,
-	triplecastStacks: number,
-	firestarterCountdown: number,
-	thunderheadCountdown: number,
-	manawardCountdown: number,
-	swiftcastCountdown: number,
-	lucidDreamingCountdown: number,
-	surecastCountdown: number,
-	tinctureCountdown: number,
-	sprintCountdown: number
-}
+export interface ResourceBarProps {
+	kind: "bar";
+	name: string | ContentNode;
+	color: string;
+	progress: number;
+	valueString: string;
+	widthPx?: number; // default 100
+	hidden?: boolean; // default false
+};
+
+export interface ResourceCounterProps {
+	kind: "counter";
+	name: string | ContentNode;
+	color: string;
+	currentStacks: number;
+	maxStacks: number;
+	valueString: string;
+};
+
+export type ResourceDisplayProps = ResourceBarProps | ResourceCounterProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
 type StatusViewProps = {
 	time: number,
-	resources?: StatusResourcesViewProps,
+	resources?: ResourceDisplayProps[],
 	resourceLocks?: StatusResourceLocksViewProps,
-	enemyBuffs?: StatusEnemyBuffsViewProps,
-	selfBuffs?: StatusSelfBuffsViewProps,
+	enemyBuffs?: BuffProps[],
+	selfBuffs?: BuffProps[],
 	level: number
 }
-
-// TODO type StatusViewProps = BLMStatusViewProps | PCTStatusViewProps
 
 // color, value
 function ResourceStack(props: {color: string, value: boolean}) {
@@ -134,9 +128,17 @@ function ResourceCounter(props: {
 
 const buffIcons = new Map();
 
-export function registerBuffIcon(buff: string, path: string) {
-	buffIcons.set(buff, require(path));
-}
+// unfortunately, assets cannot be registered automatically because not all resources have buff icons
+[
+	ResourceType.Triplecast,
+	ResourceType.Triplecast + "2",
+	ResourceType.Triplecast + "3",
+	ResourceType.Firestarter,
+	ResourceType.Thunderhead,
+	ResourceType.ThunderDoT,
+	ResourceType.LeyLines,
+	ResourceType.Manaward,
+].forEach((buff) => buffIcons.set(buff, require(`./Asset/Buffs/BLM/${buff}.png`)));
 
 const casterRoleBuffResources = [
 	ResourceType.Addle,
@@ -146,6 +148,7 @@ const casterRoleBuffResources = [
 	ResourceType.Tincture,
 ];
 
+// role buffs are registered here; job buffs should be registered in the job's respective file
 casterRoleBuffResources.forEach(
 	(buff) => buffIcons.set(buff, require(`./Asset/Buffs/CasterRole/${buff}.png`))
 );
@@ -153,14 +156,7 @@ casterRoleBuffResources.forEach(
 buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
 
 // rscType, stacks, timeRemaining, onSelf, enabled
-function Buff(props: {
-	rscType: ResourceType,
-	onSelf: boolean,
-	enabled: boolean,
-	stacks: number,
-	timeRemaining: string,
-	className: string
-}) {
+function Buff(props: BuffProps) {
 	let assetName: string = props.rscType;
 	if (props.rscType === ResourceType.Triplecast) {
 		if (props.stacks === 2) assetName += "2";
@@ -186,91 +182,9 @@ function Buff(props: {
 }
 
 function BuffsDisplay(props: {
-	data: StatusSelfBuffsViewProps
+	data: BuffProps[]
 }) {
-	let data = props.data;
-	let buffs = [];
-	buffs.push({
-		rscType: ResourceType.LeyLines,
-		onSelf: true,
-		enabled: data.leyLinesEnabled,
-		stacks:1,
-		timeRemaining: data.leyLinesCountdown.toFixed(3),
-		className: data.leyLinesCountdown > 0 ? "" : "hidden"
-	});
-	buffs.push({
-		rscType: ResourceType.Triplecast,
-		onSelf: true,
-		enabled: true,
-		stacks: data.triplecastStacks,
-		timeRemaining: data.triplecastCountdown.toFixed(3),
-		className: data.triplecastCountdown > 0 ? "" : "hidden"
-	});
-	buffs.push({
-		rscType: ResourceType.Firestarter,
-		onSelf: true,
-		enabled: true,
-		stacks:1,
-		timeRemaining: data.firestarterCountdown.toFixed(3),
-		className: data.firestarterCountdown > 0 ? "" : "hidden"
-	});
-	buffs.push({
-		rscType: ResourceType.Thunderhead,
-		onSelf: true,
-		enabled: true,
-		stacks:1,
-		timeRemaining: data.thunderheadCountdown.toFixed(3),
-		className: data.thunderheadCountdown > 0 ? "" : "hidden"
-	});
-	buffs.push({
-		rscType: ResourceType.Manaward,
-		onSelf: true,
-		enabled: true,
-		stacks:1,
-		timeRemaining: data.manawardCountdown.toFixed(3),
-		className: data.manawardCountdown > 0 ? "" : "hidden"
-	});
-	buffs.push({
-		rscType: ResourceType.Swiftcast,
-		onSelf: true,
-		enabled: true,
-		stacks:1,
-		timeRemaining: data.swiftcastCountdown.toFixed(3),
-		className: data.swiftcastCountdown > 0 ? "" : "hidden"
-	});
-	buffs.push({
-		rscType: ResourceType.LucidDreaming,
-		onSelf: true,
-		enabled: true,
-		stacks:1,
-		timeRemaining: data.lucidDreamingCountdown.toFixed(3),
-		className: data.lucidDreamingCountdown > 0 ? "" : "hidden"
-	});
-	buffs.push({
-		rscType: ResourceType.Surecast,
-		onSelf: true,
-		enabled: true,
-		stacks:1,
-		timeRemaining: data.surecastCountdown.toFixed(3),
-		className: data.surecastCountdown > 0 ? "" : "hidden"
-	});
-	buffs.push({
-		rscType: ResourceType.Tincture,
-		onSelf: true,
-		enabled: true,
-		stacks:1,
-		timeRemaining: data.tinctureCountdown.toFixed(3),
-		className: data.tinctureCountdown > 0 ? "" : "hidden"
-	});
-	buffs.push({
-		rscType: ResourceType.Sprint,
-		onSelf: true,
-		enabled: true,
-		stacks:1,
-		timeRemaining: data.sprintCountdown.toFixed(3),
-		className: data.sprintCountdown > 0 ? "" : "hidden"
-	});
-
+	const buffs = props.data;
 	let buffElems: React.ReactNode[] = [];
 	for (let i = 0; i < buffs.length; i++) {
 		buffElems.push(<Buff key={i} {...buffs[i]}/>);
@@ -282,27 +196,9 @@ function BuffsDisplay(props: {
 }
 
 function EnemyBuffsDisplay(props: {
-	data: StatusEnemyBuffsViewProps
+	data: BuffProps[]
 }) {
-	let data = props.data;
-	let buffs = [];
-	buffs.push({
-		rscType: ResourceType.ThunderDoT,
-		onSelf: false,
-		enabled: true,
-		stacks:1,
-		timeRemaining: data.DoTCountdown.toFixed(3),
-		className: data.DoTCountdown > 0 ? "" : "hidden"
-	});
-	buffs.push({
-		rscType: ResourceType.Addle,
-		onSelf: false,
-		enabled: true,
-		stacks:1,
-		timeRemaining: data.addleCountdown.toFixed(3),
-		className: data.addleCountdown > 0 ? "" : "hidden"
-	});
-
+	const buffs = props.data;
 	let buffElems: React.ReactNode[] = [];
 	for (let i = 0; i < buffs.length; i++) {
 		buffElems.push(<Buff key={i} {...buffs[i]}/>);
@@ -348,10 +244,28 @@ function ResourceLocksDisplay(props: {
 function ResourcesDisplay(props: {
 	data: {
 		level: number,
-		resources: StatusResourcesViewProps
+		resources: ResourceDisplayProps[],
 	}
 }) {
-	const elements = BLMResourcesDisplay(props.data);
+	const elements = props.data.resources.map((props, i) =>
+		(props.kind === "bar")
+			? <ResourceBar
+				name={props.name}
+				color={props.color}
+				progress={props.progress}
+				value={props.valueString}
+				width={props.widthPx ?? 100}
+				hidden={props.hidden ?? false}
+				key={"resourceDisplay" + i}
+			/>
+			: <ResourceCounter
+				name={props.name}
+				color={props.color}
+				currentStacks={props.currentStacks}
+				maxStacks={props.maxStacks}
+				key={"resourceDisplay" + i}
+			/>
+	);
 	return <div style={{textAlign: "left"}}>
 		{elements}
 	</div>
@@ -366,15 +280,8 @@ export class StatusDisplay extends React.Component {
 			time: 0,
 			level: 100,
 		}
-		updateStatusDisplay = ((newData)=>{
-			this.setState({
-				time: newData.time,
-				resources: newData.resources,
-				resourceLocks: newData.resourceLocks,
-				selfBuffs: newData.selfBuffs,
-				enemyBuffs: newData.enemyBuffs,
-				level: newData.level,
-			});
+		updateStatusDisplay = ((newData) => {
+			this.setState({...newData});
 		});
 	}
 	componentDidMount() {
