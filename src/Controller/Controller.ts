@@ -9,10 +9,11 @@ import {
 } from "./Common";
 import {GameState} from "../Game/GameState";
 import {getAutoReplacedSkillName, getConditionalReplacement} from "../Game/Skills";
-import {newGameState, BLMState} from "../Game/Jobs/BLM";
+import {BLMState} from "../Game/Jobs/BLM";
 import {Buff} from "../Game/Buffs";
 import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
+import {BLMStatusPropsGenerator} from "../Components/Jobs/BLM";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
@@ -36,6 +37,11 @@ import {
 } from "./DamageStatistics";
 
 type Fixme = any;
+
+const newGameState = (config: GameConfig) => {
+	// TODO add PCT
+	return new BLMState(config);
+};
 
 class Controller {
 	timeScale;
@@ -600,27 +606,6 @@ class Controller {
 	}
 
 	updateStatusDisplay(game: GameState) {
-		// resources
-		let eno = game.resources.get(ResourceType.Enochian);
-		let enoCountdown: number;
-		if (eno.available(1) && !eno.pendingChange) {
-			enoCountdown = 15;
-		} else {
-			enoCountdown = game.resources.timeTillReady(ResourceType.Enochian);
-		}
-
-		let resourcesData = {
-			mana: game.resources.get(ResourceType.Mana).availableAmount(),
-			timeTillNextManaTick: game.resources.timeTillReady(ResourceType.Mana),
-			enochianCountdown: enoCountdown,
-			astralFire: (game as BLMState).getFireStacks(),
-			umbralIce: (game as BLMState).getIceStacks(),
-			umbralHearts: game.resources.get(ResourceType.UmbralHeart).availableAmount(),
-			paradox: game.resources.get(ResourceType.Paradox).availableAmount(),
-			astralSoul: game.resources.get(ResourceType.AstralSoul).availableAmount(),
-			polyglotCountdown: eno.available(1) ? game.resources.timeTillReady(ResourceType.Polyglot) : 30,
-			polyglotStacks: game.resources.get(ResourceType.Polyglot).availableAmount()
-		};
 		// locks
 		let cast = game.resources.get(ResourceType.NotCasterTaxed);
 		let anim = game.resources.get(ResourceType.NotAnimationLocked);
@@ -637,33 +622,14 @@ class Controller {
 			animLockCountdown: game.resources.timeTillReady(ResourceType.NotAnimationLocked),
 			canMove: game.resources.get(ResourceType.Movement).available(1),
 		};
-		// enemy buffs
-		let enemyBuffsData = {
-			DoTCountdown: game.resources.timeTillReady(ResourceType.ThunderDoT),
-			addleCountdown: game.resources.timeTillReady(ResourceType.Addle)
-		};
-		// self buffs
-		let selfBuffsData = {
-			leyLinesEnabled: game.resources.get(ResourceType.LeyLines).enabled,
-			leyLinesCountdown: game.resources.timeTillReady(ResourceType.LeyLines),
-			triplecastCountdown: game.resources.timeTillReady(ResourceType.Triplecast),
-			triplecastStacks: game.resources.get(ResourceType.Triplecast).availableAmount(),
-			firestarterCountdown: game.resources.timeTillReady(ResourceType.Firestarter),
-			thunderheadCountdown: game.resources.timeTillReady(ResourceType.Thunderhead),
-			manawardCountdown: game.resources.timeTillReady(ResourceType.Manaward),
-			swiftcastCountdown: game.resources.timeTillReady(ResourceType.Swiftcast),
-			lucidDreamingCountdown: game.resources.timeTillReady(ResourceType.LucidDreaming),
-			surecastCountdown: game.resources.timeTillReady(ResourceType.Surecast),
-			tinctureCountdown: game.resources.timeTillReady(ResourceType.Tincture),
-			sprintCountdown: game.resources.timeTillReady(ResourceType.Sprint)
-		};
 		if (typeof updateStatusDisplay !== "undefined") {
+			const propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
 			updateStatusDisplay({
 				time: game.getDisplayTime(),
-				resources: resourcesData,
+				resources: propsGenerator.getResourceViewProps(),
 				resourceLocks: resourceLocksData,
-				enemyBuffs: enemyBuffsData,
-				selfBuffs: selfBuffsData,
+				enemyBuffs: propsGenerator.getEnemyBuffViewProps(),
+				selfBuffs: propsGenerator.getSelfBuffViewProps(),
 				level: game.config.level,
 			});
 		}

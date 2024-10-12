@@ -82,7 +82,7 @@ export class BLMState extends GameState {
 		this.registerRecurringEvents();
 	}
 
-	registerRecurringEvents() {
+	override registerRecurringEvents() {
 		super.registerRecurringEvents();
 		// thunder DoT tick
 		let recurringThunderTick = () => {
@@ -906,8 +906,3 @@ makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
 	},
 	startOnHotbar: false,
 });
-
-// TODO this function is kept here to avoid circular imports, but should probably be moved
-export function newGameState(config: GameConfig) {
-	return new BLMState(config);
-}

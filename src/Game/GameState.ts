@@ -84,7 +84,6 @@ export abstract class GameState {
 		this.displayedSkills = new DisplayedSkills(this.job, config.level);
 	}
 
-
 	/**
 	 * Get mp tick, lucid tick, and class-specific recurring timers rolling.
 	 *
