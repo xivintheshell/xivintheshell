@@ -129,17 +129,9 @@ function ResourceCounter(props: {
 
 const buffIcons = new Map();
 
-// unfortunately, assets cannot be registered automatically because not all resources have buff icons
-[
-	ResourceType.Triplecast,
-	ResourceType.Triplecast + "2",
-	ResourceType.Triplecast + "3",
-	ResourceType.Firestarter,
-	ResourceType.Thunderhead,
-	ResourceType.ThunderDoT,
-	ResourceType.LeyLines,
-	ResourceType.Manaward,
-].forEach((buff) => buffIcons.set(buff, require(`./Asset/Buffs/BLM/${buff}.png`)));
+export function registerBuffIcon(buff: string, relativePath: string) {
+	buffIcons.set(buff, require(`./Asset/Buffs/${relativePath}`));
+}
 
 const casterRoleBuffResources = [
 	ResourceType.Addle,

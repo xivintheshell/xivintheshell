@@ -1,9 +1,27 @@
-import {BuffProps, ResourceBarProps, ResourceCounterProps, ResourceDisplayProps, StatusPropsGenerator} from "../StatusDisplay";
+import {
+    registerBuffIcon,
+    BuffProps,
+    ResourceBarProps,
+    ResourceCounterProps,
+    ResourceDisplayProps,
+    StatusPropsGenerator
+} from "../StatusDisplay";
 import {ResourceType} from "../../Game/Common";
 import {TraitName, Traits} from "../../Game/Traits";
 import {BLMState} from "../../Game/Jobs/BLM";
 import {getCurrentThemeColors} from "../../Components/ColorTheme";
 import {localize} from "../../Components/Localization";
+
+[
+    ResourceType.Triplecast,
+    ResourceType.Triplecast + "2",
+    ResourceType.Triplecast + "3",
+    ResourceType.Firestarter,
+    ResourceType.Thunderhead,
+    ResourceType.ThunderDoT,
+    ResourceType.LeyLines,
+    ResourceType.Manaward,
+].forEach((buff) => registerBuffIcon(buff, `BLM/${buff}.png`));
 
 export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
     override getEnemyBuffViewProps(): BuffProps[] {
