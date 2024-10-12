@@ -10,7 +10,8 @@ import {
 import {GameState} from "../Game/GameState";
 import {getAutoReplacedSkillName, getConditionalReplacement} from "../Game/Skills";
 import {newGameState, BLMState} from "../Game/Jobs/BLM";
-import {Debug, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
+import {Buff} from "../Game/Buffs";
+import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
@@ -1115,6 +1116,54 @@ class Controller {
 			row.castTime
 		]; });
 		return [["time", "action", "isGCD", "castTime"]].concat(csvRows as any[][]);
+	}
+
+	// return rows of a CSV to feed to Amarantine's combat sim
+	// https://github.com/Amarantine-xiv/Amas-FF14-Combat-Sim
+	getAmaSimCsv(): any[][] {
+		const normalizeName = (s: string) => {
+			if (s === SkillName.Tincture) {
+				return "Grade 2 Gemdraught";
+			} else {
+				return s.replace(" 2", " II").replace(" 3", " III").replace(" 4", " IV");
+			}
+		};
+		const buffRows = this.timeline.getBuffMarkers().map(
+			marker => {
+				const buff = new Buff(marker.description as BuffType);
+				return [
+					marker.time,
+					buff.info.name,
+					buff.info.job,
+					buff.info.name === BuffType.Dokumori ? "Debuff only" :
+					(buff.info.name === BuffType.TechnicalFinish ? "Buff only" : "")
+				];
+			}
+		);
+		const actionRows = (
+			this.#actionsLogCsv
+				// sim currently doesn't track mp ticks or mp costs, so skip lucid dreaming
+				// also skip sprint, buff toggle events, and any other non-damage-related abilities
+				.filter(
+					row => ![
+						SkillName.Sprint as string,
+						SkillName.LucidDreaming as string,
+						SkillName.BetweenTheLines as string,
+						SkillName.Retrace as string,
+						SkillName.Addle as string,
+						SkillName.AetherialManipulation as string,
+						SkillName.Manaward as string,
+					].includes(row.action)
+					&& !row.action.includes("Toggle buff")
+				)
+				.map(row => [
+					row.time,
+					normalizeName(row.action),
+					"",
+					""
+				])
+		);
+		return [["Time", "skill_name", "job_class", "skill_conditional"]].concat(buffRows as any[][], actionRows as any[][]);
 	}
 
 	// generally used for trying to add a line to the current timeline
