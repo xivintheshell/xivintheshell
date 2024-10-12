@@ -1135,17 +1135,26 @@ class Controller {
 					marker.time,
 					buff.info.name,
 					buff.info.job,
-					buff.info.name === BuffType.Dokumori ? "Debuff only" : ""
+					buff.info.name === BuffType.Dokumori ? "Debuff only" :
+					(buff.info.name === BuffType.TechnicalFinish ? "Buff only" : "")
 				];
 			}
 		);
 		const actionRows = (
 			this.#actionsLogCsv
 				// sim currently doesn't track mp ticks or mp costs, so skip lucid dreaming
-				// also skip sprint and buff toggle events
+				// also skip sprint, buff toggle events, and any other non-damage-related abilities
 				.filter(
-					row => ![SkillName.Sprint as string, SkillName.LucidDreaming as string].includes(row.action) &&
-						!row.action.includes("Toggle buff")
+					row => ![
+						SkillName.Sprint as string,
+						SkillName.LucidDreaming as string,
+						SkillName.BetweenTheLines as string,
+						SkillName.Retrace as string,
+						SkillName.Addle as string,
+						SkillName.AetherialManipulation as string,
+						SkillName.Manaward as string,
+					].includes(row.action)
+					&& !row.action.includes("Toggle buff")
 				)
 				.map(row => [
 					row.time,
