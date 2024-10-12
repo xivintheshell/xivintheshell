@@ -1125,7 +1125,7 @@ class Controller {
 			if (s === SkillName.Tincture) {
 				return "Grade 2 Gemdraught";
 			} else {
-				return s.replace(" 2", "II").replace(" 3", " III").replace(" 4", " IV");
+				return s.replace(" 2", " II").replace(" 3", " III").replace(" 4", " IV");
 			}
 		};
 		const buffRows = this.timeline.getBuffMarkers().map(
