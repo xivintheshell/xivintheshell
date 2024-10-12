@@ -55,7 +55,8 @@ export class LoadSave extends React.Component {
 			<p>
 			{/* google colab probably doesn't work in China, so just link to github instead */}
 			{localize({
-				en: <span>for use with Amarantine's combat simulator:</span>,
+				en: <span>for use with <a href={"https://colab.research.google.com/github/zqsz-xiv/xivintheshell-ama-sim-notebook/blob/main/in_the_shell_with_ama_sim.ipynb"}>
+				Amarantine's combat simulator</a>:</span>,
 				zh: <span>用于<a href={"https://github.com/Amarantine-xiv/Amas-FF14-Combat-Sim"}>Amarantine的战斗模拟器</a>而使用：</span>
 			})}</p>
 			<SaveToFile fileFormat={FileFormat.Csv} getContentFn={
