@@ -1,6 +1,7 @@
 import React from 'react';
 import {Clickable, ContentNode, Help, ProgressBar, StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
+import type {PlayerState} from "../Game/GameState";
 import {controller} from "../Controller/Controller";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
@@ -327,4 +328,16 @@ export class StatusDisplay extends React.Component {
 			</div>
 		</div>
 	}
+}
+
+export abstract class StatusPropsGenerator<T extends PlayerState> {
+	state: T;
+
+	constructor(state: T) {
+		this.state = state;
+	}
+
+	abstract getEnemyBuffViewProps(): BuffProps[];
+	abstract getSelfBuffViewProps(): BuffProps[];
+	abstract getResourceViewProps(): ResourceDisplayProps[];
 }

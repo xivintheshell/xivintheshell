@@ -13,6 +13,7 @@ import {BLMState} from "../Game/Jobs/BLM";
 import {Buff} from "../Game/Buffs";
 import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
+import {BLMStatusPropsGenerator} from "../Components/Jobs/BLM";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
@@ -622,12 +623,13 @@ class Controller {
 			canMove: game.resources.get(ResourceType.Movement).available(1),
 		};
 		if (typeof updateStatusDisplay !== "undefined") {
+			const propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
 			updateStatusDisplay({
 				time: game.getDisplayTime(),
-				resources: game.getResourceViewProps(),
+				resources: propsGenerator.getResourceViewProps(),
 				resourceLocks: resourceLocksData,
-				enemyBuffs: game.getEnemyBuffViewProps(),
-				selfBuffs: game.getSelfBuffViewProps(),
+				enemyBuffs: propsGenerator.getEnemyBuffViewProps(),
+				selfBuffs: propsGenerator.getSelfBuffViewProps(),
 				level: game.config.level,
 			});
 		}

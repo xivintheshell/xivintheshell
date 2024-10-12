@@ -17,7 +17,6 @@ import {Buff} from "./Buffs";
 
 import type {BLMState} from "./Jobs/BLM";
 import {SkillButtonViewInfo} from "../Components/Skills";
-import type {BuffProps, ResourceDisplayProps} from "../Components/StatusDisplay";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require('seedrandom');
@@ -84,16 +83,6 @@ export abstract class GameState {
 		this.skillsList = new SkillsList(this);
 		this.displayedSkills = new DisplayedSkills(this.job, config.level);
 	}
-
-	// Functions for getting view info. Unfortunately, we cannot separate this into the Components
-	// folder because doing so would break some internal assumptions about import order and cause
-	// assets to be initialized out of order.
-
-	abstract getEnemyBuffViewProps(): BuffProps[];
-
-	abstract getSelfBuffViewProps(): BuffProps[];
-
-	abstract getResourceViewProps(): ResourceDisplayProps[];
 
 	/**
 	 * Get mp tick, lucid tick, and class-specific recurring timers rolling.
