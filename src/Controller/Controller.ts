@@ -1098,17 +1098,45 @@ class Controller {
 			marker => {
 				const buff = new Buff(marker.description as BuffType);
 				let buffName: string = buff.info.name as string;
-				if (buffName === BuffType.Card_TheSpear) {
+				if (buff.info.name === BuffType.Card_TheSpear) {
 					buffName = "The Spear";
-				} else if (buffName === BuffType.Card_TheBalance) {
+				} else if (buff.info.name === BuffType.Card_TheBalance) {
 					buffName = "The Balance";
+				} else if ([
+					BuffType.RadiantFinale1,
+					BuffType.RadiantFinale2,
+					BuffType.RadiantFinale3
+				].includes(buff.info.name)) {
+					buffName = "Radiant Finale";
 				}
+				const getBuffModifiers = () => {
+					if (buff.info.name === BuffType.Dokumori) {
+						return "Debuff Only";
+					} else if (buff.info.name === BuffType.RadiantFinale1) {
+						// need to put these in quotes so it stays as one column when parsed
+						return '"1 Coda, Buff Only"';
+					} else if (buff.info.name === BuffType.RadiantFinale2) {
+						return '"2 Coda, Buff Only"';
+					} else if (buff.info.name === BuffType.RadiantFinale3) {
+						return '"3 Coda, Buff Only"';
+					} else if ([
+						BuffType.ArmysPaeon,
+						BuffType.MagesBallad,
+						BuffType.WanderersMinuet,
+						BuffType.StandardFinish,
+						BuffType.TechnicalFinish,
+					].includes(buff.info.name)) {
+						return "Buff Only";
+					} else if (buff.info.name === BuffType.Card_TheBalance) {
+						return "Big";
+					}
+					return "";
+				};
 				return [
 					marker.time,
 					buffName,
 					buff.info.job,
-					buff.info.name === BuffType.Dokumori ? "Debuff only" :
-					(buff.info.name === BuffType.TechnicalFinish ? "Buff only" : "")
+					getBuffModifiers(),
 				];
 			}
 		);

@@ -1,6 +1,6 @@
 import {updateTimelineView} from "../Components/Timeline";
 import {controller} from "./Controller";
-import {Debug, ResourceType, SkillName, WarningType} from "../Game/Common";
+import {Debug, BuffType, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {ActionNode} from "./Record";
 import {FileType, getCachedValue, removeCachedValue, setCachedValue} from "./Common";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkers";
@@ -216,7 +216,13 @@ export class Timeline {
 	#recreateBuffList() {
 		this.#buffMarkers = [];
 		this.#allMarkers.forEach(m => {
-			if (m.markerType === MarkerType.Buff) this.#buffMarkers.push(m);
+			if (m.markerType === MarkerType.Buff) {
+				// fix for an earlier typo
+				if (m.description === "Wanderer's Minuet") {
+					m.description = BuffType.WanderersMinuet as string;
+				}
+				this.#buffMarkers.push(m);
+			}
 		})
 	}
 
