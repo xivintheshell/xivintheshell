@@ -1097,9 +1097,15 @@ class Controller {
 		const buffRows = this.timeline.getBuffMarkers().map(
 			marker => {
 				const buff = new Buff(marker.description as BuffType);
+				let buffName: string = buff.info.name as string;
+				if (buffName === BuffType.Card_TheSpear) {
+					buffName = "The Spear";
+				} else if (buffName === BuffType.Card_TheBalance) {
+					buffName = "The Balance";
+				}
 				return [
 					marker.time,
-					buff.info.name,
+					buffName,
 					buff.info.job,
 					buff.info.name === BuffType.Dokumori ? "Debuff only" :
 					(buff.info.name === BuffType.TechnicalFinish ? "Buff only" : "")
@@ -1119,6 +1125,7 @@ class Controller {
 						SkillName.Addle as string,
 						SkillName.AetherialManipulation as string,
 						SkillName.Manaward as string,
+						SkillName.Surecast as string,
 					].includes(row.action)
 					&& !row.action.includes("Toggle buff")
 				)
