@@ -1,5 +1,12 @@
 [
 	{
+		"date": "10/13/24",
+		"changes": [
+			"Enabled export to Amarantine's combat sim",
+			"Enhanced shift-click select on the timeline"
+		]
+	},
+	{
 		"date": "10/10/24",
 		"changes": [
 			"Added ability to modify action selections made with shift-click",
