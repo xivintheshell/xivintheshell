@@ -102,7 +102,7 @@ export enum BuffType {
 	StandardFinish = "Standard Finish",
 	StarryMuse = "Starry Muse",
 	TechnicalFinish = "Technical Finish",
-	WanderersMinuet = "Wanderer's Minuet",
+	WanderersMinuet = "The Wanderer's Minuet",
 }
 
 export const enum ResourceType {
