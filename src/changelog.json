@@ -1,5 +1,11 @@
 [
 	{
+		"date": "10/15/24",
+		"changes": [
+			"Party buff related fixes to make sure buffs are compatible with Amarantine's combat sim"
+		]
+	},
+	{
 		"date": "10/13/24",
 		"changes": [
 			"Enabled export to Amarantine's combat sim",
