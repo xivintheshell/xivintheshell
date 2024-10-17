@@ -44,6 +44,13 @@ export const TimelineDimensions = {
 
 }
 
+export type TimelineOptions = {
+	drawDamageMarks: boolean
+};
+export const DEFAULT_TIMELINE_OPTIONS = {
+	drawDamageMarks: true
+};
+
 function getBlobUrl(content: object) {
 	let blob = new Blob([JSON.stringify(content)], {type: "text/plain;charset=utf-8"});
 	return window.URL.createObjectURL(blob);

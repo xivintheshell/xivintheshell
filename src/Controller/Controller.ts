@@ -25,7 +25,7 @@ import {ImageExportConfig} from "./ImageExportConfig";
 import {PresetLinesManager} from "./PresetLinesManager";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
-import {StaticFn} from "../Components/Common";
+import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineOptions} from "../Components/Common";
 import {TimelineRenderingProps} from "../Components/TimelineCanvas";
 import {Potency, PotencyModifierType} from "../Game/Potency";
 import {updateDamageStats, updateSelectedStats} from "../Components/DamageStatistics";
@@ -84,7 +84,10 @@ class Controller {
 	#bInSandbox: boolean = false;
 
 	#skipViewUpdates: boolean = false;
+	// todo: can probably somehow get rid of this because it should largely overlaps with #bInSandbox
 	displayingUpToDateGameState = true;
+
+	#timelineOptions: TimelineOptions = DEFAULT_TIMELINE_OPTIONS;
 
 	constructor() {
 		this.timeScale = 1;
@@ -484,6 +487,11 @@ class Controller {
 		return coveredTime / totalTime;
 	}
 
+	setTimelineOptions(options: TimelineOptions) {
+		this.#timelineOptions = options;
+		this.updateTimelineDisplay();
+	}
+
 	getTimelineRenderingProps(): TimelineRenderingProps {
 		let showSelection : boolean = this.record.getFirstSelection() != null && this.record.getLastSelection() != null;
 		let countdown = this.gameConfig.countdown;
@@ -507,7 +515,8 @@ class Controller {
 			buffMarkers: this.timeline.getBuffMarkers(),
 			showSelection: showSelection,
 			selectionStartDisplayTime: (this.record.getFirstSelection()?.tmp_startLockTime ?? 0) - this.gameConfig.countdown,
-			selectionEndDisplayTime: (this.record.getLastSelection()?.tmp_endLockTime ?? 0) - this.gameConfig.countdown
+			selectionEndDisplayTime: (this.record.getLastSelection()?.tmp_endLockTime ?? 0) - this.gameConfig.countdown,
+			drawOptions: this.#timelineOptions
 		};
 	}
 

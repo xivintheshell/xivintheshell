@@ -118,7 +118,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 					drawMPTicks: this.state.includeMPAndLucidTicks,
 					drawDamageMarks: this.state.includeDamageApplication,
 					drawBuffCovers: this.state.includeBuffIndicators,
-				})
+				});
 			}
 		);
 		// 3. Copy elements off the "fake" canvas (oneRowCtx) onto our row-split canvas.
