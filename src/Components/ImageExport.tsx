@@ -62,6 +62,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 			startTime = -activeRenderProps.countdown;
 			endTime = controller.game.time;
 		}
+		//const drawOptions = controller.timelineDrawOptions; // todo [myn]
 		const exportConfig = controller.imageExportConfig;
 		let nRows: number;
 		// # of seconds before a line break
