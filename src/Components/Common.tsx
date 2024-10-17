@@ -45,10 +45,14 @@ export const TimelineDimensions = {
 }
 
 export type TimelineOptions = {
-	drawDamageMarks: boolean
+	drawDamageMarks: boolean,
+	drawMPTickMarks: boolean,
+	drawBuffIndicators: boolean
 };
 export const DEFAULT_TIMELINE_OPTIONS = {
-	drawDamageMarks: true
+	drawDamageMarks: true,
+	drawMPTickMarks: true,
+	drawBuffIndicators: true,
 };
 
 function getBlobUrl(content: object) {

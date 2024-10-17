@@ -114,10 +114,7 @@ class Controller {
 		this.record.config = this.gameConfig;
 		this.imageExportConfig = {
 			wrapThresholdSeconds: JSON.parse(getCachedValue("img: wrapThresholdSeconds") ?? "0"),
-			includeMPAndLucidTicks: JSON.parse(getCachedValue("img: includeMPAndLucidTicks") ?? "false"),
-			includeDamageApplication: JSON.parse(getCachedValue("img: includeDamageApplication") ?? "false"),
 			includeTime: JSON.parse(getCachedValue("img: includeTime") ?? "true"),
-			includeBuffIndicators: JSON.parse(getCachedValue("img: includeBuffIndicators") ?? "true"),
 		};
 
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown; // left of timeline origin
