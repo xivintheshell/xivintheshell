@@ -114,11 +114,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 					currentHeight += drawRuler(timelineOrigin, true);
 					currentHeight += drawMarkerTracks(timelineOrigin, currentHeight, true);
 				}
-				drawTimelines(timelineOrigin, currentHeight, {
-					drawMPTicks: this.state.includeMPAndLucidTicks,
-					drawDamageMarks: this.state.includeDamageApplication,
-					drawBuffCovers: this.state.includeBuffIndicators,
-				});
+				drawTimelines(timelineOrigin, currentHeight, true);
 			}
 		);
 		// 3. Copy elements off the "fake" canvas (oneRowCtx) onto our row-split canvas.
@@ -171,12 +167,13 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 					style={{margin: "10px 0"}}
 				/>
 			</div>
-			{this.checkbox("includeMPAndLucidTicks", {en: "include MP and Lucid ticks", zh: "显示跳蓝和跳醒梦"})}
-			{this.checkbox("includeDamageApplication", {en: "include damage applications", zh: "显示伤害结算标记"})}
 			{this.checkbox("includeTime", {en: "include time and markers", zh: "显示时间刻度和时间轴标记"})}
-			{this.checkbox("includeBuffIndicators", {en: "include buff indicators", zh: "显示buff快照标记"})}
 		</>
 		return <div>
+			<p>{localize({
+				en: <span>export the selected part of the timeline as a png according to the current display settings, or the whole timeline if nothing is selected</span>,
+				zh: "根据当前显示设置将时间轴内选择部分导出为png，如果无选择将整个时间轴导出"
+			})}</p>
 			{settingsSection}
 			<p><SaveToFile
 				filename={"fight"}

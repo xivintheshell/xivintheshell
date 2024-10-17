@@ -389,7 +389,6 @@ function drawSkills(
 	timelineOriginY: number,
 	elems: SkillElem[],
 	interactive: boolean,
-	drawBuffCovers: boolean
 ) {
 	let greyLockBars: Rect[] = [];
 	let purpleLockBars: Rect[] = [];
@@ -431,7 +430,7 @@ function drawSkills(
 			buildCover(nodeCoverCount, buffCovers);
 
 		function buildCover(existingCovers: number, collection: Rect[]) {
-			if (drawBuffCovers) {
+			if (g_renderingProps.drawOptions.drawBuffIndicators) {
 				collection.push({x: x, y: y + 28 + existingCovers*4, w: 28, h: 4});
 			}
 			return 1;
@@ -692,16 +691,7 @@ export function drawMarkerTracks(originX: number, originY: number, ignoreVisible
 
 }
 
-export function drawTimelines(originX: number, originY: number, imageExportSettings?: {
-	drawMPTicks: boolean,
-	drawDamageMarks: boolean,
-	drawBuffCovers: boolean,
-}): number {
-	// Flags used by the image export feature -- if this function is just called during normal
-	// timeline rendering, these should all be drawn.
-	const isImageExportMode = imageExportSettings !== undefined;
-	const shouldDrawMPTicks = imageExportSettings?.drawMPTicks ?? true;
-	const shouldDrawBuffCovers = imageExportSettings?.drawBuffCovers ?? true;
+export function drawTimelines(originX: number, originY: number, isImageExportMode: boolean): number {
 
 	let sharedElemBins = new Map<ElemType, TimelineElem[]>();
 	g_renderingProps.sharedElements.forEach(e=>{
@@ -733,7 +723,7 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 		}
 
 		// mp tick marks
-		if (shouldDrawMPTicks) {
+		if (g_renderingProps.drawOptions.drawMPTickMarks) {
 			drawMPTickMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.MPTickMark) as MPTickMarkElem[] ?? []);
 		}
 
@@ -743,7 +733,7 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 		}
 
 		// lucid marks
-		if (shouldDrawMPTicks) {
+		if (g_renderingProps.drawOptions.drawMPTickMarks) {
 			drawLucidMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.LucidMark) as LucidMarkElem[] ?? []);
 		}
 
@@ -751,7 +741,7 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 		drawWarningMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.WarningMark) as WarningMarkElem[] ?? []);
 
 		// skills
-		drawSkills(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.Skill) as SkillElem[] ?? [], isActiveSlot, shouldDrawBuffCovers);
+		drawSkills(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.Skill) as SkillElem[] ?? [], isActiveSlot);
 
 		// selection rect
 		if (g_renderingProps.showSelection && isActiveSlot && !isImageExportMode) { 
@@ -881,7 +871,7 @@ function drawEverything() {
 
 	currentHeight += drawMarkerTracks(timelineOrigin, currentHeight);
 
-	currentHeight += drawTimelines(timelineOrigin, currentHeight);
+	currentHeight += drawTimelines(timelineOrigin, currentHeight, false);
 
 	// interactive layer
 	if (g_mouseHovered) {
