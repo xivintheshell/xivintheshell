@@ -13,7 +13,7 @@ import {
 	ViewOnlyCursorElem,
 	WarningMarkElem
 } from "../Controller/Timeline";
-import {StaticFn, TimelineDimensions} from "./Common";
+import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDimensions, TimelineOptions} from "./Common";
 import {BuffType, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {getSkillIconImage} from "./Skills";
 import {buffIconImages} from "./Buffs";
@@ -41,6 +41,7 @@ export type TimelineRenderingProps = {
 	showSelection: boolean,
 	selectionStartDisplayTime: number,
 	selectionEndDisplayTime: number,
+	drawOptions: TimelineOptions
 }
 
 const c_maxTimelineHeight = 400;
@@ -80,6 +81,7 @@ let g_renderingProps: TimelineRenderingProps = {
 	showSelection: false,
 	selectionStartDisplayTime: 0,
 	selectionEndDisplayTime: 0,
+	drawOptions: DEFAULT_TIMELINE_OPTIONS
 };
 
 let cachedPointerMouse = false;
@@ -718,7 +720,6 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 	// timeline rendering, these should all be drawn.
 	const isImageExportMode = imageExportSettings !== undefined;
 	const shouldDrawMPTicks = imageExportSettings?.drawMPTicks ?? true;
-	const shouldDrawDamageMarks = imageExportSettings?.drawDamageMarks ?? true;
 	const shouldDrawBuffCovers = imageExportSettings?.drawBuffCovers ?? true;
 
 	let sharedElemBins = new Map<ElemType, TimelineElem[]>();
@@ -756,7 +757,7 @@ export function drawTimelines(originX: number, originY: number, imageExportSetti
 		}
 
 		// damage marks
-		if (shouldDrawDamageMarks) {
+		if (g_renderingProps.drawOptions.drawDamageMarks) {
 			drawDamageMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.DamageMark) as DamageMarkElem[] ?? []);
 		}
 
