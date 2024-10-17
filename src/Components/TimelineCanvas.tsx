@@ -13,7 +13,7 @@ import {
 	ViewOnlyCursorElem,
 	WarningMarkElem
 } from "../Controller/Timeline";
-import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDimensions, TimelineOptions} from "./Common";
+import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDimensions, TimelineDrawOptions} from "./Common";
 import {BuffType, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {getSkillIconImage} from "./Skills";
 import {buffIconImages} from "./Buffs";
@@ -41,7 +41,7 @@ export type TimelineRenderingProps = {
 	showSelection: boolean,
 	selectionStartDisplayTime: number,
 	selectionEndDisplayTime: number,
-	drawOptions: TimelineOptions
+	drawOptions: TimelineDrawOptions
 }
 
 const c_maxTimelineHeight = 400;
@@ -263,10 +263,10 @@ function drawMPTickMarks(
 	elems.forEach(tick=>{
 		let x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
 		g_ctx.moveTo(x, originY);
-		g_ctx.lineTo(x, originY + TimelineDimensions.slotHeight());
+		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
 		testInteraction(
-			{x: x-2, y: originY, w: 4, h: TimelineDimensions.slotHeight()},
+			{x: x-2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight()},
 			["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc]
 		);
 	});
@@ -735,7 +735,7 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 			arr.push(e);
 			elemBins.set(e.type, arr);
 		});
-		let currentY = originY + slot * TimelineDimensions.slotHeight();
+		let currentY = originY + slot * TimelineDimensions.renderSlotHeight();
 		if (isImageExportMode) {
 			// Only draw the active timeline in export mode
 			currentY = originY;
@@ -767,21 +767,21 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 			g_ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
 			let selectionLeftPx = displayOriginX + StaticFn.positionFromTimeAndScale(g_renderingProps.selectionStartDisplayTime, g_renderingProps.scale);
 			let selectionWidthPx = StaticFn.positionFromTimeAndScale(g_renderingProps.selectionEndDisplayTime - g_renderingProps.selectionStartDisplayTime, g_renderingProps.scale);
-			g_ctx.fillRect(selectionLeftPx, currentY, selectionWidthPx, TimelineDimensions.slotHeight());
+			g_ctx.fillRect(selectionLeftPx, currentY, selectionWidthPx, TimelineDimensions.renderSlotHeight());
 			g_ctx.strokeStyle = "rgba(147, 112, 219, 0.5)";
 			g_ctx.lineWidth = 1;
 			g_ctx.beginPath();
 			g_ctx.moveTo(selectionLeftPx, currentY);
-			g_ctx.lineTo(selectionLeftPx, currentY + TimelineDimensions.slotHeight());
+			g_ctx.lineTo(selectionLeftPx, currentY + TimelineDimensions.renderSlotHeight());
 			g_ctx.moveTo(selectionLeftPx + selectionWidthPx, currentY);
-			g_ctx.lineTo(selectionLeftPx + selectionWidthPx, currentY + TimelineDimensions.slotHeight());
+			g_ctx.lineTo(selectionLeftPx + selectionWidthPx, currentY + TimelineDimensions.renderSlotHeight());
 			g_ctx.stroke();
 		}
 
 	}
 	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
-	let countdownHeight = TimelineDimensions.slotHeight() * g_renderingProps.slotElements.length;
+	let countdownHeight = TimelineDimensions.renderSlotHeight() * g_renderingProps.slotElements.length;
 	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) countdownHeight += TimelineDimensions.addSlotButtonHeight;
 	g_ctx.fillStyle = g_colors.timeline.countdown;
 	// make it cover the left padding as well:
@@ -789,7 +789,7 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 
 	if (isImageExportMode) {
 		// In image export mode, don't render slot selection bars
-		return TimelineDimensions.slotHeight();
+		return TimelineDimensions.renderSlotHeight();
 	}
 
 	// view only cursor
@@ -810,12 +810,12 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 
 	// slot selection bars
 	for (let slot = 0; slot < g_renderingProps.slotElements.length; slot++) {
-		let currentY = originY + slot * TimelineDimensions.slotHeight();
+		let currentY = originY + slot * TimelineDimensions.renderSlotHeight();
 		let handle : Rect = {
 			x: 0,
 			y: currentY + 1,
 			w: 14,
-			h: TimelineDimensions.slotHeight() - 2
+			h: TimelineDimensions.renderSlotHeight() - 2
 		};
 		g_ctx.fillStyle = slot === g_renderingProps.activeSlotIndex ? g_colors.accent : g_colors.bgMediumContrast;
 		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
@@ -841,11 +841,11 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 			}, true);
 		}
 	}
-	let timelineSectionHeight = TimelineDimensions.slotHeight() * g_renderingProps.slotElements.length;
+	let timelineSectionHeight = TimelineDimensions.renderSlotHeight() * g_renderingProps.slotElements.length;
 
 	// add button
 	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) {
-		let currentY = originY + g_renderingProps.slotElements.length * TimelineDimensions.slotHeight();
+		let currentY = originY + g_renderingProps.slotElements.length * TimelineDimensions.renderSlotHeight();
 		let handle : Rect = {
 			x: 4,
 			y: currentY + 2,
