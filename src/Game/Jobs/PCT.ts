@@ -1035,3 +1035,5 @@ makeResourceAbility(ShellJob.PCT, SkillName.Smudge, 20, ResourceType.cd_Smudge, 
 	applicationDelay: 0, // instant (buff application)
 	cooldown: 20,
 });
+
+require("./RoleActions"); // ensure role actions get initialized last
