@@ -1,14 +1,13 @@
 import React, {MouseEventHandler, useEffect, useReducer} from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input, ValueChangeEvent} from "./Common";
-import {getCachedValue, setCachedValue, ShellInfo, ShellVersion, TickMode} from "../Controller/Common";
+import {getCachedValue, setCachedValue, ShellInfo, ShellJob, ShellVersion, TickMode} from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
 import {getAllResources, getResourceInfo, ResourceOverrideData} from "../Game/Resources";
 import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {SerializedConfig} from "../Game/GameConfig";
 import {XIVMath} from "../Game/XIVMath";
-import {BLMState} from "../Game/Jobs/BLM";
 
 export let updateConfigDisplay = (config: SerializedConfig)=>{};
 
@@ -135,7 +134,7 @@ export function ConfigSummary(props: {}) {
 	});
 	// TODO specialize for BLM
 	// TODO (revisit): double check this forced cast
-	let thunderTickOffset = (controller.game as BLMState).thunderTickOffset.toFixed(3);
+	let thunderTickOffset = controller.game.isBLMState() ? controller.game.thunderTickOffset.toFixed(3) : "";
 	let thunderOffsetDesc = localize({
 		en: "the random time offset of thunder DoT ticks relative to mp ticks",
 		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）"
@@ -144,7 +143,7 @@ export function ConfigSummary(props: {}) {
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	const legacyCasterTax = controller.gameConfig.legacy_casterTax;
 	let excerpt = localize({
-		en: `WARNING: this record was created in an earlier version of BLM in the Shell and uses the deprecated caster tax of ${legacyCasterTax}s instead of calculating from your FPS input below. Hover for details: `,
+		en: `WARNING: this record was created in an earlier version of FFXIV in the Shell and uses the deprecated caster tax of ${legacyCasterTax}s instead of calculating from your FPS input below. Hover for details: `,
 		zh: `警告：此时间轴文件创建于一个更早版本的排轴器，因此计算读条时间时使用的是当时手动输入的读条税${legacyCasterTax}秒（现已过时），而非由下方的“帧率”和“读条时间修正”计算得来。更多信息：`
 	});
 	let warningColor = getCurrentThemeColors().warning;
@@ -174,14 +173,20 @@ export function ConfigSummary(props: {}) {
 
 		<div>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</div>
 
-		<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
+		{ShellInfo.job === ShellJob.BLM &&
+			<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
+		}
 
-		<Expandable
-			title={"castTimesTable"}
-			titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help
-				topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
-			defaultShow={false}
-			content={castTimesChart}/>
+		{ShellInfo.job === ShellJob.BLM
+			// TODO modify for PCT
+			? <Expandable
+				title={"castTimesTable"}
+				titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help
+					topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
+				defaultShow={false}
+				content={castTimesChart}/>
+			: <br/>
+		}
 
 		<p>{localize({en: "Procs", zh: "随机数模式"})}: {procMode}</p>
 
@@ -351,6 +356,7 @@ type ConfigState = {
 	spellSpeed: string,
 	criticalHit: string,
 	directHit: string,
+	determination: string,
 	animationLock: string,
 	fps: string,
 	gcdSkillCorrection: string,
@@ -381,6 +387,7 @@ export class Config extends React.Component {
 	setLevel: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
 	setCriticalHit: (val: string) => void;
 	setDirectHit: (val: string) => void;
+	setDetermination: (val: string) => void;
 	setAnimationLock: (val: string) => void;
 	setFps: (val: string) => void;
 	setGcdSkillCorrection: (val: string) => void;
@@ -401,6 +408,7 @@ export class Config extends React.Component {
 			spellSpeed: "0",
 			criticalHit: "0",
 			directHit: "0",
+			determination: "0",
 			animationLock: "0",
 			fps: "0",
 			gcdSkillCorrection: "0",
@@ -479,6 +487,10 @@ export class Config extends React.Component {
 
 		this.setDirectHit = (val: string) => {
 			this.setState({directHit: val, dirty: true});
+		};
+
+		this.setDetermination = (val: string) => {
+			this.setState({determination: val, dirty: true});
 		};
 
 		this.setAnimationLock = (val: string) => {
@@ -854,6 +866,7 @@ export class Config extends React.Component {
 		if (isNaN(parseFloat(config.spellSpeed)) ||
 			isNaN(parseFloat(config.criticalHit)) ||
 			isNaN(parseFloat(config.directHit)) ||
+			isNaN(parseFloat(config.determination)) ||
 			isNaN(parseFloat(config.animationLock)) ||
 			isNaN(parseFloat(config.fps)) ||
 			isNaN(parseFloat(config.gcdSkillCorrection)) ||
@@ -871,6 +884,7 @@ export class Config extends React.Component {
 			spellSpeed: parseFloat(config.spellSpeed),
 			criticalHit: parseFloat(config.criticalHit),
 			directHit: parseFloat(config.directHit),
+			determination: parseFloat(config.determination),
 			animationLock: parseFloat(config.animationLock),
 			fps: parseFloat(config.fps),
 			gcdSkillCorrection: parseFloat(config.gcdSkillCorrection),
@@ -955,6 +969,7 @@ export class Config extends React.Component {
 			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: ", zh: "暴击："})}
 				   onChange={this.setCriticalHit}/>
 			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>
+			<Input defaultValue={this.state.determination} description={localize({en: "determination: " , zh: "信念："})} onChange={this.setDetermination}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<div>
 				<Input style={{display: "inline-block", color: fpsAndCorrectionColor}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>

@@ -15,7 +15,7 @@ import {
 } from "../Controller/Timeline";
 import {StaticFn, TimelineDimensions} from "./Common";
 import {BuffType, ResourceType, SkillName, WarningType} from "../Game/Common";
-import {skillIconImages} from "./Skills";
+import {getSkillIconImage} from "./Skills";
 import {buffIconImages} from "./Buffs";
 import {controller} from "../Controller/Controller";
 import {localize, localizeBuffType, localizeSkillName} from "./Localization";
@@ -297,6 +297,12 @@ function drawWarningMarks(
 		if (mark.warningType === WarningType.PolyglotOvercap) {
 			message += localize({en: "polyglot overcap!", zh: "通晓溢出！"});
 		}
+		if (mark.warningType === WarningType.CometOverwrite) {
+			message += localize({en: "comet overwrite!", zh: "彗星之黑被覆盖！"});
+		}
+		if (mark.warningType === WarningType.PaletteOvercap) {
+			message += localize({en: "palette gauge overcap!", zh: "调色量值溢出！"});
+		}
 
 		testInteraction(
 			{x: x-sideLength/2, y: bottomY-sideLength, w: sideLength, h: sideLength}, [message]
@@ -394,6 +400,7 @@ function drawSkills(
 	let gcdBars: Rect[] = [];
 	let snapshots: number[] = [];
 	let llCovers: Rect[] = [];
+	let starryCovers: Rect[] = [];
 	let potCovers: Rect[] = [];
 	let buffCovers: Rect[] = [];
 	let skillIcons: {elem: SkillElem, x: number, y: number}[] = []; // tmp
@@ -421,7 +428,9 @@ function drawSkills(
 
 		// node covers (LL, pot, party buff)
 		let nodeCoverCount = 0;
-		if (skill.node.hasBuff(BuffType.LeyLines))
+		if (skill.node.hasBuff(BuffType.StarryMuse))
+			nodeCoverCount += buildCover(nodeCoverCount, starryCovers);
+		if (skill.node.hasBuff(BuffType.LeyLines) || skill.node.hasBuff(BuffType.Hyperphantasia))
 			nodeCoverCount += buildCover(nodeCoverCount, llCovers);
 		if (skill.node.hasBuff(BuffType.Tincture))
 			nodeCoverCount += buildCover(nodeCoverCount, potCovers);
@@ -436,7 +445,7 @@ function drawSkills(
 		}
 
 		// skill icon
-		let img = skillIconImages.get(skill.skillName);
+		let img = getSkillIconImage(skill.skillName);
 		if (img) skillIcons.push({elem: e, x: x, y: y});
 	});
 
@@ -477,6 +486,15 @@ function drawSkills(
 	});
 	g_ctx.fill();
 
+	// starryCovers
+	g_ctx.fillStyle = g_colors.timeline.buffCover;
+	g_ctx.beginPath();
+	starryCovers.forEach(r=>{
+		g_ctx.rect(r.x, r.y, r.w, r.h);
+		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
+	});
+	g_ctx.fill();
+
 	// llCovers
 	g_ctx.fillStyle = g_colors.timeline.llCover;
 	g_ctx.beginPath();
@@ -507,7 +525,7 @@ function drawSkills(
 	// icons
 	g_ctx.beginPath();
 	skillIcons.forEach(icon=>{
-		g_ctx.drawImage(skillIconImages.get(icon.elem.skillName), icon.x, icon.y, 28, 28);
+		g_ctx.drawImage(getSkillIconImage(icon.elem.skillName), icon.x, icon.y, 28, 28);
 		let node = icon.elem.node;
 
 		let lines: string[] = [];
@@ -536,6 +554,7 @@ function drawSkills(
 		// 4. buff images
 		if (node.hasBuff(BuffType.LeyLines)) buffImages.push(buffIconImages.get(BuffType.LeyLines) as HTMLImageElement);
 		if (node.hasBuff(BuffType.Tincture)) buffImages.push(buffIconImages.get(BuffType.Tincture) as HTMLImageElement);
+		if (node.hasBuff(BuffType.StarryMuse)) buffImages.push(buffIconImages.get(BuffType.StarryMuse) as HTMLImageElement);
 		node.getPartyBuffs().forEach(buffType => {
 			let img = buffIconImages.get(buffType);
 			if (img) buffImages.push(img);

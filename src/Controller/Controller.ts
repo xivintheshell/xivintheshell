@@ -4,16 +4,19 @@ import {
 	ReplayMode,
 	setCachedValue,
 	ShellInfo,
+	ShellJob,
 	ShellVersion,
 	TickMode
 } from "./Common";
 import {GameState} from "../Game/GameState";
-import {getAutoReplacedSkillName, getConditionalReplacement} from "../Game/Skills";
+import {getAutoReplacedSkillName, getConditionalReplacement, getNormalizedSkillName} from "../Game/Skills";
 import {BLMState} from "../Game/Jobs/BLM";
+import {PCTState} from "../Game/Jobs/PCT";
 import {Buff} from "../Game/Buffs";
 import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 import {BLMStatusPropsGenerator} from "../Components/Jobs/BLM";
+import {PCTStatusPropsGenerator} from "../Components/Jobs/PCT";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
@@ -39,7 +42,9 @@ import {
 type Fixme = any;
 
 const newGameState = (config: GameConfig) => {
-	// TODO add PCT
+	if (ShellInfo.job === ShellJob.PCT) {
+		return new PCTState(config);
+	}
 	return new BLMState(config);
 };
 
@@ -364,7 +369,14 @@ class Controller {
 		for (let i = 0; i < content.actions.length; i++) {
 			let action = content.actions[i];
 			let node = new ActionNode(action.type);
-			node.skillName = action.skillName;
+			if (action.skillName) {
+				node.skillName = getNormalizedSkillName(action.skillName);
+				if (node.skillName === undefined) {
+					const msg = `Failed to load record- \nInvalid skill name: ${node.skillName}`;
+					window.alert(msg);
+					return;
+				}
+			}
 			node.buffName = action.buffName;
 			node.waitDuration = action.waitDuration;
 			line.addActionNode(node);
@@ -623,7 +635,9 @@ class Controller {
 			canMove: game.resources.get(ResourceType.Movement).available(1),
 		};
 		if (typeof updateStatusDisplay !== "undefined") {
-			const propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
+			const propsGenerator = ShellInfo.job === ShellJob.PCT
+				? new PCTStatusPropsGenerator(game as PCTState)
+				: new BLMStatusPropsGenerator(game as BLMState);
 			updateStatusDisplay({
 				time: game.getDisplayTime(),
 				resources: propsGenerator.getResourceViewProps(),
@@ -692,6 +706,7 @@ class Controller {
 		spellSpeed: number,
 		criticalHit: number,
 		directHit: number,
+		determination: number,
 		animationLock: number,
 		fps: number,
 		gcdSkillCorrection: number,
@@ -755,7 +770,7 @@ class Controller {
 			this.lastAttemptedSkill = "";
 		}
 
-		if (status.status === SkillReadyStatus.Blocked) {
+		if (status.status === SkillReadyStatus.Blocked || status.status === SkillReadyStatus.NotInCombat) {
 			this.lastAttemptedSkill = skillName;
 		}
 
@@ -1154,6 +1169,9 @@ class Controller {
 						SkillName.AetherialManipulation as string,
 						SkillName.Manaward as string,
 						SkillName.Surecast as string,
+
+						SkillName.TemperaGrassaPop as string,
+						SkillName.TemperaCoatPop as string,
 					].includes(row.action)
 					&& !row.action.includes("Toggle buff")
 				)

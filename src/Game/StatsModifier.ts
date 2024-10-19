@@ -1,5 +1,6 @@
 import {ResourceType} from "./Common"
 import {ResourceState} from "./Resources";
+import {ShellJob, ShellInfo} from "../Controller/Common";
 
 export class StatsModifier
 {
@@ -45,6 +46,10 @@ export class StatsModifier
 	{
 		let base = StatsModifier.base();
 		let modifiers = [];
+
+		if (ShellInfo.job !== ShellJob.BLM) {
+			return base;
+		}
 
 		// umbral ice
 		let ui = resources.get(ResourceType.UmbralIce);

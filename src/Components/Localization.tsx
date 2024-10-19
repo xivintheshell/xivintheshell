@@ -1,6 +1,6 @@
 import React from "react";
 import {forceUpdateAll} from "./Main";
-import {SkillName, BuffType} from "../Game/Common";
+import {SkillName, BuffType, ResourceType} from "../Game/Common";
 import {ContentNode} from "./Common";
 import {MdLanguage} from "react-icons/md";
 import {getCurrentThemeColors} from "./ColorTheme";
@@ -71,7 +71,58 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.HighThunder, "高闪雷"],
 	[SkillName.Sprint, "疾跑"],
 	[SkillName.Retrace, "魔纹重置"],
-	[SkillName.FlareStar, "耀星"]
+	[SkillName.FlareStar, "耀星"],
+
+	// picto stuff
+	[SkillName.FireInRed, "火炎之红"],
+	[SkillName.AeroInGreen, "疾风之绿"],
+	[SkillName.WaterInBlue, "流水之蓝"],
+	[SkillName.Fire2InRed, "烈炎之红"],
+	[SkillName.Aero2InGreen, "烈风之绿"],
+	[SkillName.Water2InBlue, "激水之蓝"],
+	[SkillName.BlizzardInCyan, "冰结之蓝青"],
+	[SkillName.StoneInYellow, "飞石之纯黄"],
+	[SkillName.ThunderInMagenta, "闪雷之品红"],
+	[SkillName.Blizzard2InCyan, "冰冻之蓝青"],
+	[SkillName.Stone2InYellow, "坚石之纯黄"],
+	[SkillName.Thunder2InMagenta, "震雷之品红"],
+	[SkillName.HolyInWhite , "神圣之白"],
+	[SkillName.CometInBlack, "彗星之黑"],
+	[SkillName.RainbowDrip , "彩虹点滴"],
+	[SkillName.StarPrism, "天星棱光"],
+
+	[SkillName.TemperaCoat, "坦培拉涂层"],
+	[SkillName.TemperaGrassa, "油性坦培拉涂层"],
+	[SkillName.TemperaCoatPop, "坦培拉涂层破盾"],
+	[SkillName.TemperaGrassaPop, "油性坦培拉涂层破盾"],
+	[SkillName.Smudge, "速涂"],
+	[SkillName.SubtractivePalette, "减色混合"],
+
+	[SkillName.CreatureMotif, "动物彩绘"],
+	[SkillName.PomMotif, "绒球彩绘"],
+	[SkillName.WingMotif, "翅膀彩绘"],
+	[SkillName.ClawMotif, "兽爪彩绘"],
+	[SkillName.MawMotif, "尖牙彩绘"],
+	[SkillName.LivingMuse, "动物构想"],
+	[SkillName.PomMuse, "绒球构想"],
+	[SkillName.WingedMuse, "翅膀构想"],
+	[SkillName.ClawedMuse, "兽爪构想"],
+	[SkillName.FangedMuse, "尖牙构想"],
+	[SkillName.MogOfTheAges, "莫古力激流"],
+	[SkillName.RetributionOfTheMadeen, "马蒂恩惩罚"],
+
+	[SkillName.WeaponMotif, "武器彩绘"],
+	[SkillName.SteelMuse, "武器构想"],
+	[SkillName.HammerMotif, "重锤彩绘"],
+	[SkillName.StrikingMuse, "重锤构想"],
+	[SkillName.HammerStamp, "重锤敲章"],
+	[SkillName.HammerBrush, "重锤掠刷"],
+	[SkillName.PolishingHammer, "重锤抛光"],
+
+	[SkillName.LandscapeMotif, "风景彩绘"],
+	[SkillName.ScenicMuse, "风景构想"],
+	[SkillName.StarrySkyMotif, "星空彩绘"],
+	[SkillName.StarryMuse, "星空构想"]
 ]);
 
 const skillsJa = new Map<SkillName, string>([
@@ -110,6 +161,8 @@ const skillsJa = new Map<SkillName, string>([
 	[SkillName.Sprint, "スプリント"],
 	[SkillName.Retrace, "魔紋再設置"],
 	[SkillName.FlareStar, "フレアスター"]
+
+	// TODO picto localization
 ]);
 
 export function localizeSkillName(text: SkillName) : string {
@@ -125,6 +178,7 @@ export function localizeSkillName(text: SkillName) : string {
 
 const buffsZh = new Map<BuffType, string>([
 	[BuffType.LeyLines, "黑魔纹"],
+	[BuffType.Hyperphantasia, "绘灵幻景"],
 	[BuffType.Tincture, "爆发药"],
 
 	[BuffType.ArcaneCircle, "神秘纹"],
@@ -145,7 +199,7 @@ const buffsZh = new Map<BuffType, string>([
 	[BuffType.RadiantFinale3, "光明神的最终乐章3"],
 	[BuffType.SearingLight, "灼热之光"],
 	[BuffType.StandardFinish, "标准舞步结束"],
-	[BuffType.StarryMuse, "绘出星空"],
+	[BuffType.StarryMuse, "星空构想"],
 	[BuffType.TechnicalFinish, "技巧舞步结束"],
 	[BuffType.WanderersMinuet, "放浪神的小步舞曲"],
 ]);
@@ -183,6 +237,31 @@ export function localizeBuffType(text: BuffType) : string {
 		return buffsZh.get(text) ?? text;
 	} else if (currentLang === "ja") {
 		return buffsJa.get(text) ?? text;
+	} else {
+		return text;
+	}
+}
+
+const resourcesZh = new Map<ResourceType, string>([
+	[ResourceType.Aetherhues, "以太色调"],
+	[ResourceType.TemperaCoat, "坦培拉涂层"],
+	[ResourceType.Smudge, "速涂"],
+	[ResourceType.HammerTime, "重锤连击"],
+	[ResourceType.SubtractivePalette, "减色混合"],
+	[ResourceType.StarryMuse, "星空构想"],
+	[ResourceType.SubtractiveSpectrum, "减色混合预备"],
+	[ResourceType.Hyperphantasia, "绘灵幻景"],
+	[ResourceType.Inspiration, "绘画装置"],
+	[ResourceType.RainbowBright, "彩虹点滴效果提高"],
+	[ResourceType.Starstruck, "天星棱光预备"],
+	[ResourceType.TemperaGrassa, "油性坦培拉涂层"],
+	[ResourceType.MonochromeTones, "色调反转"],
+]);
+
+export function localizeResourceType(text: ResourceType): string {
+	const currentLang = getCurrentLanguage();
+	if (currentLang === "zh") {
+		return resourcesZh.get(text) ?? text;
 	} else {
 		return text;
 	}

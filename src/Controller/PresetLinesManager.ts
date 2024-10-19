@@ -1,5 +1,6 @@
 import {FileType, getCachedValue, setCachedValue} from "./Common";
 import {ActionNode, Line} from "./Record";
+import {getNormalizedSkillName} from "../Game/Skills";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 
 type Fixme = any;
@@ -41,7 +42,9 @@ export class PresetLinesManager {
 			for (let j = 0; j < content.presets[i].actions.length; j++) {
 				let action = content.presets[i].actions[j];
 				let node = new ActionNode(action.type);
-				node.skillName = action.skillName;
+				if (action.skillName) {
+					node.skillName = getNormalizedSkillName(action.skillName)!;
+				}
 				node.waitDuration = action.waitDuration;
 				node.buffName = action.buffName;
 				line.addActionNode(node);
