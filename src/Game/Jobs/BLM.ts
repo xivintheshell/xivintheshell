@@ -361,6 +361,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 		autoDowngrade: params.autoDowngrade,
 		aspect: aspect,
 		castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime, aspect),
+		recastTime: (state) => state.config.adjustedGCD(2.5),
 		manaCost: (state) => state.captureManaCost(name, aspect, params.baseManaCost),
 		// TODO apply AFUI modifiers?
 		potency: (state) => params.basePotency,

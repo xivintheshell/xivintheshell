@@ -211,7 +211,7 @@ function convertTraitPotencyArray<T extends PlayerState>(arr: Array<[TraitName, 
  * - autoUpgrade + autoDowngrade: remain undefined
  * - aspect: Aspect.Other
  * - castTime: 0
- * - recastTime: 2.5
+ * - recastTime: 2.5 (not adjusted to sps)
  * - manaCost: 0
  * - potency: 0
  * - applicationDelay: 0
