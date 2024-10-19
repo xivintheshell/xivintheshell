@@ -41,7 +41,7 @@ export class XIVMath {
 		const clampedCritRate = critRate > 1 ? 1 : critRate;
 		const clampedDHRate   = dhRate   > 1 ? 1 : dhRate;
 
-		if (autoCDH) 
+		if (autoCDH)
 			modifier *= (1 + XIVMath.#autoMultiDet(level, det) + XIVMath.#autoMultiDH(level, dh));
 		else
 			modifier *= (1 + XIVMath.#autoMultiDet(level, det));
@@ -52,7 +52,7 @@ export class XIVMath {
 		const critDHRate = clampedCritRate * clampedDHRate;
 		const normalRate = 1 - clampedCritRate - clampedDHRate + critDHRate;
 
-		return modifier * normalRate + critDamage * (clampedCritRate-critDHRate) + dhDamage * (clampedDHRate-critDHRate) + critDHDamage * critDHRate; 
+		return modifier * normalRate + critDamage * (clampedCritRate-critDHRate) + dhDamage * (clampedDHRate-critDHRate) + critDHDamage * critDHRate;
 	}
 
 	static #criticalHitRate(level: LevelSync, crit: number) {

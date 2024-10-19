@@ -739,7 +739,7 @@ const livingConditions = [livingMuseCondition, pomMuseCondition, wingedMuseCondi
 const livingMuseInfos: Array<[SkillName, number, number | Array<[TraitName, number]>, number, ValidateAttemptFn<PCTState>]> = [
 	// living muse can never itself be cast
 	[SkillName.LivingMuse, 30, 0, 0, (state) => false],
-	[SkillName.PomMuse, 30, 
+	[SkillName.PomMuse, 30,
 		[[TraitName.Never, 1000], [TraitName.PictomancyMasteryIII, 1100]],
 		0.62, pomMuseCondition.condition],
 	[SkillName.WingedMuse, 30,

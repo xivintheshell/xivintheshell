@@ -370,7 +370,7 @@ export abstract class GameState {
 				node.addBuff(BuffType.Tincture);
 			}
 
-			if (this.hasResourceAvailable(ResourceType.StarryMuse) && skill.potencyFn(this) > 0) {
+			if (this.job === ShellJob.PCT && this.hasResourceAvailable(ResourceType.StarryMuse) && skill.potencyFn(this) > 0) {
 				node.addBuff(BuffType.StarryMuse);
 			}
 
@@ -460,7 +460,7 @@ export abstract class GameState {
 		}
 
 		// starry muse
-		if (this.resources.get(ResourceType.StarryMuse).available(1) && potencyNumber > 0) {
+		if (this.job === ShellJob.PCT && this.resources.get(ResourceType.StarryMuse).available(1) && potencyNumber > 0) {
 			node.addBuff(BuffType.StarryMuse);
 		}
 
