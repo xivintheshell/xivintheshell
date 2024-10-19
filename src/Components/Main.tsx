@@ -7,7 +7,7 @@ import {controller} from "../Controller/Controller";
 import 'react-tabs/style/react-tabs.css';
 import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
-import changelog from "../pct_changelog.json"
+import changelog from "../changelog.json"
 import {localize, localizeDate, SelectLanguage} from "./Localization"
 import {GlobalHelpTooltip, Tabs} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
@@ -21,6 +21,7 @@ export let setHistorical = (inHistorical: boolean) => {};
 function handleUrlCommands(command?: string) {
 	if (command === "resetAll") {
 		clearCachedValues();
+		window.location.href = "/ffxiv-blm-rotation";
 	}
 	else if (command === "resetResourceOverrides") {
 		let strOld = getCachedValue("gameRecord");
@@ -37,6 +38,7 @@ function handleUrlCommands(command?: string) {
 				setCachedValue("gameRecord" + i.toString(), JSON.stringify(content));
 			}
 		}
+		window.location.href = "/ffxiv-blm-rotation";
 	}
 	else if (command !== undefined) {
 		console.log("unrecognized command '" + command + "'");
@@ -289,7 +291,7 @@ export default class Main extends React.Component {
 						<SelectLanguage/>
 						<SelectColorTheme/>
 						<div>
-							<h3 style={{marginTop: 20, marginBottom: 6}}>Pictomancer in the Shell</h3>
+							<h3 style={{marginTop: 20, marginBottom: 6}}>Black Mage in the Shell</h3>
 							{localize({
 								en: <div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
 									tool/Changelog</b>)
