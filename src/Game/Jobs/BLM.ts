@@ -138,7 +138,7 @@ export class BLMState extends GameState {
 			thunderhead.overrideTimer(this, duration);
 		} else { // there's currently no proc. gain one.
 			thunderhead.gain(1);
-			this.enqueueResourceDrop(ResourceType.Thunderhead);
+			this.enqueueResourceDrop(ResourceType.Thunderhead, duration);
 		}
 	}
 	getThunderDotDuration() {
