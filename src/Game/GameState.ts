@@ -7,7 +7,18 @@ import {
 	Spell,
 	Ability,
 } from "./Skills"
-import {getAllResources, CoolDown, CoolDownState, DoTBuff, Event, EventTag, Resource, ResourceState} from "./Resources"
+import {
+	getAllResources,
+	getResourceInfo,
+	CoolDown,
+	CoolDownState,
+	DoTBuff,
+	Event,
+	EventTag,
+	Resource,
+	ResourceInfo,
+	ResourceState
+} from "./Resources"
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
@@ -47,6 +58,8 @@ export abstract class GameState {
 		// TIME (raw time which starts at 0 regardless of countdown)
 		this.time = 0;
 
+		this.displayedSkills = new DisplayedSkills(this.job, config.level);
+
 		// RESOURCES (checked when using skills)
 		// and skill CDs (also a form of resource)
 		this.resources = new ResourceState(this);
@@ -66,6 +79,8 @@ export abstract class GameState {
 		this.resources.set(new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(new Resource(ResourceType.NotAnimationLocked, 1, 1));
 		this.resources.set(new Resource(ResourceType.NotCasterTaxed, 1, 1));
+		// begin the encounter not in combat by default
+		this.resources.set(new Resource(ResourceType.InCombat, 1, 0));
 
 		this.cooldowns.set(new CoolDown(ResourceType.Never, 0, 0, 0)); // dummy cooldown for invalid skills
 
@@ -231,9 +246,9 @@ export abstract class GameState {
 		return mod.manaRegen;
 	}
 
+	// BLM uses this for LL GCD scaling, but PCT does not
 	gcdRecastTimeScale() {
-		let ll = this.resources.get(ResourceType.LeyLines);
-		if (ll.available(1)) {
+		if (this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines)) {
 			// should be approximately 0.85
 			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.LeyLines));
 			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
@@ -246,7 +261,7 @@ export abstract class GameState {
 	requestToggleBuff(buffName: ResourceType) {
 		let rsc = this.resources.get(buffName);
 		// only ley lines can be enabled / disabled. Everything else will just be canceled
-		if (buffName === ResourceType.LeyLines) {
+		if (buffName === ResourceType.LeyLines || buffName === ResourceType.Inspiration) {
 			if (rsc.available(1)) { // buff exists and enabled
 				rsc.enabled = false;
 				return true;
@@ -255,6 +270,15 @@ export abstract class GameState {
 				rsc.enabled = true;
 				return true;
 			}
+		} else if ([
+			ResourceType.HammerTime,
+			ResourceType.Aetherhues,
+			ResourceType.SubtractivePalette,
+		].includes(buffName)) {
+			// subtractive spectrum, starstruck, monochrome tones, rainbow drip,
+			// tempera coat/grassa, smudge can be clicked off
+			// but these buffs cannot be
+			return true;
 		} else {
 			rsc.consume(rsc.availableAmount());
 			rsc.removeTimer();
@@ -272,10 +296,33 @@ export abstract class GameState {
 	useSpell(skill: Spell<PlayerState>, node: ActionNode) {
 		let cd = this.cooldowns.get(skill.cdName);
 		let capturedManaCost = skill.manaCostFn(this);
-		let llCovered = this.hasResourceAvailable(ResourceType.LeyLines);
+		// TODO refactor logic to determine self-buffs
+		let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
+		const inspireSkills = [
+			SkillName.FireInRed,
+			SkillName.Fire2InRed,
+			SkillName.AeroInGreen,
+			SkillName.Aero2InGreen,
+			SkillName.WaterInBlue,
+			SkillName.Water2InBlue,
+			SkillName.HolyInWhite,
+			SkillName.BlizzardInCyan,
+			SkillName.Blizzard2InCyan,
+			SkillName.StoneInYellow,
+			SkillName.Stone2InYellow,
+			SkillName.ThunderInMagenta,
+			SkillName.Thunder2InMagenta,
+			SkillName.CometInBlack,
+			SkillName.StarPrism,
+		];
+		let inspired = this.job === ShellJob.PCT && this.resources.get(ResourceType.Inspiration).available(1) && inspireSkills.includes(skill.name);
 		let capturedCastTime = skill.castTimeFn(this);
+		const recastTime = skill.recastTimeFn(this);
 		if (llCovered && skill.cdName === ResourceType.cd_GCD) {
 			node.addBuff(BuffType.LeyLines);
+		}
+		if (inspired) {
+			node.addBuff(BuffType.Hyperphantasia);
 		}
 
 		// create potency node object (snapshotted buffs will populate on confirm)
@@ -323,6 +370,10 @@ export abstract class GameState {
 				node.addBuff(BuffType.Tincture);
 			}
 
+			if (this.hasResourceAvailable(ResourceType.StarryMuse) && skill.potencyFn(this) > 0) {
+				node.addBuff(BuffType.StarryMuse);
+			}
+
 			// Perform additional side effects
 			skill.onConfirm(this, node);
 
@@ -337,6 +388,15 @@ export abstract class GameState {
 					skill.onApplication(this, node);
 				}
 			));
+
+			if (potency) {
+				this.resources.addResourceEvent({
+					rscType: ResourceType.InCombat,
+					name: "begin combat if necessary",
+					delay: skill.applicationDelay,
+					fnOnRsc: (rsc: Resource) => rsc.gain(1),
+				});
+			}
 		};
 
 		const isInstant = capturedCastTime === 0 || skill.isInstantFn(this);
@@ -363,7 +423,7 @@ export abstract class GameState {
 			}));
 		}
 		// recast
-		cd.useStack(this);
+		cd.useStackWithRecast(this, this.config.getAfterTaxGCD(recastTime));
 	}
 
 	/**
@@ -399,7 +459,21 @@ export abstract class GameState {
 			node.addBuff(BuffType.Tincture);
 		}
 
+		// starry muse
+		if (this.resources.get(ResourceType.StarryMuse).available(1) && potencyNumber > 0) {
+			node.addBuff(BuffType.StarryMuse);
+		}
+
 		skill.onConfirm(this, node);
+
+		if (potency) {
+			this.resources.addResourceEvent({
+				rscType: ResourceType.InCombat,
+				name: "begin combat if necessary",
+				delay: skill.applicationDelay,
+				fnOnRsc: (rsc: Resource) => rsc.gain(1),
+			});
+		}
 
 		if (skill.applicationDelay > 0) {
 			this.addEvent(new Event(
@@ -447,11 +521,19 @@ export abstract class GameState {
 		return this.resources.get(rscType).available(atLeast ?? 1);
 	}
 
+	// Add a resource drop event after `delay` seconds.
+	// If `rscType` has a corresponding cooldown duration for the job, then that delay will be
+	// used by default.
 	enqueueResourceDrop(
 		rscType: ResourceType,
-		delay: number,
+		delay?: number,
 		toConsume?: number,
 	) {
+		if (delay === undefined) {
+			const rscInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
+			console.assert(rscInfo?.maxTimeout, `could not find timeout declaration for resource ${rscType}`)
+			delay = rscInfo.maxTimeout;
+		}
 		const name = (toConsume === undefined ? "drop all " : `drop ${toConsume} `) + rscType;
 		this.resources.addResourceEvent({
 			rscType: rscType,
@@ -468,11 +550,16 @@ export abstract class GameState {
 		return foundEvt ? foundEvt.timeTillEvent : 0;
 	}
 
+	timeTillNextDamageEvent() {
+		// Find when the next damage event is. Used to block starry + striking muse when out of combat.
+		return this.resources.timeTillReady(ResourceType.InCombat);
+	}
+
 	getSkillAvailabilityStatus(skillName: SkillName): SkillButtonViewInfo {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
 		let capturedManaCost = skill.manaCostFn(this);
-		let llCovered = this.resources.get(ResourceType.LeyLines).available(1);
+		let llCovered = this.job === ShellJob.BLM && this.resources.get(ResourceType.LeyLines).available(1);
 		let capturedCastTime = skill.kind === "weaponskill" || skill.kind === "spell" ? skill.castTimeFn(this) : 0;
 		let instantCastAvailable = capturedCastTime === 0 || skill.kind === "ability" || skill.isInstantFn(this);
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
@@ -485,6 +572,12 @@ export abstract class GameState {
 		else if (!skillUnlocked) status = SkillReadyStatus.SkillNotUnlocked;
 		else if (!reqsMet) status = SkillReadyStatus.RequirementsNotMet;
 		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
+
+		// Special case for striking/starry muse, which require being in combat
+		if ([SkillName.StrikingMuse, SkillName.StarryMuse].includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
+			status = SkillReadyStatus.NotInCombat;
+			timeTillAvailable = this.timeTillNextDamageEvent();
+		}
 
 		let cd = this.cooldowns.get(skill.cdName);
 		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.cdName);
@@ -504,6 +597,7 @@ export abstract class GameState {
 		// conditions that make the skills show proc
 		let highlight = false;
 
+		// TODO refactor out
 		if (skillName === SkillName.Paradox) {// paradox
 			highlight = true;
 		} else if (skillName === SkillName.Fire3) {// F3P
@@ -514,6 +608,57 @@ export abstract class GameState {
 			if (this.resources.get(ResourceType.Polyglot).available(1)) highlight = true;
 		} else if (skillName === SkillName.FlareStar) {
 			if (this.resources.get(ResourceType.AstralSoul).available(6)) highlight = true;
+		} else if (skillName === SkillName.CometInBlack) {
+			// if comet is ready, it glows regardless of paint status
+			highlight = this.resources.get(ResourceType.MonochromeTones).available(1);
+		} else if (skillName === SkillName.HolyInWhite) {
+			// holy doesn't glow if comet is ready
+			highlight = !this.resources.get(ResourceType.MonochromeTones).available(1)
+				&& this.resources.get(ResourceType.Paint).available(1);
+		} else if (skillName === SkillName.SubtractivePalette) {
+			highlight = this.resources.get(ResourceType.SubtractiveSpectrum).available(1) ||
+				this.resources.get(ResourceType.PaletteGauge).available(50);
+		} else if (skillName === SkillName.MogOfTheAges || skillName === SkillName.RetributionOfTheMadeen) {
+			highlight = this.resources.get(ResourceType.Portrait).available(1);
+		} else if (skill.aspect === Aspect.Hammer) {
+			highlight = this.resources.get(ResourceType.HammerTime).available(1);
+		} else if (skillName === SkillName.RainbowDrip) {
+			highlight = this.resources.get(ResourceType.RainbowBright).available(1);
+		} else if (skillName === SkillName.StarPrism) {
+			highlight = this.resources.get(ResourceType.Starstruck).available(1);
+		} else if (skillName === SkillName.TemperaGrassa || skillName === SkillName.TemperaCoatPop) {
+			highlight = this.resources.get(ResourceType.TemperaCoat).available(1);
+		} else if (skillName === SkillName.TemperaGrassaPop) {
+			highlight = this.resources.get(ResourceType.TemperaGrassa).available(1);
+		} else if ([
+			SkillName.PomMuse,
+			SkillName.WingedMuse,
+			SkillName.ClawedMuse,
+			SkillName.FangedMuse,
+		].includes(skillName)) {
+			highlight = this.resources.get(ResourceType.CreatureCanvas).available(1);
+		} else if ([SkillName.HammerStamp, SkillName.HammerBrush, SkillName.PolishingHammer].includes(skillName)) {
+			highlight = this.resources.get(ResourceType.HammerTime).available(1);
+		} else if (skillName === SkillName.StrikingMuse) {
+			highlight = this.resources.get(ResourceType.WeaponCanvas).available(1);
+		} else if (skillName === SkillName.StarryMuse) {
+			highlight = this.resources.get(ResourceType.LandscapeCanvas).available(1);
+		} else if ([
+			SkillName.AeroInGreen,
+			SkillName.Aero2InGreen,
+			SkillName.WaterInBlue,
+			SkillName.Water2InBlue,
+		].includes(skillName)) {
+			highlight = !this.resources.get(ResourceType.SubtractivePalette).available(1);
+		} else if ([
+			SkillName.BlizzardInCyan,
+			SkillName.Blizzard2InCyan,
+			SkillName.StoneInYellow,
+			SkillName.Stone2InYellow,
+			SkillName.ThunderInMagenta,
+			SkillName.Thunder2InMagenta,
+		].includes(skillName)) {
+			highlight = this.resources.get(ResourceType.SubtractivePalette).available(1);
 		}
 
 		return {
@@ -577,6 +722,10 @@ export abstract class GameState {
 			return true;
 		}
 		return false;
+	}
+
+	isInCombat() {
+		return this.hasResourceAvailable(ResourceType.InCombat);
 	}
 
 	toString() {

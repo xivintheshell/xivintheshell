@@ -133,12 +133,12 @@ export class BLMState extends GameState {
 
 	gainThunderhead() {
 		let thunderhead = this.resources.get(ResourceType.Thunderhead);
-		let duration = (getResourceInfo(ShellJob.BLM, ResourceType.Thunderhead) as ResourceInfo).maxTimeout;
+		const duration = (getResourceInfo(ShellJob.BLM, ResourceType.Thunderhead) as ResourceInfo).maxTimeout;
 		if (thunderhead.available(1)) { // already has a proc; reset its timer
 			thunderhead.overrideTimer(this, duration);
 		} else { // there's currently no proc. gain one.
 			thunderhead.gain(1);
-			this.enqueueResourceDrop(ResourceType.Thunderhead, duration);
+			this.enqueueResourceDrop(ResourceType.Thunderhead);
 		}
 	}
 	getThunderDotDuration() {
@@ -713,10 +713,7 @@ makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
 		const triple = state.resources.get(ResourceType.Triplecast)
 		if (triple.pendingChange) triple.removeTimer();
 		triple.gain(3);
-		state.enqueueResourceDrop(
-			ResourceType.Triplecast,
-			(getResourceInfo(ShellJob.BLM, ResourceType.Triplecast) as ResourceInfo).maxTimeout,
-		);
+		state.enqueueResourceDrop(ResourceType.Triplecast);
 	},
 });
 

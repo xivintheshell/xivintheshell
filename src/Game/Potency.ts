@@ -1,4 +1,5 @@
 import {controller} from "../Controller/Controller";
+import {ShellInfo, ShellJob} from "../Controller/Common";
 import {XIVMath} from "./XIVMath";
 import {Aspect, BuffType, Debug, ResourceType, SkillName} from "./Common";
 import {GameConfig} from "./GameConfig";
@@ -6,7 +7,7 @@ import {ResourceState} from "./Resources";
 import {TraitName, Traits} from "./Traits";
 
 export const enum PotencyModifierType {
-	AF3, AF2, AF1, UI3, UI2, UI1, ENO, POT, PARTY
+	AF3, AF2, AF1, UI3, UI2, UI1, ENO, POT, STARRY, HAMMER, PARTY
 }
 
 export type PotencyModifier = {
@@ -24,8 +25,18 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 		mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
 	}
 
+	// starry muse
+	if (ShellInfo.job === ShellJob.PCT && resources.get(ResourceType.StarryMuse).available(1)) {
+		mods.push({source: PotencyModifierType.STARRY, damageFactor: 1.05, critFactor: 0, dhFactor: 0});
+	}
+
+	// hammer autocrit/dh
+	if (aspect === Aspect.Hammer) {
+		mods.push({source: PotencyModifierType.HAMMER, damageFactor: 1, critFactor: 1.0, dhFactor: 1.0});
+	}
+
 	// eno
-	if (resources.get(ResourceType.Enochian).available(1)) {
+	if (ShellInfo.job === ShellJob.BLM && resources.get(ResourceType.Enochian).available(1)) {
 		const enochianModifier = 
 			(Traits.hasUnlocked(TraitName.EnhancedEnochianIV, controller.game.config.level) && 1.33) ||
 			(Traits.hasUnlocked(TraitName.EnhancedEnochianIII, controller.game.config.level) && 1.25) ||
@@ -35,46 +46,48 @@ export function getPotencyModifiersFromResourceState(resources: ResourceState, a
 		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: enochianModifier, critFactor: 0, dhFactor: 0});
 	}
 
-	// ui1
-	let ui = resources.get(ResourceType.UmbralIce);
-	if (ui.availableAmount() === 1) {
-		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI1, damageFactor: 0.9, critFactor: 0, dhFactor: 0});
-		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI1, damageFactor: 1, critFactor: 0, dhFactor: 0});
-	}
-	// ui2
-	else if (ui.availableAmount() === 2) {
-		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI2, damageFactor: 0.8, critFactor: 0, dhFactor: 0});
-		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI2, damageFactor: 1, critFactor: 0, dhFactor: 0});
-	}
-	// ui3
-	else if (ui.availableAmount() === 3) {
-		if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI3, damageFactor: 0.7, critFactor: 0, dhFactor: 0});
-		else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI3, damageFactor: 1, critFactor: 0, dhFactor: 0});
-	}
+	if (ShellInfo.job === ShellJob.BLM) {
+		// ui1
+		let ui = resources.get(ResourceType.UmbralIce);
+		if (ui.availableAmount() === 1) {
+			if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI1, damageFactor: 0.9, critFactor: 0, dhFactor: 0});
+			else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI1, damageFactor: 1, critFactor: 0, dhFactor: 0});
+		}
+		// ui2
+		else if (ui.availableAmount() === 2) {
+			if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI2, damageFactor: 0.8, critFactor: 0, dhFactor: 0});
+			else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI2, damageFactor: 1, critFactor: 0, dhFactor: 0});
+		}
+		// ui3
+		else if (ui.availableAmount() === 3) {
+			if (aspect === Aspect.Fire) mods.push({source: PotencyModifierType.UI3, damageFactor: 0.7, critFactor: 0, dhFactor: 0});
+			else if (aspect === Aspect.Ice) mods.push({source: PotencyModifierType.UI3, damageFactor: 1, critFactor: 0, dhFactor: 0});
+		}
 
-	// af1
-	let af = resources.get(ResourceType.AstralFire);
-	if (af.availableAmount() === 1) {
-		if (aspect === Aspect.Ice) {
-			mods.push({source: PotencyModifierType.AF1, damageFactor: 0.9, critFactor: 0, dhFactor: 0});
-		}  else if (aspect === Aspect.Fire) {
-			mods.push({source: PotencyModifierType.AF1, damageFactor: 1.4, critFactor: 0, dhFactor: 0});
+		// af1
+		let af = resources.get(ResourceType.AstralFire);
+		if (af.availableAmount() === 1) {
+			if (aspect === Aspect.Ice) {
+				mods.push({source: PotencyModifierType.AF1, damageFactor: 0.9, critFactor: 0, dhFactor: 0});
+			}  else if (aspect === Aspect.Fire) {
+				mods.push({source: PotencyModifierType.AF1, damageFactor: 1.4, critFactor: 0, dhFactor: 0});
+			}
 		}
-	}
-	// af2
-	else if (af.availableAmount() === 2) {
-		if (aspect === Aspect.Ice) {
-			mods.push({source: PotencyModifierType.AF2, damageFactor: 0.8, critFactor: 0, dhFactor: 0});
-		}  else if (aspect === Aspect.Fire) {
-			mods.push({source: PotencyModifierType.AF2, damageFactor: 1.6, critFactor: 0, dhFactor: 0});
+		// af2
+		else if (af.availableAmount() === 2) {
+			if (aspect === Aspect.Ice) {
+				mods.push({source: PotencyModifierType.AF2, damageFactor: 0.8, critFactor: 0, dhFactor: 0});
+			}  else if (aspect === Aspect.Fire) {
+				mods.push({source: PotencyModifierType.AF2, damageFactor: 1.6, critFactor: 0, dhFactor: 0});
+			}
 		}
-	}
-	// af3
-	else if (af.availableAmount() === 3) {
-		if (aspect === Aspect.Ice) {
-			mods.push({source: PotencyModifierType.AF3, damageFactor: 0.7, critFactor: 0, dhFactor: 0});
-		}  else if (aspect === Aspect.Fire) {
-			mods.push({source: PotencyModifierType.AF3, damageFactor: 1.8, critFactor: 0, dhFactor: 0});
+		// af3
+		else if (af.availableAmount() === 3) {
+			if (aspect === Aspect.Ice) {
+				mods.push({source: PotencyModifierType.AF3, damageFactor: 0.7, critFactor: 0, dhFactor: 0});
+			}  else if (aspect === Aspect.Fire) {
+				mods.push({source: PotencyModifierType.AF3, damageFactor: 1.8, critFactor: 0, dhFactor: 0});
+			}
 		}
 	}
 
@@ -133,7 +146,9 @@ export class Potency {
 			});
 		}
 
-		return this.base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor);
+		let amt = this.base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor)
+		if (this.aspect === Aspect.Hammer) amt *= this.#calculateAutoCDHModifier(totalCritFactor, totalDhFactor)
+		return amt;
 	}
 
 	getPartyBuffs() {
@@ -160,13 +175,22 @@ export class Potency {
 
 	hasSnapshotted() { return this.snapshotTime !== undefined; }
 
+	#calculateAutoCDHModifier(critBonus: number, dhBonus: number) {
+		const level = this.config.level;
+		const base = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, critBonus, dhBonus);
+		const buffed = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, 1+critBonus, 1+dhBonus);
+
+		return buffed / base;
+	}
+
 	#calculatePotencyModifier(damageFactor: number, critBonus: number, dhBonus: number) {
 		const level = this.config.level;
 		const critStat = this.config.criticalHit;
 		const dhStat = this.config.directHit;
+		const det = this.config.determination;
 
-		const base = XIVMath.calculateDamage(level, critStat, dhStat, 1, 0, 0);
-		const buffed = XIVMath.calculateDamage(level, critStat, dhStat, damageFactor, critBonus, dhBonus);
+		const base = XIVMath.calculateDamage(level, critStat, dhStat, det, 1, 0, 0);
+		const buffed = XIVMath.calculateDamage(level, critStat, dhStat, det, damageFactor, critBonus, dhBonus);
 
 		return buffed / base;
 	}

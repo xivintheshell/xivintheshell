@@ -3,7 +3,7 @@ import {Clickable, ContentNode, Help, ProgressBar, StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
 import type {PlayerState} from "../Game/GameState";
 import {controller} from "../Controller/Controller";
-import {localize} from "./Localization";
+import {localize, localizeResourceType} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 
 type StatusResourceLocksViewProps = {
@@ -24,7 +24,7 @@ export type BuffProps = {
 	onSelf: boolean,
 	enabled: boolean,
 	stacks: number,
-	timeRemaining: string,
+	timeRemaining?: string,
 	className: string
 };
 
@@ -47,7 +47,28 @@ export interface ResourceCounterProps {
 	valueString: string;
 };
 
-export type ResourceDisplayProps = ResourceBarProps | ResourceCounterProps;
+export interface PaintGaugeCounterProps {
+	kind: "paint",
+	name: ContentNode,
+	holyColor: string,
+	cometColor: string,
+	currentStacks: number,
+	maxStacks: number,
+	hasComet: boolean,
+};
+
+export interface ResourceTextProps {
+	kind: "text",
+	name: ContentNode,
+	text: ContentNode,
+	className?: string,
+};
+
+export type ResourceDisplayProps =
+	ResourceBarProps |
+	ResourceCounterProps |
+	PaintGaugeCounterProps |
+	ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
 type StatusViewProps = {
@@ -127,6 +148,44 @@ function ResourceCounter(props: {
 	</div>;
 }
 
+// copy of ResourceCounter specialized for the paint gauge
+// name, holyColor, cometColor, currentStacks, maxStacks, hasComet
+function PaintGaugeCounter(props: {
+	name: ContentNode,
+	holyColor: string,
+	cometColor: string,
+	currentStacks: number,
+	maxStacks: number,
+	hasComet: boolean,
+}) {
+	let stacks = [];
+	for (let i = 0; i < 5; i++) {
+		// dip the last one in black paint
+		let isComet = props.hasComet && i === props.currentStacks - 1;
+		stacks.push(<ResourceStack key={i} color={isComet ? props.cometColor : props.holyColor} value={i < props.currentStacks}/>)
+	}
+	return <div style={{marginBottom: 4, lineHeight: "1.5em"}}>
+		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
+		<div style={{width: 200, display: "inline-block"}}>
+			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
+			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{props.currentStacks + "/" + props.maxStacks}</div>
+		</div>
+	</div>;
+}
+
+function ResourceText(props: {
+	name: ContentNode,
+	text: ContentNode,
+	className?: string,
+}) {
+	return <div className={props.className} style={{marginBottom: 4, lineHeight: "1.5em"}}>
+		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
+		<div style={{width: 200, display: "inline-block"}}>
+			<div style={{display: "inline-block", marginLeft: 6}}>{props.text}</div>
+		</div>
+	</div>;
+}
+
 const buffIcons = new Map();
 
 export function registerBuffIcon(buff: string, relativePath: string) {
@@ -155,7 +214,7 @@ function Buff(props: BuffProps) {
 		if (props.stacks === 2) assetName += "2";
 		else if (props.stacks === 3) assetName += "3";
 	}
-	return <div title={props.rscType} className={props.className + " buff " + props.rscType}>
+	return <div title={localizeResourceType(props.rscType)} className={props.className + " buff " + props.rscType}>
 		<Clickable content={
 			<img style={{height: 40}} src={buffIcons.get(assetName)} alt={props.rscType}/>
 		} style={{
@@ -170,7 +229,10 @@ function Buff(props: BuffProps) {
 				controller.autoSave();
 			}
 		}}/>
-		<span className={"buff-label"}>{props.timeRemaining}</span>
+		{/* When the buff has no timer, we still want it to align with other buffs, so just pad some empty space */}
+		<span className={"buff-label"} style={{visibility: props.timeRemaining === undefined ? "hidden" : undefined}}>
+			{props.timeRemaining ?? "0.000"}
+		</span>
 	</div>
 }
 
@@ -251,13 +313,30 @@ function ResourcesDisplay(props: {
 				hidden={props.hidden ?? false}
 				key={"resourceDisplay" + i}
 			/>
-			: <ResourceCounter
+		: (props.kind === "counter"
+			? <ResourceCounter
 				name={props.name}
 				color={props.color}
 				currentStacks={props.currentStacks}
 				maxStacks={props.maxStacks}
 				key={"resourceDisplay" + i}
 			/>
+		: (props.kind === "paint"
+			? <PaintGaugeCounter
+				name={props.name}
+				holyColor={props.holyColor}
+				cometColor={props.cometColor}
+				currentStacks={props.currentStacks}
+				maxStacks={props.maxStacks}
+				hasComet={props.hasComet}
+				key={"resourceDisplay" + i}
+			/>
+			: <ResourceText
+				name={props.name}
+				text={props.text}
+				key={"resourceDisplay" + i}
+			/>
+		))
 	);
 	return <div style={{textAlign: "left"}}>
 		{elements}

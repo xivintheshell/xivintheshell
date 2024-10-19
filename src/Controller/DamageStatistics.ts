@@ -9,7 +9,10 @@ import {
 	SelectedStatisticsData
 } from "../Components/DamageStatistics";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
-import {ShellJob} from "./Common";
+import type {BLMState} from "../Game/Jobs/BLM";
+import {ShellInfo, ShellJob} from "./Common";
+
+// TODO autogenerate everything here
 
 const AFUISkills = new Set<SkillName>([
 	SkillName.Blizzard,
@@ -45,12 +48,61 @@ const abilities = new Set<SkillName>([
 	SkillName.UmbralSoul,
 	SkillName.Amplifier,
 	SkillName.Retrace,
+
+	SkillName.StrikingMuse,
+	SkillName.StarryMuse,
+	SkillName.TemperaCoat,
+	SkillName.TemperaCoatPop,
+	SkillName.TemperaGrassa,
+	SkillName.TemperaGrassaPop,
+	SkillName.Smudge,
+	SkillName.SubtractivePalette,
+
 	SkillName.Addle,
 	SkillName.Swiftcast,
 	SkillName.LucidDreaming,
 	SkillName.Surecast,
 	SkillName.Tincture,
-	SkillName.Sprint
+	SkillName.Sprint,
+]);
+
+const pictoDamageSkills = new Set<SkillName>([
+	SkillName.FireInRed,
+	SkillName.Fire2InRed,
+	SkillName.AeroInGreen,
+	SkillName.Aero2InGreen,
+	SkillName.WaterInBlue,
+	SkillName.Water2InBlue,
+	SkillName.BlizzardInCyan,
+	SkillName.Blizzard2InCyan,
+	SkillName.StoneInYellow,
+	SkillName.Stone2InYellow,
+	SkillName.ThunderInMagenta,
+	SkillName.Thunder2InMagenta,
+	SkillName.HolyInWhite,
+	SkillName.CometInBlack,
+	SkillName.RainbowDrip,
+	SkillName.StarPrism,
+
+	SkillName.PomMuse,
+	SkillName.WingedMuse,
+	SkillName.ClawedMuse,
+	SkillName.FangedMuse,
+	SkillName.MogOfTheAges,
+	SkillName.RetributionOfTheMadeen,
+
+	SkillName.HammerStamp,
+	SkillName.HammerBrush,
+	SkillName.PolishingHammer,
+]);
+
+const pictoMotifs = new Set<SkillName>([
+	SkillName.HammerMotif,
+	SkillName.PomMotif,
+	SkillName.WingMotif,
+	SkillName.ClawMotif,
+	SkillName.MawMotif,
+	SkillName.StarrySkyMotif,
 ]);
 
 // source of truth
@@ -171,7 +223,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 		calculationModifiers: []
 	}
 	if (node.type === ActionType.Skill && node.skillName) {
-		if (AFUISkills.has(node.skillName)) {
+		if (AFUISkills.has(node.skillName) || pictoDamageSkills.has(node.skillName)) {
 			console.assert(node.getPotencies().length > 0, "no potencies for " + node.skillName);
 			// use the one that's not enochian or pot (then must be one of af123, ui123)
 			let mainPotency = node.getPotencies()[0];
@@ -179,9 +231,12 @@ function expandNode(node: ActionNode) : ExpandedNode {
 			for (let i = 0; i < mainPotency.modifiers.length; i++) {
 				let tag = mainPotency.modifiers[i].source;
 				if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
-					res.displayedModifiers = [tag];
-					res.calculationModifiers = mainPotency.modifiers;
-					break;
+					res.displayedModifiers.push(tag);
+					res.calculationModifiers.push(mainPotency.modifiers[i]);
+					// TODO check why blm does a break; here
+					if (ShellInfo.job === ShellJob.BLM) {
+						break;
+					}
 				}
 			}
 		} else if (enoSkills.has(node.skillName)) {
@@ -197,7 +252,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 					break;
 				}
 			}
-		} else if (abilities.has(node.skillName)) {
+		} else if (abilities.has(node.skillName) || pictoMotifs.has(node.skillName)) {
 		} else {
 			console.assert(isThunderNode(node))
 			res.basePotency = node.getPotencies()[0].base;
@@ -465,7 +520,7 @@ export function calculateDamageStats(props: {
 		// last Thunder so far
 		let mainP = (lastThunder as ActionNode).getPotencies()[0];
 		console.assert(mainP.hasResolved());
-		let lastDotDropTime = (mainP.applicationTime as number) + ctl.game.getThunderDotDuration();
+		let lastDotDropTime = (mainP.applicationTime as number) + (ctl.game as BLMState).getThunderDotDuration();
 		let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
 
 		let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
