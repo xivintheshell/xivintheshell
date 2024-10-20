@@ -13,6 +13,7 @@ import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 
 import {LoadSave} from "./LoadSave";
+import {TimelineDisplaySettings} from "./TimelineDisplaySettings";
 
 export let updateTimelineView = () => {
 };
@@ -60,12 +61,12 @@ class TimelineMain extends React.Component {
 	componentDidMount() {
 		this.setState({
 			timelineWidth: controller.timeline.getCanvasWidth(),
-			timelineHeight: controller.timeline.getCanvasHeight(),
+			timelineHeight: controller.timeline.getCanvasHeight(controller.timelineDrawOptions),
 		});
 		updateTimelineView = (() => {
 			this.setState({
 				timelineWidth: controller.timeline.getCanvasWidth(),
-				timelineHeight: controller.timeline.getCanvasHeight(),
+				timelineHeight: controller.timeline.getCanvasHeight(controller.timelineDrawOptions),
 				version: this.state.version + 1
 			});
 		});
@@ -180,13 +181,10 @@ function TimelineTabs() {
 					<LoadSave/>
 				</div>
 			},
-			/*
-			// todo: add this back some time
 			{
 				titleNode: localize({en: "Display settings", zh: "显示设置"}),
-				contentNode: "todo"
-			},
-			 */
+				contentNode: <TimelineDisplaySettings/>
+			}
 		]} collapsible={true} scrollable={false} height={TIMELINE_SETTINGS_HEIGHT} defaultSelectedIndex={undefined}/>
 		<Slider
 			uniqueName={"timelineDisplayScale"}

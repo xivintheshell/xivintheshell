@@ -25,7 +25,7 @@ import {ImageExportConfig} from "./ImageExportConfig";
 import {PresetLinesManager} from "./PresetLinesManager";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
-import {StaticFn} from "../Components/Common";
+import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDrawOptions} from "../Components/Common";
 import {TimelineRenderingProps} from "../Components/TimelineCanvas";
 import {Potency, PotencyModifierType} from "../Game/Potency";
 import {updateDamageStats, updateSelectedStats} from "../Components/DamageStatistics";
@@ -55,6 +55,7 @@ class Controller {
 	gameConfig;
 	record;
 	imageExportConfig: ImageExportConfig;
+	timelineDrawOptions: TimelineDrawOptions = DEFAULT_TIMELINE_OPTIONS;
 	game;
 	#tinctureBuffPercentage = 0;
 	#untargetableMask = true;
@@ -84,6 +85,7 @@ class Controller {
 	#bInSandbox: boolean = false;
 
 	#skipViewUpdates: boolean = false;
+	// todo: can probably somehow get rid of this because it should largely overlaps with #bInSandbox
 	displayingUpToDateGameState = true;
 
 	constructor() {
@@ -106,10 +108,7 @@ class Controller {
 		this.record.config = this.gameConfig;
 		this.imageExportConfig = {
 			wrapThresholdSeconds: JSON.parse(getCachedValue("img: wrapThresholdSeconds") ?? "0"),
-			includeMPAndLucidTicks: JSON.parse(getCachedValue("img: includeMPAndLucidTicks") ?? "false"),
-			includeDamageApplication: JSON.parse(getCachedValue("img: includeDamageApplication") ?? "false"),
 			includeTime: JSON.parse(getCachedValue("img: includeTime") ?? "true"),
-			includeBuffIndicators: JSON.parse(getCachedValue("img: includeBuffIndicators") ?? "true"),
 		};
 
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown; // left of timeline origin
@@ -484,6 +483,11 @@ class Controller {
 		return coveredTime / totalTime;
 	}
 
+	setTimelineOptions(options: TimelineDrawOptions) {
+		this.timelineDrawOptions = options;
+		this.updateTimelineDisplay();
+	}
+
 	getTimelineRenderingProps(): TimelineRenderingProps {
 		let showSelection : boolean = this.record.getFirstSelection() != null && this.record.getLastSelection() != null;
 		let countdown = this.gameConfig.countdown;
@@ -494,7 +498,7 @@ class Controller {
 		}
 		return {
 			timelineWidth: this.timeline.getCanvasWidth(),
-			timelineHeight: this.timeline.getCanvasHeight(),
+			timelineHeight: this.timeline.getCanvasHeight(this.timelineDrawOptions),
 			scale: this.timeline.scale,
 			countdown: countdown,
 			tincturePotencyMultiplier: this.getTincturePotencyMultiplier(),
@@ -507,7 +511,8 @@ class Controller {
 			buffMarkers: this.timeline.getBuffMarkers(),
 			showSelection: showSelection,
 			selectionStartDisplayTime: (this.record.getFirstSelection()?.tmp_startLockTime ?? 0) - this.gameConfig.countdown,
-			selectionEndDisplayTime: (this.record.getLastSelection()?.tmp_endLockTime ?? 0) - this.gameConfig.countdown
+			selectionEndDisplayTime: (this.record.getLastSelection()?.tmp_endLockTime ?? 0) - this.gameConfig.countdown,
+			drawOptions: this.timelineDrawOptions
 		};
 	}
 
