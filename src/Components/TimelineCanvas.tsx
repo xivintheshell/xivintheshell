@@ -888,7 +888,9 @@ function drawEverything() {
 
 	currentHeight += drawRuler(timelineOrigin);
 
-	currentHeight += drawMarkerTracks(timelineOrigin, currentHeight);
+	if (g_renderingProps.drawOptions.drawMarkers) {
+		currentHeight += drawMarkerTracks(timelineOrigin, currentHeight);
+	}
 
 	currentHeight += drawTimelines(timelineOrigin, currentHeight, false);
 

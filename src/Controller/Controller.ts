@@ -510,7 +510,7 @@ class Controller {
 		}
 		return {
 			timelineWidth: this.timeline.getCanvasWidth(),
-			timelineHeight: this.timeline.getCanvasHeight(),
+			timelineHeight: this.timeline.getCanvasHeight(this.timelineDrawOptions),
 			scale: this.timeline.scale,
 			countdown: countdown,
 			tincturePotencyMultiplier: this.getTincturePotencyMultiplier(),
