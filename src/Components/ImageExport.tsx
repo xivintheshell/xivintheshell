@@ -113,7 +113,9 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 				let currentHeight = 0;
 				if (this.state.includeTime) {
 					currentHeight += drawRuler(timelineOrigin, true);
-					currentHeight += drawMarkerTracks(timelineOrigin, currentHeight, true);
+					if (activeRenderProps.drawOptions.drawMarkers) {
+						currentHeight += drawMarkerTracks(timelineOrigin, currentHeight, true);
+					}
 				}
 				drawTimelines(timelineOrigin, currentHeight, true);
 			}
