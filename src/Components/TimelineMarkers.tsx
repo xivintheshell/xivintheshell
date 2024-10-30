@@ -238,7 +238,7 @@ export class TimelineMarkers extends React.Component {
 		let buffCollection: JSX.Element[] = [];
 		buffInfos.forEach(info => {
 			// prevent starry from being selectable if we're the pictomancer
-			if (ShellInfo.job === ShellJob.PCT && info.name !== BuffType.StarryMuse) {
+			if (!(ShellInfo.job === ShellJob.PCT && info.name === BuffType.StarryMuse)) {
 				buffCollection.push(<option key={info.name} value={info.name}>{localizeBuffType(info.name)}</option>)
 			}
 		});

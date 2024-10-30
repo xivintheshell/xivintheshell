@@ -521,7 +521,7 @@ export abstract class GameState {
 
 	// Add a resource drop event after `delay` seconds.
 	// If `rscType` has a corresponding cooldown duration for the job, then that delay will be
-	// used by default.
+	// used if `rscType` is undefined.
 	enqueueResourceDrop(
 		rscType: ResourceType,
 		delay?: number,
