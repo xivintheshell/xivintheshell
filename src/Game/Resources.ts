@@ -103,12 +103,12 @@ export class DoTBuff extends Resource {
 }
 
 export class CoolDown extends Resource {
-	readonly #cdPerStack: number;
+	readonly #defaultBaseRecast: number;
 	#recastTimeScale: number;
 	#currentBaseRecast: number;
 	constructor(type: ResourceType, cdPerStack: number, maxStacks: number, initialNumStacks: number) {
 		super(type, maxStacks * cdPerStack, initialNumStacks * cdPerStack);
-		this.#cdPerStack = cdPerStack;
+		this.#defaultBaseRecast = cdPerStack;
 		this.#currentBaseRecast = cdPerStack; // special case for mixed-recast spells
 		this.#recastTimeScale = 1; // effective for the next stack (i.e. 0.85 if captured LL)
 	}
@@ -116,7 +116,7 @@ export class CoolDown extends Resource {
 	stacksAvailable() { return Math.floor((this.availableAmount() + Debug.epsilon) / this.#currentBaseRecast); }
 	maxStacks() { return this.maxValue / this.#currentBaseRecast; }
 	useStack(game: GameState) {
-		this.consume(this.#cdPerStack);
+		this.consume(this.#defaultBaseRecast);
 		this.#reCaptureRecastTimeScale(game);
 	}
 	useStackWithRecast(game: GameState, recast: number) {
