@@ -162,11 +162,11 @@ function expandNode(node: ActionNode) : ExpandedNode {
 			// (must be one of af123, ui123)
 			const mainPotency = node.getPotencies()[0];
 			res.basePotency = mainPotency.base;
+			res.calculationModifiers = mainPotency.modifiers;
 			for (const modifier of mainPotency.modifiers) {
 				const tag = modifier.source;
 				if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
 					res.displayedModifiers.push(tag);
-					res.calculationModifiers.push(modifier);
 					if (ShellInfo.job === ShellJob.BLM) {
 						break;
 					}
