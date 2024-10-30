@@ -156,7 +156,7 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 		color = colors.resources.enochian;
 	} else if (props.buff === PotencyModifierType.HAMMER) {
 		text = localize({en: "CDH", zh: "必直暴"});
-		color = colors.resources.astralFire;
+		color = colors.resources.cdhTag;
 	} else if (props.buff === PotencyModifierType.STARRY) {
 		text = localize({en: "STARRY", zh: "星空"});
 		color = colors.resources.umbralIce;

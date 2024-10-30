@@ -311,7 +311,8 @@ ALL_JOBS.forEach((job) => {
 		maxStacks: 1,
 		cdPerStack: 2.5
 	}]]));
-	// MP, tincture buff, and sprint are common to all jobs
+	// MP, tincture buff, InCombat, and sprint are common to all jobs
+	makeResource(job, ResourceType.InCombat, 1, {default: 0});
 	makeResource(job, ResourceType.Mana, 10000, {default: 10000});
 	makeResource(job, ResourceType.Tincture, 1, {timeout: 30});
 	makeResource(job, ResourceType.Sprint, 1, {timeout: 10});

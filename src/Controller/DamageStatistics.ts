@@ -167,7 +167,6 @@ function expandNode(node: ActionNode) : ExpandedNode {
 				if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
 					res.displayedModifiers.push(tag);
 					res.calculationModifiers.push(modifier);
-					// TODO check why blm does a break; here
 					if (ShellInfo.job === ShellJob.BLM) {
 						break;
 					}

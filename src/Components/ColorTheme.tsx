@@ -52,6 +52,7 @@ export type ThemeColors = {
 		paletteGauge: string,
 		holyPaint: string,
 		cometPaint: string,
+		cdhTag: string,
 	},
 	timeline: {
 		ruler: string,
@@ -107,6 +108,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				paletteGauge: "#b69241",
 				holyPaint: "#dde0e5",  // blue-ish light gray
 				cometPaint: "#500050",  // purple-ish black
+				cdhTag: "#d55124",
 			},
 			timeline: {
 				ruler: "#2d2d2d",
@@ -159,6 +161,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				paletteGauge: "#b69241",
 				holyPaint: "#dde0e5",  // blue-ish light gray
 				cometPaint: "#500050",  // purple-ish black
+				cdhTag: "#ff6633",
 			},
 			timeline: {
 				ruler: "#e9e9e9",
