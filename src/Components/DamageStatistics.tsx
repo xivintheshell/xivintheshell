@@ -135,31 +135,31 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	let color: string = "#66ccff";
 	if (props.buff === PotencyModifierType.AF3) {
 		text = localize({en: "AF3", zh: "三层火"});
-		color = colors.resources.astralFire;
+		color = colors.blm.astralFire;
 	} else if (props.buff === PotencyModifierType.AF2) {
 		text = localize({en: "AF2", zh: "二层火"});
-		color = colors.resources.astralFire;
+		color = colors.blm.astralFire;
 	} else if (props.buff === PotencyModifierType.AF1) {
 		text = localize({en: "AF1", zh: "一层火"});
-		color = colors.resources.astralFire;
+		color = colors.blm.astralFire;
 	} else if (props.buff === PotencyModifierType.UI3) {
 		text = localize({en: "UI3", zh: "三层冰"});
-		color = colors.resources.umbralIce;
+		color = colors.blm.umbralIce;
 	} else if (props.buff === PotencyModifierType.UI2) {
 		text = localize({en: "UI2", zh: "二层冰"});
-		color = colors.resources.umbralIce;
+		color = colors.blm.umbralIce;
 	} else if (props.buff === PotencyModifierType.UI1) {
 		text = localize({en: "UI1", zh: "一层冰"});
-		color = colors.resources.umbralIce;
+		color = colors.blm.umbralIce;
 	} else if (props.buff === PotencyModifierType.ENO) {
 		text = localize({en: "ENO", zh: "天语"});
-		color = colors.resources.enochian;
+		color = colors.blm.enochian;
 	} else if (props.buff === PotencyModifierType.HAMMER) {
 		text = localize({en: "CDH", zh: "必直暴"});
 		color = colors.resources.cdhTag;
 	} else if (props.buff === PotencyModifierType.STARRY) {
 		text = localize({en: "STARRY", zh: "星空"});
-		color = colors.resources.umbralIce;
+		color = colors.pct.starryBuff;
 	}
 	return <span style={{
 		borderRadius: 2,

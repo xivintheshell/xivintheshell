@@ -20,6 +20,27 @@ export const enum MarkerColor {
 	Grey = "#6f6f6f"
 }
 
+export type BLMResourceColors = {
+	enochian: string,
+	astralFire: string,
+	astralSoul: string,
+	umbralIce: string,
+	umbralHeart: string,
+	paradox: string,
+	polyTimer: string,
+	polyStacks: string,
+}
+
+export type PCTResourceColors = {
+	creatureCanvas: string,
+	weaponCanvas: string,
+	landscapeCanvas: string,
+	paletteGauge: string,
+	holyPaint: string,
+	cometPaint: string,
+	starryBuff: string,
+}
+
 export type ThemeColors = {
 	accent: string,
 	realTime: string,
@@ -38,22 +59,10 @@ export type ThemeColors = {
 		lockBar: string,
 		mana: string,
 		manaTick: string,
-		enochian: string,
-		astralFire: string,
-		astralSoul: string,
-		umbralIce: string,
-		umbralHeart: string,
-		paradox: string,
-		polyTimer: string,
-		polyStacks: string,
-		creatureCanvas: string,
-		weaponCanvas: string,
-		landscapeCanvas: string,
-		paletteGauge: string,
-		holyPaint: string,
-		cometPaint: string,
 		cdhTag: string,
 	},
+	blm: BLMResourceColors,
+	pct: PCTResourceColors,
 	timeline: {
 		ruler: string,
 		tracks: string,
@@ -94,6 +103,9 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				lockBar: "#737373",
 				mana: "#62a5d2",
 				manaTick: "#3d5c73",
+				cdhTag: "#d55124",
+			},
+			blm: {
 				enochian: "#b69241",
 				astralFire: "#d55124",
 				astralSoul: "#cb8046",
@@ -102,13 +114,15 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				paradox: "#d953ee",
 				polyTimer: "#594472",
 				polyStacks: "#b138ee",
+			},
+			pct: {
 				creatureCanvas: "#863ab5",
 				weaponCanvas: "#8d3741",
 				landscapeCanvas: "#264195",
 				paletteGauge: "#b69241",
 				holyPaint: "#dde0e5",  // blue-ish light gray
 				cometPaint: "#500050",  // purple-ish black
-				cdhTag: "#d55124",
+				starryBuff: "#509bd5",
 			},
 			timeline: {
 				ruler: "#2d2d2d",
@@ -147,6 +161,9 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				lockBar: "#cbcbcb",
 				mana: "#8ACEEA",
 				manaTick: "#C2EAFF",
+				cdhTag: "#ff6633",
+			},
+			blm: {
 				enochian: "#f5cf96",
 				astralFire: "#ff6633",
 				astralSoul: "#ffa641",
@@ -155,13 +172,15 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				paradox: "#d953ee",
 				polyTimer: "#d5bbf1",
 				polyStacks: "#b138ee",
+			},
+			pct: {
 				creatureCanvas: "#863ab5",
 				weaponCanvas: "#8d3741",
 				landscapeCanvas: "#264195",
 				paletteGauge: "#b69241",
 				holyPaint: "#dde0e5",  // blue-ish light gray
 				cometPaint: "#500050",  // purple-ish black
-				cdhTag: "#ff6633",
+				starryBuff: "#66bbff",
 			},
 			timeline: {
 				ruler: "#e9e9e9",

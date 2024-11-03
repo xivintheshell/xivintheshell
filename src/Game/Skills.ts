@@ -28,9 +28,8 @@ export type ConditionalSkillReplace<T extends PlayerState> = {
  * usage is confirmed.
  */
 export type ResourceCalculationFn<T> = (state: Readonly<T>) => number;
+export type StatePredicate<T> = (state: Readonly<T>) => boolean;
 // TODO encode graceful error handling into these types
-export type ValidateAttemptFn<T> = (state: Readonly<T>) => boolean;
-export type IsInstantFn<T> = (state: T) => boolean;
 export type EffectFn<T> = (state: T, node: ActionNode) => void;
 
 // empty function
@@ -64,6 +63,7 @@ interface BaseSkill<T extends PlayerState> {
 	readonly aspect: Aspect;
 	readonly replaceIf: ConditionalSkillReplace<T>[]; // list of skills that can replace this one
 	readonly startOnHotbar: boolean; // false if this skill only replaces others (like paradox)
+	readonly highlightIf: StatePredicate<T>; // condition for highlighting this skill on the hotbar
 
 	// === VALIDATION ===
 
@@ -76,7 +76,7 @@ interface BaseSkill<T extends PlayerState> {
 
 	// Determine whether the skill can be executed in the current state.
 	// Should be called when the button is pressed.
-	readonly validateAttempt: ValidateAttemptFn<T>;
+	readonly validateAttempt: StatePredicate<T>;
 
 	// === EFFECTS ===
 
@@ -107,7 +107,7 @@ export type GCD<T extends PlayerState> = BaseSkill<T> & {
 	readonly recastTimeFn: ResourceCalculationFn<T>;
 
 	// Determine whether or not this cast can be made instant, based on the current game state.
-	readonly isInstantFn: IsInstantFn<T>;
+	readonly isInstantFn: StatePredicate<T>;
 }
 
 export type Spell<T extends PlayerState> = GCD<T> & {
@@ -230,13 +230,14 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	aspect: Aspect,
 	replaceIf: ConditionalSkillReplace<T>[],
 	startOnHotbar: boolean,
+	highlightIf: StatePredicate<T>,
 	castTime: number | ResourceCalculationFn<T>,
 	recastTime: number | ResourceCalculationFn<T>,
 	manaCost: number | ResourceCalculationFn<T>,
 	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 	applicationDelay: number,
-	validateAttempt: ValidateAttemptFn<T>,
-	isInstantFn: IsInstantFn<T>,
+	validateAttempt: StatePredicate<T>,
+	isInstantFn: StatePredicate<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 }>): Spell<T> {
@@ -255,6 +256,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
+		highlightIf: params.highlightIf ?? ((state) => false),
 		castTimeFn: fnify(params.castTime, 0),
 		recastTimeFn: fnify(params.recastTime, 2.5),
 		manaCostFn: fnify(params.manaCost, 0),
@@ -293,9 +295,10 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	autoDowngrade: SkillAutoReplace,
 	replaceIf: ConditionalSkillReplace<T>[],
 	startOnHotbar: boolean,
+	highlightIf: StatePredicate<T>,
 	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 	applicationDelay: number,
-	validateAttempt: ValidateAttemptFn<T>,
+	validateAttempt: StatePredicate<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 	cooldown: number,
@@ -316,6 +319,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		aspect: Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
+		highlightIf: params.highlightIf ?? ((state) => false),
 		manaCostFn: (state) => 0,
 		potencyFn: potencyFn,
 		applicationDelay: params.applicationDelay ?? 0,
@@ -347,10 +351,11 @@ export function makeResourceAbility<T extends PlayerState>(
 		rscType: ResourceType,
 		replaceIf?: ConditionalSkillReplace<T>[],
 		startOnHotbar?: boolean,
+		highlightIf?: StatePredicate<T>,
 		applicationDelay: number,
 		duration?: number | ResourceCalculationFn<T>, // TODO push to resources
 		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
-		validateAttempt?: ValidateAttemptFn<T>,
+		validateAttempt?: StatePredicate<T>,
 		onConfirm?: EffectFn<T>,
 		onApplication?: EffectFn<T>,
 		assetPath?: string,
@@ -383,6 +388,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		potency: params.potency,
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
+		highlightIf: params.highlightIf,
 		applicationDelay: params.applicationDelay,
 		validateAttempt: params.validateAttempt,
 		onConfirm: params.onConfirm,

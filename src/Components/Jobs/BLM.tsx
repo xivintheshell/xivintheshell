@@ -196,7 +196,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
                     zh: "天语",
                     ja: "エノキアン"
                 }),
-                color: colors.resources.enochian,
+                color: colors.blm.enochian,
                 progress: enochianCountdown / 15,
                 valueString: enochianCountdown.toFixed(3),
             } as ResourceBarProps,
@@ -207,7 +207,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
                     zh: "冰火层数",
                     ja: "AF/UB"
                 }),
-                color: astralFire > 0 ? colors.resources.astralFire : colors.resources.umbralIce,
+                color: astralFire > 0 ? colors.blm.astralFire : colors.blm.umbralIce,
                 currentStacks: astralFire > 0 ? astralFire : umbralIce,
                 maxStacks: 3,
             } as ResourceCounterProps,
@@ -218,7 +218,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
                     zh: "冰针",
                     ja: "アンブラルハート"
                 }),
-                color: colors.resources.umbralHeart,
+                color: colors.blm.umbralHeart,
                 currentStacks: umbralHearts,
                 maxStacks: 3,
             } as ResourceCounterProps,
@@ -229,7 +229,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
                     zh: "悖论",
                     ja: "パラドックス"
                 }),
-                color: colors.resources.paradox,
+                color: colors.blm.paradox,
                 currentStacks: paradox,
                 maxStacks: 1,
             } as ResourceCounterProps,
@@ -242,7 +242,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
                     zh: "星极魂",
                     ja: "アストラルソウル"
                 }),
-                color: colors.resources.astralSoul,
+                color: colors.blm.astralSoul,
                 currentStacks: astralSoul,
                 maxStacks: 6,
             } as ResourceCounterProps);
@@ -255,7 +255,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
                     zh: "通晓计时",
                     ja: "エノキ継続時間"
                 }),
-                color: colors.resources.polyTimer,
+                color: colors.blm.polyTimer,
                 progress: 1 - polyglotCountdown / 30,
                 valueString: polyglotCountdown.toFixed(3),
             } as ResourceBarProps,
@@ -266,7 +266,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
                     zh: "通晓层数",
                     ja: "ポリグロット"
                 }),
-                color: colors.resources.polyStacks,
+                color: colors.blm.polyStacks,
                 currentStacks: polyglotStacks,
                 maxStacks: maxPolyglotStacks,
             } as ResourceCounterProps,

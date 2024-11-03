@@ -1,6 +1,5 @@
 // Skill and state declarations for BLM.
 
-import {StatsModifier} from "../StatsModifier";
 import {controller} from "../../Controller/Controller";
 import {ActionNode} from "../../Controller/Record";
 import {ShellJob} from "../../Controller/Common";
@@ -18,7 +17,7 @@ import {
 	NO_EFFECT,
 	SkillAutoReplace,
 	Spell,
-	ValidateAttemptFn,
+	StatePredicate,
 } from "../Skills";
 import {TraitName, Traits} from "../Traits";
 import {GameState, PlayerState} from "../GameState";
@@ -126,6 +125,13 @@ export class BLMState extends GameState {
 		recurringPolyglotGain(this.resources.get(ResourceType.Polyglot));
 	}
 
+	override captureManaRegenAmount(): number {
+		if (this.getFireStacks() > 0) {
+			return 0;
+		}
+		return 200;
+	}
+
 	getFireStacks() { return this.resources.get(ResourceType.AstralFire).availableAmount(); }
 	getIceStacks() { return this.resources.get(ResourceType.UmbralIce).availableAmount(); }
 	getUmbralHearts() { return this.resources.get(ResourceType.UmbralHeart).availableAmount(); }
@@ -206,7 +212,9 @@ export class BLMState extends GameState {
 
 	captureManaCost(name: SkillName, aspect: Aspect, baseManaCost: number) {
 		// TODO handle flare/despair MP here instead of individual skills
-		let mod = StatsModifier.fromResourceState(this.resources);
+		const ui = this.getIceStacks();
+		const af = this.getFireStacks();
+		const uhStacks = this.getUmbralHearts();
 
 		if ((name === SkillName.Paradox && this.getIceStacks() > 0) ||
 			(name === SkillName.Fire3 && this.hasResourceAvailable(ResourceType.Firestarter))
@@ -214,13 +222,18 @@ export class BLMState extends GameState {
 			return 0;
 		}
 
-		if (aspect === Aspect.Fire) {
-			return baseManaCost * mod.manaCostFire;
-		} else if (aspect === Aspect.Ice) {
-			return baseManaCost * mod.manaCostIce;
-		} else {
-			return baseManaCost;
+		let multiplier = 1;
+		if ((aspect === Aspect.Fire && ui > 0) ||
+			(aspect === Aspect.Ice && (ui > 0 || af > 0))
+		) {
+			// swapping to other element is always 0 MP
+			// ice spells under enochian are always 0 MP
+			multiplier = 0;
+		} else if (aspect === Aspect.Fire && af > 0 && uhStacks === 0) {
+			// fire spells without umbral hearts have cost doubled
+			multiplier = 2;
 		}
+		return baseManaCost * multiplier;
 	}
 
 	captureSpellCastTimeAFUI(baseCastTime: number, aspect: Aspect) {
@@ -229,13 +242,13 @@ export class BLMState extends GameState {
 			baseCastTime,
 			this.hasResourceAvailable(ResourceType.LeyLines) ? ResourceType.LeyLines : undefined
 		);
-		let mod = StatsModifier.fromResourceState(this.resources);
 
-		let castTime = llAdjustedCastTime;
-		if (aspect === Aspect.Fire) castTime *= mod.castTimeFire;
-		else if (aspect === Aspect.Ice) castTime *= mod.castTimeIce;
-
-		return castTime;
+		let multiplier = 1;
+		if ((aspect === Aspect.Fire && this.getIceStacks() === 3) ||
+			(aspect === Aspect.Ice && this.getFireStacks() === 3)) {
+			multiplier = 0.5;
+		}
+		return llAdjustedCastTime * multiplier;
 	}
 
 	hasEnochian() {
@@ -306,6 +319,7 @@ const paraCondition = (state: Readonly<BLMState>) => state.hasResourceAvailable(
 const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 	replaceIf?: ConditionalSkillReplace<BLMState>[],
 	startOnHotbar?: boolean,
+	highlightIf?: StatePredicate<BLMState>,
 	autoUpgrade?: SkillAutoReplace,
 	autoDowngrade?: SkillAutoReplace,
 	aspect?: Aspect,
@@ -313,7 +327,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 	baseManaCost: number,
 	basePotency: number,
 	applicationDelay: number,
-	validateAttempt?: ValidateAttemptFn<BLMState>,
+	validateAttempt?: StatePredicate<BLMState>,
 	onConfirm?: EffectFn<BLMState>,
 	onApplication?: EffectFn<BLMState>,
 }): Spell<BLMState> => {
@@ -357,6 +371,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 	return makeSpell(ShellJob.BLM, name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
+		highlightIf: params.highlightIf,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		aspect: aspect,
@@ -386,10 +401,11 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
 	replaceIf?: ConditionalSkillReplace<BLMState>[],
 	startOnHotbar?: boolean,
+	highlightIf?: StatePredicate<BLMState>,
 	applicationDelay?: number,
 	cooldown: number,
 	maxCharges?: number,
-	validateAttempt?: ValidateAttemptFn<BLMState>,
+	validateAttempt?: StatePredicate<BLMState>,
 	onConfirm?: EffectFn<BLMState>,
 	onApplication?: EffectFn<BLMState>,
 }): Ability<BLMState> => makeAbility(ShellJob.BLM, name, unlockLevel, cdName, params);
@@ -566,6 +582,7 @@ makeGCD_BLM(SkillName.Thunder3, 45, {
 		applyThunderDoT(state, node, SkillName.Thunder3);
 	},
 	autoUpgrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder },
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
 makeResourceAbility(ShellJob.BLM, SkillName.Manaward, 30, ResourceType.cd_Manaward, {
@@ -608,6 +625,7 @@ makeGCD_BLM(SkillName.Fire3, 35, {
 		state.switchToAForUI(ResourceType.AstralFire, 3);
 		state.startOrRefreshEnochian();
 	},
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Firestarter),
 });
 
 makeGCD_BLM(SkillName.Blizzard3, 35, {
@@ -725,6 +743,7 @@ makeGCD_BLM(SkillName.Foul, 70, {
 	applicationDelay: 1.158,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 });
 
 makeGCD_BLM(SkillName.Despair, 72, {
@@ -771,6 +790,7 @@ makeGCD_BLM(SkillName.Xenoglossy, 80, {
 	applicationDelay: 0.63,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 });
 
 makeGCD_BLM(SkillName.Fire2, 18, {
@@ -867,6 +887,7 @@ makeGCD_BLM(SkillName.Paradox, 90, {
 		condition: (state) => !state.hasResourceAvailable(ResourceType.Paradox) && state.getFireStacks() > 0,
 	}],
 	startOnHotbar: false,
+	highlightIf: (state) => true,
 });
 
 makeGCD_BLM(SkillName.HighThunder, 92, {
@@ -883,6 +904,7 @@ makeGCD_BLM(SkillName.HighThunder, 92, {
 		applyThunderDoT(state, node, SkillName.HighThunder);
 	},
 	autoDowngrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder },
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
 makeGCD_BLM(SkillName.FlareStar, 100, {
@@ -893,6 +915,7 @@ makeGCD_BLM(SkillName.FlareStar, 100, {
 	applicationDelay: 0.622,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.AstralSoul, 6),
 	onConfirm: (state, node) => state.resources.get(ResourceType.AstralSoul).consume(6),
+	highlightIf: (state) => state.resources.get(ResourceType.AstralSoul).available(6),
 });
 
 makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
