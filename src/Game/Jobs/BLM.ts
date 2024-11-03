@@ -1,6 +1,5 @@
 // Skill and state declarations for BLM.
 
-import {StatsModifier} from "../StatsModifier";
 import {controller} from "../../Controller/Controller";
 import {ActionNode} from "../../Controller/Record";
 import {ShellJob} from "../../Controller/Common";
@@ -126,6 +125,13 @@ export class BLMState extends GameState {
 		recurringPolyglotGain(this.resources.get(ResourceType.Polyglot));
 	}
 
+	override captureManaRegenAmount(): number {
+		if (this.getFireStacks() > 0) {
+			return 0;
+		}
+		return 200;
+	}
+
 	getFireStacks() { return this.resources.get(ResourceType.AstralFire).availableAmount(); }
 	getIceStacks() { return this.resources.get(ResourceType.UmbralIce).availableAmount(); }
 	getUmbralHearts() { return this.resources.get(ResourceType.UmbralHeart).availableAmount(); }
@@ -206,7 +212,9 @@ export class BLMState extends GameState {
 
 	captureManaCost(name: SkillName, aspect: Aspect, baseManaCost: number) {
 		// TODO handle flare/despair MP here instead of individual skills
-		let mod = StatsModifier.fromResourceState(this.resources);
+		const ui = this.getIceStacks();
+		const af = this.getFireStacks();
+		const uhStacks = this.getUmbralHearts();
 
 		if ((name === SkillName.Paradox && this.getIceStacks() > 0) ||
 			(name === SkillName.Fire3 && this.hasResourceAvailable(ResourceType.Firestarter))
@@ -214,13 +222,18 @@ export class BLMState extends GameState {
 			return 0;
 		}
 
-		if (aspect === Aspect.Fire) {
-			return baseManaCost * mod.manaCostFire;
-		} else if (aspect === Aspect.Ice) {
-			return baseManaCost * mod.manaCostIce;
-		} else {
-			return baseManaCost;
+		let multiplier = 1;
+		if ((aspect === Aspect.Fire && ui > 0) ||
+			(aspect === Aspect.Ice && (ui > 0 || af > 0))
+		) {
+			// swapping to other element is always 0 MP
+			// ice spells under enochian are always 0 MP
+			multiplier = 0;
+		} else if (aspect === Aspect.Fire && af > 0 && uhStacks === 0) {
+			// fire spells without umbral hearts have cost doubled
+			multiplier = 2;
 		}
+		return baseManaCost * multiplier;
 	}
 
 	captureSpellCastTimeAFUI(baseCastTime: number, aspect: Aspect) {
@@ -229,13 +242,13 @@ export class BLMState extends GameState {
 			baseCastTime,
 			this.hasResourceAvailable(ResourceType.LeyLines) ? ResourceType.LeyLines : undefined
 		);
-		let mod = StatsModifier.fromResourceState(this.resources);
 
-		let castTime = llAdjustedCastTime;
-		if (aspect === Aspect.Fire) castTime *= mod.castTimeFire;
-		else if (aspect === Aspect.Ice) castTime *= mod.castTimeIce;
-
-		return castTime;
+		let multiplier = 1;
+		if ((aspect === Aspect.Fire && this.getIceStacks() === 3) ||
+			(aspect === Aspect.Ice && this.getFireStacks() === 3)) {
+			multiplier = 0.5;
+		}
+		return llAdjustedCastTime * multiplier;
 	}
 
 	hasEnochian() {

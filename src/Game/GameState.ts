@@ -1,6 +1,5 @@
 import {Aspect, BuffType, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
 import {GameConfig} from "./GameConfig"
-import {StatsModifier} from "./StatsModifier";
 import {
 	DisplayedSkills,
 	SkillsList,
@@ -239,9 +238,11 @@ export abstract class GameState {
 		return (this.time - this.config.countdown);
 	}
 
-	captureManaRegenAmount() {
-		let mod = StatsModifier.fromResourceState(this.resources);
-		return mod.manaRegen;
+	captureManaRegenAmount(): number {
+		if (!this.isInCombat()) {
+			return 600;
+		}
+		return 200;
 	}
 
 	// BLM uses this for LL GCD scaling, but PCT does not
