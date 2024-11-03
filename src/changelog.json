@@ -1,5 +1,11 @@
 [
 	{
+		"date": "11/2/24",
+		"changes": [
+			"Fixed a bug where MP costs were not re-checked at the end of a cast bar if the MP cost changed mid-cast"
+		]
+	},
+	{
 		"date": "10/15/24",
 		"changes": [
 			"Party buff related fixes to make sure buffs are compatible with Amarantine's combat sim"

@@ -469,3 +469,43 @@ it("replaces f1/b1 with paradox when needed", testWithConfig({level: 100}, () =>
 		},
 	]);
 }));
+
+// 2.38 GCD: doing slow F3 + 5xF4 drains all mana; enochian drops midway through the ensuing B3
+// which will then fail due to not having enough mana (unaspected B3 needs 800 MP)
+it("checks MP cost at end of cast bar", testWithConfig({level: 70, spellSpeed: 700}, () => {
+	let alertMsg = "";
+	let warnMsg = "";
+	const alert = jest.spyOn(window, "alert").mockImplementation((msg) => { alertMsg = msg; });
+	const warn = jest.spyOn(console, "warn").mockImplementation((msg) => { warnMsg = msg; });
+	[
+		SkillName.Fire3,
+		SkillName.Fire4,
+		SkillName.Fire4,
+		SkillName.Fire4,
+		SkillName.Fire4,
+		SkillName.Fire4,
+		SkillName.Blizzard3,
+		SkillName.Thunder3,
+	].forEach(applySkill);
+	// wait for cast time + damage application
+	controller.step(4);
+	expect(alertMsg).toEqual("cast failed! Resources for Blizzard 3 are no longer available");
+	compareDamageTables([
+		{
+			skillName: SkillName.Fire3,
+			displayedModifiers: [],
+			hitCount: 1,
+		},
+		{
+			skillName: SkillName.Fire4,
+			displayedModifiers: [PotencyModifierType.AF3],
+			hitCount: 5,
+		},
+		// B3 cast is canceled, thunder is unaspected
+		{
+			skillName: SkillName.Thunder3,
+			displayedModifiers: [],
+			hitCount: 1,
+		},
+	]);
+}));
