@@ -495,8 +495,8 @@ class Controller {
 		return coveredTime / totalTime;
 	}
 
-	setTimelineOptions(options: TimelineDrawOptions) {
-		this.timelineDrawOptions = options;
+	setTimelineOptions(options: Partial<TimelineDrawOptions>) {
+		this.timelineDrawOptions = {...this.timelineDrawOptions, ...options};
 		this.updateTimelineDisplay();
 	}
 
@@ -510,7 +510,7 @@ class Controller {
 		}
 		return {
 			timelineWidth: this.timeline.getCanvasWidth(),
-			timelineHeight: this.timeline.getCanvasHeight(this.timelineDrawOptions),
+			timelineHeight: this.timeline.getCanvasHeight(),
 			scale: this.timeline.scale,
 			countdown: countdown,
 			tincturePotencyMultiplier: this.getTincturePotencyMultiplier(),

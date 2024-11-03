@@ -8,7 +8,7 @@ import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {Potency} from "../Game/Potency";
 import {MarkerColor} from "../Components/ColorTheme";
-import {TimelineDimensions, TimelineDrawOptions} from "../Components/Common";
+import {TimelineDimensions} from "../Components/Common";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -425,8 +425,8 @@ export class Timeline {
 		return secondsToDraw * 100 * this.scale;
 	}
 
-	getCanvasHeight(options: TimelineDrawOptions) {
-		let numTracksToDraw = options.drawMarkers ? this.getNumMarkerTracks() : 0;
+	getCanvasHeight() {
+		let numTracksToDraw = this.getNumMarkerTracks();
 		return TimelineDimensions.timelineCanvasHeight(numTracksToDraw, this.slots.length);
 	}
 

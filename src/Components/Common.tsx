@@ -47,7 +47,6 @@ export const TimelineDimensions = {
 }
 
 export type TimelineDrawOptions = {
-	drawMarkers: boolean,
 	drawDamageMarks: boolean,
 	drawMPTickMarks: boolean,
 	drawBuffIndicators: boolean

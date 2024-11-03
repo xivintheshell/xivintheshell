@@ -61,12 +61,12 @@ class TimelineMain extends React.Component {
 	componentDidMount() {
 		this.setState({
 			timelineWidth: controller.timeline.getCanvasWidth(),
-			timelineHeight: controller.timeline.getCanvasHeight(controller.timelineDrawOptions),
+			timelineHeight: controller.timeline.getCanvasHeight(),
 		});
 		updateTimelineView = (() => {
 			this.setState({
 				timelineWidth: controller.timeline.getCanvasWidth(),
-				timelineHeight: controller.timeline.getCanvasHeight(controller.timelineDrawOptions),
+				timelineHeight: controller.timeline.getCanvasHeight(),
 				version: this.state.version + 1
 			});
 		});
