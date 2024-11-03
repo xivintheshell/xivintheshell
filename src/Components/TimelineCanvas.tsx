@@ -634,37 +634,30 @@ export function drawRuler(originX: number, ignoreVisibleX = false) : number {
 	g_ctx.textAlign = "center";
 	g_ctx.fillStyle = g_colors.text;
 	const cullThreshold = 50;
+	const drawRulerMark = function(sec: number, height: number, drawLabel: boolean) {
+		const x = sec * pixelsPerSecond;
+		let pos = originX + x + countdownPadding;
+		if (pos >= -cullThreshold && pos <= xUpperBound + cullThreshold) {
+			g_ctx.moveTo(pos, 0);
+			g_ctx.lineTo(pos, height);
+			if (drawLabel) {
+				g_ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), pos, 23);
+			}
+		}
+	};
 	if (pixelsPerSecond >= 6) {
-		for (let x = 0; x < g_renderingProps.timelineWidth - countdownPadding; x += pixelsPerSecond) {
-			let pos = originX + x + countdownPadding;
-			if (pos >= -cullThreshold && pos <= xUpperBound + cullThreshold) {
-				g_ctx.moveTo(pos, 0);
-				g_ctx.lineTo(pos, 6);
-			}
+		for (let sec = 0; sec * pixelsPerSecond < g_renderingProps.timelineWidth - countdownPadding; sec += 1) {
+			if ( sec % 5 !== 0 ) drawRulerMark(sec, 6, false);
 		}
-		for (let x = -pixelsPerSecond; x >= -countdownPadding; x -= pixelsPerSecond) {
-			let pos = originX + x + countdownPadding;
-			if (pos >= -cullThreshold && pos <= xUpperBound + cullThreshold) {
-				g_ctx.moveTo(pos, 0);
-				g_ctx.lineTo(pos, 6);
-			}
+		for (let sec = -1; sec * pixelsPerSecond >= -countdownPadding; sec -= 1) {
+			if ( sec % 5 !== 0 ) drawRulerMark(sec, 6, false);
 		}
 	}
-	for (let x = 0; x < g_renderingProps.timelineWidth - countdownPadding; x += pixelsPerSecond * 5) {
-		let pos = originX + x + countdownPadding;
-		if (pos >= -cullThreshold && pos <= xUpperBound + cullThreshold) {
-			g_ctx.moveTo(pos, 0);
-			g_ctx.lineTo(pos, 10);
-			g_ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), pos, 23);
-		}
+	for (let sec = 0; sec * pixelsPerSecond < g_renderingProps.timelineWidth - countdownPadding; sec += 5) {
+		drawRulerMark(sec, 10, true);
 	}
-	for (let x = -pixelsPerSecond * 5; x >= -countdownPadding; x -= pixelsPerSecond * 5) {
-		let pos = originX + x + countdownPadding;
-		if (pos >= -cullThreshold && pos <= xUpperBound + cullThreshold) {
-			g_ctx.moveTo(pos, 0);
-			g_ctx.lineTo(pos, 10);
-			g_ctx.fillText(StaticFn.displayTime(x / pixelsPerSecond, 0), pos, 23);
-		}
+	for (let sec = -5; sec * pixelsPerSecond >= -countdownPadding; sec -= 5) {
+		drawRulerMark(sec, 10, true);
 	}
 	g_ctx.stroke();
 

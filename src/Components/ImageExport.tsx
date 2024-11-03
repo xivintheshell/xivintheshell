@@ -1,5 +1,5 @@
 import React from 'react';
-import {Help, Input, SaveToFile, FileFormat} from "./Common";
+import {Help, Input, SaveToFile, FileFormat, TimelineDimensions} from "./Common";
 import {localize, LocalizedContent} from "./Localization"
 import {ImageExportConfig} from "../Controller/ImageExportConfig";
 import {controller} from "../Controller/Controller";
@@ -62,7 +62,6 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 			startTime = -activeRenderProps.countdown;
 			endTime = controller.game.time;
 		}
-		//const drawOptions = controller.timelineDrawOptions; // todo [myn]
 		const exportConfig = controller.imageExportConfig;
 		let nRows: number;
 		// # of seconds before a line break
@@ -83,20 +82,19 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 		//   and is populated by calling getImageData on dummyOneRowCanvas
 		const dummyOneRowCanvas = document.createElement("canvas");
 		const dummySplitCanvas = document.createElement("canvas");
-		const ICON_SIZE = 28;
-		const ROW_PADDING = ICON_SIZE / 2;
+		const ROW_PADDING = 0;// TimelineDimensions.trackHeight / 2; // can make this a config if we want
 		const tlController = controller.timeline;
 		dummyOneRowCanvas.height = activeRenderProps.timelineHeight;
 		// We have no control over where to start drawing, so the one-row canvas should always
 		// have the whole duration
+		// note [myn]: iirc there's a hard limit for html canvas dimensions, so this might fail to capture very long
+		// timelines. If it ever becomes an issue we'll have to split it into sections... meh until someone complains
 		const countdownWidth = tlController.positionFromTime(activeRenderProps.countdown);
 		dummyOneRowCanvas.width = tlController.positionFromTime(endTime) + countdownWidth;
-		// Add ICON_SIZE/2 px of space between rows so ogcds don't collide
-		// activeRenderProps.timelineHeight inclues every timeline in the planner, so just
-		// manually calculate from hard-coded constants in Timeline.getCanvasHeight()
-		let rowHeight = 70 + 20;
+		let rowHeight = TimelineDimensions.renderSlotHeight();
 		if (this.state.includeTime) {
-			rowHeight += 30 + 14 * tlController.getNumMarkerTracks();
+			rowHeight += TimelineDimensions.rulerHeight;
+			rowHeight += TimelineDimensions.trackHeight * tlController.getNumMarkerTracks();
 		}
 		const oneRowCtx = dummyOneRowCanvas.getContext("2d", {willReadFrequently: true}) as CanvasRenderingContext2D;
 		// 2. Temporarily swap the active graphics context, and request TimelineCanvas functions to
@@ -113,9 +111,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 				let currentHeight = 0;
 				if (this.state.includeTime) {
 					currentHeight += drawRuler(timelineOrigin, true);
-					if (activeRenderProps.drawOptions.drawMarkers) {
-						currentHeight += drawMarkerTracks(timelineOrigin, currentHeight, true);
-					}
+					currentHeight += drawMarkerTracks(timelineOrigin, currentHeight, true);
 				}
 				drawTimelines(timelineOrigin, currentHeight, true);
 			}

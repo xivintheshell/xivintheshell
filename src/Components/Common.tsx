@@ -8,7 +8,6 @@ import {getCachedValue, setCachedValue} from "../Controller/Common";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
 import {LiaWindowMinimize} from "react-icons/lia";
 import {Panel, PanelGroup, PanelResizeHandle} from "react-resizable-panels";
-import {ImageExportConfig} from "../Controller/ImageExportConfig";
 
 export type ContentNode = JSX.Element | string;
 
@@ -41,27 +40,6 @@ export const TimelineDimensions = {
 			height += TimelineDimensions.addSlotButtonHeight;
 		}
 		return height;
-	},
-
-	// while rendered slot has a fixed height, export slot may vary depending on which elements are drawn
-	exportSlotHeight: (drawOptions: TimelineDrawOptions, exportConfig: ImageExportConfig, numMarkerTracks: number) => {
-		// handle timeline draw options
-		let slotHeight = TimelineDimensions.slotPaddingTop
-			+ TimelineDimensions.skillButtonHeight * 1.5
-			+ TimelineDimensions.slotPaddingBottom;
-		if (drawOptions.drawDamageMarks || drawOptions.drawMPTickMarks) {
-			slotHeight += TimelineDimensions.damageMarkerHeight;
-		}
-		if (drawOptions.drawBuffIndicators) {
-			slotHeight += TimelineDimensions.buffCoverHeight * MAX_BUFF_COVERS_COUNT;
-		}
-
-		// handle image export config
-		if (exportConfig.includeTime) {
-			slotHeight += TimelineDimensions.rulerHeight;
-			slotHeight += TimelineDimensions.trackHeight * numMarkerTracks;
-		}
-		return slotHeight;
 	},
 
 	leftBufferWidth: 20, // leave this much space on the left before starting to draw timeline (for timeline selection bar)
