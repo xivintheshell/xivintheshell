@@ -53,7 +53,8 @@ const getAcknowledgements = () => {
 						<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
 						<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
 						<li><b>Turtle</b>, who did the heavy work of updating this tool from Endwalker to Dawntrail</li>
-						<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b>, and many other players who contributed feature suggestions, timeline markers, bug reports, etc.</li>
+						<li><b>shanzhe (Shanzhe Qi @ Seraph)</b>, who created PCT in the Shell and the framework for adding other jobs to this tool</li>
+						<li><b>Yara, Spider, Santa, Akairyu</b>, and many other players who contributed feature suggestions, timeline markers, bug reports, etc.</li>
 					</ul>,
 				zh: <ul>
 						<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
