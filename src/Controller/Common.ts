@@ -37,7 +37,7 @@ export const enum Expansion {
 
 export const ShellInfo = {
 	version: ShellVersion.FpsTax,
-	job: ShellJob.BLM
+	job: ShellJob.BLM,
 	// thisExpansion is not exported so it stays local outside
 };
 

@@ -1,12 +1,27 @@
 import React, {CSSProperties} from 'react';
+import {ShellInfo, ShellJob} from "../Controller/Common";
 import {Expandable, Help, ButtonIndicator} from "./Common";
 import {localize} from "./Localization";
 import {DebugOptions} from "./DebugOptions";
 import changelog from "../changelog.json"
 import {getCurrentThemeColors} from "./ColorTheme";
 
-const HELP_CHANNEL_URL = "https://discordapp.com/channels/277897135515762698/1255782490862387360";
-const RESOURCE_CHANNEL_URL = "https://discordapp.com/channels/277897135515762698/1255595442926915584";
+const THIS_DOMAIN = {
+	[ShellJob.BLM]: "https://miyehn.me/ffxiv-blm-rotation",
+	[ShellJob.PCT]: "https://picto.zqsz.me",
+}[ShellInfo.job];
+
+const GITHUB_URL = "https://github.com/xivintheshell/xivintheshell";
+
+const HELP_CHANNEL_URL = {
+	[ShellJob.BLM]: "https://discordapp.com/channels/277897135515762698/1255782490862387360",
+	[ShellJob.PCT]: "https://discordapp.com/channels/277897135515762698/1274591512902238270",
+}[ShellInfo.job];
+
+const RESOURCE_CHANNEL_URL = {
+	[ShellJob.BLM]: "https://discordapp.com/channels/277897135515762698/1255595442926915584",
+	[ShellJob.PCT]: "https://discordapp.com/channels/277897135515762698/1246222197488615524",
+}[ShellInfo.job];
 
 function Changelog() {
 	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={localize({en: "Changelog", zh: "更新日志", ja: "更新履歴"})} defaultShow={false} content={
@@ -26,6 +41,83 @@ function Changelog() {
 		</div>
 	}/></div>
 }
+
+// needs to be a function to evaluate localization
+const getAcknowledgements = () => {
+	return {
+		[ShellJob.BLM]: (
+			<>
+			<div className="paragraph">{localize({en: "This tool is made by:", zh: "作者：", ja: "作者："})}</div>
+			{localize({
+				en: <ul>
+						<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
+						<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
+						<li><b>Turtle</b>, who did the heavy work of updating this tool from Endwalker to Dawntrail</li>
+						<li><b>shanzhe (Shanzhe Qi @ Seraph)</b>, who created PCT in the Shell and the framework for adding other jobs to this tool</li>
+						<li><b>Yara, Spider, Santa, Akairyu</b>, and many other players who contributed feature suggestions, timeline markers, bug reports, etc.</li>
+					</ul>,
+				zh: <ul>
+						<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
+						<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：程序；是个云黑魔玩家</li>
+						<li><b>Turtle</b>, 把本工具从6.0更新到7.0的大功臣</li>
+						<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
+					</ul>,
+				ja: <ul>
+						<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: プロダクトマネージャー、凄腕黒魔道士</li>
+						<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: ソフトウェア開発者、しがない黒魔道士</li>
+						<li><b>Turtle</b>: 黄金のレガシーへのアップデートを担当</li>
+						<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b> そして新機能やバグ報告などで貢献してくださった多くのFF14プレーヤーの皆さん</li>
+					</ul>,
+			})}
+
+			{localize({
+				en: <div className={"paragraph"}>
+					If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
+					You can also find me directly on discord (miyehn), or via email (ellyn.waterford@gmail.com). In case of sending a bug report, attaching the
+					fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
+				</div>,
+				zh: <div className={"paragraph"}>
+					如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。
+				</div>,
+				ja: <div className={"paragraph"}>
+					[outdated (ja)] 質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
+					バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
+				</div>,
+			})}
+
+			<div className="paragraph">{localize({
+				en: "Also, consider contributing! I'm not raiding lately so I can't make the timeline markers..",
+				zh: "贡献大欢迎！比如给我发时间轴标记文件！我自己很久没打高难了，自己做是不可能了。",
+				ja: "また、ぜひ貢献も考えてください！最近高難易度にコンテンツに行っていないのでタイムラインマーカーが作れません...",
+			})}</div>
+			</>
+		),
+		[ShellJob.PCT]: (
+			<>
+			<div className="paragraph">
+				{localize({en: "This tool is made by ", zh: "作者：", ja: "作者："})}
+				<b>shanzhe (Shanzhe Qi @ Seraph)</b>,
+				{localize({
+					en: <> adapted from <a href={"https://miyehn.me/ffxiv-blm-rotation/"}>BLM in the Shell</a> by <b>miyehn</b>.</>,
+					zh: <>从<b>miyehn</b>创作的<a href={"https://miyehn.me/ffxiv-blm-rotation/"}>BLM in the Shell</a>而改编。</>,
+				})}
+			</div>
+			{localize({
+				en: <div className={"paragraph"}>
+					If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
+					You can also find me directly on discord (@shanzhe in The Balance), or file an issue on GitHub (link below). In case of sending a bug report, attaching the
+					fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
+					</div>,
+				zh: <div className={"paragraph"}>
+					如果你遇到了任何问题或想提供建议，你可以在The Balance的discord频道中的<a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">【这个分支】</a>留言。你也可以直接在discord上找到我（在The Balance的频道中@shanzhe），或者在GitHub上报问题（链接在下面）。
+					如果是反馈bug，最好把能够复现bug的战斗记录文件（下方的下载战斗记录-txt格式，随意命名）一起发过来。
+					如果不方便翻墙或者想用中文反馈，也可以联系yuyuka代为传达（QQ：865835107，加时请注明来意）
+				</div>
+			})}
+			</>
+		),
+	}[ShellInfo.job];
+};
 
 export function IntroSection(props: {}) {
 	let smallGap: CSSProperties = { marginBottom: 5 };
@@ -116,7 +208,7 @@ export function IntroSection(props: {}) {
 								</div>
 								<div className="paragraph">
 								If the browser cache is somehow messed up (likely due to invalid game states), this is how to reset it:<br/>
-								Enter this tool from <b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b> replacing <b>{"{command}"}</b> with one of the following:
+								Enter this tool from <b>{THIS_DOMAIN + "/#/{command}"}</b> replacing <b>{"{command}"}</b> with one of the following:
 								<ul>
 									<li style={smallGap}><b>resetResourceOverrides</b>: delete all resource overrides and all actions on the current timeline.</li>
 									<li style={smallGap}><b>resetAll</b>: delete all browser-cached settings.</li>
@@ -129,7 +221,7 @@ export function IntroSection(props: {}) {
 							</div>
 							<div className="paragraph">
 								如果浏览器缓存因不明原因出问题（比如预设了刚打完绝望满蓝这样的“非法状态”），可尝试用以下方法重置浏览器缓存：<br/>
-								用以下链接进入本工具：<b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b>，然后把<b>{"{command}"}</b>替换成以下两个指令之一：
+								用以下链接进入本工具：<b>{THIS_DOMAIN + "/#/{command}"}</b>，然后把<b>{"{command}"}</b>替换成以下两个指令之一：
 								<ul>
 									<li style={smallGap}><b>resetResourceOverrides</b>: 删除当前时间线上的所有资源预设和技能</li>
 									<li style={smallGap}><b>resetAll</b>: 删除所有本工具相关的浏览器缓存</li>
@@ -142,7 +234,7 @@ export function IntroSection(props: {}) {
 								</div>
 								<div className="paragraph">
 									ブラウザのキャッシュが何らかの理由で壊れている場合、次の方法でリセットできます。<br/>
-									<b>{"https://miyehn.me/ffxiv-blm-rotation/#/{command}"}</b> にアクセスし、<b>{"{command}"}</b> を以下のいずれかに置き換えます：
+									<b>{THIS_DOMAIN + "/#/{command}"}</b> にアクセスし、<b>{"{command}"}</b> を以下のいずれかに置き換えます：
 								<ul>
 									<li style={smallGap}><b>resetResourceOverrides</b>: 全てのリソースとタイムライン上のアクションを上書きします。</li>
 									<li style={smallGap}><b>resetAll</b>: 全てのブラウザキャッシュを削除します。</li>
@@ -158,64 +250,43 @@ export function IntroSection(props: {}) {
 			title={"About this tool"}
 			titleNode={localize({en: "About this tool", zh: "关于", ja: "このツールについて"})}
 			content={<div>
-				<div className="paragraph">{localize({en: "This is a FFXIV black mage simulator & rotation planner.", zh: "是个黑魔模拟器/排轴工具。", ja: "FF14 黒魔道士のスキルローテーションシミュレーターです。"})}</div>
-				<div className="paragraph">{localize({en: "This tool is made by:", zh: "作者：", ja: "作者："})}</div>
-				{localize({
-					en: <ul>
-							<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
-							<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
-							<li><b>Turtle</b>, who did the heavy work of updating this tool from Endwalker to Dawntrail</li>
-							<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b>, and many other players who contributed feature suggestions, timeline markers, bug reports, etc.</li>
-						</ul>,
-					zh: <ul>
-							<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
-							<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：程序；是个云黑魔玩家</li>
-							<li><b>Turtle</b>, 把本工具从6.0更新到7.0的大功臣</li>
-							<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
-						</ul>,
-					ja: <ul>
-							<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: プロダクトマネージャー、凄腕黒魔道士</li>
-							<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: ソフトウェア開発者、しがない黒魔道士</li>
-							<li><b>Turtle</b>: 黄金のレガシーへのアップデートを担当</li>
-							<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b> そして新機能やバグ報告などで貢献してくださった多くのFF14プレーヤーの皆さん</li>
-						</ul>,
-				})}
-				{localize({
-					en: <div className={"paragraph"}>
-						If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
-						You can also find me directly on discord (miyehn), or via email (ellyn.waterford@gmail.com). In case of sending a bug report, attaching the
-						fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
-					</div>,
-					zh: <div className={"paragraph"}>
-						如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。
-					</div>,
-					ja: <div className={"paragraph"}>
-						[outdated (ja)] 質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
-						バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
-					</div>,
-				})}
-
 				<div className="paragraph">{localize({
-					en: "Also, consider contributing! I'm not raiding lately so I can't make the timeline markers..",
-					zh: "贡献大欢迎！比如给我发时间轴标记文件！我自己很久没打高难了，自己做是不可能了。",
-					ja: "また、ぜひ貢献も考えてください！最近高難易度にコンテンツに行っていないのでタイムラインマーカーが作れません...",
-				})}</div>
-
+					en: "This is a FFXIV " + {
+						[ShellJob.BLM]: "black mage",
+						[ShellJob.PCT]: "pictomancer",
+					}[ShellInfo.job] + " simulator & rotation planner.",
+					zh: "是个" + {
+						[ShellJob.BLM]: "黑魔",
+						[ShellJob.PCT]: "绘灵法师",
+					}[ShellInfo.job] + "模拟器/排轴工具。",
+					ja: "FF14 " + {
+						[ShellJob.BLM]: "黒魔道士",
+						[ShellJob.PCT]: "ピクトマンサー",
+					}[ShellInfo.job] + "のスキルローテーションシミュレーターです。"})}
+				</div>
+				{getAcknowledgements()}
 				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接：", ja: "リンク集"})}</div>
 				{localize({
 					en: <ul>
-						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
+						{ShellInfo.job === ShellJob.BLM && <>
+						<li><a href={GITHUB_URL}>Github repository</a></li>
 						<li><a href={"https://picto.zqsz.me/"}>Pictomancer in the Shell</a> by <b>shanzhe</b>, for those of you who picked up the paint brush</li>
 						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>Black Mage in the Shell (Dawntrail at LV90)</a>: a variation for planning fights at LV90, created by <b>Akairyu</b></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>: a snapshot of this tool at the end of Endwalker. It also contains some notable fight plans from Endwalker, as memoir.</li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation for Save the Queens areas, created by <b>A'zhek Silvaire @ Zalera</b></li>
-						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job
-							guide</a></li>
+						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
+						</>}
+						{ShellInfo.job === ShellJob.PCT && <>
+						<li><a href={GITHUB_URL}>Github repository</a></li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
+						<li><a href={"https://na.finalfantasyxiv.com/jobguide/pictomancer/"}>Official FFXIV pictomancer job guide</a></li>
+						</>}
 						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL} rel="noreferrer">
-							BLM resources channel on The Balance</a> (make sure you've already joined the server)</li>
+							{ShellInfo.job} resources channel on The Balance</a> (make sure you've already joined the server)</li>
 					</ul>,
 					zh: <ul>
-						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github页面</a></li>
+						{ShellInfo.job === ShellJob.BLM && <>
+						<li><a href={GITHUB_URL}>Github页面</a></li>
 						<li><a href={"https://picto.zqsz.me/"}>绘灵法师排轴器</a>，由<b>shanzhe</b>制作并维护，给那些拾起了画笔的黑黑</li>
 						<li><a href={"https://akairyugestalter.github.io/ffxiv-blm-rotation/"}>7.x版排轴器（90级）</a>，可以用来给TOP等副本排轴，作者是<b>Akairyu</b></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.x版排轴器</a>，历史版本。那里也公开展示着一些6.x时期的轴作为纪念。</li>
@@ -223,19 +294,55 @@ export function IntroSection(props: {}) {
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>官方的黑魔法师职业介绍</a></li>
 						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL} rel="noreferrer">
 							The Balance服务器里的黑魔频道</a> （需要先加入Discord服务器）</li>
+						</>}
+						{ShellInfo.job === ShellJob.PCT && <>
+						<li><a href={GITHUB_URL}>Github页面</a></li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
+						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL} rel="noreferrer">
+							The Balance服务器里的PCT频道</a> （需要先加入Discord服务器）</li>
+						</>}
 					</ul>,
-					ja:
-						<ul>
+					ja: <ul>
+						{ShellInfo.job === ShellJob.BLM && <>
 						<li><a href={"https://github.com/miyehn/ffxiv-blm-rotation"}>Github repository</a></li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: 南方ボズヤ戦線向けのツール。作者：<b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
 						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL} rel="noreferrer">
 							BLM resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
+						</>}
+						{ShellInfo.job === ShellJob.PCT && <>
+						<li><a href={GITHUB_URL}>Github repository</a></li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation/"}>Black Mage in the Shell</a></li>
+						<li><a target={"_blank"} href={RESOURCE_CHANNEL_URL} rel="noreferrer">
+							{ShellInfo.job} resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
+						</>}
 					</ul>,
 				})}
-
+				{ShellInfo.job === ShellJob.PCT &&
+				<div className="paragraph"><Expandable title={"Known issues"} titleNode={localize({en: "Known issues"})} defaultShow={false} content={
+					<div>
+					{localize({
+						en: <ul>
+							<li className="paragraph">
+								We haven't tested what happens when buffs like Hyperphantasia and Aetherhues fall off mid-cast. Hopefully nothing bad.
+							</li>
+							<li className="paragraph">
+								If Hammer Time expires, the combo should remain preserved (i.e. your next hammer would start on Polishing Hammer). We haven't implemented this.
+							</li>
+							<li className="paragraph">
+								Hammer auto crit/DH is implemented in final potency calculations, but the multiplier is not currently displayed in self-buffs.
+							</li>
+							<li className="paragraph">
+								Starry Muse is removed from the party buff list, even though a second Pictomancer can stagger their buff with yours. We will revisit this behavior at a later date.
+							</li>
+						</ul>
+					})}
+					</div>
+				}/>
+				</div>
+				}
+				{ShellInfo.job === ShellJob.BLM &&
 				<div className="paragraph"><Expandable title={"Implementation notes"} titleNode={localize({en: "Implementation notes", zh: "实现细节", ja: "実装に関するメモ"})} defaultShow={false} content={
-
 					<div>
 						{localize({
 							en:
@@ -370,6 +477,7 @@ export function IntroSection(props: {}) {
 
 				}/>
 				</div>
+				}
 				<Changelog/>
 				<Expandable
 					defaultShow={false}

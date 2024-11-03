@@ -2,7 +2,7 @@ import React from 'react'
 import {Clickable, Expandable, FileFormat, Input, LoadJsonFromFileOrUrl, SaveToFile} from "./Common";
 import {controller} from "../Controller/Controller";
 import {FileType, ReplayMode} from "../Controller/Common";
-import {skillIcons} from "./Skills";
+import {getSkillIconPath} from "./Skills";
 import {ActionType, Line} from "../Controller/Record";
 import {getCurrentThemeColors} from "./ColorTheme";
 
@@ -54,7 +54,7 @@ function PresetLine(props: { line: Line }) {
 	}
 	while (itr) {
 		console.assert(itr.type === ActionType.Skill);
-		let iconPath = skillIcons.get(itr.skillName);
+		let iconPath = getSkillIconPath(itr.skillName);
 		icons.push(<img style={iconStyle} key={ctr} src={iconPath} alt={itr.skillName}/>)
 		itr = itr.next; ctr++;
 	}

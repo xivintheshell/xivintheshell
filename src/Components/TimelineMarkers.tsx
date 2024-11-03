@@ -10,6 +10,7 @@ import {
 	SaveToFile
 } from "./Common";
 import {controller} from "../Controller/Controller";
+import {ShellInfo, ShellJob} from "../Controller/Common";
 import {ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack} from "../Controller/Timeline";
 import {localize, localizeBuffType} from "./Localization";
 import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
@@ -20,6 +21,8 @@ import { TIMELINE_COLUMNS_HEIGHT } from './Timeline';
 export let setEditingMarkerValues = (marker: MarkerElem)=>{};
 
 export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
+
+const PRESET_MARKERS_BASE = (ShellInfo.job === ShellJob.BLM) ? "/ffxiv-blm-rotation/presets/markers/" : "/presets/markers/";
 
 type TimelineMarkersProp = {};
 type TimelineMarkersState = {
@@ -234,8 +237,12 @@ export class TimelineMarkers extends React.Component {
 
 		let buffCollection: JSX.Element[] = [];
 		buffInfos.forEach(info => {
-			buffCollection.push(<option key={info.name} value={info.name}>{localizeBuffType(info.name)}</option>)
+			// prevent starry from being selectable if we're the pictomancer
+			if (!(ShellInfo.job === ShellJob.PCT && info.name === BuffType.StarryMuse)) {
+				buffCollection.push(<option key={info.name} value={info.name}>{localizeBuffType(info.name)}</option>)
+			}
 		});
+
 
 		let buffOnlySection = <div>
 			<span>{localize({en: "Buff: ", zh: "团辅："})}</span>
@@ -400,15 +407,15 @@ export class TimelineMarkers extends React.Component {
 		}}>
 			<p>
 				<span>{localize({en: "Current tier: ", zh: "当前版本（英文）："})}</span>
-				<LoadCombinedTracksBtn displayName={"M2S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m2s.txt"}/>
-				<LoadCombinedTracksBtn displayName={"M3S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m3s.txt"}/>
-				<LoadCombinedTracksBtn displayName={"M4S by shanzhe"} url={"/ffxiv-blm-rotation/presets/markers/m4s.txt"}/>
+				<LoadCombinedTracksBtn displayName={"M2S by shanzhe"} url={PRESET_MARKERS_BASE + "m2s.txt"}/>
+				<LoadCombinedTracksBtn displayName={"M3S by shanzhe"} url={PRESET_MARKERS_BASE + "m3s.txt"}/>
+				<LoadCombinedTracksBtn displayName={"M4S by shanzhe"} url={PRESET_MARKERS_BASE + "m4s.txt"}/>
 			</p>
 			<p>
 				<span>{localize({en: "Ultimates: ", zh: "绝本（英文）："})}</span>
-				<LoadCombinedTracksBtn displayName={"DSR P6 by Tischel"} url={"/ffxiv-blm-rotation/presets/markers/dsr_p6.txt"}/>
-				<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={"/ffxiv-blm-rotation/presets/markers/dsr_p7.txt"}/>
-				<LoadCombinedTracksBtn displayName={"TOP by Santa"} url={"/ffxiv-blm-rotation/presets/markers/TOP_2023_04_02.track"}/>
+				<LoadCombinedTracksBtn displayName={"DSR P6 by Tischel"} url={PRESET_MARKERS_BASE + "dsr_p6.txt"}/>
+				<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={PRESET_MARKERS_BASE + "dsr_p7.txt"}/>
+				<LoadCombinedTracksBtn displayName={"TOP by Santa"} url={PRESET_MARKERS_BASE + "TOP_2023_04_02.track"}/>
 			</p>
 		</div>
 

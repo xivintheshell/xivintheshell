@@ -103,19 +103,31 @@ export class DoTBuff extends Resource {
 }
 
 export class CoolDown extends Resource {
-	readonly #cdPerStack: number;
+	readonly #defaultBaseRecast: number;
 	#recastTimeScale: number;
+	#currentBaseRecast: number;
 	constructor(type: ResourceType, cdPerStack: number, maxStacks: number, initialNumStacks: number) {
 		super(type, maxStacks * cdPerStack, initialNumStacks * cdPerStack);
-		this.#cdPerStack = cdPerStack;
+		this.#defaultBaseRecast = cdPerStack;
+		this.#currentBaseRecast = cdPerStack; // special case for mixed-recast spells
 		this.#recastTimeScale = 1; // effective for the next stack (i.e. 0.85 if captured LL)
 	}
-	currentStackCd() { return this.#cdPerStack * this.#recastTimeScale; }
-	stacksAvailable() { return Math.floor((this.availableAmount() + Debug.epsilon) / this.#cdPerStack); }
-	maxStacks() { return this.maxValue / this.#cdPerStack; }
+	currentStackCd() { return this.#currentBaseRecast * this.#recastTimeScale; }
+	stacksAvailable() { return Math.floor((this.availableAmount() + Debug.epsilon) / this.#currentBaseRecast); }
+	maxStacks() { return this.maxValue / this.#currentBaseRecast; }
 	useStack(game: GameState) {
-		this.consume(this.#cdPerStack);
+		this.consume(this.#defaultBaseRecast);
 		this.#reCaptureRecastTimeScale(game);
+	}
+	useStackWithRecast(game: GameState, recast: number) {
+		// roll the GCD with a special recast value
+		this.consume(this.#currentBaseRecast);
+		this.maxValue = recast;
+		// LL modifier
+		// (PCT handles hyperphantasia logic separately)
+		this.#reCaptureRecastTimeScale(game);
+		// scale for spells with longer cast/recast
+		this.#currentBaseRecast = recast;
 	}
 	setRecastTimeScale(timeScale: number) { this.#recastTimeScale = timeScale; }
 	#reCaptureRecastTimeScale(game: GameState) {
@@ -123,7 +135,7 @@ export class CoolDown extends Resource {
 	}
 	restore(game: GameState, deltaTime: number) {
 		let stacksBefore = this.stacksAvailable();
-		let unscaledTimeTillNextStack = (stacksBefore + 1) * this.#cdPerStack - this.availableAmount();
+		let unscaledTimeTillNextStack = (stacksBefore + 1) * this.#currentBaseRecast - this.availableAmount();
 		let scaledTimeTillNextStack = unscaledTimeTillNextStack * this.#recastTimeScale;
 		if (deltaTime >= scaledTimeTillNextStack) {// upon return, will have gained another stack
 			// part before stack gain
@@ -138,7 +150,7 @@ export class CoolDown extends Resource {
 	}
 	timeTillNextStackAvailable() {
 		if (this.availableAmount() === this.maxValue) return 0;
-		return (this.#cdPerStack - this.availableAmount() % this.#cdPerStack) * this.#recastTimeScale;
+		return (this.#currentBaseRecast - this.availableAmount() % this.#currentBaseRecast) * this.#recastTimeScale;
 	}
 }
 
@@ -299,7 +311,8 @@ ALL_JOBS.forEach((job) => {
 		maxStacks: 1,
 		cdPerStack: 2.5
 	}]]));
-	// MP, tincture buff, and sprint are common to all jobs
+	// MP, tincture buff, InCombat, and sprint are common to all jobs
+	makeResource(job, ResourceType.InCombat, 1, {default: 0});
 	makeResource(job, ResourceType.Mana, 10000, {default: 10000});
 	makeResource(job, ResourceType.Tincture, 1, {timeout: 30});
 	makeResource(job, ResourceType.Sprint, 1, {timeout: 10});
@@ -307,6 +320,7 @@ ALL_JOBS.forEach((job) => {
 
 // Add an ability to the resource map of the specified job.
 // Should only be called within the makeAbility constructor, except for the default GCD cooldown.
+// May be called multiple times if skills share a cooldown (such as picto living muse variants)
 export function makeCooldown(job: ShellJob, rsc: ResourceType, cdPerStack: number, maxStacks: number = 1) {
 	getAllResources(job).set(rsc, {
 		isCoolDown: true,
@@ -369,7 +383,6 @@ export class ResourceOverride {
 	// other buffs: time till drop
 	// MP, AF, UI, UH, Paradox, Polyglot: amount (stacks)
 	applyTo(game: GameState) {
-
 		let info = getAllResources(ShellInfo.job).get(this.type);
 		if (!info) {
 			console.assert(false);

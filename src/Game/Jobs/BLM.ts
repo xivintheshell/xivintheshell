@@ -133,7 +133,7 @@ export class BLMState extends GameState {
 
 	gainThunderhead() {
 		let thunderhead = this.resources.get(ResourceType.Thunderhead);
-		let duration = (getResourceInfo(ShellJob.BLM, ResourceType.Thunderhead) as ResourceInfo).maxTimeout;
+		const duration = (getResourceInfo(ShellJob.BLM, ResourceType.Thunderhead) as ResourceInfo).maxTimeout;
 		if (thunderhead.available(1)) { // already has a proc; reset its timer
 			thunderhead.overrideTimer(this, duration);
 		} else { // there's currently no proc. gain one.
@@ -361,6 +361,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 		autoDowngrade: params.autoDowngrade,
 		aspect: aspect,
 		castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime, aspect),
+		recastTime: (state) => state.config.adjustedGCD(2.5),
 		manaCost: (state) => state.captureManaCost(name, aspect, params.baseManaCost),
 		// TODO apply AFUI modifiers?
 		potency: (state) => params.basePotency,
@@ -713,10 +714,7 @@ makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
 		const triple = state.resources.get(ResourceType.Triplecast)
 		if (triple.pendingChange) triple.removeTimer();
 		triple.gain(3);
-		state.enqueueResourceDrop(
-			ResourceType.Triplecast,
-			(getResourceInfo(ShellJob.BLM, ResourceType.Triplecast) as ResourceInfo).maxTimeout,
-		);
+		state.enqueueResourceDrop(ResourceType.Triplecast);
 	},
 });
 
@@ -906,3 +904,5 @@ makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
 	},
 	startOnHotbar: false,
 });
+
+require("./RoleActions"); // ensure role actions get initialized last

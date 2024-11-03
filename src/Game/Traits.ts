@@ -26,6 +26,19 @@ export const enum TraitName {
 	EnhancedAddle,
 	EnhancedAstralFire,
 
+	PictomancyMasteryII,
+	EnhancedArtistry,
+	EnhancedPictomancy,
+	EnhancedSmudge,
+	PictomancyMasteryIII,
+	EnhancedPictomancyII,
+	EnhancedTempera,
+	EnhancedPalette,
+	EnhancedPictomancyIII,
+	PictomancyMasteryIV,
+	EnhancedPictomancyIV,
+	EnhancedPictomancyV,
+
 	Never,
 }
 
@@ -47,6 +60,19 @@ export class Traits {
 			[TraitName.EnhancedPolyglotII, new Trait(TraitName.EnhancedPolyglotII, 98)],
 			[TraitName.EnhancedAddle, new Trait(TraitName.EnhancedAddle, 98)],
 			[TraitName.EnhancedAstralFire, new Trait(TraitName.EnhancedAstralFire, 100)],
+
+			[TraitName.PictomancyMasteryII, new Trait(TraitName.PictomancyMasteryII, 74)],
+			[TraitName.EnhancedArtistry, new Trait(TraitName.EnhancedArtistry, 80)],
+			[TraitName.EnhancedPictomancy, new Trait(TraitName.EnhancedPictomancy, 82)],
+			[TraitName.EnhancedSmudge, new Trait(TraitName.EnhancedSmudge, 84)],
+			[TraitName.PictomancyMasteryIII, new Trait(TraitName.PictomancyMasteryIII, 84)],
+			[TraitName.EnhancedPictomancyII, new Trait(TraitName.EnhancedPictomancyII, 86)],
+			[TraitName.EnhancedTempera, new Trait(TraitName.EnhancedTempera, 88)],
+			[TraitName.EnhancedPalette, new Trait(TraitName.EnhancedTempera, 90)],
+			[TraitName.EnhancedPictomancyIII, new Trait(TraitName.EnhancedPictomancyIII, 92)],
+			[TraitName.PictomancyMasteryIV, new Trait(TraitName.PictomancyMasteryIV, 94)],
+			[TraitName.EnhancedPictomancyIV, new Trait(TraitName.EnhancedPictomancyIV, 96)],
+			[TraitName.EnhancedPictomancyV, new Trait(TraitName.EnhancedPictomancyV, 100)],
 		]);
 	}
 

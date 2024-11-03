@@ -144,6 +144,17 @@ export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T
 // the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
 const skillMap: Map<ShellJob, Map<SkillName, Skill<PlayerState>>> = new Map();
 
+const normalizedSkillNameMap = new Map<string, SkillName>();
+/**
+ * Attempt to retrieve a SkillName enum member from the specified string. This function is run
+ * when a line is loaded to fix some capitalization errors present in earlier versions of
+ * PCT in the Shell, where "Thunder In Magenta" was capitalized inappropriately (should be
+ * "Thunder in Magenta" with "in" not capitalized.
+ */
+export function getNormalizedSkillName(s: string): SkillName | undefined {
+	return normalizedSkillNameMap.get(s.toLowerCase());
+}
+
 // Return a particular skill for a job.
 // Raises if the skill is not found.
 export function getSkill<T extends PlayerState>(job: ShellJob, skillName: SkillName): Skill<T> {
@@ -155,6 +166,10 @@ export function getAllSkills<T extends PlayerState>(job: ShellJob): Map<SkillNam
 	return skillMap.get(job)!;
 }
 
+function setSkill<T extends PlayerState>(job: ShellJob, skillName: SkillName, skill: Skill<T>) {
+	skillMap.get(job)!.set(skillName, skill as Skill<PlayerState>);
+	normalizedSkillNameMap.set(skillName.toLowerCase(), skillName);
+}
 
 ALL_JOBS.forEach((job) => skillMap.set(job, new Map()));
 
@@ -171,6 +186,23 @@ function fnify<T extends PlayerState>(arg?: number | ResourceCalculationFn<T>, d
 	}
 };
 
+function convertTraitPotencyArray<T extends PlayerState>(arr: Array<[TraitName, number]>): ResourceCalculationFn<T> {
+	console.assert(arr.length > 0, `invalid trait potency array: ${arr}`);
+	return (state) => {
+		let currPotency = undefined;
+		const level = state.config.level;
+		// this iteration assumes the highest level trait is last, and is a little algorithmically
+		// inefficient but who cares
+		for (const [traitName, potency] of arr) {
+			if (Traits.hasUnlocked(traitName, level)) {
+				currPotency = potency;
+			}
+		}
+		console.assert(currPotency !== undefined, `no applicable potency at level ${level} found in array ${arr}`)
+		return currPotency || 0;
+	};
+}
+
 /**
  * Declare a GCD skill.
  *
@@ -179,7 +211,7 @@ function fnify<T extends PlayerState>(arg?: number | ResourceCalculationFn<T>, d
  * - autoUpgrade + autoDowngrade: remain undefined
  * - aspect: Aspect.Other
  * - castTime: 0
- * - recastTime: 2.5
+ * - recastTime: 2.5 (not adjusted to sps)
  * - manaCost: 0
  * - potency: 0
  * - applicationDelay: 0
@@ -201,7 +233,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	castTime: number | ResourceCalculationFn<T>,
 	recastTime: number | ResourceCalculationFn<T>,
 	manaCost: number | ResourceCalculationFn<T>,
-	potency: number | ResourceCalculationFn<T>,
+	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 	applicationDelay: number,
 	validateAttempt: ValidateAttemptFn<T>,
 	isInstantFn: IsInstantFn<T>,
@@ -211,6 +243,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
+	let potencyFn = Array.isArray(params.potency) ? convertTraitPotencyArray(params.potency) : fnify(params.potency, 0);
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
@@ -225,14 +258,14 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		castTimeFn: fnify(params.castTime, 0),
 		recastTimeFn: fnify(params.recastTime, 2.5),
 		manaCostFn: fnify(params.manaCost, 0),
-		potencyFn: fnify(params.potency, 0),
+		potencyFn: potencyFn,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true),
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 		applicationDelay: params.applicationDelay ?? 0,
 	};
-	jobs.forEach((job) => skillMap.get(job)!.set(info.name, info as Spell<PlayerState>));
+	jobs.forEach((job) => setSkill(job, info.name, info));
 	return info;
 };
 
@@ -260,7 +293,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	autoDowngrade: SkillAutoReplace,
 	replaceIf: ConditionalSkillReplace<T>[],
 	startOnHotbar: boolean,
-	potency: number | ResourceCalculationFn<T>,
+	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 	applicationDelay: number,
 	validateAttempt: ValidateAttemptFn<T>,
 	onConfirm: EffectFn<T>,
@@ -271,6 +304,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
+	let potencyFn = Array.isArray(params.potency) ? convertTraitPotencyArray(params.potency) : fnify(params.potency, 0);
 	const info: Ability<T> = {
 		kind: "ability",
 		name: name,
@@ -283,13 +317,13 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
 		manaCostFn: (state) => 0,
-		potencyFn: fnify(params.potency, 0),
+		potencyFn: potencyFn,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 	};
-	jobs.forEach((job) => skillMap.get(job)!.set(info.name, info as Ability<PlayerState>));
+	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.cooldown !== undefined) {
 		jobs.forEach((job) => makeCooldown(job, cdName, params.cooldown!, params.maxCharges ?? 1));
 	}
@@ -315,7 +349,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		startOnHotbar?: boolean,
 		applicationDelay: number,
 		duration?: number | ResourceCalculationFn<T>, // TODO push to resources
-		potency?: number | ResourceCalculationFn<T>,
+		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 		validateAttempt?: ValidateAttemptFn<T>,
 		onConfirm?: EffectFn<T>,
 		onApplication?: EffectFn<T>,
@@ -398,6 +432,9 @@ export function getConditionalReplacement<T extends PlayerState>(key: SkillName,
 	// Attempt to replace a skill if required by the current state
 	const skill = getSkill(state.job, key);
 	for (const candidate of skill.replaceIf) {
+		if (candidate.newSkill === key) {
+			console.error(`Skill ${key} tried to replace itself with the same skill`);
+		}
 		const candidateSkill = getSkill(state.job, candidate.newSkill);
 		if (state.config.level >= candidateSkill.unlockLevel && candidate.condition(state)) {
 			return candidate.newSkill;

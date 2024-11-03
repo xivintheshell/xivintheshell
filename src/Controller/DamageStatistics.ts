@@ -9,7 +9,10 @@ import {
 	SelectedStatisticsData
 } from "../Components/DamageStatistics";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
-import {ShellJob} from "./Common";
+import type {BLMState} from "../Game/Jobs/BLM";
+import {ShellInfo, ShellJob} from "./Common";
+
+// TODO autogenerate everything here
 
 const AFUISkills = new Set<SkillName>([
 	SkillName.Blizzard,
@@ -32,25 +35,6 @@ const enoSkills = new Set<SkillName>([
 	SkillName.Foul,
 	SkillName.Xenoglossy,
 	SkillName.Paradox
-]);
-
-const abilities = new Set<SkillName>([
-	SkillName.Transpose,
-	SkillName.Manaward,
-	SkillName.Manafont,
-	SkillName.LeyLines,
-	SkillName.BetweenTheLines,
-	SkillName.AetherialManipulation,
-	SkillName.Triplecast,
-	SkillName.UmbralSoul,
-	SkillName.Amplifier,
-	SkillName.Retrace,
-	SkillName.Addle,
-	SkillName.Swiftcast,
-	SkillName.LucidDreaming,
-	SkillName.Surecast,
-	SkillName.Tincture,
-	SkillName.Sprint
 ]);
 
 // source of truth
@@ -171,25 +155,28 @@ function expandNode(node: ActionNode) : ExpandedNode {
 		calculationModifiers: []
 	}
 	if (node.type === ActionType.Skill && node.skillName) {
-		if (AFUISkills.has(node.skillName)) {
-			console.assert(node.getPotencies().length > 0, "no potencies for " + node.skillName);
-			// use the one that's not enochian or pot (then must be one of af123, ui123)
-			let mainPotency = node.getPotencies()[0];
+		if (node.getPotencies().length === 0) {
+			// do nothing if the used ability does no damage
+		} else if (AFUISkills.has(node.skillName)) {
+			// for AF/UI skills, display the first modifier that's not enochian or pot
+			// (must be one of af123, ui123)
+			const mainPotency = node.getPotencies()[0];
 			res.basePotency = mainPotency.base;
-			for (let i = 0; i < mainPotency.modifiers.length; i++) {
-				let tag = mainPotency.modifiers[i].source;
+			res.calculationModifiers = mainPotency.modifiers;
+			for (const modifier of mainPotency.modifiers) {
+				const tag = modifier.source;
 				if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
-					res.displayedModifiers = [tag];
-					res.calculationModifiers = mainPotency.modifiers;
-					break;
+					res.displayedModifiers.push(tag);
+					if (ShellInfo.job === ShellJob.BLM) {
+						break;
+					}
 				}
 			}
 		} else if (enoSkills.has(node.skillName)) {
-			console.assert(node.getPotencies().length > 0);
-			// use enochian if it has one. Otherwise empty.
-			let mainPotency = node.getPotencies()[0];
-			for (let i = 0; i < mainPotency.modifiers.length; i++) {
-				let tag = mainPotency.modifiers[i].source;
+			// for foul/xeno/para, display enochian modifier if it has one. Otherwise empty.
+			const mainPotency = node.getPotencies()[0];
+			for (const modifier of mainPotency.modifiers) {
+				const tag = modifier.source;
 				if (tag === PotencyModifierType.ENO) {
 					res.basePotency = mainPotency.base;
 					res.displayedModifiers = [tag];
@@ -197,10 +184,20 @@ function expandNode(node: ActionNode) : ExpandedNode {
 					break;
 				}
 			}
-		} else if (abilities.has(node.skillName)) {
-		} else {
-			console.assert(isThunderNode(node))
+		} else if (isThunderNode(node)) {
+			// thunder modifiers are handled separately
 			res.basePotency = node.getPotencies()[0].base;
+		} else {
+			// for non-BLM jobs, display all non-pot modifiers on all damaging skills
+			const mainPotency = node.getPotencies()[0];
+			res.basePotency = mainPotency.base;
+			for (const modifier of mainPotency.modifiers) {
+				const tag = modifier.source;
+				if (tag !== PotencyModifierType.POT) {
+					res.displayedModifiers.push(tag);
+					res.calculationModifiers.push(modifier);
+				}
+			}
 		}
 		return res;
 	} else {
@@ -465,7 +462,7 @@ export function calculateDamageStats(props: {
 		// last Thunder so far
 		let mainP = (lastThunder as ActionNode).getPotencies()[0];
 		console.assert(mainP.hasResolved());
-		let lastDotDropTime = (mainP.applicationTime as number) + ctl.game.getThunderDotDuration();
+		let lastDotDropTime = (mainP.applicationTime as number) + (ctl.game as BLMState).getThunderDotDuration();
 		let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
 
 		let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
