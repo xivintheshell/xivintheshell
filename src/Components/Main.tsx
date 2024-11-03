@@ -63,7 +63,7 @@ function ConfigTabs(props: {
 				contentNode: <Config/>
 			},
 			{
-				titleNode: localize({en: "Control", zh: "时间控制"}),
+				titleNode: localize({en: "Control", zh: "操作设置"}),
 				contentNode: <TimeControl/>
 			}
 		]} collapsible={false} scrollable={true} height={props.height} defaultSelectedIndex={0}/>
