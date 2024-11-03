@@ -263,11 +263,11 @@ export class TimelineMarkers extends React.Component {
 		</div>;
 
 		let actionsSection = <>
-			<button style={btnStyle} onClick={()=>{
+			<button style={btnStyle} onClick={() => {
 				controller.timeline.deleteAllMarkers();
 				controller.updateStats();
 			}}>{localize({en: "clear all markers", zh: "清空当前"})}</button>
-			<button style={btnStyle} onClick={()=>{
+			<button style={btnStyle} onClick={() => {
 				let count = controller.timeline.sortAndRemoveDuplicateMarkers();
 				if (count > 0) {
 					alert("removed " + count + " duplicate markers");
@@ -276,6 +276,10 @@ export class TimelineMarkers extends React.Component {
 				}
 				controller.timeline.updateTimelineMarkers();
 			}}>{localize({en: "remove duplicates", zh: "删除重复标记"})}</button>
+			<span>{localize({
+				en: ", click to delete single markers",
+				zh: "，可点击删除单个标记"
+			})}</span>
 		</>;
 
 		let textColor = getCurrentThemeColors().text;
@@ -422,7 +426,7 @@ export class TimelineMarkers extends React.Component {
 		return <>
 			<Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>{[
 				{
-					defaultSize: 46,
+					defaultSize: 50,
 					content: <>
 						{actionsSection}
 						<p style={{marginTop: 16}}><b>{localize({en: "Presets", zh: "预设文件"})}</b></p>
@@ -434,17 +438,15 @@ export class TimelineMarkers extends React.Component {
 								zh: "载入新的标记时，时间轴上的已有标记不会被删除"
 							})}/></p>
 						{loadTracksSection}
+						<p style={{marginTop: 16}}><b>{localize({en: "Save marker tracks to file", zh: "保存标记到文件"})}</b></p>
+						{saveTrackLinks}
 					</>
 				},
 				{
-					defaultSize: 54,
+					defaultSize: 50,
 					content: <>
 						<p><b>{localize({en: "Create marker", zh: "添加标记"})}</b></p>
 						{addColumn}
-						<p style={{marginTop: 16}}>
-							<span>{localize({en: "Save marker tracks to file: ", zh: "保存标记到文件："})}</span>
-							{saveTrackLinks}
-						</p>
 					</>
 				},
 			]}</Columns>
