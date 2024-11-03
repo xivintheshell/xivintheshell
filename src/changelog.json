@@ -1,5 +1,11 @@
 [
 	{
+		"date": "11/3/24",
+		"changes": [
+			"New \"Display settings\" tab at the bottom, and moved a few image export settings over there so they also apply to the timeline even without export"
+		]
+	},
+	{
 		"date": "11/2/24",
 		"changes": [
 			"Fixed a bug where MP costs were not re-checked at the end of a cast bar if the MP cost changed mid-cast"
