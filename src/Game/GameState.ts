@@ -293,7 +293,6 @@ export abstract class GameState {
 	 */
 	useSpell(skill: Spell<PlayerState>, node: ActionNode) {
 		let cd = this.cooldowns.get(skill.cdName);
-		let capturedManaCost = skill.manaCostFn(this);
 		// TODO refactor logic to determine self-buffs
 		let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
 		const inspireSkills = [
@@ -353,8 +352,16 @@ export abstract class GameState {
 			// actually deduct MP
 			// special cases like Flare/Despair should set their base MP to 0 and perform
 			// this deduction in their onCapture function
-			if (capturedManaCost > 0) {
-				this.resources.get(ResourceType.Mana).consume(capturedManaCost);
+			// note that MP costs are re-checked at the end of the cast bar: notably, if enochian
+			// drops in the middle of a an AF3 B3 cast, the spell will cost mana; this also applies
+			// to WHM Thin Air and SCH Recitation if the buffs fall off mid-cast
+			let manaCost = skill.manaCostFn(this);
+			if (manaCost > this.resources.get(ResourceType.Mana).availableAmount()) {
+				controller.reportInterruption({
+					failNode: node,
+				});
+			} else if (manaCost > 0) {
+				this.resources.get(ResourceType.Mana).consume(manaCost);
 			}
 
 			// potency
