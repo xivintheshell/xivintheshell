@@ -51,18 +51,20 @@ const getAcknowledgements = () => {
 			{localize({
 				en: <ul>
 						<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
-						<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: software developer and a humble BLM student</li>
+						<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: initial software developer and a humble BLM student</li>
 						<li><b>Turtle</b>, who did the heavy work of updating this tool from Endwalker to Dawntrail</li>
 						<li><b>shanzhe (Shanzhe Qi @ Seraph)</b>, who created PCT in the Shell and the framework for adding other jobs to this tool</li>
 						<li><b>Yara, Spider, Santa, Akairyu</b>, and many other players who contributed feature suggestions, timeline markers, bug reports, etc.</li>
 					</ul>,
 				zh: <ul>
 						<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
-						<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：程序；是个云黑魔玩家</li>
+						<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：最初的程序；是个云黑魔玩家</li>
 						<li><b>Turtle</b>, 把本工具从6.0更新到7.0的大功臣</li>
-						<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
+						<li><b>shanzhe</b>, 画家排轴器作者；为让本工具支持更多职业而搭建了程序框架</li>
+						<li><b>Yara, Spider, Santa, Akairyu</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
 					</ul>,
 				ja: <ul>
+						{/*[outdated (ja)] hey Totti you should add yourself here too*/}
 						<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: プロダクトマネージャー、凄腕黒魔道士</li>
 						<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: ソフトウェア開発者、しがない黒魔道士</li>
 						<li><b>Turtle</b>: 黄金のレガシーへのアップデートを担当</li>
@@ -140,7 +142,7 @@ export function IntroSection(props: {}) {
 						<li style={smallGap}>Click on a buff applied to self to remove it. Unless it's ley lines, in which case it can be re-enabled.</li>
 					</ul>,
 					zh: <ul>
-						<li style={smallGap}>在右边<b>编辑</b>里输入装备数据，然后点击 <ButtonIndicator text={"应用并重置时间轴"}/></li>
+						<li style={smallGap}>在右边<b>属性设置</b>里输入装备数据，然后点击 <ButtonIndicator text={"应用并重置时间轴"}/></li>
 						<li style={smallGap}>单击使用技能，如果CD还没转好，可以再次点击，会自动等到转好然后重试。</li>
 						<li style={smallGap}>按 <ButtonIndicator text={"u"}/> 删除时间线上的最后一个操作（实时模式下此操作无效）。</li>
 						<li style={smallGap}>左键单击可以移除自己身上的buff。黑魔纹除外，黑魔纹在单击关闭后可以被再次点击开启。</li>
