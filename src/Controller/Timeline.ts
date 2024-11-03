@@ -426,7 +426,8 @@ export class Timeline {
 	}
 
 	getCanvasHeight() {
-		return TimelineDimensions.timelineCanvasHeight(this.getNumMarkerTracks(), this.slots.length);
+		let numTracksToDraw = this.getNumMarkerTracks();
+		return TimelineDimensions.timelineCanvasHeight(numTracksToDraw, this.slots.length);
 	}
 
 	positionFromTime(time: number) {

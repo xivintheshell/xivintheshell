@@ -1,5 +1,5 @@
 import React from 'react';
-import {Help, Input, SaveToFile, FileFormat} from "./Common";
+import {Help, Input, SaveToFile, FileFormat, TimelineDimensions} from "./Common";
 import {localize, LocalizedContent} from "./Localization"
 import {ImageExportConfig} from "../Controller/ImageExportConfig";
 import {controller} from "../Controller/Controller";
@@ -60,7 +60,8 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 		if (startTime === endTime) {
 			// No selection was made, so export the whole timeline
 			startTime = -activeRenderProps.countdown;
-			endTime = controller.game.time;
+			const DRAW_EXTRA_DURATION = 4;// todo: ideally we'd want to have this just long enough to capture the last skill
+			endTime = controller.game.time - activeRenderProps.countdown + DRAW_EXTRA_DURATION;
 		}
 		const exportConfig = controller.imageExportConfig;
 		let nRows: number;
@@ -82,21 +83,20 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 		//   and is populated by calling getImageData on dummyOneRowCanvas
 		const dummyOneRowCanvas = document.createElement("canvas");
 		const dummySplitCanvas = document.createElement("canvas");
-		const ICON_SIZE = 28;
-		const ROW_PADDING = ICON_SIZE / 2;
+		const ROW_PADDING = TimelineDimensions.trackHeight / 2; // can make this a config if we want
 		const tlController = controller.timeline;
-		dummyOneRowCanvas.height = activeRenderProps.timelineHeight;
 		// We have no control over where to start drawing, so the one-row canvas should always
 		// have the whole duration
+		// note [myn]: iirc there's a hard limit for html canvas dimensions, so this might fail to capture very long
+		// timelines. If it ever becomes an issue we'll have to split it into sections... meh until someone complains
 		const countdownWidth = tlController.positionFromTime(activeRenderProps.countdown);
 		dummyOneRowCanvas.width = tlController.positionFromTime(endTime) + countdownWidth;
-		// Add ICON_SIZE/2 px of space between rows so ogcds don't collide
-		// activeRenderProps.timelineHeight inclues every timeline in the planner, so just
-		// manually calculate from hard-coded constants in Timeline.getCanvasHeight()
-		let rowHeight = 70 + 20;
+		let rowHeight = TimelineDimensions.renderSlotHeight();
 		if (this.state.includeTime) {
-			rowHeight += 30 + 14 * tlController.getNumMarkerTracks();
+			rowHeight += TimelineDimensions.rulerHeight;
+			rowHeight += TimelineDimensions.trackHeight * tlController.getNumMarkerTracks();
 		}
+		dummyOneRowCanvas.height = rowHeight;
 		const oneRowCtx = dummyOneRowCanvas.getContext("2d", {willReadFrequently: true}) as CanvasRenderingContext2D;
 		// 2. Temporarily swap the active graphics context, and request TimelineCanvas functions to
 		// draw elements onto our "fake" canvas (oneRowCtx).
@@ -114,11 +114,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 					currentHeight += drawRuler(timelineOrigin, true);
 					currentHeight += drawMarkerTracks(timelineOrigin, currentHeight, true);
 				}
-				drawTimelines(timelineOrigin, currentHeight, {
-					drawMPTicks: this.state.includeMPAndLucidTicks,
-					drawDamageMarks: this.state.includeDamageApplication,
-					drawBuffCovers: this.state.includeBuffIndicators,
-				})
+				drawTimelines(timelineOrigin, currentHeight, true);
 			}
 		);
 		// 3. Copy elements off the "fake" canvas (oneRowCtx) onto our row-split canvas.
@@ -171,12 +167,13 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 					style={{margin: "10px 0"}}
 				/>
 			</div>
-			{this.checkbox("includeMPAndLucidTicks", {en: "include MP and Lucid ticks", zh: "显示跳蓝和跳醒梦"})}
-			{this.checkbox("includeDamageApplication", {en: "include damage applications", zh: "显示伤害结算标记"})}
 			{this.checkbox("includeTime", {en: "include time and markers", zh: "显示时间刻度和时间轴标记"})}
-			{this.checkbox("includeBuffIndicators", {en: "include buff indicators", zh: "显示buff快照标记"})}
 		</>
 		return <div>
+			<p>{localize({
+				en: <span>export the selected part of the timeline as a png according to the current display settings, or the whole timeline if nothing is selected</span>,
+				zh: "根据当前显示设置将时间轴内选择部分导出为png，如果无选择将整个时间轴导出"
+			})}</p>
 			{settingsSection}
 			<p><SaveToFile
 				filename={"fight"}
