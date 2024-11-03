@@ -60,7 +60,8 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 		if (startTime === endTime) {
 			// No selection was made, so export the whole timeline
 			startTime = -activeRenderProps.countdown;
-			endTime = controller.game.time;
+			const DRAW_EXTRA_DURATION = 4;// todo: ideally we'd want to have this just long enough to capture the last skill
+			endTime = controller.game.time - activeRenderProps.countdown + DRAW_EXTRA_DURATION;
 		}
 		const exportConfig = controller.imageExportConfig;
 		let nRows: number;
@@ -82,7 +83,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 		//   and is populated by calling getImageData on dummyOneRowCanvas
 		const dummyOneRowCanvas = document.createElement("canvas");
 		const dummySplitCanvas = document.createElement("canvas");
-		const ROW_PADDING = 0;// TimelineDimensions.trackHeight / 2; // can make this a config if we want
+		const ROW_PADDING = TimelineDimensions.trackHeight / 2; // can make this a config if we want
 		const tlController = controller.timeline;
 		dummyOneRowCanvas.height = activeRenderProps.timelineHeight;
 		// We have no control over where to start drawing, so the one-row canvas should always
