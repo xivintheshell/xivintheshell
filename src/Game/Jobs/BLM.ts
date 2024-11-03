@@ -18,7 +18,6 @@ import {
 	SkillAutoReplace,
 	Spell,
 	StatePredicate,
-	ValidateAttemptFn,
 } from "../Skills";
 import {TraitName, Traits} from "../Traits";
 import {GameState, PlayerState} from "../GameState";
@@ -328,7 +327,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 	baseManaCost: number,
 	basePotency: number,
 	applicationDelay: number,
-	validateAttempt?: ValidateAttemptFn<BLMState>,
+	validateAttempt?: StatePredicate<BLMState>,
 	onConfirm?: EffectFn<BLMState>,
 	onApplication?: EffectFn<BLMState>,
 }): Spell<BLMState> => {
@@ -406,7 +405,7 @@ const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceTy
 	applicationDelay?: number,
 	cooldown: number,
 	maxCharges?: number,
-	validateAttempt?: ValidateAttemptFn<BLMState>,
+	validateAttempt?: StatePredicate<BLMState>,
 	onConfirm?: EffectFn<BLMState>,
 	onApplication?: EffectFn<BLMState>,
 }): Ability<BLMState> => makeAbility(ShellJob.BLM, name, unlockLevel, cdName, params);

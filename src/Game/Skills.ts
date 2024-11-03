@@ -30,8 +30,6 @@ export type ConditionalSkillReplace<T extends PlayerState> = {
 export type ResourceCalculationFn<T> = (state: Readonly<T>) => number;
 export type StatePredicate<T> = (state: Readonly<T>) => boolean;
 // TODO encode graceful error handling into these types
-export type ValidateAttemptFn<T> = StatePredicate<T>;
-export type IsInstantFn<T> = (state: T) => boolean;
 export type EffectFn<T> = (state: T, node: ActionNode) => void;
 
 // empty function
@@ -78,7 +76,7 @@ interface BaseSkill<T extends PlayerState> {
 
 	// Determine whether the skill can be executed in the current state.
 	// Should be called when the button is pressed.
-	readonly validateAttempt: ValidateAttemptFn<T>;
+	readonly validateAttempt: StatePredicate<T>;
 
 	// === EFFECTS ===
 
@@ -109,7 +107,7 @@ export type GCD<T extends PlayerState> = BaseSkill<T> & {
 	readonly recastTimeFn: ResourceCalculationFn<T>;
 
 	// Determine whether or not this cast can be made instant, based on the current game state.
-	readonly isInstantFn: IsInstantFn<T>;
+	readonly isInstantFn: StatePredicate<T>;
 }
 
 export type Spell<T extends PlayerState> = GCD<T> & {
@@ -238,8 +236,8 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	manaCost: number | ResourceCalculationFn<T>,
 	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 	applicationDelay: number,
-	validateAttempt: ValidateAttemptFn<T>,
-	isInstantFn: IsInstantFn<T>,
+	validateAttempt: StatePredicate<T>,
+	isInstantFn: StatePredicate<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 }>): Spell<T> {
@@ -300,7 +298,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	highlightIf: StatePredicate<T>,
 	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 	applicationDelay: number,
-	validateAttempt: ValidateAttemptFn<T>,
+	validateAttempt: StatePredicate<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 	cooldown: number,
@@ -357,7 +355,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		applicationDelay: number,
 		duration?: number | ResourceCalculationFn<T>, // TODO push to resources
 		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
-		validateAttempt?: ValidateAttemptFn<T>,
+		validateAttempt?: StatePredicate<T>,
 		onConfirm?: EffectFn<T>,
 		onApplication?: EffectFn<T>,
 		assetPath?: string,

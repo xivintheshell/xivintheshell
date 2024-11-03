@@ -14,7 +14,6 @@ import {
 	NO_EFFECT,
 	Spell,
 	StatePredicate,
-	ValidateAttemptFn,
 } from "../Skills";
 import {TraitName, Traits} from "../Traits";
 import {GameState} from "../GameState";
@@ -186,7 +185,7 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 	baseManaCost?: number,
 	basePotency?: number | Array<[TraitName, number]>,
 	applicationDelay: number,
-	validateAttempt?: ValidateAttemptFn<PCTState>,
+	validateAttempt?: StatePredicate<PCTState>,
 	onConfirm?: EffectFn<PCTState>,
 	onApplication?: EffectFn<PCTState>,
 }): Spell<PCTState> => {
@@ -239,7 +238,7 @@ const makeAbility_PCT = (name: SkillName, unlockLevel: number, cdName: ResourceT
 	applicationDelay?: number,
 	cooldown: number,
 	maxCharges?: number,
-	validateAttempt?: ValidateAttemptFn<PCTState>,
+	validateAttempt?: StatePredicate<PCTState>,
 	onConfirm?: EffectFn<PCTState>,
 	onApplication?: EffectFn<PCTState>,
 }): Ability<PCTState> => makeAbility(ShellJob.PCT, name, unlockLevel, cdName, params);
@@ -742,7 +741,7 @@ makeAbility_PCT(SkillName.SubtractivePalette, 60, ResourceType.cd_Subtractive, {
 
 const creatureConditions = [creatureMotifCondition, pomMotifCondition, wingMotifCondition, clawMotifCondition, mawMotifCondition];
 // [name, level, validation]
-const creatureInfos: Array<[SkillName, number, ValidateAttemptFn<PCTState>]> = [
+const creatureInfos: Array<[SkillName, number, StatePredicate<PCTState>]> = [
 	// creature motif can never itself be cast
 	[SkillName.CreatureMotif, 30, (state) => false],
 	[SkillName.PomMotif, 30, pomMotifCondition.condition],
@@ -763,7 +762,7 @@ creatureInfos.forEach(([name, level, validateAttempt], i) => makeGCD_PCT(name, l
 
 const livingConditions = [livingMuseCondition, pomMuseCondition, wingedMuseCondition, clawedMuseCondition, fangedMuseCondition];
 // [name, level, potency, delay, validation]
-const livingMuseInfos: Array<[SkillName, number, number | Array<[TraitName, number]>, number, ValidateAttemptFn<PCTState>]> = [
+const livingMuseInfos: Array<[SkillName, number, number | Array<[TraitName, number]>, number, StatePredicate<PCTState>]> = [
 	// living muse can never itself be cast
 	[SkillName.LivingMuse, 30, 0, 0, (state) => false],
 	[SkillName.PomMuse, 30,
