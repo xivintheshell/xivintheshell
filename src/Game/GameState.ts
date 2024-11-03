@@ -601,72 +601,7 @@ export abstract class GameState {
 		}
 
 		// conditions that make the skills show proc
-		let highlight = false;
-
-		// TODO refactor out
-		if (skillName === SkillName.Paradox) {// paradox
-			highlight = true;
-		} else if (skillName === SkillName.Fire3) {// F3P
-			if (this.resources.get(ResourceType.Firestarter).available(1)) highlight = true;
-		} else if (skillName === SkillName.Thunder3 || skillName === SkillName.HighThunder) {
-			if (this.resources.get(ResourceType.Thunderhead).available(1)) highlight = true;
-		} else if (skillName === SkillName.Foul || skillName === SkillName.Xenoglossy) {// polyglot
-			if (this.resources.get(ResourceType.Polyglot).available(1)) highlight = true;
-		} else if (skillName === SkillName.FlareStar) {
-			if (this.resources.get(ResourceType.AstralSoul).available(6)) highlight = true;
-		} else if (skillName === SkillName.CometInBlack) {
-			// if comet is ready, it glows regardless of paint status
-			highlight = this.resources.get(ResourceType.MonochromeTones).available(1);
-		} else if (skillName === SkillName.HolyInWhite) {
-			// holy doesn't glow if comet is ready
-			highlight = !this.resources.get(ResourceType.MonochromeTones).available(1)
-				&& this.resources.get(ResourceType.Paint).available(1);
-		} else if (skillName === SkillName.SubtractivePalette) {
-			highlight = this.resources.get(ResourceType.SubtractiveSpectrum).available(1) ||
-				this.resources.get(ResourceType.PaletteGauge).available(50);
-		} else if (skillName === SkillName.MogOfTheAges || skillName === SkillName.RetributionOfTheMadeen) {
-			highlight = this.resources.get(ResourceType.Portrait).available(1);
-		} else if (skill.aspect === Aspect.Hammer) {
-			highlight = this.resources.get(ResourceType.HammerTime).available(1);
-		} else if (skillName === SkillName.RainbowDrip) {
-			highlight = this.resources.get(ResourceType.RainbowBright).available(1);
-		} else if (skillName === SkillName.StarPrism) {
-			highlight = this.resources.get(ResourceType.Starstruck).available(1);
-		} else if (skillName === SkillName.TemperaGrassa || skillName === SkillName.TemperaCoatPop) {
-			highlight = this.resources.get(ResourceType.TemperaCoat).available(1);
-		} else if (skillName === SkillName.TemperaGrassaPop) {
-			highlight = this.resources.get(ResourceType.TemperaGrassa).available(1);
-		} else if ([
-			SkillName.PomMuse,
-			SkillName.WingedMuse,
-			SkillName.ClawedMuse,
-			SkillName.FangedMuse,
-		].includes(skillName)) {
-			highlight = this.resources.get(ResourceType.CreatureCanvas).available(1);
-		} else if ([SkillName.HammerStamp, SkillName.HammerBrush, SkillName.PolishingHammer].includes(skillName)) {
-			highlight = this.resources.get(ResourceType.HammerTime).available(1);
-		} else if (skillName === SkillName.StrikingMuse) {
-			highlight = this.resources.get(ResourceType.WeaponCanvas).available(1);
-		} else if (skillName === SkillName.StarryMuse) {
-			highlight = this.resources.get(ResourceType.LandscapeCanvas).available(1);
-		} else if ([
-			SkillName.AeroInGreen,
-			SkillName.Aero2InGreen,
-			SkillName.WaterInBlue,
-			SkillName.Water2InBlue,
-		].includes(skillName)) {
-			highlight = !this.resources.get(ResourceType.SubtractivePalette).available(1);
-		} else if ([
-			SkillName.BlizzardInCyan,
-			SkillName.Blizzard2InCyan,
-			SkillName.StoneInYellow,
-			SkillName.Stone2InYellow,
-			SkillName.ThunderInMagenta,
-			SkillName.Thunder2InMagenta,
-		].includes(skillName)) {
-			highlight = this.resources.get(ResourceType.SubtractivePalette).available(1);
-		}
-
+		const highlight = skill.highlightIf(this);
 		return {
 			skillName: skill.name,
 			status: status,

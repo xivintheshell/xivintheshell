@@ -17,6 +17,7 @@ import {
 	NO_EFFECT,
 	SkillAutoReplace,
 	Spell,
+	StatePredicate,
 	ValidateAttemptFn,
 } from "../Skills";
 import {TraitName, Traits} from "../Traits";
@@ -319,6 +320,7 @@ const paraCondition = (state: Readonly<BLMState>) => state.hasResourceAvailable(
 const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 	replaceIf?: ConditionalSkillReplace<BLMState>[],
 	startOnHotbar?: boolean,
+	highlightIf?: StatePredicate<BLMState>,
 	autoUpgrade?: SkillAutoReplace,
 	autoDowngrade?: SkillAutoReplace,
 	aspect?: Aspect,
@@ -370,6 +372,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 	return makeSpell(ShellJob.BLM, name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
+		highlightIf: params.highlightIf,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		aspect: aspect,
@@ -399,6 +402,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
 	replaceIf?: ConditionalSkillReplace<BLMState>[],
 	startOnHotbar?: boolean,
+	highlightIf?: StatePredicate<BLMState>,
 	applicationDelay?: number,
 	cooldown: number,
 	maxCharges?: number,
@@ -579,6 +583,7 @@ makeGCD_BLM(SkillName.Thunder3, 45, {
 		applyThunderDoT(state, node, SkillName.Thunder3);
 	},
 	autoUpgrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder },
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
 makeResourceAbility(ShellJob.BLM, SkillName.Manaward, 30, ResourceType.cd_Manaward, {
@@ -621,6 +626,7 @@ makeGCD_BLM(SkillName.Fire3, 35, {
 		state.switchToAForUI(ResourceType.AstralFire, 3);
 		state.startOrRefreshEnochian();
 	},
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Firestarter),
 });
 
 makeGCD_BLM(SkillName.Blizzard3, 35, {
@@ -738,6 +744,7 @@ makeGCD_BLM(SkillName.Foul, 70, {
 	applicationDelay: 1.158,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 });
 
 makeGCD_BLM(SkillName.Despair, 72, {
@@ -784,6 +791,7 @@ makeGCD_BLM(SkillName.Xenoglossy, 80, {
 	applicationDelay: 0.63,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 });
 
 makeGCD_BLM(SkillName.Fire2, 18, {
@@ -880,6 +888,7 @@ makeGCD_BLM(SkillName.Paradox, 90, {
 		condition: (state) => !state.hasResourceAvailable(ResourceType.Paradox) && state.getFireStacks() > 0,
 	}],
 	startOnHotbar: false,
+	highlightIf: (state) => true,
 });
 
 makeGCD_BLM(SkillName.HighThunder, 92, {
@@ -896,6 +905,7 @@ makeGCD_BLM(SkillName.HighThunder, 92, {
 		applyThunderDoT(state, node, SkillName.HighThunder);
 	},
 	autoDowngrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder },
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
 makeGCD_BLM(SkillName.FlareStar, 100, {
@@ -906,6 +916,7 @@ makeGCD_BLM(SkillName.FlareStar, 100, {
 	applicationDelay: 0.622,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.AstralSoul, 6),
 	onConfirm: (state, node) => state.resources.get(ResourceType.AstralSoul).consume(6),
+	highlightIf: (state) => state.resources.get(ResourceType.AstralSoul).available(6),
 });
 
 makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
