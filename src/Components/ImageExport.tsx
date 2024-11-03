@@ -85,7 +85,6 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 		const dummySplitCanvas = document.createElement("canvas");
 		const ROW_PADDING = TimelineDimensions.trackHeight / 2; // can make this a config if we want
 		const tlController = controller.timeline;
-		dummyOneRowCanvas.height = activeRenderProps.timelineHeight;
 		// We have no control over where to start drawing, so the one-row canvas should always
 		// have the whole duration
 		// note [myn]: iirc there's a hard limit for html canvas dimensions, so this might fail to capture very long
@@ -97,6 +96,7 @@ export class ImageExport extends React.Component<{}, ImageExportConfig> {
 			rowHeight += TimelineDimensions.rulerHeight;
 			rowHeight += TimelineDimensions.trackHeight * tlController.getNumMarkerTracks();
 		}
+		dummyOneRowCanvas.height = rowHeight;
 		const oneRowCtx = dummyOneRowCanvas.getContext("2d", {willReadFrequently: true}) as CanvasRenderingContext2D;
 		// 2. Temporarily swap the active graphics context, and request TimelineCanvas functions to
 		// draw elements onto our "fake" canvas (oneRowCtx).
