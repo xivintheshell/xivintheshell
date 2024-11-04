@@ -741,6 +741,7 @@ makeResourceAbility(ShellJob.BLM, SkillName.LeyLines, 52, ResourceType.cd_LeyLin
 	rscType: ResourceType.LeyLines,
 	applicationDelay: 0.49, // delayed
 	cooldown: 120,
+	maxCharges: 2,
 	onApplication: (state, node) => {
 		state.resources.get(ResourceType.LeyLines).enabled = true
 	},
@@ -811,7 +812,7 @@ makeSpell_BLM(SkillName.Foul, 70, {
 
 makeSpell_BLM(SkillName.Despair, 72, {
 	aspect: Aspect.Fire,
-	baseCastTime: 3,
+	baseCastTime: 0,
 	baseManaCost: 0, // mana handled separately, like flare
 	basePotency: 350,
 	applicationDelay: 0.556,
