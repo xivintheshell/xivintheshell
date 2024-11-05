@@ -4,6 +4,7 @@ import {ActionNode} from "../Controller/Record";
 import {PlayerState, GameState} from "./GameState";
 import {TraitName, Traits} from './Traits';
 import {makeCooldown, getResourceInfo, ResourceInfo} from "./Resources";
+import {PotencyModifier} from "./Potency";
 
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
@@ -31,6 +32,7 @@ export type ResourceCalculationFn<T> = (state: Readonly<T>) => number;
 export type StatePredicate<T> = (state: Readonly<T>) => boolean;
 // TODO encode graceful error handling into these types
 export type EffectFn<T> = (state: T, node: ActionNode) => void;
+export type PotencyModifierFn<T> = (state: Readonly<T>) => PotencyModifier[];
 
 // empty function
 export function NO_EFFECT<T extends PlayerState>(state: T, node: ActionNode) {};
@@ -73,6 +75,8 @@ interface BaseSkill<T extends PlayerState> {
 
 	// Determine the potency of the ability before any party buffs or modifiers.
 	readonly potencyFn: ResourceCalculationFn<T>;
+	// Determine job-specific potency modifiers.
+	readonly jobPotencyModifiers: PotencyModifierFn<T>;
 
 	// Determine whether the skill can be executed in the current state.
 	// Should be called when the button is pressed.
@@ -235,6 +239,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	recastTime: number | ResourceCalculationFn<T>,
 	manaCost: number | ResourceCalculationFn<T>,
 	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
+	jobPotencyModifiers: PotencyModifierFn<T>,
 	applicationDelay: number,
 	validateAttempt: StatePredicate<T>,
 	isInstantFn: StatePredicate<T>,
@@ -261,6 +266,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		recastTimeFn: fnify(params.recastTime, 2.5),
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: potencyFn,
+		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true),
 		onConfirm: params.onConfirm ?? NO_EFFECT,
@@ -297,6 +303,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	startOnHotbar: boolean,
 	highlightIf: StatePredicate<T>,
 	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
+	jobPotencyModifiers: PotencyModifierFn<T>,
 	applicationDelay: number,
 	validateAttempt: StatePredicate<T>,
 	onConfirm: EffectFn<T>,
@@ -322,6 +329,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		highlightIf: params.highlightIf ?? ((state) => false),
 		manaCostFn: (state) => 0,
 		potencyFn: potencyFn,
+		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		onConfirm: params.onConfirm ?? NO_EFFECT,
@@ -355,6 +363,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		applicationDelay: number,
 		duration?: number | ResourceCalculationFn<T>, // TODO push to resources
 		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
+		jobPotencyModifiers?: PotencyModifierFn<T>,
 		validateAttempt?: StatePredicate<T>,
 		onConfirm?: EffectFn<T>,
 		onApplication?: EffectFn<T>,
@@ -386,6 +395,7 @@ export function makeResourceAbility<T extends PlayerState>(
 	);
 	return makeAbility(jobs, name, unlockLevel, cdName, {
 		potency: params.potency,
+		jobPotencyModifiers: params.jobPotencyModifiers,
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		highlightIf: params.highlightIf,

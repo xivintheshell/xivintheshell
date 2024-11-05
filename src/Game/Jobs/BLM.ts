@@ -3,8 +3,8 @@
 import {controller} from "../../Controller/Controller";
 import {ActionNode} from "../../Controller/Record";
 import {ShellJob} from "../../Controller/Common";
-import {Aspect, BuffType, ProcMode, ResourceType, SkillName, WarningType} from "../Common";
-import {getPotencyModifiersFromResourceState, Potency} from "../Potency";
+import {Aspect, BuffType, Debug, ProcMode, ResourceType, SkillName, WarningType} from "../Common";
+import {Potency, PotencyModifierType} from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -316,6 +316,13 @@ const retraceCondition = (state: Readonly<BLMState>) => (
 
 const paraCondition = (state: Readonly<BLMState>) => state.hasResourceAvailable(ResourceType.Paradox);
 
+const getEnochianModifier = (state: Readonly<BLMState>) => (
+	(Traits.hasUnlocked(TraitName.EnhancedEnochianIV, controller.game.config.level) && 1.33) ||
+	(Traits.hasUnlocked(TraitName.EnhancedEnochianIII, controller.game.config.level) && 1.25) ||
+	(Traits.hasUnlocked(TraitName.EnhancedEnochianII, controller.game.config.level) && 1.15) ||
+	1.10
+);
+
 const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 	replaceIf?: ConditionalSkillReplace<BLMState>[],
 	startOnHotbar?: boolean,
@@ -394,6 +401,54 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 		),
 		onConfirm: onConfirm,
 		onApplication: onApplication,
+		jobPotencyModifiers: (state) => {
+			const mods = [];
+			if (state.hasResourceAvailable(ResourceType.Enochian)) {
+				const enochianModifier = getEnochianModifier(state);
+				if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: enochianModifier, critFactor: 0, dhFactor: 0});
+			}
+			const ui = state.getIceStacks();
+			const af = state.getFireStacks();
+			if (ui === 1) {
+				if (aspect === Aspect.Fire) {
+					mods.push({source: PotencyModifierType.UI1, damageFactor: 0.9, critFactor: 0, dhFactor: 0});
+				} else if (aspect === Aspect.Ice) {
+					mods.push({source: PotencyModifierType.UI1, damageFactor: 1, critFactor: 0, dhFactor: 0});
+				}
+			} else if (ui === 2) {
+				if (aspect === Aspect.Fire) {
+					mods.push({source: PotencyModifierType.UI2, damageFactor: 0.8, critFactor: 0, dhFactor: 0});
+				} else if (aspect === Aspect.Ice) {
+					mods.push({source: PotencyModifierType.UI2, damageFactor: 1, critFactor: 0, dhFactor: 0});
+				}
+			} else if (ui === 3) {
+				if (aspect === Aspect.Fire) {
+					mods.push({source: PotencyModifierType.UI3, damageFactor: 0.7, critFactor: 0, dhFactor: 0});
+				} else if (aspect === Aspect.Ice) {
+					mods.push({source: PotencyModifierType.UI3, damageFactor: 1, critFactor: 0, dhFactor: 0});
+				}
+			}
+			if (af === 1) {
+				if (aspect === Aspect.Ice) {
+					mods.push({source: PotencyModifierType.AF1, damageFactor: 0.9, critFactor: 0, dhFactor: 0});
+				}  else if (aspect === Aspect.Fire) {
+					mods.push({source: PotencyModifierType.AF1, damageFactor: 1.4, critFactor: 0, dhFactor: 0});
+				}
+			} else if (af === 2) {
+				if (aspect === Aspect.Ice) {
+					mods.push({source: PotencyModifierType.AF2, damageFactor: 0.8, critFactor: 0, dhFactor: 0});
+				}  else if (aspect === Aspect.Fire) {
+					mods.push({source: PotencyModifierType.AF2, damageFactor: 1.6, critFactor: 0, dhFactor: 0});
+				}
+			} else if (af === 3) {
+				if (aspect === Aspect.Ice) {
+					mods.push({source: PotencyModifierType.AF3, damageFactor: 0.7, critFactor: 0, dhFactor: 0});
+				}  else if (aspect === Aspect.Fire) {
+					mods.push({source: PotencyModifierType.AF3, damageFactor: 1.8, critFactor: 0, dhFactor: 0});
+				}
+			}
+			return mods;
+		},
 	});
 };
 
@@ -516,8 +571,16 @@ const applyThunderDoT = (game: PlayerState, node: ActionNode, skillName: SkillNa
 	thunder.tickCount = 0;
 };
 
-const addThunderPotencies = (game: PlayerState, node: ActionNode, skillName: SkillName.Thunder3 | SkillName.HighThunder) => {
-	let mods = getPotencyModifiersFromResourceState(game.resources, Aspect.Lightning);
+const addThunderPotencies = (game: BLMState, node: ActionNode, skillName: SkillName.Thunder3 | SkillName.HighThunder) => {
+	const mods = [];
+	// All modifiers need to be manually added to dot tick action nodes
+	if (game.hasResourceAvailable(ResourceType.Tincture)) {
+		mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
+	}
+	if (game.hasResourceAvailable(ResourceType.Enochian)) {
+		const enochianModifier = getEnochianModifier(game);
+		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: enochianModifier, critFactor: 0, dhFactor: 0});
+	}
 	let thunder = getSkill(ShellJob.BLM, skillName);
 
 	// initial potency
@@ -552,7 +615,7 @@ const addThunderPotencies = (game: PlayerState, node: ActionNode, skillName: Ski
 };
 
 const thunderConfirm = (skillName: SkillName.Thunder3 | SkillName.HighThunder) => (
-	(game: PlayerState, node: ActionNode) => {
+	(game: BLMState, node: ActionNode) => {
 		// potency
 		addThunderPotencies(game, node, skillName); // should call on capture
 		node.getPotencies().forEach(p=>{ p.snapshotTime = game.getDisplayTime(); });

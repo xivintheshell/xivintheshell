@@ -121,7 +121,7 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({en: "pot", zh: "爆发药"}) as string;
 	} else if (buff === PotencyModifierType.PARTY) {
 		text = localize({en: "party", zh: "团辅"}) as string;
-	} else if (buff === PotencyModifierType.HAMMER) {
+	} else if (buff === PotencyModifierType.AUTO_CDH) {
 		text = localize({en: "auto crit/direct hit", zh: "必直暴"}) as string;
 	} else if (buff === PotencyModifierType.STARRY) {
 		text = localize({en: "starry muse", zh: "星空构想"}) as string;
@@ -154,7 +154,7 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	} else if (props.buff === PotencyModifierType.ENO) {
 		text = localize({en: "ENO", zh: "天语"});
 		color = colors.blm.enochian;
-	} else if (props.buff === PotencyModifierType.HAMMER) {
+	} else if (props.buff === PotencyModifierType.AUTO_CDH) {
 		text = localize({en: "CDH", zh: "必直暴"});
 		color = colors.resources.cdhTag;
 	} else if (props.buff === PotencyModifierType.STARRY) {
