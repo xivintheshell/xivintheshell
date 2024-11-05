@@ -317,9 +317,9 @@ const retraceCondition = (state: Readonly<BLMState>) => (
 const paraCondition = (state: Readonly<BLMState>) => state.hasResourceAvailable(ResourceType.Paradox);
 
 const getEnochianModifier = (state: Readonly<BLMState>) => (
-	(Traits.hasUnlocked(TraitName.EnhancedEnochianIV, controller.game.config.level) && 1.33) ||
-	(Traits.hasUnlocked(TraitName.EnhancedEnochianIII, controller.game.config.level) && 1.25) ||
-	(Traits.hasUnlocked(TraitName.EnhancedEnochianII, controller.game.config.level) && 1.15) ||
+	(Traits.hasUnlocked(TraitName.EnhancedEnochianIV, state.config.level) && 1.33) ||
+	(Traits.hasUnlocked(TraitName.EnhancedEnochianIII, state.config.level) && 1.25) ||
+	(Traits.hasUnlocked(TraitName.EnhancedEnochianII, state.config.level) && 1.15) ||
 	1.10
 );
 
