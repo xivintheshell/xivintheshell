@@ -227,7 +227,6 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 			if (params.jobPotencyModifiers) {
 				mods.push(...params.jobPotencyModifiers(state));
 			}
-			console.log(name, mods);
 			return mods;
 		},
 		validateAttempt: params.validateAttempt,
