@@ -669,20 +669,6 @@ export abstract class GameState {
 		return this.hasResourceAvailable(ResourceType.InCombat);
 	}
 
-	toString() {
-		let s = "======== " + this.time.toFixed(3) + "s ========\n";
-		s += "MP:\t" + this.resources.get(ResourceType.Mana).availableAmount() + "\n";
-		s += "AF:\t" + this.resources.get(ResourceType.AstralFire).availableAmount() + "\n";
-		s += "UI:\t" + this.resources.get(ResourceType.UmbralIce).availableAmount() + "\n";
-		s += "UH:\t" + this.resources.get(ResourceType.UmbralHeart).availableAmount() + "\n";
-		s += "Enochian:\t" + this.resources.get(ResourceType.Enochian).availableAmount() + "\n";
-		s += "LL:\t" + this.resources.get(ResourceType.LeyLines).availableAmount() + "\n";
-		s += "Poly:\t" + this.resources.get(ResourceType.Polyglot).availableAmount() + "\n";
-		s += "GCD:\t" + this.cooldowns.get(ResourceType.cd_GCD).availableAmount().toFixed(3) + "\n";
-		s += "LLCD:\t" + this.cooldowns.get(ResourceType.cd_LeyLines).availableAmount().toFixed(3) + "\n";
-		return s;
-	}
-
 	isBLMState(): this is BLMState {
 		return this.job === ShellJob.BLM;
 	}

@@ -460,7 +460,7 @@ export class DamageStatistics extends React.Component {
 				skillNameNode = <span>
 					<span style={{textDecoration: includeInStats ? "none" : "line-through", color: includeInStats ? colors.text : colors.bgHighContrast}}>
 						{localizeSkillName(props.row.skillName)} {isThunderProp(props.row.skillName) ?
-							<Help topic={"potencyStats-thunder"} content={localize({en: "See Thunder table below for details", zh: "详见下方高暴雷表格"})}/>
+							<Help topic={"potencyStats-thunder"} content={localize({en: "See Thunder table below for details", zh: "详见下方雷统计表格"})}/>
 							: undefined}
 					</span>
 					{isThunderProp(props.row.skillName) ? <span style={{
