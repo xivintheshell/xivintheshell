@@ -39,6 +39,9 @@ import {
 	getTargetableDurationBetween
 } from "./DamageStatistics";
 
+// Ensure role actions are imported after job-specific ones to protect hotbar ordering
+require("../Game/Jobs/RoleActions");
+
 type Fixme = any;
 
 const newGameState = (config: GameConfig) => {

@@ -990,5 +990,3 @@ makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
 	},
 	startOnHotbar: false,
 });
-
-require("./RoleActions"); // ensure role actions get initialized last

@@ -210,10 +210,7 @@ buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props: BuffProps) {
 	let assetName: string = props.rscType;
-	if (props.rscType === ResourceType.Triplecast) {
-		if (props.stacks === 2) assetName += "2";
-		else if (props.stacks === 3) assetName += "3";
-	}
+	if (props.stacks > 1) assetName += props.stacks;
 	return <div title={localizeResourceType(props.rscType)} className={props.className + " buff " + props.rscType}>
 		<Clickable content={
 			<img style={{height: 40}} src={buffIcons.get(assetName)} alt={props.rscType}/>
