@@ -22,7 +22,7 @@ import {
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
 import {ShellInfo, ShellJob} from "../Controller/Common";
-import {getPotencyModifiersFromResourceState, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
+import {Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
 
 import type {BLMState} from "./Jobs/BLM";
@@ -368,7 +368,12 @@ export abstract class GameState {
 			// potency
 			if (potency) {
 				potency.snapshotTime = this.getDisplayTime();
-				potency.modifiers = getPotencyModifiersFromResourceState(this.resources, skill.aspect);
+				const mods = [];
+				if (this.hasResourceAvailable(ResourceType.Tincture)) {
+					mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
+				}
+				mods.push(...skill.jobPotencyModifiers(this));
+				potency.modifiers = mods;
 			}
 
 			// tincture
@@ -456,7 +461,12 @@ export abstract class GameState {
 				snapshotTime: this.getDisplayTime(),
 				description: "",
 			});
-			potency.modifiers = getPotencyModifiersFromResourceState(this.resources, skill.aspect);
+			const mods = [];
+			if (this.hasResourceAvailable(ResourceType.Tincture)) {
+				mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
+			}
+			mods.push(...skill.jobPotencyModifiers(this));
+			potency.modifiers = mods;
 			node.addPotency(potency);
 		}
 

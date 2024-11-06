@@ -2,7 +2,8 @@
 
 import {controller} from "../../Controller/Controller";
 import {ShellJob} from "../../Controller/Common";
-import {Aspect, ResourceType, SkillName, WarningType} from "../Common";
+import {ResourceType, SkillName, WarningType} from "../Common";
+import {PotencyModifierType} from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -12,6 +13,7 @@ import {
 	makeResourceAbility,
 	makeSpell,
 	NO_EFFECT,
+	PotencyModifierFn,
 	Spell,
 	StatePredicate,
 } from "../Skills";
@@ -175,21 +177,22 @@ export class PCTState extends GameState {
 // If an ability appears on the hotbar only when replacing another ability, it should have
 // `startOnHotbar` set to false, and `replaceIf` set appropriately on the abilities to replace.
 
+const starryMod = {source: PotencyModifierType.STARRY, damageFactor: 1.05, critFactor: 0, dhFactor: 0};
+
 const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 	replaceIf?: ConditionalSkillReplace<PCTState>[],
 	startOnHotbar?: boolean,
 	highlightIf?: StatePredicate<PCTState>,
-	aspect?: Aspect,
 	baseCastTime: number,
 	baseRecastTime?: number,
 	baseManaCost?: number,
 	basePotency?: number | Array<[TraitName, number]>,
+	jobPotencyModifiers?: PotencyModifierFn<PCTState>,
 	applicationDelay: number,
 	validateAttempt?: StatePredicate<PCTState>,
 	onConfirm?: EffectFn<PCTState>,
 	onApplication?: EffectFn<PCTState>,
 }): Spell<PCTState> => {
-	const aspect = params.aspect ?? Aspect.Other;
 	const baseRecastTime = params.baseRecastTime ?? 2.5;
 	let onConfirm: EffectFn<PCTState> = combineEffects(
 		(state, node) => {
@@ -200,7 +203,9 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 			(name === SkillName.StarPrism) ||
 			(name === SkillName.HolyInWhite) ||
 			(name === SkillName.CometInBlack) ||
-			(aspect === Aspect.Hammer) ||
+			(name === SkillName.HammerStamp) ||
+			(name === SkillName.HammerBrush) ||
+			(name === SkillName.PolishingHammer) ||
 			state.tryConsumeResource(ResourceType.Swiftcast)
 		},
 		params.onConfirm ?? NO_EFFECT,
@@ -210,11 +215,20 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		highlightIf: params.highlightIf,
-		aspect: aspect,
 		castTime: (state) => state.captureSpellCastTime(name, params.baseCastTime),
 		recastTime: (state) => state.captureSpellRecastTime(name, baseRecastTime),
 		manaCost: params.baseManaCost ?? 0,
 		potency: params.basePotency,
+		jobPotencyModifiers: (state) => {
+			const mods = [];
+			if (state.hasResourceAvailable(ResourceType.StarryMuse)) {
+				mods.push(starryMod);
+			}
+			if (params.jobPotencyModifiers) {
+				mods.push(...params.jobPotencyModifiers(state));
+			}
+			return mods;
+		},
 		validateAttempt: params.validateAttempt,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => (
@@ -222,7 +236,9 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 			(name === SkillName.StarPrism) ||
 			(name === SkillName.HolyInWhite) ||
 			(name === SkillName.CometInBlack) ||
-			(aspect === Aspect.Hammer) ||
+			(name === SkillName.HammerStamp) ||
+			(name === SkillName.HammerBrush) ||
+			(name === SkillName.PolishingHammer) ||
 			state.hasResourceAvailable(ResourceType.Swiftcast)
 		),
 		onConfirm: onConfirm,
@@ -241,7 +257,12 @@ const makeAbility_PCT = (name: SkillName, unlockLevel: number, cdName: ResourceT
 	validateAttempt?: StatePredicate<PCTState>,
 	onConfirm?: EffectFn<PCTState>,
 	onApplication?: EffectFn<PCTState>,
-}): Ability<PCTState> => makeAbility(ShellJob.PCT, name, unlockLevel, cdName, params);
+}): Ability<PCTState> => makeAbility(ShellJob.PCT, name, unlockLevel, cdName, {
+	jobPotencyModifiers: (state) => (
+		state.hasResourceAvailable(ResourceType.StarryMuse) ? [starryMod] : []
+	),
+	...params,
+});
 
 // Conditions for replacing RGB/CMY on hotbar
 const redCondition: ConditionalSkillReplace<PCTState> = {
@@ -919,7 +940,6 @@ const hammerInfos: Array<[SkillName, number, number | Array<[TraitName, number]>
 ];
 hammerInfos.forEach(([name, level, potencies, applicationDelay], i) => makeGCD_PCT(name, level, {
 	replaceIf: hammerConditions.slice(0, i).concat(hammerConditions.slice(i + 1)),
-	aspect: Aspect.Hammer,
 	baseCastTime: 0,
 	startOnHotbar: i === 0,
 	basePotency: potencies,
@@ -927,6 +947,9 @@ hammerInfos.forEach(([name, level, potencies, applicationDelay], i) => makeGCD_P
 	validateAttempt: hammerConditions[i].condition,
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.HammerTime),
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.HammerTime),
+	jobPotencyModifiers: (state) => [
+		{source: PotencyModifierType.AUTO_CDH, damageFactor: 1, critFactor: 1.0, dhFactor: 1.0}
+	],
 }));
 
 makeGCD_PCT(SkillName.LandscapeMotif, 70, {
