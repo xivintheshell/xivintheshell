@@ -4,6 +4,7 @@ import {ShellInfo, ShellJob, ShellVersion} from "../Controller/Common";
 import {XIVMath} from "./XIVMath";
 
 export type ConfigData = {
+	job: ShellJob,
 	shellVersion: ShellVersion,
 	level: LevelSync,
 	spellSpeed: number,
@@ -20,7 +21,8 @@ export type ConfigData = {
 	initialResourceOverrides: ResourceOverrideData[]
 }
 
-const DEFAULT_BLM_CONFIG: ConfigData = {
+export const DEFAULT_BLM_CONFIG: ConfigData = {
+	job: ShellJob.BLM,
 	shellVersion: ShellInfo.version,
 	level: LevelSync.lvl100,
 	// 2.37 GCD
@@ -38,7 +40,8 @@ const DEFAULT_BLM_CONFIG: ConfigData = {
 	initialResourceOverrides: []
 };
 
-const DEFAULT_PCT_CONFIG: ConfigData = {
+export const DEFAULT_PCT_CONFIG: ConfigData = {
+	job: ShellJob.PCT,
 	shellVersion: ShellInfo.version,
 	level: LevelSync.lvl100,
 	// 7.05 2.5 GCD bis https://xivgear.app/?page=sl%7C4c102326-839a-43c8-84ae-11ffdb6ef4a2
@@ -56,16 +59,18 @@ const DEFAULT_PCT_CONFIG: ConfigData = {
 	initialResourceOverrides: []
 };
 
-export const DEFAULT_CONFIG: ConfigData = {
-	[ShellJob.BLM]: DEFAULT_BLM_CONFIG,
-	[ShellJob.PCT]: DEFAULT_PCT_CONFIG,
-}[ShellInfo.job];
+export const DEFAULT_CONFIG: ConfigData = DEFAULT_BLM_CONFIG; // TODO
+// {
+// 	[ShellJob.BLM]: DEFAULT_BLM_CONFIG,
+// 	[ShellJob.PCT]: DEFAULT_PCT_CONFIG,
+// }[ShellInfo.job];
 
 export type SerializedConfig = ConfigData & {
 	casterTax: number, // still want this bc don't want to break cached timelines
 }
 
 export class GameConfig {
+	readonly job: ShellJob;
 	readonly shellVersion = ShellInfo.version;
 	readonly level: LevelSync;
 	readonly spellSpeed: number;
@@ -83,6 +88,7 @@ export class GameConfig {
 	readonly legacy_casterTax: number;
 
 	constructor(props: {
+		job: ShellJob,
 		shellVersion: ShellVersion,
 		level: LevelSync,
 		spellSpeed: number,
@@ -99,6 +105,7 @@ export class GameConfig {
 		initialResourceOverrides: (ResourceOverrideData & {enabled?: boolean})[],
 		casterTax?: number, // legacy
 	}) {
+		this.job = props.job;
 		this.shellVersion = props.shellVersion;
 		this.level = props.level ?? DEFAULT_CONFIG.level;
 		this.spellSpeed = props.spellSpeed;
@@ -175,6 +182,7 @@ export class GameConfig {
 
 	serialized() {
 		return {
+			job: this.job,
 			shellVersion: this.shellVersion,
 			level: this.level,
 			spellSpeed: this.spellSpeed,

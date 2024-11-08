@@ -16,8 +16,8 @@
 
 import fs from "node:fs";
 import {controller} from "./Controller/Controller";
-import {TickMode, ShellJob, ShellInfo} from "./Controller/Common";
-import {DEFAULT_CONFIG, GameConfig} from "./Game/GameConfig";
+import {TickMode, ShellJob} from "./Controller/Common";
+import {DEFAULT_BLM_CONFIG, GameConfig} from "./Game/GameConfig";
 import {PotencyModifierType} from "./Game/Potency";
 import {ResourceType, SkillName} from "./Game/Common";
 import {BLMState} from "./Game/Jobs/BLM";
@@ -93,14 +93,8 @@ afterEach(() => {
 // Run a test with the provided partial GameConfig and test function
 // Leave `params`` as an empty object to use the default config
 const testWithConfig = (params: Partial<GameConfig>, testFn: () => void) => {
-	// jest doesn't have great built-in skipping capabilities, so just don't run the test
-	// if the current job isn't BLM
-	// TODO: revisit when we can set the job dynamically
-	if (ShellInfo.job !== ShellJob.BLM) {
-		return () => console.log("skipped");
-	}
 	return () => {
-		const newConfig = {...DEFAULT_CONFIG};
+		const newConfig = {...DEFAULT_BLM_CONFIG};
 		Object.assign(newConfig, params);
 		controller.setConfigAndRestart(newConfig);
 		testFn();

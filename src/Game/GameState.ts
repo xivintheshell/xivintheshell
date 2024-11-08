@@ -21,7 +21,7 @@ import {
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
-import {ShellInfo, ShellJob} from "../Controller/Common";
+import {ShellJob} from "../Controller/Common";
 import {Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
 
@@ -49,7 +49,7 @@ export abstract class GameState {
 
 	constructor(config: GameConfig) {
 		this.config = config;
-		this.job = ShellInfo.job; // TODO make this configurable
+		this.job = config.job;
 		this.rng = new SeedRandom(config.randomSeed);
 		this.nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
 		this.lucidTickOffset = this.nonProcRng() * 3.0;

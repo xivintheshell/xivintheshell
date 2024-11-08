@@ -1,5 +1,5 @@
 import {Aspect, LevelSync, ResourceType, SkillName} from './Common'
-import {ShellJob, ShellInfo, ALL_JOBS} from "../Controller/Common";
+import {ShellJob, ALL_JOBS} from "../Controller/Common";
 import {ActionNode} from "../Controller/Record";
 import {PlayerState, GameState} from "./GameState";
 import {TraitName, Traits} from './Traits';
@@ -163,6 +163,11 @@ export function getNormalizedSkillName(s: string): SkillName | undefined {
 // Raises if the skill is not found.
 export function getSkill<T extends PlayerState>(job: ShellJob, skillName: SkillName): Skill<T> {
 	return skillMap.get(job)!.get(skillName)!;
+}
+
+// Return true if the provided skill is valid for the job.
+export function jobHasSkill(job: ShellJob, skillName: SkillName): boolean {
+	return skillMap.get(job)!.has(skillName);
 }
 
 // Return the map of all skills for a job.
@@ -378,7 +383,7 @@ export function makeResourceAbility<T extends PlayerState>(
 	const onApplication = combineEffects(
 		(state: T, node: ActionNode) => {
 			const resource = state.resources.get(params.rscType);
-			const duration = params.duration ?? (getResourceInfo(ShellInfo.job, params.rscType) as ResourceInfo).maxTimeout;
+			const duration = params.duration ?? (getResourceInfo(state.job, params.rscType) as ResourceInfo).maxTimeout;
 			const durationFn: ResourceCalculationFn<T> = (typeof duration === "number") ? ((state: T) => duration) : duration;
 			// TODO automatically tell scheduler to override existing drop event if necessary
 			if (resource.available(1)) {
@@ -464,8 +469,8 @@ export class DisplayedSkills  {
 
 	constructor(job: ShellJob, level: LevelSync) {
 		this.#skills = [];
-		console.assert(skillMap.has(ShellInfo.job), `No skill map found for job: ${ShellInfo.job}`)
-		for (const skillInfo of skillMap.get(ShellInfo.job)!.values()) {
+		console.assert(skillMap.has(job), `No skill map found for job: ${job}`)
+		for (const skillInfo of skillMap.get(job)!.values()) {
 			// Leave off abilities that are above the current level sync.
 			// Also leave off any abilities that auto-downgrade, like HF2/HB2/HT,
 			// since their downgrade versions will already be on the hotbar.

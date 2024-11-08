@@ -17,14 +17,24 @@ export const enum TickMode {
 	Manual = 2
 }
 
+// Enum representing major updates that affect serialized or in-localStorage representations
+// of timelines.
 export const enum ShellVersion {
 	Initial = 0,
-	FpsTax = 1
+	FpsTax = 1, // extra FPS field added to GameConfig
+	DynamicJob = 2, // job moved from global variable to per-GameState variable
 }
 
 export const enum ShellJob {
 	BLM = "BLM",
 	PCT = "PCT",
+}
+
+export function getLongJobName(job: ShellJob) {
+	switch (job) {
+		case ShellJob.BLM: return "Black Mage";
+		case ShellJob.PCT: return "Pictomancer";
+	}
 }
 
 // can't get this automatically from a const enum
@@ -36,8 +46,7 @@ export const enum Expansion {
 }
 
 export const ShellInfo = {
-	version: ShellVersion.FpsTax,
-	job: ShellJob.BLM,
+	version: ShellVersion.DynamicJob,
 	// thisExpansion is not exported so it stays local outside
 };
 

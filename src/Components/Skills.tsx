@@ -2,7 +2,6 @@ import React, {FormEvent, FormEventHandler} from 'react'
 import {Clickable, ContentNode, Help, parseTime, ValueChangeEvent} from "./Common";
 import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
-import {ShellInfo} from "../Controller/Common";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
 import {localize, localizeSkillName} from "./Localization";
@@ -19,7 +18,7 @@ export const getSkillIconPath = (skillName: SkillName | undefined) => {
 	if (!skillName) {
 		return undefined;
 	}
-	const skill = getSkill(ShellInfo.job, skillName);
+	const skill = getSkill(controller.getActiveJob(), skillName);
 	if (skill) {
 		return require(`./Asset/Skills/${skill.assetPath}`);
 	}
@@ -30,7 +29,7 @@ export const getSkillIconImage = (skillName: SkillName) => {
 	if (skillIconImages.has(skillName)) {
 		return skillIconImages.get(skillName);
 	}
-	const skill = getSkill(ShellInfo.job, skillName);
+	const skill = getSkill(controller.getActiveJob(), skillName);
 	if (skill) {
 		let imgObj = new Image();
 		imgObj.src = require(`./Asset/Skills/${skill.assetPath}`);

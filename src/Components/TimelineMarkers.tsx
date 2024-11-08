@@ -10,7 +10,7 @@ import {
 	SaveToFile
 } from "./Common";
 import {controller} from "../Controller/Controller";
-import {ShellInfo, ShellJob} from "../Controller/Common";
+import {ShellJob} from "../Controller/Common";
 import {ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack} from "../Controller/Timeline";
 import {localize, localizeBuffType} from "./Localization";
 import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
@@ -22,7 +22,7 @@ export let setEditingMarkerValues = (marker: MarkerElem)=>{};
 
 export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
 
-const PRESET_MARKERS_BASE = (ShellInfo.job === ShellJob.BLM) ? "/ffxiv-blm-rotation/presets/markers/" : "/presets/markers/";
+const PRESET_MARKERS_BASE = "/presets/markers/";
 
 type TimelineMarkersProp = {};
 type TimelineMarkersState = {
@@ -238,7 +238,7 @@ export class TimelineMarkers extends React.Component {
 		let buffCollection: JSX.Element[] = [];
 		buffInfos.forEach(info => {
 			// prevent starry from being selectable if we're the pictomancer
-			if (!(ShellInfo.job === ShellJob.PCT && info.name === BuffType.StarryMuse)) {
+			if (!(controller.getActiveJob() === ShellJob.PCT && info.name === BuffType.StarryMuse)) {
 				buffCollection.push(<option key={info.name} value={info.name}>{localizeBuffType(info.name)}</option>)
 			}
 		});

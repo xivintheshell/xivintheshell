@@ -1,7 +1,7 @@
 import React, {MouseEventHandler, useEffect, useReducer} from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input, ValueChangeEvent} from "./Common";
-import {getCachedValue, setCachedValue, ShellInfo, ShellJob, ShellVersion, TickMode} from "../Controller/Common";
+import {getCachedValue, setCachedValue, ShellInfo, ShellJob, ShellVersion, TickMode, ALL_JOBS} from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
 import {getAllResources, getResourceInfo, ResourceOverrideData} from "../Game/Resources";
 import {localize} from "./Localization";
@@ -42,7 +42,7 @@ export function ResourceOverrideDisplay(props: {
 	override: ResourceOverrideData,
 	deleteFn?: (rsc: ResourceType) => void, // when null, this component is for display only
 }) {
-	let rscInfo = getResourceInfo(ShellInfo.job, props.override.type);
+	let rscInfo = getResourceInfo(controller.getActiveJob(), props.override.type);
 	let str: string;
 	if (rscInfo.isCoolDown) {
 		str = props.override.type + " full in " + props.override.timeTillFullOrDrop + "s";
@@ -168,16 +168,17 @@ export function ConfigSummary(props: {}) {
 		</div>
 	});
 	let legacyCasterTaxBlurb = <p className={"paragraph"} style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={blurb}/></p>;
+	const job = controller.getActiveJob();
 	return <div>
 		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
 
 		<div>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</div>
 
-		{ShellInfo.job === ShellJob.BLM &&
+		{job === ShellJob.BLM &&
 			<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
 		}
 
-		{ShellInfo.job === ShellJob.BLM
+		{job === ShellJob.BLM
 			// TODO modify for PCT
 			? <Expandable
 				title={"castTimesTable"}
@@ -351,6 +352,7 @@ export class TimeControl extends React.Component {
 
 // states are mostly strings here because those inputs are controlled by <Input ... />
 type ConfigState = {
+	job: ShellJob,
 	shellVersion: ShellVersion,
 	level: string,
 	spellSpeed: string,
@@ -383,6 +385,7 @@ export class Config extends React.Component {
 	updateTaxPreview: (spsStr: string, fpsStr: string, levelStr: string) => void;
 	handleSubmit: MouseEventHandler;
 
+	setJob: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
 	setSpellSpeed: (val: string) => void;
 	setLevel: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
 	setCriticalHit: (val: string) => void;
@@ -403,6 +406,7 @@ export class Config extends React.Component {
 	constructor(props: {}) {
 		super(props);
 		this.state = { // NOT DEFAULTS
+			job: ShellJob.BLM,
 			shellVersion: ShellInfo.version,
 			level: `${LevelSync.lvl100}`,
 			spellSpeed: "0",
@@ -470,6 +474,11 @@ export class Config extends React.Component {
 			}
 			event.preventDefault();
 		};
+
+		this.setJob = evt => {
+			this.setState({job: evt.target.value, dirty: true});
+			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, this.state.level);
+		}
 
 		this.setSpellSpeed = (val: string) => {
 			this.setState({spellSpeed: val, dirty: true});
@@ -550,7 +559,7 @@ export class Config extends React.Component {
 		overridesList.forEach(ov=>{
 			S.add(ov.type);
 		});
-		for (let k of getAllResources(ShellInfo.job).keys()) {
+		for (let k of getAllResources(controller.getActiveJob()).keys()) {
 			if (!S.has(k)) {
 				firstAddableRsc = k;
 				break;
@@ -649,7 +658,7 @@ export class Config extends React.Component {
 
 	#addResourceOverride() {
 		let rscType = this.state.selectedOverrideResource;
-		let info = getAllResources(ShellInfo.job).get(rscType)!;
+		let info = getAllResources(controller.getActiveJob()).get(rscType)!;
 
 		let inputOverrideTimer = parseFloat(this.state.overrideTimer);
 		let inputOverrideStacks = parseInt(this.state.overrideStacks);
@@ -713,7 +722,7 @@ export class Config extends React.Component {
 	}
 
 	#addResourceOverrideNode() {
-		const resourceInfos = getAllResources(ShellInfo.job);
+		const resourceInfos = getAllResources(controller.getActiveJob());
 		let resourceOptions = [];
 		let S = new Set();
 		this.state.initialResourceOverrides.forEach(override=>{
@@ -879,7 +888,12 @@ export class Config extends React.Component {
 		if (config.initialResourceOverrides === undefined) {
 			config.initialResourceOverrides = [];
 		}
+		if (!ALL_JOBS.includes(config.job)) {
+			window.alert("Invalid job: " + config.job);
+			return;
+		}
 		controller.setConfigAndRestart({
+			job: config.job,
 			level: parseFloat(config.level),
 			spellSpeed: parseFloat(config.spellSpeed),
 			criticalHit: parseFloat(config.criticalHit),
@@ -941,6 +955,14 @@ export class Config extends React.Component {
 			</table>
 		</div>
 		let editSection = <div style={{marginBottom: 16}}>
+			<div>
+				<span>{localize({en: "job: "})}</span>
+				<select style={{outline: "none"}} value={this.state.job} onChange={this.setJob}>
+					{ALL_JOBS.map((job) =>
+						<option key={job} value={job}>{job}</option>
+					)}
+				</select>
+			</div>
 			<div>
 				<span>{localize({en: "level: ", zh: "等级："})}</span>
 				<select style={{outline: "none"}} value={this.state.level} onChange={this.setLevel}>

@@ -1,5 +1,5 @@
 import {Debug, ResourceType} from "./Common"
-import {ShellInfo, ShellJob, ALL_JOBS} from "../Controller/Common";
+import {ShellJob, ALL_JOBS} from "../Controller/Common";
 import {GameState} from "./GameState";
 import {ActionNode} from "../Controller/Record";
 import {BLMState} from "./Jobs/BLM";
@@ -383,7 +383,7 @@ export class ResourceOverride {
 	// other buffs: time till drop
 	// MP, AF, UI, UH, Paradox, Polyglot: amount (stacks)
 	applyTo(game: GameState) {
-		let info = getAllResources(ShellInfo.job).get(this.type);
+		let info = getAllResources(game.job).get(this.type);
 		if (!info) {
 			console.assert(false);
 			return;
