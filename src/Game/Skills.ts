@@ -147,6 +147,8 @@ export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T
 // Unfortunately, I [sz] don't really know of a good way to encode the relationship between
 // the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
 const skillMap: Map<ShellJob, Map<SkillName, Skill<PlayerState>>> = new Map();
+// Track asset paths for all skills so we can load icons for multiple timelines
+const skillAssetPaths: Map<SkillName, string> = new Map();
 
 const normalizedSkillNameMap = new Map<string, SkillName>();
 /**
@@ -165,6 +167,10 @@ export function getSkill<T extends PlayerState>(job: ShellJob, skillName: SkillN
 	return skillMap.get(job)!.get(skillName)!;
 }
 
+export function getSkillAssetPath(skillName: SkillName): string | undefined {
+	return skillAssetPaths.get(skillName);
+}
+
 // Return true if the provided skill is valid for the job.
 export function jobHasSkill(job: ShellJob, skillName: SkillName): boolean {
 	return skillMap.get(job)!.has(skillName);
@@ -178,6 +184,7 @@ export function getAllSkills<T extends PlayerState>(job: ShellJob): Map<SkillNam
 function setSkill<T extends PlayerState>(job: ShellJob, skillName: SkillName, skill: Skill<T>) {
 	skillMap.get(job)!.set(skillName, skill as Skill<PlayerState>);
 	normalizedSkillNameMap.set(skillName.toLowerCase(), skillName);
+	skillAssetPaths.set(skillName, skill.assetPath);
 }
 
 ALL_JOBS.forEach((job) => skillMap.set(job, new Map()));

@@ -39,10 +39,11 @@ function getTaxPreview(level: LevelSync, baseCastTime: number, spsStr: string, f
 
 // key, rscType, rscInfo
 export function ResourceOverrideDisplay(props: {
+	job: ShellJob,
 	override: ResourceOverrideData,
 	deleteFn?: (rsc: ResourceType) => void, // when null, this component is for display only
 }) {
-	let rscInfo = getResourceInfo(controller.getActiveJob(), props.override.type);
+	let rscInfo = getResourceInfo(props.job, props.override.type);
 	let str: string;
 	if (rscInfo.isCoolDown) {
 		str = props.override.type + " full in " + props.override.timeTillFullOrDrop + "s";
@@ -192,7 +193,7 @@ export function ConfigSummary(props: {selectedJob: ShellJob, appliedJob: ShellJo
 
 		<p>{localize({en: "Procs", zh: "随机数模式"})}: {procMode}</p>
 
-		{numOverrides === 0 ? undefined : <p style={{color: "mediumpurple"}}>{localize({
+		{numOverrides > 0 && props.selectedJob === props.appliedJob && <p style={{color: "mediumpurple"}}>{localize({
 			en: `${numOverrides} initial resource override(s)`,
 			zh: `${numOverrides}项初始资源覆盖`
 		})}</p>}
@@ -477,6 +478,10 @@ export class Config extends React.Component {
 		};
 
 		this.setJob = evt => {
+			// Reset all resource overrides
+			if (evt.target.value !== this.state.job) {
+				this.setState({initialResourceOverrides: [], dirty: true});
+			}
 			this.setState({job: evt.target.value, dirty: true});
 			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, this.state.level);
 		}
@@ -560,7 +565,7 @@ export class Config extends React.Component {
 		overridesList.forEach(ov=>{
 			S.add(ov.type);
 		});
-		for (let k of getAllResources(controller.getActiveJob()).keys()) {
+		for (let k of getAllResources(this.state.job).keys()) {
 			if (!S.has(k)) {
 				firstAddableRsc = k;
 				break;
@@ -659,7 +664,7 @@ export class Config extends React.Component {
 
 	#addResourceOverride() {
 		let rscType = this.state.selectedOverrideResource;
-		let info = getAllResources(controller.getActiveJob()).get(rscType)!;
+		let info = getAllResources(this.state.job).get(rscType)!;
 
 		let inputOverrideTimer = parseFloat(this.state.overrideTimer);
 		let inputOverrideStacks = parseInt(this.state.overrideStacks);
@@ -723,7 +728,7 @@ export class Config extends React.Component {
 	}
 
 	#addResourceOverrideNode() {
-		const resourceInfos = getAllResources(controller.getActiveJob());
+		const resourceInfos = getAllResources(this.state.job);
 		let resourceOptions = [];
 		let S = new Set();
 		this.state.initialResourceOverrides.forEach(override=>{
@@ -849,6 +854,7 @@ export class Config extends React.Component {
 		for (let i = 0; i < this.state.initialResourceOverrides.length; i++) {
 			let override = this.state.initialResourceOverrides[i];
 			resourceOverridesDisplayNodes.push(<ResourceOverrideDisplay
+				job={this.state.job}
 				key={i}
 				override={override}
 				deleteFn={this.deleteResourceOverride}
