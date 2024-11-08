@@ -74,12 +74,14 @@ export function ResourceOverrideDisplay(props: {
 }
 
 let refreshConfigSummary = () => {};
-export function ConfigSummary(props: {}) {
+export function ConfigSummary(props: {selectedJob: ShellJob, appliedJob: ShellJob}) {
 
 	const [, forceUpdate] = useReducer(x => x + 1, 0);
 	useEffect(() => {
 		refreshConfigSummary = forceUpdate;
 	}, []);
+
+	const outdated = props.selectedJob !== props.appliedJob;
 
 	let castTimesTableDesc = localize({
 		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
@@ -168,25 +170,24 @@ export function ConfigSummary(props: {}) {
 		</div>
 	});
 	let legacyCasterTaxBlurb = <p className={"paragraph"} style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={blurb}/></p>;
-	const job = controller.getActiveJob();
-	return <div>
+	return <div style={{textDecoration: outdated ? "line-through" : "none"}}>
 		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
 
 		<div>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</div>
 
-		{job === ShellJob.BLM &&
+		{props.appliedJob === ShellJob.BLM &&
 			<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
 		}
 
-		{job === ShellJob.BLM
+		{props.appliedJob === ShellJob.BLM
 			// TODO modify for PCT
 			? <Expandable
 				title={"castTimesTable"}
-				titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help
+				titleNode={<span style={{textDecoration: outdated ? "line-through" : "none"}}>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help
 					topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
 				defaultShow={false}
 				content={castTimesChart}/>
-			: <br/>
+			: undefined
 		}
 
 		<p>{localize({en: "Procs", zh: "随机数模式"})}: {procMode}</p>
@@ -954,15 +955,15 @@ export class Config extends React.Component {
 				</tbody>
 			</table>
 		</div>
-		let editSection = <div style={{marginBottom: 16}}>
-			<div>
-				<span>{localize({en: "job: "})}</span>
-				<select style={{outline: "none"}} value={this.state.job} onChange={this.setJob}>
-					{ALL_JOBS.map((job) =>
-						<option key={job} value={job}>{job}</option>
-					)}
-				</select>
-			</div>
+		let editJobSection = <div style={{marginBottom: 10}}>
+			<span>{localize({en: "job: ", zh: "职业："})}</span>
+			<select style={{outline: "none"}} value={this.state.job} onChange={this.setJob}>
+				{ALL_JOBS.map((job) =>
+					<option key={job} value={job}>{job}</option>
+				)}
+			</select>
+		</div>;
+		let editStatsSection = <div style={{marginBottom: 16}}>
 			<div>
 				<span>{localize({en: "level: ", zh: "等级："})}</span>
 				<select style={{outline: "none"}} value={this.state.level} onChange={this.setLevel}>
@@ -1038,9 +1039,10 @@ export class Config extends React.Component {
 		</div>;
 		return (
 			<div style={{marginBottom: 20}}>
-				<ConfigSummary/>
+				{editJobSection}
+				<ConfigSummary selectedJob={this.state.job} appliedJob={controller.getActiveJob()}/>
 				<hr style={{ border: "none", borderTop: `1px solid ${colors.bgHighContrast}`, margin: "16px 0"}}/>
-				{editSection}
+				{editStatsSection}
 				<p>{localize({
 					en: "You can also import/export fights from/to local files at the bottom of the page.",
 					zh: "页面底部有导入和导出战斗文件相关选项。"
