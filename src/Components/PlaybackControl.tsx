@@ -354,6 +354,9 @@ export class TimeControl extends React.Component {
 type ConfigState = {
 	job: ShellJob,
 	shellVersion: ShellVersion,
+
+	gearImportLink: string,
+
 	level: string,
 	spellSpeed: string,
 	criticalHit: string,
@@ -386,6 +389,8 @@ export class Config extends React.Component {
 	handleSubmit: MouseEventHandler;
 
 	setJob: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
+	importGear: (evt: React.SyntheticEvent) => void;
+	setGearImportLink: (evt: React.ChangeEvent<HTMLInputElement>) => void;
 	setSpellSpeed: (val: string) => void;
 	setLevel: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
 	setCriticalHit: (val: string) => void;
@@ -408,6 +413,7 @@ export class Config extends React.Component {
 		this.state = { // NOT DEFAULTS
 			job: ShellJob.BLM,
 			shellVersion: ShellInfo.version,
+			gearImportLink: "",
 			level: `${LevelSync.lvl100}`,
 			spellSpeed: "0",
 			criticalHit: "0",
@@ -483,6 +489,79 @@ export class Config extends React.Component {
 			this.setState({job: evt.target.value, dirty: true});
 			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, this.state.level);
 		}
+
+		this.setGearImportLink = (evt: React.ChangeEvent<HTMLInputElement>) => {
+			this.setState({ gearImportLink: evt.target.value });
+		};
+
+		this.importGear = async (event: React.SyntheticEvent) => {
+			event.preventDefault();
+			// @ts-ignore seems to be a bug where it can't recognize URL.parse
+			// https://developer.mozilla.org/en-US/docs/Web/API/URL/parse_static
+			const url = URL.parse(this.state.gearImportLink);
+			let error = undefined;
+			const headers = new Headers();
+			if (url && url.hostname === "etro.gg") {
+				const tokens = url.pathname.split("/");
+				if (tokens[1] !== "gearset" && tokens.length !== 3) {
+					error = "invalid etro gearset link (hover ? in URL input box for details)";
+				} else {
+					headers.append("Content-Type", "application/json");
+					const response = await fetch(
+						"https://etro.gg/api/gearsets/" + tokens[2],
+						{ method: "GET", headers: headers },
+					);
+					if (response.ok) {
+						const body: any = await response.json();
+						// TODO check body["jobAbbrev"]
+						const stats = new Map<string, string>(body["totalParams"].map((obj: any) => [obj["name"], obj["value"]]));
+						this.setState({
+							level: body["level"],
+							spellSpeed: stats.get("SPS"),
+							criticalHit: stats.get("CRT"),
+							directHit: stats.get("DH"),
+							determination: stats.get("DET"),
+						});
+						this.updateTaxPreview(stats.get("SPS")!.toString(), this.state.fps, body["level"]);
+					}
+				}
+			} else if (url && url.hostname === "xivgear.app") {
+				const pageParam = url.searchParams.get("page");
+				if (!pageParam) {
+					error = "xivgear link must be to a specific set (hover ? in URL input box for details)"
+				} else {
+					// strip the "sl|" url-encoded characters
+					const setId = pageParam.replace("sl|", "");
+					headers.append("Content-Type", "application/json");
+					const response = await fetch(
+						"https://api.xivgear.app/fulldata/" + setId,
+						{ method: "GET", headers: headers },
+					);
+					if (response.ok) {
+						const body: any = response.json;
+						// TODO check body["job"]
+						const stats = body["sets"][0];
+						this.setState({
+							level: body["level"],
+							spellSpeed: stats["spellspeed"],
+							criticalHit: stats["crit"],
+							directHit: stats["dhit"],
+							determination: stats["det"],
+						});
+						this.updateTaxPreview(stats["spellspeed"]!.toString(), this.state.fps, body["level"]);
+					} else {
+						console.error("xivgear load failed: " + response);
+						window.alert("xivgear load failed (please check your link)");
+					}
+				}
+			} else {
+				error = "Invalid gearset link (must be from etro.gg or xivgear.app)";
+			}
+			if (error !== undefined) {
+				console.error(error);
+				window.alert(error);
+			}
+		};
 
 		this.setSpellSpeed = (val: string) => {
 			this.setState({spellSpeed: val, dirty: true});
@@ -959,15 +1038,30 @@ export class Config extends React.Component {
 				</tbody>
 			</table>
 		</div>
-		let editJobSection = <div style={{marginBottom: 10}}>
-			<span>{localize({en: "job: ", zh: "职业："})}</span>
-			<select style={{outline: "none"}} value={this.state.job} onChange={this.setJob}>
-				{ALL_JOBS.map((job) =>
-					<option key={job} value={job}>{job}</option>
-				)}
-			</select>
+		const gearImportSection = <div>
+			<form onSubmit={this.importGear}>
+				<label>
+					{localize({en: "Load stats from etro/xivgear: "})}
+					<Help topic={"gearImport"} content={
+						<>
+						<p>{localize({
+							en: "Enter a link to a gearset from xivgear.app or etro.gg."
+						})}</p>
+						<p>{localize({
+							en: "etro: Copy/paste the link to the set (example: https://etro.gg/gearset/e13d5960-4794-4dc4-b273-24ecfed6745e)"
+						})}</p>
+						<p>{localize({
+							en: ('xivgear: At the top of the page, click "Export" -> "Selected Set" -> "Link to This Set" -> "Generate"' +
+								' (example: https://xivgear.app/?page=sl%7C143f3245-c35b-4391-8b2b-db5cc1a8de9a)')
+						})}</p>
+						</>
+					}/>
+					<input type="text" value={this.state.gearImportLink} onChange={this.setGearImportLink} />
+				</label>
+				<input type="submit" value="Load"/>
+			</form>
 		</div>;
-		let editStatsSection = <div style={{marginBottom: 16}}>
+		let editSection = <div style={{marginBottom: 16}}>
 			<div>
 				<span>{localize({en: "level: ", zh: "等级："})}</span>
 				<select style={{outline: "none"}} value={this.state.level} onChange={this.setLevel}>
@@ -1044,6 +1138,8 @@ export class Config extends React.Component {
 		return <div style={{marginBottom: 20}}>
 			{editJobSection}
 			<ConfigSummary job={controller.getActiveJob()} dirty={this.state.dirty}/>
+			{gearImportSection}
+			<hr style={{ border: "none", borderTop: `1px solid ${colors.bgHighContrast}`, margin: "16px 0"}}/>
 			{editStatsSection}
 			<p>{localize({
 				en: "You can also import/export fights from/to local files at the bottom of the page.",
