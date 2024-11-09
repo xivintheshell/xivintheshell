@@ -17,12 +17,9 @@ export const enum TickMode {
 	Manual = 2
 }
 
-// Enum representing major updates that affect serialized or in-localStorage representations
-// of timelines.
 export const enum ShellVersion {
 	Initial = 0,
 	FpsTax = 1, // extra FPS field added to GameConfig
-	DynamicJob = 2, // job moved from global variable to per-GameState variable
 }
 
 export const enum ShellJob {
@@ -46,7 +43,7 @@ export const enum Expansion {
 }
 
 export const ShellInfo = {
-	version: ShellVersion.DynamicJob,
+	version: ShellVersion.FpsTax,
 	// thisExpansion is not exported so it stays local outside
 };
 

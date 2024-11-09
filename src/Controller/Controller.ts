@@ -376,7 +376,6 @@ class Controller {
 		if (content.config.job === undefined) {
 			// infer the job based on actions present
 			content.config.job = inferJobFromActions(content.actions);
-			content.config.shellVersion = ShellVersion.DynamicJob;
 		}
 
 		let gameConfig = new GameConfig(content.config);
