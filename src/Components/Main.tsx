@@ -309,6 +309,16 @@ export default class Main extends React.Component {
 							})}
 
 							{/* PSA */}
+							<div style={{
+								border: `1px solid ${getCurrentThemeColors().warning}`,
+								padding: 10,
+								fontWeight: "bold",
+								color: getCurrentThemeColors().warning,
+								borderRadius: 4
+							}}>{localize({
+								en: "WARNING: This domain (xivintheshell.com) is in testing. Don't use yet, you might lose all your data!",
+								zh: "警告：此地址（xivintheshell.com）还在测试中，目前别用，这里的数据随时可能被删除。"
+							})}</div>
 
 							{/*
 							EW cached content warning
