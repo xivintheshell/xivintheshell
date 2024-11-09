@@ -1,7 +1,7 @@
 import React, {MouseEventHandler, useEffect, useReducer} from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input, ValueChangeEvent} from "./Common";
-import {getCachedValue, setCachedValue, ShellInfo, ShellJob, ShellVersion, TickMode} from "../Controller/Common";
+import {getCachedValue, setCachedValue, ShellInfo, ShellJob, ShellVersion, TickMode, ALL_JOBS} from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
 import {getAllResources, getResourceInfo, ResourceOverrideData} from "../Game/Resources";
 import {localize} from "./Localization";
@@ -39,10 +39,11 @@ function getTaxPreview(level: LevelSync, baseCastTime: number, spsStr: string, f
 
 // key, rscType, rscInfo
 export function ResourceOverrideDisplay(props: {
+	job: ShellJob,
 	override: ResourceOverrideData,
 	deleteFn?: (rsc: ResourceType) => void, // when null, this component is for display only
 }) {
-	let rscInfo = getResourceInfo(ShellInfo.job, props.override.type);
+	let rscInfo = getResourceInfo(props.job, props.override.type);
 	let str: string;
 	if (rscInfo.isCoolDown) {
 		str = props.override.type + " full in " + props.override.timeTillFullOrDrop + "s";
@@ -74,7 +75,7 @@ export function ResourceOverrideDisplay(props: {
 }
 
 let refreshConfigSummary = () => {};
-export function ConfigSummary(props: {}) {
+export function ConfigSummary(props: { job: ShellJob, dirty: boolean }) {
 
 	const [, forceUpdate] = useReducer(x => x + 1, 0);
 	useEffect(() => {
@@ -168,29 +169,29 @@ export function ConfigSummary(props: {}) {
 		</div>
 	});
 	let legacyCasterTaxBlurb = <p className={"paragraph"} style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={blurb}/></p>;
-	return <div>
+	return <div style={{textDecoration: props.dirty ? "line-through" : "none", marginLeft: 5, paddingLeft: 10, borderLeft: "1px solid " + getCurrentThemeColors().bgHighContrast}}>
 		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
 
 		<div>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</div>
 
-		{ShellInfo.job === ShellJob.BLM &&
+		{props.job === ShellJob.BLM &&
 			<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
 		}
 
-		{ShellInfo.job === ShellJob.BLM
+		{props.job === ShellJob.BLM
 			// TODO modify for PCT
 			? <Expandable
 				title={"castTimesTable"}
-				titleNode={<span>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help
+				titleNode={<span style={{textDecoration: props.dirty ? "line-through" : "none"}}>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help
 					topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
 				defaultShow={false}
 				content={castTimesChart}/>
-			: <br/>
+			: undefined
 		}
 
 		<p>{localize({en: "Procs", zh: "随机数模式"})}: {procMode}</p>
 
-		{numOverrides === 0 ? undefined : <p style={{color: "mediumpurple"}}>{localize({
+		{numOverrides > 0 && <p>{localize({
 			en: `${numOverrides} initial resource override(s)`,
 			zh: `${numOverrides}项初始资源覆盖`
 		})}</p>}
@@ -351,6 +352,7 @@ export class TimeControl extends React.Component {
 
 // states are mostly strings here because those inputs are controlled by <Input ... />
 type ConfigState = {
+	job: ShellJob,
 	shellVersion: ShellVersion,
 	level: string,
 	spellSpeed: string,
@@ -383,6 +385,7 @@ export class Config extends React.Component {
 	updateTaxPreview: (spsStr: string, fpsStr: string, levelStr: string) => void;
 	handleSubmit: MouseEventHandler;
 
+	setJob: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
 	setSpellSpeed: (val: string) => void;
 	setLevel: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
 	setCriticalHit: (val: string) => void;
@@ -403,6 +406,7 @@ export class Config extends React.Component {
 	constructor(props: {}) {
 		super(props);
 		this.state = { // NOT DEFAULTS
+			job: ShellJob.BLM,
 			shellVersion: ShellInfo.version,
 			level: `${LevelSync.lvl100}`,
 			spellSpeed: "0",
@@ -470,6 +474,15 @@ export class Config extends React.Component {
 			}
 			event.preventDefault();
 		};
+
+		this.setJob = evt => {
+			// Reset all resource overrides
+			if (evt.target.value !== this.state.job) {
+				this.setState({initialResourceOverrides: [], dirty: true});
+			}
+			this.setState({job: evt.target.value, dirty: true});
+			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, this.state.level);
+		}
 
 		this.setSpellSpeed = (val: string) => {
 			this.setState({spellSpeed: val, dirty: true});
@@ -550,7 +563,7 @@ export class Config extends React.Component {
 		overridesList.forEach(ov=>{
 			S.add(ov.type);
 		});
-		for (let k of getAllResources(ShellInfo.job).keys()) {
+		for (let k of getAllResources(this.state.job).keys()) {
 			if (!S.has(k)) {
 				firstAddableRsc = k;
 				break;
@@ -649,7 +662,7 @@ export class Config extends React.Component {
 
 	#addResourceOverride() {
 		let rscType = this.state.selectedOverrideResource;
-		let info = getAllResources(ShellInfo.job).get(rscType)!;
+		let info = getAllResources(this.state.job).get(rscType)!;
 
 		let inputOverrideTimer = parseFloat(this.state.overrideTimer);
 		let inputOverrideStacks = parseInt(this.state.overrideStacks);
@@ -713,7 +726,7 @@ export class Config extends React.Component {
 	}
 
 	#addResourceOverrideNode() {
-		const resourceInfos = getAllResources(ShellInfo.job);
+		const resourceInfos = getAllResources(this.state.job);
 		let resourceOptions = [];
 		let S = new Set();
 		this.state.initialResourceOverrides.forEach(override=>{
@@ -839,6 +852,7 @@ export class Config extends React.Component {
 		for (let i = 0; i < this.state.initialResourceOverrides.length; i++) {
 			let override = this.state.initialResourceOverrides[i];
 			resourceOverridesDisplayNodes.push(<ResourceOverrideDisplay
+				job={this.state.job}
 				key={i}
 				override={override}
 				deleteFn={this.deleteResourceOverride}
@@ -879,7 +893,12 @@ export class Config extends React.Component {
 		if (config.initialResourceOverrides === undefined) {
 			config.initialResourceOverrides = [];
 		}
+		if (!ALL_JOBS.includes(config.job)) {
+			window.alert("Invalid job: " + config.job);
+			return;
+		}
 		controller.setConfigAndRestart({
+			job: config.job,
 			level: parseFloat(config.level),
 			spellSpeed: parseFloat(config.spellSpeed),
 			criticalHit: parseFloat(config.criticalHit),
@@ -940,7 +959,15 @@ export class Config extends React.Component {
 				</tbody>
 			</table>
 		</div>
-		let editSection = <div style={{marginBottom: 16}}>
+		let editJobSection = <div style={{marginBottom: 10}}>
+			<span>{localize({en: "job: ", zh: "职业："})}</span>
+			<select style={{outline: "none"}} value={this.state.job} onChange={this.setJob}>
+				{ALL_JOBS.map((job) =>
+					<option key={job} value={job}>{job}</option>
+				)}
+			</select>
+		</div>;
+		let editStatsSection = <div style={{marginBottom: 16}}>
 			<div>
 				<span>{localize({en: "level: ", zh: "等级："})}</span>
 				<select style={{outline: "none"}} value={this.state.level} onChange={this.setLevel}>
@@ -973,7 +1000,7 @@ export class Config extends React.Component {
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<div>
 				<Input style={{display: "inline-block", color: fpsAndCorrectionColor}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>
-				<span> ({localize({en: "B1 tax", zh: "冰1税"})}: {this.state.b1TaxPreview} <Help topic={"b1TaxPreview"} content={b1TaxDesc}/>)</span>
+				<span> ({localize({en: "2.5s total tax", zh: "2.5s读条+帧率税"})}: {this.state.b1TaxPreview} <Help topic={"b1TaxPreview"} content={b1TaxDesc}/>)</span>
 			</div>
 			<Input
 				style={{color: fpsAndCorrectionColor}}
@@ -1010,19 +1037,18 @@ export class Config extends React.Component {
 				</select>
 			</div>
 			{this.#resourceOverridesSection()}
-			<button onClick={this.handleSubmit} style={{width: "100%"}}>
+			<button onClick={this.handleSubmit} style={{width: "100%", fontWeight: this.state.dirty ? "bold" : "normal"}}>
 				{localize({en: "apply and reset", zh: "应用并重置时间轴"})}{this.state.dirty ? "*" : ""}
 			</button>
 		</div>;
-		return (
-			<div style={{marginBottom: 20}}>
-				<ConfigSummary/>
-				<hr style={{ border: "none", borderTop: `1px solid ${colors.bgHighContrast}`, margin: "16px 0"}}/>
-				{editSection}
-				<p>{localize({
-					en: "You can also import/export fights from/to local files at the bottom of the page.",
-					zh: "页面底部有导入和导出战斗文件相关选项。"
-				})}</p>
-			</div>
-		)}
+		return <div style={{marginBottom: 20}}>
+			{editJobSection}
+			<ConfigSummary job={controller.getActiveJob()} dirty={this.state.dirty}/>
+			{editStatsSection}
+			<p>{localize({
+				en: "You can also import/export fights from/to local files at the bottom of the page.",
+				zh: "页面底部有导入和导出战斗文件相关选项。"
+			})}</p>
+		</div>
+	}
 }

@@ -19,12 +19,19 @@ export const enum TickMode {
 
 export const enum ShellVersion {
 	Initial = 0,
-	FpsTax = 1
+	FpsTax = 1, // extra FPS field added to GameConfig
 }
 
 export const enum ShellJob {
 	BLM = "BLM",
 	PCT = "PCT",
+}
+
+export function getLongJobName(job: ShellJob) {
+	switch (job) {
+		case ShellJob.BLM: return "Black Mage";
+		case ShellJob.PCT: return "Pictomancer";
+	}
 }
 
 // can't get this automatically from a const enum
@@ -37,7 +44,6 @@ export const enum Expansion {
 
 export const ShellInfo = {
 	version: ShellVersion.FpsTax,
-	job: ShellJob.BLM,
 	// thisExpansion is not exported so it stays local outside
 };
 

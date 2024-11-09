@@ -21,7 +21,7 @@ import {
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
-import {ShellInfo, ShellJob} from "../Controller/Common";
+import {ShellJob} from "../Controller/Common";
 import {Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
 
@@ -36,7 +36,6 @@ type RNG = any;
 // GameState := resources + events queue
 export abstract class GameState {
 	config: GameConfig;
-	job: ShellJob;
 	rng: RNG;
 	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
 	lucidTickOffset: number;
@@ -49,7 +48,6 @@ export abstract class GameState {
 
 	constructor(config: GameConfig) {
 		this.config = config;
-		this.job = ShellInfo.job; // TODO make this configurable
 		this.rng = new SeedRandom(config.randomSeed);
 		this.nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
 		this.lucidTickOffset = this.nonProcRng() * 3.0;
@@ -94,6 +92,10 @@ export abstract class GameState {
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = new SkillsList(this);
 		this.displayedSkills = new DisplayedSkills(this.job, config.level);
+	}
+
+	get job(): ShellJob {
+		return this.config.job;
 	}
 
 	/**

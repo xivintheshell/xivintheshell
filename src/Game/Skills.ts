@@ -1,5 +1,5 @@
 import {Aspect, LevelSync, ResourceType, SkillName} from './Common'
-import {ShellJob, ShellInfo, ALL_JOBS} from "../Controller/Common";
+import {ShellJob, ALL_JOBS} from "../Controller/Common";
 import {ActionNode} from "../Controller/Record";
 import {PlayerState, GameState} from "./GameState";
 import {TraitName, Traits} from './Traits';
@@ -147,6 +147,8 @@ export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T
 // Unfortunately, I [sz] don't really know of a good way to encode the relationship between
 // the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
 const skillMap: Map<ShellJob, Map<SkillName, Skill<PlayerState>>> = new Map();
+// Track asset paths for all skills so we can load icons for multiple timelines
+const skillAssetPaths: Map<SkillName, string> = new Map();
 
 const normalizedSkillNameMap = new Map<string, SkillName>();
 /**
@@ -165,6 +167,15 @@ export function getSkill<T extends PlayerState>(job: ShellJob, skillName: SkillN
 	return skillMap.get(job)!.get(skillName)!;
 }
 
+export function getSkillAssetPath(skillName: SkillName): string | undefined {
+	return skillAssetPaths.get(skillName);
+}
+
+// Return true if the provided skill is valid for the job.
+export function jobHasSkill(job: ShellJob, skillName: SkillName): boolean {
+	return skillMap.get(job)!.has(skillName);
+}
+
 // Return the map of all skills for a job.
 export function getAllSkills<T extends PlayerState>(job: ShellJob): Map<SkillName, Skill<T>> {
 	return skillMap.get(job)!;
@@ -173,6 +184,7 @@ export function getAllSkills<T extends PlayerState>(job: ShellJob): Map<SkillNam
 function setSkill<T extends PlayerState>(job: ShellJob, skillName: SkillName, skill: Skill<T>) {
 	skillMap.get(job)!.set(skillName, skill as Skill<PlayerState>);
 	normalizedSkillNameMap.set(skillName.toLowerCase(), skillName);
+	skillAssetPaths.set(skillName, skill.assetPath);
 }
 
 ALL_JOBS.forEach((job) => skillMap.set(job, new Map()));
@@ -378,7 +390,7 @@ export function makeResourceAbility<T extends PlayerState>(
 	const onApplication = combineEffects(
 		(state: T, node: ActionNode) => {
 			const resource = state.resources.get(params.rscType);
-			const duration = params.duration ?? (getResourceInfo(ShellInfo.job, params.rscType) as ResourceInfo).maxTimeout;
+			const duration = params.duration ?? (getResourceInfo(state.job, params.rscType) as ResourceInfo).maxTimeout;
 			const durationFn: ResourceCalculationFn<T> = (typeof duration === "number") ? ((state: T) => duration) : duration;
 			// TODO automatically tell scheduler to override existing drop event if necessary
 			if (resource.available(1)) {
@@ -464,8 +476,8 @@ export class DisplayedSkills  {
 
 	constructor(job: ShellJob, level: LevelSync) {
 		this.#skills = [];
-		console.assert(skillMap.has(ShellInfo.job), `No skill map found for job: ${ShellInfo.job}`)
-		for (const skillInfo of skillMap.get(ShellInfo.job)!.values()) {
+		console.assert(skillMap.has(job), `No skill map found for job: ${job}`)
+		for (const skillInfo of skillMap.get(job)!.values()) {
 			// Leave off abilities that are above the current level sync.
 			// Also leave off any abilities that auto-downgrade, like HF2/HB2/HT,
 			// since their downgrade versions will already be on the hotbar.

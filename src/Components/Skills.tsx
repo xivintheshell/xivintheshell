@@ -2,14 +2,13 @@ import React, {FormEvent, FormEventHandler} from 'react'
 import {Clickable, ContentNode, Help, parseTime, ValueChangeEvent} from "./Common";
 import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
 import {controller} from "../Controller/Controller";
-import {ShellInfo} from "../Controller/Common";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
 import {localize, localizeSkillName} from "./Localization";
 import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
 import {getCurrentThemeColors} from "./ColorTheme";
-import {getSkill} from "../Game/Skills";
+import {getSkillAssetPath} from "../Game/Skills";
 
 // Game/Jobs/* must be run first to ensure all skills have been registered, so we need to
 // load images lazily to ensure we're not dependent on webpack's module resolution order.
@@ -19,9 +18,9 @@ export const getSkillIconPath = (skillName: SkillName | undefined) => {
 	if (!skillName) {
 		return undefined;
 	}
-	const skill = getSkill(ShellInfo.job, skillName);
-	if (skill) {
-		return require(`./Asset/Skills/${skill.assetPath}`);
+	const assetPath = getSkillAssetPath(skillName);
+	if (assetPath) {
+		return require(`./Asset/Skills/${assetPath}`);
 	}
 	return undefined;
 };
@@ -30,10 +29,10 @@ export const getSkillIconImage = (skillName: SkillName) => {
 	if (skillIconImages.has(skillName)) {
 		return skillIconImages.get(skillName);
 	}
-	const skill = getSkill(ShellInfo.job, skillName);
-	if (skill) {
+	const assetPath = getSkillAssetPath(skillName);
+	if (assetPath) {
 		let imgObj = new Image();
-		imgObj.src = require(`./Asset/Skills/${skill.assetPath}`);
+		imgObj.src = require(`./Asset/Skills/${assetPath}`);
 		imgObj.onload = () => updateTimelineView();
 		skillIconImages.set(skillName, imgObj);
 		return imgObj;

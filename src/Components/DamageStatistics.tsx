@@ -5,7 +5,7 @@ import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {localize, localizeSkillName} from "./Localization";
 import {controller} from "../Controller/Controller";
-import {ShellJob, ShellInfo} from "../Controller/Common";
+import {ShellJob} from "../Controller/Common";
 import {
 	allSkillsAreIncluded,
 	getSkillOrDotInclude,
@@ -393,7 +393,7 @@ export class DamageStatistics extends React.Component {
 						</div>
 					}/>{colon}{ppsAvailable ? (this.data.totalPotency.applied / targetableDurationTilLastDisplay).toFixed(2) : "N/A"}</div>
 					<div>{gcdStr}</div>
-					{ShellInfo.job === ShellJob.BLM && <div>{dotStr}</div>}
+					{controller.getActiveJob() === ShellJob.BLM && <div>{dotStr}</div>}
 				</div>
 				<div style={{marginTop: 10}}>
 					<DamageStatsSettings/>
@@ -733,7 +733,7 @@ export class DamageStatistics extends React.Component {
 			{summary}
 			<div>
 				{mainTable}
-				{ShellInfo.job === ShellJob.BLM && thunderTable}
+				{controller.getActiveJob() === ShellJob.BLM && thunderTable}
 			</div>
 		</div>
 	}

@@ -6,10 +6,11 @@ import {
 	ShellInfo,
 	ShellJob,
 	ShellVersion,
-	TickMode
+	TickMode,
+	ALL_JOBS,
 } from "./Common";
 import {GameState} from "../Game/GameState";
-import {getAutoReplacedSkillName, getConditionalReplacement, getNormalizedSkillName} from "../Game/Skills";
+import {getAutoReplacedSkillName, getConditionalReplacement, getNormalizedSkillName, jobHasSkill} from "../Game/Skills";
 import {BLMState} from "../Game/Jobs/BLM";
 import {PCTState} from "../Game/Jobs/PCT";
 import {Buff} from "../Game/Buffs";
@@ -20,7 +21,7 @@ import {PCTStatusPropsGenerator} from "../Components/Jobs/PCT";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
-import {setHistorical, setRealTime} from "../Components/Main";
+import {setJob, setHistorical, setRealTime} from "../Components/Main";
 import {ElemType, MAX_TIMELINE_SLOTS, Timeline} from "./Timeline"
 import {scrollTimelineTo, updateTimelineView} from "../Components/Timeline";
 import {ActionNode, ActionType, Line, Record} from "./Record";
@@ -45,10 +46,29 @@ require("../Game/Jobs/RoleActions");
 type Fixme = any;
 
 const newGameState = (config: GameConfig) => {
-	if (ShellInfo.job === ShellJob.PCT) {
+	if (config.job === ShellJob.PCT) {
 		return new PCTState(config);
 	}
 	return new BLMState(config);
+};
+
+const inferJobFromActions = (actions: object[]) => {
+	// Iterate over the whole record and return the number of actions that occur in each job.
+	// If two jobs are tied (like if there's only a Swiftcast/Sprint in the timeline), just
+	// take the first that appears since it doesn't really matter.
+	let maxJob = ALL_JOBS[0];
+	let maxCount = 0;
+	ALL_JOBS.forEach((job) => {
+		const count = actions.reduce(
+			(acc, skill) => (skill as any).skillName && jobHasSkill(job, getNormalizedSkillName((skill as any).skillName)!) ? acc + 1 : acc,
+			0,
+		);
+		if (count > maxCount) {
+			maxJob = job;
+			maxCount = count;
+		}
+	});
+	return maxJob;
 };
 
 class Controller {
@@ -353,6 +373,10 @@ class Controller {
 		if (content.config.shellVersion === undefined) {
 			content.config.shellVersion = ShellVersion.Initial;
 		}
+		if (content.config.job === undefined) {
+			// infer the job based on actions present
+			content.config.job = inferJobFromActions(content.actions);
+		}
 
 		let gameConfig = new GameConfig(content.config);
 
@@ -643,7 +667,7 @@ class Controller {
 			canMove: game.resources.get(ResourceType.Movement).available(1),
 		};
 		if (typeof updateStatusDisplay !== "undefined") {
-			const propsGenerator = ShellInfo.job === ShellJob.PCT
+			const propsGenerator = game.job === ShellJob.PCT
 				? new PCTStatusPropsGenerator(game as PCTState)
 				: new BLMStatusPropsGenerator(game as BLMState);
 			updateStatusDisplay({
@@ -710,6 +734,7 @@ class Controller {
 	}
 
 	setConfigAndRestart(props: {
+		job: ShellJob,
 		level: LevelSync,
 		spellSpeed: number,
 		criticalHit: number,
@@ -724,6 +749,7 @@ class Controller {
 		procMode: ProcMode,
 		initialResourceOverrides: any[],
 	}) {
+		const oldJob = this.gameConfig.job;
 		this.gameConfig = new GameConfig({
 			...props,
 			shellVersion: ShellInfo.version,
@@ -734,12 +760,21 @@ class Controller {
 
 		this.#requestRestart();
 		this.#applyResourceOverrides(this.gameConfig);
+		// Propagate changes to the intro section (definitely not idiomatic react... maybe we
+		// should just make the text static for all jobs)
+		if (oldJob !== props.job) {
+			setJob(props.job);
+		}
 
 		this.autoSave();
 	}
 
 	getDisplayedGame() : GameState {
 		return this.displayingUpToDateGameState ? this.game : this.savedHistoricalGame;
+	}
+
+	getActiveJob(): ShellJob {
+		return this.getDisplayedGame().job;
 	}
 
 	getSkillInfo(props: {game: GameState, skillName: SkillName}) {

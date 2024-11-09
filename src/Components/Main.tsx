@@ -4,6 +4,7 @@ import { SkillsWindow } from "./Skills";
 import {Config, TimeControl} from "./PlaybackControl";
 import { StatusDisplay } from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
+import {ShellJob, getLongJobName} from "../Controller/Common";
 import 'react-tabs/style/react-tabs.css';
 import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
@@ -15,13 +16,13 @@ import {DamageStatistics} from "./DamageStatistics";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
 import {clearCachedValues, getCachedValue, setCachedValue, containsEwCacheContent} from "../Controller/Common";
 
+export let setJob = (job: ShellJob) => {};
 export let setRealTime = (inRealTime: boolean) => {};
 export let setHistorical = (inHistorical: boolean) => {};
 
 function handleUrlCommands(command?: string) {
 	if (command === "resetAll") {
 		clearCachedValues();
-		window.location.href = "/ffxiv-blm-rotation";
 	}
 	else if (command === "resetResourceOverrides") {
 		let strOld = getCachedValue("gameRecord");
@@ -38,7 +39,6 @@ function handleUrlCommands(command?: string) {
 				setCachedValue("gameRecord" + i.toString(), JSON.stringify(content));
 			}
 		}
-		window.location.href = "/ffxiv-blm-rotation";
 	}
 	else if (command !== undefined) {
 		console.log("unrecognized command '" + command + "'");
@@ -77,6 +77,7 @@ export default class Main extends React.Component {
 	gameplayMouseCapture: React.MouseEventHandler<HTMLDivElement>;
 
 	state: {
+		job: ShellJob,
 		realTime: boolean,
 		historical: boolean,
 		hasFocus: boolean,
@@ -89,6 +90,7 @@ export default class Main extends React.Component {
 		handleUrlCommands(props.command);
 
 		this.state = {
+			job: controller.getActiveJob(),
 			hasFocus: false,
 			historical: false,
 			realTime: false,
@@ -107,6 +109,10 @@ export default class Main extends React.Component {
 			controller.displayCurrentState();
 		});
 
+		setJob = (job: ShellJob) => {
+			this.setState({job: job});
+		};
+
 		setRealTime = ((rt: boolean)=>{
 			this.setState({realTime: rt});
 		});
@@ -124,6 +130,7 @@ export default class Main extends React.Component {
 	componentDidMount() {
 		controller.tryAutoLoad();
 		controller.updateAllDisplay();
+		setJob(controller.getActiveJob());
 
 		if (this.controlRegionRef.current) {
 			new ResizeObserver(() => {
@@ -134,6 +141,7 @@ export default class Main extends React.Component {
 	}
 
 	componentWillUnmount() {
+		setJob = job => {};
 		setRealTime = inRealTime=>{};
 		setHistorical = hi=>{};
 		forceUpdateAll = ()=>{};
@@ -291,7 +299,7 @@ export default class Main extends React.Component {
 						<SelectLanguage/>
 						<SelectColorTheme/>
 						<div>
-							<h3 style={{marginTop: 20, marginBottom: 6}}>Black Mage in the Shell</h3>
+							<h3 style={{marginTop: 20, marginBottom: 6}}>{getLongJobName(this.state.job)} in the Shell</h3>
 							{localize({
 								en: <div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
 									tool/Changelog</b>)
@@ -322,7 +330,7 @@ export default class Main extends React.Component {
 								zh: <div>提示：你的浏览器缓存里有排轴器更新到7.0前的数据，它们在这里已经不可用。请访问6.0历史版本（链接：<a style={{color: colors.warning}} href={"https://miyehn.me/ffxiv-blm-rotation-endwalker"}>miyehn.me/ffxiv-blm-rotation-endwalker</a>），数据会在那边被重新自动保存。访问过一次后，这个提示也会消失。</div>
 							}) }</div> : undefined}
 
-							<IntroSection/>
+							<IntroSection job={this.state.job}/>
 						</div>
 						<div style={{
 							display: "flex",
