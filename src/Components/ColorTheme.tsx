@@ -1,7 +1,7 @@
 import React from "react";
-import {forceUpdateAll} from "./Main";
 import {MdDarkMode, MdLightMode} from "react-icons/md";
 import {getCachedValue, setCachedValue} from "../Controller/Common";
+import {controller} from "../Controller/Controller";
 
 export type ColorTheme = "Light" | "Dark";
 
@@ -241,7 +241,7 @@ export class SelectColorTheme extends React.Component {
 	}
 	componentDidUpdate(prevProps: Readonly<{}>, prevState: Readonly<{colorTheme: ColorTheme}>, snapshot?: any) {
 		if (prevState.colorTheme !== this.state.colorTheme) {
-			forceUpdateAll();
+			controller.updateAllDisplay();
 		}
 	}
 

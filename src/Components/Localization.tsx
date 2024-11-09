@@ -1,10 +1,10 @@
 import React from "react";
-import {forceUpdateAll} from "./Main";
 import {SkillName, BuffType, ResourceType} from "../Game/Common";
 import {ContentNode} from "./Common";
 import {MdLanguage} from "react-icons/md";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {getCachedValue, setCachedValue} from "../Controller/Common";
+import {controller} from "../Controller/Controller";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -309,7 +309,7 @@ export class SelectLanguage extends React.Component {
 	}
 	componentDidUpdate(prevProps: Readonly<{}>, prevState: Readonly<{lang: Language}>, snapshot?: any) {
 		if (prevState.lang !== this.state.lang) {
-			forceUpdateAll();
+			controller.updateAllDisplay();
 		}
 	}
 

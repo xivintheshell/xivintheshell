@@ -1,8 +1,8 @@
 import React, {CSSProperties} from 'react';
-import {Timeline, updateTimelineView} from "./Timeline";
+import {Timeline} from "./Timeline";
 import { SkillsWindow } from "./Skills";
 import {Config, TimeControl} from "./PlaybackControl";
-import { StatusDisplay } from "./StatusDisplay";
+import {StatusDisplay} from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
 import {ShellJob, getLongJobName} from "../Controller/Common";
 import 'react-tabs/style/react-tabs.css';
@@ -44,8 +44,6 @@ function handleUrlCommands(command?: string) {
 		console.log("unrecognized command '" + command + "'");
 	}
 }
-
-export let forceUpdateAll = ()=>{};
 
 function ConfigTabs(props: {
 	height: number
@@ -120,17 +118,11 @@ export default class Main extends React.Component {
 		setHistorical = ((hi: boolean)=>{
 			this.setState({historical: hi});
 		});
-
-		forceUpdateAll = (()=>{
-			this.forceUpdate();
-			updateTimelineView();
-		});
 	}
 
 	componentDidMount() {
 		controller.tryAutoLoad();
 		controller.updateAllDisplay();
-		setJob(controller.getActiveJob());
 
 		if (this.controlRegionRef.current) {
 			new ResizeObserver(() => {
@@ -144,7 +136,6 @@ export default class Main extends React.Component {
 		setJob = job => {};
 		setRealTime = inRealTime=>{};
 		setHistorical = hi=>{};
-		forceUpdateAll = ()=>{};
 	}
 
 	// tabs: https://reactcommunity.org/react-tabs/
