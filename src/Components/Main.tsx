@@ -109,6 +109,16 @@ export default class Main extends React.Component {
 
 		setJob = (job: ShellJob) => {
 			this.setState({job: job});
+			// Change the favicon
+			// https://stackoverflow.com/a/260877
+			const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+			if (link) {
+				if (job === ShellJob.PCT) {
+					link.href = process.env.PUBLIC_URL + "/favicon_pct.ico";
+				} else {
+					link.href = process.env.PUBLIC_URL + "/favicon.ico";
+				}
+			}
 		};
 
 		setRealTime = ((rt: boolean)=>{
