@@ -544,7 +544,7 @@ class Controller {
 			tincturePotencyMultiplier: this.getTincturePotencyMultiplier(),
 			untargetableMask: this.#untargetableMask,
 			sharedElements: this.timeline.sharedElements,
-			slotElements: this.timeline.slots,
+			slots: this.timeline.slots,
 			activeSlotIndex: this.timeline.activeSlotIndex,
 			allMarkers: this.timeline.getAllMarkers(),
 			untargetableMarkers: this.timeline.getUntargetableMarkers(),

@@ -1,6 +1,6 @@
 import React from "react";
 import {MdDarkMode, MdLightMode} from "react-icons/md";
-import {getCachedValue, setCachedValue} from "../Controller/Common";
+import {getCachedValue, setCachedValue, ShellJob} from "../Controller/Common";
 import {controller} from "../Controller/Controller";
 
 export type ColorTheme = "Light" | "Dark";
@@ -41,8 +41,14 @@ export type PCTResourceColors = {
 	starryBuff: string,
 }
 
+export type JobAccentColors = {
+	[ShellJob.BLM]: string,
+	[ShellJob.PCT]: string
+}
+
 export type ThemeColors = {
 	accent: string,
+	jobAccents: JobAccentColors,
 	realTime: string,
 	historical: string,
 	fileDownload: string,
@@ -86,7 +92,11 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 	let currentColorTheme = getCurrentColorTheme();
 	if (currentColorTheme === "Dark") {
 		return {
-			accent: "#9370db", // medium purple
+			accent: "mediumpurple",
+			jobAccents: {
+				[ShellJob.BLM]: "#9370db", // mediumpurple
+				[ShellJob.PCT]: "#e176c2",
+			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
 			fileDownload: "#798c3f",
@@ -116,12 +126,12 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				polyStacks: "#b138ee",
 			},
 			pct: {
-				creatureCanvas: "#863ab5",
-				weaponCanvas: "#8d3741",
-				landscapeCanvas: "#264195",
+				creatureCanvas: "#a948e3",
+				weaponCanvas: "#a53535",
+				landscapeCanvas: "#2e51dd",
 				paletteGauge: "#b69241",
-				holyPaint: "#dde0e5",  // blue-ish light gray
-				cometPaint: "#500050",  // purple-ish black
+				holyPaint: "#cacdd5",  // blue-ish light gray
+				cometPaint: "#7e19aa",  // purple-ish black
 				starryBuff: "#509bd5",
 			},
 			timeline: {
@@ -142,9 +152,13 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				markerAlpha: "4f"
 			}
 		};
-	} else {
+	} else { // Light mode
 		return {
-			accent: "#9370db", // mediumpurple
+			accent: "mediumpurple",
+			jobAccents: {
+				[ShellJob.BLM]: "#9370db", // mediumpurple
+				[ShellJob.PCT]: "#f485d6",
+			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
 			fileDownload: "#798c3f",
@@ -174,12 +188,12 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				polyStacks: "#b138ee",
 			},
 			pct: {
-				creatureCanvas: "#863ab5",
-				weaponCanvas: "#8d3741",
-				landscapeCanvas: "#264195",
-				paletteGauge: "#b69241",
-				holyPaint: "#dde0e5",  // blue-ish light gray
-				cometPaint: "#500050",  // purple-ish black
+				creatureCanvas: "#b854e8",
+				weaponCanvas: "#d54d48",
+				landscapeCanvas: "#4568f6",
+				paletteGauge: "#f5cf96",
+				holyPaint: "#cacdd5",  // blue-ish light gray
+				cometPaint: "#9926c8",  // purple-ish black
 				starryBuff: "#66bbff",
 			},
 			timeline: {
