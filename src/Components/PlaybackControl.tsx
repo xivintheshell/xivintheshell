@@ -75,14 +75,12 @@ export function ResourceOverrideDisplay(props: {
 }
 
 let refreshConfigSummary = () => {};
-export function ConfigSummary(props: {selectedJob: ShellJob, appliedJob: ShellJob}) {
+export function ConfigSummary(props: { job: ShellJob, dirty: boolean }) {
 
 	const [, forceUpdate] = useReducer(x => x + 1, 0);
 	useEffect(() => {
 		refreshConfigSummary = forceUpdate;
 	}, []);
-
-	const outdated = props.selectedJob !== props.appliedJob;
 
 	let castTimesTableDesc = localize({
 		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
@@ -171,20 +169,20 @@ export function ConfigSummary(props: {selectedJob: ShellJob, appliedJob: ShellJo
 		</div>
 	});
 	let legacyCasterTaxBlurb = <p className={"paragraph"} style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={blurb}/></p>;
-	return <div style={{textDecoration: outdated ? "line-through" : "none"}}>
+	return <div style={{textDecoration: props.dirty ? "line-through" : "none", marginLeft: 5, paddingLeft: 10, borderLeft: "1px solid " + getCurrentThemeColors().bgHighContrast}}>
 		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
 
 		<div>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</div>
 
-		{props.appliedJob === ShellJob.BLM &&
+		{props.job === ShellJob.BLM &&
 			<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
 		}
 
-		{props.appliedJob === ShellJob.BLM
+		{props.job === ShellJob.BLM
 			// TODO modify for PCT
 			? <Expandable
 				title={"castTimesTable"}
-				titleNode={<span style={{textDecoration: outdated ? "line-through" : "none"}}>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help
+				titleNode={<span style={{textDecoration: props.dirty ? "line-through" : "none"}}>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help
 					topic={"castTimesTable"} content={castTimesTableDesc}/></span>}
 				defaultShow={false}
 				content={castTimesChart}/>
@@ -193,7 +191,7 @@ export function ConfigSummary(props: {selectedJob: ShellJob, appliedJob: ShellJo
 
 		<p>{localize({en: "Procs", zh: "随机数模式"})}: {procMode}</p>
 
-		{numOverrides > 0 && props.selectedJob === props.appliedJob && <p style={{color: "mediumpurple"}}>{localize({
+		{numOverrides > 0 && <p>{localize({
 			en: `${numOverrides} initial resource override(s)`,
 			zh: `${numOverrides}项初始资源覆盖`
 		})}</p>}
@@ -1002,7 +1000,7 @@ export class Config extends React.Component {
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<div>
 				<Input style={{display: "inline-block", color: fpsAndCorrectionColor}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>
-				<span> ({localize({en: "B1 tax", zh: "冰1税"})}: {this.state.b1TaxPreview} <Help topic={"b1TaxPreview"} content={b1TaxDesc}/>)</span>
+				<span> ({localize({en: "2.5s total tax", zh: "2.5s读条+帧率税"})}: {this.state.b1TaxPreview} <Help topic={"b1TaxPreview"} content={b1TaxDesc}/>)</span>
 			</div>
 			<Input
 				style={{color: fpsAndCorrectionColor}}
@@ -1039,20 +1037,18 @@ export class Config extends React.Component {
 				</select>
 			</div>
 			{this.#resourceOverridesSection()}
-			<button onClick={this.handleSubmit} style={{width: "100%"}}>
+			<button onClick={this.handleSubmit} style={{width: "100%", fontWeight: this.state.dirty ? "bold" : "normal"}}>
 				{localize({en: "apply and reset", zh: "应用并重置时间轴"})}{this.state.dirty ? "*" : ""}
 			</button>
 		</div>;
-		return (
-			<div style={{marginBottom: 20}}>
-				{editJobSection}
-				<ConfigSummary selectedJob={this.state.job} appliedJob={controller.getActiveJob()}/>
-				<hr style={{ border: "none", borderTop: `1px solid ${colors.bgHighContrast}`, margin: "16px 0"}}/>
-				{editStatsSection}
-				<p>{localize({
-					en: "You can also import/export fights from/to local files at the bottom of the page.",
-					zh: "页面底部有导入和导出战斗文件相关选项。"
-				})}</p>
-			</div>
-		)}
+		return <div style={{marginBottom: 20}}>
+			{editJobSection}
+			<ConfigSummary job={controller.getActiveJob()} dirty={this.state.dirty}/>
+			{editStatsSection}
+			<p>{localize({
+				en: "You can also import/export fights from/to local files at the bottom of the page.",
+				zh: "页面底部有导入和导出战斗文件相关选项。"
+			})}</p>
+		</div>
+	}
 }
