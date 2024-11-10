@@ -499,13 +499,13 @@ export class Config extends React.Component {
 			// @ts-ignore seems to be a bug where it can't recognize URL.parse
 			// https://developer.mozilla.org/en-US/docs/Web/API/URL/parse_static
 			const url = URL.parse(this.state.gearImportLink);
-			let error = undefined;
 			const headers = new Headers();
-			if (url && url.hostname === "etro.gg") {
-				const tokens = url.pathname.split("/");
-				if (tokens[1] !== "gearset" && tokens.length !== 3) {
-					error = "invalid etro gearset link (hover ? in URL input box for details)";
-				} else {
+			try {
+				if (url && url.hostname === "etro.gg") {
+					const tokens = url.pathname.split("/");
+					if (tokens[1] !== "gearset" && tokens.length !== 3) {
+						throw new Error("Invalid etro gearset link (hover ? in URL input box for details)");
+					}
 					headers.append("Content-Type", "application/json");
 					const response = await fetch(
 						"https://etro.gg/api/gearsets/" + tokens[2],
@@ -513,9 +513,13 @@ export class Config extends React.Component {
 					);
 					if (response.ok) {
 						const body: any = await response.json();
-						// TODO check body["jobAbbrev"]
 						const stats = new Map<string, string>(body["totalParams"].map((obj: any) => [obj["name"], obj["value"]]));
+						if (!ALL_JOBS.includes(body["jobAbbrev"])) {
+							throw new Error("Imported gearset was for a job (" + body["jobAbbrev"] + ") that XIV in the Shell doesn't support");
+						}
+						// TODO should probably validate each of these fields
 						this.setState({
+							job: body["jobAbbrev"],
 							level: body["level"],
 							spellSpeed: stats.get("SPS"),
 							criticalHit: stats.get("CRT"),
@@ -523,43 +527,50 @@ export class Config extends React.Component {
 							determination: stats.get("DET"),
 						});
 						this.updateTaxPreview(stats.get("SPS")!.toString(), this.state.fps, body["level"]);
+					} else {
+						console.error(response);
+						throw new Error("etro load failed (please check your link)");
 					}
-				}
-			} else if (url && url.hostname === "xivgear.app") {
-				const pageParam = url.searchParams.get("page");
-				if (!pageParam) {
-					error = "xivgear link must be to a specific set (hover ? in URL input box for details)"
-				} else {
-					// strip the "sl|" url-encoded characters
-					const setId = pageParam.replace("sl|", "");
+				} else if (url && url.hostname === "xivgear.app") {
+					const pageParam = url.searchParams.get("page");
+					if (!pageParam) {
+						throw new Error("xivgear link must be to a specific set (hover ? in URL input box for details)");
+					}
+					// strip the "sl|" url-encoded characters at the start of the link
+					const setId = pageParam.startsWith("sl|") ? pageParam.substr(3) : pageParam;
 					headers.append("Content-Type", "application/json");
 					const response = await fetch(
-						"https://api.xivgear.app/fulldata/" + setId,
+						// TODO replace with non-beta api after their CORS fix is live
+						// https://github.com/xiv-gear-planner/gear-planner/issues/411
+						"https://betaapi.xivgear.app/fulldata/" + setId,
 						{ method: "GET", headers: headers },
 					);
 					if (response.ok) {
-						const body: any = response.json;
-						// TODO check body["job"]
-						const stats = body["sets"][0];
+						const body: any = await response.json();
+						// TODO should probably validate each of these fields
+						if (!ALL_JOBS.includes(body["job"])) {
+							throw new Error("Imported gearset was for a job (" + body["job"] + ") that XIV in the Shell doesn't support");
+						}
+						const stats = body["sets"][0]["computedStats"];
 						this.setState({
+							job: body["job"],
 							level: body["level"],
 							spellSpeed: stats["spellspeed"],
 							criticalHit: stats["crit"],
 							directHit: stats["dhit"],
-							determination: stats["det"],
+							determination: stats["determination"],
 						});
 						this.updateTaxPreview(stats["spellspeed"]!.toString(), this.state.fps, body["level"]);
 					} else {
 						console.error("xivgear load failed: " + response);
-						window.alert("xivgear load failed (please check your link)");
+						throw new Error("xivgear load failed (please check your link)");
 					}
+				} else {
+					throw new Error("Invalid gearset link (must be from etro.gg or xivgear.app)");
 				}
-			} else {
-				error = "Invalid gearset link (must be from etro.gg or xivgear.app)";
-			}
-			if (error !== undefined) {
-				console.error(error);
-				window.alert(error);
+			} catch (e: any) {
+				console.error(e);
+				window.alert(e.message);
 			}
 		};
 
@@ -1045,7 +1056,7 @@ export class Config extends React.Component {
 					<Help topic={"gearImport"} content={
 						<>
 						<p>{localize({
-							en: "Enter a link to a gearset from xivgear.app or etro.gg."
+							en: 'Enter a link to a gearset from xivgear.app or etro.gg, then hit "apply and reset."'
 						})}</p>
 						<p>{localize({
 							en: "etro: Copy/paste the link to the set (example: https://etro.gg/gearset/e13d5960-4794-4dc4-b273-24ecfed6745e)"
@@ -1061,7 +1072,15 @@ export class Config extends React.Component {
 				<input type="submit" value="Load"/>
 			</form>
 		</div>;
-		let editSection = <div style={{marginBottom: 16}}>
+		let editJobSection = <div style={{marginBottom: 10}}>
+			<span>{localize({en: "job: ", zh: "职业："})}</span>
+			<select style={{outline: "none"}} value={this.state.job} onChange={this.setJob}>
+				{ALL_JOBS.map((job) =>
+					<option key={job} value={job}>{job}</option>
+				)}
+			</select>
+		</div>;
+		let editStatsSection = <div style={{marginBottom: 16}}>
 			<div>
 				<span>{localize({en: "level: ", zh: "等级："})}</span>
 				<select style={{outline: "none"}} value={this.state.level} onChange={this.setLevel}>
@@ -1139,7 +1158,7 @@ export class Config extends React.Component {
 			{editJobSection}
 			<ConfigSummary job={controller.getActiveJob()} dirty={this.state.dirty}/>
 			{gearImportSection}
-			<hr style={{ border: "none", borderTop: `1px solid ${colors.bgHighContrast}`, margin: "16px 0"}}/>
+			<br/>
 			{editStatsSection}
 			<p>{localize({
 				en: "You can also import/export fights from/to local files at the bottom of the page.",
