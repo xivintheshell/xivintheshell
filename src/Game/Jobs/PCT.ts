@@ -21,6 +21,7 @@ import {TraitName, Traits} from "../Traits";
 import {GameState} from "../GameState";
 import {getResourceInfo, makeResource, CoolDown, ResourceInfo} from "../Resources"
 import {GameConfig} from "../GameConfig";
+import { iconUrl } from "../../Utilities/icon";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -180,6 +181,7 @@ export class PCTState extends GameState {
 const starryMod = {source: PotencyModifierType.STARRY, damageFactor: 1.05, critFactor: 0, dhFactor: 0};
 
 const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
+	assetPath: string,
 	replaceIf?: ConditionalSkillReplace<PCTState>[],
 	startOnHotbar?: boolean,
 	highlightIf?: StatePredicate<PCTState>,
@@ -212,6 +214,7 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 	);
 	const onApplication: EffectFn<PCTState> = params.onApplication ?? NO_EFFECT;
 	return makeSpell(ShellJob.PCT, name, unlockLevel, {
+		assetPath: params.assetPath,
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		highlightIf: params.highlightIf,
@@ -247,6 +250,7 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 };
 
 const makeAbility_PCT = (name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
+	assetPath: string,
 	potency?: number | Array<[TraitName, number]>,
 	replaceIf?: ConditionalSkillReplace<PCTState>[],
 	highlightIf?: StatePredicate<PCTState>,
@@ -429,6 +433,7 @@ const starryMuseCondition: ConditionalSkillReplace<PCTState> = {
 };
 
 makeGCD_PCT(SkillName.FireInRed, 1, {
+	assetPath: iconUrl(3801),
 	replaceIf: [greenCondition, blueCondition],
 	baseCastTime: 1.5,
 	baseManaCost: 300,
@@ -444,6 +449,7 @@ makeGCD_PCT(SkillName.FireInRed, 1, {
 });
 
 makeGCD_PCT(SkillName.AeroInGreen, 5, {
+	assetPath: iconUrl(3802),
 	replaceIf: [redCondition, blueCondition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
@@ -461,6 +467,7 @@ makeGCD_PCT(SkillName.AeroInGreen, 5, {
 });
 
 makeGCD_PCT(SkillName.WaterInBlue, 15, {
+	assetPath: iconUrl(3803),
 	replaceIf: [redCondition, greenCondition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
@@ -489,6 +496,7 @@ makeGCD_PCT(SkillName.WaterInBlue, 15, {
 
 
 makeGCD_PCT(SkillName.Fire2InRed, 25, {
+	assetPath: iconUrl(3807),
 	replaceIf: [green2Condition, blue2Condition],
 	baseCastTime: 1.5,
 	baseManaCost: 300,
@@ -503,6 +511,7 @@ makeGCD_PCT(SkillName.Fire2InRed, 25, {
 });
 
 makeGCD_PCT(SkillName.Aero2InGreen, 35, {
+	assetPath: iconUrl(3808),
 	replaceIf: [red2Condition, blue2Condition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
@@ -519,6 +528,7 @@ makeGCD_PCT(SkillName.Aero2InGreen, 35, {
 });
 
 makeGCD_PCT(SkillName.Water2InBlue, 45, {
+	assetPath: iconUrl(3809),
 	replaceIf: [red2Condition, green2Condition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
@@ -545,6 +555,7 @@ makeGCD_PCT(SkillName.Water2InBlue, 45, {
 });
 
 makeGCD_PCT(SkillName.BlizzardInCyan, 60, {
+	assetPath: iconUrl(3804),
 	replaceIf: [yellowCondition, magentaCondition],
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
@@ -562,6 +573,7 @@ makeGCD_PCT(SkillName.BlizzardInCyan, 60, {
 });
 
 makeGCD_PCT(SkillName.StoneInYellow, 60, {
+	assetPath: iconUrl(3805),
 	replaceIf: [cyanCondition, magentaCondition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
@@ -580,6 +592,7 @@ makeGCD_PCT(SkillName.StoneInYellow, 60, {
 });
 
 makeGCD_PCT(SkillName.ThunderInMagenta, 60, {
+	assetPath: iconUrl(3806),
 	replaceIf: [cyanCondition, yellowCondition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
@@ -603,6 +616,7 @@ makeGCD_PCT(SkillName.ThunderInMagenta, 60, {
 });
 
 makeGCD_PCT(SkillName.Blizzard2InCyan, 60, {
+	assetPath: iconUrl(3810),
 	replaceIf: [yellow2Condition, magenta2Condition],
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
@@ -619,6 +633,7 @@ makeGCD_PCT(SkillName.Blizzard2InCyan, 60, {
 });
 
 makeGCD_PCT(SkillName.Stone2InYellow, 60, {
+	assetPath: iconUrl(3811),
 	replaceIf: [cyan2Condition, magenta2Condition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
@@ -636,6 +651,7 @@ makeGCD_PCT(SkillName.Stone2InYellow, 60, {
 });
 
 makeGCD_PCT(SkillName.Thunder2InMagenta, 60, {
+	assetPath: iconUrl(3812),
 	replaceIf: [cyan2Condition, yellow2Condition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
@@ -658,6 +674,7 @@ makeGCD_PCT(SkillName.Thunder2InMagenta, 60, {
 });
 
 makeGCD_PCT(SkillName.HolyInWhite, 80, {
+	assetPath: iconUrl(3813),
 	baseCastTime: 0,
 	baseManaCost: 300,
 	basePotency: [
@@ -682,6 +699,7 @@ makeGCD_PCT(SkillName.HolyInWhite, 80, {
 });
 
 makeGCD_PCT(SkillName.CometInBlack, 90, {
+	assetPath: iconUrl(3814),
 	baseCastTime: 0,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
@@ -704,6 +722,7 @@ makeGCD_PCT(SkillName.CometInBlack, 90, {
 });
 
 makeGCD_PCT(SkillName.RainbowDrip, 92, {
+	assetPath: iconUrl(3838),
 	baseCastTime: 4,
 	baseRecastTime: 6,
 	baseManaCost: 400,
@@ -718,6 +737,7 @@ makeGCD_PCT(SkillName.RainbowDrip, 92, {
 });
 
 makeGCD_PCT(SkillName.StarPrism, 100, {
+	assetPath: iconUrl(3832),
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 1400,
@@ -731,6 +751,7 @@ makeGCD_PCT(SkillName.StarPrism, 100, {
 });
 
 makeAbility_PCT(SkillName.SubtractivePalette, 60, ResourceType.cd_Subtractive, {
+	assetPath: iconUrl(3833),
 	cooldown: 1,
 	validateAttempt: (state) => (
 		// Check we are not already in subtractive
@@ -762,15 +783,16 @@ makeAbility_PCT(SkillName.SubtractivePalette, 60, ResourceType.cd_Subtractive, {
 
 const creatureConditions = [creatureMotifCondition, pomMotifCondition, wingMotifCondition, clawMotifCondition, mawMotifCondition];
 // [name, level, validation]
-const creatureInfos: Array<[SkillName, number, StatePredicate<PCTState>]> = [
+const creatureInfos: Array<[SkillName, number, StatePredicate<PCTState>, string]> = [
 	// creature motif can never itself be cast
-	[SkillName.CreatureMotif, 30, (state) => false],
-	[SkillName.PomMotif, 30, pomMotifCondition.condition],
-	[SkillName.WingMotif, 30, wingMotifCondition.condition],
-	[SkillName.ClawMotif, 96, clawMotifCondition.condition],
-	[SkillName.MawMotif, 96, mawMotifCondition.condition],
+	[SkillName.CreatureMotif, 30, (state) => false, iconUrl(3839)],
+	[SkillName.PomMotif, 30, pomMotifCondition.condition, iconUrl(3815)],
+	[SkillName.WingMotif, 30, wingMotifCondition.condition, iconUrl(3816)],
+	[SkillName.ClawMotif, 96, clawMotifCondition.condition, iconUrl(3817)],
+	[SkillName.MawMotif, 96, mawMotifCondition.condition, iconUrl(3818)],
 ];
-creatureInfos.forEach(([name, level, validateAttempt], i) => makeGCD_PCT(name, level, {
+creatureInfos.forEach(([name, level, validateAttempt, assetPath], i) => makeGCD_PCT(name, level, {
+	assetPath,
 	replaceIf: creatureConditions.slice(0, i).concat(creatureConditions.slice(i + 1)),
 	startOnHotbar: i === 0,
 	baseCastTime: 3,
@@ -783,19 +805,20 @@ creatureInfos.forEach(([name, level, validateAttempt], i) => makeGCD_PCT(name, l
 
 const livingConditions = [livingMuseCondition, pomMuseCondition, wingedMuseCondition, clawedMuseCondition, fangedMuseCondition];
 // [name, level, potency, delay, validation]
-const livingMuseInfos: Array<[SkillName, number, number | Array<[TraitName, number]>, number, StatePredicate<PCTState>]> = [
+const livingMuseInfos: Array<[SkillName, number, number | Array<[TraitName, number]>, number, StatePredicate<PCTState>, string]> = [
 	// living muse can never itself be cast
-	[SkillName.LivingMuse, 30, 0, 0, (state) => false],
+	[SkillName.LivingMuse, 30, 0, 0, (state) => false, iconUrl(3842)],
 	[SkillName.PomMuse, 30,
 		[[TraitName.Never, 1000], [TraitName.PictomancyMasteryIII, 1100]],
-		0.62, pomMuseCondition.condition],
+		0.62, pomMuseCondition.condition, iconUrl(3821)],
 	[SkillName.WingedMuse, 30,
 		[[TraitName.Never, 1000], [TraitName.PictomancyMasteryIII, 1100]],
-		0.98, wingedMuseCondition.condition],
-	[SkillName.ClawedMuse, 96, 1100, 0.98, clawedMuseCondition.condition],
-	[SkillName.FangedMuse, 96, 1100, 1.16, fangedMuseCondition.condition],
+		0.98, wingedMuseCondition.condition, iconUrl(3822)],
+	[SkillName.ClawedMuse, 96, 1100, 0.98, clawedMuseCondition.condition, iconUrl(3823)],
+	[SkillName.FangedMuse, 96, 1100, 1.16, fangedMuseCondition.condition, iconUrl(3824)],
 ];
-livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAttempt], i) => makeAbility_PCT(name, level, ResourceType.cd_LivingMuse, {
+livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAttempt, assetPath], i) => makeAbility_PCT(name, level, ResourceType.cd_LivingMuse, {
+	assetPath,
 	replaceIf: livingConditions.slice(0, i).concat(livingConditions.slice(i + 1)),
 	startOnHotbar: i === 0,
 	potency: potencies,
@@ -827,6 +850,7 @@ livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAtte
 }));
 
 makeAbility_PCT(SkillName.MogOfTheAges, 30, ResourceType.cd_Portrait, {
+	assetPath: iconUrl(3827),
 	replaceIf: [madeenCondition],
 	potency: [
 		[TraitName.Never, 1100],
@@ -840,6 +864,7 @@ makeAbility_PCT(SkillName.MogOfTheAges, 30, ResourceType.cd_Portrait, {
 });
 
 makeAbility_PCT(SkillName.RetributionOfTheMadeen, 30, ResourceType.cd_Portrait, {
+	assetPath: iconUrl(3828),
 	replaceIf: [mogCondition],
 	startOnHotbar: false,
 	potency: 1400,
@@ -851,6 +876,7 @@ makeAbility_PCT(SkillName.RetributionOfTheMadeen, 30, ResourceType.cd_Portrait, 
 });
 
 makeGCD_PCT(SkillName.WeaponMotif, 50, {
+	assetPath: iconUrl(3840),
 	replaceIf: [hammerCondition],
 	baseCastTime: 3,
 	baseRecastTime: 4,
@@ -860,6 +886,7 @@ makeGCD_PCT(SkillName.WeaponMotif, 50, {
 });
 
 makeGCD_PCT(SkillName.HammerMotif, 50, {
+	assetPath: iconUrl(3819),
 	replaceIf: [weaponCondition],
 	startOnHotbar: false,
 	baseCastTime: 3,
@@ -874,6 +901,7 @@ makeGCD_PCT(SkillName.HammerMotif, 50, {
 });
 
 makeAbility_PCT(SkillName.SteelMuse, 50, ResourceType.cd_SteelMuse, {
+	assetPath: iconUrl(3843),
 	replaceIf: [strikingCondition],
 	cooldown: 60,
 	maxCharges: 2, // lower this value in the state constructor when level synced
@@ -881,6 +909,7 @@ makeAbility_PCT(SkillName.SteelMuse, 50, ResourceType.cd_SteelMuse, {
 });
 
 makeAbility_PCT(SkillName.StrikingMuse, 50, ResourceType.cd_SteelMuse, {
+	assetPath: iconUrl(3825),
 	replaceIf: [steelCondition],
 	startOnHotbar: false,
 	cooldown: 60,
@@ -922,23 +951,24 @@ const hammerConditions: ConditionalSkillReplace<PCTState>[] = [
 	}
 ];
 // [name, level, potency, delay]
-const hammerInfos: Array<[SkillName, number, number | Array<[TraitName, number]>, number]> = [
+const hammerInfos: Array<[SkillName, number, number | Array<[TraitName, number]>, number, string]> = [
 	[SkillName.HammerStamp, 50, [
 			[TraitName.Never, 380],
 			[TraitName.PictomancyMasteryII, 480],
 			[TraitName.PictomancyMasteryIII, 520],
 			[TraitName.PictomancyMasteryIV, 560],
-		], 1.38],
+		], 1.38, iconUrl(3829)],
 	[SkillName.HammerBrush, 86, [
 			[TraitName.Never, 580],
 			[TraitName.PictomancyMasteryIV, 620],
-		], 1.25],
+		], 1.25, iconUrl(3830)],
 	[SkillName.PolishingHammer, 86, [
 			[TraitName.Never, 640],
 			[TraitName.PictomancyMasteryIV, 680],
-		], 2.10],
+		], 2.10, iconUrl(3831)],
 ];
-hammerInfos.forEach(([name, level, potencies, applicationDelay], i) => makeGCD_PCT(name, level, {
+hammerInfos.forEach(([name, level, potencies, applicationDelay, assetPath], i) => makeGCD_PCT(name, level, {
+	assetPath,
 	replaceIf: hammerConditions.slice(0, i).concat(hammerConditions.slice(i + 1)),
 	baseCastTime: 0,
 	startOnHotbar: i === 0,
@@ -953,6 +983,7 @@ hammerInfos.forEach(([name, level, potencies, applicationDelay], i) => makeGCD_P
 }));
 
 makeGCD_PCT(SkillName.LandscapeMotif, 70, {
+	assetPath: iconUrl(3841),
 	replaceIf: [starrySkyCondition],
 	baseCastTime: 3,
 	baseRecastTime: 4,
@@ -962,6 +993,7 @@ makeGCD_PCT(SkillName.LandscapeMotif, 70, {
 });
 
 makeGCD_PCT(SkillName.StarrySkyMotif, 70, {
+	assetPath: iconUrl(3820),
 	replaceIf: [landscapeCondition],
 	startOnHotbar: false,
 	baseCastTime: 3,
@@ -976,6 +1008,7 @@ makeGCD_PCT(SkillName.StarrySkyMotif, 70, {
 });
 
 makeAbility_PCT(SkillName.ScenicMuse, 70, ResourceType.cd_ScenicMuse, {
+	assetPath: iconUrl(3844),
 	replaceIf: [starryMuseCondition],
 	applicationDelay: 0,
 	cooldown: 120,
@@ -983,6 +1016,7 @@ makeAbility_PCT(SkillName.ScenicMuse, 70, ResourceType.cd_ScenicMuse, {
 });
 
 makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
+	assetPath: iconUrl(3826),
 	replaceIf: [scenicCondition],
 	startOnHotbar: false,
 	applicationDelay: 0, // raid buff is instant, but inspiration is delayed by 0.62s
@@ -1015,6 +1049,7 @@ makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
 });
 
 makeResourceAbility(ShellJob.PCT, SkillName.TemperaCoat, 10, ResourceType.cd_TemperaCoat, {
+	assetPath: iconUrl(3835),
 	rscType: ResourceType.TemperaCoat,
 	replaceIf: [{
 		newSkill: SkillName.TemperaCoatPop,
@@ -1025,6 +1060,7 @@ makeResourceAbility(ShellJob.PCT, SkillName.TemperaCoat, 10, ResourceType.cd_Tem
 });
 
 makeAbility_PCT(SkillName.TemperaGrassa, 88, ResourceType.cd_Grassa, {
+	assetPath: iconUrl(3836),
 	replaceIf: [{
 		newSkill: SkillName.TemperaGrassaPop,
 		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
@@ -1044,6 +1080,7 @@ makeAbility_PCT(SkillName.TemperaGrassa, 88, ResourceType.cd_Grassa, {
 
 // fake skill to represent breaking the coat shield
 makeAbility_PCT(SkillName.TemperaCoatPop, 10, ResourceType.cd_TemperaPop, {
+	assetPath: iconUrl(3835),
 	replaceIf: [{
 		newSkill: SkillName.TemperaGrassaPop,
 		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
@@ -1067,6 +1104,7 @@ makeAbility_PCT(SkillName.TemperaCoatPop, 10, ResourceType.cd_TemperaPop, {
 
 // fake skill to represent breaking the grassa shield
 makeAbility_PCT(SkillName.TemperaGrassaPop, 10, ResourceType.cd_TemperaPop, {
+	assetPath: iconUrl(3836),
 	replaceIf: [{
 		newSkill: SkillName.TemperaCoatPop,
 		condition: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
@@ -1089,6 +1127,7 @@ makeAbility_PCT(SkillName.TemperaGrassaPop, 10, ResourceType.cd_TemperaPop, {
 });
 
 makeResourceAbility(ShellJob.PCT, SkillName.Smudge, 20, ResourceType.cd_Smudge, {
+	assetPath: iconUrl(3834),
 	rscType: ResourceType.Smudge,
 	applicationDelay: 0, // instant (buff application)
 	cooldown: 20,

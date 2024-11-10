@@ -1,43 +1,44 @@
 import {
-	registerBuffIcon,
 	BuffProps,
 	PaintGaugeCounterProps,
 	ResourceBarProps,
 	ResourceCounterProps,
 	ResourceDisplayProps,
 	ResourceTextProps,
-	StatusPropsGenerator
+	StatusPropsGenerator,
+	registerBuffURL
 } from "../StatusDisplay";
 import {ResourceType} from "../../Game/Common";
 import {TraitName, Traits} from "../../Game/Traits";
 import {PCTState} from "../../Game/Jobs/PCT";
 import {getCurrentThemeColors} from "../../Components/ColorTheme";
 import {localize} from "../../Components/Localization";
+import { iconUrl } from "../../Utilities/icon";
 
 [
-	ResourceType.Aetherhues,
-	ResourceType.Aetherhues + "2",
-	ResourceType.MonochromeTones,
-	ResourceType.HammerTime,
-	ResourceType.HammerTime + "2",
-	ResourceType.HammerTime + "3",
-	ResourceType.Inspiration,
-	ResourceType.SubtractivePalette,
-	ResourceType.SubtractivePalette + "2",
-	ResourceType.SubtractivePalette + "3",
-	ResourceType.SubtractiveSpectrum,
-	ResourceType.Hyperphantasia,
-	ResourceType.Hyperphantasia + "2",
-	ResourceType.Hyperphantasia + "3",
-	ResourceType.Hyperphantasia + "4",
-	ResourceType.Hyperphantasia + "5",
-	ResourceType.RainbowBright,
-	ResourceType.Starstruck,
-	ResourceType.StarryMuse,
-	ResourceType.TemperaCoat,
-	ResourceType.TemperaGrassa,
-	ResourceType.Smudge,
-].forEach((buff) => registerBuffIcon(buff, `PCT/${buff}.png`));
+	{buff: ResourceType.Aetherhues, icon: iconUrl(13801)},
+	{buff: ResourceType.Aetherhues + "2", icon: iconUrl(13802)},
+	{buff: ResourceType.MonochromeTones, icon: iconUrl(13814)},
+	{buff: ResourceType.HammerTime, icon: iconUrl(18677)},
+	{buff: ResourceType.HammerTime + "2", icon: iconUrl(18677, 2)},
+	{buff: ResourceType.HammerTime + "3", icon: iconUrl(18677, 3)},
+	{buff: ResourceType.Inspiration, icon: iconUrl(13811)},
+	{buff: ResourceType.SubtractivePalette, icon: iconUrl(18673)},
+	{buff: ResourceType.SubtractivePalette + "2", icon: iconUrl(18673, 2)},
+	{buff: ResourceType.SubtractivePalette + "3", icon: iconUrl(18673, 3)},
+	{buff: ResourceType.SubtractiveSpectrum, icon: iconUrl(13813)},
+	{buff: ResourceType.Hyperphantasia, icon: iconUrl(18155)},
+	{buff: ResourceType.Hyperphantasia + "2", icon: iconUrl(18155, 2)},
+	{buff: ResourceType.Hyperphantasia + "3", icon: iconUrl(18155, 3)},
+	{buff: ResourceType.Hyperphantasia + "4", icon: iconUrl(18155, 4)},
+	{buff: ResourceType.Hyperphantasia + "5", icon: iconUrl(18155, 5)},
+	{buff: ResourceType.RainbowBright, icon: iconUrl(13805)},
+	{buff: ResourceType.Starstruck, icon: iconUrl(13806)},
+	{buff: ResourceType.StarryMuse, icon: iconUrl(13808)},
+	{buff: ResourceType.TemperaCoat, icon: iconUrl(13809)},
+	{buff: ResourceType.TemperaGrassa, icon: iconUrl(13810)},
+	{buff: ResourceType.Smudge, icon: iconUrl(13807)},
+].forEach(({buff, icon}) => registerBuffURL(buff, icon));
 
 export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 	override getEnemyBuffViewProps(): BuffProps[] {
