@@ -1,27 +1,28 @@
 import {
-    registerBuffIcon,
     BuffProps,
     ResourceBarProps,
     ResourceCounterProps,
     ResourceDisplayProps,
-    StatusPropsGenerator
+    StatusPropsGenerator,
+    registerBuffURL
 } from "../StatusDisplay";
 import {ResourceType} from "../../Game/Common";
 import {TraitName, Traits} from "../../Game/Traits";
 import {BLMState} from "../../Game/Jobs/BLM";
 import {getCurrentThemeColors} from "../../Components/ColorTheme";
 import {localize} from "../../Components/Localization";
+import { iconUrl } from "../../Utilities/icon";
 
 [
-    ResourceType.Triplecast,
-    ResourceType.Triplecast + "2",
-    ResourceType.Triplecast + "3",
-    ResourceType.Firestarter,
-    ResourceType.Thunderhead,
-    ResourceType.ThunderDoT,
-    ResourceType.LeyLines,
-    ResourceType.Manaward,
-].forEach((buff) => registerBuffIcon(buff, `BLM/${buff}.png`));
+    {buff: ResourceType.Triplecast, icon: iconUrl(19621)},
+    {buff: ResourceType.Triplecast + "2", icon: iconUrl(19621, 2)},
+    {buff: ResourceType.Triplecast + "3", icon: iconUrl(19621, 3)},
+    {buff: ResourceType.Firestarter,icon: iconUrl(10460)},
+    {buff: ResourceType.Thunderhead, icon: iconUrl(12660)},
+    {buff: ResourceType.ThunderDoT, icon: iconUrl(12661)}, // Technically specifically the icon for High Thunder's DoT status
+    {buff: ResourceType.LeyLines, icon: iconUrl(12653)},
+    {buff: ResourceType.Manaward, icon: iconUrl(10456)}
+].forEach(({buff, icon}) => registerBuffURL(buff, icon));
 
 export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
     override getEnemyBuffViewProps(): BuffProps[] {

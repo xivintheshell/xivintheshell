@@ -23,6 +23,7 @@ import {TraitName, Traits} from "../Traits";
 import {GameState, PlayerState} from "../GameState";
 import {getResourceInfo, makeResource, CoolDown, DoTBuff, Event, Resource, ResourceInfo} from "../Resources"
 import {GameConfig} from "../GameConfig";
+import { iconUrl } from "../../Utilities/icon";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -324,6 +325,7 @@ const getEnochianModifier = (state: Readonly<BLMState>) => (
 );
 
 const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
+	assetPath: string,
 	replaceIf?: ConditionalSkillReplace<BLMState>[],
 	startOnHotbar?: boolean,
 	highlightIf?: StatePredicate<BLMState>,
@@ -376,6 +378,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 	);
 	const onApplication: EffectFn<BLMState> = params.onApplication ?? NO_EFFECT;
 	return makeSpell(ShellJob.BLM, name, unlockLevel, {
+		assetPath: params.assetPath,
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		highlightIf: params.highlightIf,
@@ -454,6 +457,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 
 
 const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
+	assetPath: string,
 	replaceIf?: ConditionalSkillReplace<BLMState>[],
 	startOnHotbar?: boolean,
 	highlightIf?: StatePredicate<BLMState>,
@@ -472,6 +476,7 @@ const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceTy
 // https://www.fflogs.com/reports/cNpjtRXHhZ8Az2V3#fight=last&type=damage-done&view=events&ability=36987
 // https://www.fflogs.com/reports/7NMQkxLzcbptw3Xd#fight=15&type=damage-done&source=116&view=events&ability=36986
 makeGCD_BLM(SkillName.Blizzard, 1, {
+	assetPath: iconUrl(454),
 	aspect: Aspect.Ice,
 	baseCastTime: 2.5,
 	baseManaCost: 400,
@@ -512,6 +517,7 @@ const potentiallyGainFirestarter = (game: PlayerState) => {
 };
 
 makeGCD_BLM(SkillName.Fire, 2, {
+	assetPath: iconUrl(451),
 	aspect: Aspect.Fire,
 	baseCastTime: 2.5,
 	baseManaCost: 800,
@@ -535,6 +541,7 @@ makeGCD_BLM(SkillName.Fire, 2, {
 });
 
 makeAbility_BLM(SkillName.Transpose, 4, ResourceType.cd_Transpose, {
+	assetPath: iconUrl(466),
 	applicationDelay: 0, // instant
 	cooldown: 5,
 	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
@@ -632,6 +639,7 @@ const thunderConfirm = (skillName: SkillName.Thunder3 | SkillName.HighThunder) =
 );
 
 makeGCD_BLM(SkillName.Thunder3, 45, {
+	assetPath: iconUrl(459),
 	aspect: Aspect.Lightning,
 	baseCastTime: 0,
 	baseManaCost: 0,
@@ -649,6 +657,7 @@ makeGCD_BLM(SkillName.Thunder3, 45, {
 });
 
 makeResourceAbility(ShellJob.BLM, SkillName.Manaward, 30, ResourceType.cd_Manaward, {
+	assetPath: iconUrl(463),
 	rscType: ResourceType.Manaward,
 	applicationDelay: 1.114, // delayed
 	cooldown: 120,
@@ -658,6 +667,7 @@ makeResourceAbility(ShellJob.BLM, SkillName.Manaward, 30, ResourceType.cd_Manawa
 // infact most effects seem instant but MP gain is delayed.
 // see screen recording: https://drive.google.com/file/d/1zGhU9egAKJ3PJiPVjuRBBMkKdxxHLS9b/view?usp=drive_link
 makeAbility_BLM(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
+	assetPath: iconUrl(2651),
 	applicationDelay: 0.2, // delayed
 	cooldown: 100, // set by trait in the constructor
 	validateAttempt: (state) => state.getFireStacks() > 0,
@@ -678,6 +688,7 @@ makeAbility_BLM(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
 });
 
 makeGCD_BLM(SkillName.Fire3, 35, {
+	assetPath: iconUrl(452),
 	aspect: Aspect.Fire,
 	baseCastTime: 3.5,
 	baseManaCost: 2000,
@@ -692,6 +703,7 @@ makeGCD_BLM(SkillName.Fire3, 35, {
 });
 
 makeGCD_BLM(SkillName.Blizzard3, 35, {
+	assetPath: iconUrl(456),
 	aspect: Aspect.Ice,
 	baseCastTime: 3.5,
 	baseManaCost: 800,
@@ -704,6 +716,7 @@ makeGCD_BLM(SkillName.Blizzard3, 35, {
 });
 
 makeGCD_BLM(SkillName.Freeze, 40, {
+	assetPath: iconUrl(2653),
 	aspect: Aspect.Ice,
 	baseCastTime: 2.8,
 	baseManaCost: 1000,
@@ -714,6 +727,7 @@ makeGCD_BLM(SkillName.Freeze, 40, {
 });
 
 makeGCD_BLM(SkillName.Flare, 50, {
+	assetPath: iconUrl(2652),
 	aspect: Aspect.Fire,
 	baseCastTime: 4,
 	baseManaCost: 0,  // mana is handled separately
@@ -738,6 +752,7 @@ makeGCD_BLM(SkillName.Flare, 50, {
 });
 
 makeResourceAbility(ShellJob.BLM, SkillName.LeyLines, 52, ResourceType.cd_LeyLines, {
+	assetPath: iconUrl(2656),
 	rscType: ResourceType.LeyLines,
 	applicationDelay: 0.49, // delayed
 	cooldown: 120,
@@ -751,6 +766,7 @@ makeResourceAbility(ShellJob.BLM, SkillName.LeyLines, 52, ResourceType.cd_LeyLin
 });
 
 makeGCD_BLM(SkillName.Blizzard4, 58, {
+	assetPath: iconUrl(2659),
 	aspect: Aspect.Ice,
 	baseCastTime: 2.5,
 	baseManaCost: 800,
@@ -761,6 +777,7 @@ makeGCD_BLM(SkillName.Blizzard4, 58, {
 });
 
 makeGCD_BLM(SkillName.Fire4, 60, {
+	assetPath: iconUrl(2660),
 	aspect: Aspect.Fire,
 	baseCastTime: 2.8,
 	baseManaCost: 800,
@@ -774,6 +791,7 @@ makeGCD_BLM(SkillName.Fire4, 60, {
 });
 
 makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, {
+	assetPath: iconUrl(2661),
 	applicationDelay: 0, // ?
 	cooldown: 3,
 	validateAttempt: (state) => state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0,
@@ -783,11 +801,13 @@ makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, 
 });
 
 makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialManipulation, {
+	assetPath: iconUrl(467),
 	applicationDelay: 0, // ?
 	cooldown: 10,
 });
 
 makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
+	assetPath: iconUrl(2663),
 	applicationDelay: 0, // instant
 	cooldown: 60,
 	maxCharges: 2,
@@ -800,6 +820,7 @@ makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
 });
 
 makeGCD_BLM(SkillName.Foul, 70, {
+	assetPath: iconUrl(2664),
 	baseCastTime: 2.5,
 	baseManaCost: 0,
 	basePotency: 600,
@@ -810,6 +831,7 @@ makeGCD_BLM(SkillName.Foul, 70, {
 });
 
 makeGCD_BLM(SkillName.Despair, 72, {
+	assetPath: iconUrl(2665),
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 0, // mana handled separately, like flare
@@ -830,6 +852,7 @@ makeGCD_BLM(SkillName.Despair, 72, {
 // Umbral Soul: immediate snapshot & UH gain; delayed MP gain
 // see screen recording: https://drive.google.com/file/d/1nsO69O7lgc8V_R_To4X0TGalPsCus1cg/view?usp=drive_link
 makeGCD_BLM(SkillName.UmbralSoul, 35, {
+	assetPath: iconUrl(2666),
 	aspect: Aspect.Ice,
 	baseCastTime: 0,
 	baseManaCost: 0,
@@ -847,6 +870,7 @@ makeGCD_BLM(SkillName.UmbralSoul, 35, {
 });
 
 makeGCD_BLM(SkillName.Xenoglossy, 80, {
+	assetPath: iconUrl(2667),
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 880,
@@ -857,6 +881,7 @@ makeGCD_BLM(SkillName.Xenoglossy, 80, {
 });
 
 makeGCD_BLM(SkillName.Fire2, 18, {
+	assetPath: iconUrl(452),
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 1500,
@@ -870,6 +895,7 @@ makeGCD_BLM(SkillName.Fire2, 18, {
 });
 
 makeGCD_BLM(SkillName.Blizzard2, 12, {
+	assetPath: iconUrl(2668),
 	aspect: Aspect.Ice,
 	baseCastTime: 3,
 	baseManaCost: 800,
@@ -883,6 +909,7 @@ makeGCD_BLM(SkillName.Blizzard2, 12, {
 });
 
 makeGCD_BLM(SkillName.HighFire2, 82, {
+	assetPath: iconUrl(2669),
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 1500,
@@ -896,6 +923,7 @@ makeGCD_BLM(SkillName.HighFire2, 82, {
 });
 
 makeGCD_BLM(SkillName.HighBlizzard2, 82, {
+	assetPath: iconUrl(2670),
 	aspect: Aspect.Ice,
 	baseCastTime: 3,
 	baseManaCost: 800,
@@ -909,6 +937,7 @@ makeGCD_BLM(SkillName.HighBlizzard2, 82, {
 });
 
 makeAbility_BLM(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, {
+	assetPath: iconUrl(2671),
 	applicationDelay: 0, // ? (assumed to be instant)
 	cooldown: 120,
 	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
@@ -922,6 +951,7 @@ makeAbility_BLM(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, {
 });
 
 makeGCD_BLM(SkillName.Paradox, 90, {
+	assetPath: iconUrl(2672),
 	// Paradox made instant via Dawntrail
 	baseCastTime: 0,
 	baseManaCost: 1600,
@@ -954,6 +984,7 @@ makeGCD_BLM(SkillName.Paradox, 90, {
 });
 
 makeGCD_BLM(SkillName.HighThunder, 92, {
+	assetPath: iconUrl(2673),
 	aspect: Aspect.Lightning,
 	baseCastTime: 0,
 	baseManaCost: 0,
@@ -971,6 +1002,7 @@ makeGCD_BLM(SkillName.HighThunder, 92, {
 });
 
 makeGCD_BLM(SkillName.FlareStar, 100, {
+	assetPath: iconUrl(2151),
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 0,
@@ -982,6 +1014,7 @@ makeGCD_BLM(SkillName.FlareStar, 100, {
 });
 
 makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
+	assetPath: iconUrl(2150),
 	applicationDelay: 0, // ? (assumed to be instant)
 	cooldown: 40,
 	validateAttempt: retraceCondition,
