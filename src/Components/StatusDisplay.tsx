@@ -5,6 +5,7 @@ import type {PlayerState} from "../Game/GameState";
 import {controller} from "../Controller/Controller";
 import {localize, localizeResourceType} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+import { iconUrl } from '../Utilities/icon';
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean,
@@ -188,24 +189,27 @@ function ResourceText(props: {
 
 const buffIcons = new Map();
 
+export function registerBuffURL(buff: string, url: string) {
+	buffIcons.set(buff, url)
+}
 export function registerBuffIcon(buff: string, relativePath: string) {
 	buffIcons.set(buff, require(`./Asset/Buffs/${relativePath}`));
 }
 
 const casterRoleBuffResources = [
-	ResourceType.Addle,
-	ResourceType.Swiftcast,
-	ResourceType.LucidDreaming,
-	ResourceType.Surecast,
-	ResourceType.Tincture,
+	{buff: ResourceType.Addle, icon: iconUrl(13917)},
+	{buff: ResourceType.Swiftcast, icon: iconUrl(10454)},
+	{buff: ResourceType.LucidDreaming, icon: iconUrl(13909)},
+	{buff: ResourceType.Surecast, icon: iconUrl(10452)},
 ];
 
 // role buffs are registered here; job buffs should be registered in the job's respective file
 casterRoleBuffResources.forEach(
-	(buff) => buffIcons.set(buff, require(`./Asset/Buffs/CasterRole/${buff}.png`))
+	({buff, icon}) => registerBuffURL(buff, icon)
 );
 
-buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
+registerBuffURL(ResourceType.Tincture, iconUrl(16203));
+registerBuffURL(ResourceType.Sprint, iconUrl(10101));
 
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props: BuffProps) {
