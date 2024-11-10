@@ -1157,10 +1157,10 @@ export class Config extends React.Component {
 			</button>
 		</div>;
 		return <div style={{marginBottom: 20}}>
-			{editJobSection}
-			<ConfigSummary job={controller.getActiveJob()} dirty={this.state.dirty}/>
 			{gearImportSection}
 			<br/>
+			{editJobSection}
+			<ConfigSummary job={controller.getActiveJob()} dirty={this.state.dirty}/>
 			{editStatsSection}
 			<p>{localize({
 				en: "You can also import/export fights from/to local files at the bottom of the page.",
