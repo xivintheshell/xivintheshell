@@ -7,6 +7,7 @@ export const enum PotencyModifierType {
 	AF3, AF2, AF1, UI3, UI2, UI1, ENO,
 	STARRY, 
 	EMBOLDEN_M,
+	ACCELERATION,
 	POT,
 	COMBO,
 	AUTO_CDH,
@@ -64,6 +65,11 @@ export const Modifiers = {
 		source: PotencyModifierType.EMBOLDEN_M,
 		damageFactor: 1.05,
 	} as PotencyMultiplier,
+	AccelerationImpact: {
+		kind: "adder",
+		source: PotencyModifierType.ACCELERATION,
+		additiveAmount: 50,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

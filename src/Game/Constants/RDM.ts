@@ -1,10 +1,10 @@
 export enum RDMSkillName {
 	Riposte = "Riposte",
-	Jolt = "Jolt",
+	// Jolt = "Jolt",
 	Verthunder = "Verthunder",
 	CorpsACorps = "Corps-a-corps",
 	Veraero = "Veraero",
-	Scatter = "Scatter",
+	// Scatter = "Scatter",
 	Verfire = "Verfire",
 	Verstone = "Verstone",
 	Zwerchhau = "Zwerchhau",
@@ -64,8 +64,8 @@ export enum RDMResourceType {
 	// secret combo trackers
 	// 0 = no melee combo, 1 = after 1st, 2 = after 2nd
 	RDMMeleeCounter = "RDM Melee Combo", // [0, 2]
-	// 0 = finishers not started, 1 = verflare/holy ready, 2 = scorch ready, 3 = reso ready
-	RDMFinisherCounter = "RDM Finisher", // [0, 3]
+	// 0 = finishers not started, 1 = after verflare/holy, 2 = after scorch
+	RDMFinisherCounter = "RDM Finisher Combo", // [0, 2]
 	// 0 = no moulinet combo, 1 = after 1st, 2 = after 2nd
 	RDMAoECounter = "RDM AoE Combo", // [0, 2]
 }

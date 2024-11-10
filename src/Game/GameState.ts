@@ -689,6 +689,17 @@ export abstract class GameState {
 		return false;
 	}
 
+	// Attempt to set a combo counter to a specific value, and reset its timer to 30 seconds.
+	// If `newValue` is 0, then any existing timers will be canceled.
+	setComboState(rscType: ResourceType, newValue: number) {
+		if (newValue === 0) {
+			this.tryConsumeResource(rscType, true);
+		} else {
+			this.resources.get(rscType).overrideCurrentValue(newValue);
+			this.enqueueResourceDrop(rscType, 30);
+		}
+	}
+
 	isInCombat() {
 		return this.hasResourceAvailable(ResourceType.InCombat);
 	}
