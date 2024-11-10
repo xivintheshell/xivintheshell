@@ -4,7 +4,7 @@ import { SkillsWindow } from "./Skills";
 import {Config, TimeControl} from "./PlaybackControl";
 import {StatusDisplay} from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
-import {ShellJob, getLongJobName} from "../Controller/Common";
+import {ShellJob} from "../Controller/Common";
 import 'react-tabs/style/react-tabs.css';
 import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
@@ -109,6 +109,21 @@ export default class Main extends React.Component {
 
 		setJob = (job: ShellJob) => {
 			this.setState({job: job});
+			// Change the favicon
+			// https://stackoverflow.com/a/260877
+			const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+			if (link) {
+				if (job === ShellJob.PCT) {
+					link.href = process.env.PUBLIC_URL + "/favicon_pct.ico";
+				} else {
+					link.href = process.env.PUBLIC_URL + "/favicon.ico";
+				}
+			}
+			// Change the title
+			const title = document.getElementById("pageTitle") as HTMLTitleElement;
+			if (title) {
+				title.text = `FFXIV in the Shell (${job})`;
+			}
 		};
 
 		setRealTime = ((rt: boolean)=>{
@@ -290,7 +305,7 @@ export default class Main extends React.Component {
 						<SelectLanguage/>
 						<SelectColorTheme/>
 						<div>
-							<h3 style={{marginTop: 20, marginBottom: 6}}>{getLongJobName(this.state.job)} in the Shell</h3>
+							<h3 style={{marginTop: 20, marginBottom: 6}}>FFXIV in the Shell</h3>
 							{localize({
 								en: <div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
 									tool/Changelog</b>)
