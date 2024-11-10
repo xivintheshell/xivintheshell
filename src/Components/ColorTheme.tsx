@@ -130,7 +130,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				weaponCanvas: "#a53535",
 				landscapeCanvas: "#2e51dd",
 				paletteGauge: "#b69241",
-				holyPaint: "#cacdd5",  // blue-ish light gray
+				holyPaint: "#9bc6dd",  // blue-ish light gray
 				cometPaint: "#7e19aa",  // purple-ish black
 				starryBuff: "#509bd5",
 			},
@@ -192,7 +192,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				weaponCanvas: "#d54d48",
 				landscapeCanvas: "#4568f6",
 				paletteGauge: "#f5cf96",
-				holyPaint: "#cacdd5",  // blue-ish light gray
+				holyPaint: "#b7c9d5",  // blue-ish light gray
 				cometPaint: "#9926c8",  // purple-ish black
 				starryBuff: "#66bbff",
 			},
