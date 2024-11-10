@@ -157,4 +157,6 @@ export const enum WarningType {
 
 	CometOverwrite = "comet overwrite",
 	PaletteOvercap = "palette gauge overcap",
+
+	DualcastEaten = "dualcast consumed by sprint/pot",
 }

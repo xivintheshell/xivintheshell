@@ -302,12 +302,12 @@ function drawWarningMarks(
 		let message: string = "[" + mark.displayTime.toFixed(3) + "] ";
 		if (mark.warningType === WarningType.PolyglotOvercap) {
 			message += localize({en: "polyglot overcap!", zh: "通晓溢出！"});
-		}
-		if (mark.warningType === WarningType.CometOverwrite) {
+		} else if (mark.warningType === WarningType.CometOverwrite) {
 			message += localize({en: "comet overwrite!", zh: "彗星之黑被覆盖！"});
-		}
-		if (mark.warningType === WarningType.PaletteOvercap) {
+		} else if (mark.warningType === WarningType.PaletteOvercap) {
 			message += localize({en: "palette gauge overcap!", zh: "调色量值溢出！"});
+		} else {
+			message += localize({en: mark.warningType + "!"});
 		}
 
 		testInteraction(

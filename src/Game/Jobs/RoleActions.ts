@@ -1,10 +1,12 @@
 import {ShellJob} from "../../Controller/Common";
-import {SkillName, ResourceType} from "../Common";
+import {SkillName, ResourceType, WarningType} from "../Common";
 import {makeResourceAbility} from "../Skills";
 import {DoTBuff, EventTag} from "../Resources"
 import {Traits, TraitName} from "../Traits";
+import type {GameState} from "../GameState";
+import {controller} from "../../Controller/Controller";
 
-const CASTER_JOBS = [ShellJob.BLM, ShellJob.PCT];
+const CASTER_JOBS = [ShellJob.BLM, ShellJob.PCT, ShellJob.RDM];
 
 makeResourceAbility(CASTER_JOBS, SkillName.Addle, 8, ResourceType.cd_Addle, {
 	rscType: ResourceType.Addle,
@@ -44,11 +46,20 @@ makeResourceAbility(CASTER_JOBS, SkillName.Surecast, 44, ResourceType.cd_Surecas
 	assetPath: "Role/Surecast.png",
 });
 
+// Special case for RDM, because for some twelvesforsaken reason sprint/pot cancel dualcast
+const cancelDualcast = (state: GameState) => {
+	if (state.job === ShellJob.RDM) {
+		state.tryConsumeResource(ResourceType.Dualcast);
+		controller.reportWarning(WarningType.DualcastEaten);
+	}
+};
+
 makeResourceAbility(CASTER_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture, {
 	rscType: ResourceType.Tincture,
 	applicationDelay: 0.64, // delayed // somewhere in the midrange of what's seen in logs
 	cooldown: 270,
 	assetPath: "Role/Tincture.png",
+	onConfirm: cancelDualcast,
 });
 
 makeResourceAbility(CASTER_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
@@ -56,4 +67,5 @@ makeResourceAbility(CASTER_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
 	applicationDelay: 0.133, // delayed
 	cooldown: 60,
 	assetPath: "General/Sprint.png",
+	onConfirm: cancelDualcast,
 });
