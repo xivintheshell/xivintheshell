@@ -25,17 +25,11 @@ export const enum ShellVersion {
 export const enum ShellJob {
 	BLM = "BLM",
 	PCT = "PCT",
-}
-
-export function getLongJobName(job: ShellJob) {
-	switch (job) {
-		case ShellJob.BLM: return "Black Mage";
-		case ShellJob.PCT: return "Pictomancer";
-	}
+	RDM = "RDM",
 }
 
 // can't get this automatically from a const enum
-export const ALL_JOBS = [ShellJob.BLM, ShellJob.PCT];
+export const ALL_JOBS = [ShellJob.BLM, ShellJob.PCT, ShellJob.RDM];
 
 export const enum Expansion {
 	EW = "EW",

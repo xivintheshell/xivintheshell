@@ -41,9 +41,16 @@ export type PCTResourceColors = {
 	starryBuff: string,
 }
 
+export type RDMResourceColors = {
+	whiteMana: string,
+	blackMana: string,
+	manaStack: string,
+}
+
 export type JobAccentColors = {
 	[ShellJob.BLM]: string,
-	[ShellJob.PCT]: string
+	[ShellJob.PCT]: string,
+	[ShellJob.RDM]: string,
 }
 
 export type ThemeColors = {
@@ -69,6 +76,7 @@ export type ThemeColors = {
 	},
 	blm: BLMResourceColors,
 	pct: PCTResourceColors,
+	rdm: RDMResourceColors,
 	timeline: {
 		ruler: string,
 		tracks: string,
@@ -96,6 +104,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 			jobAccents: {
 				[ShellJob.BLM]: "#9370db", // mediumpurple
 				[ShellJob.PCT]: "#e176c2",
+				[ShellJob.RDM]: "#ff0000", // TODO less red
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -134,6 +143,12 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				cometPaint: "#7e19aa",  // purple-ish black
 				starryBuff: "#509bd5",
 			},
+			rdm: {
+				// TODO
+				whiteMana: "#9bc6dd",  // holy
+				blackMana: "#7e19aa",  // comet
+				manaStack: "#cb8046",  // astral soul
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -158,6 +173,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 			jobAccents: {
 				[ShellJob.BLM]: "#9370db", // mediumpurple
 				[ShellJob.PCT]: "#f485d6",
+				[ShellJob.RDM]: "#ff0000", // TODO less red
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -195,6 +211,12 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				holyPaint: "#b7c9d5",  // blue-ish light gray
 				cometPaint: "#9926c8",  // purple-ish black
 				starryBuff: "#66bbff",
+			},
+			rdm: {
+				// TODO
+				whiteMana: "#ffa641",  // holy
+				blackMana: "#b7c9d5",  // comet
+				manaStack: "#9926c8",  // astral soul
 			},
 			timeline: {
 				ruler: "#e9e9e9",

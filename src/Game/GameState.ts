@@ -22,7 +22,7 @@ import {
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
 import {ShellJob} from "../Controller/Common";
-import {Potency, PotencyModifier, PotencyModifierType} from "./Potency";
+import {Modifiers, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
 
 import type {BLMState} from "./Jobs/BLM";
@@ -248,7 +248,7 @@ export abstract class GameState {
 	}
 
 	// BLM uses this for LL GCD scaling, but PCT does not
-	gcdRecastTimeScale() {
+	gcdRecastTimeScale(): number {
 		if (this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines)) {
 			// should be approximately 0.85
 			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.LeyLines));
@@ -288,13 +288,13 @@ export abstract class GameState {
 	}
 
 	/**
-	 * Attempt to use a spell. Assumes that resources for the spell are currently available,
+	 * Attempt to use a spell or weaponskill. Assumes that resources for the spell are currently available,
 	 * i.e. `skill.validateAttempt` succeeded.
 	 *
 	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
 	 * it performs the confirmation immediately.
 	 */
-	useSpell(skill: Spell<PlayerState>, node: ActionNode) {
+	useSpellOrWeaponskill(skill: Spell<PlayerState> | Weaponskill<PlayerState>, node: ActionNode) {
 		let cd = this.cooldowns.get(skill.cdName);
 		// TODO refactor logic to determine self-buffs
 		let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
@@ -372,7 +372,7 @@ export abstract class GameState {
 				potency.snapshotTime = this.getDisplayTime();
 				const mods = [];
 				if (this.hasResourceAvailable(ResourceType.Tincture)) {
-					mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
+					mods.push(Modifiers.Tincture);
 				}
 				mods.push(...skill.jobPotencyModifiers(this));
 				potency.modifiers = mods;
@@ -465,7 +465,7 @@ export abstract class GameState {
 			});
 			const mods = [];
 			if (this.hasResourceAvailable(ResourceType.Tincture)) {
-				mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
+				mods.push(Modifiers.Tincture);
 			}
 			mods.push(...skill.jobPotencyModifiers(this));
 			potency.modifiers = mods;
@@ -633,9 +633,8 @@ export abstract class GameState {
 
 	useSkill(skillName: SkillName, node: ActionNode) {
 		let skill = this.skillsList.get(skillName);
-		// TODO implement weaponskills
-		if (skill.kind === "spell") {
-			this.useSpell(skill, node);
+		if (skill.kind === "spell" || spell.kind === "weaponskill") {
+			this.useSpellOrWeaponskill(skill, node);
 		} else if (skill.kind === "ability") {
 			this.useAbility(skill, node);
 		}
@@ -649,27 +648,39 @@ export abstract class GameState {
 		}).forEach(marker => {
 			const buff = new Buff(marker.description as BuffType);
 			if (!buffCollection.has(buff.name)) {
-				buffCollection.set(buff.name, {
-					source: PotencyModifierType.PARTY, 
-					buffType: buff.name,
-					damageFactor: buff.info.damageFactor,
-					critFactor: buff.info.critBonus,
-					dhFactor: buff.info.dhBonus,
-				});
+				// Assume all buffs are either crit/DH multipliers, or flat damage multipliers,
+				// but not both. This is currently true for all party buffs in the game.
+				if (buff.info.damageFactor === 1) {
+					buffCollection.set(buff.name, {
+						kind: "multiplier",
+						source: PotencyModifierType.PARTY,
+						buffType: buff.name,
+						damageFactor: buff.info.damageFactor,
+					});
+				} else {
+					buffCollection.set(buff.name, {
+						kind: "critDirect",
+						source: PotencyModifierType.PARTY, 
+						buffType: buff.name,
+						critFactor: buff.info.critBonus,
+						dhFactor: buff.info.dhBonus,
+					});
+				}
 			}
 		})
 
 		return buffCollection;
 	}
 
-	// Attempt to consume 1 stack of the specified resource.
-	// When cancelTimerIfEmpty is set, then remove any associated timers if the last stack of
-	// the resource was consumed.
-	tryConsumeResource(rscType: ResourceType, removeTimerIfEmpty=true) {
+	// Attempt to consume stacks of the specified resource, removing any active timers if
+	// all stacks have been consumed.
+	// Consumes only 1 stack by default; consumes all available stacks when `consumeAll` is set.
+	tryConsumeResource(rscType: ResourceType, consumeAll: boolean = false) {
 		const resource = this.resources.get(rscType);
-		if (resource.available(1)) {
-			resource.consume(1);
-			if (removeTimerIfEmpty && !resource.available(1)) {
+		const toConsume = consumeAll ? resource.availableAmount() : 1;
+		if (resource.available(toConsume)) {
+			resource.consume(toConsume);
+			if (!resource.available(toConsume)) {
 				resource.removeTimer();
 			}
 			return true;

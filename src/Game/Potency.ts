@@ -4,15 +4,66 @@ import {Aspect, BuffType, SkillName} from "./Common";
 import {GameConfig} from "./GameConfig";
 
 export const enum PotencyModifierType {
-	AF3, AF2, AF1, UI3, UI2, UI1, ENO, POT, STARRY, AUTO_CDH, PARTY
+	AF3, AF2, AF1, UI3, UI2, UI1, ENO,
+	STARRY, 
+	POT,
+	AUTO_CDH,
+	PARTY,
 }
 
-export type PotencyModifier = {
-	source: PotencyModifierType,
+// Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
+export type PotencyMultiplier = {
+	kind: "multiplier",
 	buffType?: BuffType,
+	source: PotencyModifierType,
 	damageFactor: number,
+};
+
+// Represents an additive potency buff, such as Enhanced Enpi increasing Enpi from 100 -> 270.
+// Additive potencies should be applied before any multiplicative ones.
+export type PotencyAdder = {
+	kind: "adder",
+	source: PotencyModifierType,
+	additiveAmount: number, 
+}
+
+// Represents a modifier that scales crit, DH, or both.
+export type CritDirectMultiplier = {
+	kind: "critDirect",
+	buffType?: BuffType,
+	source: PotencyModifierType,
 	critFactor: number,
 	dhFactor: number,
+};
+
+export type PotencyModifier = PotencyMultiplier | PotencyAdder | CritDirectMultiplier;
+
+export const Modifiers = {
+	Tincture: {
+		// tincture scaling is computed separately; just treat it as a multiplier of 1
+		kind: "multiplier",
+		source: PotencyModifierType.POT,
+		damageFactor: 1,
+	} as PotencyMultiplier,
+	AutoCDH: {
+		kind: "critDirect",
+		source: PotencyModifierType.AUTO_CDH,
+		critFactor: 1,
+		dhFactor: 1,
+	} as CritDirectMultiplier,
+	Starry: {
+		kind: "multiplier",
+		source: PotencyModifierType.STARRY,
+		damageFactor: 1.05,
+	} as PotencyMultiplier,
+};
+
+export function makeComboModifier(addend: number): PotencyAdder {
+	return {
+		kind: "adder",
+		source: PotencyModifierType.COMBO,
+		additiveAmount: addend,
+	};
 }
 
 export type InitialPotencyProps = {
@@ -51,6 +102,7 @@ export class Potency {
 		includePartyBuffs: boolean
 	}) {
 		let totalDamageFactor = 1;
+		let totalAdditiveAmount = 0;
 		let totalCritFactor = 0;
 		let totalDhFactor = 0;
 
@@ -59,18 +111,23 @@ export class Potency {
 		this.modifiers.forEach(m=>{
 			if (m.source===PotencyModifierType.POT) totalDamageFactor *= props.tincturePotencyMultiplier;
 			else if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
-			else totalDamageFactor *= m.damageFactor;
+			else if (m.kind === "multiplier") totalDamageFactor *= m.damageFactor;
+			else if (m.kind === "adder") totalAdditiveAmount += m.additiveAmount;
 		});
 
 		if (props.includePartyBuffs && this.snapshotTime) {
 			controller.game.getPartyBuffs(this.snapshotTime).forEach(buff => {
-				totalDamageFactor *= buff.damageFactor;
-				totalCritFactor += buff.critFactor ?? 0;
-				totalDhFactor += buff.dhFactor ?? 0;
+				if (buff.kind === "multiplier") {
+					totalDamageFactor *= buff.damageFactor;
+				} else if (buff.kind === "critDirect") {
+					totalCritFactor += buff.critFactor;
+					totalDhFactor += buff.dhFactor;
+				}
 			});
 		}
+		const base = this.base + totalAdditiveAmount;
 
-		let amt = this.base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor);
+		let amt = base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor);
 		if (isAutoCDH) amt *= this.#calculateAutoCDHModifier(totalCritFactor, totalDhFactor);
 		return amt;
 	}
@@ -103,6 +160,15 @@ export class Potency {
 		const level = this.config.level;
 		const base = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, critBonus, dhBonus);
 		const buffed = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, 1+critBonus, 1+dhBonus);
+
+		return buffed / base;
+	}
+
+	#calculateAutoCritModifier(critBonus: number) {
+		// TODO check if this is the correct formula; may need to modify XIVMath.calculateDamage
+		const level = this.config.level;
+		const base = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, critBonus, 0);
+		const buffed = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, 1+critBonus, 1);
 
 		return buffed / base;
 	}

@@ -289,6 +289,56 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	return info;
 };
 
+export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, params: Partial<{
+	assetPath: string,
+	autoUpgrade: SkillAutoReplace,
+	autoDowngrade: SkillAutoReplace,
+	aspect: Aspect,
+	replaceIf: ConditionalSkillReplace<T>[],
+	startOnHotbar: boolean,
+	highlightIf: StatePredicate<T>,
+	castTime: number | ResourceCalculationFn<T>,
+	recastTime: number | ResourceCalculationFn<T>,
+	manaCost: number | ResourceCalculationFn<T>,
+	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
+	jobPotencyModifiers: PotencyModifierFn<T>,
+	applicationDelay: number,
+	validateAttempt: StatePredicate<T>,
+	isInstantFn: StatePredicate<T>,
+	onConfirm: EffectFn<T>,
+	onApplication: EffectFn<T>,
+}>): Weaponskill<T> {
+	if (!Array.isArray(jobs)) {
+		jobs = [jobs];
+	}
+	let potencyFn = Array.isArray(params.potency) ? convertTraitPotencyArray(params.potency) : fnify(params.potency, 0);
+	const info: Weaponskill<T> = {
+		kind: "weaponskill",
+		name: name,
+		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
+		unlockLevel: unlockLevel,
+		autoUpgrade: params.autoUpgrade,
+		autoDowngrade: params.autoDowngrade,
+		cdName: ResourceType.cd_GCD,
+		aspect: params.aspect ?? Aspect.Other,
+		replaceIf: params.replaceIf ?? [],
+		startOnHotbar: params.startOnHotbar ?? true,
+		highlightIf: params.highlightIf ?? ((state) => false),
+		castTimeFn: fnify(params.castTime, 0),
+		recastTimeFn: fnify(params.recastTime, 2.5),
+		manaCostFn: fnify(params.manaCost, 0),
+		potencyFn: potencyFn,
+		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		validateAttempt: params.validateAttempt ?? ((state) => true),
+		isInstantFn: params.isInstantFn ?? ((state) => true),
+		onConfirm: params.onConfirm ?? NO_EFFECT,
+		onApplication: params.onApplication ?? NO_EFFECT,
+		applicationDelay: params.applicationDelay ?? 0,
+	};
+	jobs.forEach((job) => setSkill(job, info.name, info));
+	return info;
+};
+
 
 /**
  * Declare an oGCD ability.

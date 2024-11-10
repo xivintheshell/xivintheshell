@@ -192,7 +192,7 @@ export function registerBuffIcon(buff: string, relativePath: string) {
 	buffIcons.set(buff, require(`./Asset/Buffs/${relativePath}`));
 }
 
-const casterRoleBuffResources = [
+const roleBuffResources = [
 	ResourceType.Addle,
 	ResourceType.Swiftcast,
 	ResourceType.LucidDreaming,
@@ -201,8 +201,8 @@ const casterRoleBuffResources = [
 ];
 
 // role buffs are registered here; job buffs should be registered in the job's respective file
-casterRoleBuffResources.forEach(
-	(buff) => buffIcons.set(buff, require(`./Asset/Buffs/CasterRole/${buff}.png`))
+roleBuffResources.forEach(
+	(buff) => buffIcons.set(buff, require(`./Asset/Buffs/Role/${buff}.png`))
 );
 
 buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
