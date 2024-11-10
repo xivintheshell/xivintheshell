@@ -192,9 +192,6 @@ const buffIcons = new Map();
 export function registerBuffURL(buff: string, url: string) {
 	buffIcons.set(buff, url)
 }
-export function registerBuffIcon(buff: string, relativePath: string) {
-	buffIcons.set(buff, require(`./Asset/Buffs/${relativePath}`));
-}
 
 const casterRoleBuffResources = [
 	{buff: ResourceType.Addle, icon: iconUrl(13917)},
