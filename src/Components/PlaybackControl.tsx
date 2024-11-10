@@ -525,6 +525,7 @@ export class Config extends React.Component {
 							criticalHit: stats.get("CRT"),
 							directHit: stats.get("DH"),
 							determination: stats.get("DET"),
+							dirty: true,
 						});
 						this.updateTaxPreview(stats.get("SPS")!.toString(), this.state.fps, body["level"]);
 					} else {
@@ -559,6 +560,7 @@ export class Config extends React.Component {
 							criticalHit: stats["crit"],
 							directHit: stats["dhit"],
 							determination: stats["determination"],
+							dirty: true,
 						});
 						this.updateTaxPreview(stats["spellspeed"]!.toString(), this.state.fps, body["level"]);
 					} else {
