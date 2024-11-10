@@ -183,8 +183,18 @@ function PotencyDisplay(props: {
 	if (props.explainUntargetable) {
 		potencyExplanation += localize({en: "(untargetable)", zh: "(不可选中)"});
 	}
+	let additiveExplanation = "";
+	props.calc.forEach(m => {
+		if (m.kind === "adder" && m.additiveAmount > 0) {
+			potency += m.additiveAmount;
+			additiveExplanation += " + " + m.additiveAmount + "(" + buffName(m.source) + ")";
+		}
+	});
+	if (additiveExplanation) {
+		potencyExplanation = "[ " + potencyExplanation + additiveExplanation + " ]";
+	}
 	props.calc.forEach(m=>{
-		if (m.damageFactor !== 1) {
+		if (m.kind === "multiplier" && m.damageFactor !== 1) {
 			potency *= m.damageFactor;
 			potencyExplanation += " × " + m.damageFactor + "(" + buffName(m.source) + ")"
 		}

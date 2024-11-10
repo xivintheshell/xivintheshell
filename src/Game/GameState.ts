@@ -4,6 +4,7 @@ import {
 	DisplayedSkills,
 	SkillsList,
 	Spell,
+	Weaponskill,
 	Ability,
 } from "./Skills"
 import {
@@ -271,11 +272,11 @@ export abstract class GameState {
 				rsc.enabled = true;
 				return true;
 			}
-		} else if ([
+		} else if (([
 			ResourceType.HammerTime,
 			ResourceType.Aetherhues,
 			ResourceType.SubtractivePalette,
-		].includes(buffName)) {
+		] as ResourceType[]).includes(buffName)) {
 			// subtractive spectrum, starstruck, monochrome tones, rainbow drip,
 			// tempera coat/grassa, smudge can be clicked off
 			// but these buffs cannot be
@@ -298,7 +299,7 @@ export abstract class GameState {
 		let cd = this.cooldowns.get(skill.cdName);
 		// TODO refactor logic to determine self-buffs
 		let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
-		const inspireSkills = [
+		const inspireSkills: SkillName[] = [
 			SkillName.FireInRed,
 			SkillName.Fire2InRed,
 			SkillName.AeroInGreen,
@@ -592,7 +593,7 @@ export abstract class GameState {
 		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
 
 		// Special case for striking/starry muse, which require being in combat
-		if ([SkillName.StrikingMuse, SkillName.StarryMuse].includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
+		if (([SkillName.StrikingMuse, SkillName.StarryMuse] as SkillName[]).includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
 			status = SkillReadyStatus.NotInCombat;
 			timeTillAvailable = this.timeTillNextDamageEvent();
 		}
@@ -633,7 +634,7 @@ export abstract class GameState {
 
 	useSkill(skillName: SkillName, node: ActionNode) {
 		let skill = this.skillsList.get(skillName);
-		if (skill.kind === "spell" || spell.kind === "weaponskill") {
+		if (skill.kind === "spell" || skill.kind === "weaponskill") {
 			this.useSpellOrWeaponskill(skill, node);
 		} else if (skill.kind === "ability") {
 			this.useAbility(skill, node);

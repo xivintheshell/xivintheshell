@@ -152,7 +152,7 @@ export class BLMState extends GameState {
 	}
 
 	// call this whenever gaining af or ui from a different af/ui/unaspected state
-	switchToAForUI(rscType: ResourceType.AstralFire | ResourceType.UmbralIce, numStacksToGain: number) {
+	switchToAForUI(rscType: typeof ResourceType.AstralFire | typeof ResourceType.UmbralIce, numStacksToGain: number) {
 		console.assert(numStacksToGain > 0);
 
 		let af = this.resources.get(ResourceType.AstralFire);
@@ -360,7 +360,7 @@ const makeSpell_BLM = (name: SkillName, unlockLevel: number, params: {
 			if (
 				state.getFireStacks() > 0 &&
 				aspect === Aspect.Fire &&
-				![SkillName.Despair, SkillName.FlareStar, SkillName.Flare].includes(name) &&
+				!([SkillName.Despair, SkillName.FlareStar, SkillName.Flare] as SkillName[]).includes(name) &&
 				!(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter))
 			) {
 				state.tryConsumeResource(ResourceType.UmbralHeart)
@@ -571,7 +571,7 @@ const applyThunderDoT = (game: PlayerState, node: ActionNode, skillName: SkillNa
 	thunder.tickCount = 0;
 };
 
-const addThunderPotencies = (game: BLMState, node: ActionNode, skillName: SkillName.Thunder3 | SkillName.HighThunder) => {
+const addThunderPotencies = (game: BLMState, node: ActionNode, skillName: typeof SkillName.Thunder3 | typeof SkillName.HighThunder) => {
 	const mods: PotencyMultiplier[] = [];
 	// All modifiers need to be manually added to dot tick action nodes
 	if (game.hasResourceAvailable(ResourceType.Tincture)) {
@@ -614,7 +614,7 @@ const addThunderPotencies = (game: BLMState, node: ActionNode, skillName: SkillN
 	}
 };
 
-const thunderConfirm = (skillName: SkillName.Thunder3 | SkillName.HighThunder) => (
+const thunderConfirm = (skillName: typeof SkillName.Thunder3 | typeof SkillName.HighThunder) => (
 	(game: BLMState, node: ActionNode) => {
 		// potency
 		addThunderPotencies(game, node, skillName); // should call on capture

@@ -7,6 +7,8 @@
 # too lazy to rewrite this to parse a text file).
 # Does not re-retrieve assets that were already downloaded (delete the file first if you want to update them)
 
+# TODO: extend to auto-generate src/Game/Constants/JOB.ts as well.
+
 JOB="RDM"  # change me when you do a different job
 
 SKILL_DIR="src/Components/Asset/Skills/$JOB"

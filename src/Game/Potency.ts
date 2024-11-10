@@ -6,7 +6,9 @@ import {GameConfig} from "./GameConfig";
 export const enum PotencyModifierType {
 	AF3, AF2, AF1, UI3, UI2, UI1, ENO,
 	STARRY, 
+	EMBOLDEN_M,
 	POT,
+	COMBO,
 	AUTO_CDH,
 	PARTY,
 }
@@ -54,6 +56,12 @@ export const Modifiers = {
 	Starry: {
 		kind: "multiplier",
 		source: PotencyModifierType.STARRY,
+		damageFactor: 1.05,
+	} as PotencyMultiplier,
+	EmboldenMagic: {
+		// The RDM self-buff component of Embolden is magic damage only
+		kind: "multiplier",
+		source: PotencyModifierType.EMBOLDEN_M,
 		damageFactor: 1.05,
 	} as PotencyMultiplier,
 };

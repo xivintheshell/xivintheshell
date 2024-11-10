@@ -15,28 +15,23 @@ import {getCurrentThemeColors} from "../../Components/ColorTheme";
 import {localize} from "../../Components/Localization";
 
 [
-	ResourceType.Aetherhues,
-	ResourceType.Aetherhues + "2",
-	ResourceType.MonochromeTones,
-	ResourceType.HammerTime,
-	ResourceType.HammerTime + "2",
-	ResourceType.HammerTime + "3",
-	ResourceType.Inspiration,
-	ResourceType.SubtractivePalette,
-	ResourceType.SubtractivePalette + "2",
-	ResourceType.SubtractivePalette + "3",
-	ResourceType.SubtractiveSpectrum,
-	ResourceType.Hyperphantasia,
-	ResourceType.Hyperphantasia + "2",
-	ResourceType.Hyperphantasia + "3",
-	ResourceType.Hyperphantasia + "4",
-	ResourceType.Hyperphantasia + "5",
-	ResourceType.RainbowBright,
-	ResourceType.Starstruck,
-	ResourceType.StarryMuse,
-	ResourceType.TemperaCoat,
-	ResourceType.TemperaGrassa,
-	ResourceType.Smudge,
+	ResourceType.Acceleration,
+	ResourceType.Dualcast,
+	ResourceType.Embolden,
+	ResourceType.GrandImpactReady,
+	ResourceType.MagickBarrier,
+	ResourceType.MagickedSwordplay,
+	ResourceType.MagickedSwordplay + "2",
+	ResourceType.MagickedSwordplay + "3",
+	ResourceType.Manafication,
+	ResourceType.Manafication + "2",
+	ResourceType.Manafication + "3",
+	ResourceType.Manafication + "4",
+	ResourceType.Manafication + "5",
+	ResourceType.Manafication + "6",
+	ResourceType.PrefulgenceReady,
+	ResourceType.VerfireReady,
+	ResourceType.VerstoneReady,
 ].forEach((buff) => registerBuffIcon(buff, `RDM/${buff}.png`));
 
 export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
@@ -56,18 +51,27 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 
 	override getSelfBuffViewProps(): BuffProps[] {
 		const makeRedMageTimer = (rscType: ResourceType) => {
-			const cd = resources.timeTillReady(rscType);
+			const cd = this.state.resources.timeTillReady(rscType);
 			return {
 				rscType: rscType,
 				onSelf: true,
 				enabled: true,
-				stacks: stacks ?? resources.get(rscType).availableAmount(),
+				stacks: this.state.resources.get(rscType).availableAmount(),
 				timeRemaining: cd.toFixed(3),
 				className: cd > 0 ? "" : "hidden"
 			};
 		};
 		return [
 			ResourceType.Dualcast,
+			ResourceType.Acceleration,
+			ResourceType.GrandImpactReady,
+			ResourceType.VerstoneReady,
+			ResourceType.VerfireReady,
+			ResourceType.Embolden,
+			ResourceType.ThornedFlourish,
+			ResourceType.MagickedSwordplay,
+			ResourceType.Manafication,
+			ResourceType.MagickBarrier,
 		].map(makeRedMageTimer);
 	}
 
@@ -95,7 +99,7 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 			{
 				kind: "counter",
 				name: localize({en: "mana stacks"}),
-				color: colors.rdm.manaStacks,
+				color: colors.rdm.manaStack,
 				currentStacks: manaStacks,
 				maxStacks: 3,
 			} as ResourceCounterProps,
