@@ -24,6 +24,7 @@ import {getCurrentThemeColors, ThemeColors} from "./ColorTheme";
 import {scrollEditorToFirstSelected} from "./TimelineEditor";
 import {bossIsUntargetable} from "../Controller/DamageStatistics";
 import {updateTimelineView} from "./Timeline";
+import {ShellJob} from "../Controller/Common";
 
 export type TimelineRenderingProps = {
 	timelineWidth: number,
@@ -36,7 +37,10 @@ export type TimelineRenderingProps = {
 	untargetableMarkers: MarkerElem[],
 	buffMarkers: MarkerElem[],
 	sharedElements: SharedTimelineElem[],
-	slotElements: SlotTimelineElem[][],
+	slots: {
+		job: ShellJob,
+		elements: SlotTimelineElem[]
+	}[],
 	activeSlotIndex: number,
 	showSelection: boolean,
 	selectionStartDisplayTime: number,
@@ -76,7 +80,7 @@ let g_renderingProps: TimelineRenderingProps = {
 	buffMarkers: [],
 	untargetableMask: true,
 	sharedElements: [],
-	slotElements: [],
+	slots: [],
 	activeSlotIndex: 0,
 	showSelection: false,
 	selectionStartDisplayTime: 0,
@@ -737,7 +741,7 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 	// fragCoord.x of displayTime=0
 	const displayOriginX = originX + StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
 
-	for (let slot = 0; slot < g_renderingProps.slotElements.length; slot++) {
+	for (let slot = 0; slot < g_renderingProps.slots.length; slot++) {
 
 		let isActiveSlot = slot === g_renderingProps.activeSlotIndex;
 		let elemBins = new Map<ElemType, TimelineElem[]>();
@@ -745,7 +749,7 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 			// Only draw the active timeline in export mode
 			continue;
 		}
-		g_renderingProps.slotElements[slot].forEach(e=>{
+		g_renderingProps.slots[slot].elements.forEach(e=>{
 			let arr = elemBins.get(e.type) ?? [];
 			arr.push(e);
 			elemBins.set(e.type, arr);
@@ -796,8 +800,8 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 	}
 	// countdown grey rect
 	let countdownWidth = StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
-	let countdownHeight = TimelineDimensions.renderSlotHeight() * g_renderingProps.slotElements.length;
-	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) countdownHeight += TimelineDimensions.addSlotButtonHeight;
+	let countdownHeight = TimelineDimensions.renderSlotHeight() * g_renderingProps.slots.length;
+	if (g_renderingProps.slots.length < MAX_TIMELINE_SLOTS) countdownHeight += TimelineDimensions.addSlotButtonHeight;
 	g_ctx.fillStyle = g_colors.timeline.countdown;
 	// make it cover the left padding as well:
 	g_ctx.fillRect(originX - TimelineDimensions.leftBufferWidth, originY, countdownWidth + TimelineDimensions.leftBufferWidth, countdownHeight);
@@ -808,7 +812,7 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 	}
 
 	// slot selection bars
-	for (let slot = 0; slot < g_renderingProps.slotElements.length; slot++) {
+	for (let slot = 0; slot < g_renderingProps.slots.length; slot++) {
 		let currentY = originY + slot * TimelineDimensions.renderSlotHeight();
 		let handle : Rect = {
 			x: 0,
@@ -823,7 +827,7 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 		}, true);
 
 		// delete btn
-		if (g_renderingProps.slotElements.length > 1) {
+		if (g_renderingProps.slots.length > 1) {
 			g_ctx.fillStyle = g_colors.emphasis;
 			g_ctx.font = "bold 14px monospace";
 			g_ctx.textAlign = "center";
@@ -840,11 +844,11 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 			}, true);
 		}
 	}
-	let timelineSectionHeight = TimelineDimensions.renderSlotHeight() * g_renderingProps.slotElements.length;
+	let timelineSectionHeight = TimelineDimensions.renderSlotHeight() * g_renderingProps.slots.length;
 
 	// add button
-	if (g_renderingProps.slotElements.length < MAX_TIMELINE_SLOTS) {
-		let currentY = originY + g_renderingProps.slotElements.length * TimelineDimensions.renderSlotHeight();
+	if (g_renderingProps.slots.length < MAX_TIMELINE_SLOTS) {
+		let currentY = originY + g_renderingProps.slots.length * TimelineDimensions.renderSlotHeight();
 		let handle : Rect = {
 			x: 4,
 			y: currentY + 2,

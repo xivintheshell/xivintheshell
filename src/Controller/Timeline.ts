@@ -1,8 +1,8 @@
 import {updateTimelineView} from "../Components/Timeline";
 import {controller} from "./Controller";
-import {Debug, BuffType, ResourceType, SkillName, WarningType} from "../Game/Common";
+import {BuffType, Debug, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {ActionNode} from "./Record";
-import {FileType, getCachedValue, removeCachedValue, setCachedValue} from "./Common";
+import {FileType, getCachedValue, removeCachedValue, setCachedValue, ShellJob} from "./Common";
 import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkers";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
@@ -124,7 +124,10 @@ export class Timeline {
 	startTime: number;
 	elapsedTime: number; // raw time (starts from 0)
 	sharedElements: SharedTimelineElem[];
-	slots: SlotTimelineElem[][];
+	slots: {
+		job: ShellJob,
+		elements: SlotTimelineElem[],
+	}[];
 	activeSlotIndex: number;
 	#allMarkers: MarkerElem[];
 	#untargetableMarkers: MarkerElem[];
@@ -153,7 +156,7 @@ export class Timeline {
 			this.sharedElements.push(elem as SharedTimelineElem);
 		} else {
 			console.assert(this.slots.length > 0);
-			this.slots[this.activeSlotIndex].push(elem as SlotTimelineElem);
+			this.slots[this.activeSlotIndex].elements.push(elem as SlotTimelineElem);
 		}
 	}
 
@@ -290,7 +293,7 @@ export class Timeline {
 	}
 
 	addSlot() {
-		this.slots.push([]);
+		this.slots.push({job: ShellJob.BLM, elements: []});
 		console.assert(this.slots.length <= MAX_TIMELINE_SLOTS);
 		this.activeSlotIndex = this.slots.length - 1;
 		controller.setConfigAndRestart(controller.gameConfig);
@@ -332,10 +335,11 @@ export class Timeline {
 			// found record; make sure the slot exists
 			this.activeSlotIndex = index;
 			while (this.slots.length <= index) {
-				this.slots.push([]);
+				this.slots.push({job: ShellJob.BLM, elements: []});
 			}
 			let content = JSON.parse(str);
 			controller.loadBattleRecordFromFile(content);
+			this.slots[index].job = controller.game.job;
 			return true;
 		} else {
 			// nothing found here
@@ -347,7 +351,7 @@ export class Timeline {
 		this.startTime = 0;
 		this.elapsedTime = 0;
 		if (this.slots.length > 0) {
-			this.slots[this.activeSlotIndex] = [];
+			this.slots[this.activeSlotIndex].elements = [];
 		}
 		this.sharedElements = [];
 		this.addElement({
