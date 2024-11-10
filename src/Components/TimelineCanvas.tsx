@@ -820,8 +820,7 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 			w: 14,
 			h: TimelineDimensions.renderSlotHeight() - 2
 		};
-		// don't think very low contrast works well here so turning it off for now..
-		g_ctx.fillStyle = slot === g_renderingProps.activeSlotIndex ? g_colors.jobAccents[g_renderingProps.slots[slot].job] : g_colors.bgMediumContrast;
+		g_ctx.fillStyle = slot === g_renderingProps.activeSlotIndex ? g_colors.accent : g_colors.bgMediumContrast;
 		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
 		testInteraction(handle, slot===g_renderingProps.activeSlotIndex ? undefined : [localize({en: "set active", zh: "设为当前"}) as string], () => {
 			controller.setActiveSlot(slot);
