@@ -9,6 +9,7 @@ import {updateTimelineView} from "./Timeline";
 import * as ReactDOMServer from 'react-dom/server';
 import {getCurrentThemeColors} from "./ColorTheme";
 import {getSkillAssetPath} from "../Game/Skills";
+import { isUrl } from '../Utilities/isUrl';
 
 // Game/Jobs/* must be run first to ensure all skills have been registered, so we need to
 // load images lazily to ensure we're not dependent on webpack's module resolution order.
@@ -19,10 +20,15 @@ export const getSkillIconPath = (skillName: SkillName | undefined) => {
 		return undefined;
 	}
 	const assetPath = getSkillAssetPath(skillName);
-	if (assetPath) {
+	if (!assetPath) {
+		return undefined;
+	}
+
+	if (!isUrl(assetPath)) {
 		return require(`./Asset/Skills/${assetPath}`);
 	}
-	return undefined;
+
+	return assetPath;
 };
 
 export const getSkillIconImage = (skillName: SkillName) => {
@@ -30,14 +36,20 @@ export const getSkillIconImage = (skillName: SkillName) => {
 		return skillIconImages.get(skillName);
 	}
 	const assetPath = getSkillAssetPath(skillName);
-	if (assetPath) {
-		let imgObj = new Image();
-		imgObj.src = require(`./Asset/Skills/${assetPath}`);
-		imgObj.onload = () => updateTimelineView();
-		skillIconImages.set(skillName, imgObj);
-		return imgObj;
+	if (!assetPath) {
+		return undefined
 	}
-	return undefined;
+
+	let imageSource = assetPath;
+	if (!isUrl(assetPath)) {
+		imageSource = require(`./Asset/Skills/${assetPath}`);
+	}
+
+	let imgObj = new Image();
+	imgObj.src = imageSource;
+	imgObj.onload = () => updateTimelineView();
+	skillIconImages.set(skillName, imgObj);
+	return imgObj;
 };
 
 function ProgressCircle(props={
