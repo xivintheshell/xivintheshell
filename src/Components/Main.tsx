@@ -119,6 +119,11 @@ export default class Main extends React.Component {
 					link.href = process.env.PUBLIC_URL + "/favicon.ico";
 				}
 			}
+			// Change the title
+			const title = document.getElementById("pageTitle") as HTMLTitleElement;
+			if (title) {
+				title.text = `FFXIV in the Shell (${job})`;
+			}
 		};
 
 		setRealTime = ((rt: boolean)=>{
