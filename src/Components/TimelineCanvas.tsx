@@ -582,7 +582,8 @@ function drawSkills(
 	});
 }
 
-function drawCursor(x: number, color: string, tip: string) {
+function drawCursor(x: number, y1: number, y2: number, y3: number, color: string, tip: string) {
+	// triangle
 	g_ctx.fillStyle = color;
 	g_ctx.beginPath();
 	g_ctx.moveTo(x-3, 0);
@@ -590,14 +591,42 @@ function drawCursor(x: number, color: string, tip: string) {
 	g_ctx.lineTo(x, 6);
 	g_ctx.fill();
 
-	g_ctx.strokeStyle = color;
 	g_ctx.lineWidth = 1;
+
+	// ruler
+	g_ctx.strokeStyle = color;
+	g_ctx.setLineDash([]);
 	g_ctx.beginPath();
 	g_ctx.moveTo(x, 0);
+	g_ctx.lineTo(x, y1);
+	g_ctx.stroke();
+
+	// before active slot
+	g_ctx.strokeStyle = color + "9f";
+	g_ctx.setLineDash([2, 3]);
+	g_ctx.beginPath();
+	g_ctx.moveTo(x, y1);
+	g_ctx.lineTo(x, y2);
+	g_ctx.stroke();
+
+	// active slot
+	g_ctx.strokeStyle = color;
+	g_ctx.setLineDash([]);
+	g_ctx.beginPath();
+	g_ctx.moveTo(x, y2);
+	g_ctx.lineTo(x, y3);
+	g_ctx.stroke();
+
+	// after active slot
+	g_ctx.strokeStyle = color + "9f";
+	g_ctx.setLineDash([2, 3]);
+	g_ctx.beginPath();
+	g_ctx.moveTo(x, y3);
 	g_ctx.lineTo(x, c_maxTimelineHeight);
 	g_ctx.stroke();
 
 	testInteraction({x: x-3, y: 0, w: 6, h: c_maxTimelineHeight}, [tip]);
+	g_ctx.setLineDash([]);
 }
 
 export function drawRuler(originX: number, ignoreVisibleX = false) : number {
@@ -705,15 +734,8 @@ export function drawMarkerTracks(originX: number, originY: number, ignoreVisible
 
 export function drawTimelines(originX: number, originY: number, isImageExportMode: boolean): number {
 
-	let sharedElemBins = new Map<ElemType, TimelineElem[]>();
-	g_renderingProps.sharedElements.forEach(e=>{
-		let arr = sharedElemBins.get(e.type) ?? [];
-		arr.push(e);
-		sharedElemBins.set(e.type, arr);
-	});
-
 	// fragCoord.x of displayTime=0
-	let displayOriginX = originX + StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
+	const displayOriginX = originX + StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
 
 	for (let slot = 0; slot < g_renderingProps.slotElements.length; slot++) {
 
@@ -785,22 +807,6 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 		return TimelineDimensions.renderSlotHeight();
 	}
 
-	// view only cursor
-	(sharedElemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach(cursor=>{
-		let vcursor = cursor as ViewOnlyCursorElem
-		if (vcursor.enabled) {
-			let x = displayOriginX + StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
-			drawCursor(x, g_colors.historical, localize({en: "cursor: ", zh: "光标："}) + vcursor.displayTime.toFixed(3));
-		}
-	});
-
-	// cursor
-	(sharedElemBins.get(ElemType.s_Cursor) ?? []).forEach(elem=>{
-		let cursor = elem as CursorElem;
-		let x = displayOriginX + StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
-		drawCursor(x, g_colors.emphasis, localize({en: "cursor: ", zh: "光标："}) + cursor.displayTime.toFixed(3));
-	});
-
 	// slot selection bars
 	for (let slot = 0; slot < g_renderingProps.slotElements.length; slot++) {
 		let currentY = originY + slot * TimelineDimensions.renderSlotHeight();
@@ -866,6 +872,41 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 	return timelineSectionHeight;
 }
 
+function drawCursors(originX: number, timelineStartY: number) {
+
+	// fragCoord.x of displayTime=0
+	const displayOriginX = originX + StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
+	const slotHeight = TimelineDimensions.renderSlotHeight();
+	const activeSlotStartY = timelineStartY + g_renderingProps.activeSlotIndex * slotHeight;
+
+	let sharedElemBins = new Map<ElemType, TimelineElem[]>();
+	g_renderingProps.sharedElements.forEach(e=>{
+		let arr = sharedElemBins.get(e.type) ?? [];
+		arr.push(e);
+		sharedElemBins.set(e.type, arr);
+	});
+
+	// view only cursor
+	(sharedElemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach(cursor=>{
+		let vcursor = cursor as ViewOnlyCursorElem
+		if (vcursor.enabled) {
+			let x = displayOriginX + StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
+			drawCursor(x, timelineStartY, activeSlotStartY, activeSlotStartY + slotHeight,
+				g_colors.historical, localize({en: "cursor: ", zh: "光标："}) + vcursor.displayTime.toFixed(3));
+		}
+	});
+
+	// cursor
+	(sharedElemBins.get(ElemType.s_Cursor) ?? []).forEach(elem=>{
+		let cursor = elem as CursorElem;
+		let x = displayOriginX + StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
+		drawCursor(x, timelineStartY, activeSlotStartY, activeSlotStartY + slotHeight,
+			g_colors.emphasis, localize({en: "cursor: ", zh: "光标："}) + cursor.displayTime.toFixed(3));
+	});
+
+	return 0;
+}
+
 // background layer:
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
 function drawEverything() {
@@ -882,8 +923,11 @@ function drawEverything() {
 	currentHeight += drawRuler(timelineOrigin);
 
 	currentHeight += drawMarkerTracks(timelineOrigin, currentHeight);
+	const timelineStartY = currentHeight;
 
 	currentHeight += drawTimelines(timelineOrigin, currentHeight, false);
+
+	currentHeight += drawCursors(timelineOrigin, timelineStartY);
 
 	// interactive layer
 	if (g_mouseHovered) {

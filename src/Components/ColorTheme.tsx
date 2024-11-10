@@ -86,9 +86,9 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 	let currentColorTheme = getCurrentColorTheme();
 	if (currentColorTheme === "Dark") {
 		return {
-			accent: "mediumpurple",
+			accent: "#9370db", // medium purple
 			realTime: "mediumseagreen",
-			historical: "darkorange",
+			historical: "#ff8c00", // darkorange
 			fileDownload: "#798c3f",
 			text: "#b0b0b0",
 			emphasis: "#dadada",
@@ -132,7 +132,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				gcdBar: "#354931",
 				llCover: "#5ea647",
 				potCover: "#c4543a",
-				buffCover: "mediumpurple",
+				buffCover: "#9370db",
 				damageMark: "#ff0000",
 				untargetableDamageMark: "#7f7f7f",
 				mpTickMark: "#32525e",
@@ -144,15 +144,15 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 		};
 	} else {
 		return {
-			accent: "mediumpurple",
+			accent: "#9370db", // mediumpurple
 			realTime: "mediumseagreen",
-			historical: "darkorange",
+			historical: "#ff8c00", // darkorange
 			fileDownload: "#798c3f",
-			text: "black",
-			emphasis: "black",
+			text: "#000000",
+			emphasis: "#000000",
 			warning: "#f85210",
-			background: "white",
-			tipBackground: "white",
+			background: "#ffffff",
+			tipBackground: "#ffffff",
 			bgLowContrast: "#efefef",
 			bgMediumContrast: "lightgrey",
 			bgHighContrast: "darkgrey",
@@ -190,7 +190,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				gcdBar: "#ccefc6",
 				llCover: "#87ec71",
 				potCover: "#ff865c",
-				buffCover: "mediumpurple",
+				buffCover: "#9370db",
 				damageMark: "#ff0000",
 				untargetableDamageMark: "#7f7f7f",
 				mpTickMark: "#b6dfea",
