@@ -235,23 +235,16 @@ export function IntroSection(props: {
 						<li>The Balance's community <a href={"https://www.thebalanceffxiv.com/"}>job guides</a> and <a href={BALANCE_URL}>Discord</a></li>
 					</ul>,
 					zh: <ul>
-						{<>
 						<li><a href={GITHUB_URL}>Github页面</a></li>
-						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.x版排轴器</a>，历史版本。那里也公开展示着一些6.x时期的轴作为纪念。</li>
+						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.x版排轴器</a>，历史版本黑魔排轴器。那里也公开展示着一些6.x时期的轴作为纪念。</li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>博兹雅版排轴器（Black Mage in the Bozjan Shell）</a>: 本工具的博兹雅/天佑女王版。制作者： <b>A'zhek Silvaire @ Zalera</b></li>
-						{job === ShellJob.BLM && <li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>官方的黑魔法师职业介绍</a></li>}
-						{job === ShellJob.BLM && <li><a target={"_blank"} href={BALANCE_URL} rel="noreferrer">
-							The Balance服务器里的黑魔频道</a> （需要先加入Discord服务器）</li>}
-						</>}
-						{job === ShellJob.PCT && <>
-						<li><a target={"_blank"} href={BALANCE_URL} rel="noreferrer">
-							The Balance服务器里的PCT频道</a> （需要先加入Discord服务器）</li>
-						</>}
+						<li><a href={"https://na.finalfantasyxiv.com/jobguide/battle/"}>官方各职业介绍（英文）</a></li>
+						<li>The Balance<a href={"https://www.thebalanceffxiv.com/"}> 玩家社区攻略（英文）</a>和 <a href={BALANCE_URL}>Discord服务器</a></li>
 					</ul>,
 					ja: <ul>
-						{<>
-						<li><a href={GITHUB_URL}>Github repository</a></li>
-						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: 南方ボズヤ戦線向けのツール。作者：<b>A'zhek Silvaire @ Zalera</b></li>
+						{/*[outdated (ja)]*/<>
+							<li><a href={GITHUB_URL}>Github repository</a></li>
+							<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: 南方ボズヤ戦線向けのツール。作者：<b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
 						<li><a target={"_blank"} href={BALANCE_URL} rel="noreferrer">
 							{job} resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
