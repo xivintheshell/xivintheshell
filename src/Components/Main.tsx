@@ -4,7 +4,7 @@ import { SkillsWindow } from "./Skills";
 import {Config, TimeControl} from "./PlaybackControl";
 import {StatusDisplay} from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
-import {ShellJob, getLongJobName} from "../Controller/Common";
+import {ShellJob} from "../Controller/Common";
 import 'react-tabs/style/react-tabs.css';
 import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
@@ -300,7 +300,7 @@ export default class Main extends React.Component {
 						<SelectLanguage/>
 						<SelectColorTheme/>
 						<div>
-							<h3 style={{marginTop: 20, marginBottom: 6}}>{getLongJobName(this.state.job)} in the Shell</h3>
+							<h3 style={{marginTop: 20, marginBottom: 6}}>FFXIV in the Shell</h3>
 							{localize({
 								en: <div style={{marginBottom: 16}}>Last updated: {changelog[0].date} (see <b>About this
 									tool/Changelog</b>)

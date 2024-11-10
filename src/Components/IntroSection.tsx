@@ -10,20 +10,10 @@ const THIS_DOMAIN = "https://xivintheshell.com";
 
 const GITHUB_URL = "https://github.com/xivintheshell/xivintheshell";
 
-const getHelpChannelUrl = (job: ShellJob) => {
-	switch (job) {
-		case ShellJob.BLM: return "https://discordapp.com/channels/277897135515762698/1255782490862387360";
-		case ShellJob.PCT: return "https://discordapp.com/channels/277897135515762698/1274591512902238270";
-		default: return "";
-	}
-}
+// BLM in the Shell thread (TODO: change if we get our own channel)
+const HELP_CHANNEL_URL = "https://discordapp.com/channels/277897135515762698/1255782490862387360";
 
-const getResourceChannel = (job: ShellJob) => {
-	switch (job) {
-		case ShellJob.BLM: return "https://discordapp.com/channels/277897135515762698/1255595442926915584";
-		case ShellJob.PCT: return "https://discordapp.com/channels/277897135515762698/1246222197488615524";
-	}
-}
+const BALANCE_URL = "https://discord.gg/thebalanceffxiv"
 
 function Changelog() {
 	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={localize({en: "Changelog", zh: "更新日志", ja: "更新履歴"})} defaultShow={false} content={
@@ -45,7 +35,7 @@ function Changelog() {
 }
 
 // needs to be a function to evaluate localization
-const getAcknowledgements = (job: ShellJob) => (
+const getAcknowledgements = () => (
 	<>
 	<div className="paragraph">{localize({en: "This tool is made by:", zh: "作者：", ja: "作者："})}</div>
 	{localize({
@@ -74,7 +64,7 @@ const getAcknowledgements = (job: ShellJob) => (
 
 	{localize({
 		en: <div className={"paragraph"}>
-			If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={getHelpChannelUrl(job)} rel="noreferrer">this thread in The Balance</a>.
+			If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
 			You can also find me directly on discord (miyehn), or via email (ellyn.waterford@gmail.com). In case of sending a bug report, attaching the
 			fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
 		</div>,
@@ -230,32 +220,19 @@ export function IntroSection(props: {
 			titleNode={localize({en: "About this tool", zh: "关于", ja: "このツールについて"})}
 			content={<div>
 				<div className="paragraph">{localize({
-					en: "This is a FFXIV " + {
-						[ShellJob.BLM]: "black mage",
-						[ShellJob.PCT]: "pictomancer",
-					}[job] + " simulator & rotation planner.",
-					zh: "是个" + {
-						[ShellJob.BLM]: "黑魔",
-						[ShellJob.PCT]: "绘灵法师",
-					}[job] + "模拟器/排轴工具。",
-					ja: "FF14 " + {
-						[ShellJob.BLM]: "黒魔道士",
-						[ShellJob.PCT]: "ピクトマンサー",
-					}[job] + "のスキルローテーションシミュレーターです。"})}
+					en: "This is a FFXIV simulator & rotation planner.",
+					zh: "是个FF14模拟器/排轴工具。",
+					ja: "FF14のスキルローテーションシミュレーターです。"})}
 				</div>
-				{getAcknowledgements(job)}
+				{getAcknowledgements()}
 				<div className="paragraph">{localize({en: "Some links:", zh: "一些链接：", ja: "リンク集"})}</div>
 				{localize({
 					en: <ul>
-						{<>
 						<li><a href={GITHUB_URL}>Github repository</a></li>
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>Black Mage in the Shell (Endwalker)</a>: a snapshot of this tool at the end of Endwalker. It also contains some notable fight plans from Endwalker, as memoir.</li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: a variation for Save the Queens areas, created by <b>A'zhek Silvaire @ Zalera</b></li>
-						{job === ShellJob.BLM && <li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>}
-						{job === ShellJob.PCT && <li><a href={"https://na.finalfantasyxiv.com/jobguide/pictomancer/"}>Official FFXIV pictomancer job guide</a></li>}
-						</>}
-						<li><a target={"_blank"} href={getResourceChannel(job)} rel="noreferrer">
-							{job} resources channel on The Balance</a> (make sure you've already joined the server)</li>
+						<li><a href={"https://na.finalfantasyxiv.com/jobguide/battle/"}>Official FFXIV job guides</a></li>
+						<li>The Balance's community <a href={"https://www.thebalanceffxiv.com/"}>job guides</a> and <a href={BALANCE_URL}>Discord</a></li>
 					</ul>,
 					zh: <ul>
 						{<>
@@ -263,11 +240,11 @@ export function IntroSection(props: {
 						<li><a href={"https://miyehn.me/ffxiv-blm-rotation-endwalker/"}>6.x版排轴器</a>，历史版本。那里也公开展示着一些6.x时期的轴作为纪念。</li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>博兹雅版排轴器（Black Mage in the Bozjan Shell）</a>: 本工具的博兹雅/天佑女王版。制作者： <b>A'zhek Silvaire @ Zalera</b></li>
 						{job === ShellJob.BLM && <li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>官方的黑魔法师职业介绍</a></li>}
-						{job === ShellJob.BLM && <li><a target={"_blank"} href={getResourceChannel(job)} rel="noreferrer">
+						{job === ShellJob.BLM && <li><a target={"_blank"} href={BALANCE_URL} rel="noreferrer">
 							The Balance服务器里的黑魔频道</a> （需要先加入Discord服务器）</li>}
 						</>}
 						{job === ShellJob.PCT && <>
-						<li><a target={"_blank"} href={getResourceChannel(job)} rel="noreferrer">
+						<li><a target={"_blank"} href={BALANCE_URL} rel="noreferrer">
 							The Balance服务器里的PCT频道</a> （需要先加入Discord服务器）</li>
 						</>}
 					</ul>,
@@ -276,7 +253,7 @@ export function IntroSection(props: {
 						<li><a href={GITHUB_URL}>Github repository</a></li>
 						<li><a href={"https://spide-r.github.io/ffxiv-blm-rotation/"}>Black Mage in the Bozjan Shell</a>: 南方ボズヤ戦線向けのツール。作者：<b>A'zhek Silvaire @ Zalera</b></li>
 						<li><a href={"https://na.finalfantasyxiv.com/jobguide/blackmage/"}>Official FFXIV black mage job guide</a></li>
-						<li><a target={"_blank"} href={getResourceChannel(job)} rel="noreferrer">
+						<li><a target={"_blank"} href={BALANCE_URL} rel="noreferrer">
 							{job} resources channel on The Balance</a> （ぜひDiscordサーバーに参加してください。） </li>
 						</>}
 					</ul>,
