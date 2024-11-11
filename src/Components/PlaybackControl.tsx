@@ -8,6 +8,7 @@ import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {SerializedConfig} from "../Game/GameConfig";
 import {XIVMath} from "../Game/XIVMath";
+//import {FaCheck} from "react-icons/fa";
 
 export let updateConfigDisplay = (config: SerializedConfig)=>{};
 
@@ -1051,29 +1052,37 @@ export class Config extends React.Component {
 				</tbody>
 			</table>
 		</div>
-		const gearImportSection = <div>
-			<form onSubmit={this.importGear}>
-				<label>
-					{localize({en: "Load stats from etro/xivgear: "})}
-					<Help topic={"gearImport"} content={
-						<>
-						<p>{localize({
-							en: 'Enter a link to a gearset from xivgear.app or etro.gg, then hit "apply and reset."'
-						})}</p>
-						<p>{localize({
-							en: "etro: Copy/paste the link to the set (example: https://etro.gg/gearset/e13d5960-4794-4dc4-b273-24ecfed6745e)"
-						})}</p>
-						<p>{localize({
-							en: ('xivgear: At the top of the page, click "Export" -> "Selected Set" -> "Link to This Set" -> "Generate"' +
-								' (example: https://xivgear.app/?page=sl%7C143f3245-c35b-4391-8b2b-db5cc1a8de9a)')
-						})}</p>
-						</>
-					}/>
-					<input type="text" value={this.state.gearImportLink} onChange={this.setGearImportLink} />
-				</label>
-				<input type="submit" value="Load"/>
-			</form>
-		</div>;
+		const gearImportSection = <form onSubmit={this.importGear}>
+			{localize({en: "Load stats from etro/xivgear: ", zh: "从etro或xivgear加载套装："})}
+			<Help topic={"gearImport"} content={
+				<>
+					<p>{localize({
+						en: <span>Enter and <ButtonIndicator text={"Load"}/> a link to a gearset from xivgear.app or etro.gg, edit the rest of config, then <ButtonIndicator text={"apply and reset"}/>.</span>,
+						zh: <span>输入xivgear.app或etro.gg的套装链接并<ButtonIndicator text={"加载"}/>，调整其余角色属性，然后<ButtonIndicator text={"应用并重置时间轴"}/>。</span>
+					})}</p>
+					<p>{localize({
+						en: "etro: Copy/paste the link to the set (example: https://etro.gg/gearset/e13d5960-4794-4dc4-b273-24ecfed6745e)",
+						zh: "etro：复制粘贴套装链接（例：https://etro.gg/gearset/e13d5960-4794-4dc4-b273-24ecfed6745e）"
+					})}</p>
+					<p>{localize({
+						en: ('xivgear: At the top of the page, click "Export" -> "Selected Set" -> "Link to This Set" -> "Generate"' +
+							' (example: https://xivgear.app/?page=sl%7C143f3245-c35b-4391-8b2b-db5cc1a8de9a)'),
+						zh: 'xivgear：从页面顶端点击 "Export" -> "Selected Set" -> "Link to This Set" -> "Generate"（例：https://xivgear.app/?page=sl%7C143f3245-c35b-4391-8b2b-db5cc1a8de9a）'
+					})}</p>
+				</>
+			}/>
+			<div style={{position: "relative", marginTop: 5}}>
+				<Input style={{display: "inline-block"}} width={25} description={""} onChange={s => {
+					this.setState({gearImportLink: s})
+				}}/>
+				<span> </span>
+				<input style={{display: "inline-block"}} type="submit" value={localize({en: "Load", zh: "加载"}) as string}/>
+				{/*
+				todo [myn]
+				<FaCheck style={{position: "relative", top: 4, marginLeft: 8}}/>
+				*/}
+			</div>
+		</form>;
 		let editJobSection = <div style={{marginBottom: 10}}>
 			<span>{localize({en: "job: ", zh: "职业："})}</span>
 			<select style={{outline: "none"}} value={this.state.job} onChange={this.setJob}>
@@ -1114,11 +1123,11 @@ export class Config extends React.Component {
 			<Input defaultValue={this.state.determination} description={localize({en: "determination: " , zh: "信念："})} onChange={this.setDetermination}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<div>
-				<Input style={{display: "inline-block", color: fpsAndCorrectionColor}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>
+				<Input componentColor={fpsAndCorrectionColor} style={{display: "inline-block"}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>
 				<span> ({localize({en: "2.5s total tax", zh: "2.5s读条+帧率税"})}: {this.state.b1TaxPreview} <Help topic={"b1TaxPreview"} content={b1TaxDesc}/>)</span>
 			</div>
 			<Input
-				style={{color: fpsAndCorrectionColor}}
+				componentColor={fpsAndCorrectionColor}
 				defaultValue={this.state.gcdSkillCorrection}
 				description={<span>{localize({en: "GCD correction", zh: "GCD时长修正"})} <Help topic={"cast-time-correction"} content={localize({
 					en: "Leaving this at 0 will probably give you the most accurate simulation. But if you want to manually correct your GCD skill durations (including casts) for whatever reason, you can put a small number (can be negative)",
