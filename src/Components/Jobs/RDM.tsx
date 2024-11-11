@@ -30,6 +30,7 @@ import {localize} from "../../Components/Localization";
 	ResourceType.Manafication + "5",
 	ResourceType.Manafication + "6",
 	ResourceType.PrefulgenceReady,
+	ResourceType.ThornedFlourish,
 	ResourceType.VerfireReady,
 	ResourceType.VerstoneReady,
 ].forEach((buff) => registerBuffIcon(buff, `RDM/${buff}.png`));

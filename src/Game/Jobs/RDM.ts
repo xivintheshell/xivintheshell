@@ -3,12 +3,13 @@
 import {controller} from "../../Controller/Controller";
 import {ShellJob} from "../../Controller/Common";
 import {Aspect, ProcMode, ResourceType, SkillName, WarningType} from "../Common";
-import {Modifiers, PotencyModifier, PotencyModifierType} from "../Potency";
+import {makeComboModifier, Modifiers, PotencyModifier, PotencyModifierType} from "../Potency";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
+	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
@@ -131,6 +132,23 @@ export class RDMState extends GameState {
 		}
 	}
 
+	colorManaExceeds(amount: number): boolean {
+		// Check if black/white mana both exceed the amount, or there is a magicked swordplay stack.
+		return this.hasResourceAvailable(ResourceType.MagickedSwordplay)
+			|| (this.hasResourceAvailable(ResourceType.WhiteMana, amount)
+			&& this.hasResourceAvailable(ResourceType.BlackMana, amount));
+	}
+
+	consumeColorMana(amount: number) {
+		// Consume magicked swordplay or color mana
+		if (this.hasResourceAvailable(ResourceType.MagickedSwordplay)) {
+			this.tryConsumeResource(ResourceType.MagickedSwordplay);
+		} else {
+			this.resources.get(ResourceType.WhiteMana).consume(amount);
+			this.resources.get(ResourceType.BlackMana).consume(amount);
+		}
+	}
+
 	gainVerproc(proc: typeof ResourceType.VerfireReady | typeof ResourceType.VerstoneReady) {
 		let duration = (getResourceInfo(ShellJob.RDM, proc) as ResourceInfo).maxTimeout;
 		if (this.resources.get(proc).available(1)) {
@@ -154,14 +172,15 @@ export class RDMState extends GameState {
 		const manaStacks = this.resources.get(ResourceType.ManaStacks);
 		const hasScorch = this.config.level >= 80;
 		const hasReso = this.config.level >= 90;
+		const meleeComboCounter = this.resources.get(ResourceType.RDMMeleeCounter).availableAmount();
 		// 3-element array of melee, finisher, aoe
 		let counters: number[];
-		if (skill === SkillName.EnchantedReprise) {
+		if (skill === SkillName.EnchantedRiposte) {
 			// TODO check if aoe combo does get reset
 			counters = [1, 0, 0];
 			manaStacks.gain(1);
 		} else if (skill === SkillName.EnchantedZwerchhau) {
-			counters = [this.hasResourceAvailable(ResourceType.RDMMeleeCounter, 1) ? 2: 0, 0, 0];
+			counters = [meleeComboCounter === 1 ? 2: 0, 0, 0];
 			manaStacks.gain(1); // even if un-combo'd
 		} else if (skill === SkillName.EnchantedRedoublement) {
 			counters = [0, 0, 0];
@@ -177,6 +196,7 @@ export class RDMState extends GameState {
 			counters = [0, 0, 1];
 			manaStacks.gain(1);
 		} else if (skill === SkillName.EnchantedMoulinet2) {
+			// no need to check aoe combo status (was already validated before skill usage)
 			counters = [0, 0, 2];
 			manaStacks.gain(1);
 		} else if (skill === SkillName.EnchantedMoulinet3) {
@@ -270,17 +290,26 @@ const makeSpell_RDM = (name: SkillName, unlockLevel: number, params: {
 	});
 };
 
-const makeMeleeComboHit = (name: SkillName, unlockLevel: number, params: {
+const makeMeleeGCD = (name: SkillName, unlockLevel: number, params: {
 	replaceIf: ConditionalSkillReplace<RDMState>[],
-	startOnHotbar: boolean,
-	basePotency: number | Array<[TraitName, number]>,
+	startOnHotbar?: boolean,
+	potency: number | Array<[TraitName, number]>,
+	combo?: {
+		potency: number | Array<[TraitName, number]>,
+		resource: ResourceType,
+		resourceValue: number,
+	},
+	// note that melee hits are not scaled by sps
+	recastTime: number,
 	applicationDelay: number,
 	validateAttempt?: StatePredicate<RDMState>,
 	onConfirm?: EffectFn<RDMState>,
+	highlightIf?: StatePredicate<RDMState>,
 }): Weaponskill<RDMState> => {
 	// Un-enchanted melee hits are not magic damage
 	const isPhysical = !name.toString().startsWith("Enchanted");
 	const onConfirm: EffectFn<RDMState> = combineEffects(
+		(state) => state.processManafic(),
 		(state) => state.processComboStatus(name),
 		params.onConfirm ?? NO_EFFECT,
 	);
@@ -288,9 +317,21 @@ const makeMeleeComboHit = (name: SkillName, unlockLevel: number, params: {
 		...params,
 		aspect: isPhysical ? Aspect.Physical : undefined,
 		onConfirm: onConfirm,
-		jobPotencyModifiers: (state) => (
-			isPhysical && state.hasResourceAvailable(ResourceType.Embolden)
-		) ? [Modifiers.EmboldenMagic] : [],
+		jobPotencyModifiers: (state) => {
+			const mods: PotencyModifier[] = [];
+			if (params.combo && state.resources.get(params.combo.resource).availableAmount() === params.combo.resourceValue) {
+				mods.push(makeComboModifier(getBasePotency(state, params.combo.potency) - getBasePotency(state, params.potency)));
+			}
+			if (!isPhysical) {
+				if (state.hasResourceAvailable(ResourceType.Embolden)) {
+					mods.push(Modifiers.EmboldenMagic);
+				}
+				if (state.hasResourceAvailable(ResourceType.Manafication)) {
+					mods.push(Modifiers.Manafication);
+				}
+			}
+			return mods;
+		},
 	});
 }
 
@@ -476,7 +517,7 @@ makeSpell_RDM(SkillName.Verthunder2, 18, {
 	applicationDelay: 0.80,
 	basePotency: ver2Potency,
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
-	onConfirm: (state) => state.gainColorMana({w: 7}),
+	onConfirm: (state) => state.gainColorMana({b: 7}),
 });
 
 makeSpell_RDM(SkillName.Impact, 66, {
@@ -505,18 +546,188 @@ makeSpell_RDM(SkillName.GrandImpact, 96, {
 	highlightIf: giCondition.condition,
 });
 
-// makeMeleeComboHit(SkillName.Riposte, 1, {});
-// makeMeleeComboHit(SkillName.Zwerchhau, 35, {});
-// makeMeleeComboHit(SkillName.Redoublement, 50, {});
-// makeMeleeComboHit(SkillName.EnchantedRiposte, 50, {});
-// makeMeleeComboHit(SkillName.EnchantedZwerchhau, 50, {});
-// makeMeleeComboHit(SkillName.EnchantedRedoublement, 50, {});
-// makeMeleeComboHit(SkillName.Reprise, 76, {});
-// makeMeleeComboHit(SkillName.EnchantedReprise, 76, {});
-// makeMeleeComboHit(SkillName.Moulinet, 52, {});
-// makeMeleeComboHit(SkillName.EnchantedMoulinet, 52, {});
-// makeMeleeComboHit(SkillName.EnchantedMoulinet2, 52, {});
-// makeMeleeComboHit(SkillName.EnchantedMoulinet3, 52, {});
+// Combo state for melee hits is automatically handled in makeMeleeGCD via state.processComboStatus
+makeMeleeGCD(SkillName.Riposte, 1, {
+	replaceIf: [{newSkill: SkillName.EnchantedRiposte, condition: (state) => state.colorManaExceeds(20)}],
+	applicationDelay: 0.62, // TODO
+	potency: 130,
+	recastTime: 2.5,
+	validateAttempt: (state) => !state.colorManaExceeds(20),
+});
+
+makeMeleeGCD(SkillName.Zwerchhau, 35, {
+	replaceIf: [{newSkill: SkillName.EnchantedZwerchhau, condition: (state) => state.colorManaExceeds(15)}],
+	applicationDelay: 0.62, // TODO
+	potency: 100,
+	combo: {
+		potency: 150,
+		resource: ResourceType.RDMMeleeCounter,
+		resourceValue: 1,
+	},
+	recastTime: 2.5,
+	validateAttempt: (state) => !state.colorManaExceeds(15),
+	highlightIf: (state) => state.resources.get(ResourceType.RDMMeleeCounter).availableAmount() === 1,
+});
+
+makeMeleeGCD(SkillName.Redoublement, 50, {
+	replaceIf: [{newSkill: SkillName.EnchantedRedoublement, condition: (state) => state.colorManaExceeds(15)}],
+	applicationDelay: 0.62, // TODO
+	potency: 100,
+	combo: {
+		potency: 230,
+		resource: ResourceType.RDMMeleeCounter,
+		resourceValue: 2,
+	},
+	recastTime: 2.5,
+	validateAttempt: (state) => !state.colorManaExceeds(15),
+	highlightIf: (state) => state.resources.get(ResourceType.RDMMeleeCounter).availableAmount() === 2,
+});
+
+makeMeleeGCD(SkillName.EnchantedRiposte, 50, {
+	startOnHotbar: false,
+	replaceIf: [{newSkill: SkillName.Riposte, condition: (state) => !state.colorManaExceeds(20)}],
+	applicationDelay: 0.62,
+	potency: [
+		[TraitName.Never, 220],
+		[TraitName.RedMagicMasteryIII, 280],
+		[TraitName.EnchantedBladeMastery, 300],
+	],
+	recastTime: 1.5,
+	validateAttempt: (state) => state.colorManaExceeds(20),
+	onConfirm: (state) => state.consumeColorMana(20),
+});
+
+makeMeleeGCD(SkillName.EnchantedZwerchhau, 50, {
+	startOnHotbar: false,
+	replaceIf: [{newSkill: SkillName.Zwerchhau, condition: (state) => !state.colorManaExceeds(15)}],
+	applicationDelay: 0.62,
+	potency: [
+		[TraitName.Never, 100],
+		[TraitName.RedMagicMasteryIII, 150],
+		[TraitName.EnchantedBladeMastery, 170],
+	],
+	combo: {
+		potency: [
+			[TraitName.Never, 290],
+			[TraitName.RedMagicMasteryIII, 340],
+			[TraitName.EnchantedBladeMastery, 360],
+		],
+		resource: ResourceType.RDMMeleeCounter,
+		resourceValue: 1,
+	},
+	recastTime: 1.5,
+	validateAttempt: (state) => state.colorManaExceeds(15),
+	onConfirm: (state) => state.consumeColorMana(15),
+	highlightIf: (state) => state.resources.get(ResourceType.RDMMeleeCounter).availableAmount() === 1,
+});
+
+makeMeleeGCD(SkillName.EnchantedRedoublement, 50, {
+	startOnHotbar: false,
+	replaceIf: [{newSkill: SkillName.Redoublement, condition: (state) => !state.colorManaExceeds(15)}],
+	applicationDelay: 0.62,
+	potency: [
+		[TraitName.Never, 100],
+		[TraitName.RedMagicMasteryIII, 130],
+		[TraitName.EnchantedBladeMastery, 170],
+	],
+	combo: {
+		potency: [
+			[TraitName.Never, 470],
+			[TraitName.RedMagicMasteryIII, 500],
+			[TraitName.EnchantedBladeMastery, 530],
+		],
+		resource: ResourceType.RDMMeleeCounter,
+		resourceValue: 2,
+	},
+	recastTime: 2.2,
+	validateAttempt: (state) => state.colorManaExceeds(15),
+	onConfirm: (state) => state.consumeColorMana(15),
+	highlightIf: (state) => state.resources.get(ResourceType.RDMMeleeCounter).availableAmount() === 2,
+});
+
+const canReprise = (state: Readonly<RDMState>) => (
+	state.resources.get(ResourceType.WhiteMana).available(5)
+	&& state.resources.get(ResourceType.BlackMana).available(5)
+);
+
+makeMeleeGCD(SkillName.Reprise, 76, {
+	replaceIf: [{newSkill: SkillName.EnchantedReprise, condition: (state) => canReprise(state)}],
+	applicationDelay: 0.62, // TODO
+	potency: 100,
+	recastTime: 2.5,
+	validateAttempt: (state) => !canReprise(state),
+});
+
+makeMeleeGCD(SkillName.EnchantedReprise, 76, {
+	startOnHotbar: false,
+	replaceIf: [{newSkill: SkillName.Reprise, condition: (state) => !canReprise(state)}],
+	applicationDelay: 0.62, // TODO
+	potency: [
+		[TraitName.Never, 290],
+		[TraitName.RedMagicMasteryIII, 340],
+		[TraitName.EnchantedBladeMastery, 420],
+	],
+	recastTime: 2.5,
+	validateAttempt: (state) => canReprise(state),
+	onConfirm: (state) => {
+		// don't use the consumeColorMana helper function because this doesn't consume a magicked swordplay stack
+		state.resources.get(ResourceType.WhiteMana).consume(5);
+		state.resources.get(ResourceType.BlackMana).consume(5);
+	},
+});
+
+const moulinetConditions: ConditionalSkillReplace<RDMState>[] = [
+	{newSkill: SkillName.Moulinet, condition: (state) => !state.colorManaExceeds(20)},
+	{newSkill: SkillName.EnchantedMoulinet, condition: (state) => (
+		state.colorManaExceeds(20) && state.resources.get(ResourceType.RDMAoECounter).availableAmount() === 0
+	)},
+	{newSkill: SkillName.EnchantedMoulinet2, condition: (state) => (
+		state.colorManaExceeds(15) && state.resources.get(ResourceType.RDMAoECounter).availableAmount() === 1
+	)},
+	{newSkill: SkillName.EnchantedMoulinet3, condition: (state) => (
+		state.colorManaExceeds(15) && state.resources.get(ResourceType.RDMAoECounter).availableAmount() === 2
+	)},
+];
+
+makeMeleeGCD(SkillName.Moulinet, 52, {
+	replaceIf: [moulinetConditions[1], moulinetConditions[2], moulinetConditions[3]],
+	applicationDelay: 0.80, // TODO
+	potency: 60,
+	recastTime: 2.5,
+	validateAttempt: moulinetConditions[0].condition,
+});
+
+makeMeleeGCD(SkillName.EnchantedMoulinet, 52, {
+	startOnHotbar: false,
+	replaceIf: [moulinetConditions[0], moulinetConditions[2], moulinetConditions[3]],
+	applicationDelay: 0.80,
+	potency: 130,
+	recastTime: 1.5,
+	validateAttempt: moulinetConditions[1].condition,
+	onConfirm: (state) => state.consumeColorMana(20),
+});
+
+makeMeleeGCD(SkillName.EnchantedMoulinet2, 52, {
+	startOnHotbar: false,
+	replaceIf: [moulinetConditions[0], moulinetConditions[1], moulinetConditions[3]],
+	applicationDelay: 0.80,
+	potency: 140,
+	recastTime: 1.5,
+	validateAttempt: moulinetConditions[2].condition,
+	onConfirm: (state) => state.consumeColorMana(15),
+	highlightIf: moulinetConditions[2].condition,
+});
+
+makeMeleeGCD(SkillName.EnchantedMoulinet3, 52, {
+	startOnHotbar: false,
+	replaceIf: [moulinetConditions[0], moulinetConditions[1], moulinetConditions[2]],
+	applicationDelay: 0.80,
+	potency: 150,
+	recastTime: 1.5,
+	validateAttempt: moulinetConditions[3].condition,
+	onConfirm: (state) => state.consumeColorMana(15),
+	highlightIf: moulinetConditions[3].condition,
+});
 
 const verfinishPotency: Array<[TraitName, number]> = [
 	[TraitName.Never, 600],
@@ -604,6 +815,10 @@ makeResourceAbility(ShellJob.RDM, SkillName.Manafication, 60, ResourceType.cd_Ma
 	rscType: ResourceType.Manafication,
 	applicationDelay: 0,
 	cooldown: 110,
+	onApplication: (state) => {
+		state.resources.get(ResourceType.MagickedSwordplay).gain(3);
+		state.enqueueResourceDrop(ResourceType.MagickedSwordplay);
+	},
 });
 
 makeAbility_RDM(SkillName.CorpsACorps, 6, ResourceType.cd_CorpsACorps, {

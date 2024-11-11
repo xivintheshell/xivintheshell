@@ -1,3 +1,7 @@
+// Behaviors that are manually tested:
+// - Doing any non-enchanted GCD consumes all mana stacks (TODO: check if reprise does this)
+// - Doing un-enchanted GCDs is physical damage
+
 import fs from "node:fs";
 import {controller} from "./Controller/Controller";
 import {TickMode, ShellJob} from "./Controller/Common";

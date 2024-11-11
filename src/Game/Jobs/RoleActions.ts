@@ -48,8 +48,7 @@ makeResourceAbility(CASTER_JOBS, SkillName.Surecast, 44, ResourceType.cd_Surecas
 
 // Special case for RDM, because for some twelvesforsaken reason sprint/pot cancel dualcast
 const cancelDualcast = (state: GameState) => {
-	if (state.job === ShellJob.RDM) {
-		state.tryConsumeResource(ResourceType.Dualcast);
+	if (state.job === ShellJob.RDM && state.tryConsumeResource(ResourceType.Dualcast)) {
 		controller.reportWarning(WarningType.DualcastEaten);
 	}
 };

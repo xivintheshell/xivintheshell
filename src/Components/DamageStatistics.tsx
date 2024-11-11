@@ -131,6 +131,8 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({en: "manafication"}) as string;
 	} else if (buff === PotencyModifierType.ACCELERATION) {
 		text = localize({en: "acceleration"}) as string;
+	} else if (buff === PotencyModifierType.COMBO) {
+		text = localize({en: "combo"}) as string;
 	}
 	return text;
 }
@@ -175,6 +177,9 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	} else if (props.buff === PotencyModifierType.ACCELERATION) {
 		text = localize({en: "ACC"});
 		color = colors.rdm.accelBuff;
+	} else if (props.buff === PotencyModifierType.COMBO) {
+		text = localize({en: "CMB"});
+		color = colors.resources.comboTag;
 	}
 	return <span style={{
 		borderRadius: 2,

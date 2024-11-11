@@ -76,6 +76,7 @@ export type ThemeColors = {
 		mana: string,
 		manaTick: string,
 		cdhTag: string,
+		comboTag: string,
 	},
 	blm: BLMResourceColors,
 	pct: PCTResourceColors,
@@ -126,6 +127,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				mana: "#62a5d2",
 				manaTick: "#3d5c73",
 				cdhTag: "#d55124",
+				comboTag: "#3d5c73", // TODO pick a better color
 			},
 			blm: {
 				enochian: "#b69241",
@@ -152,7 +154,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				blackMana: "#7e19aa",  // comet
 				manaStack: "#cb8046",  // astral soul
 				emboldenBuff: "#ff0000",
-				manaficBuff: "#ff0000",
+				manaficBuff: "#530954",
 				accelBuff: "#ff0000",
 			},
 			timeline: {
@@ -198,6 +200,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				mana: "#8ACEEA",
 				manaTick: "#C2EAFF",
 				cdhTag: "#ff6633",
+				comboTag: "#8ACEEA", // TODO pick a better color
 			},
 			blm: {
 				enochian: "#f5cf96",
@@ -224,7 +227,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				blackMana: "#b7c9d5",  // comet
 				manaStack: "#9926c8",  // astral soul
 				emboldenBuff: "#ff0000",
-				manaficBuff: "#ff0000",
+				manaficBuff: "#530954",
 				accelBuff: "#ff0000",
 			},
 			timeline: {
