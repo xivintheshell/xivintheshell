@@ -1,15 +1,12 @@
 import {
 	registerBuffIcon,
 	BuffProps,
-	PaintGaugeCounterProps,
 	ResourceBarProps,
 	ResourceCounterProps,
 	ResourceDisplayProps,
-	ResourceTextProps,
 	StatusPropsGenerator
 } from "../StatusDisplay";
 import {ResourceType} from "../../Game/Common";
-import {TraitName, Traits} from "../../Game/Traits";
 import {RDMState} from "../../Game/Jobs/RDM";
 import {getCurrentThemeColors} from "../../Components/ColorTheme";
 import {localize} from "../../Components/Localization";
