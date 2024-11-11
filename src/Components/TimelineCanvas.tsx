@@ -302,12 +302,12 @@ function drawWarningMarks(
 		let message: string = "[" + mark.displayTime.toFixed(3) + "] ";
 		if (mark.warningType === WarningType.PolyglotOvercap) {
 			message += localize({en: "polyglot overcap!", zh: "通晓溢出！"});
-		}
-		if (mark.warningType === WarningType.CometOverwrite) {
+		} else if (mark.warningType === WarningType.CometOverwrite) {
 			message += localize({en: "comet overwrite!", zh: "彗星之黑被覆盖！"});
-		}
-		if (mark.warningType === WarningType.PaletteOvercap) {
+		} else if (mark.warningType === WarningType.PaletteOvercap) {
 			message += localize({en: "palette gauge overcap!", zh: "调色量值溢出！"});
+		} else {
+			message += localize({en: mark.warningType + "!"});
 		}
 
 		testInteraction(
@@ -404,10 +404,23 @@ function drawSkills(
 	let purpleLockBars: Rect[] = [];
 	let gcdBars: Rect[] = [];
 	let snapshots: number[] = [];
-	let llCovers: Rect[] = [];
-	let starryCovers: Rect[] = [];
-	let potCovers: Rect[] = [];
-	let buffCovers: Rect[] = [];
+
+	// TODO move this into a proper configuration file
+	const coverInfo: Map<BuffType, {color: string, showImage: boolean}> = new Map([
+		[BuffType.Tincture, {color: g_colors.timeline.potCover, showImage: true}],
+		[BuffType.LeyLines, {color: g_colors.timeline.llCover, showImage: true}],
+		[BuffType.Hyperphantasia, {color: g_colors.timeline.llCover, showImage: false}],
+		// TODO swap colors
+		[BuffType.StarryMuse, {color: g_colors.timeline.buffCover, showImage: true}],
+		[BuffType.Embolden, {color: g_colors.timeline.buffCover, showImage: true}],
+		[BuffType.Manafication, {color: "#666666", showImage: true}],
+		[BuffType.Acceleration, {color: "#ff4444", showImage: true}],
+	]);
+
+	const covers: Map<BuffType, Rect[]> = new Map();
+	coverInfo.forEach((_, buff) => covers.set(buff, []));
+	const buffCovers: Rect[] = [];
+
 	let skillIcons: {elem: SkillElem, x: number, y: number}[] = []; // tmp
 	let skillsTopY = timelineOriginY + TimelineDimensions.skillButtonHeight / 2;
 	elems.forEach(e=>{
@@ -432,13 +445,13 @@ function drawSkills(
 		}
 
 		// node covers (LL, pot, party buff)
+		// TODO automate declarations for these modifiers
 		let nodeCoverCount = 0;
-		if (skill.node.hasBuff(BuffType.StarryMuse))
-			nodeCoverCount += buildCover(nodeCoverCount, starryCovers);
-		if (skill.node.hasBuff(BuffType.LeyLines) || skill.node.hasBuff(BuffType.Hyperphantasia))
-			nodeCoverCount += buildCover(nodeCoverCount, llCovers);
-		if (skill.node.hasBuff(BuffType.Tincture))
-			nodeCoverCount += buildCover(nodeCoverCount, potCovers);
+		covers.forEach((coverArray, buffType) => {
+			if (skill.node.hasBuff(buffType)) {
+				nodeCoverCount += buildCover(nodeCoverCount, coverArray);
+			}
+		});
 		if (skill.node.hasPartyBuff())
 			buildCover(nodeCoverCount, buffCovers);
 
@@ -491,32 +504,15 @@ function drawSkills(
 	});
 	g_ctx.fill();
 
-	// starryCovers
-	g_ctx.fillStyle = g_colors.timeline.buffCover;
-	g_ctx.beginPath();
-	starryCovers.forEach(r=>{
-		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
+	covers.forEach((coverArray, buffType) => {
+		g_ctx.fillStyle = coverInfo.get(buffType)!.color;
+		g_ctx.beginPath();
+		coverArray.forEach(r=>{
+			g_ctx.rect(r.x, r.y, r.w, r.h);
+			if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
+		});
+		g_ctx.fill();
 	});
-	g_ctx.fill();
-
-	// llCovers
-	g_ctx.fillStyle = g_colors.timeline.llCover;
-	g_ctx.beginPath();
-	llCovers.forEach(r=>{
-		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
-	});
-	g_ctx.fill();
-
-	// potCovers
-	g_ctx.fillStyle = g_colors.timeline.potCover;
-	g_ctx.beginPath();
-	potCovers.forEach(r=>{
-		g_ctx.rect(r.x, r.y, r.w, r.h);
-		if (interactive) testInteraction(r, undefined, onClickTimelineBackground);
-	});
-	g_ctx.fill();
 
 	// buffCovers
 	g_ctx.fillStyle = g_colors.timeline.buffCover;
@@ -557,9 +553,10 @@ function drawSkills(
 		lines.push(localize({en: "duration: ", zh: "耗时："}) + lockDuration.toFixed(3));
 
 		// 4. buff images
-		if (node.hasBuff(BuffType.LeyLines)) buffImages.push(buffIconImages.get(BuffType.LeyLines) as HTMLImageElement);
-		if (node.hasBuff(BuffType.Tincture)) buffImages.push(buffIconImages.get(BuffType.Tincture) as HTMLImageElement);
-		if (node.hasBuff(BuffType.StarryMuse)) buffImages.push(buffIconImages.get(BuffType.StarryMuse) as HTMLImageElement);
+		coverInfo.forEach((info, buff) => {
+			if (info.showImage && node.hasBuff(buff)) buffImages.push(buffIconImages.get(buff) as HTMLImageElement);
+		});
+
 		node.getPartyBuffs().forEach(buffType => {
 			let img = buffIconImages.get(buffType);
 			if (img) buffImages.push(img);

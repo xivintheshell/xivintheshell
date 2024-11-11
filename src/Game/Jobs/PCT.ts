@@ -3,7 +3,7 @@
 import {controller} from "../../Controller/Controller";
 import {ShellJob} from "../../Controller/Common";
 import {ResourceType, SkillName, WarningType} from "../Common";
-import {PotencyModifierType} from "../Potency";
+import {Modifiers, PotencyModifier} from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -177,9 +177,7 @@ export class PCTState extends GameState {
 // If an ability appears on the hotbar only when replacing another ability, it should have
 // `startOnHotbar` set to false, and `replaceIf` set appropriately on the abilities to replace.
 
-const starryMod = {source: PotencyModifierType.STARRY, damageFactor: 1.05, critFactor: 0, dhFactor: 0};
-
-const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
+const makeSpell_PCT = (name: SkillName, unlockLevel: number, params: {
 	replaceIf?: ConditionalSkillReplace<PCTState>[],
 	startOnHotbar?: boolean,
 	highlightIf?: StatePredicate<PCTState>,
@@ -220,9 +218,9 @@ const makeGCD_PCT = (name: SkillName, unlockLevel: number, params: {
 		manaCost: params.baseManaCost ?? 0,
 		potency: params.basePotency,
 		jobPotencyModifiers: (state) => {
-			const mods = [];
+			const mods: PotencyModifier[] = [];
 			if (state.hasResourceAvailable(ResourceType.StarryMuse)) {
-				mods.push(starryMod);
+				mods.push(Modifiers.Starry);
 			}
 			if (params.jobPotencyModifiers) {
 				mods.push(...params.jobPotencyModifiers(state));
@@ -259,7 +257,7 @@ const makeAbility_PCT = (name: SkillName, unlockLevel: number, cdName: ResourceT
 	onApplication?: EffectFn<PCTState>,
 }): Ability<PCTState> => makeAbility(ShellJob.PCT, name, unlockLevel, cdName, {
 	jobPotencyModifiers: (state) => (
-		state.hasResourceAvailable(ResourceType.StarryMuse) ? [starryMod] : []
+		state.hasResourceAvailable(ResourceType.StarryMuse) ? [Modifiers.Starry] : []
 	),
 	...params,
 });
@@ -428,7 +426,7 @@ const starryMuseCondition: ConditionalSkillReplace<PCTState> = {
 	condition: (state) => state.hasResourceAvailable(ResourceType.LandscapeCanvas),
 };
 
-makeGCD_PCT(SkillName.FireInRed, 1, {
+makeSpell_PCT(SkillName.FireInRed, 1, {
 	replaceIf: [greenCondition, blueCondition],
 	baseCastTime: 1.5,
 	baseManaCost: 300,
@@ -443,7 +441,7 @@ makeGCD_PCT(SkillName.FireInRed, 1, {
 	onConfirm: (state) => state.doFiller(),
 });
 
-makeGCD_PCT(SkillName.AeroInGreen, 5, {
+makeSpell_PCT(SkillName.AeroInGreen, 5, {
 	replaceIf: [redCondition, blueCondition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
@@ -460,7 +458,7 @@ makeGCD_PCT(SkillName.AeroInGreen, 5, {
 	highlightIf: (state) => !state.hasResourceAvailable(ResourceType.SubtractivePalette),
 });
 
-makeGCD_PCT(SkillName.WaterInBlue, 15, {
+makeSpell_PCT(SkillName.WaterInBlue, 15, {
 	replaceIf: [redCondition, greenCondition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
@@ -488,7 +486,7 @@ makeGCD_PCT(SkillName.WaterInBlue, 15, {
 });
 
 
-makeGCD_PCT(SkillName.Fire2InRed, 25, {
+makeSpell_PCT(SkillName.Fire2InRed, 25, {
 	replaceIf: [green2Condition, blue2Condition],
 	baseCastTime: 1.5,
 	baseManaCost: 300,
@@ -502,7 +500,7 @@ makeGCD_PCT(SkillName.Fire2InRed, 25, {
 	onConfirm: (state) => state.doFiller(),
 });
 
-makeGCD_PCT(SkillName.Aero2InGreen, 35, {
+makeSpell_PCT(SkillName.Aero2InGreen, 35, {
 	replaceIf: [red2Condition, blue2Condition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
@@ -518,7 +516,7 @@ makeGCD_PCT(SkillName.Aero2InGreen, 35, {
 	highlightIf: (state) => !state.hasResourceAvailable(ResourceType.SubtractivePalette),
 });
 
-makeGCD_PCT(SkillName.Water2InBlue, 45, {
+makeSpell_PCT(SkillName.Water2InBlue, 45, {
 	replaceIf: [red2Condition, green2Condition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
@@ -544,7 +542,7 @@ makeGCD_PCT(SkillName.Water2InBlue, 45, {
 	highlightIf: (state) => !state.hasResourceAvailable(ResourceType.SubtractivePalette),
 });
 
-makeGCD_PCT(SkillName.BlizzardInCyan, 60, {
+makeSpell_PCT(SkillName.BlizzardInCyan, 60, {
 	replaceIf: [yellowCondition, magentaCondition],
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
@@ -561,7 +559,7 @@ makeGCD_PCT(SkillName.BlizzardInCyan, 60, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
 });
 
-makeGCD_PCT(SkillName.StoneInYellow, 60, {
+makeSpell_PCT(SkillName.StoneInYellow, 60, {
 	replaceIf: [cyanCondition, magentaCondition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
@@ -579,7 +577,7 @@ makeGCD_PCT(SkillName.StoneInYellow, 60, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
 });
 
-makeGCD_PCT(SkillName.ThunderInMagenta, 60, {
+makeSpell_PCT(SkillName.ThunderInMagenta, 60, {
 	replaceIf: [cyanCondition, yellowCondition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
@@ -602,7 +600,7 @@ makeGCD_PCT(SkillName.ThunderInMagenta, 60, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
 });
 
-makeGCD_PCT(SkillName.Blizzard2InCyan, 60, {
+makeSpell_PCT(SkillName.Blizzard2InCyan, 60, {
 	replaceIf: [yellow2Condition, magenta2Condition],
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
@@ -618,7 +616,7 @@ makeGCD_PCT(SkillName.Blizzard2InCyan, 60, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
 });
 
-makeGCD_PCT(SkillName.Stone2InYellow, 60, {
+makeSpell_PCT(SkillName.Stone2InYellow, 60, {
 	replaceIf: [cyan2Condition, magenta2Condition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
@@ -635,7 +633,7 @@ makeGCD_PCT(SkillName.Stone2InYellow, 60, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
 });
 
-makeGCD_PCT(SkillName.Thunder2InMagenta, 60, {
+makeSpell_PCT(SkillName.Thunder2InMagenta, 60, {
 	replaceIf: [cyan2Condition, yellow2Condition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
@@ -657,7 +655,7 @@ makeGCD_PCT(SkillName.Thunder2InMagenta, 60, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
 });
 
-makeGCD_PCT(SkillName.HolyInWhite, 80, {
+makeSpell_PCT(SkillName.HolyInWhite, 80, {
 	baseCastTime: 0,
 	baseManaCost: 300,
 	basePotency: [
@@ -681,7 +679,7 @@ makeGCD_PCT(SkillName.HolyInWhite, 80, {
 	),
 });
 
-makeGCD_PCT(SkillName.CometInBlack, 90, {
+makeSpell_PCT(SkillName.CometInBlack, 90, {
 	baseCastTime: 0,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
@@ -703,7 +701,7 @@ makeGCD_PCT(SkillName.CometInBlack, 90, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.MonochromeTones),
 });
 
-makeGCD_PCT(SkillName.RainbowDrip, 92, {
+makeSpell_PCT(SkillName.RainbowDrip, 92, {
 	baseCastTime: 4,
 	baseRecastTime: 6,
 	baseManaCost: 400,
@@ -717,7 +715,7 @@ makeGCD_PCT(SkillName.RainbowDrip, 92, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.RainbowBright),
 });
 
-makeGCD_PCT(SkillName.StarPrism, 100, {
+makeSpell_PCT(SkillName.StarPrism, 100, {
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 1400,
@@ -770,7 +768,7 @@ const creatureInfos: Array<[SkillName, number, StatePredicate<PCTState>]> = [
 	[SkillName.ClawMotif, 96, clawMotifCondition.condition],
 	[SkillName.MawMotif, 96, mawMotifCondition.condition],
 ];
-creatureInfos.forEach(([name, level, validateAttempt], i) => makeGCD_PCT(name, level, {
+creatureInfos.forEach(([name, level, validateAttempt], i) => makeSpell_PCT(name, level, {
 	replaceIf: creatureConditions.slice(0, i).concat(creatureConditions.slice(i + 1)),
 	startOnHotbar: i === 0,
 	baseCastTime: 3,
@@ -850,7 +848,7 @@ makeAbility_PCT(SkillName.RetributionOfTheMadeen, 30, ResourceType.cd_Portrait, 
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Portrait),
 });
 
-makeGCD_PCT(SkillName.WeaponMotif, 50, {
+makeSpell_PCT(SkillName.WeaponMotif, 50, {
 	replaceIf: [hammerCondition],
 	baseCastTime: 3,
 	baseRecastTime: 4,
@@ -859,7 +857,7 @@ makeGCD_PCT(SkillName.WeaponMotif, 50, {
 	validateAttempt: (state) => false, // hammer motif can never itself be cast
 });
 
-makeGCD_PCT(SkillName.HammerMotif, 50, {
+makeSpell_PCT(SkillName.HammerMotif, 50, {
 	replaceIf: [weaponCondition],
 	startOnHotbar: false,
 	baseCastTime: 3,
@@ -938,7 +936,7 @@ const hammerInfos: Array<[SkillName, number, number | Array<[TraitName, number]>
 			[TraitName.PictomancyMasteryIV, 680],
 		], 2.10],
 ];
-hammerInfos.forEach(([name, level, potencies, applicationDelay], i) => makeGCD_PCT(name, level, {
+hammerInfos.forEach(([name, level, potencies, applicationDelay], i) => makeSpell_PCT(name, level, {
 	replaceIf: hammerConditions.slice(0, i).concat(hammerConditions.slice(i + 1)),
 	baseCastTime: 0,
 	startOnHotbar: i === 0,
@@ -947,12 +945,10 @@ hammerInfos.forEach(([name, level, potencies, applicationDelay], i) => makeGCD_P
 	validateAttempt: hammerConditions[i].condition,
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.HammerTime),
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.HammerTime),
-	jobPotencyModifiers: (state) => [
-		{source: PotencyModifierType.AUTO_CDH, damageFactor: 1, critFactor: 1.0, dhFactor: 1.0}
-	],
+	jobPotencyModifiers: (state) => [Modifiers.AutoCDH],
 }));
 
-makeGCD_PCT(SkillName.LandscapeMotif, 70, {
+makeSpell_PCT(SkillName.LandscapeMotif, 70, {
 	replaceIf: [starrySkyCondition],
 	baseCastTime: 3,
 	baseRecastTime: 4,
@@ -961,7 +957,7 @@ makeGCD_PCT(SkillName.LandscapeMotif, 70, {
 	validateAttempt: (state) => false, // landscape motif can never itself be cast
 });
 
-makeGCD_PCT(SkillName.StarrySkyMotif, 70, {
+makeSpell_PCT(SkillName.StarrySkyMotif, 70, {
 	replaceIf: [landscapeCondition],
 	startOnHotbar: false,
 	baseCastTime: 3,

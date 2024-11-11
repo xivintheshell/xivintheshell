@@ -125,6 +125,14 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({en: "auto crit/direct hit", zh: "必直暴"}) as string;
 	} else if (buff === PotencyModifierType.STARRY) {
 		text = localize({en: "starry muse", zh: "星空构想"}) as string;
+	} else if (buff === PotencyModifierType.EMBOLDEN_M) {
+		text = localize({en: "embolden"}) as string;
+	} else if (buff === PotencyModifierType.MANAFIC) {
+		text = localize({en: "manafication"}) as string;
+	} else if (buff === PotencyModifierType.ACCELERATION) {
+		text = localize({en: "acceleration"}) as string;
+	} else if (buff === PotencyModifierType.COMBO) {
+		text = localize({en: "combo"}) as string;
 	}
 	return text;
 }
@@ -160,6 +168,18 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	} else if (props.buff === PotencyModifierType.STARRY) {
 		text = localize({en: "STARRY", zh: "星空"});
 		color = colors.pct.starryBuff;
+	} else if (props.buff === PotencyModifierType.EMBOLDEN_M) {
+		text = localize({en: "EMB"});
+		color = colors.rdm.emboldenBuff;
+	} else if (props.buff === PotencyModifierType.MANAFIC) {
+		text = localize({en: "MF"});
+		color = colors.rdm.manaficBuff;
+	} else if (props.buff === PotencyModifierType.ACCELERATION) {
+		text = localize({en: "ACC"});
+		color = colors.rdm.accelBuff;
+	} else if (props.buff === PotencyModifierType.COMBO) {
+		text = localize({en: "CMB"});
+		color = colors.resources.comboTag;
 	}
 	return <span style={{
 		borderRadius: 2,
@@ -183,8 +203,18 @@ function PotencyDisplay(props: {
 	if (props.explainUntargetable) {
 		potencyExplanation += localize({en: "(untargetable)", zh: "(不可选中)"});
 	}
+	let additiveExplanation = "";
+	props.calc.forEach(m => {
+		if (m.kind === "adder" && m.additiveAmount > 0) {
+			potency += m.additiveAmount;
+			additiveExplanation += " + " + m.additiveAmount + "(" + buffName(m.source) + ")";
+		}
+	});
+	if (additiveExplanation) {
+		potencyExplanation = "[ " + potencyExplanation + additiveExplanation + " ]";
+	}
 	props.calc.forEach(m=>{
-		if (m.damageFactor !== 1) {
+		if (m.kind === "multiplier" && m.damageFactor !== 1) {
 			potency *= m.damageFactor;
 			potencyExplanation += " × " + m.damageFactor + "(" + buffName(m.source) + ")"
 		}

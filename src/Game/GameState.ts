@@ -4,6 +4,7 @@ import {
 	DisplayedSkills,
 	SkillsList,
 	Spell,
+	Weaponskill,
 	Ability,
 } from "./Skills"
 import {
@@ -22,7 +23,7 @@ import {
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
 import {ShellJob} from "../Controller/Common";
-import {Potency, PotencyModifier, PotencyModifierType} from "./Potency";
+import {Modifiers, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
 
 import type {BLMState} from "./Jobs/BLM";
@@ -248,7 +249,7 @@ export abstract class GameState {
 	}
 
 	// BLM uses this for LL GCD scaling, but PCT does not
-	gcdRecastTimeScale() {
+	gcdRecastTimeScale(): number {
 		if (this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines)) {
 			// should be approximately 0.85
 			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.LeyLines));
@@ -271,11 +272,11 @@ export abstract class GameState {
 				rsc.enabled = true;
 				return true;
 			}
-		} else if ([
+		} else if (([
 			ResourceType.HammerTime,
 			ResourceType.Aetherhues,
 			ResourceType.SubtractivePalette,
-		].includes(buffName)) {
+		] as ResourceType[]).includes(buffName)) {
 			// subtractive spectrum, starstruck, monochrome tones, rainbow drip,
 			// tempera coat/grassa, smudge can be clicked off
 			// but these buffs cannot be
@@ -288,17 +289,17 @@ export abstract class GameState {
 	}
 
 	/**
-	 * Attempt to use a spell. Assumes that resources for the spell are currently available,
+	 * Attempt to use a spell or weaponskill. Assumes that resources for the spell are currently available,
 	 * i.e. `skill.validateAttempt` succeeded.
 	 *
 	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
 	 * it performs the confirmation immediately.
 	 */
-	useSpell(skill: Spell<PlayerState>, node: ActionNode) {
+	useSpellOrWeaponskill(skill: Spell<PlayerState> | Weaponskill<PlayerState>, node: ActionNode) {
 		let cd = this.cooldowns.get(skill.cdName);
 		// TODO refactor logic to determine self-buffs
 		let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
-		const inspireSkills = [
+		const inspireSkills: SkillName[] = [
 			SkillName.FireInRed,
 			SkillName.Fire2InRed,
 			SkillName.AeroInGreen,
@@ -372,19 +373,34 @@ export abstract class GameState {
 				potency.snapshotTime = this.getDisplayTime();
 				const mods = [];
 				if (this.hasResourceAvailable(ResourceType.Tincture)) {
-					mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
+					mods.push(Modifiers.Tincture);
 				}
 				mods.push(...skill.jobPotencyModifiers(this));
 				potency.modifiers = mods;
 			}
 
+			const doesDamage = skill.potencyFn(this) > 0;
+
+			// TODO automate buff covers
 			// tincture
-			if (this.hasResourceAvailable(ResourceType.Tincture) && skill.potencyFn(this) > 0) {
+			if (this.hasResourceAvailable(ResourceType.Tincture) && doesDamage) {
 				node.addBuff(BuffType.Tincture);
 			}
 
-			if (this.job === ShellJob.PCT && this.hasResourceAvailable(ResourceType.StarryMuse) && skill.potencyFn(this) > 0) {
+			if (this.job === ShellJob.PCT && this.hasResourceAvailable(ResourceType.StarryMuse) && doesDamage) {
 				node.addBuff(BuffType.StarryMuse);
+			}
+
+			if (this.job === ShellJob.RDM && doesDamage) {
+				if (this.hasResourceAvailable(ResourceType.Embolden)) {
+					node.addBuff(BuffType.Embolden);
+				}
+				if (this.hasResourceAvailable(ResourceType.Manafication)) {
+					node.addBuff(BuffType.Manafication);
+				}
+				if (skill.name === SkillName.Impact && this.hasResourceAvailable(ResourceType.Acceleration)) {
+					node.addBuff(BuffType.Acceleration);
+				}
 			}
 
 			// Perform additional side effects
@@ -465,13 +481,14 @@ export abstract class GameState {
 			});
 			const mods = [];
 			if (this.hasResourceAvailable(ResourceType.Tincture)) {
-				mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
+				mods.push(Modifiers.Tincture);
 			}
 			mods.push(...skill.jobPotencyModifiers(this));
 			potency.modifiers = mods;
 			node.addPotency(potency);
 		}
 
+		// TODO automate buff covers
 		// tincture
 		if (this.hasResourceAvailable(ResourceType.Tincture) && potencyNumber > 0) {
 			node.addBuff(BuffType.Tincture);
@@ -480,6 +497,10 @@ export abstract class GameState {
 		// starry muse
 		if (this.job === ShellJob.PCT && this.resources.get(ResourceType.StarryMuse).available(1) && potencyNumber > 0) {
 			node.addBuff(BuffType.StarryMuse);
+		}
+
+		if (this.job === ShellJob.RDM && this.hasResourceAvailable(ResourceType.Embolden) && potencyNumber > 0) {
+			node.addBuff(BuffType.Embolden);
 		}
 
 		skill.onConfirm(this, node);
@@ -592,7 +613,7 @@ export abstract class GameState {
 		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
 
 		// Special case for striking/starry muse, which require being in combat
-		if ([SkillName.StrikingMuse, SkillName.StarryMuse].includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
+		if (([SkillName.StrikingMuse, SkillName.StarryMuse] as SkillName[]).includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
 			status = SkillReadyStatus.NotInCombat;
 			timeTillAvailable = this.timeTillNextDamageEvent();
 		}
@@ -633,9 +654,8 @@ export abstract class GameState {
 
 	useSkill(skillName: SkillName, node: ActionNode) {
 		let skill = this.skillsList.get(skillName);
-		// TODO implement weaponskills
-		if (skill.kind === "spell") {
-			this.useSpell(skill, node);
+		if (skill.kind === "spell" || skill.kind === "weaponskill") {
+			this.useSpellOrWeaponskill(skill, node);
 		} else if (skill.kind === "ability") {
 			this.useAbility(skill, node);
 		}
@@ -649,32 +669,55 @@ export abstract class GameState {
 		}).forEach(marker => {
 			const buff = new Buff(marker.description as BuffType);
 			if (!buffCollection.has(buff.name)) {
-				buffCollection.set(buff.name, {
-					source: PotencyModifierType.PARTY, 
-					buffType: buff.name,
-					damageFactor: buff.info.damageFactor,
-					critFactor: buff.info.critBonus,
-					dhFactor: buff.info.dhBonus,
-				});
+				// Assume all buffs are either crit/DH multipliers, or flat damage multipliers,
+				// but not both. This is currently true for all party buffs in the game.
+				if (buff.info.damageFactor === 1) {
+					buffCollection.set(buff.name, {
+						kind: "multiplier",
+						source: PotencyModifierType.PARTY,
+						buffType: buff.name,
+						damageFactor: buff.info.damageFactor,
+					});
+				} else {
+					buffCollection.set(buff.name, {
+						kind: "critDirect",
+						source: PotencyModifierType.PARTY, 
+						buffType: buff.name,
+						critFactor: buff.info.critBonus,
+						dhFactor: buff.info.dhBonus,
+					});
+				}
 			}
 		})
 
 		return buffCollection;
 	}
 
-	// Attempt to consume 1 stack of the specified resource.
-	// When cancelTimerIfEmpty is set, then remove any associated timers if the last stack of
-	// the resource was consumed.
-	tryConsumeResource(rscType: ResourceType, removeTimerIfEmpty=true) {
+	// Attempt to consume stacks of the specified resource, removing any active timers if
+	// all stacks have been consumed.
+	// Consumes only 1 stack by default; consumes all available stacks when `consumeAll` is set.
+	tryConsumeResource(rscType: ResourceType, consumeAll: boolean = false) {
 		const resource = this.resources.get(rscType);
-		if (resource.available(1)) {
-			resource.consume(1);
-			if (removeTimerIfEmpty && !resource.available(1)) {
+		const toConsume = consumeAll ? resource.availableAmount() : 1;
+		if (resource.available(toConsume)) {
+			resource.consume(toConsume);
+			if (!resource.available(toConsume)) {
 				resource.removeTimer();
 			}
 			return true;
 		}
 		return false;
+	}
+
+	// Attempt to set a combo counter to a specific value, and reset its timer to 30 seconds.
+	// If `newValue` is 0, then any existing timers will be canceled.
+	setComboState(rscType: ResourceType, newValue: number) {
+		if (newValue === 0) {
+			this.tryConsumeResource(rscType, true);
+		} else {
+			this.resources.get(rscType).overrideCurrentValue(newValue);
+			this.enqueueResourceDrop(rscType, 30);
+		}
 	}
 
 	isInCombat() {

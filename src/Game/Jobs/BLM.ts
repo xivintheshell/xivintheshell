@@ -4,7 +4,7 @@ import {controller} from "../../Controller/Controller";
 import {ActionNode} from "../../Controller/Record";
 import {ShellJob} from "../../Controller/Common";
 import {Aspect, BuffType, Debug, ProcMode, ResourceType, SkillName, WarningType} from "../Common";
-import {Potency, PotencyModifierType} from "../Potency";
+import {Modifiers, Potency, PotencyModifierType, PotencyMultiplier} from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -152,7 +152,7 @@ export class BLMState extends GameState {
 	}
 
 	// call this whenever gaining af or ui from a different af/ui/unaspected state
-	switchToAForUI(rscType: ResourceType.AstralFire | ResourceType.UmbralIce, numStacksToGain: number) {
+	switchToAForUI(rscType: typeof ResourceType.AstralFire | typeof ResourceType.UmbralIce, numStacksToGain: number) {
 		console.assert(numStacksToGain > 0);
 
 		let af = this.resources.get(ResourceType.AstralFire);
@@ -323,7 +323,7 @@ const getEnochianModifier = (state: Readonly<BLMState>) => (
 	1.10
 );
 
-const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
+const makeSpell_BLM = (name: SkillName, unlockLevel: number, params: {
 	replaceIf?: ConditionalSkillReplace<BLMState>[],
 	startOnHotbar?: boolean,
 	highlightIf?: StatePredicate<BLMState>,
@@ -360,7 +360,7 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 			if (
 				state.getFireStacks() > 0 &&
 				aspect === Aspect.Fire &&
-				![SkillName.Despair, SkillName.FlareStar, SkillName.Flare].includes(name) &&
+				!([SkillName.Despair, SkillName.FlareStar, SkillName.Flare] as SkillName[]).includes(name) &&
 				!(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter))
 			) {
 				state.tryConsumeResource(ResourceType.UmbralHeart)
@@ -402,49 +402,49 @@ const makeGCD_BLM = (name: SkillName, unlockLevel: number, params: {
 		onConfirm: onConfirm,
 		onApplication: onApplication,
 		jobPotencyModifiers: (state) => {
-			const mods = [];
+			const mods: PotencyMultiplier[] = [];
 			if (state.hasResourceAvailable(ResourceType.Enochian)) {
 				const enochianModifier = getEnochianModifier(state);
-				if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: enochianModifier, critFactor: 0, dhFactor: 0});
+				if (!Debug.noEnochian) mods.push({kind: "multiplier", source: PotencyModifierType.ENO, damageFactor: enochianModifier});
 			}
 			const ui = state.getIceStacks();
 			const af = state.getFireStacks();
 			if (ui === 1) {
 				if (aspect === Aspect.Fire) {
-					mods.push({source: PotencyModifierType.UI1, damageFactor: 0.9, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.UI1, damageFactor: 0.9});
 				} else if (aspect === Aspect.Ice) {
-					mods.push({source: PotencyModifierType.UI1, damageFactor: 1, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.UI1, damageFactor: 1});
 				}
 			} else if (ui === 2) {
 				if (aspect === Aspect.Fire) {
-					mods.push({source: PotencyModifierType.UI2, damageFactor: 0.8, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.UI2, damageFactor: 0.8});
 				} else if (aspect === Aspect.Ice) {
-					mods.push({source: PotencyModifierType.UI2, damageFactor: 1, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.UI2, damageFactor: 1});
 				}
 			} else if (ui === 3) {
 				if (aspect === Aspect.Fire) {
-					mods.push({source: PotencyModifierType.UI3, damageFactor: 0.7, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.UI3, damageFactor: 0.7});
 				} else if (aspect === Aspect.Ice) {
-					mods.push({source: PotencyModifierType.UI3, damageFactor: 1, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.UI3, damageFactor: 1});
 				}
 			}
 			if (af === 1) {
 				if (aspect === Aspect.Ice) {
-					mods.push({source: PotencyModifierType.AF1, damageFactor: 0.9, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.AF1, damageFactor: 0.9});
 				}  else if (aspect === Aspect.Fire) {
-					mods.push({source: PotencyModifierType.AF1, damageFactor: 1.4, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.AF1, damageFactor: 1.4});
 				}
 			} else if (af === 2) {
 				if (aspect === Aspect.Ice) {
-					mods.push({source: PotencyModifierType.AF2, damageFactor: 0.8, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.AF2, damageFactor: 0.8});
 				}  else if (aspect === Aspect.Fire) {
-					mods.push({source: PotencyModifierType.AF2, damageFactor: 1.6, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.AF2, damageFactor: 1.6});
 				}
 			} else if (af === 3) {
 				if (aspect === Aspect.Ice) {
-					mods.push({source: PotencyModifierType.AF3, damageFactor: 0.7, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.AF3, damageFactor: 0.7});
 				}  else if (aspect === Aspect.Fire) {
-					mods.push({source: PotencyModifierType.AF3, damageFactor: 1.8, critFactor: 0, dhFactor: 0});
+					mods.push({kind: "multiplier", source: PotencyModifierType.AF3, damageFactor: 1.8});
 				}
 			}
 			return mods;
@@ -471,7 +471,7 @@ const makeAbility_BLM =(name: SkillName, unlockLevel: number, cdName: ResourceTy
 // https://www.fflogs.com/reports/rK87bvMFN2R3Hqpy#fight=1&type=casts&source=7
 // https://www.fflogs.com/reports/cNpjtRXHhZ8Az2V3#fight=last&type=damage-done&view=events&ability=36987
 // https://www.fflogs.com/reports/7NMQkxLzcbptw3Xd#fight=15&type=damage-done&source=116&view=events&ability=36986
-makeGCD_BLM(SkillName.Blizzard, 1, {
+makeSpell_BLM(SkillName.Blizzard, 1, {
 	aspect: Aspect.Ice,
 	baseCastTime: 2.5,
 	baseManaCost: 400,
@@ -511,7 +511,7 @@ const potentiallyGainFirestarter = (game: PlayerState) => {
 	}
 };
 
-makeGCD_BLM(SkillName.Fire, 2, {
+makeSpell_BLM(SkillName.Fire, 2, {
 	aspect: Aspect.Fire,
 	baseCastTime: 2.5,
 	baseManaCost: 800,
@@ -571,15 +571,15 @@ const applyThunderDoT = (game: PlayerState, node: ActionNode, skillName: SkillNa
 	thunder.tickCount = 0;
 };
 
-const addThunderPotencies = (game: BLMState, node: ActionNode, skillName: SkillName.Thunder3 | SkillName.HighThunder) => {
-	const mods = [];
+const addThunderPotencies = (game: BLMState, node: ActionNode, skillName: typeof SkillName.Thunder3 | typeof SkillName.HighThunder) => {
+	const mods: PotencyMultiplier[] = [];
 	// All modifiers need to be manually added to dot tick action nodes
 	if (game.hasResourceAvailable(ResourceType.Tincture)) {
-		mods.push({source: PotencyModifierType.POT, damageFactor: 1, critFactor: 0, dhFactor: 0});
+		mods.push(Modifiers.Tincture);
 	}
 	if (game.hasResourceAvailable(ResourceType.Enochian)) {
 		const enochianModifier = getEnochianModifier(game);
-		if (!Debug.noEnochian) mods.push({source: PotencyModifierType.ENO, damageFactor: enochianModifier, critFactor: 0, dhFactor: 0});
+		if (!Debug.noEnochian) mods.push({kind: "multiplier", source: PotencyModifierType.ENO, damageFactor: enochianModifier});
 	}
 	let thunder = getSkill(ShellJob.BLM, skillName);
 
@@ -614,7 +614,7 @@ const addThunderPotencies = (game: BLMState, node: ActionNode, skillName: SkillN
 	}
 };
 
-const thunderConfirm = (skillName: SkillName.Thunder3 | SkillName.HighThunder) => (
+const thunderConfirm = (skillName: typeof SkillName.Thunder3 | typeof SkillName.HighThunder) => (
 	(game: BLMState, node: ActionNode) => {
 		// potency
 		addThunderPotencies(game, node, skillName); // should call on capture
@@ -631,7 +631,7 @@ const thunderConfirm = (skillName: SkillName.Thunder3 | SkillName.HighThunder) =
 	}
 );
 
-makeGCD_BLM(SkillName.Thunder3, 45, {
+makeSpell_BLM(SkillName.Thunder3, 45, {
 	aspect: Aspect.Lightning,
 	baseCastTime: 0,
 	baseManaCost: 0,
@@ -677,7 +677,7 @@ makeAbility_BLM(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
 	},
 });
 
-makeGCD_BLM(SkillName.Fire3, 35, {
+makeSpell_BLM(SkillName.Fire3, 35, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3.5,
 	baseManaCost: 2000,
@@ -691,7 +691,7 @@ makeGCD_BLM(SkillName.Fire3, 35, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Firestarter),
 });
 
-makeGCD_BLM(SkillName.Blizzard3, 35, {
+makeSpell_BLM(SkillName.Blizzard3, 35, {
 	aspect: Aspect.Ice,
 	baseCastTime: 3.5,
 	baseManaCost: 800,
@@ -703,7 +703,7 @@ makeGCD_BLM(SkillName.Blizzard3, 35, {
 	},
 });
 
-makeGCD_BLM(SkillName.Freeze, 40, {
+makeSpell_BLM(SkillName.Freeze, 40, {
 	aspect: Aspect.Ice,
 	baseCastTime: 2.8,
 	baseManaCost: 1000,
@@ -713,7 +713,7 @@ makeGCD_BLM(SkillName.Freeze, 40, {
 	onConfirm: (state, node) => state.resources.get(ResourceType.UmbralHeart).gain(3),
 });
 
-makeGCD_BLM(SkillName.Flare, 50, {
+makeSpell_BLM(SkillName.Flare, 50, {
 	aspect: Aspect.Fire,
 	baseCastTime: 4,
 	baseManaCost: 0,  // mana is handled separately
@@ -750,7 +750,7 @@ makeResourceAbility(ShellJob.BLM, SkillName.LeyLines, 52, ResourceType.cd_LeyLin
 	}],
 });
 
-makeGCD_BLM(SkillName.Blizzard4, 58, {
+makeSpell_BLM(SkillName.Blizzard4, 58, {
 	aspect: Aspect.Ice,
 	baseCastTime: 2.5,
 	baseManaCost: 800,
@@ -760,7 +760,7 @@ makeGCD_BLM(SkillName.Blizzard4, 58, {
 	onConfirm: (state, node) => state.resources.get(ResourceType.UmbralHeart).gain(3),
 });
 
-makeGCD_BLM(SkillName.Fire4, 60, {
+makeSpell_BLM(SkillName.Fire4, 60, {
 	aspect: Aspect.Fire,
 	baseCastTime: 2.8,
 	baseManaCost: 800,
@@ -799,7 +799,7 @@ makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
 	},
 });
 
-makeGCD_BLM(SkillName.Foul, 70, {
+makeSpell_BLM(SkillName.Foul, 70, {
 	baseCastTime: 2.5,
 	baseManaCost: 0,
 	basePotency: 600,
@@ -809,7 +809,7 @@ makeGCD_BLM(SkillName.Foul, 70, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 });
 
-makeGCD_BLM(SkillName.Despair, 72, {
+makeSpell_BLM(SkillName.Despair, 72, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 0, // mana handled separately, like flare
@@ -829,7 +829,7 @@ makeGCD_BLM(SkillName.Despair, 72, {
 
 // Umbral Soul: immediate snapshot & UH gain; delayed MP gain
 // see screen recording: https://drive.google.com/file/d/1nsO69O7lgc8V_R_To4X0TGalPsCus1cg/view?usp=drive_link
-makeGCD_BLM(SkillName.UmbralSoul, 35, {
+makeSpell_BLM(SkillName.UmbralSoul, 35, {
 	aspect: Aspect.Ice,
 	baseCastTime: 0,
 	baseManaCost: 0,
@@ -846,7 +846,7 @@ makeGCD_BLM(SkillName.UmbralSoul, 35, {
 	},
 });
 
-makeGCD_BLM(SkillName.Xenoglossy, 80, {
+makeSpell_BLM(SkillName.Xenoglossy, 80, {
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 880,
@@ -856,7 +856,7 @@ makeGCD_BLM(SkillName.Xenoglossy, 80, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 });
 
-makeGCD_BLM(SkillName.Fire2, 18, {
+makeSpell_BLM(SkillName.Fire2, 18, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 1500,
@@ -869,7 +869,7 @@ makeGCD_BLM(SkillName.Fire2, 18, {
 	},
 });
 
-makeGCD_BLM(SkillName.Blizzard2, 12, {
+makeSpell_BLM(SkillName.Blizzard2, 12, {
 	aspect: Aspect.Ice,
 	baseCastTime: 3,
 	baseManaCost: 800,
@@ -882,7 +882,7 @@ makeGCD_BLM(SkillName.Blizzard2, 12, {
 	},
 });
 
-makeGCD_BLM(SkillName.HighFire2, 82, {
+makeSpell_BLM(SkillName.HighFire2, 82, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 1500,
@@ -895,7 +895,7 @@ makeGCD_BLM(SkillName.HighFire2, 82, {
 	},
 });
 
-makeGCD_BLM(SkillName.HighBlizzard2, 82, {
+makeSpell_BLM(SkillName.HighBlizzard2, 82, {
 	aspect: Aspect.Ice,
 	baseCastTime: 3,
 	baseManaCost: 800,
@@ -921,7 +921,7 @@ makeAbility_BLM(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, {
 	},
 });
 
-makeGCD_BLM(SkillName.Paradox, 90, {
+makeSpell_BLM(SkillName.Paradox, 90, {
 	// Paradox made instant via Dawntrail
 	baseCastTime: 0,
 	baseManaCost: 1600,
@@ -953,7 +953,7 @@ makeGCD_BLM(SkillName.Paradox, 90, {
 	highlightIf: (state) => true,
 });
 
-makeGCD_BLM(SkillName.HighThunder, 92, {
+makeSpell_BLM(SkillName.HighThunder, 92, {
 	aspect: Aspect.Lightning,
 	baseCastTime: 0,
 	baseManaCost: 0,
@@ -970,7 +970,7 @@ makeGCD_BLM(SkillName.HighThunder, 92, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
-makeGCD_BLM(SkillName.FlareStar, 100, {
+makeSpell_BLM(SkillName.FlareStar, 100, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 0,
