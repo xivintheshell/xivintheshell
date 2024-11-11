@@ -27,6 +27,9 @@ buffIcons.set(BuffType.StarryMuse, require("./Asset/PartyBuffs/starry_muse.png")
 buffIcons.set(BuffType.TechnicalFinish, require("./Asset/PartyBuffs/technical_step.png"));
 buffIcons.set(BuffType.WanderersMinuet, require("./Asset/PartyBuffs/wanderers_minuet.png"));
 
+buffIcons.set(BuffType.Manafication, require("./Asset/PartyBuffs/manafication.png"));
+buffIcons.set(BuffType.Acceleration, require("./Asset/Buffs/RDM/Acceleration.png"));
+
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName)=>{
 	let imgObj = new Image();

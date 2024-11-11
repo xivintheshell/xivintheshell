@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # Helper script to download icons from xivapi and give them proper names.
-# Assumes this is being from the repository root (invoked as ./scrips/download_xivapi_icons.sh).
+# Assumes this is being from the repository root (invoked as ./scripts/download_xivapi_icons.sh).
 # This only needs to be run once per job, so just modify the function calls at the bottom to suit your needs
 # (associative arrays in bash are annoying so we just explicitly do a bunch of function calls, and I'm
 # too lazy to rewrite this to parse a text file).
-# Does not re-retrieve assets that were already downloaded (delete the file first if you want to update them)
+# Does not re-retrieve assets that were already downloaded (delete the file first if you want to update them).
 
 # TODO: extend to auto-generate src/Game/Constants/JOB.ts as well.
 
@@ -16,11 +16,11 @@ BUFF_DIR="src/Components/Asset/Buffs/$JOB"
 mkdir -p "$SKILL_DIR"
 mkdir -p "$BUFF_DIR"
 
-ICONSET="002000"  # change me between function calls whenever you change icon sets
-
 get_skill_icon() {
     # 1: skill name (as shown in game)
     # 2: icon ID (see examples in https://xivapi.com/docs/Icons?set=icons002000)
+    # the iconset is the first 3 characters of the icon ID, zero-padded
+    ICONSET="${2::3}000"
     DST="$SKILL_DIR/$1.png"
     if [[ ! -f "$DST" ]]; then
         echo "Downloading $DST"
@@ -34,6 +34,8 @@ get_buff_icon() {
     # 1: buff name (as shown in game)
     # 2: icon ID (see examples in https://xivapi.com/docs/Icons?set=icons012000)
     # 3 (optional): # of stacks (see examples in https://xivapi.com/docs/Icons?set=icons018000)
+    # the iconset is the first 3 characters of the icon ID, zero-padded
+    ICONSET="${2::3}000"
     if [[ "$#" -eq 3 ]]; then
         DST="$BUFF_DIR/${1}${3}.png"
     else
@@ -47,7 +49,6 @@ get_buff_icon() {
     fi
 }
 
-ICONSET="013000"
 get_buff_icon "Verfire Ready" "013402"
 get_buff_icon "Verstone Ready" "013403"
 get_buff_icon "Acceleration" "013405"
@@ -58,12 +59,10 @@ get_buff_icon "Thorned Flourish" "013411"
 get_buff_icon "Grand Impact Ready" "013412"
 get_buff_icon "Prefulgence Ready" "013413"
 
-ICONSET="018000"
 get_buff_icon "Magicked Swordplay" "018665"
 get_buff_icon "Magicked Swordplay" "018666" 2
 get_buff_icon "Magicked Swordplay" "018667" 3
 
-ICONSET="017000"
 get_buff_icon Manafication "017491"
 get_buff_icon Manafication "017492" 2
 get_buff_icon Manafication "017493" 3
@@ -71,7 +70,6 @@ get_buff_icon Manafication "017494" 4
 get_buff_icon Manafication "017495" 5
 get_buff_icon Manafication "017496" 6
 
-ICONSET="003000"
 get_skill_icon Riposte "003201"
 get_skill_icon Jolt "003202"
 get_skill_icon Verthunder "003203"

@@ -446,7 +446,7 @@ export function makeResourceAbility<T extends PlayerState>(
 			if (resource.available(1)) {
 				resource.overrideTimer(state, durationFn(state));
 			} else {
-				resource.gain(1);
+				resource.gain(resource.maxValue);
 				state.enqueueResourceDrop(
 					params.rscType,
 					durationFn(state),

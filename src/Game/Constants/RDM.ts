@@ -72,6 +72,7 @@ export enum RDMResourceType {
 
 export enum RDMCooldownType {
 	cd_CorpsACorps = "cd_CorpsACorps",
+	cd_Displacement = "cd_Displacement",
 	cd_Fleche = "cd_Fleche",
 	cd_Acceleration = "cd_Acceleration",
 	cd_ContreSixte = "cd_ContreSixte",

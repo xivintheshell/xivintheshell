@@ -68,9 +68,12 @@ export const enum SkillReadyStatus {
 	BuffNoLongerAvailable = "buff no longer available"
 }
 
+// Add any buffs that you want to have highlighted on the timeline here.
 export enum BuffType {
 	LeyLines = "Ley Lines",
 	Hyperphantasia = "Hyperphantasia",
+	Manafication = "Manafication",
+	Acceleration = "Acceleration",
 	Tincture = "Tincture",
 
 	ArcaneCircle = "Arcane Circle",

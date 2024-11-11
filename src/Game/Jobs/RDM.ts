@@ -3,7 +3,7 @@
 import {controller} from "../../Controller/Controller";
 import {ShellJob} from "../../Controller/Common";
 import {Aspect, ProcMode, ResourceType, SkillName, WarningType} from "../Common";
-import {Modifiers, PotencyModifierType} from "../Potency";
+import {Modifiers, PotencyModifier, PotencyModifierType} from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -22,7 +22,7 @@ import {
 } from "../Skills";
 import {TraitName, Traits} from "../Traits";
 import {GameState} from "../GameState";
-import {getResourceInfo, makeResource, CoolDown, ResourceInfo} from "../Resources"
+import {getResourceInfo, makeResource, CoolDown, Resource, ResourceInfo} from "../Resources"
 import {GameConfig} from "../GameConfig";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
@@ -76,13 +76,23 @@ const FINISHERS: SkillName[] = [
 export class RDMState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
-		const swiftcastCooldown = (Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level) && 40) || 60;
-		const c6Cooldown = (Traits.hasUnlocked(TraitName.RedMagicMastery, this.config.level) && 45) || 35;
+		const swiftcastCooldown = Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level) ? 40 : 60;
+		const c6Cooldown = Traits.hasUnlocked(TraitName.RedMagicMastery, this.config.level) ? 45 : 35;
+		const mfCooldown = Traits.hasUnlocked(TraitName.EnhancedManafication, this.config.level) ? 120 : 110;
 		[
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
 			new CoolDown(ResourceType.cd_ContreSixte, c6Cooldown, 1, 1),
+			new CoolDown(ResourceType.cd_Manafication, mfCooldown, 1, 1)
 		].forEach((cd) => this.cooldowns.set(cd));
 		
+		const accelStacks = Traits.hasUnlocked(TraitName.EnhancedAcceleration, config.level) ? 2 : 1;
+		this.cooldowns.set(new CoolDown(ResourceType.cd_Acceleration, 55, accelStacks, accelStacks));
+
+		const mfStacks = Traits.hasUnlocked(TraitName.EnhancedManaficationII, config.level)
+			? 6
+			: (Traits.hasUnlocked(TraitName.EnhancedManafication, config.level) ? 5 : 4);
+		this.resources.set(new Resource(ResourceType.Manafication, mfStacks, 0));
+
 		this.registerRecurringEvents();
 	}
 
@@ -174,11 +184,23 @@ export class RDMState extends GameState {
 			manaStacks.gain(1);
 		} else {
 			counters = [0, 0, 0]
-			manaStacks.consume(3);
+			manaStacks.consume(manaStacks.availableAmount());
 		}
 		this.setComboState(ResourceType.RDMMeleeCounter, counters[0]);
 		this.setComboState(ResourceType.RDMFinisherCounter, counters[1]);
 		this.setComboState(ResourceType.RDMAoECounter, counters[2]);
+	}
+
+	processManafic() {
+		// all GCDs (even vercure/raise) consume manafic stacks
+		// if we successfully consuemd all stacks, then become prefulgence ready
+		if (this.tryConsumeResource(ResourceType.Manafication)
+			&& !this.hasResourceAvailable(ResourceType.Manafication)
+			&& Traits.hasUnlocked(TraitName.EnhancedManaficationIII, this.config.level)
+		) {
+			this.resources.get(ResourceType.PrefulgenceReady).gain(1);
+			this.enqueueResourceDrop(ResourceType.PrefulgenceReady);
+		}
 	}
 }
 
@@ -200,11 +222,13 @@ const makeSpell_RDM = (name: SkillName, unlockLevel: number, params: {
 	baseCastTime: number,
 	baseManaCost: number,
 	basePotency?: number | Array<[TraitName, number]>,
+	jobPotencyModifiers?: PotencyModifierFn<RDMState>,
 	applicationDelay: number,
 	validateAttempt?: StatePredicate<RDMState>,
 	onConfirm?: EffectFn<RDMState>,
 }): Spell<RDMState> => {
 	const onConfirm: EffectFn<RDMState> = combineEffects(
+		(state) => state.processManafic(),
 		(state) => state.processDualcastAndInstants(name),
 		(state) => state.processComboStatus(name),
 		params.onConfirm ?? NO_EFFECT,
@@ -220,7 +244,19 @@ const makeSpell_RDM = (name: SkillName, unlockLevel: number, params: {
 		recastTime: (state) => state.config.adjustedGCD(),
 		manaCost: params.baseManaCost ?? 0,
 		potency: params.basePotency,
-		jobPotencyModifiers: (state) => state.hasResourceAvailable(ResourceType.Embolden) ? [Modifiers.EmboldenMagic] : [],
+		jobPotencyModifiers: (state) => {
+			const mods: PotencyModifier[] = [];
+			if (state.hasResourceAvailable(ResourceType.Embolden)) {
+				mods.push(Modifiers.EmboldenMagic);
+			}
+			if (state.hasResourceAvailable(ResourceType.Manafication)) {
+				mods.push(Modifiers.Manafication);
+			}
+			if (params.jobPotencyModifiers) {
+				mods.push(...params.jobPotencyModifiers(state));
+			}
+			return mods;
+		},
 		validateAttempt: params.validateAttempt,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => (
@@ -270,7 +306,7 @@ const makeAbility_RDM = (name: SkillName, unlockLevel: number, cdName: ResourceT
 	validateAttempt?: StatePredicate<RDMState>,
 	onConfirm?: EffectFn<RDMState>,
 	onApplication?: EffectFn<RDMState>,
-}): Ability<RDMState> => makeAbility(ShellJob.PCT, name, unlockLevel, cdName, {
+}): Ability<RDMState> => makeAbility(ShellJob.RDM, name, unlockLevel, cdName, {
 	jobPotencyModifiers: (state) => (
 		(!params.isPhysical && state.hasResourceAvailable(ResourceType.Embolden)) ? [Modifiers.EmboldenMagic] : []
 	),
@@ -287,23 +323,30 @@ const resoCondition: ConditionalSkillReplace<RDMState> = {
 	condition: (state) => state.getFinisherCounter() === 2,
 };
 
+const giCondition: ConditionalSkillReplace<RDMState> = {
+	newSkill: SkillName.GrandImpact,
+	condition: (state) => state.getFinisherCounter() < 1 && state.hasResourceAvailable(ResourceType.GrandImpactReady),
+};
+
 makeSpell_RDM(SkillName.Jolt2, 62, {
-	replaceIf: [scorchCondition, resoCondition],
+	replaceIf: [scorchCondition, resoCondition, giCondition],
 	autoUpgrade: { trait: TraitName.RedMagicMasteryIII, otherSkill: SkillName.Jolt3 },
 	baseCastTime: 2.0,
 	baseManaCost: 200,
 	applicationDelay: 0.80, // TODO
 	basePotency: 280,
+	validateAttempt: (state) => state.getFinisherCounter() < 1 && !state.hasResourceAvailable(ResourceType.GrandImpactReady),
 	onConfirm: (state) => state.gainColorMana({w: 2, b: 2}),
 });
 
 makeSpell_RDM(SkillName.Jolt3, 84, {
-	replaceIf: [scorchCondition, resoCondition],
+	replaceIf: [scorchCondition, resoCondition, giCondition],
 	autoDowngrade: { trait: TraitName.RedMagicMasteryIII, otherSkill: SkillName.Jolt2 },
 	baseCastTime: 2.0,
 	baseManaCost: 200,
 	applicationDelay: 0.80,
 	basePotency: 360,
+	validateAttempt: (state) => state.getFinisherCounter() < 1 && !state.hasResourceAvailable(ResourceType.GrandImpactReady),
 	onConfirm: (state) => state.gainColorMana({w: 2, b: 2}),
 });
 
@@ -436,8 +479,32 @@ makeSpell_RDM(SkillName.Verthunder2, 18, {
 	onConfirm: (state) => state.gainColorMana({w: 7}),
 });
 
-// makeSpell_RDM(SkillName.Impact, 66, {});
-// makeSpell_RDM(SkillName.GrandImpact, 96, {});
+makeSpell_RDM(SkillName.Impact, 66, {
+	replaceIf: [scorchCondition, resoCondition, giCondition],
+	baseCastTime: 5.0,
+	baseManaCost: 400,
+	applicationDelay: 0.76,
+	basePotency: [
+		[TraitName.Never, 200],
+		[TraitName.RedMagicMasteryIII, 210],
+	],
+	jobPotencyModifiers: (state) => state.hasResourceAvailable(ResourceType.Acceleration)
+		? [Modifiers.AccelerationImpact] : [],
+	validateAttempt: (state) => state.getFinisherCounter() < 1 && !state.hasResourceAvailable(ResourceType.GrandImpactReady),
+	onConfirm: (state) => state.gainColorMana({w: 3, b: 3}),
+});
+
+
+makeSpell_RDM(SkillName.GrandImpact, 96, {
+	startOnHotbar: false,
+	baseCastTime: 0,
+	baseManaCost: 0,
+	basePotency: 600,
+	applicationDelay: 1.55,
+	validateAttempt: giCondition.condition,
+	highlightIf: giCondition.condition,
+});
+
 // makeMeleeComboHit(SkillName.Riposte, 1, {});
 // makeMeleeComboHit(SkillName.Zwerchhau, 35, {});
 // makeMeleeComboHit(SkillName.Redoublement, 50, {});
@@ -497,7 +564,7 @@ makeSpell_RDM(SkillName.Resolution, 90, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 400,
-	applicationDelay: 1.83,
+	applicationDelay: 1.56,
 	basePotency: [
 		[TraitName.Never, 750],
 		[TraitName.EnchantedBladeMastery, 800],
@@ -507,16 +574,119 @@ makeSpell_RDM(SkillName.Resolution, 90, {
 	highlightIf: (state) => state.getFinisherCounter() === 2,
 });
 
-// makeSpell_RDM(SkillName.Vercure, 54, {});
-// makeSpell_RDM(SkillName.Verraise, 64, {});
-// makeAbility_RDM(SkillName.Embolden, 58, {});
-// makeAbility_RDM(SkillName.Manafication, 60, {});
-// makeAbility_RDM(SkillName.CorpsACorps, 6, {});
-// makeAbility_RDM(SkillName.Engagement, 40, {});
-// makeAbility_RDM(SkillName.Displacement, 40, {});
-// makeAbility_RDM(SkillName.Fleche, 45, {});
-// makeAbility_RDM(SkillName.ContreSixte, 56, {});
-// makeAbility_RDM(SkillName.Acceleration, 50, {});
-// makeAbility_RDM(SkillName.MagickBarrier, 86, {});
-// makeAbility_RDM(SkillName.ViceOfThorns, 92, {});
-// makeAbility_RDM(SkillName.Prefulgence, 100, {});
+makeSpell_RDM(SkillName.Vercure, 54, {
+	baseCastTime: 2.0,
+	baseManaCost: 500,
+	applicationDelay: 0.80,
+	basePotency: 0,
+});
+
+makeSpell_RDM(SkillName.Verraise, 64, {
+	baseCastTime: 10,
+	baseManaCost: 2400,
+	applicationDelay: 0.81,
+	basePotency: 0,
+});
+
+makeResourceAbility(ShellJob.RDM, SkillName.Embolden, 58, ResourceType.cd_Embolden, {
+	rscType: ResourceType.Embolden,
+	applicationDelay: 0.62,
+	cooldown: 120,
+	onApplication: (state) => {
+		if (Traits.hasUnlocked(TraitName.EnhancedEmbolden, state.config.level)) {
+			state.resources.get(ResourceType.ThornedFlourish).gain(1);
+			state.enqueueResourceDrop(ResourceType.ThornedFlourish);
+		}
+	}
+});
+
+makeResourceAbility(ShellJob.RDM, SkillName.Manafication, 60, ResourceType.cd_Manafication, {
+	rscType: ResourceType.Manafication,
+	applicationDelay: 0,
+	cooldown: 110,
+});
+
+makeAbility_RDM(SkillName.CorpsACorps, 6, ResourceType.cd_CorpsACorps, {
+	isPhysical: true,
+	applicationDelay: 0.62,
+	potency: 130,
+	cooldown: 35,
+	maxCharges: 2,
+});
+
+const flipPotency: Array<[TraitName, number]> = [
+	[TraitName.Never, 130],
+	[TraitName.EnhancedDisplacement, 180],
+];
+
+makeAbility_RDM(SkillName.Engagement, 40, ResourceType.cd_Displacement, {
+	isPhysical: true,
+	applicationDelay: 0.62,
+	potency: flipPotency,
+	cooldown: 35,
+	maxCharges: 2,
+});
+
+makeAbility_RDM(SkillName.Displacement, 40, ResourceType.cd_Displacement, {
+	isPhysical: true,
+	applicationDelay: 0.62,
+	potency: flipPotency,
+	cooldown: 35,
+	maxCharges: 2,
+});
+
+makeAbility_RDM(SkillName.Fleche, 45, ResourceType.cd_Fleche, {
+	isPhysical: true,
+	applicationDelay: 1.16,
+	potency: [
+		[TraitName.Never, 460],
+		[TraitName.EnchantedBladeMastery, 480],
+	],
+	cooldown: 25,
+});
+
+makeAbility_RDM(SkillName.ContreSixte, 56, ResourceType.cd_ContreSixte, {
+	isPhysical: true,
+	applicationDelay: 1.16,
+	potency: [
+		[TraitName.Never, 380],
+		[TraitName.EnchantedBladeMastery, 420],
+	],
+	cooldown: 35, // manually adjusted for traits in constructor
+});
+
+makeResourceAbility(ShellJob.RDM, SkillName.Acceleration, 50, ResourceType.cd_Acceleration, {
+	rscType: ResourceType.Acceleration,
+	applicationDelay: 0,
+	cooldown: 55,
+	maxCharges: 2,
+	// acceleration buff grant is automatic from this declaration already
+	onApplication: (state) => {
+		state.resources.get(ResourceType.GrandImpactReady).gain(1)
+		state.enqueueResourceDrop(ResourceType.GrandImpactReady);
+	},
+});
+
+makeResourceAbility(ShellJob.RDM, SkillName.MagickBarrier, 86, ResourceType.cd_MagickBarrier, {
+	rscType: ResourceType.MagickBarrier,
+	applicationDelay: 0,
+	cooldown: 120,
+});
+
+makeAbility_RDM(SkillName.ViceOfThorns, 92, ResourceType.cd_ViceOfThorns, {
+	applicationDelay: 0.80,
+	potency: 700,
+	cooldown: 1,
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ThornedFlourish),
+	onConfirm: (state) => state.tryConsumeResource(ResourceType.ThornedFlourish),
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ThornedFlourish),
+});
+
+makeAbility_RDM(SkillName.Prefulgence, 100, ResourceType.cd_Prefulgence, {
+	applicationDelay: 1.42,
+	potency: 900,
+	cooldown: 1,
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.PrefulgenceReady),
+	onConfirm: (state) => state.tryConsumeResource(ResourceType.PrefulgenceReady),
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.PrefulgenceReady),
+});

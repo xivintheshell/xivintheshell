@@ -45,6 +45,9 @@ export type RDMResourceColors = {
 	whiteMana: string,
 	blackMana: string,
 	manaStack: string,
+	emboldenBuff: string,
+	manaficBuff: string,
+	accelBuff: string,
 }
 
 export type JobAccentColors = {
@@ -148,6 +151,9 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				whiteMana: "#9bc6dd",  // holy
 				blackMana: "#7e19aa",  // comet
 				manaStack: "#cb8046",  // astral soul
+				emboldenBuff: "#ff0000",
+				manaficBuff: "#ff0000",
+				accelBuff: "#ff0000",
 			},
 			timeline: {
 				ruler: "#2d2d2d",
@@ -217,6 +223,9 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				whiteMana: "#ffa641",  // holy
 				blackMana: "#b7c9d5",  // comet
 				manaStack: "#9926c8",  // astral soul
+				emboldenBuff: "#ff0000",
+				manaficBuff: "#ff0000",
+				accelBuff: "#ff0000",
 			},
 			timeline: {
 				ruler: "#e9e9e9",

@@ -379,13 +379,28 @@ export abstract class GameState {
 				potency.modifiers = mods;
 			}
 
+			const doesDamage = skill.potencyFn(this) > 0;
+
+			// TODO automate buff covers
 			// tincture
-			if (this.hasResourceAvailable(ResourceType.Tincture) && skill.potencyFn(this) > 0) {
+			if (this.hasResourceAvailable(ResourceType.Tincture) && doesDamage) {
 				node.addBuff(BuffType.Tincture);
 			}
 
-			if (this.job === ShellJob.PCT && this.hasResourceAvailable(ResourceType.StarryMuse) && skill.potencyFn(this) > 0) {
+			if (this.job === ShellJob.PCT && this.hasResourceAvailable(ResourceType.StarryMuse) && doesDamage) {
 				node.addBuff(BuffType.StarryMuse);
+			}
+
+			if (this.job === ShellJob.RDM && doesDamage) {
+				if (this.hasResourceAvailable(ResourceType.Embolden)) {
+					node.addBuff(BuffType.Embolden);
+				}
+				if (this.hasResourceAvailable(ResourceType.Manafication)) {
+					node.addBuff(BuffType.Manafication);
+				}
+				if (skill.name === SkillName.Impact && this.hasResourceAvailable(ResourceType.Acceleration)) {
+					node.addBuff(BuffType.Acceleration);
+				}
 			}
 
 			// Perform additional side effects
@@ -473,6 +488,7 @@ export abstract class GameState {
 			node.addPotency(potency);
 		}
 
+		// TODO automate buff covers
 		// tincture
 		if (this.hasResourceAvailable(ResourceType.Tincture) && potencyNumber > 0) {
 			node.addBuff(BuffType.Tincture);
@@ -481,6 +497,10 @@ export abstract class GameState {
 		// starry muse
 		if (this.job === ShellJob.PCT && this.resources.get(ResourceType.StarryMuse).available(1) && potencyNumber > 0) {
 			node.addBuff(BuffType.StarryMuse);
+		}
+
+		if (this.job === ShellJob.RDM && this.hasResourceAvailable(ResourceType.Embolden) && potencyNumber > 0) {
+			node.addBuff(BuffType.Embolden);
 		}
 
 		skill.onConfirm(this, node);
