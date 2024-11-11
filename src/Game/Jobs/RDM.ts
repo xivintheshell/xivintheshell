@@ -3,7 +3,7 @@
 import {controller} from "../../Controller/Controller";
 import {ShellJob} from "../../Controller/Common";
 import {Aspect, ProcMode, ResourceType, SkillName, WarningType} from "../Common";
-import {makeComboModifier, Modifiers, PotencyModifier, PotencyModifierType} from "../Potency";
+import {makeComboModifier, Modifiers, PotencyModifier} from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -124,11 +124,21 @@ export class RDMState extends GameState {
 
 	gainColorMana(params: {w?: number, b?: number}) {
 		// mana gain happens on cast confirm
+		const white = this.resources.get(ResourceType.WhiteMana);
+		const black = this.resources.get(ResourceType.BlackMana);
+		// If mana is imbalanced (b > w + 30), all mana gains of the opposing color are halved
+		// (rounded down) until the gap becomes smaller than 30
 		if (params.w) {
-			this.resources.get(ResourceType.WhiteMana).gain(params.w);
+			const imbalanced = (black.availableAmount() - white.availableAmount()) > 30;
+			white.gain(imbalanced ? Math.floor(params.w / 2) : params.w);
 		}
 		if (params.b) {
-			this.resources.get(ResourceType.BlackMana).gain(params.b);
+			const imbalanced = (white.availableAmount() - black.availableAmount()) > 30;
+			black.gain(imbalanced ? Math.floor(params.b / 2) : params.b);
+		}
+		// Raise warning after if we became imbalanced
+		if (Math.abs(black.availableAmount() - white.availableAmount()) > 30) {
+			controller.reportWarning(WarningType.ImbalancedMana);
 		}
 	}
 

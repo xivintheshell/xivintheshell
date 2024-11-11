@@ -1,6 +1,7 @@
 // Behaviors that are manually tested:
 // - Doing any non-enchanted GCD consumes all mana stacks (TODO: check if reprise does this)
 // - Doing un-enchanted GCDs is physical damage
+// - Mana imbalance state halves gain of other color
 
 import fs from "node:fs";
 import {controller} from "./Controller/Controller";

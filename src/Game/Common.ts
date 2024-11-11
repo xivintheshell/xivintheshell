@@ -162,4 +162,5 @@ export const enum WarningType {
 	PaletteOvercap = "palette gauge overcap",
 
 	DualcastEaten = "dualcast dropped",
+	ImbalancedMana = "mana difference became more than 30",
 }
