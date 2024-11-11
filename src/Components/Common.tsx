@@ -429,6 +429,7 @@ type InputProps = {
 	onChange?: (newVal: string) => void,
 	width?: number,
 	style?: CSSProperties,
+	componentColor?: string // overrides entire component's color
 }
 export class Input extends React.Component {
 	props: InputProps;
@@ -442,7 +443,7 @@ export class Input extends React.Component {
 	}
 	render() {
 		let width = this.props.width ?? 5;
-		let color = (this.props.style?.color) ?? getCurrentThemeColors().text;
+		let color = this.props.componentColor ?? getCurrentThemeColors().text;
 		let inputStyle: CSSProperties = {
 			color: color,
 			backgroundColor: "transparent",
@@ -451,7 +452,7 @@ export class Input extends React.Component {
 			borderBottom: "1px solid " + color
 		};
 		let overrideStyle = this.props.style ?? {};
-		return <div style={overrideStyle}>
+		return <div style={{...overrideStyle, ...{color: this.props.componentColor}}}>
 			<span>{this.props.description/* + "(" + this.state.value + ")"*/}</span>
 			<input style={inputStyle} size={width} type="text" value={this.props.defaultValue} onChange={this.onChange}/>
 		</div>

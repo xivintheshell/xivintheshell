@@ -8,6 +8,7 @@ import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {SerializedConfig} from "../Game/GameConfig";
 import {XIVMath} from "../Game/XIVMath";
+//import {FaCheck} from "react-icons/fa";
 
 export let updateConfigDisplay = (config: SerializedConfig)=>{};
 
@@ -354,6 +355,9 @@ export class TimeControl extends React.Component {
 type ConfigState = {
 	job: ShellJob,
 	shellVersion: ShellVersion,
+
+	gearImportLink: string,
+
 	level: string,
 	spellSpeed: string,
 	criticalHit: string,
@@ -386,6 +390,8 @@ export class Config extends React.Component {
 	handleSubmit: MouseEventHandler;
 
 	setJob: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
+	importGear: (evt: React.SyntheticEvent) => void;
+	setGearImportLink: (evt: React.ChangeEvent<HTMLInputElement>) => void;
 	setSpellSpeed: (val: string) => void;
 	setLevel: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
 	setCriticalHit: (val: string) => void;
@@ -408,6 +414,7 @@ export class Config extends React.Component {
 		this.state = { // NOT DEFAULTS
 			job: ShellJob.BLM,
 			shellVersion: ShellInfo.version,
+			gearImportLink: "",
 			level: `${LevelSync.lvl100}`,
 			spellSpeed: "0",
 			criticalHit: "0",
@@ -483,6 +490,92 @@ export class Config extends React.Component {
 			this.setState({job: evt.target.value, dirty: true});
 			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, this.state.level);
 		}
+
+		this.setGearImportLink = (evt: React.ChangeEvent<HTMLInputElement>) => {
+			this.setState({ gearImportLink: evt.target.value });
+		};
+
+		this.importGear = async (event: React.SyntheticEvent) => {
+			event.preventDefault();
+			// @ts-ignore seems to be a bug where it can't recognize URL.parse
+			// https://developer.mozilla.org/en-US/docs/Web/API/URL/parse_static
+			const url = URL.parse(this.state.gearImportLink);
+			const headers = new Headers();
+			try {
+				if (url && url.hostname === "etro.gg") {
+					const tokens = url.pathname.split("/");
+					if (tokens[1] !== "gearset" && tokens.length !== 3) {
+						throw new Error("Invalid etro gearset link (hover ? in URL input box for details)");
+					}
+					headers.append("Content-Type", "application/json");
+					const response = await fetch(
+						"https://etro.gg/api/gearsets/" + tokens[2],
+						{ method: "GET", headers: headers },
+					);
+					if (response.ok) {
+						const body: any = await response.json();
+						const stats = new Map<string, string>(body["totalParams"].map((obj: any) => [obj["name"], obj["value"]]));
+						if (!ALL_JOBS.includes(body["jobAbbrev"])) {
+							throw new Error("Imported gearset was for a job (" + body["jobAbbrev"] + ") that XIV in the Shell doesn't support");
+						}
+						// TODO should probably validate each of these fields
+						this.setState({
+							job: body["jobAbbrev"],
+							level: body["level"],
+							spellSpeed: stats.get("SPS"),
+							criticalHit: stats.get("CRT"),
+							directHit: stats.get("DH"),
+							determination: stats.get("DET"),
+							dirty: true,
+						});
+						this.updateTaxPreview(stats.get("SPS")!.toString(), this.state.fps, body["level"]);
+					} else {
+						console.error(response);
+						throw new Error("etro load failed (please check your link)");
+					}
+				} else if (url && url.hostname === "xivgear.app") {
+					const pageParam = url.searchParams.get("page");
+					if (!pageParam) {
+						throw new Error("xivgear link must be to a specific set (hover ? in URL input box for details)");
+					}
+					// strip the "sl|" url-encoded characters at the start of the link
+					const setId = pageParam.startsWith("sl|") ? pageParam.substr(3) : pageParam;
+					headers.append("Content-Type", "application/json");
+					const response = await fetch(
+						// TODO replace with non-beta api after their CORS fix is live
+						// https://github.com/xiv-gear-planner/gear-planner/issues/411
+						"https://betaapi.xivgear.app/fulldata/" + setId,
+						{ method: "GET", headers: headers },
+					);
+					if (response.ok) {
+						const body: any = await response.json();
+						// TODO should probably validate each of these fields
+						if (!ALL_JOBS.includes(body["job"])) {
+							throw new Error("Imported gearset was for a job (" + body["job"] + ") that XIV in the Shell doesn't support");
+						}
+						const stats = body["sets"][0]["computedStats"];
+						this.setState({
+							job: body["job"],
+							level: body["level"],
+							spellSpeed: stats["spellspeed"],
+							criticalHit: stats["crit"],
+							directHit: stats["dhit"],
+							determination: stats["determination"],
+							dirty: true,
+						});
+						this.updateTaxPreview(stats["spellspeed"]!.toString(), this.state.fps, body["level"]);
+					} else {
+						console.error("xivgear load failed: " + response);
+						throw new Error("xivgear load failed (please check your link)");
+					}
+				} else {
+					throw new Error("Invalid gearset link (must be from etro.gg or xivgear.app)");
+				}
+			} catch (e: any) {
+				console.error(e);
+				window.alert(e.message);
+			}
+		};
 
 		this.setSpellSpeed = (val: string) => {
 			this.setState({spellSpeed: val, dirty: true});
@@ -959,6 +1052,37 @@ export class Config extends React.Component {
 				</tbody>
 			</table>
 		</div>
+		const gearImportSection = <form onSubmit={this.importGear}>
+			{localize({en: "Load stats from etro/xivgear: ", zh: "从etro或xivgear加载套装："})}
+			<Help topic={"gearImport"} content={
+				<>
+					<p>{localize({
+						en: <span>Enter and <ButtonIndicator text={"Load"}/> a link to a gearset from xivgear.app or etro.gg, edit the rest of config, then <ButtonIndicator text={"apply and reset"}/>.</span>,
+						zh: <span>输入xivgear.app或etro.gg的套装链接并<ButtonIndicator text={"加载"}/>，调整其余角色属性，然后<ButtonIndicator text={"应用并重置时间轴"}/>。</span>
+					})}</p>
+					<p>{localize({
+						en: "etro: Copy/paste the link to the set (example: https://etro.gg/gearset/e13d5960-4794-4dc4-b273-24ecfed6745e)",
+						zh: "etro：复制粘贴套装链接（例：https://etro.gg/gearset/e13d5960-4794-4dc4-b273-24ecfed6745e）"
+					})}</p>
+					<p>{localize({
+						en: ('xivgear: At the top of the page, click "Export" -> "Selected Set" -> "Link to This Set" -> "Generate"' +
+							' (example: https://xivgear.app/?page=sl%7C143f3245-c35b-4391-8b2b-db5cc1a8de9a)'),
+						zh: 'xivgear：从页面顶端点击 "Export" -> "Selected Set" -> "Link to This Set" -> "Generate"（例：https://xivgear.app/?page=sl%7C143f3245-c35b-4391-8b2b-db5cc1a8de9a）'
+					})}</p>
+				</>
+			}/>
+			<div style={{position: "relative", marginTop: 5}}>
+				<Input style={{display: "inline-block"}} width={25} description={""} onChange={s => {
+					this.setState({gearImportLink: s})
+				}}/>
+				<span> </span>
+				<input style={{display: "inline-block"}} type="submit" value={localize({en: "Load", zh: "加载"}) as string}/>
+				{/*
+				todo [myn]
+				<FaCheck style={{position: "relative", top: 4, marginLeft: 8}}/>
+				*/}
+			</div>
+		</form>;
 		let editJobSection = <div style={{marginBottom: 10}}>
 			<span>{localize({en: "job: ", zh: "职业："})}</span>
 			<select style={{outline: "none"}} value={this.state.job} onChange={this.setJob}>
@@ -999,11 +1123,11 @@ export class Config extends React.Component {
 			<Input defaultValue={this.state.determination} description={localize({en: "determination: " , zh: "信念："})} onChange={this.setDetermination}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<div>
-				<Input style={{display: "inline-block", color: fpsAndCorrectionColor}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>
+				<Input componentColor={fpsAndCorrectionColor} style={{display: "inline-block"}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>
 				<span> ({localize({en: "2.5s total tax", zh: "2.5s读条+帧率税"})}: {this.state.b1TaxPreview} <Help topic={"b1TaxPreview"} content={b1TaxDesc}/>)</span>
 			</div>
 			<Input
-				style={{color: fpsAndCorrectionColor}}
+				componentColor={fpsAndCorrectionColor}
 				defaultValue={this.state.gcdSkillCorrection}
 				description={<span>{localize({en: "GCD correction", zh: "GCD时长修正"})} <Help topic={"cast-time-correction"} content={localize({
 					en: "Leaving this at 0 will probably give you the most accurate simulation. But if you want to manually correct your GCD skill durations (including casts) for whatever reason, you can put a small number (can be negative)",
@@ -1042,6 +1166,8 @@ export class Config extends React.Component {
 			</button>
 		</div>;
 		return <div style={{marginBottom: 20}}>
+			{gearImportSection}
+			<br/>
 			{editJobSection}
 			<ConfigSummary job={controller.getActiveJob()} dirty={this.state.dirty}/>
 			{editStatsSection}
