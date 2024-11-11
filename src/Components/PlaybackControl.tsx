@@ -8,7 +8,7 @@ import {localize} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {SerializedConfig} from "../Game/GameConfig";
 import {XIVMath} from "../Game/XIVMath";
-//import {FaCheck} from "react-icons/fa";
+import {FaCheck} from "react-icons/fa6";
 
 export let updateConfigDisplay = (config: SerializedConfig)=>{};
 
@@ -357,6 +357,8 @@ type ConfigState = {
 	shellVersion: ShellVersion,
 
 	gearImportLink: string,
+	imported: boolean,
+	importedFields: string[]
 
 	level: string,
 	spellSpeed: string,
@@ -380,7 +382,8 @@ type ConfigState = {
 	dirty: boolean,
 	b1TaxPreview: string,
 	gcdPreview: string,
-	taxedGcdPreview: string
+	taxedGcdPreview: string,
+
 }
 
 export class Config extends React.Component {
@@ -408,6 +411,7 @@ export class Config extends React.Component {
 	setOverrideStacks: (val: string) => void;
 	setOverrideEnabled: (evt: React.ChangeEvent<{checked: boolean}>) => void;
 	deleteResourceOverride: (rsc: ResourceType) => void;
+	removeImportedField: (field: string) => void;
 
 	constructor(props: {}) {
 		super(props);
@@ -415,6 +419,9 @@ export class Config extends React.Component {
 			job: ShellJob.BLM,
 			shellVersion: ShellInfo.version,
 			gearImportLink: "",
+			imported: false,
+			importedFields: [],
+			/////////
 			level: `${LevelSync.lvl100}`,
 			spellSpeed: "0",
 			criticalHit: "0",
@@ -437,7 +444,7 @@ export class Config extends React.Component {
 			dirty: false,
 			b1TaxPreview: "n/a",
 			gcdPreview: "n/a",
-			taxedGcdPreview: "n/a"
+			taxedGcdPreview: "n/a",
 		};
 
 		this.updateTaxPreview = (spsStr: string, fpsStr: string, levelStr: string) => {
@@ -476,7 +483,7 @@ export class Config extends React.Component {
 				}
 				let config = {...this.state, ...{ randomSeed: seed }};
 				this.setConfigAndRestart(config);
-				this.setState({dirty: false});
+				this.setState({dirty: false, imported: false, importedFields: []});
 				controller.scrollToTime();
 			}
 			event.preventDefault();
@@ -488,6 +495,7 @@ export class Config extends React.Component {
 				this.setState({initialResourceOverrides: [], dirty: true});
 			}
 			this.setState({job: evt.target.value, dirty: true});
+			this.removeImportedField("job");
 			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, this.state.level);
 		}
 
@@ -526,6 +534,8 @@ export class Config extends React.Component {
 							criticalHit: stats.get("CRT"),
 							directHit: stats.get("DH"),
 							determination: stats.get("DET"),
+							imported: true,
+							importedFields: ["job", "level", "spellSpeed", "criticalHit", "directHit", "determination"],
 							dirty: true,
 						});
 						this.updateTaxPreview(stats.get("SPS")!.toString(), this.state.fps, body["level"]);
@@ -559,6 +569,8 @@ export class Config extends React.Component {
 							criticalHit: stats["crit"],
 							directHit: stats["dhit"],
 							determination: stats["determination"],
+							imported: true,
+							importedFields: ["job", "level", "spellSpeed", "criticalHit", "directHit", "determination"],
 							dirty: true,
 						});
 						this.updateTaxPreview(stats["spellspeed"]!.toString(), this.state.fps, body["level"]);
@@ -577,24 +589,29 @@ export class Config extends React.Component {
 
 		this.setSpellSpeed = (val: string) => {
 			this.setState({spellSpeed: val, dirty: true});
+			this.removeImportedField("spellSpeed");
 			this.updateTaxPreview(val, this.state.fps, this.state.level);
 		};
 
 		this.setLevel = evt => {
 			this.setState({level: evt.target.value, dirty: true});
+			this.removeImportedField("level");
 			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, evt.target.value);
 		};
 
 		this.setCriticalHit = (val: string) => {
 			this.setState({criticalHit: val, dirty: true});
+			this.removeImportedField("criticalHit");
 		};
 
 		this.setDirectHit = (val: string) => {
 			this.setState({directHit: val, dirty: true});
+			this.removeImportedField("directHit");
 		};
 
 		this.setDetermination = (val: string) => {
 			this.setState({determination: val, dirty: true});
+			this.removeImportedField("determination");
 		};
 
 		this.setAnimationLock = (val: string) => {
@@ -645,6 +662,14 @@ export class Config extends React.Component {
 			}
 			this.setState({initialResourceOverrides: overrides, dirty: true});
 		};
+		this.removeImportedField = (field: string) => {
+			const idx = this.state.importedFields.indexOf(field);
+			if (idx >= 0) {
+				const newFieldsArray = this.state.importedFields;
+				newFieldsArray.splice(idx, 1);
+				this.setState({importedFields: newFieldsArray});
+			}
+		}
 	}
 
 	// call this whenever the list of options has potentially changed
@@ -669,6 +694,8 @@ export class Config extends React.Component {
 			let gcd = XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5);
 			this.setState({
 				dirty: false,
+				imported: false,
+				importedFields: [],
 				b1TaxPreview: getTaxPreview(config.level, 2.5, `${config.spellSpeed}`, `${config.fps}`),
 				gcdPreview: gcd.toFixed(2),
 				taxedGcdPreview: XIVMath.afterFpsTax(config.fps, gcd).toFixed(3),
@@ -1075,15 +1102,24 @@ export class Config extends React.Component {
 				}}/>
 				<span> </span>
 				<input style={{display: "inline-block"}} type="submit" value={localize({en: "Load", zh: "加载"}) as string}/>
-				{/*
-				todo [myn]
-				<FaCheck style={{position: "relative", top: 4, marginLeft: 8}}/>
-				*/}
+				{<FaCheck style={{
+					display: this.state.imported ? "inline" : "none",
+					color: colors.success,
+					position: "relative",
+					top: 4,
+					marginLeft: 8}}/>}
 			</div>
 		</form>;
+		let fieldColor = (field: string) => {
+			if (this.state.importedFields.indexOf(field) > -1) {
+				return colors.success;
+			} else {
+				return colors.text;
+			}
+		}
 		let editJobSection = <div style={{marginBottom: 10}}>
 			<span>{localize({en: "job: ", zh: "职业："})}</span>
-			<select style={{outline: "none"}} value={this.state.job} onChange={this.setJob}>
+			<select style={{outline: "none", color: fieldColor("job")}} value={this.state.job} onChange={this.setJob}>
 				{ALL_JOBS.map((job) =>
 					<option key={job} value={job}>{job}</option>
 				)}
@@ -1092,7 +1128,7 @@ export class Config extends React.Component {
 		let editStatsSection = <div style={{marginBottom: 16}}>
 			<div>
 				<span>{localize({en: "level: ", zh: "等级："})}</span>
-				<select style={{outline: "none"}} value={this.state.level} onChange={this.setLevel}>
+				<select style={{outline: "none", color: fieldColor("level")}} value={this.state.level} onChange={this.setLevel}>
 					<option key={LevelSync.lvl100} value={LevelSync.lvl100}>100</option>
 					<option key={LevelSync.lvl90} value={LevelSync.lvl90}>90</option>
 					<option key={LevelSync.lvl80} value={LevelSync.lvl80}>80</option>
@@ -1100,7 +1136,7 @@ export class Config extends React.Component {
 				</select>
 			</div>
 			<div>
-				<Input style={{display: "inline-block"}} defaultValue={this.state.spellSpeed}
+				<Input style={{display: "inline-block", color: fieldColor("spellSpeed")}} defaultValue={this.state.spellSpeed}
 					   description={localize({en: "spell speed: ", zh: "咏速："})} onChange={this.setSpellSpeed}/>
 				<span> (GCD: {this.state.gcdPreview} <Help topic={"gcdPreview"} content={
 					<>
@@ -1115,10 +1151,10 @@ export class Config extends React.Component {
 					</>
 				}/>)</span>
 			</div>
-			<Input defaultValue={this.state.criticalHit} description={localize({en: "crit: ", zh: "暴击："})}
+			<Input style={{color: fieldColor("criticalHit")}} defaultValue={this.state.criticalHit} description={localize({en: "crit: ", zh: "暴击："})}
 				   onChange={this.setCriticalHit}/>
-			<Input defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>
-			<Input defaultValue={this.state.determination} description={localize({en: "determination: " , zh: "信念："})} onChange={this.setDetermination}/>
+			<Input style={{color: fieldColor("directHit")}} defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>
+			<Input style={{color: fieldColor("determination")}} defaultValue={this.state.determination} description={localize({en: "determination: " , zh: "信念："})} onChange={this.setDetermination}/>
 			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
 			<div>
 				<Input componentColor={fpsAndCorrectionColor} style={{display: "inline-block"}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>

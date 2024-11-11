@@ -443,13 +443,12 @@ export class Input extends React.Component {
 	}
 	render() {
 		let width = this.props.width ?? 5;
-		let color = this.props.componentColor ?? getCurrentThemeColors().text;
 		let inputStyle: CSSProperties = {
-			color: color,
+			color: this.props.style?.color ?? this.props.componentColor ?? getCurrentThemeColors().text,
 			backgroundColor: "transparent",
 			outline: "none",
 			border: "none",
-			borderBottom: "1px solid " + color
+			borderBottom: "1px solid " + (this.props.componentColor ?? getCurrentThemeColors().text),
 		};
 		let overrideStyle = this.props.style ?? {};
 		return <div style={{...overrideStyle, ...{color: this.props.componentColor}}}>

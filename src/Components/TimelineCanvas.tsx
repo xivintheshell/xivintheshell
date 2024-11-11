@@ -841,36 +841,7 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 			}, true);
 		}
 	}
-	let timelineSectionHeight = TimelineDimensions.renderSlotHeight() * g_renderingProps.slots.length;
-
-	// add button
-	if (g_renderingProps.slots.length < MAX_TIMELINE_SLOTS) {
-		let currentY = originY + g_renderingProps.slots.length * TimelineDimensions.renderSlotHeight();
-		let handle : Rect = {
-			x: 4,
-			y: currentY + 2,
-			w: 192,
-			h: TimelineDimensions.addSlotButtonHeight - 4
-		};
-		g_ctx.fillStyle = g_colors.bgLowContrast;
-		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
-		g_ctx.strokeStyle = g_colors.bgHighContrast;
-		g_ctx.lineWidth = 1;
-		g_ctx.strokeRect(handle.x, handle.y, handle.w, handle.h);
-		g_ctx.font = "13px monospace";
-		g_ctx.fillStyle = g_colors.text;
-		g_ctx.textAlign = "center";
-		g_ctx.fillText(localize({en: "Add timeline slot", zh: "添加时间轴"}) as string, handle.x + handle.w/2, handle.y + handle.h - 4);
-
-		testInteraction(handle, undefined, () => {
-			controller.timeline.addSlot();
-			controller.displayCurrentState();
-		}, true);
-
-		timelineSectionHeight += TimelineDimensions.addSlotButtonHeight;
-	}
-
-	return timelineSectionHeight;
+	return TimelineDimensions.renderSlotHeight() * g_renderingProps.slots.length;
 }
 
 function drawCursors(originX: number, timelineStartY: number) {
@@ -908,6 +879,34 @@ function drawCursors(originX: number, timelineStartY: number) {
 	return 0;
 }
 
+function drawAddSlotButton(originY: number) {
+	if (g_renderingProps.slots.length < MAX_TIMELINE_SLOTS) {
+		let handle : Rect = {
+			x: 4,
+			y: originY + 2,
+			w: 192,
+			h: TimelineDimensions.addSlotButtonHeight - 4
+		};
+		g_ctx.fillStyle = g_colors.bgLowContrast;
+		g_ctx.fillRect(handle.x, handle.y, handle.w, handle.h);
+		g_ctx.strokeStyle = g_colors.bgHighContrast;
+		g_ctx.lineWidth = 1;
+		g_ctx.strokeRect(handle.x, handle.y, handle.w, handle.h);
+		g_ctx.font = "13px monospace";
+		g_ctx.fillStyle = g_colors.text;
+		g_ctx.textAlign = "center";
+		g_ctx.fillText(localize({en: "Add timeline slot", zh: "添加时间轴"}) as string, handle.x + handle.w/2, handle.y + handle.h - 4);
+
+		testInteraction(handle, undefined, () => {
+			controller.timeline.addSlot();
+			controller.displayCurrentState();
+		}, true);
+
+		return TimelineDimensions.addSlotButtonHeight;
+	}
+	return 0;
+}
+
 // background layer:
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
 function drawEverything() {
@@ -929,6 +928,8 @@ function drawEverything() {
 	currentHeight += drawTimelines(timelineOrigin, currentHeight, false);
 
 	currentHeight += drawCursors(timelineOrigin, timelineStartY);
+
+	currentHeight += drawAddSlotButton(currentHeight);
 
 	// interactive layer
 	if (g_mouseHovered) {
