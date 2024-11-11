@@ -542,9 +542,7 @@ export class Config extends React.Component {
 					const setId = pageParam.startsWith("sl|") ? pageParam.substr(3) : pageParam;
 					headers.append("Content-Type", "application/json");
 					const response = await fetch(
-						// TODO replace with non-beta api after their CORS fix is live
-						// https://github.com/xiv-gear-planner/gear-planner/issues/411
-						"https://betaapi.xivgear.app/fulldata/" + setId,
+						"https://api.xivgear.app/fulldata/" + setId,
 						{ method: "GET", headers: headers },
 					);
 					if (response.ok) {
