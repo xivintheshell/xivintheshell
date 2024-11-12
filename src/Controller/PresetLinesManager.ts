@@ -71,7 +71,7 @@ export class PresetLinesManager {
 				node.buffName = action.buffName;
 				line.addActionNode(node);
 			}
-			this.addLine(line, inferJobFromSkillNames(skillNames));
+			this.addLine(line, content.presets[i].job ?? inferJobFromSkillNames(skillNames));
 		}
 	}
 
