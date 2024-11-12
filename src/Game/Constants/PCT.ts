@@ -72,6 +72,9 @@ export enum PCTResourceType {
     TemperaCoat = "Tempera Coat",
     TemperaGrassa = "Tempera Grassa",
     Smudge = "Smudge",
+
+    // Hammer actions are a proper combo, not strictly tied to Hammer Time buff
+    HammerCombo = "Hammer Combo Counter", // [0, 2]
 }
 
 export enum PCTCooldownType {

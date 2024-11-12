@@ -51,6 +51,8 @@ makePCTResource(ResourceType.TemperaCoat, 1, {timeout: 10});
 makePCTResource(ResourceType.TemperaGrassa, 1, {timeout: 10});
 makePCTResource(ResourceType.Smudge, 1, {timeout: 5});
 
+makePCTResource(ResourceType.HammerCombo, 2, {timeout: 30});
+
 makePCTResource(ResourceType.Addle, 1, {timeout: 15});
 makePCTResource(ResourceType.Swiftcast, 1, {timeout: 10});
 makePCTResource(ResourceType.LucidDreaming, 1, {timeout: 21});
@@ -112,6 +114,10 @@ export class PCTState extends GameState {
 
 	getHammerStacks() {
 		return this.resources.get(ResourceType.HammerTime).availableAmount();
+	}
+
+	getHammerComboNumber() {
+		return this.resources.get(ResourceType.HammerCombo).availableAmount();
 	}
 
 	doFiller() {
@@ -897,25 +903,26 @@ const hammerConditions: ConditionalSkillReplace<PCTState>[] = [
 		newSkill: SkillName.HammerStamp,
 		condition: (state) => (
 			Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level)
-				// TODO properly mimic combo behavior
-				? state.getHammerStacks() === 3
+				? state.getHammerComboNumber() === 0
 				: state.getHammerStacks() > 0
 		),
 	},
 	{
 		newSkill: SkillName.HammerBrush,
 		condition: (state) => (
+			// If Hammer Time is inactive but the combo is still up, the skill will be highlighted
+			// but grayed out
 			Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level)
-			// TODO properly mimic combo behavior
-			&& state.getHammerStacks() === 2
+			&& state.getHammerComboNumber() === 1
 		),
 	},
 	{
 		newSkill: SkillName.PolishingHammer,
 		condition: (state) => (
+			// If Hammer Time is inactive but the combo is still up, the skill will be highlighted
+			// but grayed out
 			Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level)
-			// TODO properly mimic combo behavior
-			&& state.getHammerStacks() === 1
+			&& state.getHammerComboNumber() === 2
 		),
 	}
 ];
@@ -942,9 +949,14 @@ hammerInfos.forEach(([name, level, potencies, applicationDelay], i) => makeSpell
 	startOnHotbar: i === 0,
 	basePotency: potencies,
 	applicationDelay: applicationDelay,
-	validateAttempt: hammerConditions[i].condition,
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.HammerTime),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.HammerTime),
+	validateAttempt: (state) => hammerConditions[i].condition(state) && state.hasResourceAvailable(ResourceType.HammerTime),
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.HammerTime);
+		// If Hammer Time naturally fell off, it is possible to do the combo out of order
+		const initialCombo = state.getHammerComboNumber();
+		state.setComboState(ResourceType.HammerCombo, (initialCombo + 1) % 3);
+	},
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.HammerTime) || state.getHammerComboNumber() > 0,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCDH],
 }));
 
