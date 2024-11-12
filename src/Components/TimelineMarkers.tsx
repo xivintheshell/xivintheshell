@@ -238,7 +238,10 @@ export class TimelineMarkers extends React.Component {
 		let buffCollection: JSX.Element[] = [];
 		buffInfos.forEach(info => {
 			// prevent starry from being selectable if we're the pictomancer
-			if (!(controller.getActiveJob() === ShellJob.PCT && info.name === BuffType.StarryMuse)) {
+			const activeJob = controller.getActiveJob();
+			if (!(activeJob === ShellJob.PCT && info.name === BuffType.StarryMuse)
+				&& !(activeJob === ShellJob.RDM && info.name === BuffType.Embolden)
+			) {
 				buffCollection.push(<option key={info.name} value={info.name}>{localizeBuffType(info.name)}</option>)
 			}
 		});
