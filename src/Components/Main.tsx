@@ -126,7 +126,11 @@ export default class Main extends React.Component {
 			const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
 			if (link) {
 				if (job === ShellJob.PCT) {
-					link.href = process.env.PUBLIC_URL + "/favicon_pct.ico";
+					link.href = process.env.PUBLIC_URL + "/favicons/pct.ico";
+				} else if (job === ShellJob.BLM) {
+					link.href = process.env.PUBLIC_URL + "/favicons/blm.ico";
+				} else if (job === ShellJob.RDM) {
+					link.href = process.env.PUBLIC_URL + "/favicons/rdm.ico";
 				} else {
 					link.href = process.env.PUBLIC_URL + "/favicon.ico";
 				}
