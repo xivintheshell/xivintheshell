@@ -139,11 +139,11 @@ class Controller {
 
 	updateAllDisplay(game: GameState = this.game) {
 		updateConfigDisplay(game.config.serialized());
-		setJob(this.getActiveJob()); // as a side effect also refreshes Main..
 		this.updateStatusDisplay(game);
 		this.updateSkillButtons(game);
 		this.updateTimelineDisplay();
 		this.updateStats();
+		setJob(this.getActiveJob()); // as a side effect also refreshes Main..
 	}
 
 	#applyResourceOverrides(gameConfig: GameConfig) {
