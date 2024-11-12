@@ -62,6 +62,7 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 		return [
 			ResourceType.Dualcast,
 			ResourceType.Acceleration,
+			ResourceType.Swiftcast,
 			ResourceType.GrandImpactReady,
 			ResourceType.VerstoneReady,
 			ResourceType.VerfireReady,

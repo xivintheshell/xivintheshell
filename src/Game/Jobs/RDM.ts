@@ -169,9 +169,9 @@ export class RDMState extends GameState {
 		}
 	}
 
-	maybeGainVerproc(proc: typeof ResourceType.VerfireReady | typeof ResourceType.VerstoneReady) {
+	maybeGainVerproc(proc: typeof ResourceType.VerfireReady | typeof ResourceType.VerstoneReady, chance: number = 0.5) {
 		let rand = this.rng();
-		if (this.config.procMode === ProcMode.Always || (this.config.procMode === ProcMode.RNG && rand < 0.5)) {
+		if (this.config.procMode === ProcMode.Always || (this.config.procMode === ProcMode.RNG && rand < chance)) {
 			this.gainVerproc(proc);
 		}
 	}
@@ -741,7 +741,7 @@ makeMeleeGCD(SkillName.EnchantedMoulinet3, 52, {
 
 const verfinishPotency: Array<[TraitName, number]> = [
 	[TraitName.Never, 600],
-	[TraitName.EnchantedBladeMastery, 620],
+	[TraitName.EnchantedBladeMastery, 650],
 ];
 
 // Combo status and mana stack consumption for finisherse are handled in makeSpell_RDM
@@ -753,7 +753,15 @@ makeSpell_RDM(SkillName.Verholy, 70, {
 	basePotency: verfinishPotency,
 	validateAttempt: (state) => state.hasThreeManaStacks(),
 	highlightIf: (state) => state.hasThreeManaStacks(),
-	onConfirm: (state) => state.gainColorMana({w: 11}),
+	onConfirm: (state) => {
+		if (state.resources.get(ResourceType.WhiteMana).availableAmount()
+			< state.resources.get(ResourceType.BlackMana).availableAmount()) {
+			state.gainVerproc(ResourceType.VerstoneReady);
+		} else {
+			state.maybeGainVerproc(ResourceType.VerstoneReady, 0.2);
+		}
+		state.gainColorMana({w: 11})
+	},
 });
 
 makeSpell_RDM(SkillName.Verflare, 68, {
@@ -764,7 +772,15 @@ makeSpell_RDM(SkillName.Verflare, 68, {
 	basePotency: verfinishPotency,
 	validateAttempt: (state) => state.hasThreeManaStacks(),
 	highlightIf: (state) => state.hasThreeManaStacks(),
-	onConfirm: (state) => state.gainColorMana({b: 11}),
+	onConfirm: (state) => {
+		if (state.resources.get(ResourceType.BlackMana).availableAmount()
+			< state.resources.get(ResourceType.WhiteMana).availableAmount()) {
+			state.gainVerproc(ResourceType.VerfireReady);
+		} else {
+			state.maybeGainVerproc(ResourceType.VerfireReady, 0.2);
+		}
+		state.gainColorMana({b: 11})
+	},
 });
 
 makeSpell_RDM(SkillName.Scorch, 80, {
@@ -774,7 +790,7 @@ makeSpell_RDM(SkillName.Scorch, 80, {
 	applicationDelay: 1.83,
 	basePotency: [
 		[TraitName.Never, 680],
-		[TraitName.EnchantedBladeMastery, 700],
+		[TraitName.EnchantedBladeMastery, 750],
 	],
 	validateAttempt: (state) => state.getFinisherCounter() === 1,
 	onConfirm: (state) => state.gainColorMana({w: 4, b: 4}),
@@ -788,7 +804,7 @@ makeSpell_RDM(SkillName.Resolution, 90, {
 	applicationDelay: 1.56,
 	basePotency: [
 		[TraitName.Never, 750],
-		[TraitName.EnchantedBladeMastery, 800],
+		[TraitName.EnchantedBladeMastery, 850],
 	],
 	validateAttempt: (state) => state.getFinisherCounter() === 2,
 	onConfirm: (state) => state.gainColorMana({w: 4, b: 4}),
