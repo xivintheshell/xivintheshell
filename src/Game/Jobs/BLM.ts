@@ -317,7 +317,7 @@ const retraceCondition = (state: Readonly<BLMState>) => (
 const paraCondition = (state: Readonly<BLMState>) => state.hasResourceAvailable(ResourceType.Paradox);
 
 const getEnochianModifier = (state: Readonly<BLMState>) => (
-	(Traits.hasUnlocked(TraitName.EnhancedEnochianIV, state.config.level) && 1.33) ||
+	(Traits.hasUnlocked(TraitName.EnhancedEnochianIV, state.config.level) && 1.32) ||
 	(Traits.hasUnlocked(TraitName.EnhancedEnochianIII, state.config.level) && 1.25) ||
 	(Traits.hasUnlocked(TraitName.EnhancedEnochianII, state.config.level) && 1.15) ||
 	1.10
@@ -347,6 +347,7 @@ const makeSpell_BLM = (name: SkillName, unlockLevel: number, params: {
 			// implications on resource generation. However, they still need to be checked here
 			// to avoid improperly spending swift/triple on an already-instant spell.
 			params.baseCastTime === 0 ||
+			(name === SkillName.Despair && Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level)) ||
 			(name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
 			(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter)) ||
 			// Consume Swift before Triple.
@@ -390,6 +391,8 @@ const makeSpell_BLM = (name: SkillName, unlockLevel: number, params: {
 		validateAttempt: params.validateAttempt,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => (
+			// Despair after lvl 100
+			(name === SkillName.Despair && Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level)) ||
 			// Foul after lvl 80
 			(name === SkillName.Foul && Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
 			// F3P
@@ -715,7 +718,7 @@ makeSpell_BLM(SkillName.Freeze, 40, {
 
 makeSpell_BLM(SkillName.Flare, 50, {
 	aspect: Aspect.Fire,
-	baseCastTime: 4,
+	baseCastTime: 3,
 	baseManaCost: 0,  // mana is handled separately
 	basePotency: 240,
 	applicationDelay: 1.157,
@@ -812,7 +815,7 @@ makeSpell_BLM(SkillName.Foul, 70, {
 
 makeSpell_BLM(SkillName.Despair, 72, {
 	aspect: Aspect.Fire,
-	baseCastTime: 0,
+	baseCastTime: 3, // instant cast at level 100, handled in makeSpell_BLM
 	baseManaCost: 0, // mana handled separately, like flare
 	basePotency: 350,
 	applicationDelay: 0.556,
@@ -967,7 +970,7 @@ makeSpell_BLM(SkillName.HighThunder, 92, {
 		controller.resolvePotency(node.getPotencies()[0]);
 		applyThunderDoT(state, node, SkillName.HighThunder);
 	},
-	autoDowngrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder },
+	autoDowngrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.Thunder3 },
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
