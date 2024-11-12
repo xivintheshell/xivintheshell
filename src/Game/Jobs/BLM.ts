@@ -990,7 +990,11 @@ makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
 	cooldown: 40,
 	validateAttempt: retraceCondition,
 	onConfirm: (state, node) => {
-		state.resources.get(ResourceType.LeyLines).enabled = true;
+		let ll = state.resources.get(ResourceType.LeyLines);
+		ll.enabled = true;
+		// set LL timer to the closest 0.5s
+		console.assert(ll.pendingChange !== undefined, "LL should def have a timer when Retrace is used");
+		ll.pendingChange!.timeTillEvent = Math.floor(ll.pendingChange!.timeTillEvent) + 0.5;
 	},
 	startOnHotbar: false,
 });
