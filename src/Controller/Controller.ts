@@ -7,10 +7,9 @@ import {
 	ShellJob,
 	ShellVersion,
 	TickMode,
-	ALL_JOBS,
 } from "./Common";
 import {GameState} from "../Game/GameState";
-import {getAutoReplacedSkillName, getConditionalReplacement, getNormalizedSkillName, jobHasSkill} from "../Game/Skills";
+import {getAutoReplacedSkillName, getConditionalReplacement, getNormalizedSkillName} from "../Game/Skills";
 import {BLMState} from "../Game/Jobs/BLM";
 import {PCTState} from "../Game/Jobs/PCT";
 import {RDMState} from "../Game/Jobs/RDM";
@@ -28,7 +27,7 @@ import {ElemType, MAX_TIMELINE_SLOTS, Timeline} from "./Timeline"
 import {scrollTimelineTo, updateTimelineView} from "../Components/Timeline";
 import {ActionNode, ActionType, Line, Record} from "./Record";
 import {ImageExportConfig} from "./ImageExportConfig";
-import {PresetLinesManager} from "./PresetLinesManager";
+import {PresetLinesManager, inferJobFromSkillNames} from "./PresetLinesManager";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDrawOptions} from "../Components/Common";
@@ -54,25 +53,6 @@ const newGameState = (config: GameConfig) => {
 		return new RDMState(config);
 	}
 	return new BLMState(config);
-};
-
-const inferJobFromActions = (actions: object[]) => {
-	// Iterate over the whole record and return the number of actions that occur in each job.
-	// If two jobs are tied (like if there's only a Swiftcast/Sprint in the timeline), just
-	// take the first that appears since it doesn't really matter.
-	let maxJob = ALL_JOBS[0];
-	let maxCount = 0;
-	ALL_JOBS.forEach((job) => {
-		const count = actions.reduce(
-			(acc, skill) => (skill as any).skillName && jobHasSkill(job, getNormalizedSkillName((skill as any).skillName)!) ? acc + 1 : acc,
-			0,
-		);
-		if (count > maxCount) {
-			maxJob = job;
-			maxCount = count;
-		}
-	});
-	return maxJob;
 };
 
 class Controller {
@@ -331,7 +311,7 @@ class Controller {
 	}
 
 	getPresetLines() {
-		return this.#presetLinesManager.presetLines;
+		return this.#presetLinesManager.getLinesForJob(this.getActiveJob());
 	}
 
 	serializedPresets() {
@@ -351,7 +331,7 @@ class Controller {
 			}
 			itr = itr.next;
 		}
-		this.#presetLinesManager.addLine(line);
+		this.#presetLinesManager.addLine(line, this.getActiveJob());
 	}
 
 	appendFilePresets(content: Fixme) {
@@ -380,7 +360,9 @@ class Controller {
 		}
 		if (content.config.job === undefined) {
 			// infer the job based on actions present
-			content.config.job = inferJobFromActions(content.actions);
+			content.config.job = inferJobFromSkillNames(
+				content.actions.flatMap((skill: any) => skill ? [] : [getNormalizedSkillName((skill as any).skillName)])
+			);
 		}
 
 		let gameConfig = new GameConfig(content.config);
