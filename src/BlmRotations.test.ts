@@ -202,7 +202,8 @@ it("accepts the standard rotation", testWithConfig({}, () => {
 	]);
 }));
 
-it("drops enochian with fast F3 + 4xF4 + despair", testWithConfig({spellSpeed: 420}, () => {
+// Because despair is instant at level 100, we test this at level 90
+it("drops enochian with fast F3 + 4xF4 + despair", testWithConfig({level: 90, spellSpeed: 420}, () => {
 	let alertMsg = "";
 	let warnMsg = "";
 	const alert = jest.spyOn(window, "alert").mockImplementation((msg) => { alertMsg = msg; });
