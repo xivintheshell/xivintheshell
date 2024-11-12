@@ -1,4 +1,4 @@
-# FFXIV in the Shell
+# XIV in the Shell
 
 FFXIV job simulators & rotation planners.
 

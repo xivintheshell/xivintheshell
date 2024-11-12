@@ -145,7 +145,7 @@ export function ConfigSummary(props: { job: ShellJob, dirty: boolean }) {
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	const legacyCasterTax = controller.gameConfig.legacy_casterTax;
 	let excerpt = localize({
-		en: `WARNING: this record was created in an earlier version of FFXIV in the Shell and uses the deprecated caster tax of ${legacyCasterTax}s instead of calculating from your FPS input below. Hover for details: `,
+		en: `WARNING: this record was created in an earlier version of XIV in the Shell and uses the deprecated caster tax of ${legacyCasterTax}s instead of calculating from your FPS input below. Hover for details: `,
 		zh: `警告：此时间轴文件创建于一个更早版本的排轴器，因此计算读条时间时使用的是当时手动输入的读条税${legacyCasterTax}秒（现已过时），而非由下方的“帧率”和“读条时间修正”计算得来。更多信息：`
 	});
 	let warningColor = getCurrentThemeColors().warning;
