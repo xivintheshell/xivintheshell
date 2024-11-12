@@ -361,7 +361,7 @@ class Controller {
 		if (content.config.job === undefined) {
 			// infer the job based on actions present
 			content.config.job = inferJobFromSkillNames(
-				content.actions.flatMap((skill: any) => skill ? [] : [getNormalizedSkillName((skill as any).skillName)])
+				content.actions.flatMap((skill: any) => (skill as any).skillName ? [getNormalizedSkillName((skill as any).skillName)] : [])
 			);
 		}
 
