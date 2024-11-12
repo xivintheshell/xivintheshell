@@ -4,7 +4,6 @@ import { SkillsWindow } from "./Skills";
 import {Config, TimeControl} from "./PlaybackControl";
 import {StatusDisplay} from "./StatusDisplay";
 import {controller} from "../Controller/Controller";
-import {ShellJob} from "../Controller/Common";
 import 'react-tabs/style/react-tabs.css';
 import {SkillSequencePresets} from "./SkillSequencePresets";
 import {IntroSection} from "./IntroSection";
@@ -14,7 +13,7 @@ import {GlobalHelpTooltip, Tabs} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
 import {DamageStatistics} from "./DamageStatistics";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
-import {clearCachedValues, getCachedValue, setCachedValue, containsEwCacheContent} from "../Controller/Common";
+import {clearCachedValues, getCachedValue, setCachedValue, containsEwCacheContent, ShellJob} from "../Controller/Common";
 
 export let setJob = (job: ShellJob) => {};
 export let setRealTime = (inRealTime: boolean) => {};
@@ -65,6 +64,19 @@ function ConfigTabs(props: {
 				contentNode: <TimeControl/>
 			}
 		]} collapsible={false} scrollable={true} height={props.height} defaultSelectedIndex={0}/>
+	</div>
+}
+
+function PSA(props: {hidden?: boolean, color?: string, children: React.ReactNode}) {
+	let color = props.color ?? getCurrentThemeColors().accent;
+	return <div style={{
+		display: props.hidden===true ? "none" : "block",
+		color: color,
+		border: "1px solid " + color,
+		borderRadius: 4,
+		padding: "10px 10px 0 10px"
+	}}>
+		{props.children}
 	</div>
 }
 
@@ -315,16 +327,25 @@ export default class Main extends React.Component {
 							})}
 
 							{/* PSA */}
-							<div style={{
-								border: `1px solid ${getCurrentThemeColors().warning}`,
-								padding: 10,
-								fontWeight: "bold",
-								color: getCurrentThemeColors().warning,
-								borderRadius: 4
-							}}>{localize({
-								en: "WARNING: This domain (xivintheshell.com) is in testing. Don't use yet, you might lose all your data!",
-								zh: "警告：此地址（xivintheshell.com）还在测试中，目前别用，这里的数据随时可能被删除。"
-							})}</div>
+							<PSA hidden>{localize({
+								en: <>
+									<p>
+										We are moving to a new site! URL: <b><a target={"_blank"} rel={"noreferrer"} href={"https://xivintheshell.com"}>xivintheshell.com</a></b>.
+										It unites BLM and PCT in the Shell, has preliminary RDM support, and might support more jobs in the future.
+									</p>
+									<p>
+										Patch 7.1 job changes as well as future updates will all happen on the new site, so see y'all over there :)
+									</p>
+								</>,
+								zh: <>
+									<p>
+										排轴器搬家了！新地址是这个: <b><a target={"_blank"} rel={"noreferrer"} href={"https://xivintheshell.com"}>xivintheshell.com</a></b>。新地址整合了黑魔和画家排轴器，目前也初步支持赤魔，以后还可能会更新更多职业。
+									</p>
+									<p>
+										7.1技改和今后的所有更新也都将在新地址进行，所以就麻烦大家以后去那边了哈。
+									</p>
+								</>
+							})}</PSA>
 
 							{/*
 							EW cached content warning
