@@ -17,8 +17,8 @@ const BALANCE_URL = "https://discord.gg/thebalanceffxiv"
 
 function Changelog() {
 	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={localize({en: "Changelog", zh: "更新日志", ja: "更新履歴"})} defaultShow={false} content={
-		<div>
-			{
+		<>
+			<div>{
 				changelog.map(entry => {
 					let changes: JSX.Element[] = [];
 					for (let i = 0; i < entry.changes.length; i++) {
@@ -29,8 +29,12 @@ function Changelog() {
 						{changes}
 					</div>
 				})
-			}
-		</div>
+			}</div>
+			<div>For older changelog entries before the BLM/PCT in the Shell rejoining, see the old sites:&nbsp;
+				<a target={"_blank"} rel={"noreferrer"} href={"https://miyehn.me/ffxiv-blm-rotation/"}>BLM in the Shell</a>,&nbsp;
+				<a target={"_blank"} rel={"noreferrer"} href={"https://picto.zqsz.me/"}>PCT in the Shell</a>
+			</div>
+		</>
 	}/></div>
 }
 
