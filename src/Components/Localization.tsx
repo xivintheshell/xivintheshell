@@ -207,6 +207,56 @@ const skillsJa = new Map<SkillName, string>([
 	[SkillName.FlareStar, "フレアスター"]
 
 	// TODO picto localization
+	[SkillName.FireInRed, "レッドファイア"],
+	[SkillName.AeroInGreen, "グリーンエアロ"],
+	[SkillName.WaterInBlue, "ブルーウォータ"],
+	[SkillName.Fire2InRed, "レッドファイラ"],
+	[SkillName.Aero2InGreen, "グリーンエアロラ"],
+	[SkillName.Water2InBlue, "ブルーウォタラ"],
+	[SkillName.BlizzardInCyan, "シアンブリザド"],
+	[SkillName.StoneInYellow, "イエローストーン"],
+	[SkillName.ThunderInMagenta, "マゼンタサンダー"],
+	[SkillName.Blizzard2InCyan, "シアンブリザラ"],
+	[SkillName.Stone2InYellow, "イエローストンラ"],
+	[SkillName.Thunder2InMagenta, "マゼンタサンダラ"],
+	[SkillName.HolyInWhite , "ホワイトホーリー"],
+	[SkillName.CometInBlack, "ブラックコメット"],
+	[SkillName.RainbowDrip , "レインボードリップ"],
+	[SkillName.StarPrism, "スタープリズム"],
+
+	[SkillName.TemperaCoat, "テンペラコート"],
+	[SkillName.TemperaGrassa, "テンペラグラッサ"],
+	[SkillName.TemperaCoatPop, "テンペラコート【ブレイク】"],
+	[SkillName.TemperaGrassaPop, "テンペラグラッサ【ブレイク】"],
+	[SkillName.Smudge, "スマッジ"],
+	[SkillName.SubtractivePalette, "サブトラクティブパレット"],
+
+	[SkillName.CreatureMotif, "ピクトアニマル"],
+	[SkillName.PomMotif, "ピクトアニマル"],
+	[SkillName.WingMotif, "ピクトスケープ"],
+	[SkillName.ClawMotif, "ピクトクロー"],
+	[SkillName.MawMotif, "ピクトファング"],
+	[SkillName.LivingMuse, "イマジンアニマル"],
+	[SkillName.PomMuse, "ピクトポンポン"],
+	[SkillName.WingedMuse, "ピクトウィング"],
+	[SkillName.ClawedMuse, "イマジンクロー"],
+	[SkillName.FangedMuse, "イマジンファング"],
+	[SkillName.MogOfTheAges, "モーグリストリーム"],
+	[SkillName.RetributionOfTheMadeen, "マディーンレトリビューション"],
+
+	[SkillName.WeaponMotif, "ピクトウェポン"],
+	[SkillName.SteelMuse, "イマジンウェポン"],
+	[SkillName.HammerMotif, "ピクトハンマー"],
+	[SkillName.StrikingMuse, "イマジンハンマー"],
+	[SkillName.HammerStamp, "ハンマースタンプ"],
+	[SkillName.HammerBrush, "ハンマーブラッシュ"],
+	[SkillName.PolishingHammer, "ハンマーポリッシュ"],
+
+	[SkillName.LandscapeMotif, "ピクトスケープ"],
+	[SkillName.ScenicMuse, "イマジンスケープ"],
+	[SkillName.StarrySkyMotif, "ピクトスカイ"],
+	[SkillName.StarryMuse, "イマジンスカイ"],
+	// TODO rdm localization
 ]);
 
 export function localizeSkillName(text: SkillName) : string {
@@ -310,7 +360,10 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.TemperaGrassa, "油性坦培拉涂层"],
 	[ResourceType.MonochromeTones, "色调反转"],
 
-	// RDM todo [galahad]
+	// RDM 
+	[ResourceType.WhiteMana, "白魔元"],
+	[ResourceType.BlackMana, "黑魔元"],
+	[ResourceType.ManaStacks, "魔元集"], 
 	[ResourceType.Acceleration, "促进"],
 	[ResourceType.Dualcast, "连续咏唱"],
 	[ResourceType.Embolden, "鼓励"],
