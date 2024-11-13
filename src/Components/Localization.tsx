@@ -272,12 +272,12 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.MonochromeTones, "色调反转"],
 
 	// RDM todo [galahad]
-	[ResourceType.Acceleration, "Acceleration"],
-	[ResourceType.Dualcast, "Dualcast"],
-	[ResourceType.Embolden, "Embolden"],
-	[ResourceType.GrandImpactReady, "GrandImpactReady"],
-	[ResourceType.MagickBarrier, "MagickBarrier"],
-	[ResourceType.MagickedSwordplay, "MagickedSwordplay"],
+	[ResourceType.Acceleration, "促进"],
+	[ResourceType.Dualcast, "连续咏唱"],
+	[ResourceType.Embolden, "鼓励"],
+	[ResourceType.GrandImpactReady, "显贵冲击预备"],
+	[ResourceType.MagickBarrier, "抗死"],
+	[ResourceType.MagickedSwordplay, "魔法剑术"],
 	[ResourceType.Manafication, "Manafication"],
 	[ResourceType.PrefulgenceReady, "PrefulgenceReady"],
 	[ResourceType.ThornedFlourish, "ThornedFlourish"],
