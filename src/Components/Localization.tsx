@@ -124,10 +124,49 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.StarrySkyMotif, "星空彩绘"],
 	[SkillName.StarryMuse, "星空构想"],
 
-	// RDM todo [galahad]
-	[SkillName.Riposte, "Riposte"],
-	// ...
-	// see Game/Constants/RDM.ts
+	// RDM stuff
+	[SkillName.Riposte, "回刺"],
+	[SkillName.Verthunder = "赤闪雷"],
+	[SkillName.CorpsACorps = "短兵相接"],
+	[SkillName.Veraero = "赤疾风"],
+	[SkillName.Verfire = "赤火炎"],
+	[SkillName.Verstone = "赤飞石"],
+	[SkillName.Zwerchhau = "交击斩"],
+	[SkillName.Displacement = "移转"],
+	[SkillName.Fleche = "飞刺"],
+	[SkillName.Redoublement = "连攻"],
+	[SkillName.Acceleration = "促进"],
+	[SkillName.Moulinet = "划圆斩"],
+	[SkillName.Vercure = "赤治疗"],
+	[SkillName.ContreSixte = "六分反击"],
+	[SkillName.Embolden = "鼓励"],
+	[SkillName.Manafication = "魔元化"],
+	[SkillName.Jolt2 = "震荡"],
+	[SkillName.Verraise = "赤复活"],
+	[SkillName.Impact = "冲击"],
+	[SkillName.Verflare = "赤核爆"],
+	[SkillName.Verholy = "赤神圣"],	
+	[SkillName.EnchantedRiposte = "魔回刺"],
+	[SkillName.EnchantedZwerchhau = "魔交击斩"],
+	[SkillName.EnchantedRedoublement = "魔连攻"],
+	[SkillName.EnchantedMoulinet = "魔划圆斩"],
+	[SkillName.Verthunder2 = "赤震雷"],
+	[SkillName.Veraero2 = "赤烈风"],
+	[SkillName.Engagement = "交剑"],
+	[SkillName.EnchantedReprise = "魔续斩"],
+	[SkillName.Reprise = "续斩"],
+	[SkillName.Scorch = "焦热"],
+	[SkillName.Verthunder3 = "赤暴雷"],
+	[SkillName.Veraero3 = "赤疾风"],
+	[SkillName.MagickBarrier = "抗死"],
+	[SkillName.Resolution = "决断"],
+	[SkillName.EnchantedMoulinet2 = "魔划圆斩·二段"],
+	[SkillName.EnchantedMoulinet3 = "魔划圆斩·三段"],
+	[SkillName.Jolt3 = "激荡"],
+	[SkillName.ViceOfThorns = "荆棘回环"],
+	[SkillName.GrandImpact = "显贵冲击"],
+	[SkillName.Prefulgence = "光芒四射"],
+	//等到绝伊甸我一定把你们全都秒了！————不知名赤魔法师
 ]);
 
 const skillsJa = new Map<SkillName, string>([
