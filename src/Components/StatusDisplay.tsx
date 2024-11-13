@@ -335,7 +335,7 @@ function ResourcesDisplay(props: {
 			/>
 		))
 	);
-	return <div style={{textAlign: "left"}}>
+	return <div style={{textAlign: "left", minHeight: "10vh"}}>
 		{elements}
 	</div>
 }
