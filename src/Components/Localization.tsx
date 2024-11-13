@@ -122,7 +122,12 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.LandscapeMotif, "风景彩绘"],
 	[SkillName.ScenicMuse, "风景构想"],
 	[SkillName.StarrySkyMotif, "星空彩绘"],
-	[SkillName.StarryMuse, "星空构想"]
+	[SkillName.StarryMuse, "星空构想"],
+
+	// RDM todo [galahad]
+	[SkillName.Riposte, "Riposte"],
+	// ...
+	// see Game/Constants/RDM.ts
 ]);
 
 const skillsJa = new Map<SkillName, string>([
@@ -191,7 +196,7 @@ const buffsZh = new Map<BuffType, string>([
 	[BuffType.ChainStratagem, "连环计"],
 	[BuffType.Devilment, "进攻之探戈"],
 	[BuffType.Divination, "占卜"],
-	[BuffType.Dokumori, "毒盛"],
+	[BuffType.Dokumori, "介毒之术"],
 	[BuffType.Embolden, "鼓励"],
 	[BuffType.MagesBallad, "贤者的叙事谣"],
 	[BuffType.RadiantFinale1, "光明神的最终乐章1"],
@@ -243,6 +248,15 @@ export function localizeBuffType(text: BuffType) : string {
 }
 
 const resourcesZh = new Map<ResourceType, string>([
+	// BLM
+	[ResourceType.Triplecast, "三重咏唱"],
+	[ResourceType.Firestarter, "火苗"],
+	[ResourceType.Thunderhead, "雷砧"],
+	[ResourceType.ThunderDoT, "高闪雷"],
+	[ResourceType.LeyLines, "黑魔纹"],
+	[ResourceType.Manaward, "魔纹罩"],
+
+	// PCT
 	[ResourceType.Aetherhues, "以太色调"],
 	[ResourceType.TemperaCoat, "坦培拉涂层"],
 	[ResourceType.Smudge, "速涂"],
@@ -256,6 +270,20 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.Starstruck, "天星棱光预备"],
 	[ResourceType.TemperaGrassa, "油性坦培拉涂层"],
 	[ResourceType.MonochromeTones, "色调反转"],
+
+	// RDM todo [galahad]
+	[ResourceType.Acceleration, "Acceleration"],
+	[ResourceType.Dualcast, "Dualcast"],
+	[ResourceType.Embolden, "Embolden"],
+	[ResourceType.GrandImpactReady, "GrandImpactReady"],
+	[ResourceType.MagickBarrier, "MagickBarrier"],
+	[ResourceType.MagickedSwordplay, "MagickedSwordplay"],
+	[ResourceType.Manafication, "Manafication"],
+	[ResourceType.PrefulgenceReady, "PrefulgenceReady"],
+	[ResourceType.ThornedFlourish, "ThornedFlourish"],
+	[ResourceType.VerfireReady, "VerfireReady"],
+	[ResourceType.VerstoneReady, "VerstoneReady"]
+
 ]);
 
 export function localizeResourceType(text: ResourceType): string {

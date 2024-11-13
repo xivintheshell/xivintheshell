@@ -126,13 +126,13 @@ function buffName(buff: PotencyModifierType) {
 	} else if (buff === PotencyModifierType.STARRY) {
 		text = localize({en: "starry muse", zh: "星空构想"}) as string;
 	} else if (buff === PotencyModifierType.EMBOLDEN_M) {
-		text = localize({en: "embolden"}) as string;
+		text = localize({en: "embolden", zh: "鼓励"}) as string;
 	} else if (buff === PotencyModifierType.MANAFIC) {
-		text = localize({en: "manafication"}) as string;
+		text = localize({en: "manafication", zh: "魔元化"}) as string;
 	} else if (buff === PotencyModifierType.ACCELERATION) {
-		text = localize({en: "acceleration"}) as string;
+		text = localize({en: "acceleration", zh: "促进"}) as string;
 	} else if (buff === PotencyModifierType.COMBO) {
-		text = localize({en: "combo"}) as string;
+		text = localize({en: "combo", zh: "连击"}) as string;
 	}
 	return text;
 }
@@ -169,16 +169,16 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 		text = localize({en: "STARRY", zh: "星空"});
 		color = colors.pct.starryBuff;
 	} else if (props.buff === PotencyModifierType.EMBOLDEN_M) {
-		text = localize({en: "EMB"});
+		text = localize({en: "EMB", zh: "鼓励"});
 		color = colors.rdm.emboldenBuff;
 	} else if (props.buff === PotencyModifierType.MANAFIC) {
-		text = localize({en: "MF"});
+		text = localize({en: "MF", zh: "魔元化"});
 		color = colors.rdm.manaficBuff;
 	} else if (props.buff === PotencyModifierType.ACCELERATION) {
-		text = localize({en: "ACC"});
+		text = localize({en: "ACC", zh: "促进"});
 		color = colors.rdm.accelBuff;
 	} else if (props.buff === PotencyModifierType.COMBO) {
-		text = localize({en: "CMB"});
+		text = localize({en: "CMB", zh: "连击"});
 		color = colors.resources.comboTag;
 	}
 	return <span style={{
@@ -543,8 +543,8 @@ export class DamageStatistics extends React.Component {
 			}
 			return <div key={props.key} style={rowStyle}>
 				<div style={cell(3)}>{includeCheckboxes}</div>
-				<div style={cell(22)}>{skillNameNode}</div>
-				<div style={cell(10)}>{tags}</div>
+				<div style={cell(18)}>{skillNameNode}</div>
+				<div style={cell(14)}>{tags}</div>
 				<div style={cell(16)}>{potencyNode}</div>
 				<div style={cell(14)}>{usageCountNode}</div>
 				<div style={cell(35)}>{totalPotencyNode}</div>
