@@ -278,11 +278,11 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.GrandImpactReady, "显贵冲击预备"],
 	[ResourceType.MagickBarrier, "抗死"],
 	[ResourceType.MagickedSwordplay, "魔法剑术"],
-	[ResourceType.Manafication, "Manafication"],
-	[ResourceType.PrefulgenceReady, "PrefulgenceReady"],
-	[ResourceType.ThornedFlourish, "ThornedFlourish"],
-	[ResourceType.VerfireReady, "VerfireReady"],
-	[ResourceType.VerstoneReady, "VerstoneReady"]
+	[ResourceType.Manafication, "魔元化"],
+	[ResourceType.PrefulgenceReady, "光芒四射预备"],
+	[ResourceType.ThornedFlourish, "荆棘环绕预备"],
+	[ResourceType.VerfireReady, "赤火炎预备"],
+	[ResourceType.VerstoneReady, "赤飞石预备"]
 
 ]);
 
