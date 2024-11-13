@@ -392,7 +392,7 @@ export abstract class GameState {
 			}
 
 			if (this.job === ShellJob.RDM && doesDamage) {
-				if (this.hasResourceAvailable(ResourceType.Embolden) && skill.aspect != Aspect.Physical) {
+				if (this.hasResourceAvailable(ResourceType.Embolden) && skill.aspect !== Aspect.Physical) {
 					node.addBuff(BuffType.Embolden);
 				}
 				if (this.hasResourceAvailable(ResourceType.Manafication)) {
@@ -502,7 +502,7 @@ export abstract class GameState {
 		if (this.job === ShellJob.RDM
 			&& this.hasResourceAvailable(ResourceType.Embolden)
 			&& potencyNumber > 0
-			&& skill.aspect != Aspect.Physical) {
+			&& skill.aspect !== Aspect.Physical) {
 			node.addBuff(BuffType.Embolden);
 		}
 
