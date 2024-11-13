@@ -122,7 +122,51 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.LandscapeMotif, "风景彩绘"],
 	[SkillName.ScenicMuse, "风景构想"],
 	[SkillName.StarrySkyMotif, "星空彩绘"],
-	[SkillName.StarryMuse, "星空构想"]
+	[SkillName.StarryMuse, "星空构想"],
+
+	// RDM stuff
+	[SkillName.Riposte, "回刺"],
+	[SkillName.Verthunder, "赤闪雷"],
+	[SkillName.CorpsACorps, "短兵相接"],
+	[SkillName.Veraero, "赤疾风"],
+	[SkillName.Verfire, "赤火炎"],
+	[SkillName.Verstone, "赤飞石"],
+	[SkillName.Zwerchhau, "交击斩"],
+	[SkillName.Displacement, "移转"],
+	[SkillName.Fleche, "飞刺"],
+	[SkillName.Redoublement, "连攻"],
+	[SkillName.Acceleration, "促进"],
+	[SkillName.Moulinet, "划圆斩"],
+	[SkillName.Vercure, "赤治疗"],
+	[SkillName.ContreSixte, "六分反击"],
+	[SkillName.Embolden, "鼓励"],
+	[SkillName.Manafication, "魔元化"],
+	[SkillName.Jolt2, "震荡"],
+	[SkillName.Verraise, "赤复活"],
+	[SkillName.Impact, "冲击"],
+	[SkillName.Verflare, "赤核爆"],
+	[SkillName.Verholy, "赤神圣"],
+	[SkillName.EnchantedRiposte, "魔回刺"],
+	[SkillName.EnchantedZwerchhau, "魔交击斩"],
+	[SkillName.EnchantedRedoublement, "魔连攻"],
+	[SkillName.EnchantedMoulinet, "魔划圆斩"],
+	[SkillName.Verthunder2, "赤震雷"],
+	[SkillName.Veraero2, "赤烈风"],
+	[SkillName.Engagement, "交剑"],
+	[SkillName.EnchantedReprise, "魔续斩"],
+	[SkillName.Reprise, "续斩"],
+	[SkillName.Scorch, "焦热"],
+	[SkillName.Verthunder3, "赤暴雷"],
+	[SkillName.Veraero3, "赤疾风"],
+	[SkillName.MagickBarrier, "抗死"],
+	[SkillName.Resolution, "决断"],
+	[SkillName.EnchantedMoulinet2, "魔划圆斩·二段"],
+	[SkillName.EnchantedMoulinet3, "魔划圆斩·三段"],
+	[SkillName.Jolt3, "激荡"],
+	[SkillName.ViceOfThorns, "荆棘回环"],
+	[SkillName.GrandImpact, "显贵冲击"],
+	[SkillName.Prefulgence, "光芒四射"],
+	//等到绝伊甸我一定把你们全都秒了！————不知名赤魔法师
 ]);
 
 const skillsJa = new Map<SkillName, string>([
@@ -160,9 +204,59 @@ const skillsJa = new Map<SkillName, string>([
 	[SkillName.HighThunder, "ハイサンダー"],
 	[SkillName.Sprint, "スプリント"],
 	[SkillName.Retrace, "魔紋再設置"],
-	[SkillName.FlareStar, "フレアスター"]
+	[SkillName.FlareStar, "フレアスター"],
 
-	// TODO picto localization
+	// picto localization
+	[SkillName.FireInRed, "レッドファイア"],
+	[SkillName.AeroInGreen, "グリーンエアロ"],
+	[SkillName.WaterInBlue, "ブルーウォータ"],
+	[SkillName.Fire2InRed, "レッドファイラ"],
+	[SkillName.Aero2InGreen, "グリーンエアロラ"],
+	[SkillName.Water2InBlue, "ブルーウォタラ"],
+	[SkillName.BlizzardInCyan, "シアンブリザド"],
+	[SkillName.StoneInYellow, "イエローストーン"],
+	[SkillName.ThunderInMagenta, "マゼンタサンダー"],
+	[SkillName.Blizzard2InCyan, "シアンブリザラ"],
+	[SkillName.Stone2InYellow, "イエローストンラ"],
+	[SkillName.Thunder2InMagenta, "マゼンタサンダラ"],
+	[SkillName.HolyInWhite , "ホワイトホーリー"],
+	[SkillName.CometInBlack, "ブラックコメット"],
+	[SkillName.RainbowDrip , "レインボードリップ"],
+	[SkillName.StarPrism, "スタープリズム"],
+
+	[SkillName.TemperaCoat, "テンペラコート"],
+	[SkillName.TemperaGrassa, "テンペラグラッサ"],
+	[SkillName.TemperaCoatPop, "テンペラコート【ブレイク】"],
+	[SkillName.TemperaGrassaPop, "テンペラグラッサ【ブレイク】"],
+	[SkillName.Smudge, "スマッジ"],
+	[SkillName.SubtractivePalette, "サブトラクティブパレット"],
+
+	[SkillName.CreatureMotif, "ピクトアニマル"],
+	[SkillName.PomMotif, "ピクトアニマル"],
+	[SkillName.WingMotif, "ピクトスケープ"],
+	[SkillName.ClawMotif, "ピクトクロー"],
+	[SkillName.MawMotif, "ピクトファング"],
+	[SkillName.LivingMuse, "イマジンアニマル"],
+	[SkillName.PomMuse, "ピクトポンポン"],
+	[SkillName.WingedMuse, "ピクトウィング"],
+	[SkillName.ClawedMuse, "イマジンクロー"],
+	[SkillName.FangedMuse, "イマジンファング"],
+	[SkillName.MogOfTheAges, "モーグリストリーム"],
+	[SkillName.RetributionOfTheMadeen, "マディーンレトリビューション"],
+
+	[SkillName.WeaponMotif, "ピクトウェポン"],
+	[SkillName.SteelMuse, "イマジンウェポン"],
+	[SkillName.HammerMotif, "ピクトハンマー"],
+	[SkillName.StrikingMuse, "イマジンハンマー"],
+	[SkillName.HammerStamp, "ハンマースタンプ"],
+	[SkillName.HammerBrush, "ハンマーブラッシュ"],
+	[SkillName.PolishingHammer, "ハンマーポリッシュ"],
+
+	[SkillName.LandscapeMotif, "ピクトスケープ"],
+	[SkillName.ScenicMuse, "イマジンスケープ"],
+	[SkillName.StarrySkyMotif, "ピクトスカイ"],
+	[SkillName.StarryMuse, "イマジンスカイ"],
+	// TODO rdm localization
 ]);
 
 export function localizeSkillName(text: SkillName) : string {
@@ -191,7 +285,7 @@ const buffsZh = new Map<BuffType, string>([
 	[BuffType.ChainStratagem, "连环计"],
 	[BuffType.Devilment, "进攻之探戈"],
 	[BuffType.Divination, "占卜"],
-	[BuffType.Dokumori, "毒盛"],
+	[BuffType.Dokumori, "介毒之术"],
 	[BuffType.Embolden, "鼓励"],
 	[BuffType.MagesBallad, "贤者的叙事谣"],
 	[BuffType.RadiantFinale1, "光明神的最终乐章1"],
@@ -243,6 +337,15 @@ export function localizeBuffType(text: BuffType) : string {
 }
 
 const resourcesZh = new Map<ResourceType, string>([
+	// BLM
+	[ResourceType.Triplecast, "三重咏唱"],
+	[ResourceType.Firestarter, "火苗"],
+	[ResourceType.Thunderhead, "雷砧"],
+	[ResourceType.ThunderDoT, "高闪雷"],
+	[ResourceType.LeyLines, "黑魔纹"],
+	[ResourceType.Manaward, "魔纹罩"],
+
+	// PCT
 	[ResourceType.Aetherhues, "以太色调"],
 	[ResourceType.TemperaCoat, "坦培拉涂层"],
 	[ResourceType.Smudge, "速涂"],
@@ -256,6 +359,23 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.Starstruck, "天星棱光预备"],
 	[ResourceType.TemperaGrassa, "油性坦培拉涂层"],
 	[ResourceType.MonochromeTones, "色调反转"],
+
+	// RDM 
+	[ResourceType.WhiteMana, "白魔元"],
+	[ResourceType.BlackMana, "黑魔元"],
+	[ResourceType.ManaStacks, "魔元集"], 
+	[ResourceType.Acceleration, "促进"],
+	[ResourceType.Dualcast, "连续咏唱"],
+	[ResourceType.Embolden, "鼓励"],
+	[ResourceType.GrandImpactReady, "显贵冲击预备"],
+	[ResourceType.MagickBarrier, "抗死"],
+	[ResourceType.MagickedSwordplay, "魔法剑术"],
+	[ResourceType.Manafication, "魔元化"],
+	[ResourceType.PrefulgenceReady, "光芒四射预备"],
+	[ResourceType.ThornedFlourish, "荆棘环绕预备"],
+	[ResourceType.VerfireReady, "赤火炎预备"],
+	[ResourceType.VerstoneReady, "赤飞石预备"]
+
 ]);
 
 export function localizeResourceType(text: ResourceType): string {
