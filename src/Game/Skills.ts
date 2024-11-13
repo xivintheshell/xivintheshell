@@ -360,6 +360,7 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
  * - maxCharges: the maximum number of charges an ability has, default 1
  */
 export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, cdName: ResourceType, params: Partial<{
+	aspect: Aspect,
 	assetPath: string,
 	autoUpgrade: SkillAutoReplace,
 	autoDowngrade: SkillAutoReplace,
@@ -386,7 +387,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		cdName: cdName,
-		aspect: Aspect.Other,
+		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
 		highlightIf: params.highlightIf ?? ((state) => false),

@@ -745,6 +745,8 @@ makeResourceAbility(ShellJob.BLM, SkillName.LeyLines, 52, ResourceType.cd_LeyLin
 	applicationDelay: 0.49, // delayed
 	cooldown: 120,
 	maxCharges: 2,
+	// cannot re-use ley lines if it's already up
+	validateAttempt: (state) => !state.hasResourceAvailable(ResourceType.LeyLines),
 	onApplication: (state, node) => {
 		state.resources.get(ResourceType.LeyLines).enabled = true
 	},

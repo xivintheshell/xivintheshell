@@ -358,6 +358,7 @@ const makeAbility_RDM = (name: SkillName, unlockLevel: number, cdName: ResourceT
 	onConfirm?: EffectFn<RDMState>,
 	onApplication?: EffectFn<RDMState>,
 }): Ability<RDMState> => makeAbility(ShellJob.RDM, name, unlockLevel, cdName, {
+	aspect: params.isPhysical ? Aspect.Physical : undefined,
 	jobPotencyModifiers: (state) => (
 		(!params.isPhysical && state.hasResourceAvailable(ResourceType.Embolden)) ? [Modifiers.EmboldenMagic] : []
 	),

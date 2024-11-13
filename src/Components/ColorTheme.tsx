@@ -129,7 +129,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				mana: "#62a5d2",
 				manaTick: "#3d5c73",
 				cdhTag: "#d55124",
-				comboTag: "#3d5c73", // TODO pick a better color
+				comboTag: "#5c8bad", // light blue
 			},
 			blm: {
 				enochian: "#b69241",
@@ -151,13 +151,12 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				starryBuff: "#509bd5",
 			},
 			rdm: {
-				// TODO
-				whiteMana: "#9bc6dd",  // holy
-				blackMana: "#7e19aa",  // comet
+				whiteMana: "#dddddd",
+				blackMana: "#2a4bf5",  // blueish
 				manaStack: "#cb8046",  // astral soul
-				emboldenBuff: "#ff0000",
-				manaficBuff: "#530954",
-				accelBuff: "#ff0000",
+				emboldenBuff: "#de0202", // bright red but a little less saturated
+				manaficBuff: "#c169c2", // lavender
+				accelBuff: "#f0d1e8", // very light pink
 			},
 			timeline: {
 				ruler: "#2d2d2d",
@@ -203,7 +202,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				mana: "#8ACEEA",
 				manaTick: "#C2EAFF",
 				cdhTag: "#ff6633",
-				comboTag: "#8ACEEA", // TODO pick a better color
+				comboTag: "#53a7c9", // light blue
 			},
 			blm: {
 				enochian: "#f5cf96",
@@ -225,13 +224,12 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				starryBuff: "#66bbff",
 			},
 			rdm: {
-				// TODO
-				whiteMana: "#ffa641",  // holy
-				blackMana: "#b7c9d5",  // comet
+				whiteMana: "#fcd8d4",  // light pink
+				blackMana: "#467aeb",  // blue
 				manaStack: "#9926c8",  // astral soul
-				emboldenBuff: "#ff0000",
-				manaficBuff: "#530954",
-				accelBuff: "#ff0000",
+				emboldenBuff: "#c91310", // dark red
+				manaficBuff: "#530954", // dark purple
+				accelBuff: "#c973b4", // lighter purple
 			},
 			timeline: {
 				ruler: "#e9e9e9",

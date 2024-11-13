@@ -410,11 +410,10 @@ function drawSkills(
 		[BuffType.Tincture, {color: g_colors.timeline.potCover, showImage: true}],
 		[BuffType.LeyLines, {color: g_colors.timeline.llCover, showImage: true}],
 		[BuffType.Hyperphantasia, {color: g_colors.timeline.llCover, showImage: false}],
-		// TODO swap colors
 		[BuffType.StarryMuse, {color: g_colors.timeline.buffCover, showImage: true}],
-		[BuffType.Embolden, {color: g_colors.timeline.buffCover, showImage: true}],
-		[BuffType.Manafication, {color: "#666666", showImage: true}],
-		[BuffType.Acceleration, {color: "#ff4444", showImage: true}],
+		[BuffType.Embolden, {color: g_colors.rdm.emboldenBuff, showImage: true}],
+		[BuffType.Manafication, {color: g_colors.rdm.manaficBuff, showImage: true}],
+		[BuffType.Acceleration, {color: g_colors.rdm.accelBuff, showImage: true}],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();
