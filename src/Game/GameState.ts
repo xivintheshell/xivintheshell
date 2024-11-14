@@ -676,18 +676,18 @@ export abstract class GameState {
 				// but not both. This is currently true for all party buffs in the game.
 				if (buff.info.damageFactor === 1) {
 					buffCollection.set(buff.name, {
-						kind: "multiplier",
-						source: PotencyModifierType.PARTY,
-						buffType: buff.name,
-						damageFactor: buff.info.damageFactor,
-					});
-				} else {
-					buffCollection.set(buff.name, {
 						kind: "critDirect",
 						source: PotencyModifierType.PARTY, 
 						buffType: buff.name,
 						critFactor: buff.info.critBonus,
 						dhFactor: buff.info.dhBonus,
+					});
+				} else {
+					buffCollection.set(buff.name, {
+						kind: "multiplier",
+						source: PotencyModifierType.PARTY,
+						buffType: buff.name,
+						damageFactor: buff.info.damageFactor,
 					});
 				}
 			}
