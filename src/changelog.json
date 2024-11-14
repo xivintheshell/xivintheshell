@@ -6,7 +6,9 @@
 			"[PCT] Fixed a bug where using two hammer combos within 30s of each other caused the combo to break",
 			"[RDM] Fixed a bug where level synced RDM still received Grand Impact Ready from Acceleration",
 			"[RDM] Fixed a bug where Acceleration did not always grant a Verstone/Verfire proc",
-			"[RDM] Fixed a bug where certain role buffs were not being displayed on the hotbar"
+			"[RDM] Fixed a bug where certain role buffs were not being displayed on the hotbar",
+			"[RDM] Fixed a bug where buffs were overlapping the hotbar",
+			"[RDM] Fixed a bug where Contre Sixte's cooldown was improperly affected by traits"
 		]
 	},
 	{
