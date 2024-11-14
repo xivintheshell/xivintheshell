@@ -8,7 +8,8 @@
 			"[RDM] Fixed a bug where Acceleration did not always grant a Verstone/Verfire proc",
 			"[RDM] Fixed a bug where certain role buffs were not being displayed on the hotbar",
 			"[RDM] Fixed a bug where buffs were overlapping the hotbar",
-			"[RDM] Fixed a bug where Contre Sixte's cooldown was improperly affected by traits"
+			"[RDM] Fixed a bug where Contre Sixte's cooldown was improperly affected by traits",
+			"Removed debug and implementation notes sections (see repository wiki for implementation notes)"
 		]
 	},
 	{
