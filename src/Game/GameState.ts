@@ -577,6 +577,8 @@ export abstract class GameState {
 			delay = rscInfo.maxTimeout;
 		}
 		const name = (toConsume === undefined ? "drop all " : `drop ${toConsume} `) + rscType;
+		// Cancel any existing timers
+		this.resources.get(rscType).removeTimer();
 		this.resources.addResourceEvent({
 			rscType: rscType,
 			name: name,

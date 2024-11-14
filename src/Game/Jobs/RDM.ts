@@ -904,8 +904,10 @@ makeResourceAbility(ShellJob.RDM, SkillName.Acceleration, 50, ResourceType.cd_Ac
 	maxCharges: 2,
 	// acceleration buff grant is automatic from this declaration already
 	onApplication: (state) => {
-		state.resources.get(ResourceType.GrandImpactReady).gain(1)
-		state.enqueueResourceDrop(ResourceType.GrandImpactReady);
+		if (Traits.hasUnlocked(TraitName.EnhancedAccelerationII, state.config.level)) {
+			state.resources.get(ResourceType.GrandImpactReady).gain(1)
+			state.enqueueResourceDrop(ResourceType.GrandImpactReady);
+		}
 	},
 });
 

@@ -444,16 +444,11 @@ export function makeResourceAbility<T extends PlayerState>(
 			const resource = state.resources.get(params.rscType);
 			const duration = params.duration ?? (getResourceInfo(state.job, params.rscType) as ResourceInfo).maxTimeout;
 			const durationFn: ResourceCalculationFn<T> = (typeof duration === "number") ? ((state: T) => duration) : duration;
-			// TODO automatically tell scheduler to override existing drop event if necessary
-			if (resource.available(1)) {
-				resource.overrideTimer(state, durationFn(state));
-			} else {
-				resource.gain(resource.maxValue);
-				state.enqueueResourceDrop(
-					params.rscType,
-					durationFn(state),
-				);
-			}
+			resource.gain(resource.maxValue);
+			state.enqueueResourceDrop(
+				params.rscType,
+				durationFn(state),
+			);
 		},
 		params?.onApplication ?? NO_EFFECT, 
 	);
