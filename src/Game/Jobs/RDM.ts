@@ -259,9 +259,11 @@ const makeSpell_RDM = (name: SkillName, unlockLevel: number, params: {
 }): Spell<RDMState> => {
 	const onConfirm: EffectFn<RDMState> = combineEffects(
 		(state) => state.processManafic(),
+		// onConfirm must be checked before acceleration is consume
+		// to make sure procs are properly gained
+		params.onConfirm ?? NO_EFFECT,
 		(state) => state.processDualcastAndInstants(name),
 		(state) => state.processComboStatus(name),
-		params.onConfirm ?? NO_EFFECT,
 	);
 	return makeSpell(ShellJob.RDM, name, unlockLevel, {
 		autoUpgrade: params.autoUpgrade,
@@ -454,7 +456,11 @@ makeSpell_RDM(SkillName.Veraero, 10, {
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
 	onConfirm: (state) => {
 		state.gainColorMana({w: 6});
-		state.maybeGainVerproc(ResourceType.VerstoneReady);
+		if (state.hasResourceAvailable(ResourceType.Acceleration)) {
+			state.gainVerproc(ResourceType.VerstoneReady);
+		} else {
+			state.maybeGainVerproc(ResourceType.VerstoneReady);
+		}
 	},
 });
 
@@ -468,7 +474,11 @@ makeSpell_RDM(SkillName.Verthunder, 4, {
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
 	onConfirm: (state) => {
 		state.gainColorMana({b: 6});
-		state.maybeGainVerproc(ResourceType.VerfireReady);
+		if (state.hasResourceAvailable(ResourceType.Acceleration)) {
+			state.gainVerproc(ResourceType.VerfireReady);
+		} else {
+			state.maybeGainVerproc(ResourceType.VerfireReady);
+		}
 	},
 });
 
@@ -487,7 +497,11 @@ makeSpell_RDM(SkillName.Veraero3, 82, {
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
 	onConfirm: (state) => {
 		state.gainColorMana({w: 6});
-		state.maybeGainVerproc(ResourceType.VerstoneReady);
+		if (state.hasResourceAvailable(ResourceType.Acceleration)) {
+			state.gainVerproc(ResourceType.VerstoneReady);
+		} else {
+			state.maybeGainVerproc(ResourceType.VerstoneReady);
+		}
 	},
 });
 
@@ -501,7 +515,11 @@ makeSpell_RDM(SkillName.Verthunder3, 82, {
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
 	onConfirm: (state) => {
 		state.gainColorMana({b: 6});
-		state.maybeGainVerproc(ResourceType.VerfireReady);
+		if (state.hasResourceAvailable(ResourceType.Acceleration)) {
+			state.gainVerproc(ResourceType.VerfireReady);
+		} else {
+			state.maybeGainVerproc(ResourceType.VerfireReady);
+		}
 	},
 });
 

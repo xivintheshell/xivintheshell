@@ -140,4 +140,41 @@ it("allows triple zwerchhau", testWithConfig({}, () => {
     ].forEach(applySkill);
 }));
 
+it("performs the standard opener", testWithConfig({spellSpeed: 420}, () => {
+    // 3 procs are guaranteed in the standard opener
+    [
+        SkillName.Verthunder3,
+        SkillName.Veraero3,
+        SkillName.Acceleration,
+        SkillName.Swiftcast,
+        SkillName.Verthunder3,
+        SkillName.Tincture,
+        SkillName.Fleche,
+        SkillName.Verthunder3,
+        SkillName.Embolden,
+        SkillName.Manafication,
+        SkillName.EnchantedRiposte,
+        SkillName.ContreSixte,
+        SkillName.EnchantedZwerchhau,
+        SkillName.Engagement,
+        SkillName.EnchantedRedoublement,
+        SkillName.CorpsACorps,
+        SkillName.Engagement,
+        SkillName.Verholy,
+        SkillName.CorpsACorps,
+        SkillName.Scorch,
+        SkillName.ViceOfThorns,
+        SkillName.Resolution,
+        SkillName.Prefulgence,
+        SkillName.GrandImpact,
+        SkillName.Acceleration,
+        SkillName.Verstone,
+        SkillName.GrandImpact,
+        SkillName.Verthunder3,
+        SkillName.Veraero3,
+        SkillName.Fleche,
+        SkillName.Verthunder3,
+    ].forEach(applySkill);
+}));
+
 // it("interrupts verstone if it falls off mid-cast")

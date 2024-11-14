@@ -72,6 +72,10 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 			ResourceType.Manafication,
 			ResourceType.PrefulgenceReady,
 			ResourceType.MagickBarrier,
+			ResourceType.LucidDreaming,
+			ResourceType.Surecast,
+			ResourceType.Tincture,
+			ResourceType.Sprint,
 		].map(makeRedMageTimer);
 	}
 
