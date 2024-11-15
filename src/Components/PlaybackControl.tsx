@@ -161,7 +161,7 @@ export function ConfigSummary(props: { job: ShellJob, dirty: boolean }) {
 	let testingWarning = <p style={{
 		color: warningColor
 	}}>{localize({
-		en: "WARNING: This job is developed recently and is currently in testing. Save your work elsewhere and save often. There might be upcoming breaking changes.",
+		en: "WARNING: This job was recently added to XIV in the Shell and is still being tested. There may be bugs or changes in the near future, so make sure to frequently export and save timelines for this job to make sure you don't lose your work.",
 		zh: "警告：此职业刚被实现没多久，可能还不是很稳定，目前暂时不要太依赖txt文件，记得勤在别处保存进度。"
 	})}</p>
 
