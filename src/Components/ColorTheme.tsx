@@ -190,7 +190,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 			text: "#000000",
 			emphasis: "#000000",
 			success: "mediumseagreen",
-			warning: "#f85210",
+			warning: "#ff4d07",
 			background: "#ffffff",
 			tipBackground: "#ffffff",
 			bgLowContrast: "#efefef",

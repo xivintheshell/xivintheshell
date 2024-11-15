@@ -36,6 +36,10 @@ export const ALL_JOBS = [
 	ShellJob.PCT,
 ];
 
+export const TESTING_JOBS = [
+	ShellJob.RDM,
+];
+
 export const enum Expansion {
 	EW = "EW",
 	DT = "DT"
