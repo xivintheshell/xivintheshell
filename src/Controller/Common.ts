@@ -26,11 +26,13 @@ export const enum ShellJob {
 	BLM = "BLM",
 	PCT = "PCT",
 	RDM = "RDM",
+	DNC = "DNC",
 }
 
 // can't get this automatically from a const enum
 // jobs are in the order they appear in the job guide
 export const ALL_JOBS = [
+	ShellJob.DNC,
 	ShellJob.BLM,
 	ShellJob.RDM,
 	ShellJob.PCT,

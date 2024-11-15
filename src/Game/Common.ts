@@ -34,10 +34,17 @@ export const enum ProcMode {
 }
 
 enum GeneralSkillName {
+	ArmsLength = "Arm's Length", // Tanks, Melee, Phys Ranged
+
+	SecondWind = "Second Wind", // Melee & Phys Ranged
+
+	HeadGraze = "Head Graze", // Phys Ranged. Not bothering with Leg/Foot Graze at this point
+
 	Addle = "Addle",
 	Swiftcast = "Swiftcast",
 	LucidDreaming = "Lucid Dreaming",
 	Surecast = "Surecast",
+
 	Tincture = "Tincture",
 	Sprint = "Sprint",
 
@@ -102,10 +109,13 @@ export enum BuffType {
 enum GeneralResourceType {
 	// job resources
 	Mana = "Mana", // [0, 10000]
+	SecondWind = "Second Wind",
+	HeadGraze = "Head Graze",
 	Addle = "Addle", // [0, 1]
 	Swiftcast = "Swiftcast", // [0, 1]
 	LucidDreaming = "Lucid Dreaming", // [0, 1] also just for timing display
 	Surecast = "Surecast", // [0, 1]
+	ArmsLength = "Arms Length",
 	Tincture = "Tincture", // [0, 1]
 	Sprint = "Sprint", // [0, 1]
 	// special
@@ -123,8 +133,11 @@ enum GeneralCooldownType {
 	cd_Swiftcast = "cd_Swiftcast", // [0, 1x]
 	cd_LucidDreaming = "cd_LucidDreaming", // [0, 1x]
 	cd_Surecast = "cd_Surecast", // [0, 1x]
+	cd_ArmsLength = "cd_ArmsLength",
 	cd_Tincture = "cd_Tincture", // [0, 1x]
 	cd_Sprint = "cd_Sprint", // [0, 1x]
+	cd_SecondWind = "cd_SecondWind",
+	cd_HeadGraze = "cd_HeadGraze",
 }
 
 const CooldownType = {

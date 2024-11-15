@@ -1,12 +1,29 @@
-import {ShellJob} from "../../Controller/Common";
+
+import {ALL_JOBS, ShellJob} from "../../Controller/Common";
 import {SkillName, ResourceType, WarningType} from "../Common";
-import {makeResourceAbility} from "../Skills";
+import {makeAbility, makeResourceAbility} from "../Skills";
 import {DoTBuff, EventTag} from "../Resources"
 import {Traits, TraitName} from "../Traits";
 import type {GameState} from "../GameState";
 import {controller} from "../../Controller/Controller";
 
-const CASTER_JOBS = [ShellJob.BLM, ShellJob.PCT, ShellJob.RDM];
+const TANK_JOBS: ShellJob[] = []
+const HEALER_JOBS: ShellJob[] = []
+const MELEE_JOBS: ShellJob[] = []
+const PHYSICAL_RANGED_JOBS: ShellJob[] = [ShellJob.DNC]
+const CASTER_JOBS: ShellJob[] = [ShellJob.BLM, ShellJob.PCT, ShellJob.RDM];
+
+makeAbility([...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS], SkillName.SecondWind, 8, ResourceType.cd_SecondWind, {
+	applicationDelay: 0.62,
+	cooldown: 120,
+	assetPath: "Role/Second Wind.png",
+});
+
+makeAbility(PHYSICAL_RANGED_JOBS, SkillName.HeadGraze, 24, ResourceType.cd_HeadGraze, {
+	applicationDelay: 0,
+	cooldown: 30,
+	assetPath: "Role/Head Graze.png",
+});
 
 makeResourceAbility(CASTER_JOBS, SkillName.Addle, 8, ResourceType.cd_Addle, {
 	rscType: ResourceType.Addle,
@@ -16,14 +33,14 @@ makeResourceAbility(CASTER_JOBS, SkillName.Addle, 8, ResourceType.cd_Addle, {
 	assetPath: "Role/Addle.png",
 });
 
-makeResourceAbility(CASTER_JOBS, SkillName.Swiftcast, 18, ResourceType.cd_Swiftcast, {
+makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], SkillName.Swiftcast, 18, ResourceType.cd_Swiftcast, {
 	rscType: ResourceType.Swiftcast,
 	applicationDelay: 0, // instant
 	cooldown: 40, // set by trait in constructor
 	assetPath: "Role/Swiftcast.png",
 });
 
-makeResourceAbility(CASTER_JOBS, SkillName.LucidDreaming, 14, ResourceType.cd_LucidDreaming, {
+makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], SkillName.LucidDreaming, 14, ResourceType.cd_LucidDreaming, {
 	rscType: ResourceType.LucidDreaming,
 	applicationDelay: 0.623, // delayed
 	cooldown: 60,
@@ -39,7 +56,14 @@ makeResourceAbility(CASTER_JOBS, SkillName.LucidDreaming, 14, ResourceType.cd_Lu
 	},
 });
 
-makeResourceAbility(CASTER_JOBS, SkillName.Surecast, 44, ResourceType.cd_Surecast, {
+makeResourceAbility([...TANK_JOBS, ...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS], SkillName.ArmsLength, 32, ResourceType.cd_ArmsLength, {
+	rscType: ResourceType.ArmsLength,
+	applicationDelay: 0.62,
+	cooldown: 120,
+	assetPath: "Role/Arms Length.png",
+})
+
+makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], SkillName.Surecast, 44, ResourceType.cd_Surecast, {
 	rscType: ResourceType.Surecast,
 	applicationDelay: 0, // surprisingly instant because arms length is not
 	cooldown: 120,
@@ -53,7 +77,7 @@ const cancelDualcast = (state: GameState) => {
 	}
 };
 
-makeResourceAbility(CASTER_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture, {
+makeResourceAbility(ALL_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture, {
 	rscType: ResourceType.Tincture,
 	applicationDelay: 0.64, // delayed // somewhere in the midrange of what's seen in logs
 	cooldown: 270,
@@ -61,7 +85,7 @@ makeResourceAbility(CASTER_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture
 	onConfirm: cancelDualcast,
 });
 
-makeResourceAbility(CASTER_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
+makeResourceAbility(ALL_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
 	rscType: ResourceType.Sprint,
 	applicationDelay: 0.133, // delayed
 	cooldown: 60,
