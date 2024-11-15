@@ -1,7 +1,16 @@
 import React, {MouseEventHandler, useEffect, useReducer} from 'react';
 import {controller} from '../Controller/Controller'
 import {ButtonIndicator, Clickable, Expandable, Help, Input, ValueChangeEvent} from "./Common";
-import {getCachedValue, setCachedValue, ShellInfo, ShellJob, ShellVersion, TickMode, ALL_JOBS} from "../Controller/Common";
+import {
+	getCachedValue,
+	setCachedValue,
+	ShellInfo,
+	ShellJob,
+	ShellVersion,
+	TickMode,
+	ALL_JOBS,
+	TESTING_JOBS
+} from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
 import {getAllResources, getResourceInfo, ResourceOverrideData} from "../Game/Resources";
 import {localize} from "./Localization";
@@ -149,11 +158,18 @@ export function ConfigSummary(props: { job: ShellJob, dirty: boolean }) {
 		zh: `警告：此时间轴文件创建于一个更早版本的排轴器，因此计算读条时间时使用的是当时手动输入的读条税${legacyCasterTax}秒（现已过时），而非由下方的“帧率”和“读条时间修正”计算得来。更多信息：`
 	});
 	let warningColor = getCurrentThemeColors().warning;
-	let blurb = localize({
+	let testingWarning = <p style={{
+		color: warningColor
+	}}>{localize({
+		en: "WARNING: This job was recently added to XIV in the Shell and is still being tested. There may be bugs or changes in the near future, so make sure to frequently export and save timelines for this job to make sure you don't lose your work.",
+		zh: "警告：此职业刚被实现没多久，可能还不是很稳定，目前暂时不要太依赖txt文件，记得勤在别处保存进度。"
+	})}</p>
+
+	let legacyCasterTaxBlurbContent = localize({
 		en: <div>
 			<div className={"paragraph"}>
 				The caster tax config is now replaced by 0.1s + FPS tax and is more precise.
-				You can read more about FPS tax in About this tool/Implementation notes.
+				You can read more about FPS tax in the Github repository wiki's implementation notes section.
 			</div>
 			<div className={"paragraph"} style={{color: warningColor}}>
 				You are strongly encouraged to create a new record (in another timeline slot or from 'apply and reset') and migrate your fight plan.
@@ -169,9 +185,11 @@ export function ConfigSummary(props: { job: ShellJob, dirty: boolean }) {
 			</div>
 		</div>
 	});
-	let legacyCasterTaxBlurb = <p className={"paragraph"} style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={blurb}/></p>;
+	let legacyCasterTaxBlurb = <p style={{color: warningColor}}>{excerpt}<Help topic={"legacy-caster-tax"} content={legacyCasterTaxBlurbContent}/></p>;
 	return <div style={{textDecoration: props.dirty ? "line-through" : "none", marginLeft: 5, paddingLeft: 10, borderLeft: "1px solid " + getCurrentThemeColors().bgHighContrast}}>
 		{controller.gameConfig.shellVersion < ShellVersion.FpsTax ? legacyCasterTaxBlurb : undefined}
+
+		{TESTING_JOBS.includes(props.job) ? testingWarning : undefined}
 
 		<div>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</div>
 
@@ -1120,9 +1138,13 @@ export class Config extends React.Component {
 		let editJobSection = <div style={{marginBottom: 10}}>
 			<span>{localize({en: "job: ", zh: "职业："})}</span>
 			<select style={{outline: "none", color: fieldColor("job")}} value={this.state.job} onChange={this.setJob}>
-				{ALL_JOBS.map((job) =>
-					<option key={job} value={job}>{job}</option>
-				)}
+				{ALL_JOBS.map((job) => {
+					if (TESTING_JOBS.includes(job)) {
+						return <option key={job} value={job}>{job + ` (${localize({en: "testing", zh: "测试中"})})`}</option>
+					} else {
+						return <option key={job} value={job}>{job}</option>
+					}
+				})}
 			</select>
 		</div>;
 		let editStatsSection = <div style={{marginBottom: 16}}>
