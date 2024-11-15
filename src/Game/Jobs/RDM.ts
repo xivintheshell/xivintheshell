@@ -37,7 +37,7 @@ makeRDMResource(ResourceType.BlackMana, 100);
 makeRDMResource(ResourceType.ManaStacks, 3);
 
 // TODO: get precise durations
-makeRDMResource(ResourceType.Acceleration, 1, {timeout: 30});
+makeRDMResource(ResourceType.Acceleration, 1, {timeout: 20});
 makeRDMResource(ResourceType.Dualcast, 1, {timeout: 15});
 makeRDMResource(ResourceType.Embolden, 1, {timeout: 20});
 makeRDMResource(ResourceType.GrandImpactReady, 1, {timeout: 30});
