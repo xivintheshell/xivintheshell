@@ -241,6 +241,7 @@ export class TimelineMarkers extends React.Component {
 			const activeJob = controller.getActiveJob();
 			if (!(activeJob === ShellJob.PCT && info.name === BuffType.StarryMuse)
 				&& !(activeJob === ShellJob.RDM && info.name === BuffType.Embolden)
+				&& !(activeJob === ShellJob.DNC && info.name === BuffType.TechnicalFinish)
 			) {
 				buffCollection.push(<option key={info.name} value={info.name}>{localizeBuffType(info.name)}</option>)
 			}

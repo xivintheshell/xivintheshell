@@ -276,6 +276,11 @@ export abstract class GameState {
 			ResourceType.HammerTime,
 			ResourceType.Aetherhues,
 			ResourceType.SubtractivePalette,
+			ResourceType.ClosedPosition,
+			ResourceType.StandardStep,
+			ResourceType.TechnicalStep,
+			ResourceType.Esprit,
+			ResourceType.Improvisation,
 		] as ResourceType[]).includes(buffName)) {
 			// subtractive spectrum, starstruck, monochrome tones, rainbow drip,
 			// tempera coat/grassa, smudge can be clicked off

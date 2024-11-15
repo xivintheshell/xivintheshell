@@ -51,6 +51,18 @@ export const enum TraitName {
 	EnhancedAccelerationII,
 	EnhancedManaficationIII,
 
+	Esprit,
+	EnhancedEnAvantII,
+	EnhancedTechnicalFinish,
+	EnhancedEsprit,
+	EnhancedFlourish,
+	EnhancedShieldSamba,
+	EnhancedDevilment,
+	EnhancedStandardFinish,
+	DynamicDancer,
+	EnhancedFlourishII,
+	EnhancedTechnicalFinishII,
+
 	Never,
 }
 
@@ -98,6 +110,19 @@ export class Traits {
 			[TraitName.EnchantedBladeMastery, 94],
 			[TraitName.EnhancedAccelerationII, 96],
 			[TraitName.EnhancedManaficationIII, 100],
+
+			[TraitName.Esprit, 76],
+			[TraitName.EnhancedEnAvantII, 78],
+			[TraitName.EnhancedTechnicalFinish, 82],
+			[TraitName.EnhancedEsprit, 84],
+			[TraitName.EnhancedFlourish, 86],
+			[TraitName.EnhancedShieldSamba, 88],
+			[TraitName.EnhancedDevilment, 90],
+			[TraitName.EnhancedStandardFinish, 92],
+			[TraitName.DynamicDancer, 94],
+			[TraitName.EnhancedFlourishII, 96],
+			[TraitName.EnhancedTechnicalFinishII, 100],
+
 		].map(([name, level]) => [name, new Trait(name, level)]));
 	}
 

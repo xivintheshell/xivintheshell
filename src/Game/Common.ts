@@ -1,6 +1,7 @@
 import {BLMSkillName, BLMResourceType, BLMCooldownType} from "./Constants/BLM";
 import {PCTSkillName, PCTResourceType, PCTCooldownType} from "./Constants/PCT";
 import {RDMSkillName, RDMResourceType, RDMCooldownType} from "./Constants/RDM";
+import {DNCSkillName, DNCResourceType, DNCCooldownType} from "./Constants/DNC";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -56,6 +57,7 @@ export const SkillName = {
 	...BLMSkillName,
 	...PCTSkillName,
 	...RDMSkillName,
+	...DNCSkillName,
 	...GeneralSkillName,
 }
 
@@ -63,7 +65,8 @@ export const SkillName = {
 export type SkillName = GeneralSkillName
 	| BLMSkillName
 	| PCTSkillName
-	| RDMSkillName;
+	| RDMSkillName
+	| DNCSkillName;
 
 export const enum SkillReadyStatus {
 	Ready = "ready",
@@ -145,13 +148,15 @@ const CooldownType = {
 	...BLMCooldownType,
 	...PCTCooldownType,
 	...RDMCooldownType,
+	...DNCCooldownType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 type CooldownType = GeneralCooldownType
 	| BLMCooldownType
 	| PCTCooldownType
-	| RDMCooldownType;
+	| RDMCooldownType
+	| DNCCooldownType;
 
 export const ResourceType = {
 	...CooldownType,
@@ -159,6 +164,7 @@ export const ResourceType = {
 	...BLMResourceType,
 	...PCTResourceType,
 	...RDMResourceType,
+	...DNCResourceType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -166,7 +172,8 @@ export type ResourceType = CooldownType
 	| GeneralResourceType
 	| BLMResourceType
 	| PCTResourceType
-	| RDMResourceType;
+	| RDMResourceType
+	| DNCResourceType;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",
@@ -184,4 +191,8 @@ export const enum WarningType {
 	PrefulgenceDrop = "Prefulgence expired",
 	ManaficDrop = "Manafication stacks expired",
 	MagickedSwordplayDrop = "Magicked Swordplay stacks expired",
+
+	EspritOvercap = "esprit gauge overcap",
+	FeatherOvercap = "feather gauge overcap",
+	FanThreeOverwrite = "overwrote fan dance 3"
 }

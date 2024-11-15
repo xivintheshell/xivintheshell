@@ -50,10 +50,20 @@ export type RDMResourceColors = {
 	accelBuff: string,
 }
 
+export type DNCResourceColors = {
+	esprit: string,
+	feathers: string,
+	emboite: string,
+	entrechat: string,
+	jete: string,
+	pirouette: string,
+}
+
 export type JobAccentColors = {
 	[ShellJob.BLM]: string,
 	[ShellJob.PCT]: string,
 	[ShellJob.RDM]: string,
+	[ShellJob.DNC]: string,
 }
 
 export type ThemeColors = {
@@ -82,6 +92,7 @@ export type ThemeColors = {
 	blm: BLMResourceColors,
 	pct: PCTResourceColors,
 	rdm: RDMResourceColors,
+	dnc: DNCResourceColors,
 	timeline: {
 		ruler: string,
 		tracks: string,
@@ -110,6 +121,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.BLM]: "#9370db", // mediumpurple
 				[ShellJob.PCT]: "#e176c2",
 				[ShellJob.RDM]: "#ff0000", // TODO less red
+				[ShellJob.DNC]: "#e2b0af" // color ripped from xiva/fflogs
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -158,6 +170,14 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				manaficBuff: "#c169c2", // lavender
 				accelBuff: "#f0d1e8", // very light pink
 			},
+			dnc: {
+				esprit: "#e2b0af",
+				feathers: '#8DA147',
+				emboite: '#bf615c',
+				entrechat: '#3a8db7',
+				jete: '#539350',
+				pirouette: '#b0984e'
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -183,6 +203,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.BLM]: "#9370db", // mediumpurple
 				[ShellJob.PCT]: "#f485d6",
 				[ShellJob.RDM]: "#ff0000", // TODO less red
+				[ShellJob.DNC]: "#e2b0af" // color ripped from xiva/fflogs
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -230,6 +251,14 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				emboldenBuff: "#c91310", // dark red
 				manaficBuff: "#530954", // dark purple
 				accelBuff: "#c973b4", // lighter purple
+			},
+			dnc: {
+				esprit: "#e2b0af",
+				feathers: '#8DA147',
+				emboite: '#bf615c',
+				entrechat: '#3a8db7',
+				jete: '#539350',
+				pirouette: '#b0984e'
 			},
 			timeline: {
 				ruler: "#e9e9e9",

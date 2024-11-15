@@ -392,6 +392,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	onApplication: EffectFn<T>,
 	cooldown: number,
 	maxCharges: number,
+	secondaryCooldown?: CooldownGroupProperies,
 }>): Ability<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -404,6 +405,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		cdName: cdName,
+		secondaryCd: params.secondaryCooldown,
 		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
@@ -419,6 +421,10 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.cooldown !== undefined) {
 		jobs.forEach((job) => makeCooldown(job, cdName, params.cooldown!, params.maxCharges ?? 1));
+	}
+	if (params.secondaryCooldown !== undefined) {
+		const {cdName, cooldown, maxCharges} = params.secondaryCooldown
+		jobs.forEach((job) => makeCooldown(job, cdName, cooldown!, maxCharges));
 	}
 	return info;
 }
@@ -451,6 +457,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		assetPath?: string,
 		cooldown: number,
 		maxCharges?: number,
+		secondaryCooldown?: CooldownGroupProperies,
 	}
 ): Ability<T> {
 	// When the ability is applied:
@@ -482,6 +489,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		assetPath: params.assetPath,
 		cooldown: params.cooldown,
 		maxCharges: params.maxCharges,
+		secondaryCooldown: params.secondaryCooldown
 	});
 };
 
