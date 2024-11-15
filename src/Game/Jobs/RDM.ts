@@ -185,16 +185,22 @@ export class RDMState extends GameState {
 		const meleeComboCounter = this.resources.get(ResourceType.RDMMeleeCounter).availableAmount();
 		// 3-element array of melee, finisher, aoe
 		let counters: number[];
-		if (skill === SkillName.EnchantedRiposte) {
+		if (skill === SkillName.EnchantedRiposte || skill === SkillName.Riposte) {
 			// TODO check if aoe combo does get reset
 			counters = [1, 0, 0];
-			manaStacks.gain(1);
-		} else if (skill === SkillName.EnchantedZwerchhau) {
+			if (skill === SkillName.EnchantedRiposte) {
+				manaStacks.gain(1);
+			}
+		} else if (skill === SkillName.EnchantedZwerchhau || skill === SkillName.Zwerchhau) {
 			counters = [meleeComboCounter === 1 ? 2: 0, 0, 0];
-			manaStacks.gain(1); // even if un-combo'd
-		} else if (skill === SkillName.EnchantedRedoublement) {
+			if (skill === SkillName.EnchantedZwerchhau) {
+				manaStacks.gain(1); // even if un-combo'd
+			}
+		} else if (skill === SkillName.EnchantedRedoublement || skill === SkillName.Redoublement) {
 			counters = [0, 0, 0];
-			manaStacks.gain(1); // even if un-combo'd
+			if (skill === SkillName.EnchantedRedoublement) {
+				manaStacks.gain(1); // even if un-combo'd
+			}
 		} else if (skill === SkillName.Verholy || skill === SkillName.Verflare) {
 			counters = [0, hasScorch ? 1 : 0, 0];
 			manaStacks.consume(3);
@@ -430,7 +436,7 @@ makeSpell_RDM(SkillName.Verfire, 26, {
 	basePotency: procPotencies,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.VerfireReady),
 	onConfirm: (state) => {
-		state.gainColorMana({w: 5});
+		state.gainColorMana({b: 5});
 		state.tryConsumeResource(ResourceType.VerfireReady);
 	},
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.VerfireReady),
@@ -573,6 +579,7 @@ makeSpell_RDM(SkillName.GrandImpact, 96, {
 	applicationDelay: 1.55,
 	validateAttempt: giCondition.condition,
 	highlightIf: giCondition.condition,
+	onConfirm: (state) => state.gainColorMana({w: 3, b: 3}),
 });
 
 // Combo state for melee hits is automatically handled in makeMeleeGCD via state.processComboStatus
@@ -706,7 +713,12 @@ makeMeleeGCD(SkillName.EnchantedReprise, 76, {
 });
 
 const moulinetConditions: ConditionalSkillReplace<RDMState>[] = [
-	{newSkill: SkillName.Moulinet, condition: (state) => !state.colorManaExceeds(20)},
+	{newSkill: SkillName.Moulinet, condition: (state) => (
+		// When AoE counter is 0, check if mana < 20
+		// otherwise, check if mana < 15
+		(state.resources.get(ResourceType.RDMAoECounter).availableAmount() === 0 && !state.colorManaExceeds(20))
+		|| !state.colorManaExceeds(15)
+	)},
 	{newSkill: SkillName.EnchantedMoulinet, condition: (state) => (
 		state.colorManaExceeds(20) && state.resources.get(ResourceType.RDMAoECounter).availableAmount() === 0
 	)},

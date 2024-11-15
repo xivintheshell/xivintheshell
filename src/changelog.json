@@ -1,5 +1,13 @@
 [
 	{
+		"date": "11/14/24",
+		"changes": [
+			"(thank you Wan Shott for reporting a bunch of RDM bugs)",
+			"[RDM] Fixed bugs where Verfire and Grand Impact didn't grant correct mana",
+			"[RDM] Fixed a bug where it was possible to use un-enchanted Moulinet under certain incorrect conditions"
+		]
+	},
+	{
 		"date": "11/13/24",
 		"changes": [
 			"Fixed a bug where party buff potencies were not displayed",
