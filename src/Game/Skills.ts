@@ -49,6 +49,12 @@ export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, ...fs: Ar
 	};
 }
 
+export interface CooldownGroupProperies {
+	cdName: ResourceType, 
+	cooldown: number, 
+	maxCharges: number
+}
+
 /**
  * Base interface for common properties between different kinds of skills.
  *
@@ -62,6 +68,9 @@ interface BaseSkill<T extends PlayerState> {
 	readonly autoUpgrade?: SkillAutoReplace;
 	readonly autoDowngrade?: SkillAutoReplace;
 	readonly cdName: ResourceType;
+	// TODO: Technically, actions are defined with an array of cooldown groups, one of which is the GCD cooldown group for actions that affect the GCD.
+	// Functionally, actions have at most the GCD and a second cooldown group, so this is enough for now.
+	readonly secondaryCd?: CooldownGroupProperies;
 	readonly aspect: Aspect;
 	readonly replaceIf: ConditionalSkillReplace<T>[]; // list of skills that can replace this one
 	readonly startOnHotbar: boolean; // false if this skill only replaces others (like paradox)
@@ -261,6 +270,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	isInstantFn: StatePredicate<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
+	secondaryCooldown?: CooldownGroupProperies,
 }>): Spell<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -273,6 +283,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		cdName: ResourceType.cd_GCD,
+		secondaryCd: params.secondaryCooldown,
 		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
@@ -310,6 +321,7 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 	isInstantFn: StatePredicate<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
+	secondaryCooldown?: CooldownGroupProperies,
 }>): Weaponskill<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -322,6 +334,7 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		cdName: ResourceType.cd_GCD,
+		secondaryCd: params.secondaryCooldown,
 		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
@@ -338,6 +351,10 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 		applicationDelay: params.applicationDelay ?? 0,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
+	if (params.secondaryCooldown !== undefined) {
+		const {cdName, cooldown, maxCharges} = params.secondaryCooldown
+		jobs.forEach((job) => makeCooldown(job, cdName, cooldown!, maxCharges));
+	}
 	return info;
 };
 

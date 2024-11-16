@@ -296,7 +296,9 @@ export abstract class GameState {
 	 * it performs the confirmation immediately.
 	 */
 	useSpellOrWeaponskill(skill: Spell<PlayerState> | Weaponskill<PlayerState>, node: ActionNode) {
-		let cd = this.cooldowns.get(skill.cdName);
+		const cd = this.cooldowns.get(skill.cdName);
+		const secondaryCd = skill.secondaryCd ? this.cooldowns.get(skill.secondaryCd.cdName) : undefined
+
 		// TODO refactor logic to determine self-buffs
 		let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
 		const inspireSkills: SkillName[] = [
@@ -453,6 +455,9 @@ export abstract class GameState {
 		}
 		// recast
 		cd.useStackWithRecast(this, this.config.getAfterTaxGCD(recastTime));
+		if (secondaryCd) {
+			secondaryCd.useStack(this);
+		}
 	}
 
 	/**
@@ -541,7 +546,11 @@ export abstract class GameState {
 	#timeTillSkillAvailable(skillName: SkillName) {
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.cdName;
+		const secondaryCd = skill.secondaryCd?.cdName
 		let tillAnyCDStack = this.cooldowns.timeTillAnyStackAvailable(cdName);
+		if (secondaryCd) {
+			tillAnyCDStack = Math.max(tillAnyCDStack, this.cooldowns.timeTillAnyStackAvailable(secondaryCd));
+		}
 		return Math.max(this.timeTillAnySkillAvailable(), tillAnyCDStack);
 	}
 
@@ -633,8 +642,11 @@ export abstract class GameState {
 		}
 
 		let cd = this.cooldowns.get(skill.cdName);
+		const secondaryCd = skill.secondaryCd ? this.cooldowns.get(skill.secondaryCd.cdName) : undefined;
 		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.cdName);
+		const timeTillSecondaryReady = skill.secondaryCd ? this.cooldowns.timeTillNextStackAvailable(skill.secondaryCd.cdName) : 0
 		let cdRecastTime = cd.currentStackCd();
+		let secondaryRecastTime = secondaryCd?.currentStackCd() ?? 0
 
 		// to be displayed together when hovered on a skill
 		let timeTillDamageApplication = 0;
@@ -647,17 +659,19 @@ export abstract class GameState {
 			}
 		}
 
+		const secondaryStacksAvailable = secondaryCd?.stacksAvailable() ?? 0
+		const secondaryMaxStacks = secondaryCd?.maxStacks() ?? 0
 		// conditions that make the skills show proc
 		const highlight = skill.highlightIf(this);
 		return {
 			skillName: skill.name,
 			status: status,
-			stacksAvailable: cd.stacksAvailable(),
-			maxStacks: cd.maxStacks(),
+			stacksAvailable: secondaryMaxStacks > 0 ? secondaryStacksAvailable : cd.stacksAvailable(),
+			maxStacks: Math.max(cd.maxStacks(), secondaryMaxStacks),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
-			cdRecastTime: cdRecastTime,
-			timeTillNextStackReady: timeTillNextStackReady,
+			cdRecastTime: Math.max(cdRecastTime, secondaryRecastTime),
+			timeTillNextStackReady: Math.max(timeTillNextStackReady, timeTillSecondaryReady),
 			timeTillAvailable: timeTillAvailable,
 			timeTillDamageApplication: timeTillDamageApplication,
 			capturedManaCost: capturedManaCost,
