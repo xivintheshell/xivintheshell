@@ -2,7 +2,13 @@
 	{
 		"date": "11/15/24",
 		"changes": [
-			"[RDM] Fixed the duration of the Acceleration buff"
+			"(thank you Yuyuka for reporting a bunch of RDM bugs)",
+			"[RDM] Added some additional warnings on unintended buff drops, overwrites, and combo breaks",
+			"[RDM] Fixed the duration of the Acceleration buff",
+			"[RDM] Fixed the MP costs of Veraero II/Verthunder II",
+			"[RDM] Fixed Manafication failing to interrupt combos",
+			"[RDM] Fixed Manafication being usable out of combat",
+			"[RDM] Fixed Enchanted Reprise clearing mana stacks"
 		]
 	},
 	{
