@@ -1,4 +1,4 @@
-import {Debug, ResourceType} from "./Common"
+import {Debug, ResourceType, WarningType} from "./Common"
 import {ShellJob, ALL_JOBS} from "../Controller/Common";
 import {GameState} from "./GameState";
 import {ActionNode} from "../Controller/Record";
@@ -269,6 +269,7 @@ export type ResourceInfo = {
 	defaultValue: number,
 	maxValue: number,
 	maxTimeout: number,
+	warningOnTimeout?: WarningType,
 }
 export type CoolDownInfo = {
 	isCoolDown: true,
@@ -295,12 +296,14 @@ export function getAllResources(job: ShellJob): Map<ResourceType, ResourceOrCool
 export function makeResource(job: ShellJob, rsc: ResourceType, maxValue: number, params: Partial<{
 	default: number,
 	timeout: number,
+	warningOnTimeout: WarningType,
 }>) {
 	getAllResources(job).set(rsc, {
 		isCoolDown: false,
 		defaultValue: params.default ?? 0,
 		maxValue: maxValue,
 		maxTimeout: params.timeout ?? -1,
+		warningOnTimeout: params.warningOnTimeout,
 	});
 }
 

@@ -585,6 +585,11 @@ export abstract class GameState {
 			delay: delay,
 			fnOnRsc: (rsc: Resource) => {
 				rsc.consume(toConsume ?? rsc.availableAmount());
+				// Make sure the timer is canceled to avoid this warning
+				const rscInfo = getResourceInfo(this.job, rsc.type) as ResourceInfo;
+				if (rscInfo.warningOnTimeout) {
+					controller.reportWarning(rscInfo.warningOnTimeout);
+				}
 			}
 		})
 	}
@@ -617,8 +622,12 @@ export abstract class GameState {
 		else if (!reqsMet) status = SkillReadyStatus.RequirementsNotMet;
 		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
 
-		// Special case for striking/starry muse, which require being in combat
-		if (([SkillName.StrikingMuse, SkillName.StarryMuse] as SkillName[]).includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
+		// Special case for skills that require being in combat
+		if (([
+			SkillName.StrikingMuse,
+			SkillName.StarryMuse,
+			SkillName.Manafication,
+		] as SkillName[]).includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
 			status = SkillReadyStatus.NotInCombat;
 			timeTillAvailable = this.timeTillNextDamageEvent();
 		}
