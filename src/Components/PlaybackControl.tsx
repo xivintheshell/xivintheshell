@@ -90,6 +90,9 @@ export function ConfigSummary(props: { job: ShellJob, dirty: boolean }) {
 	const [, forceUpdate] = useReducer(x => x + 1, 0);
 	useEffect(() => {
 		refreshConfigSummary = forceUpdate;
+		return () => {
+			refreshConfigSummary = () => {};
+		}
 	}, []);
 
 	let castTimesTableDesc = localize({
