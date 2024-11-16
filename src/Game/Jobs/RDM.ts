@@ -879,6 +879,10 @@ makeSpell_RDM(SkillName.Verraise, 64, {
 });
 
 makeResourceAbility(ShellJob.RDM, SkillName.Embolden, 58, ResourceType.cd_Embolden, {
+	replaceIf: [{
+		newSkill: SkillName.ViceOfThorns,
+		condition: (state) => state.hasResourceAvailable(ResourceType.ThornedFlourish),
+	}],
 	rscType: ResourceType.Embolden,
 	applicationDelay: 0.62,
 	cooldown: 120,
@@ -891,6 +895,10 @@ makeResourceAbility(ShellJob.RDM, SkillName.Embolden, 58, ResourceType.cd_Embold
 });
 
 makeResourceAbility(ShellJob.RDM, SkillName.Manafication, 60, ResourceType.cd_Manafication, {
+	replaceIf: [{
+		newSkill: SkillName.Prefulgence,
+		condition: (state) => state.hasResourceAvailable(ResourceType.PrefulgenceReady),
+	}],
 	rscType: ResourceType.Manafication,
 	applicationDelay: 0,
 	cooldown: 110,
@@ -984,6 +992,7 @@ makeResourceAbility(ShellJob.RDM, SkillName.MagickBarrier, 86, ResourceType.cd_M
 });
 
 makeAbility_RDM(SkillName.ViceOfThorns, 92, ResourceType.cd_ViceOfThorns, {
+	startOnHotbar: false,
 	applicationDelay: 0.80,
 	potency: 700,
 	cooldown: 1,
@@ -993,6 +1002,7 @@ makeAbility_RDM(SkillName.ViceOfThorns, 92, ResourceType.cd_ViceOfThorns, {
 });
 
 makeAbility_RDM(SkillName.Prefulgence, 100, ResourceType.cd_Prefulgence, {
+	startOnHotbar: false,
 	applicationDelay: 1.42,
 	potency: 900,
 	cooldown: 1,

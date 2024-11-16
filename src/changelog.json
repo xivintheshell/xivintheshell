@@ -8,7 +8,8 @@
 			"[RDM] Fixed the MP costs of Veraero II/Verthunder II",
 			"[RDM] Fixed Manafication failing to interrupt combos",
 			"[RDM] Fixed Manafication being usable out of combat",
-			"[RDM] Fixed Enchanted Reprise clearing mana stacks"
+			"[RDM] Fixed Enchanted Reprise clearing mana stacks",
+			"[RDM] Made Prefulgence and Vice of Thorns into button replacements"
 		]
 	},
 	{
