@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.3f7b30b2.css",
-    "main.js": "/static/js/main.fff63ef2.js",
+    "main.js": "/static/js/main.324c09d7.js",
     "static/media/Tincture.png": "/static/media/Tincture.30918e122174e90fe254.png",
     "static/media/Sprint.png": "/static/media/Sprint.337bd2225fa4fad61ec8.png",
     "static/media/Blizzard 2.png": "/static/media/Blizzard 2.f2c1ac2f60d6abc82db2.png",
@@ -90,10 +90,10 @@
     "static/media/Veraero.png": "/static/media/Veraero.7f831d2e4ac23ef7eda1.png",
     "index.html": "/index.html",
     "main.3f7b30b2.css.map": "/static/css/main.3f7b30b2.css.map",
-    "main.fff63ef2.js.map": "/static/js/main.fff63ef2.js.map"
+    "main.324c09d7.js.map": "/static/js/main.324c09d7.js.map"
   },
   "entrypoints": [
     "static/css/main.3f7b30b2.css",
-    "static/js/main.fff63ef2.js"
+    "static/js/main.324c09d7.js"
   ]
 }
