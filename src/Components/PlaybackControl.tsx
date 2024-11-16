@@ -1098,13 +1098,20 @@ export class Config extends React.Component {
 				</tbody>
 			</table>
 		</div>
+		const etroLink = <a href="https://etro.gg" target="_blank" rel="noreferrer">etro</a>;
+		const xivgearLink = <a href="https://xivgear.app" target="_blank" rel="noreferrer">xivgear</a>;
 		const gearImportSection = <form onSubmit={this.importGear}>
-			{localize({en: "Load stats from etro/xivgear: ", zh: "从etro或xivgear加载套装："})}
+			{localize({
+				en: <span>Load stats from {etroLink}/{xivgearLink}: </span>,
+				zh: <span>从{etroLink}或{xivgearLink}导入套装：</span>
+			})}
 			<Help topic={"gearImport"} content={
 				<>
 					<p>{localize({
-						en: <span>Enter and <ButtonIndicator text={"Load"}/> a link to a gearset from xivgear.app or etro.gg, edit the rest of config, then <ButtonIndicator text={"apply and reset"}/>.</span>,
-						zh: <span>输入xivgear.app或etro.gg的套装链接并<ButtonIndicator text={"加载"}/>，调整其余角色属性，然后<ButtonIndicator text={"应用并重置时间轴"}/>。</span>
+						en: <span>Enter and <ButtonIndicator text={"Load"}/> a link to a gearset from xivgear.app or etro.gg, edit the rest of config, then <ButtonIndicator
+							text={"apply and reset"}/>.</span>,
+						zh: <span>输入xivgear.app或etro.gg的套装链接并<ButtonIndicator text={"加载"}/>，调整其余角色属性，然后<ButtonIndicator
+							text={"应用并重置时间轴"}/>。</span>
 					})}</p>
 					<p>{localize({
 						en: "etro: Copy/paste the link to the set (example: https://etro.gg/gearset/e13d5960-4794-4dc4-b273-24ecfed6745e)",
@@ -1122,13 +1129,15 @@ export class Config extends React.Component {
 					this.setState({gearImportLink: s})
 				}}/>
 				<span> </span>
-				<input style={{display: "inline-block"}} type="submit" value={localize({en: "Load", zh: "加载"}) as string}/>
+				<input style={{display: "inline-block"}} type="submit"
+					   value={localize({en: "Load", zh: "加载"}) as string}/>
 				{<FaCheck style={{
 					display: this.state.imported ? "inline" : "none",
 					color: colors.success,
 					position: "relative",
 					top: 4,
-					marginLeft: 8}}/>}
+					marginLeft: 8
+				}}/>}
 			</div>
 		</form>;
 		let fieldColor = (field: string) => {
@@ -1143,7 +1152,10 @@ export class Config extends React.Component {
 			<select style={{outline: "none", color: fieldColor("job")}} value={this.state.job} onChange={this.setJob}>
 				{ALL_JOBS.map((job) => {
 					if (TESTING_JOBS.includes(job)) {
-						return <option key={job} value={job}>{job + ` (${localize({en: "testing", zh: "测试中"})})`}</option>
+						return <option key={job} value={job}>{job + ` (${localize({
+							en: "testing",
+							zh: "测试中"
+						})})`}</option>
 					} else {
 						return <option key={job} value={job}>{job}</option>
 					}
@@ -1153,7 +1165,8 @@ export class Config extends React.Component {
 		let editStatsSection = <div style={{marginBottom: 16}}>
 			<div>
 				<span>{localize({en: "level: ", zh: "等级："})}</span>
-				<select style={{outline: "none", color: fieldColor("level")}} value={this.state.level} onChange={this.setLevel}>
+				<select style={{outline: "none", color: fieldColor("level")}} value={this.state.level}
+						onChange={this.setLevel}>
 					<option key={LevelSync.lvl100} value={LevelSync.lvl100}>100</option>
 					<option key={LevelSync.lvl90} value={LevelSync.lvl90}>90</option>
 					<option key={LevelSync.lvl80} value={LevelSync.lvl80}>80</option>
@@ -1161,7 +1174,8 @@ export class Config extends React.Component {
 				</select>
 			</div>
 			<div>
-				<Input style={{display: "inline-block", color: fieldColor("spellSpeed")}} defaultValue={this.state.spellSpeed}
+				<Input style={{display: "inline-block", color: fieldColor("spellSpeed")}}
+					   defaultValue={this.state.spellSpeed}
 					   description={localize({en: "spell speed: ", zh: "咏速："})} onChange={this.setSpellSpeed}/>
 				<span> (GCD: {this.state.gcdPreview} <Help topic={"gcdPreview"} content={
 					<>
@@ -1176,28 +1190,42 @@ export class Config extends React.Component {
 					</>
 				}/>)</span>
 			</div>
-			<Input style={{color: fieldColor("criticalHit")}} defaultValue={this.state.criticalHit} description={localize({en: "crit: ", zh: "暴击："})}
+			<Input style={{color: fieldColor("criticalHit")}} defaultValue={this.state.criticalHit}
+				   description={localize({en: "crit: ", zh: "暴击："})}
 				   onChange={this.setCriticalHit}/>
-			<Input style={{color: fieldColor("directHit")}} defaultValue={this.state.directHit} description={localize({en: "direct hit: " , zh: "直击："})} onChange={this.setDirectHit}/>
-			<Input style={{color: fieldColor("determination")}} defaultValue={this.state.determination} description={localize({en: "determination: " , zh: "信念："})} onChange={this.setDetermination}/>
-			<Input defaultValue={this.state.animationLock} description={localize({en: "animation lock: ", zh: "能力技后摇："})} onChange={this.setAnimationLock}/>
+			<Input style={{color: fieldColor("directHit")}} defaultValue={this.state.directHit}
+				   description={localize({en: "direct hit: ", zh: "直击："})} onChange={this.setDirectHit}/>
+			<Input style={{color: fieldColor("determination")}} defaultValue={this.state.determination}
+				   description={localize({en: "determination: ", zh: "信念："})} onChange={this.setDetermination}/>
+			<Input defaultValue={this.state.animationLock}
+				   description={localize({en: "animation lock: ", zh: "能力技后摇："})}
+				   onChange={this.setAnimationLock}/>
 			<div>
-				<Input componentColor={fpsAndCorrectionColor} style={{display: "inline-block"}} defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})} onChange={this.setFps}/>
-				<span> ({localize({en: "2.5s total tax", zh: "2.5s读条+帧率税"})}: {this.state.b1TaxPreview} <Help topic={"b1TaxPreview"} content={b1TaxDesc}/>)</span>
+				<Input componentColor={fpsAndCorrectionColor} style={{display: "inline-block"}}
+					   defaultValue={this.state.fps} description={localize({en: "FPS: ", zh: "帧率："})}
+					   onChange={this.setFps}/>
+				<span> ({localize({en: "2.5s total tax", zh: "2.5s读条+帧率税"})}: {this.state.b1TaxPreview} <Help
+					topic={"b1TaxPreview"} content={b1TaxDesc}/>)</span>
 			</div>
 			<Input
 				componentColor={fpsAndCorrectionColor}
 				defaultValue={this.state.gcdSkillCorrection}
-				description={<span>{localize({en: "GCD correction", zh: "GCD时长修正"})} <Help topic={"cast-time-correction"} content={localize({
+				description={<span>{localize({en: "GCD correction", zh: "GCD时长修正"})} <Help
+					topic={"cast-time-correction"} content={localize({
 					en: "Leaving this at 0 will probably give you the most accurate simulation. But if you want to manually correct your GCD skill durations (including casts) for whatever reason, you can put a small number (can be negative)",
 					zh: "正常情况下填0即能得到最精确的模拟结果。如果实在需要修正的话，这里输入的时长会被加到你的每个GCD技能（包括读条）耗时里（可以为负）"
 				})}/>: </span>}
 				onChange={this.setGcdSkillCorrection}/>
-			<Input defaultValue={this.state.timeTillFirstManaTick} description={localize({en: "time till first MP tick: ", zh: "距首次跳蓝时间："})} onChange={this.setTimeTillFirstManaTick}/>
+			<Input defaultValue={this.state.timeTillFirstManaTick}
+				   description={localize({en: "time till first MP tick: ", zh: "距首次跳蓝时间："})}
+				   onChange={this.setTimeTillFirstManaTick}/>
 			<Input defaultValue={this.state.countdown} description={
 				<span>{
 					localize({en: "countdown ", zh: "倒数时间 "})
-				}<Help topic={"countdown"} content={localize({en: "can use a negative countdown to start from a specific time of fight", zh: "可以是负数，时间轴会从战斗中途某个时间开始显示"})}/>: </span>
+				}<Help topic={"countdown"} content={localize({
+					en: "can use a negative countdown to start from a specific time of fight",
+					zh: "可以是负数，时间轴会从战斗中途某个时间开始显示"
+				})}/>: </span>
 			} onChange={this.setCountdown}/>
 			<Input defaultValue={this.state.randomSeed} description={
 				<span>{localize({en: "random seed ", zh: "随机种子 "})}<Help topic={"randomSeed"} content={
@@ -1220,7 +1248,8 @@ export class Config extends React.Component {
 				</select>
 			</div>
 			{this.#resourceOverridesSection()}
-			<button onClick={this.handleSubmit} style={{width: "100%", fontWeight: this.state.dirty ? "bold" : "normal"}}>
+			<button onClick={this.handleSubmit}
+					style={{width: "100%", fontWeight: this.state.dirty ? "bold" : "normal"}}>
 				{localize({en: "apply and reset", zh: "应用并重置时间轴"})}{this.state.dirty ? "*" : ""}
 			</button>
 		</div>;

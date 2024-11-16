@@ -1,5 +1,12 @@
 [
 	{
+		"date": "11/16/24",
+		"changes": [
+			"Make DET use main stat formula and default to 440",
+			"Add hyperlinks for xivgear and etro"
+		]
+	},
+	{
 		"date": "11/15/24",
 		"changes": [
 			"(thank you Yuyuka for reporting a bunch of RDM bugs)",
@@ -9,7 +16,7 @@
 			"[RDM] Fixed Manafication failing to interrupt combos",
 			"[RDM] Fixed Manafication being usable out of combat",
 			"[RDM] Fixed Enchanted Reprise clearing mana stacks",
-			"[RDM] Made Prefulgence and Vice of Thorns into button replacements"
+			"[RDM] Made Prefulgence and Vice of Thorns into button replacements",
 		]
 	},
 	{
