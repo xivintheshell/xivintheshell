@@ -79,8 +79,9 @@ export class XIVMath {
 		return Math.floor(140 * (dh-subStat) / div) * 0.001;
 	}
 
+	// https://www.akhmorning.com/allagan-studies/stats/det/#explaining-determination
 	static #autoMultiDet(level: LevelSync, det: number) {
-		const subStat = this.getSubstatBase(level);
+		const subStat = this.getMainstatBase(level);
 		const div = this.getStatDiv(level);
 		return Math.floor(140 * (det-subStat) / div) * 0.001;
 	}
