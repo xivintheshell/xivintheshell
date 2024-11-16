@@ -617,8 +617,12 @@ export abstract class GameState {
 		else if (!reqsMet) status = SkillReadyStatus.RequirementsNotMet;
 		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
 
-		// Special case for striking/starry muse, which require being in combat
-		if (([SkillName.StrikingMuse, SkillName.StarryMuse] as SkillName[]).includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
+		// Special case for skills that require being in combat
+		if (([
+			SkillName.StrikingMuse,
+			SkillName.StarryMuse,
+			SkillName.Manafication,
+		] as SkillName[]).includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
 			status = SkillReadyStatus.NotInCombat;
 			timeTillAvailable = this.timeTillNextDamageEvent();
 		}

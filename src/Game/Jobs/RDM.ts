@@ -218,6 +218,13 @@ export class RDMState extends GameState {
 		} else if (skill === SkillName.EnchantedMoulinet3) {
 			counters = [0, 0, 0];
 			manaStacks.gain(1);
+		} else if (skill === SkillName.EnchantedReprise) {
+			// enchanted reprise does not break combos or the mana counter (but reprise does)
+			counters = [
+				meleeComboCounter,
+				this.resources.get(ResourceType.RDMFinisherCounter).availableAmount(),
+				this.resources.get(ResourceType.RDMAoECounter).availableAmount(),
+			];
 		} else {
 			counters = [0, 0, 0]
 			manaStacks.consume(manaStacks.availableAmount());
@@ -538,7 +545,7 @@ const ver2Potency: Array<[TraitName, number]> = [
 makeSpell_RDM(SkillName.Veraero2, 22, {
 	replaceIf: [verholyConditon],
 	baseCastTime: 2.0,
-	baseManaCost: 200,
+	baseManaCost: 400,
 	applicationDelay: 0.80,
 	basePotency: ver2Potency,
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
@@ -548,7 +555,7 @@ makeSpell_RDM(SkillName.Veraero2, 22, {
 makeSpell_RDM(SkillName.Verthunder2, 18, {
 	replaceIf: [verflareConditon],
 	baseCastTime: 2.0,
-	baseManaCost: 200,
+	baseManaCost: 400,
 	applicationDelay: 0.80,
 	basePotency: ver2Potency,
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
@@ -872,9 +879,14 @@ makeResourceAbility(ShellJob.RDM, SkillName.Manafication, 60, ResourceType.cd_Ma
 	rscType: ResourceType.Manafication,
 	applicationDelay: 0,
 	cooldown: 110,
+	validateAttempt: (state) => state.isInCombat(),
 	onApplication: (state) => {
 		state.resources.get(ResourceType.MagickedSwordplay).gain(3);
 		state.enqueueResourceDrop(ResourceType.MagickedSwordplay);
+		// Manification resets combos
+		state.setComboState(ResourceType.RDMMeleeCounter, 0);
+		state.setComboState(ResourceType.RDMFinisherCounter, 0);
+		state.setComboState(ResourceType.RDMAoECounter, 0);
 	},
 });
 
