@@ -306,6 +306,8 @@ function drawWarningMarks(
 			message += localize({en: "comet overwrite!", zh: "彗星之黑被覆盖！"});
 		} else if (mark.warningType === WarningType.PaletteOvercap) {
 			message += localize({en: "palette gauge overcap!", zh: "调色量值溢出！"});
+		} else if (mark.warningType === WarningType.ImbalancedMana) {
+			message += localize({en: mark.warningType + "!", zh: "魔元失衡！"});
 		} else {
 			message += localize({en: mark.warningType + "!"});
 		}

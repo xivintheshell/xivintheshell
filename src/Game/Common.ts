@@ -163,4 +163,12 @@ export const enum WarningType {
 
 	DualcastEaten = "dualcast dropped",
 	ImbalancedMana = "mana difference became more than 30",
+	ComboBreak = "broken combo",
+	// TODO make buff overwrite warning generic
+	GIOverwrite = "Grand Impact Ready overwrite",
+	GIDrop = "Grand Impact expired",
+	ViceOfThornsDrop = "Vice of Thorns expired",
+	PrefulgenceDrop = "Prefulgence expired",
+	ManaficDrop = "Manafication stacks expired",
+	MagickedSwordplayDrop = "Magicked Swordplay stacks expired",
 }
