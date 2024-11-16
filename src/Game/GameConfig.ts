@@ -29,7 +29,7 @@ export const DEFAULT_BLM_CONFIG: ConfigData = {
 	spellSpeed: 1532,
 	criticalHit: 420,
 	directHit: 420,
-	determination: 420,
+	determination: 440,
 	countdown: 5,
 	randomSeed: "sup",
 	fps: 60,
