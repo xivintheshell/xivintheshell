@@ -4,12 +4,13 @@ import {controller} from "../../Controller/Controller";
 import {ActionNode} from "../../Controller/Record";
 import {ShellJob} from "../../Controller/Common";
 import {Aspect, BuffType, ResourceType, SkillName, WarningType} from "../Common";
-import {makeComboModifier, Modifiers, Potency, PotencyModifier} from "../Potency";
+import {makeComboModifier, makePositionalModifier, Modifiers, Potency, PotencyModifier} from "../Potency";
 import {
 	Ability,
 	ConditionalSkillReplace,
 	EffectFn,
 	makeAbility,
+	makeResourceAbility,
 	makeWeaponskill,
 	NO_EFFECT,
 	PotencyModifierFn,
@@ -19,7 +20,7 @@ import {
 } from "../Skills";
 import {TraitName, Traits} from "../Traits";
 import {GameState} from "../GameState";
-import {getResourceInfo, makeResource, CoolDown, DoTBuff, Event, Resource, ResourceInfo} from "../Resources"
+import {makeResource, CoolDown, DoTBuff, Event, Resource} from "../Resources"
 import {GameConfig} from "../GameConfig";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
@@ -34,6 +35,7 @@ makeSAMResource(ResourceType.ZanshinReady, 1, {timeout: 30});
 makeSAMResource(ResourceType.Tendo, 1, {timeout: 30});
 makeSAMResource(ResourceType.OgiReady, 1, {timeout: 30});
 makeSAMResource(ResourceType.TsubameGaeshiReady, 1, {timeout: 30});
+makeSAMResource(ResourceType.ThirdEye, 1, {timeout: 4});
 makeSAMResource(ResourceType.Tengetsu, 1, {timeout: 4});
 makeSAMResource(ResourceType.TengetsusForesight, 1, {timeout: 9});
 makeSAMResource(ResourceType.EnhancedEnpi, 1, {timeout: 15});
@@ -65,7 +67,6 @@ ALL_SAM_COMBOS.forEach((combo) => makeSAMResource(combo, 1, {timeout: 30}));
 // 4 - Tendo Setsugekka
 makeSAMResource(ResourceType.KaeshiTracker, 4, {timeout: 30});
 
-makeSAMResource(ResourceType.Positional, 1, {timeout: 10}); // TODO ??
 makeSAMResource(ResourceType.Feint, 1, {timeout: 15});
 makeSAMResource(ResourceType.TrueNorth, 1, {timeout: 10});
 makeSAMResource(ResourceType.ArmsLength, 1, {timeout: 6});
@@ -215,6 +216,11 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 		potency: number,
 		resource: ResourceType,
 	},
+	positional?: {
+		potency: number,
+		comboPotency: number,
+		location: "flank" | "rear",
+	},
 	applicationDelay: number,
 	jobPotencyModifiers?: PotencyModifierFn<SAMState>,
 	validateAttempt?: StatePredicate<SAMState>,
@@ -228,8 +234,18 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 		if (params.jobPotencyModifiers) {
 			mods.push(...params.jobPotencyModifiers(state));
 		}
-		if (params.combo && state.hasResourceAvailable(params.combo.resource)) {
+		const hitPositional = params.positional
+			&& (state.hasResourceAvailable(ResourceType.TrueNorth)
+				|| (params.positional.location === "flank" && state.hasResourceAvailable(ResourceType.FlankPositional))
+				|| (params.positional.location === "rear" && state.hasResourceAvailable(ResourceType.RearPositional)));
+		if (params.combo && state.checkCombo(params.combo.resource)) {
 			mods.push(makeComboModifier(params.combo.potency - params.basePotency));
+			// typescript isn't smart enough to elide the null check
+			if (params.positional && hitPositional) {
+				mods.push(makePositionalModifier(params.positional.comboPotency - params.combo.potency));
+			}
+		} else if (params.positional && hitPositional) {
+			mods.push(makePositionalModifier(params.positional.potency - params.basePotency));
 		}
 		return mods;
 	};
@@ -249,13 +265,7 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 		validateAttempt: params.validateAttempt,
 		jobPotencyModifiers: jobPotencyModifiers,
 		applicationDelay: params.applicationDelay,
-		isInstantFn: (state) => !([
-			SkillName.OgiNamikiri,
-			SkillName.Iaijutsu,
-			SkillName.Higanbana,
-			SkillName.TenkaGoken,
-			SkillName.MidareSetsugekka,
-		] as SkillName[]).includes(name),
+		isInstantFn: (state) => !(params.baseCastTime && params.baseCastTime > 0),
 		onConfirm: onConfirm,
 		onApplication: onApplication,
 	});
@@ -299,11 +309,12 @@ makeGCD_SAM(SkillName.Enpi, 15, {
 
 makeGCD_SAM(SkillName.Hakaze, 1, {
 	autoUpgrade: { trait: TraitName.HakazeMastery, otherSkill: SkillName.Gyofu },
-	applicationDelay: 0, // TODO ???
+	applicationDelay: 0.85, // TODO
 	basePotency: 200,
 	// TODO check if kenki gain is on damage app or cast confirmation
 	onConfirm: (state) => {
 		state.tryConsumeMeikyo();
+		state.gainKenki(5);
 		state.progressActiveCombo([ResourceType.TwoReady]);
 	},
 });
@@ -314,6 +325,7 @@ makeGCD_SAM(SkillName.Gyofu, 92, {
 	basePotency: 240,
 	onConfirm: (state) => {
 		state.tryConsumeMeikyo();
+		state.gainKenki(5);
 		state.progressActiveCombo([ResourceType.TwoReady]);
 	}
 });
@@ -363,8 +375,12 @@ makeGCD_SAM(SkillName.Gekko, 30, {
 	basePotency: 160,
 	combo: {
 		potency: 370,
-		// TODO positional combo modifier
 		resource: ResourceType.GekkoReady,
+	},
+	positional: {
+		potency: 210,
+		comboPotency: 420,
+		location: "rear",
 	},
 	onConfirm: (state) => {
 		if (state.checkCombo(ResourceType.GekkoReady)) {
@@ -406,8 +422,12 @@ makeGCD_SAM(SkillName.Kasha, 40, {
 	basePotency: 160,
 	combo: {
 		potency: 370,
-		// TODO positional combo modifier
 		resource: ResourceType.KashaReady,
+	},
+	positional: {
+		potency: 210,
+		comboPotency: 420,
+		location: "flank",
 	},
 	onConfirm: (state) => {
 		if (state.checkCombo(ResourceType.KashaReady)) {
@@ -425,7 +445,7 @@ makeGCD_SAM(SkillName.Kasha, 40, {
 
 makeGCD_SAM(SkillName.Fuga, 26, {
 	autoUpgrade: { trait: TraitName.HakazeMastery, otherSkill: SkillName.Fuko },
-	applicationDelay: 0, // TODO
+	applicationDelay: 0.76, // TODO
 	basePotency: 90,
 	onConfirm: (state) => {
 		state.gainKenki(5);
@@ -482,7 +502,6 @@ makeAbility_SAM(SkillName.MeikyoShisui, 50, ResourceType.cd_MeikyoShisui, {
 	maxCharges: 2,
 	onConfirm: (state) => {
 		state.resources.get(ResourceType.MeikyoShisui).gain(3);
-		// TODO check combo behavior when the meikyo stacks drop
 		state.enqueueResourceDrop(ResourceType.MeikyoShisui);
 
 		state.resources.get(ResourceType.Tendo).gain(1);
@@ -816,7 +835,19 @@ makeAbility_SAM(SkillName.Shoha, 80, ResourceType.cd_Shoha, {
 	highlightIf: (state) => state.resources.get(ResourceType.Meditation).available(3),
 });
 
-// TODO tengetsu's foresight + pop
+makeResourceAbility(ShellJob.SAM, SkillName.ThirdEye, 6, ResourceType.cd_ThirdEye, {
+	rscType: ResourceType.ThirdEye,
+	autoUpgrade: { trait: TraitName.ThirdEyeMastery, otherSkill: SkillName.Tengetsu },
+	cooldown: 15,
+	applicationDelay: 0,
+});
+
+makeResourceAbility(ShellJob.SAM, SkillName.Tengetsu, 82, ResourceType.cd_ThirdEye, {
+	rscType: ResourceType.Tengetsu,
+	autoDowngrade: { trait: TraitName.ThirdEyeMastery, otherSkill: SkillName.ThirdEye },
+	cooldown: 15,
+	applicationDelay: 0,
+});
 
 makeGCD_SAM(SkillName.OgiNamikiri, 90, {
 	replaceIf: [{

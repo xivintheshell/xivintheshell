@@ -85,6 +85,7 @@ export enum BuffType {
 	Manafication = "Manafication",
 	Acceleration = "Acceleration",
 	Fuka = "Fuka",
+	Fugetsu = "Fugetsu",
 	Tincture = "Tincture",
 
 	ArcaneCircle = "Arcane Circle",
@@ -124,9 +125,10 @@ enum GeneralResourceType {
 	TrueNorth = "True North", // [0, 1]
 	ArmsLength = "Arm's Length", // [0, 1]
 	Bloodbath = "Bloodbath", // [0, 1]
-    Positional = "Positional", // [0, 1]
 
 	// special
+    RearPositional = "Rear Positional", // [0, 1]
+    FlankPositional = "Flank Positional", // [0, 1]
 	Movement = "Movement", // [0, 1]
 	NotAnimationLocked = "NotAnimationLocked", // [0, 1]
 	NotCasterTaxed = "NotCasterTaxed", // [0, 1]

@@ -39,7 +39,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 		const feintCountdown = this.state.resources.timeTillReady(ResourceType.Feint);
 		return [
 			{
-				rscType: ResourceType.ThunderDoT,
+				rscType: ResourceType.HiganbanaDoT,
 				onSelf: false,
 				enabled: true,
 				stacks: 1,
@@ -83,7 +83,9 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			makeSamuraiTimer(ResourceType.TsubameGaeshiReady, 1),
 			makeSamuraiTimer(ResourceType.Fuka),
 			makeSamuraiTimer(ResourceType.Fugetsu),
+			makeSamuraiTimer(ResourceType.ThirdEye),
 			makeSamuraiTimer(ResourceType.Tengetsu),
+			makeSamuraiTimer(ResourceType.Sprint),
 		];
 	}
 

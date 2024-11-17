@@ -27,6 +27,7 @@ import {Modifiers, Potency, PotencyModifier, PotencyModifierType} from "./Potenc
 import {Buff} from "./Buffs";
 
 import type {BLMState} from "./Jobs/BLM";
+import type {SAMState} from "./Jobs/SAM";
 import {SkillButtonViewInfo} from "../Components/Skills";
 
 //https://www.npmjs.com/package/seedrandom
@@ -309,6 +310,7 @@ export abstract class GameState {
 		// TODO refactor logic to determine self-buffs
 		let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
 		const fukaCovered = this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fuka);
+		const fugetsuCovered = this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fugetsu);
 		const inspireSkills: SkillName[] = [
 			SkillName.FireInRed,
 			SkillName.Fire2InRed,
@@ -334,6 +336,12 @@ export abstract class GameState {
 		}
 		if (inspired) {
 			node.addBuff(BuffType.Hyperphantasia);
+		}
+		if (fukaCovered && skill.cdName === ResourceType.cd_GCD) {
+			node.addBuff(BuffType.Fuka);
+		}
+		if (fugetsuCovered) {
+			node.addBuff(BuffType.Fugetsu);
 		}
 
 		// create potency node object (snapshotted buffs will populate on confirm)
@@ -748,8 +756,13 @@ export abstract class GameState {
 		return this.hasResourceAvailable(ResourceType.InCombat);
 	}
 
+	// These methods enforce type specialization so we can avoid some casts on the frontend
 	isBLMState(): this is BLMState {
 		return this.job === ShellJob.BLM;
+	}
+
+	isSAMState(): this is SAMState {
+		return this.job === ShellJob.SAM;
 	}
 }
 

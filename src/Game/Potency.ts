@@ -106,6 +106,14 @@ export function makeComboModifier(addend: number): PotencyAdder {
 	};
 }
 
+export function makePositionalModifier(addend: number): PotencyAdder {
+	return {
+		kind: "adder",
+		source: PotencyModifierType.POSITIONAL,
+		additiveAmount: addend,
+	};
+}
+
 export type InitialPotencyProps = {
 	config: GameConfig;
 	sourceTime: number,

@@ -322,7 +322,7 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 	const info: Weaponskill<T> = {
 		kind: "weaponskill",
 		name: name,
-		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
+		assetPath: params.assetPath ?? (jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
@@ -425,6 +425,8 @@ export function makeResourceAbility<T extends PlayerState>(
 	cdName: ResourceType,
 	params: {
 		rscType: ResourceType,
+		autoUpgrade?: SkillAutoReplace,
+		autoDowngrade?: SkillAutoReplace,
 		replaceIf?: ConditionalSkillReplace<T>[],
 		startOnHotbar?: boolean,
 		highlightIf?: StatePredicate<T>,
@@ -458,6 +460,8 @@ export function makeResourceAbility<T extends PlayerState>(
 	);
 	return makeAbility(jobs, name, unlockLevel, cdName, {
 		potency: params.potency,
+		autoUpgrade: params.autoUpgrade,
+		autoDowngrade: params.autoDowngrade,
 		jobPotencyModifiers: params.jobPotencyModifiers,
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,

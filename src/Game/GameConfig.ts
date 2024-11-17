@@ -152,7 +152,9 @@ export class GameConfig {
 			|| skillName === SkillName.Smudge
 			|| skillName === SkillName.CorpsACorps
 			|| skillName === SkillName.Displacement
-			) {
+			|| skillName === SkillName.Gyoten
+			|| skillName === SkillName.Yaten
+		) {
 			return 0.8; // from: https://nga.178.com/read.php?tid=21233094&rand=761
 		} else if (skillName === SkillName.TemperaCoatPop || skillName === SkillName.TemperaGrassaPop) {
 			return 0.01; // not real abilities, animation lock is fake

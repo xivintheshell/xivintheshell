@@ -308,18 +308,15 @@ function drawWarningMarks(
 			message += localize({en: "palette gauge overcap!", zh: "调色量值溢出！"});
 		} else if (mark.warningType === WarningType.ImbalancedMana) {
 			message += localize({en: mark.warningType + "!", zh: "魔元失衡！"});
+		} else if (mark.warningType === WarningType.KenkiOvercap) {
+			message += localize({en: "kenki overcap!"});
+		} else if (mark.warningType === WarningType.MeditationOvercap) {
+			message += localize({en: "meditation stack overcap!"});
+		} else if (mark.warningType === WarningType.SenOvercap) {
+			message += localize({en: "sen overcap!"});
 		} else {
 			message += localize({en: mark.warningType + "!"});
-		}
-		if (mark.warningType === WarningType.KenkiOvercap) {
-			message += localize({en: "kenki overcap!"});
-		}
-		if (mark.warningType === WarningType.MeditationOvercap) {
-			message += localize({en: "meditation stack overcap!"});
-		}
-		if (mark.warningType === WarningType.SenOvercap) {
-			message += localize({en: "sen overcap!"});
-		}
+		} 
 
 		testInteraction(
 			{x: x-sideLength/2, y: bottomY-sideLength, w: sideLength, h: sideLength}, [message]
@@ -425,6 +422,9 @@ function drawSkills(
 		[BuffType.Embolden, {color: g_colors.rdm.emboldenBuff, showImage: true}],
 		[BuffType.Manafication, {color: g_colors.rdm.manaficBuff, showImage: true}],
 		[BuffType.Acceleration, {color: g_colors.rdm.accelBuff, showImage: true}],
+		// TODO swap color
+		[BuffType.Fuka, {color: g_colors.timeline.llCover, showImage: true}],
+		[BuffType.Fugetsu, {color: g_colors.sam.fugetsu, showImage: true}],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();
