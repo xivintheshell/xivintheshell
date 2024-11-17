@@ -2,6 +2,12 @@
 	{
 		"date": "11/17/24",
 		"changes": [
+			"[DNC] Added initial DNC support"
+		]
+	},
+	{
+		"date": "11/17/24",
+		"changes": [
 			"[RDM] Fix Manafication CD (thanks 云青渔语)",
 			"[all casters] Fix Surecast duration: previously 10s, now 6.5s (ty erii)"
 		]
