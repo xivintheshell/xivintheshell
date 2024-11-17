@@ -79,7 +79,7 @@ export class RDMState extends GameState {
 		super(config);
 		const swiftcastCooldown = Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level) ? 40 : 60;
 		const c6Cooldown = Traits.hasUnlocked(TraitName.RedMagicMastery, this.config.level) ? 35 : 45;
-		const mfCooldown = Traits.hasUnlocked(TraitName.EnhancedManafication, this.config.level) ? 120 : 110;
+		const mfCooldown = Traits.hasUnlocked(TraitName.EnhancedManafication, this.config.level) ? 110 : 120;
 		[
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
 			new CoolDown(ResourceType.cd_ContreSixte, c6Cooldown, 1, 1),

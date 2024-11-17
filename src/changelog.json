@@ -1,5 +1,11 @@
 [
 	{
+		"date": "11/17/24",
+		"changes": [
+			"[RDM] Fix Manafication CD (thanks 云青渔语)"
+		]
+	},
+	{
 		"date": "11/16/24",
 		"changes": [
 			"Make DET use main stat formula and default to 440",
