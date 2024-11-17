@@ -56,7 +56,7 @@ makeRDMResource(ResourceType.RDMAoECounter, 2, {timeout: 30});
 makeRDMResource(ResourceType.Addle, 1, {timeout: 15});
 makeRDMResource(ResourceType.Swiftcast, 1, {timeout: 10});
 makeRDMResource(ResourceType.LucidDreaming, 1, {timeout: 21});
-makeRDMResource(ResourceType.Surecast, 1, {timeout: 10});
+makeRDMResource(ResourceType.Surecast, 1, {timeout: 6.5});
 
 // === JOB GAUGE AND STATE ===
 const ACCELERATION_SKILLS: SkillName[] = [
