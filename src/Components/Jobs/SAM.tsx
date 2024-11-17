@@ -84,6 +84,20 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			makeSamuraiTimer(ResourceType.TengentsusForesight),
 			makeSamuraiTimer(ResourceType.Meditate),
 			makeSamuraiTimer(ResourceType.Sprint),
+			{
+				rscType: ResourceType.RearPositional,
+				onSelf: true,
+				enabled: resources.get(ResourceType.RearPositional).enabled,
+				stacks: 1,
+				className: "",
+			},
+			{
+				rscType: ResourceType.FlankPositional,
+				onSelf: true,
+				enabled: resources.get(ResourceType.FlankPositional).enabled,
+				stacks: 1,
+				className: "",
+			},
 		];
 	}
 

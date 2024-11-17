@@ -213,6 +213,8 @@ roleBuffResources.forEach(
 );
 
 buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
+buffIcons.set(ResourceType.RearPositional, require("./Asset/Buffs/General/Rear Positional.png"));
+buffIcons.set(ResourceType.FlankPositional, require("./Asset/Buffs/General/Flank Positional.png"));
 
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props: BuffProps) {

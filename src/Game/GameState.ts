@@ -272,8 +272,13 @@ export abstract class GameState {
 
 	requestToggleBuff(buffName: ResourceType) {
 		let rsc = this.resources.get(buffName);
-		// only ley lines can be enabled / disabled. Everything else will just be canceled
-		if (buffName === ResourceType.LeyLines || buffName === ResourceType.Inspiration) {
+		// Ley lines, paint lines, and positionals can be toggled.
+		if (([
+			ResourceType.LeyLines,
+			ResourceType.Inspiration,
+			ResourceType.FlankPositional,
+			ResourceType.RearPositional,
+		] as ResourceType[]).includes(buffName)) {
 			if (rsc.available(1)) { // buff exists and enabled
 				rsc.enabled = false;
 				return true;
@@ -292,7 +297,8 @@ export abstract class GameState {
 			// but these buffs cannot be
 			return true;
 		} else {
-			// special case for meditate: cancel meditate ticks (assume only one active event)
+			// All other buffs are outright canceled.
+			// Special case for meditate: cancel future meditate ticks (assume only one active event).
 			if (buffName === ResourceType.Meditate) {
 				const evt = this.findNextQueuedEventByTag(EventTag.MeditateTick);
 				if (evt) {
