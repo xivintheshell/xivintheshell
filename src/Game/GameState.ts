@@ -179,9 +179,12 @@ export abstract class GameState {
 		};
 		let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
 		while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;
-		let firstLucidTickEvt = new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick);
-		firstLucidTickEvt.addTag(EventTag.LucidTick);
-		this.addEvent(firstLucidTickEvt);
+		// TODO refactor out
+		if (this.job !== ShellJob.SAM) {
+			let firstLucidTickEvt = new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick);
+			firstLucidTickEvt.addTag(EventTag.LucidTick);
+			this.addEvent(firstLucidTickEvt);
+		}
 	}
 
 	// advance game state by this much time
@@ -250,9 +253,15 @@ export abstract class GameState {
 
 	// BLM uses this for LL GCD scaling, but PCT does not
 	gcdRecastTimeScale(): number {
+		// TODO move this to child class methods
 		if (this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines)) {
 			// should be approximately 0.85
 			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.LeyLines));
+			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
+			return num / denom;
+		} else if (this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fuka)) {
+			// should be approximately 0.87
+			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.Fuka));
 			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
 			return num / denom;
 		} else {
@@ -299,6 +308,7 @@ export abstract class GameState {
 		let cd = this.cooldowns.get(skill.cdName);
 		// TODO refactor logic to determine self-buffs
 		let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
+		const fukaCovered = this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fuka);
 		const inspireSkills: SkillName[] = [
 			SkillName.FireInRed,
 			SkillName.Fire2InRed,
@@ -330,7 +340,7 @@ export abstract class GameState {
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
 		// Potency object for DoT effects was already created separately
-		if (skill.aspect === Aspect.Lightning) {
+		if (skill.aspect === Aspect.Lightning || skill.name === SkillName.Higanbana) {
 			potency = node.getPotencies()[0];
 		} else if (potencyNumber > 0) {
 			potency = new Potency({
@@ -371,7 +381,7 @@ export abstract class GameState {
 			// potency
 			if (potency) {
 				potency.snapshotTime = this.getDisplayTime();
-				const mods = [];
+				const mods: PotencyModifier[] = [];
 				if (this.hasResourceAvailable(ResourceType.Tincture)) {
 					mods.push(Modifiers.Tincture);
 				}
@@ -479,7 +489,7 @@ export abstract class GameState {
 				snapshotTime: this.getDisplayTime(),
 				description: "",
 			});
-			const mods = [];
+			const mods: PotencyModifier[] = [];
 			if (this.hasResourceAvailable(ResourceType.Tincture)) {
 				mods.push(Modifiers.Tincture);
 			}

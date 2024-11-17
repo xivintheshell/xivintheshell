@@ -1,12 +1,13 @@
-import {ShellJob} from "../../Controller/Common";
+import {ShellJob, ALL_JOBS} from "../../Controller/Common";
 import {SkillName, ResourceType, WarningType} from "../Common";
-import {makeResourceAbility} from "../Skills";
+import {makeResourceAbility, makeAbility} from "../Skills";
 import {DoTBuff, EventTag} from "../Resources"
 import {Traits, TraitName} from "../Traits";
 import type {GameState} from "../GameState";
 import {controller} from "../../Controller/Controller";
 
 const CASTER_JOBS = [ShellJob.BLM, ShellJob.PCT, ShellJob.RDM];
+const MELEE_JOBS = [ShellJob.SAM];
 
 makeResourceAbility(CASTER_JOBS, SkillName.Addle, 8, ResourceType.cd_Addle, {
 	rscType: ResourceType.Addle,
@@ -53,7 +54,49 @@ const cancelDualcast = (state: GameState) => {
 	}
 };
 
-makeResourceAbility(CASTER_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture, {
+makeResourceAbility(MELEE_JOBS, SkillName.Feint, 22, ResourceType.cd_Feint, {
+	rscType: ResourceType.Feint,
+	applicationDelay: 0.537,
+	cooldown: 90,
+	duration: (state) => (Traits.hasUnlocked(TraitName.EnhancedFeint, state.config.level) && 15) || 10,
+	assetPath: "Role/Feint.png",
+});
+
+makeResourceAbility(MELEE_JOBS, SkillName.TrueNorth, 50, ResourceType.cd_TrueNorth, {
+	rscType: ResourceType.TrueNorth,
+	applicationDelay: 0,
+	cooldown: 45,
+	maxCharges: 2,
+	assetPath: "Role/True North.png",
+});
+
+makeResourceAbility(MELEE_JOBS, SkillName.ArmsLength, 32, ResourceType.cd_ArmsLength, {
+	rscType: ResourceType.ArmsLength,
+	applicationDelay: 0.625,
+	cooldown: 120,
+	assetPath: "Role/Arm's Length.png",
+});
+
+makeResourceAbility(MELEE_JOBS, SkillName.Bloodbath, 8, ResourceType.cd_Bloodbath, {
+	rscType: ResourceType.Bloodbath,
+	applicationDelay: 0.625,
+	cooldown: 90,
+	assetPath: "Role/Bloodbath.png",
+});
+
+makeAbility(MELEE_JOBS, SkillName.SecondWind, 12, ResourceType.cd_SecondWind, {
+	applicationDelay: 0.625,
+	cooldown: 120,
+	assetPath: "Role/Second Wind.png",
+});
+
+makeAbility(MELEE_JOBS, SkillName.LegSweep, 10, ResourceType.cd_LegSweep, {
+	applicationDelay: 0.625,
+	cooldown: 40,
+	assetPath: "Role/Leg Sweep.png",
+});
+
+makeResourceAbility(ALL_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture, {
 	rscType: ResourceType.Tincture,
 	applicationDelay: 0.64, // delayed // somewhere in the midrange of what's seen in logs
 	cooldown: 270,
@@ -61,7 +104,7 @@ makeResourceAbility(CASTER_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture
 	onConfirm: cancelDualcast,
 });
 
-makeResourceAbility(CASTER_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
+makeResourceAbility(ALL_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
 	rscType: ResourceType.Sprint,
 	applicationDelay: 0.133, // delayed
 	cooldown: 60,

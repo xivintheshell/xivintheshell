@@ -223,6 +223,11 @@ export function getBasePotency<T extends PlayerState>(state: Readonly<T>, potenc
 	return (Array.isArray(potencyArg) ? convertTraitPotencyArray(potencyArg) : fnify(potencyArg, 0))(state);
 }
 
+function normalizeAssetPath(job: ShellJob, name: SkillName) {
+	// Remove colons from the path because it's hard to put those into a file name
+	return `${job}/${name.replace(':', '')}.png`;
+}
+
 /**
  * Declare a GCD skill.
  *
@@ -268,7 +273,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
-		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
+		assetPath: params.assetPath ?? (jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
@@ -341,7 +346,6 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 	return info;
 };
 
-
 /**
  * Declare an oGCD ability.
  *
@@ -382,7 +386,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	const info: Ability<T> = {
 		kind: "ability",
 		name: name,
-		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
+		assetPath: params.assetPath ?? (jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,

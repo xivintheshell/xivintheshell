@@ -50,10 +50,21 @@ export type RDMResourceColors = {
 	accelBuff: string,
 }
 
+export type SAMResourceColors = {
+	kenkiGauge: string,
+	setsu: string,
+	getsu: string,
+	kaSen: string,
+	meditation: string,
+	fugetsu: string,
+	iai: string,
+}
+
 export type JobAccentColors = {
 	[ShellJob.BLM]: string,
 	[ShellJob.PCT]: string,
 	[ShellJob.RDM]: string,
+	[ShellJob.SAM]: string,
 }
 
 export type ThemeColors = {
@@ -82,6 +93,7 @@ export type ThemeColors = {
 	blm: BLMResourceColors,
 	pct: PCTResourceColors,
 	rdm: RDMResourceColors,
+	sam: SAMResourceColors,
 	timeline: {
 		ruler: string,
 		tracks: string,
@@ -110,6 +122,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.BLM]: "#9370db", // mediumpurple
 				[ShellJob.PCT]: "#e176c2",
 				[ShellJob.RDM]: "#ff0000", // TODO less red
+				[ShellJob.SAM]: "#f59542", // TODO less red
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -158,6 +171,15 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				manaficBuff: "#c169c2", // lavender
 				accelBuff: "#f0d1e8", // very light pink
 			},
+			sam: {
+				kenkiGauge: "#d55124",
+				setsu: "#c7ffff",
+				getsu: "#7987fc",
+				kaSen: "#f8a2a6",
+				meditation: "#ff853d",
+				fugetsu: "#0f52ba",
+				iai: "#89cfef",
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -183,6 +205,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.BLM]: "#9370db", // mediumpurple
 				[ShellJob.PCT]: "#f485d6",
 				[ShellJob.RDM]: "#ff0000", // TODO less red
+				[ShellJob.SAM]: "#f59542",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -230,6 +253,15 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				emboldenBuff: "#c91310", // dark red
 				manaficBuff: "#530954", // dark purple
 				accelBuff: "#c973b4", // lighter purple
+			},
+			sam: {
+				kenkiGauge: "#d55124",
+				setsu: "#c7ffff",
+				getsu: "#7987fc",
+				kaSen: "#f8a2a6",
+				meditation: "#ff853d",
+				fugetsu: "#0f52ba",
+				iai: "#89cfef",
 			},
 			timeline: {
 				ruler: "#e9e9e9",

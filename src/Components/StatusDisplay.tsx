@@ -189,13 +189,20 @@ function ResourceText(props: {
 const buffIcons = new Map();
 
 export function registerBuffIcon(buff: string, relativePath: string) {
-	buffIcons.set(buff, require(`./Asset/Buffs/${relativePath}`));
+	// remove colons since it's hard to create a file name that contains them
+	buffIcons.set(buff.replace(":", ""), require(`./Asset/Buffs/${relativePath}`));
 }
 
 const roleBuffResources = [
 	ResourceType.Addle,
 	ResourceType.Swiftcast,
 	ResourceType.LucidDreaming,
+
+	ResourceType.Feint,
+	ResourceType.TrueNorth,
+	ResourceType.ArmsLength,
+	ResourceType.Bloodbath,
+
 	ResourceType.Surecast,
 	ResourceType.Tincture,
 ];

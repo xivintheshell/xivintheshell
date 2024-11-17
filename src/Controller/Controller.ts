@@ -13,12 +13,14 @@ import {getAutoReplacedSkillName, getConditionalReplacement, getNormalizedSkillN
 import {BLMState} from "../Game/Jobs/BLM";
 import {PCTState} from "../Game/Jobs/PCT";
 import {RDMState} from "../Game/Jobs/RDM";
+import {SAMState} from "../Game/Jobs/SAM";
 import {Buff} from "../Game/Buffs";
 import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 import {BLMStatusPropsGenerator} from "../Components/Jobs/BLM";
 import {PCTStatusPropsGenerator} from "../Components/Jobs/PCT";
 import {RDMStatusPropsGenerator} from "../Components/Jobs/RDM";
+import {SAMStatusPropsGenerator} from "../Components/Jobs/SAM";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
@@ -51,6 +53,8 @@ const newGameState = (config: GameConfig) => {
 		return new PCTState(config);
 	} else if (config.job === ShellJob.RDM) {
 		return new RDMState(config);
+	} else if (config.job === ShellJob.SAM) {
+		return new SAMState(config);
 	}
 	return new BLMState(config);
 };
@@ -658,6 +662,8 @@ class Controller {
 				? new PCTStatusPropsGenerator(game as PCTState)
 				: game.job === ShellJob.RDM
 				? new RDMStatusPropsGenerator(game as RDMState)
+				: game.job === ShellJob.SAM
+				? new SAMStatusPropsGenerator(game as SAMState)
 				: new BLMStatusPropsGenerator(game as BLMState);
 			updateStatusDisplay({
 				time: game.getDisplayTime(),

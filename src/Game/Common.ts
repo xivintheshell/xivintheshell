@@ -1,6 +1,7 @@
 import {BLMSkillName, BLMResourceType, BLMCooldownType} from "./Constants/BLM";
 import {PCTSkillName, PCTResourceType, PCTCooldownType} from "./Constants/PCT";
 import {RDMSkillName, RDMResourceType, RDMCooldownType} from "./Constants/RDM";
+import {SAMSkillName, SAMResourceType, SAMCooldownType} from "./Constants/SAM";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -41,6 +42,13 @@ enum GeneralSkillName {
 	Tincture = "Tincture",
 	Sprint = "Sprint",
 
+	Feint = "Feint",
+	SecondWind = "Second Wind",
+	Bloodbath = "Bloodbath",
+	TrueNorth = "True North",
+	ArmsLength = "Arm's Length",
+	LegSweep = "Leg Sweep",
+
 	Never = "Never",
 }
 
@@ -49,6 +57,7 @@ export const SkillName = {
 	...BLMSkillName,
 	...PCTSkillName,
 	...RDMSkillName,
+	...SAMSkillName,
 	...GeneralSkillName,
 }
 
@@ -56,7 +65,8 @@ export const SkillName = {
 export type SkillName = GeneralSkillName
 	| BLMSkillName
 	| PCTSkillName
-	| RDMSkillName;
+	| RDMSkillName
+	| SAMSkillName;
 
 export const enum SkillReadyStatus {
 	Ready = "ready",
@@ -74,6 +84,7 @@ export enum BuffType {
 	Hyperphantasia = "Hyperphantasia",
 	Manafication = "Manafication",
 	Acceleration = "Acceleration",
+	Fuka = "Fuka",
 	Tincture = "Tincture",
 
 	ArcaneCircle = "Arcane Circle",
@@ -108,6 +119,12 @@ enum GeneralResourceType {
 	Surecast = "Surecast", // [0, 1]
 	Tincture = "Tincture", // [0, 1]
 	Sprint = "Sprint", // [0, 1]
+
+	Feint = "Feint", // [0, 1]
+	TrueNorth = "True North", // [0, 1]
+	ArmsLength = "Arm's Length", // [0, 1]
+	Bloodbath = "Bloodbath", // [0, 1]
+
 	// special
 	Movement = "Movement", // [0, 1]
 	NotAnimationLocked = "NotAnimationLocked", // [0, 1]
@@ -125,6 +142,12 @@ enum GeneralCooldownType {
 	cd_Surecast = "cd_Surecast", // [0, 1x]
 	cd_Tincture = "cd_Tincture", // [0, 1x]
 	cd_Sprint = "cd_Sprint", // [0, 1x]
+    cd_Feint = "cd_Feint", // [0, 90]
+    cd_TrueNorth = "cd_TrueNorth", // [0, 45]
+    cd_ArmsLength = "cd_ArmsLength", // [0, 90]
+    cd_Bloodbath = "cd_Bloodbath", // [0, 120]
+    cd_SecondWind = "cd_SecondWind", // [0, 120]
+    cd_LegSweep = "cd_LegSweep", // [0, 40]
 }
 
 const CooldownType = {
@@ -132,13 +155,15 @@ const CooldownType = {
 	...BLMCooldownType,
 	...PCTCooldownType,
 	...RDMCooldownType,
+	...SAMCooldownType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 type CooldownType = GeneralCooldownType
 	| BLMCooldownType
 	| PCTCooldownType
-	| RDMCooldownType;
+	| RDMCooldownType
+	| SAMCooldownType;
 
 export const ResourceType = {
 	...CooldownType,
@@ -146,6 +171,7 @@ export const ResourceType = {
 	...BLMResourceType,
 	...PCTResourceType,
 	...RDMResourceType,
+	...SAMResourceType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -153,7 +179,8 @@ export type ResourceType = CooldownType
 	| GeneralResourceType
 	| BLMResourceType
 	| PCTResourceType
-	| RDMResourceType;
+	| RDMResourceType
+	| SAMResourceType;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",
@@ -171,4 +198,8 @@ export const enum WarningType {
 	PrefulgenceDrop = "Prefulgence expired",
 	ManaficDrop = "Manafication stacks expired",
 	MagickedSwordplayDrop = "Magicked Swordplay stacks expired",
+
+	KenkiOvercap = "kenki overcap",
+	MeditationOvercap = "meditation stack overcap",
+	SenOvercap = "sen overcap"
 }

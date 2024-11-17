@@ -51,6 +51,9 @@ export const enum TraitName {
 	EnhancedAccelerationII,
 	EnhancedManaficationIII,
 
+	HakazeMastery,
+	EnhancedFeint,
+
 	Never,
 }
 
@@ -98,6 +101,9 @@ export class Traits {
 			[TraitName.EnchantedBladeMastery, 94],
 			[TraitName.EnhancedAccelerationII, 96],
 			[TraitName.EnhancedManaficationIII, 100],
+
+			[TraitName.HakazeMastery, 92],
+			[TraitName.EnhancedFeint, 98],
 		].map(([name, level]) => [name, new Trait(name, level)]));
 	}
 

@@ -311,6 +311,15 @@ function drawWarningMarks(
 		} else {
 			message += localize({en: mark.warningType + "!"});
 		}
+		if (mark.warningType === WarningType.KenkiOvercap) {
+			message += localize({en: "kenki overcap!"});
+		}
+		if (mark.warningType === WarningType.MeditationOvercap) {
+			message += localize({en: "meditation stack overcap!"});
+		}
+		if (mark.warningType === WarningType.SenOvercap) {
+			message += localize({en: "sen overcap!"});
+		}
 
 		testInteraction(
 			{x: x-sideLength/2, y: bottomY-sideLength, w: sideLength, h: sideLength}, [message]

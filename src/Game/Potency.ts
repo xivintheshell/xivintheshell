@@ -13,6 +13,10 @@ export const enum PotencyModifierType {
 	COMBO,
 	AUTO_CDH,
 	PARTY,
+	FUGETSU,
+	AUTO_CRIT,
+	YATEN,
+	POSITIONAL,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -49,6 +53,12 @@ export const Modifiers = {
 		source: PotencyModifierType.POT,
 		damageFactor: 1,
 	} as PotencyMultiplier,
+	AutoCrit: {
+		kind: "critDirect",
+		source: PotencyModifierType.AUTO_CRIT,
+		critFactor: 1,
+		dhFactor: 0,
+	} as CritDirectMultiplier,
 	AutoCDH: {
 		kind: "critDirect",
 		source: PotencyModifierType.AUTO_CDH,
@@ -76,6 +86,16 @@ export const Modifiers = {
 		source: PotencyModifierType.MANAFIC,
 		damageFactor: 1.05,
 	} as PotencyMultiplier,
+	Fugetsu: {
+		kind: "multiplier",
+		source: PotencyModifierType.FUGETSU,
+		damageFactor: 1.13,
+	} as PotencyMultiplier,
+	Yatenpi: {
+		kind: "adder",
+		source: PotencyModifierType.YATEN,
+		additiveAmount: 170,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {
@@ -127,10 +147,12 @@ export class Potency {
 		let totalDhFactor = 0;
 
 		let isAutoCDH = false;
+		let isAutoCrit = false;
 
 		this.modifiers.forEach(m=>{
 			if (m.source===PotencyModifierType.POT) totalDamageFactor *= props.tincturePotencyMultiplier;
 			else if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
+			else if (m.source === PotencyModifierType.AUTO_CRIT) isAutoCrit = true;
 			else if (m.kind === "multiplier") totalDamageFactor *= m.damageFactor;
 			else if (m.kind === "adder") totalAdditiveAmount += m.additiveAmount;
 		});
@@ -149,6 +171,7 @@ export class Potency {
 
 		let amt = base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor);
 		if (isAutoCDH) amt *= this.#calculateAutoCDHModifier(totalCritFactor, totalDhFactor);
+		if (isAutoCrit) amt *= this.#calculateAutoCritModifier(totalCritFactor);
 		return amt;
 	}
 

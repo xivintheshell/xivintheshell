@@ -103,6 +103,9 @@ export class XIVMath {
 		if (buff === ResourceType.Inspiration) {
 			return 25;
 		}
+		if (buff === ResourceType.Fuka) {
+			return 13;
+		}
 		console.error("No speed modifier for buff: ", buff);
 		return 0;
 	}
