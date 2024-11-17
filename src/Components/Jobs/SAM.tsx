@@ -26,10 +26,6 @@ import {localize} from "../../Components/Localization";
 	ResourceType.ThirdEye,
 	ResourceType.EnhancedEnpi,
 	ResourceType.Meditate,
-	ResourceType.Meditate + "2",
-	ResourceType.Meditate + "3",
-	ResourceType.Meditate + "4",
-	ResourceType.Meditate + "5",
 	ResourceType.HiganbanaDoT,
 ].forEach((buff) => registerBuffIcon(buff, `SAM/${buff}.png`));
 
@@ -59,13 +55,13 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 
 	override getSelfBuffViewProps(): BuffProps[] {
 		const resources = this.state.resources;
-		const makeSamuraiTimer = (rscType: ResourceType, stacks?: number) => {
+		const makeSamuraiTimer = (rscType: ResourceType) => {
 			const cd = resources.timeTillReady(rscType);
 			return {
 				rscType: rscType,
 				onSelf: true,
 				enabled: true,
-				stacks: stacks ?? resources.get(rscType).availableAmount(),
+				stacks: resources.get(rscType).availableAmount(),
 				timeRemaining: cd.toFixed(3),
 				className: cd > 0 ? "" : "hidden"
 			};
@@ -73,19 +69,20 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 
 		return [
 			makeSamuraiTimer(ResourceType.TrueNorth),
-			makeSamuraiTimer(ResourceType.ArmsLength, 1),
-			makeSamuraiTimer(ResourceType.Bloodbath, 1),
-			makeSamuraiTimer(ResourceType.Tendo, 1),
-			makeSamuraiTimer(ResourceType.EnhancedEnpi, 1),
-			makeSamuraiTimer(ResourceType.OgiReady, 1),
-			makeSamuraiTimer(ResourceType.ZanshinReady, 1),
+			makeSamuraiTimer(ResourceType.ArmsLength),
+			makeSamuraiTimer(ResourceType.Bloodbath),
+			makeSamuraiTimer(ResourceType.Tendo),
+			makeSamuraiTimer(ResourceType.EnhancedEnpi),
+			makeSamuraiTimer(ResourceType.OgiReady),
+			makeSamuraiTimer(ResourceType.ZanshinReady),
 			makeSamuraiTimer(ResourceType.MeikyoShisui),
-			makeSamuraiTimer(ResourceType.TsubameGaeshiReady, 1),
+			makeSamuraiTimer(ResourceType.TsubameGaeshiReady),
 			makeSamuraiTimer(ResourceType.Fuka),
 			makeSamuraiTimer(ResourceType.Fugetsu),
 			makeSamuraiTimer(ResourceType.ThirdEye),
 			makeSamuraiTimer(ResourceType.Tengentsu),
 			makeSamuraiTimer(ResourceType.TengentsusForesight),
+			makeSamuraiTimer(ResourceType.Meditate),
 			makeSamuraiTimer(ResourceType.Sprint),
 		];
 	}

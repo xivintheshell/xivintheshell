@@ -292,6 +292,13 @@ export abstract class GameState {
 			// but these buffs cannot be
 			return true;
 		} else {
+			// special case for meditate: cancel meditate ticks (assume only one active event)
+			if (buffName === ResourceType.Meditate) {
+				const evt = this.findNextQueuedEventByTag(EventTag.MeditateTick);
+				if (evt) {
+					evt.canceled = true;
+				}
+			}
 			rsc.consume(rsc.availableAmount());
 			rsc.removeTimer();
 			return true;
@@ -660,7 +667,7 @@ export abstract class GameState {
 		if (skillName === SkillName.Meditate && timeTillNextStackReady === 0) {
 			const gcd = this.cooldowns.get(ResourceType.cd_GCD);
 			const gcdRecastTime = gcd.currentStackCd();
-			if (gcdRecastTime < cdRecastTime) {
+			if (gcd.timeTillNextStackAvailable() > timeTillNextStackReady) {
 				cd = gcd;
 				cdRecastTime = gcdRecastTime;
 				timeTillNextStackReady = gcd.timeTillNextStackAvailable();

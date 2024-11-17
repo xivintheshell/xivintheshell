@@ -7,6 +7,7 @@ import {Aspect, BuffType, ResourceType, SkillName, WarningType} from "../Common"
 import {makeComboModifier, makePositionalModifier, Modifiers, Potency, PotencyModifier} from "../Potency";
 import {
 	Ability,
+	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
 	makeAbility,
@@ -20,7 +21,7 @@ import {
 } from "../Skills";
 import {TraitName, Traits} from "../Traits";
 import {GameState} from "../GameState";
-import {makeResource, CoolDown, DoTBuff, Event, Resource} from "../Resources"
+import {makeResource, CoolDown, DoTBuff, Event, EventTag, Resource} from "../Resources"
 import {GameConfig} from "../GameConfig";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
@@ -39,6 +40,7 @@ makeSAMResource(ResourceType.ThirdEye, 1, {timeout: 4});
 makeSAMResource(ResourceType.Tengentsu, 1, {timeout: 4});
 makeSAMResource(ResourceType.TengentsusForesight, 1, {timeout: 9});
 makeSAMResource(ResourceType.EnhancedEnpi, 1, {timeout: 15});
+makeSAMResource(ResourceType.Meditate, 1, {timeout: 15.2}); // based on a random DSR P7 log I saw
 
 makeSAMResource(ResourceType.Kenki, 100);
 makeSAMResource(ResourceType.Setsu, 1);
@@ -194,10 +196,34 @@ export class SAMState extends GameState {
 	}
 
 	startMeditateTimer() {
-		// TODO
+		// If meditate applied at time t, enqueue events 5 times at
+		// t+3, t+6, t+9, t+12, and t+15.
+		// The event is canceled when another skill is used, or the buff is clicked off.
+		const meditateEvent = (tickNumber: number) => {
+			const event = new Event("meditate tick", 3, () => {
+				if (tickNumber < 5) {
+					if (this.isInCombat()) {
+						// Don't raise any warnings for gauge overcap here.
+						this.resources.get(ResourceType.Kenki).gain(10);
+						this.resources.get(ResourceType.Meditation).gain(1);
+					}
+					this.addEvent(meditateEvent(tickNumber + 1));
+				}
+			});
+			event.addTag(EventTag.MeditateTick)
+			return event;
+		};
+		this.addEvent(meditateEvent(0));
+	}
+
+	cancelMeditate() {
+		// assume there's only one event
+		const evt = this.findNextQueuedEventByTag(EventTag.MeditateTick);
+		if (evt) {
+			evt.canceled = true;
+		}
 	}
 }
-
 
 // === SKILLS ===
 // Abilities will display on the hotbar in the order they are declared here. If an ability has an
@@ -231,7 +257,10 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 	onConfirm?: EffectFn<SAMState>,
 	onApplication?: EffectFn<SAMState>,
 }): Weaponskill<SAMState> => {
-	const onConfirm: EffectFn<SAMState> = params.onConfirm ?? NO_EFFECT;
+	const onConfirm: EffectFn<SAMState> = combineEffects(
+		(state) => state.cancelMeditate(), // cancel meditate
+		params.onConfirm ?? NO_EFFECT
+	);
 	const onApplication: EffectFn<SAMState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyModifiers = (state: Readonly<SAMState>) => {
 		const mods: PotencyModifier[] = state.hasResourceAvailable(ResourceType.Fugetsu) ? [Modifiers.Fugetsu] : [];
@@ -291,6 +320,9 @@ const makeAbility_SAM = (name: SkillName, unlockLevel: number, cdName: ResourceT
 }): Ability<SAMState> => {
 	if (params.potency && !params.jobPotencyModifiers) {
 		params.jobPotencyModifiers = (state) => state.hasResourceAvailable(ResourceType.Fugetsu) ? [Modifiers.Fugetsu] : [];
+	}
+	if (name !== SkillName.ThirdEyePop && name !== SkillName.TengentsuPop) {
+		params.onConfirm = combineEffects((state) => state.cancelMeditate(), params.onConfirm ?? NO_EFFECT);
 	}
 	return makeAbility(ShellJob.SAM, name, unlockLevel, cdName, params);
 };
@@ -882,6 +914,7 @@ makeResourceAbility(ShellJob.SAM, SkillName.ThirdEye, 6, ResourceType.cd_ThirdEy
 	}],
 	cooldown: 15,
 	applicationDelay: 0,
+	onConfirm: (state: SAMState) => state.cancelMeditate(),
 });
 
 makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_ThirdEye, {
@@ -893,6 +926,7 @@ makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_Third
 	}],
 	cooldown: 15,
 	applicationDelay: 0,
+	onConfirm: (state: SAMState) => state.cancelMeditate(),
 });
 
 // fake skill to represent breaking third eye
@@ -938,7 +972,8 @@ makeAbility_SAM(SkillName.Zanshin, 96, ResourceType.cd_Zanshin, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ZanshinReady),
 });
 
-makeAbility_SAM(SkillName.Meditate, 60, ResourceType.cd_Meditate, {
+makeResourceAbility(ShellJob.SAM, SkillName.Meditate, 60, ResourceType.cd_Meditate, {
+	rscType: ResourceType.Meditate,
 	cooldown: 60,
 	applicationDelay: 0.62,
 	// Meditate cannot be used during a GCD roll
@@ -954,5 +989,5 @@ makeAbility_SAM(SkillName.Meditate, 60, ResourceType.cd_Meditate, {
 		);
 	},
 	// start the meditate timer
-	onApplication: (state) => state.startMeditateTimer(),
+	onApplication: (state: SAMState) => state.startMeditateTimer(),
 });

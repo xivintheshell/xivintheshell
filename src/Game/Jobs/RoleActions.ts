@@ -1,6 +1,6 @@
 import {ShellJob, ALL_JOBS} from "../../Controller/Common";
 import {SkillName, ResourceType, WarningType} from "../Common";
-import {makeResourceAbility, makeAbility} from "../Skills";
+import {combineEffects, makeResourceAbility, makeAbility} from "../Skills";
 import {DoTBuff, EventTag} from "../Resources"
 import {Traits, TraitName} from "../Traits";
 import type {GameState} from "../GameState";
@@ -54,12 +54,23 @@ const cancelDualcast = (state: GameState) => {
 	}
 };
 
+// Special case for SAM, since all actions should cancel meditate
+const cancelMeditate = (state: GameState) => {
+	if (state.job === ShellJob.SAM) {
+		const evt = state.findNextQueuedEventByTag(EventTag.MeditateTick);
+		if (evt) {
+			evt.canceled = true;
+		}
+	}
+};
+
 makeResourceAbility(MELEE_JOBS, SkillName.Feint, 22, ResourceType.cd_Feint, {
 	rscType: ResourceType.Feint,
 	applicationDelay: 0.537,
 	cooldown: 90,
 	duration: (state) => (Traits.hasUnlocked(TraitName.EnhancedFeint, state.config.level) && 15) || 10,
 	assetPath: "Role/Feint.png",
+	onConfirm: cancelMeditate,
 });
 
 makeResourceAbility(MELEE_JOBS, SkillName.TrueNorth, 50, ResourceType.cd_TrueNorth, {
@@ -68,6 +79,7 @@ makeResourceAbility(MELEE_JOBS, SkillName.TrueNorth, 50, ResourceType.cd_TrueNor
 	cooldown: 45,
 	maxCharges: 2,
 	assetPath: "Role/True North.png",
+	onConfirm: cancelMeditate,
 });
 
 makeResourceAbility(MELEE_JOBS, SkillName.ArmsLength, 32, ResourceType.cd_ArmsLength, {
@@ -75,6 +87,7 @@ makeResourceAbility(MELEE_JOBS, SkillName.ArmsLength, 32, ResourceType.cd_ArmsLe
 	applicationDelay: 0.625,
 	cooldown: 120,
 	assetPath: "Role/Arm's Length.png",
+	onConfirm: cancelMeditate,
 });
 
 makeResourceAbility(MELEE_JOBS, SkillName.Bloodbath, 8, ResourceType.cd_Bloodbath, {
@@ -82,18 +95,21 @@ makeResourceAbility(MELEE_JOBS, SkillName.Bloodbath, 8, ResourceType.cd_Bloodbat
 	applicationDelay: 0.625,
 	cooldown: 90,
 	assetPath: "Role/Bloodbath.png",
+	onConfirm: cancelMeditate,
 });
 
 makeAbility(MELEE_JOBS, SkillName.SecondWind, 12, ResourceType.cd_SecondWind, {
 	applicationDelay: 0.625,
 	cooldown: 120,
 	assetPath: "Role/Second Wind.png",
+	onConfirm: cancelMeditate,
 });
 
 makeAbility(MELEE_JOBS, SkillName.LegSweep, 10, ResourceType.cd_LegSweep, {
 	applicationDelay: 0.625,
 	cooldown: 40,
 	assetPath: "Role/Leg Sweep.png",
+	onConfirm: cancelMeditate,
 });
 
 makeResourceAbility(ALL_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture, {
@@ -101,7 +117,7 @@ makeResourceAbility(ALL_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture, {
 	applicationDelay: 0.64, // delayed // somewhere in the midrange of what's seen in logs
 	cooldown: 270,
 	assetPath: "Role/Tincture.png",
-	onConfirm: cancelDualcast,
+	onConfirm: combineEffects(cancelDualcast, cancelMeditate),
 });
 
 makeResourceAbility(ALL_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
@@ -109,5 +125,5 @@ makeResourceAbility(ALL_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
 	applicationDelay: 0.133, // delayed
 	cooldown: 60,
 	assetPath: "General/Sprint.png",
-	onConfirm: cancelDualcast,
+	onConfirm: combineEffects(cancelDualcast, cancelMeditate),
 });

@@ -7,7 +7,8 @@ import {BLMState} from "./Jobs/BLM";
 export enum EventTag {
 	ManaGain,
 	MpTick,
-	LucidTick
+	LucidTick,
+	MeditateTick,
 }
 
 export class Event {
