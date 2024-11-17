@@ -7,6 +7,7 @@ import {
 	ElemType,
 	LucidMarkElem,
 	MarkerElem, MarkerType, MAX_TIMELINE_SLOTS,
+	MeditateTickMarkElem,
 	MPTickMarkElem, SharedTimelineElem,
 	SkillElem, SlotTimelineElem,
 	TimelineElem, UntargetableMarkerTrack,
@@ -263,6 +264,29 @@ function drawMPTickMarks(
 ) {
 	g_ctx.lineWidth = 1;
 	g_ctx.strokeStyle = g_colors.timeline.mpTickMark;
+	g_ctx.beginPath();
+	elems.forEach(tick=>{
+		let x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
+		g_ctx.moveTo(x, originY);
+		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
+
+		testInteraction(
+			{x: x-2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight()},
+			["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc]
+		);
+	});
+	g_ctx.stroke();
+}
+
+function drawMeditateTickMarks(
+	countdown: number,
+	scale: number,
+	originX: number,
+	originY: number,
+	elems: MeditateTickMarkElem[]
+) {
+	g_ctx.lineWidth = 1;
+	g_ctx.strokeStyle = g_colors.sam.meditation;
 	g_ctx.beginPath();
 	elems.forEach(tick=>{
 		let x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
@@ -781,6 +805,9 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 		if (g_renderingProps.drawOptions.drawMPTickMarks) {
 			drawLucidMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.LucidMark) as LucidMarkElem[] ?? []);
 		}
+
+		// always draw meditate tick marks
+		drawMeditateTickMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.MeditateTickMark) as MeditateTickMarkElem[] ?? []);
 
 		// warning marks (polyglot overcap)
 		drawWarningMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.WarningMark) as WarningMarkElem[] ?? []);

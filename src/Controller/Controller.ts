@@ -614,6 +614,17 @@ class Controller {
 		}
 	}
 
+	reportMeditateTick(time: number, sourceDesc: string) {
+		if (!this.#bInSandbox) {
+			this.timeline.addElement({
+				type: ElemType.MeditateTickMark,
+				time: time,
+				displayTime: this.game.getDisplayTime(),
+				sourceDesc: sourceDesc,
+			});
+		}
+	}
+
 	reportDotTick(rawTime: number) {
 		if (!this.#bInSandbox) {
 			this.#thunderDotTickTimes.push(rawTime)

@@ -203,6 +203,7 @@ export class SAMState extends GameState {
 			const event = new Event("meditate tick", 3, () => {
 				if (tickNumber < 5) {
 					if (this.isInCombat()) {
+						controller.reportMeditateTick(this.time, "+kenki/meditation");
 						// Don't raise any warnings for gauge overcap here.
 						this.resources.get(ResourceType.Kenki).gain(10);
 						this.resources.get(ResourceType.Meditation).gain(1);
