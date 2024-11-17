@@ -58,12 +58,11 @@ export enum SAMResourceType {
     EnhancedEnpi = "Enhanced Enpi", // [0, 1]
     HiganbanaDoT = "HiganbanaDoT", // [0, 1]
     
-    KenkiGauge = "Kenki", // [0, 100]
+    Kenki = "Kenki", // [0, 100]
     Setsu = "Setsu", // [0, 1]
     Getsu = "Getsu", // [0, 1]
     KaSen = "Ka", // [0, 1]
     Meditation = "Meditation", // [0, 3]
-    Positional = "Positional", // [0, 1]
 
     // samurai combo resources (behind the scenes)
     TwoReady = "TwoReady", // [0, 1] for jinpu/shifu

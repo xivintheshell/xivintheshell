@@ -51,7 +51,7 @@ export type RDMResourceColors = {
 }
 
 export type SAMResourceColors = {
-	kenkiGauge: string,
+	kenki: string,
 	setsu: string,
 	getsu: string,
 	kaSen: string,
@@ -172,7 +172,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				accelBuff: "#f0d1e8", // very light pink
 			},
 			sam: {
-				kenkiGauge: "#d55124",
+				kenki: "#d55124",
 				setsu: "#c7ffff",
 				getsu: "#7987fc",
 				kaSen: "#f8a2a6",
@@ -255,7 +255,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				accelBuff: "#c973b4", // lighter purple
 			},
 			sam: {
-				kenkiGauge: "#d55124",
+				kenki: "#d55124",
 				setsu: "#c7ffff",
 				getsu: "#7987fc",
 				kaSen: "#f8a2a6",

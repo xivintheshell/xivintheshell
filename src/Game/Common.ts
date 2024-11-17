@@ -124,6 +124,7 @@ enum GeneralResourceType {
 	TrueNorth = "True North", // [0, 1]
 	ArmsLength = "Arm's Length", // [0, 1]
 	Bloodbath = "Bloodbath", // [0, 1]
+    Positional = "Positional", // [0, 1]
 
 	// special
 	Movement = "Movement", // [0, 1]

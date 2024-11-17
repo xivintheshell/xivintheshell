@@ -38,7 +38,7 @@ makeSAMResource(ResourceType.Tengetsu, 1, {timeout: 4});
 makeSAMResource(ResourceType.TengetsusForesight, 1, {timeout: 9});
 makeSAMResource(ResourceType.EnhancedEnpi, 1, {timeout: 15});
 
-makeSAMResource(ResourceType.KenkiGauge, 100);
+makeSAMResource(ResourceType.Kenki, 100);
 makeSAMResource(ResourceType.Setsu, 1);
 makeSAMResource(ResourceType.Getsu, 1);
 makeSAMResource(ResourceType.KaSen, 1);
@@ -124,93 +124,39 @@ export class SAMState extends GameState {
 		this.addEvent(new Event("initial higanbana DoT tick", timeTillFirstHiganbanaTick, recurringHiganbanaTick));
 	}
 
+	// Return true if the active combo buff is up, or meikyo is active.
+	// Does not advance the combo state.
+	checkCombo(requiredCombo: ResourceType): boolean {
+		return this.hasResourceAvailable(requiredCombo) || this.hasResourceAvailable(ResourceType.MeikyoShisui);
+	}
+
 	refreshBuff(rscType: ResourceType) {
-		const buff = this.resources.get(rscType);
-		const dropTime = (getResourceInfo(ShellJob.SAM, rscType) as ResourceInfo).maxTimeout;
-		if (buff.available(1) && buff.pendingChange) {
-			// refresh timer if it was already running
-			buff.overrideTimer(this, dropTime);
-			buff.gain(1);
-		} else {
-			// buff was not active, so just start the timer
-			buff.gain(1);
-			this.resources.addResourceEvent({
-				rscType: rscType,
-				name: "drop " + buff,
-				delay: dropTime,
-				fnOnRsc: rsc => this.resources.get(rscType).overrideCurrentValue(0),
-			});
-		}
-	}
-
-	// TODO[sz] probably replace this with enqueueResourceDrop?
-	// function for creating a buff w/ a timer but overwriting the timer if already available
-	// consume set to 1 usually
-	gainTimer(restype: ResourceType, consume: number, gain: number, timer: number, msg: string) {
-		let res = this.resources.get(restype);
-		if (!res.available(1)) {
-			// create a timer
-			res.gain(gain);
-			this.resources.addResourceEvent({
-				rscType: restype,
-				name: msg,
-				delay: timer,
-				// TODO handle meikyo timeout affecting combos -- if meikyo drops naturally
-				// does a natural combo (e.g. starting from gyofu) still persist?
-				fnOnRsc: (rsc: Resource) => rsc.consume(consume),
-			});
-		} else {
-			// consume and override the timer
-			res.consume(consume);
-			res.overrideTimer(this, timer);
-			res.gain(gain);
-		}
-	}
-
-	// function for consuming a buff w/ a timer
-	consumeTimer(restype: ResourceType, available: number, consume: number, checkAvailable?: boolean) {
-		let res = this.resources.get(restype);
-		if (res.available(available) || !checkAvailable) {
-			res.consume(consume);
-			res.removeTimer();
-		}
+		this.resources.get(rscType).gain(1);
+		this.enqueueResourceDrop(rscType);
 	}
 
 	// Activate combo timers and deactivate all other combo timers.
 	progressActiveCombo(nextCombos: ResourceType[]) {
 		ALL_SAM_COMBOS.forEach((combo) => {
 			if (!nextCombos.includes(combo)) {
-				this.consumeTimer(combo, 1, 1, true);
+				this.setComboState(combo, 0);
 			}
 		});
-		nextCombos.forEach((combo) => this.gainTimer(combo, 1, 1, 30, "drop " + combo));
+		nextCombos.forEach((combo) => this.setComboState(combo, 1));
 	}
 
-	// Always call this after progressActiveCombo to ensure next combo buffs are properly set
+	// Always call this before progressActiveCombo to ensure next combo buffs are properly set.
+	// If you ever push a button that isn't a combo ender, then the combo will continue from
+	// that button you hit (e.g. third stack of Meikyo being used on Shifu will make Gekko ready).
 	tryConsumeMeikyo() {
-		const meikyoStacks = this.resources.get(ResourceType.MeikyoShisui);
-		if (meikyoStacks.available(1)) {
-			// consume a stack
-			meikyoStacks.consume(1);
-			// reapply combo buffs
-			this.gainTimer(ResourceType.TwoReady, 1, 1, 20, "drop two ready");
-			this.gainTimer(ResourceType.TwoAoeReady, 1, 1, 20, "drop two aoe ready");
-			this.gainTimer(ResourceType.GekkoReady, 1, 1, 20, "drop gekko ready");
-			this.gainTimer(ResourceType.KashaReady, 1, 1, 20, "drop kasha ready");
-
-			// if all stacks are consumed, remove all combo timers
-			if (meikyoStacks.availableAmount() === 0) {
-				ALL_SAM_COMBOS.forEach((combo) => this.tryConsumeResource(combo));
-				this.resources.get(ResourceType.MeikyoShisui).removeTimer();
-			}
-		}
+		this.tryConsumeResource(ResourceType.MeikyoShisui);
 	}
 
 	gainKenki(kenkiAmount: number) {
-		if ((this.resources.get(ResourceType.KenkiGauge).availableAmount() + kenkiAmount) > 100) {
+		if ((this.resources.get(ResourceType.Kenki).availableAmount() + kenkiAmount) > 100) {
 			controller.reportWarning(WarningType.KenkiOvercap);
 		}
-		this.resources.get(ResourceType.KenkiGauge).gain(kenkiAmount);
+		this.resources.get(ResourceType.Kenki).gain(kenkiAmount);
 	}
 
 	gainMeditation() {
@@ -357,18 +303,18 @@ makeGCD_SAM(SkillName.Hakaze, 1, {
 	basePotency: 200,
 	// TODO check if kenki gain is on damage app or cast confirmation
 	onConfirm: (state) => {
-		state.progressActiveCombo([ResourceType.TwoReady]);
 		state.tryConsumeMeikyo();
+		state.progressActiveCombo([ResourceType.TwoReady]);
 	},
 });
 
 makeGCD_SAM(SkillName.Gyofu, 92, {
 	autoDowngrade: { trait: TraitName.HakazeMastery, otherSkill: SkillName.Hakaze },
 	applicationDelay: 0.85,
-	basePotency: 230,
+	basePotency: 240,
 	onConfirm: (state) => {
-		state.progressActiveCombo([ResourceType.TwoReady]);
 		state.tryConsumeMeikyo();
+		state.progressActiveCombo([ResourceType.TwoReady]);
 	}
 });
 
@@ -380,14 +326,14 @@ makeGCD_SAM(SkillName.Yukikaze, 50, {
 		resource: ResourceType.TwoReady,
 	},
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.TwoReady)) {
+		if (state.checkCombo(ResourceType.TwoReady)) {
 			state.gainKenki(15);
 			state.gainSen(ResourceType.Setsu);
 		}
-		state.progressActiveCombo([]);
 		state.tryConsumeMeikyo();
+		state.progressActiveCombo([]);
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.TwoReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.TwoReady),
 });
 
 makeGCD_SAM(SkillName.Jinpu, 4, {
@@ -399,16 +345,17 @@ makeGCD_SAM(SkillName.Jinpu, 4, {
 		resource: ResourceType.TwoReady,
 	},
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.TwoReady)) {
+		if (state.checkCombo(ResourceType.TwoReady)) {
 			state.gainKenki(5);
 			state.refreshBuff(ResourceType.Fugetsu);
+			state.tryConsumeMeikyo();
 			state.progressActiveCombo([ResourceType.GekkoReady]);
 		} else {
+			state.tryConsumeMeikyo();
 			state.progressActiveCombo([]);
 		}
-		state.tryConsumeMeikyo();
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.TwoReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.TwoReady),
 });
 
 makeGCD_SAM(SkillName.Gekko, 30, {
@@ -420,17 +367,17 @@ makeGCD_SAM(SkillName.Gekko, 30, {
 		resource: ResourceType.GekkoReady,
 	},
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.GekkoReady)) {
+		if (state.checkCombo(ResourceType.GekkoReady)) {
 			state.gainKenki(10);
 			state.gainSen(ResourceType.Getsu);
 		}
 		if (state.hasResourceAvailable(ResourceType.MeikyoShisui)) {
 			state.refreshBuff(ResourceType.Fugetsu);
 		}
-		state.progressActiveCombo([]);
 		state.tryConsumeMeikyo();
+		state.progressActiveCombo([]);
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.GekkoReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.GekkoReady),
 });
 
 makeGCD_SAM(SkillName.Shifu, 18, {
@@ -441,16 +388,17 @@ makeGCD_SAM(SkillName.Shifu, 18, {
 		resource: ResourceType.TwoReady,
 	},
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.TwoReady)) {
+		if (state.checkCombo(ResourceType.TwoReady)) {
 			state.gainKenki(5);
 			state.refreshBuff(ResourceType.Fuka);
+			state.tryConsumeMeikyo();
 			state.progressActiveCombo([ResourceType.KashaReady]);
 		} else {
+			state.tryConsumeMeikyo();
 			state.progressActiveCombo([]);
 		}
-		state.tryConsumeMeikyo();
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.TwoReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.TwoReady),
 });
 
 makeGCD_SAM(SkillName.Kasha, 40, {
@@ -462,17 +410,17 @@ makeGCD_SAM(SkillName.Kasha, 40, {
 		resource: ResourceType.KashaReady,
 	},
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.KashaReady)) {
+		if (state.checkCombo(ResourceType.KashaReady)) {
 			state.gainKenki(10);
 			state.gainSen(ResourceType.KaSen);
 		}
 		if (state.hasResourceAvailable(ResourceType.MeikyoShisui)) {
 			state.refreshBuff(ResourceType.Fuka);
 		}
-		state.progressActiveCombo([]);
 		state.tryConsumeMeikyo();
+		state.progressActiveCombo([]);
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.KashaReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.KashaReady),
 });
 
 makeGCD_SAM(SkillName.Fuga, 26, {
@@ -503,13 +451,13 @@ makeGCD_SAM(SkillName.Mangetsu, 35, {
 		resource: ResourceType.TwoAoeReady,
 	},
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.TwoAoeReady)) {
+		if (state.checkCombo(ResourceType.TwoAoeReady)) {
 			state.gainKenki(10);
 			state.refreshBuff(ResourceType.Fugetsu);
 			state.gainSen(ResourceType.Getsu);
 		}
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.TwoAoeReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.TwoAoeReady),
 });
 
 makeGCD_SAM(SkillName.Oka, 35, {
@@ -520,29 +468,25 @@ makeGCD_SAM(SkillName.Oka, 35, {
 		resource: ResourceType.TwoAoeReady,
 	},
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.TwoAoeReady)) {
+		if (state.checkCombo(ResourceType.TwoAoeReady)) {
 			state.gainKenki(10);
 			state.refreshBuff(ResourceType.Fuka);
 			state.gainSen(ResourceType.KaSen);
 		}
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.TwoAoeReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.TwoAoeReady),
 });
 
 makeAbility_SAM(SkillName.MeikyoShisui, 50, ResourceType.cd_MeikyoShisui, {
 	cooldown: 55,
 	maxCharges: 2,
 	onConfirm: (state) => {
-		// TODO refactor
-		state.gainTimer(ResourceType.MeikyoShisui, 1, 3, 20, "drop meikyo");
+		state.resources.get(ResourceType.MeikyoShisui).gain(3);
+		// TODO check combo behavior when the meikyo stacks drop
+		state.enqueueResourceDrop(ResourceType.MeikyoShisui);
 
-		// gain all combo bonuses
-		state.gainTimer(ResourceType.TwoReady, 1, 1, 20, "drop two ready");
-		state.gainTimer(ResourceType.TwoAoeReady, 1, 1, 20, "drop two aoe ready");
-		state.gainTimer(ResourceType.GekkoReady, 1, 1, 20, "drop gekko ready");
-		state.gainTimer(ResourceType.KashaReady, 1, 1, 20, "drop kasha ready");
-		// gain tendo
-		state.gainTimer(ResourceType.Tendo, 1, 1, 30, "drop tendo");
+		state.resources.get(ResourceType.Tendo).gain(1);
+		state.enqueueResourceDrop(ResourceType.Tendo);
 	},
 });
 
@@ -560,53 +504,53 @@ makeAbility_SAM(SkillName.Ikishoten, 68, ResourceType.cd_Ikishoten, {
 makeAbility_SAM(SkillName.Shinten, 52, ResourceType.cd_Shinten, {
 	cooldown: 1,
 	potency: 250,
-	validateAttempt: (state) => state.resources.get(ResourceType.KenkiGauge).available(25),
-	onConfirm: (state) => state.resources.get(ResourceType.KenkiGauge).consume(25),
-	highlightIf: (state) => state.resources.get(ResourceType.KenkiGauge).available(25),
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
+	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
 });
 
 makeAbility_SAM(SkillName.Kyuten, 62, ResourceType.cd_Kyuten, {
 	cooldown: 1,
 	potency: 120,
-	validateAttempt: (state) => state.resources.get(ResourceType.KenkiGauge).available(25),
-	onConfirm: (state) => state.resources.get(ResourceType.KenkiGauge).consume(25),
-	highlightIf: (state) => state.resources.get(ResourceType.KenkiGauge).available(25),
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
+	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
 });
 
 makeAbility_SAM(SkillName.Gyoten, 54, ResourceType.cd_Gyoten, {
-	cooldown: 10,
+	cooldown: 5,
 	potency: 100,
-	validateAttempt: (state) => state.resources.get(ResourceType.KenkiGauge).available(10),
-	onConfirm: (state) => state.resources.get(ResourceType.KenkiGauge).consume(10),
-	highlightIf: (state) => state.resources.get(ResourceType.KenkiGauge).available(10),
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(10),
+	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(10),
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(10),
 });
 
 makeAbility_SAM(SkillName.Yaten, 56, ResourceType.cd_Yaten, {
 	cooldown: 10,
 	potency: 100,
-	validateAttempt: (state) => state.resources.get(ResourceType.KenkiGauge).available(10),
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(10),
 	onConfirm: (state) => {
-		state.resources.get(ResourceType.KenkiGauge).consume(10);
+		state.resources.get(ResourceType.Kenki).consume(10);
 		state.resources.get(ResourceType.EnhancedEnpi).gain(1);
 		state.enqueueResourceDrop(ResourceType.EnhancedEnpi);
 	},
-	highlightIf: (state) => state.resources.get(ResourceType.KenkiGauge).available(10),
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(10),
 });
 
 makeAbility_SAM(SkillName.Senei, 72, ResourceType.cd_SeneiGuren, {
 	cooldown: 60,
 	potency: 800,
-	validateAttempt: (state) => state.resources.get(ResourceType.KenkiGauge).available(25),
-	onConfirm: (state) => state.resources.get(ResourceType.KenkiGauge).consume(25),
-	highlightIf: (state) => state.resources.get(ResourceType.KenkiGauge).available(25),
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
+	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
 });
 
 makeAbility_SAM(SkillName.Guren, 70, ResourceType.cd_SeneiGuren, {
 	cooldown: 60,
 	potency: 500,
-	validateAttempt: (state) => state.resources.get(ResourceType.KenkiGauge).available(25),
-	onConfirm: (state) => state.resources.get(ResourceType.KenkiGauge).consume(25),
-	highlightIf: (state) => state.resources.get(ResourceType.KenkiGauge).available(25),
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
+	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
 });
 
 makeAbility_SAM(SkillName.Hagakure, 68, ResourceType.cd_Hagakure, {
@@ -906,13 +850,13 @@ makeGCD_SAM(SkillName.KaeshiNamikiri, 90, {
 makeAbility_SAM(SkillName.Zanshin, 96, ResourceType.cd_Zanshin, {
 	cooldown: 1,
 	applicationDelay: 1.03,
-	potency: 820,
+	potency: 900,
 	validateAttempt: (state) => (
 		state.hasResourceAvailable(ResourceType.ZanshinReady) &&
-		state.resources.get(ResourceType.KenkiGauge).available(50)
+		state.resources.get(ResourceType.Kenki).available(50)
 	),
 	onConfirm: (state) => {
-		state.resources.get(ResourceType.KenkiGauge).consume(50);
+		state.resources.get(ResourceType.Kenki).consume(50);
 		state.tryConsumeResource(ResourceType.ZanshinReady);
 	},
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ZanshinReady),

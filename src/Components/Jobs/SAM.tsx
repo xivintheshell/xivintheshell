@@ -93,13 +93,14 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 		const setsu = resources.get(ResourceType.Setsu).availableAmount();
 		const getsu = resources.get(ResourceType.Getsu).availableAmount();
 		const ka = resources.get(ResourceType.KaSen).availableAmount();
-		const kenki = resources.get(ResourceType.KenkiGauge).availableAmount();
+		const kenki = resources.get(ResourceType.Kenki).availableAmount();
 		const meditation = resources.get(ResourceType.Meditation).availableAmount();
+		// TODO use simplified gauge iconography so people don't have to remember names
 		const infos: ResourceDisplayProps[] = [
 			{
 				kind: "counter",
 				name: localize({
-					en: "setsu (yukikaze)",
+					en: "setsu",
 				}),
 				color: colors.sam.setsu,
 				currentStacks: setsu,
@@ -108,7 +109,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			{
 				kind: "counter",
 				name: localize({
-					en: "getsu (gekko/mangetsu)",
+					en: "getsu",
 				}),
 				color: colors.sam.getsu,
 				currentStacks: getsu,
@@ -117,7 +118,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			{
 				kind: "counter",
 				name: localize({
-					en: "ka (kasha/oka)",
+					en: "ka",
 				}),
 				color: colors.sam.kaSen,
 				currentStacks: ka,
@@ -126,7 +127,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			{
 				kind: "bar",
 				name: localize({en: "kenki"}),
-				color: colors.sam.kenkiGauge,
+				color: colors.sam.kenki,
 				progress: kenki / 100,
 				valueString: kenki.toFixed(0),
 			} as ResourceBarProps,
