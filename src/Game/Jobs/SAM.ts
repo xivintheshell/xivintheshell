@@ -192,6 +192,10 @@ export class SAMState extends GameState {
 			this.resources.get(ResourceType.KaSen).consume(1);
 		}
 	}
+
+	startMeditateTimer() {
+		// TODO
+	}
 }
 
 
@@ -497,95 +501,6 @@ makeGCD_SAM(SkillName.Oka, 35, {
 	highlightIf: (state) => state.checkCombo(ResourceType.TwoAoeReady),
 });
 
-makeAbility_SAM(SkillName.MeikyoShisui, 50, ResourceType.cd_MeikyoShisui, {
-	cooldown: 55,
-	maxCharges: 2,
-	onConfirm: (state) => {
-		state.resources.get(ResourceType.MeikyoShisui).gain(3);
-		state.enqueueResourceDrop(ResourceType.MeikyoShisui);
-
-		state.resources.get(ResourceType.Tendo).gain(1);
-		state.enqueueResourceDrop(ResourceType.Tendo);
-	},
-});
-
-makeAbility_SAM(SkillName.Ikishoten, 68, ResourceType.cd_Ikishoten, {
-	replaceIf: [{
-		newSkill: SkillName.Zanshin,
-		condition: (state) => state.hasResourceAvailable(ResourceType.ZanshinReady),
-	}],
-	cooldown: 120,
-	onConfirm: (state) => {
-		state.gainKenki(50);
-		state.resources.get(ResourceType.OgiReady).gain(1);
-		state.resources.get(ResourceType.ZanshinReady).gain(1);
-		state.enqueueResourceDrop(ResourceType.OgiReady);
-		state.enqueueResourceDrop(ResourceType.ZanshinReady);
-	},
-});
-
-makeAbility_SAM(SkillName.Shinten, 52, ResourceType.cd_Shinten, {
-	cooldown: 1,
-	potency: 250,
-	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
-	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
-	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
-});
-
-makeAbility_SAM(SkillName.Kyuten, 62, ResourceType.cd_Kyuten, {
-	cooldown: 1,
-	potency: 120,
-	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
-	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
-	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
-});
-
-makeAbility_SAM(SkillName.Gyoten, 54, ResourceType.cd_Gyoten, {
-	cooldown: 5,
-	potency: 100,
-	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(10),
-	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(10),
-	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(10),
-});
-
-makeAbility_SAM(SkillName.Yaten, 56, ResourceType.cd_Yaten, {
-	cooldown: 10,
-	potency: 100,
-	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(10),
-	onConfirm: (state) => {
-		state.resources.get(ResourceType.Kenki).consume(10);
-		state.resources.get(ResourceType.EnhancedEnpi).gain(1);
-		state.enqueueResourceDrop(ResourceType.EnhancedEnpi);
-	},
-	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(10),
-});
-
-makeAbility_SAM(SkillName.Senei, 72, ResourceType.cd_SeneiGuren, {
-	cooldown: 60,
-	potency: 800,
-	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
-	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
-	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
-});
-
-makeAbility_SAM(SkillName.Guren, 70, ResourceType.cd_SeneiGuren, {
-	cooldown: 60,
-	potency: 500,
-	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
-	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
-	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
-});
-
-makeAbility_SAM(SkillName.Hagakure, 68, ResourceType.cd_Hagakure, {
-	cooldown: 5,
-	validateAttempt: (state) => state.countSen() === 3,
-	onConfirm: (state) => {
-		state.gainKenki(state.countSen() * 10);
-		state.consumeAllSen();
-	},
-	highlightIf: (state) => state.countSen() === 3,
-});
-
 // no skill replacement if there are 0 sen (usage is just invalid)
 const banaCondition: ConditionalSkillReplace<SAMState> = {
 	newSkill: SkillName.Higanbana,
@@ -830,6 +745,125 @@ makeGCD_SAM(SkillName.TendoKaeshiSetsugekka, 74, {
 	highlightIf: tendoKaeshiSetsugekkaCondition.condition,
 });
 
+makeGCD_SAM(SkillName.OgiNamikiri, 90, {
+	replaceIf: [{
+		newSkill: SkillName.KaeshiNamikiri,
+		condition: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
+	}],
+	applicationDelay: 0.49,
+	basePotency: 900,
+	baseCastTime: 1.3,
+	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.OgiReady),
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.OgiReady);
+		state.gainMeditation();
+		state.resources.get(ResourceType.KaeshiOgiReady).gain(1);
+		state.enqueueResourceDrop(ResourceType.KaeshiOgiReady);
+	},
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.OgiReady),
+});
+
+makeGCD_SAM(SkillName.KaeshiNamikiri, 90, {
+	startOnHotbar: false,
+	applicationDelay: 0.49,
+	basePotency: 900,
+	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
+	onConfirm: (state) => state.tryConsumeResource(ResourceType.KaeshiOgiReady),
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
+});
+
+makeAbility_SAM(SkillName.MeikyoShisui, 50, ResourceType.cd_MeikyoShisui, {
+	cooldown: 55,
+	maxCharges: 2,
+	onConfirm: (state) => {
+		state.resources.get(ResourceType.MeikyoShisui).gain(3);
+		state.enqueueResourceDrop(ResourceType.MeikyoShisui);
+
+		state.resources.get(ResourceType.Tendo).gain(1);
+		state.enqueueResourceDrop(ResourceType.Tendo);
+	},
+});
+
+makeAbility_SAM(SkillName.Ikishoten, 68, ResourceType.cd_Ikishoten, {
+	replaceIf: [{
+		newSkill: SkillName.Zanshin,
+		condition: (state) => state.hasResourceAvailable(ResourceType.ZanshinReady),
+	}],
+	cooldown: 120,
+	validateAttempt: (state) => state.isInCombat(),
+	onConfirm: (state) => {
+		state.gainKenki(50);
+		state.resources.get(ResourceType.OgiReady).gain(1);
+		state.resources.get(ResourceType.ZanshinReady).gain(1);
+		state.enqueueResourceDrop(ResourceType.OgiReady);
+		state.enqueueResourceDrop(ResourceType.ZanshinReady);
+	},
+});
+
+makeAbility_SAM(SkillName.Shinten, 52, ResourceType.cd_Shinten, {
+	cooldown: 1,
+	potency: 250,
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
+	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
+});
+
+makeAbility_SAM(SkillName.Kyuten, 62, ResourceType.cd_Kyuten, {
+	cooldown: 1,
+	potency: 120,
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
+	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
+});
+
+makeAbility_SAM(SkillName.Gyoten, 54, ResourceType.cd_Gyoten, {
+	cooldown: 5,
+	potency: 100,
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(10),
+	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(10),
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(10),
+});
+
+makeAbility_SAM(SkillName.Yaten, 56, ResourceType.cd_Yaten, {
+	cooldown: 10,
+	potency: 100,
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(10),
+	onConfirm: (state) => {
+		state.resources.get(ResourceType.Kenki).consume(10);
+		state.resources.get(ResourceType.EnhancedEnpi).gain(1);
+		state.enqueueResourceDrop(ResourceType.EnhancedEnpi);
+	},
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(10),
+});
+
+makeAbility_SAM(SkillName.Senei, 72, ResourceType.cd_SeneiGuren, {
+	cooldown: 60,
+	potency: 800,
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
+	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
+});
+
+makeAbility_SAM(SkillName.Guren, 70, ResourceType.cd_SeneiGuren, {
+	cooldown: 60,
+	potency: 500,
+	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
+	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
+	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
+});
+
+makeAbility_SAM(SkillName.Hagakure, 68, ResourceType.cd_Hagakure, {
+	cooldown: 5,
+	validateAttempt: (state) => state.countSen() === 3,
+	onConfirm: (state) => {
+		state.gainKenki(state.countSen() * 10);
+		state.consumeAllSen();
+	},
+	highlightIf: (state) => state.countSen() === 3,
+});
+
 makeAbility_SAM(SkillName.Shoha, 80, ResourceType.cd_Shoha, {
 	cooldown: 15,
 	potency: 640,
@@ -888,35 +922,6 @@ makeAbility_SAM(SkillName.TengentsuPop, 82, ResourceType.cd_ThirdEyePop, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Tengentsu),
 });
 
-makeGCD_SAM(SkillName.OgiNamikiri, 90, {
-	replaceIf: [{
-		newSkill: SkillName.KaeshiNamikiri,
-		condition: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
-	}],
-	applicationDelay: 0.49,
-	basePotency: 900,
-	baseCastTime: 1.3,
-	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.OgiReady),
-	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.OgiReady);
-		state.gainMeditation();
-		state.resources.get(ResourceType.KaeshiOgiReady).gain(1);
-		state.enqueueResourceDrop(ResourceType.KaeshiOgiReady);
-	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.OgiReady),
-});
-
-makeGCD_SAM(SkillName.KaeshiNamikiri, 90, {
-	startOnHotbar: false,
-	applicationDelay: 0.49,
-	basePotency: 900,
-	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.KaeshiOgiReady),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
-});
-
 makeAbility_SAM(SkillName.Zanshin, 96, ResourceType.cd_Zanshin, {
 	startOnHotbar: false,
 	cooldown: 1,
@@ -933,4 +938,21 @@ makeAbility_SAM(SkillName.Zanshin, 96, ResourceType.cd_Zanshin, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ZanshinReady),
 });
 
-// TODO meditate
+makeAbility_SAM(SkillName.Meditate, 60, ResourceType.cd_Meditate, {
+	cooldown: 60,
+	applicationDelay: 0.62,
+	// Meditate cannot be used during a GCD roll
+	validateAttempt: (state) => state.cooldowns.get(ResourceType.cd_GCD).stacksAvailable() > 0,
+	// roll the GCD
+	onConfirm: (state) => {
+		const recastTime = state.config.adjustedGCD(
+			2.5,
+			state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
+		);
+		state.cooldowns.get(ResourceType.cd_GCD).useStackWithRecast(
+			state, state.config.getAfterTaxGCD(recastTime)
+		);
+	},
+	// start the meditate timer
+	onApplication: (state) => state.startMeditateTimer(),
+});

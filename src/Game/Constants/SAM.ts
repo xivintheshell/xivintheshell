@@ -83,7 +83,7 @@ export enum SAMCooldownType {
     cd_SeneiGuren = "cd_Senei", // [0,60],
     cd_Shinten = "cd_Shinten", // [0,1]
     cd_Kyuten = "cd_Kyuten", // [0,1]
-
+    cd_Meditate = "cd_Meditate", // [0, 1]
     cd_Ikishoten = "cd_Ikishoten", // [0, 120]
     cd_Zanshin = "cd_Zanshin", // [0, 1]
     cd_Hagakure = "cd_Hagakure", // [0, 1]

@@ -645,6 +645,7 @@ export abstract class GameState {
 			SkillName.StrikingMuse,
 			SkillName.StarryMuse,
 			SkillName.Manafication,
+			SkillName.Ikishoten,
 		] as SkillName[]).includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
 			status = SkillReadyStatus.NotInCombat;
 			timeTillAvailable = this.timeTillNextDamageEvent();
@@ -653,6 +654,21 @@ export abstract class GameState {
 		let cd = this.cooldowns.get(skill.cdName);
 		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.cdName);
 		let cdRecastTime = cd.currentStackCd();
+		// special case for meditate: if meditate is off CD, use the GCD cooldown instead if it's rolling
+		// this fails the edge case where a GCD is pressed ~58 seconds after meditate was last pressed
+		// and meditate would become available in the middle of the CD
+		if (skillName === SkillName.Meditate && timeTillNextStackReady === 0) {
+			const gcd = this.cooldowns.get(ResourceType.cd_GCD);
+			const gcdRecastTime = gcd.currentStackCd();
+			if (gcdRecastTime < cdRecastTime) {
+				cd = gcd;
+				cdRecastTime = gcdRecastTime;
+				timeTillNextStackReady = gcd.timeTillNextStackAvailable();
+				timeTillAvailable = timeTillNextStackReady;
+			}
+		}
+		const stacksAvailable = cd.stacksAvailable();
+		const maxStacks = cd.maxStacks();
 
 		// to be displayed together when hovered on a skill
 		let timeTillDamageApplication = 0;
@@ -670,8 +686,8 @@ export abstract class GameState {
 		return {
 			skillName: skill.name,
 			status: status,
-			stacksAvailable: cd.stacksAvailable(),
-			maxStacks: cd.maxStacks(),
+			stacksAvailable: stacksAvailable,
+			maxStacks: maxStacks,
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
 			cdRecastTime: cdRecastTime,
