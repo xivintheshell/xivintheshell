@@ -24,8 +24,7 @@ export enum SAMSkillName {
     TsubameGaeshi = "Tsubame-gaeshi",
     Shoha = "Shoha",
     ThirdEye = "Third Eye",
-    // TODO check the name of Tengetsu and related buffs, job guide has an extra N but wiki does not
-    Tengetsu = "Tengetsu",
+    Tengentsu = "Tengentsu",
     OgiNamikiri = "Ogi Namikiri",
     KaeshiNamikiri = "Kaeshi: Namikiri",
     Zanshin = "Zanshin",
@@ -42,7 +41,7 @@ export enum SAMSkillName {
     TendoKaeshiSetsugekka = "Tendo Kaeshi Setsugekka",
 
     ThirdEyePop = "Pop Third Eye",
-    TengetsuPop = "Pop Tengetsu's Foresight",
+    TengentsuPop = "Pop Tengentsu",
 }
 
 export enum SAMResourceType {
@@ -54,8 +53,8 @@ export enum SAMResourceType {
     OgiReady = "Ogi Namikiri Ready", // [0, 1]
     TsubameGaeshiReady = "Tsubame-gaeshi Ready", // [0, 1]
     ThirdEye = "Third Eye", // [0, 1]
-    Tengetsu = "Tengetsu", // [0, 1]
-    TengetsusForesight = "Tengetsu's Foresight", // [0, 1]
+    Tengentsu = "Tengentsu", // [0, 1]
+    TengentsusForesight = "Tengentsu's Foresight", // [0, 1]
     Meditate = "Meditate", // [0, 5]
     EnhancedEnpi = "Enhanced Enpi", // [0, 1]
     HiganbanaDoT = "HiganbanaDoT", // [0, 1]

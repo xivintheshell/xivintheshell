@@ -36,8 +36,8 @@ makeSAMResource(ResourceType.Tendo, 1, {timeout: 30});
 makeSAMResource(ResourceType.OgiReady, 1, {timeout: 30});
 makeSAMResource(ResourceType.TsubameGaeshiReady, 1, {timeout: 30});
 makeSAMResource(ResourceType.ThirdEye, 1, {timeout: 4});
-makeSAMResource(ResourceType.Tengetsu, 1, {timeout: 4});
-makeSAMResource(ResourceType.TengetsusForesight, 1, {timeout: 9});
+makeSAMResource(ResourceType.Tengentsu, 1, {timeout: 4});
+makeSAMResource(ResourceType.TengentsusForesight, 1, {timeout: 9});
 makeSAMResource(ResourceType.EnhancedEnpi, 1, {timeout: 15});
 
 makeSAMResource(ResourceType.Kenki, 100);
@@ -837,16 +837,51 @@ makeAbility_SAM(SkillName.Shoha, 80, ResourceType.cd_Shoha, {
 
 makeResourceAbility(ShellJob.SAM, SkillName.ThirdEye, 6, ResourceType.cd_ThirdEye, {
 	rscType: ResourceType.ThirdEye,
-	autoUpgrade: { trait: TraitName.ThirdEyeMastery, otherSkill: SkillName.Tengetsu },
+	autoUpgrade: { trait: TraitName.ThirdEyeMastery, otherSkill: SkillName.Tengentsu },
+	replaceIf: [{
+		newSkill: SkillName.ThirdEyePop,
+		condition: (state) => state.hasResourceAvailable(ResourceType.ThirdEye),
+	}],
 	cooldown: 15,
 	applicationDelay: 0,
 });
 
-makeResourceAbility(ShellJob.SAM, SkillName.Tengetsu, 82, ResourceType.cd_ThirdEye, {
-	rscType: ResourceType.Tengetsu,
+makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_ThirdEye, {
+	rscType: ResourceType.Tengentsu,
 	autoDowngrade: { trait: TraitName.ThirdEyeMastery, otherSkill: SkillName.ThirdEye },
+	replaceIf: [{
+		newSkill: SkillName.TengentsuPop,
+		condition: (state) => state.hasResourceAvailable(ResourceType.Tengentsu),
+	}],
 	cooldown: 15,
 	applicationDelay: 0,
+});
+
+// fake skill to represent breaking third eye
+makeAbility_SAM(SkillName.ThirdEyePop, 6, ResourceType.cd_ThirdEyePop, {
+	startOnHotbar: false,
+	applicationDelay: 0,
+	cooldown: 1,
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ThirdEye),
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.ThirdEye);
+		state.gainKenki(10);
+	},
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ThirdEye),
+});
+
+makeAbility_SAM(SkillName.TengentsuPop, 82, ResourceType.cd_ThirdEyePop, {
+	startOnHotbar: false,
+	applicationDelay: 0,
+	cooldown: 1,
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Tengentsu),
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.Tengentsu);
+		state.resources.get(ResourceType.TengentsusForesight).gain(1);
+		state.enqueueResourceDrop(ResourceType.TengentsusForesight);
+		state.gainKenki(10);
+	},
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Tengentsu),
 });
 
 makeGCD_SAM(SkillName.OgiNamikiri, 90, {

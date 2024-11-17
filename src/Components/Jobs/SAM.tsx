@@ -21,8 +21,8 @@ import {localize} from "../../Components/Localization";
 	ResourceType.Tendo,
 	ResourceType.OgiReady,
 	ResourceType.TsubameGaeshiReady,
-	ResourceType.Tengetsu,
-	ResourceType.TengetsusForesight,
+	ResourceType.Tengentsu,
+	ResourceType.TengentsusForesight,
 	ResourceType.ThirdEye,
 	ResourceType.EnhancedEnpi,
 	ResourceType.Meditate,
@@ -84,7 +84,8 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			makeSamuraiTimer(ResourceType.Fuka),
 			makeSamuraiTimer(ResourceType.Fugetsu),
 			makeSamuraiTimer(ResourceType.ThirdEye),
-			makeSamuraiTimer(ResourceType.Tengetsu),
+			makeSamuraiTimer(ResourceType.Tengentsu),
+			makeSamuraiTimer(ResourceType.TengentsusForesight),
 			makeSamuraiTimer(ResourceType.Sprint),
 		];
 	}
