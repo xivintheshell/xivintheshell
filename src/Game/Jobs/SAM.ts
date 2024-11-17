@@ -510,6 +510,10 @@ makeAbility_SAM(SkillName.MeikyoShisui, 50, ResourceType.cd_MeikyoShisui, {
 });
 
 makeAbility_SAM(SkillName.Ikishoten, 68, ResourceType.cd_Ikishoten, {
+	replaceIf: [{
+		newSkill: SkillName.Zanshin,
+		condition: (state) => state.hasResourceAvailable(ResourceType.ZanshinReady),
+	}],
 	cooldown: 120,
 	onConfirm: (state) => {
 		state.gainKenki(50);
@@ -914,6 +918,7 @@ makeGCD_SAM(SkillName.KaeshiNamikiri, 90, {
 });
 
 makeAbility_SAM(SkillName.Zanshin, 96, ResourceType.cd_Zanshin, {
+	startOnHotbar: false,
 	cooldown: 1,
 	applicationDelay: 1.03,
 	potency: 900,
