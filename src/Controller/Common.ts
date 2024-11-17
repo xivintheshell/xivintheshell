@@ -40,6 +40,7 @@ export const ALL_JOBS = [
 
 export const TESTING_JOBS = [
 	ShellJob.RDM,
+	ShellJob.DNC,
 ];
 
 export const enum Expansion {

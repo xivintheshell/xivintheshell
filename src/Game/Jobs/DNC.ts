@@ -51,7 +51,7 @@ makeDNCResource(ResourceType.RisingRhythm, 4, {timeout: 15})
 makeDNCResource(ResourceType.ImprovisationRegen, 1, {timeout: 15})
 makeDNCResource(ResourceType.ImprovisedFinish, 1, {timeout: 30})
 
-makeDNCResource(ResourceType.ArmsLength, 1, {timeout: 10})
+makeDNCResource(ResourceType.ArmsLength, 1, {timeout: 6.5})
 
 makeDNCResource(ResourceType.CascadeCombo, 1, {timeout: 30})
 makeDNCResource(ResourceType.WindmillCombo, 1, {timeout: 30})
