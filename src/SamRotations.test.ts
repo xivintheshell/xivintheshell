@@ -144,12 +144,12 @@ it("continues combos after a meikyo", testWithConfig({}, () => {
     compareDamageTables([
         {
             skillName: SkillName.Shifu,
-            displayedModifiers: [],
+            displayedModifiers: [PotencyModifierType.COMBO],
             hitCount: 3,
         },
         {
             skillName: SkillName.Kasha,
-            displayedModifiers: [PotencyModifierType.COMBO],
+            displayedModifiers: [PotencyModifierType.COMBO, PotencyModifierType.POSITIONAL],
             hitCount: 1,
         },
         {
@@ -158,4 +158,13 @@ it("continues combos after a meikyo", testWithConfig({}, () => {
             hitCount: 1,
         },
     ]);
+}));
+
+it("generates kenki and shoha in meditation", testWithConfig({}, () => {
+    const state = controller.game as SAMState;
+    state.resources.get(ResourceType.InCombat).overrideCurrentValue(1);
+    applySkill(SkillName.Meditate);
+    controller.step(30); // longer than the duration to make sure we don't keep ticking
+    expect(state.resources.get(ResourceType.Kenki).availableAmount()).toEqual(50);
+    expect(state.resources.get(ResourceType.Meditation).availableAmount()).toEqual(3);
 }));
