@@ -410,7 +410,7 @@ export abstract class GameState {
 				}
 			}
 
-			if (this.job === ShellJob.DNC && doesDamage) {
+			if (this.job === ShellJob.DNC && this.hasResourceAvailable(ResourceType.TechnicalFinish) && doesDamage) {
 				node.addBuff(BuffType.TechnicalFinish)
 			}
 
