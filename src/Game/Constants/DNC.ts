@@ -74,6 +74,12 @@ export enum DNCResourceType {
     ImprovisedFinish = "Improvised Finish",
     Esprit = "Esprit",
 
+    // Partner buffs
+    DancePartner = "Dance Partner",
+    StandardFinishPartner = "Standard Finish Partner",
+    EspritPartner = "Esprit Partner",
+    EspritTechnical = "Esprit Technical",
+
     // Combos & other trackers
     CascadeCombo = "CascadeCombo",
     WindmillCombo = "WindmillCombo",

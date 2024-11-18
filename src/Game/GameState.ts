@@ -410,6 +410,10 @@ export abstract class GameState {
 				}
 			}
 
+			if (this.job === ShellJob.DNC && doesDamage) {
+				node.addBuff(BuffType.TechnicalFinish)
+			}
+
 			// Perform additional side effects
 			skill.onConfirm(this, node);
 
@@ -618,7 +622,7 @@ export abstract class GameState {
 		return this.resources.timeTillReady(ResourceType.InCombat);
 	}
 
-	getSkillAvailabilityStatus(skillName: SkillName): SkillButtonViewInfo {
+	getSkillAvailabilityStatus(skillName: SkillName, primaryRecastOnly: boolean = false): SkillButtonViewInfo {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
 		let capturedManaCost = skill.manaCostFn(this);
@@ -675,7 +679,7 @@ export abstract class GameState {
 			maxStacks: Math.max(cd.maxStacks(), secondaryMaxStacks),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
-			cdRecastTime: Math.max(cdRecastTime, secondaryRecastTime),
+			cdRecastTime: primaryRecastOnly ? cdRecastTime : Math.max(cdRecastTime, secondaryRecastTime),
 			timeTillNextStackReady: Math.max(timeTillNextStackReady, timeTillSecondaryReady),
 			timeTillAvailable: timeTillAvailable,
 			timeTillDamageApplication: timeTillDamageApplication,

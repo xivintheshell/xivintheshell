@@ -51,6 +51,11 @@ makeDNCResource(ResourceType.RisingRhythm, 4, {timeout: 15})
 makeDNCResource(ResourceType.ImprovisationRegen, 1, {timeout: 15})
 makeDNCResource(ResourceType.ImprovisedFinish, 1, {timeout: 30})
 
+makeDNCResource(ResourceType.DancePartner, 1, {default: 1})
+makeDNCResource(ResourceType.EspritPartner, 1, {timeout: 60})
+makeDNCResource(ResourceType.StandardFinishPartner, 1, {timeout: 60})
+makeDNCResource(ResourceType.EspritTechnical, 1, {timeout: 20})
+
 makeDNCResource(ResourceType.ArmsLength, 1, {timeout: 6.5})
 
 makeDNCResource(ResourceType.CascadeCombo, 1, {timeout: 30})
@@ -60,14 +65,8 @@ makeDNCResource(ResourceType.PartySize, 8, {default: 8})
 const COMBO_GCDS: SkillName[] = [SkillName.Cascade, SkillName.Fountain, SkillName.Windmill, SkillName.Bladeshower]
 const DANCE_MOVES: SkillName[] = [SkillName.Emboite, SkillName.Entrechat, SkillName.Jete, SkillName.Pirouette]
 export class DNCState extends GameState {
-    lastEspritApplicationTime: number;
-    lastClosedPositionApplicationTime: number;
-
     constructor (config: GameConfig) {
         super(config)
-
-        this.lastClosedPositionApplicationTime = -this.config.countdown;
-        this.lastEspritApplicationTime = this.lastClosedPositionApplicationTime - 1;
 
         // Disable Esprit Gauge for level 70 duties
         if (!Traits.hasUnlocked(TraitName.Esprit, this.config.level)) {
@@ -165,26 +164,16 @@ export class DNCState extends GameState {
 
     simulatePartyEspritGain() {
         // Technical Finish Esprit generation overrides any need for dance partner member generation checks
-        if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
+        if (this.hasResourceAvailable(ResourceType.EspritTechnical)) {
             for (let i = 0; i < this.resources.get(ResourceType.PartySize).availableAmount() - 1; i ++) {
                 this.maybeGainResource(ResourceType.EspritGauge, 10, 0.2)
             }
             return;
         }
 
-        // If the player has applied the Esprit buff after the last time they applied Closed Position, they may gain Esprit from their partner
-        if (this.hasResourceAvailable(ResourceType.Esprit) && this.hasResourceAvailable(ResourceType.ClosedPosition) &&
-            this.lastEspritApplicationTime > this.lastClosedPositionApplicationTime) {
+        if (this.hasResourceAvailable(ResourceType.EspritPartner)) {
             this.maybeGainResource(ResourceType.EspritGauge, 10, 0.2)
         }
-    }
-
-    noteEspritApplication() {
-        this.lastEspritApplicationTime = this.time
-    }
-
-    noteClosedPositionApplication() {
-        this.lastClosedPositionApplicationTime = this.time
     }
 }
 
@@ -352,7 +341,13 @@ makeGCD_DNC(SkillName.Cascade, 1, {
         [TraitName.DynamicDancer, 220]
     ],
     applicationDelay: 0.80,
-    onConfirm: (state) => state.maybeGainProc(ResourceType.SilkenSymmetry)
+    onConfirm: (state) => {
+        state.maybeGainProc(ResourceType.SilkenSymmetry)
+
+        if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+            state.gainResource(ResourceType.EspritGauge, 5)
+        }
+    }
 })
 makeGCD_DNC(SkillName.Fountain, 2, {
     replaceIf: [entrechatCondition],
@@ -369,7 +364,13 @@ makeGCD_DNC(SkillName.Fountain, 2, {
         resourceValue: 1,
     },
     applicationDelay: 0.98,
-    onConfirm: (state) => state.maybeGainProc(ResourceType.SilkenFlow),
+    onConfirm: (state) => {
+        state.maybeGainProc(ResourceType.SilkenFlow)
+
+        if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+            state.gainResource(ResourceType.EspritGauge, 5)
+        }
+    },
     highlightIf: (state) => state.resources.get(ResourceType.CascadeCombo).availableAmount() === 1,
 })
 makeGCD_DNC(SkillName.ReverseCascade, 20, {
@@ -387,7 +388,9 @@ makeGCD_DNC(SkillName.ReverseCascade, 20, {
             state.tryConsumeResource(ResourceType.FlourishingSymmetry)
         }
 
-        state.gainResource(ResourceType.EspritGauge, 10)
+        if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+            state.gainResource(ResourceType.EspritGauge, 10)
+        }
         state.maybeGainResource(ResourceType.FeatherGauge, 1)
     },
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.SilkenSymmetry) || state.hasResourceAvailable(ResourceType.FlourishingSymmetry),
@@ -407,7 +410,9 @@ makeGCD_DNC(SkillName.Fountainfall, 40, {
             state.tryConsumeResource(ResourceType.FlourishingFlow)
         }
 
-        state.gainResource(ResourceType.EspritGauge, 10)
+        if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+            state.gainResource(ResourceType.EspritGauge, 10)
+        }
         state.maybeGainResource(ResourceType.FeatherGauge, 1)
     },
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.SilkenFlow) || state.hasResourceAvailable(ResourceType.FlourishingFlow),
@@ -490,14 +495,27 @@ makeGCD_DNC(SkillName.FinishingMove, 96, {
     onConfirm: (state) => {
         state.gainProc(ResourceType.StandardFinish)
         state.resources.get(ResourceType.StandardBonus).available(2)
+
+        if (state.hasResourceAvailable(ResourceType.DancePartner))
+        {
+            state.gainProc(ResourceType.StandardFinishPartner)
+        }
+
         if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
             state.gainProc(ResourceType.Esprit)
-            state.noteEspritApplication()
+            if (state.hasResourceAvailable(ResourceType.DancePartner)) {
+                state.gainProc(ResourceType.EspritPartner)
+            }
         }
+
         state.gainProc(ResourceType.LastDanceReady)
         state.tryConsumeResource(ResourceType.FinishingMoveReady)
     },
-    recastTime: 1.5,
+    secondaryCooldown: {
+        cdName: ResourceType.cd_StandardStep,
+        cooldown: 30,
+        maxCharges: 1,
+    },
     validateAttempt: (state) => state.hasResourceAvailable(ResourceType.FinishingMoveReady) && !isDancing(state),
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.FinishingMoveReady),
 })
@@ -521,9 +539,16 @@ makeGCD_DNC(SkillName.SingleStandardFinish, 15, {
         state.gainProc(ResourceType.StandardFinish)
         state.resources.get(ResourceType.StandardBonus).available(1)
 
+        if (state.hasResourceAvailable(ResourceType.DancePartner))
+        {
+            state.gainProc(ResourceType.StandardFinishPartner)
+        }
+
         if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
             state.gainProc(ResourceType.Esprit)
-            state.noteEspritApplication()
+            if (state.hasResourceAvailable(ResourceType.DancePartner)) {
+                state.gainProc(ResourceType.EspritPartner)
+            }
         }
 
         if (Traits.hasUnlocked(TraitName.EnhancedStandardFinish, state.config.level)) {
@@ -545,9 +570,16 @@ makeGCD_DNC(SkillName.DoubleStandardFinish, 15, {
         state.gainProc(ResourceType.StandardFinish)
         state.resources.get(ResourceType.StandardBonus).available(2)
 
+        if (state.hasResourceAvailable(ResourceType.DancePartner))
+        {
+            state.gainProc(ResourceType.StandardFinishPartner)
+        }
+
         if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
             state.gainProc(ResourceType.Esprit)
-            state.noteEspritApplication()
+            if (state.hasResourceAvailable(ResourceType.DancePartner)) {
+                state.gainProc(ResourceType.EspritPartner)
+            }
         }
 
         if (Traits.hasUnlocked(TraitName.EnhancedStandardFinish, state.config.level)) {
@@ -659,6 +691,7 @@ makeGCD_DNC(SkillName.SingleTechnicalFinish, 70, {
     applicationDelay: 0.54,
     onConfirm: (state) => {
         state.gainProc(ResourceType.TechnicalFinish)
+        state.gainProc(ResourceType.EspritTechnical)
         if (Traits.hasUnlocked(TraitName.EnhancedTechnicalFinish, state.config.level))
         {
             state.gainProc(ResourceType.FlourishingFinish)
@@ -679,6 +712,7 @@ makeGCD_DNC(SkillName.DoubleTechnicalFinish, 70, {
     applicationDelay: 0.54,
     onConfirm: (state) => {
         state.gainProc(ResourceType.TechnicalFinish)
+        state.gainProc(ResourceType.EspritTechnical)
         if (Traits.hasUnlocked(TraitName.EnhancedTechnicalFinish, state.config.level))
         {
             state.gainProc(ResourceType.FlourishingFinish)
@@ -699,6 +733,7 @@ makeGCD_DNC(SkillName.TripleTechnicalFinish, 70, {
     applicationDelay: 0.54,
     onConfirm: (state) => {
         state.gainProc(ResourceType.TechnicalFinish)
+        state.gainProc(ResourceType.EspritTechnical)
         if (Traits.hasUnlocked(TraitName.EnhancedTechnicalFinish, state.config.level))
         {
             state.gainProc(ResourceType.FlourishingFinish)
@@ -719,6 +754,7 @@ makeGCD_DNC(SkillName.QuadrupleTechnicalFinish, 70, {
     applicationDelay: 0.54,
     onConfirm: (state) => {
         state.gainProc(ResourceType.TechnicalFinish)
+        state.gainProc(ResourceType.EspritTechnical)
         if (Traits.hasUnlocked(TraitName.EnhancedTechnicalFinish, state.config.level))
         {
             state.gainProc(ResourceType.FlourishingFinish)
@@ -764,7 +800,13 @@ makeGCD_DNC(SkillName.Windmill, 15, {
     replaceIf: [emboiteCondition],
     potency: 100,
     applicationDelay: 0.62,
-    onConfirm: (state) => state.maybeGainProc(ResourceType.SilkenSymmetry)
+    onConfirm: (state) => {
+        state.maybeGainProc(ResourceType.SilkenSymmetry)
+
+        if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+            state.gainResource(ResourceType.EspritGauge, 5)
+        }
+    },
 })
 makeGCD_DNC(SkillName.Bladeshower, 25, {
     replaceIf: [entrechatCondition],
@@ -775,7 +817,13 @@ makeGCD_DNC(SkillName.Bladeshower, 25, {
         resourceValue: 1,
     },
     applicationDelay: 0.62,
-    onConfirm: (state) => state.maybeGainProc(ResourceType.SilkenFlow),
+    onConfirm: (state) => {
+        state.maybeGainProc(ResourceType.SilkenFlow)
+
+        if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+            state.gainResource(ResourceType.EspritGauge, 5)
+        }
+    },
     highlightIf: (state) => state.resources.get(ResourceType.WindmillCombo).availableAmount() === 1,
 })
 makeGCD_DNC(SkillName.RisingWindmill, 35, {
@@ -790,7 +838,9 @@ makeGCD_DNC(SkillName.RisingWindmill, 35, {
             state.tryConsumeResource(ResourceType.FlourishingSymmetry)
         }
 
-        state.gainResource(ResourceType.EspritGauge, 10)
+        if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+            state.gainResource(ResourceType.EspritGauge, 10)
+        }
         state.maybeGainResource(ResourceType.FeatherGauge, 1)
     },
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.SilkenSymmetry) || state.hasResourceAvailable(ResourceType.FlourishingSymmetry),
@@ -807,7 +857,9 @@ makeGCD_DNC(SkillName.Bloodshower, 45, {
             state.tryConsumeResource(ResourceType.FlourishingFlow)
         }
 
-        state.gainResource(ResourceType.EspritGauge, 10)
+        if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+            state.gainResource(ResourceType.EspritGauge, 10)
+        }
         state.maybeGainResource(ResourceType.FeatherGauge, 1)
     },
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.SilkenFlow) || state.hasResourceAvailable(ResourceType.FlourishingFlow),
@@ -903,7 +955,10 @@ makeAbility_DNC(SkillName.ClosedPosition, 60, ResourceType.cd_ClosedPosition, {
     cooldown: 30,
     maxCharges: 1,
     applicationDelay: 0,
-    onConfirm: (state) => state.resources.get(ResourceType.ClosedPosition).gain(1),
+    onConfirm: (state) => {
+        state.resources.get(ResourceType.ClosedPosition).gain(1)
+        state.resources.get(ResourceType.DancePartner).gain(1)
+    },
     validateAttempt: (state) => !state.hasResourceAvailable(ResourceType.ClosedPosition),
     secondaryCooldown: {
         cdName: ResourceType.cd_Ending,
@@ -916,7 +971,12 @@ makeAbility_DNC(SkillName.Ending, 60, ResourceType.cd_Ending, {
     cooldown: 1,
     maxCharges: 1,
     applicationDelay: 0,
-    onConfirm: (state) => state.tryConsumeResource(ResourceType.ClosedPosition, true),
+    onConfirm: (state) => {
+        state.tryConsumeResource(ResourceType.ClosedPosition, true)
+        state.tryConsumeResource(ResourceType.DancePartner, true)
+        state.tryConsumeResource(ResourceType.StandardFinishPartner, true)
+        state.tryConsumeResource(ResourceType.EspritPartner, true)
+    },
     secondaryCooldown: {
         cdName: ResourceType.cd_ClosedPosition,
         cooldown: 30,

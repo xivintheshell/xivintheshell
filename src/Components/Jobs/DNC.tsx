@@ -32,12 +32,55 @@ import { BuffProps, DanceCounterProps, registerBuffIcon, ResourceBarProps, Resou
     ResourceType.ImprovisationRegen,
     ResourceType.ImprovisedFinish,
     ResourceType.Esprit,
+    ResourceType.DancePartner,
+    ResourceType.EspritTechnical,
 ].forEach((buff) => registerBuffIcon(buff, `DNC/${buff}.png`))
+registerBuffIcon(ResourceType.EspritPartner, "DNC/Esprit.png")
+registerBuffIcon(ResourceType.StandardFinishPartner, "DNC/Standard Finish.png")
 
 export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
-    // DNC doesn't put any debuffs on the enemy
+    // DNC doesn't put any debuffs on the enemy... but we can use this space for showing our dance partner!
     override getEnemyBuffViewProps(): BuffProps[] {
-        return []
+        const resources = this.state.resources
+
+        const dancePartnerApplied = resources.get(ResourceType.DancePartner).availableAmount() > 0;
+        const standardFinishPartnerCountdown = resources.timeTillReady(ResourceType.StandardFinishPartner)
+        const espritPartnerCountdown = resources.timeTillReady(ResourceType.EspritPartner)
+        const espritTechnicalCountdown = resources.timeTillReady(ResourceType.EspritTechnical) 
+
+        return [
+            {
+                rscType: ResourceType.DancePartner,
+                onSelf: false,
+                enabled: true,
+                stacks: 1,
+                className: dancePartnerApplied ? "" : "hidden",
+            },
+            {
+                rscType: ResourceType.StandardFinish,
+                onSelf: false,
+                enabled: true,
+                stacks: 1,
+                timeRemaining: standardFinishPartnerCountdown.toFixed(3),
+                className: standardFinishPartnerCountdown > 0 ? "" : "hidden",
+            },
+            {
+                rscType: ResourceType.EspritPartner,
+                onSelf: false,
+                enabled: true,
+                stacks: 1,
+                timeRemaining: espritPartnerCountdown.toFixed(3),
+                className: espritPartnerCountdown > 0 ? "" : "hidden",
+            },
+            {
+                rscType: ResourceType.EspritTechnical,
+                onSelf: false,
+                enabled: true,
+                stacks: 1,
+                timeRemaining: espritTechnicalCountdown.toFixed(3),
+                className: espritTechnicalCountdown > 0 ? "" : "hidden",
+            },
+        ]
     }
 
     override getSelfBuffViewProps(): BuffProps[] {
