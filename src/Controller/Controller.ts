@@ -839,7 +839,7 @@ class Controller {
 			node.tmp_endLockTime = this.game.time + lockDuration;
 
 			if (!this.#bInSandbox) { // this block is run when NOT viewing historical state (aka run when receiving input)
-				let newStatus = this.game.getSkillAvailabilityStatus(skillName); // refresh to get re-captured recast time
+				let newStatus = this.game.getSkillAvailabilityStatus(skillName, true); // refresh to get re-captured recast time
 				let skill = this.game.skillsList.get(skillName);
 				let isGCD = skill.cdName === ResourceType.cd_GCD;
 				let isSpellCast = status.castTime > 0 && !status.instantCast;
