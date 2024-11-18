@@ -11,6 +11,7 @@ export class Trait {
 }
 
 export const enum TraitName {
+	// BLM
 	EnhancedEnochianII,
 	EnhancedPolyglot,
 	EnhancedFoul,
@@ -26,6 +27,7 @@ export const enum TraitName {
 	EnhancedAddle,
 	EnhancedAstralFire,
 
+	// PCT
 	PictomancyMasteryII,
 	EnhancedArtistry,
 	EnhancedPictomancy,
@@ -39,6 +41,7 @@ export const enum TraitName {
 	EnhancedPictomancyIV,
 	EnhancedPictomancyV,
 
+	// RDM
 	EnhancedDisplacement,
 	RedMagicMastery,
 	EnhancedManafication,
@@ -51,6 +54,7 @@ export const enum TraitName {
 	EnhancedAccelerationII,
 	EnhancedManaficationIII,
 
+	// DNC
 	Esprit,
 	EnhancedEnAvantII,
 	EnhancedTechnicalFinish,
@@ -76,6 +80,22 @@ export const enum TraitName {
 	EnhancedIkishotenII,
 	EnhancedMeikyoShisuiII,
 	EnhancedFeint,
+
+	// MCH
+	ChargedActionMastery,
+	HotShotMastery,
+	EnhancedWildfire,
+	Promotion,
+	SpreadShotMastery,
+	EnhancedReassemble,
+	MarksmansMastery,
+	QueensGambit,
+	EnhancedTactician,
+	DoubleBarrelMastery,
+	EnhancedMultiWeapon,
+	MarksmansMasteryII,
+	EnhancedMultiWeaponII,
+	EnhancedBarrelStabilizer,
 
 	Never,
 }
