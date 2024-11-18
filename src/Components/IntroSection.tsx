@@ -9,8 +9,8 @@ const THIS_DOMAIN = "https://xivintheshell.com";
 
 const GITHUB_URL = "https://github.com/xivintheshell/xivintheshell";
 
-// BLM in the Shell thread (TODO: change if we get our own channel)
-const HELP_CHANNEL_URL = "https://discordapp.com/channels/277897135515762698/1255782490862387360";
+// #xiv_in_the_shell_support in the Balance discord
+const HELP_CHANNEL_URL = "https://discord.com/channels/277897135515762698/1307922201726685236";
 
 const BALANCE_URL = "https://discord.gg/thebalanceffxiv"
 
@@ -67,7 +67,8 @@ const getAcknowledgements = () => (
 
 	{localize({
 		en: <div className={"paragraph"}>
-			If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this thread in The Balance</a>.
+			If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this channel in The Balance</a>
+			(requires the "Misc. Support" role).
 			You can also find me directly on discord (miyehn), or via email (ellyn.waterford@gmail.com). In case of sending a bug report, attaching the
 			fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
 		</div>,

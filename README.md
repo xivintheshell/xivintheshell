@@ -2,7 +2,7 @@
 
 FFXIV job simulators & rotation planners.
 
-(Deployment TBD)
+https://xivintheshell.com
 
 Let us know if you encounter bugs and/or have questions or concerns.
 
