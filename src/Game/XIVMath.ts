@@ -1,4 +1,5 @@
 import { LevelSync, ResourceType } from "./Common";
+import { Traits, TraitName } from "./Traits";
 
 export class XIVMath {
 	static getMainstatBase(level: LevelSync) {
@@ -96,7 +97,7 @@ export class XIVMath {
 	// Return the speed modifier granted by a specific buff.
 	// For example, for the 15% reduction granted by Circle of Power (which we just call Ley Lines),
 	// return the integer 15.
-	static getSpeedModifier(buff: ResourceType) {
+	static getSpeedModifier(buff: ResourceType, level: LevelSync) {
 		if (buff === ResourceType.LeyLines) {
 			return 15;
 		}
@@ -104,7 +105,7 @@ export class XIVMath {
 			return 25;
 		}
 		if (buff === ResourceType.Fuka) {
-			return 13;
+			return Traits.hasUnlocked(TraitName.EnhancedFugetsuAndFuka, level) ? 13 : 10;
 		}
 		console.error("No speed modifier for buff: ", buff);
 		return 0;
@@ -115,7 +116,7 @@ export class XIVMath {
 		const div = this.getStatDiv(level);
 
 		// let us pray we never need to stack haste buffs
-		let subtractSpeed = speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff);
+		let subtractSpeed = speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff, level);
 
 		return Math.floor(Math.floor(Math.floor((100-subtractSpeed)*100/100)*Math.floor((2000-Math.floor(130*(spellSpeed-subStat)/div+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
 	}
@@ -124,7 +125,7 @@ export class XIVMath {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
 
-		let subtractSpeed = speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff);
+		let subtractSpeed = speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff, level);
 		return Math.floor(Math.floor(Math.floor((100-subtractSpeed)*100/100)*Math.floor((2000-Math.floor(130*(spellSpeed-subStat)/div+1000))*(1000*baseCastTime)/1000)/100)*100/100)/1000;
 	}
 

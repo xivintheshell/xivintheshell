@@ -86,12 +86,22 @@ export const Modifiers = {
 		source: PotencyModifierType.MANAFIC,
 		damageFactor: 1.05,
 	} as PotencyMultiplier,
-	Fugetsu: {
+	FugetsuBase: {
+		kind: "multiplier",
+		source: PotencyModifierType.FUGETSU,
+		damageFactor: 1.10,
+	} as PotencyMultiplier,
+	FugetsuEnhanced: {
 		kind: "multiplier",
 		source: PotencyModifierType.FUGETSU,
 		damageFactor: 1.13,
 	} as PotencyMultiplier,
-	Yatenpi: {
+	YatenpiBase: {
+		kind: "adder",
+		source: PotencyModifierType.YATEN,
+		additiveAmount: 160,
+	} as PotencyAdder,
+	YatenpiEnhanced: {
 		kind: "adder",
 		source: PotencyModifierType.YATEN,
 		additiveAmount: 170,

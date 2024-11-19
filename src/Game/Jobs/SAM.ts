@@ -10,11 +10,13 @@ import {
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
+	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
 	NO_EFFECT,
 	PotencyModifierFn,
+	ResourceCalculationFn,
 	SkillAutoReplace,
 	StatePredicate,
 	Weaponskill,
@@ -83,18 +85,11 @@ export class SAMState extends GameState {
 
 		this.higanbanaTickOffset = this.nonProcRng() * 3.0;
 
-		const polyglotStacks = 
-			(Traits.hasUnlocked(TraitName.EnhancedPolyglotII, this.config.level) && 3) ||
-			(Traits.hasUnlocked(TraitName.EnhancedPolyglot, this.config.level) && 2) ||
-			1;
-		this.resources.set(new Resource(ResourceType.Polyglot, polyglotStacks, 0));
-
-		// skill CDs (also a form of resource)
-		const manafontCooldown = (Traits.hasUnlocked(TraitName.EnhancedManafont, this.config.level) && 100) || 180;
-		const swiftcastCooldown = (Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level) && 40) || 60;
+		const gurenCd = Traits.hasUnlocked(TraitName.EnhancedHissatsu, this.config.level) ? 60 : 120;
+		const meikyoStacks = Traits.hasUnlocked(TraitName.EnhancedMeikyoShisui, this.config.level) ? 2 : 1;
 		[
-			new CoolDown(ResourceType.cd_Manafont, manafontCooldown, 1, 1),
-			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
+			new CoolDown(ResourceType.cd_MeikyoShisui, 55, meikyoStacks, meikyoStacks),
+			new CoolDown(ResourceType.cd_SeneiGuren, gurenCd, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
 		this.registerRecurringEvents();
@@ -127,15 +122,26 @@ export class SAMState extends GameState {
 		this.addEvent(new Event("initial higanbana DoT tick", timeTillFirstHiganbanaTick, recurringHiganbanaTick));
 	}
 
+	getFugetsuModifier(): PotencyModifier {
+		return Traits.hasUnlocked(TraitName.EnhancedFugetsuAndFuka, this.config.level) ? Modifiers.FugetsuEnhanced : Modifiers.FugetsuBase;
+	}
+
 	// Return true if the active combo buff is up, or meikyo is active.
 	// Does not advance the combo state.
 	checkCombo(requiredCombo: ResourceType): boolean {
 		return this.hasResourceAvailable(requiredCombo) || this.hasResourceAvailable(ResourceType.MeikyoShisui);
 	}
 
-	refreshBuff(rscType: ResourceType) {
-		this.resources.get(rscType).gain(1);
-		this.enqueueResourceDrop(rscType);
+	refreshBuff(rscType: ResourceType, delay: number) {
+		// buffs are applied on hit, so apply it after a delay
+		this.addEvent(new Event(
+			"gain fugetsu",
+			delay,
+			() => {
+				this.resources.get(rscType).gain(1);
+				this.enqueueResourceDrop(rscType);
+			})
+		);
 	}
 
 	// Activate combo timers and deactivate all other combo timers.
@@ -242,14 +248,14 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 	autoDowngrade?: SkillAutoReplace,
 	baseCastTime?: number,
 	baseRecastTime?: number,
-	basePotency: number,
+	basePotency: number | Array<[TraitName, number]>,
 	combo?: {
-		potency: number,
+		potency: number | Array<[TraitName, number]>,
 		resource: ResourceType,
 	},
 	positional?: {
-		potency: number,
-		comboPotency: number,
+		potency: number | Array<[TraitName, number]>,
+		comboPotency: number | Array<[TraitName, number]>,
 		location: "flank" | "rear",
 	},
 	applicationDelay: number,
@@ -264,7 +270,7 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 	);
 	const onApplication: EffectFn<SAMState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyModifiers = (state: Readonly<SAMState>) => {
-		const mods: PotencyModifier[] = state.hasResourceAvailable(ResourceType.Fugetsu) ? [Modifiers.Fugetsu] : [];
+		const mods: PotencyModifier[] = state.hasResourceAvailable(ResourceType.Fugetsu) ? [state.getFugetsuModifier()] : [];
 		if (params.jobPotencyModifiers) {
 			mods.push(...params.jobPotencyModifiers(state));
 		}
@@ -273,16 +279,28 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 				|| (params.positional.location === "flank" && state.hasResourceAvailable(ResourceType.FlankPositional))
 				|| (params.positional.location === "rear" && state.hasResourceAvailable(ResourceType.RearPositional)));
 		if (params.combo && state.checkCombo(params.combo.resource)) {
-			mods.push(makeComboModifier(params.combo.potency - params.basePotency));
+			mods.push(makeComboModifier(getBasePotency(state, params.combo.potency) - getBasePotency(state, params.basePotency)));
 			// typescript isn't smart enough to elide the null check
 			if (params.positional && hitPositional) {
-				mods.push(makePositionalModifier(params.positional.comboPotency - params.combo.potency));
+				mods.push(makePositionalModifier(getBasePotency(state, params.positional.comboPotency) - getBasePotency(state, params.combo.potency)));
 			}
 		} else if (params.positional && hitPositional) {
-			mods.push(makePositionalModifier(params.positional.potency - params.basePotency));
+			mods.push(makePositionalModifier(getBasePotency(state, params.positional.potency) - getBasePotency(state, params.basePotency)));
 		}
 		return mods;
 	};
+	let castTime: number | ResourceCalculationFn<SAMState> = params.baseCastTime || 0;
+	if (castTime) {
+		// All SAM castbars are 1.8s (scaled to sks and affected by fuka) when synced
+		castTime = (state) => (
+			Traits.hasUnlocked(TraitName.EnhancedIaijutsu, state.config.level)
+			? params.baseCastTime || 0
+			: state.config.adjustedGCD(
+				1.8,
+				state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
+			)
+		);
+	}
 	return makeWeaponskill(ShellJob.SAM, name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
@@ -290,7 +308,7 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		// TODO deal with trait setting cast times to 1.3 vs. calculating fuka
-		castTime: (state) => params.baseCastTime || 0,
+		castTime: castTime,
 		recastTime: (state) => state.config.adjustedGCD(
 			params.baseRecastTime ?? 2.5,
 			state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
@@ -311,7 +329,7 @@ const makeAbility_SAM = (name: SkillName, unlockLevel: number, cdName: ResourceT
 	startOnHotbar?: boolean,
 	highlightIf?: StatePredicate<SAMState>,
 	applicationDelay?: number,
-	potency?: number,
+	potency?: number | Array<[TraitName, number]>,
 	jobPotencyModifiers?: PotencyModifierFn<SAMState>,
 	cooldown: number,
 	maxCharges?: number,
@@ -320,7 +338,7 @@ const makeAbility_SAM = (name: SkillName, unlockLevel: number, cdName: ResourceT
 	onApplication?: EffectFn<SAMState>,
 }): Ability<SAMState> => {
 	if (params.potency && !params.jobPotencyModifiers) {
-		params.jobPotencyModifiers = (state) => state.hasResourceAvailable(ResourceType.Fugetsu) ? [Modifiers.Fugetsu] : [];
+		params.jobPotencyModifiers = (state) => state.hasResourceAvailable(ResourceType.Fugetsu) ? [state.getFugetsuModifier()] : [];
 	}
 	if (name !== SkillName.ThirdEyePop && name !== SkillName.TengentsuPop) {
 		params.onConfirm = combineEffects((state) => state.cancelMeditate(), params.onConfirm ?? NO_EFFECT);
@@ -340,7 +358,9 @@ makeGCD_SAM(SkillName.Enpi, 15, {
 		}
 		state.gainKenki(10);
 	},
-	jobPotencyModifiers: (state) => state.hasResourceAvailable(ResourceType.EnhancedEnpi) ? [Modifiers.Yatenpi] : [],
+	jobPotencyModifiers: (state) => state.hasResourceAvailable(ResourceType.EnhancedEnpi) ? [
+		Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level) ? Modifiers.YatenpiEnhanced : Modifiers.YatenpiBase
+	] : [],
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.EnhancedEnpi),
 });
 
@@ -369,9 +389,17 @@ makeGCD_SAM(SkillName.Gyofu, 92, {
 
 makeGCD_SAM(SkillName.Yukikaze, 50, {
 	applicationDelay: 0.85,
-	basePotency: 160,
+	basePotency: [
+		[TraitName.Never, 100],
+		[TraitName.WayOfTheSamuraiII, 110],
+		[TraitName.WayOfTheSamuraiIII, 160],
+	],
 	combo: {
-		potency: 340,
+		potency: [
+			[TraitName.Never, 280],
+			[TraitName.WayOfTheSamuraiII, 290],
+			[TraitName.WayOfTheSamuraiIII, 340],
+		],
 		resource: ResourceType.TwoReady,
 	},
 	onConfirm: (state) => {
@@ -386,17 +414,22 @@ makeGCD_SAM(SkillName.Yukikaze, 50, {
 });
 
 makeGCD_SAM(SkillName.Jinpu, 4, {
-	// TODO apply lvl 94 trait potencies
 	applicationDelay: 0.62,
-	basePotency: 140,
+	basePotency: [
+		[TraitName.Never, 120],
+		[TraitName.WayOfTheSamuraiIII, 140],
+	],
 	combo: {
-		potency: 300,
+		potency: [
+			[TraitName.Never, 280],
+			[TraitName.WayOfTheSamuraiIII, 300],
+		],
 		resource: ResourceType.TwoReady,
 	},
 	onConfirm: (state) => {
 		if (state.checkCombo(ResourceType.TwoReady)) {
 			state.gainKenki(5);
-			state.refreshBuff(ResourceType.Fugetsu);
+			state.refreshBuff(ResourceType.Fugetsu, 0.62);
 			state.tryConsumeMeikyo();
 			state.progressActiveCombo([ResourceType.GekkoReady]);
 		} else {
@@ -409,14 +442,30 @@ makeGCD_SAM(SkillName.Jinpu, 4, {
 
 makeGCD_SAM(SkillName.Gekko, 30, {
 	applicationDelay: 0.76,
-	basePotency: 160,
+	basePotency: [
+		[TraitName.Never, 100],
+		[TraitName.WayOfTheSamuraiII, 110],
+		[TraitName.WayOfTheSamuraiIII, 160],
+	],
 	combo: {
-		potency: 370,
+		potency: [
+			[TraitName.Never, 310],
+			[TraitName.WayOfTheSamuraiII, 320],
+			[TraitName.WayOfTheSamuraiIII, 370],
+		],
 		resource: ResourceType.GekkoReady,
 	},
 	positional: {
-		potency: 210,
-		comboPotency: 420,
+		potency: [
+			[TraitName.Never, 150],
+			[TraitName.WayOfTheSamuraiII, 160],
+			[TraitName.WayOfTheSamuraiIII, 210],
+		],
+		comboPotency: [
+			[TraitName.Never, 360],
+			[TraitName.WayOfTheSamuraiII, 370],
+			[TraitName.WayOfTheSamuraiIII, 420],
+		],
 		location: "rear",
 	},
 	onConfirm: (state) => {
@@ -425,7 +474,7 @@ makeGCD_SAM(SkillName.Gekko, 30, {
 			state.gainSen(ResourceType.Getsu);
 		}
 		if (state.hasResourceAvailable(ResourceType.MeikyoShisui)) {
-			state.refreshBuff(ResourceType.Fugetsu);
+			state.refreshBuff(ResourceType.Fugetsu, 0.76);
 		}
 		state.tryConsumeMeikyo();
 		state.progressActiveCombo([]);
@@ -435,15 +484,21 @@ makeGCD_SAM(SkillName.Gekko, 30, {
 
 makeGCD_SAM(SkillName.Shifu, 18, {
 	applicationDelay: 0.80,
-	basePotency: 140,
+	basePotency: [
+		[TraitName.Never, 120],
+		[TraitName.WayOfTheSamuraiIII, 140],
+	],
 	combo: {
-		potency: 300,
+		potency: [
+			[TraitName.Never, 280],
+			[TraitName.WayOfTheSamuraiIII, 300],
+		],
 		resource: ResourceType.TwoReady,
 	},
 	onConfirm: (state) => {
 		if (state.checkCombo(ResourceType.TwoReady)) {
 			state.gainKenki(5);
-			state.refreshBuff(ResourceType.Fuka);
+			state.refreshBuff(ResourceType.Fuka, 0.8);
 			state.tryConsumeMeikyo();
 			state.progressActiveCombo([ResourceType.KashaReady]);
 		} else {
@@ -456,14 +511,30 @@ makeGCD_SAM(SkillName.Shifu, 18, {
 
 makeGCD_SAM(SkillName.Kasha, 40, {
 	applicationDelay: 0.62,
-	basePotency: 160,
+	basePotency: [
+		[TraitName.Never, 100],
+		[TraitName.WayOfTheSamuraiII, 110],
+		[TraitName.WayOfTheSamuraiIII, 160],
+	],
 	combo: {
-		potency: 370,
+		potency: [
+			[TraitName.Never, 310],
+			[TraitName.WayOfTheSamuraiII, 320],
+			[TraitName.WayOfTheSamuraiIII, 370],
+		],
 		resource: ResourceType.KashaReady,
 	},
 	positional: {
-		potency: 210,
-		comboPotency: 420,
+		potency: [
+			[TraitName.Never, 150],
+			[TraitName.WayOfTheSamuraiII, 160],
+			[TraitName.WayOfTheSamuraiIII, 210],
+		],
+		comboPotency: [
+			[TraitName.Never, 360],
+			[TraitName.WayOfTheSamuraiII, 370],
+			[TraitName.WayOfTheSamuraiIII, 420],
+		],
 		location: "flank",
 	},
 	onConfirm: (state) => {
@@ -472,7 +543,7 @@ makeGCD_SAM(SkillName.Kasha, 40, {
 			state.gainSen(ResourceType.KaSen);
 		}
 		if (state.hasResourceAvailable(ResourceType.MeikyoShisui)) {
-			state.refreshBuff(ResourceType.Fuka);
+			state.refreshBuff(ResourceType.Fuka, 0.62);
 		}
 		state.tryConsumeMeikyo();
 		state.progressActiveCombo([]);
@@ -481,7 +552,7 @@ makeGCD_SAM(SkillName.Kasha, 40, {
 });
 
 makeGCD_SAM(SkillName.Fuga, 26, {
-	autoUpgrade: { trait: TraitName.HakazeMastery, otherSkill: SkillName.Fuko },
+	autoUpgrade: { trait: TraitName.FugaMastery, otherSkill: SkillName.Fuko },
 	applicationDelay: 0.76, // TODO
 	basePotency: 90,
 	onConfirm: (state) => {
@@ -491,7 +562,7 @@ makeGCD_SAM(SkillName.Fuga, 26, {
 });
 
 makeGCD_SAM(SkillName.Fuko, 86, {
-	autoDowngrade: { trait: TraitName.HakazeMastery, otherSkill: SkillName.Fuga },
+	autoDowngrade: { trait: TraitName.FugaMastery, otherSkill: SkillName.Fuga },
 	applicationDelay: 0.76,
 	basePotency: 100,
 	onConfirm: (state) => {
@@ -510,7 +581,7 @@ makeGCD_SAM(SkillName.Mangetsu, 35, {
 	onConfirm: (state) => {
 		if (state.checkCombo(ResourceType.TwoAoeReady)) {
 			state.gainKenki(10);
-			state.refreshBuff(ResourceType.Fugetsu);
+			state.refreshBuff(ResourceType.Fugetsu, 0.62);
 			state.gainSen(ResourceType.Getsu);
 		}
 	},
@@ -527,7 +598,7 @@ makeGCD_SAM(SkillName.Oka, 35, {
 	onConfirm: (state) => {
 		if (state.checkCombo(ResourceType.TwoAoeReady)) {
 			state.gainKenki(10);
-			state.refreshBuff(ResourceType.Fuka);
+			state.refreshBuff(ResourceType.Fuka, 0.62);
 			state.gainSen(ResourceType.KaSen);
 		}
 	},
@@ -583,7 +654,7 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 			mods.push(Modifiers.Tincture);
 		}
 		if (state.hasResourceAvailable(ResourceType.Fugetsu)) {
-			mods.push(Modifiers.Fugetsu);
+			mods.push(state.getFugetsuModifier());
 		}
 		const snapshotTime = state.getDisplayTime();
 		// initial potency
@@ -600,7 +671,7 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 		node.addPotency(pInitial);
 		// tick potencies
 		const ticks = 20;
-		const tickPotency = 50;
+		const tickPotency = Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level) ? 50 : 45;
 		for (let i = 0; i < ticks; i++) {
 			let pDot = new Potency({
 				config: controller.record.config ?? controller.gameConfig,
@@ -685,7 +756,10 @@ makeGCD_SAM(SkillName.MidareSetsugekka, 30, {
 	startOnHotbar: false,
 	replaceIf: [banaCondition, tenkaCondition, tendoGokenCondition, tendoMidareCondition],
 	baseCastTime: 1.3,
-	basePotency: 640,
+	basePotency: [
+		[TraitName.Never, 620],
+		[TraitName.WayOfTheSamuraiIII, 640],
+	],
 	applicationDelay: 0.62,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
 	validateAttempt: midareCondition.condition,
@@ -759,7 +833,10 @@ makeGCD_SAM(SkillName.TendoKaeshiGoken, 100, {
 makeGCD_SAM(SkillName.KaeshiSetsugekka, 74, {
 	startOnHotbar: false,
 	replaceIf: [kaeshiGokenCondition, tendoKaeshiGokenCondition, tendoKaeshiSetsugekkaCondition],
-	basePotency: 640,
+	basePotency: [
+		[TraitName.Never, 620],
+		[TraitName.WayOfTheSamuraiIII, 640],
+	],
 	applicationDelay: 0.62,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
 	validateAttempt: kaeshiSetsugekkaCondition.condition,
@@ -784,7 +861,10 @@ makeGCD_SAM(SkillName.OgiNamikiri, 90, {
 		condition: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
 	}],
 	applicationDelay: 0.49,
-	basePotency: 900,
+	basePotency: [
+		[TraitName.Never, 860],
+		[TraitName.WayOfTheSamuraiIII, 900],
+	],
 	baseCastTime: 1.3,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.OgiReady),
@@ -800,7 +880,10 @@ makeGCD_SAM(SkillName.OgiNamikiri, 90, {
 makeGCD_SAM(SkillName.KaeshiNamikiri, 90, {
 	startOnHotbar: false,
 	applicationDelay: 0.49,
-	basePotency: 900,
+	basePotency: [
+		[TraitName.Never, 860],
+		[TraitName.WayOfTheSamuraiIII, 900],
+	],
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.KaeshiOgiReady),
@@ -814,8 +897,10 @@ makeAbility_SAM(SkillName.MeikyoShisui, 50, ResourceType.cd_MeikyoShisui, {
 		state.resources.get(ResourceType.MeikyoShisui).gain(3);
 		state.enqueueResourceDrop(ResourceType.MeikyoShisui);
 
-		state.resources.get(ResourceType.Tendo).gain(1);
-		state.enqueueResourceDrop(ResourceType.Tendo);
+		if (Traits.hasUnlocked(TraitName.EnhancedMeikyoShisuiII, state.config.level)) {
+			state.resources.get(ResourceType.Tendo).gain(1);
+			state.enqueueResourceDrop(ResourceType.Tendo);
+		}
 	},
 });
 
@@ -828,10 +913,14 @@ makeAbility_SAM(SkillName.Ikishoten, 68, ResourceType.cd_Ikishoten, {
 	validateAttempt: (state) => state.isInCombat(),
 	onConfirm: (state) => {
 		state.gainKenki(50);
-		state.resources.get(ResourceType.OgiReady).gain(1);
-		state.resources.get(ResourceType.ZanshinReady).gain(1);
-		state.enqueueResourceDrop(ResourceType.OgiReady);
-		state.enqueueResourceDrop(ResourceType.ZanshinReady);
+		if (Traits.hasUnlocked(TraitName.EnhancedIkishoten, state.config.level)) {
+			state.resources.get(ResourceType.OgiReady).gain(1);
+			state.enqueueResourceDrop(ResourceType.OgiReady);
+		}
+		if (Traits.hasUnlocked(TraitName.EnhancedIkishotenII, state.config.level)) {
+			state.resources.get(ResourceType.ZanshinReady).gain(1);
+			state.enqueueResourceDrop(ResourceType.ZanshinReady);
+		}
 	},
 });
 
@@ -879,6 +968,7 @@ makeAbility_SAM(SkillName.Senei, 72, ResourceType.cd_SeneiGuren, {
 	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
 });
 
+// cooldown set by trait in constructor
 makeAbility_SAM(SkillName.Guren, 70, ResourceType.cd_SeneiGuren, {
 	cooldown: 60,
 	potency: 500,
@@ -899,7 +989,10 @@ makeAbility_SAM(SkillName.Hagakure, 68, ResourceType.cd_Hagakure, {
 
 makeAbility_SAM(SkillName.Shoha, 80, ResourceType.cd_Shoha, {
 	cooldown: 15,
-	potency: 640,
+	potency: [
+		[TraitName.Never, 560],
+		[TraitName.WayOfTheSamuraiIII, 640],
+	],
 	applicationDelay: 0.58,
 	validateAttempt: (state) => state.resources.get(ResourceType.Meditation).available(3),
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.Meditation, true),
