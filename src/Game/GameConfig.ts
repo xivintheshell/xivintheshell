@@ -8,6 +8,7 @@ export type ConfigData = {
 	shellVersion: ShellVersion,
 	level: LevelSync,
 	spellSpeed: number,
+	skillSpeed: number,
 	criticalHit: number,
 	directHit: number,
 	determination: number,
@@ -27,6 +28,7 @@ export const DEFAULT_BLM_CONFIG: ConfigData = {
 	level: LevelSync.lvl100,
 	// 2.37 GCD
 	spellSpeed: 1532,
+	skillSpeed: 420,
 	criticalHit: 420,
 	directHit: 420,
 	determination: 440,
@@ -46,6 +48,7 @@ export const DEFAULT_PCT_CONFIG: ConfigData = {
 	level: LevelSync.lvl100,
 	// 7.05 2.5 GCD bis https://xivgear.app/?page=sl%7C4c102326-839a-43c8-84ae-11ffdb6ef4a2
 	spellSpeed: 420,
+	skillSpeed: 420,
 	criticalHit: 3140,
 	directHit: 1993,
 	determination: 2269,
@@ -74,6 +77,7 @@ export class GameConfig {
 	readonly shellVersion = ShellInfo.version;
 	readonly level: LevelSync;
 	readonly spellSpeed: number;
+	readonly skillSpeed: number;
 	readonly criticalHit: number;
 	readonly directHit: number;
 	readonly determination: number;
@@ -92,6 +96,7 @@ export class GameConfig {
 		shellVersion: ShellVersion,
 		level: LevelSync,
 		spellSpeed: number,
+		skillSpeed: number,
 		criticalHit: number,
 		directHit: number,
 		determination: number,
@@ -109,6 +114,7 @@ export class GameConfig {
 		this.shellVersion = props.shellVersion;
 		this.level = props.level ?? DEFAULT_CONFIG.level;
 		this.spellSpeed = props.spellSpeed;
+		this.skillSpeed = props.skillSpeed;
 		this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
 		this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
 		this.determination = props.determination ?? DEFAULT_CONFIG.determination;
@@ -131,13 +137,17 @@ export class GameConfig {
 		this.legacy_casterTax = props?.casterTax ?? 0;
 	}
 
-	adjustedDoTPotency(inPotency : number) {
-		return XIVMath.dotPotency(this.level, this.spellSpeed, inPotency);
+	adjustedDoTPotency(inPotency : number, affectedBySkillSpeed: boolean = false) {
+		return XIVMath.dotPotency(this.level, affectedBySkillSpeed ? this.skillSpeed: this.spellSpeed, inPotency);
 	}
 
 	// returns GCD before FPS tax
 	adjustedGCD(baseGCD: number = 2.5, speedBuff?: ResourceType) {
 		return XIVMath.preTaxGcd(this.level, this.spellSpeed, baseGCD, speedBuff);
+	}
+
+	adjustedSksGCD(baseGCD: number = 2.5, speedBuff?: ResourceType) {
+		return XIVMath.preTaxGcd(this.level, this.skillSpeed, baseGCD, speedBuff);
 	}
 
 	// returns cast time before FPS and caster tax
@@ -190,6 +200,7 @@ export class GameConfig {
 			shellVersion: this.shellVersion,
 			level: this.level,
 			spellSpeed: this.spellSpeed,
+			skillSpeed: this.skillSpeed,
 			criticalHit: this.criticalHit,
 			directHit: this.directHit,
 			determination: this.determination,

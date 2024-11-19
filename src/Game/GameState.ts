@@ -22,7 +22,7 @@ import {
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
-import {ShellJob} from "../Controller/Common";
+import {ShellJob, SKS_JOBS, SPS_JOBS} from "../Controller/Common";
 import {Modifiers, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
 
@@ -70,7 +70,14 @@ export abstract class GameState {
 		});
 		// GCD, movement, and animation locks are treated as special since they do not appear
 		// in resource overrides
-		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD()), 1, 1));
+		let adjustedGCD = 2.5;
+		if (SKS_JOBS.includes(this.job)) {
+			adjustedGCD = config.adjustedSksGCD()
+		}
+		if (SPS_JOBS.includes(this.job)) {
+			adjustedGCD = config.adjustedGCD()
+		}
+		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(adjustedGCD), 1, 1));
 
 		this.resources.set(new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(new Resource(ResourceType.NotAnimationLocked, 1, 1));

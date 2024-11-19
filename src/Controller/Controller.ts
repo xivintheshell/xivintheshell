@@ -739,6 +739,7 @@ class Controller {
 		job: ShellJob,
 		level: LevelSync,
 		spellSpeed: number,
+		skillSpeed: number,
 		criticalHit: number,
 		directHit: number,
 		determination: number,

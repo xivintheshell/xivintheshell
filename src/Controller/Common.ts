@@ -38,6 +38,16 @@ export const ALL_JOBS = [
 	ShellJob.PCT,
 ];
 
+export const SKS_JOBS = [
+	ShellJob.DNC,
+]
+
+export const SPS_JOBS = [
+	ShellJob.BLM,
+	ShellJob.RDM,
+	ShellJob.PCT,
+]
+
 export const TESTING_JOBS = [
 	ShellJob.RDM,
 	ShellJob.DNC,
