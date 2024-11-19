@@ -220,9 +220,22 @@ buffIcons.set(ResourceType.FlankPositional, require("./Asset/Buffs/General/Flank
 function Buff(props: BuffProps) {
 	let assetName: string = props.rscType;
 	if (props.stacks > 1) assetName += props.stacks;
+	// Special case for positional buffs: add a rounded border thta's similar in size to the other buffs
+	let imgStyle: React.CSSProperties;
+	if (props.rscType === ResourceType.RearPositional || props.rscType === ResourceType.FlankPositional) {
+		imgStyle = {
+			height: 40,
+			borderStyle: "solid",
+			borderColor: getCurrentThemeColors().bgHighContrast,
+			borderWidth: "0.2em",
+			borderRadius: "0.7em",
+		};
+	} else {
+		imgStyle = { height: 40 };
+	}
 	return <div title={localizeResourceType(props.rscType)} className={props.className + " buff " + props.rscType}>
 		<Clickable content={
-			<img style={{height: 40}} src={buffIcons.get(assetName)} alt={props.rscType}/>
+			<img style={imgStyle} src={buffIcons.get(assetName)} alt={props.rscType}/>
 		} style={{
 			display: "inline-block",
 			verticalAlign: "top",
