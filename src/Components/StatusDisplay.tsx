@@ -388,7 +388,7 @@ function ResourcesDisplay(props: {
 		}
 	});
 	// Set a minHeight to ensure buffs do not clash with the hotbar
-	return <div style={{textAlign: "left", minHeight: "13.5em"}}>
+	return <div style={{textAlign: "left", minHeight: "22em"}}>
 		{elements}
 	</div>
 }
