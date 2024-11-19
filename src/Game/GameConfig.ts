@@ -156,7 +156,12 @@ export class GameConfig {
 			|| skillName === SkillName.Yaten
 		) {
 			return 0.8; // from: https://nga.178.com/read.php?tid=21233094&rand=761
-		} else if (skillName === SkillName.TemperaCoatPop || skillName === SkillName.TemperaGrassaPop) {
+		} else if (
+			skillName === SkillName.TemperaCoatPop
+			|| skillName === SkillName.TemperaGrassaPop
+			|| skillName === SkillName.TengentsuPop
+			|| skillName === SkillName.ThirdEyePop
+		) {
 			return 0.01; // not real abilities, animation lock is fake
 		} else {
 			return this.animationLock;
