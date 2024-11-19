@@ -23,7 +23,7 @@ import {
 } from "../Skills";
 import {TraitName, Traits} from "../Traits";
 import {GameState} from "../GameState";
-import {makeResource, CoolDown, DoTBuff, Event, EventTag, Resource} from "../Resources"
+import {makeResource, CoolDown, DoTBuff, Event, EventTag} from "../Resources"
 import {GameConfig} from "../GameConfig";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
