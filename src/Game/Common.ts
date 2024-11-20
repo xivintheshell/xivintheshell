@@ -127,8 +127,8 @@ enum GeneralResourceType {
 	Bloodbath = "Bloodbath", // [0, 1]
 
 	// special
-    RearPositional = "Rear Positional", // [0, 1]
-    FlankPositional = "Flank Positional", // [0, 1]
+	RearPositional = "Rear Positional", // [0, 1]
+	FlankPositional = "Flank Positional", // [0, 1]
 	Movement = "Movement", // [0, 1]
 	NotAnimationLocked = "NotAnimationLocked", // [0, 1]
 	NotCasterTaxed = "NotCasterTaxed", // [0, 1]
@@ -145,12 +145,12 @@ enum GeneralCooldownType {
 	cd_Surecast = "cd_Surecast", // [0, 1x]
 	cd_Tincture = "cd_Tincture", // [0, 1x]
 	cd_Sprint = "cd_Sprint", // [0, 1x]
-    cd_Feint = "cd_Feint", // [0, 90]
-    cd_TrueNorth = "cd_TrueNorth", // [0, 45]
-    cd_ArmsLength = "cd_ArmsLength", // [0, 90]
-    cd_Bloodbath = "cd_Bloodbath", // [0, 120]
-    cd_SecondWind = "cd_SecondWind", // [0, 120]
-    cd_LegSweep = "cd_LegSweep", // [0, 40]
+	cd_Feint = "cd_Feint", // [0, 90]
+	cd_TrueNorth = "cd_TrueNorth", // [0, 45]
+	cd_ArmsLength = "cd_ArmsLength", // [0, 90]
+	cd_Bloodbath = "cd_Bloodbath", // [0, 120]
+	cd_SecondWind = "cd_SecondWind", // [0, 120]
+	cd_LegSweep = "cd_LegSweep", // [0, 40]
 }
 
 const CooldownType = {
