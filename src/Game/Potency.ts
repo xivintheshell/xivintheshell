@@ -112,8 +112,8 @@ export const Modifiers = {
 	Devilment: {
 		kind: "critDirect",
 		source: PotencyModifierType.DEVILMENT,
-		critFactor: 1.2,
-		dhFactor: 1.2,
+		critFactor: 0.2,
+		dhFactor: 0.2,
 	} as CritDirectMultiplier,
 };
 
