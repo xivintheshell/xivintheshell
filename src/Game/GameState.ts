@@ -419,8 +419,13 @@ export abstract class GameState {
 				}
 			}
 
-			if (this.job === ShellJob.DNC && this.hasResourceAvailable(ResourceType.TechnicalFinish) && doesDamage) {
-				node.addBuff(BuffType.TechnicalFinish)
+			if (this.job === ShellJob.DNC && doesDamage) {
+				if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
+					node.addBuff(BuffType.TechnicalFinish)
+				}
+				if (this.hasResourceAvailable(ResourceType.Devilment)) {
+					node.addBuff(BuffType.Devilment)
+				}
 			}
 
 			// Perform additional side effects

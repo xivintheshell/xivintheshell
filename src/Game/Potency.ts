@@ -15,6 +15,7 @@ export const enum PotencyModifierType {
 	PARTY,
 	STANDARD_SINGLE, STANDARD_DOUBLE,
 	TECHNICAL_SINGLE, TECHNICAL_DOUBLE, TECHNICAL_TRIPLE, TECHNICAL_QUADRUPLE,
+	DEVILMENT,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -108,6 +109,12 @@ export const Modifiers = {
 		source: PotencyModifierType.TECHNICAL_QUADRUPLE,
 		damageFactor: 1.05,
 	} as PotencyMultiplier,
+	Devilment: {
+		kind: "critDirect",
+		source: PotencyModifierType.DEVILMENT,
+		critFactor: 1.2,
+		dhFactor: 1.2,
+	} as CritDirectMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

@@ -177,6 +177,35 @@ export class DNCState extends GameState {
             this.maybeGainResource(ResourceType.EspritGauge, 10, 0.2)
         }
     }
+
+    applyStandardFinish(bonusLevel: number) {
+        if (bonusLevel === 0 ) { return }
+
+        this.gainProc(ResourceType.StandardFinish)
+        // Remove previous bonus in case they single-stepped this time...
+        this.tryConsumeResource(ResourceType.StandardBonus, true)
+
+        // Grant the new standard step bonus
+        this.resources.get(ResourceType.StandardBonus).gain(bonusLevel)
+        const duration = (getResourceInfo(ShellJob.DNC, ResourceType.StandardFinish) as ResourceInfo).maxTimeout;
+        this.enqueueResourceDrop(ResourceType.StandardBonus, duration, bonusLevel)
+
+        if (this.hasResourceAvailable(ResourceType.DancePartner))
+        {
+            this.gainProc(ResourceType.StandardFinishPartner)
+        }
+
+        if (Traits.hasUnlocked(TraitName.Esprit, this.config.level)) {
+            this.gainProc(ResourceType.Esprit)
+            if (this.hasResourceAvailable(ResourceType.DancePartner)) {
+                this.gainProc(ResourceType.EspritPartner)
+            }
+        }
+
+        if (Traits.hasUnlocked(TraitName.EnhancedStandardFinish, this.config.level)) {
+            this.gainProc(ResourceType.LastDanceReady)
+        }
+    }
 }
 
 const isDancing = (state: Readonly<DNCState>) => state.hasResourceAvailable(ResourceType.StandardStep) || state.hasResourceAvailable(ResourceType.TechnicalStep)
@@ -244,6 +273,9 @@ const makeGCD_DNC = (name: SkillName, unlockLevel: number, params: {
                     technicalBonus === 2 ? Modifiers.SingleTechnicalFinish : Modifiers.SingleTechnicalFinish
                 mods.push(modifier)
             }
+            if (state.hasResourceAvailable(ResourceType.Devilment)) {
+                mods.push(Modifiers.Devilment)
+            }
             return mods;
         },
     });
@@ -282,6 +314,9 @@ const makeAbility_DNC = (name: SkillName, unlockLevel: number, cdName: ResourceT
                     technicalBonus === 3 ? Modifiers.TripleTechnicalFinish :
                     technicalBonus === 2 ? Modifiers.SingleTechnicalFinish : Modifiers.SingleTechnicalFinish
                 mods.push(modifier)
+            }
+            if (state.hasResourceAvailable(ResourceType.Devilment)) {
+                mods.push(Modifiers.Devilment)
             }
             return mods;
         },
@@ -502,25 +537,7 @@ makeGCD_DNC(SkillName.FinishingMove, 96, {
     potency: 850,
     recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 2.05,
-    onConfirm: (state) => {
-        state.gainProc(ResourceType.StandardFinish)
-        state.resources.get(ResourceType.StandardBonus).available(2)
-
-        if (state.hasResourceAvailable(ResourceType.DancePartner))
-        {
-            state.gainProc(ResourceType.StandardFinishPartner)
-        }
-
-        if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
-            state.gainProc(ResourceType.Esprit)
-            if (state.hasResourceAvailable(ResourceType.DancePartner)) {
-                state.gainProc(ResourceType.EspritPartner)
-            }
-        }
-
-        state.gainProc(ResourceType.LastDanceReady)
-        state.tryConsumeResource(ResourceType.FinishingMoveReady)
-    },
+    onConfirm: (state) => state.applyStandardFinish(2),
     secondaryCooldown: {
         cdName: ResourceType.cd_StandardStep,
         cooldown: 30,
@@ -551,26 +568,7 @@ standardFinishes.forEach((finish) => {
 
             if (bonusLevel === 0) { return }
 
-            state.gainProc(ResourceType.StandardFinish)
-            state.resources.get(ResourceType.StandardBonus).gain(bonusLevel)
-            const duration = (getResourceInfo(ShellJob.DNC, ResourceType.StandardFinish) as ResourceInfo).maxTimeout;
-            state.enqueueResourceDrop(ResourceType.StandardBonus, duration, bonusLevel)
-
-            if (state.hasResourceAvailable(ResourceType.DancePartner))
-            {
-                state.gainProc(ResourceType.StandardFinishPartner)
-            }
-
-            if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
-                state.gainProc(ResourceType.Esprit)
-                if (state.hasResourceAvailable(ResourceType.DancePartner)) {
-                    state.gainProc(ResourceType.EspritPartner)
-                }
-            }
-
-            if (Traits.hasUnlocked(TraitName.EnhancedStandardFinish, state.config.level)) {
-                state.gainProc(ResourceType.LastDanceReady)
-            }
+            state.applyStandardFinish(bonusLevel)
         },
         recastTime: 1.5,
         validateAttempt: (state) => state.hasResourceAvailable(ResourceType.StandardStep) && state.getCurrentDanceStatus() === 2,
@@ -695,8 +693,10 @@ technicalFinishes.forEach((params) => {
             if (bonusLevel === 0) { return }
 
             state.gainProc(ResourceType.TechnicalFinish)
-            state.gainProc(ResourceType.EspritTechnical)
-            state.resources.get(ResourceType.TechnicalBonus).available(bonusLevel)
+            if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+                state.gainProc(ResourceType.EspritTechnical)
+            }
+            state.resources.get(ResourceType.TechnicalBonus).gain(bonusLevel)
             const duration = (getResourceInfo(ShellJob.DNC, ResourceType.TechnicalFinish) as ResourceInfo).maxTimeout;
             state.enqueueResourceDrop(ResourceType.TechnicalBonus, duration, bonusLevel)
 
@@ -707,8 +707,6 @@ technicalFinishes.forEach((params) => {
             if (Traits.hasUnlocked(TraitName.EnhancedTechnicalFinishII, state.config.level)) {
                 state.gainProc(ResourceType.DanceOfTheDawnReady)
             }
-            state.tryConsumeResource(ResourceType.TechnicalStep)
-            state.tryConsumeResource(ResourceType.TechnicalDance, true)
         },
         recastTime: 1.5,
         validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TechnicalStep) && state.getCurrentDanceStatus() === 4,
