@@ -42,6 +42,7 @@ import {
 	calculateSelectedStats,
 	getTargetableDurationBetween
 } from "./DamageStatistics";
+import { XIVMath } from "../Game/XIVMath";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 require("../Game/Jobs/RoleActions");
@@ -358,6 +359,9 @@ class Controller {
 		}
 		if (content.config.level) {
 			content.config.level = parseInt(content.config.level);
+		}
+		if (content.config.skillSpeed === undefined) {
+			content.config.skillSpeed = XIVMath.getSubstatBase(content.config.level as LevelSync)
 		}
 		if (content.config.shellVersion === undefined) {
 			content.config.shellVersion = ShellVersion.Initial;
