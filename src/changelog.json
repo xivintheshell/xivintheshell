@@ -1,8 +1,9 @@
 [
 	{
-		"date": "11/17/24",
+		"date": "11/19/24",
 		"changes": [
-			"[DNC] Added initial DNC support"
+			"[DNC] Added initial DNC support",
+			"Added support for skill speed in addition to spell speed"
 		]
 	},
 	{
