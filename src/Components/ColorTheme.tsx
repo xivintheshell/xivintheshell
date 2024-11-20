@@ -69,12 +69,19 @@ export type DNCResourceColors = {
 	pirouette: string,
 }
 
+export type MCHResourceColors = {
+	heat: string,
+	battery: string,
+	queen: string,
+}
+
 export type JobAccentColors = {
 	[ShellJob.BLM]: string,
 	[ShellJob.PCT]: string,
 	[ShellJob.RDM]: string,
 	[ShellJob.DNC]: string,
 	[ShellJob.SAM]: string,
+	[ShellJob.MCH]: string,
 }
 
 export type ThemeColors = {
@@ -105,6 +112,7 @@ export type ThemeColors = {
 	rdm: RDMResourceColors,
 	dnc: DNCResourceColors,
 	sam: SAMResourceColors,
+	mch: MCHResourceColors,
 	timeline: {
 		ruler: string,
 		tracks: string,
@@ -135,6 +143,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.RDM]: "#ff0000", // TODO less red
 				[ShellJob.DNC]: "#e2b0af", // color ripped from xiva/fflogs
 				[ShellJob.SAM]: "#f59542",
+				[ShellJob.MCH]: "#6ee1d6",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -200,6 +209,11 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				fugetsu: "#0f52ba",
 				iai: "#89cfef",
 			},
+			mch: {
+				heat:'#D35A10',
+				battery: '#2C9FCB',
+				queen: 'blue',
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -227,6 +241,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.RDM]: "#ff0000", // TODO less red
 				[ShellJob.DNC]: "#e2b0af", // color ripped from xiva/fflogs
 				[ShellJob.SAM]: "#f59542",
+				[ShellJob.MCH]: "#6ee1d6",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -291,6 +306,11 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				meditation: "#ff853d",
 				fugetsu: "#0f52ba",
 				iai: "#89cfef",
+			},
+			mch: {
+				heat:'#D35A10',
+				battery: '#2C9FCB',
+				queen: 'blue',
 			},
 			timeline: {
 				ruler: "#e9e9e9",

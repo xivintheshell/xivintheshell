@@ -177,7 +177,7 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
             name: localize({
                 en: "Heat",
             }),
-            color: 'orange',
+            color: colors.mch.heat,
             progress: heat / 100,
             valueString: heat.toFixed(0),
         } as ResourceBarProps,
@@ -186,7 +186,7 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
             name: localize({
                 en: "Battery",
             }),
-            color: 'blue',
+            color: colors.mch.battery,
             progress: battery / 100,
             valueString: battery.toFixed(0),
         } as ResourceBarProps,
@@ -195,7 +195,7 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
             name: localize({
                 en: "Queen Time",
             }),
-            color: 'blue',
+            color: colors.mch.queen,
             progress: queenTime / 15,
             valueString: queenTime.toFixed(0),
         } as ResourceBarProps]

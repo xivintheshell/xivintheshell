@@ -175,7 +175,7 @@ const CooldownType = {
 	...RDMCooldownType,
 	...DNCCooldownType,
 	...SAMCooldownType,
-	...DNCCooldownType,
+	...MCHCooldownType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -228,6 +228,9 @@ export const enum WarningType {
 	EspritOvercap = "esprit gauge overcap",
 	FeatherOvercap = "feather gauge overcap",
 	FanThreeOverwrite = "overwrote fan dance 3",
+
+	HeatOvercap = "heat gauge overcap",
+	BatteryOvercap = "battery gauge overcap",
 
 	KenkiOvercap = "kenki overcap",
 	MeditationOvercap = "meditation stack overcap",
