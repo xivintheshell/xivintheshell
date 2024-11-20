@@ -1,5 +1,5 @@
 
-import {ALL_JOBS, ShellJob} from "../../Controller/Common";
+import {ALL_JOBS, CASTER_JOBS, HEALER_JOBS, MELEE_JOBS, PHYSICAL_RANGED_JOBS, ShellJob, TANK_JOBS} from "../../Controller/Common";
 import {SkillName, ResourceType, WarningType} from "../Common";
 import {makeAbility, makeResourceAbility} from "../Skills";
 import {DoTBuff, EventTag} from "../Resources"
@@ -7,11 +7,6 @@ import {Traits, TraitName} from "../Traits";
 import type {GameState} from "../GameState";
 import {controller} from "../../Controller/Controller";
 
-const TANK_JOBS: ShellJob[] = []
-const HEALER_JOBS: ShellJob[] = []
-const MELEE_JOBS: ShellJob[] = []
-const PHYSICAL_RANGED_JOBS: ShellJob[] = [ShellJob.DNC]
-const CASTER_JOBS: ShellJob[] = [ShellJob.BLM, ShellJob.PCT, ShellJob.RDM];
 
 makeAbility([...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS], SkillName.SecondWind, 8, ResourceType.cd_SecondWind, {
 	applicationDelay: 0.62,

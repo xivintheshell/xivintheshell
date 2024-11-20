@@ -38,14 +38,18 @@ export const ALL_JOBS = [
 	ShellJob.PCT,
 ];
 
+export const TANK_JOBS: ShellJob[] = []
+export const HEALER_JOBS: ShellJob[] = []
+export const MELEE_JOBS: ShellJob[] = []
+export const PHYSICAL_RANGED_JOBS: ShellJob[] = [ShellJob.DNC]
+export const CASTER_JOBS: ShellJob[] = [ShellJob.BLM, ShellJob.PCT, ShellJob.RDM];
+
 export const SKS_JOBS = [
-	ShellJob.DNC,
+	...TANK_JOBS, ...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS
 ]
 
 export const SPS_JOBS = [
-	ShellJob.BLM,
-	ShellJob.RDM,
-	ShellJob.PCT,
+	...HEALER_JOBS, ...CASTER_JOBS
 ]
 
 export const TESTING_JOBS = [
