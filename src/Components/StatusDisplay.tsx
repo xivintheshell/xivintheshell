@@ -5,6 +5,7 @@ import type {PlayerState} from "../Game/GameState";
 import {controller} from "../Controller/Controller";
 import {localize, localizeResourceType} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+import {ShellJob} from '../Controller/Common';
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean,
@@ -387,8 +388,10 @@ function ResourcesDisplay(props: {
 				/>
 		}
 	});
+	// TODO - Temporary until we have a better solution for the layout
+	const minHeight = controller.getActiveJob() === ShellJob.DNC ? "22em" : "13.5em"
 	// Set a minHeight to ensure buffs do not clash with the hotbar
-	return <div style={{textAlign: "left", minHeight: "22em"}}>
+	return <div style={{textAlign: "left", minHeight}}>
 		{elements}
 	</div>
 }
