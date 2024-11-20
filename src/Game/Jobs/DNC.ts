@@ -276,6 +276,9 @@ const makeGCD_DNC = (name: SkillName, unlockLevel: number, params: {
             if (state.hasResourceAvailable(ResourceType.Devilment)) {
                 mods.push(Modifiers.Devilment)
             }
+            if (name === SkillName.StarfallDance) {
+                mods.push(Modifiers.AutoCDH)
+            }
             return mods;
         },
     });
