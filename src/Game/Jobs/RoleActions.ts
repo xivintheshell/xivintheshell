@@ -61,6 +61,7 @@ const cancelMeditate = (state: GameState) => {
 		if (evt) {
 			evt.canceled = true;
 		}
+		state.tryConsumeResource(ResourceType.Meditate);
 	}
 };
 
