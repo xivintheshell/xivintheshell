@@ -848,6 +848,13 @@ class Controller {
 				let isGCD = skill.cdName === ResourceType.cd_GCD;
 				let isSpellCast = status.castTime > 0 && !status.instantCast;
 				let snapshotTime = isSpellCast ? status.castTime - GameConfig.getSlidecastWindow(status.castTime) : 0;
+				let recastDuration = newStatus.cdRecastTime;
+				// special case for meditate, which is an ability that roles the GCD
+				if (skillName === SkillName.Meditate) {
+					isGCD = true;
+					// get the recast duration of a random GCD
+					recastDuration = this.game.getSkillAvailabilityStatus(SkillName.Yukikaze).cdRecastTime;
+				}
 				this.timeline.addElement({
 					type: ElemType.Skill,
 					displayTime: this.game.getDisplayTime(),
@@ -857,7 +864,7 @@ class Controller {
 					time: this.game.time,
 					relativeSnapshotTime: snapshotTime,
 					lockDuration: lockDuration,
-					recastDuration: newStatus.cdRecastTime,
+					recastDuration: recastDuration,
 					node: node,
 				});
 				this.#actionsLogCsv.push({

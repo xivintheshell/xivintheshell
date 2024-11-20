@@ -229,6 +229,7 @@ export class SAMState extends GameState {
 		if (evt) {
 			evt.canceled = true;
 		}
+		this.tryConsumeResource(ResourceType.Meditate);
 	}
 }
 
