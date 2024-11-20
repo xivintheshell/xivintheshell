@@ -22,7 +22,7 @@ import {
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
-import {ShellJob, SKS_JOBS, SPS_JOBS} from "../Controller/Common";
+import {CASTER_JOBS, HEALER_JOBS, ShellJob, SKS_JOBS, SPS_JOBS} from "../Controller/Common";
 import {Modifiers, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
 
@@ -184,11 +184,13 @@ export abstract class GameState {
 			}
 			this.addEvent(recurringLucidTickEvt);
 		};
-		let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
-		while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;
-		let firstLucidTickEvt = new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick);
-		firstLucidTickEvt.addTag(EventTag.LucidTick);
-		this.addEvent(firstLucidTickEvt);
+		if ([...HEALER_JOBS, ...CASTER_JOBS].includes(this.job)) {
+			let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
+			while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;
+			let firstLucidTickEvt = new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick);
+			firstLucidTickEvt.addTag(EventTag.LucidTick);
+			this.addEvent(firstLucidTickEvt);
+		}
 	}
 
 	// advance game state by this much time
