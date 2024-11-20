@@ -476,22 +476,9 @@ export class Config extends React.Component {
 		};
 
 		this.updateTaxPreview = (spsStr: string, fpsStr: string, levelStr: string) => {
-			let level = parseFloat(levelStr);
-			let sps = parseFloat(spsStr);
-			let fps = parseFloat(fpsStr);
 
 			let b1TaxPreview = getTaxPreview(parseFloat(levelStr), 2.5, spsStr, fpsStr);
-
-			let gcdStr: string;
-			let taxedGcdStr: string;
-			if (isNaN(level) || isNaN(sps) || isNaN(fps) || sps < 400) {
-				gcdStr = "n/a";
-				taxedGcdStr = "n/a";
-			} else {
-				let gcd = XIVMath.preTaxGcd(level as LevelSync, sps, 2.5);
-				gcdStr = gcd.toFixed(2);
-				taxedGcdStr = XIVMath.afterFpsTax(fps, gcd).toFixed(3);
-			}
+			const {gcdStr, taxedGcdStr} = this.getTaxPreview(spsStr, fpsStr, levelStr)
 
 			this.setState({
 				b1TaxPreview: b1TaxPreview,
@@ -501,20 +488,7 @@ export class Config extends React.Component {
 		}
 
 		this.updateSksTaxPreview = (sksStr: string, fpsStr: string, levelStr: string) => {
-			let level = parseFloat(levelStr);
-			let sps = parseFloat(sksStr);
-			let fps = parseFloat(fpsStr);
-
-			let gcdStr: string;
-			let taxedGcdStr: string;
-			if (isNaN(level) || isNaN(sps) || isNaN(fps) || sps < 400) {
-				gcdStr = "n/a";
-				taxedGcdStr = "n/a";
-			} else {
-				let gcd = XIVMath.preTaxGcd(level as LevelSync, sps, 2.5);
-				gcdStr = gcd.toFixed(2);
-				taxedGcdStr = XIVMath.afterFpsTax(fps, gcd).toFixed(3);
-			}
+			const {gcdStr, taxedGcdStr} = this.getTaxPreview(sksStr, fpsStr, levelStr)
 
 			this.setState({
 				sksGcdPreview: gcdStr,
@@ -547,6 +521,7 @@ export class Config extends React.Component {
 			this.setState({job: evt.target.value, dirty: true});
 			this.removeImportedField("job");
 			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, this.state.level);
+			this.updateSksTaxPreview(this.state.skillSpeed, this.state.fps, this.state.level);
 		}
 
 		this.setGearImportLink = (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -577,7 +552,7 @@ export class Config extends React.Component {
 							throw new Error("Imported gearset was for a job (" + body["jobAbbrev"] + ") that XIV in the Shell doesn't support");
 						}
 						// TODO should probably validate each of these fields
-						const baseSpeed = XIVMath.getSubstatBase(parseFloat(body["level"]))
+						const baseSpeed = XIVMath.getSubstatBase(parseFloat(body["level"]) as LevelSync).toString()
 						const spellSpeed = stats.get("SPS") ?? baseSpeed
 						const skillSpeed = stats.get("SKS") ?? baseSpeed
 						this.setState({
@@ -732,6 +707,28 @@ export class Config extends React.Component {
 				newFieldsArray.splice(idx, 1);
 				this.setState({importedFields: newFieldsArray});
 			}
+		}
+	}
+
+	private getTaxPreview(speedStr: string, fpsStr: string, levelStr: string): {gcdStr: string, taxedGcdStr: string} {
+		let level = parseFloat(levelStr);
+		let speed = parseFloat(speedStr);
+		let fps = parseFloat(fpsStr);
+
+		let gcdStr: string;
+		let taxedGcdStr: string;
+		if (isNaN(level) || isNaN(speed) || isNaN(fps) || speed < 400) {
+			gcdStr = "n/a";
+			taxedGcdStr = "n/a";
+		} else {
+			let gcd = XIVMath.preTaxGcd(level as LevelSync, speed, 2.5);
+			gcdStr = gcd.toFixed(2);
+			taxedGcdStr = XIVMath.afterFpsTax(fps, gcd).toFixed(3);
+		}
+
+		return {
+			gcdStr,
+			taxedGcdStr
 		}
 	}
 
