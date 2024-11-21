@@ -574,7 +574,8 @@ standardFinishes.forEach((finish) => {
             state.applyStandardFinish(bonusLevel)
         },
         recastTime: 1.5,
-        validateAttempt: (state) => state.hasResourceAvailable(ResourceType.StandardStep) && state.getCurrentDanceStatus() === 2,
+        validateAttempt: (state) => state.hasResourceAvailable(ResourceType.StandardStep),
+        highlightIf: (state) => state.hasResourceAvailable(ResourceType.StandardStep) && state.getCurrentDanceStatus() === 2,
     })
 });
 
@@ -712,7 +713,8 @@ technicalFinishes.forEach((params) => {
             }
         },
         recastTime: 1.5,
-        validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TechnicalStep) && state.getCurrentDanceStatus() === 4,
+        validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TechnicalStep),
+        highlightIf: (state) => state.hasResourceAvailable(ResourceType.TechnicalStep) && state.getCurrentDanceStatus() === 4,
     })
 })
 
