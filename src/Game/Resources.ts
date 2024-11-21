@@ -7,7 +7,8 @@ import {BLMState} from "./Jobs/BLM";
 export enum EventTag {
 	ManaGain,
 	MpTick,
-	LucidTick
+	LucidTick,
+	MeditateTick,
 }
 
 export class Event {
@@ -319,6 +320,9 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, ResourceType.Mana, 10000, {default: 10000});
 	makeResource(job, ResourceType.Tincture, 1, {timeout: 30});
 	makeResource(job, ResourceType.Sprint, 1, {timeout: 10});
+	// positionals are assumed on by default -- we'll add the ability to toggle them later
+	makeResource(job, ResourceType.RearPositional, 1, {default: 1});
+	makeResource(job, ResourceType.FlankPositional, 1, {default: 1});
 });
 
 // Add an ability to the resource map of the specified job.

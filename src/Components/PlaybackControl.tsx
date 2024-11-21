@@ -153,6 +153,10 @@ export function ConfigSummary(props: { job: ShellJob, dirty: boolean }) {
 		en: "the random time offset of thunder DoT ticks relative to mp ticks",
 		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）"
 	});
+	let higanbanaTickOffset = controller.game.isSAMState() ? controller.game.higanbanaTickOffset.toFixed(3) : "";
+	let higanbanaOffsetDesc = localize({
+		en: "the random time offset of higanbana DoT ticks relative to mp ticks",
+	});
 	let procMode = controller.gameConfig.procMode;
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	const legacyCasterTax = controller.gameConfig.legacy_casterTax;
@@ -198,6 +202,10 @@ export function ConfigSummary(props: { job: ShellJob, dirty: boolean }) {
 
 		{props.job === ShellJob.BLM &&
 			<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
+		}
+
+		{props.job === ShellJob.SAM &&
+			<div>{localize({en: "Higanbana DoT tick offset "})}<Help topic={"higanbanaTickOffset"} content={higanbanaOffsetDesc}/>: {higanbanaTickOffset}</div>
 		}
 
 		{props.job === ShellJob.BLM
@@ -751,14 +759,17 @@ export class Config extends React.Component {
 	componentDidMount() {
 		updateConfigDisplay = ((config)=>{
 			this.setState(config);
-			let gcd = XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5);
+			let spsGcd = XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5);
+			let sksGcd = XIVMath.preTaxGcd(config.level, config.skillSpeed, 2.5);
 			this.setState({
 				dirty: false,
 				imported: false,
 				importedFields: [],
 				b1TaxPreview: getTaxPreview(config.level, 2.5, `${config.spellSpeed}`, `${config.fps}`),
-				gcdPreview: gcd.toFixed(2),
-				taxedGcdPreview: XIVMath.afterFpsTax(config.fps, gcd).toFixed(3),
+				gcdPreview: spsGcd.toFixed(2),
+				taxedGcdPreview: XIVMath.afterFpsTax(config.fps, spsGcd).toFixed(3),
+				sksGcdPreview: sksGcd.toFixed(2),
+				sksTaxedGcdPreview: XIVMath.afterFpsTax(config.fps, sksGcd).toFixed(3),
 				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides)
 			});
 			refreshConfigSummary();

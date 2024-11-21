@@ -2,6 +2,7 @@ import {BLMSkillName, BLMResourceType, BLMCooldownType} from "./Constants/BLM";
 import {PCTSkillName, PCTResourceType, PCTCooldownType} from "./Constants/PCT";
 import {RDMSkillName, RDMResourceType, RDMCooldownType} from "./Constants/RDM";
 import {DNCSkillName, DNCResourceType, DNCCooldownType} from "./Constants/DNC";
+import {SAMSkillName, SAMResourceType, SAMCooldownType} from "./Constants/SAM";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -49,6 +50,11 @@ enum GeneralSkillName {
 	Tincture = "Tincture",
 	Sprint = "Sprint",
 
+	Feint = "Feint",
+	Bloodbath = "Bloodbath",
+	TrueNorth = "True North",
+	LegSweep = "Leg Sweep",
+
 	Never = "Never",
 }
 
@@ -58,6 +64,7 @@ export const SkillName = {
 	...PCTSkillName,
 	...RDMSkillName,
 	...DNCSkillName,
+	...SAMSkillName,
 	...GeneralSkillName,
 }
 
@@ -66,7 +73,8 @@ export type SkillName = GeneralSkillName
 	| BLMSkillName
 	| PCTSkillName
 	| RDMSkillName
-	| DNCSkillName;
+	| DNCSkillName
+	| SAMSkillName;
 
 export const enum SkillReadyStatus {
 	Ready = "ready",
@@ -84,6 +92,9 @@ export enum BuffType {
 	Hyperphantasia = "Hyperphantasia",
 	Manafication = "Manafication",
 	Acceleration = "Acceleration",
+	Fuka = "Fuka",
+	Fugetsu = "Fugetsu",
+	EnhancedEnpi = "Enhanced Enpi",
 	Tincture = "Tincture",
 
 	ArcaneCircle = "Arcane Circle",
@@ -112,8 +123,6 @@ export enum BuffType {
 enum GeneralResourceType {
 	// job resources
 	Mana = "Mana", // [0, 10000]
-	SecondWind = "Second Wind",
-	HeadGraze = "Head Graze",
 	Addle = "Addle", // [0, 1]
 	Swiftcast = "Swiftcast", // [0, 1]
 	LucidDreaming = "Lucid Dreaming", // [0, 1] also just for timing display
@@ -121,7 +130,14 @@ enum GeneralResourceType {
 	ArmsLength = "Arms Length",
 	Tincture = "Tincture", // [0, 1]
 	Sprint = "Sprint", // [0, 1]
+
+	Feint = "Feint", // [0, 1]
+	TrueNorth = "True North", // [0, 1]
+	Bloodbath = "Bloodbath", // [0, 1]
+
 	// special
+	RearPositional = "Rear Positional", // [0, 1]
+	FlankPositional = "Flank Positional", // [0, 1]
 	Movement = "Movement", // [0, 1]
 	NotAnimationLocked = "NotAnimationLocked", // [0, 1]
 	NotCasterTaxed = "NotCasterTaxed", // [0, 1]
@@ -136,10 +152,16 @@ enum GeneralCooldownType {
 	cd_Swiftcast = "cd_Swiftcast", // [0, 1x]
 	cd_LucidDreaming = "cd_LucidDreaming", // [0, 1x]
 	cd_Surecast = "cd_Surecast", // [0, 1x]
+	cd_SecondWind = "cd_SecondWind",
 	cd_ArmsLength = "cd_ArmsLength",
 	cd_Tincture = "cd_Tincture", // [0, 1x]
 	cd_Sprint = "cd_Sprint", // [0, 1x]
-	cd_SecondWind = "cd_SecondWind",
+
+	cd_Feint = "cd_Feint",
+	cd_TrueNorth = "cd_TrueNorth",
+	cd_Bloodbath = "cd_Bloodbath",
+	cd_LegSweep = "cd_LegSweep",
+
 	cd_HeadGraze = "cd_HeadGraze",
 }
 
@@ -149,6 +171,7 @@ const CooldownType = {
 	...PCTCooldownType,
 	...RDMCooldownType,
 	...DNCCooldownType,
+	...SAMCooldownType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -156,7 +179,8 @@ type CooldownType = GeneralCooldownType
 	| BLMCooldownType
 	| PCTCooldownType
 	| RDMCooldownType
-	| DNCCooldownType;
+	| DNCCooldownType
+	| SAMCooldownType;
 
 export const ResourceType = {
 	...CooldownType,
@@ -165,6 +189,7 @@ export const ResourceType = {
 	...PCTResourceType,
 	...RDMResourceType,
 	...DNCResourceType,
+	...SAMResourceType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -173,7 +198,8 @@ export type ResourceType = CooldownType
 	| BLMResourceType
 	| PCTResourceType
 	| RDMResourceType
-	| DNCResourceType;
+	| DNCResourceType
+	| SAMResourceType;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",
@@ -194,5 +220,9 @@ export const enum WarningType {
 
 	EspritOvercap = "esprit gauge overcap",
 	FeatherOvercap = "feather gauge overcap",
-	FanThreeOverwrite = "overwrote fan dance 3"
+	FanThreeOverwrite = "overwrote fan dance 3",
+
+	KenkiOvercap = "kenki overcap",
+	MeditationOvercap = "meditation stack overcap",
+	SenOvercap = "sen overcap",
 }

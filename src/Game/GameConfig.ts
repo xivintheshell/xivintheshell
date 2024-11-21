@@ -137,8 +137,8 @@ export class GameConfig {
 		this.legacy_casterTax = props?.casterTax ?? 0;
 	}
 
-	adjustedDoTPotency(inPotency : number, affectedBySkillSpeed: boolean = false) {
-		return XIVMath.dotPotency(this.level, affectedBySkillSpeed ? this.skillSpeed: this.spellSpeed, inPotency);
+	adjustedDoTPotency(inPotency : number, scalar: "sks" | "sps") {
+		return XIVMath.dotPotency(this.level, scalar === "sks" ? this.skillSpeed: this.spellSpeed, inPotency);
 	}
 
 	// returns GCD before FPS tax
@@ -155,6 +155,10 @@ export class GameConfig {
 		return XIVMath.preTaxCastTime(this.level, this.spellSpeed, inCastTime, speedBuff);
 	}
 
+	adjustedSksCastTime(inCastTime: number, speedBuff?: ResourceType) {
+		return XIVMath.preTaxCastTime(this.level, this.skillSpeed, inCastTime, speedBuff);
+	}
+
 	getSkillAnimationLock(skillName : SkillName) : number {
 		// all gapclosers have the same animation lock
 		if (skillName === SkillName.AetherialManipulation
@@ -162,9 +166,16 @@ export class GameConfig {
 			|| skillName === SkillName.Smudge
 			|| skillName === SkillName.CorpsACorps
 			|| skillName === SkillName.Displacement
-			) {
+			|| skillName === SkillName.Gyoten
+			|| skillName === SkillName.Yaten
+		) {
 			return 0.8; // from: https://nga.178.com/read.php?tid=21233094&rand=761
-		} else if (skillName === SkillName.TemperaCoatPop || skillName === SkillName.TemperaGrassaPop) {
+		} else if (
+			skillName === SkillName.TemperaCoatPop
+			|| skillName === SkillName.TemperaGrassaPop
+			|| skillName === SkillName.TengentsuPop
+			|| skillName === SkillName.ThirdEyePop
+		) {
 			return 0.01; // not real abilities, animation lock is fake
 		} else {
 			return this.animationLock;

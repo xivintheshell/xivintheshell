@@ -68,6 +68,17 @@ export interface DanceCounterProps {
 	currentStacks: number,
 }
 
+export interface SenCounterProps {
+	kind: "sen",
+	name: ContentNode,
+	hasSetsu: boolean,
+	hasGetsu: boolean,
+	hasKa: boolean,
+	setsuColor: string,
+	getsuColor: string,
+	kaColor: string,
+}
+
 export interface ResourceTextProps {
 	kind: "text",
 	name: ContentNode,
@@ -80,6 +91,7 @@ export type ResourceDisplayProps =
 	ResourceCounterProps |
 	PaintGaugeCounterProps |
 	DanceCounterProps |
+	SenCounterProps |
 	ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
@@ -213,6 +225,41 @@ function DanceCounter(props: {
 	</div>;
 }
 
+// copy of ResourceCounter specialized for tracking SAM's Sen gauge
+function SenCounter(props: {
+	name: ContentNode,
+	hasSetsu: boolean,
+	hasGetsu: boolean,
+	hasKa: boolean,
+	setsuColor: string,
+	getsuColor: string,
+	kaColor: string,
+}) {
+	const stacks = [];
+	const hasSen = [props.hasSetsu, props.hasGetsu, props.hasKa];
+	const senColors = [props.setsuColor, props.getsuColor, props.kaColor];
+	const names = ["setsu", "getsu", "ka"];
+	const presentSen = [];
+	const help = <Help topic={"senExplanation"}
+		content={localize({
+			en: "from left to right: setsu (yukikaze), getsu (gekko/mangetsu), ka (kasha/oka)",
+		})}
+	/>;
+	for (let i = 0; i < 3; i++) {
+		stacks.push(<ResourceStack key={i} color={senColors[i]} value={hasSen[i]} />);
+		if (hasSen[i]) {
+			presentSen.push(names[i]);
+		}
+	}
+	return <div style={{marginBottom: 4, lineHeight: "1.5em"}}>
+		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name} {help}</div>
+		<div style={{width: 200, display: "inline-block"}}>
+			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
+			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{presentSen.join("+")}</div>
+		</div>
+	</div>;
+}
+
 function ResourceText(props: {
 	name: ContentNode,
 	text: ContentNode,
@@ -229,13 +276,20 @@ function ResourceText(props: {
 const buffIcons = new Map();
 
 export function registerBuffIcon(buff: string, relativePath: string) {
-	buffIcons.set(buff, require(`./Asset/Buffs/${relativePath}`));
+	// remove colons since it's hard to create a file name that contains them
+	buffIcons.set(buff.replace(":", ""), require(`./Asset/Buffs/${relativePath}`));
 }
 
 const roleBuffResources = [
 	ResourceType.Addle,
 	ResourceType.Swiftcast,
 	ResourceType.LucidDreaming,
+
+	ResourceType.Feint,
+	ResourceType.TrueNorth,
+	ResourceType.ArmsLength,
+	ResourceType.Bloodbath,
+
 	ResourceType.Surecast,
 	ResourceType.Tincture,
 	ResourceType.ArmsLength,
@@ -247,14 +301,29 @@ roleBuffResources.forEach(
 );
 
 buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
+buffIcons.set(ResourceType.RearPositional, require("./Asset/Buffs/General/Rear Positional.png"));
+buffIcons.set(ResourceType.FlankPositional, require("./Asset/Buffs/General/Flank Positional.png"));
 
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props: BuffProps) {
 	let assetName: string = props.rscType;
 	if (props.stacks > 1) assetName += props.stacks;
+	// Special case for positional buffs: add a rounded border thta's similar in size to the other buffs
+	let imgStyle: React.CSSProperties;
+	if (props.rscType === ResourceType.RearPositional || props.rscType === ResourceType.FlankPositional) {
+		imgStyle = {
+			height: 40,
+			borderStyle: "solid",
+			borderColor: getCurrentThemeColors().bgHighContrast,
+			borderWidth: "0.2em",
+			borderRadius: "0.7em",
+		};
+	} else {
+		imgStyle = { height: 40 };
+	}
 	return <div title={localizeResourceType(props.rscType)} className={props.className + " buff " + props.rscType}>
 		<Clickable content={
-			<img style={{height: 40}} src={buffIcons.get(assetName)} alt={props.rscType}/>
+			<img style={imgStyle} src={buffIcons.get(assetName)} alt={props.rscType}/>
 		} style={{
 			display: "inline-block",
 			verticalAlign: "top",
@@ -375,6 +444,17 @@ export function ResourcesDisplay(props: {
 					pirouetteColor={props.pirouetteColor}
 					maxStacks={props.maxStacks}
 					currentStacks={props.currentStacks}
+					key={"resourceDisplay" + i}
+				/>
+			case "sen":
+				return <SenCounter
+					name={props.name}
+					hasSetsu={props.hasSetsu}
+					hasGetsu={props.hasGetsu}
+					hasKa={props.hasKa}
+					setsuColor={props.setsuColor}
+					getsuColor={props.getsuColor}
+					kaColor={props.kaColor}
 					key={"resourceDisplay" + i}
 				/>
 			default:

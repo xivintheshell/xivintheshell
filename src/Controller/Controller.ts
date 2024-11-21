@@ -14,6 +14,7 @@ import {BLMState} from "../Game/Jobs/BLM";
 import {PCTState} from "../Game/Jobs/PCT";
 import {RDMState} from "../Game/Jobs/RDM";
 import { DNCState } from "../Game/Jobs/DNC";
+import {SAMState} from "../Game/Jobs/SAM";
 import {Buff} from "../Game/Buffs";
 import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
@@ -21,6 +22,7 @@ import {BLMStatusPropsGenerator} from "../Components/Jobs/BLM";
 import {PCTStatusPropsGenerator} from "../Components/Jobs/PCT";
 import {RDMStatusPropsGenerator} from "../Components/Jobs/RDM";
 import { DNCStatusPropsGenerator } from "../Components/Jobs/DNC";
+import {SAMStatusPropsGenerator} from "../Components/Jobs/SAM";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
@@ -56,6 +58,8 @@ const newGameState = (config: GameConfig) => {
 		return new RDMState(config);
 	} else if (config.job === ShellJob.DNC) {
 		return new DNCState(config);
+	} else if (config.job === ShellJob.SAM) {
+		return new SAMState(config);
 	}
 	return new BLMState(config);
 };
@@ -618,6 +622,17 @@ class Controller {
 		}
 	}
 
+	reportMeditateTick(time: number, sourceDesc: string) {
+		if (!this.#bInSandbox) {
+			this.timeline.addElement({
+				type: ElemType.MeditateTickMark,
+				time: time,
+				displayTime: this.game.getDisplayTime(),
+				sourceDesc: sourceDesc,
+			});
+		}
+	}
+
 	reportDotTick(rawTime: number) {
 		if (!this.#bInSandbox) {
 			this.#thunderDotTickTimes.push(rawTime)
@@ -671,6 +686,9 @@ class Controller {
 				break;
 			case ShellJob.DNC:
 				propsGenerator = new DNCStatusPropsGenerator(game as DNCState);
+				break;
+			case ShellJob.SAM:
+				propsGenerator = new SAMStatusPropsGenerator(game as SAMState);
 				break;
 			default:
 				propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
@@ -847,6 +865,13 @@ class Controller {
 				let isGCD = skill.cdName === ResourceType.cd_GCD;
 				let isSpellCast = status.castTime > 0 && !status.instantCast;
 				let snapshotTime = isSpellCast ? status.castTime - GameConfig.getSlidecastWindow(status.castTime) : 0;
+				let recastDuration = newStatus.cdRecastTime;
+				// special case for meditate, which is an ability that roles the GCD
+				if (skillName === SkillName.Meditate) {
+					isGCD = true;
+					// get the recast duration of a random GCD
+					recastDuration = this.game.getSkillAvailabilityStatus(SkillName.Yukikaze).cdRecastTime;
+				}
 				this.timeline.addElement({
 					type: ElemType.Skill,
 					displayTime: this.game.getDisplayTime(),
@@ -856,7 +881,7 @@ class Controller {
 					time: this.game.time,
 					relativeSnapshotTime: snapshotTime,
 					lockDuration: lockDuration,
-					recastDuration: newStatus.cdRecastTime,
+					recastDuration: recastDuration,
 					node: node,
 				});
 				this.#actionsLogCsv.push({

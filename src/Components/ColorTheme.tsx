@@ -50,6 +50,16 @@ export type RDMResourceColors = {
 	accelBuff: string,
 }
 
+export type SAMResourceColors = {
+	kenki: string,
+	setsu: string,
+	getsu: string,
+	kaSen: string,
+	meditation: string,
+	fugetsu: string,
+	iai: string,
+}
+
 export type DNCResourceColors = {
 	esprit: string,
 	feathers: string,
@@ -64,6 +74,7 @@ export type JobAccentColors = {
 	[ShellJob.PCT]: string,
 	[ShellJob.RDM]: string,
 	[ShellJob.DNC]: string,
+	[ShellJob.SAM]: string,
 }
 
 export type ThemeColors = {
@@ -93,6 +104,7 @@ export type ThemeColors = {
 	pct: PCTResourceColors,
 	rdm: RDMResourceColors,
 	dnc: DNCResourceColors,
+	sam: SAMResourceColors,
 	timeline: {
 		ruler: string,
 		tracks: string,
@@ -121,7 +133,8 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.BLM]: "#9370db", // mediumpurple
 				[ShellJob.PCT]: "#e176c2",
 				[ShellJob.RDM]: "#ff0000", // TODO less red
-				[ShellJob.DNC]: "#e2b0af" // color ripped from xiva/fflogs
+				[ShellJob.DNC]: "#e2b0af", // color ripped from xiva/fflogs
+				[ShellJob.SAM]: "#f59542",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -178,6 +191,15 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				jete: '#539350',
 				pirouette: '#b0984e'
 			},
+			sam: {
+				kenki: "#d55124",
+				setsu: "#c7ffff",
+				getsu: "#7987fc",
+				kaSen: "#f8a2a6",
+				meditation: "#ff853d",
+				fugetsu: "#0f52ba",
+				iai: "#89cfef",
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -203,7 +225,8 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.BLM]: "#9370db", // mediumpurple
 				[ShellJob.PCT]: "#f485d6",
 				[ShellJob.RDM]: "#ff0000", // TODO less red
-				[ShellJob.DNC]: "#e2b0af" // color ripped from xiva/fflogs
+				[ShellJob.DNC]: "#e2b0af", // color ripped from xiva/fflogs
+				[ShellJob.SAM]: "#f59542",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -259,6 +282,15 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				entrechat: '#3a8db7',
 				jete: '#539350',
 				pirouette: '#b0984e'
+			},
+			sam: {
+				kenki: "#d55124",
+				setsu: "#addede",
+				getsu: "#7987fc",
+				kaSen: "#f8a2a6",
+				meditation: "#ff853d",
+				fugetsu: "#0f52ba",
+				iai: "#89cfef",
 			},
 			timeline: {
 				ruler: "#e9e9e9",

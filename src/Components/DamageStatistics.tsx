@@ -2,7 +2,7 @@ import React, {CSSProperties} from 'react'
 import {Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile} from "./Common";
 import {SkillName} from "../Game/Common";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
-import {getCurrentThemeColors} from "./ColorTheme";
+import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
 import {localize, localizeSkillName} from "./Localization";
 import {controller} from "../Controller/Controller";
 import {ShellJob} from "../Controller/Common";
@@ -28,7 +28,7 @@ export type DamageStatsMainTableEntry = {
 	partyBuffPotency: number,
 };
 
-export type DamageStatsThunderTableEntry = {
+export type DamageStatsDoTTableEntry = {
 	castTime: number,
 	applicationTime: number,
 	displayedModifiers: PotencyModifierType[],
@@ -77,8 +77,8 @@ export type DamageStatisticsData = {
 		totalPotPotency: number,
 		totalPartyBuffPotency: number,
 	},
-	thunderTable: DamageStatsThunderTableEntry[],
-	thunderTableSummary: {
+	dotTable: DamageStatsDoTTableEntry[],
+	dotTableSummary: {
 		cumulativeGap: number,
 		cumulativeOverride: number,
 		timeSinceLastDoTDropped: number,
@@ -147,6 +147,14 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({en: "devilment"}) as string;
 	} else if (buff === PotencyModifierType.COMBO) {
 		text = localize({en: "combo", zh: "连击"}) as string;
+	} else if (buff === PotencyModifierType.FUGETSU) {
+		text = localize({en: "fugetsu"}) as string;
+	} else if (buff === PotencyModifierType.AUTO_CRIT) {
+		text = localize({en: "auto crit"}) as string;
+	} else if (buff === PotencyModifierType.YATEN) {
+		text = localize({en: "yaten"}) as string;
+	} else if (buff === PotencyModifierType.POSITIONAL) {
+		text = localize({en: "positional"}) as string;
 	}
 	return text;
 }
@@ -215,6 +223,18 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	} else if (props.buff === PotencyModifierType.COMBO) {
 		text = localize({en: "CMB", zh: "连击"});
 		color = colors.resources.comboTag;
+	} else if (props.buff === PotencyModifierType.FUGETSU) {
+		text = localize({en: "FGS"});
+		color = colors.sam.fugetsu;
+	} else if (props.buff === PotencyModifierType.AUTO_CRIT) {
+		text = localize({en: "CRIT"});
+		color = colors.resources.cdhTag;
+	} else if (props.buff === PotencyModifierType.YATEN) {
+		text = localize({en: "ENH"});
+		color = colors.pct.cometPaint; // TODO
+	} else if (props.buff === PotencyModifierType.POSITIONAL) {
+		text = localize({en: "PS"});
+		color = MarkerColor.Green; // TODO
 	}
 	return <span style={{
 		borderRadius: 2,
@@ -350,8 +370,8 @@ export class DamageStatistics extends React.Component {
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
 		},
-		thunderTable: [],
-		thunderTableSummary: {
+		dotTable: [],
+		dotTableSummary: {
 			cumulativeGap: 0,
 			cumulativeOverride: 0,
 			timeSinceLastDoTDropped: 0,
@@ -426,8 +446,8 @@ export class DamageStatistics extends React.Component {
 			selectedGcdStr += lparen + "+" + this.selected.gcdSkills.pending + (localize({en: " not yet applied", zh: "未结算"}) as string) + rparen;
 		}
 
-		let dotStr = localize({en: "Thunder DoT uptime", zh: "雷覆盖时间"}) + colon + (this.data.thunderTableSummary.dotCoverageTimeFraction*100).toFixed(2) + "%";
-		dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + this.data.thunderTableSummary.totalTicks + "/" + this.data.thunderTableSummary.maxTicks + rparen;
+		let dotStr = localize({en: "Thunder DoT uptime", zh: "雷覆盖时间"}) + colon + (this.data.dotTableSummary.dotCoverageTimeFraction*100).toFixed(2) + "%";
+		dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + this.data.dotTableSummary.totalTicks + "/" + this.data.dotTableSummary.maxTicks + rparen;
 
 		let selected: React.ReactNode | undefined = undefined;
 		let selectedPPSAvailable = this.selected.targetableDuration > 0;
@@ -485,8 +505,8 @@ export class DamageStatistics extends React.Component {
 			};
 		}
 
-		let isThunderProp = function(skillName: SkillName) {
-			return skillName === SkillName.Thunder3 || skillName === SkillName.HighThunder;
+		let isDoTProp = function(skillName: SkillName) {
+			return skillName === SkillName.Thunder3 || skillName === SkillName.HighThunder || skillName === SkillName.Higanbana;
 		}
 
 		let makeRow = function(props: {
@@ -511,7 +531,7 @@ export class DamageStatistics extends React.Component {
 				}}/>);
 			}
 			// additional checkbox for DoT
-			if (isThunderProp(props.row.skillName)) {
+			if (isDoTProp(props.row.skillName)) {
 				includeCheckboxes.push(<input key="dot" type={"checkbox"} style={{position: "relative", top: 2, marginRight: 10}} checked={
 					getSkillOrDotInclude("DoT")
 				} onChange={()=>{
@@ -524,11 +544,11 @@ export class DamageStatistics extends React.Component {
 			if (!sameAsLast) {
 				skillNameNode = <span>
 					<span style={{textDecoration: includeInStats ? "none" : "line-through", color: includeInStats ? colors.text : colors.bgHighContrast}}>
-						{localizeSkillName(props.row.skillName)} {isThunderProp(props.row.skillName) ?
+						{localizeSkillName(props.row.skillName)} {isDoTProp(props.row.skillName) ?
 							<Help topic={"potencyStats-thunder"} content={localize({en: "See Thunder table below for details", zh: "详见下方雷统计表格"})}/>
 							: undefined}
 					</span>
-					{isThunderProp(props.row.skillName) ? <span style={{
+					{isDoTProp(props.row.skillName) ? <span style={{
 						textDecoration: getSkillOrDotInclude("DoT") ? "none" : "line-through",
 						color: getSkillOrDotInclude("DoT") ? colors.text : colors.bgHighContrast
 					}}><br/>
@@ -539,7 +559,7 @@ export class DamageStatistics extends React.Component {
 
 			// potency
 			let potencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.basePotency > 0 && !isThunderProp(props.row.skillName)) {
+			if (props.row.basePotency > 0 && !isDoTProp(props.row.skillName)) {
 				potencyNode = <PotencyDisplay
 					includeInStats={includeInStats}
 					basePotency={props.row.basePotency}
@@ -594,10 +614,10 @@ export class DamageStatistics extends React.Component {
 			}));
 		}
 
-		////////////////////// Thunder Table ////////////////////////
+		////////////////////// dot Table ////////////////////////
 
-		let makeThunderRow = function(props: {
-			row: DamageStatsThunderTableEntry,
+		let makedotRow = function(props: {
+			row: DamageStatsDoTTableEntry,
 			key: number
 		}) {
 
@@ -667,10 +687,10 @@ export class DamageStatistics extends React.Component {
 			</div>
 		}
 
-		let thunderTableRows: React.ReactNode[] = [];
-		for (let i = 0; i < this.data.thunderTable.length; i++) {
-			thunderTableRows.push(makeThunderRow({
-				row: this.data.thunderTable[i],
+		let dotTableRows: React.ReactNode[] = [];
+		for (let i = 0; i < this.data.dotTable.length; i++) {
+			dotTableRows.push(makedotRow({
+				row: this.data.dotTable[i],
 				key: i
 			}));
 		}
@@ -684,7 +704,10 @@ export class DamageStatistics extends React.Component {
 		let mainHeaderStr = allIncluded ?
 			localize({en: "Applied Skills", zh: "技能统计"}) :
 			localize({en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）"});
-		let thunderHeaderStr = localize({en: "Thunder", zh: "雷统计"});
+		let dotHeaderStr = localize({en: "Thunder", zh: "雷统计"});
+		if (controller.game.job === ShellJob.SAM) {
+			dotHeaderStr = localize({en: "Higanbana"});
+		}
 		if (this.data.historical) {
 			let t = (this.data.time - this.data.countdown).toFixed(3) + "s";
 			let upTillStr = lparen + localize({
@@ -692,7 +715,7 @@ export class DamageStatistics extends React.Component {
 				zh: "截至" + t
 			}) + rparen;
 			mainHeaderStr += upTillStr;
-			thunderHeaderStr += upTillStr;
+			dotHeaderStr += upTillStr;
 		}
 		let mainTable = <div id="damageTable" style={{
 			position: "relative",
@@ -732,14 +755,14 @@ export class DamageStatistics extends React.Component {
 			</div>
 		</div>
 
-		let thunderTable = <div style={{
+		let dotTable = <div style={{
 			position: "relative",
 			margin: "0 auto",
 			marginBottom: 40,
 			maxWidth: 960,
 		}}>
 			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
-				<b style={this.data.historical ? {color: colors.historical}:undefined}>{thunderHeaderStr}</b>
+				<b style={this.data.historical ? {color: colors.historical}:undefined}>{dotHeaderStr}</b>
 			</div>
 			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
 				<div>
@@ -768,37 +791,38 @@ export class DamageStatistics extends React.Component {
 					<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "ticks", zh: "跳雷次数"})}</b></span></div>
 					<div style={{display: "inline-block", width: "24%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
 				</div>
-				{thunderTableRows}
+				{dotTableRows}
 				<div style={{
 					textAlign: "left",
 					position: "relative",
 					borderTop: "1px solid " + colors.bgMediumContrast,
 				}}>
 					<div style={cell(28)}/>
-					<div style={cell(10)}>{this.data.thunderTableSummary.cumulativeGap.toFixed(3)}</div>
-					<div style={cell(10)}>{this.data.thunderTableSummary.cumulativeOverride.toFixed(3)}</div>
+					<div style={cell(10)}>{this.data.dotTableSummary.cumulativeGap.toFixed(3)}</div>
+					<div style={cell(10)}>{this.data.dotTableSummary.cumulativeOverride.toFixed(3)}</div>
 					<div style={cell(20)}/>
-					<div style={cell(8)}>{this.data.thunderTableSummary.totalTicks}/{this.data.thunderTableSummary.maxTicks}</div>
+					<div style={cell(8)}>{this.data.dotTableSummary.totalTicks}/{this.data.dotTableSummary.maxTicks}</div>
 					<div style={cell(24)}>
-						{this.data.thunderTableSummary.totalPotencyWithoutPot.toFixed(2)}
-						{this.data.thunderTableSummary.totalPotPotency>0 ?
-							<span style={{color: colors.timeline.potCover}}> +{this.data.thunderTableSummary.totalPotPotency.toFixed(2)}{localize({
+						{this.data.dotTableSummary.totalPotencyWithoutPot.toFixed(2)}
+						{this.data.dotTableSummary.totalPotPotency>0 ?
+							<span style={{color: colors.timeline.potCover}}> +{this.data.dotTableSummary.totalPotPotency.toFixed(2)}{localize({
 								en: "(pot +" + this.data.tinctureBuffPercentage + "%)",
 								zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)"
 							})}</span> : undefined}
 
-						{this.data.thunderTableSummary.totalPartyBuffPotency > 0 ? 
-							<span style={{color: colors.accent}}> +{this.data.thunderTableSummary.totalPartyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
+						{this.data.dotTableSummary.totalPartyBuffPotency > 0 ? 
+							<span style={{color: colors.accent}}> +{this.data.dotTableSummary.totalPartyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
 					</div>
 				</div>
 			</div>
 		</div>
 
+		const job = controller.getActiveJob();
 		return <div>
 			{summary}
 			<div>
 				{mainTable}
-				{controller.getActiveJob() === ShellJob.BLM && thunderTable}
+				{(job === ShellJob.BLM || job === ShellJob.SAM) && dotTable}
 			</div>
 		</div>
 	}

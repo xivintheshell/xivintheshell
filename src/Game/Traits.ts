@@ -63,6 +63,20 @@ export const enum TraitName {
 	EnhancedFlourishII,
 	EnhancedTechnicalFinishII,
 
+	EnhancedIaijutsu,
+	EnhancedMeikyoShisui,
+	EnhancedFugetsuAndFuka,
+	ThirdEyeMastery,
+	WayOfTheSamuraiII,
+	FugaMastery,
+	EnhancedIkishoten,
+	HakazeMastery,
+	EnhancedHissatsu,
+	WayOfTheSamuraiIII,
+	EnhancedIkishotenII,
+	EnhancedMeikyoShisuiII,
+	EnhancedFeint,
+
 	Never,
 }
 
@@ -123,6 +137,19 @@ export class Traits {
 			[TraitName.EnhancedFlourishII, 96],
 			[TraitName.EnhancedTechnicalFinishII, 100],
 
+			[TraitName.EnhancedIaijutsu, 74],
+			[TraitName.EnhancedMeikyoShisui, 76],
+			[TraitName.EnhancedFugetsuAndFuka, 78],
+			[TraitName.ThirdEyeMastery, 82],
+			[TraitName.WayOfTheSamuraiII, 84],
+			[TraitName.FugaMastery, 86],
+			[TraitName.EnhancedIkishoten, 90],
+			[TraitName.HakazeMastery, 92],
+			[TraitName.EnhancedHissatsu, 94],
+			[TraitName.WayOfTheSamuraiIII, 94],
+			[TraitName.EnhancedIkishotenII, 96],
+			[TraitName.EnhancedMeikyoShisuiII, 100],
+			[TraitName.EnhancedFeint, 98],
 		].map(([name, level]) => [name, new Trait(name, level)]));
 	}
 
