@@ -661,30 +661,28 @@ class Controller {
 			animLockCountdown: game.resources.timeTillReady(ResourceType.NotAnimationLocked),
 			canMove: game.resources.get(ResourceType.Movement).available(1),
 		};
-		if (typeof updateStatusDisplay !== "undefined") {
-			let propsGenerator
-			switch(game.job) {
-				case ShellJob.PCT:
-					propsGenerator = new PCTStatusPropsGenerator(game as PCTState);
-					break;
-				case ShellJob.RDM:
-					propsGenerator = new RDMStatusPropsGenerator(game as RDMState);
-					break;
-				case ShellJob.DNC:
-					propsGenerator = new DNCStatusPropsGenerator(game as DNCState);
-					break;
-				default:
-					propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
-			}
-			updateStatusDisplay({
-				time: game.getDisplayTime(),
-				resources: propsGenerator.getResourceViewProps(),
-				resourceLocks: resourceLocksData,
-				enemyBuffs: propsGenerator.getEnemyBuffViewProps(),
-				selfBuffs: propsGenerator.getSelfBuffViewProps(),
-				level: game.config.level,
-			});
+		let propsGenerator;
+		switch(game.job) {
+			case ShellJob.PCT:
+				propsGenerator = new PCTStatusPropsGenerator(game as PCTState);
+				break;
+			case ShellJob.RDM:
+				propsGenerator = new RDMStatusPropsGenerator(game as RDMState);
+				break;
+			case ShellJob.DNC:
+				propsGenerator = new DNCStatusPropsGenerator(game as DNCState);
+				break;
+			default:
+				propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
 		}
+		updateStatusDisplay({
+			time: game.getDisplayTime(),
+			resources: propsGenerator.getResourceViewProps(),
+			resourceLocks: resourceLocksData,
+			enemyBuffs: propsGenerator.getEnemyBuffViewProps(),
+			selfBuffs: propsGenerator.getSelfBuffViewProps(),
+			level: game.config.level,
+		}, propsGenerator.statusLayoutFn);
 	}
 
 	updateTimelineDisplay() {

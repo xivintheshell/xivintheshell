@@ -3,7 +3,18 @@ import { DNCState } from "../../Game/Jobs/DNC";
 import { TraitName, Traits } from "../../Game/Traits";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
-import { BuffProps, DanceCounterProps, registerBuffIcon, ResourceBarProps, ResourceCounterProps, ResourceDisplayProps, StatusPropsGenerator } from "../StatusDisplay";
+import {
+    BuffProps, BuffsDisplay,
+    DanceCounterProps,
+    registerBuffIcon,
+    ResourceBarProps,
+    ResourceCounterProps,
+    ResourceDisplayProps, ResourceLocksDisplay, ResourcesDisplay,
+    StatusPropsGenerator,
+    StatusViewProps
+} from "../StatusDisplay";
+import React from "react";
+import {StaticFn} from "../Common";
 
 [
     ResourceType.SilkenSymmetry,
@@ -387,8 +398,44 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
             pirouetteColor: colors.dnc.pirouette,
         } as DanceCounterProps)
         
-
-        
         return infos
+    }
+    override statusLayoutFn(props: StatusViewProps): React.ReactNode {
+        return <div>
+            <div style={{
+                display: "inline-block",
+                verticalAlign: "top",
+                width: "50%",
+                height: "100%"
+            }}>
+			<span style={{display: "block", marginBottom: 10}}>
+				{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}
+                {`${StaticFn.displayTime(props.time, 3)} (${props.time.toFixed(3)})`}
+			</span>
+                {props.resources ? <ResourcesDisplay data={{
+                    level: props.level,
+                    resources: props.resources
+                }} style={{
+                    height: "17em"
+                }}/> : undefined}
+            </div>
+            <div style={{
+                position: "relative",
+                display: "inline-block",
+                float: "right",
+                width: "50%"
+            }}>
+                {props.resourceLocks ? <ResourceLocksDisplay data={props.resourceLocks}/> : undefined}
+                <BuffsDisplay data={props.enemyBuffs} style={{
+                    marginTop: 50,
+                    marginBottom: "2em"
+                }}/>
+                <BuffsDisplay data={props.selfBuffs} style={{
+                    position: "absolute",
+                    right: 0,
+                    width: "200%"
+                }}/>
+            </div>
+        </div>
     }
 }
