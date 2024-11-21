@@ -104,9 +104,6 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 	override getResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
-		const setsu = resources.get(ResourceType.Setsu).availableAmount();
-		const getsu = resources.get(ResourceType.Getsu).availableAmount();
-		const ka = resources.get(ResourceType.KaSen).availableAmount();
 		const kenki = resources.get(ResourceType.Kenki).availableAmount();
 		const meditation = resources.get(ResourceType.Meditation).availableAmount();
 		// TODO use simplified gauge iconography so people don't have to remember names
