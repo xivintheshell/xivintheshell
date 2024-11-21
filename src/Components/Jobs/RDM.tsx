@@ -8,8 +8,8 @@ import {
 } from "../StatusDisplay";
 import {ResourceType} from "../../Game/Common";
 import {RDMState} from "../../Game/Jobs/RDM";
-import {getCurrentThemeColors} from "../../Components/ColorTheme";
-import {localize} from "../../Components/Localization";
+import {getCurrentThemeColors} from "../ColorTheme";
+import {localize} from "../Localization";
 
 [
 	ResourceType.Acceleration,

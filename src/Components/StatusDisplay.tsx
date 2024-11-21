@@ -1,11 +1,10 @@
-import React from 'react';
+import React, {CSSProperties} from 'react';
 import {Clickable, ContentNode, Help, ProgressBar, StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
 import type {PlayerState} from "../Game/GameState";
 import {controller} from "../Controller/Controller";
 import {localize, localizeResourceType} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
-import {ShellJob} from '../Controller/Common';
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean,
@@ -96,12 +95,12 @@ export type ResourceDisplayProps =
 	ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
-type StatusViewProps = {
+export type StatusViewProps = {
 	time: number,
-	resources?: ResourceDisplayProps[],
+	resources: ResourceDisplayProps[],
 	resourceLocks?: StatusResourceLocksViewProps,
-	enemyBuffs?: BuffProps[],
-	selfBuffs?: BuffProps[],
+	enemyBuffs: BuffProps[],
+	selfBuffs: BuffProps[],
 	level: number
 }
 
@@ -172,6 +171,8 @@ function ResourceCounter(props: {
 		</div>
 	</div>;
 }
+
+// todo [myn]: make a more generic resource display component to replace the following two
 
 // copy of ResourceCounter specialized for the paint gauge
 // name, holyColor, cometColor, currentStacks, maxStacks, hasComet
@@ -342,34 +343,29 @@ function Buff(props: BuffProps) {
 	</div>
 }
 
-function BuffsDisplay(props: {
-	data: BuffProps[]
+export function BuffsDisplay(props: {
+	data: BuffProps[],
+	style?: CSSProperties
 }) {
 	const buffs = props.data;
 	let buffElems: React.ReactNode[] = [];
 	for (let i = 0; i < buffs.length; i++) {
 		buffElems.push(<Buff key={i} {...buffs[i]}/>);
 	}
-
-	return <div className={"buffsDisplay self"}>
-		{buffElems}
-	</div>
-}
-
-function EnemyBuffsDisplay(props: {
-	data: BuffProps[]
-}) {
-	const buffs = props.data;
-	let buffElems: React.ReactNode[] = [];
-	for (let i = 0; i < buffs.length; i++) {
-		buffElems.push(<Buff key={i} {...buffs[i]}/>);
+	let style: CSSProperties = {
+		height: 54,
+		textAlign: "right",
+		lineHeight: "1em"
+	};
+	if (props.style) {
+		style = {...style, ...props.style};
 	}
-	return <div className={"buffsDisplay enemy"}>
+	return <div style={style}>
 		{buffElems}
 	</div>
 }
 
-function ResourceLocksDisplay(props: {
+export function ResourceLocksDisplay(props: {
 	data: StatusResourceLocksViewProps
 }) {
 	let colors = getCurrentThemeColors();
@@ -402,11 +398,12 @@ function ResourceLocksDisplay(props: {
 	</div>
 }
 
-function ResourcesDisplay(props: {
+export function ResourcesDisplay(props: {
 	data: {
 		level: number,
 		resources: ResourceDisplayProps[],
-	}
+	},
+	style?: CSSProperties
 }) {
 	const elements = props.data.resources.map((props, i) => {
 		switch(props.kind) {
@@ -467,35 +464,51 @@ function ResourcesDisplay(props: {
 				/>
 		}
 	});
-	// TODO - Temporary until we have a better solution for the layout
-	const minHeight = controller.getActiveJob() === ShellJob.DNC ? "22em" : "13.5em"
-	// Set a minHeight to ensure buffs do not clash with the hotbar
-	return <div style={{textAlign: "left", minHeight}}>
+	let style: CSSProperties = {
+		textAlign: "left",
+		// Set a minHeight to ensure buffs do not clash with the hotbar
+		minHeight: "13.5em"
+	};
+	if (props.style) {
+		style = {...style, ...props.style};
+	}
+	return <div style={style}>
 		{elements}
 	</div>
 }
 
-export var updateStatusDisplay = (data: StatusViewProps)=>{};
+type StatusLayoutFn = (props: StatusViewProps) => React.ReactNode;
+
+export var updateStatusDisplay = (data: StatusViewProps, layoutFn: StatusLayoutFn)=> {};
 export class StatusDisplay extends React.Component {
-	state: StatusViewProps;
+	state: StatusViewProps & {
+		layoutFn: (props: StatusViewProps) => React.ReactNode
+	};
 	constructor(props: StatusViewProps) {
 		super(props);
 		this.state = {
 			time: 0,
+			resources: [],
+			enemyBuffs: [],
+			selfBuffs: [],
 			level: 100,
+			layoutFn: (props: StatusViewProps) => { return <div/> }
 		}
-		updateStatusDisplay = ((newData) => {
-			this.setState({...newData});
-		});
+		updateStatusDisplay = (newData, newLayoutFn) => {
+			this.setState({...{layoutFn: newLayoutFn}, ...newData});
+		};
 	}
 	componentDidMount() {
 		controller.updateStatusDisplay(controller.game);
 	}
 	render() {
-		return <div className={"statusDisplay"}>
+		return <div style={{
+			position: "relative",
+			textAlign: "left",
+			margin: "8px 0"
+		}}>
 			<div style={{position: "absolute", top: -8, right: 0, zIndex: 1}}><Help topic={"mainControlRegion"} content={
 				<div className="toolTip">
-
 					{localize({
 						en:
 							<>
@@ -514,21 +527,7 @@ export class StatusDisplay extends React.Component {
 					})}
 				</div>
 			}/></div>
-			<div className={"-left"}>
-				<span style={{display: "block", marginBottom: 10}}>
-					{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}
-					{`${StaticFn.displayTime(this.state.time, 3)} (${this.state.time.toFixed(3)})`}
-				</span>
-				{this.state.resources ? <ResourcesDisplay data={{
-					level: this.state.level,
-					resources: this.state.resources
-				}}/> : undefined}
-			</div>
-			<div className={"-right"}>
-				{this.state.resourceLocks ? <ResourceLocksDisplay data={this.state.resourceLocks}/> : undefined}
-				{this.state.enemyBuffs ? <EnemyBuffsDisplay data={this.state.enemyBuffs}/> : undefined}
-				{this.state.selfBuffs ? <BuffsDisplay data={this.state.selfBuffs}/>: undefined}
-			</div>
+			{this.state.layoutFn(this.state as StatusViewProps)}
 		</div>
 	}
 }
@@ -543,4 +542,35 @@ export abstract class StatusPropsGenerator<T extends PlayerState> {
 	abstract getEnemyBuffViewProps(): BuffProps[];
 	abstract getSelfBuffViewProps(): BuffProps[];
 	abstract getResourceViewProps(): ResourceDisplayProps[];
+
+	// override me if the standard resource layout doesn't look right (DNC as an example because it gives many buffs)
+	statusLayoutFn(props: StatusViewProps): React.ReactNode {
+		return <div>
+			<div style={{
+				display: "inline-block",
+				verticalAlign: "top",
+				width: "50%",
+				height: "100%"
+			}}>
+			<span style={{display: "block", marginBottom: 10}}>
+				{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}
+				{`${StaticFn.displayTime(props.time, 3)} (${props.time.toFixed(3)})`}
+			</span>
+				{props.resources ? <ResourcesDisplay data={{
+					level: props.level,
+					resources: props.resources
+				}}/> : undefined}
+			</div>
+			<div style={{
+				position: "relative",
+				display: "inline-block",
+				float: "right",
+				width: "50%"
+			}}>
+				{props.resourceLocks ? <ResourceLocksDisplay data={props.resourceLocks}/> : undefined}
+				<BuffsDisplay data={props.enemyBuffs} style={{ marginBottom: "3em" }}/>
+				<BuffsDisplay data={props.selfBuffs}/>
+			</div>
+		</div>
+	}
 }
