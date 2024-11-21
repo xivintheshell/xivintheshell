@@ -455,6 +455,7 @@ export function ResourcesDisplay(props: {
 					setsuColor={props.setsuColor}
 					getsuColor={props.getsuColor}
 					kaColor={props.kaColor}
+					key={"resourceDisplay" + i}
 				/>
 			default:
 				return <ResourceText
