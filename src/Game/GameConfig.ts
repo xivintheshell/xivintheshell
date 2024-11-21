@@ -137,8 +137,8 @@ export class GameConfig {
 		this.legacy_casterTax = props?.casterTax ?? 0;
 	}
 
-	adjustedDoTPotency(inPotency : number, affectedBySkillSpeed: boolean = false) {
-		return XIVMath.dotPotency(this.level, affectedBySkillSpeed ? this.skillSpeed: this.spellSpeed, inPotency);
+	adjustedDoTPotency(inPotency : number, scalar: "sks" | "sps") {
+		return XIVMath.dotPotency(this.level, scalar === "sks" ? this.skillSpeed: this.spellSpeed, inPotency);
 	}
 
 	// returns GCD before FPS tax

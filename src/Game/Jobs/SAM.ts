@@ -679,7 +679,7 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 				sourceTime: state.getDisplayTime(),
 				sourceSkill: SkillName.Higanbana,
 				aspect: Aspect.Other,
-				basePotency: state.config.adjustedDoTPotency(tickPotency),
+				basePotency: state.config.adjustedDoTPotency(tickPotency, "sks"),
 				snapshotTime: snapshotTime,
 				description: "DoT " + (i+1) + `/${ticks}`
 			});

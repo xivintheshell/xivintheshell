@@ -456,6 +456,12 @@ export abstract class GameState {
 				}
 			}
 
+			if (this.job === ShellJob.SAM && doesDamage
+				&& this.hasResourceAvailable(ResourceType.EnhancedEnpi)
+				&& skill.name === SkillName.Enpi) {
+				node.addBuff(BuffType.EnhancedEnpi);
+			}
+
 			// Perform additional side effects
 			skill.onConfirm(this, node);
 
@@ -560,6 +566,19 @@ export abstract class GameState {
 			&& potencyNumber > 0
 			&& skill.aspect !== Aspect.Physical) {
 			node.addBuff(BuffType.Embolden);
+		}
+
+		if (this.job === ShellJob.DNC && potencyNumber > 0) {
+			if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
+				node.addBuff(BuffType.TechnicalFinish)
+			}
+			if (this.hasResourceAvailable(ResourceType.Devilment)) {
+				node.addBuff(BuffType.Devilment)
+			}
+		}
+
+		if (this.job === ShellJob.SAM && potencyNumber > 0 && this.hasResourceAvailable(ResourceType.Fugetsu)) {
+			node.addBuff(BuffType.Fugetsu);
 		}
 
 		skill.onConfirm(this, node);

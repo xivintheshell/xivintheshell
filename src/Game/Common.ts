@@ -94,6 +94,7 @@ export enum BuffType {
 	Acceleration = "Acceleration",
 	Fuka = "Fuka",
 	Fugetsu = "Fugetsu",
+	EnhancedEnpi = "Enhanced Enpi",
 	Tincture = "Tincture",
 
 	ArcaneCircle = "Arcane Circle",

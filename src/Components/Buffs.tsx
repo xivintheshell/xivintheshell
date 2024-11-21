@@ -32,6 +32,7 @@ buffIcons.set(BuffType.Acceleration, require("./Asset/Buffs/RDM/Acceleration.png
 
 buffIcons.set(BuffType.Fuka, require("./Asset/Buffs/SAM/Fuka.png"));
 buffIcons.set(BuffType.Fugetsu, require("./Asset/Buffs/SAM/Fugetsu.png"));
+buffIcons.set(BuffType.EnhancedEnpi, require("./Asset/Buffs/SAM/Enhanced Enpi.png"));
 
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName)=>{

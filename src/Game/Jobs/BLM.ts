@@ -608,7 +608,7 @@ const addThunderPotencies = (game: BLMState, node: ActionNode, skillName: typeof
 			sourceTime: game.getDisplayTime(),
 			sourceSkill: skillName,
 			aspect: Aspect.Lightning,
-			basePotency: game.config.adjustedDoTPotency(thunderTickPotency),
+			basePotency: game.config.adjustedDoTPotency(thunderTickPotency, "sps"),
 			snapshotTime: undefined,
 			description: "DoT " + (i+1) + `/${thunderTicks}`
 		});

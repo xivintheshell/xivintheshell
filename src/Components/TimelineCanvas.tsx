@@ -448,9 +448,10 @@ function drawSkills(
 		[BuffType.Acceleration, {color: g_colors.rdm.accelBuff, showImage: true}],
 		[BuffType.TechnicalFinish, {color: g_colors.dnc.esprit, showImage: true}],
 		[BuffType.Devilment, {color: g_colors.dnc.feathers, showImage: true}],
-		// TODO swap color
+		// TODO swap colors eventually
 		[BuffType.Fuka, {color: g_colors.timeline.llCover, showImage: true}],
 		[BuffType.Fugetsu, {color: g_colors.sam.fugetsu, showImage: true}],
+		[BuffType.EnhancedEnpi, {color: g_colors.rdm.accelBuff, showImage: true}],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();
