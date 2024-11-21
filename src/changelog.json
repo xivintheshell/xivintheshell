@@ -1,5 +1,12 @@
 [
 	{
+		"date": "11/19/24",
+		"changes": [
+			"[DNC] Added initial DNC support",
+			"Added support for skill speed in addition to spell speed"
+		]
+	},
+	{
 		"date": "11/17/24",
 		"changes": [
 			"[RDM] Fix Manafication CD (thanks 云青渔语)",

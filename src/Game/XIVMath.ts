@@ -86,10 +86,10 @@ export class XIVMath {
 		return Math.floor(140 * (det-subStat) / div) * 0.001;
 	}
 
-	static dotPotency(level: LevelSync, spellSpeed: number, basePotency: number) {
+	static dotPotency(level: LevelSync, speed: number, basePotency: number) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
-		const dotStrength = (1000 + Math.floor((spellSpeed - subStat) * 130 / div)) * 0.001;
+		const dotStrength = (1000 + Math.floor((speed - subStat) * 130 / div)) * 0.001;
 		return basePotency * dotStrength;
 	}
 
@@ -107,14 +107,14 @@ export class XIVMath {
 		return 0;
 	}
 
-	static preTaxGcd(level: LevelSync, spellSpeed: number, baseGCD: number, speedBuff?: ResourceType) {
+	static preTaxGcd(level: LevelSync, speed: number, baseGCD: number, speedBuff?: ResourceType) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
 
 		// let us pray we never need to stack haste buffs
 		let subtractSpeed = speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff);
 
-		return Math.floor(Math.floor(Math.floor((100-subtractSpeed)*100/100)*Math.floor((2000-Math.floor(130*(spellSpeed-subStat)/div+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
+		return Math.floor(Math.floor(Math.floor((100-subtractSpeed)*100/100)*Math.floor((2000-Math.floor(130*(speed-subStat)/div+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
 	}
 
 	static preTaxCastTime(level: LevelSync, spellSpeed: number, baseCastTime: number, speedBuff?: ResourceType) {

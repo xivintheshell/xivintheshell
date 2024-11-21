@@ -22,7 +22,7 @@ import {
 
 import {controller} from "../Controller/Controller";
 import {ActionNode} from "../Controller/Record";
-import {ShellJob} from "../Controller/Common";
+import {CASTER_JOBS, HEALER_JOBS, ShellJob, SKS_JOBS, SPS_JOBS} from "../Controller/Common";
 import {Modifiers, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
 import {Buff} from "./Buffs";
 
@@ -70,7 +70,14 @@ export abstract class GameState {
 		});
 		// GCD, movement, and animation locks are treated as special since they do not appear
 		// in resource overrides
-		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(config.adjustedGCD()), 1, 1));
+		let adjustedGCD = 2.5;
+		if (SKS_JOBS.includes(this.job)) {
+			adjustedGCD = config.adjustedSksGCD()
+		}
+		if (SPS_JOBS.includes(this.job)) {
+			adjustedGCD = config.adjustedGCD()
+		}
+		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(adjustedGCD), 1, 1));
 
 		this.resources.set(new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(new Resource(ResourceType.NotAnimationLocked, 1, 1));
@@ -177,11 +184,13 @@ export abstract class GameState {
 			}
 			this.addEvent(recurringLucidTickEvt);
 		};
-		let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
-		while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;
-		let firstLucidTickEvt = new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick);
-		firstLucidTickEvt.addTag(EventTag.LucidTick);
-		this.addEvent(firstLucidTickEvt);
+		if ([...HEALER_JOBS, ...CASTER_JOBS].includes(this.job)) {
+			let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
+			while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;
+			let firstLucidTickEvt = new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick);
+			firstLucidTickEvt.addTag(EventTag.LucidTick);
+			this.addEvent(firstLucidTickEvt);
+		}
 	}
 
 	// advance game state by this much time
@@ -276,6 +285,11 @@ export abstract class GameState {
 			ResourceType.HammerTime,
 			ResourceType.Aetherhues,
 			ResourceType.SubtractivePalette,
+			ResourceType.ClosedPosition,
+			ResourceType.StandardStep,
+			ResourceType.TechnicalStep,
+			ResourceType.Esprit,
+			ResourceType.Improvisation,
 		] as ResourceType[]).includes(buffName)) {
 			// subtractive spectrum, starstruck, monochrome tones, rainbow drip,
 			// tempera coat/grassa, smudge can be clicked off
@@ -296,7 +310,9 @@ export abstract class GameState {
 	 * it performs the confirmation immediately.
 	 */
 	useSpellOrWeaponskill(skill: Spell<PlayerState> | Weaponskill<PlayerState>, node: ActionNode) {
-		let cd = this.cooldowns.get(skill.cdName);
+		const cd = this.cooldowns.get(skill.cdName);
+		const secondaryCd = skill.secondaryCd ? this.cooldowns.get(skill.secondaryCd.cdName) : undefined
+
 		// TODO refactor logic to determine self-buffs
 		let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
 		const inspireSkills: SkillName[] = [
@@ -403,6 +419,15 @@ export abstract class GameState {
 				}
 			}
 
+			if (this.job === ShellJob.DNC && doesDamage) {
+				if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
+					node.addBuff(BuffType.TechnicalFinish)
+				}
+				if (this.hasResourceAvailable(ResourceType.Devilment)) {
+					node.addBuff(BuffType.Devilment)
+				}
+			}
+
 			// Perform additional side effects
 			skill.onConfirm(this, node);
 
@@ -453,6 +478,9 @@ export abstract class GameState {
 		}
 		// recast
 		cd.useStackWithRecast(this, this.config.getAfterTaxGCD(recastTime));
+		if (secondaryCd) {
+			secondaryCd.useStack(this);
+		}
 	}
 
 	/**
@@ -541,7 +569,11 @@ export abstract class GameState {
 	#timeTillSkillAvailable(skillName: SkillName) {
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.cdName;
+		const secondaryCd = skill.secondaryCd?.cdName
 		let tillAnyCDStack = this.cooldowns.timeTillAnyStackAvailable(cdName);
+		if (secondaryCd) {
+			tillAnyCDStack = Math.max(tillAnyCDStack, this.cooldowns.timeTillAnyStackAvailable(secondaryCd));
+		}
 		return Math.max(this.timeTillAnySkillAvailable(), tillAnyCDStack);
 	}
 
@@ -604,7 +636,7 @@ export abstract class GameState {
 		return this.resources.timeTillReady(ResourceType.InCombat);
 	}
 
-	getSkillAvailabilityStatus(skillName: SkillName): SkillButtonViewInfo {
+	getSkillAvailabilityStatus(skillName: SkillName, primaryRecastOnly: boolean = false): SkillButtonViewInfo {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
 		let capturedManaCost = skill.manaCostFn(this);
@@ -633,8 +665,11 @@ export abstract class GameState {
 		}
 
 		let cd = this.cooldowns.get(skill.cdName);
+		const secondaryCd = skill.secondaryCd ? this.cooldowns.get(skill.secondaryCd.cdName) : undefined;
 		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.cdName);
+		const timeTillSecondaryReady = skill.secondaryCd ? this.cooldowns.timeTillNextStackAvailable(skill.secondaryCd.cdName) : 0
 		let cdRecastTime = cd.currentStackCd();
+		let secondaryRecastTime = secondaryCd?.currentStackCd() ?? 0
 
 		// to be displayed together when hovered on a skill
 		let timeTillDamageApplication = 0;
@@ -647,17 +682,19 @@ export abstract class GameState {
 			}
 		}
 
+		const secondaryStacksAvailable = secondaryCd?.stacksAvailable() ?? 0
+		const secondaryMaxStacks = secondaryCd?.maxStacks() ?? 0
 		// conditions that make the skills show proc
 		const highlight = skill.highlightIf(this);
 		return {
 			skillName: skill.name,
 			status: status,
-			stacksAvailable: cd.stacksAvailable(),
-			maxStacks: cd.maxStacks(),
+			stacksAvailable: secondaryMaxStacks > 0 ? secondaryStacksAvailable : cd.stacksAvailable(),
+			maxStacks: Math.max(cd.maxStacks(), secondaryMaxStacks),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
-			cdRecastTime: cdRecastTime,
-			timeTillNextStackReady: timeTillNextStackReady,
+			cdRecastTime: primaryRecastOnly ? cdRecastTime : Math.max(cdRecastTime, secondaryRecastTime),
+			timeTillNextStackReady: Math.max(timeTillNextStackReady, timeTillSecondaryReady),
 			timeTillAvailable: timeTillAvailable,
 			timeTillDamageApplication: timeTillDamageApplication,
 			capturedManaCost: capturedManaCost,
