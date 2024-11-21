@@ -66,8 +66,8 @@ export enum SAMResourceType {
 	Meditation = "Meditation", // [0, 3]
 
 	// samurai combo resources (behind the scenes)
-	TwoReady = "TwoReady", // [0, 1] for jinpu/shifu
-	TwoAoeReady = "TwoAoeReady", // [0, 1] for mangetsu/oka
+	SAMTwoReady = "SAMTwoReady", // [0, 1] for jinpu/shifu
+	SAMTwoAoeReady = "SAMTwoAoeReady", // [0, 1] for mangetsu/oka
 	GekkoReady = "GekkoReady", // [0, 1]
 	KashaReady = "KashaReady", // [0, 1]
 	KaeshiOgiReady = "KaeshiOgiReady", // [0 , 1]

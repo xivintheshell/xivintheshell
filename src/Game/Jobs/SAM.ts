@@ -54,8 +54,8 @@ makeSAMResource(ResourceType.HiganbanaDoT, 1, {timeout: 60});
 
 // samurai combo resources (behind the scenes)
 const ALL_SAM_COMBOS = [
-	ResourceType.TwoReady,
-	ResourceType.TwoAoeReady,
+	ResourceType.SAMTwoReady,
+	ResourceType.SAMTwoAoeReady,
 	ResourceType.GekkoReady,
 	ResourceType.KashaReady,
 	ResourceType.KaeshiOgiReady,
@@ -308,7 +308,6 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 		highlightIf: params.highlightIf,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
-		// TODO deal with trait setting cast times to 1.3 vs. calculating fuka
 		castTime: castTime,
 		recastTime: (state) => state.config.adjustedSksGCD(
 			params.baseRecastTime ?? 2.5,
@@ -373,7 +372,7 @@ makeGCD_SAM(SkillName.Hakaze, 1, {
 	onConfirm: (state) => {
 		state.tryConsumeMeikyo();
 		state.gainKenki(5);
-		state.progressActiveCombo([ResourceType.TwoReady]);
+		state.progressActiveCombo([ResourceType.SAMTwoReady]);
 	},
 });
 
@@ -384,7 +383,7 @@ makeGCD_SAM(SkillName.Gyofu, 92, {
 	onConfirm: (state) => {
 		state.tryConsumeMeikyo();
 		state.gainKenki(5);
-		state.progressActiveCombo([ResourceType.TwoReady]);
+		state.progressActiveCombo([ResourceType.SAMTwoReady]);
 	}
 });
 
@@ -401,17 +400,17 @@ makeGCD_SAM(SkillName.Yukikaze, 50, {
 			[TraitName.WayOfTheSamuraiII, 290],
 			[TraitName.WayOfTheSamuraiIII, 340],
 		],
-		resource: ResourceType.TwoReady,
+		resource: ResourceType.SAMTwoReady,
 	},
 	onConfirm: (state) => {
-		if (state.checkCombo(ResourceType.TwoReady)) {
+		if (state.checkCombo(ResourceType.SAMTwoReady)) {
 			state.gainKenki(15);
 			state.gainSen(ResourceType.Setsu);
 		}
 		state.tryConsumeMeikyo();
 		state.progressActiveCombo([]);
 	},
-	highlightIf: (state) => state.checkCombo(ResourceType.TwoReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.SAMTwoReady),
 });
 
 makeGCD_SAM(SkillName.Jinpu, 4, {
@@ -425,10 +424,10 @@ makeGCD_SAM(SkillName.Jinpu, 4, {
 			[TraitName.Never, 280],
 			[TraitName.WayOfTheSamuraiIII, 300],
 		],
-		resource: ResourceType.TwoReady,
+		resource: ResourceType.SAMTwoReady,
 	},
 	onConfirm: (state) => {
-		if (state.checkCombo(ResourceType.TwoReady)) {
+		if (state.checkCombo(ResourceType.SAMTwoReady)) {
 			state.gainKenki(5);
 			state.refreshBuff(ResourceType.Fugetsu, 0.62);
 			state.tryConsumeMeikyo();
@@ -438,7 +437,7 @@ makeGCD_SAM(SkillName.Jinpu, 4, {
 			state.progressActiveCombo([]);
 		}
 	},
-	highlightIf: (state) => state.checkCombo(ResourceType.TwoReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.SAMTwoReady),
 });
 
 makeGCD_SAM(SkillName.Gekko, 30, {
@@ -494,10 +493,10 @@ makeGCD_SAM(SkillName.Shifu, 18, {
 			[TraitName.Never, 280],
 			[TraitName.WayOfTheSamuraiIII, 300],
 		],
-		resource: ResourceType.TwoReady,
+		resource: ResourceType.SAMTwoReady,
 	},
 	onConfirm: (state) => {
-		if (state.checkCombo(ResourceType.TwoReady)) {
+		if (state.checkCombo(ResourceType.SAMTwoReady)) {
 			state.gainKenki(5);
 			state.refreshBuff(ResourceType.Fuka, 0.8);
 			state.tryConsumeMeikyo();
@@ -507,7 +506,7 @@ makeGCD_SAM(SkillName.Shifu, 18, {
 			state.progressActiveCombo([]);
 		}
 	},
-	highlightIf: (state) => state.checkCombo(ResourceType.TwoReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.SAMTwoReady),
 });
 
 makeGCD_SAM(SkillName.Kasha, 40, {
@@ -558,7 +557,7 @@ makeGCD_SAM(SkillName.Fuga, 26, {
 	basePotency: 90,
 	onConfirm: (state) => {
 		state.gainKenki(5);
-		state.progressActiveCombo([ResourceType.TwoAoeReady]);
+		state.progressActiveCombo([ResourceType.SAMTwoAoeReady]);
 	},
 });
 
@@ -568,7 +567,7 @@ makeGCD_SAM(SkillName.Fuko, 86, {
 	basePotency: 100,
 	onConfirm: (state) => {
 		state.gainKenki(10);
-		state.progressActiveCombo([ResourceType.TwoAoeReady]);
+		state.progressActiveCombo([ResourceType.SAMTwoAoeReady]);
 	},
 });
 
@@ -577,16 +576,16 @@ makeGCD_SAM(SkillName.Mangetsu, 35, {
 	basePotency: 100,
 	combo: {
 		potency: 120,
-		resource: ResourceType.TwoAoeReady,
+		resource: ResourceType.SAMTwoAoeReady,
 	},
 	onConfirm: (state) => {
-		if (state.checkCombo(ResourceType.TwoAoeReady)) {
+		if (state.checkCombo(ResourceType.SAMTwoAoeReady)) {
 			state.gainKenki(10);
 			state.refreshBuff(ResourceType.Fugetsu, 0.62);
 			state.gainSen(ResourceType.Getsu);
 		}
 	},
-	highlightIf: (state) => state.checkCombo(ResourceType.TwoAoeReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.SAMTwoAoeReady),
 });
 
 makeGCD_SAM(SkillName.Oka, 35, {
@@ -594,16 +593,16 @@ makeGCD_SAM(SkillName.Oka, 35, {
 	basePotency: 100,
 	combo: {
 		potency: 120,
-		resource: ResourceType.TwoAoeReady,
+		resource: ResourceType.SAMTwoAoeReady,
 	},
 	onConfirm: (state) => {
-		if (state.checkCombo(ResourceType.TwoAoeReady)) {
+		if (state.checkCombo(ResourceType.SAMTwoAoeReady)) {
 			state.gainKenki(10);
 			state.refreshBuff(ResourceType.Fuka, 0.62);
 			state.gainSen(ResourceType.KaSen);
 		}
 	},
-	highlightIf: (state) => state.checkCombo(ResourceType.TwoAoeReady),
+	highlightIf: (state) => state.checkCombo(ResourceType.SAMTwoAoeReady),
 });
 
 // no skill replacement if there are 0 sen (usage is just invalid)
@@ -634,8 +633,7 @@ const tendoMidareCondition: ConditionalSkillReplace<SAMState> = {
 
 makeGCD_SAM(SkillName.Iaijutsu, 30, {
 	replaceIf: [banaCondition, tenkaCondition, tendoGokenCondition, midareCondition, tendoMidareCondition],
-	// TODO check cast time traits
-	baseCastTime: 1.3,
+	baseCastTime: 1.3, // if below level 80, set to scale in makeGCD_SAM
 	basePotency: 0,
 	applicationDelay: 0,
 	validateAttempt: (state) => false,

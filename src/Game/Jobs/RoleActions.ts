@@ -6,6 +6,31 @@ import {Traits, TraitName} from "../Traits";
 import type {GameState} from "../GameState";
 import {controller} from "../../Controller/Controller";
 
+// Special case for RDM, because for some twelvesforsaken reason sprint/pot cancel dualcast
+const cancelDualcast = (state: GameState) => {
+	if (state.job === ShellJob.RDM && state.tryConsumeResource(ResourceType.Dualcast)) {
+		controller.reportWarning(WarningType.DualcastEaten);
+	}
+};
+
+// Special case for SAM, since all actions should cancel meditate
+const cancelMeditate = (state: GameState) => {
+	if (state.job === ShellJob.SAM) {
+		const evt = state.findNextQueuedEventByTag(EventTag.MeditateTick);
+		if (evt) {
+			evt.canceled = true;
+		}
+		state.tryConsumeResource(ResourceType.Meditate);
+	}
+};
+
+makeAbility([...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS], SkillName.SecondWind, 12, ResourceType.cd_SecondWind, {
+	applicationDelay: 0.625,
+	cooldown: 120,
+	assetPath: "Role/Second Wind.png",
+	onConfirm: cancelMeditate,
+});
+
 makeAbility(PHYSICAL_RANGED_JOBS, SkillName.HeadGraze, 24, ResourceType.cd_HeadGraze, {
 	applicationDelay: 0,
 	cooldown: 30,
@@ -57,24 +82,6 @@ makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], SkillName.Surecast, 44, Re
 	assetPath: "Role/Surecast.png",
 });
 
-// Special case for RDM, because for some twelvesforsaken reason sprint/pot cancel dualcast
-const cancelDualcast = (state: GameState) => {
-	if (state.job === ShellJob.RDM && state.tryConsumeResource(ResourceType.Dualcast)) {
-		controller.reportWarning(WarningType.DualcastEaten);
-	}
-};
-
-// Special case for SAM, since all actions should cancel meditate
-const cancelMeditate = (state: GameState) => {
-	if (state.job === ShellJob.SAM) {
-		const evt = state.findNextQueuedEventByTag(EventTag.MeditateTick);
-		if (evt) {
-			evt.canceled = true;
-		}
-		state.tryConsumeResource(ResourceType.Meditate);
-	}
-};
-
 makeResourceAbility(MELEE_JOBS, SkillName.Feint, 22, ResourceType.cd_Feint, {
 	rscType: ResourceType.Feint,
 	applicationDelay: 0.537,
@@ -106,13 +113,6 @@ makeResourceAbility(MELEE_JOBS, SkillName.Bloodbath, 8, ResourceType.cd_Bloodbat
 	applicationDelay: 0.625,
 	cooldown: 90,
 	assetPath: "Role/Bloodbath.png",
-	onConfirm: cancelMeditate,
-});
-
-makeAbility([...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS], SkillName.SecondWind, 12, ResourceType.cd_SecondWind, {
-	applicationDelay: 0.625,
-	cooldown: 120,
-	assetPath: "Role/Second Wind.png",
 	onConfirm: cancelMeditate,
 });
 
