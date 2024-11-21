@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.3f7b30b2.css",
-    "main.js": "/static/js/main.14263ab3.js",
+    "main.css": "/static/css/main.d87f2c6e.css",
+    "main.js": "/static/js/main.80bcc16e.js",
     "static/media/Tincture.png": "/static/media/Tincture.30918e122174e90fe254.png",
     "static/media/Sprint.png": "/static/media/Sprint.337bd2225fa4fad61ec8.png",
     "static/media/Blizzard 2.png": "/static/media/Blizzard 2.f2c1ac2f60d6abc82db2.png",
@@ -103,11 +103,11 @@
     "static/media/Curing Waltz.png": "/static/media/Curing Waltz.31c1f5a650a66f9f7098.png",
     "static/media/Devilment.png": "/static/media/Devilment.88fa420459c55f897039.png",
     "index.html": "/index.html",
-    "main.3f7b30b2.css.map": "/static/css/main.3f7b30b2.css.map",
-    "main.14263ab3.js.map": "/static/js/main.14263ab3.js.map"
+    "main.d87f2c6e.css.map": "/static/css/main.d87f2c6e.css.map",
+    "main.80bcc16e.js.map": "/static/js/main.80bcc16e.js.map"
   },
   "entrypoints": [
-    "static/css/main.3f7b30b2.css",
-    "static/js/main.14263ab3.js"
+    "static/css/main.d87f2c6e.css",
+    "static/js/main.80bcc16e.js"
   ]
 }
