@@ -716,8 +716,8 @@ export class DamageStatistics extends React.Component {
 					position: "relative",
 					borderTop: "1px solid " + colors.bgMediumContrast
 				}}>
-					<div style={cell(65)}/>
-					<div style={cell(35)}><span>
+					<div style={cell(70)}/>
+					<div style={cell(30)}><span>
 					{this.data.mainTableSummary.totalPotencyWithoutPot.toFixed(2)}
 						{this.data.mainTableSummary.totalPotPotency>0 ?
 							<span style={{color: colors.timeline.potCover}}> +{this.data.mainTableSummary.totalPotPotency.toFixed(2)}{localize({
