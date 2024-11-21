@@ -1,11 +1,11 @@
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
-import { ResourceType, SkillName, WarningType } from "../Common";
+import { Aspect, ResourceType, SkillName, WarningType } from "../Common";
 import { MCHResourceType } from "../Constants/MCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
-import { CoolDown, getResourceInfo, makeResource, ResourceInfo } from "../Resources";
+import { makeComboModifier, Modifiers, Potency, PotencyModifier} from "../Potency";
+import { CoolDown, getResourceInfo, makeResource, ResourceInfo, Event } from "../Resources";
 import { Ability, combineEffects, ConditionalSkillReplace, CooldownGroupProperies, EffectFn, getBasePotency, makeAbility, makeResourceAbility, makeWeaponskill, NO_EFFECT, ResourceCalculationFn, SkillAutoReplace, StatePredicate, Weaponskill } from "../Skills";
 import { TraitName, Traits } from "../Traits";
 
@@ -16,7 +16,6 @@ const makeMCHResource = (rsc: ResourceType, maxValue: number, params? : {timeout
 // Gauge resources
 makeMCHResource(ResourceType.HeatGauge, 100)
 makeMCHResource(ResourceType.BatteryGauge, 100)
-makeMCHResource(ResourceType.QueenTime, 15)
 
 // Status Effects
 makeMCHResource(ResourceType.Reassembled, 1, {timeout: 5})
@@ -34,6 +33,9 @@ makeMCHResource(ResourceType.ArmsLength, 1, {timeout: 6.5})
 
 // Combos & other tracking
 makeMCHResource(ResourceType.HeatCombo, 2, {timeout: 30})
+makeMCHResource(ResourceType.Queen, 1)
+makeMCHResource(ResourceType.QueenPunches, 5)
+makeMCHResource(ResourceType.QueenFinishers, 2)
 
 
 const COMBO_GCDS: SkillName[] = [SkillName.HeatedCleanShot, SkillName.HeatedSlugShot, SkillName.HeatedSplitShot]
@@ -80,7 +82,103 @@ export class MCHState extends GameState {
             this.enqueueResourceDrop(proc, duration);
         }
     }
+
+    handleQueenPunch = () => {
+        if (!this.hasResourceAvailable(ResourceType.QueenPunches)) {
+            this.handleQueenFinisher()
+            return
+        }
+
+        // Rook, volley Fire,  35-75 potency
+        // Queen, Arm Punch, 120-240 potency
+        let sourceSkill = SkillName.VolleyFire
+        let basePotency = 0
+        if (Traits.hasUnlocked(TraitName.Promotion, this.config.level)) {
+            sourceSkill = SkillName.ArmPunch
+            basePotency = this.calculateQueenPotency(120, 240)
+        } else {
+            basePotency = this.calculateQueenPotency(35, 75)
+        }
+        const punchPotency = new Potency({
+            config: this.config,
+            sourceTime: controller.game.time,
+            sourceSkill,
+            aspect: Aspect.Physical,
+            description: "",
+            basePotency,
+            snapshotTime: controller.game.time,
+        })
+        if (this.hasResourceAvailable(ResourceType.Tincture)) {
+            punchPotency.modifiers.push(Modifiers.Tincture)
+        }
+        controller.resolvePotency(punchPotency)
+        //controller.updateStats()
+
+        if (this.getDisplayTime() >= 0) {
+            controller.reportDotTick(this.time);
+        }
+
+       this.resources.get(ResourceType.QueenPunches).consume(1)
+
+        // schedule next punch
+        if (this.hasResourceAvailable(ResourceType.QueenPunches)) {
+            this.addEvent(new Event("queen punch", 1.56, () => this.handleQueenPunch()))
+        } else {
+            this.addEvent(new Event("queen finisher", 1.56, () => this.handleQueenFinisher()))
+        }
+    }
+
+    calculateQueenPotency(minPotency: number, maxPotency: number) {
+        const batteryBonus = this.resources.get(ResourceType.BatteryBonus).availableAmount()
+        const bonusPotency = (maxPotency - minPotency) * (batteryBonus / 50.0)
+        return (minPotency + bonusPotency) * 0.89 // Pet potency is approximately 89% that of player potency
+    }
+
+    handleQueenFinisher = () => {
+        if (!this.hasResourceAvailable(ResourceType.QueenFinishers)) { return }
+
+        const sourceSkill = this.resources.get(ResourceType.QueenFinishers).availableAmount() === 2 ? SkillName.PileBunker :
+            Traits.hasUnlocked(TraitName.Promotion, this.config.level) ? SkillName.CrownedCollider : SkillName.RookOverload
+        
+        let basePotency = 0
+        if (sourceSkill === SkillName.PileBunker) {
+            basePotency = this.calculateQueenPotency(340, 680)
+        } else if (sourceSkill === SkillName.CrownedCollider) {
+            basePotency = this.calculateQueenPotency(390, 780)
+        } else {
+            basePotency = this.calculateQueenPotency(160, 320)
+        }
+
+        const finisherPotency = new Potency({
+            config: this.config,
+            sourceTime: controller.game.time,
+            sourceSkill,
+            aspect: Aspect.Physical,
+            description: "",
+            basePotency,
+            snapshotTime: controller.game.time,
+        })
+        controller.resolvePotency(finisherPotency)
+        //controller.updateStats()
+
+        if (this.getDisplayTime() >= 0) {
+            controller.reportDotTick(this.time);
+        }
+
+        this.resources.get(ResourceType.QueenFinishers).consume(1)
+
+        if (this.hasResourceAvailable(ResourceType.QueenFinishers)) {
+            this.addEvent(new Event("queen finisher", 2, () => this.handleQueenFinisher()))
+        } else {
+            this.tryConsumeResource(ResourceType.BatteryBonus, true)
+            this.addEvent(new Event("expire queen", 5., () => {
+                this.tryConsumeResource(ResourceType.Queen)
+            }))
+        }
+    }
 }
+
+
 
 const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
 	autoUpgrade?: SkillAutoReplace,
@@ -126,6 +224,7 @@ const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
 }
 
 const makeAbility_MCH = (name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
+	autoUpgrade?: SkillAutoReplace,
     potency?: number | Array<[TraitName, number]>,
     replaceIf?: ConditionalSkillReplace<MCHState>[],
     highlightIf?: StatePredicate<MCHState>,
@@ -341,9 +440,92 @@ makeWeaponskill_MCH(SkillName.FullMetalField, 100, {
 // Checkmate
 
 // Automaton Queen
+const robotSummons: Array<{
+    skillName: SkillName, 
+    skillLevel: number, 
+    startOnHotbar?: boolean, 
+    autoUpgrade?: SkillAutoReplace,
+}> = [
+    {
+        skillName: SkillName.RookAutoturret,
+        skillLevel: 40,
+        autoUpgrade: {
+            otherSkill: SkillName.AutomatonQueen,
+            trait: TraitName.Promotion,
+        },
+    },
+    {
+        skillName: SkillName.AutomatonQueen,
+        skillLevel: 80,
+        startOnHotbar: false,
+    }
+]
+robotSummons.forEach((params) => {
+    makeAbility_MCH(params.skillName, params.skillLevel, ResourceType.cd_Queen, {
+        startOnHotbar: params.startOnHotbar,
+        autoUpgrade: params.autoUpgrade,
+        applicationDelay: 0,
+        cooldown: 6,
+        maxCharges: 1,
+        validateAttempt: (state) => {
+            return state.hasResourceAvailable(ResourceType.BatteryGauge, 50) &&
+            !state.hasResourceAvailable(ResourceType.Queen)
+        },
+        onConfirm: (state) => {
+            // Cache the battery bonus scalar based on the amount of battery gauge available
+            const battery = state.resources.get(ResourceType.BatteryGauge).availableAmount()
+            state.resources.get(ResourceType.BatteryBonus).gain(battery - 50)
+
+            // Consume the gauge
+            state.tryConsumeResource(ResourceType.BatteryGauge, true)
+
+            // note that queen is summoned, and qrant the requisite number of punches and finishers
+            state.resources.get(ResourceType.Queen).gain(1)
+            state.resources.get(ResourceType.QueenPunches).gain(5)
+            const finishers = Traits.hasUnlocked(TraitName.QueensGambit, state.config.level) ? 2 : 1
+            state.resources.get(ResourceType.QueenFinishers).gain(finishers)
+        
+            // Schedule the initial punch
+            state.addEvent(new Event("initial queen punch", 5.5, () => state.handleQueenPunch()))
+        }
+    })
+})
 
 // Queen Overdrive
+const overdriveSkills: Array<{
+    skillName: SkillName,
+    skillLevel: number,
+    startOnHotbar?: boolean,
+    autoUpgrade?: SkillAutoReplace,
 
+}> = [
+    {
+        skillName: SkillName.RookOverdrive,
+        skillLevel: 40,
+        autoUpgrade: {
+            otherSkill: SkillName.QueenOverdrive,
+            trait: TraitName.Promotion,
+        }
+    },
+    {
+        skillName: SkillName.QueenOverdrive,
+        skillLevel: 80,
+        startOnHotbar: false,
+    }
+]
+overdriveSkills.forEach((params) => {
+    makeAbility_MCH(params.skillName, params.skillLevel, ResourceType.cd_Overdrive, {
+        startOnHotbar: params.startOnHotbar,
+        autoUpgrade: params.autoUpgrade,
+        applicationDelay: 0,
+        cooldown: 15,
+        maxCharges: 1,
+        validateAttempt: (state) => state.hasResourceAvailable(ResourceType.QueenPunches),
+        onConfirm: (state) => {
+            state.tryConsumeResource(ResourceType.QueenPunches, true)
+        }
+    })
+})
 // Scattergun
 
 // Bioblaster

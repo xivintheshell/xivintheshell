@@ -1,7 +1,5 @@
-import { ShellJob } from "../../Controller/Common";
 import { ResourceType } from "../../Game/Common";
 import { MCHState } from "../../Game/Jobs/MCH";
-import { getResourceInfo, ResourceInfo } from "../../Game/Resources";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import { BuffProps, registerBuffIcon, ResourceBarProps, ResourceDisplayProps, StatusPropsGenerator } from "../StatusDisplay";
@@ -169,8 +167,12 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
 
         const heat = resources.get(ResourceType.HeatGauge).availableAmount();
         const battery = resources.get(ResourceType.BatteryGauge).availableAmount();
-        const queenTime = resources.get(ResourceType.QueenTime).availableAmount();
-        //const duration = (getResourceInfo(ShellJob.MCH, ResourceType.QueenTime) as ResourceInfo).maxTimeout
+        
+        const punch = resources.get(ResourceType.QueenPunches)
+        const finish = resources.get(ResourceType.QueenFinishers)
+
+        const queenTime = punch.availableAmount() + finish.availableAmount();
+        const queenMax = punch.maxValue + finish.maxValue
 
         const infos = [{
             kind: "bar",
@@ -193,10 +195,10 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
         {
             kind: "bar",
             name: localize({
-                en: "Queen Time",
+                en: "Queen Hits",
             }),
             color: colors.mch.queen,
-            progress: queenTime / 15,
+            progress: queenTime / queenMax,
             valueString: queenTime.toFixed(0),
         } as ResourceBarProps]
 

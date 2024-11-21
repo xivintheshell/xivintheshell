@@ -31,13 +31,18 @@ export enum MCHSkillName {
 
     Dismantle = "Dismantle",
     Tactician = "Tactician",
+
+    VolleyFire = "Volley Fire",
+    ArmPunch = "Arm Punch",
+    RookOverload = "Rook Overload",
+    PileBunker = "Pile Bunker",
+    CrownedCollider = "Crowned Collider",
 }
 
 export enum MCHResourceType {
     // Gauge resources
     HeatGauge = "Heat",
     BatteryGauge = "Battery",
-    QueenTime = "QueenTime",
 
     // Status Effects
     Reassembled = "Reassembled",
@@ -53,6 +58,10 @@ export enum MCHResourceType {
 
     // Combos & other tracking
     HeatCombo = "Heat Combo",
+    Queen = "Queen",
+    QueenPunches = "QueenPunches",
+    QueenFinishers = "QueenFinishers",
+    BatteryBonus = "BatteryBonus",
 }
 
 export enum MCHCooldownType {
@@ -64,7 +73,8 @@ export enum MCHCooldownType {
     cd_Chainsaw = "cd_Chainsaw",
     cd_BarrelStabilizer = "cd_BarrelStabilizer",
     cd_Wildfire = "cd_Wildfire",
-    cd_QueenOverdrive = "cd_QueenOverdrive",
+    cd_Queen = "cd_Queen",
+    cd_Overdrive = "cd_Overdrive",
     cd_Dismantle = "cd_Dismantle",
     cd_Tactician = "cd_Tactician"
 }
