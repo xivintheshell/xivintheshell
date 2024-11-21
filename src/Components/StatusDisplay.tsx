@@ -69,6 +69,17 @@ export interface DanceCounterProps {
 	currentStacks: number,
 }
 
+export interface SenCounterProps {
+	kind: "sen",
+	name: ContentNode,
+	hasSetsu: boolean,
+	hasGetsu: boolean,
+	hasKa: boolean,
+	setsuColor: string,
+	getsuColor: string,
+	kaColor: string,
+}
+
 export interface ResourceTextProps {
 	kind: "text",
 	name: ContentNode,
@@ -81,6 +92,7 @@ export type ResourceDisplayProps =
 	ResourceCounterProps |
 	PaintGaugeCounterProps |
 	DanceCounterProps |
+	SenCounterProps |
 	ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
@@ -208,6 +220,41 @@ function DanceCounter(props: {
 		<div style={{width: 200, display: "inline-block"}}>
 			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
 			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{props.currentStacks + "/" + props.maxStacks}</div>
+		</div>
+	</div>;
+}
+
+// copy of ResourceCounter specialized for tracking SAM's Sen gauge
+function SenCounter(props: {
+	name: ContentNode,
+	hasSetsu: boolean,
+	hasGetsu: boolean,
+	hasKa: boolean,
+	setsuColor: string,
+	getsuColor: string,
+	kaColor: string,
+}) {
+	const stacks = [];
+	const hasSen = [props.hasSetsu, props.hasGetsu, props.hasKa];
+	const senColors = [props.setsuColor, props.getsuColor, props.kaColor];
+	const names = ["setsu", "getsu", "ka"];
+	const presentSen = [];
+	const help = <Help topic={"senExplanation"}
+		content={localize({
+			en: "from left to right: setsu (yukikaze), getsu (gekko/mangetsu), ka (kasha/oka)",
+		})}
+	/>;
+	for (let i = 0; i < 3; i++) {
+		stacks.push(<ResourceStack key={i} color={senColors[i]} value={hasSen[i]} />);
+		if (hasSen[i]) {
+			presentSen.push(names[i]);
+		}
+	}
+	return <div style={{marginBottom: 4, lineHeight: "1.5em"}}>
+		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name} {help}</div>
+		<div style={{width: 200, display: "inline-block"}}>
+			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
+			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{presentSen.join("+")}</div>
 		</div>
 	</div>;
 }
@@ -401,6 +448,16 @@ function ResourcesDisplay(props: {
 					maxStacks={props.maxStacks}
 					currentStacks={props.currentStacks}
 					key={"resourceDisplay" + i}
+				/>
+			case "sen":
+				return <SenCounter
+					name={props.name}
+					hasSetsu={props.hasSetsu}
+					hasGetsu={props.hasGetsu}
+					hasKa={props.hasKa}
+					setsuColor={props.setsuColor}
+					getsuColor={props.getsuColor}
+					kaColor={props.kaColor}
 				/>
 			default:
 				return <ResourceText

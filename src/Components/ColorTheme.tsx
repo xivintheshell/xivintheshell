@@ -285,7 +285,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 			},
 			sam: {
 				kenki: "#d55124",
-				setsu: "#c7ffff",
+				setsu: "#addede",
 				getsu: "#7987fc",
 				kaSen: "#f8a2a6",
 				meditation: "#ff853d",

@@ -112,32 +112,17 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 		// TODO use simplified gauge iconography so people don't have to remember names
 		const infos: ResourceDisplayProps[] = [
 			{
-				kind: "counter",
+				kind: "sen",
 				name: localize({
-					en: "setsu",
+					en: "sen",
 				}),
-				color: colors.sam.setsu,
-				currentStacks: setsu,
-				maxStacks: 1,
-			} as ResourceCounterProps,
-			{
-				kind: "counter",
-				name: localize({
-					en: "getsu",
-				}),
-				color: colors.sam.getsu,
-				currentStacks: getsu,
-				maxStacks: 1,
-			} as ResourceCounterProps,
-			{
-				kind: "counter",
-				name: localize({
-					en: "ka",
-				}),
-				color: colors.sam.kaSen,
-				currentStacks: ka,
-				maxStacks: 1,
-			} as ResourceCounterProps,
+				hasSetsu: this.state.hasResourceAvailable(ResourceType.Setsu),
+				hasGetsu: this.state.hasResourceAvailable(ResourceType.Getsu),
+				hasKa: this.state.hasResourceAvailable(ResourceType.KaSen),
+				setsuColor: colors.sam.setsu,
+				getsuColor: colors.sam.getsu,
+				kaColor: colors.sam.kaSen,
+			},
 			{
 				kind: "bar",
 				name: localize({en: "kenki"}),
