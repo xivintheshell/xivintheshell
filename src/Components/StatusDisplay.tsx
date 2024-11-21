@@ -5,6 +5,7 @@ import type {PlayerState} from "../Game/GameState";
 import {controller} from "../Controller/Controller";
 import {localize, localizeResourceType} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+import {ShellJob} from '../Controller/Common';
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean,
@@ -57,6 +58,17 @@ export interface PaintGaugeCounterProps {
 	hasComet: boolean,
 };
 
+export interface DanceCounterProps {
+	kind: "dance",
+	name: ContentNode,
+	entrechatColor: string,
+	emboiteColor: string,
+	jeteColor: string,
+	pirouetteColor: string,
+	maxStacks: number,
+	currentStacks: number,
+}
+
 export interface ResourceTextProps {
 	kind: "text",
 	name: ContentNode,
@@ -68,6 +80,7 @@ export type ResourceDisplayProps =
 	ResourceBarProps |
 	ResourceCounterProps |
 	PaintGaugeCounterProps |
+	DanceCounterProps |
 	ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
@@ -159,10 +172,36 @@ function PaintGaugeCounter(props: {
 	hasComet: boolean,
 }) {
 	let stacks = [];
-	for (let i = 0; i < 5; i++) {
+	for (let i = 0; i < props.maxStacks; i++) {
 		// dip the last one in black paint
 		let isComet = props.hasComet && i === props.currentStacks - 1;
 		stacks.push(<ResourceStack key={i} color={isComet ? props.cometColor : props.holyColor} value={i < props.currentStacks}/>)
+	}
+	return <div style={{marginBottom: 4, lineHeight: "1.5em"}}>
+		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
+		<div style={{width: 200, display: "inline-block"}}>
+			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
+			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{props.currentStacks + "/" + props.maxStacks}</div>
+		</div>
+	</div>;
+}
+
+// copy of ResourceCounter specialized for tracking Dance Steps
+function DanceCounter(props: {
+	name: ContentNode,
+	maxStacks: number,
+	currentStacks: number,
+	emboiteColor: string,
+	entrechatColor: string,
+	jeteColor: string,
+	pirouetteColor: string,
+}) {
+	const stacks = [];
+	for (let i = 0; i < props.maxStacks; i++) {
+		const color = i === 0 ? props.emboiteColor :
+			i === 1 ? props.entrechatColor :
+			i === 2 ? props.jeteColor : props.pirouetteColor
+		stacks.push(<ResourceStack key={i} color={color} value={i < props.currentStacks} /> )
 	}
 	return <div style={{marginBottom: 4, lineHeight: "1.5em"}}>
 		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
@@ -205,6 +244,7 @@ const roleBuffResources = [
 
 	ResourceType.Surecast,
 	ResourceType.Tincture,
+	ResourceType.ArmsLength,
 ];
 
 // role buffs are registered here; job buffs should be registered in the job's respective file
@@ -321,44 +361,59 @@ function ResourcesDisplay(props: {
 		resources: ResourceDisplayProps[],
 	}
 }) {
-	const elements = props.data.resources.map((props, i) =>
-		(props.kind === "bar")
-			? <ResourceBar
-				name={props.name}
-				color={props.color}
-				progress={props.progress}
-				value={props.valueString}
-				width={props.widthPx ?? 100}
-				hidden={props.hidden ?? false}
-				key={"resourceDisplay" + i}
-			/>
-		: (props.kind === "counter"
-			? <ResourceCounter
-				name={props.name}
-				color={props.color}
-				currentStacks={props.currentStacks}
-				maxStacks={props.maxStacks}
-				key={"resourceDisplay" + i}
-			/>
-		: (props.kind === "paint"
-			? <PaintGaugeCounter
-				name={props.name}
-				holyColor={props.holyColor}
-				cometColor={props.cometColor}
-				currentStacks={props.currentStacks}
-				maxStacks={props.maxStacks}
-				hasComet={props.hasComet}
-				key={"resourceDisplay" + i}
-			/>
-			: <ResourceText
-				name={props.name}
-				text={props.text}
-				key={"resourceDisplay" + i}
-			/>
-		))
-	);
+	const elements = props.data.resources.map((props, i) => {
+		switch(props.kind) {
+			case "bar":
+				return <ResourceBar
+					name={props.name}
+					color={props.color}
+					progress={props.progress}
+					value={props.valueString}
+					width={props.widthPx ?? 100}
+					hidden={props.hidden ?? false}
+					key={"resourceDisplay" + i}
+				/>
+			case "counter":
+				return <ResourceCounter
+					name={props.name}
+					color={props.color}
+					currentStacks={props.currentStacks}
+					maxStacks={props.maxStacks}
+					key={"resourceDisplay" + i}
+				/>
+			case "paint":
+				return <PaintGaugeCounter
+					name={props.name}
+					holyColor={props.holyColor}
+					cometColor={props.cometColor}
+					currentStacks={props.currentStacks}
+					maxStacks={props.maxStacks}
+					hasComet={props.hasComet}
+					key={"resourceDisplay" + i}
+				/>
+			case "dance":
+				return <DanceCounter
+					name={props.name}
+					entrechatColor={props.entrechatColor}
+					emboiteColor={props.emboiteColor}
+					jeteColor={props.jeteColor}
+					pirouetteColor={props.pirouetteColor}
+					maxStacks={props.maxStacks}
+					currentStacks={props.currentStacks}
+					key={"resourceDisplay" + i}
+				/>
+			default:
+				return <ResourceText
+					name={props.name}
+					text={props.text}
+					key={"resourceDisplay" + i}
+				/>
+		}
+	});
+	// TODO - Temporary until we have a better solution for the layout
+	const minHeight = controller.getActiveJob() === ShellJob.DNC ? "22em" : "13.5em"
 	// Set a minHeight to ensure buffs do not clash with the hotbar
-	return <div style={{textAlign: "left", minHeight: "13.5em"}}>
+	return <div style={{textAlign: "left", minHeight}}>
 		{elements}
 	</div>
 }

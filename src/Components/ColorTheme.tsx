@@ -60,10 +60,20 @@ export type SAMResourceColors = {
 	iai: string,
 }
 
+export type DNCResourceColors = {
+	esprit: string,
+	feathers: string,
+	emboite: string,
+	entrechat: string,
+	jete: string,
+	pirouette: string,
+}
+
 export type JobAccentColors = {
 	[ShellJob.BLM]: string,
 	[ShellJob.PCT]: string,
 	[ShellJob.RDM]: string,
+	[ShellJob.DNC]: string,
 	[ShellJob.SAM]: string,
 }
 
@@ -93,6 +103,7 @@ export type ThemeColors = {
 	blm: BLMResourceColors,
 	pct: PCTResourceColors,
 	rdm: RDMResourceColors,
+	dnc: DNCResourceColors,
 	sam: SAMResourceColors,
 	timeline: {
 		ruler: string,
@@ -122,7 +133,8 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.BLM]: "#9370db", // mediumpurple
 				[ShellJob.PCT]: "#e176c2",
 				[ShellJob.RDM]: "#ff0000", // TODO less red
-				[ShellJob.SAM]: "#f59542", // TODO less red
+				[ShellJob.DNC]: "#e2b0af", // color ripped from xiva/fflogs
+				[ShellJob.SAM]: "#f59542",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -171,6 +183,14 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				manaficBuff: "#c169c2", // lavender
 				accelBuff: "#f0d1e8", // very light pink
 			},
+			dnc: {
+				esprit: "#e2b0af",
+				feathers: '#8DA147',
+				emboite: '#bf615c',
+				entrechat: '#3a8db7',
+				jete: '#539350',
+				pirouette: '#b0984e'
+			},
 			sam: {
 				kenki: "#d55124",
 				setsu: "#c7ffff",
@@ -205,6 +225,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.BLM]: "#9370db", // mediumpurple
 				[ShellJob.PCT]: "#f485d6",
 				[ShellJob.RDM]: "#ff0000", // TODO less red
+				[ShellJob.DNC]: "#e2b0af", // color ripped from xiva/fflogs
 				[ShellJob.SAM]: "#f59542",
 			},
 			realTime: "mediumseagreen",
@@ -253,6 +274,14 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				emboldenBuff: "#c91310", // dark red
 				manaficBuff: "#530954", // dark purple
 				accelBuff: "#c973b4", // lighter purple
+			},
+			dnc: {
+				esprit: "#e2b0af",
+				feathers: '#8DA147',
+				emboite: '#bf615c',
+				entrechat: '#3a8db7',
+				jete: '#539350',
+				pirouette: '#b0984e'
 			},
 			sam: {
 				kenki: "#d55124",

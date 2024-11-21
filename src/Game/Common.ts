@@ -1,6 +1,7 @@
 import {BLMSkillName, BLMResourceType, BLMCooldownType} from "./Constants/BLM";
 import {PCTSkillName, PCTResourceType, PCTCooldownType} from "./Constants/PCT";
 import {RDMSkillName, RDMResourceType, RDMCooldownType} from "./Constants/RDM";
+import {DNCSkillName, DNCResourceType, DNCCooldownType} from "./Constants/DNC";
 import {SAMSkillName, SAMResourceType, SAMCooldownType} from "./Constants/SAM";
 
 export const Debug = {
@@ -35,18 +36,23 @@ export const enum ProcMode {
 }
 
 enum GeneralSkillName {
+	ArmsLength = "Arm's Length", // Tanks, Melee, Phys Ranged
+
+	SecondWind = "Second Wind", // Melee & Phys Ranged
+
+	HeadGraze = "Head Graze", // Phys Ranged. Not bothering with Leg/Foot Graze at this point
+
 	Addle = "Addle",
 	Swiftcast = "Swiftcast",
 	LucidDreaming = "Lucid Dreaming",
 	Surecast = "Surecast",
+
 	Tincture = "Tincture",
 	Sprint = "Sprint",
 
 	Feint = "Feint",
-	SecondWind = "Second Wind",
 	Bloodbath = "Bloodbath",
 	TrueNorth = "True North",
-	ArmsLength = "Arm's Length",
 	LegSweep = "Leg Sweep",
 
 	Never = "Never",
@@ -57,6 +63,7 @@ export const SkillName = {
 	...BLMSkillName,
 	...PCTSkillName,
 	...RDMSkillName,
+	...DNCSkillName,
 	...SAMSkillName,
 	...GeneralSkillName,
 }
@@ -66,6 +73,7 @@ export type SkillName = GeneralSkillName
 	| BLMSkillName
 	| PCTSkillName
 	| RDMSkillName
+	| DNCSkillName
 	| SAMSkillName;
 
 export const enum SkillReadyStatus {
@@ -118,12 +126,12 @@ enum GeneralResourceType {
 	Swiftcast = "Swiftcast", // [0, 1]
 	LucidDreaming = "Lucid Dreaming", // [0, 1] also just for timing display
 	Surecast = "Surecast", // [0, 1]
+	ArmsLength = "Arms Length",
 	Tincture = "Tincture", // [0, 1]
 	Sprint = "Sprint", // [0, 1]
 
 	Feint = "Feint", // [0, 1]
 	TrueNorth = "True North", // [0, 1]
-	ArmsLength = "Arm's Length", // [0, 1]
 	Bloodbath = "Bloodbath", // [0, 1]
 
 	// special
@@ -143,14 +151,17 @@ enum GeneralCooldownType {
 	cd_Swiftcast = "cd_Swiftcast", // [0, 1x]
 	cd_LucidDreaming = "cd_LucidDreaming", // [0, 1x]
 	cd_Surecast = "cd_Surecast", // [0, 1x]
+	cd_SecondWind = "cd_SecondWind",
+	cd_ArmsLength = "cd_ArmsLength",
 	cd_Tincture = "cd_Tincture", // [0, 1x]
 	cd_Sprint = "cd_Sprint", // [0, 1x]
-	cd_Feint = "cd_Feint", // [0, 90]
-	cd_TrueNorth = "cd_TrueNorth", // [0, 45]
-	cd_ArmsLength = "cd_ArmsLength", // [0, 90]
-	cd_Bloodbath = "cd_Bloodbath", // [0, 120]
-	cd_SecondWind = "cd_SecondWind", // [0, 120]
-	cd_LegSweep = "cd_LegSweep", // [0, 40]
+
+	cd_Feint = "cd_Feint",
+	cd_TrueNorth = "cd_TrueNorth",
+	cd_Bloodbath = "cd_Bloodbath",
+	cd_LegSweep = "cd_LegSweep",
+
+	cd_HeadGraze = "cd_HeadGraze",
 }
 
 const CooldownType = {
@@ -158,6 +169,7 @@ const CooldownType = {
 	...BLMCooldownType,
 	...PCTCooldownType,
 	...RDMCooldownType,
+	...DNCCooldownType,
 	...SAMCooldownType,
 };
 
@@ -166,6 +178,7 @@ type CooldownType = GeneralCooldownType
 	| BLMCooldownType
 	| PCTCooldownType
 	| RDMCooldownType
+	| DNCCooldownType
 	| SAMCooldownType;
 
 export const ResourceType = {
@@ -174,6 +187,7 @@ export const ResourceType = {
 	...BLMResourceType,
 	...PCTResourceType,
 	...RDMResourceType,
+	...DNCResourceType,
 	...SAMResourceType,
 };
 
@@ -183,6 +197,7 @@ export type ResourceType = CooldownType
 	| BLMResourceType
 	| PCTResourceType
 	| RDMResourceType
+	| DNCResourceType
 	| SAMResourceType;
 
 export const enum WarningType {
@@ -202,7 +217,11 @@ export const enum WarningType {
 	ManaficDrop = "Manafication stacks expired",
 	MagickedSwordplayDrop = "Magicked Swordplay stacks expired",
 
+	EspritOvercap = "esprit gauge overcap",
+	FeatherOvercap = "feather gauge overcap",
+	FanThreeOverwrite = "overwrote fan dance 3",
+
 	KenkiOvercap = "kenki overcap",
 	MeditationOvercap = "meditation stack overcap",
-	SenOvercap = "sen overcap"
+	SenOvercap = "sen overcap",
 }

@@ -13,6 +13,7 @@ import {getAutoReplacedSkillName, getConditionalReplacement, getNormalizedSkillN
 import {BLMState} from "../Game/Jobs/BLM";
 import {PCTState} from "../Game/Jobs/PCT";
 import {RDMState} from "../Game/Jobs/RDM";
+import { DNCState } from "../Game/Jobs/DNC";
 import {SAMState} from "../Game/Jobs/SAM";
 import {Buff} from "../Game/Buffs";
 import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
@@ -20,6 +21,7 @@ import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 import {BLMStatusPropsGenerator} from "../Components/Jobs/BLM";
 import {PCTStatusPropsGenerator} from "../Components/Jobs/PCT";
 import {RDMStatusPropsGenerator} from "../Components/Jobs/RDM";
+import { DNCStatusPropsGenerator } from "../Components/Jobs/DNC";
 import {SAMStatusPropsGenerator} from "../Components/Jobs/SAM";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
@@ -42,6 +44,7 @@ import {
 	calculateSelectedStats,
 	getTargetableDurationBetween
 } from "./DamageStatistics";
+import { XIVMath } from "../Game/XIVMath";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 require("../Game/Jobs/RoleActions");
@@ -53,6 +56,8 @@ const newGameState = (config: GameConfig) => {
 		return new PCTState(config);
 	} else if (config.job === ShellJob.RDM) {
 		return new RDMState(config);
+	} else if (config.job === ShellJob.DNC) {
+		return new DNCState(config);
 	} else if (config.job === ShellJob.SAM) {
 		return new SAMState(config);
 	}
@@ -358,6 +363,9 @@ class Controller {
 		}
 		if (content.config.level) {
 			content.config.level = parseInt(content.config.level);
+		}
+		if (content.config.skillSpeed === undefined) {
+			content.config.skillSpeed = XIVMath.getSubstatBase(content.config.level as LevelSync)
 		}
 		if (content.config.shellVersion === undefined) {
 			content.config.shellVersion = ShellVersion.Initial;
@@ -669,13 +677,23 @@ class Controller {
 			canMove: game.resources.get(ResourceType.Movement).available(1),
 		};
 		if (typeof updateStatusDisplay !== "undefined") {
-			const propsGenerator = game.job === ShellJob.PCT
-				? new PCTStatusPropsGenerator(game as PCTState)
-				: game.job === ShellJob.RDM
-				? new RDMStatusPropsGenerator(game as RDMState)
-				: game.job === ShellJob.SAM
-				? new SAMStatusPropsGenerator(game as SAMState)
-				: new BLMStatusPropsGenerator(game as BLMState);
+			let propsGenerator;
+			switch(game.job) {
+				case ShellJob.PCT:
+					propsGenerator = new PCTStatusPropsGenerator(game as PCTState);
+					break;
+				case ShellJob.RDM:
+					propsGenerator = new RDMStatusPropsGenerator(game as RDMState);
+					break;
+				case ShellJob.DNC:
+					propsGenerator = new DNCStatusPropsGenerator(game as DNCState);
+					break;
+				case ShellJob.SAM:
+					propsGenerator = new SAMStatusPropsGenerator(game as SAMState);
+					break;
+				default:
+					propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
+			}
 			updateStatusDisplay({
 				time: game.getDisplayTime(),
 				resources: propsGenerator.getResourceViewProps(),
@@ -743,6 +761,7 @@ class Controller {
 		job: ShellJob,
 		level: LevelSync,
 		spellSpeed: number,
+		skillSpeed: number,
 		criticalHit: number,
 		directHit: number,
 		determination: number,
@@ -843,7 +862,7 @@ class Controller {
 			node.tmp_endLockTime = this.game.time + lockDuration;
 
 			if (!this.#bInSandbox) { // this block is run when NOT viewing historical state (aka run when receiving input)
-				let newStatus = this.game.getSkillAvailabilityStatus(skillName); // refresh to get re-captured recast time
+				let newStatus = this.game.getSkillAvailabilityStatus(skillName, true); // refresh to get re-captured recast time
 				let skill = this.game.skillsList.get(skillName);
 				let isGCD = skill.cdName === ResourceType.cd_GCD;
 				let isSpellCast = status.castTime > 0 && !status.instantCast;

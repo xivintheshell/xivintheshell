@@ -446,6 +446,8 @@ function drawSkills(
 		[BuffType.Embolden, {color: g_colors.rdm.emboldenBuff, showImage: true}],
 		[BuffType.Manafication, {color: g_colors.rdm.manaficBuff, showImage: true}],
 		[BuffType.Acceleration, {color: g_colors.rdm.accelBuff, showImage: true}],
+		[BuffType.TechnicalFinish, {color: g_colors.dnc.esprit, showImage: true}],
+		[BuffType.Devilment, {color: g_colors.dnc.feathers, showImage: true}],
 		// TODO swap color
 		[BuffType.Fuka, {color: g_colors.timeline.llCover, showImage: true}],
 		[BuffType.Fugetsu, {color: g_colors.sam.fugetsu, showImage: true}],

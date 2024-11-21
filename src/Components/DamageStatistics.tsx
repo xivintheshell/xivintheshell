@@ -131,6 +131,20 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({en: "manafication", zh: "魔元化"}) as string;
 	} else if (buff === PotencyModifierType.ACCELERATION) {
 		text = localize({en: "acceleration", zh: "促进"}) as string;
+	} else if (buff === PotencyModifierType.STANDARD_SINGLE) {
+		text = localize({en: "single standard finish"}) as string;
+	} else if (buff === PotencyModifierType.STANDARD_DOUBLE) {
+		text = localize({en: "double standard finish"}) as string;
+	} else if (buff === PotencyModifierType.TECHNICAL_SINGLE) {
+		text = localize({en: "single technical finish"}) as string;
+	} else if (buff === PotencyModifierType.TECHNICAL_DOUBLE) {
+		text = localize({en: "double technical finish"}) as string;
+	} else if (buff === PotencyModifierType.TECHNICAL_TRIPLE) {
+		text = localize({en: "triple technical finish"}) as string;
+	} else if (buff === PotencyModifierType.TECHNICAL_QUADRUPLE) {
+		text = localize({en: "quadruple technical finish"}) as string;
+	} else if (buff === PotencyModifierType.DEVILMENT) {
+		text = localize({en: "devilment"}) as string;
 	} else if (buff === PotencyModifierType.COMBO) {
 		text = localize({en: "combo", zh: "连击"}) as string;
 	} else if (buff === PotencyModifierType.FUGETSU) {
@@ -185,6 +199,27 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	} else if (props.buff === PotencyModifierType.ACCELERATION) {
 		text = localize({en: "ACC", zh: "促进"});
 		color = colors.rdm.accelBuff;
+	} else if (props.buff === PotencyModifierType.STANDARD_SINGLE) {
+		text = localize({en: "SSF"});
+		color = colors.dnc.jete;
+	} else if (props.buff === PotencyModifierType.STANDARD_DOUBLE) {
+		text = localize({en: "DSF"});
+		color = colors.dnc.jete;
+	} else if (props.buff === PotencyModifierType.TECHNICAL_SINGLE) {
+		text = localize({en: "STF"});
+		color = colors.dnc.esprit;
+	} else if (props.buff === PotencyModifierType.TECHNICAL_DOUBLE) {
+		text = localize({en: "DTF"});
+		color = colors.dnc.esprit;
+	} else if (props.buff === PotencyModifierType.TECHNICAL_TRIPLE) {
+		text = localize({en: "TTF"});
+		color = colors.dnc.esprit;
+	} else if (props.buff === PotencyModifierType.TECHNICAL_QUADRUPLE) {
+		text = localize({en: "QTF"});
+		color = colors.dnc.esprit;
+	} else if (props.buff === PotencyModifierType.DEVILMENT) {
+		text = localize({en: "DEV"});
+		color = colors.dnc.feathers;
 	} else if (props.buff === PotencyModifierType.COMBO) {
 		text = localize({en: "CMB", zh: "连击"});
 		color = colors.resources.comboTag;
@@ -564,10 +599,10 @@ export class DamageStatistics extends React.Component {
 			return <div key={props.key} style={rowStyle}>
 				<div style={cell(3)}>{includeCheckboxes}</div>
 				<div style={cell(18)}>{skillNameNode}</div>
-				<div style={cell(14)}>{tags}</div>
+				<div style={cell(19)}>{tags}</div>
 				<div style={cell(16)}>{potencyNode}</div>
 				<div style={cell(14)}>{usageCountNode}</div>
-				<div style={cell(35)}>{totalPotencyNode}</div>
+				<div style={cell(30)}>{totalPotencyNode}</div>
 			</div>
 		}
 		let tableRows: React.ReactNode[] = [];
@@ -693,10 +728,10 @@ export class DamageStatistics extends React.Component {
 			</div>
 			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
 				<div>
-					<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}><b>{localize({en: "skill", zh: "技能"})}</b></span></div>
+					<div style={{display: "inline-block", width: "40%"}}><span style={headerCellStyle}><b>{localize({en: "skill", zh: "技能"})}</b></span></div>
 					<div style={{display: "inline-block", width: "16%"}}><span style={headerCellStyle}><b>{localize({en: "potency", zh: "单次威力"})}</b></span></div>
 					<div style={{display: "inline-block", width: "14%"}}><span style={headerCellStyle}><b>{localize({en: "count", zh: "数量"})}</b></span></div>
-					<div style={{display: "inline-block", width: "35%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
+					<div style={{display: "inline-block", width: "30%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
 				</div>
 				{tableRows}
 				<div style={{
@@ -704,8 +739,8 @@ export class DamageStatistics extends React.Component {
 					position: "relative",
 					borderTop: "1px solid " + colors.bgMediumContrast
 				}}>
-					<div style={cell(65)}/>
-					<div style={cell(35)}><span>
+					<div style={cell(70)}/>
+					<div style={cell(30)}><span>
 					{this.data.mainTableSummary.totalPotencyWithoutPot.toFixed(2)}
 						{this.data.mainTableSummary.totalPotPotency>0 ?
 							<span style={{color: colors.timeline.potCover}}> +{this.data.mainTableSummary.totalPotPotency.toFixed(2)}{localize({

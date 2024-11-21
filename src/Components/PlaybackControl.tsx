@@ -391,6 +391,7 @@ type ConfigState = {
 
 	level: string,
 	spellSpeed: string,
+	skillSpeed: string,
 	criticalHit: string,
 	directHit: string,
 	determination: string,
@@ -412,19 +413,22 @@ type ConfigState = {
 	b1TaxPreview: string,
 	gcdPreview: string,
 	taxedGcdPreview: string,
-
+	sksGcdPreview: string,
+	taxedSksGcdPreview: string,
 }
 
 export class Config extends React.Component {
 
 	state: ConfigState;
 	updateTaxPreview: (spsStr: string, fpsStr: string, levelStr: string) => void;
+	updateSksTaxPreview: (sksStr: string, fpsStr: string, levelStr: string) => void;
 	handleSubmit: MouseEventHandler;
 
 	setJob: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
 	importGear: (evt: React.SyntheticEvent) => void;
 	setGearImportLink: (evt: React.ChangeEvent<HTMLInputElement>) => void;
 	setSpellSpeed: (val: string) => void;
+	setSkillSpeed: (val: string) => void;
 	setLevel: (evt: React.ChangeEvent<HTMLSelectElement>) => void;
 	setCriticalHit: (val: string) => void;
 	setDirectHit: (val: string) => void;
@@ -453,6 +457,7 @@ export class Config extends React.Component {
 			/////////
 			level: `${LevelSync.lvl100}`,
 			spellSpeed: "0",
+			skillSpeed: "0",
 			criticalHit: "0",
 			directHit: "0",
 			determination: "0",
@@ -474,30 +479,28 @@ export class Config extends React.Component {
 			b1TaxPreview: "n/a",
 			gcdPreview: "n/a",
 			taxedGcdPreview: "n/a",
+			sksGcdPreview: "n/a",
+			taxedSksGcdPreview: "n/a",
 		};
 
 		this.updateTaxPreview = (spsStr: string, fpsStr: string, levelStr: string) => {
-			let level = parseFloat(levelStr);
-			let sps = parseFloat(spsStr);
-			let fps = parseFloat(fpsStr);
 
 			let b1TaxPreview = getTaxPreview(parseFloat(levelStr), 2.5, spsStr, fpsStr);
-
-			let gcdStr: string;
-			let taxedGcdStr: string;
-			if (isNaN(level) || isNaN(sps) || isNaN(fps) || sps < 400) {
-				gcdStr = "n/a";
-				taxedGcdStr = "n/a";
-			} else {
-				let gcd = XIVMath.preTaxGcd(level as LevelSync, sps, 2.5);
-				gcdStr = gcd.toFixed(2);
-				taxedGcdStr = XIVMath.afterFpsTax(fps, gcd).toFixed(3);
-			}
+			const {gcdStr, taxedGcdStr} = this.getTaxPreview(spsStr, fpsStr, levelStr)
 
 			this.setState({
 				b1TaxPreview: b1TaxPreview,
 				gcdPreview: gcdStr,
 				taxedGcdPreview: taxedGcdStr,
+			});
+		}
+
+		this.updateSksTaxPreview = (sksStr: string, fpsStr: string, levelStr: string) => {
+			const {gcdStr, taxedGcdStr} = this.getTaxPreview(sksStr, fpsStr, levelStr)
+
+			this.setState({
+				sksGcdPreview: gcdStr,
+				taxedSksGcdPreview: taxedGcdStr,
 			});
 		}
 
@@ -526,6 +529,7 @@ export class Config extends React.Component {
 			this.setState({job: evt.target.value, dirty: true});
 			this.removeImportedField("job");
 			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, this.state.level);
+			this.updateSksTaxPreview(this.state.skillSpeed, this.state.fps, this.state.level);
 		}
 
 		this.setGearImportLink = (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -556,18 +560,23 @@ export class Config extends React.Component {
 							throw new Error("Imported gearset was for a job (" + body["jobAbbrev"] + ") that XIV in the Shell doesn't support");
 						}
 						// TODO should probably validate each of these fields
+						const baseSpeed = XIVMath.getSubstatBase(parseFloat(body["level"]) as LevelSync).toString()
+						const spellSpeed = stats.get("SPS") ?? baseSpeed
+						const skillSpeed = stats.get("SKS") ?? baseSpeed
 						this.setState({
 							job: body["jobAbbrev"],
 							level: body["level"],
-							spellSpeed: stats.get("SPS"),
+							spellSpeed,
+							skillSpeed,
 							criticalHit: stats.get("CRT"),
 							directHit: stats.get("DH"),
 							determination: stats.get("DET"),
 							imported: true,
-							importedFields: ["job", "level", "spellSpeed", "criticalHit", "directHit", "determination"],
+							importedFields: ["job", "level", "spellSpeed", "skillSpeed", "criticalHit", "directHit", "determination"],
 							dirty: true,
 						});
-						this.updateTaxPreview(stats.get("SPS")!.toString(), this.state.fps, body["level"]);
+						this.updateTaxPreview(spellSpeed!.toString(), this.state.fps, body["level"]);
+						this.updateSksTaxPreview(skillSpeed!.toString(), this.state.fps, body["level"]);
 					} else {
 						console.error(response);
 						throw new Error("etro load failed (please check your link)");
@@ -595,11 +604,12 @@ export class Config extends React.Component {
 							job: body["job"],
 							level: body["level"],
 							spellSpeed: stats["spellspeed"],
+							skillSpeed: stats["skillspeed"],
 							criticalHit: stats["crit"],
 							directHit: stats["dhit"],
 							determination: stats["determination"],
 							imported: true,
-							importedFields: ["job", "level", "spellSpeed", "criticalHit", "directHit", "determination"],
+							importedFields: ["job", "level", "spellSpeed", "skillSpeed", "criticalHit", "directHit", "determination"],
 							dirty: true,
 						});
 						this.updateTaxPreview(stats["spellspeed"]!.toString(), this.state.fps, body["level"]);
@@ -622,10 +632,17 @@ export class Config extends React.Component {
 			this.updateTaxPreview(val, this.state.fps, this.state.level);
 		};
 
+		this.setSkillSpeed = (val: string) => {
+			this.setState({skillSpeed: val, dirty: true});
+			this.removeImportedField("skillSpeed");
+			this.updateSksTaxPreview(val, this.state.fps, this.state.level);
+		};
+
 		this.setLevel = evt => {
 			this.setState({level: evt.target.value, dirty: true});
 			this.removeImportedField("level");
 			this.updateTaxPreview(this.state.spellSpeed, this.state.fps, evt.target.value);
+			this.updateSksTaxPreview(this.state.skillSpeed, this.state.fps, this.state.level);
 		};
 
 		this.setCriticalHit = (val: string) => {
@@ -698,6 +715,28 @@ export class Config extends React.Component {
 				newFieldsArray.splice(idx, 1);
 				this.setState({importedFields: newFieldsArray});
 			}
+		}
+	}
+
+	private getTaxPreview(speedStr: string, fpsStr: string, levelStr: string): {gcdStr: string, taxedGcdStr: string} {
+		let level = parseFloat(levelStr);
+		let speed = parseFloat(speedStr);
+		let fps = parseFloat(fpsStr);
+
+		let gcdStr: string;
+		let taxedGcdStr: string;
+		if (isNaN(level) || isNaN(speed) || isNaN(fps) || speed < 400) {
+			gcdStr = "n/a";
+			taxedGcdStr = "n/a";
+		} else {
+			let gcd = XIVMath.preTaxGcd(level as LevelSync, speed, 2.5);
+			gcdStr = gcd.toFixed(2);
+			taxedGcdStr = XIVMath.afterFpsTax(fps, gcd).toFixed(3);
+		}
+
+		return {
+			gcdStr,
+			taxedGcdStr
 		}
 	}
 
@@ -1025,6 +1064,7 @@ export class Config extends React.Component {
 
 	setConfigAndRestart(config: ConfigState) {
 		if (isNaN(parseFloat(config.spellSpeed)) ||
+			isNaN(parseFloat(config.skillSpeed)) ||
 			isNaN(parseFloat(config.criticalHit)) ||
 			isNaN(parseFloat(config.directHit)) ||
 			isNaN(parseFloat(config.determination)) ||
@@ -1048,6 +1088,7 @@ export class Config extends React.Component {
 			job: config.job,
 			level: parseFloat(config.level),
 			spellSpeed: parseFloat(config.spellSpeed),
+			skillSpeed: parseFloat(config.skillSpeed),
 			criticalHit: parseFloat(config.criticalHit),
 			directHit: parseFloat(config.directHit),
 			determination: parseFloat(config.determination),
@@ -1198,9 +1239,25 @@ export class Config extends React.Component {
 					</>
 				}/>)</span>
 			</div>
+			<div>
+				<Input style={{display: "inline-block", color: fieldColor("skillSpeed")}}
+					   defaultValue={this.state.skillSpeed}
+					   description={localize({en: "skill speed: "})} onChange={this.setSkillSpeed}/>
+				<span> (GCD: {this.state.sksGcdPreview} <Help topic={"sksGcdPreview"} content={
+					<>
+						<p>{localize({
+							en: "Preview of displayed GCD based on your skill speed.",
+						})}</p>
+						<p>{localize({
+							en: `Measured average GCD should be ${this.state.taxedSksGcdPreview} due to FPS tax`,
+							zh: `由于帧率税的影响，测量得到的平均GCD为${this.state.taxedSksGcdPreview}`
+						})}</p>
+					</>
+				}/>)</span>
+			</div>
 			<Input style={{color: fieldColor("criticalHit")}} defaultValue={this.state.criticalHit}
-				   description={localize({en: "crit: ", zh: "暴击："})}
-				   onChange={this.setCriticalHit}/>
+					description={localize({en: "crit: ", zh: "暴击："})}
+					onChange={this.setCriticalHit}/>
 			<Input style={{color: fieldColor("directHit")}} defaultValue={this.state.directHit}
 				   description={localize({en: "direct hit: ", zh: "直击："})} onChange={this.setDirectHit}/>
 			<Input style={{color: fieldColor("determination")}} defaultValue={this.state.determination}
