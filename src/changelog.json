@@ -3,6 +3,7 @@
 		"date": "11/20/24",
 		"changes": [
 			"[DNC] Added initial DNC support",
+			"[SAM] Added initial SAM support (thank you Sterling Sylva for the initial work)",
 			"Added support for skill speed in addition to spell speed"
 		]
 	},
