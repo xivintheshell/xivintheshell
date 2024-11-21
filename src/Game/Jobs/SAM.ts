@@ -296,7 +296,7 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 		castTime = (state) => (
 			Traits.hasUnlocked(TraitName.EnhancedIaijutsu, state.config.level)
 			? params.baseCastTime || 0
-			: state.config.adjustedGCD(
+			: state.config.adjustedSksCastTime(
 				1.8,
 				state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
 			)
@@ -310,7 +310,7 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 		autoDowngrade: params.autoDowngrade,
 		// TODO deal with trait setting cast times to 1.3 vs. calculating fuka
 		castTime: castTime,
-		recastTime: (state) => state.config.adjustedGCD(
+		recastTime: (state) => state.config.adjustedSksGCD(
 			params.baseRecastTime ?? 2.5,
 			state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
 		),
@@ -1075,7 +1075,7 @@ makeResourceAbility(ShellJob.SAM, SkillName.Meditate, 60, ResourceType.cd_Medita
 	validateAttempt: (state) => state.cooldowns.get(ResourceType.cd_GCD).stacksAvailable() > 0,
 	// roll the GCD
 	onConfirm: (state) => {
-		const recastTime = state.config.adjustedGCD(
+		const recastTime = state.config.adjustedSksGCD(
 			2.5,
 			state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
 		);

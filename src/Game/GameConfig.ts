@@ -155,6 +155,10 @@ export class GameConfig {
 		return XIVMath.preTaxCastTime(this.level, this.spellSpeed, inCastTime, speedBuff);
 	}
 
+	adjustedSksCastTime(inCastTime: number, speedBuff?: ResourceType) {
+		return XIVMath.preTaxCastTime(this.level, this.skillSpeed, inCastTime, speedBuff);
+	}
+
 	getSkillAnimationLock(skillName : SkillName) : number {
 		// all gapclosers have the same animation lock
 		if (skillName === SkillName.AetherialManipulation

@@ -759,14 +759,17 @@ export class Config extends React.Component {
 	componentDidMount() {
 		updateConfigDisplay = ((config)=>{
 			this.setState(config);
-			let gcd = XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5);
+			let spsGcd = XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5);
+			let sksGcd = XIVMath.preTaxGcd(config.level, config.skillSpeed, 2.5);
 			this.setState({
 				dirty: false,
 				imported: false,
 				importedFields: [],
 				b1TaxPreview: getTaxPreview(config.level, 2.5, `${config.spellSpeed}`, `${config.fps}`),
-				gcdPreview: gcd.toFixed(2),
-				taxedGcdPreview: XIVMath.afterFpsTax(config.fps, gcd).toFixed(3),
+				gcdPreview: spsGcd.toFixed(2),
+				taxedGcdPreview: XIVMath.afterFpsTax(config.fps, spsGcd).toFixed(3),
+				sksGcdPreview: sksGcd.toFixed(2),
+				sksTaxedGcdPreview: XIVMath.afterFpsTax(config.fps, sksGcd).toFixed(3),
 				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides)
 			});
 			refreshConfigSummary();
