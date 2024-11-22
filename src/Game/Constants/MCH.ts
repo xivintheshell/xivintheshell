@@ -62,6 +62,7 @@ export enum MCHResourceType {
     QueenPunches = "QueenPunches",
     QueenFinishers = "QueenFinishers",
     BatteryBonus = "BatteryBonus",
+    WildfireHits = "WildfireHits"
 }
 
 export enum MCHCooldownType {
@@ -76,5 +77,7 @@ export enum MCHCooldownType {
     cd_Queen = "cd_Queen",
     cd_Overdrive = "cd_Overdrive",
     cd_Dismantle = "cd_Dismantle",
-    cd_Tactician = "cd_Tactician"
+    cd_Tactician = "cd_Tactician",
+    cd_Hypercharge = "cd_Hypercharge",
+    cd_Detonator = "cd_Detonator",
 }

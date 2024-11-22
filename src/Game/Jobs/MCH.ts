@@ -5,7 +5,7 @@ import { MCHResourceType } from "../Constants/MCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { makeComboModifier, Modifiers, Potency, PotencyModifier} from "../Potency";
-import { CoolDown, getResourceInfo, makeResource, ResourceInfo, Event } from "../Resources";
+import { CoolDown, getResourceInfo, makeResource, ResourceInfo, Event, DoTBuff } from "../Resources";
 import { Ability, combineEffects, ConditionalSkillReplace, CooldownGroupProperies, EffectFn, getBasePotency, makeAbility, makeResourceAbility, makeWeaponskill, NO_EFFECT, ResourceCalculationFn, SkillAutoReplace, StatePredicate, Weaponskill } from "../Skills";
 import { TraitName, Traits } from "../Traits";
 
@@ -176,6 +176,15 @@ export class MCHState extends GameState {
             }))
         }
     }
+
+    expireWildfire() {
+        if (!this.hasResourceAvailable(ResourceType.WildfireSelf)) { return }
+        const hits = Math.min(this.resources.get(ResourceType.WildfireHits).availableAmount(), 6)
+        this.tryConsumeResource(ResourceType.WildfireSelf)
+        this.tryConsumeResource(ResourceType.Wildfire)
+
+        // Potency stuff
+    }
 }
 
 
@@ -204,6 +213,11 @@ const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
         (state) => {
             if (name !== SkillName.FullMetalField) {
                 state.tryConsumeResource(ResourceType.Reassembled)
+            }
+        },
+        (state) => {
+            if (state.hasResourceAvailable(ResourceType.WildfireSelf)) {
+                state.resources.get(ResourceType.WildfireHits).gain(1)
             }
         }
     );
@@ -260,6 +274,7 @@ const makeResourceAbility_MCH = (name: SkillName, unlockLevel: number, cdName: R
     validateAttempt?: StatePredicate<MCHState>,
     onConfirm?: EffectFn<MCHState>
     onApplication?: EffectFn<MCHState>,
+    highlightIf?: StatePredicate<MCHState>,
     secondaryCooldown?: CooldownGroupProperies,
 }): Ability<MCHState> => {
     const onConfirm: EffectFn<MCHState> = combineEffects(
@@ -430,8 +445,61 @@ makeWeaponskill_MCH(SkillName.FullMetalField, 100, {
 })
 
 // Hypercharge
+makeResourceAbility_MCH(SkillName.Hypercharge, 30, ResourceType.cd_Hypercharge, {
+    rscType: ResourceType.Overheated,
+    applicationDelay: 0,
+    cooldown: 10,
+    maxCharges: 1,
+    onConfirm: (state) => {
+        if (state.hasResourceAvailable(ResourceType.Hypercharged)) {
+            state.tryConsumeResource(ResourceType.Hypercharged)
+        } else {
+            state.resources.get(ResourceType.HeatGauge).consume(50)
+        }
+    },
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.HeatGauge, 50) || state.hasResourceAvailable(ResourceType.Hypercharged),
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.HeatGauge, 50) || state.hasResourceAvailable(ResourceType.Hypercharged),
+})
 
 // Wildfire
+makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
+    replaceIf: [{
+        newSkill: SkillName.Detonator,
+        condition: (state) => state.hasResourceAvailable(ResourceType.WildfireSelf),
+    }],
+    applicationDelay: 0,
+    cooldown: 10,
+    maxCharges: 1,
+    onConfirm: (state, node) => {
+        if (state.hasResourceAvailable(ResourceType.Hypercharged)) {
+            state.tryConsumeResource(ResourceType.Hypercharged)
+        } else {
+            state.resources.get(ResourceType.HeatGauge).consume(50)
+        }
+
+        state.gainProc(ResourceType.WildfireSelf)
+        const wildFire = state.resources.get(ResourceType.Wildfire) as DoTBuff
+        wildFire.gain(1)
+        wildFire.node = node
+        
+        state.resources.addResourceEvent({
+            rscType: ResourceType.Wildfire,
+            name: "wildfire expiration",
+            delay: (getResourceInfo(ShellJob.MCH, ResourceType.Wildfire) as ResourceInfo).maxTimeout,
+            fnOnRsc: rsc => {
+                state.expireWildfire()
+            }
+        })
+    },
+})
+makeAbility_MCH(SkillName.Detonator, 45, ResourceType.cd_Detonator, {
+    startOnHotbar: false,
+    applicationDelay: 0,
+    cooldown: 1,
+    maxCharges: 1,
+    onConfirm: (state) => state.expireWildfire(),
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.WildfireSelf),
+})
 
 // Blazing Shot
 
