@@ -4,6 +4,7 @@ import {TickMode, ShellJob} from "./Controller/Common";
 import {DEFAULT_BLM_CONFIG, GameConfig} from "./Game/GameConfig";
 import {PotencyModifierType} from "./Game/Potency";
 import {ResourceType, SkillName} from "./Game/Common";
+import {XIVMath} from "./Game/XIVMath";
 import {SAMState} from "./Game/Jobs/SAM";
 import {DamageStatisticsData, mockDamageStatUpdateFn} from "./Components/DamageStatistics";
 
@@ -128,6 +129,13 @@ const applySkill = (skillName: SkillName) => {
 	controller.lastAttemptedSkill = skillName;
 	controller.requestUseSkill({skillName: skillName});
 };
+
+it("has correct GCD under fuka", () => {
+	// 2.5 base
+	expect(XIVMath.preTaxGcd(100, 420, 2.5, ResourceType.Fuka)).toEqual(2.17);
+	// 2.47 base
+	expect(XIVMath.preTaxGcd(100, 693, 2.5, ResourceType.Fuka)).toEqual(2.14);
+});
 
 it("continues combos after a meikyo", testWithConfig({}, () => {
 	[

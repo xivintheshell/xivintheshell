@@ -258,17 +258,12 @@ export abstract class GameState {
 		return 200;
 	}
 
-	// BLM uses this for LL GCD scaling, but PCT does not
+	// BLM uses this for LL GCD scaling, but PCT and SAM do not.
 	gcdRecastTimeScale(): number {
 		// TODO move this to child class methods
 		if (this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines)) {
 			// should be approximately 0.85
 			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.LeyLines));
-			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
-			return num / denom;
-		} else if (this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fuka)) {
-			// should be approximately 0.87
-			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.Fuka));
 			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
 			return num / denom;
 		} else {

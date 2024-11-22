@@ -8,6 +8,8 @@ import {
 	ShellJob,
 	ShellVersion,
 	TickMode,
+	CASTER_JOBS,
+	HEALER_JOBS,
 	ALL_JOBS,
 	TESTING_JOBS
 } from "../Controller/Common";
@@ -198,18 +200,22 @@ export function ConfigSummary(props: { job: ShellJob, dirty: boolean }) {
 
 		{TESTING_JOBS.includes(props.job) ? testingWarning : undefined}
 
+		{/* TODO: refactor these out to job props classes */}
+		{[...CASTER_JOBS, ...HEALER_JOBS].includes(props.job) &&
 		<div>{localize({en: "Lucid tick offset ", zh: "醒梦&跳蓝时间差 "})}<Help topic={"lucidTickOffset"} content={lucidOffsetDesc}/>: {lucidTickOffset}</div>
+		}
 
 		{props.job === ShellJob.BLM &&
 			<div>{localize({en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"thunderTickOffset"} content={thunderOffsetDesc}/>: {thunderTickOffset}</div>
 		}
 
-		{props.job === ShellJob.SAM &&
+		{props.job === ShellJob.SAM && <>
 			<div>{localize({en: "Higanbana DoT tick offset "})}<Help topic={"higanbanaTickOffset"} content={higanbanaOffsetDesc}/>: {higanbanaTickOffset}</div>
-		}
+			<div>{localize({en: "Fuka GCD"})}: {controller.gameConfig.adjustedSksGCD(2.5, ResourceType.Fuka).toFixed(2)}</div>
+		</>}
 
 		{props.job === ShellJob.BLM
-			// TODO modify for PCT
+			// TODO modify for PCT and other jobs
 			? <Expandable
 				title={"castTimesTable"}
 				titleNode={<span style={{textDecoration: props.dirty ? "line-through" : "none"}}>{localize({en: "Cast times table", zh: "咏唱时间表"})} <Help
