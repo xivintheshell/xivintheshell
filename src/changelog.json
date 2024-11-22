@@ -1,5 +1,12 @@
 [
 	{
+		"date": "11/21/24",
+		"changes": [
+			"[SAM] Fixed a bug where Fuka haste was doubly applied",
+			"[SAM] Added GCD under Fuka in playback control"
+		]
+	},
+	{
 		"date": "11/20/24",
 		"changes": [
 			"[DNC] Added initial DNC support",
