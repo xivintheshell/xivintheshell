@@ -80,4 +80,5 @@ export enum MCHCooldownType {
     cd_Tactician = "cd_Tactician",
     cd_Hypercharge = "cd_Hypercharge",
     cd_Detonator = "cd_Detonator",
+    cd_Robot = "cd_Robot"
 }

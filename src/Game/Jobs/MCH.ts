@@ -36,6 +36,7 @@ makeMCHResource(ResourceType.HeatCombo, 2, {timeout: 30})
 makeMCHResource(ResourceType.Queen, 1)
 makeMCHResource(ResourceType.QueenPunches, 5)
 makeMCHResource(ResourceType.QueenFinishers, 2)
+makeMCHResource(ResourceType.WildfireHits, 6)
 
 
 const COMBO_GCDS: SkillName[] = [SkillName.HeatedCleanShot, SkillName.HeatedSlugShot, SkillName.HeatedSplitShot]
@@ -101,12 +102,12 @@ export class MCHState extends GameState {
         }
         const punchPotency = new Potency({
             config: this.config,
-            sourceTime: controller.game.time,
+            sourceTime: this.getDisplayTime(),
             sourceSkill,
             aspect: Aspect.Physical,
             description: "",
             basePotency,
-            snapshotTime: controller.game.time,
+            snapshotTime: this.getDisplayTime(),
         })
         if (this.hasResourceAvailable(ResourceType.Tincture)) {
             punchPotency.modifiers.push(Modifiers.Tincture)
@@ -151,13 +152,16 @@ export class MCHState extends GameState {
 
         const finisherPotency = new Potency({
             config: this.config,
-            sourceTime: controller.game.time,
+            sourceTime: this.getDisplayTime(),
             sourceSkill,
             aspect: Aspect.Physical,
             description: "",
             basePotency,
-            snapshotTime: controller.game.time,
+            snapshotTime: this.getDisplayTime(),
         })
+        if (this.hasResourceAvailable(ResourceType.Tincture)) {
+            finisherPotency.modifiers.push(Modifiers.Tincture)
+        }
         controller.resolvePotency(finisherPotency)
         //controller.updateStats()
 
@@ -178,12 +182,20 @@ export class MCHState extends GameState {
     }
 
     expireWildfire() {
-        if (!this.hasResourceAvailable(ResourceType.WildfireSelf)) { return }
-        const hits = Math.min(this.resources.get(ResourceType.WildfireHits).availableAmount(), 6)
+        if (!this.hasResourceAvailable(ResourceType.WildfireHits)) { return }
         this.tryConsumeResource(ResourceType.WildfireSelf)
         this.tryConsumeResource(ResourceType.Wildfire)
 
         // Potency stuff
+        const basePotency = Math.min(this.resources.get(ResourceType.WildfireHits).availableAmount(), 6) * 240
+        const potencyNode = (this.resources.get(ResourceType.Wildfire) as DoTBuff).node
+
+        if (potencyNode === undefined) { return }
+        const wildFirePotency = potencyNode.getPotencies()[0]
+        wildFirePotency.base = basePotency
+        controller.resolvePotency(wildFirePotency)
+
+        this.tryConsumeResource(ResourceType.WildfireHits, true)
     }
 }
 
@@ -314,7 +326,8 @@ makeWeaponskill_MCH(SkillName.HeatedSlugShot, 60, {
     },
     applicationDelay: 0.8,
     recastTime: (state) => state.config.adjustedSksGCD(),
-    onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5)
+    onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5),
+    highlightIf: (state) => state.resources.get(ResourceType.HeatCombo).availableAmount() === 1
 })
 
 makeWeaponskill_MCH(SkillName.HeatedCleanShot, 64, {
@@ -337,7 +350,8 @@ makeWeaponskill_MCH(SkillName.HeatedCleanShot, 64, {
     onConfirm: (state) => {
         state.gainResource(ResourceType.HeatGauge, 5)
         state.gainResource(ResourceType.BatteryGauge, 10)
-    }
+    },
+    highlightIf: (state) => state.resources.get(ResourceType.HeatCombo).availableAmount() === 2
 })
 
 makeResourceAbility_MCH(SkillName.Reassemble, 10, ResourceType.cd_Reassemble, {
@@ -467,18 +481,28 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
         newSkill: SkillName.Detonator,
         condition: (state) => state.hasResourceAvailable(ResourceType.WildfireSelf),
     }],
-    applicationDelay: 0,
-    cooldown: 10,
+    applicationDelay: 0.67,
+    cooldown: 120,
     maxCharges: 1,
     onConfirm: (state, node) => {
-        if (state.hasResourceAvailable(ResourceType.Hypercharged)) {
-            state.tryConsumeResource(ResourceType.Hypercharged)
-        } else {
-            state.resources.get(ResourceType.HeatGauge).consume(50)
-        }
-
         state.gainProc(ResourceType.WildfireSelf)
         const wildFire = state.resources.get(ResourceType.Wildfire) as DoTBuff
+
+        const wildFirePotency = new Potency({
+            config: state.config,
+            sourceTime: state.getDisplayTime(),
+            sourceSkill: SkillName.Wildfire,
+            aspect: Aspect.Physical,
+            basePotency: 0, // We'll determine how much potency this deals when it expires
+            snapshotTime: state.getDisplayTime(),
+            description: "wildfire",
+        })
+        if (state.hasResourceAvailable(ResourceType.Tincture)) {
+            wildFirePotency.modifiers = [Modifiers.Tincture];
+        }
+
+        node.addPotency(wildFirePotency)
+        
         wildFire.gain(1)
         wildFire.node = node
         
@@ -486,15 +510,13 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
             rscType: ResourceType.Wildfire,
             name: "wildfire expiration",
             delay: (getResourceInfo(ShellJob.MCH, ResourceType.Wildfire) as ResourceInfo).maxTimeout,
-            fnOnRsc: rsc => {
-                state.expireWildfire()
-            }
+            fnOnRsc: (_rsc) => state.expireWildfire()
         })
     },
 })
 makeAbility_MCH(SkillName.Detonator, 45, ResourceType.cd_Detonator, {
     startOnHotbar: false,
-    applicationDelay: 0,
+    applicationDelay: 0.62,
     cooldown: 1,
     maxCharges: 1,
     onConfirm: (state) => state.expireWildfire(),
@@ -508,6 +530,21 @@ makeAbility_MCH(SkillName.Detonator, 45, ResourceType.cd_Detonator, {
 // Checkmate
 
 // Automaton Queen
+const robotAbilities: Array<{skillName: SkillName,skillLevel: number}> = [
+    { skillName: SkillName.VolleyFire, skillLevel: 40 },
+    { skillName: SkillName.RookOverdrive, skillLevel: 40 },
+    { skillName: SkillName.ArmPunch, skillLevel: 80 },
+    { skillName: SkillName.PileBunker, skillLevel: 80 },
+    { skillName: SkillName.CrownedCollider, skillLevel: 86 },
+]
+robotAbilities.forEach((params) => {
+    makeAbility_MCH(params.skillName, params.skillLevel, ResourceType.cd_Robot, {
+        startOnHotbar: false,
+        applicationDelay: 0,
+        cooldown: 1,
+        maxCharges: 1,
+    })
+})
 const robotSummons: Array<{
     skillName: SkillName, 
     skillLevel: number, 
