@@ -15,35 +15,6 @@
 
 /* Stats display */
 
-.statusDisplay {
-    position: relative;
-    text-align: left;
-    margin: 8px 0;
-}
-.statusDisplay>.-left {
-    display: inline-block;
-    vertical-align: top;
-    width: 50%;
-    height: 100%;
-}
-.statusDisplay>.-right {
-    position: relative;
-    display: inline-block;
-    float: right;
-    width: 50%;
-}
-/* buffs */
-.buffsDisplay {
-    height: 54px;
-    text-align: right;
-    line-height: 1em;
-}
-.buffsDisplay.enemy {
-    margin-bottom: 3em;
-}
-.buffsDisplay.self {
-}
-
 .buff {
     text-align: center;
     width: 54px;

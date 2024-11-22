@@ -7,6 +7,7 @@ import {
 	ElemType,
 	LucidMarkElem,
 	MarkerElem, MarkerType, MAX_TIMELINE_SLOTS,
+	MeditateTickMarkElem,
 	MPTickMarkElem, SharedTimelineElem,
 	SkillElem, SlotTimelineElem,
 	TimelineElem, UntargetableMarkerTrack,
@@ -277,6 +278,29 @@ function drawMPTickMarks(
 	g_ctx.stroke();
 }
 
+function drawMeditateTickMarks(
+	countdown: number,
+	scale: number,
+	originX: number,
+	originY: number,
+	elems: MeditateTickMarkElem[]
+) {
+	g_ctx.lineWidth = 1;
+	g_ctx.strokeStyle = g_colors.sam.meditation;
+	g_ctx.beginPath();
+	elems.forEach(tick=>{
+		let x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
+		g_ctx.moveTo(x, originY);
+		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
+
+		testInteraction(
+			{x: x-2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight()},
+			["[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc]
+		);
+	});
+	g_ctx.stroke();
+}
+
 function drawWarningMarks(
 	countdown: number,
 	scale: number,
@@ -306,9 +330,17 @@ function drawWarningMarks(
 			message += localize({en: "comet overwrite!", zh: "彗星之黑被覆盖！"});
 		} else if (mark.warningType === WarningType.PaletteOvercap) {
 			message += localize({en: "palette gauge overcap!", zh: "调色量值溢出！"});
+		} else if (mark.warningType === WarningType.ImbalancedMana) {
+			message += localize({en: mark.warningType + "!", zh: "魔元失衡！"});
+		} else if (mark.warningType === WarningType.KenkiOvercap) {
+			message += localize({en: "kenki overcap!"});
+		} else if (mark.warningType === WarningType.MeditationOvercap) {
+			message += localize({en: "meditation stack overcap!"});
+		} else if (mark.warningType === WarningType.SenOvercap) {
+			message += localize({en: "sen overcap!"});
 		} else {
 			message += localize({en: mark.warningType + "!"});
-		}
+		} 
 
 		testInteraction(
 			{x: x-sideLength/2, y: bottomY-sideLength, w: sideLength, h: sideLength}, [message]
@@ -414,6 +446,12 @@ function drawSkills(
 		[BuffType.Embolden, {color: g_colors.rdm.emboldenBuff, showImage: true}],
 		[BuffType.Manafication, {color: g_colors.rdm.manaficBuff, showImage: true}],
 		[BuffType.Acceleration, {color: g_colors.rdm.accelBuff, showImage: true}],
+		[BuffType.TechnicalFinish, {color: g_colors.dnc.esprit, showImage: true}],
+		[BuffType.Devilment, {color: g_colors.dnc.feathers, showImage: true}],
+		// TODO swap colors eventually
+		[BuffType.Fuka, {color: g_colors.timeline.llCover, showImage: true}],
+		[BuffType.Fugetsu, {color: g_colors.sam.fugetsu, showImage: true}],
+		[BuffType.EnhancedEnpi, {color: g_colors.rdm.accelBuff, showImage: true}],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();
@@ -770,6 +808,9 @@ export function drawTimelines(originX: number, originY: number, isImageExportMod
 		if (g_renderingProps.drawOptions.drawMPTickMarks) {
 			drawLucidMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.LucidMark) as LucidMarkElem[] ?? []);
 		}
+
+		// always draw meditate tick marks
+		drawMeditateTickMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.MeditateTickMark) as MeditateTickMarkElem[] ?? []);
 
 		// warning marks (polyglot overcap)
 		drawWarningMarks(g_renderingProps.countdown, g_renderingProps.scale, displayOriginX, currentY, elemBins.get(ElemType.WarningMark) as WarningMarkElem[] ?? []);

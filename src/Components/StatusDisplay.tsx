@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {CSSProperties} from 'react';
 import {Clickable, ContentNode, Help, ProgressBar, StaticFn} from "./Common";
 import {ResourceType} from "../Game/Common";
 import type {PlayerState} from "../Game/GameState";
@@ -57,6 +57,28 @@ export interface PaintGaugeCounterProps {
 	hasComet: boolean,
 };
 
+export interface DanceCounterProps {
+	kind: "dance",
+	name: ContentNode,
+	entrechatColor: string,
+	emboiteColor: string,
+	jeteColor: string,
+	pirouetteColor: string,
+	maxStacks: number,
+	currentStacks: number,
+}
+
+export interface SenCounterProps {
+	kind: "sen",
+	name: ContentNode,
+	hasSetsu: boolean,
+	hasGetsu: boolean,
+	hasKa: boolean,
+	setsuColor: string,
+	getsuColor: string,
+	kaColor: string,
+}
+
 export interface ResourceTextProps {
 	kind: "text",
 	name: ContentNode,
@@ -68,15 +90,17 @@ export type ResourceDisplayProps =
 	ResourceBarProps |
 	ResourceCounterProps |
 	PaintGaugeCounterProps |
+	DanceCounterProps |
+	SenCounterProps |
 	ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
-type StatusViewProps = {
+export type StatusViewProps = {
 	time: number,
-	resources?: ResourceDisplayProps[],
+	resources: ResourceDisplayProps[],
 	resourceLocks?: StatusResourceLocksViewProps,
-	enemyBuffs?: BuffProps[],
-	selfBuffs?: BuffProps[],
+	enemyBuffs: BuffProps[],
+	selfBuffs: BuffProps[],
 	level: number
 }
 
@@ -148,6 +172,8 @@ function ResourceCounter(props: {
 	</div>;
 }
 
+// todo [myn]: make a more generic resource display component to replace the following two
+
 // copy of ResourceCounter specialized for the paint gauge
 // name, holyColor, cometColor, currentStacks, maxStacks, hasComet
 function PaintGaugeCounter(props: {
@@ -159,7 +185,7 @@ function PaintGaugeCounter(props: {
 	hasComet: boolean,
 }) {
 	let stacks = [];
-	for (let i = 0; i < 5; i++) {
+	for (let i = 0; i < props.maxStacks; i++) {
 		// dip the last one in black paint
 		let isComet = props.hasComet && i === props.currentStacks - 1;
 		stacks.push(<ResourceStack key={i} color={isComet ? props.cometColor : props.holyColor} value={i < props.currentStacks}/>)
@@ -169,6 +195,67 @@ function PaintGaugeCounter(props: {
 		<div style={{width: 200, display: "inline-block"}}>
 			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
 			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{props.currentStacks + "/" + props.maxStacks}</div>
+		</div>
+	</div>;
+}
+
+// copy of ResourceCounter specialized for tracking Dance Steps
+function DanceCounter(props: {
+	name: ContentNode,
+	maxStacks: number,
+	currentStacks: number,
+	emboiteColor: string,
+	entrechatColor: string,
+	jeteColor: string,
+	pirouetteColor: string,
+}) {
+	const stacks = [];
+	for (let i = 0; i < props.maxStacks; i++) {
+		const color = i === 0 ? props.emboiteColor :
+			i === 1 ? props.entrechatColor :
+			i === 2 ? props.jeteColor : props.pirouetteColor
+		stacks.push(<ResourceStack key={i} color={color} value={i < props.currentStacks} /> )
+	}
+	return <div style={{marginBottom: 4, lineHeight: "1.5em"}}>
+		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
+		<div style={{width: 200, display: "inline-block"}}>
+			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
+			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{props.currentStacks + "/" + props.maxStacks}</div>
+		</div>
+	</div>;
+}
+
+// copy of ResourceCounter specialized for tracking SAM's Sen gauge
+function SenCounter(props: {
+	name: ContentNode,
+	hasSetsu: boolean,
+	hasGetsu: boolean,
+	hasKa: boolean,
+	setsuColor: string,
+	getsuColor: string,
+	kaColor: string,
+}) {
+	const stacks = [];
+	const hasSen = [props.hasSetsu, props.hasGetsu, props.hasKa];
+	const senColors = [props.setsuColor, props.getsuColor, props.kaColor];
+	const names = ["setsu", "getsu", "ka"];
+	const presentSen = [];
+	const help = <Help topic={"senExplanation"}
+		content={localize({
+			en: "from left to right: setsu (yukikaze), getsu (gekko/mangetsu), ka (kasha/oka)",
+		})}
+	/>;
+	for (let i = 0; i < 3; i++) {
+		stacks.push(<ResourceStack key={i} color={senColors[i]} value={hasSen[i]} />);
+		if (hasSen[i]) {
+			presentSen.push(names[i]);
+		}
+	}
+	return <div style={{marginBottom: 4, lineHeight: "1.5em"}}>
+		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name} {help}</div>
+		<div style={{width: 200, display: "inline-block"}}>
+			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
+			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{presentSen.join("+")}</div>
 		</div>
 	</div>;
 }
@@ -189,15 +276,23 @@ function ResourceText(props: {
 const buffIcons = new Map();
 
 export function registerBuffIcon(buff: string, relativePath: string) {
-	buffIcons.set(buff, require(`./Asset/Buffs/${relativePath}`));
+	// remove colons since it's hard to create a file name that contains them
+	buffIcons.set(buff.replace(":", ""), require(`./Asset/Buffs/${relativePath}`));
 }
 
 const roleBuffResources = [
 	ResourceType.Addle,
 	ResourceType.Swiftcast,
 	ResourceType.LucidDreaming,
+
+	ResourceType.Feint,
+	ResourceType.TrueNorth,
+	ResourceType.ArmsLength,
+	ResourceType.Bloodbath,
+
 	ResourceType.Surecast,
 	ResourceType.Tincture,
+	ResourceType.ArmsLength,
 ];
 
 // role buffs are registered here; job buffs should be registered in the job's respective file
@@ -206,14 +301,29 @@ roleBuffResources.forEach(
 );
 
 buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
+buffIcons.set(ResourceType.RearPositional, require("./Asset/Buffs/General/Rear Positional.png"));
+buffIcons.set(ResourceType.FlankPositional, require("./Asset/Buffs/General/Flank Positional.png"));
 
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props: BuffProps) {
 	let assetName: string = props.rscType;
 	if (props.stacks > 1) assetName += props.stacks;
+	// Special case for positional buffs: add a rounded border thta's similar in size to the other buffs
+	let imgStyle: React.CSSProperties;
+	if (props.rscType === ResourceType.RearPositional || props.rscType === ResourceType.FlankPositional) {
+		imgStyle = {
+			height: 40,
+			borderStyle: "solid",
+			borderColor: getCurrentThemeColors().bgHighContrast,
+			borderWidth: "0.2em",
+			borderRadius: "0.7em",
+		};
+	} else {
+		imgStyle = { height: 40 };
+	}
 	return <div title={localizeResourceType(props.rscType)} className={props.className + " buff " + props.rscType}>
 		<Clickable content={
-			<img style={{height: 40}} src={buffIcons.get(assetName)} alt={props.rscType}/>
+			<img style={imgStyle} src={buffIcons.get(assetName)} alt={props.rscType}/>
 		} style={{
 			display: "inline-block",
 			verticalAlign: "top",
@@ -233,34 +343,29 @@ function Buff(props: BuffProps) {
 	</div>
 }
 
-function BuffsDisplay(props: {
-	data: BuffProps[]
+export function BuffsDisplay(props: {
+	data: BuffProps[],
+	style?: CSSProperties
 }) {
 	const buffs = props.data;
 	let buffElems: React.ReactNode[] = [];
 	for (let i = 0; i < buffs.length; i++) {
 		buffElems.push(<Buff key={i} {...buffs[i]}/>);
 	}
-
-	return <div className={"buffsDisplay self"}>
-		{buffElems}
-	</div>
-}
-
-function EnemyBuffsDisplay(props: {
-	data: BuffProps[]
-}) {
-	const buffs = props.data;
-	let buffElems: React.ReactNode[] = [];
-	for (let i = 0; i < buffs.length; i++) {
-		buffElems.push(<Buff key={i} {...buffs[i]}/>);
+	let style: CSSProperties = {
+		height: 54,
+		textAlign: "right",
+		lineHeight: "1em"
+	};
+	if (props.style) {
+		style = {...style, ...props.style};
 	}
-	return <div className={"buffsDisplay enemy"}>
+	return <div style={style}>
 		{buffElems}
 	</div>
 }
 
-function ResourceLocksDisplay(props: {
+export function ResourceLocksDisplay(props: {
 	data: StatusResourceLocksViewProps
 }) {
 	let colors = getCurrentThemeColors();
@@ -293,74 +398,118 @@ function ResourceLocksDisplay(props: {
 	</div>
 }
 
-function ResourcesDisplay(props: {
+export function ResourcesDisplay(props: {
 	data: {
 		level: number,
 		resources: ResourceDisplayProps[],
-	}
+	},
+	style?: CSSProperties
 }) {
-	const elements = props.data.resources.map((props, i) =>
-		(props.kind === "bar")
-			? <ResourceBar
-				name={props.name}
-				color={props.color}
-				progress={props.progress}
-				value={props.valueString}
-				width={props.widthPx ?? 100}
-				hidden={props.hidden ?? false}
-				key={"resourceDisplay" + i}
-			/>
-		: (props.kind === "counter"
-			? <ResourceCounter
-				name={props.name}
-				color={props.color}
-				currentStacks={props.currentStacks}
-				maxStacks={props.maxStacks}
-				key={"resourceDisplay" + i}
-			/>
-		: (props.kind === "paint"
-			? <PaintGaugeCounter
-				name={props.name}
-				holyColor={props.holyColor}
-				cometColor={props.cometColor}
-				currentStacks={props.currentStacks}
-				maxStacks={props.maxStacks}
-				hasComet={props.hasComet}
-				key={"resourceDisplay" + i}
-			/>
-			: <ResourceText
-				name={props.name}
-				text={props.text}
-				key={"resourceDisplay" + i}
-			/>
-		))
-	);
-	return <div style={{textAlign: "left", minHeight: "10vh"}}>
+	const elements = props.data.resources.map((props, i) => {
+		switch(props.kind) {
+			case "bar":
+				return <ResourceBar
+					name={props.name}
+					color={props.color}
+					progress={props.progress}
+					value={props.valueString}
+					width={props.widthPx ?? 100}
+					hidden={props.hidden ?? false}
+					key={"resourceDisplay" + i}
+				/>
+			case "counter":
+				return <ResourceCounter
+					name={props.name}
+					color={props.color}
+					currentStacks={props.currentStacks}
+					maxStacks={props.maxStacks}
+					key={"resourceDisplay" + i}
+				/>
+			case "paint":
+				return <PaintGaugeCounter
+					name={props.name}
+					holyColor={props.holyColor}
+					cometColor={props.cometColor}
+					currentStacks={props.currentStacks}
+					maxStacks={props.maxStacks}
+					hasComet={props.hasComet}
+					key={"resourceDisplay" + i}
+				/>
+			case "dance":
+				return <DanceCounter
+					name={props.name}
+					entrechatColor={props.entrechatColor}
+					emboiteColor={props.emboiteColor}
+					jeteColor={props.jeteColor}
+					pirouetteColor={props.pirouetteColor}
+					maxStacks={props.maxStacks}
+					currentStacks={props.currentStacks}
+					key={"resourceDisplay" + i}
+				/>
+			case "sen":
+				return <SenCounter
+					name={props.name}
+					hasSetsu={props.hasSetsu}
+					hasGetsu={props.hasGetsu}
+					hasKa={props.hasKa}
+					setsuColor={props.setsuColor}
+					getsuColor={props.getsuColor}
+					kaColor={props.kaColor}
+					key={"resourceDisplay" + i}
+				/>
+			default:
+				return <ResourceText
+					name={props.name}
+					text={props.text}
+					key={"resourceDisplay" + i}
+				/>
+		}
+	});
+	let style: CSSProperties = {
+		textAlign: "left",
+		// Set a minHeight to ensure buffs do not clash with the hotbar
+		minHeight: "13.5em"
+	};
+	if (props.style) {
+		style = {...style, ...props.style};
+	}
+	return <div style={style}>
 		{elements}
 	</div>
 }
 
-export var updateStatusDisplay = (data: StatusViewProps)=>{};
+type StatusLayoutFn = (props: StatusViewProps) => React.ReactNode;
+
+export var updateStatusDisplay = (data: StatusViewProps, layoutFn: StatusLayoutFn)=> {};
 export class StatusDisplay extends React.Component {
-	state: StatusViewProps;
+	state: StatusViewProps & {
+		layoutFn: (props: StatusViewProps) => React.ReactNode
+	};
 	constructor(props: StatusViewProps) {
 		super(props);
 		this.state = {
 			time: 0,
+			resources: [],
+			enemyBuffs: [],
+			selfBuffs: [],
 			level: 100,
+			layoutFn: (props: StatusViewProps) => { return <div/> }
 		}
-		updateStatusDisplay = ((newData) => {
-			this.setState({...newData});
-		});
+		updateStatusDisplay = (newData, newLayoutFn) => {
+			this.setState({...{layoutFn: newLayoutFn}, ...newData});
+		};
 	}
 	componentDidMount() {
 		controller.updateStatusDisplay(controller.game);
 	}
 	render() {
-		return <div className={"statusDisplay"}>
+		return <div style={{
+			position: "relative",
+			textAlign: "left",
+			margin: "8px 0"
+		}}>
 			<div style={{position: "absolute", top: -8, right: 0, zIndex: 1}}><Help topic={"mainControlRegion"} content={
 				<div className="toolTip">
-
 					{localize({
 						en:
 							<>
@@ -379,21 +528,7 @@ export class StatusDisplay extends React.Component {
 					})}
 				</div>
 			}/></div>
-			<div className={"-left"}>
-				<span style={{display: "block", marginBottom: 10}}>
-					{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}
-					{`${StaticFn.displayTime(this.state.time, 3)} (${this.state.time.toFixed(3)})`}
-				</span>
-				{this.state.resources ? <ResourcesDisplay data={{
-					level: this.state.level,
-					resources: this.state.resources
-				}}/> : undefined}
-			</div>
-			<div className={"-right"}>
-				{this.state.resourceLocks ? <ResourceLocksDisplay data={this.state.resourceLocks}/> : undefined}
-				{this.state.enemyBuffs ? <EnemyBuffsDisplay data={this.state.enemyBuffs}/> : undefined}
-				{this.state.selfBuffs ? <BuffsDisplay data={this.state.selfBuffs}/>: undefined}
-			</div>
+			{this.state.layoutFn(this.state as StatusViewProps)}
 		</div>
 	}
 }
@@ -408,4 +543,35 @@ export abstract class StatusPropsGenerator<T extends PlayerState> {
 	abstract getEnemyBuffViewProps(): BuffProps[];
 	abstract getSelfBuffViewProps(): BuffProps[];
 	abstract getResourceViewProps(): ResourceDisplayProps[];
+
+	// override me if the standard resource layout doesn't look right (DNC as an example because it gives many buffs)
+	statusLayoutFn(props: StatusViewProps): React.ReactNode {
+		return <div>
+			<div style={{
+				display: "inline-block",
+				verticalAlign: "top",
+				width: "50%",
+				height: "100%"
+			}}>
+			<span style={{display: "block", marginBottom: 10}}>
+				{localize({en: "time: ", zh: "战斗时间：", ja: "経過時間："})}
+				{`${StaticFn.displayTime(props.time, 3)} (${props.time.toFixed(3)})`}
+			</span>
+				{props.resources ? <ResourcesDisplay data={{
+					level: props.level,
+					resources: props.resources
+				}}/> : undefined}
+			</div>
+			<div style={{
+				position: "relative",
+				display: "inline-block",
+				float: "right",
+				width: "50%"
+			}}>
+				{props.resourceLocks ? <ResourceLocksDisplay data={props.resourceLocks}/> : undefined}
+				<BuffsDisplay data={props.enemyBuffs} style={{ marginBottom: "3em" }}/>
+				<BuffsDisplay data={props.selfBuffs}/>
+			</div>
+		</div>
+	}
 }

@@ -11,8 +11,8 @@ import {
 import {ResourceType} from "../../Game/Common";
 import {TraitName, Traits} from "../../Game/Traits";
 import {PCTState} from "../../Game/Jobs/PCT";
-import {getCurrentThemeColors} from "../../Components/ColorTheme";
-import {localize} from "../../Components/Localization";
+import {getCurrentThemeColors} from "../ColorTheme";
+import {localize} from "../Localization";
 
 [
 	ResourceType.Aetherhues,

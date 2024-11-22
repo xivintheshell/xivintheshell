@@ -5,7 +5,7 @@ import {BuffType, ResourceType, SkillName} from "../Game/Common";
 import {
 	DamageStatisticsData,
 	DamageStatsMainTableEntry,
-	DamageStatsThunderTableEntry,
+	DamageStatsDoTTableEntry,
 	SelectedStatisticsData
 } from "../Components/DamageStatistics";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
@@ -56,15 +56,15 @@ export const getTargetableDurationBetween = (startDisplayTime: number, endDispla
 		ctl.timeline.getTargetableDurationBetween(startDisplayTime, endDisplayTime) : endDisplayTime - startDisplayTime;
 }
 
-function isThunderNode(node: ActionNode) {
-	return node.skillName === SkillName.Thunder3 || node.skillName === SkillName.HighThunder;
+function isDoTNode(node: ActionNode) {
+	return node.skillName === SkillName.Thunder3 || node.skillName === SkillName.HighThunder || node.skillName === SkillName.Higanbana;
 }
 
-function expandThunderNode(node: ActionNode, lastNode?: ActionNode) {
+function expandDoTNode(node: ActionNode, lastNode?: ActionNode) {
 	console.assert(node.getPotencies().length > 0);
-	console.assert(isThunderNode(node));
+	console.assert(isDoTNode(node));
 	let mainPotency = node.getPotencies()[0];
-	let entry: DamageStatsThunderTableEntry = {
+	let entry: DamageStatsDoTTableEntry = {
 		castTime: node.tmp_startLockTime ? node.tmp_startLockTime - ctl.gameConfig.countdown : 0,
 		applicationTime: mainPotency.hasResolved() ? (mainPotency.applicationTime as number) : 0,
 		displayedModifiers: [],
@@ -93,7 +93,7 @@ function expandThunderNode(node: ActionNode, lastNode?: ActionNode) {
 			entry.override = lastDotDropDisplayTime - thisDotApplicationDisplayTime;
 		}
 	} else {
-		// first Thunder of this fight
+		// first dot of this fight
 		console.assert(!lastNode)
 		let thisP = node.getPotencies()[0];
 		let thisDotApplicationDisplayTime = thisP.applicationTime as number;
@@ -105,8 +105,9 @@ function expandThunderNode(node: ActionNode, lastNode?: ActionNode) {
 	entry.mainPotencyHit = mainPotency.hasHitBoss(bossIsUntargetable);
 
 	for (let i = 0; i < mainPotency.modifiers.length; i++) {
-		if (mainPotency.modifiers[i].source === PotencyModifierType.ENO) {
-			entry.displayedModifiers.push(PotencyModifierType.ENO)
+		const source = mainPotency.modifiers[i].source;
+		if (source === PotencyModifierType.ENO || source === PotencyModifierType.FUGETSU) {
+			entry.displayedModifiers.push(source);
 		}
 	}
 
@@ -182,8 +183,8 @@ function expandNode(node: ActionNode) : ExpandedNode {
 					break;
 				}
 			}
-		} else if (isThunderNode(node)) {
-			// thunder modifiers are handled separately
+		} else if (isDoTNode(node)) {
+			// dot modifiers are handled separately
 			res.basePotency = node.getPotencies()[0].base;
 		} else {
 			// for non-BLM jobs, display all non-pot modifiers on all damaging skills
@@ -244,10 +245,11 @@ export function updateSkillOrDoTInclude(props: {
 }) {
 	if (props.include && excludedFromStats.has(props.skillNameOrDoT)) {
 		excludedFromStats.delete(props.skillNameOrDoT);
-		// it doesn't make sense to include DoT but not base potency of Thunder
+		// it doesn't make sense to include DoT but not base potency of Thunder/Higanbana
 		if (props.skillNameOrDoT === "DoT") {
 			excludedFromStats.delete(SkillName.Thunder3);
 			excludedFromStats.delete(SkillName.HighThunder);
+			excludedFromStats.delete(SkillName.Higanbana);
 		} else if (props.skillNameOrDoT === SkillName.Thunder3 ||
 				   props.skillNameOrDoT === SkillName.HighThunder) {
 			excludedFromStats.delete("DoT");
@@ -255,7 +257,8 @@ export function updateSkillOrDoTInclude(props: {
 	} else {
 		excludedFromStats.add(props.skillNameOrDoT);
 		if (props.skillNameOrDoT === SkillName.Thunder3 || 
-			props.skillNameOrDoT === SkillName.HighThunder) {
+			props.skillNameOrDoT === SkillName.HighThunder ||
+			props.skillNameOrDoT === SkillName.Higanbana) {
 			excludedFromStats.add("DoT");
 		}
 	}
@@ -298,7 +301,7 @@ export function calculateSelectedStats(props: {
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
 				includePartyBuffs: true,
-				excludeDoT: (isThunderNode(node)) && !getSkillOrDotInclude("DoT")
+				excludeDoT: (isDoTNode(node)) && !getSkillOrDotInclude("DoT")
 			});
 			if (checked) {
 				selected.potency.applied += p.applied;
@@ -330,8 +333,8 @@ export function calculateDamageStats(props: {
 		totalPartyBuffPotency: 0,
 	};
 
-	let thunderTable: DamageStatsThunderTableEntry[] = [];
-	let thunderTableSummary = {
+	let dotTable: DamageStatsDoTTableEntry[] = [];
+	let dotTableSummary = {
 		cumulativeGap: 0,
 		cumulativeOverride: 0,
 		timeSinceLastDoTDropped: 0,
@@ -346,7 +349,7 @@ export function calculateDamageStats(props: {
 
 	let skillPotencies: Map<SkillName, number> = new Map();
 
-	let lastThunder : ActionNode | undefined = undefined; // for tracking DoT gap / override
+	let lastDoT : ActionNode | undefined = undefined; // for tracking DoT gap / override
 	ctl.record.iterateAll(node=>{
 		if (node.type === ActionType.Skill && node.skillName) {
 
@@ -367,7 +370,7 @@ export function calculateDamageStats(props: {
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
 				includePartyBuffs: true,
-				excludeDoT: (isThunderNode(node)) && !getSkillOrDotInclude("DoT")
+				excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT")
 			});
 			if (checked) {
 				totalPotency.applied += p.applied;
@@ -397,21 +400,21 @@ export function calculateDamageStats(props: {
 					tincturePotencyMultiplier: 1,
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: false,
-					excludeDoT: (isThunderNode(node)) && !getSkillOrDotInclude("DoT")
+					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT")
 				}).applied;
 				
 				let potencyWithPot = node.getPotency({
 					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: false,
-					excludeDoT: (isThunderNode(node)) && !getSkillOrDotInclude("DoT")
+					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT")
 				}).applied;
 
 				let potencyWithPartyBuffs = node.getPotency({
 					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: true,
-					excludeDoT: (isThunderNode(node)) && !getSkillOrDotInclude("DoT")
+					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT")
 				}).applied;
 
 				const hit = node.hitBoss(bossIsUntargetable);
@@ -439,40 +442,43 @@ export function calculateDamageStats(props: {
 					mainTableSummary.totalPartyBuffPotency += (potencyWithPartyBuffs - potencyWithPot);
 				}
 
-				// Thunder table
-				if (isThunderNode(node)) {
-					let thunderTableEntry = expandThunderNode(node, lastThunder);
-					thunderTable.push(thunderTableEntry);
-					lastThunder = node;
-					thunderTableSummary.cumulativeGap += thunderTableEntry.gap;
-					thunderTableSummary.cumulativeOverride += thunderTableEntry.override;
-					thunderTableSummary.totalTicks += thunderTableEntry.numHitTicks;
-					thunderTableSummary.totalPotencyWithoutPot += thunderTableEntry.potencyWithoutPot;
-					thunderTableSummary.totalPotPotency += thunderTableEntry.potPotency;
-					thunderTableSummary.totalPartyBuffPotency += thunderTableEntry.partyBuffPotency;
+				// DoT table
+				// If the on-hit potency has not been resolved (as is the case if we just
+				// cast higanbana and the ability has not yet hit), don't add an entry yet
+				if (isDoTNode(node) && node.getPotencies().length > 0) {
+					let dotTableEntry = expandDoTNode(node, lastDoT);
+					dotTable.push(dotTableEntry);
+					lastDoT = node;
+					dotTableSummary.cumulativeGap += dotTableEntry.gap;
+					dotTableSummary.cumulativeOverride += dotTableEntry.override;
+					dotTableSummary.totalTicks += dotTableEntry.numHitTicks;
+					dotTableSummary.totalPotencyWithoutPot += dotTableEntry.potencyWithoutPot;
+					dotTableSummary.totalPotPotency += dotTableEntry.potPotency;
+					dotTableSummary.totalPartyBuffPotency += dotTableEntry.partyBuffPotency;
 				}
 			}
 		}
 	});
 
-	if (lastThunder) {
-		console.assert(ctl.game.job === ShellJob.BLM, "thunder table should be unique to BLM")
-		// last Thunder so far
-		let mainP = (lastThunder as ActionNode).getPotencies()[0];
+	if (lastDoT) {
+		// last dot so far
+		let mainP = (lastDoT as ActionNode).getPotencies()[0];
 		console.assert(mainP.hasResolved());
-		let lastDotDropTime = (mainP.applicationTime as number) + (ctl.game as BLMState).getThunderDotDuration();
+		let lastDotDropTime = (mainP.applicationTime as number)
+			// TODO don't hardcode this; else branch is currently for higanbana
+			+ ctl.game.job === ShellJob.BLM ? (ctl.game as BLMState).getThunderDotDuration() : 60;
 		let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
 
 		let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
 		if (timeSinceLastDoTDropped > 0) {
-			thunderTableSummary.cumulativeGap += gap;
-			thunderTableSummary.timeSinceLastDoTDropped = timeSinceLastDoTDropped;
+			dotTableSummary.cumulativeGap += gap;
+			dotTableSummary.timeSinceLastDoTDropped = timeSinceLastDoTDropped;
 		}
 	} else {
 		// no Thunder was used so far
 		let gap = getTargetableDurationBetween(0, Math.max(0, ctl.game.getDisplayTime()));
-		thunderTableSummary.cumulativeGap = gap;
-		thunderTableSummary.timeSinceLastDoTDropped = gap;
+		dotTableSummary.cumulativeGap = gap;
+		dotTableSummary.timeSinceLastDoTDropped = gap;
 	}
 
 	mainTable.sort((a, b)=>{
@@ -506,8 +512,8 @@ export function calculateDamageStats(props: {
 		gcdSkills: gcdSkills,
 		mainTable: mainTable,
 		mainTableSummary: mainTableSummary,
-		thunderTable: thunderTable,
-		thunderTableSummary: thunderTableSummary,
+		dotTable: dotTable,
+		dotTableSummary: dotTableSummary,
 		historical: !ctl.displayingUpToDateGameState,
 	};
 }

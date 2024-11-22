@@ -1,4 +1,5 @@
 import { LevelSync, ResourceType } from "./Common";
+import { Traits, TraitName } from "./Traits";
 
 export class XIVMath {
 	static getMainstatBase(level: LevelSync) {
@@ -79,48 +80,52 @@ export class XIVMath {
 		return Math.floor(140 * (dh-subStat) / div) * 0.001;
 	}
 
+	// https://www.akhmorning.com/allagan-studies/stats/det/#explaining-determination
 	static #autoMultiDet(level: LevelSync, det: number) {
-		const subStat = this.getSubstatBase(level);
+		const subStat = this.getMainstatBase(level);
 		const div = this.getStatDiv(level);
 		return Math.floor(140 * (det-subStat) / div) * 0.001;
 	}
 
-	static dotPotency(level: LevelSync, spellSpeed: number, basePotency: number) {
+	static dotPotency(level: LevelSync, speed: number, basePotency: number) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
-		const dotStrength = (1000 + Math.floor((spellSpeed - subStat) * 130 / div)) * 0.001;
+		const dotStrength = (1000 + Math.floor((speed - subStat) * 130 / div)) * 0.001;
 		return basePotency * dotStrength;
 	}
 
 	// Return the speed modifier granted by a specific buff.
 	// For example, for the 15% reduction granted by Circle of Power (which we just call Ley Lines),
 	// return the integer 15.
-	static getSpeedModifier(buff: ResourceType) {
+	static getSpeedModifier(buff: ResourceType, level: LevelSync) {
 		if (buff === ResourceType.LeyLines) {
 			return 15;
 		}
 		if (buff === ResourceType.Inspiration) {
 			return 25;
 		}
+		if (buff === ResourceType.Fuka) {
+			return Traits.hasUnlocked(TraitName.EnhancedFugetsuAndFuka, level) ? 13 : 10;
+		}
 		console.error("No speed modifier for buff: ", buff);
 		return 0;
 	}
 
-	static preTaxGcd(level: LevelSync, spellSpeed: number, baseGCD: number, speedBuff?: ResourceType) {
+	static preTaxGcd(level: LevelSync, speed: number, baseGCD: number, speedBuff?: ResourceType) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
 
 		// let us pray we never need to stack haste buffs
-		let subtractSpeed = speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff);
+		let subtractSpeed = speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff, level);
 
-		return Math.floor(Math.floor(Math.floor((100-subtractSpeed)*100/100)*Math.floor((2000-Math.floor(130*(spellSpeed-subStat)/div+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
+		return Math.floor(Math.floor(Math.floor((100-subtractSpeed)*100/100)*Math.floor((2000-Math.floor(130*(speed-subStat)/div+1000))*(1000*baseGCD)/10000)/100)*100/100)/100;
 	}
 
 	static preTaxCastTime(level: LevelSync, spellSpeed: number, baseCastTime: number, speedBuff?: ResourceType) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
 
-		let subtractSpeed = speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff);
+		let subtractSpeed = speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff, level);
 		return Math.floor(Math.floor(Math.floor((100-subtractSpeed)*100/100)*Math.floor((2000-Math.floor(130*(spellSpeed-subStat)/div+1000))*(1000*baseCastTime)/1000)/100)*100/100)/1000;
 	}
 

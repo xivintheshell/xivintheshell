@@ -45,8 +45,8 @@ const resetDamageData = () => {
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
 		},
-		thunderTable: [],
-		thunderTableSummary: {
+		dotTable: [],
+		dotTableSummary: {
 			cumulativeGap: 0,
 			cumulativeOverride: 0,
 			timeSinceLastDoTDropped: 0,

@@ -14,6 +14,12 @@ import {DamageStatisticsData, mockDamageStatUpdateFn} from "./Components/DamageS
 
 // TODO figure out how to share test code :3
 
+type ShortDamageEntry = {
+    skillName: SkillName,
+    displayedModifiers: PotencyModifierType[],
+    hitCount: number,
+}
+
 // If this configuration flag is set to `true`, then the fight record of each test run
 // will be exported locally to "$TEST_NAME.txt".
 const SAVE_FIGHT_RECORD = false;
@@ -35,8 +41,8 @@ const resetDamageData = () => {
             totalPotPotency: 0,
             totalPartyBuffPotency: 0,
         },
-        thunderTable: [],
-        thunderTableSummary: {
+        dotTable: [],
+        dotTableSummary: {
             cumulativeGap: 0,
             cumulativeOverride: 0,
             timeSinceLastDoTDropped: 0,
@@ -50,6 +56,34 @@ const resetDamageData = () => {
         },
         historical: false,
     };
+};
+
+const compareDamageTables = (expectedDamageEntries: Array<ShortDamageEntry>) => {
+    const actualDamageEntries = [];
+    for (const entry of damageData.mainTable) {
+        actualDamageEntries.push({
+            skillName: entry.skillName,
+            displayedModifiers: entry.displayedModifiers,
+            hitCount: entry.hitCount,
+        });
+    }
+    // sz: whatever version of node i'm on apparently doesn't support Set.difference/symmetricDifference,
+    // so we instead just sort the two arrays and do an equality check
+    const damageEntryComparator = (a: ShortDamageEntry, b: ShortDamageEntry) => {
+        const nameCmp = a.skillName.localeCompare(b.skillName);
+        // The same skill can appear with different modifiers, in which case
+        // we need to compare on their displayedModifiers field.
+        // Since the modifiers lists are short, just concat them and treat that as a string.
+        if (nameCmp === 0) {
+            return a.displayedModifiers.map((x) => x.toString()).join().localeCompare(
+                b.displayedModifiers.map((x) => x.toString()).join()
+            );
+        }
+        return nameCmp;
+    };
+    actualDamageEntries.sort(damageEntryComparator);
+    expectedDamageEntries.sort(damageEntryComparator);
+    expect(actualDamageEntries).toEqual(expectedDamageEntries);
 };
 
 beforeEach(() => {
@@ -138,6 +172,97 @@ it("allows triple zwerchhau", testWithConfig({}, () => {
         SkillName.Scorch,
         SkillName.Resolution,
     ].forEach(applySkill);
+}));
+
+it("performs the standard opener", testWithConfig({spellSpeed: 420}, () => {
+    // 3 procs are guaranteed in the standard opener
+    [
+        SkillName.Verthunder3,
+        SkillName.Veraero3,
+        SkillName.Acceleration,
+        SkillName.Swiftcast,
+        SkillName.Verthunder3,
+        SkillName.Tincture,
+        SkillName.Fleche,
+        SkillName.Verthunder3,
+        SkillName.Embolden,
+        SkillName.Manafication,
+        SkillName.EnchantedRiposte,
+        SkillName.ContreSixte,
+        SkillName.EnchantedZwerchhau,
+        SkillName.Engagement,
+        SkillName.EnchantedRedoublement,
+        SkillName.CorpsACorps,
+        SkillName.Engagement,
+        SkillName.Verholy,
+        SkillName.CorpsACorps,
+        SkillName.Scorch,
+        SkillName.ViceOfThorns,
+        SkillName.Resolution,
+        SkillName.Prefulgence,
+        SkillName.GrandImpact,
+        SkillName.Acceleration,
+        SkillName.Verfire,
+        SkillName.GrandImpact,
+        SkillName.Verthunder3,
+        SkillName.Veraero3,
+        SkillName.Fleche,
+        SkillName.Verstone,
+        SkillName.Veraero3,
+        SkillName.Verfire,
+        SkillName.Veraero3,
+        SkillName.Swiftcast,
+        SkillName.Verthunder3,
+        SkillName.ContreSixte,
+    ].forEach(applySkill);
+    // wait for damage applications
+    controller.step(4);
+    const state = controller.game as RDMState;
+    expect(state.resources.get(ResourceType.WhiteMana).availableAmount()).toEqual(54);
+    expect(state.resources.get(ResourceType.BlackMana).availableAmount()).toEqual(54);
+}));
+
+it("breaks combo with manafic but not reprise", testWithConfig({}, () => {
+    const state = controller.game as RDMState;
+    state.resources.get(ResourceType.WhiteMana).overrideCurrentValue(40);
+    state.resources.get(ResourceType.BlackMana).overrideCurrentValue(40);
+    [
+        SkillName.EnchantedRiposte,
+        SkillName.EnchantedReprise, // does not break the combo or lose mana stacks
+        SkillName.EnchantedZwerchhau, // combo
+        SkillName.Manafication,
+        SkillName.EnchantedRedoublement,
+    ].forEach(applySkill);
+    // wait for damage applications
+    controller.step(4);
+    expect(state.resources.get(ResourceType.ManaStacks).availableAmount()).toEqual(3);
+    compareDamageTables([
+        {
+            skillName: SkillName.EnchantedRiposte,
+            displayedModifiers: [],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.EnchantedReprise,
+            displayedModifiers: [],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.EnchantedZwerchhau,
+            displayedModifiers: [PotencyModifierType.COMBO],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.EnchantedRedoublement,
+            displayedModifiers: [PotencyModifierType.MANAFIC],
+            hitCount: 1,
+        },
+        {
+            skillName: SkillName.Manafication,
+            displayedModifiers: [],
+            hitCount: 1,
+        },
+    ]);
 }));
 
 // it("interrupts verstone if it falls off mid-cast")

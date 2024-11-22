@@ -27,15 +27,39 @@ export const enum ShellJob {
 	PCT = "PCT",
 	RDM = "RDM",
 	RPR = "RPR",
+	DNC = "DNC",
+	SAM = "SAM",
 }
 
 // can't get this automatically from a const enum
 // jobs are in the order they appear in the job guide
 export const ALL_JOBS = [
 	ShellJob.RPR,
+	ShellJob.SAM,	
+	ShellJob.DNC,
 	ShellJob.BLM,
 	ShellJob.RDM,
 	ShellJob.PCT,
+];
+
+export const TANK_JOBS: ShellJob[] = [];
+export const HEALER_JOBS: ShellJob[] = [];
+export const MELEE_JOBS: ShellJob[] = [ShellJob.SAM];
+export const PHYSICAL_RANGED_JOBS: ShellJob[] = [ShellJob.DNC];
+export const CASTER_JOBS: ShellJob[] = [ShellJob.BLM, ShellJob.PCT, ShellJob.RDM];
+
+export const SKS_JOBS = [
+	...TANK_JOBS, ...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS
+]
+
+export const SPS_JOBS = [
+	...HEALER_JOBS, ...CASTER_JOBS
+]
+
+export const TESTING_JOBS = [
+	ShellJob.RDM,
+	ShellJob.SAM,
+	ShellJob.DNC,
 ];
 
 export const enum Expansion {

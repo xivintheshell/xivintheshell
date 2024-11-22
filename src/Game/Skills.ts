@@ -49,6 +49,12 @@ export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, ...fs: Ar
 	};
 }
 
+export interface CooldownGroupProperies {
+	cdName: ResourceType, 
+	cooldown: number, 
+	maxCharges: number
+}
+
 /**
  * Base interface for common properties between different kinds of skills.
  *
@@ -62,6 +68,9 @@ interface BaseSkill<T extends PlayerState> {
 	readonly autoUpgrade?: SkillAutoReplace;
 	readonly autoDowngrade?: SkillAutoReplace;
 	readonly cdName: ResourceType;
+	// TODO: Technically, actions are defined with an array of cooldown groups, one of which is the GCD cooldown group for actions that affect the GCD.
+	// Functionally, actions have at most the GCD and a second cooldown group, so this is enough for now.
+	readonly secondaryCd?: CooldownGroupProperies;
 	readonly aspect: Aspect;
 	readonly replaceIf: ConditionalSkillReplace<T>[]; // list of skills that can replace this one
 	readonly startOnHotbar: boolean; // false if this skill only replaces others (like paradox)
@@ -223,6 +232,11 @@ export function getBasePotency<T extends PlayerState>(state: Readonly<T>, potenc
 	return (Array.isArray(potencyArg) ? convertTraitPotencyArray(potencyArg) : fnify(potencyArg, 0))(state);
 }
 
+function normalizeAssetPath(job: ShellJob, name: SkillName) {
+	// Remove colons from the path because it's hard to put those into a file name
+	return `${job}/${name.replace(':', '')}.png`;
+}
+
 /**
  * Declare a GCD skill.
  *
@@ -261,6 +275,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	isInstantFn: StatePredicate<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
+	secondaryCooldown?: CooldownGroupProperies,
 }>): Spell<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -268,11 +283,12 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
-		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
+		assetPath: params.assetPath ?? (jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		cdName: ResourceType.cd_GCD,
+		secondaryCd: params.secondaryCooldown,
 		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
@@ -310,6 +326,7 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 	isInstantFn: StatePredicate<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
+	secondaryCooldown?: CooldownGroupProperies,
 }>): Weaponskill<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -317,11 +334,12 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 	const info: Weaponskill<T> = {
 		kind: "weaponskill",
 		name: name,
-		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
+		assetPath: params.assetPath ?? (jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		cdName: ResourceType.cd_GCD,
+		secondaryCd: params.secondaryCooldown,
 		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
@@ -338,9 +356,12 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 		applicationDelay: params.applicationDelay ?? 0,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
+	if (params.secondaryCooldown !== undefined) {
+		const {cdName, cooldown, maxCharges} = params.secondaryCooldown
+		jobs.forEach((job) => makeCooldown(job, cdName, cooldown!, maxCharges));
+	}
 	return info;
 };
-
 
 /**
  * Declare an oGCD ability.
@@ -375,6 +396,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	onApplication: EffectFn<T>,
 	cooldown: number,
 	maxCharges: number,
+	secondaryCooldown?: CooldownGroupProperies,
 }>): Ability<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -382,11 +404,12 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	const info: Ability<T> = {
 		kind: "ability",
 		name: name,
-		assetPath: params.assetPath ?? (jobs.length === 1 ? `${jobs[0]}/${name}.png` : "General/Missing.png"),
+		assetPath: params.assetPath ?? (jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		cdName: cdName,
+		secondaryCd: params.secondaryCooldown,
 		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
@@ -402,6 +425,10 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.cooldown !== undefined) {
 		jobs.forEach((job) => makeCooldown(job, cdName, params.cooldown!, params.maxCharges ?? 1));
+	}
+	if (params.secondaryCooldown !== undefined) {
+		const {cdName, cooldown, maxCharges} = params.secondaryCooldown
+		jobs.forEach((job) => makeCooldown(job, cdName, cooldown!, maxCharges));
 	}
 	return info;
 }
@@ -421,6 +448,8 @@ export function makeResourceAbility<T extends PlayerState>(
 	cdName: ResourceType,
 	params: {
 		rscType: ResourceType,
+		autoUpgrade?: SkillAutoReplace,
+		autoDowngrade?: SkillAutoReplace,
 		replaceIf?: ConditionalSkillReplace<T>[],
 		startOnHotbar?: boolean,
 		highlightIf?: StatePredicate<T>,
@@ -434,6 +463,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		assetPath?: string,
 		cooldown: number,
 		maxCharges?: number,
+		secondaryCooldown?: CooldownGroupProperies,
 	}
 ): Ability<T> {
 	// When the ability is applied:
@@ -454,6 +484,8 @@ export function makeResourceAbility<T extends PlayerState>(
 	);
 	return makeAbility(jobs, name, unlockLevel, cdName, {
 		potency: params.potency,
+		autoUpgrade: params.autoUpgrade,
+		autoDowngrade: params.autoDowngrade,
 		jobPotencyModifiers: params.jobPotencyModifiers,
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
@@ -465,6 +497,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		assetPath: params.assetPath,
 		cooldown: params.cooldown,
 		maxCharges: params.maxCharges,
+		secondaryCooldown: params.secondaryCooldown
 	});
 };
 

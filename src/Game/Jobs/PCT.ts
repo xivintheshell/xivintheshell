@@ -56,7 +56,7 @@ makePCTResource(ResourceType.HammerCombo, 2, {timeout: 30});
 makePCTResource(ResourceType.Addle, 1, {timeout: 15});
 makePCTResource(ResourceType.Swiftcast, 1, {timeout: 10});
 makePCTResource(ResourceType.LucidDreaming, 1, {timeout: 21});
-makePCTResource(ResourceType.Surecast, 1, {timeout: 10});
+makePCTResource(ResourceType.Surecast, 1, {timeout: 6.5});
 
 // === JOB GAUGE AND STATE ===
 export class PCTState extends GameState {

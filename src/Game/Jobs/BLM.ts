@@ -53,7 +53,7 @@ makeBLMResource(ResourceType.Triplecast, 3, {timeout: 15.7});
 makeBLMResource(ResourceType.Addle, 1, {timeout: 15});
 makeBLMResource(ResourceType.Swiftcast, 1, {timeout: 10});
 makeBLMResource(ResourceType.LucidDreaming, 1, {timeout: 21});
-makeBLMResource(ResourceType.Surecast, 1, {timeout: 10});
+makeBLMResource(ResourceType.Surecast, 1, {timeout: 6.5});
 
 // === JOB GAUGE AND STATE ===
 export class BLMState extends GameState {
@@ -608,7 +608,7 @@ const addThunderPotencies = (game: BLMState, node: ActionNode, skillName: typeof
 			sourceTime: game.getDisplayTime(),
 			sourceSkill: skillName,
 			aspect: Aspect.Lightning,
-			basePotency: game.config.adjustedDoTPotency(thunderTickPotency),
+			basePotency: game.config.adjustedDoTPotency(thunderTickPotency, "sps"),
 			snapshotTime: undefined,
 			description: "DoT " + (i+1) + `/${thunderTicks}`
 		});

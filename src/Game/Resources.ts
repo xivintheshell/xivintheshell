@@ -1,4 +1,4 @@
-import {Debug, ResourceType} from "./Common"
+import {Debug, ResourceType, WarningType} from "./Common"
 import {ShellJob, ALL_JOBS} from "../Controller/Common";
 import {GameState} from "./GameState";
 import {ActionNode} from "../Controller/Record";
@@ -7,7 +7,8 @@ import {BLMState} from "./Jobs/BLM";
 export enum EventTag {
 	ManaGain,
 	MpTick,
-	LucidTick
+	LucidTick,
+	MeditateTick,
 }
 
 export class Event {
@@ -269,6 +270,7 @@ export type ResourceInfo = {
 	defaultValue: number,
 	maxValue: number,
 	maxTimeout: number,
+	warningOnTimeout?: WarningType,
 }
 export type CoolDownInfo = {
 	isCoolDown: true,
@@ -295,12 +297,14 @@ export function getAllResources(job: ShellJob): Map<ResourceType, ResourceOrCool
 export function makeResource(job: ShellJob, rsc: ResourceType, maxValue: number, params: Partial<{
 	default: number,
 	timeout: number,
+	warningOnTimeout: WarningType,
 }>) {
 	getAllResources(job).set(rsc, {
 		isCoolDown: false,
 		defaultValue: params.default ?? 0,
 		maxValue: maxValue,
 		maxTimeout: params.timeout ?? -1,
+		warningOnTimeout: params.warningOnTimeout,
 	});
 }
 
@@ -316,6 +320,9 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, ResourceType.Mana, 10000, {default: 10000});
 	makeResource(job, ResourceType.Tincture, 1, {timeout: 30});
 	makeResource(job, ResourceType.Sprint, 1, {timeout: 10});
+	// positionals are assumed on by default -- we'll add the ability to toggle them later
+	makeResource(job, ResourceType.RearPositional, 1, {default: 1});
+	makeResource(job, ResourceType.FlankPositional, 1, {default: 1});
 });
 
 // Add an ability to the resource map of the specified job.

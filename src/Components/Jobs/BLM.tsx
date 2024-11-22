@@ -9,8 +9,8 @@ import {
 import {ResourceType} from "../../Game/Common";
 import {TraitName, Traits} from "../../Game/Traits";
 import {BLMState} from "../../Game/Jobs/BLM";
-import {getCurrentThemeColors} from "../../Components/ColorTheme";
-import {localize} from "../../Components/Localization";
+import {getCurrentThemeColors} from "../ColorTheme";
+import {localize} from "../Localization";
 
 [
     ResourceType.Triplecast,

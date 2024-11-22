@@ -1,10 +1,66 @@
 [
 	{
+		"date": "11/21/24",
+		"changes": [
+			"[SAM] Fixed a bug where Fuka haste was doubly applied",
+			"[SAM] Added GCD under Fuka in playback control"
+		]
+	},
+	{
+		"date": "11/20/24",
+		"changes": [
+			"[DNC] Added initial DNC support",
+			"[SAM] Added initial SAM support (thank you Sterling Sylva for the initial work)",
+			"Added support for skill speed in addition to spell speed"
+		]
+	},
+	{
+		"date": "11/17/24",
+		"changes": [
+			"[RDM] Fix Manafication CD (thanks 云青渔语)",
+			"[all casters] Fix Surecast duration: previously 10s, now 6.5s (ty erii)"
+		]
+	},
+	{
+		"date": "11/16/24",
+		"changes": [
+			"Make DET use main stat formula and default to 440",
+			"Add hyperlinks for xivgear and etro"
+		]
+	},
+	{
+		"date": "11/15/24",
+		"changes": [
+			"(thank you Yuyuka for reporting a bunch of RDM bugs)",
+			"[RDM] Added some additional warnings on unintended buff drops, overwrites, and combo breaks",
+			"[RDM] Fixed the duration of the Acceleration buff",
+			"[RDM] Fixed the MP costs of Veraero II/Verthunder II",
+			"[RDM] Fixed Manafication failing to interrupt combos",
+			"[RDM] Fixed Manafication being usable out of combat",
+			"[RDM] Fixed Enchanted Reprise clearing mana stacks",
+			"[RDM] Made Prefulgence and Vice of Thorns into button replacements"
+		]
+	},
+	{
+		"date": "11/14/24",
+		"changes": [
+			"(thank you Wan Shott for reporting a bunch of RDM bugs)",
+			"[RDM] Fixed bugs where Verfire and Grand Impact didn't grant correct mana",
+			"[RDM] Fixed a bug where it was possible to use un-enchanted Moulinet under certain incorrect conditions",
+			"mark newly-implemented jobs as in testing and display a warning message when using those jobs"
+		]
+	},
+	{
 		"date": "11/13/24",
 		"changes": [
 			"Fixed a bug where party buff potencies were not displayed",
-			"Fixed a bug where using two hammer combos within 30s of each other caused the combo to break",
-			"Fixed a bug where level synced RDM still received Grand Impact Ready from Acceleration"
+			"[PCT] Fixed a bug where using two hammer combos within 30s of each other caused the combo to break",
+			"[RDM] Fixed a bug where level synced RDM still received Grand Impact Ready from Acceleration",
+			"[RDM] Fixed a bug where Acceleration did not always grant a Verstone/Verfire proc",
+			"[RDM] Fixed a bug where certain role buffs were not being displayed on the hotbar",
+			"[RDM] Fixed a bug where buffs were overlapping the hotbar",
+			"[RDM] Fixed a bug where Contre Sixte's cooldown was improperly affected by traits",
+			"Removed debug and implementation notes sections (see repository wiki for implementation notes)"
 		]
 	},
 	{

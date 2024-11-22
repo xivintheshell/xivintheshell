@@ -13,12 +13,16 @@ import {getAutoReplacedSkillName, getConditionalReplacement, getNormalizedSkillN
 import {BLMState} from "../Game/Jobs/BLM";
 import {PCTState} from "../Game/Jobs/PCT";
 import {RDMState} from "../Game/Jobs/RDM";
+import { DNCState } from "../Game/Jobs/DNC";
+import {SAMState} from "../Game/Jobs/SAM";
 import {Buff} from "../Game/Buffs";
 import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 import {BLMStatusPropsGenerator} from "../Components/Jobs/BLM";
 import {PCTStatusPropsGenerator} from "../Components/Jobs/PCT";
 import {RDMStatusPropsGenerator} from "../Components/Jobs/RDM";
+import { DNCStatusPropsGenerator } from "../Components/Jobs/DNC";
+import {SAMStatusPropsGenerator} from "../Components/Jobs/SAM";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
@@ -40,6 +44,7 @@ import {
 	calculateSelectedStats,
 	getTargetableDurationBetween
 } from "./DamageStatistics";
+import { XIVMath } from "../Game/XIVMath";
 import { RPRState } from "../Game/Jobs/RPR";
 import { RPRStatusPropsGenerator } from "../Components/Jobs/RPR";
 
@@ -53,6 +58,10 @@ const newGameState = (config: GameConfig) => {
 		return new PCTState(config);
 	} else if (config.job === ShellJob.RDM) {
 		return new RDMState(config);
+	} else if (config.job === ShellJob.DNC) {
+		return new DNCState(config);
+	} else if (config.job === ShellJob.SAM) {
+		return new SAMState(config);
 	} else if (config.job === ShellJob.RPR) {
 		return new RPRState(config);
 	}
@@ -359,6 +368,9 @@ class Controller {
 		if (content.config.level) {
 			content.config.level = parseInt(content.config.level);
 		}
+		if (content.config.skillSpeed === undefined) {
+			content.config.skillSpeed = XIVMath.getSubstatBase(content.config.level as LevelSync)
+		}
 		if (content.config.shellVersion === undefined) {
 			content.config.shellVersion = ShellVersion.Initial;
 		}
@@ -614,6 +626,17 @@ class Controller {
 		}
 	}
 
+	reportMeditateTick(time: number, sourceDesc: string) {
+		if (!this.#bInSandbox) {
+			this.timeline.addElement({
+				type: ElemType.MeditateTickMark,
+				time: time,
+				displayTime: this.game.getDisplayTime(),
+				sourceDesc: sourceDesc,
+			});
+		}
+	}
+
 	reportDotTick(rawTime: number) {
 		if (!this.#bInSandbox) {
 			this.#thunderDotTickTimes.push(rawTime)
@@ -657,23 +680,34 @@ class Controller {
 			animLockCountdown: game.resources.timeTillReady(ResourceType.NotAnimationLocked),
 			canMove: game.resources.get(ResourceType.Movement).available(1),
 		};
-		if (typeof updateStatusDisplay !== "undefined") {
-			const propsGenerator = game.job === ShellJob.PCT
-				? new PCTStatusPropsGenerator(game as PCTState)
-				: game.job === ShellJob.RDM
-				? new RDMStatusPropsGenerator(game as RDMState)
-				: game.job === ShellJob.RPR
-				? new RPRStatusPropsGenerator(game as RPRState)
-				: new BLMStatusPropsGenerator(game as BLMState);
-			updateStatusDisplay({
-				time: game.getDisplayTime(),
-				resources: propsGenerator.getResourceViewProps(),
-				resourceLocks: resourceLocksData,
-				enemyBuffs: propsGenerator.getEnemyBuffViewProps(),
-				selfBuffs: propsGenerator.getSelfBuffViewProps(),
-				level: game.config.level,
-			});
+		let propsGenerator;
+		switch(game.job) {
+			case ShellJob.PCT:
+				propsGenerator = new PCTStatusPropsGenerator(game as PCTState);
+				break;
+			case ShellJob.RDM:
+				propsGenerator = new RDMStatusPropsGenerator(game as RDMState);
+				break;
+			case ShellJob.DNC:
+				propsGenerator = new DNCStatusPropsGenerator(game as DNCState);
+				break;
+			case ShellJob.SAM:
+				propsGenerator = new SAMStatusPropsGenerator(game as SAMState);
+				break;
+			case ShellJob.RPR:
+				propsGenerator = new RPRStatusPropsGenerator(game as RPRState);
+				break;
+			default:
+				propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
 		}
+		updateStatusDisplay({
+			time: game.getDisplayTime(),
+			resources: propsGenerator.getResourceViewProps(),
+			resourceLocks: resourceLocksData,
+			enemyBuffs: propsGenerator.getEnemyBuffViewProps(),
+			selfBuffs: propsGenerator.getSelfBuffViewProps(),
+			level: game.config.level,
+		}, propsGenerator.statusLayoutFn);
 	}
 
 	updateTimelineDisplay() {
@@ -732,6 +766,7 @@ class Controller {
 		job: ShellJob,
 		level: LevelSync,
 		spellSpeed: number,
+		skillSpeed: number,
 		criticalHit: number,
 		directHit: number,
 		determination: number,
@@ -832,11 +867,18 @@ class Controller {
 			node.tmp_endLockTime = this.game.time + lockDuration;
 
 			if (!this.#bInSandbox) { // this block is run when NOT viewing historical state (aka run when receiving input)
-				let newStatus = this.game.getSkillAvailabilityStatus(skillName); // refresh to get re-captured recast time
+				let newStatus = this.game.getSkillAvailabilityStatus(skillName, true); // refresh to get re-captured recast time
 				let skill = this.game.skillsList.get(skillName);
 				let isGCD = skill.cdName === ResourceType.cd_GCD;
 				let isSpellCast = status.castTime > 0 && !status.instantCast;
 				let snapshotTime = isSpellCast ? status.castTime - GameConfig.getSlidecastWindow(status.castTime) : 0;
+				let recastDuration = newStatus.cdRecastTime;
+				// special case for meditate, which is an ability that roles the GCD
+				if (skillName === SkillName.Meditate) {
+					isGCD = true;
+					// get the recast duration of a random GCD
+					recastDuration = this.game.getSkillAvailabilityStatus(SkillName.Yukikaze).cdRecastTime;
+				}
 				this.timeline.addElement({
 					type: ElemType.Skill,
 					displayTime: this.game.getDisplayTime(),
@@ -846,7 +888,7 @@ class Controller {
 					time: this.game.time,
 					relativeSnapshotTime: snapshotTime,
 					lockDuration: lockDuration,
-					recastDuration: newStatus.cdRecastTime,
+					recastDuration: recastDuration,
 					node: node,
 				});
 				this.#actionsLogCsv.push({

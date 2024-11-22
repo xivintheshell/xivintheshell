@@ -13,6 +13,15 @@ export const enum PotencyModifierType {
 	COMBO,
 	AUTO_CDH,
 	PARTY,
+
+	STANDARD_SINGLE, STANDARD_DOUBLE,
+	TECHNICAL_SINGLE, TECHNICAL_DOUBLE, TECHNICAL_TRIPLE, TECHNICAL_QUADRUPLE,
+	DEVILMENT,
+
+	FUGETSU,
+	AUTO_CRIT,
+	YATEN,
+	POSITIONAL,
 	ARCANECIRCLE,
 	DEATHSDESIGN,
 }
@@ -51,6 +60,12 @@ export const Modifiers = {
 		source: PotencyModifierType.POT,
 		damageFactor: 1,
 	} as PotencyMultiplier,
+	AutoCrit: {
+		kind: "critDirect",
+		source: PotencyModifierType.AUTO_CRIT,
+		critFactor: 1,
+		dhFactor: 0,
+	} as CritDirectMultiplier,
 	AutoCDH: {
 		kind: "critDirect",
 		source: PotencyModifierType.AUTO_CDH,
@@ -78,6 +93,62 @@ export const Modifiers = {
 		source: PotencyModifierType.MANAFIC,
 		damageFactor: 1.05,
 	} as PotencyMultiplier,
+	SingleStandardFinish: {
+		kind: "multiplier",
+		source: PotencyModifierType.STANDARD_SINGLE,
+		damageFactor: 1.02,
+	} as PotencyMultiplier,
+	DoubleStandardFinish: {
+		kind: "multiplier",
+		source: PotencyModifierType.STANDARD_DOUBLE,
+		damageFactor: 1.05,
+	} as PotencyMultiplier,
+	SingleTechnicalFinish: {
+		kind: "multiplier",
+		source: PotencyModifierType.TECHNICAL_SINGLE,
+		damageFactor: 1.01,
+	} as PotencyMultiplier,
+	DoubleTechnicalFinish: {
+		kind: "multiplier",
+		source: PotencyModifierType.TECHNICAL_DOUBLE,
+		damageFactor: 1.02,
+	} as PotencyMultiplier,
+	TripleTechnicalFinish: {
+		kind: "multiplier",
+		source: PotencyModifierType.TECHNICAL_TRIPLE,
+		damageFactor: 1.03,
+	} as PotencyMultiplier,
+	QuadrupleTechnicalFinish: {
+		kind: "multiplier",
+		source: PotencyModifierType.TECHNICAL_QUADRUPLE,
+		damageFactor: 1.05,
+	} as PotencyMultiplier,
+	Devilment: {
+		kind: "critDirect",
+		source: PotencyModifierType.DEVILMENT,
+		critFactor: 0.2,
+		dhFactor: 0.2,
+	} as CritDirectMultiplier,
+	FugetsuBase: {
+		kind: "multiplier",
+		source: PotencyModifierType.FUGETSU,
+		damageFactor: 1.10,
+	} as PotencyMultiplier,
+	FugetsuEnhanced: {
+		kind: "multiplier",
+		source: PotencyModifierType.FUGETSU,
+		damageFactor: 1.13,
+	} as PotencyMultiplier,
+	YatenpiBase: {
+		kind: "adder",
+		source: PotencyModifierType.YATEN,
+		additiveAmount: 160,
+	} as PotencyAdder,
+	YatenpiEnhanced: {
+		kind: "adder",
+		source: PotencyModifierType.YATEN,
+		additiveAmount: 170,
+	} as PotencyAdder,
 	ArcaneCircle: {
 		kind: "multiplier",
 		source: PotencyModifierType.ARCANECIRCLE,
@@ -94,6 +165,14 @@ export function makeComboModifier(addend: number): PotencyAdder {
 	return {
 		kind: "adder",
 		source: PotencyModifierType.COMBO,
+		additiveAmount: addend,
+	};
+}
+
+export function makePositionalModifier(addend: number): PotencyAdder {
+	return {
+		kind: "adder",
+		source: PotencyModifierType.POSITIONAL,
 		additiveAmount: addend,
 	};
 }
@@ -139,13 +218,16 @@ export class Potency {
 		let totalDhFactor = 0;
 
 		let isAutoCDH = false;
+		let isAutoCrit = false;
 
 		this.modifiers.forEach(m=>{
 			if (m.source===PotencyModifierType.POT) totalDamageFactor *= props.tincturePotencyMultiplier;
 			else if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
+			else if (m.source === PotencyModifierType.AUTO_CRIT) isAutoCrit = true;
 			else if (m.kind === "multiplier") totalDamageFactor *= m.damageFactor;
 			else if (m.kind === "adder") totalAdditiveAmount += m.additiveAmount;
 		});
+		console.assert(!(isAutoCDH && isAutoCrit), "cannot be both auto-crit and auto-CDH");
 
 		if (props.includePartyBuffs && this.snapshotTime) {
 			controller.game.getPartyBuffs(this.snapshotTime).forEach(buff => {
@@ -161,6 +243,7 @@ export class Potency {
 
 		let amt = base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor);
 		if (isAutoCDH) amt *= this.#calculateAutoCDHModifier(totalCritFactor, totalDhFactor);
+		else if (isAutoCrit) amt *= this.#calculateAutoCritModifier(totalCritFactor, totalDhFactor);
 		return amt;
 	}
 
@@ -196,11 +279,10 @@ export class Potency {
 		return buffed / base;
 	}
 
-	#calculateAutoCritModifier(critBonus: number) {
-		// TODO check if this is the correct formula; may need to modify XIVMath.calculateDamage
+	#calculateAutoCritModifier(critBonus: number, dhBonus: number) {
 		const level = this.config.level;
-		const base = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, critBonus, 0);
-		const buffed = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, 1+critBonus, 1);
+		const base = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, critBonus, dhBonus);
+		const buffed = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, 1+critBonus, dhBonus);
 
 		return buffed / base;
 	}
