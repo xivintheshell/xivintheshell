@@ -40,6 +40,8 @@ import {
 	calculateSelectedStats,
 	getTargetableDurationBetween
 } from "./DamageStatistics";
+import { RPRState } from "../Game/Jobs/RPR";
+import { RPRStatusPropsGenerator } from "../Components/Jobs/RPR";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 require("../Game/Jobs/RoleActions");
@@ -51,6 +53,8 @@ const newGameState = (config: GameConfig) => {
 		return new PCTState(config);
 	} else if (config.job === ShellJob.RDM) {
 		return new RDMState(config);
+	} else if (config.job === ShellJob.RPR) {
+		return new RPRState(config);
 	}
 	return new BLMState(config);
 };
@@ -324,7 +328,7 @@ class Controller {
 		let line = new Line();
 		line.name = name;
 		let itr = this.record.getFirstSelection();
-		while (itr !== this.record.getLastSelection()?.next ?? undefined) {
+		while (itr !== (this.record.getLastSelection()?.next ?? undefined)) {
 			itr = itr as ActionNode;
 			if (itr.type === ActionType.Skill) {
 				line.addActionNode(itr.getClone());
@@ -658,6 +662,8 @@ class Controller {
 				? new PCTStatusPropsGenerator(game as PCTState)
 				: game.job === ShellJob.RDM
 				? new RDMStatusPropsGenerator(game as RDMState)
+				: game.job === ShellJob.RPR
+				? new RPRStatusPropsGenerator(game as RPRState)
 				: new BLMStatusPropsGenerator(game as BLMState);
 			updateStatusDisplay({
 				time: game.getDisplayTime(),

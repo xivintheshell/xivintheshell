@@ -13,6 +13,8 @@ export const enum PotencyModifierType {
 	COMBO,
 	AUTO_CDH,
 	PARTY,
+	ARCANECIRCLE,
+	DEATHSDESIGN,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -75,6 +77,16 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.MANAFIC,
 		damageFactor: 1.05,
+	} as PotencyMultiplier,
+	ArcaneCircle: {
+		kind: "multiplier",
+		source: PotencyModifierType.ARCANECIRCLE,
+		damageFactor: 1.03,
+	} as PotencyMultiplier,
+	DeathsDesign: {
+		kind: "multiplier",
+		source: PotencyModifierType.DEATHSDESIGN,
+		damageFactor: 1.10,
 	} as PotencyMultiplier,
 };
 

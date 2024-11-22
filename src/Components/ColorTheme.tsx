@@ -50,6 +50,16 @@ export type RDMResourceColors = {
 	accelBuff: string,
 }
 
+export type RPRResourceColors = {
+	soulGaugeLow: string,
+	soulGaugeHigh: string,
+	shroudGaugeLow: string,
+	shroudGaugeHigh: string,
+	lemureShroud: string,
+	voidShroudLow: string,
+	voidShroudHigh: string
+}
+
 export type JobAccentColors = {
 	[ShellJob.BLM]: string,
 	[ShellJob.PCT]: string,
@@ -82,6 +92,7 @@ export type ThemeColors = {
 	blm: BLMResourceColors,
 	pct: PCTResourceColors,
 	rdm: RDMResourceColors,
+	rpr: RPRResourceColors,
 	timeline: {
 		ruler: string,
 		tracks: string,
@@ -158,6 +169,15 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				manaficBuff: "#c169c2", // lavender
 				accelBuff: "#f0d1e8", // very light pink
 			},
+			rpr: {
+				soulGaugeLow: "#660929",
+				soulGaugeHigh: "#e5004e",
+				shroudGaugeLow: "#03706c",
+				shroudGaugeHigh: "#00fcf3",
+				lemureShroud: "#53ffff",
+				voidShroudLow: "#5c125c",
+				voidShroudHigh: "#ff04ff"
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -230,6 +250,15 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				emboldenBuff: "#c91310", // dark red
 				manaficBuff: "#530954", // dark purple
 				accelBuff: "#c973b4", // lighter purple
+			},
+			rpr: {
+				soulGaugeLow: "#660929",
+				soulGaugeHigh: "#e5004e",
+				shroudGaugeLow: "#03706c",
+				shroudGaugeHigh: "#00fcf3",
+				lemureShroud: "#53ffff",
+				voidShroudLow: "#5c125c",
+				voidShroudHigh: "#ff04ff"
 			},
 			timeline: {
 				ruler: "#e9e9e9",

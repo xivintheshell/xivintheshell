@@ -1,6 +1,7 @@
 import {BLMSkillName, BLMResourceType, BLMCooldownType} from "./Constants/BLM";
 import {PCTSkillName, PCTResourceType, PCTCooldownType} from "./Constants/PCT";
 import {RDMSkillName, RDMResourceType, RDMCooldownType} from "./Constants/RDM";
+import { RPRCooldownType, RPRResourceType, RPRSkillName } from "./Constants/RPR";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -49,6 +50,7 @@ export const SkillName = {
 	...BLMSkillName,
 	...PCTSkillName,
 	...RDMSkillName,
+	...RPRSkillName,
 	...GeneralSkillName,
 }
 
@@ -56,7 +58,8 @@ export const SkillName = {
 export type SkillName = GeneralSkillName
 	| BLMSkillName
 	| PCTSkillName
-	| RDMSkillName;
+	| RDMSkillName
+	| RPRSkillName;
 
 export const enum SkillReadyStatus {
 	Ready = "ready",
@@ -132,13 +135,15 @@ const CooldownType = {
 	...BLMCooldownType,
 	...PCTCooldownType,
 	...RDMCooldownType,
+	...RPRCooldownType
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 type CooldownType = GeneralCooldownType
 	| BLMCooldownType
 	| PCTCooldownType
-	| RDMCooldownType;
+	| RDMCooldownType
+	| RPRCooldownType;
 
 export const ResourceType = {
 	...CooldownType,
@@ -146,6 +151,7 @@ export const ResourceType = {
 	...BLMResourceType,
 	...PCTResourceType,
 	...RDMResourceType,
+	...RPRResourceType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -153,7 +159,8 @@ export type ResourceType = CooldownType
 	| GeneralResourceType
 	| BLMResourceType
 	| PCTResourceType
-	| RDMResourceType;
+	| RDMResourceType
+	| RPRResourceType;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",

@@ -51,6 +51,20 @@ export const enum TraitName {
 	EnhancedAccelerationII,
 	EnhancedManaficationIII,
 
+	Hellsgate,
+	TemperedSoul,
+	ShroudGauge,
+	EnhancedArcaneCrest,
+	MeleeMasteryII,
+	VoidSoul,
+	EnhancedArcaneCircle,
+	EnhancedEnshroud,
+	EnhancedSecondWind,
+	MeleeMasteryIII,
+	EnhancedGluttony,
+	EnhancedFeint,
+	EnhancedPlentifulHarvest,
+
 	Never,
 }
 
@@ -98,6 +112,21 @@ export class Traits {
 			[TraitName.EnchantedBladeMastery, 94],
 			[TraitName.EnhancedAccelerationII, 96],
 			[TraitName.EnhancedManaficationIII, 100],
+			
+			[TraitName.Hellsgate, 74],
+			[TraitName.TemperedSoul, 78],
+			[TraitName.ShroudGauge, 80],
+			[TraitName.EnhancedArcaneCrest, 84],
+			[TraitName.MeleeMasteryII, 84],
+			[TraitName.VoidSoul, 86],
+			[TraitName.EnhancedArcaneCircle, 88],
+			[TraitName.EnhancedEnshroud, 92],
+			[TraitName.EnhancedSecondWind, 94],
+			[TraitName.MeleeMasteryIII, 94],
+			[TraitName.EnhancedGluttony, 96],
+			[TraitName.EnhancedFeint, 98],
+			[TraitName.EnhancedPlentifulHarvest, 100],
+
 		].map(([name, level]) => [name, new Trait(name, level)]));
 	}
 
