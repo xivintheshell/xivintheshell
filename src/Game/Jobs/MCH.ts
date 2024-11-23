@@ -1,13 +1,28 @@
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, ResourceType, SkillName, WarningType } from "../Common";
+import { Aspect, BuffType, ResourceType, SkillName, WarningType } from "../Common";
 import { MCHResourceType } from "../Constants/MCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { makeComboModifier, Modifiers, Potency, PotencyModifier} from "../Potency";
-import { CoolDown, getResourceInfo, makeResource, ResourceInfo, Event, DoTBuff } from "../Resources";
-import { Ability, combineEffects, ConditionalSkillReplace, CooldownGroupProperies, EffectFn, getBasePotency, makeAbility, makeResourceAbility, makeWeaponskill, NO_EFFECT, ResourceCalculationFn, SkillAutoReplace, StatePredicate, Weaponskill } from "../Skills";
+import { makeComboModifier, Modifiers, Potency, PotencyModifier, PotencyMultiplier} from "../Potency";
+import { CoolDown, getResourceInfo, makeResource, ResourceInfo, Event, DoTBuff, Resource } from "../Resources";
+import { 
+    Ability, 
+    combineEffects, 
+    ConditionalSkillReplace, 
+    CooldownGroupProperies, 
+    EffectFn, 
+    getBasePotency, 
+    makeAbility, 
+    makeResourceAbility, 
+    makeWeaponskill, 
+    NO_EFFECT, 
+    ResourceCalculationFn, 
+    SkillAutoReplace, 
+    StatePredicate, 
+    Weaponskill 
+} from "../Skills";
 import { TraitName, Traits } from "../Traits";
 
 const makeMCHResource = (rsc: ResourceType, maxValue: number, params? : {timeout?: number, default?: number}) => {
@@ -20,7 +35,7 @@ makeMCHResource(ResourceType.BatteryGauge, 100)
 
 // Status Effects
 makeMCHResource(ResourceType.Reassembled, 1, {timeout: 5})
-makeMCHResource(ResourceType.Overheated, 5, {timeout: 10, default: 5})
+makeMCHResource(ResourceType.Overheated, 5, {timeout: 10})
 makeMCHResource(ResourceType.Wildfire, 1, {timeout: 10}) 
 makeMCHResource(ResourceType.WildfireSelf, 1, {timeout: 10}) 
 makeMCHResource(ResourceType.Flamethrower, 1, {timeout: 10})
@@ -42,14 +57,63 @@ makeMCHResource(ResourceType.WildfireHits, 6)
 
 const COMBO_GCDS: SkillName[] = [SkillName.HeatedCleanShot, SkillName.HeatedSlugShot, SkillName.HeatedSplitShot]
 export class MCHState extends GameState {
+    dotTickOffset: number
+
     constructor (config: GameConfig) {
         super(config)
+
+        this.dotTickOffset = this.nonProcRng() * 3.0;
 
         // Unlike standard and technical, Air Anchor and Chain Saw's cooldowns are affected by skill speed
         this.cooldowns.set(new CoolDown(ResourceType.cd_AirAnchor, this.config.adjustedSksGCD(40), 1, 1))
         this.cooldowns.set(new CoolDown(ResourceType.cd_Chainsaw, this.config.adjustedSksGCD(60), 1, 1))
 
+        if (!Traits.hasUnlocked(TraitName.QueensGambit, config.level)) {
+            this.resources.set(new Resource(ResourceType.QueenFinishers, 1, 0))
+            this.resources.set(new Resource(ResourceType.Queen, 6, 0))
+        }
+
+        if (!Traits.hasUnlocked(TraitName.EnhancedReassemble, config.level)) {
+            this.cooldowns.set(new CoolDown(ResourceType.cd_Reassemble, 55, 1, 1))
+        }
+        if (!Traits.hasUnlocked(TraitName.EnhancedMultiWeapon, config.level)) {
+            this.cooldowns.set(new CoolDown(ResourceType.cd_Drill, 20, 1, 1))
+        }
+
+        if (!Traits.hasUnlocked(TraitName.EnhancedTactician, this.config.level)) {
+            this.cooldowns.set(new CoolDown(ResourceType.cd_Tactician, 120, 1, 1))
+        }
+
         this.registerRecurringEvents();
+    }
+
+    override registerRecurringEvents() {
+        super.registerRecurringEvents();
+        
+        let recurringDotTick = () => {
+            const dotBuff = this.resources.get(ResourceType.Bioblaster) as DoTBuff;
+            if (dotBuff.available(1)) {
+                dotBuff.tickCount++;
+                if (dotBuff.node) {
+                    const p = dotBuff.node.getPotencies()[dotBuff.tickCount];
+                    controller.resolvePotency(p);
+                }
+            }
+
+            // increment count
+            if (this.getDisplayTime() >= 0) {
+                controller.reportDotTick(this.time);
+            }
+
+            // queue the next tick
+            this.addEvent(new Event("DoT tick", 3, ()=>{
+                recurringDotTick();
+            }));
+        };
+
+        let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
+        while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
+        this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
     }
 
     processComboStatus(skill: SkillName) {
@@ -110,7 +174,7 @@ export class MCHState extends GameState {
     resolveQueenPotency(node: ActionNode) {
         const queenActionsRemaining = this.resources.get(ResourceType.QueenPunches).availableAmount() + this.resources.get(ResourceType.QueenFinishers).availableAmount()
         const potencyIndex = this.resources.get(ResourceType.Queen).availableAmount() - queenActionsRemaining
-        
+
         if (potencyIndex < 0) { return }
 
         const queenPotency = node.getPotencies()[potencyIndex]
@@ -157,7 +221,8 @@ export class MCHState extends GameState {
         this.tryConsumeResource(ResourceType.Wildfire)
 
         // Potency stuff
-        const basePotency = Math.min(this.resources.get(ResourceType.WildfireHits).availableAmount(), 6) * 240
+        const potencyPerHit = Traits.hasUnlocked(TraitName.EnhancedWildfire, this.config.level) ? 240 : 100
+        const basePotency = Math.min(this.resources.get(ResourceType.WildfireHits).availableAmount(), 6) * potencyPerHit
         const potencyNode = (this.resources.get(ResourceType.Wildfire) as DoTBuff).node
 
         if (potencyNode === undefined) { return }
@@ -169,10 +234,8 @@ export class MCHState extends GameState {
     }
 }
 
-
-
 const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
-	autoUpgrade?: SkillAutoReplace,
+    autoUpgrade?: SkillAutoReplace,
     assetPath?: string,
     replaceIf?: ConditionalSkillReplace<MCHState>[],
     startOnHotbar?: boolean,
@@ -187,6 +250,7 @@ const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
     validateAttempt?: StatePredicate<MCHState>,
     onConfirm?: EffectFn<MCHState>,
     highlightIf?: StatePredicate<MCHState>,
+    onApplication?: EffectFn<MCHState>,
     secondaryCooldown?: CooldownGroupProperies,
 }): Weaponskill<MCHState> => {
     const onConfirm: EffectFn<MCHState> = combineEffects(
@@ -203,9 +267,11 @@ const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
             }
         }
     );
+    const onApplication: EffectFn<MCHState> = params.onApplication ?? NO_EFFECT;
     return makeWeaponskill(ShellJob.MCH, name, unlockLevel, {
         ...params,
         onConfirm: onConfirm,
+        onApplication: onApplication,
         jobPotencyModifiers: (state) => {
             const mods: PotencyModifier[] = [];
             if (params.combo && state.resources.get(params.combo.resource).availableAmount() === params.combo.resourceValue) {
@@ -220,7 +286,7 @@ const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
 }
 
 const makeAbility_MCH = (name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
-	autoUpgrade?: SkillAutoReplace,
+    autoUpgrade?: SkillAutoReplace,
     potency?: number | Array<[TraitName, number]>,
     replaceIf?: ConditionalSkillReplace<MCHState>[],
     highlightIf?: StatePredicate<MCHState>,
@@ -308,8 +374,8 @@ makeWeaponskill_MCH(SkillName.HeatedCleanShot, 64, {
     ],
     combo: {
         potency: [
-            [TraitName.Never, 380],
-            [TraitName.MarksmansMastery, 400],
+            [TraitName.Never, 360],
+            [TraitName.MarksmansMastery, 380],
             [TraitName.MarksmansMasteryII, 420],
         ],
         resource: ResourceType.HeatCombo,
@@ -328,7 +394,7 @@ makeResourceAbility_MCH(SkillName.Reassemble, 10, ResourceType.cd_Reassemble, {
     rscType: ResourceType.Reassembled,
     applicationDelay: 0,
     cooldown: 55,
-    maxCharges: 2, // TODO - Reduce in constructor by trait
+    maxCharges: 2, // charges reduced as needed in constructor by trait
 })
 
 makeWeaponskill_MCH(SkillName.Drill, 58, {
@@ -338,7 +404,7 @@ makeWeaponskill_MCH(SkillName.Drill, 58, {
     secondaryCooldown: {
         cdName: ResourceType.cd_Drill,
         cooldown: 20,
-        maxCharges: 2, // TODO - Reduce in constructor by trait
+        maxCharges: 2, // charges reduced as needed in constructor by trait
     }
 })
 
@@ -348,7 +414,7 @@ makeWeaponskill_MCH(SkillName.HotShot, 4, {
         otherSkill: SkillName.AirAnchor
     },
     potency: 240,
-    applicationDelay: 1.15, // TODO - Assuming the same as Air Anchor since we don't have data for it in the spreadsheet
+    applicationDelay: 1.15, // Assuming the same as Air Anchor since we don't have data for it in the spreadsheet
     recastTime: (state) => state.config.adjustedSksGCD(),
     onConfirm: (state) => state.gainResource(ResourceType.BatteryGauge, 20),
     secondaryCooldown: {
@@ -370,7 +436,6 @@ makeWeaponskill_MCH(SkillName.AirAnchor, 76, {
     }
 })
 
-
 makeWeaponskill_MCH(SkillName.Chainsaw, 90, {
     replaceIf: [{
         newSkill: SkillName.Excavator,
@@ -381,7 +446,9 @@ makeWeaponskill_MCH(SkillName.Chainsaw, 90, {
     recastTime: (state) => state.config.adjustedSksGCD(),
     onConfirm: (state) => {
         state.gainResource(ResourceType.BatteryGauge, 20)
-        state.gainProc(ResourceType.ExcavatorReady)
+        if (Traits.hasUnlocked(TraitName.EnhancedMultiWeaponII, state.config.level)) {
+            state.gainProc(ResourceType.ExcavatorReady)
+        }
     },
     secondaryCooldown: {
         cdName: ResourceType.cd_Chainsaw,
@@ -428,7 +495,6 @@ makeWeaponskill_MCH(SkillName.FullMetalField, 100, {
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.FullMetalMachinist),
 })
 
-// Hypercharge
 makeResourceAbility_MCH(SkillName.Hypercharge, 30, ResourceType.cd_Hypercharge, {
     rscType: ResourceType.Overheated,
     applicationDelay: 0,
@@ -445,7 +511,6 @@ makeResourceAbility_MCH(SkillName.Hypercharge, 30, ResourceType.cd_Hypercharge, 
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.HeatGauge, 50) || state.hasResourceAvailable(ResourceType.Hypercharged),
 })
 
-// Wildfire
 makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
     replaceIf: [{
         newSkill: SkillName.Detonator,
@@ -494,28 +559,58 @@ makeAbility_MCH(SkillName.Detonator, 45, ResourceType.cd_Detonator, {
     validateAttempt: (state) => state.hasResourceAvailable(ResourceType.WildfireSelf),
 })
 
-// Blazing Shot
-
-// Double Check
-
-// Checkmate
-
-// Automaton Queen
-const robotAbilities: Array<{skillName: SkillName,skillLevel: number}> = [
-    { skillName: SkillName.VolleyFire, skillLevel: 40 },
-    { skillName: SkillName.RookOverload, skillLevel: 40 },
-    { skillName: SkillName.ArmPunch, skillLevel: 80 },
-    { skillName: SkillName.PileBunker, skillLevel: 80 },
-    { skillName: SkillName.CrownedCollider, skillLevel: 86 },
-]
-robotAbilities.forEach((params) => {
-    makeAbility_MCH(params.skillName, params.skillLevel, ResourceType.cd_Robot, {
-        startOnHotbar: false,
-        applicationDelay: 0,
-        cooldown: 1,
-        maxCharges: 1,
-    })
+makeWeaponskill_MCH(SkillName.BlazingShot, 68, {
+    potency: [
+        [TraitName.Never, 220],
+        [TraitName.MarksmansMasteryII, 240]
+    ],
+    applicationDelay: 0.85,
+    recastTime: 1.5,
+    onConfirm: (state) =>  {
+        (state.cooldowns.get(ResourceType.cd_DoubleCheck) as CoolDown).restore(state, 15);
+        (state.cooldowns.get(ResourceType.cd_Checkmate) as CoolDown).restore(state, 15);
+        state.tryConsumeResource(ResourceType.Overheated)
+    },
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Overheated),
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.Overheated),
 })
+
+makeAbility_MCH(SkillName.GaussRound, 15, ResourceType.cd_DoubleCheck, {
+    autoUpgrade: {
+        trait: TraitName.DoubleBarrelMastery,
+        otherSkill: SkillName.DoubleCheck
+    },
+    potency: 130,
+    applicationDelay: 0.71,
+    cooldown: 30,
+    maxCharges: 2, // TODO
+})
+makeAbility_MCH(SkillName.DoubleCheck, 92, ResourceType.cd_DoubleCheck, {
+    startOnHotbar: false,
+    potency: 170,
+    applicationDelay: 0.71,
+    cooldown: 30,
+    maxCharges: 3, // TODO
+})
+
+makeAbility_MCH(SkillName.Ricochet, 50, ResourceType.cd_Checkmate, {
+    autoUpgrade: {
+        trait: TraitName.DoubleBarrelMastery,
+        otherSkill: SkillName.Checkmate
+    },
+    potency: 130,
+    applicationDelay: 0.71,
+    cooldown: 30,
+    maxCharges: 2, // TODO
+})
+makeAbility_MCH(SkillName.Checkmate, 92, ResourceType.cd_Checkmate, {
+    startOnHotbar: false,
+    potency: 170,
+    applicationDelay: 0.71,
+    cooldown: 30,
+    maxCharges: 3, // TODO
+})
+
 const robotSummons: Array<{
     skillName: SkillName, 
     skillLevel: number, 
@@ -620,7 +715,6 @@ robotSummons.forEach((params) => {
     })
 })
 
-// Queen Overdrive
 const overdriveSkills: Array<{
     skillName: SkillName,
     skillLevel: number,
@@ -655,14 +749,110 @@ overdriveSkills.forEach((params) => {
         }
     })
 })
-// Scattergun
 
-// Bioblaster
+makeWeaponskill_MCH(SkillName.SpreadShot, 18, {
+    autoUpgrade: {
+        trait: TraitName.SpreadShotMastery,
+        otherSkill: SkillName.Scattergun
+    },
+    potency: 140,
+    applicationDelay: 0.8,
+    recastTime: (state) => state.config.adjustedSksGCD(),
+    onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5)
+})
+makeWeaponskill_MCH(SkillName.Scattergun, 82, {
+    startOnHotbar: false,
+    potency: [
+        [TraitName.Never, 140],
+        [TraitName.MarksmansMasteryII, 160],
+    ],
+    applicationDelay: 1.15,
+    recastTime: (state) => state.config.adjustedSksGCD(),
+    onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5)
+})
 
-// Auto Crossbow
+makeWeaponskill_MCH(SkillName.Bioblaster, 58, {
+    potency: 50,
+    applicationDelay: 0.97,
+    recastTime: (state) => state.config.adjustedSksGCD(),
+    secondaryCooldown: {
+        cdName: ResourceType.cd_Drill,
+        cooldown: 20,
+        maxCharges: 2, // charges reduced as needed in constructer by trait
+    },
+    onConfirm: (state, node) => {
+        const mods: PotencyMultiplier[] = [];
+        if (state.hasResourceAvailable(ResourceType.Tincture)) {
+            mods.push(Modifiers.Tincture);
+            node.addBuff(BuffType.Tincture);
+        }
 
-// Flamethrower (this is going to be a clusterfuck to add lmao)
+        const bioBlasterTicks = 5
+        const tickPotency = 50
+        for (let i = 0; i < bioBlasterTicks; i ++) {
+            const dotPotency = new Potency({
+                config: controller.record.config ?? controller.gameConfig,
+                sourceTime: state.getDisplayTime(),
+                sourceSkill: SkillName.Bioblaster,
+                aspect: Aspect.Other,
+                basePotency: state.config.adjustedDoTPotency(tickPotency, "sks"),
+                snapshotTime: state.getDisplayTime(),
+                description: "DoT " + (i+1) + `/${bioBlasterTicks}`
+            });
+            dotPotency.modifiers = mods;
+            node.addPotency(dotPotency)
+        }
+    },
+    onApplication: (state, node) => {
+        const bioblasterDot = state.resources.get(ResourceType.Bioblaster) as DoTBuff
+        const bioblasterDuration = 15
+        if (bioblasterDot.available(1)) {
+            console.assert(bioblasterDot.node);
+            (bioblasterDot.node as ActionNode).removeUnresolvedPotencies();
+            bioblasterDot.overrideTimer(state, bioblasterDuration)
+        } else {
+            bioblasterDot.gain(1)
+            controller.reportDotStart(state.getDisplayTime());
+            state.resources.addResourceEvent({
+                rscType: ResourceType.Bioblaster,
+                name: "drop bioblaster DoT",
+                delay: bioblasterDuration,
+                fnOnRsc: rsc => {
+                    rsc.consume(1)
+                    controller.reportDotDrop(state.getDisplayTime())
+                }
+            })
+        }
+        bioblasterDot.node = node
+        bioblasterDot.tickCount = 0
+    },
+})
 
-// Tactician
+makeWeaponskill_MCH(SkillName.AutoCrossbow, 52, {
+    potency: [
+        [TraitName.Never, 140],
+        [TraitName.MarksmansMasteryII, 160],
+    ],
+    applicationDelay: 0.89,
+    recastTime: 1.5,
+    onConfirm: (state) =>  {
+        state.tryConsumeResource(ResourceType.Overheated)
+    },
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Overheated),
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.Overheated),
+})
 
-// Dismantle
+// Flamethrower - Not adding unless a notable use-case for it is found. right now it's just end-of-downtime tic fishing
+
+makeResourceAbility_MCH(SkillName.Tactician, 56, ResourceType.cd_Tactician, {
+    rscType: ResourceType.Tactician,
+    maxCharges: 1,
+    cooldown: 90,
+    applicationDelay: 0.62,
+})
+
+makeAbility_MCH(SkillName.Dismantle, 62, ResourceType.cd_Dismantle, {
+    maxCharges: 1,
+    cooldown: 120,
+    applicationDelay: 0.62,
+})
