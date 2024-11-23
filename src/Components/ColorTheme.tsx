@@ -72,7 +72,6 @@ export type DNCResourceColors = {
 export type MCHResourceColors = {
 	heat: string,
 	battery: string,
-	queen: string,
 }
 
 export type JobAccentColors = {
@@ -212,7 +211,6 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 			mch: {
 				heat:'#D35A10',
 				battery: '#2C9FCB',
-				queen: 'blue',
 			},
 			timeline: {
 				ruler: "#2d2d2d",
@@ -310,7 +308,6 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 			mch: {
 				heat:'#D35A10',
 				battery: '#2C9FCB',
-				queen: 'blue',
 			},
 			timeline: {
 				ruler: "#e9e9e9",

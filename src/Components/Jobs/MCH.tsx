@@ -197,7 +197,7 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
             name: localize({
                 en: "Queen Hits",
             }),
-            color: colors.mch.queen,
+            color: colors.mch.battery,
             progress: queenTime / queenMax,
             valueString: queenTime.toFixed(0),
         } as ResourceBarProps]
