@@ -1,5 +1,6 @@
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
+import { ActionNode } from "../../Controller/Record";
 import { Aspect, ResourceType, SkillName, WarningType } from "../Common";
 import { MCHResourceType } from "../Constants/MCH";
 import { GameConfig } from "../GameConfig";
@@ -33,7 +34,7 @@ makeMCHResource(ResourceType.ArmsLength, 1, {timeout: 6.5})
 
 // Combos & other tracking
 makeMCHResource(ResourceType.HeatCombo, 2, {timeout: 30})
-makeMCHResource(ResourceType.Queen, 1)
+makeMCHResource(ResourceType.Queen, 7)
 makeMCHResource(ResourceType.QueenPunches, 5)
 makeMCHResource(ResourceType.QueenFinishers, 2)
 makeMCHResource(ResourceType.WildfireHits, 6)
@@ -90,36 +91,13 @@ export class MCHState extends GameState {
             return
         }
 
-        // Rook, volley Fire,  35-75 potency
-        // Queen, Arm Punch, 120-240 potency
-        let sourceSkill = SkillName.VolleyFire
-        let basePotency = 0
-        if (Traits.hasUnlocked(TraitName.Promotion, this.config.level)) {
-            sourceSkill = SkillName.ArmPunch
-            basePotency = this.calculateQueenPotency(120, 240)
-        } else {
-            basePotency = this.calculateQueenPotency(35, 75)
+        const punchNode = (this.resources.get(ResourceType.Queen) as DoTBuff).node
+        
+        if (punchNode !== undefined) { 
+            this.resolveQueenPotency(punchNode) 
         }
-        const punchPotency = new Potency({
-            config: this.config,
-            sourceTime: this.getDisplayTime(),
-            sourceSkill,
-            aspect: Aspect.Physical,
-            description: "",
-            basePotency,
-            snapshotTime: this.getDisplayTime(),
-        })
-        if (this.hasResourceAvailable(ResourceType.Tincture)) {
-            punchPotency.modifiers.push(Modifiers.Tincture)
-        }
-        controller.resolvePotency(punchPotency)
-        //controller.updateStats()
-
-        if (this.getDisplayTime() >= 0) {
-            controller.reportDotTick(this.time);
-        }
-
-       this.resources.get(ResourceType.QueenPunches).consume(1)
+        
+        this.resources.get(ResourceType.QueenPunches).consume(1)
 
         // schedule next punch
         if (this.hasResourceAvailable(ResourceType.QueenPunches)) {
@@ -129,44 +107,36 @@ export class MCHState extends GameState {
         }
     }
 
+    resolveQueenPotency(node: ActionNode) {
+        const queenActionsRemaining = this.resources.get(ResourceType.QueenPunches).availableAmount() + this.resources.get(ResourceType.QueenFinishers).availableAmount()
+        const potencyIndex = this.resources.get(ResourceType.Queen).availableAmount() - queenActionsRemaining
+        
+        if (potencyIndex < 0) { return }
+
+        const queenPotency = node.getPotencies()[potencyIndex]
+
+        // Queen actions snapshot at execution time, not when the button was pressed, add Tincture modifier and note snapshot time for party buff handling
+        if (this.hasResourceAvailable(ResourceType.Tincture)) {
+            queenPotency.modifiers.push(Modifiers.Tincture)
+        }
+        queenPotency.snapshotTime = this.getDisplayTime() 
+
+        controller.resolvePotency(queenPotency)
+    }
+
     calculateQueenPotency(minPotency: number, maxPotency: number) {
         const batteryBonus = this.resources.get(ResourceType.BatteryBonus).availableAmount()
         const bonusPotency = (maxPotency - minPotency) * (batteryBonus / 50.0)
-        return (minPotency + bonusPotency) * 0.89 // Pet potency is approximately 89% that of player potency
+        return Math.floor((minPotency + bonusPotency) * 0.89) // Pet potency is approximately 89% that of player potency
     }
 
     handleQueenFinisher = () => {
         if (!this.hasResourceAvailable(ResourceType.QueenFinishers)) { return }
 
-        const sourceSkill = this.resources.get(ResourceType.QueenFinishers).availableAmount() === 2 ? SkillName.PileBunker :
-            Traits.hasUnlocked(TraitName.Promotion, this.config.level) ? SkillName.CrownedCollider : SkillName.RookOverload
-        
-        let basePotency = 0
-        if (sourceSkill === SkillName.PileBunker) {
-            basePotency = this.calculateQueenPotency(340, 680)
-        } else if (sourceSkill === SkillName.CrownedCollider) {
-            basePotency = this.calculateQueenPotency(390, 780)
-        } else {
-            basePotency = this.calculateQueenPotency(160, 320)
-        }
-
-        const finisherPotency = new Potency({
-            config: this.config,
-            sourceTime: this.getDisplayTime(),
-            sourceSkill,
-            aspect: Aspect.Physical,
-            description: "",
-            basePotency,
-            snapshotTime: this.getDisplayTime(),
-        })
-        if (this.hasResourceAvailable(ResourceType.Tincture)) {
-            finisherPotency.modifiers.push(Modifiers.Tincture)
-        }
-        controller.resolvePotency(finisherPotency)
-        //controller.updateStats()
-
-        if (this.getDisplayTime() >= 0) {
-            controller.reportDotTick(this.time);
+        const finisherNode = (this.resources.get(ResourceType.Queen) as DoTBuff).node
+       
+        if (finisherNode !== undefined) {
+            this.resolveQueenPotency(finisherNode)
         }
 
         this.resources.get(ResourceType.QueenFinishers).consume(1)
@@ -176,7 +146,7 @@ export class MCHState extends GameState {
         } else {
             this.tryConsumeResource(ResourceType.BatteryBonus, true)
             this.addEvent(new Event("expire queen", 5., () => {
-                this.tryConsumeResource(ResourceType.Queen)
+                this.tryConsumeResource(ResourceType.Queen, true)
             }))
         }
     }
@@ -533,7 +503,7 @@ makeAbility_MCH(SkillName.Detonator, 45, ResourceType.cd_Detonator, {
 // Automaton Queen
 const robotAbilities: Array<{skillName: SkillName,skillLevel: number}> = [
     { skillName: SkillName.VolleyFire, skillLevel: 40 },
-    { skillName: SkillName.RookOverdrive, skillLevel: 40 },
+    { skillName: SkillName.RookOverload, skillLevel: 40 },
     { skillName: SkillName.ArmPunch, skillLevel: 80 },
     { skillName: SkillName.PileBunker, skillLevel: 80 },
     { skillName: SkillName.CrownedCollider, skillLevel: 86 },
@@ -577,7 +547,7 @@ robotSummons.forEach((params) => {
             return state.hasResourceAvailable(ResourceType.BatteryGauge, 50) &&
             !state.hasResourceAvailable(ResourceType.Queen)
         },
-        onConfirm: (state) => {
+        onConfirm: (state, node) => {
             // Cache the battery bonus scalar based on the amount of battery gauge available
             const battery = state.resources.get(ResourceType.BatteryGauge).availableAmount()
             state.resources.get(ResourceType.BatteryBonus).gain(battery - 50)
@@ -586,10 +556,63 @@ robotSummons.forEach((params) => {
             state.tryConsumeResource(ResourceType.BatteryGauge, true)
 
             // note that queen is summoned, and qrant the requisite number of punches and finishers
-            state.resources.get(ResourceType.Queen).gain(1)
-            state.resources.get(ResourceType.QueenPunches).gain(5)
+            const punchResource = state.resources.get(ResourceType.QueenPunches)
+            punchResource.gain(5)
             const finishers = Traits.hasUnlocked(TraitName.QueensGambit, state.config.level) ? 2 : 1
             state.resources.get(ResourceType.QueenFinishers).gain(finishers)
+            state.resources.get(ResourceType.Queen).gain(punchResource.availableAmount() + finishers)
+
+            let sourceSkill = SkillName.VolleyFire
+            let basePotency = 0
+            if (Traits.hasUnlocked(TraitName.Promotion, state.config.level)) {
+                sourceSkill = SkillName.ArmPunch
+                basePotency = state.calculateQueenPotency(120, 240)
+            } else {
+                basePotency = state.calculateQueenPotency(35, 75)
+            }
+            const punchPotency = new Potency({
+                config: state.config,
+                sourceTime: state.getDisplayTime(),
+                sourceSkill,
+                aspect: Aspect.Physical,
+                description: "",
+                basePotency,
+                snapshotTime: undefined,
+            })
+            for (let i = 0; i < punchResource.availableAmount(); i++) {
+                node.addPotency(punchPotency)
+            }
+
+            sourceSkill = Traits.hasUnlocked(TraitName.Promotion, state.config.level) ? SkillName.PileBunker : SkillName.RookOverload
+            if (sourceSkill === SkillName.PileBunker) {
+                basePotency = state.calculateQueenPotency(340, 680)
+            } else {
+                basePotency = state.calculateQueenPotency(160, 320)
+            }
+
+            node.addPotency(new Potency({
+                config: state.config,
+                sourceTime: state.getDisplayTime(),
+                sourceSkill,
+                aspect: Aspect.Physical,
+                description: "",
+                basePotency,
+                snapshotTime: undefined,
+            }))
+
+            if (Traits.hasUnlocked(TraitName.QueensGambit, state.config.level)) {
+                node.addPotency(new Potency({
+                    config: state.config,
+                    sourceTime: state.getDisplayTime(),
+                    sourceSkill: SkillName.CrownedCollider,
+                    aspect: Aspect.Physical,
+                    description: "",
+                    basePotency: state.calculateQueenPotency(390, 780),
+                    snapshotTime: undefined,
+                }))
+            }
+
+            (state.resources.get(ResourceType.Queen) as DoTBuff).node = node
         
             // Schedule the initial punch
             state.addEvent(new Event("initial queen punch", 5.5, () => state.handleQueenPunch()))
