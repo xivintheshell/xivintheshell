@@ -1,3 +1,5 @@
+import { TraitName } from "../Traits";
+
 export enum SAMSkillName {
 	Enpi = "Enpi",
 	Hakaze = "Hakaze",
@@ -92,3 +94,19 @@ export enum SAMCooldownType {
 	cd_ThirdEye = "cd_ThirdEye",
 	cd_ThirdEyePop = "cd_ThirdEyePop", // [0, 1,], not real
 }
+
+export const SAMTraitList: Array<[TraitName, number]> = [
+	[TraitName.EnhancedIaijutsu, 74],
+	[TraitName.EnhancedMeikyoShisui, 76],
+	[TraitName.EnhancedFugetsuAndFuka, 78],
+	[TraitName.ThirdEyeMastery, 82],
+	[TraitName.WayOfTheSamuraiII, 84],
+	[TraitName.FugaMastery, 86],
+	[TraitName.EnhancedIkishoten, 90],
+	[TraitName.HakazeMastery, 92],
+	[TraitName.EnhancedHissatsu, 94],
+	[TraitName.WayOfTheSamuraiIII, 94],
+	[TraitName.EnhancedIkishotenII, 96],
+	[TraitName.EnhancedMeikyoShisuiII, 100],
+	[TraitName.EnhancedFeint, 98],
+];

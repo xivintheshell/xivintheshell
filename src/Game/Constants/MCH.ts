@@ -1,3 +1,5 @@
+import { TraitName } from "../Traits";
+
 export enum MCHSkillName {
     HeatedSplitShot = "Heated Split Shot",
     HeatedSlugShot = "Heated Slug Shot",
@@ -81,3 +83,20 @@ export enum MCHCooldownType {
     cd_Hypercharge = "cd_Hypercharge",
     cd_Detonator = "cd_Detonator",
 }
+
+export const MCHTraitList: Array<[TraitName, number]> = [
+    [TraitName.ChargedActionMastery, 74],
+    [TraitName.HotShotMastery, 76],
+    [TraitName.EnhancedWildfire, 88],
+    [TraitName.Promotion, 80],
+    [TraitName.SpreadShotMastery, 82],
+    [TraitName.EnhancedReassemble, 84],
+    [TraitName.MarksmansMastery, 84],
+    [TraitName.QueensGambit, 86],
+    [TraitName.EnhancedTactician, 88],
+    [TraitName.DoubleBarrelMastery, 92],
+    [TraitName.EnhancedMultiWeapon, 94],
+    [TraitName.MarksmansMasteryII, 94],
+    [TraitName.EnhancedMultiWeaponII, 96],
+    [TraitName.EnhancedBarrelStabilizer, 100],
+]

@@ -1,10 +1,12 @@
-import {BLMSkillName, BLMResourceType, BLMCooldownType} from "./Constants/BLM";
-import {PCTSkillName, PCTResourceType, PCTCooldownType} from "./Constants/PCT";
-import {RDMSkillName, RDMResourceType, RDMCooldownType} from "./Constants/RDM";
-import {DNCSkillName, DNCResourceType, DNCCooldownType} from "./Constants/DNC";
-import {SAMSkillName, SAMResourceType, SAMCooldownType} from "./Constants/SAM";
-import {MCHSkillName, MCHResourceType, MCHCooldownType} from "./Constants/MCH";
-import { RPRCooldownType, RPRResourceType, RPRSkillName } from "./Constants/RPR";
+import {BLMSkillName, BLMResourceType, BLMCooldownType, BLMTraitList} from "./Constants/BLM";
+import {PCTSkillName, PCTResourceType, PCTCooldownType, PCTTraitList } from "./Constants/PCT";
+import {RDMSkillName, RDMResourceType, RDMCooldownType, RDMTraitList} from "./Constants/RDM";
+import {DNCSkillName, DNCResourceType, DNCCooldownType, DNCTraitList} from "./Constants/DNC";
+import {SAMSkillName, SAMResourceType, SAMCooldownType, SAMTraitList} from "./Constants/SAM";
+import {MCHSkillName, MCHResourceType, MCHCooldownType, MCHTraitList} from "./Constants/MCH";
+import {RPRSkillName, RPRResourceType, RPRCooldownType, RPRTraitList } from "./Constants/RPR";
+
+import { Trait, TraitName } from "./Traits";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -243,3 +245,13 @@ export const enum WarningType {
 	MeditationOvercap = "meditation stack overcap",
 	SenOvercap = "sen overcap",
 }
+
+export const TraitList: Map<TraitName, Trait> = new Map<TraitName, Trait>([
+	...BLMTraitList,
+	...PCTTraitList,
+	...RDMTraitList,
+	...DNCTraitList,
+	...SAMTraitList,
+	...MCHTraitList,
+	...RPRTraitList
+].map(([name, level]) => [name, new Trait(name, level)]));

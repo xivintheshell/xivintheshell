@@ -1,3 +1,5 @@
+import { TraitName } from "../Traits";
+
 export enum RPRSkillName {
     /** Single-target GCD */
     Slice = "Slice",
@@ -106,3 +108,18 @@ export enum RPRCooldownType {
     cd_LemuresSlice = "cd_LemuresSlice",
     cd_Sacrificium = "cd_Sacrificium",
 }
+
+export const RPRTraitList: Array<[TraitName, number]> = [
+    [TraitName.Hellsgate, 74],
+    [TraitName.TemperedSoul, 78],
+    [TraitName.ShroudGauge, 80],
+    [TraitName.EnhancedArcaneCrest, 84],
+    [TraitName.MeleeMasteryII, 84],
+    [TraitName.VoidSoul, 86],
+    [TraitName.EnhancedArcaneCircle, 88],
+    [TraitName.EnhancedEnshroud, 92],
+    [TraitName.EnhancedSecondWind, 94],
+    [TraitName.MeleeMasteryIII, 94],
+    [TraitName.EnhancedGluttony, 96],
+    [TraitName.EnhancedPlentifulHarvest, 100],
+]

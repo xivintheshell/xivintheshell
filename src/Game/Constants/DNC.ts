@@ -1,3 +1,5 @@
+import { TraitName } from "../Traits";
+
 export enum DNCSkillName {
     StandardFinish = "Standard Finish",
     SingleStandardFinish = "Single Standard Finish",
@@ -105,3 +107,17 @@ export enum DNCCooldownType {
     cd_CuringWaltz = "cd_CuringWaltz",
     cd_Ending = "cd_Ending",
 }
+
+export const DNCTraitList: Array<[TraitName, number]> = [
+    [TraitName.Esprit, 76],
+    [TraitName.EnhancedEnAvantII, 78],
+    [TraitName.EnhancedTechnicalFinish, 82],
+    [TraitName.EnhancedEsprit, 84],
+    [TraitName.EnhancedFlourish, 86],
+    [TraitName.EnhancedShieldSamba, 88],
+    [TraitName.EnhancedDevilment, 90],
+    [TraitName.EnhancedStandardFinish, 92],
+    [TraitName.DynamicDancer, 94],
+    [TraitName.EnhancedFlourishII, 96],
+    [TraitName.EnhancedTechnicalFinishII, 100],
+];

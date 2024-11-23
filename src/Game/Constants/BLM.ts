@@ -1,3 +1,5 @@
+import { TraitName } from "../Traits"
+
 export enum BLMSkillName {
     Blizzard = "Blizzard",
     Fire = "Fire",
@@ -60,3 +62,20 @@ export enum BLMCooldownType {
     cd_Amplifier = "cd_Amplifier", // [0, 1x]
     cd_Retrace = "cd_Retrace", // [0, 1x]
 }
+
+export const BLMTraitList: Array<[TraitName, number]> = [
+    [TraitName.EnhancedEnochianII, 78],
+    [TraitName.EnhancedPolyglot, 80],
+    [TraitName.EnhancedFoul, 80],
+    [TraitName.AspectMasteryIV, 82],
+    [TraitName.EnhancedManafont, 84],
+    [TraitName.EnhancedEnochianIII, 86],
+    [TraitName.AspectMasteryV, 90],
+    [TraitName.ThunderMasteryIII, 92],
+    [TraitName.EnhancedSwiftcast, 94],
+    [TraitName.EnhancedLeyLines, 96],
+    [TraitName.EnhancedEnochianIV, 96],
+    [TraitName.EnhancedPolyglotII, 98],
+    [TraitName.EnhancedAddle, 98],
+    [TraitName.EnhancedAstralFire, 100],
+];

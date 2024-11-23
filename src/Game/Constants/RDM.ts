@@ -1,3 +1,5 @@
+import { TraitName } from "../Traits";
+
 export enum RDMSkillName {
 	Riposte = "Riposte",
 	// Jolt = "Jolt",
@@ -82,3 +84,17 @@ export enum RDMCooldownType {
 	cd_ViceOfThorns = "cd_ViceOfThorns",
 	cd_Prefulgence = "cd_Prefulgence",
 }
+
+export const RDMTraitList: Array<[TraitName, number]> = [
+	[TraitName.EnhancedDisplacement, 72],
+	[TraitName.RedMagicMastery, 74],
+	[TraitName.EnhancedManafication, 78],
+	[TraitName.RedMagicMasteryII, 82],
+	[TraitName.RedMagicMasteryIII, 84],
+	[TraitName.EnhancedAcceleration, 88],
+	[TraitName.EnhancedManaficationII, 90],
+	[TraitName.EnhancedEmbolden, 92],
+	[TraitName.EnchantedBladeMastery, 94],
+	[TraitName.EnhancedAccelerationII, 96],
+	[TraitName.EnhancedManaficationIII, 100],
+];
