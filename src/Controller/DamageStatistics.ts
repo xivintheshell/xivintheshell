@@ -192,7 +192,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 			res.basePotency = mainPotency.base;
 			for (const modifier of mainPotency.modifiers) {
 				const tag = modifier.source;
-				if (tag !== PotencyModifierType.POT) {
+				if (tag !== PotencyModifierType.POT && tag !== PotencyModifierType.NO_CDH) {
 					res.displayedModifiers.push(tag);
 					res.calculationModifiers.push(modifier);
 				}

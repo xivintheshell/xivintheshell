@@ -497,8 +497,9 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
             snapshotTime: state.getDisplayTime(),
             description: "wildfire",
         })
+        wildFirePotency.modifiers = [Modifiers.NoCDH] // Wildfire can neither crit nor direct hit
         if (state.hasResourceAvailable(ResourceType.Tincture)) {
-            wildFirePotency.modifiers = [Modifiers.Tincture];
+            wildFirePotency.modifiers.push(Modifiers.Tincture);
         }
 
         node.addPotency(wildFirePotency)
