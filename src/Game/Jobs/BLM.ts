@@ -50,10 +50,6 @@ makeBLMResource(ResourceType.Manaward, 1, {timeout: 20});
 
 // 15.7s: see screen recording: https://drive.google.com/file/d/1qoIpAMK2KAKETgID6a3p5dqkeWRcNDdB/view?usp=drive_link
 makeBLMResource(ResourceType.Triplecast, 3, {timeout: 15.7});
-makeBLMResource(ResourceType.Addle, 1, {timeout: 15});
-makeBLMResource(ResourceType.Swiftcast, 1, {timeout: 10});
-makeBLMResource(ResourceType.LucidDreaming, 1, {timeout: 21});
-makeBLMResource(ResourceType.Surecast, 1, {timeout: 6.5});
 
 // === JOB GAUGE AND STATE ===
 export class BLMState extends GameState {

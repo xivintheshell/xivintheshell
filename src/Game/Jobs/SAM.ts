@@ -71,11 +71,6 @@ ALL_SAM_COMBOS.forEach((combo) => makeSAMResource(combo, 1, {timeout: 30}));
 // 4 - Tendo Setsugekka
 makeSAMResource(ResourceType.KaeshiTracker, 4, {timeout: 30});
 
-makeSAMResource(ResourceType.Feint, 1, {timeout: 15});
-makeSAMResource(ResourceType.TrueNorth, 1, {timeout: 10});
-makeSAMResource(ResourceType.ArmsLength, 1, {timeout: 6});
-makeSAMResource(ResourceType.Bloodbath, 1, {timeout: 20});
-
 // === JOB GAUGE AND STATE ===
 export class SAMState extends GameState {
 	higanbanaTickOffset: number;

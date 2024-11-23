@@ -45,8 +45,6 @@ makeMCHResource(ResourceType.Hypercharged, 1, {timeout: 30})
 makeMCHResource(ResourceType.ExcavatorReady, 1, {timeout: 30})
 makeMCHResource(ResourceType.FullMetalMachinist, 1, {timeout: 30}) 
 
-makeMCHResource(ResourceType.ArmsLength, 1, {timeout: 6.5})
-
 // Combos & other tracking
 makeMCHResource(ResourceType.HeatCombo, 2, {timeout: 30})
 makeMCHResource(ResourceType.Queen, 7)
