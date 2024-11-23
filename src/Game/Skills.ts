@@ -49,6 +49,16 @@ export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, ...fs: Ar
 	};
 }
 
+export function combinePredicatesAnd<T extends PlayerState>(f1: StatePredicate<T>, ...fs: Array<StatePredicate<T>>): StatePredicate<T> {
+	return (state: T) => {
+		let value: boolean = f1(state);
+		for (const fn of fs) {
+			value = (value && fn(state));
+		}
+		return value;
+	}
+}
+
 export interface CooldownGroupProperies {
 	cdName: ResourceType, 
 	cooldown: number, 

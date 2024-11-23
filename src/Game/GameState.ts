@@ -586,12 +586,23 @@ export abstract class GameState {
 				fnOnRsc: (rsc: Resource) => rsc.gain(1),
 			});
 		}
+		if (skill.name === SkillName.ArcaneCircle) {
+			console.log("Before app")
+			console.log(skill);
+		}
 
 		if (skill.applicationDelay > 0) {
+			if (skill.name === SkillName.ArcaneCircle) {
+				console.log(">0 appdelay");
+			}
 			this.addEvent(new Event(
 				skill.name + " applied",
 				skill.applicationDelay,
 				() => {
+					if (skill.name === SkillName.ArcaneCircle) {
+						console.log("Applying...?");
+					}
+					
 					if (potency) controller.resolvePotency(potency);
 					skill.onApplication(this, node);
 				}

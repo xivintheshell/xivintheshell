@@ -8,9 +8,10 @@ import { BuffProps, registerBuffIcon, ResourceBarProps, ResourceCounterProps, Re
 [
     ResourceType.DeathsDesign,
     ResourceType.SoulReaver,
+    ResourceType.SoulReaver + "2",
     ResourceType.EnhancedGibbet,
     ResourceType.EnhancedGallows,
-    ResourceType.Executioner + "1",
+    ResourceType.Executioner,
     ResourceType.Executioner + "2",
     ResourceType.EnhancedVoidReaping,
     ResourceType.EnhancedCrossReaping,
@@ -21,7 +22,7 @@ import { BuffProps, registerBuffIcon, ResourceBarProps, ResourceCounterProps, Re
     ResourceType.ArcaneCircle,
     ResourceType.CircleOfSacrifice,
     ResourceType.BloodsownCircle,
-    ResourceType.ImmortalSacrifice + "1",
+    ResourceType.ImmortalSacrifice,
     ResourceType.ImmortalSacrifice + "2",
     ResourceType.ImmortalSacrifice + "3",
     ResourceType.ImmortalSacrifice + "4",
@@ -52,21 +53,23 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
         ]
     }
 
-
     override getSelfBuffViewProps(): BuffProps[] {
-    const makeRprSelfTimer = (rscType: ResourceType) => {
-        const cd = this.state.resources.timeTillReady(rscType);
-        return {
-            rscType: rscType,
-            onSelf: true,
-            enabled: true,
-            stacks: this.state.resources.get(rscType).availableAmount(),
-            timeRemaining: cd.toFixed(3),
-            className: cd > 0 ? "" : "hidden"
+        const makeRprSelfTimer = (rscType: ResourceType) => {
+            const cd = this.state.resources.timeTillReady(rscType);
+            if (rscType == ResourceType.ArcaneCircle) {
+                //console.log(`${rscType}: ${cd} | ${this.state.hasResourceAvailable(rscType)}`);
+            }
+            return {
+                rscType: rscType,
+                onSelf: true,
+                enabled: true,
+                stacks: this.state.resources.get(rscType).availableAmount(),
+                timeRemaining: cd.toFixed(3),
+                className: cd > 0 ? "" : "hidden"
+            }
         }
-    }
 
-        return [
+        const buffProps: BuffProps[] = [
             ResourceType.SoulReaver,
             ResourceType.EnhancedGibbet,
             ResourceType.EnhancedGallows,
@@ -89,6 +92,24 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
             ResourceType.Threshold,
             ResourceType.EnhancedHarpe,
         ].map(makeRprSelfTimer);
+        buffProps.push(
+			{
+                rscType: ResourceType.RearPositional,
+                onSelf: true,
+                enabled: this.state.resources.get(ResourceType.RearPositional).enabled,
+                stacks: 1,
+                className: "",
+            },
+			{
+				rscType: ResourceType.FlankPositional,
+				onSelf: true,
+				enabled: this.state.resources.get(ResourceType.FlankPositional).enabled,
+				stacks: 1,
+				className: "",
+			},
+        );
+
+        return buffProps;
     }
     override getResourceViewProps(): ResourceDisplayProps[] {
         const colors = getCurrentThemeColors();

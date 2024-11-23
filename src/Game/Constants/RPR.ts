@@ -54,7 +54,7 @@ export enum RPRResourceType {
     DeathsDesign = "Death's Design", // [0, 1]
     SoulSlice = "Soul Slice", // [0, 2]
 
-    SoulReaver = "Soul Reaver", // [0, 1], Gibbet/Gallows
+    SoulReaver = "Soul Reaver", // [0, 2], Gibbet/Gallows
     EnhancedGibbet = "Enhanced Gibbet", // [0, 1]
     EnhancedGallows = "Enhanced Gallows", // [0, 1]
     Executioner = "Executioner", // [0, 2], Executioner's Gibbet/Gallows
