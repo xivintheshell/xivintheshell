@@ -37,6 +37,15 @@ const enoSkills = new Set<SkillName>([
 	SkillName.Paradox
 ]);
 
+export const DOT_SKILLS: SkillName[] = [
+	// BLM
+	SkillName.Thunder3, SkillName.HighThunder, 
+	// SAM
+	SkillName.Higanbana,
+	// MCH
+	SkillName.Bioblaster
+]
+
 // source of truth
 const excludedFromStats = new Set<SkillName | "DoT">([]);
 
@@ -57,7 +66,8 @@ export const getTargetableDurationBetween = (startDisplayTime: number, endDispla
 }
 
 function isDoTNode(node: ActionNode) {
-	return node.skillName === SkillName.Thunder3 || node.skillName === SkillName.HighThunder || node.skillName === SkillName.Higanbana;
+	if (node.skillName === undefined) { return false }
+	return DOT_SKILLS.includes(node.skillName)
 }
 
 function expandDoTNode(node: ActionNode, lastNode?: ActionNode) {
@@ -250,6 +260,7 @@ export function updateSkillOrDoTInclude(props: {
 			excludedFromStats.delete(SkillName.Thunder3);
 			excludedFromStats.delete(SkillName.HighThunder);
 			excludedFromStats.delete(SkillName.Higanbana);
+			excludedFromStats.delete(SkillName.Bioblaster);
 		} else if (props.skillNameOrDoT === SkillName.Thunder3 ||
 				   props.skillNameOrDoT === SkillName.HighThunder) {
 			excludedFromStats.delete("DoT");
@@ -258,7 +269,8 @@ export function updateSkillOrDoTInclude(props: {
 		excludedFromStats.add(props.skillNameOrDoT);
 		if (props.skillNameOrDoT === SkillName.Thunder3 || 
 			props.skillNameOrDoT === SkillName.HighThunder ||
-			props.skillNameOrDoT === SkillName.Higanbana) {
+			props.skillNameOrDoT === SkillName.Higanbana ||
+			props.skillNameOrDoT === SkillName.Bioblaster) {
 			excludedFromStats.add("DoT");
 		}
 	}
