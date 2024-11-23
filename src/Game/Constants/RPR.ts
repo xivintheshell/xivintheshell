@@ -14,6 +14,7 @@ export enum RPRSkillName {
     PlentifulHarvest = "Plentiful Harvest",
     HarvestMoon = "Harvest Moon",
     Communio = "Communio",
+    Perfectio = "Perfectio",
     Soulsow = "Soulsow",
     Harpe = "Harpe",
 

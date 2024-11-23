@@ -15,6 +15,7 @@ import { BuffProps, registerBuffIcon, ResourceBarProps, ResourceCounterProps, Re
     ResourceType.Executioner + "2",
     ResourceType.EnhancedVoidReaping,
     ResourceType.EnhancedCrossReaping,
+    ResourceType.Enshrouded,
     ResourceType.Oblatio,
     ResourceType.IdealHost,
     ResourceType.PerfectioOcculta,
@@ -56,16 +57,13 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
     override getSelfBuffViewProps(): BuffProps[] {
         const makeRprSelfTimer = (rscType: ResourceType) => {
             const cd = this.state.resources.timeTillReady(rscType);
-            if (rscType == ResourceType.ArcaneCircle) {
-                //console.log(`${rscType}: ${cd} | ${this.state.hasResourceAvailable(rscType)}`);
-            }
             return {
                 rscType: rscType,
                 onSelf: true,
                 enabled: true,
                 stacks: this.state.resources.get(rscType).availableAmount(),
                 timeRemaining: cd.toFixed(3),
-                className: cd > 0 ? "" : "hidden"
+                className: this.state.hasResourceAvailable(rscType) ? "" : "hidden"
             }
         }
 

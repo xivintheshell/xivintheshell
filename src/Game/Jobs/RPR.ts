@@ -1,11 +1,12 @@
 import { ShellJob } from "../../Controller/Common";
+import { ActionNode } from "../../Controller/Record";
 import { Aspect, ResourceType, SkillName } from "../Common";
 import { RPRResourceType, RPRSkillName } from "../Constants/RPR";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { makeComboModifier, makePositionalModifier, Modifiers, Potency, PotencyModifier } from "../Potency";
+import { makeComboModifier, makePositionalModifier, Modifiers, PotencyAdder, PotencyModifier, PotencyModifierType } from "../Potency";
 import { CoolDown, getResourceInfo, makeResource, ResourceInfo } from "../Resources";
-import { Ability, combineEffects, combinePredicatesAnd, ConditionalSkillReplace, CooldownGroupProperies, EffectFn, getBasePotency, makeAbility, makeResourceAbility, makeWeaponskill, NO_EFFECT, SkillsList, StatePredicate, Weaponskill } from "../Skills";
+import { Ability, combineEffects, combinePredicatesAnd, ConditionalSkillReplace, CooldownGroupProperies, EffectFn, getBasePotency, getSkill, makeAbility, makeResourceAbility, makeSpell, makeWeaponskill, NO_EFFECT, ResourceCalculationFn, Spell, StatePredicate, Weaponskill } from "../Skills";
 import { Trait, TraitName, Traits } from "../Traits";
 
 function makeRPRResource(type: ResourceType, maxValue: number, params?: { timeout?: number, default?: number }) {
@@ -49,6 +50,11 @@ makeRPRResource(ResourceType.EnhancedHarpe, 1, { timeout: 10 });
 
 makeRPRResource(ResourceType.RPRCombo, 2, { timeout: 30 });
 makeRPRResource(RPRResourceType.RPRAoECombo, 1, { timeout: 30 });
+
+makeRPRResource(ResourceType.Feint, 1, {timeout: 15});
+makeRPRResource(ResourceType.TrueNorth, 1, {timeout: 10});
+makeRPRResource(ResourceType.ArmsLength, 1, {timeout: 6});
+makeRPRResource(ResourceType.Bloodbath, 1, {timeout: 20});
 
 export class RPRState extends GameState {
     constructor(config: GameConfig) {
@@ -111,7 +117,8 @@ export class RPRState extends GameState {
     processSoulGauge(skill: SkillName) {
         const soul = this.resources.get(ResourceType.Soul);
         if ([SkillName.Slice, SkillName.WaxingSlice, SkillName.InfernalSlice,
-        SkillName.SpinningScythe, SkillName.InfernalScythe].includes(skill as RPRSkillName)) {
+            SkillName.SpinningScythe, SkillName.InfernalScythe,
+            SkillName.Harpe, SkillName.HarvestMoon].includes(skill as RPRSkillName)) {
 
             soul.gain(10);
             return;
@@ -126,14 +133,14 @@ export class RPRState extends GameState {
         SkillName.Gluttony].includes(skill as RPRSkillName)) {
 
             soul.consume(50);
+            return;
         }
     }
 
     processShroudGauge(skill: SkillName) {
         const shroud = this.resources.get(ResourceType.Shroud);
 
-        if (
-            [
+        if ([
                 SkillName.Gallows,
                 SkillName.Gibbet,
                 SkillName.ExecutionersGallows,
@@ -165,6 +172,7 @@ export class RPRState extends GameState {
 
         if ([SkillName.ExecutionersGallows, SkillName.ExecutionersGibbet, SkillName.ExecutionersGuillotine].includes(skill)) {
             executioners.consume(1);
+            return;
         }
 
         // Any other action resets Soul reavers, even if it then gives more
@@ -180,7 +188,6 @@ export class RPRState extends GameState {
         // Pre-96 gluttony
         if (skill === SkillName.Gluttony) {
             if (Traits.hasUnlocked(TraitName.EnhancedGluttony, this.config.level)) {
-                console.log("GLUTTONY");
                 this.setTimedResource(ResourceType.Executioner, 2);
                 return;
             }
@@ -230,6 +237,30 @@ export class RPRState extends GameState {
         otherBuff.consume(otherBuff.availableAmount());
         otherBuff.gain(1);
     }
+
+    processCircleOfSacrifice(skill: SkillName) {
+        if (!this.hasResourceAvailable(ResourceType.CircleOfSacrifice)) {
+            return;
+        }
+        const skillInfo = getSkill(ShellJob.RPR, skill);
+        if (skillInfo.potencyFn(this) > 0) {
+            this.resources.get(ResourceType.ImmortalSacrifice).gain(1);
+            this.resources.get(ResourceType.CircleOfSacrifice).consume(1);
+        }
+    }
+
+    enterEnshroud() {
+        if (this.hasResourceAvailable(ResourceType.IdealHost)) this.resources.get(ResourceType.IdealHost).consume(1);
+        this.setTimedResource(ResourceType.Oblatio, 1);
+        this.setTimedResource(ResourceType.LemureShroud, 5);
+    }
+
+    exitEnshroud() {
+        if (this.hasResourceAvailable(ResourceType.Enshrouded)) this.resources.get(ResourceType.Enshrouded).consume(1);
+        if (this.hasResourceAvailable(ResourceType.Oblatio)) this.resources.get(ResourceType.Oblatio).consume(1);
+        if (this.hasResourceAvailable(ResourceType.VoidShroud)) this.resources.get(ResourceType.VoidShroud).consume(this.resources.get(ResourceType.VoidShroud).availableAmount());
+        if (this.hasResourceAvailable(ResourceType.LemureShroud)) this.resources.get(ResourceType.LemureShroud).consume(this.resources.get(ResourceType.LemureShroud).availableAmount());
+    }
 }
 
 const enshroudSkills = new Set<SkillName> (
@@ -271,10 +302,14 @@ const gibgalHighlightPredicate: (enhancedRsc: ResourceType) => StatePredicate<RP
 
 
     return state.resources.get(enhancedRsc).available(1)
-                    || gluttonyResource.available(2)
+                    || (gluttonyResource.available(2)
+                        && !state.hasResourceAvailable(ResourceType.EnhancedGibbet)
+                        && !state.hasResourceAvailable(ResourceType.EnhancedGallows))
 }
 
 const reaverPredicate: StatePredicate<RPRState> = (state) => state.hasResourceAvailable(ResourceType.SoulReaver);
+const executionerPredicate: StatePredicate<RPRState> = (state) => state.hasResourceAvailable(ResourceType.Executioner);
+
 const soulSpendPredicate: (cost: number) => StatePredicate<RPRState> = (cost) => (state) => state.resources.get(ResourceType.Soul).availableAmount() >= cost;
 const isEnshroudSkill = (skill: SkillName) => enshroudSkills.has(skill);
 
@@ -284,6 +319,7 @@ const baseOnConfirm = (name: RPRSkillName): EffectFn<RPRState> => {
         (state) => state.processSoulGauge(name),
         (state) => state.processShroudGauge(name),
         (state) => state.processReaversExecutioner(name),
+        (state) => state.processCircleOfSacrifice(name),
     )
 } 
 
@@ -301,6 +337,43 @@ const basePotencyModifiers = (state: Readonly<RPRState>): PotencyModifier[] => {
     return mods
 }
 
+const makeRPRSpell = (name: RPRSkillName, unlockLevel: number, params: {
+    replaceIf: ConditionalSkillReplace<RPRState>[],
+    startOnHotbar?: boolean,
+    potency: number | Array<[TraitName, number]>,
+    secondaryCooldown?: CooldownGroupProperies,
+    aspect: Aspect,
+    castTime: number | ResourceCalculationFn<RPRState>,
+    recastTime: number,
+    applicationDelay: number,
+    validateAttempt?: StatePredicate<RPRState>,
+    onConfirm?: EffectFn<RPRState>,
+    highlightIf: StatePredicate<RPRState>,
+    onApplication?: EffectFn<RPRState>,
+}): Spell<RPRState> => {
+    const onConfirm: EffectFn<RPRState> = combineEffects(
+        baseOnConfirm(name),
+        params.onConfirm ?? NO_EFFECT,
+    )
+
+    const validateAttempt: StatePredicate<RPRState> = combinePredicatesAnd(
+        (state) => (!state.resources.get(ResourceType.Enshrouded).available(1) || isEnshroudSkill(name)),
+        params.validateAttempt ?? (() => true)
+    )
+
+    return makeSpell(ShellJob.RPR, name, unlockLevel, {
+        ...params,
+        onConfirm: onConfirm,
+        validateAttempt: validateAttempt,
+        isInstantFn: (state) => !(
+                (name === SkillName.Communio)
+                || (name === SkillName.Harpe && !state.hasResourceAvailable(ResourceType.EnhancedHarpe))
+                || (name === SkillName.Soulsow && state.isInCombat())
+            ),
+        jobPotencyModifiers: basePotencyModifiers,
+
+    });
+}
 const makeRPRWeaponskill = (name: RPRSkillName, unlockLevel: number, params: {
     replaceIf: ConditionalSkillReplace<RPRState>[],
     startOnHotbar?: boolean,
@@ -350,13 +423,36 @@ const makeRPRWeaponskill = (name: RPRSkillName, unlockLevel: number, params: {
             ) {
                 mods.push(makePositionalModifier(getBasePotency(state, params.positional.potency) - getBasePotency(state, params.potency)));
             }
+
+            if ([SkillName.Gibbet, SkillName.ExecutionersGibbet].includes(name)
+            && state.hasResourceAvailable(ResourceType.EnhancedGibbet)) {
+                mods.push(Modifiers.EnhancedGibbet)
+            }
+
+            if ([SkillName.Gallows, SkillName.ExecutionersGallows].includes(name)
+            && state.hasResourceAvailable(ResourceType.EnhancedGallows)) {
+                mods.push(Modifiers.EnhancedGallows)
+            }
+
+            if (name === SkillName.VoidReaping
+            && state.hasResourceAvailable(ResourceType.EnhancedVoidReaping)) {
+            }
+
+            if (name === SkillName.CrossReaping
+            && state.hasResourceAvailable(ResourceType.EnhancedCrossReaping)) {
+                mods.push(Modifiers.EnhancedCrossReaping);
+            }
+
+            if (name === SkillName.PlentifulHarvest
+            && state.hasResourceAvailable(ResourceType.ImmortalSacrifice)) {
+                for (let i = 0; i < state.resources.get(ResourceType.ImmortalSacrifice).availableAmount(); i++) {
+                    mods.push(Modifiers.ImmortalSacrifice);
+                }
+            }
+
             return mods;
         },
         validateAttempt: validateAttempt,
-        isInstantFn: (state) => !(
-            (name === SkillName.Communio)
-            || (name === SkillName.Harpe && !state.hasResourceAvailable(ResourceType.EnhancedHarpe))
-        ),
     })
 }
 
@@ -484,7 +580,16 @@ makeRPRWeaponskill(SkillName.SoulSlice, 60, {
 })
 
 makeRPRWeaponskill(SkillName.Gibbet, 70, {
-    replaceIf: [],
+    replaceIf: [
+        {
+            newSkill: SkillName.ExecutionersGibbet,
+            condition: (state) => state.hasResourceAvailable(ResourceType.Executioner), 
+        },
+        {
+            newSkill: SkillName.VoidReaping,
+            condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+        }
+    ],
     potency: [
         [TraitName.Never, 460],
         [TraitName.MeleeMasteryIII, 500],
@@ -502,13 +607,22 @@ makeRPRWeaponskill(SkillName.Gibbet, 70, {
     highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGibbet),
     validateAttempt: reaverPredicate,
     onConfirm: (state) => {
-        state.resources.get(ResourceType.EnhancedGibbet).consume(1);
+        if (state.hasResourceAvailable(ResourceType.EnhancedGibbet)) state.resources.get(ResourceType.EnhancedGibbet).consume(1);
         state.setTimedResource(ResourceType.EnhancedGallows, 1);
     }
 });
 
 makeRPRWeaponskill(SkillName.Gallows, 70, {
-    replaceIf: [],
+    replaceIf: [
+        {
+            newSkill: SkillName.ExecutionersGallows,
+            condition: (state) => state.resources.get(ResourceType.Executioner).available(1),
+        },
+        {
+            newSkill: SkillName.CrossReaping,
+            condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+        }
+    ],
     potency: [
         [TraitName.Never, 460],
         [TraitName.MeleeMasteryIII, 500],
@@ -526,40 +640,322 @@ makeRPRWeaponskill(SkillName.Gallows, 70, {
     highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGallows),
     validateAttempt: reaverPredicate,
     onConfirm: (state) => {
-        state.resources.get(ResourceType.EnhancedGallows).consume(1);
+        if (state.hasResourceAvailable(ResourceType.EnhancedGallows)) state.resources.get(ResourceType.EnhancedGallows).consume(1);
         state.setTimedResource(ResourceType.EnhancedGibbet, 1);
     }
 })
 
+makeRPRWeaponskill(SkillName.ExecutionersGibbet, 96, {
+    replaceIf: [],
+    startOnHotbar: false,
+    potency: [
+        [TraitName.MeleeMasteryIII, 700],
+    ],
+    positional: {
+        potency: [
+            [TraitName.MeleeMasteryIII, 760],
+        ],
+        location: "flank"
+    },
+    aspect: Aspect.Physical,
+    recastTime: 2.5,
+    applicationDelay: 0.62,
+    highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGibbet),
+    validateAttempt: executionerPredicate,
+    onConfirm: (state) => {
+        if (state.hasResourceAvailable(ResourceType.EnhancedGibbet)) state.resources.get(ResourceType.EnhancedGibbet).consume(1);
+        state.setTimedResource(ResourceType.EnhancedGallows, 1);
+    } 
+})
+
+makeRPRWeaponskill(SkillName.ExecutionersGallows, 96, {
+    replaceIf: [],
+    startOnHotbar: false,
+    potency: [
+        [TraitName.MeleeMasteryIII, 700],
+    ],
+    positional: {
+        potency: [
+            [TraitName.MeleeMasteryIII, 760],
+        ],
+        location: "flank"
+    },
+    aspect: Aspect.Physical,
+    recastTime: 2.5,
+    applicationDelay: 0.62,
+    highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGallows),
+    validateAttempt: executionerPredicate,
+    onConfirm: (state) => {
+        if (state.hasResourceAvailable(ResourceType.EnhancedGallows)) state.resources.get(ResourceType.EnhancedGallows).consume(1);
+        state.setTimedResource(ResourceType.EnhancedGibbet, 1);
+    } 
+})
+
 makeRPRAbility(SkillName.Gluttony, 76, ResourceType.cd_Gluttony, {
+    replaceIf: [
+        {
+            condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+            newSkill: SkillName.Sacrificium,
+        }
+    ],
     isPhysical: false,
     potency: 520,
     startOnHotbar: true,
     applicationDelay: 1.06,
     cooldown: 60,
     validateAttempt: soulSpendPredicate(50),
-    onApplication: (state) => {
-        //console.log(state.resources.get(ResourceType.Executioner));
-    }
+    highlightIf: soulSpendPredicate(50),
 });
+
+makeRPRAbility(SkillName.BloodStalk, 50, ResourceType.cd_BloodStalk, {
+    replaceIf: [
+        {
+            newSkill: RPRSkillName.LemuresSlice,
+            condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+        },
+        {
+            newSkill: RPRSkillName.UnveiledGibbet,
+            condition: (state) => state.hasResourceAvailable(ResourceType.EnhancedGibbet)
+        },
+        {
+            newSkill: RPRSkillName.UnveiledGallows,
+            condition: (state) => state.hasResourceAvailable(ResourceType.EnhancedGallows)
+        }
+    ],
+    isPhysical: true,
+    potency: 340,
+    startOnHotbar: true,
+    applicationDelay: 0.89,
+    cooldown: 1,
+    validateAttempt: soulSpendPredicate(50),
+    highlightIf: soulSpendPredicate(50),
+})
+
+makeRPRAbility(SkillName.UnveiledGibbet, 70, ResourceType.cd_BloodStalk, {
+    isPhysical: true,
+    potency: 440,
+    startOnHotbar: false,
+    applicationDelay: 0.54,
+    cooldown: 1,
+    validateAttempt: soulSpendPredicate(50),
+    highlightIf: soulSpendPredicate(50),
+})
+
+makeRPRAbility(SkillName.UnveiledGallows, 70, ResourceType.cd_BloodStalk, {
+    isPhysical: true,
+    potency: 440,
+    startOnHotbar: false,
+    applicationDelay: 0.54,
+    cooldown: 1,
+    validateAttempt: soulSpendPredicate(50),
+    highlightIf: soulSpendPredicate(50),
+})
+
+makeRPRAbility(SkillName.LemuresSlice, 86, ResourceType.cd_BloodStalk, {
+    isPhysical: true,
+    potency: [
+        [TraitName.Never, 240],
+        [TraitName.MeleeMasteryIII, 280]
+    ],
+    startOnHotbar: false,
+    applicationDelay: 0.7,
+    cooldown: 1,
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.VoidShroud, 2),
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.VoidShroud, 2),
+    onConfirm: (state) => {
+        state.resources.get(ResourceType.VoidShroud).consume(2);
+    }
+})
+
+makeRPRAbility(SkillName.Sacrificium, 92, ResourceType.cd_BloodStalk, {
+    isPhysical: false,
+    potency: 530,
+    startOnHotbar: false,
+    applicationDelay: 0.76,
+    cooldown: 1,
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Oblatio),
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.Oblatio),
+    onConfirm: (state) => state.resources.get(ResourceType.Oblatio).consume(1),
+})
 
 makeResourceAbility(ShellJob.RPR, SkillName.ArcaneCircle, 72, ResourceType.cd_ArcaneCircle, {
     rscType: ResourceType.ArcaneCircle,
-    applicationDelay: 0.64,
+    applicationDelay: 0.6,
     startOnHotbar: true,
     maxCharges: 1,
     potency: 0,
     onApplication: (state: RPRState) => {
-        console.log("AC");
         state.setTimedResource(ResourceType.CircleOfSacrifice, 1);
         state.setTimedResource(ResourceType.BloodsownCircle, 1);
     },
     cooldown: 120,
-    validateAttempt: (state) => true,
 });
 
-makeRPRAbility(SkillName.ArcaneCircle, 76, ResourceType.cd_ArcaneCircle, {
-    isPhysical: false,
+makeRPRWeaponskill(SkillName.PlentifulHarvest, 88, {
+    replaceIf: [],
+    potency: 720,
+    aspect: Aspect.Physical,
+    recastTime: 2.5,
+    applicationDelay: 1.16,
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.ImmortalSacrifice, 1),
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ImmortalSacrifice, 1)
+                                && !state.hasResourceAvailable(ResourceType.BloodsownCircle),
+    onConfirm: (state) => {
+        state.resources.get(ResourceType.ImmortalSacrifice).consume(state.resources.get(ResourceType.ImmortalSacrifice).availableAmount());
+        state.setTimedResource(ResourceType.IdealHost, 1);
+        state.setTimedResource(ResourceType.PerfectioOcculta, 1);
+    }
+})
+
+makeRPRWeaponskill(SkillName.VoidReaping, 80, {
+    replaceIf: [],
+    startOnHotbar: false,
+    potency: [
+        [TraitName.Never, 460],
+        [TraitName.MeleeMasteryIII, 500],
+    ],
+    aspect: Aspect.Physical,
+    recastTime: 1.5,
+    applicationDelay: 0.53,
+    highlightIf: (state) => !state.hasResourceAvailable(ResourceType.EnhancedCrossReaping),
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.LemureShroud),
+    onConfirm: (state) => {
+        if (state.hasResourceAvailable(ResourceType.EnhancedVoidReaping)) state.resources.get(ResourceType.EnhancedVoidReaping).consume(1);
+        state.setTimedResource(ResourceType.EnhancedCrossReaping, 1);
+        state.resources.get(ResourceType.LemureShroud).consume(1);
+        state.resources.get(ResourceType.VoidShroud).gain(1);
+
+        if (state.resources.get(ResourceType.LemureShroud).availableAmount() === 0) {
+            state.exitEnshroud();
+        }
+    },
+})
+
+makeRPRWeaponskill(SkillName.CrossReaping, 80, {
+    replaceIf: [],
+    startOnHotbar: false,
+    potency: [
+        [TraitName.Never, 460],
+        [TraitName.MeleeMasteryIII, 500],
+    ],
+    aspect: Aspect.Physical,
+    recastTime: 1.5,
+    applicationDelay: 0.53,
+    highlightIf: (state) => !state.hasResourceAvailable(ResourceType.EnhancedVoidReaping),
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.LemureShroud),
+    onConfirm: (state) => {
+        if (state.hasResourceAvailable(ResourceType.EnhancedCrossReaping)) state.resources.get(ResourceType.EnhancedCrossReaping).consume(1);
+        state.setTimedResource(ResourceType.EnhancedVoidReaping, 1);
+        state.resources.get(ResourceType.LemureShroud).consume(1);
+        state.resources.get(ResourceType.VoidShroud).gain(1);
+
+        if (state.resources.get(ResourceType.LemureShroud).availableAmount() === 0) {
+            state.exitEnshroud();
+        }
+    }
+})
+
+makeResourceAbility(ShellJob.RPR, SkillName.Enshroud, 80, ResourceType.cd_Enshroud, {
+    rscType: ResourceType.Enshrouded,
+    highlightIf: (state) => {
+        return state.hasResourceAvailable(ResourceType.Shroud, 50)
+            || state.hasResourceAvailable(ResourceType.IdealHost);
+    },
+    applicationDelay: 0,
     startOnHotbar: true,
-    cooldown: 0
+    cooldown: 15,
+    validateAttempt: (state) => {
+        return state.hasResourceAvailable(ResourceType.Shroud, 50)
+            || state.hasResourceAvailable(ResourceType.IdealHost);
+    },
+    onConfirm: combineEffects(baseOnConfirm(SkillName.Enshroud), (state: RPRState) => {
+        state.enterEnshroud();
+    }) as EffectFn<GameState>,
+})
+
+makeRPRWeaponskill(SkillName.Perfectio, 100, {
+    replaceIf: [],
+    potency: 1300,
+    aspect: Aspect.Physical,
+    recastTime: 2.5,
+    applicationDelay: 1.29,
+    startOnHotbar: false,
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.PerfectioParata),
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.PerfectioParata),
+    onConfirm: (state) => {
+        state.resources.get(ResourceType.PerfectioParata).consume(1);
+    }
+})
+
+makeRPRSpell(SkillName.Communio, 90, {
+    replaceIf: [
+        {
+            condition: (state) => state.hasResourceAvailable(ResourceType.PerfectioParata),
+            newSkill: SkillName.Perfectio,
+        }
+    ],
+    potency: 1100,
+    aspect: Aspect.Other,
+    castTime: 1.3,
+    recastTime: 2.5,
+    applicationDelay: 1.16,
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.Enshrouded)
+                            && state.resources.get(ResourceType.LemureShroud).availableAmount() === 1,
+    onConfirm: (state) => {
+        if (state.hasResourceAvailable(ResourceType.PerfectioOcculta)) {
+            state.resources.get(ResourceType.PerfectioOcculta).consume(1);
+            state.setTimedResource(ResourceType.PerfectioParata, 1);
+        }
+        state.exitEnshroud();
+        if (state.hasResourceAvailable(ResourceType.EnhancedCrossReaping)) {
+            state.resources.get(ResourceType.EnhancedCrossReaping).consume(1);
+        }
+        if (state.hasResourceAvailable(ResourceType.EnhancedVoidReaping)) {
+            state.resources.get(ResourceType.EnhancedVoidReaping).consume(1);
+        }
+    }
+})
+
+makeRPRSpell(SkillName.Harpe, 15, {
+    potency: 300,
+    replaceIf: [],
+    aspect: Aspect.Other,
+    castTime: 1.3,
+    recastTime: 2.5,
+    applicationDelay: 0.9,
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.EnhancedHarpe),
+})
+
+makeRPRSpell(SkillName.Soulsow, 82, {
+    potency: 0,
+    replaceIf: [
+        {
+            condition: (state) => state.hasResourceAvailable(ResourceType.Soulsow),
+            newSkill: SkillName.HarvestMoon,
+        },
+    ],
+    startOnHotbar: true,
+    aspect: Aspect.Other,
+    castTime: 5,
+    recastTime: 2.5,
+    applicationDelay: 0,
+    highlightIf: (_state) => false,
+    onConfirm: (state) => state.resources.get(ResourceType.Soulsow).gain(1),
+})
+
+makeRPRSpell(SkillName.HarvestMoon, 82, {
+    potency: [
+        [TraitName.Never, 600],
+        [TraitName.MeleeMasteryIII, 800],
+    ],
+    replaceIf: [],
+    startOnHotbar: false,
+    aspect: Aspect.Other,
+    castTime: 0,
+    recastTime: 2.5,
+    applicationDelay: 0.9,
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Soulsow),
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.Soulsow),
+    onConfirm: (state) => state.resources.get(ResourceType.Soulsow).consume(1),
 })

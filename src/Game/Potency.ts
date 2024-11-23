@@ -22,8 +22,14 @@ export const enum PotencyModifierType {
 	AUTO_CRIT,
 	YATEN,
 	POSITIONAL,
+
 	ARCANECIRCLE,
 	DEATHSDESIGN,
+	ENHANCED_GIBBET,
+	ENHANCED_GALLOWS,
+	ENHANCED_VOID_REAPING,
+	ENHANCED_CROSS_REAPING,
+	IMMORTAL_SACRIFICE,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -159,6 +165,31 @@ export const Modifiers = {
 		source: PotencyModifierType.DEATHSDESIGN,
 		damageFactor: 1.10,
 	} as PotencyMultiplier,
+	EnhancedGibbet: {
+		kind: "adder",
+		source: PotencyModifierType.ENHANCED_GIBBET,
+		additiveAmount: 60		
+	} as PotencyAdder,
+	EnhancedGallows: {
+		kind: "adder",
+		source: PotencyModifierType.ENHANCED_GALLOWS,
+		additiveAmount: 60		
+	} as PotencyAdder,
+	EnhancedVoidReaping: {
+		kind: "adder",
+		source: PotencyModifierType.ENHANCED_VOID_REAPING,
+		additiveAmount: 40		
+	} as PotencyAdder,
+	EnhancedCrossReaping: {
+		kind: "adder",
+		source: PotencyModifierType.ENHANCED_CROSS_REAPING,
+		additiveAmount: 40	
+	} as PotencyAdder,
+	ImmortalSacrifice: {
+		kind: "adder",
+		source: PotencyModifierType.IMMORTAL_SACRIFICE,
+		additiveAmount: 40,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {
