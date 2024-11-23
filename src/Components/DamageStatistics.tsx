@@ -506,7 +506,24 @@ export class DamageStatistics extends React.Component {
 		}
 
 		let isDoTProp = function(skillName: SkillName) {
-			return skillName === SkillName.Thunder3 || skillName === SkillName.HighThunder || skillName === SkillName.Higanbana;
+			const doTSkills: SkillName[] = [
+				// BLM
+				SkillName.Thunder3, SkillName.HighThunder, 
+				// SAM
+				SkillName.Higanbana,
+				// MCH
+				SkillName.Bioblaster, SkillName.Flamethrower
+			]
+			return doTSkills.includes(skillName)
+		}
+
+		let hidePotency = function(skillName: SkillName) {
+			if (isDoTProp(skillName)) { return true}
+			const hidePotencySkills: SkillName[] = [
+				// MCH: Queen and Wildfire have variable potencies per "tic" so just don't show them in the per-hit potency column
+				SkillName.AutomatonQueen, SkillName.Wildfire, 
+			]
+			return hidePotencySkills.includes(skillName)
 		}
 
 		let makeRow = function(props: {
@@ -559,7 +576,7 @@ export class DamageStatistics extends React.Component {
 
 			// potency
 			let potencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.basePotency > 0 && !isDoTProp(props.row.skillName)) {
+			if (props.row.basePotency > 0 && !hidePotency(props.row.skillName)) {
 				potencyNode = <PotencyDisplay
 					includeInStats={includeInStats}
 					basePotency={props.row.basePotency}
