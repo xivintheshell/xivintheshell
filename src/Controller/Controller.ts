@@ -13,16 +13,18 @@ import {getAutoReplacedSkillName, getConditionalReplacement, getNormalizedSkillN
 import {BLMState} from "../Game/Jobs/BLM";
 import {PCTState} from "../Game/Jobs/PCT";
 import {RDMState} from "../Game/Jobs/RDM";
-import { DNCState } from "../Game/Jobs/DNC";
+import {DNCState} from "../Game/Jobs/DNC";
 import {SAMState} from "../Game/Jobs/SAM";
+import {MCHState} from "../Game/Jobs/MCH";
 import {Buff} from "../Game/Buffs";
 import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 import {BLMStatusPropsGenerator} from "../Components/Jobs/BLM";
 import {PCTStatusPropsGenerator} from "../Components/Jobs/PCT";
 import {RDMStatusPropsGenerator} from "../Components/Jobs/RDM";
-import { DNCStatusPropsGenerator } from "../Components/Jobs/DNC";
+import {DNCStatusPropsGenerator} from "../Components/Jobs/DNC";
 import {SAMStatusPropsGenerator} from "../Components/Jobs/SAM";
+import {MCHStatusPropsGenerator} from "../Components/Jobs/MCH";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
@@ -60,6 +62,8 @@ const newGameState = (config: GameConfig) => {
 		return new DNCState(config);
 	} else if (config.job === ShellJob.SAM) {
 		return new SAMState(config);
+	} else if (config.job === ShellJob.MCH) {
+		return new MCHState(config);
 	}
 	return new BLMState(config);
 };
@@ -689,6 +693,9 @@ class Controller {
 				break;
 			case ShellJob.SAM:
 				propsGenerator = new SAMStatusPropsGenerator(game as SAMState);
+				break;
+			case ShellJob.MCH:
+				propsGenerator = new MCHStatusPropsGenerator(game as MCHState);
 				break;
 			default:
 				propsGenerator = new BLMStatusPropsGenerator(game as BLMState);

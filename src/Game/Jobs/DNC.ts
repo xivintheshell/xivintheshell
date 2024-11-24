@@ -58,8 +58,6 @@ makeDNCResource(ResourceType.EspritPartner, 1, {timeout: 60})
 makeDNCResource(ResourceType.StandardFinishPartner, 1, {timeout: 60})
 makeDNCResource(ResourceType.EspritTechnical, 1, {timeout: 20})
 
-makeDNCResource(ResourceType.ArmsLength, 1, {timeout: 6.5})
-
 makeDNCResource(ResourceType.CascadeCombo, 1, {timeout: 30})
 makeDNCResource(ResourceType.WindmillCombo, 1, {timeout: 30})
 makeDNCResource(ResourceType.PartySize, 8, {default: 8})

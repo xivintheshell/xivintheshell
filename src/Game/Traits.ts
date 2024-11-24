@@ -11,6 +11,7 @@ export class Trait {
 }
 
 export const enum TraitName {
+	// BLM
 	EnhancedEnochianII,
 	EnhancedPolyglot,
 	EnhancedFoul,
@@ -26,6 +27,7 @@ export const enum TraitName {
 	EnhancedAddle,
 	EnhancedAstralFire,
 
+	// PCT
 	PictomancyMasteryII,
 	EnhancedArtistry,
 	EnhancedPictomancy,
@@ -39,6 +41,7 @@ export const enum TraitName {
 	EnhancedPictomancyIV,
 	EnhancedPictomancyV,
 
+	// RDM
 	EnhancedDisplacement,
 	RedMagicMastery,
 	EnhancedManafication,
@@ -51,6 +54,7 @@ export const enum TraitName {
 	EnhancedAccelerationII,
 	EnhancedManaficationIII,
 
+	// DNC
 	Esprit,
 	EnhancedEnAvantII,
 	EnhancedTechnicalFinish,
@@ -76,6 +80,22 @@ export const enum TraitName {
 	EnhancedIkishotenII,
 	EnhancedMeikyoShisuiII,
 	EnhancedFeint,
+
+	// MCH
+	ChargedActionMastery,
+	HotShotMastery,
+	EnhancedWildfire,
+	Promotion,
+	SpreadShotMastery,
+	EnhancedReassemble,
+	MarksmansMastery,
+	QueensGambit,
+	EnhancedTactician,
+	DoubleBarrelMastery,
+	EnhancedMultiWeapon,
+	MarksmansMasteryII,
+	EnhancedMultiWeaponII,
+	EnhancedBarrelStabilizer,
 
 	Never,
 }
@@ -150,6 +170,22 @@ export class Traits {
 			[TraitName.EnhancedIkishotenII, 96],
 			[TraitName.EnhancedMeikyoShisuiII, 100],
 			[TraitName.EnhancedFeint, 98],
+			
+			[TraitName.ChargedActionMastery, 74],
+			[TraitName.HotShotMastery, 76],
+			[TraitName.EnhancedWildfire, 88],
+			[TraitName.Promotion, 80],
+			[TraitName.SpreadShotMastery, 82],
+			[TraitName.EnhancedReassemble, 84],
+			[TraitName.MarksmansMastery, 84],
+			[TraitName.QueensGambit, 86],
+			[TraitName.EnhancedTactician, 88],
+			[TraitName.DoubleBarrelMastery, 92],
+			[TraitName.EnhancedMultiWeapon, 94],
+			[TraitName.MarksmansMasteryII, 94],
+			[TraitName.EnhancedMultiWeaponII, 96],
+			[TraitName.EnhancedBarrelStabilizer, 100],
+
 		].map(([name, level]) => [name, new Trait(name, level)]));
 	}
 

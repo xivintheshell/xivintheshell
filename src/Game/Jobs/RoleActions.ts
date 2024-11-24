@@ -1,7 +1,7 @@
 import {ALL_JOBS, CASTER_JOBS, HEALER_JOBS, MELEE_JOBS, PHYSICAL_RANGED_JOBS, ShellJob, TANK_JOBS} from "../../Controller/Common";
 import {SkillName, ResourceType, WarningType} from "../Common";
 import {combineEffects, makeAbility, makeResourceAbility} from "../Skills";
-import {DoTBuff, EventTag} from "../Resources"
+import {DoTBuff, EventTag, makeResource} from "../Resources"
 import {Traits, TraitName} from "../Traits";
 import type {GameState} from "../GameState";
 import {controller} from "../../Controller/Controller";
@@ -37,6 +37,9 @@ makeAbility(PHYSICAL_RANGED_JOBS, SkillName.HeadGraze, 24, ResourceType.cd_HeadG
 	assetPath: "Role/Head Graze.png",
 });
 
+CASTER_JOBS.forEach((job) => {
+	makeResource(job, ResourceType.Addle, 1, {timeout: 15});
+})
 makeResourceAbility(CASTER_JOBS, SkillName.Addle, 8, ResourceType.cd_Addle, {
 	rscType: ResourceType.Addle,
 	applicationDelay: 0.621, // delayed
@@ -45,6 +48,9 @@ makeResourceAbility(CASTER_JOBS, SkillName.Addle, 8, ResourceType.cd_Addle, {
 	assetPath: "Role/Addle.png",
 });
 
+[...HEALER_JOBS, ...CASTER_JOBS].forEach((job) => {
+	makeResource(job, ResourceType.Swiftcast, 1, {timeout: 10});
+})
 makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], SkillName.Swiftcast, 18, ResourceType.cd_Swiftcast, {
 	rscType: ResourceType.Swiftcast,
 	applicationDelay: 0, // instant
@@ -52,6 +58,9 @@ makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], SkillName.Swiftcast, 18, R
 	assetPath: "Role/Swiftcast.png",
 });
 
+[...HEALER_JOBS, ...CASTER_JOBS].forEach((job) => {
+	makeResource(job, ResourceType.LucidDreaming, 1, {timeout: 21});
+})
 makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], SkillName.LucidDreaming, 14, ResourceType.cd_LucidDreaming, {
 	rscType: ResourceType.LucidDreaming,
 	applicationDelay: 0.623, // delayed
@@ -68,13 +77,20 @@ makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], SkillName.LucidDreaming, 1
 	},
 });
 
+[...TANK_JOBS, ...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS].forEach((job) => {
+	makeResource(job, ResourceType.ArmsLength, 1, {timeout: 6.5})
+});
 makeResourceAbility([...TANK_JOBS, ...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS], SkillName.ArmsLength, 32, ResourceType.cd_ArmsLength, {
 	rscType: ResourceType.ArmsLength,
 	applicationDelay: 0.62,
 	cooldown: 120,
 	assetPath: "Role/Arms Length.png",
-})
+	onConfirm: cancelMeditate,
+});
 
+[...HEALER_JOBS, ...CASTER_JOBS].forEach((job) => {
+	makeResource(job, ResourceType.Surecast, 1, {timeout: 6.5})
+});
 makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], SkillName.Surecast, 44, ResourceType.cd_Surecast, {
 	rscType: ResourceType.Surecast,
 	applicationDelay: 0, // surprisingly instant because arms length is not
@@ -82,6 +98,10 @@ makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], SkillName.Surecast, 44, Re
 	assetPath: "Role/Surecast.png",
 });
 
+
+MELEE_JOBS.forEach((job) => {
+	makeResource(job, ResourceType.Feint, 1, {timeout: 15});
+})
 makeResourceAbility(MELEE_JOBS, SkillName.Feint, 22, ResourceType.cd_Feint, {
 	rscType: ResourceType.Feint,
 	applicationDelay: 0.537,
@@ -91,6 +111,9 @@ makeResourceAbility(MELEE_JOBS, SkillName.Feint, 22, ResourceType.cd_Feint, {
 	onConfirm: cancelMeditate,
 });
 
+MELEE_JOBS.forEach((job) => {
+	makeResource(job, ResourceType.TrueNorth, 1, {timeout: 10});
+})
 makeResourceAbility(MELEE_JOBS, SkillName.TrueNorth, 50, ResourceType.cd_TrueNorth, {
 	rscType: ResourceType.TrueNorth,
 	applicationDelay: 0,
@@ -100,14 +123,9 @@ makeResourceAbility(MELEE_JOBS, SkillName.TrueNorth, 50, ResourceType.cd_TrueNor
 	onConfirm: cancelMeditate,
 });
 
-makeResourceAbility(MELEE_JOBS, SkillName.ArmsLength, 32, ResourceType.cd_ArmsLength, {
-	rscType: ResourceType.ArmsLength,
-	applicationDelay: 0.625,
-	cooldown: 120,
-	assetPath: "Role/Arm's Length.png",
-	onConfirm: cancelMeditate,
-});
-
+MELEE_JOBS.forEach((job) => {
+	makeResource(job, ResourceType.Bloodbath, 1, {timeout: 20});
+})
 makeResourceAbility(MELEE_JOBS, SkillName.Bloodbath, 8, ResourceType.cd_Bloodbath, {
 	rscType: ResourceType.Bloodbath,
 	applicationDelay: 0.625,

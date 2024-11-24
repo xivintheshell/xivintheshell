@@ -3,6 +3,7 @@ import {PCTSkillName, PCTResourceType, PCTCooldownType} from "./Constants/PCT";
 import {RDMSkillName, RDMResourceType, RDMCooldownType} from "./Constants/RDM";
 import {DNCSkillName, DNCResourceType, DNCCooldownType} from "./Constants/DNC";
 import {SAMSkillName, SAMResourceType, SAMCooldownType} from "./Constants/SAM";
+import {MCHSkillName, MCHResourceType, MCHCooldownType} from "./Constants/MCH";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -65,6 +66,7 @@ export const SkillName = {
 	...RDMSkillName,
 	...DNCSkillName,
 	...SAMSkillName,
+	...MCHSkillName,
 	...GeneralSkillName,
 }
 
@@ -74,7 +76,8 @@ export type SkillName = GeneralSkillName
 	| PCTSkillName
 	| RDMSkillName
 	| DNCSkillName
-	| SAMSkillName;
+	| SAMSkillName
+	| MCHSkillName;
 
 export const enum SkillReadyStatus {
 	Ready = "ready",
@@ -172,6 +175,7 @@ const CooldownType = {
 	...RDMCooldownType,
 	...DNCCooldownType,
 	...SAMCooldownType,
+	...MCHCooldownType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -180,7 +184,8 @@ type CooldownType = GeneralCooldownType
 	| PCTCooldownType
 	| RDMCooldownType
 	| DNCCooldownType
-	| SAMCooldownType;
+	| SAMCooldownType
+	| MCHCooldownType;
 
 export const ResourceType = {
 	...CooldownType,
@@ -190,6 +195,7 @@ export const ResourceType = {
 	...RDMResourceType,
 	...DNCResourceType,
 	...SAMResourceType,
+	...MCHResourceType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -199,7 +205,8 @@ export type ResourceType = CooldownType
 	| PCTResourceType
 	| RDMResourceType
 	| DNCResourceType
-	| SAMResourceType;
+	| SAMResourceType
+	| MCHResourceType;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",
@@ -221,6 +228,9 @@ export const enum WarningType {
 	EspritOvercap = "esprit gauge overcap",
 	FeatherOvercap = "feather gauge overcap",
 	FanThreeOverwrite = "overwrote fan dance 3",
+
+	HeatOvercap = "heat gauge overcap",
+	BatteryOvercap = "battery gauge overcap",
 
 	KenkiOvercap = "kenki overcap",
 	MeditationOvercap = "meditation stack overcap",
