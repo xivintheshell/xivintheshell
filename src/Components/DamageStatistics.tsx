@@ -513,7 +513,7 @@ export class DamageStatistics extends React.Component {
 		let hidePotency = function(skillName: SkillName) {
 			if (isDoTProp(skillName)) { return true}
 			const hidePotencySkills: SkillName[] = [
-				// MCH: Queen and Wildfire have variable potencies per "tic" so just don't show them in the per-hit potency column
+				// MCH: Queen and Wildfire have variable potencies per "tick" so just don't show them in the per-hit potency column
 				SkillName.AutomatonQueen, SkillName.Wildfire, 
 			]
 			return hidePotencySkills.includes(skillName)
