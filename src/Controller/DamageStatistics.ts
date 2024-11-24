@@ -257,20 +257,14 @@ export function updateSkillOrDoTInclude(props: {
 		excludedFromStats.delete(props.skillNameOrDoT);
 		// it doesn't make sense to include DoT but not base potency of Thunder/Higanbana
 		if (props.skillNameOrDoT === "DoT") {
-			excludedFromStats.delete(SkillName.Thunder3);
-			excludedFromStats.delete(SkillName.HighThunder);
-			excludedFromStats.delete(SkillName.Higanbana);
-			excludedFromStats.delete(SkillName.Bioblaster);
+			DOT_SKILLS.forEach(skill => excludedFromStats.delete(skill));
 		} else if (props.skillNameOrDoT === SkillName.Thunder3 ||
 				   props.skillNameOrDoT === SkillName.HighThunder) {
 			excludedFromStats.delete("DoT");
 		}
 	} else {
 		excludedFromStats.add(props.skillNameOrDoT);
-		if (props.skillNameOrDoT === SkillName.Thunder3 || 
-			props.skillNameOrDoT === SkillName.HighThunder ||
-			props.skillNameOrDoT === SkillName.Higanbana ||
-			props.skillNameOrDoT === SkillName.Bioblaster) {
+		if (props.skillNameOrDoT !== "DoT" && DOT_SKILLS.includes(props.skillNameOrDoT)) {
 			excludedFromStats.add("DoT");
 		}
 	}
