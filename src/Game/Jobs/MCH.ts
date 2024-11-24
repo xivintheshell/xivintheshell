@@ -51,6 +51,7 @@ makeMCHResource(ResourceType.Queen, 7)
 makeMCHResource(ResourceType.QueenPunches, 5)
 makeMCHResource(ResourceType.QueenFinishers, 2)
 makeMCHResource(ResourceType.WildfireHits, 6)
+makeMCHResource(ResourceType.BatteryBonus, 50)
 
 
 const COMBO_GCDS: SkillName[] = [SkillName.HeatedCleanShot, SkillName.HeatedSlugShot, SkillName.HeatedSplitShot,
@@ -307,7 +308,6 @@ const makeAbility_MCH = (name: SkillName, unlockLevel: number, cdName: ResourceT
     secondaryCooldown?: CooldownGroupProperies,
 }): Ability<MCHState> => {
     const onConfirm: EffectFn<MCHState> = combineEffects(
-        (state) => state.tryConsumeResource(ResourceType.Improvisation),
         params.onConfirm ?? NO_EFFECT,
     );
     return makeAbility(ShellJob.MCH, name, unlockLevel, cdName, {
@@ -671,17 +671,17 @@ robotSummons.forEach((params) => {
             } else {
                 basePotency = state.calculateQueenPotency(35, 75)
             }
-            const punchPotency = new Potency({
-                config: state.config,
-                sourceTime: state.getDisplayTime(),
-                sourceSkill,
-                aspect: Aspect.Physical,
-                description: "",
-                basePotency,
-                snapshotTime: undefined,
-            })
+
             for (let i = 0; i < punchResource.availableAmount(); i++) {
-                node.addPotency(punchPotency)
+                node.addPotency(new Potency({
+                    config: state.config,
+                    sourceTime: state.getDisplayTime(),
+                    sourceSkill,
+                    aspect: Aspect.Physical,
+                    description: "",
+                    basePotency,
+                    snapshotTime: undefined,
+                }))
             }
 
             sourceSkill = Traits.hasUnlocked(TraitName.Promotion, state.config.level) ? SkillName.PileBunker : SkillName.RookOverload
