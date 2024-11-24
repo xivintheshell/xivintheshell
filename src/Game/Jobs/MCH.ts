@@ -91,12 +91,9 @@ const WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT: SkillName[] = [
 ];
 
 export class MCHState extends GameState {
-	dotTickOffset: number;
 
-	constructor(config: GameConfig) {
-		super(config);
-
-		this.dotTickOffset = this.nonProcRng() * 3.0;
+    constructor (config: GameConfig) {
+        super(config)
 
 		// Unlike standard and technical, Air Anchor and Chain Saw's cooldowns are affected by skill speed
 		this.cooldowns.set(
@@ -129,39 +126,8 @@ export class MCHState extends GameState {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Tactician, 120, 1, 1));
 		}
 
-		this.registerRecurringEvents();
-	}
-
-	override registerRecurringEvents() {
-		super.registerRecurringEvents();
-
-		let recurringDotTick = () => {
-			const dotBuff = this.resources.get(ResourceType.Bioblaster) as DoTBuff;
-			if (dotBuff.available(1)) {
-				dotBuff.tickCount++;
-				if (dotBuff.node) {
-					const p = dotBuff.node.getPotencies()[dotBuff.tickCount];
-					controller.resolvePotency(p);
-				}
-			}
-
-			// increment count
-			if (this.getDisplayTime() >= 0) {
-				controller.reportDotTick(this.time);
-			}
-
-			// queue the next tick
-			this.addEvent(
-				new Event("DoT tick", 3, () => {
-					recurringDotTick();
-				}),
-			);
-		};
-
-		let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
-		while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
-		this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
-	}
+        super.registerRecurringEvents([ResourceType.Bioblaster]);
+    }
 
 	processComboStatus(skill: SkillName) {
 		if (!COMBO_GCDS.includes(skill)) {

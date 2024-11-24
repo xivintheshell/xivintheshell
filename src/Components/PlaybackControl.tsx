@@ -205,18 +205,10 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 	});
 	// TODO specialize for BLM
 	// TODO (revisit): double check this forced cast
-	let thunderTickOffset = controller.game.isBLMState()
-		? controller.game.thunderTickOffset.toFixed(3)
-		: "";
-	let thunderOffsetDesc = localize({
-		en: "the random time offset of thunder DoT ticks relative to mp ticks",
-		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）",
-	});
-	let higanbanaTickOffset = controller.game.isSAMState()
-		? controller.game.higanbanaTickOffset.toFixed(3)
-		: "";
-	let higanbanaOffsetDesc = localize({
-		en: "the random time offset of higanbana DoT ticks relative to mp ticks",
+	const dotTickOffset = controller.game.dotTickOffset.toFixed(3);
+	let offsetDesc = localize({
+		en: "the random time offset of DoT ticks relative to mp ticks",
+		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）", // Akairyu's Note - Needs retranslating after removing the reference to thunder
 	});
 	let procMode = controller.gameConfig.procMode;
 	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
@@ -284,21 +276,13 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 			<Help topic={"lucidTickOffset"} content={lucidOffsetDesc} />: {lucidTickOffset}
 		</div>}
 
-		{props.job === ShellJob.BLM && <div>
-			{localize({ en: "Thunder DoT tick offset ", zh: "跳雷&跳蓝时间差 " })}
-			<Help topic={"thunderTickOffset"} content={thunderOffsetDesc} />: {thunderTickOffset}
-		</div>}
+		{/* Akairyu's Note: Needs retranslating after removing reference to Thunder*/}
+		{controller.game.dotResources.length > 0 &&
+			<div>{localize({en: "DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"dotTickOffset"} content={offsetDesc}/>: {dotTickOffset}</div>
+		}
 
 		{props.job === ShellJob.SAM && <>
-			<div>
-				{localize({ en: "Higanbana DoT tick offset " })}
-				<Help topic={"higanbanaTickOffset"} content={higanbanaOffsetDesc} />:{" "}
-				{higanbanaTickOffset}
-			</div>
-			<div>
-				{localize({ en: "Fuka GCD" })}:{" "}
-				{controller.gameConfig.adjustedSksGCD(2.5, ResourceType.Fuka).toFixed(2)}
-			</div>
+			<div>{localize({en: "Fuka GCD"})}: {controller.gameConfig.adjustedSksGCD(2.5, ResourceType.Fuka).toFixed(2)}</div>
 		</>}
 
 		{props.job === ShellJob.BLM ? (
