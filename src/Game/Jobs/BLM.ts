@@ -97,36 +97,7 @@ export class BLMState extends GameState {
 	}
 
 	override registerRecurringEvents() {
-		super.registerRecurringEvents();
-		// thunder DoT tick
-		let recurringThunderTick = () => {
-			let thunder = this.resources.get(ResourceType.ThunderDoT) as DoTBuff;
-			if (thunder.available(1)) {
-				// dot buff is effective
-				thunder.tickCount++;
-				if (thunder.node) {
-					// aka this buff is applied by a skill (and not just from an override)
-					// access potencies at index [1, 10] (since 0 is initial potency)
-					let p = thunder.node.getPotencies()[thunder.tickCount];
-					controller.resolvePotency(p);
-				}
-			}
-			// increment count
-			if (this.getDisplayTime() >= 0) {
-				controller.reportDotTick(this.time);
-			}
-			// queue the next tick
-			this.addEvent(
-				new Event("thunder DoT tick", 3, () => {
-					recurringThunderTick();
-				}),
-			);
-		};
-		let timeTillFirstThunderTick = this.config.timeTillFirstManaTick + this.thunderTickOffset;
-		while (timeTillFirstThunderTick > 3) timeTillFirstThunderTick -= 3;
-		this.addEvent(
-			new Event("initial thunder DoT tick", timeTillFirstThunderTick, recurringThunderTick),
-		);
+		super.registerRecurringEvents([ResourceType.ThunderDoT]);
 
 		// also polyglot
 		let recurringPolyglotGain = (rsc: Resource) => {
