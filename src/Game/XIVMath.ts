@@ -33,10 +33,10 @@ export class XIVMath {
 		let modifier = damageFactor;
 
 		const critRate = (critBonus >= 1) ? critBonus : 
-			critBonus < 0 ? 0 : 
+			(critBonus < 0) ? 0 : 
 			XIVMath.#criticalHitRate(level, crit) + critBonus;
 		const dhRate = (critBonus >= 1) ? dhBonus : 
-			dhBonus < 0 ? 0 :
+			(dhBonus < 0) ? 0 :
 			XIVMath.#directHitRate(level, dh) + dhBonus;
 
 		// If this ability can't crit or direct hit, no need to calculate further modifications

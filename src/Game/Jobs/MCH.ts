@@ -53,7 +53,9 @@ makeMCHResource(ResourceType.QueenFinishers, 2)
 makeMCHResource(ResourceType.WildfireHits, 6)
 
 
-const COMBO_GCDS: SkillName[] = [SkillName.HeatedCleanShot, SkillName.HeatedSlugShot, SkillName.HeatedSplitShot]
+const COMBO_GCDS: SkillName[] = [SkillName.HeatedCleanShot, SkillName.HeatedSlugShot, SkillName.HeatedSplitShot,
+    SkillName.SpreadShot, SkillName.Scattergun // Including AoE GCDs that break the combo, even though they don't combo themselves
+]
 export class MCHState extends GameState {
     dotTickOffset: number
 
@@ -75,7 +77,12 @@ export class MCHState extends GameState {
             this.cooldowns.set(new CoolDown(ResourceType.cd_Reassemble, 55, 1, 1))
         }
         if (!Traits.hasUnlocked(TraitName.EnhancedMultiWeapon, config.level)) {
-            this.cooldowns.set(new CoolDown(ResourceType.cd_Drill, 20, 1, 1))
+            this.cooldowns.set(new CoolDown(ResourceType.cd_Drill, this.config.adjustedSksGCD(20), 1, 1))
+        }
+
+        if (!Traits.hasUnlocked(TraitName.ChargedActionMastery, config.level)) {
+            this.cooldowns.set(new CoolDown(ResourceType.cd_DoubleCheck, 30, 2, 2))
+            this.cooldowns.set(new CoolDown(ResourceType.cd_Checkmate, 30, 2, 2))
         }
 
         if (!Traits.hasUnlocked(TraitName.EnhancedTactician, this.config.level)) {
@@ -119,6 +126,7 @@ export class MCHState extends GameState {
 
         const comboState = this.resources.get(ResourceType.HeatCombo).availableAmount();
 
+        // Defaulting to nextState 0 allows the AoE fillers to break the combo
         let nextState = 0
         if (comboState === 0 && skill === SkillName.HeatedSplitShot) {
             nextState = 1
@@ -263,7 +271,8 @@ const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
             if (state.hasResourceAvailable(ResourceType.WildfireSelf)) {
                 state.resources.get(ResourceType.WildfireHits).gain(1)
             }
-        }
+        },
+        (state) => state.tryConsumeResource(ResourceType.Overheated) // All weaponskills executed during overheat will consume a stack
     );
     const onApplication: EffectFn<MCHState> = params.onApplication ?? NO_EFFECT;
     return makeWeaponskill(ShellJob.MCH, name, unlockLevel, {
@@ -567,7 +576,6 @@ makeWeaponskill_MCH(SkillName.BlazingShot, 68, {
     onConfirm: (state) =>  {
         (state.cooldowns.get(ResourceType.cd_DoubleCheck) as CoolDown).restore(state, 15);
         (state.cooldowns.get(ResourceType.cd_Checkmate) as CoolDown).restore(state, 15);
-        state.tryConsumeResource(ResourceType.Overheated)
     },
     validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Overheated),
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.Overheated),
@@ -581,14 +589,14 @@ makeAbility_MCH(SkillName.GaussRound, 15, ResourceType.cd_DoubleCheck, {
     potency: 130,
     applicationDelay: 0.71,
     cooldown: 30,
-    maxCharges: 2, // TODO
+    maxCharges: 3, // TODO
 })
 makeAbility_MCH(SkillName.DoubleCheck, 92, ResourceType.cd_DoubleCheck, {
     startOnHotbar: false,
     potency: 170,
     applicationDelay: 0.71,
     cooldown: 30,
-    maxCharges: 3, // TODO
+    maxCharges: 3,
 })
 
 makeAbility_MCH(SkillName.Ricochet, 50, ResourceType.cd_Checkmate, {
@@ -599,14 +607,14 @@ makeAbility_MCH(SkillName.Ricochet, 50, ResourceType.cd_Checkmate, {
     potency: 130,
     applicationDelay: 0.71,
     cooldown: 30,
-    maxCharges: 2, // TODO
+    maxCharges: 3,
 })
 makeAbility_MCH(SkillName.Checkmate, 92, ResourceType.cd_Checkmate, {
     startOnHotbar: false,
     potency: 170,
     applicationDelay: 0.71,
     cooldown: 30,
-    maxCharges: 3, // TODO
+    maxCharges: 3,
 })
 
 const robotSummons: Array<{
@@ -648,7 +656,7 @@ robotSummons.forEach((params) => {
             // Consume the gauge
             state.tryConsumeResource(ResourceType.BatteryGauge, true)
 
-            // note that queen is summoned, and qrant the requisite number of punches and finishers
+            // note that queen is summoned, and grant the requisite number of punches and finishers
             const punchResource = state.resources.get(ResourceType.QueenPunches)
             punchResource.gain(5)
             const finishers = Traits.hasUnlocked(TraitName.QueensGambit, state.config.level) ? 2 : 1
