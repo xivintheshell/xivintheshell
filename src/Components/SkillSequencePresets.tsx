@@ -5,6 +5,7 @@ import {FileType, ReplayMode} from "../Controller/Common";
 import {getSkillIconPath} from "./Skills";
 import {ActionType, Line} from "../Controller/Record";
 import {getCurrentThemeColors} from "./ColorTheme";
+import {localize} from "./Localization";
 
 type Fixme = any;
 
@@ -30,13 +31,14 @@ class SaveAsPreset extends React.Component {
 			<Input
 				style={{display: "inline-block", marginTop: "10px"}}
 				defaultValue={this.state.filename}
-				description={"name: "} width={30}
+				description={localize({en: "name: ", zh: "文件名："})}
+				width={30}
 				onChange={this.onChange}/>
 			<span> </span>
 			<button type={"submit"} disabled={!this.props.enabled} onClick={(e) => {
 				controller.addSelectionToPreset(this.state.filename);
 				e.preventDefault();
-			}}>add selection to preset
+			}}>{localize({en: "add selection to preset", zh: "使用此文件中的预设"})}
 			</button>
 		</form>
 	}
@@ -92,7 +94,7 @@ export class SkillSequencePresets extends React.Component {
 		let content = <div>
 			<button style={{marginBottom: 10}} onClick={()=>{
 				controller.deleteAllLines();
-			}}>clear all presets</button>
+			}}>{localize({en: "clear all presets", zh: "重置所有预设"})}</button>
 			<LoadJsonFromFileOrUrl
 				allowLoadFromUrl={false} // disabled for now, until when/if people have some common openers
 				loadUrlOnMount={false}
@@ -116,12 +118,12 @@ export class SkillSequencePresets extends React.Component {
 				<div style={{marginTop: 16}}>
 					<SaveToFile fileFormat={FileFormat.Json} getContentFn={()=>{
 						return controller.serializedPresets();
-					}} filename={"presets"} displayName={"download presets to file"}/>
+					}} filename={"presets"} displayName={localize({en: "download presets to file", zh: "将当前预设下载为文件"})}/>
 				</div>
 			</div>
 		</div>;
 		return <Expandable
-			title="Skill sequence presets"
+			title={localize({en: "Skill sequence presets", zh: "技能轴预设"}) as string}
 			content={content}
 			defaultShow={false}/>
 	}
