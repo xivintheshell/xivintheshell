@@ -43,6 +43,7 @@ export abstract class GameState {
 	rng: RNG;
 	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
 	lucidTickOffset: number;
+	dotTickOffset: number;
 	time: number; // raw time which starts at 0 regardless of countdown
 	resources: ResourceState;
 	cooldowns: CoolDownState;
@@ -50,11 +51,14 @@ export abstract class GameState {
 	skillsList: SkillsList<GameState>;
 	displayedSkills: DisplayedSkills;
 
+	dotResources: ResourceType[] = []
+
 	constructor(config: GameConfig) {
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
 		this.nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
 		this.lucidTickOffset = this.nonProcRng() * 3.0;
+		this.dotTickOffset = this.nonProcRng() * 3.0;
 
 		// TIME (raw time which starts at 0 regardless of countdown)
 		this.time = 0;
@@ -120,7 +124,7 @@ export abstract class GameState {
 	 * have not yet initialized their resource/cooldown objects. Instead, all
 	 * sub-classes must explicitly call this at the end of their constructor.
 	 */
-	protected registerRecurringEvents() {
+	protected registerRecurringEvents(dotResources: ResourceType[] = []) {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
@@ -205,7 +209,40 @@ export abstract class GameState {
 			firstLucidTickEvt.addTag(EventTag.LucidTick);
 			this.addEvent(firstLucidTickEvt);
 		}
+
+		let recurringDotTick = () => {
+			this.dotResources.forEach((dotResource) => {
+				const dotBuff = this.resources.get(dotResource) as DoTBuff;
+				if (dotBuff.available(1)) {
+					dotBuff.tickCount++;
+					if (dotBuff.node) {
+						const p = dotBuff.node.getPotencies()[dotBuff.tickCount];
+						controller.resolvePotency(p);
+						this.jobSpecificOnResolveDotTick(dotResource)
+					}
+				}
+			})
+
+            // increment count
+            if (this.getDisplayTime() >= 0) {
+                controller.reportDotTick(this.time);
+            }
+
+            // queue the next tick
+            this.addEvent(new Event("DoT tick", 3, ()=>{
+                recurringDotTick();
+            }));
+		}
+		if (dotResources.length > 0) {
+			this.dotResources = dotResources
+			let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
+			while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
+			this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
+		}
 	}
+
+	// Job code may override to handle any on-tick effects of a DoT, like pre-Dawntrail Thundercloud
+	protected jobSpecificOnResolveDotTick(_dotResource: ResourceType) { }
 
 	// advance game state by this much time
 	tick(

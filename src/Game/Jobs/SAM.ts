@@ -79,12 +79,9 @@ makeSAMResource(ResourceType.KaeshiTracker, 4, { timeout: 30 });
 
 // === JOB GAUGE AND STATE ===
 export class SAMState extends GameState {
-	higanbanaTickOffset: number;
 
 	constructor(config: GameConfig) {
 		super(config);
-
-		this.higanbanaTickOffset = this.nonProcRng() * 3.0;
 
 		const gurenCd = Traits.hasUnlocked(TraitName.EnhancedHissatsu, this.config.level)
 			? 60
@@ -97,45 +94,7 @@ export class SAMState extends GameState {
 			new CoolDown(ResourceType.cd_SeneiGuren, gurenCd, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		this.registerRecurringEvents();
-	}
-
-	override registerRecurringEvents() {
-		super.registerRecurringEvents();
-		// higanbana DoT tick
-		let recurringHiganbanaTick = () => {
-			let higanbana = this.resources.get(ResourceType.HiganbanaDoT) as DoTBuff;
-			if (higanbana.available(1)) {
-				// dot buff is effective
-				higanbana.tickCount++;
-				if (higanbana.node) {
-					// aka this buff is applied by a skill (and not just from an override)
-					// access potencies at index [1, 10] (since 0 is initial potency)
-					let p = higanbana.node.getPotencies()[higanbana.tickCount];
-					controller.resolvePotency(p);
-				}
-			}
-			// increment count
-			if (this.getDisplayTime() >= 0) {
-				controller.reportDotTick(this.time);
-			}
-			// queue the next tick
-			this.addEvent(
-				new Event("higanbana DoT tick", 3, () => {
-					recurringHiganbanaTick();
-				}),
-			);
-		};
-		let timeTillFirstHiganbanaTick =
-			this.config.timeTillFirstManaTick + this.higanbanaTickOffset;
-		while (timeTillFirstHiganbanaTick > 3) timeTillFirstHiganbanaTick -= 3;
-		this.addEvent(
-			new Event(
-				"initial higanbana DoT tick",
-				timeTillFirstHiganbanaTick,
-				recurringHiganbanaTick,
-			),
-		);
+		super.registerRecurringEvents([ResourceType.HiganbanaDoT]);
 	}
 
 	getFugetsuModifier(): PotencyModifier {
