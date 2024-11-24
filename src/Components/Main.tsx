@@ -13,7 +13,7 @@ import {GlobalHelpTooltip, Tabs} from "./Common";
 import {getCurrentThemeColors, SelectColorTheme} from "./ColorTheme";
 import {DamageStatistics} from "./DamageStatistics";
 import {MAX_TIMELINE_SLOTS} from "../Controller/Timeline";
-import {clearCachedValues, getCachedValue, setCachedValue, containsEwCacheContent, ShellJob} from "../Controller/Common";
+import {clearCachedValues, getCachedValue, setCachedValue, containsEwCacheContent, ShellJob, ALL_JOBS} from "../Controller/Common";
 
 export let setJob = (job: ShellJob) => {};
 export let setRealTime = (inRealTime: boolean) => {};
@@ -125,22 +125,8 @@ export default class Main extends React.Component {
 			// https://stackoverflow.com/a/260877
 			const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
 			if (link) {
-				if (job === ShellJob.PCT) {
-					link.href = process.env.PUBLIC_URL + "/favicons/pct.ico";
-				} else if (job === ShellJob.BLM) {
-					link.href = process.env.PUBLIC_URL + "/favicons/blm.ico";
-				} else if (job === ShellJob.RDM) {
-					link.href = process.env.PUBLIC_URL + "/favicons/rdm.ico";
-				} else if (job === ShellJob.DNC) {
-					link.href = process.env.PUBLIC_URL + "/favicons/dnc.ico";
-				} else if (job === ShellJob.SAM) {
-					link.href = process.env.PUBLIC_URL + "/favicons/sam.ico";
-				} else if (job === ShellJob.MCH) {
-					link.href = process.env.PUBLIC_URL + "/favicons/mch.ico";
-				} else if (job === ShellJob.RPR) {
-					link.href = process.env.PUBLIC_URL + "/favicons/rpr.ico";
-				} else if(job === ShellJob.WAR) {
-					link.href = process.env.PUBLIC_URL + "/favicons/war.ico";
+				if (ALL_JOBS.includes(job)) {
+					link.href = process.env.PUBLIC_URL + "/favicons/" + job.toString().toLocaleLowerCase() + ".ico"
 				} else {
 					link.href = process.env.PUBLIC_URL + "/favicon.ico";
 				}
