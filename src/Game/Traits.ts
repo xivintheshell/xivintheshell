@@ -168,7 +168,6 @@ export class Traits {
 			[TraitName.EnhancedSecondWind, 94],
 			[TraitName.MeleeMasteryIII, 94],
 			[TraitName.EnhancedGluttony, 96],
-			[TraitName.EnhancedFeint, 98],
 			[TraitName.EnhancedPlentifulHarvest, 100],
 
 
