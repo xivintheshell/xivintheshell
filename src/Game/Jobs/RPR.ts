@@ -1012,6 +1012,7 @@ makeRPRAbility(SkillName.HellsIngress, 20, ResourceType.cd_IngressEgress, {
     onConfirm:(state) => {
         state.resources.get(ResourceType.HellsIngressUsed).gain(1);
         if (Traits.hasUnlocked(TraitName.Hellsgate, state.config.level)) state.setTimedResource(ResourceType.Threshold, 1);
+        state.setTimedResource(ResourceType.EnhancedHarpe, 1);
     }
 });
 
@@ -1026,6 +1027,7 @@ makeRPRAbility(SkillName.HellsEgress, 20, ResourceType.cd_IngressEgress, {
     onConfirm:(state) => {
         if (state.hasResourceAvailable(ResourceType.HellsIngressUsed)) state.resources.get(ResourceType.HellsIngressUsed).consume(1);
         if (Traits.hasUnlocked(TraitName.Hellsgate, state.config.level)) state.setTimedResource(ResourceType.Threshold, 1);
+        state.setTimedResource(ResourceType.EnhancedHarpe, 1);
     }
 });
 
