@@ -50,7 +50,7 @@ export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, ...fs: Ar
 }
 
 export function combinePredicatesAnd<T extends PlayerState>(f1: StatePredicate<T>, ...fs: Array<StatePredicate<T>>): StatePredicate<T> {
-	return (state: T) => f1(state) && fs.map((pred) => pred(state)).every();
+	return (state: T) => f1(state) && fs.map((pred) => pred(state)).every(p => p);
 }
 
 export interface CooldownGroupProperies {

@@ -23,12 +23,10 @@ export const enum PotencyModifierType {
 	YATEN,
 	POSITIONAL,
 
-	ARCANECIRCLE,
+	ARCANE_CIRCLE,
 	DEATHSDESIGN,
-	ENHANCED_GIBBET,
-	ENHANCED_GALLOWS,
-	ENHANCED_VOID_REAPING,
-	ENHANCED_CROSS_REAPING,
+	ENHANCED_GIBBET_GALLOWS,
+	ENHANCED_REAPING,
 	IMMORTAL_SACRIFICE,
 }
 
@@ -163,7 +161,7 @@ export const Modifiers = {
 	} as PotencyAdder,
 	ArcaneCircle: {
 		kind: "multiplier",
-		source: PotencyModifierType.ARCANECIRCLE,
+		source: PotencyModifierType.ARCANE_CIRCLE,
 		damageFactor: 1.03,
 	} as PotencyMultiplier,
 	DeathsDesign: {
@@ -171,25 +169,15 @@ export const Modifiers = {
 		source: PotencyModifierType.DEATHSDESIGN,
 		damageFactor: 1.10,
 	} as PotencyMultiplier,
-	EnhancedGibbet: {
+	EnhancedGibbetGallows: {
 		kind: "adder",
-		source: PotencyModifierType.ENHANCED_GIBBET,
+		source: PotencyModifierType.ENHANCED_GIBBET_GALLOWS,
 		additiveAmount: 60		
 	} as PotencyAdder,
-	EnhancedGallows: {
+	EnhancedReaping: {
 		kind: "adder",
-		source: PotencyModifierType.ENHANCED_GALLOWS,
-		additiveAmount: 60		
-	} as PotencyAdder,
-	EnhancedVoidReaping: {
-		kind: "adder",
-		source: PotencyModifierType.ENHANCED_VOID_REAPING,
+		source: PotencyModifierType.ENHANCED_REAPING,
 		additiveAmount: 40		
-	} as PotencyAdder,
-	EnhancedCrossReaping: {
-		kind: "adder",
-		source: PotencyModifierType.ENHANCED_CROSS_REAPING,
-		additiveAmount: 40	
 	} as PotencyAdder,
 	ImmortalSacrifice: {
 		kind: "adder",

@@ -3,7 +3,7 @@ import { RPRState } from "../../Game/Jobs/RPR";
 import { TraitName, Traits } from "../../Game/Traits";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
-import { BuffProps, registerBuffIcon, ResourceBarProps, ResourceCounterProps, ResourceDisplayProps, ResourceTextProps, StatusPropsGenerator } from "../StatusDisplay";
+import { BuffProps, registerBuffIcon, ResourceBarProps, ResourceCounterProps, ResourceDisplayProps, StatusPropsGenerator } from "../StatusDisplay";
 
 [
     ResourceType.DeathsDesign,
@@ -82,21 +82,26 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
             ResourceType.ArcaneCircle,
             ResourceType.CircleOfSacrifice,
             ResourceType.BloodsownCircle,
-            ResourceType.ImmortalSacrifice,
             ResourceType.ArcaneCrest,
             ResourceType.CrestOfTimeBorrowed,
             ResourceType.CrestOfTimeReturned,
-            ResourceType.Soulsow,
             ResourceType.Threshold,
             ResourceType.EnhancedHarpe,
         ].map(makeRprSelfTimer);
         buffProps.push(
 			{
-                rscType: ResourceType.RearPositional,
+                rscType: ResourceType.Soulsow,
                 onSelf: true,
-                enabled: this.state.resources.get(ResourceType.RearPositional).enabled,
-                stacks: 1,
-                className: "",
+                enabled: true,
+                stacks: this.state.resources.get(ResourceType.Soulsow).availableAmount(),
+                className: this.state.hasResourceAvailable(ResourceType.Soulsow) ? "" : "hidden",
+            },
+			{
+                rscType: ResourceType.ImmortalSacrifice,
+                onSelf: true,
+                enabled: true,
+                stacks: this.state.resources.get(ResourceType.ImmortalSacrifice).availableAmount(),
+                className: this.state.hasResourceAvailable(ResourceType.ImmortalSacrifice) ? "" : "hidden",
             },
 			{
 				rscType: ResourceType.FlankPositional,
@@ -105,6 +110,13 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 				stacks: 1,
 				className: "",
 			},
+            {
+                rscType: ResourceType.RearPositional,
+                onSelf: true,
+                enabled: this.state.resources.get(ResourceType.RearPositional).enabled,
+                stacks: 1,
+                className: "",
+            },
         );
 
         return buffProps;
@@ -116,21 +128,15 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
         const shroudGauge = resources.get(ResourceType.Shroud).availableAmount();
         const lemureShroud = resources.get(ResourceType.LemureShroud).availableAmount();
         const voidShroud = resources.get(ResourceType.VoidShroud).availableAmount();
-        const dd = resources.timeTillReady(ResourceType.DeathsDesign);
 
         const infos: ResourceDisplayProps[] = [
             {
                 kind: "text",
-                name: "combo",
-                text: resources.get(ResourceType.RPRCombo).availableAmount().toString(),
-            },
-            {
-                kind: "text",
                 name: localize({
-                    en: "Death's Design",
+                    en: "Combo Timer",
                 }),
-                text: dd.toFixed(3),
-            } as ResourceTextProps,
+                text: resources.get(ResourceType.RPRCombo).pendingChange?.timeTillEvent.toFixed(3) ?? localize({en: "N/A",})
+            },
             {
                 kind: "bar",
                 name: localize({
