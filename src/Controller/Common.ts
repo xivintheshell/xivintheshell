@@ -35,8 +35,8 @@ export const enum ShellJob {
 // can't get this automatically from a const enum
 // jobs are in the order they appear in the job guide
 export const ALL_JOBS = [
-	ShellJob.RPR,
 	ShellJob.SAM,	
+	ShellJob.RPR,
 	ShellJob.MCH,
 	ShellJob.DNC,
 	ShellJob.BLM,
