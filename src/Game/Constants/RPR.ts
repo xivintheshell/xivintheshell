@@ -100,7 +100,7 @@ export enum RPRCooldownType {
 
     cd_IngressEgress = "cd_IngressEgress",
     cd_ArcaneCrest = "cd_ArcaneCrest",
-    cd_ArcaneCrestPop = "cd_ArcaneCrestPop", // No treal
+    cd_ArcaneCrestPop = "cd_ArcaneCrestPop", // Not real
 
     cd_BloodStalk = "cd_BloodStalk",
     cd_LemuresSlice = "cd_LemuresSlice",
