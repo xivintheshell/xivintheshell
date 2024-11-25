@@ -155,6 +155,18 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({en: "yaten"}) as string;
 	} else if (buff === PotencyModifierType.POSITIONAL) {
 		text = localize({en: "positional"}) as string;
+	} else if (buff === PotencyModifierType.DEATHSDESIGN) {
+		text = localize({en: "death's design"}) as string;
+	} else if (buff === PotencyModifierType.ENHANCED_GIBBET) {
+		text = localize({en: "enhanced gibbet"}) as string;
+	} else if (buff === PotencyModifierType.ENHANCED_GALLOWS) {
+		text = localize({en: "enhanced gallows"}) as string;
+	} else if (buff === PotencyModifierType.ENHANCED_CROSS_REAPING) {
+		text = localize({en: "enhanced gallows"}) as string;
+	} else if (buff === PotencyModifierType.ENHANCED_VOID_REAPING) {
+		text = localize({en: "enhanced gallows"}) as string;
+	} else if (buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
+		text = localize({en: "enhanced gallows"}) as string;
 	}
 	return text;
 }
@@ -235,6 +247,24 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	} else if (props.buff === PotencyModifierType.POSITIONAL) {
 		text = localize({en: "PS"});
 		color = MarkerColor.Green; // TODO
+	} else if (props.buff === PotencyModifierType.DEATHSDESIGN) {
+		text = localize({en: "DD"}) as string;
+		color = MarkerColor.Blue;
+	} else if (props.buff === PotencyModifierType.ENHANCED_GIBBET) {
+		text = localize({en: "E. GAL"}) as string;
+		color = MarkerColor.Blue;
+	} else if (props.buff === PotencyModifierType.ENHANCED_GALLOWS) {
+		text = localize({en: "E. GIB"}) as string;
+		color = MarkerColor.Blue;
+	} else if (props.buff === PotencyModifierType.ENHANCED_CROSS_REAPING) {
+		text = localize({en: "E. VOID"}) as string;
+		color = MarkerColor.Blue;
+	} else if (props.buff === PotencyModifierType.ENHANCED_VOID_REAPING) {
+		text = localize({en: "E. CROSS"}) as string;
+		color = MarkerColor.Blue;
+	} else if (props.buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
+		text = localize({en: "IMMORTAL SAC"}) as string;
+		color = MarkerColor.Blue;
 	}
 	return <span style={{
 		borderRadius: 2,
