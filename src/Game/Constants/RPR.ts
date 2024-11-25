@@ -30,7 +30,7 @@ export enum RPRSkillName {
 
     /* Multi-target GCD*/
     SpinningScythe = "Spinning Scythe",
-    InfernalScythe = "Infernal Scythe",
+    NightmareScythe = "Nightmare Scythe",
     WhorlOfDeath = "Whorl of Death",
     SoulScythe = "Soul Scythe",
     Guillotine = "Guillotine",
@@ -43,8 +43,9 @@ export enum RPRSkillName {
 
     // Utility
     ArcaneCrest = "Arcane Crest",
+    ArcaneCrestPop = "Arcane Crest Pop",
     HellsIngress = "Hell's Ingress",
-    HellsRegress = "Hell's Regress",
+    HellsEgress = "Hell's Egress",
     Regress = "Regress",
 }
 
@@ -82,6 +83,7 @@ export enum RPRResourceType {
 
     Soulsow = "Soulsow",
     Threshold = "Threshold",
+    HellsIngressUsed = "Hell's Ingress Used", // For tracking which ability turns into the return
     EnhancedHarpe = "Enhanced Harpe",
 
     // 0 = no combo, 1 = after slice, 2 = after waxing
@@ -96,8 +98,9 @@ export enum RPRCooldownType {
     cd_SoulSlice = "cd_SoulSlice",
     cd_Enshroud = "cd_Enshroud",
 
-    cd_IngressRegress = "cd_IngressRegress",
+    cd_IngressEgress = "cd_IngressEgress",
     cd_ArcaneCrest = "cd_ArcaneCrest",
+    cd_ArcaneCrestPop = "cd_ArcaneCrestPop", // No treal
 
     cd_BloodStalk = "cd_BloodStalk",
     cd_LemuresSlice = "cd_LemuresSlice",

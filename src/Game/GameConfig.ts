@@ -168,6 +168,9 @@ export class GameConfig {
 			|| skillName === SkillName.Displacement
 			|| skillName === SkillName.Gyoten
 			|| skillName === SkillName.Yaten
+			|| skillName === SkillName.HellsIngress
+			|| skillName === SkillName.HellsEgress
+			|| skillName === SkillName.Regress
 		) {
 			return 0.8; // from: https://nga.178.com/read.php?tid=21233094&rand=761
 		} else if (
@@ -175,6 +178,7 @@ export class GameConfig {
 			|| skillName === SkillName.TemperaGrassaPop
 			|| skillName === SkillName.TengentsuPop
 			|| skillName === SkillName.ThirdEyePop
+			|| skillName === SkillName.ArcaneCrestPop
 		) {
 			return 0.01; // not real abilities, animation lock is fake
 		} else {
