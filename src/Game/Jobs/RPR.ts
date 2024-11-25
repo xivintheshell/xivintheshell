@@ -250,7 +250,7 @@ export class RPRState extends GameState {
 
     enterEnshroud() {
         if (this.hasResourceAvailable(ResourceType.IdealHost)) this.resources.get(ResourceType.IdealHost).consume(1);
-        this.setTimedResource(ResourceType.Oblatio, 1);
+        if (Traits.hasUnlocked(TraitName.EnhancedEnshroud, this.config.level)) this.setTimedResource(ResourceType.Oblatio, 1);
         this.setTimedResource(ResourceType.LemureShroud, 5);
     }
 
@@ -908,8 +908,10 @@ makeResourceAbility(ShellJob.RPR, SkillName.ArcaneCircle, 72, ResourceType.cd_Ar
     maxCharges: 1,
     potency: 0,
     onApplication: (state: RPRState) => {
-        state.setTimedResource(ResourceType.CircleOfSacrifice, 1);
-        state.setTimedResource(ResourceType.BloodsownCircle, 1);
+        if (Traits.hasUnlocked(TraitName.EnhancedArcaneCircle, state.config.level)) {
+            state.setTimedResource(ResourceType.CircleOfSacrifice, 1);
+            state.setTimedResource(ResourceType.BloodsownCircle, 1);
+        }
     },
     cooldown: 120,
 });
