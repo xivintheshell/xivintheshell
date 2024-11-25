@@ -20,6 +20,8 @@ export class LoadSave extends React.Component {
 				// invoke updateAllDisplay here
 				controller.loadBattleRecordFromFile(content);
 				controller.autoSave();
+			} else if (content.fileType === FileType.MarkerTrackIndividual || content.fileType === FileType.MarkerTracksCombined) {
+				window.alert("wrong file type '" + content.fileType + "'; use the \"Timeline markers\" section instead if you meant import markers.");
 			} else {
 				window.alert("wrong file type '" + content.fileType + "'.");
 			}

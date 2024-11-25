@@ -8,6 +8,7 @@ import {controller} from "../Controller/Controller";
 import {ShellJob} from "../Controller/Common";
 import {
 	allSkillsAreIncluded,
+	DOT_SKILLS,
 	getSkillOrDotInclude,
 	getTargetableDurationBetween,
 	updateSkillOrDoTInclude
@@ -536,7 +537,16 @@ export class DamageStatistics extends React.Component {
 		}
 
 		let isDoTProp = function(skillName: SkillName) {
-			return skillName === SkillName.Thunder3 || skillName === SkillName.HighThunder || skillName === SkillName.Higanbana;
+			return DOT_SKILLS.includes(skillName)
+		}
+
+		let hidePotency = function(skillName: SkillName) {
+			if (isDoTProp(skillName)) { return true}
+			const hidePotencySkills: SkillName[] = [
+				// MCH: Queen and Wildfire have variable potencies per "tick" so just don't show them in the per-hit potency column
+				SkillName.AutomatonQueen, SkillName.Wildfire, 
+			]
+			return hidePotencySkills.includes(skillName)
 		}
 
 		let makeRow = function(props: {
@@ -589,7 +599,7 @@ export class DamageStatistics extends React.Component {
 
 			// potency
 			let potencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.basePotency > 0 && !isDoTProp(props.row.skillName)) {
+			if (props.row.basePotency > 0 && !hidePotency(props.row.skillName)) {
 				potencyNode = <PotencyDisplay
 					includeInStats={includeInStats}
 					basePotency={props.row.basePotency}
@@ -737,6 +747,8 @@ export class DamageStatistics extends React.Component {
 		let dotHeaderStr = localize({en: "Thunder", zh: "雷统计"});
 		if (controller.game.job === ShellJob.SAM) {
 			dotHeaderStr = localize({en: "Higanbana"});
+		} else if (controller.game.job === ShellJob.MCH) {
+			dotHeaderStr = localize({en: "Bioblaster"})
 		}
 		if (this.data.historical) {
 			let t = (this.data.time - this.data.countdown).toFixed(3) + "s";
@@ -803,7 +815,7 @@ export class DamageStatistics extends React.Component {
 						<b>{localize({en: "gap", zh: "DoT间隙"})} </b>
 						<Help topic={"thunderTable-gap-title"} content={localize({
 							en: <div>
-								<div className={"paragraph"}>DoT coverage time gap since pull or previous Thunder</div>
+								<div className={"paragraph"}>DoT coverage time gap since pull or previous application</div>
 								<div className={"paragraph"}>The last row also includes gap at the beginning and end of the fight</div>
 							</div>,
 							zh: <div>雷DoT覆盖间隙，最后一行也包括战斗开始和结束时没有雷DoT的时间</div>,
@@ -812,7 +824,7 @@ export class DamageStatistics extends React.Component {
 					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
 						<b>{localize({en: "override", zh: "DoT覆盖"})} </b>
 						<Help topic={"thunderTable-override-title"} content={localize({
-							en: <div>Overridden DoT time from previous Thunder</div>,
+							en: <div>Overridden DoT time from previous application</div>,
 							zh: <div>提前覆盖雷DoT时长</div>,
 						})}/>
 					</span></div>
@@ -852,7 +864,7 @@ export class DamageStatistics extends React.Component {
 			{summary}
 			<div>
 				{mainTable}
-				{(job === ShellJob.BLM || job === ShellJob.SAM) && dotTable}
+				{(job === ShellJob.BLM || job === ShellJob.SAM || job === ShellJob.MCH) && dotTable}
 			</div>
 		</div>
 	}

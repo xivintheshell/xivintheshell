@@ -3,6 +3,7 @@ import {PCTSkillName, PCTResourceType, PCTCooldownType} from "./Constants/PCT";
 import {RDMSkillName, RDMResourceType, RDMCooldownType} from "./Constants/RDM";
 import {DNCSkillName, DNCResourceType, DNCCooldownType} from "./Constants/DNC";
 import {SAMSkillName, SAMResourceType, SAMCooldownType} from "./Constants/SAM";
+import {MCHSkillName, MCHResourceType, MCHCooldownType} from "./Constants/MCH";
 import { RPRCooldownType, RPRResourceType, RPRSkillName } from "./Constants/RPR";
 
 export const Debug = {
@@ -66,6 +67,7 @@ export const SkillName = {
 	...RDMSkillName,
 	...DNCSkillName,
 	...SAMSkillName,
+	...MCHSkillName,
 	...RPRSkillName,
 	...GeneralSkillName,
 }
@@ -77,6 +79,7 @@ export type SkillName = GeneralSkillName
 	| RDMSkillName
 	| DNCSkillName
 	| SAMSkillName
+	| MCHSkillName
 	| RPRSkillName;
 
 export const enum SkillReadyStatus {
@@ -175,6 +178,7 @@ const CooldownType = {
 	...RDMCooldownType,
 	...DNCCooldownType,
 	...SAMCooldownType,
+	...MCHCooldownType,
 	...RPRCooldownType
 };
 
@@ -185,6 +189,7 @@ type CooldownType = GeneralCooldownType
 	| RDMCooldownType
 	| DNCCooldownType
 	| SAMCooldownType
+	| MCHCooldownType
 	| RPRCooldownType;
 
 export const ResourceType = {
@@ -195,6 +200,7 @@ export const ResourceType = {
 	...RDMResourceType,
 	...DNCResourceType,
 	...SAMResourceType,
+	...MCHResourceType,
 	...RPRResourceType,
 };
 
@@ -206,6 +212,7 @@ export type ResourceType = CooldownType
 	| RDMResourceType
 	| DNCResourceType
 	| SAMResourceType
+	| MCHResourceType
 	| RPRResourceType;
 
 export const enum WarningType {
@@ -228,6 +235,9 @@ export const enum WarningType {
 	EspritOvercap = "esprit gauge overcap",
 	FeatherOvercap = "feather gauge overcap",
 	FanThreeOverwrite = "overwrote fan dance 3",
+
+	HeatOvercap = "heat gauge overcap",
+	BatteryOvercap = "battery gauge overcap",
 
 	KenkiOvercap = "kenki overcap",
 	MeditationOvercap = "meditation stack overcap",

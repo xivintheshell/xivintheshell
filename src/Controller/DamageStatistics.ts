@@ -37,6 +37,15 @@ const enoSkills = new Set<SkillName>([
 	SkillName.Paradox
 ]);
 
+export const DOT_SKILLS: SkillName[] = [
+	// BLM
+	SkillName.Thunder3, SkillName.HighThunder, 
+	// SAM
+	SkillName.Higanbana,
+	// MCH
+	SkillName.Bioblaster
+]
+
 // source of truth
 const excludedFromStats = new Set<SkillName | "DoT">([]);
 
@@ -57,7 +66,8 @@ export const getTargetableDurationBetween = (startDisplayTime: number, endDispla
 }
 
 function isDoTNode(node: ActionNode) {
-	return node.skillName === SkillName.Thunder3 || node.skillName === SkillName.HighThunder || node.skillName === SkillName.Higanbana;
+	if (node.skillName === undefined) { return false }
+	return DOT_SKILLS.includes(node.skillName)
 }
 
 function expandDoTNode(node: ActionNode, lastNode?: ActionNode) {
@@ -192,7 +202,7 @@ function expandNode(node: ActionNode) : ExpandedNode {
 			res.basePotency = mainPotency.base;
 			for (const modifier of mainPotency.modifiers) {
 				const tag = modifier.source;
-				if (tag !== PotencyModifierType.POT) {
+				if (tag !== PotencyModifierType.POT && tag !== PotencyModifierType.NO_CDH) {
 					res.displayedModifiers.push(tag);
 					res.calculationModifiers.push(modifier);
 				}
@@ -247,18 +257,14 @@ export function updateSkillOrDoTInclude(props: {
 		excludedFromStats.delete(props.skillNameOrDoT);
 		// it doesn't make sense to include DoT but not base potency of Thunder/Higanbana
 		if (props.skillNameOrDoT === "DoT") {
-			excludedFromStats.delete(SkillName.Thunder3);
-			excludedFromStats.delete(SkillName.HighThunder);
-			excludedFromStats.delete(SkillName.Higanbana);
+			DOT_SKILLS.forEach(skill => excludedFromStats.delete(skill));
 		} else if (props.skillNameOrDoT === SkillName.Thunder3 ||
 				   props.skillNameOrDoT === SkillName.HighThunder) {
 			excludedFromStats.delete("DoT");
 		}
 	} else {
 		excludedFromStats.add(props.skillNameOrDoT);
-		if (props.skillNameOrDoT === SkillName.Thunder3 || 
-			props.skillNameOrDoT === SkillName.HighThunder ||
-			props.skillNameOrDoT === SkillName.Higanbana) {
+		if (props.skillNameOrDoT !== "DoT" && DOT_SKILLS.includes(props.skillNameOrDoT)) {
 			excludedFromStats.add("DoT");
 		}
 	}

@@ -11,7 +11,7 @@ export const enum PotencyModifierType {
 	ACCELERATION,
 	POT,
 	COMBO,
-	AUTO_CDH,
+	AUTO_CDH, NO_CDH,
 	PARTY,
 
 	STANDARD_SINGLE, STANDARD_DOUBLE,
@@ -77,6 +77,12 @@ export const Modifiers = {
 		source: PotencyModifierType.AUTO_CDH,
 		critFactor: 1,
 		dhFactor: 1,
+	} as CritDirectMultiplier,
+	NoCDH: {
+		kind: "critDirect",
+		source: PotencyModifierType.NO_CDH,
+		critFactor: 0,
+		dhFactor: 0,
 	} as CritDirectMultiplier,
 	Starry: {
 		kind: "multiplier",
@@ -250,14 +256,22 @@ export class Potency {
 
 		let isAutoCDH = false;
 		let isAutoCrit = false;
+		let noCDH = false;
 
 		this.modifiers.forEach(m=>{
 			if (m.source===PotencyModifierType.POT) totalDamageFactor *= props.tincturePotencyMultiplier;
 			else if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
 			else if (m.source === PotencyModifierType.AUTO_CRIT) isAutoCrit = true;
+			else if (m.source === PotencyModifierType.NO_CDH) noCDH = true;
 			else if (m.kind === "multiplier") totalDamageFactor *= m.damageFactor;
 			else if (m.kind === "adder") totalAdditiveAmount += m.additiveAmount;
 		});
+		// If this skill can't crit or direct hit, it can't be an auto crit/CDH
+		console.assert(!(noCDH && (isAutoCDH || isAutoCrit)), "skills that can't CDH cannot be auto-crit or auto-CDH");
+		if (noCDH) {
+			isAutoCDH = false;
+			isAutoCrit = false;
+		}
 		console.assert(!(isAutoCDH && isAutoCrit), "cannot be both auto-crit and auto-CDH");
 
 		if (props.includePartyBuffs && this.snapshotTime) {
@@ -272,7 +286,7 @@ export class Potency {
 		}
 		const base = this.base + totalAdditiveAmount;
 
-		let amt = base * this.#calculatePotencyModifier(totalDamageFactor, totalCritFactor, totalDhFactor);
+		let amt = base * this.#calculatePotencyModifier(totalDamageFactor, noCDH ? -1: totalCritFactor, noCDH ? - 1: totalDhFactor);
 		if (isAutoCDH) amt *= this.#calculateAutoCDHModifier(totalCritFactor, totalDhFactor);
 		else if (isAutoCrit) amt *= this.#calculateAutoCritModifier(totalCritFactor, totalDhFactor);
 		return amt;
@@ -324,7 +338,7 @@ export class Potency {
 		const dhStat = this.config.directHit;
 		const det = this.config.determination;
 
-		const base = XIVMath.calculateDamage(level, critStat, dhStat, det, 1, 0, 0);
+		const base = XIVMath.calculateDamage(level, critStat, dhStat, det, 1, critBonus < 1 ? critBonus : 0, dhBonus < 1 ? dhBonus: 0);
 		const buffed = XIVMath.calculateDamage(level, critStat, dhStat, det, damageFactor, critBonus, dhBonus);
 
 		return buffed / base;

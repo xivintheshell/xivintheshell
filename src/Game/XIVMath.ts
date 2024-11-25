@@ -32,8 +32,15 @@ export class XIVMath {
 	static calculateDamage(level: LevelSync, crit: number, dh: number, det: number, damageFactor: number, critBonus: number, dhBonus: number) {
 		let modifier = damageFactor;
 
-		const critRate = (critBonus >= 1) ? critBonus : XIVMath.#criticalHitRate(level, crit) + critBonus;
-		const dhRate = (critBonus >= 1) ? dhBonus : XIVMath.#directHitRate(level, dh) + dhBonus;
+		const critRate = (critBonus >= 1) ? critBonus : 
+			(critBonus < 0) ? 0 : 
+			XIVMath.#criticalHitRate(level, crit) + critBonus;
+		const dhRate = (dhBonus >= 1) ? dhBonus :
+			(dhBonus < 0) ? 0 :
+			XIVMath.#directHitRate(level, dh) + dhBonus;
+
+		// If this ability can't crit or direct hit, no need to calculate further modifications
+		if (critRate === 0 && dhRate === 0) { return modifier }
 		const critDamageMult =  XIVMath.#criticalHitStrength(level, crit);
 
 		const autoCDH = critRate >= 1 && dhRate >= 1;

@@ -1,5 +1,11 @@
 [
 	{
+		"date": "11/24/24",
+		"changes": [
+			"[MCH] Added initial MCH support"
+		]
+	},
+	{
 		"date": "11/21/24",
 		"changes": [
 			"[SAM] Fixed a bug where Fuka haste was doubly applied",
