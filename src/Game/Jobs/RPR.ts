@@ -88,11 +88,9 @@ export class RPRState extends GameState {
     }
 
     setTimedResource(rscType: RPRResourceType, amount: number) {
-        const duration = (getResourceInfo(ShellJob.RPR, rscType) as ResourceInfo).maxTimeout;
-        const resource = this.resources.get(rscType);
-        resource.consume(resource.availableAmount());
-        resource.gain(amount);
-        this.enqueueResourceDrop(rscType, duration);
+        this.tryConsumeResource(rscType);
+        this.resources.get(rscType).gain(amount);
+        this.enqueueResourceDrop(rscType);
     }
 
     processCombo(skill: SkillName) {
