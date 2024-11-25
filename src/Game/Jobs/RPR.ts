@@ -900,7 +900,7 @@ makeRPRWeaponskill(SkillName.VoidReaping, 80, {
     highlightIf: (state) => state.resources.get(ResourceType.LemureShroud).availableAmount() > 1 && !state.hasResourceAvailable(ResourceType.EnhancedCrossReaping),
     validateAttempt: (state) => state.hasResourceAvailable(ResourceType.LemureShroud),
     onConfirm: (state) => {
-        if (state.hasResourceAvailable(ResourceType.EnhancedVoidReaping)) state.resources.get(ResourceType.EnhancedVoidReaping).consume(1);
+        state.tryConsumeResource(ResourceType.EnhancedVoidReaping);
         state.setTimedResource(ResourceType.EnhancedCrossReaping, 1);
         state.resources.get(ResourceType.LemureShroud).consume(1);
         state.resources.get(ResourceType.VoidShroud).gain(1);
@@ -923,7 +923,7 @@ makeRPRWeaponskill(SkillName.CrossReaping, 80, {
     highlightIf: (state) => state.resources.get(ResourceType.LemureShroud).availableAmount() > 1 && !state.hasResourceAvailable(ResourceType.EnhancedVoidReaping),
     validateAttempt: (state) => state.hasResourceAvailable(ResourceType.LemureShroud),
     onConfirm: (state) => {
-        if (state.hasResourceAvailable(ResourceType.EnhancedCrossReaping)) state.resources.get(ResourceType.EnhancedCrossReaping).consume(1);
+        state.tryConsumeResource(ResourceType.EnhancedCrossReaping);
         state.setTimedResource(ResourceType.EnhancedVoidReaping, 1);
         state.resources.get(ResourceType.LemureShroud).consume(1);
         state.resources.get(ResourceType.VoidShroud).gain(1);
@@ -996,7 +996,7 @@ makeRPRAbility(SkillName.HellsEgress, 20, ResourceType.cd_IngressEgress, {
     ],
     cooldown: 20,
     onConfirm:(state) => {
-        if (state.hasResourceAvailable(ResourceType.HellsIngressUsed)) state.resources.get(ResourceType.HellsIngressUsed).consume(1);
+        state.tryConsumeResource(ResourceType.HellsIngressUsed);
         if (Traits.hasUnlocked(TraitName.Hellsgate, state.config.level)) state.setTimedResource(ResourceType.Threshold, 1);
         state.setTimedResource(ResourceType.EnhancedHarpe, 1);
     }
