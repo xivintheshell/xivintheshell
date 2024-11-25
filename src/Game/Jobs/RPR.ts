@@ -482,15 +482,11 @@ const makeRPRAbility = (name: RPRSkillName, unlockLevel: number, cdName: Resourc
         ...params,
         onConfirm: onConfirm,
         validateAttempt: validateAttempt,
-        jobPotencyModifiers: (state) => {
-            const mods = basePotencyModifiers(state);
-            return mods
-        },
+        jobPotencyModifiers: basePotencyModifiers,
     });
 }
 
 makeRPRWeaponskill(SkillName.ShadowOfDeath, 10, {
-    replaceIf: [],
     potency: 300,
     aspect: Aspect.Physical,
     recastTime: 2.5,
@@ -605,7 +601,7 @@ makeRPRWeaponskill(SkillName.Gibbet, 70, {
     highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGibbet, SkillName.Gibbet),
     validateAttempt: reaverPredicate,
     onConfirm: (state) => {
-        if (state.hasResourceAvailable(ResourceType.EnhancedGibbet)) state.resources.get(ResourceType.EnhancedGibbet).consume(1);
+        state.tryConsumeResource(ResourceType.EnhancedGibbet);
         state.setTimedResource(ResourceType.EnhancedGallows, 1);
     }
 });
@@ -638,7 +634,7 @@ makeRPRWeaponskill(SkillName.Gallows, 70, {
     highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGallows, SkillName.Gallows),
     validateAttempt: reaverPredicate,
     onConfirm: (state) => {
-        if (state.hasResourceAvailable(ResourceType.EnhancedGallows)) state.resources.get(ResourceType.EnhancedGallows).consume(1);
+        state.tryConsumeResource(ResourceType.EnhancedGallows);
         state.setTimedResource(ResourceType.EnhancedGibbet, 1);
     }
 });
@@ -680,7 +676,7 @@ makeRPRWeaponskill(SkillName.ExecutionersGibbet, 96, {
     highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGibbet, SkillName.ExecutionersGibbet),
     validateAttempt: executionerPredicate,
     onConfirm: (state) => {
-        if (state.hasResourceAvailable(ResourceType.EnhancedGibbet)) state.resources.get(ResourceType.EnhancedGibbet).consume(1);
+        state.tryConsumeResource(ResourceType.EnhancedGibbet);
         state.setTimedResource(ResourceType.EnhancedGallows, 1);
     } 
 });
@@ -702,7 +698,7 @@ makeRPRWeaponskill(SkillName.ExecutionersGallows, 96, {
     highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGallows, SkillName.ExecutionersGallows),
     validateAttempt: executionerPredicate,
     onConfirm: (state) => {
-        if (state.hasResourceAvailable(ResourceType.EnhancedGallows)) state.resources.get(ResourceType.EnhancedGallows).consume(1);
+        state.tryConsumeResource(ResourceType.EnhancedGallows);
         state.setTimedResource(ResourceType.EnhancedGibbet, 1);
     } 
 });
