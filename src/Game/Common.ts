@@ -54,6 +54,13 @@ import {
 	WARTraitList,
 	WARTraitName,
 } from "./Constants/WAR";
+import {
+	BRDSkillName, 
+	BRDResourceType, 
+	BRDCooldownType, 
+	BRDTraitList, 
+	BRDTraitName
+} from "./Constants/BRD";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -167,6 +174,7 @@ export const SkillName = {
 	...MCHSkillName,
 	...RPRSkillName,
 	...WARSkillName,
+	...BRDSkillName,
 	...LimitBreakSkillName,
 	...GeneralSkillName,
 };
@@ -182,7 +190,8 @@ export type SkillName =
 	| SAMSkillName
 	| MCHSkillName
 	| RPRSkillName
-	| WARSkillName;
+	| WARSkillName
+	| BRDSkillName;
 
 export const LIMIT_BREAKS = Object.values(LimitBreakSkillName) as SkillName[];
 
@@ -359,6 +368,7 @@ const CooldownType = {
 	...MCHCooldownType,
 	...RPRCooldownType,
 	...WARCooldownType,
+	...BRDCooldownType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -371,7 +381,8 @@ type CooldownType =
 	| SAMCooldownType
 	| MCHCooldownType
 	| RPRCooldownType
-	| WARCooldownType;
+	| WARCooldownType
+	| BRDCooldownType;
 
 export const ResourceType = {
 	...CooldownType,
@@ -385,6 +396,7 @@ export const ResourceType = {
 	...MCHResourceType,
 	...RPRResourceType,
 	...WARResourceType,
+	...BRDResourceType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -399,7 +411,8 @@ export type ResourceType =
 	| SAMResourceType
 	| MCHResourceType
 	| RPRResourceType
-	| WARResourceType;
+	| WARResourceType
+	| BRDResourceType;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",
@@ -432,6 +445,8 @@ export const enum WarningType {
 	BeastGaugeOvercap = "Beast Gauge overcap",
 	InnerReleaseDrop = "Inner Release expired",
 	NascentChaosDrop = "Nascent Chaos expired",
+	
+	SoulVoiceOvercap = "soul voice overcap"
 }
 
 export enum ReservedTraitName {
@@ -471,15 +486,16 @@ const GeneralTraitList: Array<[RoleTraitName, number]> = [
 ];
 
 export const TraitName = {
-	...RoleTraitName, //  100-1000
-	...BLMTraitName, // 1000-1999
-	...PCTTraitName, // 2000-2999
-	...DNCTraitName, // 3000-3999
-	...RDMTraitName, // 4000-4999
-	...SAMTraitName, // 5000-5999
-	...MCHTraitName, // 6000-6999
-	...RPRTraitName, // 7000-7999
-	...WARTraitName, // 8000-8999
+	...RoleTraitName,  //  100-1000
+	...BLMTraitName,   // 1000-1999
+	...PCTTraitName,   // 2000-2999
+	...DNCTraitName,   // 3000-3999
+	...RDMTraitName,   // 4000-4999
+	...SAMTraitName,   // 5000-5999
+	...MCHTraitName,   // 6000-6999
+	...RPRTraitName,   // 7000-7999
+	...WARTraitName,   // 8000-8999
+	...BRDTraitName,   // 9000-9999
 	...ReservedTraitName, // 0, for now
 };
 
@@ -494,6 +510,7 @@ export type TraitName =
 	| MCHTraitName
 	| RPRTraitName
 	| WARTraitName
+	| BRDTraitName
 	| ReservedTraitName;
 
 export const TraitList: Array<[TraitName, number]> = [
@@ -506,4 +523,5 @@ export const TraitList: Array<[TraitName, number]> = [
 	...MCHTraitList,
 	...RPRTraitList,
 	...WARTraitList,
-];
+	...BRDTraitList,
+]

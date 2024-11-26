@@ -21,6 +21,7 @@ import { RDMState } from "../Game/Jobs/RDM";
 import { DNCState } from "../Game/Jobs/DNC";
 import { SAMState } from "../Game/Jobs/SAM";
 import { MCHState } from "../Game/Jobs/MCH";
+import { BRDState } from "../Game/Jobs/BRD";
 import { Buff } from "../Game/Buffs";
 import {
 	BuffType,
@@ -43,6 +44,7 @@ import { DNCStatusPropsGenerator } from "../Components/Jobs/DNC";
 import { SAMStatusPropsGenerator } from "../Components/Jobs/SAM";
 import { MCHStatusPropsGenerator } from "../Components/Jobs/MCH";
 import { WARStatusPropsGenerator } from "../Components/Jobs/WAR";
+import { BRDStatusPropsGenerator } from "../Components/Jobs/BRD";
 import { StatusPropsGenerator, updateStatusDisplay } from "../Components/StatusDisplay";
 import { updateSkillButtons } from "../Components/Skills";
 import { updateConfigDisplay } from "../Components/PlaybackControl";
@@ -93,6 +95,8 @@ const newGameState = (config: GameConfig) => {
 		return new RPRState(config);
 	} else if (config.job === ShellJob.WAR) {
 		return new WARState(config);
+	} else if (config.job === ShellJob.BRD) {
+		return new BRDState(config);
 	}
 	return new BLMState(config);
 };
