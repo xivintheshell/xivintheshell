@@ -47,6 +47,10 @@ makeRPRResource(ResourceType.Soulsow, 1, {default: 1});
 makeRPRResource(ResourceType.Threshold, 1, { timeout: 10 });
 makeRPRResource(ResourceType.EnhancedHarpe, 1, { timeout: 10 });
 
+// If 1, the last dash used was Ingress; if 0, the last dash was egress
+// This determines which button is given the Regress replacement
+makeRPRResource(ResourceType.HellsIngressUsed, 1);
+
 makeRPRResource(ResourceType.RPRCombo, 2, { timeout: 30 });
 makeRPRResource(RPRResourceType.RPRAoECombo, 1, { timeout: 30 });
 
@@ -275,7 +279,7 @@ const enshroudSkills = new Set<SkillName> (
         SkillName.Communio,
 
         SkillName.ArcaneCircle,
-        SkillName.HellsIngress,
+        SkillName.HellsEgress,
         SkillName.HellsIngress,
         SkillName.ArcaneCrest,
 
@@ -950,6 +954,7 @@ makeRPRAbility(SkillName.Regress, 74, ResourceType.cd_BloodStalk, {
     cooldown: 1,
     startOnHotbar: false,
     highlightIf: (_state) => true,
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Threshold),
     onConfirm: (state) => state.resources.get(ResourceType.Threshold).consume(1),
 });
 
@@ -1000,7 +1005,9 @@ makeRPRAbility(SkillName.ArcaneCrestPop, 40, ResourceType.cd_ArcaneCrestPop, {
     onConfirm: (state) => {
         state.resources.get(ResourceType.CrestOfTimeBorrowed).consume(1);
         state.setTimedResource(ResourceType.CrestOfTimeReturned, 1);
-    }
+    },
+    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.CrestOfTimeBorrowed),
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.CrestOfTimeBorrowed),
 });
 
 makeRPRWeaponskill(SkillName.WhorlOfDeath, 35, {

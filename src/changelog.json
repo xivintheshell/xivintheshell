@@ -1,5 +1,11 @@
 [
 	{
+		"date": "11/25/24",
+		"changes": [
+			"[RPR] Added initial RPR support"
+		]
+	},
+	{
 		"date": "11/24/24",
 		"changes": [
 			"[MCH] Added initial MCH support"

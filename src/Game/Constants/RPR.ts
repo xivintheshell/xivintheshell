@@ -43,7 +43,7 @@ export enum RPRSkillName {
 
     // Utility
     ArcaneCrest = "Arcane Crest",
-    ArcaneCrestPop = "Arcane Crest Pop",
+    ArcaneCrestPop = "Pop Arcane Crest",
     HellsIngress = "Hell's Ingress",
     HellsEgress = "Hell's Egress",
     Regress = "Regress",
