@@ -4,6 +4,7 @@ import {RDMSkillName, RDMResourceType, RDMCooldownType} from "./Constants/RDM";
 import {DNCSkillName, DNCResourceType, DNCCooldownType} from "./Constants/DNC";
 import {SAMSkillName, SAMResourceType, SAMCooldownType} from "./Constants/SAM";
 import {MCHSkillName, MCHResourceType, MCHCooldownType} from "./Constants/MCH";
+import { RPRCooldownType, RPRResourceType, RPRSkillName } from "./Constants/RPR";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -67,6 +68,7 @@ export const SkillName = {
 	...DNCSkillName,
 	...SAMSkillName,
 	...MCHSkillName,
+	...RPRSkillName,
 	...GeneralSkillName,
 }
 
@@ -77,7 +79,8 @@ export type SkillName = GeneralSkillName
 	| RDMSkillName
 	| DNCSkillName
 	| SAMSkillName
-	| MCHSkillName;
+	| MCHSkillName
+	| RPRSkillName;
 
 export const enum SkillReadyStatus {
 	Ready = "ready",
@@ -176,6 +179,7 @@ const CooldownType = {
 	...DNCCooldownType,
 	...SAMCooldownType,
 	...MCHCooldownType,
+	...RPRCooldownType
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -185,7 +189,8 @@ type CooldownType = GeneralCooldownType
 	| RDMCooldownType
 	| DNCCooldownType
 	| SAMCooldownType
-	| MCHCooldownType;
+	| MCHCooldownType
+	| RPRCooldownType;
 
 export const ResourceType = {
 	...CooldownType,
@@ -196,6 +201,7 @@ export const ResourceType = {
 	...DNCResourceType,
 	...SAMResourceType,
 	...MCHResourceType,
+	...RPRResourceType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -206,7 +212,8 @@ export type ResourceType = CooldownType
 	| RDMResourceType
 	| DNCResourceType
 	| SAMResourceType
-	| MCHResourceType;
+	| MCHResourceType
+	| RPRResourceType;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",

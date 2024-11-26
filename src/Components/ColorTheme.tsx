@@ -50,6 +50,16 @@ export type RDMResourceColors = {
 	accelBuff: string,
 }
 
+export type RPRResourceColors = {
+	soulGaugeLow: string,
+	soulGaugeHigh: string,
+	shroudGaugeLow: string,
+	shroudGaugeHigh: string,
+	lemureShroud: string,
+	voidShroudLow: string,
+	voidShroudHigh: string
+}
+
 export type SAMResourceColors = {
 	kenki: string,
 	setsu: string,
@@ -112,6 +122,7 @@ export type ThemeColors = {
 	dnc: DNCResourceColors,
 	sam: SAMResourceColors,
 	mch: MCHResourceColors,
+	rpr: RPRResourceColors,
 	timeline: {
 		ruler: string,
 		tracks: string,
@@ -212,6 +223,15 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				heat:'#D35A10',
 				battery: '#2C9FCB',
 			},
+			rpr: {
+				soulGaugeLow: "#660929",
+				soulGaugeHigh: "#e5004e",
+				shroudGaugeLow: "#03706c",
+				shroudGaugeHigh: "#00fcf3",
+				lemureShroud: "#53ffff",
+				voidShroudLow: "#5c125c",
+				voidShroudHigh: "#ff04ff"
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -308,6 +328,15 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 			mch: {
 				heat:'#D35A10',
 				battery: '#2C9FCB',
+			},
+			rpr: {
+				soulGaugeLow: "#660929",
+				soulGaugeHigh: "#e5004e",
+				shroudGaugeLow: "#03706c",
+				shroudGaugeHigh: "#00fcf3",
+				lemureShroud: "#53ffff",
+				voidShroudLow: "#5c125c",
+				voidShroudHigh: "#ff04ff"
 			},
 			timeline: {
 				ruler: "#e9e9e9",
