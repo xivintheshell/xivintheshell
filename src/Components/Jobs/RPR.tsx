@@ -128,6 +128,9 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
         const shroudGauge = resources.get(ResourceType.Shroud).availableAmount();
         const lemureShroud = resources.get(ResourceType.LemureShroud).availableAmount();
         const voidShroud = resources.get(ResourceType.VoidShroud).availableAmount();
+        const stCombo = resources.get(ResourceType.RPRCombo);
+        const aoeCombo = resources.get(ResourceType.RPRAoECombo);
+        const comboTimer = stCombo.available(1) ? stCombo.pendingChange?.timeTillEvent : (aoeCombo.available(1) ? aoeCombo.pendingChange?.timeTillEvent : undefined);
 
         const infos: ResourceDisplayProps[] = [
             {
@@ -135,7 +138,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
                 name: localize({
                     en: "Combo Timer",
                 }),
-                text: resources.get(ResourceType.RPRCombo).pendingChange?.timeTillEvent.toFixed(3) ?? localize({en: "N/A",})
+                text: comboTimer?.toFixed(3) ?? "N/A",
             },
             {
                 kind: "bar",

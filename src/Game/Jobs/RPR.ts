@@ -105,8 +105,8 @@ export class RPRState extends GameState {
             ]
         )).get(skill) ?? [currCombo, currAoeCombo]; // Any other gcd leaves combo unchanged
 
-        this.setComboState(ResourceType.RPRCombo, newCombo);
-        this.setComboState(ResourceType.RPRAoECombo, newAoeCombo);
+        if (newCombo !== currCombo) this.setComboState(ResourceType.RPRCombo, newCombo);
+        if (newAoeCombo !== currAoeCombo) this.setComboState(ResourceType.RPRAoECombo, newAoeCombo);
     }
 
     processSoulGauge(skill: SkillName) {

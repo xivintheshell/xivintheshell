@@ -61,6 +61,7 @@ export const SPS_JOBS = [
 export const TESTING_JOBS = [
 	ShellJob.RDM,
 	ShellJob.SAM,
+	ShellJob.RPR,
 	ShellJob.DNC,
 	ShellJob.MCH,
 ];
