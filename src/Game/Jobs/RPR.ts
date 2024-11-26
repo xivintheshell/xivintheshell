@@ -633,25 +633,6 @@ makeRPRWeaponskill(SkillName.Gallows, 70, {
     }
 });
 
-makeRPRWeaponskill(SkillName.Guillotine, 70, {
-    replaceIf: [
-        {
-            newSkill: SkillName.ExecutionersGuillotine,
-            condition: (state) => state.resources.get(ResourceType.Executioner).available(1),
-        },
-        {
-            newSkill: SkillName.GrimReaping,
-            condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
-        }
-    ],
-    potency: 200,
-    aspect: Aspect.Physical,
-    recastTime: 2.5,
-    applicationDelay: 0.49,
-    highlightIf: (state) => state.hasResourceAvailable(ResourceType.SoulReaver),
-    validateAttempt: reaverPredicate,
-});
-
 makeRPRWeaponskill(SkillName.ExecutionersGibbet, 96, {
     startOnHotbar: false,
     potency: 700,
@@ -1103,4 +1084,23 @@ makeRPRAbility(SkillName.LemuresScythe, 86, ResourceType.cd_BloodStalk, {
     onConfirm: (state) => {
         state.resources.get(ResourceType.VoidShroud).consume(2);
     }
+});
+
+makeRPRWeaponskill(SkillName.Guillotine, 70, {
+    replaceIf: [
+        {
+            newSkill: SkillName.ExecutionersGuillotine,
+            condition: (state) => state.resources.get(ResourceType.Executioner).available(1),
+        },
+        {
+            newSkill: SkillName.GrimReaping,
+            condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+        }
+    ],
+    potency: 200,
+    aspect: Aspect.Physical,
+    recastTime: 2.5,
+    applicationDelay: 0.49,
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.SoulReaver),
+    validateAttempt: reaverPredicate,
 });
