@@ -254,10 +254,10 @@ export class Timeline {
 	}
 
 	// assumes input is valid
-	#appendMarkersPreset(preset: Fixme, track: number) {
+	#appendMarkersPreset(preset: Fixme, track: number, offset: number) {
 		let newMarkers = preset.markers.map((m: SerializedMarker): MarkerElem=>{
 			return {
-				time: m.time,
+				time: m.time + offset,
 				duration: m.duration,
 				color: m.color,
 				description: m.description,
@@ -273,22 +273,22 @@ export class Timeline {
 		this.#save();
 	}
 
-	loadCombinedTracksPreset(content: Fixme) {
+	loadCombinedTracksPreset(content: Fixme, offset: number) {
 		if (content.fileType !== FileType.MarkerTracksCombined) {
 			window.alert("wrong file type '" + content.fileType + "'");
 			return;
 		}
 		content.tracks.forEach((trackContent: Fixme) => {
-			this.loadIndividualTrackPreset(trackContent, trackContent.track);
+			this.loadIndividualTrackPreset(trackContent, trackContent.track, offset);
 		});
 	}
 
-	loadIndividualTrackPreset(content: Fixme, track: number) {
+	loadIndividualTrackPreset(content: Fixme, track: number, offset: number) {
 		if (content.fileType !== FileType.MarkerTrackIndividual) {
 			window.alert("wrong file type '" + content.fileType + "'");
 			return;
 		}
-		this.#appendMarkersPreset(content, track);
+		this.#appendMarkersPreset(content, track, offset);
 	}
 
 	deleteAllMarkers() {
@@ -552,7 +552,7 @@ export class Timeline {
 		if (str !== null) {
 			let files = JSON.parse(str);
 			files.forEach((f: Fixme)=>{
-				this.#appendMarkersPreset(f, f.track);
+				this.#appendMarkersPreset(f, f.track, 0);
 			});
 		}
 	}

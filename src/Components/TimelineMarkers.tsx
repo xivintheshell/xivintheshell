@@ -35,6 +35,7 @@ type TimelineMarkersState = {
 	nextMarkerShowText: boolean,
 	nextMarkerBuff: BuffType,
 	loadTrackDest: string,
+	offsetStr: string,
 	/////////
 	trackBins: Map<number, MarkerElem[]>
 }
@@ -49,13 +50,14 @@ let asyncFetchJson = function(url: string, callback: (content: any)=>void) {
 	});
 }
 
-function LoadCombinedTracksBtn(props: {displayName: ContentNode, url: string}) {
+function LoadCombinedTracksBtn(props: {displayName: ContentNode, url: string, offsetStr: string}) {
 	let style: CSSProperties = {
 		marginRight: 4,
 	};
+	const parsedOffset = parseFloat(props.offsetStr);
 	return <button style={style} onClick={()=>{
 		asyncFetchJson(props.url, content => {
-			controller.timeline.loadCombinedTracksPreset(content);
+			controller.timeline.loadCombinedTracksPreset(content, !isNaN(parsedOffset) ? parsedOffset : 0);
 			controller.updateStats();
 			controller.timeline.drawElements();
 		});
@@ -71,6 +73,7 @@ export class TimelineMarkers extends React.Component {
 	onShowTextChange: React.ChangeEventHandler<HTMLInputElement>;
 	onEnterBuffEdit: (buffType: BuffType) => void;
 
+	setOffset: (val: string) => void;
 	setTime: (val: string) => void;
 	setDuration: (val: string) => void;
 	setTrack: (val: string) => void;
@@ -136,6 +139,7 @@ export class TimelineMarkers extends React.Component {
 			nextMarkerShowText: false,
 			nextMarkerBuff: BuffType.TechnicalFinish,
 			loadTrackDest: "0",
+			offsetStr: "",
 			///////
 			trackBins: new Map()
 		};
@@ -146,6 +150,7 @@ export class TimelineMarkers extends React.Component {
 		this.setBuff = (val: BuffType)=>{this.setState({nextMarkerBuff: val})};
 
 		this.setLoadTrackDest = (val: string)=>{this.setState({loadTrackDest: val})};
+		this.setOffset = (val: string) => this.setState({offsetStr: val});
 
 		updateMarkers_TimelineMarkerPresets = ((trackBins: Map<number, MarkerElem[]>) => {
 			this.setState({trackBins: trackBins});
@@ -162,6 +167,21 @@ export class TimelineMarkers extends React.Component {
 		let colorOption = function(markerColor: MarkerColor, displayName: ContentNode) {
 			return <option key={markerColor} value={markerColor}>{displayName}</option>
 		}
+
+		const offsetHelpEn = (
+			"When specified, all imported and preset tracks will start from the specified timestamp."
+			+ " Use this to combine markers for multi-phase fights with varying kill times."
+		);
+		// TODO change color when dirty
+		const offsetInput = <Input defaultValue={this.state.offsetStr}
+			description={<>
+				<span style={{color: isNaN(parseInt(this.state.offsetStr)) || parseInt(this.state.offsetStr) === 0 ? "" : MarkerColor.Purple}}>
+					{localize({en: "Load tracks starting at timestamp "})}
+				</span>
+				<Help topic={"trackLoadOffset"} content={localize({en: offsetHelpEn})}/>:
+			</>}
+			width={4}
+			style={{...inlineDiv, marginTop: 16}} onChange={this.setOffset}/>;
 
 		let trackIndices: number[] = [];
 		this.state.trackBins.forEach((bin, trackIndex)=>{
@@ -300,6 +320,7 @@ export class TimelineMarkers extends React.Component {
 			en: <span>Load into individual track {individualTrackInput}: </span>,
 			zh: <span>载入第{individualTrackInput}轨：</span>
 		});
+		const parsedOffset = parseFloat(this.state.offsetStr);
 		let loadTracksSection = <>
 			<LoadJsonFromFileOrUrl
 				allowLoadFromUrl={false}
@@ -307,7 +328,7 @@ export class TimelineMarkers extends React.Component {
 				defaultLoadUrl={""}
 				label={localize({en: "Load multiple tracks combined: ", zh: "载入多轨文件："})}
 				onLoadFn={(content: any)=>{
-					controller.timeline.loadCombinedTracksPreset(content);
+					controller.timeline.loadCombinedTracksPreset(content, !isNaN(parsedOffset) ? parsedOffset : 0);
 					controller.updateStats();
 					controller.timeline.drawElements();
 				}}/>
@@ -322,7 +343,7 @@ export class TimelineMarkers extends React.Component {
 							window.alert("invalid track destination");
 							return;
 						}
-						controller.timeline.loadIndividualTrackPreset(content, track);
+						controller.timeline.loadIndividualTrackPreset(content, track, !isNaN(parsedOffset) ? parsedOffset : 0);
 						controller.updateStats();
 						controller.timeline.drawElements();
 					}}/>
@@ -415,15 +436,15 @@ export class TimelineMarkers extends React.Component {
 		}}>
 			<p>
 				<span>{localize({en: "Current tier: ", zh: "当前版本（英文）："})}</span>
-				<LoadCombinedTracksBtn displayName={"M2S by shanzhe"} url={PRESET_MARKERS_BASE + "m2s.txt"}/>
-				<LoadCombinedTracksBtn displayName={"M3S by shanzhe"} url={PRESET_MARKERS_BASE + "m3s.txt"}/>
-				<LoadCombinedTracksBtn displayName={"M4S by shanzhe"} url={PRESET_MARKERS_BASE + "m4s.txt"}/>
+				<LoadCombinedTracksBtn displayName={"M2S by shanzhe"} url={PRESET_MARKERS_BASE + "m2s.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={"M3S by shanzhe"} url={PRESET_MARKERS_BASE + "m3s.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={"M4S by shanzhe"} url={PRESET_MARKERS_BASE + "m4s.txt"} offsetStr={this.state.offsetStr}/>
 			</p>
 			<p>
 				<span>{localize({en: "Ultimates: ", zh: "绝本（英文）："})}</span>
-				<LoadCombinedTracksBtn displayName={"DSR P6 by Tischel"} url={PRESET_MARKERS_BASE + "dsr_p6.txt"}/>
-				<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={PRESET_MARKERS_BASE + "dsr_p7.txt"}/>
-				<LoadCombinedTracksBtn displayName={"TOP by Santa"} url={PRESET_MARKERS_BASE + "TOP_2023_04_02.track"}/>
+				<LoadCombinedTracksBtn displayName={"DSR P6 by Tischel"} url={PRESET_MARKERS_BASE + "dsr_p6.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={PRESET_MARKERS_BASE + "dsr_p7.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={"TOP by Santa"} url={PRESET_MARKERS_BASE + "TOP_2023_04_02.track"} offsetStr={this.state.offsetStr}/>
 			</p>
 		</div>
 
@@ -433,7 +454,8 @@ export class TimelineMarkers extends React.Component {
 					defaultSize: 50,
 					content: <>
 						{actionsSection}
-						<p style={{marginTop: 16}}><b>{localize({en: "Presets", zh: "预设文件"})}</b></p>
+						{offsetInput}
+						<p><b>{localize({en: "Presets", zh: "预设文件"})}</b></p>
 						{presetsSection}
 						<p style={{marginTop: 16}}><b>{localize({en: "Load from file", zh: "从文件导入"})}</b> <Help
 							topic={"load tracks"}
