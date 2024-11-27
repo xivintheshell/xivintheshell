@@ -1,5 +1,17 @@
 [
 	{
+		"date": "11/27/24",
+		"changes": [
+			"Added the ability to override stacks to 0 for 1-stack resources that start present by default"
+		]
+	},
+	{
+		"date": "11/26/24",
+		"changes": [
+			"Added the ability to load marker tracks starting from a particular timestamp"
+		]
+	},
+	{
 		"date": "11/25/24",
 		"changes": [
 			"[RPR] Added initial RPR support"

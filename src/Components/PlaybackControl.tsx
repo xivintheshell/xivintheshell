@@ -63,7 +63,7 @@ export function ResourceOverrideDisplay(props: {
 		str = props.override.type;
 		if (props.override.type === ResourceType.LeyLines) str += " (" + (props.override.effectOrTimerEnabled ? "enabled" : "disabled") + ")";
 		if (props.override.type === ResourceType.Enochian) str += " (" + (props.override.effectOrTimerEnabled ? "timer enabled" : "timer disabled") + ")";
-		if (rscInfo.maxValue > 1) str += " (amount: " + props.override.stacks + ")";
+		if (rscInfo.maxValue > 1 || rscInfo.maxValue === rscInfo.defaultValue) str += " (amount: " + props.override.stacks + ")";
 		if (rscInfo.maxTimeout >= 0) {
 			if (props.override.type === ResourceType.Polyglot) {
 				if (props.override.timeTillFullOrDrop > 0) str += " next stack ready in " + props.override.timeTillFullOrDrop + "s";
@@ -892,7 +892,7 @@ export class Config extends React.Component {
 		}
 		else
 		{
-			if ((info.maxValue > 1 && rscType!==ResourceType.Paradox) &&
+			if (((info.maxValue > 1 || info.maxValue === info.defaultValue) && rscType!==ResourceType.Paradox) &&
 				(inputOverrideStacks < 0 || inputOverrideStacks > info.maxValue))
 			{
 				window.alert("invalid input amount (must be in range [0, " + info.maxValue + "])");
@@ -908,7 +908,7 @@ export class Config extends React.Component {
 			props = {
 				type: rscType,
 				timeTillFullOrDrop: info.maxTimeout >= 0 ? inputOverrideTimer : -1,
-				stacks: info.maxValue > 1 ? inputOverrideStacks : 1,
+				stacks: info.maxValue > 1 || info.maxValue === info.defaultValue ? inputOverrideStacks : 1,
 				effectOrTimerEnabled: (rscType === ResourceType.LeyLines || rscType === ResourceType.Enochian) ?
 					inputOverrideEnabled : true,
 			};
@@ -960,7 +960,9 @@ export class Config extends React.Component {
 				}
 
 				// amount
-				if (info.maxValue > 1) {
+				// hide the amount display if the resource has only one stack
+				// unless that stack is set by default
+				if (info.maxValue > 1 || info.maxValue === info.defaultValue) {
 					showAmount = true;
 					amountDefaultValue = this.state.overrideStacks;
 					amountOnChange = this.setOverrideStacks;
