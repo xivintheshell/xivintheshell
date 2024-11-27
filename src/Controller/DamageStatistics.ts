@@ -8,6 +8,7 @@ import {
 	DamageStatsDoTTableEntry,
 	DamageStatsMainTableEntry,
 	SelectedStatisticsData,
+	DamageStatsDoTTableSummary
 } from "../Components/DamageStatistics";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
 import type { BLMState } from "../Game/Jobs/BLM";
@@ -42,6 +43,8 @@ export const DOT_SKILLS: SkillName[] = [
 	SkillName.Higanbana,
 	// MCH
 	SkillName.Bioblaster,
+	// BRD
+	SkillName.CausticBite, SkillName.Stormbite,
 ];
 
 // source of truth
@@ -336,6 +339,12 @@ export function calculateSelectedStats(props: {
 	return selected;
 }
 
+export interface DamageStatsDoTTrackingData {
+	tableRows: DamageStatsDoTTableEntry[],
+	summary: DamageStatsDoTTableSummary,
+	lastDoT?: ActionNode // for tracking DoT gap / override
+}
+
 export function calculateDamageStats(props: {
 	tinctureBuffPercentage: number;
 	lastDamageApplicationTime: number;
@@ -365,23 +374,10 @@ export function calculateDamageStats(props: {
 		totalPartyBuffPotency: 0,
 	};
 
-	let dotTable: DamageStatsDoTTableEntry[] = [];
-	let dotTableSummary = {
-		cumulativeGap: 0,
-		cumulativeOverride: 0,
-		timeSinceLastDoTDropped: 0,
-		totalTicks: 0,
-		maxTicks: ctl.getMaxTicks(ctl.game.time),
-		dotCoverageTimeFraction: ctl.getDotCoverageTimeFraction(ctl.game.getDisplayTime()),
-		theoreticalMaxTicks: 0,
-		totalPotencyWithoutPot: 0,
-		totalPotPotency: 0,
-		totalPartyBuffPotency: 0,
-	};
+	const dotTables: Map<SkillName, DamageStatsDoTTrackingData> = new Map();
 
 	let skillPotencies: Map<SkillName, number> = new Map();
 
-	let lastDoT: ActionNode | undefined = undefined; // for tracking DoT gap / override
 	const processNodeFn = (node: ActionNode) => {
 		if (node.type === ActionType.Skill && node.skillName) {
 			const checked = getSkillOrDotInclude(node.skillName);
@@ -489,15 +485,36 @@ export function calculateDamageStats(props: {
 				// If the on-hit potency has not been resolved (as is the case if we just
 				// cast higanbana and the ability has not yet hit), don't add an entry yet
 				if (isDoTNode(node) && node.getPotencies().length > 0) {
-					let dotTableEntry = expandDoTNode(node, lastDoT);
-					dotTable.push(dotTableEntry);
-					lastDoT = node;
-					dotTableSummary.cumulativeGap += dotTableEntry.gap;
-					dotTableSummary.cumulativeOverride += dotTableEntry.override;
-					dotTableSummary.totalTicks += dotTableEntry.numHitTicks;
-					dotTableSummary.totalPotencyWithoutPot += dotTableEntry.potencyWithoutPot;
-					dotTableSummary.totalPotPotency += dotTableEntry.potPotency;
-					dotTableSummary.totalPartyBuffPotency += dotTableEntry.partyBuffPotency;
+					let dotTrackingData = dotTables.get(node.skillName)
+					if (!dotTrackingData) {
+						dotTrackingData = {
+							tableRows: [],
+							summary: {
+								cumulativeGap: 0,
+								cumulativeOverride: 0,
+								timeSinceLastDoTDropped: 0,
+								totalTicks: 0,
+								maxTicks: ctl.getMaxTicks(ctl.game.time),
+								dotCoverageTimeFraction: ctl.getDotCoverageTimeFraction(ctl.game.getDisplayTime()),
+								theoreticalMaxTicks: 0,
+								totalPotencyWithoutPot: 0,
+								totalPotPotency: 0,
+								totalPartyBuffPotency: 0,
+							},
+							lastDoT: undefined,
+						}
+						dotTables.set(node.skillName, dotTrackingData)
+					}
+
+					let dotTableEntry = expandDoTNode(node, dotTrackingData.lastDoT);
+					dotTrackingData.tableRows.push(dotTableEntry);
+					dotTrackingData.lastDoT = node;
+					dotTrackingData.summary.cumulativeGap += dotTableEntry.gap;
+					dotTrackingData.summary.cumulativeOverride += dotTableEntry.override;
+					dotTrackingData.summary.totalTicks += dotTableEntry.numHitTicks;
+					dotTrackingData.summary.totalPotencyWithoutPot += dotTableEntry.potencyWithoutPot;
+					dotTrackingData.summary.totalPotPotency += dotTableEntry.potPotency;
+					dotTrackingData.summary.totalPartyBuffPotency += dotTableEntry.partyBuffPotency;
 				}
 			}
 		}
@@ -508,30 +525,28 @@ export function calculateDamageStats(props: {
 		ctl.record.iterateAll(processNodeFn);
 	}
 
-	if (lastDoT) {
-		// last dot so far
-		let mainP = (lastDoT as ActionNode).getPotencies()[0];
-		console.assert(mainP.hasResolved());
-		let lastDotDropTime =
-			(mainP.applicationTime as number) +
+	dotTables.forEach((dotTrackingData) => {
+		if (dotTrackingData.lastDoT) {
+			// last dot so far
+			let mainP = (dotTrackingData.lastDoT as ActionNode).getPotencies()[0];
+			console.assert(mainP.hasResolved());
+			let lastDotDropTime = (mainP.applicationTime as number)
 				// TODO don't hardcode this; else branch is currently for higanbana
-				ctl.game.job ===
-			ShellJob.BLM
-				? (ctl.game as BLMState).getThunderDotDuration()
-				: 60;
-		let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
-
-		let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
-		if (timeSinceLastDoTDropped > 0) {
-			dotTableSummary.cumulativeGap += gap;
-			dotTableSummary.timeSinceLastDoTDropped = timeSinceLastDoTDropped;
+				+ ctl.game.job === ShellJob.BLM ? (ctl.game as BLMState).getThunderDotDuration() : 60;
+			let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
+	
+			let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
+			if (timeSinceLastDoTDropped > 0) {
+				dotTrackingData.summary.cumulativeGap += gap;
+				dotTrackingData.summary.timeSinceLastDoTDropped = timeSinceLastDoTDropped;
+			}
+		} else {
+			// no Thunder was used so far
+			let gap = getTargetableDurationBetween(0, Math.max(0, ctl.game.getDisplayTime()));
+			dotTrackingData.summary.cumulativeGap = gap;
+			dotTrackingData.summary.timeSinceLastDoTDropped = gap;
 		}
-	} else {
-		// no Thunder was used so far
-		let gap = getTargetableDurationBetween(0, Math.max(0, ctl.game.getDisplayTime()));
-		dotTableSummary.cumulativeGap = gap;
-		dotTableSummary.timeSinceLastDoTDropped = gap;
-	}
+	})
 
 	mainTable.sort((a, b) => {
 		if (a.showPotency !== b.showPotency) {
@@ -564,8 +579,7 @@ export function calculateDamageStats(props: {
 		gcdSkills: gcdSkills,
 		mainTable: mainTable,
 		mainTableSummary: mainTableSummary,
-		dotTable: dotTable,
-		dotTableSummary: dotTableSummary,
-		mode: mode,
+		dotTables,
+		mode: mode
 	};
 }

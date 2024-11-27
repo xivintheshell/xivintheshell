@@ -48,19 +48,7 @@ const resetDamageData = () => {
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
 		},
-		dotTable: [],
-		dotTableSummary: {
-			cumulativeGap: 0,
-			cumulativeOverride: 0,
-			timeSinceLastDoTDropped: 0,
-			totalTicks: 0,
-			maxTicks: 0,
-			dotCoverageTimeFraction: 0,
-			theoreticalMaxTicks: 0,
-			totalPotencyWithoutPot: 0,
-			totalPotPotency: 0,
-			totalPartyBuffPotency: 0,
-		},
+		dotTables: new Map(),
 		mode: DamageStatisticsMode.Normal,
 	};
 };
