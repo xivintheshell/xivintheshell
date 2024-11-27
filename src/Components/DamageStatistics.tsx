@@ -8,6 +8,7 @@ import { controller } from "../Controller/Controller";
 import { ShellJob } from "../Controller/Common";
 import {
 	allSkillsAreIncluded,
+	DamageStatsDoTTrackingData,
 	DOT_SKILLS,
 	getSkillOrDotInclude,
 	getTargetableDurationBetween,
@@ -46,6 +47,19 @@ export type DamageStatsDoTTableEntry = {
 	partyBuffPotency: number;
 };
 
+export interface DamageStatsDoTTableSummary {
+	cumulativeGap: number,
+	cumulativeOverride: number,
+	timeSinceLastDoTDropped: number,
+	totalTicks: number,
+	maxTicks: number,
+	dotCoverageTimeFraction: number,
+	theoreticalMaxTicks: number,
+	totalPotencyWithoutPot: number,
+	totalPotPotency: number,
+	totalPartyBuffPotency: number,
+}
+
 export type SelectedStatisticsData = {
 	totalDuration: number;
 	targetableDuration: number;
@@ -80,25 +94,13 @@ export type DamageStatisticsData = {
 	};
 	mainTable: DamageStatsMainTableEntry[];
 	mainTableSummary: {
-		totalPotencyWithoutPot: number;
-		totalPotPotency: number;
-		totalPartyBuffPotency: number;
-	};
-	dotTable: DamageStatsDoTTableEntry[];
-	dotTableSummary: {
-		cumulativeGap: number;
-		cumulativeOverride: number;
-		timeSinceLastDoTDropped: number;
-		totalTicks: number;
-		maxTicks: number;
-		dotCoverageTimeFraction: number;
-		theoreticalMaxTicks: number;
-		totalPotencyWithoutPot: number;
-		totalPotPotency: number;
-		totalPartyBuffPotency: number;
-	};
-	mode: DamageStatisticsMode;
-};
+		totalPotencyWithoutPot: number,
+		totalPotPotency: number,
+		totalPartyBuffPotency: number,
+	},
+	dotTables: Map<SkillName, DamageStatsDoTTrackingData>,
+	mode: DamageStatisticsMode,
+}
 
 export let updateDamageStats = (data: Partial<DamageStatisticsData>) => {};
 export let updateSelectedStats = (data: Partial<SelectedStatisticsData>) => {};
@@ -432,19 +434,7 @@ export class DamageStatistics extends React.Component {
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
 		},
-		dotTable: [],
-		dotTableSummary: {
-			cumulativeGap: 0,
-			cumulativeOverride: 0,
-			timeSinceLastDoTDropped: 0,
-			totalTicks: 0,
-			maxTicks: 0,
-			dotCoverageTimeFraction: 0,
-			theoreticalMaxTicks: 0,
-			totalPotencyWithoutPot: 0,
-			totalPotPotency: 0,
-			totalPartyBuffPotency: 0,
-		},
+		dotTables: new Map(),
 		mode: DamageStatisticsMode.Normal,
 	};
 
@@ -542,19 +532,15 @@ export class DamageStatistics extends React.Component {
 				rparen;
 		}
 
-		let dotStr =
-			localize({ en: "Thunder DoT uptime", zh: "雷覆盖时间" }) +
-			colon +
-			(this.data.dotTableSummary.dotCoverageTimeFraction * 100).toFixed(2) +
-			"%";
-		dotStr +=
-			lparen +
-			localize({ en: "ticks", zh: "跳雷次数" }) +
-			colon +
-			this.data.dotTableSummary.totalTicks +
-			"/" +
-			this.data.dotTableSummary.maxTicks +
-			rparen;
+		let dotStr = ""
+		if (controller.getActiveJob() === ShellJob.BLM) {
+			const thunderTable = this.data.dotTables.get(SkillName.HighThunder) ?? this.data.dotTables.get(SkillName.Thunder3)
+			if (thunderTable !== undefined) { 
+				dotStr += localize({en: "Thunder DoT uptime", zh: "雷覆盖时间"}) + colon + (thunderTable.summary.dotCoverageTimeFraction*100).toFixed(2) + "%";
+				dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + thunderTable.summary.totalTicks + "/" + thunderTable.summary.maxTicks + rparen;
+
+			}
+		}
 
 		let selected: React.ReactNode | undefined = undefined;
 		let selectedPPSAvailable = this.selected.targetableDuration > 0;
@@ -953,31 +939,40 @@ export class DamageStatistics extends React.Component {
 			</div>;
 		};
 
-		let dotTableRows: React.ReactNode[] = [];
-		for (let i = 0; i < this.data.dotTable.length; i++) {
-			dotTableRows.push(
-				makedotRow({
-					row: this.data.dotTable[i],
-					key: i,
-				}),
-			);
-		}
+		const allDotTableRows: {skillName: SkillName, tableRows:React.ReactNode[]}[] = [];
+		this.data.dotTables.forEach((dotTrackingData, skillName) => {
+			const dotTableRows = []
+
+			for (let i = 0; i < dotTrackingData.tableRows.length; i++) {
+				dotTableRows.push(makedotRow({
+					row: dotTrackingData.tableRows[i],
+					key: i
+				}));
+			}
+
+			allDotTableRows.push({skillName, tableRows: dotTableRows})
+		})
 
 		//////////////////////////////////////////////////////////
 
+		let getHeaderString = function(skillName: SkillName) {
+			if (controller.game.job === ShellJob.BLM) {
+				return localize({en: "Thunder", zh: "雷统计"});
+			} else if (controller.game.job === ShellJob.SAM) {
+				return localize({en: "Higanbana"});
+			} else if (controller.game.job === ShellJob.MCH) {
+				return localize({en: "Bioblaster"})
+			}
+			return skillName
+		}
 		let headerCellStyle: CSSProperties = {
 			display: "inline-block",
 			padding: rowGap,
 		};
-		let mainHeaderStr = allIncluded
-			? localize({ en: "Applied Skills", zh: "技能统计" })
-			: localize({ en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）" });
-		let dotHeaderStr = localize({ en: "Thunder", zh: "雷统计" });
-		if (controller.game.job === ShellJob.SAM) {
-			dotHeaderStr = localize({ en: "Higanbana" });
-		} else if (controller.game.job === ShellJob.MCH) {
-			dotHeaderStr = localize({ en: "Bioblaster" });
-		}
+		let mainHeaderStr = allIncluded ?
+			localize({en: "Applied Skills", zh: "技能统计"}) :
+			localize({en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）"});
+		let dotHeaderSuffix = ""
 		if (this.data.mode === DamageStatisticsMode.Historical) {
 			let t = (this.data.time - this.data.countdown).toFixed(3) + "s";
 			let upTillStr =
@@ -988,7 +983,7 @@ export class DamageStatistics extends React.Component {
 				}) +
 				rparen;
 			mainHeaderStr += upTillStr;
-			dotHeaderStr += upTillStr;
+			dotHeaderSuffix = upTillStr;
 		} else if (this.data.mode === DamageStatisticsMode.Selected) {
 			const selectedStr =
 				lparen +
@@ -998,7 +993,7 @@ export class DamageStatistics extends React.Component {
 				}) +
 				rparen;
 			mainHeaderStr += selectedStr;
-			dotHeaderStr += selectedStr;
+			dotHeaderSuffix += selectedStr;
 		}
 		let titleColor = colors.text;
 		if (this.data.mode === DamageStatisticsMode.Historical) titleColor = colors.historical;
@@ -1074,134 +1069,78 @@ export class DamageStatistics extends React.Component {
 			</div>
 		</div>;
 
-		let dotTable = <div
-			style={{
+		let dotTables = allDotTableRows.map((dotTable) => {
+			const dotTableRows = dotTable.tableRows
+			const dotTableSummary = this.data.dotTables.get(dotTable.skillName)?.summary
+			if (dotTableSummary === undefined) { return <></> } // Will never happen, but fixes nullish checks below
+			const dotHeaderStr = getHeaderString(dotTable.skillName) + dotHeaderSuffix
+			return <div style={{
 				position: "relative",
 				margin: "0 auto",
 				marginBottom: 40,
 				maxWidth: 960,
-			}}
-		>
-			<div style={{ ...cell(100), ...{ textAlign: "center", marginBottom: 10 } }}>
-				<b style={{ color: titleColor }}>{dotHeaderStr}</b>
-			</div>
-			<div style={{ outline: "1px solid " + colors.bgMediumContrast }}>
-				<div>
-					<div style={{ display: "inline-block", width: "8%" }}>
-						<span style={headerCellStyle}>
-							<b>{localize({ en: "cast time", zh: "读条时间" })}</b>
-						</span>
-					</div>
-					<div style={{ display: "inline-block", width: "8%" }}>
-						<span style={headerCellStyle}>
-							<b>{localize({ en: "application time", zh: "结算时间" })}</b>
-						</span>
-					</div>
-					<div style={{ display: "inline-block", width: "12%" }}>
-						<span style={headerCellStyle} />
-					</div>
-					<div style={{ display: "inline-block", width: "10%" }}>
-						<span style={headerCellStyle}>
-							<b>{localize({ en: "gap", zh: "DoT间隙" })} </b>
-							<Help
-								topic={"dot-gap-title"}
-								content={localize({
-									en: <div>
-										<div className={"paragraph"}>
-											DoT coverage time gap since pull or previous application
-										</div>
-										<div className={"paragraph"}>
-											The last row also includes gap at the beginning and end
-											of the fight
-										</div>
-									</div>,
-									zh: <div>
-										雷DoT覆盖间隙，最后一行也包括战斗开始和结束时没有雷DoT的时间
-									</div>,
-								})}
-							/>
-						</span>
-					</div>
-					<div style={{ display: "inline-block", width: "10%" }}>
-						<span style={headerCellStyle}>
-							<b>{localize({ en: "override", zh: "DoT覆盖" })} </b>
-							<Help
-								topic={"dot-override-title"}
-								content={localize({
-									en: <div>Overridden DoT time from previous application</div>,
-									zh: <div>提前覆盖雷DoT时长</div>,
-								})}
-							/>
-						</span>
-					</div>
-					<div style={{ display: "inline-block", width: "10%" }}>
-						<span style={headerCellStyle}>
-							<b>{localize({ en: "initial", zh: "初始威力" })}</b>
-						</span>
-					</div>
-					<div style={{ display: "inline-block", width: "10%" }}>
-						<span style={headerCellStyle}>
-							<b>{localize({ en: "DoT", zh: "DoT威力" })}</b>
-						</span>
-					</div>
-					<div style={{ display: "inline-block", width: "8%" }}>
-						<span style={headerCellStyle}>
-							<b>{localize({ en: "ticks", zh: "跳雷次数" })}</b>
-						</span>
-					</div>
-					<div style={{ display: "inline-block", width: "24%" }}>
-						<span style={headerCellStyle}>
-							<b>{localize({ en: "total", zh: "总威力" })}</b>
-						</span>
-					</div>
+			}}>
+				<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
+					<b style={{color: titleColor}}>{dotHeaderStr}</b>
 				</div>
-				{dotTableRows}
-				<div
-					style={{
+				<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
+					<div>
+						<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "cast time", zh: "读条时间"})}</b></span></div>
+						<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "application time", zh: "结算时间"})}</b></span></div>
+						<div style={{display: "inline-block", width: "12%"}}><span style={headerCellStyle}/></div>
+						<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
+							<b>{localize({en: "gap", zh: "DoT间隙"})} </b>
+							<Help topic={"dot-gap-title"} content={localize({
+								en: <div>
+									<div className={"paragraph"}>DoT coverage time gap since pull or previous application</div>
+									<div className={"paragraph"}>The last row also includes gap at the beginning and end of the fight</div>
+								</div>,
+								zh: <div>雷DoT覆盖间隙，最后一行也包括战斗开始和结束时没有雷DoT的时间</div>,
+							})}/>
+						</span></div>
+						<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
+							<b>{localize({en: "override", zh: "DoT覆盖"})} </b>
+							<Help topic={"dot-override-title"} content={localize({
+								en: <div>Overridden DoT time from previous application</div>,
+								zh: <div>提前覆盖雷DoT时长</div>,
+							})}/>
+						</span></div>
+						<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "initial", zh: "初始威力"})}</b></span></div>
+						<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "DoT", zh: "DoT威力"})}</b></span></div>
+						<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "ticks", zh: "跳雷次数"})}</b></span></div>
+						<div style={{display: "inline-block", width: "24%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
+					</div>
+					{dotTableRows}
+					<div style={{
 						textAlign: "left",
 						position: "relative",
 						borderTop: "1px solid " + colors.bgMediumContrast,
-					}}
-				>
-					<div style={cell(28)} />
-					<div style={cell(10)}>{this.data.dotTableSummary.cumulativeGap.toFixed(3)}</div>
-					<div style={cell(10)}>
-						{this.data.dotTableSummary.cumulativeOverride.toFixed(3)}
-					</div>
-					<div style={cell(20)} />
-					<div style={cell(8)}>
-						{this.data.dotTableSummary.totalTicks}/{this.data.dotTableSummary.maxTicks}
-					</div>
-					<div style={cell(24)}>
-						{this.data.dotTableSummary.totalPotencyWithoutPot.toFixed(2)}
-						{this.data.dotTableSummary.totalPotPotency > 0 ? (
-							<span style={{ color: colors.timeline.potCover }}>
-								{" "}
-								+{this.data.dotTableSummary.totalPotPotency.toFixed(2)}
-								{localize({
+					}}>
+						<div style={cell(28)}/>
+						<div style={cell(10)}>{dotTableSummary.cumulativeGap.toFixed(3)}</div>
+						<div style={cell(10)}>{dotTableSummary.cumulativeOverride.toFixed(3)}</div>
+						<div style={cell(20)}/>
+						<div style={cell(8)}>{dotTableSummary.totalTicks}/{dotTableSummary.maxTicks}</div>
+						<div style={cell(24)}>
+							{dotTableSummary.totalPotencyWithoutPot.toFixed(2)}
+							{dotTableSummary.totalPotPotency>0 ?
+								<span style={{color: colors.timeline.potCover}}> +{dotTableSummary.totalPotPotency.toFixed(2)}{localize({
 									en: "(pot +" + this.data.tinctureBuffPercentage + "%)",
-									zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)",
-								})}
-							</span>
-						) : undefined}
+									zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)"
+								})}</span> : undefined}
 
-						{this.data.dotTableSummary.totalPartyBuffPotency > 0 ? (
-							<span style={{ color: colors.accent }}>
-								{" "}
-								+{this.data.dotTableSummary.totalPartyBuffPotency.toFixed(2)}(
-								{localize({ en: "party", zh: "团辅" })})
-							</span>
-						) : undefined}
+							{dotTableSummary.totalPartyBuffPotency > 0 ? 
+								<span style={{color: colors.accent}}> +{dotTableSummary.totalPartyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>;
-
+		})
 		return <div>
 			{summary}
 			<div>
 				{mainTable}
-				{controller.game.dotResources.length > 0 && dotTable}
+				{controller.game.dotResources.length > 0 && dotTables}
 			</div>
 		</div>;
 	}

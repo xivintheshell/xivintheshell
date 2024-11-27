@@ -22,8 +22,6 @@ const BARD_BUFFS = [
     ResourceType.BlastArrowReady,
     ResourceType.ResonantArrowReady,
     ResourceType.RadiantEncoreReady,
-    ResourceType.CausticBite,
-    ResourceType.Stormbite,
     ResourceType.MagesBallad,
     ResourceType.ArmysPaeon,
     ResourceType.WanderersMinuet,
