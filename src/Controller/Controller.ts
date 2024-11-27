@@ -524,8 +524,7 @@ class Controller {
 				damageStats = {
 					mainTable: damageStats.mainTable,
 					mainTableSummary: damageStats.mainTableSummary,
-					dotTable: damageStats.dotTable,
-					dotTableSummary: damageStats.dotTableSummary,
+					dotTables: damageStats.dotTables,
 					mode: damageStats.mode,
 				};
 			}
