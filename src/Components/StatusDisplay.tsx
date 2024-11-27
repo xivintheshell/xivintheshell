@@ -105,10 +105,14 @@ export type StatusViewProps = {
 }
 
 // color, value
-function ResourceStack(props: {color: string, value: boolean}) {
+function ResourceStack(props: {
+	color?: string,
+	offset?: {x: number, y: number}
+}) {
 	let colors = getCurrentThemeColors();
 	return <div style={{
-		top: 1,
+		top: 1 + (props.offset?.y ?? 0),
+		left: props.offset?.x ?? 0,
 		marginRight: 8,
 		position: "relative",
 		width: 16,
@@ -117,8 +121,8 @@ function ResourceStack(props: {color: string, value: boolean}) {
 		display: "inline-block",
 		border: "1px solid " + colors.bgHighContrast,
 		verticalAlign: "top"
-	}}>
-		<div hidden={!props.value} style={{
+	}}>{
+		props.color !== undefined ? <div style={{
 			backgroundColor: `${props.color}`,
 			position: "absolute",
 			top: 2,
@@ -126,8 +130,49 @@ function ResourceStack(props: {color: string, value: boolean}) {
 			left: 2,
 			right: 2,
 			borderRadius: "inherit"
+		}}/> : undefined
+	}</div>;
+}
+
+function ResourceBox(props: {
+	imgUrl?: string
+	color?: string,
+	offset?: {x: number, y: number}
+}) {
+	let colors = getCurrentThemeColors();
+	const width = 30;
+	const height = 24;
+
+	let inner: ContentNode | undefined = undefined;
+	if (props.imgUrl) {
+		inner = <img src={props.imgUrl} alt={"resource img"} style={{
+			display: "block",
+			margin: "2px auto",
+			// todo (qol): tint
+			maxWidth: width - 4,
+			maxHeight: height - 4
 		}}/>
-	</div>;
+	} else if (props.color) {
+		inner = <div style={{
+			backgroundColor: props.color,
+			position: "absolute",
+			top: 3,
+			bottom: 3,
+			left: 3,
+			right: 3
+		}}/>
+	}
+
+	return <div style={{
+		display: "inline-block",
+		position: "relative",
+		top: props.offset?.y ?? 0,
+		left: props.offset?.x ?? 0,
+		width: width,
+		height: height,
+		border: "1px solid " + colors.bgHighContrast,
+		marginRight: 4
+	}}>{inner}</div>
 }
 
 // name, color, value, progress, width, className
@@ -151,80 +196,62 @@ function ResourceBar(props = {
 	</div>;
 }
 
-// name, color, currentStacks, maxStacks
 function ResourceCounter(props: {
 	name: ContentNode,
-	color: string,
-	currentStacks: number,
-	maxStacks: number,
-	className?: string
+	label?: ContentNode,
+	containerType: "counter" | "box",
+	items: {
+		imgUrl?: string,
+		color?: string,
+	}[]
 }) {
 	let stacks = [];
-	for (let i = 0; i < props.maxStacks; i++) {
-		stacks.push(<ResourceStack key={i} color={props.color} value={i < props.currentStacks}/>)
+	let anyBox: boolean = props.items.reduce((b, item) => {
+		return b || item.imgUrl !== undefined;
+	}, props.containerType === "box");
+
+	for (let i = 0; i < props.items.length; i++) {
+		const item = props.items[i];
+		if (props.containerType === "counter" && item.imgUrl === undefined) {
+			stacks.push(<ResourceStack key={i}color={item.color} offset={anyBox ? {x:0, y:3} : undefined}/>);
+		} else {
+			stacks.push(<ResourceBox key={i} color={item.color} imgUrl={item.imgUrl} offset={anyBox ? {x:-2, y:0} : undefined}/>);
+		}
 	}
-	return <div className={props.className} style={{marginBottom: 4, lineHeight: "1.5em"}}>
-		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
-		<div style={{width: 200, display: "inline-block"}}>
-			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
-			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{props.currentStacks + "/" + props.maxStacks}</div>
+	if (anyBox) {
+		return <div style={{ marginBottom: 4 }}>
+			<div style={{
+				display: "inline-block",
+				position: "relative",
+				verticalAlign: "top",
+				top: 6,
+				width: 108,
+			}}>{props.name}</div>
+			<div style={{display: "inline-block"}}>{stacks}</div>
+			{props.label ? <div style={{
+				marginLeft: 6,
+				display: "inline-block",
+				position: "relative",
+				verticalAlign: "top",
+				top: 6,
+			}}>{props.label}</div> : undefined}
 		</div>
-	</div>;
+	} else {
+		return <div style={{marginBottom: 4, lineHeight: "1.5em"}}>
+			<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
+			<div style={{width: 200, display: "inline-block"}}>
+				<div style={{display: "inline-block"}}>{stacks}</div>
+				{props.label ? <div style={{
+					marginLeft: 6,
+					height: "100%",
+					display: "inline-block"
+				}}>{props.label}</div> : undefined}
+			</div>
+		</div>;
+	}
 }
 
-// todo [myn]: make a more generic resource display component to replace the following two
-
-// copy of ResourceCounter specialized for the paint gauge
-// name, holyColor, cometColor, currentStacks, maxStacks, hasComet
-function PaintGaugeCounter(props: {
-	name: ContentNode,
-	holyColor: string,
-	cometColor: string,
-	currentStacks: number,
-	maxStacks: number,
-	hasComet: boolean,
-}) {
-	let stacks = [];
-	for (let i = 0; i < props.maxStacks; i++) {
-		// dip the last one in black paint
-		let isComet = props.hasComet && i === props.currentStacks - 1;
-		stacks.push(<ResourceStack key={i} color={isComet ? props.cometColor : props.holyColor} value={i < props.currentStacks}/>)
-	}
-	return <div style={{marginBottom: 4, lineHeight: "1.5em"}}>
-		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
-		<div style={{width: 200, display: "inline-block"}}>
-			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
-			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{props.currentStacks + "/" + props.maxStacks}</div>
-		</div>
-	</div>;
-}
-
-// copy of ResourceCounter specialized for tracking Dance Steps
-function DanceCounter(props: {
-	name: ContentNode,
-	maxStacks: number,
-	currentStacks: number,
-	emboiteColor: string,
-	entrechatColor: string,
-	jeteColor: string,
-	pirouetteColor: string,
-}) {
-	const stacks = [];
-	for (let i = 0; i < props.maxStacks; i++) {
-		const color = i === 0 ? props.emboiteColor :
-			i === 1 ? props.entrechatColor :
-			i === 2 ? props.jeteColor : props.pirouetteColor
-		stacks.push(<ResourceStack key={i} color={color} value={i < props.currentStacks} /> )
-	}
-	return <div style={{marginBottom: 4, lineHeight: "1.5em"}}>
-		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name}</div>
-		<div style={{width: 200, display: "inline-block"}}>
-			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
-			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{props.currentStacks + "/" + props.maxStacks}</div>
-		</div>
-	</div>;
-}
-
+// todo [myn]
 // copy of ResourceCounter specialized for tracking SAM's Sen gauge
 function SenCounter(props: {
 	name: ContentNode,
@@ -246,7 +273,7 @@ function SenCounter(props: {
 		})}
 	/>;
 	for (let i = 0; i < 3; i++) {
-		stacks.push(<ResourceStack key={i} color={senColors[i]} value={hasSen[i]} />);
+		stacks.push(<ResourceStack key={i} color={hasSen[i] ? senColors[i] : undefined}/>);
 		if (hasSen[i]) {
 			presentSen.push(names[i]);
 		}
@@ -398,6 +425,7 @@ export function ResourceLocksDisplay(props: {
 	</div>
 }
 
+// todo: instead of switching just make each job define its own resource visualization in JOB.tsx
 export function ResourcesDisplay(props: {
 	data: {
 		level: number,
@@ -417,35 +445,52 @@ export function ResourcesDisplay(props: {
 					hidden={props.hidden ?? false}
 					key={"resourceDisplay" + i}
 				/>
-			case "counter":
+			case "counter": {
+				let items = [];
+				for (let i = 0; i < props.maxStacks; i++) {
+					items.push({
+						color: i < props.currentStacks ? props.color : undefined
+					});
+				}
 				return <ResourceCounter
+					containerType={"counter"}
 					name={props.name}
-					color={props.color}
-					currentStacks={props.currentStacks}
-					maxStacks={props.maxStacks}
+					label={`${props.currentStacks}/${props.maxStacks}`}
+					items={items}
 					key={"resourceDisplay" + i}
 				/>
-			case "paint":
-				return <PaintGaugeCounter
+			}
+			case "paint": {
+				let items = [];
+				for (let i = 0; i < props.maxStacks; i++) {
+					const fillColor = (props.hasComet && i === props.currentStacks - 1) ? props.cometColor : props.holyColor;
+					items.push({ color: i < props.currentStacks ? fillColor : undefined, imgUrl: undefined });
+				}
+				let label = `${props.currentStacks}/${props.maxStacks}`;
+				return <ResourceCounter
+					containerType="counter"
 					name={props.name}
-					holyColor={props.holyColor}
-					cometColor={props.cometColor}
-					currentStacks={props.currentStacks}
-					maxStacks={props.maxStacks}
-					hasComet={props.hasComet}
+					label={label}
+					items={items}
 					key={"resourceDisplay" + i}
 				/>
-			case "dance":
-				return <DanceCounter
+			}
+			case "dance": {
+				const currentStacks = props.currentStacks;
+				let stackColors = [props.emboiteColor, props.entrechatColor, props.jeteColor, props.pirouetteColor];
+				let items = [];
+				for (let i = 0; i < props.maxStacks; i++) {
+					items.push({ color: i  < currentStacks ? stackColors[i] : undefined });
+				}
+				let label = `${currentStacks}/${props.maxStacks}`;
+				return <ResourceCounter
+					containerType="counter"
 					name={props.name}
-					entrechatColor={props.entrechatColor}
-					emboiteColor={props.emboiteColor}
-					jeteColor={props.jeteColor}
-					pirouetteColor={props.pirouetteColor}
-					maxStacks={props.maxStacks}
-					currentStacks={props.currentStacks}
+					label={label}
+					items={items}
 					key={"resourceDisplay" + i}
 				/>
+			}
 			case "sen":
 				return <SenCounter
 					name={props.name}
@@ -546,7 +591,7 @@ export abstract class StatusPropsGenerator<T extends PlayerState> {
 
 	// override me if the standard resource layout doesn't look right (DNC as an example because it gives many buffs)
 	statusLayoutFn(props: StatusViewProps): React.ReactNode {
-		return <div>
+		return <>
 			<div style={{
 				display: "inline-block",
 				verticalAlign: "top",
@@ -572,6 +617,6 @@ export abstract class StatusPropsGenerator<T extends PlayerState> {
 				<BuffsDisplay data={props.enemyBuffs} style={{ marginBottom: "3em" }}/>
 				<BuffsDisplay data={props.selfBuffs}/>
 			</div>
-		</div>
+		</>
 	}
 }
