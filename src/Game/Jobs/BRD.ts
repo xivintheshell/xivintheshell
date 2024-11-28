@@ -1,11 +1,10 @@
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
-import { ActionNode } from "../../Controller/Record";
 import { Aspect, BuffType, ResourceType, SkillName } from "../Common";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { PotencyModifier, Modifiers, PotencyMultiplier, Potency } from "../Potency";
-import { DoTBuff, getResourceInfo, makeResource, ResourceInfo } from "../Resources";
+import { makeResource } from "../Resources";
 import { SkillAutoReplace, ConditionalSkillReplace, StatePredicate, EffectFn, CooldownGroupProperies, Weaponskill, combineEffects, NO_EFFECT, makeWeaponskill } from "../Skills";
 import { TraitName } from "../Traits";
 
@@ -24,7 +23,14 @@ export class BRDState extends GameState {
     }
 
     registerRecurringEvents() {
-        super.registerRecurringEvents([ResourceType.CausticBite, ResourceType.Stormbite])
+        super.registerRecurringEvents([{
+            skillName: SkillName.CausticBite,
+            dotApplied: ResourceType.CausticBite
+        }, 
+        {
+            skillName: SkillName.Stormbite,
+            dotApplied: ResourceType.Stormbite
+        }])
 
         // Something here for Repertoire ticks
     }
@@ -90,32 +96,9 @@ dotAppliers.forEach((props) => {
                     description: "DoT " + (i+1) + `/${dotTicks}`
                 });
                 dotPotency.modifiers = mods;
-                node.addPotency(dotPotency)
+                node.addDoTPotency(dotPotency)
             }
         },
-        onApplication: (state, node) => {
-            const dotBuff = state.resources.get(props.dotName) as DoTBuff
-            const dotDuration = (getResourceInfo(ShellJob.BRD, props.dotName) as ResourceInfo).maxTimeout
-
-            if (dotBuff.available(1)) {
-                console.assert(dotBuff.node);
-                (dotBuff.node as ActionNode).removeUnresolvedPotencies();
-                dotBuff.overrideTimer(state, dotDuration)
-            } else {
-                dotBuff.gain(1)
-                controller.reportDotStart(state.getDisplayTime());
-                state.resources.addResourceEvent({
-                    rscType: props.dotName,
-                    name: "drop " + props.dotName + " DoT",
-                    delay: dotDuration,
-                    fnOnRsc: rsc => {
-                        rsc.consume(1)
-                        controller.reportDotDrop(state.getDisplayTime())
-                    }
-                })
-            }
-            dotBuff.node = node
-            dotBuff.tickCount = 0
-        }
+        onApplication: (state, node) => state.applyDoT(props.dotName, node),
     })
 })
