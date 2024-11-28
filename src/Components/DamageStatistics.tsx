@@ -9,7 +9,6 @@ import { ShellJob } from "../Controller/Common";
 import {
 	allSkillsAreIncluded,
 	DamageStatsDoTTrackingData,
-	DOT_SKILLS,
 	getSkillOrDotInclude,
 	getTargetableDurationBetween,
 	updateSkillOrDoTInclude,
@@ -644,7 +643,7 @@ export class DamageStatistics extends React.Component {
 		};
 
 		let isDoTProp = function (skillName: SkillName) {
-			return DOT_SKILLS.includes(skillName);
+			return controller.game.dotResources.get(skillName) !== undefined;
 		};
 
 		let hidePotency = function (skillName: SkillName) {
@@ -955,16 +954,6 @@ export class DamageStatistics extends React.Component {
 
 		//////////////////////////////////////////////////////////
 
-		let getHeaderString = function(skillName: SkillName) {
-			if (controller.game.job === ShellJob.BLM) {
-				return localize({en: "Thunder", zh: "雷统计"});
-			} else if (controller.game.job === ShellJob.SAM) {
-				return localize({en: "Higanbana"});
-			} else if (controller.game.job === ShellJob.MCH) {
-				return localize({en: "Bioblaster"})
-			}
-			return skillName
-		}
 		let headerCellStyle: CSSProperties = {
 			display: "inline-block",
 			padding: rowGap,
@@ -1073,7 +1062,7 @@ export class DamageStatistics extends React.Component {
 			const dotTableRows = dotTable.tableRows
 			const dotTableSummary = this.data.dotTables.get(dotTable.skillName)?.summary
 			if (dotTableSummary === undefined) { return <></> } // Will never happen, but fixes nullish checks below
-			const dotHeaderStr = getHeaderString(dotTable.skillName) + dotHeaderSuffix
+			const dotHeaderStr = localizeSkillName(dotTable.skillName) + dotHeaderSuffix
 			return <div style={{
 				position: "relative",
 				margin: "0 auto",
@@ -1140,7 +1129,7 @@ export class DamageStatistics extends React.Component {
 			{summary}
 			<div>
 				{mainTable}
-				{controller.game.dotResources.length > 0 && dotTables}
+				{dotTables}
 			</div>
 		</div>;
 	}

@@ -11,8 +11,6 @@ import {
 	DamageStatsDoTTableSummary
 } from "../Components/DamageStatistics";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
-import type { BLMState } from "../Game/Jobs/BLM";
-import { ShellJob } from "./Common";
 
 // TODO autogenerate everything here
 
@@ -70,16 +68,16 @@ function isDoTNode(node: ActionNode) {
 	if (node.skillName === undefined) {
 		return false;
 	}
-	return DOT_SKILLS.includes(node.skillName);
+	return ctl.game.dotResources.get(node.skillName) !== undefined;
 }
 
 function expandDoTNode(node: ActionNode, lastNode?: ActionNode) {
-	console.assert(node.getPotencies().length > 0);
+	console.assert(node.getDotPotencies().length > 0);
 	console.assert(isDoTNode(node));
-	let mainPotency = node.getPotencies()[0];
+	let mainPotency = node.getInitialPotency();
 	let entry: DamageStatsDoTTableEntry = {
 		castTime: node.tmp_startLockTime ? node.tmp_startLockTime - ctl.gameConfig.countdown : 0,
-		applicationTime: mainPotency.hasResolved() ? (mainPotency.applicationTime as number) : 0,
+		applicationTime: node.applicationTime ?? 0,
 		displayedModifiers: [],
 		gap: 0,
 		override: 0,
@@ -95,11 +93,9 @@ function expandDoTNode(node: ActionNode, lastNode?: ActionNode) {
 	};
 
 	if (lastNode) {
-		let lastP = lastNode.getPotencies()[0];
-		let thisP = node.getPotencies()[0];
-		console.assert(lastP.hasResolved() && thisP.hasResolved());
-		let lastDotDropDisplayTime = (lastP.applicationTime as number) + 30;
-		let thisDotApplicationDisplayTime = thisP.applicationTime as number;
+		console.assert(lastNode.applicationTime && node.applicationTime);
+		let lastDotDropDisplayTime = (lastNode.applicationTime as number) + ((lastNode.skillName) ? ctl.game.getDotDuration(lastNode.skillName) : 30);
+		let thisDotApplicationDisplayTime = node.applicationTime as number;
 		if (thisDotApplicationDisplayTime - lastDotDropDisplayTime > 0) {
 			entry.gap = getTargetableDurationBetween(
 				lastDotDropDisplayTime,
@@ -111,31 +107,29 @@ function expandDoTNode(node: ActionNode, lastNode?: ActionNode) {
 	} else {
 		// first dot of this fight
 		console.assert(!lastNode);
-		let thisP = node.getPotencies()[0];
-		let thisDotApplicationDisplayTime = thisP.applicationTime as number;
+		let thisP = node.getInitialPotency();
+		let thisDotApplicationDisplayTime = thisP?.applicationTime as number;
 		entry.gap = getTargetableDurationBetween(0, Math.max(0, thisDotApplicationDisplayTime));
 	}
 
-	entry.baseMainPotency = mainPotency.base;
-	entry.calculationModifiers = mainPotency.modifiers;
-	entry.mainPotencyHit = mainPotency.hasHitBoss(bossIsUntargetable);
+	entry.baseMainPotency = mainPotency?.base ?? 0;
+	entry.calculationModifiers = mainPotency?.modifiers ?? [];
+	entry.mainPotencyHit = node.hitBoss(bossIsUntargetable);
 
-	for (let i = 0; i < mainPotency.modifiers.length; i++) {
-		const source = mainPotency.modifiers[i].source;
+	for (let i = 0; i < entry.calculationModifiers.length; i++) {
+		const source = entry.calculationModifiers[i].source;
 		if (source === PotencyModifierType.ENO || source === PotencyModifierType.FUGETSU) {
 			entry.displayedModifiers.push(source);
 		}
 	}
 
-	for (let i = 0; i < node.getPotencies().length; i++) {
-		if (i > 0) {
-			let p = node.getPotencies()[i];
-			if (p.hasResolved()) {
-				entry.totalNumTicks += 1;
-				entry.baseDotPotency = p.base;
-				if (p.hasHitBoss(bossIsUntargetable)) {
-					entry.numHitTicks += 1;
-				}
+	for (let i = 0; i < node.getDotPotencies().length; i++) {
+		let p = node.getDotPotencies()[i];
+		if (p.hasResolved()) {
+			entry.totalNumTicks += 1;
+			entry.baseDotPotency = p.base;
+			if (p.hasHitBoss(bossIsUntargetable)) {
+				entry.numHitTicks += 1;
 			}
 		}
 	}
@@ -172,12 +166,12 @@ function expandNode(node: ActionNode): ExpandedNode {
 		calculationModifiers: [],
 	};
 	if (node.type === ActionType.Skill && node.skillName) {
-		if (node.getPotencies().length === 0) {
+		const mainPotency = node.getInitialPotency()
+		if (!mainPotency) {
 			// do nothing if the used ability does no damage
 		} else if (AFUISkills.has(node.skillName)) {
 			// for AF/UI skills, display the first modifier that's not enochian or pot
 			// (must be one of af123, ui123)
-			const mainPotency = node.getPotencies()[0];
 			res.basePotency = mainPotency.base;
 			res.calculationModifiers = mainPotency.modifiers;
 			for (const modifier of mainPotency.modifiers) {
@@ -189,7 +183,6 @@ function expandNode(node: ActionNode): ExpandedNode {
 			}
 		} else if (enoSkills.has(node.skillName)) {
 			// for foul/xeno/para, display enochian modifier if it has one. Otherwise empty.
-			const mainPotency = node.getPotencies()[0];
 			for (const modifier of mainPotency.modifiers) {
 				const tag = modifier.source;
 				if (tag === PotencyModifierType.ENO) {
@@ -201,10 +194,9 @@ function expandNode(node: ActionNode): ExpandedNode {
 			}
 		} else if (isDoTNode(node)) {
 			// dot modifiers are handled separately
-			res.basePotency = node.getPotencies()[0].base;
+			res.basePotency = mainPotency.base;
 		} else {
 			// for non-BLM jobs, display all non-pot modifiers on all damaging skills
-			const mainPotency = node.getPotencies()[0];
 			res.basePotency = mainPotency.base;
 			for (const modifier of mainPotency.modifiers) {
 				const tag = modifier.source;
@@ -419,7 +411,7 @@ export function calculateDamageStats(props: {
 						usageCount: 0,
 						hitCount: 0,
 						totalPotencyWithoutPot: 0,
-						showPotency: node.getPotencies().length > 0,
+						showPotency: node.anyPotencies(),
 						potPotency: 0,
 						potCount: 0,
 						partyBuffPotency: 0,
@@ -484,7 +476,7 @@ export function calculateDamageStats(props: {
 				// DoT table
 				// If the on-hit potency has not been resolved (as is the case if we just
 				// cast higanbana and the ability has not yet hit), don't add an entry yet
-				if (isDoTNode(node) && node.getPotencies().length > 0) {
+				if (isDoTNode(node) && node.getDotPotencies().length > 0) {
 					let dotTrackingData = dotTables.get(node.skillName)
 					if (!dotTrackingData) {
 						dotTrackingData = {
@@ -525,14 +517,14 @@ export function calculateDamageStats(props: {
 		ctl.record.iterateAll(processNodeFn);
 	}
 
-	dotTables.forEach((dotTrackingData) => {
+	dotTables.forEach((dotTrackingData, dotSkill) => {
 		if (dotTrackingData.lastDoT) {
 			// last dot so far
-			let mainP = (dotTrackingData.lastDoT as ActionNode).getPotencies()[0];
-			console.assert(mainP.hasResolved());
-			let lastDotDropTime = (mainP.applicationTime as number)
-				// TODO don't hardcode this; else branch is currently for higanbana
-				+ ctl.game.job === ShellJob.BLM ? (ctl.game as BLMState).getThunderDotDuration() : 60;
+			
+			const applicationTime = dotTrackingData.lastDoT.applicationTime
+			console.assert(applicationTime, `DoT node at index ${dotTrackingData.lastDoT.getNodeIndex()} was not resolved`);
+
+			let lastDotDropTime = (applicationTime as number) + ctl.game.getDotDuration(dotSkill)
 			let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
 	
 			let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;

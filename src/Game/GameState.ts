@@ -25,7 +25,7 @@ import {
 import { controller } from "../Controller/Controller";
 import { ActionNode } from "../Controller/Record";
 import { CASTER_JOBS, HEALER_JOBS, ShellJob, SKS_JOBS, SPS_JOBS } from "../Controller/Common";
-import { Modifiers, Potency, PotencyModifier, PotencyModifierType } from "./Potency";
+import { Modifiers, Potency, PotencyModifier, PotencyModifierType, PotencyMultiplier } from "./Potency";
 import { Buff } from "./Buffs";
 
 import type { BLMState } from "./Jobs/BLM";
@@ -36,6 +36,12 @@ import { SkillButtonViewInfo } from "../Components/Skills";
 let SeedRandom = require("seedrandom");
 
 type RNG = any;
+
+export interface DoTSkillRegistration {
+	skillName: SkillName,
+	dotApplied: ResourceType,
+	exclusiveWith?: ResourceType[],
+}
 
 // GameState := resources + events queue
 export abstract class GameState {
@@ -51,7 +57,8 @@ export abstract class GameState {
 	skillsList: SkillsList<GameState>;
 	displayedSkills: DisplayedSkills;
 
-	dotResources: ResourceType[] = []
+	dotResources: Map<SkillName, ResourceType> = new Map()
+	#exclusiveDots: Map<ResourceType, ResourceType[]> = new Map()
 
 	constructor(config: GameConfig) {
 		this.config = config;
@@ -124,7 +131,7 @@ export abstract class GameState {
 	 * have not yet initialized their resource/cooldown objects. Instead, all
 	 * sub-classes must explicitly call this at the end of their constructor.
 	 */
-	protected registerRecurringEvents(dotResources: ResourceType[] = []) {
+	protected registerRecurringEvents(dotResources: DoTSkillRegistration[] = []) {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
@@ -214,11 +221,19 @@ export abstract class GameState {
 			this.dotResources.forEach((dotResource) => {
 				const dotBuff = this.resources.get(dotResource) as DoTBuff;
 				if (dotBuff.available(1)) {
-					dotBuff.tickCount++;
 					if (dotBuff.node) {
-						const p = dotBuff.node.getPotencies()[dotBuff.tickCount];
+						const p = dotBuff.node.getDotPotencies()[dotBuff.tickCount];
+						if (p === undefined) {
+							console.assert(p)
+						}
 						controller.resolvePotency(p);
 						this.jobSpecificOnResolveDotTick(dotResource)
+					}
+					dotBuff.tickCount++;
+				} else {
+					if (dotBuff.node) {
+						dotBuff.node.removeUnresolvedDoTPotencies();
+						dotBuff.node = undefined
 					}
 				}
 			})
@@ -234,7 +249,10 @@ export abstract class GameState {
             }));
 		}
 		if (dotResources.length > 0) {
-			this.dotResources = dotResources
+			dotResources.forEach((dotResource) => {
+				this.dotResources.set(dotResource.skillName, dotResource.dotApplied)
+				this.#exclusiveDots.set(dotResource.dotApplied, dotResource.exclusiveWith ?? [])
+			})
 			let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
 			while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
 			this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
@@ -243,6 +261,13 @@ export abstract class GameState {
 
 	// Job code may override to handle any on-tick effects of a DoT, like pre-Dawntrail Thundercloud
 	protected jobSpecificOnResolveDotTick(_dotResource: ResourceType) { }
+
+	getDotDuration(dotSkill: SkillName): number
+	{ 
+		const dotResource = this.dotResources.get(dotSkill)
+		if (dotResource === undefined) { return 0 }
+		return (getResourceInfo(controller.game.job, dotResource) as ResourceInfo).maxTimeout
+	}
 
 	// advance game state by this much time
 	tick(
@@ -449,11 +474,11 @@ export abstract class GameState {
 
 		// create potency node object (snapshotted buffs will populate on confirm)
 		const potencyNumber = skill.potencyFn(this);
-		let potency: Potency | undefined = undefined;
-		// Potency object for DoT effects was already created separately
-		if (skill.aspect === Aspect.Lightning || skill.name === SkillName.Higanbana) {
-			potency = node.getPotencies()[0];
-		} else if (potencyNumber > 0) {
+
+		// See if the initial potency was already created
+		let potency: Potency | undefined = node.getInitialPotency();
+		// If it was not, and this action is supposed to do damage, go ahead and add it now
+		if (!potency && potencyNumber > 0) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
@@ -900,6 +925,73 @@ export abstract class GameState {
 			},
 		});
 	}
+
+	applyDoT(dotName: ResourceType, node: ActionNode) {
+		const dotBuff = this.resources.get(dotName) as DoTBuff
+		const dotDuration = (getResourceInfo(this.config.job, dotName) as ResourceInfo).maxTimeout;
+
+		(this.#exclusiveDots.get(dotName) ?? []).forEach((removeDot: ResourceType) => {
+			if (! this.hasResourceAvailable(removeDot)) { return }
+
+			this.tryConsumeResource(removeDot)
+		})
+
+		if (dotBuff.available(1)) {
+			console.assert(dotBuff.node);
+			(dotBuff.node as ActionNode).removeUnresolvedDoTPotencies();
+			dotBuff.overrideTimer(this, dotDuration)
+		} else {
+			dotBuff.gain(1)
+			controller.reportDotStart(this.getDisplayTime());
+			this.resources.addResourceEvent({
+				rscType: dotName,
+				name: "drop " + dotName + " DoT",
+				delay: dotDuration,
+				fnOnRsc: rsc => {
+					rsc.consume(1)
+					controller.reportDotDrop(this.getDisplayTime())
+				}
+			})
+		}
+		dotBuff.node = node
+		dotBuff.tickCount = 0
+	}
+
+	addDoTPotencies(params: {
+		node: ActionNode, 
+		skillName: SkillName,
+		tickPotency: number,
+		speedStat: "sks" | "sps"
+		aspect?: Aspect
+		modifiers?: PotencyMultiplier[]
+	}) {
+		const dotResource = this.dotResources.get(params.skillName)
+		if (!dotResource) { return }
+
+		const mods: PotencyMultiplier[] = [];
+		// If the job call didn't add Tincture, we can do that here
+		if (this.hasResourceAvailable(ResourceType.Tincture) && !((params.modifiers ?? []).includes(Modifiers.Tincture))) {
+			mods.push(Modifiers.Tincture);
+			params.node.addBuff(BuffType.Tincture);
+		}
+	
+		const dotDuration = (getResourceInfo(this.config.job, dotResource) as ResourceInfo).maxTimeout
+		const dotTicks = dotDuration / 3
+
+		for (let i = 0; i < dotTicks; i++) {
+			let pDot = new Potency({
+				config: controller.record.config ?? controller.gameConfig,
+				sourceTime: this.getDisplayTime(),
+				sourceSkill: params.skillName,
+				aspect: params.aspect ?? Aspect.Other,
+				basePotency: this.config.adjustedDoTPotency(params.tickPotency, params.speedStat),
+				snapshotTime: this.getDisplayTime(),
+				description: "DoT " + (i+1) + `/${dotTicks}`
+			});
+			pDot.modifiers = [...mods, ...(params?.modifiers ??[])];
+			params.node.addDoTPotency(pDot);
+		}
+	};
 
 	timeTillNextMpGainEvent() {
 		let foundEvt = this.findNextQueuedEventByTag(EventTag.ManaGain);

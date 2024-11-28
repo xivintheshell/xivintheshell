@@ -5,6 +5,7 @@ export enum BLMSkillName {
 	Fire2 = "Fire 2",
 	Transpose = "Transpose",
 	Thunder3 = "Thunder 3",
+    Thunder4 = "Thunder 4",
 	Manaward = "Manaward",
 	Manafont = "Manafont",
 	LeyLines = "Ley Lines",
@@ -27,6 +28,7 @@ export enum BLMSkillName {
 	Amplifier = "Amplifier",
 	Paradox = "Paradox",
 	HighThunder = "High Thunder",
+    HighThunder2 = "High Thunder 2",
 	FlareStar = "Flare Star",
 	Retrace = "Retrace",
 }
@@ -45,7 +47,10 @@ export enum BLMResourceType {
 	Triplecast = "Triplecast", // [0, 3]
 	Firestarter = "Firestarter", // [0, 1]
 	Thunderhead = "Thunderhead", // [0, 1]
-	ThunderDoT = "ThunderDoT", // [0, 1] is actually used for display timing only
+	ThunderIII = "Thunder III",
+    ThunderIV = "Thunder IV",
+    HighThunder = "High Thunder",
+    HighThunderII = "High Thunder II",
 	Manaward = "Manaward", // [0, 1]
 }
 

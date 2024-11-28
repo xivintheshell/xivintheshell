@@ -679,12 +679,12 @@ function drawSkills(
 		lines.push(description);
 
 		// 2. potency
-		const potency = node.getPotency({
-			tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
-			includePartyBuffs: true,
-			untargetable: bossIsUntargetable,
-		}).applied;
-		if (node.getPotencies().length > 0 && !LIMIT_BREAKS.includes(node.skillName!)) {
+		if (node.getInitialPotency() && !LIMIT_BREAKS.includes(node.skillName!)) {
+			const potency = node.getPotency({
+				tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
+				includePartyBuffs: true,
+				untargetable: bossIsUntargetable,
+			}).applied;
 			lines.push(localize({ en: "potency: ", zh: "威力：" }) + potency.toFixed(2));
 		}
 

@@ -94,7 +94,10 @@ export class SAMState extends GameState {
 			new CoolDown(ResourceType.cd_SeneiGuren, gurenCd, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		super.registerRecurringEvents([ResourceType.HiganbanaDoT]);
+		super.registerRecurringEvents([{
+			skillName: SkillName.Higanbana,
+			dotApplied: ResourceType.HiganbanaDoT
+		}]);
 	}
 
 	getFugetsuModifier(): PotencyModifier {
@@ -682,18 +685,7 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 			mods.push(state.getFugetsuModifier());
 		}
 		const snapshotTime = state.getDisplayTime();
-		// initial potency
-		let pInitial = new Potency({
-			config: controller.record.config ?? controller.gameConfig,
-			sourceTime: state.getDisplayTime(),
-			sourceSkill: SkillName.Higanbana,
-			aspect: Aspect.Other,
-			basePotency: 200,
-			snapshotTime: snapshotTime,
-			description: "",
-		});
-		pInitial.modifiers = mods;
-		node.addPotency(pInitial);
+
 		// tick potencies
 		const ticks = 20;
 		const tickPotency = Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level)
@@ -710,7 +702,7 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 				description: "DoT " + (i + 1) + `/${ticks}`,
 			});
 			pDot.modifiers = mods;
-			node.addPotency(pDot);
+			node.addDoTPotency(pDot);
 		}
 		// tincture
 		if (state.hasResourceAvailable(ResourceType.Tincture)) {
@@ -720,31 +712,7 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 		state.gainMeditation();
 		// bana does not reset your tsubame status
 	},
-	onApplication: (state, node) => {
-		// resolve the on-hit potency element (always the first of the node)
-		controller.resolvePotency(node.getPotencies()[0]);
-		const bana = state.resources.get(ResourceType.HiganbanaDoT) as DoTBuff;
-		const duration = 60;
-		if (bana.available(1)) {
-			console.assert(bana.node);
-			(bana.node as ActionNode).removeUnresolvedPotencies();
-			bana.overrideTimer(state, duration);
-		} else {
-			bana.gain(1);
-			controller.reportDotStart(state.getDisplayTime());
-			state.resources.addResourceEvent({
-				rscType: ResourceType.HiganbanaDoT,
-				name: "drop higanbana DoT",
-				delay: duration,
-				fnOnRsc: (rsc) => {
-					rsc.consume(1);
-					controller.reportDotDrop(state.getDisplayTime());
-				},
-			});
-		}
-		bana.node = node;
-		bana.tickCount = 0;
-	},
+	onApplication: (state, node) => state.applyDoT(ResourceType.HiganbanaDoT, node)
 });
 
 const iaiConfirm = (kaeshiValue: number) => (state: SAMState) => {

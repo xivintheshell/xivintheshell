@@ -29,12 +29,14 @@ export class ActionNode {
 	static _gNodeIndex: number = 0;
 	#nodeIndex: number;
 	#capturedBuffs: Set<BuffType>;
-	#potencies: Potency[];
+	#potency: Potency | undefined;
+	#dotPotencies: Potency[];
 
 	type: ActionType;
 	waitDuration: number = 0;
 	skillName?: SkillName;
 	buffName?: string;
+	applicationTime?: number;
 
 	next?: ActionNode = undefined;
 
@@ -47,7 +49,7 @@ export class ActionNode {
 		this.type = actionType;
 		this.#nodeIndex = ActionNode._gNodeIndex;
 		this.#capturedBuffs = new Set<BuffType>();
-		this.#potencies = [];
+		this.#dotPotencies = [];
 		ActionNode._gNodeIndex++;
 	}
 
@@ -76,41 +78,33 @@ export class ActionNode {
 	}
 
 	hasPartyBuff() {
-		let snapshotTime;
-		if (this.#potencies.length === 0) return false;
-		if (this.#potencies.length > 0) snapshotTime = this.#potencies[0].snapshotTime;
+		const snapshotTime = this.#potency?.snapshotTime;
 
 		return snapshotTime && controller.game.getPartyBuffs(snapshotTime).size > 0;
 	}
 
 	getPartyBuffs() {
-		let snapshotTime;
-		if (this.#potencies.length === 0) return [];
-		if (this.#potencies.length > 0) snapshotTime = this.#potencies[0].snapshotTime;
+		const snapshotTime = this.#potency?.snapshotTime;
 
 		return snapshotTime ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
 	}
 
 	resolveAll(displayTime: number) {
-		this.#potencies.forEach((p) => {
+		if (this.#potency) { this.#potency.resolve(displayTime) }
+		this.#dotPotencies.forEach(p=>{
 			p.resolve(displayTime);
 		});
 	}
 
 	// true if empty or any damage is resolved.
 	resolved() {
-		if (this.#potencies.length === 0) return true;
-		if (this.#potencies.length === 1) return this.#potencies[0].hasResolved();
-
-		return this.#potencies[0].hasResolved();
+		return this.#potency?.hasResolved() ?? true
 	}
 
 	hitBoss(untargetable: (displayTime: number) => boolean) {
-		if (this.#potencies.length === 0) return true;
-		if (this.#potencies.length === 1) return this.#potencies[0].hasHitBoss(untargetable);
-
-		return this.#potencies[0].hasHitBoss(untargetable);
+		return this.#potency?.hasHitBoss(untargetable) ?? true;
 	}
+
 
 	getPotency(props: {
 		tincturePotencyMultiplier: number;
@@ -122,33 +116,54 @@ export class ActionNode {
 			applied: 0,
 			snapshottedButPending: 0,
 		};
-		for (let i = 0; i < this.#potencies.length; i++) {
-			if (i === 0 || !props.excludeDoT) {
-				let p = this.#potencies[i];
-				if (p.hasHitBoss(props.untargetable)) {
-					res.applied += p.getAmount(props);
-				} else if (!p.hasResolved() && p.hasSnapshotted()) {
-					res.snapshottedButPending += p.getAmount(props);
-				}
-			}
+		if (this.#potency) {
+			this.recordPotency(props, this.#potency, res)
+		}
+
+		if (props.excludeDoT) { return res }
+		for (let i = 0; i < this.#dotPotencies.length; i++) {
+			let p = this.#dotPotencies[i];
+			this.recordPotency(props, p, res)
 		}
 		return res;
 	}
 
-	removeUnresolvedPotencies() {
-		for (let i = this.#potencies.length - 1; i >= 0; i--) {
-			if (!this.#potencies[i].hasResolved()) {
-				this.#potencies.splice(i, 1);
-			}
+	private recordPotency(props: {
+		tincturePotencyMultiplier: number,
+		untargetable: (t: number) => boolean,
+		includePartyBuffs: boolean,
+		excludeDoT?: boolean
+	}, potency: Potency, record: {applied: number, snapshottedButPending: number}) {
+		if (potency.hasHitBoss(props.untargetable)) {
+			record.applied += potency.getAmount(props);
+		} else if (!potency.hasResolved() && potency.hasSnapshotted()) {
+			record.snapshottedButPending += potency.getAmount(props);
 		}
 	}
 
-	getPotencies() {
-		return this.#potencies;
+	removeUnresolvedDoTPotencies() {
+		const unresolvedIndex = this.#dotPotencies.findIndex((p) => !p.hasResolved())
+		if (unresolvedIndex < 0) { return }
+		this.#dotPotencies.splice(unresolvedIndex)
+	}
+
+	anyPotencies(): boolean {
+		return this.#potency !== undefined || this.#dotPotencies.length > 0
+	}
+	getInitialPotency() {
+		return this.#potency
+	}
+	getDotPotencies() {
+		return this.#dotPotencies
 	}
 
 	addPotency(p: Potency) {
-		this.#potencies.push(p);
+		console.assert(!this.#potency, `ActionNode for ${this.skillName} already had an initial potency`)
+		this.#potency = p;
+	}
+
+	addDoTPotency(p: Potency) {
+		this.#dotPotencies.push(p)
 	}
 
 	select() {
