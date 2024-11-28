@@ -322,6 +322,10 @@ export function makeSpell<T extends PlayerState>(
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
+	const onApplication: EffectFn<T> = combineEffects(
+		(state, node) => node.applicationTime = state.time,
+		params.onApplication ?? NO_EFFECT,
+	)
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
@@ -346,7 +350,7 @@ export function makeSpell<T extends PlayerState>(
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
 		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
-		onApplication: params.onApplication ?? NO_EFFECT,
+		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
@@ -386,6 +390,10 @@ export function makeWeaponskill<T extends PlayerState>(
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
+	const onApplication: EffectFn<T> = combineEffects(
+		(state, node) => node.applicationTime = state.time,
+		params.onApplication ?? NO_EFFECT,
+	)
 	const info: Weaponskill<T> = {
 		kind: "weaponskill",
 		name: name,
@@ -410,7 +418,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
 		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
-		onApplication: params.onApplication ?? NO_EFFECT,
+		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
@@ -466,6 +474,10 @@ export function makeAbility<T extends PlayerState>(
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
+	const onApplication: EffectFn<T> = combineEffects(
+		(state, node) => node.applicationTime = state.time,
+		params.onApplication ?? NO_EFFECT,
+	)
 	const info: Ability<T> = {
 		kind: "ability",
 		name: name,
@@ -488,7 +500,7 @@ export function makeAbility<T extends PlayerState>(
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
-		onApplication: params.onApplication ?? NO_EFFECT,
+		onApplication,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.cooldown !== undefined) {
@@ -508,7 +520,6 @@ export function makeAbility<T extends PlayerState>(
  *
  * Any additional effects should be encoded in `onConfirm` or `onApplication`.
  */
-// TODO allow specifying cooldown + number of charges here
 export function makeResourceAbility<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
 	name: SkillName,

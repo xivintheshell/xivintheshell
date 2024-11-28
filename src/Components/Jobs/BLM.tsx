@@ -18,7 +18,10 @@ import { localize } from "../Localization";
 	ResourceType.Triplecast + "3",
 	ResourceType.Firestarter,
 	ResourceType.Thunderhead,
-	ResourceType.ThunderDoT,
+	ResourceType.ThunderIII,
+    ResourceType.ThunderIV,
+    ResourceType.HighThunder,
+    ResourceType.HighThunderII,
 	ResourceType.LeyLines,
 	ResourceType.Manaward,
 ].forEach((buff) => registerBuffIcon(buff, `BLM/${buff}.png`));
@@ -27,7 +30,10 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
 		return [
 			...[
-				ResourceType.ThunderDoT, // Upcoming change to have all the thunder DoTs on the BRD PR, so leaving this here for now
+				ResourceType.ThunderIII,
+                ResourceType.ThunderIV,
+                ResourceType.HighThunder,
+                ResourceType.HighThunderII
 			].map((rscType) => this.makeCommonTimer(rscType, false)),
 		];
 	}
