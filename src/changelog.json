@@ -1,5 +1,11 @@
 [
 	{
+		"date": "11/28/24",
+		"changes": [
+			"Added some Chinese tracks (M1S-M4S, FRU before P2.5)"
+		]
+	},
+	{
 		"date": "11/27/24",
 		"changes": [
 			"Added the ability to override stacks to 0 for 1-stack resources that start present by default",

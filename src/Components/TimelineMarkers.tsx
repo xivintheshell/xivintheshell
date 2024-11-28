@@ -172,13 +172,14 @@ export class TimelineMarkers extends React.Component {
 			"When specified, all imported and preset tracks will start from the specified timestamp."
 			+ " Use this to combine markers for multi-phase fights with varying kill times."
 		);
+		const offsetHelpZh: string = "不为空时，下方所有导入的时间轴文件和预设都将从这个时间点开始。可以用此功能自行组合不同P的时间轴文件。";
 		// TODO change color when dirty
 		const offsetInput = <Input defaultValue={this.state.offsetStr}
 			description={<>
 				<span style={{color: isNaN(parseInt(this.state.offsetStr)) || parseInt(this.state.offsetStr) === 0 ? "" : MarkerColor.Purple}}>
-					{localize({en: "Load tracks starting at timestamp "})}
+					{localize({en: "Load tracks starting at timestamp ", zh: "载入文件到此时间点 "})}
 				</span>
-				<Help topic={"trackLoadOffset"} content={localize({en: offsetHelpEn})}/>:
+				<Help topic={"trackLoadOffset"} content={localize({en: offsetHelpEn, zh: offsetHelpZh})}/>:
 			</>}
 			width={4}
 			style={{...inlineDiv, marginTop: 16}} onChange={this.setOffset}/>;
@@ -435,14 +436,22 @@ export class TimelineMarkers extends React.Component {
 		let presetsSection = <div style={{
 		}}>
 			<p>
-				<span>{localize({en: "Current tier: ", zh: "当前版本（英文）："})}</span>
-				<LoadCombinedTracksBtn displayName={"M2S by shanzhe"} url={PRESET_MARKERS_BASE + "m2s.txt"} offsetStr={this.state.offsetStr}/>
-				<LoadCombinedTracksBtn displayName={"M3S by shanzhe"} url={PRESET_MARKERS_BASE + "m3s.txt"} offsetStr={this.state.offsetStr}/>
-				<LoadCombinedTracksBtn displayName={"M4S by shanzhe"} url={PRESET_MARKERS_BASE + "m4s.txt"} offsetStr={this.state.offsetStr}/>
+				<span>{localize({en: "Current tier (en) by shanzhe: ", zh: "当前版本（英文，来自shanzhe）："})}</span>
+				<LoadCombinedTracksBtn displayName={"M2S"} url={PRESET_MARKERS_BASE + "m2s.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={"M3S"} url={PRESET_MARKERS_BASE + "m3s.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={"M4S"} url={PRESET_MARKERS_BASE + "m4s.txt"} offsetStr={this.state.offsetStr}/>
 			</p>
 			<p>
-				<span>{localize({en: "FRU: ", zh: "FRU（英文）："})}</span>
-				<LoadCombinedTracksBtn displayName={"P1 by Yara"} url={PRESET_MARKERS_BASE + "fru_p1.txt"} offsetStr={this.state.offsetStr}/>
+				<span>{localize({en: "Current tier (zh) by kiyozero: ", zh: "当前版本（中文，来自kiyozero）："})}</span>
+				<LoadCombinedTracksBtn displayName={"M1S"} url={PRESET_MARKERS_BASE + "m1s_zh.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={"M2S"} url={PRESET_MARKERS_BASE + "m2s_zh.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={"M3S"} url={PRESET_MARKERS_BASE + "m3s_zh.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={"M4S"} url={PRESET_MARKERS_BASE + "m4s_zh.txt"} offsetStr={this.state.offsetStr}/>
+			</p>
+			<p>
+				<span>{localize({en: "FRU: ", zh: "绝伊甸："})}</span>
+				<LoadCombinedTracksBtn displayName={localize({en: "P1 by Yara", zh: "P1（英文，来自Yara）"})} url={PRESET_MARKERS_BASE + "fru_p1.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={localize({en: "before P2.5 (zh) by 含砂糖的盐", zh: "到P2.5之前（来自含沙糖的盐）"})} url={PRESET_MARKERS_BASE + "fru_before_p2.5_zh.txt"} offsetStr={this.state.offsetStr}/>
 			</p>
 			<p>
 				<span>{localize({en: "Legacy ultimates: ", zh: "过去绝本（英文）："})}</span>
@@ -458,6 +467,7 @@ export class TimelineMarkers extends React.Component {
 					defaultSize: 50,
 					content: <>
 						{actionsSection}
+						<br/>
 						{offsetInput}
 						<p><b>{localize({en: "Presets", zh: "预设文件"})}</b></p>
 						{presetsSection}
