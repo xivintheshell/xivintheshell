@@ -441,7 +441,11 @@ export class TimelineMarkers extends React.Component {
 				<LoadCombinedTracksBtn displayName={"M4S by shanzhe"} url={PRESET_MARKERS_BASE + "m4s.txt"} offsetStr={this.state.offsetStr}/>
 			</p>
 			<p>
-				<span>{localize({en: "Ultimates: ", zh: "绝本（英文）："})}</span>
+				<span>{localize({en: "FRU: ", zh: "FRU（英文）："})}</span>
+				<LoadCombinedTracksBtn displayName={"P1 by Yara"} url={PRESET_MARKERS_BASE + "fru_p1.txt"} offsetStr={this.state.offsetStr}/>
+			</p>
+			<p>
+				<span>{localize({en: "Legacy ultimates: ", zh: "过去绝本（英文）："})}</span>
 				<LoadCombinedTracksBtn displayName={"DSR P6 by Tischel"} url={PRESET_MARKERS_BASE + "dsr_p6.txt"} offsetStr={this.state.offsetStr}/>
 				<LoadCombinedTracksBtn displayName={"DSR P7 by Santa"} url={PRESET_MARKERS_BASE + "dsr_p7.txt"} offsetStr={this.state.offsetStr}/>
 				<LoadCombinedTracksBtn displayName={"TOP by Santa"} url={PRESET_MARKERS_BASE + "TOP_2023_04_02.track"} offsetStr={this.state.offsetStr}/>
