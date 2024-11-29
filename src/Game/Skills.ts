@@ -115,9 +115,6 @@ interface BaseSkill<T extends PlayerState> {
 
 	// The simulation delay, in seconds, between which `onConfirm` and `onApplication` are called.
 	readonly applicationDelay: number;
-
-	// Does the attack cleave?
-	readonly isCleave?: boolean;
 }
 
 export type GCD<T extends PlayerState> = BaseSkill<T> & {
@@ -331,7 +328,6 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 	applicationDelay: number,
 	validateAttempt: StatePredicate<T>,
 	isInstantFn: StatePredicate<T>,
-	isCleave?: boolean,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 	secondaryCooldown?: CooldownGroupProperies,
@@ -362,7 +358,6 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 		applicationDelay: params.applicationDelay ?? 0,
-		isCleave: params.isCleave ?? false,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.secondaryCooldown !== undefined) {
