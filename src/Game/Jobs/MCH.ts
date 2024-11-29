@@ -259,6 +259,7 @@ const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
     highlightIf?: StatePredicate<MCHState>,
     onApplication?: EffectFn<MCHState>,
     secondaryCooldown?: CooldownGroupProperies,
+    isCleave?: boolean,
 }): Weaponskill<MCHState> => {
     const onConfirm: EffectFn<MCHState> = combineEffects(
         params.onConfirm ?? NO_EFFECT,
@@ -273,7 +274,14 @@ const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
                 state.resources.get(ResourceType.WildfireHits).gain(1)
             }
         },
-        (state) => state.tryConsumeResource(ResourceType.Overheated) // All weaponskills executed during overheat will consume a stack
+        // All single-target weaponskills executed during overheat will consume a stack
+        // AoE weaponskills will NOT consume a stack (with the exception of auto crossbow)
+        (state) => {
+            if (!(params.isCleave ?? false)) {
+                state.tryConsumeResource(ResourceType.Overheated)
+            }
+        }
+
     );
     const onApplication: EffectFn<MCHState> = params.onApplication ?? NO_EFFECT;
     return makeWeaponskill(ShellJob.MCH, name, unlockLevel, {
@@ -461,7 +469,8 @@ makeWeaponskill_MCH(SkillName.Chainsaw, 90, {
         cdName: ResourceType.cd_Chainsaw,
         cooldown: 60, // cooldown edited in constructor to be affected by skill speed
         maxCharges: 1
-    }
+    },
+    isCleave: true
 })
 makeWeaponskill_MCH(SkillName.Excavator, 90, {
     startOnHotbar: false,
@@ -473,7 +482,8 @@ makeWeaponskill_MCH(SkillName.Excavator, 90, {
         state.tryConsumeResource(ResourceType.ExcavatorReady)
     },
     validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ExcavatorReady),
-    highlightIf: (state) => state.hasResourceAvailable(ResourceType.ExcavatorReady)
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.ExcavatorReady),
+    isCleave: true
 })
 
 makeAbility_MCH(SkillName.BarrelStabilizer, 66, ResourceType.cd_BarrelStabilizer, {
@@ -500,6 +510,7 @@ makeWeaponskill_MCH(SkillName.FullMetalField, 100, {
     onConfirm: (state) => state.tryConsumeResource(ResourceType.FullMetalMachinist),
     validateAttempt: (state) => state.hasResourceAvailable(ResourceType.FullMetalMachinist),
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.FullMetalMachinist),
+    isCleave: true
 })
 
 makeResourceAbility_MCH(SkillName.Hypercharge, 30, ResourceType.cd_Hypercharge, {
@@ -841,6 +852,7 @@ makeWeaponskill_MCH(SkillName.AutoCrossbow, 52, {
     ],
     applicationDelay: 0.89,
     recastTime: 1.5,
+    isCleave: true,
     onConfirm: (state) =>  {
         state.tryConsumeResource(ResourceType.Overheated)
     },
