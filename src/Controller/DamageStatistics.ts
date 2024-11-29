@@ -92,26 +92,8 @@ function expandDoTNode(node: ActionNode, lastNode?: ActionNode) {
 		partyBuffPotency: 0,
 	};
 
-	if (lastNode) {
-		console.assert(lastNode.applicationTime && node.applicationTime);
-		let lastDotDropDisplayTime = (lastNode.applicationTime as number) + ((lastNode.skillName) ? ctl.game.getDotDuration(lastNode.skillName) : 30);
-		let thisDotApplicationDisplayTime = node.applicationTime as number;
-		if (thisDotApplicationDisplayTime - lastDotDropDisplayTime > 0) {
-			entry.gap = getTargetableDurationBetween(
-				lastDotDropDisplayTime,
-				thisDotApplicationDisplayTime,
-			);
-		} else if (thisDotApplicationDisplayTime - lastDotDropDisplayTime < 0) {
-			entry.override = lastDotDropDisplayTime - thisDotApplicationDisplayTime;
-		}
-	} else {
-		// first dot of this fight
-		console.assert(!lastNode);
-		let thisP = node.getInitialPotency();
-		let thisDotApplicationDisplayTime = thisP?.applicationTime as number;
-		entry.gap = getTargetableDurationBetween(0, Math.max(0, thisDotApplicationDisplayTime));
-	}
-
+	entry.gap = node.dotTimeGap
+	entry.override = node.dotOverrideAmount;
 	entry.baseMainPotency = mainPotency?.base ?? 0;
 	entry.calculationModifiers = mainPotency?.modifiers ?? [];
 	entry.mainPotencyHit = node.hitBoss(bossIsUntargetable);

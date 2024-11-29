@@ -5,7 +5,6 @@ import { ActionNode } from "../../Controller/Record";
 import { ShellJob } from "../../Controller/Common";
 import {
 	Aspect,
-	BuffType,
 	Debug,
 	ProcMode,
 	ResourceType,
@@ -13,7 +12,7 @@ import {
 	TraitName,
 	WarningType,
 } from "../Common";
-import { Modifiers, Potency, PotencyModifierType, PotencyMultiplier } from "../Potency";
+import { PotencyModifierType, PotencyMultiplier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
