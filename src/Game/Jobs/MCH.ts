@@ -62,7 +62,7 @@ const COMBO_GCDS: SkillName[] = [SkillName.HeatedCleanShot, SkillName.HeatedSlug
 // The only AoE skill that consumes overheat is Auto Crossbow
 const WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT: SkillName[] = [
     SkillName.Chainsaw, SkillName.Excavator, SkillName.FullMetalField,
-    SkillName.Scattergun, SkillName.Bioblaster
+    SkillName.Scattergun, SkillName.Bioblaster, SkillName.SpreadShot
 ];
 
 export class MCHState extends GameState {
