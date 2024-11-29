@@ -1,5 +1,11 @@
 [
 	{
+		"date": "11/29/24",
+		"changes": [
+			"[MCH] Fixed bugs with MCH Overheat consumption on AoE abilities (thanks FloatingGhost)"
+		]
+	},
+	{
 		"date": "11/28/24",
 		"changes": [
 			"Added some Chinese tracks (M1S-M4S, FRU before P2.5)"

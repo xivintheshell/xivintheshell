@@ -721,7 +721,7 @@ makeRPRSpell(SkillName.Harpe, 15, {
     recastTime: 2.5,
     applicationDelay: 0.9,
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.EnhancedHarpe),
-    onConfirm: (state) => state.resources.get(ResourceType.EnhancedHarpe).consume(1),
+    onConfirm: (state) => state.tryConsumeResource(ResourceType.EnhancedHarpe),
 });
 
 makeRPRSpell(SkillName.Soulsow, 82, {
