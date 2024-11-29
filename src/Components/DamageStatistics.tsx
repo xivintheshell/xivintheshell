@@ -1063,7 +1063,7 @@ export class DamageStatistics extends React.Component {
 			const dotTableSummary = this.data.dotTables.get(dotTable.skillName)?.summary
 			if (dotTableSummary === undefined) { return <></> } // Will never happen, but fixes nullish checks below
 			const dotHeaderStr = localizeSkillName(dotTable.skillName) + dotHeaderSuffix
-			return <div style={{
+			return <div key={`dot-table-${dotTable.skillName}`} style={{
 				position: "relative",
 				margin: "0 auto",
 				marginBottom: 40,
