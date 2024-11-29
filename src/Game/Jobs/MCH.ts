@@ -282,7 +282,6 @@ const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
             }
         },
         // All single-target weaponskills executed during overheat will consume a stack
-        // AoE weaponskills will NOT consume a stack (with the exception of auto crossbow)
         (state) => {
             if (!WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT.includes(name)) {
                 state.tryConsumeResource(ResourceType.Overheated)
