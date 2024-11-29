@@ -262,8 +262,10 @@ export abstract class GameState {
 	// Job code may override to handle any on-tick effects of a DoT, like pre-Dawntrail Thundercloud
 	protected jobSpecificOnResolveDotTick(_dotResource: ResourceType) { }
 
-	getDotDuration(dotSkill: SkillName): number
+	// Assumes a skill only ever applies a single DoT effect
+	getDotDuration(dotSkill?: SkillName): number
 	{ 
+		if (!dotSkill) { return 0 }
 		const dotResource = this.dotResources.get(dotSkill)
 		if (dotResource === undefined) { return 0 }
 		return (getResourceInfo(controller.game.job, dotResource) as ResourceInfo).maxTimeout
@@ -926,21 +928,37 @@ export abstract class GameState {
 		});
 	}
 
+	getOverriddenDots(dotName: ResourceType): ResourceType[] {
+		return this.#exclusiveDots.get(dotName) ?? [];
+	}
+
 	applyDoT(dotName: ResourceType, node: ActionNode) {
-		const dotBuff = this.resources.get(dotName) as DoTBuff
+		const dotBuff = this.resources.get(dotName) as DoTBuff;
 		const dotDuration = (getResourceInfo(this.config.job, dotName) as ResourceInfo).maxTimeout;
 
-		(this.#exclusiveDots.get(dotName) ?? []).forEach((removeDot: ResourceType) => {
-			if (! this.hasResourceAvailable(removeDot)) { return }
+		let dotGap: number | undefined = undefined
+		this.getOverriddenDots(dotName).forEach((removeDot: ResourceType) => {
+			if (! this.hasResourceAvailable(removeDot)) {
+				// If a mutually exclusive DoT was previously applied but has fallen off, the gap is the smallest of the times since any of those DoTs expired
+				const thisGap = this.getDisplayTime() - (this.resources.get(removeDot).getLastExpirationTime() ?? 0)
+				dotGap = (!dotGap) ? thisGap : Math.min(dotGap, thisGap)
+				return;
+			}
 
-			this.tryConsumeResource(removeDot)
+			node.dotOverrideAmount += this.resources.timeTillReady(removeDot);
+			this.tryConsumeResource(removeDot);
+			controller.reportDotDrop(this.getDisplayTime());
 		})
 
 		if (dotBuff.available(1)) {
 			console.assert(dotBuff.node);
 			(dotBuff.node as ActionNode).removeUnresolvedDoTPotencies();
-			dotBuff.overrideTimer(this, dotDuration)
+			node.dotOverrideAmount += this.resources.timeTillReady(dotName)
+			dotBuff.overrideTimer(this, dotDuration);
 		} else {
+			const thisGap = this.getDisplayTime() - (dotBuff.getLastExpirationTime() ?? 0)
+			dotGap = (!dotGap) ? thisGap : Math.min(dotGap, thisGap)
+
 			dotBuff.gain(1)
 			controller.reportDotStart(this.getDisplayTime());
 			this.resources.addResourceEvent({
@@ -948,13 +966,14 @@ export abstract class GameState {
 				name: "drop " + dotName + " DoT",
 				delay: dotDuration,
 				fnOnRsc: rsc => {
-					rsc.consume(1)
-					controller.reportDotDrop(this.getDisplayTime())
+					rsc.consume(1);
+					controller.reportDotDrop(this.getDisplayTime());
 				}
 			})
 		}
-		dotBuff.node = node
-		dotBuff.tickCount = 0
+		node.dotTimeGap = dotGap ?? 0;
+		dotBuff.node = node;
+		dotBuff.tickCount = 0;
 	}
 
 	addDoTPotencies(params: {

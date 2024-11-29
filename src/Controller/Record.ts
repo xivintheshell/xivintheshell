@@ -35,8 +35,10 @@ export class ActionNode {
 	type: ActionType;
 	waitDuration: number = 0;
 	skillName?: SkillName;
-	buffName?: string;
-	applicationTime?: number;
+	buffName? : string;
+	applicationTime?: number
+	dotOverrideAmount: number = 0
+	dotTimeGap: number = 0
 
 	next?: ActionNode = undefined;
 
@@ -96,9 +98,9 @@ export class ActionNode {
 		});
 	}
 
-	// true if empty or any damage is resolved.
+	// true if the node's effects have been applied
 	resolved() {
-		return this.#potency?.hasResolved() ?? true
+		return this.applicationTime !== undefined
 	}
 
 	hitBoss(untargetable: (displayTime: number) => boolean) {
