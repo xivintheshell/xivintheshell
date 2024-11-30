@@ -106,3 +106,31 @@ export enum RPRCooldownType {
     cd_LemuresSlice = "cd_LemuresSlice",
     cd_Sacrificium = "cd_Sacrificium",
 }
+
+export enum RPRTraitName {
+    Hellsgate = 6000,
+    TemperedSoul,
+    ShroudGauge,
+    EnhancedArcaneCrest,
+    MeleeMasteryIIRPR,
+    VoidSoul,
+    EnhancedArcaneCircle,
+    EnhancedEnshroud,
+    MeleeMasteryIIIRPR,
+    EnhancedGluttony,
+    EnhancedPlentifulHarvest,
+}
+
+export const RPRTraitList: Array<[RPRTraitName, number]> = [
+    [RPRTraitName.Hellsgate, 74],
+    [RPRTraitName.TemperedSoul, 78],
+    [RPRTraitName.ShroudGauge, 80],
+    [RPRTraitName.EnhancedArcaneCrest, 84],
+    [RPRTraitName.MeleeMasteryIIRPR, 84],
+    [RPRTraitName.VoidSoul, 86],
+    [RPRTraitName.EnhancedArcaneCircle, 88],
+    [RPRTraitName.EnhancedEnshroud, 92],
+    [RPRTraitName.MeleeMasteryIIIRPR, 94],
+    [RPRTraitName.EnhancedGluttony, 96],
+    [RPRTraitName.EnhancedPlentifulHarvest, 100],
+]

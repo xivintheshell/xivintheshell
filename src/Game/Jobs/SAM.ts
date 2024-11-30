@@ -3,7 +3,7 @@
 import {controller} from "../../Controller/Controller";
 import {ActionNode} from "../../Controller/Record";
 import {ShellJob} from "../../Controller/Common";
-import {Aspect, BuffType, ResourceType, SkillName, WarningType} from "../Common";
+import {Aspect, BuffType, ResourceType, SkillName, TraitName, WarningType} from "../Common";
 import {makeComboModifier, makePositionalModifier, Modifiers, Potency, PotencyModifier} from "../Potency";
 import {
 	Ability,
@@ -21,7 +21,7 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import {TraitName, Traits} from "../Traits";
+import {Traits} from "../Traits";
 import {GameState} from "../GameState";
 import {makeResource, CoolDown, DoTBuff, Event, EventTag} from "../Resources"
 import {GameConfig} from "../GameConfig";

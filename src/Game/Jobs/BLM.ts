@@ -3,7 +3,7 @@
 import {controller} from "../../Controller/Controller";
 import {ActionNode} from "../../Controller/Record";
 import {ShellJob} from "../../Controller/Common";
-import {Aspect, BuffType, Debug, ProcMode, ResourceType, SkillName, WarningType} from "../Common";
+import {Aspect, BuffType, Debug, ProcMode, ResourceType, SkillName, TraitName, WarningType} from "../Common";
 import {Modifiers, Potency, PotencyModifierType, PotencyMultiplier} from "../Potency";
 import {
 	Ability,
@@ -19,7 +19,7 @@ import {
 	Spell,
 	StatePredicate,
 } from "../Skills";
-import {TraitName, Traits} from "../Traits";
+import {Traits} from "../Traits";
 import {GameState, PlayerState} from "../GameState";
 import {getResourceInfo, makeResource, CoolDown, DoTBuff, Event, Resource, ResourceInfo} from "../Resources"
 import {GameConfig} from "../GameConfig";
@@ -60,7 +60,7 @@ export class BLMState extends GameState {
 
 		this.thunderTickOffset = this.nonProcRng() * 3.0;
 
-		const polyglotStacks = 
+		const polyglotStacks =
 			(Traits.hasUnlocked(TraitName.EnhancedPolyglotII, this.config.level) && 3) ||
 			(Traits.hasUnlocked(TraitName.EnhancedPolyglot, this.config.level) && 2) ||
 			1;
@@ -167,7 +167,7 @@ export class BLMState extends GameState {
 			if (Traits.hasUnlocked(TraitName.AspectMasteryV, this.config.level)) {
 				if (ui.available(3) && uh.available(3)) {
 					paradox.gain(1);
-				}  
+				}
 			}
 
 			ui.consume(ui.availableAmount());

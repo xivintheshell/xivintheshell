@@ -1,7 +1,7 @@
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, BuffType, ResourceType, SkillName, WarningType } from "../Common";
+import { Aspect, BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { MCHResourceType } from "../Constants/MCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
@@ -23,7 +23,7 @@ import {
     StatePredicate, 
     Weaponskill 
 } from "../Skills";
-import { TraitName, Traits } from "../Traits";
+import { Traits } from "../Traits";
 
 const makeMCHResource = (rsc: ResourceType, maxValue: number, params? : {timeout?: number, default?: number}) => {
     makeResource(ShellJob.MCH, rsc, maxValue, params ?? {});
