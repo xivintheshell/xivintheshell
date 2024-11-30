@@ -1,13 +1,13 @@
 import { ShellJob } from "../../Controller/Common"
 import { controller } from "../../Controller/Controller";
-import { ProcMode, ResourceType, SkillName, WarningType } from "../Common";
+import { ProcMode, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { DNCResourceType } from "../Constants/DNC";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, getResourceInfo, makeResource, Resource, ResourceInfo } from "../Resources"
 import { Ability, combineEffects, ConditionalSkillReplace, CooldownGroupProperies, EffectFn, getBasePotency, makeAbility, makeResourceAbility, makeWeaponskill, NO_EFFECT, ResourceCalculationFn, StatePredicate, Weaponskill } from "../Skills";
-import { TraitName, Traits } from "../Traits";
+import { Traits } from "../Traits";
 
 const makeDNCResource = (rsc: ResourceType, maxValue: number, params? : {timeout?: number, default?: number}) => {
     makeResource(ShellJob.DNC, rsc, maxValue, params ?? {});

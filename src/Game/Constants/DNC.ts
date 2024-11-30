@@ -105,3 +105,32 @@ export enum DNCCooldownType {
     cd_CuringWaltz = "cd_CuringWaltz",
     cd_Ending = "cd_Ending",
 }
+
+export enum DNCTraitName {
+    Esprit = 2000,
+    EnhancedEnAvantII,
+    EnhancedTechnicalFinish,
+    EnhancedEsprit,
+    EnhancedFlourish,
+    EnhancedShieldSamba,
+    EnhancedDevilment,
+    EnhancedStandardFinish,
+    DynamicDancer,
+    EnhancedFlourishII,
+    EnhancedTechnicalFinishII,
+}
+
+
+export const DNCTraitList: Array<[DNCTraitName, number]> = [
+    [DNCTraitName.Esprit, 76],
+    [DNCTraitName.EnhancedEnAvantII, 78],
+    [DNCTraitName.EnhancedTechnicalFinish, 82],
+    [DNCTraitName.EnhancedEsprit, 84],
+    [DNCTraitName.EnhancedFlourish, 86],
+    [DNCTraitName.EnhancedShieldSamba, 88],
+    [DNCTraitName.EnhancedDevilment, 90],
+    [DNCTraitName.EnhancedStandardFinish, 92],
+    [DNCTraitName.DynamicDancer, 94],
+    [DNCTraitName.EnhancedFlourishII, 96],
+    [DNCTraitName.EnhancedTechnicalFinishII, 100],
+];

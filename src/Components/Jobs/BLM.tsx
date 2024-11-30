@@ -6,8 +6,8 @@ import {
     ResourceDisplayProps,
     StatusPropsGenerator
 } from "../StatusDisplay";
-import {ResourceType} from "../../Game/Common";
-import {TraitName, Traits} from "../../Game/Traits";
+import {ResourceType, TraitName} from "../../Game/Common";
+import {Traits} from "../../Game/Traits";
 import {BLMState} from "../../Game/Jobs/BLM";
 import {getCurrentThemeColors} from "../ColorTheme";
 import {localize} from "../Localization";

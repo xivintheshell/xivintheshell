@@ -1,6 +1,6 @@
-import { ResourceType } from "../../Game/Common";
+import { ResourceType, TraitName } from "../../Game/Common";
 import { RPRState } from "../../Game/Jobs/RPR";
-import { TraitName, Traits } from "../../Game/Traits";
+import { Traits } from "../../Game/Traits";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import { BuffProps, registerBuffIcon, ResourceBarProps, ResourceCounterProps, ResourceDisplayProps, StatusPropsGenerator } from "../StatusDisplay";

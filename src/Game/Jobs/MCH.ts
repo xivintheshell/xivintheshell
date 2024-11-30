@@ -1,7 +1,7 @@
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, BuffType, ResourceType, SkillName, WarningType } from "../Common";
+import { Aspect, BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { MCHResourceType } from "../Constants/MCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
@@ -23,7 +23,7 @@ import {
     StatePredicate, 
     Weaponskill 
 } from "../Skills";
-import { TraitName, Traits } from "../Traits";
+import { Traits } from "../Traits";
 
 const makeMCHResource = (rsc: ResourceType, maxValue: number, params? : {timeout?: number, default?: number}) => {
     makeResource(ShellJob.MCH, rsc, maxValue, params ?? {});
@@ -57,6 +57,14 @@ makeMCHResource(ResourceType.BatteryBonus, 50)
 const COMBO_GCDS: SkillName[] = [SkillName.HeatedCleanShot, SkillName.HeatedSlugShot, SkillName.HeatedSplitShot,
     SkillName.SpreadShot, SkillName.Scattergun // Including AoE GCDs that break the combo, even though they don't combo themselves
 ]
+
+// Skills that don't consume overheat - these are all AoE skills
+// The only AoE skill that consumes overheat is Auto Crossbow
+const WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT: SkillName[] = [
+    SkillName.Chainsaw, SkillName.Excavator, SkillName.FullMetalField,
+    SkillName.Scattergun, SkillName.Bioblaster, SkillName.SpreadShot
+];
+
 export class MCHState extends GameState {
 
     constructor (config: GameConfig) {
@@ -241,7 +249,12 @@ const makeWeaponskill_MCH = (name: SkillName, unlockLevel: number, params: {
                 state.resources.get(ResourceType.WildfireHits).gain(1)
             }
         },
-        (state) => state.tryConsumeResource(ResourceType.Overheated) // All weaponskills executed during overheat will consume a stack
+        // All single-target weaponskills executed during overheat will consume a stack
+        (state) => {
+            if (!WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT.includes(name)) {
+                state.tryConsumeResource(ResourceType.Overheated)
+            }
+        }
     );
     const onApplication: EffectFn<MCHState> = params.onApplication ?? NO_EFFECT;
     return makeWeaponskill(ShellJob.MCH, name, unlockLevel, {
@@ -429,7 +442,7 @@ makeWeaponskill_MCH(SkillName.Chainsaw, 90, {
         cdName: ResourceType.cd_Chainsaw,
         cooldown: 60, // cooldown edited in constructor to be affected by skill speed
         maxCharges: 1
-    }
+    },
 })
 makeWeaponskill_MCH(SkillName.Excavator, 90, {
     startOnHotbar: false,
@@ -441,7 +454,7 @@ makeWeaponskill_MCH(SkillName.Excavator, 90, {
         state.tryConsumeResource(ResourceType.ExcavatorReady)
     },
     validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ExcavatorReady),
-    highlightIf: (state) => state.hasResourceAvailable(ResourceType.ExcavatorReady)
+    highlightIf: (state) => state.hasResourceAvailable(ResourceType.ExcavatorReady),
 })
 
 makeAbility_MCH(SkillName.BarrelStabilizer, 66, ResourceType.cd_BarrelStabilizer, {
@@ -742,7 +755,7 @@ makeWeaponskill_MCH(SkillName.Scattergun, 82, {
     ],
     applicationDelay: 1.15,
     recastTime: (state) => state.config.adjustedSksGCD(),
-    onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5)
+    onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 10)
 })
 
 makeWeaponskill_MCH(SkillName.Bioblaster, 58, {
@@ -809,9 +822,6 @@ makeWeaponskill_MCH(SkillName.AutoCrossbow, 52, {
     ],
     applicationDelay: 0.89,
     recastTime: 1.5,
-    onConfirm: (state) =>  {
-        state.tryConsumeResource(ResourceType.Overheated)
-    },
     validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Overheated),
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.Overheated),
 })

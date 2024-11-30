@@ -8,8 +8,8 @@ import {
 	ResourceTextProps,
 	StatusPropsGenerator
 } from "../StatusDisplay";
-import {ResourceType} from "../../Game/Common";
-import {TraitName, Traits} from "../../Game/Traits";
+import {ResourceType,TraitName} from "../../Game/Common";
+import {Traits} from "../../Game/Traits";
 import {PCTState} from "../../Game/Jobs/PCT";
 import {getCurrentThemeColors} from "../ColorTheme";
 import {localize} from "../Localization";

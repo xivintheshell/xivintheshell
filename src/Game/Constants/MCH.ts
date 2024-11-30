@@ -81,3 +81,37 @@ export enum MCHCooldownType {
     cd_Hypercharge = "cd_Hypercharge",
     cd_Detonator = "cd_Detonator",
 }
+
+export enum MCHTraitName {
+	ChargedActionMastery = 3000,
+	HotShotMastery,
+	EnhancedWildfire,
+	Promotion,
+	SpreadShotMastery,
+	EnhancedReassemble,
+	MarksmansMastery,
+	QueensGambit,
+	EnhancedTactician,
+	DoubleBarrelMastery,
+	EnhancedMultiWeapon,
+	MarksmansMasteryII,
+	EnhancedMultiWeaponII,
+	EnhancedBarrelStabilizer,
+}
+
+export const MCHTraitList: Array<[MCHTraitName, number]> = [
+    [MCHTraitName.ChargedActionMastery, 74],
+    [MCHTraitName.HotShotMastery, 76],
+    [MCHTraitName.EnhancedWildfire, 88],
+    [MCHTraitName.Promotion, 80],
+    [MCHTraitName.SpreadShotMastery, 82],
+    [MCHTraitName.EnhancedReassemble, 84],
+    [MCHTraitName.MarksmansMastery, 84],
+    [MCHTraitName.QueensGambit, 86],
+    [MCHTraitName.EnhancedTactician, 88],
+    [MCHTraitName.DoubleBarrelMastery, 92],
+    [MCHTraitName.EnhancedMultiWeapon, 94],
+    [MCHTraitName.MarksmansMasteryII, 94],
+    [MCHTraitName.EnhancedMultiWeaponII, 96],
+    [MCHTraitName.EnhancedBarrelStabilizer, 100],
+]
