@@ -808,7 +808,7 @@ export class DamageStatistics extends React.Component {
 					<div style={{display: "inline-block", width: "12%"}}><span style={headerCellStyle}/></div>
 					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
 						<b>{localize({en: "gap", zh: "DoT间隙"})} </b>
-						<Help topic={"thunderTable-gap-title"} content={localize({
+						<Help topic={"dot-gap-title"} content={localize({
 							en: <div>
 								<div className={"paragraph"}>DoT coverage time gap since pull or previous application</div>
 								<div className={"paragraph"}>The last row also includes gap at the beginning and end of the fight</div>
@@ -818,7 +818,7 @@ export class DamageStatistics extends React.Component {
 					</span></div>
 					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
 						<b>{localize({en: "override", zh: "DoT覆盖"})} </b>
-						<Help topic={"thunderTable-override-title"} content={localize({
+						<Help topic={"dot-override-title"} content={localize({
 							en: <div>Overridden DoT time from previous application</div>,
 							zh: <div>提前覆盖雷DoT时长</div>,
 						})}/>
@@ -854,12 +854,11 @@ export class DamageStatistics extends React.Component {
 			</div>
 		</div>
 
-		const job = controller.getActiveJob();
 		return <div>
 			{summary}
 			<div>
 				{mainTable}
-				{(job === ShellJob.BLM || job === ShellJob.SAM || job === ShellJob.MCH) && dotTable}
+				{controller.game.dotResources.length > 0 && dotTable}
 			</div>
 		</div>
 	}
