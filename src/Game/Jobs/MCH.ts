@@ -787,7 +787,7 @@ makeWeaponskill_MCH(SkillName.Scattergun, 82, {
     ],
     applicationDelay: 1.15,
     recastTime: (state) => state.config.adjustedSksGCD(),
-    onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5)
+    onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 10)
 })
 
 makeWeaponskill_MCH(SkillName.Bioblaster, 58, {

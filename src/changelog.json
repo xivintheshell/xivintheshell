@@ -1,5 +1,12 @@
 [
 	{
+		"date": "11/30/24",
+		"changes": [
+			"[MCH] Fixed Scattergun's heat generation (thanks Kairos)",
+			"[PCT] Fixed Monochrome Tones appearing when synced to level 80 and other internal trait logic (thanks misterperson)"
+		]
+	},
+	{
 		"date": "11/29/24",
 		"changes": [
 			"[MCH] Fixed bugs with MCH Overheat consumption on AoE abilities (thanks FloatingGhost)"
