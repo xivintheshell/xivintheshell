@@ -1,5 +1,3 @@
-import { TraitName } from "../Traits";
-
 export enum SAMSkillName {
 	Enpi = "Enpi",
 	Hakaze = "Hakaze",
@@ -95,18 +93,33 @@ export enum SAMCooldownType {
 	cd_ThirdEyePop = "cd_ThirdEyePop", // [0, 1,], not real
 }
 
-export const SAMTraitList: Array<[TraitName, number]> = [
-	[TraitName.EnhancedIaijutsu, 74],
-	[TraitName.EnhancedMeikyoShisui, 76],
-	[TraitName.EnhancedFugetsuAndFuka, 78],
-	[TraitName.ThirdEyeMastery, 82],
-	[TraitName.WayOfTheSamuraiII, 84],
-	[TraitName.FugaMastery, 86],
-	[TraitName.EnhancedIkishoten, 90],
-	[TraitName.HakazeMastery, 92],
-	[TraitName.EnhancedHissatsu, 94],
-	[TraitName.WayOfTheSamuraiIII, 94],
-	[TraitName.EnhancedIkishotenII, 96],
-	[TraitName.EnhancedMeikyoShisuiII, 100],
-	[TraitName.EnhancedFeint, 98],
+export enum SAMTraitName {
+	EnhancedIaijutsu = 7000,
+	EnhancedMeikyoShisui,
+	EnhancedFugetsuAndFuka,
+	ThirdEyeMastery,
+	WayOfTheSamuraiII,
+	FugaMastery,
+	EnhancedIkishoten,
+	HakazeMastery,
+	EnhancedHissatsu,
+	WayOfTheSamuraiIII,
+	EnhancedIkishotenII,
+	EnhancedMeikyoShisuiII,
+}
+
+export const SAMTraitList: Array<[SAMTraitName, number]> = [
+	[SAMTraitName.EnhancedIaijutsu, 74],
+	[SAMTraitName.EnhancedMeikyoShisui, 76],
+	[SAMTraitName.EnhancedMeikyoShisui, 76],
+	[SAMTraitName.EnhancedFugetsuAndFuka, 78],
+	[SAMTraitName.ThirdEyeMastery, 82],
+	[SAMTraitName.WayOfTheSamuraiII, 84],
+	[SAMTraitName.FugaMastery, 86],
+	[SAMTraitName.EnhancedIkishoten, 90],
+	[SAMTraitName.HakazeMastery, 92],
+	[SAMTraitName.EnhancedHissatsu, 94],
+	[SAMTraitName.WayOfTheSamuraiIII, 94],
+	[SAMTraitName.EnhancedIkishotenII, 96],
+	[SAMTraitName.EnhancedMeikyoShisuiII, 100],
 ];

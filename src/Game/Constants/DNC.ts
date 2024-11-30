@@ -1,5 +1,3 @@
-import { TraitName } from "../Traits";
-
 export enum DNCSkillName {
     StandardFinish = "Standard Finish",
     SingleStandardFinish = "Single Standard Finish",
@@ -108,16 +106,31 @@ export enum DNCCooldownType {
     cd_Ending = "cd_Ending",
 }
 
-export const DNCTraitList: Array<[TraitName, number]> = [
-    [TraitName.Esprit, 76],
-    [TraitName.EnhancedEnAvantII, 78],
-    [TraitName.EnhancedTechnicalFinish, 82],
-    [TraitName.EnhancedEsprit, 84],
-    [TraitName.EnhancedFlourish, 86],
-    [TraitName.EnhancedShieldSamba, 88],
-    [TraitName.EnhancedDevilment, 90],
-    [TraitName.EnhancedStandardFinish, 92],
-    [TraitName.DynamicDancer, 94],
-    [TraitName.EnhancedFlourishII, 96],
-    [TraitName.EnhancedTechnicalFinishII, 100],
+export enum DNCTraitName {
+    Esprit = 2000,
+    EnhancedEnAvantII,
+    EnhancedTechnicalFinish,
+    EnhancedEsprit,
+    EnhancedFlourish,
+    EnhancedShieldSamba,
+    EnhancedDevilment,
+    EnhancedStandardFinish,
+    DynamicDancer,
+    EnhancedFlourishII,
+    EnhancedTechnicalFinishII,
+}
+
+
+export const DNCTraitList: Array<[DNCTraitName, number]> = [
+    [DNCTraitName.Esprit, 76],
+    [DNCTraitName.EnhancedEnAvantII, 78],
+    [DNCTraitName.EnhancedTechnicalFinish, 82],
+    [DNCTraitName.EnhancedEsprit, 84],
+    [DNCTraitName.EnhancedFlourish, 86],
+    [DNCTraitName.EnhancedShieldSamba, 88],
+    [DNCTraitName.EnhancedDevilment, 90],
+    [DNCTraitName.EnhancedStandardFinish, 92],
+    [DNCTraitName.DynamicDancer, 94],
+    [DNCTraitName.EnhancedFlourishII, 96],
+    [DNCTraitName.EnhancedTechnicalFinishII, 100],
 ];

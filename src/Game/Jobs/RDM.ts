@@ -2,7 +2,7 @@
 
 import {controller} from "../../Controller/Controller";
 import {ShellJob} from "../../Controller/Common";
-import {Aspect, ProcMode, ResourceType, SkillName, WarningType} from "../Common";
+import {Aspect, ProcMode, ResourceType, SkillName, TraitName, WarningType} from "../Common";
 import {makeComboModifier, Modifiers, PotencyModifier} from "../Potency";
 import {
 	Ability,
@@ -21,7 +21,7 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import {TraitName, Traits} from "../Traits";
+import {Traits} from "../Traits";
 import {GameState} from "../GameState";
 import {getResourceInfo, makeResource, CoolDown, Resource, ResourceInfo} from "../Resources"
 import {GameConfig} from "../GameConfig";

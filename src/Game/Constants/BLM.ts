@@ -1,5 +1,3 @@
-import { TraitName } from "../Traits"
-
 export enum BLMSkillName {
     Blizzard = "Blizzard",
     Fire = "Fire",
@@ -63,19 +61,32 @@ export enum BLMCooldownType {
     cd_Retrace = "cd_Retrace", // [0, 1x]
 }
 
-export const BLMTraitList: Array<[TraitName, number]> = [
-    [TraitName.EnhancedEnochianII, 78],
-    [TraitName.EnhancedPolyglot, 80],
-    [TraitName.EnhancedFoul, 80],
-    [TraitName.AspectMasteryIV, 82],
-    [TraitName.EnhancedManafont, 84],
-    [TraitName.EnhancedEnochianIII, 86],
-    [TraitName.AspectMasteryV, 90],
-    [TraitName.ThunderMasteryIII, 92],
-    [TraitName.EnhancedSwiftcast, 94],
-    [TraitName.EnhancedLeyLines, 96],
-    [TraitName.EnhancedEnochianIV, 96],
-    [TraitName.EnhancedPolyglotII, 98],
-    [TraitName.EnhancedAddle, 98],
-    [TraitName.EnhancedAstralFire, 100],
+export enum BLMTraitName {
+    EnhancedEnochianII = 1000,
+    EnhancedPolyglot,
+    EnhancedFoul,
+    AspectMasteryIV,
+    EnhancedManafont,
+    EnhancedEnochianIII,
+    AspectMasteryV,
+    ThunderMasteryIII,
+    EnhancedLeyLines,
+    EnhancedEnochianIV,
+    EnhancedPolyglotII,
+    EnhancedAstralFire,
+}
+
+export const BLMTraitList: Array<[BLMTraitName, number]> = [
+    [BLMTraitName.EnhancedEnochianII, 78],
+    [BLMTraitName.EnhancedPolyglot, 80],
+    [BLMTraitName.EnhancedFoul, 80],
+    [BLMTraitName.AspectMasteryIV, 82],
+    [BLMTraitName.EnhancedManafont, 84],
+    [BLMTraitName.EnhancedEnochianIII, 86],
+    [BLMTraitName.AspectMasteryV, 90],
+    [BLMTraitName.ThunderMasteryIII, 92],
+    [BLMTraitName.EnhancedLeyLines, 96],
+    [BLMTraitName.EnhancedEnochianIV, 96],
+    [BLMTraitName.EnhancedPolyglotII, 98],
+    [BLMTraitName.EnhancedAstralFire, 100],
 ];

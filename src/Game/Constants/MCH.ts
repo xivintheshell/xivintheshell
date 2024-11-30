@@ -1,5 +1,3 @@
-import { TraitName } from "../Traits";
-
 export enum MCHSkillName {
     HeatedSplitShot = "Heated Split Shot",
     HeatedSlugShot = "Heated Slug Shot",
@@ -84,19 +82,36 @@ export enum MCHCooldownType {
     cd_Detonator = "cd_Detonator",
 }
 
-export const MCHTraitList: Array<[TraitName, number]> = [
-    [TraitName.ChargedActionMastery, 74],
-    [TraitName.HotShotMastery, 76],
-    [TraitName.EnhancedWildfire, 88],
-    [TraitName.Promotion, 80],
-    [TraitName.SpreadShotMastery, 82],
-    [TraitName.EnhancedReassemble, 84],
-    [TraitName.MarksmansMastery, 84],
-    [TraitName.QueensGambit, 86],
-    [TraitName.EnhancedTactician, 88],
-    [TraitName.DoubleBarrelMastery, 92],
-    [TraitName.EnhancedMultiWeapon, 94],
-    [TraitName.MarksmansMasteryII, 94],
-    [TraitName.EnhancedMultiWeaponII, 96],
-    [TraitName.EnhancedBarrelStabilizer, 100],
+export enum MCHTraitName {
+	ChargedActionMastery = 3000,
+	HotShotMastery,
+	EnhancedWildfire,
+	Promotion,
+	SpreadShotMastery,
+	EnhancedReassemble,
+	MarksmansMastery,
+	QueensGambit,
+	EnhancedTactician,
+	DoubleBarrelMastery,
+	EnhancedMultiWeapon,
+	MarksmansMasteryII,
+	EnhancedMultiWeaponII,
+	EnhancedBarrelStabilizer,
+}
+
+export const MCHTraitList: Array<[MCHTraitName, number]> = [
+    [MCHTraitName.ChargedActionMastery, 74],
+    [MCHTraitName.HotShotMastery, 76],
+    [MCHTraitName.EnhancedWildfire, 88],
+    [MCHTraitName.Promotion, 80],
+    [MCHTraitName.SpreadShotMastery, 82],
+    [MCHTraitName.EnhancedReassemble, 84],
+    [MCHTraitName.MarksmansMastery, 84],
+    [MCHTraitName.QueensGambit, 86],
+    [MCHTraitName.EnhancedTactician, 88],
+    [MCHTraitName.DoubleBarrelMastery, 92],
+    [MCHTraitName.EnhancedMultiWeapon, 94],
+    [MCHTraitName.MarksmansMasteryII, 94],
+    [MCHTraitName.EnhancedMultiWeaponII, 96],
+    [MCHTraitName.EnhancedBarrelStabilizer, 100],
 ]

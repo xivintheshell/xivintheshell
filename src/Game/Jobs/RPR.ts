@@ -1,12 +1,12 @@
 import { ShellJob } from "../../Controller/Common";
-import { Aspect, ResourceType, SkillName } from "../Common";
+import { Aspect, ResourceType, SkillName, TraitName } from "../Common";
 import { RPRResourceType, RPRSkillName } from "../Constants/RPR";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, makeResource } from "../Resources";
 import { Ability, combineEffects, combinePredicatesAnd, ConditionalSkillReplace, CooldownGroupProperies, EffectFn, getBasePotency, getSkill, makeAbility, makeResourceAbility, makeSpell, makeWeaponskill, NO_EFFECT, ResourceCalculationFn, Spell, StatePredicate, Weaponskill } from "../Skills";
-import { TraitName, Traits } from "../Traits";
+import { Traits } from "../Traits";
 
 function makeRPRResource(type: ResourceType, maxValue: number, params?: { timeout?: number, default?: number }) {
     makeResource(ShellJob.RPR, type, maxValue, params ?? {});
@@ -501,8 +501,8 @@ makeRPRWeaponskill(SkillName.ShadowOfDeath, 10, {
 makeRPRWeaponskill(SkillName.Slice, 1, {
     potency: [
         [TraitName.Never, 260],
-        [TraitName.MeleeMasteryII, 320],
-        [TraitName.MeleeMasteryIII, 460]
+        [TraitName.MeleeMasteryIIIRPR, 320],
+        [TraitName.MeleeMasteryIIIRPR, 460]
     ],
     aspect: Aspect.Physical,
     recastTime: 2.5,
@@ -512,14 +512,14 @@ makeRPRWeaponskill(SkillName.Slice, 1, {
 makeRPRWeaponskill(SkillName.WaxingSlice, 5, {
     potency: [
         [TraitName.Never, 100],
-        [TraitName.MeleeMasteryII, 160],
-        [TraitName.MeleeMasteryIII, 260]
+        [TraitName.MeleeMasteryIIRPR, 160],
+        [TraitName.MeleeMasteryIIIRPR, 260]
     ],
     combo: {
         potency: [
             [TraitName.Never, 340],
-            [TraitName.MeleeMasteryII, 400],
-            [TraitName.MeleeMasteryIII, 500],
+            [TraitName.MeleeMasteryIIRPR, 400],
+            [TraitName.MeleeMasteryIIIRPR, 500],
         ],
         resource: ResourceType.RPRCombo,
         resourceValue: 1,
@@ -535,14 +535,14 @@ makeRPRWeaponskill(SkillName.WaxingSlice, 5, {
 makeRPRWeaponskill(SkillName.InfernalSlice, 30, {
     potency: [
         [TraitName.Never, 100],
-        [TraitName.MeleeMasteryII, 180],
-        [TraitName.MeleeMasteryIII, 280],
+        [TraitName.MeleeMasteryIIRPR, 180],
+        [TraitName.MeleeMasteryIIIRPR, 280],
     ],
     combo: {
         potency: [
             [TraitName.Never, 420],
-            [TraitName.MeleeMasteryII, 500],
-            [TraitName.MeleeMasteryIII, 600],
+            [TraitName.MeleeMasteryIIRPR, 500],
+            [TraitName.MeleeMasteryIIIRPR, 600],
         ],
         resource: ResourceType.RPRCombo,
         resourceValue: 2,
@@ -559,7 +559,7 @@ makeRPRWeaponskill(SkillName.InfernalSlice, 30, {
 makeRPRWeaponskill(SkillName.SoulSlice, 60, {
     potency: [
         [TraitName.Never, 460],
-        [TraitName.MeleeMasteryIII, 520]
+        [TraitName.MeleeMasteryIIIRPR, 520]
     ],
     aspect: Aspect.Physical,
     recastTime: 2.5,
@@ -584,12 +584,12 @@ makeRPRWeaponskill(SkillName.Gibbet, 70, {
     ],
     potency: [
         [TraitName.Never, 460],
-        [TraitName.MeleeMasteryIII, 500],
+        [TraitName.MeleeMasteryIIIRPR, 500],
     ],
     positional: {
         potency: [
             [TraitName.Never, 520],
-            [TraitName.MeleeMasteryIII, 560],
+            [TraitName.MeleeMasteryIIIRPR, 560],
         ],
         location: "flank"
     },
@@ -617,12 +617,12 @@ makeRPRWeaponskill(SkillName.Gallows, 70, {
     ],
     potency: [
         [TraitName.Never, 460],
-        [TraitName.MeleeMasteryIII, 500],
+        [TraitName.MeleeMasteryIIIRPR, 500],
     ],
     positional: {
         potency: [
             [TraitName.Never, 520],
-            [TraitName.MeleeMasteryIII, 560],
+            [TraitName.MeleeMasteryIIIRPR, 560],
         ],
         location: "rear"
     },
@@ -743,7 +743,7 @@ makeRPRSpell(SkillName.Soulsow, 82, {
 makeRPRSpell(SkillName.HarvestMoon, 82, {
     potency: [
         [TraitName.Never, 600],
-        [TraitName.MeleeMasteryIII, 800],
+        [TraitName.MeleeMasteryIIIRPR, 800],
     ],
     startOnHotbar: false,
     aspect: Aspect.Other,
@@ -835,7 +835,7 @@ makeRPRAbility(SkillName.LemuresSlice, 86, ResourceType.cd_BloodStalk, {
     isPhysical: true,
     potency: [
         [TraitName.Never, 240],
-        [TraitName.MeleeMasteryIII, 280]
+        [TraitName.MeleeMasteryIIIRPR, 280]
     ],
     startOnHotbar: false,
     applicationDelay: 0.7,
@@ -877,7 +877,7 @@ makeRPRWeaponskill(SkillName.VoidReaping, 80, {
     startOnHotbar: false,
     potency: [
         [TraitName.Never, 460],
-        [TraitName.MeleeMasteryIII, 500],
+        [TraitName.MeleeMasteryIIIRPR, 500],
     ],
     aspect: Aspect.Physical,
     recastTime: 1.5,
@@ -900,7 +900,7 @@ makeRPRWeaponskill(SkillName.CrossReaping, 80, {
     startOnHotbar: false,
     potency: [
         [TraitName.Never, 460],
-        [TraitName.MeleeMasteryIII, 500],
+        [TraitName.MeleeMasteryIIIRPR, 500],
     ],
     aspect: Aspect.Physical,
     recastTime: 1.5,

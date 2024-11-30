@@ -1,8 +1,8 @@
 import {ALL_JOBS, CASTER_JOBS, HEALER_JOBS, MELEE_JOBS, PHYSICAL_RANGED_JOBS, ShellJob, TANK_JOBS} from "../../Controller/Common";
-import {SkillName, ResourceType, WarningType} from "../Common";
+import {SkillName, ResourceType, TraitName, WarningType} from "../Common";
 import {combineEffects, makeAbility, makeResourceAbility} from "../Skills";
 import {DoTBuff, EventTag, makeResource} from "../Resources"
-import {Traits, TraitName} from "../Traits";
+import {Traits} from "../Traits";
 import type {GameState} from "../GameState";
 import {controller} from "../../Controller/Controller";
 

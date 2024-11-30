@@ -1,5 +1,3 @@
-import { TraitName } from "../Traits";
-
 export enum RDMSkillName {
 	Riposte = "Riposte",
 	// Jolt = "Jolt",
@@ -85,16 +83,30 @@ export enum RDMCooldownType {
 	cd_Prefulgence = "cd_Prefulgence",
 }
 
-export const RDMTraitList: Array<[TraitName, number]> = [
-	[TraitName.EnhancedDisplacement, 72],
-	[TraitName.RedMagicMastery, 74],
-	[TraitName.EnhancedManafication, 78],
-	[TraitName.RedMagicMasteryII, 82],
-	[TraitName.RedMagicMasteryIII, 84],
-	[TraitName.EnhancedAcceleration, 88],
-	[TraitName.EnhancedManaficationII, 90],
-	[TraitName.EnhancedEmbolden, 92],
-	[TraitName.EnchantedBladeMastery, 94],
-	[TraitName.EnhancedAccelerationII, 96],
-	[TraitName.EnhancedManaficationIII, 100],
+export enum RDMTraitName {
+	EnhancedDisplacement = 5000,
+	RedMagicMastery,
+	EnhancedManafication,
+	RedMagicMasteryII,
+	RedMagicMasteryIII,
+	EnhancedAcceleration,
+	EnhancedManaficationII,
+	EnhancedEmbolden,
+	EnchantedBladeMastery,
+	EnhancedAccelerationII,
+	EnhancedManaficationIII,
+}
+
+export const RDMTraitList: Array<[RDMTraitName, number]> = [
+	[RDMTraitName.EnhancedDisplacement, 72],
+	[RDMTraitName.RedMagicMastery, 74],
+	[RDMTraitName.EnhancedManafication, 78],
+	[RDMTraitName.RedMagicMasteryII, 82],
+	[RDMTraitName.RedMagicMasteryIII, 84],
+	[RDMTraitName.EnhancedAcceleration, 88],
+	[RDMTraitName.EnhancedManaficationII, 90],
+	[RDMTraitName.EnhancedEmbolden, 92],
+	[RDMTraitName.EnchantedBladeMastery, 94],
+	[RDMTraitName.EnhancedAccelerationII, 96],
+	[RDMTraitName.EnhancedManaficationIII, 100],
 ];

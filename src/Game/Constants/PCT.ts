@@ -1,5 +1,3 @@
-import { TraitName } from "../Traits";
-
 export enum PCTSkillName {
     FireInRed = "Fire in Red",
     AeroInGreen = "Aero in Green",
@@ -91,17 +89,32 @@ export enum PCTCooldownType {
     cd_TemperaPop = "cd_TemperaPop", // [0, 1], also not real
 }
 
-export const PCTTraitList: Array<[TraitName, number]> = [
-    [TraitName.PictomancyMasteryII, 74],
-    [TraitName.EnhancedArtistry, 80],
-    [TraitName.EnhancedPictomancy, 82],
-    [TraitName.EnhancedSmudge, 84],
-    [TraitName.PictomancyMasteryIII, 84],
-    [TraitName.EnhancedPictomancyII, 86],
-    [TraitName.EnhancedTempera, 88],
-    [TraitName.EnhancedTempera, 90],
-    [TraitName.EnhancedPictomancyIII, 92],
-    [TraitName.PictomancyMasteryIV, 94],
-    [TraitName.EnhancedPictomancyIV, 96],
-    [TraitName.EnhancedPictomancyV, 100],
+export enum PCTTraitName {
+    PictomancyMasteryII = 4000,
+	EnhancedArtistry,
+	EnhancedPictomancy,
+	EnhancedSmudge,
+	PictomancyMasteryIII,
+	EnhancedPictomancyII,
+	EnhancedTempera,
+	EnhancedPalette,
+	EnhancedPictomancyIII,
+	PictomancyMasteryIV,
+	EnhancedPictomancyIV,
+	EnhancedPictomancyV,
+}
+
+export const PCTTraitList: Array<[PCTTraitName, number]> = [
+    [PCTTraitName.PictomancyMasteryII, 74],
+    [PCTTraitName.EnhancedArtistry, 80],
+    [PCTTraitName.EnhancedPictomancy, 82],
+    [PCTTraitName.EnhancedSmudge, 84],
+    [PCTTraitName.PictomancyMasteryIII, 84],
+    [PCTTraitName.EnhancedPictomancyII, 86],
+    [PCTTraitName.EnhancedTempera, 88],
+    [PCTTraitName.EnhancedPalette, 90],
+    [PCTTraitName.EnhancedPictomancyIII, 92],
+    [PCTTraitName.PictomancyMasteryIV, 94],
+    [PCTTraitName.EnhancedPictomancyIV, 96],
+    [PCTTraitName.EnhancedPictomancyV, 100],
 ];
