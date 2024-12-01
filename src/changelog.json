@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/1/24",
+		"changes": [
+			"Updated full FRU tracks in Chinese by 盐宝 & czmm"
+		]
+	},
+	{
 		"date": "11/30/24",
 		"changes": [
 			"[MCH] Fixed Scattergun's heat generation (thanks Kairos)",
