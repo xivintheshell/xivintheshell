@@ -36,6 +36,7 @@ import {RDMStatusPropsGenerator} from "../Components/Jobs/RDM";
 import {DNCStatusPropsGenerator} from "../Components/Jobs/DNC";
 import {SAMStatusPropsGenerator} from "../Components/Jobs/SAM";
 import {MCHStatusPropsGenerator} from "../Components/Jobs/MCH";
+import {WARStatusPropsGenerator} from "../Components/Jobs/WAR";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
@@ -60,6 +61,7 @@ import {
 import {XIVMath} from "../Game/XIVMath";
 import {RPRState} from "../Game/Jobs/RPR";
 import {RPRStatusPropsGenerator} from "../Components/Jobs/RPR";
+import { WARState } from "../Game/Jobs/WAR";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 require("../Game/Jobs/RoleActions");
@@ -79,6 +81,8 @@ const newGameState = (config: GameConfig) => {
 		return new MCHState(config);
 	} else if (config.job === ShellJob.RPR) {
 		return new RPRState(config);
+	} else if (config.job === ShellJob.WAR) {
+		return new WARState(config);
 	}
 	return new BLMState(config);
 };
@@ -728,6 +732,9 @@ class Controller {
 				break;
 			case ShellJob.RPR:
 				propsGenerator = new RPRStatusPropsGenerator(game as RPRState);
+				break;
+			case ShellJob.WAR:
+				propsGenerator = new WARStatusPropsGenerator(game as WARState);
 				break;
 			default:
 				propsGenerator = new BLMStatusPropsGenerator(game as BLMState);

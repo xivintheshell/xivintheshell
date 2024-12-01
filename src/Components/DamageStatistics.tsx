@@ -267,6 +267,9 @@ function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
 	} else if (props.buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
 		text = localize({en: "IMMORTAL SAC"}) as string;
 		color = MarkerColor.Pink;
+	} else if(props.buff === PotencyModifierType.SURGING_TEMPEST) {
+		text = localize({en: "SURGING"}) as string;
+		color = MarkerColor.Purple;
 	}
 	return <span style={{
 		borderRadius: 2,
