@@ -1,11 +1,11 @@
-import React, { CSSProperties } from "react";
-import { Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile } from "./Common";
-import { LIMIT_BREAKS, SkillName } from "../Game/Common";
-import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
-import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
-import { localize, localizeSkillName } from "./Localization";
-import { controller } from "../Controller/Controller";
-import { ShellJob } from "../Controller/Common";
+import React, {CSSProperties} from 'react'
+import {Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile} from "./Common";
+import {LIMIT_BREAKS, ResourceType, SkillName} from "../Game/Common";
+import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
+import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
+import {localize, localizeResourceType, localizeSkillName} from "./Localization";
+import {controller} from "../Controller/Controller";
+import {ShellJob} from "../Controller/Common";
 import {
 	allSkillsAreIncluded,
 	DamageStatsDoTTrackingData,
@@ -97,7 +97,7 @@ export type DamageStatisticsData = {
 		totalPotPotency: number,
 		totalPartyBuffPotency: number,
 	},
-	dotTables: Map<SkillName, DamageStatsDoTTrackingData>,
+	dotTables: Map<ResourceType, DamageStatsDoTTrackingData>,
 	mode: DamageStatisticsMode,
 }
 
@@ -533,7 +533,7 @@ export class DamageStatistics extends React.Component {
 
 		let dotStr = ""
 		if (controller.getActiveJob() === ShellJob.BLM) {
-			const thunderTable = this.data.dotTables.get(SkillName.HighThunder) ?? this.data.dotTables.get(SkillName.Thunder3)
+			const thunderTable = this.data.dotTables.get(ResourceType.HighThunder) ?? this.data.dotTables.get(ResourceType.ThunderIII)
 			if (thunderTable !== undefined) { 
 				dotStr += localize({en: "Thunder DoT uptime", zh: "雷覆盖时间"}) + colon + (thunderTable.summary.dotCoverageTimeFraction*100).toFixed(2) + "%";
 				dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + thunderTable.summary.totalTicks + "/" + thunderTable.summary.maxTicks + rparen;
@@ -642,9 +642,9 @@ export class DamageStatistics extends React.Component {
 			};
 		};
 
-		let isDoTProp = function (skillName: SkillName) {
-			return controller.game.dotResources.get(skillName) !== undefined;
-		};
+		let isDoTProp = function(skillName: SkillName) {
+			return controller.game.dotSkills.includes(skillName)
+		}
 
 		let hidePotency = function (skillName: SkillName) {
 			if (isDoTProp(skillName)) {
@@ -938,8 +938,8 @@ export class DamageStatistics extends React.Component {
 			</div>;
 		};
 
-		const allDotTableRows: {skillName: SkillName, tableRows:React.ReactNode[]}[] = [];
-		this.data.dotTables.forEach((dotTrackingData, skillName) => {
+		const allDotTableRows: {dotName: ResourceType, tableRows:React.ReactNode[]}[] = [];
+		this.data.dotTables.forEach((dotTrackingData, dotName) => {
 			const dotTableRows = []
 
 			for (let i = 0; i < dotTrackingData.tableRows.length; i++) {
@@ -949,7 +949,7 @@ export class DamageStatistics extends React.Component {
 				}));
 			}
 
-			allDotTableRows.push({skillName, tableRows: dotTableRows})
+			allDotTableRows.push({dotName, tableRows: dotTableRows})
 		})
 
 		//////////////////////////////////////////////////////////
@@ -1060,10 +1060,10 @@ export class DamageStatistics extends React.Component {
 
 		let dotTables = allDotTableRows.map((dotTable) => {
 			const dotTableRows = dotTable.tableRows
-			const dotTableSummary = this.data.dotTables.get(dotTable.skillName)?.summary
+			const dotTableSummary = this.data.dotTables.get(dotTable.dotName)?.summary
 			if (dotTableSummary === undefined) { return <></> } // Will never happen, but fixes nullish checks below
-			const dotHeaderStr = localizeSkillName(dotTable.skillName) + dotHeaderSuffix
-			return <div key={`dot-table-${dotTable.skillName}`} style={{
+			const dotHeaderStr = localizeResourceType(dotTable.dotName) + dotHeaderSuffix
+			return <div key={`dot-table-${dotTable.dotName}`} style={{
 				position: "relative",
 				margin: "0 auto",
 				marginBottom: 40,

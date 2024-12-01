@@ -1,16 +1,9 @@
 // Skill and state declarations for SAM.
 
-import { controller } from "../../Controller/Controller";
-import { ActionNode } from "../../Controller/Record";
-import { ShellJob } from "../../Controller/Common";
-import { Aspect, BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
-import {
-	makeComboModifier,
-	makePositionalModifier,
-	Modifiers,
-	Potency,
-	PotencyModifier,
-} from "../Potency";
+import {controller} from "../../Controller/Controller";
+import {ShellJob} from "../../Controller/Common";
+import {ResourceType, SkillName, TraitName, WarningType} from "../Common";
+import {makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier} from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -95,8 +88,8 @@ export class SAMState extends GameState {
 		].forEach((cd) => this.cooldowns.set(cd));
 
 		super.registerRecurringEvents([{
-			skillName: SkillName.Higanbana,
-			dotApplied: ResourceType.HiganbanaDoT
+			dotName: ResourceType.HiganbanaDoT,
+			appliedBy: [SkillName.Higanbana],
 		}]);
 	}
 
@@ -676,38 +669,21 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 	applicationDelay: 0.62,
 	validateAttempt: banaCondition.condition,
 	onConfirm: (state, node) => {
-		// Copied from BLM addThunder Potencies
-		const mods: PotencyModifier[] = [];
-		if (state.hasResourceAvailable(ResourceType.Tincture)) {
-			mods.push(Modifiers.Tincture);
-		}
+		const modifiers: PotencyModifier[] = [];
 		if (state.hasResourceAvailable(ResourceType.Fugetsu)) {
-			mods.push(state.getFugetsuModifier());
+			modifiers.push(state.getFugetsuModifier());
 		}
-		const snapshotTime = state.getDisplayTime();
 
-		// tick potencies
-		const ticks = 20;
-		const tickPotency = Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level)
-			? 50
-			: 45;
-		for (let i = 0; i < ticks; i++) {
-			let pDot = new Potency({
-				config: controller.record.config ?? controller.gameConfig,
-				sourceTime: state.getDisplayTime(),
-				sourceSkill: SkillName.Higanbana,
-				aspect: Aspect.Other,
-				basePotency: state.config.adjustedDoTPotency(tickPotency, "sks"),
-				snapshotTime: snapshotTime,
-				description: "DoT " + (i + 1) + `/${ticks}`,
-			});
-			pDot.modifiers = mods;
-			node.addDoTPotency(pDot);
-		}
-		// tincture
-		if (state.hasResourceAvailable(ResourceType.Tincture)) {
-			node.addBuff(BuffType.Tincture);
-		}
+		const tickPotency = Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level) ? 50 : 45;
+
+		state.addDoTPotencies({
+			node,
+			dotName: ResourceType.HiganbanaDoT,
+			skillName: SkillName.Higanbana,
+			tickPotency,
+			speedStat: "sks",
+			modifiers,
+		})
 		state.consumeAllSen();
 		state.gainMeditation();
 		// bana does not reset your tsubame status

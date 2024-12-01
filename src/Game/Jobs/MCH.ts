@@ -1,7 +1,7 @@
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { Aspect, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { MCHResourceType } from "../Constants/MCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
@@ -127,8 +127,8 @@ export class MCHState extends GameState {
 		}
 
         super.registerRecurringEvents([{
-            skillName: SkillName.Bioblaster,
-            dotApplied: ResourceType.Bioblaster
+            dotName: ResourceType.Bioblaster,
+            appliedBy: [SkillName.Bioblaster]
         }]);
     }
 
@@ -208,7 +208,7 @@ export class MCHState extends GameState {
 			return;
 		}
 
-        const queenPotency = node.getDotPotencies()[potencyIndex]
+        const queenPotency = node.getDotPotencies(ResourceType.Queen)[potencyIndex]
 
 		// Queen actions snapshot at execution time, not when the button was pressed, add Tincture modifier and note snapshot time for party buff handling
 		if (this.hasResourceAvailable(ResourceType.Tincture)) {
@@ -263,7 +263,7 @@ export class MCHState extends GameState {
         const potencyNode = (this.resources.get(ResourceType.Wildfire) as DoTBuff).node
 
         if (potencyNode === undefined) { return }
-        const wildFirePotency = potencyNode.getDotPotencies()[0]
+        const wildFirePotency = potencyNode.getDotPotencies(ResourceType.Wildfire)[0]
         wildFirePotency.base = basePotency
         controller.resolvePotency(wildFirePotency)
 
@@ -611,7 +611,7 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
 			wildFirePotency.modifiers.push(Modifiers.Tincture);
 		}
 
-        node.addDoTPotency(wildFirePotency)
+        node.addDoTPotency(wildFirePotency, ResourceType.Wildfire)
         
         wildFire.gain(1)
         wildFire.node = node
@@ -754,7 +754,7 @@ robotSummons.forEach((params) => {
                     description: "",
                     basePotency,
                     snapshotTime: undefined,
-                }))
+                }), ResourceType.Queen)
             }
 
 			sourceSkill = Traits.hasUnlocked(TraitName.Promotion, state.config.level)
@@ -774,7 +774,7 @@ robotSummons.forEach((params) => {
                 description: "",
                 basePotency,
                 snapshotTime: undefined,
-            }))
+            }), ResourceType.Queen)
 
             if (Traits.hasUnlocked(TraitName.QueensGambit, state.config.level)) {
                 node.addDoTPotency(new Potency({
@@ -785,7 +785,7 @@ robotSummons.forEach((params) => {
                     description: "",
                     basePotency: state.calculateQueenPotency(390, 780),
                     snapshotTime: undefined,
-                }))
+                }), ResourceType.Queen)
             }
 
 			(state.resources.get(ResourceType.Queen) as DoTBuff).node = node;
@@ -852,37 +852,21 @@ makeWeaponskill_MCH(SkillName.Scattergun, 82, {
 });
 
 makeWeaponskill_MCH(SkillName.Bioblaster, 58, {
-	potency: 50,
-	applicationDelay: 0.97,
-	recastTime: (state) => state.config.adjustedSksGCD(),
-	secondaryCooldown: {
-		cdName: ResourceType.cd_Drill,
-		cooldown: 20,
-		maxCharges: 2, // charges reduced as needed in constructer by trait
-	},
-	onConfirm: (state, node) => {
-		const mods: PotencyMultiplier[] = [];
-		if (state.hasResourceAvailable(ResourceType.Tincture)) {
-			mods.push(Modifiers.Tincture);
-			node.addBuff(BuffType.Tincture);
-		}
-
-        const bioBlasterTicks = 5
-        const tickPotency = 50
-        for (let i = 0; i < bioBlasterTicks; i ++) {
-            const dotPotency = new Potency({
-                config: controller.record.config ?? controller.gameConfig,
-                sourceTime: state.getDisplayTime(),
-                sourceSkill: SkillName.Bioblaster,
-                aspect: Aspect.Other,
-                basePotency: state.config.adjustedDoTPotency(tickPotency, "sks"),
-                snapshotTime: state.getDisplayTime(),
-                description: "DoT " + (i+1) + `/${bioBlasterTicks}`
-            });
-            dotPotency.modifiers = mods;
-            node.addDoTPotency(dotPotency)
-        }
+    potency: 50,
+    applicationDelay: 0.97,
+    recastTime: (state) => state.config.adjustedSksGCD(),
+    secondaryCooldown: {
+        cdName: ResourceType.cd_Drill,
+        cooldown: 20,
+        maxCharges: 2, // charges reduced as needed in constructer by trait
     },
+    onConfirm: (state, node) => state.addDoTPotencies({
+        node,
+        dotName: ResourceType.Bioblaster,
+        skillName: SkillName.Bioblaster,
+        tickPotency: 50,
+        speedStat: "sks"
+    }),
     onApplication: (state, node) => state.applyDoT(ResourceType.Bioblaster, node)
 })
 
