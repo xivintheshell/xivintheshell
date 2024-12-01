@@ -65,14 +65,12 @@ export const getTargetableDurationBetween = (startDisplayTime: number, endDispla
 };
 
 function isDoTNode(node: ActionNode) {
-	if (node.skillName === undefined) {
-		return false;
-	}
-	return ctl.game.dotResources.get(node.skillName) !== undefined;
+	if (node.skillName === undefined) { return false }
+	return controller.game.dotSkills.includes(node.skillName)
 }
 
-function expandDoTNode(node: ActionNode, lastNode?: ActionNode) {
-	console.assert(node.getDotPotencies().length > 0);
+function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: ActionNode) {
+	console.assert(node.getDotPotencies(dotName).length > 0);
 	console.assert(isDoTNode(node));
 	let mainPotency = node.getInitialPotency();
 	let entry: DamageStatsDoTTableEntry = {
@@ -92,8 +90,8 @@ function expandDoTNode(node: ActionNode, lastNode?: ActionNode) {
 		partyBuffPotency: 0,
 	};
 
-	entry.gap = node.dotTimeGap
-	entry.override = node.dotOverrideAmount;
+	entry.gap = node.getDotTimeGap(dotName)
+	entry.override = node.getDotOverrideAmount(dotName);
 	entry.baseMainPotency = mainPotency?.base ?? 0;
 	entry.calculationModifiers = mainPotency?.modifiers ?? [];
 	entry.mainPotencyHit = node.hitBoss(bossIsUntargetable);
@@ -105,8 +103,8 @@ function expandDoTNode(node: ActionNode, lastNode?: ActionNode) {
 		}
 	}
 
-	for (let i = 0; i < node.getDotPotencies().length; i++) {
-		let p = node.getDotPotencies()[i];
+	for (let i = 0; i < node.getDotPotencies(dotName).length; i++) {
+		let p = node.getDotPotencies(dotName)[i];
 		if (p.hasResolved()) {
 			entry.totalNumTicks += 1;
 			entry.baseDotPotency = p.base;
@@ -348,7 +346,7 @@ export function calculateDamageStats(props: {
 		totalPartyBuffPotency: 0,
 	};
 
-	const dotTables: Map<SkillName, DamageStatsDoTTrackingData> = new Map();
+	const dotTables: Map<ResourceType, DamageStatsDoTTrackingData> = new Map();
 
 	let skillPotencies: Map<SkillName, number> = new Map();
 
@@ -458,8 +456,10 @@ export function calculateDamageStats(props: {
 				// DoT table
 				// If the on-hit potency has not been resolved (as is the case if we just
 				// cast higanbana and the ability has not yet hit), don't add an entry yet
-				if (isDoTNode(node) && node.getDotPotencies().length > 0) {
-					let dotTrackingData = dotTables.get(node.skillName)
+				node.getAllDotPotencies().forEach((potenciesArr, rscType) => {
+					if (potenciesArr.length === 0) { return }
+
+					let dotTrackingData = dotTables.get(rscType)
 					if (!dotTrackingData) {
 						dotTrackingData = {
 							tableRows: [],
@@ -477,10 +477,10 @@ export function calculateDamageStats(props: {
 							},
 							lastDoT: undefined,
 						}
-						dotTables.set(node.skillName, dotTrackingData)
+						dotTables.set(rscType, dotTrackingData)
 					}
 
-					let dotTableEntry = expandDoTNode(node, dotTrackingData.lastDoT);
+					let dotTableEntry = expandDoTNode(node, rscType, dotTrackingData.lastDoT);
 					dotTrackingData.tableRows.push(dotTableEntry);
 					dotTrackingData.lastDoT = node;
 					dotTrackingData.summary.cumulativeGap += dotTableEntry.gap;
@@ -489,7 +489,7 @@ export function calculateDamageStats(props: {
 					dotTrackingData.summary.totalPotencyWithoutPot += dotTableEntry.potencyWithoutPot;
 					dotTrackingData.summary.totalPotPotency += dotTableEntry.potPotency;
 					dotTrackingData.summary.totalPartyBuffPotency += dotTableEntry.partyBuffPotency;
-				}
+				});
 			}
 		}
 	};
@@ -499,14 +499,14 @@ export function calculateDamageStats(props: {
 		ctl.record.iterateAll(processNodeFn);
 	}
 
-	dotTables.forEach((dotTrackingData, dotSkill) => {
+	dotTables.forEach((dotTrackingData, dotName) => {
 		if (dotTrackingData.lastDoT) {
 			// last dot so far
 			
 			const applicationTime = dotTrackingData.lastDoT.applicationTime
 			console.assert(applicationTime, `DoT node at index ${dotTrackingData.lastDoT.getNodeIndex()} was not resolved`);
 
-			let lastDotDropTime = (applicationTime as number) + ctl.game.getDotDuration(dotSkill)
+			let lastDotDropTime = (applicationTime as number) + ctl.game.getDotDuration(dotName)
 			let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
 	
 			let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;

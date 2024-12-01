@@ -1,8 +1,8 @@
-import { FileType } from "./Common";
-import { BuffType, SkillName, SkillReadyStatus } from "../Game/Common";
-import { GameConfig } from "../Game/GameConfig";
-import { Potency } from "../Game/Potency";
-import { controller } from "./Controller";
+import {FileType} from "./Common";
+import {BuffType, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
+import {GameConfig} from "../Game/GameConfig"
+import {Potency} from "../Game/Potency";
+import {controller} from "./Controller";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -30,15 +30,15 @@ export class ActionNode {
 	#nodeIndex: number;
 	#capturedBuffs: Set<BuffType>;
 	#potency: Potency | undefined;
-	#dotPotencies: Potency[];
+	#dotPotencies: Map<ResourceType, Potency[]>;
 
 	type: ActionType;
 	waitDuration: number = 0;
 	skillName?: SkillName;
 	buffName? : string;
 	applicationTime?: number
-	dotOverrideAmount: number = 0
-	dotTimeGap: number = 0
+	#dotOverrideAmount: Map<ResourceType, number>;
+	#dotTimeGap: Map<ResourceType, number>;
 
 	next?: ActionNode = undefined;
 
@@ -51,7 +51,9 @@ export class ActionNode {
 		this.type = actionType;
 		this.#nodeIndex = ActionNode._gNodeIndex;
 		this.#capturedBuffs = new Set<BuffType>();
-		this.#dotPotencies = [];
+		this.#dotPotencies = new Map();
+		this.#dotOverrideAmount = new Map();
+		this.#dotTimeGap = new Map();
 		ActionNode._gNodeIndex++;
 	}
 
@@ -93,8 +95,10 @@ export class ActionNode {
 
 	resolveAll(displayTime: number) {
 		if (this.#potency) { this.#potency.resolve(displayTime) }
-		this.#dotPotencies.forEach(p=>{
-			p.resolve(displayTime);
+		this.#dotPotencies.forEach((pArr) => {
+			pArr.forEach((p) =>{
+				p.resolve(displayTime);
+			})
 		});
 	}
 
@@ -123,10 +127,11 @@ export class ActionNode {
 		}
 
 		if (props.excludeDoT) { return res }
-		for (let i = 0; i < this.#dotPotencies.length; i++) {
-			let p = this.#dotPotencies[i];
-			this.recordPotency(props, p, res)
-		}
+		this.#dotPotencies.forEach((pArr) => {
+			pArr.forEach((p) => {
+				this.recordPotency(props, p, res)
+			})
+		})
 		return res;
 	}
 
@@ -144,19 +149,24 @@ export class ActionNode {
 	}
 
 	removeUnresolvedDoTPotencies() {
-		const unresolvedIndex = this.#dotPotencies.findIndex((p) => !p.hasResolved())
-		if (unresolvedIndex < 0) { return }
-		this.#dotPotencies.splice(unresolvedIndex)
+		this.#dotPotencies.forEach((pArr) => {
+			const unresolvedIndex = pArr.findIndex((p) => !p.hasResolved())
+			if (unresolvedIndex < 0) { return }
+			pArr.splice(unresolvedIndex)
+		})
 	}
 
 	anyPotencies(): boolean {
-		return this.#potency !== undefined || this.#dotPotencies.length > 0
+		return this.#potency !== undefined || this.#dotPotencies.size > 0
 	}
 	getInitialPotency() {
 		return this.#potency
 	}
-	getDotPotencies() {
+	getAllDotPotencies() {
 		return this.#dotPotencies
+	}
+	getDotPotencies(r: ResourceType) {
+		return this.#dotPotencies.get(r) ?? []
 	}
 
 	addPotency(p: Potency) {
@@ -164,8 +174,12 @@ export class ActionNode {
 		this.#potency = p;
 	}
 
-	addDoTPotency(p: Potency) {
-		this.#dotPotencies.push(p)
+	addDoTPotency(p: Potency, r: ResourceType) {
+		const pArr = this.#dotPotencies.get(r) ?? []
+		if (pArr.length === 0) {
+			this.#dotPotencies.set(r, pArr)
+		}
+		pArr.push(p)
 	}
 
 	select() {
@@ -173,6 +187,19 @@ export class ActionNode {
 	}
 	unselect() {
 		this.#selected = false;
+	}
+
+	setDotTimeGap(dotName: ResourceType, amount: number) {
+		this.#dotTimeGap.set(dotName, amount)
+	}
+	getDotTimeGap(dotName: ResourceType): number {
+		return this.#dotTimeGap.get(dotName) ?? 0
+	}
+	setDotOverrideAmount(dotName: ResourceType, amount: number) {
+		this.#dotOverrideAmount.set(dotName, amount)
+	}
+	getDotOverrideAmount(dotName: ResourceType): number {
+		return this.#dotOverrideAmount.get(dotName) ?? 0
 	}
 }
 
