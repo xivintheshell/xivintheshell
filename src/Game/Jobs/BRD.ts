@@ -1,12 +1,10 @@
 import { ShellJob } from "../../Controller/Common";
-import { controller } from "../../Controller/Controller";
-import { Aspect, BuffType, ResourceType, SkillName } from "../Common";
+import { ResourceType, SkillName, TraitName } from "../Common";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { PotencyModifier, Modifiers, PotencyMultiplier, Potency } from "../Potency";
+import { PotencyModifier } from "../Potency";
 import { makeResource } from "../Resources";
 import { SkillAutoReplace, ConditionalSkillReplace, StatePredicate, EffectFn, CooldownGroupProperies, Weaponskill, combineEffects, NO_EFFECT, makeWeaponskill } from "../Skills";
-import { TraitName } from "../Traits";
 
 const makeBRDResource = (rsc: ResourceType, maxValue: number, params? : {timeout?: number, default?: number}) => {
     makeResource(ShellJob.BRD, rsc, maxValue, params ?? {});
@@ -24,12 +22,12 @@ export class BRDState extends GameState {
 
     registerRecurringEvents() {
         super.registerRecurringEvents([{
-            skillName: SkillName.CausticBite,
-            dotApplied: ResourceType.CausticBite
+            dotName: ResourceType.CausticBite,
+            appliedBy: [SkillName.CausticBite, SkillName.IronJaws]
         }, 
         {
-            skillName: SkillName.Stormbite,
-            dotApplied: ResourceType.Stormbite
+            dotName: ResourceType.Stormbite,
+            appliedBy: [SkillName.Stormbite, SkillName.IronJaws],
         }])
 
         // Something here for Repertoire ticks
@@ -67,38 +65,37 @@ const makeWeaponskill_BRD = (name: SkillName, unlockLevel: number, params: {
     });
 }
 
-const dotAppliers: Array<{skillName: SkillName, dotName: ResourceType}> = [
-    { skillName: SkillName.CausticBite, dotName: ResourceType.CausticBite },
-    { skillName: SkillName.Stormbite, dotName: ResourceType.Stormbite },
+const dotAppliers: Array<{skillName: SkillName, dotName: ResourceType, initialPotency: number, tickPotency: number}> = [
+    { skillName: SkillName.CausticBite, dotName: ResourceType.CausticBite, initialPotency: 150, tickPotency: 20 },
+    { skillName: SkillName.Stormbite, dotName: ResourceType.Stormbite, initialPotency: 100, tickPotency: 25 },
 ];
 dotAppliers.forEach((props) => {
     makeWeaponskill_BRD(props.skillName, 1, {
-        potency: 100,
+        potency: props.initialPotency,
         applicationDelay: 0.5,
-        onConfirm: (state, node) => {
-            const mods: PotencyMultiplier[] = [];
-            if (state.hasResourceAvailable(ResourceType.Tincture)) {
-                mods.push(Modifiers.Tincture);
-                node.addBuff(BuffType.Tincture);
-            }
-
-            const dotTicks = 15
-            const tickPotency = 100
-
-            for (let i = 0; i < dotTicks; i ++) {
-                const dotPotency = new Potency({
-                    config: controller.record.config ?? controller.gameConfig,
-                    sourceTime: state.getDisplayTime(),
-                    sourceSkill: props.skillName,
-                    aspect: Aspect.Other,
-                    basePotency: state.config.adjustedDoTPotency(tickPotency, "sks"),
-                    snapshotTime: state.getDisplayTime(),
-                    description: "DoT " + (i+1) + `/${dotTicks}`
-                });
-                dotPotency.modifiers = mods;
-                node.addDoTPotency(dotPotency)
-            }
-        },
+        onConfirm: (state, node) => state.addDoTPotencies({
+            node,
+            dotName: props.dotName,
+            skillName: props.skillName,
+            tickPotency: props.tickPotency,
+            speedStat: "sks",
+        }),
         onApplication: (state, node) => state.applyDoT(props.dotName, node),
     })
+})
+
+makeWeaponskill_BRD(SkillName.IronJaws, 56, {
+    potency: 100,
+    applicationDelay: 0.67,
+    onApplication: (state, node) => {
+        dotAppliers.forEach((dotParams) => {
+            state.refreshDot({
+                node,
+                dotName: dotParams.dotName,
+                tickPotency: dotParams.tickPotency,
+                skillName: SkillName.IronJaws,
+                speedStat: "sks",
+            })
+        })
+    }
 })

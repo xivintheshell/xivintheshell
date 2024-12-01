@@ -101,24 +101,24 @@ export class BLMState extends GameState {
 		// Fortunately, since both ST and AoE DoTs upgrade at the same time, 
 		// we only need to handle exclusivity in pairs, instead of as the quartet
 		super.registerRecurringEvents([{
-			skillName: SkillName.HighThunder,
-			dotApplied: ResourceType.HighThunder,
+			dotName: ResourceType.HighThunder,
+			appliedBy: [SkillName.HighThunder],
 			exclusiveWith: [ResourceType.HighThunderII]
 		},
 		{
-			skillName: SkillName.HighThunder2,
-			dotApplied: ResourceType.HighThunderII,
+			dotName: ResourceType.HighThunderII,
+			appliedBy: [SkillName.HighThunder2],
 			exclusiveWith: [ResourceType.HighThunder]
 		},
 		{
-			skillName: SkillName.Thunder3,
-			dotApplied: ResourceType.ThunderIII,
+			dotName: ResourceType.ThunderIII,
+			appliedBy: [SkillName.Thunder3],
 			exclusiveWith: [ResourceType.ThunderIV]
 			
 		},
 		{
-			skillName: SkillName.Thunder4,
-			dotApplied: ResourceType.ThunderIV,
+			dotName: ResourceType.ThunderIV,
+			appliedBy: [SkillName.Thunder4],
 			exclusiveWith: [ResourceType.ThunderIII]
 		}]);
 
@@ -658,7 +658,7 @@ makeAbility_BLM(SkillName.Transpose, 4, ResourceType.cd_Transpose, {
 	},
 });
 
-const thunderConfirm = (skillName: SkillName) => (
+const thunderConfirm = (skillName: SkillName, dotName: ResourceType) => (
 	(game: BLMState, node: ActionNode) => {
 		let tickPotency = 0
 		switch (skillName) {
@@ -686,6 +686,7 @@ const thunderConfirm = (skillName: SkillName) => (
 		console.assert(tickPotency > 0, `${skillName} was applied as a Thunder DoT`)
 		game.addDoTPotencies({
 			node,
+			dotName,
 			skillName,
 			tickPotency,
 			speedStat: "sps",
@@ -706,7 +707,7 @@ makeSpell_BLM(SkillName.Thunder3, 45, {
 	basePotency: 120,
 	applicationDelay: 1.03,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.Thunder3),
+	onConfirm: thunderConfirm(SkillName.Thunder3, ResourceType.ThunderIII),
 	onApplication: (state, node) => state.applyDoT(ResourceType.ThunderIII, node),
 	autoUpgrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder },
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
@@ -1035,7 +1036,7 @@ makeSpell_BLM(SkillName.HighThunder, 92, {
 	basePotency: 150,
 	applicationDelay: 0.76,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.HighThunder),
+	onConfirm: thunderConfirm(SkillName.HighThunder, ResourceType.HighThunder),
 	onApplication: (state, node) => state.applyDoT(ResourceType.HighThunder, node),
 	autoDowngrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.Thunder3 },
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
@@ -1059,7 +1060,7 @@ makeSpell_BLM(SkillName.Thunder4, 64, {
 	basePotency: 80,
 	applicationDelay: 1.16,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.Thunder4),
+	onConfirm: thunderConfirm(SkillName.Thunder4, ResourceType.ThunderIV),
 	onApplication: (state, node) => state.applyDoT(ResourceType.ThunderIV, node),
 	autoUpgrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder2 },
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
@@ -1072,7 +1073,7 @@ makeSpell_BLM(SkillName.HighThunder2, 92, {
 	basePotency: 100,
 	applicationDelay: 0.8,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.HighThunder2),
+	onConfirm: thunderConfirm(SkillName.HighThunder2, ResourceType.HighThunderII),
 	onApplication: (state, node) => state.applyDoT(ResourceType.HighThunderII, node),
 	autoDowngrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.Thunder4 },
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
