@@ -1253,7 +1253,7 @@ export class Config extends React.Component {
 			<div>
 				<Input style={{display: "inline-block", color: fieldColor("skillSpeed")}}
 					   defaultValue={this.state.skillSpeed}
-					   description={localize({en: "skill speed: "})} onChange={this.setSkillSpeed}/>
+					   description={localize({en: "skill speed: ", zh: "技速："})} onChange={this.setSkillSpeed}/>
 				<span> (GCD: {this.state.sksGcdPreview} <Help topic={"sksGcdPreview"} content={
 					<>
 						<p>{localize({
