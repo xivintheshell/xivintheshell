@@ -284,6 +284,9 @@ const roleBuffResources = [
 	ResourceType.Surecast,
 	ResourceType.Tincture,
 	ResourceType.ArmsLength,
+
+	ResourceType.Reprisal,
+	ResourceType.Rampart,
 ];
 
 // role buffs are registered here; job buffs should be registered in the job's respective file

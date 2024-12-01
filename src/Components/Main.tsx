@@ -139,6 +139,8 @@ export default class Main extends React.Component {
 					link.href = process.env.PUBLIC_URL + "/favicons/mch.ico";
 				} else if (job === ShellJob.RPR) {
 					link.href = process.env.PUBLIC_URL + "/favicons/rpr.ico";
+				} else if(job === ShellJob.WAR) {
+					link.href = process.env.PUBLIC_URL + "/favicons/war.ico";
 				} else {
 					link.href = process.env.PUBLIC_URL + "/favicon.ico";
 				}

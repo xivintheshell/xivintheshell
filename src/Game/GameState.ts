@@ -297,6 +297,7 @@ export abstract class GameState {
 			ResourceType.TechnicalStep,
 			ResourceType.Esprit,
 			ResourceType.Improvisation,
+			ResourceType.Defiance,
 		] as ResourceType[]).includes(buffName)) {
 			// subtractive spectrum, starstruck, monochrome tones, rainbow drip,
 			// tempera coat/grassa, smudge can be clicked off
@@ -717,6 +718,8 @@ export abstract class GameState {
 			SkillName.StarryMuse,
 			SkillName.Manafication,
 			SkillName.Ikishoten,
+			SkillName.InnerRelease,
+			SkillName.Infuriate,
 		] as SkillName[]).includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
 			status = SkillReadyStatus.NotInCombat;
 			timeTillAvailable = this.timeTillNextDamageEvent();
