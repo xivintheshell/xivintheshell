@@ -88,6 +88,28 @@ export interface SenCounterProps {
 	kaColor: string;
 }
 
+export interface CodaCounterProps {
+	kind: "coda",
+	name: ContentNode,
+	hasWanderers: boolean,
+	hasMages: boolean,
+	hasArmys: boolean,
+	wanderersColor: string,
+	magesColor: string,
+	armysColor: string,
+}
+
+export interface CodaCounterProps {
+	kind: "coda",
+	name: ContentNode,
+	hasWanderers: boolean,
+	hasMages: boolean,
+	hasArmys: boolean,
+	wanderersColor: string,
+	magesColor: string,
+	armysColor: string,
+}
+
 export interface ResourceTextProps {
 	kind: "text";
 	name: ContentNode;
@@ -96,12 +118,13 @@ export interface ResourceTextProps {
 }
 
 export type ResourceDisplayProps =
-	| ResourceBarProps
-	| ResourceCounterProps
-	| PaintGaugeCounterProps
-	| DanceCounterProps
-	| SenCounterProps
-	| ResourceTextProps;
+	ResourceBarProps |
+	ResourceCounterProps |
+	PaintGaugeCounterProps |
+	DanceCounterProps |
+	SenCounterProps |
+	CodaCounterProps |
+	ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
 export type StatusViewProps = {
@@ -553,6 +576,27 @@ export function ResourcesDisplay(props: {
 							color: item.present ? item.color : undefined,
 						};
 					})}
+					key={"resourceDisplay" + i}
+				/>;
+			}
+			case "coda": {
+				const codaList = [
+					{ present: props.hasWanderers, color: props.wanderersColor },
+					{ present: props.hasMages, color: props.magesColor },
+					{ present: props.hasArmys, color: props.armysColor },
+				];
+				const help = <Help
+					topic={"codaExplanation"}
+					content={localize({
+						en: "from left to right: wanderer's coda, mage's coda, army's coda",
+					})}
+				/>;
+				return <ResourceCounter
+					name={<>{props.name} {help}</>}
+					containerType={"circle"}
+					items={codaList.map(item => { return {
+						color: item.present ? item.color : undefined
+					}})}
 					key={"resourceDisplay" + i}
 				/>;
 			}

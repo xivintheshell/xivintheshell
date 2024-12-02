@@ -38,8 +38,14 @@ export enum BRDResourceType {
     SoulVoice = "Soul Voice",
     PitchPerfect = "Pitch Perfect", // Yes it's all technically Repertoire, easier to represent this way
     Repertoire = "Repertoire", // Army's Paeon repertoire stacks
+    WanderersCoda = "Wanderer's Coda",
+    MagesCoda = "Mage's Coda",
+    ArmysCoda = "Army's Coda",
 
     // Other Trackers
+    RadiantCoda = "Radiant Coda",
+    MuseRepertoire = "Muse Repertoire",
+    EthosRepertoire = "Ethos Repertoire",
 
     // Status Effects
     HawksEye = "Hawk's Eye",
@@ -76,6 +82,8 @@ export enum BRDCooldownType {
     cd_RepellingShot = "cd_RepellingShot",
     cd_BattleVoice = "cd_BattleVoice",
     cd_RadiantFinale = "cd_RadiantFinale",
+    cd_Troubadour = "cd_Troubadour",
+    cd_PitchPerfect = "cd_PitchPerfect",
 }
 
 export enum BRDTraitName {
