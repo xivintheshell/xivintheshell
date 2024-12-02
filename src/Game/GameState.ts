@@ -277,9 +277,41 @@ export abstract class GameState {
 	// Job code may override to handle any on-tick effects of a DoT, like pre-Dawntrail Thundercloud
 	protected jobSpecificOnResolveDotTick(_dotResource: ResourceType) { }
 
-	getDotDuration(dotName: ResourceType): number
+	getStatusDuration(rscType: ResourceType): number
 	{ 
-		return (getResourceInfo(controller.game.job, dotName) as ResourceInfo).maxTimeout
+		return (getResourceInfo(this.job, rscType) as ResourceInfo).maxTimeout
+	}
+
+	gainStatus(rscType: ResourceType, stacks: number = 1) {
+		const resource = this.resources.get(rscType)
+		const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo
+        if (this.hasResourceAvailable(rscType)) {
+			if (resourceInfo.maxTimeout > 0) {
+				resource.overrideTimer(this, resourceInfo.maxTimeout);
+			}
+			if (resource.availableAmount() !== stacks) {
+				resource.overrideCurrentValue(stacks)
+			}
+        } else {
+			resource.gain(stacks)
+			if (resourceInfo.maxTimeout > 0) {
+				this.enqueueResourceDrop(rscType);
+			}
+        }
+    }
+
+	maybeGainProc(proc: ResourceType, chance: number = 0.5) {
+        if (!this.triggersEffect(chance)) { return }
+
+		this.gainStatus(proc)
+    }
+
+	triggersEffect(chance: number): boolean {
+		if (this.config.procMode === ProcMode.Never) { return false }
+		if (this.config.procMode === ProcMode.Always) { return true }
+
+		const rand = this.rng()
+		return rand < chance
 	}
 
 	// advance game state by this much time

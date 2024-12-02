@@ -506,7 +506,7 @@ export function calculateDamageStats(props: {
 			const applicationTime = dotTrackingData.lastDoT.applicationTime
 			console.assert(applicationTime, `DoT node at index ${dotTrackingData.lastDoT.getNodeIndex()} was not resolved`);
 
-			let lastDotDropTime = (applicationTime as number) + ctl.game.getDotDuration(dotName)
+			let lastDotDropTime = (applicationTime as number) + ctl.game.getStatusDuration(dotName)
 			let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
 	
 			let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;

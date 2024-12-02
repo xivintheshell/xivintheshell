@@ -175,6 +175,24 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({ en: "enhanced reaping" }) as string;
 	} else if (buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
 		text = localize({ en: "immortal Sacrifice" }) as string;
+	} else if (buff === PotencyModifierType.BARRAGE) {
+		text = localize({en: "barrage"}) as string;
+	} else if (buff === PotencyModifierType.RAGING_STRIKES) {
+		text = localize({en: "raging strikes"}) as string;
+	} else if (buff === PotencyModifierType.BATTLE_VOICE) {
+		text = localize({en: "battle voice"}) as string;
+	} else if (buff === PotencyModifierType.RADIANT_FINALE_THREE_CODA) {
+		text = localize({en: "three coda radiant finale"}) as string;
+	} else if (buff === PotencyModifierType.RADIANT_FINALE_TWO_CODA) {
+		text = localize({en: "two coda radiant finale"}) as string;
+	} else if (buff === PotencyModifierType.RADIANT_FINALE_ONE_CODA) {
+		text = localize({en: "one coda radiant finale"}) as string;
+	} else if (buff === PotencyModifierType.WANDERERS_MINUET) {
+		text = localize({en: "wanderers minuet"}) as string;
+	} else if (buff === PotencyModifierType.MAGES_BALLAD) {
+		text = localize({en: "mages ballad"}) as string;
+	} else if (buff === PotencyModifierType.ARMYS_PAEON) {
+		text = localize({en: "armys paeon"}) as string;
 	}
 	return text;
 }
@@ -273,19 +291,42 @@ function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
 	} else if (props.buff === PotencyModifierType.SURGING_TEMPEST) {
 		text = localize({ en: "SURGING" }) as string;
 		color = MarkerColor.Purple;
+	} else if (props.buff === PotencyModifierType.BARRAGE) {
+		text = localize({en: "BRG"}) as string;
+		color = colors.brd.barrage;
+	} else if (props.buff === PotencyModifierType.RAGING_STRIKES) {
+		text = localize({en: "RS"}) as string;
+		color = colors.brd.ragingStrikes;
+	} else if (props.buff === PotencyModifierType.BATTLE_VOICE) {
+		text = localize({en: "BV"}) as string;
+		color = colors.brd.battleVoice;
+	} else if (props.buff === PotencyModifierType.RADIANT_FINALE_THREE_CODA) {
+		text = localize({en: "RF3"}) as string;
+		color = colors.brd.radiantFinale;
+	} else if (props.buff === PotencyModifierType.RADIANT_FINALE_TWO_CODA) {
+		text = localize({en: "RF2"}) as string;
+		color = colors.brd.radiantFinale;
+	} else if (props.buff === PotencyModifierType.RADIANT_FINALE_ONE_CODA) {
+		text = localize({en: "RF1"}) as string;
+		color = colors.brd.radiantFinale;
+	} else if (props.buff === PotencyModifierType.WANDERERS_MINUET) {
+		text = localize({en: "WM"}) as string;
+		color = colors.brd.wanderersCoda;
+	} else if (props.buff === PotencyModifierType.MAGES_BALLAD) {
+		text = localize({en: "MB"}) as string;
+		color = colors.brd.magesCoda;
+	} else if (props.buff === PotencyModifierType.ARMYS_PAEON) {
+		text = localize({en: "AP"}) as string;
+		color = colors.brd.armysCoda;
 	}
-	return <span
-		style={{
-			borderRadius: 2,
-			border: "1px solid " + color,
-			fontSize: 11,
-			marginRight: 4,
-			padding: "1px 4px",
-			background: color + "1f",
-		}}
-	>
-		<b style={{ color: color }}>{text}</b>
-	</span>;
+	return <span style={{
+		borderRadius: 2,
+		border: "1px solid " + color,
+		fontSize: 11,
+		marginRight: 4,
+		padding: "1px 4px",
+		background: color + "1f"
+	}}><b style={{color: color}}>{text}</b></span>
 }
 
 function PotencyDisplay(props: {

@@ -780,6 +780,9 @@ class Controller {
 			case ShellJob.BLM:
 				propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
 				break;
+			case ShellJob.BRD:
+				propsGenerator = new BRDStatusPropsGenerator(game as BRDState);
+				break;
 			default:
 				propsGenerator = new StatusPropsGenerator(game);
 		}
