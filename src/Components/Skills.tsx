@@ -44,12 +44,13 @@ function ProgressCircle(props={
 	className: "",
 	diameter: 50,
 	progress: 0.7,
-	color: "rgba(255,255,255,0.5)",
+	color: "rgba(0, 0, 0, 0.5)",
 }) {
 	let elemRadius = props.diameter / 2.0;
 	let outRadius = props.diameter * 0.35;
+	let circumscribingRadius = Math.sqrt(2) * props.diameter / 2;
 	let outCircumference = 2 * Math.PI * outRadius;
-	let outFillLength = outCircumference * props.progress;
+	let outFillLength = outCircumference * (1-props.progress);
 	let outGapLength = outCircumference - outFillLength;
 	let outDasharray = outFillLength + "," + outGapLength;
 	let outlineCircle = <circle
@@ -58,9 +59,9 @@ function ProgressCircle(props={
 		cy={elemRadius}
 		fill="none"
 		stroke={props.color}
-		strokeWidth="6"
+		strokeWidth={circumscribingRadius}
 		strokeDasharray={outDasharray}
-		strokeDashoffset={outCircumference / 4}/>
+		strokeDashoffset={outCircumference/4 + outFillLength}/>
 
 	return <svg className={props.className} width={props.diameter} height={props.diameter}>
 		{outlineCircle}
@@ -71,6 +72,7 @@ type SkillButtonProps = {
 	highlight: boolean,
 	skillName: SkillName,
 	ready: boolean,
+	readyAsideFromCd: boolean,
 	cdProgress: number
 };
 
@@ -156,11 +158,10 @@ class SkillButton extends React.Component {
 			marginLeft: -20,
 		};
 		let readyOverlay = "transparent";
-		if (!this.props.ready) {
+		if (!this.props.readyAsideFromCd) {
 			readyOverlay = "rgba(0, 0, 0, 0.6)";
-		} else if (this.props.cdProgress <= 1 - Debug.epsilon) {
-			readyOverlay = "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 85%, rgba(0,0,0,0.6) 100%)"
 		}
+
 		// The numbers used to indicate remaining stacks are an in-game font, and not an icon
 		// available in xivapi. We instead just pick a large sans serif font, and render the number
 		// in white w/ red border if there's at least 1 stack, and red w/ black border at 0 stacks.
@@ -248,7 +249,7 @@ class SkillButton extends React.Component {
 			className="cdProgress"
 			diameter={40}
 			progress={this.props.cdProgress}
-			color={this.props.ready ? "rgba(255, 255, 255, 0.7)" : "rgba(255,255,255,0.7)"}/>;
+			color={this.props.ready ? "rgba(128, 128, 128, 0.0)" : "rgba(0, 0, 0, 0.7)"}/>;
 		return <span
 			title={this.props.skillName}
 			className={"skillButton"}
@@ -274,6 +275,7 @@ enum WaitSince {
 export type SkillButtonViewInfo = {
 	skillName: SkillName,
 	status: SkillReadyStatus,
+	statusExcludingCd: SkillReadyStatus,
 	stacksAvailable: number,
 	maxStacks: number,
 	castTime: number,
@@ -397,6 +399,7 @@ export class SkillsWindow extends React.Component {
 				highlight={info ? info.highlight : false}
 				skillName={skillName}
 				ready={info ? info.status===SkillReadyStatus.Ready : false}
+				readyAsideFromCd={info ? info.statusExcludingCd===SkillReadyStatus.Ready : false}
 				cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
 				/>
 			skillButtons.push(btn);
