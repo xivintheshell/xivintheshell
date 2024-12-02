@@ -446,7 +446,8 @@ export const enum WarningType {
 	InnerReleaseDrop = "Inner Release expired",
 	NascentChaosDrop = "Nascent Chaos expired",
 	
-	SoulVoiceOvercap = "soul voice overcap"
+	SoulVoiceOvercap = "soul voice overcap",
+	CodaOvercap = "coda overcap"
 }
 
 export enum ReservedTraitName {
