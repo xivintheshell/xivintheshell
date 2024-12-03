@@ -71,7 +71,8 @@ type SkillButtonProps = {
 	highlight: boolean,
 	skillName: SkillName,
 	ready: boolean,
-	cdProgress: number
+	cdProgress: number,
+	targetCount: number,
 };
 
 class SkillButton extends React.Component {
@@ -257,7 +258,7 @@ class SkillButton extends React.Component {
 				ReactDOMServer.renderToStaticMarkup(this.state.skillDescription)
 			} data-tooltip-id={"skillButton-" + this.props.skillName}>
 			<Clickable onClickFn={controller.displayingUpToDateGameState ? () => {
-				controller.requestUseSkill({skillName: this.props.skillName});
+				controller.requestUseSkill({skillName: this.props.skillName, targetCount: this.props.targetCount});
 				controller.updateAllDisplay();
 			} : undefined} content={icon}
 					   style={controller.displayingUpToDateGameState ? {} : {cursor: "not-allowed"}}/>
@@ -294,6 +295,7 @@ export class SkillsWindow extends React.Component {
 		waitTime: string,
 		waitSince: WaitSince,
 		waitUntil: string,
+		targetCount: number,
 	};
 
 	onWaitTimeChange: (e: ValueChangeEvent) => void;
@@ -301,6 +303,7 @@ export class SkillsWindow extends React.Component {
 	onWaitUntilChange: (e: ValueChangeEvent) => void;
 	onWaitUntilSubmit: FormEventHandler<HTMLFormElement>;
 	onWaitSinceChange: (e: ValueChangeEvent) => void;
+	onTargetCountChange: (e: ValueChangeEvent) => void;
 	onRemoveTrailingIdleTime: () => void;
 	onWaitTillNextMpOrLucidTick: () => void;
 
@@ -370,6 +373,10 @@ export class SkillsWindow extends React.Component {
 			this.setState({waitSince: e.target.value});
 		};
 
+		this.onTargetCountChange = (e: ValueChangeEvent) => {
+			this.setState({targetCount: e.target.value});
+		};
+
 		this.onRemoveTrailingIdleTime = (() => {
 			controller.removeTrailingIdleTime();
 		});
@@ -383,6 +390,7 @@ export class SkillsWindow extends React.Component {
 			waitTime: "1",
 			waitSince: WaitSince.Now,
 			waitUntil: "0:00",
+			targetCount: 1,
 		}
 	}
 
@@ -398,6 +406,7 @@ export class SkillsWindow extends React.Component {
 				skillName={skillName}
 				ready={info ? info.status===SkillReadyStatus.Ready : false}
 				cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
+				targetCount={this.state.targetCount}
 				/>
 			skillButtons.push(btn);
 		}
@@ -428,6 +437,12 @@ export class SkillsWindow extends React.Component {
 			background: "transparent",
 			color: colors.text
 		};
+
+		const targetCountHelp = <Help topic="targetCount" content={
+			"The number of targets hit by the next ability. Damage fall-off is automatically computed."
+			+ " If the number of targets set is more than the number of enemies the ability can hit, then"
+			+ " the additional targets are ignored."
+		}/>;
 		return <div className={"skillsWindow"}>
 			<div className={"skillIcons"}>
 				<style>{`
@@ -446,6 +461,13 @@ export class SkillsWindow extends React.Component {
 				{skillButtons}
 				<ReactTooltip anchorSelect={".skillButton"} className={"info-tooltip"} classNameArrow={"info-tooltip-arrow"} />
 				<div style={{ margin: "10px 0" }}>
+				<div style={{ margin: "10px 0" }}>
+				{localize({
+					en: "# of targets hit",
+				})} {targetCountHelp}: <input type={"number"} min={1} max={10} style={{
+					width: 30, ...textInputFieldStyle
+				}} value={this.state.targetCount} onChange={this.onTargetCountChange} />
+				</div>
 				<div style={{ display: "flex", flexDirection: "row", marginBottom: 6 }}>
 					{localize({
 					en:

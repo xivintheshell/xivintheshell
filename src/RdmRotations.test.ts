@@ -131,7 +131,7 @@ const applySkill = (skillName: SkillName) => {
     // TEST-ONLY HACK: set lastAttemptedSkill to the skill we're about to use
     // to ensure that trailing wait times are always omitted
     controller.lastAttemptedSkill = skillName;
-    controller.requestUseSkill({skillName: skillName});
+    controller.requestUseSkill({skillName: skillName, targetCount: 1});
 };
 
 it("consumes instants in the correct order", testWithConfig({}, () => {
