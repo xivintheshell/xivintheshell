@@ -35,6 +35,7 @@ export class ActionNode {
 	waitDuration: number = 0;
 	skillName?: SkillName;
 	buffName?: string;
+	targetCount: number = 1;
 
 	next?: ActionNode = undefined;
 
@@ -89,6 +90,10 @@ export class ActionNode {
 		if (this.#potencies.length > 0) snapshotTime = this.#potencies[0].snapshotTime;
 
 		return snapshotTime ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
+	}
+
+	setTargetCount(count: number) {
+		this.targetCount = count;
 	}
 
 	resolveAll(displayTime: number) {
@@ -218,6 +223,7 @@ export class Line {
 				buffName: itr.buffName,
 				// any
 				waitDuration: itr.waitDuration,
+				targetCount: itr.targetCount,
 			});
 			itr = itr.next;
 		}

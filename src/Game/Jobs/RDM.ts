@@ -325,6 +325,7 @@ const makeSpell_RDM = (
 		baseCastTime: number;
 		baseManaCost: number;
 		basePotency?: number | Array<[TraitName, number]>;
+		falloff?: number;
 		jobPotencyModifiers?: PotencyModifierFn<RDMState>;
 		applicationDelay: number;
 		validateAttempt?: StatePredicate<RDMState>;
@@ -340,11 +341,7 @@ const makeSpell_RDM = (
 		(state) => state.processComboStatus(name),
 	);
 	return makeSpell(ShellJob.RDM, name, unlockLevel, {
-		autoUpgrade: params.autoUpgrade,
-		autoDowngrade: params.autoDowngrade,
-		replaceIf: params.replaceIf,
-		startOnHotbar: params.startOnHotbar,
-		highlightIf: params.highlightIf,
+		...params,
 		aspect: params.isPhysical ? Aspect.Physical : undefined,
 		castTime: (state) => state.config.adjustedCastTime(params.baseCastTime),
 		recastTime: (state) => state.config.adjustedGCD(),
@@ -363,8 +360,6 @@ const makeSpell_RDM = (
 			}
 			return mods;
 		},
-		validateAttempt: params.validateAttempt,
-		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) =>
 			FINISHERS.includes(name) ||
 			name === SkillName.GrandImpact ||
@@ -390,6 +385,7 @@ const makeMeleeGCD = (
 		};
 		// note that melee hits are not scaled by sps
 		recastTime: number;
+		falloff?: number;
 		applicationDelay: number;
 		validateAttempt?: StatePredicate<RDMState>;
 		onConfirm?: EffectFn<RDMState>;
@@ -444,6 +440,7 @@ const makeAbility_RDM = (
 		replaceIf?: ConditionalSkillReplace<RDMState>[];
 		highlightIf?: StatePredicate<RDMState>;
 		startOnHotbar?: boolean;
+		falloff?: number;
 		applicationDelay?: number;
 		cooldown: number;
 		maxCharges?: number;
@@ -634,6 +631,7 @@ makeSpell_RDM(SkillName.Veraero2, 22, {
 	baseManaCost: 400,
 	applicationDelay: 0.8,
 	basePotency: ver2Potency,
+	falloff: 0,
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
 	onConfirm: (state) => state.gainColorMana({ w: 7 }),
 });
@@ -642,6 +640,7 @@ makeSpell_RDM(SkillName.Verthunder2, 18, {
 	replaceIf: [verflareConditon],
 	baseCastTime: 2.0,
 	baseManaCost: 400,
+	falloff: 0,
 	applicationDelay: 0.8,
 	basePotency: ver2Potency,
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
@@ -652,6 +651,7 @@ makeSpell_RDM(SkillName.Impact, 66, {
 	replaceIf: [scorchCondition, resoCondition, giCondition],
 	baseCastTime: 5.0,
 	baseManaCost: 400,
+	falloff: 0,
 	applicationDelay: 0.76,
 	basePotency: [
 		[TraitName.Never, 200],
@@ -670,6 +670,7 @@ makeSpell_RDM(SkillName.GrandImpact, 96, {
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 600,
+	falloff: 0.6,
 	applicationDelay: 1.55,
 	validateAttempt: giCondition.condition,
 	highlightIf: giCondition.condition,
@@ -857,6 +858,7 @@ const moulinetConditions: ConditionalSkillReplace<RDMState>[] = [
 
 makeMeleeGCD(SkillName.Moulinet, 52, {
 	replaceIf: [moulinetConditions[1], moulinetConditions[2], moulinetConditions[3]],
+	falloff: 0,
 	applicationDelay: 0.8, // TODO
 	potency: 60,
 	recastTime: 2.5,
@@ -866,6 +868,7 @@ makeMeleeGCD(SkillName.Moulinet, 52, {
 makeMeleeGCD(SkillName.EnchantedMoulinet, 52, {
 	startOnHotbar: false,
 	replaceIf: [moulinetConditions[0], moulinetConditions[2], moulinetConditions[3]],
+	falloff: 0,
 	applicationDelay: 0.8,
 	potency: 130,
 	recastTime: 1.5,
@@ -876,6 +879,7 @@ makeMeleeGCD(SkillName.EnchantedMoulinet, 52, {
 makeMeleeGCD(SkillName.EnchantedMoulinet2, 52, {
 	startOnHotbar: false,
 	replaceIf: [moulinetConditions[0], moulinetConditions[1], moulinetConditions[3]],
+	falloff: 0,
 	applicationDelay: 0.8,
 	potency: 140,
 	recastTime: 1.5,
@@ -887,6 +891,7 @@ makeMeleeGCD(SkillName.EnchantedMoulinet2, 52, {
 makeMeleeGCD(SkillName.EnchantedMoulinet3, 52, {
 	startOnHotbar: false,
 	replaceIf: [moulinetConditions[0], moulinetConditions[1], moulinetConditions[2]],
+	falloff: 0,
 	applicationDelay: 0.8,
 	potency: 150,
 	recastTime: 1.5,
@@ -905,6 +910,7 @@ makeSpell_RDM(SkillName.Verholy, 70, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 400,
+	falloff: 0.6,
 	applicationDelay: 1.43,
 	basePotency: verfinishPotency,
 	validateAttempt: (state) => state.hasThreeManaStacks(),
@@ -926,6 +932,7 @@ makeSpell_RDM(SkillName.Verflare, 68, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 400,
+	falloff: 0.6,
 	applicationDelay: 1.43,
 	basePotency: verfinishPotency,
 	validateAttempt: (state) => state.hasThreeManaStacks(),
@@ -947,6 +954,7 @@ makeSpell_RDM(SkillName.Scorch, 80, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 400,
+	falloff: 0.6,
 	applicationDelay: 1.83,
 	basePotency: [
 		[TraitName.Never, 680],
@@ -961,6 +969,7 @@ makeSpell_RDM(SkillName.Resolution, 90, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 400,
+	falloff: 0.6,
 	applicationDelay: 1.56,
 	basePotency: [
 		[TraitName.Never, 750],
@@ -1072,6 +1081,7 @@ makeAbility_RDM(SkillName.Fleche, 45, ResourceType.cd_Fleche, {
 
 makeAbility_RDM(SkillName.ContreSixte, 56, ResourceType.cd_ContreSixte, {
 	isPhysical: true,
+	falloff: 0,
 	applicationDelay: 1.16,
 	potency: [
 		[TraitName.Never, 380],
@@ -1105,6 +1115,7 @@ makeResourceAbility(ShellJob.RDM, SkillName.MagickBarrier, 86, ResourceType.cd_M
 
 makeAbility_RDM(SkillName.ViceOfThorns, 92, ResourceType.cd_ViceOfThorns, {
 	startOnHotbar: false,
+	falloff: 0.6,
 	applicationDelay: 0.8,
 	potency: 700,
 	cooldown: 1,
@@ -1115,6 +1126,7 @@ makeAbility_RDM(SkillName.ViceOfThorns, 92, ResourceType.cd_ViceOfThorns, {
 
 makeAbility_RDM(SkillName.Prefulgence, 100, ResourceType.cd_Prefulgence, {
 	startOnHotbar: false,
+	falloff: 0.6,
 	applicationDelay: 1.42,
 	potency: 900,
 	cooldown: 1,

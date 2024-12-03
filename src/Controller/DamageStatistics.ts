@@ -2,6 +2,7 @@
 import { controller as ctl } from "./Controller";
 import { ActionNode, ActionType } from "./Record";
 import { BuffType, LIMIT_BREAKS, ResourceType, SkillName } from "../Game/Common";
+import { getSkill } from "../Game/Skills";
 import {
 	DamageStatisticsData,
 	DamageStatisticsMode,
@@ -49,8 +50,11 @@ const excludedFromStats = new Set<SkillName | "DoT">([]);
 
 type ExpandedNode = {
 	displayedModifiers: PotencyModifierType[];
+	// base potency on a single target
 	basePotency: number;
 	calculationModifiers: PotencyModifier[];
+	falloff: number;
+	targetCount: number;
 };
 
 export const bossIsUntargetable = (displayTime: number) => {
@@ -167,47 +171,53 @@ function expandNode(node: ActionNode): ExpandedNode {
 		basePotency: 0,
 		displayedModifiers: [],
 		calculationModifiers: [],
+		falloff: 1,
+		targetCount: 1,
 	};
 	if (node.type === ActionType.Skill && node.skillName) {
 		if (node.getPotencies().length === 0) {
 			// do nothing if the used ability does no damage
-		} else if (AFUISkills.has(node.skillName)) {
-			// for AF/UI skills, display the first modifier that's not enochian or pot
-			// (must be one of af123, ui123)
-			const mainPotency = node.getPotencies()[0];
-			res.basePotency = mainPotency.base;
-			res.calculationModifiers = mainPotency.modifiers;
-			for (const modifier of mainPotency.modifiers) {
-				const tag = modifier.source;
-				if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
-					res.displayedModifiers.push(tag);
-					break;
-				}
-			}
-		} else if (enoSkills.has(node.skillName)) {
-			// for foul/xeno/para, display enochian modifier if it has one. Otherwise empty.
-			const mainPotency = node.getPotencies()[0];
-			for (const modifier of mainPotency.modifiers) {
-				const tag = modifier.source;
-				if (tag === PotencyModifierType.ENO) {
-					res.basePotency = mainPotency.base;
-					res.displayedModifiers = [tag];
-					res.calculationModifiers = mainPotency.modifiers;
-					break;
-				}
-			}
-		} else if (isDoTNode(node)) {
-			// dot modifiers are handled separately
-			res.basePotency = node.getPotencies()[0].base;
 		} else {
-			// for non-BLM jobs, display all non-pot modifiers on all damaging skills
-			const mainPotency = node.getPotencies()[0];
-			res.basePotency = mainPotency.base;
-			for (const modifier of mainPotency.modifiers) {
-				const tag = modifier.source;
-				if (tag !== PotencyModifierType.POT && tag !== PotencyModifierType.NO_CDH) {
-					res.displayedModifiers.push(tag);
-					res.calculationModifiers.push(modifier);
+			res.targetCount = node.targetCount;
+			res.falloff = getSkill(ctl.getActiveJob(), node.skillName).falloff ?? 1;
+			if (AFUISkills.has(node.skillName)) {
+				// for AF/UI skills, display the first modifier that's not enochian or pot
+				// (must be one of af123, ui123)
+				const mainPotency = node.getPotencies()[0];
+				res.basePotency = mainPotency.base;
+				res.calculationModifiers = mainPotency.modifiers;
+				for (const modifier of mainPotency.modifiers) {
+					const tag = modifier.source;
+					if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
+						res.displayedModifiers.push(tag);
+						break;
+					}
+				}
+			} else if (enoSkills.has(node.skillName)) {
+				// for foul/xeno/para, display enochian modifier if it has one. Otherwise empty.
+				const mainPotency = node.getPotencies()[0];
+				for (const modifier of mainPotency.modifiers) {
+					const tag = modifier.source;
+					if (tag === PotencyModifierType.ENO) {
+						res.basePotency = mainPotency.base;
+						res.displayedModifiers = [tag];
+						res.calculationModifiers = mainPotency.modifiers;
+						break;
+					}
+				}
+			} else if (isDoTNode(node)) {
+				// dot modifiers are handled separately
+				res.basePotency = node.getPotencies()[0].base;
+			} else {
+				// for non-BLM jobs, display all non-pot modifiers on all damaging skills
+				const mainPotency = node.getPotencies()[0];
+				res.basePotency = mainPotency.base;
+				for (const modifier of mainPotency.modifiers) {
+					const tag = modifier.source;
+					if (tag !== PotencyModifierType.POT && tag !== PotencyModifierType.NO_CDH) {
+						res.displayedModifiers.push(tag);
+						res.calculationModifiers.push(modifier);
+					}
 				}
 			}
 		}
@@ -236,7 +246,8 @@ function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 	for (let i = 0; i < table.length; i++) {
 		if (
 			node.skillName === table[i].skillName &&
-			tagsAreEqual(expanded.displayedModifiers, table[i].displayedModifiers)
+			tagsAreEqual(expanded.displayedModifiers, table[i].displayedModifiers) &&
+			node.targetCount === table[i].targetCount
 		) {
 			res.mainTableIndex = i;
 			return res;
@@ -363,6 +374,7 @@ export function calculateDamageStats(props: {
 		totalPotencyWithoutPot: 0,
 		totalPotPotency: 0,
 		totalPartyBuffPotency: 0,
+		targetCount: 0,
 	};
 
 	let dotTable: DamageStatsDoTTableEntry[] = [];
@@ -427,6 +439,8 @@ export function calculateDamageStats(props: {
 						potPotency: 0,
 						potCount: 0,
 						partyBuffPotency: 0,
+						falloff: q.expandedNode.falloff,
+						targetCount: q.expandedNode.targetCount,
 					});
 					q.mainTableIndex = mainTable.length - 1;
 				}
@@ -542,16 +556,16 @@ export function calculateDamageStats(props: {
 			let pa = skillPotencies.get(a.skillName) ?? 0;
 			let pb = skillPotencies.get(b.skillName) ?? 0;
 			return pb - pa;
+		} else if (a.targetCount !== b.targetCount) {
+			return b.targetCount - a.targetCount;
+		} else if (a.displayedModifiers.length !== b.displayedModifiers.length) {
+			return b.displayedModifiers.length - a.displayedModifiers.length;
 		} else {
-			if (a.displayedModifiers.length !== b.displayedModifiers.length) {
-				return b.displayedModifiers.length - a.displayedModifiers.length;
-			} else {
-				for (let i = 0; i < a.displayedModifiers.length; i++) {
-					let diff = a.displayedModifiers[i] - b.displayedModifiers[i];
-					if (diff !== 0) return diff;
-				}
-				return 0;
+			for (let i = 0; i < a.displayedModifiers.length; i++) {
+				let diff = a.displayedModifiers[i] - b.displayedModifiers[i];
+				if (diff !== 0) return diff;
 			}
+			return 0;
 		}
 	});
 
