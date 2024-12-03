@@ -1401,7 +1401,7 @@ class Controller {
 		this.updateAllDisplay();
 	}
 
-	requestUseSkill(props: { skillName: SkillName; }) {
+	requestUseSkill(props: { skillName: SkillName, targetCount: number }) {
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {
