@@ -54,7 +54,7 @@ function LoadCombinedTracksBtn(props: {displayName: ContentNode, url: string, of
 	let style: CSSProperties = {
 		marginRight: 4,
 	};
-	const parsedOffset = parseFloat(props.offsetStr);
+	const parsedOffset = parseTime(props.offsetStr);
 	return <button style={style} onClick={()=>{
 		asyncFetchJson(props.url, content => {
 			controller.timeline.loadCombinedTracksPreset(content, !isNaN(parsedOffset) ? parsedOffset : 0);
@@ -173,10 +173,10 @@ export class TimelineMarkers extends React.Component {
 			+ " Use this to combine markers for multi-phase fights with varying kill times."
 		);
 		const offsetHelpZh: string = "不为空时，下方所有导入的时间轴文件和预设都将从这个时间点开始。可以用此功能自行组合不同P的时间轴文件。";
-		// TODO change color when dirty
+		const parsedTime = parseTime(this.state.offsetStr);
 		const offsetInput = <Input defaultValue={this.state.offsetStr}
 			description={<>
-				<span style={{color: isNaN(parseInt(this.state.offsetStr)) || parseInt(this.state.offsetStr) === 0 ? "" : MarkerColor.Purple}}>
+				<span style={{color: isNaN(parsedTime) || parsedTime === 0 ? "" : MarkerColor.Purple}}>
 					{localize({en: "Load tracks starting at timestamp ", zh: "载入文件到此时间点 "})}
 				</span>
 				<Help topic={"trackLoadOffset"} content={localize({en: offsetHelpEn, zh: offsetHelpZh})}/>:
@@ -321,7 +321,7 @@ export class TimelineMarkers extends React.Component {
 			en: <span>Load into individual track {individualTrackInput}: </span>,
 			zh: <span>载入第{individualTrackInput}轨：</span>
 		});
-		const parsedOffset = parseFloat(this.state.offsetStr);
+		const parsedOffset = parseTime(this.state.offsetStr);
 		let loadTracksSection = <>
 			<LoadJsonFromFileOrUrl
 				allowLoadFromUrl={false}
@@ -451,6 +451,7 @@ export class TimelineMarkers extends React.Component {
 			<p>
 				<span>{localize({en: "FRU: ", zh: "绝伊甸："})}</span>
 				<LoadCombinedTracksBtn displayName={localize({en: "P1 by Yara", zh: "P1（英文，来自Yara）"})} url={PRESET_MARKERS_BASE + "fru_p1.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={localize({en: "P2 by Yara", zh: "P2（英文，来自Yara）"})} url={PRESET_MARKERS_BASE + "fru_p2.txt"} offsetStr={this.state.offsetStr}/>
 				<LoadCombinedTracksBtn displayName={localize({en: "full (zh) by 小盐 & czmm", zh: "完整（来自小盐+czmm）"})} url={PRESET_MARKERS_BASE + "fru_zh.txt"} offsetStr={this.state.offsetStr}/>
 			</p>
 			<p>

@@ -1,5 +1,13 @@
 [
 	{
+		"date": "12/2/24",
+		"changes": [
+			"Added English FRU P2 tracks by Yara",
+			"Fixed a bug where 'Load tracks starting at timestamp' did not accept some time formats",
+			"[RDM] Removed the 'testing' label"
+		]
+	},
+	{
 		"date": "12/1/24",
 		"changes": [
 			"Updated full FRU tracks in Chinese by 盐宝 & czmm"
