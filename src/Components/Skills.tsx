@@ -40,31 +40,87 @@ export const getSkillIconImage = (skillName: SkillName) => {
 	return undefined;
 };
 
-function ProgressCircle(props={
+function ProgressCircleDark(props={
 	className: "",
 	diameter: 50,
 	progress: 0.7,
 	color: "rgba(0, 0, 0, 0.5)",
 }) {
-	let elemRadius = props.diameter / 2.0;
-	let outRadius = props.diameter * 0.35;
-	let circumscribingRadius = Math.sqrt(2) * props.diameter / 2;
-	let outCircumference = 2 * Math.PI * outRadius;
-	let outFillLength = outCircumference * (1-props.progress);
-	let outGapLength = outCircumference - outFillLength;
-	let outDasharray = outFillLength + "," + outGapLength;
-	let outlineCircle = <circle
-		r={outRadius}
+	const elemRadius = props.diameter / 2.0;
+	const outCircumference =  Math.PI * elemRadius;
+	const outFillLength = outCircumference * (1-props.progress);
+	const outGapLength = outCircumference - outFillLength;
+	const outDasharray = outFillLength + "," + outGapLength;
+	const innerCircle = <circle
+		r={elemRadius / 2}
 		cx={elemRadius}
 		cy={elemRadius}
 		fill="none"
 		stroke={props.color}
-		strokeWidth={circumscribingRadius}
+		strokeWidth={elemRadius}
 		strokeDasharray={outDasharray}
 		strokeDashoffset={outCircumference/4 + outFillLength}/>
+	
+	const outerStroke = (1 - Math.SQRT2/2) * elemRadius
+	let outerCircle = <circle
+		r={elemRadius + outerStroke / 2}	
+		cx={elemRadius}
+		cy={elemRadius}
+		fill="none"
+		stroke={props.color}
+		strokeWidth={outerStroke}
+	/>
+
+	return <svg className={props.className} width={props.diameter} height={props.diameter}>
+		{innerCircle}
+		{outerCircle}
+	</svg>
+}
+
+function ProgressCircleOutline(props={
+	className: "",
+	diameter: 50,
+	progress: 0.7,
+	color: "rgba(0, 0, 0, 0.5)",
+}) {
+	const elemRadius = props.diameter / 2.0;
+	const outCircumference = Math.PI * elemRadius * 2;
+	const outFillLength = outCircumference * props.progress;
+	const outGapLength = outCircumference - outFillLength;
+	const outDasharray = outFillLength + "," + outGapLength;
+	const theta = 2 * Math.PI * props.progress;
+	const outlineCircle = <circle
+		r={elemRadius}
+		cx={elemRadius}
+		cy={elemRadius}
+		fill="none"
+		stroke="#ffffffff"
+		strokeWidth={1}
+		strokeDasharray={outDasharray}
+		strokeDashoffset={outCircumference / 4}/>
+
+	const verticalLine = <line
+		x1={elemRadius}
+		y1={elemRadius}
+		x2={elemRadius}
+		y2={0}
+		stroke="#ffffffff"
+		strokeWidth={1}
+	/>
+
+	const cdLine = <line
+		x1={elemRadius}
+		y1={elemRadius}
+		x2={elemRadius + elemRadius * Math.cos(theta - Math.PI/2)}
+		y2={elemRadius + elemRadius * Math.sin(theta - Math.PI/2)}
+		stroke="#ffffffff"
+		strokeWidth={1}
+	/>
 
 	return <svg className={props.className} width={props.diameter} height={props.diameter}>
 		{outlineCircle}
+		{verticalLine}
+		{cdLine}
 	</svg>
 }
 
@@ -245,11 +301,17 @@ class SkillButton extends React.Component {
 			}}/>
 			{stacksOverlay}
 		</div>;
-		let progressCircle = <ProgressCircle
+		let progressShadeCircle = <ProgressCircleDark
 			className="cdProgress"
 			diameter={40}
 			progress={this.props.cdProgress}
-			color={this.props.ready ? "rgba(128, 128, 128, 0.0)" : "rgba(0, 0, 0, 0.7)"}/>;
+			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(0, 0, 0, 0.7)"}/>;
+		let progressOutline = <ProgressCircleOutline
+			className="cdProgress"
+			diameter={40}
+			progress={this.props.cdProgress}
+			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(255, 255, 255, 0.5)"}
+			/>
 		return <span
 			title={this.props.skillName}
 			className={"skillButton"}
@@ -262,7 +324,8 @@ class SkillButton extends React.Component {
 				controller.updateAllDisplay();
 			} : undefined} content={icon}
 					   style={controller.displayingUpToDateGameState ? {} : {cursor: "not-allowed"}}/>
-			{this.props.cdProgress > 1 - Debug.epsilon ? undefined : progressCircle}
+			{this.props.cdProgress > 1 - Debug.epsilon || !this.props.readyAsideFromCd || progressShadeCircle}
+			{this.props.cdProgress > 1 - Debug.epsilon || progressOutline}
 		</span>
 	}
 }
