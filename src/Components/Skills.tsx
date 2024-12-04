@@ -290,15 +290,6 @@ class SkillButton extends React.Component {
 					background: readyOverlay
 				}}></div>
 			</div>
-			<img
-				hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" alt="skill proc" style={{
-				position: "absolute",
-				width: 44,
-				height: 44,
-				top: 0,
-				left: 2,
-				zIndex: 1
-			}}/>
 			{stacksOverlay}
 		</div>;
 		let progressShadeCircle = <ProgressCircleDark
@@ -319,13 +310,22 @@ class SkillButton extends React.Component {
 			data-tooltip-html={
 				ReactDOMServer.renderToStaticMarkup(this.state.skillDescription)
 			} data-tooltip-id={"skillButton-" + this.props.skillName}>
+			{this.props.cdProgress > 1 - Debug.epsilon || !this.props.readyAsideFromCd || progressShadeCircle}
+			{this.props.cdProgress > 1 - Debug.epsilon || progressOutline}
+			<img
+				hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" alt="skill proc" style={{
+				position: "absolute",
+				width: 44,
+				height: 44,
+				top: 0,
+				left: 2,
+				zIndex: 1
+			}}/>
 			<Clickable onClickFn={controller.displayingUpToDateGameState ? () => {
 				controller.requestUseSkill({skillName: this.props.skillName});
 				controller.updateAllDisplay();
 			} : undefined} content={icon}
 					   style={controller.displayingUpToDateGameState ? {} : {cursor: "not-allowed"}}/>
-			{this.props.cdProgress > 1 - Debug.epsilon || !this.props.readyAsideFromCd || progressShadeCircle}
-			{this.props.cdProgress > 1 - Debug.epsilon || progressOutline}
 		</span>
 	}
 }
