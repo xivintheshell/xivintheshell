@@ -77,6 +77,34 @@ function ProgressCircleDark(props={
 	</svg>
 }
 
+function SecondaryProgressCircle(props={
+	className: "",
+	diameter: 50,
+	progress: 0.7,
+	color: "rgba(0, 0, 0, 0.5)",
+}) {
+	const elemRadius = props.diameter / 2.0;
+	const circleRadius = elemRadius * 0.8;
+	const circumfrence = 2 * Math.PI * circleRadius;
+	const circleFillLength = circumfrence * props.progress;
+	const circleGapLength = circumfrence - circleFillLength;
+	const dashArray = circleFillLength + "," + circleGapLength;
+	const circle = <circle
+		r={circleRadius}
+		cx={elemRadius}
+		cy={elemRadius}
+		fill="none"
+		stroke={props.color}
+		strokeWidth={2}
+		strokeDashoffset={circumfrence/4}
+		strokeDasharray={dashArray}
+	/>
+
+	return <svg className={props.className} width={props.diameter} height={props.diameter}>
+		{circle}
+	</svg>
+}
+
 function ProgressCircleOutline(props={
 	className: "",
 	diameter: 50,
@@ -129,7 +157,8 @@ type SkillButtonProps = {
 	skillName: SkillName,
 	ready: boolean,
 	readyAsideFromCd: boolean,
-	cdProgress: number
+	cdProgress: number,
+	secondaryCdProgress?: number
 };
 
 class SkillButton extends React.Component {
@@ -269,6 +298,23 @@ class SkillButton extends React.Component {
 		} else {
 			stacksOverlay = <></>;
 		}
+		let progressShadeCircle = <ProgressCircleDark
+			className="cdProgress"
+			diameter={40}
+			progress={this.props.cdProgress}
+			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(0, 0, 0, 0.4)"}/>;
+		let progressOutline = <ProgressCircleOutline
+			className="cdProgress"
+			diameter={40}
+			progress={this.props.cdProgress}
+			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(255, 255, 255, 1.0)"}
+			/>
+		const secondaryOutline = this.props.secondaryCdProgress && <SecondaryProgressCircle
+			className="cdProgress"
+			diameter={40}
+			progress={this.props.secondaryCdProgress}
+			color={"rgba(250,186,47,255)"}
+			/>
 		let icon = <div onMouseEnter={this.handleMouseEnter}>
 			<div className={"skillIcon"} style={iconStyle}>
 				<img style={iconImgStyle} src={iconPath} alt={this.props.skillName}/>
@@ -290,28 +336,9 @@ class SkillButton extends React.Component {
 					background: readyOverlay
 				}}></div>
 			</div>
-			{stacksOverlay}
-		</div>;
-		let progressShadeCircle = <ProgressCircleDark
-			className="cdProgress"
-			diameter={40}
-			progress={this.props.cdProgress}
-			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(0, 0, 0, 0.7)"}/>;
-		let progressOutline = <ProgressCircleOutline
-			className="cdProgress"
-			diameter={40}
-			progress={this.props.cdProgress}
-			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(255, 255, 255, 0.5)"}
-			/>
-		return <span
-			title={this.props.skillName}
-			className={"skillButton"}
-			data-tooltip-offset={3}
-			data-tooltip-html={
-				ReactDOMServer.renderToStaticMarkup(this.state.skillDescription)
-			} data-tooltip-id={"skillButton-" + this.props.skillName}>
 			{this.props.cdProgress > 1 - Debug.epsilon || !this.props.readyAsideFromCd || progressShadeCircle}
 			{this.props.cdProgress > 1 - Debug.epsilon || progressOutline}
+			{!this.props.secondaryCdProgress || this.props.secondaryCdProgress > 1 - Debug.epsilon || secondaryOutline}
 			<img
 				hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" alt="skill proc" style={{
 				position: "absolute",
@@ -321,6 +348,15 @@ class SkillButton extends React.Component {
 				left: 2,
 				zIndex: 1
 			}}/>
+			{stacksOverlay}
+		</div>;
+		return <span
+			title={this.props.skillName}
+			className={"skillButton"}
+			data-tooltip-offset={3}
+			data-tooltip-html={
+				ReactDOMServer.renderToStaticMarkup(this.state.skillDescription)
+			} data-tooltip-id={"skillButton-" + this.props.skillName}>
 			<Clickable onClickFn={controller.displayingUpToDateGameState ? () => {
 				controller.requestUseSkill({skillName: this.props.skillName});
 				controller.updateAllDisplay();
@@ -344,7 +380,9 @@ export type SkillButtonViewInfo = {
 	castTime: number,
 	instantCast: boolean,
 	cdRecastTime: number,
+	secondaryCdRecastTime?: number,
 	timeTillNextStackReady: number,
+	timeTillSecondaryReady?: number,
 	timeTillAvailable: number,
 	timeTillDamageApplication: number,
 	capturedManaCost: number,
@@ -464,6 +502,7 @@ export class SkillsWindow extends React.Component {
 				ready={info ? info.status===SkillReadyStatus.Ready : false}
 				readyAsideFromCd={info ? info.statusExcludingCd===SkillReadyStatus.Ready : false}
 				cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
+				secondaryCdProgress={info ? (info.secondaryCdRecastTime && info.timeTillSecondaryReady ? 1 - info.timeTillSecondaryReady/info.secondaryCdRecastTime : 1) : 1}
 				/>
 			skillButtons.push(btn);
 		}

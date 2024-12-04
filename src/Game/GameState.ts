@@ -694,7 +694,8 @@ export abstract class GameState {
 		let status = SkillReadyStatus.Ready;
 		if (!notBlocked) status = SkillReadyStatus.Blocked;
 
-		if (!skillUnlocked) nonCdStatus = SkillReadyStatus.SkillNotUnlocked;
+		if (skill.secondaryCd && this.cooldowns.get(skill.secondaryCd.cdName).stacksAvailable() === 0) nonCdStatus = SkillReadyStatus.Blocked;
+		else if (!skillUnlocked) nonCdStatus = SkillReadyStatus.SkillNotUnlocked;
 		else if (!reqsMet) nonCdStatus = SkillReadyStatus.RequirementsNotMet;
 		else if (!enoughMana) nonCdStatus = SkillReadyStatus.NotEnoughMP;
 
@@ -757,8 +758,10 @@ export abstract class GameState {
 			maxStacks: Math.max(primaryMaxStacks, secondaryMaxStacks),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
-			cdRecastTime: primaryRecastOnly ? cdRecastTime : Math.max(cdRecastTime, secondaryRecastTime),
-			timeTillNextStackReady: Math.max(timeTillNextStackReady, timeTillSecondaryReady),
+			cdRecastTime: cdRecastTime,
+			secondaryCdRecastTime: secondaryRecastTime,
+			timeTillNextStackReady: timeTillNextStackReady,
+			timeTillSecondaryReady: timeTillSecondaryReady,
 			timeTillAvailable: timeTillAvailable,
 			timeTillDamageApplication: timeTillDamageApplication,
 			capturedManaCost: capturedManaCost,
