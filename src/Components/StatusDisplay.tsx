@@ -197,23 +197,27 @@ function ResourceBar(props = {
 }
 
 function ResourceCounter(props: {
-	name: ContentNode,
-	label?: ContentNode,
-	containerType: "counter" | "box",
+	name: ContentNode, // text on the left
+	label?: ContentNode, // text on the right
+	containerType: "circle" | "box",
 	items: {
+		// if imgUrl is specified, show the image scaled to fit in a box.
+		// else if color is specified, show a solid color box/circle depending on containerType
+		// else show an empty box/circle depending on containerType
 		imgUrl?: string,
 		color?: string,
 	}[]
 }) {
-	let stacks = [];
+	let stacks: React.JSX.Element[] = [];
+	// true if containerType is "box", or any item has imgUrl specified
 	let anyBox: boolean = props.items.reduce((b, item) => {
 		return b || item.imgUrl !== undefined;
 	}, props.containerType === "box");
 
 	for (let i = 0; i < props.items.length; i++) {
 		const item = props.items[i];
-		if (props.containerType === "counter" && item.imgUrl === undefined) {
-			stacks.push(<ResourceStack key={i}color={item.color} offset={anyBox ? {x:0, y:3} : undefined}/>);
+		if (props.containerType === "circle" && item.imgUrl === undefined) {
+			stacks.push(<ResourceStack key={i} color={item.color} offset={anyBox ? {x:0, y:3} : undefined}/>);
 		} else {
 			stacks.push(<ResourceBox key={i} color={item.color} imgUrl={item.imgUrl} offset={anyBox ? {x:-2, y:0} : undefined}/>);
 		}
@@ -249,42 +253,6 @@ function ResourceCounter(props: {
 			</div>
 		</div>;
 	}
-}
-
-// todo [myn]
-// copy of ResourceCounter specialized for tracking SAM's Sen gauge
-function SenCounter(props: {
-	name: ContentNode,
-	hasSetsu: boolean,
-	hasGetsu: boolean,
-	hasKa: boolean,
-	setsuColor: string,
-	getsuColor: string,
-	kaColor: string,
-}) {
-	const stacks = [];
-	const hasSen = [props.hasSetsu, props.hasGetsu, props.hasKa];
-	const senColors = [props.setsuColor, props.getsuColor, props.kaColor];
-	const names = ["setsu", "getsu", "ka"];
-	const presentSen = [];
-	const help = <Help topic={"senExplanation"}
-		content={localize({
-			en: "from left to right: setsu (yukikaze), getsu (gekko/mangetsu), ka (kasha/oka)",
-		})}
-	/>;
-	for (let i = 0; i < 3; i++) {
-		stacks.push(<ResourceStack key={i} color={hasSen[i] ? senColors[i] : undefined}/>);
-		if (hasSen[i]) {
-			presentSen.push(names[i]);
-		}
-	}
-	return <div style={{marginBottom: 4, lineHeight: "1.5em"}}>
-		<div style={{display: "inline-block", height: "100%", width: 108}}>{props.name} {help}</div>
-		<div style={{width: 200, display: "inline-block"}}>
-			<div style={{display: "inline-block", marginLeft: 6}}>{stacks}</div>
-			<div style={{marginLeft: 6, height: "100%", display: "inline-block"}}>{presentSen.join("+")}</div>
-		</div>
-	</div>;
 }
 
 function ResourceText(props: {
@@ -446,14 +414,14 @@ export function ResourcesDisplay(props: {
 					key={"resourceDisplay" + i}
 				/>
 			case "counter": {
-				let items = [];
+				let items: { color?: string, imgUrl?: string }[] = [];
 				for (let i = 0; i < props.maxStacks; i++) {
 					items.push({
 						color: i < props.currentStacks ? props.color : undefined
 					});
 				}
 				return <ResourceCounter
-					containerType={"counter"}
+					containerType={"circle"}
 					name={props.name}
 					label={`${props.currentStacks}/${props.maxStacks}`}
 					items={items}
@@ -461,14 +429,16 @@ export function ResourcesDisplay(props: {
 				/>
 			}
 			case "paint": {
-				let items = [];
+				let items: { color?: string, imgUrl?: string }[] = [];
 				for (let i = 0; i < props.maxStacks; i++) {
 					const fillColor = (props.hasComet && i === props.currentStacks - 1) ? props.cometColor : props.holyColor;
+					// uncomment the next line to see an example of mixed circle & box counter
+					//if (props.hasComet && i === props.currentStacks-1) items.push({ imgUrl: require("./Asset/heart.png") }); else
 					items.push({ color: i < props.currentStacks ? fillColor : undefined, imgUrl: undefined });
 				}
 				let label = `${props.currentStacks}/${props.maxStacks}`;
 				return <ResourceCounter
-					containerType="counter"
+					containerType="circle"
 					name={props.name}
 					label={label}
 					items={items}
@@ -478,30 +448,42 @@ export function ResourcesDisplay(props: {
 			case "dance": {
 				const currentStacks = props.currentStacks;
 				let stackColors = [props.emboiteColor, props.entrechatColor, props.jeteColor, props.pirouetteColor];
-				let items = [];
+				let items: { color?: string, imgUrl?: string }[] = [];
 				for (let i = 0; i < props.maxStacks; i++) {
 					items.push({ color: i  < currentStacks ? stackColors[i] : undefined });
 				}
 				let label = `${currentStacks}/${props.maxStacks}`;
 				return <ResourceCounter
-					containerType="counter"
+					containerType="circle"
 					name={props.name}
 					label={label}
 					items={items}
 					key={"resourceDisplay" + i}
 				/>
 			}
-			case "sen":
-				return <SenCounter
-					name={props.name}
-					hasSetsu={props.hasSetsu}
-					hasGetsu={props.hasGetsu}
-					hasKa={props.hasKa}
-					setsuColor={props.setsuColor}
-					getsuColor={props.getsuColor}
-					kaColor={props.kaColor}
-					key={"resourceDisplay" + i}
-				/>
+			case "sen": {
+				const senList = [
+					{ present: props.hasSetsu, color: props.setsuColor, name: "setsu" },
+					{ present: props.hasGetsu, color: props.getsuColor, name: "getsu" },
+					{ present: props.hasKa, color: props.kaColor, name: "ka" },
+				];
+				const help = <Help
+					topic={"senExplanation"}
+					content={localize({
+						en: "from left to right: setsu (yukikaze), getsu (gekko/mangetsu), ka (kasha/oka)",
+					})}
+				/>;
+				return <ResourceCounter
+					name={<>{props.name} {help}</>}
+					label={senList
+						.filter(item => item.present)
+						.map(item => item.name)
+						.join("+")}
+					containerType={"circle"}
+					items={senList.map(item => { return {
+						color: item.present ? item.color : undefined
+					}})}/>
+			}
 			default:
 				return <ResourceText
 					name={props.name}
