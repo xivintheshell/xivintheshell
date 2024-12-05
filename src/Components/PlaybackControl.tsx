@@ -14,7 +14,7 @@ import {
 	TESTING_JOBS
 } from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
-import {getAllResources, getResourceInfo, ResourceOrCoolDownInfo, ResourceOverrideData} from "../Game/Resources";
+import {getAllResources, getResourceInfo, ResourceOverrideData} from "../Game/Resources";
 import {localize, localizeResourceType} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {SerializedConfig} from "../Game/GameConfig";
