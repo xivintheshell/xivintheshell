@@ -33,7 +33,8 @@ function TimelineActionElement(props: {
     };
     let name = localize({en: "(other)", zh: "（其它）"});
 	if (props.node.type === ActionType.Skill) {
-		name = props.node.skillName ? localizeSkillName(props.node.skillName) : localize({en: "(unknown skill)", zh: "未知技能"});
+		const targetStr = props.node.targetCount > 1 ? localize({en: ` (${props.node.targetCount} hits)`, zh: `（${props.node.targetCount}次点击）`}) : "";
+		name = props.node.skillName ? localizeSkillName(props.node.skillName) + targetStr : localize({en: "(unknown skill)", zh: "未知技能"});
 	} else if (props.node.type === ActionType.Wait) {
 		name = localize({
 			en: "(wait for " + props.node.waitDuration.toFixed(2) + "s)",
