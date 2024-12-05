@@ -14,7 +14,7 @@ import {
 	TESTING_JOBS
 } from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
-import {getAllResources, getResourceInfo, ResourceOverrideData} from "../Game/Resources";
+import {getAllResources, getResourceInfo, ResourceOrCoolDownInfo, ResourceOverrideData} from "../Game/Resources";
 import {localize, localizeResourceType} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {SerializedConfig} from "../Game/GameConfig";
@@ -952,19 +952,22 @@ export class Config extends React.Component {
 
 	#addResourceOverrideNode() {
 		const resourceInfos = getAllResources(this.state.job);
-		let resourceOptions = [];
 		let S = new Set();
 		this.state.initialResourceOverrides.forEach(override=>{
 			S.add(override.type);
 		});
 
-		let counter = 0;
+		const optionEntries: {rsc: ResourceType, isCoolDown: number}[] = [];
 		for (let k of resourceInfos.keys()) {
 			if (!S.has(k)) {
-				resourceOptions.push(<option key={counter} value={k}>{localizeResourceType(k)}</option>);
-				counter++;
+				optionEntries.push({rsc: k, isCoolDown: resourceInfos.get(k)!.isCoolDown ? 1 : 0});
 			}
 		}
+		let resourceOptions = optionEntries.sort((a, b) => {
+			return a.isCoolDown - b.isCoolDown;
+		}).map((opt, i) => {
+			return <option key={i} value={opt.rsc}>{localizeResourceType(opt.rsc)}</option>
+		});
 
 		let rscType = this.state.selectedOverrideResource;
 		let info = resourceInfos.get(rscType);
