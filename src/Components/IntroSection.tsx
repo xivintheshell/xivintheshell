@@ -229,7 +229,7 @@ export function IntroSection(props: {
 								</div>,
 							})}
 							<div>
-								Or just: <button style={{color: "#be0f0f"}} onClick={() => {
+								{localize({en: "Or just: ", zh: "或者直接："})}<button style={{color: "#be0f0f"}} onClick={() => {
 									clearCachedValues();
 									window.location.reload();
 								}}>{localize({

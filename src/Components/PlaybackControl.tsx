@@ -1,6 +1,6 @@
 import React, {MouseEventHandler, useEffect, useReducer} from 'react';
 import {controller} from '../Controller/Controller'
-import {ButtonIndicator, Clickable, Expandable, Help, Input, ValueChangeEvent} from "./Common";
+import {ButtonIndicator, Clickable, ContentNode, Expandable, Help, Input, ValueChangeEvent} from "./Common";
 import {
 	getCachedValue,
 	setCachedValue,
@@ -56,28 +56,50 @@ export function ResourceOverrideDisplay(props: {
 	deleteFn?: (rsc: ResourceType) => void, // when null, this component is for display only
 }) {
 	let rscInfo = getResourceInfo(props.job, props.override.type);
-	let str: string;
+	let str: ContentNode;
+	const localizedRsc = localizeResourceType(props.override.type);
 	if (rscInfo.isCoolDown) {
-		str = props.override.type + " full in " + props.override.timeTillFullOrDrop + "s";
+		str = localize({
+			en: localizedRsc + " full in " + props.override.timeTillFullOrDrop + "s",
+			zh: `${localizedRsc}将在${props.override.timeTillFullOrDrop}秒后转好`
+		});
 	} else {
-		str = localizeResourceType(props.override.type);
+		str = localizedRsc;
+		const lparen = localize({en: " (", zh: "（"}) as string;
+		const rparen = localize({en: ") ", zh: "）"}) as string;
+		//const colon = localize({en: ": ", zh: "："}) as string;
 		if (props.override.type === ResourceType.LeyLines) {
-			str += " (" + (props.override.effectOrTimerEnabled ? "enabled" : "disabled") + ")";
+			str += lparen + (props.override.effectOrTimerEnabled ?
+				localize({en: "enabled", zh: "生效中"}) :
+				localize({en: "disabled", zh: "未生效"})
+			) + rparen;
 		}
 		if (props.override.type === ResourceType.Enochian) {
-			str += " (" + (props.override.effectOrTimerEnabled ? "timer enabled" : "timer disabled") + ")";
+			str += lparen + (props.override.effectOrTimerEnabled ?
+				localize({en: "timer enabled", zh: "倒计时中"}) :
+				localize({en: "timer disabled", zh: "暂停倒计时"})
+			) + rparen;
 		}
 		if (rscInfo.maxValue > 1) {
-			str += " (amount: " + props.override.stacks + ")";
+			str += localize({
+				en: ` (amount: ${props.override.stacks})`,
+				zh: `（数量：${props.override.stacks}）`
+			})
 		}
 		if (rscInfo.maxTimeout >= 0) {
 			if (props.override.type === ResourceType.Polyglot) {
 				if (props.override.timeTillFullOrDrop > 0) {
-					str += " next stack ready in " + props.override.timeTillFullOrDrop + "s";
+					str += localize({
+						en: ` next stack ready in ${props.override.timeTillFullOrDrop}s`,
+						zh: `距下一层${props.override.timeTillFullOrDrop}秒`
+					});
 				}
 			} else {
 				if (props.override.type !== ResourceType.Enochian || props.override.effectOrTimerEnabled) {
-					str += " drops in " + props.override.timeTillFullOrDrop + "s";
+					str += localize({
+						en: ` drops in ${props.override.timeTillFullOrDrop}s`,
+						zh: `将在${props.override.timeTillFullOrDrop}秒后消失`,
+					});
 				}
 			}
 		}
@@ -982,15 +1004,15 @@ export class Config extends React.Component {
 
 			let timerDesc;
 			if (info.isCoolDown) {
-				timerDesc = localize({en: "Time till full: "}) as string;
+				timerDesc = localize({en: "Time till full: ", zh: "距CD转好时间："}) as string;
 			} else if (rscType === ResourceType.Polyglot) {
-				timerDesc = localize({en: "Time till next stack: "}) as string;
+				timerDesc = localize({en: "Time till next stack: ", zh: "距下一层时间："}) as string;
 			} else {
 				timerDesc = localize({en: "Time till drop: ", zh: " 距状态消失时间："}) as string;
 			}
 
-			let enabledDesc = "enabled";
-			if (rscType === ResourceType.Enochian) enabledDesc = "timer enabled";
+			let enabledDesc = localize({en: "enabled", zh: "生效中"});
+			if (rscType === ResourceType.Enochian) enabledDesc = localize({en: "timer enabled", zh: "倒计时中"});
 
 			inputSection = <div style={{margin: "6px 0"}}>
 
@@ -1003,7 +1025,7 @@ export class Config extends React.Component {
 
 				{/*stacks*/}
 				<div hidden={!showAmount}>
-					<Input description={localize({en: "Amount: ", zh: "层数："})}
+					<Input description={localize({en: "Amount: ", zh: "数量："})}
 						   defaultValue={amountDefaultValue}
 						   onChange={amountOnChange}/>
 				</div>
@@ -1075,8 +1097,8 @@ export class Config extends React.Component {
 							<div className={"paragraph"}>I would recommend saving settings (stats, lines presets, timeline markers etc.) to files first, in case invalid game states really mess up the tool and a complete reset is required.</div>
 						</div>,
 						zh: <div>
-							<div className={"paragraph"} style={{color: "orangered"}}><b>错误的初始资源可能会导致未知错误。请在知晓操作方式下慎重使用，并优先自行排查问题！</b></div>
-							<div className={"paragraph"}>另：当前的雷dot被设计为只显示剩余时间而不会结算伤害的状态。</div>
+							<div className={"paragraph"} style={{color: "orangered"}}><b>错误的初始资源可能会导致非法游戏状态。请在阅读工具顶部的使用说明/常见问题后慎重使用，并优先自行排查问题！</b></div>
+							<div className={"paragraph"}>另：当前靠初始资源覆盖添加的雷dot只显示剩余时间，不会结算伤害。</div>
 							<div className={"paragraph"}>使用此功能时，请最好先下载保存各项数据（面板数值，技能轴，时间轴预设等），以防造成未知错误后排轴器重置导致的数据丢失。</div>
 						</div>,
 					})
@@ -1272,11 +1294,12 @@ export class Config extends React.Component {
 			<div>
 				<Input style={{display: "inline-block", color: fieldColor("skillSpeed")}}
 					   defaultValue={this.state.skillSpeed}
-					   description={localize({en: "skill speed: "})} onChange={this.setSkillSpeed}/>
+					   description={localize({en: "skill speed: ", zh: "技速："})} onChange={this.setSkillSpeed}/>
 				<span> (GCD: {this.state.sksGcdPreview} <Help topic={"sksGcdPreview"} content={
 					<>
 						<p>{localize({
 							en: "Preview of displayed GCD based on your skill speed.",
+							zh: "当前技速对应的游戏内显示的GCD."
 						})}</p>
 						<p>{localize({
 							en: `Measured average GCD should be ${this.state.taxedSksGcdPreview} due to FPS tax`,

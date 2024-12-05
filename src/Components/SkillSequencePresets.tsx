@@ -123,7 +123,7 @@ export class SkillSequencePresets extends React.Component {
 			</div>
 		</div>;
 		return <Expandable
-			title={localize({en: "Skill sequence presets", zh: "技能轴预设"}) as string}
+			title={localize({en: "Skill sequence presets", zh: "技能序列预设"}) as string}
 			content={content}
 			defaultShow={false}/>
 	}
