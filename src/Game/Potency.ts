@@ -22,6 +22,12 @@ export const enum PotencyModifierType {
 	AUTO_CRIT,
 	YATEN,
 	POSITIONAL,
+
+	ARCANE_CIRCLE,
+	DEATHSDESIGN,
+	ENHANCED_GIBBET_GALLOWS,
+	ENHANCED_REAPING,
+	IMMORTAL_SACRIFICE,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -152,6 +158,31 @@ export const Modifiers = {
 		kind: "adder",
 		source: PotencyModifierType.YATEN,
 		additiveAmount: 170,
+	} as PotencyAdder,
+	ArcaneCircle: {
+		kind: "multiplier",
+		source: PotencyModifierType.ARCANE_CIRCLE,
+		damageFactor: 1.03,
+	} as PotencyMultiplier,
+	DeathsDesign: {
+		kind: "multiplier",
+		source: PotencyModifierType.DEATHSDESIGN,
+		damageFactor: 1.10,
+	} as PotencyMultiplier,
+	EnhancedGibbetGallows: {
+		kind: "adder",
+		source: PotencyModifierType.ENHANCED_GIBBET_GALLOWS,
+		additiveAmount: 60		
+	} as PotencyAdder,
+	EnhancedReaping: {
+		kind: "adder",
+		source: PotencyModifierType.ENHANCED_REAPING,
+		additiveAmount: 40		
+	} as PotencyAdder,
+	ImmortalSacrifice: {
+		kind: "adder",
+		source: PotencyModifierType.IMMORTAL_SACRIFICE,
+		additiveAmount: 40,
 	} as PotencyAdder,
 };
 

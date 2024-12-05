@@ -82,3 +82,31 @@ export enum RDMCooldownType {
 	cd_ViceOfThorns = "cd_ViceOfThorns",
 	cd_Prefulgence = "cd_Prefulgence",
 }
+
+export enum RDMTraitName {
+	EnhancedDisplacement = 5000,
+	RedMagicMastery,
+	EnhancedManafication,
+	RedMagicMasteryII,
+	RedMagicMasteryIII,
+	EnhancedAcceleration,
+	EnhancedManaficationII,
+	EnhancedEmbolden,
+	EnchantedBladeMastery,
+	EnhancedAccelerationII,
+	EnhancedManaficationIII,
+}
+
+export const RDMTraitList: Array<[RDMTraitName, number]> = [
+	[RDMTraitName.EnhancedDisplacement, 72],
+	[RDMTraitName.RedMagicMastery, 74],
+	[RDMTraitName.EnhancedManafication, 78],
+	[RDMTraitName.RedMagicMasteryII, 82],
+	[RDMTraitName.RedMagicMasteryIII, 84],
+	[RDMTraitName.EnhancedAcceleration, 88],
+	[RDMTraitName.EnhancedManaficationII, 90],
+	[RDMTraitName.EnhancedEmbolden, 92],
+	[RDMTraitName.EnchantedBladeMastery, 94],
+	[RDMTraitName.EnhancedAccelerationII, 96],
+	[RDMTraitName.EnhancedManaficationIII, 100],
+];

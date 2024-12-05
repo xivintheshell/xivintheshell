@@ -1,5 +1,5 @@
-import { LevelSync, ResourceType } from "./Common";
-import { Traits, TraitName } from "./Traits";
+import { LevelSync, ResourceType, TraitName } from "./Common";
+import { Traits } from "./Traits";
 
 export class XIVMath {
 	static getMainstatBase(level: LevelSync) {
@@ -35,7 +35,7 @@ export class XIVMath {
 		const critRate = (critBonus >= 1) ? critBonus : 
 			(critBonus < 0) ? 0 : 
 			XIVMath.#criticalHitRate(level, crit) + critBonus;
-		const dhRate = (critBonus >= 1) ? dhBonus : 
+		const dhRate = (dhBonus >= 1) ? dhBonus :
 			(dhBonus < 0) ? 0 :
 			XIVMath.#directHitRate(level, dh) + dhBonus;
 

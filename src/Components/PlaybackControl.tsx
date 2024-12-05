@@ -922,7 +922,7 @@ export class Config extends React.Component {
 		}
 		else
 		{
-			if ((info.maxValue > 1 && rscType!==ResourceType.Paradox) &&
+			if (((info.maxValue > 1 || info.maxValue === info.defaultValue) && rscType!==ResourceType.Paradox) &&
 				(inputOverrideStacks < 0 || inputOverrideStacks > info.maxValue))
 			{
 				window.alert("invalid input amount (must be in range [0, " + info.maxValue + "])");
@@ -938,7 +938,7 @@ export class Config extends React.Component {
 			props = {
 				type: rscType,
 				timeTillFullOrDrop: info.maxTimeout >= 0 ? inputOverrideTimer : -1,
-				stacks: info.maxValue > 1 ? inputOverrideStacks : 1,
+				stacks: info.maxValue > 1 || info.maxValue === info.defaultValue ? inputOverrideStacks : 1,
 				effectOrTimerEnabled: (rscType === ResourceType.LeyLines || rscType === ResourceType.Enochian) ?
 					inputOverrideEnabled : true,
 			};
@@ -990,7 +990,9 @@ export class Config extends React.Component {
 				}
 
 				// amount
-				if (info.maxValue > 1) {
+				// hide the amount display if the resource has only one stack
+				// unless that stack is set by default
+				if (info.maxValue > 1 || info.maxValue === info.defaultValue) {
 					showAmount = true;
 					amountDefaultValue = this.state.overrideStacks;
 					amountOnChange = this.setOverrideStacks;

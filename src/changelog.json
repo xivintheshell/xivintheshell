@@ -1,6 +1,65 @@
 [
 	{
-		"date": "11/23/24",
+		"date": "12/4/24",
+		"changes": [
+			"Added English FRU P3 tracks by Yara",
+			"[RDM] Fixed Swiftcast being consumed before Dualcast when both are active"
+		]
+	},
+	{
+		"date": "12/2/24",
+		"changes": [
+			"Added English FRU P2 tracks by Yara",
+			"Fixed a bug where 'Load tracks starting at timestamp' did not accept some time formats",
+			"[RDM] Removed the 'testing' label"
+		]
+	},
+	{
+		"date": "12/1/24",
+		"changes": [
+			"Updated full FRU tracks in Chinese by 盐宝 & czmm"
+		]
+	},
+	{
+		"date": "11/30/24",
+		"changes": [
+			"[MCH] Fixed Scattergun's heat generation (thanks Kairos)",
+			"[PCT] Fixed Monochrome Tones appearing when synced to level 80 and other internal trait logic (thanks misterperson)"
+		]
+	},
+	{
+		"date": "11/29/24",
+		"changes": [
+			"[MCH] Fixed bugs with MCH Overheat consumption on AoE abilities (thanks FloatingGhost)"
+		]
+	},
+	{
+		"date": "11/28/24",
+		"changes": [
+			"Added some Chinese tracks (M1S-M4S, FRU before P2.5)"
+		]
+	},
+	{
+		"date": "11/27/24",
+		"changes": [
+			"Added the ability to override stacks to 0 for 1-stack resources that start present by default",
+			"Added preliminary FRU P1 tracks by Yara"
+		]
+	},
+	{
+		"date": "11/26/24",
+		"changes": [
+			"Added the ability to load marker tracks starting from a particular timestamp"
+		]
+	},
+	{
+		"date": "11/25/24",
+		"changes": [
+			"[RPR] Added initial RPR support"
+		]
+	},
+	{
+		"date": "11/24/24",
 		"changes": [
 			"[MCH] Added initial MCH support"
 		]

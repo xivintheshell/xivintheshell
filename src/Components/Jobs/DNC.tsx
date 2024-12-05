@@ -1,6 +1,6 @@
-import { ResourceType } from "../../Game/Common";
+import { ResourceType,TraitName } from "../../Game/Common";
 import { DNCState } from "../../Game/Jobs/DNC";
-import { TraitName, Traits } from "../../Game/Traits";
+import { Traits } from "../../Game/Traits";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import {

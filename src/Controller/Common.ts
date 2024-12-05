@@ -26,6 +26,7 @@ export const enum ShellJob {
 	BLM = "BLM",
 	PCT = "PCT",
 	RDM = "RDM",
+	RPR = "RPR",
 	DNC = "DNC",
 	SAM = "SAM",
 	MCH = "MCH",
@@ -35,6 +36,7 @@ export const enum ShellJob {
 // jobs are in the order they appear in the job guide
 export const ALL_JOBS = [
 	ShellJob.SAM,	
+	ShellJob.RPR,
 	ShellJob.MCH,
 	ShellJob.DNC,
 	ShellJob.BLM,
@@ -44,7 +46,7 @@ export const ALL_JOBS = [
 
 export const TANK_JOBS: ShellJob[] = [];
 export const HEALER_JOBS: ShellJob[] = [];
-export const MELEE_JOBS: ShellJob[] = [ShellJob.SAM];
+export const MELEE_JOBS: ShellJob[] = [ShellJob.SAM, ShellJob.RPR];
 export const PHYSICAL_RANGED_JOBS: ShellJob[] = [ShellJob.DNC, ShellJob.MCH];
 export const CASTER_JOBS: ShellJob[] = [ShellJob.BLM, ShellJob.PCT, ShellJob.RDM];
 
@@ -57,8 +59,8 @@ export const SPS_JOBS = [
 ]
 
 export const TESTING_JOBS = [
-	ShellJob.RDM,
 	ShellJob.SAM,
+	ShellJob.RPR,
 	ShellJob.DNC,
 	ShellJob.MCH,
 ];

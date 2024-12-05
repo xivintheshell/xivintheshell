@@ -1,9 +1,11 @@
-import {BLMSkillName, BLMResourceType, BLMCooldownType} from "./Constants/BLM";
-import {PCTSkillName, PCTResourceType, PCTCooldownType} from "./Constants/PCT";
-import {RDMSkillName, RDMResourceType, RDMCooldownType} from "./Constants/RDM";
-import {DNCSkillName, DNCResourceType, DNCCooldownType} from "./Constants/DNC";
-import {SAMSkillName, SAMResourceType, SAMCooldownType} from "./Constants/SAM";
-import {MCHSkillName, MCHResourceType, MCHCooldownType} from "./Constants/MCH";
+import {BLMSkillName, BLMResourceType, BLMCooldownType, BLMTraitList, BLMTraitName} from "./Constants/BLM";
+import {PCTSkillName, PCTResourceType, PCTCooldownType, PCTTraitList, PCTTraitName } from "./Constants/PCT";
+import {RDMSkillName, RDMResourceType, RDMCooldownType, RDMTraitList, RDMTraitName} from "./Constants/RDM";
+import {DNCSkillName, DNCResourceType, DNCCooldownType, DNCTraitList, DNCTraitName} from "./Constants/DNC";
+import {SAMSkillName, SAMResourceType, SAMCooldownType, SAMTraitList, SAMTraitName} from "./Constants/SAM";
+import {MCHSkillName, MCHResourceType, MCHCooldownType, MCHTraitList, MCHTraitName} from "./Constants/MCH";
+import {RPRSkillName, RPRResourceType, RPRCooldownType, RPRTraitList, RPRTraitName} from "./Constants/RPR";
+
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -67,6 +69,7 @@ export const SkillName = {
 	...DNCSkillName,
 	...SAMSkillName,
 	...MCHSkillName,
+	...RPRSkillName,
 	...GeneralSkillName,
 }
 
@@ -77,7 +80,8 @@ export type SkillName = GeneralSkillName
 	| RDMSkillName
 	| DNCSkillName
 	| SAMSkillName
-	| MCHSkillName;
+	| MCHSkillName
+	| RPRSkillName;
 
 export const enum SkillReadyStatus {
 	Ready = "ready",
@@ -176,6 +180,7 @@ const CooldownType = {
 	...DNCCooldownType,
 	...SAMCooldownType,
 	...MCHCooldownType,
+	...RPRCooldownType
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -185,7 +190,8 @@ type CooldownType = GeneralCooldownType
 	| RDMCooldownType
 	| DNCCooldownType
 	| SAMCooldownType
-	| MCHCooldownType;
+	| MCHCooldownType
+	| RPRCooldownType;
 
 export const ResourceType = {
 	...CooldownType,
@@ -196,6 +202,7 @@ export const ResourceType = {
 	...DNCResourceType,
 	...SAMResourceType,
 	...MCHResourceType,
+	...RPRResourceType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -206,7 +213,8 @@ export type ResourceType = CooldownType
 	| RDMResourceType
 	| DNCResourceType
 	| SAMResourceType
-	| MCHResourceType;
+	| MCHResourceType
+	| RPRResourceType;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",
@@ -236,3 +244,73 @@ export const enum WarningType {
 	MeditationOvercap = "meditation stack overcap",
 	SenOvercap = "sen overcap",
 }
+
+export enum ReservedTraitName {
+	Never = 0
+}
+
+export enum RoleTraitName {
+	// 0-99 reserved
+	// Healer, Magical Ranged
+	EnhancedSwiftcast = 100,
+	// Magical Ranged
+	EnhancedAddle,
+
+	// Melee, Ranged
+	EnhancedSecondWind,
+	// Melee
+	EnhancedFeint,
+
+	// Tank
+	MeleeMasteryTank,
+	EnhancedRampart,
+	MeleeMasteryIITank,
+	EnhancedReprisal,
+}
+
+const GeneralTraitList: Array<[RoleTraitName, number]> = [
+	[RoleTraitName.EnhancedSwiftcast, 94],
+	[RoleTraitName.EnhancedAddle, 98],
+
+	[RoleTraitName.EnhancedSecondWind, 94],
+	[RoleTraitName.EnhancedFeint, 98],
+
+	[RoleTraitName.MeleeMasteryTank, 84],
+	[RoleTraitName.EnhancedRampart, 94],
+	[RoleTraitName.MeleeMasteryIITank, 94],
+	[RoleTraitName.EnhancedReprisal, 98],
+]
+
+export const TraitName = {
+	...RoleTraitName,  //  100-1000
+	...BLMTraitName,   // 1000-1999
+	...PCTTraitName,   // 2000-2999
+	...DNCTraitName,   // 3000-3999
+	...RDMTraitName,   // 4000-4999
+	...SAMTraitName,   // 5000-5999
+	...MCHTraitName,   // 6000-6999
+	...RPRTraitName,   // 7000-7999
+	...ReservedTraitName, // 0, for now
+}
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export type TraitName = RoleTraitName
+	| BLMTraitName
+	| PCTTraitName
+	| DNCTraitName
+	| RDMTraitName
+	| SAMTraitName
+	| MCHTraitName
+	| RPRTraitName
+	| ReservedTraitName;
+
+export const TraitList: Array<[TraitName, number]> = [
+	...GeneralTraitList,
+	...BLMTraitList,
+	...PCTTraitList,
+	...RDMTraitList,
+	...DNCTraitList,
+	...SAMTraitList,
+	...MCHTraitList,
+	...RPRTraitList,
+]

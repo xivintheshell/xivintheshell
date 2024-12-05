@@ -1,8 +1,8 @@
-import {Aspect, LevelSync, ResourceType, SkillName} from './Common'
+import {Aspect, LevelSync, ResourceType, SkillName, TraitName} from './Common'
 import {ShellJob, ALL_JOBS} from "../Controller/Common";
 import {ActionNode} from "../Controller/Record";
 import {PlayerState, GameState} from "./GameState";
-import {TraitName, Traits} from './Traits';
+import {Traits} from './Traits';
 import {makeCooldown, getResourceInfo, ResourceInfo} from "./Resources";
 import {PotencyModifier} from "./Potency";
 
@@ -47,6 +47,10 @@ export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, ...fs: Ar
 			fn(state, node);
 		}
 	};
+}
+
+export function combinePredicatesAnd<T extends PlayerState>(f1: StatePredicate<T>, ...fs: Array<StatePredicate<T>>): StatePredicate<T> {
+	return (state: T) => f1(state) && fs.every((pred) => pred(state));
 }
 
 export interface CooldownGroupProperies {
