@@ -1,6 +1,6 @@
 import React, {MouseEventHandler, useEffect, useReducer} from 'react';
 import {controller} from '../Controller/Controller'
-import {ButtonIndicator, Clickable, Expandable, Help, Input, ValueChangeEvent} from "./Common";
+import {ButtonIndicator, Clickable, ContentNode, Expandable, Help, Input, ValueChangeEvent} from "./Common";
 import {
 	getCachedValue,
 	setCachedValue,
@@ -15,7 +15,7 @@ import {
 } from "../Controller/Common";
 import {FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType} from "../Game/Common";
 import {getAllResources, getResourceInfo, ResourceOverrideData} from "../Game/Resources";
-import {localize} from "./Localization";
+import {localize, localizeResourceType} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
 import {SerializedConfig} from "../Game/GameConfig";
 import {XIVMath} from "../Game/XIVMath";
@@ -56,20 +56,50 @@ export function ResourceOverrideDisplay(props: {
 	deleteFn?: (rsc: ResourceType) => void, // when null, this component is for display only
 }) {
 	let rscInfo = getResourceInfo(props.job, props.override.type);
-	let str: string;
+	let str: ContentNode;
+	const localizedRsc = localizeResourceType(props.override.type);
 	if (rscInfo.isCoolDown) {
-		str = props.override.type + " full in " + props.override.timeTillFullOrDrop + "s";
+		str = localize({
+			en: localizedRsc + " full in " + props.override.timeTillFullOrDrop + "s",
+			zh: `${localizedRsc}将在${props.override.timeTillFullOrDrop}秒后转好`
+		});
 	} else {
-		str = props.override.type;
-		if (props.override.type === ResourceType.LeyLines) str += " (" + (props.override.effectOrTimerEnabled ? "enabled" : "disabled") + ")";
-		if (props.override.type === ResourceType.Enochian) str += " (" + (props.override.effectOrTimerEnabled ? "timer enabled" : "timer disabled") + ")";
-		if (rscInfo.maxValue > 1 || rscInfo.maxValue === rscInfo.defaultValue) str += " (amount: " + props.override.stacks + ")";
+		str = localizedRsc;
+		const lparen = localize({en: " (", zh: "（"}) as string;
+		const rparen = localize({en: ") ", zh: "）"}) as string;
+		//const colon = localize({en: ": ", zh: "："}) as string;
+		if (props.override.type === ResourceType.LeyLines) {
+			str += lparen + (props.override.effectOrTimerEnabled ?
+				localize({en: "enabled", zh: "生效中"}) :
+				localize({en: "disabled", zh: "未生效"})
+			) + rparen;
+		}
+		if (props.override.type === ResourceType.Enochian) {
+			str += lparen + (props.override.effectOrTimerEnabled ?
+				localize({en: "timer enabled", zh: "倒计时中"}) :
+				localize({en: "timer disabled", zh: "暂停倒计时"})
+			) + rparen;
+		}
+		if (rscInfo.maxValue > 1) {
+			str += localize({
+				en: ` (amount: ${props.override.stacks})`,
+				zh: `（数量：${props.override.stacks}）`
+			})
+		}
 		if (rscInfo.maxTimeout >= 0) {
 			if (props.override.type === ResourceType.Polyglot) {
-				if (props.override.timeTillFullOrDrop > 0) str += " next stack ready in " + props.override.timeTillFullOrDrop + "s";
+				if (props.override.timeTillFullOrDrop > 0) {
+					str += localize({
+						en: ` next stack ready in ${props.override.timeTillFullOrDrop}s`,
+						zh: `距下一层${props.override.timeTillFullOrDrop}秒`
+					});
+				}
 			} else {
 				if (props.override.type !== ResourceType.Enochian || props.override.effectOrTimerEnabled) {
-					str += " drops in " + props.override.timeTillFullOrDrop + "s";
+					str += localize({
+						en: ` drops in ${props.override.timeTillFullOrDrop}s`,
+						zh: `将在${props.override.timeTillFullOrDrop}秒后消失`,
+					});
 				}
 			}
 		}
@@ -922,19 +952,22 @@ export class Config extends React.Component {
 
 	#addResourceOverrideNode() {
 		const resourceInfos = getAllResources(this.state.job);
-		let resourceOptions = [];
 		let S = new Set();
 		this.state.initialResourceOverrides.forEach(override=>{
 			S.add(override.type);
 		});
 
-		let counter = 0;
+		const optionEntries: {rsc: ResourceType, isCoolDown: number}[] = [];
 		for (let k of resourceInfos.keys()) {
 			if (!S.has(k)) {
-				resourceOptions.push(<option key={counter} value={k}>{k}</option>);
-				counter++;
+				optionEntries.push({rsc: k, isCoolDown: resourceInfos.get(k)!.isCoolDown ? 1 : 0});
 			}
 		}
+		let resourceOptions = optionEntries.sort((a, b) => {
+			return a.isCoolDown - b.isCoolDown;
+		}).map((opt, i) => {
+			return <option key={i} value={opt.rsc}>{localizeResourceType(opt.rsc)}</option>
+		});
 
 		let rscType = this.state.selectedOverrideResource;
 		let info = resourceInfos.get(rscType);
@@ -975,12 +1008,16 @@ export class Config extends React.Component {
 			}
 
 			let timerDesc;
-			if (info.isCoolDown) timerDesc = "Time till full: ";
-			else if (rscType === ResourceType.Polyglot) timerDesc = "Time till next stack: ";
-			else timerDesc = "Time till drop: ";
+			if (info.isCoolDown) {
+				timerDesc = localize({en: "Time till full: ", zh: "距CD转好时间："}) as string;
+			} else if (rscType === ResourceType.Polyglot) {
+				timerDesc = localize({en: "Time till next stack: ", zh: "距下一层时间："}) as string;
+			} else {
+				timerDesc = localize({en: "Time till drop: ", zh: " 距状态消失时间："}) as string;
+			}
 
-			let enabledDesc = "enabled";
-			if (rscType === ResourceType.Enochian) enabledDesc = "timer enabled";
+			let enabledDesc = localize({en: "enabled", zh: "生效中"});
+			if (rscType === ResourceType.Enochian) enabledDesc = localize({en: "timer enabled", zh: "倒计时中"});
 
 			inputSection = <div style={{margin: "6px 0"}}>
 
@@ -993,7 +1030,7 @@ export class Config extends React.Component {
 
 				{/*stacks*/}
 				<div hidden={!showAmount}>
-					<Input description="Amount: "
+					<Input description={localize({en: "Amount: ", zh: "数量："})}
 						   defaultValue={amountDefaultValue}
 						   onChange={amountOnChange}/>
 				</div>
@@ -1039,7 +1076,7 @@ export class Config extends React.Component {
 					{resourceOptions}
 				</select>
 				{inputSection}
-				<input type="submit" value="add override"/>
+				<input type="submit" value={localize({en: "add override", zh: "应用此状态"}) as string}/>
 			</form>
 		</div>
 	}
@@ -1057,11 +1094,20 @@ export class Config extends React.Component {
 		}
 		return <div style={{marginTop: 10}}>
 			<Expandable title="overrideInitialResources" titleNode={<span>
-				{localize({en:"Override initial resources", zh: "指定初始资源"})} <Help topic="overrideInitialResources"content={<div>
-				<div className={"paragraph"} style={{color: "orangered"}}><b>Can create invalid game states. Go over Instructions/Troubleshoot first and use carefully at your own risk!</b></div>
-				<div className={"paragraph"}>Also, currently thunder dot buff created this way doesn't actually tick. It just shows the remaining buff timer.</div>
-				<div className={"paragraph"}>I would recommend saving settings (stats, lines presets, timeline markers etc.) to files first, in case invalid game states really mess up the tool and a complete reset is required.</div>
-			</div>}/>
+				{localize({en:"Override initial resources", zh: "指定初始资源"})} <Help topic="overrideInitialResources"content={
+					localize({
+						en: <div>
+							<div className={"paragraph"} style={{color: "orangered"}}><b>Can create invalid game states. Go over Instructions/Troubleshoot first and use carefully at your own risk!</b></div>
+							<div className={"paragraph"}>Also, currently thunder dot buff created this way doesn't actually tick. It just shows the remaining buff timer.</div>
+							<div className={"paragraph"}>I would recommend saving settings (stats, lines presets, timeline markers etc.) to files first, in case invalid game states really mess up the tool and a complete reset is required.</div>
+						</div>,
+						zh: <div>
+							<div className={"paragraph"} style={{color: "orangered"}}><b>错误的初始资源可能会导致非法游戏状态。请在阅读工具顶部的使用说明/常见问题后慎重使用，并优先自行排查问题！</b></div>
+							<div className={"paragraph"}>另：当前靠初始资源覆盖添加的雷dot只显示剩余时间，不会结算伤害。</div>
+							<div className={"paragraph"}>使用此功能时，请最好先下载保存各项数据（面板数值，技能轴，时间轴预设等），以防造成未知错误后排轴器重置导致的数据丢失。</div>
+						</div>,
+					})
+				}/>
 			</span>} content={<div>
 				<button onClick={evt=>{
 					this.setState({ initialResourceOverrides: [], dirty: true });
@@ -1258,6 +1304,7 @@ export class Config extends React.Component {
 					<>
 						<p>{localize({
 							en: "Preview of displayed GCD based on your skill speed.",
+							zh: "当前技速对应的游戏内显示的GCD."
 						})}</p>
 						<p>{localize({
 							en: `Measured average GCD should be ${this.state.taxedSksGcdPreview} due to FPS tax`,

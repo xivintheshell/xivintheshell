@@ -169,8 +169,18 @@ function TimelineTabs() {
 				}}>
 					{localize({en: "Timeline editor ", zh: "时间轴编辑器 "})}
 					<Help topic={"timeline editor"} content={<div>
-						<div className={"paragraph"} style={{color: "orangered"}}><b>Has the bare minimum features but might still be buggy (let me know). Would recommend going over Instructions/Troubleshoot first, plus saving data to drive in case bugs mess up the entire tool</b></div>
-						<div className={"paragraph"}>I hope it's otherwise self-explanatory. Note that edits made here are not saved until they're applied to the actual timeline.</div>
+						<div className={"paragraph"} style={{color: "orangered"}}><b>
+						{localize({
+							en: "Has the bare minimum features but might still be buggy (let me know). Would recommend going over Instructions/Troubleshoot first, plus saving data to drive in case bugs mess up the entire tool",
+							zh: "本编辑器仍在开发中，不过有最基本的各项功能，请务必向我们汇报任何发现的bug。",
+						})}
+						</b></div>
+						<div className={"paragraph"}>
+						{localize({
+							en: "I hope it's otherwise self-explanatory. Note that edits made here are not saved until they're applied to the actual timeline.",
+							zh: "使用前最好先阅读使用指南并时刻保存各项数据。",
+						})}
+						</div>
 					</div>}/>
 				</div>,
 				contentNode: <TimelineEditor/>
