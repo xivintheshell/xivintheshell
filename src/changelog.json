@@ -2,6 +2,7 @@
 	{
 		"date": "12/4/24",
 		"changes": [
+			"Added English FRU P3 tracks by Yara",
 			"[RDM] Fixed Swiftcast being consumed before Dualcast when both are active"
 		]
 	},
