@@ -699,7 +699,17 @@ export abstract class GameState {
 		else if (!reqsMet) nonCdStatus = SkillReadyStatus.RequirementsNotMet;
 		else if (!enoughMana) nonCdStatus = SkillReadyStatus.NotEnoughMP;
 
-		if (nonCdStatus !== SkillReadyStatus.Ready) status = nonCdStatus;
+		if (skill.name === SkillName.Meditate) {
+			// Special case for Meditate
+			if (timeTillAvailable > Debug.epsilon || this.cooldowns.get(ResourceType.cd_GCD).timeTillNextStackAvailable() > Debug.epsilon) {
+				// if the skill is on CD or the GCD is rolling, mark its non-CD status as Ready
+				// but its CD status Blocked
+				nonCdStatus = SkillReadyStatus.Ready;
+				status = SkillReadyStatus.Blocked;
+			}
+		} else if (nonCdStatus !== SkillReadyStatus.Ready) {
+			status = nonCdStatus;
+		}
 
 		// Special case for skills that require being in combat
 		if (([
@@ -720,7 +730,7 @@ export abstract class GameState {
 		// special case for meditate: if meditate is off CD, use the GCD cooldown instead if it's rolling
 		// this fails the edge case where a GCD is pressed ~58 seconds after meditate was last pressed
 		// and meditate would become available in the middle of the CD
-		if (skillName === SkillName.Meditate && timeTillNextStackReady === 0) {
+		if (skillName === SkillName.Meditate && timeTillNextStackReady < Debug.epsilon) {
 			const gcd = this.cooldowns.get(ResourceType.cd_GCD);
 			const gcdRecastTime = gcd.currentStackCd();
 			if (gcd.timeTillNextStackAvailable() > timeTillNextStackReady) {
