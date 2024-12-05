@@ -358,7 +358,6 @@ class SkillButton extends React.Component {
 					position: "absolute",
 					width: skillBoxPx,
 					height: skillBoxPx,
-					zIndex: 2,
 					background: "url('https://miyehn.me/ffxiv-blm-rotation/misc/skillIcon_overlay.png') no-repeat"
 				}}/>
 			</div>
