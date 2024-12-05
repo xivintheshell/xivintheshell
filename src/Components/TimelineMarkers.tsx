@@ -453,7 +453,7 @@ export class TimelineMarkers extends React.Component {
 				<LoadCombinedTracksBtn displayName={localize({en: "P1 by Yara", zh: "P1（英文，来自Yara）"})} url={PRESET_MARKERS_BASE + "fru_p1.txt"} offsetStr={this.state.offsetStr}/>
 				<LoadCombinedTracksBtn displayName={localize({en: "P2 + intermission by Yara", zh: "P2（英文，来自Yara）"})} url={PRESET_MARKERS_BASE + "fru_p2.txt"} offsetStr={this.state.offsetStr}/>
 				<LoadCombinedTracksBtn displayName={localize({en: "P3 by Yara", zh: "P3（英文，来自Yara）"})} url={PRESET_MARKERS_BASE + "fru_p3.txt"} offsetStr={this.state.offsetStr}/>
-				<LoadCombinedTracksBtn displayName={localize({en: "full (zh) by 小盐 & czmm", zh: "完整（来自小盐+czmm）"})} url={PRESET_MARKERS_BASE + "fru_zh.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={localize({en: "full (zh) by 小盐 & czmm (12/2 ver)", zh: "完整（来自小盐+czmm, 12/2版）"})} url={PRESET_MARKERS_BASE + "fru_zh.txt"} offsetStr={this.state.offsetStr}/>
 			</p>
 			<p>
 				<span>{localize({en: "Legacy ultimates: ", zh: "过去绝本（英文）："})}</span>
