@@ -147,8 +147,8 @@ it("consumes instants in the correct order", testWithConfig({}, () => {
     expect(state.hasResourceAvailable(ResourceType.Dualcast)).toBeTruthy();
     applySkill(SkillName.Veraero3);
     expect(state.hasResourceAvailable(ResourceType.Acceleration)).toBeFalsy();
-    expect(state.hasResourceAvailable(ResourceType.Swiftcast)).toBeFalsy();
-    expect(state.hasResourceAvailable(ResourceType.Dualcast)).toBeTruthy();
+    expect(state.hasResourceAvailable(ResourceType.Swiftcast)).toBeTruthy();
+    expect(state.hasResourceAvailable(ResourceType.Dualcast)).toBeFalsy();
     applySkill(SkillName.Veraero3);
     expect(state.hasResourceAvailable(ResourceType.Acceleration)).toBeFalsy();
     expect(state.hasResourceAvailable(ResourceType.Swiftcast)).toBeFalsy();
