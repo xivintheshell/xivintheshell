@@ -41,10 +41,9 @@ export const getSkillIconImage = (skillName: SkillName) => {
 };
 
 function ProgressCircleDark(props={
-	className: "",
 	diameter: 50,
 	progress: 0.7,
-	color: "rgba(0, 0, 0, 0.5)",
+	color: "rgba(0, 0, 0, 0.6)",
 }) {
 	const elemRadius = props.diameter / 2.0;
 	const outCircumference =  Math.PI * elemRadius;
@@ -53,46 +52,49 @@ function ProgressCircleDark(props={
 	const outDasharray = outFillLength + "," + outGapLength;
 	const innerCircle = <circle
 		r={elemRadius / 2}
-		cx={elemRadius}
-		cy={elemRadius}
+		cx={20}
+		cy={21}
 		fill="none"
 		stroke={props.color}
 		strokeWidth={elemRadius}
 		strokeDasharray={outDasharray}
 		strokeDashoffset={outCircumference/4 + outFillLength}/>
 	
-	const outerStroke = (1 - Math.SQRT2/2) * elemRadius
+	const outerStroke = elemRadius; // something large enough to make sure it covers the very corner
 	let outerCircle = <circle
 		r={elemRadius + outerStroke / 2}	
-		cx={elemRadius}
-		cy={elemRadius}
+		cx={20}
+		cy={21}
 		fill="none"
 		stroke={props.color}
 		strokeWidth={outerStroke}
 	/>
 
-	return <svg className={props.className} width={props.diameter} height={props.diameter}>
+	return <svg width={48} height={48} style={{
+		position: "absolute",
+		left: "50%",
+		marginLeft: -20,
+		pointerEvents: "none",
+	}}>
 		{innerCircle}
 		{outerCircle}
 	</svg>
 }
 
 function SecondaryProgressCircle(props={
-	className: "",
 	diameter: 50,
 	progress: 0.7,
 	color: "rgba(0, 0, 0, 0.5)",
 }) {
-	const elemRadius = props.diameter / 2.0;
-	const circleRadius = elemRadius * 0.8;
+	const circleRadius = props.diameter / 2;
 	const circumfrence = 2 * Math.PI * circleRadius;
 	const circleFillLength = circumfrence * props.progress;
 	const circleGapLength = circumfrence - circleFillLength;
 	const dashArray = circleFillLength + "," + circleGapLength;
 	const circle = <circle
 		r={circleRadius}
-		cx={elemRadius}
-		cy={elemRadius}
+		cx={20}
+		cy={21}
 		fill="none"
 		stroke={props.color}
 		strokeWidth={2}
@@ -100,13 +102,17 @@ function SecondaryProgressCircle(props={
 		strokeDasharray={dashArray}
 	/>
 
-	return <svg className={props.className} width={props.diameter} height={props.diameter}>
+	return <svg width={48} height={48} style={{
+		position: "absolute",
+		left: "50%",
+		marginLeft: -20,
+		pointerEvents: "none"
+	}}>
 		{circle}
 	</svg>
 }
 
 function ProgressCircleOutline(props={
-	className: "",
 	diameter: 50,
 	progress: 0.7,
 	color: "rgba(0, 0, 0, 0.5)",
@@ -117,35 +123,41 @@ function ProgressCircleOutline(props={
 	const outGapLength = outCircumference - outFillLength;
 	const outDasharray = outFillLength + "," + outGapLength;
 	const theta = 2 * Math.PI * props.progress;
+	const cdOutlineColor = "#ffffffef";
 	const outlineCircle = <circle
 		r={elemRadius}
-		cx={elemRadius}
-		cy={elemRadius}
+		cx={20}
+		cy={21}
 		fill="none"
-		stroke="#ffffffff"
+		stroke={cdOutlineColor}
 		strokeWidth={1}
 		strokeDasharray={outDasharray}
 		strokeDashoffset={outCircumference / 4}/>
 
 	const verticalLine = <line
-		x1={elemRadius}
-		y1={elemRadius}
-		x2={elemRadius}
-		y2={0}
-		stroke="#ffffffff"
+		x1={20}
+		y1={21}
+		x2={20}
+		y2={21 - elemRadius}
+		stroke={cdOutlineColor}
 		strokeWidth={1}
 	/>
 
 	const cdLine = <line
-		x1={elemRadius}
-		y1={elemRadius}
-		x2={elemRadius + elemRadius * Math.cos(theta - Math.PI/2)}
-		y2={elemRadius + elemRadius * Math.sin(theta - Math.PI/2)}
-		stroke="#ffffffff"
+		x1={20}
+		y1={21}
+		x2={20 + elemRadius * Math.cos(theta - Math.PI/2)}
+		y2={21 + elemRadius * Math.sin(theta - Math.PI/2)}
+		stroke={cdOutlineColor}
 		strokeWidth={1}
 	/>
 
-	return <svg className={props.className} width={props.diameter} height={props.diameter}>
+	return <svg width={48} height={48} style={{
+		position: "absolute",
+		left: "50%",
+		marginLeft: -20,
+		pointerEvents: "none"
+	}}>
 		{outlineCircle}
 		{verticalLine}
 		{cdLine}
@@ -290,7 +302,7 @@ class SkillButton extends React.Component {
 				// offset to account for stretch transformation + font size
 				bottom: 2,
 				right: 1,
-				zIndex: 2,
+				zIndex: 3,
 				position: "absolute",
 			}}>
 				{readyStacks}
@@ -298,33 +310,35 @@ class SkillButton extends React.Component {
 		} else {
 			stacksOverlay = <></>;
 		}
-		let progressShadeCircle = <ProgressCircleDark
-			className="cdProgress"
-			diameter={40}
+		const progressShadeCircle = <ProgressCircleDark
+			diameter={38}
 			progress={this.props.cdProgress}
-			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(0, 0, 0, 0.4)"}/>;
-		let progressOutline = <ProgressCircleOutline
-			className="cdProgress"
-			diameter={40}
+			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(0, 0, 0, 0.6)"}/>;
+		const progressOutline = <ProgressCircleOutline
+			diameter={38}
 			progress={this.props.cdProgress}
 			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(255, 255, 255, 1.0)"}
 			/>
 		const secondaryOutline = this.props.secondaryCdProgress && <SecondaryProgressCircle
-			className="cdProgress"
-			diameter={40}
+			diameter={32}
 			progress={this.props.secondaryCdProgress}
 			color={"rgba(250,186,47,255)"}
 			/>
+		const proc = <img
+			hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" alt="skill proc"
+			style={{
+				position: "absolute",
+				width: 44,
+				height: 44,
+				top: 0,
+				left: 2,
+				zIndex: 2
+			}}
+		/>;
 		let icon = <div onMouseEnter={this.handleMouseEnter}>
-			<div className={"skillIcon"} style={iconStyle}>
+			<div style={iconStyle}> {/* "overlay" layers */}
 				<img style={iconImgStyle} src={iconPath} alt={this.props.skillName}/>
-				<div style={{ // skill icon border
-					position: "absolute",
-					width: skillBoxPx,
-					height: skillBoxPx,
-					background: "url('https://miyehn.me/ffxiv-blm-rotation/misc/skillIcon_overlay.png') no-repeat"
-				}}></div>
-				<div style={{ // grey out
+				<div style={{
 					position: "absolute",
 					width: 40,
 					height: 41,
@@ -332,22 +346,23 @@ class SkillButton extends React.Component {
 					left: "50%",
 					marginLeft: -20,
 					borderRadius: 3,
+					overflow: "hidden",
 					zIndex: 1,
 					background: readyOverlay
-				}}></div>
+				}}>
+					{this.props.cdProgress > 1 - Debug.epsilon || !this.props.readyAsideFromCd || progressShadeCircle}
+					{this.props.cdProgress > 1 - Debug.epsilon || progressOutline}
+					{!this.props.secondaryCdProgress || this.props.secondaryCdProgress > 1 - Debug.epsilon || secondaryOutline}
+				</div>
+				<div style={{ // skill icon overlay
+					position: "absolute",
+					width: skillBoxPx,
+					height: skillBoxPx,
+					zIndex: 2,
+					background: "url('https://miyehn.me/ffxiv-blm-rotation/misc/skillIcon_overlay.png') no-repeat"
+				}}/>
 			</div>
-			{this.props.cdProgress > 1 - Debug.epsilon || !this.props.readyAsideFromCd || progressShadeCircle}
-			{this.props.cdProgress > 1 - Debug.epsilon || progressOutline}
-			{!this.props.secondaryCdProgress || this.props.secondaryCdProgress > 1 - Debug.epsilon || secondaryOutline}
-			<img
-				hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" alt="skill proc" style={{
-				position: "absolute",
-				width: 44,
-				height: 44,
-				top: 0,
-				left: 2,
-				zIndex: 1
-			}}/>
+			{proc}
 			{stacksOverlay}
 		</div>;
 		return <span
