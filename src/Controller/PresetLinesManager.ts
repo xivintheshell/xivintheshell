@@ -1,8 +1,8 @@
-import {ShellJob, ALL_JOBS, FileType, getCachedValue, setCachedValue} from "./Common";
-import {ActionNode, Line} from "./Record";
-import {getNormalizedSkillName, jobHasSkill} from "../Game/Skills";
-import {SkillName} from "../Game/Common";
-import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
+import { ShellJob, ALL_JOBS, FileType, getCachedValue, setCachedValue } from "./Common";
+import { ActionNode, Line } from "./Record";
+import { getNormalizedSkillName, jobHasSkill } from "../Game/Skills";
+import { SkillName } from "../Game/Common";
+import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
 
 type Fixme = any;
 
@@ -15,20 +15,17 @@ export function inferJobFromSkillNames(actions: SkillName[]): ShellJob {
 	let maxJob = ALL_JOBS[0];
 	let maxCount = 0;
 	ALL_JOBS.forEach((job) => {
-		const count = actions.reduce(
-			(acc, skill) => jobHasSkill(job, skill) ? acc + 1 : acc,
-			0,
-		);
+		const count = actions.reduce((acc, skill) => (jobHasSkill(job, skill) ? acc + 1 : acc), 0);
 		if (count > maxCount) {
 			maxJob = job;
 			maxCount = count;
 		}
 	});
 	return maxJob;
-};
+}
 
 export class PresetLinesManager {
-	presetLines: {actions: Line, job: ShellJob}[] = [];
+	presetLines: { actions: Line; job: ShellJob }[] = [];
 
 	constructor() {
 		this.#load();
@@ -51,8 +48,8 @@ export class PresetLinesManager {
 	serialized() {
 		return {
 			fileType: FileType.SkillSequencePresets,
-			presets: this.presetLines.map(({actions, job}) => actions.serialized()),
-		}
+			presets: this.presetLines.map(({ actions, job }) => actions.serialized()),
+		};
 	}
 
 	deserializeAndAppend(content: Fixme) {
@@ -76,11 +73,13 @@ export class PresetLinesManager {
 	}
 
 	getLinesForJob(currentJob: ShellJob): Line[] {
-		return this.presetLines.flatMap(({actions, job}) => job === currentJob ? [actions] : []);
+		return this.presetLines.flatMap(({ actions, job }) =>
+			job === currentJob ? [actions] : [],
+		);
 	}
 
 	addLine(line: Line, job: ShellJob) {
-		this.presetLines.push({actions: line, job: job});
+		this.presetLines.push({ actions: line, job: job });
 		updateSkillSequencePresetsView();
 		this.#save();
 	}
@@ -102,5 +101,4 @@ export class PresetLinesManager {
 		updateSkillSequencePresetsView();
 		this.#save();
 	}
-
 }

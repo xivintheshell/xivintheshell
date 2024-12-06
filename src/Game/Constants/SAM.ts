@@ -49,7 +49,7 @@ export enum SAMResourceType {
 	Fugetsu = "Fugetsu", // [0, 1]
 	Fuka = "Fuka", // [0, 1]
 	ZanshinReady = "Zanshin Ready", // [0, 1]
-	Tendo = "Tendo", // [0, 1]  
+	Tendo = "Tendo", // [0, 1]
 	OgiReady = "Ogi Namikiri Ready", // [0, 1]
 	TsubameGaeshiReady = "Tsubame-gaeshi Ready", // [0, 1]
 	ThirdEye = "Third Eye", // [0, 1]
@@ -58,7 +58,7 @@ export enum SAMResourceType {
 	Meditate = "Meditate", // [0, 5]
 	EnhancedEnpi = "Enhanced Enpi", // [0, 1]
 	HiganbanaDoT = "HiganbanaDoT", // [0, 1]
-	
+
 	Kenki = "Kenki", // [0, 100]
 	Setsu = "Setsu", // [0, 1]
 	Getsu = "Getsu", // [0, 1]

@@ -4,12 +4,12 @@ import {
 	ResourceBarProps,
 	ResourceCounterProps,
 	ResourceDisplayProps,
-	StatusPropsGenerator
+	StatusPropsGenerator,
 } from "../StatusDisplay";
-import {ResourceType} from "../../Game/Common";
-import {RDMState} from "../../Game/Jobs/RDM";
-import {getCurrentThemeColors} from "../ColorTheme";
-import {localize} from "../Localization";
+import { ResourceType } from "../../Game/Common";
+import { RDMState } from "../../Game/Jobs/RDM";
+import { getCurrentThemeColors } from "../ColorTheme";
+import { localize } from "../Localization";
 
 [
 	ResourceType.Acceleration,
@@ -34,16 +34,16 @@ import {localize} from "../Localization";
 
 export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 	override getEnemyBuffViewProps(): BuffProps[] {
-        const addleCountdown = this.state.resources.timeTillReady(ResourceType.Addle);
+		const addleCountdown = this.state.resources.timeTillReady(ResourceType.Addle);
 		return [
 			{
 				rscType: ResourceType.Addle,
 				onSelf: false,
 				enabled: true,
-				stacks:1,
+				stacks: 1,
 				timeRemaining: addleCountdown.toFixed(3),
-				className: addleCountdown > 0 ? "" : "hidden"
-			}
+				className: addleCountdown > 0 ? "" : "hidden",
+			},
 		];
 	}
 
@@ -56,7 +56,7 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 				enabled: true,
 				stacks: this.state.resources.get(rscType).availableAmount(),
 				timeRemaining: cd.toFixed(3),
-				className: cd > 0 ? "" : "hidden"
+				className: cd > 0 ? "" : "hidden",
 			};
 		};
 		return [
@@ -100,7 +100,7 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 				name: localize({
 					en: "MP tick",
 					zh: "跳蓝时间",
-					ja: "MPティック"
+					ja: "MPティック",
 				}),
 				color: colors.resources.manaTick,
 				progress: 1 - timeTillNextManaTick / 3,
@@ -108,21 +108,21 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 			} as ResourceBarProps,
 			{
 				kind: "bar",
-				name: localize({en: "white mana", zh: "白魔元"}),
+				name: localize({ en: "white mana", zh: "白魔元" }),
 				color: colors.rdm.whiteMana,
 				progress: whiteMana / 100,
 				valueString: whiteMana.toFixed(0),
 			} as ResourceBarProps,
 			{
 				kind: "bar",
-				name: localize({en: "black mana", zh: "黑魔元"}),
+				name: localize({ en: "black mana", zh: "黑魔元" }),
 				color: colors.rdm.blackMana,
 				progress: blackMana / 100,
 				valueString: blackMana.toFixed(0),
 			} as ResourceBarProps,
 			{
 				kind: "counter",
-				name: localize({en: "mana stacks", zh: "魔元集"}),
+				name: localize({ en: "mana stacks", zh: "魔元集" }),
 				color: colors.rdm.manaStack,
 				currentStacks: manaStacks,
 				maxStacks: 3,

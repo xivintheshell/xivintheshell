@@ -1,26 +1,26 @@
-import {Aspect, LevelSync, ResourceType, SkillName, TraitName} from './Common'
-import {ShellJob, ALL_JOBS} from "../Controller/Common";
-import {ActionNode} from "../Controller/Record";
-import {PlayerState, GameState} from "./GameState";
-import {Traits} from './Traits';
-import {makeCooldown, getResourceInfo, ResourceInfo} from "./Resources";
-import {PotencyModifier} from "./Potency";
+import { Aspect, LevelSync, ResourceType, SkillName, TraitName } from "./Common";
+import { ShellJob, ALL_JOBS } from "../Controller/Common";
+import { ActionNode } from "../Controller/Record";
+import { PlayerState, GameState } from "./GameState";
+import { Traits } from "./Traits";
+import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
+import { PotencyModifier } from "./Potency";
 
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
 export type SkillAutoReplace = {
-	trait: TraitName,
-	otherSkill: SkillName,
-}
+	trait: TraitName;
+	otherSkill: SkillName;
+};
 
 // Replace a skill on a hotbar, or replay, when a certain condition based on the game state is
 // satisfied the level requirement of the replacing skill is always checked before the condition;
 // multiple replacements for a single skill should have disjoint conditions.
 // This replacement check is NOT performed recursively.
 export type ConditionalSkillReplace<T extends PlayerState> = {
-	newSkill: SkillName,
-	condition: (state: Readonly<T>) => boolean,
-}
+	newSkill: SkillName;
+	condition: (state: Readonly<T>) => boolean;
+};
 
 /*
  * A ResourceCalculationFn is called when a skill usage is attempted, and determine properties
@@ -35,12 +35,15 @@ export type EffectFn<T> = (state: T, node: ActionNode) => void;
 export type PotencyModifierFn<T> = (state: Readonly<T>) => PotencyModifier[];
 
 // empty function
-export function NO_EFFECT<T extends PlayerState>(state: T, node: ActionNode) {};
+export function NO_EFFECT<T extends PlayerState>(state: T, node: ActionNode) {}
 
 /**
  * Create a new EffectFn that performs f1 followed by each function in fs.
  */
-export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, ...fs: Array<EffectFn<T>>): EffectFn<T> {
+export function combineEffects<T extends PlayerState>(
+	f1: EffectFn<T>,
+	...fs: Array<EffectFn<T>>
+): EffectFn<T> {
 	return (state: T, node: ActionNode) => {
 		f1(state, node);
 		for (const fn of fs) {
@@ -49,14 +52,17 @@ export function combineEffects<T extends PlayerState>(f1: EffectFn<T>, ...fs: Ar
 	};
 }
 
-export function combinePredicatesAnd<T extends PlayerState>(f1: StatePredicate<T>, ...fs: Array<StatePredicate<T>>): StatePredicate<T> {
+export function combinePredicatesAnd<T extends PlayerState>(
+	f1: StatePredicate<T>,
+	...fs: Array<StatePredicate<T>>
+): StatePredicate<T> {
 	return (state: T) => f1(state) && fs.every((pred) => pred(state));
 }
 
 export interface CooldownGroupProperies {
-	cdName: ResourceType, 
-	cooldown: number, 
-	maxCharges: number
+	cdName: ResourceType;
+	cooldown: number;
+	maxCharges: number;
 }
 
 /**
@@ -67,7 +73,7 @@ export interface CooldownGroupProperies {
 interface BaseSkill<T extends PlayerState> {
 	// === COSMETIC PROPERTIES ===
 	readonly name: SkillName;
-	readonly assetPath: string; // path relative to the Components/Asset/Skills folder 
+	readonly assetPath: string; // path relative to the Components/Asset/Skills folder
 	readonly unlockLevel: number;
 	readonly autoUpgrade?: SkillAutoReplace;
 	readonly autoDowngrade?: SkillAutoReplace;
@@ -105,7 +111,6 @@ interface BaseSkill<T extends PlayerState> {
 	// be specified here, and are automatically handled in GameState.useSkill.
 	readonly onConfirm: EffectFn<T>;
 
-
 	// Perform events at skill application. This function should always be called `applicationDelay`
 	// simulation seconds after `onConfirm`, assuming `onConfirm` did not produce any errors.
 	//
@@ -125,31 +130,31 @@ export type GCD<T extends PlayerState> = BaseSkill<T> & {
 
 	// Determine whether or not this cast can be made instant, based on the current game state.
 	readonly isInstantFn: StatePredicate<T>;
-}
+};
 
 export type Spell<T extends PlayerState> = GCD<T> & {
 	kind: "spell";
-}
+};
 
 export type Weaponskill<T extends PlayerState> = GCD<T> & {
 	kind: "weaponskill";
-}
+};
 
 export type Ability<T extends PlayerState> = BaseSkill<T> & {
 	kind: "ability";
-}
+};
 
 /**
  * A Skill represents an action that a player can take.
- * 
+ *
  * Each sub-type has a `kind` field, which should be assigned in the type's corresponding helper
  * constructor function. Switching on `kind` lets us apply different behavior for GCDs and oGCDs
  * with the type checker's blessing, for example:
- * 
+ *
  * if (skill.kind === "ability") {
  *   // do something with oGCDs
  * } else if (skill.kind === "weaponskill" || skill.kind === "spell") {
- *   // do something with GCDs 
+ *   // do something with GCDs
  *   // castTimeFn, recastTimeFn, etc. are valid here
  * }
  */
@@ -202,10 +207,12 @@ function setSkill<T extends PlayerState>(job: ShellJob, skillName: SkillName, sk
 
 ALL_JOBS.forEach((job) => skillMap.set(job, new Map()));
 
-
 // Helper function to transform an optional<number | function> that has a default number value into a function.
 // If no default is provided, 0 is used instead.
-function fnify<T extends PlayerState>(arg?: number | ResourceCalculationFn<T>, defaultValue?: number): ResourceCalculationFn<T> {
+function fnify<T extends PlayerState>(
+	arg?: number | ResourceCalculationFn<T>,
+	defaultValue?: number,
+): ResourceCalculationFn<T> {
 	if (arg === undefined) {
 		return (state) => defaultValue || 0;
 	} else if (typeof arg === "number") {
@@ -213,9 +220,11 @@ function fnify<T extends PlayerState>(arg?: number | ResourceCalculationFn<T>, d
 	} else {
 		return arg;
 	}
-};
+}
 
-function convertTraitPotencyArray<T extends PlayerState>(arr: Array<[TraitName, number]>): ResourceCalculationFn<T> {
+function convertTraitPotencyArray<T extends PlayerState>(
+	arr: Array<[TraitName, number]>,
+): ResourceCalculationFn<T> {
 	console.assert(arr.length > 0, `invalid trait potency array: ${arr}`);
 	return (state) => {
 		let currPotency = undefined;
@@ -227,18 +236,26 @@ function convertTraitPotencyArray<T extends PlayerState>(arr: Array<[TraitName, 
 				currPotency = potency;
 			}
 		}
-		console.assert(currPotency !== undefined, `no applicable potency at level ${level} found in array ${arr}`)
+		console.assert(
+			currPotency !== undefined,
+			`no applicable potency at level ${level} found in array ${arr}`,
+		);
 		return currPotency || 0;
 	};
 }
 
-export function getBasePotency<T extends PlayerState>(state: Readonly<T>, potencyArg?: number | Array<[TraitName, number]> | ResourceCalculationFn<T>): number {
-	return (Array.isArray(potencyArg) ? convertTraitPotencyArray(potencyArg) : fnify(potencyArg, 0))(state);
+export function getBasePotency<T extends PlayerState>(
+	state: Readonly<T>,
+	potencyArg?: number | Array<[TraitName, number]> | ResourceCalculationFn<T>,
+): number {
+	return (
+		Array.isArray(potencyArg) ? convertTraitPotencyArray(potencyArg) : fnify(potencyArg, 0)
+	)(state);
 }
 
 function normalizeAssetPath(job: ShellJob, name: SkillName) {
 	// Remove colons from the path because it's hard to put those into a file name
-	return `${job}/${name.replace(':', '')}.png`;
+	return `${job}/${name.replace(":", "")}.png`;
 }
 
 /**
@@ -257,37 +274,44 @@ function normalizeAssetPath(job: ShellJob, name: SkillName) {
  * - isInstantFn: function always returning true
  * - onConfirm: empty function
  * - onApplication: empty function
- * 
+ *
  * TODO: If we ever branch out to non-BLM/PCT jobs, we should distinguish between
  * spells and weaponskills for sps/sks calculation purposes.
  */
-export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, params: Partial<{
-	assetPath: string,
-	autoUpgrade: SkillAutoReplace,
-	autoDowngrade: SkillAutoReplace,
-	aspect: Aspect,
-	replaceIf: ConditionalSkillReplace<T>[],
-	startOnHotbar: boolean,
-	highlightIf: StatePredicate<T>,
-	castTime: number | ResourceCalculationFn<T>,
-	recastTime: number | ResourceCalculationFn<T>,
-	manaCost: number | ResourceCalculationFn<T>,
-	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
-	jobPotencyModifiers: PotencyModifierFn<T>,
-	applicationDelay: number,
-	validateAttempt: StatePredicate<T>,
-	isInstantFn: StatePredicate<T>,
-	onConfirm: EffectFn<T>,
-	onApplication: EffectFn<T>,
-	secondaryCooldown?: CooldownGroupProperies,
-}>): Spell<T> {
+export function makeSpell<T extends PlayerState>(
+	jobs: ShellJob | ShellJob[],
+	name: SkillName,
+	unlockLevel: number,
+	params: Partial<{
+		assetPath: string;
+		autoUpgrade: SkillAutoReplace;
+		autoDowngrade: SkillAutoReplace;
+		aspect: Aspect;
+		replaceIf: ConditionalSkillReplace<T>[];
+		startOnHotbar: boolean;
+		highlightIf: StatePredicate<T>;
+		castTime: number | ResourceCalculationFn<T>;
+		recastTime: number | ResourceCalculationFn<T>;
+		manaCost: number | ResourceCalculationFn<T>;
+		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		jobPotencyModifiers: PotencyModifierFn<T>;
+		applicationDelay: number;
+		validateAttempt: StatePredicate<T>;
+		isInstantFn: StatePredicate<T>;
+		onConfirm: EffectFn<T>;
+		onApplication: EffectFn<T>;
+		secondaryCooldown?: CooldownGroupProperies;
+	}>,
+): Spell<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
-		assetPath: params.assetPath ?? (jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
+		assetPath:
+			params.assetPath ??
+			(jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
@@ -310,35 +334,42 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	return info;
-};
+}
 
-export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, params: Partial<{
-	assetPath: string,
-	autoUpgrade: SkillAutoReplace,
-	autoDowngrade: SkillAutoReplace,
-	aspect: Aspect,
-	replaceIf: ConditionalSkillReplace<T>[],
-	startOnHotbar: boolean,
-	highlightIf: StatePredicate<T>,
-	castTime: number | ResourceCalculationFn<T>,
-	recastTime: number | ResourceCalculationFn<T>,
-	manaCost: number | ResourceCalculationFn<T>,
-	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
-	jobPotencyModifiers: PotencyModifierFn<T>,
-	applicationDelay: number,
-	validateAttempt: StatePredicate<T>,
-	isInstantFn: StatePredicate<T>,
-	onConfirm: EffectFn<T>,
-	onApplication: EffectFn<T>,
-	secondaryCooldown?: CooldownGroupProperies,
-}>): Weaponskill<T> {
+export function makeWeaponskill<T extends PlayerState>(
+	jobs: ShellJob | ShellJob[],
+	name: SkillName,
+	unlockLevel: number,
+	params: Partial<{
+		assetPath: string;
+		autoUpgrade: SkillAutoReplace;
+		autoDowngrade: SkillAutoReplace;
+		aspect: Aspect;
+		replaceIf: ConditionalSkillReplace<T>[];
+		startOnHotbar: boolean;
+		highlightIf: StatePredicate<T>;
+		castTime: number | ResourceCalculationFn<T>;
+		recastTime: number | ResourceCalculationFn<T>;
+		manaCost: number | ResourceCalculationFn<T>;
+		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		jobPotencyModifiers: PotencyModifierFn<T>;
+		applicationDelay: number;
+		validateAttempt: StatePredicate<T>;
+		isInstantFn: StatePredicate<T>;
+		onConfirm: EffectFn<T>;
+		onApplication: EffectFn<T>;
+		secondaryCooldown?: CooldownGroupProperies;
+	}>,
+): Weaponskill<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
 	const info: Weaponskill<T> = {
 		kind: "weaponskill",
 		name: name,
-		assetPath: params.assetPath ?? (jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
+		assetPath:
+			params.assetPath ??
+			(jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
@@ -361,11 +392,11 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.secondaryCooldown !== undefined) {
-		const {cdName, cooldown, maxCharges} = params.secondaryCooldown
+		const { cdName, cooldown, maxCharges } = params.secondaryCooldown;
 		jobs.forEach((job) => makeCooldown(job, cdName, cooldown!, maxCharges));
 	}
 	return info;
-};
+}
 
 /**
  * Declare an oGCD ability.
@@ -384,31 +415,39 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
  * - cooldown: the cooldown (in seconds) of the ability; no resourceInfos entry is added if this is unspecified
  * - maxCharges: the maximum number of charges an ability has, default 1
  */
-export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, cdName: ResourceType, params: Partial<{
-	aspect: Aspect,
-	assetPath: string,
-	autoUpgrade: SkillAutoReplace,
-	autoDowngrade: SkillAutoReplace,
-	replaceIf: ConditionalSkillReplace<T>[],
-	startOnHotbar: boolean,
-	highlightIf: StatePredicate<T>,
-	potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
-	jobPotencyModifiers: PotencyModifierFn<T>,
-	applicationDelay: number,
-	validateAttempt: StatePredicate<T>,
-	onConfirm: EffectFn<T>,
-	onApplication: EffectFn<T>,
-	cooldown: number,
-	maxCharges: number,
-	secondaryCooldown?: CooldownGroupProperies,
-}>): Ability<T> {
+export function makeAbility<T extends PlayerState>(
+	jobs: ShellJob | ShellJob[],
+	name: SkillName,
+	unlockLevel: number,
+	cdName: ResourceType,
+	params: Partial<{
+		aspect: Aspect;
+		assetPath: string;
+		autoUpgrade: SkillAutoReplace;
+		autoDowngrade: SkillAutoReplace;
+		replaceIf: ConditionalSkillReplace<T>[];
+		startOnHotbar: boolean;
+		highlightIf: StatePredicate<T>;
+		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		jobPotencyModifiers: PotencyModifierFn<T>;
+		applicationDelay: number;
+		validateAttempt: StatePredicate<T>;
+		onConfirm: EffectFn<T>;
+		onApplication: EffectFn<T>;
+		cooldown: number;
+		maxCharges: number;
+		secondaryCooldown?: CooldownGroupProperies;
+	}>,
+): Ability<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
 	const info: Ability<T> = {
 		kind: "ability",
 		name: name,
-		assetPath: params.assetPath ?? (jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
+		assetPath:
+			params.assetPath ??
+			(jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
@@ -431,7 +470,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		jobs.forEach((job) => makeCooldown(job, cdName, params.cooldown!, params.maxCharges ?? 1));
 	}
 	if (params.secondaryCooldown !== undefined) {
-		const {cdName, cooldown, maxCharges} = params.secondaryCooldown
+		const { cdName, cooldown, maxCharges } = params.secondaryCooldown;
 		jobs.forEach((job) => makeCooldown(job, cdName, cooldown!, maxCharges));
 	}
 	return info;
@@ -451,41 +490,38 @@ export function makeResourceAbility<T extends PlayerState>(
 	unlockLevel: number,
 	cdName: ResourceType,
 	params: {
-		rscType: ResourceType,
-		autoUpgrade?: SkillAutoReplace,
-		autoDowngrade?: SkillAutoReplace,
-		replaceIf?: ConditionalSkillReplace<T>[],
-		startOnHotbar?: boolean,
-		highlightIf?: StatePredicate<T>,
-		applicationDelay: number,
-		duration?: number | ResourceCalculationFn<T>, // TODO push to resources
-		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
-		jobPotencyModifiers?: PotencyModifierFn<T>,
-		validateAttempt?: StatePredicate<T>,
-		onConfirm?: EffectFn<T>,
-		onApplication?: EffectFn<T>,
-		assetPath?: string,
-		cooldown: number,
-		maxCharges?: number,
-		secondaryCooldown?: CooldownGroupProperies,
-	}
+		rscType: ResourceType;
+		autoUpgrade?: SkillAutoReplace;
+		autoDowngrade?: SkillAutoReplace;
+		replaceIf?: ConditionalSkillReplace<T>[];
+		startOnHotbar?: boolean;
+		highlightIf?: StatePredicate<T>;
+		applicationDelay: number;
+		duration?: number | ResourceCalculationFn<T>; // TODO push to resources
+		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		jobPotencyModifiers?: PotencyModifierFn<T>;
+		validateAttempt?: StatePredicate<T>;
+		onConfirm?: EffectFn<T>;
+		onApplication?: EffectFn<T>;
+		assetPath?: string;
+		cooldown: number;
+		maxCharges?: number;
+		secondaryCooldown?: CooldownGroupProperies;
+	},
 ): Ability<T> {
 	// When the ability is applied:
 	// 1. Immediate gain resources
 	// 2. Enqueue a resource drop event after a duration, overriding an existing timer if needed
-	const onApplication = combineEffects(
-		(state: T, node: ActionNode) => {
-			const resource = state.resources.get(params.rscType);
-			const duration = params.duration ?? (getResourceInfo(state.job, params.rscType) as ResourceInfo).maxTimeout;
-			const durationFn: ResourceCalculationFn<T> = (typeof duration === "number") ? ((state: T) => duration) : duration;
-			resource.gain(resource.maxValue);
-			state.enqueueResourceDrop(
-				params.rscType,
-				durationFn(state),
-			);
-		},
-		params?.onApplication ?? NO_EFFECT, 
-	);
+	const onApplication = combineEffects((state: T, node: ActionNode) => {
+		const resource = state.resources.get(params.rscType);
+		const duration =
+			params.duration ??
+			(getResourceInfo(state.job, params.rscType) as ResourceInfo).maxTimeout;
+		const durationFn: ResourceCalculationFn<T> =
+			typeof duration === "number" ? (state: T) => duration : duration;
+		resource.gain(resource.maxValue);
+		state.enqueueResourceDrop(params.rscType, durationFn(state));
+	}, params?.onApplication ?? NO_EFFECT);
 	return makeAbility(jobs, name, unlockLevel, cdName, {
 		potency: params.potency,
 		autoUpgrade: params.autoUpgrade,
@@ -501,9 +537,9 @@ export function makeResourceAbility<T extends PlayerState>(
 		assetPath: params.assetPath,
 		cooldown: params.cooldown,
 		maxCharges: params.maxCharges,
-		secondaryCooldown: params.secondaryCooldown
+		secondaryCooldown: params.secondaryCooldown,
 	});
-};
+}
 
 // Dummy skill to avoid a hard crash when a skill info isn't found
 const NEVER_SKILL = makeAbility(ALL_JOBS, SkillName.Never, 1, ResourceType.Never, {
@@ -527,7 +563,11 @@ export class SkillsList<T extends PlayerState> {
 	}
 }
 
-export function getAutoReplacedSkillName(job: ShellJob, skillName: SkillName, level: LevelSync): SkillName {
+export function getAutoReplacedSkillName(
+	job: ShellJob,
+	skillName: SkillName,
+	level: LevelSync,
+): SkillName {
 	let skill = getSkill(job, skillName);
 	// upgrade: if level >= upgrade options
 	while (skill.autoUpgrade && Traits.hasUnlocked(skill.autoUpgrade.trait, level)) {
@@ -540,7 +580,10 @@ export function getAutoReplacedSkillName(job: ShellJob, skillName: SkillName, le
 	return skill.name;
 }
 
-export function getConditionalReplacement<T extends PlayerState>(key: SkillName, state: T): SkillName {
+export function getConditionalReplacement<T extends PlayerState>(
+	key: SkillName,
+	state: T,
+): SkillName {
 	// Attempt to replace a skill if required by the current state
 	const skill = getSkill(state.job, key);
 	for (const candidate of skill.replaceIf) {
@@ -558,21 +601,21 @@ export function getConditionalReplacement<T extends PlayerState>(key: SkillName,
 	return skill.name;
 }
 
-export class DisplayedSkills  {
+export class DisplayedSkills {
 	#skills: SkillName[];
 
 	constructor(job: ShellJob, level: LevelSync) {
 		this.#skills = [];
-		console.assert(skillMap.has(job), `No skill map found for job: ${job}`)
+		console.assert(skillMap.has(job), `No skill map found for job: ${job}`);
 		for (const skillInfo of skillMap.get(job)!.values()) {
 			// Leave off abilities that are above the current level sync.
 			// Also leave off any abilities that auto-downgrade, like HF2/HB2/HT,
 			// since their downgrade versions will already be on the hotbar.
 			if (
-				skillInfo.name !== SkillName.Never
-				&& level >= skillInfo.unlockLevel
-				&& skillInfo.autoDowngrade === undefined
-				&& skillInfo.startOnHotbar
+				skillInfo.name !== SkillName.Never &&
+				level >= skillInfo.unlockLevel &&
+				skillInfo.autoDowngrade === undefined &&
+				skillInfo.startOnHotbar
 			) {
 				this.#skills.push(getAutoReplacedSkillName(job, skillInfo.name, level));
 			}

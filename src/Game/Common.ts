@@ -1,11 +1,52 @@
-import {BLMSkillName, BLMResourceType, BLMCooldownType, BLMTraitList, BLMTraitName} from "./Constants/BLM";
-import {PCTSkillName, PCTResourceType, PCTCooldownType, PCTTraitList, PCTTraitName } from "./Constants/PCT";
-import {RDMSkillName, RDMResourceType, RDMCooldownType, RDMTraitList, RDMTraitName} from "./Constants/RDM";
-import {DNCSkillName, DNCResourceType, DNCCooldownType, DNCTraitList, DNCTraitName} from "./Constants/DNC";
-import {SAMSkillName, SAMResourceType, SAMCooldownType, SAMTraitList, SAMTraitName} from "./Constants/SAM";
-import {MCHSkillName, MCHResourceType, MCHCooldownType, MCHTraitList, MCHTraitName} from "./Constants/MCH";
-import {RPRSkillName, RPRResourceType, RPRCooldownType, RPRTraitList, RPRTraitName} from "./Constants/RPR";
-
+import {
+	BLMSkillName,
+	BLMResourceType,
+	BLMCooldownType,
+	BLMTraitList,
+	BLMTraitName,
+} from "./Constants/BLM";
+import {
+	PCTSkillName,
+	PCTResourceType,
+	PCTCooldownType,
+	PCTTraitList,
+	PCTTraitName,
+} from "./Constants/PCT";
+import {
+	RDMSkillName,
+	RDMResourceType,
+	RDMCooldownType,
+	RDMTraitList,
+	RDMTraitName,
+} from "./Constants/RDM";
+import {
+	DNCSkillName,
+	DNCResourceType,
+	DNCCooldownType,
+	DNCTraitList,
+	DNCTraitName,
+} from "./Constants/DNC";
+import {
+	SAMSkillName,
+	SAMResourceType,
+	SAMCooldownType,
+	SAMTraitList,
+	SAMTraitName,
+} from "./Constants/SAM";
+import {
+	MCHSkillName,
+	MCHResourceType,
+	MCHCooldownType,
+	MCHTraitList,
+	MCHTraitName,
+} from "./Constants/MCH";
+import {
+	RPRSkillName,
+	RPRResourceType,
+	RPRCooldownType,
+	RPRTraitList,
+	RPRTraitName,
+} from "./Constants/RPR";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -29,13 +70,13 @@ export const enum Aspect {
 	Ice = "Ice",
 	Lightning = "Lightning",
 	Physical = "Physical",
-	Other = "Other"
+	Other = "Other",
 }
 
 export const enum ProcMode {
 	RNG = "RNG",
 	Never = "Never",
-	Always = "Always"
+	Always = "Always",
 }
 
 enum GeneralSkillName {
@@ -71,10 +112,11 @@ export const SkillName = {
 	...MCHSkillName,
 	...RPRSkillName,
 	...GeneralSkillName,
-}
+};
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export type SkillName = GeneralSkillName
+export type SkillName =
+	| GeneralSkillName
 	| BLMSkillName
 	| PCTSkillName
 	| RDMSkillName
@@ -90,7 +132,7 @@ export const enum SkillReadyStatus {
 	NotInCombat = "must be in combat (after first damage application)",
 	RequirementsNotMet = "requirements not met",
 	SkillNotUnlocked = "skill not unlocked at provided level",
-	BuffNoLongerAvailable = "buff no longer available"
+	BuffNoLongerAvailable = "buff no longer available",
 }
 
 // Add any buffs that you want to have highlighted on the timeline here.
@@ -180,11 +222,12 @@ const CooldownType = {
 	...DNCCooldownType,
 	...SAMCooldownType,
 	...MCHCooldownType,
-	...RPRCooldownType
+	...RPRCooldownType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-type CooldownType = GeneralCooldownType
+type CooldownType =
+	| GeneralCooldownType
 	| BLMCooldownType
 	| PCTCooldownType
 	| RDMCooldownType
@@ -206,7 +249,8 @@ export const ResourceType = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export type ResourceType = CooldownType
+export type ResourceType =
+	| CooldownType
 	| GeneralResourceType
 	| BLMResourceType
 	| PCTResourceType
@@ -246,7 +290,7 @@ export const enum WarningType {
 }
 
 export enum ReservedTraitName {
-	Never = 0
+	Never = 0,
 }
 
 export enum RoleTraitName {
@@ -279,22 +323,23 @@ const GeneralTraitList: Array<[RoleTraitName, number]> = [
 	[RoleTraitName.EnhancedRampart, 94],
 	[RoleTraitName.MeleeMasteryIITank, 94],
 	[RoleTraitName.EnhancedReprisal, 98],
-]
+];
 
 export const TraitName = {
-	...RoleTraitName,  //  100-1000
-	...BLMTraitName,   // 1000-1999
-	...PCTTraitName,   // 2000-2999
-	...DNCTraitName,   // 3000-3999
-	...RDMTraitName,   // 4000-4999
-	...SAMTraitName,   // 5000-5999
-	...MCHTraitName,   // 6000-6999
-	...RPRTraitName,   // 7000-7999
+	...RoleTraitName, //  100-1000
+	...BLMTraitName, // 1000-1999
+	...PCTTraitName, // 2000-2999
+	...DNCTraitName, // 3000-3999
+	...RDMTraitName, // 4000-4999
+	...SAMTraitName, // 5000-5999
+	...MCHTraitName, // 6000-6999
+	...RPRTraitName, // 7000-7999
 	...ReservedTraitName, // 0, for now
-}
+};
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export type TraitName = RoleTraitName
+export type TraitName =
+	| RoleTraitName
 	| BLMTraitName
 	| PCTTraitName
 	| DNCTraitName
@@ -313,4 +358,4 @@ export const TraitList: Array<[TraitName, number]> = [
 	...SAMTraitList,
 	...MCHTraitList,
 	...RPRTraitList,
-]
+];
