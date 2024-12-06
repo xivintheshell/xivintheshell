@@ -13,7 +13,9 @@ export class Trait {
 export class Traits {
 	static map: Map<TraitName, Trait> = this.buildMap();
 	static buildMap() {
-		return new Map<TraitName,Trait>(TraitList.map(([name, level]) => [name, new Trait(name, level)]));
+		return new Map<TraitName, Trait>(
+			TraitList.map(([name, level]) => [name, new Trait(name, level)]),
+		);
 	}
 
 	static hasUnlocked(traitName: TraitName, level: LevelSync) {

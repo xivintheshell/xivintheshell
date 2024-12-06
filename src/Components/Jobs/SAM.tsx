@@ -4,12 +4,12 @@ import {
 	ResourceBarProps,
 	ResourceCounterProps,
 	ResourceDisplayProps,
-	StatusPropsGenerator
+	StatusPropsGenerator,
 } from "../StatusDisplay";
-import {ResourceType} from "../../Game/Common";
-import {SAMState} from "../../Game/Jobs/SAM";
-import {getCurrentThemeColors} from "../../Components/ColorTheme";
-import {localize} from "../../Components/Localization";
+import { ResourceType } from "../../Game/Common";
+import { SAMState } from "../../Game/Jobs/SAM";
+import { getCurrentThemeColors } from "../../Components/ColorTheme";
+import { localize } from "../../Components/Localization";
 
 [
 	ResourceType.MeikyoShisui,
@@ -40,7 +40,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 				enabled: true,
 				stacks: 1,
 				timeRemaining: DoTCountdown.toFixed(3),
-				className: DoTCountdown > 0 ? "" : "hidden"
+				className: DoTCountdown > 0 ? "" : "hidden",
 			},
 			{
 				rscType: ResourceType.Feint,
@@ -48,8 +48,8 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 				enabled: true,
 				stacks: 1,
 				timeRemaining: feintCountdown.toFixed(3),
-				className: feintCountdown > 0 ? "" : "hidden"
-			}
+				className: feintCountdown > 0 ? "" : "hidden",
+			},
 		];
 	}
 
@@ -63,7 +63,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 				enabled: true,
 				stacks: resources.get(rscType).availableAmount(),
 				timeRemaining: cd.toFixed(3),
-				className: cd > 0 ? "" : "hidden"
+				className: cd > 0 ? "" : "hidden",
 			};
 		};
 
@@ -122,14 +122,14 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			},
 			{
 				kind: "bar",
-				name: localize({en: "kenki"}),
+				name: localize({ en: "kenki" }),
 				color: colors.sam.kenki,
 				progress: kenki / 100,
 				valueString: kenki.toFixed(0),
 			} as ResourceBarProps,
 			{
 				kind: "counter",
-				name: localize({en: "meditation"}),
+				name: localize({ en: "meditation" }),
 				color: colors.sam.meditation,
 				currentStacks: meditation,
 				maxStacks: 3,

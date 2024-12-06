@@ -1,20 +1,20 @@
 export const enum ReplayMode {
 	Exact = "Exact",
 	SkillSequence = "SkillSequence",
-	Edited = "Edited"
+	Edited = "Edited",
 }
 
 export const enum FileType {
 	Record = "Record",
 	SkillSequencePresets = "SkillSequencePresets",
 	MarkerTrackIndividual = "MarkerTrackIndividual",
-	MarkerTracksCombined = "MarkerTracksCombined"
+	MarkerTracksCombined = "MarkerTracksCombined",
 }
 
 export const enum TickMode {
 	RealTime = 0, // deleted feature
 	RealTimeAutoPause = 1,
-	Manual = 2
+	Manual = 2,
 }
 
 export const enum ShellVersion {
@@ -35,7 +35,7 @@ export const enum ShellJob {
 // can't get this automatically from a const enum
 // jobs are in the order they appear in the job guide
 export const ALL_JOBS = [
-	ShellJob.SAM,	
+	ShellJob.SAM,
 	ShellJob.RPR,
 	ShellJob.MCH,
 	ShellJob.DNC,
@@ -50,24 +50,15 @@ export const MELEE_JOBS: ShellJob[] = [ShellJob.SAM, ShellJob.RPR];
 export const PHYSICAL_RANGED_JOBS: ShellJob[] = [ShellJob.DNC, ShellJob.MCH];
 export const CASTER_JOBS: ShellJob[] = [ShellJob.BLM, ShellJob.PCT, ShellJob.RDM];
 
-export const SKS_JOBS = [
-	...TANK_JOBS, ...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS
-]
+export const SKS_JOBS = [...TANK_JOBS, ...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS];
 
-export const SPS_JOBS = [
-	...HEALER_JOBS, ...CASTER_JOBS
-]
+export const SPS_JOBS = [...HEALER_JOBS, ...CASTER_JOBS];
 
-export const TESTING_JOBS = [
-	ShellJob.SAM,
-	ShellJob.RPR,
-	ShellJob.DNC,
-	ShellJob.MCH,
-];
+export const TESTING_JOBS = [ShellJob.SAM, ShellJob.RPR, ShellJob.DNC, ShellJob.MCH];
 
 export const enum Expansion {
 	EW = "EW",
-	DT = "DT"
+	DT = "DT",
 }
 
 export const ShellInfo = {
@@ -83,31 +74,28 @@ export function containsEwCacheContent(): boolean {
 const thisExpansion: Expansion = Expansion.DT; // change here in ew archive
 
 export function getCachedValue(key: string): string | null {
-
 	// 2x reads from localStorage but should be fine...?
 	let current = localStorage.getItem(thisExpansion + "." + key);
 	let noPrefix = localStorage.getItem(key);
 
-	if (noPrefix !== null) { // found something old
+	if (noPrefix !== null) {
+		// found something old
 
 		if (thisExpansion === Expansion.DT) {
 			// prompt user to go to the archive version to convert these
 			bContainsEwCacheContent = true;
 			return current;
-
 		} else if (thisExpansion === Expansion.EW) {
 			// we are in archive (EW): convert to EW and return
 			setCachedValue(key, noPrefix);
 			localStorage.removeItem(key);
 			console.log("migrated localStorage item: " + key);
 			return noPrefix;
-
 		} else {
 			// shouldn't get here
 			console.assert(false);
 			return null;
 		}
-
 	} else {
 		return current;
 	}
@@ -123,7 +111,7 @@ export function removeCachedValue(key: string) {
 
 export function clearCachedValues() {
 	// only clear values from current expansion
-	Object.keys(localStorage).forEach(key => {
+	Object.keys(localStorage).forEach((key) => {
 		if (key.startsWith(thisExpansion + ".")) {
 			localStorage.removeItem(key);
 		}

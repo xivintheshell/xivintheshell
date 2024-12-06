@@ -1,12 +1,6 @@
-import {Aspect, BuffType, Debug, ResourceType, SkillName, SkillReadyStatus} from "./Common"
-import {GameConfig} from "./GameConfig"
-import {
-	DisplayedSkills,
-	SkillsList,
-	Spell,
-	Weaponskill,
-	Ability,
-} from "./Skills"
+import { Aspect, BuffType, Debug, ResourceType, SkillName, SkillReadyStatus } from "./Common";
+import { GameConfig } from "./GameConfig";
+import { DisplayedSkills, SkillsList, Spell, Weaponskill, Ability } from "./Skills";
 import {
 	getAllResources,
 	getResourceInfo,
@@ -17,21 +11,21 @@ import {
 	EventTag,
 	Resource,
 	ResourceInfo,
-	ResourceState
-} from "./Resources"
+	ResourceState,
+} from "./Resources";
 
-import {controller} from "../Controller/Controller";
-import {ActionNode} from "../Controller/Record";
-import {CASTER_JOBS, HEALER_JOBS, ShellJob, SKS_JOBS, SPS_JOBS} from "../Controller/Common";
-import {Modifiers, Potency, PotencyModifier, PotencyModifierType} from "./Potency";
-import {Buff} from "./Buffs";
+import { controller } from "../Controller/Controller";
+import { ActionNode } from "../Controller/Record";
+import { CASTER_JOBS, HEALER_JOBS, ShellJob, SKS_JOBS, SPS_JOBS } from "../Controller/Common";
+import { Modifiers, Potency, PotencyModifier, PotencyModifierType } from "./Potency";
+import { Buff } from "./Buffs";
 
-import type {BLMState} from "./Jobs/BLM";
-import type {SAMState} from "./Jobs/SAM";
-import {SkillButtonViewInfo} from "../Components/Skills";
+import type { BLMState } from "./Jobs/BLM";
+import type { SAMState } from "./Jobs/SAM";
+import { SkillButtonViewInfo } from "../Components/Skills";
 
 //https://www.npmjs.com/package/seedrandom
-let SeedRandom = require('seedrandom');
+let SeedRandom = require("seedrandom");
 
 type RNG = any;
 
@@ -64,7 +58,9 @@ export abstract class GameState {
 		getAllResources(this.job).forEach((info, rsc) => {
 			if (info.isCoolDown) {
 				// always start cooldowns at their max stacks (overrides will be applied later)
-				this.cooldowns.set(new CoolDown(rsc, info.cdPerStack, info.maxStacks, info.maxStacks));
+				this.cooldowns.set(
+					new CoolDown(rsc, info.cdPerStack, info.maxStacks, info.maxStacks),
+				);
 			} else {
 				this.resources.set(new Resource(rsc, info.maxValue, info.defaultValue));
 			}
@@ -73,12 +69,14 @@ export abstract class GameState {
 		// in resource overrides
 		let adjustedGCD = 2.5;
 		if (SKS_JOBS.includes(this.job)) {
-			adjustedGCD = config.adjustedSksGCD()
+			adjustedGCD = config.adjustedSksGCD();
 		}
 		if (SPS_JOBS.includes(this.job)) {
-			adjustedGCD = config.adjustedGCD()
+			adjustedGCD = config.adjustedGCD();
 		}
-		this.cooldowns.set(new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(adjustedGCD), 1, 1));
+		this.cooldowns.set(
+			new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(adjustedGCD), 1, 1),
+		);
 
 		this.resources.set(new Resource(ResourceType.Movement, 1, 1));
 		this.resources.set(new Resource(ResourceType.NotAnimationLocked, 1, 1));
@@ -118,23 +116,26 @@ export abstract class GameState {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
-			let recurringManaRegen = ()=>{
+			let recurringManaRegen = () => {
 				// mana regen
 				let mana = this.resources.get(ResourceType.Mana);
 				let gainAmount = this.captureManaRegenAmount();
 				mana.gain(gainAmount);
 				let currentAmount = mana.availableAmount();
-				controller.reportManaTick(game.time, "+" + gainAmount + " (MP="+currentAmount+")");
+				controller.reportManaTick(
+					game.time,
+					"+" + gainAmount + " (MP=" + currentAmount + ")",
+				);
 				// queue the next tick
 				this.resources.addResourceEvent({
 					rscType: ResourceType.Mana,
 					name: "mana tick",
 					delay: 3,
-					fnOnRsc: rsc=>{
+					fnOnRsc: (rsc) => {
 						recurringManaRegen();
 					},
 					// would ideally want to only have ManaGain tag if there's no AF... too much work for now
-					tags: [EventTag.MpTick, EventTag.ManaGain]
+					tags: [EventTag.MpTick, EventTag.ManaGain],
 				});
 			};
 			this.resources.addResourceEvent({
@@ -143,7 +144,7 @@ export abstract class GameState {
 				delay: this.config.timeTillFirstManaTick,
 				fnOnRsc: recurringManaRegen,
 				// would ideally want to only have ManaGain tag if there's no AF... too much work for now
-				tags: [EventTag.MpTick, EventTag.ManaGain]
+				tags: [EventTag.MpTick, EventTag.ManaGain],
 			});
 		}
 
@@ -188,45 +189,60 @@ export abstract class GameState {
 		if ([...HEALER_JOBS, ...CASTER_JOBS].includes(this.job)) {
 			let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
 			while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;
-			let firstLucidTickEvt = new Event("initial lucid tick", timeTillFirstLucidTick, recurringLucidTick);
+			let firstLucidTickEvt = new Event(
+				"initial lucid tick",
+				timeTillFirstLucidTick,
+				recurringLucidTick,
+			);
 			firstLucidTickEvt.addTag(EventTag.LucidTick);
 			this.addEvent(firstLucidTickEvt);
 		}
 	}
 
 	// advance game state by this much time
-	tick(deltaTime: number, prematureStopCondition=()=>{ return false; }) {
+	tick(
+		deltaTime: number,
+		prematureStopCondition = () => {
+			return false;
+		},
+	) {
 		//======== events ========
 		let cumulativeDeltaTime = 0;
-		while (cumulativeDeltaTime < deltaTime && this.eventsQueue.length > 0 && !prematureStopCondition())
-		{
+		while (
+			cumulativeDeltaTime < deltaTime &&
+			this.eventsQueue.length > 0 &&
+			!prematureStopCondition()
+		) {
 			// make sure events are in proper order (qol: optimize using a priority queue...)
-			this.eventsQueue.sort((a, b)=>{return a.timeTillEvent - b.timeTillEvent;})
+			this.eventsQueue.sort((a, b) => {
+				return a.timeTillEvent - b.timeTillEvent;
+			});
 
 			// time to safely advance without skipping anything or ticking past deltaTime
-			let timeToTick = Math.min(deltaTime - cumulativeDeltaTime, this.eventsQueue[0].timeTillEvent);
+			let timeToTick = Math.min(
+				deltaTime - cumulativeDeltaTime,
+				this.eventsQueue[0].timeTillEvent,
+			);
 			cumulativeDeltaTime = Math.min(cumulativeDeltaTime + timeToTick, deltaTime);
 
 			// advance time
 			this.time += timeToTick;
 			this.cooldowns.tick(timeToTick);
-			if (Debug.consoleLogEvents) console.log("====== tick " + timeToTick + " now at " + this.time);
+			if (Debug.consoleLogEvents)
+				console.log("====== tick " + timeToTick + " now at " + this.time);
 
 			// make a deep copy of events to advance for this round...
 			const eventsToExecuteOld = [];
-			for (let i = 0; i < this.eventsQueue.length; i++)
-			{
+			for (let i = 0; i < this.eventsQueue.length; i++) {
 				eventsToExecuteOld.push(this.eventsQueue[i]);
 			}
 			// actually tick them (which might enqueue new events)
 			let executedEvents = 0;
-			eventsToExecuteOld.forEach(e=>{
+			eventsToExecuteOld.forEach((e) => {
 				e.timeTillEvent -= timeToTick;
 				if (Debug.consoleLogEvents) console.log(e.name + " in " + e.timeTillEvent);
-				if (e.timeTillEvent <= Debug.epsilon)
-				{
-					if (!e.canceled)
-					{
+				if (e.timeTillEvent <= Debug.epsilon) {
+					if (!e.canceled) {
 						e.effectFn();
 					}
 					executedEvents++;
@@ -248,7 +264,7 @@ export abstract class GameState {
 	}
 
 	getDisplayTime() {
-		return (this.time - this.config.countdown);
+		return this.time - this.config.countdown;
 	}
 
 	captureManaRegenAmount(): number {
@@ -263,7 +279,9 @@ export abstract class GameState {
 		// TODO move this to child class methods
 		if (this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines)) {
 			// should be approximately 0.85
-			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, ResourceType.LeyLines));
+			const num = this.config.getAfterTaxGCD(
+				this.config.adjustedGCD(2.5, ResourceType.LeyLines),
+			);
 			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
 			return num / denom;
 		} else {
@@ -274,13 +292,18 @@ export abstract class GameState {
 	requestToggleBuff(buffName: ResourceType) {
 		let rsc = this.resources.get(buffName);
 		// Ley lines, paint lines, and positionals can be toggled.
-		if (([
-			ResourceType.LeyLines,
-			ResourceType.Inspiration,
-			ResourceType.FlankPositional,
-			ResourceType.RearPositional,
-		] as ResourceType[]).includes(buffName)) {
-			if (rsc.available(1)) { // buff exists and enabled
+		if (
+			(
+				[
+					ResourceType.LeyLines,
+					ResourceType.Inspiration,
+					ResourceType.FlankPositional,
+					ResourceType.RearPositional,
+				] as ResourceType[]
+			).includes(buffName)
+		) {
+			if (rsc.available(1)) {
+				// buff exists and enabled
 				rsc.enabled = false;
 				return true;
 			} else {
@@ -288,16 +311,20 @@ export abstract class GameState {
 				rsc.enabled = true;
 				return true;
 			}
-		} else if (([
-			ResourceType.HammerTime,
-			ResourceType.Aetherhues,
-			ResourceType.SubtractivePalette,
-			ResourceType.ClosedPosition,
-			ResourceType.StandardStep,
-			ResourceType.TechnicalStep,
-			ResourceType.Esprit,
-			ResourceType.Improvisation,
-		] as ResourceType[]).includes(buffName)) {
+		} else if (
+			(
+				[
+					ResourceType.HammerTime,
+					ResourceType.Aetherhues,
+					ResourceType.SubtractivePalette,
+					ResourceType.ClosedPosition,
+					ResourceType.StandardStep,
+					ResourceType.TechnicalStep,
+					ResourceType.Esprit,
+					ResourceType.Improvisation,
+				] as ResourceType[]
+			).includes(buffName)
+		) {
 			// subtractive spectrum, starstruck, monochrome tones, rainbow drip,
 			// tempera coat/grassa, smudge can be clicked off
 			// but these buffs cannot be
@@ -326,12 +353,17 @@ export abstract class GameState {
 	 */
 	useSpellOrWeaponskill(skill: Spell<PlayerState> | Weaponskill<PlayerState>, node: ActionNode) {
 		const cd = this.cooldowns.get(skill.cdName);
-		const secondaryCd = skill.secondaryCd ? this.cooldowns.get(skill.secondaryCd.cdName) : undefined
+		const secondaryCd = skill.secondaryCd
+			? this.cooldowns.get(skill.secondaryCd.cdName)
+			: undefined;
 
 		// TODO refactor logic to determine self-buffs
-		let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
-		const fukaCovered = this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fuka);
-		const fugetsuCovered = this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fugetsu);
+		let llCovered =
+			this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
+		const fukaCovered =
+			this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fuka);
+		const fugetsuCovered =
+			this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fugetsu);
 		const inspireSkills: SkillName[] = [
 			SkillName.FireInRed,
 			SkillName.Fire2InRed,
@@ -349,7 +381,10 @@ export abstract class GameState {
 			SkillName.CometInBlack,
 			SkillName.StarPrism,
 		];
-		let inspired = this.job === ShellJob.PCT && this.resources.get(ResourceType.Inspiration).available(1) && inspireSkills.includes(skill.name);
+		let inspired =
+			this.job === ShellJob.PCT &&
+			this.resources.get(ResourceType.Inspiration).available(1) &&
+			inspireSkills.includes(skill.name);
 		let capturedCastTime = skill.castTimeFn(this);
 		const recastTime = skill.recastTimeFn(this);
 		if (llCovered && skill.cdName === ResourceType.cd_GCD) {
@@ -426,34 +461,47 @@ export abstract class GameState {
 				node.addBuff(BuffType.Tincture);
 			}
 
-			if (this.job === ShellJob.PCT && this.hasResourceAvailable(ResourceType.StarryMuse) && doesDamage) {
+			if (
+				this.job === ShellJob.PCT &&
+				this.hasResourceAvailable(ResourceType.StarryMuse) &&
+				doesDamage
+			) {
 				node.addBuff(BuffType.StarryMuse);
 			}
 
 			if (this.job === ShellJob.RDM && doesDamage) {
-				if (this.hasResourceAvailable(ResourceType.Embolden) && skill.aspect !== Aspect.Physical) {
+				if (
+					this.hasResourceAvailable(ResourceType.Embolden) &&
+					skill.aspect !== Aspect.Physical
+				) {
 					node.addBuff(BuffType.Embolden);
 				}
 				if (this.hasResourceAvailable(ResourceType.Manafication)) {
 					node.addBuff(BuffType.Manafication);
 				}
-				if (skill.name === SkillName.Impact && this.hasResourceAvailable(ResourceType.Acceleration)) {
+				if (
+					skill.name === SkillName.Impact &&
+					this.hasResourceAvailable(ResourceType.Acceleration)
+				) {
 					node.addBuff(BuffType.Acceleration);
 				}
 			}
 
 			if (this.job === ShellJob.DNC && doesDamage) {
 				if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
-					node.addBuff(BuffType.TechnicalFinish)
+					node.addBuff(BuffType.TechnicalFinish);
 				}
 				if (this.hasResourceAvailable(ResourceType.Devilment)) {
-					node.addBuff(BuffType.Devilment)
+					node.addBuff(BuffType.Devilment);
 				}
 			}
 
-			if (this.job === ShellJob.SAM && doesDamage
-				&& this.hasResourceAvailable(ResourceType.EnhancedEnpi)
-				&& skill.name === SkillName.Enpi) {
+			if (
+				this.job === ShellJob.SAM &&
+				doesDamage &&
+				this.hasResourceAvailable(ResourceType.EnhancedEnpi) &&
+				skill.name === SkillName.Enpi
+			) {
 				node.addBuff(BuffType.EnhancedEnpi);
 			}
 
@@ -461,16 +509,14 @@ export abstract class GameState {
 			skill.onConfirm(this, node);
 
 			// Enqueue effect application
-			this.addEvent(new Event(
-				skill.name + " applied",
-				skill.applicationDelay,
-				() => {
+			this.addEvent(
+				new Event(skill.name + " applied", skill.applicationDelay, () => {
 					if (potency) {
 						controller.resolvePotency(potency);
 					}
 					skill.onApplication(this, node);
-				}
-			));
+				}),
+			);
 
 			if (potency) {
 				this.resources.addResourceEvent({
@@ -484,26 +530,38 @@ export abstract class GameState {
 
 		const isInstant = capturedCastTime === 0 || skill.isInstantFn(this);
 		if (isInstant) {
-			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(skill.name));
+			this.resources.takeResourceLock(
+				ResourceType.NotAnimationLocked,
+				this.config.getSkillAnimationLock(skill.name),
+			);
 			// Immediately do confirmation (no need to validate again)
 			onSpellConfirm();
 		} else {
 			// movement lock
-			this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
+			this.resources.takeResourceLock(
+				ResourceType.Movement,
+				capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime),
+			);
 			// caster tax
-			this.resources.takeResourceLock(ResourceType.NotCasterTaxed, this.config.getAfterTaxCastTime(capturedCastTime));
-			const timeToConfirmation = capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime)
+			this.resources.takeResourceLock(
+				ResourceType.NotCasterTaxed,
+				this.config.getAfterTaxCastTime(capturedCastTime),
+			);
+			const timeToConfirmation =
+				capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime);
 			// Enqueue confirm event
-			this.addEvent(new Event(skill.name + " captured", timeToConfirmation, () => {
-				// TODO propagate error more cleanly
-				if (skill.validateAttempt(this)) {
-					onSpellConfirm();
-				} else {
-					controller.reportInterruption({
-						failNode: node,
-					});
-				}
-			}));
+			this.addEvent(
+				new Event(skill.name + " captured", timeToConfirmation, () => {
+					// TODO propagate error more cleanly
+					if (skill.validateAttempt(this)) {
+						onSpellConfirm();
+					} else {
+						controller.reportInterruption({
+							failNode: node,
+						});
+					}
+				}),
+			);
 		}
 		// recast
 		cd.useStackWithRecast(this, this.config.getAfterTaxGCD(recastTime));
@@ -525,7 +583,7 @@ export abstract class GameState {
 
 		// potency
 		const potencyNumber = skill.potencyFn(this);
-		let potency : Potency | undefined = undefined;
+		let potency: Potency | undefined = undefined;
 		if (potencyNumber > 0) {
 			potency = new Potency({
 				config: this.config,
@@ -552,27 +610,37 @@ export abstract class GameState {
 		}
 
 		// starry muse
-		if (this.job === ShellJob.PCT && this.resources.get(ResourceType.StarryMuse).available(1) && potencyNumber > 0) {
+		if (
+			this.job === ShellJob.PCT &&
+			this.resources.get(ResourceType.StarryMuse).available(1) &&
+			potencyNumber > 0
+		) {
 			node.addBuff(BuffType.StarryMuse);
 		}
 
-		if (this.job === ShellJob.RDM
-			&& this.hasResourceAvailable(ResourceType.Embolden)
-			&& potencyNumber > 0
-			&& skill.aspect !== Aspect.Physical) {
+		if (
+			this.job === ShellJob.RDM &&
+			this.hasResourceAvailable(ResourceType.Embolden) &&
+			potencyNumber > 0 &&
+			skill.aspect !== Aspect.Physical
+		) {
 			node.addBuff(BuffType.Embolden);
 		}
 
 		if (this.job === ShellJob.DNC && potencyNumber > 0) {
 			if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
-				node.addBuff(BuffType.TechnicalFinish)
+				node.addBuff(BuffType.TechnicalFinish);
 			}
 			if (this.hasResourceAvailable(ResourceType.Devilment)) {
-				node.addBuff(BuffType.Devilment)
+				node.addBuff(BuffType.Devilment);
 			}
 		}
 
-		if (this.job === ShellJob.SAM && potencyNumber > 0 && this.hasResourceAvailable(ResourceType.Fugetsu)) {
+		if (
+			this.job === ShellJob.SAM &&
+			potencyNumber > 0 &&
+			this.hasResourceAvailable(ResourceType.Fugetsu)
+		) {
 			node.addBuff(BuffType.Fugetsu);
 		}
 
@@ -588,14 +656,12 @@ export abstract class GameState {
 		}
 
 		if (skill.applicationDelay > 0) {
-			this.addEvent(new Event(
-				skill.name + " applied",
-				skill.applicationDelay,
-				() => {
+			this.addEvent(
+				new Event(skill.name + " applied", skill.applicationDelay, () => {
 					if (potency) controller.resolvePotency(potency);
 					skill.onApplication(this, node);
-				}
-			));
+				}),
+			);
 		} else {
 			if (potency) controller.resolvePotency(potency);
 			skill.onApplication(this, node);
@@ -605,16 +671,22 @@ export abstract class GameState {
 		cd.useStack(this);
 
 		// animation lock
-		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(skill.name));
+		this.resources.takeResourceLock(
+			ResourceType.NotAnimationLocked,
+			this.config.getSkillAnimationLock(skill.name),
+		);
 	}
 
 	#timeTillSkillAvailable(skillName: SkillName) {
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.cdName;
-		const secondaryCd = skill.secondaryCd?.cdName
+		const secondaryCd = skill.secondaryCd?.cdName;
 		let tillAnyCDStack = this.cooldowns.timeTillAnyStackAvailable(cdName);
 		if (secondaryCd) {
-			tillAnyCDStack = Math.max(tillAnyCDStack, this.cooldowns.timeTillAnyStackAvailable(secondaryCd));
+			tillAnyCDStack = Math.max(
+				tillAnyCDStack,
+				this.cooldowns.timeTillAnyStackAvailable(secondaryCd),
+			);
 		}
 		return Math.max(this.timeTillAnySkillAvailable(), tillAnyCDStack);
 	}
@@ -625,7 +697,7 @@ export abstract class GameState {
 		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed);
 	}
 
-	findNextQueuedEventByTag(tag : EventTag) {
+	findNextQueuedEventByTag(tag: EventTag) {
 		for (let i = 0; i < this.eventsQueue.length; i++) {
 			let evt = this.eventsQueue[i];
 			if (evt.hasTag(tag)) return evt;
@@ -640,14 +712,13 @@ export abstract class GameState {
 	// Add a resource drop event after `delay` seconds.
 	// If `rscType` has a corresponding cooldown duration for the job, then that delay will be
 	// used if `rscType` is undefined.
-	enqueueResourceDrop(
-		rscType: ResourceType,
-		delay?: number,
-		toConsume?: number,
-	) {
+	enqueueResourceDrop(rscType: ResourceType, delay?: number, toConsume?: number) {
 		if (delay === undefined) {
 			const rscInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
-			console.assert(rscInfo?.maxTimeout, `could not find timeout declaration for resource ${rscType}`)
+			console.assert(
+				rscInfo?.maxTimeout,
+				`could not find timeout declaration for resource ${rscType}`,
+			);
 			delay = rscInfo.maxTimeout;
 		}
 		const name = (toConsume === undefined ? "drop all " : `drop ${toConsume} `) + rscType;
@@ -664,8 +735,8 @@ export abstract class GameState {
 				if (rscInfo.warningOnTimeout) {
 					controller.reportWarning(rscInfo.warningOnTimeout);
 				}
-			}
-		})
+			},
+		});
 	}
 
 	timeTillNextMpGainEvent() {
@@ -678,13 +749,19 @@ export abstract class GameState {
 		return this.resources.timeTillReady(ResourceType.InCombat);
 	}
 
-	getSkillAvailabilityStatus(skillName: SkillName, primaryRecastOnly: boolean = false): SkillButtonViewInfo {
+	getSkillAvailabilityStatus(
+		skillName: SkillName,
+		primaryRecastOnly: boolean = false,
+	): SkillButtonViewInfo {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
 		let capturedManaCost = skill.manaCostFn(this);
-		let llCovered = this.job === ShellJob.BLM && this.resources.get(ResourceType.LeyLines).available(1);
-		let capturedCastTime = skill.kind === "weaponskill" || skill.kind === "spell" ? skill.castTimeFn(this) : 0;
-		let instantCastAvailable = capturedCastTime === 0 || skill.kind === "ability" || skill.isInstantFn(this);
+		let llCovered =
+			this.job === ShellJob.BLM && this.resources.get(ResourceType.LeyLines).available(1);
+		let capturedCastTime =
+			skill.kind === "weaponskill" || skill.kind === "spell" ? skill.castTimeFn(this) : 0;
+		let instantCastAvailable =
+			capturedCastTime === 0 || skill.kind === "ability" || skill.isInstantFn(this);
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let notBlocked = timeTillAvailable <= Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana;
@@ -694,14 +771,21 @@ export abstract class GameState {
 		let status = SkillReadyStatus.Ready;
 		if (!notBlocked) status = SkillReadyStatus.Blocked;
 
-		if (skill.secondaryCd && this.cooldowns.get(skill.secondaryCd.cdName).stacksAvailable() === 0) nonCdStatus = SkillReadyStatus.Blocked;
+		if (
+			skill.secondaryCd &&
+			this.cooldowns.get(skill.secondaryCd.cdName).stacksAvailable() === 0
+		)
+			nonCdStatus = SkillReadyStatus.Blocked;
 		else if (!skillUnlocked) nonCdStatus = SkillReadyStatus.SkillNotUnlocked;
 		else if (!reqsMet) nonCdStatus = SkillReadyStatus.RequirementsNotMet;
 		else if (!enoughMana) nonCdStatus = SkillReadyStatus.NotEnoughMP;
 
 		if (skill.name === SkillName.Meditate) {
 			// Special case for Meditate
-			if (timeTillAvailable > Debug.epsilon || this.cooldowns.get(ResourceType.cd_GCD).timeTillNextStackAvailable() > Debug.epsilon) {
+			if (
+				timeTillAvailable > Debug.epsilon ||
+				this.cooldowns.get(ResourceType.cd_GCD).timeTillNextStackAvailable() > Debug.epsilon
+			) {
 				// if the skill is on CD or the GCD is rolling, mark its non-CD status as Ready
 				// but its CD status Blocked
 				nonCdStatus = SkillReadyStatus.Ready;
@@ -712,20 +796,29 @@ export abstract class GameState {
 		}
 
 		// Special case for skills that require being in combat
-		if (([
-			SkillName.StrikingMuse,
-			SkillName.StarryMuse,
-			SkillName.Manafication,
-			SkillName.Ikishoten,
-		] as SkillName[]).includes(skillName) && status === SkillReadyStatus.RequirementsNotMet) {
+		if (
+			(
+				[
+					SkillName.StrikingMuse,
+					SkillName.StarryMuse,
+					SkillName.Manafication,
+					SkillName.Ikishoten,
+				] as SkillName[]
+			).includes(skillName) &&
+			status === SkillReadyStatus.RequirementsNotMet
+		) {
 			status = SkillReadyStatus.NotInCombat;
 			timeTillAvailable = this.timeTillNextDamageEvent();
 		}
 
 		let cd = this.cooldowns.get(skill.cdName);
-		const secondaryCd = skill.secondaryCd ? this.cooldowns.get(skill.secondaryCd.cdName) : undefined;
+		const secondaryCd = skill.secondaryCd
+			? this.cooldowns.get(skill.secondaryCd.cdName)
+			: undefined;
 		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.cdName);
-		const timeTillSecondaryReady = skill.secondaryCd ? this.cooldowns.timeTillNextStackAvailable(skill.secondaryCd.cdName) : 0
+		const timeTillSecondaryReady = skill.secondaryCd
+			? this.cooldowns.timeTillNextStackAvailable(skill.secondaryCd.cdName)
+			: 0;
 		let cdRecastTime = cd.currentStackCd();
 		// special case for meditate: if meditate is off CD, use the GCD cooldown instead if it's rolling
 		// this fails the edge case where a GCD is pressed ~58 seconds after meditate was last pressed
@@ -743,28 +836,31 @@ export abstract class GameState {
 		const primaryStacksAvailable = cd.stacksAvailable();
 		const primaryMaxStacks = cd.maxStacks();
 
-		let secondaryRecastTime = secondaryCd?.currentStackCd() ?? 0
+		let secondaryRecastTime = secondaryCd?.currentStackCd() ?? 0;
 
 		// to be displayed together when hovered on a skill
 		let timeTillDamageApplication = 0;
 		if (status === SkillReadyStatus.Ready) {
 			if (skill.kind === "spell") {
-				let timeTillCapture = instantCastAvailable ? 0 : (capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
+				let timeTillCapture = instantCastAvailable
+					? 0
+					: capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime);
 				timeTillDamageApplication = timeTillCapture + skill.applicationDelay;
 			} else {
 				timeTillDamageApplication = skill.applicationDelay;
 			}
 		}
 
-		const secondaryStacksAvailable = secondaryCd?.stacksAvailable() ?? 0
-		const secondaryMaxStacks = secondaryCd?.maxStacks() ?? 0
+		const secondaryStacksAvailable = secondaryCd?.stacksAvailable() ?? 0;
+		const secondaryMaxStacks = secondaryCd?.maxStacks() ?? 0;
 		// conditions that make the skills show proc
 		const highlight = skill.highlightIf(this);
 		return {
 			skillName: skill.name,
 			status: status,
 			statusExcludingCd: nonCdStatus,
-			stacksAvailable: secondaryMaxStacks > 0 ? secondaryStacksAvailable : primaryStacksAvailable,
+			stacksAvailable:
+				secondaryMaxStacks > 0 ? secondaryStacksAvailable : primaryStacksAvailable,
 			maxStacks: Math.max(primaryMaxStacks, secondaryMaxStacks),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
@@ -776,7 +872,7 @@ export abstract class GameState {
 			timeTillDamageApplication: timeTillDamageApplication,
 			capturedManaCost: capturedManaCost,
 			highlight: highlight,
-			llCovered: llCovered
+			llCovered: llCovered,
 		};
 	}
 
@@ -792,31 +888,33 @@ export abstract class GameState {
 	getPartyBuffs(time: number) {
 		const buffCollection = new Map<BuffType, PotencyModifier>();
 		const buffMarkers = controller.timeline.getBuffMarkers();
-		buffMarkers.filter(marker => {
-			return marker.time <= time && (marker.time + marker.duration) >= time;
-		}).forEach(marker => {
-			const buff = new Buff(marker.description as BuffType);
-			if (!buffCollection.has(buff.name)) {
-				// Assume all buffs are either crit/DH multipliers, or flat damage multipliers,
-				// but not both. This is currently true for all party buffs in the game.
-				if (buff.info.damageFactor === 1) {
-					buffCollection.set(buff.name, {
-						kind: "critDirect",
-						source: PotencyModifierType.PARTY, 
-						buffType: buff.name,
-						critFactor: buff.info.critBonus,
-						dhFactor: buff.info.dhBonus,
-					});
-				} else {
-					buffCollection.set(buff.name, {
-						kind: "multiplier",
-						source: PotencyModifierType.PARTY,
-						buffType: buff.name,
-						damageFactor: buff.info.damageFactor,
-					});
+		buffMarkers
+			.filter((marker) => {
+				return marker.time <= time && marker.time + marker.duration >= time;
+			})
+			.forEach((marker) => {
+				const buff = new Buff(marker.description as BuffType);
+				if (!buffCollection.has(buff.name)) {
+					// Assume all buffs are either crit/DH multipliers, or flat damage multipliers,
+					// but not both. This is currently true for all party buffs in the game.
+					if (buff.info.damageFactor === 1) {
+						buffCollection.set(buff.name, {
+							kind: "critDirect",
+							source: PotencyModifierType.PARTY,
+							buffType: buff.name,
+							critFactor: buff.info.critBonus,
+							dhFactor: buff.info.dhBonus,
+						});
+					} else {
+						buffCollection.set(buff.name, {
+							kind: "multiplier",
+							source: PotencyModifierType.PARTY,
+							buffType: buff.name,
+							damageFactor: buff.info.damageFactor,
+						});
+					}
 				}
-			}
-		})
+			});
 
 		return buffCollection;
 	}

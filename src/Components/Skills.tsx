@@ -1,14 +1,14 @@
-import React, {FormEvent, FormEventHandler} from 'react'
-import {Clickable, ContentNode, Help, parseTime, ValueChangeEvent} from "./Common";
-import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
-import {controller} from "../Controller/Controller";
-import {Tooltip as ReactTooltip} from 'react-tooltip';
-import {ActionType} from "../Controller/Record";
-import {localize, localizeSkillName} from "./Localization";
-import {updateTimelineView} from "./Timeline";
-import * as ReactDOMServer from 'react-dom/server';
-import {getCurrentThemeColors} from "./ColorTheme";
-import {getSkillAssetPath} from "../Game/Skills";
+import React, { FormEvent, FormEventHandler } from "react";
+import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
+import { Debug, SkillName, SkillReadyStatus } from "../Game/Common";
+import { controller } from "../Controller/Controller";
+import { Tooltip as ReactTooltip } from "react-tooltip";
+import { ActionType } from "../Controller/Record";
+import { localize, localizeSkillName } from "./Localization";
+import { updateTimelineView } from "./Timeline";
+import * as ReactDOMServer from "react-dom/server";
+import { getCurrentThemeColors } from "./ColorTheme";
+import { getSkillAssetPath } from "../Game/Skills";
 
 // Game/Jobs/* must be run first to ensure all skills have been registered, so we need to
 // load images lazily to ensure we're not dependent on webpack's module resolution order.
@@ -40,83 +40,108 @@ export const getSkillIconImage = (skillName: SkillName) => {
 	return undefined;
 };
 
-function ProgressCircleDark(props={
-	diameter: 50,
-	progress: 0.7,
-	color: "rgba(0, 0, 0, 0.6)",
-}) {
+function ProgressCircleDark(
+	props = {
+		diameter: 50,
+		progress: 0.7,
+		color: "rgba(0, 0, 0, 0.6)",
+	},
+) {
 	const elemRadius = props.diameter / 2.0;
-	const outCircumference =  Math.PI * elemRadius;
-	const outFillLength = outCircumference * (1-props.progress);
+	const outCircumference = Math.PI * elemRadius;
+	const outFillLength = outCircumference * (1 - props.progress);
 	const outGapLength = outCircumference - outFillLength;
 	const outDasharray = outFillLength + "," + outGapLength;
-	const innerCircle = <circle
-		r={elemRadius / 2}
-		cx={20}
-		cy={21}
-		fill="none"
-		stroke={props.color}
-		strokeWidth={elemRadius}
-		strokeDasharray={outDasharray}
-		strokeDashoffset={outCircumference/4 + outFillLength}/>
-	
-	const outerStroke = elemRadius; // something large enough to make sure it covers the very corner
-	let outerCircle = <circle
-		r={elemRadius + outerStroke / 2}	
-		cx={20}
-		cy={21}
-		fill="none"
-		stroke={props.color}
-		strokeWidth={outerStroke}
-	/>
+	const innerCircle = (
+		<circle
+			r={elemRadius / 2}
+			cx={20}
+			cy={21}
+			fill="none"
+			stroke={props.color}
+			strokeWidth={elemRadius}
+			strokeDasharray={outDasharray}
+			strokeDashoffset={outCircumference / 4 + outFillLength}
+		/>
+	);
 
-	return <svg width={48} height={48} style={{
-		position: "absolute",
-		left: "50%",
-		marginLeft: -20,
-		pointerEvents: "none",
-	}}>
-		{innerCircle}
-		{outerCircle}
-	</svg>
+	const outerStroke = elemRadius; // something large enough to make sure it covers the very corner
+	let outerCircle = (
+		<circle
+			r={elemRadius + outerStroke / 2}
+			cx={20}
+			cy={21}
+			fill="none"
+			stroke={props.color}
+			strokeWidth={outerStroke}
+		/>
+	);
+
+	return (
+		<svg
+			width={48}
+			height={48}
+			style={{
+				position: "absolute",
+				left: "50%",
+				marginLeft: -20,
+				pointerEvents: "none",
+			}}
+		>
+			{innerCircle}
+			{outerCircle}
+		</svg>
+	);
 }
 
-function SecondaryProgressCircle(props={
-	diameter: 50,
-	progress: 0.7,
-	color: "rgba(0, 0, 0, 0.5)",
-}) {
+function SecondaryProgressCircle(
+	props = {
+		diameter: 50,
+		progress: 0.7,
+		color: "rgba(0, 0, 0, 0.5)",
+	},
+) {
 	const circleRadius = props.diameter / 2;
 	const circumfrence = 2 * Math.PI * circleRadius;
 	const circleFillLength = circumfrence * props.progress;
 	const circleGapLength = circumfrence - circleFillLength;
 	const dashArray = circleFillLength + "," + circleGapLength;
-	const circle = <circle
-		r={circleRadius}
-		cx={20}
-		cy={21}
-		fill="none"
-		stroke={props.color}
-		strokeWidth={2}
-		strokeDashoffset={circumfrence/4}
-		strokeDasharray={dashArray}
-	/>
+	const circle = (
+		<circle
+			r={circleRadius}
+			cx={20}
+			cy={21}
+			fill="none"
+			stroke={props.color}
+			strokeWidth={2}
+			strokeDashoffset={circumfrence / 4}
+			strokeDasharray={dashArray}
+		/>
+	);
 
-	return <svg width={48} height={48} style={{
-		position: "absolute",
-		left: "50%",
-		marginLeft: -20,
-		pointerEvents: "none"
-	}}>
-		{circle}
-	</svg>
+	return (
+		<svg
+			width={48}
+			height={48}
+			style={{
+				position: "absolute",
+				left: "50%",
+				marginLeft: -20,
+				pointerEvents: "none",
+			}}
+		>
+			{circle}
+		</svg>
+	);
 }
 
-function ProgressCircleOutline(props={
-	diameter: 50,
-	progress: 0.7,
-	color: "rgba(0, 0, 0, 0.5)",
-}) {
+function ProgressCircleOutline(
+	props = {
+		diameter: 50,
+		progress: 0.7,
+		color: "rgba(0, 0, 0, 0.5)",
+	},
+) {
 	const elemRadius = props.diameter / 2.0;
 	const outCircumference = Math.PI * elemRadius * 2;
 	const outFillLength = outCircumference * props.progress;
@@ -124,53 +149,66 @@ function ProgressCircleOutline(props={
 	const outDasharray = outFillLength + "," + outGapLength;
 	const theta = 2 * Math.PI * props.progress;
 	const cdOutlineColor = "#ffffffef";
-	const outlineCircle = <circle
-		r={elemRadius}
-		cx={20}
-		cy={21}
-		fill="none"
-		stroke={cdOutlineColor}
-		strokeWidth={1}
-		strokeDasharray={outDasharray}
-		strokeDashoffset={outCircumference / 4}/>
+	const outlineCircle = (
+		<circle
+			r={elemRadius}
+			cx={20}
+			cy={21}
+			fill="none"
+			stroke={cdOutlineColor}
+			strokeWidth={1}
+			strokeDasharray={outDasharray}
+			strokeDashoffset={outCircumference / 4}
+		/>
+	);
 
-	const verticalLine = <line
-		x1={20}
-		y1={21}
-		x2={20}
-		y2={21 - elemRadius}
-		stroke={cdOutlineColor}
-		strokeWidth={1}
-	/>
+	const verticalLine = (
+		<line
+			x1={20}
+			y1={21}
+			x2={20}
+			y2={21 - elemRadius}
+			stroke={cdOutlineColor}
+			strokeWidth={1}
+		/>
+	);
 
-	const cdLine = <line
-		x1={20}
-		y1={21}
-		x2={20 + elemRadius * Math.cos(theta - Math.PI/2)}
-		y2={21 + elemRadius * Math.sin(theta - Math.PI/2)}
-		stroke={cdOutlineColor}
-		strokeWidth={1}
-	/>
+	const cdLine = (
+		<line
+			x1={20}
+			y1={21}
+			x2={20 + elemRadius * Math.cos(theta - Math.PI / 2)}
+			y2={21 + elemRadius * Math.sin(theta - Math.PI / 2)}
+			stroke={cdOutlineColor}
+			strokeWidth={1}
+		/>
+	);
 
-	return <svg width={48} height={48} style={{
-		position: "absolute",
-		left: "50%",
-		marginLeft: -20,
-		pointerEvents: "none"
-	}}>
-		{outlineCircle}
-		{verticalLine}
-		{cdLine}
-	</svg>
+	return (
+		<svg
+			width={48}
+			height={48}
+			style={{
+				position: "absolute",
+				left: "50%",
+				marginLeft: -20,
+				pointerEvents: "none",
+			}}
+		>
+			{outlineCircle}
+			{verticalLine}
+			{cdLine}
+		</svg>
+	);
 }
 
 type SkillButtonProps = {
-	highlight: boolean,
-	skillName: SkillName,
-	ready: boolean,
-	readyAsideFromCd: boolean,
-	cdProgress: number,
-	secondaryCdProgress?: number
+	highlight: boolean;
+	skillName: SkillName;
+	ready: boolean;
+	readyAsideFromCd: boolean;
+	cdProgress: number;
+	secondaryCdProgress?: number;
 };
 
 class SkillButton extends React.Component {
@@ -184,12 +222,12 @@ class SkillButton extends React.Component {
 		super(props);
 		this.props = props;
 		this.state = {
-			skillDescription: <div/>
+			skillDescription: <div />,
 		};
-		this.handleMouseEnter = (()=>{
+		this.handleMouseEnter = () => {
 			let info = controller.getSkillInfo({
 				game: controller.getDisplayedGame(),
-				skillName: this.props.skillName
+				skillName: this.props.skillName,
 			});
 			let colors = getCurrentThemeColors();
 			let s: ContentNode = "";
@@ -202,19 +240,28 @@ class SkillButton extends React.Component {
 				}
 				en += ")";
 				zh += ")";
-				s = localize({en: en, zh: zh});
-			}
-			else if (info.status === SkillReadyStatus.RequirementsNotMet) {
-				s += localize({en: " skill requirement(s) not satisfied", zh: " 未满足释放条件"});
+				s = localize({ en: en, zh: zh });
+			} else if (info.status === SkillReadyStatus.RequirementsNotMet) {
+				s += localize({ en: " skill requirement(s) not satisfied", zh: " 未满足释放条件" });
 			} else if (info.status === SkillReadyStatus.NotEnoughMP) {
 				s += localize({
 					en: " not enough MP (needs " + info.capturedManaCost + ")",
-					zh: " MP不足（需" + info.capturedManaCost + "）"
+					zh: " MP不足（需" + info.capturedManaCost + "）",
 				});
 			} else if (info.status === SkillReadyStatus.Blocked) {
 				s += localize({
-					en: "possibly ready in " + info.timeTillAvailable.toFixed(3) + " (next stack ready in " + info.timeTillNextStackReady.toFixed(3) + ")",
-					zh: "预计" + info.timeTillAvailable.toFixed(3) + "秒后可释放（" + info.timeTillNextStackReady.toFixed(3) + "秒后转好下一层CD）"
+					en:
+						"possibly ready in " +
+						info.timeTillAvailable.toFixed(3) +
+						" (next stack ready in " +
+						info.timeTillNextStackReady.toFixed(3) +
+						")",
+					zh:
+						"预计" +
+						info.timeTillAvailable.toFixed(3) +
+						"秒后可释放（" +
+						info.timeTillNextStackReady.toFixed(3) +
+						"秒后转好下一层CD）",
 				});
 			} else if (info.status === SkillReadyStatus.NotInCombat) {
 				s += localize({
@@ -225,17 +272,29 @@ class SkillButton extends React.Component {
 			let actualCastTime = info.instantCast ? 0 : info.castTime;
 			let infoString = "";
 			if (info.status === SkillReadyStatus.Ready) {
-				infoString += localize({en: "cast: ", zh: "读条："}) + actualCastTime.toFixed(3);
+				infoString += localize({ en: "cast: ", zh: "读条：" }) + actualCastTime.toFixed(3);
 				if (info.llCovered && actualCastTime > Debug.epsilon) infoString += " (LL)";
-				infoString += localize({en: ", cast+delay: ", zh: " 读条+生效延迟："}) + info.timeTillDamageApplication.toFixed(3);
+				infoString +=
+					localize({ en: ", cast+delay: ", zh: " 读条+生效延迟：" }) +
+					info.timeTillDamageApplication.toFixed(3);
 			}
-			let content = <div style={{color: controller.displayingUpToDateGameState ? colors.text : colors.historical}}>
-				<div className="paragraph"><b>{localizeSkillName(this.props.skillName)}</b></div>
-				<div className="paragraph">{s}</div>
-				<div className="paragraph">{infoString}</div>
-			</div>;
-			this.setState({skillDescription: content});
-		});
+			let content = (
+				<div
+					style={{
+						color: controller.displayingUpToDateGameState
+							? colors.text
+							: colors.historical,
+					}}
+				>
+					<div className="paragraph">
+						<b>{localizeSkillName(this.props.skillName)}</b>
+					</div>
+					<div className="paragraph">{s}</div>
+					<div className="paragraph">{infoString}</div>
+				</div>
+			);
+			this.setState({ skillDescription: content });
+		};
 	}
 	render() {
 		let iconPath = getSkillIconPath(this.props.skillName);
@@ -244,7 +303,7 @@ class SkillButton extends React.Component {
 			height: 48,
 			verticalAlign: "top",
 			position: "relative",
-			display: "inline-block"
+			display: "inline-block",
 		};
 		let iconImgStyle: React.CSSProperties = {
 			width: 40,
@@ -264,20 +323,21 @@ class SkillButton extends React.Component {
 		// in white w/ red border if there's at least 1 stack, and red w/ black border at 0 stacks.
 		const info = controller.getSkillInfo({
 			game: controller.getDisplayedGame(),
-			skillName: this.props.skillName
+			skillName: this.props.skillName,
 		});
 		const readyStacks = info.stacksAvailable;
 		const maxStacks = info.maxStacks;
 		let stacksOverlay;
 		const skillBoxPx = 48;
-		const fontSizePx = skillBoxPx/3 + 4;
+		const fontSizePx = skillBoxPx / 3 + 4;
 
 		let textShadow: string;
 		let fontColor: string;
 		if (readyStacks > 0) {
 			// expensive but whatever if it ever becomes a performance problem I'll just turn the icons into a canvas
 			// the red/orange border
-			textShadow = "0 0 2px rgba(255, 50, 0, 1), 0 0 3px rgba(255, 100, 0, 1), 0 0 5px rgba(255, 100, 0, 1)";
+			textShadow =
+				"0 0 2px rgba(255, 50, 0, 1), 0 0 3px rgba(255, 100, 0, 1), 0 0 5px rgba(255, 100, 0, 1)";
 			// darken background
 			const darkenLayers = readyStacks === maxStacks ? 5 : 3;
 			for (let i = 0; i < darkenLayers; i++) {
@@ -290,127 +350,166 @@ class SkillButton extends React.Component {
 		}
 
 		if (maxStacks > 1) {
-			stacksOverlay =	<div tabIndex={-1} style={{
-				fontFamily: "Goldman Regular",
-				color: fontColor,
-				// should take up a little over 1/3 of the icon
-				fontSize: `${fontSizePx}px`,
-				textShadow: textShadow,
-				// center in this square
-				width: fontSizePx,
-				textAlign: "center",
-				// offset to account for stretch transformation + font size
-				bottom: 2,
-				right: 1,
-				zIndex: 3,
-				position: "absolute",
-			}}>
-				{readyStacks}
-			</div>;
+			stacksOverlay = (
+				<div
+					tabIndex={-1}
+					style={{
+						fontFamily: "Goldman Regular",
+						color: fontColor,
+						// should take up a little over 1/3 of the icon
+						fontSize: `${fontSizePx}px`,
+						textShadow: textShadow,
+						// center in this square
+						width: fontSizePx,
+						textAlign: "center",
+						// offset to account for stretch transformation + font size
+						bottom: 2,
+						right: 1,
+						zIndex: 3,
+						position: "absolute",
+					}}
+				>
+					{readyStacks}
+				</div>
+			);
 		} else {
 			stacksOverlay = <></>;
 		}
-		const progressShadeCircle = <ProgressCircleDark
-			diameter={38}
-			progress={this.props.cdProgress}
-			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(0, 0, 0, 0.6)"}/>;
-		const progressOutline = <ProgressCircleOutline
-			diameter={38}
-			progress={this.props.cdProgress}
-			color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(255, 255, 255, 1.0)"}
+		const progressShadeCircle = (
+			<ProgressCircleDark
+				diameter={38}
+				progress={this.props.cdProgress}
+				color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(0, 0, 0, 0.6)"}
 			/>
-		const secondaryOutline = this.props.secondaryCdProgress && <SecondaryProgressCircle
-			diameter={32}
-			progress={this.props.secondaryCdProgress}
-			color={"rgba(250,186,47,255)"}
+		);
+		const progressOutline = (
+			<ProgressCircleOutline
+				diameter={38}
+				progress={this.props.cdProgress}
+				color={this.props.ready ? "rgba(0, 0, 0, 0)" : "rgba(255, 255, 255, 1.0)"}
 			/>
-		const proc = <img
-			hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" alt="skill proc"
-			style={{
-				position: "absolute",
-				width: 44,
-				height: 44,
-				top: 0,
-				left: 2,
-				zIndex: 2
-			}}
-		/>;
-		let icon = <div onMouseEnter={this.handleMouseEnter}>
-			<div style={iconStyle}> {/* "overlay" layers */}
-				<img style={iconImgStyle} src={iconPath} alt={this.props.skillName}/>
-				<div style={{
+		);
+		const secondaryOutline = this.props.secondaryCdProgress && (
+			<SecondaryProgressCircle
+				diameter={32}
+				progress={this.props.secondaryCdProgress}
+				color={"rgba(250,186,47,255)"}
+			/>
+		);
+		const proc = (
+			<img
+				hidden={!this.props.highlight}
+				src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png"
+				alt="skill proc"
+				style={{
 					position: "absolute",
-					width: 40,
-					height: 41,
-					top: 1,
-					left: "50%",
-					marginLeft: -20,
-					borderRadius: 3,
-					overflow: "hidden",
-					zIndex: 1,
-					background: readyOverlay
-				}}>
-					{this.props.cdProgress > 1 - Debug.epsilon || !this.props.readyAsideFromCd || progressShadeCircle}
-					{this.props.cdProgress > 1 - Debug.epsilon || progressOutline}
-					{!this.props.secondaryCdProgress || this.props.secondaryCdProgress > 1 - Debug.epsilon || secondaryOutline}
+					width: 44,
+					height: 44,
+					top: 0,
+					left: 2,
+					zIndex: 2,
+				}}
+			/>
+		);
+		let icon = (
+			<div onMouseEnter={this.handleMouseEnter}>
+				<div style={iconStyle}>
+					{" "}
+					{/* "overlay" layers */}
+					<img style={iconImgStyle} src={iconPath} alt={this.props.skillName} />
+					<div
+						style={{
+							position: "absolute",
+							width: 40,
+							height: 41,
+							top: 1,
+							left: "50%",
+							marginLeft: -20,
+							borderRadius: 3,
+							overflow: "hidden",
+							zIndex: 1,
+							background: readyOverlay,
+						}}
+					>
+						{this.props.cdProgress > 1 - Debug.epsilon ||
+							!this.props.readyAsideFromCd ||
+							progressShadeCircle}
+						{this.props.cdProgress > 1 - Debug.epsilon || progressOutline}
+						{!this.props.secondaryCdProgress ||
+							this.props.secondaryCdProgress > 1 - Debug.epsilon ||
+							secondaryOutline}
+					</div>
+					<div
+						style={{
+							// skill icon overlay
+							position: "absolute",
+							width: skillBoxPx,
+							height: skillBoxPx,
+							background:
+								"url('https://miyehn.me/ffxiv-blm-rotation/misc/skillIcon_overlay.png') no-repeat",
+						}}
+					/>
 				</div>
-				<div style={{ // skill icon overlay
-					position: "absolute",
-					width: skillBoxPx,
-					height: skillBoxPx,
-					background: "url('https://miyehn.me/ffxiv-blm-rotation/misc/skillIcon_overlay.png') no-repeat"
-				}}/>
+				{proc}
+				{stacksOverlay}
 			</div>
-			{proc}
-			{stacksOverlay}
-		</div>;
-		return <span
-			title={this.props.skillName}
-			className={"skillButton"}
-			data-tooltip-offset={3}
-			data-tooltip-html={
-				ReactDOMServer.renderToStaticMarkup(this.state.skillDescription)
-			} data-tooltip-id={"skillButton-" + this.props.skillName}>
-			<Clickable onClickFn={controller.displayingUpToDateGameState ? () => {
-				controller.requestUseSkill({skillName: this.props.skillName});
-				controller.updateAllDisplay();
-			} : undefined} content={icon}
-					   style={controller.displayingUpToDateGameState ? {} : {cursor: "not-allowed"}}/>
-		</span>
+		);
+		return (
+			<span
+				title={this.props.skillName}
+				className={"skillButton"}
+				data-tooltip-offset={3}
+				data-tooltip-html={ReactDOMServer.renderToStaticMarkup(this.state.skillDescription)}
+				data-tooltip-id={"skillButton-" + this.props.skillName}
+			>
+				<Clickable
+					onClickFn={
+						controller.displayingUpToDateGameState
+							? () => {
+									controller.requestUseSkill({ skillName: this.props.skillName });
+									controller.updateAllDisplay();
+								}
+							: undefined
+					}
+					content={icon}
+					style={controller.displayingUpToDateGameState ? {} : { cursor: "not-allowed" }}
+				/>
+			</span>
+		);
 	}
 }
 
 enum WaitSince {
 	Now = "Now",
-	LastSkill = "LastSkill"
+	LastSkill = "LastSkill",
 }
 
 export type SkillButtonViewInfo = {
-	skillName: SkillName,
-	status: SkillReadyStatus,
-	statusExcludingCd: SkillReadyStatus,
-	stacksAvailable: number,
-	maxStacks: number,
-	castTime: number,
-	instantCast: boolean,
-	cdRecastTime: number,
-	secondaryCdRecastTime?: number,
-	timeTillNextStackReady: number,
-	timeTillSecondaryReady?: number,
-	timeTillAvailable: number,
-	timeTillDamageApplication: number,
-	capturedManaCost: number,
-	highlight: boolean,
-	llCovered: boolean
+	skillName: SkillName;
+	status: SkillReadyStatus;
+	statusExcludingCd: SkillReadyStatus;
+	stacksAvailable: number;
+	maxStacks: number;
+	castTime: number;
+	instantCast: boolean;
+	cdRecastTime: number;
+	secondaryCdRecastTime?: number;
+	timeTillNextStackReady: number;
+	timeTillSecondaryReady?: number;
+	timeTillAvailable: number;
+	timeTillDamageApplication: number;
+	capturedManaCost: number;
+	highlight: boolean;
+	llCovered: boolean;
 };
 
-export let updateSkillButtons = (statusList: SkillButtonViewInfo[])=>{}
+export let updateSkillButtons = (statusList: SkillButtonViewInfo[]) => {};
 export class SkillsWindow extends React.Component {
 	state: {
-		statusList: SkillButtonViewInfo[],
-		waitTime: string,
-		waitSince: WaitSince,
-		waitUntil: string,
+		statusList: SkillButtonViewInfo[];
+		waitTime: string;
+		waitSince: WaitSince;
+		waitUntil: string;
 	};
 
 	onWaitTimeChange: (e: ValueChangeEvent) => void;
@@ -423,15 +522,15 @@ export class SkillsWindow extends React.Component {
 
 	constructor(props: {}) {
 		super(props);
-		updateSkillButtons = ((statusList) => {
+		updateSkillButtons = (statusList) => {
 			this.setState({
 				statusList: statusList,
 			});
-		});
+		};
 
 		this.onWaitTimeChange = (e: ValueChangeEvent) => {
 			if (!e || !e.target) return;
-			this.setState({waitTime: e.target.value});
+			this.setState({ waitTime: e.target.value });
 		};
 
 		this.onWaitTimeSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -441,7 +540,7 @@ export class SkillsWindow extends React.Component {
 					controller.step(waitTime);
 				} else if (this.state.waitSince === WaitSince.LastSkill) {
 					let timeSinceLastSkill = 0;
-					let lastAction = controller.record.getLastAction(node=>{
+					let lastAction = controller.record.getLastAction((node) => {
 						return node.type === ActionType.Wait || node.type === ActionType.Skill;
 					});
 					if (lastAction) {
@@ -449,9 +548,13 @@ export class SkillsWindow extends React.Component {
 					}
 					let stepTime = waitTime - timeSinceLastSkill;
 					if (stepTime <= 0) {
-						window.alert("Invalid input: trying to jump to " + waitTime +
-							"s since the last action, but " + timeSinceLastSkill +
-							"s has already elapsed.");
+						window.alert(
+							"Invalid input: trying to jump to " +
+								waitTime +
+								"s since the last action, but " +
+								timeSinceLastSkill +
+								"s has already elapsed.",
+						);
 					} else {
 						controller.step(stepTime);
 					}
@@ -465,7 +568,7 @@ export class SkillsWindow extends React.Component {
 
 		this.onWaitUntilChange = (e: ValueChangeEvent) => {
 			if (!e || !e.target) return;
-			this.setState({waitUntil: e.target.value});
+			this.setState({ waitUntil: e.target.value });
 		};
 
 		this.onWaitUntilSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -484,23 +587,23 @@ export class SkillsWindow extends React.Component {
 		};
 
 		this.onWaitSinceChange = (e: ValueChangeEvent) => {
-			this.setState({waitSince: e.target.value});
+			this.setState({ waitSince: e.target.value });
 		};
 
-		this.onRemoveTrailingIdleTime = (() => {
+		this.onRemoveTrailingIdleTime = () => {
 			controller.removeTrailingIdleTime();
-		});
+		};
 
-		this.onWaitTillNextMpOrLucidTick = (() => {
+		this.onWaitTillNextMpOrLucidTick = () => {
 			controller.waitTillNextMpOrLucidTick();
-		});
+		};
 
 		this.state = {
 			statusList: [],
 			waitTime: "1",
 			waitSince: WaitSince.Now,
 			waitUntil: "0:00",
-		}
+		};
 	}
 
 	render() {
@@ -509,27 +612,46 @@ export class SkillsWindow extends React.Component {
 			let skillName = this.state.statusList[i].skillName;
 			let info = this.state.statusList[i];
 
-			let btn = <SkillButton
-				key={i}
-				highlight={info ? info.highlight : false}
-				skillName={skillName}
-				ready={info ? info.status===SkillReadyStatus.Ready : false}
-				readyAsideFromCd={info ? info.statusExcludingCd===SkillReadyStatus.Ready : false}
-				cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
-				secondaryCdProgress={info ? (info.secondaryCdRecastTime && info.timeTillSecondaryReady ? 1 - info.timeTillSecondaryReady/info.secondaryCdRecastTime : 1) : 1}
+			let btn = (
+				<SkillButton
+					key={i}
+					highlight={info ? info.highlight : false}
+					skillName={skillName}
+					ready={info ? info.status === SkillReadyStatus.Ready : false}
+					readyAsideFromCd={
+						info ? info.statusExcludingCd === SkillReadyStatus.Ready : false
+					}
+					cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
+					secondaryCdProgress={
+						info
+							? info.secondaryCdRecastTime && info.timeTillSecondaryReady
+								? 1 - info.timeTillSecondaryReady / info.secondaryCdRecastTime
+								: 1
+							: 1
+					}
 				/>
+			);
 			skillButtons.push(btn);
 		}
 
-		let waitUntilHelp = <Help topic="waitUntilInputFormat" content={<div>
-			<div className="paragraph">{localize({en: "Examples:", zh: "时间格式举例："})}</div>
-			<div className="paragraph">
-				12 <br/>
-				1.5 <br/>
-				10:04.2 <br/>
-				-0:03
-			</div>
-		</div>}/>;
+		let waitUntilHelp = (
+			<Help
+				topic="waitUntilInputFormat"
+				content={
+					<div>
+						<div className="paragraph">
+							{localize({ en: "Examples:", zh: "时间格式举例：" })}
+						</div>
+						<div className="paragraph">
+							12 <br />
+							1.5 <br />
+							10:04.2 <br />
+							-0:03
+						</div>
+					</div>
+				}
+			/>
+		);
 
 		let textInputStyle = {
 			display: "inline-block",
@@ -545,11 +667,12 @@ export class SkillsWindow extends React.Component {
 			borderBottom: "1px solid " + colors.text,
 			borderRadius: 0,
 			background: "transparent",
-			color: colors.text
+			color: colors.text,
 		};
-		return <div className={"skillsWindow"}>
-			<div className={"skillIcons"}>
-				<style>{`
+		return (
+			<div className={"skillsWindow"}>
+				<div className={"skillIcons"}>
+					<style>{`
 					.info-tooltip {
 						color: ${colors.text};
 						background-color: ${colors.tipBackground};
@@ -562,87 +685,185 @@ export class SkillsWindow extends React.Component {
 					}
 					.info-tooltip-arrow { display: none; }
 				`}</style>
-				{skillButtons}
-				<ReactTooltip anchorSelect={".skillButton"} className={"info-tooltip"} classNameArrow={"info-tooltip-arrow"} />
-				<div style={{ margin: "10px 0" }}>
-				<div style={{ display: "flex", flexDirection: "row", marginBottom: 6 }}>
-					{localize({
-					en:
-						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-						Wait until <input type={"text"} style={{
-							...{ width: 40 }, ...textInputFieldStyle
-						}} value={this.state.waitTime} onChange={this.onWaitTimeChange} /> second(s) since <select
-							style={{ display: "inline-block", outline: "none" }}
-							value={this.state.waitSince}
-							onChange={this.onWaitSinceChange}>
-							<option value={WaitSince.Now}>now</option>
-							<option value={WaitSince.LastSkill}>last action</option>
-						</select> <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-						</form>,
-					zh:
-						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-						快进至 <select
-							style={{ display: "inline-block", outline: "none" }}
-							value={this.state.waitSince}
-							onChange={this.onWaitSinceChange}>
-							<option value={WaitSince.Now}>当前</option>
-							<option value={WaitSince.LastSkill}>上次操作</option>
-						</select> 后的 <input type={"text"} style={{
-							...{ width: 30 }, ...textInputFieldStyle
-						}} value={this.state.waitTime} onChange={this.onWaitTimeChange} /> 秒 <input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-						</form>,
-					ja:
-						<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
-						<select
-							style={{ display: "inline-block", outline: "none", marginRight: "4px" }}
-							value={this.state.waitSince}
-							onChange={this.onWaitSinceChange}
-						>
-							<option value={WaitSince.Now}>現在のカーソルの位置</option>
-							<option value={WaitSince.LastSkill}>最後のアクション</option>
-						</select>
-						から
-						<input
-							type={"text"}
-							style={{
-							...{ width: 30 }, ...textInputFieldStyle
-							}}
-							value={this.state.waitTime}
-							onChange={this.onWaitTimeChange}
-						/>
-						秒進む
-						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-						</form>,
-					})}
-					{localize({
-					en:
-						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
-						Wait until {waitUntilHelp} <input type={"text"} style={{
-							...{ width: 60 }, ...textInputFieldStyle
-						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
-						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-						</form>,
-					zh:
-						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
-						快进至指定时间 {waitUntilHelp} <input type={"text"} style={{
-							...{ width: 60 }, ...textInputFieldStyle
-						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
-						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-						</form>,
-					ja:
-						<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
-						指定した時間まで進む {waitUntilHelp} <input type={"text"} style={{
-							...{ width: 60 }, ...textInputFieldStyle
-						}} value={this.state.waitUntil} onChange={this.onWaitUntilChange} /> 
-						<input type="submit" disabled={!controller.displayingUpToDateGameState} value="GO" />
-						</form>
-					})}
-
+					{skillButtons}
+					<ReactTooltip
+						anchorSelect={".skillButton"}
+						className={"info-tooltip"}
+						classNameArrow={"info-tooltip-arrow"}
+					/>
+					<div style={{ margin: "10px 0" }}>
+						<div style={{ display: "flex", flexDirection: "row", marginBottom: 6 }}>
+							{localize({
+								en: (
+									<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+										Wait until{" "}
+										<input
+											type={"text"}
+											style={{
+												...{ width: 40 },
+												...textInputFieldStyle,
+											}}
+											value={this.state.waitTime}
+											onChange={this.onWaitTimeChange}
+										/>{" "}
+										second(s) since{" "}
+										<select
+											style={{ display: "inline-block", outline: "none" }}
+											value={this.state.waitSince}
+											onChange={this.onWaitSinceChange}
+										>
+											<option value={WaitSince.Now}>now</option>
+											<option value={WaitSince.LastSkill}>last action</option>
+										</select>{" "}
+										<input
+											type="submit"
+											disabled={!controller.displayingUpToDateGameState}
+											value="GO"
+										/>
+									</form>
+								),
+								zh: (
+									<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+										快进至{" "}
+										<select
+											style={{ display: "inline-block", outline: "none" }}
+											value={this.state.waitSince}
+											onChange={this.onWaitSinceChange}
+										>
+											<option value={WaitSince.Now}>当前</option>
+											<option value={WaitSince.LastSkill}>上次操作</option>
+										</select>{" "}
+										后的{" "}
+										<input
+											type={"text"}
+											style={{
+												...{ width: 30 },
+												...textInputFieldStyle,
+											}}
+											value={this.state.waitTime}
+											onChange={this.onWaitTimeChange}
+										/>{" "}
+										秒{" "}
+										<input
+											type="submit"
+											disabled={!controller.displayingUpToDateGameState}
+											value="GO"
+										/>
+									</form>
+								),
+								ja: (
+									<form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>
+										<select
+											style={{
+												display: "inline-block",
+												outline: "none",
+												marginRight: "4px",
+											}}
+											value={this.state.waitSince}
+											onChange={this.onWaitSinceChange}
+										>
+											<option value={WaitSince.Now}>
+												現在のカーソルの位置
+											</option>
+											<option value={WaitSince.LastSkill}>
+												最後のアクション
+											</option>
+										</select>
+										から
+										<input
+											type={"text"}
+											style={{
+												...{ width: 30 },
+												...textInputFieldStyle,
+											}}
+											value={this.state.waitTime}
+											onChange={this.onWaitTimeChange}
+										/>
+										秒進む
+										<input
+											type="submit"
+											disabled={!controller.displayingUpToDateGameState}
+											value="GO"
+										/>
+									</form>
+								),
+							})}
+							{localize({
+								en: (
+									<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
+										Wait until {waitUntilHelp}{" "}
+										<input
+											type={"text"}
+											style={{
+												...{ width: 60 },
+												...textInputFieldStyle,
+											}}
+											value={this.state.waitUntil}
+											onChange={this.onWaitUntilChange}
+										/>
+										<input
+											type="submit"
+											disabled={!controller.displayingUpToDateGameState}
+											value="GO"
+										/>
+									</form>
+								),
+								zh: (
+									<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
+										快进至指定时间 {waitUntilHelp}{" "}
+										<input
+											type={"text"}
+											style={{
+												...{ width: 60 },
+												...textInputFieldStyle,
+											}}
+											value={this.state.waitUntil}
+											onChange={this.onWaitUntilChange}
+										/>
+										<input
+											type="submit"
+											disabled={!controller.displayingUpToDateGameState}
+											value="GO"
+										/>
+									</form>
+								),
+								ja: (
+									<form onSubmit={this.onWaitUntilSubmit} style={textInputStyle}>
+										指定した時間まで進む {waitUntilHelp}{" "}
+										<input
+											type={"text"}
+											style={{
+												...{ width: 60 },
+												...textInputFieldStyle,
+											}}
+											value={this.state.waitUntil}
+											onChange={this.onWaitUntilChange}
+										/>
+										<input
+											type="submit"
+											disabled={!controller.displayingUpToDateGameState}
+											value="GO"
+										/>
+									</form>
+								),
+							})}
+						</div>
+						<button onClick={this.onWaitTillNextMpOrLucidTick}>
+							{localize({
+								en: "Wait until Manafont / MP tick / lucid tick",
+								zh: "快进至魔泉生效/跳蓝/跳醒梦",
+							})}
+						</button>
+						<span> </span>
+						<button onClick={this.onRemoveTrailingIdleTime}>
+							{localize({
+								en: "Remove trailing idle time",
+								zh: "去除时间轴末尾的发呆时间",
+							})}
+						</button>
+					</div>
 				</div>
-		  		<button onClick={this.onWaitTillNextMpOrLucidTick}>{localize({ en: "Wait until Manafont / MP tick / lucid tick", zh: "快进至魔泉生效/跳蓝/跳醒梦" })}</button><span> </span>
-		  		<button onClick={this.onRemoveTrailingIdleTime}>{localize({ en: "Remove trailing idle time", zh: "去除时间轴末尾的发呆时间" })}</button>
-				</div>
-	  		</div>
-		</div>
+			</div>
+		);
 	}
 }

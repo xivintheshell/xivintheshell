@@ -1,5 +1,5 @@
-import {BuffType} from "../Game/Common";
-import {updateTimelineView} from "./Timeline";
+import { BuffType } from "../Game/Common";
+import { updateTimelineView } from "./Timeline";
 
 // grabbed most of them from xivanalysis
 export const buffIcons = new Map();
@@ -35,11 +35,11 @@ buffIcons.set(BuffType.Fugetsu, require("./Asset/Buffs/SAM/Fugetsu.png"));
 buffIcons.set(BuffType.EnhancedEnpi, require("./Asset/Buffs/SAM/Enhanced Enpi.png"));
 
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
-buffIcons.forEach((path, skillName)=>{
+buffIcons.forEach((path, skillName) => {
 	let imgObj = new Image();
 	imgObj.src = path;
-	imgObj.onload = function() {
+	imgObj.onload = function () {
 		updateTimelineView();
-	}
+	};
 	buffIconImages.set(skillName, imgObj);
 });
