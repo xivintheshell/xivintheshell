@@ -765,7 +765,10 @@ export function GlobalHelpTooltip(props: {
 	</div>
 }
 
-export function Help(props: {topic: string, content: ContentNode}) {
+export function Help(props: {
+	topic: string, // need to be unique globally
+	content: ContentNode
+}) {
 	let colors = getCurrentThemeColors();
 	let style: CSSProperties = {
 		display: "inline-block",

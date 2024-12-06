@@ -325,7 +325,7 @@ class SkillButton extends React.Component {
 			color={"rgba(250,186,47,255)"}
 			/>
 		const proc = <img
-			hidden={!this.props.highlight} src="https://miyehn.me/ffxiv-blm-rotation/misc/proc.png" alt="skill proc"
+			hidden={!this.props.highlight} src="/misc/proc.png" alt="skill proc"
 			style={{
 				position: "absolute",
 				width: 44,
@@ -358,7 +358,7 @@ class SkillButton extends React.Component {
 					position: "absolute",
 					width: skillBoxPx,
 					height: skillBoxPx,
-					background: "url('https://miyehn.me/ffxiv-blm-rotation/misc/skillIcon_overlay.png') no-repeat"
+					background: "url('/misc/skillIcon_overlay.png') no-repeat"
 				}}/>
 			</div>
 			{proc}
