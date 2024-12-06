@@ -3,7 +3,8 @@
 		"date": "12/5/24",
 		"changes": [
 			"Updated Chinese FRU tracks to latest (12/2 version)",
-			"Additional Chinese localization changes (preset lines; initial resource overrides section; many resource names)"
+			"Additional Chinese localization changes (preset lines; initial resource overrides section; many resource names)",
+			"New skill icon progress bar visuals 🎉"
 		]
 	},
 	{
