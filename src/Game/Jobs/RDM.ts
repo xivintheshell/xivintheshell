@@ -108,8 +108,8 @@ export class RDMState extends GameState {
 		const isInstant = FINISHERS.includes(name)
 			|| (name === SkillName.GrandImpact && this.tryConsumeResource(ResourceType.GrandImpactReady))
 			|| (ACCELERATION_SKILLS.includes(name) && this.tryConsumeResource(ResourceType.Acceleration))
-			|| this.tryConsumeResource(ResourceType.Swiftcast)
-			|| this.tryConsumeResource(ResourceType.Dualcast);
+			|| this.tryConsumeResource(ResourceType.Dualcast)
+			|| this.tryConsumeResource(ResourceType.Swiftcast);
 		// After any hardcast skill, gain dualcast
 		if (!isInstant) {
 			this.resources.get(ResourceType.Dualcast).gain(1);
@@ -318,8 +318,8 @@ const makeSpell_RDM = (name: SkillName, unlockLevel: number, params: {
 			FINISHERS.includes(name)
 			|| name === SkillName.GrandImpact
 			|| (ACCELERATION_SKILLS.includes(name) && state.hasResourceAvailable(ResourceType.Acceleration))
-			|| state.hasResourceAvailable(ResourceType.Swiftcast)
 			|| state.hasResourceAvailable(ResourceType.Dualcast)
+			|| state.hasResourceAvailable(ResourceType.Swiftcast)
 		),
 		onConfirm: onConfirm,
 	});

@@ -337,6 +337,19 @@ export function localizeBuffType(text: BuffType) : string {
 }
 
 const resourcesZh = new Map<ResourceType, string>([
+	// common
+	[ResourceType.Mana, "MP"],
+	[ResourceType.Tincture, "爆发药"],
+	[ResourceType.Sprint, "疾跑"],
+	[ResourceType.RearPositional, "身位加成（后）"],
+	[ResourceType.FlankPositional, "身位加成（侧）"],
+	[ResourceType.Addle, "昏乱"],
+	[ResourceType.Swiftcast, "即刻咏唱"],
+	[ResourceType.LucidDreaming, "醒梦"],
+	[ResourceType.Surecast, "沉稳咏唱"],
+	[ResourceType.InCombat, "战斗中"],
+	[ResourceType.cd_GCD, "GCD"],
+
 	// BLM
 	[ResourceType.Triplecast, "三重咏唱"],
 	[ResourceType.Firestarter, "火苗"],
@@ -344,6 +357,13 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.ThunderDoT, "高闪雷"],
 	[ResourceType.LeyLines, "黑魔纹"],
 	[ResourceType.Manaward, "魔纹罩"],
+	[ResourceType.AstralFire, "星极火"],
+	[ResourceType.UmbralIce, "灵极冰"],
+	[ResourceType.UmbralHeart, "冰针"],
+	[ResourceType.AstralSoul, "星极魂"],
+	[ResourceType.Paradox, "悖论"],
+	[ResourceType.Enochian, "天语"],
+	[ResourceType.Polyglot, "通晓"],
 
 	// PCT
 	[ResourceType.Aetherhues, "以太色调"],
@@ -359,6 +379,9 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.Starstruck, "天星棱光预备"],
 	[ResourceType.TemperaGrassa, "油性坦培拉涂层"],
 	[ResourceType.MonochromeTones, "色调反转"],
+	[ResourceType.HammerCombo, "重锤连击数"],
+	[ResourceType.cd_Subtractive, "CD：减色混合"],
+	[ResourceType.cd_Grassa, "CD：油性坦培拉涂层"],
 
 	// RDM 
 	[ResourceType.WhiteMana, "白魔元"],
@@ -374,14 +397,26 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.PrefulgenceReady, "光芒四射预备"],
 	[ResourceType.ThornedFlourish, "荆棘环绕预备"],
 	[ResourceType.VerfireReady, "赤火炎预备"],
-	[ResourceType.VerstoneReady, "赤飞石预备"]
+	[ResourceType.VerstoneReady, "赤飞石预备"],
+	[ResourceType.RDMMeleeCounter, "赤魔近战连"],
+	[ResourceType.RDMAoECounter, "赤魔AOE连"]
 
 ]);
 
 export function localizeResourceType(text: ResourceType): string {
 	const currentLang = getCurrentLanguage();
 	if (currentLang === "zh") {
-		return resourcesZh.get(text) ?? text;
+		if (resourcesZh.has(text)) {
+			return resourcesZh.get(text)!;
+		}
+		if (text.startsWith("cd_")) {
+			const sliced = text.slice(3) as keyof typeof SkillName;
+			const skillName: SkillName | undefined = SkillName[sliced];
+			if (skillName !== undefined) {
+				return "CD：" + localizeSkillName(skillName);
+			}
+		}
+		return text;
 	} else {
 		return text;
 	}

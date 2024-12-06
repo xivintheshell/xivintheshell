@@ -690,11 +690,26 @@ export abstract class GameState {
 		let enoughMana = capturedManaCost <= currentMana;
 		let reqsMet = skill.validateAttempt(this);
 		let skillUnlocked = this.config.level >= skill.unlockLevel;
+		let nonCdStatus = SkillReadyStatus.Ready;
 		let status = SkillReadyStatus.Ready;
 		if (!notBlocked) status = SkillReadyStatus.Blocked;
-		else if (!skillUnlocked) status = SkillReadyStatus.SkillNotUnlocked;
-		else if (!reqsMet) status = SkillReadyStatus.RequirementsNotMet;
-		else if (!enoughMana) status = SkillReadyStatus.NotEnoughMP;
+
+		if (skill.secondaryCd && this.cooldowns.get(skill.secondaryCd.cdName).stacksAvailable() === 0) nonCdStatus = SkillReadyStatus.Blocked;
+		else if (!skillUnlocked) nonCdStatus = SkillReadyStatus.SkillNotUnlocked;
+		else if (!reqsMet) nonCdStatus = SkillReadyStatus.RequirementsNotMet;
+		else if (!enoughMana) nonCdStatus = SkillReadyStatus.NotEnoughMP;
+
+		if (skill.name === SkillName.Meditate) {
+			// Special case for Meditate
+			if (timeTillAvailable > Debug.epsilon || this.cooldowns.get(ResourceType.cd_GCD).timeTillNextStackAvailable() > Debug.epsilon) {
+				// if the skill is on CD or the GCD is rolling, mark its non-CD status as Ready
+				// but its CD status Blocked
+				nonCdStatus = SkillReadyStatus.Ready;
+				status = SkillReadyStatus.Blocked;
+			}
+		} else if (nonCdStatus !== SkillReadyStatus.Ready) {
+			status = nonCdStatus;
+		}
 
 		// Special case for skills that require being in combat
 		if (([
@@ -715,7 +730,7 @@ export abstract class GameState {
 		// special case for meditate: if meditate is off CD, use the GCD cooldown instead if it's rolling
 		// this fails the edge case where a GCD is pressed ~58 seconds after meditate was last pressed
 		// and meditate would become available in the middle of the CD
-		if (skillName === SkillName.Meditate && timeTillNextStackReady === 0) {
+		if (skillName === SkillName.Meditate && timeTillNextStackReady < Debug.epsilon) {
 			const gcd = this.cooldowns.get(ResourceType.cd_GCD);
 			const gcdRecastTime = gcd.currentStackCd();
 			if (gcd.timeTillNextStackAvailable() > timeTillNextStackReady) {
@@ -748,12 +763,15 @@ export abstract class GameState {
 		return {
 			skillName: skill.name,
 			status: status,
+			statusExcludingCd: nonCdStatus,
 			stacksAvailable: secondaryMaxStacks > 0 ? secondaryStacksAvailable : primaryStacksAvailable,
 			maxStacks: Math.max(primaryMaxStacks, secondaryMaxStacks),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
-			cdRecastTime: primaryRecastOnly ? cdRecastTime : Math.max(cdRecastTime, secondaryRecastTime),
-			timeTillNextStackReady: Math.max(timeTillNextStackReady, timeTillSecondaryReady),
+			cdRecastTime: cdRecastTime,
+			secondaryCdRecastTime: secondaryRecastTime,
+			timeTillNextStackReady: timeTillNextStackReady,
+			timeTillSecondaryReady: timeTillSecondaryReady,
 			timeTillAvailable: timeTillAvailable,
 			timeTillDamageApplication: timeTillDamageApplication,
 			capturedManaCost: capturedManaCost,

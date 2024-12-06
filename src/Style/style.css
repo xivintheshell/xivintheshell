@@ -42,14 +42,6 @@
     user-select: none;
     position: relative;
 }
-.cdProgress {
-    position: absolute;
-    z-index: 1;
-    left: 50%;
-    top: 3px;
-    margin-left: -20px;
-    pointer-events: none;
-}
 
 /*======== individual elems ========*/
 
