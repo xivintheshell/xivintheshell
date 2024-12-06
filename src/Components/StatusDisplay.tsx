@@ -207,15 +207,15 @@ function ResourceCounter(props: {
 		color?: string,
 	}[]
 }) {
+	// true if containerType is "box", or any item has imgUrl specified
+	const anyBox: boolean = props.containerType === "box" || props.items.some(
+		(item) => item.imgUrl !== undefined
+	);
+
 	const stacks: React.JSX.Element[] = props.items.map((item, i) =>
 		(props.containerType === "circle" && item.imgUrl === undefined) ?
 			<ResourceStack key={i} color={item.color} offset={anyBox ? {x:0, y:3} : undefined}/> :
 			<ResourceBox key={i} color={item.color} imgUrl={item.imgUrl} offset={anyBox ? {x:-2, y:0} : undefined}/>
-	);
-
-	// true if containerType is "box", or any item has imgUrl specified
-	const anyBox: boolean = props.containerType === "box" || props.items.some(
-		(item) => item.imgUrl !== undefined
 	);
 
 	if (anyBox) {
