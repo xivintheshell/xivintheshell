@@ -104,7 +104,6 @@ export type StatusViewProps = {
 	level: number
 }
 
-// color, value
 function ResourceStack(props: {
 	color?: string,
 	offset?: {x: number, y: number}
@@ -208,18 +207,17 @@ function ResourceCounter(props: {
 		color?: string,
 	}[]
 }) {
-	let stacks: React.JSX.Element[] = [];
-	// true if containerType is "box", or any item has imgUrl specified
-	const anyBox: boolean = props.containerType === "box" || props.items.some((item) => item.imgUrl !== undefined);
+	const stacks: React.JSX.Element[] = props.items.map((item, i) =>
+		(props.containerType === "circle" && item.imgUrl === undefined) ?
+			<ResourceStack key={i} color={item.color} offset={anyBox ? {x:0, y:3} : undefined}/> :
+			<ResourceBox key={i} color={item.color} imgUrl={item.imgUrl} offset={anyBox ? {x:-2, y:0} : undefined}/>
+	);
 
-	for (let i = 0; i < props.items.length; i++) {
-		const item = props.items[i];
-		if (props.containerType === "circle" && item.imgUrl === undefined) {
-			stacks.push(<ResourceStack key={i} color={item.color} offset={anyBox ? {x:0, y:3} : undefined}/>);
-		} else {
-			stacks.push(<ResourceBox key={i} color={item.color} imgUrl={item.imgUrl} offset={anyBox ? {x:-2, y:0} : undefined}/>);
-		}
-	}
+	// true if containerType is "box", or any item has imgUrl specified
+	const anyBox: boolean = props.containerType === "box" || props.items.some(
+		(item) => item.imgUrl !== undefined
+	);
+
 	if (anyBox) {
 		return <div style={{ marginBottom: 4 }}>
 			<div style={{
