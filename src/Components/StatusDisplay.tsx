@@ -210,9 +210,7 @@ function ResourceCounter(props: {
 }) {
 	let stacks: React.JSX.Element[] = [];
 	// true if containerType is "box", or any item has imgUrl specified
-	let anyBox: boolean = props.items.reduce((b, item) => {
-		return b || item.imgUrl !== undefined;
-	}, props.containerType === "box");
+	const anyBox: boolean = props.containerType === "box" || props.items.some((item) => item.imgUrl !== undefined);
 
 	for (let i = 0; i < props.items.length; i++) {
 		const item = props.items[i];
