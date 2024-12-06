@@ -122,7 +122,7 @@ function ResourceStack(props: {
 		border: "1px solid " + colors.bgHighContrast,
 		verticalAlign: "top"
 	}}>{
-		props.color !== undefined ? <div style={{
+		props.color && <div style={{
 			backgroundColor: `${props.color}`,
 			position: "absolute",
 			top: 2,
@@ -130,7 +130,7 @@ function ResourceStack(props: {
 			left: 2,
 			right: 2,
 			borderRadius: "inherit"
-		}}/> : undefined
+		}}/>
 	}</div>;
 }
 
