@@ -13,7 +13,8 @@ buffIcons.set(BuffType.Brotherhood, require("./Asset/PartyBuffs/brotherhood.png"
 buffIcons.set(BuffType.Card_TheBalance, require("./Asset/PartyBuffs/the_balance.png"));
 buffIcons.set(BuffType.Card_TheSpear, require("./Asset/PartyBuffs/the_spear.png"));
 buffIcons.set(BuffType.ChainStratagem, require("./Asset/PartyBuffs/chain_stratagem.png"));
-buffIcons.set(BuffType.Devilment, require("./Asset/PartyBuffs/devilment.png"));
+// I have no idea why "./Asset/PartyBuffs/devilment.png" crashes..:
+buffIcons.set(BuffType.Devilment, require("./Asset/Buffs/DNC/Devilment.png"));
 buffIcons.set(BuffType.Divination, require("./Asset/PartyBuffs/divination.png"));
 buffIcons.set(BuffType.Dokumori, require("./Asset/PartyBuffs/dokumori.png"));
 buffIcons.set(BuffType.Embolden, require("./Asset/PartyBuffs/embolden.png"));
