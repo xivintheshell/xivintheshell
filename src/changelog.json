@@ -1,5 +1,12 @@
 [
 	{
+		"date": "12/7/24",
+		"changes": [
+			"Updated positional buff icons",
+			"Misc cleanups and optimizations (hey devs: rerun npm install)"
+		]
+	},
+	{
 		"date": "12/5/24",
 		"changes": [
 			"Updated Chinese FRU tracks to latest (12/2 version)",
