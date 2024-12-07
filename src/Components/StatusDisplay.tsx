@@ -299,15 +299,11 @@ buffIcons.set(ResourceType.FlankPositional, require("./Asset/Buffs/General/Flank
 function Buff(props: BuffProps) {
 	let assetName: string = props.rscType;
 	if (props.stacks > 1) assetName += props.stacks;
-	// Special case for positional buffs: add a rounded border thta's similar in size to the other buffs
 	let imgStyle: React.CSSProperties;
 	if (props.rscType === ResourceType.RearPositional || props.rscType === ResourceType.FlankPositional) {
 		imgStyle = {
 			height: 40,
-			borderStyle: "solid",
-			borderColor: getCurrentThemeColors().bgHighContrast,
-			borderWidth: "0.2em",
-			borderRadius: "0.7em",
+			//filter: "drop-shadow(0 2px 1.5px rgba(0, 0, 0, 0.25)",
 		};
 	} else {
 		imgStyle = { height: 40 };
@@ -478,7 +474,9 @@ export function ResourcesDisplay(props: {
 					containerType={"circle"}
 					items={senList.map(item => { return {
 						color: item.present ? item.color : undefined
-					}})}/>
+					}})}
+					key={"resourceDisplay" + i}
+				/>
 			}
 			default:
 				return <ResourceText

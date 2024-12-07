@@ -596,9 +596,12 @@ export class Config extends React.Component {
 							throw new Error("Imported gearset was for a job (" + body["jobAbbrev"] + ") that XIV in the Shell doesn't support");
 						}
 						// TODO should probably validate each of these fields
-						const baseSpeed = XIVMath.getSubstatBase(parseFloat(body["level"]) as LevelSync).toString()
-						const spellSpeed = stats.get("SPS") ?? baseSpeed
-						const skillSpeed = stats.get("SKS") ?? baseSpeed
+						const baseSpeed = XIVMath.getSubstatBase(parseFloat(body["level"]) as LevelSync).toString();
+						const spellSpeed = stats.get("SPS") ?? baseSpeed;
+						const skillSpeed = stats.get("SKS") ?? baseSpeed;
+						const importedFields = ["job", "level", "criticalHit", "directHit", "determination"];
+						if (stats.has("SPS")) importedFields.push("spellSpeed");
+						if (stats.has("SKS")) importedFields.push("skillSpeed");
 						this.setState({
 							job: body["jobAbbrev"],
 							level: body["level"],
@@ -608,11 +611,11 @@ export class Config extends React.Component {
 							directHit: stats.get("DH"),
 							determination: stats.get("DET"),
 							imported: true,
-							importedFields: ["job", "level", "spellSpeed", "skillSpeed", "criticalHit", "directHit", "determination"],
+							importedFields: importedFields,
 							dirty: true,
 						});
-						this.updateTaxPreview(spellSpeed!.toString(), this.state.fps, body["level"]);
-						this.updateSksTaxPreview(skillSpeed!.toString(), this.state.fps, body["level"]);
+						this.updateTaxPreview(spellSpeed, this.state.fps, body["level"]);
+						this.updateSksTaxPreview(skillSpeed, this.state.fps, body["level"]);
 					} else {
 						console.error(response);
 						throw new Error("etro load failed (please check your link)");
