@@ -59,6 +59,12 @@ export type SelectedStatisticsData = {
 	}
 }
 
+export enum DamageStatisticsMode {
+	Normal,
+	Historical,
+	Selected
+}
+
 export type DamageStatisticsData = {
 	time: number,
 	tinctureBuffPercentage: number,
@@ -91,7 +97,7 @@ export type DamageStatisticsData = {
 		totalPotPotency: number,
 		totalPartyBuffPotency: number,
 	},
-	historical: boolean,
+	mode: DamageStatisticsMode,
 }
 
 export let updateDamageStats = (data: DamageStatisticsData) => {};
@@ -409,7 +415,7 @@ export class DamageStatistics extends React.Component {
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
 		},
-		historical: false,
+		mode: DamageStatisticsMode.Normal,
 	};
 
 	constructor(props: {}) {
@@ -478,7 +484,7 @@ export class DamageStatistics extends React.Component {
 		let selected: React.ReactNode | undefined = undefined;
 		let selectedPPSAvailable = this.selected.targetableDuration > 0;
 		if (this.selected.totalDuration > 0) {
-			selected = <div style={{flex: 1}}>
+			selected = <div style={{flex: 1, color: colors.accent}}>
 				<div>{localize({en: "Selected duration", zh: "选中时长"})}{colon}{this.selected.totalDuration.toFixed(3)}</div>
 				<div>{selectedPotencyStr}</div>
 				<div>{localize({en: "Selected PPS", zh: "选中部分PPS"})}{colon}{selectedPPSAvailable ? (this.selected.potency.applied / this.selected.targetableDuration).toFixed(2) : "N/A"}</div>
@@ -488,7 +494,7 @@ export class DamageStatistics extends React.Component {
 
 		let summary = <div style={{display: "flex", marginBottom: 10, flexDirection: "row"}}>
 			<div style={{flex: 1}}>
-				<div style={{color: this.data.historical ? colors.historical : colors.text}}>
+				<div style={{color: this.data.mode !== DamageStatisticsMode.Normal ? colors.historical : colors.text}}>
 					<div>{localize({en: "Last damage application time", zh: "最后伤害结算时间"})}{colon}{lastDamageApplicationTimeDisplay}</div>
 					<div>{potencyStr}</div>
 					<div>PPS <Help topic={"ppsNotes"} content={
@@ -745,7 +751,7 @@ export class DamageStatistics extends React.Component {
 		} else if (controller.game.job === ShellJob.MCH) {
 			dotHeaderStr = localize({en: "Bioblaster"})
 		}
-		if (this.data.historical) {
+		if (this.data.mode === DamageStatisticsMode.Historical) {
 			let t = (this.data.time - this.data.countdown).toFixed(3) + "s";
 			let upTillStr = lparen + localize({
 				en: "up till " + t,
@@ -753,7 +759,17 @@ export class DamageStatistics extends React.Component {
 			}) + rparen;
 			mainHeaderStr += upTillStr;
 			dotHeaderStr += upTillStr;
+		} else if (this.data.mode === DamageStatisticsMode.Selected) {
+			const selectedStr = lparen + localize({
+				en: "selected",
+				zh: "选中部分"
+			}) + rparen;
+			mainHeaderStr += selectedStr;
+			dotHeaderStr += selectedStr;
 		}
+		let titleColor = colors.text;
+		if (this.data.mode === DamageStatisticsMode.Historical) titleColor = colors.historical;
+		else if (this.data.mode === DamageStatisticsMode.Selected) titleColor = colors.accent;
 		let mainTable = <div id="damageTable" style={{
 			position: "relative",
 			margin: "0 auto",
@@ -761,7 +777,7 @@ export class DamageStatistics extends React.Component {
 			maxWidth: 960,
 		}}>
 			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
-				<b style={this.data.historical ? {color: colors.historical}:undefined}>{mainHeaderStr}</b>
+				<b style={{color: titleColor}}>{mainHeaderStr}</b>
 			</div>
 			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
 				<div>
@@ -799,7 +815,7 @@ export class DamageStatistics extends React.Component {
 			maxWidth: 960,
 		}}>
 			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
-				<b style={this.data.historical ? {color: colors.historical}:undefined}>{dotHeaderStr}</b>
+				<b style={{color: titleColor}}>{dotHeaderStr}</b>
 			</div>
 			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
 				<div>

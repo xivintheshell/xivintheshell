@@ -6,7 +6,7 @@ import {PotencyModifierType} from "./Game/Potency";
 import {ResourceType, SkillName} from "./Game/Common";
 import {XIVMath} from "./Game/XIVMath";
 import {SAMState} from "./Game/Jobs/SAM";
-import {DamageStatisticsData, mockDamageStatUpdateFn} from "./Components/DamageStatistics";
+import {DamageStatisticsData, DamageStatisticsMode, mockDamageStatUpdateFn} from "./Components/DamageStatistics";
 
 // TODO figure out how to share test code :3
 
@@ -50,7 +50,7 @@ const resetDamageData = () => {
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
 		},
-		historical: false,
+		mode: DamageStatisticsMode.Normal
 	};
 };
 

@@ -10,7 +10,7 @@ import {DEFAULT_BLM_CONFIG, GameConfig} from "./Game/GameConfig";
 import {PotencyModifierType} from "./Game/Potency";
 import {ResourceType, SkillName} from "./Game/Common";
 import {RDMState} from "./Game/Jobs/RDM";
-import {DamageStatisticsData, mockDamageStatUpdateFn} from "./Components/DamageStatistics";
+import {DamageStatisticsData, DamageStatisticsMode, mockDamageStatUpdateFn} from "./Components/DamageStatistics";
 
 // TODO figure out how to share test code :3
 
@@ -54,7 +54,7 @@ const resetDamageData = () => {
             totalPotPotency: 0,
             totalPartyBuffPotency: 0,
         },
-        historical: false,
+        mode: DamageStatisticsMode.Normal
     };
 };
 
