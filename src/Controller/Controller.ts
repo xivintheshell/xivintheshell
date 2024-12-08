@@ -39,7 +39,7 @@ import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDrawOptions} from "../Components/Common";
 import {TimelineRenderingProps} from "../Components/TimelineCanvas";
 import {Potency, PotencyModifierType} from "../Game/Potency";
-import {updateDamageStats, updateSelectedStats} from "../Components/DamageStatistics";
+import {DamageStatisticsData, updateDamageStats, updateSelectedStats} from "../Components/DamageStatistics";
 import {
 	bossIsUntargetable,
 	calculateDamageStats,
@@ -284,12 +284,7 @@ class Controller {
 			this.updateStatusDisplay(this.game);
 			this.updateSkillButtons(this.game);
 			updateSkillSequencePresetsView();
-
-			// if nothing is selected, call stats update here to get data up to selected timestamp:
-			// otherwise do the update outside of sandbox
-			if (!hasSelected) {
-				this.#updateTotalDamageStats();
-			}
+			this.#updateTotalDamageStats();
 
 			// timeline
 			this.timeline.drawElements();
@@ -299,7 +294,7 @@ class Controller {
 		setHistorical(true);
 
 		if (hasSelected) {
-			this.#updateTotalDamageStats();
+			this.#updateTotalDamageStats(true);
 		}
 		this.#updateSelectedDamageStats();
 	}
@@ -475,12 +470,21 @@ class Controller {
 		this.autoSave();
 	}
 
-	#updateTotalDamageStats() {
+	#updateTotalDamageStats(tablesOnly: boolean = false) {
 		if (!this.#skipViewUpdates) {
-			let damageStats = calculateDamageStats({
+			let damageStats: Partial<DamageStatisticsData> = calculateDamageStats({
 				tinctureBuffPercentage: this.#tinctureBuffPercentage,
 				lastDamageApplicationTime: this.#lastDamageApplicationTime
 			});
+			if (tablesOnly) {
+				damageStats = {
+					mainTable: damageStats.mainTable,
+					mainTableSummary: damageStats.mainTableSummary,
+					dotTable: damageStats.dotTable,
+					dotTableSummary: damageStats.dotTableSummary,
+					mode: damageStats.mode,
+				};
+			}
 			// display
 			updateDamageStats(damageStats);
 		}

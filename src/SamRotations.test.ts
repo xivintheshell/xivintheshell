@@ -95,8 +95,8 @@ beforeEach(() => {
 	// clear stats from the last run
 	resetDamageData();
 	// monkeypatch the updateDamageStats function to avoid needing to initialize the frontend
-	mockDamageStatUpdateFn((newData: DamageStatisticsData) => {
-		damageData = newData;
+	mockDamageStatUpdateFn((newData: Partial<DamageStatisticsData>) => {
+		damageData = {...damageData, ...newData};
 	});
 	// config reset is handled in testWithConfig helper
 });

@@ -100,11 +100,11 @@ export type DamageStatisticsData = {
 	mode: DamageStatisticsMode,
 }
 
-export let updateDamageStats = (data: DamageStatisticsData) => {};
-export let updateSelectedStats = (data: SelectedStatisticsData) => {};
+export let updateDamageStats = (data: Partial<DamageStatisticsData>) => {};
+export let updateSelectedStats = (data: Partial<SelectedStatisticsData>) => {};
 
 // hook for tests to access damage stats
-export const mockDamageStatUpdateFn = (updateFn: (update: DamageStatisticsData) => void) => {
+export const mockDamageStatUpdateFn = (updateFn: (update: Partial<DamageStatisticsData>) => void) => {
 	updateDamageStats = updateFn;
 };
 
@@ -420,18 +420,18 @@ export class DamageStatistics extends React.Component {
 
 	constructor(props: {}) {
 		super(props);
-		updateDamageStats = ((data: DamageStatisticsData) => {
-			this.data = data;
+		updateDamageStats = ((data: Partial<DamageStatisticsData>) => {
+			this.data = {...this.data, ...data};
 			this.forceUpdate();
 		});
-		updateSelectedStats = ((selected: SelectedStatisticsData) => {
-			this.selected = selected;
+		updateSelectedStats = ((selected: Partial<SelectedStatisticsData>) => {
+			this.selected = {...this.selected, ...selected};
 			this.forceUpdate();
 		});
 	}
 
 	componentWillUnmount() {
-		updateDamageStats = (data: DamageStatisticsData) => {}
+		updateDamageStats = (data: Partial<DamageStatisticsData>) => {}
 	}
 
 	render() {
