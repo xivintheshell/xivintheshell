@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/8/24",
+		"changes": [
+			"Updated Chinese FRU tracks to latest (12/8 ver)"
+		]
+	},
+	{
 		"date": "12/7/24",
 		"changes": [
 			"Updated positional buff icons",
