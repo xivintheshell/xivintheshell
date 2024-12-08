@@ -4,8 +4,9 @@ import {ActionNode, ActionType} from "./Record";
 import {BuffType, ResourceType, SkillName} from "../Game/Common";
 import {
 	DamageStatisticsData,
-	DamageStatsMainTableEntry,
+	DamageStatisticsMode,
 	DamageStatsDoTTableEntry,
+	DamageStatsMainTableEntry,
 	SelectedStatisticsData
 } from "../Components/DamageStatistics";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
@@ -323,6 +324,16 @@ export function calculateDamageStats(props: {
 	tinctureBuffPercentage: number,
 	lastDamageApplicationTime: number
 }): DamageStatisticsData {
+
+	let mode = DamageStatisticsMode.Normal;
+	if (!ctl.displayingUpToDateGameState) mode = DamageStatisticsMode.Historical;
+	if (ctl.record.getFirstSelection()) {
+		mode = DamageStatisticsMode.Selected;
+	}
+	// if mode is selected,
+	// for main table: only iterate selected
+	// for dot table: as if prev and after don't exist?
+
 	let totalPotency = {applied: 0, pending: 0};
 	let gcdSkills = {applied: 0, pending: 0};
 
@@ -356,7 +367,7 @@ export function calculateDamageStats(props: {
 	let skillPotencies: Map<SkillName, number> = new Map();
 
 	let lastDoT : ActionNode | undefined = undefined; // for tracking DoT gap / override
-	ctl.record.iterateAll(node=>{
+	const processNodeFn = (node: ActionNode) => {
 		if (node.type === ActionType.Skill && node.skillName) {
 
 			const checked = getSkillOrDotInclude(node.skillName);
@@ -408,7 +419,7 @@ export function calculateDamageStats(props: {
 					includePartyBuffs: false,
 					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT")
 				}).applied;
-				
+
 				let potencyWithPot = node.getPotency({
 					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 					untargetable: bossIsUntargetable,
@@ -464,7 +475,12 @@ export function calculateDamageStats(props: {
 				}
 			}
 		}
-	});
+	};
+	if (mode === DamageStatisticsMode.Selected) {
+		ctl.record.iterateSelected(processNodeFn);
+	} else {
+		ctl.record.iterateAll(processNodeFn);
+	}
 
 	if (lastDoT) {
 		// last dot so far
@@ -520,6 +536,6 @@ export function calculateDamageStats(props: {
 		mainTableSummary: mainTableSummary,
 		dotTable: dotTable,
 		dotTableSummary: dotTableSummary,
-		historical: !ctl.displayingUpToDateGameState,
+		mode: mode
 	};
 }
