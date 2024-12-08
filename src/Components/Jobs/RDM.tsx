@@ -33,19 +33,6 @@ import {localize} from "../Localization";
 ].forEach((buff) => registerBuffIcon(buff, `RDM/${buff}.png`));
 
 export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
-	override getEnemyBuffViewProps(): BuffProps[] {
-        const addleCountdown = this.state.resources.timeTillReady(ResourceType.Addle);
-		return [
-			{
-				rscType: ResourceType.Addle,
-				onSelf: false,
-				enabled: true,
-				stacks:1,
-				timeRemaining: addleCountdown.toFixed(3),
-				className: addleCountdown > 0 ? "" : "hidden"
-			}
-		];
-	}
 
 	override getSelfBuffViewProps(): BuffProps[] {
 		const makeRedMageTimer = (rscType: ResourceType) => {
@@ -60,52 +47,32 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 			};
 		};
 		return [
-			ResourceType.Dualcast,
-			ResourceType.Acceleration,
-			ResourceType.Swiftcast,
-			ResourceType.GrandImpactReady,
-			ResourceType.VerstoneReady,
-			ResourceType.VerfireReady,
-			ResourceType.Embolden,
-			ResourceType.ThornedFlourish,
-			ResourceType.MagickedSwordplay,
-			ResourceType.Manafication,
-			ResourceType.PrefulgenceReady,
-			ResourceType.MagickBarrier,
-			ResourceType.LucidDreaming,
-			ResourceType.Surecast,
-			ResourceType.Tincture,
-			ResourceType.Sprint,
-		].map(makeRedMageTimer);
+			...[
+				ResourceType.Dualcast,
+				ResourceType.Acceleration,
+				ResourceType.GrandImpactReady,
+				ResourceType.VerstoneReady,
+				ResourceType.VerfireReady,
+				ResourceType.Embolden,
+				ResourceType.ThornedFlourish,
+				ResourceType.MagickedSwordplay,
+				ResourceType.Manafication,
+				ResourceType.PrefulgenceReady,
+				ResourceType.MagickBarrier,
+			].map(makeRedMageTimer),
+			...super.getSelfBuffViewProps(),
+		];
 	}
 
 	override getResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
-		const mana = resources.get(ResourceType.Mana).availableAmount();
-		const timeTillNextManaTick = resources.timeTillReady(ResourceType.Mana);
+		
 		const whiteMana = resources.get(ResourceType.WhiteMana).availableAmount();
 		const blackMana = resources.get(ResourceType.BlackMana).availableAmount();
 		const manaStacks = resources.get(ResourceType.ManaStacks).availableAmount();
+
 		const infos: ResourceDisplayProps[] = [
-			{
-				kind: "bar",
-				name: "MP",
-				color: colors.resources.mana,
-				progress: mana / 10000,
-				valueString: Math.floor(mana) + "/10000",
-			} as ResourceBarProps,
-			{
-				kind: "bar",
-				name: localize({
-					en: "MP tick",
-					zh: "跳蓝时间",
-					ja: "MPティック"
-				}),
-				color: colors.resources.manaTick,
-				progress: 1 - timeTillNextManaTick / 3,
-				valueString: (3 - timeTillNextManaTick).toFixed(3) + "/3",
-			} as ResourceBarProps,
 			{
 				kind: "bar",
 				name: localize({en: "white mana", zh: "白魔元"}),
@@ -128,6 +95,10 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 				maxStacks: 3,
 			} as ResourceCounterProps,
 		];
-		return infos;
+
+		return [
+			...super.getResourceViewProps(),
+			...infos
+		];
 	}
 }

@@ -60,14 +60,7 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
         const tacticianCountdown = resources.timeTillReady(ResourceType.Tactician)
         const hyperchargedCountdown = resources.timeTillReady(ResourceType.Hypercharged) 
         const excavatorCountdown = resources.timeTillReady(ResourceType.ExcavatorReady)
-        const fmfCountdown = resources.timeTillReady(ResourceType.FullMetalMachinist) 
-
-        // Role
-        const armsLengthCountdown = resources.timeTillReady(ResourceType.ArmsLength)
-
-        // Common
-        const tinctureCountdown = resources.timeTillReady(ResourceType.Tincture);
-        const sprintCountdown = resources.timeTillReady(ResourceType.Sprint);
+        const fmfCountdown = resources.timeTillReady(ResourceType.FullMetalMachinist)
 
         return [
             {
@@ -134,30 +127,7 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
                 timeRemaining: fmfCountdown.toFixed(3),
                 className: fmfCountdown > 0 ? "" : "hidden"
             },
-            {
-                rscType: ResourceType.ArmsLength,
-                onSelf: true,
-                enabled: true,
-                stacks: 1,
-                timeRemaining: armsLengthCountdown.toFixed(3),
-                className: armsLengthCountdown > 0 ? "" : "hidden"
-            },
-            {
-                rscType: ResourceType.Tincture,
-                onSelf: true,
-                enabled: true,
-                stacks:1,
-                timeRemaining: tinctureCountdown.toFixed(3),
-                className: tinctureCountdown > 0 ? "" : "hidden"
-            },
-            {
-                rscType: ResourceType.Sprint,
-                onSelf: true,
-                enabled: true,
-                stacks:1,
-                timeRemaining: sprintCountdown.toFixed(3),
-                className: sprintCountdown > 0 ? "" : "hidden"
-            }
+            ...super.getSelfBuffViewProps(),
         ]
     }
 
