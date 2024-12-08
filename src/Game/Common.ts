@@ -1,5 +1,5 @@
 import {BLMSkillName, BLMResourceType, BLMCooldownType, BLMTraitList, BLMTraitName} from "./Constants/BLM";
-import {PCTSkillName, PCTResourceType, PCTCooldownType, PCTTraitList, PCTTraitName } from "./Constants/PCT";
+import {PCTSkillName, PCTResourceType, PCTCooldownType, PCTTraitList, PCTTraitName} from "./Constants/PCT";
 import {RDMSkillName, RDMResourceType, RDMCooldownType, RDMTraitList, RDMTraitName} from "./Constants/RDM";
 import {DNCSkillName, DNCResourceType, DNCCooldownType, DNCTraitList, DNCTraitName} from "./Constants/DNC";
 import {SAMSkillName, SAMResourceType, SAMCooldownType, SAMTraitList, SAMTraitName} from "./Constants/SAM";
@@ -44,6 +44,17 @@ enum GeneralSkillName {
 	SecondWind = "Second Wind", // Melee & Phys Ranged
 
 	HeadGraze = "Head Graze", // Phys Ranged. Not bothering with Leg/Foot Graze at this point
+
+	// Tanks
+	Interject = "Interject",
+	LowBlow = "Low Blow",
+	Provoke = "Provoke",
+	Rampart = "Rampart",
+	Reprisal = "Reprisal",
+	Shirk = "Shirk",
+
+	Esuna = "Esuna",
+	Rescue = "Rescue",
 
 	Addle = "Addle",
 	Swiftcast = "Swiftcast",
@@ -138,6 +149,9 @@ enum GeneralResourceType {
 	Tincture = "Tincture", // [0, 1]
 	Sprint = "Sprint", // [0, 1]
 
+	Reprisal = "Reprisal",
+	Rampart = "Rampart",
+
 	Feint = "Feint", // [0, 1]
 	TrueNorth = "True North", // [0, 1]
 	Bloodbath = "Bloodbath", // [0, 1]
@@ -163,6 +177,15 @@ enum GeneralCooldownType {
 	cd_ArmsLength = "cd_ArmsLength",
 	cd_Tincture = "cd_Tincture", // [0, 1x]
 	cd_Sprint = "cd_Sprint", // [0, 1x]
+
+	cd_Interject = "cd_Interject",
+	cd_LowBlow = "cd_LowBlow",
+	cd_Provoke = "cd_Provoke",
+	cd_Rampart = "cd_Rampart",
+	cd_Reprisal = "cd_Reprisal",
+	cd_Shirk = "cd_Shirk",
+
+	cd_Rescue = "cd_Rescue",
 
 	cd_Feint = "cd_Feint",
 	cd_TrueNorth = "cd_TrueNorth",
