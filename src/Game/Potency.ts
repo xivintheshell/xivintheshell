@@ -28,6 +28,8 @@ export const enum PotencyModifierType {
 	ENHANCED_GIBBET_GALLOWS,
 	ENHANCED_REAPING,
 	IMMORTAL_SACRIFICE,
+
+	SURGING_TEMPEST,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -184,6 +186,11 @@ export const Modifiers = {
 		source: PotencyModifierType.IMMORTAL_SACRIFICE,
 		additiveAmount: 40,
 	} as PotencyAdder,
+	SurgingTempest: {
+		kind: "multiplier",
+		source: PotencyModifierType.SURGING_TEMPEST,
+		damageFactor: 1.10
+	} as PotencyMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {
