@@ -3,7 +3,8 @@
 		"date": "12/7/24",
 		"changes": [
 			"Updated positional buff icons",
-			"Misc cleanups and optimizations (hey devs: rerun npm install)"
+			"Misc cleanups and optimizations (hey devs: rerun npm install)",
+			"[BLM] Fixed Retrace button not changing back to LL if LL is disabled when the buff drops"
 		]
 	},
 	{

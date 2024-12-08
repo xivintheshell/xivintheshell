@@ -658,7 +658,7 @@ export abstract class GameState {
 			name: name,
 			delay: delay,
 			fnOnRsc: (rsc: Resource) => {
-				rsc.consume(toConsume ?? rsc.availableAmount());
+				rsc.consume(toConsume ?? rsc.availableAmountIncludingDisabled());
 				// Make sure the timer is canceled to avoid this warning
 				const rscInfo = getResourceInfo(this.job, rsc.type) as ResourceInfo;
 				if (rscInfo.warningOnTimeout) {
