@@ -1,5 +1,5 @@
 import {BLMSkillName, BLMResourceType, BLMCooldownType, BLMTraitList, BLMTraitName} from "./Constants/BLM";
-import {PCTSkillName, PCTResourceType, PCTCooldownType, PCTTraitList, PCTTraitName } from "./Constants/PCT";
+import {PCTSkillName, PCTResourceType, PCTCooldownType, PCTTraitList, PCTTraitName} from "./Constants/PCT";
 import {RDMSkillName, RDMResourceType, RDMCooldownType, RDMTraitList, RDMTraitName} from "./Constants/RDM";
 import {DNCSkillName, DNCResourceType, DNCCooldownType, DNCTraitList, DNCTraitName} from "./Constants/DNC";
 import {SAMSkillName, SAMResourceType, SAMCooldownType, SAMTraitList, SAMTraitName} from "./Constants/SAM";
@@ -45,6 +45,9 @@ enum GeneralSkillName {
 	SecondWind = "Second Wind", // Melee & Phys Ranged
 
 	HeadGraze = "Head Graze", // Phys Ranged. Not bothering with Leg/Foot Graze at this point
+
+	Esuna = "Esuna",
+	Rescue = "Rescue",
 
 	Addle = "Addle",
 	Swiftcast = "Swiftcast",
@@ -210,6 +213,8 @@ enum GeneralCooldownType {
 	cd_ArmsLength = "cd_ArmsLength",
 	cd_Tincture = "cd_Tincture", // [0, 1x]
 	cd_Sprint = "cd_Sprint", // [0, 1x]
+
+	cd_Rescue = "cd_Rescue",
 
 	cd_Feint = "cd_Feint",
 	cd_TrueNorth = "cd_TrueNorth",

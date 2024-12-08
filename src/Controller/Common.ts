@@ -43,7 +43,7 @@ export const enum ShellJob {
 	NIN = "NIN",
 	VPR = "VPR",
 	BRD = "BRD",
-	SMN = "SMN"
+	SMN = "SMN",
 }
 
 // Uncomment the job from its respective role array
@@ -96,6 +96,11 @@ export const SKS_JOBS = [
 
 export const SPS_JOBS = [
 	...HEALER_JOBS, ...CASTER_JOBS
+]
+
+// Used to default the display of MP and the MP tic timer in the status display
+export const MP_JOBS = [
+	...HEALER_JOBS, ...CASTER_JOBS, ShellJob.PLD, ShellJob.DRK
 ]
 
 // Remove jobs from this list after sufficient time in the deployed site has passed

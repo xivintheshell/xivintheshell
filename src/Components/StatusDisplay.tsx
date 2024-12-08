@@ -5,6 +5,7 @@ import type {PlayerState} from "../Game/GameState";
 import {controller} from "../Controller/Controller";
 import {localize, localizeResourceType} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
+import { CASTER_JOBS, HEALER_JOBS, MELEE_JOBS, MP_JOBS, PHYSICAL_RANGED_JOBS, TANK_JOBS } from '../Controller/Common';
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean,
@@ -557,16 +558,179 @@ export class StatusDisplay extends React.Component {
 	}
 }
 
-export abstract class StatusPropsGenerator<T extends PlayerState> {
+export class StatusPropsGenerator<T extends PlayerState> {
 	state: T;
 
 	constructor(state: T) {
 		this.state = state;
 	}
 
-	abstract getEnemyBuffViewProps(): BuffProps[];
-	abstract getSelfBuffViewProps(): BuffProps[];
-	abstract getResourceViewProps(): ResourceDisplayProps[];
+	makeCommonTimer(rscType: ResourceType, onSelf: boolean = true) {
+		const rscCountdown = this.state.resources.timeTillReady(rscType)
+		return {
+			rscType,
+			onSelf,
+			enabled: true,
+			stacks: this.state.resources.get(rscType).availableAmount(),
+			timeRemaining: rscCountdown.toFixed(3),
+			className: this.state.hasResourceAvailable(rscType) ? "" : "hidden"
+		}
+	}
+
+	/**
+	 * Job-specific overrides should compose the return from this function at the end of their return:
+	 * 
+	 * override getSelfBuffViewProps() {
+	 *     const jobSpecificEnemyBuffViewProps: BuffProps[] = []
+	 * 
+	 *     <job-specific logic here>
+	 * 
+	 *     return [
+	 *         ...jobSpecificEnemyBuffViewProps
+	 *         ...super.getSelfBuffViewProps(),
+	 *     ]
+	 * }
+	 */
+	public getEnemyBuffViewProps(): BuffProps[] {
+		const job = controller.game.job
+
+		const roleEnemyBuffViewProps: BuffProps[] = []
+		
+		if (TANK_JOBS.includes(job)) {
+			roleEnemyBuffViewProps.push(this.makeCommonTimer(ResourceType.Reprisal, false))
+		}
+
+		if (MELEE_JOBS.includes(job)) {
+			roleEnemyBuffViewProps.push(this.makeCommonTimer(ResourceType.Feint, false))
+		}
+
+		if (CASTER_JOBS.includes(job)) {
+			roleEnemyBuffViewProps.push(this.makeCommonTimer(ResourceType.Addle, false))
+		}
+
+		return roleEnemyBuffViewProps
+	}
+
+	/**
+	 * Job-specific overrides should compose the return from this function at the end of their return:
+	 * 
+	 * override getSelfBuffViewProps() {
+	 *     const jobSpecificBuffViewProps: BuffProps[] = []
+	 * 
+	 *     <job-specific logic here>
+	 * 
+	 *     return [
+	 *         ...jobSpecificBuffViewProps
+	 *         ...super.getSelfBuffViewProps(),
+	 *     ]
+	 * }
+	 */
+	public getSelfBuffViewProps(): BuffProps[] {
+		const job = controller.game.job
+		const resources = this.state.resources
+
+		const roleBuffViewProps: BuffProps[] = []
+
+		// Tank-only role buffs
+		if (TANK_JOBS.includes(job)) {
+			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.Rampart))
+		}
+
+		// Melee-only role buffs
+		if (MELEE_JOBS.includes(job)) {
+			[ResourceType.TrueNorth, ResourceType.Bloodbath].forEach((rscType) => {
+				roleBuffViewProps.push(this.makeCommonTimer(rscType))
+			})
+		}
+
+		// Anti-knockback buffs should be the last role buffs displayed
+		if ([...TANK_JOBS, ...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS].includes(job)) {
+			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.ArmsLength))
+		}
+
+		// Healers and casters have the same self-targeting role buffs, so we can do them all in one batch
+		if ([...HEALER_JOBS, ...CASTER_JOBS].includes(job)) {
+			[ResourceType.Swiftcast, ResourceType.LucidDreaming, ResourceType.Surecast].forEach((rscType) => {
+				roleBuffViewProps.push(this.makeCommonTimer(rscType))
+			})
+		}
+
+		// All jobs should include Tincture and Sprint
+		roleBuffViewProps.push(
+			this.makeCommonTimer(ResourceType.Tincture),
+			this.makeCommonTimer(ResourceType.Sprint)
+		)
+
+		// Melee jobs should end with the "I am able to hit this positional" selectors
+		if (MELEE_JOBS.includes(job)) {
+			roleBuffViewProps.push(
+				{
+					rscType: ResourceType.RearPositional,
+					onSelf: true,
+					enabled: resources.get(ResourceType.RearPositional).enabled,
+					stacks: 1,
+					className: "",
+				},
+				{
+					rscType: ResourceType.FlankPositional,
+					onSelf: true,
+					enabled: resources.get(ResourceType.FlankPositional).enabled,
+					stacks: 1,
+					className: "",
+				},
+			)
+		}
+
+		return roleBuffViewProps
+	}
+
+	/**
+	 * Currently, only MP-using jobs have a shared resource to show. Jobs that don't have MP can fully override
+	 * this function. Jobs that use MP should compose their overrides return with this function's output at the
+	 * beginning, like the example below:
+	 * 
+	 * override getResourceViewProps() {
+	 *     const jobSpecificDisplayProps: ResourceDisplayProps[] = []
+	 * 
+	 *     <job-specific logic here>
+	 * 
+	 *     return [
+	 *         ...super.getResourceViewProps(),
+	 *         ...jobSpecificDisplayProps
+	 *     ]
+	 * }
+	 */
+	public getResourceViewProps(): ResourceDisplayProps[] {
+		if (!MP_JOBS.includes(controller.game.job)) {
+			return []
+		}
+	
+		const colors = getCurrentThemeColors();
+		const resources = this.state.resources
+		const timeTillNextManaTick = resources.timeTillReady(ResourceType.Mana);
+		const mana = resources.get(ResourceType.Mana).availableAmount()
+
+		return [
+			{
+				kind: "bar",
+				name: "MP",
+				color: colors.resources.mana,
+				progress: mana / 10000,
+				valueString: Math.floor(mana) + "/10000",
+			} as ResourceBarProps,
+				{
+				kind: "bar",
+				name: localize({
+					en: "MP tick",
+					zh: "跳蓝时间",
+					ja: "MPティック"
+				}),
+				color: colors.resources.manaTick,
+				progress: 1 - timeTillNextManaTick / 3,
+				valueString: (3 - timeTillNextManaTick).toFixed(3) + "/3",
+			} as ResourceBarProps,
+		]
+	}
 
 	// override me if the standard resource layout doesn't look right (DNC as an example because it gives many buffs)
 	statusLayoutFn(props: StatusViewProps): React.ReactNode {

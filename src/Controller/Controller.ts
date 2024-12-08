@@ -37,7 +37,7 @@ import {DNCStatusPropsGenerator} from "../Components/Jobs/DNC";
 import {SAMStatusPropsGenerator} from "../Components/Jobs/SAM";
 import {MCHStatusPropsGenerator} from "../Components/Jobs/MCH";
 import {WARStatusPropsGenerator} from "../Components/Jobs/WAR";
-import {updateStatusDisplay} from "../Components/StatusDisplay";
+import {StatusPropsGenerator, updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
 import {setHistorical, setJob, setRealTime} from "../Components/Main";
@@ -736,8 +736,11 @@ class Controller {
 			case ShellJob.WAR:
 				propsGenerator = new WARStatusPropsGenerator(game as WARState);
 				break;
-			default:
+			case ShellJob.BLM:
 				propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
+				break;
+			default:
+				propsGenerator = new StatusPropsGenerator(game);
 		}
 		updateStatusDisplay({
 			time: game.getDisplayTime(),
