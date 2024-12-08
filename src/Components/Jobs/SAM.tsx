@@ -30,9 +30,10 @@ import {localize} from "../../Components/Localization";
 ].forEach((buff) => registerBuffIcon(buff, `SAM/${buff}.png`));
 
 export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
-	override getEnemyBuffViewProps(): BuffProps[] {
+	
+	override getJobEnemyBuffViewProps(): BuffProps[] {
 		const DoTCountdown = this.state.resources.timeTillReady(ResourceType.HiganbanaDoT);
-		const feintCountdown = this.state.resources.timeTillReady(ResourceType.Feint);
+		
 		return [
 			{
 				rscType: ResourceType.HiganbanaDoT,
@@ -42,18 +43,10 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 				timeRemaining: DoTCountdown.toFixed(3),
 				className: DoTCountdown > 0 ? "" : "hidden"
 			},
-			{
-				rscType: ResourceType.Feint,
-				onSelf: false,
-				enabled: true,
-				stacks: 1,
-				timeRemaining: feintCountdown.toFixed(3),
-				className: feintCountdown > 0 ? "" : "hidden"
-			}
 		];
 	}
 
-	override getSelfBuffViewProps(): BuffProps[] {
+	override getJobSelfBuffViewProps(): BuffProps[] {
 		const resources = this.state.resources;
 		const makeSamuraiTimer = (rscType: ResourceType) => {
 			const cd = resources.timeTillReady(rscType);
@@ -82,26 +75,10 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			makeSamuraiTimer(ResourceType.ThirdEye),
 			makeSamuraiTimer(ResourceType.Tengentsu),
 			makeSamuraiTimer(ResourceType.TengentsusForesight),
-			makeSamuraiTimer(ResourceType.Meditate),
-			makeSamuraiTimer(ResourceType.Sprint),
-			{
-				rscType: ResourceType.RearPositional,
-				onSelf: true,
-				enabled: resources.get(ResourceType.RearPositional).enabled,
-				stacks: 1,
-				className: "",
-			},
-			{
-				rscType: ResourceType.FlankPositional,
-				onSelf: true,
-				enabled: resources.get(ResourceType.FlankPositional).enabled,
-				stacks: 1,
-				className: "",
-			},
 		];
 	}
 
-	override getResourceViewProps(): ResourceDisplayProps[] {
+	override getJobResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 		const kenki = resources.get(ResourceType.Kenki).availableAmount();

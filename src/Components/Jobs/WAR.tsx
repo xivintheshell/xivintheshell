@@ -20,21 +20,8 @@ import { WARBuffTypes, WARResourceType } from "../../Game/Constants/WAR";
 ].forEach((buff) => registerBuffIcon(buff, `WAR/${buff}.png`));
 
 export class WARStatusPropsGenerator extends StatusPropsGenerator<WARState> {
-	override getEnemyBuffViewProps(): BuffProps[] {
-		const reprisalCountdown = this.state.resources.timeTillReady(ResourceType.Reprisal);
-		return [
-			{
-				rscType: ResourceType.Reprisal,
-				onSelf: false,
-				enabled: true,
-				stacks: 1,
-				timeRemaining: reprisalCountdown.toFixed(3),
-				className: reprisalCountdown > 0 ? "" : "hidden"
-			}
-		];
-	}
 
-	override getSelfBuffViewProps(): BuffProps[] {
+	override getJobSelfBuffViewProps(): BuffProps[] {
 		const resources = this.state.resources;
 		const makeWarriorTimer = (rscType: ResourceType) => {
 			const cd = resources.timeTillReady(rscType);
@@ -70,7 +57,7 @@ export class WARStatusPropsGenerator extends StatusPropsGenerator<WARState> {
 		];
 	}
 
-	override getResourceViewProps(): ResourceDisplayProps[] {
+	override getJobResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 		const beastGauge = resources.get(WARResourceType.BeastGauge).availableAmount();

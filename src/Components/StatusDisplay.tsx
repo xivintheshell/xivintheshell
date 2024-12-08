@@ -577,20 +577,10 @@ export class StatusPropsGenerator<T extends PlayerState> {
 		}
 	}
 
-	/**
-	 * Job-specific overrides should compose the return from this function at the end of their return:
-	 * 
-	 * override getSelfBuffViewProps() {
-	 *     const jobSpecificEnemyBuffViewProps: BuffProps[] = []
-	 * 
-	 *     <job-specific logic here>
-	 * 
-	 *     return [
-	 *         ...jobSpecificEnemyBuffViewProps
-	 *         ...super.getSelfBuffViewProps(),
-	 *     ]
-	 * }
-	 */
+	// Jobs should override this to display their enemy-targeted buffs
+	public getJobEnemyBuffViewProps(): BuffProps[] { return [] }
+	
+	// Composes the job-specific buffs with the applicable role buffs
 	public getEnemyBuffViewProps(): BuffProps[] {
 		const job = controller.game.job
 
@@ -608,23 +598,17 @@ export class StatusPropsGenerator<T extends PlayerState> {
 			roleEnemyBuffViewProps.push(this.makeCommonTimer(ResourceType.Addle, false))
 		}
 
-		return roleEnemyBuffViewProps
+		return [
+			...this.getJobEnemyBuffViewProps(),
+			...roleEnemyBuffViewProps,
+		]
 	}
 
-	/**
-	 * Job-specific overrides should compose the return from this function at the end of their return:
-	 * 
-	 * override getSelfBuffViewProps() {
-	 *     const jobSpecificBuffViewProps: BuffProps[] = []
-	 * 
-	 *     <job-specific logic here>
-	 * 
-	 *     return [
-	 *         ...jobSpecificBuffViewProps
-	 *         ...super.getSelfBuffViewProps(),
-	 *     ]
-	 * }
-	 */
+	
+	// Jobs should override this to display their self-targeted buffs
+	public getJobSelfBuffViewProps(): BuffProps[] { return [] }
+
+	// Composes the job-specific buffs with the applicable role buffs
 	public getSelfBuffViewProps(): BuffProps[] {
 		const job = controller.game.job
 		const resources = this.state.resources
@@ -681,28 +665,20 @@ export class StatusPropsGenerator<T extends PlayerState> {
 			)
 		}
 
-		return roleBuffViewProps
+		return [
+			...this.getJobSelfBuffViewProps(),
+			...roleBuffViewProps,
+		]
 	}
 
-	/**
-	 * Currently, only MP-using jobs have a shared resource to show. Jobs that don't have MP can fully override
-	 * this function. Jobs that use MP should compose their overrides return with this function's output at the
-	 * beginning, like the example below:
-	 * 
-	 * override getResourceViewProps() {
-	 *     const jobSpecificDisplayProps: ResourceDisplayProps[] = []
-	 * 
-	 *     <job-specific logic here>
-	 * 
-	 *     return [
-	 *         ...super.getResourceViewProps(),
-	 *         ...jobSpecificDisplayProps
-	 *     ]
-	 * }
-	 */
+	
+	// Jobs should override this to display their resources
+	public getJobResourceViewProps(): ResourceDisplayProps[] { return [] }
+
+	// Display the job-specific resources, including MP and the MP tick timer by defauly for jobs that use MP
 	public getResourceViewProps(): ResourceDisplayProps[] {
 		if (!MP_JOBS.includes(controller.game.job)) {
-			return []
+			return this.getJobResourceViewProps()
 		}
 	
 		const colors = getCurrentThemeColors();
@@ -729,6 +705,7 @@ export class StatusPropsGenerator<T extends PlayerState> {
 				progress: 1 - timeTillNextManaTick / 3,
 				valueString: (3 - timeTillNextManaTick).toFixed(3) + "/3",
 			} as ResourceBarProps,
+			...this.getJobResourceViewProps(),
 		]
 	}
 

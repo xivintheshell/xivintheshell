@@ -40,21 +40,7 @@ import {localize} from "../Localization";
 ].forEach((buff) => registerBuffIcon(buff, `PCT/${buff}.png`));
 
 export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
-	override getEnemyBuffViewProps(): BuffProps[] {
-        const addleCountdown = this.state.resources.timeTillReady(ResourceType.Addle);
-		return [
-			{
-				rscType: ResourceType.Addle,
-				onSelf: false,
-				enabled: true,
-				stacks:1,
-				timeRemaining: addleCountdown.toFixed(3),
-				className: addleCountdown > 0 ? "" : "hidden"
-			}
-		];
-	}
-
-	override getSelfBuffViewProps(): BuffProps[] {
+	override getJobSelfBuffViewProps(): BuffProps[] {
 		const makePictoTimer = (rscType: ResourceType, stacks: number, cd: number) => {
 			const enabled = (rscType === ResourceType.Inspiration) ? this.state.hasResourceAvailable(rscType) : true;
 			return {
@@ -93,11 +79,6 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 		const temperaGrassaCountdown = resources.timeTillReady(ResourceType.TemperaGrassa);
 		const smudgeCountdown = resources.timeTillReady(ResourceType.Smudge);
 	
-		const swiftcastCountdown = resources.timeTillReady(ResourceType.Swiftcast);
-		const lucidDreamingCountdown = resources.timeTillReady(ResourceType.LucidDreaming);
-		const surecastCountdown = resources.timeTillReady(ResourceType.Surecast);
-		const tinctureCountdown = resources.timeTillReady(ResourceType.Tincture);
-		const sprintCountdown = resources.timeTillReady(ResourceType.Sprint);
 		return [
 			makePictoTimer(ResourceType.RainbowBright, 1, rainbowBrightCountdown),
 			makePictoTimer(ResourceType.Hyperphantasia, hyperphantasiaStacks, hyperphantasiaCountdown),
@@ -112,54 +93,13 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 			makePictoTimer(ResourceType.TemperaCoat, 1, temperaCoatCountdown),
 			makePictoTimer(ResourceType.TemperaGrassa, 1, temperaGrassaCountdown),
 			makePictoTimer(ResourceType.Smudge, 1, smudgeCountdown),
-			{
-				rscType: ResourceType.Swiftcast,
-				onSelf: true,
-				enabled: true,
-				stacks:1,
-				timeRemaining: swiftcastCountdown.toFixed(3),
-				className: swiftcastCountdown > 0 ? "" : "hidden"
-			},
-			{
-				rscType: ResourceType.LucidDreaming,
-				onSelf: true,
-				enabled: true,
-				stacks:1,
-				timeRemaining: lucidDreamingCountdown.toFixed(3),
-				className: lucidDreamingCountdown > 0 ? "" : "hidden"
-			},
-			{
-				rscType: ResourceType.Surecast,
-				onSelf: true,
-				enabled: true,
-				stacks:1,
-				timeRemaining: surecastCountdown.toFixed(3),
-				className: surecastCountdown > 0 ? "" : "hidden"
-			},
-			{
-				rscType: ResourceType.Tincture,
-				onSelf: true,
-				enabled: true,
-				stacks:1,
-				timeRemaining: tinctureCountdown.toFixed(3),
-				className: tinctureCountdown > 0 ? "" : "hidden"
-			},
-			{
-				rscType: ResourceType.Sprint,
-				onSelf: true,
-				enabled: true,
-				stacks:1,
-				timeRemaining: sprintCountdown.toFixed(3),
-				className: sprintCountdown > 0 ? "" : "hidden"
-			}
 		];
 	}
 
-	override getResourceViewProps(): ResourceDisplayProps[] {
+	override getJobResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
-		const mana = resources.get(ResourceType.Mana).availableAmount();
-		const timeTillNextManaTick = resources.timeTillReady(ResourceType.Mana);
+		
 		const portrait = resources.get(ResourceType.Portrait).availableAmount();
 		const depictions = resources.get(ResourceType.Depictions).availableAmount();
 		const creatureCanvas = resources.get(ResourceType.CreatureCanvas).availableAmount();
@@ -168,25 +108,8 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 		const paletteGauge = resources.get(ResourceType.PaletteGauge).availableAmount();
 		const paint = resources.get(ResourceType.Paint).availableAmount();
 		const hasComet = resources.get(ResourceType.MonochromeTones).available(1);
+
 		const infos: ResourceDisplayProps[] = [
-			{
-				kind: "bar",
-				name: "MP",
-				color: colors.resources.mana,
-				progress: mana / 10000,
-				valueString: Math.floor(mana) + "/10000",
-			} as ResourceBarProps,
-			{
-				kind: "bar",
-				name: localize({
-					en: "MP tick",
-					zh: "跳蓝时间",
-					ja: "MPティック"
-				}),
-				color: colors.resources.manaTick,
-				progress: 1 - timeTillNextManaTick / 3,
-				valueString: (3 - timeTillNextManaTick).toFixed(3) + "/3",
-			} as ResourceBarProps,
 			{
 				kind: "text",
 				name: localize({
@@ -281,6 +204,7 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 				hasComet: Traits.hasUnlocked(TraitName.EnhancedPalette, this.state.config.level) && hasComet,
 			} as PaintGaugeCounterProps);
 		}
-		return infos;
+
+		return infos
 	}
 }
