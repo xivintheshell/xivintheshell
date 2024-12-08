@@ -253,7 +253,7 @@ class Controller {
 
 		let rawTime = displayTime + this.gameConfig.countdown;
 
-		const selectedMoreThanOne = this.record.getFirstSelection() !== this.record.getLastSelection();
+		const hasSelected = this.record.getFirstSelection() !== undefined;
 		this.#sandboxEnvironment(()=>{
 			let tmpRecord = this.record;
 			this.game = newGameState(this.gameConfig);
@@ -287,7 +287,7 @@ class Controller {
 
 			// if nothing is selected, call stats update here to get data up to selected timestamp:
 			// otherwise do the update outside of sandbox
-			if (!selectedMoreThanOne) {
+			if (!hasSelected) {
 				this.#updateTotalDamageStats();
 			}
 
@@ -298,7 +298,7 @@ class Controller {
 		this.lastAttemptedSkill = "";
 		setHistorical(true);
 
-		if (selectedMoreThanOne) {
+		if (hasSelected) {
 			this.#updateTotalDamageStats();
 		}
 		this.#updateSelectedDamageStats();

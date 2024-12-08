@@ -333,7 +333,12 @@ export class Record extends Line {
 		if (bShift) {
 			this.selectUntil(node);
 		} else {
-			this.selectSingle(node);
+			// if this is already the only selected node, unselect it
+			if (this.selectionStart === node && this.selectionEnd === node) {
+				this.unselectAll();
+			} else {
+				this.selectSingle(node);
+			}
 		}
 	}
 	moveSelected(offset: number) { // positive: move right; negative: move left
