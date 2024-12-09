@@ -131,7 +131,7 @@ export function IntroSection(props: {
 				{localize({
 					en: <ul>
 						<li style={smallGap}>Holding <ButtonIndicator text={"shift"}/> lets you scroll horizontally</li>
-						<li style={smallGap}>Click to select a skill on the timeline. Shift click to select a sequence of skills</li>
+						<li style={smallGap}>Click to select/unselect a single skill on the timeline. Shift click to select a sequence of skills</li>
 						<li style={smallGap}><ButtonIndicator text={"backspace"}/> or <ButtonIndicator text={"delete"}/> to delete the selected skill and everything after it</li>
 						<li style={smallGap}>Click on the timeline's ruler-like header to view historical game states.
 							While doing so, the main control region will have an <b style={{color: "darkorange"}}>orange</b> border
@@ -140,7 +140,7 @@ export function IntroSection(props: {
 					</ul>,
 					zh: <ul>
 						<li style={smallGap}>按住 <ButtonIndicator text={"shift"}/> 时滑动鼠标滚轮可以横向滚动时间线。</li>
-						<li style={smallGap}>单击可以选中时间轴上的技能。已经选中一个技能时，按住 <ButtonIndicator text={"shift"}/> 点击另一个技能会选中期间的所有操作。</li>
+						<li style={smallGap}>单击选中/取消选中时间轴上的单个技能。已经选中一个技能时，按住 <ButtonIndicator text={"shift"}/> 点击另一个技能会选中期间的所有操作。</li>
 						<li style={smallGap}>按 <ButtonIndicator text={"backspace"}/> 或 <ButtonIndicator text={"delete"}/> 删除选中技能及其之后的所有操作。</li>
 						<li style={smallGap}>选中某技能或者刻度上的某时间时，可以看到相应时间的职业资源状态。此时控制区域边框变为<b style={{color: "darkorange"}}>橙色</b>且无法使用技能。点击控制区域或时间轴空白处取消。
 						</li>

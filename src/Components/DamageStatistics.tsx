@@ -761,8 +761,8 @@ export class DamageStatistics extends React.Component {
 			dotHeaderStr += upTillStr;
 		} else if (this.data.mode === DamageStatisticsMode.Selected) {
 			const selectedStr = lparen + localize({
-				en: "selected",
-				zh: "选中部分"
+				en: "from selected skills",
+				zh: "来自选中技能"
 			}) + rparen;
 			mainHeaderStr += selectedStr;
 			dotHeaderStr += selectedStr;
