@@ -84,6 +84,10 @@ export type MCHResourceColors = {
 	battery: string,
 }
 
+export type WARResourceColors = {
+	beastGauge: string,
+}
+
 export type JobAccentColors = {
 	[ShellJob.BLM]: string,
 	[ShellJob.PCT]: string,
@@ -91,6 +95,7 @@ export type JobAccentColors = {
 	[ShellJob.DNC]: string,
 	[ShellJob.SAM]: string,
 	[ShellJob.MCH]: string,
+	[ShellJob.WAR]: string,
 }
 
 export type ThemeColors = {
@@ -123,6 +128,7 @@ export type ThemeColors = {
 	sam: SAMResourceColors,
 	mch: MCHResourceColors,
 	rpr: RPRResourceColors,
+	war: WARResourceColors,
 	timeline: {
 		ruler: string,
 		tracks: string,
@@ -154,6 +160,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.DNC]: "#e2b0af", // color ripped from xiva/fflogs
 				[ShellJob.SAM]: "#f59542",
 				[ShellJob.MCH]: "#6ee1d6",
+				[ShellJob.WAR]: "#b10b0b", // color picker'd on job stone
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -232,6 +239,9 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				voidShroudLow: "#5c125c",
 				voidShroudHigh: "#ff04ff"
 			},
+			war: {
+				beastGauge: "#ffba00",
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -260,6 +270,7 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				[ShellJob.DNC]: "#e2b0af", // color ripped from xiva/fflogs
 				[ShellJob.SAM]: "#f59542",
 				[ShellJob.MCH]: "#6ee1d6",
+				[ShellJob.WAR]: "#b10b0b", // color picker'd on job stone
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -337,6 +348,9 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				lemureShroud: "#53ffff",
 				voidShroudLow: "#5c125c",
 				voidShroudHigh: "#ff04ff"
+			},
+			war: {
+				beastGauge: "#ffba00",
 			},
 			timeline: {
 				ruler: "#e9e9e9",

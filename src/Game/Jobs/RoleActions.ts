@@ -1,7 +1,7 @@
 import {ALL_JOBS, CASTER_JOBS, HEALER_JOBS, MELEE_JOBS, PHYSICAL_RANGED_JOBS, ShellJob, TANK_JOBS} from "../../Controller/Common";
 import {SkillName, ResourceType, TraitName, WarningType} from "../Common";
 import {combineEffects, makeAbility, makeResourceAbility} from "../Skills";
-import {DoTBuff, EventTag, makeResource} from "../Resources"
+import { DoTBuff, EventTag, makeResource } from '../Resources';
 import {Traits} from "../Traits";
 import type {GameState} from "../GameState";
 import {controller} from "../../Controller/Controller";
@@ -139,6 +139,53 @@ makeAbility(MELEE_JOBS, SkillName.LegSweep, 10, ResourceType.cd_LegSweep, {
 	cooldown: 40,
 	assetPath: "Role/Leg Sweep.png",
 	onConfirm: cancelMeditate,
+});
+
+// TODO: Application times are not verified.
+TANK_JOBS.forEach((job) => {
+		makeResource(job, ResourceType.Reprisal, 1, {timeout:15});
+		makeResource(job, ResourceType.Rampart, 1, {timeout:20});
+});
+
+makeResourceAbility(TANK_JOBS, SkillName.Rampart, 8, ResourceType.cd_Rampart, {
+	rscType: ResourceType.Rampart,
+	applicationDelay: 0.62,
+	cooldown: 90,
+	assetPath: "Role/Rampart.png",
+})
+
+makeResourceAbility(TANK_JOBS, SkillName.Reprisal, 22, ResourceType.cd_Reprisal, {
+	rscType: ResourceType.Reprisal,
+	applicationDelay: 0.62,
+	cooldown: 60,
+	duration: (state) => (Traits.hasUnlocked(TraitName.EnhancedReprisal, state.config.level) && 15) || 10,
+	assetPath: "Role/Reprisal.png",
+});
+
+makeAbility(TANK_JOBS, SkillName.Provoke, 15, ResourceType.cd_Provoke, {
+	onApplication: (state) => state.resources.get(ResourceType.InCombat).gain(1),
+	applicationDelay: 0,
+	cooldown: 30,
+	assetPath: "Role/Provoke.png",
+});
+
+makeAbility(TANK_JOBS, SkillName.Shirk, 48, ResourceType.cd_Shirk, {
+	applicationDelay: 0,
+	cooldown: 120,
+	assetPath: "Role/Shirk.png",
+});
+
+
+makeAbility(TANK_JOBS, SkillName.Interject, 18, ResourceType.cd_Interject, {
+	applicationDelay: 0,
+	cooldown: 30,
+	assetPath: "Role/Interject.png",
+})
+
+makeAbility(TANK_JOBS, SkillName.LowBlow, 12, ResourceType.cd_LowBlow, {
+	applicationDelay: 0.62,
+	cooldown: 25,
+	assetPath: "Role/Low Blow.png",
 });
 
 makeResourceAbility(ALL_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture, {
