@@ -125,13 +125,6 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
         const risingRhythmStacks = resources.get(ResourceType.RisingRhythm).availableAmount();
         const shieldSambaCooldown = resources.timeTillReady(ResourceType.ShieldSamba)
 
-        // Role
-        const armsLengthCountdown = resources.timeTillReady(ResourceType.ArmsLength)
-
-        // Common
-        const tinctureCountdown = resources.timeTillReady(ResourceType.Tincture);
-        const sprintCountdown = resources.timeTillReady(ResourceType.Sprint);
-
         return [
             {
                 rscType: ResourceType.StandardStep,
@@ -315,30 +308,7 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
                 timeRemaining: shieldSambaCooldown.toFixed(3),
                 className: shieldSambaCooldown > 0 ? "" : "hidden"
             },
-            {
-                rscType: ResourceType.ArmsLength,
-                onSelf: true,
-                enabled: true,
-                stacks: 1,
-                timeRemaining: armsLengthCountdown.toFixed(3),
-                className: armsLengthCountdown > 0 ? "" : "hidden"
-            },
-            {
-                rscType: ResourceType.Tincture,
-                onSelf: true,
-                enabled: true,
-                stacks:1,
-                timeRemaining: tinctureCountdown.toFixed(3),
-                className: tinctureCountdown > 0 ? "" : "hidden"
-            },
-            {
-                rscType: ResourceType.Sprint,
-                onSelf: true,
-                enabled: true,
-                stacks:1,
-                timeRemaining: sprintCountdown.toFixed(3),
-                className: sprintCountdown > 0 ? "" : "hidden"
-            }
+            ...super.getSelfBuffViewProps(),
         ]
     }
 
@@ -400,6 +370,7 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
         
         return infos
     }
+
     override statusLayoutFn(props: StatusViewProps): React.ReactNode {
         return <div>
             <div style={{

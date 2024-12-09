@@ -24,26 +24,12 @@ import {localize} from "../Localization";
 ].forEach((buff) => registerBuffIcon(buff, `BLM/${buff}.png`));
 
 export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
-    override getEnemyBuffViewProps(): BuffProps[] {
-        const DoTCountdown = this.state.resources.timeTillReady(ResourceType.ThunderDoT);
-        const addleCountdown = this.state.resources.timeTillReady(ResourceType.Addle);
+    override getEnemyBuffViewProps(): BuffProps[] {        
         return [
-            {
-                rscType: ResourceType.ThunderDoT,
-                onSelf: false,
-                enabled: true,
-                stacks:1,
-                timeRemaining: DoTCountdown.toFixed(3),
-                className: DoTCountdown > 0 ? "" : "hidden"
-            },
-            {
-                rscType: ResourceType.Addle,
-                onSelf: false,
-                enabled: true,
-                stacks:1,
-                timeRemaining: addleCountdown.toFixed(3),
-                className: addleCountdown > 0 ? "" : "hidden"
-            }
+            ...[
+                ResourceType.ThunderDoT,
+            ].map((rscType) => this.makeCommonTimer(rscType, false)),
+            ...super.getEnemyBuffViewProps()
         ];
     }
 
@@ -56,11 +42,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
         const firestarterCountdown = resources.timeTillReady(ResourceType.Firestarter);
         const thunderheadCountdown = resources.timeTillReady(ResourceType.Thunderhead);
         const manawardCountdown = resources.timeTillReady(ResourceType.Manaward);
-        const swiftcastCountdown = resources.timeTillReady(ResourceType.Swiftcast);
-        const lucidDreamingCountdown = resources.timeTillReady(ResourceType.LucidDreaming);
-        const surecastCountdown = resources.timeTillReady(ResourceType.Surecast);
-        const tinctureCountdown = resources.timeTillReady(ResourceType.Tincture);
-        const sprintCountdown = resources.timeTillReady(ResourceType.Sprint);
+        
         return [
             {
                 rscType: ResourceType.LeyLines,
@@ -102,46 +84,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
                 timeRemaining: manawardCountdown.toFixed(3),
                 className: manawardCountdown > 0 ? "" : "hidden"
             },
-            {
-                rscType: ResourceType.Swiftcast,
-                onSelf: true,
-                enabled: true,
-                stacks:1,
-                timeRemaining: swiftcastCountdown.toFixed(3),
-                className: swiftcastCountdown > 0 ? "" : "hidden"
-            },
-            {
-                rscType: ResourceType.LucidDreaming,
-                onSelf: true,
-                enabled: true,
-                stacks:1,
-                timeRemaining: lucidDreamingCountdown.toFixed(3),
-                className: lucidDreamingCountdown > 0 ? "" : "hidden"
-            },
-            {
-                rscType: ResourceType.Surecast,
-                onSelf: true,
-                enabled: true,
-                stacks:1,
-                timeRemaining: surecastCountdown.toFixed(3),
-                className: surecastCountdown > 0 ? "" : "hidden"
-            },
-            {
-                rscType: ResourceType.Tincture,
-                onSelf: true,
-                enabled: true,
-                stacks:1,
-                timeRemaining: tinctureCountdown.toFixed(3),
-                className: tinctureCountdown > 0 ? "" : "hidden"
-            },
-            {
-                rscType: ResourceType.Sprint,
-                onSelf: true,
-                enabled: true,
-                stacks:1,
-                timeRemaining: sprintCountdown.toFixed(3),
-                className: sprintCountdown > 0 ? "" : "hidden"
-            }
+            ...super.getSelfBuffViewProps()
         ];
     }
 
@@ -155,8 +98,6 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
             enoCountdown = this.state.resources.timeTillReady(ResourceType.Enochian);
         }
         const resources = this.state.resources;
-        const mana = resources.get(ResourceType.Mana).availableAmount();
-        const timeTillNextManaTick = resources.timeTillReady(ResourceType.Mana);
         const enochianCountdown = enoCountdown;
         const astralFire = this.state.getFireStacks();
         const umbralIce = this.state.getIceStacks();
@@ -171,24 +112,6 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
             (Traits.hasUnlocked(TraitName.EnhancedPolyglot, this.state.config.level) && 2) ||
             1;
         const infos = [
-            {
-                kind: "bar",
-                name: "MP",
-                color: colors.resources.mana,
-                progress: mana / 10000,
-                valueString: Math.floor(mana) + "/10000",
-            } as ResourceBarProps,
-            {
-                kind: "bar",
-                name: localize({
-                    en: "MP tick",
-                    zh: "跳蓝时间",
-                    ja: "MPティック"
-                }),
-                color: colors.resources.manaTick,
-                progress: 1 - timeTillNextManaTick / 3,
-                valueString: (3 - timeTillNextManaTick).toFixed(3) + "/3",
-            } as ResourceBarProps,
             {
                 kind: "bar",
                 name: localize({
@@ -271,6 +194,9 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
                 maxStacks: maxPolyglotStacks,
             } as ResourceCounterProps,
         );
-        return infos;
+        return [
+            ...super.getResourceViewProps(),
+            ...infos
+        ];
     }
 }

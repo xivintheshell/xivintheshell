@@ -25,7 +25,7 @@ import {RDMStatusPropsGenerator} from "../Components/Jobs/RDM";
 import {DNCStatusPropsGenerator} from "../Components/Jobs/DNC";
 import {SAMStatusPropsGenerator} from "../Components/Jobs/SAM";
 import {MCHStatusPropsGenerator} from "../Components/Jobs/MCH";
-import {updateStatusDisplay} from "../Components/StatusDisplay";
+import {StatusPropsGenerator, updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
 import {setJob, setHistorical, setRealTime} from "../Components/Main";
@@ -718,8 +718,11 @@ class Controller {
 			case ShellJob.RPR:
 				propsGenerator = new RPRStatusPropsGenerator(game as RPRState);
 				break;
-			default:
+			case ShellJob.BLM:
 				propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
+				break;
+			default:
+				propsGenerator = new StatusPropsGenerator(game);
 		}
 		updateStatusDisplay({
 			time: game.getDisplayTime(),
