@@ -39,7 +39,7 @@ import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDrawOptions} from "../Components/Common";
 import {TimelineRenderingProps} from "../Components/TimelineCanvas";
 import {Potency, PotencyModifierType} from "../Game/Potency";
-import {updateDamageStats, updateSelectedStats} from "../Components/DamageStatistics";
+import {DamageStatisticsData, updateDamageStats, updateSelectedStats} from "../Components/DamageStatistics";
 import {
 	bossIsUntargetable,
 	calculateDamageStats,
@@ -253,6 +253,7 @@ class Controller {
 
 		let rawTime = displayTime + this.gameConfig.countdown;
 
+		const hasSelected = this.record.getFirstSelection() !== undefined;
 		this.#sandboxEnvironment(()=>{
 			let tmpRecord = this.record;
 			this.game = newGameState(this.gameConfig);
@@ -284,6 +285,7 @@ class Controller {
 			this.updateSkillButtons(this.game);
 			updateSkillSequencePresetsView();
 			this.#updateTotalDamageStats();
+
 			// timeline
 			this.timeline.drawElements();
 		});
@@ -291,6 +293,9 @@ class Controller {
 		this.lastAttemptedSkill = "";
 		setHistorical(true);
 
+		if (hasSelected) {
+			this.#updateTotalDamageStats(true);
+		}
 		this.#updateSelectedDamageStats();
 	}
 
@@ -465,12 +470,21 @@ class Controller {
 		this.autoSave();
 	}
 
-	#updateTotalDamageStats() {
+	#updateTotalDamageStats(tablesOnly: boolean = false) {
 		if (!this.#skipViewUpdates) {
-			let damageStats = calculateDamageStats({
+			let damageStats: Partial<DamageStatisticsData> = calculateDamageStats({
 				tinctureBuffPercentage: this.#tinctureBuffPercentage,
 				lastDamageApplicationTime: this.#lastDamageApplicationTime
 			});
+			if (tablesOnly) {
+				damageStats = {
+					mainTable: damageStats.mainTable,
+					mainTableSummary: damageStats.mainTableSummary,
+					dotTable: damageStats.dotTable,
+					dotTableSummary: damageStats.dotTableSummary,
+					mode: damageStats.mode,
+				};
+			}
 			// display
 			updateDamageStats(damageStats);
 		}

@@ -10,7 +10,7 @@ import {DEFAULT_BLM_CONFIG, GameConfig} from "./Game/GameConfig";
 import {PotencyModifierType} from "./Game/Potency";
 import {ResourceType, SkillName} from "./Game/Common";
 import {RDMState} from "./Game/Jobs/RDM";
-import {DamageStatisticsData, mockDamageStatUpdateFn} from "./Components/DamageStatistics";
+import {DamageStatisticsData, DamageStatisticsMode, mockDamageStatUpdateFn} from "./Components/DamageStatistics";
 
 // TODO figure out how to share test code :3
 
@@ -54,7 +54,7 @@ const resetDamageData = () => {
             totalPotPotency: 0,
             totalPartyBuffPotency: 0,
         },
-        historical: false,
+        mode: DamageStatisticsMode.Normal
     };
 };
 
@@ -99,8 +99,8 @@ beforeEach(() => {
     // clear stats from the last run
     resetDamageData();
     // monkeypatch the updateDamageStats function to avoid needing to initialize the frontend
-    mockDamageStatUpdateFn((newData: DamageStatisticsData) => {
-        damageData = newData;
+    mockDamageStatUpdateFn((newData: Partial<DamageStatisticsData>) => {
+        damageData = {...damageData, ...newData};
     });
     // config reset is handled in testWithConfig helper
 });

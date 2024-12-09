@@ -482,6 +482,8 @@ export class Timeline {
 		let firstNode = controller.record.getFirstSelection();
 		if (firstNode) {
 			controller.displayHistoricalState(-Infinity, firstNode);
+		} else { // just clicked on the only selected node and unselected it. Still show historical state
+			controller.displayHistoricalState(-Infinity, node);
 		}
 	}
 

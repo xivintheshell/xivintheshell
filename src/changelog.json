@@ -2,7 +2,8 @@
 	{
 		"date": "12/8/24",
 		"changes": [
-			"Updated Chinese FRU tracks to latest (12/8 ver)"
+			"Updated Chinese FRU tracks to latest (12/8 ver)",
+			"Make stats tables only include selected skills when there is selection"
 		]
 	},
 	{
