@@ -17,7 +17,18 @@ import {DNCState} from "../Game/Jobs/DNC";
 import {SAMState} from "../Game/Jobs/SAM";
 import {MCHState} from "../Game/Jobs/MCH";
 import {Buff} from "../Game/Buffs";
-import {Debug, BuffType, LevelSync, ProcMode, ResourceType, SkillName, SkillReadyStatus, WarningType} from "../Game/Common";
+import {
+	BuffType,
+	Debug,
+	LevelSync,
+	makeSkillReadyStatus,
+	ProcMode,
+	ResourceType,
+	SkillName,
+	SkillReadyStatus,
+	SkillUnavailableReason,
+	WarningType
+} from "../Game/Common";
 import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
 import {BLMStatusPropsGenerator} from "../Components/Jobs/BLM";
 import {PCTStatusPropsGenerator} from "../Components/Jobs/PCT";
@@ -28,12 +39,12 @@ import {MCHStatusPropsGenerator} from "../Components/Jobs/MCH";
 import {updateStatusDisplay} from "../Components/StatusDisplay";
 import {updateSkillButtons} from "../Components/Skills";
 import {updateConfigDisplay} from "../Components/PlaybackControl"
-import {setJob, setHistorical, setRealTime} from "../Components/Main";
+import {setHistorical, setJob, setRealTime} from "../Components/Main";
 import {ElemType, MAX_TIMELINE_SLOTS, Timeline} from "./Timeline"
 import {scrollTimelineTo, updateTimelineView} from "../Components/Timeline";
 import {ActionNode, ActionType, Line, Record} from "./Record";
 import {ImageExportConfig} from "./ImageExportConfig";
-import {PresetLinesManager, inferJobFromSkillNames} from "./PresetLinesManager";
+import {inferJobFromSkillNames, PresetLinesManager} from "./PresetLinesManager";
 import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
 import {refreshTimelineEditor} from "../Components/TimelineEditor";
 import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDrawOptions} from "../Components/Common";
@@ -46,9 +57,9 @@ import {
 	calculateSelectedStats,
 	getTargetableDurationBetween
 } from "./DamageStatistics";
-import { XIVMath } from "../Game/XIVMath";
-import { RPRState } from "../Game/Jobs/RPR";
-import { RPRStatusPropsGenerator } from "../Components/Jobs/RPR";
+import {XIVMath} from "../Game/XIVMath";
+import {RPRState} from "../Game/Jobs/RPR";
+import {RPRStatusPropsGenerator} from "../Components/Jobs/RPR";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 require("../Game/Jobs/RoleActions");
@@ -238,7 +249,7 @@ class Controller {
 
 			result.isValid = status.success;
 			result.firstInvalidAction = status.firstInvalidNode;
-			result.invalidReason = status.invalidReason;
+			result.invalidReason = status.invalidReason?.toString();
 			result.invalidTime = status.invalidTime;
 			if (status.success) {
 				result.straightenedIfValid = this.record;
@@ -864,11 +875,13 @@ class Controller {
 			this.lastAttemptedSkill = "";
 		}
 
-		if (status.status === SkillReadyStatus.Blocked || status.status === SkillReadyStatus.NotInCombat) {
+		if (status.status.unavailableReasons.some(reason =>
+			reason === SkillUnavailableReason.Blocked || reason === SkillUnavailableReason.NotInCombat
+		)) {
 			this.lastAttemptedSkill = skillName;
 		}
 
-		if (status.status === SkillReadyStatus.Ready) {
+		if (status.status.ready()) {
 			let node = new ActionNode(ActionType.Skill);
 			node.skillName = skillName;
 			node.waitDuration = 0;
@@ -1030,7 +1043,7 @@ class Controller {
 
 				let bEditedTimelineShouldWaitAfterSkill = currentReplayMode === ReplayMode.Edited && (itr.next && itr.next.type === ActionType.Wait);
 				if (currentReplayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
-					if (status.status === SkillReadyStatus.Ready) {
+					if (status.status.ready()) {
 						//======== tick wait block ========
 						// qol: clean up this code...
 						let deltaTime = 0;
@@ -1061,10 +1074,10 @@ class Controller {
 					console.assert(false);
 				}
 
-				if (status.status !== SkillReadyStatus.Ready) {
+				if (!status.status.ready()) {
 					lastIter = true;
 					firstInvalidNode = itr;
-					invalidReason = status.status;
+					invalidReason = status.status.clone();
 					invalidTime = this.game.getDisplayTime();
 				}
 
@@ -1088,9 +1101,11 @@ class Controller {
 						separateNode: false
 					});
 				} else {
+					const reason = makeSkillReadyStatus();
+					reason.addUnavailableReason(SkillUnavailableReason.BuffNoLongerAvailable);
 					lastIter = true;
 					firstInvalidNode = itr;
-					invalidReason = SkillReadyStatus.BuffNoLongerAvailable;
+					invalidReason = reason;
 					invalidTime = this.game.getDisplayTime();
 				}
 			}
@@ -1392,7 +1407,7 @@ class Controller {
 		} else {
 			let waitFirst = props.skillName === this.lastAttemptedSkill;
 			let status = this.#useSkill(props.skillName, waitFirst);
-			if (status.status === SkillReadyStatus.Ready) {
+			if (status.status.ready()) {
 				this.scrollToTime(this.game.time);
 				this.autoSave();
 			}
@@ -1449,7 +1464,7 @@ class Controller {
 				let numSkillsProcessed = 0;
 				for (let i = 0; i < ctrl.skillsQueue.length; i++) {
 					let status = ctrl.#useSkill(ctrl.skillsQueue[i].skillName, true);
-					if (status.status === SkillReadyStatus.Ready) {
+					if (status.status.ready()) {
 						ctrl.scrollToTime(ctrl.game.time);
 						ctrl.autoSave();
 					}
