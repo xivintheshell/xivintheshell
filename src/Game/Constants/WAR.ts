@@ -48,30 +48,30 @@ export enum WARBuffTypes {
     InnerRelease = "Inner Release", // Free Fell Cleaves
     InnerStrength = "Inner Strength", // KB/Stun immune
     BurgeoningFury = "Burgeoning Fury", // Fell Cleave usage counter
-    Wrathful = "Wrathful",
+    Wrathful = "Wrathful", // Primal Wrath Ready
     PrimalRendReady = "Primal Rend Ready",
     PrimalRuinationReady = "Primal Ruination Ready",
 
     NascentChaos = "Nascent Chaos",
 
     // TODO: Nascent Glint when multiple players in a timeline is fully supported.
-    NascentFlash = "Nascent Flash",
+    NascentFlash = "Nascent Flash", // health-on-hit (self)
     ThrillOfBattle = "Thrill of Battle",
-    Equilibrium = "Equilibrium",
-    ShakeItOff = "Shake It Off",
-    ShakeItOffOverTime = "Shake It Off Over Time",
+    Equilibrium = "Equilibrium", // HoT
+    ShakeItOff = "Shake It Off", // Barrier
+    ShakeItOffOverTime = "Shake It Off Over Time", // HoT
     RawIntuition = "Raw Intuition",
-    StemTheTide = "Stem the Tide",
-    StemTheFlow = "Stem the Flow",
+    StemTheTide = "Stem the Tide", // Barrier
+    StemTheFlow = "Stem the Flow", // 4s extra DR
     Bloodwhetting = "Bloodwhetting",
 
-    Vengeance = "Vengeance",
-    Damnation = "Damnation",
-    PrimevalImpulse = "Primeval Impulse",
+    Vengeance = "Vengeance", // Phys Ref. / 30% DR
+    Damnation = "Damnation", // Phys Ref. / 40% DR
+    PrimevalImpulse = "Primeval Impulse", // HoT
 
-    Holmgang = "Holmgang",
+    Holmgang = "Holmgang", // Invuln
 
-    Defiance = "Defiance",
+    Defiance = "Defiance", // Tank Stance
 }
 
 
