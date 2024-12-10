@@ -83,14 +83,45 @@ export type SkillName = GeneralSkillName
 	| MCHSkillName
 	| RPRSkillName;
 
-export const enum SkillReadyStatus {
-	Ready = "ready",
+export const enum SkillUnavailableReason {
 	Blocked = "blocked by CD, animation lock or caster tax",
+	SecondaryBlocked = "blocked by secondary CD",
 	NotEnoughMP = "not enough MP",
 	NotInCombat = "must be in combat (after first damage application)",
 	RequirementsNotMet = "requirements not met",
 	SkillNotUnlocked = "skill not unlocked at provided level",
 	BuffNoLongerAvailable = "buff no longer available"
+}
+
+export type SkillReadyStatus = {
+	unavailableReasons: SkillUnavailableReason[]
+	ready: () => boolean;
+	toString: () => string;
+	addUnavailableReason: (reason: SkillUnavailableReason) => void;
+	clone: () => SkillReadyStatus;
+};
+
+export function makeSkillReadyStatus(): SkillReadyStatus {
+	return {
+		unavailableReasons: [],
+		ready: function() {
+			return this.unavailableReasons.length === 0;
+		},
+		toString: function() {
+			if (this.ready()) return "ready";
+			return this.unavailableReasons.join("; ");
+		},
+		addUnavailableReason: function(reason: SkillUnavailableReason) {
+			if (!this.unavailableReasons.includes(reason)) {
+				this.unavailableReasons.push(reason);
+			}
+		},
+		clone: function() {
+			const status = makeSkillReadyStatus();
+			this.unavailableReasons.forEach(reason => status.addUnavailableReason(reason));
+			return status;
+		}
+	};
 }
 
 // Add any buffs that you want to have highlighted on the timeline here.
