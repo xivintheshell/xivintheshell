@@ -214,10 +214,16 @@ class SkillButton extends React.Component {
 					}));
 				}
 				if (info.status.unavailableReasons.includes(SkillUnavailableReason.Blocked)) {
-					s.push(localize({
-						en: "possibly ready in " + info.timeTillAvailable.toFixed(3) + " (next stack ready in " + info.timeTillNextStackReady.toFixed(3) + ")",
-						zh: "预计" + info.timeTillAvailable.toFixed(3) + "秒后可释放（" + info.timeTillNextStackReady.toFixed(3) + "秒后转好下一层CD）"
-					}));
+					const nextStackReadyIn = Math.max(info.timeTillNextStackReady, info.timeTillSecondaryReady ?? 0);
+					const s1 = localize({
+						en: "possibly ready in " + info.timeTillAvailable.toFixed(3),
+						zh: "预计" + info.timeTillAvailable.toFixed(3) + "秒后可释放",
+					});
+					const s2 = localize({
+						en: " (next stack ready in " + nextStackReadyIn.toFixed(3) + ")",
+						zh: "（" + nextStackReadyIn.toFixed(3) + "秒后转好下一层CD）"
+					})
+					s.push(<>{s1}{info.stacksAvailable < info.maxStacks ? s2 : undefined}</>);
 				}
 				if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotInCombat)) {
 					s.push(localize({

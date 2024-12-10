@@ -1,12 +1,4 @@
-import {
-	Aspect,
-	BuffType,
-	Debug,
-	makeSkillReadyStatus,
-	ResourceType,
-	SkillName,
-	SkillUnavailableReason
-} from "./Common"
+import {Aspect, BuffType, Debug, makeSkillReadyStatus, ResourceType, SkillName, SkillUnavailableReason} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {Ability, DisplayedSkills, SkillsList, Spell, Weaponskill,} from "./Skills"
 import {
@@ -695,8 +687,9 @@ export abstract class GameState {
 
 		let status = makeSkillReadyStatus();
 
-		if ((skill.secondaryCd && this.cooldowns.get(skill.secondaryCd.cdName).stacksAvailable() === 0) || blocked)
-			status.addUnavailableReason(SkillUnavailableReason.Blocked);
+		if (blocked) status.addUnavailableReason(SkillUnavailableReason.Blocked);
+		if (skill.secondaryCd && this.cooldowns.get(skill.secondaryCd.cdName).stacksAvailable() === 0)
+			status.addUnavailableReason(SkillUnavailableReason.SecondaryBlocked);
 		if (!skillUnlocked) status.addUnavailableReason(SkillUnavailableReason.SkillNotUnlocked);
 		if (!reqsMet) status.addUnavailableReason(SkillUnavailableReason.RequirementsNotMet);
 		if (!enoughMana) status.addUnavailableReason(SkillUnavailableReason.NotEnoughMP);
@@ -723,7 +716,7 @@ export abstract class GameState {
 		let cd = this.cooldowns.get(skill.cdName);
 		const secondaryCd = skill.secondaryCd ? this.cooldowns.get(skill.secondaryCd.cdName) : undefined;
 		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.cdName);
-		const timeTillSecondaryReady = skill.secondaryCd ? this.cooldowns.timeTillNextStackAvailable(skill.secondaryCd.cdName) : 0
+		const timeTillSecondaryReady = skill.secondaryCd ? this.cooldowns.timeTillNextStackAvailable(skill.secondaryCd.cdName) : undefined;
 		let cdRecastTime = cd.currentStackCd();
 		// special case for meditate: if meditate is off CD, use the GCD cooldown instead if it's rolling
 		// this fails the edge case where a GCD is pressed ~58 seconds after meditate was last pressed

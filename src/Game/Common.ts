@@ -85,6 +85,7 @@ export type SkillName = GeneralSkillName
 
 export const enum SkillUnavailableReason {
 	Blocked = "blocked by CD, animation lock or caster tax",
+	SecondaryBlocked = "blocked by secondary CD",
 	NotEnoughMP = "not enough MP",
 	NotInCombat = "must be in combat (after first damage application)",
 	RequirementsNotMet = "requirements not met",
