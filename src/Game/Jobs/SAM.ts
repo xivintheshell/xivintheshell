@@ -1065,7 +1065,7 @@ makeResourceAbility(ShellJob.SAM, SkillName.Meditate, 60, ResourceType.cd_Medita
 	cooldown: 60,
 	applicationDelay: 0.62,
 	// Meditate cannot be used during a GCD roll
-	validateAttempt: (state) => true,
+	validateAttempt: (state) => state.cooldowns.get(ResourceType.cd_GCD).stacksAvailable() > 0,
 	// roll the GCD
 	onConfirm: (state) => {
 		const recastTime = state.config.adjustedSksGCD(

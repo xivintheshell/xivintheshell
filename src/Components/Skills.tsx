@@ -222,7 +222,7 @@ class SkillButton extends React.Component {
 					const s2 = localize({
 						en: " (next stack ready in " + nextStackReadyIn.toFixed(3) + ")",
 						zh: "（" + nextStackReadyIn.toFixed(3) + "秒后转好下一层CD）"
-					})
+					});
 					s.push(<>{s1}{info.stacksAvailable < info.maxStacks ? s2 : undefined}</>);
 				}
 				if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotInCombat)) {

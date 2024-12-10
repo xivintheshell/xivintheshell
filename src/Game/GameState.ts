@@ -698,6 +698,8 @@ export abstract class GameState {
 			// Special case for Meditate
 			if (timeTillAvailable > Debug.epsilon || this.cooldowns.get(ResourceType.cd_GCD).timeTillNextStackAvailable() > Debug.epsilon) {
 				// if the skill is on CD or the GCD is rolling, mark it as blocked
+				const idx = status.unavailableReasons.indexOf(SkillUnavailableReason.RequirementsNotMet);
+				if (idx >= 0) status.unavailableReasons.splice(idx, 1);
 				status.addUnavailableReason(SkillUnavailableReason.Blocked);
 			}
 		}
