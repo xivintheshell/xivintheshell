@@ -59,7 +59,11 @@ def parse_csv(src, dst):
             track_str = row["Track"]
             if not track_str:
                 continue
-            track_id = int(track_str)
+            try:
+                track_id = int(track_str)
+            except ValueError as e:
+                print("bad row:", row)
+                raise e
             # TODO add validation to ensure fields are filled
             color_str = row["Color"]
             ability = row["Ability"]

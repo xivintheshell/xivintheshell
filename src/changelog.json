@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/12/24",
+		"changes": [
+			"Updated English FRU tracks and added P4 + P5"
+		]
+	},
+	{
 		"date": "12/8/24",
 		"changes": [
 			"Updated Chinese FRU tracks to latest (12/8 ver)",

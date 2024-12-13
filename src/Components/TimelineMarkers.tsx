@@ -449,11 +449,15 @@ export class TimelineMarkers extends React.Component {
 				<LoadCombinedTracksBtn displayName={"M4S"} url={PRESET_MARKERS_BASE + "m4s_zh.txt"} offsetStr={this.state.offsetStr}/>
 			</p>
 			<p>
-				<span>{localize({en: "FRU: ", zh: "绝伊甸："})}</span>
-				<LoadCombinedTracksBtn displayName={localize({en: "P1 by Yara", zh: "P1（英文，来自Yara）"})} url={PRESET_MARKERS_BASE + "fru_p1.txt"} offsetStr={this.state.offsetStr}/>
-				<LoadCombinedTracksBtn displayName={localize({en: "P2 + intermission by Yara", zh: "P2（英文，来自Yara）"})} url={PRESET_MARKERS_BASE + "fru_p2.txt"} offsetStr={this.state.offsetStr}/>
-				<LoadCombinedTracksBtn displayName={localize({en: "P3 by Yara", zh: "P3（英文，来自Yara）"})} url={PRESET_MARKERS_BASE + "fru_p3.txt"} offsetStr={this.state.offsetStr}/>
-				<LoadCombinedTracksBtn displayName={localize({en: "full (zh) by 小盐 & czmm (12/2 ver)", zh: "完整（来自小盐+czmm, 12/2版）"})} url={PRESET_MARKERS_BASE + "fru_zh.txt"} offsetStr={this.state.offsetStr}/>
+				<span>{localize({en: "FRU (en) by Yara & shanzhe: ", zh: "绝伊甸（英文，来自Yara+shanzhe）："})}</span>
+				<LoadCombinedTracksBtn displayName={localize({en: "P1", zh: "P1"})} url={PRESET_MARKERS_BASE + "fru_p1.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={localize({en: "P2 + intermission", zh: "P2"})} url={PRESET_MARKERS_BASE + "fru_p2.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={localize({en: "P3 + P4", zh: "P3 + P4"})} url={PRESET_MARKERS_BASE + "fru_p3_p4.txt"} offsetStr={this.state.offsetStr}/>
+				<LoadCombinedTracksBtn displayName={localize({en: "P5", zh: "P5"})} url={PRESET_MARKERS_BASE + "fru_p5.txt"} offsetStr={this.state.offsetStr}/>
+			</p>
+			<p>
+				<span>{localize({en: "FRU (zh) by 小盐 & czmm: ", zh: "绝伊甸（中文，来自小盐+czmm）："})}</span>
+				<LoadCombinedTracksBtn displayName={localize({en: "full (12/8 ver)", zh: "完整（12/8版）"})} url={PRESET_MARKERS_BASE + "fru_zh.txt"} offsetStr={this.state.offsetStr}/>
 			</p>
 			<p>
 				<span>{localize({en: "Legacy ultimates: ", zh: "过去绝本（英文）："})}</span>
