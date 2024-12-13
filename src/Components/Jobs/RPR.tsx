@@ -102,6 +102,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
                 enabled: true,
                 stacks: this.state.resources.get(ResourceType.ImmortalSacrifice).availableAmount(),
                 className: this.state.hasResourceAvailable(ResourceType.ImmortalSacrifice) ? "" : "hidden",
+                timeRemaining: this.state.resources.timeTillReady(ResourceType.ImmortalSacrifice).toFixed(3),
             },
 			{
 				rscType: ResourceType.FlankPositional,
