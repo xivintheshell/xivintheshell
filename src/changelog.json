@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/13/24",
+		"changes": [
+			"Fixed sometimes unable to use skills in manual mode with double click"
+		]
+	},
+	{
 		"date": "12/12/24",
 		"changes": [
 			"Updated English FRU tracks and added P4 + P5"
