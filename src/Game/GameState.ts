@@ -436,6 +436,16 @@ export abstract class GameState {
 				}
 			}
 
+			if (this.job === ShellJob.RPR && doesDamage) {
+				if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
+					node.addBuff(BuffType.ArcaneCircle);	
+				}
+				
+				if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
+					node.addBuff(BuffType.DeathsDesign);
+				}
+			}
+
 			if (this.job === ShellJob.DNC && doesDamage) {
 				if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
 					node.addBuff(BuffType.TechnicalFinish)
@@ -555,6 +565,16 @@ export abstract class GameState {
 			&& potencyNumber > 0
 			&& skill.aspect !== Aspect.Physical) {
 			node.addBuff(BuffType.Embolden);
+		}
+
+		if (this.job === ShellJob.RPR && potencyNumber > 0) {
+			if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
+				node.addBuff(BuffType.ArcaneCircle);
+			}
+
+			if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
+				node.addBuff(BuffType.DeathsDesign);
+			}
 		}
 
 		if (this.job === ShellJob.DNC && potencyNumber > 0) {
