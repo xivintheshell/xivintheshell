@@ -1,6 +1,6 @@
 import React, {FormEvent, FormEventHandler} from 'react'
 import {Clickable, ContentNode, Help, parseTime, ValueChangeEvent} from "./Common";
-import {Debug, SkillName, SkillReadyStatus} from "../Game/Common";
+import {Debug, SkillName, SkillReadyStatus, SkillUnavailableReason} from "../Game/Common";
 import {controller} from "../Controller/Controller";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
@@ -192,8 +192,8 @@ class SkillButton extends React.Component {
 				skillName: this.props.skillName
 			});
 			let colors = getCurrentThemeColors();
-			let s: ContentNode = "";
-			if (info.status === SkillReadyStatus.Ready) {
+			let s: ContentNode[] = [];
+			if (info.status.ready()) {
 				let en = "ready (" + info.stacksAvailable;
 				let zh = "可释放 (" + info.stacksAvailable;
 				if (info.timeTillNextStackReady > 0) {
@@ -202,36 +202,49 @@ class SkillButton extends React.Component {
 				}
 				en += ")";
 				zh += ")";
-				s = localize({en: en, zh: zh});
-			}
-			else if (info.status === SkillReadyStatus.RequirementsNotMet) {
-				s += localize({en: " skill requirement(s) not satisfied", zh: " 未满足释放条件"});
-			} else if (info.status === SkillReadyStatus.NotEnoughMP) {
-				s += localize({
-					en: " not enough MP (needs " + info.capturedManaCost + ")",
-					zh: " MP不足（需" + info.capturedManaCost + "）"
-				});
-			} else if (info.status === SkillReadyStatus.Blocked) {
-				s += localize({
-					en: "possibly ready in " + info.timeTillAvailable.toFixed(3) + " (next stack ready in " + info.timeTillNextStackReady.toFixed(3) + ")",
-					zh: "预计" + info.timeTillAvailable.toFixed(3) + "秒后可释放（" + info.timeTillNextStackReady.toFixed(3) + "秒后转好下一层CD）"
-				});
-			} else if (info.status === SkillReadyStatus.NotInCombat) {
-				s += localize({
-					en: "not in combat (wait for first damage application)",
-				});
+				s.push(localize({en: en, zh: zh}));
+			} else {
+				if (info.status.unavailableReasons.includes(SkillUnavailableReason.RequirementsNotMet)) {
+					s.push(localize({en: " skill requirement(s) not satisfied", zh: " 未满足释放条件"}));
+				}
+				if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotEnoughMP)) {
+					s.push(localize({
+						en: " not enough MP (needs " + info.capturedManaCost + ")",
+						zh: " MP不足（需" + info.capturedManaCost + "）"
+					}));
+				}
+				if (info.status.unavailableReasons.includes(SkillUnavailableReason.Blocked)) {
+					const nextStackReadyIn = Math.max(info.timeTillNextStackReady, info.timeTillSecondaryReady ?? 0);
+					const s1 = localize({
+						en: "possibly ready in " + info.timeTillAvailable.toFixed(3),
+						zh: "预计" + info.timeTillAvailable.toFixed(3) + "秒后可释放",
+					});
+					const s2 = localize({
+						en: " (next stack ready in " + nextStackReadyIn.toFixed(3) + ")",
+						zh: "（" + nextStackReadyIn.toFixed(3) + "秒后转好下一层CD）"
+					});
+					s.push(<>{s1}{info.stacksAvailable < info.maxStacks ? s2 : undefined}</>);
+				}
+				if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotInCombat)) {
+					s.push(localize({
+						en: "not in combat (wait for first damage application)",
+						zh: "不在战斗中（需先等第一次伤害结算）"
+					}));
+				}
 			}
 			// if ready, also show captured cast time & time till damage application
 			let actualCastTime = info.instantCast ? 0 : info.castTime;
 			let infoString = "";
-			if (info.status === SkillReadyStatus.Ready) {
+			if (info.status.ready()) {
 				infoString += localize({en: "cast: ", zh: "读条："}) + actualCastTime.toFixed(3);
 				if (info.llCovered && actualCastTime > Debug.epsilon) infoString += " (LL)";
 				infoString += localize({en: ", cast+delay: ", zh: " 读条+生效延迟："}) + info.timeTillDamageApplication.toFixed(3);
 			}
 			let content = <div style={{color: controller.displayingUpToDateGameState ? colors.text : colors.historical}}>
 				<div className="paragraph"><b>{localizeSkillName(this.props.skillName)}</b></div>
-				<div className="paragraph">{s}</div>
+				<div className="paragraph">{s.map((line, i) => <span key={i}>
+					{line}<br/>
+				</span>)}</div>
 				<div className="paragraph">{infoString}</div>
 			</div>;
 			this.setState({skillDescription: content});
@@ -388,7 +401,6 @@ enum WaitSince {
 export type SkillButtonViewInfo = {
 	skillName: SkillName,
 	status: SkillReadyStatus,
-	statusExcludingCd: SkillReadyStatus,
 	stacksAvailable: number,
 	maxStacks: number,
 	castTime: number,
@@ -509,12 +521,15 @@ export class SkillsWindow extends React.Component {
 			let skillName = this.state.statusList[i].skillName;
 			let info = this.state.statusList[i];
 
+			const readyAsideFromCd = info ? (
+				!info.status.unavailableReasons.some(reason => reason !== SkillUnavailableReason.Blocked)
+			) : false;
 			let btn = <SkillButton
 				key={i}
 				highlight={info ? info.highlight : false}
 				skillName={skillName}
-				ready={info ? info.status===SkillReadyStatus.Ready : false}
-				readyAsideFromCd={info ? info.statusExcludingCd===SkillReadyStatus.Ready : false}
+				ready={info ? info.status.ready() : false}
+				readyAsideFromCd={readyAsideFromCd}
 				cdProgress={info ? 1 - info.timeTillNextStackReady / info.cdRecastTime : 1}
 				secondaryCdProgress={info ? (info.secondaryCdRecastTime && info.timeTillSecondaryReady ? 1 - info.timeTillSecondaryReady/info.secondaryCdRecastTime : 1) : 1}
 				/>
