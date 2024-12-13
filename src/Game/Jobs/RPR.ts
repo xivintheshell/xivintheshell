@@ -243,8 +243,14 @@ export class RPRState extends GameState {
         }
         const skillInfo = getSkill(ShellJob.RPR, skill);
         if (skillInfo.potencyFn(this) > 0) {
-            this.resources.get(ResourceType.ImmortalSacrifice).gain(1);
-            this.resources.get(ResourceType.CircleOfSacrifice).consume(1);
+            let immortalSac = this.resources.get(ResourceType.ImmortalSacrifice);
+            if (immortalSac.availableAmount() === 0) {
+                this.setTimedResource(ResourceType.ImmortalSacrifice, 1);
+            }
+            else {
+                this.resources.get(ResourceType.ImmortalSacrifice).gain(1);
+            }
+            this.tryConsumeResource(ResourceType.CircleOfSacrifice, true);
         }
     }
 
@@ -259,6 +265,8 @@ export class RPRState extends GameState {
         this.tryConsumeResource(ResourceType.Oblatio);
         this.tryConsumeResource(ResourceType.LemureShroud);
         this.tryConsumeResource(ResourceType.VoidShroud);
+        this.tryConsumeResource(ResourceType.EnhancedCrossReaping);
+        this.tryConsumeResource(ResourceType.EnhancedVoidReaping);
     }
 }
 
@@ -299,8 +307,6 @@ const gibgalHighlightPredicate: (enhancedRsc: ResourceType, skill: RPRSkillName)
     const resource = [SkillName.Gibbet, SkillName.Gallows, SkillName.Guillotine].includes(skill) 
         ? state.resources.get(ResourceType.SoulReaver) : state.resources.get(ResourceType.Executioner);
     
-
-
     return state.resources.get(enhancedRsc).available(1)
                     || (resource.available(1)
                         && !state.hasResourceAvailable(ResourceType.EnhancedGibbet)
@@ -831,7 +837,7 @@ makeRPRAbility(SkillName.UnveiledGallows, 70, ResourceType.cd_BloodStalk, {
     highlightIf: soulSpendPredicate(50),
 });
 
-makeRPRAbility(SkillName.LemuresSlice, 86, ResourceType.cd_BloodStalk, {
+makeRPRAbility(SkillName.LemuresSlice, 86, ResourceType.cd_LemuresSlice, {
     isPhysical: true,
     potency: [
         [TraitName.Never, 240],
@@ -847,7 +853,7 @@ makeRPRAbility(SkillName.LemuresSlice, 86, ResourceType.cd_BloodStalk, {
     }
 });
 
-makeRPRAbility(SkillName.Sacrificium, 92, ResourceType.cd_BloodStalk, {
+makeRPRAbility(SkillName.Sacrificium, 92, ResourceType.cd_Sacrificium, {
     isPhysical: false,
     potency: 530,
     startOnHotbar: false,
@@ -1080,7 +1086,7 @@ makeRPRWeaponskill(SkillName.GrimReaping, 80, {
     aspect: Aspect.Physical
 });
 
-makeRPRAbility(SkillName.LemuresScythe, 86, ResourceType.cd_BloodStalk, {
+makeRPRAbility(SkillName.LemuresScythe, 86, ResourceType.cd_LemuresSlice, {
     isPhysical: true,
     potency: 100,
     applicationDelay: 0.66,
