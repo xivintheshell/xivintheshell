@@ -2,7 +2,10 @@
 	{
 		"date": "12/13/24",
 		"changes": [
-			"Fixed sometimes unable to use skills in manual mode with double click"
+			"Fixed sometimes unable to use skills in manual mode with double click",
+			"[RPR] Added timer for Immortal Sacrifice",
+			"[RPR] Removed enhanced reapings whenever shroud is exited",
+			"[RPR] Separated cooldowns of Sacrificium and Lemure's Slice"
 		]
 	},
 	{
