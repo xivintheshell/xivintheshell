@@ -5,6 +5,7 @@ import {DNCSkillName, DNCResourceType, DNCCooldownType, DNCTraitList, DNCTraitNa
 import {SAMSkillName, SAMResourceType, SAMCooldownType, SAMTraitList, SAMTraitName} from "./Constants/SAM";
 import {MCHSkillName, MCHResourceType, MCHCooldownType, MCHTraitList, MCHTraitName} from "./Constants/MCH";
 import {RPRSkillName, RPRResourceType, RPRCooldownType, RPRTraitList, RPRTraitName} from "./Constants/RPR";
+import {WARSkillName, WARResourceType, WARCooldownType, WARTraitList, WARTraitName} from "./Constants/WAR";
 
 
 export const Debug = {
@@ -58,6 +59,13 @@ enum GeneralSkillName {
 	TrueNorth = "True North",
 	LegSweep = "Leg Sweep",
 
+	Rampart = "Rampart",
+	Reprisal = "Reprisal",
+	LowBlow = "Low Blow",
+	Interject = "Interject",
+	Provoke = "Provoke",
+	Shirk = "Shirk",
+
 	Never = "Never",
 }
 
@@ -70,6 +78,7 @@ export const SkillName = {
 	...SAMSkillName,
 	...MCHSkillName,
 	...RPRSkillName,
+	...WARSkillName,
 	...GeneralSkillName,
 }
 
@@ -81,7 +90,9 @@ export type SkillName = GeneralSkillName
 	| DNCSkillName
 	| SAMSkillName
 	| MCHSkillName
-	| RPRSkillName;
+	| RPRSkillName
+	| WARSkillName
+;
 
 export const enum SkillUnavailableReason {
 	Blocked = "blocked by CD, animation lock or caster tax",
@@ -175,6 +186,9 @@ enum GeneralResourceType {
 	TrueNorth = "True North", // [0, 1]
 	Bloodbath = "Bloodbath", // [0, 1]
 
+	Rampart = "Rampart", // [0, 1]
+	Reprisal = "Reprisal", // [0, 1]
+
 	// special
 	RearPositional = "Rear Positional", // [0, 1]
 	FlankPositional = "Flank Positional", // [0, 1]
@@ -202,6 +216,13 @@ enum GeneralCooldownType {
 	cd_Bloodbath = "cd_Bloodbath",
 	cd_LegSweep = "cd_LegSweep",
 
+	cd_Rampart = "cd_Rampart",
+	cd_Reprisal = "cd_Reprisal",
+	cd_LowBlow = "cd_LowBlow",
+	cd_Interject = "cd_Interject",
+	cd_Provoke = "cd_Provoke",
+	cd_Shirk = "cd_Shirk",
+
 	cd_HeadGraze = "cd_HeadGraze",
 }
 
@@ -213,7 +234,8 @@ const CooldownType = {
 	...DNCCooldownType,
 	...SAMCooldownType,
 	...MCHCooldownType,
-	...RPRCooldownType
+	...RPRCooldownType,
+	...WARCooldownType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -224,7 +246,9 @@ type CooldownType = GeneralCooldownType
 	| DNCCooldownType
 	| SAMCooldownType
 	| MCHCooldownType
-	| RPRCooldownType;
+	| RPRCooldownType
+	| WARCooldownType
+;
 
 export const ResourceType = {
 	...CooldownType,
@@ -236,6 +260,7 @@ export const ResourceType = {
 	...SAMResourceType,
 	...MCHResourceType,
 	...RPRResourceType,
+	...WARResourceType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -247,7 +272,9 @@ export type ResourceType = CooldownType
 	| DNCResourceType
 	| SAMResourceType
 	| MCHResourceType
-	| RPRResourceType;
+	| RPRResourceType
+	| WARResourceType
+;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",
@@ -276,6 +303,10 @@ export const enum WarningType {
 	KenkiOvercap = "kenki overcap",
 	MeditationOvercap = "meditation stack overcap",
 	SenOvercap = "sen overcap",
+
+	BeastGaugeOvercap = "Beast Gauge overcap",
+	InnerReleaseDrop = "Inner Release expired",
+	NascentChaosDrop = "Nascent Chaos expired",
 }
 
 export enum ReservedTraitName {
@@ -323,6 +354,7 @@ export const TraitName = {
 	...SAMTraitName,   // 5000-5999
 	...MCHTraitName,   // 6000-6999
 	...RPRTraitName,   // 7000-7999
+	...WARTraitName,   // 8000-8999
 	...ReservedTraitName, // 0, for now
 }
 
@@ -335,6 +367,7 @@ export type TraitName = RoleTraitName
 	| SAMTraitName
 	| MCHTraitName
 	| RPRTraitName
+	| WARTraitName
 	| ReservedTraitName;
 
 export const TraitList: Array<[TraitName, number]> = [
@@ -346,4 +379,5 @@ export const TraitList: Array<[TraitName, number]> = [
 	...SAMTraitList,
 	...MCHTraitList,
 	...RPRTraitList,
+	...WARTraitList,
 ]
