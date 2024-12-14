@@ -777,7 +777,9 @@ export abstract class GameState {
 		let timeTillDamageApplication = 0;
 		if (status.ready()) {
 			if (skill.kind === "spell") {
-				let timeTillCapture = instantCastAvailable ? 0 : (capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
+				let timeTillCapture = instantCastAvailable ? 0 : (capturedCastTime - 
+					(LIMIT_BREAKS.includes(skill.name) ? 0 : GameConfig.getSlidecastWindow(capturedCastTime)) // Can't slidecast an LB
+				);
 				timeTillDamageApplication = timeTillCapture + skill.applicationDelay;
 			} else {
 				timeTillDamageApplication = skill.applicationDelay;
