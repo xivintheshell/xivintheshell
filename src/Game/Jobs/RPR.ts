@@ -369,6 +369,7 @@ const makeRPRSpell = (name: RPRSkillName, unlockLevel: number, params: {
 
     return makeSpell(ShellJob.RPR, name, unlockLevel, {
         ...params,
+        recastTime: (state) => state.config.adjustedGCD(params.recastTime),
         onConfirm: onConfirm,
         validateAttempt: validateAttempt,
         isInstantFn: (state) => !(
@@ -414,6 +415,7 @@ const makeRPRWeaponskill = (name: RPRSkillName, unlockLevel: number, params: {
     )
     return makeWeaponskill(ShellJob.RPR, name, unlockLevel, {
         ...params,
+        recastTime: (state) => state.config.adjustedSksGCD(params.recastTime),
         onConfirm: onConfirm,
         jobPotencyModifiers: (state) => {
             const mods: PotencyModifier[] = basePotencyModifiers(state);
