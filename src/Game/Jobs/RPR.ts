@@ -397,7 +397,7 @@ const makeRPRWeaponskill = (name: RPRSkillName, unlockLevel: number, params: {
     }
     secondaryCooldown?: CooldownGroupProperies,
     aspect: Aspect,
-    recastTime: number,
+    recastTime: number | ResourceCalculationFn<RPRState>,
     applicationDelay: number,
     validateAttempt?: StatePredicate<RPRState>,
     onConfirm?: EffectFn<RPRState>,
@@ -415,7 +415,6 @@ const makeRPRWeaponskill = (name: RPRSkillName, unlockLevel: number, params: {
     )
     return makeWeaponskill(ShellJob.RPR, name, unlockLevel, {
         ...params,
-        recastTime: (state) => state.config.adjustedSksGCD(params.recastTime),
         onConfirm: onConfirm,
         jobPotencyModifiers: (state) => {
             const mods: PotencyModifier[] = basePotencyModifiers(state);
@@ -501,7 +500,7 @@ const makeRPRAbility = (name: RPRSkillName, unlockLevel: number, cdName: Resourc
 makeRPRWeaponskill(SkillName.ShadowOfDeath, 10, {
     potency: 300,
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 1.15,
     onConfirm: (state) => state.refreshDeathsDesign(),
 });
@@ -513,7 +512,7 @@ makeRPRWeaponskill(SkillName.Slice, 1, {
         [TraitName.MeleeMasteryIIIRPR, 460]
     ],
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.49,
 });
 
@@ -533,7 +532,7 @@ makeRPRWeaponskill(SkillName.WaxingSlice, 5, {
         resourceValue: 1,
     },
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.58,
     highlightIf: function (state: Readonly<RPRState>): boolean {
         return state.resources.get(ResourceType.RPRCombo).availableAmount() === 1;
@@ -556,7 +555,7 @@ makeRPRWeaponskill(SkillName.InfernalSlice, 30, {
         resourceValue: 2,
     },
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.54,
     highlightIf: function (state: Readonly<RPRState>): boolean {
         return state.resources.get(ResourceType.RPRCombo).availableAmount() === 2;
@@ -570,7 +569,7 @@ makeRPRWeaponskill(SkillName.SoulSlice, 60, {
         [TraitName.MeleeMasteryIIIRPR, 520]
     ],
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.99,
     secondaryCooldown: {
         cdName: ResourceType.cd_SoulSlice,
@@ -602,7 +601,7 @@ makeRPRWeaponskill(SkillName.Gibbet, 70, {
         location: "flank"
     },
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.5,
     highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGibbet, SkillName.Gibbet),
     validateAttempt: reaverPredicate,
@@ -635,7 +634,7 @@ makeRPRWeaponskill(SkillName.Gallows, 70, {
         location: "rear"
     },
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.53,
     highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGallows, SkillName.Gallows),
     validateAttempt: reaverPredicate,
@@ -653,7 +652,7 @@ makeRPRWeaponskill(SkillName.ExecutionersGibbet, 96, {
         location: "flank"
     },
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.62,
     highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGibbet, SkillName.ExecutionersGibbet),
     validateAttempt: executionerPredicate,
@@ -671,7 +670,7 @@ makeRPRWeaponskill(SkillName.ExecutionersGallows, 96, {
         location: "flank"
     },
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.62,
     highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGallows, SkillName.ExecutionersGallows),
     validateAttempt: executionerPredicate,
@@ -684,7 +683,7 @@ makeRPRWeaponskill(SkillName.ExecutionersGallows, 96, {
 makeRPRWeaponskill(SkillName.PlentifulHarvest, 88, {
     potency: 720,
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 1.16,
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.ImmortalSacrifice, 1),
     validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ImmortalSacrifice, 1)
@@ -948,7 +947,7 @@ makeResourceAbility(ShellJob.RPR, SkillName.Enshroud, 80, ResourceType.cd_Enshro
 makeRPRWeaponskill(SkillName.Perfectio, 100, {
     potency: 1300,
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 1.29,
     startOnHotbar: false,
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.PerfectioParata),
@@ -1021,7 +1020,7 @@ makeRPRAbility(SkillName.ArcaneCrestPop, 40, ResourceType.cd_ArcaneCrestPop, {
 makeRPRWeaponskill(SkillName.WhorlOfDeath, 35, {
     potency: 100,
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 1.15,
     onConfirm: (state) => state.refreshDeathsDesign(),
 });
@@ -1029,7 +1028,7 @@ makeRPRWeaponskill(SkillName.WhorlOfDeath, 35, {
 makeRPRWeaponskill(SkillName.SpinningScythe, 25, {
     potency: 160,
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.62,
 });
 
@@ -1041,7 +1040,7 @@ makeRPRWeaponskill(SkillName.NightmareScythe, 45, {
         resourceValue: 1,
     },
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.8,
     highlightIf: function (state: Readonly<RPRState>): boolean {
         return state.resources.get(ResourceType.RPRAoECombo).availableAmount() === 1;
@@ -1051,7 +1050,7 @@ makeRPRWeaponskill(SkillName.NightmareScythe, 45, {
 makeRPRWeaponskill(SkillName.SoulScythe, 65, {
     potency: 180,
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.66,
     secondaryCooldown: {
         cdName: ResourceType.cd_SoulSlice,
@@ -1064,7 +1063,7 @@ makeRPRWeaponskill(SkillName.ExecutionersGuillotine, 96, {
     startOnHotbar: false,
     potency: 300,
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.53,
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.Executioner),
     validateAttempt: executionerPredicate,
@@ -1114,7 +1113,7 @@ makeRPRWeaponskill(SkillName.Guillotine, 70, {
     ],
     potency: 200,
     aspect: Aspect.Physical,
-    recastTime: 2.5,
+    recastTime: (state) => state.config.adjustedSksGCD(),
     applicationDelay: 0.49,
     highlightIf: (state) => state.hasResourceAvailable(ResourceType.SoulReaver),
     validateAttempt: reaverPredicate,
