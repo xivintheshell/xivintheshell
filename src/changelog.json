@@ -6,7 +6,8 @@
 			"[RPR] Added timer for Immortal Sacrifice",
 			"[RPR] Removed enhanced reapings whenever shroud is exited",
 			"[RPR] Separated cooldowns of Sacrificium and Lemure's Slice",
-			"[RPR] Fixed sks scaling"
+			"[RPR] Fixed sks scaling",
+			"[WAR] Added initial WAR support"
 		]
 	},
 	{
