@@ -95,6 +95,9 @@ interface BaseSkill<T extends PlayerState> {
 	// after the first, e.g. a value of 0.6 does 100% potency to one target, and 40% potency
 	// to all remaining. This is consistent with the way most skills are listed in the job guide.
 	// If undefined, this skill is assumed to only hit a single target.
+	// CAUTION: Skills may have a falloff of 0, implying that all secondary targets take the
+	// same damage as the primary. Accordingly, conditionals involving this field should explicitly
+	// check for undefined, not truthiness.
 	readonly falloff?: number;
 
 	// Determine whether the skill can be executed in the current state.

@@ -833,7 +833,7 @@ class Controller {
 	}
 
 	getActiveJob(): ShellJob {
-		return this.getDisplayedGame().job;
+		return this.game.job;
 	}
 
 	getSkillInfo(props: {game: GameState, skillName: SkillName}) {
