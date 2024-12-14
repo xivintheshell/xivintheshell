@@ -259,9 +259,10 @@ const makeLimitBreak = (jobs: ShellJob | ShellJob [], name: SkillName, unlockLev
 	// Make the "GCD" appear to roll for the full time of the LB cast and its animation lock
 	// Otherwise the animation lock handling produces a bunch of unexplained empty space in the timeline
 	const recastTime: ResourceCalculationFn<GameState> = (state) => {return params.castTime + state.config.getSkillAnimationLock(name)}
+	const assetName = "Limit Break " + name.charAt(name.length - 1)
 	return makeSpell(jobs, name, unlockLevel, {
 		...params,
-		assetPath: "General/Limit Break.png",
+		assetPath: `General/${assetName}.png`,
 		recastTime: recastTime,
 	})
 }
@@ -287,12 +288,6 @@ makeLimitBreak(TANK_JOBS, SkillName.TankLB2, 1, {
 		state.resources.get(ResourceType.TankLB2).gain(1)
 		state.enqueueResourceDrop(ResourceType.TankLB2, 12)
 	},
-	// Fake cooldown to visually distinguish it from LB 1/LB 3
-	secondaryCooldown: {
-		cdName: ResourceType.cd_LimitBreak2,
-		cooldown: 0.01,
-		maxCharges: 2,
-	}
 })
 makeLimitBreak(TANK_JOBS, SkillName.TankLB3, 1, {
 	castTime: 0.01,
@@ -301,12 +296,6 @@ makeLimitBreak(TANK_JOBS, SkillName.TankLB3, 1, {
 		state.resources.get(ResourceType.TankLB3).gain(1)
 		state.enqueueResourceDrop(ResourceType.TankLB3, 8)
 	},
-	// Fake cooldown to visually distinguish it from LB 1/LB 2
-	secondaryCooldown: {
-		cdName: ResourceType.cd_LimitBreak3,
-		cooldown: 0.01,
-		maxCharges: 3,
-	}
 })
 
 // Healer
@@ -317,22 +306,10 @@ makeLimitBreak(HEALER_JOBS, SkillName.HealerLB1, 1, {
 makeLimitBreak(HEALER_JOBS, SkillName.HealerLB2, 1, {
 	castTime: 2,
 	applicationDelay: 0.8,
-	// Fake cooldown to visually distinguish it from LB 1/LB 3
-	secondaryCooldown: {
-		cdName: ResourceType.cd_LimitBreak2,
-		cooldown: 0.01,
-		maxCharges: 2,
-	}
 })
 makeLimitBreak(HEALER_JOBS, SkillName.HealerLB3, 1, {
 	castTime: 2,
 	applicationDelay: 0.8,
-	// Fake cooldown to visually distinguish it from LB 1/LB 2
-	secondaryCooldown: {
-		cdName: ResourceType.cd_LimitBreak3,
-		cooldown: 0.01,
-		maxCharges: 3,
-	}
 })
 
 // Melee
@@ -345,23 +322,11 @@ makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB2, 1, {
 	castTime: 3,
 	applicationDelay: 3.28,
 	onConfirm: cancelMeditate,
-	// Fake cooldown to visually distinguish it from LB 1/LB 3
-	secondaryCooldown: {
-		cdName: ResourceType.cd_LimitBreak2,
-		cooldown: 0.01,
-		maxCharges: 2,
-	}
 })
 makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB3, 1, {
 	castTime: 4.5,
 	applicationDelay: 2.26,
 	onConfirm: cancelMeditate,
-	// Fake cooldown to visually distinguish it from LB 1/LB 2
-	secondaryCooldown: {
-		cdName: ResourceType.cd_LimitBreak3,
-		cooldown: 0.01,
-		maxCharges: 3,
-	}
 })
 
 // Ranged
@@ -372,22 +337,10 @@ makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB1, 1, {
 makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB2, 1, {
 	castTime: 3,
 	applicationDelay: 2.49,
-	// Fake cooldown to visually distinguish it from LB 1/LB 3
-	secondaryCooldown: {
-		cdName: ResourceType.cd_LimitBreak2,
-		cooldown: 0.01,
-		maxCharges: 2,
-	}
 })
 makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB3, 1, {
 	castTime: 4.5,
 	applicationDelay: 3.16,
-	// Fake cooldown to visually distinguish it from LB 1/LB 2
-	secondaryCooldown: {
-		cdName: ResourceType.cd_LimitBreak3,
-		cooldown: 0.01,
-		maxCharges: 3,
-	}
 })
 
 // Caster
@@ -400,23 +353,11 @@ makeLimitBreak(CASTER_JOBS, SkillName.CasterLB2, 1, {
 	castTime: 3,
 	applicationDelay: 3.75,
 	onApplication: cancelDualcast, // LB doesn't kill dualcast until it application
-	// Fake cooldown to visually distinguish it from LB 1/LB 3
-	secondaryCooldown: {
-		cdName: ResourceType.cd_LimitBreak2,
-		cooldown: 0.01,
-		maxCharges: 2,
-	}
 })
 makeLimitBreak(CASTER_JOBS, SkillName.CasterLB3, 1, {
 	castTime: 4.5,
 	applicationDelay: 4.5,
 	onApplication: cancelDualcast, // LB doesn't kill dualcast until it application
-	// Fake cooldown to visually distinguish it from LB 1/LB 2
-	secondaryCooldown: {
-		cdName: ResourceType.cd_LimitBreak3,
-		cooldown: 0.01,
-		maxCharges: 3,
-	}
 })
 
 //#region 
