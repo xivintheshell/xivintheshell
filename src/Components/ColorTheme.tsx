@@ -57,7 +57,9 @@ export type RPRResourceColors = {
 	shroudGaugeHigh: string,
 	lemureShroud: string,
 	voidShroudLow: string,
-	voidShroudHigh: string
+	voidShroudHigh: string,
+	deathsDesign: string,
+	arcaneCircle: string,
 }
 
 export type SAMResourceColors = {
@@ -230,7 +232,9 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				shroudGaugeHigh: "#00fcf3",
 				lemureShroud: "#53ffff",
 				voidShroudLow: "#5c125c",
-				voidShroudHigh: "#ff04ff"
+				voidShroudHigh: "#ff04ff",
+				deathsDesign: "#ab0009",
+				arcaneCircle: "#ff94fd",
 			},
 			timeline: {
 				ruler: "#2d2d2d",
@@ -336,7 +340,9 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				shroudGaugeHigh: "#00fcf3",
 				lemureShroud: "#53ffff",
 				voidShroudLow: "#5c125c",
-				voidShroudHigh: "#ff04ff"
+				voidShroudHigh: "#ff04ff",
+				deathsDesign: "#ab0009",
+				arcaneCircle: "#ff94fd",
 			},
 			timeline: {
 				ruler: "#e9e9e9",

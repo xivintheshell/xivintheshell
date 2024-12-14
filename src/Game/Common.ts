@@ -156,6 +156,8 @@ export enum BuffType {
 	StarryMuse = "Starry Muse",
 	TechnicalFinish = "Technical Finish",
 	WanderersMinuet = "The Wanderer's Minuet",
+
+	DeathsDesign = "Death's Design",
 }
 
 enum GeneralResourceType {

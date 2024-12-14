@@ -452,6 +452,8 @@ function drawSkills(
 		[BuffType.Fuka, {color: g_colors.timeline.llCover, showImage: true}],
 		[BuffType.Fugetsu, {color: g_colors.sam.fugetsu, showImage: true}],
 		[BuffType.EnhancedEnpi, {color: g_colors.rdm.accelBuff, showImage: true}],
+		[BuffType.ArcaneCircle, {color: g_colors.rpr.arcaneCircle, showImage: true}],
+		[BuffType.DeathsDesign, {color: g_colors.rpr.deathsDesign, showImage: true}],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();
