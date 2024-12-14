@@ -1,4 +1,3 @@
-import { Buff } from "../Game/Buffs";
 import {BuffType} from "../Game/Common";
 import {updateTimelineView} from "./Timeline";
 
