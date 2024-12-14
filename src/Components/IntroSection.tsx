@@ -50,7 +50,8 @@ const getAcknowledgements = () => (
 			en: <ul>
 				<li>Tool design and core systems implementation: <b>shanzhe</b>, <b>miyehn</b>, <b>Turtle</b></li>
 				<li>BLM: <b>shanzhe</b>, <b>Akairyu</b>, <b>Turtle</b>, <b>miyehn</b></li>
-				<li>PCT, RDM, SAM: <b>shanzhe</b></li>
+				<li>PCT, RDM: <b>shanzhe</b></li>
+				<li>SAM: <b>Sterling</b>, <b>shanzhe</b></li>
 				<li>DNC, MCH: <b>Akairyu</b></li>
 				<li>RPR: <b>Honey B. Lovely's Favorite Bee</b></li>
 				<li>WAR: <b>misterperson</b></li>
