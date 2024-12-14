@@ -121,8 +121,6 @@ export const TESTING_JOBS = [
 	ShellJob.RPR,
 	ShellJob.VPR,
 	ShellJob.BRD,
-	ShellJob.DNC,
-	ShellJob.MCH,
 	ShellJob.SMN,
 ];
 
