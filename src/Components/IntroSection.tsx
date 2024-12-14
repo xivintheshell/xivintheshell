@@ -80,12 +80,6 @@ const getAcknowledgements = () => (
 				バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
 			</div>,
 		})}
-
-		<div className="paragraph">{localize({
-			en: "Also, consider contributing! I'm not raiding lately so I can't make the timeline markers..",
-			zh: "贡献大欢迎！比如给我发时间轴标记文件！我自己很久没打高难了，自己做是不可能了。",
-			ja: "また、ぜひ貢献も考えてください！最近高難易度にコンテンツに行っていないのでタイムラインマーカーが作れません...",
-		})}</div>
 	</>
 );
 
