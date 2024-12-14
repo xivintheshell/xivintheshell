@@ -329,6 +329,7 @@ const makeSpell_BLM = (name: SkillName, unlockLevel: number, params: {
 	baseCastTime: number,
 	baseManaCost: number,
 	basePotency: number,
+	falloff?: number,
 	applicationDelay: number,
 	validateAttempt?: StatePredicate<BLMState>,
 	onConfirm?: EffectFn<BLMState>,
@@ -373,19 +374,13 @@ const makeSpell_BLM = (name: SkillName, unlockLevel: number, params: {
 	);
 	const onApplication: EffectFn<BLMState> = params.onApplication ?? NO_EFFECT;
 	return makeSpell(ShellJob.BLM, name, unlockLevel, {
-		replaceIf: params.replaceIf,
-		startOnHotbar: params.startOnHotbar,
-		highlightIf: params.highlightIf,
-		autoUpgrade: params.autoUpgrade,
-		autoDowngrade: params.autoDowngrade,
+		...params,
 		aspect: aspect,
 		castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime, aspect),
 		recastTime: (state) => state.config.adjustedGCD(2.5),
 		manaCost: (state) => state.captureManaCost(name, aspect, params.baseManaCost),
 		// TODO apply AFUI modifiers?
 		potency: (state) => params.basePotency,
-		validateAttempt: params.validateAttempt,
-		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => (
 			// Despair after lvl 100
 			(name === SkillName.Despair && Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level)) ||
@@ -708,6 +703,7 @@ makeSpell_BLM(SkillName.Freeze, 40, {
 	baseManaCost: 1000,
 	basePotency: 120,
 	applicationDelay: 0.664,
+	falloff: 0,
 	validateAttempt: (state) => state.getIceStacks() > 0,
 	onConfirm: (state, node) => state.resources.get(ResourceType.UmbralHeart).gain(3),
 });
@@ -718,6 +714,7 @@ makeSpell_BLM(SkillName.Flare, 50, {
 	baseManaCost: 0,  // mana is handled separately
 	basePotency: 240,
 	applicationDelay: 1.157,
+	falloff: 0.3,
 	validateAttempt: (state) => state.getFireStacks() > 0 && state.getMP() >= 800,
 	onConfirm: (state, node) => {
 		let uh = state.resources.get(ResourceType.UmbralHeart);
@@ -805,6 +802,7 @@ makeSpell_BLM(SkillName.Foul, 70, {
 	baseCastTime: 2.5,
 	baseManaCost: 0,
 	basePotency: 600,
+	falloff: 0.6,
 	applicationDelay: 1.158,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 	onConfirm: (state, node) => state.resources.get(ResourceType.Polyglot).consume(1),
@@ -863,6 +861,7 @@ makeSpell_BLM(SkillName.Fire2, 18, {
 	baseCastTime: 3,
 	baseManaCost: 1500,
 	basePotency: 80,
+	falloff: 0,
 	applicationDelay: 1.154, // Unknown damage application, copied from HF2
 	autoUpgrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.HighFire2 },
 	onConfirm: (state, node) => {
@@ -876,6 +875,7 @@ makeSpell_BLM(SkillName.Blizzard2, 12, {
 	baseCastTime: 3,
 	baseManaCost: 800,
 	basePotency: 80,
+	falloff: 0,
 	applicationDelay: 1.158, // Unknown damage application, copied from HB2
 	autoUpgrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.HighBlizzard2 },
 	onConfirm: (state, node) => {
@@ -889,6 +889,7 @@ makeSpell_BLM(SkillName.HighFire2, 82, {
 	baseCastTime: 3,
 	baseManaCost: 1500,
 	basePotency: 100,
+	falloff: 0,
 	applicationDelay: 1.154,
 	autoDowngrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.Fire2 },
 	onConfirm: (state, node) => {
@@ -902,6 +903,7 @@ makeSpell_BLM(SkillName.HighBlizzard2, 82, {
 	baseCastTime: 3,
 	baseManaCost: 800,
 	basePotency: 100,
+	falloff: 0,
 	applicationDelay: 1.158,
 	autoDowngrade: { trait: TraitName.AspectMasteryIV, otherSkill: SkillName.Blizzard2 },
 	onConfirm: (state, node) => {
@@ -977,6 +979,7 @@ makeSpell_BLM(SkillName.FlareStar, 100, {
 	baseCastTime: 3,
 	baseManaCost: 0,
 	basePotency: 400,
+	falloff: 0.65,
 	applicationDelay: 0.622,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.AstralSoul, 6),
 	onConfirm: (state, node) => state.resources.get(ResourceType.AstralSoul).consume(6),
