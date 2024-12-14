@@ -2,6 +2,7 @@ import React, {FormEvent, FormEventHandler} from 'react'
 import {Clickable, ContentNode, Help, parseTime, ValueChangeEvent} from "./Common";
 import {Debug, SkillName, SkillReadyStatus, SkillUnavailableReason} from "../Game/Common";
 import {controller} from "../Controller/Controller";
+import {MAX_ABILITY_TARGETS} from "../Controller/Common";
 import {Tooltip as ReactTooltip} from 'react-tooltip';
 import {ActionType} from "../Controller/Record";
 import {localize, localizeSkillName} from "./Localization";
@@ -572,11 +573,18 @@ export class SkillsWindow extends React.Component {
 			color: colors.text
 		};
 
-		const targetCountHelp = <Help topic="targetCount" content={
-			"The number of targets hit by the next ability. Damage fall-off is automatically computed."
-			+ " If the number of targets set is more than the number of enemies the ability can hit, then"
-			+ " the additional targets are ignored."
-		}/>;
+		const targetCountHelp = <Help topic="targetCount" content={<>
+			<span>
+			The number of targets hit by the next ability. Damage fall-off is automatically computed.
+			If the number of targets set is more than the number of enemies the ability can hit, then
+			the additional targets are ignored.
+			</span>
+			<br/><br/>
+			<span>
+			Potency calculation for DoT effects, and buff calculations for enemy debuffs
+			like Dokumori and Chain Stratagem may be inaccurate when multiple targets are selected.
+			</span>
+		</>}/>;
 		return <div className={"skillsWindow"}>
 			<div className={"skillIcons"}>
 				<style>{`
@@ -598,7 +606,11 @@ export class SkillsWindow extends React.Component {
 				<div style={{ margin: "10px 0" }}>
 				{localize({
 					en: "# of targets hit",
-				})} {targetCountHelp}: <input type={"number"} min={1} max={10} style={{
+					zh: "点击数量",
+					// we don't want to change MAX_ABILITY_TARGETS to match each ability properties
+					// to allow easy input of scenarios where a user swaps between single and multi-target
+					// abilities
+				})} {targetCountHelp}: <input type={"number"} min={1} max={MAX_ABILITY_TARGETS} style={{
 					width: 30, ...textInputFieldStyle
 				}} value={this.state.targetCount} onChange={this.onTargetCountChange} />
 				</div>

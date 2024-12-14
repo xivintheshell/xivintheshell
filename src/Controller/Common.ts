@@ -1,3 +1,10 @@
+// Old reddit posts indicate that most abilities (excluding floor dots
+// like Doton and Slipstream) cap at 16 targets. This may not strictly
+// be accurate, but hopefully nobody needs to hit more than 16 targets
+// with a single ability.
+// https://www.reddit.com/r/ffxiv/comments/3i2ecd/aoe_skills_and_spells_all_enemies_actually_means/
+export const MAX_ABILITY_TARGETS = 16;
+
 export const enum ReplayMode {
 	Exact = "Exact",
 	SkillSequence = "SkillSequence",

@@ -794,6 +794,11 @@ export abstract class GameState {
 
 	useSkill(skillName: SkillName, node: ActionNode) {
 		let skill = this.skillsList.get(skillName);
+		// If there is no falloff field specified, then reset the node's targetCount to 1,
+		// ignoring whatever input the user gave
+		if (skill.falloff === undefined) {
+			node.targetCount = 1;
+		}
 		if (skill.kind === "spell" || skill.kind === "weaponskill") {
 			this.useSpellOrWeaponskill(skill, node);
 		} else if (skill.kind === "ability") {
