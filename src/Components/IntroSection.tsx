@@ -40,59 +40,59 @@ function Changelog() {
 // needs to be a function to evaluate localization
 const getAcknowledgements = () => (
 	<>
-	<div className="paragraph">{localize({en: "This tool is made by:", zh: "作者：", ja: "作者："})}</div>
-	{localize({
-		en: <ul>
-				<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: the PM and the big brain BLM</li>
-				<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: initial software developer and a humble BLM student</li>
-				<li><b>Turtle</b>, who did the heavy work of updating this tool from Endwalker to Dawntrail</li>
-				<li><b>shanzhe (Shanzhe Qi @ Seraph)</b>, who created PCT in the Shell and the framework for adding other jobs to this tool</li>
-				<li><b>Yara, Spider, Santa, Akairyu</b>, and many other players who contributed feature suggestions, timeline markers, bug reports, etc.</li>
+		<div className="paragraph">{localize({
+			en: <><span>This tool was initially Black Mage in the Shell, </span>
+				<span>ideated by <b>Eshiya</b> and developed by <b>miyehn</b> specifically for BLM during Endwalker since around February 2022. </span>
+				<span>After Dawntrail's release, it was expanded to support other jobs and is now maintained by a small team of developers:</span>
+			</>
+		})}</div>
+		{localize({
+			en: <ul>
+				<li>Tool design and core systems implementation: <b>shanzhe</b>, <b>miyehn</b>, <b>Turtle</b></li>
+				<li>BLM: <b>shanzhe</b>, <b>Akairyu</b>, <b>Turtle</b>, <b>miyehn</b></li>
+				<li>PCT, RDM, SAM: <b>shanzhe</b></li>
+				<li>DNC, MCH: <b>Akairyu</b></li>
+				<li>RPR: <b>Honey B. Lovely's Favorite Bee</b></li>
+				<li>WAR: <b>misterperson</b></li>
+				<li>Framework for adding new jobs: <b>shanzhe</b></li>
+				<li>Chinese localization: <b>miyehn</b>, <b>Eshiya</b>, <b>Yuyuka</b>, <b>shanzhe</b></li>
 			</ul>,
-		zh: <ul>
-				<li><b>Eshiya（加拉哈德 @ 沃仙曦染）</b>：PM；是个真黑魔玩家</li>
-				<li><b>miyehn（米岩 @ 海猫茶屋，国服长草中）</b>：最初的程序；是个云黑魔玩家</li>
-				<li><b>Turtle</b>, 把本工具从6.0更新到7.0的大功臣</li>
-				<li><b>shanzhe</b>, 画家排轴器作者；为让本工具支持更多职业而搭建了程序框架</li>
-				<li><b>Yara, Spider, Santa, Akairyu</b> 等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们</li>
-			</ul>,
-		ja: <ul>
-				{/*[outdated (ja)] hey Totti you should add yourself here too*/}
-				<li><b>Eshiya (Galahad Donnadieu @ Exodus)</b>: プロダクトマネージャー、凄腕黒魔道士</li>
-				<li><b>miyehn (Ellyn Waterford @ Sargatanas)</b>: ソフトウェア開発者、しがない黒魔道士</li>
-				<li><b>Turtle</b>: 黄金のレガシーへのアップデートを担当</li>
-				<li><b>Yara, Spider, Santa, shanzhe, Akairyu</b> そして新機能やバグ報告などで貢献してくださった多くのFF14プレーヤーの皆さん</li>
-			</ul>,
-	})}
+		})}
+		<div className="paragraph">{localize({
+			en: "And many thanks to Yara, Spider, Santa, players in 不打冰三攻略组, kiyozero, czmm, "
+				+ "and other players and groups who contributed feature suggestions, timeline markers, bug reports, etc."
+		})}</div>
 
-	{localize({
-		en: <div className={"paragraph"}>
-			If you have questions or would like to provide feedback, you can message in <a target={"_blank"} href={HELP_CHANNEL_URL} rel="noreferrer">this channel in The Balance</a>
-			(requires the "Misc. Support" role).
-			You can also find me directly on discord (miyehn), or via email (ellyn.waterford@gmail.com). In case of sending a bug report, attaching the
-			fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
-		</div>,
-		zh: <div className={"paragraph"}>
-			如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。
-		</div>,
-		ja: <div className={"paragraph"}>
-			[outdated (ja)] 質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
-			バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
-		</div>,
-	})}
+		{localize({
+			en: <div className={"paragraph"}>
+				If you have questions or would like to provide feedback, you can message in <a target={"_blank"}
+																							   href={HELP_CHANNEL_URL}
+																							   rel="noreferrer">this
+				channel in The Balance</a> (requires the "Misc. Support" role). In case of
+				sending a bug report, attaching the
+				fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
+			</div>,
+			zh: <div className={"paragraph"}>
+				如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。
+			</div>,
+			ja: <div className={"paragraph"}>
+				[outdated (ja)] 質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
+				バグ報告の場合は、右側からダウンロードした「fight.txt」を添付していただくと助かります。
+			</div>,
+		})}
 
-	<div className="paragraph">{localize({
-		en: "Also, consider contributing! I'm not raiding lately so I can't make the timeline markers..",
-		zh: "贡献大欢迎！比如给我发时间轴标记文件！我自己很久没打高难了，自己做是不可能了。",
-		ja: "また、ぜひ貢献も考えてください！最近高難易度にコンテンツに行っていないのでタイムラインマーカーが作れません...",
-	})}</div>
+		<div className="paragraph">{localize({
+			en: "Also, consider contributing! I'm not raiding lately so I can't make the timeline markers..",
+			zh: "贡献大欢迎！比如给我发时间轴标记文件！我自己很久没打高难了，自己做是不可能了。",
+			ja: "また、ぜひ貢献も考えてください！最近高難易度にコンテンツに行っていないのでタイムラインマーカーが作れません...",
+		})}</div>
 	</>
 );
 
 export function IntroSection(props: {
 	job: ShellJob,
 }) {
-	let smallGap: CSSProperties = { marginBottom: 5 };
+	let smallGap: CSSProperties = {marginBottom: 5};
 	let colors = getCurrentThemeColors();
 	const job = props.job;
 	return <div>
