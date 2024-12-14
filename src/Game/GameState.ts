@@ -1,4 +1,4 @@
-import {Aspect, BuffType, Debug, makeSkillReadyStatus, ResourceType, SkillName, SkillUnavailableReason} from "./Common"
+import {Aspect, BuffType, Debug, LIMIT_BREAKS, makeSkillReadyStatus, ResourceType, SkillName, SkillUnavailableReason} from "./Common"
 import {GameConfig} from "./GameConfig"
 import {Ability, DisplayedSkills, SkillsList, Spell, Weaponskill,} from "./Skills"
 import {
@@ -323,41 +323,45 @@ export abstract class GameState {
 		const cd = this.cooldowns.get(skill.cdName);
 		const secondaryCd = skill.secondaryCd ? this.cooldowns.get(skill.secondaryCd.cdName) : undefined
 
-		// TODO refactor logic to determine self-buffs
-		let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
-		const fukaCovered = this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fuka);
-		const fugetsuCovered = this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fugetsu);
-		const inspireSkills: SkillName[] = [
-			SkillName.FireInRed,
-			SkillName.Fire2InRed,
-			SkillName.AeroInGreen,
-			SkillName.Aero2InGreen,
-			SkillName.WaterInBlue,
-			SkillName.Water2InBlue,
-			SkillName.HolyInWhite,
-			SkillName.BlizzardInCyan,
-			SkillName.Blizzard2InCyan,
-			SkillName.StoneInYellow,
-			SkillName.Stone2InYellow,
-			SkillName.ThunderInMagenta,
-			SkillName.Thunder2InMagenta,
-			SkillName.CometInBlack,
-			SkillName.StarPrism,
-		];
-		let inspired = this.job === ShellJob.PCT && this.resources.get(ResourceType.Inspiration).available(1) && inspireSkills.includes(skill.name);
 		let capturedCastTime = skill.castTimeFn(this);
 		const recastTime = skill.recastTimeFn(this);
-		if (llCovered && skill.cdName === ResourceType.cd_GCD) {
-			node.addBuff(BuffType.LeyLines);
-		}
-		if (inspired) {
-			node.addBuff(BuffType.Hyperphantasia);
-		}
-		if (fukaCovered && skill.cdName === ResourceType.cd_GCD) {
-			node.addBuff(BuffType.Fuka);
-		}
-		if (fugetsuCovered) {
-			node.addBuff(BuffType.Fugetsu);
+
+		// TODO refactor logic to determine self-buffs
+		if (!LIMIT_BREAKS.includes(skill.name)) {
+
+			let llCovered = this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
+			const fukaCovered = this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fuka);
+			const fugetsuCovered = this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fugetsu);
+			const inspireSkills: SkillName[] = [
+				SkillName.FireInRed,
+				SkillName.Fire2InRed,
+				SkillName.AeroInGreen,
+				SkillName.Aero2InGreen,
+				SkillName.WaterInBlue,
+				SkillName.Water2InBlue,
+				SkillName.HolyInWhite,
+				SkillName.BlizzardInCyan,
+				SkillName.Blizzard2InCyan,
+				SkillName.StoneInYellow,
+				SkillName.Stone2InYellow,
+				SkillName.ThunderInMagenta,
+				SkillName.Thunder2InMagenta,
+				SkillName.CometInBlack,
+				SkillName.StarPrism,
+			];
+			let inspired = this.job === ShellJob.PCT && this.resources.get(ResourceType.Inspiration).available(1) && inspireSkills.includes(skill.name);
+			if (llCovered && skill.cdName === ResourceType.cd_GCD) {
+				node.addBuff(BuffType.LeyLines);
+			}
+			if (inspired) {
+				node.addBuff(BuffType.Hyperphantasia);
+			}
+			if (fukaCovered && skill.cdName === ResourceType.cd_GCD) {
+				node.addBuff(BuffType.Fuka);
+			}
+			if (fugetsuCovered) {
+				node.addBuff(BuffType.Fugetsu);
+			}
 		}
 
 		// create potency node object (snapshotted buffs will populate on confirm)
@@ -416,50 +420,52 @@ export abstract class GameState {
 			const doesDamage = skill.potencyFn(this) > 0;
 
 			// TODO automate buff covers
-			// tincture
-			if (this.hasResourceAvailable(ResourceType.Tincture) && doesDamage) {
-				node.addBuff(BuffType.Tincture);
-			}
-
-			if (this.job === ShellJob.PCT && this.hasResourceAvailable(ResourceType.StarryMuse) && doesDamage) {
-				node.addBuff(BuffType.StarryMuse);
-			}
-
-			if (this.job === ShellJob.RDM && doesDamage) {
-				if (this.hasResourceAvailable(ResourceType.Embolden) && skill.aspect !== Aspect.Physical) {
-					node.addBuff(BuffType.Embolden);
+			if (!LIMIT_BREAKS.includes(skill.name)) {
+				// tincture
+				if (this.hasResourceAvailable(ResourceType.Tincture) && doesDamage) {
+					node.addBuff(BuffType.Tincture);
 				}
-				if (this.hasResourceAvailable(ResourceType.Manafication)) {
-					node.addBuff(BuffType.Manafication);
+	
+				if (this.job === ShellJob.PCT && this.hasResourceAvailable(ResourceType.StarryMuse) && doesDamage) {
+					node.addBuff(BuffType.StarryMuse);
 				}
-				if (skill.name === SkillName.Impact && this.hasResourceAvailable(ResourceType.Acceleration)) {
-					node.addBuff(BuffType.Acceleration);
+	
+				if (this.job === ShellJob.RDM && doesDamage) {
+					if (this.hasResourceAvailable(ResourceType.Embolden) && skill.aspect !== Aspect.Physical) {
+						node.addBuff(BuffType.Embolden);
+					}
+					if (this.hasResourceAvailable(ResourceType.Manafication)) {
+						node.addBuff(BuffType.Manafication);
+					}
+					if (skill.name === SkillName.Impact && this.hasResourceAvailable(ResourceType.Acceleration)) {
+						node.addBuff(BuffType.Acceleration);
+					}
 				}
-			}
-
-			if (this.job === ShellJob.RPR && doesDamage) {
-				if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
-					node.addBuff(BuffType.ArcaneCircle);	
+	
+				if (this.job === ShellJob.RPR && doesDamage) {
+					if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
+						node.addBuff(BuffType.ArcaneCircle);	
+					}
+					
+					if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
+						node.addBuff(BuffType.DeathsDesign);
+					}
 				}
-				
-				if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
-					node.addBuff(BuffType.DeathsDesign);
+	
+				if (this.job === ShellJob.DNC && doesDamage) {
+					if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
+						node.addBuff(BuffType.TechnicalFinish)
+					}
+					if (this.hasResourceAvailable(ResourceType.Devilment)) {
+						node.addBuff(BuffType.Devilment)
+					}
 				}
-			}
-
-			if (this.job === ShellJob.DNC && doesDamage) {
-				if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
-					node.addBuff(BuffType.TechnicalFinish)
+	
+				if (this.job === ShellJob.SAM && doesDamage
+					&& this.hasResourceAvailable(ResourceType.EnhancedEnpi)
+					&& skill.name === SkillName.Enpi) {
+					node.addBuff(BuffType.EnhancedEnpi);
 				}
-				if (this.hasResourceAvailable(ResourceType.Devilment)) {
-					node.addBuff(BuffType.Devilment)
-				}
-			}
-
-			if (this.job === ShellJob.SAM && doesDamage
-				&& this.hasResourceAvailable(ResourceType.EnhancedEnpi)
-				&& skill.name === SkillName.Enpi) {
-				node.addBuff(BuffType.EnhancedEnpi);
 			}
 
 			// Perform additional side effects
@@ -497,12 +503,17 @@ export abstract class GameState {
 			this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime));
 			// caster tax
 			this.resources.takeResourceLock(ResourceType.NotCasterTaxed, this.config.getAfterTaxCastTime(capturedCastTime));
-			const timeToConfirmation = capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime)
+			const timeToConfirmation = capturedCastTime - 
+				(LIMIT_BREAKS.includes(skill.name) ? 0 : GameConfig.getSlidecastWindow(capturedCastTime)) // Can't slidecast an LB
 			// Enqueue confirm event
 			this.addEvent(new Event(skill.name + " captured", timeToConfirmation, () => {
 				// TODO propagate error more cleanly
 				if (skill.validateAttempt(this)) {
 					onSpellConfirm();
+					// LB animation lock is special-ish
+					if  (LIMIT_BREAKS.includes(skill.name)) {
+						this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(skill.name));
+					}
 				} else {
 					controller.reportInterruption({
 						failNode: node,
@@ -511,7 +522,8 @@ export abstract class GameState {
 			}));
 		}
 		// recast
-		cd.useStackWithRecast(this, this.config.getAfterTaxGCD(recastTime));
+		const recast = LIMIT_BREAKS.includes(skill.name) ? recastTime : this.config.getAfterTaxGCD(recastTime)
+		cd.useStackWithRecast(this, recast);
 		if (secondaryCd) {
 			secondaryCd.useStack(this);
 		}

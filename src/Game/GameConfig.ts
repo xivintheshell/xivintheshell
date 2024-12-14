@@ -72,6 +72,29 @@ export type SerializedConfig = ConfigData & {
 	casterTax: number, // still want this bc don't want to break cached timelines
 }
 
+// from: https://www.akhmorning.com/allagan-studies/limit-break/tables/#tables
+const LIMIT_BREAK_ANIMATION_LOCKS: { 
+	[key: string]: number
+} = {
+	// Tank LBs have .01s removed from their animation locks to account for the fake
+	// cast times used to make them look consistent on the timeline with other jobs
+	[SkillName.TankLB1]: 1.92,
+	[SkillName.TankLB2]: 3.85,
+	[SkillName.TankLB3]: 3.85,
+	[SkillName.HealerLB1]: 2.1,
+	[SkillName.HealerLB2]: 5.13,
+	[SkillName.HealerLB3]: 8.10,
+	[SkillName.MeleeLB1]: 3.86,
+	[SkillName.MeleeLB2]: 3.86,
+	[SkillName.MeleeLB3]: 3.7,
+	[SkillName.RangedLB1]: 3.1,
+	[SkillName.RangedLB2]: 3.1,
+	[SkillName.RangedLB3]: 3.7,
+	[SkillName.CasterLB1]: 3.1,
+	[SkillName.CasterLB2]: 5.1,
+	[SkillName.CasterLB3]: 8.1,
+}
+
 export class GameConfig {
 	readonly job: ShellJob;
 	readonly shellVersion = ShellInfo.version;
@@ -159,8 +182,16 @@ export class GameConfig {
 		return XIVMath.preTaxCastTime(this.level, this.skillSpeed, inCastTime, speedBuff);
 	}
 
+	// TODO - How can we make this easier to find for other job implementers? Or just not necessary...
 	getSkillAnimationLock(skillName : SkillName) : number {
+
+		// Limit breaks have variable animation locks depending on role and limit break level
+		if (Object.keys(LIMIT_BREAK_ANIMATION_LOCKS).includes(skillName)) {
+			return LIMIT_BREAK_ANIMATION_LOCKS[skillName]
+		}
+
 		// all gapclosers have the same animation lock
+		// from: https://nga.178.com/read.php?tid=21233094&rand=761
 		if (skillName === SkillName.AetherialManipulation
 			|| skillName === SkillName.BetweenTheLines
 			|| skillName === SkillName.Smudge
@@ -171,19 +202,25 @@ export class GameConfig {
 			|| skillName === SkillName.HellsIngress
 			|| skillName === SkillName.HellsEgress
 			|| skillName === SkillName.Regress
+			|| skillName === SkillName.EnAvant
+			|| skillName === SkillName.Onslaught
 		) {
-			return 0.8; // from: https://nga.178.com/read.php?tid=21233094&rand=761
-		} else if (
+			return 0.8;
+		}
+
+		// not real abilities, animation lock is fake
+		if (
 			skillName === SkillName.TemperaCoatPop
 			|| skillName === SkillName.TemperaGrassaPop
 			|| skillName === SkillName.TengentsuPop
 			|| skillName === SkillName.ThirdEyePop
 			|| skillName === SkillName.ArcaneCrestPop
 		) {
-			return 0.01; // not real abilities, animation lock is fake
-		} else {
-			return this.animationLock;
+			return 0.01; 
 		}
+
+		// Fallback if no other conditions applied
+		return this.animationLock;
 	}
 
 	// for gcd

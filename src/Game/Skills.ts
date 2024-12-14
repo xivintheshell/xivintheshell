@@ -257,9 +257,6 @@ function normalizeAssetPath(job: ShellJob, name: SkillName) {
  * - isInstantFn: function always returning true
  * - onConfirm: empty function
  * - onApplication: empty function
- * 
- * TODO: If we ever branch out to non-BLM/PCT jobs, we should distinguish between
- * spells and weaponskills for sps/sks calculation purposes.
  */
 export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, params: Partial<{
 	assetPath: string,
@@ -303,12 +300,16 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		validateAttempt: params.validateAttempt ?? ((state) => true),
-		isInstantFn: params.isInstantFn ?? ((state) => true),
+		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 		applicationDelay: params.applicationDelay ?? 0,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
+	if (params.secondaryCooldown !== undefined) {
+		const {cdName, cooldown, maxCharges} = params.secondaryCooldown
+		jobs.forEach((job) => makeCooldown(job, cdName, cooldown!, maxCharges));
+	}
 	return info;
 };
 
@@ -354,7 +355,7 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		validateAttempt: params.validateAttempt ?? ((state) => true),
-		isInstantFn: params.isInstantFn ?? ((state) => true),
+		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 		applicationDelay: params.applicationDelay ?? 0,

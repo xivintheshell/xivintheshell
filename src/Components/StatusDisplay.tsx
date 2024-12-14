@@ -295,6 +295,11 @@ roleBuffResources.forEach(
 	(buff) => buffIcons.set(buff, require(`./Asset/Buffs/Role/${buff}.png`))
 );
 
+// Tank LBs share the same buff icon
+buffIcons.set(ResourceType.TankLB1, require("./Asset/Buffs/Role/Tank Limit Break.png"));
+buffIcons.set(ResourceType.TankLB2, require("./Asset/Buffs/Role/Tank Limit Break.png"));
+buffIcons.set(ResourceType.TankLB3, require("./Asset/Buffs/Role/Tank Limit Break.png"));
+
 buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
 buffIcons.set(ResourceType.RearPositional, require("./Asset/Buffs/General/Rear Positional.png"));
 buffIcons.set(ResourceType.FlankPositional, require("./Asset/Buffs/General/Flank Positional.png"));
@@ -618,6 +623,9 @@ export class StatusPropsGenerator<T extends PlayerState> {
 		// Tank-only role buffs
 		if (TANK_JOBS.includes(job)) {
 			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.Rampart))
+			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.TankLB1))
+			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.TankLB2))
+			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.TankLB3))
 		}
 
 		// Melee-only role buffs

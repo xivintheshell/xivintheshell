@@ -69,6 +69,26 @@ enum GeneralSkillName {
 	Provoke = "Provoke",
 	Shirk = "Shirk",
 
+	TankLB1 = "Tank Limit Break 1",
+	TankLB2 = "Tank Limit Break 2",
+	TankLB3 = "Tank Limit Break 3",
+
+	HealerLB1 = "Healer Limit Break 1",
+	HealerLB2 = "Healer Limit Break 2",
+	HealerLB3 = "Healer Limit Break 3",
+
+	MeleeLB1 = "Melee Limit Break 1",
+	MeleeLB2 = "Melee Limit Break 2",
+	MeleeLB3 = "Melee Limit Break 3",
+
+	RangedLB1 = "Ranged Limit Break 1",
+	RangedLB2 = "Ranged Limit Break 2",
+	RangedLB3 = "Ranged Limit Break 3",
+
+	CasterLB1 = "Caster Limit Break 1",
+	CasterLB2 = "Caster Limit Break 2",
+	CasterLB3 = "Caster Limit Break 3",
+
 	Never = "Never",
 }
 
@@ -96,6 +116,28 @@ export type SkillName = GeneralSkillName
 	| RPRSkillName
 	| WARSkillName
 ;
+
+export const LIMIT_BREAKS: SkillName[] = [
+	SkillName.TankLB1,
+	SkillName.TankLB2, 
+	SkillName.TankLB3, 
+
+	SkillName.HealerLB1, 
+	SkillName.HealerLB2, 
+	SkillName.HealerLB3, 
+
+	SkillName.MeleeLB1, 
+	SkillName.MeleeLB2, 
+	SkillName.MeleeLB3, 
+
+	SkillName.RangedLB1,
+	SkillName.RangedLB2,
+	SkillName.RangedLB3, 
+
+	SkillName.CasterLB1, 
+	SkillName.CasterLB2, 
+	SkillName.CasterLB3,
+]
 
 export const enum SkillUnavailableReason {
 	Blocked = "blocked by CD, animation lock or caster tax",
@@ -191,6 +233,9 @@ enum GeneralResourceType {
 
 	Rampart = "Rampart", // [0, 1]
 	Reprisal = "Reprisal", // [0, 1]
+	TankLB1 = "Tank LB 1",
+	TankLB2 = "Tank LB 2",
+	TankLB3 = "Tank LB 3",
 
 	// special
 	RearPositional = "Rear Positional", // [0, 1]
@@ -229,6 +274,10 @@ enum GeneralCooldownType {
 	cd_Shirk = "cd_Shirk",
 
 	cd_HeadGraze = "cd_HeadGraze",
+
+	cd_LimitBreak1 = "cd_LimitBreak1",
+	cd_LimitBreak2 = "cd_LimitBreak2",
+	cd_LimitBreak3 = "cd_LimitBreak3",
 }
 
 const CooldownType = {
