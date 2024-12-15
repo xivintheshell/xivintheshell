@@ -624,7 +624,7 @@ export class DamageStatistics extends React.Component {
 
 			// total potency
 			let totalPotencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.showPotency) {
+			if (props.row.showPotency && !LIMIT_BREAKS.includes(props.row.skillName)) {
 				totalPotencyNode = <span style={{textDecoration: includeInStats ? "none" : "line-through"}}>
 					{props.row.totalPotencyWithoutPot.toFixed(2)}
 					{props.row.potPotency > 0 ? <span style={{
