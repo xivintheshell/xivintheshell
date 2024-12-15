@@ -633,7 +633,8 @@ export abstract class GameState {
 	useLimitBreak(skill: LimitBreak<PlayerState>, node: ActionNode) {
 		const cd = this.cooldowns.get(skill.cdName);
 
-		let capturedCastTime = skill.castTimeFn(this);
+		const capturedCastTime = skill.castTimeFn(this);
+		const slideCastTime = capturedCastTime > 0 ? GameConfig.getSlidecastWindow(capturedCastTime) : 0
 
 		/**
 		 * Perform operations common to casting a limit break.
@@ -656,7 +657,7 @@ export abstract class GameState {
 				}
 			));
 			
-			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, this.config.getSkillAnimationLock(skill.name));
+			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, slideCastTime + this.config.getSkillAnimationLock(skill.name));
 		};
 
 		const isInstant = capturedCastTime === 0;
@@ -665,11 +666,12 @@ export abstract class GameState {
 			onLimitBreakConfirm();
 		} else {
 			// movement lock
-			this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime);
+			this.resources.takeResourceLock(ResourceType.Movement, capturedCastTime - slideCastTime);
 			// caster tax
 			this.resources.takeResourceLock(ResourceType.NotCasterTaxed, this.config.getAfterTaxCastTime(capturedCastTime));
+			const timeToConfirmation = capturedCastTime - slideCastTime;
 			// Enqueue confirm event
-			this.addEvent(new Event(skill.name + " captured", capturedCastTime, () => {
+			this.addEvent(new Event(skill.name + " captured", timeToConfirmation, () => {
 				// TODO propagate error more cleanly
 				if (skill.validateAttempt(this)) {
 					onLimitBreakConfirm();

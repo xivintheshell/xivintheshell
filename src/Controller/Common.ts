@@ -56,7 +56,7 @@ export const TANK_JOBS: ShellJob[] = [
 ];
 export const HEALER_JOBS: ShellJob[] = [
 	//ShellJob.WHM, 
-	ShellJob.SCH, 
+	//ShellJob.SCH, 
 	//ShellJob.AST, 
 	//ShellJob.SGE
 ];
