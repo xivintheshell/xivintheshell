@@ -21,7 +21,7 @@ import { WARBuffTypes, WARResourceType } from "../../Game/Constants/WAR";
 
 export class WARStatusPropsGenerator extends StatusPropsGenerator<WARState> {
 
-	override getJobSelfBuffViewProps(): BuffProps[] {
+	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
 		const resources = this.state.resources;
 		const makeWarriorTimer = (rscType: ResourceType) => {
 			const cd = resources.timeTillReady(rscType);
@@ -57,7 +57,7 @@ export class WARStatusPropsGenerator extends StatusPropsGenerator<WARState> {
 		];
 	}
 
-	override getJobResourceViewProps(): ResourceDisplayProps[] {
+	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 		const beastGauge = resources.get(WARResourceType.BeastGauge).availableAmount();

@@ -51,7 +51,7 @@ registerBuffIcon(ResourceType.StandardFinishPartner, "DNC/Standard Finish.png")
 
 export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
     // DNC doesn't put any debuffs on the enemy... but we can use this space for showing our dance partner!
-    override getJobEnemyBuffViewProps(): BuffProps[] {
+    override jobSpecificOtherTagetedBuffViewProps(): BuffProps[] {
         const resources = this.state.resources
 
         const dancePartnerApplied = resources.get(ResourceType.DancePartner).availableAmount() > 0;
@@ -94,7 +94,7 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
         ]
     }
 
-    override getJobSelfBuffViewProps(): BuffProps[] {
+    override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
         const resources = this.state.resources
         
         // Job
@@ -311,7 +311,7 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
         ]
     }
 
-    override getJobResourceViewProps(): ResourceDisplayProps[] {
+    override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
         const colors = getCurrentThemeColors();
         const resources = this.state.resources
 

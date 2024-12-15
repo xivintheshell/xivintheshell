@@ -583,11 +583,11 @@ export class StatusPropsGenerator<T extends PlayerState> {
 	}
 
 	// Jobs should override this to display their enemy-targeted buffs
-	public getJobEnemyBuffViewProps(): BuffProps[] { return [] }
+	public jobSpecificOtherTagetedBuffViewProps(): BuffProps[] { return [] }
 	
 	// Composes the job-specific buffs with the applicable role buffs
-	public getEnemyBuffViewProps(): BuffProps[] {
-		const job = controller.game.job
+	public getAllOtherTargetedBuffViewProps(): BuffProps[] {
+		const job = this.state.job
 
 		const roleEnemyBuffViewProps: BuffProps[] = []
 		
@@ -604,17 +604,17 @@ export class StatusPropsGenerator<T extends PlayerState> {
 		}
 
 		return [
-			...this.getJobEnemyBuffViewProps(),
+			...this.jobSpecificOtherTagetedBuffViewProps(),
 			...roleEnemyBuffViewProps,
 		]
 	}
 
 	
 	// Jobs should override this to display their self-targeted buffs
-	public getJobSelfBuffViewProps(): BuffProps[] { return [] }
+	public jobSpecificSelfTargetedBuffViewProps(): BuffProps[] { return [] }
 
 	// Composes the job-specific buffs with the applicable role buffs
-	public getSelfBuffViewProps(): BuffProps[] {
+	public getAllSelfTargetedBuffViewProps(): BuffProps[] {
 		const job = controller.game.job
 		const resources = this.state.resources
 
@@ -674,19 +674,19 @@ export class StatusPropsGenerator<T extends PlayerState> {
 		}
 
 		return [
-			...this.getJobSelfBuffViewProps(),
+			...this.jobSpecificSelfTargetedBuffViewProps(),
 			...roleBuffViewProps,
 		]
 	}
 
 	
 	// Jobs should override this to display their resources
-	public getJobResourceViewProps(): ResourceDisplayProps[] { return [] }
+	public jobSpecificResourceViewProps(): ResourceDisplayProps[] { return [] }
 
 	// Display the job-specific resources, including MP and the MP tick timer by defauly for jobs that use MP
-	public getResourceViewProps(): ResourceDisplayProps[] {
+	public getAllResourceViewProps(): ResourceDisplayProps[] {
 		if (!MP_JOBS.includes(controller.game.job)) {
-			return this.getJobResourceViewProps()
+			return this.jobSpecificResourceViewProps()
 		}
 	
 		const colors = getCurrentThemeColors();
@@ -713,7 +713,7 @@ export class StatusPropsGenerator<T extends PlayerState> {
 				progress: 1 - timeTillNextManaTick / 3,
 				valueString: (3 - timeTillNextManaTick).toFixed(3) + "/3",
 			} as ResourceBarProps,
-			...this.getJobResourceViewProps(),
+			...this.jobSpecificResourceViewProps(),
 		]
 	}
 

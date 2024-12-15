@@ -744,10 +744,10 @@ class Controller {
 		}
 		updateStatusDisplay({
 			time: game.getDisplayTime(),
-			resources: propsGenerator.getResourceViewProps(),
+			resources: propsGenerator.getAllResourceViewProps(),
 			resourceLocks: resourceLocksData,
-			enemyBuffs: propsGenerator.getEnemyBuffViewProps(),
-			selfBuffs: propsGenerator.getSelfBuffViewProps(),
+			enemyBuffs: propsGenerator.getAllOtherTargetedBuffViewProps(),
+			selfBuffs: propsGenerator.getAllSelfTargetedBuffViewProps(),
 			level: game.config.level,
 		}, propsGenerator.statusLayoutFn);
 	}

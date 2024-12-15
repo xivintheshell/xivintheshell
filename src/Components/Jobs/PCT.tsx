@@ -40,7 +40,7 @@ import {localize} from "../Localization";
 ].forEach((buff) => registerBuffIcon(buff, `PCT/${buff}.png`));
 
 export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
-	override getJobSelfBuffViewProps(): BuffProps[] {
+	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
 		const makePictoTimer = (rscType: ResourceType, stacks: number, cd: number) => {
 			const enabled = (rscType === ResourceType.Inspiration) ? this.state.hasResourceAvailable(rscType) : true;
 			return {
@@ -96,7 +96,7 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 		];
 	}
 
-	override getJobResourceViewProps(): ResourceDisplayProps[] {
+	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 		

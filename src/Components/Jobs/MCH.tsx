@@ -22,7 +22,7 @@ import { BuffProps, registerBuffIcon, ResourceBarProps, ResourceDisplayProps, St
 ].forEach((buff) => registerBuffIcon(buff, `MCH/${buff}.png`))
 
 export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
-    override getJobEnemyBuffViewProps(): BuffProps[] {
+    override jobSpecificOtherTagetedBuffViewProps(): BuffProps[] {
         const resources = this.state.resources
 
         const wildfireCountdown = resources.timeTillReady(ResourceType.Wildfire)
@@ -48,7 +48,7 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
         ]
     }
 
-    override getJobSelfBuffViewProps(): BuffProps[] {
+    override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
         const resources = this.state.resources
 
         // Job
@@ -130,7 +130,7 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
         ]
     }
 
-    override getJobResourceViewProps(): ResourceDisplayProps[] {
+    override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
         const colors = getCurrentThemeColors();
         const resources = this.state.resources
 

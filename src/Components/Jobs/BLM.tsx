@@ -25,7 +25,7 @@ import {localize} from "../Localization";
 
 export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 
-    override getJobEnemyBuffViewProps(): BuffProps[] {        
+    override jobSpecificOtherTagetedBuffViewProps(): BuffProps[] {        
         return [
             ...[
                 ResourceType.ThunderDoT, // Upcoming change to have all the thunder DoTs on the BRD PR, so leaving this here for now
@@ -33,7 +33,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
         ];
     }
 
-    override getJobSelfBuffViewProps(): BuffProps[] {
+    override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
         const resources = this.state.resources;
         const leyLinesEnabled = resources.get(ResourceType.LeyLines).enabled;
         const leyLinesCountdown = resources.timeTillReady(ResourceType.LeyLines);
@@ -87,7 +87,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
         ];
     }
 
-    override getJobResourceViewProps(): ResourceDisplayProps[] {
+    override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
         const colors = getCurrentThemeColors();
         let eno = this.state.resources.get(ResourceType.Enochian);
         let enoCountdown: number;

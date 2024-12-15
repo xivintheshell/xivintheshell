@@ -31,7 +31,7 @@ import {localize} from "../../Components/Localization";
 
 export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 	
-	override getJobEnemyBuffViewProps(): BuffProps[] {
+	override jobSpecificOtherTagetedBuffViewProps(): BuffProps[] {
 		const DoTCountdown = this.state.resources.timeTillReady(ResourceType.HiganbanaDoT);
 		
 		return [
@@ -46,7 +46,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 		];
 	}
 
-	override getJobSelfBuffViewProps(): BuffProps[] {
+	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
 		const resources = this.state.resources;
 		const makeSamuraiTimer = (rscType: ResourceType) => {
 			const cd = resources.timeTillReady(rscType);
@@ -76,7 +76,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 		];
 	}
 
-	override getJobResourceViewProps(): ResourceDisplayProps[] {
+	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 		const kenki = resources.get(ResourceType.Kenki).availableAmount();

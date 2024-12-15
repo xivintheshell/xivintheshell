@@ -41,7 +41,7 @@ import { BuffProps, registerBuffIcon, ResourceBarProps, ResourceCounterProps, Re
 
 export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 
-    override getJobEnemyBuffViewProps(): BuffProps[] {
+    override jobSpecificOtherTagetedBuffViewProps(): BuffProps[] {
         const deathsDesignCountdown = this.state.resources.timeTillReady(ResourceType.DeathsDesign);
         
         return [
@@ -56,7 +56,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
         ]
     }
 
-    override getJobSelfBuffViewProps(): BuffProps[] {
+    override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
         const makeRprSelfTimer = (rscType: ResourceType) => {
             const cd = this.state.resources.timeTillReady(rscType);
             return {
@@ -114,7 +114,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
         ];
     }
 
-    override getJobResourceViewProps(): ResourceDisplayProps[] {
+    override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
         const colors = getCurrentThemeColors();
         const resources = this.state.resources;
         const soulGauge = resources.get(ResourceType.Soul).availableAmount();

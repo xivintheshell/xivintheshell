@@ -34,7 +34,7 @@ import {localize} from "../Localization";
 
 export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 
-	override getJobSelfBuffViewProps(): BuffProps[] {
+	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
 		const makeRedMageTimer = (rscType: ResourceType) => {
 			const cd = this.state.resources.timeTillReady(rscType);
 			return {
@@ -63,7 +63,7 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 		];
 	}
 
-	override getJobResourceViewProps(): ResourceDisplayProps[] {
+	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 		
