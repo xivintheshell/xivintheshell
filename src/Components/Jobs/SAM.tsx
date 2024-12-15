@@ -61,9 +61,6 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 		};
 
 		return [
-			makeSamuraiTimer(ResourceType.TrueNorth),
-			makeSamuraiTimer(ResourceType.ArmsLength),
-			makeSamuraiTimer(ResourceType.Bloodbath),
 			makeSamuraiTimer(ResourceType.Tendo),
 			makeSamuraiTimer(ResourceType.EnhancedEnpi),
 			makeSamuraiTimer(ResourceType.OgiReady),
@@ -75,6 +72,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			makeSamuraiTimer(ResourceType.ThirdEye),
 			makeSamuraiTimer(ResourceType.Tengentsu),
 			makeSamuraiTimer(ResourceType.TengentsusForesight),
+			makeSamuraiTimer(ResourceType.Meditate)
 		];
 	}
 

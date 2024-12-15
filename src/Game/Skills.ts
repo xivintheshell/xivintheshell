@@ -254,7 +254,7 @@ function normalizeAssetPath(job: ShellJob, name: SkillName) {
  * - potency: 0
  * - applicationDelay: 0
  * - validateAttempt: function always returning true (valid)
- * - isInstantFn: function always returning true
+ * - isInstantFn: return true to indicate if this action is an instant cast. Defaults to false for spells and true for weapon skills
  * - onConfirm: empty function
  * - onApplication: empty function
  */

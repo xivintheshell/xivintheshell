@@ -504,7 +504,7 @@ export abstract class GameState {
 			// caster tax
 			this.resources.takeResourceLock(ResourceType.NotCasterTaxed, this.config.getAfterTaxCastTime(capturedCastTime));
 			const timeToConfirmation = capturedCastTime - 
-				(LIMIT_BREAKS.includes(skill.name) ? 0 : GameConfig.getSlidecastWindow(capturedCastTime)) // Can't slidecast an LB
+				(LIMIT_BREAKS.includes(skill.name) ? 0 : GameConfig.getSlidecastWindow(capturedCastTime)) // 'Can't slidecast an LB's animation lock
 			// Enqueue confirm event
 			this.addEvent(new Event(skill.name + " captured", timeToConfirmation, () => {
 				// TODO propagate error more cleanly
@@ -778,7 +778,7 @@ export abstract class GameState {
 		if (status.ready()) {
 			if (skill.kind === "spell") {
 				let timeTillCapture = instantCastAvailable ? 0 : (capturedCastTime - 
-					(LIMIT_BREAKS.includes(skill.name) ? 0 : GameConfig.getSlidecastWindow(capturedCastTime)) // Can't slidecast an LB
+					(LIMIT_BREAKS.includes(skill.name) ? 0 : GameConfig.getSlidecastWindow(capturedCastTime)) // Can't slidecast an LB's animation lock
 				);
 				timeTillDamageApplication = timeTillCapture + skill.applicationDelay;
 			} else {

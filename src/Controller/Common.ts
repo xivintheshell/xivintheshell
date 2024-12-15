@@ -98,7 +98,7 @@ export const SPS_JOBS = [
 	...HEALER_JOBS, ...CASTER_JOBS
 ]
 
-// Used to default the display of MP and the MP tic timer in the status display
+// Used to default the display of MP and the MP tick timer in the status display
 export const MP_JOBS = [
 	...HEALER_JOBS, ...CASTER_JOBS, ShellJob.PLD, ShellJob.DRK
 ]
