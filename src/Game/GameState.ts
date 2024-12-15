@@ -862,6 +862,11 @@ export abstract class GameState {
 
 	useSkill(skillName: SkillName, node: ActionNode) {
 		let skill = this.skillsList.get(skillName);
+		
+		// Process skill execution effects regardless of skill kind
+		skill.onExecute(this, node);
+
+		// Process the remainder of the skills effects dependent on the kind of skill
 		if (skill.kind === "spell" || skill.kind === "weaponskill") {
 			this.useSpellOrWeaponskill(skill, node);
 		} else if (skill.kind === "ability") {

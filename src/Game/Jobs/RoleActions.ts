@@ -1,6 +1,6 @@
 import {ALL_JOBS, CASTER_JOBS, HEALER_JOBS, MELEE_JOBS, PHYSICAL_RANGED_JOBS, ShellJob, TANK_JOBS} from "../../Controller/Common";
 import {SkillName, ResourceType, TraitName, WarningType} from "../Common";
-import {combineEffects, CooldownGroupProperies as CooldownGroupProperties, EffectFn, makeAbility, makeResourceAbility, makeSpell, ResourceCalculationFn} from "../Skills";
+import {combineEffects, makeAbility, makeLimitBreak, makeResourceAbility, makeSpell} from "../Skills";
 import {DoTBuff, EventTag, makeResource} from "../Resources"
 import {Traits} from "../Traits";
 import type {GameState} from "../GameState";
@@ -9,6 +9,7 @@ import {controller} from "../../Controller/Controller";
 //#region Helper functions
 
 // Special case for RDM, because for some twelvesforsaken reason sprint/pot cancel dualcast
+// And so do limit breaks! :(
 const cancelDualcast = (state: GameState) => {
 	if (state.job === ShellJob.RDM && state.tryConsumeResource(ResourceType.Dualcast)) {
 		controller.reportWarning(WarningType.DualcastEaten);
@@ -26,6 +27,14 @@ const cancelMeditate = (state: GameState) => {
 	}
 };
 
+// All actions cancel Improvisation
+const cancelImprovisation = (state: GameState) => {
+	if (state.job === ShellJob.DNC) {
+		state.tryConsumeResource(ResourceType.Improvisation);
+		state.tryConsumeResource(ResourceType.RisingRhythm, true);
+	}
+}
+
 //#endregion
 
 //#region Interrupts
@@ -40,6 +49,7 @@ makeAbility(PHYSICAL_RANGED_JOBS, SkillName.HeadGraze, 24, ResourceType.cd_HeadG
 	applicationDelay: 0,
 	cooldown: 30,
 	assetPath: "Role/Head Graze.png",
+	onExecute: cancelImprovisation,
 });
 
 //#endregion
@@ -66,7 +76,7 @@ makeResourceAbility(MELEE_JOBS, SkillName.Feint, 22, ResourceType.cd_Feint, {
 	cooldown: 90,
 	duration: (state) => (Traits.hasUnlocked(TraitName.EnhancedFeint, state.config.level) && 15) || 10,
 	assetPath: "Role/Feint.png",
-	onConfirm: cancelMeditate,
+	onExecute: cancelMeditate,
 });
 
 CASTER_JOBS.forEach((job) => {
@@ -103,7 +113,7 @@ makeResourceAbility(MELEE_JOBS, SkillName.TrueNorth, 50, ResourceType.cd_TrueNor
 	cooldown: 45,
 	maxCharges: 2,
 	assetPath: "Role/True North.png",
-	onConfirm: cancelMeditate,
+	onExecute: cancelMeditate,
 });
 
 [...HEALER_JOBS, ...CASTER_JOBS].forEach((job) => {
@@ -147,7 +157,7 @@ makeResourceAbility([...TANK_JOBS, ...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS], Skil
 	applicationDelay: 0.62,
 	cooldown: 120,
 	assetPath: "Role/Arms Length.png",
-	onConfirm: cancelMeditate,
+	onExecute: combineEffects(cancelMeditate, cancelImprovisation),
 });
 
 [...HEALER_JOBS, ...CASTER_JOBS].forEach((job) => {
@@ -172,14 +182,14 @@ makeResourceAbility(MELEE_JOBS, SkillName.Bloodbath, 8, ResourceType.cd_Bloodbat
 	applicationDelay: 0.625,
 	cooldown: 90,
 	assetPath: "Role/Bloodbath.png",
-	onConfirm: cancelMeditate,
+	onExecute: cancelMeditate,
 });
 
 makeAbility([...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS], SkillName.SecondWind, 12, ResourceType.cd_SecondWind, {
 	applicationDelay: 0.625,
 	cooldown: 120,
 	assetPath: "Role/Second Wind.png",
-	onConfirm: cancelMeditate,
+	onExecute: combineEffects(cancelMeditate, cancelImprovisation),
 });
 
 //#endregion
@@ -221,7 +231,7 @@ makeAbility(MELEE_JOBS, SkillName.LegSweep, 10, ResourceType.cd_LegSweep, {
 	applicationDelay: 0.625,
 	cooldown: 40,
 	assetPath: "Role/Leg Sweep.png",
-	onConfirm: cancelMeditate,
+	onExecute: cancelMeditate,
 });
 
 //#endregion
@@ -233,7 +243,8 @@ makeResourceAbility(ALL_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture, {
 	applicationDelay: 0.64, // delayed // somewhere in the midrange of what's seen in logs
 	cooldown: 270,
 	assetPath: "Role/Tincture.png",
-	onConfirm: combineEffects(cancelDualcast, cancelMeditate),
+	onExecute: combineEffects(cancelMeditate, cancelImprovisation),
+	onConfirm: cancelDualcast,
 });
 
 makeResourceAbility(ALL_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
@@ -241,7 +252,8 @@ makeResourceAbility(ALL_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
 	applicationDelay: 0.133, // delayed
 	cooldown: 60,
 	assetPath: "General/Sprint.png",
-	onConfirm: combineEffects(cancelDualcast, cancelMeditate),
+	onExecute: combineEffects(cancelMeditate, cancelImprovisation),
+	onConfirm: cancelDualcast,
 });
 
 //#endregion
@@ -294,48 +306,51 @@ makeLimitBreak(HEALER_JOBS, SkillName.HealerLB3, ResourceType.cd_HealerLB3, {
 makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB1, ResourceType.cd_MeleeLB1, {
 	castTime: 2,
 	applicationDelay: 2.23,
-	onConfirm: cancelMeditate,
+	onExecute: cancelMeditate,
 })
 makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB2, ResourceType.cd_MeleeLB2, {
 	castTime: 3,
 	applicationDelay: 3.28,
-	onConfirm: cancelMeditate,
+	onExecute: cancelMeditate,
 })
 makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB3, ResourceType.cd_MeleeLB3, {
 	castTime: 4.5,
 	applicationDelay: 2.26,
-	onConfirm: cancelMeditate,
+	onExecute: cancelMeditate,
 })
 
 // Ranged
 makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB1, ResourceType.cd_RangedLB1, {
 	castTime: 2,
 	applicationDelay: 2.23,
+	onExecute: cancelImprovisation,
 })
 makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB2, ResourceType.cd_RangedLB2, {
 	castTime: 3,
 	applicationDelay: 2.49,
+	onExecute: cancelImprovisation,
 })
 makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB3, ResourceType.cd_RangedLB3, {
 	castTime: 4.5,
 	applicationDelay: 3.16,
+	onExecute: cancelImprovisation,
 })
 
 // Caster
 makeLimitBreak(CASTER_JOBS, SkillName.CasterLB1, ResourceType.cd_CasterLB1, {
 	castTime: 2,
 	applicationDelay: 1.64,
-	onApplication: cancelDualcast, // LB doesn't kill dualcast until it application
+	onConfirm: cancelDualcast,
 })
 makeLimitBreak(CASTER_JOBS, SkillName.CasterLB2, ResourceType.cd_CasterLB2, {
 	castTime: 3,
 	applicationDelay: 3.75,
-	onApplication: cancelDualcast, // LB doesn't kill dualcast until it application
+	onConfirm: cancelDualcast,
 })
 makeLimitBreak(CASTER_JOBS, SkillName.CasterLB3, ResourceType.cd_CasterLB3, {
 	castTime: 4.5,
 	applicationDelay: 4.5,
-	onApplication: cancelDualcast, // LB doesn't kill dualcast until it application
+	onConfirm: cancelDualcast,
 })
 
 //#region 

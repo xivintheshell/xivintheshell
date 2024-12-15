@@ -98,6 +98,10 @@ interface BaseSkill<T extends PlayerState> {
 
 	// === EFFECTS ===
 
+	// Perform side effects that occur at the time the player presses the button
+	// This is mainly for things like cancelling channeled abilites, such as Meditate, Improvisation, Collective Unconscious, and Flamethrower
+	readonly onExecute: EffectFn<T>; 
+
 	// Perform side effects that occur on the cast confirm window.
 	// If the action became invalid between the start of the cast and the cast confirmation,
 	// then return a SkillError instead.
@@ -160,7 +164,7 @@ export type LimitBreak<T extends PlayerState> = GCD<T> & {
  *   // castTimeFn, recastTimeFn, etc. are valid here
  * }
  */
-export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T>;
+export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T> | LimitBreak<T>;
 
 // Map tracking skills for each job.
 // This is automatically populated by the makeWeaponskill, makeSpell, and makeAbility helper functions.
@@ -281,6 +285,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	applicationDelay: number,
 	validateAttempt: StatePredicate<T>,
 	isInstantFn: StatePredicate<T>,
+	onExecute: EffectFn<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 	secondaryCooldown?: CooldownGroupProperies,
@@ -308,6 +313,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
+		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 		applicationDelay: params.applicationDelay ?? 0,
@@ -336,6 +342,7 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 	applicationDelay: number,
 	validateAttempt: StatePredicate<T>,
 	isInstantFn: StatePredicate<T>,
+	onExecute: EffectFn<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 	secondaryCooldown?: CooldownGroupProperies,
@@ -363,6 +370,7 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
+		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 		applicationDelay: params.applicationDelay ?? 0,
@@ -404,6 +412,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	jobPotencyModifiers: PotencyModifierFn<T>,
 	applicationDelay: number,
 	validateAttempt: StatePredicate<T>,
+	onExecute: EffectFn<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 	cooldown: number,
@@ -431,6 +440,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
+		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 	};
@@ -470,6 +480,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 		jobPotencyModifiers?: PotencyModifierFn<T>,
 		validateAttempt?: StatePredicate<T>,
+		onExecute?: EffectFn<T>,
 		onConfirm?: EffectFn<T>,
 		onApplication?: EffectFn<T>,
 		assetPath?: string,
@@ -504,6 +515,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		highlightIf: params.highlightIf,
 		applicationDelay: params.applicationDelay,
 		validateAttempt: params.validateAttempt,
+		onExecute: params.onExecute,
 		onConfirm: params.onConfirm,
 		onApplication: onApplication,
 		assetPath: params.assetPath,
@@ -529,6 +541,7 @@ export function makeResourceAbility<T extends PlayerState>(
 export function makeLimitBreak<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: LimitBreakSkillName, cdName: ResourceType, params: Partial<{
 	assetPath: string,
 	applicationDelay: number,
+	onExecute: EffectFn<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 	castTime: number,
@@ -558,6 +571,7 @@ export function makeLimitBreak<T extends PlayerState>(jobs: ShellJob | ShellJob[
 		jobPotencyModifiers: (state) => [],
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: (state) => true,
+		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 	};
