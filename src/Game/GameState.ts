@@ -636,6 +636,22 @@ export abstract class GameState {
 		const capturedCastTime = skill.castTimeFn(this);
 		const slideCastTime = capturedCastTime > 0 ? GameConfig.getSlidecastWindow(capturedCastTime) : 0
 
+		// create potency node object
+		const potencyNumber = skill.potencyFn(this);
+		let potency: Potency | undefined = undefined;
+		if (potencyNumber > 0) {
+			potency = new Potency({
+				config: this.config,
+				sourceTime: this.getDisplayTime(),
+				sourceSkill: skill.name,
+				aspect: skill.aspect,
+				basePotency: potencyNumber,
+				snapshotTime: undefined,
+				description: "",
+			});
+			node.addPotency(potency);
+		}
+
 		/**
 		 * Perform operations common to casting a limit break.
 		 *
@@ -648,11 +664,19 @@ export abstract class GameState {
 			// Perform additional side effects
 			skill.onConfirm(this, node);
 
+			// potency
+			if (potency) {
+				potency.snapshotTime = this.getDisplayTime();
+			}
+
 			// Enqueue effect application
 			this.addEvent(new Event(
 				skill.name + " applied",
 				skill.applicationDelay,
 				() => {
+					if (potency) {
+						controller.resolvePotency(potency);
+					}
 					skill.onApplication(this, node);
 				}
 			));

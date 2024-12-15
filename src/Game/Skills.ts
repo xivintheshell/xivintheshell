@@ -532,6 +532,7 @@ export function makeResourceAbility<T extends PlayerState>(
  * Additionally, the tier, and the animation lock must be specified in the params object
  * All optional params default as follows:
  * - castTime: how long the LB takes to cast
+ * - potency: for DPS LBs, the relative LB potency of the skill
  * - applicationDelay: how long after the LB confirmation are the effects applied?
  * - onExecute: function defining effects that take place on button press
  * - onConfirm: function defining effects that take place on cast confirm
@@ -549,6 +550,7 @@ export function makeLimitBreak<T extends PlayerState>(jobs: ShellJob | ShellJob[
 	onConfirm?: EffectFn<T>,
 	onApplication?: EffectFn<T>,
 	castTime?: number,
+	potency?: number
 }): LimitBreak<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -572,7 +574,7 @@ export function makeLimitBreak<T extends PlayerState>(jobs: ShellJob | ShellJob[
 		isInstantFn: (state) => false, // LB's can't be swiftcasted
 		highlightIf: (state) => false,
 		manaCostFn: (state) => 0,
-		potencyFn: (state) => 0, // We're not tracking LB potency since they're not directly related to the job's potencies
+		potencyFn: fnify(params.potency, 0),
 		jobPotencyModifiers: (state) => [],
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: (state) => true,

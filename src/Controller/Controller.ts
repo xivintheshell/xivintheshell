@@ -21,6 +21,7 @@ import {
 	BuffType,
 	Debug,
 	LevelSync,
+	LimitBreakSkillName,
 	makeSkillReadyStatus,
 	ProcMode,
 	ResourceType,
@@ -1298,6 +1299,7 @@ class Controller {
 
 						SkillName.TemperaGrassaPop as string,
 						SkillName.TemperaCoatPop as string,
+						...(Object.values(LimitBreakSkillName) as string[]) // Exclude LBs from export
 					].includes(row.action)
 					&& !row.action.includes("Toggle buff")
 				)

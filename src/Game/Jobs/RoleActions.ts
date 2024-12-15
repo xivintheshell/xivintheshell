@@ -336,6 +336,10 @@ healerLB3s.forEach((params) => {
 	})
 })
 
+// DPS LB potency isn't directly related to normal job potency, but we do know their potencies relative to each other
+// Potencies included here mainly to help visualize whether an LB's damage will take effect before an untargetable window/end of fight
+// from: https://www.akhmorning.com/allagan-studies/limit-break/tables/#relative-damage
+
 // Melee
 makeLimitBreak(MELEE_JOBS, SkillName.Braver, ResourceType.cd_MeleeLB1, {
 	tier: "1",
@@ -343,6 +347,7 @@ makeLimitBreak(MELEE_JOBS, SkillName.Braver, ResourceType.cd_MeleeLB1, {
 	applicationDelay: 2.23,
 	animationLock: 3.86,
 	onExecute: cancelMeditate,
+	potency: 1000,
 })
 makeLimitBreak(MELEE_JOBS, SkillName.Bladedance, ResourceType.cd_MeleeLB2, {
 	tier: "2",
@@ -350,6 +355,7 @@ makeLimitBreak(MELEE_JOBS, SkillName.Bladedance, ResourceType.cd_MeleeLB2, {
 	applicationDelay: 3.28,
 	animationLock: 3.86,
 	onExecute: cancelMeditate,
+	potency: 2200,
 })
 const meleeLB3s = [
 	{job: ShellJob.MNK, skill: SkillName.FinalHeaven},
@@ -367,6 +373,7 @@ meleeLB3s.forEach((params) => {
 		applicationDelay: 2.26,
 		animationLock: 3.7,
 		onExecute: params.job === ShellJob.SAM ? cancelMeditate : undefined,
+		potency: 3500,
 	})
 })
 
@@ -377,6 +384,7 @@ makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.BigShot, ResourceType.cd_RangedLB
 	applicationDelay: 2.23,
 	animationLock: 3.1,
 	onExecute: cancelImprovisation,
+	potency: 540,
 })
 makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.Desperado, ResourceType.cd_RangedLB2, {
 	tier: "2",
@@ -384,6 +392,7 @@ makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.Desperado, ResourceType.cd_Ranged
 	applicationDelay: 2.49,
 	animationLock: 3.1,
 	onExecute: cancelImprovisation,
+	potency: 1170,
 })
 const rangedLB3s = [
 	{job: ShellJob.BRD, skill: SkillName.SagittariusArrow},
@@ -398,6 +407,7 @@ rangedLB3s.forEach((params) => {
 		applicationDelay: 3.16,
 		animationLock: 3.7,
 		onExecute: params.job === ShellJob.DNC ? cancelImprovisation: undefined,
+		potency: 1890,
 	})
 })
 
@@ -408,6 +418,7 @@ makeLimitBreak(CASTER_JOBS, SkillName.Skyshard, ResourceType.cd_CasterLB1, {
 	applicationDelay: 1.64,
 	animationLock: 3.1,
 	onConfirm: cancelDualcast,
+	potency: 600,
 })
 makeLimitBreak(CASTER_JOBS, SkillName.Starstorm, ResourceType.cd_CasterLB2, {
 	tier: "2",
@@ -415,6 +426,7 @@ makeLimitBreak(CASTER_JOBS, SkillName.Starstorm, ResourceType.cd_CasterLB2, {
 	applicationDelay: 3.75,
 	animationLock: 5.1,
 	onConfirm: cancelDualcast,
+	potency: 1300,
 })
 const casterLB3s = [
 	{job: ShellJob.BLM, skill: SkillName.Meteor},
@@ -430,6 +442,7 @@ casterLB3s.forEach((params) => {
 		applicationDelay: 4.5,
 		animationLock: 8.1,
 		onConfirm: params.job === ShellJob.RDM ? cancelDualcast : undefined,
+		potency: 2100,
 	})
 })
 

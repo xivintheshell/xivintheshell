@@ -1,7 +1,7 @@
 // making another file just so I don't keep clustering Controller.ts
 import {controller as ctl} from "./Controller";
 import {ActionNode, ActionType} from "./Record";
-import {BuffType, ResourceType, SkillName} from "../Game/Common";
+import {BuffType, LIMIT_BREAKS, ResourceType, SkillName} from "../Game/Common";
 import {
 	DamageStatisticsData,
 	DamageStatisticsMode,
@@ -243,6 +243,7 @@ function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 }
 
 export function getSkillOrDotInclude(skillNameOrDoT: SkillName | "DoT") {
+	if (skillNameOrDoT !== "DoT" && LIMIT_BREAKS.includes(skillNameOrDoT)) { return false } // Don't show LB potency in the summary
 	return !excludedFromStats.has(skillNameOrDoT);
 }
 
