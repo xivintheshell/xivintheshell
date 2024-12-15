@@ -15,7 +15,7 @@ import {
 	WarningMarkElem
 } from "../Controller/Timeline";
 import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDimensions, TimelineDrawOptions} from "./Common";
-import {BuffType, ResourceType, SkillName, WarningType} from "../Game/Common";
+import {BuffType, LIMIT_BREAKS, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {getSkillIconImage} from "./Skills";
 import {buffIconImages} from "./Buffs";
 import {controller} from "../Controller/Controller";
@@ -481,6 +481,10 @@ function drawSkills(
 			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
 			gcdBars.push({x: x+barsOffset, y: y + TimelineDimensions.skillButtonHeight / 2,
 				w: recastWidth-barsOffset, h: TimelineDimensions.skillButtonHeight / 2});
+		}
+		if (LIMIT_BREAKS.includes(skill.skillName)) {
+			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
+			greyLockBars.push({x: x + barsOffset, y: y + TimelineDimensions.skillButtonHeight / 2, w: recastWidth-barsOffset, h: TimelineDimensions.skillButtonHeight / 2})
 		}
 
 		// node covers (LL, pot, party buff)

@@ -248,50 +248,28 @@ makeResourceAbility(ALL_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
 
 //#region Limit Breaks
 
-// Technically these aren't spells, but it's the closest analogue we have since most of them have a wind-up time, and they apply their animation delay afterwards
-const makeLimitBreak = (jobs: ShellJob | ShellJob [], name: SkillName, unlockLevel: number, params: {
-	castTime: number,
-	applicationDelay: number,
-	secondaryCooldown?: CooldownGroupProperties,
-	onConfirm?: EffectFn<GameState>,
-	onApplication?: EffectFn<GameState>
-}) => {
-	// Make the "GCD" appear to roll for the full time of the LB cast and its animation lock
-	// Otherwise the animation lock handling produces a bunch of unexplained empty space in the timeline
-	const recastTime: ResourceCalculationFn<GameState> = (state) => {return params.castTime + state.config.getSkillAnimationLock(name)}
-	const assetName = "Limit Break " + name.charAt(name.length - 1)
-	return makeSpell(jobs, name, unlockLevel, {
-		...params,
-		assetPath: `General/${assetName}.png`,
-		recastTime: recastTime,
-	})
-}
-
 // Tank
 TANK_JOBS.forEach((job) => {
 	makeResource(job, ResourceType.TankLB1, 1, {timeout: 10});
 	makeResource(job, ResourceType.TankLB2, 1, {timeout: 12});
 	makeResource(job, ResourceType.TankLB3, 1, {timeout: 8});
 })
-makeLimitBreak(TANK_JOBS, SkillName.TankLB1, 1, {
-	castTime: 0.01,
-	applicationDelay: 0.44, // Removed .01 to account for the fake cast time
+makeLimitBreak(TANK_JOBS, SkillName.TankLB1, ResourceType.cd_TankLB1, {
+	applicationDelay: 0.45,
 	onApplication: (state) => {
 		state.resources.get(ResourceType.TankLB1).gain(1)
 		state.enqueueResourceDrop(ResourceType.TankLB1, 10)
-	}
+	},
 })
-makeLimitBreak(TANK_JOBS, SkillName.TankLB2, 1, {
-	castTime: 0.01,
-	applicationDelay: 0.88, // Removed .01 to account for the fake cast time
+makeLimitBreak(TANK_JOBS, SkillName.TankLB2, ResourceType.cd_TankLB2, {
+	applicationDelay: 0.89,
 	onApplication: (state) => {
 		state.resources.get(ResourceType.TankLB2).gain(1)
 		state.enqueueResourceDrop(ResourceType.TankLB2, 12)
 	},
 })
-makeLimitBreak(TANK_JOBS, SkillName.TankLB3, 1, {
-	castTime: 0.01,
-	applicationDelay: 1.33, // Removed .01 to account for the fake cast time
+makeLimitBreak(TANK_JOBS, SkillName.TankLB3, ResourceType.cd_TankLB3, {
+	applicationDelay: 1.34,
 	onApplication: (state) => {
 		state.resources.get(ResourceType.TankLB3).gain(1)
 		state.enqueueResourceDrop(ResourceType.TankLB3, 8)
@@ -299,62 +277,62 @@ makeLimitBreak(TANK_JOBS, SkillName.TankLB3, 1, {
 })
 
 // Healer
-makeLimitBreak(HEALER_JOBS, SkillName.HealerLB1, 1, {
+makeLimitBreak(HEALER_JOBS, SkillName.HealerLB1, ResourceType.cd_HealerLB1, {
 	castTime: 2,
 	applicationDelay: 0.76,
 })
-makeLimitBreak(HEALER_JOBS, SkillName.HealerLB2, 1, {
+makeLimitBreak(HEALER_JOBS, SkillName.HealerLB2, ResourceType.cd_HealerLB2, {
 	castTime: 2,
 	applicationDelay: 0.8,
 })
-makeLimitBreak(HEALER_JOBS, SkillName.HealerLB3, 1, {
+makeLimitBreak(HEALER_JOBS, SkillName.HealerLB3, ResourceType.cd_HealerLB3, {
 	castTime: 2,
 	applicationDelay: 0.8,
 })
 
 // Melee
-makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB1, 1, {
+makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB1, ResourceType.cd_MeleeLB1, {
 	castTime: 2,
 	applicationDelay: 2.23,
 	onConfirm: cancelMeditate,
 })
-makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB2, 1, {
+makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB2, ResourceType.cd_MeleeLB2, {
 	castTime: 3,
 	applicationDelay: 3.28,
 	onConfirm: cancelMeditate,
 })
-makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB3, 1, {
+makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB3, ResourceType.cd_MeleeLB3, {
 	castTime: 4.5,
 	applicationDelay: 2.26,
 	onConfirm: cancelMeditate,
 })
 
 // Ranged
-makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB1, 1, {
+makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB1, ResourceType.cd_RangedLB1, {
 	castTime: 2,
 	applicationDelay: 2.23,
 })
-makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB2, 1, {
+makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB2, ResourceType.cd_RangedLB2, {
 	castTime: 3,
 	applicationDelay: 2.49,
 })
-makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB3, 1, {
+makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB3, ResourceType.cd_RangedLB3, {
 	castTime: 4.5,
 	applicationDelay: 3.16,
 })
 
 // Caster
-makeLimitBreak(CASTER_JOBS, SkillName.CasterLB1, 1, {
+makeLimitBreak(CASTER_JOBS, SkillName.CasterLB1, ResourceType.cd_CasterLB1, {
 	castTime: 2,
 	applicationDelay: 1.64,
 	onApplication: cancelDualcast, // LB doesn't kill dualcast until it application
 })
-makeLimitBreak(CASTER_JOBS, SkillName.CasterLB2, 1, {
+makeLimitBreak(CASTER_JOBS, SkillName.CasterLB2, ResourceType.cd_CasterLB2, {
 	castTime: 3,
 	applicationDelay: 3.75,
 	onApplication: cancelDualcast, // LB doesn't kill dualcast until it application
 })
-makeLimitBreak(CASTER_JOBS, SkillName.CasterLB3, 1, {
+makeLimitBreak(CASTER_JOBS, SkillName.CasterLB3, ResourceType.cd_CasterLB3, {
 	castTime: 4.5,
 	applicationDelay: 4.5,
 	onApplication: cancelDualcast, // LB doesn't kill dualcast until it application

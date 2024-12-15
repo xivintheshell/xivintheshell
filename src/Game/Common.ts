@@ -69,6 +69,11 @@ enum GeneralSkillName {
 	Provoke = "Provoke",
 	Shirk = "Shirk",
 
+	Never = "Never",
+}
+
+export enum LimitBreakSkillName {
+
 	TankLB1 = "Tank Limit Break 1",
 	TankLB2 = "Tank Limit Break 2",
 	TankLB3 = "Tank Limit Break 3",
@@ -88,8 +93,6 @@ enum GeneralSkillName {
 	CasterLB1 = "Caster Limit Break 1",
 	CasterLB2 = "Caster Limit Break 2",
 	CasterLB3 = "Caster Limit Break 3",
-
-	Never = "Never",
 }
 
 // Merge enums for each class: https://stackoverflow.com/a/55827534
@@ -102,11 +105,13 @@ export const SkillName = {
 	...MCHSkillName,
 	...RPRSkillName,
 	...WARSkillName,
+	...LimitBreakSkillName,
 	...GeneralSkillName,
 }
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export type SkillName = GeneralSkillName
+	| LimitBreakSkillName
 	| BLMSkillName
 	| PCTSkillName
 	| RDMSkillName
@@ -275,9 +280,25 @@ enum GeneralCooldownType {
 
 	cd_HeadGraze = "cd_HeadGraze",
 
-	cd_LimitBreak1 = "cd_LimitBreak1",
-	cd_LimitBreak2 = "cd_LimitBreak2",
-	cd_LimitBreak3 = "cd_LimitBreak3",
+	cd_TankLB1 = "cd_TankLB1",
+	cd_TankLB2 = "cd_TankLB2",
+	cd_TankLB3 = "cd_TankLB3",
+
+	cd_HealerLB1 = "cd_HealerLB1",
+	cd_HealerLB2 = "cd_HealerLB2",
+	cd_HealerLB3 = "cd_HealerLB3",
+
+	cd_MeleeLB1 = "cd_MeleeLB1",
+	cd_MeleeLB2 = "cd_MeleeLB2",
+	cd_MeleeLB3 = "cd_MeleeLB3",
+
+	cd_RangedLB1 = "cd_RangedLB1",
+	cd_RangedLB2 = "cd_RangedLB2",
+	cd_RangedLB3 = "cd_RangedLB3",
+
+	cd_CasterLB1 = "cd_CasterLB1",
+	cd_CasterLB2 = "cd_CasterLB2",
+	cd_CasterLB3 = "cd_CasterLB3",
 }
 
 const CooldownType = {

@@ -73,14 +73,12 @@ export type SerializedConfig = ConfigData & {
 }
 
 // from: https://www.akhmorning.com/allagan-studies/limit-break/tables/#tables
-const LIMIT_BREAK_ANIMATION_LOCKS: { 
+export const LIMIT_BREAK_ANIMATION_LOCKS: { 
 	[key: string]: number
 } = {
-	// Tank LBs have .01s removed from their animation locks to account for the fake
-	// cast times used to make them look consistent on the timeline with other jobs
-	[SkillName.TankLB1]: 1.92,
-	[SkillName.TankLB2]: 3.85,
-	[SkillName.TankLB3]: 3.85,
+	[SkillName.TankLB1]: 1.93,
+	[SkillName.TankLB2]: 3.86,
+	[SkillName.TankLB3]: 3.86,
 	[SkillName.HealerLB1]: 2.1,
 	[SkillName.HealerLB2]: 5.13,
 	[SkillName.HealerLB3]: 8.10,

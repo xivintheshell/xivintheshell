@@ -1,10 +1,11 @@
-import {Aspect, LevelSync, ResourceType, SkillName, TraitName} from './Common'
+import {Aspect, LevelSync, LimitBreakSkillName, ResourceType, SkillName, TraitName} from './Common'
 import {ShellJob, ALL_JOBS} from "../Controller/Common";
 import {ActionNode} from "../Controller/Record";
 import {PlayerState, GameState} from "./GameState";
 import {Traits} from './Traits';
 import {makeCooldown, getResourceInfo, ResourceInfo} from "./Resources";
 import {PotencyModifier} from "./Potency";
+import { LIMIT_BREAK_ANIMATION_LOCKS } from './GameConfig';
 
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
@@ -137,6 +138,12 @@ export type Weaponskill<T extends PlayerState> = GCD<T> & {
 
 export type Ability<T extends PlayerState> = BaseSkill<T> & {
 	kind: "ability";
+}
+
+// Limit breaks (mostly) have a cast time but don't otherwise actually interact with the GCD
+// Extending the GCD type since it has the properties we'd care about
+export type LimitBreak<T extends PlayerState> = GCD<T> & {
+	kind: "limitbreak"
 }
 
 /**
@@ -505,6 +512,65 @@ export function makeResourceAbility<T extends PlayerState>(
 		secondaryCooldown: params.secondaryCooldown
 	});
 };
+
+/**
+ * Declare a Limit Break ability.
+ *
+ * Only the ability's name and cooldown mandatory. All optional params default as follows:
+ * - applicationDelay: 0 if basePotency is defined, otherwise left undefined
+ * - onConfirm: empty function
+ * - onApplication: empty function
+ *
+ * The following optional parameters are not stored with the Ability object, but instead used to populate
+ * the resourceInfos dictionary if present:
+ * - cooldown: the cooldown (in seconds) of the ability; no resourceInfos entry is added if this is unspecified
+ * - maxCharges: the maximum number of charges an ability has, default 1
+ */
+export function makeLimitBreak<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: LimitBreakSkillName, cdName: ResourceType, params: Partial<{
+	assetPath: string,
+	applicationDelay: number,
+	onConfirm: EffectFn<T>,
+	onApplication: EffectFn<T>,
+	castTime: number,
+}>): LimitBreak<T> {
+	if (!Array.isArray(jobs)) {
+		jobs = [jobs];
+	}
+	const assetName = "Limit Break " + name.charAt(name.length - 1)
+	const info: LimitBreak<T> = {
+		kind: "limitbreak",
+		name: name,
+		assetPath: params.assetPath ?? `General/${assetName}.png`,
+		unlockLevel: 1,
+		autoUpgrade: undefined,
+		autoDowngrade: undefined,
+		cdName,
+		secondaryCd: undefined,
+		aspect: Aspect.Other,
+		replaceIf: [],
+		startOnHotbar: true,
+		castTimeFn: fnify(params.castTime, 0),
+		recastTimeFn: (state) => 0,
+		isInstantFn: (state) => false, // LB's can't be swiftcasted
+		highlightIf: (state) => false,
+		manaCostFn: (state) => 0,
+		potencyFn: (state) => 0, // We're not tracking LB potency since they're not directly related to the job's potencies
+		jobPotencyModifiers: (state) => [],
+		applicationDelay: params.applicationDelay ?? 0,
+		validateAttempt: (state) => true,
+		onConfirm: params.onConfirm ?? NO_EFFECT,
+		onApplication: params.onApplication ?? NO_EFFECT,
+	};
+	jobs.forEach((job) => setSkill(job, info.name, info));
+	// Fudge the "cooldown" as the sum of the cast time and the animation lock to make the grey bar on the timeline look right
+	let lockout = params.castTime ?? 0
+	// Have to directly reference the exported const since the controller won't be instantiated yet
+	if (Object.keys(LIMIT_BREAK_ANIMATION_LOCKS).includes(name)) {
+		lockout += LIMIT_BREAK_ANIMATION_LOCKS[name];
+	}
+	jobs.forEach((job) => makeCooldown(job, cdName, lockout, 1));
+	return info;
+}
 
 // Dummy skill to avoid a hard crash when a skill info isn't found
 const NEVER_SKILL = makeAbility(ALL_JOBS, SkillName.Never, 1, ResourceType.Never, {
