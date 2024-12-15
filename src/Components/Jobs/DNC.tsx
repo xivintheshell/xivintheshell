@@ -308,7 +308,6 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
                 timeRemaining: shieldSambaCooldown.toFixed(3),
                 className: shieldSambaCooldown > 0 ? "" : "hidden"
             },
-            ...super.getSelfBuffViewProps(),
         ]
     }
 
