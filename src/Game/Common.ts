@@ -74,25 +74,41 @@ enum GeneralSkillName {
 
 export enum LimitBreakSkillName {
 
-	TankLB1 = "Tank Limit Break 1",
-	TankLB2 = "Tank Limit Break 2",
-	TankLB3 = "Tank Limit Break 3",
+	ShieldWall = "Shield Wall",
+	Stronghold = "Stronghold",
+	LastBastion = "Last Bastion",
+	LandWaker = "Land Waker",
+	DarkForce = "Dark Force",
+	GunmetalSoul = "Gunmetal Soul",
 
-	HealerLB1 = "Healer Limit Break 1",
-	HealerLB2 = "Healer Limit Break 2",
-	HealerLB3 = "Healer Limit Break 3",
+	HealingWind = "Healing Wind",
+	BreathOfTheEarth = "Breath of the Earth",
+	PulseOfLife = "Pulse of Life",
+	AngelFeathers = "Angel Feathers",
+	AstralStasis = "Astral Stasis",
+	TechneMakre = "Techne Makre",
 
-	MeleeLB1 = "Melee Limit Break 1",
-	MeleeLB2 = "Melee Limit Break 2",
-	MeleeLB3 = "Melee Limit Break 3",
+	Braver = "Braver",
+	Bladedance = "Bladedance",
+	FinalHeaven = "Final Heaven",
+	DragonsongDive = "Dragonsong Dive",
+	Chimatsuri = "Chimatsuri",
+	DoomOfTheLiving = "Doom of the Living",
+	TheEnd = "The End",
+	WorldSwallower = "World-swallower",
 
-	RangedLB1 = "Ranged Limit Break 1",
-	RangedLB2 = "Ranged Limit Break 2",
-	RangedLB3 = "Ranged Limit Break 3",
+	BigShot = "Big Shot",
+	Desperado = "Desperado",
+	SagittariusArrow = "Sagittarius Arrow",
+	SatelliteBeam = "Satellite Beam",
+	CrimsonLotus = "Crimson Lotus",
 
-	CasterLB1 = "Caster Limit Break 1",
-	CasterLB2 = "Caster Limit Break 2",
-	CasterLB3 = "Caster Limit Break 3",
+	Skyshard = "Skyshard",
+	Starstorm = "Starstorm",
+	Meteor = "Meteor",
+	Teraflare = "Teraflare",
+	VermillionScourge = "Vermillion Scourge",
+	ChromaticFantasy = "Chromatic Fantasy"
 }
 
 // Merge enums for each class: https://stackoverflow.com/a/55827534
@@ -122,27 +138,7 @@ export type SkillName = GeneralSkillName
 	| WARSkillName
 ;
 
-export const LIMIT_BREAKS: SkillName[] = [
-	SkillName.TankLB1,
-	SkillName.TankLB2, 
-	SkillName.TankLB3, 
-
-	SkillName.HealerLB1, 
-	SkillName.HealerLB2, 
-	SkillName.HealerLB3, 
-
-	SkillName.MeleeLB1, 
-	SkillName.MeleeLB2, 
-	SkillName.MeleeLB3, 
-
-	SkillName.RangedLB1,
-	SkillName.RangedLB2,
-	SkillName.RangedLB3, 
-
-	SkillName.CasterLB1, 
-	SkillName.CasterLB2, 
-	SkillName.CasterLB3,
-]
+export const LIMIT_BREAKS = Object.values(LimitBreakSkillName) as SkillName[]
 
 export const enum SkillUnavailableReason {
 	Blocked = "blocked by CD, animation lock or caster tax",
@@ -238,9 +234,6 @@ enum GeneralResourceType {
 
 	Rampart = "Rampart", // [0, 1]
 	Reprisal = "Reprisal", // [0, 1]
-	TankLB1 = "Tank LB 1",
-	TankLB2 = "Tank LB 2",
-	TankLB3 = "Tank LB 3",
 
 	// special
 	RearPositional = "Rear Positional", // [0, 1]
@@ -251,6 +244,15 @@ enum GeneralResourceType {
 	InCombat = "InCombat", // [0, 1], used for abilities that can only execute in combat
 
 	Never = "Never",
+}
+
+export enum TankLBResourceType {
+	ShieldWall = "Shield Wall",
+	Stronghold = "Stronghold",
+	LastBastion = "Last Bastion",
+	LandWaker = "Land Waker",
+	DarkForce = "Dark Force",
+	GunmetalSoul = "Gunmetal Soul",
 }
 
 enum GeneralCooldownType {
@@ -328,6 +330,7 @@ type CooldownType = GeneralCooldownType
 export const ResourceType = {
 	...CooldownType,
 	...GeneralResourceType,
+	...TankLBResourceType,
 	...BLMResourceType,
 	...PCTResourceType,
 	...RDMResourceType,
@@ -341,6 +344,7 @@ export const ResourceType = {
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export type ResourceType = CooldownType
 	| GeneralResourceType
+	| TankLBResourceType
 	| BLMResourceType
 	| PCTResourceType
 	| RDMResourceType

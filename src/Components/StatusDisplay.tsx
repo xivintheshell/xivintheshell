@@ -1,11 +1,11 @@
 import React, {CSSProperties} from 'react';
 import {Clickable, ContentNode, Help, ProgressBar, StaticFn} from "./Common";
-import {ResourceType} from "../Game/Common";
+import {ResourceType, TankLBResourceType} from "../Game/Common";
 import type {PlayerState} from "../Game/GameState";
 import {controller} from "../Controller/Controller";
 import {localize, localizeResourceType} from "./Localization";
 import {getCurrentThemeColors} from "./ColorTheme";
-import { CASTER_JOBS, HEALER_JOBS, MELEE_JOBS, MP_JOBS, PHYSICAL_RANGED_JOBS, TANK_JOBS } from '../Controller/Common';
+import { CASTER_JOBS, HEALER_JOBS, MELEE_JOBS, MP_JOBS, PHYSICAL_RANGED_JOBS, ShellJob, TANK_JOBS } from '../Controller/Common';
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean,
@@ -296,9 +296,7 @@ roleBuffResources.forEach(
 );
 
 // Tank LBs share the same buff icon
-buffIcons.set(ResourceType.TankLB1, require("./Asset/Buffs/Role/Tank Limit Break.png"));
-buffIcons.set(ResourceType.TankLB2, require("./Asset/Buffs/Role/Tank Limit Break.png"));
-buffIcons.set(ResourceType.TankLB3, require("./Asset/Buffs/Role/Tank Limit Break.png"));
+Object.values(TankLBResourceType).forEach((rscType) => buffIcons.set(rscType, require("./Asset/Buffs/Role/Tank Limit Break.png")));
 
 buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
 buffIcons.set(ResourceType.RearPositional, require("./Asset/Buffs/General/Rear Positional.png"));
@@ -615,7 +613,7 @@ export class StatusPropsGenerator<T extends PlayerState> {
 
 	// Composes the job-specific buffs with the applicable role buffs
 	public getAllSelfTargetedBuffViewProps(): BuffProps[] {
-		const job = controller.game.job
+		const job = this.state.job
 		const resources = this.state.resources
 
 		const roleBuffViewProps: BuffProps[] = []
@@ -623,9 +621,16 @@ export class StatusPropsGenerator<T extends PlayerState> {
 		// Tank-only role buffs
 		if (TANK_JOBS.includes(job)) {
 			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.Rampart))
-			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.TankLB1))
-			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.TankLB2))
-			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.TankLB3))
+			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.ShieldWall))
+			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.Stronghold))
+			const tankLB3 = (job === ShellJob.PLD) ? ResourceType.LastBastion :
+				(job === ShellJob.WAR) ? ResourceType.LandWaker :
+				(job === ShellJob.DRK) ? ResourceType.DarkForce :
+				(job === ShellJob.GNB) ? ResourceType.GunmetalSoul :
+				undefined
+			if (tankLB3) {
+				roleBuffViewProps.push(this.makeCommonTimer(tankLB3))
+			}
 		}
 
 		// Melee-only role buffs
@@ -685,7 +690,7 @@ export class StatusPropsGenerator<T extends PlayerState> {
 
 	// Display the job-specific resources, including MP and the MP tick timer by defauly for jobs that use MP
 	public getAllResourceViewProps(): ResourceDisplayProps[] {
-		if (!MP_JOBS.includes(controller.game.job)) {
+		if (!MP_JOBS.includes(this.state.job)) {
 			return this.jobSpecificResourceViewProps()
 		}
 	

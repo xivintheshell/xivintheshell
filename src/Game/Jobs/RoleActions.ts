@@ -1,5 +1,5 @@
 import {ALL_JOBS, CASTER_JOBS, HEALER_JOBS, MELEE_JOBS, PHYSICAL_RANGED_JOBS, ShellJob, TANK_JOBS} from "../../Controller/Common";
-import {SkillName, ResourceType, TraitName, WarningType} from "../Common";
+import {SkillName, ResourceType, TraitName, WarningType, TankLBResourceType} from "../Common";
 import {combineEffects, makeAbility, makeLimitBreak, makeResourceAbility, makeSpell} from "../Skills";
 import {DoTBuff, EventTag, makeResource} from "../Resources"
 import {Traits} from "../Traits";
@@ -262,95 +262,175 @@ makeResourceAbility(ALL_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
 
 // Tank
 TANK_JOBS.forEach((job) => {
-	makeResource(job, ResourceType.TankLB1, 1, {timeout: 10});
-	makeResource(job, ResourceType.TankLB2, 1, {timeout: 12});
-	makeResource(job, ResourceType.TankLB3, 1, {timeout: 8});
+	makeResource(job, ResourceType.ShieldWall, 1, {timeout: 10});
+	makeResource(job, ResourceType.Stronghold, 1, {timeout: 12});
 })
-makeLimitBreak(TANK_JOBS, SkillName.TankLB1, ResourceType.cd_TankLB1, {
+makeLimitBreak(TANK_JOBS, SkillName.ShieldWall, ResourceType.cd_TankLB1, {
+	tier: "1",
 	applicationDelay: 0.45,
+	animationLock: 1.93,
 	onApplication: (state) => {
-		state.resources.get(ResourceType.TankLB1).gain(1)
-		state.enqueueResourceDrop(ResourceType.TankLB1, 10)
+		// Realistically this is only possible if you're fooling around in Explorer mode but still
+		Object.values(TankLBResourceType).forEach(rscType => state.tryConsumeResource(rscType))
+		state.resources.get(ResourceType.ShieldWall).gain(1)
+		state.enqueueResourceDrop(ResourceType.ShieldWall, 10)
 	},
 })
-makeLimitBreak(TANK_JOBS, SkillName.TankLB2, ResourceType.cd_TankLB2, {
+makeLimitBreak(TANK_JOBS, SkillName.Stronghold, ResourceType.cd_TankLB2, {
+	tier: "2",
 	applicationDelay: 0.89,
+	animationLock: 3.86,
 	onApplication: (state) => {
-		state.resources.get(ResourceType.TankLB2).gain(1)
-		state.enqueueResourceDrop(ResourceType.TankLB2, 12)
+		Object.values(TankLBResourceType).forEach(rscType => state.tryConsumeResource(rscType))
+		state.resources.get(ResourceType.Stronghold).gain(1)
+		state.enqueueResourceDrop(ResourceType.Stronghold, 12)
 	},
 })
-makeLimitBreak(TANK_JOBS, SkillName.TankLB3, ResourceType.cd_TankLB3, {
-	applicationDelay: 1.34,
-	onApplication: (state) => {
-		state.resources.get(ResourceType.TankLB3).gain(1)
-		state.enqueueResourceDrop(ResourceType.TankLB3, 8)
-	},
+const tankLB3s = [
+	{job: ShellJob.PLD, skill: SkillName.LastBastion, buff: ResourceType.LastBastion},
+	{job: ShellJob.WAR, skill: SkillName.LandWaker, buff: ResourceType.LandWaker},
+	{job: ShellJob.DRK, skill: SkillName.DarkForce, buff: ResourceType.DarkForce},
+	{job: ShellJob.GNB, skill: SkillName.GunmetalSoul, buff: ResourceType.GunmetalSoul},
+]
+tankLB3s.forEach((params) => {
+	if (!TANK_JOBS.includes(params.job)) { return } // Bail if it's not a defined job
+	makeResource(params.job, params.buff, 1, {timeout: 8});
+	makeLimitBreak(params.job, params.skill, ResourceType.cd_TankLB3, {
+		tier: "3",
+		applicationDelay: 1.34,
+		animationLock: 3.86,
+		onApplication: (state) => {
+			Object.values(TankLBResourceType).forEach(rscType => state.tryConsumeResource(rscType))
+			state.resources.get(params.buff).gain(1)
+			state.enqueueResourceDrop(params.buff, 8)
+		},
+	})
 })
 
 // Healer
-makeLimitBreak(HEALER_JOBS, SkillName.HealerLB1, ResourceType.cd_HealerLB1, {
+makeLimitBreak(HEALER_JOBS, SkillName.HealingWind, ResourceType.cd_HealerLB1, {
+	tier: "1",
 	castTime: 2,
 	applicationDelay: 0.76,
+	animationLock: 2.1,
 })
-makeLimitBreak(HEALER_JOBS, SkillName.HealerLB2, ResourceType.cd_HealerLB2, {
+makeLimitBreak(HEALER_JOBS, SkillName.BreathOfTheEarth, ResourceType.cd_HealerLB2, {
+	tier: "2",
 	castTime: 2,
 	applicationDelay: 0.8,
+	animationLock: 5.13,
 })
-makeLimitBreak(HEALER_JOBS, SkillName.HealerLB3, ResourceType.cd_HealerLB3, {
-	castTime: 2,
-	applicationDelay: 0.8,
+const healerLB3s = [
+	{job: ShellJob.WHM, skill: SkillName.PulseOfLife},
+	{job: ShellJob.SCH, skill: SkillName.AngelFeathers},
+	{job: ShellJob.AST, skill: SkillName.AstralStasis},
+	{job: ShellJob.SGE, skill: SkillName.TechneMakre},
+]
+healerLB3s.forEach((params) => {
+	if (!HEALER_JOBS.includes(params.job)) { return } // Bail if it's not a defined job
+	makeLimitBreak(params.job, params.skill, ResourceType.cd_HealerLB3, {
+		tier: "3",
+		castTime: 2,
+		applicationDelay: 0.8,
+		animationLock: 8.10,
+	})
 })
 
 // Melee
-makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB1, ResourceType.cd_MeleeLB1, {
+makeLimitBreak(MELEE_JOBS, SkillName.Braver, ResourceType.cd_MeleeLB1, {
+	tier: "1",
 	castTime: 2,
 	applicationDelay: 2.23,
+	animationLock: 3.86,
 	onExecute: cancelMeditate,
 })
-makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB2, ResourceType.cd_MeleeLB2, {
+makeLimitBreak(MELEE_JOBS, SkillName.Bladedance, ResourceType.cd_MeleeLB2, {
+	tier: "2",
 	castTime: 3,
 	applicationDelay: 3.28,
+	animationLock: 3.86,
 	onExecute: cancelMeditate,
 })
-makeLimitBreak(MELEE_JOBS, SkillName.MeleeLB3, ResourceType.cd_MeleeLB3, {
-	castTime: 4.5,
-	applicationDelay: 2.26,
-	onExecute: cancelMeditate,
+const meleeLB3s = [
+	{job: ShellJob.MNK, skill: SkillName.FinalHeaven},
+	{job: ShellJob.DRG, skill: SkillName.DragonsongDive},
+	{job: ShellJob.NIN, skill: SkillName.Chimatsuri},
+	{job: ShellJob.SAM, skill: SkillName.DoomOfTheLiving},
+	{job: ShellJob.RPR, skill: SkillName.TheEnd},
+	{job: ShellJob.VPR, skill: SkillName.WorldSwallower},
+]
+meleeLB3s.forEach((params) => {
+	if (!MELEE_JOBS.includes(params.job)) { return } // Bail if it's not a defined job
+	makeLimitBreak(params.job, params.skill, ResourceType.cd_MeleeLB3, {
+		tier: "3",
+		castTime: 4.5,
+		applicationDelay: 2.26,
+		animationLock: 3.7,
+		onExecute: params.job === ShellJob.SAM ? cancelMeditate : undefined,
+	})
 })
 
 // Ranged
-makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB1, ResourceType.cd_RangedLB1, {
+makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.BigShot, ResourceType.cd_RangedLB1, {
+	tier: "1",
 	castTime: 2,
 	applicationDelay: 2.23,
+	animationLock: 3.1,
 	onExecute: cancelImprovisation,
 })
-makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB2, ResourceType.cd_RangedLB2, {
+makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.Desperado, ResourceType.cd_RangedLB2, {
+	tier: "2",
 	castTime: 3,
 	applicationDelay: 2.49,
+	animationLock: 3.1,
 	onExecute: cancelImprovisation,
 })
-makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.RangedLB3, ResourceType.cd_RangedLB3, {
-	castTime: 4.5,
-	applicationDelay: 3.16,
-	onExecute: cancelImprovisation,
+const rangedLB3s = [
+	{job: ShellJob.BRD, skill: SkillName.SagittariusArrow},
+	{job: ShellJob.MCH, skill: SkillName.SatelliteBeam},
+	{job: ShellJob.DNC, skill: SkillName.CrimsonLotus},
+]
+rangedLB3s.forEach((params) => {
+	if (!PHYSICAL_RANGED_JOBS.includes(params.job)) { return } // Bail if it's not a defined job
+	makeLimitBreak(params.job, params.skill, ResourceType.cd_RangedLB3, {
+		tier: "3",
+		castTime: 4.5,
+		applicationDelay: 3.16,
+		animationLock: 3.7,
+		onExecute: params.job === ShellJob.DNC ? cancelImprovisation: undefined,
+	})
 })
 
 // Caster
-makeLimitBreak(CASTER_JOBS, SkillName.CasterLB1, ResourceType.cd_CasterLB1, {
+makeLimitBreak(CASTER_JOBS, SkillName.Skyshard, ResourceType.cd_CasterLB1, {
+	tier: "1",
 	castTime: 2,
 	applicationDelay: 1.64,
+	animationLock: 3.1,
 	onConfirm: cancelDualcast,
 })
-makeLimitBreak(CASTER_JOBS, SkillName.CasterLB2, ResourceType.cd_CasterLB2, {
+makeLimitBreak(CASTER_JOBS, SkillName.Starstorm, ResourceType.cd_CasterLB2, {
+	tier: "2",
 	castTime: 3,
 	applicationDelay: 3.75,
+	animationLock: 5.1,
 	onConfirm: cancelDualcast,
 })
-makeLimitBreak(CASTER_JOBS, SkillName.CasterLB3, ResourceType.cd_CasterLB3, {
-	castTime: 4.5,
-	applicationDelay: 4.5,
-	onConfirm: cancelDualcast,
+const casterLB3s = [
+	{job: ShellJob.BLM, skill: SkillName.Meteor},
+	{job: ShellJob.SMN, skill: SkillName.Teraflare},
+	{job: ShellJob.RDM, skill: SkillName.VermillionScourge},
+	{job: ShellJob.PCT, skill: SkillName.ChromaticFantasy},
+]
+casterLB3s.forEach((params) => {
+	if (!CASTER_JOBS.includes(params.job)) { return } // Bail if it's not a defined job
+	makeLimitBreak(params.job, params.skill, ResourceType.cd_CasterLB3, {
+		tier: "3",
+		castTime: 4.5,
+		applicationDelay: 4.5,
+		animationLock: 8.1,
+		onConfirm: params.job === ShellJob.RDM ? cancelDualcast : undefined,
+	})
 })
 
 //#region 

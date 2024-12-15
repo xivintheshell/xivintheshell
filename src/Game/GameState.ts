@@ -657,7 +657,7 @@ export abstract class GameState {
 				}
 			));
 			
-			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, slideCastTime + this.config.getSkillAnimationLock(skill.name));
+			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, slideCastTime + skill.animationLock);
 		};
 
 		const isInstant = capturedCastTime === 0;

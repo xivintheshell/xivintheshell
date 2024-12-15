@@ -5,7 +5,6 @@ import {PlayerState, GameState} from "./GameState";
 import {Traits} from './Traits';
 import {makeCooldown, getResourceInfo, ResourceInfo} from "./Resources";
 import {PotencyModifier} from "./Potency";
-import { LIMIT_BREAK_ANIMATION_LOCKS } from './GameConfig';
 
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
@@ -148,6 +147,7 @@ export type Ability<T extends PlayerState> = BaseSkill<T> & {
 // Extending the GCD type since it has the properties we'd care about
 export type LimitBreak<T extends PlayerState> = GCD<T> & {
 	kind: "limitbreak"
+	animationLock: number
 }
 
 /**
@@ -528,32 +528,37 @@ export function makeResourceAbility<T extends PlayerState>(
 /**
  * Declare a Limit Break ability.
  *
- * Only the ability's name and cooldown mandatory. All optional params default as follows:
- * - applicationDelay: 0 if basePotency is defined, otherwise left undefined
- * - onConfirm: empty function
- * - onApplication: empty function
+ * Only the ability's name and cooldown are mandatory. 
+ * Additionally, the tier, and the animation lock must be specified in the params object
+ * All optional params default as follows:
+ * - castTime: how long the LB takes to cast
+ * - applicationDelay: how long after the LB confirmation are the effects applied?
+ * - onExecute: function defining effects that take place on button press
+ * - onConfirm: function defining effects that take place on cast confirm
+ * - onApplication: function defining effects that take place on application
  *
- * The following optional parameters are not stored with the Ability object, but instead used to populate
- * the resourceInfos dictionary if present:
- * - cooldown: the cooldown (in seconds) of the ability; no resourceInfos entry is added if this is unspecified
- * - maxCharges: the maximum number of charges an ability has, default 1
+ * The following parameter is not stored with the Ability object, but instead used to
+ * select which skill icon is shown
+ * - tier: which tier of limit break is this? 
  */
-export function makeLimitBreak<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: LimitBreakSkillName, cdName: ResourceType, params: Partial<{
-	assetPath: string,
-	applicationDelay: number,
-	onExecute: EffectFn<T>,
-	onConfirm: EffectFn<T>,
-	onApplication: EffectFn<T>,
-	castTime: number,
-}>): LimitBreak<T> {
+export function makeLimitBreak<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: LimitBreakSkillName, cdName: ResourceType, params: {
+	tier: '1' | '2' | '3',
+	animationLock: number,
+	applicationDelay?: number,
+	onExecute?: EffectFn<T>,
+	onConfirm?: EffectFn<T>,
+	onApplication?: EffectFn<T>,
+	castTime?: number,
+}): LimitBreak<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
-	const assetName = "Limit Break " + name.charAt(name.length - 1)
+	const assetName = "Limit Break " + params.tier
 	const info: LimitBreak<T> = {
 		kind: "limitbreak",
 		name: name,
-		assetPath: params.assetPath ?? `General/${assetName}.png`,
+		animationLock: params.animationLock,
+		assetPath: `General/${assetName}.png`,
 		unlockLevel: 1,
 		autoUpgrade: undefined,
 		autoDowngrade: undefined,
@@ -577,12 +582,7 @@ export function makeLimitBreak<T extends PlayerState>(jobs: ShellJob | ShellJob[
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	// Fudge the "cooldown" as the sum of the cast time and the animation lock to make the grey bar on the timeline look right
-	let lockout = params.castTime ?? 0
-	// Have to directly reference the exported const since the controller won't be instantiated yet
-	if (Object.keys(LIMIT_BREAK_ANIMATION_LOCKS).includes(name)) {
-		lockout += LIMIT_BREAK_ANIMATION_LOCKS[name];
-	}
-	jobs.forEach((job) => makeCooldown(job, cdName, lockout, 1));
+	jobs.forEach((job) => makeCooldown(job, cdName, (params.castTime ?? 0) + params.animationLock, 1));
 	return info;
 }
 
