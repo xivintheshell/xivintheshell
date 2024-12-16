@@ -379,6 +379,9 @@ function drawDamageMarks(
 		let buffImages = [];
 		if (untargetable) {
 			info = (0).toFixed(3) + " (" + sourceStr + ")";
+		} else if (LIMIT_BREAKS.includes(dm.sourceSkill)) {
+			const lbStr = localize({en: "LB"}) as string
+			info = lbStr + " (" + sourceStr + ")"
 		} else {
 			const potency = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, includePartyBuffs: true});
 			info = potency.toFixed(2) + " (" + sourceStr + ")";
@@ -584,7 +587,7 @@ function drawSkills(
 			tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 			includePartyBuffs: true,
 			untargetable: bossIsUntargetable}).applied;
-		if (node.getPotencies().length > 0) {
+		if (node.getPotencies().length > 0 && !LIMIT_BREAKS.includes(node.skillName!)) {
 			lines.push(localize({en: "potency: ", zh: "威力："}) + potency.toFixed(2));
 		}
 
