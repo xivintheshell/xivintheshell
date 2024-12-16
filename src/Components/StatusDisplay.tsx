@@ -581,7 +581,7 @@ export class StatusPropsGenerator<T extends PlayerState> {
 	}
 
 	// Jobs should override this to display their enemy-targeted buffs
-	public jobSpecificOtherTagetedBuffViewProps(): BuffProps[] { return [] }
+	public jobSpecificOtherTargetedBuffViewProps(): BuffProps[] { return [] }
 	
 	// Composes the job-specific buffs with the applicable role buffs
 	public getAllOtherTargetedBuffViewProps(): BuffProps[] {
@@ -602,7 +602,7 @@ export class StatusPropsGenerator<T extends PlayerState> {
 		}
 
 		return [
-			...this.jobSpecificOtherTagetedBuffViewProps(),
+			...this.jobSpecificOtherTargetedBuffViewProps(),
 			...roleEnemyBuffViewProps,
 		]
 	}

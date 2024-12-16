@@ -25,7 +25,7 @@ import {localize} from "../Localization";
 
 export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 
-    override jobSpecificOtherTagetedBuffViewProps(): BuffProps[] {        
+    override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {        
         return [
             ...[
                 ResourceType.ThunderDoT, // Upcoming change to have all the thunder DoTs on the BRD PR, so leaving this here for now

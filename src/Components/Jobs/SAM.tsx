@@ -31,7 +31,7 @@ import {localize} from "../../Components/Localization";
 
 export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 	
-	override jobSpecificOtherTagetedBuffViewProps(): BuffProps[] {
+	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
 		const DoTCountdown = this.state.resources.timeTillReady(ResourceType.HiganbanaDoT);
 		
 		return [

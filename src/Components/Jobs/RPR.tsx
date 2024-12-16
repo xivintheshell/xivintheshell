@@ -41,7 +41,7 @@ import { BuffProps, registerBuffIcon, ResourceBarProps, ResourceCounterProps, Re
 
 export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 
-    override jobSpecificOtherTagetedBuffViewProps(): BuffProps[] {
+    override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
         const deathsDesignCountdown = this.state.resources.timeTillReady(ResourceType.DeathsDesign);
         
         return [
