@@ -1,5 +1,13 @@
 [
 	{
+		"date": "12/16/24",
+		"changes": [
+			"Limit breaks for all jobs!",
+			"[MCH][DNC] Removed testing tag",
+			"More underlying implementation changes"
+		]
+	},
+	{
 		"date": "12/13/24",
 		"changes": [
 			"Fixed sometimes unable to use skills in manual mode with double click",

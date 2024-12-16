@@ -5,6 +5,8 @@ import {DoTBuff, EventTag, makeResource} from "../Resources"
 import {Traits} from "../Traits";
 import type {GameState} from "../GameState";
 import {controller} from "../../Controller/Controller";
+import {SAMState} from "./SAM";
+import {DNCState} from "./DNC";
 
 //#region Helper functions
 
@@ -19,19 +21,14 @@ const cancelDualcast = (state: GameState) => {
 // Special case for SAM, since all actions should cancel meditate
 const cancelMeditate = (state: GameState) => {
 	if (state.job === ShellJob.SAM) {
-		const evt = state.findNextQueuedEventByTag(EventTag.MeditateTick);
-		if (evt) {
-			evt.canceled = true;
-		}
-		state.tryConsumeResource(ResourceType.Meditate);
+		(state as SAMState).cancelMeditate();
 	}
 };
 
 // All actions cancel Improvisation
 const cancelImprovisation = (state: GameState) => {
 	if (state.job === ShellJob.DNC) {
-		state.tryConsumeResource(ResourceType.Improvisation);
-		state.tryConsumeResource(ResourceType.RisingRhythm, true);
+		(state as DNCState).cancelImprovisation();
 	}
 }
 
