@@ -15,7 +15,9 @@ const HELP_CHANNEL_URL = "https://discord.com/channels/277897135515762698/130792
 const BALANCE_URL = "https://discord.gg/thebalanceffxiv"
 
 function Changelog() {
-	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={localize({en: "Changelog", zh: "更新日志", ja: "更新履歴"})} defaultShow={false} content={
+	return <div className={"paragraph"}><Expandable title={"Changelog"} titleNode={
+		localize({en: "Changelog", zh: "更新日志", ja: "更新履歴"})
+	} defaultShow={false} content={
 		<>
 			<div>{
 				changelog.map(entry => {
@@ -42,13 +44,17 @@ const getAcknowledgements = () => (
 	<>
 		<div className="paragraph">{localize({
 			en: <><span>This tool was initially Black Mage in the Shell, </span>
-				<span>ideated by <b>Eshiya</b> and developed by <b>miyehn</b> specifically for BLM during Endwalker since around February 2022. </span>
+				<span>ideated by <b>Eshiya (Galahad)</b> and developed by <b>miyehn</b> specifically for BLM during Endwalker since around February 2022. </span>
 				<span>After Dawntrail's release, it was expanded to support other jobs and is now maintained by a small team of developers:</span>
+			</>,
+			zh: <>
+				<span>本工具起初是由加拉哈德构想、由miyehn开发的黑魔排轴器，于2022年2月开工，陪黑魔们走过了大半段6.x时期。</span>
+				<span>7.0发售后，它被重构并逐渐开始支持更多职业，现在的排轴器由多名开发共同维护：</span>
 			</>
 		})}</div>
 		{localize({
 			en: <ul>
-				<li>Tool design and core systems implementation: <b>shanzhe</b>, <b>miyehn</b>, <b>Turtle</b></li>
+				<li>Tool design and core systems: <b>shanzhe</b>, <b>miyehn</b>, <b>Turtle</b>, <b>Akairyu</b></li>
 				<li>BLM: <b>shanzhe</b>, <b>Akairyu</b>, <b>Turtle</b>, <b>miyehn</b></li>
 				<li>PCT, RDM: <b>shanzhe</b></li>
 				<li>SAM: <b>Sterling</b>, <b>shanzhe</b></li>
@@ -58,10 +64,22 @@ const getAcknowledgements = () => (
 				<li>Framework for adding new jobs: <b>shanzhe</b></li>
 				<li>Chinese localization: <b>miyehn</b>, <b>Eshiya</b>, <b>Yuyuka</b>, <b>shanzhe</b></li>
 			</ul>,
+			zh: <ul>
+				<li>工具设计和核心系统：<b>shanzhe</b>、<b>miyehn</b>、<b>Turtle</b>、<b>Akairyu</b></li>
+				<li>黑魔：<b>shanzhe</b>、<b>Akairyu</b>、<b>Turtle</b>、<b>miyehn</b></li>
+				<li>画家、赤魔：<b>shanzhe</b></li>
+				<li>武士：<b>Sterling</b>、<b>shanzhe</b></li>
+				<li>舞者、机工：<b>Akairyu</b></li>
+				<li>镰刀：<b>Honey B. Lovely's Favorite Bee</b></li>
+				<li>战士：<b>misterperson</b></li>
+				<li>添加新职业的程序框架：<b>shanzhe</b></li>
+				<li>中文本地化：<b>miyehn</b>、<b>加拉哈德</b>、<b>鱼卡</b>、<b>shanzhe</b></li>
+			</ul>
 		})}
 		<div className="paragraph">{localize({
 			en: "And many thanks to Yara, Spider, Santa, players in 不打冰三攻略组, kiyozero, czmm, "
-				+ "and other players and groups who contributed feature suggestions, timeline markers, bug reports, etc."
+				+ "and other players and groups who contributed feature suggestions, timeline markers, bug reports, etc.",
+			zh: "同时，感谢Yara、Spider、Santa、不打冰三攻略组成员、kiyozero、czmm等，以体验反馈、报bug、时间轴标记等形式为这个工具作出过无私贡献的玩家们。"
 		})}</div>
 
 		{localize({
@@ -74,7 +92,8 @@ const getAcknowledgements = () => (
 				fight record (download "fight.txt" from the bottom or name it anything else) would be very helpful.
 			</div>,
 			zh: <div className={"paragraph"}>
-				如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我（miyehn），可请不打冰三攻略组的黑魔们转达，或加我QQ（870340705，加时请注明来意）。如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。
+				<span>如果遇到bug或者有任何工具相关的问题和建议，都欢迎反馈给我们，可请不打冰三攻略组的黑魔们或鱼卡转达，或加miyehn的QQ（870340705，加时请注明来意）。</span>
+				<span>如果是反馈bug，最好把能够复现bug的战斗记录文件（从下方下载的fight.txt）一起发过来。</span>
 			</div>,
 			ja: <div className={"paragraph"}>
 				[outdated (ja)] 質問、バグ報告、機能提案などがある場合は、Discord（miyehn）またはメール（ellyn.waterford@gmail.com）でお問い合わせください。
