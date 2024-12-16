@@ -144,10 +144,10 @@ export type Ability<T extends PlayerState> = BaseSkill<T> & {
 }
 
 // Limit breaks (mostly) have a cast time but don't otherwise actually interact with the GCD
-// Extending the GCD type since it has the properties we'd care about
-export type LimitBreak<T extends PlayerState> = GCD<T> & {
+export type LimitBreak<T extends PlayerState> = BaseSkill<T> & {
 	kind: "limitbreak"
 	animationLock: number
+	readonly castTimeFn: ResourceCalculationFn<T>;
 }
 
 /**
@@ -570,8 +570,6 @@ export function makeLimitBreak<T extends PlayerState>(jobs: ShellJob | ShellJob[
 		replaceIf: [],
 		startOnHotbar: true,
 		castTimeFn: fnify(params.castTime, 0),
-		recastTimeFn: (state) => 0,
-		isInstantFn: (state) => false, // LB's can't be swiftcasted
 		highlightIf: (state) => false,
 		manaCostFn: (state) => 0,
 		potencyFn: fnify(params.potency, 0),

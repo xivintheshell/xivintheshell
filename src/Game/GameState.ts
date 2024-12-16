@@ -785,8 +785,8 @@ export abstract class GameState {
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
 		let capturedManaCost = skill.manaCostFn(this);
 		let llCovered = this.job === ShellJob.BLM && this.resources.get(ResourceType.LeyLines).available(1);
-		let capturedCastTime = skill.kind === "weaponskill" || skill.kind === "spell" || skill.kind === "limitbreak" ? skill.castTimeFn(this) : 0;
-		let instantCastAvailable = capturedCastTime === 0 || skill.kind === "ability" || skill.isInstantFn(this);
+		let capturedCastTime = (skill.kind === "weaponskill" || skill.kind === "spell" || skill.kind === "limitbreak") ? skill.castTimeFn(this) : 0;
+		let instantCastAvailable = capturedCastTime === 0 || skill.kind === "ability" || (skill.kind !== "limitbreak" && skill.isInstantFn(this)); // LBs can't be swiftcasted
 		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
 		let blocked = timeTillAvailable > Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana;
