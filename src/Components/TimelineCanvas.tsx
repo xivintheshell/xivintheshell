@@ -15,7 +15,7 @@ import {
 	WarningMarkElem
 } from "../Controller/Timeline";
 import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDimensions, TimelineDrawOptions} from "./Common";
-import {BuffType, ResourceType, SkillName, WarningType} from "../Game/Common";
+import {BuffType, LIMIT_BREAKS, ResourceType, SkillName, WarningType} from "../Game/Common";
 import {getSkillIconImage} from "./Skills";
 import {buffIconImages} from "./Buffs";
 import {controller} from "../Controller/Controller";
@@ -379,6 +379,9 @@ function drawDamageMarks(
 		let buffImages = [];
 		if (untargetable) {
 			info = (0).toFixed(3) + " (" + sourceStr + ")";
+		} else if (LIMIT_BREAKS.includes(dm.sourceSkill)) {
+			const lbStr = localize({en: "LB"}) as string
+			info = lbStr + " (" + sourceStr + ")"
 		} else {
 			const potency = dm.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, includePartyBuffs: true});
 			info = potency.toFixed(2) + " (" + sourceStr + ")";
@@ -482,6 +485,10 @@ function drawSkills(
 			gcdBars.push({x: x+barsOffset, y: y + TimelineDimensions.skillButtonHeight / 2,
 				w: recastWidth-barsOffset, h: TimelineDimensions.skillButtonHeight / 2});
 		}
+		if (LIMIT_BREAKS.includes(skill.skillName)) {
+			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
+			greyLockBars.push({x: x + barsOffset, y: y + TimelineDimensions.skillButtonHeight / 2, w: recastWidth-barsOffset, h: TimelineDimensions.skillButtonHeight / 2})
+		}
 
 		// node covers (LL, pot, party buff)
 		// TODO automate declarations for these modifiers
@@ -580,7 +587,7 @@ function drawSkills(
 			tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 			includePartyBuffs: true,
 			untargetable: bossIsUntargetable}).applied;
-		if (node.getPotencies().length > 0) {
+		if (node.getPotencies().length > 0 && !LIMIT_BREAKS.includes(node.skillName!)) {
 			lines.push(localize({en: "potency: ", zh: "威力："}) + potency.toFixed(2));
 		}
 

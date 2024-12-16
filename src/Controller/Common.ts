@@ -30,27 +30,65 @@ export const enum ShellJob {
 	DNC = "DNC",
 	SAM = "SAM",
 	MCH = "MCH",
+	PLD = "PLD",
 	WAR = "WAR",
+	DRK = "DRK",
+	GNB = "GNB",
+	WHM = "WHM",
+	SCH = "SCH",
+	AST = "AST",
+	SGE = "SGE",
+	MNK = "MNK",
+	DRG = "DRG",
+	NIN = "NIN",
+	VPR = "VPR",
+	BRD = "BRD",
+	SMN = "SMN",
 }
+
+// Uncomment the job from its respective role array
+// when you're ready to start implementing it
+export const TANK_JOBS: ShellJob[] = [
+	//ShellJob.PLD, 
+	ShellJob.WAR, 
+	//ShellJob.DRK, 
+	//ShellJob.GNB
+];
+export const HEALER_JOBS: ShellJob[] = [
+	//ShellJob.WHM, 
+	//ShellJob.SCH, 
+	//ShellJob.AST, 
+	//ShellJob.SGE
+];
+export const MELEE_JOBS: ShellJob[] = [
+	//ShellJob.MNK, 
+	//ShellJob.DRG, 
+	//ShellJob.NIN, 
+	ShellJob.SAM, 
+	ShellJob.RPR, 
+	//ShellJob.VPR
+];
+export const PHYSICAL_RANGED_JOBS: ShellJob[] = [
+	//ShellJob.BRD, 
+	ShellJob.MCH, 
+	ShellJob.DNC
+];
+export const CASTER_JOBS: ShellJob[] = [
+	ShellJob.BLM, 
+	//ShellJob.SMN, 
+	ShellJob.RDM, 
+	ShellJob.PCT
+];
 
 // can't get this automatically from a const enum
 // jobs are in the order they appear in the job guide
 export const ALL_JOBS = [
-	ShellJob.WAR,
-	ShellJob.SAM,
-	ShellJob.RPR,
-	ShellJob.MCH,
-	ShellJob.DNC,
-	ShellJob.BLM,
-	ShellJob.RDM,
-	ShellJob.PCT,
+	...TANK_JOBS,
+	...HEALER_JOBS,
+	...MELEE_JOBS,
+	...PHYSICAL_RANGED_JOBS,
+	...CASTER_JOBS,
 ];
-
-export const TANK_JOBS: ShellJob[] = [ShellJob.WAR];
-export const HEALER_JOBS: ShellJob[] = [];
-export const MELEE_JOBS: ShellJob[] = [ShellJob.SAM, ShellJob.RPR];
-export const PHYSICAL_RANGED_JOBS: ShellJob[] = [ShellJob.DNC, ShellJob.MCH];
-export const CASTER_JOBS: ShellJob[] = [ShellJob.BLM, ShellJob.PCT, ShellJob.RDM];
 
 export const SKS_JOBS = [
 	...TANK_JOBS, ...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS
@@ -60,12 +98,30 @@ export const SPS_JOBS = [
 	...HEALER_JOBS, ...CASTER_JOBS
 ]
 
+// Used to default the display of MP and the MP tick timer in the status display
+export const MP_JOBS = [
+	...HEALER_JOBS, ...CASTER_JOBS, ShellJob.PLD, ShellJob.DRK
+]
+
+// Remove jobs from this list after sufficient time in the deployed site has passed
+// that you're confident no major bugs remain in that job's implementation
 export const TESTING_JOBS = [
+	ShellJob.PLD,
+	ShellJob.WAR,
+	ShellJob.DRK,
+	ShellJob.GNB,
+	ShellJob.WHM,
+	ShellJob.SCH,
+	ShellJob.AST,
+	ShellJob.SGE,
+	ShellJob.MNK,
+	ShellJob.DRG,
+	ShellJob.NIN,
 	ShellJob.SAM,
 	ShellJob.RPR,
-	ShellJob.DNC,
-	ShellJob.MCH,
-	ShellJob.WAR,
+	ShellJob.VPR,
+	ShellJob.BRD,
+	ShellJob.SMN,
 ];
 
 export const enum Expansion {

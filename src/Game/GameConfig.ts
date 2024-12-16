@@ -159,8 +159,10 @@ export class GameConfig {
 		return XIVMath.preTaxCastTime(this.level, this.skillSpeed, inCastTime, speedBuff);
 	}
 
+	// TODO - How can we make this easier to find for other job implementers? Or just not necessary...
 	getSkillAnimationLock(skillName : SkillName) : number {
 		// all gapclosers have the same animation lock
+		// from: https://nga.178.com/read.php?tid=21233094&rand=761
 		if (skillName === SkillName.AetherialManipulation
 			|| skillName === SkillName.BetweenTheLines
 			|| skillName === SkillName.Smudge
@@ -171,19 +173,25 @@ export class GameConfig {
 			|| skillName === SkillName.HellsIngress
 			|| skillName === SkillName.HellsEgress
 			|| skillName === SkillName.Regress
+			|| skillName === SkillName.EnAvant
+			|| skillName === SkillName.Onslaught
 		) {
-			return 0.8; // from: https://nga.178.com/read.php?tid=21233094&rand=761
-		} else if (
+			return 0.8;
+		}
+
+		// not real abilities, animation lock is fake
+		if (
 			skillName === SkillName.TemperaCoatPop
 			|| skillName === SkillName.TemperaGrassaPop
 			|| skillName === SkillName.TengentsuPop
 			|| skillName === SkillName.ThirdEyePop
 			|| skillName === SkillName.ArcaneCrestPop
 		) {
-			return 0.01; // not real abilities, animation lock is fake
-		} else {
-			return this.animationLock;
+			return 0.01; 
 		}
+
+		// Fallback if no other conditions applied
+		return this.animationLock;
 	}
 
 	// for gcd

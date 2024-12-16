@@ -257,12 +257,13 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 	applicationDelay: number,
 	jobPotencyModifiers?: PotencyModifierFn<SAMState>,
 	validateAttempt?: StatePredicate<SAMState>,
+	onExecute?: EffectFn<SAMState>,
 	onConfirm?: EffectFn<SAMState>,
 	onApplication?: EffectFn<SAMState>,
 }): Weaponskill<SAMState> => {
-	const onConfirm: EffectFn<SAMState> = combineEffects(
+	const onExecute: EffectFn<SAMState> = combineEffects(
 		(state) => state.cancelMeditate(), // cancel meditate
-		params.onConfirm ?? NO_EFFECT
+		params.onExecute ?? NO_EFFECT
 	);
 	const onApplication: EffectFn<SAMState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyModifiers = (state: Readonly<SAMState>) => {
@@ -313,7 +314,8 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 		jobPotencyModifiers: jobPotencyModifiers,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => !(params.baseCastTime && params.baseCastTime > 0),
-		onConfirm: onConfirm,
+		onExecute: onExecute,
+		onConfirm: params.onConfirm,
 		onApplication: onApplication,
 	});
 };
@@ -329,6 +331,7 @@ const makeAbility_SAM = (name: SkillName, unlockLevel: number, cdName: ResourceT
 	cooldown: number,
 	maxCharges?: number,
 	validateAttempt?: StatePredicate<SAMState>,
+	onExecute?: EffectFn<SAMState>,
 	onConfirm?: EffectFn<SAMState>,
 	onApplication?: EffectFn<SAMState>,
 }): Ability<SAMState> => {
@@ -336,7 +339,7 @@ const makeAbility_SAM = (name: SkillName, unlockLevel: number, cdName: ResourceT
 		params.jobPotencyModifiers = (state) => state.hasResourceAvailable(ResourceType.Fugetsu) ? [state.getFugetsuModifier()] : [];
 	}
 	if (name !== SkillName.ThirdEyePop && name !== SkillName.TengentsuPop) {
-		params.onConfirm = combineEffects((state) => state.cancelMeditate(), params.onConfirm ?? NO_EFFECT);
+		params.onExecute = combineEffects((state) => state.cancelMeditate(), params.onExecute ?? NO_EFFECT);
 	}
 	return makeAbility(ShellJob.SAM, name, unlockLevel, cdName, params);
 };
@@ -1002,7 +1005,7 @@ makeResourceAbility(ShellJob.SAM, SkillName.ThirdEye, 6, ResourceType.cd_ThirdEy
 	}],
 	cooldown: 15,
 	applicationDelay: 0,
-	onConfirm: (state: SAMState) => state.cancelMeditate(),
+	onExecute: (state: SAMState) => state.cancelMeditate(),
 });
 
 makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_ThirdEye, {
@@ -1014,7 +1017,7 @@ makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_Third
 	}],
 	cooldown: 15,
 	applicationDelay: 0,
-	onConfirm: (state: SAMState) => state.cancelMeditate(),
+	onExecute: (state: SAMState) => state.cancelMeditate(),
 });
 
 // fake skill to represent breaking third eye

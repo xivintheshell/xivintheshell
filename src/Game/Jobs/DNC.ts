@@ -204,6 +204,11 @@ export class DNCState extends GameState {
             this.gainProc(ResourceType.LastDanceReady)
         }
     }
+
+    cancelImprovisation() { 
+        this.tryConsumeResource(ResourceType.Improvisation)
+        this.tryConsumeResource(ResourceType.RisingRhythm, true)
+    }
 }
 
 const isDancing = (state: Readonly<DNCState>) => state.hasResourceAvailable(ResourceType.StandardStep) || state.hasResourceAvailable(ResourceType.TechnicalStep)
@@ -247,13 +252,13 @@ const makeGCD_DNC = (name: SkillName, unlockLevel: number, params: {
 }): Weaponskill<DNCState> => {
     const onConfirm: EffectFn<DNCState> = combineEffects(
         (state) => { if (params.potency) { state.simulatePartyEspritGain() }},
-        (state) => state.tryConsumeResource(ResourceType.Improvisation),
         params.onConfirm ?? NO_EFFECT,
         (state) => state.processComboStatus(name),
     );
     return makeWeaponskill(ShellJob.DNC, name, unlockLevel, {
         ...params,
         onConfirm: onConfirm,
+        onExecute: (state) => state.cancelImprovisation(),
         jobPotencyModifiers: (state) => {
             const mods: PotencyModifier[] = [];
             if (params.combo && state.resources.get(params.combo.resource).availableAmount() === params.combo.resourceValue) {
@@ -295,13 +300,10 @@ const makeAbility_DNC = (name: SkillName, unlockLevel: number, cdName: ResourceT
     onApplication?: EffectFn<DNCState>,
     secondaryCooldown?: CooldownGroupProperies,
 }): Ability<DNCState> => {
-    const onConfirm: EffectFn<DNCState> = combineEffects(
-        (state) => state.tryConsumeResource(ResourceType.Improvisation),
-        params.onConfirm ?? NO_EFFECT,
-    );
     return makeAbility(ShellJob.DNC, name, unlockLevel, cdName, {
         ...params,
-        onConfirm: onConfirm,
+        onConfirm: params.onConfirm,
+        onExecute: (state) => state.cancelImprovisation(),
         jobPotencyModifiers: (state) => {
             const mods: PotencyModifier[] = [];
             if (state.hasResourceAvailable(ResourceType.StandardFinish)) {
@@ -335,13 +337,9 @@ const makeResourceAbility_DNC = (name: SkillName, unlockLevel: number, cdName: R
     onApplication?: EffectFn<DNCState>,
     secondaryCooldown?: CooldownGroupProperies,
 }): Ability<DNCState> => {
-    const onConfirm: EffectFn<DNCState> = combineEffects(
-        params.onConfirm ?? NO_EFFECT,
-        (state) => state.tryConsumeResource(ResourceType.Improvisation)
-    );
     return makeResourceAbility(ShellJob.DNC, name, unlockLevel, cdName, {
         ...params,
-        onConfirm
+        onExecute: (state) => state.cancelImprovisation(),
     });
 }
 
@@ -730,7 +728,6 @@ makeResourceAbility_DNC(SkillName.Devilment, 62, ResourceType.cd_Devilment, {
             (state as DNCState).gainProc(ResourceType.FlourishingStarfall)
         }
     },
-    onConfirm: (state) => state.tryConsumeResource(ResourceType.Improvisation)
 })
 makeGCD_DNC(SkillName.StarfallDance, 90, {
     startOnHotbar: false,
@@ -878,11 +875,7 @@ makeAbility_DNC(SkillName.ImprovisedFinish, 80, ResourceType.cd_ImprovisedFinish
     cooldown: 120,
     applicationDelay: 0.71,
     validateAttempt: (state) => !isDancing(state),
-    onConfirm: (state) => {
-        state.tryConsumeResource(ResourceType.Improvisation)
-        state.tryConsumeResource(ResourceType.RisingRhythm, true)
-        state.gainProc(ResourceType.ImprovisedFinish)
-    }
+    onConfirm: (state) => state.gainProc(ResourceType.ImprovisedFinish)
 })
 
 

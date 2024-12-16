@@ -1,7 +1,7 @@
 // making another file just so I don't keep clustering Controller.ts
 import {controller as ctl} from "./Controller";
 import {ActionNode, ActionType} from "./Record";
-import {BuffType, ResourceType, SkillName} from "../Game/Common";
+import {BuffType, LIMIT_BREAKS, ResourceType, SkillName} from "../Game/Common";
 import {
 	DamageStatisticsData,
 	DamageStatisticsMode,
@@ -295,7 +295,7 @@ export function calculateSelectedStats(props: {
 	}
 
 	ctl.record.iterateSelected(node=>{
-		if (node.type === ActionType.Skill && node.skillName) {
+		if (node.type === ActionType.Skill && node.skillName && !LIMIT_BREAKS.includes(node.skillName)) {
 			const checked = getSkillOrDotInclude(node.skillName);
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
@@ -389,7 +389,7 @@ export function calculateDamageStats(props: {
 				includePartyBuffs: true,
 				excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT")
 			});
-			if (checked) {
+			if (checked && !LIMIT_BREAKS.includes(node.skillName)) {
 				totalPotency.applied += p.applied;
 				totalPotency.pending += p.snapshottedButPending;
 			}
@@ -401,7 +401,7 @@ export function calculateDamageStats(props: {
 					mainTable.push({
 						skillName: node.skillName,
 						displayedModifiers: q.expandedNode.displayedModifiers,
-						basePotency: q.expandedNode.basePotency,
+						basePotency: LIMIT_BREAKS.includes(node.skillName) ? 0 : q.expandedNode.basePotency,
 						calculationModifiers: q.expandedNode.calculationModifiers,
 						usageCount: 0,
 						hitCount: 0,
@@ -413,6 +413,18 @@ export function calculateDamageStats(props: {
 					});
 					q.mainTableIndex = mainTable.length - 1;
 				}
+
+				const hit = node.hitBoss(bossIsUntargetable);
+				mainTable[q.mainTableIndex].usageCount += 1;
+				if (hit) {
+					mainTable[q.mainTableIndex].hitCount += 1;
+				}
+
+				// Stop processing potency statistics for limit breaks beyond this point
+				if (LIMIT_BREAKS.includes(node.skillName)) {
+					return;
+				}
+
 				let potencyWithoutPot = node.getPotency({
 					tincturePotencyMultiplier: 1,
 					untargetable: bossIsUntargetable,
@@ -434,11 +446,6 @@ export function calculateDamageStats(props: {
 					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT")
 				}).applied;
 
-				const hit = node.hitBoss(bossIsUntargetable);
-				mainTable[q.mainTableIndex].usageCount += 1;
-				if (hit) {
-					mainTable[q.mainTableIndex].hitCount += 1;
-				}
 				mainTable[q.mainTableIndex].totalPotencyWithoutPot += potencyWithoutPot;
 				mainTable[q.mainTableIndex].potPotency += (potencyWithPot - potencyWithoutPot);
 				mainTable[q.mainTableIndex].partyBuffPotency += (potencyWithPartyBuffs - potencyWithPot);

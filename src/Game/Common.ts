@@ -1,5 +1,5 @@
 import {BLMSkillName, BLMResourceType, BLMCooldownType, BLMTraitList, BLMTraitName} from "./Constants/BLM";
-import {PCTSkillName, PCTResourceType, PCTCooldownType, PCTTraitList, PCTTraitName } from "./Constants/PCT";
+import {PCTSkillName, PCTResourceType, PCTCooldownType, PCTTraitList, PCTTraitName} from "./Constants/PCT";
 import {RDMSkillName, RDMResourceType, RDMCooldownType, RDMTraitList, RDMTraitName} from "./Constants/RDM";
 import {DNCSkillName, DNCResourceType, DNCCooldownType, DNCTraitList, DNCTraitName} from "./Constants/DNC";
 import {SAMSkillName, SAMResourceType, SAMCooldownType, SAMTraitList, SAMTraitName} from "./Constants/SAM";
@@ -46,6 +46,9 @@ enum GeneralSkillName {
 
 	HeadGraze = "Head Graze", // Phys Ranged. Not bothering with Leg/Foot Graze at this point
 
+	Esuna = "Esuna",
+	Rescue = "Rescue",
+
 	Addle = "Addle",
 	Swiftcast = "Swiftcast",
 	LucidDreaming = "Lucid Dreaming",
@@ -69,6 +72,45 @@ enum GeneralSkillName {
 	Never = "Never",
 }
 
+export enum LimitBreakSkillName {
+
+	ShieldWall = "Shield Wall",
+	Stronghold = "Stronghold",
+	LastBastion = "Last Bastion",
+	LandWaker = "Land Waker",
+	DarkForce = "Dark Force",
+	GunmetalSoul = "Gunmetal Soul",
+
+	HealingWind = "Healing Wind",
+	BreathOfTheEarth = "Breath of the Earth",
+	PulseOfLife = "Pulse of Life",
+	AngelFeathers = "Angel Feathers",
+	AstralStasis = "Astral Stasis",
+	TechneMakre = "Techne Makre",
+
+	Braver = "Braver",
+	Bladedance = "Bladedance",
+	FinalHeaven = "Final Heaven",
+	DragonsongDive = "Dragonsong Dive",
+	Chimatsuri = "Chimatsuri",
+	DoomOfTheLiving = "Doom of the Living",
+	TheEnd = "The End",
+	WorldSwallower = "World-swallower",
+
+	BigShot = "Big Shot",
+	Desperado = "Desperado",
+	SagittariusArrow = "Sagittarius Arrow",
+	SatelliteBeam = "Satellite Beam",
+	CrimsonLotus = "Crimson Lotus",
+
+	Skyshard = "Skyshard",
+	Starstorm = "Starstorm",
+	Meteor = "Meteor",
+	Teraflare = "Teraflare",
+	VermillionScourge = "Vermillion Scourge",
+	ChromaticFantasy = "Chromatic Fantasy"
+}
+
 // Merge enums for each class: https://stackoverflow.com/a/55827534
 export const SkillName = {
 	...BLMSkillName,
@@ -79,11 +121,13 @@ export const SkillName = {
 	...MCHSkillName,
 	...RPRSkillName,
 	...WARSkillName,
+	...LimitBreakSkillName,
 	...GeneralSkillName,
 }
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export type SkillName = GeneralSkillName
+	| LimitBreakSkillName
 	| BLMSkillName
 	| PCTSkillName
 	| RDMSkillName
@@ -93,6 +137,8 @@ export type SkillName = GeneralSkillName
 	| RPRSkillName
 	| WARSkillName
 ;
+
+export const LIMIT_BREAKS = Object.values(LimitBreakSkillName) as SkillName[]
 
 export const enum SkillUnavailableReason {
 	Blocked = "blocked by CD, animation lock or caster tax",
@@ -200,6 +246,15 @@ enum GeneralResourceType {
 	Never = "Never",
 }
 
+export enum TankLBResourceType {
+	ShieldWall = "Shield Wall",
+	Stronghold = "Stronghold",
+	LastBastion = "Last Bastion",
+	LandWaker = "Land Waker",
+	DarkForce = "Dark Force",
+	GunmetalSoul = "Gunmetal Soul",
+}
+
 enum GeneralCooldownType {
 	cd_GCD = "cd_GCD", // [0, Constant.gcd]
 	cd_Addle = "cd_Addle", // [0, 1x]
@@ -210,6 +265,8 @@ enum GeneralCooldownType {
 	cd_ArmsLength = "cd_ArmsLength",
 	cd_Tincture = "cd_Tincture", // [0, 1x]
 	cd_Sprint = "cd_Sprint", // [0, 1x]
+
+	cd_Rescue = "cd_Rescue",
 
 	cd_Feint = "cd_Feint",
 	cd_TrueNorth = "cd_TrueNorth",
@@ -224,6 +281,26 @@ enum GeneralCooldownType {
 	cd_Shirk = "cd_Shirk",
 
 	cd_HeadGraze = "cd_HeadGraze",
+
+	cd_TankLB1 = "cd_TankLB1",
+	cd_TankLB2 = "cd_TankLB2",
+	cd_TankLB3 = "cd_TankLB3",
+
+	cd_HealerLB1 = "cd_HealerLB1",
+	cd_HealerLB2 = "cd_HealerLB2",
+	cd_HealerLB3 = "cd_HealerLB3",
+
+	cd_MeleeLB1 = "cd_MeleeLB1",
+	cd_MeleeLB2 = "cd_MeleeLB2",
+	cd_MeleeLB3 = "cd_MeleeLB3",
+
+	cd_RangedLB1 = "cd_RangedLB1",
+	cd_RangedLB2 = "cd_RangedLB2",
+	cd_RangedLB3 = "cd_RangedLB3",
+
+	cd_CasterLB1 = "cd_CasterLB1",
+	cd_CasterLB2 = "cd_CasterLB2",
+	cd_CasterLB3 = "cd_CasterLB3",
 }
 
 const CooldownType = {
@@ -253,6 +330,7 @@ type CooldownType = GeneralCooldownType
 export const ResourceType = {
 	...CooldownType,
 	...GeneralResourceType,
+	...TankLBResourceType,
 	...BLMResourceType,
 	...PCTResourceType,
 	...RDMResourceType,
@@ -266,6 +344,7 @@ export const ResourceType = {
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export type ResourceType = CooldownType
 	| GeneralResourceType
+	| TankLBResourceType
 	| BLMResourceType
 	| PCTResourceType
 	| RDMResourceType

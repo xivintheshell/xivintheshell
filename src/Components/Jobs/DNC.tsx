@@ -51,7 +51,7 @@ registerBuffIcon(ResourceType.StandardFinishPartner, "DNC/Standard Finish.png")
 
 export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
     // DNC doesn't put any debuffs on the enemy... but we can use this space for showing our dance partner!
-    override getEnemyBuffViewProps(): BuffProps[] {
+    override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
         const resources = this.state.resources
 
         const dancePartnerApplied = resources.get(ResourceType.DancePartner).availableAmount() > 0;
@@ -94,7 +94,7 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
         ]
     }
 
-    override getSelfBuffViewProps(): BuffProps[] {
+    override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
         const resources = this.state.resources
         
         // Job
@@ -124,13 +124,6 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
         const improvFinishCountdown = resources.timeTillReady(ResourceType.ImprovisedFinish)
         const risingRhythmStacks = resources.get(ResourceType.RisingRhythm).availableAmount();
         const shieldSambaCooldown = resources.timeTillReady(ResourceType.ShieldSamba)
-
-        // Role
-        const armsLengthCountdown = resources.timeTillReady(ResourceType.ArmsLength)
-
-        // Common
-        const tinctureCountdown = resources.timeTillReady(ResourceType.Tincture);
-        const sprintCountdown = resources.timeTillReady(ResourceType.Sprint);
 
         return [
             {
@@ -315,34 +308,10 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
                 timeRemaining: shieldSambaCooldown.toFixed(3),
                 className: shieldSambaCooldown > 0 ? "" : "hidden"
             },
-            {
-                rscType: ResourceType.ArmsLength,
-                onSelf: true,
-                enabled: true,
-                stacks: 1,
-                timeRemaining: armsLengthCountdown.toFixed(3),
-                className: armsLengthCountdown > 0 ? "" : "hidden"
-            },
-            {
-                rscType: ResourceType.Tincture,
-                onSelf: true,
-                enabled: true,
-                stacks:1,
-                timeRemaining: tinctureCountdown.toFixed(3),
-                className: tinctureCountdown > 0 ? "" : "hidden"
-            },
-            {
-                rscType: ResourceType.Sprint,
-                onSelf: true,
-                enabled: true,
-                stacks:1,
-                timeRemaining: sprintCountdown.toFixed(3),
-                className: sprintCountdown > 0 ? "" : "hidden"
-            }
         ]
     }
 
-    override getResourceViewProps(): ResourceDisplayProps[] {
+    override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
         const colors = getCurrentThemeColors();
         const resources = this.state.resources
 
@@ -400,6 +369,7 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
         
         return infos
     }
+
     override statusLayoutFn(props: StatusViewProps): React.ReactNode {
         return <div>
             <div style={{

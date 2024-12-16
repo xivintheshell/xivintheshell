@@ -40,8 +40,10 @@ import { BuffProps, registerBuffIcon, ResourceBarProps, ResourceCounterProps, Re
 ].forEach((buff) => registerBuffIcon(buff, `RPR/${buff}.png`));
 
 export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
-    override getEnemyBuffViewProps(): BuffProps[] {
+
+    override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
         const deathsDesignCountdown = this.state.resources.timeTillReady(ResourceType.DeathsDesign);
+        
         return [
             {
                 rscType: ResourceType.DeathsDesign,
@@ -50,11 +52,11 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
                 stacks: 1,
                 timeRemaining: deathsDesignCountdown.toFixed(3),
                 className: deathsDesignCountdown > 0 ? "" : "hidden"
-            }
+            },
         ]
     }
 
-    override getSelfBuffViewProps(): BuffProps[] {
+    override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
         const makeRprSelfTimer = (rscType: ResourceType) => {
             const cd = this.state.resources.timeTillReady(rscType);
             return {
@@ -88,6 +90,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
             ResourceType.Threshold,
             ResourceType.EnhancedHarpe,
         ].map(makeRprSelfTimer);
+
         buffProps.push(
 			{
                 rscType: ResourceType.Soulsow,
@@ -104,25 +107,14 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
                 className: this.state.hasResourceAvailable(ResourceType.ImmortalSacrifice) ? "" : "hidden",
                 timeRemaining: this.state.resources.timeTillReady(ResourceType.ImmortalSacrifice).toFixed(3),
             },
-			{
-				rscType: ResourceType.FlankPositional,
-				onSelf: true,
-				enabled: this.state.resources.get(ResourceType.FlankPositional).enabled,
-				stacks: 1,
-				className: "",
-			},
-            {
-                rscType: ResourceType.RearPositional,
-                onSelf: true,
-                enabled: this.state.resources.get(ResourceType.RearPositional).enabled,
-                stacks: 1,
-                className: "",
-            },
         );
 
-        return buffProps;
+        return [
+            ...buffProps,
+        ];
     }
-    override getResourceViewProps(): ResourceDisplayProps[] {
+
+    override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
         const colors = getCurrentThemeColors();
         const resources = this.state.resources;
         const soulGauge = resources.get(ResourceType.Soul).availableAmount();

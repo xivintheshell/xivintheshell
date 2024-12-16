@@ -1,6 +1,6 @@
 import React, {CSSProperties} from 'react'
 import {Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile} from "./Common";
-import {SkillName} from "../Game/Common";
+import {LIMIT_BREAKS, SkillName} from "../Game/Common";
 import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
 import {localize, localizeSkillName} from "./Localization";
@@ -549,6 +549,8 @@ export class DamageStatistics extends React.Component {
 			const hidePotencySkills: SkillName[] = [
 				// MCH: Queen and Wildfire have variable potencies per "tick" so just don't show them in the per-hit potency column
 				SkillName.AutomatonQueen, SkillName.Wildfire, 
+				// Limit Break potencies don't directly translate to player potency, so don't include it in the summary
+				...LIMIT_BREAKS
 			]
 			return hidePotencySkills.includes(skillName)
 		}
@@ -569,7 +571,7 @@ export class DamageStatistics extends React.Component {
 
 			// include checkbox
 			let includeCheckboxes: React.ReactNode[] = [];
-			if (!sameAsLast && props.row.basePotency > 0) {
+			if (!sameAsLast && props.row.basePotency > 0 && !LIMIT_BREAKS.includes(props.row.skillName)) {
 				includeCheckboxes.push(<input key="main" type={"checkbox"} style={{position: "relative", top: 2, marginRight: 10}} checked={includeInStats} onChange={()=>{
 					updateSkillOrDoTInclude({skillNameOrDoT: props.row.skillName, include: !includeInStats});
 				}}/>);
@@ -622,7 +624,7 @@ export class DamageStatistics extends React.Component {
 
 			// total potency
 			let totalPotencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.showPotency) {
+			if (props.row.showPotency && !LIMIT_BREAKS.includes(props.row.skillName)) {
 				totalPotencyNode = <span style={{textDecoration: includeInStats ? "none" : "line-through"}}>
 					{props.row.totalPotencyWithoutPot.toFixed(2)}
 					{props.row.potPotency > 0 ? <span style={{

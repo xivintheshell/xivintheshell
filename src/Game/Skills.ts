@@ -1,4 +1,4 @@
-import {Aspect, LevelSync, ResourceType, SkillName, TraitName} from './Common'
+import {Aspect, LevelSync, LimitBreakSkillName, ResourceType, SkillName, TraitName} from './Common'
 import {ShellJob, ALL_JOBS} from "../Controller/Common";
 import {ActionNode} from "../Controller/Record";
 import {PlayerState, GameState} from "./GameState";
@@ -97,6 +97,10 @@ interface BaseSkill<T extends PlayerState> {
 
 	// === EFFECTS ===
 
+	// Perform side effects that occur at the time the player presses the button
+	// This is mainly for things like cancelling channeled abilites, such as Meditate, Improvisation, Collective Unconscious, and Flamethrower
+	readonly onExecute: EffectFn<T>; 
+
 	// Perform side effects that occur on the cast confirm window.
 	// If the action became invalid between the start of the cast and the cast confirmation,
 	// then return a SkillError instead.
@@ -139,6 +143,13 @@ export type Ability<T extends PlayerState> = BaseSkill<T> & {
 	kind: "ability";
 }
 
+// Limit breaks (mostly) have a cast time but don't otherwise actually interact with the GCD
+export type LimitBreak<T extends PlayerState> = BaseSkill<T> & {
+	kind: "limitbreak"
+	animationLock: number
+	readonly castTimeFn: ResourceCalculationFn<T>;
+}
+
 /**
  * A Skill represents an action that a player can take.
  * 
@@ -153,7 +164,7 @@ export type Ability<T extends PlayerState> = BaseSkill<T> & {
  *   // castTimeFn, recastTimeFn, etc. are valid here
  * }
  */
-export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T>;
+export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T> | LimitBreak<T>;
 
 // Map tracking skills for each job.
 // This is automatically populated by the makeWeaponskill, makeSpell, and makeAbility helper functions.
@@ -254,12 +265,9 @@ function normalizeAssetPath(job: ShellJob, name: SkillName) {
  * - potency: 0
  * - applicationDelay: 0
  * - validateAttempt: function always returning true (valid)
- * - isInstantFn: function always returning true
+ * - isInstantFn: return true to indicate if this action is an instant cast. Defaults to false for spells and true for weapon skills
  * - onConfirm: empty function
  * - onApplication: empty function
- * 
- * TODO: If we ever branch out to non-BLM/PCT jobs, we should distinguish between
- * spells and weaponskills for sps/sks calculation purposes.
  */
 export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: SkillName, unlockLevel: number, params: Partial<{
 	assetPath: string,
@@ -277,6 +285,7 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 	applicationDelay: number,
 	validateAttempt: StatePredicate<T>,
 	isInstantFn: StatePredicate<T>,
+	onExecute: EffectFn<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 	secondaryCooldown?: CooldownGroupProperies,
@@ -303,12 +312,17 @@ export function makeSpell<T extends PlayerState>(jobs: ShellJob | ShellJob[], na
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		validateAttempt: params.validateAttempt ?? ((state) => true),
-		isInstantFn: params.isInstantFn ?? ((state) => true),
+		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
+		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 		applicationDelay: params.applicationDelay ?? 0,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
+	if (params.secondaryCooldown !== undefined) {
+		const {cdName, cooldown, maxCharges} = params.secondaryCooldown
+		jobs.forEach((job) => makeCooldown(job, cdName, cooldown!, maxCharges));
+	}
 	return info;
 };
 
@@ -328,6 +342,7 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 	applicationDelay: number,
 	validateAttempt: StatePredicate<T>,
 	isInstantFn: StatePredicate<T>,
+	onExecute: EffectFn<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 	secondaryCooldown?: CooldownGroupProperies,
@@ -354,7 +369,8 @@ export function makeWeaponskill<T extends PlayerState>(jobs: ShellJob | ShellJob
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		validateAttempt: params.validateAttempt ?? ((state) => true),
-		isInstantFn: params.isInstantFn ?? ((state) => true),
+		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
+		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 		applicationDelay: params.applicationDelay ?? 0,
@@ -396,6 +412,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 	jobPotencyModifiers: PotencyModifierFn<T>,
 	applicationDelay: number,
 	validateAttempt: StatePredicate<T>,
+	onExecute: EffectFn<T>,
 	onConfirm: EffectFn<T>,
 	onApplication: EffectFn<T>,
 	cooldown: number,
@@ -423,6 +440,7 @@ export function makeAbility<T extends PlayerState>(jobs: ShellJob | ShellJob[], 
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
+		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 	};
@@ -462,6 +480,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>,
 		jobPotencyModifiers?: PotencyModifierFn<T>,
 		validateAttempt?: StatePredicate<T>,
+		onExecute?: EffectFn<T>,
 		onConfirm?: EffectFn<T>,
 		onApplication?: EffectFn<T>,
 		assetPath?: string,
@@ -496,6 +515,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		highlightIf: params.highlightIf,
 		applicationDelay: params.applicationDelay,
 		validateAttempt: params.validateAttempt,
+		onExecute: params.onExecute,
 		onConfirm: params.onConfirm,
 		onApplication: onApplication,
 		assetPath: params.assetPath,
@@ -504,6 +524,67 @@ export function makeResourceAbility<T extends PlayerState>(
 		secondaryCooldown: params.secondaryCooldown
 	});
 };
+
+/**
+ * Declare a Limit Break ability.
+ *
+ * Only the ability's name and cooldown are mandatory. 
+ * Additionally, the tier, and the animation lock must be specified in the params object
+ * All optional params default as follows:
+ * - castTime: how long the LB takes to cast
+ * - potency: for DPS LBs, the relative LB potency of the skill
+ * - applicationDelay: how long after the LB confirmation are the effects applied?
+ * - onExecute: function defining effects that take place on button press
+ * - onConfirm: function defining effects that take place on cast confirm
+ * - onApplication: function defining effects that take place on application
+ *
+ * The following parameter is not stored with the Ability object, but instead used to
+ * select which skill icon is shown
+ * - tier: which tier of limit break is this? 
+ */
+export function makeLimitBreak<T extends PlayerState>(jobs: ShellJob | ShellJob[], name: LimitBreakSkillName, cdName: ResourceType, params: {
+	tier: '1' | '2' | '3',
+	animationLock: number,
+	applicationDelay?: number,
+	onExecute?: EffectFn<T>,
+	onConfirm?: EffectFn<T>,
+	onApplication?: EffectFn<T>,
+	castTime?: number,
+	potency?: number
+}): LimitBreak<T> {
+	if (!Array.isArray(jobs)) {
+		jobs = [jobs];
+	}
+	const assetName = "Limit Break " + params.tier
+	const info: LimitBreak<T> = {
+		kind: "limitbreak",
+		name: name,
+		animationLock: params.animationLock,
+		assetPath: `General/${assetName}.png`,
+		unlockLevel: 1,
+		autoUpgrade: undefined,
+		autoDowngrade: undefined,
+		cdName,
+		secondaryCd: undefined,
+		aspect: Aspect.Other,
+		replaceIf: [],
+		startOnHotbar: true,
+		castTimeFn: fnify(params.castTime, 0),
+		highlightIf: (state) => false,
+		manaCostFn: (state) => 0,
+		potencyFn: fnify(params.potency, 0),
+		jobPotencyModifiers: (state) => [],
+		applicationDelay: params.applicationDelay ?? 0,
+		validateAttempt: (state) => true,
+		onExecute: params.onExecute ?? NO_EFFECT,
+		onConfirm: params.onConfirm ?? NO_EFFECT,
+		onApplication: params.onApplication ?? NO_EFFECT,
+	};
+	jobs.forEach((job) => setSkill(job, info.name, info));
+	// Fudge the "cooldown" as the sum of the cast time and the animation lock to make the grey bar on the timeline look right
+	jobs.forEach((job) => makeCooldown(job, cdName, (params.castTime ?? 0) + params.animationLock, 1));
+	return info;
+}
 
 // Dummy skill to avoid a hard crash when a skill info isn't found
 const NEVER_SKILL = makeAbility(ALL_JOBS, SkillName.Never, 1, ResourceType.Never, {
