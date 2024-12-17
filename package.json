@@ -53,8 +53,11 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@yikes2000/prettier-plugin-merge-extras": "^0.7.1-extras.4",
     "canvas": "^2.11.2",
+    "eslint-config-prettier": "^9.1.0",
     "gh-pages": "^6.1.1",
+    "prettier": "^3.4.2",
     "react-app-rewired": "^2.2.1",
     "react-scripts": "^5.0.1"
   }
