@@ -5,7 +5,8 @@
 			"Limit breaks for all jobs!",
 			"[MCH][DNC] Removed testing tag",
 			"Updated \"About this tool\" section",
-			"More underlying implementation changes"
+			"More underlying implementation changes",
+			"[PCT] Made Hammer combo expire with Hammer Time buff (changed in 7.1)"
 		]
 	},
 	{
