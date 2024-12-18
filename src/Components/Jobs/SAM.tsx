@@ -4,12 +4,12 @@ import {
 	ResourceBarProps,
 	ResourceCounterProps,
 	ResourceDisplayProps,
-	StatusPropsGenerator
+	StatusPropsGenerator,
 } from "../StatusDisplay";
-import {ResourceType} from "../../Game/Common";
-import {SAMState} from "../../Game/Jobs/SAM";
-import {getCurrentThemeColors} from "../../Components/ColorTheme";
-import {localize} from "../../Components/Localization";
+import { ResourceType } from "../../Game/Common";
+import { SAMState } from "../../Game/Jobs/SAM";
+import { getCurrentThemeColors } from "../../Components/ColorTheme";
+import { localize } from "../../Components/Localization";
 
 [
 	ResourceType.MeikyoShisui,
@@ -30,10 +30,9 @@ import {localize} from "../../Components/Localization";
 ].forEach((buff) => registerBuffIcon(buff, `SAM/${buff}.png`));
 
 export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
-	
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
 		const DoTCountdown = this.state.resources.timeTillReady(ResourceType.HiganbanaDoT);
-		
+
 		return [
 			{
 				rscType: ResourceType.HiganbanaDoT,
@@ -41,7 +40,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 				enabled: true,
 				stacks: 1,
 				timeRemaining: DoTCountdown.toFixed(3),
-				className: DoTCountdown > 0 ? "" : "hidden"
+				className: DoTCountdown > 0 ? "" : "hidden",
 			},
 		];
 	}
@@ -56,7 +55,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 				enabled: true,
 				stacks: resources.get(rscType).availableAmount(),
 				timeRemaining: cd.toFixed(3),
-				className: cd > 0 ? "" : "hidden"
+				className: cd > 0 ? "" : "hidden",
 			};
 		};
 
@@ -72,7 +71,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			makeSamuraiTimer(ResourceType.ThirdEye),
 			makeSamuraiTimer(ResourceType.Tengentsu),
 			makeSamuraiTimer(ResourceType.TengentsusForesight),
-			makeSamuraiTimer(ResourceType.Meditate)
+			makeSamuraiTimer(ResourceType.Meditate),
 		];
 	}
 
@@ -97,14 +96,14 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			},
 			{
 				kind: "bar",
-				name: localize({en: "kenki"}),
+				name: localize({ en: "kenki" }),
 				color: colors.sam.kenki,
 				progress: kenki / 100,
 				valueString: kenki.toFixed(0),
 			} as ResourceBarProps,
 			{
 				kind: "counter",
-				name: localize({en: "meditation"}),
+				name: localize({ en: "meditation" }),
 				color: colors.sam.meditation,
 				currentStacks: meditation,
 				maxStacks: 3,

@@ -1,8 +1,8 @@
-import {FileType} from "./Common";
-import {BuffType, SkillName, SkillReadyStatus} from "../Game/Common";
-import {GameConfig} from "../Game/GameConfig"
-import {Potency} from "../Game/Potency";
-import {controller} from "./Controller";
+import { FileType } from "./Common";
+import { BuffType, SkillName, SkillReadyStatus } from "../Game/Common";
+import { GameConfig } from "../Game/GameConfig";
+import { Potency } from "../Game/Potency";
+import { controller } from "./Controller";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -34,7 +34,7 @@ export class ActionNode {
 	type: ActionType;
 	waitDuration: number = 0;
 	skillName?: SkillName;
-	buffName? : string;
+	buffName?: string;
 
 	next?: ActionNode = undefined;
 
@@ -59,9 +59,13 @@ export class ActionNode {
 		return copy;
 	}
 
-	getNodeIndex() { return this.#nodeIndex; }
+	getNodeIndex() {
+		return this.#nodeIndex;
+	}
 
-	isSelected() { return this.#selected; }
+	isSelected() {
+		return this.#selected;
+	}
 
 	addBuff(rsc: BuffType) {
 		this.#capturedBuffs.add(rsc);
@@ -73,9 +77,8 @@ export class ActionNode {
 
 	hasPartyBuff() {
 		let snapshotTime;
-		if (this.#potencies.length === 0) return false
-		if (this.#potencies.length > 0) 
-			snapshotTime = this.#potencies[0].snapshotTime;
+		if (this.#potencies.length === 0) return false;
+		if (this.#potencies.length > 0) snapshotTime = this.#potencies[0].snapshotTime;
 
 		return snapshotTime && controller.game.getPartyBuffs(snapshotTime).size > 0;
 	}
@@ -83,14 +86,13 @@ export class ActionNode {
 	getPartyBuffs() {
 		let snapshotTime;
 		if (this.#potencies.length === 0) return [];
-		if (this.#potencies.length > 0) 
-			snapshotTime = this.#potencies[0].snapshotTime;
+		if (this.#potencies.length > 0) snapshotTime = this.#potencies[0].snapshotTime;
 
-		return (snapshotTime) ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
+		return snapshotTime ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
 	}
 
 	resolveAll(displayTime: number) {
-		this.#potencies.forEach(p=>{
+		this.#potencies.forEach((p) => {
 			p.resolve(displayTime);
 		});
 	}
@@ -111,14 +113,14 @@ export class ActionNode {
 	}
 
 	getPotency(props: {
-		tincturePotencyMultiplier: number,
-		untargetable: (t: number) => boolean,
-		includePartyBuffs: boolean,
-		excludeDoT?: boolean
+		tincturePotencyMultiplier: number;
+		untargetable: (t: number) => boolean;
+		includePartyBuffs: boolean;
+		excludeDoT?: boolean;
 	}) {
 		let res = {
 			applied: 0,
-			snapshottedButPending: 0
+			snapshottedButPending: 0,
 		};
 		for (let i = 0; i < this.#potencies.length; i++) {
 			if (i === 0 || !props.excludeDoT) {
@@ -191,12 +193,12 @@ export class Line {
 	getFirstAction() {
 		return this.head;
 	}
-	getLastAction(condition? : (node: ActionNode) => boolean) {
-		if (condition===undefined) {
+	getLastAction(condition?: (node: ActionNode) => boolean) {
+		if (condition === undefined) {
 			return this.tail;
 		} else {
-			let lastMatch : ActionNode | undefined = undefined;
-			this.iterateAll(node=>{
+			let lastMatch: ActionNode | undefined = undefined;
+			this.iterateAll((node) => {
 				if (condition(node)) {
 					lastMatch = node;
 				}
@@ -204,7 +206,7 @@ export class Line {
 			return lastMatch;
 		}
 	}
-	serialized(): {name: string, actions: object[]} {
+	serialized(): { name: string; actions: object[] } {
 		let list = [];
 		let itr = this.head;
 		while (itr) {
@@ -221,7 +223,7 @@ export class Line {
 		}
 		return {
 			name: this.name,
-			actions: list
+			actions: list,
 		};
 	}
 	// format: []
@@ -233,10 +235,10 @@ export class Line {
 }
 
 export type RecordValidStatus = {
-	isValid: boolean,
-	firstInvalidAction: ActionNode | undefined,
-	invalidReason: SkillReadyStatus | undefined,
-	invalidTime: number | undefined,
+	isValid: boolean;
+	firstInvalidAction: ActionNode | undefined;
+	invalidReason: SkillReadyStatus | undefined;
+	invalidTime: number | undefined;
 };
 
 // information abt a timeline
@@ -280,9 +282,9 @@ export class Record extends Line {
 		this.startIsPivot = true;
 	}
 	unselectAll() {
-		this.iterateAll(itr=>{
+		this.iterateAll((itr) => {
 			itr.unselect();
-		})
+		});
 		this.selectionStart = undefined;
 		this.selectionEnd = undefined;
 		this.startIsPivot = true;
@@ -291,9 +293,9 @@ export class Record extends Line {
 		this.unselectAll();
 		this.selectionStart = first;
 		this.selectionEnd = last;
-		this.iterateSelected(itr=>{
+		this.iterateSelected((itr) => {
 			itr.select();
-		})
+		});
 	}
 	selectUntil(node: ActionNode) {
 		if (this.selectionStart && this.selectionStart === this.selectionEnd) {
@@ -341,7 +343,8 @@ export class Record extends Line {
 			}
 		}
 	}
-	moveSelected(offset: number) { // positive: move right; negative: move left
+	moveSelected(offset: number) {
+		// positive: move right; negative: move left
 		if (offset === 0) return undefined;
 		let firstSelected = this.getFirstSelection();
 		let lastSelected = this.getLastSelection();
@@ -367,25 +370,27 @@ export class Record extends Line {
 		}
 
 		// temporarily label the unselected nodes with an index
-		let nodesArray : ActionNode[] = [];
+		let nodesArray: ActionNode[] = [];
 		let nodeBeforeSelectionIdx = -1;
 
 		let idx = 0;
 		itr = this.getFirstAction();
 		while (itr) {
-			 nodesArray.push(itr);
-			 if (itr === oldNodeBeforeSelection) {
-				  nodeBeforeSelectionIdx = idx;
-			 }
+			nodesArray.push(itr);
+			if (itr === oldNodeBeforeSelection) {
+				nodeBeforeSelectionIdx = idx;
+			}
 			itr = itr.next;
 			idx++;
 		}
 
 		// insert back the selection chain
 		let newIndexBeforeSelection = nodeBeforeSelectionIdx + offset;
-		if (newIndexBeforeSelection >= nodesArray.length) newIndexBeforeSelection = nodesArray.length - 1;
+		if (newIndexBeforeSelection >= nodesArray.length)
+			newIndexBeforeSelection = nodesArray.length - 1;
 
-		let newNodeBeforeSelection = newIndexBeforeSelection < 0 ? undefined : nodesArray[newIndexBeforeSelection];
+		let newNodeBeforeSelection =
+			newIndexBeforeSelection < 0 ? undefined : nodesArray[newIndexBeforeSelection];
 		if (newNodeBeforeSelection) {
 			let newNodeAfterSelection = newNodeBeforeSelection.next;
 			newNodeBeforeSelection.next = firstSelected;
@@ -398,7 +403,8 @@ export class Record extends Line {
 		let firstEditedNode;
 		if (offset < 0) firstEditedNode = this.getFirstSelection();
 		else {
-			if (nodeBeforeSelectionIdx >= 0) firstEditedNode = nodesArray[nodeBeforeSelectionIdx].next;
+			if (nodeBeforeSelectionIdx >= 0)
+				firstEditedNode = nodesArray[nodeBeforeSelectionIdx].next;
 			else firstEditedNode = this.head;
 		}
 		return firstEditedNode;
@@ -409,7 +415,7 @@ export class Record extends Line {
 		if (!firstSelected) return undefined;
 		this.unselectAll();
 
-		let firstBeforeSelected : ActionNode | undefined = undefined;
+		let firstBeforeSelected: ActionNode | undefined = undefined;
 		let itr = this.getFirstAction();
 		while (itr) {
 			if (itr.next === firstSelected) {
@@ -429,7 +435,7 @@ export class Record extends Line {
 			firstBeforeSelected.next = lastSelected?.next;
 		}
 		if (firstBeforeSelected) {
-			return firstBeforeSelected===this.tail ? this.tail : firstBeforeSelected.next;
+			return firstBeforeSelected === this.tail ? this.tail : firstBeforeSelected.next;
 		}
 		return this.head;
 	}
@@ -463,6 +469,4 @@ export class Record extends Line {
 		}
 		return copy;
 	}
-
 }
-

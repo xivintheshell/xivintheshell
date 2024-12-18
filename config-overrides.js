@@ -3,13 +3,14 @@
 
 /* config-overrides.js */
 module.exports = {
-	webpack: function(config, env) {
-		config.module.rules = [...config.module.rules,
+	webpack: function (config, env) {
+		config.module.rules = [
+			...config.module.rules,
 			{
 				test: /\.(png|jpe?g|gif)$/i,
-				type: "asset/resource"
-			}
+				type: "asset/resource",
+			},
 		];
 		return config;
-	}
-}
+	},
+};

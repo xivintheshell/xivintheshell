@@ -1,20 +1,24 @@
 import fs from "node:fs";
-import {controller} from "./Controller/Controller";
-import {TickMode, ShellJob} from "./Controller/Common";
-import {DEFAULT_BLM_CONFIG, GameConfig} from "./Game/GameConfig";
-import {PotencyModifierType} from "./Game/Potency";
-import {ResourceType, SkillName} from "./Game/Common";
-import {XIVMath} from "./Game/XIVMath";
-import {SAMState} from "./Game/Jobs/SAM";
-import {DamageStatisticsData, DamageStatisticsMode, mockDamageStatUpdateFn} from "./Components/DamageStatistics";
+import { controller } from "./Controller/Controller";
+import { TickMode, ShellJob } from "./Controller/Common";
+import { DEFAULT_BLM_CONFIG, GameConfig } from "./Game/GameConfig";
+import { PotencyModifierType } from "./Game/Potency";
+import { ResourceType, SkillName } from "./Game/Common";
+import { XIVMath } from "./Game/XIVMath";
+import { SAMState } from "./Game/Jobs/SAM";
+import {
+	DamageStatisticsData,
+	DamageStatisticsMode,
+	mockDamageStatUpdateFn,
+} from "./Components/DamageStatistics";
 
 // TODO figure out how to share test code :3
 
 type ShortDamageEntry = {
-	skillName: SkillName,
-	displayedModifiers: PotencyModifierType[],
-	hitCount: number,
-}
+	skillName: SkillName;
+	displayedModifiers: PotencyModifierType[];
+	hitCount: number;
+};
 
 // If this configuration flag is set to `true`, then the fight record of each test run
 // will be exported locally to "$TEST_NAME.txt".
@@ -28,12 +32,12 @@ const resetDamageData = () => {
 		time: 0,
 		tinctureBuffPercentage: 0,
 		countdown: 0,
-		totalPotency: {applied: 0, pending: 0},
+		totalPotency: { applied: 0, pending: 0 },
 		lastDamageApplicationTime: 0,
-		gcdSkills: {applied: 0, pending: 0},
+		gcdSkills: { applied: 0, pending: 0 },
 		mainTable: [],
 		mainTableSummary: {
-			totalPotencyWithoutPot: 0, 
+			totalPotencyWithoutPot: 0,
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
 		},
@@ -50,7 +54,7 @@ const resetDamageData = () => {
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
 		},
-		mode: DamageStatisticsMode.Normal
+		mode: DamageStatisticsMode.Normal,
 	};
 };
 
@@ -71,9 +75,10 @@ const compareDamageTables = (expectedDamageEntries: Array<ShortDamageEntry>) => 
 		// we need to compare on their displayedModifiers field.
 		// Since the modifiers lists are short, just concat them and treat that as a string.
 		if (nameCmp === 0) {
-			return a.displayedModifiers.map((x) => x.toString()).join().localeCompare(
-				b.displayedModifiers.map((x) => x.toString()).join()
-			);
+			return a.displayedModifiers
+				.map((x) => x.toString())
+				.join()
+				.localeCompare(b.displayedModifiers.map((x) => x.toString()).join());
 		}
 		return nameCmp;
 	};
@@ -90,13 +95,13 @@ beforeEach(() => {
 		tickMode: TickMode.Manual,
 	});
 	if (controller.timeline.slots.length === 0) {
-		controller.timeline.addSlot()
+		controller.timeline.addSlot();
 	}
 	// clear stats from the last run
 	resetDamageData();
 	// monkeypatch the updateDamageStats function to avoid needing to initialize the frontend
 	mockDamageStatUpdateFn((newData: Partial<DamageStatisticsData>) => {
-		damageData = {...damageData, ...newData};
+		damageData = { ...damageData, ...newData };
 	});
 	// config reset is handled in testWithConfig helper
 });
@@ -110,12 +115,11 @@ afterEach(() => {
 	jest.restoreAllMocks();
 });
 
-
 // Run a test with the provided partial GameConfig and test function
 // Leave `params`` as an empty object to use the default config
 const testWithConfig = (params: Partial<GameConfig>, testFn: () => void) => {
 	return () => {
-		const newConfig = {...DEFAULT_BLM_CONFIG, job: ShellJob.SAM};
+		const newConfig = { ...DEFAULT_BLM_CONFIG, job: ShellJob.SAM };
 		Object.assign(newConfig, params);
 		controller.setConfigAndRestart(newConfig);
 		testFn();
@@ -127,7 +131,7 @@ const applySkill = (skillName: SkillName) => {
 	// TEST-ONLY HACK: set lastAttemptedSkill to the skill we're about to use
 	// to ensure that trailing wait times are always omitted
 	controller.lastAttemptedSkill = skillName;
-	controller.requestUseSkill({skillName: skillName});
+	controller.requestUseSkill({ skillName: skillName });
 };
 
 it("has correct GCD under fuka", () => {
@@ -137,42 +141,48 @@ it("has correct GCD under fuka", () => {
 	expect(XIVMath.preTaxGcd(100, 693, 2.5, ResourceType.Fuka)).toEqual(2.14);
 });
 
-it("continues combos after a meikyo", testWithConfig({}, () => {
-	[
-		SkillName.MeikyoShisui,
-		SkillName.Shifu,
-		SkillName.Shifu,
-		SkillName.Shifu,
-		SkillName.Kasha, // combo'd
-	].forEach(applySkill);
-	// wait for damage applications
-	controller.step(4);
-	const state = controller.game as SAMState;
-	expect(state.resources.get(ResourceType.Kenki).availableAmount()).toEqual(25);
-	compareDamageTables([
-		{
-			skillName: SkillName.Shifu,
-			displayedModifiers: [PotencyModifierType.COMBO],
-			hitCount: 3,
-		},
-		{
-			skillName: SkillName.Kasha,
-			displayedModifiers: [PotencyModifierType.COMBO, PotencyModifierType.POSITIONAL],
-			hitCount: 1,
-		},
-		{
-			skillName: SkillName.MeikyoShisui,
-			displayedModifiers: [],
-			hitCount: 1,
-		},
-	]);
-}));
+it(
+	"continues combos after a meikyo",
+	testWithConfig({}, () => {
+		[
+			SkillName.MeikyoShisui,
+			SkillName.Shifu,
+			SkillName.Shifu,
+			SkillName.Shifu,
+			SkillName.Kasha, // combo'd
+		].forEach(applySkill);
+		// wait for damage applications
+		controller.step(4);
+		const state = controller.game as SAMState;
+		expect(state.resources.get(ResourceType.Kenki).availableAmount()).toEqual(25);
+		compareDamageTables([
+			{
+				skillName: SkillName.Shifu,
+				displayedModifiers: [PotencyModifierType.COMBO],
+				hitCount: 3,
+			},
+			{
+				skillName: SkillName.Kasha,
+				displayedModifiers: [PotencyModifierType.COMBO, PotencyModifierType.POSITIONAL],
+				hitCount: 1,
+			},
+			{
+				skillName: SkillName.MeikyoShisui,
+				displayedModifiers: [],
+				hitCount: 1,
+			},
+		]);
+	}),
+);
 
-it("generates kenki and shoha in meditation", testWithConfig({}, () => {
-	const state = controller.game as SAMState;
-	state.resources.get(ResourceType.InCombat).overrideCurrentValue(1);
-	applySkill(SkillName.Meditate);
-	controller.step(30); // longer than the duration to make sure we don't keep ticking
-	expect(state.resources.get(ResourceType.Kenki).availableAmount()).toEqual(50);
-	expect(state.resources.get(ResourceType.Meditation).availableAmount()).toEqual(3);
-}));
+it(
+	"generates kenki and shoha in meditation",
+	testWithConfig({}, () => {
+		const state = controller.game as SAMState;
+		state.resources.get(ResourceType.InCombat).overrideCurrentValue(1);
+		applySkill(SkillName.Meditate);
+		controller.step(30); // longer than the duration to make sure we don't keep ticking
+		expect(state.resources.get(ResourceType.Kenki).availableAmount()).toEqual(50);
+		expect(state.resources.get(ResourceType.Meditation).availableAmount()).toEqual(3);
+	}),
+);

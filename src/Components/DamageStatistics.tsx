@@ -1,300 +1,307 @@
-import React, {CSSProperties} from 'react'
-import {Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile} from "./Common";
-import {LIMIT_BREAKS, SkillName} from "../Game/Common";
-import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
-import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
-import {localize, localizeSkillName} from "./Localization";
-import {controller} from "../Controller/Controller";
-import {ShellJob} from "../Controller/Common";
+import React, { CSSProperties } from "react";
+import { Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile } from "./Common";
+import { LIMIT_BREAKS, SkillName } from "../Game/Common";
+import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
+import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
+import { localize, localizeSkillName } from "./Localization";
+import { controller } from "../Controller/Controller";
+import { ShellJob } from "../Controller/Common";
 import {
 	allSkillsAreIncluded,
 	DOT_SKILLS,
 	getSkillOrDotInclude,
 	getTargetableDurationBetween,
-	updateSkillOrDoTInclude
+	updateSkillOrDoTInclude,
 } from "../Controller/DamageStatistics";
-import {getCachedValue, setCachedValue} from "../Controller/Common";
+import { getCachedValue, setCachedValue } from "../Controller/Common";
 
 export type DamageStatsMainTableEntry = {
-	skillName: SkillName,
-	displayedModifiers: PotencyModifierType[],
-	basePotency: number,
-	calculationModifiers: PotencyModifier[],
-	usageCount: number,
-	hitCount: number,
-	totalPotencyWithoutPot: number,
-	showPotency: boolean,
-	potPotency: number,
-	potCount: number,
-	partyBuffPotency: number,
+	skillName: SkillName;
+	displayedModifiers: PotencyModifierType[];
+	basePotency: number;
+	calculationModifiers: PotencyModifier[];
+	usageCount: number;
+	hitCount: number;
+	totalPotencyWithoutPot: number;
+	showPotency: boolean;
+	potPotency: number;
+	potCount: number;
+	partyBuffPotency: number;
 };
 
 export type DamageStatsDoTTableEntry = {
-	castTime: number,
-	applicationTime: number,
-	displayedModifiers: PotencyModifierType[],
-	gap: number,
-	override: number,
-	mainPotencyHit: boolean,
-	baseMainPotency: number,
-	baseDotPotency: number,
-	calculationModifiers: PotencyModifier[],
-	totalNumTicks: number,
-	numHitTicks: number,
-	potencyWithoutPot: number,
-	potPotency: number,
-	partyBuffPotency: number,
-}
+	castTime: number;
+	applicationTime: number;
+	displayedModifiers: PotencyModifierType[];
+	gap: number;
+	override: number;
+	mainPotencyHit: boolean;
+	baseMainPotency: number;
+	baseDotPotency: number;
+	calculationModifiers: PotencyModifier[];
+	totalNumTicks: number;
+	numHitTicks: number;
+	potencyWithoutPot: number;
+	potPotency: number;
+	partyBuffPotency: number;
+};
 
 export type SelectedStatisticsData = {
-	totalDuration: number,
-	targetableDuration: number,
+	totalDuration: number;
+	targetableDuration: number;
 	potency: {
-		applied: number,
-		pending: number
-	},
+		applied: number;
+		pending: number;
+	};
 	gcdSkills: {
-		applied: number,
-		pending: number
-	}
-}
+		applied: number;
+		pending: number;
+	};
+};
 
 export enum DamageStatisticsMode {
 	Normal,
 	Historical,
-	Selected
+	Selected,
 }
 
 export type DamageStatisticsData = {
-	time: number,
-	tinctureBuffPercentage: number,
-	countdown: number,
+	time: number;
+	tinctureBuffPercentage: number;
+	countdown: number;
 	totalPotency: {
-		applied: number,
-		pending: number
-	},
-	lastDamageApplicationTime: number,
+		applied: number;
+		pending: number;
+	};
+	lastDamageApplicationTime: number;
 	gcdSkills: {
-		applied: number,
-		pending: number
-	},
-	mainTable: DamageStatsMainTableEntry[],
+		applied: number;
+		pending: number;
+	};
+	mainTable: DamageStatsMainTableEntry[];
 	mainTableSummary: {
-		totalPotencyWithoutPot: number,
-		totalPotPotency: number,
-		totalPartyBuffPotency: number,
-	},
-	dotTable: DamageStatsDoTTableEntry[],
+		totalPotencyWithoutPot: number;
+		totalPotPotency: number;
+		totalPartyBuffPotency: number;
+	};
+	dotTable: DamageStatsDoTTableEntry[];
 	dotTableSummary: {
-		cumulativeGap: number,
-		cumulativeOverride: number,
-		timeSinceLastDoTDropped: number,
-		totalTicks: number,
-		maxTicks: number,
-		dotCoverageTimeFraction: number,
-		theoreticalMaxTicks: number,
-		totalPotencyWithoutPot: number,
-		totalPotPotency: number,
-		totalPartyBuffPotency: number,
-	},
-	mode: DamageStatisticsMode,
-}
+		cumulativeGap: number;
+		cumulativeOverride: number;
+		timeSinceLastDoTDropped: number;
+		totalTicks: number;
+		maxTicks: number;
+		dotCoverageTimeFraction: number;
+		theoreticalMaxTicks: number;
+		totalPotencyWithoutPot: number;
+		totalPotPotency: number;
+		totalPartyBuffPotency: number;
+	};
+	mode: DamageStatisticsMode;
+};
 
 export let updateDamageStats = (data: Partial<DamageStatisticsData>) => {};
 export let updateSelectedStats = (data: Partial<SelectedStatisticsData>) => {};
 
 // hook for tests to access damage stats
-export const mockDamageStatUpdateFn = (updateFn: (update: Partial<DamageStatisticsData>) => void) => {
+export const mockDamageStatUpdateFn = (
+	updateFn: (update: Partial<DamageStatisticsData>) => void,
+) => {
 	updateDamageStats = updateFn;
 };
 
 function buffName(buff: PotencyModifierType) {
 	let text = "";
 	if (buff === PotencyModifierType.AF3) {
-		text = localize({en: "AF3", zh: "三层火"}) as string;
+		text = localize({ en: "AF3", zh: "三层火" }) as string;
 	} else if (buff === PotencyModifierType.AF2) {
-		text = localize({en: "AF2", zh: "二层火"}) as string;
+		text = localize({ en: "AF2", zh: "二层火" }) as string;
 	} else if (buff === PotencyModifierType.AF1) {
-		text = localize({en: "AF1", zh: "一层火"}) as string;
+		text = localize({ en: "AF1", zh: "一层火" }) as string;
 	} else if (buff === PotencyModifierType.UI3) {
-		text = localize({en: "UI3", zh: "三层冰"}) as string;
+		text = localize({ en: "UI3", zh: "三层冰" }) as string;
 	} else if (buff === PotencyModifierType.UI2) {
-		text = localize({en: "UI2", zh: "二层冰"}) as string;
+		text = localize({ en: "UI2", zh: "二层冰" }) as string;
 	} else if (buff === PotencyModifierType.UI1) {
-		text = localize({en: "UI1", zh: "一层冰"}) as string;
+		text = localize({ en: "UI1", zh: "一层冰" }) as string;
 	} else if (buff === PotencyModifierType.ENO) {
-		text = localize({en: "enochian", zh: "天语"}) as string;
+		text = localize({ en: "enochian", zh: "天语" }) as string;
 	} else if (buff === PotencyModifierType.POT) {
-		text = localize({en: "pot", zh: "爆发药"}) as string;
+		text = localize({ en: "pot", zh: "爆发药" }) as string;
 	} else if (buff === PotencyModifierType.PARTY) {
-		text = localize({en: "party", zh: "团辅"}) as string;
+		text = localize({ en: "party", zh: "团辅" }) as string;
 	} else if (buff === PotencyModifierType.AUTO_CDH) {
-		text = localize({en: "auto crit/direct hit", zh: "必直暴"}) as string;
+		text = localize({ en: "auto crit/direct hit", zh: "必直暴" }) as string;
 	} else if (buff === PotencyModifierType.STARRY) {
-		text = localize({en: "starry muse", zh: "星空构想"}) as string;
+		text = localize({ en: "starry muse", zh: "星空构想" }) as string;
 	} else if (buff === PotencyModifierType.EMBOLDEN_M) {
-		text = localize({en: "embolden", zh: "鼓励"}) as string;
+		text = localize({ en: "embolden", zh: "鼓励" }) as string;
 	} else if (buff === PotencyModifierType.MANAFIC) {
-		text = localize({en: "manafication", zh: "魔元化"}) as string;
+		text = localize({ en: "manafication", zh: "魔元化" }) as string;
 	} else if (buff === PotencyModifierType.ACCELERATION) {
-		text = localize({en: "acceleration", zh: "促进"}) as string;
+		text = localize({ en: "acceleration", zh: "促进" }) as string;
 	} else if (buff === PotencyModifierType.STANDARD_SINGLE) {
-		text = localize({en: "single standard finish"}) as string;
+		text = localize({ en: "single standard finish" }) as string;
 	} else if (buff === PotencyModifierType.STANDARD_DOUBLE) {
-		text = localize({en: "double standard finish"}) as string;
+		text = localize({ en: "double standard finish" }) as string;
 	} else if (buff === PotencyModifierType.TECHNICAL_SINGLE) {
-		text = localize({en: "single technical finish"}) as string;
+		text = localize({ en: "single technical finish" }) as string;
 	} else if (buff === PotencyModifierType.TECHNICAL_DOUBLE) {
-		text = localize({en: "double technical finish"}) as string;
+		text = localize({ en: "double technical finish" }) as string;
 	} else if (buff === PotencyModifierType.TECHNICAL_TRIPLE) {
-		text = localize({en: "triple technical finish"}) as string;
+		text = localize({ en: "triple technical finish" }) as string;
 	} else if (buff === PotencyModifierType.TECHNICAL_QUADRUPLE) {
-		text = localize({en: "quadruple technical finish"}) as string;
+		text = localize({ en: "quadruple technical finish" }) as string;
 	} else if (buff === PotencyModifierType.DEVILMENT) {
-		text = localize({en: "devilment"}) as string;
+		text = localize({ en: "devilment" }) as string;
 	} else if (buff === PotencyModifierType.COMBO) {
-		text = localize({en: "combo", zh: "连击"}) as string;
+		text = localize({ en: "combo", zh: "连击" }) as string;
 	} else if (buff === PotencyModifierType.FUGETSU) {
-		text = localize({en: "fugetsu"}) as string;
+		text = localize({ en: "fugetsu" }) as string;
 	} else if (buff === PotencyModifierType.AUTO_CRIT) {
-		text = localize({en: "auto crit"}) as string;
+		text = localize({ en: "auto crit" }) as string;
 	} else if (buff === PotencyModifierType.YATEN) {
-		text = localize({en: "yaten"}) as string;
+		text = localize({ en: "yaten" }) as string;
 	} else if (buff === PotencyModifierType.POSITIONAL) {
-		text = localize({en: "positional"}) as string;
+		text = localize({ en: "positional" }) as string;
 	} else if (buff === PotencyModifierType.ARCANE_CIRCLE) {
-		text = localize({en: "arcane circle"}) as string;
+		text = localize({ en: "arcane circle" }) as string;
 	} else if (buff === PotencyModifierType.DEATHSDESIGN) {
-		text = localize({en: "death's design"}) as string;
+		text = localize({ en: "death's design" }) as string;
 	} else if (buff === PotencyModifierType.ENHANCED_GIBBET_GALLOWS) {
-		text = localize({en: "enhanced gibbet/gallows"}) as string;
+		text = localize({ en: "enhanced gibbet/gallows" }) as string;
 	} else if (buff === PotencyModifierType.ENHANCED_REAPING) {
-		text = localize({en: "enhanced reaping"}) as string;
+		text = localize({ en: "enhanced reaping" }) as string;
 	} else if (buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
-		text = localize({en: "immortal Sacrifice"}) as string;
+		text = localize({ en: "immortal Sacrifice" }) as string;
 	}
 	return text;
 }
 
-function BuffTag(props: {buff?: PotencyModifierType, tc?: boolean}) {
+function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
 	let colors = getCurrentThemeColors();
 	let text: ContentNode = "";
 	let color: string = "#66ccff";
 	if (props.buff === PotencyModifierType.AF3) {
-		text = localize({en: "AF3", zh: "三层火"});
+		text = localize({ en: "AF3", zh: "三层火" });
 		color = colors.blm.astralFire;
 	} else if (props.buff === PotencyModifierType.AF2) {
-		text = localize({en: "AF2", zh: "二层火"});
+		text = localize({ en: "AF2", zh: "二层火" });
 		color = colors.blm.astralFire;
 	} else if (props.buff === PotencyModifierType.AF1) {
-		text = localize({en: "AF1", zh: "一层火"});
+		text = localize({ en: "AF1", zh: "一层火" });
 		color = colors.blm.astralFire;
 	} else if (props.buff === PotencyModifierType.UI3) {
-		text = localize({en: "UI3", zh: "三层冰"});
+		text = localize({ en: "UI3", zh: "三层冰" });
 		color = colors.blm.umbralIce;
 	} else if (props.buff === PotencyModifierType.UI2) {
-		text = localize({en: "UI2", zh: "二层冰"});
+		text = localize({ en: "UI2", zh: "二层冰" });
 		color = colors.blm.umbralIce;
 	} else if (props.buff === PotencyModifierType.UI1) {
-		text = localize({en: "UI1", zh: "一层冰"});
+		text = localize({ en: "UI1", zh: "一层冰" });
 		color = colors.blm.umbralIce;
 	} else if (props.buff === PotencyModifierType.ENO) {
-		text = localize({en: "ENO", zh: "天语"});
+		text = localize({ en: "ENO", zh: "天语" });
 		color = colors.blm.enochian;
 	} else if (props.buff === PotencyModifierType.AUTO_CDH) {
-		text = localize({en: "CDH", zh: "必直暴"});
+		text = localize({ en: "CDH", zh: "必直暴" });
 		color = colors.resources.cdhTag;
 	} else if (props.buff === PotencyModifierType.STARRY) {
-		text = localize({en: "STARRY", zh: "星空"});
+		text = localize({ en: "STARRY", zh: "星空" });
 		color = colors.pct.starryBuff;
 	} else if (props.buff === PotencyModifierType.EMBOLDEN_M) {
-		text = localize({en: "EMB", zh: "鼓励"});
+		text = localize({ en: "EMB", zh: "鼓励" });
 		color = colors.rdm.emboldenBuff;
 	} else if (props.buff === PotencyModifierType.MANAFIC) {
-		text = localize({en: "MF", zh: "魔元化"});
+		text = localize({ en: "MF", zh: "魔元化" });
 		color = colors.rdm.manaficBuff;
 	} else if (props.buff === PotencyModifierType.ACCELERATION) {
-		text = localize({en: "ACC", zh: "促进"});
+		text = localize({ en: "ACC", zh: "促进" });
 		color = colors.rdm.accelBuff;
 	} else if (props.buff === PotencyModifierType.STANDARD_SINGLE) {
-		text = localize({en: "SSF"});
+		text = localize({ en: "SSF" });
 		color = colors.dnc.jete;
 	} else if (props.buff === PotencyModifierType.STANDARD_DOUBLE) {
-		text = localize({en: "DSF"});
+		text = localize({ en: "DSF" });
 		color = colors.dnc.jete;
 	} else if (props.buff === PotencyModifierType.TECHNICAL_SINGLE) {
-		text = localize({en: "STF"});
+		text = localize({ en: "STF" });
 		color = colors.dnc.esprit;
 	} else if (props.buff === PotencyModifierType.TECHNICAL_DOUBLE) {
-		text = localize({en: "DTF"});
+		text = localize({ en: "DTF" });
 		color = colors.dnc.esprit;
 	} else if (props.buff === PotencyModifierType.TECHNICAL_TRIPLE) {
-		text = localize({en: "TTF"});
+		text = localize({ en: "TTF" });
 		color = colors.dnc.esprit;
 	} else if (props.buff === PotencyModifierType.TECHNICAL_QUADRUPLE) {
-		text = localize({en: "QTF"});
+		text = localize({ en: "QTF" });
 		color = colors.dnc.esprit;
 	} else if (props.buff === PotencyModifierType.DEVILMENT) {
-		text = localize({en: "DEV"});
+		text = localize({ en: "DEV" });
 		color = colors.dnc.feathers;
 	} else if (props.buff === PotencyModifierType.COMBO) {
-		text = localize({en: "CMB", zh: "连击"});
+		text = localize({ en: "CMB", zh: "连击" });
 		color = colors.resources.comboTag;
 	} else if (props.buff === PotencyModifierType.FUGETSU) {
-		text = localize({en: "FGS"});
+		text = localize({ en: "FGS" });
 		color = colors.sam.fugetsu;
 	} else if (props.buff === PotencyModifierType.AUTO_CRIT) {
-		text = localize({en: "CRIT"});
+		text = localize({ en: "CRIT" });
 		color = colors.resources.cdhTag;
 	} else if (props.buff === PotencyModifierType.YATEN) {
-		text = localize({en: "ENH"});
+		text = localize({ en: "ENH" });
 		color = colors.pct.cometPaint; // TODO
 	} else if (props.buff === PotencyModifierType.POSITIONAL) {
-		text = localize({en: "PS"});
+		text = localize({ en: "PS" });
 		color = MarkerColor.Green; // TODO
 	} else if (props.buff === PotencyModifierType.ARCANE_CIRCLE) {
-		text = localize({en: "AC"}) as string;
+		text = localize({ en: "AC" }) as string;
 		color = MarkerColor.Pink;
 	} else if (props.buff === PotencyModifierType.DEATHSDESIGN) {
-		text = localize({en: "DD"}) as string;
+		text = localize({ en: "DD" }) as string;
 		color = MarkerColor.Red;
 	} else if (props.buff === PotencyModifierType.ENHANCED_GIBBET_GALLOWS) {
-		text = localize({en: "E. GIB/GAL"}) as string;
+		text = localize({ en: "E. GIB/GAL" }) as string;
 		color = MarkerColor.Blue;
 	} else if (props.buff === PotencyModifierType.ENHANCED_REAPING) {
-		text = localize({en: "E. REAPING"}) as string;
+		text = localize({ en: "E. REAPING" }) as string;
 		color = MarkerColor.Purple;
 	} else if (props.buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
-		text = localize({en: "IMMORTAL SAC"}) as string;
+		text = localize({ en: "IMMORTAL SAC" }) as string;
 		color = MarkerColor.Pink;
-	} else if(props.buff === PotencyModifierType.SURGING_TEMPEST) {
-		text = localize({en: "SURGING"}) as string;
+	} else if (props.buff === PotencyModifierType.SURGING_TEMPEST) {
+		text = localize({ en: "SURGING" }) as string;
 		color = MarkerColor.Purple;
 	}
-	return <span style={{
-		borderRadius: 2,
-		border: "1px solid " + color,
-		fontSize: 11,
-		marginRight: 4,
-		padding: "1px 4px",
-		background: color + "1f"
-	}}><b style={{color: color}}>{text}</b></span>
+	return <span
+		style={{
+			borderRadius: 2,
+			border: "1px solid " + color,
+			fontSize: 11,
+			marginRight: 4,
+			padding: "1px 4px",
+			background: color + "1f",
+		}}
+	>
+		<b style={{ color: color }}>{text}</b>
+	</span>;
 }
 
 function PotencyDisplay(props: {
-	basePotency: number,
-	helpTopic: string,
-	includeInStats: boolean,
-	explainUntargetable?: boolean,
-	calc: PotencyModifier[]})
-{
+	basePotency: number;
+	helpTopic: string;
+	includeInStats: boolean;
+	explainUntargetable?: boolean;
+	calc: PotencyModifier[];
+}) {
 	let potency = props.basePotency;
-	let potencyExplanation = props.basePotency.toFixed(2) + (localize({en: "(base)", zh: "(基础威力)"}) as string);
+	let potencyExplanation =
+		props.basePotency.toFixed(2) + (localize({ en: "(base)", zh: "(基础威力)" }) as string);
 	if (props.explainUntargetable) {
-		potencyExplanation += localize({en: "(untargetable)", zh: "(不可选中)"});
+		potencyExplanation += localize({ en: "(untargetable)", zh: "(不可选中)" });
 	}
 	let additiveExplanation = "";
-	props.calc.forEach(m => {
+	props.calc.forEach((m) => {
 		if (m.kind === "adder" && m.additiveAmount > 0) {
 			potency += m.additiveAmount;
 			additiveExplanation += " + " + m.additiveAmount + "(" + buffName(m.source) + ")";
@@ -303,19 +310,21 @@ function PotencyDisplay(props: {
 	if (additiveExplanation) {
 		potencyExplanation = "[ " + potencyExplanation + additiveExplanation + " ]";
 	}
-	props.calc.forEach(m=>{
+	props.calc.forEach((m) => {
 		if (m.kind === "multiplier" && m.damageFactor !== 1) {
 			potency *= m.damageFactor;
-			potencyExplanation += " × " + m.damageFactor + "(" + buffName(m.source) + ")"
+			potencyExplanation += " × " + m.damageFactor + "(" + buffName(m.source) + ")";
 		}
 	});
-	return <span style={{textDecoration: props.includeInStats ? "none" : "line-through"}}>{potency.toFixed(2)} <Help topic={props.helpTopic} content={potencyExplanation}/></span>
+	return <span style={{ textDecoration: props.includeInStats ? "none" : "line-through" }}>
+		{potency.toFixed(2)} <Help topic={props.helpTopic} content={potencyExplanation} />
+	</span>;
 }
 
 class DamageStatsSettings extends React.Component {
 	initialDisplayScale: number;
 	state: {
-		tinctureBuffPercentageStr: string,
+		tinctureBuffPercentageStr: string;
 	};
 	setTinctureBuffPercentageStr: (val: string) => void;
 
@@ -334,18 +343,18 @@ class DamageStatsSettings extends React.Component {
 		// state
 		this.state = {
 			tinctureBuffPercentageStr: str ?? "8",
-		}
+		};
 
 		// functions
-		this.setTinctureBuffPercentageStr = ((val: string) => {
-			this.setState({tinctureBuffPercentageStr: val});
+		this.setTinctureBuffPercentageStr = (val: string) => {
+			this.setState({ tinctureBuffPercentageStr: val });
 
 			let percentage = parseFloat(val);
 			if (!isNaN(percentage)) {
 				controller.setTinctureBuffPercentage(percentage);
 				setCachedValue("tinctureBuffPercentage", val);
 			}
-		});
+		};
 	}
 
 	componentDidMount() {
@@ -353,35 +362,53 @@ class DamageStatsSettings extends React.Component {
 	}
 
 	render() {
-		let checkboxLabel = <span>{localize({en: "exclude damage when untargetable", zh: "Boss上天期间威力按0计算"})} <Help
-			topic={"untargetableMask"} content={
-			<div>
-				<div className={"paragraph"}>{localize({
-					en: "Having this checked will exclude damages from untargetable phases.",
-					zh: "若勾选，统计将不包括Boss上天期间造成的伤害。"
-				})}</div>
-				<div className={"paragraph"}>{localize({
-					en: "You can mark up such phases using timeline markers of type \"Untargetable\".",
-					zh: "可在下方用 “不可选中” 类型的时间轴标记来指定时间区间。"
-				})}</div>
-				<div className={"paragraph"}>{localize({
-					en: "This is just a statistics helper though. For example it doesn't prevent you from using skills when the boss is untargetable.",
-					zh: "此功能只是一个统计用的工具，在标注了 “不可选中” 的时间里其实也能正常使用技能。"
-				})}</div>
-			</div>
-		}/></span>;
+		let checkboxLabel = <span>
+			{localize({ en: "exclude damage when untargetable", zh: "Boss上天期间威力按0计算" })}{" "}
+			<Help
+				topic={"untargetableMask"}
+				content={
+					<div>
+						<div className={"paragraph"}>
+							{localize({
+								en: "Having this checked will exclude damages from untargetable phases.",
+								zh: "若勾选，统计将不包括Boss上天期间造成的伤害。",
+							})}
+						</div>
+						<div className={"paragraph"}>
+							{localize({
+								en: 'You can mark up such phases using timeline markers of type "Untargetable".',
+								zh: "可在下方用 “不可选中” 类型的时间轴标记来指定时间区间。",
+							})}
+						</div>
+						<div className={"paragraph"}>
+							{localize({
+								en: "This is just a statistics helper though. For example it doesn't prevent you from using skills when the boss is untargetable.",
+								zh: "此功能只是一个统计用的工具，在标注了 “不可选中” 的时间里其实也能正常使用技能。",
+							})}
+						</div>
+					</div>
+				}
+			/>
+		</span>;
 		return <div>
-			<Input defaultValue={this.state.tinctureBuffPercentageStr}
-			       description={localize({en: " tincture potency buff ", zh: "爆发药威力加成 "})}
-			       onChange={this.setTinctureBuffPercentageStr} width={2} style={{display: "inline"}}/>
+			<Input
+				defaultValue={this.state.tinctureBuffPercentageStr}
+				description={localize({ en: " tincture potency buff ", zh: "爆发药威力加成 " })}
+				onChange={this.setTinctureBuffPercentageStr}
+				width={2}
+				style={{ display: "inline" }}
+			/>
 			<span>%</span>
-			<Checkbox uniqueName={"untargetableMask"} label={checkboxLabel} onChange={val=>{
-				controller.setUntargetableMask(val);
-			}}/>
+			<Checkbox
+				uniqueName={"untargetableMask"}
+				label={checkboxLabel}
+				onChange={(val) => {
+					controller.setUntargetableMask(val);
+				}}
+			/>
 		</div>;
 	}
 }
-
 
 const rowGap = "0.375em 0.75em";
 
@@ -389,19 +416,19 @@ export class DamageStatistics extends React.Component {
 	selected: SelectedStatisticsData = {
 		totalDuration: 0,
 		targetableDuration: 0,
-		potency: {applied: 0, pending: 0},
-		gcdSkills: {applied: 0, pending: 0}
-	}
+		potency: { applied: 0, pending: 0 },
+		gcdSkills: { applied: 0, pending: 0 },
+	};
 	data: DamageStatisticsData = {
 		time: 0,
 		tinctureBuffPercentage: 0,
 		countdown: 0,
-		totalPotency: {applied: 0, pending: 0},
+		totalPotency: { applied: 0, pending: 0 },
 		lastDamageApplicationTime: 0,
-		gcdSkills: {applied: 0, pending: 0},
+		gcdSkills: { applied: 0, pending: 0 },
 		mainTable: [],
 		mainTableSummary: {
-			totalPotencyWithoutPot: 0, 
+			totalPotencyWithoutPot: 0,
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
 		},
@@ -423,40 +450,48 @@ export class DamageStatistics extends React.Component {
 
 	constructor(props: {}) {
 		super(props);
-		updateDamageStats = ((data: Partial<DamageStatisticsData>) => {
-			this.data = {...this.data, ...data};
+		updateDamageStats = (data: Partial<DamageStatisticsData>) => {
+			this.data = { ...this.data, ...data };
 			this.forceUpdate();
-		});
-		updateSelectedStats = ((selected: Partial<SelectedStatisticsData>) => {
-			this.selected = {...this.selected, ...selected};
+		};
+		updateSelectedStats = (selected: Partial<SelectedStatisticsData>) => {
+			this.selected = { ...this.selected, ...selected };
 			this.forceUpdate();
-		});
+		};
 	}
 
 	componentWillUnmount() {
-		updateDamageStats = (data: Partial<DamageStatisticsData>) => {}
+		updateDamageStats = (data: Partial<DamageStatisticsData>) => {};
 	}
 
 	render() {
-
 		let colors = getCurrentThemeColors();
 		const allIncluded = allSkillsAreIncluded();
 
 		//////////////////// Summary ///////////////////////
 
-		const colon = localize({en: ": ", zh: "："}) as string;
-		const lparen = localize({en: " (", zh: "（"}) as string;
-		const rparen = localize({en: ") ", zh: "）"}) as string;
-		const checkedOnlyStr = allIncluded ? "" : localize({en: " (checked only)", zh: "（勾选部分）"}) as string;
+		const colon = localize({ en: ": ", zh: "：" }) as string;
+		const lparen = localize({ en: " (", zh: "（" }) as string;
+		const rparen = localize({ en: ") ", zh: "）" }) as string;
+		const checkedOnlyStr = allIncluded
+			? ""
+			: (localize({ en: " (checked only)", zh: "（勾选部分）" }) as string);
 
 		let lastDisplay = this.data.lastDamageApplicationTime - this.data.countdown;
-		let targetableDurationTilLastDisplay  = getTargetableDurationBetween(0, lastDisplay);
+		let targetableDurationTilLastDisplay = getTargetableDurationBetween(0, lastDisplay);
 		let ppsAvailable = this.data.lastDamageApplicationTime > -this.data.countdown;
-		let lastDamageApplicationTimeDisplay = ppsAvailable ? lastDisplay.toFixed(3).toString() : "N/A";
-		let potencyStr = localize({en: "Total potency", zh: "总威力"}) as string;
-		let selectedPotencyStr = localize({en: "Selected potency", zh: "选中威力"}) as string;
+		let lastDamageApplicationTimeDisplay = ppsAvailable
+			? lastDisplay.toFixed(3).toString()
+			: "N/A";
+		let potencyStr = localize({ en: "Total potency", zh: "总威力" }) as string;
+		let selectedPotencyStr = localize({ en: "Selected potency", zh: "选中威力" }) as string;
 		if (this.data.tinctureBuffPercentage > 0) {
-			let s = lparen + (localize({en: "pot +", zh: "爆发药 +"}) as string) + this.data.tinctureBuffPercentage + "%" + rparen;
+			let s =
+				lparen +
+				(localize({ en: "pot +", zh: "爆发药 +" }) as string) +
+				this.data.tinctureBuffPercentage +
+				"%" +
+				rparen;
 			potencyStr += s;
 			selectedPotencyStr += s;
 		}
@@ -466,63 +501,145 @@ export class DamageStatistics extends React.Component {
 		potencyStr += colon + this.data.totalPotency.applied.toFixed(2);
 		selectedPotencyStr += colon + this.selected.potency.applied.toFixed(2);
 		if (this.data.totalPotency.pending > 0) {
-			potencyStr += lparen + this.data.totalPotency.pending.toFixed(2) + (localize({en: " pending", zh: "未结算"}) as string) + rparen;
+			potencyStr +=
+				lparen +
+				this.data.totalPotency.pending.toFixed(2) +
+				(localize({ en: " pending", zh: "未结算" }) as string) +
+				rparen;
 		}
 		if (this.selected.potency.pending > 0) {
-			selectedPotencyStr += lparen + this.selected.potency.pending.toFixed(2) + (localize({en: " pending", zh: "未结算"}) as string) + rparen;
+			selectedPotencyStr +=
+				lparen +
+				this.selected.potency.pending.toFixed(2) +
+				(localize({ en: " pending", zh: "未结算" }) as string) +
+				rparen;
 		}
 
-		let gcdStr = localize({en: "GCD skills", zh: "GCD技能"}) + checkedOnlyStr + colon + this.data.gcdSkills.applied;
-		let selectedGcdStr = localize({en:"Selected GCD skills", zh:"选中GCD技能"}) + checkedOnlyStr + colon + this.selected.gcdSkills.applied;
+		let gcdStr =
+			localize({ en: "GCD skills", zh: "GCD技能" }) +
+			checkedOnlyStr +
+			colon +
+			this.data.gcdSkills.applied;
+		let selectedGcdStr =
+			localize({ en: "Selected GCD skills", zh: "选中GCD技能" }) +
+			checkedOnlyStr +
+			colon +
+			this.selected.gcdSkills.applied;
 		if (this.data.gcdSkills.pending > 0) {
-			gcdStr += lparen + "+" + this.data.gcdSkills.pending + (localize({en: " not yet applied", zh: "未结算"}) as string) + rparen;
+			gcdStr +=
+				lparen +
+				"+" +
+				this.data.gcdSkills.pending +
+				(localize({ en: " not yet applied", zh: "未结算" }) as string) +
+				rparen;
 		}
 		if (this.selected.gcdSkills.pending > 0) {
-			selectedGcdStr += lparen + "+" + this.selected.gcdSkills.pending + (localize({en: " not yet applied", zh: "未结算"}) as string) + rparen;
+			selectedGcdStr +=
+				lparen +
+				"+" +
+				this.selected.gcdSkills.pending +
+				(localize({ en: " not yet applied", zh: "未结算" }) as string) +
+				rparen;
 		}
 
-		let dotStr = localize({en: "Thunder DoT uptime", zh: "雷覆盖时间"}) + colon + (this.data.dotTableSummary.dotCoverageTimeFraction*100).toFixed(2) + "%";
-		dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + this.data.dotTableSummary.totalTicks + "/" + this.data.dotTableSummary.maxTicks + rparen;
+		let dotStr =
+			localize({ en: "Thunder DoT uptime", zh: "雷覆盖时间" }) +
+			colon +
+			(this.data.dotTableSummary.dotCoverageTimeFraction * 100).toFixed(2) +
+			"%";
+		dotStr +=
+			lparen +
+			localize({ en: "ticks", zh: "跳雷次数" }) +
+			colon +
+			this.data.dotTableSummary.totalTicks +
+			"/" +
+			this.data.dotTableSummary.maxTicks +
+			rparen;
 
 		let selected: React.ReactNode | undefined = undefined;
 		let selectedPPSAvailable = this.selected.targetableDuration > 0;
 		if (this.selected.totalDuration > 0) {
-			selected = <div style={{flex: 1, color: colors.accent}}>
-				<div>{localize({en: "Selected duration", zh: "选中时长"})}{colon}{this.selected.totalDuration.toFixed(3)}</div>
+			selected = <div style={{ flex: 1, color: colors.accent }}>
+				<div>
+					{localize({ en: "Selected duration", zh: "选中时长" })}
+					{colon}
+					{this.selected.totalDuration.toFixed(3)}
+				</div>
 				<div>{selectedPotencyStr}</div>
-				<div>{localize({en: "Selected PPS", zh: "选中部分PPS"})}{colon}{selectedPPSAvailable ? (this.selected.potency.applied / this.selected.targetableDuration).toFixed(2) : "N/A"}</div>
+				<div>
+					{localize({ en: "Selected PPS", zh: "选中部分PPS" })}
+					{colon}
+					{selectedPPSAvailable
+						? (
+								this.selected.potency.applied / this.selected.targetableDuration
+							).toFixed(2)
+						: "N/A"}
+				</div>
 				<div>{selectedGcdStr}</div>
-			</div>
+			</div>;
 		}
 
-		let summary = <div style={{display: "flex", marginBottom: 10, flexDirection: "row"}}>
-			<div style={{flex: 1}}>
-				<div style={{color: this.data.mode !== DamageStatisticsMode.Normal ? colors.historical : colors.text}}>
-					<div>{localize({en: "Last damage application time", zh: "最后伤害结算时间"})}{colon}{lastDamageApplicationTimeDisplay}</div>
+		let summary = <div style={{ display: "flex", marginBottom: 10, flexDirection: "row" }}>
+			<div style={{ flex: 1 }}>
+				<div
+					style={{
+						color:
+							this.data.mode !== DamageStatisticsMode.Normal
+								? colors.historical
+								: colors.text,
+					}}
+				>
+					<div>
+						{localize({ en: "Last damage application time", zh: "最后伤害结算时间" })}
+						{colon}
+						{lastDamageApplicationTimeDisplay}
+					</div>
 					<div>{potencyStr}</div>
-					<div>PPS <Help topic={"ppsNotes"} content={
-						<div className={"toolTip"}>
-							<div className="paragraph">{localize({
-								en: "(total applied potency of checked skills) / (total targetable duration from 0s until last damage application time).",
-								zh: "统计表中勾选技能的已结算总威力 / (从0s到最后伤害结算时间 - 不可选中总时长)。"
-							})}</div>
-							<div className="paragraph">{localize({
-								en: "could be inaccurate if any damage happens before pull, or if some damage's not applied yet",
-								zh: "如果有伤害在0s之前结算，或者当前有的伤害还未结算，那么此PPS可能会不准确"
-							})}</div>
-						</div>
-					}/>{colon}{ppsAvailable ? (this.data.totalPotency.applied / targetableDurationTilLastDisplay).toFixed(2) : "N/A"}</div>
+					<div>
+						PPS{" "}
+						<Help
+							topic={"ppsNotes"}
+							content={
+								<div className={"toolTip"}>
+									<div className="paragraph">
+										{localize({
+											en: "(total applied potency of checked skills) / (total targetable duration from 0s until last damage application time).",
+											zh: "统计表中勾选技能的已结算总威力 / (从0s到最后伤害结算时间 - 不可选中总时长)。",
+										})}
+									</div>
+									<div className="paragraph">
+										{localize({
+											en: "could be inaccurate if any damage happens before pull, or if some damage's not applied yet",
+											zh: "如果有伤害在0s之前结算，或者当前有的伤害还未结算，那么此PPS可能会不准确",
+										})}
+									</div>
+								</div>
+							}
+						/>
+						{colon}
+						{ppsAvailable
+							? (
+									this.data.totalPotency.applied /
+									targetableDurationTilLastDisplay
+								).toFixed(2)
+							: "N/A"}
+					</div>
 					<div>{gcdStr}</div>
 					{controller.getActiveJob() === ShellJob.BLM && <div>{dotStr}</div>}
 				</div>
-				<div style={{marginTop: 10}}>
-					<DamageStatsSettings/>
-					<SaveToFile fileFormat={FileFormat.Csv} getContentFn={()=>{
-						return controller.getDamageLogCsv();
-					}} filename={"damage-log"} displayName={localize({
-						en: "download detailed damage log as CSV file",
-						zh: "下载详细伤害结算记录（CSV格式）"
-					})}/>
+				<div style={{ marginTop: 10 }}>
+					<DamageStatsSettings />
+					<SaveToFile
+						fileFormat={FileFormat.Csv}
+						getContentFn={() => {
+							return controller.getDamageLogCsv();
+						}}
+						filename={"damage-log"}
+						displayName={localize({
+							en: "download detailed damage log as CSV file",
+							zh: "下载详细伤害结算记录（CSV格式）",
+						})}
+					/>
 				</div>
 			</div>
 			{selected}
@@ -530,7 +647,7 @@ export class DamageStatistics extends React.Component {
 
 		///////////////////////// Main table //////////////////////////
 
-		let cell = function(widthPercentage: number): CSSProperties {
+		let cell = function (widthPercentage: number): CSSProperties {
 			return {
 				verticalAlign: "middle",
 				boxSizing: "border-box",
@@ -538,68 +655,114 @@ export class DamageStatistics extends React.Component {
 				width: widthPercentage + "%",
 				padding: rowGap,
 			};
-		}
+		};
 
-		let isDoTProp = function(skillName: SkillName) {
-			return DOT_SKILLS.includes(skillName)
-		}
+		let isDoTProp = function (skillName: SkillName) {
+			return DOT_SKILLS.includes(skillName);
+		};
 
-		let hidePotency = function(skillName: SkillName) {
-			if (isDoTProp(skillName)) { return true}
+		let hidePotency = function (skillName: SkillName) {
+			if (isDoTProp(skillName)) {
+				return true;
+			}
 			const hidePotencySkills: SkillName[] = [
 				// MCH: Queen and Wildfire have variable potencies per "tick" so just don't show them in the per-hit potency column
-				SkillName.AutomatonQueen, SkillName.Wildfire, 
+				SkillName.AutomatonQueen,
+				SkillName.Wildfire,
 				// Limit Break potencies don't directly translate to player potency, so don't include it in the summary
-				...LIMIT_BREAKS
-			]
-			return hidePotencySkills.includes(skillName)
-		}
+				...LIMIT_BREAKS,
+			];
+			return hidePotencySkills.includes(skillName);
+		};
 
-		let makeRow = function(props: {
-			lastRowSkill?: SkillName,
-			row: DamageStatsMainTableEntry,
-			key: number
+		let makeRow = function (props: {
+			lastRowSkill?: SkillName;
+			row: DamageStatsMainTableEntry;
+			key: number;
 		}) {
 			const sameAsLast = props.row.skillName === props.lastRowSkill;
 
 			let tags: React.ReactNode[] = [];
-			tags.push(props.row.displayedModifiers.map(
-				(tag, i) => <BuffTag key={i} buff={tag}/>)
-			);
+			tags.push(props.row.displayedModifiers.map((tag, i) => <BuffTag key={i} buff={tag} />));
 
 			const includeInStats = getSkillOrDotInclude(props.row.skillName);
 
 			// include checkbox
 			let includeCheckboxes: React.ReactNode[] = [];
-			if (!sameAsLast && props.row.basePotency > 0 && !LIMIT_BREAKS.includes(props.row.skillName)) {
-				includeCheckboxes.push(<input key="main" type={"checkbox"} style={{position: "relative", top: 2, marginRight: 10}} checked={includeInStats} onChange={()=>{
-					updateSkillOrDoTInclude({skillNameOrDoT: props.row.skillName, include: !includeInStats});
-				}}/>);
+			if (
+				!sameAsLast &&
+				props.row.basePotency > 0 &&
+				!LIMIT_BREAKS.includes(props.row.skillName)
+			) {
+				includeCheckboxes.push(
+					<input
+						key="main"
+						type={"checkbox"}
+						style={{ position: "relative", top: 2, marginRight: 10 }}
+						checked={includeInStats}
+						onChange={() => {
+							updateSkillOrDoTInclude({
+								skillNameOrDoT: props.row.skillName,
+								include: !includeInStats,
+							});
+						}}
+					/>,
+				);
 			}
 			// additional checkbox for DoT
 			if (isDoTProp(props.row.skillName)) {
-				includeCheckboxes.push(<input key="dot" type={"checkbox"} style={{position: "relative", top: 2, marginRight: 10}} checked={
-					getSkillOrDotInclude("DoT")
-				} onChange={()=>{
-					updateSkillOrDoTInclude({skillNameOrDoT: "DoT", include: !getSkillOrDotInclude("DoT")});
-				}}/>);
+				includeCheckboxes.push(
+					<input
+						key="dot"
+						type={"checkbox"}
+						style={{ position: "relative", top: 2, marginRight: 10 }}
+						checked={getSkillOrDotInclude("DoT")}
+						onChange={() => {
+							updateSkillOrDoTInclude({
+								skillNameOrDoT: "DoT",
+								include: !getSkillOrDotInclude("DoT"),
+							});
+						}}
+					/>,
+				);
 			}
 
 			// skill name node
 			let skillNameNode: React.ReactNode | undefined = undefined;
 			if (!sameAsLast) {
 				skillNameNode = <span>
-					<span style={{textDecoration: includeInStats ? "none" : "line-through", color: includeInStats ? colors.text : colors.bgHighContrast}}>
-						{localizeSkillName(props.row.skillName)} {isDoTProp(props.row.skillName) ?
-							<Help topic={"potencyStats-thunder"} content={localize({en: "See Thunder table below for details", zh: "详见下方雷统计表格"})}/>
-							: undefined}
+					<span
+						style={{
+							textDecoration: includeInStats ? "none" : "line-through",
+							color: includeInStats ? colors.text : colors.bgHighContrast,
+						}}
+					>
+						{localizeSkillName(props.row.skillName)}{" "}
+						{isDoTProp(props.row.skillName) ? (
+							<Help
+								topic={"potencyStats-thunder"}
+								content={localize({
+									en: "See Thunder table below for details",
+									zh: "详见下方雷统计表格",
+								})}
+							/>
+						) : undefined}
 					</span>
-					{isDoTProp(props.row.skillName) ? <span style={{
-						textDecoration: getSkillOrDotInclude("DoT") ? "none" : "line-through",
-						color: getSkillOrDotInclude("DoT") ? colors.text : colors.bgHighContrast
-					}}><br/>
-						{localize({en: "(DoT)", zh: "（跳雷）"})}
-					</span> : undefined}
+					{isDoTProp(props.row.skillName) ? (
+						<span
+							style={{
+								textDecoration: getSkillOrDotInclude("DoT")
+									? "none"
+									: "line-through",
+								color: getSkillOrDotInclude("DoT")
+									? colors.text
+									: colors.bgHighContrast,
+							}}
+						>
+							<br />
+							{localize({ en: "(DoT)", zh: "（跳雷）" })}
+						</span>
+					) : undefined}
 				</span>;
 			}
 
@@ -609,30 +772,64 @@ export class DamageStatistics extends React.Component {
 				potencyNode = <PotencyDisplay
 					includeInStats={includeInStats}
 					basePotency={props.row.basePotency}
-					helpTopic={"mainTable-potencyCalc-"+props.key}
-					calc={props.row.calculationModifiers}/>;
+					helpTopic={"mainTable-potencyCalc-" + props.key}
+					calc={props.row.calculationModifiers}
+				/>;
 			}
 
 			// usage count node
 			let unhitUsages = props.row.usageCount - props.row.hitCount;
-			let usageCountNode = <span style={{textDecoration: includeInStats ? "none" : "line-through"}}>
+			let usageCountNode = <span
+				style={{ textDecoration: includeInStats ? "none" : "line-through" }}
+			>
 				{props.row.hitCount}
-				{unhitUsages>0 ? <span style={{color: colors.timeline.untargetableDamageMark + "af"}}> +{unhitUsages} <Help
-					topic={"mainTable-numUntargetableUsages-"+props.key}
-					content={localize({en: "usage(s) when untargetable", zh: "Boss上天期间使用次数"})}/></span> : undefined}
-			</span>
+				{unhitUsages > 0 ? (
+					<span style={{ color: colors.timeline.untargetableDamageMark + "af" }}>
+						{" "}
+						+{unhitUsages}{" "}
+						<Help
+							topic={"mainTable-numUntargetableUsages-" + props.key}
+							content={localize({
+								en: "usage(s) when untargetable",
+								zh: "Boss上天期间使用次数",
+							})}
+						/>
+					</span>
+				) : undefined}
+			</span>;
 
 			// total potency
 			let totalPotencyNode: React.ReactNode | undefined = undefined;
 			if (props.row.showPotency && !LIMIT_BREAKS.includes(props.row.skillName)) {
-				totalPotencyNode = <span style={{textDecoration: includeInStats ? "none" : "line-through"}}>
+				totalPotencyNode = <span
+					style={{ textDecoration: includeInStats ? "none" : "line-through" }}
+				>
 					{props.row.totalPotencyWithoutPot.toFixed(2)}
-					{props.row.potPotency > 0 ? <span style={{
-						color: includeInStats ? colors.timeline.potCover : colors.bgHighContrast
-					}}> +{props.row.potPotency.toFixed(2)}({localize({en: "pot", zh: "爆发药"})})({props.row.potCount})</span> : undefined}
-					{props.row.partyBuffPotency > 0 ? 
-						<span style={{color: includeInStats ? colors.accent : colors.bgHighContrast}}> +{props.row.partyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
-				</span>
+					{props.row.potPotency > 0 ? (
+						<span
+							style={{
+								color: includeInStats
+									? colors.timeline.potCover
+									: colors.bgHighContrast,
+							}}
+						>
+							{" "}
+							+{props.row.potPotency.toFixed(2)}(
+							{localize({ en: "pot", zh: "爆发药" })})({props.row.potCount})
+						</span>
+					) : undefined}
+					{props.row.partyBuffPotency > 0 ? (
+						<span
+							style={{
+								color: includeInStats ? colors.accent : colors.bgHighContrast,
+							}}
+						>
+							{" "}
+							+{props.row.partyBuffPotency.toFixed(2)}(
+							{localize({ en: "party", zh: "团辅" })})
+						</span>
+					) : undefined}
+				</span>;
 			}
 			let rowStyle: CSSProperties = {
 				textAlign: "left",
@@ -649,78 +846,101 @@ export class DamageStatistics extends React.Component {
 				<div style={cell(16)}>{potencyNode}</div>
 				<div style={cell(14)}>{usageCountNode}</div>
 				<div style={cell(30)}>{totalPotencyNode}</div>
-			</div>
-		}
+			</div>;
+		};
 		let tableRows: React.ReactNode[] = [];
 		for (let i = 0; i < this.data.mainTable.length; i++) {
-			tableRows.push(makeRow({
-				row: this.data.mainTable[i],
-				key: i,
-				lastRowSkill: i===0 ? undefined : this.data.mainTable[i-1].skillName
-			}));
+			tableRows.push(
+				makeRow({
+					row: this.data.mainTable[i],
+					key: i,
+					lastRowSkill: i === 0 ? undefined : this.data.mainTable[i - 1].skillName,
+				}),
+			);
 		}
 
 		////////////////////// dot Table ////////////////////////
 
-		let makedotRow = function(props: {
-			row: DamageStatsDoTTableEntry,
-			key: number
-		}) {
-
+		let makedotRow = function (props: { row: DamageStatsDoTTableEntry; key: number }) {
 			// tags
 			let tags: React.ReactNode[] = [];
-			tags.push(props.row.displayedModifiers.map(
-				(tag, i) => <BuffTag key={i} buff={tag}/>)
-			);
+			tags.push(props.row.displayedModifiers.map((tag, i) => <BuffTag key={i} buff={tag} />));
 			if (props.row.baseMainPotency === 400) {
-				tags.push(<BuffTag key={tags.length} tc={true}/>);
+				tags.push(<BuffTag key={tags.length} tc={true} />);
 			}
 
 			// gap
 			let gapStr = props.row.gap.toFixed(3);
-			let gapNode = props.row.gap > 0 ? <span>{gapStr}</span> : <span/>;
+			let gapNode = props.row.gap > 0 ? <span>{gapStr}</span> : <span />;
 
 			// override
 			let overrideStr = props.row.override.toFixed(3);
-			let overrideNode = props.row.override > 0 ? <span>{overrideStr}</span> : <span/>;
+			let overrideNode = props.row.override > 0 ? <span>{overrideStr}</span> : <span />;
 
 			// potency
 			let mainPotencyNode = <PotencyDisplay
 				basePotency={props.row.mainPotencyHit ? props.row.baseMainPotency : 0}
 				includeInStats={true}
 				explainUntargetable={!props.row.mainPotencyHit}
-				helpTopic={"thunderTable-main-"+props.key}
-				calc={props.row.calculationModifiers}/>
+				helpTopic={"thunderTable-main-" + props.key}
+				calc={props.row.calculationModifiers}
+			/>;
 			let dotPotencyNode = <PotencyDisplay
 				basePotency={props.row.baseDotPotency}
 				includeInStats={true}
-				helpTopic={"thunderTable-dot-"+props.key}
-				calc={props.row.calculationModifiers}/>
+				helpTopic={"thunderTable-dot-" + props.key}
+				calc={props.row.calculationModifiers}
+			/>;
 
 			// num ticks node
-			let unhitTicks = props.row.totalNumTicks-props.row.numHitTicks;
+			let unhitTicks = props.row.totalNumTicks - props.row.numHitTicks;
 			let numTicksNode = <span>
 				{props.row.numHitTicks}
-				{unhitTicks>0 ? <span style={{color: colors.timeline.untargetableDamageMark + "af"}}> +{unhitTicks} <Help
-					topic={"thunderTable-numUntargetableTicks-"+props.key}
-					content={localize({en: "tick(s) when untargetable", zh: "Boss上天期间跳雷次数"})}/></span> : undefined}
-			</span>
+				{unhitTicks > 0 ? (
+					<span style={{ color: colors.timeline.untargetableDamageMark + "af" }}>
+						{" "}
+						+{unhitTicks}{" "}
+						<Help
+							topic={"thunderTable-numUntargetableTicks-" + props.key}
+							content={localize({
+								en: "tick(s) when untargetable",
+								zh: "Boss上天期间跳雷次数",
+							})}
+						/>
+					</span>
+				) : undefined}
+			</span>;
 
 			// total potency
 			let totalPotencyNode = <span>
 				{props.row.potencyWithoutPot.toFixed(2)}
-				{props.row.potPotency > 0 ? <span style={{
-					color: colors.timeline.potCover
-				}}> +{props.row.potPotency.toFixed(2)}({localize({en: "pot", zh: "爆发药"})})</span> : undefined}
-				{props.row.partyBuffPotency > 0 ? 
-					<span style={{color: colors.accent}}> +{props.row.partyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
-			</span>
+				{props.row.potPotency > 0 ? (
+					<span
+						style={{
+							color: colors.timeline.potCover,
+						}}
+					>
+						{" "}
+						+{props.row.potPotency.toFixed(2)}({localize({ en: "pot", zh: "爆发药" })})
+					</span>
+				) : undefined}
+				{props.row.partyBuffPotency > 0 ? (
+					<span style={{ color: colors.accent }}>
+						{" "}
+						+{props.row.partyBuffPotency.toFixed(2)}(
+						{localize({ en: "party", zh: "团辅" })})
+					</span>
+				) : undefined}
+			</span>;
 
-			return <div key={props.key} style={{
-				textAlign: "left",
-				position: "relative",
-				borderTop: "1px solid " + colors.bgMediumContrast
-			}}>
+			return <div
+				key={props.key}
+				style={{
+					textAlign: "left",
+					position: "relative",
+					borderTop: "1px solid " + colors.bgMediumContrast,
+				}}
+			>
 				<div style={cell(8)}>{props.row.castTime.toFixed(3)}</div>
 				<div style={cell(8)}>{props.row.applicationTime.toFixed(3)}</div>
 				<div style={cell(12)}>{tags}</div>
@@ -730,15 +950,17 @@ export class DamageStatistics extends React.Component {
 				<div style={cell(10)}>{dotPotencyNode}</div>
 				<div style={cell(8)}>{numTicksNode}</div>
 				<div style={cell(24)}>{totalPotencyNode}</div>
-			</div>
-		}
+			</div>;
+		};
 
 		let dotTableRows: React.ReactNode[] = [];
 		for (let i = 0; i < this.data.dotTable.length; i++) {
-			dotTableRows.push(makedotRow({
-				row: this.data.dotTable[i],
-				key: i
-			}));
+			dotTableRows.push(
+				makedotRow({
+					row: this.data.dotTable[i],
+					key: i,
+				}),
+			);
 		}
 
 		//////////////////////////////////////////////////////////
@@ -747,133 +969,233 @@ export class DamageStatistics extends React.Component {
 			display: "inline-block",
 			padding: rowGap,
 		};
-		let mainHeaderStr = allIncluded ?
-			localize({en: "Applied Skills", zh: "技能统计"}) :
-			localize({en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）"});
-		let dotHeaderStr = localize({en: "Thunder", zh: "雷统计"});
+		let mainHeaderStr = allIncluded
+			? localize({ en: "Applied Skills", zh: "技能统计" })
+			: localize({ en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）" });
+		let dotHeaderStr = localize({ en: "Thunder", zh: "雷统计" });
 		if (controller.game.job === ShellJob.SAM) {
-			dotHeaderStr = localize({en: "Higanbana"});
+			dotHeaderStr = localize({ en: "Higanbana" });
 		} else if (controller.game.job === ShellJob.MCH) {
-			dotHeaderStr = localize({en: "Bioblaster"})
+			dotHeaderStr = localize({ en: "Bioblaster" });
 		}
 		if (this.data.mode === DamageStatisticsMode.Historical) {
 			let t = (this.data.time - this.data.countdown).toFixed(3) + "s";
-			let upTillStr = lparen + localize({
-				en: "up till " + t,
-				zh: "截至" + t
-			}) + rparen;
+			let upTillStr =
+				lparen +
+				localize({
+					en: "up till " + t,
+					zh: "截至" + t,
+				}) +
+				rparen;
 			mainHeaderStr += upTillStr;
 			dotHeaderStr += upTillStr;
 		} else if (this.data.mode === DamageStatisticsMode.Selected) {
-			const selectedStr = lparen + localize({
-				en: "from selected skills",
-				zh: "来自选中技能"
-			}) + rparen;
+			const selectedStr =
+				lparen +
+				localize({
+					en: "from selected skills",
+					zh: "来自选中技能",
+				}) +
+				rparen;
 			mainHeaderStr += selectedStr;
 			dotHeaderStr += selectedStr;
 		}
 		let titleColor = colors.text;
 		if (this.data.mode === DamageStatisticsMode.Historical) titleColor = colors.historical;
 		else if (this.data.mode === DamageStatisticsMode.Selected) titleColor = colors.accent;
-		let mainTable = <div id="damageTable" style={{
-			position: "relative",
-			margin: "0 auto",
-			marginBottom: 40,
-			maxWidth: 960,
-		}}>
-			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
-				<b style={{color: titleColor}}>{mainHeaderStr}</b>
+		let mainTable = <div
+			id="damageTable"
+			style={{
+				position: "relative",
+				margin: "0 auto",
+				marginBottom: 40,
+				maxWidth: 960,
+			}}
+		>
+			<div style={{ ...cell(100), ...{ textAlign: "center", marginBottom: 10 } }}>
+				<b style={{ color: titleColor }}>{mainHeaderStr}</b>
 			</div>
-			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
+			<div style={{ outline: "1px solid " + colors.bgMediumContrast }}>
 				<div>
-					<div style={{display: "inline-block", width: "40%"}}><span style={headerCellStyle}><b>{localize({en: "skill", zh: "技能"})}</b></span></div>
-					<div style={{display: "inline-block", width: "16%"}}><span style={headerCellStyle}><b>{localize({en: "potency", zh: "单次威力"})}</b></span></div>
-					<div style={{display: "inline-block", width: "14%"}}><span style={headerCellStyle}><b>{localize({en: "count", zh: "数量"})}</b></span></div>
-					<div style={{display: "inline-block", width: "30%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
+					<div style={{ display: "inline-block", width: "40%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "skill", zh: "技能" })}</b>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "16%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "potency", zh: "单次威力" })}</b>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "14%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "count", zh: "数量" })}</b>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "30%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "total", zh: "总威力" })}</b>
+						</span>
+					</div>
 				</div>
 				{tableRows}
-				<div style={{
-					textAlign: "left",
-					position: "relative",
-					borderTop: "1px solid " + colors.bgMediumContrast
-				}}>
-					<div style={cell(70)}/>
-					<div style={cell(30)}><span>
-					{this.data.mainTableSummary.totalPotencyWithoutPot.toFixed(2)}
-						{this.data.mainTableSummary.totalPotPotency>0 ?
-							<span style={{color: colors.timeline.potCover}}> +{this.data.mainTableSummary.totalPotPotency.toFixed(2)}{localize({
-								en: " (pot +" + this.data.tinctureBuffPercentage + "%)",
-								zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)"
-							})}</span> : undefined}
+				<div
+					style={{
+						textAlign: "left",
+						position: "relative",
+						borderTop: "1px solid " + colors.bgMediumContrast,
+					}}
+				>
+					<div style={cell(70)} />
+					<div style={cell(30)}>
+						<span>
+							{this.data.mainTableSummary.totalPotencyWithoutPot.toFixed(2)}
+							{this.data.mainTableSummary.totalPotPotency > 0 ? (
+								<span style={{ color: colors.timeline.potCover }}>
+									{" "}
+									+{this.data.mainTableSummary.totalPotPotency.toFixed(2)}
+									{localize({
+										en: " (pot +" + this.data.tinctureBuffPercentage + "%)",
+										zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)",
+									})}
+								</span>
+							) : undefined}
 
-					{this.data.mainTableSummary.totalPartyBuffPotency > 0 ? 
-						<span style={{color: colors.accent}}> +{this.data.mainTableSummary.totalPartyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
-				</span></div>
-				</div>
-			</div>
-		</div>
-
-		let dotTable = <div style={{
-			position: "relative",
-			margin: "0 auto",
-			marginBottom: 40,
-			maxWidth: 960,
-		}}>
-			<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
-				<b style={{color: titleColor}}>{dotHeaderStr}</b>
-			</div>
-			<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
-				<div>
-					<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "cast time", zh: "读条时间"})}</b></span></div>
-					<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "application time", zh: "结算时间"})}</b></span></div>
-					<div style={{display: "inline-block", width: "12%"}}><span style={headerCellStyle}/></div>
-					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
-						<b>{localize({en: "gap", zh: "DoT间隙"})} </b>
-						<Help topic={"thunderTable-gap-title"} content={localize({
-							en: <div>
-								<div className={"paragraph"}>DoT coverage time gap since pull or previous application</div>
-								<div className={"paragraph"}>The last row also includes gap at the beginning and end of the fight</div>
-							</div>,
-							zh: <div>雷DoT覆盖间隙，最后一行也包括战斗开始和结束时没有雷DoT的时间</div>,
-						})}/>
-					</span></div>
-					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
-						<b>{localize({en: "override", zh: "DoT覆盖"})} </b>
-						<Help topic={"thunderTable-override-title"} content={localize({
-							en: <div>Overridden DoT time from previous application</div>,
-							zh: <div>提前覆盖雷DoT时长</div>,
-						})}/>
-					</span></div>
-					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "initial", zh: "初始威力"})}</b></span></div>
-					<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "DoT", zh: "DoT威力"})}</b></span></div>
-					<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "ticks", zh: "跳雷次数"})}</b></span></div>
-					<div style={{display: "inline-block", width: "24%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
-				</div>
-				{dotTableRows}
-				<div style={{
-					textAlign: "left",
-					position: "relative",
-					borderTop: "1px solid " + colors.bgMediumContrast,
-				}}>
-					<div style={cell(28)}/>
-					<div style={cell(10)}>{this.data.dotTableSummary.cumulativeGap.toFixed(3)}</div>
-					<div style={cell(10)}>{this.data.dotTableSummary.cumulativeOverride.toFixed(3)}</div>
-					<div style={cell(20)}/>
-					<div style={cell(8)}>{this.data.dotTableSummary.totalTicks}/{this.data.dotTableSummary.maxTicks}</div>
-					<div style={cell(24)}>
-						{this.data.dotTableSummary.totalPotencyWithoutPot.toFixed(2)}
-						{this.data.dotTableSummary.totalPotPotency>0 ?
-							<span style={{color: colors.timeline.potCover}}> +{this.data.dotTableSummary.totalPotPotency.toFixed(2)}{localize({
-								en: "(pot +" + this.data.tinctureBuffPercentage + "%)",
-								zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)"
-							})}</span> : undefined}
-
-						{this.data.dotTableSummary.totalPartyBuffPotency > 0 ? 
-							<span style={{color: colors.accent}}> +{this.data.dotTableSummary.totalPartyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
+							{this.data.mainTableSummary.totalPartyBuffPotency > 0 ? (
+								<span style={{ color: colors.accent }}>
+									{" "}
+									+{this.data.mainTableSummary.totalPartyBuffPotency.toFixed(2)}(
+									{localize({ en: "party", zh: "团辅" })})
+								</span>
+							) : undefined}
+						</span>
 					</div>
 				</div>
 			</div>
-		</div>
+		</div>;
+
+		let dotTable = <div
+			style={{
+				position: "relative",
+				margin: "0 auto",
+				marginBottom: 40,
+				maxWidth: 960,
+			}}
+		>
+			<div style={{ ...cell(100), ...{ textAlign: "center", marginBottom: 10 } }}>
+				<b style={{ color: titleColor }}>{dotHeaderStr}</b>
+			</div>
+			<div style={{ outline: "1px solid " + colors.bgMediumContrast }}>
+				<div>
+					<div style={{ display: "inline-block", width: "8%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "cast time", zh: "读条时间" })}</b>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "8%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "application time", zh: "结算时间" })}</b>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "12%" }}>
+						<span style={headerCellStyle} />
+					</div>
+					<div style={{ display: "inline-block", width: "10%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "gap", zh: "DoT间隙" })} </b>
+							<Help
+								topic={"thunderTable-gap-title"}
+								content={localize({
+									en: <div>
+										<div className={"paragraph"}>
+											DoT coverage time gap since pull or previous application
+										</div>
+										<div className={"paragraph"}>
+											The last row also includes gap at the beginning and end
+											of the fight
+										</div>
+									</div>,
+									zh: <div>
+										雷DoT覆盖间隙，最后一行也包括战斗开始和结束时没有雷DoT的时间
+									</div>,
+								})}
+							/>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "10%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "override", zh: "DoT覆盖" })} </b>
+							<Help
+								topic={"thunderTable-override-title"}
+								content={localize({
+									en: <div>Overridden DoT time from previous application</div>,
+									zh: <div>提前覆盖雷DoT时长</div>,
+								})}
+							/>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "10%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "initial", zh: "初始威力" })}</b>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "10%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "DoT", zh: "DoT威力" })}</b>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "8%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "ticks", zh: "跳雷次数" })}</b>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "24%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "total", zh: "总威力" })}</b>
+						</span>
+					</div>
+				</div>
+				{dotTableRows}
+				<div
+					style={{
+						textAlign: "left",
+						position: "relative",
+						borderTop: "1px solid " + colors.bgMediumContrast,
+					}}
+				>
+					<div style={cell(28)} />
+					<div style={cell(10)}>{this.data.dotTableSummary.cumulativeGap.toFixed(3)}</div>
+					<div style={cell(10)}>
+						{this.data.dotTableSummary.cumulativeOverride.toFixed(3)}
+					</div>
+					<div style={cell(20)} />
+					<div style={cell(8)}>
+						{this.data.dotTableSummary.totalTicks}/{this.data.dotTableSummary.maxTicks}
+					</div>
+					<div style={cell(24)}>
+						{this.data.dotTableSummary.totalPotencyWithoutPot.toFixed(2)}
+						{this.data.dotTableSummary.totalPotPotency > 0 ? (
+							<span style={{ color: colors.timeline.potCover }}>
+								{" "}
+								+{this.data.dotTableSummary.totalPotPotency.toFixed(2)}
+								{localize({
+									en: "(pot +" + this.data.tinctureBuffPercentage + "%)",
+									zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)",
+								})}
+							</span>
+						) : undefined}
+
+						{this.data.dotTableSummary.totalPartyBuffPotency > 0 ? (
+							<span style={{ color: colors.accent }}>
+								{" "}
+								+{this.data.dotTableSummary.totalPartyBuffPotency.toFixed(2)}(
+								{localize({ en: "party", zh: "团辅" })})
+							</span>
+						) : undefined}
+					</div>
+				</div>
+			</div>
+		</div>;
 
 		const job = controller.getActiveJob();
 		return <div>
@@ -882,6 +1204,6 @@ export class DamageStatistics extends React.Component {
 				{mainTable}
 				{(job === ShellJob.BLM || job === ShellJob.SAM || job === ShellJob.MCH) && dotTable}
 			</div>
-		</div>
+		</div>;
 	}
 }

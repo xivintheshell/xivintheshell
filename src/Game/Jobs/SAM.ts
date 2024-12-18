@@ -1,10 +1,16 @@
 // Skill and state declarations for SAM.
 
-import {controller} from "../../Controller/Controller";
-import {ActionNode} from "../../Controller/Record";
-import {ShellJob} from "../../Controller/Common";
-import {Aspect, BuffType, ResourceType, SkillName, TraitName, WarningType} from "../Common";
-import {makeComboModifier, makePositionalModifier, Modifiers, Potency, PotencyModifier} from "../Potency";
+import { controller } from "../../Controller/Controller";
+import { ActionNode } from "../../Controller/Record";
+import { ShellJob } from "../../Controller/Common";
+import { Aspect, BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import {
+	makeComboModifier,
+	makePositionalModifier,
+	Modifiers,
+	Potency,
+	PotencyModifier,
+} from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -21,28 +27,28 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import {Traits} from "../Traits";
-import {GameState} from "../GameState";
-import {makeResource, CoolDown, DoTBuff, Event, EventTag} from "../Resources"
-import {GameConfig} from "../GameConfig";
+import { Traits } from "../Traits";
+import { GameState } from "../GameState";
+import { makeResource, CoolDown, DoTBuff, Event, EventTag } from "../Resources";
+import { GameConfig } from "../GameConfig";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
-const makeSAMResource = (rsc: ResourceType, maxValue: number, params?: {timeout: number}) => {
+const makeSAMResource = (rsc: ResourceType, maxValue: number, params?: { timeout: number }) => {
 	makeResource(ShellJob.SAM, rsc, maxValue, params ?? {});
 };
 
-makeSAMResource(ResourceType.MeikyoShisui, 3, {timeout: 20});
-makeSAMResource(ResourceType.Fugetsu, 1, {timeout: 40});
-makeSAMResource(ResourceType.Fuka, 1, {timeout: 40});
-makeSAMResource(ResourceType.ZanshinReady, 1, {timeout: 30});
-makeSAMResource(ResourceType.Tendo, 1, {timeout: 30});
-makeSAMResource(ResourceType.OgiReady, 1, {timeout: 30});
-makeSAMResource(ResourceType.TsubameGaeshiReady, 1, {timeout: 30});
-makeSAMResource(ResourceType.ThirdEye, 1, {timeout: 4});
-makeSAMResource(ResourceType.Tengentsu, 1, {timeout: 4});
-makeSAMResource(ResourceType.TengentsusForesight, 1, {timeout: 9});
-makeSAMResource(ResourceType.EnhancedEnpi, 1, {timeout: 15});
-makeSAMResource(ResourceType.Meditate, 1, {timeout: 15.2}); // based on a random DSR P7 log I saw
+makeSAMResource(ResourceType.MeikyoShisui, 3, { timeout: 20 });
+makeSAMResource(ResourceType.Fugetsu, 1, { timeout: 40 });
+makeSAMResource(ResourceType.Fuka, 1, { timeout: 40 });
+makeSAMResource(ResourceType.ZanshinReady, 1, { timeout: 30 });
+makeSAMResource(ResourceType.Tendo, 1, { timeout: 30 });
+makeSAMResource(ResourceType.OgiReady, 1, { timeout: 30 });
+makeSAMResource(ResourceType.TsubameGaeshiReady, 1, { timeout: 30 });
+makeSAMResource(ResourceType.ThirdEye, 1, { timeout: 4 });
+makeSAMResource(ResourceType.Tengentsu, 1, { timeout: 4 });
+makeSAMResource(ResourceType.TengentsusForesight, 1, { timeout: 9 });
+makeSAMResource(ResourceType.EnhancedEnpi, 1, { timeout: 15 });
+makeSAMResource(ResourceType.Meditate, 1, { timeout: 15.2 }); // based on a random DSR P7 log I saw
 
 makeSAMResource(ResourceType.Kenki, 100);
 makeSAMResource(ResourceType.Setsu, 1);
@@ -50,7 +56,7 @@ makeSAMResource(ResourceType.Getsu, 1);
 makeSAMResource(ResourceType.KaSen, 1);
 makeSAMResource(ResourceType.Meditation, 3);
 
-makeSAMResource(ResourceType.HiganbanaDoT, 1, {timeout: 60});
+makeSAMResource(ResourceType.HiganbanaDoT, 1, { timeout: 60 });
 
 // samurai combo resources (behind the scenes)
 const ALL_SAM_COMBOS = [
@@ -61,7 +67,7 @@ const ALL_SAM_COMBOS = [
 	ResourceType.KaeshiOgiReady,
 ];
 
-ALL_SAM_COMBOS.forEach((combo) => makeSAMResource(combo, 1, {timeout: 30}));
+ALL_SAM_COMBOS.forEach((combo) => makeSAMResource(combo, 1, { timeout: 30 }));
 
 // Track the action for tsubame-gaeshi to perform
 // 0 - nothing
@@ -69,7 +75,7 @@ ALL_SAM_COMBOS.forEach((combo) => makeSAMResource(combo, 1, {timeout: 30}));
 // 2 - Tendo Goken
 // 3 - Midare Setsugekka
 // 4 - Tendo Setsugekka
-makeSAMResource(ResourceType.KaeshiTracker, 4, {timeout: 30});
+makeSAMResource(ResourceType.KaeshiTracker, 4, { timeout: 30 });
 
 // === JOB GAUGE AND STATE ===
 export class SAMState extends GameState {
@@ -80,8 +86,12 @@ export class SAMState extends GameState {
 
 		this.higanbanaTickOffset = this.nonProcRng() * 3.0;
 
-		const gurenCd = Traits.hasUnlocked(TraitName.EnhancedHissatsu, this.config.level) ? 60 : 120;
-		const meikyoStacks = Traits.hasUnlocked(TraitName.EnhancedMeikyoShisui, this.config.level) ? 2 : 1;
+		const gurenCd = Traits.hasUnlocked(TraitName.EnhancedHissatsu, this.config.level)
+			? 60
+			: 120;
+		const meikyoStacks = Traits.hasUnlocked(TraitName.EnhancedMeikyoShisui, this.config.level)
+			? 2
+			: 1;
 		[
 			new CoolDown(ResourceType.cd_MeikyoShisui, 55, meikyoStacks, meikyoStacks),
 			new CoolDown(ResourceType.cd_SeneiGuren, gurenCd, 1, 1),
@@ -95,9 +105,11 @@ export class SAMState extends GameState {
 		// higanbana DoT tick
 		let recurringHiganbanaTick = () => {
 			let higanbana = this.resources.get(ResourceType.HiganbanaDoT) as DoTBuff;
-			if (higanbana.available(1)) {// dot buff is effective
+			if (higanbana.available(1)) {
+				// dot buff is effective
 				higanbana.tickCount++;
-				if (higanbana.node) { // aka this buff is applied by a skill (and not just from an override)
+				if (higanbana.node) {
+					// aka this buff is applied by a skill (and not just from an override)
 					// access potencies at index [1, 10] (since 0 is initial potency)
 					let p = higanbana.node.getPotencies()[higanbana.tickCount];
 					controller.resolvePotency(p);
@@ -108,34 +120,46 @@ export class SAMState extends GameState {
 				controller.reportDotTick(this.time);
 			}
 			// queue the next tick
-			this.addEvent(new Event("higanbana DoT tick", 3, ()=>{
-				recurringHiganbanaTick();
-			}));
+			this.addEvent(
+				new Event("higanbana DoT tick", 3, () => {
+					recurringHiganbanaTick();
+				}),
+			);
 		};
-		let timeTillFirstHiganbanaTick = this.config.timeTillFirstManaTick + this.higanbanaTickOffset;
+		let timeTillFirstHiganbanaTick =
+			this.config.timeTillFirstManaTick + this.higanbanaTickOffset;
 		while (timeTillFirstHiganbanaTick > 3) timeTillFirstHiganbanaTick -= 3;
-		this.addEvent(new Event("initial higanbana DoT tick", timeTillFirstHiganbanaTick, recurringHiganbanaTick));
+		this.addEvent(
+			new Event(
+				"initial higanbana DoT tick",
+				timeTillFirstHiganbanaTick,
+				recurringHiganbanaTick,
+			),
+		);
 	}
 
 	getFugetsuModifier(): PotencyModifier {
-		return Traits.hasUnlocked(TraitName.EnhancedFugetsuAndFuka, this.config.level) ? Modifiers.FugetsuEnhanced : Modifiers.FugetsuBase;
+		return Traits.hasUnlocked(TraitName.EnhancedFugetsuAndFuka, this.config.level)
+			? Modifiers.FugetsuEnhanced
+			: Modifiers.FugetsuBase;
 	}
 
 	// Return true if the active combo buff is up, or meikyo is active.
 	// Does not advance the combo state.
 	checkCombo(requiredCombo: ResourceType): boolean {
-		return this.hasResourceAvailable(requiredCombo) || this.hasResourceAvailable(ResourceType.MeikyoShisui);
+		return (
+			this.hasResourceAvailable(requiredCombo) ||
+			this.hasResourceAvailable(ResourceType.MeikyoShisui)
+		);
 	}
 
 	refreshBuff(rscType: ResourceType, delay: number) {
 		// buffs are applied on hit, so apply it after a delay
-		this.addEvent(new Event(
-			"gain fugetsu",
-			delay,
-			() => {
+		this.addEvent(
+			new Event("gain fugetsu", delay, () => {
 				this.resources.get(rscType).gain(1);
 				this.enqueueResourceDrop(rscType);
-			})
+			}),
 		);
 	}
 
@@ -157,7 +181,7 @@ export class SAMState extends GameState {
 	}
 
 	gainKenki(kenkiAmount: number) {
-		if ((this.resources.get(ResourceType.Kenki).availableAmount() + kenkiAmount) > 100) {
+		if (this.resources.get(ResourceType.Kenki).availableAmount() + kenkiAmount > 100) {
 			controller.reportWarning(WarningType.KenkiOvercap);
 		}
 		this.resources.get(ResourceType.Kenki).gain(kenkiAmount);
@@ -180,7 +204,8 @@ export class SAMState extends GameState {
 
 	countSen(): number {
 		return [ResourceType.Getsu, ResourceType.Setsu, ResourceType.KaSen].reduce(
-			(acc, sen) => this.hasResourceAvailable(sen) ? acc + 1 : acc, 0
+			(acc, sen) => (this.hasResourceAvailable(sen) ? acc + 1 : acc),
+			0,
 		);
 	}
 
@@ -212,7 +237,7 @@ export class SAMState extends GameState {
 					this.addEvent(meditateEvent(tickNumber + 1));
 				}
 			});
-			event.addTag(EventTag.MeditateTick)
+			event.addTag(EventTag.MeditateTick);
 			return event;
 		};
 		this.addEvent(meditateEvent(0));
@@ -236,67 +261,92 @@ export class SAMState extends GameState {
 // If an ability appears on the hotbar only when replacing another ability, it should have
 // `startOnHotbar` set to false, and `replaceIf` set appropriately on the abilities to replace.
 
-const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
-	replaceIf?: ConditionalSkillReplace<SAMState>[],
-	startOnHotbar?: boolean,
-	highlightIf?: StatePredicate<SAMState>,
-	autoUpgrade?: SkillAutoReplace,
-	autoDowngrade?: SkillAutoReplace,
-	baseCastTime?: number,
-	baseRecastTime?: number,
-	basePotency: number | Array<[TraitName, number]>,
-	combo?: {
-		potency: number | Array<[TraitName, number]>,
-		resource: ResourceType,
+const makeGCD_SAM = (
+	name: SkillName,
+	unlockLevel: number,
+	params: {
+		replaceIf?: ConditionalSkillReplace<SAMState>[];
+		startOnHotbar?: boolean;
+		highlightIf?: StatePredicate<SAMState>;
+		autoUpgrade?: SkillAutoReplace;
+		autoDowngrade?: SkillAutoReplace;
+		baseCastTime?: number;
+		baseRecastTime?: number;
+		basePotency: number | Array<[TraitName, number]>;
+		combo?: {
+			potency: number | Array<[TraitName, number]>;
+			resource: ResourceType;
+		};
+		positional?: {
+			potency: number | Array<[TraitName, number]>;
+			comboPotency: number | Array<[TraitName, number]>;
+			location: "flank" | "rear";
+		};
+		applicationDelay: number;
+		jobPotencyModifiers?: PotencyModifierFn<SAMState>;
+		validateAttempt?: StatePredicate<SAMState>;
+		onExecute?: EffectFn<SAMState>;
+		onConfirm?: EffectFn<SAMState>;
+		onApplication?: EffectFn<SAMState>;
 	},
-	positional?: {
-		potency: number | Array<[TraitName, number]>,
-		comboPotency: number | Array<[TraitName, number]>,
-		location: "flank" | "rear",
-	},
-	applicationDelay: number,
-	jobPotencyModifiers?: PotencyModifierFn<SAMState>,
-	validateAttempt?: StatePredicate<SAMState>,
-	onExecute?: EffectFn<SAMState>,
-	onConfirm?: EffectFn<SAMState>,
-	onApplication?: EffectFn<SAMState>,
-}): Weaponskill<SAMState> => {
+): Weaponskill<SAMState> => {
 	const onExecute: EffectFn<SAMState> = combineEffects(
 		(state) => state.cancelMeditate(), // cancel meditate
-		params.onExecute ?? NO_EFFECT
+		params.onExecute ?? NO_EFFECT,
 	);
 	const onApplication: EffectFn<SAMState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyModifiers = (state: Readonly<SAMState>) => {
-		const mods: PotencyModifier[] = state.hasResourceAvailable(ResourceType.Fugetsu) ? [state.getFugetsuModifier()] : [];
+		const mods: PotencyModifier[] = state.hasResourceAvailable(ResourceType.Fugetsu)
+			? [state.getFugetsuModifier()]
+			: [];
 		if (params.jobPotencyModifiers) {
 			mods.push(...params.jobPotencyModifiers(state));
 		}
-		const hitPositional = params.positional
-			&& (state.hasResourceAvailable(ResourceType.TrueNorth)
-				|| (params.positional.location === "flank" && state.hasResourceAvailable(ResourceType.FlankPositional))
-				|| (params.positional.location === "rear" && state.hasResourceAvailable(ResourceType.RearPositional)));
+		const hitPositional =
+			params.positional &&
+			(state.hasResourceAvailable(ResourceType.TrueNorth) ||
+				(params.positional.location === "flank" &&
+					state.hasResourceAvailable(ResourceType.FlankPositional)) ||
+				(params.positional.location === "rear" &&
+					state.hasResourceAvailable(ResourceType.RearPositional)));
 		if (params.combo && state.checkCombo(params.combo.resource)) {
-			mods.push(makeComboModifier(getBasePotency(state, params.combo.potency) - getBasePotency(state, params.basePotency)));
+			mods.push(
+				makeComboModifier(
+					getBasePotency(state, params.combo.potency) -
+						getBasePotency(state, params.basePotency),
+				),
+			);
 			// typescript isn't smart enough to elide the null check
 			if (params.positional && hitPositional) {
-				mods.push(makePositionalModifier(getBasePotency(state, params.positional.comboPotency) - getBasePotency(state, params.combo.potency)));
+				mods.push(
+					makePositionalModifier(
+						getBasePotency(state, params.positional.comboPotency) -
+							getBasePotency(state, params.combo.potency),
+					),
+				);
 			}
 		} else if (params.positional && hitPositional) {
-			mods.push(makePositionalModifier(getBasePotency(state, params.positional.potency) - getBasePotency(state, params.basePotency)));
+			mods.push(
+				makePositionalModifier(
+					getBasePotency(state, params.positional.potency) -
+						getBasePotency(state, params.basePotency),
+				),
+			);
 		}
 		return mods;
 	};
 	let castTime: number | ResourceCalculationFn<SAMState> = params.baseCastTime || 0;
 	if (castTime) {
 		// All SAM castbars are 1.8s (scaled to sks and affected by fuka) when synced
-		castTime = (state) => (
+		castTime = (state) =>
 			Traits.hasUnlocked(TraitName.EnhancedIaijutsu, state.config.level)
-			? params.baseCastTime || 0
-			: state.config.adjustedSksCastTime(
-				1.8,
-				state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
-			)
-		);
+				? params.baseCastTime || 0
+				: state.config.adjustedSksCastTime(
+						1.8,
+						state.hasResourceAvailable(ResourceType.Fuka)
+							? ResourceType.Fuka
+							: undefined,
+					);
 	}
 	return makeWeaponskill(ShellJob.SAM, name, unlockLevel, {
 		replaceIf: params.replaceIf,
@@ -305,10 +355,11 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		castTime: castTime,
-		recastTime: (state) => state.config.adjustedSksGCD(
-			params.baseRecastTime ?? 2.5,
-			state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
-		),
+		recastTime: (state) =>
+			state.config.adjustedSksGCD(
+				params.baseRecastTime ?? 2.5,
+				state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
+			),
 		potency: params.basePotency,
 		validateAttempt: params.validateAttempt,
 		jobPotencyModifiers: jobPotencyModifiers,
@@ -320,30 +371,37 @@ const makeGCD_SAM = (name: SkillName, unlockLevel: number, params: {
 	});
 };
 
-
-const makeAbility_SAM = (name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
-	replaceIf?: ConditionalSkillReplace<SAMState>[],
-	startOnHotbar?: boolean,
-	highlightIf?: StatePredicate<SAMState>,
-	applicationDelay?: number,
-	potency?: number | Array<[TraitName, number]>,
-	jobPotencyModifiers?: PotencyModifierFn<SAMState>,
-	cooldown: number,
-	maxCharges?: number,
-	validateAttempt?: StatePredicate<SAMState>,
-	onExecute?: EffectFn<SAMState>,
-	onConfirm?: EffectFn<SAMState>,
-	onApplication?: EffectFn<SAMState>,
-}): Ability<SAMState> => {
+const makeAbility_SAM = (
+	name: SkillName,
+	unlockLevel: number,
+	cdName: ResourceType,
+	params: {
+		replaceIf?: ConditionalSkillReplace<SAMState>[];
+		startOnHotbar?: boolean;
+		highlightIf?: StatePredicate<SAMState>;
+		applicationDelay?: number;
+		potency?: number | Array<[TraitName, number]>;
+		jobPotencyModifiers?: PotencyModifierFn<SAMState>;
+		cooldown: number;
+		maxCharges?: number;
+		validateAttempt?: StatePredicate<SAMState>;
+		onExecute?: EffectFn<SAMState>;
+		onConfirm?: EffectFn<SAMState>;
+		onApplication?: EffectFn<SAMState>;
+	},
+): Ability<SAMState> => {
 	if (params.potency && !params.jobPotencyModifiers) {
-		params.jobPotencyModifiers = (state) => state.hasResourceAvailable(ResourceType.Fugetsu) ? [state.getFugetsuModifier()] : [];
+		params.jobPotencyModifiers = (state) =>
+			state.hasResourceAvailable(ResourceType.Fugetsu) ? [state.getFugetsuModifier()] : [];
 	}
 	if (name !== SkillName.ThirdEyePop && name !== SkillName.TengentsuPop) {
-		params.onExecute = combineEffects((state) => state.cancelMeditate(), params.onExecute ?? NO_EFFECT);
+		params.onExecute = combineEffects(
+			(state) => state.cancelMeditate(),
+			params.onExecute ?? NO_EFFECT,
+		);
 	}
 	return makeAbility(ShellJob.SAM, name, unlockLevel, cdName, params);
 };
-
 
 // https://docs.google.com/spreadsheets/d/1Emevsz5_oJdmkXy23hZQUXimirZQaoo5BejSzL3hZ9I/edit?gid=865790859#gid=865790859
 
@@ -356,9 +414,14 @@ makeGCD_SAM(SkillName.Enpi, 15, {
 		}
 		state.gainKenki(10);
 	},
-	jobPotencyModifiers: (state) => state.hasResourceAvailable(ResourceType.EnhancedEnpi) ? [
-		Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level) ? Modifiers.YatenpiEnhanced : Modifiers.YatenpiBase
-	] : [],
+	jobPotencyModifiers: (state) =>
+		state.hasResourceAvailable(ResourceType.EnhancedEnpi)
+			? [
+					Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level)
+						? Modifiers.YatenpiEnhanced
+						: Modifiers.YatenpiBase,
+				]
+			: [],
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.EnhancedEnpi),
 });
 
@@ -382,7 +445,7 @@ makeGCD_SAM(SkillName.Gyofu, 92, {
 		state.tryConsumeMeikyo();
 		state.gainKenki(5);
 		state.progressActiveCombo([ResourceType.SAMTwoReady]);
-	}
+	},
 });
 
 makeGCD_SAM(SkillName.Yukikaze, 50, {
@@ -481,7 +544,7 @@ makeGCD_SAM(SkillName.Gekko, 30, {
 });
 
 makeGCD_SAM(SkillName.Shifu, 18, {
-	applicationDelay: 0.80,
+	applicationDelay: 0.8,
 	basePotency: [
 		[TraitName.Never, 120],
 		[TraitName.WayOfTheSamuraiIII, 140],
@@ -616,7 +679,7 @@ const tenkaCondition: ConditionalSkillReplace<SAMState> = {
 
 const tendoGokenCondition: ConditionalSkillReplace<SAMState> = {
 	newSkill: SkillName.TendoGoken,
-	condition: (state) => state.hasResourceAvailable(ResourceType.Tendo) && state.countSen() === 2.
+	condition: (state) => state.hasResourceAvailable(ResourceType.Tendo) && state.countSen() === 2,
 };
 
 const midareCondition: ConditionalSkillReplace<SAMState> = {
@@ -630,7 +693,13 @@ const tendoMidareCondition: ConditionalSkillReplace<SAMState> = {
 };
 
 makeGCD_SAM(SkillName.Iaijutsu, 30, {
-	replaceIf: [banaCondition, tenkaCondition, tendoGokenCondition, midareCondition, tendoMidareCondition],
+	replaceIf: [
+		banaCondition,
+		tenkaCondition,
+		tendoGokenCondition,
+		midareCondition,
+		tendoMidareCondition,
+	],
 	baseCastTime: 1.3, // if below level 80, set to scale in makeGCD_SAM
 	basePotency: 0,
 	applicationDelay: 0,
@@ -662,13 +731,15 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 			aspect: Aspect.Other,
 			basePotency: 200,
 			snapshotTime: snapshotTime,
-			description: ""
+			description: "",
 		});
 		pInitial.modifiers = mods;
 		node.addPotency(pInitial);
 		// tick potencies
 		const ticks = 20;
-		const tickPotency = Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level) ? 50 : 45;
+		const tickPotency = Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level)
+			? 50
+			: 45;
 		for (let i = 0; i < ticks; i++) {
 			let pDot = new Potency({
 				config: controller.record.config ?? controller.gameConfig,
@@ -677,7 +748,7 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 				aspect: Aspect.Other,
 				basePotency: state.config.adjustedDoTPotency(tickPotency, "sks"),
 				snapshotTime: snapshotTime,
-				description: "DoT " + (i+1) + `/${ticks}`
+				description: "DoT " + (i + 1) + `/${ticks}`,
 			});
 			pDot.modifiers = mods;
 			node.addPotency(pDot);
@@ -706,10 +777,10 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 				rscType: ResourceType.HiganbanaDoT,
 				name: "drop higanbana DoT",
 				delay: duration,
-				fnOnRsc: rsc=>{
+				fnOnRsc: (rsc) => {
 					rsc.consume(1);
 					controller.reportDotDrop(state.getDisplayTime());
-				}
+				},
 			});
 		}
 		bana.node = node;
@@ -717,17 +788,15 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 	},
 });
 
-const iaiConfirm = (kaeshiValue: number) => (
-	(state: SAMState) => {
-		state.consumeAllSen();
-		state.resources.get(ResourceType.KaeshiTracker).overrideCurrentValue(kaeshiValue);
-		state.enqueueResourceDrop(ResourceType.KaeshiTracker);
-		state.gainMeditation();
-		state.resources.get(ResourceType.TsubameGaeshiReady).gain(1);
-		state.enqueueResourceDrop(ResourceType.TsubameGaeshiReady);
-		state.tryConsumeResource(ResourceType.Tendo);
-	}
-);
+const iaiConfirm = (kaeshiValue: number) => (state: SAMState) => {
+	state.consumeAllSen();
+	state.resources.get(ResourceType.KaeshiTracker).overrideCurrentValue(kaeshiValue);
+	state.enqueueResourceDrop(ResourceType.KaeshiTracker);
+	state.gainMeditation();
+	state.resources.get(ResourceType.TsubameGaeshiReady).gain(1);
+	state.enqueueResourceDrop(ResourceType.TsubameGaeshiReady);
+	state.tryConsumeResource(ResourceType.Tendo);
+};
 
 makeGCD_SAM(SkillName.TenkaGoken, 30, {
 	startOnHotbar: false,
@@ -795,7 +864,12 @@ const tendoKaeshiSetsugekkaCondition: ConditionalSkillReplace<SAMState> = {
 };
 
 makeGCD_SAM(SkillName.TsubameGaeshi, 74, {
-	replaceIf: [kaeshiGokenCondition, tendoKaeshiGokenCondition, kaeshiSetsugekkaCondition, tendoKaeshiSetsugekkaCondition],
+	replaceIf: [
+		kaeshiGokenCondition,
+		tendoKaeshiGokenCondition,
+		kaeshiSetsugekkaCondition,
+		tendoKaeshiSetsugekkaCondition,
+	],
 	basePotency: 0,
 	applicationDelay: 0,
 	validateAttempt: (state) => false,
@@ -809,7 +883,11 @@ const tsubameConfirm = (state: SAMState) => {
 
 makeGCD_SAM(SkillName.KaeshiGoken, 74, {
 	startOnHotbar: false,
-	replaceIf: [tendoKaeshiGokenCondition, kaeshiSetsugekkaCondition, tendoKaeshiSetsugekkaCondition],
+	replaceIf: [
+		tendoKaeshiGokenCondition,
+		kaeshiSetsugekkaCondition,
+		tendoKaeshiSetsugekkaCondition,
+	],
 	basePotency: 300,
 	applicationDelay: 0.62,
 	validateAttempt: kaeshiGokenCondition.condition,
@@ -819,7 +897,11 @@ makeGCD_SAM(SkillName.KaeshiGoken, 74, {
 
 makeGCD_SAM(SkillName.TendoKaeshiGoken, 100, {
 	startOnHotbar: false,
-	replaceIf: [tendoKaeshiGokenCondition, kaeshiSetsugekkaCondition, tendoKaeshiSetsugekkaCondition],
+	replaceIf: [
+		tendoKaeshiGokenCondition,
+		kaeshiSetsugekkaCondition,
+		tendoKaeshiSetsugekkaCondition,
+	],
 	basePotency: 410,
 	applicationDelay: 0.36,
 	validateAttempt: tendoKaeshiGokenCondition.condition,
@@ -853,10 +935,12 @@ makeGCD_SAM(SkillName.TendoKaeshiSetsugekka, 74, {
 });
 
 makeGCD_SAM(SkillName.OgiNamikiri, 90, {
-	replaceIf: [{
-		newSkill: SkillName.KaeshiNamikiri,
-		condition: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
-	}],
+	replaceIf: [
+		{
+			newSkill: SkillName.KaeshiNamikiri,
+			condition: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
+		},
+	],
 	applicationDelay: 0.49,
 	basePotency: [
 		[TraitName.Never, 860],
@@ -902,10 +986,12 @@ makeAbility_SAM(SkillName.MeikyoShisui, 50, ResourceType.cd_MeikyoShisui, {
 });
 
 makeAbility_SAM(SkillName.Ikishoten, 68, ResourceType.cd_Ikishoten, {
-	replaceIf: [{
-		newSkill: SkillName.Zanshin,
-		condition: (state) => state.hasResourceAvailable(ResourceType.ZanshinReady),
-	}],
+	replaceIf: [
+		{
+			newSkill: SkillName.Zanshin,
+			condition: (state) => state.hasResourceAvailable(ResourceType.ZanshinReady),
+		},
+	],
 	cooldown: 120,
 	validateAttempt: (state) => state.isInCombat(),
 	onConfirm: (state) => {
@@ -999,10 +1085,12 @@ makeAbility_SAM(SkillName.Shoha, 80, ResourceType.cd_Shoha, {
 makeResourceAbility(ShellJob.SAM, SkillName.ThirdEye, 6, ResourceType.cd_ThirdEye, {
 	rscType: ResourceType.ThirdEye,
 	autoUpgrade: { trait: TraitName.ThirdEyeMastery, otherSkill: SkillName.Tengentsu },
-	replaceIf: [{
-		newSkill: SkillName.ThirdEyePop,
-		condition: (state) => state.hasResourceAvailable(ResourceType.ThirdEye),
-	}],
+	replaceIf: [
+		{
+			newSkill: SkillName.ThirdEyePop,
+			condition: (state) => state.hasResourceAvailable(ResourceType.ThirdEye),
+		},
+	],
 	cooldown: 15,
 	applicationDelay: 0,
 	onExecute: (state: SAMState) => state.cancelMeditate(),
@@ -1011,10 +1099,12 @@ makeResourceAbility(ShellJob.SAM, SkillName.ThirdEye, 6, ResourceType.cd_ThirdEy
 makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_ThirdEye, {
 	rscType: ResourceType.Tengentsu,
 	autoDowngrade: { trait: TraitName.ThirdEyeMastery, otherSkill: SkillName.ThirdEye },
-	replaceIf: [{
-		newSkill: SkillName.TengentsuPop,
-		condition: (state) => state.hasResourceAvailable(ResourceType.Tengentsu),
-	}],
+	replaceIf: [
+		{
+			newSkill: SkillName.TengentsuPop,
+			condition: (state) => state.hasResourceAvailable(ResourceType.Tengentsu),
+		},
+	],
 	cooldown: 15,
 	applicationDelay: 0,
 	onExecute: (state: SAMState) => state.cancelMeditate(),
@@ -1052,10 +1142,9 @@ makeAbility_SAM(SkillName.Zanshin, 96, ResourceType.cd_Zanshin, {
 	cooldown: 1,
 	applicationDelay: 1.03,
 	potency: 900,
-	validateAttempt: (state) => (
+	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.ZanshinReady) &&
-		state.resources.get(ResourceType.Kenki).available(50)
-	),
+		state.resources.get(ResourceType.Kenki).available(50),
 	onConfirm: (state) => {
 		state.resources.get(ResourceType.Kenki).consume(50);
 		state.tryConsumeResource(ResourceType.ZanshinReady);
@@ -1075,9 +1164,9 @@ makeResourceAbility(ShellJob.SAM, SkillName.Meditate, 60, ResourceType.cd_Medita
 			2.5,
 			state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
 		);
-		state.cooldowns.get(ResourceType.cd_GCD).useStackWithRecast(
-			state, state.config.getAfterTaxGCD(recastTime)
-		);
+		state.cooldowns
+			.get(ResourceType.cd_GCD)
+			.useStackWithRecast(state, state.config.getAfterTaxGCD(recastTime));
 	},
 	// start the meditate timer
 	onApplication: (state: SAMState) => state.startMeditateTimer(),

@@ -1,12 +1,14 @@
 import React from "react";
-import {MdDarkMode, MdLightMode} from "react-icons/md";
-import {getCachedValue, setCachedValue, ShellJob} from "../Controller/Common";
-import {controller} from "../Controller/Controller";
+import { MdDarkMode, MdLightMode } from "react-icons/md";
+import { getCachedValue, setCachedValue, ShellJob } from "../Controller/Common";
+import { controller } from "../Controller/Controller";
 
 export type ColorTheme = "Light" | "Dark";
 
-let getCurrentColorTheme : ()=>ColorTheme = () => {return "Light"}
-let setCurrentColorTheme : (colorTheme: ColorTheme)=>void = (colorTheme) => {}
+let getCurrentColorTheme: () => ColorTheme = () => {
+	return "Light";
+};
+let setCurrentColorTheme: (colorTheme: ColorTheme) => void = (colorTheme) => {};
 
 export const enum MarkerColor {
 	Red = "#f64141",
@@ -17,140 +19,140 @@ export const enum MarkerColor {
 	Blue = "#217ff5",
 	Purple = "#9755ef",
 	Pink = "#ee79ee",
-	Grey = "#6f6f6f"
+	Grey = "#6f6f6f",
 }
 
 export type BLMResourceColors = {
-	enochian: string,
-	astralFire: string,
-	astralSoul: string,
-	umbralIce: string,
-	umbralHeart: string,
-	paradox: string,
-	polyTimer: string,
-	polyStacks: string,
-}
-
-export type PCTResourceColors = {
-	creatureCanvas: string,
-	weaponCanvas: string,
-	landscapeCanvas: string,
-	paletteGauge: string,
-	holyPaint: string,
-	cometPaint: string,
-	starryBuff: string,
-}
-
-export type RDMResourceColors = {
-	whiteMana: string,
-	blackMana: string,
-	manaStack: string,
-	emboldenBuff: string,
-	manaficBuff: string,
-	accelBuff: string,
-}
-
-export type RPRResourceColors = {
-	soulGaugeLow: string,
-	soulGaugeHigh: string,
-	shroudGaugeLow: string,
-	shroudGaugeHigh: string,
-	lemureShroud: string,
-	voidShroudLow: string,
-	voidShroudHigh: string,
-	deathsDesign: string,
-	arcaneCircle: string,
-}
-
-export type SAMResourceColors = {
-	kenki: string,
-	setsu: string,
-	getsu: string,
-	kaSen: string,
-	meditation: string,
-	fugetsu: string,
-	iai: string,
-}
-
-export type DNCResourceColors = {
-	esprit: string,
-	feathers: string,
-	emboite: string,
-	entrechat: string,
-	jete: string,
-	pirouette: string,
-}
-
-export type MCHResourceColors = {
-	heat: string,
-	battery: string,
-}
-
-export type WARResourceColors = {
-	beastGauge: string,
-}
-
-export type JobAccentColors = {
-	[ShellJob.BLM]: string,
-	[ShellJob.PCT]: string,
-	[ShellJob.RDM]: string,
-	[ShellJob.DNC]: string,
-	[ShellJob.SAM]: string,
-	[ShellJob.MCH]: string,
-	[ShellJob.WAR]: string,
-}
-
-export type ThemeColors = {
-	accent: string,
-	jobAccents: JobAccentColors,
-	realTime: string,
-	historical: string,
-	fileDownload: string,
-	text: string,
-	emphasis: string,
-	success: string,
-	warning: string,
-	background: string,
-	tipBackground: string,
-	bgLowContrast: string,
-	bgMediumContrast: string,
-	bgHighContrast: string,
-	resources: {
-		gcdBar: string,
-		lockBar: string,
-		mana: string,
-		manaTick: string,
-		cdhTag: string,
-		comboTag: string,
-	},
-	blm: BLMResourceColors,
-	pct: PCTResourceColors,
-	rdm: RDMResourceColors,
-	dnc: DNCResourceColors,
-	sam: SAMResourceColors,
-	mch: MCHResourceColors,
-	rpr: RPRResourceColors,
-	war: WARResourceColors,
-	timeline: {
-		ruler: string,
-		tracks: string,
-		castBar: string,
-		lockBar: string,
-		gcdBar: string,
-		llCover: string,
-		potCover: string,
-		buffCover: string,
-		damageMark: string,
-		untargetableDamageMark: string,
-		mpTickMark: string,
-		warningMark: string,
-		lucidTickMark: string,
-		countdown: string,
-		markerAlpha: string,
-	}
+	enochian: string;
+	astralFire: string;
+	astralSoul: string;
+	umbralIce: string;
+	umbralHeart: string;
+	paradox: string;
+	polyTimer: string;
+	polyStacks: string;
 };
 
-export let getCurrentThemeColors: ()=>ThemeColors = () => {
+export type PCTResourceColors = {
+	creatureCanvas: string;
+	weaponCanvas: string;
+	landscapeCanvas: string;
+	paletteGauge: string;
+	holyPaint: string;
+	cometPaint: string;
+	starryBuff: string;
+};
+
+export type RDMResourceColors = {
+	whiteMana: string;
+	blackMana: string;
+	manaStack: string;
+	emboldenBuff: string;
+	manaficBuff: string;
+	accelBuff: string;
+};
+
+export type RPRResourceColors = {
+	soulGaugeLow: string;
+	soulGaugeHigh: string;
+	shroudGaugeLow: string;
+	shroudGaugeHigh: string;
+	lemureShroud: string;
+	voidShroudLow: string;
+	voidShroudHigh: string;
+	deathsDesign: string;
+	arcaneCircle: string;
+};
+
+export type SAMResourceColors = {
+	kenki: string;
+	setsu: string;
+	getsu: string;
+	kaSen: string;
+	meditation: string;
+	fugetsu: string;
+	iai: string;
+};
+
+export type DNCResourceColors = {
+	esprit: string;
+	feathers: string;
+	emboite: string;
+	entrechat: string;
+	jete: string;
+	pirouette: string;
+};
+
+export type MCHResourceColors = {
+	heat: string;
+	battery: string;
+};
+
+export type WARResourceColors = {
+	beastGauge: string;
+};
+
+export type JobAccentColors = {
+	[ShellJob.BLM]: string;
+	[ShellJob.PCT]: string;
+	[ShellJob.RDM]: string;
+	[ShellJob.DNC]: string;
+	[ShellJob.SAM]: string;
+	[ShellJob.MCH]: string;
+	[ShellJob.WAR]: string;
+};
+
+export type ThemeColors = {
+	accent: string;
+	jobAccents: JobAccentColors;
+	realTime: string;
+	historical: string;
+	fileDownload: string;
+	text: string;
+	emphasis: string;
+	success: string;
+	warning: string;
+	background: string;
+	tipBackground: string;
+	bgLowContrast: string;
+	bgMediumContrast: string;
+	bgHighContrast: string;
+	resources: {
+		gcdBar: string;
+		lockBar: string;
+		mana: string;
+		manaTick: string;
+		cdhTag: string;
+		comboTag: string;
+	};
+	blm: BLMResourceColors;
+	pct: PCTResourceColors;
+	rdm: RDMResourceColors;
+	dnc: DNCResourceColors;
+	sam: SAMResourceColors;
+	mch: MCHResourceColors;
+	rpr: RPRResourceColors;
+	war: WARResourceColors;
+	timeline: {
+		ruler: string;
+		tracks: string;
+		castBar: string;
+		lockBar: string;
+		gcdBar: string;
+		llCover: string;
+		potCover: string;
+		buffCover: string;
+		damageMark: string;
+		untargetableDamageMark: string;
+		mpTickMark: string;
+		warningMark: string;
+		lucidTickMark: string;
+		countdown: string;
+		markerAlpha: string;
+	};
+};
+
+export let getCurrentThemeColors: () => ThemeColors = () => {
 	let currentColorTheme = getCurrentColorTheme();
 	if (currentColorTheme === "Dark") {
 		return {
@@ -199,25 +201,25 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				weaponCanvas: "#a53535",
 				landscapeCanvas: "#2e51dd",
 				paletteGauge: "#b69241",
-				holyPaint: "#9bc6dd",  // blue-ish light gray
-				cometPaint: "#7e19aa",  // purple-ish black
+				holyPaint: "#9bc6dd", // blue-ish light gray
+				cometPaint: "#7e19aa", // purple-ish black
 				starryBuff: "#509bd5",
 			},
 			rdm: {
 				whiteMana: "#dddddd",
-				blackMana: "#2a4bf5",  // blueish
-				manaStack: "#cb8046",  // astral soul
+				blackMana: "#2a4bf5", // blueish
+				manaStack: "#cb8046", // astral soul
 				emboldenBuff: "#de0202", // bright red but a little less saturated
 				manaficBuff: "#c169c2", // lavender
 				accelBuff: "#f0d1e8", // very light pink
 			},
 			dnc: {
 				esprit: "#e2b0af",
-				feathers: '#8DA147',
-				emboite: '#bf615c',
-				entrechat: '#3a8db7',
-				jete: '#539350',
-				pirouette: '#b0984e'
+				feathers: "#8DA147",
+				emboite: "#bf615c",
+				entrechat: "#3a8db7",
+				jete: "#539350",
+				pirouette: "#b0984e",
 			},
 			sam: {
 				kenki: "#d55124",
@@ -229,8 +231,8 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				iai: "#89cfef",
 			},
 			mch: {
-				heat:'#D35A10',
-				battery: '#2C9FCB',
+				heat: "#D35A10",
+				battery: "#2C9FCB",
 			},
 			rpr: {
 				soulGaugeLow: "#660929",
@@ -261,10 +263,11 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				warningMark: "#9d7103",
 				lucidTickMark: "#56b3d5",
 				countdown: "rgba(15, 15, 15, 0.4)",
-				markerAlpha: "4f"
-			}
+				markerAlpha: "4f",
+			},
 		};
-	} else { // Light mode
+	} else {
+		// Light mode
 		return {
 			accent: "mediumpurple",
 			jobAccents: {
@@ -311,25 +314,25 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				weaponCanvas: "#d54d48",
 				landscapeCanvas: "#4568f6",
 				paletteGauge: "#f5cf96",
-				holyPaint: "#b7c9d5",  // blue-ish light gray
-				cometPaint: "#9926c8",  // purple-ish black
+				holyPaint: "#b7c9d5", // blue-ish light gray
+				cometPaint: "#9926c8", // purple-ish black
 				starryBuff: "#66bbff",
 			},
 			rdm: {
-				whiteMana: "#fcd8d4",  // light pink
-				blackMana: "#467aeb",  // blue
-				manaStack: "#9926c8",  // astral soul
+				whiteMana: "#fcd8d4", // light pink
+				blackMana: "#467aeb", // blue
+				manaStack: "#9926c8", // astral soul
 				emboldenBuff: "#c91310", // dark red
 				manaficBuff: "#530954", // dark purple
 				accelBuff: "#c973b4", // lighter purple
 			},
 			dnc: {
 				esprit: "#e2b0af",
-				feathers: '#8DA147',
-				emboite: '#bf615c',
-				entrechat: '#3a8db7',
-				jete: '#539350',
-				pirouette: '#b0984e'
+				feathers: "#8DA147",
+				emboite: "#bf615c",
+				entrechat: "#3a8db7",
+				jete: "#539350",
+				pirouette: "#b0984e",
 			},
 			sam: {
 				kenki: "#d55124",
@@ -341,8 +344,8 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				iai: "#89cfef",
 			},
 			mch: {
-				heat:'#D35A10',
-				battery: '#2C9FCB',
+				heat: "#D35A10",
+				battery: "#2C9FCB",
 			},
 			rpr: {
 				soulGaugeLow: "#660929",
@@ -373,70 +376,86 @@ export let getCurrentThemeColors: ()=>ThemeColors = () => {
 				warningMark: "#ffbb29",
 				lucidTickMark: "#88cae0",
 				countdown: "rgba(0, 0, 0, 0.1)",
-				markerAlpha: "7f"
-			}
+				markerAlpha: "7f",
+			},
 		};
 	}
-}
+};
 
-function ColorThemeOption(props: {colorTheme: ColorTheme}) {
-	let icon = <MdLightMode/>
+function ColorThemeOption(props: { colorTheme: ColorTheme }) {
+	let icon = <MdLightMode />;
 	let colors = getCurrentThemeColors();
-	if (props.colorTheme === "Dark") icon = <MdDarkMode/>;
-	return <div style={{
-		display: "inline-block",
-		cursor: "pointer",
-		verticalAlign: "middle",
-		borderBottom: props.colorTheme === getCurrentColorTheme() ? "none" : "1px solid " + colors.text,
-		borderTop: props.colorTheme === getCurrentColorTheme() ? "1px solid " + colors.text : "none"
-	}} onClick={()=>{
-		setCurrentColorTheme(props.colorTheme);
-	}}>{icon}</div>
+	if (props.colorTheme === "Dark") icon = <MdDarkMode />;
+	return <div
+		style={{
+			display: "inline-block",
+			cursor: "pointer",
+			verticalAlign: "middle",
+			borderBottom:
+				props.colorTheme === getCurrentColorTheme() ? "none" : "1px solid " + colors.text,
+			borderTop:
+				props.colorTheme === getCurrentColorTheme() ? "1px solid " + colors.text : "none",
+		}}
+		onClick={() => {
+			setCurrentColorTheme(props.colorTheme);
+		}}
+	>
+		{icon}
+	</div>;
 }
 
 export class SelectColorTheme extends React.Component {
 	state: {
-		colorTheme: ColorTheme
-	}
+		colorTheme: ColorTheme;
+	};
 	constructor(props: {}) {
 		super(props);
 		let colorTheme: ColorTheme = "Light";
 		let savedColorTheme: string | null = getCachedValue("colorTheme");
 		if (savedColorTheme === "Light" || savedColorTheme === "Dark") colorTheme = savedColorTheme;
 		this.state = {
-			colorTheme: colorTheme
+			colorTheme: colorTheme,
 		};
 	}
 
 	componentDidMount() {
-		getCurrentColorTheme = (()=>{return this.state.colorTheme});
-		setCurrentColorTheme = ((colorTheme: ColorTheme)=>{
-			this.setState({colorTheme: colorTheme})
+		getCurrentColorTheme = () => {
+			return this.state.colorTheme;
+		};
+		setCurrentColorTheme = (colorTheme: ColorTheme) => {
+			this.setState({ colorTheme: colorTheme });
 			setCachedValue("colorTheme", colorTheme);
-		});
+		};
 	}
-	componentDidUpdate(prevProps: Readonly<{}>, prevState: Readonly<{colorTheme: ColorTheme}>, snapshot?: any) {
+	componentDidUpdate(
+		prevProps: Readonly<{}>,
+		prevState: Readonly<{ colorTheme: ColorTheme }>,
+		snapshot?: any,
+	) {
 		if (prevState.colorTheme !== this.state.colorTheme) {
 			controller.updateAllDisplay();
 		}
 	}
 
 	componentWillUnmount() {
-		getCurrentColorTheme = ()=>{return "Light"}
-		setCurrentColorTheme = (colorTheme) => {}
+		getCurrentColorTheme = () => {
+			return "Light";
+		};
+		setCurrentColorTheme = (colorTheme) => {};
 	}
 
 	render() {
-		return <div style={{
-			display: "inline-block",
-			position: "absolute",
-			right: 10,
-		}}>
-			<div style={{display: "inline-block", fontSize: 16, position: "relative"}}>
-				<ColorThemeOption colorTheme={"Light"}/>|
-				<ColorThemeOption colorTheme={"Dark"}/>
+		return <div
+			style={{
+				display: "inline-block",
+				position: "absolute",
+				right: 10,
+			}}
+		>
+			<div style={{ display: "inline-block", fontSize: 16, position: "relative" }}>
+				<ColorThemeOption colorTheme={"Light"} />|
+				<ColorThemeOption colorTheme={"Dark"} />
 			</div>
-		</div>
+		</div>;
 	}
 }
-

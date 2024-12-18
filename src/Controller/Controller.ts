@@ -8,15 +8,19 @@ import {
 	ShellVersion,
 	TickMode,
 } from "./Common";
-import {GameState} from "../Game/GameState";
-import {getAutoReplacedSkillName, getConditionalReplacement, getNormalizedSkillName} from "../Game/Skills";
-import {BLMState} from "../Game/Jobs/BLM";
-import {PCTState} from "../Game/Jobs/PCT";
-import {RDMState} from "../Game/Jobs/RDM";
-import {DNCState} from "../Game/Jobs/DNC";
-import {SAMState} from "../Game/Jobs/SAM";
-import {MCHState} from "../Game/Jobs/MCH";
-import {Buff} from "../Game/Buffs";
+import { GameState } from "../Game/GameState";
+import {
+	getAutoReplacedSkillName,
+	getConditionalReplacement,
+	getNormalizedSkillName,
+} from "../Game/Skills";
+import { BLMState } from "../Game/Jobs/BLM";
+import { PCTState } from "../Game/Jobs/PCT";
+import { RDMState } from "../Game/Jobs/RDM";
+import { DNCState } from "../Game/Jobs/DNC";
+import { SAMState } from "../Game/Jobs/SAM";
+import { MCHState } from "../Game/Jobs/MCH";
+import { Buff } from "../Game/Buffs";
 import {
 	BuffType,
 	Debug,
@@ -28,40 +32,44 @@ import {
 	SkillName,
 	SkillReadyStatus,
 	SkillUnavailableReason,
-	WarningType
+	WarningType,
 } from "../Game/Common";
-import {DEFAULT_CONFIG, GameConfig} from "../Game/GameConfig"
-import {BLMStatusPropsGenerator} from "../Components/Jobs/BLM";
-import {PCTStatusPropsGenerator} from "../Components/Jobs/PCT";
-import {RDMStatusPropsGenerator} from "../Components/Jobs/RDM";
-import {DNCStatusPropsGenerator} from "../Components/Jobs/DNC";
-import {SAMStatusPropsGenerator} from "../Components/Jobs/SAM";
-import {MCHStatusPropsGenerator} from "../Components/Jobs/MCH";
-import {WARStatusPropsGenerator} from "../Components/Jobs/WAR";
-import {StatusPropsGenerator, updateStatusDisplay} from "../Components/StatusDisplay";
-import {updateSkillButtons} from "../Components/Skills";
-import {updateConfigDisplay} from "../Components/PlaybackControl"
-import {setHistorical, setJob, setRealTime} from "../Components/Main";
-import {ElemType, MAX_TIMELINE_SLOTS, Timeline} from "./Timeline"
-import {scrollTimelineTo, updateTimelineView} from "../Components/Timeline";
-import {ActionNode, ActionType, Line, Record} from "./Record";
-import {ImageExportConfig} from "./ImageExportConfig";
-import {inferJobFromSkillNames, PresetLinesManager} from "./PresetLinesManager";
-import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
-import {refreshTimelineEditor} from "../Components/TimelineEditor";
-import {DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDrawOptions} from "../Components/Common";
-import {TimelineRenderingProps} from "../Components/TimelineCanvas";
-import {Potency, PotencyModifierType} from "../Game/Potency";
-import {DamageStatisticsData, updateDamageStats, updateSelectedStats} from "../Components/DamageStatistics";
+import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
+import { BLMStatusPropsGenerator } from "../Components/Jobs/BLM";
+import { PCTStatusPropsGenerator } from "../Components/Jobs/PCT";
+import { RDMStatusPropsGenerator } from "../Components/Jobs/RDM";
+import { DNCStatusPropsGenerator } from "../Components/Jobs/DNC";
+import { SAMStatusPropsGenerator } from "../Components/Jobs/SAM";
+import { MCHStatusPropsGenerator } from "../Components/Jobs/MCH";
+import { WARStatusPropsGenerator } from "../Components/Jobs/WAR";
+import { StatusPropsGenerator, updateStatusDisplay } from "../Components/StatusDisplay";
+import { updateSkillButtons } from "../Components/Skills";
+import { updateConfigDisplay } from "../Components/PlaybackControl";
+import { setHistorical, setJob, setRealTime } from "../Components/Main";
+import { ElemType, MAX_TIMELINE_SLOTS, Timeline } from "./Timeline";
+import { scrollTimelineTo, updateTimelineView } from "../Components/Timeline";
+import { ActionNode, ActionType, Line, Record } from "./Record";
+import { ImageExportConfig } from "./ImageExportConfig";
+import { inferJobFromSkillNames, PresetLinesManager } from "./PresetLinesManager";
+import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
+import { refreshTimelineEditor } from "../Components/TimelineEditor";
+import { DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDrawOptions } from "../Components/Common";
+import { TimelineRenderingProps } from "../Components/TimelineCanvas";
+import { Potency, PotencyModifierType } from "../Game/Potency";
+import {
+	DamageStatisticsData,
+	updateDamageStats,
+	updateSelectedStats,
+} from "../Components/DamageStatistics";
 import {
 	bossIsUntargetable,
 	calculateDamageStats,
 	calculateSelectedStats,
-	getTargetableDurationBetween
+	getTargetableDurationBetween,
 } from "./DamageStatistics";
-import {XIVMath} from "../Game/XIVMath";
-import {RPRState} from "../Game/Jobs/RPR";
-import {RPRStatusPropsGenerator} from "../Components/Jobs/RPR";
+import { XIVMath } from "../Game/XIVMath";
+import { RPRState } from "../Game/Jobs/RPR";
+import { RPRStatusPropsGenerator } from "../Components/Jobs/RPR";
 import { WARState } from "../Game/Jobs/WAR";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
@@ -94,7 +102,7 @@ class Controller {
 	tickMode;
 	lastAttemptedSkill;
 	skillMaxTimeInQueue;
-	skillsQueue: { skillName: SkillName, timeInQueue: number }[];
+	skillsQueue: { skillName: SkillName; timeInQueue: number }[];
 	timeline;
 	#presetLinesManager;
 	gameConfig;
@@ -107,20 +115,20 @@ class Controller {
 	#lastDamageApplicationTime;
 
 	// todo: should probably move these items to somewhere else: in Record maybe?
-	#damageLogCsv : {
-		time: number,
-		damageSource: string,
-		potency: number,
-		buffs: ResourceType[]
+	#damageLogCsv: {
+		time: number;
+		damageSource: string;
+		potency: number;
+		buffs: ResourceType[];
 	}[] = [];
-	#actionsLogCsv : {
-		time: number,
-		action: string,
-		isGCD: number,
-		castTime: number
+	#actionsLogCsv: {
+		time: number;
+		action: string;
+		isGCD: number;
+		castTime: number;
 	}[] = [];
 	#thunderDotTickTimes: number[] = [];
-	#thunderDoTCoverageTimes: {tStartDisplay: number, tEndDisplay?: number}[] = [];
+	#thunderDoTCoverageTimes: { tStartDisplay: number; tEndDisplay?: number }[] = [];
 
 	savedHistoricalGame: GameState;
 	savedHistoricalRecord: Record;
@@ -186,7 +194,7 @@ class Controller {
 		}
 	}
 
-	#sandboxEnvironment(fn: ()=>void) {
+	#sandboxEnvironment(fn: () => void) {
 		this.displayingUpToDateGameState = false;
 		this.#bInSandbox = true;
 		let tmpGame = this.game;
@@ -206,21 +214,20 @@ class Controller {
 	}
 
 	checkRecordValidity(inRecord: Record, editedNodes: ActionNode[]) {
-
 		console.assert(inRecord.config !== undefined);
 
 		let result: {
-			isValid: boolean,
-			firstInvalidAction: ActionNode | undefined,
-			invalidReason: string | undefined,
-			invalidTime: number | undefined,
-			straightenedIfValid: Record | undefined,
+			isValid: boolean;
+			firstInvalidAction: ActionNode | undefined;
+			invalidReason: string | undefined;
+			invalidTime: number | undefined;
+			straightenedIfValid: Record | undefined;
 		} = {
 			isValid: true,
 			firstInvalidAction: undefined,
 			invalidReason: undefined,
 			invalidTime: undefined,
-			straightenedIfValid: undefined
+			straightenedIfValid: undefined,
 		};
 
 		// no edit happened
@@ -229,8 +236,7 @@ class Controller {
 			return result;
 		}
 
-		this.#sandboxEnvironment(()=>{
-
+		this.#sandboxEnvironment(() => {
 			// create environment
 			let cfg = inRecord.config ?? this.gameConfig;
 			this.game = newGameState(cfg);
@@ -248,7 +254,7 @@ class Controller {
 				replayMode: ReplayMode.Edited,
 				editedNodes: editedNodes,
 				selectionStart: inRecord.getFirstSelection(),
-				selectionEnd: inRecord.getLastSelection()
+				selectionEnd: inRecord.getLastSelection(),
 			});
 			this.#bAddingLine = false;
 
@@ -266,11 +272,10 @@ class Controller {
 
 	// max replay time; cutoff action
 	displayHistoricalState(displayTime: number, cutoffAction?: ActionNode) {
-
 		let rawTime = displayTime + this.gameConfig.countdown;
 
 		const hasSelected = this.record.getFirstSelection() !== undefined;
-		this.#sandboxEnvironment(()=>{
+		this.#sandboxEnvironment(() => {
 			let tmpRecord = this.record;
 			this.game = newGameState(this.gameConfig);
 			this.record = new Record();
@@ -285,7 +290,7 @@ class Controller {
 				line: tmpRecord,
 				replayMode: ReplayMode.Exact,
 				maxReplayTime: rawTime,
-				cutoffAction: cutoffAction
+				cutoffAction: cutoffAction,
 			});
 
 			// view only cursor
@@ -293,7 +298,7 @@ class Controller {
 				type: ElemType.s_ViewOnlyCursor,
 				time: this.game.time, // is actually historical state
 				displayTime: this.game.getDisplayTime(),
-				enabled: true
+				enabled: true,
 			});
 
 			// update display
@@ -321,7 +326,7 @@ class Controller {
 			type: ElemType.s_ViewOnlyCursor,
 			enabled: false,
 			time: 0,
-			displayTime: 0
+			displayTime: 0,
 		});
 		setHistorical(false);
 		this.updateAllDisplay(this.game);
@@ -333,9 +338,9 @@ class Controller {
 	}
 
 	#requestRestart() {
-		this.lastAttemptedSkill = ""
+		this.lastAttemptedSkill = "";
 		this.game = newGameState(this.gameConfig);
-		this.#playPause({shouldLoop: false});
+		this.#playPause({ shouldLoop: false });
 		this.timeline.reset();
 		this.record.unselectAll();
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown;
@@ -357,7 +362,7 @@ class Controller {
 	}
 
 	// qol: cleanup?
-	addSelectionToPreset(name="(untitled)") {
+	addSelectionToPreset(name = "(untitled)") {
 		console.assert(this.record.getFirstSelection());
 		let line = new Line();
 		line.name = name;
@@ -377,8 +382,9 @@ class Controller {
 	}
 
 	loadBattleRecordFromFile(content: Fixme) {
-		if (content.config.procMode === undefined) { // for backward compatibility
-			if (content.config.rngProcs!==undefined) {
+		if (content.config.procMode === undefined) {
+			// for backward compatibility
+			if (content.config.rngProcs !== undefined) {
 				content.config.procMode = content.config.rngProcs ? ProcMode.RNG : ProcMode.Never;
 			} else {
 				content.config.procMode = ProcMode.RNG;
@@ -394,7 +400,7 @@ class Controller {
 			content.config.level = parseInt(content.config.level);
 		}
 		if (content.config.skillSpeed === undefined) {
-			content.config.skillSpeed = XIVMath.getSubstatBase(content.config.level as LevelSync)
+			content.config.skillSpeed = XIVMath.getSubstatBase(content.config.level as LevelSync);
 		}
 		if (content.config.shellVersion === undefined) {
 			content.config.shellVersion = ShellVersion.Initial;
@@ -402,7 +408,11 @@ class Controller {
 		if (content.config.job === undefined) {
 			// infer the job based on actions present
 			content.config.job = inferJobFromSkillNames(
-				content.actions.flatMap((skill: any) => (skill as any).skillName ? [getNormalizedSkillName((skill as any).skillName)] : [])
+				content.actions.flatMap((skill: any) =>
+					(skill as any).skillName
+						? [getNormalizedSkillName((skill as any).skillName)]
+						: [],
+				),
 			);
 		}
 
@@ -435,11 +445,14 @@ class Controller {
 			node.waitDuration = action.waitDuration;
 			line.addActionNode(node);
 		}
-		let replayResult = this.#replay({line: line, replayMode: ReplayMode.Exact});
+		let replayResult = this.#replay({ line: line, replayMode: ReplayMode.Exact });
 		if (!replayResult.success) {
 			let msg = "Failed to load the entire record- \n";
 			if (replayResult.firstInvalidNode) {
-				msg += "Stopped here because the next action " + (replayResult.firstInvalidNode.skillName ?? "(unknown)") + " can't be added: ";
+				msg +=
+					"Stopped here because the next action " +
+					(replayResult.firstInvalidNode.skillName ?? "(unknown)") +
+					" can't be added: ";
 			}
 			msg += replayResult.invalidReason;
 			window.alert(msg);
@@ -447,7 +460,7 @@ class Controller {
 	}
 
 	// assumes newRecord can be replayed exactly
-	applyEditedRecord(newRecord : Record) {
+	applyEditedRecord(newRecord: Record) {
 		if (!newRecord.config) {
 			console.assert(false);
 			return;
@@ -461,15 +474,15 @@ class Controller {
 		let replayResult = this.#replay({
 			line: newRecord,
 			replayMode: ReplayMode.Exact,
-			removeTrailingIdleTime: true
+			removeTrailingIdleTime: true,
 		});
 		console.assert(replayResult.success);
 
 		// copy selection
 		let displayedItr = this.record.getFirstAction();
 		let inItr = newRecord.getFirstAction();
-		let firstSelected : ActionNode | undefined = undefined;
-		let lastSelected : ActionNode | undefined = undefined;
+		let firstSelected: ActionNode | undefined = undefined;
+		let lastSelected: ActionNode | undefined = undefined;
 		while (inItr && displayedItr) {
 			if (inItr === newRecord.getFirstSelection()) firstSelected = displayedItr;
 			if (inItr === newRecord.getLastSelection()) lastSelected = displayedItr;
@@ -490,7 +503,7 @@ class Controller {
 		if (!this.#skipViewUpdates) {
 			let damageStats: Partial<DamageStatisticsData> = calculateDamageStats({
 				tinctureBuffPercentage: this.#tinctureBuffPercentage,
-				lastDamageApplicationTime: this.#lastDamageApplicationTime
+				lastDamageApplicationTime: this.#lastDamageApplicationTime,
 			});
 			if (tablesOnly) {
 				damageStats = {
@@ -510,7 +523,7 @@ class Controller {
 		if (!this.#skipViewUpdates) {
 			let stats = calculateSelectedStats({
 				tinctureBuffPercentage: this.#tinctureBuffPercentage,
-				lastDamageApplicationTime: this.#lastDamageApplicationTime
+				lastDamageApplicationTime: this.#lastDamageApplicationTime,
 			});
 			// display
 			updateSelectedStats(stats);
@@ -532,11 +545,13 @@ class Controller {
 		this.displayCurrentState();
 		updateTimelineView();
 	}
-	getUntargetableMask() { return this.#untargetableMask; }
+	getUntargetableMask() {
+		return this.#untargetableMask;
+	}
 
 	getMaxTicks(untilRawTime: number) {
 		let cnt = 0;
-		this.#thunderDotTickTimes.forEach(rt => {
+		this.#thunderDotTickTimes.forEach((rt) => {
 			if (!bossIsUntargetable(rt - this.gameConfig.countdown) && rt <= untilRawTime) {
 				cnt++;
 			}
@@ -547,10 +562,13 @@ class Controller {
 	getDotCoverageTimeFraction(untilDisplayTime: number) {
 		if (untilDisplayTime <= Debug.epsilon) return 0;
 		let coveredTime = 0;
-		this.#thunderDoTCoverageTimes.forEach(section=>{
+		this.#thunderDoTCoverageTimes.forEach((section) => {
 			if (section.tStartDisplay <= untilDisplayTime) {
 				let startTime = Math.max(0, section.tStartDisplay);
-				let endTime = (section.tEndDisplay!==undefined && section.tEndDisplay <= untilDisplayTime) ? section.tEndDisplay : untilDisplayTime;
+				let endTime =
+					section.tEndDisplay !== undefined && section.tEndDisplay <= untilDisplayTime
+						? section.tEndDisplay
+						: untilDisplayTime;
 				endTime = Math.max(0, endTime);
 				coveredTime += getTargetableDurationBetween(startTime, endTime);
 			}
@@ -560,12 +578,13 @@ class Controller {
 	}
 
 	setTimelineOptions(options: Partial<TimelineDrawOptions>) {
-		this.timelineDrawOptions = {...this.timelineDrawOptions, ...options};
+		this.timelineDrawOptions = { ...this.timelineDrawOptions, ...options };
 		this.updateTimelineDisplay();
 	}
 
 	getTimelineRenderingProps(): TimelineRenderingProps {
-		let showSelection : boolean = this.record.getFirstSelection() != null && this.record.getLastSelection() != null;
+		let showSelection: boolean =
+			this.record.getFirstSelection() != null && this.record.getLastSelection() != null;
 		let countdown = this.gameConfig.countdown;
 		// and other slots
 		let allSlotsTimeInfo = this.timeline.getAllSlotsTimeInfo();
@@ -586,9 +605,12 @@ class Controller {
 			untargetableMarkers: this.timeline.getUntargetableMarkers(),
 			buffMarkers: this.timeline.getBuffMarkers(),
 			showSelection: showSelection,
-			selectionStartDisplayTime: (this.record.getFirstSelection()?.tmp_startLockTime ?? 0) - this.gameConfig.countdown,
-			selectionEndDisplayTime: (this.record.getLastSelection()?.tmp_endLockTime ?? 0) - this.gameConfig.countdown,
-			drawOptions: this.timelineDrawOptions
+			selectionStartDisplayTime:
+				(this.record.getFirstSelection()?.tmp_startLockTime ?? 0) -
+				this.gameConfig.countdown,
+			selectionEndDisplayTime:
+				(this.record.getLastSelection()?.tmp_endLockTime ?? 0) - this.gameConfig.countdown,
+			drawOptions: this.timelineDrawOptions,
 		};
 	}
 
@@ -608,8 +630,8 @@ class Controller {
 		this.#lastDamageApplicationTime = this.game.time;
 
 		let pot = false;
-		p.modifiers.forEach(m=>{
-			if (m.source===PotencyModifierType.POT) pot = true;
+		p.modifiers.forEach((m) => {
+			if (m.source === PotencyModifierType.POT) pot = true;
 		});
 
 		if (!this.#bInSandbox) {
@@ -622,7 +644,7 @@ class Controller {
 				time: this.game.time,
 				displayTime: this.game.getDisplayTime(),
 				sourceDesc: sourceDesc,
-				sourceSkill: p.sourceSkill
+				sourceSkill: p.sourceSkill,
 			});
 
 			// time, damageSource, potency, cumulativePotency
@@ -630,7 +652,7 @@ class Controller {
 				time: this.game.getDisplayTime(),
 				damageSource: p.sourceSkill + "@" + p.sourceTime,
 				// tincture is applied when actually exporting for download.
-				potency: p.getAmount({tincturePotencyMultiplier: 1, includePartyBuffs: true}),
+				potency: p.getAmount({ tincturePotencyMultiplier: 1, includePartyBuffs: true }),
 				buffs: pot ? [ResourceType.Tincture] : [],
 			});
 		}
@@ -673,7 +695,7 @@ class Controller {
 
 	reportDotTick(rawTime: number) {
 		if (!this.#bInSandbox) {
-			this.#thunderDotTickTimes.push(rawTime)
+			this.#thunderDotTickTimes.push(rawTime);
 			this.updateStats();
 		}
 	}
@@ -681,10 +703,12 @@ class Controller {
 	reportDotStart(displayTime: number) {
 		if (!this.#bInSandbox) {
 			let len = this.#thunderDoTCoverageTimes.length;
-			console.assert(len === 0 || this.#thunderDoTCoverageTimes[len-1].tEndDisplay!==undefined);
+			console.assert(
+				len === 0 || this.#thunderDoTCoverageTimes[len - 1].tEndDisplay !== undefined,
+			);
 			this.#thunderDoTCoverageTimes.push({
 				tStartDisplay: displayTime,
-				tEndDisplay: undefined
+				tEndDisplay: undefined,
 			});
 		}
 	}
@@ -692,8 +716,10 @@ class Controller {
 	reportDotDrop(displayTime: number) {
 		if (!this.#bInSandbox) {
 			let len = this.#thunderDoTCoverageTimes.length;
-			console.assert(len > 0 && this.#thunderDoTCoverageTimes[len-1].tEndDisplay===undefined);
-			this.#thunderDoTCoverageTimes[len-1].tEndDisplay = displayTime;
+			console.assert(
+				len > 0 && this.#thunderDoTCoverageTimes[len - 1].tEndDisplay === undefined,
+			);
+			this.#thunderDoTCoverageTimes[len - 1].tEndDisplay = displayTime;
 		}
 	}
 
@@ -715,7 +741,7 @@ class Controller {
 			canMove: game.resources.get(ResourceType.Movement).available(1),
 		};
 		let propsGenerator;
-		switch(game.job) {
+		switch (game.job) {
 			case ShellJob.PCT:
 				propsGenerator = new PCTStatusPropsGenerator(game as PCTState);
 				break;
@@ -743,14 +769,17 @@ class Controller {
 			default:
 				propsGenerator = new StatusPropsGenerator(game);
 		}
-		updateStatusDisplay({
-			time: game.getDisplayTime(),
-			resources: propsGenerator.getAllResourceViewProps(),
-			resourceLocks: resourceLocksData,
-			enemyBuffs: propsGenerator.getAllOtherTargetedBuffViewProps(),
-			selfBuffs: propsGenerator.getAllSelfTargetedBuffViewProps(),
-			level: game.config.level,
-		}, propsGenerator.statusLayoutFn);
+		updateStatusDisplay(
+			{
+				time: game.getDisplayTime(),
+				resources: propsGenerator.getAllResourceViewProps(),
+				resourceLocks: resourceLocksData,
+				enemyBuffs: propsGenerator.getAllOtherTargetedBuffViewProps(),
+				selfBuffs: propsGenerator.getAllSelfTargetedBuffViewProps(),
+				level: game.config.level,
+			},
+			propsGenerator.statusLayoutFn,
+		);
 	}
 
 	updateTimelineDisplay() {
@@ -763,7 +792,7 @@ class Controller {
 			this.timeline.updateElem({
 				type: ElemType.s_Cursor,
 				time: this.game.time,
-				displayTime: this.game.getDisplayTime()
+				displayTime: this.game.getDisplayTime(),
 			});
 		}
 		this.timeline.drawElements();
@@ -771,20 +800,26 @@ class Controller {
 
 	updateSkillButtons(game: GameState) {
 		updateSkillButtons(
-			this.game.displayedSkills.getCurrentSkillNames(this.game)
-				.map((skillName: SkillName) => game.getSkillAvailabilityStatus(skillName))
+			this.game.displayedSkills
+				.getCurrentSkillNames(this.game)
+				.map((skillName: SkillName) => game.getSkillAvailabilityStatus(skillName)),
 		);
 	}
 
 	#requestTick(props: {
-		deltaTime: number,
-		separateNode: boolean,
-		prematureStopCondition?: () => boolean,
+		deltaTime: number;
+		separateNode: boolean;
+		prematureStopCondition?: () => boolean;
 	}) {
 		if (props.deltaTime > 0) {
 			let timeTicked = this.game.tick(
 				props.deltaTime,
-				props.prematureStopCondition ? props.prematureStopCondition : ()=>{ return false; });
+				props.prematureStopCondition
+					? props.prematureStopCondition
+					: () => {
+							return false;
+						},
+			);
 
 			// add this tick to game record
 			let lastAction = this.record.getLastAction();
@@ -798,7 +833,7 @@ class Controller {
 		}
 	}
 
-	setTimeControlSettings(props: { timeScale: number; tickMode: TickMode; }) {
+	setTimeControlSettings(props: { timeScale: number; tickMode: TickMode }) {
 		this.timeScale = props.timeScale;
 		this.tickMode = props.tickMode;
 		this.shouldLoop = false;
@@ -806,21 +841,21 @@ class Controller {
 	}
 
 	setConfigAndRestart(props: {
-		job: ShellJob,
-		level: LevelSync,
-		spellSpeed: number,
-		skillSpeed: number,
-		criticalHit: number,
-		directHit: number,
-		determination: number,
-		animationLock: number,
-		fps: number,
-		gcdSkillCorrection: number,
-		timeTillFirstManaTick: number,
-		countdown: number,
-		randomSeed: string,
-		procMode: ProcMode,
-		initialResourceOverrides: any[],
+		job: ShellJob;
+		level: LevelSync;
+		spellSpeed: number;
+		skillSpeed: number;
+		criticalHit: number;
+		directHit: number;
+		determination: number;
+		animationLock: number;
+		fps: number;
+		gcdSkillCorrection: number;
+		timeTillFirstManaTick: number;
+		countdown: number;
+		randomSeed: string;
+		procMode: ProcMode;
+		initialResourceOverrides: any[];
 	}) {
 		const oldJob = this.gameConfig.job;
 		this.gameConfig = new GameConfig({
@@ -842,7 +877,7 @@ class Controller {
 		this.autoSave();
 	}
 
-	getDisplayedGame() : GameState {
+	getDisplayedGame(): GameState {
 		return this.displayingUpToDateGameState ? this.game : this.savedHistoricalGame;
 	}
 
@@ -850,45 +885,49 @@ class Controller {
 		return this.getDisplayedGame().job;
 	}
 
-	getSkillInfo(props: {game: GameState, skillName: SkillName}) {
+	getSkillInfo(props: { game: GameState; skillName: SkillName }) {
 		return props.game.getSkillAvailabilityStatus(props.skillName);
 	}
 
-	#playPause(props: { shouldLoop: boolean; }) {
+	#playPause(props: { shouldLoop: boolean }) {
 		let newShouldLoop = props.shouldLoop;
 		if (this.shouldLoop === newShouldLoop) return;
 
 		this.shouldLoop = newShouldLoop;
 
 		if (this.shouldLoop) {
-			this.#runLoop(()=>{
-				return this.shouldLoop
+			this.#runLoop(() => {
+				return this.shouldLoop;
 			});
 		}
 	}
 
 	#fastForward() {
 		let deltaTime: number = this.game.timeTillAnySkillAvailable();
-		this.#requestTick({deltaTime: deltaTime, separateNode: false});
+		this.#requestTick({ deltaTime: deltaTime, separateNode: false });
 	}
 
 	#useSkill(
 		skillName: SkillName,
 		bWaitFirst: boolean,
-		overrideTickMode: TickMode = this.tickMode
+		overrideTickMode: TickMode = this.tickMode,
 	) {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
 		if (bWaitFirst) {
-			this.#requestTick({deltaTime: status.timeTillAvailable, separateNode: false});
+			this.#requestTick({ deltaTime: status.timeTillAvailable, separateNode: false });
 			skillName = getConditionalReplacement(skillName, this.game);
 			status = this.game.getSkillAvailabilityStatus(skillName);
 			this.lastAttemptedSkill = "";
 		}
 
-		if (status.status.unavailableReasons.some(reason =>
-			reason === SkillUnavailableReason.Blocked || reason === SkillUnavailableReason.NotInCombat
-		)) {
+		if (
+			status.status.unavailableReasons.some(
+				(reason) =>
+					reason === SkillUnavailableReason.Blocked ||
+					reason === SkillUnavailableReason.NotInCombat,
+			)
+		) {
 			this.lastAttemptedSkill = skillName;
 		}
 
@@ -901,7 +940,7 @@ class Controller {
 			this.game.useSkill(skillName, node);
 			if (overrideTickMode === TickMode.RealTimeAutoPause) {
 				this.shouldLoop = true;
-				this.#runLoop(()=>{
+				this.#runLoop(() => {
 					return this.game.timeTillAnySkillAvailable() > 0;
 				});
 			}
@@ -911,18 +950,23 @@ class Controller {
 			node.tmp_startLockTime = this.game.time;
 			node.tmp_endLockTime = this.game.time + lockDuration;
 
-			if (!this.#bInSandbox) { // this block is run when NOT viewing historical state (aka run when receiving input)
+			if (!this.#bInSandbox) {
+				// this block is run when NOT viewing historical state (aka run when receiving input)
 				let newStatus = this.game.getSkillAvailabilityStatus(skillName, true); // refresh to get re-captured recast time
 				let skill = this.game.skillsList.get(skillName);
 				let isGCD = skill.cdName === ResourceType.cd_GCD;
 				let isSpellCast = status.castTime > 0 && !status.instantCast;
-				let snapshotTime = isSpellCast ? status.castTime - GameConfig.getSlidecastWindow(status.castTime) : 0;
+				let snapshotTime = isSpellCast
+					? status.castTime - GameConfig.getSlidecastWindow(status.castTime)
+					: 0;
 				let recastDuration = newStatus.cdRecastTime;
 				// special case for meditate, which is an ability that roles the GCD
 				if (skillName === SkillName.Meditate) {
 					isGCD = true;
 					// get the recast duration of a random GCD
-					recastDuration = this.game.getSkillAvailabilityStatus(SkillName.Yukikaze).cdRecastTime;
+					recastDuration = this.game.getSkillAvailabilityStatus(
+						SkillName.Yukikaze,
+					).cdRecastTime;
 				}
 				this.timeline.addElement({
 					type: ElemType.Skill,
@@ -940,7 +984,7 @@ class Controller {
 					time: this.game.getDisplayTime(),
 					action: skillName,
 					isGCD: isGCD ? 1 : 0,
-					castTime: status.instantCast ? 0 : status.castTime
+					castTime: status.instantCast ? 0 : status.castTime,
 				});
 			}
 
@@ -962,26 +1006,26 @@ class Controller {
 
 	// returns true on success
 	#replay(props: {
-		line: Line,
-		replayMode: ReplayMode,
-		removeTrailingIdleTime?: boolean,
-		maxReplayTime?: number,
-		cutoffAction?: ActionNode,
-		editedNodes?: ActionNode[], // for ReplayMode.Edited: everything before this should instead use ReplayMode.Exact
-		selectionStart?: ActionNode,
-		selectionEnd?: ActionNode
-	}) : {
-		success: boolean,
-		firstAddedNode: ActionNode | undefined,
-		firstInvalidNode: ActionNode | undefined,
-		invalidReason: SkillReadyStatus | undefined,
-		invalidTime: number | undefined,
+		line: Line;
+		replayMode: ReplayMode;
+		removeTrailingIdleTime?: boolean;
+		maxReplayTime?: number;
+		cutoffAction?: ActionNode;
+		editedNodes?: ActionNode[]; // for ReplayMode.Edited: everything before this should instead use ReplayMode.Exact
+		selectionStart?: ActionNode;
+		selectionEnd?: ActionNode;
+	}): {
+		success: boolean;
+		firstAddedNode: ActionNode | undefined;
+		firstInvalidNode: ActionNode | undefined;
+		invalidReason: SkillReadyStatus | undefined;
+		invalidTime: number | undefined;
 	} {
 		// Prevent UI updates from occuring until the final action
 		this.#skipViewUpdates = true;
 		// default input, if not provided
-		if (props.removeTrailingIdleTime===undefined) props.removeTrailingIdleTime = false;
-		if (props.maxReplayTime===undefined) props.maxReplayTime = -1;
+		if (props.removeTrailingIdleTime === undefined) props.removeTrailingIdleTime = false;
+		if (props.maxReplayTime === undefined) props.maxReplayTime = -1;
 
 		// when checking record validity as well as final application (ReplayMode.Edited), replay exactly until the first edited node
 		// and also copy over selection status
@@ -1007,12 +1051,13 @@ class Controller {
 		const oldTail = this.record.getLastAction();
 		let firstAddedNode = undefined;
 		while (itr && itr !== props.cutoffAction) {
-
 			// switch to edited replay past the first edited node
-			if (props.replayMode === ReplayMode.Edited
-				&& currentReplayMode === ReplayMode.Exact
-				&& (this.#inArray(itr, props.editedNodes) || this.#inArray(itr.next, props.editedNodes)))
-			{
+			if (
+				props.replayMode === ReplayMode.Edited &&
+				currentReplayMode === ReplayMode.Exact &&
+				(this.#inArray(itr, props.editedNodes) ||
+					this.#inArray(itr.next, props.editedNodes))
+			) {
 				currentReplayMode = ReplayMode.Edited;
 			}
 
@@ -1023,7 +1068,8 @@ class Controller {
 
 			// maxReplayTime is used for replay for displaying historical game states (only replay some given duration)
 			let waitDuration = itr.waitDuration;
-			if (props.maxReplayTime >= 0 &&
+			if (
+				props.maxReplayTime >= 0 &&
 				props.maxReplayTime - this.game.time < waitDuration &&
 				currentReplayMode === ReplayMode.Exact
 			) {
@@ -1033,7 +1079,10 @@ class Controller {
 			}
 
 			// only Exact & validity replays wait nodes
-			if (itr.type === ActionType.Wait && (currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)) {
+			if (
+				itr.type === ActionType.Wait &&
+				(currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)
+			) {
 				this.#requestTick({
 					deltaTime: waitDuration,
 					separateNode: true,
@@ -1043,16 +1092,24 @@ class Controller {
 
 			// skill nodes
 			else if (itr.type === ActionType.Skill) {
-
-				let waitFirst = currentReplayMode === ReplayMode.SkillSequence || currentReplayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
+				let waitFirst =
+					currentReplayMode === ReplayMode.SkillSequence ||
+					currentReplayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
 				let skillName = itr.skillName as SkillName;
 				if (props.replayMode === ReplayMode.SkillSequence) {
 					// auto-replace as much as possible
-					skillName = getAutoReplacedSkillName(this.game.job, skillName, this.gameConfig.level);
+					skillName = getAutoReplacedSkillName(
+						this.game.job,
+						skillName,
+						this.gameConfig.level,
+					);
 				}
 				let status = this.#useSkill(skillName, waitFirst, TickMode.Manual);
 
-				let bEditedTimelineShouldWaitAfterSkill = currentReplayMode === ReplayMode.Edited && (itr.next && itr.next.type === ActionType.Wait);
+				let bEditedTimelineShouldWaitAfterSkill =
+					currentReplayMode === ReplayMode.Edited &&
+					itr.next &&
+					itr.next.type === ActionType.Wait;
 				if (currentReplayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
 					if (status.status.ready()) {
 						//======== tick wait block ========
@@ -1062,25 +1119,29 @@ class Controller {
 							deltaTime = waitDuration;
 						} else {
 							if (props.removeTrailingIdleTime) {
-								deltaTime = (itr===props.line.getLastAction() ? this.game.timeTillAnySkillAvailable() : waitDuration);
+								deltaTime =
+									itr === props.line.getLastAction()
+										? this.game.timeTillAnySkillAvailable()
+										: waitDuration;
 							} else {
 								deltaTime = waitDuration;
 							}
 						}
 						this.#requestTick({
 							deltaTime: deltaTime,
-							separateNode: false
+							separateNode: false,
 						});
 						//======== tick wait block ========
 					}
-				}
-				else if (currentReplayMode === ReplayMode.SkillSequence || currentReplayMode === ReplayMode.Edited) {
+				} else if (
+					currentReplayMode === ReplayMode.SkillSequence ||
+					currentReplayMode === ReplayMode.Edited
+				) {
 					this.#requestTick({
 						deltaTime: this.game.timeTillAnySkillAvailable(),
-						separateNode: false
+						separateNode: false,
 					});
-				}
-				else {
+				} else {
 					lastIter = true;
 					console.assert(false);
 				}
@@ -1092,7 +1153,8 @@ class Controller {
 					invalidTime = this.game.getDisplayTime();
 				}
 
-				if (this.#bInterrupted) {// likely because enochian dropped before a cast snapshots
+				if (this.#bInterrupted) {
+					// likely because enochian dropped before a cast snapshots
 					this.#bInterrupted = false;
 					lastIter = true;
 					firstInvalidNode = itr;
@@ -1101,15 +1163,20 @@ class Controller {
 				}
 			}
 			// buff enable/disable also only supported by exact / edited replay
-			else if (itr.type === ActionType.SetResourceEnabled && (currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)) {
+			else if (
+				itr.type === ActionType.SetResourceEnabled &&
+				(currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)
+			) {
 				let success = this.requestToggleBuff(itr.buffName as ResourceType);
 				const exact = currentReplayMode === ReplayMode.Exact;
 				if (success) {
 					this.#requestTick({
 						// waitDuration gets auto filled when this node is moved around and causes unwanted gaps on the timeline..
 						// current workaround: auto decide whether to respect this info in the record. Could be a bit too hacky..
-						deltaTime: exact ? waitDuration : Math.min(waitDuration, this.game.timeTillAnySkillAvailable()),
-						separateNode: false
+						deltaTime: exact
+							? waitDuration
+							: Math.min(waitDuration, this.game.timeTillAnySkillAvailable()),
+						separateNode: false,
 					});
 				} else {
 					const reason = makeSkillReadyStatus();
@@ -1119,8 +1186,7 @@ class Controller {
 					invalidReason = reason;
 					invalidTime = this.game.getDisplayTime();
 				}
-			}
-			else {
+			} else {
 				console.assert(false);
 			}
 
@@ -1128,7 +1194,7 @@ class Controller {
 
 			// for edited replay mode, copy selection:
 			if (props.replayMode === ReplayMode.Edited) {
-				let lastAdded = this.record.getLastAction() ;
+				let lastAdded = this.record.getLastAction();
 				if (itr === props.selectionStart && lastAdded) {
 					this.record.selectSingle(lastAdded);
 				} else if (itr === props.selectionEnd && lastAdded) {
@@ -1155,7 +1221,6 @@ class Controller {
 			} else {
 				itr = itr.next;
 			}
-
 		}
 		// Re-enable UI updates
 		this.#skipViewUpdates = false;
@@ -1195,7 +1260,7 @@ class Controller {
 
 	setActiveSlot(slot: number) {
 		// cancel real time
-		this.#playPause({shouldLoop: false});
+		this.#playPause({ shouldLoop: false });
 		this.autoSave();
 
 		this.record.unselectAll();
@@ -1203,11 +1268,11 @@ class Controller {
 		this.displayCurrentState();
 	}
 
-	getDamageLogCsv() : any[][] {
-		let csvRows = this.#damageLogCsv.map(row=>{
+	getDamageLogCsv(): any[][] {
+		let csvRows = this.#damageLogCsv.map((row) => {
 			let pot = false;
-			row.buffs.forEach(b=>{
-				if (b===ResourceType.Tincture) pot = true;
+			row.buffs.forEach((b) => {
+				if (b === ResourceType.Tincture) pot = true;
 			});
 			let potency = row.potency;
 			if (pot) potency *= this.getTincturePotencyMultiplier();
@@ -1216,13 +1281,10 @@ class Controller {
 		return [["time", "damageSource", "potency"]].concat(csvRows as any[][]);
 	}
 
-	getActionsLogCsv() : any[][] {
-		let csvRows = this.#actionsLogCsv.map(row=>{ return [
-			row.time,
-			row.action,
-			row.isGCD,
-			row.castTime
-		]; });
+	getActionsLogCsv(): any[][] {
+		let csvRows = this.#actionsLogCsv.map((row) => {
+			return [row.time, row.action, row.isGCD, row.castTime];
+		});
 		return [["time", "action", "isGCD", "castTime"]].concat(csvRows as any[][]);
 	}
 
@@ -1236,58 +1298,55 @@ class Controller {
 				return s.replace(" 2", " II").replace(" 3", " III").replace(" 4", " IV");
 			}
 		};
-		const buffRows = this.timeline.getBuffMarkers().map(
-			marker => {
-				const buff = new Buff(marker.description as BuffType);
-				let buffName: string = buff.info.name as string;
-				if (buff.info.name === BuffType.Card_TheSpear) {
-					buffName = "The Spear";
-				} else if (buff.info.name === BuffType.Card_TheBalance) {
-					buffName = "The Balance";
-				} else if ([
+		const buffRows = this.timeline.getBuffMarkers().map((marker) => {
+			const buff = new Buff(marker.description as BuffType);
+			let buffName: string = buff.info.name as string;
+			if (buff.info.name === BuffType.Card_TheSpear) {
+				buffName = "The Spear";
+			} else if (buff.info.name === BuffType.Card_TheBalance) {
+				buffName = "The Balance";
+			} else if (
+				[
 					BuffType.RadiantFinale1,
 					BuffType.RadiantFinale2,
-					BuffType.RadiantFinale3
-				].includes(buff.info.name)) {
-					buffName = "Radiant Finale";
-				}
-				const getBuffModifiers = () => {
-					if (buff.info.name === BuffType.Dokumori) {
-						return "Debuff Only";
-					} else if (buff.info.name === BuffType.RadiantFinale1) {
-						// need to put these in quotes so it stays as one column when parsed
-						return '"1 Coda, Buff Only"';
-					} else if (buff.info.name === BuffType.RadiantFinale2) {
-						return '"2 Coda, Buff Only"';
-					} else if (buff.info.name === BuffType.RadiantFinale3) {
-						return '"3 Coda, Buff Only"';
-					} else if ([
+					BuffType.RadiantFinale3,
+				].includes(buff.info.name)
+			) {
+				buffName = "Radiant Finale";
+			}
+			const getBuffModifiers = () => {
+				if (buff.info.name === BuffType.Dokumori) {
+					return "Debuff Only";
+				} else if (buff.info.name === BuffType.RadiantFinale1) {
+					// need to put these in quotes so it stays as one column when parsed
+					return '"1 Coda, Buff Only"';
+				} else if (buff.info.name === BuffType.RadiantFinale2) {
+					return '"2 Coda, Buff Only"';
+				} else if (buff.info.name === BuffType.RadiantFinale3) {
+					return '"3 Coda, Buff Only"';
+				} else if (
+					[
 						BuffType.ArmysPaeon,
 						BuffType.MagesBallad,
 						BuffType.WanderersMinuet,
 						BuffType.StandardFinish,
 						BuffType.TechnicalFinish,
-					].includes(buff.info.name)) {
-						return "Buff Only";
-					} else if (buff.info.name === BuffType.Card_TheSpear) {
-						return "Big";
-					}
-					return "";
-				};
-				return [
-					marker.time,
-					buffName,
-					buff.info.job,
-					getBuffModifiers(),
-				];
-			}
-		);
-		const actionRows = (
-			this.#actionsLogCsv
-				// sim currently doesn't track mp ticks or mp costs, so skip lucid dreaming
-				// also skip sprint, buff toggle events, and any other non-damage-related abilities
-				.filter(
-					row => ![
+					].includes(buff.info.name)
+				) {
+					return "Buff Only";
+				} else if (buff.info.name === BuffType.Card_TheSpear) {
+					return "Big";
+				}
+				return "";
+			};
+			return [marker.time, buffName, buff.info.job, getBuffModifiers()];
+		});
+		const actionRows = this.#actionsLogCsv
+			// sim currently doesn't track mp ticks or mp costs, so skip lucid dreaming
+			// also skip sprint, buff toggle events, and any other non-damage-related abilities
+			.filter(
+				(row) =>
+					![
 						SkillName.Sprint as string,
 						SkillName.LucidDreaming as string,
 						SkillName.BetweenTheLines as string,
@@ -1299,28 +1358,28 @@ class Controller {
 
 						SkillName.TemperaGrassaPop as string,
 						SkillName.TemperaCoatPop as string,
-						...(Object.values(LimitBreakSkillName) as string[]) // Exclude LBs from export
-					].includes(row.action)
-					&& !row.action.includes("Toggle buff")
-				)
-				.map(row => [
-					row.time,
-					normalizeName(row.action),
-					"",
-					""
-				])
+						...(Object.values(LimitBreakSkillName) as string[]), // Exclude LBs from export
+					].includes(row.action) && !row.action.includes("Toggle buff"),
+			)
+			.map((row) => [row.time, normalizeName(row.action), "", ""]);
+		return [["Time", "skill_name", "job_class", "skill_conditional"]].concat(
+			buffRows as any[][],
+			actionRows as any[][],
 		);
-		return [["Time", "skill_name", "job_class", "skill_conditional"]].concat(buffRows as any[][], actionRows as any[][]);
 	}
 
 	// generally used for trying to add a line to the current timeline
-	tryAddLine(line: Line, replayMode=ReplayMode.SkillSequence) {
+	tryAddLine(line: Line, replayMode = ReplayMode.SkillSequence) {
 		this.#bAddingLine = true;
 
-		let replayResult = this.#replay({line: line, replayMode: replayMode});
+		let replayResult = this.#replay({ line: line, replayMode: replayMode });
 		if (!replayResult.success) {
 			this.rewindUntilBefore(replayResult.firstAddedNode, false);
-			window.alert('Failed to add line "' + line.name + '" due to insufficient resources and/or stats mismatch.');
+			window.alert(
+				'Failed to add line "' +
+					line.name +
+					'" due to insufficient resources and/or stats mismatch.',
+			);
 			this.#bAddingLine = false;
 			return false;
 		} else {
@@ -1338,9 +1397,13 @@ class Controller {
 		this.#presetLinesManager.deleteAllLines();
 	}
 
-	reportInterruption(props: {failNode: ActionNode}) {
+	reportInterruption(props: { failNode: ActionNode }) {
 		if (!this.#bInSandbox) {
-			window.alert("cast failed! Resources for " + props.failNode.skillName + " are no longer available");
+			window.alert(
+				"cast failed! Resources for " +
+					props.failNode.skillName +
+					" are no longer available",
+			);
 			console.warn("failed: " + props.failNode.skillName);
 		}
 		// if adding from a line, invalidate the whole line
@@ -1391,29 +1454,31 @@ class Controller {
 			this.#replay({
 				line: replayRecord,
 				replayMode: ReplayMode.Exact,
-				removeTrailingIdleTime: removeTrailingIdleTime
+				removeTrailingIdleTime: removeTrailingIdleTime,
 			});
 		}
 	}
 
 	removeTrailingIdleTime() {
-
 		// first remove any non-skill nodes in the end
-		let lastSkill = this.record.getLastAction(node=>{ return node.type === ActionType.Skill; });
+		let lastSkill = this.record.getLastAction((node) => {
+			return node.type === ActionType.Skill;
+		});
 		if (!lastSkill) {
 			// no skill has been used yet - delete everything.
 			this.rewindUntilBefore(this.record.getFirstAction(), true);
-		} else { // there are nodes after the last skill
+		} else {
+			// there are nodes after the last skill
 			this.rewindUntilBefore(lastSkill.next, true);
 		}
 	}
 
 	waitTillNextMpOrLucidTick() {
-		this.#requestTick({deltaTime: this.game.timeTillNextMpGainEvent(), separateNode: true});
+		this.#requestTick({ deltaTime: this.game.timeTillNextMpGainEvent(), separateNode: true });
 		this.updateAllDisplay();
 	}
 
-	requestUseSkill(props: { skillName: SkillName; }) {
+	requestUseSkill(props: { skillName: SkillName }) {
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {
@@ -1438,7 +1503,7 @@ class Controller {
 			time: this.game.getDisplayTime(),
 			action: "Toggle buff: " + buffName,
 			isGCD: 0,
-			castTime: 0
+			castTime: 0,
 		});
 
 		return true;
@@ -1447,23 +1512,23 @@ class Controller {
 	scrollToTime(t?: number) {
 		let targetT = t === undefined ? this.game.time : t;
 		// the most adhoc hack ever...
-		setTimeout(()=>{
+		setTimeout(() => {
 			scrollTimelineTo(StaticFn.positionFromTimeAndScale(targetT, this.timeline.scale));
 		}, 0);
 	}
 
 	#runLoop(loopCondition: () => boolean) {
-
 		let prevTime = 0;
 		let ctrl = this;
 
-		const loopFn = function(time: number) {
-			if (prevTime === 0) { // first frame
+		const loopFn = function (time: number) {
+			if (prevTime === 0) {
+				// first frame
 				prevTime = time;
 				// start
 				// ...
 			}
-			let dt = (time - prevTime) / 1000 * ctrl.timeScale;
+			let dt = ((time - prevTime) / 1000) * ctrl.timeScale;
 
 			// update (skills queue)
 			// dequeue skills at the start of each frame - if the skill is actually ready before the last frame is finished,
@@ -1472,7 +1537,7 @@ class Controller {
 			// tick until (1) dt, or (2) exactly when the last skill is finished, whichever comes first
 			// if (2), dequeue the next skill if there is one, then tick the rest of dt
 
-			let tryDequeueSkill = ()=>{
+			let tryDequeueSkill = () => {
 				let numSkillsProcessed = 0;
 				for (let i = 0; i < ctrl.skillsQueue.length; i++) {
 					let status = ctrl.#useSkill(ctrl.skillsQueue[i].skillName, true);
@@ -1494,21 +1559,27 @@ class Controller {
 			let timeTillAnySkillAvailable = ctrl.game.timeTillAnySkillAvailable();
 			if (timeTillAnySkillAvailable >= dt) {
 				ctrl.#requestTick({
-					deltaTime : dt,
+					deltaTime: dt,
 					separateNode: false,
-					prematureStopCondition: ()=>{ return !loopCondition(); }
+					prematureStopCondition: () => {
+						return !loopCondition();
+					},
 				});
 			} else {
 				ctrl.#requestTick({
-					deltaTime : timeTillAnySkillAvailable,
+					deltaTime: timeTillAnySkillAvailable,
 					separateNode: false,
-					prematureStopCondition: ()=>{ return !loopCondition(); }
+					prematureStopCondition: () => {
+						return !loopCondition();
+					},
 				});
 				tryDequeueSkill(); // potentially sandwich another skill here
 				ctrl.#requestTick({
-					deltaTime : dt - timeTillAnySkillAvailable,
+					deltaTime: dt - timeTillAnySkillAvailable,
 					separateNode: false,
-					prematureStopCondition: ()=>{ return !loopCondition(); }
+					prematureStopCondition: () => {
+						return !loopCondition();
+					},
 				});
 			}
 
@@ -1519,45 +1590,46 @@ class Controller {
 			prevTime = time;
 			if (loopCondition()) {
 				requestAnimationFrame(loopFn);
-			}
-			else {
+			} else {
 				ctrl.shouldLoop = false;
 				ctrl.autoSave();
 				setRealTime(false);
 			}
-		}
+		};
 		setRealTime(true);
 		requestAnimationFrame(loopFn);
 	}
 
 	step(t: number) {
-		this.#requestTick({deltaTime: t, separateNode: true});
+		this.#requestTick({ deltaTime: t, separateNode: true });
 		this.updateAllDisplay();
 	}
 
-	#handleKeyboardEvent_RealTimeAutoPause(evt: { shiftKey: boolean; keyCode: number; }) {
+	#handleKeyboardEvent_RealTimeAutoPause(evt: { shiftKey: boolean; keyCode: number }) {
 		if (this.shouldLoop) return;
 
-		if (evt.keyCode===85) { // u (undo)
+		if (evt.keyCode === 85) {
+			// u (undo)
 			this.rewindUntilBefore(this.record.getLastAction(), false);
 			this.updateAllDisplay();
 			this.autoSave();
 		}
 	}
-	#handleKeyboardEvent_Manual(evt: { keyCode: number; shiftKey: boolean; }) {
-		if (evt.keyCode===32) { // space
+	#handleKeyboardEvent_Manual(evt: { keyCode: number; shiftKey: boolean }) {
+		if (evt.keyCode === 32) {
+			// space
 			this.#fastForward();
 			this.updateAllDisplay();
 			this.autoSave();
-		}
-		else if (evt.keyCode===85) { // u (undo)
+		} else if (evt.keyCode === 85) {
+			// u (undo)
 			this.rewindUntilBefore(this.record.getLastAction(), false);
 			this.updateAllDisplay();
 			this.autoSave();
 		}
 	}
 
-	handleKeyboardEvent(evt: { keyCode: number; shiftKey: boolean; }) {
+	handleKeyboardEvent(evt: { keyCode: number; shiftKey: boolean }) {
 		// console.log(evt.keyCode);
 		if (this.displayingUpToDateGameState) {
 			if (this.tickMode === TickMode.RealTimeAutoPause) {

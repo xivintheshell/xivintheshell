@@ -6,13 +6,13 @@ import {
 	ResourceCounterProps,
 	ResourceDisplayProps,
 	ResourceTextProps,
-	StatusPropsGenerator
+	StatusPropsGenerator,
 } from "../StatusDisplay";
-import {ResourceType,TraitName} from "../../Game/Common";
-import {Traits} from "../../Game/Traits";
-import {PCTState} from "../../Game/Jobs/PCT";
-import {getCurrentThemeColors} from "../ColorTheme";
-import {localize} from "../Localization";
+import { ResourceType, TraitName } from "../../Game/Common";
+import { Traits } from "../../Game/Traits";
+import { PCTState } from "../../Game/Jobs/PCT";
+import { getCurrentThemeColors } from "../ColorTheme";
+import { localize } from "../Localization";
 
 [
 	ResourceType.Aetherhues,
@@ -42,14 +42,17 @@ import {localize} from "../Localization";
 export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
 		const makePictoTimer = (rscType: ResourceType, stacks: number, cd: number) => {
-			const enabled = (rscType === ResourceType.Inspiration) ? this.state.hasResourceAvailable(rscType) : true;
+			const enabled =
+				rscType === ResourceType.Inspiration
+					? this.state.hasResourceAvailable(rscType)
+					: true;
 			return {
 				rscType: rscType,
 				onSelf: true,
 				enabled: enabled,
 				stacks: stacks,
 				timeRemaining: cd.toFixed(3),
-				className: cd > 0 ? "" : "hidden"
+				className: cd > 0 ? "" : "hidden",
 			};
 		};
 		const makePictoIndefinite = (rscType: ResourceType, stacks: number) => {
@@ -66,7 +69,9 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 		const aetherhuesStacks = resources.get(ResourceType.Aetherhues).availableAmount();
 		const monochromeTones = resources.get(ResourceType.MonochromeTones).availableAmount();
 		const subtractivePalette = resources.get(ResourceType.SubtractivePalette).availableAmount();
-		const subtractiveSpectrumCountdown = resources.timeTillReady(ResourceType.SubtractiveSpectrum);
+		const subtractiveSpectrumCountdown = resources.timeTillReady(
+			ResourceType.SubtractiveSpectrum,
+		);
 		const starryMuseCountdown = resources.timeTillReady(ResourceType.StarryMuse);
 		const hyperphantasiaCountdown = resources.timeTillReady(ResourceType.Hyperphantasia);
 		const hyperphantasiaStacks = resources.get(ResourceType.Hyperphantasia).availableAmount();
@@ -78,10 +83,14 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 		const temperaCoatCountdown = resources.timeTillReady(ResourceType.TemperaCoat);
 		const temperaGrassaCountdown = resources.timeTillReady(ResourceType.TemperaGrassa);
 		const smudgeCountdown = resources.timeTillReady(ResourceType.Smudge);
-	
+
 		return [
 			makePictoTimer(ResourceType.RainbowBright, 1, rainbowBrightCountdown),
-			makePictoTimer(ResourceType.Hyperphantasia, hyperphantasiaStacks, hyperphantasiaCountdown),
+			makePictoTimer(
+				ResourceType.Hyperphantasia,
+				hyperphantasiaStacks,
+				hyperphantasiaCountdown,
+			),
 			makePictoTimer(ResourceType.Inspiration, 1, inspirationCountdown),
 			makePictoTimer(ResourceType.SubtractiveSpectrum, 1, subtractiveSpectrumCountdown),
 			makePictoTimer(ResourceType.HammerTime, hammerTimeStacks, hammerTimeCountdown),
@@ -99,7 +108,7 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
-		
+
 		const portrait = resources.get(ResourceType.Portrait).availableAmount();
 		const depictions = resources.get(ResourceType.Depictions).availableAmount();
 		const creatureCanvas = resources.get(ResourceType.CreatureCanvas).availableAmount();
@@ -116,15 +125,18 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 					en: "portrait",
 					zh: "肖像标识",
 				}),
-				text: portrait === 0 ? "/" : (
-					portrait === 1 ? localize({
-						en: "moogle",
-						zh: "莫古力",
-					}) : localize({
-						en: "madeen",
-						zh: "马蒂恩",
-					})
-				),
+				text:
+					portrait === 0
+						? "/"
+						: portrait === 1
+							? localize({
+									en: "moogle",
+									zh: "莫古力",
+								})
+							: localize({
+									en: "madeen",
+									zh: "马蒂恩",
+								}),
 			} as ResourceTextProps,
 			{
 				kind: "text",
@@ -132,22 +144,28 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 					en: "depictions",
 					zh: "动物标识",
 				}),
-				text: depictions === 0 ? "/" :
-					(depictions === 1 ? localize({
-						en: "pom",
-						zh: "绒球",
-					}) :
-						(depictions === 2 ? localize({
-							en: "wing",
-							zh: "翅膀",
-						}) :
-							(depictions === 3 ? localize({
-								en: "fang",
-								zh: "兽爪",
-							}) : localize({
-								en: "maw",
-								zh: "尖牙",
-							})))),
+				text:
+					depictions === 0
+						? "/"
+						: depictions === 1
+							? localize({
+									en: "pom",
+									zh: "绒球",
+								})
+							: depictions === 2
+								? localize({
+										en: "wing",
+										zh: "翅膀",
+									})
+								: depictions === 3
+									? localize({
+											en: "fang",
+											zh: "兽爪",
+										})
+									: localize({
+											en: "maw",
+											zh: "尖牙",
+										}),
 			} as ResourceTextProps,
 			{
 				kind: "counter",
@@ -201,10 +219,12 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 				cometColor: colors.pct.cometPaint,
 				currentStacks: paint,
 				maxStacks: 5,
-				hasComet: Traits.hasUnlocked(TraitName.EnhancedPalette, this.state.config.level) && hasComet,
+				hasComet:
+					Traits.hasUnlocked(TraitName.EnhancedPalette, this.state.config.level) &&
+					hasComet,
 			} as PaintGaugeCounterProps);
 		}
 
-		return infos
+		return infos;
 	}
 }
