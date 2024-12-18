@@ -486,46 +486,7 @@ export abstract class GameState {
 		let capturedCastTime = skill.castTimeFn(this);
 		const recastTime = skill.recastTimeFn(this);
 
-		// TODO refactor logic to determine self-buffs
-		let llCovered =
-			this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
-		const fukaCovered =
-			this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fuka);
-		const fugetsuCovered =
-			this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fugetsu);
-		const inspireSkills: SkillName[] = [
-			SkillName.FireInRed,
-			SkillName.Fire2InRed,
-			SkillName.AeroInGreen,
-			SkillName.Aero2InGreen,
-			SkillName.WaterInBlue,
-			SkillName.Water2InBlue,
-			SkillName.HolyInWhite,
-			SkillName.BlizzardInCyan,
-			SkillName.Blizzard2InCyan,
-			SkillName.StoneInYellow,
-			SkillName.Stone2InYellow,
-			SkillName.ThunderInMagenta,
-			SkillName.Thunder2InMagenta,
-			SkillName.CometInBlack,
-			SkillName.StarPrism,
-		];
-		let inspired =
-			this.job === ShellJob.PCT &&
-			this.resources.get(ResourceType.Inspiration).available(1) &&
-			inspireSkills.includes(skill.name);
-		if (llCovered && skill.cdName === ResourceType.cd_GCD) {
-			node.addBuff(BuffType.LeyLines);
-		}
-		if (inspired) {
-			node.addBuff(BuffType.Hyperphantasia);
-		}
-		if (fukaCovered && skill.cdName === ResourceType.cd_GCD) {
-			node.addBuff(BuffType.Fuka);
-		}
-		if (fugetsuCovered) {
-			node.addBuff(BuffType.Fugetsu);
-		}
+		this.jobSpecificAddSpeedBuffCovers(node, skill)
 
 		// create potency node object (snapshotted buffs will populate on confirm)
 		const potencyNumber = skill.potencyFn(this);
