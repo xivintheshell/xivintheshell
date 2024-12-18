@@ -2,7 +2,7 @@
 
 import { controller } from "../../Controller/Controller";
 import { ShellJob } from "../../Controller/Common";
-import { ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { BuffType,  ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -15,13 +15,15 @@ import {
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
+	Skill,
 	Spell,
 	StatePredicate,
 } from "../Skills";
 import { Traits } from "../Traits";
-import { GameState } from "../GameState";
+import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
+import { ActionNode } from "../../Controller/Record";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -79,6 +81,12 @@ export class PCTState extends GameState {
 		);
 
 		this.registerRecurringEvents();
+	}
+
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.StarryMuse)) {
+			node.addBuff(BuffType.StarryMuse)
+		}
 	}
 
 	// apply hyperphantasia + sps adjustment without consuming any resources

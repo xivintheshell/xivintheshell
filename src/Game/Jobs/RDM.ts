@@ -2,7 +2,7 @@
 
 import { controller } from "../../Controller/Controller";
 import { ShellJob } from "../../Controller/Common";
-import { Aspect, ProcMode, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { Aspect, BuffType, ProcMode, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -17,15 +17,17 @@ import {
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
+	Skill,
 	SkillAutoReplace,
 	Spell,
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
 import { Traits } from "../Traits";
-import { GameState } from "../GameState";
+import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, Resource, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
+import { ActionNode } from "../../Controller/Record";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -122,6 +124,18 @@ export class RDMState extends GameState {
 		this.resources.set(new Resource(ResourceType.Manafication, mfStacks, 0));
 
 		this.registerRecurringEvents();
+	}
+
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {		
+		if (this.hasResourceAvailable(ResourceType.Embolden) && skill.aspect !== Aspect.Physical) {
+			node.addBuff(BuffType.Embolden);
+		}
+		if (this.hasResourceAvailable(ResourceType.Manafication)) {
+			node.addBuff(BuffType.Manafication);
+		}
+		if (skill.name === SkillName.Impact && this.hasResourceAvailable(ResourceType.Acceleration)) {
+			node.addBuff(BuffType.Acceleration);
+		}
 	}
 
 	hasThreeManaStacks(): boolean {
