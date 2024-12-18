@@ -8,7 +8,7 @@ import {
 	SkillUnavailableReason,
 } from "./Common";
 import { GameConfig } from "./GameConfig";
-import { Ability, DisplayedSkills, LimitBreak, SkillsList, Spell, Weaponskill } from "./Skills";
+import { Ability, DisplayedSkills, LimitBreak, Skill, SkillsList, Spell, Weaponskill } from "./Skills";
 import {
 	CoolDown,
 	CoolDownState,
@@ -32,6 +32,7 @@ import type { BLMState } from "./Jobs/BLM";
 import type { SAMState } from "./Jobs/SAM";
 import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
+import { localizeResourceType } from "../Components/Localization";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require("seedrandom");
@@ -278,7 +279,12 @@ export abstract class GameState {
 		let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
 		while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
 		this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
+
+		this.jobSpecificRegisterRecurringEvents()
 	}
+
+	// Job code may override to handle setting up any job-specific recurring events, such as BLM's Polyglot timer
+	jobSpecificRegisterRecurringEvents() { }
 
 	// Job code may override to handle any on-tick effects of a DoT, like pre-Dawntrail Thundercloud
 	jobSpecificOnResolveDotTick(_dotResource: ResourceType) { }
@@ -907,7 +913,7 @@ export abstract class GameState {
 				aspect: props.aspect ?? Aspect.Other,
 				basePotency: this.config.adjustedDoTPotency(props.tickPotency, props.speedStat),
 				snapshotTime: this.getDisplayTime(),
-				description: "DoT " + (i+1) + `/${dotTicks}`
+				description: localizeResourceType(props.dotName) + " DoT " + (i+1) + `/${dotTicks}`
 			});
 			pDot.modifiers = [...mods, ...(props?.modifiers ??[])];
 			props.node.addDoTPotency(pDot, props.dotName);

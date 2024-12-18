@@ -315,9 +315,8 @@ makeLimitBreak(TANK_JOBS, SkillName.ShieldWall, ResourceType.cd_TankLB1, {
 	animationLock: 1.93,
 	onApplication: (state) => {
 		// Realistically this is only possible if you're fooling around in Explorer mode but still
-		Object.values(TankLBResourceType).forEach((rscType) => state.tryConsumeResource(rscType));
-		state.resources.get(ResourceType.ShieldWall).gain(1);
-		state.enqueueResourceDrop(ResourceType.ShieldWall, 10);
+		Object.values(TankLBResourceType).forEach(rscType => state.tryConsumeResource(rscType))
+		state.gainStatus(ResourceType.ShieldWall)
 	},
 });
 makeLimitBreak(TANK_JOBS, SkillName.Stronghold, ResourceType.cd_TankLB2, {
@@ -325,9 +324,8 @@ makeLimitBreak(TANK_JOBS, SkillName.Stronghold, ResourceType.cd_TankLB2, {
 	applicationDelay: 0.89,
 	animationLock: 3.86,
 	onApplication: (state) => {
-		Object.values(TankLBResourceType).forEach((rscType) => state.tryConsumeResource(rscType));
-		state.resources.get(ResourceType.Stronghold).gain(1);
-		state.enqueueResourceDrop(ResourceType.Stronghold, 12);
+		Object.values(TankLBResourceType).forEach(rscType => state.tryConsumeResource(rscType))
+		state.gainStatus(ResourceType.Stronghold)
 	},
 });
 const tankLB3s = [
@@ -346,11 +344,8 @@ tankLB3s.forEach((params) => {
 		applicationDelay: 1.34,
 		animationLock: 3.86,
 		onApplication: (state) => {
-			Object.values(TankLBResourceType).forEach((rscType) =>
-				state.tryConsumeResource(rscType),
-			);
-			state.resources.get(params.buff).gain(1);
-			state.enqueueResourceDrop(params.buff, 8);
+			Object.values(TankLBResourceType).forEach(rscType => state.tryConsumeResource(rscType))
+			state.gainStatus(params.buff)
 		},
 	});
 });
