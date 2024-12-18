@@ -4,7 +4,7 @@ import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { ShellJob } from "../../Controller/Common";
 import {
-	Aspect,
+	Aspect, BuffType,
 	Debug,
 	ProcMode,
 	ResourceType,
@@ -23,6 +23,7 @@ import {
 	makeSpell,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
+	Skill,
 	SkillAutoReplace,
 	Spell,
 	StatePredicate,
@@ -95,11 +96,7 @@ export class BLMState extends GameState {
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		this.registerRecurringEvents();
-	}
-
-	override registerRecurringEvents() {
-		super.registerRecurringEvents([{
+		this.registerRecurringEvents([{
 			reportName: localize({en: "Thunder DoT"}),
 			groupedDots: [{
 				dotName: ResourceType.HighThunder,
@@ -119,7 +116,9 @@ export class BLMState extends GameState {
 				appliedBy: [SkillName.Thunder4],
 			}]
 		}]);
+	}
 
+	override jobSpecificRegisterRecurringEvents() {
 		// also polyglot
 		let recurringPolyglotGain = (rsc: Resource) => {
 			if (this.hasEnochian()) {
@@ -136,6 +135,12 @@ export class BLMState extends GameState {
 			});
 		};
 		recurringPolyglotGain(this.resources.get(ResourceType.Polyglot));
+	}
+
+	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.LeyLines) && skill.cdName === ResourceType.cd_GCD) {
+			node.addBuff(BuffType.LeyLines);
+		}
 	}
 
 	override captureManaRegenAmount(): number {

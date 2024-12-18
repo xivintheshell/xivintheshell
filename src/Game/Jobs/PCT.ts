@@ -58,6 +58,24 @@ makePCTResource(ResourceType.TemperaCoat, 1, { timeout: 10 });
 makePCTResource(ResourceType.TemperaGrassa, 1, { timeout: 10 });
 makePCTResource(ResourceType.Smudge, 1, { timeout: 5 });
 
+const HYPERPHANTASIA_SKILLS: SkillName[] = [
+	SkillName.FireInRed,
+	SkillName.Fire2InRed,
+	SkillName.AeroInGreen,
+	SkillName.Aero2InGreen,
+	SkillName.WaterInBlue,
+	SkillName.Water2InBlue,
+	SkillName.HolyInWhite,
+	SkillName.BlizzardInCyan,
+	SkillName.Blizzard2InCyan,
+	SkillName.StoneInYellow,
+	SkillName.Stone2InYellow,
+	SkillName.ThunderInMagenta,
+	SkillName.Thunder2InMagenta,
+	SkillName.CometInBlack,
+	SkillName.StarPrism,
+];
+
 // === JOB GAUGE AND STATE ===
 export class PCTState extends GameState {
 	constructor(config: GameConfig) {
@@ -86,6 +104,13 @@ export class PCTState extends GameState {
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
 		if (this.hasResourceAvailable(ResourceType.StarryMuse)) {
 			node.addBuff(BuffType.StarryMuse)
+		}
+	}
+
+	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.Inspiration) && HYPERPHANTASIA_SKILLS.includes(skill.name))
+		{
+			node.addBuff(BuffType.Hyperphantasia)
 		}
 	}
 
