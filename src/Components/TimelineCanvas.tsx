@@ -444,31 +444,33 @@ function drawDamageMarks(
 		});
 		// hover text
 		let time = "[" + dm.displayTime.toFixed(3) + "] ";
-		let untargetableStr = localize({ en: "Untargetable", zh: "不可选中" }) as string;
-		let info = "";
-		let sourceStr = dm.sourceDesc.replace("{skill}", localizeSkillName(dm.sourceSkill));
-		let buffImages = [];
-		if (untargetable) {
-			info = (0).toFixed(3) + " (" + sourceStr + ")";
-		} else if (LIMIT_BREAKS.includes(dm.sourceSkill)) {
-			const lbStr = localize({ en: "LB" }) as string;
-			info = lbStr + " (" + sourceStr + ")";
-		} else {
-			const potency = dm.potency.getAmount({
-				tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
-				includePartyBuffs: true,
-			});
-			info = potency.toFixed(2) + " (" + sourceStr + ")";
-			if (pot) buffImages.push(buffIconImages.get(BuffType.Tincture));
-
-			dm.potency.getPartyBuffs().forEach((desc) => {
-				buffImages.push(buffIconImages.get(desc));
-			});
-		}
+		let untargetableStr = localize({en: "Untargetable", zh: "不可选中"}) as string;
+		const info: string[] = [];
+		let buffImages: Array<HTMLImageElement | undefined> = [];
+		dm.damageInfos.forEach((damageInfo) => {
+			let sourceStr = damageInfo.sourceDesc.replace("{skill}", localizeSkillName(damageInfo.sourceSkill));
+			if (untargetable) {
+				info.push((0).toFixed(3) + " (" + sourceStr + ")")
+			} else if (LIMIT_BREAKS.includes(damageInfo.sourceSkill)) {
+				const lbStr = localize({en: "LB"}) as string
+				info.push(lbStr + " (" + sourceStr + ")")
+			} else {
+				const potencyAmount = damageInfo.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, includePartyBuffs: true});
+				info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")")
+				if (pot) buffImages.push(buffIconImages.get(BuffType.Tincture));
+	
+				damageInfo.potency.getPartyBuffs().forEach(desc => {
+					const buffImage = buffIconImages.get(desc);
+					if (!buffImages.includes(buffImage)) {
+						buffImages.push();
+					}
+				});
+			}
+		})
 
 		testInteraction(
-			{ x: x - 3, y: timelineOriginY, w: 6, h: 6 },
-			untargetable ? [time + info, untargetableStr] : [time + info],
+			{x: x-3, y: timelineOriginY, w: 6, h: 6},
+			untargetable ? [time, ...info, untargetableStr] : [time, ...info],
 			undefined,
 			undefined,
 			buffImages,

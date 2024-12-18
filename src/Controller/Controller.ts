@@ -651,15 +651,26 @@ class Controller {
 		if (!this.#bInSandbox) {
 			let sourceDesc = "{skill}@" + p.sourceTime.toFixed(3);
 			if (p.description.length > 0) sourceDesc += " " + p.description;
-			this.timeline.addElement({
-				type: ElemType.DamageMark,
+			const damageInfo: DamageMarkInfo = {
 				potency: p,
-				buffs: pot ? [ResourceType.Tincture] : [],
-				time: this.game.time,
-				displayTime: this.game.getDisplayTime(),
-				sourceDesc: sourceDesc,
-				sourceSkill: p.sourceSkill,
-			});
+				sourceDesc,
+				sourceSkill: p.sourceSkill
+			}
+			let existingElement = this.timeline.tryGetElement(this.game.time, ElemType.DamageMark) as DamageMarkElem
+			if (existingElement) {
+				existingElement.damageInfos.push(damageInfo)
+				if (pot && !existingElement.buffs.includes(ResourceType.Tincture)) {
+					existingElement.buffs.push(ResourceType.Tincture)
+				}
+			} else {
+				this.timeline.addElement({
+					type: ElemType.DamageMark,
+					damageInfos: [damageInfo],
+					buffs: pot ? [ResourceType.Tincture] : [],
+					time: this.game.time,
+					displayTime: this.game.getDisplayTime(),
+				});
+			}
 
 			// time, damageSource, potency, cumulativePotency
 			this.#damageLogCsv.push({
