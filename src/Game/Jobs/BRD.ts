@@ -7,7 +7,7 @@ import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, makeResource, Event} from "../Resources";
-import { SkillAutoReplace, ConditionalSkillReplace, StatePredicate, EffectFn, CooldownGroupProperies, Weaponskill, makeWeaponskill, Ability, makeAbility, makeResourceAbility, ResourceCalculationFn } from "../Skills";
+import { SkillAutoReplace, ConditionalSkillReplace, StatePredicate, EffectFn, CooldownGroupProperies, Weaponskill, makeWeaponskill, Ability, makeAbility, makeResourceAbility, ResourceCalculationFn, MOVEMENT_SKILL_ANIMATION_LOCK } from "../Skills";
 import { Traits } from "../Traits";
 
 const makeBRDResource = (rsc: ResourceType, maxValue: number, params? : {timeout?: number, default?: number}) => {
@@ -282,6 +282,7 @@ const makeAbility_BRD = (name: SkillName, unlockLevel: number, cdName: ResourceT
     highlightIf?: StatePredicate<BRDState>,
     startOnHotbar?: boolean,
     applicationDelay?: number,
+    animationLock?: number,
     cooldown: number,
     maxCharges?: number,
     validateAttempt?: StatePredicate<BRDState>,
@@ -654,7 +655,8 @@ makeResourceAbility_BRD(SkillName.NaturesMinne, 35, ResourceType.cd_NaturesMinne
 })
 
 makeAbility_BRD(SkillName.RepellingShot, 15, ResourceType.cd_RepellingShot, {
-    cooldown: 30
+    cooldown: 30,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 })
 
 makeResourceAbility_BRD(SkillName.Troubadour, 56, ResourceType.cd_Troubadour, {
