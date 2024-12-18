@@ -263,11 +263,13 @@ export enum BuffType {
 	RadiantFinale1 = "Radiant Finale (1)",
 	RadiantFinale2 = "Radiant Finale (2)",
 	RadiantFinale3 = "Radiant Finale (3)",
+	Barrage = "Barrage",
 	SearingLight = "Searing Light",
 	StandardFinish = "Standard Finish",
 	StarryMuse = "Starry Muse",
 	TechnicalFinish = "Technical Finish",
 	WanderersMinuet = "The Wanderer's Minuet",
+	RagingStrikes = "Raging Strikes",
 
 	DeathsDesign = "Death's Design",
 }

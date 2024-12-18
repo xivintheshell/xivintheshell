@@ -38,6 +38,7 @@ buffIcons.set(BuffType.DeathsDesign, require("./Asset/Buffs/RPR/Death's Design.p
 buffIcons.set(BuffType.ArcaneCircle, require("./Asset/Buffs/RPR/Arcane Circle.png"));
 
 buffIcons.set(BuffType.RagingStrikes, require("./Asset/Buffs/BRD/Raging Strikes.png"));
+buffIcons.set(BuffType.Barrage, require("./Asset/Buffs/BRD/Barrage.png"));
 
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
