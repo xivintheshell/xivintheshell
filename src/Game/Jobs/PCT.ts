@@ -12,6 +12,7 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
 	Spell,
@@ -275,6 +276,7 @@ const makeAbility_PCT = (
 		highlightIf?: StatePredicate<PCTState>;
 		startOnHotbar?: boolean;
 		applicationDelay?: number;
+		animationLock?: number;
 		cooldown: number;
 		maxCharges?: number;
 		validateAttempt?: StatePredicate<PCTState>;
@@ -1129,6 +1131,7 @@ makeAbility_PCT(SkillName.TemperaCoatPop, 10, ResourceType.cd_TemperaPop, {
 	],
 	startOnHotbar: false,
 	applicationDelay: 0,
+	animationLock: 0.01,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
 	onConfirm: (state) => {
@@ -1156,6 +1159,7 @@ makeAbility_PCT(SkillName.TemperaGrassaPop, 10, ResourceType.cd_TemperaPop, {
 	],
 	startOnHotbar: false,
 	applicationDelay: 0,
+	animationLock: 0.01,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
 	onConfirm: (state) => {
@@ -1177,4 +1181,5 @@ makeResourceAbility(ShellJob.PCT, SkillName.Smudge, 20, ResourceType.cd_Smudge, 
 	rscType: ResourceType.Smudge,
 	applicationDelay: 0, // instant (buff application)
 	cooldown: 20,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });

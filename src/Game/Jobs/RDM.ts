@@ -14,6 +14,7 @@ import {
 	makeResourceAbility,
 	makeSpell,
 	makeWeaponskill,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
 	SkillAutoReplace,
@@ -445,6 +446,7 @@ const makeAbility_RDM = (
 		highlightIf?: StatePredicate<RDMState>;
 		startOnHotbar?: boolean;
 		applicationDelay?: number;
+		animationLock?: number;
 		cooldown: number;
 		maxCharges?: number;
 		validateAttempt?: StatePredicate<RDMState>;
@@ -1037,6 +1039,7 @@ makeAbility_RDM(SkillName.CorpsACorps, 6, ResourceType.cd_CorpsACorps, {
 	potency: 130,
 	cooldown: 35,
 	maxCharges: 2,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
 const flipPotency: Array<[TraitName, number]> = [
@@ -1058,6 +1061,7 @@ makeAbility_RDM(SkillName.Displacement, 40, ResourceType.cd_Displacement, {
 	potency: flipPotency,
 	cooldown: 35,
 	maxCharges: 2,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
 makeAbility_RDM(SkillName.Fleche, 45, ResourceType.cd_Fleche, {

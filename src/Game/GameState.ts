@@ -663,10 +663,7 @@ export abstract class GameState {
 
 		const isInstant = capturedCastTime === 0 || skill.isInstantFn(this);
 		if (isInstant) {
-			this.resources.takeResourceLock(
-				ResourceType.NotAnimationLocked,
-				this.config.getSkillAnimationLock(skill.name),
-			);
+			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, skill.animationLockFn(this));
 			// Immediately do confirmation (no need to validate again)
 			onSpellConfirm();
 		} else {
@@ -814,10 +811,7 @@ export abstract class GameState {
 		cd.useStack(this);
 
 		// animation lock
-		this.resources.takeResourceLock(
-			ResourceType.NotAnimationLocked,
-			this.config.getSkillAnimationLock(skill.name),
-		);
+		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, skill.animationLockFn(this));
 	}
 
 	/**
@@ -872,13 +866,10 @@ export abstract class GameState {
 						controller.resolvePotency(potency);
 					}
 					skill.onApplication(this, node);
-				}),
-			);
-
-			this.resources.takeResourceLock(
-				ResourceType.NotAnimationLocked,
-				slideCastTime + skill.animationLock,
-			);
+				}
+			));
+			
+			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, slideCastTime + skill.animationLockFn(this));
 		};
 
 		const isInstant = capturedCastTime === 0;
