@@ -31,6 +31,7 @@ import { Buff } from "./Buffs";
 import type { BLMState } from "./Jobs/BLM";
 import type { SAMState } from "./Jobs/SAM";
 import { SkillButtonViewInfo } from "../Components/Skills";
+import { ReactNode } from "react";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require("seedrandom");
@@ -40,7 +41,10 @@ type RNG = any;
 export interface DoTSkillRegistration {
 	dotName: ResourceType,
 	appliedBy: SkillName[],
-	exclusiveWith?: ResourceType[],
+}
+export interface DoTRegistrationGroup {
+	reportName?: ReactNode,
+	groupedDots: DoTSkillRegistration[],
 }
 
 export interface DoTPotencyProps {
@@ -67,6 +71,7 @@ export abstract class GameState {
 	skillsList: SkillsList<GameState>;
 	displayedSkills: DisplayedSkills;
 
+	dotGroups: DoTRegistrationGroup[] = []
 	dotResources: ResourceType[] = []
 	dotSkills: SkillName[] = []
 	#exclusiveDots: Map<ResourceType, ResourceType[]> = new Map()
@@ -142,7 +147,7 @@ export abstract class GameState {
 	 * have not yet initialized their resource/cooldown objects. Instead, all
 	 * sub-classes must explicitly call this at the end of their constructor.
 	 */
-	protected registerRecurringEvents(dotResources: DoTSkillRegistration[] = []) {
+	protected registerRecurringEvents(dotGroups: DoTRegistrationGroup[] = []) {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
@@ -256,22 +261,23 @@ export abstract class GameState {
                 recurringDotTick();
             }));
 		}
-		if (dotResources.length > 0) {
-			dotResources.forEach((dotResource) => {
-				if (!this.dotResources.includes(dotResource.dotName)) {
-					this.dotResources.push(dotResource.dotName)
-					dotResource.appliedBy.forEach(dotSkill => {
+		dotGroups.forEach((dotGroup) => {
+			dotGroup.groupedDots.forEach((registeredDot) => {
+				if (!this.dotResources.includes(registeredDot.dotName)) {
+					this.dotResources.push(registeredDot.dotName)
+					registeredDot.appliedBy.forEach(dotSkill => {
 						if (!this.dotSkills.includes(dotSkill)) { this.dotSkills.push(dotSkill) }
 					})
-					this.#exclusiveDots.set(dotResource.dotName, dotResource.exclusiveWith ?? [])
+					this.#exclusiveDots.set(registeredDot.dotName, dotGroup.groupedDots.filter(dot => dot !== registeredDot).map(dot => dot.dotName))
 				} else {
-					console.assert(false, `${dotResource.dotName} was registered as a dot multiple times for ${this.job}`)
+					console.assert(false, `${registeredDot.dotName} was registered as a dot multiple times for ${this.job}`)
 				}
 			})
-			let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
-			while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
-			this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
-		}
+		})
+		this.dotGroups = dotGroups
+		let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
+		while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
+		this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
 	}
 
 	// Job code may override to handle any on-tick effects of a DoT, like pre-Dawntrail Thundercloud
@@ -990,7 +996,7 @@ export abstract class GameState {
 
 			node.setDotOverrideAmount(removeDot, node.getDotOverrideAmount(removeDot) + this.resources.timeTillReady(removeDot));
 			this.tryConsumeResource(removeDot);
-			controller.reportDotDrop(this.getDisplayTime());
+			controller.reportDotDrop(this.getDisplayTime(), dotName);
 		})
 
 		if (dotBuff.available(1)) {
@@ -1003,14 +1009,14 @@ export abstract class GameState {
 			dotGap = (!dotGap) ? thisGap : Math.min(dotGap, thisGap)
 
 			dotBuff.gain(1)
-			controller.reportDotStart(this.getDisplayTime());
+			controller.reportDotStart(this.getDisplayTime(), dotName);
 			this.resources.addResourceEvent({
 				rscType: dotName,
 				name: "drop " + dotName + " DoT",
 				delay: dotDuration,
 				fnOnRsc: rsc => {
 					rsc.consume(1);
-					controller.reportDotDrop(this.getDisplayTime());
+					controller.reportDotDrop(this.getDisplayTime(), dotName);
 				}
 			})
 		}

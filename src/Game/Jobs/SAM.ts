@@ -22,8 +22,9 @@ import {
 } from "../Skills";
 import { Traits } from "../Traits";
 import { GameState } from "../GameState";
-import { makeResource, CoolDown, DoTBuff, Event, EventTag } from "../Resources";
+import { makeResource, CoolDown, Event, EventTag } from "../Resources";
 import { GameConfig } from "../GameConfig";
+import { localizeResourceType } from "../../Components/Localization";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 const makeSAMResource = (rsc: ResourceType, maxValue: number, params?: { timeout: number }) => {
@@ -88,8 +89,11 @@ export class SAMState extends GameState {
 		].forEach((cd) => this.cooldowns.set(cd));
 
 		super.registerRecurringEvents([{
-			dotName: ResourceType.HiganbanaDoT,
-			appliedBy: [SkillName.Higanbana],
+			reportName: localizeResourceType(ResourceType.HiganbanaDoT),
+			groupedDots: [{
+				dotName: ResourceType.HiganbanaDoT,
+				appliedBy: [SkillName.Higanbana],
+			}]
 		}]);
 	}
 

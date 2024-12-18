@@ -49,7 +49,7 @@ import { StatusPropsGenerator, updateStatusDisplay } from "../Components/StatusD
 import { updateSkillButtons } from "../Components/Skills";
 import { updateConfigDisplay } from "../Components/PlaybackControl";
 import { setHistorical, setJob, setRealTime } from "../Components/Main";
-import { ElemType, MAX_TIMELINE_SLOTS, Timeline } from "./Timeline";
+import { DamageMarkElem, DamageMarkInfo, ElemType, MAX_TIMELINE_SLOTS, Timeline } from "./Timeline";
 import { scrollTimelineTo, updateTimelineView } from "../Components/Timeline";
 import { ActionNode, ActionType, Line, Record } from "./Record";
 import { ImageExportConfig } from "./ImageExportConfig";
@@ -132,8 +132,8 @@ class Controller {
 		isGCD: number;
 		castTime: number;
 	}[] = [];
-	#thunderDotTickTimes: number[] = [];
-	#thunderDoTCoverageTimes: { tStartDisplay: number; tEndDisplay?: number }[] = [];
+	#dotTickTimes: number[] = [];
+	#dotCoverageTimes: Map<ResourceType, {tStartDisplay: number, tEndDisplay?: number}[]> = new Map();
 
 	savedHistoricalGame: GameState;
 	savedHistoricalRecord: Record;
@@ -351,8 +351,8 @@ class Controller {
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown;
 		this.#damageLogCsv = [];
 		this.#actionsLogCsv = [];
-		this.#thunderDotTickTimes = [];
-		this.#thunderDoTCoverageTimes = [];
+		this.#dotTickTimes = [];
+		this.#dotCoverageTimes = new Map();
 		this.#bAddingLine = false;
 		this.#bInterrupted = false;
 		this.displayingUpToDateGameState = true;
@@ -565,7 +565,7 @@ class Controller {
 
 	getMaxTicks(untilRawTime: number) {
 		let cnt = 0;
-		this.#thunderDotTickTimes.forEach((rt) => {
+		this.#dotTickTimes.forEach(rt => {
 			if (!bossIsUntargetable(rt - this.gameConfig.countdown) && rt <= untilRawTime) {
 				cnt++;
 			}
@@ -573,10 +573,13 @@ class Controller {
 		return cnt;
 	}
 
-	getDotCoverageTimeFraction(untilDisplayTime: number) {
+	getDotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceType) {
 		if (untilDisplayTime <= Debug.epsilon) return 0;
+		const dotCoverages = this.#dotCoverageTimes.get(dot)
+		if (!dotCoverages) { return 0; }
+
 		let coveredTime = 0;
-		this.#thunderDoTCoverageTimes.forEach((section) => {
+		dotCoverages.forEach(section=>{
 			if (section.tStartDisplay <= untilDisplayTime) {
 				let startTime = Math.max(0, section.tStartDisplay);
 				let endTime =
@@ -720,31 +723,35 @@ class Controller {
 
 	reportDotTick(rawTime: number) {
 		if (!this.#bInSandbox) {
-			this.#thunderDotTickTimes.push(rawTime);
+			this.#dotTickTimes.push(rawTime)
 			this.updateStats();
 		}
 	}
 
-	reportDotStart(displayTime: number) {
+	reportDotStart(displayTime: number, dot: ResourceType) {
 		if (!this.#bInSandbox) {
-			let len = this.#thunderDoTCoverageTimes.length;
-			console.assert(
-				len === 0 || this.#thunderDoTCoverageTimes[len - 1].tEndDisplay !== undefined,
-			);
-			this.#thunderDoTCoverageTimes.push({
+			let dotCoverages = this.#dotCoverageTimes.get(dot)
+			if (!dotCoverages) {
+				dotCoverages = []
+				this.#dotCoverageTimes.set(dot, dotCoverages)
+			}
+			let len = dotCoverages.length;
+			console.assert(len === 0 || dotCoverages[len-1].tEndDisplay!==undefined);
+			dotCoverages.push({
 				tStartDisplay: displayTime,
 				tEndDisplay: undefined,
 			});
 		}
 	}
 
-	reportDotDrop(displayTime: number) {
+	reportDotDrop(displayTime: number, dot: ResourceType) {
 		if (!this.#bInSandbox) {
-			let len = this.#thunderDoTCoverageTimes.length;
-			console.assert(
-				len > 0 && this.#thunderDoTCoverageTimes[len - 1].tEndDisplay === undefined,
-			);
-			this.#thunderDoTCoverageTimes[len - 1].tEndDisplay = displayTime;
+			const dotCoverages = this.#dotCoverageTimes.get(dot)
+			console.assert(dotCoverages, `Reported dropping ${dot} when no coverage was detected`)
+			if (!dotCoverages) { return }
+			let len = dotCoverages.length;
+			console.assert(len > 0 && dotCoverages[len-1].tEndDisplay===undefined);
+			dotCoverages[len-1].tEndDisplay = displayTime;
 		}
 	}
 

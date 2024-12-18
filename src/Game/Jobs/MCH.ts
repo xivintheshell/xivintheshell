@@ -127,8 +127,10 @@ export class MCHState extends GameState {
 		}
 
         super.registerRecurringEvents([{
-            dotName: ResourceType.Bioblaster,
-            appliedBy: [SkillName.Bioblaster]
+            groupedDots: [{
+                dotName: ResourceType.Bioblaster,
+                appliedBy: [SkillName.Bioblaster]
+            }]
         }]);
     }
 
