@@ -21,6 +21,7 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	SkillAutoReplace,
 	Spell,
@@ -552,6 +553,7 @@ const makeAbility_BLM = (
 		startOnHotbar?: boolean;
 		highlightIf?: StatePredicate<BLMState>;
 		applicationDelay?: number;
+		animationLock?: number;
 		cooldown: number;
 		maxCharges?: number;
 		validateAttempt?: StatePredicate<BLMState>;
@@ -843,6 +845,7 @@ makeSpell_BLM(SkillName.Fire4, 60, {
 makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, {
 	applicationDelay: 0, // ?
 	cooldown: 3,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	validateAttempt: (state) =>
 		state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0,
 	onConfirm: (state, node) => {
@@ -853,6 +856,7 @@ makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, 
 makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialManipulation, {
 	applicationDelay: 0, // ?
 	cooldown: 10,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
 makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {

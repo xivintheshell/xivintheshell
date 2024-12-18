@@ -16,7 +16,7 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
-	NO_EFFECT,
+	MOVEMENT_SKILL_ANIMATION_LOCK, NO_EFFECT,
 	ResourceCalculationFn,
 	StatePredicate,
 	Weaponskill,
@@ -380,58 +380,45 @@ const makeGCD_DNC = (
 	});
 };
 
-const makeAbility_DNC = (
-	name: SkillName,
-	unlockLevel: number,
-	cdName: ResourceType,
-	params: {
-		potency?: number | Array<[TraitName, number]>;
-		replaceIf?: ConditionalSkillReplace<DNCState>[];
-		highlightIf?: StatePredicate<DNCState>;
-		startOnHotbar?: boolean;
-		applicationDelay?: number;
-		cooldown: number;
-		maxCharges?: number;
-		validateAttempt?: StatePredicate<DNCState>;
-		onConfirm?: EffectFn<DNCState>;
-		onApplication?: EffectFn<DNCState>;
-		secondaryCooldown?: CooldownGroupProperies;
-	},
-): Ability<DNCState> => {
-	return makeAbility(ShellJob.DNC, name, unlockLevel, cdName, {
-		...params,
-		onConfirm: params.onConfirm,
-		onExecute: (state) => state.cancelImprovisation(),
-		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = [];
-			if (state.hasResourceAvailable(ResourceType.StandardFinish)) {
-				const modifier =
-					state.resources.get(ResourceType.StandardBonus).availableAmount() === 2
-						? Modifiers.DoubleStandardFinish
-						: Modifiers.SingleStandardFinish;
-				mods.push(modifier);
-			}
-			if (state.hasResourceAvailable(ResourceType.TechnicalFinish)) {
-				const technicalBonus = state.resources
-					.get(ResourceType.TechnicalBonus)
-					.availableAmount();
-				const modifier =
-					technicalBonus === 4
-						? Modifiers.QuadrupleTechnicalFinish
-						: technicalBonus === 3
-							? Modifiers.TripleTechnicalFinish
-							: technicalBonus === 2
-								? Modifiers.SingleTechnicalFinish
-								: Modifiers.SingleTechnicalFinish;
-				mods.push(modifier);
-			}
-			if (state.hasResourceAvailable(ResourceType.Devilment)) {
-				mods.push(Modifiers.Devilment);
-			}
-			return mods;
-		},
-	});
-};
+const makeAbility_DNC = (name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
+    potency?: number | Array<[TraitName, number]>,
+    replaceIf?: ConditionalSkillReplace<DNCState>[],
+    highlightIf?: StatePredicate<DNCState>,
+    startOnHotbar?: boolean,
+    applicationDelay?: number,
+    animationLock?: number,
+    cooldown: number,
+    maxCharges?: number,
+    validateAttempt?: StatePredicate<DNCState>,
+    onConfirm?: EffectFn<DNCState>,
+    onApplication?: EffectFn<DNCState>,
+    secondaryCooldown?: CooldownGroupProperies,
+}): Ability<DNCState> => {
+    return makeAbility(ShellJob.DNC, name, unlockLevel, cdName, {
+        ...params,
+        onConfirm: params.onConfirm,
+        onExecute: (state) => state.cancelImprovisation(),
+        jobPotencyModifiers: (state) => {
+            const mods: PotencyModifier[] = [];
+            if (state.hasResourceAvailable(ResourceType.StandardFinish)) {
+                const modifier = state.resources.get(ResourceType.StandardBonus).availableAmount() === 2 ?
+                    Modifiers.DoubleStandardFinish : Modifiers.SingleStandardFinish
+                mods.push(modifier)
+            }
+            if (state.hasResourceAvailable(ResourceType.TechnicalFinish)) {
+                const technicalBonus = state.resources.get(ResourceType.TechnicalBonus).availableAmount()
+                const modifier = technicalBonus === 4 ? Modifiers.QuadrupleTechnicalFinish :
+                    technicalBonus === 3 ? Modifiers.TripleTechnicalFinish :
+                    technicalBonus === 2 ? Modifiers.SingleTechnicalFinish : Modifiers.SingleTechnicalFinish
+                mods.push(modifier)
+            }
+            if (state.hasResourceAvailable(ResourceType.Devilment)) {
+                mods.push(Modifiers.Devilment)
+            }
+            return mods;
+        },
+    });
+}
 
 const makeResourceAbility_DNC = (
 	name: SkillName,
@@ -1074,9 +1061,10 @@ makeAbility_DNC(SkillName.ImprovisedFinish, 80, ResourceType.cd_ImprovisedFinish
 });
 
 makeAbility_DNC(SkillName.EnAvant, 50, ResourceType.cd_EnAvant, {
-	cooldown: 30,
-	maxCharges: 3, // Adjust charges when synced in the state constructor
-});
+    cooldown: 30,
+    maxCharges: 3, // Adjust charges when synced in the state constructor
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
+})
 
 makeResourceAbility_DNC(SkillName.ShieldSamba, 56, ResourceType.cd_ShieldSamba, {
 	rscType: ResourceType.ShieldSamba,
