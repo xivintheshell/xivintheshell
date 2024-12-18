@@ -469,7 +469,7 @@ export function calculateDamageStats(props: {
 								timeSinceLastDoTDropped: 0,
 								totalTicks: 0,
 								maxTicks: ctl.getMaxTicks(ctl.game.time),
-								dotCoverageTimeFraction: ctl.getDotCoverageTimeFraction(ctl.game.getDisplayTime()),
+								dotCoverageTimeFraction: ctl.getDotCoverageTimeFraction(ctl.game.getDisplayTime(), rscType),
 								theoreticalMaxTicks: 0,
 								totalPotencyWithoutPot: 0,
 								totalPotPotency: 0,
