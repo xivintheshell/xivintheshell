@@ -31,7 +31,7 @@ import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
 import { localize, localizeBuffType, localizeSkillName } from "./Localization";
 import { setEditingMarkerValues } from "./TimelineMarkers";
-import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
+import { getCurrentThemeColors, MarkerColor, ThemeColors } from "./ColorTheme";
 import { scrollEditorToFirstSelected } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
 import { updateTimelineView } from "./Timeline";
@@ -537,12 +537,12 @@ function drawSkills(
 		[BuffType.WanderersMinuet, {color: g_colors.brd.wanderersCoda, showImage: true}],
 		[BuffType.MagesBallad, {color: g_colors.brd.magesCoda, showImage: true}],
 		[BuffType.ArmysPaeon, {color: g_colors.brd.armysCoda, showImage: true}],
-		[BuffType.RagingStrikes, {color: g_colors.brd.ragingStrikes, showImage: true}],
-		[BuffType.Barrage, {color: g_colors.brd.barrage, showImage: true}],
-		[BuffType.BattleVoice, {color: g_colors.brd.battleVoice, showImage: true}],
-		[BuffType.RadiantFinale1, {color: g_colors.brd.radiantFinale, showImage: true}],
-		[BuffType.RadiantFinale2, {color: g_colors.brd.radiantFinale, showImage: true}],
-		[BuffType.RadiantFinale3, {color: g_colors.brd.radiantFinale, showImage: true}],
+		[BuffType.RagingStrikes, {color: MarkerColor.Red, showImage: true}],
+		[BuffType.Barrage, {color: MarkerColor.Yellow, showImage: true}],
+		[BuffType.BattleVoice, {color: g_colors.timeline.buffCover, showImage: true}],
+		[BuffType.RadiantFinale1, {color: g_colors.timeline.buffCover, showImage: true}],
+		[BuffType.RadiantFinale2, {color: g_colors.timeline.buffCover, showImage: true}],
+		[BuffType.RadiantFinale3, {color: g_colors.timeline.buffCover, showImage: true}],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();
