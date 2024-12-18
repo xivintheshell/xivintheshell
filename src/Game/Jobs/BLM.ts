@@ -32,12 +32,12 @@ import {
 	getResourceInfo,
 	makeResource,
 	CoolDown,
-	DoTBuff,
 	Event,
 	Resource,
 	ResourceInfo,
 } from "../Resources";
 import { GameConfig } from "../GameConfig";
+import { localize } from "../../Components/Localization";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -98,28 +98,25 @@ export class BLMState extends GameState {
 	}
 
 	override registerRecurringEvents() {
-		// Fortunately, since both ST and AoE DoTs upgrade at the same time, 
-		// we only need to handle exclusivity in pairs, instead of as the quartet
 		super.registerRecurringEvents([{
-			dotName: ResourceType.HighThunder,
-			appliedBy: [SkillName.HighThunder],
-			exclusiveWith: [ResourceType.HighThunderII]
-		},
-		{
-			dotName: ResourceType.HighThunderII,
-			appliedBy: [SkillName.HighThunder2],
-			exclusiveWith: [ResourceType.HighThunder]
-		},
-		{
-			dotName: ResourceType.ThunderIII,
-			appliedBy: [SkillName.Thunder3],
-			exclusiveWith: [ResourceType.ThunderIV]
-			
-		},
-		{
-			dotName: ResourceType.ThunderIV,
-			appliedBy: [SkillName.Thunder4],
-			exclusiveWith: [ResourceType.ThunderIII]
+			reportName: localize({en: "Thunder DoT"}),
+			groupedDots: [{
+				dotName: ResourceType.HighThunder,
+				appliedBy: [SkillName.HighThunder],
+			},
+			{
+				dotName: ResourceType.HighThunderII,
+				appliedBy: [SkillName.HighThunder2],
+			},
+			{
+				dotName: ResourceType.ThunderIII,
+				appliedBy: [SkillName.Thunder3],
+				
+			},
+			{
+				dotName: ResourceType.ThunderIV,
+				appliedBy: [SkillName.Thunder4],
+			}]
 		}]);
 
 		// also polyglot

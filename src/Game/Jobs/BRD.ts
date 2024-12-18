@@ -1,3 +1,4 @@
+import { localizeResourceType } from "../../Components/Localization";
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { ResourceType, SkillName, TraitName, WarningType } from "../Common";
@@ -62,12 +63,18 @@ export class BRDState extends GameState {
         }
         
         this.registerRecurringEvents([{
-            dotName: ResourceType.CausticBite,
-            appliedBy: [SkillName.CausticBite, SkillName.IronJaws]
-        }, 
+            reportName: localizeResourceType(ResourceType.Stormbite),
+            groupedDots: [{
+                dotName: ResourceType.Stormbite,
+                appliedBy: [SkillName.Stormbite, SkillName.IronJaws],
+            }]
+        },
         {
-            dotName: ResourceType.Stormbite,
-            appliedBy: [SkillName.Stormbite, SkillName.IronJaws],
+            reportName: localizeResourceType(ResourceType.CausticBite),
+            groupedDots: [{
+                dotName: ResourceType.CausticBite,
+                appliedBy: [SkillName.CausticBite, SkillName.IronJaws]
+            }]
         }]);
     }
 

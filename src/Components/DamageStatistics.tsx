@@ -5,7 +5,6 @@ import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
 import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
 import {localize, localizeResourceType, localizeSkillName} from "./Localization";
 import {controller} from "../Controller/Controller";
-import {ShellJob} from "../Controller/Common";
 import {
 	allSkillsAreIncluded,
 	DamageStatsDoTTrackingData,
@@ -572,15 +571,25 @@ export class DamageStatistics extends React.Component {
 				rparen;
 		}
 
-		let dotStr = ""
-		if (controller.getActiveJob() === ShellJob.BLM) {
-			const thunderTable = this.data.dotTables.get(ResourceType.HighThunder) ?? this.data.dotTables.get(ResourceType.ThunderIII)
-			if (thunderTable !== undefined) { 
-				dotStr += localize({en: "Thunder DoT uptime", zh: "雷覆盖时间"}) + colon + (thunderTable.summary.dotCoverageTimeFraction*100).toFixed(2) + "%";
-				dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + thunderTable.summary.totalTicks + "/" + thunderTable.summary.maxTicks + rparen;
+		// Build DoT uptime reports for any DoT groups that have requested reporting
+		const dotUptime = controller.game.dotGroups.filter(group => group.reportName).map((dotGroup) => {
+			let dotStr = dotGroup.reportName + " " + localize({en: "uptime"}) + colon
+			
+			let uptime = 0
+			let totalTicks = 0
+			let maxTicks = 0;
+			dotGroup.groupedDots.forEach((dot) => {
+				const dotTable = this.data.dotTables.get(dot.dotName)
+				if (!dotTable) { return }
+				uptime += dotTable.summary.dotCoverageTimeFraction
+				totalTicks += dotTable.summary.totalTicks
+				maxTicks = Math.max(maxTicks, dotTable.summary.maxTicks) // Practically speaking, they should all come out with the same maxTicks
+			})
 
-			}
-		}
+			dotStr += (uptime * 100).toFixed(2) + "%";
+			dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + totalTicks + "/" + maxTicks + rparen;
+			return <div>{dotStr}</div>
+		})
 
 		let selected: React.ReactNode | undefined = undefined;
 		let selectedPPSAvailable = this.selected.targetableDuration > 0;
@@ -651,7 +660,7 @@ export class DamageStatistics extends React.Component {
 							: "N/A"}
 					</div>
 					<div>{gcdStr}</div>
-					{controller.getActiveJob() === ShellJob.BLM && <div>{dotStr}</div>}
+					{dotUptime}
 				</div>
 				<div style={{ marginTop: 10 }}>
 					<DamageStatsSettings />
