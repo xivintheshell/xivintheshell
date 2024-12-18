@@ -2,5 +2,3 @@ tabWidth = 4
 useTabs = true
 printWidth = 100
 endOfLine = "auto"
-plugins = ["@yikes2000/prettier-plugin-merge-extras"]
-returnParentheses = false

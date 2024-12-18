@@ -31,7 +31,8 @@
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "format": "prettier-no-jsx-parens -w -l ."
   },
   "eslintConfig": {
     "extends": [
@@ -53,11 +54,11 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@yikes2000/prettier-plugin-merge-extras": "^0.7.1-extras.4",
     "canvas": "^2.11.2",
     "eslint-config-prettier": "^9.1.0",
     "gh-pages": "^6.1.1",
     "prettier": "^3.4.2",
+    "prettier-no-jsx-parens": "^3.4.0",
     "react-app-rewired": "^2.2.1",
     "react-scripts": "^5.0.1"
   }
