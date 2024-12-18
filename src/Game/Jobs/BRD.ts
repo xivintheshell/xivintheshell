@@ -1,13 +1,14 @@
 import { localizeResourceType } from "../../Components/Localization";
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
-import { ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { ActionNode } from "../../Controller/Record";
+import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { BRDTraitName } from "../Constants/BRD";
 import { GameConfig } from "../GameConfig";
-import { GameState } from "../GameState";
+import { GameState, PlayerState } from "../GameState";
 import { Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, makeResource, Event} from "../Resources";
-import { SkillAutoReplace, ConditionalSkillReplace, StatePredicate, EffectFn, CooldownGroupProperies, Weaponskill, makeWeaponskill, Ability, makeAbility, makeResourceAbility, ResourceCalculationFn, MOVEMENT_SKILL_ANIMATION_LOCK } from "../Skills";
+import { SkillAutoReplace, ConditionalSkillReplace, StatePredicate, EffectFn, CooldownGroupProperies, Weaponskill, makeWeaponskill, Ability, makeAbility, makeResourceAbility, ResourceCalculationFn, MOVEMENT_SKILL_ANIMATION_LOCK, Skill } from "../Skills";
 import { Traits } from "../Traits";
 
 const makeBRDResource = (rsc: ResourceType, maxValue: number, params? : {timeout?: number, default?: number}) => {
@@ -44,10 +45,16 @@ makeBRDResource(ResourceType.RadiantCoda, 3)
 makeBRDResource(ResourceType.CausticBite, 1, {timeout: 45})
 makeBRDResource(ResourceType.Stormbite, 1, {timeout: 45})
 
-const bardSongs: ResourceType[] = [
+const BARD_SONGS: ResourceType[] = [
     ResourceType.WanderersMinuet,
     ResourceType.MagesBallad,
     ResourceType.ArmysPaeon
+]
+
+const BARRAGE_SKILLS: SkillName[] = [
+    SkillName.RefulgentArrow,
+    SkillName.Shadowbite,
+    SkillName.WideVolley
 ]
 
 export class BRDState extends GameState {
@@ -78,9 +85,42 @@ export class BRDState extends GameState {
         }]);
     }
 
+    override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+        if (this.hasResourceAvailable(ResourceType.RagingStrikes)) {
+            node.addBuff(BuffType.RagingStrikes)
+        }
+        if (this.hasResourceAvailable(ResourceType.BattleVoice)) {
+            node.addBuff(BuffType.BattleVoice)
+        }
+        const radiantFinale = this.resources.get(ResourceType.RadiantFinale).availableAmount()
+        switch (radiantFinale) {
+            case 1:
+                node.addBuff(BuffType.RadiantFinale1)
+                break
+            case 2:
+                node.addBuff(BuffType.RadiantFinale2)
+                break
+            case 3:
+                node.addBuff(BuffType.RadiantFinale3)
+                break
+        }
+
+        if (this.hasResourceAvailable(ResourceType.Barrage) && BARRAGE_SKILLS.includes(skill.name)) {
+            node.addBuff(BuffType.Barrage)
+        }
+
+        if (this.hasResourceAvailable(ResourceType.WanderersMinuet)) {
+            node.addBuff(BuffType.WanderersMinuet)
+        } else if (this.hasResourceAvailable(ResourceType.MagesBallad)) {
+            node.addBuff(BuffType.MagesBallad)
+        } else if (this.hasResourceAvailable(ResourceType.ArmysPaeon)) {
+            node.addBuff(BuffType.ArmysPaeon)
+        }
+    }
+
     // Songs tick based on their application time, so they're not registered as a normal recurring event
     songTick(song: ResourceType) {
-        if (!bardSongs.includes(song)) { return }
+        if (!BARD_SONGS.includes(song)) { return }
         if (!this.hasResourceAvailable(song)) { return }
 
         if (this.triggersEffect(0.80)) {
@@ -101,7 +141,7 @@ export class BRDState extends GameState {
         }
         // If no song is active, or the resource given isn't actually a song, bail
         if (!song) { return }
-        if (!bardSongs.includes(song)) { return }
+        if (!BARD_SONGS.includes(song)) { return }
 
         // Grant the specified repertoire effect
         switch(song) {
@@ -125,14 +165,14 @@ export class BRDState extends GameState {
     }
 
     resourceIsSong(rscType: ResourceType): boolean {
-        return bardSongs.includes(rscType)
+        return BARD_SONGS.includes(rscType)
     }
 
     beginSong(newSong: ResourceType)
     {
         if (!this.resourceIsSong(newSong)) { return }
 
-        bardSongs.forEach((song) => this.tryExpireSong(song))
+        BARD_SONGS.forEach((song) => this.tryExpireSong(song))
 
         // Convert stocked Army's Ethos into Army's Muse, if not singing Army's Paeon
         if (newSong !== ResourceType.ArmysPaeon && this.hasResourceAvailable(ResourceType.ArmysEthos)) {
@@ -325,7 +365,7 @@ makeWeaponskill_BRD(SkillName.HeavyShot, 1, {
 makeWeaponskill_BRD(SkillName.BurstShot, 1, {
     startOnHotbar: false,
     potency: [
-        [TraitName.Never, 200], // TODO - Double-check
+        [TraitName.Never, 200],
         [TraitName.RangedMastery, 220]
     ],
     applicationDelay: 1.47,
@@ -398,8 +438,8 @@ makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
     potency: (state) => {
         const soulVoice = state.resources.get(ResourceType.SoulVoice)
         const minRequirement = 20
-        const minPotency = 120
-        const maxPotency = 600
+        const minPotency = Traits.hasUnlocked(TraitName.RangedMastery, state.config.level) ? 120 : 100
+        const maxPotency = Traits.hasUnlocked(TraitName.RangedMastery, state.config.level) ? 600 : 500
         const soulVoiceBonus = 1.0 * (soulVoice.availableAmount() - minRequirement) / (soulVoice.maxValue - minRequirement)
         const basePotency = (maxPotency - minPotency) * soulVoiceBonus + minPotency
         return basePotency
@@ -459,7 +499,10 @@ makeAbility_BRD(SkillName.HeartbreakShot, 92, ResourceType.cd_HeartbreakShot, {
 })
 
 makeAbility_BRD(SkillName.Sidewinder, 60, ResourceType.cd_Sidewinder, {
-    potency: 400,
+    potency: [
+        [TraitName.Never, 320],
+        [TraitName.RangedMastery, 400],
+    ],
     cooldown: 60,
     applicationDelay: 0.53,
 })
