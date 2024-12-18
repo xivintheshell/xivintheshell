@@ -13,6 +13,7 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
 	ResourceCalculationFn,
@@ -339,6 +340,7 @@ const makeAbility_SAM = (
 		startOnHotbar?: boolean;
 		highlightIf?: StatePredicate<SAMState>;
 		applicationDelay?: number;
+		animationLock?: number;
 		potency?: number | Array<[TraitName, number]>;
 		jobPotencyModifiers?: PotencyModifierFn<SAMState>;
 		cooldown: number;
@@ -932,6 +934,7 @@ makeAbility_SAM(SkillName.Kyuten, 62, ResourceType.cd_Kyuten, {
 
 makeAbility_SAM(SkillName.Gyoten, 54, ResourceType.cd_Gyoten, {
 	cooldown: 5,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	potency: 100,
 	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(10),
 	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(10),
@@ -940,6 +943,7 @@ makeAbility_SAM(SkillName.Gyoten, 54, ResourceType.cd_Gyoten, {
 
 makeAbility_SAM(SkillName.Yaten, 56, ResourceType.cd_Yaten, {
 	cooldown: 10,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	potency: 100,
 	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(10),
 	onConfirm: (state) => {
@@ -1021,6 +1025,7 @@ makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_Third
 makeAbility_SAM(SkillName.ThirdEyePop, 6, ResourceType.cd_ThirdEyePop, {
 	startOnHotbar: false,
 	applicationDelay: 0,
+	animationLock: 0.01,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ThirdEye),
 	onConfirm: (state) => {
@@ -1033,6 +1038,7 @@ makeAbility_SAM(SkillName.ThirdEyePop, 6, ResourceType.cd_ThirdEyePop, {
 makeAbility_SAM(SkillName.TengentsuPop, 82, ResourceType.cd_ThirdEyePop, {
 	startOnHotbar: false,
 	applicationDelay: 0,
+	animationLock: 0.01,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Tengentsu),
 	onConfirm: (state) => {
