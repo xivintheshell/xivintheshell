@@ -1,9 +1,10 @@
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
-import { ProcMode, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { ActionNode } from "../../Controller/Record";
+import { BuffType, ProcMode, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { DNCResourceType } from "../Constants/DNC";
 import { GameConfig } from "../GameConfig";
-import { GameState } from "../GameState";
+import { GameState, PlayerState } from "../GameState";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, getResourceInfo, makeResource, Resource, ResourceInfo } from "../Resources";
 import {
@@ -17,7 +18,7 @@ import {
 	makeResourceAbility,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK, NO_EFFECT,
-	ResourceCalculationFn,
+	ResourceCalculationFn, Skill,
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
@@ -116,6 +117,15 @@ export class DNCState extends GameState {
 
 		this.registerRecurringEvents();
 	}
+
+    override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
+        if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
+            node.addBuff(BuffType.TechnicalFinish)
+        }
+        if (this.hasResourceAvailable(ResourceType.Devilment)) {
+            node.addBuff(BuffType.Devilment)
+        }
+    }
 
 	processComboStatus(skill: SkillName) {
 		if (!COMBO_GCDS.includes(skill)) {

@@ -281,7 +281,11 @@ export abstract class GameState {
 	}
 
 	// Job code may override to handle any on-tick effects of a DoT, like pre-Dawntrail Thundercloud
-	protected jobSpecificOnResolveDotTick(_dotResource: ResourceType) { }
+	jobSpecificOnResolveDotTick(_dotResource: ResourceType) { }
+
+	// Job code may override to handle adding buff covers for the timeline
+	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) { }
+	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) { }
 
 	getStatusDuration(rscType: ResourceType): number
 	{ 
@@ -578,64 +582,13 @@ export abstract class GameState {
 
 			const doesDamage = skill.potencyFn(this) > 0;
 
-			// TODO automate buff covers
-			// tincture
-			if (this.hasResourceAvailable(ResourceType.Tincture) && doesDamage) {
-				node.addBuff(BuffType.Tincture);
-			}
-
-			if (
-				this.job === ShellJob.PCT &&
-				this.hasResourceAvailable(ResourceType.StarryMuse) &&
-				doesDamage
-			) {
-				node.addBuff(BuffType.StarryMuse);
-			}
-
-			if (this.job === ShellJob.RDM && doesDamage) {
-				if (
-					this.hasResourceAvailable(ResourceType.Embolden) &&
-					skill.aspect !== Aspect.Physical
-				) {
-					node.addBuff(BuffType.Embolden);
-				}
-				if (this.hasResourceAvailable(ResourceType.Manafication)) {
-					node.addBuff(BuffType.Manafication);
-				}
-				if (
-					skill.name === SkillName.Impact &&
-					this.hasResourceAvailable(ResourceType.Acceleration)
-				) {
-					node.addBuff(BuffType.Acceleration);
-				}
-			}
-
-			if (this.job === ShellJob.RPR && doesDamage) {
-				if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
-					node.addBuff(BuffType.ArcaneCircle);
+			if (doesDamage) {
+				// tincture
+				if (this.hasResourceAvailable(ResourceType.Tincture)) {
+					node.addBuff(BuffType.Tincture)
 				}
 
-				if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
-					node.addBuff(BuffType.DeathsDesign);
-				}
-			}
-
-			if (this.job === ShellJob.DNC && doesDamage) {
-				if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
-					node.addBuff(BuffType.TechnicalFinish);
-				}
-				if (this.hasResourceAvailable(ResourceType.Devilment)) {
-					node.addBuff(BuffType.Devilment);
-				}
-			}
-
-			if (
-				this.job === ShellJob.SAM &&
-				doesDamage &&
-				this.hasResourceAvailable(ResourceType.EnhancedEnpi) &&
-				skill.name === SkillName.Enpi
-			) {
-				node.addBuff(BuffType.EnhancedEnpi);
+				this.jobSpecificAddDamageBuffCovers(node, skill)
 			}
 
 			// Perform additional side effects
@@ -733,55 +686,13 @@ export abstract class GameState {
 			node.addPotency(potency);
 		}
 
-		// TODO automate buff covers
-		// tincture
-		if (this.hasResourceAvailable(ResourceType.Tincture) && potencyNumber > 0) {
-			node.addBuff(BuffType.Tincture);
-		}
-
-		// starry muse
-		if (
-			this.job === ShellJob.PCT &&
-			this.resources.get(ResourceType.StarryMuse).available(1) &&
-			potencyNumber > 0
-		) {
-			node.addBuff(BuffType.StarryMuse);
-		}
-
-		if (
-			this.job === ShellJob.RDM &&
-			this.hasResourceAvailable(ResourceType.Embolden) &&
-			potencyNumber > 0 &&
-			skill.aspect !== Aspect.Physical
-		) {
-			node.addBuff(BuffType.Embolden);
-		}
-
-		if (this.job === ShellJob.RPR && potencyNumber > 0) {
-			if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
-				node.addBuff(BuffType.ArcaneCircle);
+		if (potencyNumber > 0) {
+			// tincture
+			if (this.hasResourceAvailable(ResourceType.Tincture)) {
+				node.addBuff(BuffType.Tincture)
 			}
 
-			if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
-				node.addBuff(BuffType.DeathsDesign);
-			}
-		}
-
-		if (this.job === ShellJob.DNC && potencyNumber > 0) {
-			if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
-				node.addBuff(BuffType.TechnicalFinish);
-			}
-			if (this.hasResourceAvailable(ResourceType.Devilment)) {
-				node.addBuff(BuffType.Devilment);
-			}
-		}
-
-		if (
-			this.job === ShellJob.SAM &&
-			potencyNumber > 0 &&
-			this.hasResourceAvailable(ResourceType.Fugetsu)
-		) {
-			node.addBuff(BuffType.Fugetsu);
+			this.jobSpecificAddDamageBuffCovers(node, skill)
 		}
 
 		skill.onConfirm(this, node);
