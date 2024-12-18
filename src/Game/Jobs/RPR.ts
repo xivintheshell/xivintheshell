@@ -1,8 +1,9 @@
 import { ShellJob } from "../../Controller/Common";
-import { Aspect, ResourceType, SkillName, TraitName } from "../Common";
+import { ActionNode } from "../../Controller/Record";
+import { Aspect, BuffType, ResourceType, SkillName, TraitName } from "../Common";
 import { RPRResourceType, RPRSkillName } from "../Constants/RPR";
 import { GameConfig } from "../GameConfig";
-import { GameState } from "../GameState";
+import { GameState, PlayerState } from "../GameState";
 import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, makeResource } from "../Resources";
 import {
@@ -19,7 +20,7 @@ import {
 	makeSpell,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK, NO_EFFECT,
-	ResourceCalculationFn,
+	ResourceCalculationFn, Skill,
 	Spell,
 	StatePredicate,
 	Weaponskill,
@@ -92,6 +93,16 @@ export class RPRState extends GameState {
 
 		this.registerRecurringEvents();
 	}
+
+    override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {        
+        if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
+            node.addBuff(BuffType.ArcaneCircle);	
+        }
+        
+        if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
+            node.addBuff(BuffType.DeathsDesign);
+        }
+    }
 
 	refreshDeathsDesign() {
 		const dd = this.resources.get(ResourceType.DeathsDesign);

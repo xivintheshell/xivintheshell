@@ -2,7 +2,7 @@
 
 import {controller} from "../../Controller/Controller";
 import {ShellJob} from "../../Controller/Common";
-import {ResourceType, SkillName, TraitName, WarningType} from "../Common";
+import {BuffType, ResourceType, SkillName, TraitName, WarningType} from "../Common";
 import {makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier} from "../Potency";
 import {
 	Ability,
@@ -17,15 +17,17 @@ import {
 	NO_EFFECT,
 	PotencyModifierFn,
 	ResourceCalculationFn,
+	Skill,
 	SkillAutoReplace,
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
 import { Traits } from "../Traits";
-import { GameState } from "../GameState";
+import { GameState, PlayerState } from "../GameState";
 import { makeResource, CoolDown, Event, EventTag } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { localizeResourceType } from "../../Components/Localization";
+import { ActionNode } from "../../Controller/Record";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 const makeSAMResource = (rsc: ResourceType, maxValue: number, params?: { timeout: number }) => {
@@ -96,6 +98,15 @@ export class SAMState extends GameState {
 				appliedBy: [SkillName.Higanbana],
 			}]
 		}]);
+	}
+
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.EnhancedEnpi) && skill.name === SkillName.Enpi) {
+			node.addBuff(BuffType.EnhancedEnpi);
+		}
+		if (this.hasResourceAvailable(ResourceType.Fugetsu)) {
+			node.addBuff(BuffType.Fugetsu);
+		}
 	}
 
 	getFugetsuModifier(): PotencyModifier {
