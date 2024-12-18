@@ -1,26 +1,33 @@
-import {Debug, SkillName, ProcMode, LevelSync, ResourceType, FIXED_BASE_CASTER_TAX} from "./Common";
-import {ResourceOverride, ResourceOverrideData} from "./Resources";
-import {ShellInfo, ShellJob, ShellVersion} from "../Controller/Common";
-import {XIVMath} from "./XIVMath";
+import {
+	Debug,
+	SkillName,
+	ProcMode,
+	LevelSync,
+	ResourceType,
+	FIXED_BASE_CASTER_TAX,
+} from "./Common";
+import { ResourceOverride, ResourceOverrideData } from "./Resources";
+import { ShellInfo, ShellJob, ShellVersion } from "../Controller/Common";
+import { XIVMath } from "./XIVMath";
 
 export type ConfigData = {
-	job: ShellJob,
-	shellVersion: ShellVersion,
-	level: LevelSync,
-	spellSpeed: number,
-	skillSpeed: number,
-	criticalHit: number,
-	directHit: number,
-	determination: number,
-	countdown: number,
-	randomSeed: string,
-	fps: number,
-	gcdSkillCorrection: number,
-	animationLock: number,
-	timeTillFirstManaTick: number,
-	procMode: ProcMode,
-	initialResourceOverrides: ResourceOverrideData[]
-}
+	job: ShellJob;
+	shellVersion: ShellVersion;
+	level: LevelSync;
+	spellSpeed: number;
+	skillSpeed: number;
+	criticalHit: number;
+	directHit: number;
+	determination: number;
+	countdown: number;
+	randomSeed: string;
+	fps: number;
+	gcdSkillCorrection: number;
+	animationLock: number;
+	timeTillFirstManaTick: number;
+	procMode: ProcMode;
+	initialResourceOverrides: ResourceOverrideData[];
+};
 
 export const DEFAULT_BLM_CONFIG: ConfigData = {
 	job: ShellJob.BLM,
@@ -39,7 +46,7 @@ export const DEFAULT_BLM_CONFIG: ConfigData = {
 	animationLock: 0.7,
 	timeTillFirstManaTick: 1.2,
 	procMode: ProcMode.Never,
-	initialResourceOverrides: []
+	initialResourceOverrides: [],
 };
 
 export const DEFAULT_PCT_CONFIG: ConfigData = {
@@ -59,7 +66,7 @@ export const DEFAULT_PCT_CONFIG: ConfigData = {
 	animationLock: 0.7,
 	timeTillFirstManaTick: 1.2,
 	procMode: ProcMode.Never,
-	initialResourceOverrides: []
+	initialResourceOverrides: [],
 };
 
 export const DEFAULT_CONFIG: ConfigData = DEFAULT_BLM_CONFIG; // TODO
@@ -69,8 +76,8 @@ export const DEFAULT_CONFIG: ConfigData = DEFAULT_BLM_CONFIG; // TODO
 // }[ShellInfo.job];
 
 export type SerializedConfig = ConfigData & {
-	casterTax: number, // still want this bc don't want to break cached timelines
-}
+	casterTax: number; // still want this bc don't want to break cached timelines
+};
 
 export class GameConfig {
 	readonly job: ShellJob;
@@ -92,23 +99,23 @@ export class GameConfig {
 	readonly legacy_casterTax: number;
 
 	constructor(props: {
-		job: ShellJob,
-		shellVersion: ShellVersion,
-		level: LevelSync,
-		spellSpeed: number,
-		skillSpeed: number,
-		criticalHit: number,
-		directHit: number,
-		determination: number,
-		countdown: number,
-		randomSeed: string,
-		fps: number,
-		gcdSkillCorrection: number,
-		animationLock: number,
-		timeTillFirstManaTick: number,
-		procMode: ProcMode,
-		initialResourceOverrides: (ResourceOverrideData & {enabled?: boolean})[],
-		casterTax?: number, // legacy
+		job: ShellJob;
+		shellVersion: ShellVersion;
+		level: LevelSync;
+		spellSpeed: number;
+		skillSpeed: number;
+		criticalHit: number;
+		directHit: number;
+		determination: number;
+		countdown: number;
+		randomSeed: string;
+		fps: number;
+		gcdSkillCorrection: number;
+		animationLock: number;
+		timeTillFirstManaTick: number;
+		procMode: ProcMode;
+		initialResourceOverrides: (ResourceOverrideData & { enabled?: boolean })[];
+		casterTax?: number; // legacy
 	}) {
 		this.job = props.job;
 		this.shellVersion = props.shellVersion;
@@ -125,7 +132,7 @@ export class GameConfig {
 		this.animationLock = props.animationLock;
 		this.timeTillFirstManaTick = props.timeTillFirstManaTick;
 		this.procMode = props.procMode;
-		this.initialResourceOverrides = props.initialResourceOverrides.map(obj=>{
+		this.initialResourceOverrides = props.initialResourceOverrides.map((obj) => {
 			if (obj.effectOrTimerEnabled === undefined) {
 				// backward compatibility:
 				if (obj.enabled === undefined) obj.effectOrTimerEnabled = true;
@@ -137,8 +144,12 @@ export class GameConfig {
 		this.legacy_casterTax = props?.casterTax ?? 0;
 	}
 
-	adjustedDoTPotency(inPotency : number, scalar: "sks" | "sps") {
-		return XIVMath.dotPotency(this.level, scalar === "sks" ? this.skillSpeed: this.spellSpeed, inPotency);
+	adjustedDoTPotency(inPotency: number, scalar: "sks" | "sps") {
+		return XIVMath.dotPotency(
+			this.level,
+			scalar === "sks" ? this.skillSpeed : this.spellSpeed,
+			inPotency,
+		);
 	}
 
 	// returns GCD before FPS tax
@@ -160,34 +171,35 @@ export class GameConfig {
 	}
 
 	// TODO - How can we make this easier to find for other job implementers? Or just not necessary...
-	getSkillAnimationLock(skillName : SkillName) : number {
+	getSkillAnimationLock(skillName: SkillName): number {
 		// all gapclosers have the same animation lock
 		// from: https://nga.178.com/read.php?tid=21233094&rand=761
-		if (skillName === SkillName.AetherialManipulation
-			|| skillName === SkillName.BetweenTheLines
-			|| skillName === SkillName.Smudge
-			|| skillName === SkillName.CorpsACorps
-			|| skillName === SkillName.Displacement
-			|| skillName === SkillName.Gyoten
-			|| skillName === SkillName.Yaten
-			|| skillName === SkillName.HellsIngress
-			|| skillName === SkillName.HellsEgress
-			|| skillName === SkillName.Regress
-			|| skillName === SkillName.EnAvant
-			|| skillName === SkillName.Onslaught
+		if (
+			skillName === SkillName.AetherialManipulation ||
+			skillName === SkillName.BetweenTheLines ||
+			skillName === SkillName.Smudge ||
+			skillName === SkillName.CorpsACorps ||
+			skillName === SkillName.Displacement ||
+			skillName === SkillName.Gyoten ||
+			skillName === SkillName.Yaten ||
+			skillName === SkillName.HellsIngress ||
+			skillName === SkillName.HellsEgress ||
+			skillName === SkillName.Regress ||
+			skillName === SkillName.EnAvant ||
+			skillName === SkillName.Onslaught
 		) {
 			return 0.8;
 		}
 
 		// not real abilities, animation lock is fake
 		if (
-			skillName === SkillName.TemperaCoatPop
-			|| skillName === SkillName.TemperaGrassaPop
-			|| skillName === SkillName.TengentsuPop
-			|| skillName === SkillName.ThirdEyePop
-			|| skillName === SkillName.ArcaneCrestPop
+			skillName === SkillName.TemperaCoatPop ||
+			skillName === SkillName.TemperaGrassaPop ||
+			skillName === SkillName.TengentsuPop ||
+			skillName === SkillName.ThirdEyePop ||
+			skillName === SkillName.ArcaneCrestPop
 		) {
-			return 0.01; 
+			return 0.01;
 		}
 
 		// Fallback if no other conditions applied
@@ -199,8 +211,7 @@ export class GameConfig {
 		if (this.shellVersion < ShellVersion.FpsTax) {
 			return beforeTaxGCD;
 		}
-		return XIVMath.afterFpsTax(this.fps, beforeTaxGCD)
-			+ this.gcdSkillCorrection;
+		return XIVMath.afterFpsTax(this.fps, beforeTaxGCD) + this.gcdSkillCorrection;
 	}
 
 	// for casts
@@ -208,12 +219,14 @@ export class GameConfig {
 		if (this.shellVersion < ShellVersion.FpsTax) {
 			return this.legacy_casterTax + capturedCastTime;
 		}
-		return XIVMath.afterFpsTax(this.fps, capturedCastTime)
-			+ XIVMath.afterFpsTax(this.fps, FIXED_BASE_CASTER_TAX)
-			+ this.gcdSkillCorrection;
+		return (
+			XIVMath.afterFpsTax(this.fps, capturedCastTime) +
+			XIVMath.afterFpsTax(this.fps, FIXED_BASE_CASTER_TAX) +
+			this.gcdSkillCorrection
+		);
 	}
 
-	static getSlidecastWindow(castTime : number) {
+	static getSlidecastWindow(castTime: number) {
 		return Debug.constantSlidecastWindow ? 0.5 : 0.46 + 0.02 * castTime;
 	}
 
@@ -235,8 +248,9 @@ export class GameConfig {
 			animationLock: this.animationLock,
 			timeTillFirstManaTick: this.timeTillFirstManaTick,
 			procMode: this.procMode,
-			initialResourceOverrides: this.initialResourceOverrides.map(override=>{ return override.serialized(); })
+			initialResourceOverrides: this.initialResourceOverrides.map((override) => {
+				return override.serialized();
+			}),
 		};
 	}
 }
-

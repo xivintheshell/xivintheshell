@@ -1,16 +1,16 @@
 import React from "react";
-import {SkillName, BuffType, ResourceType} from "../Game/Common";
-import {ContentNode} from "./Common";
-import {MdLanguage} from "react-icons/md";
-import {getCurrentThemeColors} from "./ColorTheme";
-import {getCachedValue, setCachedValue} from "../Controller/Common";
-import {controller} from "../Controller/Controller";
+import { SkillName, BuffType, ResourceType } from "../Game/Common";
+import { ContentNode } from "./Common";
+import { MdLanguage } from "react-icons/md";
+import { getCurrentThemeColors } from "./ColorTheme";
+import { getCachedValue, setCachedValue } from "../Controller/Common";
+import { controller } from "../Controller/Controller";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
-	en: ContentNode,
-	zh?: ContentNode,
-	ja?: ContentNode
+	en: ContentNode;
+	zh?: ContentNode;
+	ja?: ContentNode;
 };
 
 export function localize(content: LocalizedContent) {
@@ -26,14 +26,14 @@ export function localize(content: LocalizedContent) {
 
 // Expect date in format "mm/dd/yy" which is in changelog.
 export function localizeDate(date: string, lang: Language): string {
-	if (lang === "zh" || lang === "en") return date
+	if (lang === "zh" || lang === "en") return date;
 
 	if (lang === "ja") {
 		let [month, day, year] = date.split("/");
 		return `20${year}年${month}月${day}日`;
 	}
 
-	return date
+	return date;
 }
 
 const skillsZh = new Map<SkillName, string>([
@@ -86,9 +86,9 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.Blizzard2InCyan, "冰冻之蓝青"],
 	[SkillName.Stone2InYellow, "坚石之纯黄"],
 	[SkillName.Thunder2InMagenta, "震雷之品红"],
-	[SkillName.HolyInWhite , "神圣之白"],
+	[SkillName.HolyInWhite, "神圣之白"],
 	[SkillName.CometInBlack, "彗星之黑"],
-	[SkillName.RainbowDrip , "彩虹点滴"],
+	[SkillName.RainbowDrip, "彩虹点滴"],
 	[SkillName.StarPrism, "天星棱光"],
 
 	[SkillName.TemperaCoat, "坦培拉涂层"],
@@ -219,9 +219,9 @@ const skillsJa = new Map<SkillName, string>([
 	[SkillName.Blizzard2InCyan, "シアンブリザラ"],
 	[SkillName.Stone2InYellow, "イエローストンラ"],
 	[SkillName.Thunder2InMagenta, "マゼンタサンダラ"],
-	[SkillName.HolyInWhite , "ホワイトホーリー"],
+	[SkillName.HolyInWhite, "ホワイトホーリー"],
 	[SkillName.CometInBlack, "ブラックコメット"],
-	[SkillName.RainbowDrip , "レインボードリップ"],
+	[SkillName.RainbowDrip, "レインボードリップ"],
 	[SkillName.StarPrism, "スタープリズム"],
 
 	[SkillName.TemperaCoat, "テンペラコート"],
@@ -259,7 +259,7 @@ const skillsJa = new Map<SkillName, string>([
 	// TODO rdm localization
 ]);
 
-export function localizeSkillName(text: SkillName) : string {
+export function localizeSkillName(text: SkillName): string {
 	let currentLang = getCurrentLanguage();
 	if (currentLang === "zh") {
 		return skillsZh.get(text) ?? text;
@@ -325,7 +325,7 @@ const buffsJa = new Map<BuffType, string>([
 	[BuffType.WanderersMinuet, "旅神のメヌエット"],
 ]);
 
-export function localizeBuffType(text: BuffType) : string {
+export function localizeBuffType(text: BuffType): string {
 	let currentLang = getCurrentLanguage();
 	if (currentLang === "zh") {
 		return buffsZh.get(text) ?? text;
@@ -383,10 +383,10 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.cd_Subtractive, "CD：减色混合"],
 	[ResourceType.cd_Grassa, "CD：油性坦培拉涂层"],
 
-	// RDM 
+	// RDM
 	[ResourceType.WhiteMana, "白魔元"],
 	[ResourceType.BlackMana, "黑魔元"],
-	[ResourceType.ManaStacks, "魔元集"], 
+	[ResourceType.ManaStacks, "魔元集"],
 	[ResourceType.Acceleration, "促进"],
 	[ResourceType.Dualcast, "连续咏唱"],
 	[ResourceType.Embolden, "鼓励"],
@@ -399,8 +399,7 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.VerfireReady, "赤火炎预备"],
 	[ResourceType.VerstoneReady, "赤飞石预备"],
 	[ResourceType.RDMMeleeCounter, "赤魔近战连"],
-	[ResourceType.RDMAoECounter, "赤魔AOE连"]
-
+	[ResourceType.RDMAoECounter, "赤魔AOE连"],
 ]);
 
 export function localizeResourceType(text: ResourceType): string {
@@ -422,69 +421,94 @@ export function localizeResourceType(text: ResourceType): string {
 	}
 }
 
-export let getCurrentLanguage : ()=>Language = () => {return "en"}
-let setCurrentLanguage : (lang: Language)=>void = (lang) => {}
+export let getCurrentLanguage: () => Language = () => {
+	return "en";
+};
+let setCurrentLanguage: (lang: Language) => void = (lang) => {};
 
-function LanguageOption(props: {lang: Language}) {
+function LanguageOption(props: { lang: Language }) {
 	let text = "English";
 	if (props.lang === "zh") text = "中文";
 	if (props.lang === "ja") text = "日本語";
 	let colors = getCurrentThemeColors();
-	return <div style={{
-		display: "inline-block",
-		cursor: "pointer",
-		verticalAlign: "middle",
-		textDecoration: props.lang === getCurrentLanguage() ? "none" : "underline",
-		borderTop: props.lang === getCurrentLanguage() ? "1px solid " + colors.text : "none"
-	}} onClick={()=>{
-		setCurrentLanguage(props.lang);
-	}}>{text}</div>
+	return <div
+		style={{
+			display: "inline-block",
+			cursor: "pointer",
+			verticalAlign: "middle",
+			textDecoration: props.lang === getCurrentLanguage() ? "none" : "underline",
+			borderTop: props.lang === getCurrentLanguage() ? "1px solid " + colors.text : "none",
+		}}
+		onClick={() => {
+			setCurrentLanguage(props.lang);
+		}}
+	>
+		{text}
+	</div>;
 }
 
 export class SelectLanguage extends React.Component {
 	state: {
-		lang: Language
-	}
+		lang: Language;
+	};
 	constructor(props: {}) {
 		super(props);
 		let lang: Language = "en";
 		let savedLang = getCachedValue("language");
 		if (savedLang === "zh" || savedLang === "ja") lang = savedLang;
 		this.state = {
-			lang: lang
-		}
+			lang: lang,
+		};
 	}
 
 	componentDidMount() {
-		getCurrentLanguage = (()=>{return this.state.lang});
-		setCurrentLanguage = ((lang: Language)=>{
-			this.setState({lang: lang})
+		getCurrentLanguage = () => {
+			return this.state.lang;
+		};
+		setCurrentLanguage = (lang: Language) => {
+			this.setState({ lang: lang });
 			setCachedValue("language", lang);
-		});
+		};
 	}
-	componentDidUpdate(prevProps: Readonly<{}>, prevState: Readonly<{lang: Language}>, snapshot?: any) {
+	componentDidUpdate(
+		prevProps: Readonly<{}>,
+		prevState: Readonly<{ lang: Language }>,
+		snapshot?: any,
+	) {
 		if (prevState.lang !== this.state.lang) {
 			controller.updateAllDisplay();
 		}
 	}
 
 	componentWillUnmount() {
-		getCurrentLanguage = ()=>{return "en"}
-		setCurrentLanguage = (lang) => {}
+		getCurrentLanguage = () => {
+			return "en";
+		};
+		setCurrentLanguage = (lang) => {};
 	}
 
 	render() {
-		return <div style={{
-			display: "inline-block",
-			position: "absolute",
-			right: 68,
-		}}>
-			<span style={{display: "inline-block", fontSize: 17, position: "relative", marginRight: 2}}><MdLanguage/></span>
-			<div style={{display: "inline-block", fontSize: 14, position: "relative", top: -4}}>
-				<LanguageOption lang={"en"}/>|
-				<LanguageOption lang={"zh"}/>
+		return <div
+			style={{
+				display: "inline-block",
+				position: "absolute",
+				right: 68,
+			}}
+		>
+			<span
+				style={{
+					display: "inline-block",
+					fontSize: 17,
+					position: "relative",
+					marginRight: 2,
+				}}
+			>
+				<MdLanguage />
+			</span>
+			<div style={{ display: "inline-block", fontSize: 14, position: "relative", top: -4 }}>
+				<LanguageOption lang={"en"} />|
+				<LanguageOption lang={"zh"} />
 			</div>
-		</div>
+		</div>;
 	}
 }
-

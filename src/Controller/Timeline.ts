@@ -1,14 +1,14 @@
-import {updateTimelineView} from "../Components/Timeline";
-import {controller} from "./Controller";
-import {BuffType, Debug, ResourceType, SkillName, WarningType} from "../Game/Common";
-import {ActionNode} from "./Record";
-import {FileType, getCachedValue, removeCachedValue, setCachedValue, ShellJob} from "./Common";
-import {updateMarkers_TimelineMarkerPresets} from "../Components/TimelineMarkers";
-import {updateSkillSequencePresetsView} from "../Components/SkillSequencePresets";
-import {refreshTimelineEditor} from "../Components/TimelineEditor";
-import {Potency} from "../Game/Potency";
-import {MarkerColor} from "../Components/ColorTheme";
-import {TimelineDimensions} from "../Components/Common";
+import { updateTimelineView } from "../Components/Timeline";
+import { controller } from "./Controller";
+import { BuffType, Debug, ResourceType, SkillName, WarningType } from "../Game/Common";
+import { ActionNode } from "./Record";
+import { FileType, getCachedValue, removeCachedValue, setCachedValue, ShellJob } from "./Common";
+import { updateMarkers_TimelineMarkerPresets } from "../Components/TimelineMarkers";
+import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
+import { refreshTimelineEditor } from "../Components/TimelineEditor";
+import { Potency } from "../Game/Potency";
+import { MarkerColor } from "../Components/ColorTheme";
+import { TimelineDimensions } from "../Components/Common";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -22,7 +22,7 @@ export const enum ElemType {
 	Skill = "Skill",
 	Marker = "Marker",
 	WarningMark = "WarningMark",
-    Buff = "Buff"
+	Buff = "Buff",
 }
 
 export const UntargetableMarkerTrack = -1;
@@ -30,24 +30,24 @@ export const UntargetableMarkerTrack = -1;
 export const enum MarkerType {
 	Info = "Info",
 	Untargetable = "Untargetable",
-	Buff = "Buff"
+	Buff = "Buff",
 }
 
 type TimelineElemBase = {
 	time: number;
-}
+};
 
 type Fixme = any;
 
 export type CursorElem = TimelineElemBase & {
 	type: ElemType.s_Cursor;
 	displayTime: number;
-}
+};
 export type ViewOnlyCursorElem = TimelineElemBase & {
 	type: ElemType.s_ViewOnlyCursor;
 	displayTime: number;
 	enabled: boolean;
-}
+};
 export type DamageMarkElem = TimelineElemBase & {
 	type: ElemType.DamageMark;
 	displayTime: number;
@@ -55,27 +55,27 @@ export type DamageMarkElem = TimelineElemBase & {
 	buffs: ResourceType[];
 	sourceDesc: string;
 	sourceSkill: SkillName;
-}
+};
 export type LucidMarkElem = TimelineElemBase & {
 	type: ElemType.LucidMark;
 	displayTime: number;
 	sourceDesc: string;
-}
+};
 export type MPTickMarkElem = TimelineElemBase & {
 	type: ElemType.MPTickMark;
 	displayTime: number;
 	sourceDesc: string;
-}
+};
 export type MeditateTickMarkElem = TimelineElemBase & {
 	type: ElemType.MeditateTickMark;
 	displayTime: number;
 	sourceDesc: string;
-}
+};
 export type WarningMarkElem = TimelineElemBase & {
 	type: ElemType.WarningMark;
 	warningType: WarningType;
 	displayTime: number;
-}
+};
 export type SkillElem = TimelineElemBase & {
 	type: ElemType.Skill;
 	displayTime: number;
@@ -86,7 +86,7 @@ export type SkillElem = TimelineElemBase & {
 	lockDuration: number;
 	recastDuration: number;
 	node: ActionNode;
-}
+};
 export type MarkerElem = TimelineElemBase & {
 	type: ElemType.Marker;
 	markerType: MarkerType;
@@ -95,7 +95,7 @@ export type MarkerElem = TimelineElemBase & {
 	track: number;
 	showText: boolean;
 	description: string; // if markerType is Buff, description holds BuffType as string, and is localized on render
-}
+};
 
 export type SerializedMarker = TimelineElemBase & {
 	markerType: MarkerType;
@@ -103,37 +103,32 @@ export type SerializedMarker = TimelineElemBase & {
 	showText: boolean;
 	color: MarkerColor;
 	description: string;
-}
+};
 
-export type SharedTimelineElem =
-	CursorElem |
-	ViewOnlyCursorElem;
+export type SharedTimelineElem = CursorElem | ViewOnlyCursorElem;
 
 export type SlotTimelineElem =
-	DamageMarkElem |
-	LucidMarkElem |
-	MPTickMarkElem |
-	MeditateTickMarkElem |
-	WarningMarkElem |
-	SkillElem
-	;
+	| DamageMarkElem
+	| LucidMarkElem
+	| MPTickMarkElem
+	| MeditateTickMarkElem
+	| WarningMarkElem
+	| SkillElem;
 
 function isSharedElem(elem: TimelineElem) {
-	return elem.type === ElemType.s_Cursor ||
-		elem.type === ElemType.s_ViewOnlyCursor;
+	return elem.type === ElemType.s_Cursor || elem.type === ElemType.s_ViewOnlyCursor;
 }
 
 export type TimelineElem = SharedTimelineElem | SlotTimelineElem;
 
 export class Timeline {
-
 	scale: number;
 	startTime: number;
 	elapsedTime: number; // raw time (starts from 0)
 	sharedElements: SharedTimelineElem[];
 	slots: {
-		job: ShellJob,
-		elements: SlotTimelineElem[],
+		job: ShellJob;
+		elements: SlotTimelineElem[];
 	}[];
 	activeSlotIndex: number;
 	#allMarkers: MarkerElem[];
@@ -167,16 +162,22 @@ export class Timeline {
 		}
 	}
 
-	getAllMarkers() { return this.#allMarkers; }
+	getAllMarkers() {
+		return this.#allMarkers;
+	}
 
-	getUntargetableMarkers() { return this.#untargetableMarkers; }
+	getUntargetableMarkers() {
+		return this.#untargetableMarkers;
+	}
 
-	getBuffMarkers() { return this.#buffMarkers; }
+	getBuffMarkers() {
+		return this.#buffMarkers;
+	}
 
-	#markersAreEqual(m1: MarkerElem, m2: MarkerElem) : boolean {
-		let almostEq = function(a: number, b: number) {
+	#markersAreEqual(m1: MarkerElem, m2: MarkerElem): boolean {
+		let almostEq = function (a: number, b: number) {
 			return Math.abs(a - b) < Debug.epsilon;
-		}
+		};
 
 		if (m1.markerType !== m2.markerType) return false;
 		if (!almostEq(m1.time, m2.time)) return false;
@@ -218,14 +219,14 @@ export class Timeline {
 
 	#recreateUntargetableList() {
 		this.#untargetableMarkers = [];
-		this.#allMarkers.forEach(m => {
+		this.#allMarkers.forEach((m) => {
 			if (m.markerType === MarkerType.Untargetable) this.#untargetableMarkers.push(m);
-		})
+		});
 	}
 
 	#recreateBuffList() {
 		this.#buffMarkers = [];
-		this.#allMarkers.forEach(m => {
+		this.#allMarkers.forEach((m) => {
 			if (m.markerType === MarkerType.Buff) {
 				// fix for an earlier typo
 				if (m.description === "Wanderer's Minuet") {
@@ -233,16 +234,16 @@ export class Timeline {
 				}
 				this.#buffMarkers.push(m);
 			}
-		})
+		});
 	}
 
 	sortAndRemoveDuplicateMarkers() {
-		this.#allMarkers.sort((a, b)=>{
+		this.#allMarkers.sort((a, b) => {
 			return a.time - b.time;
 		});
 		let count = 0;
 		for (let i = this.#allMarkers.length - 1; i > 0; i--) {
-			if (this.#markersAreEqual(this.#allMarkers[i], this.#allMarkers[i-1])) {
+			if (this.#markersAreEqual(this.#allMarkers[i], this.#allMarkers[i - 1])) {
 				this.#allMarkers.splice(i, 1);
 				count++;
 			}
@@ -255,7 +256,7 @@ export class Timeline {
 
 	// assumes input is valid
 	#appendMarkersPreset(preset: Fixme, track: number, offset: number) {
-		let newMarkers = preset.markers.map((m: SerializedMarker): MarkerElem=>{
+		let newMarkers = preset.markers.map((m: SerializedMarker): MarkerElem => {
 			return {
 				time: m.time + offset,
 				duration: m.duration,
@@ -264,7 +265,7 @@ export class Timeline {
 				track: m.markerType === MarkerType.Untargetable ? UntargetableMarkerTrack : track,
 				type: ElemType.Marker,
 				markerType: m.markerType ?? MarkerType.Info,
-				showText: m.showText ?? false
+				showText: m.showText ?? false,
 			};
 		});
 		this.#allMarkers = this.#allMarkers.concat(newMarkers);
@@ -300,7 +301,7 @@ export class Timeline {
 	}
 
 	addSlot() {
-		this.slots.push({job: ShellJob.BLM, elements: []});
+		this.slots.push({ job: ShellJob.BLM, elements: [] });
 		console.assert(this.slots.length <= MAX_TIMELINE_SLOTS);
 		this.activeSlotIndex = this.slots.length - 1;
 		controller.setConfigAndRestart(controller.gameConfig);
@@ -324,16 +325,23 @@ export class Timeline {
 			removeCachedValue("gameRecord" + i.toString());
 			removeCachedValue("gameTimeInfo" + i.toString());
 		}
-		if (this.activeSlotIndex >= idx) this.activeSlotIndex = Math.max(0, this.activeSlotIndex - 1);
+		if (this.activeSlotIndex >= idx)
+			this.activeSlotIndex = Math.max(0, this.activeSlotIndex - 1);
 		this.loadSlot(this.activeSlotIndex);
 	}
 
 	saveCurrentSlot(serializedRecord: any, countdown: number, elapsedTime: number) {
-		setCachedValue("gameRecord" + this.activeSlotIndex.toString(), JSON.stringify(serializedRecord));
-		setCachedValue("gameTimeInfo" + this.activeSlotIndex.toString(), JSON.stringify({
-			countdown: countdown,
-			elapsedTime: elapsedTime
-		}));
+		setCachedValue(
+			"gameRecord" + this.activeSlotIndex.toString(),
+			JSON.stringify(serializedRecord),
+		);
+		setCachedValue(
+			"gameTimeInfo" + this.activeSlotIndex.toString(),
+			JSON.stringify({
+				countdown: countdown,
+				elapsedTime: elapsedTime,
+			}),
+		);
 	}
 
 	loadSlot(index: number): boolean {
@@ -342,7 +350,7 @@ export class Timeline {
 			// found record; make sure the slot exists
 			this.activeSlotIndex = index;
 			while (this.slots.length <= index) {
-				this.slots.push({job: ShellJob.BLM, elements: []});
+				this.slots.push({ job: ShellJob.BLM, elements: [] });
 			}
 			let content = JSON.parse(str);
 			controller.loadBattleRecordFromFile(content);
@@ -364,19 +372,19 @@ export class Timeline {
 		this.addElement({
 			type: ElemType.s_Cursor,
 			time: 0,
-			displayTime: 0 // gets updated later (it seems)
+			displayTime: 0, // gets updated later (it seems)
 		});
 		this.addElement({
 			type: ElemType.s_ViewOnlyCursor,
 			time: 0,
 			displayTime: 0,
-			enabled: false
+			enabled: false,
 		});
 	}
 
 	// can only update singletons this way
 	updateElem(elem: TimelineElem) {
-		console.assert(elem && elem.type.substring(0, 2)==="s_");
+		console.assert(elem && elem.type.substring(0, 2) === "s_");
 		for (let i = 0; i < this.sharedElements.length; i++) {
 			if (this.sharedElements[i].type === elem.type) {
 				this.sharedElements[i] = elem;
@@ -400,8 +408,8 @@ export class Timeline {
 			let str = getCachedValue("gameTimeInfo" + i.toString());
 			if (str !== null) {
 				let info = JSON.parse(str) as {
-					countdown: number,
-					elapsedTime: number
+					countdown: number;
+					elapsedTime: number;
 				};
 				countdown = Math.max(countdown, info.countdown);
 				rightMostTime = Math.max(rightMostTime, info.elapsedTime);
@@ -411,7 +419,7 @@ export class Timeline {
 		if (hasRecord) {
 			return {
 				countdown: countdown,
-				rightMostTime: rightMostTime
+				rightMostTime: rightMostTime,
 			};
 		} else {
 			return null;
@@ -428,7 +436,7 @@ export class Timeline {
 			rightMostTime = Math.max(rightMostTime, allSlotsTimeInfo.rightMostTime);
 		}
 		// and include markers
-		this.#allMarkers.forEach(marker=>{
+		this.#allMarkers.forEach((marker) => {
 			let endDisplayTime = marker.time + marker.duration;
 			rightMostTime = Math.max(rightMostTime, endDisplayTime + countdown);
 		});
@@ -450,7 +458,6 @@ export class Timeline {
 	}
 
 	drawElements() {
-
 		// this call signals a redraw. Exact elements are queried
 		// at the start of the actual redraw (controller.getTimelineRenderingProps)
 		updateTimelineView();
@@ -462,7 +469,7 @@ export class Timeline {
 	updateTimelineMarkers() {
 		updateTimelineView();
 		let M = new Map<number, MarkerElem[]>();
-		this.#allMarkers.forEach(marker=>{
+		this.#allMarkers.forEach((marker) => {
 			let trackBin = M.get(marker.track);
 			if (trackBin === undefined) trackBin = [];
 			trackBin.push(marker);
@@ -472,7 +479,6 @@ export class Timeline {
 	}
 
 	onClickTimelineAction(node: ActionNode, bShift: boolean) {
-
 		controller.record.onClickNode(node, bShift);
 
 		updateSkillSequencePresetsView();
@@ -482,7 +488,8 @@ export class Timeline {
 		let firstNode = controller.record.getFirstSelection();
 		if (firstNode) {
 			controller.displayHistoricalState(-Infinity, firstNode);
-		} else { // just clicked on the only selected node and unselected it. Still show historical state
+		} else {
+			// just clicked on the only selected node and unselected it. Still show historical state
 			controller.displayHistoricalState(-Infinity, node);
 		}
 	}
@@ -510,8 +517,7 @@ export class Timeline {
 
 	// inputs are displayed numbers
 	getTargetableDurationBetween(tStart: number, tEnd: number) {
-
-		let cut = function([targetA, targetB]: [number, number], [srcA, srcB]: [number, number]) {
+		let cut = function ([targetA, targetB]: [number, number], [srcA, srcB]: [number, number]) {
 			let res: [number, number][] = [];
 			if (targetA < srcA) {
 				res.push([targetA, Math.min(targetB, srcA)]);
@@ -520,7 +526,7 @@ export class Timeline {
 				res.push([Math.max(srcB, targetA), targetB]);
 			}
 			return res;
-		}
+		};
 
 		let remainings: [number, number][] = [[tStart, tEnd]];
 
@@ -530,14 +536,14 @@ export class Timeline {
 			let mEnd = m.time + m.duration;
 
 			let newRemainings: [number, number][] = [];
-			remainings.forEach(rem => {
+			remainings.forEach((rem) => {
 				newRemainings = newRemainings.concat(cut(rem, [mStart, mEnd]));
-			})
+			});
 			remainings = newRemainings;
 		}
 
 		let remainingTime = 0;
-		remainings.forEach(rem => {
+		remainings.forEach((rem) => {
 			remainingTime += rem[1] - rem[0];
 		});
 
@@ -553,7 +559,7 @@ export class Timeline {
 		let str = getCachedValue("timelineMarkers");
 		if (str !== null) {
 			let files = JSON.parse(str);
-			files.forEach((f: Fixme)=>{
+			files.forEach((f: Fixme) => {
 				this.#appendMarkersPreset(f, f.track, 0);
 			});
 		}
@@ -568,7 +574,7 @@ export class Timeline {
 			markerTracks.set(i, []);
 		}
 
-		this.#allMarkers.forEach(marker=>{
+		this.#allMarkers.forEach((marker) => {
 			let bin = markerTracks.get(marker.track);
 			console.assert(bin);
 			if (bin) {
@@ -578,18 +584,18 @@ export class Timeline {
 					duration: marker.duration,
 					description: marker.description,
 					color: marker.color,
-					showText: marker.showText
+					showText: marker.showText,
 				});
 				markerTracks.set(marker.track, bin);
 			}
 		});
 		let files: Fixme[] = [];
-		markerTracks.forEach((bin, i)=>{
+		markerTracks.forEach((bin, i) => {
 			if (bin.length > 0) {
 				files.push({
 					fileType: FileType.MarkerTrackIndividual,
 					track: i,
-					markers: bin
+					markers: bin,
 				});
 			}
 		});
@@ -601,7 +607,7 @@ export class Timeline {
 		let tracks = this.serializedSeparateMarkerTracks();
 		return {
 			fileType: FileType.MarkerTracksCombined,
-			tracks: tracks
+			tracks: tracks,
 		};
 	}
 }

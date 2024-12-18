@@ -1,21 +1,32 @@
-import {controller} from "../Controller/Controller";
-import {XIVMath} from "./XIVMath";
-import {Aspect, BuffType, SkillName} from "./Common";
-import {GameConfig} from "./GameConfig";
+import { controller } from "../Controller/Controller";
+import { XIVMath } from "./XIVMath";
+import { Aspect, BuffType, SkillName } from "./Common";
+import { GameConfig } from "./GameConfig";
 
 export const enum PotencyModifierType {
-	AF3, AF2, AF1, UI3, UI2, UI1, ENO,
-	STARRY, 
+	AF3,
+	AF2,
+	AF1,
+	UI3,
+	UI2,
+	UI1,
+	ENO,
+	STARRY,
 	EMBOLDEN_M,
 	MANAFIC,
 	ACCELERATION,
 	POT,
 	COMBO,
-	AUTO_CDH, NO_CDH,
+	AUTO_CDH,
+	NO_CDH,
 	PARTY,
 
-	STANDARD_SINGLE, STANDARD_DOUBLE,
-	TECHNICAL_SINGLE, TECHNICAL_DOUBLE, TECHNICAL_TRIPLE, TECHNICAL_QUADRUPLE,
+	STANDARD_SINGLE,
+	STANDARD_DOUBLE,
+	TECHNICAL_SINGLE,
+	TECHNICAL_DOUBLE,
+	TECHNICAL_TRIPLE,
+	TECHNICAL_QUADRUPLE,
 	DEVILMENT,
 
 	FUGETSU,
@@ -34,27 +45,27 @@ export const enum PotencyModifierType {
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
 export type PotencyMultiplier = {
-	kind: "multiplier",
-	buffType?: BuffType,
-	source: PotencyModifierType,
-	damageFactor: number,
+	kind: "multiplier";
+	buffType?: BuffType;
+	source: PotencyModifierType;
+	damageFactor: number;
 };
 
 // Represents an additive potency buff, such as Enhanced Enpi increasing Enpi from 100 -> 270.
 // Additive potencies should be applied before any multiplicative ones.
 export type PotencyAdder = {
-	kind: "adder",
-	source: PotencyModifierType,
-	additiveAmount: number, 
-}
+	kind: "adder";
+	source: PotencyModifierType;
+	additiveAmount: number;
+};
 
 // Represents a modifier that scales crit, DH, or both.
 export type CritDirectMultiplier = {
-	kind: "critDirect",
-	buffType?: BuffType,
-	source: PotencyModifierType,
-	critFactor: number,
-	dhFactor: number,
+	kind: "critDirect";
+	buffType?: BuffType;
+	source: PotencyModifierType;
+	critFactor: number;
+	dhFactor: number;
 };
 
 export type PotencyModifier = PotencyMultiplier | PotencyAdder | CritDirectMultiplier;
@@ -144,7 +155,7 @@ export const Modifiers = {
 	FugetsuBase: {
 		kind: "multiplier",
 		source: PotencyModifierType.FUGETSU,
-		damageFactor: 1.10,
+		damageFactor: 1.1,
 	} as PotencyMultiplier,
 	FugetsuEnhanced: {
 		kind: "multiplier",
@@ -169,17 +180,17 @@ export const Modifiers = {
 	DeathsDesign: {
 		kind: "multiplier",
 		source: PotencyModifierType.DEATHSDESIGN,
-		damageFactor: 1.10,
+		damageFactor: 1.1,
 	} as PotencyMultiplier,
 	EnhancedGibbetGallows: {
 		kind: "adder",
 		source: PotencyModifierType.ENHANCED_GIBBET_GALLOWS,
-		additiveAmount: 60		
+		additiveAmount: 60,
 	} as PotencyAdder,
 	EnhancedReaping: {
 		kind: "adder",
 		source: PotencyModifierType.ENHANCED_REAPING,
-		additiveAmount: 40		
+		additiveAmount: 40,
 	} as PotencyAdder,
 	ImmortalSacrifice: {
 		kind: "adder",
@@ -189,7 +200,7 @@ export const Modifiers = {
 	SurgingTempest: {
 		kind: "multiplier",
 		source: PotencyModifierType.SURGING_TEMPEST,
-		damageFactor: 1.10
+		damageFactor: 1.1,
 	} as PotencyMultiplier,
 };
 
@@ -211,13 +222,13 @@ export function makePositionalModifier(addend: number): PotencyAdder {
 
 export type InitialPotencyProps = {
 	config: GameConfig;
-	sourceTime: number,
-	sourceSkill: SkillName,
-	aspect: Aspect,
-	basePotency: number,
-	snapshotTime?: number,
-	description: string,
-}
+	sourceTime: number;
+	sourceSkill: SkillName;
+	aspect: Aspect;
+	basePotency: number;
+	snapshotTime?: number;
+	description: string;
+};
 
 export class Potency {
 	config: GameConfig;
@@ -240,10 +251,7 @@ export class Potency {
 		this.description = props.description;
 	}
 
-	getAmount(props: {
-		tincturePotencyMultiplier: number,
-		includePartyBuffs: boolean
-	}) {
+	getAmount(props: { tincturePotencyMultiplier: number; includePartyBuffs: boolean }) {
 		let totalDamageFactor = 1;
 		let totalAdditiveAmount = 0;
 		let totalCritFactor = 0;
@@ -253,8 +261,9 @@ export class Potency {
 		let isAutoCrit = false;
 		let noCDH = false;
 
-		this.modifiers.forEach(m=>{
-			if (m.source===PotencyModifierType.POT) totalDamageFactor *= props.tincturePotencyMultiplier;
+		this.modifiers.forEach((m) => {
+			if (m.source === PotencyModifierType.POT)
+				totalDamageFactor *= props.tincturePotencyMultiplier;
 			else if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
 			else if (m.source === PotencyModifierType.AUTO_CRIT) isAutoCrit = true;
 			else if (m.source === PotencyModifierType.NO_CDH) noCDH = true;
@@ -262,7 +271,10 @@ export class Potency {
 			else if (m.kind === "adder") totalAdditiveAmount += m.additiveAmount;
 		});
 		// If this skill can't crit or direct hit, it can't be an auto crit/CDH
-		console.assert(!(noCDH && (isAutoCDH || isAutoCrit)), "skills that can't CDH cannot be auto-crit or auto-CDH");
+		console.assert(
+			!(noCDH && (isAutoCDH || isAutoCrit)),
+			"skills that can't CDH cannot be auto-crit or auto-CDH",
+		);
 		if (noCDH) {
 			isAutoCDH = false;
 			isAutoCrit = false;
@@ -270,7 +282,7 @@ export class Potency {
 		console.assert(!(isAutoCDH && isAutoCrit), "cannot be both auto-crit and auto-CDH");
 
 		if (props.includePartyBuffs && this.snapshotTime) {
-			controller.game.getPartyBuffs(this.snapshotTime).forEach(buff => {
+			controller.game.getPartyBuffs(this.snapshotTime).forEach((buff) => {
 				if (buff.kind === "multiplier") {
 					totalDamageFactor *= buff.damageFactor;
 				} else if (buff.kind === "critDirect") {
@@ -281,48 +293,95 @@ export class Potency {
 		}
 		const base = this.base + totalAdditiveAmount;
 
-		let amt = base * this.#calculatePotencyModifier(totalDamageFactor, noCDH ? -1: totalCritFactor, noCDH ? - 1: totalDhFactor);
+		let amt =
+			base *
+			this.#calculatePotencyModifier(
+				totalDamageFactor,
+				noCDH ? -1 : totalCritFactor,
+				noCDH ? -1 : totalDhFactor,
+			);
 		if (isAutoCDH) amt *= this.#calculateAutoCDHModifier(totalCritFactor, totalDhFactor);
 		else if (isAutoCrit) amt *= this.#calculateAutoCritModifier(totalCritFactor, totalDhFactor);
 		return amt;
 	}
 
 	getPartyBuffs() {
-		return (this.snapshotTime) ? [...controller.game.getPartyBuffs(this.snapshotTime).keys()] : [];
+		return this.snapshotTime
+			? [...controller.game.getPartyBuffs(this.snapshotTime).keys()]
+			: [];
 	}
 
 	resolve(displayTime: number) {
 		if (this.base < 1) {
 			console.warn(this);
 		}
-		console.assert(this.snapshotTime !== undefined, `${this.sourceSkill} displayed at ${displayTime} did not have snapshotTime`);
+		console.assert(
+			this.snapshotTime !== undefined,
+			`${this.sourceSkill} displayed at ${displayTime} did not have snapshotTime`,
+		);
 		console.assert(
 			this.applicationTime === undefined,
-			`${this.sourceSkill} displayed at ${displayTime} was already resolved at ${this.applicationTime}`
+			`${this.sourceSkill} displayed at ${displayTime} was already resolved at ${this.applicationTime}`,
 		);
 		this.applicationTime = displayTime;
 	}
 
-	hasResolved() { return this.applicationTime !== undefined; }
+	hasResolved() {
+		return this.applicationTime !== undefined;
+	}
 
 	hasHitBoss(untargetable: (displayTime: number) => boolean) {
 		return this.applicationTime !== undefined && !untargetable(this.applicationTime);
 	}
 
-	hasSnapshotted() { return this.snapshotTime !== undefined; }
+	hasSnapshotted() {
+		return this.snapshotTime !== undefined;
+	}
 
 	#calculateAutoCDHModifier(critBonus: number, dhBonus: number) {
 		const level = this.config.level;
-		const base = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, critBonus, dhBonus);
-		const buffed = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, 1+critBonus, 1+dhBonus);
+		const base = XIVMath.calculateDamage(
+			level,
+			controller.gameConfig.criticalHit,
+			controller.gameConfig.directHit,
+			controller.gameConfig.determination,
+			1,
+			critBonus,
+			dhBonus,
+		);
+		const buffed = XIVMath.calculateDamage(
+			level,
+			controller.gameConfig.criticalHit,
+			controller.gameConfig.directHit,
+			controller.gameConfig.determination,
+			1,
+			1 + critBonus,
+			1 + dhBonus,
+		);
 
 		return buffed / base;
 	}
 
 	#calculateAutoCritModifier(critBonus: number, dhBonus: number) {
 		const level = this.config.level;
-		const base = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, critBonus, dhBonus);
-		const buffed = XIVMath.calculateDamage(level, controller.gameConfig.criticalHit, controller.gameConfig.directHit, controller.gameConfig.determination, 1, 1+critBonus, dhBonus);
+		const base = XIVMath.calculateDamage(
+			level,
+			controller.gameConfig.criticalHit,
+			controller.gameConfig.directHit,
+			controller.gameConfig.determination,
+			1,
+			critBonus,
+			dhBonus,
+		);
+		const buffed = XIVMath.calculateDamage(
+			level,
+			controller.gameConfig.criticalHit,
+			controller.gameConfig.directHit,
+			controller.gameConfig.determination,
+			1,
+			1 + critBonus,
+			dhBonus,
+		);
 
 		return buffed / base;
 	}
@@ -333,8 +392,24 @@ export class Potency {
 		const dhStat = this.config.directHit;
 		const det = this.config.determination;
 
-		const base = XIVMath.calculateDamage(level, critStat, dhStat, det, 1, critBonus < 1 ? critBonus : 0, dhBonus < 1 ? dhBonus: 0);
-		const buffed = XIVMath.calculateDamage(level, critStat, dhStat, det, damageFactor, critBonus, dhBonus);
+		const base = XIVMath.calculateDamage(
+			level,
+			critStat,
+			dhStat,
+			det,
+			1,
+			critBonus < 1 ? critBonus : 0,
+			dhBonus < 1 ? dhBonus : 0,
+		);
+		const buffed = XIVMath.calculateDamage(
+			level,
+			critStat,
+			dhStat,
+			det,
+			damageFactor,
+			critBonus,
+			dhBonus,
+		);
 
 		return buffed / base;
 	}

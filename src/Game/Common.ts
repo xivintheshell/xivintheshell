@@ -1,12 +1,59 @@
-import {BLMSkillName, BLMResourceType, BLMCooldownType, BLMTraitList, BLMTraitName} from "./Constants/BLM";
-import {PCTSkillName, PCTResourceType, PCTCooldownType, PCTTraitList, PCTTraitName} from "./Constants/PCT";
-import {RDMSkillName, RDMResourceType, RDMCooldownType, RDMTraitList, RDMTraitName} from "./Constants/RDM";
-import {DNCSkillName, DNCResourceType, DNCCooldownType, DNCTraitList, DNCTraitName} from "./Constants/DNC";
-import {SAMSkillName, SAMResourceType, SAMCooldownType, SAMTraitList, SAMTraitName} from "./Constants/SAM";
-import {MCHSkillName, MCHResourceType, MCHCooldownType, MCHTraitList, MCHTraitName} from "./Constants/MCH";
-import {RPRSkillName, RPRResourceType, RPRCooldownType, RPRTraitList, RPRTraitName} from "./Constants/RPR";
-import {WARSkillName, WARResourceType, WARCooldownType, WARTraitList, WARTraitName} from "./Constants/WAR";
-
+import {
+	BLMSkillName,
+	BLMResourceType,
+	BLMCooldownType,
+	BLMTraitList,
+	BLMTraitName,
+} from "./Constants/BLM";
+import {
+	PCTSkillName,
+	PCTResourceType,
+	PCTCooldownType,
+	PCTTraitList,
+	PCTTraitName,
+} from "./Constants/PCT";
+import {
+	RDMSkillName,
+	RDMResourceType,
+	RDMCooldownType,
+	RDMTraitList,
+	RDMTraitName,
+} from "./Constants/RDM";
+import {
+	DNCSkillName,
+	DNCResourceType,
+	DNCCooldownType,
+	DNCTraitList,
+	DNCTraitName,
+} from "./Constants/DNC";
+import {
+	SAMSkillName,
+	SAMResourceType,
+	SAMCooldownType,
+	SAMTraitList,
+	SAMTraitName,
+} from "./Constants/SAM";
+import {
+	MCHSkillName,
+	MCHResourceType,
+	MCHCooldownType,
+	MCHTraitList,
+	MCHTraitName,
+} from "./Constants/MCH";
+import {
+	RPRSkillName,
+	RPRResourceType,
+	RPRCooldownType,
+	RPRTraitList,
+	RPRTraitName,
+} from "./Constants/RPR";
+import {
+	WARSkillName,
+	WARResourceType,
+	WARCooldownType,
+	WARTraitList,
+	WARTraitName,
+} from "./Constants/WAR";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -30,13 +77,13 @@ export const enum Aspect {
 	Ice = "Ice",
 	Lightning = "Lightning",
 	Physical = "Physical",
-	Other = "Other"
+	Other = "Other",
 }
 
 export const enum ProcMode {
 	RNG = "RNG",
 	Never = "Never",
-	Always = "Always"
+	Always = "Always",
 }
 
 enum GeneralSkillName {
@@ -73,7 +120,6 @@ enum GeneralSkillName {
 }
 
 export enum LimitBreakSkillName {
-
 	ShieldWall = "Shield Wall",
 	Stronghold = "Stronghold",
 	LastBastion = "Last Bastion",
@@ -108,7 +154,7 @@ export enum LimitBreakSkillName {
 	Meteor = "Meteor",
 	Teraflare = "Teraflare",
 	VermillionScourge = "Vermillion Scourge",
-	ChromaticFantasy = "Chromatic Fantasy"
+	ChromaticFantasy = "Chromatic Fantasy",
 }
 
 // Merge enums for each class: https://stackoverflow.com/a/55827534
@@ -123,10 +169,11 @@ export const SkillName = {
 	...WARSkillName,
 	...LimitBreakSkillName,
 	...GeneralSkillName,
-}
+};
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export type SkillName = GeneralSkillName
+export type SkillName =
+	| GeneralSkillName
 	| LimitBreakSkillName
 	| BLMSkillName
 	| PCTSkillName
@@ -135,10 +182,9 @@ export type SkillName = GeneralSkillName
 	| SAMSkillName
 	| MCHSkillName
 	| RPRSkillName
-	| WARSkillName
-;
+	| WARSkillName;
 
-export const LIMIT_BREAKS = Object.values(LimitBreakSkillName) as SkillName[]
+export const LIMIT_BREAKS = Object.values(LimitBreakSkillName) as SkillName[];
 
 export const enum SkillUnavailableReason {
 	Blocked = "blocked by CD, animation lock or caster tax",
@@ -147,11 +193,11 @@ export const enum SkillUnavailableReason {
 	NotInCombat = "must be in combat (after first damage application)",
 	RequirementsNotMet = "requirements not met",
 	SkillNotUnlocked = "skill not unlocked at provided level",
-	BuffNoLongerAvailable = "buff no longer available"
+	BuffNoLongerAvailable = "buff no longer available",
 }
 
 export type SkillReadyStatus = {
-	unavailableReasons: SkillUnavailableReason[]
+	unavailableReasons: SkillUnavailableReason[];
 	ready: () => boolean;
 	toString: () => string;
 	addUnavailableReason: (reason: SkillUnavailableReason) => void;
@@ -161,23 +207,23 @@ export type SkillReadyStatus = {
 export function makeSkillReadyStatus(): SkillReadyStatus {
 	return {
 		unavailableReasons: [],
-		ready: function() {
+		ready: function () {
 			return this.unavailableReasons.length === 0;
 		},
-		toString: function() {
+		toString: function () {
 			if (this.ready()) return "ready";
 			return this.unavailableReasons.join("; ");
 		},
-		addUnavailableReason: function(reason: SkillUnavailableReason) {
+		addUnavailableReason: function (reason: SkillUnavailableReason) {
 			if (!this.unavailableReasons.includes(reason)) {
 				this.unavailableReasons.push(reason);
 			}
 		},
-		clone: function() {
+		clone: function () {
 			const status = makeSkillReadyStatus();
-			this.unavailableReasons.forEach(reason => status.addUnavailableReason(reason));
+			this.unavailableReasons.forEach((reason) => status.addUnavailableReason(reason));
 			return status;
-		}
+		},
 	};
 }
 
@@ -316,7 +362,8 @@ const CooldownType = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-type CooldownType = GeneralCooldownType
+type CooldownType =
+	| GeneralCooldownType
 	| BLMCooldownType
 	| PCTCooldownType
 	| RDMCooldownType
@@ -324,8 +371,7 @@ type CooldownType = GeneralCooldownType
 	| SAMCooldownType
 	| MCHCooldownType
 	| RPRCooldownType
-	| WARCooldownType
-;
+	| WARCooldownType;
 
 export const ResourceType = {
 	...CooldownType,
@@ -342,7 +388,8 @@ export const ResourceType = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export type ResourceType = CooldownType
+export type ResourceType =
+	| CooldownType
 	| GeneralResourceType
 	| TankLBResourceType
 	| BLMResourceType
@@ -352,8 +399,7 @@ export type ResourceType = CooldownType
 	| SAMResourceType
 	| MCHResourceType
 	| RPRResourceType
-	| WARResourceType
-;
+	| WARResourceType;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",
@@ -389,7 +435,7 @@ export const enum WarningType {
 }
 
 export enum ReservedTraitName {
-	Never = 0
+	Never = 0,
 }
 
 export enum RoleTraitName {
@@ -422,23 +468,24 @@ const GeneralTraitList: Array<[RoleTraitName, number]> = [
 	[RoleTraitName.EnhancedRampart, 94],
 	[RoleTraitName.MeleeMasteryIITank, 94],
 	[RoleTraitName.EnhancedReprisal, 98],
-]
+];
 
 export const TraitName = {
-	...RoleTraitName,  //  100-1000
-	...BLMTraitName,   // 1000-1999
-	...PCTTraitName,   // 2000-2999
-	...DNCTraitName,   // 3000-3999
-	...RDMTraitName,   // 4000-4999
-	...SAMTraitName,   // 5000-5999
-	...MCHTraitName,   // 6000-6999
-	...RPRTraitName,   // 7000-7999
-	...WARTraitName,   // 8000-8999
+	...RoleTraitName, //  100-1000
+	...BLMTraitName, // 1000-1999
+	...PCTTraitName, // 2000-2999
+	...DNCTraitName, // 3000-3999
+	...RDMTraitName, // 4000-4999
+	...SAMTraitName, // 5000-5999
+	...MCHTraitName, // 6000-6999
+	...RPRTraitName, // 7000-7999
+	...WARTraitName, // 8000-8999
 	...ReservedTraitName, // 0, for now
-}
+};
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export type TraitName = RoleTraitName
+export type TraitName =
+	| RoleTraitName
 	| BLMTraitName
 	| PCTTraitName
 	| DNCTraitName
@@ -459,4 +506,4 @@ export const TraitList: Array<[TraitName, number]> = [
 	...MCHTraitList,
 	...RPRTraitList,
 	...WARTraitList,
-]
+];

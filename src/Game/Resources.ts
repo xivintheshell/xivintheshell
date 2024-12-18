@@ -1,8 +1,8 @@
-import {Debug, ResourceType, WarningType} from "./Common"
-import {ShellJob, ALL_JOBS} from "../Controller/Common";
-import {GameState} from "./GameState";
-import {ActionNode} from "../Controller/Record";
-import {BLMState} from "./Jobs/BLM";
+import { Debug, ResourceType, WarningType } from "./Common";
+import { ShellJob, ALL_JOBS } from "../Controller/Common";
+import { GameState } from "./GameState";
+import { ActionNode } from "../Controller/Record";
+import { BLMState } from "./Jobs/BLM";
 
 export enum EventTag {
 	ManaGain,
@@ -57,14 +57,16 @@ export class Resource {
 	overrideTimer(game: GameState, newTime: number) {
 		if (this.pendingChange) {
 			// hack: make a new event for this, so it's executed after all other events at this time are ticked
-			game.addEvent(new Event(
-				"override " + this.pendingChange.name + " timer: " + newTime,
-				0,
-				()=>{ if (this.pendingChange) this.pendingChange.timeTillEvent = newTime; }
-			));
+			game.addEvent(
+				new Event("override " + this.pendingChange.name + " timer: " + newTime, 0, () => {
+					if (this.pendingChange) this.pendingChange.timeTillEvent = newTime;
+				}),
+			);
 			this.pendingChange.timeTillEvent = newTime;
 		} else {
-			console.error(`Failed to override non-pending resource timer for resource: ${this.type}`);
+			console.error(
+				`Failed to override non-pending resource timer for resource: ${this.type}`,
+			);
 		}
 	}
 	removeTimer() {
@@ -79,7 +81,8 @@ export class Resource {
 	availableAmount() {
 		return this.enabled ? this.#currentValue : 0;
 	}
-	availableAmountIncludingDisabled(): number {// used for checking LL existence: if Retrace should replace its button
+	availableAmountIncludingDisabled(): number {
+		// used for checking LL existence: if Retrace should replace its button
 		return this.#currentValue;
 	}
 	consume(amount: number) {
@@ -107,15 +110,26 @@ export class CoolDown extends Resource {
 	readonly #defaultBaseRecast: number;
 	#recastTimeScale: number;
 	#currentBaseRecast: number;
-	constructor(type: ResourceType, cdPerStack: number, maxStacks: number, initialNumStacks: number) {
+	constructor(
+		type: ResourceType,
+		cdPerStack: number,
+		maxStacks: number,
+		initialNumStacks: number,
+	) {
 		super(type, maxStacks * cdPerStack, initialNumStacks * cdPerStack);
 		this.#defaultBaseRecast = cdPerStack;
 		this.#currentBaseRecast = cdPerStack; // special case for mixed-recast spells
 		this.#recastTimeScale = 1; // effective for the next stack (i.e. 0.85 if captured LL)
 	}
-	currentStackCd() { return this.#currentBaseRecast * this.#recastTimeScale; }
-	stacksAvailable() { return Math.floor((this.availableAmount() + Debug.epsilon) / this.#currentBaseRecast); }
-	maxStacks() { return this.maxValue / this.#currentBaseRecast; }
+	currentStackCd() {
+		return this.#currentBaseRecast * this.#recastTimeScale;
+	}
+	stacksAvailable() {
+		return Math.floor((this.availableAmount() + Debug.epsilon) / this.#currentBaseRecast);
+	}
+	maxStacks() {
+		return this.maxValue / this.#currentBaseRecast;
+	}
 	useStack(game: GameState) {
 		this.consume(this.#defaultBaseRecast);
 		this.#reCaptureRecastTimeScale(game);
@@ -130,15 +144,19 @@ export class CoolDown extends Resource {
 		// scale for spells with longer cast/recast
 		this.#currentBaseRecast = recast;
 	}
-	setRecastTimeScale(timeScale: number) { this.#recastTimeScale = timeScale; }
+	setRecastTimeScale(timeScale: number) {
+		this.#recastTimeScale = timeScale;
+	}
 	#reCaptureRecastTimeScale(game: GameState) {
 		this.#recastTimeScale = this.type === ResourceType.cd_GCD ? game.gcdRecastTimeScale() : 1;
 	}
 	restore(game: GameState, deltaTime: number) {
 		let stacksBefore = this.stacksAvailable();
-		let unscaledTimeTillNextStack = (stacksBefore + 1) * this.#currentBaseRecast - this.availableAmount();
+		let unscaledTimeTillNextStack =
+			(stacksBefore + 1) * this.#currentBaseRecast - this.availableAmount();
 		let scaledTimeTillNextStack = unscaledTimeTillNextStack * this.#recastTimeScale;
-		if (deltaTime >= scaledTimeTillNextStack) {// upon return, will have gained another stack
+		if (deltaTime >= scaledTimeTillNextStack) {
+			// upon return, will have gained another stack
 			// part before stack gain
 			this.gain(unscaledTimeTillNextStack);
 			// re-capture
@@ -151,7 +169,10 @@ export class CoolDown extends Resource {
 	}
 	timeTillNextStackAvailable() {
 		if (this.availableAmount() === this.maxValue) return 0;
-		return (this.#currentBaseRecast - this.availableAmount() % this.#currentBaseRecast) * this.#recastTimeScale;
+		return (
+			(this.#currentBaseRecast - (this.availableAmount() % this.#currentBaseRecast)) *
+			this.#recastTimeScale
+		);
 	}
 }
 
@@ -232,13 +253,12 @@ export class ResourceState {
 
 	// fnOnRsc : Resource -> ()
 	addResourceEvent(props: {
-		rscType: ResourceType,
-		name: string,
-		delay: number,
-		fnOnRsc: (rsc: Resource)=>void,
-		tags?: EventTag[]
-	})
-	{
+		rscType: ResourceType;
+		name: string;
+		delay: number;
+		fnOnRsc: (rsc: Resource) => void;
+		tags?: EventTag[];
+	}) {
 		let rsc = this.get(props.rscType);
 		let evt = new Event(props.name, props.delay, () => {
 			rsc.pendingChange = undefined; // unregister self from resource
@@ -246,7 +266,7 @@ export class ResourceState {
 		});
 		rsc.pendingChange = evt; // register to resource
 		if (props.tags) {
-			props.tags.forEach(tag => {
+			props.tags.forEach((tag) => {
 				evt.addTag(tag);
 			});
 		}
@@ -260,23 +280,25 @@ export class ResourceState {
 			rscType: rscType,
 			name: "[resource ready] " + rscType,
 			delay: delay,
-			fnOnRsc: rsc=>{ rsc.gain(1); }
+			fnOnRsc: (rsc) => {
+				rsc.gain(1);
+			},
 		});
 	}
 }
 
 export type ResourceInfo = {
-	isCoolDown: false,
-	defaultValue: number,
-	maxValue: number,
-	maxTimeout: number,
-	warningOnTimeout?: WarningType,
-}
+	isCoolDown: false;
+	defaultValue: number;
+	maxValue: number;
+	maxTimeout: number;
+	warningOnTimeout?: WarningType;
+};
 export type CoolDownInfo = {
-	isCoolDown: true,
-	maxStacks: number,
-	cdPerStack: number
-}
+	isCoolDown: true;
+	maxStacks: number;
+	cdPerStack: number;
+};
 export type ResourceOrCoolDownInfo = ResourceInfo | CoolDownInfo;
 
 const resourceInfos = new Map<ShellJob, Map<ResourceType, ResourceOrCoolDownInfo>>();
@@ -294,11 +316,16 @@ export function getAllResources(job: ShellJob): Map<ResourceType, ResourceOrCool
 }
 
 // Add a status effect or job gauge element to the resource map of the specified job.
-export function makeResource(job: ShellJob, rsc: ResourceType, maxValue: number, params: Partial<{
-	default: number,
-	timeout: number,
-	warningOnTimeout: WarningType,
-}>) {
+export function makeResource(
+	job: ShellJob,
+	rsc: ResourceType,
+	maxValue: number,
+	params: Partial<{
+		default: number;
+		timeout: number;
+		warningOnTimeout: WarningType;
+	}>,
+) {
 	getAllResources(job).set(rsc, {
 		isCoolDown: false,
 		defaultValue: params.default ?? 0,
@@ -309,26 +336,39 @@ export function makeResource(job: ShellJob, rsc: ResourceType, maxValue: number,
 }
 
 ALL_JOBS.forEach((job) => {
-	resourceInfos.set(job, new Map([[ResourceType.cd_GCD, {
-		// special declaration for GCD override default
-		isCoolDown: true,
-		maxStacks: 1,
-		cdPerStack: 2.5
-	}]]));
+	resourceInfos.set(
+		job,
+		new Map([
+			[
+				ResourceType.cd_GCD,
+				{
+					// special declaration for GCD override default
+					isCoolDown: true,
+					maxStacks: 1,
+					cdPerStack: 2.5,
+				},
+			],
+		]),
+	);
 	// MP, tincture buff, InCombat, and sprint are common to all jobs
-	makeResource(job, ResourceType.InCombat, 1, {default: 0});
-	makeResource(job, ResourceType.Mana, 10000, {default: 10000});
-	makeResource(job, ResourceType.Tincture, 1, {timeout: 30});
-	makeResource(job, ResourceType.Sprint, 1, {timeout: 10});
+	makeResource(job, ResourceType.InCombat, 1, { default: 0 });
+	makeResource(job, ResourceType.Mana, 10000, { default: 10000 });
+	makeResource(job, ResourceType.Tincture, 1, { timeout: 30 });
+	makeResource(job, ResourceType.Sprint, 1, { timeout: 10 });
 	// positionals are assumed on by default -- we'll add the ability to toggle them later
-	makeResource(job, ResourceType.RearPositional, 1, {default: 1});
-	makeResource(job, ResourceType.FlankPositional, 1, {default: 1});
+	makeResource(job, ResourceType.RearPositional, 1, { default: 1 });
+	makeResource(job, ResourceType.FlankPositional, 1, { default: 1 });
 });
 
 // Add an ability to the resource map of the specified job.
 // Should only be called within the makeAbility constructor, except for the default GCD cooldown.
 // May be called multiple times if skills share a cooldown (such as picto living muse variants)
-export function makeCooldown(job: ShellJob, rsc: ResourceType, cdPerStack: number, maxStacks: number = 1) {
+export function makeCooldown(
+	job: ShellJob,
+	rsc: ResourceType,
+	cdPerStack: number,
+	maxStacks: number = 1,
+) {
 	getAllResources(job).set(rsc, {
 		isCoolDown: true,
 		cdPerStack: cdPerStack,
@@ -337,14 +377,13 @@ export function makeCooldown(job: ShellJob, rsc: ResourceType, cdPerStack: numbe
 }
 
 export type ResourceOverrideData = {
-	type: ResourceType,
-	timeTillFullOrDrop: number, // CDs (full), buff/procs (drop)
-	stacks: number, // Triplecast, MP, AF, UI, UH, Paradox, Polyglot
-	effectOrTimerEnabled: boolean, // LL, halt
+	type: ResourceType;
+	timeTillFullOrDrop: number; // CDs (full), buff/procs (drop)
+	stacks: number; // Triplecast, MP, AF, UI, UH, Paradox, Polyglot
+	effectOrTimerEnabled: boolean; // LL, halt
 };
 
 export class ResourceOverride {
-
 	type: ResourceType;
 	timeTillFullOrDrop: number; // CDs (full), buff/procs (drop)
 	stacks: number; // Triplecast, MP, AF, UI, UH, Paradox, Polyglot
@@ -358,25 +397,28 @@ export class ResourceOverride {
 	}
 
 	equals(other: ResourceOverride) {
-		return this.type === other.type &&
+		return (
+			this.type === other.type &&
 			this.timeTillFullOrDrop === other.timeTillFullOrDrop &&
 			this.stacks === other.stacks &&
-			this.effectOrTimerEnabled === other.effectOrTimerEnabled;
+			this.effectOrTimerEnabled === other.effectOrTimerEnabled
+		);
 	}
 
 	// todo
-	static fromGameState(game: GameState)
-	{
+	static fromGameState(game: GameState) {
 		let overrides: ResourceOverride[] = [];
 		// CDs
 		game.cooldowns.forEach((cd: CoolDown, cdName: ResourceType) => {
 			cd.availableAmount();
-			overrides.push(new ResourceOverride({
-				type: cdName,
-				timeTillFullOrDrop: cd.maxValue - cd.availableAmount(),
-				stacks: 0, // not used
-				effectOrTimerEnabled: true // not used
-			}));
+			overrides.push(
+				new ResourceOverride({
+					type: cdName,
+					timeTillFullOrDrop: cd.maxValue - cd.availableAmount(),
+					stacks: 0, // not used
+					effectOrTimerEnabled: true, // not used
+				}),
+			);
 		});
 		// other resources: todo
 
@@ -413,19 +455,19 @@ export class ResourceOverride {
 					name: "drop " + rsc.type,
 					delay: newTimer,
 					fnOnRsc: (r: Resource) => {
-						if (rsc.type === ResourceType.Enochian) { // since enochian should also take away AF/UI/UH stacks
+						if (rsc.type === ResourceType.Enochian) {
+							// since enochian should also take away AF/UI/UH stacks
 							// TODO move to job-specific code
 							(game as BLMState).loseEnochian();
 						} else {
 							r.consume(r.availableAmount());
 						}
-					}
+					},
 				});
 			};
 
 			// Ley Lines (timer + enabled)
-			if (rsc.type === ResourceType.LeyLines)
-			{
+			if (rsc.type === ResourceType.LeyLines) {
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(1);
 				overrideDropRscTimer(this.timeTillFullOrDrop);
@@ -433,8 +475,7 @@ export class ResourceOverride {
 			}
 
 			// Enochian (timer + enabled)
-			else if (rsc.type === ResourceType.Enochian)
-			{
+			else if (rsc.type === ResourceType.Enochian) {
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(1);
 				if (this.effectOrTimerEnabled) {
@@ -443,22 +484,21 @@ export class ResourceOverride {
 			}
 
 			// Polyglot (refresh timer + stacks)
-			else if (rsc.type === ResourceType.Polyglot)
-			{
+			else if (rsc.type === ResourceType.Polyglot) {
 				// stacks
 				let stacks = this.stacks;
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(stacks);
 				// timer
 				let timer = this.timeTillFullOrDrop;
-				if (timer > 0) { // timer is set
+				if (timer > 0) {
+					// timer is set
 					rsc.overrideTimer(game, timer);
 				}
 			}
 
 			// everything else (timer and/or stacks)
 			else {
-
 				// stacks
 				let stacks = this.stacks;
 				rsc.consume(rsc.availableAmount());
@@ -466,7 +506,8 @@ export class ResourceOverride {
 
 				// timer
 				let timer = this.timeTillFullOrDrop;
-				if (stacks > 0 && info.maxTimeout >= 0) { // may expire
+				if (stacks > 0 && info.maxTimeout >= 0) {
+					// may expire
 					overrideDropRscTimer(timer);
 				}
 			}
@@ -478,7 +519,7 @@ export class ResourceOverride {
 			type: this.type,
 			timeTillFullOrDrop: this.timeTillFullOrDrop,
 			stacks: this.stacks,
-			effectOrTimerEnabled: this.effectOrTimerEnabled
+			effectOrTimerEnabled: this.effectOrTimerEnabled,
 		};
 	}
 }
