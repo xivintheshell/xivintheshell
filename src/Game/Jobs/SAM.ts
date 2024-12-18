@@ -109,6 +109,12 @@ export class SAMState extends GameState {
 		}
 	}
 
+	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.Fuka) && skill.cdName === ResourceType.cd_GCD) {
+			node.addBuff(BuffType.Fuka)
+		}
+	}
+
 	getFugetsuModifier(): PotencyModifier {
 		return Traits.hasUnlocked(TraitName.EnhancedFugetsuAndFuka, this.config.level)
 			? Modifiers.FugetsuEnhanced
