@@ -19,9 +19,9 @@ import { localize } from "../Localization";
 	ResourceType.Firestarter,
 	ResourceType.Thunderhead,
 	ResourceType.ThunderIII,
-    ResourceType.ThunderIV,
-    ResourceType.HighThunder,
-    ResourceType.HighThunderII,
+	ResourceType.ThunderIV,
+	ResourceType.HighThunder,
+	ResourceType.HighThunderII,
 	ResourceType.LeyLines,
 	ResourceType.Manaward,
 ].forEach((buff) => registerBuffIcon(buff, `BLM/${buff}.png`));
@@ -31,9 +31,9 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 		return [
 			...[
 				ResourceType.ThunderIII,
-                ResourceType.ThunderIV,
-                ResourceType.HighThunder,
-                ResourceType.HighThunderII
+				ResourceType.ThunderIV,
+				ResourceType.HighThunder,
+				ResourceType.HighThunderII,
 			].map((rscType) => this.makeCommonTimer(rscType, false)),
 		];
 	}

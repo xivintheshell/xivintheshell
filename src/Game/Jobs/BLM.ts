@@ -4,7 +4,8 @@ import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { ShellJob } from "../../Controller/Common";
 import {
-	Aspect, BuffType,
+	Aspect,
+	BuffType,
 	Debug,
 	ProcMode,
 	ResourceType,
@@ -96,26 +97,29 @@ export class BLMState extends GameState {
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		this.registerRecurringEvents([{
-			reportName: localize({en: "Thunder DoT"}),
-			groupedDots: [{
-				dotName: ResourceType.HighThunder,
-				appliedBy: [SkillName.HighThunder],
-			},
+		this.registerRecurringEvents([
 			{
-				dotName: ResourceType.HighThunderII,
-				appliedBy: [SkillName.HighThunder2],
+				reportName: localize({ en: "Thunder DoT" }),
+				groupedDots: [
+					{
+						dotName: ResourceType.HighThunder,
+						appliedBy: [SkillName.HighThunder],
+					},
+					{
+						dotName: ResourceType.HighThunderII,
+						appliedBy: [SkillName.HighThunder2],
+					},
+					{
+						dotName: ResourceType.ThunderIII,
+						appliedBy: [SkillName.Thunder3],
+					},
+					{
+						dotName: ResourceType.ThunderIV,
+						appliedBy: [SkillName.Thunder4],
+					},
+				],
 			},
-			{
-				dotName: ResourceType.ThunderIII,
-				appliedBy: [SkillName.Thunder3],
-				
-			},
-			{
-				dotName: ResourceType.ThunderIV,
-				appliedBy: [SkillName.Thunder4],
-			}]
-		}]);
+		]);
 	}
 
 	override jobSpecificRegisterRecurringEvents() {
@@ -138,7 +142,10 @@ export class BLMState extends GameState {
 	}
 
 	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
-		if (this.hasResourceAvailable(ResourceType.LeyLines) && skill.cdName === ResourceType.cd_GCD) {
+		if (
+			this.hasResourceAvailable(ResourceType.LeyLines) &&
+			skill.cdName === ResourceType.cd_GCD
+		) {
 			node.addBuff(BuffType.LeyLines);
 		}
 	}
@@ -662,32 +669,35 @@ makeAbility_BLM(SkillName.Transpose, 4, ResourceType.cd_Transpose, {
 	},
 });
 
-const thunderConfirm = (skillName: SkillName, dotName: ResourceType) => (
-	(game: BLMState, node: ActionNode) => {
-		let tickPotency = 0
+const thunderConfirm =
+	(skillName: SkillName, dotName: ResourceType) => (game: BLMState, node: ActionNode) => {
+		let tickPotency = 0;
 		switch (skillName) {
 			case SkillName.HighThunder:
-				tickPotency = 60
-				break
+				tickPotency = 60;
+				break;
 			case SkillName.Thunder3:
-				tickPotency = 50
-				break
+				tickPotency = 50;
+				break;
 			case SkillName.Thunder4:
-				tickPotency = 35
-				break
+				tickPotency = 35;
+				break;
 			case SkillName.HighThunder2:
-				tickPotency = 40
-				break
-
+				tickPotency = 40;
+				break;
 		}
 
-		const mods: PotencyMultiplier[] = []
+		const mods: PotencyMultiplier[] = [];
 		if (game.hasResourceAvailable(ResourceType.Enochian) && !Debug.noEnochian) {
 			const enochianModifier = getEnochianModifier(game);
-			mods.push({kind: "multiplier", source: PotencyModifierType.ENO, damageFactor: enochianModifier});
+			mods.push({
+				kind: "multiplier",
+				source: PotencyModifierType.ENO,
+				damageFactor: enochianModifier,
+			});
 		}
 
-		console.assert(tickPotency > 0, `${skillName} was applied as a Thunder DoT`)
+		console.assert(tickPotency > 0, `${skillName} was applied as a Thunder DoT`);
 		game.addDoTPotencies({
 			node,
 			dotName,
@@ -696,13 +706,12 @@ const thunderConfirm = (skillName: SkillName, dotName: ResourceType) => (
 			speedStat: "sps",
 			aspect: Aspect.Lightning,
 			modifiers: mods,
-		})		
+		});
 
 		let thunderhead = game.resources.get(ResourceType.Thunderhead);
 		thunderhead.consume(1);
 		thunderhead.removeTimer();
-	}
-);
+	};
 
 makeSpell_BLM(SkillName.Thunder3, 45, {
 	aspect: Aspect.Lightning,

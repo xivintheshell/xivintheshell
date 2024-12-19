@@ -5,13 +5,7 @@ import { Aspect, ResourceType, SkillName, TraitName, WarningType } from "../Comm
 import { MCHResourceType } from "../Constants/MCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import {
-	makeComboModifier,
-	Modifiers,
-	Potency,
-	PotencyModifier,
-	PotencyMultiplier,
-} from "../Potency";
+import { makeComboModifier, Modifiers, Potency, PotencyModifier } from "../Potency";
 import {
 	CoolDown,
 	getResourceInfo,
@@ -91,9 +85,8 @@ const WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT: SkillName[] = [
 ];
 
 export class MCHState extends GameState {
-
-    constructor (config: GameConfig) {
-        super(config)
+	constructor(config: GameConfig) {
+		super(config);
 
 		// Unlike standard and technical, Air Anchor and Chain Saw's cooldowns are affected by skill speed
 		this.cooldowns.set(
@@ -126,13 +119,17 @@ export class MCHState extends GameState {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Tactician, 120, 1, 1));
 		}
 
-        super.registerRecurringEvents([{
-            groupedDots: [{
-                dotName: ResourceType.Bioblaster,
-                appliedBy: [SkillName.Bioblaster]
-            }]
-        }]);
-    }
+		super.registerRecurringEvents([
+			{
+				groupedDots: [
+					{
+						dotName: ResourceType.Bioblaster,
+						appliedBy: [SkillName.Bioblaster],
+					},
+				],
+			},
+		]);
+	}
 
 	processComboStatus(skill: SkillName) {
 		if (!COMBO_GCDS.includes(skill)) {
@@ -210,7 +207,7 @@ export class MCHState extends GameState {
 			return;
 		}
 
-        const queenPotency = node.getDotPotencies(ResourceType.Queen)[potencyIndex]
+		const queenPotency = node.getDotPotencies(ResourceType.Queen)[potencyIndex];
 
 		// Queen actions snapshot at execution time, not when the button was pressed, add Tincture modifier and note snapshot time for party buff handling
 		if (this.hasResourceAvailable(ResourceType.Tincture)) {
@@ -259,18 +256,24 @@ export class MCHState extends GameState {
 		this.tryConsumeResource(ResourceType.WildfireSelf);
 		this.tryConsumeResource(ResourceType.Wildfire);
 
-        // Potency stuff
-        const potencyPerHit = Traits.hasUnlocked(TraitName.EnhancedWildfire, this.config.level) ? 240 : 100
-        const basePotency = Math.min(this.resources.get(ResourceType.WildfireHits).availableAmount(), 6) * potencyPerHit
-        const potencyNode = (this.resources.get(ResourceType.Wildfire) as DoTBuff).node
+		// Potency stuff
+		const potencyPerHit = Traits.hasUnlocked(TraitName.EnhancedWildfire, this.config.level)
+			? 240
+			: 100;
+		const basePotency =
+			Math.min(this.resources.get(ResourceType.WildfireHits).availableAmount(), 6) *
+			potencyPerHit;
+		const potencyNode = (this.resources.get(ResourceType.Wildfire) as DoTBuff).node;
 
-        if (potencyNode === undefined) { return }
-        const wildFirePotency = potencyNode.getDotPotencies(ResourceType.Wildfire)[0]
-        wildFirePotency.base = basePotency
-        controller.resolvePotency(wildFirePotency)
+		if (potencyNode === undefined) {
+			return;
+		}
+		const wildFirePotency = potencyNode.getDotPotencies(ResourceType.Wildfire)[0];
+		wildFirePotency.base = basePotency;
+		controller.resolvePotency(wildFirePotency);
 
-        this.tryConsumeResource(ResourceType.WildfireHits, true)
-    }
+		this.tryConsumeResource(ResourceType.WildfireHits, true);
+	}
 }
 
 const makeWeaponskill_MCH = (
@@ -613,19 +616,20 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
 			wildFirePotency.modifiers.push(Modifiers.Tincture);
 		}
 
-        node.addDoTPotency(wildFirePotency, ResourceType.Wildfire)
-        
-        wildFire.gain(1)
-        wildFire.node = node
-        
-        state.resources.addResourceEvent({
-            rscType: ResourceType.Wildfire,
-            name: "wildfire expiration",
-            delay: (getResourceInfo(ShellJob.MCH, ResourceType.Wildfire) as ResourceInfo).maxTimeout,
-            fnOnRsc: (_rsc) => state.expireWildfire()
-        })
-    },
-})
+		node.addDoTPotency(wildFirePotency, ResourceType.Wildfire);
+
+		wildFire.gain(1);
+		wildFire.node = node;
+
+		state.resources.addResourceEvent({
+			rscType: ResourceType.Wildfire,
+			name: "wildfire expiration",
+			delay: (getResourceInfo(ShellJob.MCH, ResourceType.Wildfire) as ResourceInfo)
+				.maxTimeout,
+			fnOnRsc: (_rsc) => state.expireWildfire(),
+		});
+	},
+});
 makeAbility_MCH(SkillName.Detonator, 45, ResourceType.cd_Detonator, {
 	startOnHotbar: false,
 	applicationDelay: 0.62,
@@ -747,17 +751,20 @@ robotSummons.forEach((params) => {
 				basePotency = state.calculateQueenPotency(35, 75);
 			}
 
-            for (let i = 0; i < punchResource.availableAmount(); i++) {
-                node.addDoTPotency(new Potency({
-                    config: state.config,
-                    sourceTime: state.getDisplayTime(),
-                    sourceSkill,
-                    aspect: Aspect.Physical,
-                    description: "",
-                    basePotency,
-                    snapshotTime: undefined,
-                }), ResourceType.Queen)
-            }
+			for (let i = 0; i < punchResource.availableAmount(); i++) {
+				node.addDoTPotency(
+					new Potency({
+						config: state.config,
+						sourceTime: state.getDisplayTime(),
+						sourceSkill,
+						aspect: Aspect.Physical,
+						description: "",
+						basePotency,
+						snapshotTime: undefined,
+					}),
+					ResourceType.Queen,
+				);
+			}
 
 			sourceSkill = Traits.hasUnlocked(TraitName.Promotion, state.config.level)
 				? SkillName.PileBunker
@@ -768,27 +775,33 @@ robotSummons.forEach((params) => {
 				basePotency = state.calculateQueenPotency(160, 320);
 			}
 
-            node.addDoTPotency(new Potency({
-                config: state.config,
-                sourceTime: state.getDisplayTime(),
-                sourceSkill,
-                aspect: Aspect.Physical,
-                description: "",
-                basePotency,
-                snapshotTime: undefined,
-            }), ResourceType.Queen)
+			node.addDoTPotency(
+				new Potency({
+					config: state.config,
+					sourceTime: state.getDisplayTime(),
+					sourceSkill,
+					aspect: Aspect.Physical,
+					description: "",
+					basePotency,
+					snapshotTime: undefined,
+				}),
+				ResourceType.Queen,
+			);
 
-            if (Traits.hasUnlocked(TraitName.QueensGambit, state.config.level)) {
-                node.addDoTPotency(new Potency({
-                    config: state.config,
-                    sourceTime: state.getDisplayTime(),
-                    sourceSkill: SkillName.CrownedCollider,
-                    aspect: Aspect.Physical,
-                    description: "",
-                    basePotency: state.calculateQueenPotency(390, 780),
-                    snapshotTime: undefined,
-                }), ResourceType.Queen)
-            }
+			if (Traits.hasUnlocked(TraitName.QueensGambit, state.config.level)) {
+				node.addDoTPotency(
+					new Potency({
+						config: state.config,
+						sourceTime: state.getDisplayTime(),
+						sourceSkill: SkillName.CrownedCollider,
+						aspect: Aspect.Physical,
+						description: "",
+						basePotency: state.calculateQueenPotency(390, 780),
+						snapshotTime: undefined,
+					}),
+					ResourceType.Queen,
+				);
+			}
 
 			(state.resources.get(ResourceType.Queen) as DoTBuff).node = node;
 
@@ -854,23 +867,24 @@ makeWeaponskill_MCH(SkillName.Scattergun, 82, {
 });
 
 makeWeaponskill_MCH(SkillName.Bioblaster, 58, {
-    potency: 50,
-    applicationDelay: 0.97,
-    recastTime: (state) => state.config.adjustedSksGCD(),
-    secondaryCooldown: {
-        cdName: ResourceType.cd_Drill,
-        cooldown: 20,
-        maxCharges: 2, // charges reduced as needed in constructer by trait
-    },
-    onConfirm: (state, node) => state.addDoTPotencies({
-        node,
-        dotName: ResourceType.Bioblaster,
-        skillName: SkillName.Bioblaster,
-        tickPotency: 50,
-        speedStat: "sks"
-    }),
-    onApplication: (state, node) => state.applyDoT(ResourceType.Bioblaster, node)
-})
+	potency: 50,
+	applicationDelay: 0.97,
+	recastTime: (state) => state.config.adjustedSksGCD(),
+	secondaryCooldown: {
+		cdName: ResourceType.cd_Drill,
+		cooldown: 20,
+		maxCharges: 2, // charges reduced as needed in constructer by trait
+	},
+	onConfirm: (state, node) =>
+		state.addDoTPotencies({
+			node,
+			dotName: ResourceType.Bioblaster,
+			skillName: SkillName.Bioblaster,
+			tickPotency: 50,
+			speedStat: "sks",
+		}),
+	onApplication: (state, node) => state.applyDoT(ResourceType.Bioblaster, node),
+});
 
 makeWeaponskill_MCH(SkillName.AutoCrossbow, 52, {
 	potency: [

@@ -1,10 +1,10 @@
-import React, {CSSProperties} from 'react'
-import {Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile} from "./Common";
-import {LIMIT_BREAKS, ResourceType, SkillName} from "../Game/Common";
-import {PotencyModifier, PotencyModifierType} from "../Game/Potency";
-import {getCurrentThemeColors, MarkerColor} from "./ColorTheme";
-import {localize, localizeResourceType, localizeSkillName} from "./Localization";
-import {controller} from "../Controller/Controller";
+import React, { CSSProperties } from "react";
+import { Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile } from "./Common";
+import { LIMIT_BREAKS, ResourceType, SkillName } from "../Game/Common";
+import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
+import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
+import { localize, localizeResourceType, localizeSkillName } from "./Localization";
+import { controller } from "../Controller/Controller";
 import {
 	allSkillsAreIncluded,
 	DamageStatsDoTTrackingData,
@@ -46,16 +46,16 @@ export type DamageStatsDoTTableEntry = {
 };
 
 export interface DamageStatsDoTTableSummary {
-	cumulativeGap: number,
-	cumulativeOverride: number,
-	timeSinceLastDoTDropped: number,
-	totalTicks: number,
-	maxTicks: number,
-	dotCoverageTimeFraction: number,
-	theoreticalMaxTicks: number,
-	totalPotencyWithoutPot: number,
-	totalPotPotency: number,
-	totalPartyBuffPotency: number,
+	cumulativeGap: number;
+	cumulativeOverride: number;
+	timeSinceLastDoTDropped: number;
+	totalTicks: number;
+	maxTicks: number;
+	dotCoverageTimeFraction: number;
+	theoreticalMaxTicks: number;
+	totalPotencyWithoutPot: number;
+	totalPotPotency: number;
+	totalPartyBuffPotency: number;
 }
 
 export type SelectedStatisticsData = {
@@ -92,13 +92,13 @@ export type DamageStatisticsData = {
 	};
 	mainTable: DamageStatsMainTableEntry[];
 	mainTableSummary: {
-		totalPotencyWithoutPot: number,
-		totalPotPotency: number,
-		totalPartyBuffPotency: number,
-	},
-	dotTables: Map<ResourceType, DamageStatsDoTTrackingData>,
-	mode: DamageStatisticsMode,
-}
+		totalPotencyWithoutPot: number;
+		totalPotPotency: number;
+		totalPartyBuffPotency: number;
+	};
+	dotTables: Map<ResourceType, DamageStatsDoTTrackingData>;
+	mode: DamageStatisticsMode;
+};
 
 export let updateDamageStats = (data: Partial<DamageStatisticsData>) => {};
 export let updateSelectedStats = (data: Partial<SelectedStatisticsData>) => {};
@@ -175,23 +175,23 @@ function buffName(buff: PotencyModifierType) {
 	} else if (buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
 		text = localize({ en: "immortal Sacrifice" }) as string;
 	} else if (buff === PotencyModifierType.BARRAGE) {
-		text = localize({en: "barrage"}) as string;
+		text = localize({ en: "barrage" }) as string;
 	} else if (buff === PotencyModifierType.RAGING_STRIKES) {
-		text = localize({en: "raging strikes"}) as string;
+		text = localize({ en: "raging strikes" }) as string;
 	} else if (buff === PotencyModifierType.BATTLE_VOICE) {
-		text = localize({en: "battle voice"}) as string;
+		text = localize({ en: "battle voice" }) as string;
 	} else if (buff === PotencyModifierType.RADIANT_FINALE_THREE_CODA) {
-		text = localize({en: "three coda radiant finale"}) as string;
+		text = localize({ en: "three coda radiant finale" }) as string;
 	} else if (buff === PotencyModifierType.RADIANT_FINALE_TWO_CODA) {
-		text = localize({en: "two coda radiant finale"}) as string;
+		text = localize({ en: "two coda radiant finale" }) as string;
 	} else if (buff === PotencyModifierType.RADIANT_FINALE_ONE_CODA) {
-		text = localize({en: "one coda radiant finale"}) as string;
+		text = localize({ en: "one coda radiant finale" }) as string;
 	} else if (buff === PotencyModifierType.WANDERERS_MINUET) {
-		text = localize({en: "wanderers minuet"}) as string;
+		text = localize({ en: "wanderers minuet" }) as string;
 	} else if (buff === PotencyModifierType.MAGES_BALLAD) {
-		text = localize({en: "mages ballad"}) as string;
+		text = localize({ en: "mages ballad" }) as string;
 	} else if (buff === PotencyModifierType.ARMYS_PAEON) {
-		text = localize({en: "armys paeon"}) as string;
+		text = localize({ en: "armys paeon" }) as string;
 	}
 	return text;
 }
@@ -291,41 +291,45 @@ function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
 		text = localize({ en: "SURGING" }) as string;
 		color = MarkerColor.Purple;
 	} else if (props.buff === PotencyModifierType.BARRAGE) {
-		text = localize({en: "BRG"}) as string;
+		text = localize({ en: "BRG" }) as string;
 		color = colors.brd.barrage;
 	} else if (props.buff === PotencyModifierType.RAGING_STRIKES) {
-		text = localize({en: "RS"}) as string;
+		text = localize({ en: "RS" }) as string;
 		color = colors.brd.ragingStrikes;
 	} else if (props.buff === PotencyModifierType.BATTLE_VOICE) {
-		text = localize({en: "BV"}) as string;
+		text = localize({ en: "BV" }) as string;
 		color = colors.brd.battleVoice;
 	} else if (props.buff === PotencyModifierType.RADIANT_FINALE_THREE_CODA) {
-		text = localize({en: "RF3"}) as string;
+		text = localize({ en: "RF3" }) as string;
 		color = colors.brd.radiantFinale;
 	} else if (props.buff === PotencyModifierType.RADIANT_FINALE_TWO_CODA) {
-		text = localize({en: "RF2"}) as string;
+		text = localize({ en: "RF2" }) as string;
 		color = colors.brd.radiantFinale;
 	} else if (props.buff === PotencyModifierType.RADIANT_FINALE_ONE_CODA) {
-		text = localize({en: "RF1"}) as string;
+		text = localize({ en: "RF1" }) as string;
 		color = colors.brd.radiantFinale;
 	} else if (props.buff === PotencyModifierType.WANDERERS_MINUET) {
-		text = localize({en: "WM"}) as string;
+		text = localize({ en: "WM" }) as string;
 		color = colors.brd.wanderersCoda;
 	} else if (props.buff === PotencyModifierType.MAGES_BALLAD) {
-		text = localize({en: "MB"}) as string;
+		text = localize({ en: "MB" }) as string;
 		color = colors.brd.magesCoda;
 	} else if (props.buff === PotencyModifierType.ARMYS_PAEON) {
-		text = localize({en: "AP"}) as string;
+		text = localize({ en: "AP" }) as string;
 		color = colors.brd.armysCoda;
 	}
-	return <span style={{
-		borderRadius: 2,
-		border: "1px solid " + color,
-		fontSize: 11,
-		marginRight: 4,
-		padding: "1px 4px",
-		background: color + "1f"
-	}}><b style={{color: color}}>{text}</b></span>
+	return <span
+		style={{
+			borderRadius: 2,
+			border: "1px solid " + color,
+			fontSize: 11,
+			marginRight: 4,
+			padding: "1px 4px",
+			background: color + "1f",
+		}}
+	>
+		<b style={{ color: color }}>{text}</b>
+	</span>;
 }
 
 function PotencyDisplay(props: {
@@ -572,24 +576,35 @@ export class DamageStatistics extends React.Component {
 		}
 
 		// Build DoT uptime reports for any DoT groups that have requested reporting
-		const dotUptime = controller.game.dotGroups.filter(group => group.reportName).map((dotGroup) => {
-			let dotStr = dotGroup.reportName + " " + localize({en: "uptime"}) + colon
-			
-			let uptime = 0
-			let totalTicks = 0
-			let maxTicks = 0;
-			dotGroup.groupedDots.forEach((dot) => {
-				const dotTable = this.data.dotTables.get(dot.dotName)
-				if (!dotTable) { return }
-				uptime += dotTable.summary.dotCoverageTimeFraction
-				totalTicks += dotTable.summary.totalTicks
-				maxTicks = Math.max(maxTicks, dotTable.summary.maxTicks) // Practically speaking, they should all come out with the same maxTicks
-			})
+		const dotUptime = controller.game.dotGroups
+			.filter((group) => group.reportName)
+			.map((dotGroup) => {
+				let dotStr = dotGroup.reportName + " " + localize({ en: "uptime" }) + colon;
 
-			dotStr += (uptime * 100).toFixed(2) + "%";
-			dotStr += lparen + localize({en: "ticks", zh: "跳雷次数"}) + colon + totalTicks + "/" + maxTicks + rparen;
-			return <div>{dotStr}</div>
-		})
+				let uptime = 0;
+				let totalTicks = 0;
+				let maxTicks = 0;
+				dotGroup.groupedDots.forEach((dot) => {
+					const dotTable = this.data.dotTables.get(dot.dotName);
+					if (!dotTable) {
+						return;
+					}
+					uptime += dotTable.summary.dotCoverageTimeFraction;
+					totalTicks += dotTable.summary.totalTicks;
+					maxTicks = Math.max(maxTicks, dotTable.summary.maxTicks); // Practically speaking, they should all come out with the same maxTicks
+				});
+
+				dotStr += (uptime * 100).toFixed(2) + "%";
+				dotStr +=
+					lparen +
+					localize({ en: "ticks", zh: "跳雷次数" }) +
+					colon +
+					totalTicks +
+					"/" +
+					maxTicks +
+					rparen;
+				return <div>{dotStr}</div>;
+			});
 
 		let selected: React.ReactNode | undefined = undefined;
 		let selectedPPSAvailable = this.selected.targetableDuration > 0;
@@ -692,9 +707,9 @@ export class DamageStatistics extends React.Component {
 			};
 		};
 
-		let isDoTProp = function(skillName: SkillName) {
-			return controller.game.dotSkills.includes(skillName)
-		}
+		let isDoTProp = function (skillName: SkillName) {
+			return controller.game.dotSkills.includes(skillName);
+		};
 
 		let hidePotency = function (skillName: SkillName) {
 			if (isDoTProp(skillName)) {
@@ -988,19 +1003,21 @@ export class DamageStatistics extends React.Component {
 			</div>;
 		};
 
-		const allDotTableRows: {dotName: ResourceType, tableRows:React.ReactNode[]}[] = [];
+		const allDotTableRows: { dotName: ResourceType; tableRows: React.ReactNode[] }[] = [];
 		this.data.dotTables.forEach((dotTrackingData, dotName) => {
-			const dotTableRows = []
+			const dotTableRows = [];
 
 			for (let i = 0; i < dotTrackingData.tableRows.length; i++) {
-				dotTableRows.push(makedotRow({
-					row: dotTrackingData.tableRows[i],
-					key: i
-				}));
+				dotTableRows.push(
+					makedotRow({
+						row: dotTrackingData.tableRows[i],
+						key: i,
+					}),
+				);
 			}
 
-			allDotTableRows.push({dotName, tableRows: dotTableRows})
-		})
+			allDotTableRows.push({ dotName, tableRows: dotTableRows });
+		});
 
 		//////////////////////////////////////////////////////////
 
@@ -1008,10 +1025,10 @@ export class DamageStatistics extends React.Component {
 			display: "inline-block",
 			padding: rowGap,
 		};
-		let mainHeaderStr = allIncluded ?
-			localize({en: "Applied Skills", zh: "技能统计"}) :
-			localize({en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）"});
-		let dotHeaderSuffix = ""
+		let mainHeaderStr = allIncluded
+			? localize({ en: "Applied Skills", zh: "技能统计" })
+			: localize({ en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）" });
+		let dotHeaderSuffix = "";
 		if (this.data.mode === DamageStatisticsMode.Historical) {
 			let t = (this.data.time - this.data.countdown).toFixed(3) + "s";
 			let upTillStr =
@@ -1109,72 +1126,137 @@ export class DamageStatistics extends React.Component {
 		</div>;
 
 		let dotTables = allDotTableRows.map((dotTable) => {
-			const dotTableRows = dotTable.tableRows
-			const dotTableSummary = this.data.dotTables.get(dotTable.dotName)?.summary
-			if (dotTableSummary === undefined) { return <></> } // Will never happen, but fixes nullish checks below
-			const dotHeaderStr = localizeResourceType(dotTable.dotName) + dotHeaderSuffix
-			return <div key={`dot-table-${dotTable.dotName}`} style={{
-				position: "relative",
-				margin: "0 auto",
-				marginBottom: 40,
-				maxWidth: 960,
-			}}>
-				<div style={{...cell(100), ...{textAlign: "center", marginBottom: 10}}}>
-					<b style={{color: titleColor}}>{dotHeaderStr}</b>
+			const dotTableRows = dotTable.tableRows;
+			const dotTableSummary = this.data.dotTables.get(dotTable.dotName)?.summary;
+			if (dotTableSummary === undefined) {
+				return <></>;
+			} // Will never happen, but fixes nullish checks below
+			const dotHeaderStr = localizeResourceType(dotTable.dotName) + dotHeaderSuffix;
+			return <div
+				key={`dot-table-${dotTable.dotName}`}
+				style={{
+					position: "relative",
+					margin: "0 auto",
+					marginBottom: 40,
+					maxWidth: 960,
+				}}
+			>
+				<div style={{ ...cell(100), ...{ textAlign: "center", marginBottom: 10 } }}>
+					<b style={{ color: titleColor }}>{dotHeaderStr}</b>
 				</div>
-				<div style={{outline: "1px solid " + colors.bgMediumContrast}}>
+				<div style={{ outline: "1px solid " + colors.bgMediumContrast }}>
 					<div>
-						<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "cast time", zh: "读条时间"})}</b></span></div>
-						<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "application time", zh: "结算时间"})}</b></span></div>
-						<div style={{display: "inline-block", width: "12%"}}><span style={headerCellStyle}/></div>
-						<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
-							<b>{localize({en: "gap", zh: "DoT间隙"})} </b>
-							<Help topic={"dot-gap-title"} content={localize({
-								en: <div>
-									<div className={"paragraph"}>DoT coverage time gap since pull or previous application</div>
-									<div className={"paragraph"}>The last row also includes gap at the beginning and end of the fight</div>
-								</div>,
-								zh: <div>雷DoT覆盖间隙，最后一行也包括战斗开始和结束时没有雷DoT的时间</div>,
-							})}/>
-						</span></div>
-						<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}>
-							<b>{localize({en: "override", zh: "DoT覆盖"})} </b>
-							<Help topic={"dot-override-title"} content={localize({
-								en: <div>Overridden DoT time from previous application</div>,
-								zh: <div>提前覆盖雷DoT时长</div>,
-							})}/>
-						</span></div>
-						<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "initial", zh: "初始威力"})}</b></span></div>
-						<div style={{display: "inline-block", width: "10%"}}><span style={headerCellStyle}><b>{localize({en: "DoT", zh: "DoT威力"})}</b></span></div>
-						<div style={{display: "inline-block", width: "8%"}}><span style={headerCellStyle}><b>{localize({en: "ticks", zh: "跳雷次数"})}</b></span></div>
-						<div style={{display: "inline-block", width: "24%"}}><span style={headerCellStyle}><b>{localize({en: "total", zh: "总威力"})}</b></span></div>
+						<div style={{ display: "inline-block", width: "8%" }}>
+							<span style={headerCellStyle}>
+								<b>{localize({ en: "cast time", zh: "读条时间" })}</b>
+							</span>
+						</div>
+						<div style={{ display: "inline-block", width: "8%" }}>
+							<span style={headerCellStyle}>
+								<b>{localize({ en: "application time", zh: "结算时间" })}</b>
+							</span>
+						</div>
+						<div style={{ display: "inline-block", width: "12%" }}>
+							<span style={headerCellStyle} />
+						</div>
+						<div style={{ display: "inline-block", width: "10%" }}>
+							<span style={headerCellStyle}>
+								<b>{localize({ en: "gap", zh: "DoT间隙" })} </b>
+								<Help
+									topic={"dot-gap-title"}
+									content={localize({
+										en: <div>
+											<div className={"paragraph"}>
+												DoT coverage time gap since pull or previous
+												application
+											</div>
+											<div className={"paragraph"}>
+												The last row also includes gap at the beginning and
+												end of the fight
+											</div>
+										</div>,
+										zh: <div>
+											雷DoT覆盖间隙，最后一行也包括战斗开始和结束时没有雷DoT的时间
+										</div>,
+									})}
+								/>
+							</span>
+						</div>
+						<div style={{ display: "inline-block", width: "10%" }}>
+							<span style={headerCellStyle}>
+								<b>{localize({ en: "override", zh: "DoT覆盖" })} </b>
+								<Help
+									topic={"dot-override-title"}
+									content={localize({
+										en: <div>
+											Overridden DoT time from previous application
+										</div>,
+										zh: <div>提前覆盖雷DoT时长</div>,
+									})}
+								/>
+							</span>
+						</div>
+						<div style={{ display: "inline-block", width: "10%" }}>
+							<span style={headerCellStyle}>
+								<b>{localize({ en: "initial", zh: "初始威力" })}</b>
+							</span>
+						</div>
+						<div style={{ display: "inline-block", width: "10%" }}>
+							<span style={headerCellStyle}>
+								<b>{localize({ en: "DoT", zh: "DoT威力" })}</b>
+							</span>
+						</div>
+						<div style={{ display: "inline-block", width: "8%" }}>
+							<span style={headerCellStyle}>
+								<b>{localize({ en: "ticks", zh: "跳雷次数" })}</b>
+							</span>
+						</div>
+						<div style={{ display: "inline-block", width: "24%" }}>
+							<span style={headerCellStyle}>
+								<b>{localize({ en: "total", zh: "总威力" })}</b>
+							</span>
+						</div>
 					</div>
 					{dotTableRows}
-					<div style={{
-						textAlign: "left",
-						position: "relative",
-						borderTop: "1px solid " + colors.bgMediumContrast,
-					}}>
-						<div style={cell(28)}/>
+					<div
+						style={{
+							textAlign: "left",
+							position: "relative",
+							borderTop: "1px solid " + colors.bgMediumContrast,
+						}}
+					>
+						<div style={cell(28)} />
 						<div style={cell(10)}>{dotTableSummary.cumulativeGap.toFixed(3)}</div>
 						<div style={cell(10)}>{dotTableSummary.cumulativeOverride.toFixed(3)}</div>
-						<div style={cell(20)}/>
-						<div style={cell(8)}>{dotTableSummary.totalTicks}/{dotTableSummary.maxTicks}</div>
+						<div style={cell(20)} />
+						<div style={cell(8)}>
+							{dotTableSummary.totalTicks}/{dotTableSummary.maxTicks}
+						</div>
 						<div style={cell(24)}>
 							{dotTableSummary.totalPotencyWithoutPot.toFixed(2)}
-							{dotTableSummary.totalPotPotency>0 ?
-								<span style={{color: colors.timeline.potCover}}> +{dotTableSummary.totalPotPotency.toFixed(2)}{localize({
-									en: "(pot +" + this.data.tinctureBuffPercentage + "%)",
-									zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)"
-								})}</span> : undefined}
+							{dotTableSummary.totalPotPotency > 0 ? (
+								<span style={{ color: colors.timeline.potCover }}>
+									{" "}
+									+{dotTableSummary.totalPotPotency.toFixed(2)}
+									{localize({
+										en: "(pot +" + this.data.tinctureBuffPercentage + "%)",
+										zh: "(爆发药 +" + this.data.tinctureBuffPercentage + "%)",
+									})}
+								</span>
+							) : undefined}
 
-							{dotTableSummary.totalPartyBuffPotency > 0 ? 
-								<span style={{color: colors.accent}}> +{dotTableSummary.totalPartyBuffPotency.toFixed(2)}({localize({en: "party", zh: "团辅"})})</span> : undefined}
+							{dotTableSummary.totalPartyBuffPotency > 0 ? (
+								<span style={{ color: colors.accent }}>
+									{" "}
+									+{dotTableSummary.totalPartyBuffPotency.toFixed(2)}(
+									{localize({ en: "party", zh: "团辅" })})
+								</span>
+							) : undefined}
 						</div>
 					</div>
 				</div>
-			</div>
-		})
+			</div>;
+		});
 		return <div>
 			{summary}
 			<div>

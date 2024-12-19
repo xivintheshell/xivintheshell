@@ -24,7 +24,7 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
-    MOVEMENT_SKILL_ANIMATION_LOCK,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
 	SkillAutoReplace,
@@ -281,33 +281,38 @@ const makeWeaponskill_WAR = (
 	});
 };
 
-const makeAbility_WAR = (name: SkillName, unlockLevel: number, cdName: ResourceType, params: {
-    autoUpgrade?: SkillAutoReplace,
-    potency?: number | Array<[TraitName, number]>,
-    replaceIf?: ConditionalSkillReplace<WARState>[],
-    highlightIf?: StatePredicate<WARState>,
-    startOnHotbar?: boolean,
-    applicationDelay?: number,
-    animationLock?: number,
-    cooldown: number,
-    maxCharges?: number,
-    validateAttempt?: StatePredicate<WARState>,
-    onConfirm?: EffectFn<WARState>,
-    onApplication?: EffectFn<WARState>,
-    secondaryCooldown?: CooldownGroupProperies,
-}): Ability<WARState> => {
-    return makeAbility(ShellJob.WAR, name, unlockLevel, cdName, {
-        ...params,
-        onConfirm: params.onConfirm,
-        jobPotencyModifiers: (state) => {
-            const mods: PotencyModifier[] = [];
-            if (state.hasResourceAvailable(ResourceType.SurgingTempest)) {
-                mods.push(Modifiers.SurgingTempest);
-            }
-            return mods;
-        },
-    });
-}
+const makeAbility_WAR = (
+	name: SkillName,
+	unlockLevel: number,
+	cdName: ResourceType,
+	params: {
+		autoUpgrade?: SkillAutoReplace;
+		potency?: number | Array<[TraitName, number]>;
+		replaceIf?: ConditionalSkillReplace<WARState>[];
+		highlightIf?: StatePredicate<WARState>;
+		startOnHotbar?: boolean;
+		applicationDelay?: number;
+		animationLock?: number;
+		cooldown: number;
+		maxCharges?: number;
+		validateAttempt?: StatePredicate<WARState>;
+		onConfirm?: EffectFn<WARState>;
+		onApplication?: EffectFn<WARState>;
+		secondaryCooldown?: CooldownGroupProperies;
+	},
+): Ability<WARState> => {
+	return makeAbility(ShellJob.WAR, name, unlockLevel, cdName, {
+		...params,
+		onConfirm: params.onConfirm,
+		jobPotencyModifiers: (state) => {
+			const mods: PotencyModifier[] = [];
+			if (state.hasResourceAvailable(ResourceType.SurgingTempest)) {
+				mods.push(Modifiers.SurgingTempest);
+			}
+			return mods;
+		},
+	});
+};
 
 makeWeaponskill_WAR(WARSkillName.Tomahawk, 15, {
 	potency: 150,

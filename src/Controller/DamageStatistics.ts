@@ -8,7 +8,7 @@ import {
 	DamageStatsDoTTableEntry,
 	DamageStatsMainTableEntry,
 	SelectedStatisticsData,
-	DamageStatsDoTTableSummary
+	DamageStatsDoTTableSummary,
 } from "../Components/DamageStatistics";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
 
@@ -42,7 +42,8 @@ export const DOT_SKILLS: SkillName[] = [
 	// MCH
 	SkillName.Bioblaster,
 	// BRD
-	SkillName.CausticBite, SkillName.Stormbite,
+	SkillName.CausticBite,
+	SkillName.Stormbite,
 ];
 
 // source of truth
@@ -65,8 +66,10 @@ export const getTargetableDurationBetween = (startDisplayTime: number, endDispla
 };
 
 function isDoTNode(node: ActionNode) {
-	if (node.skillName === undefined) { return false }
-	return controller.game.dotSkills.includes(node.skillName)
+	if (node.skillName === undefined) {
+		return false;
+	}
+	return ctl.game.dotSkills.includes(node.skillName);
 }
 
 function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: ActionNode) {
@@ -90,7 +93,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: Actio
 		partyBuffPotency: 0,
 	};
 
-	entry.gap = node.getDotTimeGap(dotName)
+	entry.gap = node.getDotTimeGap(dotName);
 	entry.override = node.getDotOverrideAmount(dotName);
 	entry.baseMainPotency = mainPotency?.base ?? 0;
 	entry.calculationModifiers = mainPotency?.modifiers ?? [];
@@ -146,7 +149,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 		calculationModifiers: [],
 	};
 	if (node.type === ActionType.Skill && node.skillName) {
-		const mainPotency = node.getInitialPotency()
+		const mainPotency = node.getInitialPotency();
 		if (!mainPotency) {
 			// do nothing if the used ability does no damage
 		} else if (AFUISkills.has(node.skillName)) {
@@ -312,9 +315,9 @@ export function calculateSelectedStats(props: {
 }
 
 export interface DamageStatsDoTTrackingData {
-	tableRows: DamageStatsDoTTableEntry[],
-	summary: DamageStatsDoTTableSummary,
-	lastDoT?: ActionNode // for tracking DoT gap / override
+	tableRows: DamageStatsDoTTableEntry[];
+	summary: DamageStatsDoTTableSummary;
+	lastDoT?: ActionNode; // for tracking DoT gap / override
 }
 
 export function calculateDamageStats(props: {
@@ -457,9 +460,11 @@ export function calculateDamageStats(props: {
 				// If the on-hit potency has not been resolved (as is the case if we just
 				// cast higanbana and the ability has not yet hit), don't add an entry yet
 				node.getAllDotPotencies().forEach((potenciesArr, rscType) => {
-					if (potenciesArr.length === 0) { return }
+					if (potenciesArr.length === 0) {
+						return;
+					}
 
-					let dotTrackingData = dotTables.get(rscType)
+					let dotTrackingData = dotTables.get(rscType);
 					if (!dotTrackingData) {
 						dotTrackingData = {
 							tableRows: [],
@@ -469,15 +474,18 @@ export function calculateDamageStats(props: {
 								timeSinceLastDoTDropped: 0,
 								totalTicks: 0,
 								maxTicks: ctl.getMaxTicks(ctl.game.time),
-								dotCoverageTimeFraction: ctl.getDotCoverageTimeFraction(ctl.game.getDisplayTime(), rscType),
+								dotCoverageTimeFraction: ctl.getDotCoverageTimeFraction(
+									ctl.game.getDisplayTime(),
+									rscType,
+								),
 								theoreticalMaxTicks: 0,
 								totalPotencyWithoutPot: 0,
 								totalPotPotency: 0,
 								totalPartyBuffPotency: 0,
 							},
 							lastDoT: undefined,
-						}
-						dotTables.set(rscType, dotTrackingData)
+						};
+						dotTables.set(rscType, dotTrackingData);
 					}
 
 					let dotTableEntry = expandDoTNode(node, rscType, dotTrackingData.lastDoT);
@@ -486,7 +494,8 @@ export function calculateDamageStats(props: {
 					dotTrackingData.summary.cumulativeGap += dotTableEntry.gap;
 					dotTrackingData.summary.cumulativeOverride += dotTableEntry.override;
 					dotTrackingData.summary.totalTicks += dotTableEntry.numHitTicks;
-					dotTrackingData.summary.totalPotencyWithoutPot += dotTableEntry.potencyWithoutPot;
+					dotTrackingData.summary.totalPotencyWithoutPot +=
+						dotTableEntry.potencyWithoutPot;
 					dotTrackingData.summary.totalPotPotency += dotTableEntry.potPotency;
 					dotTrackingData.summary.totalPartyBuffPotency += dotTableEntry.partyBuffPotency;
 				});
@@ -502,13 +511,16 @@ export function calculateDamageStats(props: {
 	dotTables.forEach((dotTrackingData, dotName) => {
 		if (dotTrackingData.lastDoT) {
 			// last dot so far
-			
-			const applicationTime = dotTrackingData.lastDoT.applicationTime
-			console.assert(applicationTime, `DoT node at index ${dotTrackingData.lastDoT.getNodeIndex()} was not resolved`);
 
-			let lastDotDropTime = (applicationTime as number) + ctl.game.getStatusDuration(dotName)
+			const applicationTime = dotTrackingData.lastDoT.applicationTime;
+			console.assert(
+				applicationTime,
+				`DoT node at index ${dotTrackingData.lastDoT.getNodeIndex()} was not resolved`,
+			);
+
+			let lastDotDropTime = (applicationTime as number) + ctl.game.getStatusDuration(dotName);
 			let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
-	
+
 			let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
 			if (timeSinceLastDoTDropped > 0) {
 				dotTrackingData.summary.cumulativeGap += gap;
@@ -520,7 +532,7 @@ export function calculateDamageStats(props: {
 			dotTrackingData.summary.cumulativeGap = gap;
 			dotTrackingData.summary.timeSinceLastDoTDropped = gap;
 		}
-	})
+	});
 
 	mainTable.sort((a, b) => {
 		if (a.showPotency !== b.showPotency) {
@@ -554,6 +566,6 @@ export function calculateDamageStats(props: {
 		mainTable: mainTable,
 		mainTableSummary: mainTableSummary,
 		dotTables,
-		mode: mode
+		mode: mode,
 	};
 }

@@ -19,8 +19,10 @@ import {
 	makeResourceAbility,
 	makeSpell,
 	makeWeaponskill,
-	MOVEMENT_SKILL_ANIMATION_LOCK, NO_EFFECT,
-	ResourceCalculationFn, Skill,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
+	NO_EFFECT,
+	ResourceCalculationFn,
+	Skill,
 	Spell,
 	StatePredicate,
 	Weaponskill,
@@ -94,15 +96,15 @@ export class RPRState extends GameState {
 		this.registerRecurringEvents();
 	}
 
-    override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {        
-        if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
-            node.addBuff(BuffType.ArcaneCircle);	
-        }
-        
-        if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
-            node.addBuff(BuffType.DeathsDesign);
-        }
-    }
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
+			node.addBuff(BuffType.ArcaneCircle);
+		}
+
+		if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
+			node.addBuff(BuffType.DeathsDesign);
+		}
+	}
 
 	refreshDeathsDesign() {
 		const dd = this.resources.get(ResourceType.DeathsDesign);
@@ -570,25 +572,26 @@ const makeRPRWeaponskill = (
 	});
 };
 
-const makeRPRAbility = (name: RPRSkillName, unlockLevel: number, cdName: ResourceType, params: {
-    isPhysical?: boolean,
-    potency?: number | Array<[TraitName, number]>,
-    replaceIf?: ConditionalSkillReplace<RPRState>[],
-    highlightIf?: StatePredicate<RPRState>,
-    startOnHotbar?: boolean,
-    applicationDelay?: number,
-    animationLock?: number,
-    cooldown: number,
-    maxCharges?: number,
-    validateAttempt?: StatePredicate<RPRState>,
-    onConfirm?: EffectFn<RPRState>,
-    onApplication?: EffectFn<RPRState>,
-}): Ability<RPRState> => { 
-
-    const onConfirm = combineEffects(
-        baseOnConfirm(name),
-        params.onConfirm ?? NO_EFFECT,
-    );
+const makeRPRAbility = (
+	name: RPRSkillName,
+	unlockLevel: number,
+	cdName: ResourceType,
+	params: {
+		isPhysical?: boolean;
+		potency?: number | Array<[TraitName, number]>;
+		replaceIf?: ConditionalSkillReplace<RPRState>[];
+		highlightIf?: StatePredicate<RPRState>;
+		startOnHotbar?: boolean;
+		applicationDelay?: number;
+		animationLock?: number;
+		cooldown: number;
+		maxCharges?: number;
+		validateAttempt?: StatePredicate<RPRState>;
+		onConfirm?: EffectFn<RPRState>;
+		onApplication?: EffectFn<RPRState>;
+	},
+): Ability<RPRState> => {
+	const onConfirm = combineEffects(baseOnConfirm(name), params.onConfirm ?? NO_EFFECT);
 
 	const validateAttempt: StatePredicate<RPRState> = combinePredicatesAnd(
 		(state) =>
@@ -1082,44 +1085,50 @@ makeRPRWeaponskill(SkillName.Perfectio, 100, {
 });
 
 makeRPRAbility(SkillName.Regress, 74, ResourceType.cd_BloodStalk, {
-    cooldown: 1,
+	cooldown: 1,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
-    startOnHotbar: false,
-    highlightIf: (_state) => true,
-    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Threshold),
-    onConfirm: (state) => state.resources.get(ResourceType.Threshold).consume(1),
+	startOnHotbar: false,
+	highlightIf: (_state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Threshold),
+	onConfirm: (state) => state.resources.get(ResourceType.Threshold).consume(1),
 });
 
 makeRPRAbility(SkillName.HellsIngress, 20, ResourceType.cd_IngressEgress, {
-    replaceIf: [
-        {
-            condition: (state) => state.hasResourceAvailable(ResourceType.Threshold) && state.hasResourceAvailable(ResourceType.HellsIngressUsed),
-            newSkill: SkillName.Regress,
-        }
-    ],
-    cooldown: 20,
+	replaceIf: [
+		{
+			condition: (state) =>
+				state.hasResourceAvailable(ResourceType.Threshold) &&
+				state.hasResourceAvailable(ResourceType.HellsIngressUsed),
+			newSkill: SkillName.Regress,
+		},
+	],
+	cooldown: 20,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
-    onConfirm:(state) => {
-        state.resources.get(ResourceType.HellsIngressUsed).gain(1);
-        if (Traits.hasUnlocked(TraitName.Hellsgate, state.config.level)) state.setTimedResource(ResourceType.Threshold, 1);
-        state.setTimedResource(ResourceType.EnhancedHarpe, 1);
-    }
+	onConfirm: (state) => {
+		state.resources.get(ResourceType.HellsIngressUsed).gain(1);
+		if (Traits.hasUnlocked(TraitName.Hellsgate, state.config.level))
+			state.setTimedResource(ResourceType.Threshold, 1);
+		state.setTimedResource(ResourceType.EnhancedHarpe, 1);
+	},
 });
 
 makeRPRAbility(SkillName.HellsEgress, 20, ResourceType.cd_IngressEgress, {
-    replaceIf: [
-        {
-            condition: (state) => state.hasResourceAvailable(ResourceType.Threshold) && !state.hasResourceAvailable(ResourceType.HellsIngressUsed),
-            newSkill: SkillName.Regress,
-        }
-    ],
-    cooldown: 20,
+	replaceIf: [
+		{
+			condition: (state) =>
+				state.hasResourceAvailable(ResourceType.Threshold) &&
+				!state.hasResourceAvailable(ResourceType.HellsIngressUsed),
+			newSkill: SkillName.Regress,
+		},
+	],
+	cooldown: 20,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
-    onConfirm:(state) => {
-        state.tryConsumeResource(ResourceType.HellsIngressUsed);
-        if (Traits.hasUnlocked(TraitName.Hellsgate, state.config.level)) state.setTimedResource(ResourceType.Threshold, 1);
-        state.setTimedResource(ResourceType.EnhancedHarpe, 1);
-    }
+	onConfirm: (state) => {
+		state.tryConsumeResource(ResourceType.HellsIngressUsed);
+		if (Traits.hasUnlocked(TraitName.Hellsgate, state.config.level))
+			state.setTimedResource(ResourceType.Threshold, 1);
+		state.setTimedResource(ResourceType.EnhancedHarpe, 1);
+	},
 });
 
 makeRPRAbility(SkillName.ArcaneCrest, 40, ResourceType.cd_ArcaneCrest, {
@@ -1134,15 +1143,15 @@ makeRPRAbility(SkillName.ArcaneCrest, 40, ResourceType.cd_ArcaneCrest, {
 });
 
 makeRPRAbility(SkillName.ArcaneCrestPop, 40, ResourceType.cd_ArcaneCrestPop, {
-    cooldown: 1,
+	cooldown: 1,
 	animationLock: 0.01,
-    startOnHotbar: false,
-    onConfirm: (state) => {
-        state.resources.get(ResourceType.CrestOfTimeBorrowed).consume(1);
-        state.setTimedResource(ResourceType.CrestOfTimeReturned, 1);
-    },
-    validateAttempt: (state) => state.hasResourceAvailable(ResourceType.CrestOfTimeBorrowed),
-    highlightIf: (state) => state.hasResourceAvailable(ResourceType.CrestOfTimeBorrowed),
+	startOnHotbar: false,
+	onConfirm: (state) => {
+		state.resources.get(ResourceType.CrestOfTimeBorrowed).consume(1);
+		state.setTimedResource(ResourceType.CrestOfTimeReturned, 1);
+	},
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.CrestOfTimeBorrowed),
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.CrestOfTimeBorrowed),
 });
 
 makeRPRWeaponskill(SkillName.WhorlOfDeath, 35, {
