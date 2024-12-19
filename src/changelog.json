@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/19/24",
+		"changes": [
+			"[WAR] Adjusted animation lock of Primal Rend"
+		]
+	},
+	{
 		"date": "12/16/24",
 		"changes": [
 			"Limit breaks for all jobs!",
