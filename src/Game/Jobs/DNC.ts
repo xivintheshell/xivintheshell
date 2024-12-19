@@ -1,4 +1,3 @@
-import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { BuffType, ProcMode, ResourceType, SkillName, TraitName, WarningType } from "../Common";
@@ -30,7 +29,7 @@ const makeDNCResource = (
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
-	makeResource(ShellJob.DNC, rsc, maxValue, params ?? {});
+	makeResource('DNC', rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
@@ -176,7 +175,7 @@ export class DNCState extends GameState {
 	}
 
 	gainProc(proc: DNCResourceType) {
-		const duration = (getResourceInfo(ShellJob.DNC, proc) as ResourceInfo).maxTimeout;
+		const duration = (getResourceInfo('DNC', proc) as ResourceInfo).maxTimeout;
 		if (this.resources.get(proc).available(1)) {
 			if (proc === ResourceType.ThreefoldFanDance) {
 				controller.reportWarning(WarningType.FanThreeOverwrite);
@@ -259,7 +258,7 @@ export class DNCState extends GameState {
 		// Grant the new standard step bonus
 		this.resources.get(ResourceType.StandardBonus).gain(bonusLevel);
 		const duration = (
-			getResourceInfo(ShellJob.DNC, ResourceType.StandardFinish) as ResourceInfo
+			getResourceInfo('DNC', ResourceType.StandardFinish) as ResourceInfo
 		).maxTimeout;
 		this.enqueueResourceDrop(ResourceType.StandardBonus, duration, bonusLevel);
 
@@ -334,7 +333,7 @@ const makeGCD_DNC = (
 		params.onConfirm ?? NO_EFFECT,
 		(state) => state.processComboStatus(name),
 	);
-	return makeWeaponskill(ShellJob.DNC, name, unlockLevel, {
+	return makeWeaponskill('DNC', name, unlockLevel, {
 		...params,
 		onConfirm: onConfirm,
 		jobPotencyModifiers: (state) => {
@@ -342,12 +341,12 @@ const makeGCD_DNC = (
 			if (
 				params.combo &&
 				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
+				params.combo.resourceValue
 			) {
 				mods.push(
 					makeComboModifier(
 						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
+						getBasePotency(state, params.potency),
 					),
 				);
 			}
@@ -403,7 +402,7 @@ const makeAbility_DNC = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<DNCState> => {
-	return makeAbility(ShellJob.DNC, name, unlockLevel, cdName, {
+	return makeAbility('DNC', name, unlockLevel, cdName, {
 		...params,
 		onConfirm: params.onConfirm,
 		jobPotencyModifiers: (state) => {
@@ -453,7 +452,7 @@ const makeResourceAbility_DNC = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<DNCState> => {
-	return makeResourceAbility(ShellJob.DNC, name, unlockLevel, cdName, {
+	return makeResourceAbility('DNC', name, unlockLevel, cdName, {
 		...params,
 	});
 };
@@ -877,7 +876,7 @@ technicalFinishes.forEach((params) => {
 			}
 			state.resources.get(ResourceType.TechnicalBonus).gain(bonusLevel);
 			const duration = (
-				getResourceInfo(ShellJob.DNC, ResourceType.TechnicalFinish) as ResourceInfo
+				getResourceInfo('DNC', ResourceType.TechnicalFinish) as ResourceInfo
 			).maxTimeout;
 			state.enqueueResourceDrop(ResourceType.TechnicalBonus, duration, bonusLevel);
 
@@ -1060,7 +1059,7 @@ makeAbility_DNC(SkillName.Improvisation, 80, ResourceType.cd_Improvisation, {
 		state.resources.addResourceEvent({
 			rscType: ResourceType.Improvisation,
 			name: "improvisation timeout",
-			delay: (getResourceInfo(ShellJob.DNC, ResourceType.Improvisation) as ResourceInfo)
+			delay: (getResourceInfo('DNC', ResourceType.Improvisation) as ResourceInfo)
 				.maxTimeout,
 			fnOnRsc: (rsc) => {
 				rsc.consume(1);

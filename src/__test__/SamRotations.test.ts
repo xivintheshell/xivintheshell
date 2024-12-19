@@ -1,5 +1,4 @@
 import {
-	damageData,
 	rotationTestSetup,
 	rotationTestTeardown,
 	makeTestWithConfigFn,
@@ -8,18 +7,16 @@ import {
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
-import { ShellJob } from "../Controller/Common";
 import { PotencyModifierType } from "../Game/Potency";
 import { ResourceType, SkillName } from "../Game/Common";
 import { XIVMath } from "../Game/XIVMath";
 import { SAMState } from "../Game/Jobs/SAM";
-import { getResourceInfo, ResourceInfo } from "../Game/Resources";
 
 beforeEach(rotationTestSetup);
 
 afterEach(rotationTestTeardown);
 
-const testWithConfig = makeTestWithConfigFn(ShellJob.SAM);
+const testWithConfig = makeTestWithConfigFn("SAM");
 
 it("has correct GCD under fuka", () => {
 	testWithConfig({}, () => {

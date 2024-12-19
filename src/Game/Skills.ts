@@ -6,12 +6,12 @@ import {
 	SkillName,
 	TraitName,
 } from "./Common";
-import { ShellJob, ALL_JOBS } from "../Controller/Common";
 import { ActionNode } from "../Controller/Record";
 import { PlayerState, GameState } from "./GameState";
 import { Traits } from "./Traits";
 import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
 import { PotencyModifier } from "./Potency";
+import { ShellJob, ALL_JOBS } from "./Constants/Common";
 
 // all gapclosers have the same animation lock
 // from: https://nga.178.com/read.php?tid=21233094&rand=761
@@ -49,7 +49,7 @@ export type EffectFn<T> = (state: T, node: ActionNode) => void;
 export type PotencyModifierFn<T> = (state: Readonly<T>) => PotencyModifier[];
 
 // empty function
-export function NO_EFFECT<T extends PlayerState>(state: T, node: ActionNode) {}
+export function NO_EFFECT<T extends PlayerState>(state: T, node: ActionNode) { }
 
 /**
  * Create a new EffectFn that performs f1 followed by each function in fs.

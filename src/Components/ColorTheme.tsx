@@ -1,14 +1,15 @@
 import React from "react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
-import { getCachedValue, setCachedValue, ShellJob } from "../Controller/Common";
+import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
+import { ShellJob } from "../Game/Constants/Common";
 
 export type ColorTheme = "Light" | "Dark";
 
 let getCurrentColorTheme: () => ColorTheme = () => {
 	return "Light";
 };
-let setCurrentColorTheme: (colorTheme: ColorTheme) => void = (colorTheme) => {};
+let setCurrentColorTheme: (colorTheme: ColorTheme) => void = (colorTheme) => { };
 
 export const enum MarkerColor {
 	Red = "#f64141",
@@ -105,17 +106,9 @@ export type BRDResourceColors = {
 	radiantFinale: string;
 };
 
-export type JobAccentColors = {
-	[ShellJob.BLM]: string;
-	[ShellJob.PCT]: string;
-	[ShellJob.RDM]: string;
-	[ShellJob.DNC]: string;
-	[ShellJob.SAM]: string;
-	[ShellJob.MCH]: string;
-	[ShellJob.WAR]: string;
-	[ShellJob.RPR]: string;
-	[ShellJob.BRD]: string;
-};
+export type JobAccentColors = Partial<{
+	[key in ShellJob]: string;
+}>;
 
 export type ThemeColors = {
 	accent: string;
@@ -174,15 +167,15 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 		return {
 			accent: "mediumpurple",
 			jobAccents: {
-				[ShellJob.BLM]: "#9370db", // mediumpurple
-				[ShellJob.PCT]: "#e176c2",
-				[ShellJob.RDM]: "#ff0000", // TODO less red
-				[ShellJob.DNC]: "#e2b0af", // color ripped from xiva/fflogs
-				[ShellJob.SAM]: "#f59542",
-				[ShellJob.MCH]: "#6ee1d6",
-				[ShellJob.WAR]: "#b10b0b", // color picker'd on job stone
-				[ShellJob.RPR]: "#965a90",
-				[ShellJob.BRD]: "#91ba5e",
+				'BLM': "#9370db", // mediumpurple
+				'PCT': "#e176c2",
+				'RDM': "#ff0000", // TODO less red
+				'DNC': "#e2b0af", // color ripped from xiva/fflogs
+				'SAM': "#f59542",
+				'MCH': "#6ee1d6",
+				'WAR': "#b10b0b", // color picker'd on job stone
+				'RPR': "#965a90",
+				'BRD': "#91ba5e",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -301,15 +294,15 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 		return {
 			accent: "mediumpurple",
 			jobAccents: {
-				[ShellJob.BLM]: "#9370db", // mediumpurple
-				[ShellJob.PCT]: "#f485d6",
-				[ShellJob.RDM]: "#ff0000", // TODO less red
-				[ShellJob.DNC]: "#e2b0af", // color ripped from xiva/fflogs
-				[ShellJob.SAM]: "#f59542",
-				[ShellJob.MCH]: "#6ee1d6",
-				[ShellJob.WAR]: "#b10b0b", // color picker'd on job stone
-				[ShellJob.RPR]: "#965a90",
-				[ShellJob.BRD]: "#91ba5e",
+				'BLM': "#9370db", // mediumpurple
+				'PCT': "#f485d6",
+				'RDM': "#ff0000", // TODO less red
+				'DNC': "#e2b0af", // color ripped from xiva/fflogs
+				'SAM': "#f59542",
+				'MCH': "#6ee1d6",
+				'WAR': "#b10b0b", // color picker'd on job stone
+				'RPR': "#965a90",
+				'BRD': "#91ba5e",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -485,7 +478,7 @@ export class SelectColorTheme extends React.Component {
 		getCurrentColorTheme = () => {
 			return "Light";
 		};
-		setCurrentColorTheme = (colorTheme) => {};
+		setCurrentColorTheme = (colorTheme) => { };
 	}
 
 	render() {

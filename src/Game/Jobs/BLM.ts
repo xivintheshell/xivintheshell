@@ -2,7 +2,6 @@
 
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { ShellJob } from "../../Controller/Common";
 import {
 	Aspect,
 	BuffType,
@@ -44,7 +43,7 @@ import { localize } from "../../Components/Localization";
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
 const makeBLMResource = (rsc: ResourceType, maxValue: number, params?: { timeout: number }) => {
-	makeResource(ShellJob.BLM, rsc, maxValue, params ?? {});
+	makeResource('BLM', rsc, maxValue, params ?? {});
 };
 
 makeBLMResource(ResourceType.Polyglot, 3, { timeout: 30 });
@@ -169,7 +168,7 @@ export class BLMState extends GameState {
 
 	gainThunderhead() {
 		let thunderhead = this.resources.get(ResourceType.Thunderhead);
-		const duration = (getResourceInfo(ShellJob.BLM, ResourceType.Thunderhead) as ResourceInfo)
+		const duration = (getResourceInfo('BLM', ResourceType.Thunderhead) as ResourceInfo)
 			.maxTimeout;
 		if (thunderhead.available(1)) {
 			// already has a proc; reset its timer
@@ -419,7 +418,7 @@ const makeSpell_BLM = (
 		params.onConfirm ?? NO_EFFECT,
 	);
 	const onApplication: EffectFn<BLMState> = params.onApplication ?? NO_EFFECT;
-	return makeSpell(ShellJob.BLM, name, unlockLevel, {
+	return makeSpell('BLM', name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		highlightIf: params.highlightIf,
@@ -566,7 +565,7 @@ const makeAbility_BLM = (
 		onConfirm?: EffectFn<BLMState>;
 		onApplication?: EffectFn<BLMState>;
 	},
-): Ability<BLMState> => makeAbility(ShellJob.BLM, name, unlockLevel, cdName, params);
+): Ability<BLMState> => makeAbility('BLM', name, unlockLevel, cdName, params);
 
 // ref logs
 // https://www.fflogs.com/reports/KVgxmW9fC26qhNGt#fight=16&type=summary&view=events&source=6
@@ -601,7 +600,7 @@ makeSpell_BLM(SkillName.Blizzard, 1, {
 });
 
 const gainFirestarterProc = (state: PlayerState) => {
-	let duration = (getResourceInfo(ShellJob.BLM, ResourceType.Firestarter) as ResourceInfo)
+	let duration = (getResourceInfo('BLM', ResourceType.Firestarter) as ResourceInfo)
 		.maxTimeout;
 	if (state.resources.get(ResourceType.Firestarter).available(1)) {
 		state.resources.get(ResourceType.Firestarter).overrideTimer(state, duration);
@@ -720,7 +719,7 @@ makeSpell_BLM(SkillName.Thunder3, 45, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
-makeResourceAbility(ShellJob.BLM, SkillName.Manaward, 30, ResourceType.cd_Manaward, {
+makeResourceAbility('BLM', SkillName.Manaward, 30, ResourceType.cd_Manaward, {
 	rscType: ResourceType.Manaward,
 	applicationDelay: 1.114, // delayed
 	cooldown: 120,
@@ -809,7 +808,7 @@ makeSpell_BLM(SkillName.Flare, 50, {
 	},
 });
 
-makeResourceAbility(ShellJob.BLM, SkillName.LeyLines, 52, ResourceType.cd_LeyLines, {
+makeResourceAbility('BLM', SkillName.LeyLines, 52, ResourceType.cd_LeyLines, {
 	rscType: ResourceType.LeyLines,
 	applicationDelay: 0.49, // delayed
 	cooldown: 120,

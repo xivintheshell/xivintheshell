@@ -1,16 +1,16 @@
 import fs from "node:fs";
 
 import { controller } from "../Controller/Controller";
-import { ShellJob, TickMode } from "../Controller/Common";
+import { TickMode } from "../Controller/Common";
 import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
 import { PotencyModifierType } from "../Game/Potency";
-import { ResourceType, SkillName } from "../Game/Common";
+import { SkillName } from "../Game/Common";
 import {
 	DamageStatisticsData,
 	DamageStatisticsMode,
 	mockDamageStatUpdateFn,
 } from "../Components/DamageStatistics";
-import { getResourceInfo, ResourceInfo } from "../Game/Resources";
+import { ShellJob } from "../Game/Constants/Common";
 
 // If this configuration flag is set to `true`, then the fight record of each test run
 // will be exported locally to "$TEST_NAME.txt".

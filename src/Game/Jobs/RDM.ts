@@ -1,7 +1,6 @@
 // Skill and state declarations for RDM.
 
 import { controller } from "../../Controller/Controller";
-import { ShellJob } from "../../Controller/Common";
 import {
 	Aspect,
 	BuffType,
@@ -43,7 +42,7 @@ const makeRDMResource = (
 	maxValue: number,
 	params?: { timeout?: number; default?: number; warningOnTimeout?: WarningType },
 ) => {
-	makeResource(ShellJob.RDM, rsc, maxValue, params ?? {});
+	makeResource('RDM', rsc, maxValue, params ?? {});
 };
 
 makeRDMResource(ResourceType.WhiteMana, 100);
@@ -211,7 +210,7 @@ export class RDMState extends GameState {
 	}
 
 	gainVerproc(proc: typeof ResourceType.VerfireReady | typeof ResourceType.VerstoneReady) {
-		let duration = (getResourceInfo(ShellJob.RDM, proc) as ResourceInfo).maxTimeout;
+		let duration = (getResourceInfo('RDM', proc) as ResourceInfo).maxTimeout;
 		if (this.resources.get(proc).available(1)) {
 			this.resources.get(proc).overrideTimer(this, duration);
 		} else {
@@ -359,7 +358,7 @@ const makeSpell_RDM = (
 		(state) => state.processDualcastAndInstants(name),
 		(state) => state.processComboStatus(name),
 	);
-	return makeSpell(ShellJob.RDM, name, unlockLevel, {
+	return makeSpell('RDM', name, unlockLevel, {
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
 		replaceIf: params.replaceIf,
@@ -423,7 +422,7 @@ const makeMeleeGCD = (
 		(state) => state.processComboStatus(name),
 		params.onConfirm ?? NO_EFFECT,
 	);
-	return makeWeaponskill(ShellJob.RDM, name, unlockLevel, {
+	return makeWeaponskill('RDM', name, unlockLevel, {
 		...params,
 		aspect: isPhysical ? Aspect.Physical : undefined,
 		onConfirm: onConfirm,
@@ -432,12 +431,12 @@ const makeMeleeGCD = (
 			if (
 				params.combo &&
 				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
+				params.combo.resourceValue
 			) {
 				mods.push(
 					makeComboModifier(
 						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
+						getBasePotency(state, params.potency),
 					),
 				);
 			}
@@ -473,7 +472,7 @@ const makeAbility_RDM = (
 		onApplication?: EffectFn<RDMState>;
 	},
 ): Ability<RDMState> =>
-	makeAbility(ShellJob.RDM, name, unlockLevel, cdName, {
+	makeAbility('RDM', name, unlockLevel, cdName, {
 		aspect: params.isPhysical ? Aspect.Physical : undefined,
 		jobPotencyModifiers: (state) =>
 			!params.isPhysical && state.hasResourceAvailable(ResourceType.Embolden)
@@ -1006,7 +1005,7 @@ makeSpell_RDM(SkillName.Verraise, 64, {
 	basePotency: 0,
 });
 
-makeResourceAbility(ShellJob.RDM, SkillName.Embolden, 58, ResourceType.cd_Embolden, {
+makeResourceAbility('RDM', SkillName.Embolden, 58, ResourceType.cd_Embolden, {
 	replaceIf: [
 		{
 			newSkill: SkillName.ViceOfThorns,
@@ -1024,7 +1023,7 @@ makeResourceAbility(ShellJob.RDM, SkillName.Embolden, 58, ResourceType.cd_Embold
 	},
 });
 
-makeResourceAbility(ShellJob.RDM, SkillName.Manafication, 60, ResourceType.cd_Manafication, {
+makeResourceAbility('RDM', SkillName.Manafication, 60, ResourceType.cd_Manafication, {
 	replaceIf: [
 		{
 			newSkill: SkillName.Prefulgence,
@@ -1103,7 +1102,7 @@ makeAbility_RDM(SkillName.ContreSixte, 56, ResourceType.cd_ContreSixte, {
 	cooldown: 35, // manually adjusted for traits in constructor
 });
 
-makeResourceAbility(ShellJob.RDM, SkillName.Acceleration, 50, ResourceType.cd_Acceleration, {
+makeResourceAbility('RDM', SkillName.Acceleration, 50, ResourceType.cd_Acceleration, {
 	rscType: ResourceType.Acceleration,
 	applicationDelay: 0,
 	cooldown: 55,
@@ -1120,7 +1119,7 @@ makeResourceAbility(ShellJob.RDM, SkillName.Acceleration, 50, ResourceType.cd_Ac
 	},
 });
 
-makeResourceAbility(ShellJob.RDM, SkillName.MagickBarrier, 86, ResourceType.cd_MagickBarrier, {
+makeResourceAbility('RDM', SkillName.MagickBarrier, 86, ResourceType.cd_MagickBarrier, {
 	rscType: ResourceType.MagickBarrier,
 	applicationDelay: 0,
 	cooldown: 120,
