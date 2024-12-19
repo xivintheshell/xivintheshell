@@ -172,6 +172,13 @@ export class GameConfig {
 
 	// TODO - How can we make this easier to find for other job implementers? Or just not necessary...
 	getSkillAnimationLock(skillName: SkillName): number {
+		// Averaged on logged fight timelines taking the deltatime
+		// between Provoke and Primal Rend with this opener:
+		// IR > Heavy Swing > Primal Rend > Provoke
+		if (skillName === SkillName.PrimalRend) {
+			return 1.2;
+		}
+
 		// all gapclosers have the same animation lock
 		// from: https://nga.178.com/read.php?tid=21233094&rand=761
 		if (
