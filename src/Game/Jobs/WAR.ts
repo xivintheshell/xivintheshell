@@ -24,6 +24,7 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
 	SkillAutoReplace,
@@ -290,6 +291,7 @@ const makeAbility_WAR = (
 		highlightIf?: StatePredicate<WARState>;
 		startOnHotbar?: boolean;
 		applicationDelay?: number;
+		animationLock?: number;
 		cooldown: number;
 		maxCharges?: number;
 		validateAttempt?: StatePredicate<WARState>;
@@ -615,6 +617,7 @@ makeAbility_WAR(WARSkillName.Onslaught, 62, WARCooldownType.cd_Onslaught, {
 	applicationDelay: 0.63,
 	cooldown: 30,
 	maxCharges: 2, // set in constructor to be 3 with trait
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
 makeAbility_WAR(WARSkillName.Upheaval, 64, WARCooldownType.cd_Upheaval, {

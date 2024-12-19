@@ -1,16 +1,9 @@
 // Skill and state declarations for SAM.
 
 import { controller } from "../../Controller/Controller";
-import { ActionNode } from "../../Controller/Record";
 import { ShellJob } from "../../Controller/Common";
-import { Aspect, BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
-import {
-	makeComboModifier,
-	makePositionalModifier,
-	Modifiers,
-	Potency,
-	PotencyModifier,
-} from "../Potency";
+import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -20,17 +13,21 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
 	ResourceCalculationFn,
+	Skill,
 	SkillAutoReplace,
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
 import { Traits } from "../Traits";
-import { GameState } from "../GameState";
-import { makeResource, CoolDown, DoTBuff, Event, EventTag } from "../Resources";
+import { GameState, PlayerState } from "../GameState";
+import { makeResource, CoolDown, Event, EventTag } from "../Resources";
 import { GameConfig } from "../GameConfig";
+import { localizeResourceType } from "../../Components/Localization";
+import { ActionNode } from "../../Controller/Record";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 const makeSAMResource = (rsc: ResourceType, maxValue: number, params?: { timeout: number }) => {
@@ -79,12 +76,8 @@ makeSAMResource(ResourceType.KaeshiTracker, 4, { timeout: 30 });
 
 // === JOB GAUGE AND STATE ===
 export class SAMState extends GameState {
-	higanbanaTickOffset: number;
-
 	constructor(config: GameConfig) {
 		super(config);
-
-		this.higanbanaTickOffset = this.nonProcRng() * 3.0;
 
 		const gurenCd = Traits.hasUnlocked(TraitName.EnhancedHissatsu, this.config.level)
 			? 60
@@ -97,45 +90,32 @@ export class SAMState extends GameState {
 			new CoolDown(ResourceType.cd_SeneiGuren, gurenCd, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		this.registerRecurringEvents();
+		super.registerRecurringEvents([
+			{
+				reportName: localizeResourceType(ResourceType.HiganbanaDoT),
+				groupedDots: [
+					{
+						dotName: ResourceType.HiganbanaDoT,
+						appliedBy: [SkillName.Higanbana],
+					},
+				],
+			},
+		]);
 	}
 
-	override registerRecurringEvents() {
-		super.registerRecurringEvents();
-		// higanbana DoT tick
-		let recurringHiganbanaTick = () => {
-			let higanbana = this.resources.get(ResourceType.HiganbanaDoT) as DoTBuff;
-			if (higanbana.available(1)) {
-				// dot buff is effective
-				higanbana.tickCount++;
-				if (higanbana.node) {
-					// aka this buff is applied by a skill (and not just from an override)
-					// access potencies at index [1, 10] (since 0 is initial potency)
-					let p = higanbana.node.getPotencies()[higanbana.tickCount];
-					controller.resolvePotency(p);
-				}
-			}
-			// increment count
-			if (this.getDisplayTime() >= 0) {
-				controller.reportDotTick(this.time);
-			}
-			// queue the next tick
-			this.addEvent(
-				new Event("higanbana DoT tick", 3, () => {
-					recurringHiganbanaTick();
-				}),
-			);
-		};
-		let timeTillFirstHiganbanaTick =
-			this.config.timeTillFirstManaTick + this.higanbanaTickOffset;
-		while (timeTillFirstHiganbanaTick > 3) timeTillFirstHiganbanaTick -= 3;
-		this.addEvent(
-			new Event(
-				"initial higanbana DoT tick",
-				timeTillFirstHiganbanaTick,
-				recurringHiganbanaTick,
-			),
-		);
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.EnhancedEnpi) && skill.name === SkillName.Enpi) {
+			node.addBuff(BuffType.EnhancedEnpi);
+		}
+		if (this.hasResourceAvailable(ResourceType.Fugetsu)) {
+			node.addBuff(BuffType.Fugetsu);
+		}
+	}
+
+	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.Fuka) && skill.cdName === ResourceType.cd_GCD) {
+			node.addBuff(BuffType.Fuka);
+		}
 	}
 
 	getFugetsuModifier(): PotencyModifier {
@@ -380,6 +360,7 @@ const makeAbility_SAM = (
 		startOnHotbar?: boolean;
 		highlightIf?: StatePredicate<SAMState>;
 		applicationDelay?: number;
+		animationLock?: number;
 		potency?: number | Array<[TraitName, number]>;
 		jobPotencyModifiers?: PotencyModifierFn<SAMState>;
 		cooldown: number;
@@ -714,78 +695,28 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 	applicationDelay: 0.62,
 	validateAttempt: banaCondition.condition,
 	onConfirm: (state, node) => {
-		// Copied from BLM addThunder Potencies
-		const mods: PotencyModifier[] = [];
-		if (state.hasResourceAvailable(ResourceType.Tincture)) {
-			mods.push(Modifiers.Tincture);
-		}
+		const modifiers: PotencyModifier[] = [];
 		if (state.hasResourceAvailable(ResourceType.Fugetsu)) {
-			mods.push(state.getFugetsuModifier());
+			modifiers.push(state.getFugetsuModifier());
 		}
-		const snapshotTime = state.getDisplayTime();
-		// initial potency
-		let pInitial = new Potency({
-			config: controller.record.config ?? controller.gameConfig,
-			sourceTime: state.getDisplayTime(),
-			sourceSkill: SkillName.Higanbana,
-			aspect: Aspect.Other,
-			basePotency: 200,
-			snapshotTime: snapshotTime,
-			description: "",
-		});
-		pInitial.modifiers = mods;
-		node.addPotency(pInitial);
-		// tick potencies
-		const ticks = 20;
+
 		const tickPotency = Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level)
 			? 50
 			: 45;
-		for (let i = 0; i < ticks; i++) {
-			let pDot = new Potency({
-				config: controller.record.config ?? controller.gameConfig,
-				sourceTime: state.getDisplayTime(),
-				sourceSkill: SkillName.Higanbana,
-				aspect: Aspect.Other,
-				basePotency: state.config.adjustedDoTPotency(tickPotency, "sks"),
-				snapshotTime: snapshotTime,
-				description: "DoT " + (i + 1) + `/${ticks}`,
-			});
-			pDot.modifiers = mods;
-			node.addPotency(pDot);
-		}
-		// tincture
-		if (state.hasResourceAvailable(ResourceType.Tincture)) {
-			node.addBuff(BuffType.Tincture);
-		}
+
+		state.addDoTPotencies({
+			node,
+			dotName: ResourceType.HiganbanaDoT,
+			skillName: SkillName.Higanbana,
+			tickPotency,
+			speedStat: "sks",
+			modifiers,
+		});
 		state.consumeAllSen();
 		state.gainMeditation();
 		// bana does not reset your tsubame status
 	},
-	onApplication: (state, node) => {
-		// resolve the on-hit potency element (always the first of the node)
-		controller.resolvePotency(node.getPotencies()[0]);
-		const bana = state.resources.get(ResourceType.HiganbanaDoT) as DoTBuff;
-		const duration = 60;
-		if (bana.available(1)) {
-			console.assert(bana.node);
-			(bana.node as ActionNode).removeUnresolvedPotencies();
-			bana.overrideTimer(state, duration);
-		} else {
-			bana.gain(1);
-			controller.reportDotStart(state.getDisplayTime());
-			state.resources.addResourceEvent({
-				rscType: ResourceType.HiganbanaDoT,
-				name: "drop higanbana DoT",
-				delay: duration,
-				fnOnRsc: (rsc) => {
-					rsc.consume(1);
-					controller.reportDotDrop(state.getDisplayTime());
-				},
-			});
-		}
-		bana.node = node;
-		bana.tickCount = 0;
-	},
+	onApplication: (state, node) => state.applyDoT(ResourceType.HiganbanaDoT, node),
 });
 
 const iaiConfirm = (kaeshiValue: number) => (state: SAMState) => {
@@ -1025,6 +956,7 @@ makeAbility_SAM(SkillName.Kyuten, 62, ResourceType.cd_Kyuten, {
 
 makeAbility_SAM(SkillName.Gyoten, 54, ResourceType.cd_Gyoten, {
 	cooldown: 5,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	potency: 100,
 	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(10),
 	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(10),
@@ -1033,6 +965,7 @@ makeAbility_SAM(SkillName.Gyoten, 54, ResourceType.cd_Gyoten, {
 
 makeAbility_SAM(SkillName.Yaten, 56, ResourceType.cd_Yaten, {
 	cooldown: 10,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	potency: 100,
 	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(10),
 	onConfirm: (state) => {
@@ -1114,6 +1047,7 @@ makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_Third
 makeAbility_SAM(SkillName.ThirdEyePop, 6, ResourceType.cd_ThirdEyePop, {
 	startOnHotbar: false,
 	applicationDelay: 0,
+	animationLock: 0.01,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ThirdEye),
 	onConfirm: (state) => {
@@ -1126,6 +1060,7 @@ makeAbility_SAM(SkillName.ThirdEyePop, 6, ResourceType.cd_ThirdEyePop, {
 makeAbility_SAM(SkillName.TengentsuPop, 82, ResourceType.cd_ThirdEyePop, {
 	startOnHotbar: false,
 	applicationDelay: 0,
+	animationLock: 0.01,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Tengentsu),
 	onConfirm: (state) => {

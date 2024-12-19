@@ -54,6 +54,13 @@ import {
 	WARTraitList,
 	WARTraitName,
 } from "./Constants/WAR";
+import {
+	BRDSkillName,
+	BRDResourceType,
+	BRDCooldownType,
+	BRDTraitList,
+	BRDTraitName,
+} from "./Constants/BRD";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -167,6 +174,7 @@ export const SkillName = {
 	...MCHSkillName,
 	...RPRSkillName,
 	...WARSkillName,
+	...BRDSkillName,
 	...LimitBreakSkillName,
 	...GeneralSkillName,
 };
@@ -182,7 +190,8 @@ export type SkillName =
 	| SAMSkillName
 	| MCHSkillName
 	| RPRSkillName
-	| WARSkillName;
+	| WARSkillName
+	| BRDSkillName;
 
 export const LIMIT_BREAKS = Object.values(LimitBreakSkillName) as SkillName[];
 
@@ -254,11 +263,13 @@ export enum BuffType {
 	RadiantFinale1 = "Radiant Finale (1)",
 	RadiantFinale2 = "Radiant Finale (2)",
 	RadiantFinale3 = "Radiant Finale (3)",
+	Barrage = "Barrage",
 	SearingLight = "Searing Light",
 	StandardFinish = "Standard Finish",
 	StarryMuse = "Starry Muse",
 	TechnicalFinish = "Technical Finish",
 	WanderersMinuet = "The Wanderer's Minuet",
+	RagingStrikes = "Raging Strikes",
 
 	DeathsDesign = "Death's Design",
 }
@@ -359,6 +370,7 @@ const CooldownType = {
 	...MCHCooldownType,
 	...RPRCooldownType,
 	...WARCooldownType,
+	...BRDCooldownType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -371,7 +383,8 @@ type CooldownType =
 	| SAMCooldownType
 	| MCHCooldownType
 	| RPRCooldownType
-	| WARCooldownType;
+	| WARCooldownType
+	| BRDCooldownType;
 
 export const ResourceType = {
 	...CooldownType,
@@ -385,6 +398,7 @@ export const ResourceType = {
 	...MCHResourceType,
 	...RPRResourceType,
 	...WARResourceType,
+	...BRDResourceType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -399,7 +413,8 @@ export type ResourceType =
 	| SAMResourceType
 	| MCHResourceType
 	| RPRResourceType
-	| WARResourceType;
+	| WARResourceType
+	| BRDResourceType;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",
@@ -432,6 +447,9 @@ export const enum WarningType {
 	BeastGaugeOvercap = "Beast Gauge overcap",
 	InnerReleaseDrop = "Inner Release expired",
 	NascentChaosDrop = "Nascent Chaos expired",
+
+	SoulVoiceOvercap = "soul voice overcap",
+	CodaOvercap = "coda overcap",
 }
 
 export enum ReservedTraitName {
@@ -480,6 +498,7 @@ export const TraitName = {
 	...MCHTraitName, // 6000-6999
 	...RPRTraitName, // 7000-7999
 	...WARTraitName, // 8000-8999
+	...BRDTraitName, // 9000-9999
 	...ReservedTraitName, // 0, for now
 };
 
@@ -494,6 +513,7 @@ export type TraitName =
 	| MCHTraitName
 	| RPRTraitName
 	| WARTraitName
+	| BRDTraitName
 	| ReservedTraitName;
 
 export const TraitList: Array<[TraitName, number]> = [
@@ -506,4 +526,5 @@ export const TraitList: Array<[TraitName, number]> = [
 	...MCHTraitList,
 	...RPRTraitList,
 	...WARTraitList,
+	...BRDTraitList,
 ];
