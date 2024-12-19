@@ -40,7 +40,7 @@ const resetDamageData = () => {
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
 		},
-        dotTables: new Map(),
+		dotTables: new Map(),
 		mode: DamageStatisticsMode.Normal,
 	};
 };

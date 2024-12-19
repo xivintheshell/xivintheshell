@@ -2,7 +2,15 @@
 
 import { controller } from "../../Controller/Controller";
 import { ShellJob } from "../../Controller/Common";
-import { Aspect, BuffType, ProcMode, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import {
+	Aspect,
+	BuffType,
+	ProcMode,
+	ResourceType,
+	SkillName,
+	TraitName,
+	WarningType,
+} from "../Common";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -126,14 +134,17 @@ export class RDMState extends GameState {
 		this.registerRecurringEvents();
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {		
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
 		if (this.hasResourceAvailable(ResourceType.Embolden) && skill.aspect !== Aspect.Physical) {
 			node.addBuff(BuffType.Embolden);
 		}
 		if (this.hasResourceAvailable(ResourceType.Manafication)) {
 			node.addBuff(BuffType.Manafication);
 		}
-		if (skill.name === SkillName.Impact && this.hasResourceAvailable(ResourceType.Acceleration)) {
+		if (
+			skill.name === SkillName.Impact &&
+			this.hasResourceAvailable(ResourceType.Acceleration)
+		) {
 			node.addBuff(BuffType.Acceleration);
 		}
 	}

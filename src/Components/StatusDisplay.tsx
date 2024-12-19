@@ -89,25 +89,25 @@ export interface SenCounterProps {
 }
 
 export interface CodaCounterProps {
-	kind: "coda",
-	name: ContentNode,
-	hasWanderers: boolean,
-	hasMages: boolean,
-	hasArmys: boolean,
-	wanderersColor: string,
-	magesColor: string,
-	armysColor: string,
+	kind: "coda";
+	name: ContentNode;
+	hasWanderers: boolean;
+	hasMages: boolean;
+	hasArmys: boolean;
+	wanderersColor: string;
+	magesColor: string;
+	armysColor: string;
 }
 
 export interface CodaCounterProps {
-	kind: "coda",
-	name: ContentNode,
-	hasWanderers: boolean,
-	hasMages: boolean,
-	hasArmys: boolean,
-	wanderersColor: string,
-	magesColor: string,
-	armysColor: string,
+	kind: "coda";
+	name: ContentNode;
+	hasWanderers: boolean;
+	hasMages: boolean;
+	hasArmys: boolean;
+	wanderersColor: string;
+	magesColor: string;
+	armysColor: string;
 }
 
 export interface ResourceTextProps {
@@ -118,13 +118,13 @@ export interface ResourceTextProps {
 }
 
 export type ResourceDisplayProps =
-	ResourceBarProps |
-	ResourceCounterProps |
-	PaintGaugeCounterProps |
-	DanceCounterProps |
-	SenCounterProps |
-	CodaCounterProps |
-	ResourceTextProps;
+	| ResourceBarProps
+	| ResourceCounterProps
+	| PaintGaugeCounterProps
+	| DanceCounterProps
+	| SenCounterProps
+	| CodaCounterProps
+	| ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
 export type StatusViewProps = {
@@ -592,11 +592,17 @@ export function ResourcesDisplay(props: {
 					})}
 				/>;
 				return <ResourceCounter
-					name={<>{props.name} {help}</>}
+					name={
+						<>
+							{props.name} {help}
+						</>
+					}
 					containerType={"circle"}
-					items={codaList.map(item => { return {
-						color: item.present ? item.color : undefined
-					}})}
+					items={codaList.map((item) => {
+						return {
+							color: item.present ? item.color : undefined,
+						};
+					})}
 					key={"resourceDisplay" + i}
 				/>;
 			}

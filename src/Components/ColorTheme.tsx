@@ -93,29 +93,29 @@ export type WARResourceColors = {
 };
 
 export type BRDResourceColors = {
-	soulVoice: string,
-	pitchPerfect: string,
-	repertoire: string,
-	wanderersCoda: string,
-	magesCoda: string,
-	armysCoda: string,
-	ragingStrikes: string,
-	barrage: string,
-	battleVoice: string,
-	radiantFinale: string
-}
+	soulVoice: string;
+	pitchPerfect: string;
+	repertoire: string;
+	wanderersCoda: string;
+	magesCoda: string;
+	armysCoda: string;
+	ragingStrikes: string;
+	barrage: string;
+	battleVoice: string;
+	radiantFinale: string;
+};
 
 export type JobAccentColors = {
-	[ShellJob.BLM]: string,
-	[ShellJob.PCT]: string,
-	[ShellJob.RDM]: string,
-	[ShellJob.DNC]: string,
-	[ShellJob.SAM]: string,
-	[ShellJob.MCH]: string,
-	[ShellJob.WAR]: string,
-	[ShellJob.RPR]: string,
-	[ShellJob.BRD]: string,
-}
+	[ShellJob.BLM]: string;
+	[ShellJob.PCT]: string;
+	[ShellJob.RDM]: string;
+	[ShellJob.DNC]: string;
+	[ShellJob.SAM]: string;
+	[ShellJob.MCH]: string;
+	[ShellJob.WAR]: string;
+	[ShellJob.RPR]: string;
+	[ShellJob.BRD]: string;
+};
 
 export type ThemeColors = {
 	accent: string;
@@ -268,8 +268,8 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 			},
 			brd: {
 				soulVoice: "#5DBD99",
-				pitchPerfect: 'white',
-				repertoire: 'white',
+				pitchPerfect: "white",
+				repertoire: "white",
 				wanderersCoda: "#add549",
 				magesCoda: "#ffbcf8",
 				armysCoda: "#eb9b5f",
@@ -395,8 +395,8 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 			},
 			brd: {
 				soulVoice: "#5DBD99",
-				pitchPerfect: 'black',
-				repertoire: 'black',
+				pitchPerfect: "black",
+				repertoire: "black",
 				wanderersCoda: "#add549",
 				magesCoda: "#ffbcf8",
 				armysCoda: "#eb9b5f",

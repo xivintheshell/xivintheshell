@@ -68,11 +68,7 @@ export const MELEE_JOBS: ShellJob[] = [
 	ShellJob.RPR,
 	//ShellJob.VPR
 ];
-export const PHYSICAL_RANGED_JOBS: ShellJob[] = [
-	ShellJob.BRD, 
-	ShellJob.MCH, 
-	ShellJob.DNC
-];
+export const PHYSICAL_RANGED_JOBS: ShellJob[] = [ShellJob.BRD, ShellJob.MCH, ShellJob.DNC];
 export const CASTER_JOBS: ShellJob[] = [
 	ShellJob.BLM,
 	//ShellJob.SMN,

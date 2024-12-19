@@ -444,32 +444,38 @@ function drawDamageMarks(
 		});
 		// hover text
 		let time = "[" + dm.displayTime.toFixed(3) + "] ";
-		let untargetableStr = localize({en: "Untargetable", zh: "不可选中"}) as string;
+		let untargetableStr = localize({ en: "Untargetable", zh: "不可选中" }) as string;
 		const info: string[] = [];
 		let buffImages: Array<HTMLImageElement | undefined> = [];
 		dm.damageInfos.forEach((damageInfo) => {
-			let sourceStr = damageInfo.sourceDesc.replace("{skill}", localizeSkillName(damageInfo.sourceSkill));
+			let sourceStr = damageInfo.sourceDesc.replace(
+				"{skill}",
+				localizeSkillName(damageInfo.sourceSkill),
+			);
 			if (untargetable) {
-				info.push((0).toFixed(3) + " (" + sourceStr + ")")
+				info.push((0).toFixed(3) + " (" + sourceStr + ")");
 			} else if (LIMIT_BREAKS.includes(damageInfo.sourceSkill)) {
-				const lbStr = localize({en: "LB"}) as string
-				info.push(lbStr + " (" + sourceStr + ")")
+				const lbStr = localize({ en: "LB" }) as string;
+				info.push(lbStr + " (" + sourceStr + ")");
 			} else {
-				const potencyAmount = damageInfo.potency.getAmount({tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier, includePartyBuffs: true});
-				info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")")
+				const potencyAmount = damageInfo.potency.getAmount({
+					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
+					includePartyBuffs: true,
+				});
+				info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")");
 				if (pot) buffImages.push(buffIconImages.get(BuffType.Tincture));
-	
-				damageInfo.potency.getPartyBuffs().forEach(desc => {
+
+				damageInfo.potency.getPartyBuffs().forEach((desc) => {
 					const buffImage = buffIconImages.get(desc);
 					if (!buffImages.includes(buffImage)) {
 						buffImages.push();
 					}
 				});
 			}
-		})
+		});
 
 		testInteraction(
-			{x: x-3, y: timelineOriginY, w: 6, h: 6},
+			{ x: x - 3, y: timelineOriginY, w: 6, h: 6 },
 			untargetable ? [time, ...info, untargetableStr] : [time, ...info],
 			undefined,
 			undefined,
@@ -534,15 +540,15 @@ function drawSkills(
 		[BuffType.EnhancedEnpi, { color: g_colors.rdm.accelBuff, showImage: true }],
 		[BuffType.ArcaneCircle, { color: g_colors.rpr.arcaneCircle, showImage: true }],
 		[BuffType.DeathsDesign, { color: g_colors.rpr.deathsDesign, showImage: true }],
-		[BuffType.WanderersMinuet, {color: g_colors.brd.wanderersCoda, showImage: true}],
-		[BuffType.MagesBallad, {color: g_colors.brd.magesCoda, showImage: true}],
-		[BuffType.ArmysPaeon, {color: g_colors.brd.armysCoda, showImage: true}],
-		[BuffType.RagingStrikes, {color: MarkerColor.Red, showImage: true}],
-		[BuffType.Barrage, {color: MarkerColor.Yellow, showImage: true}],
-		[BuffType.BattleVoice, {color: g_colors.timeline.buffCover, showImage: true}],
-		[BuffType.RadiantFinale1, {color: g_colors.timeline.buffCover, showImage: true}],
-		[BuffType.RadiantFinale2, {color: g_colors.timeline.buffCover, showImage: true}],
-		[BuffType.RadiantFinale3, {color: g_colors.timeline.buffCover, showImage: true}],
+		[BuffType.WanderersMinuet, { color: g_colors.brd.wanderersCoda, showImage: true }],
+		[BuffType.MagesBallad, { color: g_colors.brd.magesCoda, showImage: true }],
+		[BuffType.ArmysPaeon, { color: g_colors.brd.armysCoda, showImage: true }],
+		[BuffType.RagingStrikes, { color: MarkerColor.Red, showImage: true }],
+		[BuffType.Barrage, { color: MarkerColor.Yellow, showImage: true }],
+		[BuffType.BattleVoice, { color: g_colors.timeline.buffCover, showImage: true }],
+		[BuffType.RadiantFinale1, { color: g_colors.timeline.buffCover, showImage: true }],
+		[BuffType.RadiantFinale2, { color: g_colors.timeline.buffCover, showImage: true }],
+		[BuffType.RadiantFinale3, { color: g_colors.timeline.buffCover, showImage: true }],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();
