@@ -25,7 +25,6 @@ import {
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
-import { ShellJob } from "../Controller/Common";
 import { PotencyModifierType } from "../Game/Potency";
 import { ResourceType, SkillName } from "../Game/Common";
 import { BLMState } from "../Game/Jobs/BLM";
@@ -35,7 +34,7 @@ beforeEach(rotationTestSetup);
 
 afterEach(rotationTestTeardown);
 
-const testWithConfig = makeTestWithConfigFn(ShellJob.BLM);
+const testWithConfig = makeTestWithConfigFn("BLM");
 
 const checkEnochian = () => (controller.game as BLMState).hasEnochian();
 
@@ -478,7 +477,7 @@ it(
 		const ht2ApplicationDelay = state.skillsList.get(SkillName.HighThunder2).applicationDelay;
 		const ht2ApplicationTime = b3CastTime + 2 * gcdRecastTime + ht2ApplicationDelay;
 		const expectedOverride =
-			(getResourceInfo(ShellJob.BLM, ResourceType.HighThunder) as ResourceInfo).maxTimeout -
+			(getResourceInfo("BLM", ResourceType.HighThunder) as ResourceInfo).maxTimeout -
 			(ht2ApplicationTime - htApplicationTime);
 		// The override amount should be applied to the overriding DoT, not the overridden one
 		// controller time can be inexact due to floating point nonsense, so just expect it to be close

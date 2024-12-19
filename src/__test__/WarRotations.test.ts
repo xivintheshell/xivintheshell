@@ -1,5 +1,4 @@
 import {
-	damageData,
 	rotationTestSetup,
 	rotationTestTeardown,
 	makeTestWithConfigFn,
@@ -8,17 +7,15 @@ import {
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
-import { ShellJob } from "../Controller/Common";
 import { PotencyModifierType } from "../Game/Potency";
 import { Debug, ResourceType, SkillName } from "../Game/Common";
 import { WARState } from "../Game/Jobs/WAR";
-import { getResourceInfo, ResourceInfo } from "../Game/Resources";
 
 beforeEach(rotationTestSetup);
 
 afterEach(rotationTestTeardown);
 
-const testWithConfig = makeTestWithConfigFn(ShellJob.WAR);
+const testWithConfig = makeTestWithConfigFn("WAR");
 
 it(
 	"simulates 7.05 standard opener correctly",
@@ -168,7 +165,7 @@ it(
 	testWithConfig({}, () => {
 		[SkillName.Overpower, SkillName.Onslaught, SkillName.MythrilTempest].forEach(applySkill);
 		const state = controller.game as WARState;
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest));
+		expect(state.hasResourceAvailable(ResourceType.SurgingTempest)).toBe(true);
 		// Mythril Tempest gives about 30.45 seconds of Surging Tempest immediately
 		expect(state.resources.timeTillReady(ResourceType.SurgingTempest)).toBeGreaterThan(30);
 		expect(state.resources.timeTillReady(ResourceType.SurgingTempest)).toBeLessThan(31);
@@ -179,13 +176,13 @@ it(
 		controller.step(27.7);
 		applySkill(SkillName.MythrilTempest);
 
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest));
+		expect(state.hasResourceAvailable(ResourceType.SurgingTempest)).toBe(true);
 		expect(state.resources.timeTillReady(ResourceType.SurgingTempest)).toBeLessThan(1);
 		// Surging Tempest should drop before being re-applied after the application delay on Mythril Tempest
 		controller.step(state.resources.timeTillReady(ResourceType.SurgingTempest) + Debug.epsilon);
-		expect(!state.hasResourceAvailable(ResourceType.SurgingTempest));
+		expect(state.hasResourceAvailable(ResourceType.SurgingTempest)).toBe(false);
 		applySkill(SkillName.Onslaught);
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest));
+		expect(state.hasResourceAvailable(ResourceType.SurgingTempest)).toBe(true);
 		// wait for damage application
 		controller.step(1);
 

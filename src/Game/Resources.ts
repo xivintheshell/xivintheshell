@@ -1,9 +1,9 @@
 import { Debug, ResourceType, WarningType } from "./Common";
-import { ShellJob, ALL_JOBS, MELEE_JOBS } from "../Controller/Common";
 import { GameState } from "./GameState";
 import { ActionNode } from "../Controller/Record";
 import { BLMState } from "./Jobs/BLM";
 import { controller } from "../Controller/Controller";
+import { ShellJob, ALL_JOBS, MELEE_JOBS } from "./Constants/Common";
 
 export enum EventTag {
 	ManaGain,

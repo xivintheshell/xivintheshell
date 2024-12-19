@@ -1,7 +1,6 @@
 // Skill and state declarations for PCT.
 
 import { controller } from "../../Controller/Controller";
-import { ShellJob } from "../../Controller/Common";
 import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { Modifiers, PotencyModifier } from "../Potency";
 import {
@@ -32,7 +31,7 @@ const makePCTResource = (
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
-	makeResource(ShellJob.PCT, rsc, maxValue, params ?? {});
+	makeResource('PCT', rsc, maxValue, params ?? {});
 };
 
 makePCTResource(ResourceType.Portrait, 2);
@@ -165,7 +164,7 @@ export class PCTState extends GameState {
 	// (for now ignore edge case of buff falling off mid-cast)
 	cycleAetherhues() {
 		const aetherhues = this.resources.get(ResourceType.Aetherhues);
-		const dropTime = (getResourceInfo(ShellJob.PCT, ResourceType.Aetherhues) as ResourceInfo)
+		const dropTime = (getResourceInfo('PCT', ResourceType.Aetherhues) as ResourceInfo)
 			.maxTimeout;
 		if (aetherhues.available(2) && aetherhues.pendingChange) {
 			// reset timer and reset value to 0
@@ -258,7 +257,7 @@ const makeSpell_PCT = (
 			state.tryConsumeResource(ResourceType.Swiftcast);
 	}, params.onConfirm ?? NO_EFFECT);
 	const onApplication: EffectFn<PCTState> = params.onApplication ?? NO_EFFECT;
-	return makeSpell(ShellJob.PCT, name, unlockLevel, {
+	return makeSpell('PCT', name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		highlightIf: params.highlightIf,
@@ -314,7 +313,7 @@ const makeAbility_PCT = (
 		onApplication?: EffectFn<PCTState>;
 	},
 ): Ability<PCTState> =>
-	makeAbility(ShellJob.PCT, name, unlockLevel, cdName, {
+	makeAbility('PCT', name, unlockLevel, cdName, {
 		jobPotencyModifiers: (state) =>
 			state.hasResourceAvailable(ResourceType.StarryMuse) ? [Modifiers.Starry] : [],
 		...params,
@@ -874,31 +873,31 @@ const livingConditions = [
 const livingMuseInfos: Array<
 	[SkillName, number, number | Array<[TraitName, number]>, number, StatePredicate<PCTState>]
 > = [
-	// living muse can never itself be cast
-	[SkillName.LivingMuse, 30, 0, 0, (state) => false],
-	[
-		SkillName.PomMuse,
-		30,
+		// living muse can never itself be cast
+		[SkillName.LivingMuse, 30, 0, 0, (state) => false],
 		[
-			[TraitName.Never, 1000],
-			[TraitName.PictomancyMasteryIII, 1100],
+			SkillName.PomMuse,
+			30,
+			[
+				[TraitName.Never, 1000],
+				[TraitName.PictomancyMasteryIII, 1100],
+			],
+			0.62,
+			pomMuseCondition.condition,
 		],
-		0.62,
-		pomMuseCondition.condition,
-	],
-	[
-		SkillName.WingedMuse,
-		30,
 		[
-			[TraitName.Never, 1000],
-			[TraitName.PictomancyMasteryIII, 1100],
+			SkillName.WingedMuse,
+			30,
+			[
+				[TraitName.Never, 1000],
+				[TraitName.PictomancyMasteryIII, 1100],
+			],
+			0.98,
+			wingedMuseCondition.condition,
 		],
-		0.98,
-		wingedMuseCondition.condition,
-	],
-	[SkillName.ClawedMuse, 96, 1100, 0.98, clawedMuseCondition.condition],
-	[SkillName.FangedMuse, 96, 1100, 1.16, fangedMuseCondition.condition],
-];
+		[SkillName.ClawedMuse, 96, 1100, 0.98, clawedMuseCondition.condition],
+		[SkillName.FangedMuse, 96, 1100, 1.16, fangedMuseCondition.condition],
+	];
 livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAttempt], i) =>
 	makeAbility_PCT(name, level, ResourceType.cd_LivingMuse, {
 		replaceIf: livingConditions.slice(0, i).concat(livingConditions.slice(i + 1)),
@@ -1116,7 +1115,7 @@ makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
 			state.resources.get(ResourceType.Inspiration).gain(1);
 
 			const hpDuration = (
-				getResourceInfo(ShellJob.PCT, ResourceType.Hyperphantasia) as ResourceInfo
+				getResourceInfo('PCT', ResourceType.Hyperphantasia) as ResourceInfo
 			).maxTimeout;
 			state.enqueueResourceDrop(ResourceType.Hyperphantasia, hpDuration);
 			state.enqueueResourceDrop(ResourceType.Inspiration, hpDuration);
@@ -1132,7 +1131,7 @@ makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.LandscapeCanvas),
 });
 
-makeResourceAbility(ShellJob.PCT, SkillName.TemperaCoat, 10, ResourceType.cd_TemperaCoat, {
+makeResourceAbility('PCT', SkillName.TemperaCoat, 10, ResourceType.cd_TemperaCoat, {
 	rscType: ResourceType.TemperaCoat,
 	replaceIf: [
 		{
@@ -1220,7 +1219,7 @@ makeAbility_PCT(SkillName.TemperaGrassaPop, 10, ResourceType.cd_TemperaPop, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
 });
 
-makeResourceAbility(ShellJob.PCT, SkillName.Smudge, 20, ResourceType.cd_Smudge, {
+makeResourceAbility('PCT', SkillName.Smudge, 20, ResourceType.cd_Smudge, {
 	rscType: ResourceType.Smudge,
 	applicationDelay: 0, // instant (buff application)
 	cooldown: 20,

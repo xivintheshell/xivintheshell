@@ -1,7 +1,6 @@
 // Skill and state declarations for SAM.
 
 import { controller } from "../../Controller/Controller";
-import { ShellJob } from "../../Controller/Common";
 import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
@@ -30,7 +29,7 @@ import { ActionNode } from "../../Controller/Record";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 const makeSAMResource = (rsc: ResourceType, maxValue: number, params?: { timeout: number }) => {
-	makeResource(ShellJob.SAM, rsc, maxValue, params ?? {});
+	makeResource("SAM", rsc, maxValue, params ?? {});
 };
 
 makeSAMResource(ResourceType.MeikyoShisui, 3, { timeout: 20 });
@@ -322,7 +321,7 @@ const makeGCD_SAM = (
 				? params.baseCastTime || 0
 				: state.config.adjustedSksCastTime(1.8, state.getFukaModifier());
 	}
-	return makeWeaponskill(ShellJob.SAM, name, unlockLevel, {
+	return makeWeaponskill("SAM", name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		highlightIf: params.highlightIf,
@@ -366,7 +365,7 @@ const makeAbility_SAM = (
 		params.jobPotencyModifiers = (state) =>
 			state.hasResourceAvailable(ResourceType.Fugetsu) ? [state.getFugetsuModifier()] : [];
 	}
-	return makeAbility(ShellJob.SAM, name, unlockLevel, cdName, params);
+	return makeAbility("SAM", name, unlockLevel, cdName, params);
 };
 
 // https://docs.google.com/spreadsheets/d/1Emevsz5_oJdmkXy23hZQUXimirZQaoo5BejSzL3hZ9I/edit?gid=865790859#gid=865790859
@@ -1011,7 +1010,7 @@ makeAbility_SAM(SkillName.Shoha, 80, ResourceType.cd_Shoha, {
 	highlightIf: (state) => state.resources.get(ResourceType.Meditation).available(3),
 });
 
-makeResourceAbility(ShellJob.SAM, SkillName.ThirdEye, 6, ResourceType.cd_ThirdEye, {
+makeResourceAbility("SAM", SkillName.ThirdEye, 6, ResourceType.cd_ThirdEye, {
 	rscType: ResourceType.ThirdEye,
 	autoUpgrade: { trait: TraitName.ThirdEyeMastery, otherSkill: SkillName.Tengentsu },
 	replaceIf: [
@@ -1024,7 +1023,7 @@ makeResourceAbility(ShellJob.SAM, SkillName.ThirdEye, 6, ResourceType.cd_ThirdEy
 	applicationDelay: 0,
 });
 
-makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_ThirdEye, {
+makeResourceAbility("SAM", SkillName.Tengentsu, 82, ResourceType.cd_ThirdEye, {
 	rscType: ResourceType.Tengentsu,
 	autoDowngrade: { trait: TraitName.ThirdEyeMastery, otherSkill: SkillName.ThirdEye },
 	replaceIf: [
@@ -1082,7 +1081,7 @@ makeAbility_SAM(SkillName.Zanshin, 96, ResourceType.cd_Zanshin, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ZanshinReady),
 });
 
-makeResourceAbility(ShellJob.SAM, SkillName.Meditate, 60, ResourceType.cd_Meditate, {
+makeResourceAbility("SAM", SkillName.Meditate, 60, ResourceType.cd_Meditate, {
 	rscType: ResourceType.Meditate,
 	cooldown: 60,
 	applicationDelay: 0.62,

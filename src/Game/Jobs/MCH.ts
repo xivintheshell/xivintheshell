@@ -1,4 +1,3 @@
-import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { Aspect, ResourceType, SkillName, TraitName, WarningType } from "../Common";
@@ -36,7 +35,7 @@ const makeMCHResource = (
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
-	makeResource(ShellJob.MCH, rsc, maxValue, params ?? {});
+	makeResource("MCH", rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
@@ -350,7 +349,7 @@ const makeWeaponskill_MCH = (
 		},
 	);
 	const onApplication: EffectFn<MCHState> = params.onApplication ?? NO_EFFECT;
-	return makeWeaponskill(ShellJob.MCH, name, unlockLevel, {
+	return makeWeaponskill("MCH", name, unlockLevel, {
 		...params,
 		onConfirm,
 		onApplication,
@@ -401,7 +400,7 @@ const makeAbility_MCH = (
 	},
 ): Ability<MCHState> => {
 	const onConfirm: EffectFn<MCHState> = combineEffects(params.onConfirm ?? NO_EFFECT);
-	return makeAbility(ShellJob.MCH, name, unlockLevel, cdName, {
+	return makeAbility("MCH", name, unlockLevel, cdName, {
 		...params,
 		onConfirm: onConfirm,
 		jobPotencyModifiers: (state) => {
@@ -429,7 +428,7 @@ const makeResourceAbility_MCH = (
 	},
 ): Ability<MCHState> => {
 	const onConfirm: EffectFn<MCHState> = combineEffects(params.onConfirm ?? NO_EFFECT);
-	return makeResourceAbility(ShellJob.MCH, name, unlockLevel, cdName, {
+	return makeResourceAbility("MCH", name, unlockLevel, cdName, {
 		...params,
 		onConfirm,
 	});
@@ -660,8 +659,7 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
 		state.resources.addResourceEvent({
 			rscType: ResourceType.Wildfire,
 			name: "wildfire expiration",
-			delay: (getResourceInfo(ShellJob.MCH, ResourceType.Wildfire) as ResourceInfo)
-				.maxTimeout,
+			delay: (getResourceInfo("MCH", ResourceType.Wildfire) as ResourceInfo).maxTimeout,
 			fnOnRsc: (_rsc) => state.expireWildfire(),
 		});
 	},

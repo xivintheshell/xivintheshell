@@ -1,4 +1,3 @@
-import { ShellJob } from "../../Controller/Common";
 import { ActionNode } from "../../Controller/Record";
 import { Aspect, BuffType, ResourceType, SkillName, TraitName } from "../Common";
 import { RPRResourceType, RPRSkillName } from "../Constants/RPR";
@@ -35,7 +34,7 @@ function makeRPRResource(
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) {
-	makeResource(ShellJob.RPR, type, maxValue, params ?? {});
+	makeResource('RPR', type, maxValue, params ?? {});
 }
 
 makeRPRResource(ResourceType.Soul, 100);
@@ -303,7 +302,7 @@ export class RPRState extends GameState {
 		if (!this.hasResourceAvailable(ResourceType.CircleOfSacrifice)) {
 			return;
 		}
-		const skillInfo = getSkill(ShellJob.RPR, skill);
+		const skillInfo = getSkill('RPR', skill);
 		if (skillInfo.potencyFn(this) > 0) {
 			let immortalSac = this.resources.get(ResourceType.ImmortalSacrifice);
 			if (immortalSac.availableAmount() === 0) {
@@ -442,7 +441,7 @@ const makeRPRSpell = (
 		params.validateAttempt ?? (() => true),
 	);
 
-	return makeSpell(ShellJob.RPR, name, unlockLevel, {
+	return makeSpell('RPR', name, unlockLevel, {
 		...params,
 		recastTime: (state) => state.config.adjustedGCD(params.recastTime),
 		onConfirm: onConfirm,
@@ -494,7 +493,7 @@ const makeRPRWeaponskill = (
 			!state.resources.get(ResourceType.Enshrouded).available(1) || isEnshroudSkill(name),
 		params.validateAttempt ?? (() => true),
 	);
-	return makeWeaponskill(ShellJob.RPR, name, unlockLevel, {
+	return makeWeaponskill('RPR', name, unlockLevel, {
 		...params,
 		onConfirm: onConfirm,
 		jobPotencyModifiers: (state) => {
@@ -502,12 +501,12 @@ const makeRPRWeaponskill = (
 			if (
 				params.combo &&
 				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
+				params.combo.resourceValue
 			) {
 				mods.push(
 					makeComboModifier(
 						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
+						getBasePotency(state, params.potency),
 					),
 				);
 			}
@@ -523,7 +522,7 @@ const makeRPRWeaponskill = (
 				mods.push(
 					makePositionalModifier(
 						getBasePotency(state, params.positional.potency) -
-							getBasePotency(state, params.potency),
+						getBasePotency(state, params.potency),
 					),
 				);
 			}
@@ -603,7 +602,7 @@ const makeRPRAbility = (
 		params.validateAttempt ?? (() => true),
 	);
 
-	return makeAbility(ShellJob.RPR, name, unlockLevel, cdName, {
+	return makeAbility('RPR', name, unlockLevel, cdName, {
 		...params,
 		onConfirm: onConfirm,
 		validateAttempt: validateAttempt,
@@ -994,7 +993,7 @@ makeRPRAbility(SkillName.Sacrificium, 92, ResourceType.cd_Sacrificium, {
 	onConfirm: (state) => state.resources.get(ResourceType.Oblatio).consume(1),
 });
 
-makeResourceAbility(ShellJob.RPR, SkillName.ArcaneCircle, 72, ResourceType.cd_ArcaneCircle, {
+makeResourceAbility('RPR', SkillName.ArcaneCircle, 72, ResourceType.cd_ArcaneCircle, {
 	rscType: ResourceType.ArcaneCircle,
 	applicationDelay: 0.6,
 	startOnHotbar: true,
@@ -1059,7 +1058,7 @@ makeRPRWeaponskill(SkillName.CrossReaping, 80, {
 	},
 });
 
-makeResourceAbility(ShellJob.RPR, SkillName.Enshroud, 80, ResourceType.cd_Enshroud, {
+makeResourceAbility('RPR', SkillName.Enshroud, 80, ResourceType.cd_Enshroud, {
 	rscType: ResourceType.Enshrouded,
 	highlightIf: (state) => {
 		return (

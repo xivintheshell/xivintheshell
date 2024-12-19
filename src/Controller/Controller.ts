@@ -1,11 +1,9 @@
 import {
 	getCachedValue,
-	MELEE_JOBS,
 	removeCachedValue,
 	ReplayMode,
 	setCachedValue,
 	ShellInfo,
-	ShellJob,
 	ShellVersion,
 	TickMode,
 } from "./Common";
@@ -74,6 +72,7 @@ import { XIVMath } from "../Game/XIVMath";
 import { RPRState } from "../Game/Jobs/RPR";
 import { RPRStatusPropsGenerator } from "../Components/Jobs/RPR";
 import { WARState } from "../Game/Jobs/WAR";
+import { MELEE_JOBS, ShellJob } from "../Game/Constants/Common";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 require("../Game/Jobs/RoleActions");
@@ -83,21 +82,21 @@ type Fixme = any;
 const STANDARD_DOT_TICK_KEY = "stdtick";
 
 const newGameState = (config: GameConfig) => {
-	if (config.job === ShellJob.PCT) {
+	if (config.job === "PCT") {
 		return new PCTState(config);
-	} else if (config.job === ShellJob.RDM) {
+	} else if (config.job === "RDM") {
 		return new RDMState(config);
-	} else if (config.job === ShellJob.DNC) {
+	} else if (config.job === "DNC") {
 		return new DNCState(config);
-	} else if (config.job === ShellJob.SAM) {
+	} else if (config.job === "SAM") {
 		return new SAMState(config);
-	} else if (config.job === ShellJob.MCH) {
+	} else if (config.job === "MCH") {
 		return new MCHState(config);
-	} else if (config.job === ShellJob.RPR) {
+	} else if (config.job === "RPR") {
 		return new RPRState(config);
-	} else if (config.job === ShellJob.WAR) {
+	} else if (config.job === "WAR") {
 		return new WARState(config);
-	} else if (config.job === ShellJob.BRD) {
+	} else if (config.job === "BRD") {
 		return new BRDState(config);
 	}
 	return new BLMState(config);
@@ -810,31 +809,31 @@ class Controller {
 		};
 		let propsGenerator;
 		switch (game.job) {
-			case ShellJob.PCT:
+			case "PCT":
 				propsGenerator = new PCTStatusPropsGenerator(game as PCTState);
 				break;
-			case ShellJob.RDM:
+			case "RDM":
 				propsGenerator = new RDMStatusPropsGenerator(game as RDMState);
 				break;
-			case ShellJob.DNC:
+			case "DNC":
 				propsGenerator = new DNCStatusPropsGenerator(game as DNCState);
 				break;
-			case ShellJob.SAM:
+			case "SAM":
 				propsGenerator = new SAMStatusPropsGenerator(game as SAMState);
 				break;
-			case ShellJob.MCH:
+			case "MCH":
 				propsGenerator = new MCHStatusPropsGenerator(game as MCHState);
 				break;
-			case ShellJob.RPR:
+			case "RPR":
 				propsGenerator = new RPRStatusPropsGenerator(game as RPRState);
 				break;
-			case ShellJob.WAR:
+			case "WAR":
 				propsGenerator = new WARStatusPropsGenerator(game as WARState);
 				break;
-			case ShellJob.BLM:
+			case "BLM":
 				propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
 				break;
-			case ShellJob.BRD:
+			case "BRD":
 				propsGenerator = new BRDStatusPropsGenerator(game as BRDState);
 				break;
 			default:
