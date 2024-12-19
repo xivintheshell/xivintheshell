@@ -144,14 +144,22 @@ export class XIVMath {
 			return Traits.hasUnlocked(TraitName.EnhancedFugetsuAndFuka, level) ? 13 : 10;
 		}
 		if (buff === ResourceType.ArmysPaeon) {
-			const repertoire = controller.game.resources.get(ResourceType.Repertoire).availableAmount()
-			return repertoire * 4 // 4% per repertoire stack under Army's Paeon
+			const repertoire = controller.game.resources
+				.get(ResourceType.Repertoire)
+				.availableAmount();
+			return repertoire * 4; // 4% per repertoire stack under Army's Paeon
 		}
 		if (buff === ResourceType.ArmysMuse) {
-			const museRepertoire = controller.game.resources.get(ResourceType.MuseRepertoire).availableAmount()
-			if (museRepertoire === 4) { return 12 } // 12% at 4 stacks
-			if (museRepertoire === 3) { return 4 } // 4% at 3 stacks
-			return museRepertoire // 1% per stack below 3 stacks
+			const museRepertoire = controller.game.resources
+				.get(ResourceType.MuseRepertoire)
+				.availableAmount();
+			if (museRepertoire === 4) {
+				return 12;
+			} // 12% at 4 stacks
+			if (museRepertoire === 3) {
+				return 4;
+			} // 4% at 3 stacks
+			return museRepertoire; // 1% per stack below 3 stacks
 		}
 		console.error("No speed modifier for buff: ", buff);
 		return 0;

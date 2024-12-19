@@ -47,7 +47,9 @@ export const enum PotencyModifierType {
 	MAGES_BALLAD,
 	ARMYS_PAEON,
 	BATTLE_VOICE,
-	RADIANT_FINALE_ONE_CODA, RADIANT_FINALE_TWO_CODA, RADIANT_FINALE_THREE_CODA,
+	RADIANT_FINALE_ONE_CODA,
+	RADIANT_FINALE_TWO_CODA,
+	RADIANT_FINALE_THREE_CODA,
 	BARRAGE,
 }
 
@@ -236,7 +238,7 @@ export const Modifiers = {
 		kind: "critDirect",
 		source: PotencyModifierType.BATTLE_VOICE,
 		critFactor: 0,
-		dhFactor: 0.20,
+		dhFactor: 0.2,
 	} as CritDirectMultiplier,
 	RadiantFinaleOneCoda: {
 		kind: "multiplier",
@@ -261,13 +263,13 @@ export const Modifiers = {
 	BarrageWideVolley: {
 		kind: "adder",
 		source: PotencyModifierType.BARRAGE,
-		additiveAmount: 80
+		additiveAmount: 80,
 	} as PotencyAdder,
 	BarrageShadowbite: {
 		kind: "adder",
 		source: PotencyModifierType.BARRAGE,
-		additiveAmount: 100
-	} as PotencyAdder
+		additiveAmount: 100,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

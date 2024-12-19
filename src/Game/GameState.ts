@@ -3,12 +3,21 @@ import {
 	BuffType,
 	Debug,
 	makeSkillReadyStatus,
+	ProcMode,
 	ResourceType,
 	SkillName,
 	SkillUnavailableReason,
 } from "./Common";
 import { GameConfig } from "./GameConfig";
-import { Ability, DisplayedSkills, LimitBreak, Skill, SkillsList, Spell, Weaponskill } from "./Skills";
+import {
+	Ability,
+	DisplayedSkills,
+	LimitBreak,
+	Skill,
+	SkillsList,
+	Spell,
+	Weaponskill,
+} from "./Skills";
 import {
 	CoolDown,
 	CoolDownState,
@@ -40,22 +49,22 @@ let SeedRandom = require("seedrandom");
 type RNG = any;
 
 export interface DoTSkillRegistration {
-	dotName: ResourceType,
-	appliedBy: SkillName[],
+	dotName: ResourceType;
+	appliedBy: SkillName[];
 }
 export interface DoTRegistrationGroup {
-	reportName?: ReactNode,
-	groupedDots: DoTSkillRegistration[],
+	reportName?: ReactNode;
+	groupedDots: DoTSkillRegistration[];
 }
 
 export interface DoTPotencyProps {
-	node: ActionNode, 
-	skillName: SkillName,
-	dotName: ResourceType
-	tickPotency: number,
-	speedStat: "sks" | "sps"
-	aspect?: Aspect
-	modifiers?: PotencyModifier[]
+	node: ActionNode;
+	skillName: SkillName;
+	dotName: ResourceType;
+	tickPotency: number;
+	speedStat: "sks" | "sps";
+	aspect?: Aspect;
+	modifiers?: PotencyModifier[];
 }
 
 // GameState := resources + events queue
@@ -72,10 +81,10 @@ export abstract class GameState {
 	skillsList: SkillsList<GameState>;
 	displayedSkills: DisplayedSkills;
 
-	dotGroups: DoTRegistrationGroup[] = []
-	dotResources: ResourceType[] = []
-	dotSkills: SkillName[] = []
-	#exclusiveDots: Map<ResourceType, ResourceType[]> = new Map()
+	dotGroups: DoTRegistrationGroup[] = [];
+	dotResources: ResourceType[] = [];
+	dotSkills: SkillName[] = [];
+	#exclusiveDots: Map<ResourceType, ResourceType[]> = new Map();
 
 	constructor(config: GameConfig) {
 		this.config = config;
@@ -241,93 +250,110 @@ export abstract class GameState {
 					if (dotBuff.node) {
 						const p = dotBuff.node.getDotPotencies(dotResource)[dotBuff.tickCount];
 						controller.resolvePotency(p);
-						this.jobSpecificOnResolveDotTick(dotResource)
+						this.jobSpecificOnResolveDotTick(dotResource);
 					}
 					dotBuff.tickCount++;
 				} else {
 					if (dotBuff.node) {
 						dotBuff.node.removeUnresolvedDoTPotencies();
-						dotBuff.node = undefined
+						dotBuff.node = undefined;
 					}
 				}
-			})
+			});
 
-            // increment count
-            if (this.getDisplayTime() >= 0) {
-                controller.reportDotTick(this.time);
-            }
+			// increment count
+			if (this.getDisplayTime() >= 0) {
+				controller.reportDotTick(this.time);
+			}
 
-            // queue the next tick
-            this.addEvent(new Event("DoT tick", 3, ()=>{
-                recurringDotTick();
-            }));
-		}
+			// queue the next tick
+			this.addEvent(
+				new Event("DoT tick", 3, () => {
+					recurringDotTick();
+				}),
+			);
+		};
 		dotGroups.forEach((dotGroup) => {
 			dotGroup.groupedDots.forEach((registeredDot) => {
 				if (!this.dotResources.includes(registeredDot.dotName)) {
-					this.dotResources.push(registeredDot.dotName)
-					registeredDot.appliedBy.forEach(dotSkill => {
-						if (!this.dotSkills.includes(dotSkill)) { this.dotSkills.push(dotSkill) }
-					})
-					this.#exclusiveDots.set(registeredDot.dotName, dotGroup.groupedDots.filter(dot => dot !== registeredDot).map(dot => dot.dotName))
+					this.dotResources.push(registeredDot.dotName);
+					registeredDot.appliedBy.forEach((dotSkill) => {
+						if (!this.dotSkills.includes(dotSkill)) {
+							this.dotSkills.push(dotSkill);
+						}
+					});
+					this.#exclusiveDots.set(
+						registeredDot.dotName,
+						dotGroup.groupedDots
+							.filter((dot) => dot !== registeredDot)
+							.map((dot) => dot.dotName),
+					);
 				} else {
-					console.assert(false, `${registeredDot.dotName} was registered as a dot multiple times for ${this.job}`)
+					console.assert(
+						false,
+						`${registeredDot.dotName} was registered as a dot multiple times for ${this.job}`,
+					);
 				}
-			})
-		})
-		this.dotGroups = dotGroups
+			});
+		});
+		this.dotGroups = dotGroups;
 		let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
 		while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
 		this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
 
-		this.jobSpecificRegisterRecurringEvents()
+		this.jobSpecificRegisterRecurringEvents();
 	}
 
 	// Job code may override to handle setting up any job-specific recurring events, such as BLM's Polyglot timer
-	jobSpecificRegisterRecurringEvents() { }
+	jobSpecificRegisterRecurringEvents() {}
 
 	// Job code may override to handle any on-tick effects of a DoT, like pre-Dawntrail Thundercloud
-	jobSpecificOnResolveDotTick(_dotResource: ResourceType) { }
+	jobSpecificOnResolveDotTick(_dotResource: ResourceType) {}
 
 	// Job code may override to handle adding buff covers for the timeline
-	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) { }
-	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) { }
+	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
+	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
 
-	getStatusDuration(rscType: ResourceType): number
-	{ 
-		return (getResourceInfo(this.job, rscType) as ResourceInfo).maxTimeout
+	getStatusDuration(rscType: ResourceType): number {
+		return (getResourceInfo(this.job, rscType) as ResourceInfo).maxTimeout;
 	}
 
 	gainStatus(rscType: ResourceType, stacks: number = 1) {
-		const resource = this.resources.get(rscType)
-		const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo
-        if (this.hasResourceAvailable(rscType)) {
+		const resource = this.resources.get(rscType);
+		const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
+		if (this.hasResourceAvailable(rscType)) {
 			if (resourceInfo.maxTimeout > 0) {
 				resource.overrideTimer(this, resourceInfo.maxTimeout);
 			}
 			if (resource.availableAmount() !== stacks) {
-				resource.overrideCurrentValue(stacks)
+				resource.overrideCurrentValue(stacks);
 			}
-        } else {
-			resource.gain(stacks)
+		} else {
+			resource.gain(stacks);
 			if (resourceInfo.maxTimeout > 0) {
 				this.enqueueResourceDrop(rscType);
 			}
-        }
-    }
+		}
+	}
 
 	maybeGainProc(proc: ResourceType, chance: number = 0.5) {
-        if (!this.triggersEffect(chance)) { return }
+		if (!this.triggersEffect(chance)) {
+			return;
+		}
 
-		this.gainStatus(proc)
-    }
+		this.gainStatus(proc);
+	}
 
 	triggersEffect(chance: number): boolean {
-		if (this.config.procMode === ProcMode.Never) { return false }
-		if (this.config.procMode === ProcMode.Always) { return true }
+		if (this.config.procMode === ProcMode.Never) {
+			return false;
+		}
+		if (this.config.procMode === ProcMode.Always) {
+			return true;
+		}
 
-		const rand = this.rng()
-		return rand < chance
+		const rand = this.rng();
+		return rand < chance;
 	}
 
 	// advance game state by this much time
@@ -492,7 +518,7 @@ export abstract class GameState {
 		let capturedCastTime = skill.castTimeFn(this);
 		const recastTime = skill.recastTimeFn(this);
 
-		this.jobSpecificAddSpeedBuffCovers(node, skill)
+		this.jobSpecificAddSpeedBuffCovers(node, skill);
 
 		// create potency node object (snapshotted buffs will populate on confirm)
 		const potencyNumber = skill.potencyFn(this);
@@ -552,10 +578,10 @@ export abstract class GameState {
 			if (doesDamage) {
 				// tincture
 				if (this.hasResourceAvailable(ResourceType.Tincture)) {
-					node.addBuff(BuffType.Tincture)
+					node.addBuff(BuffType.Tincture);
 				}
 
-				this.jobSpecificAddDamageBuffCovers(node, skill)
+				this.jobSpecificAddDamageBuffCovers(node, skill);
 			}
 
 			// Perform additional side effects
@@ -583,7 +609,10 @@ export abstract class GameState {
 
 		const isInstant = capturedCastTime === 0 || skill.isInstantFn(this);
 		if (isInstant) {
-			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, skill.animationLockFn(this));
+			this.resources.takeResourceLock(
+				ResourceType.NotAnimationLocked,
+				skill.animationLockFn(this),
+			);
 			// Immediately do confirmation (no need to validate again)
 			onSpellConfirm();
 		} else {
@@ -656,10 +685,10 @@ export abstract class GameState {
 		if (potencyNumber > 0) {
 			// tincture
 			if (this.hasResourceAvailable(ResourceType.Tincture)) {
-				node.addBuff(BuffType.Tincture)
+				node.addBuff(BuffType.Tincture);
 			}
 
-			this.jobSpecificAddDamageBuffCovers(node, skill)
+			this.jobSpecificAddDamageBuffCovers(node, skill);
 		}
 
 		skill.onConfirm(this, node);
@@ -689,7 +718,10 @@ export abstract class GameState {
 		cd.useStack(this);
 
 		// animation lock
-		this.resources.takeResourceLock(ResourceType.NotAnimationLocked, skill.animationLockFn(this));
+		this.resources.takeResourceLock(
+			ResourceType.NotAnimationLocked,
+			skill.animationLockFn(this),
+		);
 	}
 
 	/**
@@ -744,10 +776,13 @@ export abstract class GameState {
 						controller.resolvePotency(potency);
 					}
 					skill.onApplication(this, node);
-				}
-			));
-			
-			this.resources.takeResourceLock(ResourceType.NotAnimationLocked, slideCastTime + skill.animationLockFn(this));
+				}),
+			);
+
+			this.resources.takeResourceLock(
+				ResourceType.NotAnimationLocked,
+				slideCastTime + skill.animationLockFn(this),
+			);
 		};
 
 		const isInstant = capturedCastTime === 0;
@@ -854,42 +889,50 @@ export abstract class GameState {
 		const dotBuff = this.resources.get(dotName) as DoTBuff;
 		const dotDuration = (getResourceInfo(this.config.job, dotName) as ResourceInfo).maxTimeout;
 
-		let dotGap: number | undefined = undefined
+		let dotGap: number | undefined = undefined;
 		this.getOverriddenDots(dotName).forEach((removeDot: ResourceType) => {
-			if (! this.hasResourceAvailable(removeDot)) {
+			if (!this.hasResourceAvailable(removeDot)) {
 				// If a mutually exclusive DoT was previously applied but has fallen off, the gap is the smallest of the times since any of those DoTs expired
-				const thisGap = this.getDisplayTime() - (this.resources.get(removeDot).getLastExpirationTime() ?? 0)
-				dotGap = (!dotGap) ? thisGap : Math.min(dotGap, thisGap)
+				const thisGap =
+					this.getDisplayTime() -
+					(this.resources.get(removeDot).getLastExpirationTime() ?? 0);
+				dotGap = !dotGap ? thisGap : Math.min(dotGap, thisGap);
 				return;
 			}
 
-			node.setDotOverrideAmount(removeDot, node.getDotOverrideAmount(removeDot) + this.resources.timeTillReady(removeDot));
+			node.setDotOverrideAmount(
+				removeDot,
+				node.getDotOverrideAmount(removeDot) + this.resources.timeTillReady(removeDot),
+			);
 			this.tryConsumeResource(removeDot);
 			controller.reportDotDrop(this.getDisplayTime(), dotName);
-		})
+		});
 
 		if (dotBuff.available(1)) {
 			console.assert(dotBuff.node);
 			(dotBuff.node as ActionNode).removeUnresolvedDoTPotencies();
-			node.setDotOverrideAmount(dotName, node.getDotOverrideAmount(dotName) + this.resources.timeTillReady(dotName));
+			node.setDotOverrideAmount(
+				dotName,
+				node.getDotOverrideAmount(dotName) + this.resources.timeTillReady(dotName),
+			);
 			dotBuff.overrideTimer(this, dotDuration);
 		} else {
-			const thisGap = this.getDisplayTime() - (dotBuff.getLastExpirationTime() ?? 0)
-			dotGap = (!dotGap) ? thisGap : Math.min(dotGap, thisGap)
+			const thisGap = this.getDisplayTime() - (dotBuff.getLastExpirationTime() ?? 0);
+			dotGap = !dotGap ? thisGap : Math.min(dotGap, thisGap);
 
-			dotBuff.gain(1)
+			dotBuff.gain(1);
 			controller.reportDotStart(this.getDisplayTime(), dotName);
 			this.resources.addResourceEvent({
 				rscType: dotName,
 				name: "drop " + dotName + " DoT",
 				delay: dotDuration,
-				fnOnRsc: rsc => {
+				fnOnRsc: (rsc) => {
 					rsc.consume(1);
 					controller.reportDotDrop(this.getDisplayTime(), dotName);
-				}
-			})
+				},
+			});
 		}
-		node.setDotTimeGap(dotName, dotGap ?? 0)
+		node.setDotTimeGap(dotName, dotGap ?? 0);
 		dotBuff.node = node;
 		dotBuff.tickCount = 0;
 	}
@@ -897,13 +940,17 @@ export abstract class GameState {
 	addDoTPotencies(props: DoTPotencyProps) {
 		const mods: PotencyModifier[] = [];
 		// If the job call didn't add Tincture, we can do that here
-		if (this.hasResourceAvailable(ResourceType.Tincture) && !((props.modifiers ?? []).includes(Modifiers.Tincture))) {
+		if (
+			this.hasResourceAvailable(ResourceType.Tincture) &&
+			!(props.modifiers ?? []).includes(Modifiers.Tincture)
+		) {
 			mods.push(Modifiers.Tincture);
 			props.node.addBuff(BuffType.Tincture);
 		}
-	
-		const dotDuration = (getResourceInfo(this.config.job, props.dotName) as ResourceInfo).maxTimeout
-		const dotTicks = dotDuration / 3
+
+		const dotDuration = (getResourceInfo(this.config.job, props.dotName) as ResourceInfo)
+			.maxTimeout;
+		const dotTicks = dotDuration / 3;
 
 		for (let i = 0; i < dotTicks; i++) {
 			let pDot = new Potency({
@@ -913,21 +960,24 @@ export abstract class GameState {
 				aspect: props.aspect ?? Aspect.Other,
 				basePotency: this.config.adjustedDoTPotency(props.tickPotency, props.speedStat),
 				snapshotTime: this.getDisplayTime(),
-				description: localizeResourceType(props.dotName) + " DoT " + (i+1) + `/${dotTicks}`
+				description:
+					localizeResourceType(props.dotName) + " DoT " + (i + 1) + `/${dotTicks}`,
 			});
-			pDot.modifiers = [...mods, ...(props?.modifiers ??[])];
+			pDot.modifiers = [...mods, ...(props?.modifiers ?? [])];
 			props.node.addDoTPotency(pDot, props.dotName);
 		}
-	};
+	}
 
 	refreshDot(props: DoTPotencyProps) {
-		if (!this.hasResourceAvailable(props.dotName)) { return }
+		if (!this.hasResourceAvailable(props.dotName)) {
+			return;
+		}
 
 		this.addDoTPotencies({
 			...props,
-		})
+		});
 
-		this.applyDoT(props.dotName, props.node)
+		this.applyDoT(props.dotName, props.node);
 	}
 
 	timeTillNextMpGainEvent() {

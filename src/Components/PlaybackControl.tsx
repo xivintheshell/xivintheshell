@@ -277,12 +277,16 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 		</div>}
 
 		{/* Akairyu's Note: Needs retranslating after removing reference to Thunder*/}
-		{controller.game.dotResources.length > 0 &&
-			<div>{localize({en: "DoT tick offset ", zh: "跳雷&跳蓝时间差 "})}<Help topic={"dotTickOffset"} content={offsetDesc}/>: {dotTickOffset}</div>
-		}
+		{controller.game.dotResources.length > 0 && <div>
+			{localize({ en: "DoT tick offset ", zh: "跳雷&跳蓝时间差 " })}
+			<Help topic={"dotTickOffset"} content={offsetDesc} />: {dotTickOffset}
+		</div>}
 
 		{props.job === ShellJob.SAM && <>
-			<div>{localize({en: "Fuka GCD"})}: {controller.gameConfig.adjustedSksGCD(2.5, ResourceType.Fuka).toFixed(2)}</div>
+			<div>
+				{localize({ en: "Fuka GCD" })}:{" "}
+				{controller.gameConfig.adjustedSksGCD(2.5, ResourceType.Fuka).toFixed(2)}
+			</div>
 		</>}
 
 		{props.job === ShellJob.BLM ? (

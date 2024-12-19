@@ -328,10 +328,10 @@ export function makeSpell<T extends PlayerState>(
 		jobs = [jobs];
 	}
 	const onApplication: EffectFn<T> = combineEffects(
-		(state, node) => node.applicationTime = state.time,
+		(state, node) => (node.applicationTime = state.time),
 		params.onApplication ?? NO_EFFECT,
-	)
-	
+	);
+
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
@@ -399,9 +399,9 @@ export function makeWeaponskill<T extends PlayerState>(
 		jobs = [jobs];
 	}
 	const onApplication: EffectFn<T> = combineEffects(
-		(state, node) => node.applicationTime = state.time,
+		(state, node) => (node.applicationTime = state.time),
 		params.onApplication ?? NO_EFFECT,
-	)
+	);
 	const info: Weaponskill<T> = {
 		kind: "weaponskill",
 		name: name,
@@ -485,9 +485,9 @@ export function makeAbility<T extends PlayerState>(
 		jobs = [jobs];
 	}
 	const onApplication: EffectFn<T> = combineEffects(
-		(state, node) => node.applicationTime = state.time,
+		(state, node) => (node.applicationTime = state.time),
 		params.onApplication ?? NO_EFFECT,
-	)
+	);
 	const info: Ability<T> = {
 		kind: "ability",
 		name: name,

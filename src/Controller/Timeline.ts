@@ -49,14 +49,14 @@ export type ViewOnlyCursorElem = TimelineElemBase & {
 	enabled: boolean;
 };
 export interface DamageMarkInfo {
-	potency: Potency,
-	sourceDesc: string,
+	potency: Potency;
+	sourceDesc: string;
 	sourceSkill: SkillName;
-};
+}
 export type DamageMarkElem = TimelineElemBase & {
 	type: ElemType.DamageMark;
 	displayTime: number;
-	damageInfos: DamageMarkInfo[]
+	damageInfos: DamageMarkInfo[];
 	buffs: ResourceType[];
 };
 export type LucidMarkElem = TimelineElemBase & {
@@ -166,7 +166,9 @@ export class Timeline {
 	}
 
 	tryGetElement(time: number, type: ElemType): SlotTimelineElem | undefined {
-		return this.slots[this.activeSlotIndex].elements.find((element) => element.time === time && element.type === type)
+		return this.slots[this.activeSlotIndex].elements.find(
+			(element) => element.time === time && element.type === type,
+		);
 	}
 
 	getAllMarkers() {

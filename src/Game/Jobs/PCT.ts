@@ -2,7 +2,7 @@
 
 import { controller } from "../../Controller/Controller";
 import { ShellJob } from "../../Controller/Common";
-import { BuffType,  ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -103,14 +103,16 @@ export class PCTState extends GameState {
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
 		if (this.hasResourceAvailable(ResourceType.StarryMuse)) {
-			node.addBuff(BuffType.StarryMuse)
+			node.addBuff(BuffType.StarryMuse);
 		}
 	}
 
 	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
-		if (this.hasResourceAvailable(ResourceType.Inspiration) && HYPERPHANTASIA_SKILLS.includes(skill.name))
-		{
-			node.addBuff(BuffType.Hyperphantasia)
+		if (
+			this.hasResourceAvailable(ResourceType.Inspiration) &&
+			HYPERPHANTASIA_SKILLS.includes(skill.name)
+		) {
+			node.addBuff(BuffType.Hyperphantasia);
 		}
 	}
 

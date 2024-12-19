@@ -96,11 +96,11 @@ export class Resource {
 		}
 		this.#currentValue = Math.max(this.#currentValue - amount, 0);
 		if (this.#currentValue === 0) {
-			this.#lastExpirationTime = controller.game.getDisplayTime()
+			this.#lastExpirationTime = controller.game.getDisplayTime();
 		}
 	}
 	getLastExpirationTime(): number | undefined {
-		return this.#lastExpirationTime
+		return this.#lastExpirationTime;
 	}
 	gain(amount: number) {
 		this.#currentValue = Math.min(this.#currentValue + amount, this.maxValue);

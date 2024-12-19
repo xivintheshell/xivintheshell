@@ -1,8 +1,8 @@
-import {FileType} from "./Common";
-import {BuffType, ResourceType, SkillName, SkillReadyStatus} from "../Game/Common";
-import {GameConfig} from "../Game/GameConfig"
-import {Potency} from "../Game/Potency";
-import {controller} from "./Controller";
+import { FileType } from "./Common";
+import { BuffType, ResourceType, SkillName, SkillReadyStatus } from "../Game/Common";
+import { GameConfig } from "../Game/GameConfig";
+import { Potency } from "../Game/Potency";
+import { controller } from "./Controller";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -35,8 +35,8 @@ export class ActionNode {
 	type: ActionType;
 	waitDuration: number = 0;
 	skillName?: SkillName;
-	buffName? : string;
-	applicationTime?: number
+	buffName?: string;
+	applicationTime?: number;
 	#dotOverrideAmount: Map<ResourceType, number>;
 	#dotTimeGap: Map<ResourceType, number>;
 
@@ -94,23 +94,24 @@ export class ActionNode {
 	}
 
 	resolveAll(displayTime: number) {
-		if (this.#potency) { this.#potency.resolve(displayTime) }
+		if (this.#potency) {
+			this.#potency.resolve(displayTime);
+		}
 		this.#dotPotencies.forEach((pArr) => {
-			pArr.forEach((p) =>{
+			pArr.forEach((p) => {
 				p.resolve(displayTime);
-			})
+			});
 		});
 	}
 
 	// true if the node's effects have been applied
 	resolved() {
-		return this.applicationTime !== undefined
+		return this.applicationTime !== undefined;
 	}
 
 	hitBoss(untargetable: (displayTime: number) => boolean) {
 		return this.#potency?.hasHitBoss(untargetable) ?? true;
 	}
-
 
 	getPotency(props: {
 		tincturePotencyMultiplier: number;
@@ -123,24 +124,30 @@ export class ActionNode {
 			snapshottedButPending: 0,
 		};
 		if (this.#potency) {
-			this.recordPotency(props, this.#potency, res)
+			this.recordPotency(props, this.#potency, res);
 		}
 
-		if (props.excludeDoT) { return res }
+		if (props.excludeDoT) {
+			return res;
+		}
 		this.#dotPotencies.forEach((pArr) => {
 			pArr.forEach((p) => {
-				this.recordPotency(props, p, res)
-			})
-		})
+				this.recordPotency(props, p, res);
+			});
+		});
 		return res;
 	}
 
-	private recordPotency(props: {
-		tincturePotencyMultiplier: number,
-		untargetable: (t: number) => boolean,
-		includePartyBuffs: boolean,
-		excludeDoT?: boolean
-	}, potency: Potency, record: {applied: number, snapshottedButPending: number}) {
+	private recordPotency(
+		props: {
+			tincturePotencyMultiplier: number;
+			untargetable: (t: number) => boolean;
+			includePartyBuffs: boolean;
+			excludeDoT?: boolean;
+		},
+		potency: Potency,
+		record: { applied: number; snapshottedButPending: number },
+	) {
 		if (potency.hasHitBoss(props.untargetable)) {
 			record.applied += potency.getAmount(props);
 		} else if (!potency.hasResolved() && potency.hasSnapshotted()) {
@@ -150,36 +157,41 @@ export class ActionNode {
 
 	removeUnresolvedDoTPotencies() {
 		this.#dotPotencies.forEach((pArr) => {
-			const unresolvedIndex = pArr.findIndex((p) => !p.hasResolved())
-			if (unresolvedIndex < 0) { return }
-			pArr.splice(unresolvedIndex)
-		})
+			const unresolvedIndex = pArr.findIndex((p) => !p.hasResolved());
+			if (unresolvedIndex < 0) {
+				return;
+			}
+			pArr.splice(unresolvedIndex);
+		});
 	}
 
 	anyPotencies(): boolean {
-		return this.#potency !== undefined || this.#dotPotencies.size > 0
+		return this.#potency !== undefined || this.#dotPotencies.size > 0;
 	}
 	getInitialPotency() {
-		return this.#potency
+		return this.#potency;
 	}
 	getAllDotPotencies() {
-		return this.#dotPotencies
+		return this.#dotPotencies;
 	}
 	getDotPotencies(r: ResourceType) {
-		return this.#dotPotencies.get(r) ?? []
+		return this.#dotPotencies.get(r) ?? [];
 	}
 
 	addPotency(p: Potency) {
-		console.assert(!this.#potency, `ActionNode for ${this.skillName} already had an initial potency`)
+		console.assert(
+			!this.#potency,
+			`ActionNode for ${this.skillName} already had an initial potency`,
+		);
 		this.#potency = p;
 	}
 
 	addDoTPotency(p: Potency, r: ResourceType) {
-		const pArr = this.#dotPotencies.get(r) ?? []
+		const pArr = this.#dotPotencies.get(r) ?? [];
 		if (pArr.length === 0) {
-			this.#dotPotencies.set(r, pArr)
+			this.#dotPotencies.set(r, pArr);
 		}
-		pArr.push(p)
+		pArr.push(p);
 	}
 
 	select() {
@@ -190,16 +202,16 @@ export class ActionNode {
 	}
 
 	setDotTimeGap(dotName: ResourceType, amount: number) {
-		this.#dotTimeGap.set(dotName, amount)
+		this.#dotTimeGap.set(dotName, amount);
 	}
 	getDotTimeGap(dotName: ResourceType): number {
-		return this.#dotTimeGap.get(dotName) ?? 0
+		return this.#dotTimeGap.get(dotName) ?? 0;
 	}
 	setDotOverrideAmount(dotName: ResourceType, amount: number) {
-		this.#dotOverrideAmount.set(dotName, amount)
+		this.#dotOverrideAmount.set(dotName, amount);
 	}
 	getDotOverrideAmount(dotName: ResourceType): number {
-		return this.#dotOverrideAmount.get(dotName) ?? 0
+		return this.#dotOverrideAmount.get(dotName) ?? 0;
 	}
 }
 

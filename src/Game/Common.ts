@@ -55,11 +55,11 @@ import {
 	WARTraitName,
 } from "./Constants/WAR";
 import {
-	BRDSkillName, 
-	BRDResourceType, 
-	BRDCooldownType, 
-	BRDTraitList, 
-	BRDTraitName
+	BRDSkillName,
+	BRDResourceType,
+	BRDCooldownType,
+	BRDTraitList,
+	BRDTraitName,
 } from "./Constants/BRD";
 
 export const Debug = {
@@ -447,9 +447,9 @@ export const enum WarningType {
 	BeastGaugeOvercap = "Beast Gauge overcap",
 	InnerReleaseDrop = "Inner Release expired",
 	NascentChaosDrop = "Nascent Chaos expired",
-	
+
 	SoulVoiceOvercap = "soul voice overcap",
-	CodaOvercap = "coda overcap"
+	CodaOvercap = "coda overcap",
 }
 
 export enum ReservedTraitName {
@@ -489,16 +489,16 @@ const GeneralTraitList: Array<[RoleTraitName, number]> = [
 ];
 
 export const TraitName = {
-	...RoleTraitName,  //  100-1000
-	...BLMTraitName,   // 1000-1999
-	...PCTTraitName,   // 2000-2999
-	...DNCTraitName,   // 3000-3999
-	...RDMTraitName,   // 4000-4999
-	...SAMTraitName,   // 5000-5999
-	...MCHTraitName,   // 6000-6999
-	...RPRTraitName,   // 7000-7999
-	...WARTraitName,   // 8000-8999
-	...BRDTraitName,   // 9000-9999
+	...RoleTraitName, //  100-1000
+	...BLMTraitName, // 1000-1999
+	...PCTTraitName, // 2000-2999
+	...DNCTraitName, // 3000-3999
+	...RDMTraitName, // 4000-4999
+	...SAMTraitName, // 5000-5999
+	...MCHTraitName, // 6000-6999
+	...RPRTraitName, // 7000-7999
+	...WARTraitName, // 8000-8999
+	...BRDTraitName, // 9000-9999
 	...ReservedTraitName, // 0, for now
 };
 
@@ -527,4 +527,4 @@ export const TraitList: Array<[TraitName, number]> = [
 	...RPRTraitList,
 	...WARTraitList,
 	...BRDTraitList,
-]
+];

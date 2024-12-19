@@ -133,7 +133,8 @@ class Controller {
 		castTime: number;
 	}[] = [];
 	#dotTickTimes: number[] = [];
-	#dotCoverageTimes: Map<ResourceType, {tStartDisplay: number, tEndDisplay?: number}[]> = new Map();
+	#dotCoverageTimes: Map<ResourceType, { tStartDisplay: number; tEndDisplay?: number }[]> =
+		new Map();
 
 	savedHistoricalGame: GameState;
 	savedHistoricalRecord: Record;
@@ -565,7 +566,7 @@ class Controller {
 
 	getMaxTicks(untilRawTime: number) {
 		let cnt = 0;
-		this.#dotTickTimes.forEach(rt => {
+		this.#dotTickTimes.forEach((rt) => {
 			if (!bossIsUntargetable(rt - this.gameConfig.countdown) && rt <= untilRawTime) {
 				cnt++;
 			}
@@ -575,11 +576,13 @@ class Controller {
 
 	getDotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceType) {
 		if (untilDisplayTime <= Debug.epsilon) return 0;
-		const dotCoverages = this.#dotCoverageTimes.get(dot)
-		if (!dotCoverages) { return 0; }
+		const dotCoverages = this.#dotCoverageTimes.get(dot);
+		if (!dotCoverages) {
+			return 0;
+		}
 
 		let coveredTime = 0;
-		dotCoverages.forEach(section=>{
+		dotCoverages.forEach((section) => {
 			if (section.tStartDisplay <= untilDisplayTime) {
 				let startTime = Math.max(0, section.tStartDisplay);
 				let endTime =
@@ -657,13 +660,16 @@ class Controller {
 			const damageInfo: DamageMarkInfo = {
 				potency: p,
 				sourceDesc,
-				sourceSkill: p.sourceSkill
-			}
-			let existingElement = this.timeline.tryGetElement(this.game.time, ElemType.DamageMark) as DamageMarkElem
+				sourceSkill: p.sourceSkill,
+			};
+			let existingElement = this.timeline.tryGetElement(
+				this.game.time,
+				ElemType.DamageMark,
+			) as DamageMarkElem;
 			if (existingElement) {
-				existingElement.damageInfos.push(damageInfo)
+				existingElement.damageInfos.push(damageInfo);
 				if (pot && !existingElement.buffs.includes(ResourceType.Tincture)) {
-					existingElement.buffs.push(ResourceType.Tincture)
+					existingElement.buffs.push(ResourceType.Tincture);
 				}
 			} else {
 				this.timeline.addElement({
@@ -723,20 +729,20 @@ class Controller {
 
 	reportDotTick(rawTime: number) {
 		if (!this.#bInSandbox) {
-			this.#dotTickTimes.push(rawTime)
+			this.#dotTickTimes.push(rawTime);
 			this.updateStats();
 		}
 	}
 
 	reportDotStart(displayTime: number, dot: ResourceType) {
 		if (!this.#bInSandbox) {
-			let dotCoverages = this.#dotCoverageTimes.get(dot)
+			let dotCoverages = this.#dotCoverageTimes.get(dot);
 			if (!dotCoverages) {
-				dotCoverages = []
-				this.#dotCoverageTimes.set(dot, dotCoverages)
+				dotCoverages = [];
+				this.#dotCoverageTimes.set(dot, dotCoverages);
 			}
 			let len = dotCoverages.length;
-			console.assert(len === 0 || dotCoverages[len-1].tEndDisplay!==undefined);
+			console.assert(len === 0 || dotCoverages[len - 1].tEndDisplay !== undefined);
 			dotCoverages.push({
 				tStartDisplay: displayTime,
 				tEndDisplay: undefined,
@@ -746,12 +752,14 @@ class Controller {
 
 	reportDotDrop(displayTime: number, dot: ResourceType) {
 		if (!this.#bInSandbox) {
-			const dotCoverages = this.#dotCoverageTimes.get(dot)
-			console.assert(dotCoverages, `Reported dropping ${dot} when no coverage was detected`)
-			if (!dotCoverages) { return }
+			const dotCoverages = this.#dotCoverageTimes.get(dot);
+			console.assert(dotCoverages, `Reported dropping ${dot} when no coverage was detected`);
+			if (!dotCoverages) {
+				return;
+			}
 			let len = dotCoverages.length;
-			console.assert(len > 0 && dotCoverages[len-1].tEndDisplay===undefined);
-			dotCoverages[len-1].tEndDisplay = displayTime;
+			console.assert(len > 0 && dotCoverages[len - 1].tEndDisplay === undefined);
+			dotCoverages[len - 1].tEndDisplay = displayTime;
 		}
 	}
 

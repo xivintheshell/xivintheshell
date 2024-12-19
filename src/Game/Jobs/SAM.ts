@@ -1,9 +1,9 @@
 // Skill and state declarations for SAM.
 
-import {controller} from "../../Controller/Controller";
-import {ShellJob} from "../../Controller/Common";
-import {BuffType, ResourceType, SkillName, TraitName, WarningType} from "../Common";
-import {makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier} from "../Potency";
+import { controller } from "../../Controller/Controller";
+import { ShellJob } from "../../Controller/Common";
+import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -76,7 +76,6 @@ makeSAMResource(ResourceType.KaeshiTracker, 4, { timeout: 30 });
 
 // === JOB GAUGE AND STATE ===
 export class SAMState extends GameState {
-
 	constructor(config: GameConfig) {
 		super(config);
 
@@ -91,13 +90,17 @@ export class SAMState extends GameState {
 			new CoolDown(ResourceType.cd_SeneiGuren, gurenCd, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		super.registerRecurringEvents([{
-			reportName: localizeResourceType(ResourceType.HiganbanaDoT),
-			groupedDots: [{
-				dotName: ResourceType.HiganbanaDoT,
-				appliedBy: [SkillName.Higanbana],
-			}]
-		}]);
+		super.registerRecurringEvents([
+			{
+				reportName: localizeResourceType(ResourceType.HiganbanaDoT),
+				groupedDots: [
+					{
+						dotName: ResourceType.HiganbanaDoT,
+						appliedBy: [SkillName.Higanbana],
+					},
+				],
+			},
+		]);
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
@@ -111,7 +114,7 @@ export class SAMState extends GameState {
 
 	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
 		if (this.hasResourceAvailable(ResourceType.Fuka) && skill.cdName === ResourceType.cd_GCD) {
-			node.addBuff(BuffType.Fuka)
+			node.addBuff(BuffType.Fuka);
 		}
 	}
 
@@ -697,7 +700,9 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 			modifiers.push(state.getFugetsuModifier());
 		}
 
-		const tickPotency = Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level) ? 50 : 45;
+		const tickPotency = Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level)
+			? 50
+			: 45;
 
 		state.addDoTPotencies({
 			node,
@@ -706,12 +711,12 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 			tickPotency,
 			speedStat: "sks",
 			modifiers,
-		})
+		});
 		state.consumeAllSen();
 		state.gainMeditation();
 		// bana does not reset your tsubame status
 	},
-	onApplication: (state, node) => state.applyDoT(ResourceType.HiganbanaDoT, node)
+	onApplication: (state, node) => state.applyDoT(ResourceType.HiganbanaDoT, node),
 });
 
 const iaiConfirm = (kaeshiValue: number) => (state: SAMState) => {
