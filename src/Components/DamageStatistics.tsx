@@ -100,8 +100,8 @@ export type DamageStatisticsData = {
 	mode: DamageStatisticsMode;
 };
 
-export let updateDamageStats = (data: Partial<DamageStatisticsData>) => {};
-export let updateSelectedStats = (data: Partial<SelectedStatisticsData>) => {};
+export let updateDamageStats = (data: Partial<DamageStatisticsData>) => { };
+export let updateSelectedStats = (data: Partial<SelectedStatisticsData>) => { };
 
 // hook for tests to access damage stats
 export const mockDamageStatUpdateFn = (
@@ -494,7 +494,7 @@ export class DamageStatistics extends React.Component {
 	}
 
 	componentWillUnmount() {
-		updateDamageStats = (data: Partial<DamageStatisticsData>) => {};
+		updateDamageStats = (data: Partial<DamageStatisticsData>) => { };
 	}
 
 	render() {
@@ -603,7 +603,7 @@ export class DamageStatistics extends React.Component {
 					"/" +
 					maxTicks +
 					rparen;
-				return <div>{dotStr}</div>;
+				return <div key={`dot-uptime-${dotGroup.reportName}`}>{dotStr}</div>;
 			});
 
 		let selected: React.ReactNode | undefined = undefined;
@@ -621,8 +621,8 @@ export class DamageStatistics extends React.Component {
 					{colon}
 					{selectedPPSAvailable
 						? (
-								this.selected.potency.applied / this.selected.targetableDuration
-							).toFixed(2)
+							this.selected.potency.applied / this.selected.targetableDuration
+						).toFixed(2)
 						: "N/A"}
 				</div>
 				<div>{selectedGcdStr}</div>
@@ -669,9 +669,9 @@ export class DamageStatistics extends React.Component {
 						{colon}
 						{ppsAvailable
 							? (
-									this.data.totalPotency.applied /
-									targetableDurationTilLastDisplay
-								).toFixed(2)
+								this.data.totalPotency.applied /
+								targetableDurationTilLastDisplay
+							).toFixed(2)
 							: "N/A"}
 					</div>
 					<div>{gcdStr}</div>
