@@ -1,4 +1,3 @@
-import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { LevelSync, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import {
@@ -37,7 +36,7 @@ const makeWARResource = (
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
-	makeResource(ShellJob.WAR, rsc, maxValue, params ?? {});
+	makeResource('WAR', rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
@@ -159,7 +158,7 @@ export class WARState extends GameState {
 	}
 
 	gainProc(proc: WARResourceType, amount?: number) {
-		const duration = (getResourceInfo(ShellJob.WAR, proc) as ResourceInfo).maxTimeout;
+		const duration = (getResourceInfo('WAR', proc) as ResourceInfo).maxTimeout;
 		if (this.hasResourceAvailable(proc)) {
 			if (proc === WARResourceType.BurgeoningFury) {
 				this.resources.get(proc).gain(1);
@@ -176,7 +175,7 @@ export class WARState extends GameState {
 	gainSurgingTempest(duration: number) {
 		const resource = this.resources.get(ResourceType.SurgingTempest);
 		const maxDuration = (
-			getResourceInfo(ShellJob.WAR, ResourceType.SurgingTempest) as ResourceInfo
+			getResourceInfo('WAR', ResourceType.SurgingTempest) as ResourceInfo
 		).maxTimeout;
 		const newDuration = (resource.pendingChange?.timeTillEvent ?? 0.0) + duration;
 		resource.overrideTimer(this, newDuration >= maxDuration ? maxDuration : newDuration);
@@ -249,7 +248,7 @@ const makeWeaponskill_WAR = (
 	const onApplication: EffectFn<WARState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyMod: PotencyModifierFn<WARState> =
 		params.jobPotencyModifiers ?? ((state) => []);
-	return makeWeaponskill(ShellJob.WAR, name, unlockLevel, {
+	return makeWeaponskill('WAR', name, unlockLevel, {
 		...params,
 		onConfirm: onConfirm,
 		onApplication: onApplication,
@@ -263,7 +262,7 @@ const makeWeaponskill_WAR = (
 				mods.push(
 					makeComboModifier(
 						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
+						getBasePotency(state, params.potency),
 					),
 				);
 			}
@@ -303,7 +302,7 @@ const makeAbility_WAR = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<WARState> => {
-	return makeAbility(ShellJob.WAR, name, unlockLevel, cdName, {
+	return makeAbility('WAR', name, unlockLevel, cdName, {
 		...params,
 		onConfirm: params.onConfirm,
 		jobPotencyModifiers: (state) => {
@@ -645,28 +644,28 @@ makeAbility_WAR(WARSkillName.Orogeny, 86, WARCooldownType.cd_Upheaval, {
 });
 
 // TODO: when boss attacks are tracked, apply Vengance/Damnation's phys. reflection
-makeResourceAbility(ShellJob.WAR, SkillName.Vengeance, 38, ResourceType.cd_Vengeance, {
+makeResourceAbility('WAR', SkillName.Vengeance, 38, ResourceType.cd_Vengeance, {
 	rscType: WARResourceType.Vengeance,
 	autoUpgrade: { trait: TraitName.VengeanceMastery, otherSkill: SkillName.Damnation },
 	cooldown: 120,
 	applicationDelay: 0.62,
 });
 
-makeResourceAbility(ShellJob.WAR, SkillName.Damnation, 92, ResourceType.cd_Vengeance, {
+makeResourceAbility('WAR', SkillName.Damnation, 92, ResourceType.cd_Vengeance, {
 	rscType: WARResourceType.Damnation,
 	autoDowngrade: { trait: TraitName.VengeanceMastery, otherSkill: SkillName.Vengeance },
 	cooldown: 120,
 	applicationDelay: 0.62,
 });
 
-makeResourceAbility(ShellJob.WAR, SkillName.RawIntuition, 56, ResourceType.cd_RawIntuition, {
+makeResourceAbility('WAR', SkillName.RawIntuition, 56, ResourceType.cd_RawIntuition, {
 	rscType: WARResourceType.RawIntuition,
 	autoUpgrade: { trait: TraitName.RawIntuitionMastery, otherSkill: SkillName.BloodWhetting },
 	cooldown: 25,
 	applicationDelay: 0.45,
 });
 
-makeResourceAbility(ShellJob.WAR, SkillName.BloodWhetting, 82, ResourceType.cd_RawIntuition, {
+makeResourceAbility('WAR', SkillName.BloodWhetting, 82, ResourceType.cd_RawIntuition, {
 	rscType: WARResourceType.Bloodwhetting,
 	autoDowngrade: { trait: TraitName.RawIntuitionMastery, otherSkill: SkillName.RawIntuition },
 	onApplication: (state: WARState) => {
@@ -677,7 +676,7 @@ makeResourceAbility(ShellJob.WAR, SkillName.BloodWhetting, 82, ResourceType.cd_R
 	applicationDelay: 0.45,
 });
 
-makeAbility(ShellJob.WAR, SkillName.NascentFlash, 76, ResourceType.cd_RawIntuition, {
+makeAbility('WAR', SkillName.NascentFlash, 76, ResourceType.cd_RawIntuition, {
 	onApplication: (state: WARState) => {
 		let duration = 6;
 		if (state.hasTraitUnlocked(WARTraitName.EnhancedNascentFlash)) {
@@ -691,19 +690,19 @@ makeAbility(ShellJob.WAR, SkillName.NascentFlash, 76, ResourceType.cd_RawIntuiti
 	applicationDelay: 0.45,
 });
 
-makeResourceAbility(ShellJob.WAR, SkillName.Holmgang, 45, ResourceType.cd_Holmgang, {
+makeResourceAbility('WAR', SkillName.Holmgang, 45, ResourceType.cd_Holmgang, {
 	rscType: ResourceType.Holmgang,
 	cooldown: 240,
 	applicationDelay: 0.45,
 });
 
-makeResourceAbility(ShellJob.WAR, SkillName.ThrillOfBattle, 30, ResourceType.cd_ThrillOfBattle, {
+makeResourceAbility('WAR', SkillName.ThrillOfBattle, 30, ResourceType.cd_ThrillOfBattle, {
 	rscType: ResourceType.ThrillOfBattle,
 	cooldown: 90,
 	applicationDelay: 0.62,
 });
 
-makeAbility(ShellJob.WAR, SkillName.Equilibrium, 58, ResourceType.cd_Equilibrium, {
+makeAbility('WAR', SkillName.Equilibrium, 58, ResourceType.cd_Equilibrium, {
 	cooldown: 60,
 	applicationDelay: 0.62,
 	onApplication: (state: WARState) => {
@@ -713,7 +712,7 @@ makeAbility(ShellJob.WAR, SkillName.Equilibrium, 58, ResourceType.cd_Equilibrium
 	},
 });
 
-makeResourceAbility(ShellJob.WAR, SkillName.ShakeItOff, 68, ResourceType.cd_ShakeItOff, {
+makeResourceAbility('WAR', SkillName.ShakeItOff, 68, ResourceType.cd_ShakeItOff, {
 	rscType: ResourceType.ShakeItOff,
 	cooldown: 90,
 	onApplication: (state: WARState, node) => {
@@ -731,7 +730,7 @@ makeResourceAbility(ShellJob.WAR, SkillName.ShakeItOff, 68, ResourceType.cd_Shak
 	applicationDelay: 0,
 });
 
-makeAbility(ShellJob.WAR, SkillName.Defiance, 10, ResourceType.cd_Defiance, {
+makeAbility('WAR', SkillName.Defiance, 10, ResourceType.cd_Defiance, {
 	cooldown: 2,
 	maxCharges: 1,
 	applicationDelay: 0,
@@ -750,7 +749,7 @@ makeAbility(ShellJob.WAR, SkillName.Defiance, 10, ResourceType.cd_Defiance, {
 	},
 });
 
-makeAbility(ShellJob.WAR, SkillName.ReleaseDefiance, 10, ResourceType.cd_ReleaseDefiance, {
+makeAbility('WAR', SkillName.ReleaseDefiance, 10, ResourceType.cd_ReleaseDefiance, {
 	startOnHotbar: false,
 	cooldown: 1,
 	maxCharges: 1,

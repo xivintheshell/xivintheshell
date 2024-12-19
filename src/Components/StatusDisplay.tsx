@@ -5,15 +5,7 @@ import type { PlayerState } from "../Game/GameState";
 import { controller } from "../Controller/Controller";
 import { localize, localizeResourceType } from "./Localization";
 import { getCurrentThemeColors } from "./ColorTheme";
-import {
-	CASTER_JOBS,
-	HEALER_JOBS,
-	MELEE_JOBS,
-	MP_JOBS,
-	PHYSICAL_RANGED_JOBS,
-	ShellJob,
-	TANK_JOBS,
-} from "../Controller/Common";
+import { JOBS } from "../Game/Constants/Common";
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean;
@@ -738,15 +730,15 @@ export class StatusPropsGenerator<T extends PlayerState> {
 
 		const roleEnemyBuffViewProps: BuffProps[] = [];
 
-		if (TANK_JOBS.includes(job)) {
+		if (JOBS[job].role === "TANK") {
 			roleEnemyBuffViewProps.push(this.makeCommonTimer(ResourceType.Reprisal, false));
 		}
 
-		if (MELEE_JOBS.includes(job)) {
+		if (JOBS[job].role === "MELEE") {
 			roleEnemyBuffViewProps.push(this.makeCommonTimer(ResourceType.Feint, false));
 		}
 
-		if (CASTER_JOBS.includes(job)) {
+		if (JOBS[job].role === "CASTER") {
 			roleEnemyBuffViewProps.push(this.makeCommonTimer(ResourceType.Addle, false));
 		}
 
@@ -766,39 +758,30 @@ export class StatusPropsGenerator<T extends PlayerState> {
 		const roleBuffViewProps: BuffProps[] = [];
 
 		// Tank-only role buffs
-		if (TANK_JOBS.includes(job)) {
+		if (JOBS[job].role === "TANK") {
 			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.Rampart));
 			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.ShieldWall));
 			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.Stronghold));
-			const tankLB3 =
-				job === ShellJob.PLD
-					? ResourceType.LastBastion
-					: job === ShellJob.WAR
-						? ResourceType.LandWaker
-						: job === ShellJob.DRK
-							? ResourceType.DarkForce
-							: job === ShellJob.GNB
-								? ResourceType.GunmetalSoul
-								: undefined;
+			const tankLB3 = JOBS[job].limitBreakBuff;
 			if (tankLB3) {
 				roleBuffViewProps.push(this.makeCommonTimer(tankLB3));
 			}
 		}
 
 		// Melee-only role buffs
-		if (MELEE_JOBS.includes(job)) {
+		if (JOBS[job].role === "MELEE") {
 			[ResourceType.TrueNorth, ResourceType.Bloodbath].forEach((rscType) => {
 				roleBuffViewProps.push(this.makeCommonTimer(rscType));
 			});
 		}
 
 		// Anti-knockback buffs should be the last role buffs displayed
-		if ([...TANK_JOBS, ...MELEE_JOBS, ...PHYSICAL_RANGED_JOBS].includes(job)) {
+		if (["TANK", "MELEE", "RANGED"].includes(JOBS[job].role)) {
 			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.ArmsLength));
 		}
 
 		// Healers and casters have the same self-targeting role buffs, so we can do them all in one batch
-		if ([...HEALER_JOBS, ...CASTER_JOBS].includes(job)) {
+		if (["HEALER", "CASTER"].includes(JOBS[job].role)) {
 			[ResourceType.Swiftcast, ResourceType.LucidDreaming, ResourceType.Surecast].forEach(
 				(rscType) => {
 					roleBuffViewProps.push(this.makeCommonTimer(rscType));
@@ -813,7 +796,7 @@ export class StatusPropsGenerator<T extends PlayerState> {
 		);
 
 		// Melee jobs should end with the "I am able to hit this positional" selectors
-		if (MELEE_JOBS.includes(job)) {
+		if (JOBS[job].role === "MELEE") {
 			roleBuffViewProps.push(
 				{
 					rscType: ResourceType.RearPositional,
@@ -842,7 +825,7 @@ export class StatusPropsGenerator<T extends PlayerState> {
 
 	// Display the job-specific resources, including MP and the MP tick timer by defauly for jobs that use MP
 	public getAllResourceViewProps(): ResourceDisplayProps[] {
-		if (!MP_JOBS.includes(this.state.job)) {
+		if (!JOBS[this.state.job].usesMp) {
 			return this.jobSpecificResourceViewProps();
 		}
 

@@ -1,5 +1,4 @@
 import { localizeResourceType } from "../../Components/Localization";
-import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
@@ -29,7 +28,7 @@ const makeBRDResource = (
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
-	makeResource(ShellJob.BRD, rsc, maxValue, params ?? {});
+	makeResource('BRD', rsc, maxValue, params ?? {});
 };
 
 makeBRDResource(ResourceType.SoulVoice, 100);
@@ -384,7 +383,7 @@ const makeWeaponskill_BRD = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Weaponskill<BRDState> => {
-	return makeWeaponskill(ShellJob.BRD, name, unlockLevel, {
+	return makeWeaponskill('BRD', name, unlockLevel, {
 		...params,
 		recastTime: (state) => {
 			let speedBuff = undefined;
@@ -422,7 +421,7 @@ const makeAbility_BRD = (
 		autoUpgrade?: SkillAutoReplace;
 	},
 ): Ability<BRDState> => {
-	return makeAbility(ShellJob.BRD, name, unlockLevel, cdName, {
+	return makeAbility('BRD', name, unlockLevel, cdName, {
 		...params,
 		jobPotencyModifiers: (state) => state.getJobPotencyModifiers(name),
 	});
@@ -444,7 +443,7 @@ const makeResourceAbility_BRD = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<BRDState> => {
-	return makeResourceAbility(ShellJob.BRD, name, unlockLevel, cdName, {
+	return makeResourceAbility('BRD', name, unlockLevel, cdName, {
 		...params,
 	});
 };
@@ -495,19 +494,19 @@ const dotAppliers: Array<{
 	initialPotency: number;
 	tickPotency: number;
 }> = [
-	{
-		skillName: SkillName.CausticBite,
-		dotName: ResourceType.CausticBite,
-		initialPotency: 150,
-		tickPotency: 20,
-	},
-	{
-		skillName: SkillName.Stormbite,
-		dotName: ResourceType.Stormbite,
-		initialPotency: 100,
-		tickPotency: 25,
-	},
-];
+		{
+			skillName: SkillName.CausticBite,
+			dotName: ResourceType.CausticBite,
+			initialPotency: 150,
+			tickPotency: 20,
+		},
+		{
+			skillName: SkillName.Stormbite,
+			dotName: ResourceType.Stormbite,
+			initialPotency: 100,
+			tickPotency: 25,
+		},
+	];
 dotAppliers.forEach((props) => {
 	makeWeaponskill_BRD(props.skillName, 1, {
 		potency: props.initialPotency,
@@ -637,31 +636,31 @@ const songSkills: Array<{
 	cdName: ResourceType;
 	replaceIf?: ConditionalSkillReplace<BRDState>[];
 }> = [
-	{
-		skillName: SkillName.WanderersMinuet,
-		song: ResourceType.WanderersMinuet,
-		skillLevel: 52,
-		cdName: ResourceType.cd_WanderersMinuet,
-		replaceIf: [
-			{
-				newSkill: SkillName.PitchPerfect,
-				condition: (state) => state.hasResourceAvailable(ResourceType.WanderersMinuet),
-			},
-		],
-	},
-	{
-		skillName: SkillName.MagesBallad,
-		song: ResourceType.MagesBallad,
-		skillLevel: 30,
-		cdName: ResourceType.cd_MagesBallad,
-	},
-	{
-		skillName: SkillName.ArmysPaeon,
-		song: ResourceType.ArmysPaeon,
-		skillLevel: 40,
-		cdName: ResourceType.cd_ArmysPaeon,
-	},
-];
+		{
+			skillName: SkillName.WanderersMinuet,
+			song: ResourceType.WanderersMinuet,
+			skillLevel: 52,
+			cdName: ResourceType.cd_WanderersMinuet,
+			replaceIf: [
+				{
+					newSkill: SkillName.PitchPerfect,
+					condition: (state) => state.hasResourceAvailable(ResourceType.WanderersMinuet),
+				},
+			],
+		},
+		{
+			skillName: SkillName.MagesBallad,
+			song: ResourceType.MagesBallad,
+			skillLevel: 30,
+			cdName: ResourceType.cd_MagesBallad,
+		},
+		{
+			skillName: SkillName.ArmysPaeon,
+			song: ResourceType.ArmysPaeon,
+			skillLevel: 40,
+			cdName: ResourceType.cd_ArmysPaeon,
+		},
+	];
 songSkills.forEach((props) => {
 	makeAbility_BRD(props.skillName, props.skillLevel, props.cdName, {
 		applicationDelay: 0,

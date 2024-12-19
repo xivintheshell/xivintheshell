@@ -3,7 +3,6 @@
 // - Doing un-enchanted GCDs is physical damage
 // - Mana imbalance state halves gain of other color
 import {
-	damageData,
 	rotationTestSetup,
 	rotationTestTeardown,
 	makeTestWithConfigFn,
@@ -12,17 +11,15 @@ import {
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
-import { ShellJob } from "../Controller/Common";
 import { PotencyModifierType } from "../Game/Potency";
 import { ResourceType, SkillName } from "../Game/Common";
 import { RDMState } from "../Game/Jobs/RDM";
-import { getResourceInfo, ResourceInfo } from "../Game/Resources";
 
 beforeEach(rotationTestSetup);
 
 afterEach(rotationTestTeardown);
 
-const testWithConfig = makeTestWithConfigFn(ShellJob.RDM);
+const testWithConfig = makeTestWithConfigFn("RDM");
 
 it(
 	"consumes instants in the correct order",

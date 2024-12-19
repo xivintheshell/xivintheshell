@@ -2,13 +2,14 @@ import { updateTimelineView } from "../Components/Timeline";
 import { controller } from "./Controller";
 import { BuffType, Debug, ResourceType, SkillName, WarningType } from "../Game/Common";
 import { ActionNode } from "./Record";
-import { FileType, getCachedValue, removeCachedValue, setCachedValue, ShellJob } from "./Common";
+import { FileType, getCachedValue, removeCachedValue, setCachedValue } from "./Common";
 import { updateMarkers_TimelineMarkerPresets } from "../Components/TimelineMarkers";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
 import { refreshTimelineEditor } from "../Components/TimelineEditor";
 import { Potency } from "../Game/Potency";
 import { MarkerColor } from "../Components/ColorTheme";
 import { TimelineDimensions } from "../Components/Common";
+import { ShellJob } from "../Game/Constants/Common";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -310,7 +311,7 @@ export class Timeline {
 	}
 
 	addSlot() {
-		this.slots.push({ job: ShellJob.BLM, elements: [] });
+		this.slots.push({ job: 'BLM', elements: [] });
 		console.assert(this.slots.length <= MAX_TIMELINE_SLOTS);
 		this.activeSlotIndex = this.slots.length - 1;
 		controller.setConfigAndRestart(controller.gameConfig);
@@ -359,7 +360,7 @@ export class Timeline {
 			// found record; make sure the slot exists
 			this.activeSlotIndex = index;
 			while (this.slots.length <= index) {
-				this.slots.push({ job: ShellJob.BLM, elements: [] });
+				this.slots.push({ job: 'BLM', elements: [] });
 			}
 			let content = JSON.parse(str);
 			controller.loadBattleRecordFromFile(content);

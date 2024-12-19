@@ -36,7 +36,6 @@ import { Traits } from "./Traits";
 
 import { controller } from "../Controller/Controller";
 import { ActionNode } from "../Controller/Record";
-import { CASTER_JOBS, HEALER_JOBS, ShellJob, SKS_JOBS, SPS_JOBS } from "../Controller/Common";
 import { Modifiers, Potency, PotencyModifier, PotencyModifierType } from "./Potency";
 import { Buff } from "./Buffs";
 
@@ -44,6 +43,7 @@ import type { BLMState } from "./Jobs/BLM";
 import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";
+import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS } from "./Constants/Common";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require("seedrandom");
@@ -121,10 +121,10 @@ export abstract class GameState {
 		// GCD, movement, and animation locks are treated as special since they do not appear
 		// in resource overrides
 		let adjustedGCD = 2.5;
-		if (SKS_JOBS.includes(this.job)) {
+		if (JOBS[this.job].speedStat === "sks") {
 			adjustedGCD = config.adjustedSksGCD();
 		}
-		if (SPS_JOBS.includes(this.job)) {
+		if (JOBS[this.job].speedStat === "sps") {
 			adjustedGCD = config.adjustedGCD();
 		}
 		this.cooldowns.set(
@@ -487,7 +487,7 @@ export abstract class GameState {
 	// BLM uses this for LL GCD scaling, but PCT and SAM do not.
 	gcdRecastTimeScale(): number {
 		// TODO move this to child class methods
-		if (this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines)) {
+		if (this.job === "BLM" && this.hasResourceAvailable(ResourceType.LeyLines)) {
 			// should be approximately 0.85
 			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, 15));
 			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
@@ -1084,7 +1084,7 @@ export abstract class GameState {
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
 		let capturedManaCost = skill.manaCostFn(this);
 		let llCovered =
-			this.job === ShellJob.BLM && this.resources.get(ResourceType.LeyLines).available(1);
+			this.job === "BLM" && this.resources.get(ResourceType.LeyLines).available(1);
 		let capturedCastTime =
 			skill.kind === "weaponskill" || skill.kind === "spell" || skill.kind === "limitbreak"
 				? skill.castTimeFn(this)
@@ -1295,7 +1295,7 @@ export abstract class GameState {
 
 	// These methods enforce type specialization so we can avoid some casts on the frontend
 	isBLMState(): this is BLMState {
-		return this.job === ShellJob.BLM;
+		return this.job === "BLM";
 	}
 }
 

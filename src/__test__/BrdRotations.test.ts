@@ -8,7 +8,6 @@ import {
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
-import { ShellJob } from "../Controller/Common";
 import { PotencyModifierType } from "../Game/Potency";
 import { ProcMode, ResourceType, SkillName } from "../Game/Common";
 import { BRDState } from "../Game/Jobs/BRD";
@@ -17,7 +16,7 @@ beforeEach(rotationTestSetup);
 
 afterEach(rotationTestTeardown);
 
-const testWithConfig = makeTestWithConfigFn(ShellJob.BRD);
+const testWithConfig = makeTestWithConfigFn("BRD");
 
 it(
 	"accepts the standard opener",
