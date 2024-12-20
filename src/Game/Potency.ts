@@ -64,8 +64,8 @@ export type CritDirectMultiplier = {
 	kind: "critDirect";
 	buffType?: BuffType;
 	source: PotencyModifierType;
-	critFactor: number;
-	dhFactor: number;
+	critBonus: number;
+	dhBonus: number;
 };
 
 export type PotencyModifier = PotencyMultiplier | PotencyAdder | CritDirectMultiplier;
@@ -80,20 +80,20 @@ export const Modifiers = {
 	AutoCrit: {
 		kind: "critDirect",
 		source: PotencyModifierType.AUTO_CRIT,
-		critFactor: 1,
-		dhFactor: 0,
+		critBonus: 1,
+		dhBonus: 0,
 	} as CritDirectMultiplier,
 	AutoCDH: {
 		kind: "critDirect",
 		source: PotencyModifierType.AUTO_CDH,
-		critFactor: 1,
-		dhFactor: 1,
+		critBonus: 1,
+		dhBonus: 1,
 	} as CritDirectMultiplier,
 	NoCDH: {
 		kind: "critDirect",
 		source: PotencyModifierType.NO_CDH,
-		critFactor: 0,
-		dhFactor: 0,
+		critBonus: 0,
+		dhBonus: 0,
 	} as CritDirectMultiplier,
 	Starry: {
 		kind: "multiplier",
@@ -149,8 +149,8 @@ export const Modifiers = {
 	Devilment: {
 		kind: "critDirect",
 		source: PotencyModifierType.DEVILMENT,
-		critFactor: 0.2,
-		dhFactor: 0.2,
+		critBonus: 0.2,
+		dhBonus: 0.2,
 	} as CritDirectMultiplier,
 	FugetsuBase: {
 		kind: "multiplier",
@@ -254,8 +254,8 @@ export class Potency {
 	getAmount(props: { tincturePotencyMultiplier: number; includePartyBuffs: boolean }) {
 		let totalDamageFactor = 1;
 		let totalAdditiveAmount = 0;
-		let totalCritFactor = 0;
-		let totalDhFactor = 0;
+		let totalCritBonus = 0;
+		let totalDhBonus = 0;
 
 		let isAutoCDH = false;
 		let isAutoCrit = false;
@@ -286,8 +286,8 @@ export class Potency {
 				if (buff.kind === "multiplier") {
 					totalDamageFactor *= buff.damageFactor;
 				} else if (buff.kind === "critDirect") {
-					totalCritFactor += buff.critFactor;
-					totalDhFactor += buff.dhFactor;
+					totalCritBonus += buff.critBonus;
+					totalDhBonus += buff.dhBonus;
 				}
 			});
 		}
@@ -297,11 +297,11 @@ export class Potency {
 			base *
 			this.#calculatePotencyModifier(
 				totalDamageFactor,
-				noCDH ? -1 : totalCritFactor,
-				noCDH ? -1 : totalDhFactor,
+				noCDH ? 0 : totalCritBonus,
+				noCDH ? 0 : totalDhBonus,
 			);
-		if (isAutoCDH) amt *= this.#calculateAutoCDHModifier(totalCritFactor, totalDhFactor);
-		else if (isAutoCrit) amt *= this.#calculateAutoCritModifier(totalCritFactor, totalDhFactor);
+		if (isAutoCDH) amt *= this.#calculateAutoCDHModifier(totalCritBonus, totalDhBonus);
+		else if (isAutoCrit) amt *= this.#calculateAutoCritModifier(totalCritBonus, totalDhBonus);
 		return amt;
 	}
 
@@ -392,15 +392,7 @@ export class Potency {
 		const dhStat = this.config.directHit;
 		const det = this.config.determination;
 
-		const base = XIVMath.calculateDamage(
-			level,
-			critStat,
-			dhStat,
-			det,
-			1,
-			critBonus < 1 ? critBonus : 0,
-			dhBonus < 1 ? dhBonus : 0,
-		);
+		const base = XIVMath.calculateDamage(level, critStat, dhStat, det, 1, 0, 0);
 		const buffed = XIVMath.calculateDamage(
 			level,
 			critStat,

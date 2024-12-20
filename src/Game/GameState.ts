@@ -1043,8 +1043,8 @@ export abstract class GameState {
 							kind: "critDirect",
 							source: PotencyModifierType.PARTY,
 							buffType: buff.name,
-							critFactor: buff.info.critBonus,
-							dhFactor: buff.info.dhBonus,
+							critBonus: buff.info.critBonus,
+							dhBonus: buff.info.dhBonus,
 						});
 					} else {
 						buffCollection.set(buff.name, {

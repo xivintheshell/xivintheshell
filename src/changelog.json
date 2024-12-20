@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/20/24",
+		"changes": [
+			"Fixed stats tables not including party buff potencies for most skills"
+		]
+	},
+	{
 		"date": "12/19/24",
 		"changes": [
 			"[WAR] Adjusted animation lock of Primal Rend",
