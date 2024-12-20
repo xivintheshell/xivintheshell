@@ -711,6 +711,8 @@ export class StatusPropsGenerator<T extends PlayerState> {
 	// Composes the job-specific buffs with the applicable role buffs
 	public getAllSelfTargetedBuffViewProps(): BuffProps[] {
 		const job = this.state.job;
+		const resources = this.state.resources;
+
 		const roleBuffViewProps: BuffProps[] = [];
 
 		// Tank-only role buffs
@@ -759,6 +761,26 @@ export class StatusPropsGenerator<T extends PlayerState> {
 			this.makeCommonTimer(ResourceType.Tincture),
 			this.makeCommonTimer(ResourceType.Sprint),
 		);
+
+		// Melee jobs should end with the "I am able to hit this positional" selectors
+		if (MELEE_JOBS.includes(job)) {
+			roleBuffViewProps.push(
+				{
+					rscType: ResourceType.RearPositional,
+					onSelf: true,
+					enabled: resources.get(ResourceType.RearPositional).enabled,
+					stacks: 1,
+					className: "",
+				},
+				{
+					rscType: ResourceType.FlankPositional,
+					onSelf: true,
+					enabled: resources.get(ResourceType.FlankPositional).enabled,
+					stacks: 1,
+					className: "",
+				},
+			);
+		}
 
 		return [...this.jobSpecificSelfTargetedBuffViewProps(), ...roleBuffViewProps];
 	}
