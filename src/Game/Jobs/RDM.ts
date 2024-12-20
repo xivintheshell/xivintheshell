@@ -2,7 +2,15 @@
 
 import { controller } from "../../Controller/Controller";
 import { ShellJob } from "../../Controller/Common";
-import { Aspect, ProcMode, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import {
+	Aspect,
+	BuffType,
+	ProcMode,
+	ResourceType,
+	SkillName,
+	TraitName,
+	WarningType,
+} from "../Common";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -14,17 +22,20 @@ import {
 	makeResourceAbility,
 	makeSpell,
 	makeWeaponskill,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
+	Skill,
 	SkillAutoReplace,
 	Spell,
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
 import { Traits } from "../Traits";
-import { GameState } from "../GameState";
+import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, Resource, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
+import { ActionNode } from "../../Controller/Record";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -121,6 +132,21 @@ export class RDMState extends GameState {
 		this.resources.set(new Resource(ResourceType.Manafication, mfStacks, 0));
 
 		this.registerRecurringEvents();
+	}
+
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.Embolden) && skill.aspect !== Aspect.Physical) {
+			node.addBuff(BuffType.Embolden);
+		}
+		if (this.hasResourceAvailable(ResourceType.Manafication)) {
+			node.addBuff(BuffType.Manafication);
+		}
+		if (
+			skill.name === SkillName.Impact &&
+			this.hasResourceAvailable(ResourceType.Acceleration)
+		) {
+			node.addBuff(BuffType.Acceleration);
+		}
 	}
 
 	hasThreeManaStacks(): boolean {
@@ -445,6 +471,7 @@ const makeAbility_RDM = (
 		highlightIf?: StatePredicate<RDMState>;
 		startOnHotbar?: boolean;
 		applicationDelay?: number;
+		animationLock?: number;
 		cooldown: number;
 		maxCharges?: number;
 		validateAttempt?: StatePredicate<RDMState>;
@@ -1037,6 +1064,7 @@ makeAbility_RDM(SkillName.CorpsACorps, 6, ResourceType.cd_CorpsACorps, {
 	potency: 130,
 	cooldown: 35,
 	maxCharges: 2,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
 const flipPotency: Array<[TraitName, number]> = [
@@ -1058,6 +1086,7 @@ makeAbility_RDM(SkillName.Displacement, 40, ResourceType.cd_Displacement, {
 	potency: flipPotency,
 	cooldown: 35,
 	maxCharges: 2,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
 makeAbility_RDM(SkillName.Fleche, 45, ResourceType.cd_Fleche, {
