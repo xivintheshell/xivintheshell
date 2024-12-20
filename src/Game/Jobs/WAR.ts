@@ -220,7 +220,7 @@ const makeWeaponskill_WAR = (
 		};
 		jobPotencyModifiers?: PotencyModifierFn<WARState>;
 		applicationDelay?: number;
-		animationLock?: number,
+		animationLock?: number;
 		validateAttempt?: StatePredicate<WARState>;
 		onConfirm?: EffectFn<WARState>;
 		highlightIf?: StatePredicate<WARState>;
