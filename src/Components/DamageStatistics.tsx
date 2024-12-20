@@ -168,13 +168,13 @@ function buffName(buff: PotencyModifierType) {
 	} else if (buff === PotencyModifierType.POSITIONAL) {
 		text = localize({ en: "positional", zh: "身位" }) as string;
 	} else if (buff === PotencyModifierType.ARCANE_CIRCLE) {
-		text = localize({ en: "arcane circle" }) as string;
+		text = localize({ en: "arcane circle", zh: "神秘环" }) as string;
 	} else if (buff === PotencyModifierType.DEATHSDESIGN) {
-		text = localize({ en: "death's design" }) as string;
+		text = localize({ en: "death's design", zh: "死亡烙印" }) as string;
 	} else if (buff === PotencyModifierType.ENHANCED_GIBBET_GALLOWS) {
-		text = localize({ en: "enhanced gibbet/gallows" }) as string;
+		text = localize({ en: "enhanced gibbet/gallows", zh: "绞决/缢杀效果提高" }) as string;
 	} else if (buff === PotencyModifierType.ENHANCED_REAPING) {
-		text = localize({ en: "enhanced reaping" }) as string;
+		text = localize({ en: "enhanced reaping", zh: "虚无/交错收割效果提高" }) as string;
 	} else if (buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
 		text = localize({ en: "immortal Sacrifice" }) as string;
 	} else if (buff === PotencyModifierType.BARRAGE) {
@@ -276,19 +276,19 @@ function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
 		text = localize({ en: "PS", zh: "身位" });
 		color = MarkerColor.Green; // TODO
 	} else if (props.buff === PotencyModifierType.ARCANE_CIRCLE) {
-		text = localize({ en: "AC" }) as string;
+		text = localize({ en: "AC", zh: "神秘环" }) as string;
 		color = MarkerColor.Pink;
 	} else if (props.buff === PotencyModifierType.DEATHSDESIGN) {
-		text = localize({ en: "DD" }) as string;
+		text = localize({ en: "DD", zh: "死亡烙印" }) as string;
 		color = MarkerColor.Red;
 	} else if (props.buff === PotencyModifierType.ENHANCED_GIBBET_GALLOWS) {
-		text = localize({ en: "E. GIB/GAL" }) as string;
+		text = localize({ en: "E. GIB/GAL", zh: "绞决/缢杀↑" }) as string;
 		color = MarkerColor.Blue;
 	} else if (props.buff === PotencyModifierType.ENHANCED_REAPING) {
-		text = localize({ en: "E. REAPING" }) as string;
+		text = localize({ en: "E. REAPING", zh: "虚无/交错收割↑" }) as string;
 		color = MarkerColor.Purple;
 	} else if (props.buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
-		text = localize({ en: "IMMORTAL SAC" }) as string;
+		text = localize({ en: "IMMORTAL SAC", zh: "死亡祭品" }) as string;
 		color = MarkerColor.Pink;
 	} else if (props.buff === PotencyModifierType.SURGING_TEMPEST) {
 		text = localize({ en: "SURGING" }) as string;

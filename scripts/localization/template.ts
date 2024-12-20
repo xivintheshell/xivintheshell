@@ -2,11 +2,11 @@
 // npx ts-node template.ts
 
 import fs from "node:fs"
-import {SAMSkillName, SAMResourceType} from "../../src/Game/Constants/SAM";
+import {RPRSkillName, RPRResourceType} from "../../src/Game/Constants/RPR";
 
 fs.readFile("skills.txt", "utf8", (err, data) => {
-	let zh = data.split('\n').map(line => line.trim());
-	let en = Object.keys(SAMSkillName);
+	let zh = data.split('\n').map(line => line.trim()).filter(l => l.length > 0);
+	let en = Object.keys(RPRSkillName);
 	if (zh.length === en.length) {
 		console.log(en.map((_, i) => `[SkillName.${en[i]}, "${zh[i]}"],`).join('\n'));
 	} else {
@@ -15,8 +15,8 @@ fs.readFile("skills.txt", "utf8", (err, data) => {
 });
 
 fs.readFile("resources.txt", "utf8", (err, data) => {
-	let zh = data.split('\n').map(line => line.trim());
-	let en = Object.keys(SAMResourceType);
+	let zh = data.split('\n').map(line => line.trim()).filter(l => l.length > 0);
+	let en = Object.keys(RPRResourceType);
 	if (zh.length === en.length) {
 		console.log(en.map((_, i) => `[ResourceType.${en[i]}, "${zh[i]}"],`).join('\n'));
 	} else {
