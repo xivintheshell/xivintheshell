@@ -2,7 +2,8 @@
 	{
 		"date": "12/20/24",
 		"changes": [
-			"Fixed stats tables not including party buff potencies for most skills"
+			"Fixed stats tables not including party buff potencies for most skills",
+			"Removed flank/rear positional resources for non-melee jobs"
 		]
 	},
 	{

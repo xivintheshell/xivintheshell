@@ -1,5 +1,6 @@
 import {
 	getCachedValue,
+	MELEE_JOBS,
 	removeCachedValue,
 	ReplayMode,
 	setCachedValue,
@@ -414,6 +415,16 @@ class Controller {
 						: [],
 				),
 			);
+		}
+		// make sure in case anyone ever used these for non-melee jobs they are dropped here
+		if (!MELEE_JOBS.includes(content.config.job)) {
+			content.config.initialResourceOverrides =
+				content.config.initialResourceOverrides.filter(
+					(ov: any) =>
+						![ResourceType.FlankPositional, ResourceType.RearPositional].includes(
+							ov.type,
+						),
+				);
 		}
 
 		let gameConfig = new GameConfig(content.config);
