@@ -285,7 +285,7 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 
 		{props.job === ShellJob.SAM && <>
 			<div>
-				{localize({ en: "Fuka GCD" })}:{" "}
+				{localize({ en: "Fuka GCD", zh: "风花GCD" })}:{" "}
 				{controller.gameConfig
 					.adjustedSksGCD(2.5, (controller.game as SAMState).getFukaModifier())
 					.toFixed(2)}

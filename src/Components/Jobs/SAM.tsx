@@ -6,10 +6,10 @@ import {
 	ResourceDisplayProps,
 	StatusPropsGenerator,
 } from "../StatusDisplay";
-import {ResourceType} from "../../Game/Common";
-import {SAMState} from "../../Game/Jobs/SAM";
-import {getCurrentThemeColors} from "../../Components/ColorTheme";
-import {localize} from "../../Components/Localization";
+import { ResourceType } from "../../Game/Common";
+import { SAMState } from "../../Game/Jobs/SAM";
+import { getCurrentThemeColors } from "../../Components/ColorTheme";
+import { localize } from "../../Components/Localization";
 
 [
 	ResourceType.MeikyoShisui,
@@ -94,14 +94,14 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			},
 			{
 				kind: "bar",
-				name: localize({en: "kenki", zh: "剑气" }),
+				name: localize({ en: "kenki", zh: "剑气" }),
 				color: colors.sam.kenki,
 				progress: kenki / 100,
 				valueString: kenki.toFixed(0),
 			} as ResourceBarProps,
 			{
 				kind: "counter",
-				name: localize({en: "meditation", zh: "剑压" }),
+				name: localize({ en: "meditation", zh: "剑压" }),
 				color: colors.sam.meditation,
 				currentStacks: meditation,
 				maxStacks: 3,
