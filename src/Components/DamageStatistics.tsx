@@ -160,13 +160,13 @@ function buffName(buff: PotencyModifierType) {
 	} else if (buff === PotencyModifierType.COMBO) {
 		text = localize({ en: "combo", zh: "连击" }) as string;
 	} else if (buff === PotencyModifierType.FUGETSU) {
-		text = localize({ en: "fugetsu" }) as string;
+		text = localize({ en: "fugetsu", zh: "风月" }) as string;
 	} else if (buff === PotencyModifierType.AUTO_CRIT) {
-		text = localize({ en: "auto crit" }) as string;
+		text = localize({ en: "auto crit", zh: "必暴" }) as string;
 	} else if (buff === PotencyModifierType.YATEN) {
-		text = localize({ en: "yaten" }) as string;
+		text = localize({ en: "yaten", zh: "强化夜天" }) as string;
 	} else if (buff === PotencyModifierType.POSITIONAL) {
-		text = localize({ en: "positional" }) as string;
+		text = localize({ en: "positional", zh: "身位" }) as string;
 	} else if (buff === PotencyModifierType.ARCANE_CIRCLE) {
 		text = localize({ en: "arcane circle" }) as string;
 	} else if (buff === PotencyModifierType.DEATHSDESIGN) {
@@ -264,16 +264,16 @@ function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
 		text = localize({ en: "CMB", zh: "连击" });
 		color = colors.resources.comboTag;
 	} else if (props.buff === PotencyModifierType.FUGETSU) {
-		text = localize({ en: "FGS" });
+		text = localize({ en: "FGS", zh: "风月" });
 		color = colors.sam.fugetsu;
 	} else if (props.buff === PotencyModifierType.AUTO_CRIT) {
-		text = localize({ en: "CRIT" });
+		text = localize({ en: "CRIT", zh: "必暴" });
 		color = colors.resources.cdhTag;
 	} else if (props.buff === PotencyModifierType.YATEN) {
-		text = localize({ en: "ENH" });
+		text = localize({ en: "ENH", zh: "强化夜天" });
 		color = colors.pct.cometPaint; // TODO
 	} else if (props.buff === PotencyModifierType.POSITIONAL) {
-		text = localize({ en: "PS" });
+		text = localize({ en: "PS", zh: "身位" });
 		color = MarkerColor.Green; // TODO
 	} else if (props.buff === PotencyModifierType.ARCANE_CIRCLE) {
 		text = localize({ en: "AC" }) as string;
