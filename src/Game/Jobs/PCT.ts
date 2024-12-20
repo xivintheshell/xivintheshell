@@ -208,6 +208,7 @@ const makeSpell_PCT = (
 		baseManaCost?: number;
 		basePotency?: number | Array<[TraitName, number]>;
 		jobPotencyModifiers?: PotencyModifierFn<PCTState>;
+		falloff?: number;
 		applicationDelay: number;
 		validateAttempt?: StatePredicate<PCTState>;
 		onConfirm?: EffectFn<PCTState>;
@@ -248,6 +249,7 @@ const makeSpell_PCT = (
 			}
 			return mods;
 		},
+		falloff: params.falloff,
 		validateAttempt: params.validateAttempt,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) =>
@@ -274,6 +276,7 @@ const makeAbility_PCT = (
 		replaceIf?: ConditionalSkillReplace<PCTState>[];
 		highlightIf?: StatePredicate<PCTState>;
 		startOnHotbar?: boolean;
+		falloff?: number;
 		applicationDelay?: number;
 		cooldown: number;
 		maxCharges?: number;
@@ -518,6 +521,7 @@ makeSpell_PCT(SkillName.Fire2InRed, 25, {
 		[TraitName.PictomancyMasteryII, 100],
 		[TraitName.PictomancyMasteryIV, 120],
 	],
+	falloff: 0,
 	applicationDelay: 0.84,
 	validateAttempt: (state) =>
 		red2Condition.condition(state) &&
@@ -535,6 +539,7 @@ makeSpell_PCT(SkillName.Aero2InGreen, 35, {
 		[TraitName.PictomancyMasteryII, 120],
 		[TraitName.PictomancyMasteryIV, 140],
 	],
+	falloff: 0,
 	applicationDelay: 0.89,
 	validateAttempt: (state) =>
 		green2Condition.condition(state) &&
@@ -553,6 +558,7 @@ makeSpell_PCT(SkillName.Water2InBlue, 45, {
 		[TraitName.PictomancyMasteryII, 140],
 		[TraitName.PictomancyMasteryIV, 160],
 	],
+	falloff: 0,
 	applicationDelay: 0.89,
 	validateAttempt: (state) =>
 		blue2Condition.condition(state) &&
@@ -645,6 +651,7 @@ makeSpell_PCT(SkillName.Blizzard2InCyan, 60, {
 		[TraitName.PictomancyMasteryII, 220],
 		[TraitName.PictomancyMasteryIV, 240],
 	],
+	falloff: 0,
 	applicationDelay: 0.75,
 	validateAttempt: (state) =>
 		cyan2Condition.condition(state) &&
@@ -664,6 +671,7 @@ makeSpell_PCT(SkillName.Stone2InYellow, 60, {
 		[TraitName.PictomancyMasteryII, 240],
 		[TraitName.PictomancyMasteryIV, 260],
 	],
+	falloff: 0,
 	applicationDelay: 0.8,
 	validateAttempt: (state) =>
 		yellow2Condition.condition(state) &&
@@ -683,6 +691,7 @@ makeSpell_PCT(SkillName.Thunder2InMagenta, 60, {
 		[TraitName.PictomancyMasteryII, 260],
 		[TraitName.PictomancyMasteryIV, 280],
 	],
+	falloff: 0,
 	applicationDelay: 0.8,
 	validateAttempt: (state) =>
 		magenta2Condition.condition(state) &&
@@ -704,6 +713,7 @@ makeSpell_PCT(SkillName.HolyInWhite, 80, {
 		[TraitName.PictomancyMasteryIII, 460],
 		[TraitName.PictomancyMasteryIV, 520],
 	],
+	falloff: 0.6,
 	applicationDelay: 1.34,
 	validateAttempt: (state) =>
 		!state.hasResourceAvailable(ResourceType.MonochromeTones) &&
@@ -726,6 +736,7 @@ makeSpell_PCT(SkillName.CometInBlack, 90, {
 		[TraitName.Never, 780],
 		[TraitName.PictomancyMasteryIV, 880],
 	],
+	falloff: 0.6,
 	applicationDelay: 1.87,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.MonochromeTones) &&
@@ -745,6 +756,7 @@ makeSpell_PCT(SkillName.RainbowDrip, 92, {
 	baseManaCost: 400,
 	basePotency: 1000,
 	applicationDelay: 1.24,
+	falloff: 0.85,
 	onConfirm: (state) => {
 		// gain a holy stack
 		state.resources.get(ResourceType.Paint).gain(1);
@@ -758,6 +770,7 @@ makeSpell_PCT(SkillName.StarPrism, 100, {
 	baseManaCost: 0,
 	basePotency: 1400,
 	applicationDelay: 1.25,
+	falloff: 0.6,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Starstruck),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.Starstruck);
@@ -862,6 +875,7 @@ livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAtte
 		replaceIf: livingConditions.slice(0, i).concat(livingConditions.slice(i + 1)),
 		startOnHotbar: i === 0,
 		potency: potencies,
+		falloff: 0.6,
 		applicationDelay: applicationDelay,
 		cooldown: 40,
 		validateAttempt: validateAttempt,
@@ -896,6 +910,7 @@ makeAbility_PCT(SkillName.MogOfTheAges, 30, ResourceType.cd_Portrait, {
 		[TraitName.Never, 1100],
 		[TraitName.PictomancyMasteryIII, 1300],
 	],
+	falloff: 0.6,
 	applicationDelay: 1.15,
 	validateAttempt: (state) => state.resources.get(ResourceType.Portrait).availableAmount() === 1,
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.Portrait),
@@ -907,6 +922,7 @@ makeAbility_PCT(SkillName.RetributionOfTheMadeen, 30, ResourceType.cd_Portrait, 
 	replaceIf: [mogCondition],
 	startOnHotbar: false,
 	potency: 1400,
+	falloff: 0.6,
 	applicationDelay: 1.3,
 	validateAttempt: (state) => state.resources.get(ResourceType.Portrait).availableAmount() === 2,
 	onConfirm: (state) => state.resources.get(ResourceType.Portrait).overrideCurrentValue(0),
@@ -1015,6 +1031,7 @@ hammerInfos.forEach(([name, level, potencies, applicationDelay], i) =>
 		baseCastTime: 0,
 		startOnHotbar: i === 0,
 		basePotency: potencies,
+		falloff: 0.6,
 		applicationDelay: applicationDelay,
 		validateAttempt: (state) =>
 			hammerConditions[i].condition(state) &&
