@@ -1,15 +1,15 @@
 import {
-	registerBuffIcon,
 	BuffProps,
+	registerBuffIcon,
 	ResourceBarProps,
 	ResourceCounterProps,
 	ResourceDisplayProps,
 	StatusPropsGenerator,
 } from "../StatusDisplay";
-import { ResourceType } from "../../Game/Common";
-import { SAMState } from "../../Game/Jobs/SAM";
-import { getCurrentThemeColors } from "../../Components/ColorTheme";
-import { localize } from "../../Components/Localization";
+import {ResourceType} from "../../Game/Common";
+import {SAMState} from "../../Game/Jobs/SAM";
+import {getCurrentThemeColors} from "../../Components/ColorTheme";
+import {localize} from "../../Components/Localization";
 
 [
 	ResourceType.MeikyoShisui,
@@ -81,12 +81,10 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 		const kenki = resources.get(ResourceType.Kenki).availableAmount();
 		const meditation = resources.get(ResourceType.Meditation).availableAmount();
 		// TODO use simplified gauge iconography so people don't have to remember names
-		const infos: ResourceDisplayProps[] = [
+		return [
 			{
 				kind: "sen",
-				name: localize({
-					en: "sen",
-				}),
+				name: localize({ en: "sen", zh: "闪" }),
 				hasSetsu: this.state.hasResourceAvailable(ResourceType.Setsu),
 				hasGetsu: this.state.hasResourceAvailable(ResourceType.Getsu),
 				hasKa: this.state.hasResourceAvailable(ResourceType.KaSen),
@@ -96,19 +94,18 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			},
 			{
 				kind: "bar",
-				name: localize({ en: "kenki" }),
+				name: localize({en: "kenki", zh: "剑气" }),
 				color: colors.sam.kenki,
 				progress: kenki / 100,
 				valueString: kenki.toFixed(0),
 			} as ResourceBarProps,
 			{
 				kind: "counter",
-				name: localize({ en: "meditation" }),
+				name: localize({en: "meditation", zh: "剑压" }),
 				color: colors.sam.meditation,
 				currentStacks: meditation,
 				maxStacks: 3,
 			} as ResourceCounterProps,
 		];
-		return infos;
 	}
 }
