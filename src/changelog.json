@@ -2,7 +2,8 @@
 	{
 		"date": "12/19/24",
 		"changes": [
-			"[WAR] Adjusted animation lock of Primal Rend"
+			"[WAR] Adjusted animation lock of Primal Rend",
+			"Fixed Down for the Count timing in FRU P4 (thanks xi12570)"
 		]
 	},
 	{
