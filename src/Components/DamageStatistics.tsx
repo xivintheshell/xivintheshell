@@ -974,7 +974,7 @@ export class DamageStatistics extends React.Component {
 			: localize({ en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）" });
 		let dotHeaderStr = localize({ en: "Thunder", zh: "雷统计" });
 		if (controller.game.job === ShellJob.SAM) {
-			dotHeaderStr = localize({ en: "Higanbana" });
+			dotHeaderStr = localize({ en: "Higanbana", zh: "彼岸花" });
 		} else if (controller.game.job === ShellJob.MCH) {
 			dotHeaderStr = localize({ en: "Bioblaster" });
 		}

@@ -291,12 +291,12 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 
 		{props.job === ShellJob.SAM && <>
 			<div>
-				{localize({ en: "Higanbana DoT tick offset " })}
+				{localize({ en: "Higanbana DoT tick offset ", zh: "彼岸花dot&跳蓝时间差 " })}
 				<Help topic={"higanbanaTickOffset"} content={higanbanaOffsetDesc} />:{" "}
 				{higanbanaTickOffset}
 			</div>
 			<div>
-				{localize({ en: "Fuka GCD" })}:{" "}
+				{localize({ en: "Fuka GCD", zh: "风花GCD" })}:{" "}
 				{controller.gameConfig.adjustedSksGCD(2.5, ResourceType.Fuka).toFixed(2)}
 			</div>
 		</>}
