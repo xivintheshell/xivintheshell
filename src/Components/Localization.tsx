@@ -37,6 +37,28 @@ export function localizeDate(date: string, lang: Language): string {
 }
 
 const skillsZh = new Map<SkillName, string>([
+	// common
+	[SkillName.Addle, "病毒"],
+	[SkillName.Swiftcast, "即刻咏唱"],
+	[SkillName.LucidDreaming, "醒梦"],
+	[SkillName.Surecast, "沉稳咏唱"],
+	[SkillName.Tincture, "爆发药"],
+	[SkillName.Sprint, "疾跑"],
+	[SkillName.Feint, "牵制"],
+	[SkillName.TrueNorth, "真北"],
+	[SkillName.SecondWind, "内丹"],
+	[SkillName.LegSweep, "扫腿"],
+	[SkillName.ArmsLength, "亲疏自行"],
+	[SkillName.Bloodbath, "浴血"],
+	[SkillName.HeadGraze, "伤头"],
+	[SkillName.Rampart, "铁壁"],
+	[SkillName.Reprisal, "雪仇"],
+	[SkillName.LowBlow, "下踢"],
+	[SkillName.Interject, "插言"],
+	[SkillName.Provoke, "挑衅"],
+	[SkillName.Shirk, "退避"],
+
+	// BLM
 	[SkillName.Fire, "火1"],
 	[SkillName.Blizzard, "冰1"],
 	[SkillName.Fire2, "火2"],
@@ -63,15 +85,9 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.HighFire2, "高火2"],
 	[SkillName.HighBlizzard2, "高冰冻2"],
 	[SkillName.Amplifier, "详述"],
-	[SkillName.Addle, "病毒"],
-	[SkillName.Swiftcast, "即刻咏唱"],
-	[SkillName.LucidDreaming, "醒梦"],
-	[SkillName.Surecast, "沉稳咏唱"],
-	[SkillName.Tincture, "爆发药"],
 	[SkillName.Paradox, "悖论"],
 	[SkillName.HighThunder, "高闪雷"],
 	[SkillName.HighThunder2, "高震雷"],
-	[SkillName.Sprint, "疾跑"],
 	[SkillName.Retrace, "魔纹重置"],
 	[SkillName.FlareStar, "耀星"],
 
@@ -433,6 +449,10 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.Swiftcast, "即刻咏唱"],
 	[ResourceType.LucidDreaming, "醒梦"],
 	[ResourceType.Surecast, "沉稳咏唱"],
+	[ResourceType.ArmsLength, "亲疏自行"],
+	[ResourceType.Feint, "牵制"],
+	[ResourceType.TrueNorth, "真北"],
+	[ResourceType.Bloodbath, "浴血"],
 	[ResourceType.InCombat, "战斗中"],
 	[ResourceType.cd_GCD, "GCD"],
 
@@ -543,10 +563,11 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.CrestOfTimeReturned, "活性纹"],
 	[ResourceType.Soulsow, "播魂种"],
 	[ResourceType.Threshold, "回退预备"],
-	[ResourceType.HellsIngressUsed, "[myn] todo"],
+	[ResourceType.HellsIngressUsed, "地狱入境已使用"],
 	[ResourceType.EnhancedHarpe, "勾刃效果提高"],
 	[ResourceType.RPRCombo, "单体连击"],
 	[ResourceType.RPRAoECombo, "AOE连击"],
+	[ResourceType.cd_IngressEgress, "CD：地狱入境/地狱出境"],
 ]);
 
 export function localizeResourceType(text: ResourceType): string {
