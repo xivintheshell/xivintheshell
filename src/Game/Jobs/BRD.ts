@@ -3,7 +3,7 @@ import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
-import { BRDTraitName } from "../Constants/BRD";
+import { BRDResourceType, BRDTraitName } from "../Constants/BRD";
 import { GameConfig } from "../GameConfig";
 import { GameState, PlayerState } from "../GameState";
 import { Modifiers, PotencyModifier } from "../Potency";
@@ -347,6 +347,25 @@ export class BRDState extends GameState {
 
 		return mods;
 	}
+
+	getSpeedModifier(buff?: BRDResourceType): number {
+		if (buff === ResourceType.ArmysPaeon) {
+			const repertoire = this.resources.get(ResourceType.Repertoire).availableAmount();
+			return repertoire * 4; // 4% per repertoire stack under Army's Paeon
+		} else if (buff === ResourceType.ArmysMuse) {
+			const museRepertoire = this.resources
+				.get(ResourceType.MuseRepertoire)
+				.availableAmount();
+			if (museRepertoire === 4) {
+				return 12;
+			} // 12% at 4 stacks
+			if (museRepertoire === 3) {
+				return 4;
+			} // 4% at 3 stacks
+			return museRepertoire; // 1% per stack below 3 stacks
+		}
+		return 0;
+	}
 }
 
 const makeWeaponskill_BRD = (
@@ -374,7 +393,8 @@ const makeWeaponskill_BRD = (
 			} else if (state.hasResourceAvailable(ResourceType.ArmysMuse)) {
 				speedBuff = ResourceType.ArmysMuse;
 			}
-			return state.config.adjustedSksGCD(2.5, speedBuff);
+			const speedModifier = state.getSpeedModifier(speedBuff);
+			return state.config.adjustedSksGCD(2.5, speedModifier);
 		},
 		jobPotencyModifiers: (state) => state.getJobPotencyModifiers(name),
 	});

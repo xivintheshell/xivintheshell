@@ -28,6 +28,7 @@ import { getCurrentThemeColors } from "./ColorTheme";
 import { SerializedConfig } from "../Game/GameConfig";
 import { XIVMath } from "../Game/XIVMath";
 import { FaCheck } from "react-icons/fa6";
+import { SAMState } from "../Game/Jobs/SAM";
 
 export let updateConfigDisplay = (config: SerializedConfig) => {};
 
@@ -285,7 +286,9 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 		{props.job === ShellJob.SAM && <>
 			<div>
 				{localize({ en: "Fuka GCD" })}:{" "}
-				{controller.gameConfig.adjustedSksGCD(2.5, ResourceType.Fuka).toFixed(2)}
+				{controller.gameConfig
+					.adjustedSksGCD(2.5, (controller.game as SAMState).getFukaModifier())
+					.toFixed(2)}
 			</div>
 		</>}
 

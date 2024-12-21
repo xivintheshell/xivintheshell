@@ -146,21 +146,21 @@ export class GameConfig {
 	}
 
 	// returns GCD before FPS tax
-	adjustedGCD(baseGCD: number = 2.5, speedBuff?: ResourceType) {
-		return XIVMath.preTaxGcd(this.level, this.spellSpeed, baseGCD, speedBuff);
+	adjustedGCD(baseGCD: number = 2.5, speedModifier?: number) {
+		return XIVMath.preTaxGcd(this.level, this.spellSpeed, baseGCD, speedModifier);
 	}
 
-	adjustedSksGCD(baseGCD: number = 2.5, speedBuff?: ResourceType) {
-		return XIVMath.preTaxGcd(this.level, this.skillSpeed, baseGCD, speedBuff);
+	adjustedSksGCD(baseGCD: number = 2.5, speedModifier?: number) {
+		return XIVMath.preTaxGcd(this.level, this.skillSpeed, baseGCD, speedModifier);
 	}
 
 	// returns cast time before FPS and caster tax
-	adjustedCastTime(inCastTime: number, speedBuff?: ResourceType) {
-		return XIVMath.preTaxCastTime(this.level, this.spellSpeed, inCastTime, speedBuff);
+	adjustedCastTime(inCastTime: number, speedModifier?: number) {
+		return XIVMath.preTaxCastTime(this.level, this.spellSpeed, inCastTime, speedModifier);
 	}
 
-	adjustedSksCastTime(inCastTime: number, speedBuff?: ResourceType) {
-		return XIVMath.preTaxCastTime(this.level, this.skillSpeed, inCastTime, speedBuff);
+	adjustedSksCastTime(inCastTime: number, speedModifier?: number) {
+		return XIVMath.preTaxCastTime(this.level, this.skillSpeed, inCastTime, speedModifier);
 	}
 
 	// for gcd

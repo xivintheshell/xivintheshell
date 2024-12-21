@@ -131,9 +131,7 @@ export class PCTState extends GameState {
 		}
 		return this.config.adjustedCastTime(
 			baseCastTime,
-			this.hasResourceAvailable(ResourceType.Inspiration)
-				? ResourceType.Inspiration
-				: undefined,
+			this.hasResourceAvailable(ResourceType.Inspiration) ? 25 : undefined,
 		);
 	}
 
@@ -155,9 +153,7 @@ export class PCTState extends GameState {
 		}
 		return this.config.adjustedGCD(
 			baseRecastTime,
-			this.hasResourceAvailable(ResourceType.Inspiration)
-				? ResourceType.Inspiration
-				: undefined,
+			this.hasResourceAvailable(ResourceType.Inspiration) ? 25 : undefined,
 		);
 	}
 
