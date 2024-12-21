@@ -905,7 +905,7 @@ export abstract class GameState {
 				node.getDotOverrideAmount(removeDot) + this.resources.timeTillReady(removeDot),
 			);
 			this.tryConsumeResource(removeDot);
-			controller.reportDotDrop(this.getDisplayTime(), dotName);
+			controller.reportDotDrop(this.getDisplayTime(), removeDot);
 		});
 
 		if (dotBuff.available(1)) {
