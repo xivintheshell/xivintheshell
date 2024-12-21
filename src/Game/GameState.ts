@@ -590,18 +590,26 @@ export abstract class GameState {
 				new Event(skill.name + " applied", skill.applicationDelay, () => {
 					if (potency) {
 						controller.resolvePotency(potency);
+						if (!this.hasResourceAvailable(ResourceType.InCombat)) {
+							this.resources.get(ResourceType.InCombat).gain(1);
+						}
 					}
 					skill.onApplication(this, node);
 				}),
 			);
 
-			if (potency) {
-				this.resources.addResourceEvent({
-					rscType: ResourceType.InCombat,
-					name: "begin combat if necessary",
-					delay: skill.applicationDelay,
-					fnOnRsc: (rsc: Resource) => rsc.gain(1),
-				});
+			if (potency && !this.hasResourceAvailable(ResourceType.InCombat)) {
+				const combatStart = this.resources.timeTillReady(ResourceType.InCombat);
+				if (combatStart === 0 || combatStart > skill.applicationDelay) {
+					this.resources.addResourceEvent({
+						rscType: ResourceType.InCombat,
+						name: "begin combat if necessary",
+						delay: skill.applicationDelay,
+						fnOnRsc: (rsc: Resource) => {
+							rsc.gain(1);
+						},
+					});
+				}
 			}
 		};
 
@@ -691,13 +699,18 @@ export abstract class GameState {
 
 		skill.onConfirm(this, node);
 
-		if (potency) {
-			this.resources.addResourceEvent({
-				rscType: ResourceType.InCombat,
-				name: "begin combat if necessary",
-				delay: skill.applicationDelay,
-				fnOnRsc: (rsc: Resource) => rsc.gain(1),
-			});
+		if (potency && !this.hasResourceAvailable(ResourceType.InCombat)) {
+			const combatStart = this.resources.timeTillReady(ResourceType.InCombat);
+			if (combatStart === 0 || combatStart > skill.applicationDelay) {
+				this.resources.addResourceEvent({
+					rscType: ResourceType.InCombat,
+					name: "begin combat if necessary",
+					delay: skill.applicationDelay,
+					fnOnRsc: (rsc: Resource) => {
+						rsc.gain(1);
+					},
+				});
+			}
 		}
 
 		if (skill.applicationDelay > 0) {
