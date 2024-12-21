@@ -1,11 +1,4 @@
-import {
-	Debug,
-	SkillName,
-	ProcMode,
-	LevelSync,
-	ResourceType,
-	FIXED_BASE_CASTER_TAX,
-} from "./Common";
+import { Debug, ProcMode, LevelSync, FIXED_BASE_CASTER_TAX } from "./Common";
 import { ResourceOverride, ResourceOverrideData } from "./Resources";
 import { ShellInfo, ShellJob, ShellVersion } from "../Controller/Common";
 import { XIVMath } from "./XIVMath";
@@ -153,64 +146,21 @@ export class GameConfig {
 	}
 
 	// returns GCD before FPS tax
-	adjustedGCD(baseGCD: number = 2.5, speedBuff?: ResourceType) {
-		return XIVMath.preTaxGcd(this.level, this.spellSpeed, baseGCD, speedBuff);
+	adjustedGCD(baseGCD: number = 2.5, speedModifier?: number) {
+		return XIVMath.preTaxGcd(this.level, this.spellSpeed, baseGCD, speedModifier);
 	}
 
-	adjustedSksGCD(baseGCD: number = 2.5, speedBuff?: ResourceType) {
-		return XIVMath.preTaxGcd(this.level, this.skillSpeed, baseGCD, speedBuff);
+	adjustedSksGCD(baseGCD: number = 2.5, speedModifier?: number) {
+		return XIVMath.preTaxGcd(this.level, this.skillSpeed, baseGCD, speedModifier);
 	}
 
 	// returns cast time before FPS and caster tax
-	adjustedCastTime(inCastTime: number, speedBuff?: ResourceType) {
-		return XIVMath.preTaxCastTime(this.level, this.spellSpeed, inCastTime, speedBuff);
+	adjustedCastTime(inCastTime: number, speedModifier?: number) {
+		return XIVMath.preTaxCastTime(this.level, this.spellSpeed, inCastTime, speedModifier);
 	}
 
-	adjustedSksCastTime(inCastTime: number, speedBuff?: ResourceType) {
-		return XIVMath.preTaxCastTime(this.level, this.skillSpeed, inCastTime, speedBuff);
-	}
-
-	// TODO - How can we make this easier to find for other job implementers? Or just not necessary...
-	getSkillAnimationLock(skillName: SkillName): number {
-		// Averaged on logged fight timelines taking the deltatime
-		// between Provoke and Primal Rend with this opener:
-		// IR > Heavy Swing > Primal Rend > Provoke
-		if (skillName === SkillName.PrimalRend) {
-			return 1.2;
-		}
-
-		// all gapclosers have the same animation lock
-		// from: https://nga.178.com/read.php?tid=21233094&rand=761
-		if (
-			skillName === SkillName.AetherialManipulation ||
-			skillName === SkillName.BetweenTheLines ||
-			skillName === SkillName.Smudge ||
-			skillName === SkillName.CorpsACorps ||
-			skillName === SkillName.Displacement ||
-			skillName === SkillName.Gyoten ||
-			skillName === SkillName.Yaten ||
-			skillName === SkillName.HellsIngress ||
-			skillName === SkillName.HellsEgress ||
-			skillName === SkillName.Regress ||
-			skillName === SkillName.EnAvant ||
-			skillName === SkillName.Onslaught
-		) {
-			return 0.8;
-		}
-
-		// not real abilities, animation lock is fake
-		if (
-			skillName === SkillName.TemperaCoatPop ||
-			skillName === SkillName.TemperaGrassaPop ||
-			skillName === SkillName.TengentsuPop ||
-			skillName === SkillName.ThirdEyePop ||
-			skillName === SkillName.ArcaneCrestPop
-		) {
-			return 0.01;
-		}
-
-		// Fallback if no other conditions applied
-		return this.animationLock;
+	adjustedSksCastTime(inCastTime: number, speedModifier?: number) {
+		return XIVMath.preTaxCastTime(this.level, this.skillSpeed, inCastTime, speedModifier);
 	}
 
 	// for gcd

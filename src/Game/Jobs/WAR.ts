@@ -24,6 +24,7 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
 	SkillAutoReplace,
@@ -219,6 +220,7 @@ const makeWeaponskill_WAR = (
 		};
 		jobPotencyModifiers?: PotencyModifierFn<WARState>;
 		applicationDelay?: number;
+		animationLock?: number;
 		validateAttempt?: StatePredicate<WARState>;
 		onConfirm?: EffectFn<WARState>;
 		highlightIf?: StatePredicate<WARState>;
@@ -285,11 +287,13 @@ const makeAbility_WAR = (
 	cdName: ResourceType,
 	params: {
 		autoUpgrade?: SkillAutoReplace;
+		requiresCombat?: boolean;
 		potency?: number | Array<[TraitName, number]>;
 		replaceIf?: ConditionalSkillReplace<WARState>[];
 		highlightIf?: StatePredicate<WARState>;
 		startOnHotbar?: boolean;
 		applicationDelay?: number;
+		animationLock?: number;
 		cooldown: number;
 		maxCharges?: number;
 		validateAttempt?: StatePredicate<WARState>;
@@ -492,6 +496,7 @@ makeWeaponskill_WAR(SkillName.Decimate, 60, {
 
 makeAbility_WAR(SkillName.InnerRelease, 70, ResourceType.cd_InnerRelease, {
 	applicationDelay: 0,
+	requiresCombat: true,
 	cooldown: 60,
 	maxCharges: 1,
 	onConfirm: (state) => {
@@ -504,7 +509,6 @@ makeAbility_WAR(SkillName.InnerRelease, 70, ResourceType.cd_InnerRelease, {
 			state.gainProc(ResourceType.PrimalRendReady);
 		}
 	},
-	validateAttempt: (state) => state.isInCombat(),
 	replaceIf: [
 		{
 			newSkill: SkillName.PrimalWrath,
@@ -516,6 +520,7 @@ makeAbility_WAR(SkillName.InnerRelease, 70, ResourceType.cd_InnerRelease, {
 makeWeaponskill_WAR(SkillName.PrimalRend, 90, {
 	potency: 700,
 	applicationDelay: 1.16,
+	animationLock: 1.2,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.PrimalRendReady),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.PrimalRendReady);
@@ -561,6 +566,7 @@ makeWeaponskill_WAR(SkillName.PrimalRuination, 100, {
 
 makeAbility_WAR(SkillName.Infuriate, 50, ResourceType.cd_Infuriate, {
 	applicationDelay: 0,
+	requiresCombat: true,
 	cooldown: 60,
 	maxCharges: 2,
 	onApplication: (state) => {
@@ -569,7 +575,6 @@ makeAbility_WAR(SkillName.Infuriate, 50, ResourceType.cd_Infuriate, {
 			state.gainProc(ResourceType.NascentChaos);
 		}
 	},
-	validateAttempt: (state) => state.isInCombat(),
 });
 
 makeWeaponskill_WAR(SkillName.InnerChaos, 80, {
@@ -615,6 +620,7 @@ makeAbility_WAR(WARSkillName.Onslaught, 62, WARCooldownType.cd_Onslaught, {
 	applicationDelay: 0.63,
 	cooldown: 30,
 	maxCharges: 2, // set in constructor to be 3 with trait
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
 makeAbility_WAR(WARSkillName.Upheaval, 64, WARCooldownType.cd_Upheaval, {

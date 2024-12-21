@@ -54,9 +54,9 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "canvas": "^2.11.2",
     "eslint-config-prettier": "^9.1.0",
     "gh-pages": "^6.1.1",
+    "jest-canvas-mock": "^2.5.2",
     "prettier-no-jsx-parens": "^3.4.0",
     "react-app-rewired": "^2.2.1",
     "react-scripts": "^5.0.1"

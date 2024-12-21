@@ -1,17 +1,11 @@
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { Aspect, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { MCHResourceType } from "../Constants/MCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import {
-	makeComboModifier,
-	Modifiers,
-	Potency,
-	PotencyModifier,
-	PotencyMultiplier,
-} from "../Potency";
+import { makeComboModifier, Modifiers, Potency, PotencyModifier } from "../Potency";
 import {
 	CoolDown,
 	getResourceInfo,
@@ -91,12 +85,8 @@ const WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT: SkillName[] = [
 ];
 
 export class MCHState extends GameState {
-	dotTickOffset: number;
-
 	constructor(config: GameConfig) {
 		super(config);
-
-		this.dotTickOffset = this.nonProcRng() * 3.0;
 
 		// Unlike standard and technical, Air Anchor and Chain Saw's cooldowns are affected by skill speed
 		this.cooldowns.set(
@@ -129,38 +119,16 @@ export class MCHState extends GameState {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Tactician, 120, 1, 1));
 		}
 
-		this.registerRecurringEvents();
-	}
-
-	override registerRecurringEvents() {
-		super.registerRecurringEvents();
-
-		let recurringDotTick = () => {
-			const dotBuff = this.resources.get(ResourceType.Bioblaster) as DoTBuff;
-			if (dotBuff.available(1)) {
-				dotBuff.tickCount++;
-				if (dotBuff.node) {
-					const p = dotBuff.node.getPotencies()[dotBuff.tickCount];
-					controller.resolvePotency(p);
-				}
-			}
-
-			// increment count
-			if (this.getDisplayTime() >= 0) {
-				controller.reportDotTick(this.time);
-			}
-
-			// queue the next tick
-			this.addEvent(
-				new Event("DoT tick", 3, () => {
-					recurringDotTick();
-				}),
-			);
-		};
-
-		let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
-		while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
-		this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
+		super.registerRecurringEvents([
+			{
+				groupedDots: [
+					{
+						dotName: ResourceType.Bioblaster,
+						appliedBy: [SkillName.Bioblaster],
+					},
+				],
+			},
+		]);
 	}
 
 	processComboStatus(skill: SkillName) {
@@ -239,7 +207,7 @@ export class MCHState extends GameState {
 			return;
 		}
 
-		const queenPotency = node.getPotencies()[potencyIndex];
+		const queenPotency = node.getDotPotencies(ResourceType.Queen)[potencyIndex];
 
 		// Queen actions snapshot at execution time, not when the button was pressed, add Tincture modifier and note snapshot time for party buff handling
 		if (this.hasResourceAvailable(ResourceType.Tincture)) {
@@ -300,7 +268,7 @@ export class MCHState extends GameState {
 		if (potencyNode === undefined) {
 			return;
 		}
-		const wildFirePotency = potencyNode.getPotencies()[0];
+		const wildFirePotency = potencyNode.getDotPotencies(ResourceType.Wildfire)[0];
 		wildFirePotency.base = basePotency;
 		controller.resolvePotency(wildFirePotency);
 
@@ -648,7 +616,7 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
 			wildFirePotency.modifiers.push(Modifiers.Tincture);
 		}
 
-		node.addPotency(wildFirePotency);
+		node.addDoTPotency(wildFirePotency, ResourceType.Wildfire);
 
 		wildFire.gain(1);
 		wildFire.node = node;
@@ -784,7 +752,7 @@ robotSummons.forEach((params) => {
 			}
 
 			for (let i = 0; i < punchResource.availableAmount(); i++) {
-				node.addPotency(
+				node.addDoTPotency(
 					new Potency({
 						config: state.config,
 						sourceTime: state.getDisplayTime(),
@@ -794,6 +762,7 @@ robotSummons.forEach((params) => {
 						basePotency,
 						snapshotTime: undefined,
 					}),
+					ResourceType.Queen,
 				);
 			}
 
@@ -806,7 +775,7 @@ robotSummons.forEach((params) => {
 				basePotency = state.calculateQueenPotency(160, 320);
 			}
 
-			node.addPotency(
+			node.addDoTPotency(
 				new Potency({
 					config: state.config,
 					sourceTime: state.getDisplayTime(),
@@ -816,10 +785,11 @@ robotSummons.forEach((params) => {
 					basePotency,
 					snapshotTime: undefined,
 				}),
+				ResourceType.Queen,
 			);
 
 			if (Traits.hasUnlocked(TraitName.QueensGambit, state.config.level)) {
-				node.addPotency(
+				node.addDoTPotency(
 					new Potency({
 						config: state.config,
 						sourceTime: state.getDisplayTime(),
@@ -829,6 +799,7 @@ robotSummons.forEach((params) => {
 						basePotency: state.calculateQueenPotency(390, 780),
 						snapshotTime: undefined,
 					}),
+					ResourceType.Queen,
 				);
 			}
 
@@ -904,52 +875,15 @@ makeWeaponskill_MCH(SkillName.Bioblaster, 58, {
 		cooldown: 20,
 		maxCharges: 2, // charges reduced as needed in constructer by trait
 	},
-	onConfirm: (state, node) => {
-		const mods: PotencyMultiplier[] = [];
-		if (state.hasResourceAvailable(ResourceType.Tincture)) {
-			mods.push(Modifiers.Tincture);
-			node.addBuff(BuffType.Tincture);
-		}
-
-		const bioBlasterTicks = 5;
-		const tickPotency = 50;
-		for (let i = 0; i < bioBlasterTicks; i++) {
-			const dotPotency = new Potency({
-				config: controller.record.config ?? controller.gameConfig,
-				sourceTime: state.getDisplayTime(),
-				sourceSkill: SkillName.Bioblaster,
-				aspect: Aspect.Other,
-				basePotency: state.config.adjustedDoTPotency(tickPotency, "sks"),
-				snapshotTime: state.getDisplayTime(),
-				description: "DoT " + (i + 1) + `/${bioBlasterTicks}`,
-			});
-			dotPotency.modifiers = mods;
-			node.addPotency(dotPotency);
-		}
-	},
-	onApplication: (state, node) => {
-		const bioblasterDot = state.resources.get(ResourceType.Bioblaster) as DoTBuff;
-		const bioblasterDuration = 15;
-		if (bioblasterDot.available(1)) {
-			console.assert(bioblasterDot.node);
-			(bioblasterDot.node as ActionNode).removeUnresolvedPotencies();
-			bioblasterDot.overrideTimer(state, bioblasterDuration);
-		} else {
-			bioblasterDot.gain(1);
-			controller.reportDotStart(state.getDisplayTime());
-			state.resources.addResourceEvent({
-				rscType: ResourceType.Bioblaster,
-				name: "drop bioblaster DoT",
-				delay: bioblasterDuration,
-				fnOnRsc: (rsc) => {
-					rsc.consume(1);
-					controller.reportDotDrop(state.getDisplayTime());
-				},
-			});
-		}
-		bioblasterDot.node = node;
-		bioblasterDot.tickCount = 0;
-	},
+	onConfirm: (state, node) =>
+		state.addDoTPotencies({
+			node,
+			dotName: ResourceType.Bioblaster,
+			skillName: SkillName.Bioblaster,
+			tickPotency: 50,
+			speedStat: "sks",
+		}),
+	onApplication: (state, node) => state.applyDoT(ResourceType.Bioblaster, node),
 });
 
 makeWeaponskill_MCH(SkillName.AutoCrossbow, 52, {

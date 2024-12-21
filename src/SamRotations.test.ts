@@ -41,19 +41,7 @@ const resetDamageData = () => {
 			totalPotPotency: 0,
 			totalPartyBuffPotency: 0,
 		},
-		dotTable: [],
-		dotTableSummary: {
-			cumulativeGap: 0,
-			cumulativeOverride: 0,
-			timeSinceLastDoTDropped: 0,
-			totalTicks: 0,
-			maxTicks: 0,
-			dotCoverageTimeFraction: 0,
-			theoreticalMaxTicks: 0,
-			totalPotencyWithoutPot: 0,
-			totalPotPotency: 0,
-			totalPartyBuffPotency: 0,
-		},
+		dotTables: new Map(),
 		mode: DamageStatisticsMode.Normal,
 	};
 };
@@ -135,10 +123,15 @@ const applySkill = (skillName: SkillName) => {
 };
 
 it("has correct GCD under fuka", () => {
-	// 2.5 base
-	expect(XIVMath.preTaxGcd(100, 420, 2.5, ResourceType.Fuka)).toEqual(2.17);
-	// 2.47 base
-	expect(XIVMath.preTaxGcd(100, 693, 2.5, ResourceType.Fuka)).toEqual(2.14);
+	testWithConfig({}, () => {
+		const state = controller.game as SAMState;
+		const speedModifier = state.getFukaModifier();
+
+		// 2.5 base
+		expect(XIVMath.preTaxGcd(100, 420, 2.5, speedModifier)).toEqual(2.17);
+		// 2.47 base
+		expect(XIVMath.preTaxGcd(100, 693, 2.5, speedModifier)).toEqual(2.14);
+	});
 });
 
 it(

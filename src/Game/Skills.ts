@@ -13,6 +13,13 @@ import { Traits } from "./Traits";
 import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
 import { PotencyModifier } from "./Potency";
 
+// all gapclosers have the same animation lock
+// from: https://nga.178.com/read.php?tid=21233094&rand=761
+export const MOVEMENT_SKILL_ANIMATION_LOCK = 0.8;
+
+// Fake skills for things like popping a shield should have a functionally minimal animation lock
+export const FAKE_SKILL_ANIMATION_LOCK = 0.01;
+
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
 export type SkillAutoReplace = {
@@ -82,6 +89,7 @@ interface BaseSkill<T extends PlayerState> {
 	readonly name: SkillName;
 	readonly assetPath: string; // path relative to the Components/Asset/Skills folder
 	readonly unlockLevel: number;
+	readonly requiresCombat?: boolean; // Set to true if the action requires being in combat to use
 	readonly autoUpgrade?: SkillAutoReplace;
 	readonly autoDowngrade?: SkillAutoReplace;
 	readonly cdName: ResourceType;
@@ -91,6 +99,7 @@ interface BaseSkill<T extends PlayerState> {
 	readonly aspect: Aspect;
 	readonly replaceIf: ConditionalSkillReplace<T>[]; // list of skills that can replace this one
 	readonly startOnHotbar: boolean; // false if this skill only replaces others (like paradox)
+	readonly animationLockFn: ResourceCalculationFn<T>; // function to determine the action's animation lock
 	readonly highlightIf: StatePredicate<T>; // condition for highlighting this skill on the hotbar
 
 	// === VALIDATION ===
@@ -158,7 +167,6 @@ export type Ability<T extends PlayerState> = BaseSkill<T> & {
 // Limit breaks (mostly) have a cast time but don't otherwise actually interact with the GCD
 export type LimitBreak<T extends PlayerState> = BaseSkill<T> & {
 	kind: "limitbreak";
-	animationLock: number;
 	readonly castTimeFn: ResourceCalculationFn<T>;
 };
 
@@ -307,6 +315,7 @@ export function makeSpell<T extends PlayerState>(
 		highlightIf: StatePredicate<T>;
 		castTime: number | ResourceCalculationFn<T>;
 		recastTime: number | ResourceCalculationFn<T>;
+		animationLock: number | ResourceCalculationFn<T>;
 		manaCost: number | ResourceCalculationFn<T>;
 		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
@@ -322,6 +331,11 @@ export function makeSpell<T extends PlayerState>(
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
+	const onApplication: EffectFn<T> = combineEffects(
+		(state, node) => (node.applicationTime = state.time),
+		params.onApplication ?? NO_EFFECT,
+	);
+
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
@@ -339,6 +353,7 @@ export function makeSpell<T extends PlayerState>(
 		highlightIf: params.highlightIf ?? ((state) => false),
 		castTimeFn: fnify(params.castTime, 0),
 		recastTimeFn: fnify(params.recastTime, 2.5),
+		animationLockFn: (state) => fnify(params.animationLock, state.config.animationLock)(state),
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
@@ -346,7 +361,7 @@ export function makeSpell<T extends PlayerState>(
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
 		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
-		onApplication: params.onApplication ?? NO_EFFECT,
+		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
@@ -371,6 +386,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		highlightIf: StatePredicate<T>;
 		castTime: number | ResourceCalculationFn<T>;
 		recastTime: number | ResourceCalculationFn<T>;
+		animationLock: number | ResourceCalculationFn<T>;
 		manaCost: number | ResourceCalculationFn<T>;
 		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
@@ -386,6 +402,10 @@ export function makeWeaponskill<T extends PlayerState>(
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
+	const onApplication: EffectFn<T> = combineEffects(
+		(state, node) => (node.applicationTime = state.time),
+		params.onApplication ?? NO_EFFECT,
+	);
 	const info: Weaponskill<T> = {
 		kind: "weaponskill",
 		name: name,
@@ -403,6 +423,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		highlightIf: params.highlightIf ?? ((state) => false),
 		castTimeFn: fnify(params.castTime, 0),
 		recastTimeFn: fnify(params.recastTime, 2.5),
+		animationLockFn: (state) => fnify(params.animationLock, state.config.animationLock)(state),
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
@@ -410,7 +431,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
 		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
-		onApplication: params.onApplication ?? NO_EFFECT,
+		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
@@ -446,6 +467,7 @@ export function makeAbility<T extends PlayerState>(
 	params: Partial<{
 		aspect: Aspect;
 		assetPath: string;
+		requiresCombat: boolean;
 		autoUpgrade: SkillAutoReplace;
 		autoDowngrade: SkillAutoReplace;
 		replaceIf: ConditionalSkillReplace<T>[];
@@ -454,6 +476,7 @@ export function makeAbility<T extends PlayerState>(
 		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
 		applicationDelay: number;
+		animationLock: number | ResourceCalculationFn<T>;
 		validateAttempt: StatePredicate<T>;
 		onExecute: EffectFn<T>;
 		onConfirm: EffectFn<T>;
@@ -466,12 +489,22 @@ export function makeAbility<T extends PlayerState>(
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
 	}
+	const onApplication: EffectFn<T> = combineEffects(
+		(state, node) => (node.applicationTime = state.time),
+		params.onApplication ?? NO_EFFECT,
+	);
+	// All abilities that require being in combat should check isInCombat
+	const validateAttempt: StatePredicate<T> = combinePredicatesAnd(
+		(state) => (params.requiresCombat ? state.isInCombat() : true),
+		params.validateAttempt ?? ((state) => true),
+	);
 	const info: Ability<T> = {
 		kind: "ability",
 		name: name,
 		assetPath:
 			params.assetPath ??
 			(jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
+		requiresCombat: params.requiresCombat,
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
@@ -481,14 +514,15 @@ export function makeAbility<T extends PlayerState>(
 		replaceIf: params.replaceIf ?? [],
 		startOnHotbar: params.startOnHotbar ?? true,
 		highlightIf: params.highlightIf ?? ((state) => false),
+		animationLockFn: (state) => fnify(params.animationLock, state.config.animationLock)(state),
 		manaCostFn: (state) => 0,
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		applicationDelay: params.applicationDelay ?? 0,
-		validateAttempt: params.validateAttempt ?? ((state) => true),
+		validateAttempt,
 		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
-		onApplication: params.onApplication ?? NO_EFFECT,
+		onApplication,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.cooldown !== undefined) {
@@ -508,7 +542,6 @@ export function makeAbility<T extends PlayerState>(
  *
  * Any additional effects should be encoded in `onConfirm` or `onApplication`.
  */
-// TODO allow specifying cooldown + number of charges here
 export function makeResourceAbility<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
 	name: SkillName,
@@ -516,11 +549,13 @@ export function makeResourceAbility<T extends PlayerState>(
 	cdName: ResourceType,
 	params: {
 		rscType: ResourceType;
+		requiresCombat?: boolean;
 		autoUpgrade?: SkillAutoReplace;
 		autoDowngrade?: SkillAutoReplace;
 		replaceIf?: ConditionalSkillReplace<T>[];
 		startOnHotbar?: boolean;
 		highlightIf?: StatePredicate<T>;
+		animationLock?: number | ResourceCalculationFn<T>;
 		applicationDelay: number;
 		duration?: number | ResourceCalculationFn<T>; // TODO push to resources
 		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
@@ -556,6 +591,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		highlightIf: params.highlightIf,
+		animationLock: params.animationLock,
 		applicationDelay: params.applicationDelay,
 		validateAttempt: params.validateAttempt,
 		onExecute: params.onExecute,
@@ -607,7 +643,7 @@ export function makeLimitBreak<T extends PlayerState>(
 	const info: LimitBreak<T> = {
 		kind: "limitbreak",
 		name: name,
-		animationLock: params.animationLock,
+		animationLockFn: (state) => params.animationLock,
 		assetPath: `General/${assetName}.png`,
 		unlockLevel: 1,
 		autoUpgrade: undefined,
