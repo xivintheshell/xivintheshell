@@ -1042,16 +1042,7 @@ export abstract class GameState {
 
 		// Special case for skills that require being in combat
 		if (
-			(
-				[
-					SkillName.StrikingMuse,
-					SkillName.StarryMuse,
-					SkillName.Manafication,
-					SkillName.Ikishoten,
-					SkillName.InnerRelease,
-					SkillName.Infuriate,
-				] as SkillName[]
-			).includes(skillName) &&
+			skill.requiresCombat &&
 			status.unavailableReasons.includes(SkillUnavailableReason.RequirementsNotMet)
 		) {
 			status.addUnavailableReason(SkillUnavailableReason.NotInCombat);

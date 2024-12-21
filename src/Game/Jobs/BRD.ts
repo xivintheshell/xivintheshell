@@ -387,6 +387,7 @@ const makeAbility_BRD = (
 	params: {
 		potency?: number | Array<[TraitName, number]> | ResourceCalculationFn<BRDState>;
 		replaceIf?: ConditionalSkillReplace<BRDState>[];
+		requiresCombat?: boolean;
 		highlightIf?: StatePredicate<BRDState>;
 		startOnHotbar?: boolean;
 		applicationDelay?: number;
@@ -645,10 +646,10 @@ const songSkills: Array<{
 songSkills.forEach((props) => {
 	makeAbility_BRD(props.skillName, props.skillLevel, props.cdName, {
 		applicationDelay: 0,
+		requiresCombat: true,
 		cooldown: 120,
 		replaceIf: props.replaceIf,
 		onConfirm: (state) => state.beginSong(props.song),
-		validateAttempt: (state) => state.isInCombat(),
 	});
 });
 

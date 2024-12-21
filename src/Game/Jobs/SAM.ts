@@ -359,6 +359,7 @@ const makeAbility_SAM = (
 	params: {
 		replaceIf?: ConditionalSkillReplace<SAMState>[];
 		startOnHotbar?: boolean;
+		requiresCombat?: boolean;
 		highlightIf?: StatePredicate<SAMState>;
 		applicationDelay?: number;
 		animationLock?: number;
@@ -925,7 +926,7 @@ makeAbility_SAM(SkillName.Ikishoten, 68, ResourceType.cd_Ikishoten, {
 		},
 	],
 	cooldown: 120,
-	validateAttempt: (state) => state.isInCombat(),
+	requiresCombat: true,
 	onConfirm: (state) => {
 		state.gainKenki(50);
 		if (Traits.hasUnlocked(TraitName.EnhancedIkishoten, state.config.level)) {

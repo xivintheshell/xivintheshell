@@ -309,6 +309,7 @@ const makeAbility_PCT = (
 	params: {
 		potency?: number | Array<[TraitName, number]>;
 		replaceIf?: ConditionalSkillReplace<PCTState>[];
+		requiresCombat?: boolean;
 		highlightIf?: StatePredicate<PCTState>;
 		startOnHotbar?: boolean;
 		applicationDelay?: number;
@@ -983,10 +984,10 @@ makeAbility_PCT(SkillName.SteelMuse, 50, ResourceType.cd_SteelMuse, {
 makeAbility_PCT(SkillName.StrikingMuse, 50, ResourceType.cd_SteelMuse, {
 	replaceIf: [steelCondition],
 	startOnHotbar: false,
+	requiresCombat: true,
 	cooldown: 60,
 	maxCharges: 2, // lower this value in the state constructor when level synced
-	validateAttempt: (state) =>
-		state.hasResourceAvailable(ResourceType.WeaponCanvas) && state.isInCombat(),
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.WeaponCanvas),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.WeaponCanvas);
 		state.resources.get(ResourceType.HammerTime).gain(3);
@@ -1094,9 +1095,10 @@ makeAbility_PCT(SkillName.ScenicMuse, 70, ResourceType.cd_ScenicMuse, {
 makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
 	replaceIf: [scenicCondition],
 	startOnHotbar: false,
+	requiresCombat: true,
 	applicationDelay: 0, // raid buff is instant, but inspiration is delayed by 0.62s
 	cooldown: 120,
-	validateAttempt: (state) => starryMuseCondition.condition(state) && state.isInCombat(),
+	validateAttempt: (state) => starryMuseCondition.condition(state),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.LandscapeCanvas);
 		// It is not possible to have an existing starry active
