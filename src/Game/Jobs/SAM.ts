@@ -125,6 +125,14 @@ export class SAMState extends GameState {
 			: Modifiers.FugetsuBase;
 	}
 
+	getFukaModifier(): number {
+		if (!this.hasResourceAvailable(ResourceType.Fuka)) {
+			return 0;
+		}
+
+		return Traits.hasUnlocked(TraitName.EnhancedFugetsuAndFuka, this.config.level) ? 13 : 10;
+	}
+
 	// Return true if the active combo buff is up, or meikyo is active.
 	// Does not advance the combo state.
 	checkCombo(requiredCombo: ResourceType): boolean {
@@ -322,12 +330,7 @@ const makeGCD_SAM = (
 		castTime = (state) =>
 			Traits.hasUnlocked(TraitName.EnhancedIaijutsu, state.config.level)
 				? params.baseCastTime || 0
-				: state.config.adjustedSksCastTime(
-						1.8,
-						state.hasResourceAvailable(ResourceType.Fuka)
-							? ResourceType.Fuka
-							: undefined,
-					);
+				: state.config.adjustedSksCastTime(1.8, state.getFukaModifier());
 	}
 	return makeWeaponskill(ShellJob.SAM, name, unlockLevel, {
 		replaceIf: params.replaceIf,
@@ -337,10 +340,7 @@ const makeGCD_SAM = (
 		autoDowngrade: params.autoDowngrade,
 		castTime: castTime,
 		recastTime: (state) =>
-			state.config.adjustedSksGCD(
-				params.baseRecastTime ?? 2.5,
-				state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
-			),
+			state.config.adjustedSksGCD(params.baseRecastTime ?? 2.5, state.getFukaModifier()),
 		potency: params.basePotency,
 		validateAttempt: params.validateAttempt,
 		jobPotencyModifiers: jobPotencyModifiers,
@@ -1097,10 +1097,7 @@ makeResourceAbility(ShellJob.SAM, SkillName.Meditate, 60, ResourceType.cd_Medita
 	validateAttempt: (state) => state.cooldowns.get(ResourceType.cd_GCD).stacksAvailable() > 0,
 	// roll the GCD
 	onConfirm: (state) => {
-		const recastTime = state.config.adjustedSksGCD(
-			2.5,
-			state.hasResourceAvailable(ResourceType.Fuka) ? ResourceType.Fuka : undefined,
-		);
+		const recastTime = state.config.adjustedSksGCD(2.5, state.getFukaModifier());
 		state.cooldowns
 			.get(ResourceType.cd_GCD)
 			.useStackWithRecast(state, state.config.getAfterTaxGCD(recastTime));

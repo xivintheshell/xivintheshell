@@ -436,9 +436,7 @@ export abstract class GameState {
 		// TODO move this to child class methods
 		if (this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines)) {
 			// should be approximately 0.85
-			const num = this.config.getAfterTaxGCD(
-				this.config.adjustedGCD(2.5, ResourceType.LeyLines),
-			);
+			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, 15));
 			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
 			return num / denom;
 		} else {

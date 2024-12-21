@@ -279,7 +279,7 @@ export class BLMState extends GameState {
 		// Apply AF/UI multiplier after ley lines
 		const llAdjustedCastTime = this.config.adjustedCastTime(
 			baseCastTime,
-			this.hasResourceAvailable(ResourceType.LeyLines) ? ResourceType.LeyLines : undefined,
+			this.hasResourceAvailable(ResourceType.LeyLines) ? 15 : undefined,
 		);
 
 		let multiplier = 1;

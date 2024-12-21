@@ -130,53 +130,24 @@ export class XIVMath {
 		return basePotency * dotStrength;
 	}
 
-	// Return the speed modifier granted by a specific buff.
-	// For example, for the 15% reduction granted by Circle of Power (which we just call Ley Lines),
-	// return the integer 15.
-	static getSpeedModifier(buff: ResourceType, level: LevelSync) {
-		if (buff === ResourceType.LeyLines) {
-			return 15;
-		}
-		if (buff === ResourceType.Inspiration) {
-			return 25;
-		}
-		if (buff === ResourceType.Fuka) {
-			return Traits.hasUnlocked(TraitName.EnhancedFugetsuAndFuka, level) ? 13 : 10;
-		}
-		if (buff === ResourceType.ArmysPaeon) {
-			const repertoire = controller.game.resources
-				.get(ResourceType.Repertoire)
-				.availableAmount();
-			return repertoire * 4; // 4% per repertoire stack under Army's Paeon
-		}
-		if (buff === ResourceType.ArmysMuse) {
-			const museRepertoire = controller.game.resources
-				.get(ResourceType.MuseRepertoire)
-				.availableAmount();
-			if (museRepertoire === 4) {
-				return 12;
-			} // 12% at 4 stacks
-			if (museRepertoire === 3) {
-				return 4;
-			} // 4% at 3 stacks
-			return museRepertoire; // 1% per stack below 3 stacks
-		}
-		console.error("No speed modifier for buff: ", buff);
-		return 0;
-	}
-
-	static preTaxGcd(level: LevelSync, speed: number, baseGCD: number, speedBuff?: ResourceType) {
+	/**
+	 * Returns the pre-tax GCD given the player's current stats and base GCD length
+	 * @param level The player's level
+	 * @param speed The player's applicable speed stat
+	 * @param baseGCD The base time of the GCD
+	 * @param speedModifier Any speed modifiers applied, as an integer reduction to the total time.
+	 * 						For example, for the 15% reduction granted by Circle of Power
+	 * 						(which we just call Ley Lines), return the integer 15.
+	 * @returns The GCD prior to any FPS tax
+	 */
+	static preTaxGcd(level: LevelSync, speed: number, baseGCD: number, speedModifier?: number) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
-
-		// let us pray we never need to stack haste buffs
-		let subtractSpeed =
-			speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff, level);
 
 		return (
 			Math.floor(
 				(Math.floor(
-					(Math.floor(((100 - subtractSpeed) * 100) / 100) *
+					(Math.floor(((100 - (speedModifier ?? 0)) * 100) / 100) *
 						Math.floor(
 							((2000 - Math.floor((130 * (speed - subStat)) / div + 1000)) *
 								(1000 * baseGCD)) /
@@ -190,23 +161,31 @@ export class XIVMath {
 		);
 	}
 
+	/**
+	 * The pre-tax cast time of an action, given the player's current stats and base cast time
+	 * @param level The player's level
+	 * @param speed The player's applicable speed stat
+	 * @param baseCastTime The base cast time of the action
+	 * @param speedModifier Any speed modifiers applied, as an integer reduction to the total time.
+	 * 						For example, for the 15% reduction granted by Circle of Power
+	 * 						(which we just call Ley Lines), return the integer 15.
+	 * @returns The cast time prior to any FPS or caster tax
+	 */
 	static preTaxCastTime(
 		level: LevelSync,
-		spellSpeed: number,
+		speed: number,
 		baseCastTime: number,
-		speedBuff?: ResourceType,
+		speedModifier?: number,
 	) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
 
-		let subtractSpeed =
-			speedBuff === undefined ? 0 : XIVMath.getSpeedModifier(speedBuff, level);
 		return (
 			Math.floor(
 				(Math.floor(
-					(Math.floor(((100 - subtractSpeed) * 100) / 100) *
+					(Math.floor(((100 - (speedModifier ?? 0)) * 100) / 100) *
 						Math.floor(
-							((2000 - Math.floor((130 * (spellSpeed - subStat)) / div + 1000)) *
+							((2000 - Math.floor((130 * (speed - subStat)) / div + 1000)) *
 								(1000 * baseCastTime)) /
 								1000,
 						)) /
