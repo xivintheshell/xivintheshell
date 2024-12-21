@@ -65,7 +65,7 @@ export class BRDStatusPropsGenerator extends StatusPropsGenerator<BRDState> {
 			{
 				kind: "counter",
 				name: localize({
-					en: "Repertoire",
+					en: "Paeon Repertoire",
 				}),
 				color: colors.brd.repertoire,
 				currentStacks: repertoire.availableAmount(),
