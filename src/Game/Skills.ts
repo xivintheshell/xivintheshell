@@ -18,7 +18,7 @@ import { PotencyModifier } from "./Potency";
 export const MOVEMENT_SKILL_ANIMATION_LOCK = 0.8;
 
 // Fake skills for things like popping a shield should have a functionally minimal animation lock
-export const FAKE_SKILL_ANIMATION_LOCK = 0.001;
+export const FAKE_SKILL_ANIMATION_LOCK = 0.01;
 
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
