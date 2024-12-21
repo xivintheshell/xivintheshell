@@ -106,16 +106,15 @@ function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: Actio
 		}
 	}
 
-	for (let i = 0; i < node.getDotPotencies(dotName).length; i++) {
-		let p = node.getDotPotencies(dotName)[i];
+	node.getDotPotencies(dotName).forEach((p) => {
 		if (p.hasResolved()) {
-			entry.totalNumTicks += 1;
+			entry.totalNumTicks++;
 			entry.baseDotPotency = p.base;
 			if (p.hasHitBoss(bossIsUntargetable)) {
-				entry.numHitTicks += 1;
+				entry.numHitTicks++;
 			}
 		}
-	}
+	});
 
 	let potencyWithoutPot = node.getPotency({
 		tincturePotencyMultiplier: 1,
