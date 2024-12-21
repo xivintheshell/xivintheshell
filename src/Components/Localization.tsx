@@ -355,7 +355,7 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.Firestarter, "火苗"],
 	[ResourceType.Thunderhead, "雷砧"],
 	[ResourceType.HighThunder, "高闪雷"], // May need retranslation from ThunderDoT
-	[ResourceType.ThunderIII, "高闪雷"], // May need retranslation from ThunderDoT
+	[ResourceType.ThunderIII, "暴雷"], // May need retranslation from ThunderDoT
 	[ResourceType.HighThunderII, "高震雷"], // May need retranslation from ThunderDoT
 	[ResourceType.ThunderIV, "霹雷"], // May need retranslation from ThunderDoT
 	[ResourceType.LeyLines, "黑魔纹"],
