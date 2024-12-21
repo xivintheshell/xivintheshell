@@ -1,10 +1,10 @@
-import { render, screen, findBy } from "@testing-library/react";
+import { render, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import { within } from "@testing-library/dom";
 
 import Main from "./Components/Main";
 import { act } from "react-dom/test-utils";
+import "jest-canvas-mock";
 
 // Need to mock window.URL.createObjectURL
 // https://stackoverflow.com/questions/52968969/jest-url-createobjecturl-is-not-a-function
