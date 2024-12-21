@@ -494,6 +494,8 @@ it(
 	"checks MP cost at end of cast bar",
 	testWithConfig({ level: 70, spellSpeed: 700 }, () => {
 		let alertMsg = "";
+
+		/* eslint-disable @typescript-eslint/no-unused-vars */
 		let warnMsg = "";
 		const alert = jest.spyOn(window, "alert").mockImplementation((msg) => {
 			alertMsg = msg;
@@ -501,6 +503,8 @@ it(
 		const warn = jest.spyOn(console, "warn").mockImplementation((msg) => {
 			warnMsg = msg;
 		});
+		/* eslint-enable @typescript-eslint/no-unused-vars */
+
 		[
 			SkillName.Fire3,
 			SkillName.Fire4,
@@ -538,6 +542,8 @@ it(
 it(
 	"overwrites DoT with no gap",
 	testWithConfig({}, () => {
+		// Fast forward to zero to make sure gap calcs are positive
+		controller.step(controller.gameConfig.countdown);
 		[
 			SkillName.Blizzard3,
 			SkillName.HighThunder,
@@ -546,6 +552,13 @@ it(
 		].forEach(applySkill);
 		// wait for cast time + damage application
 		controller.step(4);
+
+		// check the DoT summary for HT
+		const htSummary = damageData.dotTables.get(ResourceType.HighThunder)?.summary;
+		// There should be a gap from the start of the pull to the initial application
+		expect(htSummary?.cumulativeGap).toBeGreaterThan(0);
+		// HT will not have overridden anything
+		expect(htSummary?.cumulativeOverride).toEqual(0);
 
 		const ht2Summary = damageData.dotTables.get(ResourceType.HighThunderII)?.summary;
 		// Overriding DoTs should not list a gap
