@@ -138,7 +138,7 @@ export class RDMState extends GameState {
 		if (this.hasResourceAvailable(ResourceType.Embolden) && skill.aspect !== Aspect.Physical) {
 			node.addBuff(BuffType.Embolden);
 		}
-		if (this.hasResourceAvailable(ResourceType.Manafication)) {
+		if (this.hasResourceAvailable(ResourceType.Manafication) && skill.kind === "spell" || skill.kind === "weaponskill") {
 			node.addBuff(BuffType.Manafication);
 		}
 		if (
