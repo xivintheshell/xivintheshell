@@ -268,8 +268,8 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 			},
 			brd: {
 				soulVoice: "#5DBD99",
-				pitchPerfect: "white",
-				repertoire: "white",
+				pitchPerfect: "#9ac5f1",
+				repertoire: "#e8c35a",
 				wanderersCoda: "#add549",
 				magesCoda: "#ffbcf8",
 				armysCoda: "#eb9b5f",
@@ -395,8 +395,8 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 			},
 			brd: {
 				soulVoice: "#5DBD99",
-				pitchPerfect: "black",
-				repertoire: "black",
+				pitchPerfect: "#9ac5f1",
+				repertoire: "#e8c35a",
 				wanderersCoda: "#add549",
 				magesCoda: "#ffbcf8",
 				armysCoda: "#eb9b5f",
