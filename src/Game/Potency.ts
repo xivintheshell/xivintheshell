@@ -225,20 +225,20 @@ export const Modifiers = {
 	ArmysPaeon: {
 		kind: "critDirect",
 		source: PotencyModifierType.ARMYS_PAEON,
-		critFactor: 0,
-		dhFactor: 0.03,
+		critBonus: 0,
+		dhBonus: 0.03,
 	} as CritDirectMultiplier,
 	WanderersMinuet: {
 		kind: "critDirect",
 		source: PotencyModifierType.WANDERERS_MINUET,
-		critFactor: 0.02,
-		dhFactor: 0,
+		critBonus: 0.02,
+		dhBonus: 0,
 	} as CritDirectMultiplier,
 	BattleVoice: {
 		kind: "critDirect",
 		source: PotencyModifierType.BATTLE_VOICE,
-		critFactor: 0,
-		dhFactor: 0.2,
+		critBonus: 0,
+		dhBonus: 0.2,
 	} as CritDirectMultiplier,
 	RadiantFinaleOneCoda: {
 		kind: "multiplier",
