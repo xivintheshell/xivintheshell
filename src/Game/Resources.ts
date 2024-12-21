@@ -1,5 +1,5 @@
 import { Debug, ResourceType, WarningType } from "./Common";
-import { ShellJob, ALL_JOBS } from "../Controller/Common";
+import { ShellJob, ALL_JOBS, MELEE_JOBS } from "../Controller/Common";
 import { GameState } from "./GameState";
 import { ActionNode } from "../Controller/Record";
 import { BLMState } from "./Jobs/BLM";
@@ -355,6 +355,9 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, ResourceType.Mana, 10000, { default: 10000 });
 	makeResource(job, ResourceType.Tincture, 1, { timeout: 30 });
 	makeResource(job, ResourceType.Sprint, 1, { timeout: 10 });
+});
+
+MELEE_JOBS.forEach((job) => {
 	// positionals are assumed on by default -- we'll add the ability to toggle them later
 	makeResource(job, ResourceType.RearPositional, 1, { default: 1 });
 	makeResource(job, ResourceType.FlankPositional, 1, { default: 1 });
@@ -434,7 +437,7 @@ export class ResourceOverride {
 	applyTo(game: GameState) {
 		let info = getAllResources(game.job).get(this.type);
 		if (!info) {
-			console.assert(false);
+			console.assert(false, `can't apply override ${this.type} to job ${game.job}`);
 			return;
 		}
 

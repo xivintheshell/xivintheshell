@@ -146,9 +146,9 @@ export function loadFromFile(
 	let fileReader = new FileReader();
 	fileReader.onload = function (fileLoadedEvent) {
 		let str: string = fileLoadedEvent.target?.result?.toString() ?? "";
+		let json;
 		try {
-			let json = JSON.parse(str);
-			callback(json);
+			json = JSON.parse(str);
 		} catch (e) {
 			window.alert(
 				localize({
@@ -157,6 +157,7 @@ export function loadFromFile(
 				}),
 			);
 		}
+		callback(json);
 	};
 	fileReader.readAsText(fileObject, "UTF-8");
 }
