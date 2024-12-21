@@ -89,6 +89,7 @@ interface BaseSkill<T extends PlayerState> {
 	readonly name: SkillName;
 	readonly assetPath: string; // path relative to the Components/Asset/Skills folder
 	readonly unlockLevel: number;
+	readonly requiresCombat?: boolean; // Set to true if the action requires being in combat to use
 	readonly autoUpgrade?: SkillAutoReplace;
 	readonly autoDowngrade?: SkillAutoReplace;
 	readonly cdName: ResourceType;
@@ -466,6 +467,7 @@ export function makeAbility<T extends PlayerState>(
 	params: Partial<{
 		aspect: Aspect;
 		assetPath: string;
+		requiresCombat: boolean;
 		autoUpgrade: SkillAutoReplace;
 		autoDowngrade: SkillAutoReplace;
 		replaceIf: ConditionalSkillReplace<T>[];
@@ -491,12 +493,18 @@ export function makeAbility<T extends PlayerState>(
 		(state, node) => (node.applicationTime = state.time),
 		params.onApplication ?? NO_EFFECT,
 	);
+	// All abilities that require being in combat should check isInCombat
+	const validateAttempt: StatePredicate<T> = combinePredicatesAnd(
+		(state) => (params.requiresCombat ? state.isInCombat() : true),
+		params.validateAttempt ?? ((state) => true),
+	);
 	const info: Ability<T> = {
 		kind: "ability",
 		name: name,
 		assetPath:
 			params.assetPath ??
 			(jobs.length === 1 ? normalizeAssetPath(jobs[0], name) : "General/Missing.png"),
+		requiresCombat: params.requiresCombat,
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
@@ -511,7 +519,7 @@ export function makeAbility<T extends PlayerState>(
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		applicationDelay: params.applicationDelay ?? 0,
-		validateAttempt: params.validateAttempt ?? ((state) => true),
+		validateAttempt,
 		onExecute: params.onExecute ?? NO_EFFECT,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
@@ -541,6 +549,7 @@ export function makeResourceAbility<T extends PlayerState>(
 	cdName: ResourceType,
 	params: {
 		rscType: ResourceType;
+		requiresCombat?: boolean;
 		autoUpgrade?: SkillAutoReplace;
 		autoDowngrade?: SkillAutoReplace;
 		replaceIf?: ConditionalSkillReplace<T>[];

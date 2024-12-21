@@ -138,7 +138,10 @@ export class RDMState extends GameState {
 		if (this.hasResourceAvailable(ResourceType.Embolden) && skill.aspect !== Aspect.Physical) {
 			node.addBuff(BuffType.Embolden);
 		}
-		if (this.hasResourceAvailable(ResourceType.Manafication) && skill.kind === "spell" || skill.kind === "weaponskill") {
+		if (
+			(this.hasResourceAvailable(ResourceType.Manafication) && skill.kind === "spell") ||
+			skill.kind === "weaponskill"
+		) {
 			node.addBuff(BuffType.Manafication);
 		}
 		if (
@@ -1038,9 +1041,9 @@ makeResourceAbility(ShellJob.RDM, SkillName.Manafication, 60, ResourceType.cd_Ma
 		},
 	],
 	rscType: ResourceType.Manafication,
+	requiresCombat: true,
 	applicationDelay: 0,
 	cooldown: 110,
-	validateAttempt: (state) => state.isInCombat(),
 	onApplication: (state) => {
 		state.resources.get(ResourceType.MagickedSwordplay).gain(3);
 		state.enqueueResourceDrop(ResourceType.MagickedSwordplay);

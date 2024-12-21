@@ -287,6 +287,7 @@ const makeAbility_WAR = (
 	cdName: ResourceType,
 	params: {
 		autoUpgrade?: SkillAutoReplace;
+		requiresCombat?: boolean;
 		potency?: number | Array<[TraitName, number]>;
 		replaceIf?: ConditionalSkillReplace<WARState>[];
 		highlightIf?: StatePredicate<WARState>;
@@ -495,6 +496,7 @@ makeWeaponskill_WAR(SkillName.Decimate, 60, {
 
 makeAbility_WAR(SkillName.InnerRelease, 70, ResourceType.cd_InnerRelease, {
 	applicationDelay: 0,
+	requiresCombat: true,
 	cooldown: 60,
 	maxCharges: 1,
 	onConfirm: (state) => {
@@ -507,7 +509,6 @@ makeAbility_WAR(SkillName.InnerRelease, 70, ResourceType.cd_InnerRelease, {
 			state.gainProc(ResourceType.PrimalRendReady);
 		}
 	},
-	validateAttempt: (state) => state.isInCombat(),
 	replaceIf: [
 		{
 			newSkill: SkillName.PrimalWrath,
@@ -565,6 +566,7 @@ makeWeaponskill_WAR(SkillName.PrimalRuination, 100, {
 
 makeAbility_WAR(SkillName.Infuriate, 50, ResourceType.cd_Infuriate, {
 	applicationDelay: 0,
+	requiresCombat: true,
 	cooldown: 60,
 	maxCharges: 2,
 	onApplication: (state) => {
@@ -573,7 +575,6 @@ makeAbility_WAR(SkillName.Infuriate, 50, ResourceType.cd_Infuriate, {
 			state.gainProc(ResourceType.NascentChaos);
 		}
 	},
-	validateAttempt: (state) => state.isInCombat(),
 });
 
 makeWeaponskill_WAR(SkillName.InnerChaos, 80, {
