@@ -13,6 +13,7 @@ import {
 	ConditionalSkillReplace,
 	CooldownGroupProperies,
 	EffectFn,
+	FAKE_SKILL_ANIMATION_LOCK,
 	getBasePotency,
 	getSkill,
 	makeAbility,
@@ -1144,7 +1145,7 @@ makeRPRAbility(SkillName.ArcaneCrest, 40, ResourceType.cd_ArcaneCrest, {
 
 makeRPRAbility(SkillName.ArcaneCrestPop, 40, ResourceType.cd_ArcaneCrestPop, {
 	cooldown: 1,
-	animationLock: 0.01,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	startOnHotbar: false,
 	onConfirm: (state) => {
 		state.resources.get(ResourceType.CrestOfTimeBorrowed).consume(1);
