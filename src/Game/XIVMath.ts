@@ -1,6 +1,4 @@
-import { controller } from "../Controller/Controller";
-import { LevelSync, ResourceType, TraitName } from "./Common";
-import { Traits } from "./Traits";
+import { LevelSync } from "./Common";
 
 export class XIVMath {
 	static getMainstatBase(level: LevelSync) {

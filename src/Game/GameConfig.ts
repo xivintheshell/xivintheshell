@@ -1,4 +1,4 @@
-import { Debug, ProcMode, LevelSync, ResourceType, FIXED_BASE_CASTER_TAX } from "./Common";
+import { Debug, ProcMode, LevelSync, FIXED_BASE_CASTER_TAX } from "./Common";
 import { ResourceOverride, ResourceOverrideData } from "./Resources";
 import { ShellInfo, ShellJob, ShellVersion } from "../Controller/Common";
 import { XIVMath } from "./XIVMath";

@@ -894,14 +894,15 @@ export abstract class GameState {
 				const thisGap =
 					this.getDisplayTime() -
 					(this.resources.get(removeDot).getLastExpirationTime() ?? 0);
-				dotGap = !dotGap ? thisGap : Math.min(dotGap, thisGap);
+				dotGap = dotGap === undefined ? thisGap : Math.min(dotGap, thisGap);
 				return;
 			}
 
 			node.setDotOverrideAmount(
-				removeDot,
+				dotName,
 				node.getDotOverrideAmount(removeDot) + this.resources.timeTillReady(removeDot),
 			);
+			dotGap = 0;
 			this.tryConsumeResource(removeDot);
 			controller.reportDotDrop(this.getDisplayTime(), removeDot);
 		});
@@ -916,7 +917,7 @@ export abstract class GameState {
 			dotBuff.overrideTimer(this, dotDuration);
 		} else {
 			const thisGap = this.getDisplayTime() - (dotBuff.getLastExpirationTime() ?? 0);
-			dotGap = !dotGap ? thisGap : Math.min(dotGap, thisGap);
+			dotGap = dotGap === undefined ? thisGap : Math.min(dotGap, thisGap);
 
 			dotBuff.gain(1);
 			controller.reportDotStart(this.getDisplayTime(), dotName);

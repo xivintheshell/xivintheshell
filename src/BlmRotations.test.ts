@@ -534,3 +534,23 @@ it(
 		]);
 	}),
 );
+
+it(
+	"overwrites DoT with no gap",
+	testWithConfig({}, () => {
+		[
+			SkillName.Blizzard3,
+			SkillName.HighThunder,
+			SkillName.Fire3,
+			SkillName.HighThunder2,
+		].forEach(applySkill);
+		// wait for cast time + damage application
+		controller.step(4);
+
+		const ht2Summary = damageData.dotTables.get(ResourceType.HighThunderII)?.summary;
+		// Overriding DoTs should not list a gap
+		expect(ht2Summary?.cumulativeGap).toEqual(0);
+		// The override amount should be applied to the overriding DoT, not the overridden one
+		expect(ht2Summary?.cumulativeOverride).toBeGreaterThan(0);
+	}),
+);
