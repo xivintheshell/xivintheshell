@@ -9,6 +9,7 @@ import {
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
+	FAKE_SKILL_ANIMATION_LOCK,
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
@@ -1166,7 +1167,7 @@ makeAbility_PCT(SkillName.TemperaCoatPop, 10, ResourceType.cd_TemperaPop, {
 	],
 	startOnHotbar: false,
 	applicationDelay: 0,
-	animationLock: 0.01,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
 	onConfirm: (state) => {
@@ -1194,7 +1195,7 @@ makeAbility_PCT(SkillName.TemperaGrassaPop, 10, ResourceType.cd_TemperaPop, {
 	],
 	startOnHotbar: false,
 	applicationDelay: 0,
-	animationLock: 0.01,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
 	onConfirm: (state) => {

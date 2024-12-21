@@ -9,6 +9,7 @@ import {
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
+	FAKE_SKILL_ANIMATION_LOCK,
 	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
@@ -1047,7 +1048,7 @@ makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_Third
 makeAbility_SAM(SkillName.ThirdEyePop, 6, ResourceType.cd_ThirdEyePop, {
 	startOnHotbar: false,
 	applicationDelay: 0,
-	animationLock: 0.01,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ThirdEye),
 	onConfirm: (state) => {
@@ -1060,7 +1061,7 @@ makeAbility_SAM(SkillName.ThirdEyePop, 6, ResourceType.cd_ThirdEyePop, {
 makeAbility_SAM(SkillName.TengentsuPop, 82, ResourceType.cd_ThirdEyePop, {
 	startOnHotbar: false,
 	applicationDelay: 0,
-	animationLock: 0.01,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Tengentsu),
 	onConfirm: (state) => {
