@@ -78,7 +78,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: Actio
 	let mainPotency = node.getInitialPotency();
 	let entry: DamageStatsDoTTableEntry = {
 		castTime: node.tmp_startLockTime ? node.tmp_startLockTime - ctl.gameConfig.countdown : 0,
-		applicationTime: node.applicationTime ?? 0,
+		applicationTime: node.applicationTime ? node.applicationTime - ctl.gameConfig.countdown : 0,
 		displayedModifiers: [],
 		gap: 0,
 		override: 0,
