@@ -1049,7 +1049,7 @@ makeSpell_BLM(SkillName.HighThunder, 92, {
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 150,
-	applicationDelay: 0.767,
+	applicationDelay: 0.757,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 	onConfirm: thunderConfirm(SkillName.HighThunder, ResourceType.HighThunder),
 	onApplication: (state, node) => state.applyDoT(ResourceType.HighThunder, node),
