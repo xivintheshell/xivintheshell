@@ -1,10 +1,11 @@
 import React from "react";
-import { SkillName, BuffType, ResourceType } from "../Game/Common";
+import { BuffType, ResourceType, SkillName } from "../Game/Common";
 import { ContentNode } from "./Common";
 import { MdLanguage } from "react-icons/md";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
+import { PotencyModifierType } from "../Game/Potency";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -306,6 +307,49 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.RookOverload, "超负荷车式炮塔"],
 	[SkillName.PileBunker, "打桩枪"],
 	[SkillName.CrownedCollider, "王室对撞机"],
+
+	// DNC
+	[SkillName.StandardFinish, "标准舞步结束"],
+	[SkillName.SingleStandardFinish, "单色标准舞步结束"],
+	[SkillName.DoubleStandardFinish, "双色标准舞步结束"],
+	[SkillName.FinishingMove, "结束动作"],
+	[SkillName.LastDance, "落幕舞"],
+	[SkillName.TechnicalFinish, "技巧舞步结束"],
+	[SkillName.SingleTechnicalFinish, "单色技巧舞步结束"],
+	[SkillName.DoubleTechnicalFinish, "双色技巧舞步结束"],
+	[SkillName.TripleTechnicalFinish, "三色技巧舞步结束"],
+	[SkillName.QuadrupleTechnicalFinish, "四色技巧舞步结束"],
+	[SkillName.Tillana, "提拉纳"],
+	[SkillName.Cascade, "瀑泻"],
+	[SkillName.Fountain, "喷泉"],
+	[SkillName.ReverseCascade, "逆瀑泻"],
+	[SkillName.Fountainfall, "坠喷泉"],
+	[SkillName.Windmill, "风车"],
+	[SkillName.Bladeshower, "落刃雨"],
+	[SkillName.RisingWindmill, "升风车"],
+	[SkillName.Bloodshower, "落血雨"],
+	[SkillName.StandardStep, "标准舞步"],
+	[SkillName.TechnicalStep, "技巧舞步"],
+	[SkillName.Emboite, "蔷薇曲舞步"],
+	[SkillName.Entrechat, "小鸟交叠跳"],
+	[SkillName.Jete, "绿叶小踢腿"],
+	[SkillName.Pirouette, "金冠趾尖转"],
+	[SkillName.SaberDance, "剑舞"],
+	[SkillName.DanceOfTheDawn, "拂晓舞"],
+	[SkillName.ClosedPosition, "闭式舞姿"],
+	[SkillName.FanDance, "扇舞·序"],
+	[SkillName.FanDance2, "扇舞·破"],
+	[SkillName.FanDance3, "扇舞·急"],
+	[SkillName.FanDance4, "扇舞·终"],
+	[SkillName.EnAvant, "前冲步"],
+	[SkillName.Devilment, "进攻之探戈"],
+	[SkillName.StarfallDance, "流星舞"],
+	[SkillName.ShieldSamba, "防守之桑巴"],
+	[SkillName.Flourish, "百花争艳"],
+	[SkillName.Improvisation, "即兴表演"],
+	[SkillName.ImprovisedFinish, "即兴表演结束"],
+	[SkillName.CuringWaltz, "治疗之华尔兹"],
+	[SkillName.Ending, "解除闭式舞姿"],
 ]);
 
 const skillsJa = new Map<SkillName, string>([
@@ -409,7 +453,7 @@ export function localizeSkillName(text: SkillName): string {
 	}
 }
 
-const buffsZh = new Map<BuffType, string>([
+const partyBuffsZh = new Map<BuffType, string>([
 	[BuffType.LeyLines, "黑魔纹"],
 	[BuffType.Hyperphantasia, "绘灵幻景"],
 	[BuffType.Tincture, "爆发药"],
@@ -437,7 +481,7 @@ const buffsZh = new Map<BuffType, string>([
 	[BuffType.WanderersMinuet, "放浪神的小步舞曲"],
 ]);
 
-const buffsJa = new Map<BuffType, string>([
+const partyBuffsJa = new Map<BuffType, string>([
 	[BuffType.LeyLines, "黒魔紋"],
 	[BuffType.Tincture, "薬"],
 
@@ -464,12 +508,12 @@ const buffsJa = new Map<BuffType, string>([
 	[BuffType.WanderersMinuet, "旅神のメヌエット"],
 ]);
 
-export function localizeBuffType(text: BuffType): string {
+export function localizePartyBuffType(text: BuffType): string {
 	let currentLang = getCurrentLanguage();
 	if (currentLang === "zh") {
-		return buffsZh.get(text) ?? text;
+		return partyBuffsZh.get(text) ?? text;
 	} else if (currentLang === "ja") {
-		return buffsJa.get(text) ?? text;
+		return partyBuffsJa.get(text) ?? text;
 	} else {
 		return text;
 	}
@@ -627,6 +671,44 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.WildfireHits, "野火命中"],
 	[ResourceType.cd_Queen, "CD：后式自走人偶"],
 	[ResourceType.cd_Overdrive, "CD：超档车式炮塔/超档后式人偶"],
+
+	// DNC
+	[ResourceType.EspritGauge, "伶俐量值"],
+	[ResourceType.FeatherGauge, "幻扇"],
+	[ResourceType.StandardDance, "标准舞步"],
+	[ResourceType.TechnicalDance, "技巧舞步"],
+	[ResourceType.SilkenSymmetry, "对称投掷"],
+	[ResourceType.SilkenFlow, "非对称投掷"],
+	[ResourceType.FlourishingSymmetry, "对称投掷·百花争艳"],
+	[ResourceType.FlourishingFlow, "非对称投掷·百花争艳"],
+	[ResourceType.ThreefoldFanDance, "扇舞·急预备"],
+	[ResourceType.FourfoldFanDance, "扇舞·终预备"],
+	[ResourceType.FinishingMoveReady, "结束动作预备"],
+	[ResourceType.FlourishingStarfall, "流星舞预备"],
+	[ResourceType.StandardStep, "标准舞步"],
+	[ResourceType.TechnicalStep, "技巧舞步"],
+	[ResourceType.StandardFinish, "标准舞步结束"],
+	[ResourceType.LastDanceReady, "落幕舞预备"],
+	[ResourceType.TechnicalFinish, "技巧舞步结束"],
+	[ResourceType.DanceOfTheDawnReady, "拂晓舞预备"],
+	[ResourceType.FlourishingFinish, "提拉纳预备"],
+	[ResourceType.ClosedPosition, "闭式舞姿"],
+	[ResourceType.Devilment, "进攻之探戈"],
+	[ResourceType.ShieldSamba, "防守之桑巴"],
+	[ResourceType.Improvisation, "即兴表演"],
+	[ResourceType.RisingRhythm, "舞动的热情"],
+	[ResourceType.ImprovisationRegen, "享受即兴表演"],
+	[ResourceType.ImprovisedFinish, "即兴表演结束"],
+	[ResourceType.Esprit, "伶俐"],
+	[ResourceType.DancePartner, "舞伴"],
+	[ResourceType.StandardFinishPartner, "舞伴小舞buff"],
+	[ResourceType.EspritPartner, "舞伴伶俐buff"],
+	[ResourceType.EspritTechnical, "大舞伶俐buff"],
+	[ResourceType.CascadeCombo, "瀑泻连击"],
+	[ResourceType.WindmillCombo, "风车连击"],
+	[ResourceType.StandardBonus, "小舞连击"],
+	[ResourceType.TechnicalBonus, "大舞连击"],
+	[ResourceType.PartySize, "小队人数"],
 ]);
 
 export function localizeResourceType(text: ResourceType): string {
@@ -646,6 +728,59 @@ export function localizeResourceType(text: ResourceType): string {
 	} else {
 		return text;
 	}
+}
+
+const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
+	[PotencyModifierType.AF3, { en: "AF3", zh: "三层火" }],
+	[PotencyModifierType.AF2, { en: "AF2", zh: "二层火" }],
+	[PotencyModifierType.AF1, { en: "AF1", zh: "一层火" }],
+	[PotencyModifierType.UI3, { en: "UI3", zh: "三层冰" }],
+	[PotencyModifierType.UI2, { en: "UI2", zh: "二层冰" }],
+	[PotencyModifierType.UI1, { en: "UI1", zh: "一层冰" }],
+	[PotencyModifierType.ENO, { en: "enochian", zh: "天语" }],
+	[PotencyModifierType.POT, { en: "pot", zh: "爆发药" }],
+	[PotencyModifierType.PARTY, { en: "party", zh: "团辅" }],
+	[PotencyModifierType.AUTO_CDH, { en: "auto crit/direct hit", zh: "必直暴" }],
+	[PotencyModifierType.STARRY, { en: "starry muse", zh: "星空构想" }],
+	[PotencyModifierType.EMBOLDEN_M, { en: "embolden", zh: "鼓励" }],
+	[PotencyModifierType.MANAFIC, { en: "manafication", zh: "魔元化" }],
+	[PotencyModifierType.ACCELERATION, { en: "acceleration", zh: "促进" }],
+	[PotencyModifierType.STANDARD_SINGLE, { en: "single standard finish", zh: "单色小舞" }],
+	[PotencyModifierType.STANDARD_DOUBLE, { en: "double standard finish", zh: "双色小舞" }],
+	[PotencyModifierType.TECHNICAL_SINGLE, { en: "single technical finish", zh: "单色大舞" }],
+	[PotencyModifierType.TECHNICAL_DOUBLE, { en: "double technical finish", zh: "双色大舞" }],
+	[PotencyModifierType.TECHNICAL_TRIPLE, { en: "triple technical finish", zh: "三色大舞" }],
+	[PotencyModifierType.TECHNICAL_QUADRUPLE, { en: "quadruple technical finish", zh: "四色大舞" }],
+	[PotencyModifierType.DEVILMENT, { en: "devilment", zh: "探戈" }],
+	[PotencyModifierType.COMBO, { en: "combo", zh: "连击" }],
+	[PotencyModifierType.FUGETSU, { en: "fugetsu", zh: "风月" }],
+	[PotencyModifierType.AUTO_CRIT, { en: "auto crit", zh: "必暴" }],
+	[PotencyModifierType.YATEN, { en: "yaten", zh: "强化夜天" }],
+	[PotencyModifierType.POSITIONAL, { en: "positional", zh: "身位" }],
+	[PotencyModifierType.ARCANE_CIRCLE, { en: "arcane circle", zh: "神秘环" }],
+	[PotencyModifierType.DEATHSDESIGN, { en: "death's design", zh: "死亡烙印" }],
+	[
+		PotencyModifierType.ENHANCED_GIBBET_GALLOWS,
+		{ en: "enhanced gibbet/gallows", zh: "绞决/缢杀效果提高" },
+	],
+	[PotencyModifierType.ENHANCED_REAPING, { en: "enhanced reaping", zh: "虚无/交错收割效果提高" }],
+	[PotencyModifierType.IMMORTAL_SACRIFICE, { en: "immortal sacrifice" }],
+	[PotencyModifierType.BARRAGE, { en: "barrage" }],
+	[PotencyModifierType.RAGING_STRIKES, { en: "raging strikes" }],
+	[PotencyModifierType.BATTLE_VOICE, { en: "battle voice" }],
+	[PotencyModifierType.RADIANT_FINALE_THREE_CODA, { en: "three coda radiant finale" }],
+	[PotencyModifierType.RADIANT_FINALE_TWO_CODA, { en: "two coda radiant finale" }],
+	[PotencyModifierType.RADIANT_FINALE_ONE_CODA, { en: "one coda radiant finale" }],
+	[PotencyModifierType.WANDERERS_MINUET, { en: "wanderer's minuet" }],
+	[PotencyModifierType.MAGES_BALLAD, { en: "mage's ballad" }],
+	[PotencyModifierType.ARMYS_PAEON, { en: "army's paeon" }],
+]);
+export function localizeModifierName(modifierType: PotencyModifierType) {
+	console.assert(
+		modifierNames.has(modifierType),
+		`modifier ${modifierType} doesn't have a name!`,
+	);
+	return localize(modifierNames.get(modifierType)!);
 }
 
 export let getCurrentLanguage: () => Language = () => {

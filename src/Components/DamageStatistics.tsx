@@ -3,7 +3,12 @@ import { Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile } from "./Co
 import { LIMIT_BREAKS, ResourceType, SkillName } from "../Game/Common";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
 import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
-import { localize, localizeResourceType, localizeSkillName } from "./Localization";
+import {
+	localize,
+	localizeModifierName,
+	localizeResourceType,
+	localizeSkillName,
+} from "./Localization";
 import { controller } from "../Controller/Controller";
 import {
 	allSkillsAreIncluded,
@@ -112,92 +117,6 @@ export const mockDamageStatUpdateFn = (
 ) => {
 	updateDamageStats = updateFn;
 };
-
-function buffName(buff: PotencyModifierType) {
-	let text = "";
-	if (buff === PotencyModifierType.AF3) {
-		text = localize({ en: "AF3", zh: "三层火" }) as string;
-	} else if (buff === PotencyModifierType.AF2) {
-		text = localize({ en: "AF2", zh: "二层火" }) as string;
-	} else if (buff === PotencyModifierType.AF1) {
-		text = localize({ en: "AF1", zh: "一层火" }) as string;
-	} else if (buff === PotencyModifierType.UI3) {
-		text = localize({ en: "UI3", zh: "三层冰" }) as string;
-	} else if (buff === PotencyModifierType.UI2) {
-		text = localize({ en: "UI2", zh: "二层冰" }) as string;
-	} else if (buff === PotencyModifierType.UI1) {
-		text = localize({ en: "UI1", zh: "一层冰" }) as string;
-	} else if (buff === PotencyModifierType.ENO) {
-		text = localize({ en: "enochian", zh: "天语" }) as string;
-	} else if (buff === PotencyModifierType.POT) {
-		text = localize({ en: "pot", zh: "爆发药" }) as string;
-	} else if (buff === PotencyModifierType.PARTY) {
-		text = localize({ en: "party", zh: "团辅" }) as string;
-	} else if (buff === PotencyModifierType.AUTO_CDH) {
-		text = localize({ en: "auto crit/direct hit", zh: "必直暴" }) as string;
-	} else if (buff === PotencyModifierType.STARRY) {
-		text = localize({ en: "starry muse", zh: "星空构想" }) as string;
-	} else if (buff === PotencyModifierType.EMBOLDEN_M) {
-		text = localize({ en: "embolden", zh: "鼓励" }) as string;
-	} else if (buff === PotencyModifierType.MANAFIC) {
-		text = localize({ en: "manafication", zh: "魔元化" }) as string;
-	} else if (buff === PotencyModifierType.ACCELERATION) {
-		text = localize({ en: "acceleration", zh: "促进" }) as string;
-	} else if (buff === PotencyModifierType.STANDARD_SINGLE) {
-		text = localize({ en: "single standard finish" }) as string;
-	} else if (buff === PotencyModifierType.STANDARD_DOUBLE) {
-		text = localize({ en: "double standard finish" }) as string;
-	} else if (buff === PotencyModifierType.TECHNICAL_SINGLE) {
-		text = localize({ en: "single technical finish" }) as string;
-	} else if (buff === PotencyModifierType.TECHNICAL_DOUBLE) {
-		text = localize({ en: "double technical finish" }) as string;
-	} else if (buff === PotencyModifierType.TECHNICAL_TRIPLE) {
-		text = localize({ en: "triple technical finish" }) as string;
-	} else if (buff === PotencyModifierType.TECHNICAL_QUADRUPLE) {
-		text = localize({ en: "quadruple technical finish" }) as string;
-	} else if (buff === PotencyModifierType.DEVILMENT) {
-		text = localize({ en: "devilment" }) as string;
-	} else if (buff === PotencyModifierType.COMBO) {
-		text = localize({ en: "combo", zh: "连击" }) as string;
-	} else if (buff === PotencyModifierType.FUGETSU) {
-		text = localize({ en: "fugetsu", zh: "风月" }) as string;
-	} else if (buff === PotencyModifierType.AUTO_CRIT) {
-		text = localize({ en: "auto crit", zh: "必暴" }) as string;
-	} else if (buff === PotencyModifierType.YATEN) {
-		text = localize({ en: "yaten", zh: "强化夜天" }) as string;
-	} else if (buff === PotencyModifierType.POSITIONAL) {
-		text = localize({ en: "positional", zh: "身位" }) as string;
-	} else if (buff === PotencyModifierType.ARCANE_CIRCLE) {
-		text = localize({ en: "arcane circle", zh: "神秘环" }) as string;
-	} else if (buff === PotencyModifierType.DEATHSDESIGN) {
-		text = localize({ en: "death's design", zh: "死亡烙印" }) as string;
-	} else if (buff === PotencyModifierType.ENHANCED_GIBBET_GALLOWS) {
-		text = localize({ en: "enhanced gibbet/gallows", zh: "绞决/缢杀效果提高" }) as string;
-	} else if (buff === PotencyModifierType.ENHANCED_REAPING) {
-		text = localize({ en: "enhanced reaping", zh: "虚无/交错收割效果提高" }) as string;
-	} else if (buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
-		text = localize({ en: "immortal Sacrifice" }) as string;
-	} else if (buff === PotencyModifierType.BARRAGE) {
-		text = localize({ en: "barrage" }) as string;
-	} else if (buff === PotencyModifierType.RAGING_STRIKES) {
-		text = localize({ en: "raging strikes" }) as string;
-	} else if (buff === PotencyModifierType.BATTLE_VOICE) {
-		text = localize({ en: "battle voice" }) as string;
-	} else if (buff === PotencyModifierType.RADIANT_FINALE_THREE_CODA) {
-		text = localize({ en: "three coda radiant finale" }) as string;
-	} else if (buff === PotencyModifierType.RADIANT_FINALE_TWO_CODA) {
-		text = localize({ en: "two coda radiant finale" }) as string;
-	} else if (buff === PotencyModifierType.RADIANT_FINALE_ONE_CODA) {
-		text = localize({ en: "one coda radiant finale" }) as string;
-	} else if (buff === PotencyModifierType.WANDERERS_MINUET) {
-		text = localize({ en: "wanderers minuet" }) as string;
-	} else if (buff === PotencyModifierType.MAGES_BALLAD) {
-		text = localize({ en: "mages ballad" }) as string;
-	} else if (buff === PotencyModifierType.ARMYS_PAEON) {
-		text = localize({ en: "armys paeon" }) as string;
-	}
-	return text;
-}
 
 function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
 	let colors = getCurrentThemeColors();
@@ -354,7 +273,8 @@ function PotencyDisplay(props: {
 	props.calc.forEach((m) => {
 		if (m.kind === "adder" && m.additiveAmount > 0) {
 			potency += m.additiveAmount;
-			additiveExplanation += " + " + m.additiveAmount + "(" + buffName(m.source) + ")";
+			additiveExplanation +=
+				" + " + m.additiveAmount + "(" + localizeModifierName(m.source) + ")";
 		}
 	});
 	if (additiveExplanation) {
@@ -363,7 +283,8 @@ function PotencyDisplay(props: {
 	props.calc.forEach((m) => {
 		if (m.kind === "multiplier" && m.damageFactor !== 1) {
 			potency *= m.damageFactor;
-			potencyExplanation += " × " + m.damageFactor + "(" + buffName(m.source) + ")";
+			potencyExplanation +=
+				" × " + m.damageFactor + "(" + localizeModifierName(m.source) + ")";
 		}
 	});
 	if (props.targetCount && props.falloff !== undefined && props.targetCount > 1) {
