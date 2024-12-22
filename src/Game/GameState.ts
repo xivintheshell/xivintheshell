@@ -902,18 +902,24 @@ export abstract class GameState {
 
 		let dotGap: number | undefined = undefined;
 		this.getOverriddenDots(dotName).forEach((removeDot: ResourceType) => {
+			// Ignore self for the purposes of overriding other DoTs
+			if (removeDot === dotName) {
+				return;
+			}
 			if (!this.hasResourceAvailable(removeDot)) {
+				const lastExpiration = this.resources.get(removeDot).getLastExpirationTime();
+
 				// If a mutually exclusive DoT was previously applied but has fallen off, the gap is the smallest of the times since any of those DoTs expired
-				const thisGap =
-					this.getDisplayTime() -
-					(this.resources.get(removeDot).getLastExpirationTime() ?? 0);
-				dotGap = dotGap === undefined ? thisGap : Math.min(dotGap, thisGap);
+				if (lastExpiration) {
+					const thisGap = this.getDisplayTime() - lastExpiration;
+					dotGap = dotGap === undefined ? thisGap : Math.min(dotGap, thisGap);
+				}
 				return;
 			}
 
 			node.setDotOverrideAmount(
 				dotName,
-				node.getDotOverrideAmount(removeDot) + this.resources.timeTillReady(removeDot),
+				node.getDotOverrideAmount(dotName) + this.resources.timeTillReady(removeDot),
 			);
 			dotGap = 0;
 			this.tryConsumeResource(removeDot);
