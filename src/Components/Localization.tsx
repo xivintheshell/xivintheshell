@@ -709,6 +709,9 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.StandardBonus, "小舞连击"],
 	[ResourceType.TechnicalBonus, "大舞连击"],
 	[ResourceType.PartySize, "小队人数"],
+	[ResourceType.cd_FanDanceII, "CD：扇舞·破"],
+	[ResourceType.cd_FanDanceIII, "CD：扇舞·急"],
+	[ResourceType.cd_FanDanceIV, "CD：扇舞·终"],
 ]);
 
 export function localizeResourceType(text: ResourceType): string {
