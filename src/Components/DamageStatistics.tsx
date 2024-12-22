@@ -810,7 +810,8 @@ export class DamageStatistics extends React.Component {
 							}}
 						>
 							<br />
-							{localize({ en: "(DoT)", zh: "（跳雷）" })} {/* TODO update zh localization */}
+							{localize({ en: "(DoT)", zh: "（跳雷）" })}{" "}
+							{/* TODO update zh localization */}
 						</span>
 					) : undefined}
 				</span>;
