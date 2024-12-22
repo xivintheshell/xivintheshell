@@ -459,10 +459,6 @@ export function calculateDamageStats(props: {
 				// If the on-hit potency has not been resolved (as is the case if we just
 				// cast higanbana and the ability has not yet hit), don't add an entry yet
 				node.getAllDotPotencies().forEach((potenciesArr, rscType) => {
-					if (potenciesArr.length === 0) {
-						return;
-					}
-
 					let dotTrackingData = dotTables.get(rscType);
 					if (!dotTrackingData) {
 						dotTrackingData = {
