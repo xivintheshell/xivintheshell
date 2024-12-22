@@ -16,7 +16,7 @@
 
 import fs from "node:fs";
 import { controller } from "./Controller/Controller";
-import { TickMode } from "./Controller/Common";
+import { ShellJob, TickMode } from "./Controller/Common";
 import { DEFAULT_BLM_CONFIG, GameConfig } from "./Game/GameConfig";
 import { PotencyModifierType } from "./Game/Potency";
 import { ResourceType, SkillName } from "./Game/Common";
@@ -26,6 +26,7 @@ import {
 	DamageStatisticsMode,
 	mockDamageStatUpdateFn,
 } from "./Components/DamageStatistics";
+import { getResourceInfo, ResourceInfo } from "./Game/Resources";
 
 // If this configuration flag is set to `true`, then the fight record of each test run
 // will be exported locally to "$TEST_NAME.txt".
@@ -553,17 +554,33 @@ it(
 		// wait for cast time + damage application
 		controller.step(4);
 
+		const state = controller.game as BLMState;
+
+		// Each DoT should have applied once
+		expect(damageData.dotTables.get(ResourceType.HighThunder)?.tableRows.length).toBe(1);
+		expect(damageData.dotTables.get(ResourceType.HighThunderII)?.tableRows.length).toBe(1);
+
+		const b3CastTime = state.config.getAfterTaxCastTime(state.config.adjustedCastTime(3.5));
+		const htApplicationDelay = state.skillsList.get(SkillName.HighThunder).applicationDelay;
+		const htApplicationTime = b3CastTime + htApplicationDelay;
 		// check the DoT summary for HT
 		const htSummary = damageData.dotTables.get(ResourceType.HighThunder)?.summary;
 		// There should be a gap from the start of the pull to the initial application
-		expect(htSummary?.cumulativeGap).toBeGreaterThan(0);
+		expect(htSummary?.cumulativeGap).toBeCloseTo(htApplicationTime, 0);
 		// HT will not have overridden anything
 		expect(htSummary?.cumulativeOverride).toEqual(0);
 
 		const ht2Summary = damageData.dotTables.get(ResourceType.HighThunderII)?.summary;
 		// Overriding DoTs should not list a gap
 		expect(ht2Summary?.cumulativeGap).toEqual(0);
+		const gcdRecastTime = state.config.getAfterTaxGCD(state.config.adjustedGCD(2.5));
+		const ht2ApplicationDelay = state.skillsList.get(SkillName.HighThunder2).applicationDelay;
+		const ht2ApplicationTime = b3CastTime + 2 * gcdRecastTime + ht2ApplicationDelay;
+		const expectedOverride =
+			(getResourceInfo(ShellJob.BLM, ResourceType.HighThunder) as ResourceInfo).maxTimeout -
+			(ht2ApplicationTime - htApplicationTime);
 		// The override amount should be applied to the overriding DoT, not the overridden one
-		expect(ht2Summary?.cumulativeOverride).toBeGreaterThan(0);
+		// controller time can be inexact due to floating point nonsense, so just expect it to be close
+		expect(ht2Summary?.cumulativeOverride).toBeCloseTo(expectedOverride, 0);
 	}),
 );
