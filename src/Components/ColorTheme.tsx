@@ -92,6 +92,19 @@ export type WARResourceColors = {
 	beastGauge: string;
 };
 
+export type BRDResourceColors = {
+	soulVoice: string;
+	pitchPerfect: string;
+	repertoire: string;
+	wanderersCoda: string;
+	magesCoda: string;
+	armysCoda: string;
+	ragingStrikes: string;
+	barrage: string;
+	battleVoice: string;
+	radiantFinale: string;
+};
+
 export type JobAccentColors = {
 	[ShellJob.BLM]: string;
 	[ShellJob.PCT]: string;
@@ -100,6 +113,8 @@ export type JobAccentColors = {
 	[ShellJob.SAM]: string;
 	[ShellJob.MCH]: string;
 	[ShellJob.WAR]: string;
+	[ShellJob.RPR]: string;
+	[ShellJob.BRD]: string;
 };
 
 export type ThemeColors = {
@@ -133,6 +148,7 @@ export type ThemeColors = {
 	mch: MCHResourceColors;
 	rpr: RPRResourceColors;
 	war: WARResourceColors;
+	brd: BRDResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -165,6 +181,8 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				[ShellJob.SAM]: "#f59542",
 				[ShellJob.MCH]: "#6ee1d6",
 				[ShellJob.WAR]: "#b10b0b", // color picker'd on job stone
+				[ShellJob.RPR]: "#965a90",
+				[ShellJob.BRD]: "#91ba5e",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -248,6 +266,18 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 			war: {
 				beastGauge: "#ffba00",
 			},
+			brd: {
+				soulVoice: "#5DBD99",
+				pitchPerfect: "#9ac5f1",
+				repertoire: "#e8c35a",
+				wanderersCoda: "#add549",
+				magesCoda: "#ffbcf8",
+				armysCoda: "#eb9b5f",
+				ragingStrikes: "#c04414",
+				barrage: "#e6c65b",
+				battleVoice: "#71bed1",
+				radiantFinale: "#edcce7",
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -278,6 +308,8 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				[ShellJob.SAM]: "#f59542",
 				[ShellJob.MCH]: "#6ee1d6",
 				[ShellJob.WAR]: "#b10b0b", // color picker'd on job stone
+				[ShellJob.RPR]: "#965a90",
+				[ShellJob.BRD]: "#91ba5e",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -360,6 +392,18 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 			},
 			war: {
 				beastGauge: "#e74a3c",
+			},
+			brd: {
+				soulVoice: "#5DBD99",
+				pitchPerfect: "#9ac5f1",
+				repertoire: "#e8c35a",
+				wanderersCoda: "#add549",
+				magesCoda: "#ffbcf8",
+				armysCoda: "#eb9b5f",
+				ragingStrikes: "#c04414",
+				barrage: "#e6c65b",
+				battleVoice: "#71bed1",
+				radiantFinale: "#edcce7",
 			},
 			timeline: {
 				ruler: "#e9e9e9",

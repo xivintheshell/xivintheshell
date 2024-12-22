@@ -41,6 +41,16 @@ export const enum PotencyModifierType {
 	IMMORTAL_SACRIFICE,
 
 	SURGING_TEMPEST,
+
+	RAGING_STRIKES,
+	WANDERERS_MINUET,
+	MAGES_BALLAD,
+	ARMYS_PAEON,
+	BATTLE_VOICE,
+	RADIANT_FINALE_ONE_CODA,
+	RADIANT_FINALE_TWO_CODA,
+	RADIANT_FINALE_THREE_CODA,
+	BARRAGE,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -202,6 +212,64 @@ export const Modifiers = {
 		source: PotencyModifierType.SURGING_TEMPEST,
 		damageFactor: 1.1,
 	} as PotencyMultiplier,
+	RagingStrikes: {
+		kind: "multiplier",
+		source: PotencyModifierType.RAGING_STRIKES,
+		damageFactor: 1.15,
+	} as PotencyMultiplier,
+	MagesBallad: {
+		kind: "multiplier",
+		source: PotencyModifierType.MAGES_BALLAD,
+		damageFactor: 1.01,
+	} as PotencyMultiplier,
+	ArmysPaeon: {
+		kind: "critDirect",
+		source: PotencyModifierType.ARMYS_PAEON,
+		critBonus: 0,
+		dhBonus: 0.03,
+	} as CritDirectMultiplier,
+	WanderersMinuet: {
+		kind: "critDirect",
+		source: PotencyModifierType.WANDERERS_MINUET,
+		critBonus: 0.02,
+		dhBonus: 0,
+	} as CritDirectMultiplier,
+	BattleVoice: {
+		kind: "critDirect",
+		source: PotencyModifierType.BATTLE_VOICE,
+		critBonus: 0,
+		dhBonus: 0.2,
+	} as CritDirectMultiplier,
+	RadiantFinaleOneCoda: {
+		kind: "multiplier",
+		source: PotencyModifierType.RADIANT_FINALE_ONE_CODA,
+		damageFactor: 1.02,
+	} as PotencyMultiplier,
+	RadiantFinaleTwoCoda: {
+		kind: "multiplier",
+		source: PotencyModifierType.RADIANT_FINALE_TWO_CODA,
+		damageFactor: 1.04,
+	} as PotencyMultiplier,
+	RadiantFinaleThreeCoda: {
+		kind: "multiplier",
+		source: PotencyModifierType.RADIANT_FINALE_THREE_CODA,
+		damageFactor: 1.06,
+	} as PotencyMultiplier,
+	BarrageRefulgent: {
+		kind: "multiplier",
+		source: PotencyModifierType.BARRAGE,
+		damageFactor: 3,
+	} as PotencyMultiplier,
+	BarrageWideVolley: {
+		kind: "adder",
+		source: PotencyModifierType.BARRAGE,
+		additiveAmount: 80,
+	} as PotencyAdder,
+	BarrageShadowbite: {
+		kind: "adder",
+		source: PotencyModifierType.BARRAGE,
+		additiveAmount: 100,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

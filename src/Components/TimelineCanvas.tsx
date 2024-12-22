@@ -31,7 +31,7 @@ import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
 import { localize, localizeBuffType, localizeSkillName } from "./Localization";
 import { setEditingMarkerValues } from "./TimelineMarkers";
-import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
+import { getCurrentThemeColors, MarkerColor, ThemeColors } from "./ColorTheme";
 import { scrollEditorToFirstSelected } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
 import { updateTimelineView } from "./Timeline";
@@ -445,30 +445,38 @@ function drawDamageMarks(
 		// hover text
 		let time = "[" + dm.displayTime.toFixed(3) + "] ";
 		let untargetableStr = localize({ en: "Untargetable", zh: "不可选中" }) as string;
-		let info = "";
-		let sourceStr = dm.sourceDesc.replace("{skill}", localizeSkillName(dm.sourceSkill));
-		let buffImages = [];
-		if (untargetable) {
-			info = (0).toFixed(3) + " (" + sourceStr + ")";
-		} else if (LIMIT_BREAKS.includes(dm.sourceSkill)) {
-			const lbStr = localize({ en: "LB" }) as string;
-			info = lbStr + " (" + sourceStr + ")";
-		} else {
-			const potency = dm.potency.getAmount({
-				tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
-				includePartyBuffs: true,
-			});
-			info = potency.toFixed(2) + " (" + sourceStr + ")";
-			if (pot) buffImages.push(buffIconImages.get(BuffType.Tincture));
+		const info: string[] = [];
+		let buffImages: Array<HTMLImageElement | undefined> = [];
+		dm.damageInfos.forEach((damageInfo) => {
+			let sourceStr = damageInfo.sourceDesc.replace(
+				"{skill}",
+				localizeSkillName(damageInfo.sourceSkill),
+			);
+			if (untargetable) {
+				info.push((0).toFixed(3) + " (" + sourceStr + ")");
+			} else if (LIMIT_BREAKS.includes(damageInfo.sourceSkill)) {
+				const lbStr = localize({ en: "LB" }) as string;
+				info.push(lbStr + " (" + sourceStr + ")");
+			} else {
+				const potencyAmount = damageInfo.potency.getAmount({
+					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
+					includePartyBuffs: true,
+				});
+				info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")");
+				if (pot) buffImages.push(buffIconImages.get(BuffType.Tincture));
 
-			dm.potency.getPartyBuffs().forEach((desc) => {
-				buffImages.push(buffIconImages.get(desc));
-			});
-		}
+				damageInfo.potency.getPartyBuffs().forEach((desc) => {
+					const buffImage = buffIconImages.get(desc);
+					if (!buffImages.includes(buffImage)) {
+						buffImages.push();
+					}
+				});
+			}
+		});
 
 		testInteraction(
 			{ x: x - 3, y: timelineOriginY, w: 6, h: 6 },
-			untargetable ? [time + info, untargetableStr] : [time + info],
+			untargetable ? [time, ...info, untargetableStr] : [time, ...info],
 			undefined,
 			undefined,
 			buffImages,
@@ -532,6 +540,15 @@ function drawSkills(
 		[BuffType.EnhancedEnpi, { color: g_colors.rdm.accelBuff, showImage: true }],
 		[BuffType.ArcaneCircle, { color: g_colors.rpr.arcaneCircle, showImage: true }],
 		[BuffType.DeathsDesign, { color: g_colors.rpr.deathsDesign, showImage: true }],
+		[BuffType.WanderersMinuet, { color: g_colors.brd.wanderersCoda, showImage: true }],
+		[BuffType.MagesBallad, { color: g_colors.brd.magesCoda, showImage: true }],
+		[BuffType.ArmysPaeon, { color: g_colors.brd.armysCoda, showImage: true }],
+		[BuffType.RagingStrikes, { color: g_colors.brd.ragingStrikes, showImage: true }],
+		[BuffType.Barrage, { color: g_colors.brd.barrage, showImage: true }],
+		[BuffType.BattleVoice, { color: g_colors.brd.battleVoice, showImage: true }],
+		[BuffType.RadiantFinale1, { color: g_colors.brd.radiantFinale, showImage: true }],
+		[BuffType.RadiantFinale2, { color: g_colors.brd.radiantFinale, showImage: true }],
+		[BuffType.RadiantFinale3, { color: g_colors.brd.radiantFinale, showImage: true }],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();
@@ -679,12 +696,12 @@ function drawSkills(
 		lines.push(description);
 
 		// 2. potency
-		const potency = node.getPotency({
-			tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
-			includePartyBuffs: true,
-			untargetable: bossIsUntargetable,
-		}).applied;
-		if (node.getPotencies().length > 0 && !LIMIT_BREAKS.includes(node.skillName!)) {
+		if (node.getInitialPotency() && !LIMIT_BREAKS.includes(node.skillName!)) {
+			const potency = node.getPotency({
+				tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
+				includePartyBuffs: true,
+				untargetable: bossIsUntargetable,
+			}).applied;
 			lines.push(localize({ en: "potency: ", zh: "威力：" }) + potency.toFixed(2));
 		}
 

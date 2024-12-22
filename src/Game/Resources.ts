@@ -3,6 +3,7 @@ import { ShellJob, ALL_JOBS, MELEE_JOBS } from "../Controller/Common";
 import { GameState } from "./GameState";
 import { ActionNode } from "../Controller/Record";
 import { BLMState } from "./Jobs/BLM";
+import { controller } from "../Controller/Controller";
 
 export enum EventTag {
 	ManaGain,
@@ -48,6 +49,8 @@ export class Resource {
 	#currentValue: number;
 	enabled: boolean;
 	pendingChange?: Event;
+	#lastExpirationTime?: number;
+
 	constructor(type: ResourceType, maxValue: number, initialValue: number) {
 		this.type = type;
 		this.maxValue = maxValue;
@@ -92,6 +95,12 @@ export class Resource {
 			console.log(this);
 		}
 		this.#currentValue = Math.max(this.#currentValue - amount, 0);
+		if (this.#currentValue === 0) {
+			this.#lastExpirationTime = controller.game.getDisplayTime();
+		}
+	}
+	getLastExpirationTime(): number | undefined {
+		return this.#lastExpirationTime;
 	}
 	gain(amount: number) {
 		this.#currentValue = Math.min(this.#currentValue + amount, this.maxValue);

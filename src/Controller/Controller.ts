@@ -21,6 +21,7 @@ import { RDMState } from "../Game/Jobs/RDM";
 import { DNCState } from "../Game/Jobs/DNC";
 import { SAMState } from "../Game/Jobs/SAM";
 import { MCHState } from "../Game/Jobs/MCH";
+import { BRDState } from "../Game/Jobs/BRD";
 import { Buff } from "../Game/Buffs";
 import {
 	BuffType,
@@ -43,11 +44,12 @@ import { DNCStatusPropsGenerator } from "../Components/Jobs/DNC";
 import { SAMStatusPropsGenerator } from "../Components/Jobs/SAM";
 import { MCHStatusPropsGenerator } from "../Components/Jobs/MCH";
 import { WARStatusPropsGenerator } from "../Components/Jobs/WAR";
+import { BRDStatusPropsGenerator } from "../Components/Jobs/BRD";
 import { StatusPropsGenerator, updateStatusDisplay } from "../Components/StatusDisplay";
 import { updateSkillButtons } from "../Components/Skills";
 import { updateConfigDisplay } from "../Components/PlaybackControl";
 import { setHistorical, setJob, setRealTime } from "../Components/Main";
-import { ElemType, MAX_TIMELINE_SLOTS, Timeline } from "./Timeline";
+import { DamageMarkElem, DamageMarkInfo, ElemType, MAX_TIMELINE_SLOTS, Timeline } from "./Timeline";
 import { scrollTimelineTo, updateTimelineView } from "../Components/Timeline";
 import { ActionNode, ActionType, Line, Record } from "./Record";
 import { ImageExportConfig } from "./ImageExportConfig";
@@ -93,6 +95,8 @@ const newGameState = (config: GameConfig) => {
 		return new RPRState(config);
 	} else if (config.job === ShellJob.WAR) {
 		return new WARState(config);
+	} else if (config.job === ShellJob.BRD) {
+		return new BRDState(config);
 	}
 	return new BLMState(config);
 };
@@ -128,8 +132,9 @@ class Controller {
 		isGCD: number;
 		castTime: number;
 	}[] = [];
-	#thunderDotTickTimes: number[] = [];
-	#thunderDoTCoverageTimes: { tStartDisplay: number; tEndDisplay?: number }[] = [];
+	#dotTickTimes: number[] = [];
+	#dotCoverageTimes: Map<ResourceType, { tStartDisplay: number; tEndDisplay?: number }[]> =
+		new Map();
 
 	savedHistoricalGame: GameState;
 	savedHistoricalRecord: Record;
@@ -347,8 +352,8 @@ class Controller {
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown;
 		this.#damageLogCsv = [];
 		this.#actionsLogCsv = [];
-		this.#thunderDotTickTimes = [];
-		this.#thunderDoTCoverageTimes = [];
+		this.#dotTickTimes = [];
+		this.#dotCoverageTimes = new Map();
 		this.#bAddingLine = false;
 		this.#bInterrupted = false;
 		this.displayingUpToDateGameState = true;
@@ -520,8 +525,7 @@ class Controller {
 				damageStats = {
 					mainTable: damageStats.mainTable,
 					mainTableSummary: damageStats.mainTableSummary,
-					dotTable: damageStats.dotTable,
-					dotTableSummary: damageStats.dotTableSummary,
+					dotTables: damageStats.dotTables,
 					mode: damageStats.mode,
 				};
 			}
@@ -562,7 +566,7 @@ class Controller {
 
 	getMaxTicks(untilRawTime: number) {
 		let cnt = 0;
-		this.#thunderDotTickTimes.forEach((rt) => {
+		this.#dotTickTimes.forEach((rt) => {
 			if (!bossIsUntargetable(rt - this.gameConfig.countdown) && rt <= untilRawTime) {
 				cnt++;
 			}
@@ -570,10 +574,15 @@ class Controller {
 		return cnt;
 	}
 
-	getDotCoverageTimeFraction(untilDisplayTime: number) {
+	getDotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceType) {
 		if (untilDisplayTime <= Debug.epsilon) return 0;
+		const dotCoverages = this.#dotCoverageTimes.get(dot);
+		if (!dotCoverages) {
+			return 0;
+		}
+
 		let coveredTime = 0;
-		this.#thunderDoTCoverageTimes.forEach((section) => {
+		dotCoverages.forEach((section) => {
 			if (section.tStartDisplay <= untilDisplayTime) {
 				let startTime = Math.max(0, section.tStartDisplay);
 				let endTime =
@@ -648,15 +657,29 @@ class Controller {
 		if (!this.#bInSandbox) {
 			let sourceDesc = "{skill}@" + p.sourceTime.toFixed(3);
 			if (p.description.length > 0) sourceDesc += " " + p.description;
-			this.timeline.addElement({
-				type: ElemType.DamageMark,
+			const damageInfo: DamageMarkInfo = {
 				potency: p,
-				buffs: pot ? [ResourceType.Tincture] : [],
-				time: this.game.time,
-				displayTime: this.game.getDisplayTime(),
-				sourceDesc: sourceDesc,
+				sourceDesc,
 				sourceSkill: p.sourceSkill,
-			});
+			};
+			let existingElement = this.timeline.tryGetElement(
+				this.game.time,
+				ElemType.DamageMark,
+			) as DamageMarkElem;
+			if (existingElement) {
+				existingElement.damageInfos.push(damageInfo);
+				if (pot && !existingElement.buffs.includes(ResourceType.Tincture)) {
+					existingElement.buffs.push(ResourceType.Tincture);
+				}
+			} else {
+				this.timeline.addElement({
+					type: ElemType.DamageMark,
+					damageInfos: [damageInfo],
+					buffs: pot ? [ResourceType.Tincture] : [],
+					time: this.game.time,
+					displayTime: this.game.getDisplayTime(),
+				});
+			}
 
 			// time, damageSource, potency, cumulativePotency
 			this.#damageLogCsv.push({
@@ -706,31 +729,37 @@ class Controller {
 
 	reportDotTick(rawTime: number) {
 		if (!this.#bInSandbox) {
-			this.#thunderDotTickTimes.push(rawTime);
+			this.#dotTickTimes.push(rawTime);
 			this.updateStats();
 		}
 	}
 
-	reportDotStart(displayTime: number) {
+	reportDotStart(displayTime: number, dot: ResourceType) {
 		if (!this.#bInSandbox) {
-			let len = this.#thunderDoTCoverageTimes.length;
-			console.assert(
-				len === 0 || this.#thunderDoTCoverageTimes[len - 1].tEndDisplay !== undefined,
-			);
-			this.#thunderDoTCoverageTimes.push({
+			let dotCoverages = this.#dotCoverageTimes.get(dot);
+			if (!dotCoverages) {
+				dotCoverages = [];
+				this.#dotCoverageTimes.set(dot, dotCoverages);
+			}
+			let len = dotCoverages.length;
+			console.assert(len === 0 || dotCoverages[len - 1].tEndDisplay !== undefined);
+			dotCoverages.push({
 				tStartDisplay: displayTime,
 				tEndDisplay: undefined,
 			});
 		}
 	}
 
-	reportDotDrop(displayTime: number) {
+	reportDotDrop(displayTime: number, dot: ResourceType) {
 		if (!this.#bInSandbox) {
-			let len = this.#thunderDoTCoverageTimes.length;
-			console.assert(
-				len > 0 && this.#thunderDoTCoverageTimes[len - 1].tEndDisplay === undefined,
-			);
-			this.#thunderDoTCoverageTimes[len - 1].tEndDisplay = displayTime;
+			const dotCoverages = this.#dotCoverageTimes.get(dot);
+			console.assert(dotCoverages, `Reported dropping ${dot} when no coverage was detected`);
+			if (!dotCoverages) {
+				return;
+			}
+			let len = dotCoverages.length;
+			console.assert(len > 0 && dotCoverages[len - 1].tEndDisplay === undefined);
+			dotCoverages[len - 1].tEndDisplay = displayTime;
 		}
 	}
 
@@ -776,6 +805,9 @@ class Controller {
 				break;
 			case ShellJob.BLM:
 				propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
+				break;
+			case ShellJob.BRD:
+				propsGenerator = new BRDStatusPropsGenerator(game as BRDState);
 				break;
 			default:
 				propsGenerator = new StatusPropsGenerator(game);

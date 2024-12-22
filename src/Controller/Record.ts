@@ -1,5 +1,5 @@
 import { FileType } from "./Common";
-import { BuffType, SkillName, SkillReadyStatus } from "../Game/Common";
+import { BuffType, ResourceType, SkillName, SkillReadyStatus } from "../Game/Common";
 import { GameConfig } from "../Game/GameConfig";
 import { Potency } from "../Game/Potency";
 import { controller } from "./Controller";
@@ -29,12 +29,16 @@ export class ActionNode {
 	static _gNodeIndex: number = 0;
 	#nodeIndex: number;
 	#capturedBuffs: Set<BuffType>;
-	#potencies: Potency[];
+	#potency: Potency | undefined;
+	#dotPotencies: Map<ResourceType, Potency[]>;
 
 	type: ActionType;
 	waitDuration: number = 0;
 	skillName?: SkillName;
 	buffName?: string;
+	applicationTime?: number;
+	#dotOverrideAmount: Map<ResourceType, number>;
+	#dotTimeGap: Map<ResourceType, number>;
 
 	next?: ActionNode = undefined;
 
@@ -47,7 +51,9 @@ export class ActionNode {
 		this.type = actionType;
 		this.#nodeIndex = ActionNode._gNodeIndex;
 		this.#capturedBuffs = new Set<BuffType>();
-		this.#potencies = [];
+		this.#dotPotencies = new Map();
+		this.#dotOverrideAmount = new Map();
+		this.#dotTimeGap = new Map();
 		ActionNode._gNodeIndex++;
 	}
 
@@ -76,40 +82,35 @@ export class ActionNode {
 	}
 
 	hasPartyBuff() {
-		let snapshotTime;
-		if (this.#potencies.length === 0) return false;
-		if (this.#potencies.length > 0) snapshotTime = this.#potencies[0].snapshotTime;
+		const snapshotTime = this.#potency?.snapshotTime;
 
 		return snapshotTime && controller.game.getPartyBuffs(snapshotTime).size > 0;
 	}
 
 	getPartyBuffs() {
-		let snapshotTime;
-		if (this.#potencies.length === 0) return [];
-		if (this.#potencies.length > 0) snapshotTime = this.#potencies[0].snapshotTime;
+		const snapshotTime = this.#potency?.snapshotTime;
 
 		return snapshotTime ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
 	}
 
 	resolveAll(displayTime: number) {
-		this.#potencies.forEach((p) => {
-			p.resolve(displayTime);
+		if (this.#potency) {
+			this.#potency.resolve(displayTime);
+		}
+		this.#dotPotencies.forEach((pArr) => {
+			pArr.forEach((p) => {
+				p.resolve(displayTime);
+			});
 		});
 	}
 
-	// true if empty or any damage is resolved.
+	// true if the node's effects have been applied
 	resolved() {
-		if (this.#potencies.length === 0) return true;
-		if (this.#potencies.length === 1) return this.#potencies[0].hasResolved();
-
-		return this.#potencies[0].hasResolved();
+		return this.applicationTime !== undefined;
 	}
 
 	hitBoss(untargetable: (displayTime: number) => boolean) {
-		if (this.#potencies.length === 0) return true;
-		if (this.#potencies.length === 1) return this.#potencies[0].hasHitBoss(untargetable);
-
-		return this.#potencies[0].hasHitBoss(untargetable);
+		return this.#potency?.hasHitBoss(untargetable) ?? true;
 	}
 
 	getPotency(props: {
@@ -122,33 +123,75 @@ export class ActionNode {
 			applied: 0,
 			snapshottedButPending: 0,
 		};
-		for (let i = 0; i < this.#potencies.length; i++) {
-			if (i === 0 || !props.excludeDoT) {
-				let p = this.#potencies[i];
-				if (p.hasHitBoss(props.untargetable)) {
-					res.applied += p.getAmount(props);
-				} else if (!p.hasResolved() && p.hasSnapshotted()) {
-					res.snapshottedButPending += p.getAmount(props);
-				}
-			}
+		if (this.#potency) {
+			this.recordPotency(props, this.#potency, res);
 		}
+
+		if (props.excludeDoT) {
+			return res;
+		}
+		this.#dotPotencies.forEach((pArr) => {
+			pArr.forEach((p) => {
+				this.recordPotency(props, p, res);
+			});
+		});
 		return res;
 	}
 
-	removeUnresolvedPotencies() {
-		for (let i = this.#potencies.length - 1; i >= 0; i--) {
-			if (!this.#potencies[i].hasResolved()) {
-				this.#potencies.splice(i, 1);
-			}
+	private recordPotency(
+		props: {
+			tincturePotencyMultiplier: number;
+			untargetable: (t: number) => boolean;
+			includePartyBuffs: boolean;
+			excludeDoT?: boolean;
+		},
+		potency: Potency,
+		record: { applied: number; snapshottedButPending: number },
+	) {
+		if (potency.hasHitBoss(props.untargetable)) {
+			record.applied += potency.getAmount(props);
+		} else if (!potency.hasResolved() && potency.hasSnapshotted()) {
+			record.snapshottedButPending += potency.getAmount(props);
 		}
 	}
 
-	getPotencies() {
-		return this.#potencies;
+	removeUnresolvedDoTPotencies() {
+		this.#dotPotencies.forEach((pArr) => {
+			const unresolvedIndex = pArr.findIndex((p) => !p.hasResolved());
+			if (unresolvedIndex < 0) {
+				return;
+			}
+			pArr.splice(unresolvedIndex);
+		});
+	}
+
+	anyPotencies(): boolean {
+		return this.#potency !== undefined || this.#dotPotencies.size > 0;
+	}
+	getInitialPotency() {
+		return this.#potency;
+	}
+	getAllDotPotencies() {
+		return this.#dotPotencies;
+	}
+	getDotPotencies(r: ResourceType) {
+		return this.#dotPotencies.get(r) ?? [];
 	}
 
 	addPotency(p: Potency) {
-		this.#potencies.push(p);
+		console.assert(
+			!this.#potency,
+			`ActionNode for ${this.skillName} already had an initial potency`,
+		);
+		this.#potency = p;
+	}
+
+	addDoTPotency(p: Potency, r: ResourceType) {
+		const pArr = this.#dotPotencies.get(r) ?? [];
+		if (pArr.length === 0) {
+			this.#dotPotencies.set(r, pArr);
+		}
+		pArr.push(p);
 	}
 
 	select() {
@@ -156,6 +199,19 @@ export class ActionNode {
 	}
 	unselect() {
 		this.#selected = false;
+	}
+
+	setDotTimeGap(dotName: ResourceType, amount: number) {
+		this.#dotTimeGap.set(dotName, amount);
+	}
+	getDotTimeGap(dotName: ResourceType): number {
+		return this.#dotTimeGap.get(dotName) ?? 0;
+	}
+	setDotOverrideAmount(dotName: ResourceType, amount: number) {
+		this.#dotOverrideAmount.set(dotName, amount);
+	}
+	getDotOverrideAmount(dotName: ResourceType): number {
+		return this.#dotOverrideAmount.get(dotName) ?? 0;
 	}
 }
 

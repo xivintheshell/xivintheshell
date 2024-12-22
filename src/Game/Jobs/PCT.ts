@@ -2,25 +2,29 @@
 
 import { controller } from "../../Controller/Controller";
 import { ShellJob } from "../../Controller/Common";
-import { ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
+	FAKE_SKILL_ANIMATION_LOCK,
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
+	Skill,
 	Spell,
 	StatePredicate,
 } from "../Skills";
 import { Traits } from "../Traits";
-import { GameState } from "../GameState";
+import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
+import { ActionNode } from "../../Controller/Record";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -55,6 +59,24 @@ makePCTResource(ResourceType.TemperaCoat, 1, { timeout: 10 });
 makePCTResource(ResourceType.TemperaGrassa, 1, { timeout: 10 });
 makePCTResource(ResourceType.Smudge, 1, { timeout: 5 });
 
+const HYPERPHANTASIA_SKILLS: SkillName[] = [
+	SkillName.FireInRed,
+	SkillName.Fire2InRed,
+	SkillName.AeroInGreen,
+	SkillName.Aero2InGreen,
+	SkillName.WaterInBlue,
+	SkillName.Water2InBlue,
+	SkillName.HolyInWhite,
+	SkillName.BlizzardInCyan,
+	SkillName.Blizzard2InCyan,
+	SkillName.StoneInYellow,
+	SkillName.Stone2InYellow,
+	SkillName.ThunderInMagenta,
+	SkillName.Thunder2InMagenta,
+	SkillName.CometInBlack,
+	SkillName.StarPrism,
+];
+
 // === JOB GAUGE AND STATE ===
 export class PCTState extends GameState {
 	constructor(config: GameConfig) {
@@ -80,6 +102,21 @@ export class PCTState extends GameState {
 		this.registerRecurringEvents();
 	}
 
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.StarryMuse)) {
+			node.addBuff(BuffType.StarryMuse);
+		}
+	}
+
+	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+		if (
+			this.hasResourceAvailable(ResourceType.Inspiration) &&
+			HYPERPHANTASIA_SKILLS.includes(skill.name)
+		) {
+			node.addBuff(BuffType.Hyperphantasia);
+		}
+	}
+
 	// apply hyperphantasia + sps adjustment without consuming any resources
 	captureSpellCastTime(name: SkillName, baseCastTime: number): number {
 		if (name.includes("Motif")) {
@@ -94,9 +131,7 @@ export class PCTState extends GameState {
 		}
 		return this.config.adjustedCastTime(
 			baseCastTime,
-			this.hasResourceAvailable(ResourceType.Inspiration)
-				? ResourceType.Inspiration
-				: undefined,
+			this.hasResourceAvailable(ResourceType.Inspiration) ? 25 : undefined,
 		);
 	}
 
@@ -118,9 +153,7 @@ export class PCTState extends GameState {
 		}
 		return this.config.adjustedGCD(
 			baseRecastTime,
-			this.hasResourceAvailable(ResourceType.Inspiration)
-				? ResourceType.Inspiration
-				: undefined,
+			this.hasResourceAvailable(ResourceType.Inspiration) ? 25 : undefined,
 		);
 	}
 
@@ -272,9 +305,11 @@ const makeAbility_PCT = (
 	params: {
 		potency?: number | Array<[TraitName, number]>;
 		replaceIf?: ConditionalSkillReplace<PCTState>[];
+		requiresCombat?: boolean;
 		highlightIf?: StatePredicate<PCTState>;
 		startOnHotbar?: boolean;
 		applicationDelay?: number;
+		animationLock?: number;
 		cooldown: number;
 		maxCharges?: number;
 		validateAttempt?: StatePredicate<PCTState>;
@@ -945,10 +980,10 @@ makeAbility_PCT(SkillName.SteelMuse, 50, ResourceType.cd_SteelMuse, {
 makeAbility_PCT(SkillName.StrikingMuse, 50, ResourceType.cd_SteelMuse, {
 	replaceIf: [steelCondition],
 	startOnHotbar: false,
+	requiresCombat: true,
 	cooldown: 60,
 	maxCharges: 2, // lower this value in the state constructor when level synced
-	validateAttempt: (state) =>
-		state.hasResourceAvailable(ResourceType.WeaponCanvas) && state.isInCombat(),
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.WeaponCanvas),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.WeaponCanvas);
 		state.resources.get(ResourceType.HammerTime).gain(3);
@@ -1056,9 +1091,10 @@ makeAbility_PCT(SkillName.ScenicMuse, 70, ResourceType.cd_ScenicMuse, {
 makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
 	replaceIf: [scenicCondition],
 	startOnHotbar: false,
+	requiresCombat: true,
 	applicationDelay: 0, // raid buff is instant, but inspiration is delayed by 0.62s
 	cooldown: 120,
-	validateAttempt: (state) => starryMuseCondition.condition(state) && state.isInCombat(),
+	validateAttempt: (state) => starryMuseCondition.condition(state),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.LandscapeCanvas);
 		// It is not possible to have an existing starry active
@@ -1129,6 +1165,7 @@ makeAbility_PCT(SkillName.TemperaCoatPop, 10, ResourceType.cd_TemperaPop, {
 	],
 	startOnHotbar: false,
 	applicationDelay: 0,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
 	onConfirm: (state) => {
@@ -1156,6 +1193,7 @@ makeAbility_PCT(SkillName.TemperaGrassaPop, 10, ResourceType.cd_TemperaPop, {
 	],
 	startOnHotbar: false,
 	applicationDelay: 0,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
 	onConfirm: (state) => {
@@ -1177,4 +1215,5 @@ makeResourceAbility(ShellJob.PCT, SkillName.Smudge, 20, ResourceType.cd_Smudge, 
 	rscType: ResourceType.Smudge,
 	applicationDelay: 0, // instant (buff application)
 	cooldown: 20,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });

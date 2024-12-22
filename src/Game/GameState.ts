@@ -3,12 +3,21 @@ import {
 	BuffType,
 	Debug,
 	makeSkillReadyStatus,
+	ProcMode,
 	ResourceType,
 	SkillName,
 	SkillUnavailableReason,
 } from "./Common";
 import { GameConfig } from "./GameConfig";
-import { Ability, DisplayedSkills, LimitBreak, SkillsList, Spell, Weaponskill } from "./Skills";
+import {
+	Ability,
+	DisplayedSkills,
+	LimitBreak,
+	Skill,
+	SkillsList,
+	Spell,
+	Weaponskill,
+} from "./Skills";
 import {
 	CoolDown,
 	CoolDownState,
@@ -31,11 +40,32 @@ import { Buff } from "./Buffs";
 import type { BLMState } from "./Jobs/BLM";
 import type { SAMState } from "./Jobs/SAM";
 import { SkillButtonViewInfo } from "../Components/Skills";
+import { ReactNode } from "react";
+import { localizeResourceType } from "../Components/Localization";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require("seedrandom");
 
 type RNG = any;
+
+export interface DoTSkillRegistration {
+	dotName: ResourceType;
+	appliedBy: SkillName[];
+}
+export interface DoTRegistrationGroup {
+	reportName?: ReactNode;
+	groupedDots: DoTSkillRegistration[];
+}
+
+export interface DoTPotencyProps {
+	node: ActionNode;
+	skillName: SkillName;
+	dotName: ResourceType;
+	tickPotency: number;
+	speedStat: "sks" | "sps";
+	aspect?: Aspect;
+	modifiers?: PotencyModifier[];
+}
 
 // GameState := resources + events queue
 export abstract class GameState {
@@ -43,6 +73,7 @@ export abstract class GameState {
 	rng: RNG;
 	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
 	lucidTickOffset: number;
+	dotTickOffset: number;
 	time: number; // raw time which starts at 0 regardless of countdown
 	resources: ResourceState;
 	cooldowns: CoolDownState;
@@ -50,11 +81,17 @@ export abstract class GameState {
 	skillsList: SkillsList<GameState>;
 	displayedSkills: DisplayedSkills;
 
+	dotGroups: DoTRegistrationGroup[] = [];
+	dotResources: ResourceType[] = [];
+	dotSkills: SkillName[] = [];
+	#exclusiveDots: Map<ResourceType, ResourceType[]> = new Map();
+
 	constructor(config: GameConfig) {
 		this.config = config;
 		this.rng = new SeedRandom(config.randomSeed);
 		this.nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
 		this.lucidTickOffset = this.nonProcRng() * 3.0;
+		this.dotTickOffset = this.nonProcRng() * 3.0;
 
 		// TIME (raw time which starts at 0 regardless of countdown)
 		this.time = 0;
@@ -120,7 +157,7 @@ export abstract class GameState {
 	 * have not yet initialized their resource/cooldown objects. Instead, all
 	 * sub-classes must explicitly call this at the end of their constructor.
 	 */
-	protected registerRecurringEvents() {
+	protected registerRecurringEvents(dotGroups: DoTRegistrationGroup[] = []) {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
@@ -205,6 +242,118 @@ export abstract class GameState {
 			firstLucidTickEvt.addTag(EventTag.LucidTick);
 			this.addEvent(firstLucidTickEvt);
 		}
+
+		let recurringDotTick = () => {
+			this.dotResources.forEach((dotResource) => {
+				const dotBuff = this.resources.get(dotResource) as DoTBuff;
+				if (dotBuff.available(1)) {
+					if (dotBuff.node) {
+						const p = dotBuff.node.getDotPotencies(dotResource)[dotBuff.tickCount];
+						controller.resolvePotency(p);
+						this.jobSpecificOnResolveDotTick(dotResource);
+					}
+					dotBuff.tickCount++;
+				} else {
+					if (dotBuff.node) {
+						dotBuff.node.removeUnresolvedDoTPotencies();
+						dotBuff.node = undefined;
+					}
+				}
+			});
+
+			// increment count
+			if (this.getDisplayTime() >= 0) {
+				controller.reportDotTick(this.time);
+			}
+
+			// queue the next tick
+			this.addEvent(
+				new Event("DoT tick", 3, () => {
+					recurringDotTick();
+				}),
+			);
+		};
+		dotGroups.forEach((dotGroup) => {
+			dotGroup.groupedDots.forEach((registeredDot) => {
+				if (!this.dotResources.includes(registeredDot.dotName)) {
+					this.dotResources.push(registeredDot.dotName);
+					registeredDot.appliedBy.forEach((dotSkill) => {
+						if (!this.dotSkills.includes(dotSkill)) {
+							this.dotSkills.push(dotSkill);
+						}
+					});
+					this.#exclusiveDots.set(
+						registeredDot.dotName,
+						dotGroup.groupedDots
+							.filter((dot) => dot !== registeredDot)
+							.map((dot) => dot.dotName),
+					);
+				} else {
+					console.assert(
+						false,
+						`${registeredDot.dotName} was registered as a dot multiple times for ${this.job}`,
+					);
+				}
+			});
+		});
+		this.dotGroups = dotGroups;
+		let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
+		while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
+		this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
+
+		this.jobSpecificRegisterRecurringEvents();
+	}
+
+	// Job code may override to handle setting up any job-specific recurring events, such as BLM's Polyglot timer
+	jobSpecificRegisterRecurringEvents() {}
+
+	// Job code may override to handle any on-tick effects of a DoT, like pre-Dawntrail Thundercloud
+	jobSpecificOnResolveDotTick(_dotResource: ResourceType) {}
+
+	// Job code may override to handle adding buff covers for the timeline
+	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
+	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
+
+	getStatusDuration(rscType: ResourceType): number {
+		return (getResourceInfo(this.job, rscType) as ResourceInfo).maxTimeout;
+	}
+
+	gainStatus(rscType: ResourceType, stacks: number = 1) {
+		const resource = this.resources.get(rscType);
+		const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
+		if (this.hasResourceAvailable(rscType)) {
+			if (resourceInfo.maxTimeout > 0) {
+				resource.overrideTimer(this, resourceInfo.maxTimeout);
+			}
+			if (resource.availableAmount() !== stacks) {
+				resource.overrideCurrentValue(stacks);
+			}
+		} else {
+			resource.gain(stacks);
+			if (resourceInfo.maxTimeout > 0) {
+				this.enqueueResourceDrop(rscType);
+			}
+		}
+	}
+
+	maybeGainProc(proc: ResourceType, chance: number = 0.5) {
+		if (!this.triggersEffect(chance)) {
+			return;
+		}
+
+		this.gainStatus(proc);
+	}
+
+	triggersEffect(chance: number): boolean {
+		if (this.config.procMode === ProcMode.Never) {
+			return false;
+		}
+		if (this.config.procMode === ProcMode.Always) {
+			return true;
+		}
+
+		const rand = this.rng();
+		return rand < chance;
 	}
 
 	// advance game state by this much time
@@ -287,9 +436,7 @@ export abstract class GameState {
 		// TODO move this to child class methods
 		if (this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines)) {
 			// should be approximately 0.85
-			const num = this.config.getAfterTaxGCD(
-				this.config.adjustedGCD(2.5, ResourceType.LeyLines),
-			);
+			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, 15));
 			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
 			return num / denom;
 		} else {
@@ -369,54 +516,15 @@ export abstract class GameState {
 		let capturedCastTime = skill.castTimeFn(this);
 		const recastTime = skill.recastTimeFn(this);
 
-		// TODO refactor logic to determine self-buffs
-		let llCovered =
-			this.job === ShellJob.BLM && this.hasResourceAvailable(ResourceType.LeyLines);
-		const fukaCovered =
-			this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fuka);
-		const fugetsuCovered =
-			this.job === ShellJob.SAM && this.hasResourceAvailable(ResourceType.Fugetsu);
-		const inspireSkills: SkillName[] = [
-			SkillName.FireInRed,
-			SkillName.Fire2InRed,
-			SkillName.AeroInGreen,
-			SkillName.Aero2InGreen,
-			SkillName.WaterInBlue,
-			SkillName.Water2InBlue,
-			SkillName.HolyInWhite,
-			SkillName.BlizzardInCyan,
-			SkillName.Blizzard2InCyan,
-			SkillName.StoneInYellow,
-			SkillName.Stone2InYellow,
-			SkillName.ThunderInMagenta,
-			SkillName.Thunder2InMagenta,
-			SkillName.CometInBlack,
-			SkillName.StarPrism,
-		];
-		let inspired =
-			this.job === ShellJob.PCT &&
-			this.resources.get(ResourceType.Inspiration).available(1) &&
-			inspireSkills.includes(skill.name);
-		if (llCovered && skill.cdName === ResourceType.cd_GCD) {
-			node.addBuff(BuffType.LeyLines);
-		}
-		if (inspired) {
-			node.addBuff(BuffType.Hyperphantasia);
-		}
-		if (fukaCovered && skill.cdName === ResourceType.cd_GCD) {
-			node.addBuff(BuffType.Fuka);
-		}
-		if (fugetsuCovered) {
-			node.addBuff(BuffType.Fugetsu);
-		}
+		this.jobSpecificAddSpeedBuffCovers(node, skill);
 
 		// create potency node object (snapshotted buffs will populate on confirm)
 		const potencyNumber = skill.potencyFn(this);
-		let potency: Potency | undefined = undefined;
-		// Potency object for DoT effects was already created separately
-		if (skill.aspect === Aspect.Lightning || skill.name === SkillName.Higanbana) {
-			potency = node.getPotencies()[0];
-		} else if (potencyNumber > 0) {
+
+		// See if the initial potency was already created
+		let potency: Potency | undefined = node.getInitialPotency();
+		// If it was not, and this action is supposed to do damage, go ahead and add it now
+		if (!potency && potencyNumber > 0) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
@@ -465,64 +573,13 @@ export abstract class GameState {
 
 			const doesDamage = skill.potencyFn(this) > 0;
 
-			// TODO automate buff covers
-			// tincture
-			if (this.hasResourceAvailable(ResourceType.Tincture) && doesDamage) {
-				node.addBuff(BuffType.Tincture);
-			}
-
-			if (
-				this.job === ShellJob.PCT &&
-				this.hasResourceAvailable(ResourceType.StarryMuse) &&
-				doesDamage
-			) {
-				node.addBuff(BuffType.StarryMuse);
-			}
-
-			if (this.job === ShellJob.RDM && doesDamage) {
-				if (
-					this.hasResourceAvailable(ResourceType.Embolden) &&
-					skill.aspect !== Aspect.Physical
-				) {
-					node.addBuff(BuffType.Embolden);
-				}
-				if (this.hasResourceAvailable(ResourceType.Manafication)) {
-					node.addBuff(BuffType.Manafication);
-				}
-				if (
-					skill.name === SkillName.Impact &&
-					this.hasResourceAvailable(ResourceType.Acceleration)
-				) {
-					node.addBuff(BuffType.Acceleration);
-				}
-			}
-
-			if (this.job === ShellJob.RPR && doesDamage) {
-				if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
-					node.addBuff(BuffType.ArcaneCircle);
+			if (doesDamage) {
+				// tincture
+				if (this.hasResourceAvailable(ResourceType.Tincture)) {
+					node.addBuff(BuffType.Tincture);
 				}
 
-				if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
-					node.addBuff(BuffType.DeathsDesign);
-				}
-			}
-
-			if (this.job === ShellJob.DNC && doesDamage) {
-				if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
-					node.addBuff(BuffType.TechnicalFinish);
-				}
-				if (this.hasResourceAvailable(ResourceType.Devilment)) {
-					node.addBuff(BuffType.Devilment);
-				}
-			}
-
-			if (
-				this.job === ShellJob.SAM &&
-				doesDamage &&
-				this.hasResourceAvailable(ResourceType.EnhancedEnpi) &&
-				skill.name === SkillName.Enpi
-			) {
-				node.addBuff(BuffType.EnhancedEnpi);
+				this.jobSpecificAddDamageBuffCovers(node, skill);
 			}
 
 			// Perform additional side effects
@@ -533,18 +590,26 @@ export abstract class GameState {
 				new Event(skill.name + " applied", skill.applicationDelay, () => {
 					if (potency) {
 						controller.resolvePotency(potency);
+						if (!this.hasResourceAvailable(ResourceType.InCombat)) {
+							this.resources.get(ResourceType.InCombat).gain(1);
+						}
 					}
 					skill.onApplication(this, node);
 				}),
 			);
 
-			if (potency) {
-				this.resources.addResourceEvent({
-					rscType: ResourceType.InCombat,
-					name: "begin combat if necessary",
-					delay: skill.applicationDelay,
-					fnOnRsc: (rsc: Resource) => rsc.gain(1),
-				});
+			if (potency && !this.hasResourceAvailable(ResourceType.InCombat)) {
+				const combatStart = this.resources.timeTillReady(ResourceType.InCombat);
+				if (combatStart === 0 || combatStart > skill.applicationDelay) {
+					this.resources.addResourceEvent({
+						rscType: ResourceType.InCombat,
+						name: "begin combat if necessary",
+						delay: skill.applicationDelay,
+						fnOnRsc: (rsc: Resource) => {
+							rsc.gain(1);
+						},
+					});
+				}
 			}
 		};
 
@@ -552,7 +617,7 @@ export abstract class GameState {
 		if (isInstant) {
 			this.resources.takeResourceLock(
 				ResourceType.NotAnimationLocked,
-				this.config.getSkillAnimationLock(skill.name),
+				skill.animationLockFn(this),
 			);
 			// Immediately do confirmation (no need to validate again)
 			onSpellConfirm();
@@ -623,66 +688,29 @@ export abstract class GameState {
 			node.addPotency(potency);
 		}
 
-		// TODO automate buff covers
-		// tincture
-		if (this.hasResourceAvailable(ResourceType.Tincture) && potencyNumber > 0) {
-			node.addBuff(BuffType.Tincture);
-		}
-
-		// starry muse
-		if (
-			this.job === ShellJob.PCT &&
-			this.resources.get(ResourceType.StarryMuse).available(1) &&
-			potencyNumber > 0
-		) {
-			node.addBuff(BuffType.StarryMuse);
-		}
-
-		if (
-			this.job === ShellJob.RDM &&
-			this.hasResourceAvailable(ResourceType.Embolden) &&
-			potencyNumber > 0 &&
-			skill.aspect !== Aspect.Physical
-		) {
-			node.addBuff(BuffType.Embolden);
-		}
-
-		if (this.job === ShellJob.RPR && potencyNumber > 0) {
-			if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
-				node.addBuff(BuffType.ArcaneCircle);
+		if (potencyNumber > 0) {
+			// tincture
+			if (this.hasResourceAvailable(ResourceType.Tincture)) {
+				node.addBuff(BuffType.Tincture);
 			}
 
-			if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
-				node.addBuff(BuffType.DeathsDesign);
-			}
-		}
-
-		if (this.job === ShellJob.DNC && potencyNumber > 0) {
-			if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
-				node.addBuff(BuffType.TechnicalFinish);
-			}
-			if (this.hasResourceAvailable(ResourceType.Devilment)) {
-				node.addBuff(BuffType.Devilment);
-			}
-		}
-
-		if (
-			this.job === ShellJob.SAM &&
-			potencyNumber > 0 &&
-			this.hasResourceAvailable(ResourceType.Fugetsu)
-		) {
-			node.addBuff(BuffType.Fugetsu);
+			this.jobSpecificAddDamageBuffCovers(node, skill);
 		}
 
 		skill.onConfirm(this, node);
 
-		if (potency) {
-			this.resources.addResourceEvent({
-				rscType: ResourceType.InCombat,
-				name: "begin combat if necessary",
-				delay: skill.applicationDelay,
-				fnOnRsc: (rsc: Resource) => rsc.gain(1),
-			});
+		if (potency && !this.hasResourceAvailable(ResourceType.InCombat)) {
+			const combatStart = this.resources.timeTillReady(ResourceType.InCombat);
+			if (combatStart === 0 || combatStart > skill.applicationDelay) {
+				this.resources.addResourceEvent({
+					rscType: ResourceType.InCombat,
+					name: "begin combat if necessary",
+					delay: skill.applicationDelay,
+					fnOnRsc: (rsc: Resource) => {
+						rsc.gain(1);
+					},
+				});
+			}
 		}
 
 		if (skill.applicationDelay > 0) {
@@ -703,7 +731,7 @@ export abstract class GameState {
 		// animation lock
 		this.resources.takeResourceLock(
 			ResourceType.NotAnimationLocked,
-			this.config.getSkillAnimationLock(skill.name),
+			skill.animationLockFn(this),
 		);
 	}
 
@@ -764,7 +792,7 @@ export abstract class GameState {
 
 			this.resources.takeResourceLock(
 				ResourceType.NotAnimationLocked,
-				slideCastTime + skill.animationLock,
+				slideCastTime + skill.animationLockFn(this),
 			);
 		};
 
@@ -864,6 +892,112 @@ export abstract class GameState {
 		});
 	}
 
+	getOverriddenDots(dotName: ResourceType): ResourceType[] {
+		return this.#exclusiveDots.get(dotName) ?? [];
+	}
+
+	applyDoT(dotName: ResourceType, node: ActionNode) {
+		const dotBuff = this.resources.get(dotName) as DoTBuff;
+		const dotDuration = (getResourceInfo(this.config.job, dotName) as ResourceInfo).maxTimeout;
+
+		let dotGap: number | undefined = undefined;
+		this.getOverriddenDots(dotName).forEach((removeDot: ResourceType) => {
+			// Ignore self for the purposes of overriding other DoTs
+			if (removeDot === dotName) {
+				return;
+			}
+			if (!this.hasResourceAvailable(removeDot)) {
+				const lastExpiration = this.resources.get(removeDot).getLastExpirationTime();
+
+				// If a mutually exclusive DoT was previously applied but has fallen off, the gap is the smallest of the times since any of those DoTs expired
+				if (lastExpiration) {
+					const thisGap = this.getDisplayTime() - lastExpiration;
+					dotGap = dotGap === undefined ? thisGap : Math.min(dotGap, thisGap);
+				}
+				return;
+			}
+
+			node.setDotOverrideAmount(
+				dotName,
+				node.getDotOverrideAmount(dotName) + this.resources.timeTillReady(removeDot),
+			);
+			dotGap = 0;
+			this.tryConsumeResource(removeDot);
+			controller.reportDotDrop(this.getDisplayTime(), removeDot);
+		});
+
+		if (dotBuff.available(1)) {
+			console.assert(dotBuff.node);
+			(dotBuff.node as ActionNode).removeUnresolvedDoTPotencies();
+			node.setDotOverrideAmount(
+				dotName,
+				node.getDotOverrideAmount(dotName) + this.resources.timeTillReady(dotName),
+			);
+			dotBuff.overrideTimer(this, dotDuration);
+		} else {
+			const thisGap = this.getDisplayTime() - (dotBuff.getLastExpirationTime() ?? 0);
+			dotGap = dotGap === undefined ? thisGap : Math.min(dotGap, thisGap);
+
+			dotBuff.gain(1);
+			controller.reportDotStart(this.getDisplayTime(), dotName);
+			this.resources.addResourceEvent({
+				rscType: dotName,
+				name: "drop " + dotName + " DoT",
+				delay: dotDuration,
+				fnOnRsc: (rsc) => {
+					rsc.consume(1);
+					controller.reportDotDrop(this.getDisplayTime(), dotName);
+				},
+			});
+		}
+		node.setDotTimeGap(dotName, dotGap ?? 0);
+		dotBuff.node = node;
+		dotBuff.tickCount = 0;
+	}
+
+	addDoTPotencies(props: DoTPotencyProps) {
+		const mods: PotencyModifier[] = [];
+		// If the job call didn't add Tincture, we can do that here
+		if (
+			this.hasResourceAvailable(ResourceType.Tincture) &&
+			!(props.modifiers ?? []).includes(Modifiers.Tincture)
+		) {
+			mods.push(Modifiers.Tincture);
+			props.node.addBuff(BuffType.Tincture);
+		}
+
+		const dotDuration = (getResourceInfo(this.config.job, props.dotName) as ResourceInfo)
+			.maxTimeout;
+		const dotTicks = dotDuration / 3;
+
+		for (let i = 0; i < dotTicks; i++) {
+			let pDot = new Potency({
+				config: controller.record.config ?? controller.gameConfig,
+				sourceTime: this.getDisplayTime(),
+				sourceSkill: props.skillName,
+				aspect: props.aspect ?? Aspect.Other,
+				basePotency: this.config.adjustedDoTPotency(props.tickPotency, props.speedStat),
+				snapshotTime: this.getDisplayTime(),
+				description:
+					localizeResourceType(props.dotName) + " DoT " + (i + 1) + `/${dotTicks}`,
+			});
+			pDot.modifiers = [...mods, ...(props?.modifiers ?? [])];
+			props.node.addDoTPotency(pDot, props.dotName);
+		}
+	}
+
+	refreshDot(props: DoTPotencyProps) {
+		if (!this.hasResourceAvailable(props.dotName)) {
+			return;
+		}
+
+		this.addDoTPotencies({
+			...props,
+		});
+
+		this.applyDoT(props.dotName, props.node);
+	}
+
 	timeTillNextMpGainEvent() {
 		let foundEvt = this.findNextQueuedEventByTag(EventTag.ManaGain);
 		return foundEvt ? foundEvt.timeTillEvent : 0;
@@ -926,16 +1060,7 @@ export abstract class GameState {
 
 		// Special case for skills that require being in combat
 		if (
-			(
-				[
-					SkillName.StrikingMuse,
-					SkillName.StarryMuse,
-					SkillName.Manafication,
-					SkillName.Ikishoten,
-					SkillName.InnerRelease,
-					SkillName.Infuriate,
-				] as SkillName[]
-			).includes(skillName) &&
+			skill.requiresCombat &&
 			status.unavailableReasons.includes(SkillUnavailableReason.RequirementsNotMet)
 		) {
 			status.addUnavailableReason(SkillUnavailableReason.NotInCombat);

@@ -1,9 +1,10 @@
 import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
-import { ProcMode, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { ActionNode } from "../../Controller/Record";
+import { BuffType, ProcMode, ResourceType, SkillName, TraitName, WarningType } from "../Common";
 import { DNCResourceType } from "../Constants/DNC";
 import { GameConfig } from "../GameConfig";
-import { GameState } from "../GameState";
+import { GameState, PlayerState } from "../GameState";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, getResourceInfo, makeResource, Resource, ResourceInfo } from "../Resources";
 import {
@@ -16,8 +17,10 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	ResourceCalculationFn,
+	Skill,
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
@@ -115,6 +118,15 @@ export class DNCState extends GameState {
 		this.cooldowns.set(new CoolDown(ResourceType.cd_ShieldSamba, shieldSambaCooldown, 1, 1));
 
 		this.registerRecurringEvents();
+	}
+
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.TechnicalFinish)) {
+			node.addBuff(BuffType.TechnicalFinish);
+		}
+		if (this.hasResourceAvailable(ResourceType.Devilment)) {
+			node.addBuff(BuffType.Devilment);
+		}
 	}
 
 	processComboStatus(skill: SkillName) {
@@ -390,6 +402,7 @@ const makeAbility_DNC = (
 		highlightIf?: StatePredicate<DNCState>;
 		startOnHotbar?: boolean;
 		applicationDelay?: number;
+		animationLock?: number;
 		cooldown: number;
 		maxCharges?: number;
 		validateAttempt?: StatePredicate<DNCState>;
@@ -1076,6 +1089,7 @@ makeAbility_DNC(SkillName.ImprovisedFinish, 80, ResourceType.cd_ImprovisedFinish
 makeAbility_DNC(SkillName.EnAvant, 50, ResourceType.cd_EnAvant, {
 	cooldown: 30,
 	maxCharges: 3, // Adjust charges when synced in the state constructor
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
 makeResourceAbility_DNC(SkillName.ShieldSamba, 56, ResourceType.cd_ShieldSamba, {

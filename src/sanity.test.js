@@ -1,10 +1,10 @@
-import { render, screen, findBy } from "@testing-library/react";
+import { render, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import { within } from "@testing-library/dom";
 
 import Main from "./Components/Main";
 import { act } from "react-dom/test-utils";
+import "jest-canvas-mock";
 
 // Need to mock window.URL.createObjectURL
 // https://stackoverflow.com/questions/52968969/jest-url-createobjecturl-is-not-a-function
@@ -44,8 +44,14 @@ it("allows timeline inputs without crashing", async () => {
 	const { container } = render(<Main />);
 	// Sprint applies instantaneously, and will show up in the damage table instantaneously
 	const skillButtonId = "skillButton-Sprint";
+
+	/* eslint-disable testing-library/no-node-access */
+	/* eslint-disable testing-library/no-container */
 	const skillButton = container.querySelector(`[data-tooptip-id="${skillButtonId}"]`);
 	const damageTable = container.querySelector("#damageTable");
+	/* eslint-enable testing-library/no-node-access */
+	/* eslint-enable testing-library/no-container */
+
 	// Before clicking Sprint, it won't show up anywhere
 	expect(within(damageTable).queryByText("Sprint")).not.toBeInTheDocument();
 	// click a skill

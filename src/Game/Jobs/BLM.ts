@@ -13,17 +13,18 @@ import {
 	TraitName,
 	WarningType,
 } from "../Common";
-import { Modifiers, Potency, PotencyModifierType, PotencyMultiplier } from "../Potency";
+import { PotencyModifierType, PotencyMultiplier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
-	getSkill,
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
+	Skill,
 	SkillAutoReplace,
 	Spell,
 	StatePredicate,
@@ -34,12 +35,12 @@ import {
 	getResourceInfo,
 	makeResource,
 	CoolDown,
-	DoTBuff,
 	Event,
 	Resource,
 	ResourceInfo,
 } from "../Resources";
 import { GameConfig } from "../GameConfig";
+import { localize } from "../../Components/Localization";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -62,7 +63,10 @@ makeBLMResource(ResourceType.Firestarter, 1, { timeout: 30.5 });
 // [6/29/24] note: from screen recording it looks more like: button press (0.1s) gain buff (30.0s) lose buff
 // see: https://drive.google.com/file/d/11KEAEjgezCKxhvUsaLTjugKAH_D1glmy/view?usp=sharing
 makeBLMResource(ResourceType.Thunderhead, 1, { timeout: 30 });
-makeBLMResource(ResourceType.ThunderDoT, 1, { timeout: 30 }); // TODO
+makeBLMResource(ResourceType.ThunderIII, 1, { timeout: 27 });
+makeBLMResource(ResourceType.ThunderIV, 1, { timeout: 21 });
+makeBLMResource(ResourceType.HighThunder, 1, { timeout: 30 });
+makeBLMResource(ResourceType.HighThunderII, 1, { timeout: 24 });
 makeBLMResource(ResourceType.Manaward, 1, { timeout: 20 });
 
 // 15.7s: see screen recording: https://drive.google.com/file/d/1qoIpAMK2KAKETgID6a3p5dqkeWRcNDdB/view?usp=drive_link
@@ -93,41 +97,32 @@ export class BLMState extends GameState {
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		this.registerRecurringEvents();
+		this.registerRecurringEvents([
+			{
+				reportName: localize({ en: "Thunder DoT" }),
+				groupedDots: [
+					{
+						dotName: ResourceType.HighThunder,
+						appliedBy: [SkillName.HighThunder],
+					},
+					{
+						dotName: ResourceType.HighThunderII,
+						appliedBy: [SkillName.HighThunder2],
+					},
+					{
+						dotName: ResourceType.ThunderIII,
+						appliedBy: [SkillName.Thunder3],
+					},
+					{
+						dotName: ResourceType.ThunderIV,
+						appliedBy: [SkillName.Thunder4],
+					},
+				],
+			},
+		]);
 	}
 
-	override registerRecurringEvents() {
-		super.registerRecurringEvents();
-		// thunder DoT tick
-		let recurringThunderTick = () => {
-			let thunder = this.resources.get(ResourceType.ThunderDoT) as DoTBuff;
-			if (thunder.available(1)) {
-				// dot buff is effective
-				thunder.tickCount++;
-				if (thunder.node) {
-					// aka this buff is applied by a skill (and not just from an override)
-					// access potencies at index [1, 10] (since 0 is initial potency)
-					let p = thunder.node.getPotencies()[thunder.tickCount];
-					controller.resolvePotency(p);
-				}
-			}
-			// increment count
-			if (this.getDisplayTime() >= 0) {
-				controller.reportDotTick(this.time);
-			}
-			// queue the next tick
-			this.addEvent(
-				new Event("thunder DoT tick", 3, () => {
-					recurringThunderTick();
-				}),
-			);
-		};
-		let timeTillFirstThunderTick = this.config.timeTillFirstManaTick + this.thunderTickOffset;
-		while (timeTillFirstThunderTick > 3) timeTillFirstThunderTick -= 3;
-		this.addEvent(
-			new Event("initial thunder DoT tick", timeTillFirstThunderTick, recurringThunderTick),
-		);
-
+	override jobSpecificRegisterRecurringEvents() {
 		// also polyglot
 		let recurringPolyglotGain = (rsc: Resource) => {
 			if (this.hasEnochian()) {
@@ -144,6 +139,15 @@ export class BLMState extends GameState {
 			});
 		};
 		recurringPolyglotGain(this.resources.get(ResourceType.Polyglot));
+	}
+
+	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+		if (
+			this.hasResourceAvailable(ResourceType.LeyLines) &&
+			skill.cdName === ResourceType.cd_GCD
+		) {
+			node.addBuff(BuffType.LeyLines);
+		}
 	}
 
 	override captureManaRegenAmount(): number {
@@ -178,11 +182,6 @@ export class BLMState extends GameState {
 			thunderhead.gain(1);
 			this.enqueueResourceDrop(ResourceType.Thunderhead, duration);
 		}
-	}
-	getThunderDotDuration() {
-		return this.config.level >= getSkill(ShellJob.BLM, SkillName.HighThunder).unlockLevel
-			? 30
-			: 27;
 	}
 
 	// call this whenever gaining af or ui from a different af/ui/unaspected state
@@ -280,7 +279,7 @@ export class BLMState extends GameState {
 		// Apply AF/UI multiplier after ley lines
 		const llAdjustedCastTime = this.config.adjustedCastTime(
 			baseCastTime,
-			this.hasResourceAvailable(ResourceType.LeyLines) ? ResourceType.LeyLines : undefined,
+			this.hasResourceAvailable(ResourceType.LeyLines) ? 15 : undefined,
 		);
 
 		let multiplier = 1;
@@ -566,6 +565,7 @@ const makeAbility_BLM = (
 		startOnHotbar?: boolean;
 		highlightIf?: StatePredicate<BLMState>;
 		applicationDelay?: number;
+		animationLock?: number;
 		cooldown: number;
 		maxCharges?: number;
 		validateAttempt?: StatePredicate<BLMState>;
@@ -669,96 +669,44 @@ makeAbility_BLM(SkillName.Transpose, 4, ResourceType.cd_Transpose, {
 	},
 });
 
-const applyThunderDoT = (game: PlayerState, node: ActionNode, skillName: SkillName) => {
-	let thunder = game.resources.get(ResourceType.ThunderDoT) as DoTBuff;
-	const thunderDuration = (skillName === SkillName.Thunder3 && 27) || 30;
-	if (thunder.available(1)) {
-		console.assert(thunder.node);
-		(thunder.node as ActionNode).removeUnresolvedPotencies();
+const thunderConfirm =
+	(skillName: SkillName, dotName: ResourceType) => (game: BLMState, node: ActionNode) => {
+		let tickPotency = 0;
+		switch (skillName) {
+			case SkillName.HighThunder:
+				tickPotency = 60;
+				break;
+			case SkillName.Thunder3:
+				tickPotency = 50;
+				break;
+			case SkillName.Thunder4:
+				tickPotency = 35;
+				break;
+			case SkillName.HighThunder2:
+				tickPotency = 40;
+				break;
+		}
 
-		thunder.overrideTimer(game, thunderDuration);
-	} else {
-		thunder.gain(1);
-		controller.reportDotStart(game.getDisplayTime());
-		game.resources.addResourceEvent({
-			rscType: ResourceType.ThunderDoT,
-			name: "drop thunder DoT",
-			delay: thunderDuration,
-			fnOnRsc: (rsc) => {
-				rsc.consume(1);
-				controller.reportDotDrop(game.getDisplayTime());
-			},
-		});
-	}
-	thunder.node = node;
-	thunder.tickCount = 0;
-};
-
-const addThunderPotencies = (
-	game: BLMState,
-	node: ActionNode,
-	skillName: typeof SkillName.Thunder3 | typeof SkillName.HighThunder,
-) => {
-	const mods: PotencyMultiplier[] = [];
-	// All modifiers need to be manually added to dot tick action nodes
-	if (game.hasResourceAvailable(ResourceType.Tincture)) {
-		mods.push(Modifiers.Tincture);
-	}
-	if (game.hasResourceAvailable(ResourceType.Enochian)) {
-		const enochianModifier = getEnochianModifier(game);
-		if (!Debug.noEnochian)
+		const mods: PotencyMultiplier[] = [];
+		if (game.hasResourceAvailable(ResourceType.Enochian) && !Debug.noEnochian) {
+			const enochianModifier = getEnochianModifier(game);
 			mods.push({
 				kind: "multiplier",
 				source: PotencyModifierType.ENO,
 				damageFactor: enochianModifier,
 			});
-	}
-	let thunder = getSkill(ShellJob.BLM, skillName);
-
-	// initial potency
-	let pInitial = new Potency({
-		config: controller.record.config ?? controller.gameConfig,
-		sourceTime: game.getDisplayTime(),
-		sourceSkill: skillName,
-		aspect: Aspect.Lightning,
-		basePotency: thunder ? thunder.potencyFn(game) : 150,
-		snapshotTime: undefined,
-		description: "",
-	});
-	pInitial.modifiers = mods;
-	node.addPotency(pInitial);
-
-	// dots
-	const thunderTicks = (skillName === SkillName.Thunder3 && 9) || 10;
-	const thunderTickPotency = (skillName === SkillName.Thunder3 && 50) || 60;
-	for (let i = 0; i < thunderTicks; i++) {
-		let pDot = new Potency({
-			config: controller.record.config ?? controller.gameConfig,
-			sourceTime: game.getDisplayTime(),
-			sourceSkill: skillName,
-			aspect: Aspect.Lightning,
-			basePotency: game.config.adjustedDoTPotency(thunderTickPotency, "sps"),
-			snapshotTime: undefined,
-			description: "DoT " + (i + 1) + `/${thunderTicks}`,
-		});
-		pDot.modifiers = mods;
-		node.addPotency(pDot);
-	}
-};
-
-const thunderConfirm =
-	(skillName: typeof SkillName.Thunder3 | typeof SkillName.HighThunder) =>
-	(game: BLMState, node: ActionNode) => {
-		// potency
-		addThunderPotencies(game, node, skillName); // should call on capture
-		node.getPotencies().forEach((p) => {
-			p.snapshotTime = game.getDisplayTime();
-		});
-
-		// tincture
-		if (game.hasResourceAvailable(ResourceType.Tincture)) {
-			node.addBuff(BuffType.Tincture);
 		}
+
+		console.assert(tickPotency > 0, `${skillName} was applied as a Thunder DoT`);
+		game.addDoTPotencies({
+			node,
+			dotName,
+			skillName,
+			tickPotency,
+			speedStat: "sps",
+			aspect: Aspect.Lightning,
+			modifiers: mods,
+		});
 
 		let thunderhead = game.resources.get(ResourceType.Thunderhead);
 		thunderhead.consume(1);
@@ -770,14 +718,10 @@ makeSpell_BLM(SkillName.Thunder3, 45, {
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 120,
-	applicationDelay: 0.757, // Unknown damage application, copied from HT
+	applicationDelay: 1.03,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.Thunder3),
-	onApplication: (state, node) => {
-		// resolve the on-hit potency element (always the first of the node)
-		controller.resolvePotency(node.getPotencies()[0]);
-		applyThunderDoT(state, node, SkillName.Thunder3);
-	},
+	onConfirm: thunderConfirm(SkillName.Thunder3, ResourceType.ThunderIII),
+	onApplication: (state, node) => state.applyDoT(ResourceType.ThunderIII, node),
 	autoUpgrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder },
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
@@ -915,6 +859,7 @@ makeSpell_BLM(SkillName.Fire4, 60, {
 makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, {
 	applicationDelay: 0, // ?
 	cooldown: 3,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	validateAttempt: (state) =>
 		state.resources.get(ResourceType.LeyLines).availableAmountIncludingDisabled() > 0,
 	onConfirm: (state, node) => {
@@ -925,6 +870,7 @@ makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, 
 makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialManipulation, {
 	applicationDelay: 0, // ?
 	cooldown: 10,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
 makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
@@ -1105,12 +1051,8 @@ makeSpell_BLM(SkillName.HighThunder, 92, {
 	basePotency: 150,
 	applicationDelay: 0.757,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.HighThunder),
-	onApplication: (state, node) => {
-		// resolve the on-hit potency element (always the first of the node)
-		controller.resolvePotency(node.getPotencies()[0]);
-		applyThunderDoT(state, node, SkillName.HighThunder);
-	},
+	onConfirm: thunderConfirm(SkillName.HighThunder, ResourceType.HighThunder),
+	onApplication: (state, node) => state.applyDoT(ResourceType.HighThunder, node),
 	autoDowngrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.Thunder3 },
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
@@ -1124,6 +1066,32 @@ makeSpell_BLM(SkillName.FlareStar, 100, {
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.AstralSoul, 6),
 	onConfirm: (state, node) => state.resources.get(ResourceType.AstralSoul).consume(6),
 	highlightIf: (state) => state.resources.get(ResourceType.AstralSoul).available(6),
+});
+
+makeSpell_BLM(SkillName.Thunder4, 64, {
+	aspect: Aspect.Lightning,
+	baseCastTime: 0,
+	baseManaCost: 0,
+	basePotency: 80,
+	applicationDelay: 1.16,
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
+	onConfirm: thunderConfirm(SkillName.Thunder4, ResourceType.ThunderIV),
+	onApplication: (state, node) => state.applyDoT(ResourceType.ThunderIV, node),
+	autoUpgrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.HighThunder2 },
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
+});
+
+makeSpell_BLM(SkillName.HighThunder2, 92, {
+	aspect: Aspect.Lightning,
+	baseCastTime: 0,
+	baseManaCost: 0,
+	basePotency: 100,
+	applicationDelay: 0.8,
+	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
+	onConfirm: thunderConfirm(SkillName.HighThunder2, ResourceType.HighThunderII),
+	onApplication: (state, node) => state.applyDoT(ResourceType.HighThunderII, node),
+	autoDowngrade: { trait: TraitName.ThunderMasteryIII, otherSkill: SkillName.Thunder4 },
+	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
 makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {

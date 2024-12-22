@@ -1,5 +1,13 @@
 [
 	{
+		"date": "12/22/24",
+		"changes": [
+			"[BRD] Added initial support for BRD",
+			"Overhaul DoT tracking to provide better usage statistics",
+			"[BLM] Added High Thunder II"
+		]
+	},
+	{
 		"date": "12/20/24",
 		"changes": [
 			"Fixed stats tables not including party buff potencies for most skills",

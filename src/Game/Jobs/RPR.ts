@@ -1,8 +1,9 @@
 import { ShellJob } from "../../Controller/Common";
-import { Aspect, ResourceType, SkillName, TraitName } from "../Common";
+import { ActionNode } from "../../Controller/Record";
+import { Aspect, BuffType, ResourceType, SkillName, TraitName } from "../Common";
 import { RPRResourceType, RPRSkillName } from "../Constants/RPR";
 import { GameConfig } from "../GameConfig";
-import { GameState } from "../GameState";
+import { GameState, PlayerState } from "../GameState";
 import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, makeResource } from "../Resources";
 import {
@@ -12,14 +13,17 @@ import {
 	ConditionalSkillReplace,
 	CooldownGroupProperies,
 	EffectFn,
+	FAKE_SKILL_ANIMATION_LOCK,
 	getBasePotency,
 	getSkill,
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
 	makeWeaponskill,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	ResourceCalculationFn,
+	Skill,
 	Spell,
 	StatePredicate,
 	Weaponskill,
@@ -91,6 +95,16 @@ export class RPRState extends GameState {
 		);
 
 		this.registerRecurringEvents();
+	}
+
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
+			node.addBuff(BuffType.ArcaneCircle);
+		}
+
+		if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
+			node.addBuff(BuffType.DeathsDesign);
+		}
 	}
 
 	refreshDeathsDesign() {
@@ -570,6 +584,7 @@ const makeRPRAbility = (
 		highlightIf?: StatePredicate<RPRState>;
 		startOnHotbar?: boolean;
 		applicationDelay?: number;
+		animationLock?: number;
 		cooldown: number;
 		maxCharges?: number;
 		validateAttempt?: StatePredicate<RPRState>;
@@ -1072,6 +1087,7 @@ makeRPRWeaponskill(SkillName.Perfectio, 100, {
 
 makeRPRAbility(SkillName.Regress, 74, ResourceType.cd_BloodStalk, {
 	cooldown: 1,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	startOnHotbar: false,
 	highlightIf: (_state) => true,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Threshold),
@@ -1088,6 +1104,7 @@ makeRPRAbility(SkillName.HellsIngress, 20, ResourceType.cd_IngressEgress, {
 		},
 	],
 	cooldown: 20,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	onConfirm: (state) => {
 		state.resources.get(ResourceType.HellsIngressUsed).gain(1);
 		if (Traits.hasUnlocked(TraitName.Hellsgate, state.config.level))
@@ -1106,6 +1123,7 @@ makeRPRAbility(SkillName.HellsEgress, 20, ResourceType.cd_IngressEgress, {
 		},
 	],
 	cooldown: 20,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.HellsIngressUsed);
 		if (Traits.hasUnlocked(TraitName.Hellsgate, state.config.level))
@@ -1127,6 +1145,7 @@ makeRPRAbility(SkillName.ArcaneCrest, 40, ResourceType.cd_ArcaneCrest, {
 
 makeRPRAbility(SkillName.ArcaneCrestPop, 40, ResourceType.cd_ArcaneCrestPop, {
 	cooldown: 1,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	startOnHotbar: false,
 	onConfirm: (state) => {
 		state.resources.get(ResourceType.CrestOfTimeBorrowed).consume(1);
