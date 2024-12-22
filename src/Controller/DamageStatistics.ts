@@ -73,7 +73,6 @@ function isDoTNode(node: ActionNode) {
 }
 
 function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: ActionNode) {
-	console.assert(node.getDotPotencies(dotName).length > 0);
 	console.assert(isDoTNode(node));
 	let mainPotency = node.getInitialPotency();
 	let entry: DamageStatsDoTTableEntry = {
