@@ -792,8 +792,8 @@ export class DamageStatistics extends React.Component {
 							<Help
 								topic={"potencyStats-thunder"}
 								content={localize({
-									en: "See Thunder table below for details",
-									zh: "详见下方雷统计表格",
+									en: "See table below for details",
+									zh: "详见下方统计表格",
 								})}
 							/>
 						) : undefined}
@@ -810,7 +810,7 @@ export class DamageStatistics extends React.Component {
 							}}
 						>
 							<br />
-							{localize({ en: "(DoT)", zh: "（跳雷）" })}
+							{localize({ en: "(DoT)", zh: "（跳雷）" })} {/* TODO update zh localization */}
 						</span>
 					) : undefined}
 				</span>;
@@ -954,7 +954,7 @@ export class DamageStatistics extends React.Component {
 							topic={"thunderTable-numUntargetableTicks-" + props.key}
 							content={localize({
 								en: "tick(s) when untargetable",
-								zh: "Boss上天期间跳雷次数",
+								zh: "Boss上天期间跳雷次数", // TODO update zh localization
 							})}
 						/>
 					</span>
