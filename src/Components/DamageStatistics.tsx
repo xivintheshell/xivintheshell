@@ -810,8 +810,7 @@ export class DamageStatistics extends React.Component {
 							}}
 						>
 							<br />
-							{localize({ en: "(DoT)", zh: "（跳雷）" })}{" "}
-							{/* TODO update zh localization */}
+							{localize({ en: "(DoT)", zh: "（DoT）" })}{" "}
 						</span>
 					) : undefined}
 				</span>;
@@ -955,7 +954,7 @@ export class DamageStatistics extends React.Component {
 							topic={"thunderTable-numUntargetableTicks-" + props.key}
 							content={localize({
 								en: "tick(s) when untargetable",
-								zh: "Boss上天期间跳雷次数", // TODO update zh localization
+								zh: "Boss上天期间跳DoT次数",
 							})}
 						/>
 					</span>
