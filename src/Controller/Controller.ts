@@ -80,6 +80,8 @@ require("../Game/Jobs/RoleActions");
 
 type Fixme = any;
 
+const STANDARD_DOT_TICK_KEY = "stdtick";
+
 const newGameState = (config: GameConfig) => {
 	if (config.job === ShellJob.PCT) {
 		return new PCTState(config);
@@ -132,7 +134,7 @@ class Controller {
 		isGCD: number;
 		castTime: number;
 	}[] = [];
-	#dotTickTimes: number[] = [];
+	#dotTickTimes: Map<ResourceType | string, number[]> = new Map();
 	#dotCoverageTimes: Map<ResourceType, { tStartDisplay: number; tEndDisplay?: number }[]> =
 		new Map();
 
@@ -352,7 +354,7 @@ class Controller {
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown;
 		this.#damageLogCsv = [];
 		this.#actionsLogCsv = [];
-		this.#dotTickTimes = [];
+		this.#dotTickTimes = new Map();
 		this.#dotCoverageTimes = new Map();
 		this.#bAddingLine = false;
 		this.#bInterrupted = false;
@@ -564,12 +566,26 @@ class Controller {
 		return this.#untargetableMask;
 	}
 
-	getMaxTicks(untilRawTime: number) {
+	/**
+	 * Gets the maximum number of DoT ticks for the given DoT. DoT ticks may be one of:
+	 * - The standard tick most DoTs tick on
+	 * - The dot-specific initial tick for ground-targeted DoTs like Salted Earth and Doton
+	 * - Flamethrower's weird faster ticks
+	 * @param untilRawTime The end of the time range to look for ticks within
+	 * @param dotName The name of the dot to get ticks for
+	 * @param excludeStandardTicks Boolean flag to exclude the standard tick from the results, mainly for Flamethrower
+	 * @returns The number of applicable dot ticks within the time range, excluding any that hit during an untargetable time
+	 */
+	getMaxTicks(untilRawTime: number, dotName: ResourceType, excludeStandardTicks: boolean) {
 		let cnt = 0;
-		this.#dotTickTimes.forEach((rt) => {
-			if (!bossIsUntargetable(rt - this.gameConfig.countdown) && rt <= untilRawTime) {
-				cnt++;
-			}
+		const dotKeys: Array<ResourceType | string> = [dotName];
+		if (!excludeStandardTicks) dotKeys.push(STANDARD_DOT_TICK_KEY);
+		dotKeys.forEach((key) => {
+			this.#dotTickTimes.get(key)?.forEach((rt) => {
+				if (!bossIsUntargetable(rt - this.gameConfig.countdown) && rt <= untilRawTime) {
+					cnt++;
+				}
+			});
 		});
 		return cnt;
 	}
@@ -727,9 +743,20 @@ class Controller {
 		}
 	}
 
-	reportDotTick(rawTime: number) {
+	/**
+	 * Records the raw time at which a dot tick event took place
+	 * @param rawTime The time of the DoT
+	 * @param dotName The name of the DoT that ticked. If not provided, assumes the standard DoT tick
+	 */
+	reportDotTick(rawTime: number, dotName?: ResourceType) {
 		if (!this.#bInSandbox) {
-			this.#dotTickTimes.push(rawTime);
+			const tickGroupKey = dotName ?? STANDARD_DOT_TICK_KEY;
+			let tickGroup = this.#dotTickTimes.get(tickGroupKey);
+			if (!tickGroup) {
+				tickGroup = [];
+				this.#dotTickTimes.set(tickGroupKey, tickGroup);
+			}
+			tickGroup.push(rawTime);
 			this.updateStats();
 		}
 	}

@@ -459,6 +459,7 @@ export function calculateDamageStats(props: {
 				// cast higanbana and the ability has not yet hit), don't add an entry yet
 				node.getAllDotPotencies().forEach((potenciesArr, rscType) => {
 					let dotTrackingData = dotTables.get(rscType);
+					const excludeStandardTicks = ctl.game.excludedDoTs.includes(rscType);
 					if (!dotTrackingData) {
 						dotTrackingData = {
 							tableRows: [],
@@ -467,7 +468,11 @@ export function calculateDamageStats(props: {
 								cumulativeOverride: 0,
 								timeSinceLastDoTDropped: 0,
 								totalTicks: 0,
-								maxTicks: ctl.getMaxTicks(ctl.game.time),
+								maxTicks: ctl.getMaxTicks(
+									ctl.game.time,
+									rscType,
+									excludeStandardTicks,
+								),
 								dotCoverageTimeFraction: ctl.getDotCoverageTimeFraction(
 									ctl.game.getDisplayTime(),
 									rscType,
