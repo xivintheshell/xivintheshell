@@ -52,6 +52,7 @@ type RNG = any;
 export interface DoTSkillRegistration {
 	dotName: ResourceType;
 	appliedBy: SkillName[];
+	exclude?: boolean; // Exclude from standard DoT tick handling (Flamethrower)
 }
 export interface DoTRegistrationGroup {
 	reportName?: ReactNode;
@@ -84,6 +85,7 @@ export abstract class GameState {
 
 	dotGroups: DoTRegistrationGroup[] = [];
 	dotResources: ResourceType[] = [];
+	excludedDoTs: ResourceType[] = [];
 	dotSkills: SkillName[] = [];
 	#exclusiveDots: Map<ResourceType, ResourceType[]> = new Map();
 
@@ -246,6 +248,7 @@ export abstract class GameState {
 
 		let recurringDotTick = () => {
 			this.dotResources
+				.filter((dotResource) => !this.excludedDoTs.includes(dotResource))
 				.forEach((dotResource) => this.handleDoTTick(dotResource));
 
 			// increment count
@@ -275,6 +278,14 @@ export abstract class GameState {
 							.filter((dot) => dot !== registeredDot)
 							.map((dot) => dot.dotName),
 					);
+
+					// Keep track of which DoTs are going to be handled separately from the main DoT tick
+					if (
+						registeredDot.exclude &&
+						!this.excludedDoTs.includes(registeredDot.dotName)
+					) {
+						this.excludedDoTs.push(registeredDot.dotName);
+					}
 				} else {
 					console.assert(
 						false,
