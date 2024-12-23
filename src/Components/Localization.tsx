@@ -541,10 +541,10 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.Triplecast, "三重咏唱"],
 	[ResourceType.Firestarter, "火苗"],
 	[ResourceType.Thunderhead, "雷砧"],
-	[ResourceType.HighThunder, "高闪雷"], // May need retranslation from ThunderDoT
-	[ResourceType.ThunderIII, "暴雷"], // May need retranslation from ThunderDoT
-	[ResourceType.HighThunderII, "高震雷"], // May need retranslation from ThunderDoT
-	[ResourceType.ThunderIV, "霹雷"], // May need retranslation from ThunderDoT
+	[ResourceType.HighThunder, "高闪雷"],
+	[ResourceType.ThunderIII, "暴雷"],
+	[ResourceType.HighThunderII, "高震雷"],
+	[ResourceType.ThunderIV, "霹雷"],
 	[ResourceType.LeyLines, "黑魔纹"],
 	[ResourceType.Manaward, "魔纹罩"],
 	[ResourceType.AstralFire, "星极火"],
@@ -768,6 +768,7 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	],
 	[PotencyModifierType.ENHANCED_REAPING, { en: "enhanced reaping", zh: "虚无/交错收割效果提高" }],
 	[PotencyModifierType.IMMORTAL_SACRIFICE, { en: "immortal sacrifice" }],
+	[PotencyModifierType.SURGING_TEMPEST, { en: "surging tempest" }],
 	[PotencyModifierType.BARRAGE, { en: "barrage" }],
 	[PotencyModifierType.RAGING_STRIKES, { en: "raging strikes" }],
 	[PotencyModifierType.BATTLE_VOICE, { en: "battle voice" }],
@@ -778,12 +779,63 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.MAGES_BALLAD, { en: "mage's ballad" }],
 	[PotencyModifierType.ARMYS_PAEON, { en: "army's paeon" }],
 ]);
-export function localizeModifierName(modifierType: PotencyModifierType) {
+export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
 		modifierNames.has(modifierType),
 		`modifier ${modifierType} doesn't have a name!`,
 	);
-	return localize(modifierNames.get(modifierType)!);
+	return localize(modifierNames.get(modifierType) ?? { en: "unknown" }) as string;
+}
+
+const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
+	[PotencyModifierType.AF3, { en: "AF3", zh: "三层火" }],
+	[PotencyModifierType.AF2, { en: "AF2", zh: "二层火" }],
+	[PotencyModifierType.AF1, { en: "AF1", zh: "一层火" }],
+	[PotencyModifierType.UI3, { en: "UI3", zh: "三层冰" }],
+	[PotencyModifierType.UI2, { en: "UI2", zh: "二层冰" }],
+	[PotencyModifierType.UI1, { en: "UI1", zh: "一层冰" }],
+	[PotencyModifierType.ENO, { en: "enochian", zh: "天语" }],
+	[PotencyModifierType.POT, { en: "pot", zh: "爆发药" }],
+	[PotencyModifierType.PARTY, { en: "party", zh: "团辅" }],
+	[PotencyModifierType.AUTO_CDH, { en: "CDH", zh: "必直暴" }],
+	[PotencyModifierType.STARRY, { en: "STARRY", zh: "星空" }],
+	[PotencyModifierType.EMBOLDEN_M, { en: "MB", zh: "鼓励" }],
+	[PotencyModifierType.MANAFIC, { en: "MF", zh: "魔元化" }],
+	[PotencyModifierType.ACCELERATION, { en: "ACC", zh: "促进" }],
+	[PotencyModifierType.STANDARD_SINGLE, { en: "SSF", zh: "单色小舞" }],
+	[PotencyModifierType.STANDARD_DOUBLE, { en: "DSF", zh: "双色小舞" }],
+	[PotencyModifierType.TECHNICAL_SINGLE, { en: "STF", zh: "单色大舞" }],
+	[PotencyModifierType.TECHNICAL_DOUBLE, { en: "DTF", zh: "双色大舞" }],
+	[PotencyModifierType.TECHNICAL_TRIPLE, { en: "TTF", zh: "三色大舞" }],
+	[PotencyModifierType.TECHNICAL_QUADRUPLE, { en: "QTF", zh: "四色大舞" }],
+	[PotencyModifierType.DEVILMENT, { en: "DEV", zh: "探戈" }],
+	[PotencyModifierType.COMBO, { en: "CMB", zh: "连击" }],
+	[PotencyModifierType.FUGETSU, { en: "FGS", zh: "风月" }],
+	[PotencyModifierType.AUTO_CRIT, { en: "CRIT", zh: "必暴" }],
+	[PotencyModifierType.YATEN, { en: "ENH", zh: "强化夜天" }],
+	[PotencyModifierType.POSITIONAL, { en: "PS", zh: "身位" }],
+	[PotencyModifierType.ARCANE_CIRCLE, { en: "AC", zh: "神秘环" }],
+	[PotencyModifierType.DEATHSDESIGN, { en: "DD", zh: "死亡烙印" }],
+	[PotencyModifierType.ENHANCED_GIBBET_GALLOWS, { en: "E. GIB/GAL", zh: "绞决/缢杀↑" }],
+	[PotencyModifierType.ENHANCED_REAPING, { en: "E. REAPING", zh: "虚无/交错收割↑" }],
+	[PotencyModifierType.IMMORTAL_SACRIFICE, { en: "IMMORTAL SAC", zh: "死亡祭品" }],
+	[PotencyModifierType.SURGING_TEMPEST, { en: "SURGING" }],
+	[PotencyModifierType.BARRAGE, { en: "BRG" }],
+	[PotencyModifierType.RAGING_STRIKES, { en: "RS" }],
+	[PotencyModifierType.BATTLE_VOICE, { en: "BV" }],
+	[PotencyModifierType.RADIANT_FINALE_THREE_CODA, { en: "RF3" }],
+	[PotencyModifierType.RADIANT_FINALE_TWO_CODA, { en: "RF2" }],
+	[PotencyModifierType.RADIANT_FINALE_ONE_CODA, { en: "RF1" }],
+	[PotencyModifierType.WANDERERS_MINUET, { en: "WM" }],
+	[PotencyModifierType.MAGES_BALLAD, { en: "MB" }],
+	[PotencyModifierType.ARMYS_PAEON, { en: "AP" }],
+]);
+export function localizeModifierTag(modifierType: PotencyModifierType): string {
+	console.assert(
+		modifierTags.has(modifierType),
+		`modifier ${modifierType} doesn't have a tag name!`,
+	);
+	return localize(modifierTags.get(modifierType) ?? { en: "unknown" }) as string;
 }
 
 export let getCurrentLanguage: () => Language = () => {

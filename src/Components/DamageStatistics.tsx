@@ -1,11 +1,12 @@
 import React, { CSSProperties } from "react";
-import { Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile } from "./Common";
+import { Checkbox, FileFormat, Help, Input, SaveToFile } from "./Common";
 import { LIMIT_BREAKS, ResourceType, SkillName } from "../Game/Common";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
-import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
+import { getCurrentThemeColors, getModifierTagColor } from "./ColorTheme";
 import {
 	localize,
 	localizeModifierName,
+	localizeModifierTag,
 	localizeResourceType,
 	localizeSkillName,
 } from "./Localization";
@@ -118,128 +119,9 @@ export const mockDamageStatUpdateFn = (
 	updateDamageStats = updateFn;
 };
 
-function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
-	let colors = getCurrentThemeColors();
-	let text: ContentNode = "";
-	let color: string = "#66ccff";
-	if (props.buff === PotencyModifierType.AF3) {
-		text = localize({ en: "AF3", zh: "三层火" });
-		color = colors.blm.astralFire;
-	} else if (props.buff === PotencyModifierType.AF2) {
-		text = localize({ en: "AF2", zh: "二层火" });
-		color = colors.blm.astralFire;
-	} else if (props.buff === PotencyModifierType.AF1) {
-		text = localize({ en: "AF1", zh: "一层火" });
-		color = colors.blm.astralFire;
-	} else if (props.buff === PotencyModifierType.UI3) {
-		text = localize({ en: "UI3", zh: "三层冰" });
-		color = colors.blm.umbralIce;
-	} else if (props.buff === PotencyModifierType.UI2) {
-		text = localize({ en: "UI2", zh: "二层冰" });
-		color = colors.blm.umbralIce;
-	} else if (props.buff === PotencyModifierType.UI1) {
-		text = localize({ en: "UI1", zh: "一层冰" });
-		color = colors.blm.umbralIce;
-	} else if (props.buff === PotencyModifierType.ENO) {
-		text = localize({ en: "ENO", zh: "天语" });
-		color = colors.blm.enochian;
-	} else if (props.buff === PotencyModifierType.AUTO_CDH) {
-		text = localize({ en: "CDH", zh: "必直暴" });
-		color = colors.resources.cdhTag;
-	} else if (props.buff === PotencyModifierType.STARRY) {
-		text = localize({ en: "STARRY", zh: "星空" });
-		color = colors.pct.starryBuff;
-	} else if (props.buff === PotencyModifierType.EMBOLDEN_M) {
-		text = localize({ en: "EMB", zh: "鼓励" });
-		color = colors.rdm.emboldenBuff;
-	} else if (props.buff === PotencyModifierType.MANAFIC) {
-		text = localize({ en: "MF", zh: "魔元化" });
-		color = colors.rdm.manaficBuff;
-	} else if (props.buff === PotencyModifierType.ACCELERATION) {
-		text = localize({ en: "ACC", zh: "促进" });
-		color = colors.rdm.accelBuff;
-	} else if (props.buff === PotencyModifierType.STANDARD_SINGLE) {
-		text = localize({ en: "SSF" });
-		color = colors.dnc.jete;
-	} else if (props.buff === PotencyModifierType.STANDARD_DOUBLE) {
-		text = localize({ en: "DSF" });
-		color = colors.dnc.jete;
-	} else if (props.buff === PotencyModifierType.TECHNICAL_SINGLE) {
-		text = localize({ en: "STF" });
-		color = colors.dnc.esprit;
-	} else if (props.buff === PotencyModifierType.TECHNICAL_DOUBLE) {
-		text = localize({ en: "DTF" });
-		color = colors.dnc.esprit;
-	} else if (props.buff === PotencyModifierType.TECHNICAL_TRIPLE) {
-		text = localize({ en: "TTF" });
-		color = colors.dnc.esprit;
-	} else if (props.buff === PotencyModifierType.TECHNICAL_QUADRUPLE) {
-		text = localize({ en: "QTF" });
-		color = colors.dnc.esprit;
-	} else if (props.buff === PotencyModifierType.DEVILMENT) {
-		text = localize({ en: "DEV" });
-		color = colors.dnc.feathers;
-	} else if (props.buff === PotencyModifierType.COMBO) {
-		text = localize({ en: "CMB", zh: "连击" });
-		color = colors.resources.comboTag;
-	} else if (props.buff === PotencyModifierType.FUGETSU) {
-		text = localize({ en: "FGS", zh: "风月" });
-		color = colors.sam.fugetsu;
-	} else if (props.buff === PotencyModifierType.AUTO_CRIT) {
-		text = localize({ en: "CRIT", zh: "必暴" });
-		color = colors.resources.cdhTag;
-	} else if (props.buff === PotencyModifierType.YATEN) {
-		text = localize({ en: "ENH", zh: "强化夜天" });
-		color = colors.pct.cometPaint; // TODO
-	} else if (props.buff === PotencyModifierType.POSITIONAL) {
-		text = localize({ en: "PS", zh: "身位" });
-		color = MarkerColor.Green; // TODO
-	} else if (props.buff === PotencyModifierType.ARCANE_CIRCLE) {
-		text = localize({ en: "AC", zh: "神秘环" }) as string;
-		color = MarkerColor.Pink;
-	} else if (props.buff === PotencyModifierType.DEATHSDESIGN) {
-		text = localize({ en: "DD", zh: "死亡烙印" }) as string;
-		color = MarkerColor.Red;
-	} else if (props.buff === PotencyModifierType.ENHANCED_GIBBET_GALLOWS) {
-		text = localize({ en: "E. GIB/GAL", zh: "绞决/缢杀↑" }) as string;
-		color = MarkerColor.Blue;
-	} else if (props.buff === PotencyModifierType.ENHANCED_REAPING) {
-		text = localize({ en: "E. REAPING", zh: "虚无/交错收割↑" }) as string;
-		color = MarkerColor.Purple;
-	} else if (props.buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
-		text = localize({ en: "IMMORTAL SAC", zh: "死亡祭品" }) as string;
-		color = MarkerColor.Pink;
-	} else if (props.buff === PotencyModifierType.SURGING_TEMPEST) {
-		text = localize({ en: "SURGING" }) as string;
-		color = MarkerColor.Purple;
-	} else if (props.buff === PotencyModifierType.BARRAGE) {
-		text = localize({ en: "BRG" }) as string;
-		color = colors.brd.barrage;
-	} else if (props.buff === PotencyModifierType.RAGING_STRIKES) {
-		text = localize({ en: "RS" }) as string;
-		color = colors.brd.ragingStrikes;
-	} else if (props.buff === PotencyModifierType.BATTLE_VOICE) {
-		text = localize({ en: "BV" }) as string;
-		color = colors.brd.battleVoice;
-	} else if (props.buff === PotencyModifierType.RADIANT_FINALE_THREE_CODA) {
-		text = localize({ en: "RF3" }) as string;
-		color = colors.brd.radiantFinale;
-	} else if (props.buff === PotencyModifierType.RADIANT_FINALE_TWO_CODA) {
-		text = localize({ en: "RF2" }) as string;
-		color = colors.brd.radiantFinale;
-	} else if (props.buff === PotencyModifierType.RADIANT_FINALE_ONE_CODA) {
-		text = localize({ en: "RF1" }) as string;
-		color = colors.brd.radiantFinale;
-	} else if (props.buff === PotencyModifierType.WANDERERS_MINUET) {
-		text = localize({ en: "WM" }) as string;
-		color = colors.brd.wanderersCoda;
-	} else if (props.buff === PotencyModifierType.MAGES_BALLAD) {
-		text = localize({ en: "MB" }) as string;
-		color = colors.brd.magesCoda;
-	} else if (props.buff === PotencyModifierType.ARMYS_PAEON) {
-		text = localize({ en: "AP" }) as string;
-		color = colors.brd.armysCoda;
-	}
+function BuffTag(props: { buff: PotencyModifierType }) {
+	let text: string = localizeModifierTag(props.buff);
+	let color: string = getModifierTagColor(props.buff);
 	return <span
 		style={{
 			borderRadius: 2,
@@ -860,9 +742,6 @@ export class DamageStatistics extends React.Component {
 			// tags
 			let tags: React.ReactNode[] = [];
 			tags.push(props.row.displayedModifiers.map((tag, i) => <BuffTag key={i} buff={tag} />));
-			if (props.row.baseMainPotency === 400) {
-				tags.push(<BuffTag key={tags.length} tc={true} />);
-			}
 
 			// gap
 			let gapStr = props.row.gap.toFixed(3);
