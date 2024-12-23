@@ -2,7 +2,6 @@ import { ShellJob } from "../../Controller/Common";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { Aspect, ResourceType, SkillName, TraitName, WarningType } from "../Common";
-import { MCHResourceType } from "../Constants/MCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { makeComboModifier, Modifiers, Potency, PotencyModifier } from "../Potency";
@@ -118,7 +117,7 @@ export class MCHState extends GameState {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Tactician, 120, 1, 1));
 		}
 
-		super.registerRecurringEvents([
+		this.registerRecurringEvents([
 			{
 				groupedDots: [
 					{
@@ -127,7 +126,46 @@ export class MCHState extends GameState {
 					},
 				],
 			},
+			{
+				groupedDots: [
+					{
+						dotName: ResourceType.Flamethrower,
+						appliedBy: [SkillName.Flamethrower],
+						isGroundTargeted: true,
+						exclude: true,
+					},
+				],
+			},
 		]);
+	}
+
+	// Flamethrower works like a DoT, but ticks every second instead, so we need to handle that separately
+	override jobSpecificRegisterRecurringEvents(): void {
+		let recurringFlamethrowerTick = () => {
+			this.handleDoTTick(ResourceType.Flamethrower);
+
+			// increment count
+			if (this.getDisplayTime() >= 0) {
+				controller.reportDotTick(this.time, ResourceType.Flamethrower);
+			}
+
+			// Flamethrower ticks every second, instead of every three, the way most DoTs do
+			this.addEvent(
+				new Event("Flamethrower tick", 1, () => {
+					recurringFlamethrowerTick();
+				}),
+			);
+		};
+
+		let timeTillFirstFlamethrowerTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
+		while (timeTillFirstFlamethrowerTick > 1) timeTillFirstFlamethrowerTick--;
+		this.addEvent(
+			new Event(
+				"initial Flamethrower tick",
+				timeTillFirstFlamethrowerTick,
+				recurringFlamethrowerTick,
+			),
+		);
 	}
 
 	processComboStatus(skill: SkillName) {
@@ -161,16 +199,6 @@ export class MCHState extends GameState {
 			);
 		}
 		this.resources.get(rscType).gain(amount);
-	}
-
-	gainProc(proc: MCHResourceType) {
-		const duration = (getResourceInfo(ShellJob.MCH, proc) as ResourceInfo).maxTimeout;
-		if (this.resources.get(proc).available(1)) {
-			this.resources.get(proc).overrideTimer(this, duration);
-		} else {
-			this.resources.get(proc).gain(1);
-			this.enqueueResourceDrop(proc, duration);
-		}
 	}
 
 	handleQueenPunch = () => {
@@ -319,8 +347,9 @@ const makeWeaponskill_MCH = (
 	const onApplication: EffectFn<MCHState> = params.onApplication ?? NO_EFFECT;
 	return makeWeaponskill(ShellJob.MCH, name, unlockLevel, {
 		...params,
-		onConfirm: onConfirm,
-		onApplication: onApplication,
+		onExecute: (state) => state.tryConsumeResource(ResourceType.Flamethrower),
+		onConfirm,
+		onApplication,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (
@@ -515,7 +544,7 @@ makeWeaponskill_MCH(SkillName.Chainsaw, 90, {
 	onConfirm: (state) => {
 		state.gainResource(ResourceType.BatteryGauge, 20);
 		if (state.hasTraitUnlocked(TraitName.EnhancedMultiWeaponII)) {
-			state.gainProc(ResourceType.ExcavatorReady);
+			state.gainStatus(ResourceType.ExcavatorReady);
 		}
 	},
 	secondaryCooldown: {
@@ -548,9 +577,9 @@ makeAbility_MCH(SkillName.BarrelStabilizer, 66, ResourceType.cd_BarrelStabilizer
 	cooldown: 120,
 	maxCharges: 1,
 	onConfirm: (state) => {
-		state.gainProc(ResourceType.Hypercharged);
+		state.gainStatus(ResourceType.Hypercharged);
 		if (state.hasTraitUnlocked(TraitName.EnhancedBarrelStabilizer)) {
-			state.gainProc(ResourceType.FullMetalMachinist);
+			state.gainStatus(ResourceType.FullMetalMachinist);
 		}
 	},
 	validateAttempt: (state) => state.isInCombat(),
@@ -596,7 +625,7 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
 	cooldown: 120,
 	maxCharges: 1,
 	onConfirm: (state, node) => {
-		state.gainProc(ResourceType.WildfireSelf);
+		state.gainStatus(ResourceType.WildfireSelf);
 		const wildFire = state.resources.get(ResourceType.Wildfire) as DoTBuff;
 
 		const wildFirePotency = new Potency({
@@ -892,7 +921,28 @@ makeWeaponskill_MCH(SkillName.AutoCrossbow, 52, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Overheated),
 });
 
-// Flamethrower - Not adding unless a notable use-case for it is found. right now it's just end-of-downtime tic fishing
+makeWeaponskill_MCH(SkillName.Flamethrower, 70, {
+	applicationDelay: 0.89,
+	recastTime: (state) => state.config.adjustedSksGCD(),
+	onConfirm: (state, node) => {
+		state.addDoTPotencies({
+			node,
+			dotName: ResourceType.Flamethrower,
+			skillName: SkillName.Flamethrower,
+			tickPotency: 100,
+			tickFrequency: 1,
+			speedStat: "sks",
+		});
+	},
+	onApplication: (state, node) => {
+		state.applyDoT(ResourceType.Flamethrower, node);
+	},
+	secondaryCooldown: {
+		cdName: ResourceType.cd_Flamethrower,
+		cooldown: 60,
+		maxCharges: 1,
+	},
+});
 
 makeResourceAbility_MCH(SkillName.Tactician, 56, ResourceType.cd_Tactician, {
 	rscType: ResourceType.Tactician,
