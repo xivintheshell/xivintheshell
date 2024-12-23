@@ -52,6 +52,7 @@ type RNG = any;
 export interface DoTSkillRegistration {
 	dotName: ResourceType;
 	appliedBy: SkillName[];
+	isGroundTargeted?: true;
 	exclude?: boolean; // Exclude from standard DoT tick handling (Flamethrower)
 }
 export interface DoTRegistrationGroup {
@@ -64,6 +65,7 @@ export interface DoTPotencyProps {
 	skillName: SkillName;
 	dotName: ResourceType;
 	tickPotency: number;
+	tickFrequency?: number;
 	speedStat: "sks" | "sps";
 	aspect?: Aspect;
 	modifiers?: PotencyModifier[];
@@ -86,6 +88,8 @@ export abstract class GameState {
 	dotGroups: DoTRegistrationGroup[] = [];
 	dotResources: ResourceType[] = [];
 	excludedDoTs: ResourceType[] = [];
+	fullTimeDoTs: ResourceType[] = [];
+	#groundTargetDoTs: ResourceType[] = [];
 	dotSkills: SkillName[] = [];
 	#exclusiveDots: Map<ResourceType, ResourceType[]> = new Map();
 
@@ -279,12 +283,25 @@ export abstract class GameState {
 							.map((dot) => dot.dotName),
 					);
 
+					// Keep track of DoTs that are ground targeted, so we can handle their special on-application tick
+					if (
+						registeredDot.isGroundTargeted &&
+						!this.#groundTargetDoTs.includes(registeredDot.dotName)
+					) {
+						this.#groundTargetDoTs.push(registeredDot.dotName);
+					}
+
 					// Keep track of which DoTs are going to be handled separately from the main DoT tick
 					if (
 						registeredDot.exclude &&
 						!this.excludedDoTs.includes(registeredDot.dotName)
 					) {
 						this.excludedDoTs.push(registeredDot.dotName);
+					}
+
+					// Keep track of which DoTs we have a reportName label for, meaning the job wants an uptime report for them
+					if (dotGroup.reportName && !this.fullTimeDoTs.includes(registeredDot.dotName)) {
+						this.fullTimeDoTs.push(registeredDot.dotName);
 					}
 				} else {
 					console.assert(
@@ -975,6 +992,12 @@ export abstract class GameState {
 		node.setDotTimeGap(dotName, dotGap ?? 0);
 		dotBuff.node = node;
 		dotBuff.tickCount = 0;
+
+		// Immediately tick any ground-targeted DoTs on application
+		if (this.#groundTargetDoTs.includes(dotName)) {
+			this.handleDoTTick(dotName);
+			controller.reportDotTick(this.time, dotName);
+		}
 	}
 
 	addDoTPotencies(props: DoTPotencyProps) {
@@ -990,7 +1013,8 @@ export abstract class GameState {
 
 		const dotDuration = (getResourceInfo(this.config.job, props.dotName) as ResourceInfo)
 			.maxTimeout;
-		const dotTicks = dotDuration / 3;
+		const isGroundTargeted = this.#groundTargetDoTs.includes(props.dotName);
+		const dotTicks = dotDuration / (props.tickFrequency ?? 3) + (isGroundTargeted ? 1 : 0);
 
 		for (let i = 0; i < dotTicks; i++) {
 			let pDot = new Potency({
