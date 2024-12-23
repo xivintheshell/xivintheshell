@@ -20,6 +20,7 @@ import type { GameState } from "../GameState";
 import { controller } from "../../Controller/Controller";
 import { SAMState } from "./SAM";
 import { DNCState } from "./DNC";
+import { MCHState } from "./MCH";
 
 //#region Helper functions
 
@@ -42,6 +43,12 @@ const cancelMeditate = (state: GameState) => {
 const cancelImprovisation = (state: GameState) => {
 	if (state.job === ShellJob.DNC) {
 		(state as DNCState).cancelImprovisation();
+	}
+};
+
+const cancelFlamethrower = (state: GameState) => {
+	if (state.job === ShellJob.MCH) {
+		(state as MCHState).tryConsumeResource(ResourceType.Flamethrower);
 	}
 };
 
@@ -184,7 +191,7 @@ makeResourceAbility(
 		applicationDelay: 0.62,
 		cooldown: 120,
 		assetPath: "Role/Arms Length.png",
-		onExecute: combineEffects(cancelMeditate, cancelImprovisation),
+		onExecute: combineEffects(cancelMeditate, cancelImprovisation, cancelFlamethrower),
 	},
 );
 
@@ -228,7 +235,7 @@ makeAbility(
 		applicationDelay: 0.625,
 		cooldown: 120,
 		assetPath: "Role/Second Wind.png",
-		onExecute: combineEffects(cancelMeditate, cancelImprovisation),
+		onExecute: combineEffects(cancelMeditate, cancelImprovisation, cancelFlamethrower),
 	},
 );
 
@@ -283,7 +290,7 @@ makeResourceAbility(ALL_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture, {
 	applicationDelay: 0.64, // delayed // somewhere in the midrange of what's seen in logs
 	cooldown: 270,
 	assetPath: "Role/Tincture.png",
-	onExecute: combineEffects(cancelMeditate, cancelImprovisation),
+	onExecute: combineEffects(cancelMeditate, cancelImprovisation, cancelFlamethrower),
 	onConfirm: cancelDualcast,
 });
 
@@ -292,7 +299,7 @@ makeResourceAbility(ALL_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
 	applicationDelay: 0.133, // delayed
 	cooldown: 60,
 	assetPath: "General/Sprint.png",
-	onExecute: combineEffects(cancelMeditate, cancelImprovisation),
+	onExecute: combineEffects(cancelMeditate, cancelImprovisation, cancelFlamethrower),
 	onConfirm: cancelDualcast,
 });
 
@@ -428,7 +435,7 @@ makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.BigShot, ResourceType.cd_RangedLB
 	castTime: 2,
 	applicationDelay: 2.23,
 	animationLock: 3.1,
-	onExecute: cancelImprovisation,
+	onExecute: combineEffects(cancelImprovisation, cancelFlamethrower),
 	potency: 540,
 });
 makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.Desperado, ResourceType.cd_RangedLB2, {
@@ -436,7 +443,7 @@ makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.Desperado, ResourceType.cd_Ranged
 	castTime: 3,
 	applicationDelay: 2.49,
 	animationLock: 3.1,
-	onExecute: cancelImprovisation,
+	onExecute: combineEffects(cancelImprovisation, cancelFlamethrower),
 	potency: 1170,
 });
 const rangedLB3s = [
@@ -453,7 +460,7 @@ rangedLB3s.forEach((params) => {
 		castTime: 4.5,
 		applicationDelay: 3.16,
 		animationLock: 3.7,
-		onExecute: params.job === ShellJob.DNC ? cancelImprovisation : undefined,
+		onExecute: combineEffects(cancelImprovisation, cancelFlamethrower),
 		potency: 1890,
 	});
 });
