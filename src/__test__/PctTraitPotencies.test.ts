@@ -1,8 +1,8 @@
-import { ShellInfo, ShellJob } from "./Controller/Common";
-import { controller } from "./Controller/Controller";
-import { LevelSync, SkillName } from "./Game/Common";
-import { getSkill } from "./Game/Skills";
-import { DEFAULT_PCT_CONFIG } from "./Game/GameConfig";
+import { ShellInfo, ShellJob } from "../Controller/Common";
+import { controller } from "../Controller/Controller";
+import { LevelSync, SkillName } from "../Game/Common";
+import { getSkill } from "../Game/Skills";
+import { DEFAULT_PCT_CONFIG } from "../Game/GameConfig";
 
 // test the potency of Fire in Red since it gets changed by trait at every level sync
 const testRedPotency = (level: LevelSync, expectedPotency: number) => {
