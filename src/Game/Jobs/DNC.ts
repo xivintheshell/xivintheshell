@@ -121,6 +121,11 @@ export class DNCState extends GameState {
 		}
 	}
 
+	override cancelChanneledSkills(): void {
+		this.tryConsumeResource(ResourceType.Improvisation);
+		this.tryConsumeResource(ResourceType.RisingRhythm, true);
+	}
+
 	processComboStatus(skill: SkillName) {
 		if (!COMBO_GCDS.includes(skill)) {
 			return;
@@ -273,11 +278,6 @@ export class DNCState extends GameState {
 			this.gainProc(ResourceType.LastDanceReady);
 		}
 	}
-
-	cancelImprovisation() {
-		this.tryConsumeResource(ResourceType.Improvisation);
-		this.tryConsumeResource(ResourceType.RisingRhythm, true);
-	}
 }
 
 const isDancing = (state: Readonly<DNCState>) =>
@@ -337,7 +337,6 @@ const makeGCD_DNC = (
 	return makeWeaponskill(ShellJob.DNC, name, unlockLevel, {
 		...params,
 		onConfirm: onConfirm,
-		onExecute: (state) => state.cancelImprovisation(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (
@@ -406,7 +405,6 @@ const makeAbility_DNC = (
 	return makeAbility(ShellJob.DNC, name, unlockLevel, cdName, {
 		...params,
 		onConfirm: params.onConfirm,
-		onExecute: (state) => state.cancelImprovisation(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (state.hasResourceAvailable(ResourceType.StandardFinish)) {
@@ -456,7 +454,6 @@ const makeResourceAbility_DNC = (
 ): Ability<DNCState> => {
 	return makeResourceAbility(ShellJob.DNC, name, unlockLevel, cdName, {
 		...params,
-		onExecute: (state) => state.cancelImprovisation(),
 	});
 };
 

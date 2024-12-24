@@ -168,6 +168,10 @@ export class MCHState extends GameState {
 		);
 	}
 
+	override cancelChanneledSkills(): void {
+		this.tryConsumeResource(ResourceType.Flamethrower);
+	}
+
 	processComboStatus(skill: SkillName) {
 		if (!COMBO_GCDS.includes(skill)) {
 			return;
@@ -347,7 +351,6 @@ const makeWeaponskill_MCH = (
 	const onApplication: EffectFn<MCHState> = params.onApplication ?? NO_EFFECT;
 	return makeWeaponskill(ShellJob.MCH, name, unlockLevel, {
 		...params,
-		onExecute: (state) => state.tryConsumeResource(ResourceType.Flamethrower),
 		onConfirm,
 		onApplication,
 		jobPotencyModifiers: (state) => {
