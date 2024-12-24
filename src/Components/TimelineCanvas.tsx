@@ -35,7 +35,7 @@ import { getCurrentThemeColors, MarkerColor, ThemeColors } from "./ColorTheme";
 import { scrollEditorToFirstSelected } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
 import { updateTimelineView } from "./Timeline";
-import { ShellJob } from "../Game/Constants/Common";
+import { ShellJob } from "../Game/Data/Jobs";
 
 export type TimelineRenderingProps = {
 	timelineWidth: number;
@@ -775,7 +775,7 @@ function drawSkills(
 			testInteraction(
 				{ x: icon.x, y: icon.y, w: 28, h: 28 },
 				lines,
-				() => { },
+				() => {},
 				false,
 				buffImages,
 			);
@@ -834,9 +834,9 @@ export function drawRuler(originX: number, ignoreVisibleX = false): number {
 	// If we're in image export mode, ignore the visibility limit
 	const xUpperBound = ignoreVisibleX
 		? StaticFn.positionFromTimeAndScale(
-			controller.game.time + g_renderingProps.countdown,
-			g_renderingProps.scale,
-		)
+				controller.game.time + g_renderingProps.countdown,
+				g_renderingProps.scale,
+			)
 		: g_visibleWidth;
 	// ruler bg
 	g_ctx.fillStyle = g_colors.timeline.ruler;
@@ -920,9 +920,9 @@ export function drawMarkerTracks(originX: number, originY: number, ignoreVisible
 	// If we're in image export mode, ignore the visibility limit
 	const xUpperBound = ignoreVisibleX
 		? StaticFn.positionFromTimeAndScale(
-			controller.game.time + g_renderingProps.countdown,
-			g_renderingProps.scale,
-		)
+				controller.game.time + g_renderingProps.countdown,
+				g_renderingProps.scale,
+			)
 		: g_visibleWidth;
 	// make trackbins
 	let trackBins = new Map<number, MarkerElem[]>();
@@ -1063,7 +1063,7 @@ export function drawTimelines(
 				);
 			let selectionWidthPx = StaticFn.positionFromTimeAndScale(
 				g_renderingProps.selectionEndDisplayTime -
-				g_renderingProps.selectionStartDisplayTime,
+					g_renderingProps.selectionStartDisplayTime,
 				g_renderingProps.scale,
 			);
 			g_ctx.fillRect(
@@ -1294,11 +1294,11 @@ function drawEverything() {
 // cursor, selection: can update in real time; on top of everything else
 // transparent interactive layer: only render when not in real time, html DOM
 
-export let timelineCanvasOnMouseMove: (x: number, y: number) => void = (x: number, y: number) => { };
-export let timelineCanvasOnMouseEnter: () => void = () => { };
-export let timelineCanvasOnMouseLeave: () => void = () => { };
-export let timelineCanvasOnClick: (e: any) => void = (e: any) => { };
-export let timelineCanvasOnKeyDown: (e: any) => void = (e: any) => { };
+export let timelineCanvasOnMouseMove: (x: number, y: number) => void = (x: number, y: number) => {};
+export let timelineCanvasOnMouseEnter: () => void = () => {};
+export let timelineCanvasOnMouseLeave: () => void = () => {};
+export let timelineCanvasOnClick: (e: any) => void = (e: any) => {};
+export let timelineCanvasOnKeyDown: (e: any) => void = (e: any) => {};
 
 export let timelineCanvasGetPointerMouse: () => boolean = () => {
 	return readback_pointerMouse;

@@ -1,17 +1,13 @@
-import {
-	Aspect,
-	LevelSync,
-	LimitBreakSkillName,
-	ResourceType,
-	SkillName,
-	TraitName,
-} from "./Common";
+import { Aspect, LevelSync, LimitBreakSkillName, ResourceType, SkillName } from "./Common";
 import { ActionNode } from "../Controller/Record";
 import { PlayerState, GameState } from "./GameState";
-import { Traits } from "./Traits";
 import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
 import { PotencyModifier } from "./Potency";
-import { ShellJob, ALL_JOBS } from "./Constants/Common";
+import { ShellJob, ALL_JOBS } from "./Data/Jobs";
+import { TraitKey } from "./Data/Traits";
+import { ActionKey, ACTIONS } from "./Data/Actions";
+import { LimitBreakKey } from "./Data/Actions/Shared/LimitBreak";
+import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
 
 // all gapclosers have the same animation lock
 // from: https://nga.178.com/read.php?tid=21233094&rand=761
@@ -23,7 +19,7 @@ export const FAKE_SKILL_ANIMATION_LOCK = 0.01;
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
 export type SkillAutoReplace = {
-	trait: TraitName;
+	trait: TraitKey;
 	otherSkill: SkillName;
 };
 
@@ -49,7 +45,7 @@ export type EffectFn<T> = (state: T, node: ActionNode) => void;
 export type PotencyModifierFn<T> = (state: Readonly<T>) => PotencyModifier[];
 
 // empty function
-export function NO_EFFECT<T extends PlayerState>(state: T, node: ActionNode) { }
+export function NO_EFFECT<T extends PlayerState>(state: T, node: ActionNode) {}
 
 /**
  * Create a new EffectFn that performs f1 followed by each function in fs.
@@ -258,7 +254,7 @@ function fnify<T extends PlayerState>(
 }
 
 function convertTraitPotencyArray<T extends PlayerState>(
-	arr: Array<[TraitName, number]>,
+	arr: Array<[TraitKey, number]>,
 ): ResourceCalculationFn<T> {
 	console.assert(arr.length > 0, `invalid trait potency array: ${arr}`);
 	return (state) => {
@@ -267,7 +263,7 @@ function convertTraitPotencyArray<T extends PlayerState>(
 		// this iteration assumes the highest level trait is last, and is a little algorithmically
 		// inefficient but who cares
 		for (const [traitName, potency] of arr) {
-			if (Traits.hasUnlocked(traitName, level)) {
+			if (state.hasTraitUnlocked(traitName)) {
 				currPotency = potency;
 			}
 		}
@@ -281,7 +277,7 @@ function convertTraitPotencyArray<T extends PlayerState>(
 
 export function getBasePotency<T extends PlayerState>(
 	state: Readonly<T>,
-	potencyArg?: number | Array<[TraitName, number]> | ResourceCalculationFn<T>,
+	potencyArg?: number | Array<[TraitKey, number]> | ResourceCalculationFn<T>,
 ): number {
 	return (
 		Array.isArray(potencyArg) ? convertTraitPotencyArray(potencyArg) : fnify(potencyArg, 0)
@@ -326,7 +322,7 @@ export function makeSpell<T extends PlayerState>(
 		recastTime: number | ResourceCalculationFn<T>;
 		animationLock: number | ResourceCalculationFn<T>;
 		manaCost: number | ResourceCalculationFn<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
 		falloff: number;
 		applicationDelay: number;
@@ -402,7 +398,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		recastTime: number | ResourceCalculationFn<T>;
 		animationLock: number | ResourceCalculationFn<T>;
 		manaCost: number | ResourceCalculationFn<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
 		falloff: number;
 		applicationDelay: number;
@@ -493,7 +489,7 @@ export function makeAbility<T extends PlayerState>(
 		replaceIf: ConditionalSkillReplace<T>[];
 		startOnHotbar: boolean;
 		highlightIf: StatePredicate<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
 		falloff: number;
 		applicationDelay: number;
@@ -584,7 +580,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		animationLock?: number | ResourceCalculationFn<T>;
 		applicationDelay: number;
 		duration?: number | ResourceCalculationFn<T>; // TODO push to resources
-		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		potency?: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 		jobPotencyModifiers?: PotencyModifierFn<T>;
 		validateAttempt?: StatePredicate<T>;
 		onExecute?: EffectFn<T>;
@@ -731,7 +727,7 @@ export function getAutoReplacedSkillName(
 ): SkillName {
 	let skill = getSkill(job, skillName);
 	// upgrade: if level >= upgrade options
-	while (skill.autoUpgrade && Traits.hasUnlocked(skill.autoUpgrade.trait, level)) {
+	while (skill.autoUpgrade && hasUnlockedTrait(skill.autoUpgrade.trait, level)) {
 		skill = getSkill(job, getAutoReplacedSkillName(job, skill.autoUpgrade.otherSkill, level));
 	}
 	// downgrade: if level < current skill required level

@@ -3,7 +3,7 @@ import { ActionNode, Line } from "./Record";
 import { getNormalizedSkillName, jobHasSkill } from "../Game/Skills";
 import { SkillName } from "../Game/Common";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
-import { ShellJob, ALL_JOBS } from "../Game/Constants/Common";
+import { ShellJob, ALL_JOBS } from "../Game/Data/Jobs";
 
 type Fixme = any;
 

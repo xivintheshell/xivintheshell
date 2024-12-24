@@ -1,6 +1,5 @@
-import { ResourceType, TraitName } from "../../Game/Common";
+import { ResourceType } from "../../Game/Common";
 import { RPRState } from "../../Game/Jobs/RPR";
-import { Traits } from "../../Game/Traits";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import {
@@ -154,7 +153,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 				valueString: Math.floor(soulGauge) + "/100",
 			} as ResourceBarProps,
 		];
-		if (Traits.hasUnlocked(TraitName.ShroudGauge, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("SHROUD_GAUGE")) {
 			infos.push(
 				{
 					kind: "bar",
@@ -177,7 +176,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 				} as ResourceCounterProps,
 			);
 		}
-		if (Traits.hasUnlocked(TraitName.VoidSoul, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("VOID_SOUL")) {
 			infos.push({
 				kind: "counter",
 				name: localize({

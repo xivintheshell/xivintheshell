@@ -1,6 +1,7 @@
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { Aspect, ResourceType, SkillName, WarningType } from "../Common";
+import { TraitKey } from "../Data/Traits";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { makeComboModifier, Modifiers, Potency, PotencyModifier } from "../Potency";
@@ -93,26 +94,26 @@ export class MCHState extends GameState {
 			new CoolDown(ResourceType.cd_Chainsaw, this.config.adjustedSksGCD(60), 1, 1),
 		);
 
-		if (!this.hasTraitUnlocked(TraitName.QueensGambit)) {
+		if (!this.hasTraitUnlocked("QUEENS_GAMBIT")) {
 			this.resources.set(new Resource(ResourceType.QueenFinishers, 1, 0));
 			this.resources.set(new Resource(ResourceType.Queen, 6, 0));
 		}
 
-		if (!this.hasTraitUnlocked(TraitName.EnhancedReassemble)) {
+		if (!this.hasTraitUnlocked("ENHANCED_REASSEMBLE")) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Reassemble, 55, 1, 1));
 		}
-		if (!this.hasTraitUnlocked(TraitName.EnhancedMultiWeapon)) {
+		if (!this.hasTraitUnlocked("ENHANCED_MULTI_WEAPON")) {
 			this.cooldowns.set(
 				new CoolDown(ResourceType.cd_Drill, this.config.adjustedSksGCD(20), 1, 1),
 			);
 		}
 
-		if (!this.hasTraitUnlocked(TraitName.ChargedActionMastery)) {
+		if (!this.hasTraitUnlocked("CHARGED_ACTION_MASTERY")) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_DoubleCheck, 30, 2, 2));
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Checkmate, 30, 2, 2));
 		}
 
-		if (!this.hasTraitUnlocked(TraitName.EnhancedTactician)) {
+		if (!this.hasTraitUnlocked("ENHANCED_TACTICIAN")) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Tactician, 120, 1, 1));
 		}
 
@@ -287,7 +288,7 @@ export class MCHState extends GameState {
 		this.tryConsumeResource(ResourceType.Wildfire);
 
 		// Potency stuff
-		const potencyPerHit = this.hasTraitUnlocked(TraitName.EnhancedWildfire) ? 240 : 100;
+		const potencyPerHit = this.hasTraitUnlocked("ENHANCED_WILD_FIRE") ? 240 : 100;
 		const basePotency =
 			Math.min(this.resources.get(ResourceType.WildfireHits).availableAmount(), 6) *
 			potencyPerHit;
@@ -312,9 +313,9 @@ const makeWeaponskill_MCH = (
 		assetPath?: string;
 		replaceIf?: ConditionalSkillReplace<MCHState>[];
 		startOnHotbar?: boolean;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		combo?: {
-			potency: number | Array<[TraitName, number]>;
+			potency: number | Array<[TraitKey, number]>;
 			resource: ResourceType;
 			resourceValue: number;
 		};
@@ -385,7 +386,7 @@ const makeAbility_MCH = (
 	params: {
 		autoUpgrade?: SkillAutoReplace;
 		requiresCombat?: boolean;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<MCHState>[];
 		highlightIf?: StatePredicate<MCHState>;
 		startOnHotbar?: boolean;
@@ -436,9 +437,9 @@ const makeResourceAbility_MCH = (
 
 makeWeaponskill_MCH(SkillName.HeatedSplitShot, 54, {
 	potency: [
-		[TraitName.Never, 180],
-		[TraitName.MarksmansMastery, 200],
-		[TraitName.MarksmansMasteryII, 220],
+		["NEVER", 180],
+		["MARKSMANS_MASTERY", 200],
+		["MARKSMANS_MASTERY_II", 220],
 	],
 	applicationDelay: 0.8,
 	recastTime: (state) => state.config.adjustedSksGCD(),
@@ -447,15 +448,15 @@ makeWeaponskill_MCH(SkillName.HeatedSplitShot, 54, {
 
 makeWeaponskill_MCH(SkillName.HeatedSlugShot, 60, {
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.MarksmansMastery, 120],
-		[TraitName.MarksmansMasteryII, 140],
+		["NEVER", 100],
+		["MARKSMANS_MASTERY", 120],
+		["MARKSMANS_MASTERY_II", 140],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 280],
-			[TraitName.MarksmansMastery, 300],
-			[TraitName.MarksmansMasteryII, 320],
+			["NEVER", 280],
+			["MARKSMANS_MASTERY", 300],
+			["MARKSMANS_MASTERY_II", 320],
 		],
 		resource: ResourceType.HeatCombo,
 		resourceValue: 1,
@@ -468,15 +469,15 @@ makeWeaponskill_MCH(SkillName.HeatedSlugShot, 60, {
 
 makeWeaponskill_MCH(SkillName.HeatedCleanShot, 64, {
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.MarksmansMastery, 120],
-		[TraitName.MarksmansMasteryII, 160],
+		["NEVER", 100],
+		["MARKSMANS_MASTERY", 120],
+		["MARKSMANS_MASTERY_II", 160],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 360],
-			[TraitName.MarksmansMastery, 380],
-			[TraitName.MarksmansMasteryII, 420],
+			["NEVER", 360],
+			["MARKSMANS_MASTERY", 380],
+			["MARKSMANS_MASTERY_II", 420],
 		],
 		resource: ResourceType.HeatCombo,
 		resourceValue: 2,
@@ -510,7 +511,7 @@ makeWeaponskill_MCH(SkillName.Drill, 58, {
 
 makeWeaponskill_MCH(SkillName.HotShot, 4, {
 	autoUpgrade: {
-		trait: TraitName.HotShotMastery,
+		trait: "HOT_SHOT_MASTERY",
 		otherSkill: SkillName.AirAnchor,
 	},
 	potency: 240,
@@ -549,7 +550,7 @@ makeWeaponskill_MCH(SkillName.Chainsaw, 90, {
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => {
 		state.gainResource(ResourceType.BatteryGauge, 20);
-		if (state.hasTraitUnlocked(TraitName.EnhancedMultiWeaponII)) {
+		if (state.hasTraitUnlocked("ENHANCED_MULTI_WEAPON_II")) {
 			state.gainStatus(ResourceType.ExcavatorReady);
 		}
 	},
@@ -586,7 +587,7 @@ makeAbility_MCH(SkillName.BarrelStabilizer, 66, ResourceType.cd_BarrelStabilizer
 	requiresCombat: true,
 	onConfirm: (state) => {
 		state.gainStatus(ResourceType.Hypercharged);
-		if (state.hasTraitUnlocked(TraitName.EnhancedBarrelStabilizer)) {
+		if (state.hasTraitUnlocked("ENHANCED_BARREL_STABILIZER")) {
 			state.gainStatus(ResourceType.FullMetalMachinist);
 		}
 	},
@@ -675,8 +676,8 @@ makeAbility_MCH(SkillName.Detonator, 45, ResourceType.cd_Detonator, {
 
 makeWeaponskill_MCH(SkillName.BlazingShot, 68, {
 	potency: [
-		[TraitName.Never, 220],
-		[TraitName.MarksmansMasteryII, 240],
+		["NEVER", 220],
+		["MARKSMANS_MASTERY_II", 240],
 	],
 	applicationDelay: 0.85,
 	recastTime: 1.5,
@@ -690,7 +691,7 @@ makeWeaponskill_MCH(SkillName.BlazingShot, 68, {
 
 makeAbility_MCH(SkillName.GaussRound, 15, ResourceType.cd_DoubleCheck, {
 	autoUpgrade: {
-		trait: TraitName.DoubleBarrelMastery,
+		trait: "DOUBLE_BARREL_MASTERY",
 		otherSkill: SkillName.DoubleCheck,
 	},
 	potency: 130,
@@ -709,7 +710,7 @@ makeAbility_MCH(SkillName.DoubleCheck, 92, ResourceType.cd_DoubleCheck, {
 
 makeAbility_MCH(SkillName.Ricochet, 50, ResourceType.cd_Checkmate, {
 	autoUpgrade: {
-		trait: TraitName.DoubleBarrelMastery,
+		trait: "DOUBLE_BARREL_MASTERY",
 		otherSkill: SkillName.Checkmate,
 	},
 	potency: 130,
@@ -738,7 +739,7 @@ const robotSummons: Array<{
 		skillLevel: 40,
 		autoUpgrade: {
 			otherSkill: SkillName.AutomatonQueen,
-			trait: TraitName.Promotion,
+			trait: "PROMOTION",
 		},
 	},
 	{
@@ -771,7 +772,7 @@ robotSummons.forEach((params) => {
 			// note that queen is summoned, and grant the requisite number of punches and finishers
 			const punchResource = state.resources.get(ResourceType.QueenPunches);
 			punchResource.gain(5);
-			const finishers = state.hasTraitUnlocked(TraitName.QueensGambit) ? 2 : 1;
+			const finishers = state.hasTraitUnlocked("QUEENS_GAMBIT") ? 2 : 1;
 			state.resources.get(ResourceType.QueenFinishers).gain(finishers);
 			state.resources
 				.get(ResourceType.Queen)
@@ -779,7 +780,7 @@ robotSummons.forEach((params) => {
 
 			let sourceSkill = SkillName.VolleyFire;
 			let basePotency = 0;
-			if (state.hasTraitUnlocked(TraitName.Promotion)) {
+			if (state.hasTraitUnlocked("PROMOTION")) {
 				sourceSkill = SkillName.ArmPunch;
 				basePotency = state.calculateQueenPotency(120, 240);
 			} else {
@@ -802,7 +803,7 @@ robotSummons.forEach((params) => {
 				);
 			}
 
-			sourceSkill = state.hasTraitUnlocked(TraitName.Promotion)
+			sourceSkill = state.hasTraitUnlocked("PROMOTION")
 				? SkillName.PileBunker
 				: SkillName.RookOverload;
 			if (sourceSkill === SkillName.PileBunker) {
@@ -825,7 +826,7 @@ robotSummons.forEach((params) => {
 				ResourceType.Queen,
 			);
 
-			if (state.hasTraitUnlocked(TraitName.QueensGambit)) {
+			if (state.hasTraitUnlocked("QUEENS_GAMBIT")) {
 				node.addDoTPotency(
 					new Potency({
 						config: state.config,
@@ -860,7 +861,7 @@ const overdriveSkills: Array<{
 		skillLevel: 40,
 		autoUpgrade: {
 			otherSkill: SkillName.QueenOverdrive,
-			trait: TraitName.Promotion,
+			trait: "PROMOTION",
 		},
 	},
 	{
@@ -885,7 +886,7 @@ overdriveSkills.forEach((params) => {
 
 makeWeaponskill_MCH(SkillName.SpreadShot, 18, {
 	autoUpgrade: {
-		trait: TraitName.SpreadShotMastery,
+		trait: "SPREAD_SHOT_MASTERY",
 		otherSkill: SkillName.Scattergun,
 	},
 	potency: 140,
@@ -897,8 +898,8 @@ makeWeaponskill_MCH(SkillName.SpreadShot, 18, {
 makeWeaponskill_MCH(SkillName.Scattergun, 82, {
 	startOnHotbar: false,
 	potency: [
-		[TraitName.Never, 140],
-		[TraitName.MarksmansMasteryII, 160],
+		["NEVER", 140],
+		["MARKSMANS_MASTERY_II", 160],
 	],
 	falloff: 0,
 	applicationDelay: 1.15,
@@ -929,8 +930,8 @@ makeWeaponskill_MCH(SkillName.Bioblaster, 58, {
 
 makeWeaponskill_MCH(SkillName.AutoCrossbow, 52, {
 	potency: [
-		[TraitName.Never, 140],
-		[TraitName.MarksmansMasteryII, 160],
+		["NEVER", 140],
+		["MARKSMANS_MASTERY_II", 160],
 	],
 	falloff: 0,
 	applicationDelay: 0.89,

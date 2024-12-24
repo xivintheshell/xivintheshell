@@ -19,7 +19,7 @@ import {
 	setCachedValue,
 	containsEwCacheContent,
 } from "../Controller/Common";
-import { JOBS, ShellJob } from "../Game/Constants/Common";
+import { JOBS, ShellJob } from "../Game/Data/Jobs";
 
 export let setJob = (job: ShellJob) => {};
 export let setRealTime = (inRealTime: boolean) => {};

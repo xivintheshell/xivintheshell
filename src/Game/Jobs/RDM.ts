@@ -1,15 +1,7 @@
 // Skill and state declarations for RDM.
 
 import { controller } from "../../Controller/Controller";
-import {
-	Aspect,
-	BuffType,
-	ProcMode,
-	ResourceType,
-	SkillName,
-	TraitName,
-	WarningType,
-} from "../Common";
+import { Aspect, BuffType, ProcMode, ResourceType, SkillName, WarningType } from "../Common";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -34,6 +26,7 @@ import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, Resource, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
+import { TraitKey } from "../Data/Traits";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -100,23 +93,23 @@ const FINISHERS: SkillName[] = [
 export class RDMState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
-		const swiftcastCooldown = this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) ? 40 : 60;
-		const c6Cooldown = this.hasTraitUnlocked(TraitName.RedMagicMastery) ? 35 : 45;
-		const mfCooldown = this.hasTraitUnlocked(TraitName.EnhancedManafication) ? 110 : 120;
+		const swiftcastCooldown = this.hasTraitUnlocked("ENHANCED_SWIFTCAST") ? 40 : 60;
+		const c6Cooldown = this.hasTraitUnlocked("RED_MAGIC_MASTERY") ? 35 : 45;
+		const mfCooldown = this.hasTraitUnlocked("ENHANCED_MANAFICATION") ? 110 : 120;
 		[
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
 			new CoolDown(ResourceType.cd_ContreSixte, c6Cooldown, 1, 1),
 			new CoolDown(ResourceType.cd_Manafication, mfCooldown, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		const accelStacks = this.hasTraitUnlocked(TraitName.EnhancedAcceleration) ? 2 : 1;
+		const accelStacks = this.hasTraitUnlocked("ENHANCED_ACCELERATION") ? 2 : 1;
 		this.cooldowns.set(
 			new CoolDown(ResourceType.cd_Acceleration, 55, accelStacks, accelStacks),
 		);
 
-		const mfStacks = this.hasTraitUnlocked(TraitName.EnhancedManaficationII)
+		const mfStacks = this.hasTraitUnlocked("ENHANCED_MANAFICATION_II")
 			? 6
-			: this.hasTraitUnlocked(TraitName.EnhancedManafication)
+			: this.hasTraitUnlocked("ENHANCED_MANAFICATION")
 				? 5
 				: 4;
 		this.resources.set(new Resource(ResourceType.Manafication, mfStacks, 0));
@@ -315,7 +308,7 @@ export class RDMState extends GameState {
 		if (
 			this.tryConsumeResource(ResourceType.Manafication) &&
 			!this.hasResourceAvailable(ResourceType.Manafication) &&
-			this.hasTraitUnlocked(TraitName.EnhancedManaficationIII)
+			this.hasTraitUnlocked("ENHANCED_MANAFICATION_III")
 		) {
 			this.resources.get(ResourceType.PrefulgenceReady).gain(1);
 			this.enqueueResourceDrop(ResourceType.PrefulgenceReady);
@@ -343,7 +336,7 @@ const makeSpell_RDM = (
 		highlightIf?: StatePredicate<RDMState>;
 		baseCastTime: number;
 		baseManaCost: number;
-		basePotency?: number | Array<[TraitName, number]>;
+		basePotency?: number | Array<[TraitKey, number]>;
 		falloff?: number;
 		jobPotencyModifiers?: PotencyModifierFn<RDMState>;
 		applicationDelay: number;
@@ -396,9 +389,9 @@ const makeMeleeGCD = (
 	params: {
 		replaceIf: ConditionalSkillReplace<RDMState>[];
 		startOnHotbar?: boolean;
-		potency: number | Array<[TraitName, number]>;
+		potency: number | Array<[TraitKey, number]>;
 		combo?: {
-			potency: number | Array<[TraitName, number]>;
+			potency: number | Array<[TraitKey, number]>;
 			resource: ResourceType;
 			resourceValue: number;
 		};
@@ -455,7 +448,7 @@ const makeAbility_RDM = (
 	cdName: ResourceType,
 	params: {
 		isPhysical?: boolean;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<RDMState>[];
 		highlightIf?: StatePredicate<RDMState>;
 		startOnHotbar?: boolean;
@@ -496,7 +489,7 @@ const giCondition: ConditionalSkillReplace<RDMState> = {
 
 makeSpell_RDM(SkillName.Jolt2, 62, {
 	replaceIf: [scorchCondition, resoCondition, giCondition],
-	autoUpgrade: { trait: TraitName.RedMagicMasteryIII, otherSkill: SkillName.Jolt3 },
+	autoUpgrade: { trait: "RED_MAGIC_MASTERY_III", otherSkill: SkillName.Jolt3 },
 	baseCastTime: 2.0,
 	baseManaCost: 200,
 	applicationDelay: 0.8, // TODO
@@ -509,7 +502,7 @@ makeSpell_RDM(SkillName.Jolt2, 62, {
 
 makeSpell_RDM(SkillName.Jolt3, 84, {
 	replaceIf: [scorchCondition, resoCondition, giCondition],
-	autoDowngrade: { trait: TraitName.RedMagicMasteryIII, otherSkill: SkillName.Jolt2 },
+	autoDowngrade: { trait: "RED_MAGIC_MASTERY_III", otherSkill: SkillName.Jolt2 },
 	baseCastTime: 2.0,
 	baseManaCost: 200,
 	applicationDelay: 0.8,
@@ -521,10 +514,10 @@ makeSpell_RDM(SkillName.Jolt3, 84, {
 });
 
 const procPotencies = [
-	[TraitName.Never, 300],
-	[TraitName.RedMagicMasteryII, 340],
-	[TraitName.RedMagicMasteryIII, 380],
-] as Array<[TraitName, number]>;
+	["NEVER", 300],
+	["RED_MAGIC_MASTERY_II", 340],
+	["RED_MAGIC_MASTERY_III", 380],
+] as Array<[TraitKey, number]>;
 
 makeSpell_RDM(SkillName.Verstone, 30, {
 	baseCastTime: 2.0,
@@ -564,7 +557,7 @@ const verflareConditon: ConditionalSkillReplace<RDMState> = {
 
 makeSpell_RDM(SkillName.Veraero, 10, {
 	replaceIf: [verholyConditon],
-	autoUpgrade: { trait: TraitName.RedMagicMasteryII, otherSkill: SkillName.Veraero3 },
+	autoUpgrade: { trait: "RED_MAGIC_MASTERY_II", otherSkill: SkillName.Veraero3 },
 	baseCastTime: 5.0,
 	baseManaCost: 400,
 	applicationDelay: 0.76,
@@ -582,7 +575,7 @@ makeSpell_RDM(SkillName.Veraero, 10, {
 
 makeSpell_RDM(SkillName.Verthunder, 4, {
 	replaceIf: [verflareConditon],
-	autoUpgrade: { trait: TraitName.RedMagicMasteryII, otherSkill: SkillName.Verthunder3 },
+	autoUpgrade: { trait: "RED_MAGIC_MASTERY_II", otherSkill: SkillName.Verthunder3 },
 	baseCastTime: 5.0,
 	baseManaCost: 400,
 	applicationDelay: 0.76,
@@ -598,14 +591,14 @@ makeSpell_RDM(SkillName.Verthunder, 4, {
 	},
 });
 
-const ver3Potency: Array<[TraitName, number]> = [
-	[TraitName.Never, 380],
-	[TraitName.EnchantedBladeMastery, 440],
+const ver3Potency: Array<[TraitKey, number]> = [
+	["NEVER", 380],
+	["ENCHANTED_BLADE_MASTERY", 440],
 ];
 
 makeSpell_RDM(SkillName.Veraero3, 82, {
 	replaceIf: [verholyConditon],
-	autoDowngrade: { trait: TraitName.RedMagicMasteryII, otherSkill: SkillName.Veraero },
+	autoDowngrade: { trait: "RED_MAGIC_MASTERY_II", otherSkill: SkillName.Veraero },
 	baseCastTime: 5.0,
 	baseManaCost: 400,
 	applicationDelay: 0.76,
@@ -623,7 +616,7 @@ makeSpell_RDM(SkillName.Veraero3, 82, {
 
 makeSpell_RDM(SkillName.Verthunder3, 82, {
 	replaceIf: [verflareConditon],
-	autoDowngrade: { trait: TraitName.RedMagicMasteryII, otherSkill: SkillName.Verthunder },
+	autoDowngrade: { trait: "RED_MAGIC_MASTERY_II", otherSkill: SkillName.Verthunder },
 	baseCastTime: 5.0,
 	baseManaCost: 400,
 	applicationDelay: 0.76,
@@ -639,10 +632,10 @@ makeSpell_RDM(SkillName.Verthunder3, 82, {
 	},
 });
 
-const ver2Potency: Array<[TraitName, number]> = [
-	[TraitName.Never, 100],
-	[TraitName.RedMagicMastery, 120],
-	[TraitName.RedMagicMasteryIII, 140],
+const ver2Potency: Array<[TraitKey, number]> = [
+	["NEVER", 100],
+	["RED_MAGIC_MASTERY", 120],
+	["RED_MAGIC_MASTERY_III", 140],
 ];
 
 makeSpell_RDM(SkillName.Veraero2, 22, {
@@ -674,8 +667,8 @@ makeSpell_RDM(SkillName.Impact, 66, {
 	falloff: 0,
 	applicationDelay: 0.76,
 	basePotency: [
-		[TraitName.Never, 200],
-		[TraitName.RedMagicMasteryIII, 210],
+		["NEVER", 200],
+		["RED_MAGIC_MASTERY_III", 210],
 	],
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable(ResourceType.Acceleration) ? [Modifiers.AccelerationImpact] : [],
@@ -753,9 +746,9 @@ makeMeleeGCD(SkillName.EnchantedRiposte, 50, {
 	replaceIf: [{ newSkill: SkillName.Riposte, condition: (state) => !state.colorManaExceeds(20) }],
 	applicationDelay: 0.62,
 	potency: [
-		[TraitName.Never, 220],
-		[TraitName.RedMagicMasteryIII, 280],
-		[TraitName.EnchantedBladeMastery, 300],
+		["NEVER", 220],
+		["RED_MAGIC_MASTERY_III", 280],
+		["ENCHANTED_BLADE_MASTERY", 300],
 	],
 	recastTime: 1.5,
 	validateAttempt: (state) => state.colorManaExceeds(20),
@@ -769,15 +762,15 @@ makeMeleeGCD(SkillName.EnchantedZwerchhau, 50, {
 	],
 	applicationDelay: 0.62,
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.RedMagicMasteryIII, 150],
-		[TraitName.EnchantedBladeMastery, 170],
+		["NEVER", 100],
+		["RED_MAGIC_MASTERY_III", 150],
+		["ENCHANTED_BLADE_MASTERY", 170],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 290],
-			[TraitName.RedMagicMasteryIII, 340],
-			[TraitName.EnchantedBladeMastery, 360],
+			["NEVER", 290],
+			["RED_MAGIC_MASTERY_III", 340],
+			["ENCHANTED_BLADE_MASTERY", 360],
 		],
 		resource: ResourceType.RDMMeleeCounter,
 		resourceValue: 1,
@@ -796,15 +789,15 @@ makeMeleeGCD(SkillName.EnchantedRedoublement, 50, {
 	],
 	applicationDelay: 0.62,
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.RedMagicMasteryIII, 130],
-		[TraitName.EnchantedBladeMastery, 170],
+		["NEVER", 100],
+		["RED_MAGIC_MASTERY_III", 130],
+		["ENCHANTED_BLADE_MASTERY", 170],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 470],
-			[TraitName.RedMagicMasteryIII, 500],
-			[TraitName.EnchantedBladeMastery, 530],
+			["NEVER", 470],
+			["RED_MAGIC_MASTERY_III", 500],
+			["ENCHANTED_BLADE_MASTERY", 530],
 		],
 		resource: ResourceType.RDMMeleeCounter,
 		resourceValue: 2,
@@ -833,9 +826,9 @@ makeMeleeGCD(SkillName.EnchantedReprise, 76, {
 	replaceIf: [{ newSkill: SkillName.Reprise, condition: (state) => !canReprise(state) }],
 	applicationDelay: 0.62, // TODO
 	potency: [
-		[TraitName.Never, 290],
-		[TraitName.RedMagicMasteryIII, 340],
-		[TraitName.EnchantedBladeMastery, 420],
+		["NEVER", 290],
+		["RED_MAGIC_MASTERY_III", 340],
+		["ENCHANTED_BLADE_MASTERY", 420],
 	],
 	recastTime: 2.5,
 	validateAttempt: (state) => canReprise(state),
@@ -920,9 +913,9 @@ makeMeleeGCD(SkillName.EnchantedMoulinet3, 52, {
 	highlightIf: moulinetConditions[3].condition,
 });
 
-const verfinishPotency: Array<[TraitName, number]> = [
-	[TraitName.Never, 600],
-	[TraitName.EnchantedBladeMastery, 650],
+const verfinishPotency: Array<[TraitKey, number]> = [
+	["NEVER", 600],
+	["ENCHANTED_BLADE_MASTERY", 650],
 ];
 
 // Combo status and mana stack consumption for finisherse are handled in makeSpell_RDM
@@ -977,8 +970,8 @@ makeSpell_RDM(SkillName.Scorch, 80, {
 	falloff: 0.6,
 	applicationDelay: 1.83,
 	basePotency: [
-		[TraitName.Never, 680],
-		[TraitName.EnchantedBladeMastery, 750],
+		["NEVER", 680],
+		["ENCHANTED_BLADE_MASTERY", 750],
 	],
 	validateAttempt: (state) => state.getFinisherCounter() === 1,
 	onConfirm: (state) => state.gainColorMana({ w: 4, b: 4 }),
@@ -992,8 +985,8 @@ makeSpell_RDM(SkillName.Resolution, 90, {
 	falloff: 0.6,
 	applicationDelay: 1.56,
 	basePotency: [
-		[TraitName.Never, 750],
-		[TraitName.EnchantedBladeMastery, 850],
+		["NEVER", 750],
+		["ENCHANTED_BLADE_MASTERY", 850],
 	],
 	validateAttempt: (state) => state.getFinisherCounter() === 2,
 	onConfirm: (state) => state.gainColorMana({ w: 4, b: 4 }),
@@ -1025,7 +1018,7 @@ makeResourceAbility("RDM", SkillName.Embolden, 58, ResourceType.cd_Embolden, {
 	applicationDelay: 0.62,
 	cooldown: 120,
 	onApplication: (state) => {
-		if (state.hasTraitUnlocked(TraitName.EnhancedEmbolden)) {
+		if (state.hasTraitUnlocked("ENHANCED_EMBOLDEN")) {
 			state.resources.get(ResourceType.ThornedFlourish).gain(1);
 			state.enqueueResourceDrop(ResourceType.ThornedFlourish);
 		}
@@ -1069,9 +1062,9 @@ makeAbility_RDM(SkillName.CorpsACorps, 6, ResourceType.cd_CorpsACorps, {
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
-const flipPotency: Array<[TraitName, number]> = [
-	[TraitName.Never, 130],
-	[TraitName.EnhancedDisplacement, 180],
+const flipPotency: Array<[TraitKey, number]> = [
+	["NEVER", 130],
+	["ENHANCED_DISPLACEMENT", 180],
 ];
 
 makeAbility_RDM(SkillName.Engagement, 40, ResourceType.cd_Displacement, {
@@ -1095,8 +1088,8 @@ makeAbility_RDM(SkillName.Fleche, 45, ResourceType.cd_Fleche, {
 	isPhysical: true,
 	applicationDelay: 1.16,
 	potency: [
-		[TraitName.Never, 460],
-		[TraitName.EnchantedBladeMastery, 480],
+		["NEVER", 460],
+		["ENCHANTED_BLADE_MASTERY", 480],
 	],
 	cooldown: 25,
 });
@@ -1106,8 +1099,8 @@ makeAbility_RDM(SkillName.ContreSixte, 56, ResourceType.cd_ContreSixte, {
 	falloff: 0,
 	applicationDelay: 1.16,
 	potency: [
-		[TraitName.Never, 380],
-		[TraitName.EnchantedBladeMastery, 420],
+		["NEVER", 380],
+		["ENCHANTED_BLADE_MASTERY", 420],
 	],
 	cooldown: 35, // manually adjusted for traits in constructor
 });
@@ -1119,7 +1112,7 @@ makeResourceAbility("RDM", SkillName.Acceleration, 50, ResourceType.cd_Accelerat
 	maxCharges: 2,
 	// acceleration buff grant is automatic from this declaration already
 	onApplication: (state) => {
-		if (state.hasTraitUnlocked(TraitName.EnhancedAccelerationII)) {
+		if (state.hasTraitUnlocked("ENHANCED_ACCELERATION_II")) {
 			if (state.hasResourceAvailable(ResourceType.GrandImpactReady)) {
 				controller.reportWarning(WarningType.GIOverwrite);
 			}

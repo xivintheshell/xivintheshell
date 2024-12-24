@@ -6,8 +6,7 @@ import {
 	ResourceDisplayProps,
 	StatusPropsGenerator,
 } from "../StatusDisplay";
-import { ResourceType, TraitName } from "../../Game/Common";
-import { Traits } from "../../Game/Traits";
+import { ResourceType } from "../../Game/Common";
 import { BLMState } from "../../Game/Jobs/BLM";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
@@ -114,8 +113,8 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 		const polyglotStacks = resources.get(ResourceType.Polyglot).availableAmount();
 
 		const maxPolyglotStacks =
-			(Traits.hasUnlocked(TraitName.EnhancedPolyglotII, this.state.config.level) && 3) ||
-			(Traits.hasUnlocked(TraitName.EnhancedPolyglot, this.state.config.level) && 2) ||
+			(this.state.hasTraitUnlocked("ENHANCED_POLYGLOT_II") && 3) ||
+			(this.state.hasTraitUnlocked("ENHANCED_POLYGLOT") && 2) ||
 			1;
 		const infos = [
 			{
@@ -163,7 +162,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 				maxStacks: 1,
 			} as ResourceCounterProps,
 		];
-		if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("ENHANCED_ASTRAL_FIRE")) {
 			infos.push({
 				kind: "counter",
 				name: localize({

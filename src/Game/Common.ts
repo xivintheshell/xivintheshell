@@ -1,66 +1,12 @@
-import {
-	BLMSkillName,
-	BLMResourceType,
-	BLMCooldownType,
-	BLMTraitList,
-	BLMTraitName,
-} from "./Constants/BLM";
-import {
-	PCTSkillName,
-	PCTResourceType,
-	PCTCooldownType,
-	PCTTraitList,
-	PCTTraitName,
-} from "./Constants/PCT";
-import {
-	RDMSkillName,
-	RDMResourceType,
-	RDMCooldownType,
-	RDMTraitList,
-	RDMTraitName,
-} from "./Constants/RDM";
-import {
-	DNCSkillName,
-	DNCResourceType,
-	DNCCooldownType,
-	DNCTraitList,
-	DNCTraitName,
-} from "./Constants/DNC";
-import {
-	SAMSkillName,
-	SAMResourceType,
-	SAMCooldownType,
-	SAMTraitList,
-	SAMTraitName,
-} from "./Constants/SAM";
-import {
-	MCHSkillName,
-	MCHResourceType,
-	MCHCooldownType,
-	MCHTraitList,
-	MCHTraitName,
-} from "./Constants/MCH";
-import {
-	RPRSkillName,
-	RPRResourceType,
-	RPRCooldownType,
-	RPRTraitList,
-	RPRTraitName,
-} from "./Constants/RPR";
-import {
-	WARSkillName,
-	WARResourceType,
-	WARCooldownType,
-	WARTraitList,
-	WARTraitName,
-} from "./Constants/WAR";
-import {
-	BRDSkillName,
-	BRDResourceType,
-	BRDCooldownType,
-	BRDTraitList,
-	BRDTraitName,
-} from "./Constants/BRD";
+import { BLMSkillName, BLMResourceType, BLMCooldownType } from "./Constants/BLM";
+import { PCTSkillName, PCTResourceType, PCTCooldownType } from "./Constants/PCT";
+import { RDMSkillName, RDMResourceType, RDMCooldownType } from "./Constants/RDM";
+import { DNCSkillName, DNCResourceType, DNCCooldownType } from "./Constants/DNC";
+import { SAMSkillName, SAMResourceType, SAMCooldownType } from "./Constants/SAM";
+import { MCHSkillName, MCHResourceType, MCHCooldownType } from "./Constants/MCH";
+import { RPRSkillName, RPRResourceType, RPRCooldownType } from "./Constants/RPR";
+import { WARSkillName, WARResourceType, WARCooldownType } from "./Constants/WAR";
+import { BRDSkillName, BRDResourceType, BRDCooldownType } from "./Constants/BRD";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -451,80 +397,3 @@ export const enum WarningType {
 	SoulVoiceOvercap = "soul voice overcap",
 	CodaOvercap = "coda overcap",
 }
-
-export enum ReservedTraitName {
-	Never = 0,
-}
-
-export enum RoleTraitName {
-	// 0-99 reserved
-	// Healer, Magical Ranged
-	EnhancedSwiftcast = 100,
-	// Magical Ranged
-	EnhancedAddle,
-
-	// Melee, Ranged
-	EnhancedSecondWind,
-	// Melee
-	EnhancedFeint,
-
-	// Tank
-	MeleeMasteryTank,
-	EnhancedRampart,
-	MeleeMasteryIITank,
-	EnhancedReprisal,
-}
-
-const GeneralTraitList: Array<[RoleTraitName, number]> = [
-	[RoleTraitName.EnhancedSwiftcast, 94],
-	[RoleTraitName.EnhancedAddle, 98],
-
-	[RoleTraitName.EnhancedSecondWind, 94],
-	[RoleTraitName.EnhancedFeint, 98],
-
-	[RoleTraitName.MeleeMasteryTank, 84],
-	[RoleTraitName.EnhancedRampart, 94],
-	[RoleTraitName.MeleeMasteryIITank, 94],
-	[RoleTraitName.EnhancedReprisal, 98],
-];
-
-export const TraitName = {
-	...RoleTraitName, //  100-1000
-	...BLMTraitName, // 1000-1999
-	...PCTTraitName, // 2000-2999
-	...DNCTraitName, // 3000-3999
-	...RDMTraitName, // 4000-4999
-	...SAMTraitName, // 5000-5999
-	...MCHTraitName, // 6000-6999
-	...RPRTraitName, // 7000-7999
-	...WARTraitName, // 8000-8999
-	...BRDTraitName, // 9000-9999
-	...ReservedTraitName, // 0, for now
-};
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export type TraitName =
-	| RoleTraitName
-	| BLMTraitName
-	| PCTTraitName
-	| DNCTraitName
-	| RDMTraitName
-	| SAMTraitName
-	| MCHTraitName
-	| RPRTraitName
-	| WARTraitName
-	| BRDTraitName
-	| ReservedTraitName;
-
-export const TraitList: Array<[TraitName, number]> = [
-	...GeneralTraitList,
-	...BLMTraitList,
-	...PCTTraitList,
-	...RDMTraitList,
-	...DNCTraitList,
-	...SAMTraitList,
-	...MCHTraitList,
-	...RPRTraitList,
-	...WARTraitList,
-	...BRDTraitList,
-];

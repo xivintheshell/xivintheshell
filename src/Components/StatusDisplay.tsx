@@ -5,7 +5,7 @@ import type { PlayerState } from "../Game/GameState";
 import { controller } from "../Controller/Controller";
 import { localize, localizeResourceType } from "./Localization";
 import { getCurrentThemeColors } from "./ColorTheme";
-import { JOBS } from "../Game/Constants/Common";
+import { JOBS } from "../Game/Data/Jobs";
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean;

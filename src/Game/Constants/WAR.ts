@@ -105,31 +105,3 @@ export enum WARCooldownType {
 	cd_Defiance = "cd_Defiance",
 	cd_ReleaseDefiance = "cd_ReleaseDefiance",
 }
-
-export enum WARTraitName {
-	NascentChaos = 8000,
-	MasteringTheBeast,
-	EnhancedShakeItOff,
-	EnhancedThrillOfBattle,
-	RawIntuitionMastery,
-	EnhancedNascentFlash,
-	EnhancedEquilibrium,
-	EnhancedOnslaught,
-	VengeanceMastery,
-	EnhancedInnerRelease,
-	EnhancedPrimalRend,
-}
-
-export const WARTraitList: Array<[WARTraitName, number]> = [
-	[WARTraitName.NascentChaos, 72],
-	[WARTraitName.MasteringTheBeast, 74],
-	[WARTraitName.EnhancedShakeItOff, 76],
-	[WARTraitName.EnhancedThrillOfBattle, 78],
-	[WARTraitName.RawIntuitionMastery, 82],
-	[WARTraitName.EnhancedNascentFlash, 82],
-	[WARTraitName.EnhancedEquilibrium, 84],
-	[WARTraitName.EnhancedOnslaught, 88],
-	[WARTraitName.VengeanceMastery, 92],
-	[WARTraitName.EnhancedInnerRelease, 96],
-	[WARTraitName.EnhancedPrimalRend, 100],
-];
