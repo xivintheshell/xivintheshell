@@ -374,19 +374,12 @@ export abstract class GameState {
 	handleDoTTick(dotResource: ResourceType) {
 		const dotBuff = this.resources.get(dotResource) as DoTBuff;
 		if (dotBuff.available(1)) {
-			let maxTicks = 0;
 			if (dotBuff.node) {
-				const dotPotencies = dotBuff.node.getDotPotencies(dotResource);
-				const p = dotPotencies[dotBuff.tickCount];
-				maxTicks = dotPotencies.length;
+				const p = dotBuff.node.getDotPotencies(dotResource)[dotBuff.tickCount];
 				controller.resolvePotency(p);
 				this.jobSpecificOnResolveDotTick(dotResource);
 			}
 			dotBuff.tickCount++;
-			// If we've resolved all of the potencies, clear the node
-			if (dotBuff.tickCount >= maxTicks) {
-				dotBuff.node = undefined;
-			}
 		} else {
 			if (dotBuff.node) {
 				dotBuff.node.removeUnresolvedDoTPotencies();
