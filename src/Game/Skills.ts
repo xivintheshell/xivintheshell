@@ -335,7 +335,10 @@ export function makeSpell<T extends PlayerState>(
 		(state, node) => (node.applicationTime = state.time),
 		params.onApplication ?? NO_EFFECT,
 	);
-
+	const onExecute: EffectFn<T> = combineEffects(
+		(state) => state.maybeCancelChanneledSkills(name),
+		params.onExecute ?? NO_EFFECT,
+	);
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
@@ -359,7 +362,7 @@ export function makeSpell<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
-		onExecute: params.onExecute ?? NO_EFFECT,
+		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
@@ -406,6 +409,10 @@ export function makeWeaponskill<T extends PlayerState>(
 		(state, node) => (node.applicationTime = state.time),
 		params.onApplication ?? NO_EFFECT,
 	);
+	const onExecute: EffectFn<T> = combineEffects(
+		(state) => state.maybeCancelChanneledSkills(name),
+		params.onExecute ?? NO_EFFECT,
+	);
 	const info: Weaponskill<T> = {
 		kind: "weaponskill",
 		name: name,
@@ -429,7 +436,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
-		onExecute: params.onExecute ?? NO_EFFECT,
+		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
@@ -493,6 +500,10 @@ export function makeAbility<T extends PlayerState>(
 		(state, node) => (node.applicationTime = state.time),
 		params.onApplication ?? NO_EFFECT,
 	);
+	const onExecute: EffectFn<T> = combineEffects(
+		(state) => state.maybeCancelChanneledSkills(name),
+		params.onExecute ?? NO_EFFECT,
+	);
 	// All abilities that require being in combat should check isInCombat
 	const validateAttempt: StatePredicate<T> = combinePredicatesAnd(
 		(state) => (params.requiresCombat ? state.isInCombat() : true),
@@ -520,7 +531,7 @@ export function makeAbility<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt,
-		onExecute: params.onExecute ?? NO_EFFECT,
+		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
 	};
@@ -640,6 +651,10 @@ export function makeLimitBreak<T extends PlayerState>(
 		jobs = [jobs];
 	}
 	const assetName = "Limit Break " + params.tier;
+	const onExecute: EffectFn<T> = combineEffects(
+		(state) => state.maybeCancelChanneledSkills(name),
+		params.onExecute ?? NO_EFFECT,
+	);
 	const info: LimitBreak<T> = {
 		kind: "limitbreak",
 		name: name,
@@ -660,7 +675,7 @@ export function makeLimitBreak<T extends PlayerState>(
 		jobPotencyModifiers: (state) => [],
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: (state) => true,
-		onExecute: params.onExecute ?? NO_EFFECT,
+		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
 	};

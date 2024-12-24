@@ -13,6 +13,7 @@ import { GameConfig } from "./GameConfig";
 import {
 	Ability,
 	DisplayedSkills,
+	FAKE_SKILL_ANIMATION_LOCK,
 	LimitBreak,
 	Skill,
 	SkillsList,
@@ -328,6 +329,26 @@ export abstract class GameState {
 	// Job code may override to handle adding buff covers for the timeline
 	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
 	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
+
+	maybeCancelChanneledSkills(nextSkillName: SkillName) {
+		const nextSkill = this.skillsList.get(nextSkillName);
+
+		// Bail if we don't actually have this skill defined for this job
+		if (!nextSkill) {
+			return;
+		}
+
+		// If the next action is a fake action, don't actually cancel, the player didn't really do anything
+		if (nextSkill.animationLockFn(this) <= FAKE_SKILL_ANIMATION_LOCK) {
+			return;
+		}
+
+		// Now that we know it's a real skill for this job, go ahead and cancel any of the jobs channeled skills
+		this.cancelChanneledSkills();
+	}
+
+	// Job code may override to handle cancelling any of their channeled skills
+	cancelChanneledSkills() {}
 
 	getStatusDuration(rscType: ResourceType): number {
 		return (getResourceInfo(this.job, rscType) as ResourceInfo).maxTimeout;
