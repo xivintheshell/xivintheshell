@@ -388,6 +388,7 @@ const makeAbility_DNC = (
 	unlockLevel: number,
 	cdName: ResourceType,
 	params: {
+		requiresCombat?: boolean;
 		potency?: number | Array<[TraitName, number]>;
 		replaceIf?: ConditionalSkillReplace<DNCState>[];
 		highlightIf?: StatePredicate<DNCState>;
@@ -731,7 +732,8 @@ standardFinishes.forEach((finish) => {
 
 makeAbility_DNC(SkillName.Flourish, 72, ResourceType.cd_Flourish, {
 	cooldown: 60,
-	validateAttempt: (state) => !isDancing(state) && state.isInCombat(),
+	requiresCombat: true,
+	validateAttempt: (state) => !isDancing(state),
 	onConfirm: (state) => {
 		state.gainProc(ResourceType.FlourishingSymmetry);
 		state.gainProc(ResourceType.FlourishingFlow);

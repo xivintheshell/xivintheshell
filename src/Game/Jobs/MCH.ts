@@ -384,6 +384,7 @@ const makeAbility_MCH = (
 	cdName: ResourceType,
 	params: {
 		autoUpgrade?: SkillAutoReplace;
+		requiresCombat?: boolean;
 		potency?: number | Array<[TraitName, number]>;
 		replaceIf?: ConditionalSkillReplace<MCHState>[];
 		highlightIf?: StatePredicate<MCHState>;
@@ -579,13 +580,13 @@ makeAbility_MCH(SkillName.BarrelStabilizer, 66, ResourceType.cd_BarrelStabilizer
 	applicationDelay: 0,
 	cooldown: 120,
 	maxCharges: 1,
+	requiresCombat: true,
 	onConfirm: (state) => {
 		state.gainStatus(ResourceType.Hypercharged);
 		if (state.hasTraitUnlocked(TraitName.EnhancedBarrelStabilizer)) {
 			state.gainStatus(ResourceType.FullMetalMachinist);
 		}
 	},
-	validateAttempt: (state) => state.isInCombat(),
 });
 makeWeaponskill_MCH(SkillName.FullMetalField, 100, {
 	startOnHotbar: false,
