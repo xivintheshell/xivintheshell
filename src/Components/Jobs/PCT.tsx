@@ -8,8 +8,7 @@ import {
 	ResourceTextProps,
 	StatusPropsGenerator,
 } from "../StatusDisplay";
-import { ResourceType, TraitName } from "../../Game/Common";
-import { Traits } from "../../Game/Traits";
+import { ResourceType } from "../../Game/Common";
 import { PCTState } from "../../Game/Jobs/PCT";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
@@ -208,7 +207,7 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 				valueString: paletteGauge.toFixed(0),
 			} as ResourceBarProps,
 		];
-		if (Traits.hasUnlocked(TraitName.EnhancedArtistry, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
 			infos.push({
 				kind: "paint",
 				name: localize({
@@ -219,9 +218,7 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 				cometColor: colors.pct.cometPaint,
 				currentStacks: paint,
 				maxStacks: 5,
-				hasComet:
-					Traits.hasUnlocked(TraitName.EnhancedPalette, this.state.config.level) &&
-					hasComet,
+				hasComet: this.state.hasTraitUnlocked("ENHANCED_PALETTE") && hasComet,
 			} as PaintGaugeCounterProps);
 		}
 

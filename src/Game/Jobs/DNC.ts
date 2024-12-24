@@ -1,7 +1,8 @@
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, ProcMode, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { BuffType, ProcMode, ResourceType, SkillName, WarningType } from "../Common";
 import { DNCResourceType } from "../Constants/DNC";
+import { TraitKey } from "../Data/Traits";
 import { GameConfig } from "../GameConfig";
 import { GameState, PlayerState } from "../GameState";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
@@ -29,7 +30,7 @@ const makeDNCResource = (
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
-	makeResource('DNC', rsc, maxValue, params ?? {});
+	makeResource("DNC", rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
@@ -98,14 +99,14 @@ export class DNCState extends GameState {
 		super(config);
 
 		// Disable Esprit Gauge for level 70 duties
-		if (!this.hasTraitUnlocked(TraitName.Esprit)) {
+		if (!this.hasTraitUnlocked("ESPRIT")) {
 			this.resources.set(new Resource(ResourceType.EspritGauge, 0, 0));
 		}
 
-		const enAvantStacks = this.hasTraitUnlocked(TraitName.EnhancedEnAvantII) ? 3 : 2;
+		const enAvantStacks = this.hasTraitUnlocked("ENHANCED_EN_AVANT_II") ? 3 : 2;
 		this.cooldowns.set(new CoolDown(ResourceType.cd_EnAvant, 30, enAvantStacks, enAvantStacks));
 
-		const shieldSambaCooldown = this.hasTraitUnlocked(TraitName.EnhancedShieldSamba) ? 90 : 120;
+		const shieldSambaCooldown = this.hasTraitUnlocked("ENHANCED_SHIELD_SAMBA") ? 90 : 120;
 		this.cooldowns.set(new CoolDown(ResourceType.cd_ShieldSamba, shieldSambaCooldown, 1, 1));
 
 		this.registerRecurringEvents();
@@ -175,7 +176,7 @@ export class DNCState extends GameState {
 	}
 
 	gainProc(proc: DNCResourceType) {
-		const duration = (getResourceInfo('DNC', proc) as ResourceInfo).maxTimeout;
+		const duration = (getResourceInfo("DNC", proc) as ResourceInfo).maxTimeout;
 		if (this.resources.get(proc).available(1)) {
 			if (proc === ResourceType.ThreefoldFanDance) {
 				controller.reportWarning(WarningType.FanThreeOverwrite);
@@ -257,23 +258,22 @@ export class DNCState extends GameState {
 
 		// Grant the new standard step bonus
 		this.resources.get(ResourceType.StandardBonus).gain(bonusLevel);
-		const duration = (
-			getResourceInfo('DNC', ResourceType.StandardFinish) as ResourceInfo
-		).maxTimeout;
+		const duration = (getResourceInfo("DNC", ResourceType.StandardFinish) as ResourceInfo)
+			.maxTimeout;
 		this.enqueueResourceDrop(ResourceType.StandardBonus, duration, bonusLevel);
 
 		if (this.hasResourceAvailable(ResourceType.DancePartner)) {
 			this.gainProc(ResourceType.StandardFinishPartner);
 		}
 
-		if (this.hasTraitUnlocked(TraitName.Esprit)) {
+		if (this.hasTraitUnlocked("ESPRIT")) {
 			this.gainProc(ResourceType.Esprit);
 			if (this.hasResourceAvailable(ResourceType.DancePartner)) {
 				this.gainProc(ResourceType.EspritPartner);
 			}
 		}
 
-		if (this.hasTraitUnlocked(TraitName.EnhancedStandardFinish)) {
+		if (this.hasTraitUnlocked("ENHANCED_STANDARD_FINISH")) {
 			this.gainProc(ResourceType.LastDanceReady);
 		}
 	}
@@ -310,9 +310,9 @@ const makeGCD_DNC = (
 		assetPath?: string;
 		replaceIf?: ConditionalSkillReplace<DNCState>[];
 		startOnHotbar?: boolean;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		combo?: {
-			potency: number | Array<[TraitName, number]>;
+			potency: number | Array<[TraitKey, number]>;
 			resource: ResourceType;
 			resourceValue: number;
 		};
@@ -333,7 +333,7 @@ const makeGCD_DNC = (
 		params.onConfirm ?? NO_EFFECT,
 		(state) => state.processComboStatus(name),
 	);
-	return makeWeaponskill('DNC', name, unlockLevel, {
+	return makeWeaponskill("DNC", name, unlockLevel, {
 		...params,
 		onConfirm: onConfirm,
 		jobPotencyModifiers: (state) => {
@@ -341,12 +341,12 @@ const makeGCD_DNC = (
 			if (
 				params.combo &&
 				state.resources.get(params.combo.resource).availableAmount() ===
-				params.combo.resourceValue
+					params.combo.resourceValue
 			) {
 				mods.push(
 					makeComboModifier(
 						getBasePotency(state, params.combo.potency) -
-						getBasePotency(state, params.potency),
+							getBasePotency(state, params.potency),
 					),
 				);
 			}
@@ -388,7 +388,7 @@ const makeAbility_DNC = (
 	cdName: ResourceType,
 	params: {
 		requiresCombat?: boolean;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<DNCState>[];
 		highlightIf?: StatePredicate<DNCState>;
 		startOnHotbar?: boolean;
@@ -402,7 +402,7 @@ const makeAbility_DNC = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<DNCState> => {
-	return makeAbility('DNC', name, unlockLevel, cdName, {
+	return makeAbility("DNC", name, unlockLevel, cdName, {
 		...params,
 		onConfirm: params.onConfirm,
 		jobPotencyModifiers: (state) => {
@@ -452,7 +452,7 @@ const makeResourceAbility_DNC = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<DNCState> => {
-	return makeResourceAbility('DNC', name, unlockLevel, cdName, {
+	return makeResourceAbility("DNC", name, unlockLevel, cdName, {
 		...params,
 	});
 };
@@ -491,15 +491,15 @@ makeGCD_DNC(SkillName.Pirouette, 15, {
 makeGCD_DNC(SkillName.Cascade, 1, {
 	replaceIf: [emboiteCondition],
 	potency: [
-		[TraitName.Never, 200],
-		[TraitName.DynamicDancer, 220],
+		["NEVER", 200],
+		["DYNAMIC_DANCER", 220],
 	],
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.8,
 	onConfirm: (state) => {
 		state.maybeGainProc(ResourceType.SilkenSymmetry);
 
-		if (state.hasTraitUnlocked(TraitName.Esprit)) {
+		if (state.hasTraitUnlocked("ESPRIT")) {
 			state.gainResource(ResourceType.EspritGauge, 5);
 		}
 	},
@@ -507,13 +507,13 @@ makeGCD_DNC(SkillName.Cascade, 1, {
 makeGCD_DNC(SkillName.Fountain, 2, {
 	replaceIf: [entrechatCondition],
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.DynamicDancer, 120],
+		["NEVER", 100],
+		["DYNAMIC_DANCER", 120],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 260],
-			[TraitName.DynamicDancer, 280],
+			["NEVER", 260],
+			["DYNAMIC_DANCER", 280],
 		],
 		resource: ResourceType.CascadeCombo,
 		resourceValue: 1,
@@ -523,7 +523,7 @@ makeGCD_DNC(SkillName.Fountain, 2, {
 	onConfirm: (state) => {
 		state.maybeGainProc(ResourceType.SilkenFlow);
 
-		if (state.hasTraitUnlocked(TraitName.Esprit)) {
+		if (state.hasTraitUnlocked("ESPRIT")) {
 			state.gainResource(ResourceType.EspritGauge, 5);
 		}
 	},
@@ -532,8 +532,8 @@ makeGCD_DNC(SkillName.Fountain, 2, {
 makeGCD_DNC(SkillName.ReverseCascade, 20, {
 	replaceIf: [jeteCondition],
 	potency: [
-		[TraitName.Never, 260],
-		[TraitName.DynamicDancer, 280],
+		["NEVER", 260],
+		["DYNAMIC_DANCER", 280],
 	],
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.62,
@@ -547,7 +547,7 @@ makeGCD_DNC(SkillName.ReverseCascade, 20, {
 			state.tryConsumeResource(ResourceType.FlourishingSymmetry);
 		}
 
-		if (state.hasTraitUnlocked(TraitName.Esprit)) {
+		if (state.hasTraitUnlocked("ESPRIT")) {
 			state.gainResource(ResourceType.EspritGauge, 10);
 		}
 		state.maybeGainResource(ResourceType.FeatherGauge, 1);
@@ -559,8 +559,8 @@ makeGCD_DNC(SkillName.ReverseCascade, 20, {
 makeGCD_DNC(SkillName.Fountainfall, 40, {
 	replaceIf: [pirouetteCondition],
 	potency: [
-		[TraitName.Never, 320],
-		[TraitName.DynamicDancer, 340],
+		["NEVER", 320],
+		["DYNAMIC_DANCER", 340],
 	],
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 1.21,
@@ -574,7 +574,7 @@ makeGCD_DNC(SkillName.Fountainfall, 40, {
 			state.tryConsumeResource(ResourceType.FlourishingFlow);
 		}
 
-		if (state.hasTraitUnlocked(TraitName.Esprit)) {
+		if (state.hasTraitUnlocked("ESPRIT")) {
 			state.gainResource(ResourceType.EspritGauge, 10);
 		}
 		state.maybeGainResource(ResourceType.FeatherGauge, 1);
@@ -585,8 +585,8 @@ makeGCD_DNC(SkillName.Fountainfall, 40, {
 });
 makeAbility_DNC(SkillName.FanDance, 30, ResourceType.cd_FanDance, {
 	potency: [
-		[TraitName.Never, 150],
-		[TraitName.DynamicDancer, 180],
+		["NEVER", 150],
+		["DYNAMIC_DANCER", 180],
 	],
 	cooldown: 1,
 	applicationDelay: 0.62,
@@ -609,8 +609,8 @@ makeGCD_DNC(SkillName.SaberDance, 76, {
 		},
 	],
 	potency: [
-		[TraitName.Never, 500],
-		[TraitName.DynamicDancer, 520],
+		["NEVER", 500],
+		["DYNAMIC_DANCER", 520],
 	],
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.44,
@@ -692,18 +692,17 @@ makeGCD_DNC(SkillName.FinishingMove, 96, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.FinishingMoveReady),
 });
 
-const standardFinishes: Array<{ skill: SkillName; potency: number | Array<[TraitName, number]> }> =
-	[
-		{ skill: SkillName.StandardFinish, potency: 360 },
-		{ skill: SkillName.SingleStandardFinish, potency: 540 },
-		{
-			skill: SkillName.DoubleStandardFinish,
-			potency: [
-				[TraitName.Never, 800],
-				[TraitName.DynamicDancer, 850],
-			],
-		},
-	];
+const standardFinishes: Array<{ skill: SkillName; potency: number | Array<[TraitKey, number]> }> = [
+	{ skill: SkillName.StandardFinish, potency: 360 },
+	{ skill: SkillName.SingleStandardFinish, potency: 540 },
+	{
+		skill: SkillName.DoubleStandardFinish,
+		potency: [
+			["NEVER", 800],
+			["DYNAMIC_DANCER", 850],
+		],
+	},
+];
 standardFinishes.forEach((finish) => {
 	makeGCD_DNC(finish.skill, 15, {
 		assetPath: "DNC/Standard Finish.png",
@@ -737,18 +736,18 @@ makeAbility_DNC(SkillName.Flourish, 72, ResourceType.cd_Flourish, {
 		state.gainProc(ResourceType.FlourishingSymmetry);
 		state.gainProc(ResourceType.FlourishingFlow);
 		state.gainProc(ResourceType.ThreefoldFanDance);
-		if (state.hasTraitUnlocked(TraitName.EnhancedFlourish)) {
+		if (state.hasTraitUnlocked("ENHANCED_FLOURISH")) {
 			state.gainProc(ResourceType.FourfoldFanDance);
 		}
-		if (state.hasTraitUnlocked(TraitName.EnhancedFlourishII)) {
+		if (state.hasTraitUnlocked("ENHANCED_FLOURISH_II")) {
 			state.gainProc(ResourceType.FinishingMoveReady);
 		}
 	},
 });
 makeAbility_DNC(SkillName.FanDance3, 66, ResourceType.cd_FanDanceIII, {
 	potency: [
-		[TraitName.Never, 200],
-		[TraitName.DynamicDancer, 220],
+		["NEVER", 200],
+		["DYNAMIC_DANCER", 220],
 	],
 	cooldown: 1,
 	applicationDelay: 0.62,
@@ -759,8 +758,8 @@ makeAbility_DNC(SkillName.FanDance3, 66, ResourceType.cd_FanDanceIII, {
 });
 makeAbility_DNC(SkillName.FanDance4, 86, ResourceType.cd_FanDanceIV, {
 	potency: [
-		[TraitName.Never, 300],
-		[TraitName.DynamicDancer, 420],
+		["NEVER", 300],
+		["DYNAMIC_DANCER", 420],
 	],
 	cooldown: 1,
 	applicationDelay: 0.62,
@@ -841,7 +840,7 @@ makeGCD_DNC(SkillName.TechnicalFinish, 70, {
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TechnicalStep),
 });
 
-const technicalFinishes: Array<{ skill: SkillName; potency: number | Array<[TraitName, number]> }> =
+const technicalFinishes: Array<{ skill: SkillName; potency: number | Array<[TraitKey, number]> }> =
 	[
 		{ skill: SkillName.TechnicalFinish, potency: 350 },
 		{ skill: SkillName.SingleTechnicalFinish, potency: 540 },
@@ -850,8 +849,8 @@ const technicalFinishes: Array<{ skill: SkillName; potency: number | Array<[Trai
 		{
 			skill: SkillName.QuadrupleTechnicalFinish,
 			potency: [
-				[TraitName.Never, 1200],
-				[TraitName.DynamicDancer, 1300],
+				["NEVER", 1200],
+				["DYNAMIC_DANCER", 1300],
 			],
 		},
 	];
@@ -871,19 +870,18 @@ technicalFinishes.forEach((params) => {
 			}
 
 			state.gainProc(ResourceType.TechnicalFinish);
-			if (state.hasTraitUnlocked(TraitName.Esprit)) {
+			if (state.hasTraitUnlocked("ESPRIT")) {
 				state.gainProc(ResourceType.EspritTechnical);
 			}
 			state.resources.get(ResourceType.TechnicalBonus).gain(bonusLevel);
-			const duration = (
-				getResourceInfo('DNC', ResourceType.TechnicalFinish) as ResourceInfo
-			).maxTimeout;
+			const duration = (getResourceInfo("DNC", ResourceType.TechnicalFinish) as ResourceInfo)
+				.maxTimeout;
 			state.enqueueResourceDrop(ResourceType.TechnicalBonus, duration, bonusLevel);
 
-			if (state.hasTraitUnlocked(TraitName.EnhancedTechnicalFinish)) {
+			if (state.hasTraitUnlocked("ENHANCED_TECHNICAL_FINISH")) {
 				state.gainProc(ResourceType.FlourishingFinish);
 			}
-			if (state.hasTraitUnlocked(TraitName.EnhancedTechnicalFinishII)) {
+			if (state.hasTraitUnlocked("ENHANCED_TECHNICAL_FINISH_II")) {
 				state.gainProc(ResourceType.DanceOfTheDawnReady);
 			}
 		},
@@ -907,7 +905,7 @@ makeResourceAbility_DNC(SkillName.Devilment, 62, ResourceType.cd_Devilment, {
 	cooldown: 120,
 	validateAttempt: (state) => !isDancing(state),
 	onApplication: (state) => {
-		if (state.hasTraitUnlocked(TraitName.EnhancedDevilment)) {
+		if (state.hasTraitUnlocked("ENHANCED_DEVILMENT")) {
 			(state as DNCState).gainProc(ResourceType.FlourishingStarfall);
 		}
 	},
@@ -932,7 +930,7 @@ makeGCD_DNC(SkillName.Windmill, 15, {
 	onConfirm: (state) => {
 		state.maybeGainProc(ResourceType.SilkenSymmetry);
 
-		if (state.hasTraitUnlocked(TraitName.Esprit)) {
+		if (state.hasTraitUnlocked("ESPRIT")) {
 			state.gainResource(ResourceType.EspritGauge, 5);
 		}
 	},
@@ -950,7 +948,7 @@ makeGCD_DNC(SkillName.Bladeshower, 25, {
 	onConfirm: (state) => {
 		state.maybeGainProc(ResourceType.SilkenFlow);
 
-		if (state.hasTraitUnlocked(TraitName.Esprit)) {
+		if (state.hasTraitUnlocked("ESPRIT")) {
 			state.gainResource(ResourceType.EspritGauge, 5);
 		}
 	},
@@ -971,7 +969,7 @@ makeGCD_DNC(SkillName.RisingWindmill, 35, {
 			state.tryConsumeResource(ResourceType.FlourishingSymmetry);
 		}
 
-		if (state.hasTraitUnlocked(TraitName.Esprit)) {
+		if (state.hasTraitUnlocked("ESPRIT")) {
 			state.gainResource(ResourceType.EspritGauge, 10);
 		}
 		state.maybeGainResource(ResourceType.FeatherGauge, 1);
@@ -995,7 +993,7 @@ makeGCD_DNC(SkillName.Bloodshower, 45, {
 			state.tryConsumeResource(ResourceType.FlourishingFlow);
 		}
 
-		if (state.hasTraitUnlocked(TraitName.Esprit)) {
+		if (state.hasTraitUnlocked("ESPRIT")) {
 			state.gainResource(ResourceType.EspritGauge, 10);
 		}
 		state.maybeGainResource(ResourceType.FeatherGauge, 1);
@@ -1059,8 +1057,7 @@ makeAbility_DNC(SkillName.Improvisation, 80, ResourceType.cd_Improvisation, {
 		state.resources.addResourceEvent({
 			rscType: ResourceType.Improvisation,
 			name: "improvisation timeout",
-			delay: (getResourceInfo('DNC', ResourceType.Improvisation) as ResourceInfo)
-				.maxTimeout,
+			delay: (getResourceInfo("DNC", ResourceType.Improvisation) as ResourceInfo).maxTimeout,
 			fnOnRsc: (rsc) => {
 				rsc.consume(1);
 				state.tryConsumeResource(ResourceType.RisingRhythm, true);

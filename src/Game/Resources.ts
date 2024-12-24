@@ -3,7 +3,7 @@ import { GameState } from "./GameState";
 import { ActionNode } from "../Controller/Record";
 import { BLMState } from "./Jobs/BLM";
 import { controller } from "../Controller/Controller";
-import { ShellJob, ALL_JOBS, MELEE_JOBS } from "./Constants/Common";
+import { ShellJob, ALL_JOBS, MELEE_JOBS } from "./Data/Jobs";
 
 export enum EventTag {
 	ManaGain,

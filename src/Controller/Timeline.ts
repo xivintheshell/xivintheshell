@@ -9,7 +9,7 @@ import { refreshTimelineEditor } from "../Components/TimelineEditor";
 import { Potency } from "../Game/Potency";
 import { MarkerColor } from "../Components/ColorTheme";
 import { TimelineDimensions } from "../Components/Common";
-import { ShellJob } from "../Game/Constants/Common";
+import { ShellJob } from "../Game/Data/Jobs";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -311,7 +311,7 @@ export class Timeline {
 	}
 
 	addSlot() {
-		this.slots.push({ job: 'BLM', elements: [] });
+		this.slots.push({ job: "BLM", elements: [] });
 		console.assert(this.slots.length <= MAX_TIMELINE_SLOTS);
 		this.activeSlotIndex = this.slots.length - 1;
 		controller.setConfigAndRestart(controller.gameConfig);
@@ -360,7 +360,7 @@ export class Timeline {
 			// found record; make sure the slot exists
 			this.activeSlotIndex = index;
 			while (this.slots.length <= index) {
-				this.slots.push({ job: 'BLM', elements: [] });
+				this.slots.push({ job: "BLM", elements: [] });
 			}
 			let content = JSON.parse(str);
 			controller.loadBattleRecordFromFile(content);

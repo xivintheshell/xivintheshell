@@ -4,7 +4,7 @@ import { Expandable, Help, ButtonIndicator } from "./Common";
 import { localize } from "./Localization";
 import changelog from "../changelog.json";
 import { getCurrentThemeColors } from "./ColorTheme";
-import { ShellJob } from "../Game/Constants/Common";
+import { ShellJob } from "../Game/Data/Jobs";
 
 const THIS_DOMAIN = "https://xivintheshell.com";
 

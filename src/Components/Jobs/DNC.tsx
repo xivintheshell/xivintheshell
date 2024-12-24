@@ -1,6 +1,5 @@
-import { ResourceType, TraitName } from "../../Game/Common";
+import { ResourceType } from "../../Game/Common";
 import { DNCState } from "../../Game/Jobs/DNC";
-import { Traits } from "../../Game/Traits";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import {
@@ -323,14 +322,14 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 
-		const esprit = resources.get(ResourceType.EspritGauge).availableAmount();
 		const feathers = resources.get(ResourceType.FeatherGauge).availableAmount();
 		const standardSteps = resources.get(ResourceType.StandardDance).availableAmount();
 		const technicalSteps = resources.get(ResourceType.TechnicalDance).availableAmount();
 
 		const infos: ResourceDisplayProps[] = [];
 
-		if (Traits.hasUnlocked(TraitName.Esprit, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("ESPRIT")) {
+			const esprit = resources.get(ResourceType.EspritGauge).availableAmount();
 			infos.push({
 				kind: "bar",
 				name: localize({

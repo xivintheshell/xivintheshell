@@ -85,37 +85,3 @@ export enum BRDCooldownType {
 	cd_Troubadour = "cd_Troubadour",
 	cd_PitchPerfect = "cd_PitchPerfect",
 }
-
-export enum BRDTraitName {
-	WideVolleyMastery = 9000,
-	BiteMasteryII,
-	HeavyShotMastery,
-	EnhancedArmysPaeon,
-	SoulVoice,
-	QuickNockMastery,
-	EnhancedBloodletter,
-	EnhancedApexArrow,
-	EnhancedTroubadour,
-	MinstrelsCoda,
-	BloodletterMastery,
-	RangedMastery,
-	EnhancedBarrage,
-	EnhancedRadiantFinale,
-}
-
-export const BRDTraitList: Array<[BRDTraitName, number]> = [
-	[BRDTraitName.WideVolleyMastery, 72],
-	[BRDTraitName.BiteMasteryII, 76],
-	[BRDTraitName.HeavyShotMastery, 76],
-	[BRDTraitName.EnhancedArmysPaeon, 78],
-	[BRDTraitName.SoulVoice, 80],
-	[BRDTraitName.QuickNockMastery, 82],
-	[BRDTraitName.EnhancedBloodletter, 84],
-	[BRDTraitName.EnhancedApexArrow, 86],
-	[BRDTraitName.EnhancedTroubadour, 88],
-	[BRDTraitName.MinstrelsCoda, 90],
-	[BRDTraitName.BloodletterMastery, 92],
-	[BRDTraitName.RangedMastery, 94],
-	[BRDTraitName.EnhancedBarrage, 96],
-	[BRDTraitName.EnhancedRadiantFinale, 100],
-];

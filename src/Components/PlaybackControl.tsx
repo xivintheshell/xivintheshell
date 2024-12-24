@@ -32,7 +32,7 @@ import {
 	HEALER_JOBS,
 	ALL_JOBS,
 	IMPLEMENTATION_LEVELS,
-} from "../Game/Constants/Common";
+} from "../Game/Data/Jobs";
 
 export let updateConfigDisplay = (config: SerializedConfig) => {};
 

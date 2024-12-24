@@ -88,33 +88,3 @@ export enum PCTCooldownType {
 	cd_Grassa = "cd_Grassa", // [0, 1], not real
 	cd_TemperaPop = "cd_TemperaPop", // [0, 1], also not real
 }
-
-export enum PCTTraitName {
-	PictomancyMasteryII = 4000,
-	EnhancedArtistry,
-	EnhancedPictomancy,
-	EnhancedSmudge,
-	PictomancyMasteryIII,
-	EnhancedPictomancyII,
-	EnhancedTempera,
-	EnhancedPalette,
-	EnhancedPictomancyIII,
-	PictomancyMasteryIV,
-	EnhancedPictomancyIV,
-	EnhancedPictomancyV,
-}
-
-export const PCTTraitList: Array<[PCTTraitName, number]> = [
-	[PCTTraitName.PictomancyMasteryII, 74],
-	[PCTTraitName.EnhancedArtistry, 80],
-	[PCTTraitName.EnhancedPictomancy, 82],
-	[PCTTraitName.EnhancedSmudge, 84],
-	[PCTTraitName.PictomancyMasteryIII, 84],
-	[PCTTraitName.EnhancedPictomancyII, 86],
-	[PCTTraitName.EnhancedTempera, 88],
-	[PCTTraitName.EnhancedPalette, 90],
-	[PCTTraitName.EnhancedPictomancyIII, 92],
-	[PCTTraitName.PictomancyMasteryIV, 94],
-	[PCTTraitName.EnhancedPictomancyIV, 96],
-	[PCTTraitName.EnhancedPictomancyV, 100],
-];

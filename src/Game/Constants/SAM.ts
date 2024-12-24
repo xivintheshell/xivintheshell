@@ -92,34 +92,3 @@ export enum SAMCooldownType {
 	cd_ThirdEye = "cd_ThirdEye",
 	cd_ThirdEyePop = "cd_ThirdEyePop", // [0, 1,], not real
 }
-
-export enum SAMTraitName {
-	EnhancedIaijutsu = 7000,
-	EnhancedMeikyoShisui,
-	EnhancedFugetsuAndFuka,
-	ThirdEyeMastery,
-	WayOfTheSamuraiII,
-	FugaMastery,
-	EnhancedIkishoten,
-	HakazeMastery,
-	EnhancedHissatsu,
-	WayOfTheSamuraiIII,
-	EnhancedIkishotenII,
-	EnhancedMeikyoShisuiII,
-}
-
-export const SAMTraitList: Array<[SAMTraitName, number]> = [
-	[SAMTraitName.EnhancedIaijutsu, 74],
-	[SAMTraitName.EnhancedMeikyoShisui, 76],
-	[SAMTraitName.EnhancedMeikyoShisui, 76],
-	[SAMTraitName.EnhancedFugetsuAndFuka, 78],
-	[SAMTraitName.ThirdEyeMastery, 82],
-	[SAMTraitName.WayOfTheSamuraiII, 84],
-	[SAMTraitName.FugaMastery, 86],
-	[SAMTraitName.EnhancedIkishoten, 90],
-	[SAMTraitName.HakazeMastery, 92],
-	[SAMTraitName.EnhancedHissatsu, 94],
-	[SAMTraitName.WayOfTheSamuraiIII, 94],
-	[SAMTraitName.EnhancedIkishotenII, 96],
-	[SAMTraitName.EnhancedMeikyoShisuiII, 100],
-];

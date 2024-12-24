@@ -18,9 +18,9 @@ import { Buff, buffInfos } from "../Game/Buffs";
 import { BuffType } from "../Game/Common";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
 
-export let setEditingMarkerValues = (marker: MarkerElem) => { };
+export let setEditingMarkerValues = (marker: MarkerElem) => {};
 
-export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => { };
+export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
 
 const PRESET_MARKERS_BASE = "/presets/markers/";
 
@@ -180,8 +180,8 @@ export class TimelineMarkers extends React.Component {
 	}
 
 	componentWillUnmount() {
-		updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => { };
-		setEditingMarkerValues = (marker) => { };
+		updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
+		setEditingMarkerValues = (marker) => {};
 	}
 
 	render() {
@@ -330,10 +330,10 @@ export class TimelineMarkers extends React.Component {
 			// prevent starry from being selectable if we're the pictomancer
 			const activeJob = controller.getActiveJob();
 			if (
-				!(activeJob === 'PCT' && info.name === BuffType.StarryMuse) &&
-				!(activeJob === 'RDM' && info.name === BuffType.Embolden) &&
+				!(activeJob === "PCT" && info.name === BuffType.StarryMuse) &&
+				!(activeJob === "RDM" && info.name === BuffType.Embolden) &&
 				!(
-					activeJob === 'DNC' &&
+					activeJob === "DNC" &&
 					(info.name === BuffType.TechnicalFinish || info.name === BuffType.Devilment)
 				)
 			) {

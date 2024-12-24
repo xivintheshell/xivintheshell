@@ -1,6 +1,5 @@
-import { ResourceType, TraitName } from "../../Game/Common";
+import { ResourceType } from "../../Game/Common";
 import { BRDState } from "../../Game/Jobs/BRD";
-import { Traits } from "../../Game/Traits";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import {
@@ -73,7 +72,7 @@ export class BRDStatusPropsGenerator extends StatusPropsGenerator<BRDState> {
 			} as ResourceCounterProps,
 		];
 
-		if (Traits.hasUnlocked(TraitName.SoulVoice, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("SOUL_VOICE")) {
 			const soulVoice = resources.get(ResourceType.SoulVoice);
 
 			infos.push({
@@ -87,7 +86,7 @@ export class BRDStatusPropsGenerator extends StatusPropsGenerator<BRDState> {
 			} as ResourceBarProps);
 		}
 
-		if (Traits.hasUnlocked(TraitName.MinstrelsCoda, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("MINSTRELS_CODA")) {
 			infos.push({
 				kind: "coda",
 				name: localize({
