@@ -40,7 +40,6 @@ import { Modifiers, Potency, PotencyModifier, PotencyModifierType } from "./Pote
 import { Buff } from "./Buffs";
 
 import type { BLMState } from "./Jobs/BLM";
-import type { SAMState } from "./Jobs/SAM";
 import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";
