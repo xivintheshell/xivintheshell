@@ -87,10 +87,8 @@ export class BLMState extends GameState {
 		this.resources.set(new Resource(ResourceType.Polyglot, polyglotStacks, 0));
 
 		// skill CDs (also a form of resource)
-		const manafontCooldown =
-			(this.hasTraitUnlocked(TraitName.EnhancedManafont) && 100) || 180;
-		const swiftcastCooldown =
-			(this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) && 40) || 60;
+		const manafontCooldown = (this.hasTraitUnlocked(TraitName.EnhancedManafont) && 100) || 180;
+		const swiftcastCooldown = (this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) && 40) || 60;
 		[
 			new CoolDown(ResourceType.cd_Manafont, manafontCooldown, 1, 1),
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
@@ -390,8 +388,7 @@ const makeSpell_BLM = (
 			params.baseCastTime === 0 ||
 				(name === SkillName.Despair &&
 					state.hasTraitUnlocked(TraitName.EnhancedAstralFire)) ||
-				(name === SkillName.Foul &&
-					state.hasTraitUnlocked(TraitName.EnhancedFoul)) ||
+				(name === SkillName.Foul && state.hasTraitUnlocked(TraitName.EnhancedFoul)) ||
 				(name === SkillName.Fire3 &&
 					state.hasResourceAvailable(ResourceType.Firestarter)) ||
 				// Consume Swift before Triple.
@@ -438,11 +435,9 @@ const makeSpell_BLM = (
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) =>
 			// Despair after lvl 100
-			(name === SkillName.Despair &&
-				state.hasTraitUnlocked(TraitName.EnhancedAstralFire)) ||
+			(name === SkillName.Despair && state.hasTraitUnlocked(TraitName.EnhancedAstralFire)) ||
 			// Foul after lvl 80
-			(name === SkillName.Foul &&
-				state.hasTraitUnlocked(TraitName.EnhancedFoul)) ||
+			(name === SkillName.Foul && state.hasTraitUnlocked(TraitName.EnhancedFoul)) ||
 			// F3P
 			(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter)) ||
 			// Swift

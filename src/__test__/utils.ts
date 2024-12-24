@@ -80,7 +80,7 @@ export const makeTestWithConfigFn = (job: ShellJob) => {
 			controller.setConfigAndRestart(newConfig);
 			testFn();
 		};
-	}
+	};
 };
 
 export const applySkill = (skillName: SkillName) => {

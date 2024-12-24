@@ -103,16 +103,10 @@ export class DNCState extends GameState {
 			this.resources.set(new Resource(ResourceType.EspritGauge, 0, 0));
 		}
 
-		const enAvantStacks = this.hasTraitUnlocked(TraitName.EnhancedEnAvantII)
-			? 3
-			: 2;
+		const enAvantStacks = this.hasTraitUnlocked(TraitName.EnhancedEnAvantII) ? 3 : 2;
 		this.cooldowns.set(new CoolDown(ResourceType.cd_EnAvant, 30, enAvantStacks, enAvantStacks));
 
-		const shieldSambaCooldown = this.hasTraitUnlocked(
-			TraitName.EnhancedShieldSamba,
-		)
-			? 90
-			: 120;
+		const shieldSambaCooldown = this.hasTraitUnlocked(TraitName.EnhancedShieldSamba) ? 90 : 120;
 		this.cooldowns.set(new CoolDown(ResourceType.cd_ShieldSamba, shieldSambaCooldown, 1, 1));
 
 		this.registerRecurringEvents();

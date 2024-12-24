@@ -101,24 +101,16 @@ const FINISHERS: SkillName[] = [
 export class RDMState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
-		const swiftcastCooldown = this.hasTraitUnlocked(TraitName.EnhancedSwiftcast)
-			? 40
-			: 60;
-		const c6Cooldown = this.hasTraitUnlocked(TraitName.RedMagicMastery)
-			? 35
-			: 45;
-		const mfCooldown = this.hasTraitUnlocked(TraitName.EnhancedManafication)
-			? 110
-			: 120;
+		const swiftcastCooldown = this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) ? 40 : 60;
+		const c6Cooldown = this.hasTraitUnlocked(TraitName.RedMagicMastery) ? 35 : 45;
+		const mfCooldown = this.hasTraitUnlocked(TraitName.EnhancedManafication) ? 110 : 120;
 		[
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
 			new CoolDown(ResourceType.cd_ContreSixte, c6Cooldown, 1, 1),
 			new CoolDown(ResourceType.cd_Manafication, mfCooldown, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		const accelStacks = this.hasTraitUnlocked(TraitName.EnhancedAcceleration)
-			? 2
-			: 1;
+		const accelStacks = this.hasTraitUnlocked(TraitName.EnhancedAcceleration) ? 2 : 1;
 		this.cooldowns.set(
 			new CoolDown(ResourceType.cd_Acceleration, 55, accelStacks, accelStacks),
 		);

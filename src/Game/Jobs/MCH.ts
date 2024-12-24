@@ -256,9 +256,7 @@ export class MCHState extends GameState {
 		this.tryConsumeResource(ResourceType.Wildfire);
 
 		// Potency stuff
-		const potencyPerHit = this.hasTraitUnlocked(TraitName.EnhancedWildfire)
-			? 240
-			: 100;
+		const potencyPerHit = this.hasTraitUnlocked(TraitName.EnhancedWildfire) ? 240 : 100;
 		const basePotency =
 			Math.min(this.resources.get(ResourceType.WildfireHits).availableAmount(), 6) *
 			potencyPerHit;
@@ -733,9 +731,7 @@ robotSummons.forEach((params) => {
 			// note that queen is summoned, and grant the requisite number of punches and finishers
 			const punchResource = state.resources.get(ResourceType.QueenPunches);
 			punchResource.gain(5);
-			const finishers = state.hasTraitUnlocked(TraitName.QueensGambit)
-				? 2
-				: 1;
+			const finishers = state.hasTraitUnlocked(TraitName.QueensGambit) ? 2 : 1;
 			state.resources.get(ResourceType.QueenFinishers).gain(finishers);
 			state.resources
 				.get(ResourceType.Queen)

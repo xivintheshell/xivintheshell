@@ -80,20 +80,15 @@ const HYPERPHANTASIA_SKILLS: SkillName[] = [
 export class PCTState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
-		const swiftcastCooldown =
-			(this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) && 40) || 60;
+		const swiftcastCooldown = (this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) && 40) || 60;
 		[new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1)].forEach((cd) =>
 			this.cooldowns.set(cd),
 		);
-		const livingMuseStacks = this.hasTraitUnlocked(TraitName.EnhancedPictomancyIV)
-			? 3
-			: 2;
+		const livingMuseStacks = this.hasTraitUnlocked(TraitName.EnhancedPictomancyIV) ? 3 : 2;
 		this.cooldowns.set(
 			new CoolDown(ResourceType.cd_LivingMuse, 40, livingMuseStacks, livingMuseStacks),
 		);
-		const steelMuseStacks = this.hasTraitUnlocked(TraitName.EnhancedPictomancyII)
-			? 2
-			: 1;
+		const steelMuseStacks = this.hasTraitUnlocked(TraitName.EnhancedPictomancyII) ? 2 : 1;
 		this.cooldowns.set(
 			new CoolDown(ResourceType.cd_SteelMuse, 60, steelMuseStacks, steelMuseStacks),
 		);
@@ -1001,14 +996,12 @@ const hammerConditions: ConditionalSkillReplace<PCTState>[] = [
 	{
 		newSkill: SkillName.HammerBrush,
 		condition: (state) =>
-			state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) &&
-			state.getHammerStacks() === 2,
+			state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) && state.getHammerStacks() === 2,
 	},
 	{
 		newSkill: SkillName.PolishingHammer,
 		condition: (state) =>
-			state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) &&
-			state.getHammerStacks() === 1,
+			state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) && state.getHammerStacks() === 1,
 	},
 ];
 // [name, level, potency, delay]

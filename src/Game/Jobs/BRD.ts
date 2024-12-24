@@ -552,12 +552,8 @@ makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
 	potency: (state) => {
 		const soulVoice = state.resources.get(ResourceType.SoulVoice);
 		const minRequirement = 20;
-		const minPotency = state.hasTraitUnlocked(TraitName.RangedMastery)
-			? 120
-			: 100;
-		const maxPotency = state.hasTraitUnlocked(TraitName.RangedMastery)
-			? 600
-			: 500;
+		const minPotency = state.hasTraitUnlocked(TraitName.RangedMastery) ? 120 : 100;
+		const maxPotency = state.hasTraitUnlocked(TraitName.RangedMastery) ? 600 : 500;
 		const soulVoiceBonus =
 			(1.0 * (soulVoice.availableAmount() - minRequirement)) /
 			(soulVoice.maxValue - minRequirement);

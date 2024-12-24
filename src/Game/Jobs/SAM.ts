@@ -79,12 +79,8 @@ export class SAMState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
-		const gurenCd = this.hasTraitUnlocked(TraitName.EnhancedHissatsu)
-			? 60
-			: 120;
-		const meikyoStacks = this.hasTraitUnlocked(TraitName.EnhancedMeikyoShisui)
-			? 2
-			: 1;
+		const gurenCd = this.hasTraitUnlocked(TraitName.EnhancedHissatsu) ? 60 : 120;
+		const meikyoStacks = this.hasTraitUnlocked(TraitName.EnhancedMeikyoShisui) ? 2 : 1;
 		[
 			new CoolDown(ResourceType.cd_MeikyoShisui, 55, meikyoStacks, meikyoStacks),
 			new CoolDown(ResourceType.cd_SeneiGuren, gurenCd, 1, 1),
@@ -701,9 +697,7 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 			modifiers.push(state.getFugetsuModifier());
 		}
 
-		const tickPotency = state.hasTraitUnlocked(TraitName.WayOfTheSamuraiIII)
-			? 50
-			: 45;
+		const tickPotency = state.hasTraitUnlocked(TraitName.WayOfTheSamuraiIII) ? 50 : 45;
 
 		state.addDoTPotencies({
 			node,
