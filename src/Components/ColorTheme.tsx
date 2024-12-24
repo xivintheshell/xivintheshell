@@ -2,7 +2,7 @@ import React from "react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
-import { ShellJob } from "../Game/Constants/Common";
+import { ShellJob } from "../Game/Data/Jobs";
 
 export type ColorTheme = "Light" | "Dark";
 

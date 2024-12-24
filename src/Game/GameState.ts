@@ -7,7 +7,6 @@ import {
 	ResourceType,
 	SkillName,
 	SkillUnavailableReason,
-	TraitName,
 } from "./Common";
 import { GameConfig } from "./GameConfig";
 import {
@@ -32,7 +31,6 @@ import {
 	ResourceInfo,
 	ResourceState,
 } from "./Resources";
-import { Traits } from "./Traits";
 
 import { controller } from "../Controller/Controller";
 import { ActionNode } from "../Controller/Record";
@@ -43,7 +41,10 @@ import type { BLMState } from "./Jobs/BLM";
 import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";
-import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS } from "./Constants/Common";
+import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS } from "./Data/Jobs";
+import { TraitKey } from "./Data/Traits";
+import { ActionKey } from "./Data/Actions";
+import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require("seedrandom");
@@ -1285,8 +1286,8 @@ export abstract class GameState {
 		}
 	}
 
-	hasTraitUnlocked(traitName: TraitName) {
-		return Traits.hasUnlocked(traitName, this.config.level);
+	hasTraitUnlocked(traitName: TraitKey) {
+		return hasUnlockedTrait(traitName, this.config.level);
 	}
 
 	isInCombat() {

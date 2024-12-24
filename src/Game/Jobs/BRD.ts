@@ -1,8 +1,9 @@
 import { localizeResourceType } from "../../Components/Localization";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
-import { BRDResourceType, BRDTraitName } from "../Constants/BRD";
+import { BuffType, ResourceType, SkillName, WarningType } from "../Common";
+import { BRDResourceType } from "../Constants/BRD";
+import { TraitKey } from "../Data/Traits";
 import { GameConfig } from "../GameConfig";
 import { GameState, PlayerState } from "../GameState";
 import { Modifiers, PotencyModifier } from "../Potency";
@@ -28,7 +29,7 @@ const makeBRDResource = (
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
-	makeResource('BRD', rsc, maxValue, params ?? {});
+	makeResource("BRD", rsc, maxValue, params ?? {});
 };
 
 makeBRDResource(ResourceType.SoulVoice, 100);
@@ -77,11 +78,11 @@ export class BRDState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
-		if (!this.hasTraitUnlocked(TraitName.EnhancedBloodletter)) {
+		if (!this.hasTraitUnlocked("ENHANCED_BLOODLETTER")) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_HeartbreakShot, 15, 2, 2));
 		}
 
-		if (!this.hasTraitUnlocked(TraitName.EnhancedTroubadour)) {
+		if (!this.hasTraitUnlocked("ENHANCED_TROUBADOUR")) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Troubadour, 120, 1, 1));
 		}
 
@@ -197,7 +198,7 @@ export class BRDState extends GameState {
 				break;
 		}
 
-		if (this.hasTraitUnlocked(TraitName.SoulVoice)) {
+		if (this.hasTraitUnlocked("SOUL_VOICE")) {
 			if (this.hasResourceAvailable(ResourceType.SoulVoice, 100)) {
 				controller.reportWarning(WarningType.SoulVoiceOvercap);
 			}
@@ -230,7 +231,7 @@ export class BRDState extends GameState {
 			this.gainStatus(ResourceType.ArmysMuse);
 		}
 
-		if (this.hasTraitUnlocked(TraitName.MinstrelsCoda)) {
+		if (this.hasTraitUnlocked("MINSTRELS_CODA")) {
 			const coda =
 				newSong === ResourceType.WanderersMinuet
 					? ResourceType.WanderersCoda
@@ -274,7 +275,7 @@ export class BRDState extends GameState {
 				break;
 			case ResourceType.ArmysPaeon:
 				// Cache how much repertoire is currently held for when the next song applies
-				if (this.hasTraitUnlocked(TraitName.EnhancedArmysPaeon)) {
+				if (this.hasTraitUnlocked("ENHANCED_ARMYS_PAEON")) {
 					const repertoire = this.resources
 						.get(ResourceType.Repertoire)
 						.availableAmount();
@@ -373,7 +374,7 @@ const makeWeaponskill_BRD = (
 		autoUpgrade?: SkillAutoReplace;
 		replaceIf?: ConditionalSkillReplace<BRDState>[];
 		startOnHotbar?: boolean;
-		potency?: number | Array<[TraitName, number]> | ResourceCalculationFn<BRDState>;
+		potency?: number | Array<[TraitKey, number]> | ResourceCalculationFn<BRDState>;
 		falloff?: number;
 		applicationDelay?: number;
 		validateAttempt?: StatePredicate<BRDState>;
@@ -383,7 +384,7 @@ const makeWeaponskill_BRD = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Weaponskill<BRDState> => {
-	return makeWeaponskill('BRD', name, unlockLevel, {
+	return makeWeaponskill("BRD", name, unlockLevel, {
 		...params,
 		recastTime: (state) => {
 			let speedBuff = undefined;
@@ -404,7 +405,7 @@ const makeAbility_BRD = (
 	unlockLevel: number,
 	cdName: ResourceType,
 	params: {
-		potency?: number | Array<[TraitName, number]> | ResourceCalculationFn<BRDState>;
+		potency?: number | Array<[TraitKey, number]> | ResourceCalculationFn<BRDState>;
 		replaceIf?: ConditionalSkillReplace<BRDState>[];
 		requiresCombat?: boolean;
 		highlightIf?: StatePredicate<BRDState>;
@@ -421,7 +422,7 @@ const makeAbility_BRD = (
 		autoUpgrade?: SkillAutoReplace;
 	},
 ): Ability<BRDState> => {
-	return makeAbility('BRD', name, unlockLevel, cdName, {
+	return makeAbility("BRD", name, unlockLevel, cdName, {
 		...params,
 		jobPotencyModifiers: (state) => state.getJobPotencyModifiers(name),
 	});
@@ -443,7 +444,7 @@ const makeResourceAbility_BRD = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<BRDState> => {
-	return makeResourceAbility('BRD', name, unlockLevel, cdName, {
+	return makeResourceAbility("BRD", name, unlockLevel, cdName, {
 		...params,
 	});
 };
@@ -453,15 +454,15 @@ makeWeaponskill_BRD(SkillName.HeavyShot, 1, {
 	applicationDelay: 1.47, // Unknown, copied from Burst Shot
 	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.2),
 	autoUpgrade: {
-		trait: BRDTraitName.HeavyShotMastery,
+		trait: "HEAVY_SHOT_MASTERY",
 		otherSkill: SkillName.BurstShot,
 	},
 });
 makeWeaponskill_BRD(SkillName.BurstShot, 1, {
 	startOnHotbar: false,
 	potency: [
-		[TraitName.Never, 200],
-		[TraitName.RangedMastery, 220],
+		["NEVER", 200],
+		["RANGED_MASTERY", 220],
 	],
 	applicationDelay: 1.47,
 	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.35),
@@ -469,8 +470,8 @@ makeWeaponskill_BRD(SkillName.BurstShot, 1, {
 
 makeWeaponskill_BRD(SkillName.RefulgentArrow, 70, {
 	potency: [
-		[TraitName.Never, 260],
-		[TraitName.RangedMastery, 280],
+		["NEVER", 260],
+		["RANGED_MASTERY", 280],
 	],
 	applicationDelay: 1.47,
 	onConfirm: (state) => {
@@ -494,19 +495,19 @@ const dotAppliers: Array<{
 	initialPotency: number;
 	tickPotency: number;
 }> = [
-		{
-			skillName: SkillName.CausticBite,
-			dotName: ResourceType.CausticBite,
-			initialPotency: 150,
-			tickPotency: 20,
-		},
-		{
-			skillName: SkillName.Stormbite,
-			dotName: ResourceType.Stormbite,
-			initialPotency: 100,
-			tickPotency: 25,
-		},
-	];
+	{
+		skillName: SkillName.CausticBite,
+		dotName: ResourceType.CausticBite,
+		initialPotency: 150,
+		tickPotency: 20,
+	},
+	{
+		skillName: SkillName.Stormbite,
+		dotName: ResourceType.Stormbite,
+		initialPotency: 100,
+		tickPotency: 25,
+	},
+];
 dotAppliers.forEach((props) => {
 	makeWeaponskill_BRD(props.skillName, 1, {
 		potency: props.initialPotency,
@@ -522,7 +523,7 @@ dotAppliers.forEach((props) => {
 			}),
 		onApplication: (state, node) => {
 			state.applyDoT(props.dotName, node);
-			if (state.hasTraitUnlocked(TraitName.BiteMasteryII)) {
+			if (state.hasTraitUnlocked("BITE_MASTERY_II")) {
 				state.maybeGainProc(ResourceType.HawksEye, 0.35);
 			}
 		},
@@ -543,7 +544,7 @@ makeWeaponskill_BRD(SkillName.IronJaws, 56, {
 				modifiers: state.getJobPotencyModifiers(SkillName.IronJaws),
 			});
 		});
-		if (state.hasTraitUnlocked(TraitName.BiteMasteryII)) {
+		if (state.hasTraitUnlocked("BITE_MASTERY_II")) {
 			state.maybeGainProc(ResourceType.HawksEye, 0.35);
 		}
 	},
@@ -553,8 +554,8 @@ makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
 	potency: (state) => {
 		const soulVoice = state.resources.get(ResourceType.SoulVoice);
 		const minRequirement = 20;
-		const minPotency = state.hasTraitUnlocked(TraitName.RangedMastery) ? 120 : 100;
-		const maxPotency = state.hasTraitUnlocked(TraitName.RangedMastery) ? 600 : 500;
+		const minPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 120 : 100;
+		const maxPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 600 : 500;
 		const soulVoiceBonus =
 			(1.0 * (soulVoice.availableAmount() - minRequirement)) /
 			(soulVoice.maxValue - minRequirement);
@@ -565,7 +566,7 @@ makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
 	applicationDelay: 1.07,
 	onConfirm: (state) => {
 		if (
-			state.hasTraitUnlocked(TraitName.EnhancedApexArrow) &&
+			state.hasTraitUnlocked("ENHANCED_APEX_ARROW") &&
 			state.resources.get(ResourceType.SoulVoice).availableAmount() >= 80
 		) {
 			state.gainStatus(ResourceType.BlastArrowReady);
@@ -594,8 +595,8 @@ makeWeaponskill_BRD(SkillName.BlastArrow, 86, {
 
 makeAbility_BRD(SkillName.EmyprealArrow, 54, ResourceType.cd_EmpyrealArrow, {
 	potency: [
-		[TraitName.Never, 240], // TODO - Confirm
-		[TraitName.RangedMastery, 260],
+		["NEVER", 240], // TODO - Confirm
+		["RANGED_MASTERY", 260],
 	],
 	cooldown: 15,
 	applicationDelay: 1.03,
@@ -609,7 +610,7 @@ makeAbility_BRD(SkillName.Bloodletter, 12, ResourceType.cd_HeartbreakShot, {
 	applicationDelay: 1.65, // Unsure, copied from Heartbreak
 	autoUpgrade: {
 		otherSkill: SkillName.HeartbreakShot,
-		trait: TraitName.BloodletterMastery,
+		trait: "BLOODLETTER_MASTERY",
 	},
 });
 makeAbility_BRD(SkillName.HeartbreakShot, 92, ResourceType.cd_HeartbreakShot, {
@@ -622,8 +623,8 @@ makeAbility_BRD(SkillName.HeartbreakShot, 92, ResourceType.cd_HeartbreakShot, {
 
 makeAbility_BRD(SkillName.Sidewinder, 60, ResourceType.cd_Sidewinder, {
 	potency: [
-		[TraitName.Never, 320],
-		[TraitName.RangedMastery, 400],
+		["NEVER", 320],
+		["RANGED_MASTERY", 400],
 	],
 	cooldown: 60,
 	applicationDelay: 0.53,
@@ -636,31 +637,31 @@ const songSkills: Array<{
 	cdName: ResourceType;
 	replaceIf?: ConditionalSkillReplace<BRDState>[];
 }> = [
-		{
-			skillName: SkillName.WanderersMinuet,
-			song: ResourceType.WanderersMinuet,
-			skillLevel: 52,
-			cdName: ResourceType.cd_WanderersMinuet,
-			replaceIf: [
-				{
-					newSkill: SkillName.PitchPerfect,
-					condition: (state) => state.hasResourceAvailable(ResourceType.WanderersMinuet),
-				},
-			],
-		},
-		{
-			skillName: SkillName.MagesBallad,
-			song: ResourceType.MagesBallad,
-			skillLevel: 30,
-			cdName: ResourceType.cd_MagesBallad,
-		},
-		{
-			skillName: SkillName.ArmysPaeon,
-			song: ResourceType.ArmysPaeon,
-			skillLevel: 40,
-			cdName: ResourceType.cd_ArmysPaeon,
-		},
-	];
+	{
+		skillName: SkillName.WanderersMinuet,
+		song: ResourceType.WanderersMinuet,
+		skillLevel: 52,
+		cdName: ResourceType.cd_WanderersMinuet,
+		replaceIf: [
+			{
+				newSkill: SkillName.PitchPerfect,
+				condition: (state) => state.hasResourceAvailable(ResourceType.WanderersMinuet),
+			},
+		],
+	},
+	{
+		skillName: SkillName.MagesBallad,
+		song: ResourceType.MagesBallad,
+		skillLevel: 30,
+		cdName: ResourceType.cd_MagesBallad,
+	},
+	{
+		skillName: SkillName.ArmysPaeon,
+		song: ResourceType.ArmysPaeon,
+		skillLevel: 40,
+		cdName: ResourceType.cd_ArmysPaeon,
+	},
+];
 songSkills.forEach((props) => {
 	makeAbility_BRD(props.skillName, props.skillLevel, props.cdName, {
 		applicationDelay: 0,
@@ -694,7 +695,7 @@ makeResourceAbility_BRD(SkillName.Barrage, 38, ResourceType.cd_Barrage, {
 	applicationDelay: 0,
 	cooldown: 120,
 	onConfirm: (state) => {
-		if (state.hasTraitUnlocked(TraitName.EnhancedBarrage)) {
+		if (state.hasTraitUnlocked("ENHANCED_BARRAGE")) {
 			state.gainStatus(ResourceType.ResonantArrowReady);
 		}
 	},
@@ -726,7 +727,7 @@ makeResourceAbility_BRD(SkillName.RadiantFinale, 90, ResourceType.cd_RadiantFina
 		state.tryConsumeResource(ResourceType.MagesCoda);
 		state.tryConsumeResource(ResourceType.ArmysCoda);
 
-		if (state.hasTraitUnlocked(TraitName.EnhancedRadiantFinale)) {
+		if (state.hasTraitUnlocked("ENHANCED_RADIANT_FINALE")) {
 			state.gainStatus(ResourceType.RadiantEncoreReady);
 		}
 	},
@@ -769,7 +770,7 @@ makeWeaponskill_BRD(SkillName.QuickNock, 18, {
 	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.2),
 	falloff: 0,
 	autoUpgrade: {
-		trait: TraitName.QuickNockMastery,
+		trait: "QUICK_NOCK_MASTERY",
 		otherSkill: SkillName.Ladonsbite,
 	},
 });
@@ -799,7 +800,7 @@ makeWeaponskill_BRD(SkillName.WideVolley, 18, {
 		state.hasResourceAvailable(ResourceType.HawksEye) ||
 		state.hasResourceAvailable(ResourceType.Barrage),
 	autoUpgrade: {
-		trait: TraitName.WideVolleyMastery,
+		trait: "WIDE_VOLLEY_MASTERY",
 		otherSkill: SkillName.Shadowbite,
 	},
 });

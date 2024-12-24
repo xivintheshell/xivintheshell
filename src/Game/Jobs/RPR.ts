@@ -1,6 +1,7 @@
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, BuffType, ResourceType, SkillName, TraitName } from "../Common";
+import { Aspect, BuffType, ResourceType, SkillName } from "../Common";
 import { RPRResourceType, RPRSkillName } from "../Constants/RPR";
+import { TraitKey } from "../Data/Traits";
 import { GameConfig } from "../GameConfig";
 import { GameState, PlayerState } from "../GameState";
 import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
@@ -27,14 +28,13 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import { Traits } from "../Traits";
 
 function makeRPRResource(
 	type: ResourceType,
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) {
-	makeResource('RPR', type, maxValue, params ?? {});
+	makeResource("RPR", type, maxValue, params ?? {});
 }
 
 makeRPRResource(ResourceType.Soul, 100);
@@ -88,7 +88,7 @@ export class RPRState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
-		const soulSliceStacks = Traits.hasUnlocked(TraitName.TemperedSoul, config.level) ? 2 : 1;
+		const soulSliceStacks = this.hasTraitUnlocked("TEMPERED_SOUL") ? 2 : 1;
 		this.cooldowns.set(
 			new CoolDown(ResourceType.cd_SoulSlice, 30, soulSliceStacks, soulSliceStacks),
 		);
@@ -255,7 +255,7 @@ export class RPRState extends GameState {
 		if (skill === SkillName.Gluttony) {
 			reavers.consume(reavers.availableAmount());
 			executioners.consume(executioners.availableAmount());
-			if (this.hasTraitUnlocked(TraitName.EnhancedGluttony)) {
+			if (this.hasTraitUnlocked("ENHANCED_GLUTTONY")) {
 				this.setTimedResource(ResourceType.Executioner, 2);
 				return;
 			}
@@ -308,7 +308,7 @@ export class RPRState extends GameState {
 		if (!this.hasResourceAvailable(ResourceType.CircleOfSacrifice)) {
 			return;
 		}
-		const skillInfo = getSkill('RPR', skill);
+		const skillInfo = getSkill("RPR", skill);
 		if (skillInfo.potencyFn(this) > 0) {
 			let immortalSac = this.resources.get(ResourceType.ImmortalSacrifice);
 			if (immortalSac.availableAmount() === 0) {
@@ -323,7 +323,7 @@ export class RPRState extends GameState {
 	enterEnshroud() {
 		if (this.hasResourceAvailable(ResourceType.IdealHost))
 			this.resources.get(ResourceType.IdealHost).consume(1);
-		if (this.hasTraitUnlocked(TraitName.EnhancedEnshroud))
+		if (this.hasTraitUnlocked("ENHANCED_ENSHROUD"))
 			this.setTimedResource(ResourceType.Oblatio, 1);
 		this.setTimedResource(ResourceType.LemureShroud, 5);
 	}
@@ -423,7 +423,7 @@ const makeRPRSpell = (
 	params: {
 		replaceIf?: ConditionalSkillReplace<RPRState>[];
 		startOnHotbar?: boolean;
-		potency: number | Array<[TraitName, number]>;
+		potency: number | Array<[TraitKey, number]>;
 		secondaryCooldown?: CooldownGroupProperties;
 		aspect: Aspect;
 		castTime: number | ResourceCalculationFn<RPRState>;
@@ -447,7 +447,7 @@ const makeRPRSpell = (
 		params.validateAttempt ?? (() => true),
 	);
 
-	return makeSpell('RPR', name, unlockLevel, {
+	return makeSpell("RPR", name, unlockLevel, {
 		...params,
 		recastTime: (state) => state.config.adjustedGCD(params.recastTime),
 		onConfirm: onConfirm,
@@ -469,14 +469,14 @@ const makeRPRWeaponskill = (
 	params: {
 		replaceIf?: ConditionalSkillReplace<RPRState>[];
 		startOnHotbar?: boolean;
-		potency: number | Array<[TraitName, number]>;
+		potency: number | Array<[TraitKey, number]>;
 		combo?: {
-			potency: number | Array<[TraitName, number]>;
+			potency: number | Array<[TraitKey, number]>;
 			resource: ResourceType;
 			resourceValue: number;
 		};
 		positional?: {
-			potency: number | Array<[TraitName, number]>;
+			potency: number | Array<[TraitKey, number]>;
 			location: "flank" | "rear";
 		};
 		secondaryCooldown?: CooldownGroupProperties;
@@ -499,7 +499,7 @@ const makeRPRWeaponskill = (
 			!state.resources.get(ResourceType.Enshrouded).available(1) || isEnshroudSkill(name),
 		params.validateAttempt ?? (() => true),
 	);
-	return makeWeaponskill('RPR', name, unlockLevel, {
+	return makeWeaponskill("RPR", name, unlockLevel, {
 		...params,
 		onConfirm: onConfirm,
 		jobPotencyModifiers: (state) => {
@@ -507,12 +507,12 @@ const makeRPRWeaponskill = (
 			if (
 				params.combo &&
 				state.resources.get(params.combo.resource).availableAmount() ===
-				params.combo.resourceValue
+					params.combo.resourceValue
 			) {
 				mods.push(
 					makeComboModifier(
 						getBasePotency(state, params.combo.potency) -
-						getBasePotency(state, params.potency),
+							getBasePotency(state, params.potency),
 					),
 				);
 			}
@@ -528,7 +528,7 @@ const makeRPRWeaponskill = (
 				mods.push(
 					makePositionalModifier(
 						getBasePotency(state, params.positional.potency) -
-						getBasePotency(state, params.potency),
+							getBasePotency(state, params.potency),
 					),
 				);
 			}
@@ -586,7 +586,7 @@ const makeRPRAbility = (
 	cdName: ResourceType,
 	params: {
 		isPhysical?: boolean;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<RPRState>[];
 		highlightIf?: StatePredicate<RPRState>;
 		startOnHotbar?: boolean;
@@ -608,7 +608,7 @@ const makeRPRAbility = (
 		params.validateAttempt ?? (() => true),
 	);
 
-	return makeAbility('RPR', name, unlockLevel, cdName, {
+	return makeAbility("RPR", name, unlockLevel, cdName, {
 		...params,
 		onConfirm: onConfirm,
 		validateAttempt: validateAttempt,
@@ -626,9 +626,9 @@ makeRPRWeaponskill(SkillName.ShadowOfDeath, 10, {
 
 makeRPRWeaponskill(SkillName.Slice, 1, {
 	potency: [
-		[TraitName.Never, 260],
-		[TraitName.MeleeMasteryIIIRPR, 320],
-		[TraitName.MeleeMasteryIIIRPR, 460],
+		["NEVER", 260],
+		["MELEE_MASTERY_II_RPR", 320],
+		["MELEE_MASTERY_III_RPR", 460],
 	],
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
@@ -637,15 +637,15 @@ makeRPRWeaponskill(SkillName.Slice, 1, {
 
 makeRPRWeaponskill(SkillName.WaxingSlice, 5, {
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.MeleeMasteryIIRPR, 160],
-		[TraitName.MeleeMasteryIIIRPR, 260],
+		["NEVER", 100],
+		["MELEE_MASTERY_II_RPR", 160],
+		["MELEE_MASTERY_III_RPR", 260],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 340],
-			[TraitName.MeleeMasteryIIRPR, 400],
-			[TraitName.MeleeMasteryIIIRPR, 500],
+			["NEVER", 340],
+			["MELEE_MASTERY_II_RPR", 400],
+			["MELEE_MASTERY_III_RPR", 500],
 		],
 		resource: ResourceType.RPRCombo,
 		resourceValue: 1,
@@ -660,15 +660,15 @@ makeRPRWeaponskill(SkillName.WaxingSlice, 5, {
 
 makeRPRWeaponskill(SkillName.InfernalSlice, 30, {
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.MeleeMasteryIIRPR, 180],
-		[TraitName.MeleeMasteryIIIRPR, 280],
+		["NEVER", 100],
+		["MELEE_MASTERY_II_RPR", 180],
+		["MELEE_MASTERY_III_RPR", 280],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 420],
-			[TraitName.MeleeMasteryIIRPR, 500],
-			[TraitName.MeleeMasteryIIIRPR, 600],
+			["NEVER", 420],
+			["MELEE_MASTERY_II_RPR", 500],
+			["MELEE_MASTERY_III_RPR", 600],
 		],
 		resource: ResourceType.RPRCombo,
 		resourceValue: 2,
@@ -683,8 +683,8 @@ makeRPRWeaponskill(SkillName.InfernalSlice, 30, {
 
 makeRPRWeaponskill(SkillName.SoulSlice, 60, {
 	potency: [
-		[TraitName.Never, 460],
-		[TraitName.MeleeMasteryIIIRPR, 520],
+		["NEVER", 460],
+		["MELEE_MASTERY_III_RPR", 520],
 	],
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
@@ -708,13 +708,13 @@ makeRPRWeaponskill(SkillName.Gibbet, 70, {
 		},
 	],
 	potency: [
-		[TraitName.Never, 460],
-		[TraitName.MeleeMasteryIIIRPR, 500],
+		["NEVER", 460],
+		["MELEE_MASTERY_III_RPR", 500],
 	],
 	positional: {
 		potency: [
-			[TraitName.Never, 520],
-			[TraitName.MeleeMasteryIIIRPR, 560],
+			["NEVER", 520],
+			["MELEE_MASTERY_III_RPR", 560],
 		],
 		location: "flank",
 	},
@@ -741,13 +741,13 @@ makeRPRWeaponskill(SkillName.Gallows, 70, {
 		},
 	],
 	potency: [
-		[TraitName.Never, 460],
-		[TraitName.MeleeMasteryIIIRPR, 500],
+		["NEVER", 460],
+		["MELEE_MASTERY_III_RPR", 500],
 	],
 	positional: {
 		potency: [
-			[TraitName.Never, 520],
-			[TraitName.MeleeMasteryIIIRPR, 560],
+			["NEVER", 520],
+			["MELEE_MASTERY_III_RPR", 560],
 		],
 		location: "rear",
 	},
@@ -879,8 +879,8 @@ makeRPRSpell(SkillName.Soulsow, 82, {
 
 makeRPRSpell(SkillName.HarvestMoon, 82, {
 	potency: [
-		[TraitName.Never, 600],
-		[TraitName.MeleeMasteryIIIRPR, 800],
+		["NEVER", 600],
+		["MELEE_MASTERY_III_RPR", 800],
 	],
 	startOnHotbar: false,
 	aspect: Aspect.Other,
@@ -974,8 +974,8 @@ makeRPRAbility(SkillName.UnveiledGallows, 70, ResourceType.cd_BloodStalk, {
 makeRPRAbility(SkillName.LemuresSlice, 86, ResourceType.cd_LemuresSlice, {
 	isPhysical: true,
 	potency: [
-		[TraitName.Never, 240],
-		[TraitName.MeleeMasteryIIIRPR, 280],
+		["NEVER", 240],
+		["MELEE_MASTERY_III_RPR", 280],
 	],
 	startOnHotbar: false,
 	applicationDelay: 0.7,
@@ -999,14 +999,14 @@ makeRPRAbility(SkillName.Sacrificium, 92, ResourceType.cd_Sacrificium, {
 	onConfirm: (state) => state.resources.get(ResourceType.Oblatio).consume(1),
 });
 
-makeResourceAbility('RPR', SkillName.ArcaneCircle, 72, ResourceType.cd_ArcaneCircle, {
+makeResourceAbility("RPR", SkillName.ArcaneCircle, 72, ResourceType.cd_ArcaneCircle, {
 	rscType: ResourceType.ArcaneCircle,
 	applicationDelay: 0.6,
 	startOnHotbar: true,
 	maxCharges: 1,
 	potency: 0,
 	onApplication: (state: RPRState) => {
-		if (state.hasTraitUnlocked(TraitName.EnhancedArcaneCircle)) {
+		if (state.hasTraitUnlocked("ENHANCED_ARCANE_CIRCLE")) {
 			state.setTimedResource(ResourceType.CircleOfSacrifice, 1);
 			state.setTimedResource(ResourceType.BloodsownCircle, 1);
 		}
@@ -1017,8 +1017,8 @@ makeResourceAbility('RPR', SkillName.ArcaneCircle, 72, ResourceType.cd_ArcaneCir
 makeRPRWeaponskill(SkillName.VoidReaping, 80, {
 	startOnHotbar: false,
 	potency: [
-		[TraitName.Never, 460],
-		[TraitName.MeleeMasteryIIIRPR, 500],
+		["NEVER", 460],
+		["MELEE_MASTERY_III_RPR", 500],
 	],
 	aspect: Aspect.Physical,
 	recastTime: 1.5,
@@ -1042,8 +1042,8 @@ makeRPRWeaponskill(SkillName.VoidReaping, 80, {
 makeRPRWeaponskill(SkillName.CrossReaping, 80, {
 	startOnHotbar: false,
 	potency: [
-		[TraitName.Never, 460],
-		[TraitName.MeleeMasteryIIIRPR, 500],
+		["NEVER", 460],
+		["MELEE_MASTERY_III_RPR", 500],
 	],
 	aspect: Aspect.Physical,
 	recastTime: 1.5,
@@ -1064,7 +1064,7 @@ makeRPRWeaponskill(SkillName.CrossReaping, 80, {
 	},
 });
 
-makeResourceAbility('RPR', SkillName.Enshroud, 80, ResourceType.cd_Enshroud, {
+makeResourceAbility("RPR", SkillName.Enshroud, 80, ResourceType.cd_Enshroud, {
 	rscType: ResourceType.Enshrouded,
 	highlightIf: (state) => {
 		return (
@@ -1122,8 +1122,7 @@ makeRPRAbility(SkillName.HellsIngress, 20, ResourceType.cd_IngressEgress, {
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	onConfirm: (state) => {
 		state.resources.get(ResourceType.HellsIngressUsed).gain(1);
-		if (state.hasTraitUnlocked(TraitName.Hellsgate))
-			state.setTimedResource(ResourceType.Threshold, 1);
+		if (state.hasTraitUnlocked("HELLSGATE")) state.setTimedResource(ResourceType.Threshold, 1);
 		state.setTimedResource(ResourceType.EnhancedHarpe, 1);
 	},
 });
@@ -1141,8 +1140,7 @@ makeRPRAbility(SkillName.HellsEgress, 20, ResourceType.cd_IngressEgress, {
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.HellsIngressUsed);
-		if (state.hasTraitUnlocked(TraitName.Hellsgate))
-			state.setTimedResource(ResourceType.Threshold, 1);
+		if (state.hasTraitUnlocked("HELLSGATE")) state.setTimedResource(ResourceType.Threshold, 1);
 		state.setTimedResource(ResourceType.EnhancedHarpe, 1);
 	},
 });

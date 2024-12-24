@@ -2,7 +2,7 @@ import { Debug, ProcMode, LevelSync, FIXED_BASE_CASTER_TAX } from "./Common";
 import { ResourceOverride, ResourceOverrideData } from "./Resources";
 import { ShellInfo, ShellVersion } from "../Controller/Common";
 import { XIVMath } from "./XIVMath";
-import { ShellJob } from "./Constants/Common";
+import { ShellJob } from "./Data/Jobs";
 
 export type ConfigData = {
 	job: ShellJob;
@@ -24,7 +24,7 @@ export type ConfigData = {
 };
 
 export const DEFAULT_BLM_CONFIG: ConfigData = {
-	job: 'BLM',
+	job: "BLM",
 	shellVersion: ShellInfo.version,
 	level: LevelSync.lvl100,
 	// 2.37 GCD
@@ -44,7 +44,7 @@ export const DEFAULT_BLM_CONFIG: ConfigData = {
 };
 
 export const DEFAULT_PCT_CONFIG: ConfigData = {
-	job: 'PCT',
+	job: "PCT",
 	shellVersion: ShellInfo.version,
 	level: LevelSync.lvl100,
 	// 7.05 2.5 GCD bis https://xivgear.app/?page=sl%7C4c102326-839a-43c8-84ae-11ffdb6ef4a2

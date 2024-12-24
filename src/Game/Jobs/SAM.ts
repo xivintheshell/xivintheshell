@@ -1,7 +1,7 @@
 // Skill and state declarations for SAM.
 
 import { controller } from "../../Controller/Controller";
-import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { BuffType, ResourceType, SkillName, WarningType } from "../Common";
 import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -26,6 +26,7 @@ import { makeResource, CoolDown, Event, EventTag } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { localizeResourceType } from "../../Components/Localization";
 import { ActionNode } from "../../Controller/Record";
+import { TraitKey } from "../Data/Traits";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 const makeSAMResource = (rsc: ResourceType, maxValue: number, params?: { timeout: number }) => {
@@ -77,8 +78,8 @@ export class SAMState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
-		const gurenCd = this.hasTraitUnlocked(TraitName.EnhancedHissatsu) ? 60 : 120;
-		const meikyoStacks = this.hasTraitUnlocked(TraitName.EnhancedMeikyoShisui) ? 2 : 1;
+		const gurenCd = this.hasTraitUnlocked("ENHANCED_HISSATSU") ? 60 : 120;
+		const meikyoStacks = this.hasTraitUnlocked("ENHANCED_MEIKYO_SHISUI") ? 2 : 1;
 		[
 			new CoolDown(ResourceType.cd_MeikyoShisui, 55, meikyoStacks, meikyoStacks),
 			new CoolDown(ResourceType.cd_SeneiGuren, gurenCd, 1, 1),
@@ -122,7 +123,7 @@ export class SAMState extends GameState {
 	}
 
 	getFugetsuModifier(): PotencyModifier {
-		return this.hasTraitUnlocked(TraitName.EnhancedFugetsuAndFuka)
+		return this.hasTraitUnlocked("ENHANCED_FUGETSU_AND_FUKA")
 			? Modifiers.FugetsuEnhanced
 			: Modifiers.FugetsuBase;
 	}
@@ -132,7 +133,7 @@ export class SAMState extends GameState {
 			return 0;
 		}
 
-		return this.hasTraitUnlocked(TraitName.EnhancedFugetsuAndFuka) ? 13 : 10;
+		return this.hasTraitUnlocked("ENHANCED_FUGETSU_AND_FUKA") ? 13 : 10;
 	}
 
 	// Return true if the active combo buff is up, or meikyo is active.
@@ -254,14 +255,14 @@ const makeGCD_SAM = (
 		autoDowngrade?: SkillAutoReplace;
 		baseCastTime?: number;
 		baseRecastTime?: number;
-		basePotency: number | Array<[TraitName, number]>;
+		basePotency: number | Array<[TraitKey, number]>;
 		combo?: {
-			potency: number | Array<[TraitName, number]>;
+			potency: number | Array<[TraitKey, number]>;
 			resource: ResourceType;
 		};
 		positional?: {
-			potency: number | Array<[TraitName, number]>;
-			comboPotency: number | Array<[TraitName, number]>;
+			potency: number | Array<[TraitKey, number]>;
+			comboPotency: number | Array<[TraitKey, number]>;
 			location: "flank" | "rear";
 		};
 		falloff?: number;
@@ -317,7 +318,7 @@ const makeGCD_SAM = (
 	if (castTime) {
 		// All SAM castbars are 1.8s (scaled to sks and affected by fuka) when synced
 		castTime = (state) =>
-			state.hasTraitUnlocked(TraitName.EnhancedIaijutsu)
+			state.hasTraitUnlocked("ENHANCED_IAIJUTSU")
 				? params.baseCastTime || 0
 				: state.config.adjustedSksCastTime(1.8, state.getFukaModifier());
 	}
@@ -352,7 +353,7 @@ const makeAbility_SAM = (
 		falloff?: number;
 		applicationDelay?: number;
 		animationLock?: number;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		jobPotencyModifiers?: PotencyModifierFn<SAMState>;
 		cooldown: number;
 		maxCharges?: number;
@@ -382,7 +383,7 @@ makeGCD_SAM(SkillName.Enpi, 15, {
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable(ResourceType.EnhancedEnpi)
 			? [
-					state.hasTraitUnlocked(TraitName.WayOfTheSamuraiIII)
+					state.hasTraitUnlocked("WAY_OF_THE_SAMURAI_III")
 						? Modifiers.YatenpiEnhanced
 						: Modifiers.YatenpiBase,
 				]
@@ -391,7 +392,7 @@ makeGCD_SAM(SkillName.Enpi, 15, {
 });
 
 makeGCD_SAM(SkillName.Hakaze, 1, {
-	autoUpgrade: { trait: TraitName.HakazeMastery, otherSkill: SkillName.Gyofu },
+	autoUpgrade: { trait: "HAKAZE_MASTERY", otherSkill: SkillName.Gyofu },
 	applicationDelay: 0.85, // TODO
 	basePotency: 200,
 	// TODO check if kenki gain is on damage app or cast confirmation
@@ -403,7 +404,7 @@ makeGCD_SAM(SkillName.Hakaze, 1, {
 });
 
 makeGCD_SAM(SkillName.Gyofu, 92, {
-	autoDowngrade: { trait: TraitName.HakazeMastery, otherSkill: SkillName.Hakaze },
+	autoDowngrade: { trait: "HAKAZE_MASTERY", otherSkill: SkillName.Hakaze },
 	applicationDelay: 0.85,
 	basePotency: 240,
 	onConfirm: (state) => {
@@ -416,15 +417,15 @@ makeGCD_SAM(SkillName.Gyofu, 92, {
 makeGCD_SAM(SkillName.Yukikaze, 50, {
 	applicationDelay: 0.85,
 	basePotency: [
-		[TraitName.Never, 100],
-		[TraitName.WayOfTheSamuraiII, 110],
-		[TraitName.WayOfTheSamuraiIII, 160],
+		["NEVER", 100],
+		["WAY_OF_THE_SAMURAI_II", 110],
+		["WAY_OF_THE_SAMURAI_III", 160],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 280],
-			[TraitName.WayOfTheSamuraiII, 290],
-			[TraitName.WayOfTheSamuraiIII, 340],
+			["NEVER", 280],
+			["WAY_OF_THE_SAMURAI_II", 290],
+			["WAY_OF_THE_SAMURAI_III", 340],
 		],
 		resource: ResourceType.SAMTwoReady,
 	},
@@ -442,13 +443,13 @@ makeGCD_SAM(SkillName.Yukikaze, 50, {
 makeGCD_SAM(SkillName.Jinpu, 4, {
 	applicationDelay: 0.62,
 	basePotency: [
-		[TraitName.Never, 120],
-		[TraitName.WayOfTheSamuraiIII, 140],
+		["NEVER", 120],
+		["WAY_OF_THE_SAMURAI_III", 140],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 280],
-			[TraitName.WayOfTheSamuraiIII, 300],
+			["NEVER", 280],
+			["WAY_OF_THE_SAMURAI_III", 300],
 		],
 		resource: ResourceType.SAMTwoReady,
 	},
@@ -469,28 +470,28 @@ makeGCD_SAM(SkillName.Jinpu, 4, {
 makeGCD_SAM(SkillName.Gekko, 30, {
 	applicationDelay: 0.76,
 	basePotency: [
-		[TraitName.Never, 100],
-		[TraitName.WayOfTheSamuraiII, 110],
-		[TraitName.WayOfTheSamuraiIII, 160],
+		["NEVER", 100],
+		["WAY_OF_THE_SAMURAI_II", 110],
+		["WAY_OF_THE_SAMURAI_III", 160],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 310],
-			[TraitName.WayOfTheSamuraiII, 320],
-			[TraitName.WayOfTheSamuraiIII, 370],
+			["NEVER", 310],
+			["WAY_OF_THE_SAMURAI_II", 320],
+			["WAY_OF_THE_SAMURAI_III", 370],
 		],
 		resource: ResourceType.GekkoReady,
 	},
 	positional: {
 		potency: [
-			[TraitName.Never, 150],
-			[TraitName.WayOfTheSamuraiII, 160],
-			[TraitName.WayOfTheSamuraiIII, 210],
+			["NEVER", 150],
+			["WAY_OF_THE_SAMURAI_II", 160],
+			["WAY_OF_THE_SAMURAI_III", 210],
 		],
 		comboPotency: [
-			[TraitName.Never, 360],
-			[TraitName.WayOfTheSamuraiII, 370],
-			[TraitName.WayOfTheSamuraiIII, 420],
+			["NEVER", 360],
+			["WAY_OF_THE_SAMURAI_II", 370],
+			["WAY_OF_THE_SAMURAI_III", 420],
 		],
 		location: "rear",
 	},
@@ -511,13 +512,13 @@ makeGCD_SAM(SkillName.Gekko, 30, {
 makeGCD_SAM(SkillName.Shifu, 18, {
 	applicationDelay: 0.8,
 	basePotency: [
-		[TraitName.Never, 120],
-		[TraitName.WayOfTheSamuraiIII, 140],
+		["NEVER", 120],
+		["WAY_OF_THE_SAMURAI_III", 140],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 280],
-			[TraitName.WayOfTheSamuraiIII, 300],
+			["NEVER", 280],
+			["WAY_OF_THE_SAMURAI_III", 300],
 		],
 		resource: ResourceType.SAMTwoReady,
 	},
@@ -538,28 +539,28 @@ makeGCD_SAM(SkillName.Shifu, 18, {
 makeGCD_SAM(SkillName.Kasha, 40, {
 	applicationDelay: 0.62,
 	basePotency: [
-		[TraitName.Never, 100],
-		[TraitName.WayOfTheSamuraiII, 110],
-		[TraitName.WayOfTheSamuraiIII, 160],
+		["NEVER", 100],
+		["WAY_OF_THE_SAMURAI_II", 110],
+		["WAY_OF_THE_SAMURAI_III", 160],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 310],
-			[TraitName.WayOfTheSamuraiII, 320],
-			[TraitName.WayOfTheSamuraiIII, 370],
+			["NEVER", 310],
+			["WAY_OF_THE_SAMURAI_II", 320],
+			["WAY_OF_THE_SAMURAI_III", 370],
 		],
 		resource: ResourceType.KashaReady,
 	},
 	positional: {
 		potency: [
-			[TraitName.Never, 150],
-			[TraitName.WayOfTheSamuraiII, 160],
-			[TraitName.WayOfTheSamuraiIII, 210],
+			["NEVER", 150],
+			["WAY_OF_THE_SAMURAI_II", 160],
+			["WAY_OF_THE_SAMURAI_III", 210],
 		],
 		comboPotency: [
-			[TraitName.Never, 360],
-			[TraitName.WayOfTheSamuraiII, 370],
-			[TraitName.WayOfTheSamuraiIII, 420],
+			["NEVER", 360],
+			["WAY_OF_THE_SAMURAI_II", 370],
+			["WAY_OF_THE_SAMURAI_III", 420],
 		],
 		location: "flank",
 	},
@@ -578,7 +579,7 @@ makeGCD_SAM(SkillName.Kasha, 40, {
 });
 
 makeGCD_SAM(SkillName.Fuga, 26, {
-	autoUpgrade: { trait: TraitName.FugaMastery, otherSkill: SkillName.Fuko },
+	autoUpgrade: { trait: "FUGA_MASTERY", otherSkill: SkillName.Fuko },
 	falloff: 0,
 	applicationDelay: 0.76, // TODO
 	basePotency: 90,
@@ -589,7 +590,7 @@ makeGCD_SAM(SkillName.Fuga, 26, {
 });
 
 makeGCD_SAM(SkillName.Fuko, 86, {
-	autoDowngrade: { trait: TraitName.FugaMastery, otherSkill: SkillName.Fuga },
+	autoDowngrade: { trait: "FUGA_MASTERY", otherSkill: SkillName.Fuga },
 	falloff: 0,
 	applicationDelay: 0.76,
 	basePotency: 100,
@@ -688,7 +689,7 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 			modifiers.push(state.getFugetsuModifier());
 		}
 
-		const tickPotency = state.hasTraitUnlocked(TraitName.WayOfTheSamuraiIII) ? 50 : 45;
+		const tickPotency = state.hasTraitUnlocked("WAY_OF_THE_SAMURAI_III") ? 50 : 45;
 
 		state.addDoTPotencies({
 			node,
@@ -742,8 +743,8 @@ makeGCD_SAM(SkillName.MidareSetsugekka, 30, {
 	replaceIf: [banaCondition, tenkaCondition, tendoGokenCondition, tendoMidareCondition],
 	baseCastTime: 1.3,
 	basePotency: [
-		[TraitName.Never, 620],
-		[TraitName.WayOfTheSamuraiIII, 640],
+		["NEVER", 620],
+		["WAY_OF_THE_SAMURAI_III", 640],
 	],
 	applicationDelay: 0.62,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
@@ -834,8 +835,8 @@ makeGCD_SAM(SkillName.KaeshiSetsugekka, 74, {
 	startOnHotbar: false,
 	replaceIf: [kaeshiGokenCondition, tendoKaeshiGokenCondition, tendoKaeshiSetsugekkaCondition],
 	basePotency: [
-		[TraitName.Never, 620],
-		[TraitName.WayOfTheSamuraiIII, 640],
+		["NEVER", 620],
+		["WAY_OF_THE_SAMURAI_III", 640],
 	],
 	applicationDelay: 0.62,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
@@ -865,8 +866,8 @@ makeGCD_SAM(SkillName.OgiNamikiri, 90, {
 	falloff: 0.75,
 	applicationDelay: 0.49,
 	basePotency: [
-		[TraitName.Never, 860],
-		[TraitName.WayOfTheSamuraiIII, 900],
+		["NEVER", 860],
+		["WAY_OF_THE_SAMURAI_III", 900],
 	],
 	baseCastTime: 1.3,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
@@ -885,8 +886,8 @@ makeGCD_SAM(SkillName.KaeshiNamikiri, 90, {
 	falloff: 0.75,
 	applicationDelay: 0.49,
 	basePotency: [
-		[TraitName.Never, 860],
-		[TraitName.WayOfTheSamuraiIII, 900],
+		["NEVER", 860],
+		["WAY_OF_THE_SAMURAI_III", 900],
 	],
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
@@ -901,7 +902,7 @@ makeAbility_SAM(SkillName.MeikyoShisui, 50, ResourceType.cd_MeikyoShisui, {
 		state.resources.get(ResourceType.MeikyoShisui).gain(3);
 		state.enqueueResourceDrop(ResourceType.MeikyoShisui);
 
-		if (state.hasTraitUnlocked(TraitName.EnhancedMeikyoShisuiII)) {
+		if (state.hasTraitUnlocked("ENHANCED_MEIKYO_SHISUI_II")) {
 			state.resources.get(ResourceType.Tendo).gain(1);
 			state.enqueueResourceDrop(ResourceType.Tendo);
 		}
@@ -919,11 +920,11 @@ makeAbility_SAM(SkillName.Ikishoten, 68, ResourceType.cd_Ikishoten, {
 	requiresCombat: true,
 	onConfirm: (state) => {
 		state.gainKenki(50);
-		if (state.hasTraitUnlocked(TraitName.EnhancedIkishoten)) {
+		if (state.hasTraitUnlocked("ENHANCED_IKISHOTEN")) {
 			state.resources.get(ResourceType.OgiReady).gain(1);
 			state.enqueueResourceDrop(ResourceType.OgiReady);
 		}
-		if (state.hasTraitUnlocked(TraitName.EnhancedIkishotenII)) {
+		if (state.hasTraitUnlocked("ENHANCED_IKISHOTEN_II")) {
 			state.resources.get(ResourceType.ZanshinReady).gain(1);
 			state.enqueueResourceDrop(ResourceType.ZanshinReady);
 		}
@@ -1000,8 +1001,8 @@ makeAbility_SAM(SkillName.Hagakure, 68, ResourceType.cd_Hagakure, {
 makeAbility_SAM(SkillName.Shoha, 80, ResourceType.cd_Shoha, {
 	cooldown: 15,
 	potency: [
-		[TraitName.Never, 560],
-		[TraitName.WayOfTheSamuraiIII, 640],
+		["NEVER", 560],
+		["WAY_OF_THE_SAMURAI_III", 640],
 	],
 	falloff: 0.65,
 	applicationDelay: 0.58,
@@ -1012,7 +1013,7 @@ makeAbility_SAM(SkillName.Shoha, 80, ResourceType.cd_Shoha, {
 
 makeResourceAbility("SAM", SkillName.ThirdEye, 6, ResourceType.cd_ThirdEye, {
 	rscType: ResourceType.ThirdEye,
-	autoUpgrade: { trait: TraitName.ThirdEyeMastery, otherSkill: SkillName.Tengentsu },
+	autoUpgrade: { trait: "THIRD_EYE_MASTERY", otherSkill: SkillName.Tengentsu },
 	replaceIf: [
 		{
 			newSkill: SkillName.ThirdEyePop,
@@ -1025,7 +1026,7 @@ makeResourceAbility("SAM", SkillName.ThirdEye, 6, ResourceType.cd_ThirdEye, {
 
 makeResourceAbility("SAM", SkillName.Tengentsu, 82, ResourceType.cd_ThirdEye, {
 	rscType: ResourceType.Tengentsu,
-	autoDowngrade: { trait: TraitName.ThirdEyeMastery, otherSkill: SkillName.ThirdEye },
+	autoDowngrade: { trait: "THIRD_EYE_MASTERY", otherSkill: SkillName.ThirdEye },
 	replaceIf: [
 		{
 			newSkill: SkillName.TengentsuPop,

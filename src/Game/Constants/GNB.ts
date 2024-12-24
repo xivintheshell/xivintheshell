@@ -111,25 +111,3 @@ export enum GNBCooldownType {
 	cd_AbdomenTear = "cd_AbdomenTear",
 	cd_EyeGouge = "cd_EyeGouge",
 }
-
-export enum GNBTraitName {
-	DangerZoneMastery = 10000,
-	HeartOfStoneMastery,
-	EnhancedAurora,
-	EnhancedContinuation,
-	CartridgeChargeII,
-	NebulaMastery,
-	EnhancedContinuationII,
-	EnhancedBloodfest,
-}
-
-export const GNBTraitList: Array<[GNBTraitName, number]> = [
-	[GNBTraitName.DangerZoneMastery, 80],
-	[GNBTraitName.HeartOfStoneMastery, 82],
-	[GNBTraitName.EnhancedAurora, 84],
-	[GNBTraitName.EnhancedContinuation, 86],
-	[GNBTraitName.CartridgeChargeII, 88],
-	[GNBTraitName.NebulaMastery, 92],
-	[GNBTraitName.EnhancedContinuationII, 96],
-	[GNBTraitName.EnhancedBloodfest, 100],
-];

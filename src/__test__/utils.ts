@@ -10,7 +10,7 @@ import {
 	DamageStatisticsMode,
 	mockDamageStatUpdateFn,
 } from "../Components/DamageStatistics";
-import { ShellJob } from "../Game/Constants/Common";
+import { ShellJob } from "../Game/Data/Jobs";
 
 // If this configuration flag is set to `true`, then the fight record of each test run
 // will be exported locally to "$TEST_NAME.txt".

@@ -74,7 +74,7 @@ import { XIVMath } from "../Game/XIVMath";
 import { RPRState } from "../Game/Jobs/RPR";
 import { RPRStatusPropsGenerator } from "../Components/Jobs/RPR";
 import { WARState } from "../Game/Jobs/WAR";
-import { MELEE_JOBS, ShellJob } from "../Game/Constants/Common";
+import { MELEE_JOBS, ShellJob } from "../Game/Data/Jobs";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 require("../Game/Jobs/RoleActions");

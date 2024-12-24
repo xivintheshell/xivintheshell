@@ -1,7 +1,7 @@
 // Skill and state declarations for PCT.
 
 import { controller } from "../../Controller/Controller";
-import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { BuffType, ResourceType, SkillName, WarningType } from "../Common";
 import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -23,6 +23,7 @@ import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
+import { TraitKey } from "../Data/Traits";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -31,7 +32,7 @@ const makePCTResource = (
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
-	makeResource('PCT', rsc, maxValue, params ?? {});
+	makeResource("PCT", rsc, maxValue, params ?? {});
 };
 
 makePCTResource(ResourceType.Portrait, 2);
@@ -79,15 +80,15 @@ const HYPERPHANTASIA_SKILLS: SkillName[] = [
 export class PCTState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
-		const swiftcastCooldown = (this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) && 40) || 60;
+		const swiftcastCooldown = (this.hasTraitUnlocked("ENHANCED_SWIFTCAST") && 40) || 60;
 		[new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1)].forEach((cd) =>
 			this.cooldowns.set(cd),
 		);
-		const livingMuseStacks = this.hasTraitUnlocked(TraitName.EnhancedPictomancyIV) ? 3 : 2;
+		const livingMuseStacks = this.hasTraitUnlocked("ENHANCED_PICTOMANCY_IV") ? 3 : 2;
 		this.cooldowns.set(
 			new CoolDown(ResourceType.cd_LivingMuse, 40, livingMuseStacks, livingMuseStacks),
 		);
-		const steelMuseStacks = this.hasTraitUnlocked(TraitName.EnhancedPictomancyII) ? 2 : 1;
+		const steelMuseStacks = this.hasTraitUnlocked("ENHANCED_PICTOMANCY_II") ? 2 : 1;
 		this.cooldowns.set(
 			new CoolDown(ResourceType.cd_SteelMuse, 60, steelMuseStacks, steelMuseStacks),
 		);
@@ -164,7 +165,7 @@ export class PCTState extends GameState {
 	// (for now ignore edge case of buff falling off mid-cast)
 	cycleAetherhues() {
 		const aetherhues = this.resources.get(ResourceType.Aetherhues);
-		const dropTime = (getResourceInfo('PCT', ResourceType.Aetherhues) as ResourceInfo)
+		const dropTime = (getResourceInfo("PCT", ResourceType.Aetherhues) as ResourceInfo)
 			.maxTimeout;
 		if (aetherhues.available(2) && aetherhues.pendingChange) {
 			// reset timer and reset value to 0
@@ -205,7 +206,7 @@ export class PCTState extends GameState {
 				inspiration.consume(1);
 				hyperphantasia.removeTimer();
 				inspiration.removeTimer();
-				if (this.hasTraitUnlocked(TraitName.EnhancedPictomancyIII)) {
+				if (this.hasTraitUnlocked("ENHANCED_PICTOMANCY_III")) {
 					this.resources.get(ResourceType.RainbowBright).gain(1);
 					this.enqueueResourceDrop(ResourceType.RainbowBright);
 				}
@@ -232,7 +233,7 @@ const makeSpell_PCT = (
 		baseCastTime: number;
 		baseRecastTime?: number;
 		baseManaCost?: number;
-		basePotency?: number | Array<[TraitName, number]>;
+		basePotency?: number | Array<[TraitKey, number]>;
 		jobPotencyModifiers?: PotencyModifierFn<PCTState>;
 		falloff?: number;
 		applicationDelay: number;
@@ -257,7 +258,7 @@ const makeSpell_PCT = (
 			state.tryConsumeResource(ResourceType.Swiftcast);
 	}, params.onConfirm ?? NO_EFFECT);
 	const onApplication: EffectFn<PCTState> = params.onApplication ?? NO_EFFECT;
-	return makeSpell('PCT', name, unlockLevel, {
+	return makeSpell("PCT", name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		highlightIf: params.highlightIf,
@@ -298,7 +299,7 @@ const makeAbility_PCT = (
 	unlockLevel: number,
 	cdName: ResourceType,
 	params: {
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<PCTState>[];
 		requiresCombat?: boolean;
 		highlightIf?: StatePredicate<PCTState>;
@@ -313,7 +314,7 @@ const makeAbility_PCT = (
 		onApplication?: EffectFn<PCTState>;
 	},
 ): Ability<PCTState> =>
-	makeAbility('PCT', name, unlockLevel, cdName, {
+	makeAbility("PCT", name, unlockLevel, cdName, {
 		jobPotencyModifiers: (state) =>
 			state.hasResourceAvailable(ResourceType.StarryMuse) ? [Modifiers.Starry] : [],
 		...params,
@@ -480,10 +481,10 @@ makeSpell_PCT(SkillName.FireInRed, 1, {
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 280],
-		[TraitName.PictomancyMasteryII, 340],
-		[TraitName.PictomancyMasteryIII, 380],
-		[TraitName.PictomancyMasteryIV, 440],
+		["NEVER", 280],
+		["PICTOMANCY_MASTERY_II", 340],
+		["PICTOMANCY_MASTERY_III", 380],
+		["PICTOMANCY_MASTERY_IV", 440],
 	],
 	applicationDelay: 0.84,
 	validateAttempt: (state) =>
@@ -498,10 +499,10 @@ makeSpell_PCT(SkillName.AeroInGreen, 5, {
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 320],
-		[TraitName.PictomancyMasteryII, 380],
-		[TraitName.PictomancyMasteryIII, 420],
-		[TraitName.PictomancyMasteryIV, 480],
+		["NEVER", 320],
+		["PICTOMANCY_MASTERY_II", 380],
+		["PICTOMANCY_MASTERY_III", 420],
+		["PICTOMANCY_MASTERY_IV", 480],
 	],
 	applicationDelay: 0.89,
 	validateAttempt: (state) =>
@@ -517,10 +518,10 @@ makeSpell_PCT(SkillName.WaterInBlue, 15, {
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 360],
-		[TraitName.PictomancyMasteryII, 420],
-		[TraitName.PictomancyMasteryIII, 460],
-		[TraitName.PictomancyMasteryIV, 520],
+		["NEVER", 360],
+		["PICTOMANCY_MASTERY_II", 420],
+		["PICTOMANCY_MASTERY_III", 460],
+		["PICTOMANCY_MASTERY_IV", 520],
 	],
 	applicationDelay: 0.98,
 	validateAttempt: (state) =>
@@ -533,7 +534,7 @@ makeSpell_PCT(SkillName.WaterInBlue, 15, {
 			controller.reportWarning(WarningType.PaletteOvercap);
 		}
 		paletteGauge.gain(25);
-		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
+		if (state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
 			state.resources.get(ResourceType.Paint).gain(1);
 		}
 	},
@@ -545,9 +546,9 @@ makeSpell_PCT(SkillName.Fire2InRed, 25, {
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 80],
-		[TraitName.PictomancyMasteryII, 100],
-		[TraitName.PictomancyMasteryIV, 120],
+		["NEVER", 80],
+		["PICTOMANCY_MASTERY_II", 100],
+		["PICTOMANCY_MASTERY_IV", 120],
 	],
 	falloff: 0,
 	applicationDelay: 0.84,
@@ -563,9 +564,9 @@ makeSpell_PCT(SkillName.Aero2InGreen, 35, {
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 100],
-		[TraitName.PictomancyMasteryII, 120],
-		[TraitName.PictomancyMasteryIV, 140],
+		["NEVER", 100],
+		["PICTOMANCY_MASTERY_II", 120],
+		["PICTOMANCY_MASTERY_IV", 140],
 	],
 	falloff: 0,
 	applicationDelay: 0.89,
@@ -582,9 +583,9 @@ makeSpell_PCT(SkillName.Water2InBlue, 45, {
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 120],
-		[TraitName.PictomancyMasteryII, 140],
-		[TraitName.PictomancyMasteryIV, 160],
+		["NEVER", 120],
+		["PICTOMANCY_MASTERY_II", 140],
+		["PICTOMANCY_MASTERY_IV", 160],
 	],
 	falloff: 0,
 	applicationDelay: 0.89,
@@ -598,7 +599,7 @@ makeSpell_PCT(SkillName.Water2InBlue, 45, {
 			controller.reportWarning(WarningType.PaletteOvercap);
 		}
 		paletteGauge.gain(25);
-		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
+		if (state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
 			state.resources.get(ResourceType.Paint).gain(1);
 		}
 	},
@@ -611,10 +612,10 @@ makeSpell_PCT(SkillName.BlizzardInCyan, 60, {
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 520],
-		[TraitName.PictomancyMasteryII, 630],
-		[TraitName.PictomancyMasteryIII, 700],
-		[TraitName.PictomancyMasteryIV, 800],
+		["NEVER", 520],
+		["PICTOMANCY_MASTERY_II", 630],
+		["PICTOMANCY_MASTERY_III", 700],
+		["PICTOMANCY_MASTERY_IV", 800],
 	],
 	applicationDelay: 0.75,
 	validateAttempt: (state) =>
@@ -631,10 +632,10 @@ makeSpell_PCT(SkillName.StoneInYellow, 60, {
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 560],
-		[TraitName.PictomancyMasteryII, 670],
-		[TraitName.PictomancyMasteryIII, 740],
-		[TraitName.PictomancyMasteryIV, 840],
+		["NEVER", 560],
+		["PICTOMANCY_MASTERY_II", 670],
+		["PICTOMANCY_MASTERY_III", 740],
+		["PICTOMANCY_MASTERY_IV", 840],
 	],
 	applicationDelay: 0.8,
 	validateAttempt: (state) =>
@@ -651,10 +652,10 @@ makeSpell_PCT(SkillName.ThunderInMagenta, 60, {
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 600],
-		[TraitName.PictomancyMasteryII, 710],
-		[TraitName.PictomancyMasteryIII, 780],
-		[TraitName.PictomancyMasteryIV, 880],
+		["NEVER", 600],
+		["PICTOMANCY_MASTERY_II", 710],
+		["PICTOMANCY_MASTERY_III", 780],
+		["PICTOMANCY_MASTERY_IV", 880],
 	],
 	applicationDelay: 0.8,
 	validateAttempt: (state) =>
@@ -662,7 +663,7 @@ makeSpell_PCT(SkillName.ThunderInMagenta, 60, {
 		state.hasResourceAvailable(ResourceType.SubtractivePalette),
 	onConfirm: (state) => {
 		state.doFiller();
-		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
+		if (state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
 			state.resources.get(ResourceType.Paint).gain(1);
 		}
 	},
@@ -675,9 +676,9 @@ makeSpell_PCT(SkillName.Blizzard2InCyan, 60, {
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 180],
-		[TraitName.PictomancyMasteryII, 220],
-		[TraitName.PictomancyMasteryIV, 240],
+		["NEVER", 180],
+		["PICTOMANCY_MASTERY_II", 220],
+		["PICTOMANCY_MASTERY_IV", 240],
 	],
 	falloff: 0,
 	applicationDelay: 0.75,
@@ -695,9 +696,9 @@ makeSpell_PCT(SkillName.Stone2InYellow, 60, {
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 200],
-		[TraitName.PictomancyMasteryII, 240],
-		[TraitName.PictomancyMasteryIV, 260],
+		["NEVER", 200],
+		["PICTOMANCY_MASTERY_II", 240],
+		["PICTOMANCY_MASTERY_IV", 260],
 	],
 	falloff: 0,
 	applicationDelay: 0.8,
@@ -715,9 +716,9 @@ makeSpell_PCT(SkillName.Thunder2InMagenta, 60, {
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 220],
-		[TraitName.PictomancyMasteryII, 260],
-		[TraitName.PictomancyMasteryIV, 280],
+		["NEVER", 220],
+		["PICTOMANCY_MASTERY_II", 260],
+		["PICTOMANCY_MASTERY_IV", 280],
 	],
 	falloff: 0,
 	applicationDelay: 0.8,
@@ -726,7 +727,7 @@ makeSpell_PCT(SkillName.Thunder2InMagenta, 60, {
 		state.hasResourceAvailable(ResourceType.SubtractivePalette),
 	onConfirm: (state) => {
 		state.doFiller();
-		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
+		if (state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
 			state.resources.get(ResourceType.Paint).gain(1);
 		}
 	},
@@ -737,9 +738,9 @@ makeSpell_PCT(SkillName.HolyInWhite, 80, {
 	baseCastTime: 0,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 420],
-		[TraitName.PictomancyMasteryIII, 460],
-		[TraitName.PictomancyMasteryIV, 520],
+		["NEVER", 420],
+		["PICTOMANCY_MASTERY_III", 460],
+		["PICTOMANCY_MASTERY_IV", 520],
 	],
 	falloff: 0.6,
 	applicationDelay: 1.34,
@@ -761,8 +762,8 @@ makeSpell_PCT(SkillName.CometInBlack, 90, {
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 780],
-		[TraitName.PictomancyMasteryIV, 880],
+		["NEVER", 780],
+		["PICTOMANCY_MASTERY_IV", 880],
 	],
 	falloff: 0.6,
 	applicationDelay: 1.87,
@@ -823,7 +824,7 @@ makeAbility_PCT(SkillName.SubtractivePalette, 60, ResourceType.cd_Subtractive, {
 		if (state.hasResourceAvailable(ResourceType.MonochromeTones)) {
 			controller.reportWarning(WarningType.CometOverwrite);
 		}
-		if (state.hasTraitUnlocked(TraitName.EnhancedPalette)) {
+		if (state.hasTraitUnlocked("ENHANCED_PALETTE")) {
 			state.resources.get(ResourceType.MonochromeTones).gain(1);
 		}
 		state.resources.get(ResourceType.SubtractivePalette).gain(3);
@@ -871,33 +872,33 @@ const livingConditions = [
 ];
 // [name, level, potency, delay, validation]
 const livingMuseInfos: Array<
-	[SkillName, number, number | Array<[TraitName, number]>, number, StatePredicate<PCTState>]
+	[SkillName, number, number | Array<[TraitKey, number]>, number, StatePredicate<PCTState>]
 > = [
-		// living muse can never itself be cast
-		[SkillName.LivingMuse, 30, 0, 0, (state) => false],
+	// living muse can never itself be cast
+	[SkillName.LivingMuse, 30, 0, 0, (state) => false],
+	[
+		SkillName.PomMuse,
+		30,
 		[
-			SkillName.PomMuse,
-			30,
-			[
-				[TraitName.Never, 1000],
-				[TraitName.PictomancyMasteryIII, 1100],
-			],
-			0.62,
-			pomMuseCondition.condition,
+			["NEVER", 1000],
+			["PICTOMANCY_MASTERY_III", 1100],
 		],
+		0.62,
+		pomMuseCondition.condition,
+	],
+	[
+		SkillName.WingedMuse,
+		30,
 		[
-			SkillName.WingedMuse,
-			30,
-			[
-				[TraitName.Never, 1000],
-				[TraitName.PictomancyMasteryIII, 1100],
-			],
-			0.98,
-			wingedMuseCondition.condition,
+			["NEVER", 1000],
+			["PICTOMANCY_MASTERY_III", 1100],
 		],
-		[SkillName.ClawedMuse, 96, 1100, 0.98, clawedMuseCondition.condition],
-		[SkillName.FangedMuse, 96, 1100, 1.16, fangedMuseCondition.condition],
-	];
+		0.98,
+		wingedMuseCondition.condition,
+	],
+	[SkillName.ClawedMuse, 96, 1100, 0.98, clawedMuseCondition.condition],
+	[SkillName.FangedMuse, 96, 1100, 1.16, fangedMuseCondition.condition],
+];
 livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAttempt], i) =>
 	makeAbility_PCT(name, level, ResourceType.cd_LivingMuse, {
 		replaceIf: livingConditions.slice(0, i).concat(livingConditions.slice(i + 1)),
@@ -916,7 +917,7 @@ livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAtte
 			if (name === SkillName.WingedMuse) {
 				portraits.overrideCurrentValue(1);
 				// below lvl 94, there's no madeen, so wrap depictions back to 0
-				if (!state.hasTraitUnlocked(TraitName.EnhancedPictomancyIV)) {
+				if (!state.hasTraitUnlocked("ENHANCED_PICTOMANCY_IV")) {
 					depictions.overrideCurrentValue(0);
 				}
 			}
@@ -935,8 +936,8 @@ livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAtte
 makeAbility_PCT(SkillName.MogOfTheAges, 30, ResourceType.cd_Portrait, {
 	replaceIf: [madeenCondition],
 	potency: [
-		[TraitName.Never, 1100],
-		[TraitName.PictomancyMasteryIII, 1300],
+		["NEVER", 1100],
+		["PICTOMANCY_MASTERY_III", 1300],
 	],
 	falloff: 0.6,
 	applicationDelay: 1.15,
@@ -1005,30 +1006,29 @@ const hammerConditions: ConditionalSkillReplace<PCTState>[] = [
 	{
 		newSkill: SkillName.HammerStamp,
 		condition: (state) =>
-			!state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) ||
-			state.getHammerStacks() === 3,
+			!state.hasTraitUnlocked("ENHANCED_PICTOMANCY_II") || state.getHammerStacks() === 3,
 	},
 	{
 		newSkill: SkillName.HammerBrush,
 		condition: (state) =>
-			state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) && state.getHammerStacks() === 2,
+			state.hasTraitUnlocked("ENHANCED_PICTOMANCY_II") && state.getHammerStacks() === 2,
 	},
 	{
 		newSkill: SkillName.PolishingHammer,
 		condition: (state) =>
-			state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) && state.getHammerStacks() === 1,
+			state.hasTraitUnlocked("ENHANCED_PICTOMANCY_II") && state.getHammerStacks() === 1,
 	},
 ];
 // [name, level, potency, delay]
-const hammerInfos: Array<[SkillName, number, number | Array<[TraitName, number]>, number]> = [
+const hammerInfos: Array<[SkillName, number, number | Array<[TraitKey, number]>, number]> = [
 	[
 		SkillName.HammerStamp,
 		50,
 		[
-			[TraitName.Never, 380],
-			[TraitName.PictomancyMasteryII, 480],
-			[TraitName.PictomancyMasteryIII, 520],
-			[TraitName.PictomancyMasteryIV, 560],
+			["NEVER", 380],
+			["PICTOMANCY_MASTERY_II", 480],
+			["PICTOMANCY_MASTERY_III", 520],
+			["PICTOMANCY_MASTERY_IV", 560],
 		],
 		1.38,
 	],
@@ -1036,8 +1036,8 @@ const hammerInfos: Array<[SkillName, number, number | Array<[TraitName, number]>
 		SkillName.HammerBrush,
 		86,
 		[
-			[TraitName.Never, 580],
-			[TraitName.PictomancyMasteryIV, 620],
+			["NEVER", 580],
+			["PICTOMANCY_MASTERY_IV", 620],
 		],
 		1.25,
 	],
@@ -1045,8 +1045,8 @@ const hammerInfos: Array<[SkillName, number, number | Array<[TraitName, number]>
 		SkillName.PolishingHammer,
 		86,
 		[
-			[TraitName.Never, 640],
-			[TraitName.PictomancyMasteryIV, 680],
+			["NEVER", 640],
+			["PICTOMANCY_MASTERY_IV", 680],
 		],
 		2.1,
 	],
@@ -1110,17 +1110,16 @@ makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
 		// Since this fork is hacky we just ignore this case for now.
 		state.resources.get(ResourceType.StarryMuse).gain(1);
 		// Technically, hyperphantasia is gained on a delay, but whatever
-		if (state.hasTraitUnlocked(TraitName.EnhancedPictomancy)) {
+		if (state.hasTraitUnlocked("ENHANCED_PICTOMANCY")) {
 			state.resources.get(ResourceType.Hyperphantasia).gain(5);
 			state.resources.get(ResourceType.Inspiration).gain(1);
 
-			const hpDuration = (
-				getResourceInfo('PCT', ResourceType.Hyperphantasia) as ResourceInfo
-			).maxTimeout;
+			const hpDuration = (getResourceInfo("PCT", ResourceType.Hyperphantasia) as ResourceInfo)
+				.maxTimeout;
 			state.enqueueResourceDrop(ResourceType.Hyperphantasia, hpDuration);
 			state.enqueueResourceDrop(ResourceType.Inspiration, hpDuration);
 		}
-		if (state.hasTraitUnlocked(TraitName.EnhancedPictomancyV)) {
+		if (state.hasTraitUnlocked("ENHANCED_PICTOMANCY_V")) {
 			state.resources.get(ResourceType.Starstruck).gain(1);
 			state.enqueueResourceDrop(ResourceType.Starstruck);
 		}
@@ -1131,7 +1130,7 @@ makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.LandscapeCanvas),
 });
 
-makeResourceAbility('PCT', SkillName.TemperaCoat, 10, ResourceType.cd_TemperaCoat, {
+makeResourceAbility("PCT", SkillName.TemperaCoat, 10, ResourceType.cd_TemperaCoat, {
 	rscType: ResourceType.TemperaCoat,
 	replaceIf: [
 		{
@@ -1219,7 +1218,7 @@ makeAbility_PCT(SkillName.TemperaGrassaPop, 10, ResourceType.cd_TemperaPop, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
 });
 
-makeResourceAbility('PCT', SkillName.Smudge, 20, ResourceType.cd_Smudge, {
+makeResourceAbility("PCT", SkillName.Smudge, 20, ResourceType.cd_Smudge, {
 	rscType: ResourceType.Smudge,
 	applicationDelay: 0, // instant (buff application)
 	cooldown: 20,

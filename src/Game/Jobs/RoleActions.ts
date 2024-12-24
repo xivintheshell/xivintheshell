@@ -6,8 +6,8 @@ import {
 	HEALER_JOBS,
 	ALL_JOBS,
 	JOBS,
-} from "../Constants/Common";
-import { SkillName, ResourceType, TraitName, WarningType, TankLBResourceType } from "../Common";
+} from "../Data/Jobs";
+import { SkillName, ResourceType, WarningType, TankLBResourceType } from "../Common";
 import { makeAbility, makeLimitBreak, makeResourceAbility, makeSpell } from "../Skills";
 import { DoTBuff, EventTag, makeResource } from "../Resources";
 import type { GameState } from "../GameState";
@@ -50,7 +50,7 @@ makeResourceAbility(TANK_JOBS, SkillName.Reprisal, 22, ResourceType.cd_Reprisal,
 	rscType: ResourceType.Reprisal,
 	applicationDelay: 0.62,
 	cooldown: 60,
-	duration: (state) => (state.hasTraitUnlocked(TraitName.EnhancedReprisal) && 15) || 10,
+	duration: (state) => (state.hasTraitUnlocked("ENHANCED_REPRISAL") && 15) || 10,
 	assetPath: "Role/Reprisal.png",
 });
 
@@ -61,7 +61,7 @@ makeResourceAbility(MELEE_JOBS, SkillName.Feint, 22, ResourceType.cd_Feint, {
 	rscType: ResourceType.Feint,
 	applicationDelay: 0.537,
 	cooldown: 90,
-	duration: (state) => (state.hasTraitUnlocked(TraitName.EnhancedFeint) && 15) || 10,
+	duration: (state) => (state.hasTraitUnlocked("ENHANCED_FEINT") && 15) || 10,
 	assetPath: "Role/Feint.png",
 });
 
@@ -72,7 +72,7 @@ makeResourceAbility(CASTER_JOBS, SkillName.Addle, 8, ResourceType.cd_Addle, {
 	rscType: ResourceType.Addle,
 	applicationDelay: 0.621, // delayed
 	cooldown: 90,
-	duration: (state) => (state.hasTraitUnlocked(TraitName.EnhancedAddle) && 15) || 10,
+	duration: (state) => (state.hasTraitUnlocked("ENHANCED_ADDLE") && 15) || 10,
 	assetPath: "Role/Addle.png",
 });
 

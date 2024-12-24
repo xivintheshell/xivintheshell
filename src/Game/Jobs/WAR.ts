@@ -1,5 +1,5 @@
 import { controller } from "../../Controller/Controller";
-import { LevelSync, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { LevelSync, ResourceType, SkillName, WarningType } from "../Common";
 import {
 	WARBuffTypes,
 	WARCooldownType,
@@ -7,8 +7,8 @@ import {
 	WARResourceType,
 	WARSkillName,
 	WARTrackingType,
-	WARTraitName,
 } from "../Constants/WAR";
+import { TraitKey } from "../Data/Traits";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
@@ -36,7 +36,7 @@ const makeWARResource = (
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
-	makeResource('WAR', rsc, maxValue, params ?? {});
+	makeResource("WAR", rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
@@ -104,7 +104,7 @@ export class WARState extends GameState {
 		super(config);
 
 		// Enhanced Onslaught adds an additional charge
-		if (this.hasTraitUnlocked(WARTraitName.EnhancedOnslaught)) {
+		if (this.hasTraitUnlocked("ENHANCED_ONSLAUGHT")) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Onslaught, 30, 3, 3));
 		}
 
@@ -158,7 +158,7 @@ export class WARState extends GameState {
 	}
 
 	gainProc(proc: WARResourceType, amount?: number) {
-		const duration = (getResourceInfo('WAR', proc) as ResourceInfo).maxTimeout;
+		const duration = (getResourceInfo("WAR", proc) as ResourceInfo).maxTimeout;
 		if (this.hasResourceAvailable(proc)) {
 			if (proc === WARResourceType.BurgeoningFury) {
 				this.resources.get(proc).gain(1);
@@ -174,9 +174,8 @@ export class WARState extends GameState {
 
 	gainSurgingTempest(duration: number) {
 		const resource = this.resources.get(ResourceType.SurgingTempest);
-		const maxDuration = (
-			getResourceInfo('WAR', ResourceType.SurgingTempest) as ResourceInfo
-		).maxTimeout;
+		const maxDuration = (getResourceInfo("WAR", ResourceType.SurgingTempest) as ResourceInfo)
+			.maxTimeout;
 		const newDuration = (resource.pendingChange?.timeTillEvent ?? 0.0) + duration;
 		resource.overrideTimer(this, newDuration >= maxDuration ? maxDuration : newDuration);
 	}
@@ -210,9 +209,9 @@ const makeWeaponskill_WAR = (
 		assetPath?: string;
 		replaceIf?: ConditionalSkillReplace<WARState>[];
 		startOnHotbar?: boolean;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		combo?: {
-			potency: number | Array<[TraitName, number]>;
+			potency: number | Array<[TraitKey, number]>;
 			resource: WARTrackingType;
 			resourceValue: number;
 		};
@@ -234,7 +233,7 @@ const makeWeaponskill_WAR = (
 		(state) => {
 			if (INNER_RELEASE_GCDS.includes(name)) {
 				if (state.tryConsumeResource(ResourceType.InnerRelease)) {
-					if (state.hasTraitUnlocked(TraitName.EnhancedInnerRelease)) {
+					if (state.hasTraitUnlocked("ENHANCED_INNER_RELEASE")) {
 						state.gainProc(ResourceType.BurgeoningFury);
 						if (state.hasResourceAvailable(ResourceType.BurgeoningFury, 3)) {
 							state.gainProc(ResourceType.Wrathful);
@@ -248,7 +247,7 @@ const makeWeaponskill_WAR = (
 	const onApplication: EffectFn<WARState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyMod: PotencyModifierFn<WARState> =
 		params.jobPotencyModifiers ?? ((state) => []);
-	return makeWeaponskill('WAR', name, unlockLevel, {
+	return makeWeaponskill("WAR", name, unlockLevel, {
 		...params,
 		onConfirm: onConfirm,
 		onApplication: onApplication,
@@ -262,7 +261,7 @@ const makeWeaponskill_WAR = (
 				mods.push(
 					makeComboModifier(
 						getBasePotency(state, params.combo.potency) -
-						getBasePotency(state, params.potency),
+							getBasePotency(state, params.potency),
 					),
 				);
 			}
@@ -287,7 +286,7 @@ const makeAbility_WAR = (
 	params: {
 		autoUpgrade?: SkillAutoReplace;
 		requiresCombat?: boolean;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<WARState>[];
 		highlightIf?: StatePredicate<WARState>;
 		startOnHotbar?: boolean;
@@ -302,7 +301,7 @@ const makeAbility_WAR = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<WARState> => {
-	return makeAbility('WAR', name, unlockLevel, cdName, {
+	return makeAbility("WAR", name, unlockLevel, cdName, {
 		...params,
 		onConfirm: params.onConfirm,
 		jobPotencyModifiers: (state) => {
@@ -322,24 +321,24 @@ makeWeaponskill_WAR(WARSkillName.Tomahawk, 15, {
 
 makeWeaponskill_WAR(SkillName.HeavySwing, 1, {
 	potency: [
-		[TraitName.Never, 150],
-		[TraitName.MeleeMasteryTank, 200],
-		[TraitName.MeleeMasteryIITank, 220],
+		["NEVER", 150],
+		["MELEE_MASTERY_TANK", 200],
+		["MELEE_MASTERY_II_TANK", 220],
 	],
 	applicationDelay: 0.53,
 });
 
 makeWeaponskill_WAR(SkillName.Maim, 4, {
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.MeleeMasteryTank, 150],
-		[TraitName.MeleeMasteryIITank, 190],
+		["NEVER", 100],
+		["MELEE_MASTERY_TANK", 150],
+		["MELEE_MASTERY_II_TANK", 190],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 250],
-			[TraitName.MeleeMasteryTank, 300],
-			[TraitName.MeleeMasteryIITank, 340],
+			["NEVER", 250],
+			["MELEE_MASTERY_TANK", 300],
+			["MELEE_MASTERY_II_TANK", 340],
 		],
 		resource: WARTrackingType.StormCombo,
 		resourceValue: 1,
@@ -355,15 +354,15 @@ makeWeaponskill_WAR(SkillName.Maim, 4, {
 
 makeWeaponskill_WAR(SkillName.StormsPath, 26, {
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.MeleeMasteryTank, 160],
-		[TraitName.MeleeMasteryIITank, 200],
+		["NEVER", 100],
+		["MELEE_MASTERY_TANK", 160],
+		["MELEE_MASTERY_II_TANK", 200],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 380],
-			[TraitName.MeleeMasteryTank, 440],
-			[TraitName.MeleeMasteryIITank, 480],
+			["NEVER", 380],
+			["MELEE_MASTERY_TANK", 440],
+			["MELEE_MASTERY_II_TANK", 480],
 		],
 		resource: WARTrackingType.StormCombo,
 		resourceValue: 2,
@@ -379,15 +378,15 @@ makeWeaponskill_WAR(SkillName.StormsPath, 26, {
 
 makeWeaponskill_WAR(SkillName.StormsEye, 50, {
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.MeleeMasteryTank, 160],
-		[TraitName.MeleeMasteryIITank, 200],
+		["NEVER", 100],
+		["MELEE_MASTERY_TANK", 160],
+		["MELEE_MASTERY_II_TANK", 200],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 380],
-			[TraitName.MeleeMasteryTank, 440],
-			[TraitName.MeleeMasteryIITank, 480],
+			["NEVER", 380],
+			["MELEE_MASTERY_TANK", 440],
+			["MELEE_MASTERY_II_TANK", 480],
 		],
 		resource: WARTrackingType.StormCombo,
 		resourceValue: 2,
@@ -433,8 +432,8 @@ function reduceInfuriateCooldown(state: WARState) {
 
 makeWeaponskill_WAR(SkillName.FellCleave, 54, {
 	potency: [
-		[TraitName.Never, 520],
-		[TraitName.MeleeMasteryIITank, 580],
+		["NEVER", 520],
+		["MELEE_MASTERY_II_TANK", 580],
 	],
 	applicationDelay: 0.62,
 	validateAttempt: (state) => {
@@ -528,7 +527,7 @@ makeWeaponskill_WAR(SkillName.PrimalRend, 90, {
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.PrimalRendReady),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.PrimalRendReady);
-		if (state.hasTraitUnlocked(WARTraitName.EnhancedPrimalRend)) {
+		if (state.hasTraitUnlocked("ENHANCED_PRIMAL_REND")) {
 			state.gainProc(WARResourceType.PrimalRuinationReady);
 		}
 	},
@@ -577,7 +576,7 @@ makeAbility_WAR(SkillName.Infuriate, 50, ResourceType.cd_Infuriate, {
 	maxCharges: 2,
 	onApplication: (state) => {
 		state.gainBeastGauge(50);
-		if (state.hasTraitUnlocked(WARTraitName.NascentChaos)) {
+		if (state.hasTraitUnlocked("NASCENT_CHAOS")) {
 			state.gainProc(ResourceType.NascentChaos);
 		}
 	},
@@ -644,30 +643,30 @@ makeAbility_WAR(WARSkillName.Orogeny, 86, WARCooldownType.cd_Upheaval, {
 });
 
 // TODO: when boss attacks are tracked, apply Vengance/Damnation's phys. reflection
-makeResourceAbility('WAR', SkillName.Vengeance, 38, ResourceType.cd_Vengeance, {
+makeResourceAbility("WAR", SkillName.Vengeance, 38, ResourceType.cd_Vengeance, {
 	rscType: WARResourceType.Vengeance,
-	autoUpgrade: { trait: TraitName.VengeanceMastery, otherSkill: SkillName.Damnation },
+	autoUpgrade: { trait: "VENGEANCE_MASTERY", otherSkill: SkillName.Damnation },
 	cooldown: 120,
 	applicationDelay: 0.62,
 });
 
-makeResourceAbility('WAR', SkillName.Damnation, 92, ResourceType.cd_Vengeance, {
+makeResourceAbility("WAR", SkillName.Damnation, 92, ResourceType.cd_Vengeance, {
 	rscType: WARResourceType.Damnation,
-	autoDowngrade: { trait: TraitName.VengeanceMastery, otherSkill: SkillName.Vengeance },
+	autoDowngrade: { trait: "VENGEANCE_MASTERY", otherSkill: SkillName.Vengeance },
 	cooldown: 120,
 	applicationDelay: 0.62,
 });
 
-makeResourceAbility('WAR', SkillName.RawIntuition, 56, ResourceType.cd_RawIntuition, {
+makeResourceAbility("WAR", SkillName.RawIntuition, 56, ResourceType.cd_RawIntuition, {
 	rscType: WARResourceType.RawIntuition,
-	autoUpgrade: { trait: TraitName.RawIntuitionMastery, otherSkill: SkillName.BloodWhetting },
+	autoUpgrade: { trait: "RAW_INTUITION_MASTERY", otherSkill: SkillName.BloodWhetting },
 	cooldown: 25,
 	applicationDelay: 0.45,
 });
 
-makeResourceAbility('WAR', SkillName.BloodWhetting, 82, ResourceType.cd_RawIntuition, {
+makeResourceAbility("WAR", SkillName.BloodWhetting, 82, ResourceType.cd_RawIntuition, {
 	rscType: WARResourceType.Bloodwhetting,
-	autoDowngrade: { trait: TraitName.RawIntuitionMastery, otherSkill: SkillName.RawIntuition },
+	autoDowngrade: { trait: "RAW_INTUITION_MASTERY", otherSkill: SkillName.RawIntuition },
 	onApplication: (state: WARState) => {
 		state.gainProc(WARBuffTypes.StemTheFlow);
 		state.gainProc(WARBuffTypes.StemTheTide);
@@ -676,10 +675,10 @@ makeResourceAbility('WAR', SkillName.BloodWhetting, 82, ResourceType.cd_RawIntui
 	applicationDelay: 0.45,
 });
 
-makeAbility('WAR', SkillName.NascentFlash, 76, ResourceType.cd_RawIntuition, {
+makeAbility("WAR", SkillName.NascentFlash, 76, ResourceType.cd_RawIntuition, {
 	onApplication: (state: WARState) => {
 		let duration = 6;
-		if (state.hasTraitUnlocked(WARTraitName.EnhancedNascentFlash)) {
+		if (state.hasTraitUnlocked("ENHANCED_NASCENT_FLASH")) {
 			duration = 8;
 		}
 		state.resources.get(ResourceType.NascentFlash).gain(1);
@@ -690,29 +689,29 @@ makeAbility('WAR', SkillName.NascentFlash, 76, ResourceType.cd_RawIntuition, {
 	applicationDelay: 0.45,
 });
 
-makeResourceAbility('WAR', SkillName.Holmgang, 45, ResourceType.cd_Holmgang, {
+makeResourceAbility("WAR", SkillName.Holmgang, 45, ResourceType.cd_Holmgang, {
 	rscType: ResourceType.Holmgang,
 	cooldown: 240,
 	applicationDelay: 0.45,
 });
 
-makeResourceAbility('WAR', SkillName.ThrillOfBattle, 30, ResourceType.cd_ThrillOfBattle, {
+makeResourceAbility("WAR", SkillName.ThrillOfBattle, 30, ResourceType.cd_ThrillOfBattle, {
 	rscType: ResourceType.ThrillOfBattle,
 	cooldown: 90,
 	applicationDelay: 0.62,
 });
 
-makeAbility('WAR', SkillName.Equilibrium, 58, ResourceType.cd_Equilibrium, {
+makeAbility("WAR", SkillName.Equilibrium, 58, ResourceType.cd_Equilibrium, {
 	cooldown: 60,
 	applicationDelay: 0.62,
 	onApplication: (state: WARState) => {
-		if (state.hasTraitUnlocked(TraitName.EnhancedEquilibrium)) {
+		if (state.hasTraitUnlocked("ENHANCED_EQUILIBRIUM")) {
 			state.gainProc(WARResourceType.Equilibrium);
 		}
 	},
 });
 
-makeResourceAbility('WAR', SkillName.ShakeItOff, 68, ResourceType.cd_ShakeItOff, {
+makeResourceAbility("WAR", SkillName.ShakeItOff, 68, ResourceType.cd_ShakeItOff, {
 	rscType: ResourceType.ShakeItOff,
 	cooldown: 90,
 	onApplication: (state: WARState, node) => {
@@ -730,7 +729,7 @@ makeResourceAbility('WAR', SkillName.ShakeItOff, 68, ResourceType.cd_ShakeItOff,
 	applicationDelay: 0,
 });
 
-makeAbility('WAR', SkillName.Defiance, 10, ResourceType.cd_Defiance, {
+makeAbility("WAR", SkillName.Defiance, 10, ResourceType.cd_Defiance, {
 	cooldown: 2,
 	maxCharges: 1,
 	applicationDelay: 0,
@@ -749,7 +748,7 @@ makeAbility('WAR', SkillName.Defiance, 10, ResourceType.cd_Defiance, {
 	},
 });
 
-makeAbility('WAR', SkillName.ReleaseDefiance, 10, ResourceType.cd_ReleaseDefiance, {
+makeAbility("WAR", SkillName.ReleaseDefiance, 10, ResourceType.cd_ReleaseDefiance, {
 	startOnHotbar: false,
 	cooldown: 1,
 	maxCharges: 1,

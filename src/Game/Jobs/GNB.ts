@@ -1,8 +1,7 @@
 // Skill and state declarations for GNB
 
 import { controller } from "../../Controller/Controller";
-import { ShellJob } from "../../Controller/Common";
-import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { BuffType, ResourceType, SkillName, WarningType } from "../Common";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -26,6 +25,7 @@ import { GameState, PlayerState } from "../GameState";
 import { makeResource, CoolDown, Event, Resource } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
+import { TraitKey } from "../Data/Traits";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 const makeGNBResource = (
@@ -33,7 +33,7 @@ const makeGNBResource = (
 	maxValue: number,
 	params?: { timeout?: number; default?: number; warningOnTimeout?: WarningType },
 ) => {
-	makeResource(ShellJob.GNB, rsc, maxValue, params ?? {});
+	makeResource("GNB", rsc, maxValue, params ?? {});
 };
 
 makeGNBResource(ResourceType.PowderGauge, 3);
@@ -95,7 +95,7 @@ export class GNBState extends GameState {
 		super(config);
 
 		// Enhanced Aurora adds an additional charge
-		const auroraStacks = this.hasTraitUnlocked(TraitName.EnhancedAurora) ? 2 : 1;
+		const auroraStacks = this.hasTraitUnlocked("ENHANCED_AURORA") ? 2 : 1;
 		[new CoolDown(ResourceType.cd_Aurora, 60, auroraStacks, auroraStacks)].forEach((cd) =>
 			this.cooldowns.set(cd),
 		);
@@ -107,7 +107,7 @@ export class GNBState extends GameState {
 			new CoolDown(ResourceType.cd_GnashingFang, this.config.adjustedSksGCD(30), 1, 1),
 		);
 
-		const powderGaugeMax = this.hasTraitUnlocked(TraitName.CartridgeChargeII) ? 3 : 2;
+		const powderGaugeMax = this.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2;
 		this.resources.set(new Resource(ResourceType.PowderGauge, powderGaugeMax, 0));
 
 		this.registerRecurringEvents([
@@ -192,7 +192,7 @@ export class GNBState extends GameState {
 
 	// gain a cart
 	gainCartridge(carts: number) {
-		const maxCarts = this.hasTraitUnlocked(TraitName.CartridgeChargeII) ? 3 : 2;
+		const maxCarts = this.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2;
 		if (this.resources.get(ResourceType.PowderGauge).availableAmount() + carts > maxCarts) {
 			controller.reportWarning(WarningType.CartridgeOvercap);
 		}
@@ -226,10 +226,10 @@ const makeWeaponskill_GNB = (
 		assetPath?: string;
 		replaceIf?: ConditionalSkillReplace<GNBState>[];
 		startOnHotbar?: boolean;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		recastTime?: number | ResourceCalculationFn<GNBState>;
 		combo?: {
-			potency: number | Array<[TraitName, number]>;
+			potency: number | Array<[TraitKey, number]>;
 			resource: ResourceType;
 			resourceValue: number;
 		};
@@ -261,7 +261,7 @@ const makeWeaponskill_GNB = (
 	const onApplication: EffectFn<GNBState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyMod: PotencyModifierFn<GNBState> =
 		params.jobPotencyModifiers ?? ((state) => []);
-	return makeWeaponskill(ShellJob.GNB, name, unlockLevel, {
+	return makeWeaponskill("GNB", name, unlockLevel, {
 		...params,
 		onConfirm: onConfirm,
 		onApplication: onApplication,
@@ -295,7 +295,7 @@ const makeAbility_GNB = (
 	params: {
 		autoUpgrade?: SkillAutoReplace;
 		requiresCombat?: boolean;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<GNBState>[];
 		highlightIf?: StatePredicate<GNBState>;
 		falloff?: number;
@@ -310,7 +310,7 @@ const makeAbility_GNB = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<GNBState> => {
-	return makeAbility(ShellJob.GNB, name, unlockLevel, cdName, {
+	return makeAbility("GNB", name, unlockLevel, cdName, {
 		...params,
 		onConfirm: params.onConfirm,
 		jobPotencyModifiers: (state) => {
@@ -405,24 +405,24 @@ makeWeaponskill_GNB(SkillName.LightningShock, 15, {
 
 makeWeaponskill_GNB(SkillName.KeenEdge, 1, {
 	potency: [
-		[TraitName.Never, 150],
-		[TraitName.MeleeMasteryTank, 200],
-		[TraitName.MeleeMasteryIITank, 300],
+		["NEVER", 150],
+		["MELEE_MASTERY_TANK", 200],
+		["MELEE_MASTERY_II_TANK", 300],
 	],
 	applicationDelay: 0.89,
 });
 
 makeWeaponskill_GNB(SkillName.BrutalShell, 4, {
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.MeleeMasteryTank, 160],
-		[TraitName.MeleeMasteryIITank, 240],
+		["NEVER", 100],
+		["MELEE_MASTERY_TANK", 160],
+		["MELEE_MASTERY_II_TANK", 240],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 240],
-			[TraitName.MeleeMasteryTank, 300],
-			[TraitName.MeleeMasteryIITank, 380],
+			["NEVER", 240],
+			["MELEE_MASTERY_TANK", 300],
+			["MELEE_MASTERY_II_TANK", 380],
 		],
 		resource: ResourceType.GNBComboTracker,
 		resourceValue: 1,
@@ -440,15 +440,15 @@ makeWeaponskill_GNB(SkillName.BrutalShell, 4, {
 
 makeWeaponskill_GNB(SkillName.SolidBarrel, 26, {
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.MeleeMasteryTank, 140],
-		[TraitName.MeleeMasteryIITank, 240],
+		["NEVER", 100],
+		["MELEE_MASTERY_TANK", 140],
+		["MELEE_MASTERY_II_TANK", 240],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 320],
-			[TraitName.MeleeMasteryTank, 360],
-			[TraitName.MeleeMasteryIITank, 460],
+			["NEVER", 320],
+			["MELEE_MASTERY_TANK", 360],
+			["MELEE_MASTERY_II_TANK", 460],
 		],
 		resource: ResourceType.GNBComboTracker,
 		resourceValue: 2,
@@ -490,14 +490,14 @@ makeWeaponskill_GNB(SkillName.DemonSlaughter, 40, {
 
 makeWeaponskill_GNB(SkillName.BurstStrike, 30, {
 	potency: [
-		[TraitName.Never, 400],
-		[TraitName.MeleeMasteryIITank, 460],
+		["NEVER", 400],
+		["MELEE_MASTERY_II_TANK", 460],
 	],
 	applicationDelay: 0.71,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.PowderGauge),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.PowderGauge);
-		if (state.hasTraitUnlocked(TraitName.EnhancedContinuation)) {
+		if (state.hasTraitUnlocked("ENHANCED_CONTINUATION")) {
 			state.refreshBuff(ResourceType.ReadyToBlast, 0);
 		}
 	},
@@ -511,7 +511,7 @@ makeWeaponskill_GNB(SkillName.FatedCircle, 72, {
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.PowderGauge),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.PowderGauge);
-		if (state.hasTraitUnlocked(TraitName.EnhancedContinuationII)) {
+		if (state.hasTraitUnlocked("ENHANCED_CONTINUATION_II")) {
 			state.refreshBuff(ResourceType.ReadyToRaze, 0);
 		}
 	},
@@ -523,9 +523,9 @@ makeAbility_GNB(SkillName.Bloodfest, 76, ResourceType.cd_Bloodfest, {
 	cooldown: 120,
 	maxCharges: 1,
 	onConfirm: (state) => {
-		const maxCarts = state.hasTraitUnlocked(TraitName.CartridgeChargeII) ? 3 : 2;
+		const maxCarts = state.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2;
 		state.gainCartridge(maxCarts);
-		if (state.hasTraitUnlocked(TraitName.EnhancedBloodfest)) {
+		if (state.hasTraitUnlocked("ENHANCED_BLOODFEST")) {
 			state.refreshBuff(ResourceType.ReadyToReign, 0);
 		}
 	},
@@ -571,8 +571,8 @@ makeWeaponskill_GNB(SkillName.SonicBreak, 54, {
 makeWeaponskill_GNB(SkillName.GnashingFang, 60, {
 	replaceIf: [savageClawCondition, wickedTalonCondition],
 	potency: [
-		[TraitName.Never, 380],
-		[TraitName.MeleeMasteryIITank, 500],
+		["NEVER", 380],
+		["MELEE_MASTERY_II_TANK", 500],
 	],
 	applicationDelay: 0.62,
 	recastTime: (state) => state.config.adjustedSksGCD(),
@@ -596,8 +596,8 @@ makeWeaponskill_GNB(SkillName.SavageClaw, 60, {
 	startOnHotbar: false,
 	replaceIf: [gnashingFangCondition, wickedTalonCondition],
 	potency: [
-		[TraitName.Never, 460],
-		[TraitName.MeleeMasteryIITank, 560],
+		["NEVER", 460],
+		["MELEE_MASTERY_II_TANK", 560],
 	],
 	applicationDelay: 0.62,
 	validateAttempt: (state) =>
@@ -613,8 +613,8 @@ makeWeaponskill_GNB(SkillName.WickedTalon, 60, {
 	startOnHotbar: false,
 	replaceIf: [gnashingFangCondition, savageClawCondition],
 	potency: [
-		[TraitName.Never, 540],
-		[TraitName.MeleeMasteryIITank, 620],
+		["NEVER", 540],
+		["MELEE_MASTERY_II_TANK", 620],
 	],
 	applicationDelay: 1.16,
 	validateAttempt: (state) =>
@@ -756,7 +756,7 @@ makeAbility_GNB(SkillName.EyeGouge, 70, ResourceType.cd_EyeGouge, {
 
 makeAbility_GNB(SkillName.DangerZone, 18, ResourceType.cd_DangerZone, {
 	autoUpgrade: {
-		trait: TraitName.DangerZoneMastery,
+		trait: "DANGER_ZONE_MASTERY",
 		otherSkill: SkillName.BlastingZone,
 	},
 	applicationDelay: 0.62,
@@ -804,7 +804,7 @@ makeAbility_GNB(SkillName.Trajectory, 56, ResourceType.cd_Trajectory, {
 
 makeAbility_GNB(SkillName.HeartOfStone, 68, ResourceType.cd_HeartOfStone, {
 	autoUpgrade: {
-		trait: TraitName.HeartOfStoneMastery,
+		trait: "HEART_OF_STONE_MASTERY",
 		otherSkill: SkillName.HeartOfCorundum,
 	},
 	applicationDelay: 0.62,
@@ -843,7 +843,7 @@ makeAbility_GNB(SkillName.Camouflage, 6, ResourceType.cd_Camouflage, {
 
 makeAbility_GNB(SkillName.Nebula, 38, ResourceType.cd_Nebula, {
 	autoUpgrade: {
-		trait: TraitName.NebulaMastery,
+		trait: "NEBULA_MASTERY",
 		otherSkill: SkillName.GreatNebula,
 	},
 	applicationDelay: 0.56,
