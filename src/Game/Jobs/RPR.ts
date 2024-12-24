@@ -250,7 +250,7 @@ export class RPRState extends GameState {
 
 		// Pre-96 gluttony
 		if (skill === SkillName.Gluttony) {
-			if (Traits.hasUnlocked(TraitName.EnhancedGluttony, this.config.level)) {
+			if (this.hasTraitUnlocked(TraitName.EnhancedGluttony)) {
 				this.setTimedResource(ResourceType.Executioner, 2);
 				return;
 			}
@@ -318,7 +318,7 @@ export class RPRState extends GameState {
 	enterEnshroud() {
 		if (this.hasResourceAvailable(ResourceType.IdealHost))
 			this.resources.get(ResourceType.IdealHost).consume(1);
-		if (Traits.hasUnlocked(TraitName.EnhancedEnshroud, this.config.level))
+		if (this.hasTraitUnlocked(TraitName.EnhancedEnshroud))
 			this.setTimedResource(ResourceType.Oblatio, 1);
 		this.setTimedResource(ResourceType.LemureShroud, 5);
 	}
@@ -992,7 +992,7 @@ makeResourceAbility(ShellJob.RPR, SkillName.ArcaneCircle, 72, ResourceType.cd_Ar
 	maxCharges: 1,
 	potency: 0,
 	onApplication: (state: RPRState) => {
-		if (Traits.hasUnlocked(TraitName.EnhancedArcaneCircle, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedArcaneCircle)) {
 			state.setTimedResource(ResourceType.CircleOfSacrifice, 1);
 			state.setTimedResource(ResourceType.BloodsownCircle, 1);
 		}
@@ -1107,7 +1107,7 @@ makeRPRAbility(SkillName.HellsIngress, 20, ResourceType.cd_IngressEgress, {
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	onConfirm: (state) => {
 		state.resources.get(ResourceType.HellsIngressUsed).gain(1);
-		if (Traits.hasUnlocked(TraitName.Hellsgate, state.config.level))
+		if (state.hasTraitUnlocked(TraitName.Hellsgate))
 			state.setTimedResource(ResourceType.Threshold, 1);
 		state.setTimedResource(ResourceType.EnhancedHarpe, 1);
 	},
@@ -1126,7 +1126,7 @@ makeRPRAbility(SkillName.HellsEgress, 20, ResourceType.cd_IngressEgress, {
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.HellsIngressUsed);
-		if (Traits.hasUnlocked(TraitName.Hellsgate, state.config.level))
+		if (state.hasTraitUnlocked(TraitName.Hellsgate))
 			state.setTimedResource(ResourceType.Threshold, 1);
 		state.setTimedResource(ResourceType.EnhancedHarpe, 1);
 	},

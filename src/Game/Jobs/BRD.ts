@@ -23,7 +23,6 @@ import {
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 	Skill,
 } from "../Skills";
-import { Traits } from "../Traits";
 
 const makeBRDResource = (
 	rsc: ResourceType,
@@ -79,11 +78,11 @@ export class BRDState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
-		if (!Traits.hasUnlocked(TraitName.EnhancedBloodletter, this.config.level)) {
+		if (!this.hasTraitUnlocked(TraitName.EnhancedBloodletter)) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_HeartbreakShot, 15, 2, 2));
 		}
 
-		if (!Traits.hasUnlocked(TraitName.EnhancedTroubadour, this.config.level)) {
+		if (!this.hasTraitUnlocked(TraitName.EnhancedTroubadour)) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Troubadour, 120, 1, 1));
 		}
 
@@ -199,7 +198,7 @@ export class BRDState extends GameState {
 				break;
 		}
 
-		if (Traits.hasUnlocked(TraitName.SoulVoice, this.config.level)) {
+		if (this.hasTraitUnlocked(TraitName.SoulVoice)) {
 			if (this.hasResourceAvailable(ResourceType.SoulVoice, 100)) {
 				controller.reportWarning(WarningType.SoulVoiceOvercap);
 			}
@@ -232,7 +231,7 @@ export class BRDState extends GameState {
 			this.gainStatus(ResourceType.ArmysMuse);
 		}
 
-		if (Traits.hasUnlocked(TraitName.MinstrelsCoda, this.config.level)) {
+		if (this.hasTraitUnlocked(TraitName.MinstrelsCoda)) {
 			const coda =
 				newSong === ResourceType.WanderersMinuet
 					? ResourceType.WanderersCoda
@@ -276,7 +275,7 @@ export class BRDState extends GameState {
 				break;
 			case ResourceType.ArmysPaeon:
 				// Cache how much repertoire is currently held for when the next song applies
-				if (Traits.hasUnlocked(TraitName.EnhancedArmysPaeon, this.config.level)) {
+				if (this.hasTraitUnlocked(TraitName.EnhancedArmysPaeon)) {
 					const repertoire = this.resources
 						.get(ResourceType.Repertoire)
 						.availableAmount();
@@ -522,7 +521,7 @@ dotAppliers.forEach((props) => {
 			}),
 		onApplication: (state, node) => {
 			state.applyDoT(props.dotName, node);
-			if (Traits.hasUnlocked(TraitName.BiteMasteryII, state.config.level)) {
+			if (state.hasTraitUnlocked(TraitName.BiteMasteryII)) {
 				state.maybeGainProc(ResourceType.HawksEye, 0.35);
 			}
 		},
@@ -543,7 +542,7 @@ makeWeaponskill_BRD(SkillName.IronJaws, 56, {
 				modifiers: state.getJobPotencyModifiers(SkillName.IronJaws),
 			});
 		});
-		if (Traits.hasUnlocked(TraitName.BiteMasteryII, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.BiteMasteryII)) {
 			state.maybeGainProc(ResourceType.HawksEye, 0.35);
 		}
 	},
@@ -553,10 +552,10 @@ makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
 	potency: (state) => {
 		const soulVoice = state.resources.get(ResourceType.SoulVoice);
 		const minRequirement = 20;
-		const minPotency = Traits.hasUnlocked(TraitName.RangedMastery, state.config.level)
+		const minPotency = state.hasTraitUnlocked(TraitName.RangedMastery)
 			? 120
 			: 100;
-		const maxPotency = Traits.hasUnlocked(TraitName.RangedMastery, state.config.level)
+		const maxPotency = state.hasTraitUnlocked(TraitName.RangedMastery)
 			? 600
 			: 500;
 		const soulVoiceBonus =
@@ -568,7 +567,7 @@ makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
 	applicationDelay: 1.07,
 	onConfirm: (state) => {
 		if (
-			Traits.hasUnlocked(TraitName.EnhancedApexArrow, state.config.level) &&
+			state.hasTraitUnlocked(TraitName.EnhancedApexArrow) &&
 			state.resources.get(ResourceType.SoulVoice).availableAmount() >= 80
 		) {
 			state.gainStatus(ResourceType.BlastArrowReady);
@@ -695,7 +694,7 @@ makeResourceAbility_BRD(SkillName.Barrage, 38, ResourceType.cd_Barrage, {
 	applicationDelay: 0,
 	cooldown: 120,
 	onConfirm: (state) => {
-		if (Traits.hasUnlocked(TraitName.EnhancedBarrage, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedBarrage)) {
 			state.gainStatus(ResourceType.ResonantArrowReady);
 		}
 	},
@@ -726,7 +725,7 @@ makeResourceAbility_BRD(SkillName.RadiantFinale, 90, ResourceType.cd_RadiantFina
 		state.tryConsumeResource(ResourceType.MagesCoda);
 		state.tryConsumeResource(ResourceType.ArmysCoda);
 
-		if (Traits.hasUnlocked(TraitName.EnhancedRadiantFinale, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedRadiantFinale)) {
 			state.gainStatus(ResourceType.RadiantEncoreReady);
 		}
 	},

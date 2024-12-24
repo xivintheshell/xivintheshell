@@ -29,7 +29,6 @@ import {
 	Spell,
 	StatePredicate,
 } from "../Skills";
-import { Traits } from "../Traits";
 import { GameState, PlayerState } from "../GameState";
 import {
 	getResourceInfo,
@@ -82,16 +81,16 @@ export class BLMState extends GameState {
 		this.thunderTickOffset = this.nonProcRng() * 3.0;
 
 		const polyglotStacks =
-			(Traits.hasUnlocked(TraitName.EnhancedPolyglotII, this.config.level) && 3) ||
-			(Traits.hasUnlocked(TraitName.EnhancedPolyglot, this.config.level) && 2) ||
+			(this.hasTraitUnlocked(TraitName.EnhancedPolyglotII) && 3) ||
+			(this.hasTraitUnlocked(TraitName.EnhancedPolyglot) && 2) ||
 			1;
 		this.resources.set(new Resource(ResourceType.Polyglot, polyglotStacks, 0));
 
 		// skill CDs (also a form of resource)
 		const manafontCooldown =
-			(Traits.hasUnlocked(TraitName.EnhancedManafont, this.config.level) && 100) || 180;
+			(this.hasTraitUnlocked(TraitName.EnhancedManafont) && 100) || 180;
 		const swiftcastCooldown =
-			(Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level) && 40) || 60;
+			(this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) && 40) || 60;
 		[
 			new CoolDown(ResourceType.cd_Manafont, manafontCooldown, 1, 1),
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
@@ -203,7 +202,7 @@ export class BLMState extends GameState {
 			}
 			af.gain(numStacksToGain);
 
-			if (Traits.hasUnlocked(TraitName.AspectMasteryV, this.config.level)) {
+			if (this.hasTraitUnlocked(TraitName.AspectMasteryV)) {
 				if (ui.available(3) && uh.available(3)) {
 					paradox.gain(1);
 				}
@@ -216,7 +215,7 @@ export class BLMState extends GameState {
 			}
 			ui.gain(numStacksToGain);
 
-			if (Traits.hasUnlocked(TraitName.AspectMasteryV, this.config.level)) {
+			if (this.hasTraitUnlocked(TraitName.AspectMasteryV)) {
 				if (af.available(3)) {
 					paradox.gain(1);
 				}
@@ -356,9 +355,9 @@ const paraCondition = (state: Readonly<BLMState>) =>
 	state.hasResourceAvailable(ResourceType.Paradox);
 
 const getEnochianModifier = (state: Readonly<BLMState>) =>
-	(Traits.hasUnlocked(TraitName.EnhancedEnochianIV, state.config.level) && 1.32) ||
-	(Traits.hasUnlocked(TraitName.EnhancedEnochianIII, state.config.level) && 1.25) ||
-	(Traits.hasUnlocked(TraitName.EnhancedEnochianII, state.config.level) && 1.15) ||
+	(state.hasTraitUnlocked(TraitName.EnhancedEnochianIV) && 1.32) ||
+	(state.hasTraitUnlocked(TraitName.EnhancedEnochianIII) && 1.25) ||
+	(state.hasTraitUnlocked(TraitName.EnhancedEnochianII) && 1.15) ||
 	1.1;
 
 const makeSpell_BLM = (
@@ -390,9 +389,9 @@ const makeSpell_BLM = (
 			// to avoid improperly spending swift/triple on an already-instant spell.
 			params.baseCastTime === 0 ||
 				(name === SkillName.Despair &&
-					Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level)) ||
+					state.hasTraitUnlocked(TraitName.EnhancedAstralFire)) ||
 				(name === SkillName.Foul &&
-					Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
+					state.hasTraitUnlocked(TraitName.EnhancedFoul)) ||
 				(name === SkillName.Fire3 &&
 					state.hasResourceAvailable(ResourceType.Firestarter)) ||
 				// Consume Swift before Triple.
@@ -440,10 +439,10 @@ const makeSpell_BLM = (
 		isInstantFn: (state) =>
 			// Despair after lvl 100
 			(name === SkillName.Despair &&
-				Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level)) ||
+				state.hasTraitUnlocked(TraitName.EnhancedAstralFire)) ||
 			// Foul after lvl 80
 			(name === SkillName.Foul &&
-				Traits.hasUnlocked(TraitName.EnhancedFoul, state.config.level)) ||
+				state.hasTraitUnlocked(TraitName.EnhancedFoul)) ||
 			// F3P
 			(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter)) ||
 			// Swift
@@ -744,7 +743,7 @@ makeAbility_BLM(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
 		state.resources.get(ResourceType.AstralFire).gain(3);
 		state.resources.get(ResourceType.UmbralHeart).gain(3);
 
-		if (Traits.hasUnlocked(TraitName.AspectMasteryV, state.config.level))
+		if (state.hasTraitUnlocked(TraitName.AspectMasteryV))
 			state.resources.get(ResourceType.Paradox).gain(1);
 
 		state.gainThunderhead();
@@ -808,7 +807,7 @@ makeSpell_BLM(SkillName.Flare, 50, {
 		// +3 AF; refresh enochian
 		state.resources.get(ResourceType.AstralFire).gain(3);
 
-		if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level))
+		if (state.hasTraitUnlocked(TraitName.EnhancedAstralFire))
 			state.resources.get(ResourceType.AstralSoul).gain(3);
 
 		state.startOrRefreshEnochian();
@@ -851,7 +850,7 @@ makeSpell_BLM(SkillName.Fire4, 60, {
 	applicationDelay: 1.159,
 	validateAttempt: (state) => state.getFireStacks() > 0,
 	onConfirm: (state, node) => {
-		if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, state.config.level))
+		if (state.hasTraitUnlocked(TraitName.EnhancedAstralFire))
 			state.resources.get(ResourceType.AstralSoul).gain(1);
 	},
 });

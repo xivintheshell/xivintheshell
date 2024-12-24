@@ -31,7 +31,6 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import { Traits } from "../Traits";
 
 const makeWARResource = (
 	rsc: ResourceType,
@@ -106,7 +105,7 @@ export class WARState extends GameState {
 		super(config);
 
 		// Enhanced Onslaught adds an additional charge
-		if (Traits.hasUnlocked(WARTraitName.EnhancedOnslaught, config.level)) {
+		if (this.hasTraitUnlocked(WARTraitName.EnhancedOnslaught)) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Onslaught, 30, 3, 3));
 		}
 
@@ -235,7 +234,7 @@ const makeWeaponskill_WAR = (
 		(state) => {
 			if (INNER_RELEASE_GCDS.includes(name)) {
 				if (state.tryConsumeResource(ResourceType.InnerRelease)) {
-					if (Traits.hasUnlocked(TraitName.EnhancedInnerRelease, state.config.level)) {
+					if (state.hasTraitUnlocked(TraitName.EnhancedInnerRelease)) {
 						state.gainProc(ResourceType.BurgeoningFury);
 						if (state.hasResourceAvailable(ResourceType.BurgeoningFury, 3)) {
 							state.gainProc(ResourceType.Wrathful);
@@ -524,7 +523,7 @@ makeWeaponskill_WAR(SkillName.PrimalRend, 90, {
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.PrimalRendReady),
 	onConfirm: (state) => {
 		state.tryConsumeResource(ResourceType.PrimalRendReady);
-		if (Traits.hasUnlocked(WARTraitName.EnhancedPrimalRend, state.config.level)) {
+		if (state.hasTraitUnlocked(WARTraitName.EnhancedPrimalRend)) {
 			state.gainProc(WARResourceType.PrimalRuinationReady);
 		}
 	},
@@ -571,7 +570,7 @@ makeAbility_WAR(SkillName.Infuriate, 50, ResourceType.cd_Infuriate, {
 	maxCharges: 2,
 	onApplication: (state) => {
 		state.gainBeastGauge(50);
-		if (Traits.hasUnlocked(WARTraitName.NascentChaos, state.config.level)) {
+		if (state.hasTraitUnlocked(WARTraitName.NascentChaos)) {
 			state.gainProc(ResourceType.NascentChaos);
 		}
 	},
@@ -671,7 +670,7 @@ makeResourceAbility(ShellJob.WAR, SkillName.BloodWhetting, 82, ResourceType.cd_R
 makeAbility(ShellJob.WAR, SkillName.NascentFlash, 76, ResourceType.cd_RawIntuition, {
 	onApplication: (state: WARState) => {
 		let duration = 6;
-		if (Traits.hasUnlocked(WARTraitName.EnhancedNascentFlash, state.config.level)) {
+		if (state.hasTraitUnlocked(WARTraitName.EnhancedNascentFlash)) {
 			duration = 8;
 		}
 		state.resources.get(ResourceType.NascentFlash).gain(1);
@@ -698,7 +697,7 @@ makeAbility(ShellJob.WAR, SkillName.Equilibrium, 58, ResourceType.cd_Equilibrium
 	cooldown: 60,
 	applicationDelay: 0.62,
 	onApplication: (state: WARState) => {
-		if (Traits.hasUnlocked(TraitName.EnhancedEquilibrium, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedEquilibrium)) {
 			state.gainProc(WARResourceType.Equilibrium);
 		}
 	},

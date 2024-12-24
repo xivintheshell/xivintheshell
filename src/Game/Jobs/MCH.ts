@@ -31,7 +31,6 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import { Traits } from "../Traits";
 
 const makeMCHResource = (
 	rsc: ResourceType,
@@ -96,26 +95,26 @@ export class MCHState extends GameState {
 			new CoolDown(ResourceType.cd_Chainsaw, this.config.adjustedSksGCD(60), 1, 1),
 		);
 
-		if (!Traits.hasUnlocked(TraitName.QueensGambit, config.level)) {
+		if (!this.hasTraitUnlocked(TraitName.QueensGambit)) {
 			this.resources.set(new Resource(ResourceType.QueenFinishers, 1, 0));
 			this.resources.set(new Resource(ResourceType.Queen, 6, 0));
 		}
 
-		if (!Traits.hasUnlocked(TraitName.EnhancedReassemble, config.level)) {
+		if (!this.hasTraitUnlocked(TraitName.EnhancedReassemble)) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Reassemble, 55, 1, 1));
 		}
-		if (!Traits.hasUnlocked(TraitName.EnhancedMultiWeapon, config.level)) {
+		if (!this.hasTraitUnlocked(TraitName.EnhancedMultiWeapon)) {
 			this.cooldowns.set(
 				new CoolDown(ResourceType.cd_Drill, this.config.adjustedSksGCD(20), 1, 1),
 			);
 		}
 
-		if (!Traits.hasUnlocked(TraitName.ChargedActionMastery, config.level)) {
+		if (!this.hasTraitUnlocked(TraitName.ChargedActionMastery)) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_DoubleCheck, 30, 2, 2));
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Checkmate, 30, 2, 2));
 		}
 
-		if (!Traits.hasUnlocked(TraitName.EnhancedTactician, this.config.level)) {
+		if (!this.hasTraitUnlocked(TraitName.EnhancedTactician)) {
 			this.cooldowns.set(new CoolDown(ResourceType.cd_Tactician, 120, 1, 1));
 		}
 
@@ -257,7 +256,7 @@ export class MCHState extends GameState {
 		this.tryConsumeResource(ResourceType.Wildfire);
 
 		// Potency stuff
-		const potencyPerHit = Traits.hasUnlocked(TraitName.EnhancedWildfire, this.config.level)
+		const potencyPerHit = this.hasTraitUnlocked(TraitName.EnhancedWildfire)
 			? 240
 			: 100;
 		const basePotency =
@@ -517,7 +516,7 @@ makeWeaponskill_MCH(SkillName.Chainsaw, 90, {
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => {
 		state.gainResource(ResourceType.BatteryGauge, 20);
-		if (Traits.hasUnlocked(TraitName.EnhancedMultiWeaponII, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedMultiWeaponII)) {
 			state.gainProc(ResourceType.ExcavatorReady);
 		}
 	},
@@ -552,7 +551,7 @@ makeAbility_MCH(SkillName.BarrelStabilizer, 66, ResourceType.cd_BarrelStabilizer
 	maxCharges: 1,
 	onConfirm: (state) => {
 		state.gainProc(ResourceType.Hypercharged);
-		if (Traits.hasUnlocked(TraitName.EnhancedBarrelStabilizer, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedBarrelStabilizer)) {
 			state.gainProc(ResourceType.FullMetalMachinist);
 		}
 	},
@@ -734,7 +733,7 @@ robotSummons.forEach((params) => {
 			// note that queen is summoned, and grant the requisite number of punches and finishers
 			const punchResource = state.resources.get(ResourceType.QueenPunches);
 			punchResource.gain(5);
-			const finishers = Traits.hasUnlocked(TraitName.QueensGambit, state.config.level)
+			const finishers = state.hasTraitUnlocked(TraitName.QueensGambit)
 				? 2
 				: 1;
 			state.resources.get(ResourceType.QueenFinishers).gain(finishers);
@@ -744,7 +743,7 @@ robotSummons.forEach((params) => {
 
 			let sourceSkill = SkillName.VolleyFire;
 			let basePotency = 0;
-			if (Traits.hasUnlocked(TraitName.Promotion, state.config.level)) {
+			if (state.hasTraitUnlocked(TraitName.Promotion)) {
 				sourceSkill = SkillName.ArmPunch;
 				basePotency = state.calculateQueenPotency(120, 240);
 			} else {
@@ -766,7 +765,7 @@ robotSummons.forEach((params) => {
 				);
 			}
 
-			sourceSkill = Traits.hasUnlocked(TraitName.Promotion, state.config.level)
+			sourceSkill = state.hasTraitUnlocked(TraitName.Promotion)
 				? SkillName.PileBunker
 				: SkillName.RookOverload;
 			if (sourceSkill === SkillName.PileBunker) {
@@ -788,7 +787,7 @@ robotSummons.forEach((params) => {
 				ResourceType.Queen,
 			);
 
-			if (Traits.hasUnlocked(TraitName.QueensGambit, state.config.level)) {
+			if (state.hasTraitUnlocked(TraitName.QueensGambit)) {
 				node.addDoTPotency(
 					new Potency({
 						config: state.config,

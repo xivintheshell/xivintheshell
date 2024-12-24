@@ -23,7 +23,6 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import { Traits } from "../Traits";
 import { GameState, PlayerState } from "../GameState";
 import { makeResource, CoolDown, Event, EventTag } from "../Resources";
 import { GameConfig } from "../GameConfig";
@@ -80,10 +79,10 @@ export class SAMState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
-		const gurenCd = Traits.hasUnlocked(TraitName.EnhancedHissatsu, this.config.level)
+		const gurenCd = this.hasTraitUnlocked(TraitName.EnhancedHissatsu)
 			? 60
 			: 120;
-		const meikyoStacks = Traits.hasUnlocked(TraitName.EnhancedMeikyoShisui, this.config.level)
+		const meikyoStacks = this.hasTraitUnlocked(TraitName.EnhancedMeikyoShisui)
 			? 2
 			: 1;
 		[
@@ -120,7 +119,7 @@ export class SAMState extends GameState {
 	}
 
 	getFugetsuModifier(): PotencyModifier {
-		return Traits.hasUnlocked(TraitName.EnhancedFugetsuAndFuka, this.config.level)
+		return this.hasTraitUnlocked(TraitName.EnhancedFugetsuAndFuka)
 			? Modifiers.FugetsuEnhanced
 			: Modifiers.FugetsuBase;
 	}
@@ -130,7 +129,7 @@ export class SAMState extends GameState {
 			return 0;
 		}
 
-		return Traits.hasUnlocked(TraitName.EnhancedFugetsuAndFuka, this.config.level) ? 13 : 10;
+		return this.hasTraitUnlocked(TraitName.EnhancedFugetsuAndFuka) ? 13 : 10;
 	}
 
 	// Return true if the active combo buff is up, or meikyo is active.
@@ -328,7 +327,7 @@ const makeGCD_SAM = (
 	if (castTime) {
 		// All SAM castbars are 1.8s (scaled to sks and affected by fuka) when synced
 		castTime = (state) =>
-			Traits.hasUnlocked(TraitName.EnhancedIaijutsu, state.config.level)
+			state.hasTraitUnlocked(TraitName.EnhancedIaijutsu)
 				? params.baseCastTime || 0
 				: state.config.adjustedSksCastTime(1.8, state.getFukaModifier());
 	}
@@ -400,7 +399,7 @@ makeGCD_SAM(SkillName.Enpi, 15, {
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable(ResourceType.EnhancedEnpi)
 			? [
-					Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level)
+					state.hasTraitUnlocked(TraitName.WayOfTheSamuraiIII)
 						? Modifiers.YatenpiEnhanced
 						: Modifiers.YatenpiBase,
 				]
@@ -702,7 +701,7 @@ makeGCD_SAM(SkillName.Higanbana, 30, {
 			modifiers.push(state.getFugetsuModifier());
 		}
 
-		const tickPotency = Traits.hasUnlocked(TraitName.WayOfTheSamuraiIII, state.config.level)
+		const tickPotency = state.hasTraitUnlocked(TraitName.WayOfTheSamuraiIII)
 			? 50
 			: 45;
 
@@ -911,7 +910,7 @@ makeAbility_SAM(SkillName.MeikyoShisui, 50, ResourceType.cd_MeikyoShisui, {
 		state.resources.get(ResourceType.MeikyoShisui).gain(3);
 		state.enqueueResourceDrop(ResourceType.MeikyoShisui);
 
-		if (Traits.hasUnlocked(TraitName.EnhancedMeikyoShisuiII, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedMeikyoShisuiII)) {
 			state.resources.get(ResourceType.Tendo).gain(1);
 			state.enqueueResourceDrop(ResourceType.Tendo);
 		}
@@ -929,11 +928,11 @@ makeAbility_SAM(SkillName.Ikishoten, 68, ResourceType.cd_Ikishoten, {
 	requiresCombat: true,
 	onConfirm: (state) => {
 		state.gainKenki(50);
-		if (Traits.hasUnlocked(TraitName.EnhancedIkishoten, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedIkishoten)) {
 			state.resources.get(ResourceType.OgiReady).gain(1);
 			state.enqueueResourceDrop(ResourceType.OgiReady);
 		}
-		if (Traits.hasUnlocked(TraitName.EnhancedIkishotenII, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedIkishotenII)) {
 			state.resources.get(ResourceType.ZanshinReady).gain(1);
 			state.enqueueResourceDrop(ResourceType.ZanshinReady);
 		}
