@@ -1231,7 +1231,7 @@ export class DamageStatistics extends React.Component {
 						<div style={cell(20)} />
 						<div style={cell(8)}>
 							{
-								/* The total dick denominator isn't terribly useful for DoTs that aren't maintained full-time */
+								/* The total tick denominator isn't terribly useful for DoTs that aren't maintained full-time */
 								controller.game.fullTimeDoTs.includes(dotTable.dotName) ? (
 									<>
 										{dotTableSummary.totalTicks}/{dotTableSummary.maxTicks}
