@@ -31,7 +31,6 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import { Traits } from "../Traits";
 import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, Resource, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
@@ -102,31 +101,23 @@ const FINISHERS: SkillName[] = [
 export class RDMState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
-		const swiftcastCooldown = Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level)
-			? 40
-			: 60;
-		const c6Cooldown = Traits.hasUnlocked(TraitName.RedMagicMastery, this.config.level)
-			? 35
-			: 45;
-		const mfCooldown = Traits.hasUnlocked(TraitName.EnhancedManafication, this.config.level)
-			? 110
-			: 120;
+		const swiftcastCooldown = this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) ? 40 : 60;
+		const c6Cooldown = this.hasTraitUnlocked(TraitName.RedMagicMastery) ? 35 : 45;
+		const mfCooldown = this.hasTraitUnlocked(TraitName.EnhancedManafication) ? 110 : 120;
 		[
 			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
 			new CoolDown(ResourceType.cd_ContreSixte, c6Cooldown, 1, 1),
 			new CoolDown(ResourceType.cd_Manafication, mfCooldown, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		const accelStacks = Traits.hasUnlocked(TraitName.EnhancedAcceleration, config.level)
-			? 2
-			: 1;
+		const accelStacks = this.hasTraitUnlocked(TraitName.EnhancedAcceleration) ? 2 : 1;
 		this.cooldowns.set(
 			new CoolDown(ResourceType.cd_Acceleration, 55, accelStacks, accelStacks),
 		);
 
-		const mfStacks = Traits.hasUnlocked(TraitName.EnhancedManaficationII, config.level)
+		const mfStacks = this.hasTraitUnlocked(TraitName.EnhancedManaficationII)
 			? 6
-			: Traits.hasUnlocked(TraitName.EnhancedManafication, config.level)
+			: this.hasTraitUnlocked(TraitName.EnhancedManafication)
 				? 5
 				: 4;
 		this.resources.set(new Resource(ResourceType.Manafication, mfStacks, 0));
@@ -325,7 +316,7 @@ export class RDMState extends GameState {
 		if (
 			this.tryConsumeResource(ResourceType.Manafication) &&
 			!this.hasResourceAvailable(ResourceType.Manafication) &&
-			Traits.hasUnlocked(TraitName.EnhancedManaficationIII, this.config.level)
+			this.hasTraitUnlocked(TraitName.EnhancedManaficationIII)
 		) {
 			this.resources.get(ResourceType.PrefulgenceReady).gain(1);
 			this.enqueueResourceDrop(ResourceType.PrefulgenceReady);
@@ -1026,7 +1017,7 @@ makeResourceAbility(ShellJob.RDM, SkillName.Embolden, 58, ResourceType.cd_Embold
 	applicationDelay: 0.62,
 	cooldown: 120,
 	onApplication: (state) => {
-		if (Traits.hasUnlocked(TraitName.EnhancedEmbolden, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedEmbolden)) {
 			state.resources.get(ResourceType.ThornedFlourish).gain(1);
 			state.enqueueResourceDrop(ResourceType.ThornedFlourish);
 		}
@@ -1119,7 +1110,7 @@ makeResourceAbility(ShellJob.RDM, SkillName.Acceleration, 50, ResourceType.cd_Ac
 	maxCharges: 2,
 	// acceleration buff grant is automatic from this declaration already
 	onApplication: (state) => {
-		if (Traits.hasUnlocked(TraitName.EnhancedAccelerationII, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedAccelerationII)) {
 			if (state.hasResourceAvailable(ResourceType.GrandImpactReady)) {
 				controller.reportWarning(WarningType.GIOverwrite);
 			}

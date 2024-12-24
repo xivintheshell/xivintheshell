@@ -1,5 +1,5 @@
-import { TraitName, ReservedTraitName } from "./Game/Common";
-import { Traits } from "./Game/Traits";
+import { TraitName, ReservedTraitName } from "../Game/Common";
+import { Traits } from "../Game/Traits";
 
 function GetTraits() {
 	const traitNameArr = Object.keys(TraitName).filter((v) => isNaN(Number(v)));

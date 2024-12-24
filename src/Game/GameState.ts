@@ -7,6 +7,7 @@ import {
 	ResourceType,
 	SkillName,
 	SkillUnavailableReason,
+	TraitName,
 } from "./Common";
 import { GameConfig } from "./GameConfig";
 import {
@@ -30,6 +31,7 @@ import {
 	ResourceInfo,
 	ResourceState,
 } from "./Resources";
+import { Traits } from "./Traits";
 
 import { controller } from "../Controller/Controller";
 import { ActionNode } from "../Controller/Record";
@@ -38,7 +40,6 @@ import { Modifiers, Potency, PotencyModifier, PotencyModifierType } from "./Pote
 import { Buff } from "./Buffs";
 
 import type { BLMState } from "./Jobs/BLM";
-import type { SAMState } from "./Jobs/SAM";
 import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";
@@ -1212,6 +1213,10 @@ export abstract class GameState {
 		}
 	}
 
+	hasTraitUnlocked(traitName: TraitName) {
+		return Traits.hasUnlocked(traitName, this.config.level);
+	}
+
 	isInCombat() {
 		return this.hasResourceAvailable(ResourceType.InCombat);
 	}
@@ -1219,10 +1224,6 @@ export abstract class GameState {
 	// These methods enforce type specialization so we can avoid some casts on the frontend
 	isBLMState(): this is BLMState {
 		return this.job === ShellJob.BLM;
-	}
-
-	isSAMState(): this is SAMState {
-		return this.job === ShellJob.SAM;
 	}
 }
 

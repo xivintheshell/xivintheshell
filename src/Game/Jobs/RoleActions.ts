@@ -16,7 +16,6 @@ import {
 	makeSpell,
 } from "../Skills";
 import { DoTBuff, EventTag, makeResource } from "../Resources";
-import { Traits } from "../Traits";
 import type { GameState } from "../GameState";
 import { controller } from "../../Controller/Controller";
 import { SAMState } from "./SAM";
@@ -74,8 +73,7 @@ makeResourceAbility(TANK_JOBS, SkillName.Reprisal, 22, ResourceType.cd_Reprisal,
 	rscType: ResourceType.Reprisal,
 	applicationDelay: 0.62,
 	cooldown: 60,
-	duration: (state) =>
-		(Traits.hasUnlocked(TraitName.EnhancedReprisal, state.config.level) && 15) || 10,
+	duration: (state) => (state.hasTraitUnlocked(TraitName.EnhancedReprisal) && 15) || 10,
 	assetPath: "Role/Reprisal.png",
 });
 
@@ -86,8 +84,7 @@ makeResourceAbility(MELEE_JOBS, SkillName.Feint, 22, ResourceType.cd_Feint, {
 	rscType: ResourceType.Feint,
 	applicationDelay: 0.537,
 	cooldown: 90,
-	duration: (state) =>
-		(Traits.hasUnlocked(TraitName.EnhancedFeint, state.config.level) && 15) || 10,
+	duration: (state) => (state.hasTraitUnlocked(TraitName.EnhancedFeint) && 15) || 10,
 	assetPath: "Role/Feint.png",
 	onExecute: cancelMeditate,
 });
@@ -99,8 +96,7 @@ makeResourceAbility(CASTER_JOBS, SkillName.Addle, 8, ResourceType.cd_Addle, {
 	rscType: ResourceType.Addle,
 	applicationDelay: 0.621, // delayed
 	cooldown: 90,
-	duration: (state) =>
-		(Traits.hasUnlocked(TraitName.EnhancedAddle, state.config.level) && 15) || 10,
+	duration: (state) => (state.hasTraitUnlocked(TraitName.EnhancedAddle) && 15) || 10,
 	assetPath: "Role/Addle.png",
 });
 

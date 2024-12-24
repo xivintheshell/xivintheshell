@@ -24,7 +24,6 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import { Traits } from "../Traits";
 
 const makeDNCResource = (
 	rsc: ResourceType,
@@ -100,21 +99,14 @@ export class DNCState extends GameState {
 		super(config);
 
 		// Disable Esprit Gauge for level 70 duties
-		if (!Traits.hasUnlocked(TraitName.Esprit, this.config.level)) {
+		if (!this.hasTraitUnlocked(TraitName.Esprit)) {
 			this.resources.set(new Resource(ResourceType.EspritGauge, 0, 0));
 		}
 
-		const enAvantStacks = Traits.hasUnlocked(TraitName.EnhancedEnAvantII, this.config.level)
-			? 3
-			: 2;
+		const enAvantStacks = this.hasTraitUnlocked(TraitName.EnhancedEnAvantII) ? 3 : 2;
 		this.cooldowns.set(new CoolDown(ResourceType.cd_EnAvant, 30, enAvantStacks, enAvantStacks));
 
-		const shieldSambaCooldown = Traits.hasUnlocked(
-			TraitName.EnhancedShieldSamba,
-			this.config.level,
-		)
-			? 90
-			: 120;
+		const shieldSambaCooldown = this.hasTraitUnlocked(TraitName.EnhancedShieldSamba) ? 90 : 120;
 		this.cooldowns.set(new CoolDown(ResourceType.cd_ShieldSamba, shieldSambaCooldown, 1, 1));
 
 		this.registerRecurringEvents();
@@ -270,14 +262,14 @@ export class DNCState extends GameState {
 			this.gainProc(ResourceType.StandardFinishPartner);
 		}
 
-		if (Traits.hasUnlocked(TraitName.Esprit, this.config.level)) {
+		if (this.hasTraitUnlocked(TraitName.Esprit)) {
 			this.gainProc(ResourceType.Esprit);
 			if (this.hasResourceAvailable(ResourceType.DancePartner)) {
 				this.gainProc(ResourceType.EspritPartner);
 			}
 		}
 
-		if (Traits.hasUnlocked(TraitName.EnhancedStandardFinish, this.config.level)) {
+		if (this.hasTraitUnlocked(TraitName.EnhancedStandardFinish)) {
 			this.gainProc(ResourceType.LastDanceReady);
 		}
 	}
@@ -510,7 +502,7 @@ makeGCD_DNC(SkillName.Cascade, 1, {
 	onConfirm: (state) => {
 		state.maybeGainProc(ResourceType.SilkenSymmetry);
 
-		if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.Esprit)) {
 			state.gainResource(ResourceType.EspritGauge, 5);
 		}
 	},
@@ -534,7 +526,7 @@ makeGCD_DNC(SkillName.Fountain, 2, {
 	onConfirm: (state) => {
 		state.maybeGainProc(ResourceType.SilkenFlow);
 
-		if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.Esprit)) {
 			state.gainResource(ResourceType.EspritGauge, 5);
 		}
 	},
@@ -558,7 +550,7 @@ makeGCD_DNC(SkillName.ReverseCascade, 20, {
 			state.tryConsumeResource(ResourceType.FlourishingSymmetry);
 		}
 
-		if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.Esprit)) {
 			state.gainResource(ResourceType.EspritGauge, 10);
 		}
 		state.maybeGainResource(ResourceType.FeatherGauge, 1);
@@ -585,7 +577,7 @@ makeGCD_DNC(SkillName.Fountainfall, 40, {
 			state.tryConsumeResource(ResourceType.FlourishingFlow);
 		}
 
-		if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.Esprit)) {
 			state.gainResource(ResourceType.EspritGauge, 10);
 		}
 		state.maybeGainResource(ResourceType.FeatherGauge, 1);
@@ -747,10 +739,10 @@ makeAbility_DNC(SkillName.Flourish, 72, ResourceType.cd_Flourish, {
 		state.gainProc(ResourceType.FlourishingSymmetry);
 		state.gainProc(ResourceType.FlourishingFlow);
 		state.gainProc(ResourceType.ThreefoldFanDance);
-		if (Traits.hasUnlocked(TraitName.EnhancedFlourish, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedFlourish)) {
 			state.gainProc(ResourceType.FourfoldFanDance);
 		}
-		if (Traits.hasUnlocked(TraitName.EnhancedFlourishII, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedFlourishII)) {
 			state.gainProc(ResourceType.FinishingMoveReady);
 		}
 	},
@@ -881,7 +873,7 @@ technicalFinishes.forEach((params) => {
 			}
 
 			state.gainProc(ResourceType.TechnicalFinish);
-			if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+			if (state.hasTraitUnlocked(TraitName.Esprit)) {
 				state.gainProc(ResourceType.EspritTechnical);
 			}
 			state.resources.get(ResourceType.TechnicalBonus).gain(bonusLevel);
@@ -890,10 +882,10 @@ technicalFinishes.forEach((params) => {
 			).maxTimeout;
 			state.enqueueResourceDrop(ResourceType.TechnicalBonus, duration, bonusLevel);
 
-			if (Traits.hasUnlocked(TraitName.EnhancedTechnicalFinish, state.config.level)) {
+			if (state.hasTraitUnlocked(TraitName.EnhancedTechnicalFinish)) {
 				state.gainProc(ResourceType.FlourishingFinish);
 			}
-			if (Traits.hasUnlocked(TraitName.EnhancedTechnicalFinishII, state.config.level)) {
+			if (state.hasTraitUnlocked(TraitName.EnhancedTechnicalFinishII)) {
 				state.gainProc(ResourceType.DanceOfTheDawnReady);
 			}
 		},
@@ -917,7 +909,7 @@ makeResourceAbility_DNC(SkillName.Devilment, 62, ResourceType.cd_Devilment, {
 	cooldown: 120,
 	validateAttempt: (state) => !isDancing(state),
 	onApplication: (state) => {
-		if (Traits.hasUnlocked(TraitName.EnhancedDevilment, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedDevilment)) {
 			(state as DNCState).gainProc(ResourceType.FlourishingStarfall);
 		}
 	},
@@ -942,7 +934,7 @@ makeGCD_DNC(SkillName.Windmill, 15, {
 	onConfirm: (state) => {
 		state.maybeGainProc(ResourceType.SilkenSymmetry);
 
-		if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.Esprit)) {
 			state.gainResource(ResourceType.EspritGauge, 5);
 		}
 	},
@@ -960,7 +952,7 @@ makeGCD_DNC(SkillName.Bladeshower, 25, {
 	onConfirm: (state) => {
 		state.maybeGainProc(ResourceType.SilkenFlow);
 
-		if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.Esprit)) {
 			state.gainResource(ResourceType.EspritGauge, 5);
 		}
 	},
@@ -981,7 +973,7 @@ makeGCD_DNC(SkillName.RisingWindmill, 35, {
 			state.tryConsumeResource(ResourceType.FlourishingSymmetry);
 		}
 
-		if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.Esprit)) {
 			state.gainResource(ResourceType.EspritGauge, 10);
 		}
 		state.maybeGainResource(ResourceType.FeatherGauge, 1);
@@ -1005,7 +997,7 @@ makeGCD_DNC(SkillName.Bloodshower, 45, {
 			state.tryConsumeResource(ResourceType.FlourishingFlow);
 		}
 
-		if (Traits.hasUnlocked(TraitName.Esprit, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.Esprit)) {
 			state.gainResource(ResourceType.EspritGauge, 10);
 		}
 		state.maybeGainResource(ResourceType.FeatherGauge, 1);

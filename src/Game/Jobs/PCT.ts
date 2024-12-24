@@ -20,7 +20,6 @@ import {
 	Spell,
 	StatePredicate,
 } from "../Skills";
-import { Traits } from "../Traits";
 import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
@@ -81,20 +80,15 @@ const HYPERPHANTASIA_SKILLS: SkillName[] = [
 export class PCTState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
-		const swiftcastCooldown =
-			(Traits.hasUnlocked(TraitName.EnhancedSwiftcast, this.config.level) && 40) || 60;
+		const swiftcastCooldown = (this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) && 40) || 60;
 		[new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1)].forEach((cd) =>
 			this.cooldowns.set(cd),
 		);
-		const livingMuseStacks = Traits.hasUnlocked(TraitName.EnhancedPictomancyIV, config.level)
-			? 3
-			: 2;
+		const livingMuseStacks = this.hasTraitUnlocked(TraitName.EnhancedPictomancyIV) ? 3 : 2;
 		this.cooldowns.set(
 			new CoolDown(ResourceType.cd_LivingMuse, 40, livingMuseStacks, livingMuseStacks),
 		);
-		const steelMuseStacks = Traits.hasUnlocked(TraitName.EnhancedPictomancyII, config.level)
-			? 2
-			: 1;
+		const steelMuseStacks = this.hasTraitUnlocked(TraitName.EnhancedPictomancyII) ? 2 : 1;
 		this.cooldowns.set(
 			new CoolDown(ResourceType.cd_SteelMuse, 60, steelMuseStacks, steelMuseStacks),
 		);
@@ -212,7 +206,7 @@ export class PCTState extends GameState {
 				inspiration.consume(1);
 				hyperphantasia.removeTimer();
 				inspiration.removeTimer();
-				if (Traits.hasUnlocked(TraitName.EnhancedPictomancyIII, this.config.level)) {
+				if (this.hasTraitUnlocked(TraitName.EnhancedPictomancyIII)) {
 					this.resources.get(ResourceType.RainbowBright).gain(1);
 					this.enqueueResourceDrop(ResourceType.RainbowBright);
 				}
@@ -537,7 +531,7 @@ makeSpell_PCT(SkillName.WaterInBlue, 15, {
 			controller.reportWarning(WarningType.PolyglotOvercap);
 		}
 		paletteGauge.gain(25);
-		if (Traits.hasUnlocked(TraitName.EnhancedArtistry, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
 			state.resources.get(ResourceType.Paint).gain(1);
 		}
 	},
@@ -599,7 +593,7 @@ makeSpell_PCT(SkillName.Water2InBlue, 45, {
 			controller.reportWarning(WarningType.PolyglotOvercap);
 		}
 		paletteGauge.gain(25);
-		if (Traits.hasUnlocked(TraitName.EnhancedArtistry, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
 			state.resources.get(ResourceType.Paint).gain(1);
 		}
 	},
@@ -663,7 +657,7 @@ makeSpell_PCT(SkillName.ThunderInMagenta, 60, {
 		state.hasResourceAvailable(ResourceType.SubtractivePalette),
 	onConfirm: (state) => {
 		state.doFiller();
-		if (Traits.hasUnlocked(TraitName.EnhancedArtistry, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
 			state.resources.get(ResourceType.Paint).gain(1);
 		}
 	},
@@ -724,7 +718,7 @@ makeSpell_PCT(SkillName.Thunder2InMagenta, 60, {
 		state.hasResourceAvailable(ResourceType.SubtractivePalette),
 	onConfirm: (state) => {
 		state.doFiller();
-		if (Traits.hasUnlocked(TraitName.EnhancedArtistry, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
 			state.resources.get(ResourceType.Paint).gain(1);
 		}
 	},
@@ -817,7 +811,7 @@ makeAbility_PCT(SkillName.SubtractivePalette, 60, ResourceType.cd_Subtractive, {
 		if (state.hasResourceAvailable(ResourceType.MonochromeTones)) {
 			controller.reportWarning(WarningType.CometOverwrite);
 		}
-		if (Traits.hasUnlocked(TraitName.EnhancedPalette, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedPalette)) {
 			state.resources.get(ResourceType.MonochromeTones).gain(1);
 		}
 		state.resources.get(ResourceType.SubtractivePalette).gain(3);
@@ -909,7 +903,7 @@ livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAtte
 			if (name === SkillName.WingedMuse) {
 				portraits.overrideCurrentValue(1);
 				// below lvl 94, there's no madeen, so wrap depictions back to 0
-				if (!Traits.hasUnlocked(TraitName.EnhancedPictomancyIV, state.config.level)) {
+				if (!state.hasTraitUnlocked(TraitName.EnhancedPictomancyIV)) {
 					depictions.overrideCurrentValue(0);
 				}
 			}
@@ -996,20 +990,18 @@ const hammerConditions: ConditionalSkillReplace<PCTState>[] = [
 	{
 		newSkill: SkillName.HammerStamp,
 		condition: (state) =>
-			!Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level) ||
+			!state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) ||
 			state.getHammerStacks() === 3,
 	},
 	{
 		newSkill: SkillName.HammerBrush,
 		condition: (state) =>
-			Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level) &&
-			state.getHammerStacks() === 2,
+			state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) && state.getHammerStacks() === 2,
 	},
 	{
 		newSkill: SkillName.PolishingHammer,
 		condition: (state) =>
-			Traits.hasUnlocked(TraitName.EnhancedPictomancyII, state.config.level) &&
-			state.getHammerStacks() === 1,
+			state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) && state.getHammerStacks() === 1,
 	},
 ];
 // [name, level, potency, delay]
@@ -1102,7 +1094,7 @@ makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
 		// Since this fork is hacky we just ignore this case for now.
 		state.resources.get(ResourceType.StarryMuse).gain(1);
 		// Technically, hyperphantasia is gained on a delay, but whatever
-		if (Traits.hasUnlocked(TraitName.EnhancedPictomancy, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedPictomancy)) {
 			state.resources.get(ResourceType.Hyperphantasia).gain(5);
 			state.resources.get(ResourceType.Inspiration).gain(1);
 
@@ -1112,7 +1104,7 @@ makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
 			state.enqueueResourceDrop(ResourceType.Hyperphantasia, hpDuration);
 			state.enqueueResourceDrop(ResourceType.Inspiration, hpDuration);
 		}
-		if (Traits.hasUnlocked(TraitName.EnhancedPictomancyV, state.config.level)) {
+		if (state.hasTraitUnlocked(TraitName.EnhancedPictomancyV)) {
 			state.resources.get(ResourceType.Starstruck).gain(1);
 			state.enqueueResourceDrop(ResourceType.Starstruck);
 		}
