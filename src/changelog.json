@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/24/24",
+		"changes": [
+			"[MCH] Added support for Flamethrower"
+		]
+	},
+	{
 		"date": "12/22/24",
 		"changes": [
 			"[BRD] Added initial support for BRD",
