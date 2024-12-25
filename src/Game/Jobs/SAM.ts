@@ -6,7 +6,6 @@ import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Co
 import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
-	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
 	FAKE_SKILL_ANIMATION_LOCK,
@@ -112,6 +111,15 @@ export class SAMState extends GameState {
 		if (this.hasResourceAvailable(ResourceType.Fuka) && skill.cdName === ResourceType.cd_GCD) {
 			node.addBuff(BuffType.Fuka);
 		}
+	}
+
+	override cancelChanneledSkills(): void {
+		// assume there's only one event
+		const evt = this.findNextQueuedEventByTag(EventTag.MeditateTick);
+		if (evt) {
+			evt.canceled = true;
+		}
+		this.tryConsumeResource(ResourceType.Meditate);
 	}
 
 	getFugetsuModifier(): PotencyModifier {
@@ -226,15 +234,6 @@ export class SAMState extends GameState {
 		};
 		this.addEvent(meditateEvent(0));
 	}
-
-	cancelMeditate() {
-		// assume there's only one event
-		const evt = this.findNextQueuedEventByTag(EventTag.MeditateTick);
-		if (evt) {
-			evt.canceled = true;
-		}
-		this.tryConsumeResource(ResourceType.Meditate);
-	}
 }
 
 // === SKILLS ===
@@ -269,15 +268,10 @@ const makeGCD_SAM = (
 		applicationDelay: number;
 		jobPotencyModifiers?: PotencyModifierFn<SAMState>;
 		validateAttempt?: StatePredicate<SAMState>;
-		onExecute?: EffectFn<SAMState>;
 		onConfirm?: EffectFn<SAMState>;
 		onApplication?: EffectFn<SAMState>;
 	},
 ): Weaponskill<SAMState> => {
-	const onExecute: EffectFn<SAMState> = combineEffects(
-		(state) => state.cancelMeditate(), // cancel meditate
-		params.onExecute ?? NO_EFFECT,
-	);
 	const onApplication: EffectFn<SAMState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyModifiers = (state: Readonly<SAMState>) => {
 		const mods: PotencyModifier[] = state.hasResourceAvailable(ResourceType.Fugetsu)
@@ -341,7 +335,6 @@ const makeGCD_SAM = (
 		jobPotencyModifiers: jobPotencyModifiers,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => !(params.baseCastTime && params.baseCastTime > 0),
-		onExecute: onExecute,
 		onConfirm: params.onConfirm,
 		onApplication: onApplication,
 	});
@@ -363,7 +356,6 @@ const makeAbility_SAM = (
 		cooldown: number;
 		maxCharges?: number;
 		validateAttempt?: StatePredicate<SAMState>;
-		onExecute?: EffectFn<SAMState>;
 		onConfirm?: EffectFn<SAMState>;
 		onApplication?: EffectFn<SAMState>;
 	},
@@ -371,12 +363,6 @@ const makeAbility_SAM = (
 	if (params.potency && !params.jobPotencyModifiers) {
 		params.jobPotencyModifiers = (state) =>
 			state.hasResourceAvailable(ResourceType.Fugetsu) ? [state.getFugetsuModifier()] : [];
-	}
-	if (name !== SkillName.ThirdEyePop && name !== SkillName.TengentsuPop) {
-		params.onExecute = combineEffects(
-			(state) => state.cancelMeditate(),
-			params.onExecute ?? NO_EFFECT,
-		);
 	}
 	return makeAbility(ShellJob.SAM, name, unlockLevel, cdName, params);
 };
@@ -1021,7 +1007,6 @@ makeResourceAbility(ShellJob.SAM, SkillName.ThirdEye, 6, ResourceType.cd_ThirdEy
 	],
 	cooldown: 15,
 	applicationDelay: 0,
-	onExecute: (state: SAMState) => state.cancelMeditate(),
 });
 
 makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_ThirdEye, {
@@ -1035,7 +1020,6 @@ makeResourceAbility(ShellJob.SAM, SkillName.Tengentsu, 82, ResourceType.cd_Third
 	],
 	cooldown: 15,
 	applicationDelay: 0,
-	onExecute: (state: SAMState) => state.cancelMeditate(),
 });
 
 // fake skill to represent breaking third eye

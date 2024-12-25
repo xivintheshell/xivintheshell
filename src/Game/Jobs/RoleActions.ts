@@ -8,18 +8,10 @@ import {
 	TANK_JOBS,
 } from "../../Controller/Common";
 import { SkillName, ResourceType, TraitName, WarningType, TankLBResourceType } from "../Common";
-import {
-	combineEffects,
-	makeAbility,
-	makeLimitBreak,
-	makeResourceAbility,
-	makeSpell,
-} from "../Skills";
+import { makeAbility, makeLimitBreak, makeResourceAbility, makeSpell } from "../Skills";
 import { DoTBuff, EventTag, makeResource } from "../Resources";
 import type { GameState } from "../GameState";
 import { controller } from "../../Controller/Controller";
-import { SAMState } from "./SAM";
-import { DNCState } from "./DNC";
 
 //#region Helper functions
 
@@ -28,20 +20,6 @@ import { DNCState } from "./DNC";
 const cancelDualcast = (state: GameState) => {
 	if (state.job === ShellJob.RDM && state.tryConsumeResource(ResourceType.Dualcast)) {
 		controller.reportWarning(WarningType.DualcastEaten);
-	}
-};
-
-// Special case for SAM, since all actions should cancel meditate
-const cancelMeditate = (state: GameState) => {
-	if (state.job === ShellJob.SAM) {
-		(state as SAMState).cancelMeditate();
-	}
-};
-
-// All actions cancel Improvisation
-const cancelImprovisation = (state: GameState) => {
-	if (state.job === ShellJob.DNC) {
-		(state as DNCState).cancelImprovisation();
 	}
 };
 
@@ -59,7 +37,6 @@ makeAbility(PHYSICAL_RANGED_JOBS, SkillName.HeadGraze, 24, ResourceType.cd_HeadG
 	applicationDelay: 0,
 	cooldown: 30,
 	assetPath: "Role/Head Graze.png",
-	onExecute: cancelImprovisation,
 });
 
 //#endregion
@@ -86,7 +63,6 @@ makeResourceAbility(MELEE_JOBS, SkillName.Feint, 22, ResourceType.cd_Feint, {
 	cooldown: 90,
 	duration: (state) => (state.hasTraitUnlocked(TraitName.EnhancedFeint) && 15) || 10,
 	assetPath: "Role/Feint.png",
-	onExecute: cancelMeditate,
 });
 
 CASTER_JOBS.forEach((job) => {
@@ -123,7 +99,6 @@ makeResourceAbility(MELEE_JOBS, SkillName.TrueNorth, 50, ResourceType.cd_TrueNor
 	cooldown: 45,
 	maxCharges: 2,
 	assetPath: "Role/True North.png",
-	onExecute: cancelMeditate,
 });
 
 [...HEALER_JOBS, ...CASTER_JOBS].forEach((job) => {
@@ -184,7 +159,6 @@ makeResourceAbility(
 		applicationDelay: 0.62,
 		cooldown: 120,
 		assetPath: "Role/Arms Length.png",
-		onExecute: combineEffects(cancelMeditate, cancelImprovisation),
 	},
 );
 
@@ -216,7 +190,6 @@ makeResourceAbility(MELEE_JOBS, SkillName.Bloodbath, 8, ResourceType.cd_Bloodbat
 	applicationDelay: 0.625,
 	cooldown: 90,
 	assetPath: "Role/Bloodbath.png",
-	onExecute: cancelMeditate,
 });
 
 makeAbility(
@@ -228,7 +201,6 @@ makeAbility(
 		applicationDelay: 0.625,
 		cooldown: 120,
 		assetPath: "Role/Second Wind.png",
-		onExecute: combineEffects(cancelMeditate, cancelImprovisation),
 	},
 );
 
@@ -271,7 +243,6 @@ makeAbility(MELEE_JOBS, SkillName.LegSweep, 10, ResourceType.cd_LegSweep, {
 	applicationDelay: 0.625,
 	cooldown: 40,
 	assetPath: "Role/Leg Sweep.png",
-	onExecute: cancelMeditate,
 });
 
 //#endregion
@@ -283,7 +254,6 @@ makeResourceAbility(ALL_JOBS, SkillName.Tincture, 1, ResourceType.cd_Tincture, {
 	applicationDelay: 0.64, // delayed // somewhere in the midrange of what's seen in logs
 	cooldown: 270,
 	assetPath: "Role/Tincture.png",
-	onExecute: combineEffects(cancelMeditate, cancelImprovisation),
 	onConfirm: cancelDualcast,
 });
 
@@ -292,7 +262,6 @@ makeResourceAbility(ALL_JOBS, SkillName.Sprint, 1, ResourceType.cd_Sprint, {
 	applicationDelay: 0.133, // delayed
 	cooldown: 60,
 	assetPath: "General/Sprint.png",
-	onExecute: combineEffects(cancelMeditate, cancelImprovisation),
 	onConfirm: cancelDualcast,
 });
 
@@ -389,7 +358,6 @@ makeLimitBreak(MELEE_JOBS, SkillName.Braver, ResourceType.cd_MeleeLB1, {
 	castTime: 2,
 	applicationDelay: 2.23,
 	animationLock: 3.86,
-	onExecute: cancelMeditate,
 	potency: 1000,
 });
 makeLimitBreak(MELEE_JOBS, SkillName.Bladedance, ResourceType.cd_MeleeLB2, {
@@ -397,7 +365,6 @@ makeLimitBreak(MELEE_JOBS, SkillName.Bladedance, ResourceType.cd_MeleeLB2, {
 	castTime: 3,
 	applicationDelay: 3.28,
 	animationLock: 3.86,
-	onExecute: cancelMeditate,
 	potency: 2200,
 });
 const meleeLB3s = [
@@ -417,7 +384,6 @@ meleeLB3s.forEach((params) => {
 		castTime: 4.5,
 		applicationDelay: 2.26,
 		animationLock: 3.7,
-		onExecute: params.job === ShellJob.SAM ? cancelMeditate : undefined,
 		potency: 3500,
 	});
 });
@@ -428,7 +394,6 @@ makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.BigShot, ResourceType.cd_RangedLB
 	castTime: 2,
 	applicationDelay: 2.23,
 	animationLock: 3.1,
-	onExecute: cancelImprovisation,
 	potency: 540,
 });
 makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.Desperado, ResourceType.cd_RangedLB2, {
@@ -436,7 +401,6 @@ makeLimitBreak(PHYSICAL_RANGED_JOBS, SkillName.Desperado, ResourceType.cd_Ranged
 	castTime: 3,
 	applicationDelay: 2.49,
 	animationLock: 3.1,
-	onExecute: cancelImprovisation,
 	potency: 1170,
 });
 const rangedLB3s = [
@@ -453,7 +417,6 @@ rangedLB3s.forEach((params) => {
 		castTime: 4.5,
 		applicationDelay: 3.16,
 		animationLock: 3.7,
-		onExecute: params.job === ShellJob.DNC ? cancelImprovisation : undefined,
 		potency: 1890,
 	});
 });

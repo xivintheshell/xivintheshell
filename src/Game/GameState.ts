@@ -13,6 +13,7 @@ import { GameConfig } from "./GameConfig";
 import {
 	Ability,
 	DisplayedSkills,
+	FAKE_SKILL_ANIMATION_LOCK,
 	LimitBreak,
 	Skill,
 	SkillsList,
@@ -52,6 +53,8 @@ type RNG = any;
 export interface DoTSkillRegistration {
 	dotName: ResourceType;
 	appliedBy: SkillName[];
+	isGroundTargeted?: true;
+	exclude?: boolean; // Exclude from standard DoT tick handling (Flamethrower)
 }
 export interface DoTRegistrationGroup {
 	reportName?: ReactNode;
@@ -63,6 +66,7 @@ export interface DoTPotencyProps {
 	skillName: SkillName;
 	dotName: ResourceType;
 	tickPotency: number;
+	tickFrequency?: number;
 	speedStat: "sks" | "sps";
 	aspect?: Aspect;
 	modifiers?: PotencyModifier[];
@@ -84,6 +88,9 @@ export abstract class GameState {
 
 	dotGroups: DoTRegistrationGroup[] = [];
 	dotResources: ResourceType[] = [];
+	excludedDoTs: ResourceType[] = [];
+	fullTimeDoTs: ResourceType[] = [];
+	#groundTargetDoTs: ResourceType[] = [];
 	dotSkills: SkillName[] = [];
 	#exclusiveDots: Map<ResourceType, ResourceType[]> = new Map();
 
@@ -245,22 +252,9 @@ export abstract class GameState {
 		}
 
 		let recurringDotTick = () => {
-			this.dotResources.forEach((dotResource) => {
-				const dotBuff = this.resources.get(dotResource) as DoTBuff;
-				if (dotBuff.available(1)) {
-					if (dotBuff.node) {
-						const p = dotBuff.node.getDotPotencies(dotResource)[dotBuff.tickCount];
-						controller.resolvePotency(p);
-						this.jobSpecificOnResolveDotTick(dotResource);
-					}
-					dotBuff.tickCount++;
-				} else {
-					if (dotBuff.node) {
-						dotBuff.node.removeUnresolvedDoTPotencies();
-						dotBuff.node = undefined;
-					}
-				}
-			});
+			this.dotResources
+				.filter((dotResource) => !this.excludedDoTs.includes(dotResource))
+				.forEach((dotResource) => this.handleDoTTick(dotResource));
 
 			// increment count
 			if (this.getDisplayTime() >= 0) {
@@ -289,6 +283,27 @@ export abstract class GameState {
 							.filter((dot) => dot !== registeredDot)
 							.map((dot) => dot.dotName),
 					);
+
+					// Keep track of DoTs that are ground targeted, so we can handle their special on-application tick
+					if (
+						registeredDot.isGroundTargeted &&
+						!this.#groundTargetDoTs.includes(registeredDot.dotName)
+					) {
+						this.#groundTargetDoTs.push(registeredDot.dotName);
+					}
+
+					// Keep track of which DoTs are going to be handled separately from the main DoT tick
+					if (
+						registeredDot.exclude &&
+						!this.excludedDoTs.includes(registeredDot.dotName)
+					) {
+						this.excludedDoTs.push(registeredDot.dotName);
+					}
+
+					// Keep track of which DoTs we have a reportName label for, meaning the job wants an uptime report for them
+					if (dotGroup.reportName && !this.fullTimeDoTs.includes(registeredDot.dotName)) {
+						this.fullTimeDoTs.push(registeredDot.dotName);
+					}
 				} else {
 					console.assert(
 						false,
@@ -314,6 +329,26 @@ export abstract class GameState {
 	// Job code may override to handle adding buff covers for the timeline
 	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
 	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
+
+	maybeCancelChanneledSkills(nextSkillName: SkillName) {
+		const nextSkill = this.skillsList.get(nextSkillName);
+
+		// Bail if we don't actually have this skill defined for this job
+		if (!nextSkill) {
+			return;
+		}
+
+		// If the next action is a fake action, don't actually cancel, the player didn't really do anything
+		if (nextSkill.animationLockFn(this) <= FAKE_SKILL_ANIMATION_LOCK) {
+			return;
+		}
+
+		// Now that we know it's a real skill for this job, go ahead and cancel any of the jobs channeled skills
+		this.cancelChanneledSkills();
+	}
+
+	// Job code may override to handle cancelling any of their channeled skills
+	cancelChanneledSkills() {}
 
 	getStatusDuration(rscType: ResourceType): number {
 		return (getResourceInfo(this.job, rscType) as ResourceInfo).maxTimeout;
@@ -355,6 +390,23 @@ export abstract class GameState {
 
 		const rand = this.rng();
 		return rand < chance;
+	}
+
+	handleDoTTick(dotResource: ResourceType) {
+		const dotBuff = this.resources.get(dotResource) as DoTBuff;
+		if (dotBuff.available(1)) {
+			if (dotBuff.node) {
+				const p = dotBuff.node.getDotPotencies(dotResource)[dotBuff.tickCount];
+				controller.resolvePotency(p);
+				this.jobSpecificOnResolveDotTick(dotResource);
+			}
+			dotBuff.tickCount++;
+		} else {
+			if (dotBuff.node) {
+				dotBuff.node.removeUnresolvedDoTPotencies();
+				dotBuff.node = undefined;
+			}
+		}
 	}
 
 	// advance game state by this much time
@@ -954,6 +1006,12 @@ export abstract class GameState {
 		node.setDotTimeGap(dotName, dotGap ?? 0);
 		dotBuff.node = node;
 		dotBuff.tickCount = 0;
+
+		// Immediately tick any ground-targeted DoTs on application
+		if (this.#groundTargetDoTs.includes(dotName)) {
+			this.handleDoTTick(dotName);
+			controller.reportDotTick(this.time, dotName);
+		}
 	}
 
 	addDoTPotencies(props: DoTPotencyProps) {
@@ -969,7 +1027,8 @@ export abstract class GameState {
 
 		const dotDuration = (getResourceInfo(this.config.job, props.dotName) as ResourceInfo)
 			.maxTimeout;
-		const dotTicks = dotDuration / 3;
+		const isGroundTargeted = this.#groundTargetDoTs.includes(props.dotName);
+		const dotTicks = dotDuration / (props.tickFrequency ?? 3) + (isGroundTargeted ? 1 : 0);
 
 		for (let i = 0; i < dotTicks; i++) {
 			let pDot = new Potency({

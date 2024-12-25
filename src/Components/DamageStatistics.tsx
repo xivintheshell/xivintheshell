@@ -1230,7 +1230,16 @@ export class DamageStatistics extends React.Component {
 						<div style={cell(10)}>{dotTableSummary.cumulativeOverride.toFixed(3)}</div>
 						<div style={cell(20)} />
 						<div style={cell(8)}>
-							{dotTableSummary.totalTicks}/{dotTableSummary.maxTicks}
+							{
+								/* The total tick denominator isn't terribly useful for DoTs that aren't maintained full-time */
+								controller.game.fullTimeDoTs.includes(dotTable.dotName) ? (
+									<>
+										{dotTableSummary.totalTicks}/{dotTableSummary.maxTicks}
+									</>
+								) : (
+									<>{dotTableSummary.totalTicks}</>
+								)
+							}
 						</div>
 						<div style={cell(24)}>
 							{dotTableSummary.totalPotencyWithoutPot.toFixed(2)}
