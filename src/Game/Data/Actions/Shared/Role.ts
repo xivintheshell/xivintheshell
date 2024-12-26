@@ -11,10 +11,13 @@ export const ROLE = ensureRecord<Action>()({
 	ESUNA: { name: "Esuna" },
 	RESCUE: { name: "Rescue" },
 
-	ADDLE: { name: "Addle" },
-	SWIFTCAST: { name: "Swiftcast" },
-	LUCID_DREAMING: { name: "Lucid Dreaming" },
-	SURECAST: { name: "Surecast" },
+	ADDLE: { name: "Addle", label: { zh: "病毒", ja: "アドル" } },
+	SWIFTCAST: { name: "Swiftcast", label: { zh: "即刻咏唱", ja: "迅速魔" } },
+	LUCID_DREAMING: {
+		name: "Lucid Dreaming",
+		label: { zh: "醒梦", ja: "ルーシッドドリーム" },
+	},
+	SURECAST: { name: "Surecast", label: { zh: "沉稳咏唱", ja: "堅実魔" } },
 
 	FEINT: { name: "Feint" },
 	BLOODBATH: { name: "Bloodbath" },
