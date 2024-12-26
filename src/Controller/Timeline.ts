@@ -1,6 +1,6 @@
 import { updateTimelineView } from "../Components/Timeline";
 import { controller } from "./Controller";
-import { BuffType, Debug, ResourceType, SkillName, WarningType } from "../Game/Common";
+import { BuffType, Debug, ResourceType, WarningType } from "../Game/Common";
 import { ActionNode } from "./Record";
 import { FileType, getCachedValue, removeCachedValue, setCachedValue } from "./Common";
 import { updateMarkers_TimelineMarkerPresets } from "../Components/TimelineMarkers";
@@ -10,6 +10,7 @@ import { Potency } from "../Game/Potency";
 import { MarkerColor } from "../Components/ColorTheme";
 import { TimelineDimensions } from "../Components/Common";
 import { ShellJob } from "../Game/Data/Jobs";
+import { ActionKey } from "../Game/Data/Actions";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -52,7 +53,7 @@ export type ViewOnlyCursorElem = TimelineElemBase & {
 export interface DamageMarkInfo {
 	potency: Potency;
 	sourceDesc: string;
-	sourceSkill: SkillName;
+	sourceSkill: ActionKey;
 }
 export type DamageMarkElem = TimelineElemBase & {
 	type: ElemType.DamageMark;
@@ -83,7 +84,7 @@ export type WarningMarkElem = TimelineElemBase & {
 export type SkillElem = TimelineElemBase & {
 	type: ElemType.Skill;
 	displayTime: number;
-	skillName: SkillName;
+	skillName: ActionKey;
 	isGCD: boolean;
 	isSpellCast: boolean;
 	relativeSnapshotTime: number;

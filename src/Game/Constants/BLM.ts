@@ -1,38 +1,3 @@
-export enum BLMSkillName {
-	Blizzard = "Blizzard",
-	Fire = "Fire",
-	Blizzard2 = "Blizzard 2",
-	Fire2 = "Fire 2",
-	Transpose = "Transpose",
-	Thunder3 = "Thunder 3",
-	Thunder4 = "Thunder 4",
-	Manaward = "Manaward",
-	Manafont = "Manafont",
-	LeyLines = "Ley Lines",
-	Fire3 = "Fire 3",
-	Blizzard3 = "Blizzard 3",
-	Freeze = "Freeze",
-	Flare = "Flare",
-	Blizzard4 = "Blizzard 4",
-	Fire4 = "Fire 4",
-	BetweenTheLines = "Between the Lines",
-	AetherialManipulation = "Aetherial Manipulation",
-	// Thunder4 = "Thunder 4",
-	Triplecast = "Triplecast",
-	Foul = "Foul",
-	Despair = "Despair",
-	UmbralSoul = "Umbral Soul",
-	Xenoglossy = "Xenoglossy",
-	HighFire2 = "High Fire 2",
-	HighBlizzard2 = "High Blizzard 2",
-	Amplifier = "Amplifier",
-	Paradox = "Paradox",
-	HighThunder = "High Thunder",
-	HighThunder2 = "High Thunder 2",
-	FlareStar = "Flare Star",
-	Retrace = "Retrace",
-}
-
 export enum BLMResourceType {
 	Polyglot = "Polyglot", // [0, 3]
 	AstralFire = "AstralFire", // [0, 3]

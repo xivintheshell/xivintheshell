@@ -4,13 +4,13 @@ import { controller } from "../Controller/Controller";
 import { TickMode } from "../Controller/Common";
 import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
 import { PotencyModifierType } from "../Game/Potency";
-import { SkillName } from "../Game/Common";
 import {
 	DamageStatisticsData,
 	DamageStatisticsMode,
 	mockDamageStatUpdateFn,
 } from "../Components/DamageStatistics";
 import { ShellJob } from "../Game/Data/Jobs";
+import { ActionKey } from "../Game/Data/Actions";
 
 // If this configuration flag is set to `true`, then the fight record of each test run
 // will be exported locally to "$TEST_NAME.txt".
@@ -83,7 +83,7 @@ export const makeTestWithConfigFn = (job: ShellJob) => {
 	};
 };
 
-export const applySkill = (skillName: SkillName) => {
+export const applySkill = (skillName: ActionKey) => {
 	// Perform the specified skill as soon as possible
 	// TEST-ONLY HACK: set lastAttemptedSkill to the skill we're about to use
 	// to ensure that trailing wait times are always omitted
@@ -92,7 +92,7 @@ export const applySkill = (skillName: SkillName) => {
 };
 
 export type ShortDamageEntry = {
-	skillName: SkillName;
+	skillName: ActionKey;
 	displayedModifiers: PotencyModifierType[];
 	hitCount: number;
 };

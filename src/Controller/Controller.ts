@@ -25,11 +25,9 @@ import {
 	BuffType,
 	Debug,
 	LevelSync,
-	LimitBreakSkillName,
 	makeSkillReadyStatus,
 	ProcMode,
 	ResourceType,
-	SkillName,
 	SkillReadyStatus,
 	SkillUnavailableReason,
 	WarningType,
@@ -73,6 +71,8 @@ import { RPRState } from "../Game/Jobs/RPR";
 import { RPRStatusPropsGenerator } from "../Components/Jobs/RPR";
 import { WARState } from "../Game/Jobs/WAR";
 import { MELEE_JOBS, ShellJob } from "../Game/Data/Jobs";
+import { ActionKey, ACTIONS } from "../Game/Data/Actions";
+import { LIMIT_BREAK } from "../Game/Data/Actions/Shared/LimitBreak";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 require("../Game/Jobs/RoleActions");
@@ -108,7 +108,7 @@ class Controller {
 	tickMode;
 	lastAttemptedSkill;
 	skillMaxTimeInQueue;
-	skillsQueue: { skillName: SkillName; timeInQueue: number }[];
+	skillsQueue: { skillName: ActionKey; timeInQueue: number }[];
 	timeline;
 	#presetLinesManager;
 	gameConfig;
@@ -453,7 +453,7 @@ class Controller {
 			if (action.skillName) {
 				node.skillName = getNormalizedSkillName(action.skillName);
 				if (node.skillName === undefined) {
-					const msg = `Failed to load record- \nInvalid skill name: ${node.skillName}`;
+					const msg = `Failed to load record- \nInvalid skill name: ${action.skillName}`;
 					window.alert(msg);
 					return;
 				}
@@ -871,7 +871,7 @@ class Controller {
 		updateSkillButtons(
 			this.game.displayedSkills
 				.getCurrentSkillNames(this.game)
-				.map((skillName: SkillName) => game.getSkillAvailabilityStatus(skillName)),
+				.map((skillName: ActionKey) => game.getSkillAvailabilityStatus(skillName)),
 		);
 	}
 
@@ -954,7 +954,7 @@ class Controller {
 		return this.getDisplayedGame().job;
 	}
 
-	getSkillInfo(props: { game: GameState; skillName: SkillName }) {
+	getSkillInfo(props: { game: GameState; skillName: ActionKey }) {
 		return props.game.getSkillAvailabilityStatus(props.skillName);
 	}
 
@@ -977,7 +977,7 @@ class Controller {
 	}
 
 	#useSkill(
-		skillName: SkillName,
+		skillName: ActionKey,
 		bWaitFirst: boolean,
 		overrideTickMode: TickMode = this.tickMode,
 	) {
@@ -1030,12 +1030,10 @@ class Controller {
 					: 0;
 				let recastDuration = newStatus.cdRecastTime;
 				// special case for meditate, which is an ability that roles the GCD
-				if (skillName === SkillName.Meditate) {
+				if (skillName === "MEDITATE") {
 					isGCD = true;
 					// get the recast duration of a random GCD
-					recastDuration = this.game.getSkillAvailabilityStatus(
-						SkillName.Yukikaze,
-					).cdRecastTime;
+					recastDuration = this.game.getSkillAvailabilityStatus("YUKIKAZE").cdRecastTime;
 				}
 				this.timeline.addElement({
 					type: ElemType.Skill,
@@ -1051,7 +1049,7 @@ class Controller {
 				});
 				this.#actionsLogCsv.push({
 					time: this.game.getDisplayTime(),
-					action: skillName,
+					action: ACTIONS[skillName].name,
 					isGCD: isGCD ? 1 : 0,
 					castTime: status.instantCast ? 0 : status.castTime,
 				});
@@ -1164,7 +1162,7 @@ class Controller {
 				let waitFirst =
 					currentReplayMode === ReplayMode.SkillSequence ||
 					currentReplayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
-				let skillName = itr.skillName as SkillName;
+				let skillName = itr.skillName as ActionKey;
 				if (props.replayMode === ReplayMode.SkillSequence) {
 					// auto-replace as much as possible
 					skillName = getAutoReplacedSkillName(
@@ -1361,7 +1359,7 @@ class Controller {
 	// https://github.com/Amarantine-xiv/Amas-FF14-Combat-Sim
 	getAmaSimCsv(): any[][] {
 		const normalizeName = (s: string) => {
-			if (s === SkillName.Tincture) {
+			if (s === ACTIONS.TINCTURE.name) {
 				return "Grade 2 Gemdraught";
 			} else {
 				return s.replace(" 2", " II").replace(" 3", " III").replace(" 4", " IV");
@@ -1415,20 +1413,24 @@ class Controller {
 			// also skip sprint, buff toggle events, and any other non-damage-related abilities
 			.filter(
 				(row) =>
-					![
-						SkillName.Sprint as string,
-						SkillName.LucidDreaming as string,
-						SkillName.BetweenTheLines as string,
-						SkillName.Retrace as string,
-						SkillName.Addle as string,
-						SkillName.AetherialManipulation as string,
-						SkillName.Manaward as string,
-						SkillName.Surecast as string,
+					!(
+						[
+							"SPRINT",
+							"LUCID_DREAMING",
+							"BETWEEN_THE_LINES",
+							"RETRACE",
+							"ADDLE",
+							"AETHERIAL_MANIPULATION",
+							"MANAWARD",
+							"SURECAST",
 
-						SkillName.TemperaGrassaPop as string,
-						SkillName.TemperaCoatPop as string,
-						...(Object.values(LimitBreakSkillName) as string[]), // Exclude LBs from export
-					].includes(row.action) && !row.action.includes("Toggle buff"),
+							"TEMPERA_GRASSA_POP",
+							"TEMPERA_COAT_POP",
+							...Object.keys(LIMIT_BREAK), // Exclude LBs from export
+						] as ActionKey[]
+					)
+						.map((key) => ACTIONS[key].name)
+						.includes(row.action) && !row.action.includes("Toggle buff"),
 			)
 			.map((row) => [row.time, normalizeName(row.action), "", ""]);
 		return [["Time", "skill_name", "job_class", "skill_conditional"]].concat(
@@ -1470,10 +1472,10 @@ class Controller {
 		if (!this.#bInSandbox) {
 			window.alert(
 				"cast failed! Resources for " +
-					props.failNode.skillName +
+					ACTIONS[props.failNode.skillName as ActionKey].name +
 					" are no longer available",
 			);
-			console.warn("failed: " + props.failNode.skillName);
+			console.warn("failed: " + ACTIONS[props.failNode.skillName as ActionKey].name);
 		}
 		// if adding from a line, invalidate the whole line
 		// if loading from file (shouldn't happen)
@@ -1547,7 +1549,7 @@ class Controller {
 		this.updateAllDisplay();
 	}
 
-	requestUseSkill(props: { skillName: SkillName }) {
+	requestUseSkill(props: { skillName: ActionKey }) {
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {

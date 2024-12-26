@@ -1,13 +1,13 @@
 import { controller } from "../../Controller/Controller";
-import { LevelSync, ResourceType, SkillName, WarningType } from "../Common";
+import { LevelSync, ResourceType, WarningType } from "../Common";
 import {
 	WARBuffTypes,
 	WARCooldownType,
 	WARGaugeTypes,
 	WARResourceType,
-	WARSkillName,
 	WARTrackingType,
 } from "../Constants/WAR";
+import { WARActionKey } from "../Data/Actions/Jobs/WAR";
 import { TraitKey } from "../Data/Traits";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
@@ -76,20 +76,15 @@ makeWARResource(WARBuffTypes.Defiance, 1);
 makeWARResource(WARTrackingType.StormCombo, 2, { timeout: 30 });
 makeWARResource(WARTrackingType.TempestCombo, 1, { timeout: 30 });
 
-const STORM_COMBO_GCDS: SkillName[] = [
-	WARSkillName.HeavySwing,
-	WARSkillName.Maim,
-	WARSkillName.StormsEye,
-	WARSkillName.StormsPath,
-];
+const STORM_COMBO_GCDS: WARActionKey[] = ["HEAVY_SWING", "MAIM", "STORMS_EYE", "STORMS_PATH"];
 
-const TEMPEST_COMBO_GCDS: SkillName[] = [WARSkillName.Overpower, WARSkillName.MythrilTempest];
+const TEMPEST_COMBO_GCDS: WARActionKey[] = ["OVERPOWER", "MYTHRIL_TEMPEST"];
 
-const COMBO_GCDS: SkillName[] = [...STORM_COMBO_GCDS, ...TEMPEST_COMBO_GCDS];
+const COMBO_GCDS: WARActionKey[] = [...STORM_COMBO_GCDS, ...TEMPEST_COMBO_GCDS];
 
 // Weaponskills that consume Inner Release stacks.
 // Additionally, they increase Burgeoning Fury count on-hit
-const INNER_RELEASE_GCDS: SkillName[] = [WARSkillName.FellCleave, WARSkillName.Decimate];
+const INNER_RELEASE_GCDS: WARActionKey[] = ["FELL_CLEAVE", "DECIMATE"];
 
 const BUFFS_DISPELLED_BY_SHAKE_IT_OFF: WARBuffTypes[] = [
 	WARBuffTypes.ThrillOfBattle,
@@ -111,7 +106,7 @@ export class WARState extends GameState {
 		this.registerRecurringEvents();
 	}
 
-	processComboStatus(skill: SkillName) {
+	processComboStatus(skill: WARActionKey) {
 		if (!COMBO_GCDS.includes(skill)) {
 			return;
 		} // WAR's non-combo GCDs don't break an ongoing combo
@@ -129,13 +124,13 @@ export class WARState extends GameState {
 		let comboState = this.resources.get(combo).availableAmount();
 		let nextState = 0;
 		if (isTempestCombo) {
-			if (skill === SkillName.Overpower) {
+			if (skill === "OVERPOWER") {
 				nextState = 1;
 			}
 		} else {
-			if (skill === SkillName.HeavySwing) {
+			if (skill === "HEAVY_SWING") {
 				nextState = 1;
-			} else if (comboState === 1 && skill === SkillName.Maim) {
+			} else if (comboState === 1 && skill === "MAIM") {
 				nextState = 2;
 			}
 		}
@@ -202,7 +197,7 @@ export class WARState extends GameState {
 }
 
 const makeWeaponskill_WAR = (
-	name: SkillName,
+	name: WARActionKey,
 	unlockLevel: number,
 	params: {
 		autoUpgrade?: SkillAutoReplace;
@@ -279,7 +274,7 @@ const makeWeaponskill_WAR = (
 };
 
 const makeAbility_WAR = (
-	name: SkillName,
+	name: WARActionKey,
 	unlockLevel: number,
 	cdName: ResourceType,
 	params: {
@@ -312,12 +307,12 @@ const makeAbility_WAR = (
 	});
 };
 
-makeWeaponskill_WAR(WARSkillName.Tomahawk, 15, {
+makeWeaponskill_WAR("TOMAHAWK", 15, {
 	potency: 150,
 	applicationDelay: 0.71,
 });
 
-makeWeaponskill_WAR(SkillName.HeavySwing, 1, {
+makeWeaponskill_WAR("HEAVY_SWING", 1, {
 	potency: [
 		["NEVER", 150],
 		["MELEE_MASTERY_TANK", 200],
@@ -326,7 +321,7 @@ makeWeaponskill_WAR(SkillName.HeavySwing, 1, {
 	applicationDelay: 0.53,
 });
 
-makeWeaponskill_WAR(SkillName.Maim, 4, {
+makeWeaponskill_WAR("MAIM", 4, {
 	potency: [
 		["NEVER", 100],
 		["MELEE_MASTERY_TANK", 150],
@@ -350,7 +345,7 @@ makeWeaponskill_WAR(SkillName.Maim, 4, {
 	highlightIf: (state) => state.hasComboStatus(WARTrackingType.StormCombo, 1),
 });
 
-makeWeaponskill_WAR(SkillName.StormsPath, 26, {
+makeWeaponskill_WAR("STORMS_PATH", 26, {
 	potency: [
 		["NEVER", 100],
 		["MELEE_MASTERY_TANK", 160],
@@ -374,7 +369,7 @@ makeWeaponskill_WAR(SkillName.StormsPath, 26, {
 	highlightIf: (state) => state.hasComboStatus(WARTrackingType.StormCombo, 2),
 });
 
-makeWeaponskill_WAR(SkillName.StormsEye, 50, {
+makeWeaponskill_WAR("STORMS_EYE", 50, {
 	potency: [
 		["NEVER", 100],
 		["MELEE_MASTERY_TANK", 160],
@@ -399,12 +394,12 @@ makeWeaponskill_WAR(SkillName.StormsEye, 50, {
 	highlightIf: (state) => state.hasComboStatus(WARTrackingType.StormCombo, 2),
 });
 
-makeWeaponskill_WAR(SkillName.Overpower, 10, {
+makeWeaponskill_WAR("OVERPOWER", 10, {
 	potency: 110,
 	applicationDelay: 0.62,
 });
 
-makeWeaponskill_WAR(SkillName.MythrilTempest, 40, {
+makeWeaponskill_WAR("MYTHRIL_TEMPEST", 40, {
 	potency: 100,
 	combo: {
 		potency: 140,
@@ -426,7 +421,7 @@ function reduceInfuriateCooldown(state: WARState) {
 	cooldown.restore(state, 5);
 }
 
-makeWeaponskill_WAR(SkillName.FellCleave, 54, {
+makeWeaponskill_WAR("FELL_CLEAVE", 54, {
 	potency: [
 		["NEVER", 520],
 		["MELEE_MASTERY_II_TANK", 580],
@@ -446,7 +441,7 @@ makeWeaponskill_WAR(SkillName.FellCleave, 54, {
 	},
 	replaceIf: [
 		{
-			newSkill: SkillName.InnerChaos,
+			newSkill: "INNER_CHAOS",
 			condition: (state: Readonly<WARState>): boolean => {
 				return state.hasResourceAvailable(ResourceType.NascentChaos);
 			},
@@ -460,7 +455,7 @@ makeWeaponskill_WAR(SkillName.FellCleave, 54, {
 	},
 });
 
-makeWeaponskill_WAR(SkillName.Decimate, 60, {
+makeWeaponskill_WAR("DECIMATE", 60, {
 	potency: 180,
 	applicationDelay: 1.83,
 	validateAttempt: (state) => {
@@ -483,7 +478,7 @@ makeWeaponskill_WAR(SkillName.Decimate, 60, {
 	},
 	replaceIf: [
 		{
-			newSkill: SkillName.ChaoticCyclone,
+			newSkill: "CHAOTIC_CYCLONE",
 			condition: (state: Readonly<WARState>): boolean => {
 				return state.hasResourceAvailable(ResourceType.NascentChaos);
 			},
@@ -491,7 +486,7 @@ makeWeaponskill_WAR(SkillName.Decimate, 60, {
 	],
 });
 
-makeAbility_WAR(SkillName.InnerRelease, 70, ResourceType.cd_InnerRelease, {
+makeAbility_WAR("INNER_RELEASE", 70, ResourceType.cd_InnerRelease, {
 	applicationDelay: 0,
 	requiresCombat: true,
 	cooldown: 60,
@@ -508,13 +503,13 @@ makeAbility_WAR(SkillName.InnerRelease, 70, ResourceType.cd_InnerRelease, {
 	},
 	replaceIf: [
 		{
-			newSkill: SkillName.PrimalWrath,
+			newSkill: "PRIMAL_WRATH",
 			condition: (state) => state.hasResourceAvailable(ResourceType.Wrathful),
 		},
 	],
 });
 
-makeWeaponskill_WAR(SkillName.PrimalRend, 90, {
+makeWeaponskill_WAR("PRIMAL_REND", 90, {
 	potency: 700,
 	applicationDelay: 1.16,
 	animationLock: 1.2,
@@ -528,7 +523,7 @@ makeWeaponskill_WAR(SkillName.PrimalRend, 90, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.PrimalRendReady),
 	replaceIf: [
 		{
-			newSkill: SkillName.PrimalRuination,
+			newSkill: "PRIMAL_RUINATION",
 			condition: (state: Readonly<WARState>): boolean => {
 				return state.hasResourceAvailable(ResourceType.PrimalRuinationReady);
 			},
@@ -537,7 +532,7 @@ makeWeaponskill_WAR(SkillName.PrimalRend, 90, {
 	jobPotencyModifiers: (state) => [Modifiers.AutoCDH],
 });
 
-makeAbility_WAR(SkillName.PrimalWrath, 96, WARCooldownType.cd_PrimalWrath, {
+makeAbility_WAR("PRIMAL_WRATH", 96, WARCooldownType.cd_PrimalWrath, {
 	startOnHotbar: false,
 	potency: 700,
 	applicationDelay: 1.15,
@@ -547,7 +542,7 @@ makeAbility_WAR(SkillName.PrimalWrath, 96, WARCooldownType.cd_PrimalWrath, {
 	highlightIf: (state) => true,
 });
 
-makeWeaponskill_WAR(SkillName.PrimalRuination, 100, {
+makeWeaponskill_WAR("PRIMAL_RUINATION", 100, {
 	startOnHotbar: false,
 	potency: 780,
 	applicationDelay: 1.06,
@@ -561,7 +556,7 @@ makeWeaponskill_WAR(SkillName.PrimalRuination, 100, {
 	jobPotencyModifiers: (state) => [Modifiers.AutoCDH],
 });
 
-makeAbility_WAR(SkillName.Infuriate, 50, ResourceType.cd_Infuriate, {
+makeAbility_WAR("INFURIATE", 50, ResourceType.cd_Infuriate, {
 	applicationDelay: 0,
 	requiresCombat: true,
 	cooldown: 60,
@@ -574,7 +569,7 @@ makeAbility_WAR(SkillName.Infuriate, 50, ResourceType.cd_Infuriate, {
 	},
 });
 
-makeWeaponskill_WAR(SkillName.InnerChaos, 80, {
+makeWeaponskill_WAR("INNER_CHAOS", 80, {
 	startOnHotbar: false,
 	potency: 660,
 	applicationDelay: 0.94,
@@ -593,7 +588,7 @@ makeWeaponskill_WAR(SkillName.InnerChaos, 80, {
 	jobPotencyModifiers: (state) => [Modifiers.AutoCDH],
 });
 
-makeWeaponskill_WAR(SkillName.ChaoticCyclone, 72, {
+makeWeaponskill_WAR("CHAOTIC_CYCLONE", 72, {
 	startOnHotbar: false,
 	potency: 300,
 	applicationDelay: 1.43,
@@ -612,7 +607,7 @@ makeWeaponskill_WAR(SkillName.ChaoticCyclone, 72, {
 	jobPotencyModifiers: (state) => [Modifiers.AutoCDH],
 });
 
-makeAbility_WAR(WARSkillName.Onslaught, 62, WARCooldownType.cd_Onslaught, {
+makeAbility_WAR("ONSLAUGHT", 62, WARCooldownType.cd_Onslaught, {
 	potency: 150,
 	applicationDelay: 0.63,
 	cooldown: 30,
@@ -620,43 +615,43 @@ makeAbility_WAR(WARSkillName.Onslaught, 62, WARCooldownType.cd_Onslaught, {
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
-makeAbility_WAR(WARSkillName.Upheaval, 64, WARCooldownType.cd_Upheaval, {
+makeAbility_WAR("UPHEAVAL", 64, WARCooldownType.cd_Upheaval, {
 	potency: 400,
 	applicationDelay: 0.62,
 	cooldown: 30,
 });
 
-makeAbility_WAR(WARSkillName.Orogeny, 86, WARCooldownType.cd_Upheaval, {
+makeAbility_WAR("OROGENY", 86, WARCooldownType.cd_Upheaval, {
 	potency: 150,
 	applicationDelay: 0.62,
 	cooldown: 30,
 });
 
 // TODO: when boss attacks are tracked, apply Vengance/Damnation's phys. reflection
-makeResourceAbility("WAR", SkillName.Vengeance, 38, ResourceType.cd_Vengeance, {
+makeResourceAbility("WAR", "VENGEANCE", 38, ResourceType.cd_Vengeance, {
 	rscType: WARResourceType.Vengeance,
-	autoUpgrade: { trait: "VENGEANCE_MASTERY", otherSkill: SkillName.Damnation },
+	autoUpgrade: { trait: "VENGEANCE_MASTERY", otherSkill: "DAMNATION" },
 	cooldown: 120,
 	applicationDelay: 0.62,
 });
 
-makeResourceAbility("WAR", SkillName.Damnation, 92, ResourceType.cd_Vengeance, {
+makeResourceAbility("WAR", "DAMNATION", 92, ResourceType.cd_Vengeance, {
 	rscType: WARResourceType.Damnation,
-	autoDowngrade: { trait: "VENGEANCE_MASTERY", otherSkill: SkillName.Vengeance },
+	autoDowngrade: { trait: "VENGEANCE_MASTERY", otherSkill: "VENGEANCE" },
 	cooldown: 120,
 	applicationDelay: 0.62,
 });
 
-makeResourceAbility("WAR", SkillName.RawIntuition, 56, ResourceType.cd_RawIntuition, {
+makeResourceAbility("WAR", "RAW_INTUITION", 56, ResourceType.cd_RawIntuition, {
 	rscType: WARResourceType.RawIntuition,
-	autoUpgrade: { trait: "RAW_INTUITION_MASTERY", otherSkill: SkillName.BloodWhetting },
+	autoUpgrade: { trait: "RAW_INTUITION_MASTERY", otherSkill: "BLOODWHETTING" },
 	cooldown: 25,
 	applicationDelay: 0.45,
 });
 
-makeResourceAbility("WAR", SkillName.BloodWhetting, 82, ResourceType.cd_RawIntuition, {
+makeResourceAbility("WAR", "BLOODWHETTING", 82, ResourceType.cd_RawIntuition, {
 	rscType: WARResourceType.Bloodwhetting,
-	autoDowngrade: { trait: "RAW_INTUITION_MASTERY", otherSkill: SkillName.RawIntuition },
+	autoDowngrade: { trait: "RAW_INTUITION_MASTERY", otherSkill: "RAW_INTUITION" },
 	onApplication: (state: WARState) => {
 		state.gainProc(WARBuffTypes.StemTheFlow);
 		state.gainProc(WARBuffTypes.StemTheTide);
@@ -665,7 +660,7 @@ makeResourceAbility("WAR", SkillName.BloodWhetting, 82, ResourceType.cd_RawIntui
 	applicationDelay: 0.45,
 });
 
-makeAbility("WAR", SkillName.NascentFlash, 76, ResourceType.cd_RawIntuition, {
+makeAbility("WAR", "NASCENT_FLASH", 76, ResourceType.cd_RawIntuition, {
 	onApplication: (state: WARState) => {
 		let duration = 6;
 		if (state.hasTraitUnlocked("ENHANCED_NASCENT_FLASH")) {
@@ -679,19 +674,19 @@ makeAbility("WAR", SkillName.NascentFlash, 76, ResourceType.cd_RawIntuition, {
 	applicationDelay: 0.45,
 });
 
-makeResourceAbility("WAR", SkillName.Holmgang, 45, ResourceType.cd_Holmgang, {
+makeResourceAbility("WAR", "HOLMGANG", 45, ResourceType.cd_Holmgang, {
 	rscType: ResourceType.Holmgang,
 	cooldown: 240,
 	applicationDelay: 0.45,
 });
 
-makeResourceAbility("WAR", SkillName.ThrillOfBattle, 30, ResourceType.cd_ThrillOfBattle, {
+makeResourceAbility("WAR", "THRILL_OF_BATTLE", 30, ResourceType.cd_ThrillOfBattle, {
 	rscType: ResourceType.ThrillOfBattle,
 	cooldown: 90,
 	applicationDelay: 0.62,
 });
 
-makeAbility("WAR", SkillName.Equilibrium, 58, ResourceType.cd_Equilibrium, {
+makeAbility("WAR", "EQUILIBRIUM", 58, ResourceType.cd_Equilibrium, {
 	cooldown: 60,
 	applicationDelay: 0.62,
 	onApplication: (state: WARState) => {
@@ -701,7 +696,7 @@ makeAbility("WAR", SkillName.Equilibrium, 58, ResourceType.cd_Equilibrium, {
 	},
 });
 
-makeResourceAbility("WAR", SkillName.ShakeItOff, 68, ResourceType.cd_ShakeItOff, {
+makeResourceAbility("WAR", "SHAKE_IT_OFF", 68, ResourceType.cd_ShakeItOff, {
 	rscType: ResourceType.ShakeItOff,
 	cooldown: 90,
 	onApplication: (state: WARState, node) => {
@@ -719,7 +714,7 @@ makeResourceAbility("WAR", SkillName.ShakeItOff, 68, ResourceType.cd_ShakeItOff,
 	applicationDelay: 0,
 });
 
-makeAbility("WAR", SkillName.Defiance, 10, ResourceType.cd_Defiance, {
+makeAbility("WAR", "DEFIANCE", 10, ResourceType.cd_Defiance, {
 	cooldown: 2,
 	maxCharges: 1,
 	applicationDelay: 0,
@@ -727,7 +722,7 @@ makeAbility("WAR", SkillName.Defiance, 10, ResourceType.cd_Defiance, {
 	onConfirm: (state: WARState) => state.resources.get(ResourceType.Defiance).gain(1),
 	replaceIf: [
 		{
-			newSkill: SkillName.ReleaseDefiance,
+			newSkill: "RELEASE_DEFIANCE",
 			condition: (state) => state.hasResourceAvailable(ResourceType.Defiance),
 		},
 	],
@@ -738,7 +733,7 @@ makeAbility("WAR", SkillName.Defiance, 10, ResourceType.cd_Defiance, {
 	},
 });
 
-makeAbility("WAR", SkillName.ReleaseDefiance, 10, ResourceType.cd_ReleaseDefiance, {
+makeAbility("WAR", "RELEASE_DEFIANCE", 10, ResourceType.cd_ReleaseDefiance, {
 	startOnHotbar: false,
 	cooldown: 1,
 	maxCharges: 1,

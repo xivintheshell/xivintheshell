@@ -12,8 +12,9 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { PotencyModifierType } from "../Game/Potency";
-import { ResourceType, SkillName } from "../Game/Common";
+import { ResourceType } from "../Game/Common";
 import { RDMState } from "../Game/Jobs/RDM";
+import { ActionKey } from "../Game/Data/Actions";
 
 beforeEach(rotationTestSetup);
 
@@ -24,21 +25,18 @@ const testWithConfig = makeTestWithConfigFn("RDM");
 it(
 	"consumes instants in the correct order",
 	testWithConfig({}, () => {
-		[
-			SkillName.Jolt3,
-			SkillName.Acceleration,
-			SkillName.Swiftcast,
-			SkillName.Verthunder3,
-		].forEach(applySkill);
+		(["JOLT_III", "ACCELERATION", "SWIFTCAST", "VERTHUNDER_III"] as ActionKey[]).forEach(
+			applySkill,
+		);
 		const state = controller.game as RDMState;
 		expect(state.hasResourceAvailable(ResourceType.Acceleration)).toBeFalsy();
 		expect(state.hasResourceAvailable(ResourceType.Swiftcast)).toBeTruthy();
 		expect(state.hasResourceAvailable(ResourceType.Dualcast)).toBeTruthy();
-		applySkill(SkillName.Veraero3);
+		applySkill("VERAERO_III");
 		expect(state.hasResourceAvailable(ResourceType.Acceleration)).toBeFalsy();
 		expect(state.hasResourceAvailable(ResourceType.Swiftcast)).toBeTruthy();
 		expect(state.hasResourceAvailable(ResourceType.Dualcast)).toBeFalsy();
-		applySkill(SkillName.Veraero3);
+		applySkill("VERAERO_III");
 		expect(state.hasResourceAvailable(ResourceType.Acceleration)).toBeFalsy();
 		expect(state.hasResourceAvailable(ResourceType.Swiftcast)).toBeFalsy();
 		expect(state.hasResourceAvailable(ResourceType.Dualcast)).toBeFalsy();
@@ -49,28 +47,30 @@ it(
 	"allows triple zwerchhau",
 	testWithConfig({}, () => {
 		// just cast each spell 7x until we get 49/49, which is enough for triple zwerchhau
-		[
-			SkillName.Verthunder3,
-			SkillName.Veraero3,
-			SkillName.Verthunder3,
-			SkillName.Veraero3,
-			SkillName.Verthunder3,
-			SkillName.Veraero3,
-			SkillName.Verthunder3,
-			SkillName.Veraero3,
-			SkillName.Verthunder3,
-			SkillName.Veraero3,
-			SkillName.Verthunder3,
-			SkillName.Veraero3,
-			SkillName.Verthunder3,
-			SkillName.Veraero3,
-			SkillName.EnchantedZwerchhau,
-			SkillName.EnchantedZwerchhau,
-			SkillName.EnchantedZwerchhau,
-			SkillName.Verholy,
-			SkillName.Scorch,
-			SkillName.Resolution,
-		].forEach(applySkill);
+		(
+			[
+				"VERTHUNDER_III",
+				"VERAERO_III",
+				"VERTHUNDER_III",
+				"VERAERO_III",
+				"VERTHUNDER_III",
+				"VERAERO_III",
+				"VERTHUNDER_III",
+				"VERAERO_III",
+				"VERTHUNDER_III",
+				"VERAERO_III",
+				"VERTHUNDER_III",
+				"VERAERO_III",
+				"VERTHUNDER_III",
+				"VERAERO_III",
+				"ENCHANTED_ZWERCHHAU",
+				"ENCHANTED_ZWERCHHAU",
+				"ENCHANTED_ZWERCHHAU",
+				"VERHOLY",
+				"SCORCH",
+				"RESOLUTION",
+			] as ActionKey[]
+		).forEach(applySkill);
 	}),
 );
 
@@ -78,45 +78,47 @@ it(
 	"performs the standard opener",
 	testWithConfig({ spellSpeed: 420 }, () => {
 		// 3 procs are guaranteed in the standard opener
-		[
-			SkillName.Verthunder3,
-			SkillName.Veraero3,
-			SkillName.Acceleration,
-			SkillName.Swiftcast,
-			SkillName.Verthunder3,
-			SkillName.Tincture,
-			SkillName.Fleche,
-			SkillName.Verthunder3,
-			SkillName.Embolden,
-			SkillName.Manafication,
-			SkillName.EnchantedRiposte,
-			SkillName.ContreSixte,
-			SkillName.EnchantedZwerchhau,
-			SkillName.Engagement,
-			SkillName.EnchantedRedoublement,
-			SkillName.CorpsACorps,
-			SkillName.Engagement,
-			SkillName.Verholy,
-			SkillName.CorpsACorps,
-			SkillName.Scorch,
-			SkillName.ViceOfThorns,
-			SkillName.Resolution,
-			SkillName.Prefulgence,
-			SkillName.GrandImpact,
-			SkillName.Acceleration,
-			SkillName.Verfire,
-			SkillName.GrandImpact,
-			SkillName.Verthunder3,
-			SkillName.Veraero3,
-			SkillName.Fleche,
-			SkillName.Verstone,
-			SkillName.Veraero3,
-			SkillName.Verfire,
-			SkillName.Veraero3,
-			SkillName.Swiftcast,
-			SkillName.Verthunder3,
-			SkillName.ContreSixte,
-		].forEach(applySkill);
+		(
+			[
+				"VERTHUNDER_III",
+				"VERAERO_III",
+				"ACCELERATION",
+				"SWIFTCAST",
+				"VERTHUNDER_III",
+				"TINCTURE",
+				"FLECHE",
+				"VERTHUNDER_III",
+				"EMBOLDEN",
+				"MANAFICATION",
+				"ENCHANTED_RIPOSTE",
+				"CONTRE_SIXTE",
+				"ENCHANTED_ZWERCHHAU",
+				"ENGAGEMENT",
+				"ENCHANTED_REDOUBLEMENT",
+				"CORPS_A_CORPS",
+				"ENGAGEMENT",
+				"VERHOLY",
+				"CORPS_A_CORPS",
+				"SCORCH",
+				"VICE_OF_THORNS",
+				"RESOLUTION",
+				"PREFULGENCE",
+				"GRAND_IMPACT",
+				"ACCELERATION",
+				"VERFIRE",
+				"GRAND_IMPACT",
+				"VERTHUNDER_III",
+				"VERAERO_III",
+				"FLECHE",
+				"VERSTONE",
+				"VERAERO_III",
+				"VERFIRE",
+				"VERAERO_III",
+				"SWIFTCAST",
+				"VERTHUNDER_III",
+				"CONTRE_SIXTE",
+			] as ActionKey[]
+		).forEach(applySkill);
 		// wait for damage applications
 		controller.step(4);
 		const state = controller.game as RDMState;
@@ -131,39 +133,41 @@ it(
 		const state = controller.game as RDMState;
 		state.resources.get(ResourceType.WhiteMana).overrideCurrentValue(40);
 		state.resources.get(ResourceType.BlackMana).overrideCurrentValue(40);
-		[
-			SkillName.EnchantedRiposte,
-			SkillName.EnchantedReprise, // does not break the combo or lose mana stacks
-			SkillName.EnchantedZwerchhau, // combo
-			SkillName.Manafication,
-			SkillName.EnchantedRedoublement,
-		].forEach(applySkill);
+		(
+			[
+				"ENCHANTED_RIPOSTE",
+				"ENCHANTED_REPRISE", // does not break the combo or lose mana stacks
+				"ENCHANTED_ZWERCHHAU", // combo
+				"MANAFICATION",
+				"ENCHANTED_REDOUBLEMENT",
+			] as ActionKey[]
+		).forEach(applySkill);
 		// wait for damage applications
 		controller.step(4);
 		expect(state.resources.get(ResourceType.ManaStacks).availableAmount()).toEqual(3);
 		compareDamageTables([
 			{
-				skillName: SkillName.EnchantedRiposte,
+				skillName: "ENCHANTED_RIPOSTE",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.EnchantedReprise,
+				skillName: "ENCHANTED_REPRISE",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.EnchantedZwerchhau,
+				skillName: "ENCHANTED_ZWERCHHAU",
 				displayedModifiers: [PotencyModifierType.COMBO],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.EnchantedRedoublement,
+				skillName: "ENCHANTED_REDOUBLEMENT",
 				displayedModifiers: [PotencyModifierType.MANAFIC],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Manafication,
+				skillName: "MANAFICATION",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
