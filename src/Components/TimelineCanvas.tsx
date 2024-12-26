@@ -518,6 +518,7 @@ function drawSkills(
 	elems: SkillElem[],
 	interactive: boolean,
 ) {
+	let targetCounts: Array<{ count: number; x: number; y: number }> = [];
 	let greyLockBars: Rect[] = [];
 	let purpleLockBars: Rect[] = [];
 	let gcdBars: Rect[] = [];
@@ -561,6 +562,14 @@ function drawSkills(
 		let skill = e as SkillElem;
 		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(skill.displayTime, scale);
 		let y = skill.isGCD ? skillsTopY + TimelineDimensions.skillButtonHeight / 2 : skillsTopY;
+		// if there were multiple targets, draw the number of targets above the ability icon
+		if (skill.node.targetCount > 1) {
+			targetCounts.push({
+				count: skill.node.targetCount,
+				x: x + TimelineDimensions.skillButtonHeight / 2,
+				y: y - 5,
+			});
+		}
 		// offset the bar under skill button icon so it's completely invisible before the button
 		const barsOffset = 2;
 		// purple/grey bar
@@ -623,6 +632,15 @@ function drawSkills(
 		// skill icon
 		let img = getSkillIconImage(skill.skillName);
 		if (img) skillIcons.push({ elem: e, x: x, y: y });
+	});
+
+	// target counts
+	// TODO set color and heighten timeline
+	g_ctx.font = "13px monospace";
+	g_ctx.fillStyle = "rgba(0, 0, 0, 1)";
+	g_ctx.textAlign = "center";
+	targetCounts.forEach((c) => {
+		g_ctx.fillText("x" + c.count.toString(), c.x, c.y);
 	});
 
 	// purple

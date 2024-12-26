@@ -39,6 +39,7 @@ export class ActionNode {
 	applicationTime?: number;
 	#dotOverrideAmount: Map<ResourceType, number>;
 	#dotTimeGap: Map<ResourceType, number>;
+	targetCount: number = 1;
 
 	next?: ActionNode = undefined;
 
@@ -91,6 +92,10 @@ export class ActionNode {
 		const snapshotTime = this.#potency?.snapshotTime;
 
 		return snapshotTime ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
+	}
+
+	setTargetCount(count: number) {
+		this.targetCount = count;
 	}
 
 	resolveAll(displayTime: number) {
@@ -274,6 +279,7 @@ export class Line {
 				buffName: itr.buffName,
 				// any
 				waitDuration: itr.waitDuration,
+				targetCount: itr.targetCount,
 			});
 			itr = itr.next;
 		}

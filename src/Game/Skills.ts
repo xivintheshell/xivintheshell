@@ -113,6 +113,15 @@ interface BaseSkill<T extends PlayerState> {
 	// Determine job-specific potency modifiers.
 	readonly jobPotencyModifiers: PotencyModifierFn<T>;
 
+	// If defined, this button is treated as AoE damage with specified falloff for all enemies
+	// after the first, e.g. a value of 0.6 does 100% potency to one target, and 40% potency
+	// to all remaining. This is consistent with the way most skills are listed in the job guide.
+	// If undefined, this skill is assumed to only hit a single target.
+	// CAUTION: Skills may have a falloff of 0, implying that all secondary targets take the
+	// same damage as the primary. Accordingly, conditionals involving this field should explicitly
+	// check for undefined, not truthiness.
+	readonly falloff?: number;
+
 	// Determine whether the skill can be executed in the current state.
 	// Should be called when the button is pressed.
 	readonly validateAttempt: StatePredicate<T>;
@@ -319,6 +328,7 @@ export function makeSpell<T extends PlayerState>(
 		manaCost: number | ResourceCalculationFn<T>;
 		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
+		falloff: number;
 		applicationDelay: number;
 		validateAttempt: StatePredicate<T>;
 		isInstantFn: StatePredicate<T>;
@@ -360,6 +370,7 @@ export function makeSpell<T extends PlayerState>(
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		falloff: params.falloff,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
 		onExecute,
@@ -393,6 +404,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		manaCost: number | ResourceCalculationFn<T>;
 		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
+		falloff: number;
 		applicationDelay: number;
 		validateAttempt: StatePredicate<T>;
 		isInstantFn: StatePredicate<T>;
@@ -434,6 +446,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		falloff: params.falloff,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
 		onExecute,
@@ -482,6 +495,7 @@ export function makeAbility<T extends PlayerState>(
 		highlightIf: StatePredicate<T>;
 		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
+		falloff: number;
 		applicationDelay: number;
 		animationLock: number | ResourceCalculationFn<T>;
 		validateAttempt: StatePredicate<T>;
@@ -529,6 +543,7 @@ export function makeAbility<T extends PlayerState>(
 		manaCostFn: (state) => 0,
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		falloff: params.falloff,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt,
 		onExecute,

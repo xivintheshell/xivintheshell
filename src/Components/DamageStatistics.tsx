@@ -26,6 +26,8 @@ export type DamageStatsMainTableEntry = {
 	potPotency: number;
 	potCount: number;
 	partyBuffPotency: number;
+	targetCount: number;
+	falloff: number;
 };
 
 export type DamageStatsDoTTableEntry = {
@@ -338,6 +340,8 @@ function PotencyDisplay(props: {
 	includeInStats: boolean;
 	explainUntargetable?: boolean;
 	calc: PotencyModifier[];
+	falloff?: number;
+	targetCount?: number;
 }) {
 	let potency = props.basePotency;
 	let potencyExplanation =
@@ -361,6 +365,11 @@ function PotencyDisplay(props: {
 			potencyExplanation += " × " + m.damageFactor + "(" + buffName(m.source) + ")";
 		}
 	});
+	if (props.targetCount && props.falloff !== undefined && props.targetCount > 1) {
+		const falloffMultiplier = 1 + (1 - props.falloff) * (props.targetCount - 1);
+		potencyExplanation = `[ ${potencyExplanation} ] x ${falloffMultiplier}(${props.targetCount}${localize({ en: " targets", zh: "个目标" })})`;
+		potency *= falloffMultiplier;
+	}
 	return <span style={{ textDecoration: props.includeInStats ? "none" : "line-through" }}>
 		{potency.toFixed(2)} <Help topic={props.helpTopic} content={potencyExplanation} />
 	</span>;
@@ -725,6 +734,7 @@ export class DamageStatistics extends React.Component {
 			return hidePotencySkills.includes(skillName);
 		};
 
+		// omit the target count column if all abilities hit only one target
 		let makeRow = function (props: {
 			lastRowSkill?: SkillName;
 			row: DamageStatsMainTableEntry;
@@ -816,6 +826,20 @@ export class DamageStatistics extends React.Component {
 				</span>;
 			}
 
+			// target count node
+			let targetCountNode: React.ReactNode | undefined = undefined;
+			if (
+				props.row.targetCount &&
+				props.row.basePotency > 0 &&
+				!hidePotency(props.row.skillName)
+			) {
+				targetCountNode = <span
+					style={{ textDecoration: includeInStats ? "none" : "line-through" }}
+				>
+					{props.row.targetCount}
+				</span>;
+			}
+
 			// potency
 			let potencyNode: React.ReactNode | undefined = undefined;
 			if (props.row.basePotency > 0 && !hidePotency(props.row.skillName)) {
@@ -824,6 +848,8 @@ export class DamageStatistics extends React.Component {
 					basePotency={props.row.basePotency}
 					helpTopic={"mainTable-potencyCalc-" + props.key}
 					calc={props.row.calculationModifiers}
+					falloff={props.row.falloff}
+					targetCount={props.row.targetCount}
 				/>;
 			}
 
@@ -892,9 +918,10 @@ export class DamageStatistics extends React.Component {
 			return <div key={props.key} style={rowStyle}>
 				<div style={cell(3)}>{includeCheckboxes}</div>
 				<div style={cell(18)}>{skillNameNode}</div>
+				<div style={cell(8)}>{targetCountNode}</div>
 				<div style={cell(19)}>{tags}</div>
-				<div style={cell(16)}>{potencyNode}</div>
-				<div style={cell(14)}>{usageCountNode}</div>
+				<div style={cell(14)}>{potencyNode}</div>
+				<div style={cell(8)}>{usageCountNode}</div>
 				<div style={cell(30)}>{totalPotencyNode}</div>
 			</div>;
 		};
@@ -1068,17 +1095,22 @@ export class DamageStatistics extends React.Component {
 			</div>
 			<div style={{ outline: "1px solid " + colors.bgMediumContrast }}>
 				<div>
-					<div style={{ display: "inline-block", width: "40%" }}>
+					<div style={{ display: "inline-block", width: "21%" }}>
 						<span style={headerCellStyle}>
 							<b>{localize({ en: "skill", zh: "技能" })}</b>
 						</span>
 					</div>
-					<div style={{ display: "inline-block", width: "16%" }}>
+					<div style={{ display: "inline-block", width: "27%" }}>
+						<span style={headerCellStyle}>
+							<b>{localize({ en: "targets", zh: "目标数" })}</b>
+						</span>
+					</div>
+					<div style={{ display: "inline-block", width: "14%" }}>
 						<span style={headerCellStyle}>
 							<b>{localize({ en: "potency", zh: "单次威力" })}</b>
 						</span>
 					</div>
-					<div style={{ display: "inline-block", width: "14%" }}>
+					<div style={{ display: "inline-block", width: "8%" }}>
 						<span style={headerCellStyle}>
 							<b>{localize({ en: "count", zh: "数量" })}</b>
 						</span>
