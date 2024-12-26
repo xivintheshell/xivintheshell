@@ -1,10 +1,11 @@
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, BuffType, ResourceType } from "../Common";
-import { RPRResourceType } from "../Constants/RPR";
+import { Aspect, BuffType } from "../Common";
 import { ActionKey } from "../Data/Actions";
 import { RPRActionKey } from "../Data/Actions/Jobs/RPR";
 import { CommonActionKey } from "../Data/Actions/Shared/Common";
 import { RoleActionKey } from "../Data/Actions/Shared/Role";
+import { RPRCooldownKey } from "../Data/Cooldowns/Jobs/RPR";
+import { RPRResourceKey } from "../Data/Resources/Jobs/RPR";
 import { TraitKey } from "../Data/Traits";
 import { GameConfig } from "../GameConfig";
 import { GameState, PlayerState } from "../GameState";
@@ -34,86 +35,79 @@ import {
 } from "../Skills";
 
 function makeRPRResource(
-	type: ResourceType,
+	type: RPRResourceKey,
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) {
 	makeResource("RPR", type, maxValue, params ?? {});
 }
 
-makeRPRResource(ResourceType.Soul, 100);
-makeRPRResource(ResourceType.Shroud, 100);
+makeRPRResource("SOUL", 100);
+makeRPRResource("SHROUD", 100);
 
-makeRPRResource(ResourceType.DeathsDesign, 1, {});
-makeRPRResource(ResourceType.SoulReaver, 2, { timeout: 30 });
-makeRPRResource(ResourceType.EnhancedGibbet, 1, { timeout: 60 });
-makeRPRResource(ResourceType.EnhancedGallows, 1, { timeout: 60 });
-makeRPRResource(ResourceType.Executioner, 2, { timeout: 30 });
+makeRPRResource("DEATHS_DESIGN", 1, {});
+makeRPRResource("SOUL_REAVER", 2, { timeout: 30 });
+makeRPRResource("ENHANCED_GIBBET", 1, { timeout: 60 });
+makeRPRResource("ENHANCED_GALLOWS", 1, { timeout: 60 });
+makeRPRResource("EXECUTIONER", 2, { timeout: 30 });
 
-makeRPRResource(ResourceType.Enshrouded, 1, { timeout: 30 });
-makeRPRResource(ResourceType.LemureShroud, 5, { timeout: 30 });
+makeRPRResource("ENSHROUDED", 1, { timeout: 30 });
+makeRPRResource("LEMURE_SHROUD", 5, { timeout: 30 });
 /* Not giving timeout for this because it needs to be zeroe-ed out when enshroud ends anyway
  * And I don't want the timeout to hide logic errors with that */
-makeRPRResource(ResourceType.VoidShroud, 5); // Impossible for it to last 30s, but 30s is an upper bound
-makeRPRResource(ResourceType.Oblatio, 1, { timeout: 30 });
-makeRPRResource(ResourceType.EnhancedVoidReaping, 1, { timeout: 30 });
-makeRPRResource(ResourceType.EnhancedCrossReaping, 1, { timeout: 30 });
+makeRPRResource("VOID_SHROUD", 5); // Impossible for it to last 30s, but 30s is an upper bound
+makeRPRResource("OBLATIO", 1, { timeout: 30 });
+makeRPRResource("ENHANCED_VOID_REAPING", 1, { timeout: 30 });
+makeRPRResource("ENHANCED_CROSS_REAPING", 1, { timeout: 30 });
 
-makeRPRResource(ResourceType.IdealHost, 1, { timeout: 30 });
-makeRPRResource(ResourceType.PerfectioOcculta, 1, { timeout: 30 });
-makeRPRResource(ResourceType.PerfectioParata, 1, { timeout: 30 });
+makeRPRResource("IDEAL_HOST", 1, { timeout: 30 });
+makeRPRResource("PERFECTIO_OCCULTA", 1, { timeout: 30 });
+makeRPRResource("PERFECTIO_PARATA", 1, { timeout: 30 });
 
-makeRPRResource(ResourceType.ArcaneCircle, 1, { timeout: 20 }); // 20.00s exactly
-makeRPRResource(ResourceType.CircleOfSacrifice, 1, { timeout: 5 });
-makeRPRResource(ResourceType.BloodsownCircle, 1, { timeout: 6 });
-makeRPRResource(ResourceType.ImmortalSacrifice, 8, { timeout: 30 });
+makeRPRResource("ARCANE_CIRCLE", 1, { timeout: 20 }); // 20.00s exactly
+makeRPRResource("CIRCLE_OF_SACRIFICE", 1, { timeout: 5 });
+makeRPRResource("BLOODSOWN_CIRCLE", 1, { timeout: 6 });
+makeRPRResource("IMMORTAL_SACRIFICE", 8, { timeout: 30 });
 
-makeRPRResource(ResourceType.ArcaneCrest, 1, { timeout: 5 });
-makeRPRResource(ResourceType.CrestOfTimeBorrowed, 1, { timeout: 5 });
-makeRPRResource(ResourceType.CrestOfTimeReturned, 1, { timeout: 15 });
+makeRPRResource("ARCANE_CREST", 1, { timeout: 5 });
+makeRPRResource("CREST_OF_TIME_BORROWED", 1, { timeout: 5 });
+makeRPRResource("CREST_OF_TIME_RETURNED", 1, { timeout: 15 });
 
-makeRPRResource(ResourceType.Soulsow, 1, { default: 1 });
-makeRPRResource(ResourceType.Threshold, 1, { timeout: 10 });
-makeRPRResource(ResourceType.EnhancedHarpe, 1, { timeout: 10 });
+makeRPRResource("SOULSOW", 1, { default: 1 });
+makeRPRResource("THRESHOLD", 1, { timeout: 10 });
+makeRPRResource("ENHANCED_HARPE", 1, { timeout: 10 });
 
 // If 1, the last dash used was Ingress; if 0, the last dash was egress
 // This determines which button is given the Regress replacement
-makeRPRResource(ResourceType.HellsIngressUsed, 1);
+makeRPRResource("HELLS_INGRESS_USED", 1);
 
-makeRPRResource(ResourceType.RPRCombo, 2, { timeout: 30 });
-makeRPRResource(RPRResourceType.RPRAoECombo, 1, { timeout: 30 });
-
-makeRPRResource(ResourceType.Feint, 1, { timeout: 15 });
-makeRPRResource(ResourceType.TrueNorth, 1, { timeout: 10 });
-makeRPRResource(ResourceType.ArmsLength, 1, { timeout: 6 });
-makeRPRResource(ResourceType.Bloodbath, 1, { timeout: 20 });
+makeRPRResource("RPR_COMBO", 2, { timeout: 30 });
+makeRPRResource("RPR_AOE_COMBO", 1, { timeout: 30 });
 
 export class RPRState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
 		const soulSliceStacks = this.hasTraitUnlocked("TEMPERED_SOUL") ? 2 : 1;
-		this.cooldowns.set(
-			new CoolDown(ResourceType.cd_SoulSlice, 30, soulSliceStacks, soulSliceStacks),
-		);
+		this.cooldowns.set(new CoolDown("cd_SOUL_SLICE", 30, soulSliceStacks, soulSliceStacks));
 
 		this.registerRecurringEvents();
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
-		if (this.hasResourceAvailable(ResourceType.ArcaneCircle)) {
+		if (this.hasResourceAvailable("ARCANE_CIRCLE")) {
 			node.addBuff(BuffType.ArcaneCircle);
 		}
 
-		if (this.hasResourceAvailable(ResourceType.DeathsDesign)) {
+		if (this.hasResourceAvailable("DEATHS_DESIGN")) {
 			node.addBuff(BuffType.DeathsDesign);
 		}
 	}
 
 	refreshDeathsDesign() {
-		const dd = this.resources.get(ResourceType.DeathsDesign);
+		const dd = this.resources.get("DEATHS_DESIGN");
 
-		const newTime = Math.min(this.resources.timeTillReady(ResourceType.DeathsDesign) + 30, 60);
+		const newTime = Math.min(this.resources.timeTillReady("DEATHS_DESIGN") + 30, 60);
 		if (dd.available(1)) {
 			dd.overrideTimer(this, newTime);
 			return;
@@ -121,7 +115,7 @@ export class RPRState extends GameState {
 
 		dd.gain(1);
 		this.resources.addResourceEvent({
-			rscType: ResourceType.DeathsDesign,
+			rscType: "DEATHS_DESIGN",
 			name: "drop Death's Design",
 			delay: newTime,
 			fnOnRsc: (rsc) => {
@@ -130,15 +124,15 @@ export class RPRState extends GameState {
 		});
 	}
 
-	setTimedResource(rscType: RPRResourceType, amount: number) {
+	setTimedResource(rscType: RPRResourceKey, amount: number) {
 		this.tryConsumeResource(rscType);
 		this.resources.get(rscType).gain(amount);
 		this.enqueueResourceDrop(rscType);
 	}
 
 	processCombo(skill: RPRActionKey) {
-		const currCombo = this.resources.get(ResourceType.RPRCombo).availableAmount();
-		const currAoeCombo = this.resources.get(ResourceType.RPRAoECombo).availableAmount();
+		const currCombo = this.resources.get("RPR_COMBO").availableAmount();
+		const currAoeCombo = this.resources.get("RPR_AOE_COMBO").availableAmount();
 
 		let [newCombo, newAoeCombo] = new Map<RPRActionKey, [number, number]>([
 			["SLICE", [1, 0]],
@@ -148,12 +142,12 @@ export class RPRState extends GameState {
 			["NIGHTMARE_SCYTHE", [0, 0]],
 		]).get(skill) ?? [currCombo, currAoeCombo]; // Any other gcd leaves combo unchanged
 
-		if (newCombo !== currCombo) this.setComboState(ResourceType.RPRCombo, newCombo);
-		if (newAoeCombo !== currAoeCombo) this.setComboState(ResourceType.RPRAoECombo, newAoeCombo);
+		if (newCombo !== currCombo) this.setComboState("RPR_COMBO", newCombo);
+		if (newAoeCombo !== currAoeCombo) this.setComboState("RPR_AOE_COMBO", newAoeCombo);
 	}
 
 	processSoulGauge(skill: RPRActionKey) {
-		const soul = this.resources.get(ResourceType.Soul);
+		const soul = this.resources.get("SOUL");
 		if (
 			(
 				[
@@ -193,7 +187,7 @@ export class RPRState extends GameState {
 	}
 
 	processShroudGauge(skill: RPRActionKey) {
-		const shroud = this.resources.get(ResourceType.Shroud);
+		const shroud = this.resources.get("SHROUD");
 
 		if (
 			(
@@ -211,14 +205,14 @@ export class RPRState extends GameState {
 			return;
 		}
 
-		if (skill === "ENSHROUD" && !this.resources.get(ResourceType.IdealHost).available(1)) {
+		if (skill === "ENSHROUD" && !this.resources.get("IDEAL_HOST").available(1)) {
 			shroud.consume(50);
 		}
 	}
 
 	processReaversExecutioner(skill: RPRActionKey) {
-		const reavers = this.resources.get(ResourceType.SoulReaver);
-		const executioners = this.resources.get(ResourceType.Executioner);
+		const reavers = this.resources.get("SOUL_REAVER");
+		const executioners = this.resources.get("EXECUTIONER");
 
 		// Gibbet, Gallows, Guillotine
 		if ((["GIBBET", "GALLOWS", "GUILLOTINE"] as RPRActionKey[]).includes(skill)) {
@@ -240,7 +234,7 @@ export class RPRState extends GameState {
 		}
 
 		// Any other action resets Soul reavers, even if it then gives more
-		if (this.skillsList.get(skill).cdName === ResourceType.cd_GCD) {
+		if (this.skillsList.get(skill).cdName === "cd_GCD") {
 			reavers.consume(reavers.availableAmount());
 			executioners.consume(executioners.availableAmount());
 		}
@@ -258,7 +252,7 @@ export class RPRState extends GameState {
 		) {
 			reavers.consume(reavers.availableAmount());
 			executioners.consume(executioners.availableAmount());
-			this.setTimedResource(ResourceType.SoulReaver, 1);
+			this.setTimedResource("SOUL_REAVER", 1);
 			return;
 		}
 
@@ -267,18 +261,18 @@ export class RPRState extends GameState {
 			reavers.consume(reavers.availableAmount());
 			executioners.consume(executioners.availableAmount());
 			if (this.hasTraitUnlocked("ENHANCED_GLUTTONY")) {
-				this.setTimedResource(ResourceType.Executioner, 2);
+				this.setTimedResource("EXECUTIONER", 2);
 				return;
 			}
 
-			this.setTimedResource(ResourceType.SoulReaver, 2);
+			this.setTimedResource("SOUL_REAVER", 2);
 			return;
 		}
 	}
 
 	processGibbetGallows(skill: RPRActionKey) {
-		const soulReavers = this.resources.get(ResourceType.SoulReaver);
-		const executioners = this.resources.get(ResourceType.Executioner);
+		const soulReavers = this.resources.get("SOUL_REAVER");
+		const executioners = this.resources.get("EXECUTIONER");
 
 		if (
 			!(
@@ -293,22 +287,22 @@ export class RPRState extends GameState {
 			soulReavers.consume(soulReavers.availableAmount());
 			executioners.consume(executioners.availableAmount());
 		}
-		const matchingBuffs = new Map<RPRActionKey, ResourceType>([
-			["GIBBET", ResourceType.EnhancedGibbet],
-			["EXECUTIONERS_GIBBET", ResourceType.EnhancedGibbet],
-			["GALLOWS", ResourceType.EnhancedGallows],
-			["EXECUTIONERS_GALLOWS", ResourceType.EnhancedGallows],
+		const matchingBuffs = new Map<RPRActionKey, RPRResourceKey>([
+			["GIBBET", "ENHANCED_GIBBET"],
+			["EXECUTIONERS_GIBBET", "ENHANCED_GIBBET"],
+			["GALLOWS", "ENHANCED_GALLOWS"],
+			["EXECUTIONERS_GALLOWS", "ENHANCED_GALLOWS"],
 		]);
-		const otherBuffs = new Map<ActionKey, ResourceType>([
-			["GIBBET", ResourceType.EnhancedGallows],
-			["EXECUTIONERS_GIBBET", ResourceType.EnhancedGallows],
-			["GALLOWS", ResourceType.EnhancedGibbet],
-			["EXECUTIONERS_GALLOWS", ResourceType.EnhancedGibbet],
+		const otherBuffs = new Map<ActionKey, RPRResourceKey>([
+			["GIBBET", "ENHANCED_GALLOWS"],
+			["EXECUTIONERS_GIBBET", "ENHANCED_GALLOWS"],
+			["GALLOWS", "ENHANCED_GIBBET"],
+			["EXECUTIONERS_GALLOWS", "ENHANCED_GIBBET"],
 		]);
 
 		//Already verified that map lookup will be successful.
-		const matchingBuff = this.resources.get(matchingBuffs.get(skill) as ResourceType);
-		const otherBuff = this.resources.get(otherBuffs.get(skill) as ResourceType);
+		const matchingBuff = this.resources.get(matchingBuffs.get(skill) as RPRResourceKey);
+		const otherBuff = this.resources.get(otherBuffs.get(skill) as RPRResourceKey);
 
 		matchingBuff.consume(matchingBuff.availableAmount());
 		otherBuff.consume(otherBuff.availableAmount());
@@ -316,36 +310,34 @@ export class RPRState extends GameState {
 	}
 
 	processCircleOfSacrifice(skill: RPRActionKey) {
-		if (!this.hasResourceAvailable(ResourceType.CircleOfSacrifice)) {
+		if (!this.hasResourceAvailable("CIRCLE_OF_SACRIFICE")) {
 			return;
 		}
 		const skillInfo = getSkill("RPR", skill);
 		if (skillInfo.potencyFn(this) > 0) {
-			let immortalSac = this.resources.get(ResourceType.ImmortalSacrifice);
+			let immortalSac = this.resources.get("IMMORTAL_SACRIFICE");
 			if (immortalSac.availableAmount() === 0) {
-				this.setTimedResource(ResourceType.ImmortalSacrifice, 1);
+				this.setTimedResource("IMMORTAL_SACRIFICE", 1);
 			} else {
-				this.resources.get(ResourceType.ImmortalSacrifice).gain(1);
+				this.resources.get("IMMORTAL_SACRIFICE").gain(1);
 			}
-			this.tryConsumeResource(ResourceType.CircleOfSacrifice, true);
+			this.tryConsumeResource("CIRCLE_OF_SACRIFICE", true);
 		}
 	}
 
 	enterEnshroud() {
-		if (this.hasResourceAvailable(ResourceType.IdealHost))
-			this.resources.get(ResourceType.IdealHost).consume(1);
-		if (this.hasTraitUnlocked("ENHANCED_ENSHROUD"))
-			this.setTimedResource(ResourceType.Oblatio, 1);
-		this.setTimedResource(ResourceType.LemureShroud, 5);
+		if (this.hasResourceAvailable("IDEAL_HOST")) this.resources.get("IDEAL_HOST").consume(1);
+		if (this.hasTraitUnlocked("ENHANCED_ENSHROUD")) this.setTimedResource("OBLATIO", 1);
+		this.setTimedResource("LEMURE_SHROUD", 5);
 	}
 
 	exitEnshroud() {
-		this.tryConsumeResource(ResourceType.Enshrouded);
-		this.tryConsumeResource(ResourceType.Oblatio);
-		this.tryConsumeResource(ResourceType.LemureShroud);
-		this.tryConsumeResource(ResourceType.VoidShroud);
-		this.tryConsumeResource(ResourceType.EnhancedCrossReaping);
-		this.tryConsumeResource(ResourceType.EnhancedVoidReaping);
+		this.tryConsumeResource("ENSHROUDED");
+		this.tryConsumeResource("OBLATIO");
+		this.tryConsumeResource("LEMURE_SHROUD");
+		this.tryConsumeResource("VOID_SHROUD");
+		this.tryConsumeResource("ENHANCED_CROSS_REAPING");
+		this.tryConsumeResource("ENHANCED_VOID_REAPING");
 	}
 }
 
@@ -380,28 +372,28 @@ const enshroudSkills = new Set<RPRActionKey | RoleActionKey | CommonActionKey>([
 ]);
 
 const gibgalHighlightPredicate: (
-	enhancedRsc: ResourceType,
+	enhancedRsc: RPRResourceKey,
 	skill: RPRActionKey,
 ) => StatePredicate<RPRState> = (enhancedRsc, skill) => (state: Readonly<RPRState>) => {
 	const resource = (["GIBBET", "GALLOWS", "GUILLOTINE"] as RPRActionKey[]).includes(skill)
-		? state.resources.get(ResourceType.SoulReaver)
-		: state.resources.get(ResourceType.Executioner);
+		? state.resources.get("SOUL_REAVER")
+		: state.resources.get("EXECUTIONER");
 
 	return (
 		state.resources.get(enhancedRsc).available(1) ||
 		(resource.available(1) &&
-			!state.hasResourceAvailable(ResourceType.EnhancedGibbet) &&
-			!state.hasResourceAvailable(ResourceType.EnhancedGallows))
+			!state.hasResourceAvailable("ENHANCED_GIBBET") &&
+			!state.hasResourceAvailable("ENHANCED_GALLOWS"))
 	);
 };
 
 const reaverPredicate: StatePredicate<RPRState> = (state) =>
-	state.hasResourceAvailable(ResourceType.SoulReaver);
+	state.hasResourceAvailable("SOUL_REAVER");
 const executionerPredicate: StatePredicate<RPRState> = (state) =>
-	state.hasResourceAvailable(ResourceType.Executioner);
+	state.hasResourceAvailable("EXECUTIONER");
 
 const soulSpendPredicate: (cost: number) => StatePredicate<RPRState> = (cost) => (state) =>
-	state.resources.get(ResourceType.Soul).availableAmount() >= cost;
+	state.resources.get("SOUL").availableAmount() >= cost;
 const isEnshroudSkill = (skill: RPRActionKey) => enshroudSkills.has(skill);
 
 const baseOnConfirm = (name: RPRActionKey): EffectFn<RPRState> => {
@@ -417,11 +409,11 @@ const baseOnConfirm = (name: RPRActionKey): EffectFn<RPRState> => {
 const basePotencyModifiers = (state: Readonly<RPRState>): PotencyModifier[] => {
 	const mods: PotencyModifier[] = [];
 
-	if (state.hasResourceAvailable(ResourceType.ArcaneCircle)) {
+	if (state.hasResourceAvailable("ARCANE_CIRCLE")) {
 		mods.push(Modifiers.ArcaneCircle);
 	}
 
-	if (state.hasResourceAvailable(ResourceType.DeathsDesign)) {
+	if (state.hasResourceAvailable("DEATHS_DESIGN")) {
 		mods.push(Modifiers.DeathsDesign);
 	}
 
@@ -453,8 +445,7 @@ const makeRPRSpell = (
 	);
 
 	const validateAttempt: StatePredicate<RPRState> = combinePredicatesAnd(
-		(state) =>
-			!state.resources.get(ResourceType.Enshrouded).available(1) || isEnshroudSkill(name),
+		(state) => !state.resources.get("ENSHROUDED").available(1) || isEnshroudSkill(name),
 		params.validateAttempt ?? (() => true),
 	);
 
@@ -466,7 +457,7 @@ const makeRPRSpell = (
 		isInstantFn: (state) =>
 			!(
 				name === "COMMUNIO" ||
-				(name === "HARPE" && !state.hasResourceAvailable(ResourceType.EnhancedHarpe)) ||
+				(name === "HARPE" && !state.hasResourceAvailable("ENHANCED_HARPE")) ||
 				(name === "SOULSOW" && state.isInCombat())
 			),
 		jobPotencyModifiers: basePotencyModifiers,
@@ -482,7 +473,7 @@ const makeRPRWeaponskill = (
 		potency: number | Array<[TraitKey, number]>;
 		combo?: {
 			potency: number | Array<[TraitKey, number]>;
-			resource: ResourceType;
+			resource: RPRResourceKey;
 			resourceValue: number;
 		};
 		positional?: {
@@ -505,8 +496,7 @@ const makeRPRWeaponskill = (
 	);
 
 	const validateAttempt: StatePredicate<RPRState> = combinePredicatesAnd(
-		(state) =>
-			!state.resources.get(ResourceType.Enshrouded).available(1) || isEnshroudSkill(name),
+		(state) => !state.resources.get("ENSHROUDED").available(1) || isEnshroudSkill(name),
 		params.validateAttempt ?? (() => true),
 	);
 	return makeWeaponskill("RPR", name, unlockLevel, {
@@ -529,11 +519,11 @@ const makeRPRWeaponskill = (
 
 			if (
 				params.positional &&
-				(state.hasResourceAvailable(ResourceType.TrueNorth) ||
+				(state.hasResourceAvailable("TRUE_NORTH") ||
 					(params.positional.location === "flank" &&
-						state.hasResourceAvailable(ResourceType.FlankPositional)) ||
+						state.hasResourceAvailable("FLANK_POSITIONAL")) ||
 					(params.positional.location === "rear" &&
-						state.hasResourceAvailable(ResourceType.RearPositional)))
+						state.hasResourceAvailable("REAR_POSITIONAL")))
 			) {
 				mods.push(
 					makePositionalModifier(
@@ -545,39 +535,30 @@ const makeRPRWeaponskill = (
 
 			if (
 				["GIBBET", "EXECUTIONERS_GIBBET"].includes(name) &&
-				state.hasResourceAvailable(ResourceType.EnhancedGibbet)
+				state.hasResourceAvailable("ENHANCED_GIBBET")
 			) {
 				mods.push(Modifiers.EnhancedGibbetGallows);
 			}
 
 			if (
 				["GALLOWS", "EXECUTIONERS_GALLOWS"].includes(name) &&
-				state.hasResourceAvailable(ResourceType.EnhancedGallows)
+				state.hasResourceAvailable("ENHANCED_GALLOWS")
 			) {
 				mods.push(Modifiers.EnhancedGibbetGallows);
 			}
 
-			if (
-				name === "VOID_REAPING" &&
-				state.hasResourceAvailable(ResourceType.EnhancedVoidReaping)
-			) {
+			if (name === "VOID_REAPING" && state.hasResourceAvailable("ENHANCED_VOID_REAPING")) {
 				mods.push(Modifiers.EnhancedReaping);
 			}
 
-			if (
-				name === "CROSS_REAPING" &&
-				state.hasResourceAvailable(ResourceType.EnhancedCrossReaping)
-			) {
+			if (name === "CROSS_REAPING" && state.hasResourceAvailable("ENHANCED_CROSS_REAPING")) {
 				mods.push(Modifiers.EnhancedReaping);
 			}
 
-			if (
-				name === "PLENTIFUL_HARVEST" &&
-				state.hasResourceAvailable(ResourceType.ImmortalSacrifice)
-			) {
+			if (name === "PLENTIFUL_HARVEST" && state.hasResourceAvailable("IMMORTAL_SACRIFICE")) {
 				for (
 					let i = 0;
-					i < state.resources.get(ResourceType.ImmortalSacrifice).availableAmount();
+					i < state.resources.get("IMMORTAL_SACRIFICE").availableAmount();
 					i++
 				) {
 					mods.push(Modifiers.ImmortalSacrifice);
@@ -593,7 +574,7 @@ const makeRPRWeaponskill = (
 const makeRPRAbility = (
 	name: RPRActionKey,
 	unlockLevel: number,
-	cdName: ResourceType,
+	cdName: RPRCooldownKey,
 	params: {
 		isPhysical?: boolean;
 		potency?: number | Array<[TraitKey, number]>;
@@ -613,8 +594,7 @@ const makeRPRAbility = (
 	const onConfirm = combineEffects(baseOnConfirm(name), params.onConfirm ?? NO_EFFECT);
 
 	const validateAttempt: StatePredicate<RPRState> = combinePredicatesAnd(
-		(state) =>
-			!state.resources.get(ResourceType.Enshrouded).available(1) || isEnshroudSkill(name),
+		(state) => !state.resources.get("ENSHROUDED").available(1) || isEnshroudSkill(name),
 		params.validateAttempt ?? (() => true),
 	);
 
@@ -657,14 +637,14 @@ makeRPRWeaponskill("WAXING_SLICE", 5, {
 			["MELEE_MASTERY_II_RPR", 400],
 			["MELEE_MASTERY_III_RPR", 500],
 		],
-		resource: ResourceType.RPRCombo,
+		resource: "RPR_COMBO",
 		resourceValue: 1,
 	},
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.58,
 	highlightIf: function (state: Readonly<RPRState>): boolean {
-		return state.resources.get(ResourceType.RPRCombo).availableAmount() === 1;
+		return state.resources.get("RPR_COMBO").availableAmount() === 1;
 	},
 });
 
@@ -680,14 +660,14 @@ makeRPRWeaponskill("INFERNAL_SLICE", 30, {
 			["MELEE_MASTERY_II_RPR", 500],
 			["MELEE_MASTERY_III_RPR", 600],
 		],
-		resource: ResourceType.RPRCombo,
+		resource: "RPR_COMBO",
 		resourceValue: 2,
 	},
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.54,
 	highlightIf: function (state: Readonly<RPRState>): boolean {
-		return state.resources.get(ResourceType.RPRCombo).availableAmount() === 2;
+		return state.resources.get("RPR_COMBO").availableAmount() === 2;
 	},
 });
 
@@ -700,7 +680,7 @@ makeRPRWeaponskill("SOUL_SLICE", 60, {
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.99,
 	secondaryCooldown: {
-		cdName: ResourceType.cd_SoulSlice,
+		cdName: "cd_SOUL_SLICE",
 		cooldown: 30,
 		maxCharges: 2,
 	},
@@ -710,11 +690,11 @@ makeRPRWeaponskill("GIBBET", 70, {
 	replaceIf: [
 		{
 			newSkill: "EXECUTIONERS_GIBBET",
-			condition: (state) => state.hasResourceAvailable(ResourceType.Executioner),
+			condition: (state) => state.hasResourceAvailable("EXECUTIONER"),
 		},
 		{
 			newSkill: "VOID_REAPING",
-			condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+			condition: (state) => state.hasResourceAvailable("ENSHROUDED"),
 		},
 	],
 	potency: [
@@ -731,11 +711,11 @@ makeRPRWeaponskill("GIBBET", 70, {
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.5,
-	highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGibbet, "GIBBET"),
+	highlightIf: gibgalHighlightPredicate("ENHANCED_GIBBET", "GIBBET"),
 	validateAttempt: reaverPredicate,
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.EnhancedGibbet);
-		state.setTimedResource(ResourceType.EnhancedGallows, 1);
+		state.tryConsumeResource("ENHANCED_GIBBET");
+		state.setTimedResource("ENHANCED_GALLOWS", 1);
 	},
 });
 
@@ -743,11 +723,11 @@ makeRPRWeaponskill("GALLOWS", 70, {
 	replaceIf: [
 		{
 			newSkill: "EXECUTIONERS_GALLOWS",
-			condition: (state) => state.resources.get(ResourceType.Executioner).available(1),
+			condition: (state) => state.resources.get("EXECUTIONER").available(1),
 		},
 		{
 			newSkill: "CROSS_REAPING",
-			condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+			condition: (state) => state.hasResourceAvailable("ENSHROUDED"),
 		},
 	],
 	potency: [
@@ -764,11 +744,11 @@ makeRPRWeaponskill("GALLOWS", 70, {
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.53,
-	highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGallows, "GALLOWS"),
+	highlightIf: gibgalHighlightPredicate("ENHANCED_GALLOWS", "GALLOWS"),
 	validateAttempt: reaverPredicate,
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.EnhancedGallows);
-		state.setTimedResource(ResourceType.EnhancedGibbet, 1);
+		state.tryConsumeResource("ENHANCED_GALLOWS");
+		state.setTimedResource("ENHANCED_GIBBET", 1);
 	},
 });
 
@@ -782,11 +762,11 @@ makeRPRWeaponskill("EXECUTIONERS_GIBBET", 96, {
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.62,
-	highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGibbet, "EXECUTIONERS_GIBBET"),
+	highlightIf: gibgalHighlightPredicate("ENHANCED_GIBBET", "EXECUTIONERS_GIBBET"),
 	validateAttempt: executionerPredicate,
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.EnhancedGibbet);
-		state.setTimedResource(ResourceType.EnhancedGallows, 1);
+		state.tryConsumeResource("ENHANCED_GIBBET");
+		state.setTimedResource("ENHANCED_GALLOWS", 1);
 	},
 });
 
@@ -800,11 +780,11 @@ makeRPRWeaponskill("EXECUTIONERS_GALLOWS", 96, {
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.62,
-	highlightIf: gibgalHighlightPredicate(ResourceType.EnhancedGallows, "EXECUTIONERS_GALLOWS"),
+	highlightIf: gibgalHighlightPredicate("ENHANCED_GALLOWS", "EXECUTIONERS_GALLOWS"),
 	validateAttempt: executionerPredicate,
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.EnhancedGallows);
-		state.setTimedResource(ResourceType.EnhancedGibbet, 1);
+		state.tryConsumeResource("ENHANCED_GALLOWS");
+		state.setTimedResource("ENHANCED_GIBBET", 1);
 	},
 });
 
@@ -814,23 +794,23 @@ makeRPRWeaponskill("PLENTIFUL_HARVEST", 88, {
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0.6,
 	applicationDelay: 1.16,
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ImmortalSacrifice, 1),
+	highlightIf: (state) => state.hasResourceAvailable("IMMORTAL_SACRIFICE", 1),
 	validateAttempt: (state) =>
-		state.hasResourceAvailable(ResourceType.ImmortalSacrifice, 1) &&
-		!state.hasResourceAvailable(ResourceType.BloodsownCircle),
+		state.hasResourceAvailable("IMMORTAL_SACRIFICE", 1) &&
+		!state.hasResourceAvailable("BLOODSOWN_CIRCLE"),
 	onConfirm: (state) => {
 		state.resources
-			.get(ResourceType.ImmortalSacrifice)
-			.consume(state.resources.get(ResourceType.ImmortalSacrifice).availableAmount());
-		state.setTimedResource(ResourceType.IdealHost, 1);
-		state.setTimedResource(ResourceType.PerfectioOcculta, 1);
+			.get("IMMORTAL_SACRIFICE")
+			.consume(state.resources.get("IMMORTAL_SACRIFICE").availableAmount());
+		state.setTimedResource("IDEAL_HOST", 1);
+		state.setTimedResource("PERFECTIO_OCCULTA", 1);
 	},
 });
 
 makeRPRSpell("COMMUNIO", 90, {
 	replaceIf: [
 		{
-			condition: (state) => state.hasResourceAvailable(ResourceType.PerfectioParata),
+			condition: (state) => state.hasResourceAvailable("PERFECTIO_PARATA"),
 			newSkill: "PERFECTIO",
 		},
 	],
@@ -840,18 +820,18 @@ makeRPRSpell("COMMUNIO", 90, {
 	recastTime: 2.5,
 	falloff: 0.6,
 	applicationDelay: 1.16,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+	validateAttempt: (state) => state.hasResourceAvailable("ENSHROUDED"),
 	highlightIf: (state) =>
-		state.hasResourceAvailable(ResourceType.Enshrouded) &&
-		state.resources.get(ResourceType.LemureShroud).availableAmount() === 1,
+		state.hasResourceAvailable("ENSHROUDED") &&
+		state.resources.get("LEMURE_SHROUD").availableAmount() === 1,
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.PerfectioOcculta)) {
-			state.resources.get(ResourceType.PerfectioOcculta).consume(1);
-			state.setTimedResource(ResourceType.PerfectioParata, 1);
+		if (state.hasResourceAvailable("PERFECTIO_OCCULTA")) {
+			state.resources.get("PERFECTIO_OCCULTA").consume(1);
+			state.setTimedResource("PERFECTIO_PARATA", 1);
 		}
 		state.exitEnshroud();
-		state.tryConsumeResource(ResourceType.EnhancedCrossReaping);
-		state.tryConsumeResource(ResourceType.EnhancedVoidReaping);
+		state.tryConsumeResource("ENHANCED_CROSS_REAPING");
+		state.tryConsumeResource("ENHANCED_VOID_REAPING");
 	},
 });
 
@@ -861,15 +841,15 @@ makeRPRSpell("HARPE", 15, {
 	castTime: 1.3,
 	recastTime: 2.5,
 	applicationDelay: 0.9,
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.EnhancedHarpe),
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.EnhancedHarpe),
+	highlightIf: (state) => state.hasResourceAvailable("ENHANCED_HARPE"),
+	onConfirm: (state) => state.tryConsumeResource("ENHANCED_HARPE"),
 });
 
 makeRPRSpell("SOULSOW", 82, {
 	potency: 0,
 	replaceIf: [
 		{
-			condition: (state) => state.hasResourceAvailable(ResourceType.Soulsow),
+			condition: (state) => state.hasResourceAvailable("SOULSOW"),
 			newSkill: "HARVEST_MOON",
 		},
 	],
@@ -878,7 +858,7 @@ makeRPRSpell("SOULSOW", 82, {
 	castTime: 5,
 	recastTime: 2.5,
 	applicationDelay: 0,
-	onConfirm: (state) => state.resources.get(ResourceType.Soulsow).gain(1),
+	onConfirm: (state) => state.resources.get("SOULSOW").gain(1),
 });
 
 makeRPRSpell("HARVEST_MOON", 82, {
@@ -892,15 +872,15 @@ makeRPRSpell("HARVEST_MOON", 82, {
 	recastTime: 2.5,
 	falloff: 0.5,
 	applicationDelay: 0.9,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Soulsow),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Soulsow),
-	onConfirm: (state) => state.resources.get(ResourceType.Soulsow).consume(1),
+	validateAttempt: (state) => state.hasResourceAvailable("SOULSOW"),
+	highlightIf: (state) => state.hasResourceAvailable("SOULSOW"),
+	onConfirm: (state) => state.resources.get("SOULSOW").consume(1),
 });
 
-makeRPRAbility("GLUTTONY", 76, ResourceType.cd_Gluttony, {
+makeRPRAbility("GLUTTONY", 76, "cd_GLUTTONY", {
 	replaceIf: [
 		{
-			condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+			condition: (state) => state.hasResourceAvailable("ENSHROUDED"),
 			newSkill: "SACRIFICIUM",
 		},
 	],
@@ -914,19 +894,19 @@ makeRPRAbility("GLUTTONY", 76, ResourceType.cd_Gluttony, {
 	highlightIf: soulSpendPredicate(50),
 });
 
-makeRPRAbility("BLOOD_STALK", 50, ResourceType.cd_BloodStalk, {
+makeRPRAbility("BLOOD_STALK", 50, "cd_BLOOD_STALK", {
 	replaceIf: [
 		{
 			newSkill: "LEMURES_SLICE",
-			condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+			condition: (state) => state.hasResourceAvailable("ENSHROUDED"),
 		},
 		{
 			newSkill: "UNVEILED_GIBBET",
-			condition: (state) => state.hasResourceAvailable(ResourceType.EnhancedGibbet),
+			condition: (state) => state.hasResourceAvailable("ENHANCED_GIBBET"),
 		},
 		{
 			newSkill: "UNVEILED_GALLOWS",
-			condition: (state) => state.hasResourceAvailable(ResourceType.EnhancedGallows),
+			condition: (state) => state.hasResourceAvailable("ENHANCED_GALLOWS"),
 		},
 	],
 	isPhysical: true,
@@ -938,10 +918,10 @@ makeRPRAbility("BLOOD_STALK", 50, ResourceType.cd_BloodStalk, {
 	highlightIf: soulSpendPredicate(50),
 });
 
-makeRPRAbility("GRIM_SWATHE", 55, ResourceType.cd_BloodStalk, {
+makeRPRAbility("GRIM_SWATHE", 55, "cd_BLOOD_STALK", {
 	replaceIf: [
 		{
-			condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+			condition: (state) => state.hasResourceAvailable("ENSHROUDED"),
 			newSkill: "LEMURES_SLICE",
 		},
 	],
@@ -955,7 +935,7 @@ makeRPRAbility("GRIM_SWATHE", 55, ResourceType.cd_BloodStalk, {
 	highlightIf: soulSpendPredicate(50),
 });
 
-makeRPRAbility("UNVEILED_GIBBET", 70, ResourceType.cd_BloodStalk, {
+makeRPRAbility("UNVEILED_GIBBET", 70, "cd_BLOOD_STALK", {
 	isPhysical: true,
 	potency: 440,
 	startOnHotbar: false,
@@ -965,7 +945,7 @@ makeRPRAbility("UNVEILED_GIBBET", 70, ResourceType.cd_BloodStalk, {
 	highlightIf: soulSpendPredicate(50),
 });
 
-makeRPRAbility("UNVEILED_GALLOWS", 70, ResourceType.cd_BloodStalk, {
+makeRPRAbility("UNVEILED_GALLOWS", 70, "cd_BLOOD_STALK", {
 	isPhysical: true,
 	potency: 440,
 	startOnHotbar: false,
@@ -975,7 +955,7 @@ makeRPRAbility("UNVEILED_GALLOWS", 70, ResourceType.cd_BloodStalk, {
 	highlightIf: soulSpendPredicate(50),
 });
 
-makeRPRAbility("LEMURES_SLICE", 86, ResourceType.cd_LemuresSlice, {
+makeRPRAbility("LEMURES_SLICE", 86, "cd_LEMURES_SLICE", {
 	isPhysical: true,
 	potency: [
 		["NEVER", 240],
@@ -984,35 +964,35 @@ makeRPRAbility("LEMURES_SLICE", 86, ResourceType.cd_LemuresSlice, {
 	startOnHotbar: false,
 	applicationDelay: 0.7,
 	cooldown: 1,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.VoidShroud, 2),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.VoidShroud, 2),
+	validateAttempt: (state) => state.hasResourceAvailable("VOID_SHROUD", 2),
+	highlightIf: (state) => state.hasResourceAvailable("VOID_SHROUD", 2),
 	onConfirm: (state) => {
-		state.resources.get(ResourceType.VoidShroud).consume(2);
+		state.resources.get("VOID_SHROUD").consume(2);
 	},
 });
 
-makeRPRAbility("SACRIFICIUM", 92, ResourceType.cd_Sacrificium, {
+makeRPRAbility("SACRIFICIUM", 92, "cd_SACRIFICIUM", {
 	isPhysical: false,
 	potency: 530,
 	startOnHotbar: false,
 	falloff: 0.5,
 	applicationDelay: 0.76,
 	cooldown: 1,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Oblatio),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Oblatio),
-	onConfirm: (state) => state.resources.get(ResourceType.Oblatio).consume(1),
+	validateAttempt: (state) => state.hasResourceAvailable("OBLATIO"),
+	highlightIf: (state) => state.hasResourceAvailable("OBLATIO"),
+	onConfirm: (state) => state.resources.get("OBLATIO").consume(1),
 });
 
-makeResourceAbility("RPR", "ARCANE_CIRCLE", 72, ResourceType.cd_ArcaneCircle, {
-	rscType: ResourceType.ArcaneCircle,
+makeResourceAbility("RPR", "ARCANE_CIRCLE", 72, "cd_ARCANE_CIRCLE", {
+	rscType: "ARCANE_CIRCLE",
 	applicationDelay: 0.6,
 	startOnHotbar: true,
 	maxCharges: 1,
 	potency: 0,
 	onApplication: (state: RPRState) => {
 		if (state.hasTraitUnlocked("ENHANCED_ARCANE_CIRCLE")) {
-			state.setTimedResource(ResourceType.CircleOfSacrifice, 1);
-			state.setTimedResource(ResourceType.BloodsownCircle, 1);
+			state.setTimedResource("CIRCLE_OF_SACRIFICE", 1);
+			state.setTimedResource("BLOODSOWN_CIRCLE", 1);
 		}
 	},
 	cooldown: 120,
@@ -1028,16 +1008,16 @@ makeRPRWeaponskill("VOID_REAPING", 80, {
 	recastTime: 1.5,
 	applicationDelay: 0.53,
 	highlightIf: (state) =>
-		state.resources.get(ResourceType.LemureShroud).availableAmount() > 1 &&
-		!state.hasResourceAvailable(ResourceType.EnhancedCrossReaping),
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.LemureShroud),
+		state.resources.get("LEMURE_SHROUD").availableAmount() > 1 &&
+		!state.hasResourceAvailable("ENHANCED_CROSS_REAPING"),
+	validateAttempt: (state) => state.hasResourceAvailable("LEMURE_SHROUD"),
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.EnhancedVoidReaping);
-		state.setTimedResource(ResourceType.EnhancedCrossReaping, 1);
-		state.resources.get(ResourceType.LemureShroud).consume(1);
-		state.resources.get(ResourceType.VoidShroud).gain(1);
+		state.tryConsumeResource("ENHANCED_VOID_REAPING");
+		state.setTimedResource("ENHANCED_CROSS_REAPING", 1);
+		state.resources.get("LEMURE_SHROUD").consume(1);
+		state.resources.get("VOID_SHROUD").gain(1);
 
-		if (state.resources.get(ResourceType.LemureShroud).availableAmount() === 0) {
+		if (state.resources.get("LEMURE_SHROUD").availableAmount() === 0) {
 			state.exitEnshroud();
 		}
 	},
@@ -1053,37 +1033,31 @@ makeRPRWeaponskill("CROSS_REAPING", 80, {
 	recastTime: 1.5,
 	applicationDelay: 0.53,
 	highlightIf: (state) =>
-		state.resources.get(ResourceType.LemureShroud).availableAmount() > 1 &&
-		!state.hasResourceAvailable(ResourceType.EnhancedVoidReaping),
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.LemureShroud),
+		state.resources.get("LEMURE_SHROUD").availableAmount() > 1 &&
+		!state.hasResourceAvailable("ENHANCED_VOID_REAPING"),
+	validateAttempt: (state) => state.hasResourceAvailable("LEMURE_SHROUD"),
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.EnhancedCrossReaping);
-		state.setTimedResource(ResourceType.EnhancedVoidReaping, 1);
-		state.resources.get(ResourceType.LemureShroud).consume(1);
-		state.resources.get(ResourceType.VoidShroud).gain(1);
+		state.tryConsumeResource("ENHANCED_CROSS_REAPING");
+		state.setTimedResource("ENHANCED_VOID_REAPING", 1);
+		state.resources.get("LEMURE_SHROUD").consume(1);
+		state.resources.get("VOID_SHROUD").gain(1);
 
-		if (state.resources.get(ResourceType.LemureShroud).availableAmount() === 0) {
+		if (state.resources.get("LEMURE_SHROUD").availableAmount() === 0) {
 			state.exitEnshroud();
 		}
 	},
 });
 
-makeResourceAbility("RPR", "ENSHROUD", 80, ResourceType.cd_Enshroud, {
-	rscType: ResourceType.Enshrouded,
+makeResourceAbility("RPR", "ENSHROUD", 80, "cd_ENSHROUD", {
+	rscType: "ENSHROUDED",
 	highlightIf: (state) => {
-		return (
-			state.hasResourceAvailable(ResourceType.Shroud, 50) ||
-			state.hasResourceAvailable(ResourceType.IdealHost)
-		);
+		return state.hasResourceAvailable("SHROUD", 50) || state.hasResourceAvailable("IDEAL_HOST");
 	},
 	applicationDelay: 0,
 	startOnHotbar: true,
 	cooldown: 15,
 	validateAttempt: (state) => {
-		return (
-			state.hasResourceAvailable(ResourceType.Shroud, 50) ||
-			state.hasResourceAvailable(ResourceType.IdealHost)
-		);
+		return state.hasResourceAvailable("SHROUD", 50) || state.hasResourceAvailable("IDEAL_HOST");
 	},
 	onConfirm: combineEffects(baseOnConfirm("ENSHROUD"), (state: RPRState) => {
 		state.enterEnshroud();
@@ -1097,79 +1071,79 @@ makeRPRWeaponskill("PERFECTIO", 100, {
 	falloff: 0.6,
 	applicationDelay: 1.29,
 	startOnHotbar: false,
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.PerfectioParata),
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.PerfectioParata),
+	highlightIf: (state) => state.hasResourceAvailable("PERFECTIO_PARATA"),
+	validateAttempt: (state) => state.hasResourceAvailable("PERFECTIO_PARATA"),
 	onConfirm: (state) => {
-		state.resources.get(ResourceType.PerfectioParata).consume(1);
+		state.resources.get("PERFECTIO_PARATA").consume(1);
 	},
 });
 
-makeRPRAbility("REGRESS", 74, ResourceType.cd_BloodStalk, {
+makeRPRAbility("REGRESS", 74, "cd_BLOOD_STALK", {
 	cooldown: 1,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	startOnHotbar: false,
 	highlightIf: (_state) => true,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Threshold),
-	onConfirm: (state) => state.resources.get(ResourceType.Threshold).consume(1),
+	validateAttempt: (state) => state.hasResourceAvailable("THRESHOLD"),
+	onConfirm: (state) => state.resources.get("THRESHOLD").consume(1),
 });
 
-makeRPRAbility("HELLS_INGRESS", 20, ResourceType.cd_IngressEgress, {
+makeRPRAbility("HELLS_INGRESS", 20, "cd_INGRESS_EGRESS", {
 	replaceIf: [
 		{
 			condition: (state) =>
-				state.hasResourceAvailable(ResourceType.Threshold) &&
-				state.hasResourceAvailable(ResourceType.HellsIngressUsed),
+				state.hasResourceAvailable("THRESHOLD") &&
+				state.hasResourceAvailable("HELLS_INGRESS_USED"),
 			newSkill: "REGRESS",
 		},
 	],
 	cooldown: 20,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	onConfirm: (state) => {
-		state.resources.get(ResourceType.HellsIngressUsed).gain(1);
-		if (state.hasTraitUnlocked("HELLSGATE")) state.setTimedResource(ResourceType.Threshold, 1);
-		state.setTimedResource(ResourceType.EnhancedHarpe, 1);
+		state.resources.get("HELLS_INGRESS_USED").gain(1);
+		if (state.hasTraitUnlocked("HELLSGATE")) state.setTimedResource("THRESHOLD", 1);
+		state.setTimedResource("ENHANCED_HARPE", 1);
 	},
 });
 
-makeRPRAbility("HELLS_EGRESS", 20, ResourceType.cd_IngressEgress, {
+makeRPRAbility("HELLS_EGRESS", 20, "cd_INGRESS_EGRESS", {
 	replaceIf: [
 		{
 			condition: (state) =>
-				state.hasResourceAvailable(ResourceType.Threshold) &&
-				!state.hasResourceAvailable(ResourceType.HellsIngressUsed),
+				state.hasResourceAvailable("THRESHOLD") &&
+				!state.hasResourceAvailable("HELLS_INGRESS_USED"),
 			newSkill: "REGRESS",
 		},
 	],
 	cooldown: 20,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.HellsIngressUsed);
-		if (state.hasTraitUnlocked("HELLSGATE")) state.setTimedResource(ResourceType.Threshold, 1);
-		state.setTimedResource(ResourceType.EnhancedHarpe, 1);
+		state.tryConsumeResource("HELLS_INGRESS_USED");
+		if (state.hasTraitUnlocked("HELLSGATE")) state.setTimedResource("THRESHOLD", 1);
+		state.setTimedResource("ENHANCED_HARPE", 1);
 	},
 });
 
-makeRPRAbility("ARCANE_CREST", 40, ResourceType.cd_ArcaneCrest, {
+makeRPRAbility("ARCANE_CREST", 40, "cd_ARCANE_CREST", {
 	replaceIf: [
 		{
-			condition: (state) => state.hasResourceAvailable(ResourceType.CrestOfTimeBorrowed),
+			condition: (state) => state.hasResourceAvailable("CREST_OF_TIME_BORROWED"),
 			newSkill: "ARCANE_CREST_POP",
 		},
 	],
 	cooldown: 30,
-	onConfirm: (state) => state.setTimedResource(ResourceType.CrestOfTimeBorrowed, 1),
+	onConfirm: (state) => state.setTimedResource("CREST_OF_TIME_BORROWED", 1),
 });
 
-makeRPRAbility("ARCANE_CREST_POP", 40, ResourceType.cd_ArcaneCrestPop, {
+makeRPRAbility("ARCANE_CREST_POP", 40, "cd_ARCANE_CREST_POP", {
 	cooldown: 1,
 	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	startOnHotbar: false,
 	onConfirm: (state) => {
-		state.resources.get(ResourceType.CrestOfTimeBorrowed).consume(1);
-		state.setTimedResource(ResourceType.CrestOfTimeReturned, 1);
+		state.resources.get("CREST_OF_TIME_BORROWED").consume(1);
+		state.setTimedResource("CREST_OF_TIME_RETURNED", 1);
 	},
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.CrestOfTimeBorrowed),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.CrestOfTimeBorrowed),
+	validateAttempt: (state) => state.hasResourceAvailable("CREST_OF_TIME_BORROWED"),
+	highlightIf: (state) => state.hasResourceAvailable("CREST_OF_TIME_BORROWED"),
 });
 
 makeRPRWeaponskill("WHORL_OF_DEATH", 35, {
@@ -1193,7 +1167,7 @@ makeRPRWeaponskill("NIGHTMARE_SCYTHE", 45, {
 	potency: 140,
 	combo: {
 		potency: 200,
-		resource: ResourceType.RPRAoECombo,
+		resource: "RPR_AOE_COMBO",
 		resourceValue: 1,
 	},
 	aspect: Aspect.Physical,
@@ -1201,7 +1175,7 @@ makeRPRWeaponskill("NIGHTMARE_SCYTHE", 45, {
 	falloff: 0,
 	applicationDelay: 0.8,
 	highlightIf: function (state: Readonly<RPRState>): boolean {
-		return state.resources.get(ResourceType.RPRAoECombo).availableAmount() === 1;
+		return state.resources.get("RPR_AOE_COMBO").availableAmount() === 1;
 	},
 });
 
@@ -1212,7 +1186,7 @@ makeRPRWeaponskill("SOUL_SCYTHE", 65, {
 	falloff: 0,
 	applicationDelay: 0.66,
 	secondaryCooldown: {
-		cdName: ResourceType.cd_SoulSlice,
+		cdName: "cd_SOUL_SLICE",
 		cooldown: 30,
 		maxCharges: 2,
 	},
@@ -1225,7 +1199,7 @@ makeRPRWeaponskill("EXECUTIONERS_GUILLOTINE", 96, {
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0,
 	applicationDelay: 0.53,
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Executioner),
+	highlightIf: (state) => state.hasResourceAvailable("EXECUTIONER"),
 	validateAttempt: executionerPredicate,
 });
 
@@ -1235,30 +1209,30 @@ makeRPRWeaponskill("GRIM_REAPING", 80, {
 	recastTime: 1.5,
 	falloff: 0,
 	applicationDelay: 0.8,
-	highlightIf: (state) => state.resources.get(ResourceType.LemureShroud).availableAmount() > 1,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.LemureShroud),
+	highlightIf: (state) => state.resources.get("LEMURE_SHROUD").availableAmount() > 1,
+	validateAttempt: (state) => state.hasResourceAvailable("LEMURE_SHROUD"),
 	onConfirm: (state) => {
-		state.resources.get(ResourceType.LemureShroud).consume(1);
-		state.resources.get(ResourceType.VoidShroud).gain(1);
+		state.resources.get("LEMURE_SHROUD").consume(1);
+		state.resources.get("VOID_SHROUD").gain(1);
 
-		if (state.resources.get(ResourceType.LemureShroud).availableAmount() === 0) {
+		if (state.resources.get("LEMURE_SHROUD").availableAmount() === 0) {
 			state.exitEnshroud();
 		}
 	},
 	aspect: Aspect.Physical,
 });
 
-makeRPRAbility("LEMURES_SCYTHE", 86, ResourceType.cd_LemuresSlice, {
+makeRPRAbility("LEMURES_SCYTHE", 86, "cd_LEMURES_SLICE", {
 	isPhysical: true,
 	potency: 100,
 	falloff: 0,
 	applicationDelay: 0.66,
 	cooldown: 1,
 	startOnHotbar: false,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.VoidShroud, 2),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.VoidShroud, 2),
+	validateAttempt: (state) => state.hasResourceAvailable("VOID_SHROUD", 2),
+	highlightIf: (state) => state.hasResourceAvailable("VOID_SHROUD", 2),
 	onConfirm: (state) => {
-		state.resources.get(ResourceType.VoidShroud).consume(2);
+		state.resources.get("VOID_SHROUD").consume(2);
 	},
 });
 
@@ -1266,11 +1240,11 @@ makeRPRWeaponskill("GUILLOTINE", 70, {
 	replaceIf: [
 		{
 			newSkill: "EXECUTIONERS_GUILLOTINE",
-			condition: (state) => state.resources.get(ResourceType.Executioner).available(1),
+			condition: (state) => state.resources.get("EXECUTIONER").available(1),
 		},
 		{
 			newSkill: "GRIM_REAPING",
-			condition: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
+			condition: (state) => state.hasResourceAvailable("ENSHROUDED"),
 		},
 	],
 	potency: 200,
@@ -1278,6 +1252,6 @@ makeRPRWeaponskill("GUILLOTINE", 70, {
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0,
 	applicationDelay: 0.49,
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SoulReaver),
+	highlightIf: (state) => state.hasResourceAvailable("SOUL_REAVER"),
 	validateAttempt: reaverPredicate,
 });

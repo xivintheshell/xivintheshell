@@ -26,7 +26,6 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { PotencyModifierType } from "../Game/Potency";
-import { ResourceType } from "../Game/Common";
 import { BLMState } from "../Game/Jobs/BLM";
 import { getResourceInfo, ResourceInfo } from "../Game/Resources";
 import { ActionKey } from "../Game/Data/Actions";
@@ -159,10 +158,10 @@ it(
 	testWithConfig({ spellSpeed: 420 }, () => {
 		(["FIRE_III", "SWIFTCAST", "BLIZZARD_III"] as ActionKey[]).forEach(applySkill);
 		expect(checkEnochian()).toBeTruthy();
-		expect(controller.game.resources.get(ResourceType.Paradox).available(1)).toBeTruthy();
+		expect(controller.game.resources.get("PARADOX").available(1)).toBeTruthy();
 		controller.step(15.01); // wait just a tiny bit after the enochian drop
 		expect(checkEnochian()).toBeFalsy();
-		expect(controller.game.resources.get(ResourceType.Paradox).available(0)).toBeTruthy();
+		expect(controller.game.resources.get("PARADOX").available(0)).toBeTruthy();
 	}),
 );
 
@@ -242,11 +241,9 @@ it(
 		// wait for cast time + damage application
 		controller.step(4);
 		expect(checkEnochian()).toBeTruthy();
+		expect((controller.game as BLMState).resources.get("MANA").availableAmount()).toEqual(2380);
 		expect(
-			(controller.game as BLMState).resources.get(ResourceType.Mana).availableAmount(),
-		).toEqual(2380);
-		expect(
-			(controller.game as BLMState).resources.get(ResourceType.UmbralHeart).availableAmount(),
+			(controller.game as BLMState).resources.get("UMBRAL_HEART").availableAmount(),
 		).toEqual(0);
 		(
 			[
@@ -261,9 +258,7 @@ it(
 		).forEach(applySkill);
 		controller.step(4);
 		expect(checkEnochian()).toBeTruthy();
-		expect(
-			(controller.game as BLMState).resources.get(ResourceType.Mana).availableAmount(),
-		).toEqual(0);
+		expect((controller.game as BLMState).resources.get("MANA").availableAmount()).toEqual(0);
 		compareDamageTables([
 			{
 				skillName: "FLARE",
@@ -471,27 +466,27 @@ it(
 		const state = controller.game as BLMState;
 
 		// Each DoT should have applied once
-		expect(damageData.dotTables.get(ResourceType.HighThunder)?.tableRows.length).toBe(1);
-		expect(damageData.dotTables.get(ResourceType.HighThunderII)?.tableRows.length).toBe(1);
+		expect(damageData.dotTables.get("HIGH_THUNDER")?.tableRows.length).toBe(1);
+		expect(damageData.dotTables.get("HIGH_THUNDER_II")?.tableRows.length).toBe(1);
 
 		const b3CastTime = state.config.getAfterTaxCastTime(state.config.adjustedCastTime(3.5));
 		const htApplicationDelay = state.skillsList.get("HIGH_THUNDER").applicationDelay;
 		const htApplicationTime = b3CastTime + htApplicationDelay;
 		// check the DoT summary for HT
-		const htSummary = damageData.dotTables.get(ResourceType.HighThunder)?.summary;
+		const htSummary = damageData.dotTables.get("HIGH_THUNDER")?.summary;
 		// There should be a gap from the start of the pull to the initial application
 		expect(htSummary?.cumulativeGap).toBeCloseTo(htApplicationTime, 0);
 		// HT will not have overridden anything
 		expect(htSummary?.cumulativeOverride).toEqual(0);
 
-		const ht2Summary = damageData.dotTables.get(ResourceType.HighThunderII)?.summary;
+		const ht2Summary = damageData.dotTables.get("HIGH_THUNDER_II")?.summary;
 		// Overriding DoTs should not list a gap
 		expect(ht2Summary?.cumulativeGap).toEqual(0);
 		const gcdRecastTime = state.config.getAfterTaxGCD(state.config.adjustedGCD(2.5));
 		const ht2ApplicationDelay = state.skillsList.get("HIGH_THUNDER_II").applicationDelay;
 		const ht2ApplicationTime = b3CastTime + 2 * gcdRecastTime + ht2ApplicationDelay;
 		const expectedOverride =
-			(getResourceInfo("BLM", ResourceType.HighThunder) as ResourceInfo).maxTimeout -
+			(getResourceInfo("BLM", "HIGH_THUNDER") as ResourceInfo).maxTimeout -
 			(ht2ApplicationTime - htApplicationTime);
 		// The override amount should be applied to the overriding DoT, not the overridden one
 		// controller time can be inexact due to floating point nonsense, so just expect it to be close

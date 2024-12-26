@@ -1,8 +1,10 @@
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, ResourceType, WarningType } from "../Common";
+import { Aspect, WarningType } from "../Common";
 import { ActionKey } from "../Data/Actions";
 import { MCHActionKey } from "../Data/Actions/Jobs/MCH";
+import { MCHCooldownKey } from "../Data/Cooldowns/Jobs/MCH";
+import { MCHResourceKey } from "../Data/Resources/Jobs/MCH";
 import { TraitKey } from "../Data/Traits";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
@@ -34,7 +36,7 @@ import {
 } from "../Skills";
 
 const makeMCHResource = (
-	rsc: ResourceType,
+	rsc: MCHResourceKey,
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
@@ -42,28 +44,28 @@ const makeMCHResource = (
 };
 
 // Gauge resources
-makeMCHResource(ResourceType.HeatGauge, 100);
-makeMCHResource(ResourceType.BatteryGauge, 100);
+makeMCHResource("HEAT_GAUGE", 100);
+makeMCHResource("BATTERY_GAUGE", 100);
 
 // Status Effects
-makeMCHResource(ResourceType.Reassembled, 1, { timeout: 5 });
-makeMCHResource(ResourceType.Overheated, 5, { timeout: 10 });
-makeMCHResource(ResourceType.Wildfire, 1, { timeout: 10 });
-makeMCHResource(ResourceType.WildfireSelf, 1, { timeout: 10 });
-makeMCHResource(ResourceType.Flamethrower, 1, { timeout: 10 });
-makeMCHResource(ResourceType.Bioblaster, 1, { timeout: 15 });
-makeMCHResource(ResourceType.Tactician, 1, { timeout: 15 });
-makeMCHResource(ResourceType.Hypercharged, 1, { timeout: 30 });
-makeMCHResource(ResourceType.ExcavatorReady, 1, { timeout: 30 });
-makeMCHResource(ResourceType.FullMetalMachinist, 1, { timeout: 30 });
+makeMCHResource("REASSEMBLED", 1, { timeout: 5 });
+makeMCHResource("OVERHEATED", 5, { timeout: 10 });
+makeMCHResource("WILDFIRE", 1, { timeout: 10 });
+makeMCHResource("WILDFIRE_SELF", 1, { timeout: 10 });
+makeMCHResource("FLAMETHROWER", 1, { timeout: 10 });
+makeMCHResource("BIOBLASTER", 1, { timeout: 15 });
+makeMCHResource("TACTICIAN", 1, { timeout: 15 });
+makeMCHResource("HYPERCHARGED", 1, { timeout: 30 });
+makeMCHResource("EXCAVATOR_READY", 1, { timeout: 30 });
+makeMCHResource("FULL_METAL_MACHINIST", 1, { timeout: 30 });
 
 // Combos & other tracking
-makeMCHResource(ResourceType.HeatCombo, 2, { timeout: 30 });
-makeMCHResource(ResourceType.Queen, 7);
-makeMCHResource(ResourceType.QueenPunches, 5);
-makeMCHResource(ResourceType.QueenFinishers, 2);
-makeMCHResource(ResourceType.WildfireHits, 6);
-makeMCHResource(ResourceType.BatteryBonus, 50);
+makeMCHResource("HEAT_COMBO", 2, { timeout: 30 });
+makeMCHResource("QUEEN", 7);
+makeMCHResource("QUEEN_PUNCHES", 5);
+makeMCHResource("QUEEN_FINISHERS", 2);
+makeMCHResource("WILDFIRE_HITS", 6);
+makeMCHResource("BATTERY_BONUS", 50);
 
 const COMBO_GCDS: MCHActionKey[] = [
 	"HEATED_CLEAN_SHOT",
@@ -89,41 +91,35 @@ export class MCHState extends GameState {
 		super(config);
 
 		// Unlike standard and technical, Air Anchor and Chain Saw's cooldowns are affected by skill speed
-		this.cooldowns.set(
-			new CoolDown(ResourceType.cd_AirAnchor, this.config.adjustedSksGCD(40), 1, 1),
-		);
-		this.cooldowns.set(
-			new CoolDown(ResourceType.cd_Chainsaw, this.config.adjustedSksGCD(60), 1, 1),
-		);
+		this.cooldowns.set(new CoolDown("cd_AIR_ANCHOR", this.config.adjustedSksGCD(40), 1, 1));
+		this.cooldowns.set(new CoolDown("cd_CHAINSAW", this.config.adjustedSksGCD(60), 1, 1));
 
 		if (!this.hasTraitUnlocked("QUEENS_GAMBIT")) {
-			this.resources.set(new Resource(ResourceType.QueenFinishers, 1, 0));
-			this.resources.set(new Resource(ResourceType.Queen, 6, 0));
+			this.resources.set(new Resource("QUEEN_FINISHERS", 1, 0));
+			this.resources.set(new Resource("QUEEN", 6, 0));
 		}
 
 		if (!this.hasTraitUnlocked("ENHANCED_REASSEMBLE")) {
-			this.cooldowns.set(new CoolDown(ResourceType.cd_Reassemble, 55, 1, 1));
+			this.cooldowns.set(new CoolDown("cd_REASSEMBLE", 55, 1, 1));
 		}
 		if (!this.hasTraitUnlocked("ENHANCED_MULTI_WEAPON")) {
-			this.cooldowns.set(
-				new CoolDown(ResourceType.cd_Drill, this.config.adjustedSksGCD(20), 1, 1),
-			);
+			this.cooldowns.set(new CoolDown("cd_DRILL", this.config.adjustedSksGCD(20), 1, 1));
 		}
 
 		if (!this.hasTraitUnlocked("CHARGED_ACTION_MASTERY")) {
-			this.cooldowns.set(new CoolDown(ResourceType.cd_DoubleCheck, 30, 2, 2));
-			this.cooldowns.set(new CoolDown(ResourceType.cd_Checkmate, 30, 2, 2));
+			this.cooldowns.set(new CoolDown("cd_DOUBLE_CHECK", 30, 2, 2));
+			this.cooldowns.set(new CoolDown("cd_CHECKMATE", 30, 2, 2));
 		}
 
 		if (!this.hasTraitUnlocked("ENHANCED_TACTICIAN")) {
-			this.cooldowns.set(new CoolDown(ResourceType.cd_Tactician, 120, 1, 1));
+			this.cooldowns.set(new CoolDown("cd_TACTICIAN", 120, 1, 1));
 		}
 
 		this.registerRecurringEvents([
 			{
 				groupedDots: [
 					{
-						dotName: ResourceType.Bioblaster,
+						dotName: "BIOBLASTER",
 						appliedBy: ["BIOBLASTER"],
 					},
 				],
@@ -131,7 +127,7 @@ export class MCHState extends GameState {
 			{
 				groupedDots: [
 					{
-						dotName: ResourceType.Flamethrower,
+						dotName: "FLAMETHROWER",
 						appliedBy: ["FLAMETHROWER"],
 						isGroundTargeted: true,
 						exclude: true,
@@ -144,11 +140,11 @@ export class MCHState extends GameState {
 	// Flamethrower works like a DoT, but ticks every second instead, so we need to handle that separately
 	override jobSpecificRegisterRecurringEvents(): void {
 		let recurringFlamethrowerTick = () => {
-			this.handleDoTTick(ResourceType.Flamethrower);
+			this.handleDoTTick("FLAMETHROWER");
 
 			// increment count
 			if (this.getDisplayTime() >= 0) {
-				controller.reportDotTick(this.time, ResourceType.Flamethrower);
+				controller.reportDotTick(this.time, "FLAMETHROWER");
 			}
 
 			// Flamethrower ticks every second, instead of every three, the way most DoTs do
@@ -171,7 +167,7 @@ export class MCHState extends GameState {
 	}
 
 	override cancelChanneledSkills(): void {
-		this.tryConsumeResource(ResourceType.Flamethrower);
+		this.tryConsumeResource("FLAMETHROWER");
 	}
 
 	processComboStatus(skill: MCHActionKey) {
@@ -179,7 +175,7 @@ export class MCHState extends GameState {
 			return;
 		} // MCH's non-combo GCDs don't break an ongoing combo
 
-		const comboState = this.resources.get(ResourceType.HeatCombo).availableAmount();
+		const comboState = this.resources.get("HEAT_COMBO").availableAmount();
 
 		// Defaulting to nextState 0 allows the AoE fillers to break the combo
 		let nextState = 0;
@@ -189,40 +185,35 @@ export class MCHState extends GameState {
 			nextState = 2;
 		}
 
-		this.setComboState(ResourceType.HeatCombo, nextState);
+		this.setComboState("HEAT_COMBO", nextState);
 	}
 
-	gainResource(
-		rscType: typeof ResourceType.HeatGauge | typeof ResourceType.BatteryGauge,
-		amount: number,
-	) {
+	gainResource(rscType: "HEAT_GAUGE" | "BATTERY_GAUGE", amount: number) {
 		const resource = this.resources.get(rscType);
 		if (resource.availableAmount() + amount > resource.maxValue) {
 			controller.reportWarning(
-				rscType === ResourceType.HeatGauge
-					? WarningType.HeatOvercap
-					: WarningType.BatteryOvercap,
+				rscType === "HEAT_GAUGE" ? WarningType.HeatOvercap : WarningType.BatteryOvercap,
 			);
 		}
 		this.resources.get(rscType).gain(amount);
 	}
 
 	handleQueenPunch = () => {
-		if (!this.hasResourceAvailable(ResourceType.QueenPunches)) {
+		if (!this.hasResourceAvailable("QUEEN_PUNCHES")) {
 			this.handleQueenFinisher();
 			return;
 		}
 
-		const punchNode = (this.resources.get(ResourceType.Queen) as DoTBuff).node;
+		const punchNode = (this.resources.get("QUEEN") as DoTBuff).node;
 
 		if (punchNode !== undefined) {
 			this.resolveQueenPotency(punchNode);
 		}
 
-		this.resources.get(ResourceType.QueenPunches).consume(1);
+		this.resources.get("QUEEN_PUNCHES").consume(1);
 
 		// schedule next punch
-		if (this.hasResourceAvailable(ResourceType.QueenPunches)) {
+		if (this.hasResourceAvailable("QUEEN_PUNCHES")) {
 			this.addEvent(new Event("queen punch", 1.56, () => this.handleQueenPunch()));
 		} else {
 			this.addEvent(new Event("queen finisher", 1.56, () => this.handleQueenFinisher()));
@@ -231,19 +222,18 @@ export class MCHState extends GameState {
 
 	resolveQueenPotency(node: ActionNode) {
 		const queenActionsRemaining =
-			this.resources.get(ResourceType.QueenPunches).availableAmount() +
-			this.resources.get(ResourceType.QueenFinishers).availableAmount();
-		const potencyIndex =
-			this.resources.get(ResourceType.Queen).availableAmount() - queenActionsRemaining;
+			this.resources.get("QUEEN_PUNCHES").availableAmount() +
+			this.resources.get("QUEEN_FINISHERS").availableAmount();
+		const potencyIndex = this.resources.get("QUEEN").availableAmount() - queenActionsRemaining;
 
 		if (potencyIndex < 0) {
 			return;
 		}
 
-		const queenPotency = node.getDotPotencies(ResourceType.Queen)[potencyIndex];
+		const queenPotency = node.getDotPotencies("QUEEN")[potencyIndex];
 
 		// Queen actions snapshot at execution time, not when the button was pressed, add Tincture modifier and note snapshot time for party buff handling
-		if (this.hasResourceAvailable(ResourceType.Tincture)) {
+		if (this.hasResourceAvailable("TINCTURE")) {
 			queenPotency.modifiers.push(Modifiers.Tincture);
 		}
 		queenPotency.snapshotTime = this.getDisplayTime();
@@ -252,58 +242,57 @@ export class MCHState extends GameState {
 	}
 
 	calculateQueenPotency(minPotency: number, maxPotency: number) {
-		const batteryBonus = this.resources.get(ResourceType.BatteryBonus).availableAmount();
+		const batteryBonus = this.resources.get("BATTERY_BONUS").availableAmount();
 		const bonusPotency = (maxPotency - minPotency) * (batteryBonus / 50.0);
 		return Math.floor((minPotency + bonusPotency) * 0.89); // Pet potency is approximately 89% that of player potency
 	}
 
 	handleQueenFinisher = () => {
-		if (!this.hasResourceAvailable(ResourceType.QueenFinishers)) {
+		if (!this.hasResourceAvailable("QUEEN_FINISHERS")) {
 			return;
 		}
 
-		const finisherNode = (this.resources.get(ResourceType.Queen) as DoTBuff).node;
+		const finisherNode = (this.resources.get("QUEEN") as DoTBuff).node;
 
 		if (finisherNode !== undefined) {
 			this.resolveQueenPotency(finisherNode);
 		}
 
-		this.resources.get(ResourceType.QueenFinishers).consume(1);
+		this.resources.get("QUEEN_FINISHERS").consume(1);
 
-		if (this.hasResourceAvailable(ResourceType.QueenFinishers)) {
+		if (this.hasResourceAvailable("QUEEN_FINISHERS")) {
 			this.addEvent(new Event("queen finisher", 2, () => this.handleQueenFinisher()));
 		} else {
-			this.tryConsumeResource(ResourceType.BatteryBonus, true);
+			this.tryConsumeResource("BATTERY_BONUS", true);
 			this.addEvent(
 				new Event("expire queen", 5, () => {
-					this.tryConsumeResource(ResourceType.Queen, true);
+					this.tryConsumeResource("QUEEN", true);
 				}),
 			);
 		}
 	};
 
 	expireWildfire() {
-		if (!this.hasResourceAvailable(ResourceType.WildfireHits)) {
+		if (!this.hasResourceAvailable("WILDFIRE_HITS")) {
 			return;
 		}
-		this.tryConsumeResource(ResourceType.WildfireSelf);
-		this.tryConsumeResource(ResourceType.Wildfire);
+		this.tryConsumeResource("WILDFIRE_SELF");
+		this.tryConsumeResource("WILDFIRE");
 
 		// Potency stuff
 		const potencyPerHit = this.hasTraitUnlocked("ENHANCED_WILD_FIRE") ? 240 : 100;
 		const basePotency =
-			Math.min(this.resources.get(ResourceType.WildfireHits).availableAmount(), 6) *
-			potencyPerHit;
-		const potencyNode = (this.resources.get(ResourceType.Wildfire) as DoTBuff).node;
+			Math.min(this.resources.get("WILDFIRE_HITS").availableAmount(), 6) * potencyPerHit;
+		const potencyNode = (this.resources.get("WILDFIRE") as DoTBuff).node;
 
 		if (potencyNode === undefined) {
 			return;
 		}
-		const wildFirePotency = potencyNode.getDotPotencies(ResourceType.Wildfire)[0];
+		const wildFirePotency = potencyNode.getDotPotencies("WILDFIRE")[0];
 		wildFirePotency.base = basePotency;
 		controller.resolvePotency(wildFirePotency);
 
-		this.tryConsumeResource(ResourceType.WildfireHits, true);
+		this.tryConsumeResource("WILDFIRE_HITS", true);
 	}
 }
 
@@ -318,7 +307,7 @@ const makeWeaponskill_MCH = (
 		potency?: number | Array<[TraitKey, number]>;
 		combo?: {
 			potency: number | Array<[TraitKey, number]>;
-			resource: ResourceType;
+			resource: MCHResourceKey;
 			resourceValue: number;
 		};
 		recastTime: number | ResourceCalculationFn<MCHState>;
@@ -336,18 +325,18 @@ const makeWeaponskill_MCH = (
 		(state) => state.processComboStatus(name),
 		(state) => {
 			if (name !== "FULL_METAL_FIELD") {
-				state.tryConsumeResource(ResourceType.Reassembled);
+				state.tryConsumeResource("REASSEMBLED");
 			}
 		},
 		(state) => {
-			if (state.hasResourceAvailable(ResourceType.WildfireSelf)) {
-				state.resources.get(ResourceType.WildfireHits).gain(1);
+			if (state.hasResourceAvailable("WILDFIRE_SELF")) {
+				state.resources.get("WILDFIRE_HITS").gain(1);
 			}
 		},
 		// All single-target weaponskills executed during overheat will consume a stack
 		(state) => {
 			if (!WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT.includes(name)) {
-				state.tryConsumeResource(ResourceType.Overheated);
+				state.tryConsumeResource("OVERHEATED");
 			}
 		},
 	);
@@ -370,10 +359,7 @@ const makeWeaponskill_MCH = (
 					),
 				);
 			}
-			if (
-				state.hasResourceAvailable(ResourceType.Reassembled) ||
-				name === "FULL_METAL_FIELD"
-			) {
+			if (state.hasResourceAvailable("REASSEMBLED") || name === "FULL_METAL_FIELD") {
 				mods.push(Modifiers.AutoCDH);
 			}
 			if (
@@ -390,7 +376,7 @@ const makeWeaponskill_MCH = (
 const makeAbility_MCH = (
 	name: MCHActionKey,
 	unlockLevel: number,
-	cdName: ResourceType,
+	cdName: MCHCooldownKey,
 	params: {
 		autoUpgrade?: SkillAutoReplace;
 		requiresCombat?: boolean;
@@ -422,9 +408,9 @@ const makeAbility_MCH = (
 const makeResourceAbility_MCH = (
 	name: MCHActionKey,
 	unlockLevel: number,
-	cdName: ResourceType,
+	cdName: MCHCooldownKey,
 	params: {
-		rscType: ResourceType;
+		rscType: MCHResourceKey;
 		replaceIf?: ConditionalSkillReplace<MCHState>[];
 		applicationDelay: number;
 		cooldown: number;
@@ -451,7 +437,7 @@ makeWeaponskill_MCH("HEATED_SPLIT_SHOT", 54, {
 	],
 	applicationDelay: 0.8,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5),
+	onConfirm: (state) => state.gainResource("HEAT_GAUGE", 5),
 });
 
 makeWeaponskill_MCH("HEATED_SLUG_SHOT", 60, {
@@ -466,13 +452,13 @@ makeWeaponskill_MCH("HEATED_SLUG_SHOT", 60, {
 			["MARKSMANS_MASTERY", 300],
 			["MARKSMANS_MASTERY_II", 320],
 		],
-		resource: ResourceType.HeatCombo,
+		resource: "HEAT_COMBO",
 		resourceValue: 1,
 	},
 	applicationDelay: 0.8,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5),
-	highlightIf: (state) => state.resources.get(ResourceType.HeatCombo).availableAmount() === 1,
+	onConfirm: (state) => state.gainResource("HEAT_GAUGE", 5),
+	highlightIf: (state) => state.resources.get("HEAT_COMBO").availableAmount() === 1,
 });
 
 makeWeaponskill_MCH("HEATED_CLEAN_SHOT", 64, {
@@ -487,20 +473,20 @@ makeWeaponskill_MCH("HEATED_CLEAN_SHOT", 64, {
 			["MARKSMANS_MASTERY", 380],
 			["MARKSMANS_MASTERY_II", 420],
 		],
-		resource: ResourceType.HeatCombo,
+		resource: "HEAT_COMBO",
 		resourceValue: 2,
 	},
 	applicationDelay: 0.8,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => {
-		state.gainResource(ResourceType.HeatGauge, 5);
-		state.gainResource(ResourceType.BatteryGauge, 10);
+		state.gainResource("HEAT_GAUGE", 5);
+		state.gainResource("BATTERY_GAUGE", 10);
 	},
-	highlightIf: (state) => state.resources.get(ResourceType.HeatCombo).availableAmount() === 2,
+	highlightIf: (state) => state.resources.get("HEAT_COMBO").availableAmount() === 2,
 });
 
-makeResourceAbility_MCH("REASSEMBLE", 10, ResourceType.cd_Reassemble, {
-	rscType: ResourceType.Reassembled,
+makeResourceAbility_MCH("REASSEMBLE", 10, "cd_REASSEMBLE", {
+	rscType: "REASSEMBLED",
 	applicationDelay: 0,
 	cooldown: 55,
 	maxCharges: 2, // charges reduced as needed in constructor by trait
@@ -511,7 +497,7 @@ makeWeaponskill_MCH("DRILL", 58, {
 	applicationDelay: 1.15,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	secondaryCooldown: {
-		cdName: ResourceType.cd_Drill,
+		cdName: "cd_DRILL",
 		cooldown: 20,
 		maxCharges: 2, // charges reduced as needed in constructor by trait
 	},
@@ -525,9 +511,9 @@ makeWeaponskill_MCH("HOT_SHOT", 4, {
 	potency: 240,
 	applicationDelay: 1.15, // Assuming the same as Air Anchor since we don't have data for it in the spreadsheet
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	onConfirm: (state) => state.gainResource(ResourceType.BatteryGauge, 20),
+	onConfirm: (state) => state.gainResource("BATTERY_GAUGE", 20),
 	secondaryCooldown: {
-		cdName: ResourceType.cd_AirAnchor,
+		cdName: "cd_AIR_ANCHOR",
 		cooldown: 40, // cooldown edited in constructor to be affected by skill speed
 		maxCharges: 1,
 	},
@@ -537,9 +523,9 @@ makeWeaponskill_MCH("AIR_ANCHOR", 76, {
 	potency: 600,
 	applicationDelay: 1.15,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	onConfirm: (state) => state.gainResource(ResourceType.BatteryGauge, 20),
+	onConfirm: (state) => state.gainResource("BATTERY_GAUGE", 20),
 	secondaryCooldown: {
-		cdName: ResourceType.cd_AirAnchor,
+		cdName: "cd_AIR_ANCHOR",
 		cooldown: 40, // cooldown edited in constructor to be affected by skill speed
 		maxCharges: 1,
 	},
@@ -549,7 +535,7 @@ makeWeaponskill_MCH("CHAIN_SAW", 90, {
 	replaceIf: [
 		{
 			newSkill: "EXCAVATOR",
-			condition: (state) => state.hasResourceAvailable(ResourceType.ExcavatorReady),
+			condition: (state) => state.hasResourceAvailable("EXCAVATOR_READY"),
 		},
 	],
 	potency: 600,
@@ -557,13 +543,13 @@ makeWeaponskill_MCH("CHAIN_SAW", 90, {
 	applicationDelay: 1.03,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => {
-		state.gainResource(ResourceType.BatteryGauge, 20);
+		state.gainResource("BATTERY_GAUGE", 20);
 		if (state.hasTraitUnlocked("ENHANCED_MULTI_WEAPON_II")) {
-			state.gainStatus(ResourceType.ExcavatorReady);
+			state.gainStatus("EXCAVATOR_READY");
 		}
 	},
 	secondaryCooldown: {
-		cdName: ResourceType.cd_Chainsaw,
+		cdName: "cd_CHAINSAW",
 		cooldown: 60, // cooldown edited in constructor to be affected by skill speed
 		maxCharges: 1,
 	},
@@ -575,18 +561,18 @@ makeWeaponskill_MCH("EXCAVATOR", 90, {
 	applicationDelay: 1.07,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => {
-		state.gainResource(ResourceType.BatteryGauge, 20);
-		state.tryConsumeResource(ResourceType.ExcavatorReady);
+		state.gainResource("BATTERY_GAUGE", 20);
+		state.tryConsumeResource("EXCAVATOR_READY");
 	},
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ExcavatorReady),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ExcavatorReady),
+	validateAttempt: (state) => state.hasResourceAvailable("EXCAVATOR_READY"),
+	highlightIf: (state) => state.hasResourceAvailable("EXCAVATOR_READY"),
 });
 
-makeAbility_MCH("BARREL_STABILIZER", 66, ResourceType.cd_BarrelStabilizer, {
+makeAbility_MCH("BARREL_STABILIZER", 66, "cd_BARREL_STABILIZER", {
 	replaceIf: [
 		{
 			newSkill: "FULL_METAL_FIELD",
-			condition: (state) => state.hasResourceAvailable(ResourceType.FullMetalMachinist),
+			condition: (state) => state.hasResourceAvailable("FULL_METAL_MACHINIST"),
 		},
 	],
 	applicationDelay: 0,
@@ -594,9 +580,9 @@ makeAbility_MCH("BARREL_STABILIZER", 66, ResourceType.cd_BarrelStabilizer, {
 	maxCharges: 1,
 	requiresCombat: true,
 	onConfirm: (state) => {
-		state.gainStatus(ResourceType.Hypercharged);
+		state.gainStatus("HYPERCHARGED");
 		if (state.hasTraitUnlocked("ENHANCED_BARREL_STABILIZER")) {
-			state.gainStatus(ResourceType.FullMetalMachinist);
+			state.gainStatus("FULL_METAL_MACHINIST");
 		}
 	},
 });
@@ -606,44 +592,42 @@ makeWeaponskill_MCH("FULL_METAL_FIELD", 100, {
 	falloff: 0.5,
 	applicationDelay: 1.02,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.FullMetalMachinist),
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.FullMetalMachinist),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.FullMetalMachinist),
+	onConfirm: (state) => state.tryConsumeResource("FULL_METAL_MACHINIST"),
+	validateAttempt: (state) => state.hasResourceAvailable("FULL_METAL_MACHINIST"),
+	highlightIf: (state) => state.hasResourceAvailable("FULL_METAL_MACHINIST"),
 });
 
-makeResourceAbility_MCH("HYPERCHARGE", 30, ResourceType.cd_Hypercharge, {
-	rscType: ResourceType.Overheated,
+makeResourceAbility_MCH("HYPERCHARGE", 30, "cd_HYPERCHARGE", {
+	rscType: "OVERHEATED",
 	applicationDelay: 0,
 	cooldown: 10,
 	maxCharges: 1,
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.Hypercharged)) {
-			state.tryConsumeResource(ResourceType.Hypercharged);
+		if (state.hasResourceAvailable("HYPERCHARGED")) {
+			state.tryConsumeResource("HYPERCHARGED");
 		} else {
-			state.resources.get(ResourceType.HeatGauge).consume(50);
+			state.resources.get("HEAT_GAUGE").consume(50);
 		}
 	},
 	validateAttempt: (state) =>
-		state.hasResourceAvailable(ResourceType.HeatGauge, 50) ||
-		state.hasResourceAvailable(ResourceType.Hypercharged),
+		state.hasResourceAvailable("HEAT_GAUGE", 50) || state.hasResourceAvailable("HYPERCHARGED"),
 	highlightIf: (state) =>
-		state.hasResourceAvailable(ResourceType.HeatGauge, 50) ||
-		state.hasResourceAvailable(ResourceType.Hypercharged),
+		state.hasResourceAvailable("HEAT_GAUGE", 50) || state.hasResourceAvailable("HYPERCHARGED"),
 });
 
-makeAbility_MCH("WILDFIRE", 45, ResourceType.cd_Wildfire, {
+makeAbility_MCH("WILDFIRE", 45, "cd_WILDFIRE", {
 	replaceIf: [
 		{
 			newSkill: "DETONATOR",
-			condition: (state) => state.hasResourceAvailable(ResourceType.WildfireSelf),
+			condition: (state) => state.hasResourceAvailable("WILDFIRE_SELF"),
 		},
 	],
 	applicationDelay: 0.67,
 	cooldown: 120,
 	maxCharges: 1,
 	onConfirm: (state, node) => {
-		state.gainStatus(ResourceType.WildfireSelf);
-		const wildFire = state.resources.get(ResourceType.Wildfire) as DoTBuff;
+		state.gainStatus("WILDFIRE_SELF");
+		const wildFire = state.resources.get("WILDFIRE") as DoTBuff;
 
 		const wildFirePotency = new Potency({
 			config: state.config,
@@ -656,30 +640,30 @@ makeAbility_MCH("WILDFIRE", 45, ResourceType.cd_Wildfire, {
 			targetCount: 1,
 		});
 		wildFirePotency.modifiers = [Modifiers.NoCDH]; // Wildfire can neither crit nor direct hit
-		if (state.hasResourceAvailable(ResourceType.Tincture)) {
+		if (state.hasResourceAvailable("TINCTURE")) {
 			wildFirePotency.modifiers.push(Modifiers.Tincture);
 		}
 
-		node.addDoTPotency(wildFirePotency, ResourceType.Wildfire);
+		node.addDoTPotency(wildFirePotency, "WILDFIRE");
 
 		wildFire.gain(1);
 		wildFire.node = node;
 
 		state.resources.addResourceEvent({
-			rscType: ResourceType.Wildfire,
+			rscType: "WILDFIRE",
 			name: "wildfire expiration",
-			delay: (getResourceInfo("MCH", ResourceType.Wildfire) as ResourceInfo).maxTimeout,
+			delay: (getResourceInfo("MCH", "WILDFIRE") as ResourceInfo).maxTimeout,
 			fnOnRsc: (_rsc) => state.expireWildfire(),
 		});
 	},
 });
-makeAbility_MCH("DETONATOR", 45, ResourceType.cd_Detonator, {
+makeAbility_MCH("DETONATOR", 45, "cd_DETONATOR", {
 	startOnHotbar: false,
 	applicationDelay: 0.62,
 	cooldown: 1,
 	maxCharges: 1,
 	onConfirm: (state) => state.expireWildfire(),
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.WildfireSelf),
+	validateAttempt: (state) => state.hasResourceAvailable("WILDFIRE_SELF"),
 });
 
 makeWeaponskill_MCH("BLAZING_SHOT", 68, {
@@ -690,14 +674,14 @@ makeWeaponskill_MCH("BLAZING_SHOT", 68, {
 	applicationDelay: 0.85,
 	recastTime: 1.5,
 	onConfirm: (state) => {
-		(state.cooldowns.get(ResourceType.cd_DoubleCheck) as CoolDown).restore(state, 15);
-		(state.cooldowns.get(ResourceType.cd_Checkmate) as CoolDown).restore(state, 15);
+		(state.cooldowns.get("cd_DOUBLE_CHECK") as CoolDown).restore(state, 15);
+		(state.cooldowns.get("cd_CHECKMATE") as CoolDown).restore(state, 15);
 	},
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Overheated),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Overheated),
+	validateAttempt: (state) => state.hasResourceAvailable("OVERHEATED"),
+	highlightIf: (state) => state.hasResourceAvailable("OVERHEATED"),
 });
 
-makeAbility_MCH("GAUSS_ROUND", 15, ResourceType.cd_DoubleCheck, {
+makeAbility_MCH("GAUSS_ROUND", 15, "cd_DOUBLE_CHECK", {
 	autoUpgrade: {
 		trait: "DOUBLE_BARREL_MASTERY",
 		otherSkill: "DOUBLE_CHECK",
@@ -707,7 +691,7 @@ makeAbility_MCH("GAUSS_ROUND", 15, ResourceType.cd_DoubleCheck, {
 	cooldown: 30,
 	maxCharges: 3, // TODO
 });
-makeAbility_MCH("DOUBLE_CHECK", 92, ResourceType.cd_DoubleCheck, {
+makeAbility_MCH("DOUBLE_CHECK", 92, "cd_DOUBLE_CHECK", {
 	startOnHotbar: false,
 	potency: 170,
 	falloff: 0.5,
@@ -716,7 +700,7 @@ makeAbility_MCH("DOUBLE_CHECK", 92, ResourceType.cd_DoubleCheck, {
 	maxCharges: 3,
 });
 
-makeAbility_MCH("RICOCHET", 50, ResourceType.cd_Checkmate, {
+makeAbility_MCH("RICOCHET", 50, "cd_CHECKMATE", {
 	autoUpgrade: {
 		trait: "DOUBLE_BARREL_MASTERY",
 		otherSkill: "CHECKMATE",
@@ -727,7 +711,7 @@ makeAbility_MCH("RICOCHET", 50, ResourceType.cd_Checkmate, {
 	cooldown: 30,
 	maxCharges: 3,
 });
-makeAbility_MCH("CHECKMATE", 92, ResourceType.cd_Checkmate, {
+makeAbility_MCH("CHECKMATE", 92, "cd_CHECKMATE", {
 	startOnHotbar: false,
 	potency: 170,
 	falloff: 0.5,
@@ -757,7 +741,7 @@ const robotSummons: Array<{
 	},
 ];
 robotSummons.forEach((params) => {
-	makeAbility_MCH(params.skillName, params.skillLevel, ResourceType.cd_Queen, {
+	makeAbility_MCH(params.skillName, params.skillLevel, "cd_QUEEN", {
 		startOnHotbar: params.startOnHotbar,
 		autoUpgrade: params.autoUpgrade,
 		applicationDelay: 0,
@@ -765,26 +749,24 @@ robotSummons.forEach((params) => {
 		maxCharges: 1,
 		validateAttempt: (state) => {
 			return (
-				state.hasResourceAvailable(ResourceType.BatteryGauge, 50) &&
-				!state.hasResourceAvailable(ResourceType.Queen)
+				state.hasResourceAvailable("BATTERY_GAUGE", 50) &&
+				!state.hasResourceAvailable("QUEEN")
 			);
 		},
 		onConfirm: (state, node) => {
 			// Cache the battery bonus scalar based on the amount of battery gauge available
-			const battery = state.resources.get(ResourceType.BatteryGauge).availableAmount();
-			state.resources.get(ResourceType.BatteryBonus).gain(battery - 50);
+			const battery = state.resources.get("BATTERY_GAUGE").availableAmount();
+			state.resources.get("BATTERY_BONUS").gain(battery - 50);
 
 			// Consume the gauge
-			state.tryConsumeResource(ResourceType.BatteryGauge, true);
+			state.tryConsumeResource("BATTERY_GAUGE", true);
 
 			// note that queen is summoned, and grant the requisite number of punches and finishers
-			const punchResource = state.resources.get(ResourceType.QueenPunches);
+			const punchResource = state.resources.get("QUEEN_PUNCHES");
 			punchResource.gain(5);
 			const finishers = state.hasTraitUnlocked("QUEENS_GAMBIT") ? 2 : 1;
-			state.resources.get(ResourceType.QueenFinishers).gain(finishers);
-			state.resources
-				.get(ResourceType.Queen)
-				.gain(punchResource.availableAmount() + finishers);
+			state.resources.get("QUEEN_FINISHERS").gain(finishers);
+			state.resources.get("QUEEN").gain(punchResource.availableAmount() + finishers);
 
 			let sourceSkill = "VOLLEY_FIRE";
 			let basePotency = 0;
@@ -807,7 +789,7 @@ robotSummons.forEach((params) => {
 						snapshotTime: undefined,
 						targetCount: node.targetCount,
 					}),
-					ResourceType.Queen,
+					"QUEEN",
 				);
 			}
 
@@ -829,7 +811,7 @@ robotSummons.forEach((params) => {
 					snapshotTime: undefined,
 					targetCount: node.targetCount,
 				}),
-				ResourceType.Queen,
+				"QUEEN",
 			);
 
 			if (state.hasTraitUnlocked("QUEENS_GAMBIT")) {
@@ -844,11 +826,11 @@ robotSummons.forEach((params) => {
 						snapshotTime: undefined,
 						targetCount: node.targetCount,
 					}),
-					ResourceType.Queen,
+					"QUEEN",
 				);
 			}
 
-			(state.resources.get(ResourceType.Queen) as DoTBuff).node = node;
+			(state.resources.get("QUEEN") as DoTBuff).node = node;
 
 			// Schedule the initial punch
 			state.addEvent(new Event("initial queen punch", 5.5, () => state.handleQueenPunch()));
@@ -877,15 +859,15 @@ const overdriveSkills: Array<{
 	},
 ];
 overdriveSkills.forEach((params) => {
-	makeAbility_MCH(params.skillName, params.skillLevel, ResourceType.cd_Overdrive, {
+	makeAbility_MCH(params.skillName, params.skillLevel, "cd_OVERDRIVE", {
 		startOnHotbar: params.startOnHotbar,
 		autoUpgrade: params.autoUpgrade,
 		applicationDelay: 0,
 		cooldown: 15,
 		maxCharges: 1,
-		validateAttempt: (state) => state.hasResourceAvailable(ResourceType.QueenPunches),
+		validateAttempt: (state) => state.hasResourceAvailable("QUEEN_PUNCHES"),
 		onConfirm: (state) => {
-			state.tryConsumeResource(ResourceType.QueenPunches, true);
+			state.tryConsumeResource("QUEEN_PUNCHES", true);
 		},
 	});
 });
@@ -899,7 +881,7 @@ makeWeaponskill_MCH("SPREAD_SHOT", 18, {
 	falloff: 0,
 	applicationDelay: 0.8,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5),
+	onConfirm: (state) => state.gainResource("HEAT_GAUGE", 5),
 });
 makeWeaponskill_MCH("SCATTERGUN", 82, {
 	startOnHotbar: false,
@@ -910,7 +892,7 @@ makeWeaponskill_MCH("SCATTERGUN", 82, {
 	falloff: 0,
 	applicationDelay: 1.15,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 10),
+	onConfirm: (state) => state.gainResource("HEAT_GAUGE", 10),
 });
 
 makeWeaponskill_MCH("BIOBLASTER", 58, {
@@ -919,19 +901,19 @@ makeWeaponskill_MCH("BIOBLASTER", 58, {
 	applicationDelay: 0.97,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	secondaryCooldown: {
-		cdName: ResourceType.cd_Drill,
+		cdName: "cd_DRILL",
 		cooldown: 20,
 		maxCharges: 2, // charges reduced as needed in constructer by trait
 	},
 	onConfirm: (state, node) =>
 		state.addDoTPotencies({
 			node,
-			dotName: ResourceType.Bioblaster,
+			dotName: "BIOBLASTER",
 			skillName: "BIOBLASTER",
 			tickPotency: 50,
 			speedStat: "sks",
 		}),
-	onApplication: (state, node) => state.applyDoT(ResourceType.Bioblaster, node),
+	onApplication: (state, node) => state.applyDoT("BIOBLASTER", node),
 });
 
 makeWeaponskill_MCH("AUTO_CROSSBOW", 52, {
@@ -942,8 +924,8 @@ makeWeaponskill_MCH("AUTO_CROSSBOW", 52, {
 	falloff: 0,
 	applicationDelay: 0.89,
 	recastTime: 1.5,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Overheated),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Overheated),
+	validateAttempt: (state) => state.hasResourceAvailable("OVERHEATED"),
+	highlightIf: (state) => state.hasResourceAvailable("OVERHEATED"),
 });
 
 makeWeaponskill_MCH("FLAMETHROWER", 70, {
@@ -953,7 +935,7 @@ makeWeaponskill_MCH("FLAMETHROWER", 70, {
 	onConfirm: (state, node) => {
 		state.addDoTPotencies({
 			node,
-			dotName: ResourceType.Flamethrower,
+			dotName: "FLAMETHROWER",
 			skillName: "FLAMETHROWER",
 			tickPotency: 100,
 			tickFrequency: 1,
@@ -961,23 +943,23 @@ makeWeaponskill_MCH("FLAMETHROWER", 70, {
 		});
 	},
 	onApplication: (state, node) => {
-		state.applyDoT(ResourceType.Flamethrower, node);
+		state.applyDoT("FLAMETHROWER", node);
 	},
 	secondaryCooldown: {
-		cdName: ResourceType.cd_Flamethrower,
+		cdName: "cd_FLAMETHROWER",
 		cooldown: 60,
 		maxCharges: 1,
 	},
 });
 
-makeResourceAbility_MCH("TACTICIAN", 56, ResourceType.cd_Tactician, {
-	rscType: ResourceType.Tactician,
+makeResourceAbility_MCH("TACTICIAN", 56, "cd_TACTICIAN", {
+	rscType: "TACTICIAN",
 	maxCharges: 1,
 	cooldown: 90,
 	applicationDelay: 0.62,
 });
 
-makeAbility_MCH("DISMANTLE", 62, ResourceType.cd_Dismantle, {
+makeAbility_MCH("DISMANTLE", 62, "cd_DISMANTLE", {
 	maxCharges: 1,
 	cooldown: 120,
 	applicationDelay: 0.62,

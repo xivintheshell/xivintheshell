@@ -1,7 +1,7 @@
 // making another file just so I don't keep clustering Controller.ts
 import { controller as ctl } from "./Controller";
 import { ActionNode, ActionType } from "./Record";
-import { BuffType, ResourceType } from "../Game/Common";
+import { BuffType } from "../Game/Common";
 import {
 	DamageStatisticsData,
 	DamageStatisticsMode,
@@ -13,6 +13,7 @@ import {
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
 import { ActionKey } from "../Game/Data/Actions";
 import { LIMIT_BREAK } from "../Game/Data/Actions/Shared/LimitBreak";
+import { ResourceKey } from "../Game/Data/Resources";
 
 // TODO autogenerate everything here
 
@@ -89,7 +90,7 @@ function isDoTNode(node: ActionNode) {
 	return ctl.game.dotSkills.includes(node.skillName);
 }
 
-function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: ActionNode) {
+function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: ActionNode) {
 	console.assert(isDoTNode(node));
 	let mainPotency = node.getInitialPotency();
 	let entry: DamageStatsDoTTableEntry = {
@@ -325,7 +326,7 @@ export function calculateSelectedStats(props: {
 			const checked = getSkillOrDotInclude(node.skillName);
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
-			if (skillInfo.cdName === ResourceType.cd_GCD && checked) {
+			if (skillInfo.cdName === "cd_GCD" && checked) {
 				if (node.hitBoss(bossIsUntargetable)) selected.gcdSkills.applied++;
 				else if (!node.resolved()) selected.gcdSkills.pending++;
 			}
@@ -382,7 +383,7 @@ export function calculateDamageStats(props: {
 		totalPartyBuffPotency: 0,
 	};
 
-	const dotTables: Map<ResourceType, DamageStatsDoTTrackingData> = new Map();
+	const dotTables: Map<ResourceKey, DamageStatsDoTTrackingData> = new Map();
 
 	let skillPotencies: Map<ActionKey, number> = new Map();
 
@@ -393,7 +394,7 @@ export function calculateDamageStats(props: {
 
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
-			if (skillInfo.cdName === ResourceType.cd_GCD && checked) {
+			if (skillInfo.cdName === "cd_GCD" && checked) {
 				if (node.hitBoss(bossIsUntargetable)) {
 					gcdSkills.applied++;
 				} else if (!node.resolved()) {

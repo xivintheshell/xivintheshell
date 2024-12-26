@@ -1,6 +1,5 @@
 import React, { CSSProperties } from "react";
 import { Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile } from "./Common";
-import { ResourceType } from "../Game/Common";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
 import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
 import { localize, localizeResourceType, localizeSkillName } from "./Localization";
@@ -15,6 +14,7 @@ import {
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { ActionKey } from "../Game/Data/Actions";
 import { LIMIT_BREAK } from "../Game/Data/Actions/Shared/LimitBreak";
+import { ResourceKey } from "../Game/Data/Resources";
 
 export type DamageStatsMainTableEntry = {
 	skillName: ActionKey;
@@ -101,7 +101,7 @@ export type DamageStatisticsData = {
 		totalPotPotency: number;
 		totalPartyBuffPotency: number;
 	};
-	dotTables: Map<ResourceType, DamageStatsDoTTrackingData>;
+	dotTables: Map<ResourceKey, DamageStatsDoTTrackingData>;
 	mode: DamageStatisticsMode;
 };
 
@@ -1042,7 +1042,7 @@ export class DamageStatistics extends React.Component {
 			</div>;
 		};
 
-		const allDotTableRows: { dotName: ResourceType; tableRows: React.ReactNode[] }[] = [];
+		const allDotTableRows: { dotName: ResourceKey; tableRows: React.ReactNode[] }[] = [];
 		this.data.dotTables.forEach((dotTrackingData, dotName) => {
 			const dotTableRows = [];
 

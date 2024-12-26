@@ -8,7 +8,6 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { PotencyModifierType } from "../Game/Potency";
-import { ResourceType } from "../Game/Common";
 import { XIVMath } from "../Game/XIVMath";
 import { SAMState } from "../Game/Jobs/SAM";
 import { ActionKey } from "../Game/Data/Actions";
@@ -46,7 +45,7 @@ it(
 		// wait for damage applications
 		controller.step(4);
 		const state = controller.game as SAMState;
-		expect(state.resources.get(ResourceType.Kenki).availableAmount()).toEqual(25);
+		expect(state.resources.get("KENKI").availableAmount()).toEqual(25);
 		compareDamageTables([
 			{
 				skillName: "SHIFU",
@@ -71,10 +70,10 @@ it(
 	"generates kenki and shoha in meditation",
 	testWithConfig({}, () => {
 		const state = controller.game as SAMState;
-		state.resources.get(ResourceType.InCombat).overrideCurrentValue(1);
+		state.resources.get("IN_COMBAT").overrideCurrentValue(1);
 		applySkill("MEDITATE");
 		controller.step(30); // longer than the duration to make sure we don't keep ticking
-		expect(state.resources.get(ResourceType.Kenki).availableAmount()).toEqual(50);
-		expect(state.resources.get(ResourceType.Meditation).availableAmount()).toEqual(3);
+		expect(state.resources.get("KENKI").availableAmount()).toEqual(50);
+		expect(state.resources.get("MEDITATION").availableAmount()).toEqual(3);
 	}),
 );

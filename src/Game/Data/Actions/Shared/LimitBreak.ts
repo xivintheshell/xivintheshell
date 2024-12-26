@@ -39,5 +39,5 @@ export const LIMIT_BREAK = ensureRecord<Action>()({
 	CHROMATIC_FANTASY: { name: "Chromatic Fantasy" },
 });
 
-export type LimitBreak = typeof LIMIT_BREAK;
-export type LimitBreakKey = keyof LimitBreak;
+export type LimitBreakActions = typeof LIMIT_BREAK;
+export type LimitBreakActionKey = keyof LimitBreakActions;

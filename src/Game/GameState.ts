@@ -4,7 +4,6 @@ import {
 	Debug,
 	makeSkillReadyStatus,
 	ProcMode,
-	ResourceType,
 	SkillUnavailableReason,
 } from "./Common";
 import { GameConfig } from "./GameConfig";
@@ -44,6 +43,8 @@ import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS } from "./Data/Jobs";
 import { TraitKey } from "./Data/Traits";
 import { ActionKey } from "./Data/Actions";
 import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
+import { CooldownKey } from "./Data/Cooldowns";
+import { ResourceKey, RESOURCES } from "./Data/Resources";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require("seedrandom");
@@ -51,7 +52,7 @@ let SeedRandom = require("seedrandom");
 type RNG = any;
 
 export interface DoTSkillRegistration {
-	dotName: ResourceType;
+	dotName: ResourceKey;
 	appliedBy: ActionKey[];
 	isGroundTargeted?: true;
 	exclude?: boolean; // Exclude from standard DoT tick handling (Flamethrower)
@@ -64,7 +65,7 @@ export interface DoTRegistrationGroup {
 export interface DoTPotencyProps {
 	node: ActionNode;
 	skillName: ActionKey;
-	dotName: ResourceType;
+	dotName: ResourceKey;
 	tickPotency: number;
 	tickFrequency?: number;
 	speedStat: "sks" | "sps";
@@ -87,12 +88,12 @@ export abstract class GameState {
 	displayedSkills: DisplayedSkills;
 
 	dotGroups: DoTRegistrationGroup[] = [];
-	dotResources: ResourceType[] = [];
-	excludedDoTs: ResourceType[] = [];
-	fullTimeDoTs: ResourceType[] = [];
-	#groundTargetDoTs: ResourceType[] = [];
+	dotResources: ResourceKey[] = [];
+	excludedDoTs: ResourceKey[] = [];
+	fullTimeDoTs: ResourceKey[] = [];
+	#groundTargetDoTs: ResourceKey[] = [];
 	dotSkills: ActionKey[] = [];
-	#exclusiveDots: Map<ResourceType, ResourceType[]> = new Map();
+	#exclusiveDots: Map<ResourceKey, ResourceKey[]> = new Map();
 
 	constructor(config: GameConfig) {
 		this.config = config;
@@ -112,10 +113,17 @@ export abstract class GameState {
 			if (info.isCoolDown) {
 				// always start cooldowns at their max stacks (overrides will be applied later)
 				this.cooldowns.set(
-					new CoolDown(rsc, info.cdPerStack, info.maxStacks, info.maxStacks),
+					new CoolDown(
+						rsc as CooldownKey,
+						info.cdPerStack,
+						info.maxStacks,
+						info.maxStacks,
+					),
 				);
 			} else {
-				this.resources.set(new Resource(rsc, info.maxValue, info.defaultValue));
+				this.resources.set(
+					new Resource(rsc as ResourceKey, info.maxValue, info.defaultValue),
+				);
 			}
 		});
 		// GCD, movement, and animation locks are treated as special since they do not appear
@@ -127,17 +135,15 @@ export abstract class GameState {
 		if (JOBS[this.job].speedStat === "sps") {
 			adjustedGCD = config.adjustedGCD();
 		}
-		this.cooldowns.set(
-			new CoolDown(ResourceType.cd_GCD, config.getAfterTaxGCD(adjustedGCD), 1, 1),
-		);
+		this.cooldowns.set(new CoolDown("cd_GCD", config.getAfterTaxGCD(adjustedGCD), 1, 1));
 
-		this.resources.set(new Resource(ResourceType.Movement, 1, 1));
-		this.resources.set(new Resource(ResourceType.NotAnimationLocked, 1, 1));
-		this.resources.set(new Resource(ResourceType.NotCasterTaxed, 1, 1));
+		this.resources.set(new Resource("MOVEMENT", 1, 1));
+		this.resources.set(new Resource("NOT_ANIMATION_LOCKED", 1, 1));
+		this.resources.set(new Resource("NOT_CASTER_TAXED", 1, 1));
 		// begin the encounter not in combat by default
-		this.resources.set(new Resource(ResourceType.InCombat, 1, 0));
+		this.resources.set(new Resource("IN_COMBAT", 1, 0));
 
-		this.cooldowns.set(new CoolDown(ResourceType.Never, 0, 0, 0)); // dummy cooldown for invalid skills
+		this.cooldowns.set(new CoolDown("NEVER", 0, 0, 0)); // dummy cooldown for invalid skills
 
 		// EVENTS QUEUE (events decide future changes to resources)
 		// which might include:
@@ -171,7 +177,7 @@ export abstract class GameState {
 			// get mana ticks rolling (through recursion)
 			let recurringManaRegen = () => {
 				// mana regen
-				let mana = this.resources.get(ResourceType.Mana);
+				let mana = this.resources.get("MANA");
 				let gainAmount = this.captureManaRegenAmount();
 				mana.gain(gainAmount);
 				let currentAmount = mana.availableAmount();
@@ -181,7 +187,7 @@ export abstract class GameState {
 				);
 				// queue the next tick
 				this.resources.addResourceEvent({
-					rscType: ResourceType.Mana,
+					rscType: "MANA",
 					name: "mana tick",
 					delay: 3,
 					fnOnRsc: (rsc) => {
@@ -192,7 +198,7 @@ export abstract class GameState {
 				});
 			};
 			this.resources.addResourceEvent({
-				rscType: ResourceType.Mana,
+				rscType: "MANA",
 				name: "initial mana tick",
 				delay: this.config.timeTillFirstManaTick,
 				fnOnRsc: recurringManaRegen,
@@ -204,12 +210,12 @@ export abstract class GameState {
 		// lucid ticks
 		let recurringLucidTick = () => {
 			// do work at lucid tick
-			let lucid = this.resources.get(ResourceType.LucidDreaming) as DoTBuff;
+			let lucid = this.resources.get("LUCID_DREAMING") as DoTBuff;
 			if (lucid.available(1)) {
 				lucid.tickCount++;
 				if (!(this.isBLMState() && this.getFireStacks() > 0)) {
 					// Block lucid ticks for BLM in fire
-					let mana = this.resources.get(ResourceType.Mana);
+					let mana = this.resources.get("MANA");
 					mana.gain(550);
 					let msg = "+550";
 					console.assert(lucid.node !== undefined);
@@ -324,7 +330,7 @@ export abstract class GameState {
 	jobSpecificRegisterRecurringEvents() {}
 
 	// Job code may override to handle any on-tick effects of a DoT, like pre-Dawntrail Thundercloud
-	jobSpecificOnResolveDotTick(_dotResource: ResourceType) {}
+	jobSpecificOnResolveDotTick(_dotResource: ResourceKey) {}
 
 	// Job code may override to handle adding buff covers for the timeline
 	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
@@ -350,11 +356,11 @@ export abstract class GameState {
 	// Job code may override to handle cancelling any of their channeled skills
 	cancelChanneledSkills() {}
 
-	getStatusDuration(rscType: ResourceType): number {
+	getStatusDuration(rscType: ResourceKey): number {
 		return (getResourceInfo(this.job, rscType) as ResourceInfo).maxTimeout;
 	}
 
-	gainStatus(rscType: ResourceType, stacks: number = 1) {
+	gainStatus(rscType: ResourceKey, stacks: number = 1) {
 		const resource = this.resources.get(rscType);
 		const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
 		if (this.hasResourceAvailable(rscType)) {
@@ -372,7 +378,7 @@ export abstract class GameState {
 		}
 	}
 
-	maybeGainProc(proc: ResourceType, chance: number = 0.5) {
+	maybeGainProc(proc: ResourceKey, chance: number = 0.5) {
 		if (!this.triggersEffect(chance)) {
 			return;
 		}
@@ -392,7 +398,7 @@ export abstract class GameState {
 		return rand < chance;
 	}
 
-	handleDoTTick(dotResource: ResourceType) {
+	handleDoTTick(dotResource: ResourceKey) {
 		const dotBuff = this.resources.get(dotResource) as DoTBuff;
 		if (dotBuff.available(1)) {
 			if (dotBuff.node) {
@@ -487,7 +493,7 @@ export abstract class GameState {
 	// BLM uses this for LL GCD scaling, but PCT and SAM do not.
 	gcdRecastTimeScale(): number {
 		// TODO move this to child class methods
-		if (this.job === "BLM" && this.hasResourceAvailable(ResourceType.LeyLines)) {
+		if (this.job === "BLM" && this.hasResourceAvailable("LEY_LINES")) {
 			// should be approximately 0.85
 			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, 15));
 			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
@@ -497,19 +503,10 @@ export abstract class GameState {
 		}
 	}
 
-	requestToggleBuff(buffName: ResourceType) {
+	requestToggleBuff(buffName: ResourceKey) {
 		let rsc = this.resources.get(buffName);
 		// Ley lines, paint lines, and positionals can be toggled.
-		if (
-			(
-				[
-					ResourceType.LeyLines,
-					ResourceType.Inspiration,
-					ResourceType.FlankPositional,
-					ResourceType.RearPositional,
-				] as ResourceType[]
-			).includes(buffName)
-		) {
+		if (RESOURCES[buffName].mayBeToggled) {
 			if (rsc.available(1)) {
 				// buff exists and enabled
 				rsc.enabled = false;
@@ -519,21 +516,7 @@ export abstract class GameState {
 				rsc.enabled = true;
 				return true;
 			}
-		} else if (
-			(
-				[
-					ResourceType.HammerTime,
-					ResourceType.Aetherhues,
-					ResourceType.SubtractivePalette,
-					ResourceType.ClosedPosition,
-					ResourceType.StandardStep,
-					ResourceType.TechnicalStep,
-					ResourceType.Esprit,
-					ResourceType.Improvisation,
-					ResourceType.Defiance,
-				] as ResourceType[]
-			).includes(buffName)
-		) {
+		} else if (RESOURCES[buffName].mayNotBeCanceled) {
 			// subtractive spectrum, starstruck, monochrome tones, rainbow drip,
 			// tempera coat/grassa, smudge can be clicked off
 			// but these buffs cannot be
@@ -541,7 +524,7 @@ export abstract class GameState {
 		} else {
 			// All other buffs are outright canceled.
 			// Special case for meditate: cancel future meditate ticks (assume only one active event).
-			if (buffName === ResourceType.Meditate) {
+			if (buffName === "MEDITATE") {
 				const evt = this.findNextQueuedEventByTag(EventTag.MeditateTick);
 				if (evt) {
 					evt.canceled = true;
@@ -607,19 +590,19 @@ export abstract class GameState {
 			// drops in the middle of a an AF3 B3 cast, the spell will cost mana; this also applies
 			// to WHM Thin Air and SCH Recitation if the buffs fall off mid-cast
 			let manaCost = skill.manaCostFn(this);
-			if (manaCost > this.resources.get(ResourceType.Mana).availableAmount()) {
+			if (manaCost > this.resources.get("MANA").availableAmount()) {
 				controller.reportInterruption({
 					failNode: node,
 				});
 			} else if (manaCost > 0) {
-				this.resources.get(ResourceType.Mana).consume(manaCost);
+				this.resources.get("MANA").consume(manaCost);
 			}
 
 			// potency
 			if (potency) {
 				potency.snapshotTime = this.getDisplayTime();
 				const mods: PotencyModifier[] = [];
-				if (this.hasResourceAvailable(ResourceType.Tincture)) {
+				if (this.hasResourceAvailable("TINCTURE")) {
 					mods.push(Modifiers.Tincture);
 				}
 				mods.push(...skill.jobPotencyModifiers(this));
@@ -630,7 +613,7 @@ export abstract class GameState {
 
 			if (doesDamage) {
 				// tincture
-				if (this.hasResourceAvailable(ResourceType.Tincture)) {
+				if (this.hasResourceAvailable("TINCTURE")) {
 					node.addBuff(BuffType.Tincture);
 				}
 
@@ -645,19 +628,19 @@ export abstract class GameState {
 				new Event(skill.name + " applied", skill.applicationDelay, () => {
 					if (potency) {
 						controller.resolvePotency(potency);
-						if (!this.hasResourceAvailable(ResourceType.InCombat)) {
-							this.resources.get(ResourceType.InCombat).gain(1);
+						if (!this.hasResourceAvailable("IN_COMBAT")) {
+							this.resources.get("IN_COMBAT").gain(1);
 						}
 					}
 					skill.onApplication(this, node);
 				}),
 			);
 
-			if (potency && !this.hasResourceAvailable(ResourceType.InCombat)) {
-				const combatStart = this.resources.timeTillReady(ResourceType.InCombat);
+			if (potency && !this.hasResourceAvailable("IN_COMBAT")) {
+				const combatStart = this.resources.timeTillReady("IN_COMBAT");
 				if (combatStart === 0 || combatStart > skill.applicationDelay) {
 					this.resources.addResourceEvent({
-						rscType: ResourceType.InCombat,
+						rscType: "IN_COMBAT",
 						name: "begin combat if necessary",
 						delay: skill.applicationDelay,
 						fnOnRsc: (rsc: Resource) => {
@@ -670,21 +653,18 @@ export abstract class GameState {
 
 		const isInstant = capturedCastTime === 0 || skill.isInstantFn(this);
 		if (isInstant) {
-			this.resources.takeResourceLock(
-				ResourceType.NotAnimationLocked,
-				skill.animationLockFn(this),
-			);
+			this.resources.takeResourceLock("NOT_ANIMATION_LOCKED", skill.animationLockFn(this));
 			// Immediately do confirmation (no need to validate again)
 			onSpellConfirm();
 		} else {
 			// movement lock
 			this.resources.takeResourceLock(
-				ResourceType.Movement,
+				"MOVEMENT",
 				capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime),
 			);
 			// caster tax
 			this.resources.takeResourceLock(
-				ResourceType.NotCasterTaxed,
+				"NOT_CASTER_TAXED",
 				this.config.getAfterTaxCastTime(capturedCastTime),
 			);
 			const timeToConfirmation =
@@ -737,7 +717,7 @@ export abstract class GameState {
 				falloff: skill.falloff,
 			});
 			const mods: PotencyModifier[] = [];
-			if (this.hasResourceAvailable(ResourceType.Tincture)) {
+			if (this.hasResourceAvailable("TINCTURE")) {
 				mods.push(Modifiers.Tincture);
 			}
 			mods.push(...skill.jobPotencyModifiers(this));
@@ -747,7 +727,7 @@ export abstract class GameState {
 
 		if (potencyNumber > 0) {
 			// tincture
-			if (this.hasResourceAvailable(ResourceType.Tincture)) {
+			if (this.hasResourceAvailable("TINCTURE")) {
 				node.addBuff(BuffType.Tincture);
 			}
 
@@ -756,11 +736,11 @@ export abstract class GameState {
 
 		skill.onConfirm(this, node);
 
-		if (potency && !this.hasResourceAvailable(ResourceType.InCombat)) {
-			const combatStart = this.resources.timeTillReady(ResourceType.InCombat);
+		if (potency && !this.hasResourceAvailable("IN_COMBAT")) {
+			const combatStart = this.resources.timeTillReady("IN_COMBAT");
 			if (combatStart === 0 || combatStart > skill.applicationDelay) {
 				this.resources.addResourceEvent({
-					rscType: ResourceType.InCombat,
+					rscType: "IN_COMBAT",
 					name: "begin combat if necessary",
 					delay: skill.applicationDelay,
 					fnOnRsc: (rsc: Resource) => {
@@ -786,10 +766,7 @@ export abstract class GameState {
 		cd.useStack(this);
 
 		// animation lock
-		this.resources.takeResourceLock(
-			ResourceType.NotAnimationLocked,
-			skill.animationLockFn(this),
-		);
+		this.resources.takeResourceLock("NOT_ANIMATION_LOCKED", skill.animationLockFn(this));
 	}
 
 	/**
@@ -850,7 +827,7 @@ export abstract class GameState {
 			);
 
 			this.resources.takeResourceLock(
-				ResourceType.NotAnimationLocked,
+				"NOT_ANIMATION_LOCKED",
 				slideCastTime + skill.animationLockFn(this),
 			);
 		};
@@ -861,13 +838,10 @@ export abstract class GameState {
 			onLimitBreakConfirm();
 		} else {
 			// movement lock
-			this.resources.takeResourceLock(
-				ResourceType.Movement,
-				capturedCastTime - slideCastTime,
-			);
+			this.resources.takeResourceLock("MOVEMENT", capturedCastTime - slideCastTime);
 			// caster tax
 			this.resources.takeResourceLock(
-				ResourceType.NotCasterTaxed,
+				"NOT_CASTER_TAXED",
 				this.config.getAfterTaxCastTime(capturedCastTime),
 			);
 			const timeToConfirmation = capturedCastTime - slideCastTime;
@@ -904,8 +878,8 @@ export abstract class GameState {
 	}
 
 	timeTillAnySkillAvailable() {
-		let tillNotAnimationLocked = this.resources.timeTillReady(ResourceType.NotAnimationLocked);
-		let tillNotCasterTaxed = this.resources.timeTillReady(ResourceType.NotCasterTaxed);
+		let tillNotAnimationLocked = this.resources.timeTillReady("NOT_ANIMATION_LOCKED");
+		let tillNotCasterTaxed = this.resources.timeTillReady("NOT_CASTER_TAXED");
 		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed);
 	}
 
@@ -917,14 +891,14 @@ export abstract class GameState {
 		return undefined;
 	}
 
-	hasResourceAvailable(rscType: ResourceType, atLeast?: number): boolean {
+	hasResourceAvailable(rscType: ResourceKey, atLeast?: number): boolean {
 		return this.resources.get(rscType).available(atLeast ?? 1);
 	}
 
 	// Add a resource drop event after `delay` seconds.
 	// If `rscType` has a corresponding cooldown duration for the job, then that delay will be
 	// used if `rscType` is undefined.
-	enqueueResourceDrop(rscType: ResourceType, delay?: number, toConsume?: number) {
+	enqueueResourceDrop(rscType: ResourceKey, delay?: number, toConsume?: number) {
 		if (delay === undefined) {
 			const rscInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
 			console.assert(
@@ -951,16 +925,16 @@ export abstract class GameState {
 		});
 	}
 
-	getOverriddenDots(dotName: ResourceType): ResourceType[] {
+	getOverriddenDots(dotName: ResourceKey): ResourceKey[] {
 		return this.#exclusiveDots.get(dotName) ?? [];
 	}
 
-	applyDoT(dotName: ResourceType, node: ActionNode) {
+	applyDoT(dotName: ResourceKey, node: ActionNode) {
 		const dotBuff = this.resources.get(dotName) as DoTBuff;
 		const dotDuration = (getResourceInfo(this.config.job, dotName) as ResourceInfo).maxTimeout;
 
 		let dotGap: number | undefined = undefined;
-		this.getOverriddenDots(dotName).forEach((removeDot: ResourceType) => {
+		this.getOverriddenDots(dotName).forEach((removeDot: ResourceKey) => {
 			// Ignore self for the purposes of overriding other DoTs
 			if (removeDot === dotName) {
 				return;
@@ -1024,7 +998,7 @@ export abstract class GameState {
 		const mods: PotencyModifier[] = [];
 		// If the job call didn't add Tincture, we can do that here
 		if (
-			this.hasResourceAvailable(ResourceType.Tincture) &&
+			this.hasResourceAvailable("TINCTURE") &&
 			!(props.modifiers ?? []).includes(Modifiers.Tincture)
 		) {
 			mods.push(Modifiers.Tincture);
@@ -1073,7 +1047,7 @@ export abstract class GameState {
 
 	timeTillNextDamageEvent() {
 		// Find when the next damage event is. Used to block starry + striking muse when out of combat.
-		return this.resources.timeTillReady(ResourceType.InCombat);
+		return this.resources.timeTillReady("IN_COMBAT");
 	}
 
 	getSkillAvailabilityStatus(
@@ -1083,8 +1057,7 @@ export abstract class GameState {
 		let skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
 		let capturedManaCost = skill.manaCostFn(this);
-		let llCovered =
-			this.job === "BLM" && this.resources.get(ResourceType.LeyLines).available(1);
+		let llCovered = this.job === "BLM" && this.resources.get("LEY_LINES").available(1);
 		let capturedCastTime =
 			skill.kind === "weaponskill" || skill.kind === "spell" || skill.kind === "limitbreak"
 				? skill.castTimeFn(this)
@@ -1093,7 +1066,7 @@ export abstract class GameState {
 			capturedCastTime === 0 ||
 			skill.kind === "ability" ||
 			(skill.kind !== "limitbreak" && skill.isInstantFn(this)); // LBs can't be swiftcasted
-		let currentMana = this.resources.get(ResourceType.Mana).availableAmount();
+		let currentMana = this.resources.get("MANA").availableAmount();
 		let blocked = timeTillAvailable > Debug.epsilon;
 		let enoughMana = capturedManaCost <= currentMana;
 		let reqsMet = skill.validateAttempt(this);
@@ -1115,7 +1088,7 @@ export abstract class GameState {
 			// Special case for Meditate
 			if (
 				timeTillAvailable > Debug.epsilon ||
-				this.cooldowns.get(ResourceType.cd_GCD).timeTillNextStackAvailable() > Debug.epsilon
+				this.cooldowns.get("cd_GCD").timeTillNextStackAvailable() > Debug.epsilon
 			) {
 				// if the skill is on CD or the GCD is rolling, mark it as blocked
 				const idx = status.unavailableReasons.indexOf(
@@ -1148,7 +1121,7 @@ export abstract class GameState {
 		// this fails the edge case where a GCD is pressed ~58 seconds after meditate was last pressed
 		// and meditate would become available in the middle of the CD
 		if (skillName === "MEDITATE" && timeTillNextStackReady < Debug.epsilon) {
-			const gcd = this.cooldowns.get(ResourceType.cd_GCD);
+			const gcd = this.cooldowns.get("cd_GCD");
 			const gcdRecastTime = gcd.currentStackCd();
 			if (gcd.timeTillNextStackAvailable() > timeTillNextStackReady) {
 				cd = gcd;
@@ -1261,7 +1234,7 @@ export abstract class GameState {
 	// Attempt to consume stacks of the specified resource, removing any active timers if
 	// all stacks have been consumed.
 	// Consumes only 1 stack by default; consumes all available stacks when `consumeAll` is set.
-	tryConsumeResource(rscType: ResourceType, consumeAll: boolean = false) {
+	tryConsumeResource(rscType: ResourceKey, consumeAll: boolean = false) {
 		const resource = this.resources.get(rscType);
 		const toConsume = consumeAll ? resource.availableAmount() : 1;
 		if (resource.available(toConsume)) {
@@ -1276,7 +1249,7 @@ export abstract class GameState {
 
 	// Attempt to set a combo counter to a specific value, and reset its timer to 30 seconds.
 	// If `newValue` is 0, then any existing timers will be canceled.
-	setComboState(rscType: ResourceType, newValue: number) {
+	setComboState(rscType: ResourceKey, newValue: number) {
 		if (newValue === 0) {
 			this.tryConsumeResource(rscType, true);
 		} else {
@@ -1290,7 +1263,7 @@ export abstract class GameState {
 	}
 
 	isInCombat() {
-		return this.hasResourceAvailable(ResourceType.InCombat);
+		return this.hasResourceAvailable("IN_COMBAT");
 	}
 
 	// These methods enforce type specialization so we can avoid some casts on the frontend

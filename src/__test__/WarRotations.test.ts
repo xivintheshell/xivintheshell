@@ -8,7 +8,7 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { PotencyModifierType } from "../Game/Potency";
-import { Debug, ResourceType } from "../Game/Common";
+import { Debug } from "../Game/Common";
 import { WARState } from "../Game/Jobs/WAR";
 import { ActionKey } from "../Game/Data/Actions";
 
@@ -53,8 +53,8 @@ it(
 		// wait for damage applications
 		controller.step(1);
 		const state = controller.game as WARState;
-		expect(state.resources.get(ResourceType.BeastGauge).availableAmount()).toEqual(0);
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest)).toBe(true);
+		expect(state.resources.get("BEAST_GAUGE").availableAmount()).toEqual(0);
+		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
 		compareDamageTables([
 			{
 				skillName: "TOMAHAWK",
@@ -168,10 +168,10 @@ it(
 	testWithConfig({}, () => {
 		(["OVERPOWER", "ONSLAUGHT", "MYTHRIL_TEMPEST"] as ActionKey[]).forEach(applySkill);
 		const state = controller.game as WARState;
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest)).toBe(true);
+		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
 		// Mythril Tempest gives about 30.45 seconds of Surging Tempest immediately
-		expect(state.resources.timeTillReady(ResourceType.SurgingTempest)).toBeGreaterThan(30);
-		expect(state.resources.timeTillReady(ResourceType.SurgingTempest)).toBeLessThan(31);
+		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeGreaterThan(30);
+		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeLessThan(31);
 		applySkill("ONSLAUGHT");
 
 		// wait for Surging Tempest to nearly expire before refreshing
@@ -179,13 +179,13 @@ it(
 		controller.step(27.7);
 		applySkill("MYTHRIL_TEMPEST");
 
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest)).toBe(true);
-		expect(state.resources.timeTillReady(ResourceType.SurgingTempest)).toBeLessThan(1);
+		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
+		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeLessThan(1);
 		// Surging Tempest should drop before being re-applied after the application delay on Mythril Tempest
-		controller.step(state.resources.timeTillReady(ResourceType.SurgingTempest) + Debug.epsilon);
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest)).toBe(false);
+		controller.step(state.resources.timeTillReady("SURGING_TEMPEST") + Debug.epsilon);
+		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(false);
 		applySkill("ONSLAUGHT");
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest)).toBe(true);
+		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
 		// wait for damage application
 		controller.step(1);
 

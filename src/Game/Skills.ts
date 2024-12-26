@@ -1,4 +1,4 @@
-import { Aspect, LevelSync, ResourceType } from "./Common";
+import { Aspect, LevelSync } from "./Common";
 import { ActionNode } from "../Controller/Record";
 import { PlayerState, GameState } from "./GameState";
 import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
@@ -6,8 +6,11 @@ import { PotencyModifier } from "./Potency";
 import { ShellJob, ALL_JOBS } from "./Data/Jobs";
 import { TraitKey } from "./Data/Traits";
 import { ActionKey, ACTIONS } from "./Data/Actions";
-import { LimitBreakKey } from "./Data/Actions/Shared/LimitBreak";
+import { LimitBreakActionKey } from "./Data/Actions/Shared/LimitBreak";
 import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
+import { CooldownKey } from "./Data/Cooldowns";
+import { ResourceKey, RESOURCES } from "./Data/Resources";
+import { Data } from "./Data/Data";
 
 // all gapclosers have the same animation lock
 // from: https://nga.178.com/read.php?tid=21233094&rand=761
@@ -70,7 +73,7 @@ export function combinePredicatesAnd<T extends PlayerState>(
 }
 
 export interface CooldownGroupProperties {
-	cdName: ResourceType;
+	cdName: CooldownKey;
 	cooldown: number;
 	maxCharges: number;
 }
@@ -88,7 +91,7 @@ interface BaseSkill<T extends PlayerState> {
 	readonly requiresCombat?: boolean; // Set to true if the action requires being in combat to use
 	readonly autoUpgrade?: SkillAutoReplace;
 	readonly autoDowngrade?: SkillAutoReplace;
-	readonly cdName: ResourceType;
+	readonly cdName: CooldownKey;
 	// TODO: Technically, actions are defined with an array of cooldown groups, one of which is the GCD cooldown group for actions that affect the GCD.
 	// Functionally, actions have at most the GCD and a second cooldown group, so this is enough for now.
 	readonly secondaryCd?: CooldownGroupProperties;
@@ -201,13 +204,22 @@ const skillAssetPaths: Map<ActionKey, string> = new Map();
 
 const normalizedSkillNameMap = new Map<string, ActionKey>();
 /**
- * Attempt to retrieve a SkillName enum member from the specified string. This function is run
+ * Attempt to retrieve an ActionKey member from the specified string. This function is run
  * when a line is loaded to fix some capitalization errors present in earlier versions of
  * PCT in the Shell, where "Thunder In Magenta" was capitalized inappropriately (should be
  * "Thunder in Magenta" with "in" not capitalized.
  */
 export function getNormalizedSkillName(s: string): ActionKey | undefined {
 	return normalizedSkillNameMap.get(s.toLowerCase());
+}
+
+export function getResourceKeyFromBuffName(s: string): ResourceKey | undefined {
+	// If the provided string is already a key in the RESOURCES object, return it
+	if (s in RESOURCES) {
+		return s as ResourceKey;
+	}
+	// See if we can find a key in the RESOURCES where the incoming string matches the name of the resources
+	return Data.findResourceKey(s);
 }
 
 // Return a particular skill for a job.
@@ -355,7 +367,7 @@ export function makeSpell<T extends PlayerState>(
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
-		cdName: ResourceType.cd_GCD,
+		cdName: "cd_GCD",
 		secondaryCd: params.secondaryCooldown,
 		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
@@ -431,7 +443,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
-		cdName: ResourceType.cd_GCD,
+		cdName: "cd_GCD",
 		secondaryCd: params.secondaryCooldown,
 		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
@@ -480,7 +492,7 @@ export function makeAbility<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
 	name: ActionKey,
 	unlockLevel: number,
-	cdName: ResourceType,
+	cdName: CooldownKey,
 	params: Partial<{
 		aspect: Aspect;
 		assetPath: string;
@@ -569,9 +581,9 @@ export function makeResourceAbility<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
 	name: ActionKey,
 	unlockLevel: number,
-	cdName: ResourceType,
+	cdName: CooldownKey,
 	params: {
-		rscType: ResourceType;
+		rscType: ResourceKey;
 		requiresCombat?: boolean;
 		autoUpgrade?: SkillAutoReplace;
 		autoDowngrade?: SkillAutoReplace;
@@ -646,8 +658,8 @@ export function makeResourceAbility<T extends PlayerState>(
  */
 export function makeLimitBreak<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
-	name: LimitBreakKey,
-	cdName: ResourceType,
+	name: LimitBreakActionKey,
+	cdName: CooldownKey,
 	params: {
 		tier: "1" | "2" | "3";
 		animationLock: number;
@@ -700,7 +712,7 @@ export function makeLimitBreak<T extends PlayerState>(
 }
 
 // Dummy skill to avoid a hard crash when a skill info isn't found
-const NEVER_SKILL = makeAbility(ALL_JOBS, "NEVER", 1, ResourceType.Never, {
+const NEVER_SKILL = makeAbility(ALL_JOBS, "NEVER", 1, "NEVER", {
 	validateAttempt: (state) => false,
 });
 

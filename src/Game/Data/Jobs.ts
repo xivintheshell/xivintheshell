@@ -1,8 +1,8 @@
 import { ReactNode } from "react";
 import { localize } from "../../Components/Localization";
 import { ensureRecord } from "../../Utilities/ensureRecord";
-import { ResourceType } from "../Common";
-import { LimitBreakKey } from "./Actions/Shared/LimitBreak";
+import { LimitBreakActionKey } from "./Actions/Shared/LimitBreak";
+import { LimitBreakResourceKey } from "./Resources/Shared/LimitBreak";
 
 /**
  * Description of how well supported a job is:
@@ -57,8 +57,8 @@ export interface Job {
 	implementationLevel: ImplementationKey;
 	speedStat: "sks" | "sps";
 	usesMp?: boolean;
-	limitBreak?: LimitBreakKey;
-	limitBreakBuff?: ResourceType;
+	limitBreak?: LimitBreakActionKey;
+	limitBreakBuff?: LimitBreakResourceKey;
 }
 
 // jobs are in the order they appear in the job guide
@@ -69,14 +69,14 @@ export const TANKS = ensureRecord<Job>()({
 		speedStat: "sks",
 		usesMp: true,
 		limitBreak: "LAST_BASTION",
-		limitBreakBuff: ResourceType.LastBastion,
+		limitBreakBuff: "LAST_BASTION",
 	},
 	WAR: {
 		role: "TANK",
 		implementationLevel: "LIVE",
 		speedStat: "sks",
 		limitBreak: "LAND_WAKER",
-		limitBreakBuff: ResourceType.LandWaker,
+		limitBreakBuff: "LAND_WAKER",
 	},
 	DRK: {
 		role: "TANK",
@@ -84,14 +84,14 @@ export const TANKS = ensureRecord<Job>()({
 		speedStat: "sks",
 		usesMp: true,
 		limitBreak: "DARK_FORCE",
-		limitBreakBuff: ResourceType.DarkForce,
+		limitBreakBuff: "DARK_FORCE",
 	},
 	GNB: {
 		role: "TANK",
 		implementationLevel: "TESTING",
 		speedStat: "sks",
 		limitBreak: "GUNMETAL_SOUL",
-		limitBreakBuff: ResourceType.GunmetalSoul,
+		limitBreakBuff: "GUNMETAL_SOUL",
 	},
 });
 export type Tanks = typeof TANKS;

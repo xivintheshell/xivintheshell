@@ -9,7 +9,7 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { PotencyModifierType } from "../Game/Potency";
-import { ProcMode, ResourceType } from "../Game/Common";
+import { ProcMode } from "../Game/Common";
 import { BRDState } from "../Game/Jobs/BRD";
 import { ActionKey } from "../Game/Data/Actions";
 
@@ -206,8 +206,8 @@ it(
 			]);
 
 			const dotTables = damageData.dotTables;
-			expect(dotTables.get(ResourceType.CausticBite)).toBeTruthy();
-			expect(dotTables.get(ResourceType.Stormbite)).toBeTruthy();
+			expect(dotTables.get("CAUSTIC_BITE")).toBeTruthy();
+			expect(dotTables.get("STORMBITE")).toBeTruthy();
 		},
 	),
 );
