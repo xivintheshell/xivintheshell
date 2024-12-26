@@ -265,6 +265,7 @@ const makeGCD_SAM = (
 			comboPotency: number | Array<[TraitName, number]>;
 			location: "flank" | "rear";
 		};
+		falloff?: number;
 		applicationDelay: number;
 		jobPotencyModifiers?: PotencyModifierFn<SAMState>;
 		validateAttempt?: StatePredicate<SAMState>;
@@ -349,6 +350,7 @@ const makeAbility_SAM = (
 		startOnHotbar?: boolean;
 		requiresCombat?: boolean;
 		highlightIf?: StatePredicate<SAMState>;
+		falloff?: number;
 		applicationDelay?: number;
 		animationLock?: number;
 		potency?: number | Array<[TraitName, number]>;
@@ -578,6 +580,7 @@ makeGCD_SAM(SkillName.Kasha, 40, {
 
 makeGCD_SAM(SkillName.Fuga, 26, {
 	autoUpgrade: { trait: TraitName.FugaMastery, otherSkill: SkillName.Fuko },
+	falloff: 0,
 	applicationDelay: 0.76, // TODO
 	basePotency: 90,
 	onConfirm: (state) => {
@@ -588,6 +591,7 @@ makeGCD_SAM(SkillName.Fuga, 26, {
 
 makeGCD_SAM(SkillName.Fuko, 86, {
 	autoDowngrade: { trait: TraitName.FugaMastery, otherSkill: SkillName.Fuga },
+	falloff: 0,
 	applicationDelay: 0.76,
 	basePotency: 100,
 	onConfirm: (state) => {
@@ -597,6 +601,7 @@ makeGCD_SAM(SkillName.Fuko, 86, {
 });
 
 makeGCD_SAM(SkillName.Mangetsu, 35, {
+	falloff: 0,
 	applicationDelay: 0.62,
 	basePotency: 100,
 	combo: {
@@ -614,6 +619,7 @@ makeGCD_SAM(SkillName.Mangetsu, 35, {
 });
 
 makeGCD_SAM(SkillName.Oka, 35, {
+	falloff: 0,
 	applicationDelay: 0.62,
 	basePotency: 100,
 	combo: {
@@ -715,6 +721,7 @@ makeGCD_SAM(SkillName.TenkaGoken, 30, {
 	replaceIf: [banaCondition, tendoGokenCondition, midareCondition, tendoMidareCondition],
 	baseCastTime: 1.3,
 	basePotency: 300,
+	falloff: 0,
 	applicationDelay: 0.62,
 	validateAttempt: tenkaCondition.condition,
 	onConfirm: iaiConfirm(1),
@@ -725,6 +732,7 @@ makeGCD_SAM(SkillName.TendoGoken, 100, {
 	replaceIf: [banaCondition, tenkaCondition, midareCondition, tendoMidareCondition],
 	baseCastTime: 1.3,
 	basePotency: 410,
+	falloff: 0,
 	applicationDelay: 0.36,
 	validateAttempt: tendoGokenCondition.condition,
 	onConfirm: iaiConfirm(2),
@@ -801,6 +809,7 @@ makeGCD_SAM(SkillName.KaeshiGoken, 74, {
 		tendoKaeshiSetsugekkaCondition,
 	],
 	basePotency: 300,
+	falloff: 0,
 	applicationDelay: 0.62,
 	validateAttempt: kaeshiGokenCondition.condition,
 	onConfirm: tsubameConfirm,
@@ -815,6 +824,7 @@ makeGCD_SAM(SkillName.TendoKaeshiGoken, 100, {
 		tendoKaeshiSetsugekkaCondition,
 	],
 	basePotency: 410,
+	falloff: 0,
 	applicationDelay: 0.36,
 	validateAttempt: tendoKaeshiGokenCondition.condition,
 	onConfirm: tsubameConfirm,
@@ -853,6 +863,7 @@ makeGCD_SAM(SkillName.OgiNamikiri, 90, {
 			condition: (state) => state.hasResourceAvailable(ResourceType.KaeshiOgiReady),
 		},
 	],
+	falloff: 0.75,
 	applicationDelay: 0.49,
 	basePotency: [
 		[TraitName.Never, 860],
@@ -872,6 +883,7 @@ makeGCD_SAM(SkillName.OgiNamikiri, 90, {
 
 makeGCD_SAM(SkillName.KaeshiNamikiri, 90, {
 	startOnHotbar: false,
+	falloff: 0.75,
 	applicationDelay: 0.49,
 	basePotency: [
 		[TraitName.Never, 860],
@@ -930,6 +942,7 @@ makeAbility_SAM(SkillName.Shinten, 52, ResourceType.cd_Shinten, {
 makeAbility_SAM(SkillName.Kyuten, 62, ResourceType.cd_Kyuten, {
 	cooldown: 1,
 	potency: 120,
+	falloff: 0,
 	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
 	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
 	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
@@ -969,6 +982,7 @@ makeAbility_SAM(SkillName.Senei, 72, ResourceType.cd_SeneiGuren, {
 makeAbility_SAM(SkillName.Guren, 70, ResourceType.cd_SeneiGuren, {
 	cooldown: 60,
 	potency: 500,
+	falloff: 0.25,
 	validateAttempt: (state) => state.resources.get(ResourceType.Kenki).available(25),
 	onConfirm: (state) => state.resources.get(ResourceType.Kenki).consume(25),
 	highlightIf: (state) => state.resources.get(ResourceType.Kenki).available(25),
@@ -990,6 +1004,7 @@ makeAbility_SAM(SkillName.Shoha, 80, ResourceType.cd_Shoha, {
 		[TraitName.Never, 560],
 		[TraitName.WayOfTheSamuraiIII, 640],
 	],
+	falloff: 0.65,
 	applicationDelay: 0.58,
 	validateAttempt: (state) => state.resources.get(ResourceType.Meditation).available(3),
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.Meditation, true),
@@ -1054,6 +1069,7 @@ makeAbility_SAM(SkillName.TengentsuPop, 82, ResourceType.cd_ThirdEyePop, {
 makeAbility_SAM(SkillName.Zanshin, 96, ResourceType.cd_Zanshin, {
 	startOnHotbar: false,
 	cooldown: 1,
+	falloff: 0.6,
 	applicationDelay: 1.03,
 	potency: 900,
 	validateAttempt: (state) =>
