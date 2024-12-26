@@ -20,6 +20,7 @@ import {
 	rotationTestTeardown,
 	makeTestWithConfigFn,
 	applySkill,
+	applySkillMultiTarget,
 	compareDamageTables,
 } from "./utils";
 
@@ -483,4 +484,64 @@ it(
 		// controller time can be inexact due to floating point nonsense, so just expect it to be close
 		expect(ht2Summary?.cumulativeOverride).toBeCloseTo(expectedOverride, 0);
 	}),
+);
+
+it(
+	"accepts the basic nonstandard AoE rotation",
+	testWithConfig({}, () => {
+		const targetCount = 3;
+		[
+			SkillName.HighBlizzard2, // enter enochian for testing purposes
+			SkillName.Freeze,
+			SkillName.HighThunder2,
+			SkillName.Transpose,
+			SkillName.Flare,
+			SkillName.Flare,
+			SkillName.FlareStar,
+		].forEach((skill) => applySkillMultiTarget(skill, targetCount));
+		controller.step(4);
+		compareDamageTables([
+			{
+				skillName: SkillName.HighBlizzard2,
+				displayedModifiers: [],
+				hitCount: 1,
+				targetCount,
+			},
+			{
+				skillName: SkillName.Freeze,
+				displayedModifiers: [PotencyModifierType.UI3],
+				hitCount: 1,
+				targetCount,
+			},
+			{
+				skillName: SkillName.HighThunder2,
+				displayedModifiers: [],
+				hitCount: 1,
+				targetCount,
+			},
+			{
+				skillName: SkillName.Flare,
+				displayedModifiers: [PotencyModifierType.AF1],
+				hitCount: 1,
+				targetCount,
+			},
+			{
+				skillName: SkillName.Flare,
+				displayedModifiers: [PotencyModifierType.AF3],
+				hitCount: 1,
+				targetCount,
+			},
+			{
+				skillName: SkillName.FlareStar,
+				displayedModifiers: [PotencyModifierType.AF3],
+				hitCount: 1,
+				targetCount,
+			},
+			{
+				skillName: SkillName.Transpose,
+				displayedModifiers: [],
+				hitCount: 1,
+			}
+		]);
+	})
 );

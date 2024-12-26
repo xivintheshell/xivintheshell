@@ -684,9 +684,8 @@ export class SkillsWindow extends React.Component {
 					<br />
 					<br />
 					<span>
-						Potency calculation for DoT effects, and buff calculations for enemy debuffs
-						like Dokumori and Chain Stratagem may be inaccurate when multiple targets
-						are selected.
+						Buff calculations for enemy debuffs like Dokumori and Chain Stratagem
+						may be inaccurate when multiple targets are selected.
 					</span>
 				</>
 			}

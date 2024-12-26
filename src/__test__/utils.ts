@@ -83,18 +83,23 @@ export const makeTestWithConfigFn = (job: ShellJob) => {
 	};
 };
 
-export const applySkill = (skillName: SkillName) => {
+// We define separate functions instead of an optional parameter to avoid accidentally
+// using the item index as argument when calling .forEach(applySkill)
+export const applySkill = (skillName: SkillName) => applySkillMultiTarget(skillName, 1);
+
+export const applySkillMultiTarget = (skillName: SkillName, targetCount: number) => {
 	// Perform the specified skill as soon as possible
 	// TEST-ONLY HACK: set lastAttemptedSkill to the skill we're about to use
 	// to ensure that trailing wait times are always omitted
 	controller.lastAttemptedSkill = skillName;
-	controller.requestUseSkill({ skillName: skillName, targetCount: 1 });
+	controller.requestUseSkill({ skillName, targetCount });
 };
 
 export type ShortDamageEntry = {
 	skillName: SkillName;
 	displayedModifiers: PotencyModifierType[];
 	hitCount: number;
+	targetCount?: number;
 };
 
 export const compareDamageTables = (expectedDamageEntries: Array<ShortDamageEntry>) => {
@@ -104,6 +109,7 @@ export const compareDamageTables = (expectedDamageEntries: Array<ShortDamageEntr
 			skillName: entry.skillName,
 			displayedModifiers: entry.displayedModifiers,
 			hitCount: entry.hitCount,
+			targetCount: entry.targetCount,
 		});
 	}
 	// sz: whatever version of node i'm on apparently doesn't support Set.difference/symmetricDifference,
@@ -114,14 +120,19 @@ export const compareDamageTables = (expectedDamageEntries: Array<ShortDamageEntr
 		// we need to compare on their displayedModifiers field.
 		// Since the modifiers lists are short, just concat them and treat that as a string.
 		if (nameCmp === 0) {
-			return a.displayedModifiers
+			const modifierCmp = a.displayedModifiers
 				.map((x) => x.toString())
 				.join()
 				.localeCompare(b.displayedModifiers.map((x) => x.toString()).join());
+			if (modifierCmp === 0) {
+				return (a.targetCount ?? 1) - (b.targetCount ?? 1);
+			}
+			return modifierCmp;
 		}
 		return nameCmp;
 	};
 	actualDamageEntries.sort(damageEntryComparator);
+	expectedDamageEntries = expectedDamageEntries.map((entry) => ({...entry, targetCount: entry.targetCount ?? 1}));
 	expectedDamageEntries.sort(damageEntryComparator);
 	expect(actualDamageEntries).toEqual(expectedDamageEntries);
 };
