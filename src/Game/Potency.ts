@@ -325,7 +325,11 @@ export class Potency {
 		this.falloff = props.falloff;
 	}
 
-	getAmount(props: { tincturePotencyMultiplier: number; includePartyBuffs: boolean, includeSplash: boolean }) {
+	getAmount(props: {
+		tincturePotencyMultiplier: number;
+		includePartyBuffs: boolean;
+		includeSplash: boolean;
+	}) {
 		let totalDamageFactor = 1;
 		let totalAdditiveAmount = 0;
 		let totalCritBonus = 0;
