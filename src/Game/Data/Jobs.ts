@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { localize } from "../../Components/Localization";
 import { ensureRecord } from "../../Utilities/ensureRecord";
-import { LimitBreakSkillName, ResourceType } from "../Common";
+import { ResourceType } from "../Common";
+import { LimitBreakKey } from "./Actions/Shared/LimitBreak";
 
 /**
  * Description of how well supported a job is:
@@ -56,7 +57,7 @@ export interface Job {
 	implementationLevel: ImplementationKey;
 	speedStat: "sks" | "sps";
 	usesMp?: boolean;
-	limitBreak?: LimitBreakSkillName;
+	limitBreak?: LimitBreakKey;
 	limitBreakBuff?: ResourceType;
 }
 
@@ -67,14 +68,14 @@ export const TANKS = ensureRecord<Job>()({
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sks",
 		usesMp: true,
-		limitBreak: LimitBreakSkillName.LastBastion,
+		limitBreak: "LAST_BASTION",
 		limitBreakBuff: ResourceType.LastBastion,
 	},
 	WAR: {
 		role: "TANK",
 		implementationLevel: "LIVE",
 		speedStat: "sks",
-		limitBreak: LimitBreakSkillName.LandWaker,
+		limitBreak: "LAND_WAKER",
 		limitBreakBuff: ResourceType.LandWaker,
 	},
 	DRK: {
@@ -82,14 +83,14 @@ export const TANKS = ensureRecord<Job>()({
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sks",
 		usesMp: true,
-		limitBreak: LimitBreakSkillName.DarkForce,
+		limitBreak: "DARK_FORCE",
 		limitBreakBuff: ResourceType.DarkForce,
 	},
 	GNB: {
 		role: "TANK",
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sks",
-		limitBreak: LimitBreakSkillName.GunmetalSoul,
+		limitBreak: "GUNMETAL_SOUL",
 		limitBreakBuff: ResourceType.GunmetalSoul,
 	},
 });
@@ -102,28 +103,28 @@ export const HEALERS = ensureRecord<Job>()({
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sps",
 		usesMp: true,
-		limitBreak: LimitBreakSkillName.PulseOfLife,
+		limitBreak: "PULSE_OF_LIFE",
 	},
 	SCH: {
 		role: "HEALER",
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sps",
 		usesMp: true,
-		limitBreak: LimitBreakSkillName.AngelFeathers,
+		limitBreak: "ANGEL_FEATHERS",
 	},
 	AST: {
 		role: "HEALER",
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sps",
 		usesMp: true,
-		limitBreak: LimitBreakSkillName.AstralStasis,
+		limitBreak: "ASTRAL_STASIS",
 	},
 	SGE: {
 		role: "HEALER",
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sps",
 		usesMp: true,
-		limitBreak: LimitBreakSkillName.TechneMakre,
+		limitBreak: "TECHNE_MAKRE",
 	},
 });
 export type Healers = typeof HEALERS;
@@ -134,37 +135,37 @@ export const MELEE = ensureRecord<Job>()({
 		role: "MELEE",
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sks",
-		limitBreak: LimitBreakSkillName.FinalHeaven,
+		limitBreak: "FINAL_HEAVEN",
 	},
 	DRG: {
 		role: "MELEE",
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sks",
-		limitBreak: LimitBreakSkillName.DragonsongDive,
+		limitBreak: "DRAGONSONG_DIVE",
 	},
 	NIN: {
 		role: "MELEE",
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sks",
-		limitBreak: LimitBreakSkillName.Chimatsuri,
+		limitBreak: "CHIMATSURI",
 	},
 	SAM: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		speedStat: "sks",
-		limitBreak: LimitBreakSkillName.DoomOfTheLiving,
+		limitBreak: "DOOM_OF_THE_LIVING",
 	},
 	RPR: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
 		speedStat: "sks",
-		limitBreak: LimitBreakSkillName.TheEnd,
+		limitBreak: "THE_END",
 	},
 	VPR: {
 		role: "MELEE",
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sks",
-		limitBreak: LimitBreakSkillName.WorldSwallower,
+		limitBreak: "WORLD_SWALLOWER",
 	},
 });
 export type Melee = typeof MELEE;
@@ -175,19 +176,19 @@ export const RANGED = ensureRecord<Job>()({
 		role: "RANGED",
 		implementationLevel: "TESTING",
 		speedStat: "sks",
-		limitBreak: LimitBreakSkillName.SagittariusArrow,
+		limitBreak: "SAGITTARIUS_ARROW",
 	},
 	MCH: {
 		role: "RANGED",
 		implementationLevel: "LIVE",
 		speedStat: "sks",
-		limitBreak: LimitBreakSkillName.SatelliteBeam,
+		limitBreak: "SATELLITE_BEAM",
 	},
 	DNC: {
 		role: "RANGED",
 		implementationLevel: "LIVE",
 		speedStat: "sks",
-		limitBreak: LimitBreakSkillName.CrimsonLotus,
+		limitBreak: "CRIMSON_LOTUS",
 	},
 });
 export type Ranged = typeof RANGED;
@@ -199,28 +200,28 @@ export const CASTERS = ensureRecord<Job>()({
 		implementationLevel: "LIVE",
 		speedStat: "sps",
 		usesMp: true,
-		limitBreak: LimitBreakSkillName.Meteor,
+		limitBreak: "METEOR",
 	},
 	SMN: {
 		role: "CASTER",
 		implementationLevel: "UNIMPLEMENTED",
 		speedStat: "sps",
 		usesMp: true,
-		limitBreak: LimitBreakSkillName.Teraflare,
+		limitBreak: "TERAFLARE",
 	},
 	RDM: {
 		role: "CASTER",
 		implementationLevel: "LIVE",
 		speedStat: "sps",
 		usesMp: true,
-		limitBreak: LimitBreakSkillName.VermillionScourge,
+		limitBreak: "VERMILLION_SCOURGE",
 	},
 	PCT: {
 		role: "CASTER",
 		implementationLevel: "LIVE",
 		speedStat: "sps",
 		usesMp: true,
-		limitBreak: LimitBreakSkillName.ChromaticFantasy,
+		limitBreak: "CHROMATIC_FANTASY",
 	},
 });
 export type Casters = typeof CASTERS;

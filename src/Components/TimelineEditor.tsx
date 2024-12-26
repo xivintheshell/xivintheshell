@@ -5,6 +5,7 @@ import { StaticFn } from "./Common";
 import { localize, localizeSkillName } from "./Localization";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
 import { Columns } from "./Common";
+import { ACTIONS } from "../Game/Data/Actions";
 
 export let refreshTimelineEditor = () => {};
 
@@ -213,7 +214,9 @@ export class TimelineEditor extends React.Component {
 						} else if (node.type === ActionType.SetResourceEnabled) {
 							nodeName = "(Toggle resource " + node.buffName + ")";
 						} else if (node.type === ActionType.Skill) {
-							nodeName = node.skillName ?? "(unknown skill)";
+							nodeName = node.skillName
+								? ACTIONS[node.skillName].name
+								: "(unknown skill)";
 						}
 					}
 					let errorMessage = "This sequence contains invalid actions! Check: " + nodeName;

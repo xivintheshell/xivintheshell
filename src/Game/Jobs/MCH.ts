@@ -1,6 +1,8 @@
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, ResourceType, SkillName, WarningType } from "../Common";
+import { Aspect, ResourceType, WarningType } from "../Common";
+import { ActionKey } from "../Data/Actions";
+import { MCHActionKey } from "../Data/Actions/Jobs/MCH";
 import { TraitKey } from "../Data/Traits";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
@@ -63,23 +65,23 @@ makeMCHResource(ResourceType.QueenFinishers, 2);
 makeMCHResource(ResourceType.WildfireHits, 6);
 makeMCHResource(ResourceType.BatteryBonus, 50);
 
-const COMBO_GCDS: SkillName[] = [
-	SkillName.HeatedCleanShot,
-	SkillName.HeatedSlugShot,
-	SkillName.HeatedSplitShot,
-	SkillName.SpreadShot,
-	SkillName.Scattergun, // Including AoE GCDs that break the combo, even though they don't combo themselves
+const COMBO_GCDS: MCHActionKey[] = [
+	"HEATED_CLEAN_SHOT",
+	"HEATED_SLUG_SHOT",
+	"HEATED_SPLIT_SHOT",
+	"SPREAD_SHOT",
+	"SCATTERGUN", // Including AoE GCDs that break the combo, even though they don't combo themselves
 ];
 
 // Skills that don't consume overheat - these are all AoE skills
 // The only AoE skill that consumes overheat is Auto Crossbow
-const WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT: SkillName[] = [
-	SkillName.Chainsaw,
-	SkillName.Excavator,
-	SkillName.FullMetalField,
-	SkillName.Scattergun,
-	SkillName.Bioblaster,
-	SkillName.SpreadShot,
+const WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT: MCHActionKey[] = [
+	"CHAIN_SAW",
+	"EXCAVATOR",
+	"FULL_METAL_FIELD",
+	"SCATTERGUN",
+	"BIOBLASTER",
+	"SPREAD_SHOT",
 ];
 
 export class MCHState extends GameState {
@@ -122,7 +124,7 @@ export class MCHState extends GameState {
 				groupedDots: [
 					{
 						dotName: ResourceType.Bioblaster,
-						appliedBy: [SkillName.Bioblaster],
+						appliedBy: ["BIOBLASTER"],
 					},
 				],
 			},
@@ -130,7 +132,7 @@ export class MCHState extends GameState {
 				groupedDots: [
 					{
 						dotName: ResourceType.Flamethrower,
-						appliedBy: [SkillName.Flamethrower],
+						appliedBy: ["FLAMETHROWER"],
 						isGroundTargeted: true,
 						exclude: true,
 					},
@@ -172,7 +174,7 @@ export class MCHState extends GameState {
 		this.tryConsumeResource(ResourceType.Flamethrower);
 	}
 
-	processComboStatus(skill: SkillName) {
+	processComboStatus(skill: MCHActionKey) {
 		if (!COMBO_GCDS.includes(skill)) {
 			return;
 		} // MCH's non-combo GCDs don't break an ongoing combo
@@ -181,9 +183,9 @@ export class MCHState extends GameState {
 
 		// Defaulting to nextState 0 allows the AoE fillers to break the combo
 		let nextState = 0;
-		if (comboState === 0 && skill === SkillName.HeatedSplitShot) {
+		if (comboState === 0 && skill === "HEATED_SPLIT_SHOT") {
 			nextState = 1;
-		} else if (comboState === 1 && skill === SkillName.HeatedSlugShot) {
+		} else if (comboState === 1 && skill === "HEATED_SLUG_SHOT") {
 			nextState = 2;
 		}
 
@@ -306,7 +308,7 @@ export class MCHState extends GameState {
 }
 
 const makeWeaponskill_MCH = (
-	name: SkillName,
+	name: MCHActionKey,
 	unlockLevel: number,
 	params: {
 		autoUpgrade?: SkillAutoReplace;
@@ -333,7 +335,7 @@ const makeWeaponskill_MCH = (
 		params.onConfirm ?? NO_EFFECT,
 		(state) => state.processComboStatus(name),
 		(state) => {
-			if (name !== SkillName.FullMetalField) {
+			if (name !== "FULL_METAL_FIELD") {
 				state.tryConsumeResource(ResourceType.Reassembled);
 			}
 		},
@@ -370,7 +372,7 @@ const makeWeaponskill_MCH = (
 			}
 			if (
 				state.hasResourceAvailable(ResourceType.Reassembled) ||
-				name === SkillName.FullMetalField
+				name === "FULL_METAL_FIELD"
 			) {
 				mods.push(Modifiers.AutoCDH);
 			}
@@ -380,7 +382,7 @@ const makeWeaponskill_MCH = (
 };
 
 const makeAbility_MCH = (
-	name: SkillName,
+	name: MCHActionKey,
 	unlockLevel: number,
 	cdName: ResourceType,
 	params: {
@@ -412,7 +414,7 @@ const makeAbility_MCH = (
 };
 
 const makeResourceAbility_MCH = (
-	name: SkillName,
+	name: MCHActionKey,
 	unlockLevel: number,
 	cdName: ResourceType,
 	params: {
@@ -435,7 +437,7 @@ const makeResourceAbility_MCH = (
 	});
 };
 
-makeWeaponskill_MCH(SkillName.HeatedSplitShot, 54, {
+makeWeaponskill_MCH("HEATED_SPLIT_SHOT", 54, {
 	potency: [
 		["NEVER", 180],
 		["MARKSMANS_MASTERY", 200],
@@ -446,7 +448,7 @@ makeWeaponskill_MCH(SkillName.HeatedSplitShot, 54, {
 	onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5),
 });
 
-makeWeaponskill_MCH(SkillName.HeatedSlugShot, 60, {
+makeWeaponskill_MCH("HEATED_SLUG_SHOT", 60, {
 	potency: [
 		["NEVER", 100],
 		["MARKSMANS_MASTERY", 120],
@@ -467,7 +469,7 @@ makeWeaponskill_MCH(SkillName.HeatedSlugShot, 60, {
 	highlightIf: (state) => state.resources.get(ResourceType.HeatCombo).availableAmount() === 1,
 });
 
-makeWeaponskill_MCH(SkillName.HeatedCleanShot, 64, {
+makeWeaponskill_MCH("HEATED_CLEAN_SHOT", 64, {
 	potency: [
 		["NEVER", 100],
 		["MARKSMANS_MASTERY", 120],
@@ -491,14 +493,14 @@ makeWeaponskill_MCH(SkillName.HeatedCleanShot, 64, {
 	highlightIf: (state) => state.resources.get(ResourceType.HeatCombo).availableAmount() === 2,
 });
 
-makeResourceAbility_MCH(SkillName.Reassemble, 10, ResourceType.cd_Reassemble, {
+makeResourceAbility_MCH("REASSEMBLE", 10, ResourceType.cd_Reassemble, {
 	rscType: ResourceType.Reassembled,
 	applicationDelay: 0,
 	cooldown: 55,
 	maxCharges: 2, // charges reduced as needed in constructor by trait
 });
 
-makeWeaponskill_MCH(SkillName.Drill, 58, {
+makeWeaponskill_MCH("DRILL", 58, {
 	potency: 600,
 	applicationDelay: 1.15,
 	recastTime: (state) => state.config.adjustedSksGCD(),
@@ -509,10 +511,10 @@ makeWeaponskill_MCH(SkillName.Drill, 58, {
 	},
 });
 
-makeWeaponskill_MCH(SkillName.HotShot, 4, {
+makeWeaponskill_MCH("HOT_SHOT", 4, {
 	autoUpgrade: {
 		trait: "HOT_SHOT_MASTERY",
-		otherSkill: SkillName.AirAnchor,
+		otherSkill: "AIR_ANCHOR",
 	},
 	potency: 240,
 	applicationDelay: 1.15, // Assuming the same as Air Anchor since we don't have data for it in the spreadsheet
@@ -524,7 +526,7 @@ makeWeaponskill_MCH(SkillName.HotShot, 4, {
 		maxCharges: 1,
 	},
 });
-makeWeaponskill_MCH(SkillName.AirAnchor, 76, {
+makeWeaponskill_MCH("AIR_ANCHOR", 76, {
 	startOnHotbar: false,
 	potency: 600,
 	applicationDelay: 1.15,
@@ -537,10 +539,10 @@ makeWeaponskill_MCH(SkillName.AirAnchor, 76, {
 	},
 });
 
-makeWeaponskill_MCH(SkillName.Chainsaw, 90, {
+makeWeaponskill_MCH("CHAIN_SAW", 90, {
 	replaceIf: [
 		{
-			newSkill: SkillName.Excavator,
+			newSkill: "EXCAVATOR",
 			condition: (state) => state.hasResourceAvailable(ResourceType.ExcavatorReady),
 		},
 	],
@@ -560,7 +562,7 @@ makeWeaponskill_MCH(SkillName.Chainsaw, 90, {
 		maxCharges: 1,
 	},
 });
-makeWeaponskill_MCH(SkillName.Excavator, 90, {
+makeWeaponskill_MCH("EXCAVATOR", 90, {
 	startOnHotbar: false,
 	potency: 600,
 	falloff: 0.65,
@@ -574,10 +576,10 @@ makeWeaponskill_MCH(SkillName.Excavator, 90, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ExcavatorReady),
 });
 
-makeAbility_MCH(SkillName.BarrelStabilizer, 66, ResourceType.cd_BarrelStabilizer, {
+makeAbility_MCH("BARREL_STABILIZER", 66, ResourceType.cd_BarrelStabilizer, {
 	replaceIf: [
 		{
-			newSkill: SkillName.FullMetalField,
+			newSkill: "FULL_METAL_FIELD",
 			condition: (state) => state.hasResourceAvailable(ResourceType.FullMetalMachinist),
 		},
 	],
@@ -592,7 +594,7 @@ makeAbility_MCH(SkillName.BarrelStabilizer, 66, ResourceType.cd_BarrelStabilizer
 		}
 	},
 });
-makeWeaponskill_MCH(SkillName.FullMetalField, 100, {
+makeWeaponskill_MCH("FULL_METAL_FIELD", 100, {
 	startOnHotbar: false,
 	potency: 900,
 	falloff: 0.5,
@@ -603,7 +605,7 @@ makeWeaponskill_MCH(SkillName.FullMetalField, 100, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.FullMetalMachinist),
 });
 
-makeResourceAbility_MCH(SkillName.Hypercharge, 30, ResourceType.cd_Hypercharge, {
+makeResourceAbility_MCH("HYPERCHARGE", 30, ResourceType.cd_Hypercharge, {
 	rscType: ResourceType.Overheated,
 	applicationDelay: 0,
 	cooldown: 10,
@@ -623,10 +625,10 @@ makeResourceAbility_MCH(SkillName.Hypercharge, 30, ResourceType.cd_Hypercharge, 
 		state.hasResourceAvailable(ResourceType.Hypercharged),
 });
 
-makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
+makeAbility_MCH("WILDFIRE", 45, ResourceType.cd_Wildfire, {
 	replaceIf: [
 		{
-			newSkill: SkillName.Detonator,
+			newSkill: "DETONATOR",
 			condition: (state) => state.hasResourceAvailable(ResourceType.WildfireSelf),
 		},
 	],
@@ -640,7 +642,7 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
 		const wildFirePotency = new Potency({
 			config: state.config,
 			sourceTime: state.getDisplayTime(),
-			sourceSkill: SkillName.Wildfire,
+			sourceSkill: "WILDFIRE",
 			aspect: Aspect.Physical,
 			basePotency: 0, // We'll determine how much potency this deals when it expires
 			snapshotTime: state.getDisplayTime(),
@@ -665,7 +667,7 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
 		});
 	},
 });
-makeAbility_MCH(SkillName.Detonator, 45, ResourceType.cd_Detonator, {
+makeAbility_MCH("DETONATOR", 45, ResourceType.cd_Detonator, {
 	startOnHotbar: false,
 	applicationDelay: 0.62,
 	cooldown: 1,
@@ -674,7 +676,7 @@ makeAbility_MCH(SkillName.Detonator, 45, ResourceType.cd_Detonator, {
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.WildfireSelf),
 });
 
-makeWeaponskill_MCH(SkillName.BlazingShot, 68, {
+makeWeaponskill_MCH("BLAZING_SHOT", 68, {
 	potency: [
 		["NEVER", 220],
 		["MARKSMANS_MASTERY_II", 240],
@@ -689,17 +691,17 @@ makeWeaponskill_MCH(SkillName.BlazingShot, 68, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Overheated),
 });
 
-makeAbility_MCH(SkillName.GaussRound, 15, ResourceType.cd_DoubleCheck, {
+makeAbility_MCH("GAUSS_ROUND", 15, ResourceType.cd_DoubleCheck, {
 	autoUpgrade: {
 		trait: "DOUBLE_BARREL_MASTERY",
-		otherSkill: SkillName.DoubleCheck,
+		otherSkill: "DOUBLE_CHECK",
 	},
 	potency: 130,
 	applicationDelay: 0.71,
 	cooldown: 30,
 	maxCharges: 3, // TODO
 });
-makeAbility_MCH(SkillName.DoubleCheck, 92, ResourceType.cd_DoubleCheck, {
+makeAbility_MCH("DOUBLE_CHECK", 92, ResourceType.cd_DoubleCheck, {
 	startOnHotbar: false,
 	potency: 170,
 	falloff: 0.5,
@@ -708,10 +710,10 @@ makeAbility_MCH(SkillName.DoubleCheck, 92, ResourceType.cd_DoubleCheck, {
 	maxCharges: 3,
 });
 
-makeAbility_MCH(SkillName.Ricochet, 50, ResourceType.cd_Checkmate, {
+makeAbility_MCH("RICOCHET", 50, ResourceType.cd_Checkmate, {
 	autoUpgrade: {
 		trait: "DOUBLE_BARREL_MASTERY",
-		otherSkill: SkillName.Checkmate,
+		otherSkill: "CHECKMATE",
 	},
 	potency: 130,
 	falloff: 0.5,
@@ -719,7 +721,7 @@ makeAbility_MCH(SkillName.Ricochet, 50, ResourceType.cd_Checkmate, {
 	cooldown: 30,
 	maxCharges: 3,
 });
-makeAbility_MCH(SkillName.Checkmate, 92, ResourceType.cd_Checkmate, {
+makeAbility_MCH("CHECKMATE", 92, ResourceType.cd_Checkmate, {
 	startOnHotbar: false,
 	potency: 170,
 	falloff: 0.5,
@@ -729,21 +731,21 @@ makeAbility_MCH(SkillName.Checkmate, 92, ResourceType.cd_Checkmate, {
 });
 
 const robotSummons: Array<{
-	skillName: SkillName;
+	skillName: MCHActionKey;
 	skillLevel: number;
 	startOnHotbar?: boolean;
 	autoUpgrade?: SkillAutoReplace;
 }> = [
 	{
-		skillName: SkillName.RookAutoturret,
+		skillName: "ROOK_AUTOTURRET",
 		skillLevel: 40,
 		autoUpgrade: {
-			otherSkill: SkillName.AutomatonQueen,
+			otherSkill: "AUTOMATON_QUEEN",
 			trait: "PROMOTION",
 		},
 	},
 	{
-		skillName: SkillName.AutomatonQueen,
+		skillName: "AUTOMATON_QUEEN",
 		skillLevel: 80,
 		startOnHotbar: false,
 	},
@@ -778,10 +780,10 @@ robotSummons.forEach((params) => {
 				.get(ResourceType.Queen)
 				.gain(punchResource.availableAmount() + finishers);
 
-			let sourceSkill = SkillName.VolleyFire;
+			let sourceSkill = "VOLLEY_FIRE";
 			let basePotency = 0;
 			if (state.hasTraitUnlocked("PROMOTION")) {
-				sourceSkill = SkillName.ArmPunch;
+				sourceSkill = "ARM_PUNCH";
 				basePotency = state.calculateQueenPotency(120, 240);
 			} else {
 				basePotency = state.calculateQueenPotency(35, 75);
@@ -792,7 +794,7 @@ robotSummons.forEach((params) => {
 					new Potency({
 						config: state.config,
 						sourceTime: state.getDisplayTime(),
-						sourceSkill,
+						sourceSkill: sourceSkill as ActionKey,
 						aspect: Aspect.Physical,
 						description: "",
 						basePotency,
@@ -803,10 +805,8 @@ robotSummons.forEach((params) => {
 				);
 			}
 
-			sourceSkill = state.hasTraitUnlocked("PROMOTION")
-				? SkillName.PileBunker
-				: SkillName.RookOverload;
-			if (sourceSkill === SkillName.PileBunker) {
+			sourceSkill = state.hasTraitUnlocked("PROMOTION") ? "PILE_BUNKER" : "ROOK_OVERLOAD";
+			if (sourceSkill === "PILE_BUNKER") {
 				basePotency = state.calculateQueenPotency(340, 680);
 			} else {
 				basePotency = state.calculateQueenPotency(160, 320);
@@ -816,7 +816,7 @@ robotSummons.forEach((params) => {
 				new Potency({
 					config: state.config,
 					sourceTime: state.getDisplayTime(),
-					sourceSkill,
+					sourceSkill: sourceSkill as ActionKey,
 					aspect: Aspect.Physical,
 					description: "",
 					basePotency,
@@ -831,7 +831,7 @@ robotSummons.forEach((params) => {
 					new Potency({
 						config: state.config,
 						sourceTime: state.getDisplayTime(),
-						sourceSkill: SkillName.CrownedCollider,
+						sourceSkill: "CROWNED_COLLIDER",
 						aspect: Aspect.Physical,
 						description: "",
 						basePotency: state.calculateQueenPotency(390, 780),
@@ -851,21 +851,21 @@ robotSummons.forEach((params) => {
 });
 
 const overdriveSkills: Array<{
-	skillName: SkillName;
+	skillName: MCHActionKey;
 	skillLevel: number;
 	startOnHotbar?: boolean;
 	autoUpgrade?: SkillAutoReplace;
 }> = [
 	{
-		skillName: SkillName.RookOverdrive,
+		skillName: "ROOK_OVERDRIVE",
 		skillLevel: 40,
 		autoUpgrade: {
-			otherSkill: SkillName.QueenOverdrive,
+			otherSkill: "QUEEN_OVERDRIVE",
 			trait: "PROMOTION",
 		},
 	},
 	{
-		skillName: SkillName.QueenOverdrive,
+		skillName: "QUEEN_OVERDRIVE",
 		skillLevel: 80,
 		startOnHotbar: false,
 	},
@@ -884,10 +884,10 @@ overdriveSkills.forEach((params) => {
 	});
 });
 
-makeWeaponskill_MCH(SkillName.SpreadShot, 18, {
+makeWeaponskill_MCH("SPREAD_SHOT", 18, {
 	autoUpgrade: {
 		trait: "SPREAD_SHOT_MASTERY",
-		otherSkill: SkillName.Scattergun,
+		otherSkill: "SCATTERGUN",
 	},
 	potency: 140,
 	falloff: 0,
@@ -895,7 +895,7 @@ makeWeaponskill_MCH(SkillName.SpreadShot, 18, {
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5),
 });
-makeWeaponskill_MCH(SkillName.Scattergun, 82, {
+makeWeaponskill_MCH("SCATTERGUN", 82, {
 	startOnHotbar: false,
 	potency: [
 		["NEVER", 140],
@@ -907,7 +907,7 @@ makeWeaponskill_MCH(SkillName.Scattergun, 82, {
 	onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 10),
 });
 
-makeWeaponskill_MCH(SkillName.Bioblaster, 58, {
+makeWeaponskill_MCH("BIOBLASTER", 58, {
 	potency: 50,
 	falloff: 0,
 	applicationDelay: 0.97,
@@ -921,14 +921,14 @@ makeWeaponskill_MCH(SkillName.Bioblaster, 58, {
 		state.addDoTPotencies({
 			node,
 			dotName: ResourceType.Bioblaster,
-			skillName: SkillName.Bioblaster,
+			skillName: "BIOBLASTER",
 			tickPotency: 50,
 			speedStat: "sks",
 		}),
 	onApplication: (state, node) => state.applyDoT(ResourceType.Bioblaster, node),
 });
 
-makeWeaponskill_MCH(SkillName.AutoCrossbow, 52, {
+makeWeaponskill_MCH("AUTO_CROSSBOW", 52, {
 	potency: [
 		["NEVER", 140],
 		["MARKSMANS_MASTERY_II", 160],
@@ -940,7 +940,7 @@ makeWeaponskill_MCH(SkillName.AutoCrossbow, 52, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Overheated),
 });
 
-makeWeaponskill_MCH(SkillName.Flamethrower, 70, {
+makeWeaponskill_MCH("FLAMETHROWER", 70, {
 	applicationDelay: 0.89,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0,
@@ -948,7 +948,7 @@ makeWeaponskill_MCH(SkillName.Flamethrower, 70, {
 		state.addDoTPotencies({
 			node,
 			dotName: ResourceType.Flamethrower,
-			skillName: SkillName.Flamethrower,
+			skillName: "FLAMETHROWER",
 			tickPotency: 100,
 			tickFrequency: 1,
 			speedStat: "sks",
@@ -964,14 +964,14 @@ makeWeaponskill_MCH(SkillName.Flamethrower, 70, {
 	},
 });
 
-makeResourceAbility_MCH(SkillName.Tactician, 56, ResourceType.cd_Tactician, {
+makeResourceAbility_MCH("TACTICIAN", 56, ResourceType.cd_Tactician, {
 	rscType: ResourceType.Tactician,
 	maxCharges: 1,
 	cooldown: 90,
 	applicationDelay: 0.62,
 });
 
-makeAbility_MCH(SkillName.Dismantle, 62, ResourceType.cd_Dismantle, {
+makeAbility_MCH("DISMANTLE", 62, ResourceType.cd_Dismantle, {
 	maxCharges: 1,
 	cooldown: 120,
 	applicationDelay: 0.62,

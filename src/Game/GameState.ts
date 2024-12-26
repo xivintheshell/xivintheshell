@@ -5,7 +5,6 @@ import {
 	makeSkillReadyStatus,
 	ProcMode,
 	ResourceType,
-	SkillName,
 	SkillUnavailableReason,
 } from "./Common";
 import { GameConfig } from "./GameConfig";
@@ -53,7 +52,7 @@ type RNG = any;
 
 export interface DoTSkillRegistration {
 	dotName: ResourceType;
-	appliedBy: SkillName[];
+	appliedBy: ActionKey[];
 	isGroundTargeted?: true;
 	exclude?: boolean; // Exclude from standard DoT tick handling (Flamethrower)
 }
@@ -64,7 +63,7 @@ export interface DoTRegistrationGroup {
 
 export interface DoTPotencyProps {
 	node: ActionNode;
-	skillName: SkillName;
+	skillName: ActionKey;
 	dotName: ResourceType;
 	tickPotency: number;
 	tickFrequency?: number;
@@ -92,7 +91,7 @@ export abstract class GameState {
 	excludedDoTs: ResourceType[] = [];
 	fullTimeDoTs: ResourceType[] = [];
 	#groundTargetDoTs: ResourceType[] = [];
-	dotSkills: SkillName[] = [];
+	dotSkills: ActionKey[] = [];
 	#exclusiveDots: Map<ResourceType, ResourceType[]> = new Map();
 
 	constructor(config: GameConfig) {
@@ -331,7 +330,7 @@ export abstract class GameState {
 	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
 	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
 
-	maybeCancelChanneledSkills(nextSkillName: SkillName) {
+	maybeCancelChanneledSkills(nextSkillName: ActionKey) {
 		const nextSkill = this.skillsList.get(nextSkillName);
 
 		// Bail if we don't actually have this skill defined for this job
@@ -890,7 +889,7 @@ export abstract class GameState {
 		cd.useStack(this);
 	}
 
-	#timeTillSkillAvailable(skillName: SkillName) {
+	#timeTillSkillAvailable(skillName: ActionKey) {
 		let skill = this.skillsList.get(skillName);
 		let cdName = skill.cdName;
 		const secondaryCd = skill.secondaryCd?.cdName;
@@ -1078,7 +1077,7 @@ export abstract class GameState {
 	}
 
 	getSkillAvailabilityStatus(
-		skillName: SkillName,
+		skillName: ActionKey,
 		primaryRecastOnly: boolean = false,
 	): SkillButtonViewInfo {
 		let skill = this.skillsList.get(skillName);
@@ -1112,7 +1111,7 @@ export abstract class GameState {
 		if (!reqsMet) status.addUnavailableReason(SkillUnavailableReason.RequirementsNotMet);
 		if (!enoughMana) status.addUnavailableReason(SkillUnavailableReason.NotEnoughMP);
 
-		if (skill.name === SkillName.Meditate) {
+		if (skill.name === "MEDITATE") {
 			// Special case for Meditate
 			if (
 				timeTillAvailable > Debug.epsilon ||
@@ -1148,7 +1147,7 @@ export abstract class GameState {
 		// special case for meditate: if meditate is off CD, use the GCD cooldown instead if it's rolling
 		// this fails the edge case where a GCD is pressed ~58 seconds after meditate was last pressed
 		// and meditate would become available in the middle of the CD
-		if (skillName === SkillName.Meditate && timeTillNextStackReady < Debug.epsilon) {
+		if (skillName === "MEDITATE" && timeTillNextStackReady < Debug.epsilon) {
 			const gcd = this.cooldowns.get(ResourceType.cd_GCD);
 			const gcdRecastTime = gcd.currentStackCd();
 			if (gcd.timeTillNextStackAvailable() > timeTillNextStackReady) {
@@ -1204,7 +1203,7 @@ export abstract class GameState {
 		};
 	}
 
-	useSkill(skillName: SkillName, node: ActionNode) {
+	useSkill(skillName: ActionKey, node: ActionNode) {
 		let skill = this.skillsList.get(skillName);
 
 		// Process skill execution effects regardless of skill kind

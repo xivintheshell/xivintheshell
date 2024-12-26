@@ -2,7 +2,7 @@
 
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, BuffType, Debug, ProcMode, ResourceType, SkillName, WarningType } from "../Common";
+import { Aspect, BuffType, Debug, ProcMode, ResourceType, WarningType } from "../Common";
 import { PotencyModifierType, PotencyMultiplier } from "../Potency";
 import {
 	Ability,
@@ -30,6 +30,7 @@ import {
 } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { localize } from "../../Components/Localization";
+import { BLMActionKey } from "../Data/Actions/Jobs/BLM";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -90,19 +91,19 @@ export class BLMState extends GameState {
 				groupedDots: [
 					{
 						dotName: ResourceType.HighThunder,
-						appliedBy: [SkillName.HighThunder],
+						appliedBy: ["HIGH_THUNDER"],
 					},
 					{
 						dotName: ResourceType.HighThunderII,
-						appliedBy: [SkillName.HighThunder2],
+						appliedBy: ["HIGH_THUNDER_II"],
 					},
 					{
 						dotName: ResourceType.ThunderIII,
-						appliedBy: [SkillName.Thunder3],
+						appliedBy: ["THUNDER_III"],
 					},
 					{
 						dotName: ResourceType.ThunderIV,
-						appliedBy: [SkillName.Thunder4],
+						appliedBy: ["THUNDER_IV"],
 					},
 				],
 			},
@@ -237,15 +238,15 @@ export class BLMState extends GameState {
 		);
 	}
 
-	captureManaCost(name: SkillName, aspect: Aspect, baseManaCost: number) {
+	captureManaCost(name: BLMActionKey, aspect: Aspect, baseManaCost: number) {
 		// TODO handle flare/despair MP here instead of individual skills
 		const ui = this.getIceStacks();
 		const af = this.getFireStacks();
 		const uhStacks = this.getUmbralHearts();
 
 		if (
-			(name === SkillName.Paradox && this.getIceStacks() > 0) ||
-			(name === SkillName.Fire3 && this.hasResourceAvailable(ResourceType.Firestarter))
+			(name === "PARADOX" && this.getIceStacks() > 0) ||
+			(name === "FIRE_III" && this.hasResourceAvailable(ResourceType.Firestarter))
 		) {
 			return 0;
 		}
@@ -349,7 +350,7 @@ const getEnochianModifier = (state: Readonly<BLMState>) =>
 	1.1;
 
 const makeSpell_BLM = (
-	name: SkillName,
+	name: BLMActionKey,
 	unlockLevel: number,
 	params: {
 		replaceIf?: ConditionalSkillReplace<BLMState>[];
@@ -377,10 +378,9 @@ const makeSpell_BLM = (
 			// implications on resource generation. However, they still need to be checked here
 			// to avoid improperly spending swift/triple on an already-instant spell.
 			params.baseCastTime === 0 ||
-				(name === SkillName.Despair && state.hasTraitUnlocked("ENHANCED_ASTRAL_FIRE")) ||
-				(name === SkillName.Foul && state.hasTraitUnlocked("ENHANCED_FOUL")) ||
-				(name === SkillName.Fire3 &&
-					state.hasResourceAvailable(ResourceType.Firestarter)) ||
+				(name === "DESPAIR" && state.hasTraitUnlocked("ENHANCED_ASTRAL_FIRE")) ||
+				(name === "FOUL" && state.hasTraitUnlocked("ENHANCED_FOUL")) ||
+				(name === "FIRE_III" && state.hasResourceAvailable(ResourceType.Firestarter)) ||
 				// Consume Swift before Triple.
 				state.tryConsumeResource(ResourceType.Swiftcast) ||
 				state.tryConsumeResource(ResourceType.Triplecast);
@@ -392,10 +392,8 @@ const makeSpell_BLM = (
 			if (
 				state.getFireStacks() > 0 &&
 				aspect === Aspect.Fire &&
-				!(
-					[SkillName.Despair, SkillName.FlareStar, SkillName.Flare] as SkillName[]
-				).includes(name) &&
-				!(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter))
+				!(["DESPAIR", "FLARE_STAR", "FLARE"] as BLMActionKey[]).includes(name) &&
+				!(name === "FIRE_III" && state.hasResourceAvailable(ResourceType.Firestarter))
 			) {
 				state.tryConsumeResource(ResourceType.UmbralHeart);
 			}
@@ -419,11 +417,11 @@ const makeSpell_BLM = (
 		potency: (state) => params.basePotency,
 		isInstantFn: (state) =>
 			// Despair after lvl 100
-			(name === SkillName.Despair && state.hasTraitUnlocked("ENHANCED_ASTRAL_FIRE")) ||
+			(name === "DESPAIR" && state.hasTraitUnlocked("ENHANCED_ASTRAL_FIRE")) ||
 			// Foul after lvl 80
-			(name === SkillName.Foul && state.hasTraitUnlocked("ENHANCED_FOUL")) ||
+			(name === "FOUL" && state.hasTraitUnlocked("ENHANCED_FOUL")) ||
 			// F3P
-			(name === SkillName.Fire3 && state.hasResourceAvailable(ResourceType.Firestarter)) ||
+			(name === "FIRE_III" && state.hasResourceAvailable(ResourceType.Firestarter)) ||
 			// Swift
 			state.hasResourceAvailable(ResourceType.Swiftcast) ||
 			// Triple
@@ -535,7 +533,7 @@ const makeSpell_BLM = (
 };
 
 const makeAbility_BLM = (
-	name: SkillName,
+	name: BLMActionKey,
 	unlockLevel: number,
 	cdName: ResourceType,
 	params: {
@@ -557,7 +555,7 @@ const makeAbility_BLM = (
 // https://www.fflogs.com/reports/rK87bvMFN2R3Hqpy#fight=1&type=casts&source=7
 // https://www.fflogs.com/reports/cNpjtRXHhZ8Az2V3#fight=last&type=damage-done&view=events&ability=36987
 // https://www.fflogs.com/reports/7NMQkxLzcbptw3Xd#fight=15&type=damage-done&source=116&view=events&ability=36986
-makeSpell_BLM(SkillName.Blizzard, 1, {
+makeSpell_BLM("BLIZZARD", 1, {
 	aspect: Aspect.Ice,
 	baseCastTime: 2.5,
 	baseManaCost: 400,
@@ -578,7 +576,7 @@ makeSpell_BLM(SkillName.Blizzard, 1, {
 	},
 	replaceIf: [
 		{
-			newSkill: SkillName.Paradox,
+			newSkill: "PARADOX",
 			condition: paraCondition,
 		},
 	],
@@ -604,7 +602,7 @@ const potentiallyGainFirestarter = (game: PlayerState) => {
 	}
 };
 
-makeSpell_BLM(SkillName.Fire, 2, {
+makeSpell_BLM("FIRE", 2, {
 	aspect: Aspect.Fire,
 	baseCastTime: 2.5,
 	baseManaCost: 800,
@@ -625,13 +623,13 @@ makeSpell_BLM(SkillName.Fire, 2, {
 	},
 	replaceIf: [
 		{
-			newSkill: SkillName.Paradox,
+			newSkill: "PARADOX",
 			condition: paraCondition,
 		},
 	],
 });
 
-makeAbility_BLM(SkillName.Transpose, 4, ResourceType.cd_Transpose, {
+makeAbility_BLM("TRANSPOSE", 4, ResourceType.cd_Transpose, {
 	applicationDelay: 0, // instant
 	cooldown: 5,
 	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
@@ -647,19 +645,19 @@ makeAbility_BLM(SkillName.Transpose, 4, ResourceType.cd_Transpose, {
 });
 
 const thunderConfirm =
-	(skillName: SkillName, dotName: ResourceType) => (game: BLMState, node: ActionNode) => {
+	(skillName: BLMActionKey, dotName: ResourceType) => (game: BLMState, node: ActionNode) => {
 		let tickPotency = 0;
 		switch (skillName) {
-			case SkillName.HighThunder:
+			case "HIGH_THUNDER":
 				tickPotency = 60;
 				break;
-			case SkillName.Thunder3:
+			case "THUNDER_III":
 				tickPotency = 50;
 				break;
-			case SkillName.Thunder4:
+			case "THUNDER_IV":
 				tickPotency = 35;
 				break;
-			case SkillName.HighThunder2:
+			case "HIGH_THUNDER_II":
 				tickPotency = 40;
 				break;
 		}
@@ -690,20 +688,20 @@ const thunderConfirm =
 		thunderhead.removeTimer();
 	};
 
-makeSpell_BLM(SkillName.Thunder3, 45, {
+makeSpell_BLM("THUNDER_III", 45, {
 	aspect: Aspect.Lightning,
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 120,
 	applicationDelay: 1.03,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.Thunder3, ResourceType.ThunderIII),
+	onConfirm: thunderConfirm("THUNDER_III", ResourceType.ThunderIII),
 	onApplication: (state, node) => state.applyDoT(ResourceType.ThunderIII, node),
-	autoUpgrade: { trait: "THUNDER_MASTERY_III", otherSkill: SkillName.HighThunder },
+	autoUpgrade: { trait: "THUNDER_MASTERY_III", otherSkill: "HIGH_THUNDER" },
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
-makeResourceAbility("BLM", SkillName.Manaward, 30, ResourceType.cd_Manaward, {
+makeResourceAbility("BLM", "MANAWARD", 30, ResourceType.cd_Manaward, {
 	rscType: ResourceType.Manaward,
 	applicationDelay: 1.114, // delayed
 	cooldown: 120,
@@ -712,7 +710,7 @@ makeResourceAbility("BLM", SkillName.Manaward, 30, ResourceType.cd_Manaward, {
 // Manafont: application delay 0.88s -> 0.2s since Dawntrail
 // infact most effects seem instant but MP gain is delayed.
 // see screen recording: https://drive.google.com/file/d/1zGhU9egAKJ3PJiPVjuRBBMkKdxxHLS9b/view?usp=drive_link
-makeAbility_BLM(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
+makeAbility_BLM("MANAFONT", 30, ResourceType.cd_Manafont, {
 	applicationDelay: 0.2, // delayed
 	cooldown: 100, // set by trait in the constructor
 	validateAttempt: (state) => state.getFireStacks() > 0,
@@ -732,7 +730,7 @@ makeAbility_BLM(SkillName.Manafont, 30, ResourceType.cd_Manafont, {
 	},
 });
 
-makeSpell_BLM(SkillName.Fire3, 35, {
+makeSpell_BLM("FIRE_III", 35, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3.5,
 	baseManaCost: 2000,
@@ -746,7 +744,7 @@ makeSpell_BLM(SkillName.Fire3, 35, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Firestarter),
 });
 
-makeSpell_BLM(SkillName.Blizzard3, 35, {
+makeSpell_BLM("BLIZZARD_III", 35, {
 	aspect: Aspect.Ice,
 	baseCastTime: 3.5,
 	baseManaCost: 800,
@@ -758,7 +756,7 @@ makeSpell_BLM(SkillName.Blizzard3, 35, {
 	},
 });
 
-makeSpell_BLM(SkillName.Freeze, 40, {
+makeSpell_BLM("FREEZE", 40, {
 	aspect: Aspect.Ice,
 	baseCastTime: 2.8,
 	baseManaCost: 1000,
@@ -769,7 +767,7 @@ makeSpell_BLM(SkillName.Freeze, 40, {
 	onConfirm: (state, node) => state.resources.get(ResourceType.UmbralHeart).gain(3),
 });
 
-makeSpell_BLM(SkillName.Flare, 50, {
+makeSpell_BLM("FLARE", 50, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 0, // mana is handled separately
@@ -794,7 +792,7 @@ makeSpell_BLM(SkillName.Flare, 50, {
 	},
 });
 
-makeResourceAbility("BLM", SkillName.LeyLines, 52, ResourceType.cd_LeyLines, {
+makeResourceAbility("BLM", "LEY_LINES", 52, ResourceType.cd_LeyLines, {
 	rscType: ResourceType.LeyLines,
 	applicationDelay: 0.49, // delayed
 	cooldown: 120,
@@ -806,13 +804,13 @@ makeResourceAbility("BLM", SkillName.LeyLines, 52, ResourceType.cd_LeyLines, {
 	},
 	replaceIf: [
 		{
-			newSkill: SkillName.Retrace,
+			newSkill: "RETRACE",
 			condition: retraceCondition,
 		},
 	],
 });
 
-makeSpell_BLM(SkillName.Blizzard4, 58, {
+makeSpell_BLM("BLIZZARD_IV", 58, {
 	aspect: Aspect.Ice,
 	baseCastTime: 2.5,
 	baseManaCost: 800,
@@ -822,7 +820,7 @@ makeSpell_BLM(SkillName.Blizzard4, 58, {
 	onConfirm: (state, node) => state.resources.get(ResourceType.UmbralHeart).gain(3),
 });
 
-makeSpell_BLM(SkillName.Fire4, 60, {
+makeSpell_BLM("FIRE_IV", 60, {
 	aspect: Aspect.Fire,
 	baseCastTime: 2.8,
 	baseManaCost: 800,
@@ -835,7 +833,7 @@ makeSpell_BLM(SkillName.Fire4, 60, {
 	},
 });
 
-makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, {
+makeAbility_BLM("BETWEEN_THE_LINES", 62, ResourceType.cd_BetweenTheLines, {
 	applicationDelay: 0, // ?
 	cooldown: 3,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
@@ -846,13 +844,13 @@ makeAbility_BLM(SkillName.BetweenTheLines, 62, ResourceType.cd_BetweenTheLines, 
 	},
 });
 
-makeAbility_BLM(SkillName.AetherialManipulation, 50, ResourceType.cd_AetherialManipulation, {
+makeAbility_BLM("AETHERIAL_MANIPULATION", 50, ResourceType.cd_AetherialManipulation, {
 	applicationDelay: 0, // ?
 	cooldown: 10,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
-makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
+makeAbility_BLM("TRIPLECAST", 66, ResourceType.cd_Triplecast, {
 	applicationDelay: 0, // instant
 	cooldown: 60,
 	maxCharges: 2,
@@ -864,7 +862,7 @@ makeAbility_BLM(SkillName.Triplecast, 66, ResourceType.cd_Triplecast, {
 	},
 });
 
-makeSpell_BLM(SkillName.Foul, 70, {
+makeSpell_BLM("FOUL", 70, {
 	baseCastTime: 2.5,
 	baseManaCost: 0,
 	basePotency: 600,
@@ -875,7 +873,7 @@ makeSpell_BLM(SkillName.Foul, 70, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 });
 
-makeSpell_BLM(SkillName.Despair, 72, {
+makeSpell_BLM("DESPAIR", 72, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3, // instant cast at level 100, handled in makeSpell_BLM
 	baseManaCost: 0, // mana handled separately, like flare
@@ -895,7 +893,7 @@ makeSpell_BLM(SkillName.Despair, 72, {
 
 // Umbral Soul: immediate snapshot & UH gain; delayed MP gain
 // see screen recording: https://drive.google.com/file/d/1nsO69O7lgc8V_R_To4X0TGalPsCus1cg/view?usp=drive_link
-makeSpell_BLM(SkillName.UmbralSoul, 35, {
+makeSpell_BLM("UMBRAL_SOUL", 35, {
 	aspect: Aspect.Ice,
 	baseCastTime: 0,
 	baseManaCost: 0,
@@ -912,7 +910,7 @@ makeSpell_BLM(SkillName.UmbralSoul, 35, {
 	},
 });
 
-makeSpell_BLM(SkillName.Xenoglossy, 80, {
+makeSpell_BLM("XENOGLOSSY", 80, {
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 880,
@@ -922,63 +920,63 @@ makeSpell_BLM(SkillName.Xenoglossy, 80, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Polyglot),
 });
 
-makeSpell_BLM(SkillName.Fire2, 18, {
+makeSpell_BLM("FIRE_II", 18, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 1500,
 	basePotency: 80,
 	falloff: 0,
 	applicationDelay: 1.154, // Unknown damage application, copied from HF2
-	autoUpgrade: { trait: "ASPECT_MASTERY_IV", otherSkill: SkillName.HighFire2 },
+	autoUpgrade: { trait: "ASPECT_MASTERY_IV", otherSkill: "HIGH_FIRE_II" },
 	onConfirm: (state, node) => {
 		state.switchToAForUI(ResourceType.AstralFire, 3);
 		state.startOrRefreshEnochian();
 	},
 });
 
-makeSpell_BLM(SkillName.Blizzard2, 12, {
+makeSpell_BLM("BLIZZARD_II", 12, {
 	aspect: Aspect.Ice,
 	baseCastTime: 3,
 	baseManaCost: 800,
 	basePotency: 80,
 	falloff: 0,
 	applicationDelay: 1.158, // Unknown damage application, copied from HB2
-	autoUpgrade: { trait: "ASPECT_MASTERY_IV", otherSkill: SkillName.HighBlizzard2 },
+	autoUpgrade: { trait: "ASPECT_MASTERY_IV", otherSkill: "HIGH_BLIZZARD_II" },
 	onConfirm: (state, node) => {
 		state.switchToAForUI(ResourceType.UmbralIce, 3);
 		state.startOrRefreshEnochian();
 	},
 });
 
-makeSpell_BLM(SkillName.HighFire2, 82, {
+makeSpell_BLM("HIGH_FIRE_II", 82, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 1500,
 	basePotency: 100,
 	falloff: 0,
 	applicationDelay: 1.154,
-	autoDowngrade: { trait: "ASPECT_MASTERY_IV", otherSkill: SkillName.Fire2 },
+	autoDowngrade: { trait: "ASPECT_MASTERY_IV", otherSkill: "FIRE_II" },
 	onConfirm: (state, node) => {
 		state.switchToAForUI(ResourceType.AstralFire, 3);
 		state.startOrRefreshEnochian();
 	},
 });
 
-makeSpell_BLM(SkillName.HighBlizzard2, 82, {
+makeSpell_BLM("HIGH_BLIZZARD_II", 82, {
 	aspect: Aspect.Ice,
 	baseCastTime: 3,
 	baseManaCost: 800,
 	basePotency: 100,
 	falloff: 0,
 	applicationDelay: 1.158,
-	autoDowngrade: { trait: "ASPECT_MASTERY_IV", otherSkill: SkillName.Blizzard2 },
+	autoDowngrade: { trait: "ASPECT_MASTERY_IV", otherSkill: "BLIZZARD_II" },
 	onConfirm: (state, node) => {
 		state.switchToAForUI(ResourceType.UmbralIce, 3);
 		state.startOrRefreshEnochian();
 	},
 });
 
-makeAbility_BLM(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, {
+makeAbility_BLM("AMPLIFIER", 86, ResourceType.cd_Amplifier, {
 	applicationDelay: 0, // ? (assumed to be instant)
 	cooldown: 120,
 	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
@@ -991,7 +989,7 @@ makeAbility_BLM(SkillName.Amplifier, 86, ResourceType.cd_Amplifier, {
 	},
 });
 
-makeSpell_BLM(SkillName.Paradox, 90, {
+makeSpell_BLM("PARADOX", 90, {
 	// Paradox made instant via Dawntrail
 	baseCastTime: 0,
 	baseManaCost: 1600,
@@ -1014,12 +1012,12 @@ makeSpell_BLM(SkillName.Paradox, 90, {
 	},
 	replaceIf: [
 		{
-			newSkill: SkillName.Blizzard,
+			newSkill: "BLIZZARD",
 			condition: (state) =>
 				!state.hasResourceAvailable(ResourceType.Paradox) && state.getIceStacks() > 0,
 		},
 		{
-			newSkill: SkillName.Fire,
+			newSkill: "FIRE",
 			condition: (state) =>
 				!state.hasResourceAvailable(ResourceType.Paradox) && state.getFireStacks() > 0,
 		},
@@ -1028,20 +1026,20 @@ makeSpell_BLM(SkillName.Paradox, 90, {
 	highlightIf: (state) => true,
 });
 
-makeSpell_BLM(SkillName.HighThunder, 92, {
+makeSpell_BLM("HIGH_THUNDER", 92, {
 	aspect: Aspect.Lightning,
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 150,
 	applicationDelay: 0.757,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.HighThunder, ResourceType.HighThunder),
+	onConfirm: thunderConfirm("HIGH_THUNDER", ResourceType.HighThunder),
 	onApplication: (state, node) => state.applyDoT(ResourceType.HighThunder, node),
-	autoDowngrade: { trait: "THUNDER_MASTERY_III", otherSkill: SkillName.Thunder3 },
+	autoDowngrade: { trait: "THUNDER_MASTERY_III", otherSkill: "THUNDER_III" },
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
-makeSpell_BLM(SkillName.FlareStar, 100, {
+makeSpell_BLM("FLARE_STAR", 100, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3,
 	baseManaCost: 0,
@@ -1053,7 +1051,7 @@ makeSpell_BLM(SkillName.FlareStar, 100, {
 	highlightIf: (state) => state.resources.get(ResourceType.AstralSoul).available(6),
 });
 
-makeSpell_BLM(SkillName.Thunder4, 64, {
+makeSpell_BLM("THUNDER_IV", 64, {
 	aspect: Aspect.Lightning,
 	baseCastTime: 0,
 	baseManaCost: 0,
@@ -1061,13 +1059,13 @@ makeSpell_BLM(SkillName.Thunder4, 64, {
 	falloff: 0,
 	applicationDelay: 1.16,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.Thunder4, ResourceType.ThunderIV),
+	onConfirm: thunderConfirm("THUNDER_IV", ResourceType.ThunderIV),
 	onApplication: (state, node) => state.applyDoT(ResourceType.ThunderIV, node),
-	autoUpgrade: { trait: "THUNDER_MASTERY_III", otherSkill: SkillName.HighThunder2 },
+	autoUpgrade: { trait: "THUNDER_MASTERY_III", otherSkill: "HIGH_THUNDER_II" },
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
-makeSpell_BLM(SkillName.HighThunder2, 92, {
+makeSpell_BLM("HIGH_THUNDER_II", 92, {
 	aspect: Aspect.Lightning,
 	baseCastTime: 0,
 	baseManaCost: 0,
@@ -1075,13 +1073,13 @@ makeSpell_BLM(SkillName.HighThunder2, 92, {
 	falloff: 0,
 	applicationDelay: 0.8,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
-	onConfirm: thunderConfirm(SkillName.HighThunder2, ResourceType.HighThunderII),
+	onConfirm: thunderConfirm("HIGH_THUNDER_II", ResourceType.HighThunderII),
 	onApplication: (state, node) => state.applyDoT(ResourceType.HighThunderII, node),
-	autoDowngrade: { trait: "THUNDER_MASTERY_III", otherSkill: SkillName.Thunder4 },
+	autoDowngrade: { trait: "THUNDER_MASTERY_III", otherSkill: "THUNDER_IV" },
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Thunderhead),
 });
 
-makeAbility_BLM(SkillName.Retrace, 96, ResourceType.cd_Retrace, {
+makeAbility_BLM("RETRACE", 96, ResourceType.cd_Retrace, {
 	applicationDelay: 0, // ? (assumed to be instant)
 	cooldown: 40,
 	validateAttempt: retraceCondition,

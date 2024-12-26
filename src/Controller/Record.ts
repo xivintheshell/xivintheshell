@@ -1,8 +1,9 @@
 import { FileType } from "./Common";
-import { BuffType, ResourceType, SkillName, SkillReadyStatus } from "../Game/Common";
+import { BuffType, ResourceType, SkillReadyStatus } from "../Game/Common";
 import { GameConfig } from "../Game/GameConfig";
 import { Potency } from "../Game/Potency";
 import { controller } from "./Controller";
+import { ActionKey, ACTIONS } from "../Game/Data/Actions";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -34,7 +35,7 @@ export class ActionNode {
 
 	type: ActionType;
 	waitDuration: number = 0;
-	skillName?: SkillName;
+	skillName?: ActionKey;
 	buffName?: string;
 	applicationTime?: number;
 	#dotOverrideAmount: Map<ResourceType, number>;
@@ -276,7 +277,7 @@ export class Line {
 			list.push({
 				type: itr.type,
 				// skill
-				skillName: itr.skillName,
+				skillName: itr.skillName ? ACTIONS[itr.skillName as ActionKey].name : undefined,
 				// setResourceEnabled
 				buffName: itr.buffName,
 				// any

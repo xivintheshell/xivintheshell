@@ -1,6 +1,6 @@
 import React, { FormEvent, FormEventHandler } from "react";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
-import { Debug, SkillName, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
+import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { Tooltip as ReactTooltip } from "react-tooltip";
@@ -10,12 +10,13 @@ import { updateTimelineView } from "./Timeline";
 import * as ReactDOMServer from "react-dom/server";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { getSkillAssetPath } from "../Game/Skills";
+import { ActionKey } from "../Game/Data/Actions";
 
 // Game/Jobs/* must be run first to ensure all skills have been registered, so we need to
 // load images lazily to ensure we're not dependent on webpack's module resolution order.
 const skillIconImages = new Map();
 
-export const getSkillIconPath = (skillName: SkillName | undefined) => {
+export const getSkillIconPath = (skillName: ActionKey | undefined) => {
 	if (!skillName) {
 		return undefined;
 	}
@@ -26,7 +27,7 @@ export const getSkillIconPath = (skillName: SkillName | undefined) => {
 	return undefined;
 };
 
-export const getSkillIconImage = (skillName: SkillName) => {
+export const getSkillIconImage = (skillName: ActionKey) => {
 	if (skillIconImages.has(skillName)) {
 		return skillIconImages.get(skillName);
 	}
@@ -187,7 +188,7 @@ function ProgressCircleOutline(
 
 type SkillButtonProps = {
 	highlight: boolean;
-	skillName: SkillName;
+	skillName: ActionKey;
 	ready: boolean;
 	readyAsideFromCd: boolean;
 	cdProgress: number;
@@ -481,7 +482,7 @@ enum WaitSince {
 }
 
 export type SkillButtonViewInfo = {
-	skillName: SkillName;
+	skillName: ActionKey;
 	status: SkillReadyStatus;
 	stacksAvailable: number;
 	maxStacks: number;
