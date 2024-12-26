@@ -640,6 +640,7 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
 			basePotency: 0, // We'll determine how much potency this deals when it expires
 			snapshotTime: state.getDisplayTime(),
 			description: "wildfire",
+			targetCount: 1,
 		});
 		wildFirePotency.modifiers = [Modifiers.NoCDH]; // Wildfire can neither crit nor direct hit
 		if (state.hasResourceAvailable(ResourceType.Tincture)) {
@@ -789,6 +790,7 @@ robotSummons.forEach((params) => {
 						description: "",
 						basePotency,
 						snapshotTime: undefined,
+						targetCount: node.targetCount,
 					}),
 					ResourceType.Queen,
 				);
@@ -812,6 +814,7 @@ robotSummons.forEach((params) => {
 					description: "",
 					basePotency,
 					snapshotTime: undefined,
+					targetCount: node.targetCount,
 				}),
 				ResourceType.Queen,
 			);
@@ -826,6 +829,7 @@ robotSummons.forEach((params) => {
 						description: "",
 						basePotency: state.calculateQueenPotency(390, 780),
 						snapshotTime: undefined,
+						targetCount: node.targetCount,
 					}),
 					ResourceType.Queen,
 				);

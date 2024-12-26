@@ -296,6 +296,8 @@ export type InitialPotencyProps = {
 	basePotency: number;
 	snapshotTime?: number;
 	description: string;
+	targetCount: number;
+	falloff?: number;
 };
 
 export class Potency {
@@ -305,6 +307,8 @@ export class Potency {
 	aspect: Aspect;
 	description: string;
 	base: number;
+	targetCount: number;
+	falloff?: number;
 	snapshotTime?: number;
 	applicationTime?: number;
 	modifiers: PotencyModifier[] = [];
@@ -317,6 +321,8 @@ export class Potency {
 		this.base = props.basePotency;
 		this.snapshotTime = props.snapshotTime;
 		this.description = props.description;
+		this.targetCount = props.targetCount;
+		this.falloff = props.falloff;
 	}
 
 	getAmount(props: { tincturePotencyMultiplier: number; includePartyBuffs: boolean }) {

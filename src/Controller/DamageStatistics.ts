@@ -2,7 +2,6 @@
 import { controller as ctl } from "./Controller";
 import { ActionNode, ActionType } from "./Record";
 import { BuffType, LIMIT_BREAKS, ResourceType, SkillName } from "../Game/Common";
-import { getSkill } from "../Game/Skills";
 import {
 	DamageStatisticsData,
 	DamageStatisticsMode,
@@ -158,7 +157,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 			// do nothing if the used ability does no damage
 		} else {
 			res.targetCount = node.targetCount;
-			res.falloff = getSkill(ctl.getActiveJob(), node.skillName).falloff ?? 1;
+			res.falloff = mainPotency.falloff ?? 1;
 			if (AFUISkills.has(node.skillName)) {
 				// for AF/UI skills, display the first modifier that's not enochian or pot
 				// (must be one of af123, ui123)

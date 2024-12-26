@@ -586,6 +586,8 @@ export abstract class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
+				targetCount: node.targetCount,
+				falloff: skill.falloff,
 			});
 			node.addPotency(potency);
 		}
@@ -731,6 +733,8 @@ export abstract class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: this.getDisplayTime(),
 				description: "",
+				targetCount: node.targetCount,
+				falloff: skill.falloff,
 			});
 			const mods: PotencyModifier[] = [];
 			if (this.hasResourceAvailable(ResourceType.Tincture)) {
@@ -813,6 +817,8 @@ export abstract class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
+				targetCount: node.targetCount,
+				falloff: skill.falloff,
 			});
 			node.addPotency(potency);
 		}
@@ -1040,6 +1046,7 @@ export abstract class GameState {
 				snapshotTime: this.getDisplayTime(),
 				description:
 					localizeResourceType(props.dotName) + " DoT " + (i + 1) + `/${dotTicks}`,
+				targetCount: props.node.targetCount,
 			});
 			pDot.modifiers = [...mods, ...(props?.modifiers ?? [])];
 			props.node.addDoTPotency(pDot, props.dotName);

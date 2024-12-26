@@ -462,7 +462,22 @@ function drawDamageMarks(
 					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 					includePartyBuffs: true,
 				});
-				info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")");
+				// Push additional info for hits that splash
+				if (damageInfo.potency.targetCount > 1) {
+					for (let i = 0; i < damageInfo.potency.targetCount; i++) {
+						let potencyOnHit =
+							i === 0
+								? potencyAmount
+								: potencyAmount * (1 - (damageInfo.potency.falloff ?? 1));
+						const sourceStrForTarget = localize({
+							en: `${sourceStr}, target #${i + 1}`,
+							zh: `${sourceStr}, ${i + 1}号目标`,
+						});
+						info.push(potencyOnHit.toFixed(2) + " (" + sourceStrForTarget + ")");
+					}
+				} else {
+					info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")");
+				}
 				if (pot) buffImages.push(buffIconImages.get(BuffType.Tincture));
 
 				damageInfo.potency.getPartyBuffs().forEach((desc) => {
