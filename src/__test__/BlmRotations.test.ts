@@ -26,9 +26,10 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { PotencyModifierType } from "../Game/Potency";
-import { ResourceType, SkillName } from "../Game/Common";
+import { ResourceType } from "../Game/Common";
 import { BLMState } from "../Game/Jobs/BLM";
 import { getResourceInfo, ResourceInfo } from "../Game/Resources";
+import { ActionKey } from "../Game/Data/Actions";
 
 beforeEach(rotationTestSetup);
 
@@ -41,56 +42,58 @@ const checkEnochian = () => (controller.game as BLMState).hasEnochian();
 it(
 	"accepts the standard rotation",
 	testWithConfig({}, () => {
-		[
-			SkillName.Blizzard3, // precast, no enochian
-			SkillName.Blizzard4,
-			SkillName.Fire3,
-			SkillName.Fire4,
-			SkillName.Fire4,
-			SkillName.Fire4,
-			SkillName.Fire4,
-			SkillName.Paradox,
-			SkillName.Fire4,
-			SkillName.Fire4,
-			SkillName.Despair,
-			SkillName.FlareStar,
-		].forEach(applySkill);
+		(
+			[
+				"BLIZZARD_III", // precast, no enochian
+				"BLIZZARD_IV",
+				"FIRE_III",
+				"FIRE_IV",
+				"FIRE_IV",
+				"FIRE_IV",
+				"FIRE_IV",
+				"PARADOX",
+				"FIRE_IV",
+				"FIRE_IV",
+				"DESPAIR",
+				"FLARE_STAR",
+			] as ActionKey[]
+		).forEach(applySkill);
 		// wait 4 seconds for cast finish + damage application
 		controller.step(4);
 		compareDamageTables([
 			{
-				skillName: SkillName.Blizzard3,
+				skillName: "BLIZZARD_III",
 				displayedModifiers: [], // unaspected
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Blizzard4,
+				skillName: "BLIZZARD_IV",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire3,
+				skillName: "FIRE_III",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire4,
+				skillName: "FIRE_IV",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 6,
 			},
 			{
-				skillName: SkillName.Paradox,
+				skillName: "PARADOX",
 				// unaspected spell under enochian
 				displayedModifiers: [PotencyModifierType.ENO],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Despair,
+				skillName: "DESPAIR",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.FlareStar,
+				skillName: "FLARE_STAR",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 1,
 			},
@@ -112,16 +115,18 @@ it(
 		});
 		// at min sps (420), 4xF4 after a fast F3 will drop enochian during the
 		// castbar of despair
-		[
-			// needed to make F3 fast
-			SkillName.Blizzard3,
-			SkillName.Fire3,
-			SkillName.Fire4,
-			SkillName.Fire4,
-			SkillName.Fire4,
-			SkillName.Fire4,
-			SkillName.Despair,
-		].forEach(applySkill);
+		(
+			[
+				// needed to make F3 fast
+				"BLIZZARD_III",
+				"FIRE_III",
+				"FIRE_IV",
+				"FIRE_IV",
+				"FIRE_IV",
+				"FIRE_IV",
+				"DESPAIR",
+			] as ActionKey[]
+		).forEach(applySkill);
 		// wait 4 seconds for cast finish + damage application
 		controller.step(4);
 		expect(alert).toHaveBeenCalled();
@@ -131,17 +136,17 @@ it(
 		expect(checkEnochian()).toBeFalsy();
 		compareDamageTables([
 			{
-				skillName: SkillName.Blizzard3,
+				skillName: "BLIZZARD_III",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire3,
+				skillName: "FIRE_III",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire4,
+				skillName: "FIRE_IV",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 4,
 			},
@@ -152,7 +157,7 @@ it(
 it(
 	"removes paradox on enochian drop",
 	testWithConfig({ spellSpeed: 420 }, () => {
-		[SkillName.Fire3, SkillName.Swiftcast, SkillName.Blizzard3].forEach(applySkill);
+		(["FIRE_III", "SWIFTCAST", "BLIZZARD_III"] as ActionKey[]).forEach(applySkill);
 		expect(checkEnochian()).toBeTruthy();
 		expect(controller.game.resources.get(ResourceType.Paradox).available(1)).toBeTruthy();
 		controller.step(15.01); // wait just a tiny bit after the enochian drop
@@ -164,51 +169,53 @@ it(
 it(
 	"has different F1 modifiers at different AF/UI states",
 	testWithConfig({}, () => {
-		[
-			SkillName.Fire, // no eno
-			SkillName.Fire, // AF1
-			SkillName.Fire, // AF2
-			SkillName.Fire, // AF3
-			SkillName.Blizzard3, // AF3
-			SkillName.Paradox, // eno
-			SkillName.Fire, // UI3
-		].forEach(applySkill);
+		(
+			[
+				"FIRE", // no eno
+				"FIRE", // AF1
+				"FIRE", // AF2
+				"FIRE", // AF3
+				"BLIZZARD_III", // AF3
+				"PARADOX", // eno
+				"FIRE", // UI3
+			] as ActionKey[]
+		).forEach(applySkill);
 		// wait for cast time + damage application
 		controller.step(4);
 		expect(checkEnochian()).toBeFalsy();
 		compareDamageTables([
 			{
-				skillName: SkillName.Fire,
+				skillName: "FIRE",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire,
+				skillName: "FIRE",
 				displayedModifiers: [PotencyModifierType.AF1],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire,
+				skillName: "FIRE",
 				displayedModifiers: [PotencyModifierType.AF2],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire,
+				skillName: "FIRE",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Blizzard3,
+				skillName: "BLIZZARD_III",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Paradox,
+				skillName: "PARADOX",
 				displayedModifiers: [PotencyModifierType.ENO],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire,
+				skillName: "FIRE",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 			},
@@ -219,17 +226,19 @@ it(
 it(
 	"accepts the standard aoe rotation",
 	testWithConfig({}, () => {
-		[
-			SkillName.HighBlizzard2, // no eno
-			SkillName.Freeze, // UI3
-			SkillName.HighFire2, // UI3
-			// it's optimal for dps to skip these, but we're testing resource consumption here
-			SkillName.HighFire2, // AF3
-			SkillName.HighFire2, // AF3
-			// hard clip triplecast
-			SkillName.Triplecast,
-			SkillName.Flare, // AF3
-		].forEach(applySkill);
+		(
+			[
+				"HIGH_BLIZZARD_II", // no eno
+				"FREEZE", // UI3
+				"HIGH_FIRE_II", // UI3
+				// it's optimal for dps to skip these, but we're testing resource consumption here
+				"HIGH_FIRE_II", // AF3
+				"HIGH_FIRE_II", // AF3
+				// hard clip triplecast
+				"TRIPLECAST",
+				"FLARE", // AF3
+			] as ActionKey[]
+		).forEach(applySkill);
 		// wait for cast time + damage application
 		controller.step(4);
 		expect(checkEnochian()).toBeTruthy();
@@ -239,15 +248,17 @@ it(
 		expect(
 			(controller.game as BLMState).resources.get(ResourceType.UmbralHeart).availableAmount(),
 		).toEqual(0);
-		[
-			SkillName.Flare, // AF3
-			SkillName.FlareStar, // Flare
-			SkillName.Manafont,
-			SkillName.Triplecast,
-			SkillName.Flare, // AF3
-			SkillName.Flare, // AF3
-			SkillName.FlareStar, // Flare
-		].forEach(applySkill);
+		(
+			[
+				"FLARE", // AF3
+				"FLARE_STAR", // Flare
+				"MANAFONT",
+				"TRIPLECAST",
+				"FLARE", // AF3
+				"FLARE", // AF3
+				"FLARE_STAR", // Flare
+			] as ActionKey[]
+		).forEach(applySkill);
 		controller.step(4);
 		expect(checkEnochian()).toBeTruthy();
 		expect(
@@ -255,42 +266,42 @@ it(
 		).toEqual(0);
 		compareDamageTables([
 			{
-				skillName: SkillName.Flare,
+				skillName: "FLARE",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 4,
 			},
 			{
-				skillName: SkillName.FlareStar,
+				skillName: "FLARE_STAR",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 2,
 			},
 			{
-				skillName: SkillName.HighFire2,
+				skillName: "HIGH_FIRE_II",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 2,
 			},
 			{
-				skillName: SkillName.HighFire2,
+				skillName: "HIGH_FIRE_II",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Freeze,
+				skillName: "FREEZE",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.HighBlizzard2,
+				skillName: "HIGH_BLIZZARD_II",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Manafont,
+				skillName: "MANAFONT",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Triplecast,
+				skillName: "TRIPLECAST",
 				displayedModifiers: [],
 				hitCount: 2,
 			},
@@ -301,44 +312,46 @@ it(
 it(
 	"replaces paradox below level 90",
 	testWithConfig({ level: 80 }, () => {
-		[
-			SkillName.Blizzard3,
-			SkillName.Blizzard4,
-			SkillName.Fire3,
-			SkillName.Paradox, // should be replaced by fire 1
-			SkillName.Blizzard3,
-			SkillName.Paradox, // should be replaced by blizzard 1
-		].forEach(applySkill);
+		(
+			[
+				"BLIZZARD_III",
+				"BLIZZARD_IV",
+				"FIRE_III",
+				"PARADOX", // should be replaced by fire 1
+				"BLIZZARD_III",
+				"PARADOX", // should be replaced by blizzard 1
+			] as ActionKey[]
+		).forEach(applySkill);
 		// wait for cast time + damage application
 		controller.step(4);
 		compareDamageTables([
 			{
-				skillName: SkillName.Blizzard3,
+				skillName: "BLIZZARD_III",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Blizzard4,
+				skillName: "BLIZZARD_IV",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire3,
+				skillName: "FIRE_III",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire,
+				skillName: "FIRE",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Blizzard3,
+				skillName: "BLIZZARD_III",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Blizzard,
+				skillName: "BLIZZARD",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 			},
@@ -349,39 +362,41 @@ it(
 it(
 	"replaces f1/b1 with paradox when needed",
 	testWithConfig({ level: 100 }, () => {
-		[
-			SkillName.Blizzard3,
-			SkillName.Blizzard4,
-			SkillName.Fire3,
-			SkillName.Fire, // should be replaced by paradox
-			SkillName.Blizzard3,
-			SkillName.Blizzard, // should be replaced by paradox
-		].forEach(applySkill);
+		(
+			[
+				"BLIZZARD_III",
+				"BLIZZARD_IV",
+				"FIRE_III",
+				"FIRE", // should be replaced by paradox
+				"BLIZZARD_III",
+				"BLIZZARD", // should be replaced by paradox
+			] as ActionKey[]
+		).forEach(applySkill);
 		// wait for cast time + damage application
 		controller.step(4);
 		compareDamageTables([
 			{
-				skillName: SkillName.Blizzard3,
+				skillName: "BLIZZARD_III",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Blizzard4,
+				skillName: "BLIZZARD_IV",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire3,
+				skillName: "FIRE_III",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Paradox,
+				skillName: "PARADOX",
 				displayedModifiers: [PotencyModifierType.ENO],
 				hitCount: 2,
 			},
 			{
-				skillName: SkillName.Blizzard3,
+				skillName: "BLIZZARD_III",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 1,
 			},
@@ -406,33 +421,35 @@ it(
 		});
 		/* eslint-enable @typescript-eslint/no-unused-vars */
 
-		[
-			SkillName.Fire3,
-			SkillName.Fire4,
-			SkillName.Fire4,
-			SkillName.Fire4,
-			SkillName.Fire4,
-			SkillName.Fire4,
-			SkillName.Blizzard3,
-			SkillName.Thunder3,
-		].forEach(applySkill);
+		(
+			[
+				"FIRE_III",
+				"FIRE_IV",
+				"FIRE_IV",
+				"FIRE_IV",
+				"FIRE_IV",
+				"FIRE_IV",
+				"BLIZZARD_III",
+				"THUNDER_III",
+			] as ActionKey[]
+		).forEach(applySkill);
 		// wait for cast time + damage application
 		controller.step(4);
 		expect(alertMsg).toEqual("cast failed! Resources for Blizzard 3 are no longer available");
 		compareDamageTables([
 			{
-				skillName: SkillName.Fire3,
+				skillName: "FIRE_III",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Fire4,
+				skillName: "FIRE_IV",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 5,
 			},
 			// B3 cast is canceled, thunder is unaspected
 			{
-				skillName: SkillName.Thunder3,
+				skillName: "THUNDER_III",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
@@ -445,12 +462,9 @@ it(
 	testWithConfig({}, () => {
 		// Fast forward to zero to make sure gap calcs are positive
 		controller.step(controller.gameConfig.countdown);
-		[
-			SkillName.Blizzard3,
-			SkillName.HighThunder,
-			SkillName.Fire3,
-			SkillName.HighThunder2,
-		].forEach(applySkill);
+		(["BLIZZARD_III", "HIGH_THUNDER", "FIRE_III", "HIGH_THUNDER_II"] as ActionKey[]).forEach(
+			applySkill,
+		);
 		// wait for cast time + damage application
 		controller.step(4);
 
@@ -461,7 +475,7 @@ it(
 		expect(damageData.dotTables.get(ResourceType.HighThunderII)?.tableRows.length).toBe(1);
 
 		const b3CastTime = state.config.getAfterTaxCastTime(state.config.adjustedCastTime(3.5));
-		const htApplicationDelay = state.skillsList.get(SkillName.HighThunder).applicationDelay;
+		const htApplicationDelay = state.skillsList.get("HIGH_THUNDER").applicationDelay;
 		const htApplicationTime = b3CastTime + htApplicationDelay;
 		// check the DoT summary for HT
 		const htSummary = damageData.dotTables.get(ResourceType.HighThunder)?.summary;
@@ -474,7 +488,7 @@ it(
 		// Overriding DoTs should not list a gap
 		expect(ht2Summary?.cumulativeGap).toEqual(0);
 		const gcdRecastTime = state.config.getAfterTaxGCD(state.config.adjustedGCD(2.5));
-		const ht2ApplicationDelay = state.skillsList.get(SkillName.HighThunder2).applicationDelay;
+		const ht2ApplicationDelay = state.skillsList.get("HIGH_THUNDER_II").applicationDelay;
 		const ht2ApplicationTime = b3CastTime + 2 * gcdRecastTime + ht2ApplicationDelay;
 		const expectedOverride =
 			(getResourceInfo("BLM", ResourceType.HighThunder) as ResourceInfo).maxTimeout -

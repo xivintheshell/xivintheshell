@@ -1,8 +1,9 @@
 import { localizeResourceType } from "../../Components/Localization";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, ResourceType, SkillName, WarningType } from "../Common";
+import { BuffType, ResourceType, WarningType } from "../Common";
 import { BRDResourceType } from "../Constants/BRD";
+import { BRDActionKey } from "../Data/Actions/Jobs/BRD";
 import { TraitKey } from "../Data/Traits";
 import { GameConfig } from "../GameConfig";
 import { GameState, PlayerState } from "../GameState";
@@ -68,11 +69,7 @@ const BARD_SONGS: ResourceType[] = [
 	ResourceType.ArmysPaeon,
 ];
 
-const BARRAGE_SKILLS: SkillName[] = [
-	SkillName.RefulgentArrow,
-	SkillName.Shadowbite,
-	SkillName.WideVolley,
-];
+const BARRAGE_SKILLS: BRDActionKey[] = ["REFULGENT_ARROW", "SHADOWBITE", "WIDE_VOLLEY"];
 
 export class BRDState extends GameState {
 	constructor(config: GameConfig) {
@@ -92,7 +89,7 @@ export class BRDState extends GameState {
 				groupedDots: [
 					{
 						dotName: ResourceType.Stormbite,
-						appliedBy: [SkillName.Stormbite, SkillName.IronJaws],
+						appliedBy: ["STORMBITE", "IRON_JAWS"],
 					},
 				],
 			},
@@ -101,7 +98,7 @@ export class BRDState extends GameState {
 				groupedDots: [
 					{
 						dotName: ResourceType.CausticBite,
-						appliedBy: [SkillName.CausticBite, SkillName.IronJaws],
+						appliedBy: ["CAUSTIC_BITE", "IRON_JAWS"],
 					},
 				],
 			},
@@ -130,7 +127,7 @@ export class BRDState extends GameState {
 
 		if (
 			this.hasResourceAvailable(ResourceType.Barrage) &&
-			BARRAGE_SKILLS.includes(skill.name)
+			BARRAGE_SKILLS.includes(skill.name as BRDActionKey)
 		) {
 			node.addBuff(BuffType.Barrage);
 		}
@@ -303,7 +300,7 @@ export class BRDState extends GameState {
 		return wanderers + mages + armys;
 	}
 
-	getJobPotencyModifiers(skillName: SkillName): PotencyModifier[] {
+	getJobPotencyModifiers(skillName: BRDActionKey): PotencyModifier[] {
 		const mods: PotencyModifier[] = [];
 
 		const modiferResources: { rscType: ResourceType; mod: PotencyModifier }[] = [
@@ -332,13 +329,13 @@ export class BRDState extends GameState {
 
 		if (this.hasResourceAvailable(ResourceType.Barrage)) {
 			switch (skillName) {
-				case SkillName.RefulgentArrow:
+				case "REFULGENT_ARROW":
 					mods.push(Modifiers.BarrageRefulgent);
 					break;
-				case SkillName.Shadowbite:
+				case "SHADOWBITE":
 					mods.push(Modifiers.BarrageShadowbite);
 					break;
-				case SkillName.WideVolley:
+				case "WIDE_VOLLEY":
 					mods.push(Modifiers.BarrageWideVolley);
 					break;
 			}
@@ -368,7 +365,7 @@ export class BRDState extends GameState {
 }
 
 const makeWeaponskill_BRD = (
-	name: SkillName,
+	name: BRDActionKey,
 	unlockLevel: number,
 	params: {
 		autoUpgrade?: SkillAutoReplace;
@@ -401,7 +398,7 @@ const makeWeaponskill_BRD = (
 };
 
 const makeAbility_BRD = (
-	name: SkillName,
+	name: BRDActionKey,
 	unlockLevel: number,
 	cdName: ResourceType,
 	params: {
@@ -429,7 +426,7 @@ const makeAbility_BRD = (
 };
 
 const makeResourceAbility_BRD = (
-	name: SkillName,
+	name: BRDActionKey,
 	unlockLevel: number,
 	cdName: ResourceType,
 	params: {
@@ -449,16 +446,16 @@ const makeResourceAbility_BRD = (
 	});
 };
 
-makeWeaponskill_BRD(SkillName.HeavyShot, 1, {
+makeWeaponskill_BRD("HEAVY_SHOT", 1, {
 	potency: 160,
 	applicationDelay: 1.47, // Unknown, copied from Burst Shot
 	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.2),
 	autoUpgrade: {
 		trait: "HEAVY_SHOT_MASTERY",
-		otherSkill: SkillName.BurstShot,
+		otherSkill: "BURST_SHOT",
 	},
 });
-makeWeaponskill_BRD(SkillName.BurstShot, 1, {
+makeWeaponskill_BRD("BURST_SHOT", 1, {
 	startOnHotbar: false,
 	potency: [
 		["NEVER", 200],
@@ -468,7 +465,7 @@ makeWeaponskill_BRD(SkillName.BurstShot, 1, {
 	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.35),
 });
 
-makeWeaponskill_BRD(SkillName.RefulgentArrow, 70, {
+makeWeaponskill_BRD("REFULGENT_ARROW", 70, {
 	potency: [
 		["NEVER", 260],
 		["RANGED_MASTERY", 280],
@@ -490,19 +487,19 @@ makeWeaponskill_BRD(SkillName.RefulgentArrow, 70, {
 });
 
 const dotAppliers: Array<{
-	skillName: SkillName;
+	skillName: BRDActionKey;
 	dotName: ResourceType;
 	initialPotency: number;
 	tickPotency: number;
 }> = [
 	{
-		skillName: SkillName.CausticBite,
+		skillName: "CAUSTIC_BITE",
 		dotName: ResourceType.CausticBite,
 		initialPotency: 150,
 		tickPotency: 20,
 	},
 	{
-		skillName: SkillName.Stormbite,
+		skillName: "STORMBITE",
 		dotName: ResourceType.Stormbite,
 		initialPotency: 100,
 		tickPotency: 25,
@@ -530,7 +527,7 @@ dotAppliers.forEach((props) => {
 	});
 });
 
-makeWeaponskill_BRD(SkillName.IronJaws, 56, {
+makeWeaponskill_BRD("IRON_JAWS", 56, {
 	potency: 100,
 	applicationDelay: 0.67,
 	onApplication: (state, node) => {
@@ -539,9 +536,9 @@ makeWeaponskill_BRD(SkillName.IronJaws, 56, {
 				node,
 				dotName: dotParams.dotName,
 				tickPotency: dotParams.tickPotency,
-				skillName: SkillName.IronJaws,
+				skillName: "IRON_JAWS",
 				speedStat: "sks",
-				modifiers: state.getJobPotencyModifiers(SkillName.IronJaws),
+				modifiers: state.getJobPotencyModifiers("IRON_JAWS"),
 			});
 		});
 		if (state.hasTraitUnlocked("BITE_MASTERY_II")) {
@@ -550,7 +547,7 @@ makeWeaponskill_BRD(SkillName.IronJaws, 56, {
 	},
 });
 
-makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
+makeWeaponskill_BRD("APEX_ARROW", 80, {
 	potency: (state) => {
 		const soulVoice = state.resources.get(ResourceType.SoulVoice);
 		const minRequirement = 20;
@@ -578,12 +575,12 @@ makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SoulVoice, 80),
 	replaceIf: [
 		{
-			newSkill: SkillName.BlastArrow,
+			newSkill: "BLAST_ARROW",
 			condition: (state) => state.hasResourceAvailable(ResourceType.BlastArrowReady),
 		},
 	],
 });
-makeWeaponskill_BRD(SkillName.BlastArrow, 86, {
+makeWeaponskill_BRD("BLAST_ARROW", 86, {
 	startOnHotbar: false,
 	potency: 600,
 	falloff: 0.6,
@@ -593,7 +590,7 @@ makeWeaponskill_BRD(SkillName.BlastArrow, 86, {
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.BlastArrowReady),
 });
 
-makeAbility_BRD(SkillName.EmyprealArrow, 54, ResourceType.cd_EmpyrealArrow, {
+makeAbility_BRD("EMYPREAL_ARROW", 54, ResourceType.cd_EmpyrealArrow, {
 	potency: [
 		["NEVER", 240], // TODO - Confirm
 		["RANGED_MASTERY", 260],
@@ -603,17 +600,17 @@ makeAbility_BRD(SkillName.EmyprealArrow, 54, ResourceType.cd_EmpyrealArrow, {
 	onApplication: (state) => state.gainRepertoireEffect(), // on application or on confirm?
 });
 
-makeAbility_BRD(SkillName.Bloodletter, 12, ResourceType.cd_HeartbreakShot, {
+makeAbility_BRD("BLOODLETTER", 12, ResourceType.cd_HeartbreakShot, {
 	potency: 130,
 	cooldown: 15,
 	maxCharges: 3,
 	applicationDelay: 1.65, // Unsure, copied from Heartbreak
 	autoUpgrade: {
-		otherSkill: SkillName.HeartbreakShot,
+		otherSkill: "HEARTBREAK_SHOT",
 		trait: "BLOODLETTER_MASTERY",
 	},
 });
-makeAbility_BRD(SkillName.HeartbreakShot, 92, ResourceType.cd_HeartbreakShot, {
+makeAbility_BRD("HEARTBREAK_SHOT", 92, ResourceType.cd_HeartbreakShot, {
 	startOnHotbar: false,
 	potency: 180,
 	cooldown: 15,
@@ -621,7 +618,7 @@ makeAbility_BRD(SkillName.HeartbreakShot, 92, ResourceType.cd_HeartbreakShot, {
 	applicationDelay: 1.65,
 });
 
-makeAbility_BRD(SkillName.Sidewinder, 60, ResourceType.cd_Sidewinder, {
+makeAbility_BRD("SIDEWINDER", 60, ResourceType.cd_Sidewinder, {
 	potency: [
 		["NEVER", 320],
 		["RANGED_MASTERY", 400],
@@ -631,32 +628,32 @@ makeAbility_BRD(SkillName.Sidewinder, 60, ResourceType.cd_Sidewinder, {
 });
 
 const songSkills: Array<{
-	skillName: SkillName;
+	skillName: BRDActionKey;
 	song: ResourceType;
 	skillLevel: number;
 	cdName: ResourceType;
 	replaceIf?: ConditionalSkillReplace<BRDState>[];
 }> = [
 	{
-		skillName: SkillName.WanderersMinuet,
+		skillName: "WANDERERS_MINUET",
 		song: ResourceType.WanderersMinuet,
 		skillLevel: 52,
 		cdName: ResourceType.cd_WanderersMinuet,
 		replaceIf: [
 			{
-				newSkill: SkillName.PitchPerfect,
+				newSkill: "PITCH_PERFECT",
 				condition: (state) => state.hasResourceAvailable(ResourceType.WanderersMinuet),
 			},
 		],
 	},
 	{
-		skillName: SkillName.MagesBallad,
+		skillName: "MAGES_BALLAD",
 		song: ResourceType.MagesBallad,
 		skillLevel: 30,
 		cdName: ResourceType.cd_MagesBallad,
 	},
 	{
-		skillName: SkillName.ArmysPaeon,
+		skillName: "ARMYS_PAEON",
 		song: ResourceType.ArmysPaeon,
 		skillLevel: 40,
 		cdName: ResourceType.cd_ArmysPaeon,
@@ -672,7 +669,7 @@ songSkills.forEach((props) => {
 	});
 });
 
-makeAbility_BRD(SkillName.PitchPerfect, 52, ResourceType.cd_PitchPerfect, {
+makeAbility_BRD("PITCH_PERFECT", 52, ResourceType.cd_PitchPerfect, {
 	startOnHotbar: false,
 	applicationDelay: 0.8,
 	cooldown: 1,
@@ -690,7 +687,7 @@ makeAbility_BRD(SkillName.PitchPerfect, 52, ResourceType.cd_PitchPerfect, {
 		state.hasResourceAvailable(ResourceType.PitchPerfect),
 });
 
-makeResourceAbility_BRD(SkillName.Barrage, 38, ResourceType.cd_Barrage, {
+makeResourceAbility_BRD("BARRAGE", 38, ResourceType.cd_Barrage, {
 	rscType: ResourceType.Barrage,
 	applicationDelay: 0,
 	cooldown: 120,
@@ -701,12 +698,12 @@ makeResourceAbility_BRD(SkillName.Barrage, 38, ResourceType.cd_Barrage, {
 	},
 	replaceIf: [
 		{
-			newSkill: SkillName.ResonantArrow,
+			newSkill: "RESONANT_ARROW",
 			condition: (state) => state.hasResourceAvailable(ResourceType.ResonantArrowReady),
 		},
 	],
 });
-makeWeaponskill_BRD(SkillName.ResonantArrow, 96, {
+makeWeaponskill_BRD("RESONANT_ARROW", 96, {
 	startOnHotbar: false,
 	potency: 600,
 	falloff: 0.5,
@@ -716,7 +713,7 @@ makeWeaponskill_BRD(SkillName.ResonantArrow, 96, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ResonantArrowReady),
 });
 
-makeResourceAbility_BRD(SkillName.RadiantFinale, 90, ResourceType.cd_RadiantFinale, {
+makeResourceAbility_BRD("RADIANT_FINALE", 90, ResourceType.cd_RadiantFinale, {
 	rscType: ResourceType.RadiantFinale,
 	applicationDelay: 0.62,
 	cooldown: 110,
@@ -734,12 +731,12 @@ makeResourceAbility_BRD(SkillName.RadiantFinale, 90, ResourceType.cd_RadiantFina
 	validateAttempt: (state) => state.getCodaCount() > 0,
 	replaceIf: [
 		{
-			newSkill: SkillName.RadiantEncore,
+			newSkill: "RADIANT_ENCORE",
 			condition: (state) => state.hasResourceAvailable(ResourceType.RadiantEncoreReady),
 		},
 	],
 });
-makeWeaponskill_BRD(SkillName.RadiantEncore, 100, {
+makeWeaponskill_BRD("RADIANT_ENCORE", 100, {
 	startOnHotbar: false,
 	potency: (state) => {
 		const radiantCoda = state.resources.get(ResourceType.RadiantCoda).availableAmount();
@@ -752,29 +749,29 @@ makeWeaponskill_BRD(SkillName.RadiantEncore, 100, {
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.RadiantEncoreReady),
 });
 
-makeResourceAbility_BRD(SkillName.RagingStrikes, 4, ResourceType.cd_RagingStrikes, {
+makeResourceAbility_BRD("RAGING_STRIKES", 4, ResourceType.cd_RagingStrikes, {
 	rscType: ResourceType.RagingStrikes,
 	applicationDelay: 0.53,
 	cooldown: 120,
 });
 
-makeResourceAbility_BRD(SkillName.BattleVoice, 50, ResourceType.cd_BattleVoice, {
+makeResourceAbility_BRD("BATTLE_VOICE", 50, ResourceType.cd_BattleVoice, {
 	rscType: ResourceType.BattleVoice,
 	applicationDelay: 0.62,
 	cooldown: 120,
 });
 
-makeWeaponskill_BRD(SkillName.QuickNock, 18, {
+makeWeaponskill_BRD("QUICK_NOCK", 18, {
 	potency: 110,
 	applicationDelay: 1.11, // Unsure, copied from Ladonsbite,
 	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.2),
 	falloff: 0,
 	autoUpgrade: {
 		trait: "QUICK_NOCK_MASTERY",
-		otherSkill: SkillName.Ladonsbite,
+		otherSkill: "LADONSBITE",
 	},
 });
-makeWeaponskill_BRD(SkillName.Ladonsbite, 82, {
+makeWeaponskill_BRD("LADONSBITE", 82, {
 	startOnHotbar: false,
 	potency: 110,
 	falloff: 0,
@@ -782,7 +779,7 @@ makeWeaponskill_BRD(SkillName.Ladonsbite, 82, {
 	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.35),
 });
 
-makeWeaponskill_BRD(SkillName.WideVolley, 18, {
+makeWeaponskill_BRD("WIDE_VOLLEY", 18, {
 	potency: 140,
 	falloff: 0,
 	applicationDelay: 1.43, // Unsure, copied from Shadowbite,
@@ -801,10 +798,10 @@ makeWeaponskill_BRD(SkillName.WideVolley, 18, {
 		state.hasResourceAvailable(ResourceType.Barrage),
 	autoUpgrade: {
 		trait: "WIDE_VOLLEY_MASTERY",
-		otherSkill: SkillName.Shadowbite,
+		otherSkill: "SHADOWBITE",
 	},
 });
-makeWeaponskill_BRD(SkillName.Shadowbite, 72, {
+makeWeaponskill_BRD("SHADOWBITE", 72, {
 	startOnHotbar: false,
 	potency: 170,
 	falloff: 0,
@@ -824,7 +821,7 @@ makeWeaponskill_BRD(SkillName.Shadowbite, 72, {
 		state.hasResourceAvailable(ResourceType.Barrage),
 });
 
-makeAbility_BRD(SkillName.RainOfDeath, 45, ResourceType.cd_HeartbreakShot, {
+makeAbility_BRD("RAIN_OF_DEATH", 45, ResourceType.cd_HeartbreakShot, {
 	potency: 100,
 	cooldown: 15,
 	maxCharges: 3,
@@ -832,24 +829,24 @@ makeAbility_BRD(SkillName.RainOfDeath, 45, ResourceType.cd_HeartbreakShot, {
 	applicationDelay: 1.65,
 });
 
-makeResourceAbility_BRD(SkillName.WardensPaean, 35, ResourceType.cd_WardensPaean, {
+makeResourceAbility_BRD("WARDENS_PAEAN", 35, ResourceType.cd_WardensPaean, {
 	rscType: ResourceType.WardensPaean,
 	cooldown: 45,
 	applicationDelay: 0.62,
 });
 
-makeResourceAbility_BRD(SkillName.NaturesMinne, 35, ResourceType.cd_NaturesMinne, {
+makeResourceAbility_BRD("NATURES_MINNE", 35, ResourceType.cd_NaturesMinne, {
 	rscType: ResourceType.NaturesMinne,
 	cooldown: 120,
 	applicationDelay: 0.62,
 });
 
-makeAbility_BRD(SkillName.RepellingShot, 15, ResourceType.cd_RepellingShot, {
+makeAbility_BRD("REPELLING_SHOT", 15, ResourceType.cd_RepellingShot, {
 	cooldown: 30,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
-makeResourceAbility_BRD(SkillName.Troubadour, 56, ResourceType.cd_Troubadour, {
+makeResourceAbility_BRD("TROUBADOUR", 56, ResourceType.cd_Troubadour, {
 	rscType: ResourceType.Troubadour,
 	maxCharges: 1,
 	cooldown: 90,

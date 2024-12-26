@@ -1,7 +1,8 @@
 import { controller } from "../Controller/Controller";
 import { XIVMath } from "./XIVMath";
-import { Aspect, BuffType, SkillName } from "./Common";
+import { Aspect, BuffType } from "./Common";
 import { GameConfig } from "./GameConfig";
+import { ActionKey } from "./Data/Actions";
 
 export const enum PotencyModifierType {
 	AF3,
@@ -305,7 +306,7 @@ export function makePositionalModifier(addend: number): PotencyAdder {
 export type InitialPotencyProps = {
 	config: GameConfig;
 	sourceTime: number;
-	sourceSkill: SkillName;
+	sourceSkill: ActionKey;
 	aspect: Aspect;
 	basePotency: number;
 	snapshotTime?: number;
@@ -317,7 +318,7 @@ export type InitialPotencyProps = {
 export class Potency {
 	config: GameConfig;
 	sourceTime: number; // display time
-	sourceSkill: SkillName;
+	sourceSkill: ActionKey;
 	aspect: Aspect;
 	description: string;
 	base: number;

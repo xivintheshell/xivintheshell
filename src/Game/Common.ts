@@ -1,13 +1,13 @@
-import { BLMSkillName, BLMResourceType, BLMCooldownType } from "./Constants/BLM";
-import { PCTSkillName, PCTResourceType, PCTCooldownType } from "./Constants/PCT";
-import { RDMSkillName, RDMResourceType, RDMCooldownType } from "./Constants/RDM";
-import { DNCSkillName, DNCResourceType, DNCCooldownType } from "./Constants/DNC";
-import { SAMSkillName, SAMResourceType, SAMCooldownType } from "./Constants/SAM";
-import { MCHSkillName, MCHResourceType, MCHCooldownType } from "./Constants/MCH";
-import { RPRSkillName, RPRResourceType, RPRCooldownType } from "./Constants/RPR";
-import { WARSkillName, WARResourceType, WARCooldownType } from "./Constants/WAR";
-import { BRDSkillName, BRDResourceType, BRDCooldownType } from "./Constants/BRD";
-import { GNBSkillName, GNBCooldownType, GNBResourceType } from "./Constants/GNB";
+import { BLMResourceType, BLMCooldownType } from "./Constants/BLM";
+import { PCTResourceType, PCTCooldownType } from "./Constants/PCT";
+import { RDMResourceType, RDMCooldownType } from "./Constants/RDM";
+import { DNCResourceType, DNCCooldownType } from "./Constants/DNC";
+import { SAMResourceType, SAMCooldownType } from "./Constants/SAM";
+import { MCHResourceType, MCHCooldownType } from "./Constants/MCH";
+import { RPRResourceType, RPRCooldownType } from "./Constants/RPR";
+import { WARResourceType, WARCooldownType } from "./Constants/WAR";
+import { BRDResourceType, BRDCooldownType } from "./Constants/BRD";
+import { GNBCooldownType, GNBResourceType } from "./Constants/GNB";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -39,110 +39,6 @@ export const enum ProcMode {
 	Never = "Never",
 	Always = "Always",
 }
-
-enum GeneralSkillName {
-	ArmsLength = "Arm's Length", // Tanks, Melee, Phys Ranged
-
-	SecondWind = "Second Wind", // Melee & Phys Ranged
-
-	HeadGraze = "Head Graze", // Phys Ranged. Not bothering with Leg/Foot Graze at this point
-
-	Esuna = "Esuna",
-	Rescue = "Rescue",
-
-	Addle = "Addle",
-	Swiftcast = "Swiftcast",
-	LucidDreaming = "Lucid Dreaming",
-	Surecast = "Surecast",
-
-	Tincture = "Tincture",
-	Sprint = "Sprint",
-
-	Feint = "Feint",
-	Bloodbath = "Bloodbath",
-	TrueNorth = "True North",
-	LegSweep = "Leg Sweep",
-
-	Rampart = "Rampart",
-	Reprisal = "Reprisal",
-	LowBlow = "Low Blow",
-	Interject = "Interject",
-	Provoke = "Provoke",
-	Shirk = "Shirk",
-
-	Never = "Never",
-}
-
-export enum LimitBreakSkillName {
-	ShieldWall = "Shield Wall",
-	Stronghold = "Stronghold",
-	LastBastion = "Last Bastion",
-	LandWaker = "Land Waker",
-	DarkForce = "Dark Force",
-	GunmetalSoul = "Gunmetal Soul",
-
-	HealingWind = "Healing Wind",
-	BreathOfTheEarth = "Breath of the Earth",
-	PulseOfLife = "Pulse of Life",
-	AngelFeathers = "Angel Feathers",
-	AstralStasis = "Astral Stasis",
-	TechneMakre = "Techne Makre",
-
-	Braver = "Braver",
-	Bladedance = "Bladedance",
-	FinalHeaven = "Final Heaven",
-	DragonsongDive = "Dragonsong Dive",
-	Chimatsuri = "Chimatsuri",
-	DoomOfTheLiving = "Doom of the Living",
-	TheEnd = "The End",
-	WorldSwallower = "World-swallower",
-
-	BigShot = "Big Shot",
-	Desperado = "Desperado",
-	SagittariusArrow = "Sagittarius Arrow",
-	SatelliteBeam = "Satellite Beam",
-	CrimsonLotus = "Crimson Lotus",
-
-	Skyshard = "Skyshard",
-	Starstorm = "Starstorm",
-	Meteor = "Meteor",
-	Teraflare = "Teraflare",
-	VermillionScourge = "Vermillion Scourge",
-	ChromaticFantasy = "Chromatic Fantasy",
-}
-
-// Merge enums for each class: https://stackoverflow.com/a/55827534
-export const SkillName = {
-	...BLMSkillName,
-	...PCTSkillName,
-	...RDMSkillName,
-	...DNCSkillName,
-	...SAMSkillName,
-	...MCHSkillName,
-	...RPRSkillName,
-	...WARSkillName,
-	...BRDSkillName,
-	...GNBSkillName,
-	...LimitBreakSkillName,
-	...GeneralSkillName,
-};
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export type SkillName =
-	| GeneralSkillName
-	| LimitBreakSkillName
-	| BLMSkillName
-	| PCTSkillName
-	| RDMSkillName
-	| DNCSkillName
-	| SAMSkillName
-	| MCHSkillName
-	| RPRSkillName
-	| WARSkillName
-	| BRDSkillName
-	| GNBSkillName;
-
-export const LIMIT_BREAKS = Object.values(LimitBreakSkillName) as SkillName[];
 
 export const enum SkillUnavailableReason {
 	Blocked = "blocked by CD, animation lock or caster tax",

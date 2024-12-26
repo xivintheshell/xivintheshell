@@ -4,13 +4,13 @@ import { controller } from "../Controller/Controller";
 import { TickMode } from "../Controller/Common";
 import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
 import { PotencyModifierType } from "../Game/Potency";
-import { SkillName } from "../Game/Common";
 import {
 	DamageStatisticsData,
 	DamageStatisticsMode,
 	mockDamageStatUpdateFn,
 } from "../Components/DamageStatistics";
 import { ShellJob } from "../Game/Data/Jobs";
+import { ActionKey } from "../Game/Data/Actions";
 
 // If this configuration flag is set to `true`, then the fight record of each test run
 // will be exported locally to "$TEST_NAME.txt".
@@ -85,9 +85,9 @@ export const makeTestWithConfigFn = (job: ShellJob) => {
 
 // We define separate functions instead of an optional parameter to avoid accidentally
 // using the item index as argument when calling .forEach(applySkill)
-export const applySkill = (skillName: SkillName) => applySkillMultiTarget(skillName, 1);
+export const applySkill = (skillName: ActionKey) => applySkillMultiTarget(skillName, 1);
 
-export const applySkillMultiTarget = (skillName: SkillName, targetCount: number) => {
+export const applySkillMultiTarget = (skillName: ActionKey, targetCount: number) => {
 	// Perform the specified skill as soon as possible
 	// TEST-ONLY HACK: set lastAttemptedSkill to the skill we're about to use
 	// to ensure that trailing wait times are always omitted
@@ -96,7 +96,7 @@ export const applySkillMultiTarget = (skillName: SkillName, targetCount: number)
 };
 
 export type ShortDamageEntry = {
-	skillName: SkillName;
+	skillName: ActionKey;
 	displayedModifiers: PotencyModifierType[];
 	hitCount: number;
 	targetCount?: number;

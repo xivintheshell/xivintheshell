@@ -1,7 +1,7 @@
 // making another file just so I don't keep clustering Controller.ts
 import { controller as ctl } from "./Controller";
 import { ActionNode, ActionType } from "./Record";
-import { BuffType, LIMIT_BREAKS, ResourceType, SkillName } from "../Game/Common";
+import { BuffType, ResourceType } from "../Game/Common";
 import {
 	DamageStatisticsData,
 	DamageStatisticsMode,
@@ -11,49 +11,57 @@ import {
 	DamageStatsDoTTableSummary,
 } from "../Components/DamageStatistics";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
+import { ActionKey } from "../Game/Data/Actions";
+import { LIMIT_BREAK } from "../Game/Data/Actions/Shared/LimitBreak";
 
 // TODO autogenerate everything here
 
-const AFUISkills = new Set<SkillName>([
-	SkillName.Blizzard,
-	SkillName.Fire,
-	SkillName.Blizzard2,
-	SkillName.Fire2,
-	SkillName.Fire3,
-	SkillName.Blizzard3,
-	SkillName.Freeze,
-	SkillName.Flare,
-	SkillName.Blizzard4,
-	SkillName.Fire4,
-	SkillName.Despair,
-	SkillName.HighFire2,
-	SkillName.HighBlizzard2,
-	SkillName.FlareStar,
+const AFUISkills = new Set<ActionKey>([
+	"BLIZZARD",
+	"FIRE",
+	"BLIZZARD_II",
+	"FIRE_II",
+	"BLIZZARD_III",
+	"FIRE_III",
+	"FREEZE",
+	"FLARE",
+	"BLIZZARD_IV",
+	"FIRE_IV",
+	"DESPAIR",
+	"HIGH_FIRE_II",
+	"HIGH_BLIZZARD_II",
+	"FLARE_STAR",
 ]);
 
-const enoSkills = new Set<SkillName>([SkillName.Foul, SkillName.Xenoglossy, SkillName.Paradox]);
+const enoSkills = new Set<ActionKey>(["FOUL", "XENOGLOSSY", "PARADOX"]);
 
-export const DOT_SKILLS: SkillName[] = [
+// TODO - execute
+export const DOT_SKILLS: ActionKey[] = [
 	// BLM
-	SkillName.Thunder3,
-	SkillName.HighThunder,
-	SkillName.Thunder4,
-	SkillName.HighThunder2,
+	"THUNDER_III",
+	"HIGH_THUNDER",
+	"THUNDER_IV",
+	"HIGH_THUNDER_II",
+
 	// SAM
-	SkillName.Higanbana,
+	"HIGANBANA",
+
 	// MCH
-	SkillName.Bioblaster,
-	SkillName.Flamethrower,
+	"BIOBLASTER",
+	"FLAMETHROWER",
+
 	// BRD
-	SkillName.CausticBite,
-	SkillName.Stormbite,
+	"CAUSTIC_BITE",
+	"STORMBITE",
+	"IRON_JAWS",
+
 	// GNB
-	SkillName.SonicBreak,
-	SkillName.BowShock,
+	"SONIC_BREAK",
+	"BOW_SHOCK",
 ];
 
 // source of truth
-const excludedFromStats = new Set<SkillName | "DoT">([]);
+const excludedFromStats = new Set<ActionKey | "DoT">([]);
 
 type ExpandedNode = {
 	displayedModifiers: PotencyModifierType[];
@@ -250,7 +258,7 @@ function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 	return res;
 }
 
-export function getSkillOrDotInclude(skillNameOrDoT: SkillName | "DoT") {
+export function getSkillOrDotInclude(skillNameOrDoT: ActionKey | "DoT") {
 	return !excludedFromStats.has(skillNameOrDoT);
 }
 
@@ -259,7 +267,7 @@ export function allSkillsAreIncluded() {
 }
 
 export function updateSkillOrDoTInclude(props: {
-	skillNameOrDoT: SkillName | "DoT";
+	skillNameOrDoT: ActionKey | "DoT";
 	include: boolean;
 }) {
 	if (props.include && excludedFromStats.has(props.skillNameOrDoT)) {
@@ -268,8 +276,10 @@ export function updateSkillOrDoTInclude(props: {
 		if (props.skillNameOrDoT === "DoT") {
 			DOT_SKILLS.forEach((skill) => excludedFromStats.delete(skill));
 		} else if (
-			props.skillNameOrDoT === SkillName.Thunder3 ||
-			props.skillNameOrDoT === SkillName.HighThunder
+			props.skillNameOrDoT === "THUNDER_III" ||
+			props.skillNameOrDoT === "HIGH_THUNDER" ||
+			props.skillNameOrDoT === "THUNDER_IV" ||
+			props.skillNameOrDoT === "HIGH_THUNDER_II"
 		) {
 			excludedFromStats.delete("DoT");
 		}
@@ -311,11 +321,7 @@ export function calculateSelectedStats(props: {
 	}
 
 	ctl.record.iterateSelected((node) => {
-		if (
-			node.type === ActionType.Skill &&
-			node.skillName &&
-			!LIMIT_BREAKS.includes(node.skillName)
-		) {
+		if (node.type === ActionType.Skill && node.skillName && !(node.skillName in LIMIT_BREAK)) {
 			const checked = getSkillOrDotInclude(node.skillName);
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
@@ -378,11 +384,12 @@ export function calculateDamageStats(props: {
 
 	const dotTables: Map<ResourceType, DamageStatsDoTTrackingData> = new Map();
 
-	let skillPotencies: Map<SkillName, number> = new Map();
+	let skillPotencies: Map<ActionKey, number> = new Map();
 
 	const processNodeFn = (node: ActionNode) => {
 		if (node.type === ActionType.Skill && node.skillName) {
 			const checked = getSkillOrDotInclude(node.skillName);
+			const isLimitBreak = node.skillName in LIMIT_BREAK;
 
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
@@ -402,7 +409,7 @@ export function calculateDamageStats(props: {
 				includeSplash: true,
 				excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
 			});
-			if (checked && !LIMIT_BREAKS.includes(node.skillName)) {
+			if (checked && !isLimitBreak) {
 				totalPotency.applied += p.applied;
 				totalPotency.pending += p.snapshottedButPending;
 			}
@@ -415,9 +422,7 @@ export function calculateDamageStats(props: {
 					mainTable.push({
 						skillName: node.skillName,
 						displayedModifiers: q.expandedNode.displayedModifiers,
-						basePotency: LIMIT_BREAKS.includes(node.skillName)
-							? 0
-							: q.expandedNode.basePotency,
+						basePotency: isLimitBreak ? 0 : q.expandedNode.basePotency,
 						calculationModifiers: q.expandedNode.calculationModifiers,
 						usageCount: 0,
 						hitCount: 0,
@@ -439,7 +444,7 @@ export function calculateDamageStats(props: {
 				}
 
 				// Stop processing potency statistics for limit breaks beyond this point
-				if (LIMIT_BREAKS.includes(node.skillName)) {
+				if (isLimitBreak) {
 					return;
 				}
 
