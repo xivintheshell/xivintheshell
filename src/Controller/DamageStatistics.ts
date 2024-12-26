@@ -93,6 +93,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: Actio
 		potencyWithoutPot: 0,
 		potPotency: 0,
 		partyBuffPotency: 0,
+		targetCount: node.targetCount,
 	};
 
 	entry.gap = node.getDotTimeGap(dotName);
@@ -122,18 +123,21 @@ function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: Actio
 		tincturePotencyMultiplier: 1,
 		includePartyBuffs: false,
 		untargetable: bossIsUntargetable,
+		includeSplash: false,
 	}).applied;
 
 	let potencyWithPot = node.getPotency({
 		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 		includePartyBuffs: false,
 		untargetable: bossIsUntargetable,
+		includeSplash: false,
 	}).applied;
 
 	let potencyWithPartyBuffs = node.getPotency({
 		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 		includePartyBuffs: true,
 		untargetable: bossIsUntargetable,
+		includeSplash: false,
 	}).applied;
 
 	entry.potencyWithoutPot = potencyWithoutPot;
@@ -311,6 +315,7 @@ export function calculateSelectedStats(props: {
 				untargetable: bossIsUntargetable,
 				includePartyBuffs: true,
 				excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+				includeSplash: true,
 			});
 			if (checked) {
 				selected.potency.applied += p.applied;
@@ -381,6 +386,7 @@ export function calculateDamageStats(props: {
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
 				includePartyBuffs: true,
+				includeSplash: true,
 				excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
 			});
 			if (checked && !LIMIT_BREAKS.includes(node.skillName)) {
@@ -429,6 +435,7 @@ export function calculateDamageStats(props: {
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: false,
 					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+					includeSplash: true,
 				}).applied;
 
 				let potencyWithPot = node.getPotency({
@@ -436,6 +443,7 @@ export function calculateDamageStats(props: {
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: false,
 					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+					includeSplash: true,
 				}).applied;
 
 				let potencyWithPartyBuffs = node.getPotency({
@@ -443,6 +451,7 @@ export function calculateDamageStats(props: {
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: true,
 					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+					includeSplash: true,
 				}).applied;
 
 				mainTable[q.mainTableIndex].totalPotencyWithoutPot += potencyWithoutPot;

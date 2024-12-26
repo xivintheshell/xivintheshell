@@ -461,6 +461,7 @@ function drawDamageMarks(
 				const potencyAmount = damageInfo.potency.getAmount({
 					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 					includePartyBuffs: true,
+					includeSplash: false,
 				});
 				// Push additional info for hits that splash
 				if (damageInfo.potency.targetCount > 1) {
@@ -733,6 +734,7 @@ function drawSkills(
 			const potency = node.getPotency({
 				tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 				includePartyBuffs: true,
+				includeSplash: false,
 				untargetable: bossIsUntargetable,
 			}).applied;
 			lines.push(localize({ en: "potency: ", zh: "威力：" }) + potency.toFixed(2));

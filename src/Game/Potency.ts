@@ -325,7 +325,7 @@ export class Potency {
 		this.falloff = props.falloff;
 	}
 
-	getAmount(props: { tincturePotencyMultiplier: number; includePartyBuffs: boolean }) {
+	getAmount(props: { tincturePotencyMultiplier: number; includePartyBuffs: boolean, includeSplash: boolean }) {
 		let totalDamageFactor = 1;
 		let totalAdditiveAmount = 0;
 		let totalCritBonus = 0;
@@ -376,6 +376,10 @@ export class Potency {
 			);
 		if (isAutoCDH) amt *= this.#calculateAutoCDHModifier(totalCritBonus, totalDhBonus);
 		else if (isAutoCrit) amt *= this.#calculateAutoCritModifier(totalCritBonus, totalDhBonus);
+		if (props.includeSplash) {
+			const splashScalar = 1 + (1 - (this.falloff ?? 1)) * (this.targetCount - 1);
+			amt *= splashScalar;
+		}
 		return amt;
 	}
 

@@ -45,6 +45,7 @@ export type DamageStatsDoTTableEntry = {
 	potencyWithoutPot: number;
 	potPotency: number;
 	partyBuffPotency: number;
+	targetCount: number;
 };
 
 export interface DamageStatsDoTTableSummary {
@@ -955,18 +956,23 @@ export class DamageStatistics extends React.Component {
 			let overrideNode = props.row.override > 0 ? <span>{overrideStr}</span> : <span />;
 
 			// potency
+			// assume dots have no falloff
 			let mainPotencyNode = <PotencyDisplay
 				basePotency={props.row.mainPotencyHit ? props.row.baseMainPotency : 0}
 				includeInStats={true}
 				explainUntargetable={!props.row.mainPotencyHit}
 				helpTopic={"thunderTable-main-" + props.key}
 				calc={props.row.calculationModifiers}
+				targetCount={props.row.targetCount}
+				falloff={0}
 			/>;
 			let dotPotencyNode = <PotencyDisplay
 				basePotency={props.row.baseDotPotency}
 				includeInStats={true}
 				helpTopic={"thunderTable-dot-" + props.key}
 				calc={props.row.calculationModifiers}
+				targetCount={props.row.targetCount}
+				falloff={0}
 			/>;
 
 			// num ticks node

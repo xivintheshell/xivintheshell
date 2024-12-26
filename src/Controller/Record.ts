@@ -122,6 +122,7 @@ export class ActionNode {
 		tincturePotencyMultiplier: number;
 		untargetable: (t: number) => boolean;
 		includePartyBuffs: boolean;
+		includeSplash: boolean;
 		excludeDoT?: boolean;
 	}) {
 		let res = {
@@ -148,6 +149,7 @@ export class ActionNode {
 			tincturePotencyMultiplier: number;
 			untargetable: (t: number) => boolean;
 			includePartyBuffs: boolean;
+			includeSplash: boolean;
 			excludeDoT?: boolean;
 		},
 		potency: Potency,
