@@ -15,26 +15,41 @@ export type PCTGaugeKey = keyof PCTGauges;
 
 export const PCT_STATUSES = ensureRecord<Resource>()({
 	// Technically two different buffs, but we're treating it like a stacked buff here
-	AETHERHUES: { name: "Aetherhues", mayNotBeCanceled: true, maximumStacks: 2 }, // [0, 2]
-	MONOCHROME_TONES: { name: "Monochrome Tones" }, // [0, 1]
-	SUBTRACTIVE_PALETTE: { name: "Subtractive Palette", mayNotBeCanceled: true, maximumStacks: 3 }, // [0, 3]
-	HAMMER_TIME: { name: "Hammer Time", mayNotBeCanceled: true, maximumStacks: 3 }, // [0, 3]
-	INSPIRATION: { name: "Inspiration", mayBeToggled: true }, // [0, 1]
-	SUBTRACTIVE_SPECTRUM: { name: "Subtractive Spectrum" }, // [0, 1]
-	HYPERPHANTASIA: { name: "Hyperphantasia", maximumStacks: 5 }, // [0, 5]
-	RAINBOW_BRIGHT: { name: "Rainbow Bright" }, // [0, 1]
-	STARSTRUCK: { name: "Starstruck" }, // [0, 1]
-	STARRY_MUSE: { name: "Starry Muse" }, // [0, 1]
-	TEMPERA_COAT: { name: "Tempera Coat" },
-	TEMPERA_GRASSA: { name: "Tempera Grassa" },
-	SMUDGE: { name: "Smudge" },
+	AETHERHUES: {
+		name: "Aetherhues",
+		label: { zh: "以太色调" },
+		mayNotBeCanceled: true,
+		maximumStacks: 2,
+	}, // [0, 2]
+	MONOCHROME_TONES: { name: "Monochrome Tones", label: { zh: "色调反转" } }, // [0, 1]
+	SUBTRACTIVE_PALETTE: {
+		name: "Subtractive Palette",
+		label: { zh: "减色混合" },
+		mayNotBeCanceled: true,
+		maximumStacks: 3,
+	}, // [0, 3]
+	HAMMER_TIME: {
+		name: "Hammer Time",
+		label: { zh: "重锤连击" },
+		mayNotBeCanceled: true,
+		maximumStacks: 3,
+	}, // [0, 3]
+	INSPIRATION: { name: "Inspiration", label: { zh: "绘画装置" }, mayBeToggled: true }, // [0, 1]
+	SUBTRACTIVE_SPECTRUM: { name: "Subtractive Spectrum", label: { zh: "减色混合预备" } }, // [0, 1]
+	HYPERPHANTASIA: { name: "Hyperphantasia", label: { zh: "绘灵幻景" }, maximumStacks: 5 }, // [0, 5]
+	RAINBOW_BRIGHT: { name: "Rainbow Bright", label: { zh: "彩虹点滴效果提高" } }, // [0, 1]
+	STARSTRUCK: { name: "Starstruck", label: { zh: "天星棱光预备" } }, // [0, 1]
+	STARRY_MUSE: { name: "Starry Muse", label: { zh: "星空构想" } }, // [0, 1]
+	TEMPERA_COAT: { name: "Tempera Coat", label: { zh: "坦培拉涂层" } },
+	TEMPERA_GRASSA: { name: "Tempera Grassa", label: { zh: "油性坦培拉涂层" } },
+	SMUDGE: { name: "Smudge", label: { zh: "速涂" } },
 });
 export type PCTStatuses = typeof PCT_STATUSES;
 export type PCTStatusKey = keyof PCTStatuses;
 
 export const PCT_TRACKERS = ensureRecord<Resource>()({
 	// Hammer actions are a proper combo, not strictly tied to Hammer Time buff
-	HAMMER_COMBO: { name: "Hammer Combo Counter" }, // [0, 2]
+	HAMMER_COMBO: { name: "Hammer Combo Counter", label: { zh: "重锤连击数" } }, // [0, 2]
 });
 export type PCTTrackers = typeof PCT_TRACKERS;
 export type PCTTrackerKey = keyof PCTTrackers;

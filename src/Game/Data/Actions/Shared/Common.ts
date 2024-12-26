@@ -7,9 +7,11 @@ export const COMMON = ensureRecord<Action>()({
 	},
 	TINCTURE: {
 		name: "Tincture",
+		label: { zh: "爆发药", ja: "薬" },
 	},
 	SPRINT: {
 		name: "Sprint",
+		label: { zh: "疾跑", ja: "スプリント" },
 	},
 });
 
