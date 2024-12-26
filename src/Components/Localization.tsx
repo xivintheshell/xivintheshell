@@ -1,11 +1,13 @@
 import React from "react";
-import { BuffType, ResourceType } from "../Game/Common";
+import { BuffType } from "../Game/Common";
 import { ContentNode } from "./Common";
 import { MdLanguage } from "react-icons/md";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
 import { ActionKey, ACTIONS } from "../Game/Data/Actions";
+import { ResourceKey, RESOURCES } from "../Game/Data/Resources";
+import { CooldownKey, COOLDOWNS } from "../Game/Data/Cooldowns";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -339,97 +341,99 @@ export function localizeBuffType(text: BuffType): string {
 	}
 }
 
-const resourcesZh = new Map<ResourceType, string>([
+const resourcesZh = new Map<ResourceKey | CooldownKey, string>([
 	// common
-	[ResourceType.Mana, "MP"],
-	[ResourceType.Tincture, "爆发药"],
-	[ResourceType.Sprint, "疾跑"],
-	[ResourceType.RearPositional, "身位加成（后）"],
-	[ResourceType.FlankPositional, "身位加成（侧）"],
-	[ResourceType.Addle, "昏乱"],
-	[ResourceType.Swiftcast, "即刻咏唱"],
-	[ResourceType.LucidDreaming, "醒梦"],
-	[ResourceType.Surecast, "沉稳咏唱"],
-	[ResourceType.InCombat, "战斗中"],
-	[ResourceType.cd_GCD, "GCD"],
+	["MANA", "MP"],
+	["TINCTURE", "爆发药"],
+	["SPRINT", "疾跑"],
+	["REAR_POSITIONAL", "身位加成（后）"],
+	["FLANK_POSITIONAL", "身位加成（侧）"],
+	["ADDLE", "昏乱"],
+	["SWIFTCAST", "即刻咏唱"],
+	["LUCID_DREAMING", "醒梦"],
+	["SURECAST", "沉稳咏唱"],
+	["IN_COMBAT", "战斗中"],
+	["cd_GCD", "GCD"],
 
 	// BLM
-	[ResourceType.Triplecast, "三重咏唱"],
-	[ResourceType.Firestarter, "火苗"],
-	[ResourceType.Thunderhead, "雷砧"],
-	[ResourceType.HighThunder, "高闪雷"], // May need retranslation from ThunderDoT
-	[ResourceType.ThunderIII, "暴雷"], // May need retranslation from ThunderDoT
-	[ResourceType.HighThunderII, "高震雷"], // May need retranslation from ThunderDoT
-	[ResourceType.ThunderIV, "霹雷"], // May need retranslation from ThunderDoT
-	[ResourceType.LeyLines, "黑魔纹"],
-	[ResourceType.Manaward, "魔纹罩"],
-	[ResourceType.AstralFire, "星极火"],
-	[ResourceType.UmbralIce, "灵极冰"],
-	[ResourceType.UmbralHeart, "冰针"],
-	[ResourceType.AstralSoul, "星极魂"],
-	[ResourceType.Paradox, "悖论"],
-	[ResourceType.Enochian, "天语"],
-	[ResourceType.Polyglot, "通晓"],
+	["TRIPLECAST", "三重咏唱"],
+	["FIRESTARTER", "火苗"],
+	["THUNDERHEAD", "雷砧"],
+	["HIGH_THUNDER", "高闪雷"], // May need retranslation from ThunderDoT
+	["THUNDER_III", "暴雷"], // May need retranslation from ThunderDoT
+	["HIGH_THUNDER_II", "高震雷"], // May need retranslation from ThunderDoT
+	["THUNDER_IV", "霹雷"], // May need retranslation from ThunderDoT
+	["LEY_LINES", "黑魔纹"],
+	["MANAWARD", "魔纹罩"],
+	["ASTRAL_FIRE", "星极火"],
+	["UMBRAL_ICE", "灵极冰"],
+	["UMBRAL_HEART", "冰针"],
+	["ASTRAL_SOUL", "星极魂"],
+	["PARADOX", "悖论"],
+	["ENOCHIAN", "天语"],
+	["POLYGLOT", "通晓"],
 
 	// PCT
-	[ResourceType.Aetherhues, "以太色调"],
-	[ResourceType.TemperaCoat, "坦培拉涂层"],
-	[ResourceType.Smudge, "速涂"],
-	[ResourceType.HammerTime, "重锤连击"],
-	[ResourceType.SubtractivePalette, "减色混合"],
-	[ResourceType.StarryMuse, "星空构想"],
-	[ResourceType.SubtractiveSpectrum, "减色混合预备"],
-	[ResourceType.Hyperphantasia, "绘灵幻景"],
-	[ResourceType.Inspiration, "绘画装置"],
-	[ResourceType.RainbowBright, "彩虹点滴效果提高"],
-	[ResourceType.Starstruck, "天星棱光预备"],
-	[ResourceType.TemperaGrassa, "油性坦培拉涂层"],
-	[ResourceType.MonochromeTones, "色调反转"],
-	[ResourceType.HammerCombo, "重锤连击数"],
-	[ResourceType.cd_Subtractive, "CD：减色混合"],
-	[ResourceType.cd_Grassa, "CD：油性坦培拉涂层"],
+	["AETHERHUES", "以太色调"],
+	["TEMPERA_COAT", "坦培拉涂层"],
+	["SMUDGE", "速涂"],
+	["HAMMER_TIME", "重锤连击"],
+	["SUBTRACTIVE_PALETTE", "减色混合"],
+	["STARRY_MUSE", "星空构想"],
+	["SUBTRACTIVE_SPECTRUM", "减色混合预备"],
+	["HYPERPHANTASIA", "绘灵幻景"],
+	["INSPIRATION", "绘画装置"],
+	["RAINBOW_BRIGHT", "彩虹点滴效果提高"],
+	["STARSTRUCK", "天星棱光预备"],
+	["TEMPERA_GRASSA", "油性坦培拉涂层"],
+	["MONOCHROME_TONES", "色调反转"],
+	["HAMMER_COMBO", "重锤连击数"],
+	["cd_SUBTRACTIVE", "CD：减色混合"],
+	["cd_GRASSA", "CD：油性坦培拉涂层"],
 
 	// RDM
-	[ResourceType.WhiteMana, "白魔元"],
-	[ResourceType.BlackMana, "黑魔元"],
-	[ResourceType.ManaStacks, "魔元集"],
-	[ResourceType.Acceleration, "促进"],
-	[ResourceType.Dualcast, "连续咏唱"],
-	[ResourceType.Embolden, "鼓励"],
-	[ResourceType.GrandImpactReady, "显贵冲击预备"],
-	[ResourceType.MagickBarrier, "抗死"],
-	[ResourceType.MagickedSwordplay, "魔法剑术"],
-	[ResourceType.Manafication, "魔元化"],
-	[ResourceType.PrefulgenceReady, "光芒四射预备"],
-	[ResourceType.ThornedFlourish, "荆棘环绕预备"],
-	[ResourceType.VerfireReady, "赤火炎预备"],
-	[ResourceType.VerstoneReady, "赤飞石预备"],
-	[ResourceType.RDMMeleeCounter, "赤魔近战连"],
-	[ResourceType.RDMAoECounter, "赤魔AOE连"],
+	["WHITE_MANA", "白魔元"],
+	["BLACK_MANA", "黑魔元"],
+	["MANA_STACKS", "魔元集"],
+	["ACCELERATION", "促进"],
+	["DUALCAST", "连续咏唱"],
+	["EMBOLDEN", "鼓励"],
+	["GRAND_IMPACT_READY", "显贵冲击预备"],
+	["MAGICK_BARRIER", "抗死"],
+	["MAGICKED_SWORDPLAY", "魔法剑术"],
+	["MANAFICATION", "魔元化"],
+	["PREFULGENCE_READY", "光芒四射预备"],
+	["THORNED_FLOURISH", "荆棘环绕预备"],
+	["VERFIRE_READY", "赤火炎预备"],
+	["VERSTONE_READY", "赤飞石预备"],
+	["RDM_MELEE_COUNTER", "赤魔近战连"],
+	["RDM_AOE_COUNTER", "赤魔AOE连"],
 ]);
 
-export function localizeResourceType(text: ResourceType): string {
+export function localizeResourceType(key: ResourceKey | CooldownKey): string {
 	const currentLang = getCurrentLanguage();
 	if (currentLang === "zh") {
-		if (resourcesZh.has(text)) {
-			return resourcesZh.get(text)!;
+		if (resourcesZh.has(key)) {
+			return resourcesZh.get(key)!;
 		}
 		// TODO - This in particular probably doesn't work well anymore, nor did it likely work well before,
 		// Depending on how well developers matched their skill enum keys to their cd_* cooldown keys
 		// An argument for better linking the actions to their cooldowns in the data...
-		if (text.startsWith("cd_")) {
-			const sliced = text.slice(3);
+		if (key.startsWith("cd_")) {
+			const sliced = key.slice(3);
 			const skillName = Object.keys(ACTIONS).find(
-				(key) => ACTIONS[key as ActionKey].name === sliced,
+				(key) => ACTIONS[key as ActionKey].name === sliced || key === sliced,
 			) as ActionKey | undefined;
 			if (skillName !== undefined) {
 				return "CD：" + localizeSkillName(skillName);
 			}
 		}
-		return text;
-	} else {
-		return text;
 	}
+
+	if (key in COOLDOWNS) {
+		return COOLDOWNS[key as CooldownKey].name;
+	}
+	return RESOURCES[key as ResourceKey].name;
 }
 
 export let getCurrentLanguage: () => Language = () => {
