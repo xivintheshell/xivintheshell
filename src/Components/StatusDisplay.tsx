@@ -1,11 +1,13 @@
 import React, { CSSProperties } from "react";
 import { Clickable, ContentNode, Help, ProgressBar, StaticFn } from "./Common";
-import { ResourceType, TankLBResourceType } from "../Game/Common";
 import type { PlayerState } from "../Game/GameState";
 import { controller } from "../Controller/Controller";
 import { localize, localizeResourceType } from "./Localization";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { JOBS } from "../Game/Data/Jobs";
+import { ResourceKey, RESOURCES } from "../Game/Data/Resources";
+import { ROLE } from "../Game/Data/Resources/Shared/Role";
+import { LIMIT_BREAK } from "../Game/Data/Resources/Shared/LimitBreak";
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean;
@@ -21,7 +23,7 @@ type StatusResourceLocksViewProps = {
 };
 
 export type BuffProps = {
-	rscType: ResourceType;
+	rscType: ResourceKey;
 	onSelf: boolean;
 	enabled: boolean;
 	stacks: number;
@@ -329,50 +331,39 @@ function ResourceText(props: { name: ContentNode; text: ContentNode; className?:
 
 const buffIcons = new Map();
 
-export function registerBuffIcon(buff: string, relativePath: string) {
-	// remove colons since it's hard to create a file name that contains them
-	buffIcons.set(buff.replace(":", ""), require(`./Asset/Buffs/${relativePath}`));
+export function registerBuffIcon(buff: ResourceKey, relativePath: string) {
+	buffIcons.set(buff, require(`./Asset/Buffs/${relativePath}`));
+	const maxStacks = RESOURCES[buff].maximumStacks ?? 1;
+	for (let i = 2; i <= maxStacks; i++) {
+		buffIcons.set(
+			buff + i,
+			require(
+				`./Asset/Buffs/${relativePath.replace(RESOURCES[buff].name, RESOURCES[buff].name + i)}`,
+			),
+		);
+	}
 }
 
-const roleBuffResources = [
-	ResourceType.Addle,
-	ResourceType.Swiftcast,
-	ResourceType.LucidDreaming,
-
-	ResourceType.Feint,
-	ResourceType.TrueNorth,
-	ResourceType.ArmsLength,
-	ResourceType.Bloodbath,
-
-	ResourceType.Surecast,
-	ResourceType.Tincture,
-	ResourceType.ArmsLength,
-
-	ResourceType.Reprisal,
-	ResourceType.Rampart,
-];
-
 // role buffs are registered here; job buffs should be registered in the job's respective file
-roleBuffResources.forEach((buff) => buffIcons.set(buff, require(`./Asset/Buffs/Role/${buff}.png`)));
+Object.keys(ROLE).forEach((buff) => {
+	const iconName = RESOURCES[buff as ResourceKey].name;
+	buffIcons.set(buff, require(`./Asset/Buffs/Role/${iconName}.png`));
+});
 
 // Tank LBs share the same buff icon
-Object.values(TankLBResourceType).forEach((rscType) =>
+Object.keys(LIMIT_BREAK).forEach((rscType) =>
 	buffIcons.set(rscType, require("./Asset/Buffs/Role/Tank Limit Break.png")),
 );
 
-buffIcons.set(ResourceType.Sprint, require("./Asset/Buffs/General/Sprint.png"));
-buffIcons.set(ResourceType.RearPositional, require("./Asset/Buffs/General/Rear Positional.png"));
-buffIcons.set(ResourceType.FlankPositional, require("./Asset/Buffs/General/Flank Positional.png"));
+buffIcons.set("SPRINT", require("./Asset/Buffs/General/Sprint.png"));
+buffIcons.set("TINCTURE", require("./Asset/Buffs/General/Tincture.png"));
 
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props: BuffProps) {
 	let assetName: string = props.rscType;
 	if (props.stacks > 1) assetName += props.stacks;
 	let imgStyle: React.CSSProperties;
-	if (
-		props.rscType === ResourceType.RearPositional ||
-		props.rscType === ResourceType.FlankPositional
-	) {
+	if (props.rscType === "REAR_POSITIONAL" || props.rscType === "FLANK_POSITIONAL") {
 		imgStyle = {
 			height: 40,
 			//filter: "drop-shadow(0 2px 1.5px rgba(0, 0, 0, 0.25)",
@@ -707,14 +698,40 @@ export class StatusPropsGenerator<T extends PlayerState> {
 		this.state = state;
 	}
 
-	makeCommonTimer(rscType: ResourceType, onSelf: boolean = true) {
+	makeCommonTimer(rscType: ResourceKey, onSelf: boolean = true): BuffProps {
 		const rscCountdown = this.state.resources.timeTillReady(rscType);
+		const resource = this.state.resources.get(rscType);
+
+		return {
+			rscType,
+			onSelf,
+			enabled: resource.enabled,
+			stacks: resource.availableAmount(),
+			timeRemaining: rscCountdown.toFixed(3),
+			className: resource.availableAmountIncludingDisabled() > 0 ? "" : "hidden",
+		};
+	}
+
+	makeToggleableTimer(rscType: ResourceKey, onSelf: boolean = true): BuffProps {
+		const rscCountdown = this.state.resources.timeTillReady(rscType);
+		const resource = this.state.resources.get(rscType);
+
+		return {
+			rscType,
+			onSelf,
+			enabled: resource.enabled,
+			stacks: resource.availableAmount(),
+			timeRemaining: rscCountdown.toFixed(3),
+			className: resource.availableAmountIncludingDisabled() > 0 ? "" : "hidden",
+		};
+	}
+
+	makeCommonTimerless(rscType: ResourceKey, onSelf: boolean = true): BuffProps {
 		return {
 			rscType,
 			onSelf,
 			enabled: true,
 			stacks: this.state.resources.get(rscType).availableAmount(),
-			timeRemaining: rscCountdown.toFixed(3),
 			className: this.state.hasResourceAvailable(rscType) ? "" : "hidden",
 		};
 	}
@@ -731,15 +748,15 @@ export class StatusPropsGenerator<T extends PlayerState> {
 		const roleEnemyBuffViewProps: BuffProps[] = [];
 
 		if (JOBS[job].role === "TANK") {
-			roleEnemyBuffViewProps.push(this.makeCommonTimer(ResourceType.Reprisal, false));
+			roleEnemyBuffViewProps.push(this.makeCommonTimer("REPRISAL", false));
 		}
 
 		if (JOBS[job].role === "MELEE") {
-			roleEnemyBuffViewProps.push(this.makeCommonTimer(ResourceType.Feint, false));
+			roleEnemyBuffViewProps.push(this.makeCommonTimer("FEINT", false));
 		}
 
 		if (JOBS[job].role === "CASTER") {
-			roleEnemyBuffViewProps.push(this.makeCommonTimer(ResourceType.Addle, false));
+			roleEnemyBuffViewProps.push(this.makeCommonTimer("ADDLE", false));
 		}
 
 		return [...this.jobSpecificOtherTargetedBuffViewProps(), ...roleEnemyBuffViewProps];
@@ -759,9 +776,11 @@ export class StatusPropsGenerator<T extends PlayerState> {
 
 		// Tank-only role buffs
 		if (JOBS[job].role === "TANK") {
-			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.Rampart));
-			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.ShieldWall));
-			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.Stronghold));
+			roleBuffViewProps.push(
+				...(["RAMPART", "SHIELD_WALL", "STRONGHOLD"] as ResourceKey[]).map((key) =>
+					this.makeCommonTimer(key),
+				),
+			);
 			const tankLB3 = JOBS[job].limitBreakBuff;
 			if (tankLB3) {
 				roleBuffViewProps.push(this.makeCommonTimer(tankLB3));
@@ -770,48 +789,42 @@ export class StatusPropsGenerator<T extends PlayerState> {
 
 		// Melee-only role buffs
 		if (JOBS[job].role === "MELEE") {
-			[ResourceType.TrueNorth, ResourceType.Bloodbath].forEach((rscType) => {
-				roleBuffViewProps.push(this.makeCommonTimer(rscType));
-			});
+			roleBuffViewProps.push(
+				...(["TRUE_NORTH", "BLOODBATH"] as ResourceKey[]).map((rscType) =>
+					this.makeCommonTimer(rscType),
+				),
+			);
 		}
 
 		// Anti-knockback buffs should be the last role buffs displayed
 		if (["TANK", "MELEE", "RANGED"].includes(JOBS[job].role)) {
-			roleBuffViewProps.push(this.makeCommonTimer(ResourceType.ArmsLength));
+			roleBuffViewProps.push(this.makeCommonTimer("ARMS_LENGTH"));
 		}
 
 		// Healers and casters have the same self-targeting role buffs, so we can do them all in one batch
 		if (["HEALER", "CASTER"].includes(JOBS[job].role)) {
-			[ResourceType.Swiftcast, ResourceType.LucidDreaming, ResourceType.Surecast].forEach(
-				(rscType) => {
-					roleBuffViewProps.push(this.makeCommonTimer(rscType));
-				},
+			roleBuffViewProps.push(
+				...(["SWIFTCAST", "LUCID_DREAMING", "SURECAST"] as ResourceKey[]).map((rscType) =>
+					this.makeCommonTimer(rscType),
+				),
 			);
 		}
 
 		// All jobs should include Tincture and Sprint
-		roleBuffViewProps.push(
-			this.makeCommonTimer(ResourceType.Tincture),
-			this.makeCommonTimer(ResourceType.Sprint),
-		);
+		roleBuffViewProps.push(this.makeCommonTimer("TINCTURE"), this.makeCommonTimer("SPRINT"));
 
 		// Melee jobs should end with the "I am able to hit this positional" selectors
 		if (JOBS[job].role === "MELEE") {
 			roleBuffViewProps.push(
-				{
-					rscType: ResourceType.RearPositional,
-					onSelf: true,
-					enabled: resources.get(ResourceType.RearPositional).enabled,
-					stacks: 1,
-					className: "",
-				},
-				{
-					rscType: ResourceType.FlankPositional,
-					onSelf: true,
-					enabled: resources.get(ResourceType.FlankPositional).enabled,
-					stacks: 1,
-					className: "",
-				},
+				...(["REAR_POSITIONAL", "FLANK_POSITIONAL"] as ResourceKey[]).map((key) => {
+					return {
+						rscType: key,
+						onSelf: true,
+						enabled: resources.get(key).enabled,
+						stacks: 1,
+						className: "",
+					};
+				}),
 			);
 		}
 
@@ -831,8 +844,8 @@ export class StatusPropsGenerator<T extends PlayerState> {
 
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
-		const timeTillNextManaTick = resources.timeTillReady(ResourceType.Mana);
-		const mana = resources.get(ResourceType.Mana).availableAmount();
+		const timeTillNextManaTick = resources.timeTillReady("MANA");
+		const mana = resources.get("MANA").availableAmount();
 
 		return [
 			{

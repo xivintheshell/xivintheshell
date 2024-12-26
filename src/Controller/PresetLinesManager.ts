@@ -1,6 +1,6 @@
 import { FileType, getCachedValue, setCachedValue } from "./Common";
 import { ActionNode, Line } from "./Record";
-import { getNormalizedSkillName, jobHasSkill } from "../Game/Skills";
+import { getNormalizedSkillName, getResourceKeyFromBuffName, jobHasSkill } from "../Game/Skills";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
 import { ShellJob, ALL_JOBS } from "../Game/Data/Jobs";
 import { ActionKey } from "../Game/Data/Actions";
@@ -66,7 +66,7 @@ export class PresetLinesManager {
 					skillNames.push(node.skillName);
 				}
 				node.waitDuration = action.waitDuration;
-				node.buffName = action.buffName;
+				node.buffName = getResourceKeyFromBuffName(action.buffName);
 				line.addActionNode(node);
 			}
 			this.addLine(line, content.presets[i].job ?? inferJobFromSkillNames(skillNames));

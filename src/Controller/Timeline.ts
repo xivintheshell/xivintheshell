@@ -1,6 +1,6 @@
 import { updateTimelineView } from "../Components/Timeline";
 import { controller } from "./Controller";
-import { BuffType, Debug, ResourceType, WarningType } from "../Game/Common";
+import { BuffType, Debug, WarningType } from "../Game/Common";
 import { ActionNode } from "./Record";
 import { FileType, getCachedValue, removeCachedValue, setCachedValue } from "./Common";
 import { updateMarkers_TimelineMarkerPresets } from "../Components/TimelineMarkers";
@@ -11,6 +11,7 @@ import { MarkerColor } from "../Components/ColorTheme";
 import { TimelineDimensions } from "../Components/Common";
 import { ShellJob } from "../Game/Data/Jobs";
 import { ActionKey } from "../Game/Data/Actions";
+import { ResourceKey } from "../Game/Data/Resources";
 
 export const MAX_TIMELINE_SLOTS = 4;
 
@@ -59,7 +60,7 @@ export type DamageMarkElem = TimelineElemBase & {
 	type: ElemType.DamageMark;
 	displayTime: number;
 	damageInfos: DamageMarkInfo[];
-	buffs: ResourceType[];
+	buffs: ResourceKey[];
 };
 export type LucidMarkElem = TimelineElemBase & {
 	type: ElemType.LucidMark;

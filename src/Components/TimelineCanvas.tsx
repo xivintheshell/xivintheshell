@@ -25,7 +25,7 @@ import {
 	TimelineDimensions,
 	TimelineDrawOptions,
 } from "./Common";
-import { BuffType, ResourceType, WarningType } from "../Game/Common";
+import { BuffType, WarningType } from "../Game/Common";
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
@@ -441,7 +441,7 @@ function drawDamageMarks(
 		// pot?
 		let pot = false;
 		dm.buffs.forEach((b) => {
-			if (b === ResourceType.Tincture) pot = true;
+			if (b === "TINCTURE") pot = true;
 		});
 		// hover text
 		let time = "[" + dm.displayTime.toFixed(3) + "] ";

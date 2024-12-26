@@ -12,7 +12,6 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { PotencyModifierType } from "../Game/Potency";
-import { ResourceType } from "../Game/Common";
 import { RDMState } from "../Game/Jobs/RDM";
 import { ActionKey } from "../Game/Data/Actions";
 
@@ -29,17 +28,17 @@ it(
 			applySkill,
 		);
 		const state = controller.game as RDMState;
-		expect(state.hasResourceAvailable(ResourceType.Acceleration)).toBeFalsy();
-		expect(state.hasResourceAvailable(ResourceType.Swiftcast)).toBeTruthy();
-		expect(state.hasResourceAvailable(ResourceType.Dualcast)).toBeTruthy();
+		expect(state.hasResourceAvailable("ACCELERATION")).toBeFalsy();
+		expect(state.hasResourceAvailable("SWIFTCAST")).toBeTruthy();
+		expect(state.hasResourceAvailable("DUALCAST")).toBeTruthy();
 		applySkill("VERAERO_III");
-		expect(state.hasResourceAvailable(ResourceType.Acceleration)).toBeFalsy();
-		expect(state.hasResourceAvailable(ResourceType.Swiftcast)).toBeTruthy();
-		expect(state.hasResourceAvailable(ResourceType.Dualcast)).toBeFalsy();
+		expect(state.hasResourceAvailable("ACCELERATION")).toBeFalsy();
+		expect(state.hasResourceAvailable("SWIFTCAST")).toBeTruthy();
+		expect(state.hasResourceAvailable("DUALCAST")).toBeFalsy();
 		applySkill("VERAERO_III");
-		expect(state.hasResourceAvailable(ResourceType.Acceleration)).toBeFalsy();
-		expect(state.hasResourceAvailable(ResourceType.Swiftcast)).toBeFalsy();
-		expect(state.hasResourceAvailable(ResourceType.Dualcast)).toBeFalsy();
+		expect(state.hasResourceAvailable("ACCELERATION")).toBeFalsy();
+		expect(state.hasResourceAvailable("SWIFTCAST")).toBeFalsy();
+		expect(state.hasResourceAvailable("DUALCAST")).toBeFalsy();
 	}),
 );
 
@@ -122,8 +121,8 @@ it(
 		// wait for damage applications
 		controller.step(4);
 		const state = controller.game as RDMState;
-		expect(state.resources.get(ResourceType.WhiteMana).availableAmount()).toEqual(54);
-		expect(state.resources.get(ResourceType.BlackMana).availableAmount()).toEqual(54);
+		expect(state.resources.get("WHITE_MANA").availableAmount()).toEqual(54);
+		expect(state.resources.get("BLACK_MANA").availableAmount()).toEqual(54);
 	}),
 );
 
@@ -131,8 +130,8 @@ it(
 	"breaks combo with manafic but not reprise",
 	testWithConfig({}, () => {
 		const state = controller.game as RDMState;
-		state.resources.get(ResourceType.WhiteMana).overrideCurrentValue(40);
-		state.resources.get(ResourceType.BlackMana).overrideCurrentValue(40);
+		state.resources.get("WHITE_MANA").overrideCurrentValue(40);
+		state.resources.get("BLACK_MANA").overrideCurrentValue(40);
 		(
 			[
 				"ENCHANTED_RIPOSTE",
@@ -144,7 +143,7 @@ it(
 		).forEach(applySkill);
 		// wait for damage applications
 		controller.step(4);
-		expect(state.resources.get(ResourceType.ManaStacks).availableAmount()).toEqual(3);
+		expect(state.resources.get("MANA_STACKS").availableAmount()).toEqual(3);
 		compareDamageTables([
 			{
 				skillName: "ENCHANTED_RIPOSTE",
