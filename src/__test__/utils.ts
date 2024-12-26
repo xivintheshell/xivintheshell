@@ -132,7 +132,10 @@ export const compareDamageTables = (expectedDamageEntries: Array<ShortDamageEntr
 		return nameCmp;
 	};
 	actualDamageEntries.sort(damageEntryComparator);
-	expectedDamageEntries = expectedDamageEntries.map((entry) => ({...entry, targetCount: entry.targetCount ?? 1}));
+	expectedDamageEntries = expectedDamageEntries.map((entry) => ({
+		...entry,
+		targetCount: entry.targetCount ?? 1,
+	}));
 	expectedDamageEntries.sort(damageEntryComparator);
 	expect(actualDamageEntries).toEqual(expectedDamageEntries);
 };

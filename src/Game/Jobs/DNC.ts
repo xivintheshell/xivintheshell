@@ -1000,7 +1000,7 @@ makeGCD_DNC(SkillName.Bloodshower, 45, {
 	replaceIf: [pirouetteCondition],
 	potency: 180,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	falloff: 0,	
+	falloff: 0,
 	applicationDelay: 0.62,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.SilkenFlow) ||

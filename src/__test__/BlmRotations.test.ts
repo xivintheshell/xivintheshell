@@ -541,7 +541,7 @@ it(
 				skillName: SkillName.Transpose,
 				displayedModifiers: [],
 				hitCount: 1,
-			}
+			},
 		]);
-	})
+	}),
 );
