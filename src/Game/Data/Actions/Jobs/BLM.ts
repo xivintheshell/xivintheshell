@@ -8,7 +8,7 @@ export const BLM = ensureRecord<Action>()({
 	FIRE_II: { name: "Fire 2", label: { zh: "火2", ja: "ファイラ" } },
 	TRANSPOSE: { name: "Transpose", label: { zh: "星灵移位", ja: "トランス" } },
 	THUNDER_III: { name: "Thunder 3", label: { zh: "雷3", ja: "サンダガ" } },
-	THUNDER_IV: { name: "Thunder 4", label: { zh: "霹雷", ja: "" } },
+	THUNDER_IV: { name: "Thunder 4", label: { zh: "霹雷" } }, // TODO - Needs Japanese translation
 	MANAWARD: { name: "Manaward", label: { zh: "魔罩", ja: "マバリア" } },
 	MANAFONT: { name: "Manafont", label: { zh: "魔泉", ja: "マナフォント" } },
 	LEY_LINES: { name: "Ley Lines", label: { zh: "黑魔纹", ja: "黒魔紋" } },
