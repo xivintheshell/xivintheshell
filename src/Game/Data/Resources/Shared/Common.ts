@@ -21,7 +21,7 @@ export const COMMON_TRACKERS = ensureRecord<Resource>()({
 	NOT_CASTER_TAXED: { name: "NotCasterTaxed" }, // [0, 1]
 	IN_COMBAT: { name: "InCombat", label: { zh: "战斗中" } }, // [0, 1], used for abilities that can only execute in combat
 
-	PARTY_SIZE: { name: "PartySize" },
+	PARTY_SIZE: { name: "PartySize", label: { zh: "小队人数" } },
 
 	NEVER: { name: "Never" },
 });
