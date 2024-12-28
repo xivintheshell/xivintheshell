@@ -1,5 +1,11 @@
 [
 	{
+		"date": "12/28/24",
+		"changes": [
+			"[PCT] Fixed warning for Palette Gauge overcap"
+		]
+	},
+	{
 		"date": "12/24/24",
 		"changes": [
 			"[MCH] Added support for Flamethrower"

@@ -528,7 +528,7 @@ makeSpell_PCT(SkillName.WaterInBlue, 15, {
 		state.doFiller();
 		const paletteGauge = state.resources.get(ResourceType.PaletteGauge);
 		if (paletteGauge.available(100)) {
-			controller.reportWarning(WarningType.PolyglotOvercap);
+			controller.reportWarning(WarningType.PaletteOvercap);
 		}
 		paletteGauge.gain(25);
 		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
@@ -590,7 +590,7 @@ makeSpell_PCT(SkillName.Water2InBlue, 45, {
 		state.doFiller();
 		const paletteGauge = state.resources.get(ResourceType.PaletteGauge);
 		if (paletteGauge.available(100)) {
-			controller.reportWarning(WarningType.PolyglotOvercap);
+			controller.reportWarning(WarningType.PaletteOvercap);
 		}
 		paletteGauge.gain(25);
 		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
