@@ -8,7 +8,7 @@ export const BLM = ensureRecord<Action>()({
 	FIRE_II: { name: "Fire 2", label: { zh: "火2", ja: "ファイラ" } },
 	TRANSPOSE: { name: "Transpose", label: { zh: "星灵移位", ja: "トランス" } },
 	THUNDER_III: { name: "Thunder 3", label: { zh: "雷3", ja: "サンダガ" } },
-	THUNDER_IV: { name: "Thunder 4", label: { zh: "雷4", ja: "" } },
+	THUNDER_IV: { name: "Thunder 4", label: { zh: "雷4" } }, // TODO - Needs Japanese translation
 	MANAWARD: { name: "Manaward", label: { zh: "魔罩", ja: "マバリア" } },
 	MANAFONT: { name: "Manafont", label: { zh: "魔泉", ja: "マナフォント" } },
 	LEY_LINES: { name: "Ley Lines", label: { zh: "黑魔纹", ja: "黒魔紋" } },
@@ -36,7 +36,7 @@ export const BLM = ensureRecord<Action>()({
 	AMPLIFIER: { name: "Amplifier", label: { zh: "详述", ja: "アンプリファイア" } },
 	PARADOX: { name: "Paradox", label: { zh: "悖论", ja: "パラドックス" } },
 	HIGH_THUNDER: { name: "High Thunder", label: { zh: "高闪雷", ja: "ハイサンダー" } },
-	HIGH_THUNDER_II: { name: "High Thunder 2", label: { zh: "高闪雷2" } }, // TODO - Needs Japanese translation
+	HIGH_THUNDER_II: { name: "High Thunder 2", label: { zh: "高震雷" } }, // TODO - Needs Japanese translation
 	FLARE_STAR: { name: "Flare Star", label: { zh: "耀星", ja: "フレアスター" } },
 	RETRACE: { name: "Retrace", label: { zh: "魔纹重置", ja: "魔紋再設置" } },
 });

@@ -8,11 +8,11 @@ export const ROLE_STATUSES = ensureRecord<Resource>()({
 	SWIFTCAST: { name: "Swiftcast", label: { zh: "即刻咏唱" } }, // [0, 1]
 	LUCID_DREAMING: { name: "Lucid Dreaming", label: { zh: "醒梦" } }, // [0, 1] also just for timing display
 	SURECAST: { name: "Surecast", label: { zh: "沉稳咏唱" } }, // [0, 1]
-	ARMS_LENGTH: { name: "Arms Length" },
+	ARMS_LENGTH: { name: "Arms Length", label: { zh: "亲疏自行" } },
 
-	FEINT: { name: "Feint" }, // [0, 1]
-	TRUE_NORTH: { name: "True North" }, // [0, 1]
-	BLOODBATH: { name: "Bloodbath" }, // [0, 1]
+	FEINT: { name: "Feint", label: { zh: "牵制" } }, // [0, 1]
+	TRUE_NORTH: { name: "True North", label: { zh: "真北" } }, // [0, 1]
+	BLOODBATH: { name: "Bloodbath", label: { zh: "浴血" } }, // [0, 1]
 
 	RAMPART: { name: "Rampart" }, // [0, 1]
 	REPRISAL: { name: "Reprisal" }, // [0, 1]

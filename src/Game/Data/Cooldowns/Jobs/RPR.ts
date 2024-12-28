@@ -7,7 +7,7 @@ export const RPR = ensureRecord<Cooldown>()({
 	cd_SOUL_SLICE: { name: "cd_SoulSlice" },
 	cd_ENSHROUD: { name: "cd_Enshroud" },
 
-	cd_INGRESS_EGRESS: { name: "cd_IngressEgress" },
+	cd_INGRESS_EGRESS: { name: "cd_IngressEgress", label: { zh: "CD：地狱入境/地狱出境" } },
 	cd_ARCANE_CREST: { name: "cd_ArcaneCrest" },
 	cd_ARCANE_CREST_POP: { name: "cd_ArcaneCrestPop" }, // Not real
 
