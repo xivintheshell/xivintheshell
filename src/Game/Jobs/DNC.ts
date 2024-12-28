@@ -11,7 +11,7 @@ import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
-	CooldownGroupProperies,
+	CooldownGroupProperties,
 	EffectFn,
 	getBasePotency,
 	makeAbility,
@@ -322,7 +322,7 @@ const makeGCD_DNC = (
 		validateAttempt?: StatePredicate<DNCState>;
 		onConfirm?: EffectFn<DNCState>;
 		highlightIf?: StatePredicate<DNCState>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Weaponskill<DNCState> => {
 	const onConfirm: EffectFn<DNCState> = combineEffects(
@@ -400,7 +400,7 @@ const makeAbility_DNC = (
 		validateAttempt?: StatePredicate<DNCState>;
 		onConfirm?: EffectFn<DNCState>;
 		onApplication?: EffectFn<DNCState>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<DNCState> => {
 	return makeAbility(ShellJob.DNC, name, unlockLevel, cdName, {
@@ -450,7 +450,7 @@ const makeResourceAbility_DNC = (
 		validateAttempt?: StatePredicate<DNCState>;
 		onConfirm?: EffectFn<DNCState>;
 		onApplication?: EffectFn<DNCState>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<DNCState> => {
 	return makeResourceAbility(ShellJob.DNC, name, unlockLevel, cdName, {

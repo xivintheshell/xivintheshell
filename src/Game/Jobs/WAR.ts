@@ -18,7 +18,7 @@ import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
-	CooldownGroupProperies,
+	CooldownGroupProperties,
 	EffectFn,
 	getBasePotency,
 	makeAbility,
@@ -298,7 +298,7 @@ const makeAbility_WAR = (
 		validateAttempt?: StatePredicate<WARState>;
 		onConfirm?: EffectFn<WARState>;
 		onApplication?: EffectFn<WARState>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<WARState> => {
 	return makeAbility(ShellJob.WAR, name, unlockLevel, cdName, {

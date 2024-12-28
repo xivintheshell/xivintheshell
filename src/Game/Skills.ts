@@ -73,7 +73,7 @@ export function combinePredicatesAnd<T extends PlayerState>(
 	return (state: T) => f1(state) && fs.every((pred) => pred(state));
 }
 
-export interface CooldownGroupProperies {
+export interface CooldownGroupProperties {
 	cdName: ResourceType;
 	cooldown: number;
 	maxCharges: number;
@@ -95,7 +95,7 @@ interface BaseSkill<T extends PlayerState> {
 	readonly cdName: ResourceType;
 	// TODO: Technically, actions are defined with an array of cooldown groups, one of which is the GCD cooldown group for actions that affect the GCD.
 	// Functionally, actions have at most the GCD and a second cooldown group, so this is enough for now.
-	readonly secondaryCd?: CooldownGroupProperies;
+	readonly secondaryCd?: CooldownGroupProperties;
 	readonly aspect: Aspect;
 	readonly replaceIf: ConditionalSkillReplace<T>[]; // list of skills that can replace this one
 	readonly startOnHotbar: boolean; // false if this skill only replaces others (like paradox)
@@ -325,7 +325,7 @@ export function makeSpell<T extends PlayerState>(
 		onExecute: EffectFn<T>;
 		onConfirm: EffectFn<T>;
 		onApplication: EffectFn<T>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	}>,
 ): Spell<T> {
 	if (!Array.isArray(jobs)) {
@@ -399,7 +399,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		onExecute: EffectFn<T>;
 		onConfirm: EffectFn<T>;
 		onApplication: EffectFn<T>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	}>,
 ): Weaponskill<T> {
 	if (!Array.isArray(jobs)) {
@@ -490,7 +490,7 @@ export function makeAbility<T extends PlayerState>(
 		onApplication: EffectFn<T>;
 		cooldown: number;
 		maxCharges: number;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	}>,
 ): Ability<T> {
 	if (!Array.isArray(jobs)) {
@@ -578,7 +578,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		assetPath?: string;
 		cooldown: number;
 		maxCharges?: number;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<T> {
 	// When the ability is applied:

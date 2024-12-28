@@ -13,7 +13,7 @@ import {
 	ConditionalSkillReplace,
 	StatePredicate,
 	EffectFn,
-	CooldownGroupProperies,
+	CooldownGroupProperties,
 	Weaponskill,
 	makeWeaponskill,
 	Ability,
@@ -380,7 +380,7 @@ const makeWeaponskill_BRD = (
 		onConfirm?: EffectFn<BRDState>;
 		highlightIf?: StatePredicate<BRDState>;
 		onApplication?: EffectFn<BRDState>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Weaponskill<BRDState> => {
 	return makeWeaponskill(ShellJob.BRD, name, unlockLevel, {
@@ -416,7 +416,7 @@ const makeAbility_BRD = (
 		validateAttempt?: StatePredicate<BRDState>;
 		onConfirm?: EffectFn<BRDState>;
 		onApplication?: EffectFn<BRDState>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 		autoUpgrade?: SkillAutoReplace;
 	},
 ): Ability<BRDState> => {
@@ -439,7 +439,7 @@ const makeResourceAbility_BRD = (
 		validateAttempt?: StatePredicate<BRDState>;
 		onConfirm?: EffectFn<BRDState>;
 		onApplication?: EffectFn<BRDState>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<BRDState> => {
 	return makeResourceAbility(ShellJob.BRD, name, unlockLevel, cdName, {

@@ -18,7 +18,7 @@ import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
-	CooldownGroupProperies,
+	CooldownGroupProperties,
 	EffectFn,
 	getBasePotency,
 	makeAbility,
@@ -325,7 +325,7 @@ const makeWeaponskill_MCH = (
 		onConfirm?: EffectFn<MCHState>;
 		highlightIf?: StatePredicate<MCHState>;
 		onApplication?: EffectFn<MCHState>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Weaponskill<MCHState> => {
 	const onConfirm: EffectFn<MCHState> = combineEffects(
@@ -395,7 +395,7 @@ const makeAbility_MCH = (
 		validateAttempt?: StatePredicate<MCHState>;
 		onConfirm?: EffectFn<MCHState>;
 		onApplication?: EffectFn<MCHState>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<MCHState> => {
 	const onConfirm: EffectFn<MCHState> = combineEffects(params.onConfirm ?? NO_EFFECT);
@@ -423,7 +423,7 @@ const makeResourceAbility_MCH = (
 		onConfirm?: EffectFn<MCHState>;
 		onApplication?: EffectFn<MCHState>;
 		highlightIf?: StatePredicate<MCHState>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<MCHState> => {
 	const onConfirm: EffectFn<MCHState> = combineEffects(params.onConfirm ?? NO_EFFECT);
