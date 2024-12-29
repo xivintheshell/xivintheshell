@@ -5,7 +5,7 @@ import { LocalizedContent } from "../../../Components/Localization";
 
 export interface Resource {
 	name: string;
-	label?: Omit<LocalizedContent, "en">; // Can eventually move localization directly onto the definition
+	label?: Omit<LocalizedContent, "en">; // Defines the locale-specific text that will be displayed. English is inferred from the name property
 
 	// Set to indicate the maximum number of stacks for a resource. Defaults to 1 if not set.
 	// Note that for status effects, this also controls the stacked icon registration
