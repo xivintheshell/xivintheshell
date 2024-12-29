@@ -36,31 +36,6 @@ const AFUISkills = new Set<ActionKey>([
 
 const enoSkills = new Set<ActionKey>(["FOUL", "XENOGLOSSY", "PARADOX"]);
 
-// TODO - execute
-export const DOT_SKILLS: ActionKey[] = [
-	// BLM
-	"THUNDER_III",
-	"HIGH_THUNDER",
-	"THUNDER_IV",
-	"HIGH_THUNDER_II",
-
-	// SAM
-	"HIGANBANA",
-
-	// MCH
-	"BIOBLASTER",
-	"FLAMETHROWER",
-
-	// BRD
-	"CAUSTIC_BITE",
-	"STORMBITE",
-	"IRON_JAWS",
-
-	// GNB
-	"SONIC_BREAK",
-	"BOW_SHOCK",
-];
-
 // source of truth
 const excludedFromStats = new Set<ActionKey | "DoT">([]);
 
@@ -274,19 +249,15 @@ export function updateSkillOrDoTInclude(props: {
 	if (props.include && excludedFromStats.has(props.skillNameOrDoT)) {
 		excludedFromStats.delete(props.skillNameOrDoT);
 		// it doesn't make sense to include DoT but not base potency of Thunder/Higanbana
+		// TODO - for jobs with more than one DoT, this functions as an all-or-nothing toggle. Figure out how to have the toggles only affect that skill
 		if (props.skillNameOrDoT === "DoT") {
-			DOT_SKILLS.forEach((skill) => excludedFromStats.delete(skill));
-		} else if (
-			props.skillNameOrDoT === "THUNDER_III" ||
-			props.skillNameOrDoT === "HIGH_THUNDER" ||
-			props.skillNameOrDoT === "THUNDER_IV" ||
-			props.skillNameOrDoT === "HIGH_THUNDER_II"
-		) {
+			ctl.game.dotSkills.forEach((skill) => excludedFromStats.delete(skill));
+		} else if (ctl.game.dotSkills.includes(props.skillNameOrDoT)) {
 			excludedFromStats.delete("DoT");
 		}
 	} else {
 		excludedFromStats.add(props.skillNameOrDoT);
-		if (props.skillNameOrDoT !== "DoT" && DOT_SKILLS.includes(props.skillNameOrDoT)) {
+		if (props.skillNameOrDoT !== "DoT" && ctl.game.dotSkills.includes(props.skillNameOrDoT)) {
 			excludedFromStats.add("DoT");
 		}
 	}
