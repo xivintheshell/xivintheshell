@@ -1,3 +1,5 @@
+import { DNCStatusPropsGenerator } from "../../Components/Jobs/DNC";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { BuffType, ProcMode, WarningType } from "../Common";
@@ -102,6 +104,10 @@ export class DNCState extends GameState {
 		this.cooldowns.set(new CoolDown("cd_SHIELD_SAMBA", shieldSambaCooldown, 1, 1));
 
 		this.registerRecurringEvents();
+	}
+
+	override get statusPropsGenerator(): StatusPropsGenerator<DNCState> {
+		return new DNCStatusPropsGenerator(this);
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {

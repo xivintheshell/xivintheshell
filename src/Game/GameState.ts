@@ -45,6 +45,7 @@ import { ActionKey } from "./Data/Actions";
 import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
 import { CooldownKey } from "./Data/Cooldowns";
 import { ResourceKey, RESOURCES } from "./Data/Resources";
+import { StatusPropsGenerator } from "../Components/StatusDisplay";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require("seedrandom");
@@ -74,7 +75,7 @@ export interface DoTPotencyProps {
 }
 
 // GameState := resources + events queue
-export abstract class GameState {
+export class GameState {
 	config: GameConfig;
 	rng: RNG;
 	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
@@ -158,6 +159,10 @@ export abstract class GameState {
 		// SKILLS (instantiated once, read-only later)
 		this.skillsList = new SkillsList(this);
 		this.displayedSkills = new DisplayedSkills(this.job, config.level);
+	}
+
+	get statusPropsGenerator(): StatusPropsGenerator<PlayerState> {
+		return new StatusPropsGenerator(this);
 	}
 
 	get job(): ShellJob {

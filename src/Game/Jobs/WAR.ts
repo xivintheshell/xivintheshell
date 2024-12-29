@@ -1,3 +1,5 @@
+import { WARStatusPropsGenerator } from "../../Components/Jobs/WAR";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { controller } from "../../Controller/Controller";
 import { LevelSync, WarningType } from "../Common";
 import { WARActionKey } from "../Data/Actions/Jobs/WAR";
@@ -99,6 +101,10 @@ export class WARState extends GameState {
 		}
 
 		this.registerRecurringEvents();
+	}
+
+	override get statusPropsGenerator(): StatusPropsGenerator<WARState> {
+		return new WARStatusPropsGenerator(this);
 	}
 
 	processComboStatus(skill: WARActionKey) {

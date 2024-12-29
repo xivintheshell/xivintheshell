@@ -1,4 +1,6 @@
+import { BRDStatusPropsGenerator } from "../../Components/Jobs/BRD";
 import { localizeResourceType } from "../../Components/Localization";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { BuffType, WarningType } from "../Common";
@@ -100,6 +102,10 @@ export class BRDState extends GameState {
 				],
 			},
 		]);
+	}
+
+	override get statusPropsGenerator(): StatusPropsGenerator<BRDState> {
+		return new BRDStatusPropsGenerator(this);
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {

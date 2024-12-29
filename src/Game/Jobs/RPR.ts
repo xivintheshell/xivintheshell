@@ -1,3 +1,5 @@
+import { RPRStatusPropsGenerator } from "../../Components/Jobs/RPR";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
 import { Aspect, BuffType } from "../Common";
 import { ActionKey } from "../Data/Actions";
@@ -92,6 +94,10 @@ export class RPRState extends GameState {
 		this.cooldowns.set(new CoolDown("cd_SOUL_SLICE", 30, soulSliceStacks, soulSliceStacks));
 
 		this.registerRecurringEvents();
+	}
+
+	override get statusPropsGenerator(): StatusPropsGenerator<RPRState> {
+		return new RPRStatusPropsGenerator(this);
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {

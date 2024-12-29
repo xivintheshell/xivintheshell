@@ -33,6 +33,8 @@ import { localize } from "../../Components/Localization";
 import { BLMActionKey } from "../Data/Actions/Jobs/BLM";
 import { BLMResourceKey } from "../Data/Resources/Jobs/BLM";
 import { BLMCooldownKey } from "../Data/Cooldowns/Jobs/BLM";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
+import { BLMStatusPropsGenerator } from "../../Components/Jobs/BLM";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -110,6 +112,10 @@ export class BLMState extends GameState {
 				],
 			},
 		]);
+	}
+
+	override get statusPropsGenerator(): StatusPropsGenerator<BLMState> {
+		return new BLMStatusPropsGenerator(this);
 	}
 
 	override jobSpecificRegisterRecurringEvents() {
