@@ -28,6 +28,8 @@ import { ActionKey } from "../Data/Actions";
 import { PCTActionKey } from "../Data/Actions/Jobs/PCT";
 import { PCTResourceKey } from "../Data/Resources/Jobs/PCT";
 import { PCTCooldownKey } from "../Data/Cooldowns/Jobs/PCT";
+import { PCTStatusPropsGenerator } from "../../Components/Jobs/PCT";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -94,6 +96,10 @@ export class PCTState extends GameState {
 		this.cooldowns.set(new CoolDown("cd_STEEL_MUSE", 60, steelMuseStacks, steelMuseStacks));
 
 		this.registerRecurringEvents();
+	}
+
+	override get statusPropsGenerator(): StatusPropsGenerator<PCTState> {
+		return new PCTStatusPropsGenerator(this);
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {

@@ -30,6 +30,8 @@ import { TraitKey } from "../Data/Traits";
 import { ActionKey } from "../Data/Actions";
 import { SAMResourceKey } from "../Data/Resources/Jobs/SAM";
 import { SAMCooldownKey } from "../Data/Cooldowns/Jobs/SAM";
+import { SAMStatusPropsGenerator } from "../../Components/Jobs/SAM";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 const makeSAMResource = (rsc: SAMResourceKey, maxValue: number, params?: { timeout: number }) => {
@@ -99,6 +101,10 @@ export class SAMState extends GameState {
 				],
 			},
 		]);
+	}
+
+	override get statusPropsGenerator(): StatusPropsGenerator<SAMState> {
+		return new SAMStatusPropsGenerator(this);
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {

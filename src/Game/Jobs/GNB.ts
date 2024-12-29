@@ -30,6 +30,8 @@ import { ActionKey } from "../Data/Actions";
 import { GNBResourceKey } from "../Data/Resources/Jobs/GNB";
 import { ResourceKey } from "../Data/Resources";
 import { CooldownKey } from "../Data/Cooldowns";
+import { GNBStatusPropsGenerator } from "../../Components/Jobs/GNB";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 const makeGNBResource = (
@@ -116,6 +118,10 @@ export class GNBState extends GameState {
 				],
 			},
 		]);
+	}
+
+	override get statusPropsGenerator(): StatusPropsGenerator<GNBState> {
+		return new GNBStatusPropsGenerator(this);
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {

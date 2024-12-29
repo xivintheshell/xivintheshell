@@ -31,6 +31,8 @@ import { RDMActionKey } from "../Data/Actions/Jobs/RDM";
 import { ActionKey } from "../Data/Actions";
 import { RDMResourceKey } from "../Data/Resources/Jobs/RDM";
 import { CooldownKey } from "../Data/Cooldowns";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
+import { RDMStatusPropsGenerator } from "../../Components/Jobs/RDM";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
@@ -112,6 +114,10 @@ export class RDMState extends GameState {
 		this.resources.set(new Resource("MANAFICATION", mfStacks, 0));
 
 		this.registerRecurringEvents();
+	}
+
+	override get statusPropsGenerator(): StatusPropsGenerator<RDMState> {
+		return new RDMStatusPropsGenerator(this);
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
