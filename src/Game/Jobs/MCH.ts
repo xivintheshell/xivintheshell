@@ -1,3 +1,5 @@
+import { MCHStatusPropsGenerator } from "../../Components/Jobs/MCH";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { Aspect, WarningType } from "../Common";
@@ -135,6 +137,10 @@ export class MCHState extends GameState {
 				],
 			},
 		]);
+	}
+
+	override get statusPropsGenerator(): StatusPropsGenerator<MCHState> {
+		return new MCHStatusPropsGenerator(this);
 	}
 
 	// Flamethrower works like a DoT, but ticks every second instead, so we need to handle that separately
