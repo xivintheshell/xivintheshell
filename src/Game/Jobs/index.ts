@@ -11,6 +11,7 @@ import { RDMState } from "./RDM";
 import { RPRState } from "./RPR";
 import { SAMState } from "./SAM";
 import { SMNState } from "./SMN";
+import { SGEState } from "./SGE";
 import { WARState } from "./WAR";
 
 export function getGameState(config: GameConfig): GameState {
@@ -21,6 +22,8 @@ export function getGameState(config: GameConfig): GameState {
 		case "GNB":
 			return new GNBState(config);
 		// Healers
+		case "SGE":
+			return new SGEState(config);
 		// Melee
 		case "DRG":
 			return new DRGState(config);
