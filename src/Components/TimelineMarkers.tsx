@@ -636,6 +636,11 @@ export class TimelineMarkers extends React.Component {
 					url={PRESET_MARKERS_BASE + "fru_p5.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
+				<LoadCombinedTracksBtn
+					displayName={localize({ en: "full fight", zh: "完整" })}
+					url={PRESET_MARKERS_BASE + "fru_en_full.txt"}
+					offsetStr={this.state.offsetStr}
+				/>
 			</p>
 			<p>
 				<span>

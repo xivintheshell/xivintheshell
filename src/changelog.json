@@ -1,5 +1,11 @@
 [
 	{
+		"date": "1/1/25",
+		"changes": [
+			"Added combined English FRU tracks"
+		]
+	},
+	{
 		"date": "12/28/24",
 		"changes": [
 			"[PCT] Fixed warning for Palette Gauge overcap"
