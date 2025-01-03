@@ -674,8 +674,8 @@ export class SkillsWindow extends React.Component {
 
 		const targetCountHelp = <Help
 			topic="targetCount"
-			content={
-				<>
+			content={localize({
+				en: <>
 					<span>
 						The number of targets hit by the next ability. Damage fall-off is
 						automatically computed. If the number of targets set is more than the number
@@ -687,8 +687,19 @@ export class SkillsWindow extends React.Component {
 						Buff calculations for enemy debuffs like Dokumori and Chain Stratagem may be
 						inaccurate when multiple targets are selected.
 					</span>
-				</>
-			}
+				</>,
+				zh: <div>
+					<span>
+						{"下一个技能击中的目标数。会自动计算对主目标之外敌人的伤害衰减。" +
+							"如果在此设置的敌人数量超过技能的生效敌人数上限（例：给对单技能设置2或更多目标数），多余的目标会被忽略。"}
+					</span>
+					<br />
+					<br />
+					<span>
+						注：介毒之术、连环计等作用于目标的团辅可能会使多目标技能威力计算出现误差。
+					</span>
+				</div>,
+			})}
 		/>;
 		return <div className={"skillsWindow"}>
 			<div className={"skillIcons"}>
