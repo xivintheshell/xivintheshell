@@ -1,17 +1,16 @@
-import {
-	Aspect,
-	LevelSync,
-	LimitBreakSkillName,
-	ResourceType,
-	SkillName,
-	TraitName,
-} from "./Common";
-import { ShellJob, ALL_JOBS } from "../Controller/Common";
+import { Aspect, LevelSync } from "./Common";
 import { ActionNode } from "../Controller/Record";
 import { PlayerState, GameState } from "./GameState";
-import { Traits } from "./Traits";
 import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
 import { PotencyModifier } from "./Potency";
+import { ShellJob, ALL_JOBS } from "./Data/Jobs";
+import { TraitKey } from "./Data/Traits";
+import { ActionKey, ACTIONS } from "./Data/Actions";
+import { LimitBreakActionKey } from "./Data/Actions/Shared/LimitBreak";
+import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
+import { CooldownKey } from "./Data/Cooldowns";
+import { ResourceKey, RESOURCES } from "./Data/Resources";
+import { Data } from "./Data/Data";
 
 // all gapclosers have the same animation lock
 // from: https://nga.178.com/read.php?tid=21233094&rand=761
@@ -23,8 +22,8 @@ export const FAKE_SKILL_ANIMATION_LOCK = 0.01;
 // if skill is lower than current level, auto upgrade until (no more upgrade options) or (more upgrades will exceed current level)
 // if skill is higher than current level, auto downgrade until skill is at or below current level. If run out of downgrades, throw error
 export type SkillAutoReplace = {
-	trait: TraitName;
-	otherSkill: SkillName;
+	trait: TraitKey;
+	otherSkill: ActionKey;
 };
 
 // Replace a skill on a hotbar, or replay, when a certain condition based on the game state is
@@ -32,7 +31,7 @@ export type SkillAutoReplace = {
 // multiple replacements for a single skill should have disjoint conditions.
 // This replacement check is NOT performed recursively.
 export type ConditionalSkillReplace<T extends PlayerState> = {
-	newSkill: SkillName;
+	newSkill: ActionKey;
 	condition: (state: Readonly<T>) => boolean;
 };
 
@@ -74,7 +73,7 @@ export function combinePredicatesAnd<T extends PlayerState>(
 }
 
 export interface CooldownGroupProperties {
-	cdName: ResourceType;
+	cdName: CooldownKey;
 	cooldown: number;
 	maxCharges: number;
 }
@@ -86,13 +85,13 @@ export interface CooldownGroupProperties {
  */
 interface BaseSkill<T extends PlayerState> {
 	// === COSMETIC PROPERTIES ===
-	readonly name: SkillName;
+	readonly name: ActionKey;
 	readonly assetPath: string; // path relative to the Components/Asset/Skills folder
 	readonly unlockLevel: number;
 	readonly requiresCombat?: boolean; // Set to true if the action requires being in combat to use
 	readonly autoUpgrade?: SkillAutoReplace;
 	readonly autoDowngrade?: SkillAutoReplace;
-	readonly cdName: ResourceType;
+	readonly cdName: CooldownKey;
 	// TODO: Technically, actions are defined with an array of cooldown groups, one of which is the GCD cooldown group for actions that affect the GCD.
 	// Functionally, actions have at most the GCD and a second cooldown group, so this is enough for now.
 	readonly secondaryCd?: CooldownGroupProperties;
@@ -190,44 +189,53 @@ export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T
 // This is automatically populated by the makeWeaponskill, makeSpell, and makeAbility helper functions.
 // Unfortunately, I [sz] don't really know of a good way to encode the relationship between
 // the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
-const skillMap: Map<ShellJob, Map<SkillName, Skill<PlayerState>>> = new Map();
+const skillMap: Map<ShellJob, Map<ActionKey, Skill<PlayerState>>> = new Map();
 // Track asset paths for all skills so we can load icons for multiple timelines
-const skillAssetPaths: Map<SkillName, string> = new Map();
+const skillAssetPaths: Map<ActionKey, string> = new Map();
 
-const normalizedSkillNameMap = new Map<string, SkillName>();
+const normalizedSkillNameMap = new Map<string, ActionKey>();
 /**
- * Attempt to retrieve a SkillName enum member from the specified string. This function is run
+ * Attempt to retrieve an ActionKey member from the specified string. This function is run
  * when a line is loaded to fix some capitalization errors present in earlier versions of
  * PCT in the Shell, where "Thunder In Magenta" was capitalized inappropriately (should be
  * "Thunder in Magenta" with "in" not capitalized.
  */
-export function getNormalizedSkillName(s: string): SkillName | undefined {
+export function getNormalizedSkillName(s: string): ActionKey | undefined {
 	return normalizedSkillNameMap.get(s.toLowerCase());
+}
+
+export function getResourceKeyFromBuffName(s: string): ResourceKey | undefined {
+	// If the provided string is already a key in the RESOURCES object, return it
+	if (s in RESOURCES) {
+		return s as ResourceKey;
+	}
+	// See if we can find a key in the RESOURCES where the incoming string matches the name of the resources
+	return Data.findResourceKey(s);
 }
 
 // Return a particular skill for a job.
 // Raises if the skill is not found.
-export function getSkill<T extends PlayerState>(job: ShellJob, skillName: SkillName): Skill<T> {
+export function getSkill<T extends PlayerState>(job: ShellJob, skillName: ActionKey): Skill<T> {
 	return skillMap.get(job)!.get(skillName)!;
 }
 
-export function getSkillAssetPath(skillName: SkillName): string | undefined {
+export function getSkillAssetPath(skillName: ActionKey): string | undefined {
 	return skillAssetPaths.get(skillName);
 }
 
 // Return true if the provided skill is valid for the job.
-export function jobHasSkill(job: ShellJob, skillName: SkillName): boolean {
+export function jobHasSkill(job: ShellJob, skillName: ActionKey): boolean {
 	return skillMap.get(job)!.has(skillName);
 }
 
 // Return the map of all skills for a job.
-export function getAllSkills<T extends PlayerState>(job: ShellJob): Map<SkillName, Skill<T>> {
+export function getAllSkills<T extends PlayerState>(job: ShellJob): Map<ActionKey, Skill<T>> {
 	return skillMap.get(job)!;
 }
 
-function setSkill<T extends PlayerState>(job: ShellJob, skillName: SkillName, skill: Skill<T>) {
+function setSkill<T extends PlayerState>(job: ShellJob, skillName: ActionKey, skill: Skill<T>) {
 	skillMap.get(job)!.set(skillName, skill as Skill<PlayerState>);
-	normalizedSkillNameMap.set(skillName.toLowerCase(), skillName);
+	normalizedSkillNameMap.set(ACTIONS[skillName].name.toLowerCase(), skillName);
 	skillAssetPaths.set(skillName, skill.assetPath);
 }
 
@@ -249,7 +257,7 @@ function fnify<T extends PlayerState>(
 }
 
 function convertTraitPotencyArray<T extends PlayerState>(
-	arr: Array<[TraitName, number]>,
+	arr: Array<[TraitKey, number]>,
 ): ResourceCalculationFn<T> {
 	console.assert(arr.length > 0, `invalid trait potency array: ${arr}`);
 	return (state) => {
@@ -258,7 +266,7 @@ function convertTraitPotencyArray<T extends PlayerState>(
 		// this iteration assumes the highest level trait is last, and is a little algorithmically
 		// inefficient but who cares
 		for (const [traitName, potency] of arr) {
-			if (Traits.hasUnlocked(traitName, level)) {
+			if (state.hasTraitUnlocked(traitName)) {
 				currPotency = potency;
 			}
 		}
@@ -272,14 +280,15 @@ function convertTraitPotencyArray<T extends PlayerState>(
 
 export function getBasePotency<T extends PlayerState>(
 	state: Readonly<T>,
-	potencyArg?: number | Array<[TraitName, number]> | ResourceCalculationFn<T>,
+	potencyArg?: number | Array<[TraitKey, number]> | ResourceCalculationFn<T>,
 ): number {
 	return (
 		Array.isArray(potencyArg) ? convertTraitPotencyArray(potencyArg) : fnify(potencyArg, 0)
 	)(state);
 }
 
-function normalizeAssetPath(job: ShellJob, name: SkillName) {
+function normalizeAssetPath(job: ShellJob, key: ActionKey) {
+	const name = ACTIONS[key].name;
 	// Remove colons from the path because it's hard to put those into a file name
 	return `${job}/${name.replace(":", "")}.png`;
 }
@@ -303,7 +312,7 @@ function normalizeAssetPath(job: ShellJob, name: SkillName) {
  */
 export function makeSpell<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
-	name: SkillName,
+	name: ActionKey,
 	unlockLevel: number,
 	params: Partial<{
 		assetPath: string;
@@ -317,7 +326,7 @@ export function makeSpell<T extends PlayerState>(
 		recastTime: number | ResourceCalculationFn<T>;
 		animationLock: number | ResourceCalculationFn<T>;
 		manaCost: number | ResourceCalculationFn<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
 		applicationDelay: number;
 		validateAttempt: StatePredicate<T>;
@@ -348,7 +357,7 @@ export function makeSpell<T extends PlayerState>(
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
-		cdName: ResourceType.cd_GCD,
+		cdName: "cd_GCD",
 		secondaryCd: params.secondaryCooldown,
 		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
@@ -377,7 +386,7 @@ export function makeSpell<T extends PlayerState>(
 
 export function makeWeaponskill<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
-	name: SkillName,
+	name: ActionKey,
 	unlockLevel: number,
 	params: Partial<{
 		assetPath: string;
@@ -391,7 +400,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		recastTime: number | ResourceCalculationFn<T>;
 		animationLock: number | ResourceCalculationFn<T>;
 		manaCost: number | ResourceCalculationFn<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
 		applicationDelay: number;
 		validateAttempt: StatePredicate<T>;
@@ -422,7 +431,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		unlockLevel: unlockLevel,
 		autoUpgrade: params.autoUpgrade,
 		autoDowngrade: params.autoDowngrade,
-		cdName: ResourceType.cd_GCD,
+		cdName: "cd_GCD",
 		secondaryCd: params.secondaryCooldown,
 		aspect: params.aspect ?? Aspect.Other,
 		replaceIf: params.replaceIf ?? [],
@@ -468,9 +477,9 @@ export function makeWeaponskill<T extends PlayerState>(
  */
 export function makeAbility<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
-	name: SkillName,
+	name: ActionKey,
 	unlockLevel: number,
-	cdName: ResourceType,
+	cdName: CooldownKey,
 	params: Partial<{
 		aspect: Aspect;
 		assetPath: string;
@@ -480,7 +489,7 @@ export function makeAbility<T extends PlayerState>(
 		replaceIf: ConditionalSkillReplace<T>[];
 		startOnHotbar: boolean;
 		highlightIf: StatePredicate<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
 		applicationDelay: number;
 		animationLock: number | ResourceCalculationFn<T>;
@@ -555,11 +564,11 @@ export function makeAbility<T extends PlayerState>(
  */
 export function makeResourceAbility<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
-	name: SkillName,
+	name: ActionKey,
 	unlockLevel: number,
-	cdName: ResourceType,
+	cdName: CooldownKey,
 	params: {
-		rscType: ResourceType;
+		rscType: ResourceKey;
 		requiresCombat?: boolean;
 		autoUpgrade?: SkillAutoReplace;
 		autoDowngrade?: SkillAutoReplace;
@@ -569,7 +578,7 @@ export function makeResourceAbility<T extends PlayerState>(
 		animationLock?: number | ResourceCalculationFn<T>;
 		applicationDelay: number;
 		duration?: number | ResourceCalculationFn<T>; // TODO push to resources
-		potency?: number | ResourceCalculationFn<T> | Array<[TraitName, number]>;
+		potency?: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 		jobPotencyModifiers?: PotencyModifierFn<T>;
 		validateAttempt?: StatePredicate<T>;
 		onExecute?: EffectFn<T>;
@@ -634,8 +643,8 @@ export function makeResourceAbility<T extends PlayerState>(
  */
 export function makeLimitBreak<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
-	name: LimitBreakSkillName,
-	cdName: ResourceType,
+	name: LimitBreakActionKey,
+	cdName: CooldownKey,
 	params: {
 		tier: "1" | "2" | "3";
 		animationLock: number;
@@ -688,7 +697,7 @@ export function makeLimitBreak<T extends PlayerState>(
 }
 
 // Dummy skill to avoid a hard crash when a skill info isn't found
-const NEVER_SKILL = makeAbility(ALL_JOBS, SkillName.Never, 1, ResourceType.Never, {
+const NEVER_SKILL = makeAbility(ALL_JOBS, "NEVER", 1, "NEVER", {
 	validateAttempt: (state) => false,
 });
 
@@ -699,11 +708,11 @@ export class SkillsList<T extends PlayerState> {
 		this.job = state.job;
 	}
 
-	get(key: SkillName): Skill<T> {
+	get(key: ActionKey): Skill<T> {
 		let skill = skillMap.get(this.job)!.get(key) as Skill<T>;
 		if (skill) return skill;
 		else {
-			console.error(`could not find skill with name: ${key}`);
+			console.error(`could not find skill with key: ${key}`);
 			return NEVER_SKILL;
 		}
 	}
@@ -711,12 +720,12 @@ export class SkillsList<T extends PlayerState> {
 
 export function getAutoReplacedSkillName(
 	job: ShellJob,
-	skillName: SkillName,
+	skillName: ActionKey,
 	level: LevelSync,
-): SkillName {
+): ActionKey {
 	let skill = getSkill(job, skillName);
 	// upgrade: if level >= upgrade options
-	while (skill.autoUpgrade && Traits.hasUnlocked(skill.autoUpgrade.trait, level)) {
+	while (skill.autoUpgrade && hasUnlockedTrait(skill.autoUpgrade.trait, level)) {
 		skill = getSkill(job, getAutoReplacedSkillName(job, skill.autoUpgrade.otherSkill, level));
 	}
 	// downgrade: if level < current skill required level
@@ -727,9 +736,9 @@ export function getAutoReplacedSkillName(
 }
 
 export function getConditionalReplacement<T extends PlayerState>(
-	key: SkillName,
+	key: ActionKey,
 	state: T,
-): SkillName {
+): ActionKey {
 	// Attempt to replace a skill if required by the current state
 	const skill = getSkill(state.job, key);
 	for (const candidate of skill.replaceIf) {
@@ -748,7 +757,7 @@ export function getConditionalReplacement<T extends PlayerState>(
 }
 
 export class DisplayedSkills {
-	#skills: SkillName[];
+	#skills: ActionKey[];
 
 	constructor(job: ShellJob, level: LevelSync) {
 		this.#skills = [];
@@ -758,7 +767,7 @@ export class DisplayedSkills {
 			// Also leave off any abilities that auto-downgrade, like HF2/HB2/HT,
 			// since their downgrade versions will already be on the hotbar.
 			if (
-				skillInfo.name !== SkillName.Never &&
+				skillInfo.name !== "NEVER" &&
 				level >= skillInfo.unlockLevel &&
 				skillInfo.autoDowngrade === undefined &&
 				skillInfo.startOnHotbar
@@ -771,7 +780,7 @@ export class DisplayedSkills {
 	// Get the list of skills to display in the current game state.
 	// `replaceIf` conditions are checked here.
 	// `autoUpgrade`/`autoDowngrade` are not checked here, and are checked in the constructor instead.
-	getCurrentSkillNames<T extends PlayerState>(state: T): SkillName[] {
+	getCurrentSkillNames<T extends PlayerState>(state: T): ActionKey[] {
 		return this.#skills.map((skillName) => getConditionalReplacement(skillName, state));
 	}
 }

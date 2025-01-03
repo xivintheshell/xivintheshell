@@ -18,9 +18,8 @@ import {
 	getCachedValue,
 	setCachedValue,
 	containsEwCacheContent,
-	ShellJob,
-	ALL_JOBS,
 } from "../Controller/Common";
+import { JOBS, ShellJob } from "../Game/Data/Jobs";
 
 export let setJob = (job: ShellJob) => {};
 export let setRealTime = (inRealTime: boolean) => {};
@@ -138,7 +137,7 @@ export default class Main extends React.Component {
 			// https://stackoverflow.com/a/260877
 			const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
 			if (link) {
-				if (ALL_JOBS.includes(job)) {
+				if (job in JOBS) {
 					link.href =
 						process.env.PUBLIC_URL +
 						"/favicons/" +

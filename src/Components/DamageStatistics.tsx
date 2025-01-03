@@ -1,6 +1,5 @@
 import React, { CSSProperties } from "react";
 import { Checkbox, ContentNode, FileFormat, Help, Input, SaveToFile } from "./Common";
-import { LIMIT_BREAKS, ResourceType, SkillName } from "../Game/Common";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
 import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
 import { localize, localizeResourceType, localizeSkillName } from "./Localization";
@@ -13,9 +12,12 @@ import {
 	updateSkillOrDoTInclude,
 } from "../Controller/DamageStatistics";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
+import { ActionKey } from "../Game/Data/Actions";
+import { LIMIT_BREAK } from "../Game/Data/Actions/Shared/LimitBreak";
+import { ResourceKey } from "../Game/Data/Resources";
 
 export type DamageStatsMainTableEntry = {
-	skillName: SkillName;
+	skillName: ActionKey;
 	displayedModifiers: PotencyModifierType[];
 	basePotency: number;
 	calculationModifiers: PotencyModifier[];
@@ -96,7 +98,7 @@ export type DamageStatisticsData = {
 		totalPotPotency: number;
 		totalPartyBuffPotency: number;
 	};
-	dotTables: Map<ResourceType, DamageStatsDoTTrackingData>;
+	dotTables: Map<ResourceKey, DamageStatsDoTTrackingData>;
 	mode: DamageStatisticsMode;
 };
 
@@ -707,26 +709,26 @@ export class DamageStatistics extends React.Component {
 			};
 		};
 
-		let isDoTProp = function (skillName: SkillName) {
+		let isDoTProp = function (skillName: ActionKey) {
 			return controller.game.dotSkills.includes(skillName);
 		};
 
-		let hidePotency = function (skillName: SkillName) {
+		let hidePotency = function (skillName: ActionKey) {
 			if (isDoTProp(skillName)) {
 				return true;
 			}
-			const hidePotencySkills: SkillName[] = [
+			const hidePotencySkills: ActionKey[] = [
 				// MCH: Queen and Wildfire have variable potencies per "tick" so just don't show them in the per-hit potency column
-				SkillName.AutomatonQueen,
-				SkillName.Wildfire,
+				"AUTOMATON_QUEEN",
+				"WILDFIRE",
 				// Limit Break potencies don't directly translate to player potency, so don't include it in the summary
-				...LIMIT_BREAKS,
+				...(Object.keys(LIMIT_BREAK) as ActionKey[]),
 			];
 			return hidePotencySkills.includes(skillName);
 		};
 
 		let makeRow = function (props: {
-			lastRowSkill?: SkillName;
+			lastRowSkill?: ActionKey;
 			row: DamageStatsMainTableEntry;
 			key: number;
 		}) {
@@ -739,11 +741,7 @@ export class DamageStatistics extends React.Component {
 
 			// include checkbox
 			let includeCheckboxes: React.ReactNode[] = [];
-			if (
-				!sameAsLast &&
-				props.row.basePotency > 0 &&
-				!LIMIT_BREAKS.includes(props.row.skillName)
-			) {
+			if (!sameAsLast && props.row.basePotency > 0 && !(props.row.skillName in LIMIT_BREAK)) {
 				includeCheckboxes.push(
 					<input
 						key="main"
@@ -850,7 +848,7 @@ export class DamageStatistics extends React.Component {
 
 			// total potency
 			let totalPotencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.showPotency && !LIMIT_BREAKS.includes(props.row.skillName)) {
+			if (props.row.showPotency && !(props.row.skillName in LIMIT_BREAK)) {
 				totalPotencyNode = <span
 					style={{ textDecoration: includeInStats ? "none" : "line-through" }}
 				>
@@ -1003,7 +1001,7 @@ export class DamageStatistics extends React.Component {
 			</div>;
 		};
 
-		const allDotTableRows: { dotName: ResourceType; tableRows: React.ReactNode[] }[] = [];
+		const allDotTableRows: { dotName: ResourceKey; tableRows: React.ReactNode[] }[] = [];
 		this.data.dotTables.forEach((dotTrackingData, dotName) => {
 			const dotTableRows = [];
 

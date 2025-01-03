@@ -6,59 +6,20 @@ import {
 	ResourceDisplayProps,
 	StatusPropsGenerator,
 } from "../StatusDisplay";
-import { ResourceType } from "../../Game/Common";
 import { RDMState } from "../../Game/Jobs/RDM";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
+import { RDM_STATUSES } from "../../Game/Data/Resources/Jobs/RDM";
+import { ResourceKey, RESOURCES } from "../../Game/Data/Resources";
 
-[
-	ResourceType.Acceleration,
-	ResourceType.Dualcast,
-	ResourceType.Embolden,
-	ResourceType.GrandImpactReady,
-	ResourceType.MagickBarrier,
-	ResourceType.MagickedSwordplay,
-	ResourceType.MagickedSwordplay + "2",
-	ResourceType.MagickedSwordplay + "3",
-	ResourceType.Manafication,
-	ResourceType.Manafication + "2",
-	ResourceType.Manafication + "3",
-	ResourceType.Manafication + "4",
-	ResourceType.Manafication + "5",
-	ResourceType.Manafication + "6",
-	ResourceType.PrefulgenceReady,
-	ResourceType.ThornedFlourish,
-	ResourceType.VerfireReady,
-	ResourceType.VerstoneReady,
-].forEach((buff) => registerBuffIcon(buff, `RDM/${buff}.png`));
+(Object.keys(RDM_STATUSES) as ResourceKey[]).forEach((buff) =>
+	registerBuffIcon(buff, `RDM/${RESOURCES[buff].name}.png`),
+);
 
 export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
-		const makeRedMageTimer = (rscType: ResourceType) => {
-			const cd = this.state.resources.timeTillReady(rscType);
-			return {
-				rscType: rscType,
-				onSelf: true,
-				enabled: true,
-				stacks: this.state.resources.get(rscType).availableAmount(),
-				timeRemaining: cd.toFixed(3),
-				className: cd > 0 ? "" : "hidden",
-			};
-		};
 		return [
-			...[
-				ResourceType.Dualcast,
-				ResourceType.Acceleration,
-				ResourceType.GrandImpactReady,
-				ResourceType.VerstoneReady,
-				ResourceType.VerfireReady,
-				ResourceType.Embolden,
-				ResourceType.ThornedFlourish,
-				ResourceType.MagickedSwordplay,
-				ResourceType.Manafication,
-				ResourceType.PrefulgenceReady,
-				ResourceType.MagickBarrier,
-			].map(makeRedMageTimer),
+			...(Object.keys(RDM_STATUSES) as ResourceKey[]).map((key) => this.makeCommonTimer(key)),
 		];
 	}
 
@@ -66,9 +27,9 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 
-		const whiteMana = resources.get(ResourceType.WhiteMana).availableAmount();
-		const blackMana = resources.get(ResourceType.BlackMana).availableAmount();
-		const manaStacks = resources.get(ResourceType.ManaStacks).availableAmount();
+		const whiteMana = resources.get("WHITE_MANA").availableAmount();
+		const blackMana = resources.get("BLACK_MANA").availableAmount();
+		const manaStacks = resources.get("MANA_STACKS").availableAmount();
 
 		const infos: ResourceDisplayProps[] = [
 			{

@@ -11,7 +11,6 @@ import {
 	SaveToFile,
 } from "./Common";
 import { controller } from "../Controller/Controller";
-import { ShellJob } from "../Controller/Common";
 import { ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack } from "../Controller/Timeline";
 import { localize, localizeBuffType } from "./Localization";
 import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
@@ -331,10 +330,10 @@ export class TimelineMarkers extends React.Component {
 			// prevent starry from being selectable if we're the pictomancer
 			const activeJob = controller.getActiveJob();
 			if (
-				!(activeJob === ShellJob.PCT && info.name === BuffType.StarryMuse) &&
-				!(activeJob === ShellJob.RDM && info.name === BuffType.Embolden) &&
+				!(activeJob === "PCT" && info.name === BuffType.StarryMuse) &&
+				!(activeJob === "RDM" && info.name === BuffType.Embolden) &&
 				!(
-					activeJob === ShellJob.DNC &&
+					activeJob === "DNC" &&
 					(info.name === BuffType.TechnicalFinish || info.name === BuffType.Devilment)
 				)
 			) {
