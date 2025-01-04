@@ -23,13 +23,10 @@ import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
-import { TraitKey } from "../Data/Traits";
-import { ActionKey } from "../Data/Actions";
-import { PCTActionKey } from "../Data/Actions/Jobs/PCT";
-import { PCTResourceKey } from "../Data/Resources/Jobs/PCT";
-import { PCTCooldownKey } from "../Data/Cooldowns/Jobs/PCT";
+import { ActionKey, TraitKey } from "../Data";
 import { PCTStatusPropsGenerator } from "../../Components/Jobs/PCT";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
+import { PCTResourceKey, PCTActionKey, PCTCooldownKey } from "../Data/Jobs/PCT";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here

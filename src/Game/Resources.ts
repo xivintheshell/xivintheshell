@@ -4,8 +4,7 @@ import { ActionNode } from "../Controller/Record";
 import { BLMState } from "./Jobs/BLM";
 import { controller } from "../Controller/Controller";
 import { ShellJob, ALL_JOBS, MELEE_JOBS } from "./Data/Jobs";
-import { ResourceKey } from "./Data/Resources";
-import { CooldownKey } from "./Data/Cooldowns";
+import { ResourceKey, CooldownKey } from "./Data";
 
 export enum EventTag {
 	ManaGain,

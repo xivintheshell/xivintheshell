@@ -1,5 +1,5 @@
-import { ResourceKey, RESOURCES } from "../../Game/Data/Resources";
-import { RPR_STATUSES } from "../../Game/Data/Resources/Jobs/RPR";
+import { ResourceKey, RESOURCES } from "../../Game/Data";
+import { RPR_STATUSES } from "../../Game/Data/Jobs/RPR";
 import { RPRState } from "../../Game/Jobs/RPR";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";

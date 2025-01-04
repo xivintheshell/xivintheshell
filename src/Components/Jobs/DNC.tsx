@@ -16,8 +16,8 @@ import {
 } from "../StatusDisplay";
 import React from "react";
 import { StaticFn } from "../Common";
-import { DNC_STATUSES, DNCResourceKey } from "../../Game/Data/Resources/Jobs/DNC";
-import { RESOURCES } from "../../Game/Data/Resources";
+import { RESOURCES } from "../../Game/Data";
+import { DNC_STATUSES, DNCResourceKey } from "../../Game/Data/Jobs/DNC";
 
 (Object.keys(DNC_STATUSES) as DNCResourceKey[])
 	.filter((key) => !(key === "ESPRIT_PARTNER" || key === "STANDARD_FINISH_PARTNER"))

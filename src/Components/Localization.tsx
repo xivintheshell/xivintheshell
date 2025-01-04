@@ -5,9 +5,7 @@ import { MdLanguage } from "react-icons/md";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
-import { ActionKey, ACTIONS } from "../Game/Data/Actions";
-import { ResourceKey } from "../Game/Data/Resources";
-import { CooldownKey, COOLDOWNS } from "../Game/Data/Cooldowns";
+import { ActionKey, ACTIONS, CooldownKey, COOLDOWNS, ResourceKey } from "../Game/Data";
 import { Data } from "../Game/Data/Data";
 
 export type Language = "en" | "zh" | "ja";

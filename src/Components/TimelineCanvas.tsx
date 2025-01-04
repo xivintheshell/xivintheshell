@@ -36,7 +36,7 @@ import { scrollEditorToFirstSelected } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
 import { updateTimelineView } from "./Timeline";
 import { ShellJob } from "../Game/Data/Jobs";
-import { LIMIT_BREAK } from "../Game/Data/Actions/Shared/LimitBreak";
+import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 
 export type TimelineRenderingProps = {
 	timelineWidth: number;
@@ -455,7 +455,7 @@ function drawDamageMarks(
 			);
 			if (untargetable) {
 				info.push((0).toFixed(3) + " (" + sourceStr + ")");
-			} else if (damageInfo.sourceSkill in LIMIT_BREAK) {
+			} else if (damageInfo.sourceSkill in LIMIT_BREAK_ACTIONS) {
 				const lbStr = localize({ en: "LB" }) as string;
 				info.push(lbStr + " (" + sourceStr + ")");
 			} else {
@@ -620,7 +620,7 @@ function drawSkills(
 				h: TimelineDimensions.skillButtonHeight / 2,
 			});
 		}
-		if (skill.skillName in LIMIT_BREAK) {
+		if (skill.skillName in LIMIT_BREAK_ACTIONS) {
 			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
 			greyLockBars.push({
 				x: x + barsOffset,
@@ -731,7 +731,7 @@ function drawSkills(
 		lines.push(description);
 
 		// 2. potency
-		if (node.getInitialPotency() && !((node.skillName ?? "NEVER") in LIMIT_BREAK)) {
+		if (node.getInitialPotency() && !((node.skillName ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
 			const potency = node.getPotency({
 				tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 				includePartyBuffs: true,

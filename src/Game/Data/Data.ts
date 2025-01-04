@@ -1,10 +1,16 @@
-import { ActionKey, Actions, ACTIONS } from "./Actions";
-import { Action } from "./Actions/type";
-import { CooldownKey, Cooldowns, COOLDOWNS } from "./Cooldowns";
-import { Cooldown } from "./Cooldowns/type";
-import { Job, JOBS, ShellJob } from "./Jobs";
-import { ResourceKey, Resources, RESOURCES } from "./Resources";
-import { Resource } from "./Resources/type";
+import {
+	Actions,
+	Resources,
+	Cooldowns,
+	ActionKey,
+	ACTIONS,
+	ResourceKey,
+	RESOURCES,
+	CooldownKey,
+	COOLDOWNS,
+} from ".";
+import { ShellJob, Job, JOBS } from "./Jobs";
+import { Action, Resource, Cooldown } from "./types";
 
 type DataTypes = Actions | Resources | Cooldowns;
 

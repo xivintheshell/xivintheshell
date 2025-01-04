@@ -4,12 +4,9 @@ import { PlayerState, GameState } from "./GameState";
 import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
 import { PotencyModifier } from "./Potency";
 import { ShellJob, ALL_JOBS } from "./Data/Jobs";
-import { TraitKey } from "./Data/Traits";
-import { ActionKey, ACTIONS } from "./Data/Actions";
-import { LimitBreakActionKey } from "./Data/Actions/Shared/LimitBreak";
+import { ActionKey, ACTIONS, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
+import { LimitBreakActionKey } from "./Data/Shared/LimitBreak";
 import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
-import { CooldownKey } from "./Data/Cooldowns";
-import { ResourceKey, RESOURCES } from "./Data/Resources";
 import { Data } from "./Data/Data";
 
 // all gapclosers have the same animation lock

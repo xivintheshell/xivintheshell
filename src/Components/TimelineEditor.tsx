@@ -5,7 +5,7 @@ import { StaticFn } from "./Common";
 import { localize, localizeSkillName } from "./Localization";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
 import { Columns } from "./Common";
-import { ACTIONS } from "../Game/Data/Actions";
+import { ACTIONS } from "../Game/Data";
 
 export let refreshTimelineEditor = () => {};
 

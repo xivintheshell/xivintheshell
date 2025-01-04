@@ -40,11 +40,8 @@ import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";
 import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS } from "./Data/Jobs";
-import { TraitKey } from "./Data/Traits";
-import { ActionKey } from "./Data/Actions";
+import { ActionKey, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
 import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
-import { CooldownKey } from "./Data/Cooldowns";
-import { ResourceKey, RESOURCES } from "./Data/Resources";
 import { StatusPropsGenerator } from "../Components/StatusDisplay";
 
 //https://www.npmjs.com/package/seedrandom

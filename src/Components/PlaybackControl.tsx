@@ -33,8 +33,7 @@ import {
 	ALL_JOBS,
 	IMPLEMENTATION_LEVELS,
 } from "../Game/Data/Jobs";
-import { ResourceKey } from "../Game/Data/Resources";
-import { CooldownKey } from "../Game/Data/Cooldowns";
+import { ResourceKey, CooldownKey } from "../Game/Data";
 
 export let updateConfigDisplay = (config: SerializedConfig) => {};
 

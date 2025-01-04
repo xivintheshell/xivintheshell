@@ -11,8 +11,8 @@ import {
 import { PCTState } from "../../Game/Jobs/PCT";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
-import { PCT_STATUSES, PCTResourceKey } from "../../Game/Data/Resources/Jobs/PCT";
-import { ResourceKey, RESOURCES } from "../../Game/Data/Resources";
+import { ResourceKey, RESOURCES } from "../../Game/Data";
+import { PCT_STATUSES, PCTResourceKey } from "../../Game/Data/Jobs/PCT";
 
 (Object.keys(PCT_STATUSES) as ResourceKey[]).forEach((buff) =>
 	registerBuffIcon(buff, `PCT/${RESOURCES[buff].name}.png`),

@@ -1,8 +1,7 @@
 import { ReactNode } from "react";
 import { localize } from "../../Components/Localization";
 import { ensureRecord } from "../../Utilities/ensureRecord";
-import { LimitBreakActionKey } from "./Actions/Shared/LimitBreak";
-import { LimitBreakResourceKey } from "./Resources/Shared/LimitBreak";
+import { LimitBreakActionKey, LimitBreakResourceKey } from "./Shared/LimitBreak";
 
 /**
  * Description of how well supported a job is:

@@ -11,7 +11,7 @@ import { controller } from "../Controller/Controller";
 import { PotencyModifierType } from "../Game/Potency";
 import { ProcMode } from "../Game/Common";
 import { BRDState } from "../Game/Jobs/BRD";
-import { ActionKey } from "../Game/Data/Actions";
+import { ActionKey } from "../Game/Data";
 
 beforeEach(rotationTestSetup);
 

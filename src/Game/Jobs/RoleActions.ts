@@ -12,7 +12,7 @@ import { makeAbility, makeLimitBreak, makeResourceAbility, makeSpell } from "../
 import { DoTBuff, EventTag, makeResource } from "../Resources";
 import type { GameState } from "../GameState";
 import { controller } from "../../Controller/Controller";
-import { LIMIT_BREAK, LimitBreakResourceKey } from "../Data/Resources/Shared/LimitBreak";
+import { LIMIT_BREAK_RESOURCES, LimitBreakResourceKey } from "../Data/Shared/LimitBreak";
 
 //#region Helper functions
 
@@ -257,7 +257,7 @@ makeLimitBreak(TANK_JOBS, "SHIELD_WALL", "cd_TANK_LB1", {
 	animationLock: 1.93,
 	onApplication: (state) => {
 		// Realistically this is only possible if you're fooling around in Explorer mode but still
-		Object.keys(LIMIT_BREAK).forEach((rscType) =>
+		Object.keys(LIMIT_BREAK_RESOURCES).forEach((rscType) =>
 			state.tryConsumeResource(rscType as LimitBreakResourceKey),
 		);
 		state.gainStatus("SHIELD_WALL");
@@ -268,7 +268,7 @@ makeLimitBreak(TANK_JOBS, "STRONGHOLD", "cd_TANK_LB2", {
 	applicationDelay: 0.89,
 	animationLock: 3.86,
 	onApplication: (state) => {
-		Object.keys(LIMIT_BREAK).forEach((rscType) =>
+		Object.keys(LIMIT_BREAK_RESOURCES).forEach((rscType) =>
 			state.tryConsumeResource(rscType as LimitBreakResourceKey),
 		);
 		state.gainStatus("STRONGHOLD");
@@ -286,7 +286,7 @@ TANK_JOBS.forEach((job) => {
 		applicationDelay: 1.34,
 		animationLock: 3.86,
 		onApplication: (state) => {
-			Object.keys(LIMIT_BREAK).forEach((rscType) =>
+			Object.keys(LIMIT_BREAK_RESOURCES).forEach((rscType) =>
 				state.tryConsumeResource(rscType as LimitBreakResourceKey),
 			);
 			state.gainStatus(buff);

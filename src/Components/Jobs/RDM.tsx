@@ -9,8 +9,8 @@ import {
 import { RDMState } from "../../Game/Jobs/RDM";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
-import { RDM_STATUSES } from "../../Game/Data/Resources/Jobs/RDM";
-import { ResourceKey, RESOURCES } from "../../Game/Data/Resources";
+import { ResourceKey, RESOURCES } from "../../Game/Data";
+import { RDM_STATUSES } from "../../Game/Data/Jobs/RDM";
 
 (Object.keys(RDM_STATUSES) as ResourceKey[]).forEach((buff) =>
 	registerBuffIcon(buff, `RDM/${RESOURCES[buff].name}.png`),

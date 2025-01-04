@@ -3,8 +3,7 @@ import { BuffType, SkillReadyStatus } from "../Game/Common";
 import { GameConfig } from "../Game/GameConfig";
 import { Potency } from "../Game/Potency";
 import { controller } from "./Controller";
-import { ActionKey, ACTIONS } from "../Game/Data/Actions";
-import { ResourceKey } from "../Game/Data/Resources";
+import { ActionKey, ACTIONS, ResourceKey } from "../Game/Data";
 
 export const enum ActionType {
 	Skill = "Skill",

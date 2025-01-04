@@ -5,9 +5,9 @@ import { controller } from "../Controller/Controller";
 import { localize, localizeResourceType } from "./Localization";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { JOBS } from "../Game/Data/Jobs";
-import { ResourceKey, RESOURCES } from "../Game/Data/Resources";
-import { ROLE } from "../Game/Data/Resources/Shared/Role";
-import { LIMIT_BREAK } from "../Game/Data/Resources/Shared/LimitBreak";
+import { ResourceKey, RESOURCES } from "../Game/Data";
+import { ROLE_RESOURCES } from "../Game/Data/Shared/Role";
+import { LIMIT_BREAK_RESOURCES } from "../Game/Data/Shared/LimitBreak";
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean;
@@ -345,13 +345,13 @@ export function registerBuffIcon(buff: ResourceKey, relativePath: string) {
 }
 
 // role buffs are registered here; job buffs should be registered in the job's respective file
-Object.keys(ROLE).forEach((buff) => {
+Object.keys(ROLE_RESOURCES).forEach((buff) => {
 	const iconName = RESOURCES[buff as ResourceKey].name;
 	buffIcons.set(buff, require(`./Asset/Buffs/Role/${iconName}.png`));
 });
 
 // Tank LBs share the same buff icon
-Object.keys(LIMIT_BREAK).forEach((rscType) =>
+Object.keys(LIMIT_BREAK_RESOURCES).forEach((rscType) =>
 	buffIcons.set(rscType, require("./Asset/Buffs/Role/Tank Limit Break.png")),
 );
 

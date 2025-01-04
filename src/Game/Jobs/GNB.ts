@@ -25,13 +25,10 @@ import { GameState, PlayerState } from "../GameState";
 import { makeResource, CoolDown, Event, Resource } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
-import { TraitKey } from "../Data/Traits";
-import { ActionKey } from "../Data/Actions";
-import { GNBResourceKey } from "../Data/Resources/Jobs/GNB";
-import { ResourceKey } from "../Data/Resources";
-import { CooldownKey } from "../Data/Cooldowns";
 import { GNBStatusPropsGenerator } from "../../Components/Jobs/GNB";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
+import { ActionKey, CooldownKey, ResourceKey, TraitKey } from "../Data";
+import { GNBResourceKey } from "../Data/Jobs/GNB";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 const makeGNBResource = (

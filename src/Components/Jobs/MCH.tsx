@@ -1,5 +1,5 @@
-import { ResourceKey, RESOURCES } from "../../Game/Data/Resources";
-import { MCH_STATUSES, MCHResourceKey } from "../../Game/Data/Resources/Jobs/MCH";
+import { ResourceKey, RESOURCES } from "../../Game/Data";
+import { MCH_STATUSES, MCHResourceKey } from "../../Game/Data/Jobs/MCH";
 import { MCHState } from "../../Game/Jobs/MCH";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";

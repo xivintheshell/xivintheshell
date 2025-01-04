@@ -10,7 +10,7 @@ import { controller } from "../Controller/Controller";
 import { PotencyModifierType } from "../Game/Potency";
 import { XIVMath } from "../Game/XIVMath";
 import { SAMState } from "../Game/Jobs/SAM";
-import { ActionKey } from "../Game/Data/Actions";
+import { ActionKey } from "../Game/Data";
 
 beforeEach(rotationTestSetup);
 

@@ -28,7 +28,7 @@ import { controller } from "../Controller/Controller";
 import { PotencyModifierType } from "../Game/Potency";
 import { BLMState } from "../Game/Jobs/BLM";
 import { getResourceInfo, ResourceInfo } from "../Game/Resources";
-import { ActionKey } from "../Game/Data/Actions";
+import { ActionKey } from "../Game/Data";
 
 beforeEach(rotationTestSetup);
 
@@ -498,55 +498,57 @@ it(
 	"accepts the basic nonstandard AoE rotation",
 	testWithConfig({}, () => {
 		const targetCount = 3;
-		[
-			SkillName.HighBlizzard2, // enter enochian for testing purposes
-			SkillName.Freeze,
-			SkillName.HighThunder2,
-			SkillName.Transpose,
-			SkillName.Flare,
-			SkillName.Flare,
-			SkillName.FlareStar,
-		].forEach((skill) => applySkillMultiTarget(skill, targetCount));
+		(
+			[
+				"HIGH_BLIZZARD_II", // enter enochian for testing purposes
+				"FREEZE",
+				"HIGH_THUNDER_II",
+				"TRANSPOSE",
+				"FLARE",
+				"FLARE",
+				"FLARE_STAR",
+			] as ActionKey[]
+		).forEach((skill) => applySkillMultiTarget(skill, targetCount));
 		controller.step(4);
 		compareDamageTables([
 			{
-				skillName: SkillName.HighBlizzard2,
+				skillName: "HIGH_BLIZZARD_II",
 				displayedModifiers: [],
 				hitCount: 1,
 				targetCount,
 			},
 			{
-				skillName: SkillName.Freeze,
+				skillName: "FREEZE",
 				displayedModifiers: [PotencyModifierType.UI3],
 				hitCount: 1,
 				targetCount,
 			},
 			{
-				skillName: SkillName.HighThunder2,
+				skillName: "HIGH_THUNDER_II",
 				displayedModifiers: [],
 				hitCount: 1,
 				targetCount,
 			},
 			{
-				skillName: SkillName.Flare,
+				skillName: "FLARE",
 				displayedModifiers: [PotencyModifierType.AF1],
 				hitCount: 1,
 				targetCount,
 			},
 			{
-				skillName: SkillName.Flare,
+				skillName: "FLARE",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 1,
 				targetCount,
 			},
 			{
-				skillName: SkillName.FlareStar,
+				skillName: "FLARE_STAR",
 				displayedModifiers: [PotencyModifierType.AF3],
 				hitCount: 1,
 				targetCount,
 			},
 			{
-				skillName: SkillName.Transpose,
+				skillName: "TRANSPOSE",
 				displayedModifiers: [],
 				hitCount: 1,
 			},

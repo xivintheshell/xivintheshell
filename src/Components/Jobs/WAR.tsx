@@ -7,8 +7,8 @@ import {
 import { WARState } from "../../Game/Jobs/WAR";
 import { getCurrentThemeColors } from "../../Components/ColorTheme";
 import { localize } from "../../Components/Localization";
-import { WAR_STATUSES } from "../../Game/Data/Resources/Jobs/WAR";
-import { ResourceKey, RESOURCES } from "../../Game/Data/Resources";
+import { ResourceKey, RESOURCES } from "../../Game/Data";
+import { WAR_STATUSES } from "../../Game/Data/Jobs/WAR";
 
 (Object.keys(WAR_STATUSES) as ResourceKey[]).forEach((buff) =>
 	registerBuffIcon(buff, `WAR/${RESOURCES[buff].name}.png`),
