@@ -53,9 +53,8 @@ import {
 } from "./DamageStatistics";
 import { XIVMath } from "../Game/XIVMath";
 import { MELEE_JOBS, ShellJob } from "../Game/Data/Jobs";
-import { ActionKey, ACTIONS } from "../Game/Data/Actions";
-import { LIMIT_BREAK } from "../Game/Data/Actions/Shared/LimitBreak";
-import { ResourceKey, RESOURCES } from "../Game/Data/Resources";
+import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
+import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 import { getGameState } from "../Game/Jobs";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
@@ -1361,7 +1360,7 @@ class Controller {
 
 							"TEMPERA_GRASSA_POP",
 							"TEMPERA_COAT_POP",
-							...Object.keys(LIMIT_BREAK), // Exclude LBs from export
+							...Object.keys(LIMIT_BREAK_ACTIONS), // Exclude LBs from export
 						] as ActionKey[]
 					)
 						.map((key) => ACTIONS[key].name)

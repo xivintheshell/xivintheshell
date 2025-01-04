@@ -9,8 +9,8 @@ import {
 import { BLMState } from "../../Game/Jobs/BLM";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
-import { BLM_STATUSES, BLMResourceKey } from "../../Game/Data/Resources/Jobs/BLM";
-import { RESOURCES } from "../../Game/Data/Resources";
+import { RESOURCES } from "../../Game/Data";
+import { BLMResourceKey, BLM_STATUSES } from "../../Game/Data/Jobs/BLM";
 
 const BLM_DEBUFFS: BLMResourceKey[] = [
 	"THUNDER_III",

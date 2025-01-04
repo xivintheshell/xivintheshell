@@ -2,7 +2,7 @@ import { controller } from "../Controller/Controller";
 import { XIVMath } from "./XIVMath";
 import { Aspect, BuffType } from "./Common";
 import { GameConfig } from "./GameConfig";
-import { ActionKey } from "./Data/Actions";
+import { ActionKey } from "./Data";
 
 export const enum PotencyModifierType {
 	AF3,

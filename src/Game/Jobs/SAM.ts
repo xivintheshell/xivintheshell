@@ -26,12 +26,10 @@ import { makeResource, CoolDown, Event, EventTag } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { localizeResourceType } from "../../Components/Localization";
 import { ActionNode } from "../../Controller/Record";
-import { TraitKey } from "../Data/Traits";
-import { ActionKey } from "../Data/Actions";
-import { SAMResourceKey } from "../Data/Resources/Jobs/SAM";
-import { SAMCooldownKey } from "../Data/Cooldowns/Jobs/SAM";
+import { ActionKey, TraitKey } from "../Data";
 import { SAMStatusPropsGenerator } from "../../Components/Jobs/SAM";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
+import { SAMResourceKey, SAMCooldownKey } from "../Data/Jobs/SAM";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 const makeSAMResource = (rsc: SAMResourceKey, maxValue: number, params?: { timeout: number }) => {

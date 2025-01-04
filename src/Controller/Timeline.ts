@@ -10,8 +10,7 @@ import { Potency } from "../Game/Potency";
 import { MarkerColor } from "../Components/ColorTheme";
 import { TimelineDimensions } from "../Components/Common";
 import { ShellJob } from "../Game/Data/Jobs";
-import { ActionKey } from "../Game/Data/Actions";
-import { ResourceKey } from "../Game/Data/Resources";
+import { ActionKey, ResourceKey } from "../Game/Data";
 
 export const MAX_TIMELINE_SLOTS = 4;
 

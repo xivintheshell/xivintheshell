@@ -11,9 +11,8 @@ import {
 	DamageStatsDoTTableSummary,
 } from "../Components/DamageStatistics";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
-import { ActionKey } from "../Game/Data/Actions";
-import { LIMIT_BREAK } from "../Game/Data/Actions/Shared/LimitBreak";
-import { ResourceKey } from "../Game/Data/Resources";
+import { ActionKey, ResourceKey } from "../Game/Data";
+import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 
 // TODO autogenerate everything here
 
@@ -286,7 +285,11 @@ export function calculateSelectedStats(props: {
 	}
 
 	ctl.record.iterateSelected((node) => {
-		if (node.type === ActionType.Skill && node.skillName && !(node.skillName in LIMIT_BREAK)) {
+		if (
+			node.type === ActionType.Skill &&
+			node.skillName &&
+			!(node.skillName in LIMIT_BREAK_ACTIONS)
+		) {
 			const checked = getSkillOrDotInclude(node.skillName);
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
@@ -354,7 +357,7 @@ export function calculateDamageStats(props: {
 	const processNodeFn = (node: ActionNode) => {
 		if (node.type === ActionType.Skill && node.skillName) {
 			const checked = getSkillOrDotInclude(node.skillName);
-			const isLimitBreak = node.skillName in LIMIT_BREAK;
+			const isLimitBreak = node.skillName in LIMIT_BREAK_ACTIONS;
 
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);

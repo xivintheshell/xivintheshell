@@ -12,9 +12,8 @@ import {
 	updateSkillOrDoTInclude,
 } from "../Controller/DamageStatistics";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
-import { ActionKey } from "../Game/Data/Actions";
-import { LIMIT_BREAK } from "../Game/Data/Actions/Shared/LimitBreak";
-import { ResourceKey } from "../Game/Data/Resources";
+import { ActionKey, ResourceKey } from "../Game/Data";
+import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 
 export type DamageStatsMainTableEntry = {
 	skillName: ActionKey;
@@ -732,7 +731,7 @@ export class DamageStatistics extends React.Component {
 				"AUTOMATON_QUEEN",
 				"WILDFIRE",
 				// Limit Break potencies don't directly translate to player potency, so don't include it in the summary
-				...(Object.keys(LIMIT_BREAK) as ActionKey[]),
+				...(Object.keys(LIMIT_BREAK_ACTIONS) as ActionKey[]),
 			];
 			return hidePotencySkills.includes(skillName);
 		};
@@ -752,7 +751,11 @@ export class DamageStatistics extends React.Component {
 
 			// include checkbox
 			let includeCheckboxes: React.ReactNode[] = [];
-			if (!sameAsLast && props.row.basePotency > 0 && !(props.row.skillName in LIMIT_BREAK)) {
+			if (
+				!sameAsLast &&
+				props.row.basePotency > 0 &&
+				!(props.row.skillName in LIMIT_BREAK_ACTIONS)
+			) {
 				includeCheckboxes.push(
 					<input
 						key="main"
@@ -871,7 +874,7 @@ export class DamageStatistics extends React.Component {
 
 			// total potency
 			let totalPotencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.showPotency && !(props.row.skillName in LIMIT_BREAK)) {
+			if (props.row.showPotency && !(props.row.skillName in LIMIT_BREAK_ACTIONS)) {
 				totalPotencyNode = <span
 					style={{ textDecoration: includeInStats ? "none" : "line-through" }}
 				>

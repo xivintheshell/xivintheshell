@@ -26,13 +26,10 @@ import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, Resource, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
-import { TraitKey } from "../Data/Traits";
-import { RDMActionKey } from "../Data/Actions/Jobs/RDM";
-import { ActionKey } from "../Data/Actions";
-import { RDMResourceKey } from "../Data/Resources/Jobs/RDM";
-import { CooldownKey } from "../Data/Cooldowns";
+import { ActionKey, CooldownKey, TraitKey } from "../Data";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { RDMStatusPropsGenerator } from "../../Components/Jobs/RDM";
+import { RDMResourceKey, RDMActionKey } from "../Data/Jobs/RDM";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here

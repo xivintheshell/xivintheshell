@@ -1,5 +1,5 @@
-import { RESOURCES } from "../../Game/Data/Resources";
-import { BRD_STATUSES, BRDResourceKey } from "../../Game/Data/Resources/Jobs/BRD";
+import { RESOURCES } from "../../Game/Data";
+import { BRDResourceKey, BRD_STATUSES } from "../../Game/Data/Jobs/BRD";
 import { BRDState } from "../../Game/Jobs/BRD";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";

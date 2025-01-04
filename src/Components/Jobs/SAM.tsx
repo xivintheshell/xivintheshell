@@ -9,8 +9,8 @@ import {
 import { SAMState } from "../../Game/Jobs/SAM";
 import { getCurrentThemeColors } from "../../Components/ColorTheme";
 import { localize } from "../../Components/Localization";
-import { SAM_STATUSES } from "../../Game/Data/Resources/Jobs/SAM";
-import { ResourceKey, RESOURCES } from "../../Game/Data/Resources";
+import { ResourceKey, RESOURCES } from "../../Game/Data";
+import { SAM_STATUSES } from "../../Game/Data/Jobs/SAM";
 
 (Object.keys(SAM_STATUSES) as ResourceKey[]).forEach((buff) =>
 	registerBuffIcon(buff, `SAM/${RESOURCES[buff].name}.png`),

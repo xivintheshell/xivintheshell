@@ -10,7 +10,7 @@ import { updateTimelineView } from "./Timeline";
 import * as ReactDOMServer from "react-dom/server";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { getSkillAssetPath } from "../Game/Skills";
-import { ActionKey } from "../Game/Data/Actions";
+import { ActionKey, ACTIONS } from "../Game/Data";
 
 // Game/Jobs/* must be run first to ensure all skills have been registered, so we need to
 // load images lazily to ensure we're not dependent on webpack's module resolution order.
@@ -451,7 +451,7 @@ class SkillButton extends React.Component {
 			{stacksOverlay}
 		</div>;
 		return <span
-			title={this.props.skillName}
+			title={ACTIONS[this.props.skillName].name}
 			className={"skillButton"}
 			data-tooltip-offset={3}
 			data-tooltip-html={ReactDOMServer.renderToStaticMarkup(this.state.skillDescription)}

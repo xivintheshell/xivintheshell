@@ -30,11 +30,9 @@ import {
 } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { localize } from "../../Components/Localization";
-import { BLMActionKey } from "../Data/Actions/Jobs/BLM";
-import { BLMResourceKey } from "../Data/Resources/Jobs/BLM";
-import { BLMCooldownKey } from "../Data/Cooldowns/Jobs/BLM";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { BLMStatusPropsGenerator } from "../../Components/Jobs/BLM";
+import { BLMResourceKey, BLMActionKey, BLMCooldownKey } from "../Data/Jobs/BLM";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here

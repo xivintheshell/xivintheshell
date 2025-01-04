@@ -10,7 +10,7 @@ import { controller } from "../Controller/Controller";
 import { PotencyModifierType } from "../Game/Potency";
 import { Debug } from "../Game/Common";
 import { WARState } from "../Game/Jobs/WAR";
-import { ActionKey } from "../Game/Data/Actions";
+import { ActionKey } from "../Game/Data";
 
 beforeEach(rotationTestSetup);
 
