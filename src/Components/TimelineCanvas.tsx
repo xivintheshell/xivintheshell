@@ -651,7 +651,6 @@ function drawSkills(
 	});
 
 	// target counts
-	// TODO set color and heighten timeline
 	g_ctx.font = "13px monospace";
 	g_ctx.fillStyle = g_colors.text;
 	g_ctx.textAlign = "center";

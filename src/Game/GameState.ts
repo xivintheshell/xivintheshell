@@ -1047,6 +1047,7 @@ export abstract class GameState {
 				description:
 					localizeResourceType(props.dotName) + " DoT " + (i + 1) + `/${dotTicks}`,
 				targetCount: props.node.targetCount,
+				falloff: 0, // assume all DoTs have no falloff
 			});
 			pDot.modifiers = [...mods, ...(props?.modifiers ?? [])];
 			props.node.addDoTPotency(pDot, props.dotName);
