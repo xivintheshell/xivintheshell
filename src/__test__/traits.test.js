@@ -1,4 +1,4 @@
-import { TRAITS } from "../Game/Data/Traits";
+import { TRAITS } from "../Game/Data";
 import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
 
 function GetTraits() {
