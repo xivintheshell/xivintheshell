@@ -1,5 +1,11 @@
 [
 	{
+		"date": "1/4/25",
+		"changes": [
+			"Added support for multi-target abilities"
+		]
+	},
+	{
 		"date": "1/3/25",
 		"changes": [
 			"[WAR][SAM][RPR] Removed testing tag"
