@@ -335,6 +335,7 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
 				kind: "bar",
 				name: localize({
 					en: "Esprit",
+					zh: "伶俐",
 				}),
 				color: colors.dnc.esprit,
 				progress: esprit / 100,
@@ -347,6 +348,7 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
 				kind: "counter",
 				name: localize({
 					en: "Feathers",
+					zh: "幻扇",
 				}),
 				color: colors.dnc.feathers,
 				currentStacks: feathers,
@@ -356,6 +358,7 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
 				kind: "dance",
 				name: localize({
 					en: "Standard",
+					zh: "标准舞步计数",
 				}),
 				maxStacks: 2,
 				currentStacks: standardSteps,
@@ -368,6 +371,7 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
 				kind: "dance",
 				name: localize({
 					en: "Technical",
+					zh: "技巧舞步计数",
 				}),
 				maxStacks: 4,
 				currentStacks: technicalSteps,
