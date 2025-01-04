@@ -97,7 +97,6 @@ export const MP_JOBS = [...HEALER_JOBS, ...CASTER_JOBS, ShellJob.PLD, ShellJob.D
 // that you're confident no major bugs remain in that job's implementation
 export const TESTING_JOBS = [
 	ShellJob.PLD,
-	ShellJob.WAR,
 	ShellJob.DRK,
 	ShellJob.GNB,
 	ShellJob.WHM,
@@ -107,8 +106,6 @@ export const TESTING_JOBS = [
 	ShellJob.MNK,
 	ShellJob.DRG,
 	ShellJob.NIN,
-	ShellJob.SAM,
-	ShellJob.RPR,
 	ShellJob.VPR,
 	ShellJob.BRD,
 	ShellJob.SMN,
