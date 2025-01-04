@@ -725,7 +725,7 @@ export class SkillsWindow extends React.Component {
 				<div style={{ margin: "10px 0" }}>
 					{localize({
 						en: "# of targets hit",
-						zh: "点击数量",
+						zh: "击中目标数",
 						// we don't want to change MAX_ABILITY_TARGETS to match each ability's properties
 						// to allow easy input of scenarios where a user swaps between single and multi-target
 						// abilities
