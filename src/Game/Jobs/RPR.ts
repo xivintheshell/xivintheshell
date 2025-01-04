@@ -11,7 +11,7 @@ import {
 	combineEffects,
 	combinePredicatesAnd,
 	ConditionalSkillReplace,
-	CooldownGroupProperies,
+	CooldownGroupProperties,
 	EffectFn,
 	FAKE_SKILL_ANIMATION_LOCK,
 	getBasePotency,
@@ -419,7 +419,7 @@ const makeRPRSpell = (
 		replaceIf?: ConditionalSkillReplace<RPRState>[];
 		startOnHotbar?: boolean;
 		potency: number | Array<[TraitName, number]>;
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 		aspect: Aspect;
 		castTime: number | ResourceCalculationFn<RPRState>;
 		recastTime: number;
@@ -474,7 +474,7 @@ const makeRPRWeaponskill = (
 			potency: number | Array<[TraitName, number]>;
 			location: "flank" | "rear";
 		};
-		secondaryCooldown?: CooldownGroupProperies;
+		secondaryCooldown?: CooldownGroupProperties;
 		aspect: Aspect;
 		recastTime: number | ResourceCalculationFn<RPRState>;
 		falloff?: number;

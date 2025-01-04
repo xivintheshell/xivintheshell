@@ -1,5 +1,23 @@
 [
 	{
+		"date": "1/3/25",
+		"changes": [
+			"[WAR][SAM][RPR] Removed testing tag"
+		]
+	},
+	{
+		"date": "1/1/25",
+		"changes": [
+			"Added combined English FRU tracks"
+		]
+	},
+	{
+		"date": "12/28/24",
+		"changes": [
+			"[PCT] Fixed warning for Palette Gauge overcap"
+		]
+	},
+	{
 		"date": "12/24/24",
 		"changes": [
 			"[MCH] Added support for Flamethrower"
