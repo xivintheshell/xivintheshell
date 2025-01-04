@@ -461,8 +461,24 @@ function drawDamageMarks(
 				const potencyAmount = damageInfo.potency.getAmount({
 					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 					includePartyBuffs: true,
+					includeSplash: false,
 				});
-				info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")");
+				// Push additional info for hits that splash
+				if (damageInfo.potency.targetCount > 1) {
+					for (let i = 0; i < damageInfo.potency.targetCount; i++) {
+						let potencyOnHit =
+							i === 0
+								? potencyAmount
+								: potencyAmount * (1 - (damageInfo.potency.falloff ?? 1));
+						const sourceStrForTarget = localize({
+							en: `${sourceStr}, target #${i + 1}`,
+							zh: `${sourceStr}, ${i + 1}号目标`,
+						});
+						info.push(potencyOnHit.toFixed(2) + " (" + sourceStrForTarget + ")");
+					}
+				} else {
+					info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")");
+				}
 				if (pot) buffImages.push(buffIconImages.get(BuffType.Tincture));
 
 				damageInfo.potency.getPartyBuffs().forEach((desc) => {
@@ -518,6 +534,7 @@ function drawSkills(
 	elems: SkillElem[],
 	interactive: boolean,
 ) {
+	let targetCounts: Array<{ count: number; x: number; y: number }> = [];
 	let greyLockBars: Rect[] = [];
 	let purpleLockBars: Rect[] = [];
 	let gcdBars: Rect[] = [];
@@ -561,6 +578,14 @@ function drawSkills(
 		let skill = e as SkillElem;
 		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(skill.displayTime, scale);
 		let y = skill.isGCD ? skillsTopY + TimelineDimensions.skillButtonHeight / 2 : skillsTopY;
+		// if there were multiple targets, draw the number of targets above the ability icon
+		if (skill.node.targetCount > 1) {
+			targetCounts.push({
+				count: skill.node.targetCount,
+				x: x + TimelineDimensions.skillButtonHeight / 2,
+				y: y - 5,
+			});
+		}
 		// offset the bar under skill button icon so it's completely invisible before the button
 		const barsOffset = 2;
 		// purple/grey bar
@@ -623,6 +648,14 @@ function drawSkills(
 		// skill icon
 		let img = getSkillIconImage(skill.skillName);
 		if (img) skillIcons.push({ elem: e, x: x, y: y });
+	});
+
+	// target counts
+	g_ctx.font = "13px monospace";
+	g_ctx.fillStyle = g_colors.text;
+	g_ctx.textAlign = "center";
+	targetCounts.forEach((c) => {
+		g_ctx.fillText("x" + c.count.toString(), c.x, c.y);
 	});
 
 	// purple
@@ -700,6 +733,7 @@ function drawSkills(
 			const potency = node.getPotency({
 				tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 				includePartyBuffs: true,
+				includeSplash: false,
 				untargetable: bossIsUntargetable,
 			}).applied;
 			lines.push(localize({ en: "potency: ", zh: "威力：" }) + potency.toFixed(2));

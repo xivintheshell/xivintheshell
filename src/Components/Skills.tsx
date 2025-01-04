@@ -2,6 +2,7 @@ import React, { FormEvent, FormEventHandler } from "react";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillName, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { controller } from "../Controller/Controller";
+import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import { ActionType } from "../Controller/Record";
 import { localize, localizeSkillName } from "./Localization";
@@ -191,6 +192,7 @@ type SkillButtonProps = {
 	readyAsideFromCd: boolean;
 	cdProgress: number;
 	secondaryCdProgress?: number;
+	targetCount: number;
 };
 
 class SkillButton extends React.Component {
@@ -458,7 +460,10 @@ class SkillButton extends React.Component {
 				onClickFn={
 					controller.displayingUpToDateGameState
 						? () => {
-								controller.requestUseSkill({ skillName: this.props.skillName });
+								controller.requestUseSkill({
+									skillName: this.props.skillName,
+									targetCount: this.props.targetCount,
+								});
 								controller.updateAllDisplay();
 							}
 						: undefined
@@ -500,6 +505,7 @@ export class SkillsWindow extends React.Component {
 		waitTime: string;
 		waitSince: WaitSince;
 		waitUntil: string;
+		targetCount: number;
 	};
 
 	onWaitTimeChange: (e: ValueChangeEvent) => void;
@@ -507,6 +513,7 @@ export class SkillsWindow extends React.Component {
 	onWaitUntilChange: (e: ValueChangeEvent) => void;
 	onWaitUntilSubmit: FormEventHandler<HTMLFormElement>;
 	onWaitSinceChange: (e: ValueChangeEvent) => void;
+	onTargetCountChange: (e: ValueChangeEvent) => void;
 	onRemoveTrailingIdleTime: () => void;
 	onWaitTillNextMpOrLucidTick: () => void;
 
@@ -580,6 +587,10 @@ export class SkillsWindow extends React.Component {
 			this.setState({ waitSince: e.target.value });
 		};
 
+		this.onTargetCountChange = (e: ValueChangeEvent) => {
+			this.setState({ targetCount: parseInt(e.target.value) });
+		};
+
 		this.onRemoveTrailingIdleTime = () => {
 			controller.removeTrailingIdleTime();
 		};
@@ -593,6 +604,7 @@ export class SkillsWindow extends React.Component {
 			waitTime: "1",
 			waitSince: WaitSince.Now,
 			waitUntil: "0:00",
+			targetCount: 1,
 		};
 	}
 
@@ -621,6 +633,7 @@ export class SkillsWindow extends React.Component {
 							: 1
 						: 1
 				}
+				targetCount={this.state.targetCount}
 			/>;
 			skillButtons.push(btn);
 		}
@@ -658,6 +671,36 @@ export class SkillsWindow extends React.Component {
 			background: "transparent",
 			color: colors.text,
 		};
+
+		const targetCountHelp = <Help
+			topic="targetCount"
+			content={localize({
+				en: <>
+					<span>
+						The number of targets hit by the next ability. Damage fall-off is
+						automatically computed. If the number of targets set is more than the number
+						of enemies the ability can hit, then the additional targets are ignored.
+					</span>
+					<br />
+					<br />
+					<span>
+						Buff calculations for enemy debuffs like Dokumori and Chain Stratagem may be
+						inaccurate when multiple targets are selected.
+					</span>
+				</>,
+				zh: <div>
+					<span>
+						{"下一个技能击中的目标数。会自动计算对主目标之外敌人的伤害衰减。" +
+							"如果在此设置的敌人数量超过技能的生效敌人数上限（例：给对单技能设置2或更多目标数），多余的目标会被忽略。"}
+					</span>
+					<br />
+					<br />
+					<span>
+						注：介毒之术、连环计等作用于目标的团辅可能会使多目标技能威力计算出现误差。
+					</span>
+				</div>,
+			})}
+		/>;
 		return <div className={"skillsWindow"}>
 			<div className={"skillIcons"}>
 				<style>{`
@@ -680,6 +723,25 @@ export class SkillsWindow extends React.Component {
 					classNameArrow={"info-tooltip-arrow"}
 				/>
 				<div style={{ margin: "10px 0" }}>
+					{localize({
+						en: "# of targets hit",
+						zh: "击中目标数",
+						// we don't want to change MAX_ABILITY_TARGETS to match each ability's properties
+						// to allow easy input of scenarios where a user swaps between single and multi-target
+						// abilities
+					})}{" "}
+					{targetCountHelp}:{" "}
+					<input
+						type={"number"}
+						min={1}
+						max={MAX_ABILITY_TARGETS}
+						style={{
+							width: 30,
+							...textInputFieldStyle,
+						}}
+						value={this.state.targetCount}
+						onChange={this.onTargetCountChange}
+					/>
 					<div style={{ display: "flex", flexDirection: "row", marginBottom: 6 }}>
 						{localize({
 							en: <form onSubmit={this.onWaitTimeSubmit} style={textInputStyle}>

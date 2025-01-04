@@ -586,6 +586,8 @@ export abstract class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
+				targetCount: node.targetCount,
+				falloff: skill.falloff,
 			});
 			node.addPotency(potency);
 		}
@@ -731,6 +733,8 @@ export abstract class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: this.getDisplayTime(),
 				description: "",
+				targetCount: node.targetCount,
+				falloff: skill.falloff,
 			});
 			const mods: PotencyModifier[] = [];
 			if (this.hasResourceAvailable(ResourceType.Tincture)) {
@@ -813,6 +817,8 @@ export abstract class GameState {
 				basePotency: potencyNumber,
 				snapshotTime: undefined,
 				description: "",
+				targetCount: node.targetCount,
+				falloff: skill.falloff,
 			});
 			node.addPotency(potency);
 		}
@@ -1040,6 +1046,8 @@ export abstract class GameState {
 				snapshotTime: this.getDisplayTime(),
 				description:
 					localizeResourceType(props.dotName) + " DoT " + (i + 1) + `/${dotTicks}`,
+				targetCount: props.node.targetCount,
+				falloff: 0, // assume all DoTs have no falloff
 			});
 			pDot.modifiers = [...mods, ...(props?.modifiers ?? [])];
 			props.node.addDoTPotency(pDot, props.dotName);
@@ -1201,6 +1209,11 @@ export abstract class GameState {
 		// Process skill execution effects regardless of skill kind
 		skill.onExecute(this, node);
 
+		// If there is no falloff field specified, then reset the node's targetCount to 1,
+		// ignoring whatever input the user gave
+		if (skill.falloff === undefined) {
+			node.targetCount = 1;
+		}
 		// Process the remainder of the skills effects dependent on the kind of skill
 		if (skill.kind === "spell" || skill.kind === "weaponskill") {
 			this.useSpellOrWeaponskill(skill, node);

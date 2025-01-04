@@ -218,6 +218,7 @@ const makeWeaponskill_WAR = (
 			resourceValue: number;
 		};
 		jobPotencyModifiers?: PotencyModifierFn<WARState>;
+		falloff?: number;
 		applicationDelay?: number;
 		animationLock?: number;
 		validateAttempt?: StatePredicate<WARState>;
@@ -291,6 +292,7 @@ const makeAbility_WAR = (
 		replaceIf?: ConditionalSkillReplace<WARState>[];
 		highlightIf?: StatePredicate<WARState>;
 		startOnHotbar?: boolean;
+		falloff?: number;
 		applicationDelay?: number;
 		animationLock?: number;
 		cooldown: number;
@@ -403,6 +405,7 @@ makeWeaponskill_WAR(SkillName.StormsEye, 50, {
 
 makeWeaponskill_WAR(SkillName.Overpower, 10, {
 	potency: 110,
+	falloff: 0,
 	applicationDelay: 0.62,
 });
 
@@ -413,6 +416,7 @@ makeWeaponskill_WAR(SkillName.MythrilTempest, 40, {
 		resource: WARTrackingType.TempestCombo,
 		resourceValue: 1,
 	},
+	falloff: 0,
 	applicationDelay: 0.49,
 	onConfirm: (state) => {
 		if (state.hasComboStatus(WARTrackingType.TempestCombo, 1)) {
@@ -464,6 +468,7 @@ makeWeaponskill_WAR(SkillName.FellCleave, 54, {
 
 makeWeaponskill_WAR(SkillName.Decimate, 60, {
 	potency: 180,
+	falloff: 0,
 	applicationDelay: 1.83,
 	validateAttempt: (state) => {
 		return (
@@ -519,6 +524,7 @@ makeAbility_WAR(SkillName.InnerRelease, 70, ResourceType.cd_InnerRelease, {
 makeWeaponskill_WAR(SkillName.PrimalRend, 90, {
 	potency: 700,
 	applicationDelay: 1.16,
+	falloff: 0.7,
 	animationLock: 1.2,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.PrimalRendReady),
 	onConfirm: (state) => {
@@ -542,6 +548,7 @@ makeWeaponskill_WAR(SkillName.PrimalRend, 90, {
 makeAbility_WAR(SkillName.PrimalWrath, 96, WARCooldownType.cd_PrimalWrath, {
 	startOnHotbar: false,
 	potency: 700,
+	falloff: 0.7,
 	applicationDelay: 1.15,
 	cooldown: 1.0,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Wrathful),
@@ -552,6 +559,7 @@ makeAbility_WAR(SkillName.PrimalWrath, 96, WARCooldownType.cd_PrimalWrath, {
 makeWeaponskill_WAR(SkillName.PrimalRuination, 100, {
 	startOnHotbar: false,
 	potency: 780,
+	falloff: 0.7,
 	applicationDelay: 1.06,
 	validateAttempt: (state) => {
 		return state.hasResourceAvailable(ResourceType.PrimalRuinationReady);
@@ -598,6 +606,7 @@ makeWeaponskill_WAR(SkillName.InnerChaos, 80, {
 makeWeaponskill_WAR(SkillName.ChaoticCyclone, 72, {
 	startOnHotbar: false,
 	potency: 300,
+	falloff: 0,
 	applicationDelay: 1.43,
 	validateAttempt: (state) => {
 		return (
@@ -630,6 +639,7 @@ makeAbility_WAR(WARSkillName.Upheaval, 64, WARCooldownType.cd_Upheaval, {
 
 makeAbility_WAR(WARSkillName.Orogeny, 86, WARCooldownType.cd_Upheaval, {
 	potency: 150,
+	falloff: 0,
 	applicationDelay: 0.62,
 	cooldown: 30,
 });
