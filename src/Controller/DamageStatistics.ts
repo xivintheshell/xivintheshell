@@ -37,6 +37,8 @@ export const DOT_SKILLS: SkillName[] = [
 	// BLM
 	SkillName.Thunder3,
 	SkillName.HighThunder,
+	SkillName.Thunder4,
+	SkillName.HighThunder2,
 	// SAM
 	SkillName.Higanbana,
 	// MCH
