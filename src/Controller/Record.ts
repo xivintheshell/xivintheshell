@@ -39,6 +39,7 @@ export class ActionNode {
 	applicationTime?: number;
 	#dotOverrideAmount: Map<ResourceType, number>;
 	#dotTimeGap: Map<ResourceType, number>;
+	targetCount: number = 1;
 
 	next?: ActionNode = undefined;
 
@@ -93,6 +94,10 @@ export class ActionNode {
 		return snapshotTime ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
 	}
 
+	setTargetCount(count: number) {
+		this.targetCount = count;
+	}
+
 	resolveAll(displayTime: number) {
 		if (this.#potency) {
 			this.#potency.resolve(displayTime);
@@ -117,6 +122,7 @@ export class ActionNode {
 		tincturePotencyMultiplier: number;
 		untargetable: (t: number) => boolean;
 		includePartyBuffs: boolean;
+		includeSplash: boolean;
 		excludeDoT?: boolean;
 	}) {
 		let res = {
@@ -143,6 +149,7 @@ export class ActionNode {
 			tincturePotencyMultiplier: number;
 			untargetable: (t: number) => boolean;
 			includePartyBuffs: boolean;
+			includeSplash: boolean;
 			excludeDoT?: boolean;
 		},
 		potency: Potency,
@@ -274,6 +281,7 @@ export class Line {
 				buffName: itr.buffName,
 				// any
 				waitDuration: itr.waitDuration,
+				targetCount: itr.targetCount,
 			});
 			itr = itr.next;
 		}

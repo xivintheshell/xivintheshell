@@ -108,8 +108,6 @@ class Controller {
 	shouldLoop;
 	tickMode;
 	lastAttemptedSkill;
-	skillMaxTimeInQueue;
-	skillsQueue: { skillName: SkillName; timeInQueue: number }[];
 	timeline;
 	#presetLinesManager;
 	gameConfig;
@@ -154,8 +152,6 @@ class Controller {
 		this.shouldLoop = false;
 		this.tickMode = TickMode.RealTimeAutoPause;
 		this.lastAttemptedSkill = "";
-		this.skillMaxTimeInQueue = 0.5;
-		this.skillsQueue = [];
 
 		this.timeline = new Timeline();
 		this.timeline.reset();
@@ -461,6 +457,7 @@ class Controller {
 			}
 			node.buffName = action.buffName;
 			node.waitDuration = action.waitDuration;
+			node.targetCount = action.targetCount ?? 1;
 			line.addActionNode(node);
 		}
 		let replayResult = this.#replay({ line: line, replayMode: ReplayMode.Exact });
@@ -702,7 +699,11 @@ class Controller {
 				time: this.game.getDisplayTime(),
 				damageSource: p.sourceSkill + "@" + p.sourceTime,
 				// tincture is applied when actually exporting for download.
-				potency: p.getAmount({ tincturePotencyMultiplier: 1, includePartyBuffs: true }),
+				potency: p.getAmount({
+					tincturePotencyMultiplier: 1,
+					includePartyBuffs: true,
+					includeSplash: true,
+				}),
 				buffs: pot ? [ResourceType.Tincture] : [],
 			});
 		}
@@ -952,7 +953,7 @@ class Controller {
 	}
 
 	getActiveJob(): ShellJob {
-		return this.getDisplayedGame().job;
+		return this.game.job;
 	}
 
 	getSkillInfo(props: { game: GameState; skillName: SkillName }) {
@@ -979,6 +980,7 @@ class Controller {
 
 	#useSkill(
 		skillName: SkillName,
+		targetCount: number,
 		bWaitFirst: boolean,
 		overrideTickMode: TickMode = this.tickMode,
 	) {
@@ -1005,6 +1007,7 @@ class Controller {
 			let node = new ActionNode(ActionType.Skill);
 			node.skillName = skillName;
 			node.waitDuration = 0;
+			node.targetCount = targetCount;
 			this.record.addActionNode(node);
 
 			this.game.useSkill(skillName, node);
@@ -1174,7 +1177,7 @@ class Controller {
 						this.gameConfig.level,
 					);
 				}
-				let status = this.#useSkill(skillName, waitFirst, TickMode.Manual);
+				let status = this.#useSkill(skillName, itr.targetCount, waitFirst, TickMode.Manual);
 
 				let bEditedTimelineShouldWaitAfterSkill =
 					currentReplayMode === ReplayMode.Edited &&
@@ -1548,12 +1551,12 @@ class Controller {
 		this.updateAllDisplay();
 	}
 
-	requestUseSkill(props: { skillName: SkillName }) {
+	requestUseSkill(props: { skillName: SkillName; targetCount: number }) {
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {
 			let waitFirst = props.skillName === this.lastAttemptedSkill;
-			let status = this.#useSkill(props.skillName, waitFirst);
+			let status = this.#useSkill(props.skillName, props.targetCount, waitFirst);
 			if (status.status.ready()) {
 				this.scrollToTime(this.game.time);
 				this.autoSave();
@@ -1598,34 +1601,9 @@ class Controller {
 				// start
 				// ...
 			}
+
 			let dt = ((time - prevTime) / 1000) * ctrl.timeScale;
-
-			// update (skills queue)
-			// dequeue skills at the start of each frame - if the skill is actually ready before the last frame is finished,
-			// will leave a small gap between skills... OOF
-
-			// tick until (1) dt, or (2) exactly when the last skill is finished, whichever comes first
-			// if (2), dequeue the next skill if there is one, then tick the rest of dt
-
-			let tryDequeueSkill = () => {
-				let numSkillsProcessed = 0;
-				for (let i = 0; i < ctrl.skillsQueue.length; i++) {
-					let status = ctrl.#useSkill(ctrl.skillsQueue[i].skillName, true);
-					if (status.status.ready()) {
-						ctrl.scrollToTime(ctrl.game.time);
-						ctrl.autoSave();
-					}
-					ctrl.skillsQueue[i].timeInQueue += dt;
-					if (ctrl.skillsQueue[i].timeInQueue >= ctrl.skillMaxTimeInQueue) {
-						numSkillsProcessed++;
-					}
-				}
-				ctrl.skillsQueue.splice(0, numSkillsProcessed);
-			};
-
-			tryDequeueSkill();
-
-			// advance by dt, but potentially dequeue another skill in between
+			// advance by dt
 			let timeTillAnySkillAvailable = ctrl.game.timeTillAnySkillAvailable();
 			if (timeTillAnySkillAvailable >= dt) {
 				ctrl.#requestTick({
@@ -1643,7 +1621,6 @@ class Controller {
 						return !loopCondition();
 					},
 				});
-				tryDequeueSkill(); // potentially sandwich another skill here
 				ctrl.#requestTick({
 					deltaTime: dt - timeTillAnySkillAvailable,
 					separateNode: false,

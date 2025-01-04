@@ -320,6 +320,7 @@ const makeWeaponskill_MCH = (
 			resourceValue: number;
 		};
 		recastTime: number | ResourceCalculationFn<MCHState>;
+		falloff?: number;
 		applicationDelay?: number;
 		validateAttempt?: StatePredicate<MCHState>;
 		onConfirm?: EffectFn<MCHState>;
@@ -389,6 +390,7 @@ const makeAbility_MCH = (
 		replaceIf?: ConditionalSkillReplace<MCHState>[];
 		highlightIf?: StatePredicate<MCHState>;
 		startOnHotbar?: boolean;
+		falloff?: number;
 		applicationDelay?: number;
 		cooldown: number;
 		maxCharges?: number;
@@ -543,6 +545,7 @@ makeWeaponskill_MCH(SkillName.Chainsaw, 90, {
 		},
 	],
 	potency: 600,
+	falloff: 0.65,
 	applicationDelay: 1.03,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => {
@@ -560,6 +563,7 @@ makeWeaponskill_MCH(SkillName.Chainsaw, 90, {
 makeWeaponskill_MCH(SkillName.Excavator, 90, {
 	startOnHotbar: false,
 	potency: 600,
+	falloff: 0.65,
 	applicationDelay: 1.07,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => {
@@ -591,6 +595,7 @@ makeAbility_MCH(SkillName.BarrelStabilizer, 66, ResourceType.cd_BarrelStabilizer
 makeWeaponskill_MCH(SkillName.FullMetalField, 100, {
 	startOnHotbar: false,
 	potency: 900,
+	falloff: 0.5,
 	applicationDelay: 1.02,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.FullMetalMachinist),
@@ -640,6 +645,7 @@ makeAbility_MCH(SkillName.Wildfire, 45, ResourceType.cd_Wildfire, {
 			basePotency: 0, // We'll determine how much potency this deals when it expires
 			snapshotTime: state.getDisplayTime(),
 			description: "wildfire",
+			targetCount: 1,
 		});
 		wildFirePotency.modifiers = [Modifiers.NoCDH]; // Wildfire can neither crit nor direct hit
 		if (state.hasResourceAvailable(ResourceType.Tincture)) {
@@ -697,6 +703,7 @@ makeAbility_MCH(SkillName.GaussRound, 15, ResourceType.cd_DoubleCheck, {
 makeAbility_MCH(SkillName.DoubleCheck, 92, ResourceType.cd_DoubleCheck, {
 	startOnHotbar: false,
 	potency: 170,
+	falloff: 0.5,
 	applicationDelay: 0.71,
 	cooldown: 30,
 	maxCharges: 3,
@@ -708,6 +715,7 @@ makeAbility_MCH(SkillName.Ricochet, 50, ResourceType.cd_Checkmate, {
 		otherSkill: SkillName.Checkmate,
 	},
 	potency: 130,
+	falloff: 0.5,
 	applicationDelay: 0.71,
 	cooldown: 30,
 	maxCharges: 3,
@@ -715,6 +723,7 @@ makeAbility_MCH(SkillName.Ricochet, 50, ResourceType.cd_Checkmate, {
 makeAbility_MCH(SkillName.Checkmate, 92, ResourceType.cd_Checkmate, {
 	startOnHotbar: false,
 	potency: 170,
+	falloff: 0.5,
 	applicationDelay: 0.71,
 	cooldown: 30,
 	maxCharges: 3,
@@ -789,6 +798,7 @@ robotSummons.forEach((params) => {
 						description: "",
 						basePotency,
 						snapshotTime: undefined,
+						targetCount: node.targetCount,
 					}),
 					ResourceType.Queen,
 				);
@@ -812,6 +822,7 @@ robotSummons.forEach((params) => {
 					description: "",
 					basePotency,
 					snapshotTime: undefined,
+					targetCount: node.targetCount,
 				}),
 				ResourceType.Queen,
 			);
@@ -826,6 +837,7 @@ robotSummons.forEach((params) => {
 						description: "",
 						basePotency: state.calculateQueenPotency(390, 780),
 						snapshotTime: undefined,
+						targetCount: node.targetCount,
 					}),
 					ResourceType.Queen,
 				);
@@ -879,6 +891,7 @@ makeWeaponskill_MCH(SkillName.SpreadShot, 18, {
 		otherSkill: SkillName.Scattergun,
 	},
 	potency: 140,
+	falloff: 0,
 	applicationDelay: 0.8,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 5),
@@ -889,6 +902,7 @@ makeWeaponskill_MCH(SkillName.Scattergun, 82, {
 		[TraitName.Never, 140],
 		[TraitName.MarksmansMasteryII, 160],
 	],
+	falloff: 0,
 	applicationDelay: 1.15,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => state.gainResource(ResourceType.HeatGauge, 10),
@@ -896,6 +910,7 @@ makeWeaponskill_MCH(SkillName.Scattergun, 82, {
 
 makeWeaponskill_MCH(SkillName.Bioblaster, 58, {
 	potency: 50,
+	falloff: 0,
 	applicationDelay: 0.97,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	secondaryCooldown: {
@@ -919,6 +934,7 @@ makeWeaponskill_MCH(SkillName.AutoCrossbow, 52, {
 		[TraitName.Never, 140],
 		[TraitName.MarksmansMasteryII, 160],
 	],
+	falloff: 0,
 	applicationDelay: 0.89,
 	recastTime: 1.5,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Overheated),
@@ -928,6 +944,7 @@ makeWeaponskill_MCH(SkillName.AutoCrossbow, 52, {
 makeWeaponskill_MCH(SkillName.Flamethrower, 70, {
 	applicationDelay: 0.89,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0,
 	onConfirm: (state, node) => {
 		state.addDoTPotencies({
 			node,

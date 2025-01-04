@@ -51,8 +51,11 @@ const excludedFromStats = new Set<SkillName | "DoT">([]);
 
 type ExpandedNode = {
 	displayedModifiers: PotencyModifierType[];
+	// base potency on a single target
 	basePotency: number;
 	calculationModifiers: PotencyModifier[];
+	falloff: number;
+	targetCount: number;
 };
 
 export const bossIsUntargetable = (displayTime: number) => {
@@ -90,6 +93,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: Actio
 		potencyWithoutPot: 0,
 		potPotency: 0,
 		partyBuffPotency: 0,
+		targetCount: node.targetCount,
 	};
 
 	entry.gap = node.getDotTimeGap(dotName);
@@ -119,18 +123,21 @@ function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: Actio
 		tincturePotencyMultiplier: 1,
 		includePartyBuffs: false,
 		untargetable: bossIsUntargetable,
+		includeSplash: false,
 	}).applied;
 
 	let potencyWithPot = node.getPotency({
 		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 		includePartyBuffs: false,
 		untargetable: bossIsUntargetable,
+		includeSplash: false,
 	}).applied;
 
 	let potencyWithPartyBuffs = node.getPotency({
 		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 		includePartyBuffs: true,
 		untargetable: bossIsUntargetable,
+		includeSplash: false,
 	}).applied;
 
 	entry.potencyWithoutPot = potencyWithoutPot;
@@ -145,45 +152,51 @@ function expandNode(node: ActionNode): ExpandedNode {
 		basePotency: 0,
 		displayedModifiers: [],
 		calculationModifiers: [],
+		falloff: 1,
+		targetCount: 1,
 	};
 	if (node.type === ActionType.Skill && node.skillName) {
 		const mainPotency = node.getInitialPotency();
 		if (!mainPotency) {
 			// do nothing if the used ability does no damage
-		} else if (AFUISkills.has(node.skillName)) {
-			// for AF/UI skills, display the first modifier that's not enochian or pot
-			// (must be one of af123, ui123)
-			res.basePotency = mainPotency.base;
-			res.calculationModifiers = mainPotency.modifiers;
-			for (const modifier of mainPotency.modifiers) {
-				const tag = modifier.source;
-				if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
-					res.displayedModifiers.push(tag);
-					break;
-				}
-			}
-		} else if (enoSkills.has(node.skillName)) {
-			// for foul/xeno/para, display enochian modifier if it has one. Otherwise empty.
-			for (const modifier of mainPotency.modifiers) {
-				const tag = modifier.source;
-				if (tag === PotencyModifierType.ENO) {
-					res.basePotency = mainPotency.base;
-					res.displayedModifiers = [tag];
-					res.calculationModifiers = mainPotency.modifiers;
-					break;
-				}
-			}
-		} else if (isDoTNode(node)) {
-			// dot modifiers are handled separately
-			res.basePotency = mainPotency.base;
 		} else {
-			// for non-BLM jobs, display all non-pot modifiers on all damaging skills
-			res.basePotency = mainPotency.base;
-			for (const modifier of mainPotency.modifiers) {
-				const tag = modifier.source;
-				if (tag !== PotencyModifierType.POT && tag !== PotencyModifierType.NO_CDH) {
-					res.displayedModifiers.push(tag);
-					res.calculationModifiers.push(modifier);
+			res.targetCount = node.targetCount;
+			res.falloff = mainPotency.falloff ?? 1;
+			if (AFUISkills.has(node.skillName)) {
+				// for AF/UI skills, display the first modifier that's not enochian or pot
+				// (must be one of af123, ui123)
+				res.basePotency = mainPotency.base;
+				res.calculationModifiers = mainPotency.modifiers;
+				for (const modifier of mainPotency.modifiers) {
+					const tag = modifier.source;
+					if (tag !== PotencyModifierType.ENO && tag !== PotencyModifierType.POT) {
+						res.displayedModifiers.push(tag);
+						break;
+					}
+				}
+			} else if (enoSkills.has(node.skillName)) {
+				// for foul/xeno/para, display enochian modifier if it has one. Otherwise empty.
+				for (const modifier of mainPotency.modifiers) {
+					const tag = modifier.source;
+					if (tag === PotencyModifierType.ENO) {
+						res.basePotency = mainPotency.base;
+						res.displayedModifiers = [tag];
+						res.calculationModifiers = mainPotency.modifiers;
+						break;
+					}
+				}
+			} else if (isDoTNode(node)) {
+				// dot modifiers are handled separately
+				res.basePotency = mainPotency.base;
+			} else {
+				// for non-BLM jobs, display all non-pot modifiers on all damaging skills
+				res.basePotency = mainPotency.base;
+				for (const modifier of mainPotency.modifiers) {
+					const tag = modifier.source;
+					if (tag !== PotencyModifierType.POT && tag !== PotencyModifierType.NO_CDH) {
+						res.displayedModifiers.push(tag);
+						res.calculationModifiers.push(modifier);
+					}
 				}
 			}
 		}
@@ -212,7 +225,8 @@ function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 	for (let i = 0; i < table.length; i++) {
 		if (
 			node.skillName === table[i].skillName &&
-			tagsAreEqual(expanded.displayedModifiers, table[i].displayedModifiers)
+			tagsAreEqual(expanded.displayedModifiers, table[i].displayedModifiers) &&
+			node.targetCount === table[i].targetCount
 		) {
 			res.mainTableIndex = i;
 			return res;
@@ -301,6 +315,7 @@ export function calculateSelectedStats(props: {
 				untargetable: bossIsUntargetable,
 				includePartyBuffs: true,
 				excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+				includeSplash: true,
 			});
 			if (checked) {
 				selected.potency.applied += p.applied;
@@ -345,6 +360,7 @@ export function calculateDamageStats(props: {
 		totalPotencyWithoutPot: 0,
 		totalPotPotency: 0,
 		totalPartyBuffPotency: 0,
+		targetCount: 0,
 	};
 
 	const dotTables: Map<ResourceType, DamageStatsDoTTrackingData> = new Map();
@@ -370,6 +386,7 @@ export function calculateDamageStats(props: {
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
 				includePartyBuffs: true,
+				includeSplash: true,
 				excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
 			});
 			if (checked && !LIMIT_BREAKS.includes(node.skillName)) {
@@ -396,6 +413,8 @@ export function calculateDamageStats(props: {
 						potPotency: 0,
 						potCount: 0,
 						partyBuffPotency: 0,
+						falloff: q.expandedNode.falloff,
+						targetCount: q.expandedNode.targetCount,
 					});
 					q.mainTableIndex = mainTable.length - 1;
 				}
@@ -416,6 +435,7 @@ export function calculateDamageStats(props: {
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: false,
 					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+					includeSplash: true,
 				}).applied;
 
 				let potencyWithPot = node.getPotency({
@@ -423,6 +443,7 @@ export function calculateDamageStats(props: {
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: false,
 					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+					includeSplash: true,
 				}).applied;
 
 				let potencyWithPartyBuffs = node.getPotency({
@@ -430,6 +451,7 @@ export function calculateDamageStats(props: {
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: true,
 					excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
+					includeSplash: true,
 				}).applied;
 
 				mainTable[q.mainTableIndex].totalPotencyWithoutPot += potencyWithoutPot;
@@ -542,16 +564,16 @@ export function calculateDamageStats(props: {
 			let pa = skillPotencies.get(a.skillName) ?? 0;
 			let pb = skillPotencies.get(b.skillName) ?? 0;
 			return pb - pa;
+		} else if (a.targetCount !== b.targetCount) {
+			return b.targetCount - a.targetCount;
+		} else if (a.displayedModifiers.length !== b.displayedModifiers.length) {
+			return b.displayedModifiers.length - a.displayedModifiers.length;
 		} else {
-			if (a.displayedModifiers.length !== b.displayedModifiers.length) {
-				return b.displayedModifiers.length - a.displayedModifiers.length;
-			} else {
-				for (let i = 0; i < a.displayedModifiers.length; i++) {
-					let diff = a.displayedModifiers[i] - b.displayedModifiers[i];
-					if (diff !== 0) return diff;
-				}
-				return 0;
+			for (let i = 0; i < a.displayedModifiers.length; i++) {
+				let diff = a.displayedModifiers[i] - b.displayedModifiers[i];
+				if (diff !== 0) return diff;
 			}
+			return 0;
 		}
 	});
 

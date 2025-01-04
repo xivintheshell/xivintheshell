@@ -423,6 +423,7 @@ const makeRPRSpell = (
 		aspect: Aspect;
 		castTime: number | ResourceCalculationFn<RPRState>;
 		recastTime: number;
+		falloff?: number;
 		applicationDelay: number;
 		validateAttempt?: StatePredicate<RPRState>;
 		onConfirm?: EffectFn<RPRState>;
@@ -476,6 +477,7 @@ const makeRPRWeaponskill = (
 		secondaryCooldown?: CooldownGroupProperties;
 		aspect: Aspect;
 		recastTime: number | ResourceCalculationFn<RPRState>;
+		falloff?: number;
 		applicationDelay: number;
 		validateAttempt?: StatePredicate<RPRState>;
 		onConfirm?: EffectFn<RPRState>;
@@ -583,6 +585,7 @@ const makeRPRAbility = (
 		replaceIf?: ConditionalSkillReplace<RPRState>[];
 		highlightIf?: StatePredicate<RPRState>;
 		startOnHotbar?: boolean;
+		falloff?: number;
 		applicationDelay?: number;
 		animationLock?: number;
 		cooldown: number;
@@ -800,6 +803,7 @@ makeRPRWeaponskill(SkillName.PlentifulHarvest, 88, {
 	potency: 720,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0.6,
 	applicationDelay: 1.16,
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ImmortalSacrifice, 1),
 	validateAttempt: (state) =>
@@ -825,6 +829,7 @@ makeRPRSpell(SkillName.Communio, 90, {
 	aspect: Aspect.Other,
 	castTime: 1.3,
 	recastTime: 2.5,
+	falloff: 0.6,
 	applicationDelay: 1.16,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Enshrouded),
 	highlightIf: (state) =>
@@ -876,6 +881,7 @@ makeRPRSpell(SkillName.HarvestMoon, 82, {
 	aspect: Aspect.Other,
 	castTime: 0,
 	recastTime: 2.5,
+	falloff: 0.5,
 	applicationDelay: 0.9,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Soulsow),
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Soulsow),
@@ -892,6 +898,7 @@ makeRPRAbility(SkillName.Gluttony, 76, ResourceType.cd_Gluttony, {
 	isPhysical: false,
 	potency: 520,
 	startOnHotbar: true,
+	falloff: 0.25,
 	applicationDelay: 1.06,
 	cooldown: 60,
 	validateAttempt: soulSpendPredicate(50),
@@ -932,6 +939,7 @@ makeRPRAbility(SkillName.GrimSwathe, 55, ResourceType.cd_BloodStalk, {
 	isPhysical: true,
 	potency: 140,
 	startOnHotbar: true,
+	falloff: 0,
 	applicationDelay: 0.58,
 	cooldown: 1,
 	validateAttempt: soulSpendPredicate(50),
@@ -978,6 +986,7 @@ makeRPRAbility(SkillName.Sacrificium, 92, ResourceType.cd_Sacrificium, {
 	isPhysical: false,
 	potency: 530,
 	startOnHotbar: false,
+	falloff: 0.5,
 	applicationDelay: 0.76,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Oblatio),
@@ -1076,6 +1085,7 @@ makeRPRWeaponskill(SkillName.Perfectio, 100, {
 	potency: 1300,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0.6,
 	applicationDelay: 1.29,
 	startOnHotbar: false,
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.PerfectioParata),
@@ -1159,6 +1169,7 @@ makeRPRWeaponskill(SkillName.WhorlOfDeath, 35, {
 	potency: 100,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0,
 	applicationDelay: 1.15,
 	onConfirm: (state) => state.refreshDeathsDesign(),
 });
@@ -1167,6 +1178,7 @@ makeRPRWeaponskill(SkillName.SpinningScythe, 25, {
 	potency: 160,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0,
 	applicationDelay: 0.62,
 });
 
@@ -1179,6 +1191,7 @@ makeRPRWeaponskill(SkillName.NightmareScythe, 45, {
 	},
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0,
 	applicationDelay: 0.8,
 	highlightIf: function (state: Readonly<RPRState>): boolean {
 		return state.resources.get(ResourceType.RPRAoECombo).availableAmount() === 1;
@@ -1189,6 +1202,7 @@ makeRPRWeaponskill(SkillName.SoulScythe, 65, {
 	potency: 180,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0,
 	applicationDelay: 0.66,
 	secondaryCooldown: {
 		cdName: ResourceType.cd_SoulSlice,
@@ -1202,6 +1216,7 @@ makeRPRWeaponskill(SkillName.ExecutionersGuillotine, 96, {
 	potency: 300,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0,
 	applicationDelay: 0.53,
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Executioner),
 	validateAttempt: executionerPredicate,
@@ -1211,6 +1226,7 @@ makeRPRWeaponskill(SkillName.GrimReaping, 80, {
 	startOnHotbar: false,
 	potency: 200,
 	recastTime: 1.5,
+	falloff: 0,
 	applicationDelay: 0.8,
 	highlightIf: (state) => state.resources.get(ResourceType.LemureShroud).availableAmount() > 1,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.LemureShroud),
@@ -1228,6 +1244,7 @@ makeRPRWeaponskill(SkillName.GrimReaping, 80, {
 makeRPRAbility(SkillName.LemuresScythe, 86, ResourceType.cd_LemuresSlice, {
 	isPhysical: true,
 	potency: 100,
+	falloff: 0,
 	applicationDelay: 0.66,
 	cooldown: 1,
 	startOnHotbar: false,
@@ -1252,6 +1269,7 @@ makeRPRWeaponskill(SkillName.Guillotine, 70, {
 	potency: 200,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0,
 	applicationDelay: 0.49,
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SoulReaver),
 	validateAttempt: reaverPredicate,
