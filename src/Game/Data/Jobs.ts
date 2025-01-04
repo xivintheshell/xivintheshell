@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { localize } from "../../Components/Localization";
 import { ensureRecord } from "../../Utilities/ensureRecord";
-import { LimitBreakActionKey, LimitBreakResourceKey } from "./Shared/LimitBreak";
+import { LimitBreak3ActionKey, TankLimitBreak3ResourceKey } from "./Shared/LimitBreak";
 
 /**
  * Description of how well supported a job is:
@@ -56,8 +56,8 @@ export interface Job {
 	implementationLevel: ImplementationKey;
 	speedStat: "sks" | "sps";
 	usesMp?: boolean;
-	limitBreak?: LimitBreakActionKey;
-	limitBreakBuff?: LimitBreakResourceKey;
+	limitBreak?: LimitBreak3ActionKey; // Enforce actually specifying an LB3 action
+	limitBreakBuff?: TankLimitBreak3ResourceKey; // Only Tank LBs have a buff at the moment, so limit it to those
 }
 
 // jobs are in the order they appear in the job guide
