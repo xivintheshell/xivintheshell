@@ -43,6 +43,7 @@ export const DOT_SKILLS: SkillName[] = [
 	SkillName.Higanbana,
 	// MCH
 	SkillName.Bioblaster,
+	SkillName.Flamethrower,
 	// BRD
 	SkillName.CausticBite,
 	SkillName.Stormbite,
