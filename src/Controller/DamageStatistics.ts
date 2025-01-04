@@ -123,21 +123,21 @@ function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: Actio
 		tincturePotencyMultiplier: 1,
 		includePartyBuffs: false,
 		untargetable: bossIsUntargetable,
-		includeSplash: false,
+		includeSplash: true,
 	}).applied;
 
 	let potencyWithPot = node.getPotency({
 		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 		includePartyBuffs: false,
 		untargetable: bossIsUntargetable,
-		includeSplash: false,
+		includeSplash: true,
 	}).applied;
 
 	let potencyWithPartyBuffs = node.getPotency({
 		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 		includePartyBuffs: true,
 		untargetable: bossIsUntargetable,
-		includeSplash: false,
+		includeSplash: true,
 	}).applied;
 
 	entry.potencyWithoutPot = potencyWithoutPot;
@@ -188,6 +188,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 			} else if (isDoTNode(node)) {
 				// dot modifiers are handled separately
 				res.basePotency = mainPotency.base;
+				node.targetCount = mainPotency.targetCount;
 			} else {
 				// for non-BLM jobs, display all non-pot modifiers on all damaging skills
 				res.basePotency = mainPotency.base;
@@ -360,7 +361,6 @@ export function calculateDamageStats(props: {
 		totalPotencyWithoutPot: 0,
 		totalPotPotency: 0,
 		totalPartyBuffPotency: 0,
-		targetCount: 0,
 	};
 
 	const dotTables: Map<ResourceType, DamageStatsDoTTrackingData> = new Map();

@@ -771,7 +771,7 @@ export class DamageStatistics extends React.Component {
 				);
 			}
 			// additional checkbox for DoT
-			if (isDoTProp(props.row.skillName)) {
+			if (!sameAsLast && isDoTProp(props.row.skillName)) {
 				includeCheckboxes.push(
 					<input
 						key="dot"
@@ -829,11 +829,7 @@ export class DamageStatistics extends React.Component {
 
 			// target count node
 			let targetCountNode: React.ReactNode | undefined = undefined;
-			if (
-				props.row.targetCount &&
-				props.row.basePotency > 0 &&
-				!hidePotency(props.row.skillName)
-			) {
+			if (props.row.targetCount && props.row.basePotency > 0) {
 				targetCountNode = <span
 					style={{ textDecoration: includeInStats ? "none" : "line-through" }}
 				>

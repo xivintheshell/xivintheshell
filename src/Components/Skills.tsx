@@ -588,7 +588,7 @@ export class SkillsWindow extends React.Component {
 		};
 
 		this.onTargetCountChange = (e: ValueChangeEvent) => {
-			this.setState({ targetCount: e.target.value });
+			this.setState({ targetCount: parseInt(e.target.value) });
 		};
 
 		this.onRemoveTrailingIdleTime = () => {
