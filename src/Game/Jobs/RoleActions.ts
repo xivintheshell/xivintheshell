@@ -12,7 +12,7 @@ import { makeAbility, makeLimitBreak, makeResourceAbility, makeSpell } from "../
 import { DoTBuff, EventTag, makeResource } from "../Resources";
 import type { GameState } from "../GameState";
 import { controller } from "../../Controller/Controller";
-import { LIMIT_BREAK_RESOURCES, LimitBreakResourceKey } from "../Data/Shared/LimitBreak";
+import { SHARED_LIMIT_BREAK_RESOURCES, LimitBreakResourceKey } from "../Data/Shared/LimitBreak";
 
 //#region Helper functions
 
@@ -251,42 +251,39 @@ TANK_JOBS.forEach((job) => {
 	makeResource(job, "SHIELD_WALL", 1, { timeout: 10 });
 	makeResource(job, "STRONGHOLD", 1, { timeout: 12 });
 });
-makeLimitBreak(TANK_JOBS, "SHIELD_WALL", "cd_TANK_LB1", {
+makeLimitBreak(TANK_JOBS, "SHIELD_WALL", "cd_LIMIT_BREAK_1", {
 	tier: "1",
 	applicationDelay: 0.45,
 	animationLock: 1.93,
 	onApplication: (state) => {
 		// Realistically this is only possible if you're fooling around in Explorer mode but still
-		Object.keys(LIMIT_BREAK_RESOURCES).forEach((rscType) =>
+		Object.keys(SHARED_LIMIT_BREAK_RESOURCES).forEach((rscType) =>
 			state.tryConsumeResource(rscType as LimitBreakResourceKey),
 		);
 		state.gainStatus("SHIELD_WALL");
 	},
 });
-makeLimitBreak(TANK_JOBS, "STRONGHOLD", "cd_TANK_LB2", {
+makeLimitBreak(TANK_JOBS, "STRONGHOLD", "cd_LIMIT_BREAK_2", {
 	tier: "2",
 	applicationDelay: 0.89,
 	animationLock: 3.86,
 	onApplication: (state) => {
-		Object.keys(LIMIT_BREAK_RESOURCES).forEach((rscType) =>
+		Object.keys(SHARED_LIMIT_BREAK_RESOURCES).forEach((rscType) =>
 			state.tryConsumeResource(rscType as LimitBreakResourceKey),
 		);
 		state.gainStatus("STRONGHOLD");
 	},
 });
 TANK_JOBS.forEach((job) => {
-	const buff = JOBS[job].limitBreakBuff;
-	// Bail out if the limit break hasn't been fully-defined
-	if (!(buff && JOBS[job].limitBreak)) {
-		return;
-	}
+	const action = JOBS[job].limitBreak ?? "UNKNOWN";
+	const buff = JOBS[job].limitBreakBuff ?? "UNKNOWN";
 	makeResource(job, buff, 1, { timeout: 8 });
-	makeLimitBreak(job, JOBS[job].limitBreak, "cd_TANK_LB3", {
+	makeLimitBreak(job, action, "cd_LIMIT_BREAK_3", {
 		tier: "3",
 		applicationDelay: 1.34,
 		animationLock: 3.86,
 		onApplication: (state) => {
-			Object.keys(LIMIT_BREAK_RESOURCES).forEach((rscType) =>
+			Object.keys(SHARED_LIMIT_BREAK_RESOURCES).forEach((rscType) =>
 				state.tryConsumeResource(rscType as LimitBreakResourceKey),
 			);
 			state.gainStatus(buff);
@@ -295,23 +292,21 @@ TANK_JOBS.forEach((job) => {
 });
 
 // Healer
-makeLimitBreak(HEALER_JOBS, "HEALING_WIND", "cd_HEALER_LB1", {
+makeLimitBreak(HEALER_JOBS, "HEALING_WIND", "cd_LIMIT_BREAK_1", {
 	tier: "1",
 	castTime: 2,
 	applicationDelay: 0.76,
 	animationLock: 2.1,
 });
-makeLimitBreak(HEALER_JOBS, "BREATH_OF_THE_EARTH", "cd_HEALER_LB2", {
+makeLimitBreak(HEALER_JOBS, "BREATH_OF_THE_EARTH", "cd_LIMIT_BREAK_2", {
 	tier: "2",
 	castTime: 2,
 	applicationDelay: 0.8,
 	animationLock: 5.13,
 });
 HEALER_JOBS.forEach((job) => {
-	if (!JOBS[job].limitBreak) {
-		return;
-	}
-	makeLimitBreak(job, JOBS[job].limitBreak, "cd_HEALER_LB3", {
+	const action = JOBS[job].limitBreak ?? "UNKNOWN";
+	makeLimitBreak(job, action, "cd_LIMIT_BREAK_3", {
 		tier: "3",
 		castTime: 2,
 		applicationDelay: 0.8,
@@ -324,14 +319,14 @@ HEALER_JOBS.forEach((job) => {
 // from: https://www.akhmorning.com/allagan-studies/limit-break/tables/#relative-damage
 
 // Melee
-makeLimitBreak(MELEE_JOBS, "BRAVER", "cd_MELEE_LB1", {
+makeLimitBreak(MELEE_JOBS, "BRAVER", "cd_LIMIT_BREAK_1", {
 	tier: "1",
 	castTime: 2,
 	applicationDelay: 2.23,
 	animationLock: 3.86,
 	potency: 1000,
 });
-makeLimitBreak(MELEE_JOBS, "BLADEDANCE", "cd_MELEE_LB2", {
+makeLimitBreak(MELEE_JOBS, "BLADEDANCE", "cd_LIMIT_BREAK_2", {
 	tier: "2",
 	castTime: 3,
 	applicationDelay: 3.28,
@@ -339,10 +334,8 @@ makeLimitBreak(MELEE_JOBS, "BLADEDANCE", "cd_MELEE_LB2", {
 	potency: 2200,
 });
 MELEE_JOBS.forEach((job) => {
-	if (!JOBS[job].limitBreak) {
-		return;
-	}
-	makeLimitBreak(job, JOBS[job].limitBreak, "cd_MELEE_LB3", {
+	const action = JOBS[job].limitBreak ?? "UNKNOWN";
+	makeLimitBreak(job, action, "cd_LIMIT_BREAK_3", {
 		tier: "3",
 		castTime: 4.5,
 		applicationDelay: 2.26,
@@ -352,14 +345,14 @@ MELEE_JOBS.forEach((job) => {
 });
 
 // Ranged
-makeLimitBreak(RANGED_JOBS, "BIGSHOT", "cd_RANGED_LB1", {
+makeLimitBreak(RANGED_JOBS, "BIGSHOT", "cd_LIMIT_BREAK_1", {
 	tier: "1",
 	castTime: 2,
 	applicationDelay: 2.23,
 	animationLock: 3.1,
 	potency: 540,
 });
-makeLimitBreak(RANGED_JOBS, "DESPERADO", "cd_RANGED_LB2", {
+makeLimitBreak(RANGED_JOBS, "DESPERADO", "cd_LIMIT_BREAK_2", {
 	tier: "2",
 	castTime: 3,
 	applicationDelay: 2.49,
@@ -367,10 +360,8 @@ makeLimitBreak(RANGED_JOBS, "DESPERADO", "cd_RANGED_LB2", {
 	potency: 1170,
 });
 RANGED_JOBS.forEach((job) => {
-	if (!JOBS[job].limitBreak) {
-		return;
-	}
-	makeLimitBreak(job, JOBS[job].limitBreak, "cd_RANGED_LB3", {
+	const action = JOBS[job].limitBreak ?? "UNKNOWN";
+	makeLimitBreak(job, action, "cd_LIMIT_BREAK_3", {
 		tier: "3",
 		castTime: 4.5,
 		applicationDelay: 3.16,
@@ -380,7 +371,7 @@ RANGED_JOBS.forEach((job) => {
 });
 
 // Caster
-makeLimitBreak(CASTER_JOBS, "SKYSHARD", "cd_CASTER_LB1", {
+makeLimitBreak(CASTER_JOBS, "SKYSHARD", "cd_LIMIT_BREAK_1", {
 	tier: "1",
 	castTime: 2,
 	applicationDelay: 1.64,
@@ -388,7 +379,7 @@ makeLimitBreak(CASTER_JOBS, "SKYSHARD", "cd_CASTER_LB1", {
 	onConfirm: cancelDualcast,
 	potency: 600,
 });
-makeLimitBreak(CASTER_JOBS, "STARSTORM", "cd_CASTER_LB2", {
+makeLimitBreak(CASTER_JOBS, "STARSTORM", "cd_LIMIT_BREAK_2", {
 	tier: "2",
 	castTime: 3,
 	applicationDelay: 3.75,
@@ -397,10 +388,8 @@ makeLimitBreak(CASTER_JOBS, "STARSTORM", "cd_CASTER_LB2", {
 	potency: 1300,
 });
 CASTER_JOBS.forEach((job) => {
-	if (!JOBS[job].limitBreak) {
-		return;
-	}
-	makeLimitBreak(job, JOBS[job].limitBreak, "cd_CASTER_LB3", {
+	const action = JOBS[job].limitBreak ?? "UNKNOWN";
+	makeLimitBreak(job, action, "cd_LIMIT_BREAK_3", {
 		tier: "3",
 		castTime: 4.5,
 		applicationDelay: 4.5,
