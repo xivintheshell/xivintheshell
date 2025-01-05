@@ -1,5 +1,11 @@
 [
 	{
+		"date": "1/5/25",
+		"changes": [
+			"Fixed a bug where multi-target spells lost their target counts when using the timeline editor"
+		]
+	},
+	{
 		"date": "1/4/25",
 		"changes": [
 			"Added support for multi-target abilities"

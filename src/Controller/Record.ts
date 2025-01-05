@@ -63,6 +63,7 @@ export class ActionNode {
 		copy.skillName = this.skillName;
 		copy.waitDuration = this.waitDuration;
 		copy.buffName = this.buffName;
+		copy.targetCount = this.targetCount;
 		return copy;
 	}
 
