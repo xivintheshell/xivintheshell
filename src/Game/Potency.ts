@@ -67,6 +67,12 @@ export const enum PotencyModifierType {
 	BATTLE_LITANY,
 
 	PET,
+
+	ZOE,
+	SOTERIA,
+	KRASIS,
+	AUTOPHYSIS,
+	PHILOSOPHIA,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -311,17 +317,17 @@ export const Modifiers = {
 	PowerSurge: {
 		kind: "multiplier",
 		source: PotencyModifierType.POWER_SURGE,
-		damageFactor: 1.1,
+		potencyFactor: 1.1,
 	} as PotencyMultiplier,
 	LanceCharge: {
 		kind: "multiplier",
 		source: PotencyModifierType.LANCE_CHARGE,
-		damageFactor: 1.1,
+		potencyFactor: 1.1,
 	} as PotencyMultiplier,
 	LifeOfTheDragon: {
 		kind: "multiplier",
 		source: PotencyModifierType.LIFE_OF_THE_DRAGON,
-		damageFactor: 1.15,
+		potencyFactor: 1.15,
 	} as PotencyMultiplier,
 	BattleLitany: {
 		kind: "critDirect",
@@ -340,6 +346,31 @@ export const Modifiers = {
 		critBonus: 1.0,
 		dhBonus: 0,
 	} as CritDirectMultiplier,
+	Zoe: {
+		kind: "multiplier",
+		source: PotencyModifierType.ZOE,
+		potencyFactor: 1.5,
+	} as PotencyMultiplier,
+	Soteria: {
+		kind: "multiplier",
+		source: PotencyModifierType.SOTERIA,
+		potencyFactor: 1.7,
+	} as PotencyMultiplier,
+	Krasis: {
+		kind: "multiplier",
+		source: PotencyModifierType.KRASIS,
+		potencyFactor: 1.2,
+	} as PotencyMultiplier,
+	Autophysis: {
+		kind: "multiplier",
+		source: PotencyModifierType.AUTOPHYSIS,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	Philosophia: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHILOSOPHIA,
+		potencyFactor: 1.2,
+	} as PotencyMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

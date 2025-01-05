@@ -666,7 +666,11 @@ function drawSkills(
 		[BuffType.BattleVoice, { color: g_colors.brd.battleVoice, showImage: true }],
 		[BuffType.RadiantFinale1, { color: g_colors.brd.radiantFinale, showImage: true }],
 		[BuffType.RadiantFinale2, { color: g_colors.brd.radiantFinale, showImage: true }],
-		[BuffType.RadiantFinale3, { color: g_colors.brd.radiantFinale, showImage: true }],
+		[BuffType.Zoe, { color: g_colors.brd.radiantFinale, showImage: true }],
+		[BuffType.Autophysis, { color: g_colors.brd.radiantFinale, showImage: true }],
+		[BuffType.Krasis, { color: g_colors.brd.radiantFinale, showImage: true }],
+		[BuffType.Soteria, { color: g_colors.brd.radiantFinale, showImage: true }],
+		[BuffType.Philosophia, { color: g_colors.brd.radiantFinale, showImage: true }],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();

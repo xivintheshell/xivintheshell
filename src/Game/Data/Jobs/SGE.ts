@@ -41,6 +41,9 @@ export const SGE_ACTIONS = ensureRecord<ActionData>()({
 	EUKRASIAN_PROGNOSIS_POP: {
 		name: "Pop Eukrasian Prognosis",
 	},
+	EUKRASIAN_PROGNOSIS_II_POP: {
+		name: "Pop Eukrasian Prognosis II",
+	},
 	PANHAIMA: {
 		id: 24311,
 		name: "Panhaima",
@@ -339,7 +342,12 @@ export const SGE_STATUSES = ensureRecord<ResourceData>()({
 	},
 });
 
-export const SGE_TRACKERS = ensureRecord<ResourceData>()({});
+export const SGE_TRACKERS = ensureRecord<ResourceData>()({
+	PEPSIS: {
+		// Fake resource to hold Pepsis' healing potencies
+		name: "Pepsis",
+	},
+});
 
 export const SGE_TRAITS = ensureRecord<TraitData>()({
 	OFFENSIVE_MAGIC_MASTERY: {
@@ -354,7 +362,10 @@ export const SGE_TRAITS = ensureRecord<TraitData>()({
 		name: "Enhanced Kerachole",
 		level: 78,
 	},
-	// Enhanced Healing Magic: 85
+	ENHANCED_HEALING_MAGIC: {
+		name: "Enhanced Healing Magic",
+		level: 85,
+	},
 	ENHANCED_ZOE: {
 		name: "Enhanced Zoe",
 		level: 88,

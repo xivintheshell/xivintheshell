@@ -180,6 +180,10 @@ export class GameState {
 		return this.config.job;
 	}
 
+	get partySize(): number {
+		return this.resources.get("PARTY_SIZE").availableAmount();
+	}
+
 	/**
 	 * Get mp tick, lucid tick, and class-specific recurring timers rolling. Jobs may also
 	 * register a list of pet resources to be treated as DoT effects.
@@ -622,6 +626,10 @@ export class GameState {
 				if (evt) {
 					evt.canceled = true;
 				}
+			}
+			// Special case: cancelling Kardia on self also cancels Kardion on partner
+			if (buffName === "KARDIA") {
+				this.tryConsumeResource("KARDION");
 			}
 			rsc.consume(rsc.availableAmount());
 			rsc.removeTimer();
