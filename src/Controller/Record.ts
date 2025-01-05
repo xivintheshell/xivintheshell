@@ -1,7 +1,7 @@
 import { FileType } from "./Common";
 import { BuffType, SkillReadyStatus } from "../Game/Common";
 import { GameConfig } from "../Game/GameConfig";
-import { Potency } from "../Game/Potency";
+import { Potency, PotencyKind } from "../Game/Potency";
 import { controller } from "./Controller";
 import { ActionKey, ACTIONS, ResourceKey } from "../Game/Data";
 
@@ -32,6 +32,8 @@ export class ActionNode {
 	#capturedBuffs: Set<BuffType>;
 	#potency: Potency | undefined;
 	#dotPotencies: Map<ResourceKey, Potency[]>;
+	#healingPotency: Potency | undefined;
+	#hotPotencies: Map<ResourceKey, Potency[]>;
 
 	type: ActionType;
 	waitDuration: number = 0;
@@ -41,6 +43,9 @@ export class ActionNode {
 	#dotOverrideAmount: Map<ResourceKey, number>;
 	#dotTimeGap: Map<ResourceKey, number>;
 	targetCount: number = 1;
+	#hotOverrideAmount: Map<ResourceKey, number>;
+	#hotTimeGap: Map<ResourceKey, number>;
+	healTargetCount: number = 1;
 
 	next?: ActionNode = undefined;
 
@@ -54,8 +59,11 @@ export class ActionNode {
 		this.#nodeIndex = ActionNode._gNodeIndex;
 		this.#capturedBuffs = new Set<BuffType>();
 		this.#dotPotencies = new Map();
+		this.#hotPotencies = new Map();
 		this.#dotOverrideAmount = new Map();
 		this.#dotTimeGap = new Map();
+		this.#hotOverrideAmount = new Map();
+		this.#hotTimeGap = new Map();
 		ActionNode._gNodeIndex++;
 	}
 
@@ -146,6 +154,32 @@ export class ActionNode {
 		return res;
 	}
 
+	getHealingPotency(props: {
+		tincturePotencyMultiplier: number;
+		untargetable: (t: number) => boolean;
+		includePartyBuffs: boolean;
+		includeSplash: boolean;
+		excludeHoT?: boolean;
+	}) {
+		let res = {
+			applied: 0,
+			snapshottedButPending: 0,
+		};
+		if (this.#healingPotency) {
+			this.recordPotency(props, this.#healingPotency, res);
+		}
+
+		if (props.excludeHoT) {
+			return res;
+		}
+		this.#hotPotencies.forEach((pArr) => {
+			pArr.forEach((p) => {
+				this.recordPotency(props, p, res);
+			});
+		});
+		return res;
+	}
+
 	private recordPotency(
 		props: {
 			tincturePotencyMultiplier: number;
@@ -164,8 +198,9 @@ export class ActionNode {
 		}
 	}
 
-	removeUnresolvedDoTPotencies() {
-		this.#dotPotencies.forEach((pArr) => {
+	removeUnresolvedOvertimePotencies(kind: PotencyKind) {
+		const potencyMap = kind === "damage" ? this.#dotPotencies : this.#hotPotencies;
+		potencyMap.forEach((pArr) => {
 			const unresolvedIndex = pArr.findIndex((p) => !p.hasResolved());
 			if (unresolvedIndex < 0) {
 				return;
@@ -177,14 +212,42 @@ export class ActionNode {
 	anyPotencies(): boolean {
 		return this.#potency !== undefined || this.#dotPotencies.size > 0;
 	}
+	anyHealingPotencies(): boolean {
+		return this.#healingPotency !== undefined || this.#hotPotencies.size > 0;
+	}
 	getInitialPotency() {
 		return this.#potency;
 	}
-	getAllDotPotencies() {
-		return this.#dotPotencies;
+	getInitialHealingPotency() {
+		return this.#healingPotency;
 	}
+
+	getAllDotPotencies() {
+		return this.getAllOverTimePotencies("damage");
+	}
+	getAllHotPotencies() {
+		return this.getAllOverTimePotencies("healing");
+	}
+	getAllOverTimePotencies(kind: PotencyKind) {
+		if (kind === "damage") {
+			return this.#dotPotencies;
+		} else {
+			return this.#hotPotencies;
+		}
+	}
+
 	getDotPotencies(r: ResourceKey) {
-		return this.#dotPotencies.get(r) ?? [];
+		return this.getOverTimePotencies(r, "damage");
+	}
+	getHotPotencies(r: ResourceKey) {
+		return this.getOverTimePotencies(r, "healing");
+	}
+	getOverTimePotencies(r: ResourceKey, kind: PotencyKind) {
+		if (kind === "damage") {
+			return this.#dotPotencies.get(r) ?? [];
+		} else {
+			return this.#hotPotencies.get(r) ?? [];
+		}
 	}
 
 	addPotency(p: Potency) {
@@ -194,11 +257,27 @@ export class ActionNode {
 		);
 		this.#potency = p;
 	}
+	addHealingPotency(p: Potency) {
+		console.assert(
+			!this.#healingPotency,
+			`ActionNode for ${this.skillName} already had an initial healing potency`,
+		);
+		this.#healingPotency = p;
+	}
 
 	addDoTPotency(p: Potency, r: ResourceKey) {
-		const pArr = this.#dotPotencies.get(r) ?? [];
+		this.addOverTimePotency(p, r, "damage");
+	}
+
+	addHoTPotency(p: Potency, r: ResourceKey) {
+		this.addOverTimePotency(p, r, "healing");
+	}
+	addOverTimePotency(p: Potency, r: ResourceKey, kind: PotencyKind) {
+		const potencyMap: Map<ResourceKey, Potency[]> =
+			kind === "damage" ? this.#dotPotencies : this.#hotPotencies;
+		const pArr = potencyMap.get(r) ?? [];
 		if (pArr.length === 0) {
-			this.#dotPotencies.set(r, pArr);
+			potencyMap.set(r, pArr);
 		}
 		pArr.push(p);
 	}
@@ -210,17 +289,45 @@ export class ActionNode {
 		this.#selected = false;
 	}
 
-	setDotTimeGap(dotName: ResourceKey, amount: number) {
-		this.#dotTimeGap.set(dotName, amount);
+	setOverTimeGap(effectName: ResourceKey, amount: number, kind: PotencyKind) {
+		if (kind === "damage") {
+			this.setOverTimeMappedAmount(effectName, amount, this.#dotTimeGap);
+		} else {
+			this.setOverTimeMappedAmount(effectName, amount, this.#hotTimeGap);
+		}
 	}
-	getDotTimeGap(dotName: ResourceKey): number {
-		return this.#dotTimeGap.get(dotName) ?? 0;
+
+	getOverTimeGap(effectName: ResourceKey, kind: PotencyKind) {
+		if (kind === "damage") {
+			return this.getOverTimeMappedAmount(effectName, this.#dotTimeGap);
+		}
+		return this.getOverTimeMappedAmount(effectName, this.#hotTimeGap);
 	}
-	setDotOverrideAmount(dotName: ResourceKey, amount: number) {
-		this.#dotOverrideAmount.set(dotName, amount);
+
+	setOverTimeOverrideAmount(effectName: ResourceKey, amount: number, kind: PotencyKind) {
+		if (kind === "damage") {
+			this.setOverTimeMappedAmount(effectName, amount, this.#dotOverrideAmount);
+		} else {
+			this.setOverTimeMappedAmount(effectName, amount, this.#hotOverrideAmount);
+		}
 	}
-	getDotOverrideAmount(dotName: ResourceKey): number {
-		return this.#dotOverrideAmount.get(dotName) ?? 0;
+
+	getOverTimeOverrideAmount(effectName: ResourceKey, kind: PotencyKind) {
+		if (kind === "damage") {
+			return this.getOverTimeMappedAmount(effectName, this.#dotOverrideAmount);
+		}
+		return this.getOverTimeMappedAmount(effectName, this.#hotOverrideAmount);
+	}
+
+	private setOverTimeMappedAmount(
+		effectName: ResourceKey,
+		amount: number,
+		map: Map<ResourceKey, number>,
+	) {
+		map.set(effectName, amount);
+	}
+	private getOverTimeMappedAmount(effectName: ResourceKey, map: Map<ResourceKey, number>) {
+		return map.get(effectName) ?? 0;
 	}
 }
 

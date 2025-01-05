@@ -121,9 +121,11 @@ export class XIVMath {
 		return Math.floor((140 * (det - subStat)) / div) * 0.001;
 	}
 
-	static dotPotency(level: LevelSync, speed: number, basePotency: number) {
+	static overtimePotency(level: LevelSync, speed: number, basePotency: number) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
+		const effectStrength = (1000 + Math.floor(((speed - subStat) * 130) / div)) * 0.001;
+		return basePotency * effectStrength;
 	}
 
 	static mpTick(level: LevelSync, pie: number) {

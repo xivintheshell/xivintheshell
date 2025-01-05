@@ -118,6 +118,13 @@ interface BaseSkill<T extends PlayerState> {
 	// check for undefined, not truthiness.
 	readonly falloff?: number;
 
+	readonly healingPotencyFn: ResourceCalculationFn<T>;
+	readonly jobHealingPotencyModifiers: PotencyModifierFn<T>;
+
+	// If defined, this button is treated as an AoE heal, and will apply that healing amount for the number
+	// of party members defined in the PARTY_SIZE resource, which defaults to 8
+	readonly aoeHeal?: boolean;
+
 	// Determine whether the skill can be executed in the current state.
 	// Should be called when the button is pressed.
 	readonly validateAttempt: StatePredicate<T>;
@@ -305,6 +312,40 @@ function normalizeAssetPath(job: ShellJob, key: ActionKey) {
 	return `${job}/${name.replace(":", "")}.png`;
 }
 
+// Shared parameters for all skill kinds
+export interface MakeSkillParams<T extends PlayerState> {
+	assetPath: string;
+	autoUpgrade: SkillAutoReplace;
+	autoDowngrade: SkillAutoReplace;
+	aspect: Aspect;
+	replaceIf: ConditionalSkillReplace<T>[];
+	startOnHotbar: boolean;
+	highlightIf: StatePredicate<T>;
+	animationLock: number | ResourceCalculationFn<T>;
+	potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
+	jobPotencyModifiers: PotencyModifierFn<T>;
+	drawsAggro: boolean;
+	falloff: number;
+	healingPotency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
+	jobHealingPotencyModifiers: PotencyModifierFn<T>;
+	aoeHeal: boolean;
+	applicationDelay: number;
+	validateAttempt: StatePredicate<T>;
+	isInstantFn: StatePredicate<T>;
+	onExecute: EffectFn<T>;
+	onConfirm: EffectFn<T>;
+	onApplication: EffectFn<T>;
+	secondaryCooldown?: CooldownGroupProperties;
+}
+
+// Parameters for a spell or weaponskill
+export interface MakeGCDParams<T extends PlayerState> extends MakeSkillParams<T> {
+	castTime: number | ResourceCalculationFn<T>;
+	recastTime: number | ResourceCalculationFn<T>;
+	isInstantFn: StatePredicate<T>;
+	manaCost: number | ResourceCalculationFn<T>;
+}
+
 /**
  * Declare a GCD skill.
  *
@@ -327,30 +368,7 @@ export function makeSpell<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
 	name: ActionKey,
 	unlockLevel: number,
-	params: Partial<{
-		assetPath: string;
-		autoUpgrade: SkillAutoReplace;
-		autoDowngrade: SkillAutoReplace;
-		aspect: Aspect;
-		replaceIf: ConditionalSkillReplace<T>[];
-		startOnHotbar: boolean;
-		highlightIf: StatePredicate<T>;
-		castTime: number | ResourceCalculationFn<T>;
-		recastTime: number | ResourceCalculationFn<T>;
-		animationLock: number | ResourceCalculationFn<T>;
-		manaCost: number | ResourceCalculationFn<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
-		jobPotencyModifiers: PotencyModifierFn<T>;
-		drawsAggro: boolean;
-		falloff: number;
-		applicationDelay: number;
-		validateAttempt: StatePredicate<T>;
-		isInstantFn: StatePredicate<T>;
-		onExecute: EffectFn<T>;
-		onConfirm: EffectFn<T>;
-		onApplication: EffectFn<T>;
-		secondaryCooldown?: CooldownGroupProperties;
-	}>,
+	params: Partial<MakeGCDParams<T>>,
 ): Spell<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -386,6 +404,9 @@ export function makeSpell<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
+		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
+		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
+		aoeHeal: params.aoeHeal,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
 		onExecute,
@@ -405,30 +426,7 @@ export function makeWeaponskill<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
 	name: ActionKey,
 	unlockLevel: number,
-	params: Partial<{
-		assetPath: string;
-		autoUpgrade: SkillAutoReplace;
-		autoDowngrade: SkillAutoReplace;
-		aspect: Aspect;
-		replaceIf: ConditionalSkillReplace<T>[];
-		startOnHotbar: boolean;
-		highlightIf: StatePredicate<T>;
-		castTime: number | ResourceCalculationFn<T>;
-		recastTime: number | ResourceCalculationFn<T>;
-		animationLock: number | ResourceCalculationFn<T>;
-		manaCost: number | ResourceCalculationFn<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
-		jobPotencyModifiers: PotencyModifierFn<T>;
-		drawsAggro: boolean;
-		falloff: number;
-		applicationDelay: number;
-		validateAttempt: StatePredicate<T>;
-		isInstantFn: StatePredicate<T>;
-		onExecute: EffectFn<T>;
-		onConfirm: EffectFn<T>;
-		onApplication: EffectFn<T>;
-		secondaryCooldown?: CooldownGroupProperties;
-	}>,
+	params: Partial<MakeGCDParams<T>>,
 ): Weaponskill<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -464,6 +462,9 @@ export function makeWeaponskill<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
+		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
+		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
+		aoeHeal: params.aoeHeal,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
 		onExecute,
@@ -479,6 +480,12 @@ export function makeWeaponskill<T extends PlayerState>(
 	return info;
 }
 
+// Parameters for an ability
+export interface MakeAbilityParams<T extends PlayerState> extends MakeSkillParams<T> {
+	requiresCombat: boolean;
+	cooldown: number;
+	maxCharges: number;
+}
 /**
  * Declare an oGCD ability.
  *
@@ -502,29 +509,7 @@ export function makeAbility<T extends PlayerState>(
 	name: ActionKey,
 	unlockLevel: number,
 	cdName: CooldownKey,
-	params: Partial<{
-		aspect: Aspect;
-		assetPath: string;
-		requiresCombat: boolean;
-		autoUpgrade: SkillAutoReplace;
-		autoDowngrade: SkillAutoReplace;
-		replaceIf: ConditionalSkillReplace<T>[];
-		startOnHotbar: boolean;
-		highlightIf: StatePredicate<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
-		jobPotencyModifiers: PotencyModifierFn<T>;
-		drawsAggro: boolean;
-		falloff: number;
-		applicationDelay: number;
-		animationLock: number | ResourceCalculationFn<T>;
-		validateAttempt: StatePredicate<T>;
-		onExecute: EffectFn<T>;
-		onConfirm: EffectFn<T>;
-		onApplication: EffectFn<T>;
-		cooldown: number;
-		maxCharges: number;
-		secondaryCooldown?: CooldownGroupProperties;
-	}>,
+	params: Partial<MakeAbilityParams<T>>,
 ): Ability<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -564,6 +549,9 @@ export function makeAbility<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
+		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
+		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
+		aoeHeal: params.aoeHeal,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt,
 		onExecute,
@@ -581,6 +569,12 @@ export function makeAbility<T extends PlayerState>(
 	return info;
 }
 
+export type MakeResourceAbilityParams<T extends PlayerState> = {
+	rscType: ResourceKey;
+	cooldown: number;
+	applicationDelay: number;
+	duration?: number | ResourceCalculationFn<T>;
+} & Partial<Omit<MakeAbilityParams<T>, "cooldown" | "applicationDelay">>;
 /**
  * Helper function to create an Ability that applies a buff or debuff (`rscType`) for a certain duration.
  *
@@ -593,28 +587,7 @@ export function makeResourceAbility<T extends PlayerState>(
 	name: ActionKey,
 	unlockLevel: number,
 	cdName: CooldownKey,
-	params: {
-		rscType: ResourceKey;
-		requiresCombat?: boolean;
-		autoUpgrade?: SkillAutoReplace;
-		autoDowngrade?: SkillAutoReplace;
-		replaceIf?: ConditionalSkillReplace<T>[];
-		startOnHotbar?: boolean;
-		highlightIf?: StatePredicate<T>;
-		animationLock?: number | ResourceCalculationFn<T>;
-		applicationDelay: number;
-		duration?: number | ResourceCalculationFn<T>; // TODO push to resources
-		potency?: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
-		jobPotencyModifiers?: PotencyModifierFn<T>;
-		validateAttempt?: StatePredicate<T>;
-		onExecute?: EffectFn<T>;
-		onConfirm?: EffectFn<T>;
-		onApplication?: EffectFn<T>;
-		assetPath?: string;
-		cooldown: number;
-		maxCharges?: number;
-		secondaryCooldown?: CooldownGroupProperties;
-	},
+	params: MakeResourceAbilityParams<T>,
 ): Ability<T> {
 	// When the ability is applied:
 	// 1. Immediate gain resources
@@ -630,23 +603,8 @@ export function makeResourceAbility<T extends PlayerState>(
 		state.enqueueResourceDrop(params.rscType, durationFn(state));
 	}, params?.onApplication ?? NO_EFFECT);
 	return makeAbility(jobs, name, unlockLevel, cdName, {
-		potency: params.potency,
-		autoUpgrade: params.autoUpgrade,
-		autoDowngrade: params.autoDowngrade,
-		jobPotencyModifiers: params.jobPotencyModifiers,
-		replaceIf: params.replaceIf,
-		startOnHotbar: params.startOnHotbar,
-		highlightIf: params.highlightIf,
-		animationLock: params.animationLock,
-		applicationDelay: params.applicationDelay,
-		validateAttempt: params.validateAttempt,
-		onExecute: params.onExecute,
-		onConfirm: params.onConfirm,
-		onApplication: onApplication,
-		assetPath: params.assetPath,
-		cooldown: params.cooldown,
-		maxCharges: params.maxCharges,
-		secondaryCooldown: params.secondaryCooldown,
+		...params,
+		onApplication,
 	});
 }
 
@@ -680,6 +638,7 @@ export function makeLimitBreak<T extends PlayerState>(
 		onApplication?: EffectFn<T>;
 		castTime?: number;
 		potency?: number;
+		healingPotency?: number;
 	},
 ): LimitBreak<T> {
 	if (!Array.isArray(jobs)) {
@@ -708,6 +667,8 @@ export function makeLimitBreak<T extends PlayerState>(
 		manaCostFn: (state) => 0,
 		potencyFn: fnify(params.potency, 0),
 		jobPotencyModifiers: (state) => [],
+		healingPotencyFn: fnify(params.healingPotency, 0),
+		jobHealingPotencyModifiers: (state) => [],
 		drawsAggro: false,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: (state) => true,

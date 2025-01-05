@@ -90,21 +90,21 @@ export class BLMState extends GameState {
 		this.registerRecurringEvents([
 			{
 				reportName: localize({ en: "Thunder DoT" }),
-				groupedDots: [
+				groupedEffects: [
 					{
-						dotName: "HIGH_THUNDER",
+						effectName: "HIGH_THUNDER",
 						appliedBy: ["HIGH_THUNDER"],
 					},
 					{
-						dotName: "HIGH_THUNDER_II",
+						effectName: "HIGH_THUNDER_II",
 						appliedBy: ["HIGH_THUNDER_II"],
 					},
 					{
-						dotName: "THUNDER_III",
+						effectName: "THUNDER_III",
 						appliedBy: ["THUNDER_III"],
 					},
 					{
-						dotName: "THUNDER_IV",
+						effectName: "THUNDER_IV",
 						appliedBy: ["THUNDER_IV"],
 					},
 				],
@@ -434,7 +434,7 @@ const makeSpell_BLM = (
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.ENO,
-						damageFactor: enochianModifier,
+						potencyFactor: enochianModifier,
 					});
 			}
 			const ui = state.getIceStacks();
@@ -444,13 +444,13 @@ const makeSpell_BLM = (
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.UI1,
-						damageFactor: 0.9,
+						potencyFactor: 0.9,
 					});
 				} else if (aspect === Aspect.Ice) {
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.UI1,
-						damageFactor: 1,
+						potencyFactor: 1,
 					});
 				}
 			} else if (ui === 2) {
@@ -458,13 +458,13 @@ const makeSpell_BLM = (
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.UI2,
-						damageFactor: 0.8,
+						potencyFactor: 0.8,
 					});
 				} else if (aspect === Aspect.Ice) {
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.UI2,
-						damageFactor: 1,
+						potencyFactor: 1,
 					});
 				}
 			} else if (ui === 3) {
@@ -472,13 +472,13 @@ const makeSpell_BLM = (
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.UI3,
-						damageFactor: 0.7,
+						potencyFactor: 0.7,
 					});
 				} else if (aspect === Aspect.Ice) {
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.UI3,
-						damageFactor: 1,
+						potencyFactor: 1,
 					});
 				}
 			}
@@ -487,13 +487,13 @@ const makeSpell_BLM = (
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.AF1,
-						damageFactor: 0.9,
+						potencyFactor: 0.9,
 					});
 				} else if (aspect === Aspect.Fire) {
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.AF1,
-						damageFactor: 1.4,
+						potencyFactor: 1.4,
 					});
 				}
 			} else if (af === 2) {
@@ -501,13 +501,13 @@ const makeSpell_BLM = (
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.AF2,
-						damageFactor: 0.8,
+						potencyFactor: 0.8,
 					});
 				} else if (aspect === Aspect.Fire) {
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.AF2,
-						damageFactor: 1.6,
+						potencyFactor: 1.6,
 					});
 				}
 			} else if (af === 3) {
@@ -515,13 +515,13 @@ const makeSpell_BLM = (
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.AF3,
-						damageFactor: 0.7,
+						potencyFactor: 0.7,
 					});
 				} else if (aspect === Aspect.Fire) {
 					mods.push({
 						kind: "multiplier",
 						source: PotencyModifierType.AF3,
-						damageFactor: 1.8,
+						potencyFactor: 1.8,
 					});
 				}
 			}
@@ -663,14 +663,14 @@ const thunderConfirm =
 			mods.push({
 				kind: "multiplier",
 				source: PotencyModifierType.ENO,
-				damageFactor: enochianModifier,
+				potencyFactor: enochianModifier,
 			});
 		}
 
 		console.assert(tickPotency > 0, `${skillName} was applied as a Thunder DoT`);
 		game.addDoTPotencies({
 			node,
-			dotName,
+			effectName: dotName,
 			skillName,
 			tickPotency,
 			speedStat: "sps",

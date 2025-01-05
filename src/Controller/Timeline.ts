@@ -18,6 +18,7 @@ export const enum ElemType {
 	s_Cursor = "s_Cursor",
 	s_ViewOnlyCursor = "s_ViewOnlyCursor",
 	DamageMark = "DamageMark",
+	HealingMark = "HealingMark",
 	LucidMark = "LucidMark",
 	MPTickMark = "MPTickMark",
 	MeditateTickMark = "MeditateTickMark",
@@ -50,15 +51,15 @@ export type ViewOnlyCursorElem = TimelineElemBase & {
 	displayTime: number;
 	enabled: boolean;
 };
-export interface DamageMarkInfo {
+export interface PotencyMarkInfo {
 	potency: Potency;
 	sourceDesc: string;
 	sourceSkill: ActionKey;
 }
-export type DamageMarkElem = TimelineElemBase & {
-	type: ElemType.DamageMark;
+export type PotencyMarkElem = TimelineElemBase & {
+	type: ElemType.DamageMark | ElemType.HealingMark;
 	displayTime: number;
-	damageInfos: DamageMarkInfo[];
+	potencyInfos: PotencyMarkInfo[];
 	buffs: ResourceKey[];
 };
 export type LucidMarkElem = TimelineElemBase & {
@@ -113,7 +114,7 @@ export type SerializedMarker = TimelineElemBase & {
 export type SharedTimelineElem = CursorElem | ViewOnlyCursorElem;
 
 export type SlotTimelineElem =
-	| DamageMarkElem
+	| PotencyMarkElem
 	| LucidMarkElem
 	| MPTickMarkElem
 	| MeditateTickMarkElem

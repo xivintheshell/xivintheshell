@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
 	CursorElem,
-	DamageMarkElem,
+	PotencyMarkElem,
 	ElemType,
 	LucidMarkElem,
 	MarkerElem,
@@ -423,7 +423,7 @@ function drawDamageMarks(
 	scale: number,
 	timelineOriginX: number,
 	timelineOriginY: number,
-	elems: DamageMarkElem[],
+	elems: PotencyMarkElem[],
 ) {
 	elems.forEach((mark) => {
 		let untargetable = bossIsUntargetable(mark.displayTime);
@@ -444,11 +444,11 @@ function drawDamageMarks(
 			if (b === "TINCTURE") pot = true;
 		});
 		// hover text
-		let time = "[" + dm.displayTime.toFixed(3) + "] ";
+		let time = "[" + dm.displayTime.toFixed(3) + "] " + localize({ en: "damage" });
 		let untargetableStr = localize({ en: "Untargetable", zh: "不可选中" }) as string;
 		const info: string[] = [];
 		let buffImages: Array<HTMLImageElement | undefined> = [];
-		dm.damageInfos.forEach((damageInfo) => {
+		dm.potencyInfos.forEach((damageInfo) => {
 			let sourceStr = damageInfo.sourceDesc.replace(
 				"{skill}",
 				localizeSkillName(damageInfo.sourceSkill),
@@ -466,21 +466,31 @@ function drawDamageMarks(
 				});
 				// Push additional info for hits that splash
 				if (damageInfo.potency.targetCount > 1) {
-					for (let i = 0; i < damageInfo.potency.targetCount; i++) {
-						let potencyOnHit =
-							i === 0
-								? potencyAmount
-								: potencyAmount * (1 - (damageInfo.potency.falloff ?? 1));
-						const sourceStrForTarget = localize({
-							en: `${sourceStr}, target #${i + 1}`,
-							zh: `${sourceStr}, ${i + 1}号目标`,
-						});
-						info.push(potencyOnHit.toFixed(2) + " (" + sourceStrForTarget + ")");
-					}
+					const splashPotency = potencyAmount * (1 - (damageInfo.potency.falloff ?? 1));
+					info.push(
+						potencyAmount.toFixed(2) +
+							" (" +
+							localize({
+								en: `${sourceStr}, target #1`,
+								zh: `${sourceStr}, 1号目标`,
+							}) +
+							")",
+					);
+					info.push(
+						splashPotency.toFixed(2) +
+							" (" +
+							localize({
+								en: `${sourceStr}, x${damageInfo.potency.targetCount - 1} targets`,
+								zh: `${sourceStr}, x${damageInfo.potency.targetCount - 1} 号目标`,
+							}) +
+							")",
+					);
 				} else {
 					info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")");
 				}
-				if (pot) buffImages.push(buffIconImages.get(BuffType.Tincture));
+				if (pot && !buffImages.includes(buffIconImages.get(BuffType.Tincture))) {
+					buffImages.push(buffIconImages.get(BuffType.Tincture));
+				}
 
 				damageInfo.potency.getPartyBuffs().forEach((desc) => {
 					const buffImage = buffIconImages.get(desc);
@@ -500,6 +510,85 @@ function drawDamageMarks(
 		);
 	});
 }
+
+function drawHealingMarks(
+	countdown: number,
+	scale: number,
+	timelineOriginX: number,
+	timelineOriginY: number,
+	elems: PotencyMarkElem[],
+) {
+	elems.forEach((mark) => {
+		g_ctx.fillStyle = g_colors.timeline.healingMark;
+
+		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.displayTime, scale);
+		g_ctx.beginPath();
+		g_ctx.moveTo(x - 3, timelineOriginY + 12);
+		g_ctx.lineTo(x + 3, timelineOriginY + 12);
+		g_ctx.lineTo(x, timelineOriginY + 6);
+		g_ctx.fill();
+
+		let hm = mark;
+		// pot?
+		let pot = false;
+		hm.buffs.forEach((b) => {
+			if (b === "TINCTURE") pot = true;
+		});
+		// hover text
+		let time = "[" + hm.displayTime.toFixed(3) + "] " + localize({ en: "healing" });
+		const info: string[] = [];
+		let buffImages: Array<HTMLImageElement | undefined> = [];
+		hm.potencyInfos.forEach((healingInfo) => {
+			let sourceStr = healingInfo.sourceDesc.replace(
+				"{skill}",
+				localizeSkillName(healingInfo.sourceSkill),
+			);
+			if (healingInfo.sourceSkill in LIMIT_BREAK_ACTIONS) {
+				const lbStr = localize({ en: "LB" }) as string;
+				info.push(lbStr + " (" + sourceStr + ")");
+			} else {
+				const potencyAmount = healingInfo.potency.getAmount({
+					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
+					includePartyBuffs: true,
+					includeSplash: false,
+				});
+				// Push additional info for hits that splash
+				if (healingInfo.potency.targetCount > 1) {
+					info.push(
+						potencyAmount.toFixed(2) +
+							" (" +
+							localize({
+								en: `${sourceStr}, x${healingInfo.potency.targetCount} targets`,
+								zh: `${sourceStr}, x${healingInfo.potency.targetCount} 号目标`,
+							}) +
+							")",
+					);
+				} else {
+					info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")");
+				}
+			}
+			if (pot && !buffImages.includes(buffIconImages.get(BuffType.Tincture))) {
+				buffImages.push(buffIconImages.get(BuffType.Tincture));
+			}
+
+			healingInfo.potency.getPartyBuffs().forEach((desc) => {
+				const buffImage = buffIconImages.get(desc);
+				if (!buffImages.includes(buffImage)) {
+					buffImages.push();
+				}
+			});
+		});
+
+		testInteraction(
+			{ x: x - 3, y: timelineOriginY + 6, w: 6, h: 6 },
+			[time, ...info],
+			undefined,
+			undefined,
+			buffImages,
+		);
+	});
+}
+
 function drawLucidMarks(
 	countdown: number,
 	scale: number,
@@ -741,14 +830,25 @@ function drawSkills(
 		lines.push(description);
 
 		// 2. potency
-		if (node.getInitialPotency() && !((node.skillName ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
-			const potency = node.getPotency({
-				tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
-				includePartyBuffs: true,
-				includeSplash: false,
-				untargetable: bossIsUntargetable,
-			}).applied;
-			lines.push(localize({ en: "potency: ", zh: "威力：" }) + potency.toFixed(2));
+		if (!((node.skillName ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
+			if (node.getInitialPotency()) {
+				const potency = node.getPotency({
+					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
+					includePartyBuffs: true,
+					includeSplash: false,
+					untargetable: bossIsUntargetable,
+				}).applied;
+				lines.push(localize({ en: "potency: ", zh: "威力：" }) + potency.toFixed(2));
+			}
+			if (node.getInitialHealingPotency()) {
+				const healingPotency = node.getHealingPotency({
+					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
+					includeSplash: false,
+					includePartyBuffs: true,
+					untargetable: bossIsUntargetable,
+				}).applied;
+				lines.push(localize({ en: "healing potency: " }) + healingPotency.toFixed(2));
+			}
 		}
 
 		// 3. duration
@@ -1014,6 +1114,17 @@ export function drawTimelines(
 			);
 		}
 
+		// healing marks
+		if (g_renderingProps.drawOptions.drawHealingMarks) {
+			drawHealingMarks(
+				g_renderingProps.countdown,
+				g_renderingProps.scale,
+				displayOriginX,
+				currentY,
+				(elemBins.get(ElemType.HealingMark) as PotencyMarkElem[]) ?? [],
+			);
+		}
+
 		// damage marks
 		if (g_renderingProps.drawOptions.drawDamageMarks) {
 			drawDamageMarks(
@@ -1021,7 +1132,7 @@ export function drawTimelines(
 				g_renderingProps.scale,
 				displayOriginX,
 				currentY,
-				(elemBins.get(ElemType.DamageMark) as DamageMarkElem[]) ?? [],
+				(elemBins.get(ElemType.DamageMark) as PotencyMarkElem[]) ?? [],
 			);
 		}
 

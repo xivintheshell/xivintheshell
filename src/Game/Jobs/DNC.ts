@@ -28,7 +28,7 @@ import {
 } from "../Skills";
 
 const makeDNCResource = (
-	rsc: DNCResourceKey | "PARTY_SIZE",
+	rsc: DNCResourceKey,
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
@@ -82,7 +82,6 @@ makeDNCResource("ESPRIT_TECHNICAL", 1, { timeout: 20 });
 
 makeDNCResource("CASCADE_COMBO", 1, { timeout: 30 });
 makeDNCResource("WINDMILL_COMBO", 1, { timeout: 30 });
-makeDNCResource("PARTY_SIZE", 8, { default: 8 });
 
 const COMBO_GCDS: DNCActionKey[] = ["CASCADE", "FOUNTAIN", "WINDMILL", "BLADESHOWER"];
 const DANCE_MOVES: DNCActionKey[] = ["EMBOITE", "ENTRECHAT", "JETE", "PIROUETTE"];
@@ -549,7 +548,6 @@ makeGCD_DNC("FOUNTAINFALL", 40, {
 		state.hasResourceAvailable("SILKEN_FLOW") || state.hasResourceAvailable("FLOURISHING_FLOW"),
 	onConfirm: (state) => {
 		if (state.hasResourceAvailable("SILKEN_FLOW")) {
-			state.tryConsumeResource("SILKEN_FLOW");
 		} else {
 			state.tryConsumeResource("FLOURISHING_FLOW");
 		}
