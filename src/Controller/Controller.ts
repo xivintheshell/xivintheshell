@@ -850,6 +850,7 @@ class Controller {
 		criticalHit: number;
 		directHit: number;
 		determination: number;
+		piety: number;
 		animationLock: number;
 		fps: number;
 		gcdSkillCorrection: number;

@@ -14,6 +14,7 @@ export type ConfigData = {
 	criticalHit: number;
 	directHit: number;
 	determination: number;
+	piety: number;
 	countdown: number;
 	randomSeed: string;
 	fps: number;
@@ -34,6 +35,7 @@ export const DEFAULT_BLM_CONFIG: ConfigData = {
 	criticalHit: 420,
 	directHit: 420,
 	determination: 440,
+	piety: 440,
 	countdown: 5,
 	randomSeed: "sup",
 	fps: 60,
@@ -54,6 +56,7 @@ export const DEFAULT_PCT_CONFIG: ConfigData = {
 	criticalHit: 3140,
 	directHit: 1993,
 	determination: 2269,
+	piety: 440,
 	countdown: 4.5,
 	randomSeed: "sup",
 	fps: 60,
@@ -83,6 +86,7 @@ export class GameConfig {
 	readonly criticalHit: number;
 	readonly directHit: number;
 	readonly determination: number;
+	readonly piety: number;
 	readonly countdown: number;
 	readonly randomSeed: string;
 	readonly fps: number;
@@ -102,6 +106,7 @@ export class GameConfig {
 		criticalHit: number;
 		directHit: number;
 		determination: number;
+		piety: number;
 		countdown: number;
 		randomSeed: string;
 		fps: number;
@@ -120,6 +125,7 @@ export class GameConfig {
 		this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
 		this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
 		this.determination = props.determination ?? DEFAULT_CONFIG.determination;
+		this.piety = props.piety ?? DEFAULT_CONFIG.piety;
 		this.countdown = props.countdown;
 		this.randomSeed = props.randomSeed;
 		this.fps = props.fps;
@@ -225,6 +231,7 @@ export class GameConfig {
 			criticalHit: this.criticalHit,
 			directHit: this.directHit,
 			determination: this.determination,
+			piety: this.piety,
 			countdown: this.countdown,
 			randomSeed: this.randomSeed,
 			casterTax: this.legacy_casterTax, // still want this bc don't want to break cached timelines

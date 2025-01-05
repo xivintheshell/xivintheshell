@@ -43,6 +43,7 @@ import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS } from "./Data/Jobs";
 import { ActionKey, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
 import { hasUnlockedTrait } from "../utilities";
 import { StatusPropsGenerator } from "../Components/StatusDisplay";
+import { XIVMath } from "./XIVMath";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require("seedrandom");
@@ -502,6 +503,9 @@ export class GameState {
 	captureManaRegenAmount(): number {
 		if (!this.isInCombat()) {
 			return 600;
+		}
+		if (this.job in HEALERS) {
+			return XIVMath.mpTick(this.config.level, this.config.piety);
 		}
 		return 200;
 	}

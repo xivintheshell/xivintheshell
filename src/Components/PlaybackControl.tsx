@@ -548,6 +548,7 @@ type ConfigState = {
 	criticalHit: string;
 	directHit: string;
 	determination: string;
+	piety: string;
 	animationLock: string;
 	fps: string;
 	gcdSkillCorrection: string;
@@ -585,6 +586,7 @@ export class Config extends React.Component {
 	setCriticalHit: (val: string) => void;
 	setDirectHit: (val: string) => void;
 	setDetermination: (val: string) => void;
+	setPiety: (val: string) => void;
 	setAnimationLock: (val: string) => void;
 	setFps: (val: string) => void;
 	setGcdSkillCorrection: (val: string) => void;
@@ -614,6 +616,7 @@ export class Config extends React.Component {
 			criticalHit: "0",
 			directHit: "0",
 			determination: "0",
+			piety: "0",
 			animationLock: "0",
 			fps: "0",
 			gcdSkillCorrection: "0",
@@ -734,6 +737,7 @@ export class Config extends React.Component {
 						];
 						if (stats.has("SPS")) importedFields.push("spellSpeed");
 						if (stats.has("SKS")) importedFields.push("skillSpeed");
+						if (stats.has("PIE")) importedFields.push("piety");
 						this.setState({
 							job: body["jobAbbrev"],
 							level: body["level"],
@@ -742,6 +746,7 @@ export class Config extends React.Component {
 							criticalHit: stats.get("CRT"),
 							directHit: stats.get("DH"),
 							determination: stats.get("DET"),
+							piety: stats.get("PIE"),
 							imported: true,
 							importedFields: importedFields,
 							dirty: true,
@@ -785,6 +790,7 @@ export class Config extends React.Component {
 							criticalHit: stats["crit"],
 							directHit: stats["dhit"],
 							determination: stats["determination"],
+							piety: stats["piety"],
 							imported: true,
 							importedFields: [
 								"job",
@@ -794,6 +800,7 @@ export class Config extends React.Component {
 								"criticalHit",
 								"directHit",
 								"determination",
+								"piety",
 							],
 							dirty: true,
 						});
@@ -847,6 +854,11 @@ export class Config extends React.Component {
 		this.setDetermination = (val: string) => {
 			this.setState({ determination: val, dirty: true });
 			this.removeImportedField("determination");
+		};
+
+		this.setPiety = (val: string) => {
+			this.setState({ piety: val, dirty: true });
+			this.removeImportedField("piety");
 		};
 
 		this.setAnimationLock = (val: string) => {
@@ -1391,6 +1403,7 @@ export class Config extends React.Component {
 			criticalHit: parseFloat(config.criticalHit),
 			directHit: parseFloat(config.directHit),
 			determination: parseFloat(config.determination),
+			piety: parseFloat(config.piety),
 			animationLock: parseFloat(config.animationLock),
 			fps: parseFloat(config.fps),
 			gcdSkillCorrection: parseFloat(config.gcdSkillCorrection),
@@ -1661,6 +1674,12 @@ export class Config extends React.Component {
 				defaultValue={this.state.determination}
 				description={localize({ en: "determination: ", zh: "信念：" })}
 				onChange={this.setDetermination}
+			/>
+			<Input
+				style={{ color: fieldColor("piety") }}
+				defaultValue={this.state.piety}
+				description={localize({ en: "piety: " })}
+				onChange={this.setPiety}
 			/>
 			<Input
 				defaultValue={this.state.animationLock}
