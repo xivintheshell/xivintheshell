@@ -3,6 +3,7 @@ import { ResourceOverride, ResourceOverrideData } from "./Resources";
 import { ShellInfo, ShellVersion } from "../Controller/Common";
 import { XIVMath } from "./XIVMath";
 import { ShellJob } from "./Data/Jobs";
+import { ResourceKey, RESOURCES } from "./Data";
 
 export type ConfigData = {
 	job: ShellJob;
@@ -131,6 +132,15 @@ export class GameConfig {
 				// backward compatibility:
 				if (obj.enabled === undefined) obj.effectOrTimerEnabled = true;
 				else obj.effectOrTimerEnabled = obj.enabled;
+			}
+			// Backwards compatibility re: change to keyed data
+			if (!(obj.type in RESOURCES)) {
+				const key = Object.keys(RESOURCES).find(
+					(key) => RESOURCES[key as ResourceKey].name === obj.type,
+				) as ResourceKey;
+				if (key) {
+					obj.type = key;
+				}
 			}
 			return new ResourceOverride(obj);
 		});
