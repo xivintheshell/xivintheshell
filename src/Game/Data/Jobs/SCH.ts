@@ -1,4 +1,4 @@
-import { ensureRecord } from "../../../Utilities/ensureRecord";
+import { ensureRecord } from "../../../utilities";
 import { Action, Cooldown, Resource, Trait } from "../types";
 
 export const SCH_ACTIONS = ensureRecord<Action>()({});

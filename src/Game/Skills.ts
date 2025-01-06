@@ -6,7 +6,7 @@ import { PotencyModifier } from "./Potency";
 import { ShellJob, ALL_JOBS } from "./Data/Jobs";
 import { ActionKey, ACTIONS, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
 import { LimitBreakActionKey } from "./Data/Shared/LimitBreak";
-import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
+import { hasUnlockedTrait } from "../utilities";
 import { Data } from "./Data/Data";
 
 // all gapclosers have the same animation lock

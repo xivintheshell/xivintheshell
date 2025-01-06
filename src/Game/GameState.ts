@@ -41,7 +41,7 @@ import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";
 import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS } from "./Data/Jobs";
 import { ActionKey, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
-import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
+import { hasUnlockedTrait } from "../utilities";
 import { StatusPropsGenerator } from "../Components/StatusDisplay";
 
 //https://www.npmjs.com/package/seedrandom
@@ -127,11 +127,16 @@ export class GameState {
 		// GCD, movement, and animation locks are treated as special since they do not appear
 		// in resource overrides
 		let adjustedGCD = 2.5;
-		if (JOBS[this.job].speedStat === "sks") {
-			adjustedGCD = config.adjustedSksGCD();
-		}
-		if (JOBS[this.job].speedStat === "sps") {
-			adjustedGCD = config.adjustedGCD();
+		switch (JOBS[this.job].role) {
+			case "TANK":
+			case "MELEE":
+			case "RANGED":
+				adjustedGCD = config.adjustedSksGCD();
+				break;
+			case "HEALER":
+			case "CASTER":
+				adjustedGCD = config.adjustedGCD();
+				break;
 		}
 		this.cooldowns.set(new CoolDown("cd_GCD", config.getAfterTaxGCD(adjustedGCD), 1, 1));
 
