@@ -1,5 +1,5 @@
 import { TRAITS } from "../Game/Data";
-import { hasUnlockedTrait } from "../Utilities/hasUnlockedTrait";
+import { hasUnlockedTrait } from "../utilities";
 
 function GetTraits() {
 	return Object.keys(TRAITS);
