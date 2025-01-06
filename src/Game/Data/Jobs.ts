@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { localize } from "../../Components/Localization";
-import { ensureRecord } from "../../Utilities/ensureRecord";
+import { ensureRecord } from "../../utilities";
 import { LimitBreak3ActionKey, TankLimitBreak3ResourceKey } from "./Shared/LimitBreak";
 
 /**
@@ -54,7 +54,6 @@ export type RoleKey = keyof RoleType;
 export interface Job {
 	role: RoleKey;
 	implementationLevel: ImplementationKey;
-	speedStat: "sks" | "sps";
 	usesMp?: boolean;
 	limitBreak?: LimitBreak3ActionKey; // Enforce actually specifying an LB3 action
 	limitBreakBuff?: TankLimitBreak3ResourceKey; // Only Tank LBs have a buff at the moment, so limit it to those
@@ -65,7 +64,6 @@ export const TANKS = ensureRecord<Job>()({
 	PLD: {
 		role: "TANK",
 		implementationLevel: "UNIMPLEMENTED",
-		speedStat: "sks",
 		usesMp: true,
 		limitBreak: "LAST_BASTION",
 		limitBreakBuff: "LAST_BASTION",
@@ -73,14 +71,12 @@ export const TANKS = ensureRecord<Job>()({
 	WAR: {
 		role: "TANK",
 		implementationLevel: "LIVE",
-		speedStat: "sks",
 		limitBreak: "LAND_WAKER",
 		limitBreakBuff: "LAND_WAKER",
 	},
 	DRK: {
 		role: "TANK",
 		implementationLevel: "UNIMPLEMENTED",
-		speedStat: "sks",
 		usesMp: true,
 		limitBreak: "DARK_FORCE",
 		limitBreakBuff: "DARK_FORCE",
@@ -88,7 +84,6 @@ export const TANKS = ensureRecord<Job>()({
 	GNB: {
 		role: "TANK",
 		implementationLevel: "TESTING",
-		speedStat: "sks",
 		limitBreak: "GUNMETAL_SOUL",
 		limitBreakBuff: "GUNMETAL_SOUL",
 	},
@@ -100,28 +95,24 @@ export const HEALERS = ensureRecord<Job>()({
 	WHM: {
 		role: "HEALER",
 		implementationLevel: "UNIMPLEMENTED",
-		speedStat: "sps",
 		usesMp: true,
 		limitBreak: "PULSE_OF_LIFE",
 	},
 	SCH: {
 		role: "HEALER",
 		implementationLevel: "UNIMPLEMENTED",
-		speedStat: "sps",
 		usesMp: true,
 		limitBreak: "ANGEL_FEATHERS",
 	},
 	AST: {
 		role: "HEALER",
 		implementationLevel: "UNIMPLEMENTED",
-		speedStat: "sps",
 		usesMp: true,
 		limitBreak: "ASTRAL_STASIS",
 	},
 	SGE: {
 		role: "HEALER",
 		implementationLevel: "UNIMPLEMENTED",
-		speedStat: "sps",
 		usesMp: true,
 		limitBreak: "TECHNE_MAKRE",
 	},
@@ -133,37 +124,31 @@ export const MELEE = ensureRecord<Job>()({
 	MNK: {
 		role: "MELEE",
 		implementationLevel: "UNIMPLEMENTED",
-		speedStat: "sks",
 		limitBreak: "FINAL_HEAVEN",
 	},
 	DRG: {
 		role: "MELEE",
 		implementationLevel: "UNIMPLEMENTED",
-		speedStat: "sks",
 		limitBreak: "DRAGONSONG_DIVE",
 	},
 	NIN: {
 		role: "MELEE",
 		implementationLevel: "UNIMPLEMENTED",
-		speedStat: "sks",
 		limitBreak: "CHIMATSURI",
 	},
 	SAM: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
-		speedStat: "sks",
 		limitBreak: "DOOM_OF_THE_LIVING",
 	},
 	RPR: {
 		role: "MELEE",
 		implementationLevel: "LIVE",
-		speedStat: "sks",
 		limitBreak: "THE_END",
 	},
 	VPR: {
 		role: "MELEE",
 		implementationLevel: "UNIMPLEMENTED",
-		speedStat: "sks",
 		limitBreak: "WORLD_SWALLOWER",
 	},
 });
@@ -174,19 +159,16 @@ export const RANGED = ensureRecord<Job>()({
 	BRD: {
 		role: "RANGED",
 		implementationLevel: "TESTING",
-		speedStat: "sks",
 		limitBreak: "SAGITTARIUS_ARROW",
 	},
 	MCH: {
 		role: "RANGED",
 		implementationLevel: "LIVE",
-		speedStat: "sks",
 		limitBreak: "SATELLITE_BEAM",
 	},
 	DNC: {
 		role: "RANGED",
 		implementationLevel: "LIVE",
-		speedStat: "sks",
 		limitBreak: "CRIMSON_LOTUS",
 	},
 });
@@ -197,28 +179,24 @@ export const CASTERS = ensureRecord<Job>()({
 	BLM: {
 		role: "CASTER",
 		implementationLevel: "LIVE",
-		speedStat: "sps",
 		usesMp: true,
 		limitBreak: "METEOR",
 	},
 	SMN: {
 		role: "CASTER",
 		implementationLevel: "UNIMPLEMENTED",
-		speedStat: "sps",
 		usesMp: true,
 		limitBreak: "TERAFLARE",
 	},
 	RDM: {
 		role: "CASTER",
 		implementationLevel: "LIVE",
-		speedStat: "sps",
 		usesMp: true,
 		limitBreak: "VERMILLION_SCOURGE",
 	},
 	PCT: {
 		role: "CASTER",
 		implementationLevel: "LIVE",
-		speedStat: "sps",
 		usesMp: true,
 		limitBreak: "CHROMATIC_FANTASY",
 	},

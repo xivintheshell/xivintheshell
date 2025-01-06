@@ -5,7 +5,7 @@ import { LocalizedContent } from "../../Components/Localization";
 
 export interface Action {
 	name: string;
-	id?: number; // Intended for use with exporting to Amarantine
+	id?: number; // In-game Action ID. Intended for use with exporting to Tischel
 	label?: Omit<LocalizedContent, "en">; // Defines the locale-specific text that will be displayed. English is inferred from the name property
 }
 

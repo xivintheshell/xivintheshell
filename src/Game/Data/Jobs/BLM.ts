@@ -1,4 +1,4 @@
-import { ensureRecord } from "../../../Utilities/ensureRecord";
+import { ensureRecord } from "../../../utilities";
 import { Action, Cooldown, Resource, Trait } from "../types";
 
 export const BLM_ACTIONS = ensureRecord<Action>()({
@@ -55,9 +55,9 @@ export const BLM_COOLDOWNS = ensureRecord<Cooldown>()({
 
 export const BLM_GAUGES = ensureRecord<Resource>()({
 	POLYGLOT: { name: "Polyglot", label: { zh: "通晓" } }, // [0, 3]
-	ASTRAL_FIRE: { name: "AstralFire", label: { zh: "星极火" } }, // [0, 3]
-	UMBRAL_ICE: { name: "UmbralIce", label: { zh: "灵极冰" } }, // [0, 3]
-	UMBRAL_HEART: { name: "UmbralHeart", label: { zh: "冰针" } }, // [0, 3]
+	ASTRAL_FIRE: { name: "Astral Fire", label: { zh: "星极火" } }, // [0, 3]
+	UMBRAL_ICE: { name: "Umbral Ice", label: { zh: "灵极冰" } }, // [0, 3]
+	UMBRAL_HEART: { name: "Umbral Heart", label: { zh: "冰针" } }, // [0, 3]
 	ENOCHIAN: { name: "Enochian", label: { zh: "天语" } }, // [0, 1]
 	PARADOX: { name: "Paradox", label: { zh: "悖论" } }, // [0, 1]
 	ASTRAL_SOUL: { name: "Astral Soul", label: { zh: "星极魂" } }, // [0, 6]

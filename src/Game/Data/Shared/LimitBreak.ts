@@ -1,4 +1,4 @@
-import { ensureRecord } from "../../../Utilities/ensureRecord";
+import { ensureRecord } from "../../../utilities";
 import { Action, Cooldown, Resource } from "../types";
 
 export const TANK_LB3_ACTIONS = ensureRecord<Action>()({
