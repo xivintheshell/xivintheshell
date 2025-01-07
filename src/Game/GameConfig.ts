@@ -135,11 +135,20 @@ export class GameConfig {
 			}
 			// Backwards compatibility re: change to keyed data
 			if (!(obj.type in RESOURCES)) {
-				const key = Object.keys(RESOURCES).find(
-					(key) => RESOURCES[key as ResourceKey].name === obj.type,
-				) as ResourceKey;
-				if (key) {
-					obj.type = key;
+				// Special case a few spelling changes made during the transition
+				if (obj.type.toString() === "AstralFire") {
+					obj.type = "ASTRAL_FIRE";
+				} else if (obj.type.toString() === "UmbralIce") {
+					obj.type = "UMBRAL_ICE";
+				} else if (obj.type.toString() === "UmbralHeart") {
+					obj.type = "UMBRAL_HEART";
+				} else {
+					const key = Object.keys(RESOURCES).find(
+						(key) => RESOURCES[key as ResourceKey].name === obj.type,
+					) as ResourceKey;
+					if (key) {
+						obj.type = key;
+					}
 				}
 			}
 			return new ResourceOverride(obj);
