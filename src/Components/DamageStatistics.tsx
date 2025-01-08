@@ -177,6 +177,8 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({ en: "enhanced reaping" }) as string;
 	} else if (buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
 		text = localize({ en: "immortal Sacrifice" }) as string;
+	} else if (buff === PotencyModifierType.SURGING_TEMPEST) {
+		text = localize({ en: "surging tempest" }) as string;
 	} else if (buff === PotencyModifierType.BARRAGE) {
 		text = localize({ en: "barrage" }) as string;
 	} else if (buff === PotencyModifierType.RAGING_STRIKES) {
