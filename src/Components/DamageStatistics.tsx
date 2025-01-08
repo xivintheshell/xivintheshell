@@ -192,6 +192,8 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({ en: "mages ballad" }) as string;
 	} else if (buff === PotencyModifierType.ARMYS_PAEON) {
 		text = localize({ en: "armys paeon" }) as string;
+	} else if (buff === PotencyModifierType.NO_MERCY) {
+		text = localize({ en: "no mercy" }) as string;
 	}
 	return text;
 }
@@ -317,6 +319,9 @@ function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
 	} else if (props.buff === PotencyModifierType.ARMYS_PAEON) {
 		text = localize({ en: "AP" }) as string;
 		color = colors.brd.armysCoda;
+	} else if (props.buff === PotencyModifierType.NO_MERCY) {
+		text = localize({ en: "NM" }) as string;
+		color = colors.rdm.blackMana;
 	}
 	return <span
 		style={{

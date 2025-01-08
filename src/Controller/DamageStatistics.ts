@@ -44,6 +44,9 @@ export const DOT_SKILLS: SkillName[] = [
 	// BRD
 	SkillName.CausticBite,
 	SkillName.Stormbite,
+	// GNB
+	SkillName.SonicBreak,
+	SkillName.BowShock,
 ];
 
 // source of truth
