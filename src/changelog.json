@@ -1,5 +1,29 @@
 [
 	{
+		"date": "1/8/25",
+		"changes": [
+			"Fixed surging tempest text not showing up in potency modifier tooltip"
+		]
+	},
+	{
+		"date": "1/5/25",
+		"changes": [
+			"Fixed a bug where multi-target spells lost their target counts when using the timeline editor"
+		]
+	},
+	{
+		"date": "1/4/25",
+		"changes": [
+			"Added support for multi-target abilities"
+		]
+	},
+	{
+		"date": "1/3/25",
+		"changes": [
+			"[WAR][SAM][RPR] Removed testing tag"
+		]
+	},
+	{
 		"date": "1/1/25",
 		"changes": [
 			"Added combined English FRU tracks"

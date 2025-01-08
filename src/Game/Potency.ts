@@ -303,6 +303,8 @@ export type InitialPotencyProps = {
 	basePotency: number;
 	snapshotTime?: number;
 	description: string;
+	targetCount: number;
+	falloff?: number;
 };
 
 export class Potency {
@@ -312,6 +314,8 @@ export class Potency {
 	aspect: Aspect;
 	description: string;
 	base: number;
+	targetCount: number;
+	falloff?: number;
 	snapshotTime?: number;
 	applicationTime?: number;
 	modifiers: PotencyModifier[] = [];
@@ -324,9 +328,15 @@ export class Potency {
 		this.base = props.basePotency;
 		this.snapshotTime = props.snapshotTime;
 		this.description = props.description;
+		this.targetCount = props.targetCount;
+		this.falloff = props.falloff;
 	}
 
-	getAmount(props: { tincturePotencyMultiplier: number; includePartyBuffs: boolean }) {
+	getAmount(props: {
+		tincturePotencyMultiplier: number;
+		includePartyBuffs: boolean;
+		includeSplash: boolean;
+	}) {
 		let totalDamageFactor = 1;
 		let totalAdditiveAmount = 0;
 		let totalCritBonus = 0;
@@ -377,6 +387,10 @@ export class Potency {
 			);
 		if (isAutoCDH) amt *= this.#calculateAutoCDHModifier(totalCritBonus, totalDhBonus);
 		else if (isAutoCrit) amt *= this.#calculateAutoCritModifier(totalCritBonus, totalDhBonus);
+		if (props.includeSplash) {
+			const splashScalar = 1 + (1 - (this.falloff ?? 1)) * (this.targetCount - 1);
+			amt *= splashScalar;
+		}
 		return amt;
 	}
 

@@ -318,6 +318,7 @@ const makeGCD_DNC = (
 			resourceValue: number;
 		};
 		recastTime: number | ResourceCalculationFn<DNCState>;
+		falloff?: number;
 		applicationDelay?: number;
 		validateAttempt?: StatePredicate<DNCState>;
 		onConfirm?: EffectFn<DNCState>;
@@ -393,6 +394,7 @@ const makeAbility_DNC = (
 		replaceIf?: ConditionalSkillReplace<DNCState>[];
 		highlightIf?: StatePredicate<DNCState>;
 		startOnHotbar?: boolean;
+		falloff?: number;
 		applicationDelay?: number;
 		animationLock?: number;
 		cooldown: number;
@@ -614,6 +616,7 @@ makeGCD_DNC(SkillName.SaberDance, 76, {
 		[TraitName.DynamicDancer, 520],
 	],
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0.5,
 	applicationDelay: 0.44,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.EspritGauge, 50) && !isDancing(state),
@@ -624,6 +627,7 @@ makeGCD_DNC(SkillName.DanceOfTheDawn, 100, {
 	startOnHotbar: false,
 	potency: 1000,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0.5,
 	applicationDelay: 0.44,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.EspritGauge, 50) && !isDancing(state),
@@ -636,6 +640,7 @@ makeGCD_DNC(SkillName.DanceOfTheDawn, 100, {
 makeGCD_DNC(SkillName.LastDance, 92, {
 	potency: 520,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0.5,
 	applicationDelay: 1.26,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.LastDanceReady) && !isDancing(state),
@@ -681,6 +686,7 @@ makeGCD_DNC(SkillName.FinishingMove, 96, {
 	startOnHotbar: false,
 	potency: 850,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0.5,
 	applicationDelay: 2.05,
 	onConfirm: (state) => state.applyStandardFinish(2),
 	secondaryCooldown: {
@@ -710,6 +716,7 @@ standardFinishes.forEach((finish) => {
 		assetPath: "DNC/Standard Finish.png",
 		startOnHotbar: false,
 		potency: finish.potency,
+		falloff: 0.75,
 		applicationDelay: 0.54,
 		onConfirm: (state) => {
 			const bonusLevel = state.getCurrentDanceStatus();
@@ -752,6 +759,7 @@ makeAbility_DNC(SkillName.FanDance3, 66, ResourceType.cd_FanDanceIII, {
 		[TraitName.DynamicDancer, 220],
 	],
 	cooldown: 1,
+	falloff: 0.5,
 	applicationDelay: 0.62,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.ThreefoldFanDance) && !isDancing(state),
@@ -763,6 +771,7 @@ makeAbility_DNC(SkillName.FanDance4, 86, ResourceType.cd_FanDanceIV, {
 		[TraitName.Never, 300],
 		[TraitName.DynamicDancer, 420],
 	],
+	falloff: 0.5,
 	cooldown: 1,
 	applicationDelay: 0.62,
 	validateAttempt: (state) =>
@@ -811,6 +820,7 @@ makeGCD_DNC(SkillName.TechnicalStep, 70, {
 	validateAttempt: (state) => !isDancing(state),
 	onConfirm: (state) => state.gainProc(ResourceType.TechnicalStep),
 	recastTime: 1.5,
+	falloff: 0.75,
 	secondaryCooldown: {
 		cdName: ResourceType.cd_TechnicalStep,
 		cooldown: 120,
@@ -821,6 +831,7 @@ makeGCD_DNC(SkillName.Tillana, 82, {
 	startOnHotbar: false,
 	potency: 600,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0.5,
 	applicationDelay: 0.84,
 	onConfirm: (state) => {
 		state.gainResource(ResourceType.EspritGauge, 50);
@@ -917,6 +928,7 @@ makeGCD_DNC(SkillName.StarfallDance, 90, {
 	startOnHotbar: false,
 	potency: 600,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0.75,
 	applicationDelay: 0.89,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.FlourishingStarfall) && !isDancing(state),
@@ -929,6 +941,7 @@ makeGCD_DNC(SkillName.Windmill, 15, {
 	replaceIf: [emboiteCondition],
 	potency: 100,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0,
 	applicationDelay: 0.62,
 	onConfirm: (state) => {
 		state.maybeGainProc(ResourceType.SilkenSymmetry);
@@ -947,6 +960,7 @@ makeGCD_DNC(SkillName.Bladeshower, 25, {
 		resource: ResourceType.WindmillCombo,
 		resourceValue: 1,
 	},
+	falloff: 0,
 	applicationDelay: 0.62,
 	onConfirm: (state) => {
 		state.maybeGainProc(ResourceType.SilkenFlow);
@@ -961,6 +975,7 @@ makeGCD_DNC(SkillName.RisingWindmill, 35, {
 	replaceIf: [jeteCondition],
 	potency: 140,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0,
 	applicationDelay: 0.62,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.SilkenSymmetry) ||
@@ -985,6 +1000,7 @@ makeGCD_DNC(SkillName.Bloodshower, 45, {
 	replaceIf: [pirouetteCondition],
 	potency: 180,
 	recastTime: (state) => state.config.adjustedSksGCD(),
+	falloff: 0,
 	applicationDelay: 0.62,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.SilkenFlow) ||
@@ -1009,6 +1025,7 @@ makeGCD_DNC(SkillName.Bloodshower, 45, {
 makeAbility_DNC(SkillName.FanDance2, 30, ResourceType.cd_FanDanceII, {
 	potency: 100,
 	cooldown: 1,
+	falloff: 0,
 	applicationDelay: 0.54,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.FeatherGauge) && !isDancing(state),

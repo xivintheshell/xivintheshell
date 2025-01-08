@@ -375,6 +375,7 @@ const makeWeaponskill_BRD = (
 		replaceIf?: ConditionalSkillReplace<BRDState>[];
 		startOnHotbar?: boolean;
 		potency?: number | Array<[TraitName, number]> | ResourceCalculationFn<BRDState>;
+		falloff?: number;
 		applicationDelay?: number;
 		validateAttempt?: StatePredicate<BRDState>;
 		onConfirm?: EffectFn<BRDState>;
@@ -409,6 +410,7 @@ const makeAbility_BRD = (
 		requiresCombat?: boolean;
 		highlightIf?: StatePredicate<BRDState>;
 		startOnHotbar?: boolean;
+		falloff?: number;
 		applicationDelay?: number;
 		animationLock?: number;
 		cooldown: number;
@@ -560,6 +562,7 @@ makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
 		const basePotency = (maxPotency - minPotency) * soulVoiceBonus + minPotency;
 		return basePotency;
 	},
+	falloff: 0,
 	applicationDelay: 1.07,
 	onConfirm: (state) => {
 		if (
@@ -583,6 +586,7 @@ makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
 makeWeaponskill_BRD(SkillName.BlastArrow, 86, {
 	startOnHotbar: false,
 	potency: 600,
+	falloff: 0.6,
 	applicationDelay: 1.65,
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.BlastArrowReady),
 	highlightIf: (state) => state.hasResourceAvailable(ResourceType.BlastArrowReady),
@@ -676,6 +680,7 @@ makeAbility_BRD(SkillName.PitchPerfect, 52, ResourceType.cd_PitchPerfect, {
 		const pitchPerfectStacks = state.resources.get(ResourceType.PitchPerfect).availableAmount();
 		return pitchPerfectStacks === 3 ? 360 : pitchPerfectStacks === 2 ? 220 : 100;
 	},
+	falloff: 0,
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.PitchPerfect, true),
 	validateAttempt: (state) =>
 		state.hasResourceAvailable(ResourceType.WanderersMinuet) &&
@@ -704,6 +709,7 @@ makeResourceAbility_BRD(SkillName.Barrage, 38, ResourceType.cd_Barrage, {
 makeWeaponskill_BRD(SkillName.ResonantArrow, 96, {
 	startOnHotbar: false,
 	potency: 600,
+	falloff: 0.5,
 	applicationDelay: 1.16,
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.ResonantArrowReady),
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ResonantArrowReady),
@@ -739,6 +745,7 @@ makeWeaponskill_BRD(SkillName.RadiantEncore, 100, {
 		const radiantCoda = state.resources.get(ResourceType.RadiantCoda).availableAmount();
 		return radiantCoda === 3 ? 900 : radiantCoda === 2 ? 600 : 500;
 	},
+	falloff: 0.5,
 	applicationDelay: 1.96,
 	onConfirm: (state) => state.tryConsumeResource(ResourceType.RadiantEncoreReady),
 	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.RadiantEncoreReady),
@@ -761,6 +768,7 @@ makeWeaponskill_BRD(SkillName.QuickNock, 18, {
 	potency: 110,
 	applicationDelay: 1.11, // Unsure, copied from Ladonsbite,
 	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.2),
+	falloff: 0,
 	autoUpgrade: {
 		trait: TraitName.QuickNockMastery,
 		otherSkill: SkillName.Ladonsbite,
@@ -769,12 +777,14 @@ makeWeaponskill_BRD(SkillName.QuickNock, 18, {
 makeWeaponskill_BRD(SkillName.Ladonsbite, 82, {
 	startOnHotbar: false,
 	potency: 110,
+	falloff: 0,
 	applicationDelay: 1.11,
 	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.35),
 });
 
 makeWeaponskill_BRD(SkillName.WideVolley, 18, {
 	potency: 140,
+	falloff: 0,
 	applicationDelay: 1.43, // Unsure, copied from Shadowbite,
 	onConfirm: (state) => {
 		if (state.hasResourceAvailable(ResourceType.Barrage)) {
@@ -797,6 +807,7 @@ makeWeaponskill_BRD(SkillName.WideVolley, 18, {
 makeWeaponskill_BRD(SkillName.Shadowbite, 72, {
 	startOnHotbar: false,
 	potency: 170,
+	falloff: 0,
 	applicationDelay: 1.43,
 	onConfirm: (state) => {
 		if (state.hasResourceAvailable(ResourceType.Barrage)) {
@@ -817,6 +828,7 @@ makeAbility_BRD(SkillName.RainOfDeath, 45, ResourceType.cd_HeartbreakShot, {
 	potency: 100,
 	cooldown: 15,
 	maxCharges: 3,
+	falloff: 0,
 	applicationDelay: 1.65,
 });
 
