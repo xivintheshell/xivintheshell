@@ -29,7 +29,7 @@ import { BuffType, LIMIT_BREAKS, ResourceType, SkillName, WarningType } from "..
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
-import { localize, localizeBuffType, localizeSkillName } from "./Localization";
+import { localize, localizePartyBuffType, localizeSkillName } from "./Localization";
 import { setEditingMarkerValues } from "./TimelineMarkers";
 import { getCurrentThemeColors, MarkerColor, ThemeColors } from "./ColorTheme";
 import { scrollEditorToFirstSelected } from "./TimelineEditor";
@@ -231,7 +231,7 @@ function drawMarkers(
 			if (m.markerType === MarkerType.Untargetable)
 				localizedDescription = localize({ en: "Untargetable", zh: "不可选中" }) as string;
 			else if (m.markerType === MarkerType.Buff)
-				localizedDescription = localizeBuffType(m.description as BuffType);
+				localizedDescription = localizePartyBuffType(m.description as BuffType);
 
 			let left =
 				timelineOrigin + StaticFn.positionFromTimeAndScale(m.time + countdown, scale);
