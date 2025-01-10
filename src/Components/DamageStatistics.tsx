@@ -177,6 +177,8 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({ en: "enhanced reaping" }) as string;
 	} else if (buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
 		text = localize({ en: "immortal Sacrifice" }) as string;
+	} else if (buff === PotencyModifierType.OVERHEATED) {
+		text = localize({ en: "overheated" }) as string;
 	} else if (buff === PotencyModifierType.SURGING_TEMPEST) {
 		text = localize({ en: "surging tempest" }) as string;
 	} else if (buff === PotencyModifierType.BARRAGE) {
@@ -293,6 +295,9 @@ function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
 		color = MarkerColor.Purple;
 	} else if (props.buff === PotencyModifierType.IMMORTAL_SACRIFICE) {
 		text = localize({ en: "IMMORTAL SAC" }) as string;
+		color = MarkerColor.Pink;
+	} else if (props.buff === PotencyModifierType.OVERHEATED) {
+		text = localize({ en: "OVERHEATED" }) as string;
 		color = MarkerColor.Pink;
 	} else if (props.buff === PotencyModifierType.SURGING_TEMPEST) {
 		text = localize({ en: "SURGING" }) as string;

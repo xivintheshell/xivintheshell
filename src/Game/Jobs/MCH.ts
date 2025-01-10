@@ -374,6 +374,12 @@ const makeWeaponskill_MCH = (
 			) {
 				mods.push(Modifiers.AutoCDH);
 			}
+			if (
+				state.hasResourceAvailable(ResourceType.Overheated) &&
+				!WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT.includes(name)
+			) {
+				mods.push(Modifiers.Overheated);
+			}
 			return mods;
 		},
 	});

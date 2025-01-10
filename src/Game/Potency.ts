@@ -40,6 +40,8 @@ export const enum PotencyModifierType {
 	ENHANCED_REAPING,
 	IMMORTAL_SACRIFICE,
 
+	OVERHEATED,
+
 	SURGING_TEMPEST,
 
 	RAGING_STRIKES,
@@ -208,6 +210,11 @@ export const Modifiers = {
 		kind: "adder",
 		source: PotencyModifierType.IMMORTAL_SACRIFICE,
 		additiveAmount: 40,
+	} as PotencyAdder,
+	Overheated: {
+		kind: "adder",
+		source: PotencyModifierType.OVERHEATED,
+		additiveAmount: 20,
 	} as PotencyAdder,
 	SurgingTempest: {
 		kind: "multiplier",

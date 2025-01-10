@@ -2,7 +2,8 @@
 	{
 		"date": "1/8/25",
 		"changes": [
-			"Fixed surging tempest text not showing up in potency modifier tooltip"
+			"[WAR] Fixed surging tempest text not showing up in potency modifier tooltip",
+			"[MCH] Fixed Overheated potency modifier not being applied"
 		]
 	},
 	{
