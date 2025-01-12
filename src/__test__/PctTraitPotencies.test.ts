@@ -1,6 +1,5 @@
-import { ShellInfo, ShellJob } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
-import { LevelSync, SkillName } from "../Game/Common";
+import { LevelSync } from "../Game/Common";
 import { getSkill } from "../Game/Skills";
 import { DEFAULT_PCT_CONFIG } from "../Game/GameConfig";
 
@@ -9,7 +8,7 @@ const testRedPotency = (level: LevelSync, expectedPotency: number) => {
 	const newConfig = { ...DEFAULT_PCT_CONFIG };
 	newConfig["level"] = level;
 	controller.setConfigAndRestart(newConfig);
-	const red = getSkill(ShellJob.PCT, SkillName.FireInRed);
+	const red = getSkill("PCT", "FIRE_IN_RED");
 	expect(red.potencyFn(controller.game)).toEqual(expectedPotency);
 };
 

@@ -1,5 +1,4 @@
 import {
-	damageData,
 	rotationTestSetup,
 	rotationTestTeardown,
 	makeTestWithConfigFn,
@@ -8,76 +7,77 @@ import {
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
-import { ShellJob } from "../Controller/Common";
 import { PotencyModifierType } from "../Game/Potency";
-import { Debug, ResourceType, SkillName } from "../Game/Common";
+import { Debug } from "../Game/Common";
 import { WARState } from "../Game/Jobs/WAR";
-import { getResourceInfo, ResourceInfo } from "../Game/Resources";
+import { ActionKey } from "../Game/Data";
 
 beforeEach(rotationTestSetup);
 
 afterEach(rotationTestTeardown);
 
-const testWithConfig = makeTestWithConfigFn(ShellJob.WAR);
+const testWithConfig = makeTestWithConfigFn("WAR");
 
 it(
 	"simulates 7.05 standard opener correctly",
 	testWithConfig({}, () => {
-		[
-			SkillName.Tomahawk,
-			SkillName.Infuriate,
-			SkillName.HeavySwing,
-			SkillName.Maim,
-			SkillName.StormsEye,
-			SkillName.InnerRelease,
-			SkillName.InnerChaos,
-			SkillName.Upheaval,
-			SkillName.Onslaught,
-			SkillName.PrimalRend,
-			SkillName.Onslaught,
-			SkillName.PrimalRuination,
-			SkillName.Onslaught,
-			SkillName.FellCleave,
-			SkillName.FellCleave,
-			SkillName.FellCleave,
-			SkillName.PrimalWrath,
-			SkillName.Infuriate,
-			SkillName.InnerChaos,
-			SkillName.HeavySwing,
-			SkillName.Maim,
-			SkillName.StormsPath,
-			SkillName.FellCleave,
-			SkillName.Infuriate,
-			SkillName.InnerChaos,
-		].forEach(applySkill);
+		(
+			[
+				"TOMAHAWK",
+				"INFURIATE",
+				"HEAVY_SWING",
+				"MAIM",
+				"STORMS_EYE",
+				"INNER_RELEASE",
+				"INNER_CHAOS",
+				"UPHEAVAL",
+				"ONSLAUGHT",
+				"PRIMAL_REND",
+				"ONSLAUGHT",
+				"PRIMAL_RUINATION",
+				"ONSLAUGHT",
+				"FELL_CLEAVE",
+				"FELL_CLEAVE",
+				"FELL_CLEAVE",
+				"PRIMAL_WRATH",
+				"INFURIATE",
+				"INNER_CHAOS",
+				"HEAVY_SWING",
+				"MAIM",
+				"STORMS_PATH",
+				"FELL_CLEAVE",
+				"INFURIATE",
+				"INNER_CHAOS",
+			] as ActionKey[]
+		).forEach(applySkill);
 		// wait for damage applications
 		controller.step(1);
 		const state = controller.game as WARState;
-		expect(state.resources.get(ResourceType.BeastGauge).availableAmount()).toEqual(0);
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest)).toBe(true);
+		expect(state.resources.get("BEAST_GAUGE").availableAmount()).toEqual(0);
+		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
 		compareDamageTables([
 			{
-				skillName: SkillName.Tomahawk,
+				skillName: "TOMAHAWK",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.HeavySwing,
+				skillName: "HEAVY_SWING",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.HeavySwing,
+				skillName: "HEAVY_SWING",
 				displayedModifiers: [PotencyModifierType.SURGING_TEMPEST],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Maim,
+				skillName: "MAIM",
 				displayedModifiers: [PotencyModifierType.COMBO],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Maim,
+				skillName: "MAIM",
 				displayedModifiers: [
 					PotencyModifierType.COMBO,
 					PotencyModifierType.SURGING_TEMPEST,
@@ -85,12 +85,12 @@ it(
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.StormsEye,
+				skillName: "STORMS_EYE",
 				displayedModifiers: [PotencyModifierType.COMBO],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.StormsPath,
+				skillName: "STORMS_PATH",
 				displayedModifiers: [
 					PotencyModifierType.COMBO,
 					PotencyModifierType.SURGING_TEMPEST,
@@ -98,7 +98,7 @@ it(
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.InnerChaos,
+				skillName: "INNER_CHAOS",
 				displayedModifiers: [
 					PotencyModifierType.AUTO_CDH,
 					PotencyModifierType.SURGING_TEMPEST,
@@ -106,12 +106,12 @@ it(
 				hitCount: 3,
 			},
 			{
-				skillName: SkillName.FellCleave,
+				skillName: "FELL_CLEAVE",
 				displayedModifiers: [PotencyModifierType.SURGING_TEMPEST],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.FellCleave,
+				skillName: "FELL_CLEAVE",
 				displayedModifiers: [
 					PotencyModifierType.SURGING_TEMPEST,
 					PotencyModifierType.AUTO_CDH,
@@ -119,7 +119,7 @@ it(
 				hitCount: 3,
 			},
 			{
-				skillName: SkillName.PrimalRend,
+				skillName: "PRIMAL_REND",
 				displayedModifiers: [
 					PotencyModifierType.AUTO_CDH,
 					PotencyModifierType.SURGING_TEMPEST,
@@ -127,7 +127,7 @@ it(
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.PrimalRuination,
+				skillName: "PRIMAL_RUINATION",
 				displayedModifiers: [
 					PotencyModifierType.AUTO_CDH,
 					PotencyModifierType.SURGING_TEMPEST,
@@ -135,27 +135,27 @@ it(
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.PrimalWrath,
+				skillName: "PRIMAL_WRATH",
 				displayedModifiers: [PotencyModifierType.SURGING_TEMPEST],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Onslaught,
+				skillName: "ONSLAUGHT",
 				displayedModifiers: [PotencyModifierType.SURGING_TEMPEST],
 				hitCount: 3,
 			},
 			{
-				skillName: SkillName.Upheaval,
+				skillName: "UPHEAVAL",
 				displayedModifiers: [PotencyModifierType.SURGING_TEMPEST],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.InnerRelease,
+				skillName: "INNER_RELEASE",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Infuriate,
+				skillName: "INFURIATE",
 				displayedModifiers: [],
 				hitCount: 3,
 			},
@@ -166,47 +166,47 @@ it(
 it(
 	"Tracks surging tempest correctly",
 	testWithConfig({}, () => {
-		[SkillName.Overpower, SkillName.Onslaught, SkillName.MythrilTempest].forEach(applySkill);
+		(["OVERPOWER", "ONSLAUGHT", "MYTHRIL_TEMPEST"] as ActionKey[]).forEach(applySkill);
 		const state = controller.game as WARState;
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest));
+		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
 		// Mythril Tempest gives about 30.45 seconds of Surging Tempest immediately
-		expect(state.resources.timeTillReady(ResourceType.SurgingTempest)).toBeGreaterThan(30);
-		expect(state.resources.timeTillReady(ResourceType.SurgingTempest)).toBeLessThan(31);
-		applySkill(SkillName.Onslaught);
+		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeGreaterThan(30);
+		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeLessThan(31);
+		applySkill("ONSLAUGHT");
 
 		// wait for Surging Tempest to nearly expire before refreshing
-		applySkill(SkillName.Overpower);
+		applySkill("OVERPOWER");
 		controller.step(27.7);
-		applySkill(SkillName.MythrilTempest);
+		applySkill("MYTHRIL_TEMPEST");
 
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest));
-		expect(state.resources.timeTillReady(ResourceType.SurgingTempest)).toBeLessThan(1);
+		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
+		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeLessThan(1);
 		// Surging Tempest should drop before being re-applied after the application delay on Mythril Tempest
-		controller.step(state.resources.timeTillReady(ResourceType.SurgingTempest) + Debug.epsilon);
-		expect(!state.hasResourceAvailable(ResourceType.SurgingTempest));
-		applySkill(SkillName.Onslaught);
-		expect(state.hasResourceAvailable(ResourceType.SurgingTempest));
+		controller.step(state.resources.timeTillReady("SURGING_TEMPEST") + Debug.epsilon);
+		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(false);
+		applySkill("ONSLAUGHT");
+		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
 		// wait for damage application
 		controller.step(1);
 
 		compareDamageTables([
 			{
-				skillName: SkillName.Overpower,
+				skillName: "OVERPOWER",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Overpower,
+				skillName: "OVERPOWER",
 				displayedModifiers: [PotencyModifierType.SURGING_TEMPEST],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.MythrilTempest,
+				skillName: "MYTHRIL_TEMPEST",
 				displayedModifiers: [PotencyModifierType.COMBO],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.MythrilTempest,
+				skillName: "MYTHRIL_TEMPEST",
 				displayedModifiers: [
 					PotencyModifierType.COMBO,
 					PotencyModifierType.SURGING_TEMPEST,
@@ -214,12 +214,12 @@ it(
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Onslaught,
+				skillName: "ONSLAUGHT",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.Onslaught,
+				skillName: "ONSLAUGHT",
 				displayedModifiers: [PotencyModifierType.SURGING_TEMPEST],
 				hitCount: 2,
 			},

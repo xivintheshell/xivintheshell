@@ -25,7 +25,7 @@ import {
 	TimelineDimensions,
 	TimelineDrawOptions,
 } from "./Common";
-import { BuffType, LIMIT_BREAKS, ResourceType, SkillName, WarningType } from "../Game/Common";
+import { BuffType, WarningType } from "../Game/Common";
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
@@ -35,7 +35,8 @@ import { getCurrentThemeColors, MarkerColor, ThemeColors } from "./ColorTheme";
 import { scrollEditorToFirstSelected } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
 import { updateTimelineView } from "./Timeline";
-import { ShellJob } from "../Controller/Common";
+import { ShellJob } from "../Game/Data/Jobs";
+import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 
 export type TimelineRenderingProps = {
 	timelineWidth: number;
@@ -440,7 +441,7 @@ function drawDamageMarks(
 		// pot?
 		let pot = false;
 		dm.buffs.forEach((b) => {
-			if (b === ResourceType.Tincture) pot = true;
+			if (b === "TINCTURE") pot = true;
 		});
 		// hover text
 		let time = "[" + dm.displayTime.toFixed(3) + "] ";
@@ -454,7 +455,7 @@ function drawDamageMarks(
 			);
 			if (untargetable) {
 				info.push((0).toFixed(3) + " (" + sourceStr + ")");
-			} else if (LIMIT_BREAKS.includes(damageInfo.sourceSkill)) {
+			} else if (damageInfo.sourceSkill in LIMIT_BREAK_ACTIONS) {
 				const lbStr = localize({ en: "LB" }) as string;
 				info.push(lbStr + " (" + sourceStr + ")");
 			} else {
@@ -520,7 +521,7 @@ function drawLucidMarks(
 			"[" +
 			mark.displayTime.toFixed(3) +
 			"] " +
-			mark.sourceDesc.replace("{skill}", localizeSkillName(SkillName.LucidDreaming));
+			mark.sourceDesc.replace("{skill}", localizeSkillName("LUCID_DREAMING"));
 		testInteraction({ x: x - 3, y: timelineOriginY, w: 6, h: 6 }, [hoverText]);
 	});
 }
@@ -618,7 +619,7 @@ function drawSkills(
 				h: TimelineDimensions.skillButtonHeight / 2,
 			});
 		}
-		if (LIMIT_BREAKS.includes(skill.skillName)) {
+		if (skill.skillName in LIMIT_BREAK_ACTIONS) {
 			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
 			greyLockBars.push({
 				x: x + barsOffset,
@@ -729,7 +730,7 @@ function drawSkills(
 		lines.push(description);
 
 		// 2. potency
-		if (node.getInitialPotency() && !LIMIT_BREAKS.includes(node.skillName!)) {
+		if (node.getInitialPotency() && !((node.skillName ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
 			const potency = node.getPotency({
 				tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 				includePartyBuffs: true,

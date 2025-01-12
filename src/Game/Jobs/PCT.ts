@@ -1,8 +1,7 @@
 // Skill and state declarations for PCT.
 
 import { controller } from "../../Controller/Controller";
-import { ShellJob } from "../../Controller/Common";
-import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
+import { BuffType, WarningType } from "../Common";
 import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -24,122 +23,126 @@ import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
+import { ActionKey, TraitKey } from "../Data";
+import { PCTStatusPropsGenerator } from "../../Components/Jobs/PCT";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
+import { PCTResourceKey, PCTActionKey, PCTCooldownKey } from "../Data/Jobs/PCT";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
 const makePCTResource = (
-	rsc: ResourceType,
+	rsc: PCTResourceKey,
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
-	makeResource(ShellJob.PCT, rsc, maxValue, params ?? {});
+	makeResource("PCT", rsc, maxValue, params ?? {});
 };
 
-makePCTResource(ResourceType.Portrait, 2);
-makePCTResource(ResourceType.Depictions, 3);
+makePCTResource("PORTRAIT", 2);
+makePCTResource("DEPICTIONS", 3);
 // automatically do prepull draws
-makePCTResource(ResourceType.CreatureCanvas, 1, { default: 1 });
-makePCTResource(ResourceType.WeaponCanvas, 1, { default: 1 });
-makePCTResource(ResourceType.LandscapeCanvas, 1, { default: 1 });
-makePCTResource(ResourceType.PaletteGauge, 100);
-makePCTResource(ResourceType.Paint, 5);
+makePCTResource("CREATURE_CANVAS", 1, { default: 1 });
+makePCTResource("WEAPON_CANVAS", 1, { default: 1 });
+makePCTResource("LANDSCAPE_CANVAS", 1, { default: 1 });
+makePCTResource("PALETTE_GAUGE", 100);
+makePCTResource("PAINT", 5);
 
-makePCTResource(ResourceType.Aetherhues, 2, { timeout: 30.8 });
-makePCTResource(ResourceType.MonochromeTones, 1);
-makePCTResource(ResourceType.SubtractivePalette, 3);
-makePCTResource(ResourceType.HammerTime, 3, { timeout: 30 });
-makePCTResource(ResourceType.Inspiration, 1);
-makePCTResource(ResourceType.SubtractiveSpectrum, 1, { timeout: 30 });
-makePCTResource(ResourceType.Hyperphantasia, 5, { timeout: 30 });
-makePCTResource(ResourceType.RainbowBright, 1, { timeout: 30 });
-makePCTResource(ResourceType.Starstruck, 1, { timeout: 20 });
-makePCTResource(ResourceType.StarryMuse, 1, { timeout: 20.5 });
-makePCTResource(ResourceType.TemperaCoat, 1, { timeout: 10 });
-makePCTResource(ResourceType.TemperaGrassa, 1, { timeout: 10 });
-makePCTResource(ResourceType.Smudge, 1, { timeout: 5 });
+makePCTResource("AETHERHUES", 2, { timeout: 30.8 });
+makePCTResource("MONOCHROME_TONES", 1);
+makePCTResource("SUBTRACTIVE_PALETTE", 3);
+makePCTResource("HAMMER_TIME", 3, { timeout: 30 });
+makePCTResource("INSPIRATION", 1);
+makePCTResource("SUBTRACTIVE_SPECTRUM", 1, { timeout: 30 });
+makePCTResource("HYPERPHANTASIA", 5, { timeout: 30 });
+makePCTResource("RAINBOW_BRIGHT", 1, { timeout: 30 });
+makePCTResource("STARSTRUCK", 1, { timeout: 20 });
+makePCTResource("STARRY_MUSE", 1, { timeout: 20.5 });
+makePCTResource("TEMPERA_COAT", 1, { timeout: 10 });
+makePCTResource("TEMPERA_GRASSA", 1, { timeout: 10 });
+makePCTResource("SMUDGE", 1, { timeout: 5 });
 
-const HYPERPHANTASIA_SKILLS: SkillName[] = [
-	SkillName.FireInRed,
-	SkillName.Fire2InRed,
-	SkillName.AeroInGreen,
-	SkillName.Aero2InGreen,
-	SkillName.WaterInBlue,
-	SkillName.Water2InBlue,
-	SkillName.HolyInWhite,
-	SkillName.BlizzardInCyan,
-	SkillName.Blizzard2InCyan,
-	SkillName.StoneInYellow,
-	SkillName.Stone2InYellow,
-	SkillName.ThunderInMagenta,
-	SkillName.Thunder2InMagenta,
-	SkillName.CometInBlack,
-	SkillName.StarPrism,
+const HYPERPHANTASIA_SKILLS: PCTActionKey[] = [
+	"FIRE_IN_RED",
+	"FIRE_II_IN_RED",
+	"AERO_IN_GREEN",
+	"AERO_II_IN_GREEN",
+	"WATER_IN_BLUE",
+	"WATER_II_IN_BLUE",
+	"HOLY_IN_WHITE",
+	"BLIZZARD_IN_CYAN",
+	"BLIZZARD_II_IN_CYAN",
+	"STONE_IN_YELLOW",
+	"STONE_II_IN_YELLOW",
+	"THUNDER_IN_MAGENTA",
+	"THUNDER_II_IN_MAGENTA",
+	"COMET_IN_BLACK",
+	"STAR_PRISM",
 ];
 
 // === JOB GAUGE AND STATE ===
 export class PCTState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
-		const swiftcastCooldown = (this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) && 40) || 60;
-		[new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1)].forEach((cd) =>
+		const swiftcastCooldown = (this.hasTraitUnlocked("ENHANCED_SWIFTCAST") && 40) || 60;
+		[new CoolDown("cd_SWIFTCAST", swiftcastCooldown, 1, 1)].forEach((cd) =>
 			this.cooldowns.set(cd),
 		);
-		const livingMuseStacks = this.hasTraitUnlocked(TraitName.EnhancedPictomancyIV) ? 3 : 2;
-		this.cooldowns.set(
-			new CoolDown(ResourceType.cd_LivingMuse, 40, livingMuseStacks, livingMuseStacks),
-		);
-		const steelMuseStacks = this.hasTraitUnlocked(TraitName.EnhancedPictomancyII) ? 2 : 1;
-		this.cooldowns.set(
-			new CoolDown(ResourceType.cd_SteelMuse, 60, steelMuseStacks, steelMuseStacks),
-		);
+		const livingMuseStacks = this.hasTraitUnlocked("ENHANCED_PICTOMANCY_IV") ? 3 : 2;
+		this.cooldowns.set(new CoolDown("cd_LIVING_MUSE", 40, livingMuseStacks, livingMuseStacks));
+		const steelMuseStacks = this.hasTraitUnlocked("ENHANCED_PICTOMANCY_II") ? 2 : 1;
+		this.cooldowns.set(new CoolDown("cd_STEEL_MUSE", 60, steelMuseStacks, steelMuseStacks));
 
 		this.registerRecurringEvents();
 	}
 
+	override get statusPropsGenerator(): StatusPropsGenerator<PCTState> {
+		return new PCTStatusPropsGenerator(this);
+	}
+
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
-		if (this.hasResourceAvailable(ResourceType.StarryMuse)) {
+		if (this.hasResourceAvailable("STARRY_MUSE")) {
 			node.addBuff(BuffType.StarryMuse);
 		}
 	}
 
 	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
 		if (
-			this.hasResourceAvailable(ResourceType.Inspiration) &&
-			HYPERPHANTASIA_SKILLS.includes(skill.name)
+			this.hasResourceAvailable("INSPIRATION") &&
+			HYPERPHANTASIA_SKILLS.includes(skill.name as PCTActionKey)
 		) {
 			node.addBuff(BuffType.Hyperphantasia);
 		}
 	}
 
 	// apply hyperphantasia + sps adjustment without consuming any resources
-	captureSpellCastTime(name: SkillName, baseCastTime: number): number {
-		if (name.includes("Motif")) {
+	captureSpellCastTime(name: ActionKey, baseCastTime: number): number {
+		if (name.includes("MOTIF")) {
 			// motifs are not affected by sps
 			return baseCastTime;
 		}
-		if (name === SkillName.RainbowDrip) {
+		if (name === "RAINBOW_DRIP") {
 			// rainbow drip is not affected by inspiration
-			return this.hasResourceAvailable(ResourceType.RainbowBright)
+			return this.hasResourceAvailable("RAINBOW_BRIGHT")
 				? 0
 				: this.config.adjustedCastTime(baseCastTime);
 		}
 		return this.config.adjustedCastTime(
 			baseCastTime,
-			this.hasResourceAvailable(ResourceType.Inspiration) ? 25 : undefined,
+			this.hasResourceAvailable("INSPIRATION") ? 25 : undefined,
 		);
 	}
 
-	captureSpellRecastTime(name: SkillName, baseRecastTime: number): number {
+	captureSpellRecastTime(name: ActionKey, baseRecastTime: number): number {
 		if (name.includes("Motif")) {
 			// motifs are unaffected by sps
 			return baseRecastTime;
 		}
-		if (name === SkillName.RainbowDrip) {
+		if (name === "RAINBOW_DRIP") {
 			// rainbow drip is not affected by inspiration
 			// when rainbow bright is affecting rainbow drip, treat it as a 6s cast
 			// then subtract 3.5s from the result
 			let recast = this.config.adjustedGCD(baseRecastTime);
-			return this.hasResourceAvailable(ResourceType.RainbowBright) ? recast - 3.5 : recast;
+			return this.hasResourceAvailable("RAINBOW_BRIGHT") ? recast - 3.5 : recast;
 		}
 		// hammers are not affected by inspiration
 		if (name.includes("Hammer")) {
@@ -147,26 +150,25 @@ export class PCTState extends GameState {
 		}
 		return this.config.adjustedGCD(
 			baseRecastTime,
-			this.hasResourceAvailable(ResourceType.Inspiration) ? 25 : undefined,
+			this.hasResourceAvailable("INSPIRATION") ? 25 : undefined,
 		);
 	}
 
 	getHammerStacks() {
-		return this.resources.get(ResourceType.HammerTime).availableAmount();
+		return this.resources.get("HAMMER_TIME").availableAmount();
 	}
 
 	doFiller() {
 		this.cycleAetherhues();
 		this.tryConsumeHyperphantasia();
-		this.tryConsumeResource(ResourceType.SubtractivePalette);
+		this.tryConsumeResource("SUBTRACTIVE_PALETTE");
 	}
 
 	// falls off after 30 (or 30.8) seconds unless next spell is resolved
 	// (for now ignore edge case of buff falling off mid-cast)
 	cycleAetherhues() {
-		const aetherhues = this.resources.get(ResourceType.Aetherhues);
-		const dropTime = (getResourceInfo(ShellJob.PCT, ResourceType.Aetherhues) as ResourceInfo)
-			.maxTimeout;
+		const aetherhues = this.resources.get("AETHERHUES");
+		const dropTime = (getResourceInfo("PCT", "AETHERHUES") as ResourceInfo).maxTimeout;
 		if (aetherhues.available(2) && aetherhues.pendingChange) {
 			// reset timer and reset value to 0
 			aetherhues.overrideCurrentValue(0);
@@ -179,11 +181,10 @@ export class PCTState extends GameState {
 			// we were at 0 aetherhues, so increment and start the timer anew
 			aetherhues.gain(1);
 			this.resources.addResourceEvent({
-				rscType: ResourceType.Aetherhues,
+				rscType: "AETHERHUES",
 				name: "reset aetherhues status",
 				delay: dropTime,
-				fnOnRsc: (rsc) =>
-					this.resources.get(ResourceType.Aetherhues).overrideCurrentValue(0),
+				fnOnRsc: (rsc) => this.resources.get("AETHERHUES").overrideCurrentValue(0),
 			});
 		}
 	}
@@ -192,8 +193,8 @@ export class PCTState extends GameState {
 	// are greatly reduced
 	// when all 5 phantasia stacks are consumed, then inspiration is also removed
 	tryConsumeHyperphantasia() {
-		let hyperphantasia = this.resources.get(ResourceType.Hyperphantasia);
-		let inspiration = this.resources.get(ResourceType.Inspiration);
+		let hyperphantasia = this.resources.get("HYPERPHANTASIA");
+		let inspiration = this.resources.get("INSPIRATION");
 		if (
 			inspiration.available(1) &&
 			hyperphantasia.available(1) &&
@@ -206,9 +207,9 @@ export class PCTState extends GameState {
 				inspiration.consume(1);
 				hyperphantasia.removeTimer();
 				inspiration.removeTimer();
-				if (this.hasTraitUnlocked(TraitName.EnhancedPictomancyIII)) {
-					this.resources.get(ResourceType.RainbowBright).gain(1);
-					this.enqueueResourceDrop(ResourceType.RainbowBright);
+				if (this.hasTraitUnlocked("ENHANCED_PICTOMANCY_III")) {
+					this.resources.get("RAINBOW_BRIGHT").gain(1);
+					this.enqueueResourceDrop("RAINBOW_BRIGHT");
 				}
 			}
 		}
@@ -224,7 +225,7 @@ export class PCTState extends GameState {
 // `startOnHotbar` set to false, and `replaceIf` set appropriately on the abilities to replace.
 
 const makeSpell_PCT = (
-	name: SkillName,
+	name: PCTActionKey,
 	unlockLevel: number,
 	params: {
 		replaceIf?: ConditionalSkillReplace<PCTState>[];
@@ -233,7 +234,7 @@ const makeSpell_PCT = (
 		baseCastTime: number;
 		baseRecastTime?: number;
 		baseManaCost?: number;
-		basePotency?: number | Array<[TraitName, number]>;
+		basePotency?: number | Array<[TraitKey, number]>;
 		jobPotencyModifiers?: PotencyModifierFn<PCTState>;
 		falloff?: number;
 		applicationDelay: number;
@@ -247,18 +248,17 @@ const makeSpell_PCT = (
 		// Consume swift/triple before anything else happens.
 		// The code here is dependent on short-circuiting logic to consume the correct resources.
 		// Don't consume non-swiftcast resources yet.
-		(name === SkillName.RainbowDrip &&
-			state.hasResourceAvailable(ResourceType.RainbowBright)) ||
-			name === SkillName.StarPrism ||
-			name === SkillName.HolyInWhite ||
-			name === SkillName.CometInBlack ||
-			name === SkillName.HammerStamp ||
-			name === SkillName.HammerBrush ||
-			name === SkillName.PolishingHammer ||
-			state.tryConsumeResource(ResourceType.Swiftcast);
+		(name === "RAINBOW_DRIP" && state.hasResourceAvailable("RAINBOW_BRIGHT")) ||
+			name === "STAR_PRISM" ||
+			name === "HOLY_IN_WHITE" ||
+			name === "COMET_IN_BLACK" ||
+			name === "HAMMER_STAMP" ||
+			name === "HAMMER_BRUSH" ||
+			name === "POLISHING_HAMMER" ||
+			state.tryConsumeResource("SWIFTCAST");
 	}, params.onConfirm ?? NO_EFFECT);
 	const onApplication: EffectFn<PCTState> = params.onApplication ?? NO_EFFECT;
-	return makeSpell(ShellJob.PCT, name, unlockLevel, {
+	return makeSpell("PCT", name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		highlightIf: params.highlightIf,
@@ -268,7 +268,7 @@ const makeSpell_PCT = (
 		potency: params.basePotency,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
-			if (state.hasResourceAvailable(ResourceType.StarryMuse)) {
+			if (state.hasResourceAvailable("STARRY_MUSE")) {
 				mods.push(Modifiers.Starry);
 			}
 			if (params.jobPotencyModifiers) {
@@ -280,26 +280,25 @@ const makeSpell_PCT = (
 		validateAttempt: params.validateAttempt,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) =>
-			(name === SkillName.RainbowDrip &&
-				state.hasResourceAvailable(ResourceType.RainbowBright)) ||
-			name === SkillName.StarPrism ||
-			name === SkillName.HolyInWhite ||
-			name === SkillName.CometInBlack ||
-			name === SkillName.HammerStamp ||
-			name === SkillName.HammerBrush ||
-			name === SkillName.PolishingHammer ||
-			state.hasResourceAvailable(ResourceType.Swiftcast),
+			(name === "RAINBOW_DRIP" && state.hasResourceAvailable("RAINBOW_BRIGHT")) ||
+			name === "STAR_PRISM" ||
+			name === "HOLY_IN_WHITE" ||
+			name === "COMET_IN_BLACK" ||
+			name === "HAMMER_STAMP" ||
+			name === "HAMMER_BRUSH" ||
+			name === "POLISHING_HAMMER" ||
+			state.hasResourceAvailable("SWIFTCAST"),
 		onConfirm: onConfirm,
 		onApplication: onApplication,
 	});
 };
 
 const makeAbility_PCT = (
-	name: SkillName,
+	name: PCTActionKey,
 	unlockLevel: number,
-	cdName: ResourceType,
+	cdName: PCTCooldownKey,
 	params: {
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<PCTState>[];
 		requiresCombat?: boolean;
 		highlightIf?: StatePredicate<PCTState>;
@@ -314,472 +313,457 @@ const makeAbility_PCT = (
 		onApplication?: EffectFn<PCTState>;
 	},
 ): Ability<PCTState> =>
-	makeAbility(ShellJob.PCT, name, unlockLevel, cdName, {
+	makeAbility("PCT", name, unlockLevel, cdName, {
 		jobPotencyModifiers: (state) =>
-			state.hasResourceAvailable(ResourceType.StarryMuse) ? [Modifiers.Starry] : [],
+			state.hasResourceAvailable("STARRY_MUSE") ? [Modifiers.Starry] : [],
 		...params,
 	});
 
 // Conditions for replacing RGB/CMY on hotbar
 const redCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.FireInRed,
-	condition: (state) => !state.hasResourceAvailable(ResourceType.Aetherhues),
+	newSkill: "FIRE_IN_RED",
+	condition: (state) => !state.hasResourceAvailable("AETHERHUES"),
 };
 const greenCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.AeroInGreen,
-	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+	newSkill: "AERO_IN_GREEN",
+	condition: (state) => state.resources.get("AETHERHUES").availableAmount() === 1,
 };
 const blueCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.WaterInBlue,
-	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
+	newSkill: "WATER_IN_BLUE",
+	condition: (state) => state.resources.get("AETHERHUES").availableAmount() === 2,
 };
 const cyanCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.BlizzardInCyan,
-	condition: (state) => !state.hasResourceAvailable(ResourceType.Aetherhues),
+	newSkill: "BLIZZARD_IN_CYAN",
+	condition: (state) => !state.hasResourceAvailable("AETHERHUES"),
 };
 const yellowCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.StoneInYellow,
-	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+	newSkill: "STONE_IN_YELLOW",
+	condition: (state) => state.resources.get("AETHERHUES").availableAmount() === 1,
 };
 const magentaCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.ThunderInMagenta,
-	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
+	newSkill: "THUNDER_IN_MAGENTA",
+	condition: (state) => state.resources.get("AETHERHUES").availableAmount() === 2,
 };
 
 const red2Condition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.Fire2InRed,
-	condition: (state) => !state.hasResourceAvailable(ResourceType.Aetherhues),
+	newSkill: "FIRE_II_IN_RED",
+	condition: (state) => !state.hasResourceAvailable("AETHERHUES"),
 };
 const green2Condition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.Aero2InGreen,
-	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+	newSkill: "AERO_II_IN_GREEN",
+	condition: (state) => state.resources.get("AETHERHUES").availableAmount() === 1,
 };
 const blue2Condition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.Water2InBlue,
-	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
+	newSkill: "WATER_II_IN_BLUE",
+	condition: (state) => state.resources.get("AETHERHUES").availableAmount() === 2,
 };
 const cyan2Condition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.Blizzard2InCyan,
-	condition: (state) => !state.hasResourceAvailable(ResourceType.Aetherhues),
+	newSkill: "BLIZZARD_II_IN_CYAN",
+	condition: (state) => !state.hasResourceAvailable("AETHERHUES"),
 };
 const yellow2Condition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.Stone2InYellow,
-	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 1,
+	newSkill: "STONE_II_IN_YELLOW",
+	condition: (state) => state.resources.get("AETHERHUES").availableAmount() === 1,
 };
 const magenta2Condition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.Thunder2InMagenta,
-	condition: (state) => state.resources.get(ResourceType.Aetherhues).availableAmount() === 2,
+	newSkill: "THUNDER_II_IN_MAGENTA",
+	condition: (state) => state.resources.get("AETHERHUES").availableAmount() === 2,
 };
 
 // use the creature motif icon when a creature is already drawn
 const creatureMotifCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.CreatureMotif,
-	condition: (state) => state.hasResourceAvailable(ResourceType.CreatureCanvas),
+	newSkill: "CREATURE_MOTIF",
+	condition: (state) => state.hasResourceAvailable("CREATURE_CANVAS"),
 };
 const pomMotifCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.PomMotif,
+	newSkill: "POM_MOTIF",
 	condition: (state) =>
-		!state.hasResourceAvailable(ResourceType.CreatureCanvas) &&
-		state.resources.get(ResourceType.Depictions).availableAmount() === 0,
+		!state.hasResourceAvailable("CREATURE_CANVAS") &&
+		state.resources.get("DEPICTIONS").availableAmount() === 0,
 };
 const wingMotifCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.WingMotif,
+	newSkill: "WING_MOTIF",
 	condition: (state) =>
-		!state.hasResourceAvailable(ResourceType.CreatureCanvas) &&
-		state.resources.get(ResourceType.Depictions).availableAmount() === 1,
+		!state.hasResourceAvailable("CREATURE_CANVAS") &&
+		state.resources.get("DEPICTIONS").availableAmount() === 1,
 };
 const clawMotifCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.ClawMotif,
+	newSkill: "CLAW_MOTIF",
 	condition: (state) =>
-		!state.hasResourceAvailable(ResourceType.CreatureCanvas) &&
-		state.resources.get(ResourceType.Depictions).availableAmount() === 2,
+		!state.hasResourceAvailable("CREATURE_CANVAS") &&
+		state.resources.get("DEPICTIONS").availableAmount() === 2,
 };
 const mawMotifCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.MawMotif,
+	newSkill: "MAW_MOTIF",
 	condition: (state) =>
-		!state.hasResourceAvailable(ResourceType.CreatureCanvas) &&
-		state.resources.get(ResourceType.Depictions).availableAmount() === 3,
+		!state.hasResourceAvailable("CREATURE_CANVAS") &&
+		state.resources.get("DEPICTIONS").availableAmount() === 3,
 };
 
 const livingMuseCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.LivingMuse,
-	condition: (state) => !state.hasResourceAvailable(ResourceType.CreatureCanvas),
+	newSkill: "LIVING_MUSE",
+	condition: (state) => !state.hasResourceAvailable("CREATURE_CANVAS"),
 };
 const pomMuseCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.PomMuse,
+	newSkill: "POM_MUSE",
 	condition: (state) =>
-		state.hasResourceAvailable(ResourceType.CreatureCanvas) &&
-		state.resources.get(ResourceType.Depictions).availableAmount() === 0,
+		state.hasResourceAvailable("CREATURE_CANVAS") &&
+		state.resources.get("DEPICTIONS").availableAmount() === 0,
 };
 const wingedMuseCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.WingedMuse,
+	newSkill: "WINGED_MUSE",
 	condition: (state) =>
-		state.hasResourceAvailable(ResourceType.CreatureCanvas) &&
-		state.resources.get(ResourceType.Depictions).availableAmount() === 1,
+		state.hasResourceAvailable("CREATURE_CANVAS") &&
+		state.resources.get("DEPICTIONS").availableAmount() === 1,
 };
 const clawedMuseCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.ClawedMuse,
+	newSkill: "CLAWED_MUSE",
 	condition: (state) =>
-		state.hasResourceAvailable(ResourceType.CreatureCanvas) &&
-		state.resources.get(ResourceType.Depictions).availableAmount() === 2,
+		state.hasResourceAvailable("CREATURE_CANVAS") &&
+		state.resources.get("DEPICTIONS").availableAmount() === 2,
 };
 const fangedMuseCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.FangedMuse,
+	newSkill: "FANGED_MUSE",
 	condition: (state) =>
-		state.hasResourceAvailable(ResourceType.CreatureCanvas) &&
-		state.resources.get(ResourceType.Depictions).availableAmount() === 3,
+		state.hasResourceAvailable("CREATURE_CANVAS") &&
+		state.resources.get("DEPICTIONS").availableAmount() === 3,
 };
 
 const mogCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.MogOfTheAges,
+	newSkill: "MOG_OF_THE_AGES",
 	// mog is shown when no portrait is available
-	condition: (state) => state.resources.get(ResourceType.Portrait).availableAmount() !== 2,
+	condition: (state) => state.resources.get("PORTRAIT").availableAmount() !== 2,
 };
 const madeenCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.RetributionOfTheMadeen,
-	condition: (state) => state.resources.get(ResourceType.Portrait).availableAmount() === 2,
+	newSkill: "RETRIBUTION_OF_THE_MADEEN",
+	condition: (state) => state.resources.get("PORTRAIT").availableAmount() === 2,
 };
 
 const weaponCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.WeaponMotif,
-	condition: (state) => state.hasResourceAvailable(ResourceType.WeaponCanvas),
+	newSkill: "WEAPON_MOTIF",
+	condition: (state) => state.hasResourceAvailable("WEAPON_CANVAS"),
 };
 const hammerCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.HammerMotif,
-	condition: (state) => !state.hasResourceAvailable(ResourceType.WeaponCanvas),
+	newSkill: "HAMMER_MOTIF",
+	condition: (state) => !state.hasResourceAvailable("WEAPON_CANVAS"),
 };
 
 const steelCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.SteelMuse,
-	condition: (state) => !state.hasResourceAvailable(ResourceType.WeaponCanvas),
+	newSkill: "STEEL_MUSE",
+	condition: (state) => !state.hasResourceAvailable("WEAPON_CANVAS"),
 };
 const strikingCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.StrikingMuse,
-	condition: (state) => state.hasResourceAvailable(ResourceType.WeaponCanvas),
+	newSkill: "STRIKING_MUSE",
+	condition: (state) => state.hasResourceAvailable("WEAPON_CANVAS"),
 };
 
 const landscapeCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.LandscapeMotif,
-	condition: (state) => state.hasResourceAvailable(ResourceType.LandscapeCanvas),
+	newSkill: "LANDSCAPE_MOTIF",
+	condition: (state) => state.hasResourceAvailable("LANDSCAPE_CANVAS"),
 };
 const starrySkyCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.StarrySkyMotif,
-	condition: (state) => !state.hasResourceAvailable(ResourceType.LandscapeCanvas),
+	newSkill: "STARRY_SKY_MOTIF",
+	condition: (state) => !state.hasResourceAvailable("LANDSCAPE_CANVAS"),
 };
 
 const scenicCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.ScenicMuse,
-	condition: (state) => !state.hasResourceAvailable(ResourceType.LandscapeCanvas),
+	newSkill: "SCENIC_MUSE",
+	condition: (state) => !state.hasResourceAvailable("LANDSCAPE_CANVAS"),
 };
 const starryMuseCondition: ConditionalSkillReplace<PCTState> = {
-	newSkill: SkillName.StarryMuse,
-	condition: (state) => state.hasResourceAvailable(ResourceType.LandscapeCanvas),
+	newSkill: "STARRY_MUSE",
+	condition: (state) => state.hasResourceAvailable("LANDSCAPE_CANVAS"),
 };
 
-makeSpell_PCT(SkillName.FireInRed, 1, {
+makeSpell_PCT("FIRE_IN_RED", 1, {
 	replaceIf: [greenCondition, blueCondition],
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 280],
-		[TraitName.PictomancyMasteryII, 340],
-		[TraitName.PictomancyMasteryIII, 380],
-		[TraitName.PictomancyMasteryIV, 440],
+		["NEVER", 280],
+		["PICTOMANCY_MASTERY_II", 340],
+		["PICTOMANCY_MASTERY_III", 380],
+		["PICTOMANCY_MASTERY_IV", 440],
 	],
 	applicationDelay: 0.84,
 	validateAttempt: (state) =>
-		redCondition.condition(state) &&
-		!state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		redCondition.condition(state) && !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => state.doFiller(),
 });
 
-makeSpell_PCT(SkillName.AeroInGreen, 5, {
+makeSpell_PCT("AERO_IN_GREEN", 5, {
 	replaceIf: [redCondition, blueCondition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 320],
-		[TraitName.PictomancyMasteryII, 380],
-		[TraitName.PictomancyMasteryIII, 420],
-		[TraitName.PictomancyMasteryIV, 480],
+		["NEVER", 320],
+		["PICTOMANCY_MASTERY_II", 380],
+		["PICTOMANCY_MASTERY_III", 420],
+		["PICTOMANCY_MASTERY_IV", 480],
 	],
 	applicationDelay: 0.89,
 	validateAttempt: (state) =>
-		greenCondition.condition(state) &&
-		!state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		greenCondition.condition(state) && !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => state.doFiller(),
-	highlightIf: (state) => !state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	highlightIf: (state) => !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 });
 
-makeSpell_PCT(SkillName.WaterInBlue, 15, {
+makeSpell_PCT("WATER_IN_BLUE", 15, {
 	replaceIf: [redCondition, greenCondition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 360],
-		[TraitName.PictomancyMasteryII, 420],
-		[TraitName.PictomancyMasteryIII, 460],
-		[TraitName.PictomancyMasteryIV, 520],
+		["NEVER", 360],
+		["PICTOMANCY_MASTERY_II", 420],
+		["PICTOMANCY_MASTERY_III", 460],
+		["PICTOMANCY_MASTERY_IV", 520],
 	],
 	applicationDelay: 0.98,
 	validateAttempt: (state) =>
-		blueCondition.condition(state) &&
-		!state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		blueCondition.condition(state) && !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => {
 		state.doFiller();
-		const paletteGauge = state.resources.get(ResourceType.PaletteGauge);
+		const paletteGauge = state.resources.get("PALETTE_GAUGE");
 		if (paletteGauge.available(100)) {
 			controller.reportWarning(WarningType.PaletteOvercap);
 		}
 		paletteGauge.gain(25);
-		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
-			state.resources.get(ResourceType.Paint).gain(1);
+		if (state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
+			state.resources.get("PAINT").gain(1);
 		}
 	},
-	highlightIf: (state) => !state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	highlightIf: (state) => !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 });
 
-makeSpell_PCT(SkillName.Fire2InRed, 25, {
+makeSpell_PCT("FIRE_II_IN_RED", 25, {
 	replaceIf: [green2Condition, blue2Condition],
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 80],
-		[TraitName.PictomancyMasteryII, 100],
-		[TraitName.PictomancyMasteryIV, 120],
+		["NEVER", 80],
+		["PICTOMANCY_MASTERY_II", 100],
+		["PICTOMANCY_MASTERY_IV", 120],
 	],
 	falloff: 0,
 	applicationDelay: 0.84,
 	validateAttempt: (state) =>
-		red2Condition.condition(state) &&
-		!state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		red2Condition.condition(state) && !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => state.doFiller(),
 });
 
-makeSpell_PCT(SkillName.Aero2InGreen, 35, {
+makeSpell_PCT("AERO_II_IN_GREEN", 35, {
 	replaceIf: [red2Condition, blue2Condition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 100],
-		[TraitName.PictomancyMasteryII, 120],
-		[TraitName.PictomancyMasteryIV, 140],
+		["NEVER", 100],
+		["PICTOMANCY_MASTERY_II", 120],
+		["PICTOMANCY_MASTERY_IV", 140],
 	],
 	falloff: 0,
 	applicationDelay: 0.89,
 	validateAttempt: (state) =>
-		green2Condition.condition(state) &&
-		!state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		green2Condition.condition(state) && !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => state.doFiller(),
-	highlightIf: (state) => !state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	highlightIf: (state) => !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 });
 
-makeSpell_PCT(SkillName.Water2InBlue, 45, {
+makeSpell_PCT("WATER_II_IN_BLUE", 45, {
 	replaceIf: [red2Condition, green2Condition],
 	startOnHotbar: false,
 	baseCastTime: 1.5,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 120],
-		[TraitName.PictomancyMasteryII, 140],
-		[TraitName.PictomancyMasteryIV, 160],
+		["NEVER", 120],
+		["PICTOMANCY_MASTERY_II", 140],
+		["PICTOMANCY_MASTERY_IV", 160],
 	],
 	falloff: 0,
 	applicationDelay: 0.89,
 	validateAttempt: (state) =>
-		blue2Condition.condition(state) &&
-		!state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		blue2Condition.condition(state) && !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => {
 		state.doFiller();
-		const paletteGauge = state.resources.get(ResourceType.PaletteGauge);
+		const paletteGauge = state.resources.get("PALETTE_GAUGE");
 		if (paletteGauge.available(100)) {
 			controller.reportWarning(WarningType.PaletteOvercap);
 		}
 		paletteGauge.gain(25);
-		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
-			state.resources.get(ResourceType.Paint).gain(1);
+		if (state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
+			state.resources.get("PAINT").gain(1);
 		}
 	},
-	highlightIf: (state) => !state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	highlightIf: (state) => !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 });
 
-makeSpell_PCT(SkillName.BlizzardInCyan, 60, {
+makeSpell_PCT("BLIZZARD_IN_CYAN", 60, {
 	replaceIf: [yellowCondition, magentaCondition],
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 520],
-		[TraitName.PictomancyMasteryII, 630],
-		[TraitName.PictomancyMasteryIII, 700],
-		[TraitName.PictomancyMasteryIV, 800],
+		["NEVER", 520],
+		["PICTOMANCY_MASTERY_II", 630],
+		["PICTOMANCY_MASTERY_III", 700],
+		["PICTOMANCY_MASTERY_IV", 800],
 	],
 	applicationDelay: 0.75,
 	validateAttempt: (state) =>
-		cyanCondition.condition(state) &&
-		state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		cyanCondition.condition(state) && state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => state.doFiller(),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	highlightIf: (state) => state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 });
 
-makeSpell_PCT(SkillName.StoneInYellow, 60, {
+makeSpell_PCT("STONE_IN_YELLOW", 60, {
 	replaceIf: [cyanCondition, magentaCondition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 560],
-		[TraitName.PictomancyMasteryII, 670],
-		[TraitName.PictomancyMasteryIII, 740],
-		[TraitName.PictomancyMasteryIV, 840],
+		["NEVER", 560],
+		["PICTOMANCY_MASTERY_II", 670],
+		["PICTOMANCY_MASTERY_III", 740],
+		["PICTOMANCY_MASTERY_IV", 840],
 	],
 	applicationDelay: 0.8,
 	validateAttempt: (state) =>
-		yellowCondition.condition(state) &&
-		state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		yellowCondition.condition(state) && state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => state.doFiller(),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	highlightIf: (state) => state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 });
 
-makeSpell_PCT(SkillName.ThunderInMagenta, 60, {
+makeSpell_PCT("THUNDER_IN_MAGENTA", 60, {
 	replaceIf: [cyanCondition, yellowCondition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 600],
-		[TraitName.PictomancyMasteryII, 710],
-		[TraitName.PictomancyMasteryIII, 780],
-		[TraitName.PictomancyMasteryIV, 880],
+		["NEVER", 600],
+		["PICTOMANCY_MASTERY_II", 710],
+		["PICTOMANCY_MASTERY_III", 780],
+		["PICTOMANCY_MASTERY_IV", 880],
 	],
 	applicationDelay: 0.8,
 	validateAttempt: (state) =>
-		magentaCondition.condition(state) &&
-		state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		magentaCondition.condition(state) && state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => {
 		state.doFiller();
-		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
-			state.resources.get(ResourceType.Paint).gain(1);
+		if (state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
+			state.resources.get("PAINT").gain(1);
 		}
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	highlightIf: (state) => state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 });
 
-makeSpell_PCT(SkillName.Blizzard2InCyan, 60, {
+makeSpell_PCT("BLIZZARD_II_IN_CYAN", 60, {
 	replaceIf: [yellow2Condition, magenta2Condition],
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 180],
-		[TraitName.PictomancyMasteryII, 220],
-		[TraitName.PictomancyMasteryIV, 240],
+		["NEVER", 180],
+		["PICTOMANCY_MASTERY_II", 220],
+		["PICTOMANCY_MASTERY_IV", 240],
 	],
 	falloff: 0,
 	applicationDelay: 0.75,
 	validateAttempt: (state) =>
-		cyan2Condition.condition(state) &&
-		state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		cyan2Condition.condition(state) && state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => state.doFiller(),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	highlightIf: (state) => state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 });
 
-makeSpell_PCT(SkillName.Stone2InYellow, 60, {
+makeSpell_PCT("STONE_II_IN_YELLOW", 60, {
 	replaceIf: [cyan2Condition, magenta2Condition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 200],
-		[TraitName.PictomancyMasteryII, 240],
-		[TraitName.PictomancyMasteryIV, 260],
+		["NEVER", 200],
+		["PICTOMANCY_MASTERY_II", 240],
+		["PICTOMANCY_MASTERY_IV", 260],
 	],
 	falloff: 0,
 	applicationDelay: 0.8,
 	validateAttempt: (state) =>
-		yellow2Condition.condition(state) &&
-		state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		yellow2Condition.condition(state) && state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => state.doFiller(),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	highlightIf: (state) => state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 });
 
-makeSpell_PCT(SkillName.Thunder2InMagenta, 60, {
+makeSpell_PCT("THUNDER_II_IN_MAGENTA", 60, {
 	replaceIf: [cyan2Condition, yellow2Condition],
 	startOnHotbar: false,
 	baseCastTime: 2.3,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 220],
-		[TraitName.PictomancyMasteryII, 260],
-		[TraitName.PictomancyMasteryIV, 280],
+		["NEVER", 220],
+		["PICTOMANCY_MASTERY_II", 260],
+		["PICTOMANCY_MASTERY_IV", 280],
 	],
 	falloff: 0,
 	applicationDelay: 0.8,
 	validateAttempt: (state) =>
-		magenta2Condition.condition(state) &&
-		state.hasResourceAvailable(ResourceType.SubtractivePalette),
+		magenta2Condition.condition(state) && state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => {
 		state.doFiller();
-		if (state.hasTraitUnlocked(TraitName.EnhancedArtistry)) {
-			state.resources.get(ResourceType.Paint).gain(1);
+		if (state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
+			state.resources.get("PAINT").gain(1);
 		}
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SubtractivePalette),
+	highlightIf: (state) => state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 });
 
-makeSpell_PCT(SkillName.HolyInWhite, 80, {
+makeSpell_PCT("HOLY_IN_WHITE", 80, {
 	baseCastTime: 0,
 	baseManaCost: 300,
 	basePotency: [
-		[TraitName.Never, 420],
-		[TraitName.PictomancyMasteryIII, 460],
-		[TraitName.PictomancyMasteryIV, 520],
+		["NEVER", 420],
+		["PICTOMANCY_MASTERY_III", 460],
+		["PICTOMANCY_MASTERY_IV", 520],
 	],
 	falloff: 0.6,
 	applicationDelay: 1.34,
 	validateAttempt: (state) =>
-		!state.hasResourceAvailable(ResourceType.MonochromeTones) &&
-		state.hasResourceAvailable(ResourceType.Paint),
+		!state.hasResourceAvailable("MONOCHROME_TONES") && state.hasResourceAvailable("PAINT"),
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.Paint);
+		state.tryConsumeResource("PAINT");
 		state.tryConsumeHyperphantasia();
 	},
 	// holy doesn't glow if comet is ready
 	highlightIf: (state) =>
-		!state.hasResourceAvailable(ResourceType.MonochromeTones) &&
-		state.hasResourceAvailable(ResourceType.Paint),
+		!state.hasResourceAvailable("MONOCHROME_TONES") && state.hasResourceAvailable("PAINT"),
 });
 
-makeSpell_PCT(SkillName.CometInBlack, 90, {
+makeSpell_PCT("COMET_IN_BLACK", 90, {
 	baseCastTime: 0,
 	baseRecastTime: 3.3,
 	baseManaCost: 400,
 	basePotency: [
-		[TraitName.Never, 780],
-		[TraitName.PictomancyMasteryIV, 880],
+		["NEVER", 780],
+		["PICTOMANCY_MASTERY_IV", 880],
 	],
 	falloff: 0.6,
 	applicationDelay: 1.87,
 	validateAttempt: (state) =>
-		state.hasResourceAvailable(ResourceType.MonochromeTones) &&
-		state.hasResourceAvailable(ResourceType.Paint),
+		state.hasResourceAvailable("MONOCHROME_TONES") && state.hasResourceAvailable("PAINT"),
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.Paint);
-		state.tryConsumeResource(ResourceType.MonochromeTones);
+		state.tryConsumeResource("PAINT");
+		state.tryConsumeResource("MONOCHROME_TONES");
 		state.tryConsumeHyperphantasia();
 	},
 	// if comet is ready, it glows regardless of paint status
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.MonochromeTones),
+	highlightIf: (state) => state.hasResourceAvailable("MONOCHROME_TONES"),
 });
 
-makeSpell_PCT(SkillName.RainbowDrip, 92, {
+makeSpell_PCT("RAINBOW_DRIP", 92, {
 	baseCastTime: 4,
 	baseRecastTime: 6,
 	baseManaCost: 400,
@@ -788,50 +772,50 @@ makeSpell_PCT(SkillName.RainbowDrip, 92, {
 	falloff: 0.85,
 	onConfirm: (state) => {
 		// gain a holy stack
-		state.resources.get(ResourceType.Paint).gain(1);
-		state.tryConsumeResource(ResourceType.RainbowBright);
+		state.resources.get("PAINT").gain(1);
+		state.tryConsumeResource("RAINBOW_BRIGHT");
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.RainbowBright),
+	highlightIf: (state) => state.hasResourceAvailable("RAINBOW_BRIGHT"),
 });
 
-makeSpell_PCT(SkillName.StarPrism, 100, {
+makeSpell_PCT("STAR_PRISM", 100, {
 	baseCastTime: 0,
 	baseManaCost: 0,
 	basePotency: 1400,
 	applicationDelay: 1.25,
 	falloff: 0.6,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.Starstruck),
+	validateAttempt: (state) => state.hasResourceAvailable("STARSTRUCK"),
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.Starstruck);
+		state.tryConsumeResource("STARSTRUCK");
 		state.tryConsumeHyperphantasia();
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Starstruck),
+	highlightIf: (state) => state.hasResourceAvailable("STARSTRUCK"),
 });
 
-makeAbility_PCT(SkillName.SubtractivePalette, 60, ResourceType.cd_Subtractive, {
+makeAbility_PCT("SUBTRACTIVE_PALETTE", 60, "cd_SUBTRACTIVE", {
 	cooldown: 1,
 	validateAttempt: (state) =>
 		// Check we are not already in subtractive
-		!state.hasResourceAvailable(ResourceType.SubtractivePalette) &&
+		!state.hasResourceAvailable("SUBTRACTIVE_PALETTE") &&
 		// Check if free subtractive from starry muse or 50 gauge is available
-		(state.hasResourceAvailable(ResourceType.SubtractiveSpectrum) ||
-			state.hasResourceAvailable(ResourceType.PaletteGauge, 50)),
+		(state.hasResourceAvailable("SUBTRACTIVE_SPECTRUM") ||
+			state.hasResourceAvailable("PALETTE_GAUGE", 50)),
 	onConfirm: (state) => {
-		if (!state.tryConsumeResource(ResourceType.SubtractiveSpectrum)) {
-			state.resources.get(ResourceType.PaletteGauge).consume(50);
+		if (!state.tryConsumeResource("SUBTRACTIVE_SPECTRUM")) {
+			state.resources.get("PALETTE_GAUGE").consume(50);
 		}
 		// gain comet (caps at 1)
-		if (state.hasResourceAvailable(ResourceType.MonochromeTones)) {
+		if (state.hasResourceAvailable("MONOCHROME_TONES")) {
 			controller.reportWarning(WarningType.CometOverwrite);
 		}
-		if (state.hasTraitUnlocked(TraitName.EnhancedPalette)) {
-			state.resources.get(ResourceType.MonochromeTones).gain(1);
+		if (state.hasTraitUnlocked("ENHANCED_PALETTE")) {
+			state.resources.get("MONOCHROME_TONES").gain(1);
 		}
-		state.resources.get(ResourceType.SubtractivePalette).gain(3);
+		state.resources.get("SUBTRACTIVE_PALETTE").gain(3);
 	},
 	highlightIf: (state) =>
-		state.hasResourceAvailable(ResourceType.SubtractiveSpectrum) ||
-		state.resources.get(ResourceType.PaletteGauge).available(50),
+		state.hasResourceAvailable("SUBTRACTIVE_SPECTRUM") ||
+		state.resources.get("PALETTE_GAUGE").available(50),
 });
 
 const creatureConditions = [
@@ -842,13 +826,13 @@ const creatureConditions = [
 	mawMotifCondition,
 ];
 // [name, level, validation]
-const creatureInfos: Array<[SkillName, number, StatePredicate<PCTState>]> = [
+const creatureInfos: Array<[PCTActionKey, number, StatePredicate<PCTState>]> = [
 	// creature motif can never itself be cast
-	[SkillName.CreatureMotif, 30, (state) => false],
-	[SkillName.PomMotif, 30, pomMotifCondition.condition],
-	[SkillName.WingMotif, 30, wingMotifCondition.condition],
-	[SkillName.ClawMotif, 96, clawMotifCondition.condition],
-	[SkillName.MawMotif, 96, mawMotifCondition.condition],
+	["CREATURE_MOTIF", 30, (state) => false],
+	["POM_MOTIF", 30, pomMotifCondition.condition],
+	["WING_MOTIF", 30, wingMotifCondition.condition],
+	["CLAW_MOTIF", 96, clawMotifCondition.condition],
+	["MAW_MOTIF", 96, mawMotifCondition.condition],
 ];
 creatureInfos.forEach(([name, level, validateAttempt], i) =>
 	makeSpell_PCT(name, level, {
@@ -859,7 +843,7 @@ creatureInfos.forEach(([name, level, validateAttempt], i) =>
 		baseManaCost: 0,
 		applicationDelay: 0,
 		validateAttempt: validateAttempt,
-		onConfirm: (state) => state.resources.get(ResourceType.CreatureCanvas).gain(1),
+		onConfirm: (state) => state.resources.get("CREATURE_CANVAS").gain(1),
 	}),
 );
 
@@ -872,35 +856,35 @@ const livingConditions = [
 ];
 // [name, level, potency, delay, validation]
 const livingMuseInfos: Array<
-	[SkillName, number, number | Array<[TraitName, number]>, number, StatePredicate<PCTState>]
+	[PCTActionKey, number, number | Array<[TraitKey, number]>, number, StatePredicate<PCTState>]
 > = [
 	// living muse can never itself be cast
-	[SkillName.LivingMuse, 30, 0, 0, (state) => false],
+	["LIVING_MUSE", 30, 0, 0, (state) => false],
 	[
-		SkillName.PomMuse,
+		"POM_MUSE",
 		30,
 		[
-			[TraitName.Never, 1000],
-			[TraitName.PictomancyMasteryIII, 1100],
+			["NEVER", 1000],
+			["PICTOMANCY_MASTERY_III", 1100],
 		],
 		0.62,
 		pomMuseCondition.condition,
 	],
 	[
-		SkillName.WingedMuse,
+		"WINGED_MUSE",
 		30,
 		[
-			[TraitName.Never, 1000],
-			[TraitName.PictomancyMasteryIII, 1100],
+			["NEVER", 1000],
+			["PICTOMANCY_MASTERY_III", 1100],
 		],
 		0.98,
 		wingedMuseCondition.condition,
 	],
-	[SkillName.ClawedMuse, 96, 1100, 0.98, clawedMuseCondition.condition],
-	[SkillName.FangedMuse, 96, 1100, 1.16, fangedMuseCondition.condition],
+	["CLAWED_MUSE", 96, 1100, 0.98, clawedMuseCondition.condition],
+	["FANGED_MUSE", 96, 1100, 1.16, fangedMuseCondition.condition],
 ];
 livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAttempt], i) =>
-	makeAbility_PCT(name, level, ResourceType.cd_LivingMuse, {
+	makeAbility_PCT(name, level, "cd_LIVING_MUSE", {
 		replaceIf: livingConditions.slice(0, i).concat(livingConditions.slice(i + 1)),
 		startOnHotbar: i === 0,
 		potency: potencies,
@@ -909,57 +893,57 @@ livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAtte
 		cooldown: 40,
 		validateAttempt: validateAttempt,
 		onConfirm: (state) => {
-			let depictions = state.resources.get(ResourceType.Depictions);
-			let portraits = state.resources.get(ResourceType.Portrait);
-			state.tryConsumeResource(ResourceType.CreatureCanvas);
+			let depictions = state.resources.get("DEPICTIONS");
+			let portraits = state.resources.get("PORTRAIT");
+			state.tryConsumeResource("CREATURE_CANVAS");
 			depictions.gain(1);
 			// wing: make moogle portrait available (overwrites madeen)
-			if (name === SkillName.WingedMuse) {
+			if (name === "WINGED_MUSE") {
 				portraits.overrideCurrentValue(1);
 				// below lvl 94, there's no madeen, so wrap depictions back to 0
-				if (!state.hasTraitUnlocked(TraitName.EnhancedPictomancyIV)) {
+				if (!state.hasTraitUnlocked("ENHANCED_PICTOMANCY_IV")) {
 					depictions.overrideCurrentValue(0);
 				}
 			}
 			// maw: make madeen portrait available (overwrites moogle)
 			// reset depictions to empty
-			if (name === SkillName.FangedMuse) {
+			if (name === "FANGED_MUSE") {
 				portraits.overrideCurrentValue(2);
 				depictions.overrideCurrentValue(0);
 			}
 		},
 		maxCharges: 3, // lower this value in the state constructor when level synced
-		highlightIf: (state) => state.hasResourceAvailable(ResourceType.CreatureCanvas),
+		highlightIf: (state) => state.hasResourceAvailable("CREATURE_CANVAS"),
 	}),
 );
 
-makeAbility_PCT(SkillName.MogOfTheAges, 30, ResourceType.cd_Portrait, {
+makeAbility_PCT("MOG_OF_THE_AGES", 30, "cd_PORTRAIT", {
 	replaceIf: [madeenCondition],
 	potency: [
-		[TraitName.Never, 1100],
-		[TraitName.PictomancyMasteryIII, 1300],
+		["NEVER", 1100],
+		["PICTOMANCY_MASTERY_III", 1300],
 	],
 	falloff: 0.6,
 	applicationDelay: 1.15,
-	validateAttempt: (state) => state.resources.get(ResourceType.Portrait).availableAmount() === 1,
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.Portrait),
+	validateAttempt: (state) => state.resources.get("PORTRAIT").availableAmount() === 1,
+	onConfirm: (state) => state.tryConsumeResource("PORTRAIT"),
 	cooldown: 30,
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Portrait),
+	highlightIf: (state) => state.hasResourceAvailable("PORTRAIT"),
 });
 
-makeAbility_PCT(SkillName.RetributionOfTheMadeen, 30, ResourceType.cd_Portrait, {
+makeAbility_PCT("RETRIBUTION_OF_THE_MADEEN", 30, "cd_PORTRAIT", {
 	replaceIf: [mogCondition],
 	startOnHotbar: false,
 	potency: 1400,
 	falloff: 0.6,
 	applicationDelay: 1.3,
-	validateAttempt: (state) => state.resources.get(ResourceType.Portrait).availableAmount() === 2,
-	onConfirm: (state) => state.resources.get(ResourceType.Portrait).overrideCurrentValue(0),
+	validateAttempt: (state) => state.resources.get("PORTRAIT").availableAmount() === 2,
+	onConfirm: (state) => state.resources.get("PORTRAIT").overrideCurrentValue(0),
 	cooldown: 30,
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.Portrait),
+	highlightIf: (state) => state.hasResourceAvailable("PORTRAIT"),
 });
 
-makeSpell_PCT(SkillName.WeaponMotif, 50, {
+makeSpell_PCT("WEAPON_MOTIF", 50, {
 	replaceIf: [hammerCondition],
 	baseCastTime: 3,
 	baseRecastTime: 4,
@@ -968,7 +952,7 @@ makeSpell_PCT(SkillName.WeaponMotif, 50, {
 	validateAttempt: (state) => false, // hammer motif can never itself be cast
 });
 
-makeSpell_PCT(SkillName.HammerMotif, 50, {
+makeSpell_PCT("HAMMER_MOTIF", 50, {
 	replaceIf: [weaponCondition],
 	startOnHotbar: false,
 	baseCastTime: 3,
@@ -976,78 +960,77 @@ makeSpell_PCT(SkillName.HammerMotif, 50, {
 	baseManaCost: 0,
 	applicationDelay: 0,
 	validateAttempt: (state) =>
-		hammerCondition.condition(state) && !state.hasResourceAvailable(ResourceType.HammerTime),
-	onConfirm: (state) => state.resources.get(ResourceType.WeaponCanvas).gain(1),
+		hammerCondition.condition(state) && !state.hasResourceAvailable("HAMMER_TIME"),
+	onConfirm: (state) => state.resources.get("WEAPON_CANVAS").gain(1),
 });
 
-makeAbility_PCT(SkillName.SteelMuse, 50, ResourceType.cd_SteelMuse, {
+makeAbility_PCT("STEEL_MUSE", 50, "cd_STEEL_MUSE", {
 	replaceIf: [strikingCondition],
 	cooldown: 60,
 	maxCharges: 2, // lower this value in the state constructor when level synced
 	validateAttempt: (state) => false, // steel muse can never itself be cast
 });
 
-makeAbility_PCT(SkillName.StrikingMuse, 50, ResourceType.cd_SteelMuse, {
+makeAbility_PCT("STRIKING_MUSE", 50, "cd_STEEL_MUSE", {
 	replaceIf: [steelCondition],
 	startOnHotbar: false,
 	requiresCombat: true,
 	cooldown: 60,
 	maxCharges: 2, // lower this value in the state constructor when level synced
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.WeaponCanvas),
+	validateAttempt: (state) => state.hasResourceAvailable("WEAPON_CANVAS"),
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.WeaponCanvas);
-		state.resources.get(ResourceType.HammerTime).gain(3);
-		state.enqueueResourceDrop(ResourceType.HammerTime);
+		state.tryConsumeResource("WEAPON_CANVAS");
+		state.resources.get("HAMMER_TIME").gain(3);
+		state.enqueueResourceDrop("HAMMER_TIME");
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.WeaponCanvas),
+	highlightIf: (state) => state.hasResourceAvailable("WEAPON_CANVAS"),
 });
 
 const hammerConditions: ConditionalSkillReplace<PCTState>[] = [
 	{
-		newSkill: SkillName.HammerStamp,
+		newSkill: "HAMMER_STAMP",
 		condition: (state) =>
-			!state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) ||
-			state.getHammerStacks() === 3,
+			!state.hasTraitUnlocked("ENHANCED_PICTOMANCY_II") || state.getHammerStacks() === 3,
 	},
 	{
-		newSkill: SkillName.HammerBrush,
+		newSkill: "HAMMER_BRUSH",
 		condition: (state) =>
-			state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) && state.getHammerStacks() === 2,
+			state.hasTraitUnlocked("ENHANCED_PICTOMANCY_II") && state.getHammerStacks() === 2,
 	},
 	{
-		newSkill: SkillName.PolishingHammer,
+		newSkill: "POLISHING_HAMMER",
 		condition: (state) =>
-			state.hasTraitUnlocked(TraitName.EnhancedPictomancyII) && state.getHammerStacks() === 1,
+			state.hasTraitUnlocked("ENHANCED_PICTOMANCY_II") && state.getHammerStacks() === 1,
 	},
 ];
 // [name, level, potency, delay]
-const hammerInfos: Array<[SkillName, number, number | Array<[TraitName, number]>, number]> = [
+const hammerInfos: Array<[PCTActionKey, number, number | Array<[TraitKey, number]>, number]> = [
 	[
-		SkillName.HammerStamp,
+		"HAMMER_STAMP",
 		50,
 		[
-			[TraitName.Never, 380],
-			[TraitName.PictomancyMasteryII, 480],
-			[TraitName.PictomancyMasteryIII, 520],
-			[TraitName.PictomancyMasteryIV, 560],
+			["NEVER", 380],
+			["PICTOMANCY_MASTERY_II", 480],
+			["PICTOMANCY_MASTERY_III", 520],
+			["PICTOMANCY_MASTERY_IV", 560],
 		],
 		1.38,
 	],
 	[
-		SkillName.HammerBrush,
+		"HAMMER_BRUSH",
 		86,
 		[
-			[TraitName.Never, 580],
-			[TraitName.PictomancyMasteryIV, 620],
+			["NEVER", 580],
+			["PICTOMANCY_MASTERY_IV", 620],
 		],
 		1.25,
 	],
 	[
-		SkillName.PolishingHammer,
+		"POLISHING_HAMMER",
 		86,
 		[
-			[TraitName.Never, 640],
-			[TraitName.PictomancyMasteryIV, 680],
+			["NEVER", 640],
+			["PICTOMANCY_MASTERY_IV", 680],
 		],
 		2.1,
 	],
@@ -1061,15 +1044,14 @@ hammerInfos.forEach(([name, level, potencies, applicationDelay], i) =>
 		falloff: 0.6,
 		applicationDelay: applicationDelay,
 		validateAttempt: (state) =>
-			hammerConditions[i].condition(state) &&
-			state.hasResourceAvailable(ResourceType.HammerTime),
-		onConfirm: (state) => state.tryConsumeResource(ResourceType.HammerTime),
-		highlightIf: (state) => state.hasResourceAvailable(ResourceType.HammerTime),
+			hammerConditions[i].condition(state) && state.hasResourceAvailable("HAMMER_TIME"),
+		onConfirm: (state) => state.tryConsumeResource("HAMMER_TIME"),
+		highlightIf: (state) => state.hasResourceAvailable("HAMMER_TIME"),
 		jobPotencyModifiers: (state) => [Modifiers.AutoCDH],
 	}),
 );
 
-makeSpell_PCT(SkillName.LandscapeMotif, 70, {
+makeSpell_PCT("LANDSCAPE_MOTIF", 70, {
 	replaceIf: [starrySkyCondition],
 	baseCastTime: 3,
 	baseRecastTime: 4,
@@ -1078,7 +1060,7 @@ makeSpell_PCT(SkillName.LandscapeMotif, 70, {
 	validateAttempt: (state) => false, // landscape motif can never itself be cast
 });
 
-makeSpell_PCT(SkillName.StarrySkyMotif, 70, {
+makeSpell_PCT("STARRY_SKY_MOTIF", 70, {
 	replaceIf: [landscapeCondition],
 	startOnHotbar: false,
 	baseCastTime: 3,
@@ -1086,18 +1068,18 @@ makeSpell_PCT(SkillName.StarrySkyMotif, 70, {
 	baseManaCost: 0,
 	applicationDelay: 0,
 	validateAttempt: (state) =>
-		starrySkyCondition.condition(state) && !state.hasResourceAvailable(ResourceType.StarryMuse),
-	onConfirm: (state) => state.resources.get(ResourceType.LandscapeCanvas).gain(1),
+		starrySkyCondition.condition(state) && !state.hasResourceAvailable("STARRY_MUSE"),
+	onConfirm: (state) => state.resources.get("LANDSCAPE_CANVAS").gain(1),
 });
 
-makeAbility_PCT(SkillName.ScenicMuse, 70, ResourceType.cd_ScenicMuse, {
+makeAbility_PCT("SCENIC_MUSE", 70, "cd_SCENIC_MUSE", {
 	replaceIf: [starryMuseCondition],
 	applicationDelay: 0,
 	cooldown: 120,
 	validateAttempt: (state) => false, // scenic muse can never itself be cast
 });
 
-makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
+makeAbility_PCT("STARRY_MUSE", 70, "cd_SCENIC_MUSE", {
 	replaceIf: [scenicCondition],
 	startOnHotbar: false,
 	requiresCombat: true,
@@ -1105,123 +1087,118 @@ makeAbility_PCT(SkillName.StarryMuse, 70, ResourceType.cd_ScenicMuse, {
 	cooldown: 120,
 	validateAttempt: (state) => starryMuseCondition.condition(state),
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.LandscapeCanvas);
+		state.tryConsumeResource("LANDSCAPE_CANVAS");
 		// It is not possible to have an existing starry active
 		// unless someone added starry muse via the party buff menu.
 		// Since this fork is hacky we just ignore this case for now.
-		state.resources.get(ResourceType.StarryMuse).gain(1);
+		state.resources.get("STARRY_MUSE").gain(1);
 		// Technically, hyperphantasia is gained on a delay, but whatever
-		if (state.hasTraitUnlocked(TraitName.EnhancedPictomancy)) {
-			state.resources.get(ResourceType.Hyperphantasia).gain(5);
-			state.resources.get(ResourceType.Inspiration).gain(1);
+		if (state.hasTraitUnlocked("ENHANCED_PICTOMANCY")) {
+			state.resources.get("HYPERPHANTASIA").gain(5);
+			state.resources.get("INSPIRATION").gain(1);
 
-			const hpDuration = (
-				getResourceInfo(ShellJob.PCT, ResourceType.Hyperphantasia) as ResourceInfo
-			).maxTimeout;
-			state.enqueueResourceDrop(ResourceType.Hyperphantasia, hpDuration);
-			state.enqueueResourceDrop(ResourceType.Inspiration, hpDuration);
+			const hpDuration = (getResourceInfo("PCT", "HYPERPHANTASIA") as ResourceInfo)
+				.maxTimeout;
+			state.enqueueResourceDrop("HYPERPHANTASIA", hpDuration);
+			state.enqueueResourceDrop("INSPIRATION", hpDuration);
 		}
-		if (state.hasTraitUnlocked(TraitName.EnhancedPictomancyV)) {
-			state.resources.get(ResourceType.Starstruck).gain(1);
-			state.enqueueResourceDrop(ResourceType.Starstruck);
+		if (state.hasTraitUnlocked("ENHANCED_PICTOMANCY_V")) {
+			state.resources.get("STARSTRUCK").gain(1);
+			state.enqueueResourceDrop("STARSTRUCK");
 		}
-		state.resources.get(ResourceType.SubtractiveSpectrum).gain(1);
-		state.enqueueResourceDrop(ResourceType.StarryMuse);
-		state.enqueueResourceDrop(ResourceType.SubtractiveSpectrum);
+		state.resources.get("SUBTRACTIVE_SPECTRUM").gain(1);
+		state.enqueueResourceDrop("STARRY_MUSE");
+		state.enqueueResourceDrop("SUBTRACTIVE_SPECTRUM");
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.LandscapeCanvas),
+	highlightIf: (state) => state.hasResourceAvailable("LANDSCAPE_CANVAS"),
 });
 
-makeResourceAbility(ShellJob.PCT, SkillName.TemperaCoat, 10, ResourceType.cd_TemperaCoat, {
-	rscType: ResourceType.TemperaCoat,
+makeResourceAbility("PCT", "TEMPERA_COAT", 10, "cd_TEMPERA_COAT", {
+	rscType: "TEMPERA_COAT",
 	replaceIf: [
 		{
-			newSkill: SkillName.TemperaCoatPop,
-			condition: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
+			newSkill: "TEMPERA_COAT_POP",
+			condition: (state) => state.hasResourceAvailable("TEMPERA_COAT"),
 		},
 	],
 	applicationDelay: 0, // instant
 	cooldown: 120,
 });
 
-makeAbility_PCT(SkillName.TemperaGrassa, 88, ResourceType.cd_Grassa, {
+makeAbility_PCT("TEMPERA_GRASSA", 88, "cd_GRASSA", {
 	replaceIf: [
 		{
-			newSkill: SkillName.TemperaGrassaPop,
-			condition: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
+			newSkill: "TEMPERA_GRASSA_POP",
+			condition: (state) => state.hasResourceAvailable("TEMPERA_GRASSA"),
 		},
 	],
 	applicationDelay: 0, // instant
 	cooldown: 1,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
+	validateAttempt: (state) => state.hasResourceAvailable("TEMPERA_COAT"),
 	onConfirm: (state) => {
 		// goodbye, tempera coat
-		state.tryConsumeResource(ResourceType.TemperaCoat);
+		state.tryConsumeResource("TEMPERA_COAT");
 		// hello, tempera grassa
-		state.resources.get(ResourceType.TemperaGrassa).gain(1);
-		state.enqueueResourceDrop(ResourceType.TemperaGrassa);
+		state.resources.get("TEMPERA_GRASSA").gain(1);
+		state.enqueueResourceDrop("TEMPERA_GRASSA");
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
+	highlightIf: (state) => state.hasResourceAvailable("TEMPERA_COAT"),
 });
 
 // fake skill to represent breaking the coat shield
-makeAbility_PCT(SkillName.TemperaCoatPop, 10, ResourceType.cd_TemperaPop, {
+makeAbility_PCT("TEMPERA_COAT_POP", 10, "cd_TEMPERA_POP", {
 	replaceIf: [
 		{
-			newSkill: SkillName.TemperaGrassaPop,
-			condition: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
+			newSkill: "TEMPERA_GRASSA_POP",
+			condition: (state) => state.hasResourceAvailable("TEMPERA_GRASSA"),
 		},
 	],
 	startOnHotbar: false,
 	applicationDelay: 0,
 	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: 1,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
+	validateAttempt: (state) => state.hasResourceAvailable("TEMPERA_COAT"),
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.TemperaCoat);
+		state.tryConsumeResource("TEMPERA_COAT");
 		// Reduce the cooldown of tempera coat by 60s
-		let coatElapsed = state.cooldowns
-			.get(ResourceType.cd_TemperaCoat)
-			.timeTillNextStackAvailable();
+		let coatElapsed = state.cooldowns.get("cd_TEMPERA_COAT").timeTillNextStackAvailable();
 		console.assert(
 			coatElapsed > 0,
 			"attempted to pop Tempera Coat when no timer for Tempera Coat CD was active",
 		);
-		state.cooldowns.get(ResourceType.cd_TemperaCoat).overrideCurrentValue(180 - coatElapsed);
+		state.cooldowns.get("cd_TEMPERA_COAT").overrideCurrentValue(180 - coatElapsed);
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
+	highlightIf: (state) => state.hasResourceAvailable("TEMPERA_COAT"),
 });
 
 // fake skill to represent breaking the grassa shield
-makeAbility_PCT(SkillName.TemperaGrassaPop, 10, ResourceType.cd_TemperaPop, {
+makeAbility_PCT("TEMPERA_GRASSA_POP", 10, "cd_TEMPERA_POP", {
 	replaceIf: [
 		{
-			newSkill: SkillName.TemperaCoatPop,
-			condition: (state) => state.hasResourceAvailable(ResourceType.TemperaCoat),
+			newSkill: "TEMPERA_COAT_POP",
+			condition: (state) => state.hasResourceAvailable("TEMPERA_COAT"),
 		},
 	],
 	startOnHotbar: false,
 	applicationDelay: 0,
 	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: 1,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
+	validateAttempt: (state) => state.hasResourceAvailable("TEMPERA_GRASSA"),
 	onConfirm: (state) => {
-		state.tryConsumeResource(ResourceType.TemperaGrassa);
+		state.tryConsumeResource("TEMPERA_GRASSA");
 		// Reduce the cooldown of tempera coat by 30s
-		let coatElapsed = state.cooldowns
-			.get(ResourceType.cd_TemperaCoat)
-			.timeTillNextStackAvailable();
+		let coatElapsed = state.cooldowns.get("cd_TEMPERA_COAT").timeTillNextStackAvailable();
 		console.assert(
 			coatElapsed > 0,
 			"attempted to pop Tempera Grassa when no timer for Tempera Coat CD was active",
 		);
-		state.cooldowns.get(ResourceType.cd_TemperaCoat).overrideCurrentValue(150 - coatElapsed);
+		state.cooldowns.get("cd_TEMPERA_COAT").overrideCurrentValue(150 - coatElapsed);
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.TemperaGrassa),
+	highlightIf: (state) => state.hasResourceAvailable("TEMPERA_GRASSA"),
 });
 
-makeResourceAbility(ShellJob.PCT, SkillName.Smudge, 20, ResourceType.cd_Smudge, {
-	rscType: ResourceType.Smudge,
+makeResourceAbility("PCT", "SMUDGE", 20, "cd_SMUDGE", {
+	rscType: "SMUDGE",
 	applicationDelay: 0, // instant (buff application)
 	cooldown: 20,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,

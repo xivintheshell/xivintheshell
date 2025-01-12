@@ -1,7 +1,7 @@
 // making another file just so I don't keep clustering Controller.ts
 import { controller as ctl } from "./Controller";
 import { ActionNode, ActionType } from "./Record";
-import { BuffType, LIMIT_BREAKS, ResourceType, SkillName } from "../Game/Common";
+import { BuffType } from "../Game/Common";
 import {
 	DamageStatisticsData,
 	DamageStatisticsMode,
@@ -11,46 +11,32 @@ import {
 	DamageStatsDoTTableSummary,
 } from "../Components/DamageStatistics";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
+import { ActionKey, ResourceKey } from "../Game/Data";
+import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 
 // TODO autogenerate everything here
 
-const AFUISkills = new Set<SkillName>([
-	SkillName.Blizzard,
-	SkillName.Fire,
-	SkillName.Blizzard2,
-	SkillName.Fire2,
-	SkillName.Fire3,
-	SkillName.Blizzard3,
-	SkillName.Freeze,
-	SkillName.Flare,
-	SkillName.Blizzard4,
-	SkillName.Fire4,
-	SkillName.Despair,
-	SkillName.HighFire2,
-	SkillName.HighBlizzard2,
-	SkillName.FlareStar,
+const AFUISkills = new Set<ActionKey>([
+	"BLIZZARD",
+	"FIRE",
+	"BLIZZARD_II",
+	"FIRE_II",
+	"BLIZZARD_III",
+	"FIRE_III",
+	"FREEZE",
+	"FLARE",
+	"BLIZZARD_IV",
+	"FIRE_IV",
+	"DESPAIR",
+	"HIGH_FIRE_II",
+	"HIGH_BLIZZARD_II",
+	"FLARE_STAR",
 ]);
 
-const enoSkills = new Set<SkillName>([SkillName.Foul, SkillName.Xenoglossy, SkillName.Paradox]);
-
-export const DOT_SKILLS: SkillName[] = [
-	// BLM
-	SkillName.Thunder3,
-	SkillName.HighThunder,
-	SkillName.Thunder4,
-	SkillName.HighThunder2,
-	// SAM
-	SkillName.Higanbana,
-	// MCH
-	SkillName.Bioblaster,
-	SkillName.Flamethrower,
-	// BRD
-	SkillName.CausticBite,
-	SkillName.Stormbite,
-];
+const enoSkills = new Set<ActionKey>(["FOUL", "XENOGLOSSY", "PARADOX"]);
 
 // source of truth
-const excludedFromStats = new Set<SkillName | "DoT">([]);
+const excludedFromStats = new Set<ActionKey | "DoT">([]);
 
 type ExpandedNode = {
 	displayedModifiers: PotencyModifierType[];
@@ -78,7 +64,7 @@ function isDoTNode(node: ActionNode) {
 	return ctl.game.dotSkills.includes(node.skillName);
 }
 
-function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: ActionNode) {
+function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: ActionNode) {
 	console.assert(isDoTNode(node));
 	let mainPotency = node.getInitialPotency();
 	let entry: DamageStatsDoTTableEntry = {
@@ -240,7 +226,7 @@ function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 	return res;
 }
 
-export function getSkillOrDotInclude(skillNameOrDoT: SkillName | "DoT") {
+export function getSkillOrDotInclude(skillNameOrDoT: ActionKey | "DoT") {
 	return !excludedFromStats.has(skillNameOrDoT);
 }
 
@@ -249,23 +235,21 @@ export function allSkillsAreIncluded() {
 }
 
 export function updateSkillOrDoTInclude(props: {
-	skillNameOrDoT: SkillName | "DoT";
+	skillNameOrDoT: ActionKey | "DoT";
 	include: boolean;
 }) {
 	if (props.include && excludedFromStats.has(props.skillNameOrDoT)) {
 		excludedFromStats.delete(props.skillNameOrDoT);
 		// it doesn't make sense to include DoT but not base potency of Thunder/Higanbana
+		// TODO - for jobs with more than one DoT, this functions as an all-or-nothing toggle. Figure out how to have the toggles only affect that skill
 		if (props.skillNameOrDoT === "DoT") {
-			DOT_SKILLS.forEach((skill) => excludedFromStats.delete(skill));
-		} else if (
-			props.skillNameOrDoT === SkillName.Thunder3 ||
-			props.skillNameOrDoT === SkillName.HighThunder
-		) {
+			ctl.game.dotSkills.forEach((skill) => excludedFromStats.delete(skill));
+		} else if (ctl.game.dotSkills.includes(props.skillNameOrDoT)) {
 			excludedFromStats.delete("DoT");
 		}
 	} else {
 		excludedFromStats.add(props.skillNameOrDoT);
-		if (props.skillNameOrDoT !== "DoT" && DOT_SKILLS.includes(props.skillNameOrDoT)) {
+		if (props.skillNameOrDoT !== "DoT" && ctl.game.dotSkills.includes(props.skillNameOrDoT)) {
 			excludedFromStats.add("DoT");
 		}
 	}
@@ -304,12 +288,12 @@ export function calculateSelectedStats(props: {
 		if (
 			node.type === ActionType.Skill &&
 			node.skillName &&
-			!LIMIT_BREAKS.includes(node.skillName)
+			!(node.skillName in LIMIT_BREAK_ACTIONS)
 		) {
 			const checked = getSkillOrDotInclude(node.skillName);
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
-			if (skillInfo.cdName === ResourceType.cd_GCD && checked) {
+			if (skillInfo.cdName === "cd_GCD" && checked) {
 				if (node.hitBoss(bossIsUntargetable)) selected.gcdSkills.applied++;
 				else if (!node.resolved()) selected.gcdSkills.pending++;
 			}
@@ -366,17 +350,18 @@ export function calculateDamageStats(props: {
 		totalPartyBuffPotency: 0,
 	};
 
-	const dotTables: Map<ResourceType, DamageStatsDoTTrackingData> = new Map();
+	const dotTables: Map<ResourceKey, DamageStatsDoTTrackingData> = new Map();
 
-	let skillPotencies: Map<SkillName, number> = new Map();
+	let skillPotencies: Map<ActionKey, number> = new Map();
 
 	const processNodeFn = (node: ActionNode) => {
 		if (node.type === ActionType.Skill && node.skillName) {
 			const checked = getSkillOrDotInclude(node.skillName);
+			const isLimitBreak = node.skillName in LIMIT_BREAK_ACTIONS;
 
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.skillName);
-			if (skillInfo.cdName === ResourceType.cd_GCD && checked) {
+			if (skillInfo.cdName === "cd_GCD" && checked) {
 				if (node.hitBoss(bossIsUntargetable)) {
 					gcdSkills.applied++;
 				} else if (!node.resolved()) {
@@ -392,7 +377,7 @@ export function calculateDamageStats(props: {
 				includeSplash: true,
 				excludeDoT: isDoTNode(node) && !getSkillOrDotInclude("DoT"),
 			});
-			if (checked && !LIMIT_BREAKS.includes(node.skillName)) {
+			if (checked && !isLimitBreak) {
 				totalPotency.applied += p.applied;
 				totalPotency.pending += p.snapshottedButPending;
 			}
@@ -405,9 +390,7 @@ export function calculateDamageStats(props: {
 					mainTable.push({
 						skillName: node.skillName,
 						displayedModifiers: q.expandedNode.displayedModifiers,
-						basePotency: LIMIT_BREAKS.includes(node.skillName)
-							? 0
-							: q.expandedNode.basePotency,
+						basePotency: isLimitBreak ? 0 : q.expandedNode.basePotency,
 						calculationModifiers: q.expandedNode.calculationModifiers,
 						usageCount: 0,
 						hitCount: 0,
@@ -429,7 +412,7 @@ export function calculateDamageStats(props: {
 				}
 
 				// Stop processing potency statistics for limit breaks beyond this point
-				if (LIMIT_BREAKS.includes(node.skillName)) {
+				if (isLimitBreak) {
 					return;
 				}
 

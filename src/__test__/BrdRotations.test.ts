@@ -8,16 +8,16 @@ import {
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
-import { ShellJob } from "../Controller/Common";
 import { PotencyModifierType } from "../Game/Potency";
-import { ProcMode, ResourceType, SkillName } from "../Game/Common";
+import { ProcMode } from "../Game/Common";
 import { BRDState } from "../Game/Jobs/BRD";
+import { ActionKey } from "../Game/Data";
 
 beforeEach(rotationTestSetup);
 
 afterEach(rotationTestTeardown);
 
-const testWithConfig = makeTestWithConfigFn(ShellJob.BRD);
+const testWithConfig = makeTestWithConfigFn("BRD");
 
 it(
 	"accepts the standard opener",
@@ -27,64 +27,66 @@ it(
 			procMode: ProcMode.Never,
 		},
 		() => {
-			[
-				SkillName.Stormbite,
-				SkillName.WanderersMinuet,
-				SkillName.EmyprealArrow,
-				SkillName.CausticBite,
-				SkillName.BattleVoice,
-				SkillName.BurstShot,
-				SkillName.RadiantFinale,
-				SkillName.RagingStrikes,
-				SkillName.BurstShot,
-				SkillName.HeartbreakShot,
-				SkillName.RadiantEncore,
-				SkillName.Barrage,
-				SkillName.RefulgentArrow,
-				SkillName.Sidewinder,
-				SkillName.ResonantArrow,
-				SkillName.EmyprealArrow,
-				SkillName.BurstShot,
-				SkillName.HeartbreakShot,
-				SkillName.BurstShot,
-				SkillName.IronJaws,
-				SkillName.HeartbreakShot,
-				SkillName.BurstShot,
-				SkillName.PitchPerfect,
-			].forEach(applySkill);
+			(
+				[
+					"STORMBITE",
+					"WANDERERS_MINUET",
+					"EMYPREAL_ARROW",
+					"CAUSTIC_BITE",
+					"BATTLE_VOICE",
+					"BURST_SHOT",
+					"RADIANT_FINALE",
+					"RAGING_STRIKES",
+					"BURST_SHOT",
+					"HEARTBREAK_SHOT",
+					"RADIANT_ENCORE",
+					"BARRAGE",
+					"REFULGENT_ARROW",
+					"SIDEWINDER",
+					"RESONANT_ARROW",
+					"EMYPREAL_ARROW",
+					"BURST_SHOT",
+					"HEARTBREAK_SHOT",
+					"BURST_SHOT",
+					"IRON_JAWS",
+					"HEARTBREAK_SHOT",
+					"BURST_SHOT",
+					"PITCH_PERFECT",
+				] as ActionKey[]
+			).forEach(applySkill);
 			// wait for applications
 			controller.step(4);
 
 			compareDamageTables([
 				{
-					skillName: SkillName.Stormbite,
+					skillName: "STORMBITE",
 					// DoT applying skills don't display modifiers
 					displayedModifiers: [],
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.WanderersMinuet,
+					skillName: "WANDERERS_MINUET",
 					displayedModifiers: [],
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.EmyprealArrow,
+					skillName: "EMYPREAL_ARROW",
 					displayedModifiers: [PotencyModifierType.WANDERERS_MINUET],
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.CausticBite,
+					skillName: "CAUSTIC_BITE",
 					// DoT applying skills don't display modifiers
 					displayedModifiers: [],
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.BattleVoice,
+					skillName: "BATTLE_VOICE",
 					displayedModifiers: [],
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.BurstShot,
+					skillName: "BURST_SHOT",
 					displayedModifiers: [
 						PotencyModifierType.WANDERERS_MINUET,
 						PotencyModifierType.BATTLE_VOICE,
@@ -92,27 +94,17 @@ it(
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.RadiantFinale,
+					skillName: "RADIANT_FINALE",
 					displayedModifiers: [],
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.RagingStrikes,
+					skillName: "RAGING_STRIKES",
 					displayedModifiers: [],
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.BurstShot,
-					displayedModifiers: [
-						PotencyModifierType.WANDERERS_MINUET,
-						PotencyModifierType.RAGING_STRIKES,
-						PotencyModifierType.BATTLE_VOICE,
-						PotencyModifierType.RADIANT_FINALE_ONE_CODA,
-					],
-					hitCount: 3,
-				},
-				{
-					skillName: SkillName.HeartbreakShot,
+					skillName: "BURST_SHOT",
 					displayedModifiers: [
 						PotencyModifierType.WANDERERS_MINUET,
 						PotencyModifierType.RAGING_STRIKES,
@@ -122,7 +114,17 @@ it(
 					hitCount: 3,
 				},
 				{
-					skillName: SkillName.RadiantEncore,
+					skillName: "HEARTBREAK_SHOT",
+					displayedModifiers: [
+						PotencyModifierType.WANDERERS_MINUET,
+						PotencyModifierType.RAGING_STRIKES,
+						PotencyModifierType.BATTLE_VOICE,
+						PotencyModifierType.RADIANT_FINALE_ONE_CODA,
+					],
+					hitCount: 3,
+				},
+				{
+					skillName: "RADIANT_ENCORE",
 					displayedModifiers: [
 						PotencyModifierType.WANDERERS_MINUET,
 						PotencyModifierType.RAGING_STRIKES,
@@ -132,12 +134,12 @@ it(
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.Barrage,
+					skillName: "BARRAGE",
 					displayedModifiers: [],
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.RefulgentArrow,
+					skillName: "REFULGENT_ARROW",
 					displayedModifiers: [
 						PotencyModifierType.WANDERERS_MINUET,
 						PotencyModifierType.RAGING_STRIKES,
@@ -148,7 +150,7 @@ it(
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.Sidewinder,
+					skillName: "SIDEWINDER",
 					displayedModifiers: [
 						PotencyModifierType.WANDERERS_MINUET,
 						PotencyModifierType.RAGING_STRIKES,
@@ -158,7 +160,7 @@ it(
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.ResonantArrow,
+					skillName: "RESONANT_ARROW",
 					displayedModifiers: [
 						PotencyModifierType.WANDERERS_MINUET,
 						PotencyModifierType.RAGING_STRIKES,
@@ -168,7 +170,7 @@ it(
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.EmyprealArrow,
+					skillName: "EMYPREAL_ARROW",
 					displayedModifiers: [
 						PotencyModifierType.WANDERERS_MINUET,
 						PotencyModifierType.RAGING_STRIKES,
@@ -178,13 +180,13 @@ it(
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.IronJaws,
+					skillName: "IRON_JAWS",
 					// DoT applying skills don't display modifiers
 					displayedModifiers: [],
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.BurstShot,
+					skillName: "BURST_SHOT",
 					displayedModifiers: [
 						PotencyModifierType.WANDERERS_MINUET,
 						PotencyModifierType.RAGING_STRIKES,
@@ -193,7 +195,7 @@ it(
 					hitCount: 1,
 				},
 				{
-					skillName: SkillName.PitchPerfect,
+					skillName: "PITCH_PERFECT",
 					displayedModifiers: [
 						PotencyModifierType.WANDERERS_MINUET,
 						PotencyModifierType.RAGING_STRIKES,
@@ -204,8 +206,8 @@ it(
 			]);
 
 			const dotTables = damageData.dotTables;
-			expect(dotTables.get(ResourceType.CausticBite)).toBeTruthy();
-			expect(dotTables.get(ResourceType.Stormbite)).toBeTruthy();
+			expect(dotTables.get("CAUSTIC_BITE")).toBeTruthy();
+			expect(dotTables.get("STORMBITE")).toBeTruthy();
 		},
 	),
 );
@@ -217,9 +219,9 @@ it(
 			countdown: 0,
 		},
 		() => {
-			[SkillName.Stormbite, SkillName.WanderersMinuet].forEach(applySkill);
+			(["STORMBITE", "WANDERERS_MINUET"] as ActionKey[]).forEach(applySkill);
 			expect(controller.game.time).toBe(
-				(controller.game as BRDState).skillsList.get(SkillName.Stormbite).applicationDelay,
+				(controller.game as BRDState).skillsList.get("STORMBITE").applicationDelay,
 			);
 		},
 	),
@@ -232,12 +234,11 @@ it(
 			countdown: 0,
 		},
 		() => {
-			[SkillName.HeartbreakShot, SkillName.Stormbite, SkillName.WanderersMinuet].forEach(
+			(["HEARTBREAK_SHOT", "STORMBITE", "WANDERERS_MINUET"] as ActionKey[]).forEach(
 				applySkill,
 			);
 			expect(controller.game.time).toBe(
-				(controller.game as BRDState).skillsList.get(SkillName.HeartbreakShot)
-					.applicationDelay,
+				(controller.game as BRDState).skillsList.get("HEARTBREAK_SHOT").applicationDelay,
 			);
 		},
 	),

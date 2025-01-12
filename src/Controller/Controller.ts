@@ -1,11 +1,9 @@
 import {
 	getCachedValue,
-	MELEE_JOBS,
 	removeCachedValue,
 	ReplayMode,
 	setCachedValue,
 	ShellInfo,
-	ShellJob,
 	ShellVersion,
 	TickMode,
 } from "./Common";
@@ -14,38 +12,21 @@ import {
 	getAutoReplacedSkillName,
 	getConditionalReplacement,
 	getNormalizedSkillName,
+	getResourceKeyFromBuffName,
 } from "../Game/Skills";
-import { BLMState } from "../Game/Jobs/BLM";
-import { PCTState } from "../Game/Jobs/PCT";
-import { RDMState } from "../Game/Jobs/RDM";
-import { DNCState } from "../Game/Jobs/DNC";
-import { SAMState } from "../Game/Jobs/SAM";
-import { MCHState } from "../Game/Jobs/MCH";
-import { BRDState } from "../Game/Jobs/BRD";
 import { Buff } from "../Game/Buffs";
 import {
 	BuffType,
 	Debug,
 	LevelSync,
-	LimitBreakSkillName,
 	makeSkillReadyStatus,
 	ProcMode,
-	ResourceType,
-	SkillName,
 	SkillReadyStatus,
 	SkillUnavailableReason,
 	WarningType,
 } from "../Game/Common";
 import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
-import { BLMStatusPropsGenerator } from "../Components/Jobs/BLM";
-import { PCTStatusPropsGenerator } from "../Components/Jobs/PCT";
-import { RDMStatusPropsGenerator } from "../Components/Jobs/RDM";
-import { DNCStatusPropsGenerator } from "../Components/Jobs/DNC";
-import { SAMStatusPropsGenerator } from "../Components/Jobs/SAM";
-import { MCHStatusPropsGenerator } from "../Components/Jobs/MCH";
-import { WARStatusPropsGenerator } from "../Components/Jobs/WAR";
-import { BRDStatusPropsGenerator } from "../Components/Jobs/BRD";
-import { StatusPropsGenerator, updateStatusDisplay } from "../Components/StatusDisplay";
+import { updateStatusDisplay } from "../Components/StatusDisplay";
 import { updateSkillButtons } from "../Components/Skills";
 import { updateConfigDisplay } from "../Components/PlaybackControl";
 import { setHistorical, setJob, setRealTime } from "../Components/Main";
@@ -71,9 +52,10 @@ import {
 	getTargetableDurationBetween,
 } from "./DamageStatistics";
 import { XIVMath } from "../Game/XIVMath";
-import { RPRState } from "../Game/Jobs/RPR";
-import { RPRStatusPropsGenerator } from "../Components/Jobs/RPR";
-import { WARState } from "../Game/Jobs/WAR";
+import { MELEE_JOBS, ShellJob } from "../Game/Data/Jobs";
+import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
+import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
+import { getGameState } from "../Game/Jobs";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 require("../Game/Jobs/RoleActions");
@@ -81,27 +63,6 @@ require("../Game/Jobs/RoleActions");
 type Fixme = any;
 
 const STANDARD_DOT_TICK_KEY = "stdtick";
-
-const newGameState = (config: GameConfig) => {
-	if (config.job === ShellJob.PCT) {
-		return new PCTState(config);
-	} else if (config.job === ShellJob.RDM) {
-		return new RDMState(config);
-	} else if (config.job === ShellJob.DNC) {
-		return new DNCState(config);
-	} else if (config.job === ShellJob.SAM) {
-		return new SAMState(config);
-	} else if (config.job === ShellJob.MCH) {
-		return new MCHState(config);
-	} else if (config.job === ShellJob.RPR) {
-		return new RPRState(config);
-	} else if (config.job === ShellJob.WAR) {
-		return new WARState(config);
-	} else if (config.job === ShellJob.BRD) {
-		return new BRDState(config);
-	}
-	return new BLMState(config);
-};
 
 class Controller {
 	timeScale;
@@ -124,7 +85,7 @@ class Controller {
 		time: number;
 		damageSource: string;
 		potency: number;
-		buffs: ResourceType[];
+		buffs: ResourceKey[];
 	}[] = [];
 	#actionsLogCsv: {
 		time: number;
@@ -132,8 +93,8 @@ class Controller {
 		isGCD: number;
 		castTime: number;
 	}[] = [];
-	#dotTickTimes: Map<ResourceType | string, number[]> = new Map();
-	#dotCoverageTimes: Map<ResourceType, { tStartDisplay: number; tEndDisplay?: number }[]> =
+	#dotTickTimes: Map<ResourceKey | string, number[]> = new Map();
+	#dotCoverageTimes: Map<ResourceKey, { tStartDisplay: number; tEndDisplay?: number }[]> =
 		new Map();
 
 	savedHistoricalGame: GameState;
@@ -159,7 +120,7 @@ class Controller {
 		this.#presetLinesManager = new PresetLinesManager();
 
 		this.gameConfig = new GameConfig(DEFAULT_CONFIG);
-		this.game = newGameState(this.gameConfig);
+		this.game = getGameState(this.gameConfig);
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;
@@ -243,7 +204,7 @@ class Controller {
 		this.#sandboxEnvironment(() => {
 			// create environment
 			let cfg = inRecord.config ?? this.gameConfig;
-			this.game = newGameState(cfg);
+			this.game = getGameState(cfg);
 			this.record = new Record();
 			this.record.config = cfg;
 			this.#lastDamageApplicationTime = -cfg.countdown;
@@ -281,7 +242,7 @@ class Controller {
 		const hasSelected = this.record.getFirstSelection() !== undefined;
 		this.#sandboxEnvironment(() => {
 			let tmpRecord = this.record;
-			this.game = newGameState(this.gameConfig);
+			this.game = getGameState(this.gameConfig);
 			this.record = new Record();
 			this.record.config = this.gameConfig;
 			this.#lastDamageApplicationTime = -this.gameConfig.countdown;
@@ -343,7 +304,7 @@ class Controller {
 
 	#requestRestart() {
 		this.lastAttemptedSkill = "";
-		this.game = newGameState(this.gameConfig);
+		this.game = getGameState(this.gameConfig);
 		this.#playPause({ shouldLoop: false });
 		this.timeline.reset();
 		this.record.unselectAll();
@@ -424,7 +385,7 @@ class Controller {
 			content.config.initialResourceOverrides =
 				content.config.initialResourceOverrides.filter(
 					(ov: any) =>
-						![ResourceType.FlankPositional, ResourceType.RearPositional].includes(
+						![RESOURCES.FLANK_POSITIONAL.name, RESOURCES.REAR_POSITIONAL.name].includes(
 							ov.type,
 						),
 				);
@@ -450,12 +411,12 @@ class Controller {
 			if (action.skillName) {
 				node.skillName = getNormalizedSkillName(action.skillName);
 				if (node.skillName === undefined) {
-					const msg = `Failed to load record- \nInvalid skill name: ${node.skillName}`;
+					const msg = `Failed to load record- \nInvalid skill name: ${action.skillName}`;
 					window.alert(msg);
 					return;
 				}
 			}
-			node.buffName = action.buffName;
+			node.buffName = getResourceKeyFromBuffName(action.buffName);
 			node.waitDuration = action.waitDuration;
 			node.targetCount = action.targetCount ?? 1;
 			line.addActionNode(node);
@@ -573,9 +534,9 @@ class Controller {
 	 * @param excludeStandardTicks Boolean flag to exclude the standard tick from the results, mainly for Flamethrower
 	 * @returns The number of applicable dot ticks within the time range, excluding any that hit during an untargetable time
 	 */
-	getMaxTicks(untilRawTime: number, dotName: ResourceType, excludeStandardTicks: boolean) {
+	getMaxTicks(untilRawTime: number, dotName: ResourceKey, excludeStandardTicks: boolean) {
 		let cnt = 0;
-		const dotKeys: Array<ResourceType | string> = [dotName];
+		const dotKeys: Array<ResourceKey | string> = [dotName];
 		if (!excludeStandardTicks) dotKeys.push(STANDARD_DOT_TICK_KEY);
 		dotKeys.forEach((key) => {
 			this.#dotTickTimes.get(key)?.forEach((rt) => {
@@ -587,7 +548,7 @@ class Controller {
 		return cnt;
 	}
 
-	getDotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceType) {
+	getDotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceKey) {
 		if (untilDisplayTime <= Debug.epsilon) return 0;
 		const dotCoverages = this.#dotCoverageTimes.get(dot);
 		if (!dotCoverages) {
@@ -681,14 +642,14 @@ class Controller {
 			) as DamageMarkElem;
 			if (existingElement) {
 				existingElement.damageInfos.push(damageInfo);
-				if (pot && !existingElement.buffs.includes(ResourceType.Tincture)) {
-					existingElement.buffs.push(ResourceType.Tincture);
+				if (pot && !existingElement.buffs.includes("TINCTURE")) {
+					existingElement.buffs.push("TINCTURE");
 				}
 			} else {
 				this.timeline.addElement({
 					type: ElemType.DamageMark,
 					damageInfos: [damageInfo],
-					buffs: pot ? [ResourceType.Tincture] : [],
+					buffs: pot ? ["TINCTURE"] : [],
 					time: this.game.time,
 					displayTime: this.game.getDisplayTime(),
 				});
@@ -704,7 +665,7 @@ class Controller {
 					includePartyBuffs: true,
 					includeSplash: true,
 				}),
-				buffs: pot ? [ResourceType.Tincture] : [],
+				buffs: pot ? ["TINCTURE"] : [],
 			});
 		}
 
@@ -749,7 +710,7 @@ class Controller {
 	 * @param rawTime The time of the DoT
 	 * @param dotName The name of the DoT that ticked. If not provided, assumes the standard DoT tick
 	 */
-	reportDotTick(rawTime: number, dotName?: ResourceType) {
+	reportDotTick(rawTime: number, dotName?: ResourceKey) {
 		if (!this.#bInSandbox) {
 			const tickGroupKey = dotName ?? STANDARD_DOT_TICK_KEY;
 			let tickGroup = this.#dotTickTimes.get(tickGroupKey);
@@ -762,7 +723,7 @@ class Controller {
 		}
 	}
 
-	reportDotStart(displayTime: number, dot: ResourceType) {
+	reportDotStart(displayTime: number, dot: ResourceKey) {
 		if (!this.#bInSandbox) {
 			let dotCoverages = this.#dotCoverageTimes.get(dot);
 			if (!dotCoverages) {
@@ -778,7 +739,7 @@ class Controller {
 		}
 	}
 
-	reportDotDrop(displayTime: number, dot: ResourceType) {
+	reportDotDrop(displayTime: number, dot: ResourceKey) {
 		if (!this.#bInSandbox) {
 			const dotCoverages = this.#dotCoverageTimes.get(dot);
 			console.assert(dotCoverages, `Reported dropping ${dot} when no coverage was detected`);
@@ -793,53 +754,22 @@ class Controller {
 
 	updateStatusDisplay(game: GameState) {
 		// locks
-		let cast = game.resources.get(ResourceType.NotCasterTaxed);
-		let anim = game.resources.get(ResourceType.NotAnimationLocked);
-		let gcd = game.cooldowns.get(ResourceType.cd_GCD);
+		let cast = game.resources.get("NOT_CASTER_TAXED");
+		let anim = game.resources.get("NOT_ANIMATION_LOCKED");
+		let gcd = game.cooldowns.get("cd_GCD");
 		let resourceLocksData = {
 			gcdReady: gcd.stacksAvailable() > 0,
 			gcd: gcd.currentStackCd(),
-			timeTillGCDReady: game.cooldowns.timeTillAnyStackAvailable(ResourceType.cd_GCD),
-			castLocked: game.resources.timeTillReady(ResourceType.NotCasterTaxed) > 0,
+			timeTillGCDReady: game.cooldowns.timeTillAnyStackAvailable("cd_GCD"),
+			castLocked: game.resources.timeTillReady("NOT_CASTER_TAXED") > 0,
 			castLockTotalDuration: cast.pendingChange ? cast.pendingChange.delay : 0,
-			castLockCountdown: game.resources.timeTillReady(ResourceType.NotCasterTaxed),
-			animLocked: game.resources.timeTillReady(ResourceType.NotAnimationLocked) > 0,
+			castLockCountdown: game.resources.timeTillReady("NOT_CASTER_TAXED"),
+			animLocked: game.resources.timeTillReady("NOT_ANIMATION_LOCKED") > 0,
 			animLockTotalDuration: anim.pendingChange ? anim.pendingChange.delay : 0,
-			animLockCountdown: game.resources.timeTillReady(ResourceType.NotAnimationLocked),
-			canMove: game.resources.get(ResourceType.Movement).available(1),
+			animLockCountdown: game.resources.timeTillReady("NOT_ANIMATION_LOCKED"),
+			canMove: game.resources.get("MOVEMENT").available(1),
 		};
-		let propsGenerator;
-		switch (game.job) {
-			case ShellJob.PCT:
-				propsGenerator = new PCTStatusPropsGenerator(game as PCTState);
-				break;
-			case ShellJob.RDM:
-				propsGenerator = new RDMStatusPropsGenerator(game as RDMState);
-				break;
-			case ShellJob.DNC:
-				propsGenerator = new DNCStatusPropsGenerator(game as DNCState);
-				break;
-			case ShellJob.SAM:
-				propsGenerator = new SAMStatusPropsGenerator(game as SAMState);
-				break;
-			case ShellJob.MCH:
-				propsGenerator = new MCHStatusPropsGenerator(game as MCHState);
-				break;
-			case ShellJob.RPR:
-				propsGenerator = new RPRStatusPropsGenerator(game as RPRState);
-				break;
-			case ShellJob.WAR:
-				propsGenerator = new WARStatusPropsGenerator(game as WARState);
-				break;
-			case ShellJob.BLM:
-				propsGenerator = new BLMStatusPropsGenerator(game as BLMState);
-				break;
-			case ShellJob.BRD:
-				propsGenerator = new BRDStatusPropsGenerator(game as BRDState);
-				break;
-			default:
-				propsGenerator = new StatusPropsGenerator(game);
-		}
+		const propsGenerator = game.statusPropsGenerator;
 		updateStatusDisplay(
 			{
 				time: game.getDisplayTime(),
@@ -873,7 +803,7 @@ class Controller {
 		updateSkillButtons(
 			this.game.displayedSkills
 				.getCurrentSkillNames(this.game)
-				.map((skillName: SkillName) => game.getSkillAvailabilityStatus(skillName)),
+				.map((skillName: ActionKey) => game.getSkillAvailabilityStatus(skillName)),
 		);
 	}
 
@@ -956,7 +886,7 @@ class Controller {
 		return this.game.job;
 	}
 
-	getSkillInfo(props: { game: GameState; skillName: SkillName }) {
+	getSkillInfo(props: { game: GameState; skillName: ActionKey }) {
 		return props.game.getSkillAvailabilityStatus(props.skillName);
 	}
 
@@ -979,7 +909,7 @@ class Controller {
 	}
 
 	#useSkill(
-		skillName: SkillName,
+		skillName: ActionKey,
 		targetCount: number,
 		bWaitFirst: boolean,
 		overrideTickMode: TickMode = this.tickMode,
@@ -1027,19 +957,17 @@ class Controller {
 				// this block is run when NOT viewing historical state (aka run when receiving input)
 				let newStatus = this.game.getSkillAvailabilityStatus(skillName, true); // refresh to get re-captured recast time
 				let skill = this.game.skillsList.get(skillName);
-				let isGCD = skill.cdName === ResourceType.cd_GCD;
+				let isGCD = skill.cdName === "cd_GCD";
 				let isSpellCast = status.castTime > 0 && !status.instantCast;
 				let snapshotTime = isSpellCast
 					? status.castTime - GameConfig.getSlidecastWindow(status.castTime)
 					: 0;
 				let recastDuration = newStatus.cdRecastTime;
 				// special case for meditate, which is an ability that roles the GCD
-				if (skillName === SkillName.Meditate) {
+				if (skillName === "MEDITATE") {
 					isGCD = true;
 					// get the recast duration of a random GCD
-					recastDuration = this.game.getSkillAvailabilityStatus(
-						SkillName.Yukikaze,
-					).cdRecastTime;
+					recastDuration = this.game.getSkillAvailabilityStatus("YUKIKAZE").cdRecastTime;
 				}
 				this.timeline.addElement({
 					type: ElemType.Skill,
@@ -1055,7 +983,7 @@ class Controller {
 				});
 				this.#actionsLogCsv.push({
 					time: this.game.getDisplayTime(),
-					action: skillName,
+					action: ACTIONS[skillName].name,
 					isGCD: isGCD ? 1 : 0,
 					castTime: status.instantCast ? 0 : status.castTime,
 				});
@@ -1168,7 +1096,7 @@ class Controller {
 				let waitFirst =
 					currentReplayMode === ReplayMode.SkillSequence ||
 					currentReplayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
-				let skillName = itr.skillName as SkillName;
+				let skillName = itr.skillName as ActionKey;
 				if (props.replayMode === ReplayMode.SkillSequence) {
 					// auto-replace as much as possible
 					skillName = getAutoReplacedSkillName(
@@ -1240,7 +1168,7 @@ class Controller {
 				itr.type === ActionType.SetResourceEnabled &&
 				(currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)
 			) {
-				let success = this.requestToggleBuff(itr.buffName as ResourceType);
+				let success = this.requestToggleBuff(itr.buffName as ResourceKey);
 				const exact = currentReplayMode === ReplayMode.Exact;
 				if (success) {
 					this.#requestTick({
@@ -1345,7 +1273,7 @@ class Controller {
 		let csvRows = this.#damageLogCsv.map((row) => {
 			let pot = false;
 			row.buffs.forEach((b) => {
-				if (b === ResourceType.Tincture) pot = true;
+				if (b === "TINCTURE") pot = true;
 			});
 			let potency = row.potency;
 			if (pot) potency *= this.getTincturePotencyMultiplier();
@@ -1365,7 +1293,7 @@ class Controller {
 	// https://github.com/Amarantine-xiv/Amas-FF14-Combat-Sim
 	getAmaSimCsv(): any[][] {
 		const normalizeName = (s: string) => {
-			if (s === SkillName.Tincture) {
+			if (s === ACTIONS.TINCTURE.name) {
 				return "Grade 2 Gemdraught";
 			} else {
 				return s.replace(" 2", " II").replace(" 3", " III").replace(" 4", " IV");
@@ -1419,20 +1347,24 @@ class Controller {
 			// also skip sprint, buff toggle events, and any other non-damage-related abilities
 			.filter(
 				(row) =>
-					![
-						SkillName.Sprint as string,
-						SkillName.LucidDreaming as string,
-						SkillName.BetweenTheLines as string,
-						SkillName.Retrace as string,
-						SkillName.Addle as string,
-						SkillName.AetherialManipulation as string,
-						SkillName.Manaward as string,
-						SkillName.Surecast as string,
+					!(
+						[
+							"SPRINT",
+							"LUCID_DREAMING",
+							"BETWEEN_THE_LINES",
+							"RETRACE",
+							"ADDLE",
+							"AETHERIAL_MANIPULATION",
+							"MANAWARD",
+							"SURECAST",
 
-						SkillName.TemperaGrassaPop as string,
-						SkillName.TemperaCoatPop as string,
-						...(Object.values(LimitBreakSkillName) as string[]), // Exclude LBs from export
-					].includes(row.action) && !row.action.includes("Toggle buff"),
+							"TEMPERA_GRASSA_POP",
+							"TEMPERA_COAT_POP",
+							...Object.keys(LIMIT_BREAK_ACTIONS), // Exclude LBs from export
+						] as ActionKey[]
+					)
+						.map((key) => ACTIONS[key].name)
+						.includes(row.action) && !row.action.includes("Toggle buff"),
 			)
 			.map((row) => [row.time, normalizeName(row.action), "", ""]);
 		return [["Time", "skill_name", "job_class", "skill_conditional"]].concat(
@@ -1474,10 +1406,10 @@ class Controller {
 		if (!this.#bInSandbox) {
 			window.alert(
 				"cast failed! Resources for " +
-					props.failNode.skillName +
+					ACTIONS[props.failNode.skillName as ActionKey].name +
 					" are no longer available",
 			);
-			console.warn("failed: " + props.failNode.skillName);
+			console.warn("failed: " + ACTIONS[props.failNode.skillName as ActionKey].name);
 		}
 		// if adding from a line, invalidate the whole line
 		// if loading from file (shouldn't happen)
@@ -1551,7 +1483,7 @@ class Controller {
 		this.updateAllDisplay();
 	}
 
-	requestUseSkill(props: { skillName: SkillName; targetCount: number }) {
+	requestUseSkill(props: { skillName: ActionKey; targetCount: number }) {
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {
@@ -1564,7 +1496,7 @@ class Controller {
 		}
 	}
 
-	requestToggleBuff(buffName: ResourceType) {
+	requestToggleBuff(buffName: ResourceKey) {
 		let success = this.game.requestToggleBuff(buffName); // currently always succeeds
 		if (!success) return false;
 
@@ -1574,7 +1506,7 @@ class Controller {
 
 		this.#actionsLogCsv.push({
 			time: this.game.getDisplayTime(),
-			action: "Toggle buff: " + buffName,
+			action: "Toggle buff: " + RESOURCES[buffName].name,
 			isGCD: 0,
 			castTime: 0,
 		});

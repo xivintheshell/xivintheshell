@@ -1,10 +1,12 @@
 import React from "react";
-import { SkillName, BuffType, ResourceType } from "../Game/Common";
+import { BuffType } from "../Game/Common";
 import { ContentNode } from "./Common";
 import { MdLanguage } from "react-icons/md";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
+import { ActionKey, ACTIONS, CooldownKey, COOLDOWNS, ResourceKey } from "../Game/Data";
+import { Data } from "../Game/Data/Data";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -36,240 +38,13 @@ export function localizeDate(date: string, lang: Language): string {
 	return date;
 }
 
-const skillsZh = new Map<SkillName, string>([
-	[SkillName.Fire, "火1"],
-	[SkillName.Blizzard, "冰1"],
-	[SkillName.Fire2, "火2"],
-	[SkillName.Blizzard2, "冰2"],
-	[SkillName.Fire4, "火4"],
-	[SkillName.Transpose, "星灵移位"],
-	[SkillName.Thunder3, "雷3"],
-	[SkillName.Manaward, "魔罩"],
-	[SkillName.Manafont, "魔泉"],
-	[SkillName.Fire3, "火3"],
-	[SkillName.Blizzard3, "冰3"],
-	[SkillName.Freeze, "玄冰"],
-	[SkillName.Flare, "核爆"],
-	[SkillName.LeyLines, "黑魔纹"],
-	[SkillName.Blizzard4, "冰4"],
-	[SkillName.Thunder4, "霹雷"],
-	[SkillName.BetweenTheLines, "魔纹步"],
-	[SkillName.AetherialManipulation, "以太步"],
-	[SkillName.Triplecast, "三连咏唱"],
-	[SkillName.Foul, "秽浊"],
-	[SkillName.Despair, "绝望"],
-	[SkillName.UmbralSoul, "灵极魂"],
-	[SkillName.Xenoglossy, "异言"],
-	[SkillName.HighFire2, "高火2"],
-	[SkillName.HighBlizzard2, "高冰冻2"],
-	[SkillName.Amplifier, "详述"],
-	[SkillName.Addle, "病毒"],
-	[SkillName.Swiftcast, "即刻咏唱"],
-	[SkillName.LucidDreaming, "醒梦"],
-	[SkillName.Surecast, "沉稳咏唱"],
-	[SkillName.Tincture, "爆发药"],
-	[SkillName.Paradox, "悖论"],
-	[SkillName.HighThunder, "高闪雷"],
-	[SkillName.HighThunder2, "高震雷"],
-	[SkillName.Sprint, "疾跑"],
-	[SkillName.Retrace, "魔纹重置"],
-	[SkillName.FlareStar, "耀星"],
+export function localizeSkillName(text: ActionKey): string {
+	const action = Data.getAction(text);
 
-	// picto stuff
-	[SkillName.FireInRed, "火炎之红"],
-	[SkillName.AeroInGreen, "疾风之绿"],
-	[SkillName.WaterInBlue, "流水之蓝"],
-	[SkillName.Fire2InRed, "烈炎之红"],
-	[SkillName.Aero2InGreen, "烈风之绿"],
-	[SkillName.Water2InBlue, "激水之蓝"],
-	[SkillName.BlizzardInCyan, "冰结之蓝青"],
-	[SkillName.StoneInYellow, "飞石之纯黄"],
-	[SkillName.ThunderInMagenta, "闪雷之品红"],
-	[SkillName.Blizzard2InCyan, "冰冻之蓝青"],
-	[SkillName.Stone2InYellow, "坚石之纯黄"],
-	[SkillName.Thunder2InMagenta, "震雷之品红"],
-	[SkillName.HolyInWhite, "神圣之白"],
-	[SkillName.CometInBlack, "彗星之黑"],
-	[SkillName.RainbowDrip, "彩虹点滴"],
-	[SkillName.StarPrism, "天星棱光"],
-
-	[SkillName.TemperaCoat, "坦培拉涂层"],
-	[SkillName.TemperaGrassa, "油性坦培拉涂层"],
-	[SkillName.TemperaCoatPop, "坦培拉涂层破盾"],
-	[SkillName.TemperaGrassaPop, "油性坦培拉涂层破盾"],
-	[SkillName.Smudge, "速涂"],
-	[SkillName.SubtractivePalette, "减色混合"],
-
-	[SkillName.CreatureMotif, "动物彩绘"],
-	[SkillName.PomMotif, "绒球彩绘"],
-	[SkillName.WingMotif, "翅膀彩绘"],
-	[SkillName.ClawMotif, "兽爪彩绘"],
-	[SkillName.MawMotif, "尖牙彩绘"],
-	[SkillName.LivingMuse, "动物构想"],
-	[SkillName.PomMuse, "绒球构想"],
-	[SkillName.WingedMuse, "翅膀构想"],
-	[SkillName.ClawedMuse, "兽爪构想"],
-	[SkillName.FangedMuse, "尖牙构想"],
-	[SkillName.MogOfTheAges, "莫古力激流"],
-	[SkillName.RetributionOfTheMadeen, "马蒂恩惩罚"],
-
-	[SkillName.WeaponMotif, "武器彩绘"],
-	[SkillName.SteelMuse, "武器构想"],
-	[SkillName.HammerMotif, "重锤彩绘"],
-	[SkillName.StrikingMuse, "重锤构想"],
-	[SkillName.HammerStamp, "重锤敲章"],
-	[SkillName.HammerBrush, "重锤掠刷"],
-	[SkillName.PolishingHammer, "重锤抛光"],
-
-	[SkillName.LandscapeMotif, "风景彩绘"],
-	[SkillName.ScenicMuse, "风景构想"],
-	[SkillName.StarrySkyMotif, "星空彩绘"],
-	[SkillName.StarryMuse, "星空构想"],
-
-	// RDM stuff
-	[SkillName.Riposte, "回刺"],
-	[SkillName.Verthunder, "赤闪雷"],
-	[SkillName.CorpsACorps, "短兵相接"],
-	[SkillName.Veraero, "赤疾风"],
-	[SkillName.Verfire, "赤火炎"],
-	[SkillName.Verstone, "赤飞石"],
-	[SkillName.Zwerchhau, "交击斩"],
-	[SkillName.Displacement, "移转"],
-	[SkillName.Fleche, "飞刺"],
-	[SkillName.Redoublement, "连攻"],
-	[SkillName.Acceleration, "促进"],
-	[SkillName.Moulinet, "划圆斩"],
-	[SkillName.Vercure, "赤治疗"],
-	[SkillName.ContreSixte, "六分反击"],
-	[SkillName.Embolden, "鼓励"],
-	[SkillName.Manafication, "魔元化"],
-	[SkillName.Jolt2, "震荡"],
-	[SkillName.Verraise, "赤复活"],
-	[SkillName.Impact, "冲击"],
-	[SkillName.Verflare, "赤核爆"],
-	[SkillName.Verholy, "赤神圣"],
-	[SkillName.EnchantedRiposte, "魔回刺"],
-	[SkillName.EnchantedZwerchhau, "魔交击斩"],
-	[SkillName.EnchantedRedoublement, "魔连攻"],
-	[SkillName.EnchantedMoulinet, "魔划圆斩"],
-	[SkillName.Verthunder2, "赤震雷"],
-	[SkillName.Veraero2, "赤烈风"],
-	[SkillName.Engagement, "交剑"],
-	[SkillName.EnchantedReprise, "魔续斩"],
-	[SkillName.Reprise, "续斩"],
-	[SkillName.Scorch, "焦热"],
-	[SkillName.Verthunder3, "赤暴雷"],
-	[SkillName.Veraero3, "赤疾风"],
-	[SkillName.MagickBarrier, "抗死"],
-	[SkillName.Resolution, "决断"],
-	[SkillName.EnchantedMoulinet2, "魔划圆斩·二段"],
-	[SkillName.EnchantedMoulinet3, "魔划圆斩·三段"],
-	[SkillName.Jolt3, "激荡"],
-	[SkillName.ViceOfThorns, "荆棘回环"],
-	[SkillName.GrandImpact, "显贵冲击"],
-	[SkillName.Prefulgence, "光芒四射"],
-	//等到绝伊甸我一定把你们全都秒了！————不知名赤魔法师
-]);
-
-const skillsJa = new Map<SkillName, string>([
-	[SkillName.Fire, "ファイア"],
-	[SkillName.Blizzard, "ブリザド"],
-	[SkillName.Fire2, "ファイラ"],
-	[SkillName.Blizzard2, "ブリザラ"],
-	[SkillName.Fire4, "ファイジャ"],
-	[SkillName.Transpose, "トランス"],
-	[SkillName.Thunder3, "サンダガ"],
-	[SkillName.Manaward, "マバリア"],
-	[SkillName.Manafont, "マナフォント"],
-	[SkillName.Fire3, "ファイガ"],
-	[SkillName.Blizzard3, "ブリザガ"],
-	[SkillName.Freeze, "フリーズ"],
-	[SkillName.Flare, "フレア"],
-	[SkillName.LeyLines, "黒魔紋"],
-	[SkillName.Blizzard4, "ブリザジャ"],
-	[SkillName.BetweenTheLines, "ラインズステップ"],
-	[SkillName.AetherialManipulation, "エーテリアルテップ"],
-	[SkillName.Triplecast, "三連魔"],
-	[SkillName.Foul, "ファウル"],
-	[SkillName.Despair, "デスペア"],
-	[SkillName.UmbralSoul, "アンブラルソウル"],
-	[SkillName.Xenoglossy, "ゼノグロシー"],
-	[SkillName.HighFire2, "ハイファイラ"],
-	[SkillName.HighBlizzard2, "ハイブリザラ"],
-	[SkillName.Amplifier, "アンプリファイア"],
-	[SkillName.Addle, "アドル"],
-	[SkillName.Swiftcast, "迅速魔"],
-	[SkillName.LucidDreaming, "ルーシッドドリーム"],
-	[SkillName.Surecast, "堅実魔"],
-	[SkillName.Tincture, "薬"],
-	[SkillName.Paradox, "パラドックス"],
-	[SkillName.HighThunder, "ハイサンダー"],
-	[SkillName.Sprint, "スプリント"],
-	[SkillName.Retrace, "魔紋再設置"],
-	[SkillName.FlareStar, "フレアスター"],
-
-	// picto localization
-	[SkillName.FireInRed, "レッドファイア"],
-	[SkillName.AeroInGreen, "グリーンエアロ"],
-	[SkillName.WaterInBlue, "ブルーウォータ"],
-	[SkillName.Fire2InRed, "レッドファイラ"],
-	[SkillName.Aero2InGreen, "グリーンエアロラ"],
-	[SkillName.Water2InBlue, "ブルーウォタラ"],
-	[SkillName.BlizzardInCyan, "シアンブリザド"],
-	[SkillName.StoneInYellow, "イエローストーン"],
-	[SkillName.ThunderInMagenta, "マゼンタサンダー"],
-	[SkillName.Blizzard2InCyan, "シアンブリザラ"],
-	[SkillName.Stone2InYellow, "イエローストンラ"],
-	[SkillName.Thunder2InMagenta, "マゼンタサンダラ"],
-	[SkillName.HolyInWhite, "ホワイトホーリー"],
-	[SkillName.CometInBlack, "ブラックコメット"],
-	[SkillName.RainbowDrip, "レインボードリップ"],
-	[SkillName.StarPrism, "スタープリズム"],
-
-	[SkillName.TemperaCoat, "テンペラコート"],
-	[SkillName.TemperaGrassa, "テンペラグラッサ"],
-	[SkillName.TemperaCoatPop, "テンペラコート【ブレイク】"],
-	[SkillName.TemperaGrassaPop, "テンペラグラッサ【ブレイク】"],
-	[SkillName.Smudge, "スマッジ"],
-	[SkillName.SubtractivePalette, "サブトラクティブパレット"],
-
-	[SkillName.CreatureMotif, "ピクトアニマル"],
-	[SkillName.PomMotif, "ピクトアニマル"],
-	[SkillName.WingMotif, "ピクトスケープ"],
-	[SkillName.ClawMotif, "ピクトクロー"],
-	[SkillName.MawMotif, "ピクトファング"],
-	[SkillName.LivingMuse, "イマジンアニマル"],
-	[SkillName.PomMuse, "ピクトポンポン"],
-	[SkillName.WingedMuse, "ピクトウィング"],
-	[SkillName.ClawedMuse, "イマジンクロー"],
-	[SkillName.FangedMuse, "イマジンファング"],
-	[SkillName.MogOfTheAges, "モーグリストリーム"],
-	[SkillName.RetributionOfTheMadeen, "マディーンレトリビューション"],
-
-	[SkillName.WeaponMotif, "ピクトウェポン"],
-	[SkillName.SteelMuse, "イマジンウェポン"],
-	[SkillName.HammerMotif, "ピクトハンマー"],
-	[SkillName.StrikingMuse, "イマジンハンマー"],
-	[SkillName.HammerStamp, "ハンマースタンプ"],
-	[SkillName.HammerBrush, "ハンマーブラッシュ"],
-	[SkillName.PolishingHammer, "ハンマーポリッシュ"],
-
-	[SkillName.LandscapeMotif, "ピクトスケープ"],
-	[SkillName.ScenicMuse, "イマジンスケープ"],
-	[SkillName.StarrySkyMotif, "ピクトスカイ"],
-	[SkillName.StarryMuse, "イマジンスカイ"],
-	// TODO rdm localization
-]);
-
-export function localizeSkillName(text: SkillName): string {
-	let currentLang = getCurrentLanguage();
-	if (currentLang === "zh") {
-		return skillsZh.get(text) ?? text;
-	} else if (currentLang === "ja") {
-		return skillsJa.get(text) ?? text;
-	} else {
-		return text;
-	}
+	return localize({
+		en: action.name,
+		...action.label,
+	}).toString();
 }
 
 const buffsZh = new Map<BuffType, string>([
@@ -338,92 +113,40 @@ export function localizeBuffType(text: BuffType): string {
 	}
 }
 
-const resourcesZh = new Map<ResourceType, string>([
-	// common
-	[ResourceType.Mana, "MP"],
-	[ResourceType.Tincture, "爆发药"],
-	[ResourceType.Sprint, "疾跑"],
-	[ResourceType.RearPositional, "身位加成（后）"],
-	[ResourceType.FlankPositional, "身位加成（侧）"],
-	[ResourceType.Addle, "昏乱"],
-	[ResourceType.Swiftcast, "即刻咏唱"],
-	[ResourceType.LucidDreaming, "醒梦"],
-	[ResourceType.Surecast, "沉稳咏唱"],
-	[ResourceType.InCombat, "战斗中"],
-	[ResourceType.cd_GCD, "GCD"],
-
-	// BLM
-	[ResourceType.Triplecast, "三重咏唱"],
-	[ResourceType.Firestarter, "火苗"],
-	[ResourceType.Thunderhead, "雷砧"],
-	[ResourceType.HighThunder, "高闪雷"], // May need retranslation from ThunderDoT
-	[ResourceType.ThunderIII, "暴雷"], // May need retranslation from ThunderDoT
-	[ResourceType.HighThunderII, "高震雷"], // May need retranslation from ThunderDoT
-	[ResourceType.ThunderIV, "霹雷"], // May need retranslation from ThunderDoT
-	[ResourceType.LeyLines, "黑魔纹"],
-	[ResourceType.Manaward, "魔纹罩"],
-	[ResourceType.AstralFire, "星极火"],
-	[ResourceType.UmbralIce, "灵极冰"],
-	[ResourceType.UmbralHeart, "冰针"],
-	[ResourceType.AstralSoul, "星极魂"],
-	[ResourceType.Paradox, "悖论"],
-	[ResourceType.Enochian, "天语"],
-	[ResourceType.Polyglot, "通晓"],
-
-	// PCT
-	[ResourceType.Aetherhues, "以太色调"],
-	[ResourceType.TemperaCoat, "坦培拉涂层"],
-	[ResourceType.Smudge, "速涂"],
-	[ResourceType.HammerTime, "重锤连击"],
-	[ResourceType.SubtractivePalette, "减色混合"],
-	[ResourceType.StarryMuse, "星空构想"],
-	[ResourceType.SubtractiveSpectrum, "减色混合预备"],
-	[ResourceType.Hyperphantasia, "绘灵幻景"],
-	[ResourceType.Inspiration, "绘画装置"],
-	[ResourceType.RainbowBright, "彩虹点滴效果提高"],
-	[ResourceType.Starstruck, "天星棱光预备"],
-	[ResourceType.TemperaGrassa, "油性坦培拉涂层"],
-	[ResourceType.MonochromeTones, "色调反转"],
-	[ResourceType.HammerCombo, "重锤连击数"],
-	[ResourceType.cd_Subtractive, "CD：减色混合"],
-	[ResourceType.cd_Grassa, "CD：油性坦培拉涂层"],
-
-	// RDM
-	[ResourceType.WhiteMana, "白魔元"],
-	[ResourceType.BlackMana, "黑魔元"],
-	[ResourceType.ManaStacks, "魔元集"],
-	[ResourceType.Acceleration, "促进"],
-	[ResourceType.Dualcast, "连续咏唱"],
-	[ResourceType.Embolden, "鼓励"],
-	[ResourceType.GrandImpactReady, "显贵冲击预备"],
-	[ResourceType.MagickBarrier, "抗死"],
-	[ResourceType.MagickedSwordplay, "魔法剑术"],
-	[ResourceType.Manafication, "魔元化"],
-	[ResourceType.PrefulgenceReady, "光芒四射预备"],
-	[ResourceType.ThornedFlourish, "荆棘环绕预备"],
-	[ResourceType.VerfireReady, "赤火炎预备"],
-	[ResourceType.VerstoneReady, "赤飞石预备"],
-	[ResourceType.RDMMeleeCounter, "赤魔近战连"],
-	[ResourceType.RDMAoECounter, "赤魔AOE连"],
-]);
-
-export function localizeResourceType(text: ResourceType): string {
+export function localizeResourceType(key: ResourceKey | CooldownKey): string {
 	const currentLang = getCurrentLanguage();
-	if (currentLang === "zh") {
-		if (resourcesZh.has(text)) {
-			return resourcesZh.get(text)!;
-		}
-		if (text.startsWith("cd_")) {
-			const sliced = text.slice(3) as keyof typeof SkillName;
-			const skillName: SkillName | undefined = SkillName[sliced];
+
+	if (key in COOLDOWNS) {
+		// If it's a cooldown, first see if it's localized on the Data object
+		const cooldown = Data.getCooldown(key as CooldownKey);
+		const tryLocalized = localize({
+			en: cooldown.name,
+			...cooldown.label,
+		}).toString();
+
+		// If it's not localized on the Data object, try to find the action it's tied to by
+		// trimming off the "cd_" leading portion that we use by convention
+		if (currentLang !== "en" && tryLocalized === cooldown.name) {
+			const sliced = key.slice(3);
+
+			// Check both the action name and the key
+			const skillName = Object.keys(ACTIONS).find(
+				(key) => ACTIONS[key as ActionKey].name === sliced || key === sliced,
+			) as ActionKey | undefined;
+
+			// If we found a corresponding action, use that action's localized name
 			if (skillName !== undefined) {
 				return "CD：" + localizeSkillName(skillName);
 			}
 		}
-		return text;
-	} else {
-		return text;
+		return tryLocalized;
 	}
+
+	const resource = Data.getResource(key as ResourceKey);
+	return localize({
+		en: resource.name,
+		...resource.label,
+	}).toString();
 }
 
 export let getCurrentLanguage: () => Language = () => {

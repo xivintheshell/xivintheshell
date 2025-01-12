@@ -1,12 +1,13 @@
-import { ShellJob, ALL_JOBS, FileType, getCachedValue, setCachedValue } from "./Common";
+import { FileType, getCachedValue, setCachedValue } from "./Common";
 import { ActionNode, Line } from "./Record";
-import { getNormalizedSkillName, jobHasSkill } from "../Game/Skills";
-import { SkillName } from "../Game/Common";
+import { getNormalizedSkillName, getResourceKeyFromBuffName, jobHasSkill } from "../Game/Skills";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
+import { ShellJob, ALL_JOBS } from "../Game/Data/Jobs";
+import { ActionKey } from "../Game/Data";
 
 type Fixme = any;
 
-export function inferJobFromSkillNames(actions: SkillName[]): ShellJob {
+export function inferJobFromSkillNames(actions: ActionKey[]): ShellJob {
 	// Helper function used for migrating from BLM/PCT in the Shell to multi-job support.
 	//
 	// Iterate over the whole record and return the number of actions that occur in each job.
@@ -54,7 +55,7 @@ export class PresetLinesManager {
 
 	deserializeAndAppend(content: Fixme) {
 		for (let i = 0; i < content.presets.length; i++) {
-			const skillNames = [];
+			const skillNames: ActionKey[] = [];
 			const line = new Line();
 			line.name = content.presets[i].name;
 			for (let j = 0; j < content.presets[i].actions.length; j++) {
@@ -65,7 +66,7 @@ export class PresetLinesManager {
 					skillNames.push(node.skillName);
 				}
 				node.waitDuration = action.waitDuration;
-				node.buffName = action.buffName;
+				node.buffName = getResourceKeyFromBuffName(action.buffName);
 				line.addActionNode(node);
 			}
 			this.addLine(line, content.presets[i].job ?? inferJobFromSkillNames(skillNames));

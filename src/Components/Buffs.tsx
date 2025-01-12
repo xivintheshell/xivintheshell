@@ -4,7 +4,7 @@ import { updateTimelineView } from "./Timeline";
 // grabbed most of them from xivanalysis
 export const buffIcons = new Map();
 buffIcons.set(BuffType.LeyLines, require("./Asset/Buffs/BLM/Ley Lines.png"));
-buffIcons.set(BuffType.Tincture, require("./Asset/Buffs/Role/Tincture.png"));
+buffIcons.set(BuffType.Tincture, require("./Asset/Buffs/General/Tincture.png"));
 buffIcons.set(BuffType.ArcaneCircle, require("./Asset/Buffs/RPR/Arcane Circle.png"));
 buffIcons.set(BuffType.ArmysPaeon, require("./Asset/Buffs/BRD/Army's Paeon.png"));
 buffIcons.set(BuffType.BattleLitany, require("./Asset/PartyBuffs/battle_litany.png"));

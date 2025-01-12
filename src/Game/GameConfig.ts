@@ -1,7 +1,9 @@
 import { Debug, ProcMode, LevelSync, FIXED_BASE_CASTER_TAX } from "./Common";
 import { ResourceOverride, ResourceOverrideData } from "./Resources";
-import { ShellInfo, ShellJob, ShellVersion } from "../Controller/Common";
+import { ShellInfo, ShellVersion } from "../Controller/Common";
 import { XIVMath } from "./XIVMath";
+import { ShellJob } from "./Data/Jobs";
+import { ResourceKey, RESOURCES } from "./Data";
 
 export type ConfigData = {
 	job: ShellJob;
@@ -23,7 +25,7 @@ export type ConfigData = {
 };
 
 export const DEFAULT_BLM_CONFIG: ConfigData = {
-	job: ShellJob.BLM,
+	job: "BLM",
 	shellVersion: ShellInfo.version,
 	level: LevelSync.lvl100,
 	// 2.37 GCD
@@ -43,7 +45,7 @@ export const DEFAULT_BLM_CONFIG: ConfigData = {
 };
 
 export const DEFAULT_PCT_CONFIG: ConfigData = {
-	job: ShellJob.PCT,
+	job: "PCT",
 	shellVersion: ShellInfo.version,
 	level: LevelSync.lvl100,
 	// 7.05 2.5 GCD bis https://xivgear.app/?page=sl%7C4c102326-839a-43c8-84ae-11ffdb6ef4a2
@@ -64,8 +66,8 @@ export const DEFAULT_PCT_CONFIG: ConfigData = {
 
 export const DEFAULT_CONFIG: ConfigData = DEFAULT_BLM_CONFIG; // TODO
 // {
-// 	[ShellJob.BLM]: DEFAULT_BLM_CONFIG,
-// 	[ShellJob.PCT]: DEFAULT_PCT_CONFIG,
+// 	['BLM']: DEFAULT_BLM_CONFIG,
+// 	['PCT']: DEFAULT_PCT_CONFIG,
 // }[ShellInfo.job];
 
 export type SerializedConfig = ConfigData & {
@@ -130,6 +132,24 @@ export class GameConfig {
 				// backward compatibility:
 				if (obj.enabled === undefined) obj.effectOrTimerEnabled = true;
 				else obj.effectOrTimerEnabled = obj.enabled;
+			}
+			// Backwards compatibility re: change to keyed data
+			if (!(obj.type in RESOURCES)) {
+				// Special case a few spelling changes made during the transition
+				if (obj.type.toString() === "AstralFire") {
+					obj.type = "ASTRAL_FIRE";
+				} else if (obj.type.toString() === "UmbralIce") {
+					obj.type = "UMBRAL_ICE";
+				} else if (obj.type.toString() === "UmbralHeart") {
+					obj.type = "UMBRAL_HEART";
+				} else {
+					const key = Object.keys(RESOURCES).find(
+						(key) => RESOURCES[key as ResourceKey].name === obj.type,
+					) as ResourceKey;
+					if (key) {
+						obj.type = key;
+					}
+				}
 			}
 			return new ResourceOverride(obj);
 		});

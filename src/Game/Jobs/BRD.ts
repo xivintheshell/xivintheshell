@@ -1,9 +1,11 @@
+import { BRDStatusPropsGenerator } from "../../Components/Jobs/BRD";
 import { localizeResourceType } from "../../Components/Localization";
-import { ShellJob } from "../../Controller/Common";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, ResourceType, SkillName, TraitName, WarningType } from "../Common";
-import { BRDResourceType, BRDTraitName } from "../Constants/BRD";
+import { BuffType, WarningType } from "../Common";
+import { TraitKey } from "../Data";
+import { BRDResourceKey, BRDActionKey, BRDCooldownKey } from "../Data/Jobs/BRD";
 import { GameConfig } from "../GameConfig";
 import { GameState, PlayerState } from "../GameState";
 import { Modifiers, PotencyModifier } from "../Potency";
@@ -25,97 +27,93 @@ import {
 } from "../Skills";
 
 const makeBRDResource = (
-	rsc: ResourceType,
+	rsc: BRDResourceKey,
 	maxValue: number,
 	params?: { timeout?: number; default?: number },
 ) => {
-	makeResource(ShellJob.BRD, rsc, maxValue, params ?? {});
+	makeResource("BRD", rsc, maxValue, params ?? {});
 };
 
-makeBRDResource(ResourceType.SoulVoice, 100);
-makeBRDResource(ResourceType.PitchPerfect, 3);
-makeBRDResource(ResourceType.Repertoire, 4);
-makeBRDResource(ResourceType.WanderersCoda, 1);
-makeBRDResource(ResourceType.MagesCoda, 1);
-makeBRDResource(ResourceType.ArmysCoda, 1);
-makeBRDResource(ResourceType.EthosRepertoire, 4);
-makeBRDResource(ResourceType.MuseRepertoire, 4);
+makeBRDResource("SOUL_VOICE", 100);
+makeBRDResource("PITCH_PERFECT", 3);
+makeBRDResource("REPERTOIRE", 4);
+makeBRDResource("WANDERERS_CODA", 1);
+makeBRDResource("MAGES_CODA", 1);
+makeBRDResource("ARMYS_CODA", 1);
+makeBRDResource("ETHOS_REPERTOIRE", 4);
+makeBRDResource("MUSE_REPERTOIRE", 4);
 
-makeBRDResource(ResourceType.HawksEye, 1, { timeout: 30 });
-makeBRDResource(ResourceType.RagingStrikes, 1, { timeout: 20 });
-makeBRDResource(ResourceType.Barrage, 1, { timeout: 10 });
-makeBRDResource(ResourceType.ArmysMuse, 4, { timeout: 10 });
-makeBRDResource(ResourceType.ArmysEthos, 4, { timeout: 30 });
-makeBRDResource(ResourceType.BlastArrowReady, 1, { timeout: 10 });
-makeBRDResource(ResourceType.ResonantArrowReady, 1, { timeout: 30 });
-makeBRDResource(ResourceType.RadiantEncoreReady, 1, { timeout: 30 });
-makeBRDResource(ResourceType.MagesBallad, 1, { timeout: 45 });
-makeBRDResource(ResourceType.ArmysPaeon, 1, { timeout: 45 });
-makeBRDResource(ResourceType.WanderersMinuet, 1, { timeout: 45 });
-makeBRDResource(ResourceType.BattleVoice, 1, { timeout: 20 });
-makeBRDResource(ResourceType.WardensPaean, 1, { timeout: 30 });
-makeBRDResource(ResourceType.Troubadour, 1, { timeout: 15 });
-makeBRDResource(ResourceType.NaturesMinne, 1, { timeout: 15 });
-makeBRDResource(ResourceType.RadiantFinale, 1, { timeout: 20 });
-makeBRDResource(ResourceType.RadiantCoda, 3);
+makeBRDResource("HAWKS_EYE", 1, { timeout: 30 });
+makeBRDResource("RAGING_STRIKES", 1, { timeout: 20 });
+makeBRDResource("BARRAGE", 1, { timeout: 10 });
+makeBRDResource("ARMYS_MUSE", 4, { timeout: 10 });
+makeBRDResource("ARMYS_ETHOS", 4, { timeout: 30 });
+makeBRDResource("BLAST_ARROW_READY", 1, { timeout: 10 });
+makeBRDResource("RESONANT_ARROW_READY", 1, { timeout: 30 });
+makeBRDResource("RADIANT_ENCORE_READY", 1, { timeout: 30 });
+makeBRDResource("MAGES_BALLAD", 1, { timeout: 45 });
+makeBRDResource("ARMYS_PAEON", 1, { timeout: 45 });
+makeBRDResource("WANDERERS_MINUET", 1, { timeout: 45 });
+makeBRDResource("BATTLE_VOICE", 1, { timeout: 20 });
+makeBRDResource("WARDENS_PAEAN", 1, { timeout: 30 });
+makeBRDResource("TROUBADOUR", 1, { timeout: 15 });
+makeBRDResource("NATURES_MINNE", 1, { timeout: 15 });
+makeBRDResource("RADIANT_FINALE", 1, { timeout: 20 });
+makeBRDResource("RADIANT_CODA", 3);
 
-makeBRDResource(ResourceType.CausticBite, 1, { timeout: 45 });
-makeBRDResource(ResourceType.Stormbite, 1, { timeout: 45 });
+makeBRDResource("CAUSTIC_BITE", 1, { timeout: 45 });
+makeBRDResource("STORMBITE", 1, { timeout: 45 });
 
-const BARD_SONGS: ResourceType[] = [
-	ResourceType.WanderersMinuet,
-	ResourceType.MagesBallad,
-	ResourceType.ArmysPaeon,
-];
+const BARD_SONGS: BRDResourceKey[] = ["WANDERERS_MINUET", "MAGES_BALLAD", "ARMYS_PAEON"];
 
-const BARRAGE_SKILLS: SkillName[] = [
-	SkillName.RefulgentArrow,
-	SkillName.Shadowbite,
-	SkillName.WideVolley,
-];
+const BARRAGE_SKILLS: BRDActionKey[] = ["REFULGENT_ARROW", "SHADOWBITE", "WIDE_VOLLEY"];
 
 export class BRDState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
-		if (!this.hasTraitUnlocked(TraitName.EnhancedBloodletter)) {
-			this.cooldowns.set(new CoolDown(ResourceType.cd_HeartbreakShot, 15, 2, 2));
+		if (!this.hasTraitUnlocked("ENHANCED_BLOODLETTER")) {
+			this.cooldowns.set(new CoolDown("cd_HEARTBREAK_SHOT", 15, 2, 2));
 		}
 
-		if (!this.hasTraitUnlocked(TraitName.EnhancedTroubadour)) {
-			this.cooldowns.set(new CoolDown(ResourceType.cd_Troubadour, 120, 1, 1));
+		if (!this.hasTraitUnlocked("ENHANCED_TROUBADOUR")) {
+			this.cooldowns.set(new CoolDown("cd_TROUBADOUR", 120, 1, 1));
 		}
 
 		this.registerRecurringEvents([
 			{
-				reportName: localizeResourceType(ResourceType.Stormbite),
+				reportName: localizeResourceType("STORMBITE"),
 				groupedDots: [
 					{
-						dotName: ResourceType.Stormbite,
-						appliedBy: [SkillName.Stormbite, SkillName.IronJaws],
+						dotName: "STORMBITE",
+						appliedBy: ["STORMBITE", "IRON_JAWS"],
 					},
 				],
 			},
 			{
-				reportName: localizeResourceType(ResourceType.CausticBite),
+				reportName: localizeResourceType("CAUSTIC_BITE"),
 				groupedDots: [
 					{
-						dotName: ResourceType.CausticBite,
-						appliedBy: [SkillName.CausticBite, SkillName.IronJaws],
+						dotName: "CAUSTIC_BITE",
+						appliedBy: ["CAUSTIC_BITE", "IRON_JAWS"],
 					},
 				],
 			},
 		]);
 	}
 
+	override get statusPropsGenerator(): StatusPropsGenerator<BRDState> {
+		return new BRDStatusPropsGenerator(this);
+	}
+
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
-		if (this.hasResourceAvailable(ResourceType.RagingStrikes)) {
+		if (this.hasResourceAvailable("RAGING_STRIKES")) {
 			node.addBuff(BuffType.RagingStrikes);
 		}
-		if (this.hasResourceAvailable(ResourceType.BattleVoice)) {
+		if (this.hasResourceAvailable("BATTLE_VOICE")) {
 			node.addBuff(BuffType.BattleVoice);
 		}
-		const radiantFinale = this.resources.get(ResourceType.RadiantFinale).availableAmount();
+		const radiantFinale = this.resources.get("RADIANT_FINALE").availableAmount();
 		switch (radiantFinale) {
 			case 1:
 				node.addBuff(BuffType.RadiantFinale1);
@@ -129,24 +127,24 @@ export class BRDState extends GameState {
 		}
 
 		if (
-			this.hasResourceAvailable(ResourceType.Barrage) &&
-			BARRAGE_SKILLS.includes(skill.name)
+			this.hasResourceAvailable("BARRAGE") &&
+			BARRAGE_SKILLS.includes(skill.name as BRDActionKey)
 		) {
 			node.addBuff(BuffType.Barrage);
 		}
 
-		if (this.hasResourceAvailable(ResourceType.WanderersMinuet)) {
+		if (this.hasResourceAvailable("WANDERERS_MINUET")) {
 			node.addBuff(BuffType.WanderersMinuet);
-		} else if (this.hasResourceAvailable(ResourceType.MagesBallad)) {
+		} else if (this.hasResourceAvailable("MAGES_BALLAD")) {
 			node.addBuff(BuffType.MagesBallad);
-		} else if (this.hasResourceAvailable(ResourceType.ArmysPaeon)) {
+		} else if (this.hasResourceAvailable("ARMYS_PAEON")) {
 			node.addBuff(BuffType.ArmysPaeon);
 		}
 	}
 
 	// Songs tick based on their application time, so they're not registered as a normal recurring event
-	songTick(song: ResourceType) {
-		if (!BARD_SONGS.includes(song)) {
+	songTick(song: BRDResourceKey) {
+		if (!this.resourceIsSong(song)) {
 			return;
 		}
 		if (!this.hasResourceAvailable(song)) {
@@ -166,51 +164,51 @@ export class BRDState extends GameState {
 		}
 	}
 
-	gainRepertoireEffect(song?: ResourceType) {
+	gainRepertoireEffect(song?: BRDResourceKey) {
 		// If we weren't given a song, figure out if one is active
 		if (!song) {
-			if (this.hasResourceAvailable(ResourceType.WanderersMinuet)) {
-				song = ResourceType.WanderersMinuet;
-			} else if (this.hasResourceAvailable(ResourceType.MagesBallad)) {
-				song = ResourceType.MagesBallad;
-			} else if (this.hasResourceAvailable(ResourceType.ArmysPaeon)) {
-				song = ResourceType.ArmysPaeon;
+			if (this.hasResourceAvailable("WANDERERS_MINUET")) {
+				song = "WANDERERS_MINUET";
+			} else if (this.hasResourceAvailable("MAGES_BALLAD")) {
+				song = "MAGES_BALLAD";
+			} else if (this.hasResourceAvailable("ARMYS_PAEON")) {
+				song = "ARMYS_PAEON";
 			}
 		}
 		// If no song is active, or the resource given isn't actually a song, bail
 		if (!song) {
 			return;
 		}
-		if (!BARD_SONGS.includes(song)) {
+		if (!this.resourceIsSong(song)) {
 			return;
 		}
 
 		// Grant the specified repertoire effect
 		switch (song) {
-			case ResourceType.WanderersMinuet:
-				this.resources.get(ResourceType.PitchPerfect).gain(1);
+			case "WANDERERS_MINUET":
+				this.resources.get("PITCH_PERFECT").gain(1);
 				break;
-			case ResourceType.MagesBallad:
-				this.cooldowns.get(ResourceType.cd_HeartbreakShot).restore(this, 7.5);
+			case "MAGES_BALLAD":
+				this.cooldowns.get("cd_HEARTBREAK_SHOT").restore(this, 7.5);
 				break;
-			case ResourceType.ArmysPaeon:
-				this.resources.get(ResourceType.Repertoire).gain(1);
+			case "ARMYS_PAEON":
+				this.resources.get("REPERTOIRE").gain(1);
 				break;
 		}
 
-		if (this.hasTraitUnlocked(TraitName.SoulVoice)) {
-			if (this.hasResourceAvailable(ResourceType.SoulVoice, 100)) {
+		if (this.hasTraitUnlocked("SOUL_VOICE")) {
+			if (this.hasResourceAvailable("SOUL_VOICE", 100)) {
 				controller.reportWarning(WarningType.SoulVoiceOvercap);
 			}
-			this.resources.get(ResourceType.SoulVoice).gain(5);
+			this.resources.get("SOUL_VOICE").gain(5);
 		}
 	}
 
-	resourceIsSong(rscType: ResourceType): boolean {
+	resourceIsSong(rscType: BRDResourceKey): boolean {
 		return BARD_SONGS.includes(rscType);
 	}
 
-	beginSong(newSong: ResourceType) {
+	beginSong(newSong: BRDResourceKey) {
 		if (!this.resourceIsSong(newSong)) {
 			return;
 		}
@@ -218,26 +216,23 @@ export class BRDState extends GameState {
 		BARD_SONGS.forEach((song) => this.tryExpireSong(song));
 
 		// Convert stocked Army's Ethos into Army's Muse, if not singing Army's Paeon
-		if (
-			newSong !== ResourceType.ArmysPaeon &&
-			this.hasResourceAvailable(ResourceType.ArmysEthos)
-		) {
-			const repertoire = this.resources.get(ResourceType.EthosRepertoire).availableAmount();
-			this.resources.get(ResourceType.MuseRepertoire).gain(repertoire);
+		if (newSong !== "ARMYS_PAEON" && this.hasResourceAvailable("ARMYS_ETHOS")) {
+			const repertoire = this.resources.get("ETHOS_REPERTOIRE").availableAmount();
+			this.resources.get("MUSE_REPERTOIRE").gain(repertoire);
 
-			this.tryConsumeResource(ResourceType.ArmysEthos);
-			this.tryConsumeResource(ResourceType.EthosRepertoire, true);
+			this.tryConsumeResource("ARMYS_ETHOS");
+			this.tryConsumeResource("ETHOS_REPERTOIRE", true);
 
-			this.gainStatus(ResourceType.ArmysMuse);
+			this.gainStatus("ARMYS_MUSE");
 		}
 
-		if (this.hasTraitUnlocked(TraitName.MinstrelsCoda)) {
+		if (this.hasTraitUnlocked("MINSTRELS_CODA")) {
 			const coda =
-				newSong === ResourceType.WanderersMinuet
-					? ResourceType.WanderersCoda
-					: newSong === ResourceType.MagesBallad
-						? ResourceType.MagesCoda
-						: ResourceType.ArmysCoda;
+				newSong === "WANDERERS_MINUET"
+					? "WANDERERS_CODA"
+					: newSong === "MAGES_BALLAD"
+						? "MAGES_CODA"
+						: "ARMYS_CODA";
 			if (this.hasResourceAvailable(coda)) {
 				controller.reportWarning(WarningType.CodaOvercap);
 			}
@@ -260,7 +255,7 @@ export class BRDState extends GameState {
 		);
 	}
 
-	tryExpireSong(song: ResourceType) {
+	tryExpireSong(song: BRDResourceKey) {
 		if (!this.resourceIsSong(song)) {
 			return;
 		}
@@ -270,25 +265,23 @@ export class BRDState extends GameState {
 
 		// Handle expiring secondary effects/gauge resources
 		switch (song) {
-			case ResourceType.WanderersMinuet:
-				this.tryConsumeResource(ResourceType.PitchPerfect, true);
+			case "WANDERERS_MINUET":
+				this.tryConsumeResource("PITCH_PERFECT", true);
 				break;
-			case ResourceType.ArmysPaeon:
+			case "ARMYS_PAEON":
 				// Cache how much repertoire is currently held for when the next song applies
-				if (this.hasTraitUnlocked(TraitName.EnhancedArmysPaeon)) {
-					const repertoire = this.resources
-						.get(ResourceType.Repertoire)
-						.availableAmount();
+				if (this.hasTraitUnlocked("ENHANCED_ARMYS_PAEON")) {
+					const repertoire = this.resources.get("REPERTOIRE").availableAmount();
 					if (repertoire > 0) {
-						this.resources.get(ResourceType.EthosRepertoire).gain(repertoire);
-						this.gainStatus(ResourceType.ArmysEthos);
+						this.resources.get("ETHOS_REPERTOIRE").gain(repertoire);
+						this.gainStatus("ARMYS_ETHOS");
 					}
 
 					// Clear out last Paeon's Muse Repertoire stack counter too
-					this.tryConsumeResource(ResourceType.MuseRepertoire, true);
+					this.tryConsumeResource("MUSE_REPERTOIRE", true);
 				}
 
-				this.tryConsumeResource(ResourceType.Repertoire, true);
+				this.tryConsumeResource("REPERTOIRE", true);
 				break;
 		}
 
@@ -296,22 +289,22 @@ export class BRDState extends GameState {
 	}
 
 	getCodaCount() {
-		const wanderers = this.resources.get(ResourceType.WanderersCoda).availableAmount();
-		const mages = this.resources.get(ResourceType.MagesCoda).availableAmount();
-		const armys = this.resources.get(ResourceType.ArmysCoda).availableAmount();
+		const wanderers = this.resources.get("WANDERERS_CODA").availableAmount();
+		const mages = this.resources.get("MAGES_CODA").availableAmount();
+		const armys = this.resources.get("ARMYS_CODA").availableAmount();
 
 		return wanderers + mages + armys;
 	}
 
-	getJobPotencyModifiers(skillName: SkillName): PotencyModifier[] {
+	getJobPotencyModifiers(skillName: BRDActionKey): PotencyModifier[] {
 		const mods: PotencyModifier[] = [];
 
-		const modiferResources: { rscType: ResourceType; mod: PotencyModifier }[] = [
-			{ rscType: ResourceType.WanderersMinuet, mod: Modifiers.WanderersMinuet },
-			{ rscType: ResourceType.MagesBallad, mod: Modifiers.MagesBallad },
-			{ rscType: ResourceType.ArmysPaeon, mod: Modifiers.ArmysPaeon },
-			{ rscType: ResourceType.RagingStrikes, mod: Modifiers.RagingStrikes },
-			{ rscType: ResourceType.BattleVoice, mod: Modifiers.BattleVoice },
+		const modiferResources: { rscType: BRDResourceKey; mod: PotencyModifier }[] = [
+			{ rscType: "WANDERERS_MINUET", mod: Modifiers.WanderersMinuet },
+			{ rscType: "MAGES_BALLAD", mod: Modifiers.MagesBallad },
+			{ rscType: "ARMYS_PAEON", mod: Modifiers.ArmysPaeon },
+			{ rscType: "RAGING_STRIKES", mod: Modifiers.RagingStrikes },
+			{ rscType: "BATTLE_VOICE", mod: Modifiers.BattleVoice },
 		];
 		modiferResources.forEach((modRsc) => {
 			if (this.hasResourceAvailable(modRsc.rscType)) {
@@ -319,8 +312,8 @@ export class BRDState extends GameState {
 			}
 		});
 
-		if (this.hasResourceAvailable(ResourceType.RadiantFinale)) {
-			const radiantCoda = this.resources.get(ResourceType.RadiantCoda).availableAmount();
+		if (this.hasResourceAvailable("RADIANT_FINALE")) {
+			const radiantCoda = this.resources.get("RADIANT_CODA").availableAmount();
 			if (radiantCoda === 3) {
 				mods.push(Modifiers.RadiantFinaleThreeCoda);
 			} else if (radiantCoda === 2) {
@@ -330,15 +323,15 @@ export class BRDState extends GameState {
 			}
 		}
 
-		if (this.hasResourceAvailable(ResourceType.Barrage)) {
+		if (this.hasResourceAvailable("BARRAGE")) {
 			switch (skillName) {
-				case SkillName.RefulgentArrow:
+				case "REFULGENT_ARROW":
 					mods.push(Modifiers.BarrageRefulgent);
 					break;
-				case SkillName.Shadowbite:
+				case "SHADOWBITE":
 					mods.push(Modifiers.BarrageShadowbite);
 					break;
-				case SkillName.WideVolley:
+				case "WIDE_VOLLEY":
 					mods.push(Modifiers.BarrageWideVolley);
 					break;
 			}
@@ -347,14 +340,12 @@ export class BRDState extends GameState {
 		return mods;
 	}
 
-	getSpeedModifier(buff?: BRDResourceType): number {
-		if (buff === ResourceType.ArmysPaeon) {
-			const repertoire = this.resources.get(ResourceType.Repertoire).availableAmount();
+	getSpeedModifier(buff?: BRDResourceKey): number {
+		if (buff === "ARMYS_PAEON") {
+			const repertoire = this.resources.get("REPERTOIRE").availableAmount();
 			return repertoire * 4; // 4% per repertoire stack under Army's Paeon
-		} else if (buff === ResourceType.ArmysMuse) {
-			const museRepertoire = this.resources
-				.get(ResourceType.MuseRepertoire)
-				.availableAmount();
+		} else if (buff === "ARMYS_MUSE") {
+			const museRepertoire = this.resources.get("MUSE_REPERTOIRE").availableAmount();
 			if (museRepertoire === 4) {
 				return 12;
 			} // 12% at 4 stacks
@@ -368,13 +359,13 @@ export class BRDState extends GameState {
 }
 
 const makeWeaponskill_BRD = (
-	name: SkillName,
+	name: BRDActionKey,
 	unlockLevel: number,
 	params: {
 		autoUpgrade?: SkillAutoReplace;
 		replaceIf?: ConditionalSkillReplace<BRDState>[];
 		startOnHotbar?: boolean;
-		potency?: number | Array<[TraitName, number]> | ResourceCalculationFn<BRDState>;
+		potency?: number | Array<[TraitKey, number]> | ResourceCalculationFn<BRDState>;
 		falloff?: number;
 		applicationDelay?: number;
 		validateAttempt?: StatePredicate<BRDState>;
@@ -384,14 +375,14 @@ const makeWeaponskill_BRD = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Weaponskill<BRDState> => {
-	return makeWeaponskill(ShellJob.BRD, name, unlockLevel, {
+	return makeWeaponskill("BRD", name, unlockLevel, {
 		...params,
 		recastTime: (state) => {
-			let speedBuff = undefined;
-			if (state.hasResourceAvailable(ResourceType.ArmysPaeon)) {
-				speedBuff = ResourceType.ArmysPaeon;
-			} else if (state.hasResourceAvailable(ResourceType.ArmysMuse)) {
-				speedBuff = ResourceType.ArmysMuse;
+			let speedBuff: BRDResourceKey | undefined = undefined;
+			if (state.hasResourceAvailable("ARMYS_PAEON")) {
+				speedBuff = "ARMYS_PAEON";
+			} else if (state.hasResourceAvailable("ARMYS_MUSE")) {
+				speedBuff = "ARMYS_MUSE";
 			}
 			const speedModifier = state.getSpeedModifier(speedBuff);
 			return state.config.adjustedSksGCD(2.5, speedModifier);
@@ -401,11 +392,11 @@ const makeWeaponskill_BRD = (
 };
 
 const makeAbility_BRD = (
-	name: SkillName,
+	name: BRDActionKey,
 	unlockLevel: number,
-	cdName: ResourceType,
+	cdName: BRDCooldownKey,
 	params: {
-		potency?: number | Array<[TraitName, number]> | ResourceCalculationFn<BRDState>;
+		potency?: number | Array<[TraitKey, number]> | ResourceCalculationFn<BRDState>;
 		replaceIf?: ConditionalSkillReplace<BRDState>[];
 		requiresCombat?: boolean;
 		highlightIf?: StatePredicate<BRDState>;
@@ -422,18 +413,18 @@ const makeAbility_BRD = (
 		autoUpgrade?: SkillAutoReplace;
 	},
 ): Ability<BRDState> => {
-	return makeAbility(ShellJob.BRD, name, unlockLevel, cdName, {
+	return makeAbility("BRD", name, unlockLevel, cdName, {
 		...params,
 		jobPotencyModifiers: (state) => state.getJobPotencyModifiers(name),
 	});
 };
 
 const makeResourceAbility_BRD = (
-	name: SkillName,
+	name: BRDActionKey,
 	unlockLevel: number,
-	cdName: ResourceType,
+	cdName: BRDCooldownKey,
 	params: {
-		rscType: ResourceType;
+		rscType: BRDResourceKey;
 		replaceIf?: ConditionalSkillReplace<BRDState>[];
 		applicationDelay: number;
 		cooldown: number;
@@ -444,66 +435,64 @@ const makeResourceAbility_BRD = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<BRDState> => {
-	return makeResourceAbility(ShellJob.BRD, name, unlockLevel, cdName, {
+	return makeResourceAbility("BRD", name, unlockLevel, cdName, {
 		...params,
 	});
 };
 
-makeWeaponskill_BRD(SkillName.HeavyShot, 1, {
+makeWeaponskill_BRD("HEAVY_SHOT", 1, {
 	potency: 160,
 	applicationDelay: 1.47, // Unknown, copied from Burst Shot
-	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.2),
+	onApplication: (state) => state.maybeGainProc("HAWKS_EYE", 0.2),
 	autoUpgrade: {
-		trait: BRDTraitName.HeavyShotMastery,
-		otherSkill: SkillName.BurstShot,
+		trait: "HEAVY_SHOT_MASTERY",
+		otherSkill: "BURST_SHOT",
 	},
 });
-makeWeaponskill_BRD(SkillName.BurstShot, 1, {
+makeWeaponskill_BRD("BURST_SHOT", 1, {
 	startOnHotbar: false,
 	potency: [
-		[TraitName.Never, 200],
-		[TraitName.RangedMastery, 220],
+		["NEVER", 200],
+		["RANGED_MASTERY", 220],
 	],
 	applicationDelay: 1.47,
-	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.35),
+	onApplication: (state) => state.maybeGainProc("HAWKS_EYE", 0.35),
 });
 
-makeWeaponskill_BRD(SkillName.RefulgentArrow, 70, {
+makeWeaponskill_BRD("REFULGENT_ARROW", 70, {
 	potency: [
-		[TraitName.Never, 260],
-		[TraitName.RangedMastery, 280],
+		["NEVER", 260],
+		["RANGED_MASTERY", 280],
 	],
 	applicationDelay: 1.47,
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.Barrage)) {
-			state.tryConsumeResource(ResourceType.Barrage);
+		if (state.hasResourceAvailable("BARRAGE")) {
+			state.tryConsumeResource("BARRAGE");
 		} else {
-			state.tryConsumeResource(ResourceType.HawksEye);
+			state.tryConsumeResource("HAWKS_EYE");
 		}
 	},
 	validateAttempt: (state) =>
-		state.hasResourceAvailable(ResourceType.HawksEye) ||
-		state.hasResourceAvailable(ResourceType.Barrage),
+		state.hasResourceAvailable("HAWKS_EYE") || state.hasResourceAvailable("BARRAGE"),
 	highlightIf: (state) =>
-		state.hasResourceAvailable(ResourceType.HawksEye) ||
-		state.hasResourceAvailable(ResourceType.Barrage),
+		state.hasResourceAvailable("HAWKS_EYE") || state.hasResourceAvailable("BARRAGE"),
 });
 
 const dotAppliers: Array<{
-	skillName: SkillName;
-	dotName: ResourceType;
+	skillName: BRDActionKey;
+	dotName: BRDResourceKey;
 	initialPotency: number;
 	tickPotency: number;
 }> = [
 	{
-		skillName: SkillName.CausticBite,
-		dotName: ResourceType.CausticBite,
+		skillName: "CAUSTIC_BITE",
+		dotName: "CAUSTIC_BITE",
 		initialPotency: 150,
 		tickPotency: 20,
 	},
 	{
-		skillName: SkillName.Stormbite,
-		dotName: ResourceType.Stormbite,
+		skillName: "STORMBITE",
+		dotName: "STORMBITE",
 		initialPotency: 100,
 		tickPotency: 25,
 	},
@@ -523,14 +512,14 @@ dotAppliers.forEach((props) => {
 			}),
 		onApplication: (state, node) => {
 			state.applyDoT(props.dotName, node);
-			if (state.hasTraitUnlocked(TraitName.BiteMasteryII)) {
-				state.maybeGainProc(ResourceType.HawksEye, 0.35);
+			if (state.hasTraitUnlocked("BITE_MASTERY_II")) {
+				state.maybeGainProc("HAWKS_EYE", 0.35);
 			}
 		},
 	});
 });
 
-makeWeaponskill_BRD(SkillName.IronJaws, 56, {
+makeWeaponskill_BRD("IRON_JAWS", 56, {
 	potency: 100,
 	applicationDelay: 0.67,
 	onApplication: (state, node) => {
@@ -539,23 +528,23 @@ makeWeaponskill_BRD(SkillName.IronJaws, 56, {
 				node,
 				dotName: dotParams.dotName,
 				tickPotency: dotParams.tickPotency,
-				skillName: SkillName.IronJaws,
+				skillName: "IRON_JAWS",
 				speedStat: "sks",
-				modifiers: state.getJobPotencyModifiers(SkillName.IronJaws),
+				modifiers: state.getJobPotencyModifiers("IRON_JAWS"),
 			});
 		});
-		if (state.hasTraitUnlocked(TraitName.BiteMasteryII)) {
-			state.maybeGainProc(ResourceType.HawksEye, 0.35);
+		if (state.hasTraitUnlocked("BITE_MASTERY_II")) {
+			state.maybeGainProc("HAWKS_EYE", 0.35);
 		}
 	},
 });
 
-makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
+makeWeaponskill_BRD("APEX_ARROW", 80, {
 	potency: (state) => {
-		const soulVoice = state.resources.get(ResourceType.SoulVoice);
+		const soulVoice = state.resources.get("SOUL_VOICE");
 		const minRequirement = 20;
-		const minPotency = state.hasTraitUnlocked(TraitName.RangedMastery) ? 120 : 100;
-		const maxPotency = state.hasTraitUnlocked(TraitName.RangedMastery) ? 600 : 500;
+		const minPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 120 : 100;
+		const maxPotency = state.hasTraitUnlocked("RANGED_MASTERY") ? 600 : 500;
 		const soulVoiceBonus =
 			(1.0 * (soulVoice.availableAmount() - minRequirement)) /
 			(soulVoice.maxValue - minRequirement);
@@ -566,54 +555,54 @@ makeWeaponskill_BRD(SkillName.ApexArrow, 80, {
 	applicationDelay: 1.07,
 	onConfirm: (state) => {
 		if (
-			state.hasTraitUnlocked(TraitName.EnhancedApexArrow) &&
-			state.resources.get(ResourceType.SoulVoice).availableAmount() >= 80
+			state.hasTraitUnlocked("ENHANCED_APEX_ARROW") &&
+			state.resources.get("SOUL_VOICE").availableAmount() >= 80
 		) {
-			state.gainStatus(ResourceType.BlastArrowReady);
+			state.gainStatus("BLAST_ARROW_READY");
 		}
 
-		state.tryConsumeResource(ResourceType.SoulVoice, true);
+		state.tryConsumeResource("SOUL_VOICE", true);
 	},
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.SoulVoice, 20),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.SoulVoice, 80),
+	validateAttempt: (state) => state.hasResourceAvailable("SOUL_VOICE", 20),
+	highlightIf: (state) => state.hasResourceAvailable("SOUL_VOICE", 80),
 	replaceIf: [
 		{
-			newSkill: SkillName.BlastArrow,
-			condition: (state) => state.hasResourceAvailable(ResourceType.BlastArrowReady),
+			newSkill: "BLAST_ARROW",
+			condition: (state) => state.hasResourceAvailable("BLAST_ARROW_READY"),
 		},
 	],
 });
-makeWeaponskill_BRD(SkillName.BlastArrow, 86, {
+makeWeaponskill_BRD("BLAST_ARROW", 86, {
 	startOnHotbar: false,
 	potency: 600,
 	falloff: 0.6,
 	applicationDelay: 1.65,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.BlastArrowReady),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.BlastArrowReady),
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.BlastArrowReady),
+	validateAttempt: (state) => state.hasResourceAvailable("BLAST_ARROW_READY"),
+	highlightIf: (state) => state.hasResourceAvailable("BLAST_ARROW_READY"),
+	onConfirm: (state) => state.tryConsumeResource("BLAST_ARROW_READY"),
 });
 
-makeAbility_BRD(SkillName.EmyprealArrow, 54, ResourceType.cd_EmpyrealArrow, {
+makeAbility_BRD("EMYPREAL_ARROW", 54, "cd_EMPYREAL_ARROW", {
 	potency: [
-		[TraitName.Never, 240], // TODO - Confirm
-		[TraitName.RangedMastery, 260],
+		["NEVER", 240], // TODO - Confirm
+		["RANGED_MASTERY", 260],
 	],
 	cooldown: 15,
 	applicationDelay: 1.03,
 	onApplication: (state) => state.gainRepertoireEffect(), // on application or on confirm?
 });
 
-makeAbility_BRD(SkillName.Bloodletter, 12, ResourceType.cd_HeartbreakShot, {
+makeAbility_BRD("BLOODLETTER", 12, "cd_HEARTBREAK_SHOT", {
 	potency: 130,
 	cooldown: 15,
 	maxCharges: 3,
 	applicationDelay: 1.65, // Unsure, copied from Heartbreak
 	autoUpgrade: {
-		otherSkill: SkillName.HeartbreakShot,
-		trait: TraitName.BloodletterMastery,
+		otherSkill: "HEARTBREAK_SHOT",
+		trait: "BLOODLETTER_MASTERY",
 	},
 });
-makeAbility_BRD(SkillName.HeartbreakShot, 92, ResourceType.cd_HeartbreakShot, {
+makeAbility_BRD("HEARTBREAK_SHOT", 92, "cd_HEARTBREAK_SHOT", {
 	startOnHotbar: false,
 	potency: 180,
 	cooldown: 15,
@@ -621,45 +610,45 @@ makeAbility_BRD(SkillName.HeartbreakShot, 92, ResourceType.cd_HeartbreakShot, {
 	applicationDelay: 1.65,
 });
 
-makeAbility_BRD(SkillName.Sidewinder, 60, ResourceType.cd_Sidewinder, {
+makeAbility_BRD("SIDEWINDER", 60, "cd_SIDEWINDER", {
 	potency: [
-		[TraitName.Never, 320],
-		[TraitName.RangedMastery, 400],
+		["NEVER", 320],
+		["RANGED_MASTERY", 400],
 	],
 	cooldown: 60,
 	applicationDelay: 0.53,
 });
 
 const songSkills: Array<{
-	skillName: SkillName;
-	song: ResourceType;
+	skillName: BRDActionKey;
+	song: BRDResourceKey;
 	skillLevel: number;
-	cdName: ResourceType;
+	cdName: BRDCooldownKey;
 	replaceIf?: ConditionalSkillReplace<BRDState>[];
 }> = [
 	{
-		skillName: SkillName.WanderersMinuet,
-		song: ResourceType.WanderersMinuet,
+		skillName: "WANDERERS_MINUET",
+		song: "WANDERERS_MINUET",
 		skillLevel: 52,
-		cdName: ResourceType.cd_WanderersMinuet,
+		cdName: "cd_WANDERERS_MINUET",
 		replaceIf: [
 			{
-				newSkill: SkillName.PitchPerfect,
-				condition: (state) => state.hasResourceAvailable(ResourceType.WanderersMinuet),
+				newSkill: "PITCH_PERFECT",
+				condition: (state) => state.hasResourceAvailable("WANDERERS_MINUET"),
 			},
 		],
 	},
 	{
-		skillName: SkillName.MagesBallad,
-		song: ResourceType.MagesBallad,
+		skillName: "MAGES_BALLAD",
+		song: "MAGES_BALLAD",
 		skillLevel: 30,
-		cdName: ResourceType.cd_MagesBallad,
+		cdName: "cd_MAGES_BALLAD",
 	},
 	{
-		skillName: SkillName.ArmysPaeon,
-		song: ResourceType.ArmysPaeon,
+		skillName: "ARMYS_PAEON",
+		song: "ARMYS_PAEON",
 		skillLevel: 40,
-		cdName: ResourceType.cd_ArmysPaeon,
+		cdName: "cd_ARMYS_PAEON",
 	},
 ];
 songSkills.forEach((props) => {
@@ -672,159 +661,155 @@ songSkills.forEach((props) => {
 	});
 });
 
-makeAbility_BRD(SkillName.PitchPerfect, 52, ResourceType.cd_PitchPerfect, {
+makeAbility_BRD("PITCH_PERFECT", 52, "cd_PITCH_PERFECT", {
 	startOnHotbar: false,
 	applicationDelay: 0.8,
 	cooldown: 1,
 	potency: (state) => {
-		const pitchPerfectStacks = state.resources.get(ResourceType.PitchPerfect).availableAmount();
+		const pitchPerfectStacks = state.resources.get("PITCH_PERFECT").availableAmount();
 		return pitchPerfectStacks === 3 ? 360 : pitchPerfectStacks === 2 ? 220 : 100;
 	},
 	falloff: 0,
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.PitchPerfect, true),
+	onConfirm: (state) => state.tryConsumeResource("PITCH_PERFECT", true),
 	validateAttempt: (state) =>
-		state.hasResourceAvailable(ResourceType.WanderersMinuet) &&
-		state.hasResourceAvailable(ResourceType.PitchPerfect),
+		state.hasResourceAvailable("WANDERERS_MINUET") &&
+		state.hasResourceAvailable("PITCH_PERFECT"),
 	highlightIf: (state) =>
-		state.hasResourceAvailable(ResourceType.WanderersMinuet) &&
-		state.hasResourceAvailable(ResourceType.PitchPerfect),
+		state.hasResourceAvailable("WANDERERS_MINUET") &&
+		state.hasResourceAvailable("PITCH_PERFECT"),
 });
 
-makeResourceAbility_BRD(SkillName.Barrage, 38, ResourceType.cd_Barrage, {
-	rscType: ResourceType.Barrage,
+makeResourceAbility_BRD("BARRAGE", 38, "cd_BARRAGE", {
+	rscType: "BARRAGE",
 	applicationDelay: 0,
 	cooldown: 120,
 	onConfirm: (state) => {
-		if (state.hasTraitUnlocked(TraitName.EnhancedBarrage)) {
-			state.gainStatus(ResourceType.ResonantArrowReady);
+		if (state.hasTraitUnlocked("ENHANCED_BARRAGE")) {
+			state.gainStatus("RESONANT_ARROW_READY");
 		}
 	},
 	replaceIf: [
 		{
-			newSkill: SkillName.ResonantArrow,
-			condition: (state) => state.hasResourceAvailable(ResourceType.ResonantArrowReady),
+			newSkill: "RESONANT_ARROW",
+			condition: (state) => state.hasResourceAvailable("RESONANT_ARROW_READY"),
 		},
 	],
 });
-makeWeaponskill_BRD(SkillName.ResonantArrow, 96, {
+makeWeaponskill_BRD("RESONANT_ARROW", 96, {
 	startOnHotbar: false,
 	potency: 600,
 	falloff: 0.5,
 	applicationDelay: 1.16,
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.ResonantArrowReady),
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ResonantArrowReady),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ResonantArrowReady),
+	onConfirm: (state) => state.tryConsumeResource("RESONANT_ARROW_READY"),
+	validateAttempt: (state) => state.hasResourceAvailable("RESONANT_ARROW_READY"),
+	highlightIf: (state) => state.hasResourceAvailable("RESONANT_ARROW_READY"),
 });
 
-makeResourceAbility_BRD(SkillName.RadiantFinale, 90, ResourceType.cd_RadiantFinale, {
-	rscType: ResourceType.RadiantFinale,
+makeResourceAbility_BRD("RADIANT_FINALE", 90, "cd_RADIANT_FINALE", {
+	rscType: "RADIANT_FINALE",
 	applicationDelay: 0.62,
 	cooldown: 110,
 	onConfirm: (state) => {
 		const coda = state.getCodaCount();
-		state.resources.get(ResourceType.RadiantCoda).overrideCurrentValue(coda);
-		state.tryConsumeResource(ResourceType.WanderersCoda);
-		state.tryConsumeResource(ResourceType.MagesCoda);
-		state.tryConsumeResource(ResourceType.ArmysCoda);
+		state.resources.get("RADIANT_CODA").overrideCurrentValue(coda);
+		state.tryConsumeResource("WANDERERS_CODA");
+		state.tryConsumeResource("MAGES_CODA");
+		state.tryConsumeResource("ARMYS_CODA");
 
-		if (state.hasTraitUnlocked(TraitName.EnhancedRadiantFinale)) {
-			state.gainStatus(ResourceType.RadiantEncoreReady);
+		if (state.hasTraitUnlocked("ENHANCED_RADIANT_FINALE")) {
+			state.gainStatus("RADIANT_ENCORE_READY");
 		}
 	},
 	validateAttempt: (state) => state.getCodaCount() > 0,
 	replaceIf: [
 		{
-			newSkill: SkillName.RadiantEncore,
-			condition: (state) => state.hasResourceAvailable(ResourceType.RadiantEncoreReady),
+			newSkill: "RADIANT_ENCORE",
+			condition: (state) => state.hasResourceAvailable("RADIANT_ENCORE_READY"),
 		},
 	],
 });
-makeWeaponskill_BRD(SkillName.RadiantEncore, 100, {
+makeWeaponskill_BRD("RADIANT_ENCORE", 100, {
 	startOnHotbar: false,
 	potency: (state) => {
-		const radiantCoda = state.resources.get(ResourceType.RadiantCoda).availableAmount();
+		const radiantCoda = state.resources.get("RADIANT_CODA").availableAmount();
 		return radiantCoda === 3 ? 900 : radiantCoda === 2 ? 600 : 500;
 	},
 	falloff: 0.5,
 	applicationDelay: 1.96,
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.RadiantEncoreReady),
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.RadiantEncoreReady),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.RadiantEncoreReady),
+	onConfirm: (state) => state.tryConsumeResource("RADIANT_ENCORE_READY"),
+	validateAttempt: (state) => state.hasResourceAvailable("RADIANT_ENCORE_READY"),
+	highlightIf: (state) => state.hasResourceAvailable("RADIANT_ENCORE_READY"),
 });
 
-makeResourceAbility_BRD(SkillName.RagingStrikes, 4, ResourceType.cd_RagingStrikes, {
-	rscType: ResourceType.RagingStrikes,
+makeResourceAbility_BRD("RAGING_STRIKES", 4, "cd_RAGING_STRIKES", {
+	rscType: "RAGING_STRIKES",
 	applicationDelay: 0.53,
 	cooldown: 120,
 });
 
-makeResourceAbility_BRD(SkillName.BattleVoice, 50, ResourceType.cd_BattleVoice, {
-	rscType: ResourceType.BattleVoice,
+makeResourceAbility_BRD("BATTLE_VOICE", 50, "cd_BATTLE_VOICE", {
+	rscType: "BATTLE_VOICE",
 	applicationDelay: 0.62,
 	cooldown: 120,
 });
 
-makeWeaponskill_BRD(SkillName.QuickNock, 18, {
+makeWeaponskill_BRD("QUICK_NOCK", 18, {
 	potency: 110,
 	applicationDelay: 1.11, // Unsure, copied from Ladonsbite,
-	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.2),
+	onApplication: (state) => state.maybeGainProc("HAWKS_EYE", 0.2),
 	falloff: 0,
 	autoUpgrade: {
-		trait: TraitName.QuickNockMastery,
-		otherSkill: SkillName.Ladonsbite,
+		trait: "QUICK_NOCK_MASTERY",
+		otherSkill: "LADONSBITE",
 	},
 });
-makeWeaponskill_BRD(SkillName.Ladonsbite, 82, {
+makeWeaponskill_BRD("LADONSBITE", 82, {
 	startOnHotbar: false,
 	potency: 110,
 	falloff: 0,
 	applicationDelay: 1.11,
-	onApplication: (state) => state.maybeGainProc(ResourceType.HawksEye, 0.35),
+	onApplication: (state) => state.maybeGainProc("HAWKS_EYE", 0.35),
 });
 
-makeWeaponskill_BRD(SkillName.WideVolley, 18, {
+makeWeaponskill_BRD("WIDE_VOLLEY", 18, {
 	potency: 140,
 	falloff: 0,
 	applicationDelay: 1.43, // Unsure, copied from Shadowbite,
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.Barrage)) {
-			state.tryConsumeResource(ResourceType.Barrage);
+		if (state.hasResourceAvailable("BARRAGE")) {
+			state.tryConsumeResource("BARRAGE");
 		} else {
-			state.tryConsumeResource(ResourceType.HawksEye);
+			state.tryConsumeResource("HAWKS_EYE");
 		}
 	},
 	validateAttempt: (state) =>
-		state.hasResourceAvailable(ResourceType.HawksEye) ||
-		state.hasResourceAvailable(ResourceType.Barrage),
+		state.hasResourceAvailable("HAWKS_EYE") || state.hasResourceAvailable("BARRAGE"),
 	highlightIf: (state) =>
-		state.hasResourceAvailable(ResourceType.HawksEye) ||
-		state.hasResourceAvailable(ResourceType.Barrage),
+		state.hasResourceAvailable("HAWKS_EYE") || state.hasResourceAvailable("BARRAGE"),
 	autoUpgrade: {
-		trait: TraitName.WideVolleyMastery,
-		otherSkill: SkillName.Shadowbite,
+		trait: "WIDE_VOLLEY_MASTERY",
+		otherSkill: "SHADOWBITE",
 	},
 });
-makeWeaponskill_BRD(SkillName.Shadowbite, 72, {
+makeWeaponskill_BRD("SHADOWBITE", 72, {
 	startOnHotbar: false,
 	potency: 170,
 	falloff: 0,
 	applicationDelay: 1.43,
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable(ResourceType.Barrage)) {
-			state.tryConsumeResource(ResourceType.Barrage);
+		if (state.hasResourceAvailable("BARRAGE")) {
+			state.tryConsumeResource("BARRAGE");
 		} else {
-			state.tryConsumeResource(ResourceType.HawksEye);
+			state.tryConsumeResource("HAWKS_EYE");
 		}
 	},
 	validateAttempt: (state) =>
-		state.hasResourceAvailable(ResourceType.HawksEye) ||
-		state.hasResourceAvailable(ResourceType.Barrage),
+		state.hasResourceAvailable("HAWKS_EYE") || state.hasResourceAvailable("BARRAGE"),
 	highlightIf: (state) =>
-		state.hasResourceAvailable(ResourceType.HawksEye) ||
-		state.hasResourceAvailable(ResourceType.Barrage),
+		state.hasResourceAvailable("HAWKS_EYE") || state.hasResourceAvailable("BARRAGE"),
 });
 
-makeAbility_BRD(SkillName.RainOfDeath, 45, ResourceType.cd_HeartbreakShot, {
+makeAbility_BRD("RAIN_OF_DEATH", 45, "cd_HEARTBREAK_SHOT", {
 	potency: 100,
 	cooldown: 15,
 	maxCharges: 3,
@@ -832,25 +817,25 @@ makeAbility_BRD(SkillName.RainOfDeath, 45, ResourceType.cd_HeartbreakShot, {
 	applicationDelay: 1.65,
 });
 
-makeResourceAbility_BRD(SkillName.WardensPaean, 35, ResourceType.cd_WardensPaean, {
-	rscType: ResourceType.WardensPaean,
+makeResourceAbility_BRD("WARDENS_PAEAN", 35, "cd_WARDENS_PAEAN", {
+	rscType: "WARDENS_PAEAN",
 	cooldown: 45,
 	applicationDelay: 0.62,
 });
 
-makeResourceAbility_BRD(SkillName.NaturesMinne, 35, ResourceType.cd_NaturesMinne, {
-	rscType: ResourceType.NaturesMinne,
+makeResourceAbility_BRD("NATURES_MINNE", 35, "cd_NATURES_MINNE", {
+	rscType: "NATURES_MINNE",
 	cooldown: 120,
 	applicationDelay: 0.62,
 });
 
-makeAbility_BRD(SkillName.RepellingShot, 15, ResourceType.cd_RepellingShot, {
+makeAbility_BRD("REPELLING_SHOT", 15, "cd_REPELLING_SHOT", {
 	cooldown: 30,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
-makeResourceAbility_BRD(SkillName.Troubadour, 56, ResourceType.cd_Troubadour, {
-	rscType: ResourceType.Troubadour,
+makeResourceAbility_BRD("TROUBADOUR", 56, "cd_TROUBADOUR", {
+	rscType: "TROUBADOUR",
 	maxCharges: 1,
 	cooldown: 90,
 	applicationDelay: 0,
