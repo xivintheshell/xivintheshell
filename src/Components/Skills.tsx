@@ -21,7 +21,13 @@ export const getSkillIconPath = (skillName: SkillName | undefined) => {
 	}
 	const assetPath = getSkillAssetPath(skillName);
 	if (assetPath) {
-		return require(`./Asset/Skills/${assetPath}`);
+		try {
+			return require(`./Asset/Skills/${assetPath}`);
+		}
+		catch (e) {
+			console.error(e);
+			return require('./Asset/Skills/General/Missing.png');
+		}
 	}
 	return undefined;
 };
