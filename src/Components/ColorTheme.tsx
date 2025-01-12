@@ -183,6 +183,7 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				[ShellJob.WAR]: "#b10b0b", // color picker'd on job stone
 				[ShellJob.RPR]: "#965a90",
 				[ShellJob.BRD]: "#91ba5e",
+				[ShellJob.GNB]: "#f6b26b",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange

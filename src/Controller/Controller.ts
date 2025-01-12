@@ -22,6 +22,7 @@ import { DNCState } from "../Game/Jobs/DNC";
 import { SAMState } from "../Game/Jobs/SAM";
 import { MCHState } from "../Game/Jobs/MCH";
 import { BRDState } from "../Game/Jobs/BRD";
+import { GNBState } from "../Game/Jobs/GNB";
 import { Buff } from "../Game/Buffs";
 import {
 	BuffType,
@@ -45,6 +46,7 @@ import { SAMStatusPropsGenerator } from "../Components/Jobs/SAM";
 import { MCHStatusPropsGenerator } from "../Components/Jobs/MCH";
 import { WARStatusPropsGenerator } from "../Components/Jobs/WAR";
 import { BRDStatusPropsGenerator } from "../Components/Jobs/BRD";
+import { GNBStatusPropsGenerator } from "../Components/Jobs/GNB";
 import { StatusPropsGenerator, updateStatusDisplay } from "../Components/StatusDisplay";
 import { updateSkillButtons } from "../Components/Skills";
 import { updateConfigDisplay } from "../Components/PlaybackControl";
@@ -99,6 +101,8 @@ const newGameState = (config: GameConfig) => {
 		return new WARState(config);
 	} else if (config.job === ShellJob.BRD) {
 		return new BRDState(config);
+	} else if (config.job === ShellJob.GNB) {
+		return new GNBState(config);
 	}
 	return new BLMState(config);
 };
@@ -836,6 +840,9 @@ class Controller {
 				break;
 			case ShellJob.BRD:
 				propsGenerator = new BRDStatusPropsGenerator(game as BRDState);
+				break;
+			case ShellJob.GNB:
+				propsGenerator = new GNBStatusPropsGenerator(game as GNBState);
 				break;
 			default:
 				propsGenerator = new StatusPropsGenerator(game);
