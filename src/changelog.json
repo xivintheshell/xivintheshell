@@ -1,4 +1,10 @@
 [
+    {
+        "date": "1/12/25",
+        "changes": [
+            "[RPR] Fixed a bug where oGCDs would improperly consume Reaver/Executioner stacks"
+        ]
+    },
 	{
 		"date": "1/8/25",
 		"changes": [
