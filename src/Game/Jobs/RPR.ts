@@ -232,8 +232,10 @@ export class RPRState extends GameState {
 		}
 
 		// Any other action resets Soul reavers, even if it then gives more
-		reavers.consume(reavers.availableAmount());
-		executioners.consume(executioners.availableAmount());
+		if (this.skillsList.get(skill).cdName === ResourceType.cd_GCD) {
+			reavers.consume(reavers.availableAmount());
+			executioners.consume(executioners.availableAmount());
+		}
 
 		// Unveiled actions
 		if (
@@ -244,12 +246,16 @@ export class RPRState extends GameState {
 				SkillName.GrimSwathe,
 			].includes(skill)
 		) {
+			reavers.consume(reavers.availableAmount());
+			executioners.consume(executioners.availableAmount());
 			this.setTimedResource(ResourceType.SoulReaver, 1);
 			return;
 		}
 
 		// Pre-96 gluttony
 		if (skill === SkillName.Gluttony) {
+			reavers.consume(reavers.availableAmount());
+			executioners.consume(executioners.availableAmount());
 			if (this.hasTraitUnlocked(TraitName.EnhancedGluttony)) {
 				this.setTimedResource(ResourceType.Executioner, 2);
 				return;
