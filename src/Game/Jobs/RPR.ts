@@ -232,8 +232,10 @@ export class RPRState extends GameState {
 		}
 
 		// Any other action resets Soul reavers, even if it then gives more
-		reavers.consume(reavers.availableAmount());
-		executioners.consume(executioners.availableAmount());
+		if (this.skillsList.get(skill).cdName === ResourceType.cd_GCD) {
+			reavers.consume(reavers.availableAmount());
+			executioners.consume(executioners.availableAmount());
+		}
 
 		// Unveiled actions
 		if (
