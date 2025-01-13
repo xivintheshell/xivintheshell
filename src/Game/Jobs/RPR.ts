@@ -246,12 +246,16 @@ export class RPRState extends GameState {
 				SkillName.GrimSwathe,
 			].includes(skill)
 		) {
+			reavers.consume(reavers.availableAmount());
+			executioners.consume(executioners.availableAmount());
 			this.setTimedResource(ResourceType.SoulReaver, 1);
 			return;
 		}
 
 		// Pre-96 gluttony
 		if (skill === SkillName.Gluttony) {
+			reavers.consume(reavers.availableAmount());
+			executioners.consume(executioners.availableAmount());
 			if (this.hasTraitUnlocked(TraitName.EnhancedGluttony)) {
 				this.setTimedResource(ResourceType.Executioner, 2);
 				return;
