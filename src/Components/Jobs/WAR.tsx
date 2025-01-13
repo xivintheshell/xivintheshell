@@ -72,6 +72,7 @@ export class WARStatusPropsGenerator extends StatusPropsGenerator<WARState> {
 				kind: "text",
 				name: localize({
 					en: "Combo Timer",
+					zh: "连击监控"
 				}),
 				text: comboTimer?.toFixed(3) ?? "N/A",
 			},
@@ -79,6 +80,7 @@ export class WARStatusPropsGenerator extends StatusPropsGenerator<WARState> {
 				kind: "bar",
 				name: localize({
 					en: "Beast Gauge",
+					zh: "兽魂量谱"
 				}),
 				color: colors.war.beastGauge,
 				progress: beastGauge / 100,
