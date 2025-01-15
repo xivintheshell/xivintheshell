@@ -463,7 +463,7 @@ export function IntroSection(props: { job: ShellJob }) {
 									<div>
 										{localize({ en: "Or just: ", zh: "或者直接：" })}
 										<button
-											style={{ color: "#be0f0f" }}
+											className="dangerButton"
 											onClick={() => {
 												clearCachedValues();
 												window.location.reload();

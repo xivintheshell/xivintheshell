@@ -43,6 +43,24 @@
     position: relative;
 }
 
+/* Danger button */
+.dangerButton {
+    color: #be0f0f;
+    border: 1px solid #be0f0f;
+    background: transparent;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dangerButton:hover {
+    color: #ffffff;
+    background: #be0f0f;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 12px rgba(190, 15, 15, 0.4);
+}
+
+
 /*======== individual elems ========*/
 
 .clickable {
