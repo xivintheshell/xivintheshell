@@ -403,6 +403,7 @@ export function Tabs(props: {
 		);
 	}
 
+	const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
 	return <div
 		style={{
 			...{
@@ -418,7 +419,7 @@ export function Tabs(props: {
 				display: selectedIndex === undefined ? "none" : "block",
 				height: props.height - TABS_TITLE_HEIGHT,
 				boxSizing: "border-box",
-				padding: "10px 5px",
+				padding: `10px ${isFirefox ? 15 : 5}px`,
 				overflowY: props.scrollable ? "scroll" : "hidden",
 			}}
 		>

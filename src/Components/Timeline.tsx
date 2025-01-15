@@ -102,7 +102,7 @@ class TimelineMain extends React.Component {
 			visibleWidth={this.state.visibleWidth}
 			version={this.state.version}
 		/>;
-
+		const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
 		return <div style={{ position: "relative" }}>
 			{canvas}
 			<div
@@ -115,6 +115,7 @@ class TimelineMain extends React.Component {
 					overflowY: "clip",
 					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
 					cursor: timelineCanvasGetPointerMouse() ? "pointer" : "default",
+					paddingBottom: isFirefox ? 10 : 0,
 				}}
 				ref={this.myRef}
 				onScroll={(e) => {
