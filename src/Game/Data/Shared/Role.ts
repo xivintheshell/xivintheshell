@@ -70,8 +70,8 @@ export const ROLE_STATUSES = ensureRecord<Resource>()({
 	TRUE_NORTH: { name: "True North", label: { zh: "真北" } }, // [0, 1]
 	BLOODBATH: { name: "Bloodbath", label: { zh: "浴血" } }, // [0, 1]
 
-	RAMPART: { name: "Rampart", label: { zh: "铁壁" } }, // [0, 1]
-	REPRISAL: { name: "Reprisal", label: { zh: "雪仇" } }, // [0, 1]
+	RAMPART: { name: "Rampart", label: { zh: "铁壁buff" } }, // [0, 1]
+	REPRISAL: { name: "Reprisal", label: { zh: "雪仇buff" } }, // [0, 1]
 });
 
 export const ROLE_TRACKERS = ensureRecord<Resource>()({

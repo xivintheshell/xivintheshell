@@ -89,7 +89,7 @@ export const RDM_TRACKERS = ensureRecord<Resource>()({
 	// 0 = no melee combo, 1 = after 1st, 2 = after 2nd
 	RDM_MELEE_COUNTER: { name: "RDM Melee Combo", label: { zh: "赤魔近战连" } }, // [0, 2]
 	// 0 = finishers not started, 1 = after verflare/holy, 2 = after scorch
-	RDM_FINISHER_COUNTER: { name: "RDM Finisher Combo" }, // [0, 2]
+	RDM_FINISHER_COUNTER: { name: "RDM Finisher Combo", label: { zh: "赤核爆/赤神圣连击" } }, // [0, 2]
 	// 0 = no moulinet combo, 1 = after 1st, 2 = after 2nd
 	RDM_AOE_COUNTER: { name: "RDM AoE Combo", label: { zh: "赤魔AOE连" } }, // [0, 2]
 });

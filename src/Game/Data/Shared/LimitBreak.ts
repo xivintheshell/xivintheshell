@@ -78,8 +78,8 @@ export const SHARED_LIMIT_BREAK_RESOURCES = ensureRecord<Resource>()({
 	UNKNOWN: { name: "Unknown" },
 
 	// LB 1 and 2
-	SHIELD_WALL: { name: "Shield Wall" },
-	STRONGHOLD: { name: "Stronghold" },
+	SHIELD_WALL: { name: "Shield Wall", label: { zh: "一段LB buff" } }, // todo: use actual translation or keep this
+	STRONGHOLD: { name: "Stronghold", label: { zh: "二段LB buff" } },
 });
 
 // Limit breaks don't have any related traits... yet.

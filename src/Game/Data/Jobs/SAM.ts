@@ -51,11 +51,11 @@ export const SAM_ACTIONS = ensureRecord<Action>()({
 });
 
 export const SAM_COOLDOWNS = ensureRecord<Cooldown>()({
-	cd_YATEN: { name: "cd_Yaten" }, // [0, 10],
-	cd_GYOTEN: { name: "cd_Gyoten" }, // [0, 10],
-	cd_SENEI_GUREN: { name: "cd_Senei" }, // [0,60],
-	cd_SHINTEN: { name: "cd_Shinten" }, // [0,1]
-	cd_KYUTEN: { name: "cd_Kyuten" }, // [0,1]
+	cd_YATEN: { name: "cd_Yaten", label: { zh: "CD：夜天" } }, // [0, 10],
+	cd_GYOTEN: { name: "cd_Gyoten", label: { zh: "CD：晓天" } }, // [0, 10],
+	cd_SENEI_GUREN: { name: "cd_Senei", label: { zh: "CD: 闪影/红莲" } }, // [0,60],
+	cd_SHINTEN: { name: "cd_Shinten", label: { zh: "CD：震天" } }, // [0,1]
+	cd_KYUTEN: { name: "cd_Kyuten", label: { zh: "CD：九天" } }, // [0,1]
 	cd_MEDITATE: { name: "cd_Meditate" }, // [0, 1]
 	cd_IKISHOTEN: { name: "cd_Ikishoten" }, // [0, 120]
 	cd_ZANSHIN: { name: "cd_Zanshin" }, // [0, 1]

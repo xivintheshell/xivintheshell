@@ -12,7 +12,7 @@ import {
 } from "./Common";
 import { controller } from "../Controller/Controller";
 import { ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack } from "../Controller/Timeline";
-import { localize, localizePartyBuffType } from "./Localization";
+import { localize, localizeBuffType } from "./Localization";
 import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
 import { Buff, buffInfos } from "../Game/Buffs";
 import { BuffType } from "../Game/Common";
@@ -339,7 +339,7 @@ export class TimelineMarkers extends React.Component {
 			) {
 				buffCollection.push(
 					<option key={info.name} value={info.name}>
-						{localizePartyBuffType(info.name)}
+						{localizeBuffType(info.name)}
 					</option>,
 				);
 			}
