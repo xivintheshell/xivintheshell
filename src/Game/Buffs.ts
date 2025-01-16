@@ -1,5 +1,6 @@
 import { MarkerColor } from "../Components/ColorTheme";
 import { BuffType } from "./Common";
+import { ShellJob } from "./Data/Jobs";
 
 export class BuffInfo {
 	readonly name: BuffType;
@@ -8,7 +9,7 @@ export class BuffInfo {
 	readonly damageFactor: number;
 	readonly critBonus: number;
 	readonly dhBonus: number;
-	readonly job: string; // TODO replace with ShellJob
+	readonly job: ShellJob;
 
 	constructor(
 		name: BuffType,
@@ -17,7 +18,7 @@ export class BuffInfo {
 		damageFactor: number,
 		critBonus: number,
 		dhBonus: number,
-		job: string,
+		job: ShellJob,
 	) {
 		this.name = name;
 		this.duration = duration;

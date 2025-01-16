@@ -6,88 +6,40 @@ import {
 	ResourceDisplayProps,
 	StatusPropsGenerator,
 } from "../StatusDisplay";
-import { ResourceType } from "../../Game/Common";
 import { SAMState } from "../../Game/Jobs/SAM";
 import { getCurrentThemeColors } from "../../Components/ColorTheme";
 import { localize } from "../../Components/Localization";
+import { ResourceKey, RESOURCES } from "../../Game/Data";
+import { SAM_STATUSES } from "../../Game/Data/Jobs/SAM";
 
-[
-	ResourceType.MeikyoShisui,
-	ResourceType.MeikyoShisui + "2",
-	ResourceType.MeikyoShisui + "3",
-	ResourceType.Fugetsu,
-	ResourceType.Fuka,
-	ResourceType.ZanshinReady,
-	ResourceType.Tendo,
-	ResourceType.OgiReady,
-	ResourceType.TsubameGaeshiReady,
-	ResourceType.Tengentsu,
-	ResourceType.TengentsusForesight,
-	ResourceType.ThirdEye,
-	ResourceType.EnhancedEnpi,
-	ResourceType.Meditate,
-	ResourceType.HiganbanaDoT,
-].forEach((buff) => registerBuffIcon(buff, `SAM/${buff}.png`));
+(Object.keys(SAM_STATUSES) as ResourceKey[]).forEach((buff) =>
+	registerBuffIcon(buff, `SAM/${RESOURCES[buff].name}.png`),
+);
 
 export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		const DoTCountdown = this.state.resources.timeTillReady(ResourceType.HiganbanaDoT);
-
-		return [
-			{
-				rscType: ResourceType.HiganbanaDoT,
-				onSelf: false,
-				enabled: true,
-				stacks: 1,
-				timeRemaining: DoTCountdown.toFixed(3),
-				className: DoTCountdown > 0 ? "" : "hidden",
-			},
-		];
+		return [this.makeCommonTimer("HIGANBANA_DOT", false)];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
-		const resources = this.state.resources;
-		const makeSamuraiTimer = (rscType: ResourceType) => {
-			const cd = resources.timeTillReady(rscType);
-			return {
-				rscType: rscType,
-				onSelf: true,
-				enabled: true,
-				stacks: resources.get(rscType).availableAmount(),
-				timeRemaining: cd.toFixed(3),
-				className: cd > 0 ? "" : "hidden",
-			};
-		};
-
-		return [
-			makeSamuraiTimer(ResourceType.Tendo),
-			makeSamuraiTimer(ResourceType.EnhancedEnpi),
-			makeSamuraiTimer(ResourceType.OgiReady),
-			makeSamuraiTimer(ResourceType.ZanshinReady),
-			makeSamuraiTimer(ResourceType.MeikyoShisui),
-			makeSamuraiTimer(ResourceType.TsubameGaeshiReady),
-			makeSamuraiTimer(ResourceType.Fuka),
-			makeSamuraiTimer(ResourceType.Fugetsu),
-			makeSamuraiTimer(ResourceType.ThirdEye),
-			makeSamuraiTimer(ResourceType.Tengentsu),
-			makeSamuraiTimer(ResourceType.TengentsusForesight),
-			makeSamuraiTimer(ResourceType.Meditate),
-		];
+		return (Object.keys(SAM_STATUSES) as ResourceKey[])
+			.filter((key) => key !== "HIGANBANA_DOT")
+			.map((key) => this.makeCommonTimer(key));
 	}
 
 	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
-		const kenki = resources.get(ResourceType.Kenki).availableAmount();
-		const meditation = resources.get(ResourceType.Meditation).availableAmount();
+		const kenki = resources.get("KENKI").availableAmount();
+		const meditation = resources.get("MEDITATION").availableAmount();
 		// TODO use simplified gauge iconography so people don't have to remember names
 		return [
 			{
 				kind: "sen",
 				name: localize({ en: "sen", zh: "闪" }),
-				hasSetsu: this.state.hasResourceAvailable(ResourceType.Setsu),
-				hasGetsu: this.state.hasResourceAvailable(ResourceType.Getsu),
-				hasKa: this.state.hasResourceAvailable(ResourceType.KaSen),
+				hasSetsu: this.state.hasResourceAvailable("SETSU"),
+				hasGetsu: this.state.hasResourceAvailable("GETSU"),
+				hasKa: this.state.hasResourceAvailable("KA_SEN"),
 				setsuColor: colors.sam.setsu,
 				getsuColor: colors.sam.getsu,
 				kaColor: colors.sam.kaSen,

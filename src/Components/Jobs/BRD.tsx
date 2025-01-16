@@ -1,6 +1,6 @@
-import { ResourceType, TraitName } from "../../Game/Common";
+import { RESOURCES } from "../../Game/Data";
+import { BRDResourceKey, BRD_STATUSES } from "../../Game/Data/Jobs/BRD";
 import { BRDState } from "../../Game/Jobs/BRD";
-import { Traits } from "../../Game/Traits";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import {
@@ -13,28 +13,15 @@ import {
 	StatusPropsGenerator,
 } from "../StatusDisplay";
 
-const BARD_DEBUFFS = [ResourceType.CausticBite, ResourceType.Stormbite];
+const BARD_DEBUFFS: BRDResourceKey[] = ["CAUSTIC_BITE", "STORMBITE"];
 
-const BARD_BUFFS = [
-	ResourceType.HawksEye,
-	ResourceType.RagingStrikes,
-	ResourceType.Barrage,
-	ResourceType.ArmysMuse,
-	ResourceType.ArmysEthos,
-	ResourceType.BlastArrowReady,
-	ResourceType.ResonantArrowReady,
-	ResourceType.RadiantEncoreReady,
-	ResourceType.MagesBallad,
-	ResourceType.ArmysPaeon,
-	ResourceType.WanderersMinuet,
-	ResourceType.BattleVoice,
-	ResourceType.WardensPaean,
-	ResourceType.Troubadour,
-	ResourceType.NaturesMinne,
-	ResourceType.RadiantFinale,
-];
+const BARD_BUFFS: BRDResourceKey[] = (Object.keys(BRD_STATUSES) as BRDResourceKey[]).filter(
+	(key) => !BARD_DEBUFFS.includes(key),
+);
 
-[...BARD_BUFFS, ...BARD_DEBUFFS].forEach((buff) => registerBuffIcon(buff, `BRD/${buff}.png`));
+(Object.keys(BRD_STATUSES) as BRDResourceKey[]).forEach((buff) =>
+	registerBuffIcon(buff, `BRD/${RESOURCES[buff].name}.png`),
+);
 
 export class BRDStatusPropsGenerator extends StatusPropsGenerator<BRDState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
@@ -49,8 +36,8 @@ export class BRDStatusPropsGenerator extends StatusPropsGenerator<BRDState> {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 
-		const pitchPerfect = resources.get(ResourceType.PitchPerfect);
-		const repertoire = resources.get(ResourceType.Repertoire);
+		const pitchPerfect = resources.get("PITCH_PERFECT");
+		const repertoire = resources.get("REPERTOIRE");
 
 		const infos: ResourceDisplayProps[] = [
 			{
@@ -73,8 +60,8 @@ export class BRDStatusPropsGenerator extends StatusPropsGenerator<BRDState> {
 			} as ResourceCounterProps,
 		];
 
-		if (Traits.hasUnlocked(TraitName.SoulVoice, this.state.config.level)) {
-			const soulVoice = resources.get(ResourceType.SoulVoice);
+		if (this.state.hasTraitUnlocked("SOUL_VOICE")) {
+			const soulVoice = resources.get("SOUL_VOICE");
 
 			infos.push({
 				kind: "bar",
@@ -87,15 +74,15 @@ export class BRDStatusPropsGenerator extends StatusPropsGenerator<BRDState> {
 			} as ResourceBarProps);
 		}
 
-		if (Traits.hasUnlocked(TraitName.MinstrelsCoda, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("MINSTRELS_CODA")) {
 			infos.push({
 				kind: "coda",
 				name: localize({
 					en: "Coda",
 				}),
-				hasWanderers: this.state.hasResourceAvailable(ResourceType.WanderersCoda),
-				hasMages: this.state.hasResourceAvailable(ResourceType.MagesCoda),
-				hasArmys: this.state.hasResourceAvailable(ResourceType.ArmysCoda),
+				hasWanderers: this.state.hasResourceAvailable("WANDERERS_CODA"),
+				hasMages: this.state.hasResourceAvailable("MAGES_CODA"),
+				hasArmys: this.state.hasResourceAvailable("ARMYS_CODA"),
 				wanderersColor: colors.brd.wanderersCoda,
 				magesColor: colors.brd.magesCoda,
 				armysColor: colors.brd.armysCoda,

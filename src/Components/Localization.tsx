@@ -1,11 +1,13 @@
 import React from "react";
-import { BuffType, ResourceType, SkillName } from "../Game/Common";
+import { BuffType } from "../Game/Common";
 import { ContentNode } from "./Common";
 import { MdLanguage } from "react-icons/md";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
-import { PotencyModifierType } from "../Game/Potency";
+import { ActionKey, ACTIONS, CooldownKey, COOLDOWNS, ResourceKey } from "../Game/Data";
+import { Data } from "../Game/Data/Data";
+import {PotencyModifierType} from "../Game/Potency";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -37,12 +39,13 @@ export function localizeDate(date: string, lang: Language): string {
 	return date;
 }
 
-const skillsZh = new Map<SkillName, string>([
+const skillsZh = new Map<ActionKey, string>([
 	// common
-	[SkillName.Addle, "病毒"],
-	[SkillName.Swiftcast, "即刻咏唱"],
-	[SkillName.LucidDreaming, "醒梦"],
-	[SkillName.Surecast, "沉稳咏唱"],
+	/*
+	["ADDLE", "病毒"],
+	["SWIFTCAST", "即刻咏唱"],
+	["LUCID_DREAMING", "醒梦"],
+	["SURECAST", "沉稳咏唱"],
 	[SkillName.Tincture, "爆发药"],
 	[SkillName.Sprint, "疾跑"],
 	[SkillName.Feint, "牵制"],
@@ -381,9 +384,11 @@ const skillsZh = new Map<SkillName, string>([
 	[SkillName.Damnation, "戮罪"],
 	[SkillName.Holmgang, "死斗"],
 	[SkillName.Defiance, "守护"],
+	 */
 ]);
 
-const skillsJa = new Map<SkillName, string>([
+const skillsJa = new Map<ActionKey, string>([
+	/*
 	[SkillName.Fire, "ファイア"],
 	[SkillName.Blizzard, "ブリザド"],
 	[SkillName.Fire2, "ファイラ"],
@@ -471,17 +476,16 @@ const skillsJa = new Map<SkillName, string>([
 	[SkillName.StarrySkyMotif, "ピクトスカイ"],
 	[SkillName.StarryMuse, "イマジンスカイ"],
 	// TODO rdm localization
+	 */
 ]);
 
-export function localizeSkillName(text: SkillName): string {
-	let currentLang = getCurrentLanguage();
-	if (currentLang === "zh") {
-		return skillsZh.get(text) ?? text;
-	} else if (currentLang === "ja") {
-		return skillsJa.get(text) ?? text;
-	} else {
-		return text;
-	}
+export function localizeSkillName(text: ActionKey): string {
+	const action = Data.getAction(text);
+
+	return localize({
+		en: action.name,
+		...action.label,
+	}).toString();
 }
 
 const partyBuffsZh = new Map<BuffType, string>([
@@ -550,7 +554,8 @@ export function localizePartyBuffType(text: BuffType): string {
 	}
 }
 
-const resourcesZh = new Map<ResourceType, string>([
+const resourcesZh = new Map<ResourceKey, string>([
+	/*
 	// common
 	[ResourceType.Mana, "MP"],
 	[ResourceType.Tincture, "爆发药"],
@@ -776,25 +781,43 @@ const resourcesZh = new Map<ResourceType, string>([
 	[ResourceType.Stronghold, "二段LB buff"],
 	[ResourceType.LandWaker, "三段LB buff"],
 	[ResourceType.cd_ReleaseDefiance, "CD：取消守护"]
+	 */
 ]);
 
-export function localizeResourceType(text: ResourceType): string {
+export function localizeResourceType(key: ResourceKey | CooldownKey): string {
 	const currentLang = getCurrentLanguage();
-	if (currentLang === "zh") {
-		if (resourcesZh.has(text)) {
-			return resourcesZh.get(text)!;
-		}
-		if (text.startsWith("cd_")) {
-			const sliced = text.slice(3) as keyof typeof SkillName;
-			const skillName: SkillName | undefined = SkillName[sliced];
+
+	if (key in COOLDOWNS) {
+		// If it's a cooldown, first see if it's localized on the Data object
+		const cooldown = Data.getCooldown(key as CooldownKey);
+		const tryLocalized = localize({
+			en: cooldown.name,
+			...cooldown.label,
+		}).toString();
+
+		// If it's not localized on the Data object, try to find the action it's tied to by
+		// trimming off the "cd_" leading portion that we use by convention
+		if (currentLang !== "en" && tryLocalized === cooldown.name) {
+			const sliced = key.slice(3);
+
+			// Check both the action name and the key
+			const skillName = Object.keys(ACTIONS).find(
+				(key) => ACTIONS[key as ActionKey].name === sliced || key === sliced,
+			) as ActionKey | undefined;
+
+			// If we found a corresponding action, use that action's localized name
 			if (skillName !== undefined) {
 				return "CD：" + localizeSkillName(skillName);
 			}
 		}
-		return text;
-	} else {
-		return text;
+		return tryLocalized;
 	}
+
+	const resource = Data.getResource(key as ResourceKey);
+	return localize({
+		en: resource.name,
+		...resource.label,
+	}).toString();
 }
 
 const modifierNames = new Map<PotencyModifierType, LocalizedContent>([

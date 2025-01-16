@@ -1,8 +1,9 @@
 import { FileType } from "./Common";
-import { BuffType, ResourceType, SkillName, SkillReadyStatus } from "../Game/Common";
+import { BuffType, SkillReadyStatus } from "../Game/Common";
 import { GameConfig } from "../Game/GameConfig";
 import { Potency } from "../Game/Potency";
 import { controller } from "./Controller";
+import { ActionKey, ACTIONS, ResourceKey } from "../Game/Data";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -30,15 +31,15 @@ export class ActionNode {
 	#nodeIndex: number;
 	#capturedBuffs: Set<BuffType>;
 	#potency: Potency | undefined;
-	#dotPotencies: Map<ResourceType, Potency[]>;
+	#dotPotencies: Map<ResourceKey, Potency[]>;
 
 	type: ActionType;
 	waitDuration: number = 0;
-	skillName?: SkillName;
+	skillName?: ActionKey;
 	buffName?: string;
 	applicationTime?: number;
-	#dotOverrideAmount: Map<ResourceType, number>;
-	#dotTimeGap: Map<ResourceType, number>;
+	#dotOverrideAmount: Map<ResourceKey, number>;
+	#dotTimeGap: Map<ResourceKey, number>;
 	targetCount: number = 1;
 
 	next?: ActionNode = undefined;
@@ -182,7 +183,7 @@ export class ActionNode {
 	getAllDotPotencies() {
 		return this.#dotPotencies;
 	}
-	getDotPotencies(r: ResourceType) {
+	getDotPotencies(r: ResourceKey) {
 		return this.#dotPotencies.get(r) ?? [];
 	}
 
@@ -194,7 +195,7 @@ export class ActionNode {
 		this.#potency = p;
 	}
 
-	addDoTPotency(p: Potency, r: ResourceType) {
+	addDoTPotency(p: Potency, r: ResourceKey) {
 		const pArr = this.#dotPotencies.get(r) ?? [];
 		if (pArr.length === 0) {
 			this.#dotPotencies.set(r, pArr);
@@ -209,16 +210,16 @@ export class ActionNode {
 		this.#selected = false;
 	}
 
-	setDotTimeGap(dotName: ResourceType, amount: number) {
+	setDotTimeGap(dotName: ResourceKey, amount: number) {
 		this.#dotTimeGap.set(dotName, amount);
 	}
-	getDotTimeGap(dotName: ResourceType): number {
+	getDotTimeGap(dotName: ResourceKey): number {
 		return this.#dotTimeGap.get(dotName) ?? 0;
 	}
-	setDotOverrideAmount(dotName: ResourceType, amount: number) {
+	setDotOverrideAmount(dotName: ResourceKey, amount: number) {
 		this.#dotOverrideAmount.set(dotName, amount);
 	}
-	getDotOverrideAmount(dotName: ResourceType): number {
+	getDotOverrideAmount(dotName: ResourceKey): number {
 		return this.#dotOverrideAmount.get(dotName) ?? 0;
 	}
 }
@@ -277,7 +278,7 @@ export class Line {
 			list.push({
 				type: itr.type,
 				// skill
-				skillName: itr.skillName,
+				skillName: itr.skillName ? ACTIONS[itr.skillName as ActionKey].name : undefined,
 				// setResourceEnabled
 				buffName: itr.buffName,
 				// any

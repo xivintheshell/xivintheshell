@@ -1,6 +1,5 @@
 import React, { CSSProperties } from "react";
 import { Checkbox, FileFormat, Help, Input, SaveToFile } from "./Common";
-import { LIMIT_BREAKS, ResourceType, SkillName } from "../Game/Common";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
 import { getCurrentThemeColors, getModifierTagColor } from "./ColorTheme";
 import {
@@ -19,9 +18,11 @@ import {
 	updateSkillOrDoTInclude,
 } from "../Controller/DamageStatistics";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
+import { ActionKey, ResourceKey } from "../Game/Data";
+import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 
 export type DamageStatsMainTableEntry = {
-	skillName: SkillName;
+	skillName: ActionKey;
 	displayedModifiers: PotencyModifierType[];
 	basePotency: number;
 	calculationModifiers: PotencyModifier[];
@@ -105,7 +106,7 @@ export type DamageStatisticsData = {
 		totalPotPotency: number;
 		totalPartyBuffPotency: number;
 	};
-	dotTables: Map<ResourceType, DamageStatsDoTTrackingData>;
+	dotTables: Map<ResourceKey, DamageStatsDoTTrackingData>;
 	mode: DamageStatisticsMode;
 };
 
@@ -520,27 +521,27 @@ export class DamageStatistics extends React.Component {
 			};
 		};
 
-		let isDoTProp = function (skillName: SkillName) {
+		let isDoTProp = function (skillName: ActionKey) {
 			return controller.game.dotSkills.includes(skillName);
 		};
 
-		let hidePotency = function (skillName: SkillName) {
+		let hidePotency = function (skillName: ActionKey) {
 			if (isDoTProp(skillName)) {
 				return true;
 			}
-			const hidePotencySkills: SkillName[] = [
+			const hidePotencySkills: ActionKey[] = [
 				// MCH: Queen and Wildfire have variable potencies per "tick" so just don't show them in the per-hit potency column
-				SkillName.AutomatonQueen,
-				SkillName.Wildfire,
+				"AUTOMATON_QUEEN",
+				"WILDFIRE",
 				// Limit Break potencies don't directly translate to player potency, so don't include it in the summary
-				...LIMIT_BREAKS,
+				...(Object.keys(LIMIT_BREAK_ACTIONS) as ActionKey[]),
 			];
 			return hidePotencySkills.includes(skillName);
 		};
 
 		// omit the target count column if all abilities hit only one target
 		let makeRow = function (props: {
-			lastRowSkill?: SkillName;
+			lastRowSkill?: ActionKey;
 			row: DamageStatsMainTableEntry;
 			key: number;
 		}) {
@@ -556,7 +557,7 @@ export class DamageStatistics extends React.Component {
 			if (
 				!sameAsLast &&
 				props.row.basePotency > 0 &&
-				!LIMIT_BREAKS.includes(props.row.skillName)
+				!(props.row.skillName in LIMIT_BREAK_ACTIONS)
 			) {
 				includeCheckboxes.push(
 					<input
@@ -676,7 +677,7 @@ export class DamageStatistics extends React.Component {
 
 			// total potency
 			let totalPotencyNode: React.ReactNode | undefined = undefined;
-			if (props.row.showPotency && !LIMIT_BREAKS.includes(props.row.skillName)) {
+			if (props.row.showPotency && !(props.row.skillName in LIMIT_BREAK_ACTIONS)) {
 				totalPotencyNode = <span
 					style={{ textDecoration: includeInStats ? "none" : "line-through" }}
 				>
@@ -832,7 +833,7 @@ export class DamageStatistics extends React.Component {
 			</div>;
 		};
 
-		const allDotTableRows: { dotName: ResourceType; tableRows: React.ReactNode[] }[] = [];
+		const allDotTableRows: { dotName: ResourceKey; tableRows: React.ReactNode[] }[] = [];
 		this.data.dotTables.forEach((dotTrackingData, dotName) => {
 			const dotTableRows = [];
 
