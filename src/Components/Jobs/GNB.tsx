@@ -4,6 +4,7 @@ import {
 	ResourceCounterProps,
 	ResourceDisplayProps,
 	StatusPropsGenerator,
+    ResourceBarProps,
 } from "../StatusDisplay";
 import { ResourceType, TraitName } from "../../Game/Common";
 import { GNBState } from "../../Game/Jobs/GNB";
@@ -28,15 +29,12 @@ import { localize } from "../Localization";
     ResourceType.HeartOfLight,
     ResourceType.Aurora,
     ResourceType.RoyalGuard,
-
     ResourceType.ReadyToRip,
     ResourceType.ReadyToGouge,
     ResourceType.ReadyToTear,
-
     ResourceType.SonicBreakDoT,
     ResourceType.BowShockDoT,
-    
-    
+
 ].forEach((buff) => registerBuffIcon(buff, `GNB/${buff}.png`));
 
 export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
@@ -64,7 +62,7 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
-		const makeRedMageTimer = (rscType: ResourceType) => {
+		const makeGNBTimer = (rscType: ResourceType) => {
 			const cd = this.state.resources.timeTillReady(rscType);
 			return {
 				rscType: rscType,
@@ -77,8 +75,6 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 
             
 		};
-
-        
 
         const makeRoyalGuard = () => {
 			return {
@@ -108,13 +104,11 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
                 ResourceType.GreatNebula,
                 ResourceType.HeartOfLight,
                 ResourceType.Aurora,
-
                 ResourceType.ReadyToRip,
                 ResourceType.ReadyToGouge,
                 ResourceType.ReadyToTear,
                 
-                
-			].map(makeRedMageTimer),
+			].map(makeGNBTimer),
             makeRoyalGuard()
 		];
 
@@ -126,26 +120,45 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 		const resources = this.state.resources;
 
         const singleCombo = resources.get(ResourceType.GNBComboTracker);
-
         const aoeCombo = resources.get(ResourceType.GNBAOEComboTracker);
 		const powderGaugeStacks = resources.get(ResourceType.PowderGauge).availableAmount();
+        const royalGuardActive = resources.get(ResourceType.RoyalGuard).availableAmount();
         
         const comboTimer = singleCombo.available(1)
 			? singleCombo.pendingChange?.timeTillEvent
 			: aoeCombo.available(1)
 				? aoeCombo.pendingChange?.timeTillEvent
-				: undefined;
+				:undefined;
 
 		const infos: ResourceDisplayProps[] = [
 			
+            /* COMBO TIMER AS TEXT
             {
                 kind: "text",
                 name: localize({ en: "Combo Timer", zh: "Cmbo Timer" }),
                 text: comboTimer?.toFixed(3) ?? "N/A",
             } as ResourceDisplayProps,
+            */
+
+            {
+                kind: "bar",
+                name: localize({ en: "Combo Timer"}),
+                color: colors.rdm.manaStack,
+                progress: comboTimer? comboTimer / 30: 0,
+                valueString: comboTimer?.toFixed(3) ?? "N/A",
+            } as ResourceBarProps,
+
+            {
+                kind: "counter",
+                name: localize({ en: "Royal Guard"}),
+                color: colors.rdm.manaStack,
+                currentStacks: royalGuardActive,
+                maxStacks: 1,
+            } as ResourceCounterProps,
+
 			{
 				kind: "counter",
-				name: localize({ en: "Powder Gauge", zh: "Powder Gauge" }),
+				name: localize({ en: "Powder Gauge", zh: "晶壤" }),
 				color: colors.rdm.manaStack,
 				currentStacks: powderGaugeStacks,
 				maxStacks: this.state.hasTraitUnlocked(TraitName.CartridgeChargeII)? 3: 2,
