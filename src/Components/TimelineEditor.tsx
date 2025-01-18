@@ -329,6 +329,11 @@ export class TimelineEditor extends React.Component {
 						<br />
 						to start of selection
 					</>,
+					zh: <>
+						将选中的最后一个技能节点
+						<br />
+						移到选区最前
+					</>,
 				})}
 			</button>
 		</div>;
