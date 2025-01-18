@@ -111,7 +111,13 @@ function expandDoTNode(node: ActionNode, dotName: ResourceType, lastNode?: Actio
 	for (let i = 0; i < entry.calculationModifiers.length; i++) {
 		const source = entry.calculationModifiers[i].source;
 		// DoTs should show if they are cast under BLM's Enochian, SAM's Fugetsu, or GNB's No Mercy
-		if ([PotencyModifierType.ENO, PotencyModifierType.FUGETSU, PotencyModifierType.NO_MERCY].includes(source)) {
+		if (
+			[
+				PotencyModifierType.ENO,
+				PotencyModifierType.FUGETSU,
+				PotencyModifierType.NO_MERCY,
+			].includes(source)
+		) {
 			entry.displayedModifiers.push(source);
 		}
 	}

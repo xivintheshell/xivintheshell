@@ -581,7 +581,10 @@ makeWeaponskill_GNB(SkillName.GnashingFang, 60, {
 		state.refreshBuff(ResourceType.ReadyToRip, 0);
 		state.tryConsumeResource(ResourceType.PowderGauge);
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.PowderGauge),
+	// Gnashing Fang does not highlight if we're in the middle of a Reign of Beasts combo
+	highlightIf: (state) =>
+		state.hasResourceAvailable(ResourceType.PowderGauge) &&
+		!state.hasResourceAvailable(ResourceType.GNBReignComboTracker),
 	secondaryCooldown: {
 		cdName: ResourceType.cd_GnashingFang,
 		cooldown: 30,

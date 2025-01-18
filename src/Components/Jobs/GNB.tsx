@@ -67,9 +67,7 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 				onSelf: true,
 				enabled: true,
 				stacks: 1,
-				className: this.state.hasResourceAvailable(ResourceType.RoyalGuard)
-					? ""
-					: "hidden",
+				className: this.state.hasResourceAvailable(ResourceType.RoyalGuard) ? "" : "hidden",
 			};
 		};
 
