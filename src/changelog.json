@@ -1,4 +1,10 @@
 [
+	{
+		"date": "1/17/25",
+		"changes": [
+			"Added \"move end of selection to start of selection\" button to the timeline editor"
+		]
+	},
     {
         "date": "1/12/25",
         "changes": [
