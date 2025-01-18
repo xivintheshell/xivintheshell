@@ -244,94 +244,81 @@ export class TimelineEditor extends React.Component {
 			marginBottom: 10,
 			padding: 3,
 		};
+		const doRecordEdit = (action: (record: Record) => ActionNode | undefined) => {
+			if (displayedRecord.getFirstSelection()) {
+				setHandledSkillSelectionThisFrame(true);
+				let copy = this.getRecordCopy();
+				let editedNodes = this.state.editedNodes;
+				let firstEditedNode = action(copy);
+				if (firstEditedNode) editedNodes.push(firstEditedNode);
+				let status = controller.checkRecordValidity(copy, editedNodes);
+				if (firstEditedNode && status.straightenedIfValid) {
+					this.setState({
+						editedRecord: status.straightenedIfValid,
+						editedNodes: [],
+					});
+				} else {
+					this.setState({
+						editedNodes: editedNodes,
+					});
+				}
+				this.setState({
+					recordValidStatus: status,
+				});
+			}
+		};
 		let toolbar = <div style={{ marginBottom: 6, flex: 1 }}>
 			<button
 				style={buttonStyle}
-				onClick={(e) => {
-					if (displayedRecord.getFirstSelection()) {
-						setHandledSkillSelectionThisFrame(true);
-						// move selected skills up
-						let copy = this.getRecordCopy();
-						let editedNodes = this.state.editedNodes;
-						let firstEditedNode = copy.moveSelected(-1);
-						if (firstEditedNode) editedNodes.push(firstEditedNode);
-						let status = controller.checkRecordValidity(copy, editedNodes);
-						if (firstEditedNode && status.straightenedIfValid) {
-							this.setState({
-								editedRecord: status.straightenedIfValid,
-								editedNodes: [],
-							});
-						} else {
-							this.setState({
-								editedNodes: editedNodes,
-							});
-						}
-						this.setState({
-							recordValidStatus: status,
-						});
-					}
-				}}
+				onClick={(e) => doRecordEdit((record) => record.moveSelected(-1))}
 			>
 				{localize({ en: "move up", zh: "上移" })}
 			</button>
 
 			<button
 				style={buttonStyle}
-				onClick={(e) => {
-					if (displayedRecord.getFirstSelection()) {
-						setHandledSkillSelectionThisFrame(true);
-						// move selected skills down
-						let copy = this.getRecordCopy();
-						let editedNodes = this.state.editedNodes;
-						let firstEditedNode = copy.moveSelected(1);
-						if (firstEditedNode) editedNodes.push(firstEditedNode);
-						let status = controller.checkRecordValidity(copy, editedNodes);
-						if (firstEditedNode && status.straightenedIfValid) {
-							this.setState({
-								editedRecord: status.straightenedIfValid,
-								editedNodes: [],
-							});
-						} else {
-							this.setState({
-								editedNodes: editedNodes,
-							});
-						}
-						this.setState({
-							recordValidStatus: status,
-						});
-					}
-				}}
+				onClick={(e) => doRecordEdit((record) => record.moveSelected(1))}
 			>
 				{localize({ en: "move down", zh: "下移" })}
 			</button>
 
 			<button
 				style={buttonStyle}
-				onClick={(e) => {
-					if (displayedRecord.getFirstSelection()) {
-						setHandledSkillSelectionThisFrame(true);
-						let copy = this.getRecordCopy();
-						let editedNodes = this.state.editedNodes;
-						let firstEditedNode = copy.deleteSelected();
-						if (firstEditedNode) editedNodes.push(firstEditedNode);
-						let status = controller.checkRecordValidity(copy, editedNodes);
-						if (firstEditedNode && status.straightenedIfValid) {
-							this.setState({
-								editedRecord: status.straightenedIfValid,
-								editedNodes: [],
-							});
-						} else {
-							this.setState({
-								editedNodes: editedNodes,
-							});
-						}
-						this.setState({
-							recordValidStatus: status,
-						});
-					}
-				}}
+				onClick={(e) => doRecordEdit((record) => record.deleteSelected())}
 			>
 				{localize({ en: "delete selected", zh: "删除所选" })}
+			</button>
+
+			<button
+				style={buttonStyle}
+				onClick={(e) => doRecordEdit((record) => {
+					const selectionLength = record.getSelectionLength();
+					if (selectionLength > 1) {
+						// To make use of the existing moveSelected abstraction, we do the following:
+						// 1. Record the second to last selected node (this will be the new tail)
+						// 2. Deselect everything except the current tail
+						// 3. Call `moveSelected(-1 * (selectionLength - 1))`
+						// 4. Call `selectUntil` with the new tail
+						// Unfortunately the ActionNode linked list is not double-sided, so we
+						// just manually iterate from the start of the selection until we hit the
+						// second to last node.
+						const newHead = record.getLastSelection();
+						let itr = record.getFirstSelection();
+						let newTail = undefined;
+						while (itr && itr.next !== newHead) {
+							itr = itr.next;
+						}
+						newTail = itr;
+						console.assert(newTail !== undefined,"last selected node had no parent");
+						record.selectSingle(newHead!);
+						record.moveSelected(-(selectionLength - 1));
+						record.selectUntil(newTail!);
+						return newHead;
+					}
+					return undefined;
+				})}
+			>
+				{localize({ en: <>move end of selection<br/>to start of selection</> })}
 			</button>
 		</div>;
 
