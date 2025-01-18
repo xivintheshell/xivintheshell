@@ -61,25 +61,13 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
-		const makeGNBTimer = (rscType: ResourceType) => {
-			const cd = this.state.resources.timeTillReady(rscType);
-			return {
-				rscType: rscType,
-				onSelf: true,
-				enabled: true,
-				stacks: this.state.resources.get(rscType).availableAmount(),
-				timeRemaining: cd.toFixed(3),
-				className: cd > 0 ? "" : "hidden",
-			};
-		};
-
 		const makeRoyalGuard = () => {
 			return {
 				rscType: ResourceType.RoyalGuard,
 				onSelf: true,
 				enabled: true,
 				stacks: 1,
-				className: this.state.resources.get(ResourceType.RoyalGuard).available(1)
+				className: this.state.hasResourceAvailable(ResourceType.RoyalGuard)
 					? ""
 					: "hidden",
 			};
@@ -106,7 +94,7 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 				ResourceType.ReadyToRip,
 				ResourceType.ReadyToGouge,
 				ResourceType.ReadyToTear,
-			].map(makeGNBTimer),
+			].map((rsc) => this.makeCommonTimer(rsc)),
 			makeRoyalGuard(),
 		];
 	}
@@ -127,14 +115,6 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 				: undefined;
 
 		const infos: ResourceDisplayProps[] = [
-			/* COMBO TIMER AS TEXT
-            {
-                kind: "text",
-                name: localize({ en: "Combo Timer", zh: "Cmbo Timer" }),
-                text: comboTimer?.toFixed(3) ?? "N/A",
-            } as ResourceDisplayProps,
-            */
-
 			{
 				kind: "bar",
 				name: localize({ en: "Combo Timer" }),
