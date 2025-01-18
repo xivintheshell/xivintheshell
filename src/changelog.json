@@ -1,5 +1,11 @@
 [
 	{
+		"date": "1/18/25",
+		"changes": [
+			"[GNB] Added initial support for GNB"
+		]
+	},
+	{
 		"date": "1/17/25",
 		"changes": [
 			"Added \"move end of selection to start of selection\" button to the timeline editor"
