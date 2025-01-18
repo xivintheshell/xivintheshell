@@ -339,6 +339,12 @@ export class Record extends Line {
 		}
 	}
 
+	getSelectionLength(): number {
+		let acc = 0;
+		this.iterateSelected((_) => acc++);
+		return acc;
+	}
+
 	selectSingle(node: ActionNode) {
 		this.unselectAll();
 		node.select();
