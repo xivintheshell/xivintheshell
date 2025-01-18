@@ -291,34 +291,45 @@ export class TimelineEditor extends React.Component {
 
 			<button
 				style={buttonStyle}
-				onClick={(e) => doRecordEdit((record) => {
-					const selectionLength = record.getSelectionLength();
-					if (selectionLength > 1) {
-						// To make use of the existing moveSelected abstraction, we do the following:
-						// 1. Record the second to last selected node (this will be the new tail)
-						// 2. Deselect everything except the current tail
-						// 3. Call `moveSelected(-1 * (selectionLength - 1))`
-						// 4. Call `selectUntil` with the new tail
-						// Unfortunately the ActionNode linked list is not double-sided, so we
-						// just manually iterate from the start of the selection until we hit the
-						// second to last node.
-						const newHead = record.getLastSelection();
-						let itr = record.getFirstSelection();
-						let newTail = undefined;
-						while (itr && itr.next !== newHead) {
-							itr = itr.next;
+				onClick={(e) =>
+					doRecordEdit((record) => {
+						const selectionLength = record.getSelectionLength();
+						if (selectionLength > 1) {
+							// To make use of the existing moveSelected abstraction, we do the following:
+							// 1. Record the second to last selected node (this will be the new tail)
+							// 2. Deselect everything except the current tail
+							// 3. Call `moveSelected(-1 * (selectionLength - 1))`
+							// 4. Call `selectUntil` with the new tail
+							// Unfortunately the ActionNode linked list is not double-sided, so we
+							// just manually iterate from the start of the selection until we hit the
+							// second to last node.
+							const newHead = record.getLastSelection();
+							let itr = record.getFirstSelection();
+							let newTail = undefined;
+							while (itr && itr.next !== newHead) {
+								itr = itr.next;
+							}
+							newTail = itr;
+							console.assert(
+								newTail !== undefined,
+								"last selected node had no parent",
+							);
+							record.selectSingle(newHead!);
+							record.moveSelected(-(selectionLength - 1));
+							record.selectUntil(newTail!);
+							return newHead;
 						}
-						newTail = itr;
-						console.assert(newTail !== undefined,"last selected node had no parent");
-						record.selectSingle(newHead!);
-						record.moveSelected(-(selectionLength - 1));
-						record.selectUntil(newTail!);
-						return newHead;
-					}
-					return undefined;
-				})}
+						return undefined;
+					})
+				}
 			>
-				{localize({ en: <>move end of selection<br/>to start of selection</> })}
+				{localize({
+					en: <>
+						move end of selection
+						<br />
+						to start of selection
+					</>,
+				})}
 			</button>
 		</div>;
 
