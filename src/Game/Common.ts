@@ -465,6 +465,8 @@ export const enum WarningType {
 
 	SoulVoiceOvercap = "soul voice overcap",
 	CodaOvercap = "coda overcap",
+
+	CartridgeOvercap = "cartridge overcap",
 }
 
 export enum ReservedTraitName {
