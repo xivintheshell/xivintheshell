@@ -53,6 +53,8 @@ export const enum PotencyModifierType {
 	RADIANT_FINALE_TWO_CODA,
 	RADIANT_FINALE_THREE_CODA,
 	BARRAGE,
+
+	NO_MERCY,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -277,6 +279,11 @@ export const Modifiers = {
 		source: PotencyModifierType.BARRAGE,
 		additiveAmount: 100,
 	} as PotencyAdder,
+	NoMercy: {
+		kind: "multiplier",
+		source: PotencyModifierType.NO_MERCY,
+		damageFactor: 1.2,
+	} as PotencyModifier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

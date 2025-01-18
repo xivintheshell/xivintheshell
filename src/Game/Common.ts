@@ -61,6 +61,13 @@ import {
 	BRDTraitList,
 	BRDTraitName,
 } from "./Constants/BRD";
+import {
+	GNBSkillName,
+	GNBCooldownType,
+	GNBResourceType,
+	GNBTraitList,
+	GNBTraitName,
+} from "./Constants/GNB";
 
 export const Debug = {
 	epsilon: 1e-6,
@@ -175,6 +182,7 @@ export const SkillName = {
 	...RPRSkillName,
 	...WARSkillName,
 	...BRDSkillName,
+	...GNBSkillName,
 	...LimitBreakSkillName,
 	...GeneralSkillName,
 };
@@ -191,7 +199,8 @@ export type SkillName =
 	| MCHSkillName
 	| RPRSkillName
 	| WARSkillName
-	| BRDSkillName;
+	| BRDSkillName
+	| GNBSkillName;
 
 export const LIMIT_BREAKS = Object.values(LimitBreakSkillName) as SkillName[];
 
@@ -245,6 +254,7 @@ export enum BuffType {
 	Fuka = "Fuka",
 	Fugetsu = "Fugetsu",
 	EnhancedEnpi = "Enhanced Enpi",
+	NoMercy = "No Mercy",
 	Tincture = "Tincture",
 
 	ArcaneCircle = "Arcane Circle",
@@ -371,6 +381,7 @@ const CooldownType = {
 	...RPRCooldownType,
 	...WARCooldownType,
 	...BRDCooldownType,
+	...GNBCooldownType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -384,7 +395,8 @@ type CooldownType =
 	| MCHCooldownType
 	| RPRCooldownType
 	| WARCooldownType
-	| BRDCooldownType;
+	| BRDCooldownType
+	| GNBCooldownType;
 
 export const ResourceType = {
 	...CooldownType,
@@ -399,6 +411,7 @@ export const ResourceType = {
 	...RPRResourceType,
 	...WARResourceType,
 	...BRDResourceType,
+	...GNBResourceType,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -414,7 +427,8 @@ export type ResourceType =
 	| MCHResourceType
 	| RPRResourceType
 	| WARResourceType
-	| BRDResourceType;
+	| BRDResourceType
+	| GNBResourceType;
 
 export const enum WarningType {
 	PolyglotOvercap = "polyglot overcap",
@@ -450,6 +464,8 @@ export const enum WarningType {
 
 	SoulVoiceOvercap = "soul voice overcap",
 	CodaOvercap = "coda overcap",
+
+	CartridgeOvercap = "cartridge overcap",
 }
 
 export enum ReservedTraitName {
@@ -499,6 +515,7 @@ export const TraitName = {
 	...RPRTraitName, // 7000-7999
 	...WARTraitName, // 8000-8999
 	...BRDTraitName, // 9000-9999
+	...GNBTraitName, // 10000-10999
 	...ReservedTraitName, // 0, for now
 };
 
@@ -514,6 +531,7 @@ export type TraitName =
 	| RPRTraitName
 	| WARTraitName
 	| BRDTraitName
+	| GNBTraitName
 	| ReservedTraitName;
 
 export const TraitList: Array<[TraitName, number]> = [
@@ -527,4 +545,5 @@ export const TraitList: Array<[TraitName, number]> = [
 	...RPRTraitList,
 	...WARTraitList,
 	...BRDTraitList,
+	...GNBTraitList,
 ];
