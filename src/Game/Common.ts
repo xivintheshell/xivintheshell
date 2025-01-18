@@ -61,12 +61,12 @@ import {
 	BRDTraitList,
 	BRDTraitName,
 } from "./Constants/BRD";
-import { 
+import {
 	GNBSkillName,
-	GNBCooldownType, 
-	GNBResourceType, 
-	GNBTraitList, 
-	GNBTraitName ,
+	GNBCooldownType,
+	GNBResourceType,
+	GNBTraitList,
+	GNBTraitName,
 } from "./Constants/GNB";
 
 export const Debug = {
@@ -200,8 +200,7 @@ export type SkillName =
 	| RPRSkillName
 	| WARSkillName
 	| BRDSkillName
-	| GNBSkillName
-	;
+	| GNBSkillName;
 
 export const LIMIT_BREAKS = Object.values(LimitBreakSkillName) as SkillName[];
 

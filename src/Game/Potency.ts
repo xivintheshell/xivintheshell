@@ -282,7 +282,7 @@ export const Modifiers = {
 	NoMercy: {
 		kind: "multiplier",
 		source: PotencyModifierType.NO_MERCY,
-		damageFactor: 1.20,
+		damageFactor: 1.2,
 	} as PotencyModifier,
 };
 
