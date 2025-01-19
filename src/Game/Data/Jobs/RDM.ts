@@ -1,7 +1,7 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const RDM_ACTIONS = ensureRecord<Action>()({
+export const RDM_ACTIONS = ensureRecord<ActionData>()({
 	RIPOSTE: { name: "Riposte", label: { zh: "回刺", ja: "" } },
 	VERTHUNDER: { name: "Verthunder", label: { zh: "赤闪雷", ja: "" } },
 	CORPS_A_CORPS: { name: "Corps-a-corps", label: { zh: "短兵相接", ja: "" } },
@@ -51,7 +51,7 @@ export const RDM_ACTIONS = ensureRecord<Action>()({
 	PREFULGENCE: { name: "Prefulgence", label: { zh: "光芒四射", ja: "" } },
 });
 
-export const RDM_COOLDOWNS = ensureRecord<Cooldown>()({
+export const RDM_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_CORPS_A_CORPS: { name: "cd_CorpsACorps" },
 	cd_DISPLACEMENT: { name: "cd_Displacement" },
 	cd_FLECHE: { name: "cd_Fleche" },
@@ -64,13 +64,13 @@ export const RDM_COOLDOWNS = ensureRecord<Cooldown>()({
 	cd_PREFULGENCE: { name: "cd_Prefulgence" },
 });
 
-export const RDM_GAUGES = ensureRecord<Resource>()({
+export const RDM_GAUGES = ensureRecord<ResourceData>()({
 	WHITE_MANA: { name: "White Mana", label: { zh: "白魔元" } }, // [0, 100]
 	BLACK_MANA: { name: "Black Mana", label: { zh: "黑魔元" } }, // [0, 100]
 	MANA_STACKS: { name: "Mana Stacks", label: { zh: "魔元集" } }, // [0, 3]
 });
 
-export const RDM_STATUSES = ensureRecord<Resource>()({
+export const RDM_STATUSES = ensureRecord<ResourceData>()({
 	ACCELERATION: { name: "Acceleration", label: { zh: "促进" } }, // [0, 1]
 	DUALCAST: { name: "Dualcast", label: { zh: "连续咏唱" } }, // [0, 1]
 	EMBOLDEN: { name: "Embolden", label: { zh: "鼓励" } }, // [0, 1]
@@ -84,7 +84,7 @@ export const RDM_STATUSES = ensureRecord<Resource>()({
 	VERSTONE_READY: { name: "Verstone Ready", label: { zh: "赤飞石预备" } }, // [0, 1]
 });
 
-export const RDM_TRACKERS = ensureRecord<Resource>()({
+export const RDM_TRACKERS = ensureRecord<ResourceData>()({
 	// secret combo trackers
 	// 0 = no melee combo, 1 = after 1st, 2 = after 2nd
 	RDM_MELEE_COUNTER: { name: "RDM Melee Combo", label: { zh: "赤魔近战连" } }, // [0, 2]
@@ -94,7 +94,7 @@ export const RDM_TRACKERS = ensureRecord<Resource>()({
 	RDM_AOE_COUNTER: { name: "RDM AoE Combo", label: { zh: "赤魔AOE连" } }, // [0, 2]
 });
 
-export const RDM_TRAITS = ensureRecord<Trait>()({
+export const RDM_TRAITS = ensureRecord<TraitData>()({
 	ENHANCED_DISPLACEMENT: { name: "Enhanced Displacement", level: 72 },
 	RED_MAGIC_MASTERY: { name: "Red Magic Mastery", level: 74 },
 	ENHANCED_MANAFICATION: { name: "Enhanced Manafication", level: 78 },

@@ -1,17 +1,17 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const DRK_ACTIONS = ensureRecord<Action>()({});
+export const DRK_ACTIONS = ensureRecord<ActionData>()({});
 
-export const DRK_COOLDOWNS = ensureRecord<Cooldown>()({});
+export const DRK_COOLDOWNS = ensureRecord<CooldownData>()({});
 
-export const DRK_GAUGES = ensureRecord<Resource>()({});
+export const DRK_GAUGES = ensureRecord<ResourceData>()({});
 
-export const DRK_STATUSES = ensureRecord<Resource>()({});
+export const DRK_STATUSES = ensureRecord<ResourceData>()({});
 
-export const DRK_TRACKERS = ensureRecord<Resource>()({});
+export const DRK_TRACKERS = ensureRecord<ResourceData>()({});
 
-export const DRK_TRAITS = ensureRecord<Trait>()({});
+export const DRK_TRAITS = ensureRecord<TraitData>()({});
 
 export type DRKActions = typeof DRK_ACTIONS;
 export type DRKActionKey = keyof DRKActions;

@@ -1,7 +1,7 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const RPR_ACTIONS = ensureRecord<Action>()({
+export const RPR_ACTIONS = ensureRecord<ActionData>()({
 	/** Single-target GCD */
 	SLICE: { name: "Slice", label: { zh: "切割" } },
 	WAXING_SLICE: { name: "Waxing Slice", label: { zh: "增盈切割" } },
@@ -55,7 +55,7 @@ export const RPR_ACTIONS = ensureRecord<Action>()({
 	REGRESS: { name: "Regress", label: { zh: "回退" } },
 });
 
-export const RPR_COOLDOWNS = ensureRecord<Cooldown>()({
+export const RPR_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_ARCANE_CIRCLE: { name: "cd_ArcaneCircle" },
 	cd_GLUTTONY: { name: "cd_Gluttony" },
 	cd_SOUL_SLICE: { name: "cd_SoulSlice" },
@@ -70,7 +70,7 @@ export const RPR_COOLDOWNS = ensureRecord<Cooldown>()({
 	cd_SACRIFICIUM: { name: "cd_Sacrificium" },
 });
 
-export const RPR_GAUGES = ensureRecord<Resource>()({
+export const RPR_GAUGES = ensureRecord<ResourceData>()({
 	SOUL: { name: "Soul", label: { zh: "灵魂" } }, // [0, 100]
 	SHROUD: { name: "Shroud", label: { zh: "魂衣" } }, // [0, 100]
 
@@ -78,7 +78,7 @@ export const RPR_GAUGES = ensureRecord<Resource>()({
 	VOID_SHROUD: { name: "Void Shroud", label: { zh: "虚无魂" } }, // [0, 5]
 });
 
-export const RPR_STATUSES = ensureRecord<Resource>()({
+export const RPR_STATUSES = ensureRecord<ResourceData>()({
 	DEATHS_DESIGN: { name: "Death's Design", label: { zh: "死亡烙印" } }, // [0, 1]
 
 	SOUL_REAVER: { name: "Soul Reaver", label: { zh: "妖异之镰" }, maximumStacks: 2 }, // [0, 2], Gibbet/Gallows
@@ -108,7 +108,7 @@ export const RPR_STATUSES = ensureRecord<Resource>()({
 	ENHANCED_HARPE: { name: "Enhanced Harpe", label: { zh: "勾刃效果提高" } },
 });
 
-export const RPR_TRACKERS = ensureRecord<Resource>()({
+export const RPR_TRACKERS = ensureRecord<ResourceData>()({
 	ARCANE_CREST: { name: "Arcane Crest", label: { zh: "神秘纹" } }, // [0, 1]
 	HELLS_INGRESS_USED: { name: "Hell's Ingress Used", label: { zh: "地狱入境已使用" } }, // For tracking which ability turns into the return
 
@@ -118,7 +118,7 @@ export const RPR_TRACKERS = ensureRecord<Resource>()({
 	RPR_AOE_COMBO: { name: "RPR AoE Combo", label: { zh: "AOE连击" } }, // [0, 1]
 });
 
-export const RPR_TRAITS = ensureRecord<Trait>()({
+export const RPR_TRAITS = ensureRecord<TraitData>()({
 	HELLSGATE: { name: "Hellsgate", level: 74 },
 	TEMPERED_SOUL: { name: "Tempered Soul", level: 78 },
 	SHROUD_GAUGE: { name: "Shroud Gauge", level: 80 },

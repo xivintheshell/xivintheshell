@@ -1,17 +1,17 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const NIN_ACTIONS = ensureRecord<Action>()({});
+export const NIN_ACTIONS = ensureRecord<ActionData>()({});
 
-export const NIN_COOLDOWNS = ensureRecord<Cooldown>()({});
+export const NIN_COOLDOWNS = ensureRecord<CooldownData>()({});
 
-export const NIN_GAUGES = ensureRecord<Resource>()({});
+export const NIN_GAUGES = ensureRecord<ResourceData>()({});
 
-export const NIN_STATUSES = ensureRecord<Resource>()({});
+export const NIN_STATUSES = ensureRecord<ResourceData>()({});
 
-export const NIN_TRACKERS = ensureRecord<Resource>()({});
+export const NIN_TRACKERS = ensureRecord<ResourceData>()({});
 
-export const NIN_TRAITS = ensureRecord<Trait>()({});
+export const NIN_TRAITS = ensureRecord<TraitData>()({});
 
 export type NINActions = typeof NIN_ACTIONS;
 export type NINActionKey = keyof NINActions;

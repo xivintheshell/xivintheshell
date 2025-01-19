@@ -1,17 +1,17 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const AST_ACTIONS = ensureRecord<Action>()({});
+export const AST_ACTIONS = ensureRecord<ActionData>()({});
 
-export const AST_COOLDOWNS = ensureRecord<Cooldown>()({});
+export const AST_COOLDOWNS = ensureRecord<CooldownData>()({});
 
-export const AST_GAUGES = ensureRecord<Resource>()({});
+export const AST_GAUGES = ensureRecord<ResourceData>()({});
 
-export const AST_STATUSES = ensureRecord<Resource>()({});
+export const AST_STATUSES = ensureRecord<ResourceData>()({});
 
-export const AST_TRACKERS = ensureRecord<Resource>()({});
+export const AST_TRACKERS = ensureRecord<ResourceData>()({});
 
-export const AST_TRAITS = ensureRecord<Trait>()({});
+export const AST_TRAITS = ensureRecord<TraitData>()({});
 
 export type ASTActions = typeof AST_ACTIONS;
 export type ASTActionKey = keyof ASTActions;

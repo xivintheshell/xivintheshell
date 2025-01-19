@@ -1,17 +1,17 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const PLD_ACTIONS = ensureRecord<Action>()({});
+export const PLD_ACTIONS = ensureRecord<ActionData>()({});
 
-export const PLD_COOLDOWNS = ensureRecord<Cooldown>()({});
+export const PLD_COOLDOWNS = ensureRecord<CooldownData>()({});
 
-export const PLD_GAUGES = ensureRecord<Resource>()({});
+export const PLD_GAUGES = ensureRecord<ResourceData>()({});
 
-export const PLD_STATUSES = ensureRecord<Resource>()({});
+export const PLD_STATUSES = ensureRecord<ResourceData>()({});
 
-export const PLD_TRACKERS = ensureRecord<Resource>()({});
+export const PLD_TRACKERS = ensureRecord<ResourceData>()({});
 
-export const PLD_TRAITS = ensureRecord<Trait>()({});
+export const PLD_TRAITS = ensureRecord<TraitData>()({});
 
 export type PLDActions = typeof PLD_ACTIONS;
 export type PLDActionKey = keyof PLDActions;

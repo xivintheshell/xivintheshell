@@ -1,17 +1,17 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const WHM_ACTIONS = ensureRecord<Action>()({});
+export const WHM_ACTIONS = ensureRecord<ActionData>()({});
 
-export const WHM_COOLDOWNS = ensureRecord<Cooldown>()({});
+export const WHM_COOLDOWNS = ensureRecord<CooldownData>()({});
 
-export const WHM_GAUGES = ensureRecord<Resource>()({});
+export const WHM_GAUGES = ensureRecord<ResourceData>()({});
 
-export const WHM_STATUSES = ensureRecord<Resource>()({});
+export const WHM_STATUSES = ensureRecord<ResourceData>()({});
 
-export const WHM_TRACKERS = ensureRecord<Resource>()({});
+export const WHM_TRACKERS = ensureRecord<ResourceData>()({});
 
-export const WHM_TRAITS = ensureRecord<Trait>()({});
+export const WHM_TRAITS = ensureRecord<TraitData>()({});
 
 export type WHMActions = typeof WHM_ACTIONS;
 export type WHMActionKey = keyof WHMActions;

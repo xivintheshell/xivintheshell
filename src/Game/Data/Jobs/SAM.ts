@@ -1,7 +1,7 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const SAM_ACTIONS = ensureRecord<Action>()({
+export const SAM_ACTIONS = ensureRecord<ActionData>()({
 	ENPI: { name: "Enpi", label: { zh: "燕飞" } },
 	HAKAZE: { name: "Hakaze", label: { zh: "刃风" } },
 	GYOFU: { name: "Gyofu", label: { zh: "晓风" } },
@@ -50,7 +50,7 @@ export const SAM_ACTIONS = ensureRecord<Action>()({
 	TENGENTSU_POP: { name: "Pop Tengentsu", label: { zh: "天眼通触发" } },
 });
 
-export const SAM_COOLDOWNS = ensureRecord<Cooldown>()({
+export const SAM_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_YATEN: { name: "cd_Yaten" }, // [0, 10],
 	cd_GYOTEN: { name: "cd_Gyoten" }, // [0, 10],
 	cd_SENEI_GUREN: { name: "cd_Senei" }, // [0,60],
@@ -66,14 +66,14 @@ export const SAM_COOLDOWNS = ensureRecord<Cooldown>()({
 	cd_THIRD_EYE_POP: { name: "cd_ThirdEyePop" }, // [0, 1,], not real
 });
 
-export const SAM_GAUGES = ensureRecord<Resource>()({
+export const SAM_GAUGES = ensureRecord<ResourceData>()({
 	KENKI: { name: "Kenki", label: { zh: "剑气" } }, // [0, 100]
 	SETSU: { name: "Setsu", label: { zh: "雪闪" } }, // [0, 1]
 	GETSU: { name: "Getsu", label: { zh: "月闪" } }, // [0, 1]
 	KA_SEN: { name: "Ka", label: { zh: "花闪" } }, // [0, 1]
 	MEDITATION: { name: "Meditation", label: { zh: "默想" } }, // [0, 3]
 });
-export const SAM_STATUSES = ensureRecord<Resource>()({
+export const SAM_STATUSES = ensureRecord<ResourceData>()({
 	MEIKYO_SHISUI: { name: "Meikyo Shisui", label: { zh: "明镜止水" }, maximumStacks: 3 }, // [0, 3]
 	FUGETSU: { name: "Fugetsu", label: { zh: "风月" } }, // [0, 1]
 	FUKA: { name: "Fuka", label: { zh: "风花" } }, // [0, 1]
@@ -89,7 +89,7 @@ export const SAM_STATUSES = ensureRecord<Resource>()({
 	HIGANBANA_DOT: { name: "HiganbanaDoT", label: { zh: "彼岸花dot" } }, // [0, 1]
 });
 
-export const SAM_TRACKERS = ensureRecord<Resource>()({
+export const SAM_TRACKERS = ensureRecord<ResourceData>()({
 	SAM_TWO_READY: { name: "SAMTwoReady", label: { zh: "连击2预备" } }, // [0, 1] for jinpu/shifu
 	SAM_TWO_AOE_READY: { name: "SAMTwoAoeReady", label: { zh: "AOE2预备" } }, // [0, 1] for mangetsu/oka
 	GEKKO_READY: { name: "GekkoReady", label: { zh: "月光预备" } }, // [0, 1]
@@ -101,7 +101,7 @@ export const SAM_TRACKERS = ensureRecord<Resource>()({
 	KAESHI_TRACKER: { name: "KaeshiTracker", label: { zh: "回返状态" } }, // [0, 4]
 });
 
-export const SAM_TRAITS = ensureRecord<Trait>()({
+export const SAM_TRAITS = ensureRecord<TraitData>()({
 	ENHANCED_IAIJUTSU: { name: "Enhanced Iaijutsu", level: 74 },
 	ENHANCED_MEIKYO_SHISUI: { name: "Enhanced Meikyo Shisui", level: 76 },
 	ENHANCED_FUGETSU_AND_FUKA: { name: "Enhanced Fugetsu and Fuka", level: 78 },

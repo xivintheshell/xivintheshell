@@ -3,20 +3,20 @@ import { LocalizedContent } from "../../Components/Localization";
 // Properties beyond name are all optional at this time to allow for gradual migration
 // Mainly provided here as examples of what we could do with the data
 
-export interface Action {
+export interface ActionData {
 	name: string;
 	id?: number; // In-game Action ID. Intended for use with exporting to Tischel
 	label?: Omit<LocalizedContent, "en">; // Defines the locale-specific text that will be displayed. English is inferred from the name property
 }
 
-export interface Cooldown {
+export interface CooldownData {
 	name: string;
 	label?: Omit<LocalizedContent, "en">; // Defines the locale-specific text that will be displayed. English is inferred from the name property
 	maximum?: number;
 	charges?: number;
 }
 
-export interface Resource {
+export interface ResourceData {
 	name: string;
 	label?: Omit<LocalizedContent, "en">; // Defines the locale-specific text that will be displayed. English is inferred from the name property
 
@@ -28,7 +28,7 @@ export interface Resource {
 	mayNotBeCanceled?: boolean; // set to true to prevent the resource from being clicked off
 }
 
-export interface Trait {
+export interface TraitData {
 	name: string;
 	level: number;
 }

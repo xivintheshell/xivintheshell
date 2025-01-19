@@ -10,7 +10,7 @@ import {
 	COOLDOWNS,
 } from ".";
 import { ShellJob, Job, JOBS } from "./Jobs";
-import { Action, Resource, Cooldown } from "./types";
+import { ActionData, ResourceData, CooldownData } from "./types";
 
 type DataTypes = Actions | Resources | Cooldowns;
 
@@ -19,7 +19,7 @@ export class Data {
 		return JOBS[key];
 	}
 
-	static getAction(key: ActionKey): Action {
+	static getAction(key: ActionKey): ActionData {
 		return ACTIONS[key];
 	}
 	static findAction(name: string): Actions | undefined {
@@ -29,7 +29,7 @@ export class Data {
 		return this.findKeyByName<Actions>(ACTIONS, name);
 	}
 
-	static getResource(key: ResourceKey): Resource {
+	static getResource(key: ResourceKey): ResourceData {
 		return RESOURCES[key];
 	}
 	static findResource(name: string): Resources | undefined {
@@ -39,7 +39,7 @@ export class Data {
 		return this.findKeyByName<Resources>(RESOURCES, name);
 	}
 
-	static getCooldown(key: CooldownKey): Cooldown {
+	static getCooldown(key: CooldownKey): CooldownData {
 		return COOLDOWNS[key];
 	}
 	static findCooldown(name: string): Cooldowns | undefined {

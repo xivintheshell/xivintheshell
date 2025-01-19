@@ -1,17 +1,17 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const SMN_ACTIONS = ensureRecord<Action>()({});
+export const SMN_ACTIONS = ensureRecord<ActionData>()({});
 
-export const SMN_COOLDOWNS = ensureRecord<Cooldown>()({});
+export const SMN_COOLDOWNS = ensureRecord<CooldownData>()({});
 
-export const SMN_GAUGES = ensureRecord<Resource>()({});
+export const SMN_GAUGES = ensureRecord<ResourceData>()({});
 
-export const SMN_STATUSES = ensureRecord<Resource>()({});
+export const SMN_STATUSES = ensureRecord<ResourceData>()({});
 
-export const SMN_TRACKERS = ensureRecord<Resource>()({});
+export const SMN_TRACKERS = ensureRecord<ResourceData>()({});
 
-export const SMN_TRAITS = ensureRecord<Trait>()({});
+export const SMN_TRAITS = ensureRecord<TraitData>()({});
 
 export type SMNActions = typeof SMN_ACTIONS;
 export type SMNActionKey = keyof SMNActions;

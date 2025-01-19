@@ -1,7 +1,7 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const PCT_ACTIONS = ensureRecord<Action>()({
+export const PCT_ACTIONS = ensureRecord<ActionData>()({
 	FIRE_IN_RED: { name: "Fire in Red", label: { zh: "火炎之红", ja: "レッドファイア" } },
 	AERO_IN_GREEN: { name: "Aero in Green", label: { zh: "疾风之绿", ja: "グリーンエアロ" } },
 	WATER_IN_BLUE: { name: "Water in Blue", label: { zh: "流水之蓝", ja: "ブルーウォータ" } },
@@ -92,7 +92,7 @@ export const PCT_ACTIONS = ensureRecord<Action>()({
 	STARRY_MUSE: { name: "Starry Muse", label: { zh: "星空构想", ja: "イマジンスカイ" } },
 });
 
-export const PCT_COOLDOWNS = ensureRecord<Cooldown>()({
+export const PCT_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_TEMPERA_COAT: { name: "cd_TemperaCoat" }, // [0, 120]
 	cd_SMUDGE: { name: "cd_Smudge" }, // [0, 20]
 	cd_LIVING_MUSE: { name: "cd_LivingMuse" }, // [0, 40]
@@ -103,7 +103,7 @@ export const PCT_COOLDOWNS = ensureRecord<Cooldown>()({
 	cd_GRASSA: { name: "cd_Grassa", label: { zh: "CD：油性坦培拉涂层" } }, // [0, 1], not real
 	cd_TEMPERA_POP: { name: "cd_TemperaPop" }, // [0, 1], also not real
 });
-export const PCT_GAUGES = ensureRecord<Resource>()({
+export const PCT_GAUGES = ensureRecord<ResourceData>()({
 	PORTRAIT: { name: "Portrait" }, // [0, 2] 1 = moogle, 2 = madeen
 	DEPICTIONS: { name: "Depictions" }, // [0, 3] used to show which creature motifs have been drawn
 	CREATURE_CANVAS: { name: "Creature Canvas" }, // [0, 1]
@@ -113,7 +113,7 @@ export const PCT_GAUGES = ensureRecord<Resource>()({
 	PAINT: { name: "Paint" }, // [0, 5]
 });
 
-export const PCT_STATUSES = ensureRecord<Resource>()({
+export const PCT_STATUSES = ensureRecord<ResourceData>()({
 	// Technically two different buffs, but we're treating it like a stacked buff here
 	AETHERHUES: {
 		name: "Aetherhues",
@@ -145,12 +145,12 @@ export const PCT_STATUSES = ensureRecord<Resource>()({
 	SMUDGE: { name: "Smudge", label: { zh: "速涂" } },
 });
 
-export const PCT_TRACKERS = ensureRecord<Resource>()({
+export const PCT_TRACKERS = ensureRecord<ResourceData>()({
 	// Hammer actions are a proper combo, not strictly tied to Hammer Time buff
 	HAMMER_COMBO: { name: "Hammer Combo Counter", label: { zh: "重锤连击数" } }, // [0, 2]
 });
 
-export const PCT_TRAITS = ensureRecord<Trait>()({
+export const PCT_TRAITS = ensureRecord<TraitData>()({
 	PICTOMANCY_MASTERY_II: { name: "Pictomancy Mastery II", level: 74 },
 	ENHANCED_ARTISTRY: { name: "Enhanced Artistry", level: 80 },
 	ENHANCED_PICTOMANCY: { name: "Enhanced Pictomancy", level: 82 },

@@ -1,7 +1,7 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const GNB_ACTIONS = ensureRecord<Action>()({
+export const GNB_ACTIONS = ensureRecord<ActionData>()({
 	LIGHTNING_SHOCK: { name: "Lightning Shock" },
 	KEEN_EDGE: { name: "Keen Edge" },
 	BRUTAL_SHELL: { name: "Brutal Shell" },
@@ -50,7 +50,7 @@ export const GNB_ACTIONS = ensureRecord<Action>()({
 	RELEASE_ROYAL_GUARD: { name: "Release Royal Guard" },
 });
 
-export const GNB_COOLDOWNS = ensureRecord<Cooldown>()({
+export const GNB_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_NO_MERCY: { name: "cd_NoMercy" }, // 60 sec
 	cd_BLOODFEST: { name: "cd_Bloodfest" }, // 120 sec
 	cd_CAMOUFLAGE: { name: "cd_Camouflage" }, // 90 sec
@@ -77,11 +77,11 @@ export const GNB_COOLDOWNS = ensureRecord<Cooldown>()({
 	cd_EYE_GOUGE: { name: "cd_EyeGouge" },
 });
 
-export const GNB_GAUGES = ensureRecord<Resource>()({
+export const GNB_GAUGES = ensureRecord<ResourceData>()({
 	POWDER_GAUGE: { name: "Powder Gauge" }, // [0, 3]
 });
 
-export const GNB_STATUSES = ensureRecord<Resource>()({
+export const GNB_STATUSES = ensureRecord<ResourceData>()({
 	NO_MERCY: { name: "No Mercy" }, // [0, 1]
 	AURORA: { name: "Aurora" }, // [0, 1]
 	BOW_SHOCK_DOT: { name: "Bow Shock DoT" }, // [0, 1]
@@ -108,7 +108,7 @@ export const GNB_STATUSES = ensureRecord<Resource>()({
 	BRUTAL_SHELL: { name: "Brutal Shell" }, // [0, 1]
 });
 
-export const GNB_TRACKERS = ensureRecord<Resource>()({
+export const GNB_TRACKERS = ensureRecord<ResourceData>()({
 	// 0 - combo neutral, 1 - brutal shell ready, 2 - solid barrel ready
 	GNB_COMBO_TRACKER: { name: "GNB Combo" }, // [0, 2]
 	// 0 - combo neutral, 1 - demon slaughter ready
@@ -119,7 +119,7 @@ export const GNB_TRACKERS = ensureRecord<Resource>()({
 	GNB_REIGN_COMBO_TRACKER: { name: "GNB Reign Combo" }, // [0, 2]
 });
 
-export const GNB_TRAITS = ensureRecord<Trait>()({
+export const GNB_TRAITS = ensureRecord<TraitData>()({
 	DANGER_ZONE_MASTERY: { name: "Danger Zone Mastery", level: 80 },
 	HEART_OF_STONE_MASTERY: { name: "Heart Of Stone Mastery", level: 82 },
 	ENHANCED_AURORA: { name: "Enhanced Aurora", level: 84 },

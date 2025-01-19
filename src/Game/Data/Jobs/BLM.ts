@@ -1,10 +1,21 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const BLM_ACTIONS = ensureRecord<Action>()({
-	BLIZZARD: { name: "Blizzard", label: { zh: "冰1", ja: "ブリザド" } },
-	FIRE: { name: "Fire", label: { zh: "火1", ja: "ファイア" } },
-	BLIZZARD_II: { name: "Blizzard 2", label: { zh: "冰2", ja: "ブリザラ" } },
+export const BLM_ACTIONS = ensureRecord<ActionData>()({
+	BLIZZARD: {
+		id: 142,
+		name: "Blizzard",
+		label: { zh: "冰1", ja: "ブリザド" },
+	},
+	FIRE: {
+		name: "Fire",
+		label: { zh: "火1", ja: "ファイア" },
+	},
+	BLIZZARD_II: {
+		id: 25793,
+		name: "Blizzard 2",
+		label: { zh: "冰2", ja: "ブリザラ" },
+	},
 	FIRE_II: { name: "Fire 2", label: { zh: "火2", ja: "ファイラ" } },
 	TRANSPOSE: { name: "Transpose", label: { zh: "星灵移位", ja: "トランス" } },
 	THUNDER_III: { name: "Thunder 3", label: { zh: "雷3", ja: "サンダガ" } },
@@ -13,10 +24,10 @@ export const BLM_ACTIONS = ensureRecord<Action>()({
 	MANAFONT: { name: "Manafont", label: { zh: "魔泉", ja: "マナフォント" } },
 	LEY_LINES: { name: "Ley Lines", label: { zh: "黑魔纹", ja: "黒魔紋" } },
 	FIRE_III: { name: "Fire 3", label: { zh: "火3", ja: "ファイガ" } },
-	BLIZZARD_III: { name: "Blizzard 3", label: { zh: "冰3", ja: "ブリザガ" } },
+	BLIZZARD_III: { id: 154, name: "Blizzard 3", label: { zh: "冰3", ja: "ブリザガ" } },
 	FREEZE: { name: "Freeze", label: { zh: "玄冰", ja: "フリーズ" } },
 	FLARE: { name: "Flare", label: { zh: "核爆", ja: "フレア" } },
-	BLIZZARD_IV: { name: "Blizzard 4", label: { zh: "冰4", ja: "ブリザジャ" } },
+	BLIZZARD_IV: { id: 3576, name: "Blizzard 4", label: { zh: "冰4", ja: "ブリザジャ" } },
 	FIRE_IV: { name: "Fire 4", label: { zh: "火4", ja: "ファイジャ" } },
 	BETWEEN_THE_LINES: {
 		name: "Between the Lines",
@@ -41,7 +52,7 @@ export const BLM_ACTIONS = ensureRecord<Action>()({
 	RETRACE: { name: "Retrace", label: { zh: "魔纹重置", ja: "魔紋再設置" } },
 });
 
-export const BLM_COOLDOWNS = ensureRecord<Cooldown>()({
+export const BLM_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_TRANSPOSE: { name: "cd_Transpose" }, // [0, 1x]
 	cd_LEY_LINES: { name: "cd_LeyLines" }, // [0, 1x]
 	cd_MANAWARD: { name: "cd_Manaward" }, // [0, 1x]
@@ -53,7 +64,7 @@ export const BLM_COOLDOWNS = ensureRecord<Cooldown>()({
 	cd_RETRACE: { name: "cd_Retrace" }, // [0, 1x]
 });
 
-export const BLM_GAUGES = ensureRecord<Resource>()({
+export const BLM_GAUGES = ensureRecord<ResourceData>()({
 	POLYGLOT: { name: "Polyglot", label: { zh: "通晓" } }, // [0, 3]
 	ASTRAL_FIRE: { name: "Astral Fire", label: { zh: "星极火" } }, // [0, 3]
 	UMBRAL_ICE: { name: "Umbral Ice", label: { zh: "灵极冰" } }, // [0, 3]
@@ -63,7 +74,7 @@ export const BLM_GAUGES = ensureRecord<Resource>()({
 	ASTRAL_SOUL: { name: "Astral Soul", label: { zh: "星极魂" } }, // [0, 6]
 });
 
-export const BLM_STATUSES = ensureRecord<Resource>()({
+export const BLM_STATUSES = ensureRecord<ResourceData>()({
 	LEY_LINES: { name: "Ley Lines", label: { zh: "黑魔纹" }, mayBeToggled: true }, // [0, 1]
 	TRIPLECAST: { name: "Triplecast", label: { zh: "三重咏唱" }, maximumStacks: 3 }, // [0, 3]
 	FIRESTARTER: { name: "Firestarter", label: { zh: "火苗" } }, // [0, 1]
@@ -75,9 +86,9 @@ export const BLM_STATUSES = ensureRecord<Resource>()({
 	MANAWARD: { name: "Manaward", label: { zh: "魔纹罩" } }, // [0, 1]
 });
 
-export const BLM_TRACKERS = ensureRecord<Resource>()({});
+export const BLM_TRACKERS = ensureRecord<ResourceData>()({});
 
-export const BLM_TRAITS = ensureRecord<Trait>()({
+export const BLM_TRAITS = ensureRecord<TraitData>()({
 	ENHANCED_ENOCHIAN_II: { name: "Enhanced Enochian II", level: 78 },
 	ENHANCED_POLYGLOT: { name: "Enhanced Polyglot", level: 80 },
 	ENHANCED_FOUL: { name: "Enhanced Foul", level: 80 },
