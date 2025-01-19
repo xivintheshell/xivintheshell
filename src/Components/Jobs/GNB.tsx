@@ -6,105 +6,44 @@ import {
 	StatusPropsGenerator,
 	ResourceBarProps,
 } from "../StatusDisplay";
-import { ResourceType, TraitName } from "../../Game/Common";
 import { GNBState } from "../../Game/Jobs/GNB";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
+import { GNB_STATUSES, GNBResourceKey } from "../../Game/Data/Jobs/GNB";
+import { RESOURCES } from "../../Game/Data";
 
-[
-	ResourceType.HeartOfStone,
-	ResourceType.CatharsisOfCorundum,
-	ResourceType.HeartOfCorundum,
-	ResourceType.ClarityOfCorundum,
-	ResourceType.Superbolide,
-	ResourceType.ReadyToReign,
-	ResourceType.ReadyToBlast,
-	ResourceType.ReadyToRaze,
-	ResourceType.BrutalShell,
-	ResourceType.NoMercy,
-	ResourceType.ReadyToBreak,
-	ResourceType.Camouflage,
-	ResourceType.Nebula,
-	ResourceType.GreatNebula,
-	ResourceType.HeartOfLight,
-	ResourceType.Aurora,
-	ResourceType.RoyalGuard,
-	ResourceType.ReadyToRip,
-	ResourceType.ReadyToGouge,
-	ResourceType.ReadyToTear,
-	ResourceType.SonicBreakDoT,
-	ResourceType.BowShockDoT,
-].forEach((buff) => registerBuffIcon(buff, `GNB/${buff}.png`));
+const GNB_DEBUFFS: GNBResourceKey[] = ["SONIC_BREAK_DOT", "BOW_SHOCK_DOT"];
+
+const GNB_BUFFS: GNBResourceKey[] = (Object.keys(GNB_STATUSES) as GNBResourceKey[]).filter(
+	(key) => !GNB_DEBUFFS.includes(key),
+);
+
+(Object.keys(GNB_STATUSES) as GNBResourceKey[]).forEach((buff) =>
+	registerBuffIcon(buff, `GNB/${RESOURCES[buff].name}.png`),
+);
 
 export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		const sonicDoTCountdown = this.state.resources.timeTillReady(ResourceType.SonicBreakDoT);
-		const bowShockDoTCountdown = this.state.resources.timeTillReady(ResourceType.BowShockDoT);
-		return [
-			{
-				rscType: ResourceType.SonicBreakDoT,
-				onSelf: false,
-				enabled: true,
-				stacks: 1,
-				timeRemaining: sonicDoTCountdown.toFixed(3),
-				className: sonicDoTCountdown > 0 ? "" : "hidden",
-			},
-			{
-				rscType: ResourceType.BowShockDoT,
-				onSelf: false,
-				enabled: true,
-				stacks: 1,
-				timeRemaining: bowShockDoTCountdown.toFixed(3),
-				className: bowShockDoTCountdown > 0 ? "" : "hidden",
-			},
-		];
+		return [...GNB_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType, false))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
-		const makeRoyalGuard = () => {
-			return {
-				rscType: ResourceType.RoyalGuard,
-				onSelf: true,
-				enabled: true,
-				stacks: 1,
-				className: this.state.hasResourceAvailable(ResourceType.RoyalGuard) ? "" : "hidden",
-			};
-		};
-
-		return [
-			...[
-				ResourceType.HeartOfStone,
-				ResourceType.CatharsisOfCorundum,
-				ResourceType.HeartOfCorundum,
-				ResourceType.ClarityOfCorundum,
-				ResourceType.Superbolide,
-				ResourceType.ReadyToReign,
-				ResourceType.ReadyToBlast,
-				ResourceType.ReadyToRaze,
-				ResourceType.BrutalShell,
-				ResourceType.NoMercy,
-				ResourceType.ReadyToBreak,
-				ResourceType.Camouflage,
-				ResourceType.Nebula,
-				ResourceType.GreatNebula,
-				ResourceType.HeartOfLight,
-				ResourceType.Aurora,
-				ResourceType.ReadyToRip,
-				ResourceType.ReadyToGouge,
-				ResourceType.ReadyToTear,
-			].map((rsc) => this.makeCommonTimer(rsc)),
-			makeRoyalGuard(),
-		];
+		return GNB_BUFFS.map((key) => {
+			if (key === "ROYAL_GUARD") {
+				return this.makeCommonTimerless(key);
+			}
+			return this.makeCommonTimer(key);
+		});
 	}
 
 	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 
-		const singleCombo = resources.get(ResourceType.GNBComboTracker);
-		const aoeCombo = resources.get(ResourceType.GNBAOEComboTracker);
-		const powderGaugeStacks = resources.get(ResourceType.PowderGauge).availableAmount();
-		const royalGuardActive = resources.get(ResourceType.RoyalGuard).availableAmount();
+		const singleCombo = resources.get("GNB_COMBO_TRACKER");
+		const aoeCombo = resources.get("GNB_AOE_COMBO_TRACKER");
+		const powderGaugeStacks = resources.get("POWDER_GAUGE").availableAmount();
+		const royalGuardActive = resources.get("ROYAL_GUARD").availableAmount();
 
 		const comboTimer = singleCombo.available(1)
 			? singleCombo.pendingChange?.timeTillEvent
@@ -134,7 +73,7 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 				name: localize({ en: "Powder Gauge", zh: "晶壤" }),
 				color: colors.rdm.manaStack,
 				currentStacks: powderGaugeStacks,
-				maxStacks: this.state.hasTraitUnlocked(TraitName.CartridgeChargeII) ? 3 : 2,
+				maxStacks: this.state.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2,
 			} as ResourceCounterProps,
 		];
 
