@@ -83,7 +83,7 @@ export const TANKS = ensureRecord<Job>()({
 	},
 	GNB: {
 		role: "TANK",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		limitBreak: "GUNMETAL_SOUL",
 		limitBreakBuff: "GUNMETAL_SOUL",
 	},

@@ -177,6 +177,7 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				WAR: "#b10b0b", // color picker'd on job stone
 				RPR: "#965a90",
 				BRD: "#91ba5e",
+				GNB: "#f6b26b",
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange

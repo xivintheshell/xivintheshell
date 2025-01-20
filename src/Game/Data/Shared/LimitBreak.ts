@@ -1,21 +1,21 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource } from "../types";
+import { ActionData, CooldownData, ResourceData } from "../types";
 
-export const TANK_LB3_ACTIONS = ensureRecord<Action>()({
+export const TANK_LB3_ACTIONS = ensureRecord<ActionData>()({
 	LAST_BASTION: { name: "Last Bastion" },
 	LAND_WAKER: { name: "Land Waker" },
 	DARK_FORCE: { name: "Dark Force" },
 	GUNMETAL_SOUL: { name: "Gunmetal Soul" },
 });
 
-export const HEALER_LB3_ACTIONS = ensureRecord<Action>()({
+export const HEALER_LB3_ACTIONS = ensureRecord<ActionData>()({
 	PULSE_OF_LIFE: { name: "Pulse of Life" },
 	ANGEL_FEATHERS: { name: "Angel Feathers" },
 	ASTRAL_STASIS: { name: "Astral Stasis" },
 	TECHNE_MAKRE: { name: "Techne Makre" },
 });
 
-export const MELEE_LB3_ACTIONS = ensureRecord<Action>()({
+export const MELEE_LB3_ACTIONS = ensureRecord<ActionData>()({
 	FINAL_HEAVEN: { name: "Final Heaven" },
 	DRAGONSONG_DIVE: { name: "Dragonsong Dive" },
 	CHIMATSURI: { name: "Chimatsuri" },
@@ -24,13 +24,13 @@ export const MELEE_LB3_ACTIONS = ensureRecord<Action>()({
 	WORLD_SWALLOWER: { name: "World-swallower" },
 });
 
-export const RANGED_LB3_ACTIONS = ensureRecord<Action>()({
+export const RANGED_LB3_ACTIONS = ensureRecord<ActionData>()({
 	SAGITTARIUS_ARROW: { name: "Sagittarius Arrow" },
 	SATELLITE_BEAM: { name: "Satellite Beam" },
 	CRIMSON_LOTUS: { name: "Crimson Lotus" },
 });
 
-export const CASTER_LB3_ACTIONS = ensureRecord<Action>()({
+export const CASTER_LB3_ACTIONS = ensureRecord<ActionData>()({
 	METEOR: { name: "Meteor" },
 	TERAFLARE: { name: "Teraflare" },
 	VERMILLION_SCOURGE: { name: "Vermillion Scourge" },
@@ -38,7 +38,7 @@ export const CASTER_LB3_ACTIONS = ensureRecord<Action>()({
 });
 
 // Tank LB3 Status effects
-export const TANK_LB3_RESOURCES = ensureRecord<Resource>()({
+export const TANK_LB3_RESOURCES = ensureRecord<ResourceData>()({
 	LAST_BASTION: { name: "Last Bastion" },
 	LAND_WAKER: { name: "Land Waker" },
 	DARK_FORCE: { name: "Dark Force" },
@@ -49,13 +49,13 @@ export const TANK_LB3_RESOURCES = ensureRecord<Resource>()({
 // Common data and typing boilerplate below
 // ========================================
 
-export const LIMIT_BREAK_COOLDOWNS = ensureRecord<Cooldown>()({
+export const LIMIT_BREAK_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_LIMIT_BREAK_1: { name: "cd_LIMIT_BREAK_1" },
 	cd_LIMIT_BREAK_2: { name: "cd_LIMIT_BREAK_2" },
 	cd_LIMIT_BREAK_3: { name: "cd_LIMIT_BREAK_3" },
 });
 
-export const SHARED_LIMIT_BREAK_ACTIONS = ensureRecord<Action>()({
+export const SHARED_LIMIT_BREAK_ACTIONS = ensureRecord<ActionData>()({
 	UNKNOWN: { name: "Unknown" },
 
 	SHIELD_WALL: { name: "Shield Wall" },
@@ -74,12 +74,12 @@ export const SHARED_LIMIT_BREAK_ACTIONS = ensureRecord<Action>()({
 	STARSTORM: { name: "Starstorm" },
 });
 
-export const SHARED_LIMIT_BREAK_RESOURCES = ensureRecord<Resource>()({
+export const SHARED_LIMIT_BREAK_RESOURCES = ensureRecord<ResourceData>()({
 	UNKNOWN: { name: "Unknown" },
 
 	// LB 1 and 2
-	SHIELD_WALL: { name: "Shield Wall", label: { zh: "一段LB buff" } }, // todo: use actual translation or keep this
-	STRONGHOLD: { name: "Stronghold", label: { zh: "二段LB buff" } },
+	SHIELD_WALL: { name: "Shield Wall" },
+	STRONGHOLD: { name: "Stronghold" },
 });
 
 // Limit breaks don't have any related traits... yet.

@@ -1,7 +1,7 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const DNC_ACTIONS = ensureRecord<Action>()({
+export const DNC_ACTIONS = ensureRecord<ActionData>()({
 	STANDARD_FINISH: { name: "Standard Finish", label: { zh: "标准舞步结束" } },
 	SINGLE_STANDARD_FINISH: { name: "Single Standard Finish", label: { zh: "单色标准舞步结束" } },
 	DOUBLE_STANDARD_FINISH: { name: "Double Standard Finish", label: { zh: "双色标准舞步结束" } },
@@ -48,7 +48,7 @@ export const DNC_ACTIONS = ensureRecord<Action>()({
 	ENDING: { name: "Ending", label: { zh: "解除闭式舞姿" } },
 });
 
-export const DNC_COOLDOWNS = ensureRecord<Cooldown>()({
+export const DNC_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_STANDARD_STEP: { name: "cd_StandardStep" },
 	cd_TECHNICAL_STEP: { name: "cd_TechnicalStep" },
 	cd_CLOSED_POSITION: { name: "cd_ClosedPosition" },
@@ -65,14 +65,14 @@ export const DNC_COOLDOWNS = ensureRecord<Cooldown>()({
 	cd_CURING_WALTZ: { name: "cd_CuringWaltz" },
 	cd_ENDING: { name: "cd_Ending" },
 });
-export const DNC_GAUGES = ensureRecord<Resource>()({
+export const DNC_GAUGES = ensureRecord<ResourceData>()({
 	ESPRIT_GAUGE: { name: "EspritGauge", label: { zh: "伶俐量值" } },
 	FEATHER_GAUGE: { name: "Feathers", label: { zh: "幻扇" } },
 	STANDARD_DANCE: { name: "Standard Dance", label: { zh: "标准舞步" } },
 	TECHNICAL_DANCE: { name: "Technical Dance", label: { zh: "技巧舞步" } },
 });
 
-export const DNC_STATUSES = ensureRecord<Resource>()({
+export const DNC_STATUSES = ensureRecord<ResourceData>()({
 	// Self Buffs
 	SILKEN_SYMMETRY: { name: "Silken Symmetry", label: { zh: "对称投掷" } },
 	SILKEN_FLOW: { name: "Silken Flow", label: { zh: "非对称投掷" } },
@@ -105,14 +105,14 @@ export const DNC_STATUSES = ensureRecord<Resource>()({
 	ESPRIT_TECHNICAL: { name: "Esprit Technical", label: { zh: "大舞伶俐buff" } },
 });
 
-export const DNC_TRACKERS = ensureRecord<Resource>()({
+export const DNC_TRACKERS = ensureRecord<ResourceData>()({
 	CASCADE_COMBO: { name: "CascadeCombo", label: { zh: "瀑泻连击" } },
 	WINDMILL_COMBO: { name: "WindmillCombo", label: { zh: "风车连击" } },
 	STANDARD_BONUS: { name: "StandardBonus", label: { zh: "小舞连击" } },
 	TECHNICAL_BONUS: { name: "TechnicalBonus", label: { zh: "大舞连击" } },
 });
 
-export const DNC_TRAITS = ensureRecord<Trait>()({
+export const DNC_TRAITS = ensureRecord<TraitData>()({
 	ESPRIT: { name: "Esprit", level: 76 },
 	ENHANCED_EN_AVANT_II: { name: "Enhanced En Avant II", level: 78 },
 	ENHANCED_TECHNICAL_FINISH: { name: "Enhanced Technical Finish", level: 82 },

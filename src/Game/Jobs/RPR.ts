@@ -237,8 +237,10 @@ export class RPRState extends GameState {
 		}
 
 		// Any other action resets Soul reavers, even if it then gives more
-		reavers.consume(reavers.availableAmount());
-		executioners.consume(executioners.availableAmount());
+		if (this.skillsList.get(skill).cdName === "cd_GCD") {
+			reavers.consume(reavers.availableAmount());
+			executioners.consume(executioners.availableAmount());
+		}
 
 		// Unveiled actions
 		if (
@@ -251,12 +253,16 @@ export class RPRState extends GameState {
 				] as RPRActionKey[]
 			).includes(skill)
 		) {
+			reavers.consume(reavers.availableAmount());
+			executioners.consume(executioners.availableAmount());
 			this.setTimedResource("SOUL_REAVER", 1);
 			return;
 		}
 
 		// Pre-96 gluttony
 		if (skill === "GLUTTONY") {
+			reavers.consume(reavers.availableAmount());
+			executioners.consume(executioners.availableAmount());
 			if (this.hasTraitUnlocked("ENHANCED_GLUTTONY")) {
 				this.setTimedResource("EXECUTIONER", 2);
 				return;

@@ -3,6 +3,7 @@ import { GameState } from "../GameState";
 import { BLMState } from "./BLM";
 import { BRDState } from "./BRD";
 import { DNCState } from "./DNC";
+import { GNBState } from "./GNB";
 import { MCHState } from "./MCH";
 import { PCTState } from "./PCT";
 import { RDMState } from "./RDM";
@@ -15,6 +16,8 @@ export function getGameState(config: GameConfig): GameState {
 		// Tanks
 		case "WAR":
 			return new WARState(config);
+		case "GNB":
+			return new GNBState(config);
 		// Healers
 		// Melee
 		case "SAM":

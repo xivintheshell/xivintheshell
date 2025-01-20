@@ -1,7 +1,7 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const BRD_ACTIONS = ensureRecord<Action>()({
+export const BRD_ACTIONS = ensureRecord<ActionData>()({
 	HEAVY_SHOT: { name: "Heavy Shot" },
 	QUICK_NOCK: { name: "Quick Nock" },
 	BLOODLETTER: { name: "Bloodletter" },
@@ -35,7 +35,7 @@ export const BRD_ACTIONS = ensureRecord<Action>()({
 	RADIANT_ENCORE: { name: "Radiant Encore" },
 });
 
-export const BRD_COOLDOWNS = ensureRecord<Cooldown>()({
+export const BRD_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_RAGING_STRIKES: { name: "cd_RagingStrikes" },
 	cd_BARRAGE: { name: "cd_Barrage" },
 	cd_EMPYREAL_ARROW: { name: "cd_EmpyrealArrow" },
@@ -53,7 +53,7 @@ export const BRD_COOLDOWNS = ensureRecord<Cooldown>()({
 	cd_PITCH_PERFECT: { name: "cd_PitchPerfect" },
 });
 
-export const BRD_GAUGES = ensureRecord<Resource>()({
+export const BRD_GAUGES = ensureRecord<ResourceData>()({
 	SONG_TIMER: { name: "SongTimer" },
 	SOUL_VOICE: { name: "Soul Voice" },
 	PITCH_PERFECT: { name: "Pitch Perfect" }, // Yes it's all technically Repertoire, easier to represent this way
@@ -63,7 +63,7 @@ export const BRD_GAUGES = ensureRecord<Resource>()({
 	ARMYS_CODA: { name: "Army's Coda" },
 });
 
-export const BRD_STATUSES = ensureRecord<Resource>()({
+export const BRD_STATUSES = ensureRecord<ResourceData>()({
 	HAWKS_EYE: { name: "Hawk's Eye" },
 	RAGING_STRIKES: { name: "Raging Strikes" },
 	BARRAGE: { name: "Barrage" },
@@ -84,13 +84,13 @@ export const BRD_STATUSES = ensureRecord<Resource>()({
 	RADIANT_FINALE: { name: "Radiant Finale" },
 });
 
-export const BRD_TRACKERS = ensureRecord<Resource>()({
+export const BRD_TRACKERS = ensureRecord<ResourceData>()({
 	RADIANT_CODA: { name: "Radiant Coda" },
 	MUSE_REPERTOIRE: { name: "Muse Repertoire" },
 	ETHOS_REPERTOIRE: { name: "Ethos Repertoire" },
 });
 
-export const BRD_TRAITS = ensureRecord<Trait>()({
+export const BRD_TRAITS = ensureRecord<TraitData>()({
 	WIDE_VOLLEY_MASTERY: { name: "Wide Volley Mastery", level: 72 },
 	BITE_MASTERY_II: { name: "Bite Mastery II", level: 76 },
 	HEAVY_SHOT_MASTERY: { name: "Heavy Shot Mastery", level: 76 },

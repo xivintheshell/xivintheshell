@@ -1,7 +1,7 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const COMMON_ACTIONS = ensureRecord<Action>()({
+export const COMMON_ACTIONS = ensureRecord<ActionData>()({
 	NEVER: {
 		name: "Never",
 	},
@@ -15,7 +15,7 @@ export const COMMON_ACTIONS = ensureRecord<Action>()({
 	},
 });
 
-export const COMMON_COOLDOWNS = ensureRecord<Cooldown>()({
+export const COMMON_COOLDOWNS = ensureRecord<CooldownData>()({
 	NEVER: { name: "Never" },
 
 	cd_GCD: { name: "cd_GCD", label: { zh: "GCD" } }, // [0, Constant.gcd]
@@ -24,17 +24,17 @@ export const COMMON_COOLDOWNS = ensureRecord<Cooldown>()({
 	cd_SPRINT: { name: "cd_Sprint" }, // [0, 1x]
 });
 
-export const COMMON_GAUGES = ensureRecord<Resource>()({
+export const COMMON_GAUGES = ensureRecord<ResourceData>()({
 	// Mana's not really a gauge, but we display it alongside gauge and similar resources
 	MANA: { name: "Mana", label: { zh: "MP" } },
 });
 
-export const COMMON_STATUSES = ensureRecord<Resource>()({
+export const COMMON_STATUSES = ensureRecord<ResourceData>()({
 	TINCTURE: { name: "Tincture", label: { zh: "爆发药" } }, // [0, 1]
 	SPRINT: { name: "Sprint", label: { zh: "疾跑" } }, // [0, 1]
 });
 
-export const COMMON_TRACKERS = ensureRecord<Resource>()({
+export const COMMON_TRACKERS = ensureRecord<ResourceData>()({
 	MOVEMENT: { name: "Movement" }, // [0, 1]
 	NOT_ANIMATION_LOCKED: { name: "NotAnimationLocked" }, // [0, 1]
 	NOT_CASTER_TAXED: { name: "NotCasterTaxed" }, // [0, 1]
@@ -45,7 +45,7 @@ export const COMMON_TRACKERS = ensureRecord<Resource>()({
 	NEVER: { name: "Never" },
 });
 
-export const COMMON_TRAITS = ensureRecord<Trait>()({
+export const COMMON_TRAITS = ensureRecord<TraitData>()({
 	NEVER: { name: "Never", level: 1 },
 });
 

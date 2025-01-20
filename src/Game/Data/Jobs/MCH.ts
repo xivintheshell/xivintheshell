@@ -1,7 +1,7 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const MCH_ACTIONS = ensureRecord<Action>()({
+export const MCH_ACTIONS = ensureRecord<ActionData>()({
 	HEATED_SPLIT_SHOT: { name: "Heated Split Shot", label: { zh: "热分裂弹" } },
 	HEATED_SLUG_SHOT: { name: "Heated Slug Shot", label: { zh: "热独头弹" } },
 	HEATED_CLEAN_SHOT: { name: "Heated Clean Shot", label: { zh: "热狙击弹" } },
@@ -42,7 +42,7 @@ export const MCH_ACTIONS = ensureRecord<Action>()({
 	CROWNED_COLLIDER: { name: "Crowned Collider", label: { zh: "王室对撞机" } },
 });
 
-export const MCH_COOLDOWNS = ensureRecord<Cooldown>()({
+export const MCH_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_REASSEMBLE: { name: "cd_Reassemble" },
 	cd_DRILL: { name: "cd_Drill" },
 	cd_CHECKMATE: { name: "cd_Checkmate" },
@@ -60,12 +60,12 @@ export const MCH_COOLDOWNS = ensureRecord<Cooldown>()({
 	cd_FLAMETHROWER: { name: "cd_Flamethrower" },
 });
 
-export const MCH_GAUGES = ensureRecord<Resource>()({
+export const MCH_GAUGES = ensureRecord<ResourceData>()({
 	HEAT_GAUGE: { name: "Heat", label: { zh: "枪管热度" } },
 	BATTERY_GAUGE: { name: "Battery", label: { zh: "电能" } },
 });
 
-export const MCH_STATUSES = ensureRecord<Resource>()({
+export const MCH_STATUSES = ensureRecord<ResourceData>()({
 	REASSEMBLED: { name: "Reassembled", label: { zh: "整备预备" } },
 	OVERHEATED: { name: "Overheated", label: { zh: "过热状态" }, maximumStacks: 5 },
 	WILDFIRE: { name: "Wildfire", label: { zh: "野火（敌）" } },
@@ -78,7 +78,7 @@ export const MCH_STATUSES = ensureRecord<Resource>()({
 	FULL_METAL_MACHINIST: { name: "Full Metal Machinist", label: { zh: "全金属爆发预备" } },
 });
 
-export const MCH_TRACKERS = ensureRecord<Resource>()({
+export const MCH_TRACKERS = ensureRecord<ResourceData>()({
 	HEAT_COMBO: { name: "Heat Combo", label: { zh: "热连击" } },
 	QUEEN: { name: "Queen", label: { zh: "人偶预备" } },
 	QUEEN_PUNCHES: { name: "QueenPunches", label: { zh: "人偶铁壁拳" } },
@@ -87,7 +87,7 @@ export const MCH_TRACKERS = ensureRecord<Resource>()({
 	WILDFIRE_HITS: { name: "WildfireHits", label: { zh: "野火命中" } },
 });
 
-export const MCH_TRAITS = ensureRecord<Trait>()({
+export const MCH_TRAITS = ensureRecord<TraitData>()({
 	CHARGED_ACTION_MASTERY: { name: "Charged Action Mastery", level: 74 },
 	HOT_SHOT_MASTERY: { name: "Hot Shot Mastery", level: 76 },
 	ENHANCED_WILD_FIRE: { name: "Enhanced Wildfire", level: 88 },

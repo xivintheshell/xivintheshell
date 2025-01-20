@@ -1,7 +1,7 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const ROLE_ACTIONS = ensureRecord<Action>()({
+export const ROLE_ACTIONS = ensureRecord<ActionData>()({
 	ARMS_LENGTH: { name: "Arm's Length", label: { zh: "亲疏自行" } }, // Tanks, Melee, Phys Ranged
 
 	SECOND_WIND: { name: "Second Wind", label: { zh: "内丹" } }, // Melee & Phys Ranged
@@ -32,7 +32,7 @@ export const ROLE_ACTIONS = ensureRecord<Action>()({
 	SHIRK: { name: "Shirk", label: { zh: "退避" } },
 });
 
-export const ROLE_COOLDOWNS = ensureRecord<Cooldown>()({
+export const ROLE_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_ADDLE: { name: "cd_Addle" }, // [0, 1x]
 	cd_SWIFTCAST: { name: "cd_Swiftcast" }, // [0, 1x]
 	cd_LUCID_DREAMING: { name: "cd_LucidDreaming" }, // [0, 1x]
@@ -59,7 +59,7 @@ export const ROLE_COOLDOWNS = ensureRecord<Cooldown>()({
 
 // There are not currently any role-specific gauge-like resources to track
 
-export const ROLE_STATUSES = ensureRecord<Resource>()({
+export const ROLE_STATUSES = ensureRecord<ResourceData>()({
 	ADDLE: { name: "Addle", label: { zh: "昏乱" } }, // [0, 1]
 	SWIFTCAST: { name: "Swiftcast", label: { zh: "即刻咏唱" } }, // [0, 1]
 	LUCID_DREAMING: { name: "Lucid Dreaming", label: { zh: "醒梦" } }, // [0, 1] also just for timing display
@@ -74,7 +74,7 @@ export const ROLE_STATUSES = ensureRecord<Resource>()({
 	REPRISAL: { name: "Reprisal", label: { zh: "雪仇buff" } }, // [0, 1]
 });
 
-export const ROLE_TRACKERS = ensureRecord<Resource>()({
+export const ROLE_TRACKERS = ensureRecord<ResourceData>()({
 	REAR_POSITIONAL: {
 		name: "Rear Positional",
 		label: { zh: "身位加成（后）" },
@@ -87,7 +87,7 @@ export const ROLE_TRACKERS = ensureRecord<Resource>()({
 	}, // [0, 1]
 });
 
-export const ROLE_TRAITS = ensureRecord<Trait>()({
+export const ROLE_TRAITS = ensureRecord<TraitData>()({
 	ENHANCED_SWIFTCAST: { name: "Enhanced Swiftcast", level: 94 },
 	ENHANCED_ADDLE: { name: "Enhanced Addle", level: 98 },
 

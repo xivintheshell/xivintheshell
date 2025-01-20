@@ -1,7 +1,7 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const WAR_ACTIONS = ensureRecord<Action>()({
+export const WAR_ACTIONS = ensureRecord<ActionData>()({
 	HEAVY_SWING: { name: "Heavy Swing", label: { zh: "重劈" } },
 	MAIM: { name: "Maim", label: { zh: "凶残裂" } },
 	STORMS_PATH: { name: "Storms Path", label: { zh: "暴风斩" } },
@@ -40,7 +40,7 @@ export const WAR_ACTIONS = ensureRecord<Action>()({
 	RELEASE_DEFIANCE: { name: "Release Defiance", label: { zh: "取消守护" } },
 });
 
-export const WAR_COOLDOWNS = ensureRecord<Cooldown>()({
+export const WAR_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_INNER_RELEASE: { name: "cd_InnerRelease" },
 	cd_PRIMAL_WRATH: { name: "cd_PrimalWrath" },
 	cd_UPHEAVAL: { name: "cd_Upheaval" },
@@ -58,11 +58,11 @@ export const WAR_COOLDOWNS = ensureRecord<Cooldown>()({
 	cd_RELEASE_DEFIANCE: { name: "cd_ReleaseDefiance" },
 });
 
-export const WAR_GAUGES = ensureRecord<Resource>()({
+export const WAR_GAUGES = ensureRecord<ResourceData>()({
 	BEAST_GAUGE: { name: "Beast Gauge", label: { zh: "兽魂量谱" } },
 });
 
-export const WAR_STATUSES = ensureRecord<Resource>()({
+export const WAR_STATUSES = ensureRecord<ResourceData>()({
 	SURGING_TEMPEST: { name: "Surging Tempest", label: { zh: "战场风暴buff" } },
 	INNER_RELEASE: { name: "Inner Release", label: { zh: "原初的解放buff" }, maximumStacks: 3 }, // Free Fell Cleaves
 	INNER_STRENGTH: { name: "Inner Strength", label: { zh: "原初的觉悟buff" } }, // KB/Stun immune
@@ -93,12 +93,12 @@ export const WAR_STATUSES = ensureRecord<Resource>()({
 	DEFIANCE: { name: "Defiance", label: { zh: "盾姿buff" }, mayNotBeCanceled: true }, // Tank Stance
 });
 
-export const WAR_TRACKERS = ensureRecord<Resource>()({
+export const WAR_TRACKERS = ensureRecord<ResourceData>()({
 	STORM_COMBO: { name: "Storm Combo", label: { zh: "单体连击" } },
 	TEMPEST_COMBO: { name: "Tempest Combo", label: { zh: "aoe连击" } },
 });
 
-export const WAR_TRAITS = ensureRecord<Trait>()({
+export const WAR_TRAITS = ensureRecord<TraitData>()({
 	NASCENT_CHAOS: { name: "Nascent Chaos", level: 72 },
 	MASTERING_THE_BEAST: { name: "Mastering the Beast", level: 74 },
 	ENHANCED_SHAKE_IT_OFF: { name: "Enhanced Shake It Off", level: 76 },

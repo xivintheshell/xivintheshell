@@ -1,17 +1,17 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const SCH_ACTIONS = ensureRecord<Action>()({});
+export const SCH_ACTIONS = ensureRecord<ActionData>()({});
 
-export const SCH_COOLDOWNS = ensureRecord<Cooldown>()({});
+export const SCH_COOLDOWNS = ensureRecord<CooldownData>()({});
 
-export const SCH_GAUGES = ensureRecord<Resource>()({});
+export const SCH_GAUGES = ensureRecord<ResourceData>()({});
 
-export const SCH_STATUSES = ensureRecord<Resource>()({});
+export const SCH_STATUSES = ensureRecord<ResourceData>()({});
 
-export const SCH_TRACKERS = ensureRecord<Resource>()({});
+export const SCH_TRACKERS = ensureRecord<ResourceData>()({});
 
-export const SCH_TRAITS = ensureRecord<Trait>()({});
+export const SCH_TRAITS = ensureRecord<TraitData>()({});
 
 export type SCHActions = typeof SCH_ACTIONS;
 export type SCHActionKey = keyof SCHActions;

@@ -79,6 +79,7 @@ export enum BuffType {
 	Fuka = "Fuka",
 	Fugetsu = "Fugetsu",
 	EnhancedEnpi = "Enhanced Enpi",
+	NoMercy = "No Mercy",
 	Tincture = "Tincture",
 
 	ArcaneCircle = "Arcane Circle",
@@ -142,4 +143,6 @@ export const enum WarningType {
 
 	SoulVoiceOvercap = "soul voice overcap",
 	CodaOvercap = "coda overcap",
+
+	CartridgeOvercap = "cartridge overcap",
 }

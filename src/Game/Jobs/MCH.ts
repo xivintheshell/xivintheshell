@@ -365,6 +365,12 @@ const makeWeaponskill_MCH = (
 			if (state.hasResourceAvailable("REASSEMBLED") || name === "FULL_METAL_FIELD") {
 				mods.push(Modifiers.AutoCDH);
 			}
+			if (
+				state.hasResourceAvailable("OVERHEATED") &&
+				!WEAPONSKILLS_THAT_DONT_CONSUME_OVERHEAT.includes(name)
+			) {
+				mods.push(Modifiers.Overheated);
+			}
 			return mods;
 		},
 	});

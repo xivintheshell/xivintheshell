@@ -1,17 +1,17 @@
 import { ensureRecord } from "../../../utilities";
-import { Action, Cooldown, Resource, Trait } from "../types";
+import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const VPR_ACTIONS = ensureRecord<Action>()({});
+export const VPR_ACTIONS = ensureRecord<ActionData>()({});
 
-export const VPR_COOLDOWNS = ensureRecord<Cooldown>()({});
+export const VPR_COOLDOWNS = ensureRecord<CooldownData>()({});
 
-export const VPR_GAUGES = ensureRecord<Resource>()({});
+export const VPR_GAUGES = ensureRecord<ResourceData>()({});
 
-export const VPR_STATUSES = ensureRecord<Resource>()({});
+export const VPR_STATUSES = ensureRecord<ResourceData>()({});
 
-export const VPR_TRACKERS = ensureRecord<Resource>()({});
+export const VPR_TRACKERS = ensureRecord<ResourceData>()({});
 
-export const VPR_TRAITS = ensureRecord<Trait>()({});
+export const VPR_TRAITS = ensureRecord<TraitData>()({});
 
 export type VPRActions = typeof VPR_ACTIONS;
 export type VPRActionKey = keyof VPRActions;

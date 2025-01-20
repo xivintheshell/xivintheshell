@@ -16,25 +16,35 @@ import { ActionKey, ACTIONS } from "../Game/Data";
 // load images lazily to ensure we're not dependent on webpack's module resolution order.
 const skillIconImages = new Map();
 
+const tryLoadSkillIcon = (assetPath?: string) => {
+	if (assetPath) {
+		try {
+			return require(`./Asset/Skills/${assetPath}`);
+		} catch (e) {
+			// If we forgot to specify the asset path, raise the error in console
+			// and use the missing skill icon.
+			console.error(e);
+			return require("./Asset/Skills/General/Missing.png");
+		}
+	}
+	return undefined;
+};
+
 export const getSkillIconPath = (skillName: ActionKey | undefined) => {
 	if (!skillName) {
 		return undefined;
 	}
-	const assetPath = getSkillAssetPath(skillName);
-	if (assetPath) {
-		return require(`./Asset/Skills/${assetPath}`);
-	}
-	return undefined;
+	return tryLoadSkillIcon(getSkillAssetPath(skillName));
 };
 
 export const getSkillIconImage = (skillName: ActionKey) => {
 	if (skillIconImages.has(skillName)) {
 		return skillIconImages.get(skillName);
 	}
-	const assetPath = getSkillAssetPath(skillName);
-	if (assetPath) {
+	const assetIcon = tryLoadSkillIcon(getSkillAssetPath(skillName));
+	if (assetIcon) {
 		let imgObj = new Image();
-		imgObj.src = require(`./Asset/Skills/${assetPath}`);
+		imgObj.src = assetIcon;
 		imgObj.onload = () => updateTimelineView();
 		skillIconImages.set(skillName, imgObj);
 		return imgObj;
