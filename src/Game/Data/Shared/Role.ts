@@ -8,8 +8,8 @@ export const ROLE_ACTIONS = ensureRecord<ActionData>()({
 
 	HEAD_GRAZE: { name: "Head Graze", label: { zh: "伤头" } }, // Phys Ranged. Not bothering with Leg/Foot Graze at this point
 
-	ESUNA: { name: "Esuna", label: { zh: "" } },
-	RESCUE: { name: "Rescue", label: { zh: "" } },
+	ESUNA: { name: "Esuna", label: { zh: "康复" } },
+	RESCUE: { name: "Rescue", label: { zh: "营救" } },
 
 	ADDLE: { name: "Addle", label: { zh: "病毒", ja: "アドル" } },
 	SWIFTCAST: { name: "Swiftcast", label: { zh: "即刻咏唱", ja: "迅速魔" } },
@@ -70,8 +70,8 @@ export const ROLE_STATUSES = ensureRecord<ResourceData>()({
 	TRUE_NORTH: { name: "True North", label: { zh: "真北" } }, // [0, 1]
 	BLOODBATH: { name: "Bloodbath", label: { zh: "浴血" } }, // [0, 1]
 
-	RAMPART: { name: "Rampart" }, // [0, 1]
-	REPRISAL: { name: "Reprisal" }, // [0, 1]
+	RAMPART: { name: "Rampart", label: { zh: "铁壁buff" } }, // [0, 1]
+	REPRISAL: { name: "Reprisal", label: { zh: "雪仇buff" } }, // [0, 1]
 });
 
 export const ROLE_TRACKERS = ensureRecord<ResourceData>()({

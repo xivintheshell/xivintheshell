@@ -54,6 +54,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 				kind: "text",
 				name: localize({
 					en: "Combo Timer",
+					zh: "连击监控",
 				}),
 				text: comboTimer?.toFixed(3) ?? "N/A",
 			},
@@ -61,6 +62,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 				kind: "bar",
 				name: localize({
 					en: "Soul Gauge",
+					zh: "灵魂量谱",
 				}),
 				color: soulGauge < 50 ? colors.rpr.soulGaugeLow : colors.rpr.soulGaugeHigh,
 				progress: soulGauge / 100,
@@ -73,6 +75,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 					kind: "bar",
 					name: localize({
 						en: "Shroud Gauge",
+						zh: "魂衣量谱",
 					}),
 					color:
 						shroudGauge < 50 ? colors.rpr.shroudGaugeLow : colors.rpr.shroudGaugeHigh,
@@ -83,6 +86,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 					kind: "counter",
 					name: localize({
 						en: "Lemure Shroud",
+						zh: "夜游魂",
 					}),
 					color: colors.rpr.lemureShroud,
 					currentStacks: lemureShroud,
@@ -95,6 +99,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 				kind: "counter",
 				name: localize({
 					en: "Void Shroud",
+					zh: "虚无魂",
 				}),
 				color: voidShroud < 2 ? colors.rpr.voidShroudLow : colors.rpr.voidShroudHigh,
 				currentStacks: voidShroud,
