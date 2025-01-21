@@ -6,116 +6,63 @@ import {
 	ResourceDisplayProps,
 	StatusPropsGenerator,
 } from "../StatusDisplay";
-import { ResourceType, TraitName } from "../../Game/Common";
-import { Traits } from "../../Game/Traits";
 import { BLMState } from "../../Game/Jobs/BLM";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
+import { RESOURCES } from "../../Game/Data";
+import { BLMResourceKey, BLM_STATUSES } from "../../Game/Data/Jobs/BLM";
 
-[
-	ResourceType.Triplecast,
-	ResourceType.Triplecast + "2",
-	ResourceType.Triplecast + "3",
-	ResourceType.Firestarter,
-	ResourceType.Thunderhead,
-	ResourceType.ThunderIII,
-	ResourceType.ThunderIV,
-	ResourceType.HighThunder,
-	ResourceType.HighThunderII,
-	ResourceType.LeyLines,
-	ResourceType.Manaward,
-].forEach((buff) => registerBuffIcon(buff, `BLM/${buff}.png`));
+const BLM_DEBUFFS: BLMResourceKey[] = [
+	"THUNDER_III",
+	"THUNDER_IV",
+	"HIGH_THUNDER",
+	"HIGH_THUNDER_II",
+];
+
+const BLM_BUFFS: BLMResourceKey[] = (Object.keys(BLM_STATUSES) as BLMResourceKey[]).filter(
+	(key) => !BLM_DEBUFFS.includes(key),
+);
+
+(Object.keys(BLM_STATUSES) as BLMResourceKey[]).forEach((buff) =>
+	registerBuffIcon(buff, `BLM/${RESOURCES[buff].name}.png`),
+);
 
 export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [
-			...[
-				ResourceType.ThunderIII,
-				ResourceType.ThunderIV,
-				ResourceType.HighThunder,
-				ResourceType.HighThunderII,
-			].map((rscType) => this.makeCommonTimer(rscType, false)),
-		];
+		return [...BLM_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType, false))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
-		const resources = this.state.resources;
-		const leyLinesEnabled = resources.get(ResourceType.LeyLines).enabled;
-		const leyLinesCountdown = resources.timeTillReady(ResourceType.LeyLines);
-		const triplecastCountdown = resources.timeTillReady(ResourceType.Triplecast);
-		const triplecastStacks = resources.get(ResourceType.Triplecast).availableAmount();
-		const firestarterCountdown = resources.timeTillReady(ResourceType.Firestarter);
-		const thunderheadCountdown = resources.timeTillReady(ResourceType.Thunderhead);
-		const manawardCountdown = resources.timeTillReady(ResourceType.Manaward);
-
-		return [
-			{
-				rscType: ResourceType.LeyLines,
-				onSelf: true,
-				enabled: leyLinesEnabled,
-				stacks: 1,
-				timeRemaining: leyLinesCountdown.toFixed(3),
-				className: leyLinesCountdown > 0 ? "" : "hidden",
-			},
-			{
-				rscType: ResourceType.Triplecast,
-				onSelf: true,
-				enabled: true,
-				stacks: triplecastStacks,
-				timeRemaining: triplecastCountdown.toFixed(3),
-				className: triplecastCountdown > 0 ? "" : "hidden",
-			},
-			{
-				rscType: ResourceType.Firestarter,
-				onSelf: true,
-				enabled: true,
-				stacks: 1,
-				timeRemaining: firestarterCountdown.toFixed(3),
-				className: firestarterCountdown > 0 ? "" : "hidden",
-			},
-			{
-				rscType: ResourceType.Thunderhead,
-				onSelf: true,
-				enabled: true,
-				stacks: 1,
-				timeRemaining: thunderheadCountdown.toFixed(3),
-				className: thunderheadCountdown > 0 ? "" : "hidden",
-			},
-			{
-				rscType: ResourceType.Manaward,
-				onSelf: true,
-				enabled: true,
-				stacks: 1,
-				timeRemaining: manawardCountdown.toFixed(3),
-				className: manawardCountdown > 0 ? "" : "hidden",
-			},
-		];
+		return BLM_BUFFS.map((key) => {
+			if (key === "LEY_LINES") {
+				return this.makeToggleableTimer(key);
+			}
+			return this.makeCommonTimer(key);
+		});
 	}
 
 	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
-		let eno = this.state.resources.get(ResourceType.Enochian);
+		let eno = this.state.resources.get("ENOCHIAN");
 		let enoCountdown: number;
 		if (eno.available(1) && !eno.pendingChange) {
 			enoCountdown = 15;
 		} else {
-			enoCountdown = this.state.resources.timeTillReady(ResourceType.Enochian);
+			enoCountdown = this.state.resources.timeTillReady("ENOCHIAN");
 		}
 		const resources = this.state.resources;
 		const enochianCountdown = enoCountdown;
 		const astralFire = this.state.getFireStacks();
 		const umbralIce = this.state.getIceStacks();
-		const umbralHearts = resources.get(ResourceType.UmbralHeart).availableAmount();
-		const paradox = resources.get(ResourceType.Paradox).availableAmount();
-		const astralSoul = resources.get(ResourceType.AstralSoul).availableAmount();
-		const polyglotCountdown = eno.available(1)
-			? resources.timeTillReady(ResourceType.Polyglot)
-			: 30;
-		const polyglotStacks = resources.get(ResourceType.Polyglot).availableAmount();
+		const umbralHearts = resources.get("UMBRAL_HEART").availableAmount();
+		const paradox = resources.get("PARADOX").availableAmount();
+		const astralSoul = resources.get("ASTRAL_SOUL").availableAmount();
+		const polyglotCountdown = eno.available(1) ? resources.timeTillReady("POLYGLOT") : 30;
+		const polyglotStacks = resources.get("POLYGLOT").availableAmount();
 
 		const maxPolyglotStacks =
-			(Traits.hasUnlocked(TraitName.EnhancedPolyglotII, this.state.config.level) && 3) ||
-			(Traits.hasUnlocked(TraitName.EnhancedPolyglot, this.state.config.level) && 2) ||
+			(this.state.hasTraitUnlocked("ENHANCED_POLYGLOT_II") && 3) ||
+			(this.state.hasTraitUnlocked("ENHANCED_POLYGLOT") && 2) ||
 			1;
 		const infos = [
 			{
@@ -163,7 +110,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 				maxStacks: 1,
 			} as ResourceCounterProps,
 		];
-		if (Traits.hasUnlocked(TraitName.EnhancedAstralFire, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("ENHANCED_ASTRAL_FIRE")) {
 			infos.push({
 				kind: "counter",
 				name: localize({

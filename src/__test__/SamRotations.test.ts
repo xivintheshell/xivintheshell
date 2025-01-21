@@ -1,5 +1,4 @@
 import {
-	damageData,
 	rotationTestSetup,
 	rotationTestTeardown,
 	makeTestWithConfigFn,
@@ -8,18 +7,16 @@ import {
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
-import { ShellJob } from "../Controller/Common";
 import { PotencyModifierType } from "../Game/Potency";
-import { ResourceType, SkillName } from "../Game/Common";
 import { XIVMath } from "../Game/XIVMath";
 import { SAMState } from "../Game/Jobs/SAM";
-import { getResourceInfo, ResourceInfo } from "../Game/Resources";
+import { ActionKey } from "../Game/Data";
 
 beforeEach(rotationTestSetup);
 
 afterEach(rotationTestTeardown);
 
-const testWithConfig = makeTestWithConfigFn(ShellJob.SAM);
+const testWithConfig = makeTestWithConfigFn("SAM");
 
 it("has correct GCD under fuka", () => {
 	testWithConfig({}, () => {
@@ -36,30 +33,32 @@ it("has correct GCD under fuka", () => {
 it(
 	"continues combos after a meikyo",
 	testWithConfig({}, () => {
-		[
-			SkillName.MeikyoShisui,
-			SkillName.Shifu,
-			SkillName.Shifu,
-			SkillName.Shifu,
-			SkillName.Kasha, // combo'd
-		].forEach(applySkill);
+		(
+			[
+				"MEIKYO_SHISUI",
+				"SHIFU",
+				"SHIFU",
+				"SHIFU",
+				"KASHA", // combo'd
+			] as ActionKey[]
+		).forEach(applySkill);
 		// wait for damage applications
 		controller.step(4);
 		const state = controller.game as SAMState;
-		expect(state.resources.get(ResourceType.Kenki).availableAmount()).toEqual(25);
+		expect(state.resources.get("KENKI").availableAmount()).toEqual(25);
 		compareDamageTables([
 			{
-				skillName: SkillName.Shifu,
+				skillName: "SHIFU",
 				displayedModifiers: [PotencyModifierType.COMBO],
 				hitCount: 3,
 			},
 			{
-				skillName: SkillName.Kasha,
+				skillName: "KASHA",
 				displayedModifiers: [PotencyModifierType.COMBO, PotencyModifierType.POSITIONAL],
 				hitCount: 1,
 			},
 			{
-				skillName: SkillName.MeikyoShisui,
+				skillName: "MEIKYO_SHISUI",
 				displayedModifiers: [],
 				hitCount: 1,
 			},
@@ -71,10 +70,10 @@ it(
 	"generates kenki and shoha in meditation",
 	testWithConfig({}, () => {
 		const state = controller.game as SAMState;
-		state.resources.get(ResourceType.InCombat).overrideCurrentValue(1);
-		applySkill(SkillName.Meditate);
+		state.resources.get("IN_COMBAT").overrideCurrentValue(1);
+		applySkill("MEDITATE");
 		controller.step(30); // longer than the duration to make sure we don't keep ticking
-		expect(state.resources.get(ResourceType.Kenki).availableAmount()).toEqual(50);
-		expect(state.resources.get(ResourceType.Meditation).availableAmount()).toEqual(3);
+		expect(state.resources.get("KENKI").availableAmount()).toEqual(50);
+		expect(state.resources.get("MEDITATION").availableAmount()).toEqual(3);
 	}),
 );

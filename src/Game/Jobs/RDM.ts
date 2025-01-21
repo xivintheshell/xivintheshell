@@ -1,16 +1,7 @@
 // Skill and state declarations for RDM.
 
 import { controller } from "../../Controller/Controller";
-import { ShellJob } from "../../Controller/Common";
-import {
-	Aspect,
-	BuffType,
-	ProcMode,
-	ResourceType,
-	SkillName,
-	TraitName,
-	WarningType,
-} from "../Common";
+import { Aspect, BuffType, ProcMode, WarningType } from "../Common";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -35,146 +26,143 @@ import { GameState, PlayerState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, Resource, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
+import { ActionKey, CooldownKey, TraitKey } from "../Data";
+import { StatusPropsGenerator } from "../../Components/StatusDisplay";
+import { RDMStatusPropsGenerator } from "../../Components/Jobs/RDM";
+import { RDMResourceKey, RDMActionKey } from "../Data/Jobs/RDM";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
 const makeRDMResource = (
-	rsc: ResourceType,
+	rsc: RDMResourceKey,
 	maxValue: number,
 	params?: { timeout?: number; default?: number; warningOnTimeout?: WarningType },
 ) => {
-	makeResource(ShellJob.RDM, rsc, maxValue, params ?? {});
+	makeResource("RDM", rsc, maxValue, params ?? {});
 };
 
-makeRDMResource(ResourceType.WhiteMana, 100);
-makeRDMResource(ResourceType.BlackMana, 100);
-makeRDMResource(ResourceType.ManaStacks, 3);
+makeRDMResource("WHITE_MANA", 100);
+makeRDMResource("BLACK_MANA", 100);
+makeRDMResource("MANA_STACKS", 3);
 
 // TODO: get precise durations
-makeRDMResource(ResourceType.Acceleration, 1, { timeout: 20 });
-makeRDMResource(ResourceType.Dualcast, 1, { timeout: 15 });
-makeRDMResource(ResourceType.Embolden, 1, { timeout: 20 });
-makeRDMResource(ResourceType.GrandImpactReady, 1, {
+makeRDMResource("ACCELERATION", 1, { timeout: 20 });
+makeRDMResource("DUALCAST", 1, { timeout: 15 });
+makeRDMResource("EMBOLDEN", 1, { timeout: 20 });
+makeRDMResource("GRAND_IMPACT_READY", 1, {
 	timeout: 30,
 	warningOnTimeout: WarningType.GIDrop,
 });
-makeRDMResource(ResourceType.MagickBarrier, 1, { timeout: 10 });
-makeRDMResource(ResourceType.MagickedSwordplay, 3, {
+makeRDMResource("MAGICK_BARRIER", 1, { timeout: 10 });
+makeRDMResource("MAGICKED_SWORDPLAY", 3, {
 	timeout: 30,
 	warningOnTimeout: WarningType.MagickedSwordplayDrop,
 });
-makeRDMResource(ResourceType.Manafication, 6, {
+makeRDMResource("MANAFICATION", 6, {
 	timeout: 30,
 	warningOnTimeout: WarningType.ManaficDrop,
 });
-makeRDMResource(ResourceType.PrefulgenceReady, 1, {
+makeRDMResource("PREFULGENCE_READY", 1, {
 	timeout: 30,
 	warningOnTimeout: WarningType.PrefulgenceDrop,
 });
-makeRDMResource(ResourceType.ThornedFlourish, 1, {
+makeRDMResource("THORNED_FLOURISH", 1, {
 	timeout: 30,
 	warningOnTimeout: WarningType.ViceOfThornsDrop,
 });
-makeRDMResource(ResourceType.VerfireReady, 1, { timeout: 30 });
-makeRDMResource(ResourceType.VerstoneReady, 1, { timeout: 30 });
+makeRDMResource("VERFIRE_READY", 1, { timeout: 30 });
+makeRDMResource("VERSTONE_READY", 1, { timeout: 30 });
 
-makeRDMResource(ResourceType.RDMMeleeCounter, 2, { timeout: 30 });
-makeRDMResource(ResourceType.RDMFinisherCounter, 2, { timeout: 30 });
-makeRDMResource(ResourceType.RDMAoECounter, 2, { timeout: 30 });
+makeRDMResource("RDM_MELEE_COUNTER", 2, { timeout: 30 });
+makeRDMResource("RDM_FINISHER_COUNTER", 2, { timeout: 30 });
+makeRDMResource("RDM_AOE_COUNTER", 2, { timeout: 30 });
 
 // === JOB GAUGE AND STATE ===
-const ACCELERATION_SKILLS: SkillName[] = [
-	SkillName.Impact,
-	SkillName.Veraero,
-	SkillName.Verthunder,
-	SkillName.Veraero3,
-	SkillName.Verthunder3,
+const ACCELERATION_SKILLS: RDMActionKey[] = [
+	"IMPACT",
+	"VERAERO",
+	"VERTHUNDER",
+	"VERAERO_III",
+	"VERTHUNDER_III",
 ];
 
-const FINISHERS: SkillName[] = [
-	SkillName.Verholy,
-	SkillName.Verflare,
-	SkillName.Scorch,
-	SkillName.Resolution,
-];
+const FINISHERS: RDMActionKey[] = ["VERHOLY", "VERFLARE", "SCORCH", "RESOLUTION"];
 
 export class RDMState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
-		const swiftcastCooldown = this.hasTraitUnlocked(TraitName.EnhancedSwiftcast) ? 40 : 60;
-		const c6Cooldown = this.hasTraitUnlocked(TraitName.RedMagicMastery) ? 35 : 45;
-		const mfCooldown = this.hasTraitUnlocked(TraitName.EnhancedManafication) ? 110 : 120;
+		const swiftcastCooldown = this.hasTraitUnlocked("ENHANCED_SWIFTCAST") ? 40 : 60;
+		const c6Cooldown = this.hasTraitUnlocked("RED_MAGIC_MASTERY") ? 35 : 45;
+		const mfCooldown = this.hasTraitUnlocked("ENHANCED_MANAFICATION") ? 110 : 120;
 		[
-			new CoolDown(ResourceType.cd_Swiftcast, swiftcastCooldown, 1, 1),
-			new CoolDown(ResourceType.cd_ContreSixte, c6Cooldown, 1, 1),
-			new CoolDown(ResourceType.cd_Manafication, mfCooldown, 1, 1),
+			new CoolDown("cd_SWIFTCAST", swiftcastCooldown, 1, 1),
+			new CoolDown("cd_CONTRE_SIXTE", c6Cooldown, 1, 1),
+			new CoolDown("cd_MANAFICATION", mfCooldown, 1, 1),
 		].forEach((cd) => this.cooldowns.set(cd));
 
-		const accelStacks = this.hasTraitUnlocked(TraitName.EnhancedAcceleration) ? 2 : 1;
-		this.cooldowns.set(
-			new CoolDown(ResourceType.cd_Acceleration, 55, accelStacks, accelStacks),
-		);
+		const accelStacks = this.hasTraitUnlocked("ENHANCED_ACCELERATION") ? 2 : 1;
+		this.cooldowns.set(new CoolDown("cd_ACCELERATION", 55, accelStacks, accelStacks));
 
-		const mfStacks = this.hasTraitUnlocked(TraitName.EnhancedManaficationII)
+		const mfStacks = this.hasTraitUnlocked("ENHANCED_MANAFICATION_II")
 			? 6
-			: this.hasTraitUnlocked(TraitName.EnhancedManafication)
+			: this.hasTraitUnlocked("ENHANCED_MANAFICATION")
 				? 5
 				: 4;
-		this.resources.set(new Resource(ResourceType.Manafication, mfStacks, 0));
+		this.resources.set(new Resource("MANAFICATION", mfStacks, 0));
 
 		this.registerRecurringEvents();
 	}
 
+	override get statusPropsGenerator(): StatusPropsGenerator<RDMState> {
+		return new RDMStatusPropsGenerator(this);
+	}
+
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
-		if (this.hasResourceAvailable(ResourceType.Embolden) && skill.aspect !== Aspect.Physical) {
+		if (this.hasResourceAvailable("EMBOLDEN") && skill.aspect !== Aspect.Physical) {
 			node.addBuff(BuffType.Embolden);
 		}
 		if (
-			(this.hasResourceAvailable(ResourceType.Manafication) && skill.kind === "spell") ||
+			(this.hasResourceAvailable("MANAFICATION") && skill.kind === "spell") ||
 			skill.kind === "weaponskill"
 		) {
 			node.addBuff(BuffType.Manafication);
 		}
-		if (
-			skill.name === SkillName.Impact &&
-			this.hasResourceAvailable(ResourceType.Acceleration)
-		) {
+		if (skill.name === "IMPACT" && this.hasResourceAvailable("ACCELERATION")) {
 			node.addBuff(BuffType.Acceleration);
 		}
 	}
 
 	hasThreeManaStacks(): boolean {
-		return this.hasResourceAvailable(ResourceType.ManaStacks, 3);
+		return this.hasResourceAvailable("MANA_STACKS", 3);
 	}
 
 	getFinisherCounter(): number {
-		return this.resources.get(ResourceType.RDMFinisherCounter).availableAmount();
+		return this.resources.get("RDM_FINISHER_COUNTER").availableAmount();
 	}
 
-	processDualcastAndInstants(name: SkillName) {
+	processDualcastAndInstants(name: ActionKey) {
 		// This function should only be called for spells; weaponskills (melee hits) are handled separately.
 		// Instant consumption order:
 		// Acceleration (if possible) -> Swift -> Dualcast
 		// This depends on boolean short-circuiting logic
 		const isInstant =
-			FINISHERS.includes(name) ||
-			(name === SkillName.GrandImpact &&
-				this.tryConsumeResource(ResourceType.GrandImpactReady)) ||
-			(ACCELERATION_SKILLS.includes(name) &&
-				this.tryConsumeResource(ResourceType.Acceleration)) ||
-			this.tryConsumeResource(ResourceType.Dualcast) ||
-			this.tryConsumeResource(ResourceType.Swiftcast);
+			FINISHERS.includes(name as RDMActionKey) ||
+			(name === "GRAND_IMPACT" && this.tryConsumeResource("GRAND_IMPACT_READY")) ||
+			(ACCELERATION_SKILLS.includes(name as RDMActionKey) &&
+				this.tryConsumeResource("ACCELERATION")) ||
+			this.tryConsumeResource("DUALCAST") ||
+			this.tryConsumeResource("SWIFTCAST");
 		// After any hardcast skill, gain dualcast
 		if (!isInstant) {
-			this.resources.get(ResourceType.Dualcast).gain(1);
-			this.enqueueResourceDrop(ResourceType.Dualcast);
+			this.resources.get("DUALCAST").gain(1);
+			this.enqueueResourceDrop("DUALCAST");
 		}
 	}
 
 	gainColorMana(params: { w?: number; b?: number }) {
 		// mana gain happens on cast confirm
-		const white = this.resources.get(ResourceType.WhiteMana);
-		const black = this.resources.get(ResourceType.BlackMana);
+		const white = this.resources.get("WHITE_MANA");
+		const black = this.resources.get("BLACK_MANA");
 		// If mana is imbalanced (b > w + 30), all mana gains of the opposing color are halved
 		// (rounded down) until the gap becomes smaller than 30
 		if (params.w) {
@@ -194,24 +182,24 @@ export class RDMState extends GameState {
 	colorManaExceeds(amount: number): boolean {
 		// Check if black/white mana both exceed the amount, or there is a magicked swordplay stack.
 		return (
-			this.hasResourceAvailable(ResourceType.MagickedSwordplay) ||
-			(this.hasResourceAvailable(ResourceType.WhiteMana, amount) &&
-				this.hasResourceAvailable(ResourceType.BlackMana, amount))
+			this.hasResourceAvailable("MAGICKED_SWORDPLAY") ||
+			(this.hasResourceAvailable("WHITE_MANA", amount) &&
+				this.hasResourceAvailable("BLACK_MANA", amount))
 		);
 	}
 
 	consumeColorMana(amount: number) {
 		// Consume magicked swordplay or color mana
-		if (this.hasResourceAvailable(ResourceType.MagickedSwordplay)) {
-			this.tryConsumeResource(ResourceType.MagickedSwordplay);
+		if (this.hasResourceAvailable("MAGICKED_SWORDPLAY")) {
+			this.tryConsumeResource("MAGICKED_SWORDPLAY");
 		} else {
-			this.resources.get(ResourceType.WhiteMana).consume(amount);
-			this.resources.get(ResourceType.BlackMana).consume(amount);
+			this.resources.get("WHITE_MANA").consume(amount);
+			this.resources.get("BLACK_MANA").consume(amount);
 		}
 	}
 
-	gainVerproc(proc: typeof ResourceType.VerfireReady | typeof ResourceType.VerstoneReady) {
-		let duration = (getResourceInfo(ShellJob.RDM, proc) as ResourceInfo).maxTimeout;
+	gainVerproc(proc: "VERFIRE_READY" | "VERSTONE_READY") {
+		let duration = (getResourceInfo("RDM", proc) as ResourceInfo).maxTimeout;
 		if (this.resources.get(proc).available(1)) {
 			this.resources.get(proc).overrideTimer(this, duration);
 		} else {
@@ -220,10 +208,7 @@ export class RDMState extends GameState {
 		}
 	}
 
-	maybeGainVerproc(
-		proc: typeof ResourceType.VerfireReady | typeof ResourceType.VerstoneReady,
-		chance: number = 0.5,
-	) {
+	maybeGainVerproc(proc: "VERFIRE_READY" | "VERSTONE_READY", chance: number = 0.5) {
 		let rand = this.rng();
 		if (
 			this.config.procMode === ProcMode.Always ||
@@ -235,67 +220,63 @@ export class RDMState extends GameState {
 
 	// Advance the appropriate combo resources (RDMMeleeCounter, RDMFinisherCounter, RDMAoECounter)
 	// on skill confirmation. Also increment/consume mana stacks.
-	processComboStatus(skill: SkillName) {
-		const manaStacks = this.resources.get(ResourceType.ManaStacks);
+	processComboStatus(skill: RDMActionKey) {
+		const manaStacks = this.resources.get("MANA_STACKS");
 		const hasScorch = this.config.level >= 80;
 		const hasReso = this.config.level >= 90;
-		const meleeComboCounter = this.resources
-			.get(ResourceType.RDMMeleeCounter)
-			.availableAmount();
-		const finisherCounter = this.resources
-			.get(ResourceType.RDMFinisherCounter)
-			.availableAmount();
-		const aoeCounter = this.resources.get(ResourceType.RDMAoECounter).availableAmount();
+		const meleeComboCounter = this.resources.get("RDM_MELEE_COUNTER").availableAmount();
+		const finisherCounter = this.resources.get("RDM_FINISHER_COUNTER").availableAmount();
+		const aoeCounter = this.resources.get("RDM_AOE_COUNTER").availableAmount();
 		const anyComboActive = meleeComboCounter + finisherCounter + aoeCounter > 0;
 		// 3-element array of melee, finisher, aoe
 		let counters: number[];
-		if (skill === SkillName.EnchantedRiposte || skill === SkillName.Riposte) {
+		if (skill === "ENCHANTED_RIPOSTE" || skill === "RIPOSTE") {
 			// TODO check if aoe combo does get reset
 			if (anyComboActive) {
 				controller.reportWarning(WarningType.ComboBreak);
 			}
 			counters = [1, 0, 0];
-			if (skill === SkillName.EnchantedRiposte) {
+			if (skill === "ENCHANTED_RIPOSTE") {
 				manaStacks.gain(1);
 			}
-		} else if (skill === SkillName.EnchantedZwerchhau || skill === SkillName.Zwerchhau) {
+		} else if (skill === "ENCHANTED_ZWERCHHAU" || skill === "ZWERCHHAU") {
 			if (anyComboActive && meleeComboCounter !== 1) {
 				controller.reportWarning(WarningType.ComboBreak);
 			}
 			counters = [meleeComboCounter === 1 ? 2 : 0, 0, 0];
-			if (skill === SkillName.EnchantedZwerchhau) {
+			if (skill === "ENCHANTED_ZWERCHHAU") {
 				manaStacks.gain(1); // even if un-combo'd
 			}
-		} else if (skill === SkillName.EnchantedRedoublement || skill === SkillName.Redoublement) {
+		} else if (skill === "ENCHANTED_REDOUBLEMENT" || skill === "REDOUBLEMENT") {
 			if (anyComboActive && meleeComboCounter !== 2) {
 				controller.reportWarning(WarningType.ComboBreak);
 			}
 			counters = [0, 0, 0];
-			if (skill === SkillName.EnchantedRedoublement) {
+			if (skill === "ENCHANTED_REDOUBLEMENT") {
 				manaStacks.gain(1); // even if un-combo'd
 			}
-		} else if (skill === SkillName.Verholy || skill === SkillName.Verflare) {
+		} else if (skill === "VERHOLY" || skill === "VERFLARE") {
 			// don't report combo breaks for finishers
 			counters = [0, hasScorch ? 1 : 0, 0];
 			manaStacks.consume(3);
-		} else if (skill === SkillName.Scorch) {
+		} else if (skill === "SCORCH") {
 			counters = [0, hasReso ? 2 : 0, 0];
-		} else if (skill === SkillName.Resolution) {
+		} else if (skill === "RESOLUTION") {
 			counters = [0, 0, 0];
-		} else if (skill === SkillName.EnchantedMoulinet) {
+		} else if (skill === "ENCHANTED_MOULINET") {
 			if (meleeComboCounter + finisherCounter > 0) {
 				controller.reportWarning(WarningType.ComboBreak);
 			}
 			counters = [0, 0, 1];
 			manaStacks.gain(1);
-		} else if (skill === SkillName.EnchantedMoulinet2) {
+		} else if (skill === "ENCHANTED_MOULINET_II") {
 			// no need to check aoe combo status (was already validated before skill usage)
 			counters = [0, 0, 2];
 			manaStacks.gain(1);
-		} else if (skill === SkillName.EnchantedMoulinet3) {
+		} else if (skill === "ENCHANTED_MOULINET_III") {
 			counters = [0, 0, 0];
 			manaStacks.gain(1);
-		} else if (skill === SkillName.EnchantedReprise) {
+		} else if (skill === "ENCHANTED_REPRISE") {
 			// enchanted reprise does not break combos or the mana counter (but reprise does)
 			counters = [meleeComboCounter, finisherCounter, aoeCounter];
 		} else {
@@ -305,21 +286,21 @@ export class RDMState extends GameState {
 			counters = [0, 0, 0];
 			manaStacks.consume(manaStacks.availableAmount());
 		}
-		this.setComboState(ResourceType.RDMMeleeCounter, counters[0]);
-		this.setComboState(ResourceType.RDMFinisherCounter, counters[1]);
-		this.setComboState(ResourceType.RDMAoECounter, counters[2]);
+		this.setComboState("RDM_MELEE_COUNTER", counters[0]);
+		this.setComboState("RDM_FINISHER_COUNTER", counters[1]);
+		this.setComboState("RDM_AOE_COUNTER", counters[2]);
 	}
 
 	processManafic() {
 		// all GCDs (even vercure/raise) consume manafic stacks
 		// if we successfully consuemd all stacks, then become prefulgence ready
 		if (
-			this.tryConsumeResource(ResourceType.Manafication) &&
-			!this.hasResourceAvailable(ResourceType.Manafication) &&
-			this.hasTraitUnlocked(TraitName.EnhancedManaficationIII)
+			this.tryConsumeResource("MANAFICATION") &&
+			!this.hasResourceAvailable("MANAFICATION") &&
+			this.hasTraitUnlocked("ENHANCED_MANAFICATION_III")
 		) {
-			this.resources.get(ResourceType.PrefulgenceReady).gain(1);
-			this.enqueueResourceDrop(ResourceType.PrefulgenceReady);
+			this.resources.get("PREFULGENCE_READY").gain(1);
+			this.enqueueResourceDrop("PREFULGENCE_READY");
 		}
 	}
 }
@@ -333,7 +314,7 @@ export class RDMState extends GameState {
 // `startOnHotbar` set to false, and `replaceIf` set appropriately on the abilities to replace.
 
 const makeSpell_RDM = (
-	name: SkillName,
+	name: RDMActionKey,
 	unlockLevel: number,
 	params: {
 		autoUpgrade?: SkillAutoReplace;
@@ -344,7 +325,7 @@ const makeSpell_RDM = (
 		highlightIf?: StatePredicate<RDMState>;
 		baseCastTime: number;
 		baseManaCost: number;
-		basePotency?: number | Array<[TraitName, number]>;
+		basePotency?: number | Array<[TraitKey, number]>;
 		falloff?: number;
 		jobPotencyModifiers?: PotencyModifierFn<RDMState>;
 		applicationDelay: number;
@@ -360,7 +341,7 @@ const makeSpell_RDM = (
 		(state) => state.processDualcastAndInstants(name),
 		(state) => state.processComboStatus(name),
 	);
-	return makeSpell(ShellJob.RDM, name, unlockLevel, {
+	return makeSpell("RDM", name, unlockLevel, {
 		...params,
 		aspect: params.isPhysical ? Aspect.Physical : undefined,
 		castTime: (state) => state.config.adjustedCastTime(params.baseCastTime),
@@ -369,10 +350,10 @@ const makeSpell_RDM = (
 		potency: params.basePotency,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
-			if (state.hasResourceAvailable(ResourceType.Embolden)) {
+			if (state.hasResourceAvailable("EMBOLDEN")) {
 				mods.push(Modifiers.EmboldenMagic);
 			}
-			if (state.hasResourceAvailable(ResourceType.Manafication)) {
+			if (state.hasResourceAvailable("MANAFICATION")) {
 				mods.push(Modifiers.Manafication);
 			}
 			if (params.jobPotencyModifiers) {
@@ -382,25 +363,24 @@ const makeSpell_RDM = (
 		},
 		isInstantFn: (state) =>
 			FINISHERS.includes(name) ||
-			name === SkillName.GrandImpact ||
-			(ACCELERATION_SKILLS.includes(name) &&
-				state.hasResourceAvailable(ResourceType.Acceleration)) ||
-			state.hasResourceAvailable(ResourceType.Dualcast) ||
-			state.hasResourceAvailable(ResourceType.Swiftcast),
+			name === "GRAND_IMPACT" ||
+			(ACCELERATION_SKILLS.includes(name) && state.hasResourceAvailable("ACCELERATION")) ||
+			state.hasResourceAvailable("DUALCAST") ||
+			state.hasResourceAvailable("SWIFTCAST"),
 		onConfirm: onConfirm,
 	});
 };
 
 const makeMeleeGCD = (
-	name: SkillName,
+	name: RDMActionKey,
 	unlockLevel: number,
 	params: {
 		replaceIf: ConditionalSkillReplace<RDMState>[];
 		startOnHotbar?: boolean;
-		potency: number | Array<[TraitName, number]>;
+		potency: number | Array<[TraitKey, number]>;
 		combo?: {
-			potency: number | Array<[TraitName, number]>;
-			resource: ResourceType;
+			potency: number | Array<[TraitKey, number]>;
+			resource: RDMResourceKey;
 			resourceValue: number;
 		};
 		// note that melee hits are not scaled by sps
@@ -413,13 +393,13 @@ const makeMeleeGCD = (
 	},
 ): Weaponskill<RDMState> => {
 	// Un-enchanted melee hits are not magic damage
-	const isPhysical = !name.toString().startsWith("Enchanted");
+	const isPhysical = !name.toString().startsWith("ENCHANTED");
 	const onConfirm: EffectFn<RDMState> = combineEffects(
 		(state) => state.processManafic(),
 		(state) => state.processComboStatus(name),
 		params.onConfirm ?? NO_EFFECT,
 	);
-	return makeWeaponskill(ShellJob.RDM, name, unlockLevel, {
+	return makeWeaponskill("RDM", name, unlockLevel, {
 		...params,
 		aspect: isPhysical ? Aspect.Physical : undefined,
 		onConfirm: onConfirm,
@@ -438,10 +418,10 @@ const makeMeleeGCD = (
 				);
 			}
 			if (!isPhysical) {
-				if (state.hasResourceAvailable(ResourceType.Embolden)) {
+				if (state.hasResourceAvailable("EMBOLDEN")) {
 					mods.push(Modifiers.EmboldenMagic);
 				}
-				if (state.hasResourceAvailable(ResourceType.Manafication)) {
+				if (state.hasResourceAvailable("MANAFICATION")) {
 					mods.push(Modifiers.Manafication);
 				}
 			}
@@ -451,12 +431,12 @@ const makeMeleeGCD = (
 };
 
 const makeAbility_RDM = (
-	name: SkillName,
+	name: RDMActionKey,
 	unlockLevel: number,
-	cdName: ResourceType,
+	cdName: CooldownKey,
 	params: {
 		isPhysical?: boolean;
-		potency?: number | Array<[TraitName, number]>;
+		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<RDMState>[];
 		highlightIf?: StatePredicate<RDMState>;
 		startOnHotbar?: boolean;
@@ -470,102 +450,100 @@ const makeAbility_RDM = (
 		onApplication?: EffectFn<RDMState>;
 	},
 ): Ability<RDMState> =>
-	makeAbility(ShellJob.RDM, name, unlockLevel, cdName, {
+	makeAbility("RDM", name, unlockLevel, cdName, {
 		aspect: params.isPhysical ? Aspect.Physical : undefined,
 		jobPotencyModifiers: (state) =>
-			!params.isPhysical && state.hasResourceAvailable(ResourceType.Embolden)
+			!params.isPhysical && state.hasResourceAvailable("EMBOLDEN")
 				? [Modifiers.EmboldenMagic]
 				: [],
 		...params,
 	});
 
 const scorchCondition: ConditionalSkillReplace<RDMState> = {
-	newSkill: SkillName.Scorch,
+	newSkill: "SCORCH",
 	condition: (state) => state.getFinisherCounter() === 1,
 };
 
 const resoCondition: ConditionalSkillReplace<RDMState> = {
-	newSkill: SkillName.Resolution,
+	newSkill: "RESOLUTION",
 	condition: (state) => state.getFinisherCounter() === 2,
 };
 
 const giCondition: ConditionalSkillReplace<RDMState> = {
-	newSkill: SkillName.GrandImpact,
+	newSkill: "GRAND_IMPACT",
 	condition: (state) =>
-		state.getFinisherCounter() < 1 && state.hasResourceAvailable(ResourceType.GrandImpactReady),
+		state.getFinisherCounter() < 1 && state.hasResourceAvailable("GRAND_IMPACT_READY"),
 };
 
-makeSpell_RDM(SkillName.Jolt2, 62, {
+makeSpell_RDM("JOLT_II", 62, {
 	replaceIf: [scorchCondition, resoCondition, giCondition],
-	autoUpgrade: { trait: TraitName.RedMagicMasteryIII, otherSkill: SkillName.Jolt3 },
+	autoUpgrade: { trait: "RED_MAGIC_MASTERY_III", otherSkill: "JOLT_III" },
 	baseCastTime: 2.0,
 	baseManaCost: 200,
 	applicationDelay: 0.8, // TODO
 	basePotency: 280,
 	validateAttempt: (state) =>
-		state.getFinisherCounter() < 1 &&
-		!state.hasResourceAvailable(ResourceType.GrandImpactReady),
+		state.getFinisherCounter() < 1 && !state.hasResourceAvailable("GRAND_IMPACT_READY"),
 	onConfirm: (state) => state.gainColorMana({ w: 2, b: 2 }),
 });
 
-makeSpell_RDM(SkillName.Jolt3, 84, {
+makeSpell_RDM("JOLT_III", 84, {
 	replaceIf: [scorchCondition, resoCondition, giCondition],
-	autoDowngrade: { trait: TraitName.RedMagicMasteryIII, otherSkill: SkillName.Jolt2 },
+	autoDowngrade: { trait: "RED_MAGIC_MASTERY_III", otherSkill: "JOLT_II" },
 	baseCastTime: 2.0,
 	baseManaCost: 200,
 	applicationDelay: 0.8,
 	basePotency: 360,
 	validateAttempt: (state) =>
-		state.getFinisherCounter() < 1 &&
-		!state.hasResourceAvailable(ResourceType.GrandImpactReady),
+		state.getFinisherCounter() < 1 && !state.hasResourceAvailable("GRAND_IMPACT_READY"),
 	onConfirm: (state) => state.gainColorMana({ w: 2, b: 2 }),
 });
 
 const procPotencies = [
-	[TraitName.Never, 300],
-	[TraitName.RedMagicMasteryII, 340],
-	[TraitName.RedMagicMasteryIII, 380],
-] as Array<[TraitName, number]>;
+	["NEVER", 300],
+	["RED_MAGIC_MASTERY_II", 340],
+	["RED_MAGIC_MASTERY_III", 380],
+] as Array<[TraitKey, number]>;
 
-makeSpell_RDM(SkillName.Verstone, 30, {
+makeSpell_RDM("VERSTONE", 30, {
 	baseCastTime: 2.0,
 	baseManaCost: 200,
 	applicationDelay: 0.8,
 	basePotency: procPotencies,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.VerstoneReady),
+	validateAttempt: (state) => state.hasResourceAvailable("VERSTONE_READY"),
 	onConfirm: (state) => {
 		state.gainColorMana({ w: 5 });
-		state.tryConsumeResource(ResourceType.VerstoneReady);
+		state.tryConsumeResource("VERSTONE_READY");
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.VerstoneReady),
+	highlightIf: (state) => state.hasResourceAvailable("VERSTONE_READY"),
 });
 
-makeSpell_RDM(SkillName.Verfire, 26, {
+makeSpell_RDM("VERFIRE", 26, {
 	baseCastTime: 2.0,
 	baseManaCost: 200,
 	applicationDelay: 0.8,
 	basePotency: procPotencies,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.VerfireReady),
+	validateAttempt: (state) => state.hasResourceAvailable("VERFIRE_READY"),
 	onConfirm: (state) => {
 		state.gainColorMana({ b: 5 });
-		state.tryConsumeResource(ResourceType.VerfireReady);
+		state.tryConsumeResource("VERFIRE_READY");
 	},
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.VerfireReady),
+	highlightIf: (state) => state.hasResourceAvailable("VERFIRE_READY"),
 });
 
 const verholyConditon: ConditionalSkillReplace<RDMState> = {
-	newSkill: SkillName.Verholy,
+	newSkill: "VERHOLY",
 	condition: (state) => state.hasThreeManaStacks(),
 };
 
 const verflareConditon: ConditionalSkillReplace<RDMState> = {
-	newSkill: SkillName.Verflare,
+	newSkill: "VERFLARE",
 	condition: (state) => state.hasThreeManaStacks(),
 };
 
-makeSpell_RDM(SkillName.Veraero, 10, {
+makeSpell_RDM("VERAERO", 10, {
 	replaceIf: [verholyConditon],
-	autoUpgrade: { trait: TraitName.RedMagicMasteryII, otherSkill: SkillName.Veraero3 },
+	autoUpgrade: { trait: "RED_MAGIC_MASTERY_II", otherSkill: "VERAERO_III" },
 	baseCastTime: 5.0,
 	baseManaCost: 400,
 	applicationDelay: 0.76,
@@ -573,17 +551,17 @@ makeSpell_RDM(SkillName.Veraero, 10, {
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
 	onConfirm: (state) => {
 		state.gainColorMana({ w: 6 });
-		if (state.hasResourceAvailable(ResourceType.Acceleration)) {
-			state.gainVerproc(ResourceType.VerstoneReady);
+		if (state.hasResourceAvailable("ACCELERATION")) {
+			state.gainVerproc("VERSTONE_READY");
 		} else {
-			state.maybeGainVerproc(ResourceType.VerstoneReady);
+			state.maybeGainVerproc("VERSTONE_READY");
 		}
 	},
 });
 
-makeSpell_RDM(SkillName.Verthunder, 4, {
+makeSpell_RDM("VERTHUNDER", 4, {
 	replaceIf: [verflareConditon],
-	autoUpgrade: { trait: TraitName.RedMagicMasteryII, otherSkill: SkillName.Verthunder3 },
+	autoUpgrade: { trait: "RED_MAGIC_MASTERY_II", otherSkill: "VERTHUNDER_III" },
 	baseCastTime: 5.0,
 	baseManaCost: 400,
 	applicationDelay: 0.76,
@@ -591,22 +569,22 @@ makeSpell_RDM(SkillName.Verthunder, 4, {
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
 	onConfirm: (state) => {
 		state.gainColorMana({ b: 6 });
-		if (state.hasResourceAvailable(ResourceType.Acceleration)) {
-			state.gainVerproc(ResourceType.VerfireReady);
+		if (state.hasResourceAvailable("ACCELERATION")) {
+			state.gainVerproc("VERFIRE_READY");
 		} else {
-			state.maybeGainVerproc(ResourceType.VerfireReady);
+			state.maybeGainVerproc("VERFIRE_READY");
 		}
 	},
 });
 
-const ver3Potency: Array<[TraitName, number]> = [
-	[TraitName.Never, 380],
-	[TraitName.EnchantedBladeMastery, 440],
+const ver3Potency: Array<[TraitKey, number]> = [
+	["NEVER", 380],
+	["ENCHANTED_BLADE_MASTERY", 440],
 ];
 
-makeSpell_RDM(SkillName.Veraero3, 82, {
+makeSpell_RDM("VERAERO_III", 82, {
 	replaceIf: [verholyConditon],
-	autoDowngrade: { trait: TraitName.RedMagicMasteryII, otherSkill: SkillName.Veraero },
+	autoDowngrade: { trait: "RED_MAGIC_MASTERY_II", otherSkill: "VERAERO" },
 	baseCastTime: 5.0,
 	baseManaCost: 400,
 	applicationDelay: 0.76,
@@ -614,17 +592,17 @@ makeSpell_RDM(SkillName.Veraero3, 82, {
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
 	onConfirm: (state) => {
 		state.gainColorMana({ w: 6 });
-		if (state.hasResourceAvailable(ResourceType.Acceleration)) {
-			state.gainVerproc(ResourceType.VerstoneReady);
+		if (state.hasResourceAvailable("ACCELERATION")) {
+			state.gainVerproc("VERSTONE_READY");
 		} else {
-			state.maybeGainVerproc(ResourceType.VerstoneReady);
+			state.maybeGainVerproc("VERSTONE_READY");
 		}
 	},
 });
 
-makeSpell_RDM(SkillName.Verthunder3, 82, {
+makeSpell_RDM("VERTHUNDER_III", 82, {
 	replaceIf: [verflareConditon],
-	autoDowngrade: { trait: TraitName.RedMagicMasteryII, otherSkill: SkillName.Verthunder },
+	autoDowngrade: { trait: "RED_MAGIC_MASTERY_II", otherSkill: "VERTHUNDER" },
 	baseCastTime: 5.0,
 	baseManaCost: 400,
 	applicationDelay: 0.76,
@@ -632,21 +610,21 @@ makeSpell_RDM(SkillName.Verthunder3, 82, {
 	validateAttempt: (state) => !state.hasThreeManaStacks(),
 	onConfirm: (state) => {
 		state.gainColorMana({ b: 6 });
-		if (state.hasResourceAvailable(ResourceType.Acceleration)) {
-			state.gainVerproc(ResourceType.VerfireReady);
+		if (state.hasResourceAvailable("ACCELERATION")) {
+			state.gainVerproc("VERFIRE_READY");
 		} else {
-			state.maybeGainVerproc(ResourceType.VerfireReady);
+			state.maybeGainVerproc("VERFIRE_READY");
 		}
 	},
 });
 
-const ver2Potency: Array<[TraitName, number]> = [
-	[TraitName.Never, 100],
-	[TraitName.RedMagicMastery, 120],
-	[TraitName.RedMagicMasteryIII, 140],
+const ver2Potency: Array<[TraitKey, number]> = [
+	["NEVER", 100],
+	["RED_MAGIC_MASTERY", 120],
+	["RED_MAGIC_MASTERY_III", 140],
 ];
 
-makeSpell_RDM(SkillName.Veraero2, 22, {
+makeSpell_RDM("VERAERO_II", 22, {
 	replaceIf: [verholyConditon],
 	baseCastTime: 2.0,
 	baseManaCost: 400,
@@ -657,7 +635,7 @@ makeSpell_RDM(SkillName.Veraero2, 22, {
 	onConfirm: (state) => state.gainColorMana({ w: 7 }),
 });
 
-makeSpell_RDM(SkillName.Verthunder2, 18, {
+makeSpell_RDM("VERTHUNDER_II", 18, {
 	replaceIf: [verflareConditon],
 	baseCastTime: 2.0,
 	baseManaCost: 400,
@@ -668,25 +646,24 @@ makeSpell_RDM(SkillName.Verthunder2, 18, {
 	onConfirm: (state) => state.gainColorMana({ b: 7 }),
 });
 
-makeSpell_RDM(SkillName.Impact, 66, {
+makeSpell_RDM("IMPACT", 66, {
 	replaceIf: [scorchCondition, resoCondition, giCondition],
 	baseCastTime: 5.0,
 	baseManaCost: 400,
 	falloff: 0,
 	applicationDelay: 0.76,
 	basePotency: [
-		[TraitName.Never, 200],
-		[TraitName.RedMagicMasteryIII, 210],
+		["NEVER", 200],
+		["RED_MAGIC_MASTERY_III", 210],
 	],
 	jobPotencyModifiers: (state) =>
-		state.hasResourceAvailable(ResourceType.Acceleration) ? [Modifiers.AccelerationImpact] : [],
+		state.hasResourceAvailable("ACCELERATION") ? [Modifiers.AccelerationImpact] : [],
 	validateAttempt: (state) =>
-		state.getFinisherCounter() < 1 &&
-		!state.hasResourceAvailable(ResourceType.GrandImpactReady),
+		state.getFinisherCounter() < 1 && !state.hasResourceAvailable("GRAND_IMPACT_READY"),
 	onConfirm: (state) => state.gainColorMana({ w: 3, b: 3 }),
 });
 
-makeSpell_RDM(SkillName.GrandImpact, 96, {
+makeSpell_RDM("GRAND_IMPACT", 96, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 0,
@@ -699,9 +676,9 @@ makeSpell_RDM(SkillName.GrandImpact, 96, {
 });
 
 // Combo state for melee hits is automatically handled in makeMeleeGCD via state.processComboStatus
-makeMeleeGCD(SkillName.Riposte, 1, {
+makeMeleeGCD("RIPOSTE", 1, {
 	replaceIf: [
-		{ newSkill: SkillName.EnchantedRiposte, condition: (state) => state.colorManaExceeds(20) },
+		{ newSkill: "ENCHANTED_RIPOSTE", condition: (state) => state.colorManaExceeds(20) },
 	],
 	applicationDelay: 0.62, // TODO
 	potency: 130,
@@ -709,10 +686,10 @@ makeMeleeGCD(SkillName.Riposte, 1, {
 	validateAttempt: (state) => !state.colorManaExceeds(20),
 });
 
-makeMeleeGCD(SkillName.Zwerchhau, 35, {
+makeMeleeGCD("ZWERCHHAU", 35, {
 	replaceIf: [
 		{
-			newSkill: SkillName.EnchantedZwerchhau,
+			newSkill: "ENCHANTED_ZWERCHHAU",
 			condition: (state) => state.colorManaExceeds(15),
 		},
 	],
@@ -720,19 +697,18 @@ makeMeleeGCD(SkillName.Zwerchhau, 35, {
 	potency: 100,
 	combo: {
 		potency: 150,
-		resource: ResourceType.RDMMeleeCounter,
+		resource: "RDM_MELEE_COUNTER",
 		resourceValue: 1,
 	},
 	recastTime: 2.5,
 	validateAttempt: (state) => !state.colorManaExceeds(15),
-	highlightIf: (state) =>
-		state.resources.get(ResourceType.RDMMeleeCounter).availableAmount() === 1,
+	highlightIf: (state) => state.resources.get("RDM_MELEE_COUNTER").availableAmount() === 1,
 });
 
-makeMeleeGCD(SkillName.Redoublement, 50, {
+makeMeleeGCD("REDOUBLEMENT", 50, {
 	replaceIf: [
 		{
-			newSkill: SkillName.EnchantedRedoublement,
+			newSkill: "ENCHANTED_REDOUBLEMENT",
 			condition: (state) => state.colorManaExceeds(15),
 		},
 	],
@@ -740,144 +716,137 @@ makeMeleeGCD(SkillName.Redoublement, 50, {
 	potency: 100,
 	combo: {
 		potency: 230,
-		resource: ResourceType.RDMMeleeCounter,
+		resource: "RDM_MELEE_COUNTER",
 		resourceValue: 2,
 	},
 	recastTime: 2.5,
 	validateAttempt: (state) => !state.colorManaExceeds(15),
-	highlightIf: (state) =>
-		state.resources.get(ResourceType.RDMMeleeCounter).availableAmount() === 2,
+	highlightIf: (state) => state.resources.get("RDM_MELEE_COUNTER").availableAmount() === 2,
 });
 
-makeMeleeGCD(SkillName.EnchantedRiposte, 50, {
+makeMeleeGCD("ENCHANTED_RIPOSTE", 50, {
 	startOnHotbar: false,
-	replaceIf: [{ newSkill: SkillName.Riposte, condition: (state) => !state.colorManaExceeds(20) }],
+	replaceIf: [{ newSkill: "RIPOSTE", condition: (state) => !state.colorManaExceeds(20) }],
 	applicationDelay: 0.62,
 	potency: [
-		[TraitName.Never, 220],
-		[TraitName.RedMagicMasteryIII, 280],
-		[TraitName.EnchantedBladeMastery, 300],
+		["NEVER", 220],
+		["RED_MAGIC_MASTERY_III", 280],
+		["ENCHANTED_BLADE_MASTERY", 300],
 	],
 	recastTime: 1.5,
 	validateAttempt: (state) => state.colorManaExceeds(20),
 	onConfirm: (state) => state.consumeColorMana(20),
 });
 
-makeMeleeGCD(SkillName.EnchantedZwerchhau, 50, {
+makeMeleeGCD("ENCHANTED_ZWERCHHAU", 50, {
 	startOnHotbar: false,
-	replaceIf: [
-		{ newSkill: SkillName.Zwerchhau, condition: (state) => !state.colorManaExceeds(15) },
-	],
+	replaceIf: [{ newSkill: "ZWERCHHAU", condition: (state) => !state.colorManaExceeds(15) }],
 	applicationDelay: 0.62,
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.RedMagicMasteryIII, 150],
-		[TraitName.EnchantedBladeMastery, 170],
+		["NEVER", 100],
+		["RED_MAGIC_MASTERY_III", 150],
+		["ENCHANTED_BLADE_MASTERY", 170],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 290],
-			[TraitName.RedMagicMasteryIII, 340],
-			[TraitName.EnchantedBladeMastery, 360],
+			["NEVER", 290],
+			["RED_MAGIC_MASTERY_III", 340],
+			["ENCHANTED_BLADE_MASTERY", 360],
 		],
-		resource: ResourceType.RDMMeleeCounter,
+		resource: "RDM_MELEE_COUNTER",
 		resourceValue: 1,
 	},
 	recastTime: 1.5,
 	validateAttempt: (state) => state.colorManaExceeds(15),
 	onConfirm: (state) => state.consumeColorMana(15),
-	highlightIf: (state) =>
-		state.resources.get(ResourceType.RDMMeleeCounter).availableAmount() === 1,
+	highlightIf: (state) => state.resources.get("RDM_MELEE_COUNTER").availableAmount() === 1,
 });
 
-makeMeleeGCD(SkillName.EnchantedRedoublement, 50, {
+makeMeleeGCD("ENCHANTED_REDOUBLEMENT", 50, {
 	startOnHotbar: false,
-	replaceIf: [
-		{ newSkill: SkillName.Redoublement, condition: (state) => !state.colorManaExceeds(15) },
-	],
+	replaceIf: [{ newSkill: "REDOUBLEMENT", condition: (state) => !state.colorManaExceeds(15) }],
 	applicationDelay: 0.62,
 	potency: [
-		[TraitName.Never, 100],
-		[TraitName.RedMagicMasteryIII, 130],
-		[TraitName.EnchantedBladeMastery, 170],
+		["NEVER", 100],
+		["RED_MAGIC_MASTERY_III", 130],
+		["ENCHANTED_BLADE_MASTERY", 170],
 	],
 	combo: {
 		potency: [
-			[TraitName.Never, 470],
-			[TraitName.RedMagicMasteryIII, 500],
-			[TraitName.EnchantedBladeMastery, 530],
+			["NEVER", 470],
+			["RED_MAGIC_MASTERY_III", 500],
+			["ENCHANTED_BLADE_MASTERY", 530],
 		],
-		resource: ResourceType.RDMMeleeCounter,
+		resource: "RDM_MELEE_COUNTER",
 		resourceValue: 2,
 	},
 	recastTime: 2.2,
 	validateAttempt: (state) => state.colorManaExceeds(15),
 	onConfirm: (state) => state.consumeColorMana(15),
-	highlightIf: (state) =>
-		state.resources.get(ResourceType.RDMMeleeCounter).availableAmount() === 2,
+	highlightIf: (state) => state.resources.get("RDM_MELEE_COUNTER").availableAmount() === 2,
 });
 
 const canReprise = (state: Readonly<RDMState>) =>
-	state.resources.get(ResourceType.WhiteMana).available(5) &&
-	state.resources.get(ResourceType.BlackMana).available(5);
+	state.resources.get("WHITE_MANA").available(5) &&
+	state.resources.get("BLACK_MANA").available(5);
 
-makeMeleeGCD(SkillName.Reprise, 76, {
-	replaceIf: [{ newSkill: SkillName.EnchantedReprise, condition: (state) => canReprise(state) }],
+makeMeleeGCD("REPRISE", 76, {
+	replaceIf: [{ newSkill: "ENCHANTED_REPRISE", condition: (state) => canReprise(state) }],
 	applicationDelay: 0.62, // TODO
 	potency: 100,
 	recastTime: 2.5,
 	validateAttempt: (state) => !canReprise(state),
 });
 
-makeMeleeGCD(SkillName.EnchantedReprise, 76, {
+makeMeleeGCD("ENCHANTED_REPRISE", 76, {
 	startOnHotbar: false,
-	replaceIf: [{ newSkill: SkillName.Reprise, condition: (state) => !canReprise(state) }],
+	replaceIf: [{ newSkill: "REPRISE", condition: (state) => !canReprise(state) }],
 	applicationDelay: 0.62, // TODO
 	potency: [
-		[TraitName.Never, 290],
-		[TraitName.RedMagicMasteryIII, 340],
-		[TraitName.EnchantedBladeMastery, 420],
+		["NEVER", 290],
+		["RED_MAGIC_MASTERY_III", 340],
+		["ENCHANTED_BLADE_MASTERY", 420],
 	],
 	recastTime: 2.5,
 	validateAttempt: (state) => canReprise(state),
 	onConfirm: (state) => {
 		// don't use the consumeColorMana helper function because this doesn't consume a magicked swordplay stack
-		state.resources.get(ResourceType.WhiteMana).consume(5);
-		state.resources.get(ResourceType.BlackMana).consume(5);
+		state.resources.get("WHITE_MANA").consume(5);
+		state.resources.get("BLACK_MANA").consume(5);
 	},
 });
 
 const moulinetConditions: ConditionalSkillReplace<RDMState>[] = [
 	{
-		newSkill: SkillName.Moulinet,
+		newSkill: "MOULINET",
 		condition: (state) =>
 			// When AoE counter is 0, check if mana < 20
 			// otherwise, check if mana < 15
-			(state.resources.get(ResourceType.RDMAoECounter).availableAmount() === 0 &&
+			(state.resources.get("RDM_AOE_COUNTER").availableAmount() === 0 &&
 				!state.colorManaExceeds(20)) ||
 			!state.colorManaExceeds(15),
 	},
 	{
-		newSkill: SkillName.EnchantedMoulinet,
+		newSkill: "ENCHANTED_MOULINET",
 		condition: (state) =>
 			state.colorManaExceeds(20) &&
-			state.resources.get(ResourceType.RDMAoECounter).availableAmount() === 0,
+			state.resources.get("RDM_AOE_COUNTER").availableAmount() === 0,
 	},
 	{
-		newSkill: SkillName.EnchantedMoulinet2,
+		newSkill: "ENCHANTED_MOULINET_II",
 		condition: (state) =>
 			state.colorManaExceeds(15) &&
-			state.resources.get(ResourceType.RDMAoECounter).availableAmount() === 1,
+			state.resources.get("RDM_AOE_COUNTER").availableAmount() === 1,
 	},
 	{
-		newSkill: SkillName.EnchantedMoulinet3,
+		newSkill: "ENCHANTED_MOULINET_III",
 		condition: (state) =>
 			state.colorManaExceeds(15) &&
-			state.resources.get(ResourceType.RDMAoECounter).availableAmount() === 2,
+			state.resources.get("RDM_AOE_COUNTER").availableAmount() === 2,
 	},
 ];
 
-makeMeleeGCD(SkillName.Moulinet, 52, {
+makeMeleeGCD("MOULINET", 52, {
 	replaceIf: [moulinetConditions[1], moulinetConditions[2], moulinetConditions[3]],
 	falloff: 0,
 	applicationDelay: 0.8, // TODO
@@ -886,7 +855,7 @@ makeMeleeGCD(SkillName.Moulinet, 52, {
 	validateAttempt: moulinetConditions[0].condition,
 });
 
-makeMeleeGCD(SkillName.EnchantedMoulinet, 52, {
+makeMeleeGCD("ENCHANTED_MOULINET", 52, {
 	startOnHotbar: false,
 	replaceIf: [moulinetConditions[0], moulinetConditions[2], moulinetConditions[3]],
 	falloff: 0,
@@ -897,7 +866,7 @@ makeMeleeGCD(SkillName.EnchantedMoulinet, 52, {
 	onConfirm: (state) => state.consumeColorMana(20),
 });
 
-makeMeleeGCD(SkillName.EnchantedMoulinet2, 52, {
+makeMeleeGCD("ENCHANTED_MOULINET_II", 52, {
 	startOnHotbar: false,
 	replaceIf: [moulinetConditions[0], moulinetConditions[1], moulinetConditions[3]],
 	falloff: 0,
@@ -909,7 +878,7 @@ makeMeleeGCD(SkillName.EnchantedMoulinet2, 52, {
 	highlightIf: moulinetConditions[2].condition,
 });
 
-makeMeleeGCD(SkillName.EnchantedMoulinet3, 52, {
+makeMeleeGCD("ENCHANTED_MOULINET_III", 52, {
 	startOnHotbar: false,
 	replaceIf: [moulinetConditions[0], moulinetConditions[1], moulinetConditions[2]],
 	falloff: 0,
@@ -921,13 +890,13 @@ makeMeleeGCD(SkillName.EnchantedMoulinet3, 52, {
 	highlightIf: moulinetConditions[3].condition,
 });
 
-const verfinishPotency: Array<[TraitName, number]> = [
-	[TraitName.Never, 600],
-	[TraitName.EnchantedBladeMastery, 650],
+const verfinishPotency: Array<[TraitKey, number]> = [
+	["NEVER", 600],
+	["ENCHANTED_BLADE_MASTERY", 650],
 ];
 
 // Combo status and mana stack consumption for finisherse are handled in makeSpell_RDM
-makeSpell_RDM(SkillName.Verholy, 70, {
+makeSpell_RDM("VERHOLY", 70, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 400,
@@ -938,18 +907,18 @@ makeSpell_RDM(SkillName.Verholy, 70, {
 	highlightIf: (state) => state.hasThreeManaStacks(),
 	onConfirm: (state) => {
 		if (
-			state.resources.get(ResourceType.WhiteMana).availableAmount() <
-			state.resources.get(ResourceType.BlackMana).availableAmount()
+			state.resources.get("WHITE_MANA").availableAmount() <
+			state.resources.get("BLACK_MANA").availableAmount()
 		) {
-			state.gainVerproc(ResourceType.VerstoneReady);
+			state.gainVerproc("VERSTONE_READY");
 		} else {
-			state.maybeGainVerproc(ResourceType.VerstoneReady, 0.2);
+			state.maybeGainVerproc("VERSTONE_READY", 0.2);
 		}
 		state.gainColorMana({ w: 11 });
 	},
 });
 
-makeSpell_RDM(SkillName.Verflare, 68, {
+makeSpell_RDM("VERFLARE", 68, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 400,
@@ -960,108 +929,108 @@ makeSpell_RDM(SkillName.Verflare, 68, {
 	highlightIf: (state) => state.hasThreeManaStacks(),
 	onConfirm: (state) => {
 		if (
-			state.resources.get(ResourceType.BlackMana).availableAmount() <
-			state.resources.get(ResourceType.WhiteMana).availableAmount()
+			state.resources.get("BLACK_MANA").availableAmount() <
+			state.resources.get("WHITE_MANA").availableAmount()
 		) {
-			state.gainVerproc(ResourceType.VerfireReady);
+			state.gainVerproc("VERFIRE_READY");
 		} else {
-			state.maybeGainVerproc(ResourceType.VerfireReady, 0.2);
+			state.maybeGainVerproc("VERFIRE_READY", 0.2);
 		}
 		state.gainColorMana({ b: 11 });
 	},
 });
 
-makeSpell_RDM(SkillName.Scorch, 80, {
+makeSpell_RDM("SCORCH", 80, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 400,
 	falloff: 0.6,
 	applicationDelay: 1.83,
 	basePotency: [
-		[TraitName.Never, 680],
-		[TraitName.EnchantedBladeMastery, 750],
+		["NEVER", 680],
+		["ENCHANTED_BLADE_MASTERY", 750],
 	],
 	validateAttempt: (state) => state.getFinisherCounter() === 1,
 	onConfirm: (state) => state.gainColorMana({ w: 4, b: 4 }),
 	highlightIf: (state) => state.getFinisherCounter() === 1,
 });
 
-makeSpell_RDM(SkillName.Resolution, 90, {
+makeSpell_RDM("RESOLUTION", 90, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 400,
 	falloff: 0.6,
 	applicationDelay: 1.56,
 	basePotency: [
-		[TraitName.Never, 750],
-		[TraitName.EnchantedBladeMastery, 850],
+		["NEVER", 750],
+		["ENCHANTED_BLADE_MASTERY", 850],
 	],
 	validateAttempt: (state) => state.getFinisherCounter() === 2,
 	onConfirm: (state) => state.gainColorMana({ w: 4, b: 4 }),
 	highlightIf: (state) => state.getFinisherCounter() === 2,
 });
 
-makeSpell_RDM(SkillName.Vercure, 54, {
+makeSpell_RDM("VERCURE", 54, {
 	baseCastTime: 2.0,
 	baseManaCost: 500,
 	applicationDelay: 0.8,
 	basePotency: 0,
 });
 
-makeSpell_RDM(SkillName.Verraise, 64, {
+makeSpell_RDM("VERRAISE", 64, {
 	baseCastTime: 10,
 	baseManaCost: 2400,
 	applicationDelay: 0.81,
 	basePotency: 0,
 });
 
-makeResourceAbility(ShellJob.RDM, SkillName.Embolden, 58, ResourceType.cd_Embolden, {
+makeResourceAbility("RDM", "EMBOLDEN", 58, "cd_EMBOLDEN", {
 	replaceIf: [
 		{
-			newSkill: SkillName.ViceOfThorns,
-			condition: (state) => state.hasResourceAvailable(ResourceType.ThornedFlourish),
+			newSkill: "VICE_OF_THORNS",
+			condition: (state) => state.hasResourceAvailable("THORNED_FLOURISH"),
 		},
 	],
-	rscType: ResourceType.Embolden,
+	rscType: "EMBOLDEN",
 	applicationDelay: 0.62,
 	cooldown: 120,
 	onApplication: (state) => {
-		if (state.hasTraitUnlocked(TraitName.EnhancedEmbolden)) {
-			state.resources.get(ResourceType.ThornedFlourish).gain(1);
-			state.enqueueResourceDrop(ResourceType.ThornedFlourish);
+		if (state.hasTraitUnlocked("ENHANCED_EMBOLDEN")) {
+			state.resources.get("THORNED_FLOURISH").gain(1);
+			state.enqueueResourceDrop("THORNED_FLOURISH");
 		}
 	},
 });
 
-makeResourceAbility(ShellJob.RDM, SkillName.Manafication, 60, ResourceType.cd_Manafication, {
+makeResourceAbility("RDM", "MANAFICATION", 60, "cd_MANAFICATION", {
 	replaceIf: [
 		{
-			newSkill: SkillName.Prefulgence,
-			condition: (state) => state.hasResourceAvailable(ResourceType.PrefulgenceReady),
+			newSkill: "PREFULGENCE",
+			condition: (state) => state.hasResourceAvailable("PREFULGENCE_READY"),
 		},
 	],
-	rscType: ResourceType.Manafication,
+	rscType: "MANAFICATION",
 	requiresCombat: true,
 	applicationDelay: 0,
 	cooldown: 110,
 	onApplication: (state) => {
-		state.resources.get(ResourceType.MagickedSwordplay).gain(3);
-		state.enqueueResourceDrop(ResourceType.MagickedSwordplay);
+		state.resources.get("MAGICKED_SWORDPLAY").gain(3);
+		state.enqueueResourceDrop("MAGICKED_SWORDPLAY");
 		// Manification resets combos
 		if (
-			state.hasResourceAvailable(ResourceType.RDMMeleeCounter) ||
-			state.hasResourceAvailable(ResourceType.RDMFinisherCounter) ||
-			state.hasResourceAvailable(ResourceType.RDMAoECounter)
+			state.hasResourceAvailable("RDM_MELEE_COUNTER") ||
+			state.hasResourceAvailable("RDM_FINISHER_COUNTER") ||
+			state.hasResourceAvailable("RDM_AOE_COUNTER")
 		) {
 			controller.reportWarning(WarningType.ComboBreak);
 		}
-		state.setComboState(ResourceType.RDMMeleeCounter, 0);
-		state.setComboState(ResourceType.RDMFinisherCounter, 0);
-		state.setComboState(ResourceType.RDMAoECounter, 0);
+		state.setComboState("RDM_MELEE_COUNTER", 0);
+		state.setComboState("RDM_FINISHER_COUNTER", 0);
+		state.setComboState("RDM_AOE_COUNTER", 0);
 	},
 });
 
-makeAbility_RDM(SkillName.CorpsACorps, 6, ResourceType.cd_CorpsACorps, {
+makeAbility_RDM("CORPS_A_CORPS", 6, "cd_CORPS_A_CORPS", {
 	isPhysical: true,
 	applicationDelay: 0.62,
 	potency: 130,
@@ -1070,12 +1039,12 @@ makeAbility_RDM(SkillName.CorpsACorps, 6, ResourceType.cd_CorpsACorps, {
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
-const flipPotency: Array<[TraitName, number]> = [
-	[TraitName.Never, 130],
-	[TraitName.EnhancedDisplacement, 180],
+const flipPotency: Array<[TraitKey, number]> = [
+	["NEVER", 130],
+	["ENHANCED_DISPLACEMENT", 180],
 ];
 
-makeAbility_RDM(SkillName.Engagement, 40, ResourceType.cd_Displacement, {
+makeAbility_RDM("ENGAGEMENT", 40, "cd_DISPLACEMENT", {
 	isPhysical: true,
 	applicationDelay: 0.62,
 	potency: flipPotency,
@@ -1083,7 +1052,7 @@ makeAbility_RDM(SkillName.Engagement, 40, ResourceType.cd_Displacement, {
 	maxCharges: 2,
 });
 
-makeAbility_RDM(SkillName.Displacement, 40, ResourceType.cd_Displacement, {
+makeAbility_RDM("DISPLACEMENT", 40, "cd_DISPLACEMENT", {
 	isPhysical: true,
 	applicationDelay: 0.62,
 	potency: flipPotency,
@@ -1092,68 +1061,68 @@ makeAbility_RDM(SkillName.Displacement, 40, ResourceType.cd_Displacement, {
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
 
-makeAbility_RDM(SkillName.Fleche, 45, ResourceType.cd_Fleche, {
+makeAbility_RDM("FLECHE", 45, "cd_FLECHE", {
 	isPhysical: true,
 	applicationDelay: 1.16,
 	potency: [
-		[TraitName.Never, 460],
-		[TraitName.EnchantedBladeMastery, 480],
+		["NEVER", 460],
+		["ENCHANTED_BLADE_MASTERY", 480],
 	],
 	cooldown: 25,
 });
 
-makeAbility_RDM(SkillName.ContreSixte, 56, ResourceType.cd_ContreSixte, {
+makeAbility_RDM("CONTRE_SIXTE", 56, "cd_CONTRE_SIXTE", {
 	isPhysical: true,
 	falloff: 0,
 	applicationDelay: 1.16,
 	potency: [
-		[TraitName.Never, 380],
-		[TraitName.EnchantedBladeMastery, 420],
+		["NEVER", 380],
+		["ENCHANTED_BLADE_MASTERY", 420],
 	],
 	cooldown: 35, // manually adjusted for traits in constructor
 });
 
-makeResourceAbility(ShellJob.RDM, SkillName.Acceleration, 50, ResourceType.cd_Acceleration, {
-	rscType: ResourceType.Acceleration,
+makeResourceAbility("RDM", "ACCELERATION", 50, "cd_ACCELERATION", {
+	rscType: "ACCELERATION",
 	applicationDelay: 0,
 	cooldown: 55,
 	maxCharges: 2,
 	// acceleration buff grant is automatic from this declaration already
 	onApplication: (state) => {
-		if (state.hasTraitUnlocked(TraitName.EnhancedAccelerationII)) {
-			if (state.hasResourceAvailable(ResourceType.GrandImpactReady)) {
+		if (state.hasTraitUnlocked("ENHANCED_ACCELERATION_II")) {
+			if (state.hasResourceAvailable("GRAND_IMPACT_READY")) {
 				controller.reportWarning(WarningType.GIOverwrite);
 			}
-			state.resources.get(ResourceType.GrandImpactReady).gain(1);
-			state.enqueueResourceDrop(ResourceType.GrandImpactReady);
+			state.resources.get("GRAND_IMPACT_READY").gain(1);
+			state.enqueueResourceDrop("GRAND_IMPACT_READY");
 		}
 	},
 });
 
-makeResourceAbility(ShellJob.RDM, SkillName.MagickBarrier, 86, ResourceType.cd_MagickBarrier, {
-	rscType: ResourceType.MagickBarrier,
+makeResourceAbility("RDM", "MAGICK_BARRIER", 86, "cd_MAGICK_BARRIER", {
+	rscType: "MAGICK_BARRIER",
 	applicationDelay: 0,
 	cooldown: 120,
 });
 
-makeAbility_RDM(SkillName.ViceOfThorns, 92, ResourceType.cd_ViceOfThorns, {
+makeAbility_RDM("VICE_OF_THORNS", 92, "cd_VICE_OF_THORNS", {
 	startOnHotbar: false,
 	falloff: 0.6,
 	applicationDelay: 0.8,
 	potency: 700,
 	cooldown: 1,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.ThornedFlourish),
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.ThornedFlourish),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.ThornedFlourish),
+	validateAttempt: (state) => state.hasResourceAvailable("THORNED_FLOURISH"),
+	onConfirm: (state) => state.tryConsumeResource("THORNED_FLOURISH"),
+	highlightIf: (state) => state.hasResourceAvailable("THORNED_FLOURISH"),
 });
 
-makeAbility_RDM(SkillName.Prefulgence, 100, ResourceType.cd_Prefulgence, {
+makeAbility_RDM("PREFULGENCE", 100, "cd_PREFULGENCE", {
 	startOnHotbar: false,
 	falloff: 0.6,
 	applicationDelay: 1.42,
 	potency: 900,
 	cooldown: 1,
-	validateAttempt: (state) => state.hasResourceAvailable(ResourceType.PrefulgenceReady),
-	onConfirm: (state) => state.tryConsumeResource(ResourceType.PrefulgenceReady),
-	highlightIf: (state) => state.hasResourceAvailable(ResourceType.PrefulgenceReady),
+	validateAttempt: (state) => state.hasResourceAvailable("PREFULGENCE_READY"),
+	onConfirm: (state) => state.tryConsumeResource("PREFULGENCE_READY"),
+	highlightIf: (state) => state.hasResourceAvailable("PREFULGENCE_READY"),
 });

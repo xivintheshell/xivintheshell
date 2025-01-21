@@ -8,100 +8,28 @@ import {
 	ResourceTextProps,
 	StatusPropsGenerator,
 } from "../StatusDisplay";
-import { ResourceType, TraitName } from "../../Game/Common";
-import { Traits } from "../../Game/Traits";
 import { PCTState } from "../../Game/Jobs/PCT";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
+import { ResourceKey, RESOURCES } from "../../Game/Data";
+import { PCT_STATUSES, PCTResourceKey } from "../../Game/Data/Jobs/PCT";
 
-[
-	ResourceType.Aetherhues,
-	ResourceType.Aetherhues + "2",
-	ResourceType.MonochromeTones,
-	ResourceType.HammerTime,
-	ResourceType.HammerTime + "2",
-	ResourceType.HammerTime + "3",
-	ResourceType.Inspiration,
-	ResourceType.SubtractivePalette,
-	ResourceType.SubtractivePalette + "2",
-	ResourceType.SubtractivePalette + "3",
-	ResourceType.SubtractiveSpectrum,
-	ResourceType.Hyperphantasia,
-	ResourceType.Hyperphantasia + "2",
-	ResourceType.Hyperphantasia + "3",
-	ResourceType.Hyperphantasia + "4",
-	ResourceType.Hyperphantasia + "5",
-	ResourceType.RainbowBright,
-	ResourceType.Starstruck,
-	ResourceType.StarryMuse,
-	ResourceType.TemperaCoat,
-	ResourceType.TemperaGrassa,
-	ResourceType.Smudge,
-].forEach((buff) => registerBuffIcon(buff, `PCT/${buff}.png`));
+(Object.keys(PCT_STATUSES) as ResourceKey[]).forEach((buff) =>
+	registerBuffIcon(buff, `PCT/${RESOURCES[buff].name}.png`),
+);
 
 export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
-		const makePictoTimer = (rscType: ResourceType, stacks: number, cd: number) => {
-			const enabled =
-				rscType === ResourceType.Inspiration
-					? this.state.hasResourceAvailable(rscType)
-					: true;
-			return {
-				rscType: rscType,
-				onSelf: true,
-				enabled: enabled,
-				stacks: stacks,
-				timeRemaining: cd.toFixed(3),
-				className: cd > 0 ? "" : "hidden",
-			};
-		};
-		const makePictoIndefinite = (rscType: ResourceType, stacks: number) => {
-			return {
-				rscType: rscType,
-				onSelf: true,
-				enabled: true,
-				stacks: stacks,
-				className: stacks ? "" : "hidden",
-			};
-		};
-		const resources = this.state.resources;
-		const aetherhuesCountdown = resources.timeTillReady(ResourceType.Aetherhues);
-		const aetherhuesStacks = resources.get(ResourceType.Aetherhues).availableAmount();
-		const monochromeTones = resources.get(ResourceType.MonochromeTones).availableAmount();
-		const subtractivePalette = resources.get(ResourceType.SubtractivePalette).availableAmount();
-		const subtractiveSpectrumCountdown = resources.timeTillReady(
-			ResourceType.SubtractiveSpectrum,
-		);
-		const starryMuseCountdown = resources.timeTillReady(ResourceType.StarryMuse);
-		const hyperphantasiaCountdown = resources.timeTillReady(ResourceType.Hyperphantasia);
-		const hyperphantasiaStacks = resources.get(ResourceType.Hyperphantasia).availableAmount();
-		const inspirationCountdown = resources.timeTillReady(ResourceType.Inspiration);
-		const rainbowBrightCountdown = resources.timeTillReady(ResourceType.RainbowBright);
-		const starstruckCountdown = resources.timeTillReady(ResourceType.Starstruck);
-		const hammerTimeCountdown = resources.timeTillReady(ResourceType.HammerTime);
-		const hammerTimeStacks = resources.get(ResourceType.HammerTime).availableAmount();
-		const temperaCoatCountdown = resources.timeTillReady(ResourceType.TemperaCoat);
-		const temperaGrassaCountdown = resources.timeTillReady(ResourceType.TemperaGrassa);
-		const smudgeCountdown = resources.timeTillReady(ResourceType.Smudge);
-
 		return [
-			makePictoTimer(ResourceType.RainbowBright, 1, rainbowBrightCountdown),
-			makePictoTimer(
-				ResourceType.Hyperphantasia,
-				hyperphantasiaStacks,
-				hyperphantasiaCountdown,
-			),
-			makePictoTimer(ResourceType.Inspiration, 1, inspirationCountdown),
-			makePictoTimer(ResourceType.SubtractiveSpectrum, 1, subtractiveSpectrumCountdown),
-			makePictoTimer(ResourceType.HammerTime, hammerTimeStacks, hammerTimeCountdown),
-			makePictoTimer(ResourceType.Starstruck, 1, starstruckCountdown),
-			makePictoTimer(ResourceType.Aetherhues, aetherhuesStacks, aetherhuesCountdown),
-			makePictoIndefinite(ResourceType.MonochromeTones, monochromeTones),
-			makePictoIndefinite(ResourceType.SubtractivePalette, subtractivePalette),
-			makePictoTimer(ResourceType.StarryMuse, 1, starryMuseCountdown),
-			makePictoTimer(ResourceType.TemperaCoat, 1, temperaCoatCountdown),
-			makePictoTimer(ResourceType.TemperaGrassa, 1, temperaGrassaCountdown),
-			makePictoTimer(ResourceType.Smudge, 1, smudgeCountdown),
+			...(Object.keys(PCT_STATUSES) as PCTResourceKey[]).map((key) => {
+				if (key === "MONOCHROME_TONES" || key === "SUBTRACTIVE_PALETTE") {
+					return this.makeCommonTimerless(key);
+				}
+				if (key === "INSPIRATION") {
+					return this.makeToggleableTimer(key);
+				}
+				return this.makeCommonTimer(key);
+			}),
 		];
 	}
 
@@ -109,14 +37,14 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 
-		const portrait = resources.get(ResourceType.Portrait).availableAmount();
-		const depictions = resources.get(ResourceType.Depictions).availableAmount();
-		const creatureCanvas = resources.get(ResourceType.CreatureCanvas).availableAmount();
-		const weaponCanvas = resources.get(ResourceType.WeaponCanvas).availableAmount();
-		const landscapeCanvas = resources.get(ResourceType.LandscapeCanvas).availableAmount();
-		const paletteGauge = resources.get(ResourceType.PaletteGauge).availableAmount();
-		const paint = resources.get(ResourceType.Paint).availableAmount();
-		const hasComet = resources.get(ResourceType.MonochromeTones).available(1);
+		const portrait = resources.get("PORTRAIT").availableAmount();
+		const depictions = resources.get("DEPICTIONS").availableAmount();
+		const creatureCanvas = resources.get("CREATURE_CANVAS").availableAmount();
+		const weaponCanvas = resources.get("WEAPON_CANVAS").availableAmount();
+		const landscapeCanvas = resources.get("LANDSCAPE_CANVAS").availableAmount();
+		const paletteGauge = resources.get("PALETTE_GAUGE").availableAmount();
+		const paint = resources.get("PAINT").availableAmount();
+		const hasComet = resources.get("MONOCHROME_TONES").available(1);
 
 		const infos: ResourceDisplayProps[] = [
 			{
@@ -208,7 +136,7 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 				valueString: paletteGauge.toFixed(0),
 			} as ResourceBarProps,
 		];
-		if (Traits.hasUnlocked(TraitName.EnhancedArtistry, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
 			infos.push({
 				kind: "paint",
 				name: localize({
@@ -219,9 +147,7 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 				cometColor: colors.pct.cometPaint,
 				currentStacks: paint,
 				maxStacks: 5,
-				hasComet:
-					Traits.hasUnlocked(TraitName.EnhancedPalette, this.state.config.level) &&
-					hasComet,
+				hasComet: this.state.hasTraitUnlocked("ENHANCED_PALETTE") && hasComet,
 			} as PaintGaugeCounterProps);
 		}
 

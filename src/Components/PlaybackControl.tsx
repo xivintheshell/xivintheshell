@@ -13,15 +13,10 @@ import {
 	getCachedValue,
 	setCachedValue,
 	ShellInfo,
-	ShellJob,
 	ShellVersion,
 	TickMode,
-	CASTER_JOBS,
-	HEALER_JOBS,
-	ALL_JOBS,
-	TESTING_JOBS,
 } from "../Controller/Common";
-import { FIXED_BASE_CASTER_TAX, LevelSync, ProcMode, ResourceType } from "../Game/Common";
+import { FIXED_BASE_CASTER_TAX, LevelSync, ProcMode } from "../Game/Common";
 import { getAllResources, getResourceInfo, ResourceOverrideData } from "../Game/Resources";
 import { localize, localizeResourceType } from "./Localization";
 import { getCurrentThemeColors } from "./ColorTheme";
@@ -29,6 +24,16 @@ import { SerializedConfig } from "../Game/GameConfig";
 import { XIVMath } from "../Game/XIVMath";
 import { FaCheck } from "react-icons/fa6";
 import { SAMState } from "../Game/Jobs/SAM";
+import {
+	ShellJob,
+	JOBS,
+	ImplementationKey,
+	CASTER_JOBS,
+	HEALER_JOBS,
+	ALL_JOBS,
+	IMPLEMENTATION_LEVELS,
+} from "../Game/Data/Jobs";
+import { ResourceKey, CooldownKey } from "../Game/Data";
 
 export let updateConfigDisplay = (config: SerializedConfig) => {};
 
@@ -66,7 +71,7 @@ function getTaxPreview(level: LevelSync, baseCastTime: number, spsStr: string, f
 export function ResourceOverrideDisplay(props: {
 	job: ShellJob;
 	override: ResourceOverrideData;
-	deleteFn?: (rsc: ResourceType) => void; // when null, this component is for display only
+	deleteFn?: (rsc: ResourceKey | CooldownKey) => void; // when null, this component is for display only
 }) {
 	let rscInfo = getResourceInfo(props.job, props.override.type);
 	let str: ContentNode;
@@ -81,7 +86,7 @@ export function ResourceOverrideDisplay(props: {
 		const lparen = localize({ en: " (", zh: "（" }) as string;
 		const rparen = localize({ en: ") ", zh: "）" }) as string;
 		//const colon = localize({en: ": ", zh: "："}) as string;
-		if (props.override.type === ResourceType.LeyLines) {
+		if (props.override.type === "LEY_LINES") {
 			str +=
 				lparen +
 				(props.override.effectOrTimerEnabled
@@ -89,7 +94,7 @@ export function ResourceOverrideDisplay(props: {
 					: localize({ en: "disabled", zh: "未生效" })) +
 				rparen;
 		}
-		if (props.override.type === ResourceType.Enochian) {
+		if (props.override.type === "ENOCHIAN") {
 			str +=
 				lparen +
 				(props.override.effectOrTimerEnabled
@@ -104,7 +109,7 @@ export function ResourceOverrideDisplay(props: {
 			});
 		}
 		if (rscInfo.maxTimeout >= 0) {
-			if (props.override.type === ResourceType.Polyglot) {
+			if (props.override.type === "POLYGLOT") {
 				if (props.override.timeTillFullOrDrop > 0) {
 					str += localize({
 						en: ` next stack ready in ${props.override.timeTillFullOrDrop}s`,
@@ -112,10 +117,7 @@ export function ResourceOverrideDisplay(props: {
 					});
 				}
 			} else {
-				if (
-					props.override.type !== ResourceType.Enochian ||
-					props.override.effectOrTimerEnabled
-				) {
+				if (props.override.type !== "ENOCHIAN" || props.override.effectOrTimerEnabled) {
 					str += localize({
 						en: ` drops in ${props.override.timeTillFullOrDrop}s`,
 						zh: `将在${props.override.timeTillFullOrDrop}秒后消失`,
@@ -219,16 +221,30 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 		zh: `警告：此时间轴文件创建于一个更早版本的排轴器，因此计算读条时间时使用的是当时手动输入的读条税${legacyCasterTax}秒（现已过时），而非由下方的“帧率”和“读条时间修正”计算得来。更多信息：`,
 	});
 	let warningColor = getCurrentThemeColors().warning;
-	let testingWarning = <p
-		style={{
-			color: warningColor,
-		}}
-	>
-		{localize({
-			en: "WARNING: This job was recently added to XIV in the Shell and is still being tested. There may be bugs or changes in the near future, so make sure to frequently export and save timelines for this job to make sure you don't lose your work.",
-			zh: "警告：此职业刚被实现没多久，可能还不是很稳定，目前暂时不要太依赖txt文件，记得勤在别处保存进度。",
-		})}
-	</p>;
+	let tryGetImplementationWarning = (impl: ImplementationKey, warningColor: string) => {
+		if (impl === "TESTING") {
+			return <p
+				style={{
+					color: warningColor,
+				}}
+			>
+				{localize({
+					en: "WARNING: This job was recently added to XIV in the Shell and is still being tested. There may be bugs or changes in the near future, so make sure to frequently export and save timelines for this job to make sure you don't lose your work.",
+					zh: "警告：此职业刚被实现没多久，可能还不是很稳定，目前暂时不要太依赖txt文件，记得勤在别处保存进度。",
+				})}
+			</p>;
+		} else if (impl === "OUTDATED") {
+			return <p
+				style={{
+					color: warningColor,
+				}}
+			>
+				{localize({
+					en: "WARNING: This job recently had significant changes, and may not have been fully updated to reflect them. There may be bugs or changes in the near future, so make sure to frequently export and save timelines for this job to make sure you don't lose your work.",
+				})}
+			</p>;
+		}
+	};
 
 	let legacyCasterTaxBlurbContent = localize({
 		en: <div>
@@ -269,7 +285,7 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 			? legacyCasterTaxBlurb
 			: undefined}
 
-		{TESTING_JOBS.includes(props.job) ? testingWarning : undefined}
+		{tryGetImplementationWarning(JOBS[props.job].implementationLevel, warningColor)}
 
 		{/* TODO: refactor these out to job props classes */}
 		{[...CASTER_JOBS, ...HEALER_JOBS].includes(props.job) && <div>
@@ -283,7 +299,7 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 			<Help topic={"dotTickOffset"} content={offsetDesc} />: {dotTickOffset}
 		</div>}
 
-		{props.job === ShellJob.SAM && <>
+		{props.job === "SAM" && <>
 			<div>
 				{localize({ en: "Fuka GCD" })}:{" "}
 				{controller.gameConfig
@@ -292,7 +308,7 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 			</div>
 		</>}
 
-		{props.job === ShellJob.BLM ? (
+		{props.job === "BLM" ? (
 			// TODO modify for PCT and other jobs
 			<Expandable
 				title={"castTimesTable"}
@@ -541,7 +557,7 @@ type ConfigState = {
 	procMode: ProcMode;
 	initialResourceOverrides: ResourceOverrideData[];
 
-	selectedOverrideResource: ResourceType;
+	selectedOverrideResource: ResourceKey | CooldownKey;
 	overrideTimer: string;
 	overrideStacks: string;
 	overrideEnabled: boolean;
@@ -579,14 +595,14 @@ export class Config extends React.Component {
 	setOverrideTimer: (val: string) => void;
 	setOverrideStacks: (val: string) => void;
 	setOverrideEnabled: (evt: React.ChangeEvent<{ checked: boolean }>) => void;
-	deleteResourceOverride: (rsc: ResourceType) => void;
+	deleteResourceOverride: (rsc: ResourceKey | CooldownKey) => void;
 	removeImportedField: (field: string) => void;
 
 	constructor(props: {}) {
 		super(props);
 		this.state = {
 			// NOT DEFAULTS
-			job: ShellJob.BLM,
+			job: "BLM",
 			shellVersion: ShellInfo.version,
 			gearImportLink: "",
 			imported: false,
@@ -607,7 +623,7 @@ export class Config extends React.Component {
 			procMode: ProcMode.RNG,
 			initialResourceOverrides: [],
 			/////////
-			selectedOverrideResource: ResourceType.Mana,
+			selectedOverrideResource: "MANA",
 			overrideTimer: "0",
 			overrideStacks: "0",
 			overrideEnabled: true,
@@ -696,7 +712,7 @@ export class Config extends React.Component {
 						const stats = new Map<string, string>(
 							body["totalParams"].map((obj: any) => [obj["name"], obj["value"]]),
 						);
-						if (!ALL_JOBS.includes(body["jobAbbrev"])) {
+						if (!(body["jobAbbrev"] in JOBS)) {
 							throw new Error(
 								"Imported gearset was for a job (" +
 									body["jobAbbrev"] +
@@ -753,7 +769,7 @@ export class Config extends React.Component {
 					if (response.ok) {
 						const body: any = await response.json();
 						// TODO should probably validate each of these fields
-						if (!ALL_JOBS.includes(body["job"])) {
+						if (!(body["job"] in JOBS)) {
 							throw new Error(
 								"Imported gearset was for a job (" +
 									body["job"] +
@@ -871,7 +887,7 @@ export class Config extends React.Component {
 		this.setOverrideEnabled = (evt: React.ChangeEvent<{ checked: boolean }>) => {
 			this.setState({ overrideEnabled: evt.target.checked });
 		};
-		this.deleteResourceOverride = (rscType: ResourceType) => {
+		this.deleteResourceOverride = (rscType: ResourceKey | CooldownKey) => {
 			let overrides = this.state.initialResourceOverrides;
 			for (let i = 0; i < overrides.length; i++) {
 				if (overrides[i].type === rscType) {
@@ -920,7 +936,7 @@ export class Config extends React.Component {
 	// call this whenever the list of options has potentially changed
 	#getFirstAddable(overridesList: ResourceOverrideData[]) {
 		let firstAddableRsc = "aba aba";
-		let S = new Set<ResourceType>();
+		let S = new Set<ResourceKey | CooldownKey>();
 		overridesList.forEach((ov) => {
 			S.add(ov.type);
 		});
@@ -960,15 +976,15 @@ export class Config extends React.Component {
 
 	#resourceOverridesAreValid() {
 		// gather resources for quick access
-		let M = new Map();
+		let M = new Map<ResourceKey | CooldownKey, ResourceOverrideData>();
 		this.state.initialResourceOverrides.forEach((ov) => {
 			M.set(ov.type, ov);
 		});
 
 		// shouldn't have AF and UI at the same time
-		if (M.has(ResourceType.AstralFire) && M.has(ResourceType.UmbralIce)) {
-			let af = M.get(ResourceType.AstralFire).stacks;
-			let ui = M.get(ResourceType.UmbralIce).stacks;
+		if (M.has("ASTRAL_FIRE") && M.has("UMBRAL_ICE")) {
+			let af = M.get("ASTRAL_FIRE")!.stacks;
+			let ui = M.get("UMBRAL_ICE")!.stacks;
 			if (af > 0 && ui > 0) {
 				window.alert("shouldn't have both AF and UI stacks");
 				return false;
@@ -978,9 +994,9 @@ export class Config extends React.Component {
 		let af = 0;
 		let ui = 0;
 		let uh = 0;
-		if (M.has(ResourceType.AstralFire)) af = M.get(ResourceType.AstralFire).stacks;
-		if (M.has(ResourceType.UmbralIce)) ui = M.get(ResourceType.UmbralIce).stacks;
-		if (M.has(ResourceType.UmbralHeart)) uh = M.get(ResourceType.UmbralHeart).stacks;
+		if (M.has("ASTRAL_FIRE")) af = M.get("ASTRAL_FIRE")!.stacks;
+		if (M.has("UMBRAL_ICE")) ui = M.get("UMBRAL_ICE")!.stacks;
+		if (M.has("UMBRAL_HEART")) uh = M.get("UMBRAL_HEART")!.stacks;
 
 		// if there's uh, must have AF/UI
 		if (uh > 0) {
@@ -994,7 +1010,7 @@ export class Config extends React.Component {
 
 		// if there are AF/UI stacks, must have enochian
 		if (af > 0 || ui > 0 || uh > 0) {
-			if (!M.has(ResourceType.Enochian)) {
+			if (!M.has("ENOCHIAN")) {
 				window.alert(
 					"since there's at least one AF/UI stack, there should also be an Enochian timer",
 				);
@@ -1003,13 +1019,13 @@ export class Config extends React.Component {
 		}
 
 		// vice versa: if there's enochian, must have AF/UI
-		if (M.has(ResourceType.Enochian)) {
+		if (M.has("ENOCHIAN")) {
 			if (af === 0 && ui === 0) {
 				window.alert("since there's enochian, there should be at least one AF/UI stack");
 				return false;
 			}
 			// if enochian drop halted, must be in ui and have timer at 15s
-			let enochian = M.get(ResourceType.Enochian);
+			let enochian = M.get("ENOCHIAN")!;
 			if (!enochian.effectOrTimerEnabled) {
 				if (enochian.timeTillFullOrDrop < 15) {
 					window.alert(
@@ -1027,9 +1043,9 @@ export class Config extends React.Component {
 		}
 
 		// if polyglot timer is set (>0), must have enochian
-		if (M.has(ResourceType.Polyglot)) {
-			let polyTimer = M.get(ResourceType.Polyglot).timeTillFullOrDrop;
-			if (polyTimer > 0 && !M.has(ResourceType.Enochian)) {
+		if (M.has("POLYGLOT")) {
+			let polyTimer = M.get("POLYGLOT")!.timeTillFullOrDrop;
+			if (polyTimer > 0 && !M.has("ENOCHIAN")) {
 				window.alert(
 					"since a timer for polyglot is set (time till next stack > 0), there must also be Enochian",
 				);
@@ -1049,7 +1065,7 @@ export class Config extends React.Component {
 		let inputOverrideEnabled = this.state.overrideEnabled;
 
 		// an exception for polyglot: leave empty := no timer set
-		if (rscType === ResourceType.Polyglot && this.state.overrideTimer === "") {
+		if (rscType === "POLYGLOT" && this.state.overrideTimer === "") {
 			inputOverrideTimer = 0;
 		}
 
@@ -1076,7 +1092,7 @@ export class Config extends React.Component {
 		} else {
 			if (
 				(info.maxValue > 1 || info.maxValue === info.defaultValue) &&
-				rscType !== ResourceType.Paradox &&
+				rscType !== "PARADOX" &&
 				(inputOverrideStacks < 0 || inputOverrideStacks > info.maxValue)
 			) {
 				window.alert("invalid input amount (must be in range [0, " + info.maxValue + "])");
@@ -1100,9 +1116,7 @@ export class Config extends React.Component {
 						? inputOverrideStacks
 						: 1,
 				effectOrTimerEnabled:
-					rscType === ResourceType.LeyLines || rscType === ResourceType.Enochian
-						? inputOverrideEnabled
-						: true,
+					rscType === "LEY_LINES" || rscType === "ENOCHIAN" ? inputOverrideEnabled : true,
 			};
 		}
 		// end validation
@@ -1119,7 +1133,7 @@ export class Config extends React.Component {
 			S.add(override.type);
 		});
 
-		const optionEntries: { rsc: ResourceType; isCoolDown: number }[] = [];
+		const optionEntries: { rsc: ResourceKey | CooldownKey; isCoolDown: number }[] = [];
 		for (let k of resourceInfos.keys()) {
 			if (!S.has(k)) {
 				optionEntries.push({
@@ -1176,14 +1190,13 @@ export class Config extends React.Component {
 				}
 
 				// enabled
-				showEnabled =
-					rscType === ResourceType.LeyLines || rscType === ResourceType.Enochian;
+				showEnabled = rscType === "LEY_LINES" || rscType === "ENOCHIAN";
 			}
 
 			let timerDesc;
 			if (info.isCoolDown) {
 				timerDesc = localize({ en: "Time till full: ", zh: "距CD转好时间：" }) as string;
-			} else if (rscType === ResourceType.Polyglot) {
+			} else if (rscType === "POLYGLOT") {
 				timerDesc = localize({
 					en: "Time till next stack: ",
 					zh: "距下一层时间：",
@@ -1193,7 +1206,7 @@ export class Config extends React.Component {
 			}
 
 			let enabledDesc = localize({ en: "enabled", zh: "生效中" });
-			if (rscType === ResourceType.Enochian)
+			if (rscType === "ENOCHIAN")
 				enabledDesc = localize({ en: "timer enabled", zh: "倒计时中" });
 
 			inputSection = <div style={{ margin: "6px 0" }}>
@@ -1252,7 +1265,7 @@ export class Config extends React.Component {
 							this.setState({
 								selectedOverrideResource: evt.target.value,
 								overrideEnabled:
-									evt.target.value === ResourceType.LeyLines
+									evt.target.value === "LEY_LINES"
 										? this.state.overrideEnabled
 										: true,
 							});
@@ -1366,7 +1379,7 @@ export class Config extends React.Component {
 		if (config.initialResourceOverrides === undefined) {
 			config.initialResourceOverrides = [];
 		}
-		if (!ALL_JOBS.includes(config.job)) {
+		if (!(config.job in JOBS)) {
 			window.alert("Invalid job: " + config.job);
 			return;
 		}
@@ -1529,21 +1542,20 @@ export class Config extends React.Component {
 				value={this.state.job}
 				onChange={this.setJob}
 			>
-				{ALL_JOBS.map((job) => {
-					if (TESTING_JOBS.includes(job)) {
-						return <option key={job} value={job}>
-							{job +
-								` (${localize({
-									en: "testing",
-									zh: "测试中",
-								})})`}
-						</option>;
-					} else {
-						return <option key={job} value={job}>
-							{job}
-						</option>;
-					}
-				})}
+				{ALL_JOBS.filter((job) => JOBS[job].implementationLevel !== "UNIMPLEMENTED").map(
+					(job) => {
+						const impl = JOBS[job].implementationLevel;
+						if (impl !== "LIVE") {
+							return <option key={job} value={job}>
+								{job + ` (${IMPLEMENTATION_LEVELS[impl].label})`}
+							</option>;
+						} else {
+							return <option key={job} value={job}>
+								{job}
+							</option>;
+						}
+					},
+				)}
 			</select>
 		</div>;
 		let editStatsSection = <div style={{ marginBottom: 16 }}>

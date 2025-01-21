@@ -1,6 +1,6 @@
-import { ResourceType, TraitName } from "../../Game/Common";
+import { ResourceKey, RESOURCES } from "../../Game/Data";
+import { RPR_STATUSES } from "../../Game/Data/Jobs/RPR";
 import { RPRState } from "../../Game/Jobs/RPR";
-import { Traits } from "../../Game/Traits";
 import { getCurrentThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import {
@@ -12,124 +12,37 @@ import {
 	StatusPropsGenerator,
 } from "../StatusDisplay";
 
-[
-	ResourceType.DeathsDesign,
-	ResourceType.SoulReaver,
-	ResourceType.SoulReaver + "2",
-	ResourceType.EnhancedGibbet,
-	ResourceType.EnhancedGallows,
-	ResourceType.Executioner,
-	ResourceType.Executioner + "2",
-	ResourceType.EnhancedVoidReaping,
-	ResourceType.EnhancedCrossReaping,
-	ResourceType.Enshrouded,
-	ResourceType.Oblatio,
-	ResourceType.IdealHost,
-	ResourceType.PerfectioOcculta,
-	ResourceType.PerfectioParata,
-	ResourceType.ArcaneCircle,
-	ResourceType.CircleOfSacrifice,
-	ResourceType.BloodsownCircle,
-	ResourceType.ImmortalSacrifice,
-	ResourceType.ImmortalSacrifice + "2",
-	ResourceType.ImmortalSacrifice + "3",
-	ResourceType.ImmortalSacrifice + "4",
-	ResourceType.ImmortalSacrifice + "5",
-	ResourceType.ImmortalSacrifice + "6",
-	ResourceType.ImmortalSacrifice + "7",
-	ResourceType.ImmortalSacrifice + "8",
-	ResourceType.CrestOfTimeBorrowed,
-	ResourceType.CrestOfTimeReturned,
-	ResourceType.Soulsow,
-	ResourceType.Threshold,
-	ResourceType.EnhancedHarpe,
-].forEach((buff) => registerBuffIcon(buff, `RPR/${buff}.png`));
+(Object.keys(RPR_STATUSES) as ResourceKey[]).forEach((buff) =>
+	registerBuffIcon(buff, `RPR/${RESOURCES[buff].name}.png`),
+);
 
 export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		const deathsDesignCountdown = this.state.resources.timeTillReady(ResourceType.DeathsDesign);
-
-		return [
-			{
-				rscType: ResourceType.DeathsDesign,
-				onSelf: false,
-				enabled: true,
-				stacks: 1,
-				timeRemaining: deathsDesignCountdown.toFixed(3),
-				className: deathsDesignCountdown > 0 ? "" : "hidden",
-			},
-		];
+		return [this.makeCommonTimer("DEATHS_DESIGN", false)];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
-		const makeRprSelfTimer = (rscType: ResourceType) => {
-			const cd = this.state.resources.timeTillReady(rscType);
-			return {
-				rscType: rscType,
-				onSelf: true,
-				enabled: true,
-				stacks: this.state.resources.get(rscType).availableAmount(),
-				timeRemaining: cd.toFixed(3),
-				className: this.state.hasResourceAvailable(rscType) ? "" : "hidden",
-			};
-		};
-
-		const buffProps: BuffProps[] = [
-			ResourceType.SoulReaver,
-			ResourceType.EnhancedGibbet,
-			ResourceType.EnhancedGallows,
-			ResourceType.Executioner,
-			ResourceType.Enshrouded,
-			ResourceType.EnhancedCrossReaping,
-			ResourceType.EnhancedVoidReaping,
-			ResourceType.Oblatio,
-			ResourceType.IdealHost,
-			ResourceType.PerfectioOcculta,
-			ResourceType.PerfectioParata,
-			ResourceType.ArcaneCircle,
-			ResourceType.CircleOfSacrifice,
-			ResourceType.BloodsownCircle,
-			ResourceType.ArcaneCrest,
-			ResourceType.CrestOfTimeBorrowed,
-			ResourceType.CrestOfTimeReturned,
-			ResourceType.Threshold,
-			ResourceType.EnhancedHarpe,
-		].map(makeRprSelfTimer);
-
-		buffProps.push(
-			{
-				rscType: ResourceType.Soulsow,
-				onSelf: true,
-				enabled: true,
-				stacks: this.state.resources.get(ResourceType.Soulsow).availableAmount(),
-				className: this.state.hasResourceAvailable(ResourceType.Soulsow) ? "" : "hidden",
-			},
-			{
-				rscType: ResourceType.ImmortalSacrifice,
-				onSelf: true,
-				enabled: true,
-				stacks: this.state.resources.get(ResourceType.ImmortalSacrifice).availableAmount(),
-				className: this.state.hasResourceAvailable(ResourceType.ImmortalSacrifice)
-					? ""
-					: "hidden",
-				timeRemaining: this.state.resources
-					.timeTillReady(ResourceType.ImmortalSacrifice)
-					.toFixed(3),
-			},
-		);
-
-		return [...buffProps];
+		return [
+			...(Object.keys(RPR_STATUSES) as ResourceKey[])
+				.filter((key) => key !== "DEATHS_DESIGN")
+				.map((key) => {
+					if (key === "SOULSOW") {
+						return this.makeCommonTimerless(key);
+					}
+					return this.makeCommonTimer(key);
+				}),
+		];
 	}
 
 	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
-		const soulGauge = resources.get(ResourceType.Soul).availableAmount();
-		const shroudGauge = resources.get(ResourceType.Shroud).availableAmount();
-		const lemureShroud = resources.get(ResourceType.LemureShroud).availableAmount();
-		const voidShroud = resources.get(ResourceType.VoidShroud).availableAmount();
-		const stCombo = resources.get(ResourceType.RPRCombo);
-		const aoeCombo = resources.get(ResourceType.RPRAoECombo);
+		const soulGauge = resources.get("SOUL").availableAmount();
+		const shroudGauge = resources.get("SHROUD").availableAmount();
+		const lemureShroud = resources.get("LEMURE_SHROUD").availableAmount();
+		const voidShroud = resources.get("VOID_SHROUD").availableAmount();
+		const stCombo = resources.get("RPR_COMBO");
+		const aoeCombo = resources.get("RPR_AOE_COMBO");
 		const comboTimer = stCombo.available(1)
 			? stCombo.pendingChange?.timeTillEvent
 			: aoeCombo.available(1)
@@ -154,7 +67,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 				valueString: Math.floor(soulGauge) + "/100",
 			} as ResourceBarProps,
 		];
-		if (Traits.hasUnlocked(TraitName.ShroudGauge, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("SHROUD_GAUGE")) {
 			infos.push(
 				{
 					kind: "bar",
@@ -177,7 +90,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 				} as ResourceCounterProps,
 			);
 		}
-		if (Traits.hasUnlocked(TraitName.VoidSoul, this.state.config.level)) {
+		if (this.state.hasTraitUnlocked("VOID_SOUL")) {
 			infos.push({
 				kind: "counter",
 				name: localize({
