@@ -79,6 +79,10 @@ const HYPERPHANTASIA_SKILLS: PCTActionKey[] = [
 	"STAR_PRISM",
 ];
 
+const MOTIFS: ActionKey[] = ["POM_MOTIF", "WING_MOTIF", "CLAW_MOTIF", "MAW_MOTIF"];
+
+const HAMMER_COMBO: ActionKey[] = ["HAMMER_BRUSH", "HAMMER_STAMP", "POLISHING_HAMMER"];
+
 // === JOB GAUGE AND STATE ===
 export class PCTState extends GameState {
 	constructor(config: GameConfig) {
@@ -116,7 +120,7 @@ export class PCTState extends GameState {
 
 	// apply hyperphantasia + sps adjustment without consuming any resources
 	captureSpellCastTime(name: ActionKey, baseCastTime: number): number {
-		if (name.includes("MOTIF")) {
+		if (MOTIFS.includes(name)) {
 			// motifs are not affected by sps
 			return baseCastTime;
 		}
@@ -133,7 +137,7 @@ export class PCTState extends GameState {
 	}
 
 	captureSpellRecastTime(name: ActionKey, baseRecastTime: number): number {
-		if (name.includes("Motif")) {
+		if (MOTIFS.includes(name)) {
 			// motifs are unaffected by sps
 			return baseRecastTime;
 		}
@@ -145,7 +149,7 @@ export class PCTState extends GameState {
 			return this.hasResourceAvailable("RAINBOW_BRIGHT") ? recast - 3.5 : recast;
 		}
 		// hammers are not affected by inspiration
-		if (name.includes("Hammer")) {
+		if (HAMMER_COMBO.includes(name)) {
 			return this.config.adjustedGCD(baseRecastTime);
 		}
 		return this.config.adjustedGCD(
