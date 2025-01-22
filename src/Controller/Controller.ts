@@ -56,6 +56,7 @@ import { MELEE_JOBS, ShellJob } from "../Game/Data/Jobs";
 import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
 import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 import { getGameState } from "../Game/Jobs";
+import { localizeSkillName } from "../Components/Localization";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 require("../Game/Jobs/RoleActions");
@@ -425,10 +426,10 @@ class Controller {
 		if (!replayResult.success) {
 			let msg = "Failed to load the entire record- \n";
 			if (replayResult.firstInvalidNode) {
-				msg +=
-					"Stopped here because the next action " +
-					(replayResult.firstInvalidNode.skillName ?? "(unknown)") +
-					" can't be added: ";
+				const actionName = replayResult.firstInvalidNode.skillName
+					? localizeSkillName(replayResult.firstInvalidNode.skillName)
+					: "(unknown)";
+				msg += "Stopped here because the next action " + actionName + " can't be added: ";
 			}
 			msg += replayResult.invalidReason;
 			window.alert(msg);
