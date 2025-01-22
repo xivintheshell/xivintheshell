@@ -3,7 +3,7 @@ import { ResourceOverride, ResourceOverrideData } from "./Resources";
 import { ShellInfo, ShellVersion } from "../Controller/Common";
 import { XIVMath } from "./XIVMath";
 import { ShellJob } from "./Data/Jobs";
-import { ResourceKey, RESOURCES } from "./Data";
+import { CooldownKey, COOLDOWNS, ResourceKey, RESOURCES } from "./Data";
 
 export type ConfigData = {
 	job: ShellJob;
@@ -134,7 +134,7 @@ export class GameConfig {
 				else obj.effectOrTimerEnabled = obj.enabled;
 			}
 			// Backwards compatibility re: change to keyed data
-			if (!(obj.type in RESOURCES)) {
+			if (!(obj.type in RESOURCES || obj.type in COOLDOWNS)) {
 				// Special case a few spelling changes made during the transition
 				if (obj.type.toString() === "AstralFire") {
 					obj.type = "ASTRAL_FIRE";
@@ -143,9 +143,17 @@ export class GameConfig {
 				} else if (obj.type.toString() === "UmbralHeart") {
 					obj.type = "UMBRAL_HEART";
 				} else {
-					const key = Object.keys(RESOURCES).find(
+					// Try to find the key in RESOURCES
+					let key: ResourceKey | CooldownKey | undefined = Object.keys(RESOURCES).find(
 						(key) => RESOURCES[key as ResourceKey].name === obj.type,
 					) as ResourceKey;
+					// If not found, check COOLDOWNS next
+					if (!key) {
+						key = Object.keys(COOLDOWNS).find(
+							(key) => COOLDOWNS[key as CooldownKey].name === obj.type,
+						) as CooldownKey;
+					}
+					// If we found it in either data set, assign the key as the type
 					if (key) {
 						obj.type = key;
 					}
