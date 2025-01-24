@@ -149,11 +149,8 @@ export const SMN_ACTIONS = ensureRecord<ActionData>()({
 	SEARING_FLASH: {
 		name: "Searing Flash",
 	},
-	LUX_SOLARIS: {
-		name: "Lux Solaris",
-	},
 	SUMMON_SOLAR_BAHAMUT: {
-		name: "Summon Solar Bahamut"
+		name: "Summon Solar Bahamut",
 	},
 	UMBRAL_IMPULSE: {
 		name: "Umbral Impulse",
@@ -167,6 +164,9 @@ export const SMN_ACTIONS = ensureRecord<ActionData>()({
 	ENKINDLE_SOLAR_BAHAMUT: {
 		name: "Enkindle Solar Bahamut",
 	},
+	LUX_SOLARIS: {
+		name: "Lux Solaris",
+	},
 });
 
 export const SMN_COOLDOWNS = ensureRecord<CooldownData>()({
@@ -178,6 +178,12 @@ export const SMN_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_SEARING_LIGHT: { name: "cd_SEARING_LIGHT" }, // 120s
 	cd_SEARING_FLASH: { name: "cd_SEARING_FLASH" }, // 1s
 	cd_LUX_SOLARIS: { name: "cd_LUX_SOLARIS" }, // 60s
+	// per hauffen: lockout is 4.05s for ifrit/titan; 3.38s for garuda:
+	// https://discord.com/channels/277897135515762698/277968477233479680/1331466393430003793
+	// this number is lower for egis below level 90; need to double check
+	cd_SUMMON_LOCKOUT: { name: "cd_SUMMON_LOCKOUT" },
+	// assume a fixed 3.163 delay between demi autos, which is close enough to reality
+	cd_DEMI_AUTO: { name: "cd_DEMI_AUTO" },
 });
 
 export const SMN_GAUGES = ensureRecord<ResourceData>()({
@@ -185,16 +191,16 @@ export const SMN_GAUGES = ensureRecord<ResourceData>()({
 	RUBY_ARCANUM: { name: "Ruby Arcanum" },
 	TOPAZ_ARCANUM: { name: "Topaz Arcanum" },
 	EMERALD_ARCANUM: { name: "Emerald Arcanum" },
-	ATTUNEMENT: { name: "Attunement" },
-	// time remaining on attunement stacks
-	ATTUNEMENT_TIMER: { name: "Attunement Timer" },
-	// time remaining before summoned egi leaves
-	SUMMON_TIMER: { name: "Summon Timer" },
+	RUBY_ATTUNEMENT: { name: "Ruby Attunement" },
+	TOPAZ_ATTUNEMENT: { name: "Topaz Attunement" },
+	EMERALD_ATTUNEMENT: { name: "Emerald Attunement" },
+	// time remaining before summoned egi or demi leaves
+	SUMMON_ACTIVE: { name: "Summon Timer" },
 });
 
 export const SMN_STATUSES = ensureRecord<ResourceData>()({
 	AETHERFLOW: { name: "Aetherflow", maximumStacks: 2 },
-	CRIMSON_STRIKE_READY: { name: "Crimson Strike Reaady" },
+	CRIMSON_STRIKE_READY: { name: "Crimson Strike Ready" },
 	EVERLASTING_FLIGHT: { name: "Everlasting Flight" },
 	FURTHER_RUIN: { name: "Further Ruin" },
 	GARUDAS_FAVOR: { name: "Garuda's Favor" },
@@ -204,18 +210,22 @@ export const SMN_STATUSES = ensureRecord<ResourceData>()({
 	REKINDLE: { name: "Rekindle" },
 	RUBYS_GLIMMER: { name: "Ruby's Glimmer" },
 	SEARING_LIGHT: { name: "Searing Light" },
-	SLIPSTREAM: { name: "Slipstream" },
+	SLIPSTREAM: { name: "Slipstream", mayBeToggled: true },
 	TITANS_FAVOR: { name: "Titan's Favor" },
 	UNDYING_FLAME: { name: "Undying Flame" },
 });
 
-export const SMN_TRACKERS = ensureRecord<ResourceData>()({});
+export const SMN_TRACKERS = ensureRecord<ResourceData>()({
+	// (next demi summon) 0 = solar, 1 = baha, 2 = solar, 3 = phoenix
+	NEXT_DEMI_CYCLE: { name: "Next Demi Cycle" },
+});
 
 export const SMN_TRAITS = ensureRecord<TraitData>()({
-	// smn's 72-82 traits just upgrade skills, so we can just check level directly
 	RUIN_MASTERY_IV: { name: "Ruin Mastery IV", level: 84 },
 	ENHANCED_RADIANT_AEGIS: { name: "Enhanced Radiant Aegis", level: 88 },
-	ARCANE_MASTERY: { name: "Arcane Mastery", level : 94 },
+	ENHANCED_FESTER: { name: "Enhanced Fester", level: 92 },
+	ARCANE_MASTERY: { name: "Arcane Mastery", level: 94 },
+	ENHANCED_SEARING_LIGHT: { name: "Enhanced Searing Light", level: 96 },
 });
 
 export type SMNActions = typeof SMN_ACTIONS;

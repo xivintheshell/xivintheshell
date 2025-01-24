@@ -56,6 +56,8 @@ export const enum PotencyModifierType {
 	BARRAGE,
 
 	NO_MERCY,
+
+	SEARING_LIGHT,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -284,7 +286,12 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.NO_MERCY,
 		damageFactor: 1.2,
-	} as PotencyModifier,
+	} as PotencyMultiplier,
+	SearingLight: {
+		kind: "multiplier",
+		source: PotencyModifierType.SEARING_LIGHT,
+		damageFactor: 1.05,
+	} as PotencyMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

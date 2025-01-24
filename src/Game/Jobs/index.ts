@@ -9,6 +9,7 @@ import { PCTState } from "./PCT";
 import { RDMState } from "./RDM";
 import { RPRState } from "./RPR";
 import { SAMState } from "./SAM";
+import { SMNState } from "./SMN";
 import { WARState } from "./WAR";
 
 export function getGameState(config: GameConfig): GameState {
@@ -34,6 +35,8 @@ export function getGameState(config: GameConfig): GameState {
 		// Casters
 		case "BLM":
 			return new BLMState(config);
+		case "SMN":
+			return new SMNState(config);
 		case "RDM":
 			return new RDMState(config);
 		case "PCT":
