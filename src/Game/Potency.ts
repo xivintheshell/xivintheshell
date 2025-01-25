@@ -58,6 +58,8 @@ export const enum PotencyModifierType {
 	NO_MERCY,
 
 	SEARING_LIGHT,
+
+	PET,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -291,6 +293,13 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.SEARING_LIGHT,
 		damageFactor: 1.05,
+	} as PotencyMultiplier,
+	SmnPet: {
+		kind: "multiplier",
+		source: PotencyModifierType.PET,
+		// with a 5% party bonus, smn pet skills do approximately 80% of its other potencies
+		// https://docs.google.com/spreadsheets/d/1Yt7Px7VHuKG1eJR9CRKs3RpvcR5IZKAAA3xjekvv0LY/edit?gid=0#gid=0
+		damageFactor: 0.80,
 	} as PotencyMultiplier,
 };
 

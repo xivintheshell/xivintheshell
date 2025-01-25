@@ -762,10 +762,10 @@ export function getConditionalReplacement<T extends PlayerState>(
 			throw new Error("couldn't find skill info for " + candidate.newSkill);
 		}
 		if (state.config.level >= candidateSkill.unlockLevel && candidate.condition(state)) {
-			return candidate.newSkill;
+			return getAutoReplacedSkillName(state.job, candidate.newSkill, state.config.level);
 		}
 	}
-	return skill.name;
+	return getAutoReplacedSkillName(state.job, skill.name, state.config.level);
 }
 
 export class DisplayedSkills {
@@ -790,8 +790,8 @@ export class DisplayedSkills {
 	}
 
 	// Get the list of skills to display in the current game state.
-	// `replaceIf` conditions are checked here.
-	// `autoUpgrade`/`autoDowngrade` are not checked here, and are checked in the constructor instead.
+	// `replaceIf` and `autoUpgrade`/`autoDowngrade`` conditions are checked here;
+	// `autoUpgrade`/`autoDowngrade` conditions are also checked in the constructor.
 	getCurrentSkillNames<T extends PlayerState>(state: T): ActionKey[] {
 		return this.#skills.map((skillName) => getConditionalReplacement(skillName, state));
 	}

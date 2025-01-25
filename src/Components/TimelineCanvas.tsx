@@ -545,6 +545,7 @@ function drawSkills(
 	const coverInfo: Map<BuffType, { color: string; showImage: boolean }> = new Map([
 		[BuffType.Tincture, { color: g_colors.timeline.potCover, showImage: true }],
 		[BuffType.LeyLines, { color: g_colors.timeline.llCover, showImage: true }],
+		[BuffType.SearingLight, { color: "blue", showImage: true }],
 		[BuffType.Hyperphantasia, { color: g_colors.timeline.llCover, showImage: false }],
 		[BuffType.StarryMuse, { color: g_colors.timeline.buffCover, showImage: true }],
 		[BuffType.Embolden, { color: g_colors.rdm.emboldenBuff, showImage: true }],

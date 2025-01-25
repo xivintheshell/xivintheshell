@@ -19,9 +19,15 @@ import { SMN_STATUSES } from "../../Game/Data/Jobs/SMN";
 
 export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
+		const timerlessBuffs: ResourceKey[] = [
+			"AETHERFLOW",
+			"IFRITS_FAVOR",
+			"TITANS_FAVOR",
+			"GARUDAS_FAVOR",
+		];
 		return [
 			...(Object.keys(SMN_STATUSES) as ResourceKey[]).map((key) => {
-				if (key === "AETHERFLOW") {
+				if (timerlessBuffs.includes(key)) {
 					return this.makeCommonTimerless(key);
 				}
 				return this.makeCommonTimer(key);
@@ -40,6 +46,17 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 		);
 		const demiTimer = resources.timeTillReady("ACTIVE_DEMI");
 
+		const arcana = []
+		if (resources.get("RUBY_ARCANUM").available(1)) {
+			arcana.push("ruby");
+		}
+		if (resources.get("TOPAZ_ARCANUM").available(1)) {
+			arcana.push("topaz");
+		}
+		if (resources.get("EMERALD_ARCANUM").available(1)) {
+			arcana.push("emerald");
+		}
+
 		const infos: ResourceDisplayProps[] = [
 			{
 				kind: "counter",
@@ -49,6 +66,12 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 				maxStacks: 2,
 			} as ResourceCounterProps,
 			// TODO combine trace gauge elements into a common thing
+			{
+				kind: "text",
+				name: localize({ en: "arcanum" }),
+				colors: colors.rdm.manaStack,
+				text: arcana.join(" | "),
+			} as ResourceTextProps,
 			{
 				kind: "text",
 				name: localize({ en: "attunement" }),
@@ -84,6 +107,12 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 				name: localize({ en: "active demi" }),
 				color: colors.rdm.manaStack,
 				text: resources.get("ACTIVE_DEMI").availableAmount().toFixed(0),
+			} as ResourceTextProps,
+			{
+				kind: "text",
+				name: localize({ en: "summon timer" }),
+				color: colors.rdm.manaStack,
+				text: this.state.cooldowns.get("cd_SUMMON_LOCKOUT").timeTillNextStackAvailable().toFixed(3),
 			} as ResourceTextProps,
 		];
 

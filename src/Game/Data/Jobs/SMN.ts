@@ -167,6 +167,16 @@ export const SMN_ACTIONS = ensureRecord<ActionData>()({
 	LUX_SOLARIS: {
 		name: "Lux Solaris",
 	},
+	// pet actions
+	INFERNO: {
+		name: "Inferno",
+	},
+	EARTHEN_FURY: {
+		name: "Earthen Fury",
+	},
+	AERIAL_BLAST: {
+		name: "Aerial Blast",
+	},
 });
 
 export const SMN_COOLDOWNS = ensureRecord<CooldownData>()({
