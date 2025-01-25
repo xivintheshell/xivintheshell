@@ -41,6 +41,14 @@ const makeSMNResource = (
 	makeResource("SMN", rsc, maxValue, params ?? {});
 };
 
+
+enum ActiveDemiValues {
+	NONE = 0,
+	SOLAR = 1,
+	BAHAMUT = 2,
+	PHOENIX = 3,
+}
+
 makeSMNResource("AETHERFLOW", 2);
 makeSMNResource("RUBY_ARCANUM", 1);
 makeSMNResource("TOPAZ_ARCANUM", 1);
@@ -61,7 +69,12 @@ makeSMNResource("UNDYING_FLAME", 1, { timeout: 15 });
 makeSMNResource("RUBYS_GLIMMER", 1, { timeout: 30 });
 makeSMNResource("SEARING_LIGHT", 1, { timeout: 20 });
 makeSMNResource("SLIPSTREAM", 1, { timeout: 15 });
-makeSMNResource("SUMMON_ACTIVE", 1, { timeout: 15 }); // changes depending on active egi or demi
+// 0 = no demi, 1 = solar, 2 = baha, 3 = phoenix
+makeSMNResource("ACTIVE_DEMI", 2, { timeout: 15 });
+// needed to distinguish between the 1min and 3min bahamuts
+// at level 100: 0 = next summon is solar, 1 = baha, 2 = phoenix, 3 = baha
+// at level 80/90: 0 = baha, 1 = phoenix, 2 = baha, 3 = phoenix
+// at level 70: any value is baha
 makeSMNResource("NEXT_DEMI_CYCLE", 3);
 
 // === JOB GAUGE AND STATE ===
@@ -83,6 +96,10 @@ export class SMNState extends GameState {
 		if (this.hasResourceAvailable("SEARING_LIGHT")) {
 			node.addBuff(BuffType.Embolden);
 		}
+	}
+
+	get activeDemi(): number {
+		return this.resources.get("ACTIVE_DEMI").availableAmount();
 	}
 }
 
@@ -116,7 +133,7 @@ const makeSpell_SMN = (
 	const baseCastTime = params.baseCastTime ?? 0;
 	const baseRecastTime = params.baseRecastTime ?? 2.5;
 	// R3 and ifrit fillers consume swiftcast
-	const onConfirm =
+	const onConfirm: EffectFn<SMNState> | undefined =
 		baseCastTime > 0
 			? combineEffects(
 					(state) => state.tryConsumeResource("SWIFTCAST"),
@@ -161,28 +178,143 @@ const makeAbility_SMN = (
 		...params,
 	});
 
+// manual stand-in for toSpliced, available in ES2023
+function toSpliced<T>(arr: T[], i: number): T[] {
+	const newArr = arr.slice();
+	newArr.splice(i, 1);
+	return newArr;
+}
+
+const r3ReplaceList: ConditionalSkillReplace<SMNState>[] = [
+	{
+		newSkill: "ASTRAL_IMPULSE",
+		condition: (state) => state.activeDemi === ActiveDemiValues.BAHAMUT,
+	},
+	{
+		newSkill: "FOUNTAIN_OF_FIRE",
+		condition: (state) => state.activeDemi === ActiveDemiValues.PHOENIX,
+	},
+	{
+		newSkill: "UMBRAL_IMPULSE",
+		condition: (state) => state.activeDemi === ActiveDemiValues.SOLAR,
+	}
+];
+
 makeSpell_SMN("RUIN_III", 54, {
+	basePotency: [
+		["NEVER", 300],
+		["RUIN_MASTERY_IV", 310],
+		["ARCANE_MASTERY", 360],
+	],
 	baseCastTime: 1.5,
 	manaCost: 300,
-	replaceIf: [], // TODO
+	replaceIf: r3ReplaceList,
 	applicationDelay: 0.8,
 });
 
-// ASTRAL_IMPULSE
-// FOUNTAIN_OF_FIRE
-// UMBRAL_IMPULSE
+makeSpell_SMN("ASTRAL_IMPULSE", 58, {
+	basePotency: [
+		["NEVER", 440],
+		["ARCANE_MASTERY", 500],
+	],
+	manaCost: 300,
+	replaceIf: toSpliced(r3ReplaceList, 0),
+	applicationDelay: 0.67,
+	validateAttempt: r3ReplaceList[0].condition, 
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("FOUNTAIN_OF_FIRE", 80, {
+	basePotency: [
+		["NEVER", 540],
+		["ARCANE_MASTERY", 580],
+	],
+	manaCost: 300,
+	replaceIf: toSpliced(r3ReplaceList, 1),
+	applicationDelay: 1.07,
+	validateAttempt: r3ReplaceList[1].condition,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("UMBRAL_IMPULSE", 100, {
+	basePotency: 620,
+	manaCost: 300,
+	replaceIf: toSpliced(r3ReplaceList, 2),
+	applicationDelay: 0.80,
+	validateAttempt: r3ReplaceList[2].condition,
+	startOnHotbar: false,
+});
+
+const outburstReplaceList: ConditionalSkillReplace<SMNState>[] = [
+	{
+		newSkill: "ASTRAL_FLARE",
+		condition: (state) => state.activeDemi === ActiveDemiValues.BAHAMUT,
+	},
+	{
+		newSkill: "BRAND_OF_PURGATORY",
+		condition: (state) => state.activeDemi === ActiveDemiValues.PHOENIX,
+	},
+	{
+		newSkill: "UMBRAL_FLARE",
+		condition: (state) => state.activeDemi === ActiveDemiValues.SOLAR,
+	}
+];
 
 makeSpell_SMN("OUTBURST", 26, {
+	autoUpgrade: {
+		trait: "OUTBURST_MASTERY",
+		otherSkill: "TRI_DISASTER",
+	},
+	basePotency: 100,
 	baseCastTime: 1.5,
 	manaCost: 300,
+	replaceIf: outburstReplaceList,
 	applicationDelay: 0.8, // TODO
 	falloff: 0,
 });
 
-// ASTRAL_FLARE
-// TRI_DISASTER
-// BRAND_OF_PURGATORY
-// UMBRAL_FLARE
+makeSpell_SMN("TRI_DISASTER", 74, {
+	autoDowngrade: {
+		trait: "OUTBURST_MASTERY",
+		otherSkill: "OUTBURST",
+	},
+	basePotency: 120,
+	baseCastTime: 1.5,
+	manaCost: 300,
+	replaceIf: outburstReplaceList,
+	applicationDelay: 0.8, // TODO
+	falloff: 0,
+});
+
+makeSpell_SMN("ASTRAL_FLARE", 58, {
+	basePotency: 180,
+	manaCost: 300,
+	replaceIf: toSpliced(outburstReplaceList, 0),
+	applicationDelay: 0.54,
+	validateAttempt: outburstReplaceList[0].condition,
+	falloff: 0,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("BRAND_OF_PURGATORY", 80, {
+	basePotency: 240,
+	manaCost: 300,
+	replaceIf: toSpliced(outburstReplaceList, 1),
+	applicationDelay: 0.80,
+	validateAttempt: outburstReplaceList[1].condition,
+	falloff: 0,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("UMBRAL_FLARE", 100, {
+	basePotency: 280,
+	manaCost: 300,
+	replaceIf: toSpliced(outburstReplaceList, 2),
+	applicationDelay: 0.53,
+	validateAttempt: outburstReplaceList[2].condition,
+	falloff: 0,
+	startOnHotbar: false,
+});
 
 // GEMSHINE
 // PRECIOUS_BRILLIANCE

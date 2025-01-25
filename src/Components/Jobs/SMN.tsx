@@ -38,7 +38,7 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 			resources.timeTillReady("TOPAZ_ATTUNEMENT"),
 			resources.timeTillReady("EMERALD_ATTUNEMENT"),
 		);
-		const summonTimer = resources.timeTillReady("SUMMON_ACTIVE");
+		const demiTimer = resources.timeTillReady("ACTIVE_DEMI");
 
 		const infos: ResourceDisplayProps[] = [
 			{
@@ -68,9 +68,9 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 			} as ResourceBarProps,
 			{
 				kind: "text",
-				name: localize({ en: "summon timer" }),
+				name: localize({ en: "demi timer" }),
 				color: colors.rdm.blackMana,
-				text: summonTimer.toFixed(2),
+				text: demiTimer.toFixed(2),
 			} as ResourceTextProps,
 		];
 

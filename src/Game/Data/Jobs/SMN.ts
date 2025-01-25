@@ -194,8 +194,7 @@ export const SMN_GAUGES = ensureRecord<ResourceData>()({
 	RUBY_ATTUNEMENT: { name: "Ruby Attunement" },
 	TOPAZ_ATTUNEMENT: { name: "Topaz Attunement" },
 	EMERALD_ATTUNEMENT: { name: "Emerald Attunement" },
-	// time remaining before summoned egi or demi leaves
-	SUMMON_ACTIVE: { name: "Summon Timer" },
+	ACTIVE_DEMI: { name: "Active Demi" },
 });
 
 export const SMN_STATUSES = ensureRecord<ResourceData>()({
@@ -221,11 +220,16 @@ export const SMN_TRACKERS = ensureRecord<ResourceData>()({
 });
 
 export const SMN_TRAITS = ensureRecord<TraitData>()({
+	OUTBURST_MASTERY: { name: "Outburst Mastery", level: 74 },
+	ENHANCED_SUMMON_BAHAMUT: { name: "Enhanced Summon Bahamut", level: 80 },
 	RUIN_MASTERY_IV: { name: "Ruin Mastery IV", level: 84 },
+	ELEMENTAL_MASTERY: { name: "Elemental Mastery", level: 86 },
 	ENHANCED_RADIANT_AEGIS: { name: "Enhanced Radiant Aegis", level: 88 },
+	ENKINDLE_II: { name: "Enkindle II", level: 90 },
 	ENHANCED_FESTER: { name: "Enhanced Fester", level: 92 },
 	ARCANE_MASTERY: { name: "Arcane Mastery", level: 94 },
 	ENHANCED_SEARING_LIGHT: { name: "Enhanced Searing Light", level: 96 },
+	ENHANCED_SUMMON_BAHAMUT_II: { name: "Enhanced Summon Bahamut II", level: 100 },
 });
 
 export type SMNActions = typeof SMN_ACTIONS;
