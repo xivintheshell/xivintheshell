@@ -6,6 +6,7 @@ import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
+	CooldownGroupProperties,
 	ConditionalSkillReplace,
 	EffectFn,
 	getBasePotency,
@@ -23,7 +24,7 @@ import {
 	Weaponskill,
 } from "../Skills";
 import { GameState, PlayerState } from "../GameState";
-import { getResourceInfo, makeResource, CoolDown, Resource, ResourceInfo } from "../Resources";
+import { getResourceInfo, makeResource, CoolDown, Event, Resource, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
 import { ActionKey, CooldownKey, TraitKey } from "../Data";
@@ -42,12 +43,14 @@ const makeSMNResource = (
 };
 
 
-enum ActiveDemiValues {
+enum ActiveDemiValue {
 	NONE = 0,
 	SOLAR = 1,
 	BAHAMUT = 2,
 	PHOENIX = 3,
 }
+
+const DEMI_DURATION: number = 15;
 
 makeSMNResource("AETHERFLOW", 2);
 makeSMNResource("RUBY_ARCANUM", 1);
@@ -70,7 +73,7 @@ makeSMNResource("RUBYS_GLIMMER", 1, { timeout: 30 });
 makeSMNResource("SEARING_LIGHT", 1, { timeout: 20 });
 makeSMNResource("SLIPSTREAM", 1, { timeout: 15 });
 // 0 = no demi, 1 = solar, 2 = baha, 3 = phoenix
-makeSMNResource("ACTIVE_DEMI", 2, { timeout: 15 });
+makeSMNResource("ACTIVE_DEMI", 3, { timeout: DEMI_DURATION });
 // needed to distinguish between the 1min and 3min bahamuts
 // at level 100: 0 = next summon is solar, 1 = baha, 2 = phoenix, 3 = baha
 // at level 80/90: 0 = baha, 1 = phoenix, 2 = baha, 3 = phoenix
@@ -85,6 +88,8 @@ export class SMNState extends GameState {
 		this.cooldowns.set(new CoolDown("cd_SWIFTCAST", swiftcastCooldown, 1, 1));
 		const aegisStacks = this.hasTraitUnlocked("ENHANCED_RADIANT_AEGIS") ? 2 : 1;
 		this.cooldowns.set(new CoolDown("cd_RADIANT_AEGIS", 60, aegisStacks, aegisStacks));
+		// set demi cd to scale off sps
+		this.cooldowns.set(new CoolDown("cd_DEMI_SUMMON", this.config.adjustedGCD(60), 1, 1));
 		this.registerRecurringEvents();
 	}
 
@@ -98,8 +103,41 @@ export class SMNState extends GameState {
 		}
 	}
 
-	get activeDemi(): number {
+	get activeDemi(): ActiveDemiValue {
 		return this.resources.get("ACTIVE_DEMI").availableAmount();
+	}
+
+	get nextDemi(): ActiveDemiValue {
+		// at level 100: 0 = next summon is solar, 1 = baha, 2 = phoenix, 3 = baha
+		// at level 80/90: 0 = baha, 1 = phoenix, 2 = baha, 3 = phoenix
+		// at level 70: any value is baha
+		const resourceValue = this.resources.get("NEXT_DEMI_CYCLE").availableAmount();
+		if (this.hasTraitUnlocked("ENHANCED_SUMMON_BAHAMUT_II")) {
+			if (resourceValue === 0) {
+				return ActiveDemiValue.SOLAR;
+			} else if (resourceValue === 2) {
+				return ActiveDemiValue.PHOENIX
+			} else {
+				return ActiveDemiValue.BAHAMUT;
+			}
+		} else if (this.hasTraitUnlocked("ENHANCED_SUMMON_BAHAMUT")) {
+			return resourceValue % 2 === 0 ? ActiveDemiValue.BAHAMUT : ActiveDemiValue.PHOENIX;
+		} else {
+			return ActiveDemiValue.BAHAMUT;
+		}
+	}
+
+	get hasActivePet(): boolean {
+		// TODO account for primal summon abilities
+		return this.activeDemi !== ActiveDemiValue.NONE;
+	}
+
+	startPetAutos() {
+		// TODO
+	}
+
+	queueEnkindle() {
+		// TODO
 	}
 }
 
@@ -122,12 +160,13 @@ const makeSpell_SMN = (
 		highlightIf?: StatePredicate<SMNState>;
 		baseCastTime?: number;
 		baseRecastTime?: number;
-		manaCost: number;
+		manaCost?: number;
 		basePotency?: number | Array<[TraitKey, number]>;
 		falloff?: number;
 		applicationDelay: number;
 		validateAttempt?: StatePredicate<SMNState>;
 		onConfirm?: EffectFn<SMNState>;
+		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Spell<SMNState> => {
 	const baseCastTime = params.baseCastTime ?? 0;
@@ -185,18 +224,18 @@ function toSpliced<T>(arr: T[], i: number): T[] {
 	return newArr;
 }
 
-const r3ReplaceList: ConditionalSkillReplace<SMNState>[] = [
+const R3_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 	{
 		newSkill: "ASTRAL_IMPULSE",
-		condition: (state) => state.activeDemi === ActiveDemiValues.BAHAMUT,
+		condition: (state) => state.activeDemi === ActiveDemiValue.BAHAMUT,
 	},
 	{
 		newSkill: "FOUNTAIN_OF_FIRE",
-		condition: (state) => state.activeDemi === ActiveDemiValues.PHOENIX,
+		condition: (state) => state.activeDemi === ActiveDemiValue.PHOENIX,
 	},
 	{
 		newSkill: "UMBRAL_IMPULSE",
-		condition: (state) => state.activeDemi === ActiveDemiValues.SOLAR,
+		condition: (state) => state.activeDemi === ActiveDemiValue.SOLAR,
 	}
 ];
 
@@ -208,7 +247,7 @@ makeSpell_SMN("RUIN_III", 54, {
 	],
 	baseCastTime: 1.5,
 	manaCost: 300,
-	replaceIf: r3ReplaceList,
+	replaceIf: R3_REPLACE_LIST,
 	applicationDelay: 0.8,
 });
 
@@ -218,9 +257,9 @@ makeSpell_SMN("ASTRAL_IMPULSE", 58, {
 		["ARCANE_MASTERY", 500],
 	],
 	manaCost: 300,
-	replaceIf: toSpliced(r3ReplaceList, 0),
+	replaceIf: toSpliced(R3_REPLACE_LIST, 0),
 	applicationDelay: 0.67,
-	validateAttempt: r3ReplaceList[0].condition, 
+	validateAttempt: R3_REPLACE_LIST[0].condition, 
 	startOnHotbar: false,
 });
 
@@ -230,33 +269,33 @@ makeSpell_SMN("FOUNTAIN_OF_FIRE", 80, {
 		["ARCANE_MASTERY", 580],
 	],
 	manaCost: 300,
-	replaceIf: toSpliced(r3ReplaceList, 1),
+	replaceIf: toSpliced(R3_REPLACE_LIST, 1),
 	applicationDelay: 1.07,
-	validateAttempt: r3ReplaceList[1].condition,
+	validateAttempt: R3_REPLACE_LIST[1].condition,
 	startOnHotbar: false,
 });
 
 makeSpell_SMN("UMBRAL_IMPULSE", 100, {
 	basePotency: 620,
 	manaCost: 300,
-	replaceIf: toSpliced(r3ReplaceList, 2),
+	replaceIf: toSpliced(R3_REPLACE_LIST, 2),
 	applicationDelay: 0.80,
-	validateAttempt: r3ReplaceList[2].condition,
+	validateAttempt: R3_REPLACE_LIST[2].condition,
 	startOnHotbar: false,
 });
 
-const outburstReplaceList: ConditionalSkillReplace<SMNState>[] = [
+const OUTBURST_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 	{
 		newSkill: "ASTRAL_FLARE",
-		condition: (state) => state.activeDemi === ActiveDemiValues.BAHAMUT,
+		condition: (state) => state.activeDemi === ActiveDemiValue.BAHAMUT,
 	},
 	{
 		newSkill: "BRAND_OF_PURGATORY",
-		condition: (state) => state.activeDemi === ActiveDemiValues.PHOENIX,
+		condition: (state) => state.activeDemi === ActiveDemiValue.PHOENIX,
 	},
 	{
 		newSkill: "UMBRAL_FLARE",
-		condition: (state) => state.activeDemi === ActiveDemiValues.SOLAR,
+		condition: (state) => state.activeDemi === ActiveDemiValue.SOLAR,
 	}
 ];
 
@@ -268,7 +307,7 @@ makeSpell_SMN("OUTBURST", 26, {
 	basePotency: 100,
 	baseCastTime: 1.5,
 	manaCost: 300,
-	replaceIf: outburstReplaceList,
+	replaceIf: OUTBURST_REPLACE_LIST,
 	applicationDelay: 0.8, // TODO
 	falloff: 0,
 });
@@ -281,7 +320,7 @@ makeSpell_SMN("TRI_DISASTER", 74, {
 	basePotency: 120,
 	baseCastTime: 1.5,
 	manaCost: 300,
-	replaceIf: outburstReplaceList,
+	replaceIf: OUTBURST_REPLACE_LIST,
 	applicationDelay: 0.8, // TODO
 	falloff: 0,
 });
@@ -289,9 +328,9 @@ makeSpell_SMN("TRI_DISASTER", 74, {
 makeSpell_SMN("ASTRAL_FLARE", 58, {
 	basePotency: 180,
 	manaCost: 300,
-	replaceIf: toSpliced(outburstReplaceList, 0),
+	replaceIf: toSpliced(OUTBURST_REPLACE_LIST, 0),
 	applicationDelay: 0.54,
-	validateAttempt: outburstReplaceList[0].condition,
+	validateAttempt: OUTBURST_REPLACE_LIST[0].condition,
 	falloff: 0,
 	startOnHotbar: false,
 });
@@ -299,9 +338,9 @@ makeSpell_SMN("ASTRAL_FLARE", 58, {
 makeSpell_SMN("BRAND_OF_PURGATORY", 80, {
 	basePotency: 240,
 	manaCost: 300,
-	replaceIf: toSpliced(outburstReplaceList, 1),
+	replaceIf: toSpliced(OUTBURST_REPLACE_LIST, 1),
 	applicationDelay: 0.80,
-	validateAttempt: outburstReplaceList[1].condition,
+	validateAttempt: OUTBURST_REPLACE_LIST[1].condition,
 	falloff: 0,
 	startOnHotbar: false,
 });
@@ -309,9 +348,9 @@ makeSpell_SMN("BRAND_OF_PURGATORY", 80, {
 makeSpell_SMN("UMBRAL_FLARE", 100, {
 	basePotency: 280,
 	manaCost: 300,
-	replaceIf: toSpliced(outburstReplaceList, 2),
+	replaceIf: toSpliced(OUTBURST_REPLACE_LIST, 2),
 	applicationDelay: 0.53,
-	validateAttempt: outburstReplaceList[2].condition,
+	validateAttempt: OUTBURST_REPLACE_LIST[2].condition,
 	falloff: 0,
 	startOnHotbar: false,
 });
@@ -321,9 +360,68 @@ makeSpell_SMN("UMBRAL_FLARE", 100, {
 // RUBY_OUTBURST
 // TOPAZ_OUTBURST
 // EMERALD_OUTBURST
-// SUMMON_BAHAMUT
-// SUMMON_PHOENIX
-// SUMMON_SOLAR_BAHAMUT
+
+// demi replacements take effect AFTER the demi expires
+// at level 100: 0 = next summon is solar, 1 = baha, 2 = phoenix, 3 = baha
+// at level 80/90: 0 = baha, 1 = phoenix, 2 = baha, 3 = phoenix
+// at level 70: any value is baha
+const DEMI_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
+	{
+		newSkill: "SUMMON_BAHAMUT",
+		condition: (state) => state.nextDemi === ActiveDemiValue.BAHAMUT,
+	},
+	{
+		newSkill: "SUMMON_PHOENIX",
+		condition: (state) => state.nextDemi === ActiveDemiValue.PHOENIX,
+	},
+	{
+		newSkill: "SUMMON_SOLAR_BAHAMUT",
+		condition: (state) => state.nextDemi === ActiveDemiValue.SOLAR,
+	}
+];
+
+const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
+	cdName: "cd_DEMI_SUMMON",
+	cooldown: 60, // cooldown edited in constructor to scale with sks
+	maxCharges: 1,
+};
+
+[
+	{
+		name: "SUMMON_BAHAMUT",
+		level: 70,
+		activeValue: ActiveDemiValue.BAHAMUT,
+	},
+	{
+		name: "SUMMON_PHOENIX",
+		level: 80,
+		activeValue: ActiveDemiValue.PHOENIX,
+	},
+	{
+		name: "SUMMON_SOLAR_BAHAMUT",
+		level: 100,
+		activeValue: ActiveDemiValue.SOLAR,
+	}
+].forEach((info, i) =>
+	makeSpell_SMN(info.name as SMNActionKey, info.level, {
+		applicationDelay: 0,
+		replaceIf: toSpliced(DEMI_REPLACE_LIST, i),
+		secondaryCooldown: DEMI_COOLDOWN_GROUP,
+		validateAttempt: (state) => !state.hasActivePet && state.nextDemi === info.activeValue,
+		onConfirm: (state) => {
+			state.startPetAutos();
+			state.gainStatus("ACTIVE_DEMI", info.activeValue);
+			// after 15 seconds, wrapping increment the value of the next demi
+			state.addEvent(
+				new Event("update next demi", DEMI_DURATION, () => {
+					state.resources.get("NEXT_DEMI_CYCLE").gainWrapping(1);
+				})
+			);
+		},
+		startOnHotbar: i === 0,
+	})
+);
+
 // SUMMON_IFRIT
 // SUMMON_TITAN
 // SUMMON_GARUDA
@@ -344,14 +442,102 @@ makeSpell_SMN("UMBRAL_FLARE", 100, {
 // TOPAZ_DISASTER
 // EMERALD_DISASTER
 
-// ASTRAL FLOW
-// DEATHFLARE
-// REKINDLE
-// SUNFLARE
+const ASTRAL_FLOW_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
+	{
+		newSkill: "DEATHFLARE",
+		condition: (state) => state.activeDemi === ActiveDemiValue.BAHAMUT,
+	},
+	{
+		newSkill: "REKINDLE",
+		condition: (state) => state.activeDemi === ActiveDemiValue.PHOENIX,
+	},
+	{
+		newSkill: "SUNFLARE",
+		condition: (state) => state.activeDemi === ActiveDemiValue.SOLAR,
+	},
+];
 
-// ENKINDLE_BAHAMUT
-// ENKINDLE_PHOENIX
-// ENKINDLE_SOLAR_BAHAMUT
+makeAbility_SMN("ASTRAL_FLOW", 60, "cd_ASTRAL_FLOW", {
+	applicationDelay: 0,
+	cooldown: 20,
+	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
+	validateAttempt: (state) => false,
+});
+
+makeAbility_SMN("DEATHFLARE", 60, "cd_ASTRAL_FLOW", {
+	potency: 500,
+	applicationDelay: 0.8,
+	cooldown: 20,
+	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 0),
+	highlightIf: (state) => true,
+	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[0].condition,
+	falloff: 0.6,
+	startOnHotbar: false,
+});
+
+makeAbility_SMN("REKINDLE", 80, "cd_ASTRAL_FLOW", {
+	applicationDelay: 1.03,
+	cooldown: 20,
+	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 1),
+	highlightIf: (state) => true,
+	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[1].condition,
+	onConfirm: (state) => state.gainStatus("REKINDLE"),
+	startOnHotbar: false,
+});
+
+
+makeAbility_SMN("SUNFLARE", 100, "cd_ASTRAL_FLOW", {
+	potency: 800,
+	applicationDelay: 0.8,
+	cooldown: 20,
+	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 2),
+	highlightIf: (state) => true,
+	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[2].condition,
+	falloff: 0.6,
+	startOnHotbar: false,
+});
+
+// Except during the relevant demi window, enkindle always uses the enkindle bahamut icon
+const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
+	{
+		newSkill: "ENKINDLE_BAHAMUT",
+		condition: (state) => [ActiveDemiValue.NONE, ActiveDemiValue.BAHAMUT].includes(state.activeDemi),
+	},
+	{
+		newSkill: "ENKINDLE_PHOENIX",
+		condition: (state) => state.activeDemi === ActiveDemiValue.PHOENIX,
+	},
+	{
+		newSkill: "ENKINDLE_SOLAR_BAHAMUT",
+		condition: (state) => state.activeDemi === ActiveDemiValue.SOLAR,
+	}
+];
+
+[
+	{
+		name: "ENKINDLE_BAHAMUT",
+		level: 70,
+		activeValue: ActiveDemiValue.BAHAMUT,
+	},
+	{
+		name: "ENKINDLE_PHOENIX",
+		level: 80,
+		activeValue: ActiveDemiValue.PHOENIX,
+	},
+	{
+		name: "ENKINDLE_SOLAR_BAHAMUT",
+		level: 100,
+		activeValue: ActiveDemiValue.SOLAR,
+	}
+].forEach((info, i) =>
+	makeAbility_SMN(info.name as SMNActionKey, info.level, "cd_ENKINDLE", {
+		applicationDelay: 0,
+		cooldown: 20,
+		replaceIf: toSpliced(ENKINDLE_REPLACE_LIST, i),
+		onConfirm: (state) => state.queueEnkindle(),
+		startOnHotbar: i === 0,
+	})
+);
 
 makeSpell_SMN("RUIN_IV", 62, {
 	manaCost: 400,

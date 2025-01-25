@@ -104,6 +104,9 @@ abstract class ResourceOrCooldown {
 	gain(amount: number) {
 		this.#currentValue = Math.min(this.#currentValue + amount, this.maxValue);
 	}
+	gainWrapping(amount: number) {
+		this.#currentValue = (this.#currentValue + amount) % this.maxValue;
+	}
 	overrideCurrentValue(amount: number) {
 		this.#currentValue = amount;
 	}

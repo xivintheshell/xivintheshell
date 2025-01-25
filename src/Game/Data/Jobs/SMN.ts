@@ -171,6 +171,7 @@ export const SMN_ACTIONS = ensureRecord<ActionData>()({
 
 export const SMN_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_RADIANT_AEGIS: { name: "cd_RADIANT_AEGIS" }, // 60s
+	cd_ASTRAL_FLOW: { name: "cd_ASTRAL_FLOW" }, // 20s
 	cd_ENKINDLE: { name: "cd_ENKINDLE" }, // 20s
 	cd_DEMI_SUMMON: { name: "cd_DEMI_SUMMON" }, // 60s scaled to sps
 	cd_ENERGY_DRAIN: { name: "cd_ENERGY_DRAIN" }, // 60s

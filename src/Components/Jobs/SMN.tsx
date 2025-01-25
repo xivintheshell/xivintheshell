@@ -72,6 +72,19 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 				color: colors.rdm.blackMana,
 				text: demiTimer.toFixed(2),
 			} as ResourceTextProps,
+			// debugging
+			{
+				kind: "text",
+				name: localize({ en: "next demi" }),
+				color: colors.rdm.manaStack,
+				text: resources.get("NEXT_DEMI_CYCLE").availableAmount().toFixed(0),
+			} as ResourceTextProps,
+			{
+				kind: "text",
+				name: localize({ en: "active demi" }),
+				color: colors.rdm.manaStack,
+				text: resources.get("ACTIVE_DEMI").availableAmount().toFixed(0),
+			} as ResourceTextProps,
 		];
 
 		return infos;
