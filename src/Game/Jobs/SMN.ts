@@ -56,9 +56,9 @@ makeSMNResource("AETHERFLOW", 2);
 makeSMNResource("RUBY_ARCANUM", 1);
 makeSMNResource("TOPAZ_ARCANUM", 1);
 makeSMNResource("EMERALD_ARCANUM", 1);
-makeSMNResource("RUBY_ATTUNEMENT", 2, { timeout: 30 });
-makeSMNResource("TOPAZ_ATTUNEMENT", 4, { timeout: 30 });
-makeSMNResource("EMERALD_ATTUNEMENT", 4, { timeout: 30 });
+makeSMNResource("FIRE_ATTUNEMENT", 2, { timeout: 30 });
+makeSMNResource("EARTH_ATTUNEMENT", 4, { timeout: 30 });
+makeSMNResource("WIND_ATTUNEMENT", 4, { timeout: 30 });
 makeSMNResource("CRIMSON_STRIKE_READY", 1);
 makeSMNResource("EVERLASTING_FLIGHT", 1, { timeout: 21 });
 makeSMNResource("FURTHER_RUIN", 1, { timeout: 60 });
@@ -184,7 +184,7 @@ const makeSpell_SMN = (
 		castTime: (state) => state.config.adjustedCastTime(baseCastTime),
 		// em rite does not get scaled by sps
 		recastTime: (state) =>
-			baseRecastTime <= 1.0 ? 1.0 : state.config.adjustedGCD(baseRecastTime),
+			baseRecastTime <= 1.5 ? baseRecastTime : state.config.adjustedGCD(baseRecastTime),
 		potency: params.basePotency,
 		jobPotencyModifiers: (state) =>
 			state.hasResourceAvailable("SEARING_LIGHT") ? [Modifiers.SearingLight] : [],
@@ -355,11 +355,291 @@ makeSpell_SMN("UMBRAL_FLARE", 100, {
 	startOnHotbar: false,
 });
 
-// GEMSHINE
-// PRECIOUS_BRILLIANCE
-// RUBY_OUTBURST
-// TOPAZ_OUTBURST
-// EMERALD_OUTBURST
+const GEMSHINE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
+	{
+		newSkill: "RUBY_RUIN_III",
+		condition: (state) => state.hasResourceAvailable("FIRE_ATTUNEMENT"),
+	},
+	{
+		newSkill: "TOPAZ_RUIN_III",
+		condition: (state) => state.hasResourceAvailable("EARTH_ATTUNEMENT"),
+	},
+	{
+		newSkill: "EMERALD_RUIN_III",
+		condition: (state) => state.hasResourceAvailable("WIND_ATTUNEMENT"),
+	},
+];
+
+makeSpell_SMN("GEMSHINE", 6, {
+	replaceIf: GEMSHINE_REPLACE_LIST,
+	applicationDelay: 0,
+	validateAttempt: (state) => false,
+});
+
+makeSpell_SMN("RUBY_RUIN_III", 54, {
+	autoUpgrade: {
+		trait: "RUIN_MASTERY_III",
+		otherSkill: "RUBY_RITE",
+	},
+	basePotency: 410,
+	baseCastTime: 2.8,
+	baseRecastTime: 3,
+	applicationDelay: 0.62, // TODO
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("FIRE_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("FIRE_ATTUNEMENT"),
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("TOPAZ_RUIN_III", 54, {
+	autoUpgrade: {
+		trait: "RUIN_MASTERY_III",
+		otherSkill: "TOPAZ_RITE",
+	},
+	basePotency: 300,
+	applicationDelay: 0.62, // TODO
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("EARTH_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("EARTH_ATTUNEMENT"),
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("EMERALD_RUIN_III", 54, {
+	autoUpgrade: {
+		trait: "RUIN_MASTERY_III",
+		otherSkill: "EMERALD_RITE",
+	},
+	baseRecastTime: 1.5,
+	basePotency: 180,
+	applicationDelay: 0.62, // TODO
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("WIND_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("WIND_ATTUNEMENT"),
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("RUBY_RITE", 72, {
+	autoDowngrade: {
+		trait: "RUIN_MASTERY_III",
+		otherSkill: "RUBY_RITE",
+	},
+	basePotency: [
+		["NEVER", 480],
+		["RUIN_MASTERY_IV", 510],
+		["ARCANE_MASTERY", 540],
+	],
+	baseCastTime: 2.8,
+	baseRecastTime: 3,
+	applicationDelay: 0.62,
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("FIRE_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("FIRE_ATTUNEMENT"),
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("TOPAZ_RITE", 72, {
+	autoDowngrade: {
+		trait: "RUIN_MASTERY_III",
+		otherSkill: "TOPAZ_RUIN_III",
+	},
+	basePotency: [
+		["NEVER", 320],
+		["RUIN_MASTERY_IV", 330],
+		["ARCANE_MASTERY", 340],
+	],
+	applicationDelay: 0.62,
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("EARTH_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("EARTH_ATTUNEMENT"),
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("EMERALD_RITE", 72, {
+	autoDowngrade: {
+		trait: "RUIN_MASTERY_III",
+		otherSkill: "EMERALD_RUIN_III",
+	},
+	baseRecastTime: 1.5,
+	basePotency: [
+		["NEVER", 220],
+		["RUIN_MASTERY_IV", 230],
+		["ARCANE_MASTERY", 240],
+	],
+	applicationDelay: 0.62,
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("WIND_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("WIND_ATTUNEMENT"),
+	startOnHotbar: false,
+});
+
+const PRECIOUS_BRILLIANCE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
+	{
+		newSkill: "RUBY_OUTBURST",
+		condition: (state) => state.hasResourceAvailable("FIRE_ATTUNEMENT"),
+	},
+	{
+		newSkill: "TOPAZ_OUTBURST",
+		condition: (state) => state.hasResourceAvailable("EARTH_ATTUNEMENT"),
+	},
+	{
+		newSkill: "EMERALD_OUTBURST",
+		condition: (state) => state.hasResourceAvailable("WIND_ATTUNEMENT"),
+	},	
+];
+
+makeSpell_SMN("PRECIOUS_BRILLIANCE", 26, {
+	replaceIf: PRECIOUS_BRILLIANCE_REPLACE_LIST,
+	applicationDelay: 0,
+	validateAttempt: (state) => false,
+});
+
+makeSpell_SMN("RUBY_OUTBURST", 26, {
+	autoUpgrade: {
+		trait: "OUTBURST_MASTERY",
+		otherSkill: "RUBY_DISASTER",
+	},
+	basePotency: 160,
+	baseCastTime: 2.8,
+	baseRecastTime: 3,
+	applicationDelay: 0.53, // TODO
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("FIRE_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("FIRE_ATTUNEMENT"),
+	falloff: 0,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("TOPAZ_OUTBURST", 26, {
+	autoUpgrade: {
+		trait: "OUTBURST_MASTERY",
+		otherSkill: "TOPAZ_DISASTER",
+	},
+	basePotency: 110,
+	applicationDelay: 0.53, // TODO
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("EARTH_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("EARTH_ATTUNEMENT"),
+	falloff: 0,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("EMERALD_OUTBURST", 26, {
+	autoUpgrade: {
+		trait: "OUTBURST_MASTERY",
+		otherSkill: "EMERALD_DISASTER",
+	},
+	baseRecastTime: 1.5,
+	basePotency: 70,
+	applicationDelay: 0.53,
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("WIND_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("WIND_ATTUNEMENT"),
+	falloff: 0,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("RUBY_DISASTER", 74, {
+	autoDowngrade: {
+		trait: "OUTBURST_MASTERY",
+		otherSkill: "RUBY_OUTBURST",
+	},
+	autoUpgrade: {
+		trait: "OUTBURST_MASTERY_II",
+		otherSkill: "RUBY_CATASTROPHE",
+	},
+	basePotency: 190,
+	baseCastTime: 2.8,
+	baseRecastTime: 3,
+	applicationDelay: 0.53, // TODO
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("FIRE_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("FIRE_ATTUNEMENT"),
+	falloff: 0,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("TOPAZ_DISASTER", 74, {
+	autoDowngrade: {
+		trait: "OUTBURST_MASTERY",
+		otherSkill: "TOPAZ_OUTBURST",
+	},
+	autoUpgrade: {
+		trait: "OUTBURST_MASTERY_II",
+		otherSkill: "TOPAZ_CATASTROPHE",
+	},
+	basePotency: 130,
+	applicationDelay: 0.53, // TODO
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("EARTH_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("EARTH_ATTUNEMENT"),
+	falloff: 0,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("EMERALD_DISASTER", 74, {
+	autoDowngrade: {
+		trait: "OUTBURST_MASTERY",
+		otherSkill: "EMERALD_OUTBURST",
+	},
+	autoUpgrade: {
+		trait: "OUTBURST_MASTERY_II",
+		otherSkill: "EMERALD_CATASTROPHE",
+	},
+	baseRecastTime: 1.5,
+	basePotency: 90,
+	applicationDelay: 0.53,
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("WIND_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("WIND_ATTUNEMENT"),
+	falloff: 0,
+	startOnHotbar: false,
+});
+
+
+makeSpell_SMN("RUBY_CATASTROPHE", 82, {
+	autoDowngrade: {
+		trait: "OUTBURST_MASTERY_II",
+		otherSkill: "RUBY_DISASTER",
+	},
+	basePotency: 210,
+	baseCastTime: 2.8,
+	baseRecastTime: 3,
+	applicationDelay: 0.53,
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("FIRE_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("FIRE_ATTUNEMENT"),
+	falloff: 0,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("TOPAZ_CATASTROPHE", 82, {
+	autoDowngrade: {
+		trait: "OUTBURST_MASTERY_II",
+		otherSkill: "TOPAZ_DISASTER",
+	},
+	basePotency: 140,
+	applicationDelay: 0.53,
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("EARTH_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("EARTH_ATTUNEMENT"),
+	falloff: 0,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("EMERALD_CATASTROPHE", 82, {
+	autoDowngrade: {
+		trait: "OUTBURST_MASTERY_II",
+		otherSkill: "EMERALD_DISASTER",
+	},
+	baseRecastTime: 1.5,
+	basePotency: 100,
+	applicationDelay: 0.53,
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("WIND_ATTUNEMENT"),
+	onConfirm: (state) => state.tryConsumeResource("WIND_ATTUNEMENT"),
+	falloff: 0,
+	startOnHotbar: false,
+});
 
 // demi replacements take effect AFTER the demi expires
 // at level 100: 0 = next summon is solar, 1 = baha, 2 = phoenix, 3 = baha
@@ -428,19 +708,6 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 // SUMMON_IFRIT_II
 // SUMMON_TITAN_II
 // SUMMON_GARUDA_II
-// RUBY_RUIN_III
-// TOPAZ_RUIN_III
-// EMERALD_RUIN_III
-// RUBY_RITE
-// TOPAZ_RITE
-// EMERALD_RITE
-// RUBY_CATASTROPHE
-// TOPAZ_CATASTROPHE
-// EMERALD_CATASTROPHE
-
-// RUBY_DISASTER
-// TOPAZ_DISASTER
-// EMERALD_DISASTER
 
 const ASTRAL_FLOW_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 	{
@@ -484,7 +751,6 @@ makeAbility_SMN("REKINDLE", 80, "cd_ASTRAL_FLOW", {
 	onConfirm: (state) => state.gainStatus("REKINDLE"),
 	startOnHotbar: false,
 });
-
 
 makeAbility_SMN("SUNFLARE", 100, "cd_ASTRAL_FLOW", {
 	potency: 800,

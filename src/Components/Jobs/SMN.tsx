@@ -34,9 +34,9 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 		const resources = this.state.resources;
 
 		const attunementTimer = Math.max(
-			resources.timeTillReady("RUBY_ATTUNEMENT"),
-			resources.timeTillReady("TOPAZ_ATTUNEMENT"),
-			resources.timeTillReady("EMERALD_ATTUNEMENT"),
+			resources.timeTillReady("FIRE_ATTUNEMENT"),
+			resources.timeTillReady("EARTH_ATTUNEMENT"),
+			resources.timeTillReady("WIND_ATTUNEMENT"),
 		);
 		const demiTimer = resources.timeTillReady("ACTIVE_DEMI");
 
@@ -54,9 +54,9 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 				name: localize({ en: "attunement" }),
 				color: colors.rdm.manaStack,
 				text: Math.max(
-					resources.get("RUBY_ATTUNEMENT").availableAmount(),
-					resources.get("TOPAZ_ATTUNEMENT").availableAmount(),
-					resources.get("EMERALD_ATTUNEMENT").availableAmount(),
+					resources.get("FIRE_ATTUNEMENT").availableAmount(),
+					resources.get("EARTH_ATTUNEMENT").availableAmount(),
+					resources.get("WIND_ATTUNEMENT").availableAmount(),
 				).toString(),
 			} as ResourceTextProps,
 			{

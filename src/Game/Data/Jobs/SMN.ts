@@ -192,9 +192,9 @@ export const SMN_GAUGES = ensureRecord<ResourceData>()({
 	RUBY_ARCANUM: { name: "Ruby Arcanum" },
 	TOPAZ_ARCANUM: { name: "Topaz Arcanum" },
 	EMERALD_ARCANUM: { name: "Emerald Arcanum" },
-	RUBY_ATTUNEMENT: { name: "Ruby Attunement" },
-	TOPAZ_ATTUNEMENT: { name: "Topaz Attunement" },
-	EMERALD_ATTUNEMENT: { name: "Emerald Attunement" },
+	FIRE_ATTUNEMENT: { name: "Fire Attunement" },
+	EARTH_ATTUNEMENT: { name: "Earth Attunement" },
+	WIND_ATTUNEMENT: { name: "Wind Attunement" },
 	ACTIVE_DEMI: { name: "Active Demi" },
 });
 
@@ -221,8 +221,10 @@ export const SMN_TRACKERS = ensureRecord<ResourceData>()({
 });
 
 export const SMN_TRAITS = ensureRecord<TraitData>()({
+	RUIN_MASTERY_III: { name: "Ruin Mastery III", level: 72 },
 	OUTBURST_MASTERY: { name: "Outburst Mastery", level: 74 },
 	ENHANCED_SUMMON_BAHAMUT: { name: "Enhanced Summon Bahamut", level: 80 },
+	OUTBURST_MASTERY_II: { name: "Outburst Mastery II", level: 82 },
 	RUIN_MASTERY_IV: { name: "Ruin Mastery IV", level: 84 },
 	ELEMENTAL_MASTERY: { name: "Elemental Mastery", level: 86 },
 	ENHANCED_RADIANT_AEGIS: { name: "Enhanced Radiant Aegis", level: 88 },
