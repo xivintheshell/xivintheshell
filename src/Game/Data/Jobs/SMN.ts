@@ -134,6 +134,18 @@ export const SMN_ACTIONS = ensureRecord<ActionData>()({
 	EMERALD_CATASTROPHE: {
 		name: "Emerald Catastrophe",
 	},
+	CRIMSON_CYCLONE: {
+		name: "Crimson Cyclone",
+	},
+	CRIMSON_STRIKE: {
+		name: "Crimson Strike",
+	},
+	MOUNTAIN_BUSTER: {
+		name: "Mountain Buster",
+	},
+	SLIPSTREAM: {
+		name: "Slipstream",
+	},
 	SUMMON_IFRIT_II: {
 		name: "Summon Ifrit II",
 	},
@@ -189,6 +201,7 @@ export const SMN_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_SEARING_LIGHT: { name: "cd_SEARING_LIGHT" }, // 120s
 	cd_SEARING_FLASH: { name: "cd_SEARING_FLASH" }, // 1s
 	cd_LUX_SOLARIS: { name: "cd_LUX_SOLARIS" }, // 60s
+	cd_MOUNTAIN_BUSTER: { name: "cd_MOUNTAIN_BUSTER" }, // 1s
 	// per hauffen: lockout is 4.05s for ifrit/titan; 3.38s for garuda:
 	// https://discord.com/channels/277897135515762698/277968477233479680/1331466393430003793
 	// this number is lower for egis below level 90; need to double check

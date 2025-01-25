@@ -505,7 +505,10 @@ makeSpell_SMN("TOPAZ_RITE", 72, {
 	applicationDelay: 0.62,
 	highlightIf: (state) => true,
 	validateAttempt: (state) => state.hasResourceAvailable("EARTH_ATTUNEMENT"),
-	onConfirm: (state) => state.tryConsumeResource("EARTH_ATTUNEMENT"),
+	onConfirm: (state) => {
+		state.tryConsumeResource("EARTH_ATTUNEMENT");
+		state.gainStatus("TITANS_FAVOR");
+	},
 	startOnHotbar: false,
 });
 
@@ -676,7 +679,10 @@ makeSpell_SMN("TOPAZ_CATASTROPHE", 82, {
 	applicationDelay: 0.53,
 	highlightIf: (state) => true,
 	validateAttempt: (state) => state.hasResourceAvailable("EARTH_ATTUNEMENT"),
-	onConfirm: (state) => state.tryConsumeResource("EARTH_ATTUNEMENT"),
+	onConfirm: (state) => {
+		state.tryConsumeResource("EARTH_ATTUNEMENT");
+		state.gainStatus("TITANS_FAVOR");
+	},
 	falloff: 0,
 	startOnHotbar: false,
 });
@@ -865,10 +871,8 @@ makeSpell_SMN("SUMMON_TITAN_II", 90, {
 	applicationDelay: 0,
 	highlightIf: (state) => state.hasResourceAvailable("TOPAZ_ARCANUM"),
 	validateAttempt: (state) => !state.hasActivePet && state.hasResourceAvailable("TOPAZ_ARCANUM"),
-	onConfirm: (state, node) => {
-		state.gainStatus("TITANS_FAVOR");
-		titanConfirm(state.hasTraitUnlocked("ARCANE_MASTERY") ? 800 : 600)(state, node);
-	},
+	// titan's favor is gained upon executing rite/catastrophe
+	onConfirm: (state, node) => titanConfirm(state.hasTraitUnlocked("ARCANE_MASTERY") ? 800 : 600)(state, node),
 });
 
 makeSpell_SMN("SUMMON_GARUDA_II", 90, {
@@ -898,6 +902,22 @@ const ASTRAL_FLOW_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 		newSkill: "SUNFLARE",
 		condition: (state) => state.activeDemi === ActiveDemiValue.SOLAR,
 	},
+	{
+		newSkill: "CRIMSON_CYCLONE",
+		condition: (state) => state.hasResourceAvailable("IFRITS_FAVOR"),
+	},
+	{
+		newSkill: "CRIMSON_STRIKE",
+		condition: (state) => state.hasResourceAvailable("CRIMSON_STRIKE_READY"),
+	},
+	{
+		newSkill: "MOUNTAIN_BUSTER",
+		condition: (state) => state.hasResourceAvailable("TITANS_FAVOR"),
+	},
+	{
+		newSkill: "SLIPSTREAM",
+		condition: (state) => state.hasResourceAvailable("GARUDAS_FAVOR"),
+	}
 ];
 
 makeAbility_SMN("ASTRAL_FLOW", 60, "cd_ASTRAL_FLOW", {
@@ -936,6 +956,69 @@ makeAbility_SMN("SUNFLARE", 100, "cd_ASTRAL_FLOW", {
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[2].condition,
 	falloff: 0.6,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("CRIMSON_CYCLONE", 86, {
+	basePotency: [
+		["NEVER", 430],
+		["ARCANE_MASTERY", 490],
+	],
+	applicationDelay: 0.80,
+	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 3),
+	highlightIf: (state) => true,
+	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[3].condition,
+	onConfirm: (state) => state.tryConsumeResource("IFRITS_FAVOR"),
+	falloff: 0.65,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("CRIMSON_STRIKE", 86, {
+	basePotency: [
+		["NEVER", 430],
+		["ARCANE_MASTERY", 490],
+	],
+	applicationDelay: 0.76,
+	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 4),
+	highlightIf: (state) => true,
+	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[4].condition,
+	onConfirm: (state) => state.tryConsumeResource("CRIMSON_STRIKE_READY"),
+	falloff: 0.65,
+	startOnHotbar: false,
+});
+
+makeAbility_SMN("MOUNTAIN_BUSTER", 86, "cd_MOUNTAIN_BUSTER", {
+	potency: [
+		["NEVER", 150],
+		["ARCANE_MASTERY", 170],
+	],
+	cooldown: 1,
+	applicationDelay: 0.76,
+	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 5),
+	highlightIf: (state) => true,
+	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[5].condition,
+	onConfirm: (state) => state.tryConsumeResource("TITANS_FAVOR"),
+	falloff: 0.7,
+	startOnHotbar: false,
+});
+
+makeSpell_SMN("SLIPSTREAM", 86, {
+	baseCastTime: 3,
+	baseRecastTime: 3.5,
+	basePotency: [
+		["NEVER", 430],
+		["ARCANE_MASTERY", 490],
+	],
+	applicationDelay: 1.02,
+	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 6),
+	highlightIf: (state) => true,
+	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[6].condition,
+	onConfirm: (state) => {
+		state.tryConsumeResource("GARUDAS_FAVOR");
+		// TODO start aoe dot effect
+		state.gainStatus("SLIPSTREAM");
+	},
+	falloff: 0.65,
 	startOnHotbar: false,
 });
 
