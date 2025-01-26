@@ -1,30 +1,26 @@
 // Skill and state declarations for SMN.
 
 import { controller } from "../../Controller/Controller";
-import { Aspect, BuffType, ProcMode, WarningType } from "../Common";
-import { makeComboModifier, Modifiers, Potency, PotencyModifier } from "../Potency";
+import { Aspect, BuffType, WarningType } from "../Common";
+import { Modifiers, Potency } from "../Potency";
 import {
 	Ability,
 	combineEffects,
 	CooldownGroupProperties,
 	ConditionalSkillReplace,
 	EffectFn,
-	getBasePotency,
+	getSkill,
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
-	makeWeaponskill,
-	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
-	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
 	Spell,
 	StatePredicate,
-	Weaponskill,
 } from "../Skills";
 import { GameState, PlayerState } from "../GameState";
-import { getResourceInfo, makeResource, CoolDown, Event, Resource, ResourceInfo } from "../Resources";
+import { makeResource, CoolDown, Event } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
 import { ActionKey, CooldownKey, TraitKey } from "../Data";
@@ -79,6 +75,44 @@ makeSMNResource("ACTIVE_DEMI", 3, { timeout: DEMI_DURATION });
 // at level 80/90: 0 = baha, 1 = phoenix, 2 = baha, 3 = phoenix
 // at level 70: any value is baha
 makeSMNResource("NEXT_DEMI_CYCLE", 3);
+
+// Pressing the button to summon a primal creates 4 different events:
+// 1. "Summon" button is pressed
+// 2. Summoned pet creates a "prepares" event
+// 3. Damage from pet applies
+// 4. Summoned pet leaves
+// I (shanzhe) experimentally measured these delays:
+// https://docs.google.com/spreadsheets/d/1FSvf0n8Gbqb-95qbGwXtDLAo7ArxLvMDfwm_FAxvGA8/edit?gid=0#gid=0
+
+// delay from "summon" button press to pet's "prepares" event
+const SUMMON_DELAYS: Map<SMNActionKey, number> = new Map([
+	["SUMMON_IFRIT_II", 2.1],
+	["SUMMON_GARUDA_II", 2.095],
+	["SUMMON_TITAN_II", 2.095],
+	["SUMMON_IFRIT", 2.46],
+	["SUMMON_GARUDA", 2.1],
+	["SUMMON_TITAN", 2.495],
+]);
+
+// delay from pet's "prepares" to actual damage event
+const PET_APPLICATION_DELAYS: Map<SMNActionKey, number> = new Map([
+	["SUMMON_IFRIT_II", 1.96],
+	["SUMMON_GARUDA_II", 1.29],
+	["SUMMON_TITAN_II", 1.96],
+	["SUMMON_IFRIT", 0.936],
+	["SUMMON_GARUDA", 0.8],
+	["SUMMON_TITAN", 0.8],
+]);
+
+// delay from "summon" button press to pet leaving
+const PET_LOCK_DURATIONS: Map<SMNActionKey, number> = new Map([
+	["SUMMON_IFRIT_II", 6.28],
+	["SUMMON_GARUDA_II", 6.28],
+	["SUMMON_TITAN_II", 6.28],
+	["SUMMON_IFRIT", 4.6],
+	["SUMMON_GARUDA", 4.3],
+	["SUMMON_TITAN", 4.6],
+]);
 
 // === JOB GAUGE AND STATE ===
 export class SMNState extends GameState {
@@ -144,46 +178,69 @@ export class SMNState extends GameState {
 		// TODO
 	}
 
-	queuePrimalSummon(node: ActionNode, sourceSkill: ActionKey, basePotency: number, delay: number) {
+	queuePrimalSummon(node: ActionNode, sourceSkill: SMNActionKey) {
 		// we manually construct a potency event here so the damage event has the name of the pet's
 		// attack rather than "summon primal"
-		const potency = new Potency({
-			config: this.config,
-			sourceTime: this.getDisplayTime(),
-			sourceSkill,
-			aspect: Aspect.Other,
-			basePotency,
-			snapshotTime: undefined,
-			description: "",
-			targetCount: node.targetCount,
-			falloff: 0.6,
-		});
-		potency.modifiers = [Modifiers.SmnPet];
-		// TODO adjust snapshot timing
-		if (this.hasResourceAvailable("SEARING_LIGHT")) {
-			potency.modifiers.push(Modifiers.SearingLight);
+		let basePotency = 600;
+		if (this.hasTraitUnlocked("ARCANE_MASTERY")) {
+			basePotency = 800;
+		} else if (this.hasTraitUnlocked("ENKINDLE_II")) {
+			basePotency = 750;
 		}
-		node.addPotency(potency);
-		this.cooldowns.get("cd_SUMMON_LOCKOUT").useStackWithRecast(this, delay);
+		let damageName: SMNActionKey;
+		if (sourceSkill.includes("IFRIT")) {
+			damageName = "INFERNO";
+		} else if (sourceSkill.includes("TITAN")) {
+			damageName = "EARTHEN_FURY";
+		} else {
+			damageName = "AERIAL_BLAST";
+		}
+		// enqueue the pet's "prepares" event
+		const summonDelay = SUMMON_DELAYS.get(sourceSkill)!;
+		const castTime = this.getDisplayTime();
 		this.addEvent(
 			new Event(
-				"summoned primal attack",
-				delay,
+				damageName + " pet snapshot",
+				summonDelay,
 				() => {
-					// TODO add covers
-					// TODO apply other buffs
-					// TODO check when the prepares event occurs
+					const potency = new Potency({
+						config: this.config,
+						sourceTime: castTime,
+						sourceSkill,
+						aspect: Aspect.Other,
+						basePotency,
+						snapshotTime: this.getDisplayTime(),
+						description: "",
+						targetCount: node.targetCount,
+						falloff: 0.6,
+					});
+					const mods = [Modifiers.SmnPet];
+					if (this.hasResourceAvailable("SEARING_LIGHT")) {
+						mods.push(Modifiers.SearingLight);
+					}
 					if (this.hasResourceAvailable("TINCTURE")) {
+						mods.push(Modifiers.Tincture);
 						node.addBuff(BuffType.Tincture);
 					}
-					if (this.hasResourceAvailable("SEARING_LIGHT")) {
-						node.addBuff(BuffType.SearingLight);
-					}
-					potency.snapshotTime = this.getDisplayTime();
-					controller.resolvePotency(potency);
+					potency.modifiers = mods;
+					node.addPotency(potency);
+					this.jobSpecificAddDamageBuffCovers(node, getSkill("SMN", sourceSkill));
+					this.addEvent(
+						new Event(
+							"summoned primal attack",
+							PET_APPLICATION_DELAYS.get(sourceSkill)!,
+							() => {
+								controller.resolvePotency(potency);
+							}
+						),
+					);	
 				}
-			),
+			)
 		);
+
+		// prevent radiant aegis and other pet summons
+		const summonLockout = PET_LOCK_DURATIONS.get(sourceSkill)!;
+		this.cooldowns.get("cd_SUMMON_LOCKOUT").useStackWithRecast(this, summonLockout);
 	}
 }
 
@@ -745,7 +802,7 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 	}
 ].forEach((info, i) =>
 	makeSpell_SMN(info.name as SMNActionKey, info.level, {
-		applicationDelay: 0,
+		applicationDelay: 0.8,
 		replaceIf: toSpliced(DEMI_REPLACE_LIST, i),
 		secondaryCooldown: DEMI_COOLDOWN_GROUP,
 		validateAttempt: (state) => !state.hasActivePet && state.nextDemi === info.activeValue,
@@ -764,29 +821,24 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 				})
 			);
 		},
+		// even though demi summons don't themselves do damage, they still begin combat
+		onApplication: (state) => {
+			if (!state.isInCombat()) {
+				state.resources.get("IN_COMBAT").gain(1);
+			}
+		},
 		startOnHotbar: i === 0,
 	})
 );
 
-// don't declare potencies for pet summons explicitly
-// delays from Hauffen:
-// https://discord.com/channels/277897135515762698/277968477233479680/1331466393430003793
-// > The latter is the easiest since it's a fixed duration, 4.05s for Ifrit/Titan
-// > and 3.38s for Garuda, from the prepare event
-// may need to check if egis have shorter delays
-// TODO: it seems like there's separate delays from
-// summon pressed -> prepares event -> damage hits -> summon leaves
+const ifritCondition: StatePredicate<SMNState> = (state) => !state.hasActivePet && state.hasResourceAvailable("RUBY_ARCANUM");
+const titanCondition: StatePredicate<SMNState> = (state) => !state.hasActivePet && state.hasResourceAvailable("TOPAZ_ARCANUM");
+const garudaCondition: StatePredicate<SMNState> = (state) => !state.hasActivePet && state.hasResourceAvailable("EMERALD_ARCANUM");
 
-const IFRIT_TITAN_DELAY: number = 4.05;
-const GARUDA_DELAY: number = 3.38;
-
-// while the "[primal]'s Favor" buffs are granted by the synced version (because followups are 
-// learned at level 86), we don't need to implement them because the only level sync they're used
-// at is 90+
-const ifritConfirm: (potency: number) => EffectFn<SMNState> = (potency) => (state, node) => {
+const ifritConfirm: (skill: SMNActionKey) => EffectFn<SMNState> = (skill) => (state, node) => {
 	state.tryConsumeResource("RUBY_ARCANUM");
 	state.gainStatus("FIRE_ATTUNEMENT", 2);
-	state.queuePrimalSummon(node, "INFERNO", potency, IFRIT_TITAN_DELAY);
+	state.queuePrimalSummon(node, skill);
 	// consume favor + attunements of other primals
 	state.tryConsumeResource("EARTH_ATTUNEMENT", true);
 	state.tryConsumeResource("WIND_ATTUNEMENT", true);
@@ -794,10 +846,10 @@ const ifritConfirm: (potency: number) => EffectFn<SMNState> = (potency) => (stat
 	state.tryConsumeResource("GARUDAS_FAVOR");
 };
 
-const titanConfirm: (potency: number) => EffectFn<SMNState> = (potency) => (state, node) => {
+const titanConfirm: (skill: SMNActionKey) => EffectFn<SMNState> = (skill) => (state, node) => {
 	state.tryConsumeResource("TOPAZ_ARCANUM");
 	state.gainStatus("EARTH_ATTUNEMENT", 4);
-	state.queuePrimalSummon(node, "EARTHEN_FURY", potency, IFRIT_TITAN_DELAY);
+	state.queuePrimalSummon(node, skill);
 	// consume favor + attunements of other primals
 	state.tryConsumeResource("FIRE_ATTUNEMENT", true);
 	state.tryConsumeResource("WIND_ATTUNEMENT", true);
@@ -805,10 +857,10 @@ const titanConfirm: (potency: number) => EffectFn<SMNState> = (potency) => (stat
 	state.tryConsumeResource("GARUDAS_FAVOR");
 };
 
-const garudaConfirm: (potency: number) => EffectFn<SMNState> = (potency) => (state, node) => {
+const garudaConfirm: (skill: SMNActionKey) => EffectFn<SMNState> = (skill) => (state, node) => {
 	state.tryConsumeResource("EMERALD_ARCANUM");
 	state.gainStatus("WIND_ATTUNEMENT", 4);
-	state.queuePrimalSummon(node, "AERIAL_BLAST", potency, GARUDA_DELAY);
+	state.queuePrimalSummon(node, skill);
 	// consume favor + attunements of other primals
 	state.tryConsumeResource("FIRE_ATTUNEMENT", true);
 	state.tryConsumeResource("EARTH_ATTUNEMENT", true);
@@ -816,15 +868,22 @@ const garudaConfirm: (potency: number) => EffectFn<SMNState> = (potency) => (sta
 	state.tryConsumeResource("TITANS_FAVOR");
 };
 
+// don't declare potencies for pet summons explicitly because they have different snapshot timings
+// instead, each "summon" ability enqueues the pet's "prepares" event, which then in turn snapshots
+// damage and enqueues the actual damage event
+
+// while the "[primal]'s Favor" buffs are granted by the synced version (because followups are 
+// learned at level 86), we don't need to implement them for the un-upgraded summons because the
+// only level sync they're used at is 90
 makeSpell_SMN("SUMMON_IFRIT", 30, {
 	autoUpgrade: {
 		trait: "ENKINDLE_II",
 		otherSkill: "SUMMON_IFRIT_II",
 	},
-	applicationDelay: IFRIT_TITAN_DELAY,
-	highlightIf: (state) => state.hasResourceAvailable("RUBY_ARCANUM"),
-	validateAttempt: (state) => !state.hasActivePet && state.hasResourceAvailable("RUBY_ARCANUM"),
-	onConfirm: ifritConfirm(600),
+	applicationDelay: 0,
+	highlightIf: ifritCondition,
+	validateAttempt: ifritCondition,
+	onConfirm: ifritConfirm("SUMMON_IFRIT"),
 });
 
 makeSpell_SMN("SUMMON_TITAN", 35, {
@@ -833,9 +892,9 @@ makeSpell_SMN("SUMMON_TITAN", 35, {
 		otherSkill: "SUMMON_TITAN_II",
 	},
 	applicationDelay: 0,
-	highlightIf: (state) => state.hasResourceAvailable("TOPAZ_ARCANUM"),
-	validateAttempt: (state) => !state.hasActivePet && state.hasResourceAvailable("TOPAZ_ARCANUM"),
-	onConfirm: titanConfirm(600),
+	highlightIf: titanCondition,
+	validateAttempt: titanCondition,
+	onConfirm: titanConfirm("SUMMON_TITAN"),
 });
 
 makeSpell_SMN("SUMMON_GARUDA", 45, {
@@ -844,9 +903,9 @@ makeSpell_SMN("SUMMON_GARUDA", 45, {
 		otherSkill: "SUMMON_GARUDA_II",
 	},
 	applicationDelay: 0,
-	highlightIf: (state) => state.hasResourceAvailable("EMERALD_ARCANUM"),
-	validateAttempt: (state) => !state.hasActivePet && state.hasResourceAvailable("EMERALD_ARCANUM"),
-	onConfirm: garudaConfirm(600),
+	highlightIf: garudaCondition,
+	validateAttempt: garudaCondition,
+	onConfirm: garudaConfirm("SUMMON_GARUDA"),
 });
 
 makeSpell_SMN("SUMMON_IFRIT_II", 90, {
@@ -855,12 +914,12 @@ makeSpell_SMN("SUMMON_IFRIT_II", 90, {
 		otherSkill: "SUMMON_IFRIT",
 	},
 	applicationDelay: 0,
-	highlightIf: (state) => state.hasResourceAvailable("RUBY_ARCANUM"),
-	validateAttempt: (state) => !state.hasActivePet && state.hasResourceAvailable("RUBY_ARCANUM"),
-	onConfirm: (state, node) => {
-		state.gainStatus("IFRITS_FAVOR");
-		ifritConfirm(state.hasTraitUnlocked("ARCANE_MASTERY") ? 800 : 600)(state, node);
-	},
+	highlightIf: ifritCondition,
+	validateAttempt: ifritCondition,
+	onConfirm: combineEffects(
+		(state) => state.gainStatus("IFRITS_FAVOR"),
+		ifritConfirm("SUMMON_IFRIT_II"),
+	),
 });
 
 makeSpell_SMN("SUMMON_TITAN_II", 90, {
@@ -869,10 +928,10 @@ makeSpell_SMN("SUMMON_TITAN_II", 90, {
 		otherSkill: "SUMMON_TITAN",
 	},
 	applicationDelay: 0,
-	highlightIf: (state) => state.hasResourceAvailable("TOPAZ_ARCANUM"),
-	validateAttempt: (state) => !state.hasActivePet && state.hasResourceAvailable("TOPAZ_ARCANUM"),
+	highlightIf: titanCondition,
+	validateAttempt: titanCondition,
 	// titan's favor is gained upon executing rite/catastrophe
-	onConfirm: (state, node) => titanConfirm(state.hasTraitUnlocked("ARCANE_MASTERY") ? 800 : 600)(state, node),
+	onConfirm: titanConfirm("SUMMON_TITAN_II"),
 });
 
 makeSpell_SMN("SUMMON_GARUDA_II", 90, {
@@ -881,12 +940,12 @@ makeSpell_SMN("SUMMON_GARUDA_II", 90, {
 		otherSkill: "SUMMON_GARUDA",
 	},
 	applicationDelay: 0,
-	highlightIf: (state) => state.hasResourceAvailable("EMERALD_ARCANUM"),
-	validateAttempt: (state) => !state.hasActivePet && state.hasResourceAvailable("EMERALD_ARCANUM"),
-	onConfirm: (state, node) => {
-		state.gainStatus("GARUDAS_FAVOR");
-		garudaConfirm(state.hasTraitUnlocked("ARCANE_MASTERY") ? 800 : 600)(state, node);
-	},
+	highlightIf: garudaCondition,
+	validateAttempt: garudaCondition,
+	onConfirm: combineEffects(
+		(state) => state.gainStatus("GARUDAS_FAVOR"),
+		garudaConfirm("SUMMON_GARUDA_II"),
+	),
 });
 
 const ASTRAL_FLOW_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
@@ -968,7 +1027,10 @@ makeSpell_SMN("CRIMSON_CYCLONE", 86, {
 	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 3),
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[3].condition,
-	onConfirm: (state) => state.tryConsumeResource("IFRITS_FAVOR"),
+	onConfirm: (state) => {
+		state.tryConsumeResource("IFRITS_FAVOR");
+		state.gainStatus("CRIMSON_STRIKE_READY");
+	},
 	falloff: 0.65,
 	startOnHotbar: false,
 });
@@ -1059,6 +1121,7 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 		applicationDelay: 0,
 		cooldown: 20,
 		replaceIf: toSpliced(ENKINDLE_REPLACE_LIST, i),
+		validateAttempt: (state) => state.activeDemi === info.activeValue,
 		onConfirm: (state) => state.queueEnkindle(),
 		startOnHotbar: i === 0,
 	})

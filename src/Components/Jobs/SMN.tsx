@@ -24,6 +24,7 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 			"IFRITS_FAVOR",
 			"TITANS_FAVOR",
 			"GARUDAS_FAVOR",
+			"CRIMSON_STRIKE_READY",
 		];
 		return [
 			...(Object.keys(SMN_STATUSES) as ResourceKey[]).map((key) => {
