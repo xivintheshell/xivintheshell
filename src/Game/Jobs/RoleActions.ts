@@ -251,15 +251,21 @@ TANK_JOBS.forEach((job) => {
 	makeResource(job, "SHIELD_WALL", 1, { timeout: 10 });
 	makeResource(job, "STRONGHOLD", 1, { timeout: 12 });
 });
+
+const consumeSharedLbBuffs = (state: GameState) =>
+	Object.keys(SHARED_LIMIT_BREAK_RESOURCES).forEach((rscType) => {
+		// Realistically this is only possible if you're fooling around in Explorer mode but still
+		if (rscType !== "UNKNOWN") {
+			state.tryConsumeResource(rscType as LimitBreakResourceKey);
+		}
+	});
+
 makeLimitBreak(TANK_JOBS, "SHIELD_WALL", "cd_LIMIT_BREAK_1", {
 	tier: "1",
 	applicationDelay: 0.45,
 	animationLock: 1.93,
 	onApplication: (state) => {
-		// Realistically this is only possible if you're fooling around in Explorer mode but still
-		Object.keys(SHARED_LIMIT_BREAK_RESOURCES).forEach((rscType) =>
-			state.tryConsumeResource(rscType as LimitBreakResourceKey),
-		);
+		consumeSharedLbBuffs(state);
 		state.gainStatus("SHIELD_WALL");
 	},
 });
@@ -268,9 +274,7 @@ makeLimitBreak(TANK_JOBS, "STRONGHOLD", "cd_LIMIT_BREAK_2", {
 	applicationDelay: 0.89,
 	animationLock: 3.86,
 	onApplication: (state) => {
-		Object.keys(SHARED_LIMIT_BREAK_RESOURCES).forEach((rscType) =>
-			state.tryConsumeResource(rscType as LimitBreakResourceKey),
-		);
+		consumeSharedLbBuffs(state);
 		state.gainStatus("STRONGHOLD");
 	},
 });
@@ -283,9 +287,7 @@ TANK_JOBS.forEach((job) => {
 		applicationDelay: 1.34,
 		animationLock: 3.86,
 		onApplication: (state) => {
-			Object.keys(SHARED_LIMIT_BREAK_RESOURCES).forEach((rscType) =>
-				state.tryConsumeResource(rscType as LimitBreakResourceKey),
-			);
+			consumeSharedLbBuffs(state);
 			state.gainStatus(buff);
 		},
 	});
