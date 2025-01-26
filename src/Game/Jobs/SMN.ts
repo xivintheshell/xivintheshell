@@ -60,7 +60,7 @@ makeSMNResource("FURTHER_RUIN", 1, { timeout: 60 });
 makeSMNResource("GARUDAS_FAVOR", 1);
 makeSMNResource("IFRITS_FAVOR", 1);
 makeSMNResource("TITANS_FAVOR", 1);
-makeSMNResource("RADIANT_AEGIS", 2, { timeout: 30 }); // upgraded by trait
+makeSMNResource("RADIANT_AEGIS", 1, { timeout: 30 }); // upgraded by trait
 makeSMNResource("REFULGENT_LUX", 1, { timeout: 30 });
 makeSMNResource("REKINDLE", 1, { timeout: 30 });
 makeSMNResource("UNDYING_FLAME", 1, { timeout: 15 });
@@ -1332,4 +1332,10 @@ makeAbility_SMN("LUX_SOLARIS", 100, "cd_LUX_SOLARIS", {
 
 // SUMMON_CARBUNCLE
 // PHYSICK
-// RESURRECTION
+
+makeSpell_SMN("RESURRECTION", 12, {
+	baseCastTime: 8,
+	manaCost: 2400,
+	applicationDelay: 1.11,
+	basePotency: 0,
+});
