@@ -96,7 +96,7 @@ export const PCT_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_TEMPERA_COAT: { name: "cd_TemperaCoat" }, // [0, 120]
 	cd_SMUDGE: { name: "cd_Smudge" }, // [0, 20]
 	cd_LIVING_MUSE: { name: "cd_LivingMuse" }, // [0, 40]
-	cd_PORTRAIT: { name: "cd_Portrait" }, // [0, 30]
+	cd_PORTRAIT: { name: "cd_Portrait", label: { zh: "CD：莫古力激流/马蒂恩惩罚"} }, // [0, 30]
 	cd_STEEL_MUSE: { name: "cd_SteelMuse" }, // [0, 60]
 	cd_SCENIC_MUSE: { name: "cd_ScenicMuse" }, // [0, 120]
 	cd_SUBTRACTIVE: { name: "cd_Subtractive", label: { zh: "CD：减色混合" } }, // [0, 1], not real
