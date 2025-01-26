@@ -289,6 +289,7 @@ const makeAbility_GNB = (
 		potency?: number | Array<[TraitKey, number]>;
 		replaceIf?: ConditionalSkillReplace<GNBState>[];
 		highlightIf?: StatePredicate<GNBState>;
+		drawsAggro?: boolean;
 		falloff?: number;
 		startOnHotbar?: boolean;
 		applicationDelay?: number;
@@ -780,6 +781,8 @@ makeAbility_GNB("TRAJECTORY", 56, "cd_TRAJECTORY", {
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	cooldown: 30,
 	maxCharges: 2,
+	applicationDelay: 0.22,
+	drawsAggro: true,
 });
 
 makeAbility_GNB("HEART_OF_STONE", 68, "cd_HEART_OF_STONE", {

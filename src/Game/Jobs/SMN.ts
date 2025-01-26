@@ -23,13 +23,12 @@ import { GameState, PlayerState } from "../GameState";
 import { makeResource, CoolDown, Event } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
-import { ActionKey, CooldownKey, TraitKey } from "../Data";
+import { CooldownKey, TraitKey } from "../Data";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { SMNStatusPropsGenerator } from "../../Components/Jobs/SMN";
 import { SMNResourceKey, SMNActionKey } from "../Data/Jobs/SMN";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
-// TODO values changed by traits are handled in the class constructor, should be moved here
 const makeSMNResource = (
 	rsc: SMNResourceKey,
 	maxValue: number,
@@ -174,6 +173,56 @@ export class SMNState extends GameState {
 		// TODO
 	}
 
+	queuePetDamageEvent(
+		node: ActionNode,
+		sourceSkill: SMNActionKey,
+		petSkill: SMNActionKey,
+		basePotency: number,
+		summonDelay: number, // delay from summon to pet snapshot
+		applicationDelay: number, // delay from pet snapshot to damage event
+	) {
+		const castTime = this.getDisplayTime();
+		// enqueue the pet's "prepares" event
+		this.addEvent(
+			new Event(
+				petSkill + " pet snapshot",
+				summonDelay,
+				() => {
+					const potency = new Potency({
+						config: this.config,
+						sourceTime: castTime,
+						sourceSkill,
+						aspect: Aspect.Other,
+						basePotency,
+						snapshotTime: this.getDisplayTime(),
+						description: "",
+						targetCount: node.targetCount,
+						falloff: 0.6, // all summons + enkindle have 60% falloff
+					});
+					const mods = [Modifiers.SmnPet];
+					if (this.hasResourceAvailable("SEARING_LIGHT")) {
+						mods.push(Modifiers.SearingLight);
+					}
+					if (this.hasResourceAvailable("TINCTURE")) {
+						mods.push(Modifiers.Tincture);
+						node.addBuff(BuffType.Tincture);
+					}
+					potency.modifiers = mods;
+					node.addPotency(potency);
+					this.jobSpecificAddDamageBuffCovers(node, getSkill("SMN", sourceSkill));
+					// enqueue the actual damage application
+					this.addEvent(
+						new Event(
+							petSkill + " application",
+							applicationDelay,
+							() => controller.resolvePotency(potency),
+						),
+					);	
+				}
+			)
+		);
+	}
+
 	queueEnkindle() {
 		// TODO
 	}
@@ -195,49 +244,14 @@ export class SMNState extends GameState {
 		} else {
 			damageName = "AERIAL_BLAST";
 		}
-		// enqueue the pet's "prepares" event
-		const summonDelay = SUMMON_DELAYS.get(sourceSkill)!;
-		const castTime = this.getDisplayTime();
-		this.addEvent(
-			new Event(
-				damageName + " pet snapshot",
-				summonDelay,
-				() => {
-					const potency = new Potency({
-						config: this.config,
-						sourceTime: castTime,
-						sourceSkill,
-						aspect: Aspect.Other,
-						basePotency,
-						snapshotTime: this.getDisplayTime(),
-						description: "",
-						targetCount: node.targetCount,
-						falloff: 0.6,
-					});
-					const mods = [Modifiers.SmnPet];
-					if (this.hasResourceAvailable("SEARING_LIGHT")) {
-						mods.push(Modifiers.SearingLight);
-					}
-					if (this.hasResourceAvailable("TINCTURE")) {
-						mods.push(Modifiers.Tincture);
-						node.addBuff(BuffType.Tincture);
-					}
-					potency.modifiers = mods;
-					node.addPotency(potency);
-					this.jobSpecificAddDamageBuffCovers(node, getSkill("SMN", sourceSkill));
-					this.addEvent(
-						new Event(
-							"summoned primal attack",
-							PET_APPLICATION_DELAYS.get(sourceSkill)!,
-							() => {
-								controller.resolvePotency(potency);
-							}
-						),
-					);	
-				}
-			)
+		this.queuePetDamageEvent(
+			node,
+			sourceSkill,
+			damageName,
+			basePotency,
+			SUMMON_DELAYS.get(sourceSkill)!,
+			PET_APPLICATION_DELAYS.get(sourceSkill)!,
 		);
-
 		// prevent radiant aegis and other pet summons
 		const summonLockout = PET_LOCK_DURATIONS.get(sourceSkill)!;
 		this.cooldowns.get("cd_SUMMON_LOCKOUT").useStackWithRecast(this, summonLockout);
@@ -265,6 +279,7 @@ const makeSpell_SMN = (
 		baseRecastTime?: number;
 		manaCost?: number;
 		basePotency?: number | Array<[TraitKey, number]>;
+		drawsAggro?: boolean;
 		falloff?: number;
 		applicationDelay: number;
 		isPetAttack?: boolean,
@@ -806,6 +821,7 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 		replaceIf: toSpliced(DEMI_REPLACE_LIST, i),
 		secondaryCooldown: DEMI_COOLDOWN_GROUP,
 		validateAttempt: (state) => !state.hasActivePet && state.nextDemi === info.activeValue,
+		drawsAggro: true,
 		onConfirm: (state) => {
 			// start appropriate demi timer
 			state.gainStatus("ACTIVE_DEMI", info.activeValue);

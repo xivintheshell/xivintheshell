@@ -124,6 +124,12 @@ interface BaseSkill<T extends PlayerState> {
 
 	// === EFFECTS ===
 
+	// If true, then this ability draws aggro at application time. This should be used for
+	// abilities like DRK/GNB gap-closers and SMN's demi-summons that begin an encounter without
+	// dealing any damage; having the tick mark on the timeline is still useful for players to
+	// determine when the prepull should occur.
+	readonly drawsAggro: boolean;
+
 	// Perform side effects that occur at the time the player presses the button
 	// This is mainly for things like cancelling channeled abilites, such as Meditate, Improvisation, Collective Unconscious, and Flamethrower
 	readonly onExecute: EffectFn<T>;
@@ -310,6 +316,7 @@ function normalizeAssetPath(job: ShellJob, key: ActionKey) {
  * - recastTime: 2.5 (not adjusted to sps)
  * - manaCost: 0
  * - potency: 0
+ * - drawsAggro: false
  * - applicationDelay: 0
  * - validateAttempt: function always returning true (valid)
  * - isInstantFn: return true to indicate if this action is an instant cast. Defaults to false for spells and true for weapon skills
@@ -334,6 +341,7 @@ export function makeSpell<T extends PlayerState>(
 		manaCost: number | ResourceCalculationFn<T>;
 		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
+		drawsAggro: boolean;
 		falloff: number;
 		applicationDelay: number;
 		validateAttempt: StatePredicate<T>;
@@ -376,6 +384,7 @@ export function makeSpell<T extends PlayerState>(
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
@@ -410,6 +419,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		manaCost: number | ResourceCalculationFn<T>;
 		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
+		drawsAggro: boolean;
 		falloff: number;
 		applicationDelay: number;
 		validateAttempt: StatePredicate<T>;
@@ -452,6 +462,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
@@ -475,6 +486,7 @@ export function makeWeaponskill<T extends PlayerState>(
  * - assetPath: if `jobs` is a single job, then "$JOB/$SKILLNAME.png"; otherwise "General/Missing.png"
  * - autoUpgrade + autoDowngrade: remain undefined
  * - potency: 0
+ * - drawsAggro: false
  * - applicationDelay: 0 if basePotency is defined, otherwise left undefined
  * - validateAttempt: function always returning true (no error)
  * - onConfirm: empty function
@@ -501,6 +513,7 @@ export function makeAbility<T extends PlayerState>(
 		highlightIf: StatePredicate<T>;
 		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 		jobPotencyModifiers: PotencyModifierFn<T>;
+		drawsAggro: boolean;
 		falloff: number;
 		applicationDelay: number;
 		animationLock: number | ResourceCalculationFn<T>;
@@ -549,6 +562,7 @@ export function makeAbility<T extends PlayerState>(
 		manaCostFn: (state) => 0,
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt,
@@ -694,6 +708,7 @@ export function makeLimitBreak<T extends PlayerState>(
 		manaCostFn: (state) => 0,
 		potencyFn: fnify(params.potency, 0),
 		jobPotencyModifiers: (state) => [],
+		drawsAggro: false,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: (state) => true,
 		onExecute,
