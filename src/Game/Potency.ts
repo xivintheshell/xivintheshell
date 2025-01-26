@@ -425,9 +425,6 @@ export class Potency {
 	}
 
 	resolve(displayTime: number) {
-		if (this.base < 1) {
-			console.warn(this);
-		}
 		console.assert(
 			this.snapshotTime !== undefined,
 			`${this.sourceSkill} displayed at ${displayTime} did not have snapshotTime`,

@@ -74,6 +74,8 @@ makeSMNResource("ACTIVE_DEMI", 3, { timeout: DEMI_DURATION });
 // at level 80/90: 0 = baha, 1 = phoenix, 2 = baha, 3 = phoenix
 // at level 70: any value is baha
 makeSMNResource("NEXT_DEMI_CYCLE", 3);
+// each demi-summon will do 4 autos before leaving
+makeSMNResource("DEMI_AUTOS", 4);
 
 // Pressing the button to summon a primal creates 4 different events:
 // 1. "Summon" button is pressed
@@ -125,7 +127,17 @@ export class SMNState extends GameState {
 		this.cooldowns.set(new CoolDown("cd_DEMI_SUMMON", this.config.adjustedGCD(60), 1, 1));
 		// register summon lockout cd (change duration later)
 		this.cooldowns.set(new CoolDown("cd_SUMMON_LOCKOUT", 5, 1, 1));
-		this.registerRecurringEvents();
+		this.registerRecurringEvents([
+			{
+				groupedDots: [
+					{
+						dotName: "SLIPSTREAM",
+						appliedBy: ["SLIPSTREAM"],
+						isGroundTargeted: true,
+					},
+				],
+			},
+		]);
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<SMNState> {
@@ -170,7 +182,8 @@ export class SMNState extends GameState {
 	}
 
 	startPetAutos() {
-		// TODO
+		this.resources.get("DEMI_AUTOS").gain(4);
+		// assume a fixed 3.163 delay between demi autos, which is close enough to reality
 	}
 
 	queuePetDamageEvent(
@@ -1091,11 +1104,17 @@ makeSpell_SMN("SLIPSTREAM", 86, {
 	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 6),
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[6].condition,
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		state.tryConsumeResource("GARUDAS_FAVOR");
-		// TODO start aoe dot effect
-		state.gainStatus("SLIPSTREAM");
+		state.addDoTPotencies({
+			node,
+			dotName: "SLIPSTREAM",
+			skillName: "SLIPSTREAM",
+			tickPotency: 30,
+			speedStat: "sps",
+		});
 	},
+	onApplication: (state, node) => state.applyDoT("SLIPSTREAM", node),
 	falloff: 0.65,
 	startOnHotbar: false,
 });

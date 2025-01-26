@@ -206,8 +206,6 @@ export const SMN_COOLDOWNS = ensureRecord<CooldownData>()({
 	// https://discord.com/channels/277897135515762698/277968477233479680/1331466393430003793
 	// this number is lower for egis below level 90; need to double check
 	cd_SUMMON_LOCKOUT: { name: "cd_SUMMON_LOCKOUT" },
-	// assume a fixed 3.163 delay between demi autos, which is close enough to reality
-	cd_DEMI_AUTO: { name: "cd_DEMI_AUTO" },
 });
 
 export const SMN_GAUGES = ensureRecord<ResourceData>()({
@@ -241,6 +239,8 @@ export const SMN_STATUSES = ensureRecord<ResourceData>()({
 export const SMN_TRACKERS = ensureRecord<ResourceData>()({
 	// (next demi summon) 0 = solar, 1 = baha, 2 = solar, 3 = phoenix
 	NEXT_DEMI_CYCLE: { name: "Next Demi Cycle" },
+	// # of remaining demi autos during this summon
+	DEMI_AUTOS: { name: "Demi Auto-attacks"},
 });
 
 export const SMN_TRAITS = ensureRecord<TraitData>()({

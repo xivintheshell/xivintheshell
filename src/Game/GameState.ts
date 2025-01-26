@@ -407,14 +407,18 @@ export class GameState {
 
 	handleDoTTick(dotResource: ResourceKey) {
 		const dotBuff = this.resources.get(dotResource) as DoTBuff;
-		if (dotBuff.available(1)) {
-			if (dotBuff.node) {
+		if (dotBuff.availableAmountIncludingDisabled() > 0) {
+			// For floor dots that are toggled off, don't resolve its potency but do
+			// advance the tickCount.
+			if (dotBuff.node && dotBuff.enabled) {
 				const p = dotBuff.node.getDotPotencies(dotResource)[dotBuff.tickCount];
 				controller.resolvePotency(p);
 				this.jobSpecificOnResolveDotTick(dotResource);
 			}
 			dotBuff.tickCount++;
 		} else {
+			// If the dot buff has expired and was not simply toggled off, then remove
+			// all future dot tick potencies.
 			if (dotBuff.node) {
 				dotBuff.node.removeUnresolvedDoTPotencies();
 				dotBuff.node = undefined;

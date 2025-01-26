@@ -85,6 +85,7 @@ abstract class ResourceOrCooldown {
 	}
 	availableAmountIncludingDisabled(): number {
 		// used for checking LL existence: if Retrace should replace its button
+		// also used for checking if a ground dot has been toggled but is still active
 		return this.#currentValue;
 	}
 	consume(amount: number) {
