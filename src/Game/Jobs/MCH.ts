@@ -133,7 +133,7 @@ export class MCHState extends GameState {
 					},
 				],
 			},
-		]);
+		], ["ROOK_AUTOTURRET", "AUTOMATON_QUEEN"]);
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<MCHState> {

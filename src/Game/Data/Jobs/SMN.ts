@@ -189,6 +189,24 @@ export const SMN_ACTIONS = ensureRecord<ActionData>()({
 	AERIAL_BLAST: {
 		name: "Aerial Blast",
 	},
+	WYRMWAVE: {
+		name: "Wyrmwave",
+	},
+	SCARLET_FLAME: {
+		name: "Scarlet Flame",
+	},
+	LUXWAVE: {
+		name: "Luxwave",
+	},
+	AKH_MORN: {
+		name: "Akh Morn",
+	},
+	REVELATION: {
+		name: "Revelation",
+	},
+	EXODUS: {
+		name: "Exodus",
+	},
 });
 
 export const SMN_COOLDOWNS = ensureRecord<CooldownData>()({
@@ -240,7 +258,7 @@ export const SMN_TRACKERS = ensureRecord<ResourceData>()({
 	// (next demi summon) 0 = solar, 1 = baha, 2 = solar, 3 = phoenix
 	NEXT_DEMI_CYCLE: { name: "Next Demi Cycle" },
 	// # of remaining demi autos during this summon
-	DEMI_AUTOS: { name: "Demi Auto-attacks"},
+	DEMI_AUTO: { name: "Demi Auto-attack"},
 });
 
 export const SMN_TRAITS = ensureRecord<TraitData>()({

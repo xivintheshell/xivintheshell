@@ -20,7 +20,7 @@ import {
 	StatePredicate,
 } from "../Skills";
 import { GameState, PlayerState } from "../GameState";
-import { makeResource, CoolDown, Event } from "../Resources";
+import { makeResource, CoolDown, DoTBuff, Event } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
 import { CooldownKey, TraitKey } from "../Data";
@@ -75,7 +75,9 @@ makeSMNResource("ACTIVE_DEMI", 3, { timeout: DEMI_DURATION });
 // at level 70: any value is baha
 makeSMNResource("NEXT_DEMI_CYCLE", 3);
 // each demi-summon will do 4 autos before leaving
-makeSMNResource("DEMI_AUTOS", 4);
+makeSMNResource("DEMI_AUTO", 4);
+
+const DEMI_AUTO_DELAY: number = 3.163;
 
 // Pressing the button to summon a primal creates 4 different events:
 // 1. "Summon" button is pressed
@@ -137,7 +139,7 @@ export class SMNState extends GameState {
 					},
 				],
 			},
-		]);
+		], ["SUMMON_BAHAMUT", "SUMMON_PHOENIX", "SUMMON_SOLAR_BAHAMUT"]);
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<SMNState> {
@@ -181,9 +183,73 @@ export class SMNState extends GameState {
 			|| this.cooldowns.get("cd_SUMMON_LOCKOUT").stacksAvailable() === 0;
 	}
 
-	startPetAutos() {
-		this.resources.get("DEMI_AUTOS").gain(4);
-		// assume a fixed 3.163 delay between demi autos, which is close enough to reality
+	snapSearingAndTincture(node: ActionNode, potency: Potency) {
+		const mods = potency.modifiers;
+		if (this.hasResourceAvailable("SEARING_LIGHT")) {
+			mods.push(Modifiers.SearingLight);
+		}
+		if (this.hasResourceAvailable("TINCTURE")) {
+			mods.push(Modifiers.Tincture);
+			node.addBuff(BuffType.Tincture);
+		}
+	}
+
+	makePetPotency(
+		targetCount: number,
+		sourceSkill: SMNActionKey,
+		sourceTime: number,
+		basePotency: number,
+		falloff?: number
+	): Potency {
+		const potency = new Potency({
+			config: this.config,
+			sourceTime,
+			sourceSkill,
+			aspect: Aspect.Other,
+			basePotency,
+			snapshotTime: this.getDisplayTime(),
+			description: "",
+			targetCount,
+			falloff,
+		});
+		const mods = [Modifiers.SmnPet];
+		potency.modifiers = mods;
+		return potency;
+	}
+
+	handleDemiAuto() {
+		if (!this.hasResourceAvailable("DEMI_AUTO")) {
+			return;
+		}
+		const potencyIndex = 4 - this.resources.get("DEMI_AUTO").availableAmount();
+		if (potencyIndex < 0) {
+			 return;
+		}
+		const autoNode = (this.resources.get("DEMI_AUTO") as DoTBuff).node;
+		if (autoNode !== undefined) {
+			const autoPotency = autoNode.getDotPotencies("DEMI_AUTO")[potencyIndex];
+			this.snapSearingAndTincture(autoNode, autoPotency);
+			autoPotency.snapshotTime = this.getDisplayTime();
+			controller.resolvePotency(autoPotency);
+		}
+		// enqueue next demi auto
+		this.tryConsumeResource("DEMI_AUTO");
+		this.addEvent(new Event("demi auto", DEMI_AUTO_DELAY, () => this.handleDemiAuto()));
+	}
+
+	startPetAutos(node: ActionNode, autoName: SMNActionKey) {
+		const demiRsc = this.resources.get("DEMI_AUTO");
+		const basePotency = this.activeDemi === ActiveDemiValue.SOLAR ? 160 : 150;
+		demiRsc.gain(4);
+		(demiRsc as DoTBuff).node = node;
+		// assume a fixed delay between demi autos, which is close enough to reality
+		for (let i = 0; i < 4; i++) {
+			node.addDoTPotency(
+				this.makePetPotency(1, autoName, this.getDisplayTime(), basePotency),
+				"DEMI_AUTO",
+			);
+		}
+		this.addEvent(new Event("first demi auto", DEMI_AUTO_DELAY, () => this.handleDemiAuto()));
 	}
 
 	queuePetDamageEvent(
@@ -194,34 +260,16 @@ export class SMNState extends GameState {
 		summonDelay: number, // delay from summon to pet snapshot
 		applicationDelay: number, // delay from pet snapshot to damage event
 	) {
-		const castTime = this.getDisplayTime();
+		const sourceTime = this.getDisplayTime();
 		// enqueue the pet's "prepares" event
 		this.addEvent(
 			new Event(
 				petSkill + " pet snapshot",
 				summonDelay,
 				() => {
-					const potency = new Potency({
-						config: this.config,
-						sourceTime: castTime,
-						sourceSkill,
-						aspect: Aspect.Other,
-						basePotency,
-						snapshotTime: this.getDisplayTime(),
-						description: "",
-						targetCount: node.targetCount,
-						falloff: 0.6, // all summons + enkindle have 60% falloff
-					});
-					const mods = [Modifiers.SmnPet];
-					if (this.hasResourceAvailable("SEARING_LIGHT")) {
-						mods.push(Modifiers.SearingLight);
-					}
-					if (this.hasResourceAvailable("TINCTURE")) {
-						mods.push(Modifiers.Tincture);
-						node.addBuff(BuffType.Tincture);
-					}
-					potency.modifiers = mods;
+					const potency = this.makePetPotency(node.targetCount, sourceSkill, sourceTime, basePotency, 0.6);
 					node.addPotency(potency);
+					this.snapSearingAndTincture(node, potency);
 					this.jobSpecificAddDamageBuffCovers(node, getSkill("SMN", sourceSkill));
 					// enqueue the actual damage application
 					this.addEvent(
@@ -815,16 +863,19 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 [
 	{
 		name: "SUMMON_BAHAMUT",
+		autoName: "WYRMWAVE",
 		level: 70,
 		activeValue: ActiveDemiValue.BAHAMUT,
 	},
 	{
 		name: "SUMMON_PHOENIX",
+		autoName: "SCARLET_FLAME",
 		level: 80,
 		activeValue: ActiveDemiValue.PHOENIX,
 	},
 	{
 		name: "SUMMON_SOLAR_BAHAMUT",
+		autoName: "LUXWAVE",
 		level: 100,
 		activeValue: ActiveDemiValue.SOLAR,
 	}
@@ -835,10 +886,10 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 		secondaryCooldown: DEMI_COOLDOWN_GROUP,
 		validateAttempt: (state) => !state.hasActivePet && state.nextDemi === info.activeValue,
 		drawsAggro: true,
-		onConfirm: (state) => {
+		onConfirm: (state, node) => {
 			// start appropriate demi timer
 			state.gainStatus("ACTIVE_DEMI", info.activeValue);
-			state.startPetAutos();
+			state.startPetAutos(node, info.autoName as SMNActionKey);
 			// gain ability to summon primals
 			["RUBY_ARCANUM", "TOPAZ_ARCANUM", "EMERALD_ARCANUM"].forEach((rsc) => state.gainStatus(rsc as SMNResourceKey, 1));
 			// cancel all active attunements

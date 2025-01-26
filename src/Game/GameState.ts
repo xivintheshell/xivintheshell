@@ -172,13 +172,14 @@ export class GameState {
 	}
 
 	/**
-	 * Get mp tick, lucid tick, and class-specific recurring timers rolling.
+	 * Get mp tick, lucid tick, and class-specific recurring timers rolling. Jobs may also
+	 * register a list of pet resources to be treated as DoT effects.
 	 *
 	 * This cannot be called by the base GameState constructor because sub-classes
 	 * have not yet initialized their resource/cooldown objects. Instead, all
 	 * sub-classes must explicitly call this at the end of their constructor.
 	 */
-	protected registerRecurringEvents(dotGroups: DoTRegistrationGroup[] = []) {
+	protected registerRecurringEvents(dotGroups: DoTRegistrationGroup[] = [], petSkills: ActionKey[] = []) {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
@@ -325,6 +326,8 @@ export class GameState {
 				}
 			});
 		});
+		// Register pet summoning skills as DoTs for the purposes of damage reporting
+		petSkills.forEach((skill) => this.dotSkills.push(skill));
 		this.dotGroups = dotGroups;
 		let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
 		while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
