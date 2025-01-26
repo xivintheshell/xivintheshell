@@ -177,6 +177,7 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				RPR: "#965a90",
 				BRD: "#91ba5e",
 				GNB: "#f6b26b",
+				SMN: "#2D9B78", // copied from fflogs
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -304,6 +305,7 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				WAR: "#b10b0b", // color picker'd on job stone
 				RPR: "#965a90",
 				BRD: "#91ba5e",
+				SMN: "#2D9B78", // copied from fflogs
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange

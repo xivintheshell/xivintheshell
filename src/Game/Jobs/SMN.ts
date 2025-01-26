@@ -105,6 +105,9 @@ const PET_APPLICATION_DELAYS: Map<SMNActionKey, number> = new Map([
 	["SUMMON_IFRIT", 0.936],
 	["SUMMON_GARUDA", 0.8],
 	["SUMMON_TITAN", 0.8],
+	["ENKINDLE_BAHAMUT", 0.894],
+	["ENKINDLE_PHOENIX", 1.026],
+	["ENKINDLE_SOLAR_BAHAMUT", 0.846],
 ]);
 
 // delay from "summon" button press to pet leaving
@@ -196,7 +199,7 @@ export class SMNState extends GameState {
 
 	makePetPotency(
 		targetCount: number,
-		sourceSkill: SMNActionKey,
+		petSkill: SMNActionKey,
 		sourceTime: number,
 		basePotency: number,
 		falloff?: number
@@ -204,7 +207,7 @@ export class SMNState extends GameState {
 		const potency = new Potency({
 			config: this.config,
 			sourceTime,
-			sourceSkill,
+			sourceSkill: petSkill,
 			aspect: Aspect.Other,
 			basePotency,
 			snapshotTime: this.getDisplayTime(),
@@ -267,7 +270,7 @@ export class SMNState extends GameState {
 				petSkill + " pet snapshot",
 				summonDelay,
 				() => {
-					const potency = this.makePetPotency(node.targetCount, sourceSkill, sourceTime, basePotency, 0.6);
+					const potency = this.makePetPotency(node.targetCount, petSkill, sourceTime, basePotency, 0.6);
 					node.addPotency(potency);
 					this.snapSearingAndTincture(node, potency);
 					this.jobSpecificAddDamageBuffCovers(node, getSkill("SMN", sourceSkill));
@@ -284,8 +287,32 @@ export class SMNState extends GameState {
 		);
 	}
 
-	queueEnkindle() {
-		// TODO
+	queueEnkindle(node: ActionNode, sourceSkill: SMNActionKey) {
+		let damageName: SMNActionKey;
+		let basePotency: number;
+		if (sourceSkill === "ENKINDLE_BAHAMUT") {
+			damageName = "AKH_MORN";
+			basePotency = 1300;
+		} else if (sourceSkill === "ENKINDLE_PHOENIX") {
+			damageName = "REVELATION";
+			basePotency = 1300;
+		} else {
+			damageName = "EXODUS";
+			basePotency = 1400;
+		}
+		const demiEvent = this.resources.get("ACTIVE_DEMI").pendingChange;
+		console.assert(demiEvent);
+		if (demiEvent && demiEvent.timeTillEvent < 2.5) {
+			controller.reportWarning(WarningType.LateEnkindle);
+		}
+		this.queuePetDamageEvent(
+			node,
+			sourceSkill,
+			damageName,
+			basePotency,
+			0, // assume enkindles are enqueued immediately, even though this isn't accurate
+			PET_APPLICATION_DELAYS.get(sourceSkill)!,
+		);
 	}
 
 	queuePrimalSummon(node: ActionNode, sourceSkill: SMNActionKey) {
@@ -1208,7 +1235,7 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 		cooldown: 20,
 		replaceIf: toSpliced(ENKINDLE_REPLACE_LIST, i),
 		validateAttempt: (state) => state.activeDemi === info.activeValue,
-		onConfirm: (state) => state.queueEnkindle(),
+		onConfirm: (state, node) => state.queueEnkindle(node, info.name as SMNActionKey),
 		startOnHotbar: i === 0,
 	})
 );
