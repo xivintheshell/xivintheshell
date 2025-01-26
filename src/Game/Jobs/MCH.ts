@@ -114,26 +114,29 @@ export class MCHState extends GameState {
 			this.cooldowns.set(new CoolDown("cd_TACTICIAN", 120, 1, 1));
 		}
 
-		this.registerRecurringEvents([
-			{
-				groupedDots: [
-					{
-						dotName: "BIOBLASTER",
-						appliedBy: ["BIOBLASTER"],
-					},
-				],
-			},
-			{
-				groupedDots: [
-					{
-						dotName: "FLAMETHROWER",
-						appliedBy: ["FLAMETHROWER"],
-						isGroundTargeted: true,
-						exclude: true,
-					},
-				],
-			},
-		], ["ROOK_AUTOTURRET", "AUTOMATON_QUEEN"]);
+		this.registerRecurringEvents(
+			[
+				{
+					groupedDots: [
+						{
+							dotName: "BIOBLASTER",
+							appliedBy: ["BIOBLASTER"],
+						},
+					],
+				},
+				{
+					groupedDots: [
+						{
+							dotName: "FLAMETHROWER",
+							appliedBy: ["FLAMETHROWER"],
+							isGroundTargeted: true,
+							exclude: true,
+						},
+					],
+				},
+			],
+			["ROOK_AUTOTURRET", "AUTOMATON_QUEEN"],
+		);
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<MCHState> {

@@ -258,7 +258,7 @@ export const SMN_TRACKERS = ensureRecord<ResourceData>()({
 	// (next demi summon) 0 = solar, 1 = baha, 2 = solar, 3 = phoenix
 	NEXT_DEMI_CYCLE: { name: "Next Demi Cycle" },
 	// # of remaining demi autos during this summon
-	DEMI_AUTO: { name: "Demi Auto-attack"},
+	DEMI_AUTO: { name: "Demi Auto-attack" },
 });
 
 export const SMN_TRAITS = ensureRecord<TraitData>()({

@@ -179,7 +179,10 @@ export class GameState {
 	 * have not yet initialized their resource/cooldown objects. Instead, all
 	 * sub-classes must explicitly call this at the end of their constructor.
 	 */
-	protected registerRecurringEvents(dotGroups: DoTRegistrationGroup[] = [], petSkills: ActionKey[] = []) {
+	protected registerRecurringEvents(
+		dotGroups: DoTRegistrationGroup[] = [],
+		petSkills: ActionKey[] = [],
+	) {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)

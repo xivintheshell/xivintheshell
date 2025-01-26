@@ -37,7 +37,6 @@ const makeSMNResource = (
 	makeResource("SMN", rsc, maxValue, params ?? {});
 };
 
-
 enum ActiveDemiValue {
 	NONE = 0,
 	SOLAR = 1,
@@ -132,17 +131,20 @@ export class SMNState extends GameState {
 		this.cooldowns.set(new CoolDown("cd_DEMI_SUMMON", this.config.adjustedGCD(60), 1, 1));
 		// register summon lockout cd (change duration later)
 		this.cooldowns.set(new CoolDown("cd_SUMMON_LOCKOUT", 5, 1, 1));
-		this.registerRecurringEvents([
-			{
-				groupedDots: [
-					{
-						dotName: "SLIPSTREAM",
-						appliedBy: ["SLIPSTREAM"],
-						isGroundTargeted: true,
-					},
-				],
-			},
-		], ["SUMMON_BAHAMUT", "SUMMON_PHOENIX", "SUMMON_SOLAR_BAHAMUT"]);
+		this.registerRecurringEvents(
+			[
+				{
+					groupedDots: [
+						{
+							dotName: "SLIPSTREAM",
+							appliedBy: ["SLIPSTREAM"],
+							isGroundTargeted: true,
+						},
+					],
+				},
+			],
+			["SUMMON_BAHAMUT", "SUMMON_PHOENIX", "SUMMON_SOLAR_BAHAMUT"],
+		);
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<SMNState> {
@@ -168,7 +170,7 @@ export class SMNState extends GameState {
 			if (resourceValue === 1) {
 				return ActiveDemiValue.BAHAMUT;
 			} else if (resourceValue === 3) {
-				return ActiveDemiValue.PHOENIX
+				return ActiveDemiValue.PHOENIX;
 			} else {
 				return ActiveDemiValue.SOLAR;
 			}
@@ -182,8 +184,10 @@ export class SMNState extends GameState {
 	get hasActivePet(): boolean {
 		// using radiant aegis or summoning another primal is locked out during a demi window
 		// or during the on-summon attack of a primal
-		return this.activeDemi !== ActiveDemiValue.NONE
-			|| this.cooldowns.get("cd_SUMMON_LOCKOUT").stacksAvailable() === 0;
+		return (
+			this.activeDemi !== ActiveDemiValue.NONE ||
+			this.cooldowns.get("cd_SUMMON_LOCKOUT").stacksAvailable() === 0
+		);
 	}
 
 	snapSearingAndTincture(node: ActionNode, potency: Potency) {
@@ -202,7 +206,7 @@ export class SMNState extends GameState {
 		petSkill: SMNActionKey,
 		sourceTime: number,
 		basePotency: number,
-		falloff?: number
+		falloff?: number,
 	): Potency {
 		const potency = new Potency({
 			config: this.config,
@@ -226,7 +230,7 @@ export class SMNState extends GameState {
 		}
 		const potencyIndex = 4 - this.resources.get("DEMI_AUTO").availableAmount();
 		if (potencyIndex < 0) {
-			 return;
+			return;
 		}
 		const autoNode = (this.resources.get("DEMI_AUTO") as DoTBuff).node;
 		if (autoNode !== undefined) {
@@ -266,24 +270,24 @@ export class SMNState extends GameState {
 		const sourceTime = this.getDisplayTime();
 		// enqueue the pet's "prepares" event
 		this.addEvent(
-			new Event(
-				petSkill + " pet snapshot",
-				summonDelay,
-				() => {
-					const potency = this.makePetPotency(node.targetCount, petSkill, sourceTime, basePotency, 0.6);
-					node.addPotency(potency);
-					this.snapSearingAndTincture(node, potency);
-					this.jobSpecificAddDamageBuffCovers(node, getSkill("SMN", sourceSkill));
-					// enqueue the actual damage application
-					this.addEvent(
-						new Event(
-							petSkill + " application",
-							applicationDelay,
-							() => controller.resolvePotency(potency),
-						),
-					);	
-				}
-			)
+			new Event(petSkill + " pet snapshot", summonDelay, () => {
+				const potency = this.makePetPotency(
+					node.targetCount,
+					petSkill,
+					sourceTime,
+					basePotency,
+					0.6,
+				);
+				node.addPotency(potency);
+				this.snapSearingAndTincture(node, potency);
+				this.jobSpecificAddDamageBuffCovers(node, getSkill("SMN", sourceSkill));
+				// enqueue the actual damage application
+				this.addEvent(
+					new Event(petSkill + " application", applicationDelay, () =>
+						controller.resolvePotency(potency),
+					),
+				);
+			}),
 		);
 	}
 
@@ -370,7 +374,7 @@ const makeSpell_SMN = (
 		drawsAggro?: boolean;
 		falloff?: number;
 		applicationDelay: number;
-		isPetAttack?: boolean,
+		isPetAttack?: boolean;
 		validateAttempt?: StatePredicate<SMNState>;
 		onApplication?: EffectFn<SMNState>;
 		onConfirm?: EffectFn<SMNState>;
@@ -451,7 +455,7 @@ const R3_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 	{
 		newSkill: "UMBRAL_IMPULSE",
 		condition: (state) => state.activeDemi === ActiveDemiValue.SOLAR,
-	}
+	},
 ];
 
 makeSpell_SMN("RUIN_III", 54, {
@@ -474,7 +478,7 @@ makeSpell_SMN("ASTRAL_IMPULSE", 58, {
 	manaCost: 300,
 	replaceIf: toSpliced(R3_REPLACE_LIST, 0),
 	applicationDelay: 0.67,
-	validateAttempt: R3_REPLACE_LIST[0].condition, 
+	validateAttempt: R3_REPLACE_LIST[0].condition,
 	startOnHotbar: false,
 });
 
@@ -494,7 +498,7 @@ makeSpell_SMN("UMBRAL_IMPULSE", 100, {
 	basePotency: 620,
 	manaCost: 300,
 	replaceIf: toSpliced(R3_REPLACE_LIST, 2),
-	applicationDelay: 0.80,
+	applicationDelay: 0.8,
 	validateAttempt: R3_REPLACE_LIST[2].condition,
 	startOnHotbar: false,
 });
@@ -511,7 +515,7 @@ const OUTBURST_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 	{
 		newSkill: "UMBRAL_FLARE",
 		condition: (state) => state.activeDemi === ActiveDemiValue.SOLAR,
-	}
+	},
 ];
 
 makeSpell_SMN("OUTBURST", 26, {
@@ -554,7 +558,7 @@ makeSpell_SMN("BRAND_OF_PURGATORY", 80, {
 	basePotency: 240,
 	manaCost: 300,
 	replaceIf: toSpliced(OUTBURST_REPLACE_LIST, 1),
-	applicationDelay: 0.80,
+	applicationDelay: 0.8,
 	validateAttempt: OUTBURST_REPLACE_LIST[1].condition,
 	falloff: 0,
 	startOnHotbar: false,
@@ -702,7 +706,7 @@ const PRECIOUS_BRILLIANCE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 	{
 		newSkill: "EMERALD_OUTBURST",
 		condition: (state) => state.hasResourceAvailable("WIND_ATTUNEMENT"),
-	},	
+	},
 ];
 
 makeSpell_SMN("PRECIOUS_BRILLIANCE", 26, {
@@ -813,7 +817,6 @@ makeSpell_SMN("EMERALD_DISASTER", 74, {
 	startOnHotbar: false,
 });
 
-
 makeSpell_SMN("RUBY_CATASTROPHE", 82, {
 	autoDowngrade: {
 		trait: "OUTBURST_MASTERY_II",
@@ -878,7 +881,7 @@ const DEMI_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 	{
 		newSkill: "SUMMON_SOLAR_BAHAMUT",
 		condition: (state) => state.nextDemi === ActiveDemiValue.SOLAR,
-	}
+	},
 ];
 
 const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
@@ -905,7 +908,7 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 		autoName: "LUXWAVE",
 		level: 100,
 		activeValue: ActiveDemiValue.SOLAR,
-	}
+	},
 ].forEach((info, i) =>
 	makeSpell_SMN(info.name as SMNActionKey, info.level, {
 		applicationDelay: 0.8,
@@ -918,14 +921,18 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 			state.gainStatus("ACTIVE_DEMI", info.activeValue);
 			state.startPetAutos(node, info.autoName as SMNActionKey);
 			// gain ability to summon primals
-			["RUBY_ARCANUM", "TOPAZ_ARCANUM", "EMERALD_ARCANUM"].forEach((rsc) => state.gainStatus(rsc as SMNResourceKey, 1));
+			["RUBY_ARCANUM", "TOPAZ_ARCANUM", "EMERALD_ARCANUM"].forEach((rsc) =>
+				state.gainStatus(rsc as SMNResourceKey, 1),
+			);
 			// cancel all active attunements
-			["FIRE_ATTUNEMENT", "EARTH_ATTUNEMENT", "WIND_ATTUNEMENT"].forEach((rsc) => state.tryConsumeResource(rsc as SMNResourceKey, true));
+			["FIRE_ATTUNEMENT", "EARTH_ATTUNEMENT", "WIND_ATTUNEMENT"].forEach((rsc) =>
+				state.tryConsumeResource(rsc as SMNResourceKey, true),
+			);
 			// after 15 seconds, wrapping increment the value of the next demi
 			state.addEvent(
 				new Event("update next demi", DEMI_DURATION, () => {
 					state.resources.get("NEXT_DEMI_CYCLE").gainWrapping(1);
-				})
+				}),
 			);
 		},
 		// even though demi summons don't themselves do damage, they still begin combat
@@ -935,12 +942,15 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 			}
 		},
 		startOnHotbar: i === 0,
-	})
+	}),
 );
 
-const ifritCondition: StatePredicate<SMNState> = (state) => !state.hasActivePet && state.hasResourceAvailable("RUBY_ARCANUM");
-const titanCondition: StatePredicate<SMNState> = (state) => !state.hasActivePet && state.hasResourceAvailable("TOPAZ_ARCANUM");
-const garudaCondition: StatePredicate<SMNState> = (state) => !state.hasActivePet && state.hasResourceAvailable("EMERALD_ARCANUM");
+const ifritCondition: StatePredicate<SMNState> = (state) =>
+	!state.hasActivePet && state.hasResourceAvailable("RUBY_ARCANUM");
+const titanCondition: StatePredicate<SMNState> = (state) =>
+	!state.hasActivePet && state.hasResourceAvailable("TOPAZ_ARCANUM");
+const garudaCondition: StatePredicate<SMNState> = (state) =>
+	!state.hasActivePet && state.hasResourceAvailable("EMERALD_ARCANUM");
 
 const ifritConfirm: (skill: SMNActionKey) => EffectFn<SMNState> = (skill) => (state, node) => {
 	state.tryConsumeResource("RUBY_ARCANUM");
@@ -979,7 +989,7 @@ const garudaConfirm: (skill: SMNActionKey) => EffectFn<SMNState> = (skill) => (s
 // instead, each "summon" ability enqueues the pet's "prepares" event, which then in turn snapshots
 // damage and enqueues the actual damage event
 
-// while the "[primal]'s Favor" buffs are granted by the synced version (because followups are 
+// while the "[primal]'s Favor" buffs are granted by the synced version (because followups are
 // learned at level 86), we don't need to implement them for the un-upgraded summons because the
 // only level sync they're used at is 90
 makeSpell_SMN("SUMMON_IFRIT", 30, {
@@ -1083,7 +1093,7 @@ const ASTRAL_FLOW_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 	{
 		newSkill: "SLIPSTREAM",
 		condition: (state) => state.hasResourceAvailable("GARUDAS_FAVOR"),
-	}
+	},
 ];
 
 makeAbility_SMN("ASTRAL_FLOW", 60, "cd_ASTRAL_FLOW", {
@@ -1130,7 +1140,7 @@ makeSpell_SMN("CRIMSON_CYCLONE", 86, {
 		["NEVER", 430],
 		["ARCANE_MASTERY", 490],
 	],
-	applicationDelay: 0.80,
+	applicationDelay: 0.8,
 	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 3),
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[3].condition,
@@ -1201,7 +1211,8 @@ makeSpell_SMN("SLIPSTREAM", 86, {
 const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 	{
 		newSkill: "ENKINDLE_BAHAMUT",
-		condition: (state) => [ActiveDemiValue.NONE, ActiveDemiValue.BAHAMUT].includes(state.activeDemi),
+		condition: (state) =>
+			[ActiveDemiValue.NONE, ActiveDemiValue.BAHAMUT].includes(state.activeDemi),
 	},
 	{
 		newSkill: "ENKINDLE_PHOENIX",
@@ -1210,7 +1221,7 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 	{
 		newSkill: "ENKINDLE_SOLAR_BAHAMUT",
 		condition: (state) => state.activeDemi === ActiveDemiValue.SOLAR,
-	}
+	},
 ];
 
 [
@@ -1228,7 +1239,7 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 		name: "ENKINDLE_SOLAR_BAHAMUT",
 		level: 100,
 		activeValue: ActiveDemiValue.SOLAR,
-	}
+	},
 ].forEach((info, i) =>
 	makeAbility_SMN(info.name as SMNActionKey, info.level, "cd_ENKINDLE", {
 		applicationDelay: 0,
@@ -1237,12 +1248,12 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 		validateAttempt: (state) => state.activeDemi === info.activeValue,
 		onConfirm: (state, node) => state.queueEnkindle(node, info.name as SMNActionKey),
 		startOnHotbar: i === 0,
-	})
+	}),
 );
 
 makeSpell_SMN("RUIN_IV", 62, {
 	manaCost: 400,
-	applicationDelay: 0.80,
+	applicationDelay: 0.8,
 	falloff: 0.6,
 	highlightIf: (state) => state.hasResourceAvailable("FURTHER_RUIN"),
 	validateAttempt: (state) => state.hasResourceAvailable("FURTHER_RUIN"),
@@ -1254,7 +1265,7 @@ makeSpell_SMN("RUIN_IV", 62, {
 		name: "ENERGY_DRAIN" as SMNActionKey,
 		level: 10,
 		potency: 200,
-		applicationDelay: 1.07
+		applicationDelay: 1.07,
 	},
 	{
 		name: "ENERGY_SIPHON" as SMNActionKey,
@@ -1262,9 +1273,8 @@ makeSpell_SMN("RUIN_IV", 62, {
 		potency: 100,
 		applicationDelay: 1.02,
 		falloff: 0,
-	}
-].forEach(
-	(info) => 
+	},
+].forEach((info) =>
 	makeAbility_SMN(info.name, info.level, "cd_ENERGY_DRAIN", {
 		...info,
 		cooldown: 60,
@@ -1272,7 +1282,7 @@ makeSpell_SMN("RUIN_IV", 62, {
 			state.gainStatus("AETHERFLOW", 2);
 			state.gainStatus("FURTHER_RUIN");
 		},
-	})
+	}),
 );
 
 [
@@ -1303,13 +1313,13 @@ makeSpell_SMN("RUIN_IV", 62, {
 			otherSkill: "FESTER",
 		},
 	},
-].forEach((info) => 
+].forEach((info) =>
 	makeAbility_SMN(info.name, info.level, "cd_AETHERFLOW", {
 		...info,
 		cooldown: 1,
 		validateAttempt: (state) => state.hasResourceAvailable("AETHERFLOW"),
 		onConfirm: (state) => state.tryConsumeResource("AETHERFLOW"),
-	})
+	}),
 );
 
 makeResourceAbility("SMN", "SEARING_LIGHT", 66, "cd_SEARING_LIGHT", {
@@ -1325,13 +1335,13 @@ makeResourceAbility("SMN", "SEARING_LIGHT", 66, "cd_SEARING_LIGHT", {
 		{
 			newSkill: "SEARING_FLASH",
 			condition: (state) => state.hasResourceAvailable("RUBYS_GLIMMER"),
-		}
+		},
 	],
 });
 
 makeAbility_SMN("SEARING_FLASH", 96, "cd_SEARING_FLASH", {
 	potency: 600,
-	applicationDelay: 0.80,
+	applicationDelay: 0.8,
 	cooldown: 1,
 	falloff: 0,
 	startOnHotbar: false,

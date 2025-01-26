@@ -47,7 +47,7 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 		);
 		const demiTimer = resources.timeTillReady("ACTIVE_DEMI");
 
-		const arcana = []
+		const arcana = [];
 		if (resources.get("RUBY_ARCANUM").available(1)) {
 			arcana.push("ruby");
 		}
@@ -113,7 +113,10 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 				kind: "text",
 				name: localize({ en: "summon timer" }),
 				color: colors.rdm.manaStack,
-				text: this.state.cooldowns.get("cd_SUMMON_LOCKOUT").timeTillNextStackAvailable().toFixed(3),
+				text: this.state.cooldowns
+					.get("cd_SUMMON_LOCKOUT")
+					.timeTillNextStackAvailable()
+					.toFixed(3),
 			} as ResourceTextProps,
 		];
 

@@ -299,7 +299,7 @@ export const Modifiers = {
 		source: PotencyModifierType.PET,
 		// with a 5% party bonus, smn pet skills do approximately 80% of its other potencies
 		// https://docs.google.com/spreadsheets/d/1Yt7Px7VHuKG1eJR9CRKs3RpvcR5IZKAAA3xjekvv0LY/edit?gid=0#gid=0
-		damageFactor: 0.80,
+		damageFactor: 0.8,
 	} as PotencyMultiplier,
 };
 
