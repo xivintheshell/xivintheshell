@@ -70,7 +70,7 @@ makeSMNResource("SLIPSTREAM", 1, { timeout: 15 });
 // 0 = no demi, 1 = solar, 2 = baha, 3 = phoenix
 makeSMNResource("ACTIVE_DEMI", 3, { timeout: DEMI_DURATION });
 // needed to distinguish between the 1min and 3min bahamuts
-// at level 100: 0 = next summon is solar, 1 = baha, 2 = phoenix, 3 = baha
+// at level 100: 0 = next summon is solar, 1 = baha, 2 = solar, 3 = phoenix
 // at level 80/90: 0 = baha, 1 = phoenix, 2 = baha, 3 = phoenix
 // at level 70: any value is baha
 makeSMNResource("NEXT_DEMI_CYCLE", 3);
@@ -155,17 +155,17 @@ export class SMNState extends GameState {
 	}
 
 	get nextDemi(): ActiveDemiValue {
-		// at level 100: 0 = next summon is solar, 1 = baha, 2 = phoenix, 3 = baha
+		// at level 100: 0 = next summon is solar, 1 = baha, 2 = solar, 3 = phoenix
 		// at level 80/90: 0 = baha, 1 = phoenix, 2 = baha, 3 = phoenix
 		// at level 70: any value is baha
 		const resourceValue = this.resources.get("NEXT_DEMI_CYCLE").availableAmount();
 		if (this.hasTraitUnlocked("ENHANCED_SUMMON_BAHAMUT_II")) {
-			if (resourceValue === 0) {
-				return ActiveDemiValue.SOLAR;
-			} else if (resourceValue === 2) {
+			if (resourceValue === 1) {
+				return ActiveDemiValue.BAHAMUT;
+			} else if (resourceValue === 3) {
 				return ActiveDemiValue.PHOENIX
 			} else {
-				return ActiveDemiValue.BAHAMUT;
+				return ActiveDemiValue.SOLAR;
 			}
 		} else if (this.hasTraitUnlocked("ENHANCED_SUMMON_BAHAMUT")) {
 			return resourceValue % 2 === 0 ? ActiveDemiValue.BAHAMUT : ActiveDemiValue.PHOENIX;

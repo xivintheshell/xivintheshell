@@ -408,8 +408,7 @@ export class GameState {
 	handleDoTTick(dotResource: ResourceKey) {
 		const dotBuff = this.resources.get(dotResource) as DoTBuff;
 		if (dotBuff.availableAmountIncludingDisabled() > 0) {
-			// For floor dots that are toggled off, don't resolve its potency but do
-			// advance the tickCount.
+			// For floor dots that are toggled off, don't resolve its potency, but increment the tick count.
 			if (dotBuff.node && dotBuff.enabled) {
 				const p = dotBuff.node.getDotPotencies(dotResource)[dotBuff.tickCount];
 				controller.resolvePotency(p);
