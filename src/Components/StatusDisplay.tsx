@@ -7,7 +7,7 @@ import { getCurrentThemeColors } from "./ColorTheme";
 import { JOBS } from "../Game/Data/Jobs";
 import { ResourceKey, RESOURCES } from "../Game/Data";
 import { ROLE_RESOURCES } from "../Game/Data/Shared/Role";
-import { SHARED_LIMIT_BREAK_RESOURCES } from "../Game/Data/Shared/LimitBreak";
+import { LIMIT_BREAK_RESOURCES } from "../Game/Data/Shared/LimitBreak";
 
 type StatusResourceLocksViewProps = {
 	gcdReady: boolean;
@@ -351,7 +351,7 @@ Object.keys(ROLE_RESOURCES).forEach((buff) => {
 });
 
 // Tank LBs share the same buff icon
-Object.keys(SHARED_LIMIT_BREAK_RESOURCES).forEach((rscType) =>
+Object.keys(LIMIT_BREAK_RESOURCES).forEach((rscType) =>
 	buffIcons.set(rscType, require("./Asset/Buffs/Role/Tank Limit Break.png")),
 );
 
