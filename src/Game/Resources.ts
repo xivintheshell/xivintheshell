@@ -85,6 +85,7 @@ abstract class ResourceOrCooldown {
 	}
 	availableAmountIncludingDisabled(): number {
 		// used for checking LL existence: if Retrace should replace its button
+		// also used for checking if a ground dot has been toggled but is still active
 		return this.#currentValue;
 	}
 	consume(amount: number) {
@@ -103,6 +104,9 @@ abstract class ResourceOrCooldown {
 	}
 	gain(amount: number) {
 		this.#currentValue = Math.min(this.#currentValue + amount, this.maxValue);
+	}
+	gainWrapping(amount: number) {
+		this.#currentValue = (this.#currentValue + amount) % (this.maxValue + 1);
 	}
 	overrideCurrentValue(amount: number) {
 		this.#currentValue = amount;

@@ -56,6 +56,10 @@ export const enum PotencyModifierType {
 	BARRAGE,
 
 	NO_MERCY,
+
+	SEARING_LIGHT,
+
+	PET,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -284,7 +288,19 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.NO_MERCY,
 		damageFactor: 1.2,
-	} as PotencyModifier,
+	} as PotencyMultiplier,
+	SearingLight: {
+		kind: "multiplier",
+		source: PotencyModifierType.SEARING_LIGHT,
+		damageFactor: 1.05,
+	} as PotencyMultiplier,
+	SmnPet: {
+		kind: "multiplier",
+		source: PotencyModifierType.PET,
+		// with a 5% party bonus, smn pet skills do approximately 80% of its other potencies
+		// https://docs.google.com/spreadsheets/d/1Yt7Px7VHuKG1eJR9CRKs3RpvcR5IZKAAA3xjekvv0LY/edit?gid=0#gid=0
+		damageFactor: 0.8,
+	} as PotencyMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {
@@ -409,9 +425,6 @@ export class Potency {
 	}
 
 	resolve(displayTime: number) {
-		if (this.base < 1) {
-			console.warn(this);
-		}
 		console.assert(
 			this.snapshotTime !== undefined,
 			`${this.sourceSkill} displayed at ${displayTime} did not have snapshotTime`,

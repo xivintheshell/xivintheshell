@@ -186,9 +186,10 @@ makeAbility([...MELEE_JOBS, ...RANGED_JOBS], "SECOND_WIND", 12, "cd_SECOND_WIND"
 //#region Other-targeted utility
 
 makeAbility(TANK_JOBS, "PROVOKE", 15, "cd_PROVOKE", {
-	applicationDelay: 0,
+	applicationDelay: 0.62,
 	cooldown: 30,
 	assetPath: "Role/Provoke.png",
+	drawsAggro: true,
 });
 
 makeAbility(TANK_JOBS, "SHIRK", 48, "cd_SHIRK", {

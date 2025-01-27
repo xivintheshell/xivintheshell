@@ -172,13 +172,17 @@ export class GameState {
 	}
 
 	/**
-	 * Get mp tick, lucid tick, and class-specific recurring timers rolling.
+	 * Get mp tick, lucid tick, and class-specific recurring timers rolling. Jobs may also
+	 * register a list of pet resources to be treated as DoT effects.
 	 *
 	 * This cannot be called by the base GameState constructor because sub-classes
 	 * have not yet initialized their resource/cooldown objects. Instead, all
 	 * sub-classes must explicitly call this at the end of their constructor.
 	 */
-	protected registerRecurringEvents(dotGroups: DoTRegistrationGroup[] = []) {
+	protected registerRecurringEvents(
+		dotGroups: DoTRegistrationGroup[] = [],
+		petSkills: ActionKey[] = [],
+	) {
 		let game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
@@ -325,6 +329,8 @@ export class GameState {
 				}
 			});
 		});
+		// Register pet summoning skills as DoTs for the purposes of damage reporting
+		petSkills.forEach((skill) => this.dotSkills.push(skill));
 		this.dotGroups = dotGroups;
 		let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
 		while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
@@ -407,14 +413,17 @@ export class GameState {
 
 	handleDoTTick(dotResource: ResourceKey) {
 		const dotBuff = this.resources.get(dotResource) as DoTBuff;
-		if (dotBuff.available(1)) {
-			if (dotBuff.node) {
+		if (dotBuff.availableAmountIncludingDisabled() > 0) {
+			// For floor dots that are toggled off, don't resolve its potency, but increment the tick count.
+			if (dotBuff.node && dotBuff.enabled) {
 				const p = dotBuff.node.getDotPotencies(dotResource)[dotBuff.tickCount];
 				controller.resolvePotency(p);
 				this.jobSpecificOnResolveDotTick(dotResource);
 			}
 			dotBuff.tickCount++;
 		} else {
+			// If the dot buff has expired and was not simply toggled off, then remove
+			// all future dot tick potencies.
 			if (dotBuff.node) {
 				dotBuff.node.removeUnresolvedDoTPotencies();
 				dotBuff.node = undefined;
@@ -567,7 +576,9 @@ export class GameState {
 		// See if the initial potency was already created
 		let potency: Potency | undefined = node.getInitialPotency();
 		// If it was not, and this action is supposed to do damage, go ahead and add it now
-		if (!potency && potencyNumber > 0) {
+		// If the skill draws aggro without dealing damage (such as Summon Bahamut), then
+		// create a potency object so a damage mark can be drawn if we're not already in combat.
+		if (!potency && (potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()))) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
@@ -605,18 +616,20 @@ export class GameState {
 				this.resources.get("MANA").consume(manaCost);
 			}
 
-			// potency
+			const doesDamage = potencyNumber > 0;
+			// Skills that draw aggro (Provoke, Summon Bahamut) should generate a snapshot time
+			// but no modifiers.
 			if (potency) {
 				potency.snapshotTime = this.getDisplayTime();
-				const mods: PotencyModifier[] = [];
-				if (this.hasResourceAvailable("TINCTURE")) {
-					mods.push(Modifiers.Tincture);
+				if (doesDamage) {
+					const mods: PotencyModifier[] = [];
+					if (this.hasResourceAvailable("TINCTURE")) {
+						mods.push(Modifiers.Tincture);
+					}
+					mods.push(...skill.jobPotencyModifiers(this));
+					potency.modifiers = mods;
 				}
-				mods.push(...skill.jobPotencyModifiers(this));
-				potency.modifiers = mods;
 			}
-
-			const doesDamage = skill.potencyFn(this) > 0;
 
 			if (doesDamage) {
 				// tincture
@@ -711,7 +724,7 @@ export class GameState {
 		// potency
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
-		if (potencyNumber > 0) {
+		if (potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()!)) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
@@ -723,6 +736,8 @@ export class GameState {
 				targetCount: node.targetCount,
 				falloff: skill.falloff,
 			});
+		}
+		if (potency && potencyNumber > 0) {
 			const mods: PotencyModifier[] = [];
 			if (this.hasResourceAvailable("TINCTURE")) {
 				mods.push(Modifiers.Tincture);
@@ -730,14 +745,10 @@ export class GameState {
 			mods.push(...skill.jobPotencyModifiers(this));
 			potency.modifiers = mods;
 			node.addPotency(potency);
-		}
-
-		if (potencyNumber > 0) {
 			// tincture
 			if (this.hasResourceAvailable("TINCTURE")) {
 				node.addBuff(BuffType.Tincture);
 			}
-
 			this.jobSpecificAddDamageBuffCovers(node, skill);
 		}
 

@@ -202,6 +202,10 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({ en: "armys paeon" }) as string;
 	} else if (buff === PotencyModifierType.NO_MERCY) {
 		text = localize({ en: "no mercy" }) as string;
+	} else if (buff === PotencyModifierType.SEARING_LIGHT) {
+		text = localize({ en: "searing light" }) as string;
+	} else if (buff === PotencyModifierType.PET) {
+		text = localize({ en: "pet" }) as string;
 	}
 	return text;
 }
@@ -333,6 +337,12 @@ function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
 	} else if (props.buff === PotencyModifierType.NO_MERCY) {
 		text = localize({ en: "NM" }) as string;
 		color = colors.rdm.blackMana;
+	} else if (props.buff === PotencyModifierType.SEARING_LIGHT) {
+		text = localize({ en: "SL" }) as string;
+		color = colors.smn.searing;
+	} else if (props.buff === PotencyModifierType.PET) {
+		text = localize({ en: "PET" }) as string;
+		color = colors.resources.petTag;
 	}
 	return <span
 		style={{
