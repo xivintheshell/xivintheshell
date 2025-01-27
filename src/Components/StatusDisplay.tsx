@@ -93,15 +93,18 @@ export interface CodaCounterProps {
 	armysColor: string;
 }
 
-export interface CodaCounterProps {
-	kind: "coda";
-	name: ContentNode;
-	hasWanderers: boolean;
-	hasMages: boolean;
-	hasArmys: boolean;
-	wanderersColor: string;
-	magesColor: string;
-	armysColor: string;
+export interface AttunementGaugeProps {
+	kind: "attunement";
+	aetherName: ContentNode;
+	attunementName: ContentNode;
+	ruby: boolean;
+	topaz: boolean;
+	emerald: boolean;
+	attunementCount: number;
+	timeRemaining: number;
+	rubyColor: string;
+	topazColor: string;
+	emeraldColor: string;
 }
 
 export interface ResourceTextProps {
@@ -118,6 +121,7 @@ export type ResourceDisplayProps =
 	| DanceCounterProps
 	| SenCounterProps
 	| CodaCounterProps
+	| AttunementGaugeProps
 	| ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
@@ -588,6 +592,34 @@ export function ResourcesDisplay(props: {
 					})}
 					key={"resourceDisplay" + i}
 				/>;
+			}
+			case "attunement": {
+				// Ideally we would have the gems + # of attunements displayed right next
+				// to each other like in game, but this isn't possible to conveniently compose
+				// using ResourceCounter and ResourceBar. Instead, we just make two separate gauges.
+				const gemList = [
+					{ gem: props.ruby, color: props.rubyColor },
+					{ gem: props.topaz, color: props.topazColor },
+					{ gem: props.emerald, color: props.emeraldColor },
+				];
+				return <div key={"resourceDisplay" + i}>
+					<ResourceCounter
+						name={props.aetherName}
+						containerType={"circle"}
+						items={gemList.map((item) => {
+							return { color: item.gem ? item.color : undefined };
+						})}
+					/>
+					<ResourceText
+						name={props.attunementName}
+						text={
+							props.attunementCount.toString() +
+							(props.attunementCount > 0
+								? ` | ${props.timeRemaining.toFixed(3)}`
+								: "")
+						}
+					/>
+				</div>;
 			}
 			default:
 				return <ResourceText

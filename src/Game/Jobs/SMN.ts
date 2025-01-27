@@ -37,7 +37,7 @@ const makeSMNResource = (
 	makeResource("SMN", rsc, maxValue, params ?? {});
 };
 
-enum ActiveDemiValue {
+export enum ActiveDemiValue {
 	NONE = 0,
 	SOLAR = 1,
 	BAHAMUT = 2,

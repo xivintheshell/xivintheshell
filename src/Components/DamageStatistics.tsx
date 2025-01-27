@@ -339,10 +339,10 @@ function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
 		color = colors.rdm.blackMana;
 	} else if (props.buff === PotencyModifierType.SEARING_LIGHT) {
 		text = localize({ en: "SL" }) as string;
-		color = colors.jobAccents.SMN!;
+		color = colors.smn.searing;
 	} else if (props.buff === PotencyModifierType.PET) {
 		text = localize({ en: "PET" }) as string;
-		color = colors.brd.armysCoda;
+		color = colors.resources.petTag;
 	}
 	return <span
 		style={{
