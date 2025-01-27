@@ -131,7 +131,7 @@ export const testDamageFromTimeline = (
 	expectedDamageData: RecursivePartial<ComparableStats>,
 ) => {
 	return () => {
-		const absPath = "src\\__test__\\Asset\\" + relPath;
+		const absPath = "src/__test__/Asset/" + relPath;
 		const content = JSON.parse(fs.readFileSync(absPath, "utf8"));
 
 		controller.setTinctureBuffPercentage(8);
