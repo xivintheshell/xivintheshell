@@ -83,17 +83,18 @@ const DEMI_AUTO_DELAY: number = 3.163;
 // 2. Summoned pet creates a "prepares" event
 // 3. Damage from pet applies
 // 4. Summoned pet leaves
-// I (shanzhe) experimentally measured these delays:
+// Some delays are experimentally measured, some are taken from Hauffen:
 // https://docs.google.com/spreadsheets/d/1FSvf0n8Gbqb-95qbGwXtDLAo7ArxLvMDfwm_FAxvGA8/edit?gid=0#gid=0
+// https://discord.com/channels/277897135515762698/277968477233479680/1333178688019238912
 
 // delay from "summon" button press to pet's "prepares" event
 const SUMMON_DELAYS: Map<SMNActionKey, number> = new Map([
 	["SUMMON_IFRIT_II", 2.1],
-	["SUMMON_GARUDA_II", 2.095],
-	["SUMMON_TITAN_II", 2.095],
+	["SUMMON_GARUDA_II", 2.1],
+	["SUMMON_TITAN_II", 2.1],
 	["SUMMON_IFRIT", 2.46],
 	["SUMMON_GARUDA", 2.1],
-	["SUMMON_TITAN", 2.495],
+	["SUMMON_TITAN", 2.46],
 ]);
 
 // delay from pet's "prepares" to actual damage event
@@ -111,9 +112,9 @@ const PET_APPLICATION_DELAYS: Map<SMNActionKey, number> = new Map([
 
 // delay from "summon" button press to pet leaving
 const PET_LOCK_DURATIONS: Map<SMNActionKey, number> = new Map([
-	["SUMMON_IFRIT_II", 6.28],
-	["SUMMON_GARUDA_II", 6.28],
-	["SUMMON_TITAN_II", 6.28],
+	["SUMMON_IFRIT_II", 6.29],
+	["SUMMON_GARUDA_II", 6.29],
+	["SUMMON_TITAN_II", 6.29],
 	["SUMMON_IFRIT", 4.6],
 	["SUMMON_GARUDA", 4.3],
 	["SUMMON_TITAN", 4.6],
@@ -911,7 +912,7 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 	},
 ].forEach((info, i) =>
 	makeSpell_SMN(info.name as SMNActionKey, info.level, {
-		applicationDelay: 0.8,
+		applicationDelay: 0.76,
 		replaceIf: toSpliced(DEMI_REPLACE_LIST, i),
 		secondaryCooldown: DEMI_COOLDOWN_GROUP,
 		validateAttempt: (state) => !state.hasActivePet && state.nextDemi === info.activeValue,
