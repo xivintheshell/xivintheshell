@@ -63,7 +63,10 @@ makeSMNResource("RADIANT_AEGIS", 1, { timeout: 30 }); // upgraded by trait
 makeSMNResource("REFULGENT_LUX", 1, { timeout: 30 });
 makeSMNResource("REKINDLE", 1, { timeout: 30 });
 makeSMNResource("UNDYING_FLAME", 1, { timeout: 15 });
-makeSMNResource("RUBYS_GLIMMER", 1, { timeout: 30, warningOnTimeout: WarningType.RubysGlimmerDrop });
+makeSMNResource("RUBYS_GLIMMER", 1, {
+	timeout: 30,
+	warningOnTimeout: WarningType.RubysGlimmerDrop,
+});
 makeSMNResource("SEARING_LIGHT", 1, { timeout: 20 });
 makeSMNResource("SLIPSTREAM", 1, { timeout: 15 });
 // 0 = no demi, 1 = solar, 2 = baha, 3 = phoenix
