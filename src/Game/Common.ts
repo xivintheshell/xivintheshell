@@ -147,4 +147,6 @@ export const enum WarningType {
 	CartridgeOvercap = "cartridge overcap",
 
 	LateEnkindle = "enkindle used near end of demi window may ghost",
+	RubysGlimmerDrop = "Ruby's Glimmer expired",
+	AetherflowOvercap = "aetherflow overcap",
 }

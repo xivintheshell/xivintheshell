@@ -63,7 +63,7 @@ makeSMNResource("RADIANT_AEGIS", 1, { timeout: 30 }); // upgraded by trait
 makeSMNResource("REFULGENT_LUX", 1, { timeout: 30 });
 makeSMNResource("REKINDLE", 1, { timeout: 30 });
 makeSMNResource("UNDYING_FLAME", 1, { timeout: 15 });
-makeSMNResource("RUBYS_GLIMMER", 1, { timeout: 30 });
+makeSMNResource("RUBYS_GLIMMER", 1, { timeout: 30, warningOnTimeout: WarningType.RubysGlimmerDrop });
 makeSMNResource("SEARING_LIGHT", 1, { timeout: 20 });
 makeSMNResource("SLIPSTREAM", 1, { timeout: 15 });
 // 0 = no demi, 1 = solar, 2 = baha, 3 = phoenix
@@ -672,6 +672,7 @@ makeSpell_SMN("TOPAZ_RITE", 72, {
 	validateAttempt: (state) => state.hasResourceAvailable("EARTH_ATTUNEMENT"),
 	onConfirm: (state) => {
 		state.tryConsumeResource("EARTH_ATTUNEMENT");
+		// titan's favor is canceled by other summons, but apparently not normal gcds
 		state.gainStatus("TITANS_FAVOR");
 	},
 	startOnHotbar: false,
@@ -920,6 +921,7 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 		onConfirm: (state, node) => {
 			// start appropriate demi timer
 			state.gainStatus("ACTIVE_DEMI", info.activeValue);
+			// in-game autos don't start until you GCD a target, but that's annoying to model
 			state.startPetAutos(node, info.autoName as SMNActionKey);
 			// gain ability to summon primals
 			["RUBY_ARCANUM", "TOPAZ_ARCANUM", "EMERALD_ARCANUM"].forEach((rsc) =>
@@ -929,6 +931,14 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 			["FIRE_ATTUNEMENT", "EARTH_ATTUNEMENT", "WIND_ATTUNEMENT"].forEach((rsc) =>
 				state.tryConsumeResource(rsc as SMNResourceKey, true),
 			);
+			// clear all favor buffs
+			state.tryConsumeResource("IFRITS_FAVOR");
+			state.tryConsumeResource("CRIMSON_STRIKE_READY");
+			state.tryConsumeResource("GARUDAS_FAVOR");
+			state.tryConsumeResource("TITANS_FAVOR");
+			if (info.name === "SUMMON_SOLAR_BAHAMUT") {
+				state.gainStatus("REFULGENT_LUX");
+			}
 			// after 15 seconds, wrapping increment the value of the next demi
 			state.addEvent(
 				new Event("update next demi", DEMI_DURATION, () => {
@@ -972,6 +982,7 @@ const titanConfirm: (skill: SMNActionKey) => EffectFn<SMNState> = (skill) => (st
 	state.tryConsumeResource("FIRE_ATTUNEMENT", true);
 	state.tryConsumeResource("WIND_ATTUNEMENT", true);
 	state.tryConsumeResource("IFRITS_FAVOR");
+	state.tryConsumeResource("CRIMSON_STRIKE_READY");
 	state.tryConsumeResource("GARUDAS_FAVOR");
 };
 
@@ -983,12 +994,14 @@ const garudaConfirm: (skill: SMNActionKey) => EffectFn<SMNState> = (skill) => (s
 	state.tryConsumeResource("FIRE_ATTUNEMENT", true);
 	state.tryConsumeResource("EARTH_ATTUNEMENT", true);
 	state.tryConsumeResource("IFRITS_FAVOR");
+	state.tryConsumeResource("CRIMSON_STRIKE_READY");
 	state.tryConsumeResource("TITANS_FAVOR");
 };
 
 // don't declare potencies for pet summons explicitly because they have different snapshot timings
 // instead, each "summon" ability enqueues the pet's "prepares" event, which then in turn snapshots
 // damage and enqueues the actual damage event
+// do specify falloff amount to make sure it's propagated to the child node
 
 // while the "[primal]'s Favor" buffs are granted by the synced version (because followups are
 // learned at level 86), we don't need to implement them for the un-upgraded summons because the
@@ -1002,6 +1015,7 @@ makeSpell_SMN("SUMMON_IFRIT", 30, {
 	highlightIf: ifritCondition,
 	validateAttempt: ifritCondition,
 	onConfirm: ifritConfirm("SUMMON_IFRIT"),
+	falloff: 0.6,
 });
 
 makeSpell_SMN("SUMMON_TITAN", 35, {
@@ -1013,6 +1027,7 @@ makeSpell_SMN("SUMMON_TITAN", 35, {
 	highlightIf: titanCondition,
 	validateAttempt: titanCondition,
 	onConfirm: titanConfirm("SUMMON_TITAN"),
+	falloff: 0.6,
 });
 
 makeSpell_SMN("SUMMON_GARUDA", 45, {
@@ -1024,6 +1039,7 @@ makeSpell_SMN("SUMMON_GARUDA", 45, {
 	highlightIf: garudaCondition,
 	validateAttempt: garudaCondition,
 	onConfirm: garudaConfirm("SUMMON_GARUDA"),
+	falloff: 0.6,
 });
 
 makeSpell_SMN("SUMMON_IFRIT_II", 90, {
@@ -1038,6 +1054,7 @@ makeSpell_SMN("SUMMON_IFRIT_II", 90, {
 		(state) => state.gainStatus("IFRITS_FAVOR"),
 		ifritConfirm("SUMMON_IFRIT_II"),
 	),
+	falloff: 0.6,
 });
 
 makeSpell_SMN("SUMMON_TITAN_II", 90, {
@@ -1050,6 +1067,7 @@ makeSpell_SMN("SUMMON_TITAN_II", 90, {
 	validateAttempt: titanCondition,
 	// titan's favor is gained upon executing rite/catastrophe
 	onConfirm: titanConfirm("SUMMON_TITAN_II"),
+	falloff: 0.6,
 });
 
 makeSpell_SMN("SUMMON_GARUDA_II", 90, {
@@ -1064,6 +1082,7 @@ makeSpell_SMN("SUMMON_GARUDA_II", 90, {
 		(state) => state.gainStatus("GARUDAS_FAVOR"),
 		garudaConfirm("SUMMON_GARUDA_II"),
 	),
+	falloff: 0.6,
 });
 
 const ASTRAL_FLOW_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
@@ -1230,16 +1249,19 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 		name: "ENKINDLE_BAHAMUT",
 		level: 70,
 		activeValue: ActiveDemiValue.BAHAMUT,
+		falloff: 0.6,
 	},
 	{
 		name: "ENKINDLE_PHOENIX",
 		level: 80,
 		activeValue: ActiveDemiValue.PHOENIX,
+		falloff: undefined,
 	},
 	{
 		name: "ENKINDLE_SOLAR_BAHAMUT",
 		level: 100,
 		activeValue: ActiveDemiValue.SOLAR,
+		falloff: 0.6,
 	},
 ].forEach((info, i) =>
 	makeAbility_SMN(info.name as SMNActionKey, info.level, "cd_ENKINDLE", {
@@ -1249,6 +1271,7 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 		validateAttempt: (state) => state.activeDemi === info.activeValue,
 		onConfirm: (state, node) => state.queueEnkindle(node, info.name as SMNActionKey),
 		startOnHotbar: i === 0,
+		falloff: info.falloff,
 	}),
 );
 
@@ -1280,6 +1303,9 @@ makeSpell_SMN("RUIN_IV", 62, {
 		...info,
 		cooldown: 60,
 		onConfirm: (state) => {
+			if (state.resources.get("AETHERFLOW").available(1)) {
+				controller.reportWarning(WarningType.AetherflowOvercap);
+			}
 			state.gainStatus("AETHERFLOW", 2);
 			state.gainStatus("FURTHER_RUIN");
 		},
