@@ -56,7 +56,6 @@ export interface DamageStatsDoTTableSummary {
 	totalTicks: number;
 	maxTicks: number;
 	dotCoverageTimeFraction: number;
-	theoreticalMaxTicks: number;
 	totalPotencyWithoutPot: number;
 	totalPotPotency: number;
 	totalPartyBuffPotency: number;
