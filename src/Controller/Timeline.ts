@@ -19,6 +19,7 @@ export const enum ElemType {
 	s_ViewOnlyCursor = "s_ViewOnlyCursor",
 	DamageMark = "DamageMark",
 	HealingMark = "HealingMark",
+	AggroMark = "AggroMark",
 	LucidMark = "LucidMark",
 	MPTickMark = "MPTickMark",
 	MeditateTickMark = "MeditateTickMark",
@@ -57,7 +58,7 @@ export interface PotencyMarkInfo {
 	sourceSkill: ActionKey;
 }
 export type PotencyMarkElem = TimelineElemBase & {
-	type: ElemType.DamageMark | ElemType.HealingMark;
+	type: ElemType.DamageMark | ElemType.HealingMark | ElemType.AggroMark;
 	displayTime: number;
 	potencyInfos: PotencyMarkInfo[];
 	buffs: ResourceKey[];

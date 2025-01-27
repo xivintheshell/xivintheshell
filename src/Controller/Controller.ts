@@ -666,11 +666,16 @@ class Controller {
 
 	private resolveAnyPotency(
 		p: Potency,
-		elemType: ElemType.DamageMark | ElemType.HealingMark,
+		elemType: ElemType.DamageMark | ElemType.HealingMark | ElemType.AggroMark,
 		csvLog: PotencyLogCsv[],
 	) {
 		p.resolve(this.game.getDisplayTime());
 		this.#lastDamageApplicationTime = this.game.time;
+
+		// If the potency didn't actually do anything, assume it's an aggro-only action like Provoke
+		if (p.base === 0) {
+			elemType = ElemType.AggroMark;
+		}
 
 		let pot = false;
 		p.modifiers.forEach((m) => {

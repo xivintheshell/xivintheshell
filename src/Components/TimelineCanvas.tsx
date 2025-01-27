@@ -511,6 +511,80 @@ function drawDamageMarks(
 	});
 }
 
+function drawAggroMarks(
+	countdown: number,
+	scale: number,
+	timelineOriginX: number,
+	timelineOriginY: number,
+	elems: PotencyMarkElem[],
+) {
+	elems.forEach((mark) => {
+		let untargetable = bossIsUntargetable(mark.displayTime);
+		g_ctx.fillStyle = g_colors.timeline.aggroMark;
+		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.displayTime, scale);
+		g_ctx.beginPath();
+		g_ctx.moveTo(x - 3, timelineOriginY);
+		g_ctx.lineTo(x + 3, timelineOriginY);
+		g_ctx.lineTo(x, timelineOriginY + 6);
+		g_ctx.fill();
+
+		let am = mark;
+
+		// hover text
+		let time = "[" + am.displayTime.toFixed(3) + "] " + localize({ en: "aggro" });
+		const info: string[] = [];
+
+		am.potencyInfos.forEach((aggroInfo) => {
+			let sourceStr = aggroInfo.sourceDesc.replace(
+				"{skill}",
+				localizeSkillName(aggroInfo.sourceSkill),
+			);
+			if (aggroInfo.sourceSkill in LIMIT_BREAK_ACTIONS) {
+				const lbStr = localize({ en: "LB" }) as string;
+				info.push(lbStr + " (" + sourceStr + ")");
+			} else {
+				const potencyAmount = aggroInfo.potency.getAmount({
+					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
+					includePartyBuffs: true,
+					includeSplash: false,
+				});
+				// Push additional info for hits that splash
+				if (aggroInfo.potency.targetCount > 1) {
+					const splashPotency = potencyAmount * (1 - (aggroInfo.potency.falloff ?? 1));
+					info.push(
+						potencyAmount.toFixed(2) +
+							" (" +
+							localize({
+								en: `${sourceStr}, target #1`,
+								zh: `${sourceStr}, 1号目标`,
+							}) +
+							")",
+					);
+					info.push(
+						splashPotency.toFixed(2) +
+							" (" +
+							localize({
+								en: `${sourceStr}, x${aggroInfo.potency.targetCount - 1} targets`,
+								zh: `${sourceStr}, x${aggroInfo.potency.targetCount - 1} 号目标`,
+							}) +
+							")",
+					);
+				} else {
+					info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")");
+				}
+			}
+		});
+
+		testInteraction(
+			{ x: x - 3, y: timelineOriginY, w: 6, h: 6 },
+			[time, ...info],
+			undefined,
+			undefined,
+			undefined,
+		);
+	});
+}
+
 function drawHealingMarks(
 	countdown: number,
 	scale: number,
@@ -1137,6 +1211,14 @@ export function drawTimelines(
 				displayOriginX,
 				currentY,
 				(elemBins.get(ElemType.DamageMark) as PotencyMarkElem[]) ?? [],
+			);
+
+			drawAggroMarks(
+				g_renderingProps.countdown,
+				g_renderingProps.scale,
+				displayOriginX,
+				currentY,
+				(elemBins.get(ElemType.AggroMark) as PotencyMarkElem[]) ?? [],
 			);
 		}
 
