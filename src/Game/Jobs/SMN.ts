@@ -1276,6 +1276,10 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 );
 
 makeSpell_SMN("RUIN_IV", 62, {
+	basePotency: [
+		["NEVER", 430],
+		["ARCANE_MASTERY", 490],
+	],
 	manaCost: 400,
 	applicationDelay: 0.8,
 	falloff: 0.6,
