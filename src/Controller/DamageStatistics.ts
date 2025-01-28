@@ -492,7 +492,6 @@ export function calculateDamageStats(props: {
 									ctl.game.getDisplayTime(),
 									rscType,
 								),
-								theoreticalMaxTicks: 0,
 								totalPotencyWithoutPot: 0,
 								totalPotPotency: 0,
 								totalPartyBuffPotency: 0,

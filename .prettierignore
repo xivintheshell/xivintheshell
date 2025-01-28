@@ -1,6 +1,7 @@
 build
 
 *.css
+*.txt
 src/changelog.json
 src/index.js
 public
