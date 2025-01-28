@@ -511,7 +511,7 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.WANDERERS_MINUET, colors.brd.wanderersCoda],
 		[PotencyModifierType.MAGES_BALLAD, colors.brd.magesCoda],
 		[PotencyModifierType.ARMYS_PAEON, colors.brd.armysCoda],
-		[PotencyModifierType.NO_MERCY, colors.rdm.blackMana], // rdm
+		[PotencyModifierType.NO_MERCY, colors.rdm.blackMana], // gnb
 		[PotencyModifierType.SEARING_LIGHT, colors.smn.searing], // smn
 		[PotencyModifierType.PET, colors.resources.petTag],
 	]);
