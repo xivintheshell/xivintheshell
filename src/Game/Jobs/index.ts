@@ -3,6 +3,7 @@ import { GameState } from "../GameState";
 import { BLMState } from "./BLM";
 import { BRDState } from "./BRD";
 import { DNCState } from "./DNC";
+import { DRGState } from "./DRG";
 import { GNBState } from "./GNB";
 import { MCHState } from "./MCH";
 import { PCTState } from "./PCT";
@@ -21,6 +22,8 @@ export function getGameState(config: GameConfig): GameState {
 			return new GNBState(config);
 		// Healers
 		// Melee
+		case "DRG":
+			return new DRGState(config);
 		case "SAM":
 			return new SAMState(config);
 		case "RPR":

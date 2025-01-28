@@ -128,7 +128,7 @@ export const MELEE = ensureRecord<Job>()({
 	},
 	DRG: {
 		role: "MELEE",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		limitBreak: "DRAGONSONG_DIVE",
 	},
 	NIN: {
