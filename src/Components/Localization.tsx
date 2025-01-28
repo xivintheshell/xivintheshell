@@ -246,6 +246,9 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.WANDERERS_MINUET, { en: "WM" }],
 	[PotencyModifierType.MAGES_BALLAD, { en: "MB" }],
 	[PotencyModifierType.ARMYS_PAEON, { en: "AP" }],
+	[PotencyModifierType.NO_MERCY, { en: "NM" }], // rdm
+	[PotencyModifierType.SEARING_LIGHT, { en: "SL" }], // smn
+	[PotencyModifierType.PET, { en: "PET" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(

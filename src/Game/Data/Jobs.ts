@@ -184,7 +184,7 @@ export const CASTERS = ensureRecord<Job>()({
 	},
 	SMN: {
 		role: "CASTER",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "TERAFLARE",
 	},

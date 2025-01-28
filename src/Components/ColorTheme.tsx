@@ -107,6 +107,21 @@ export type BRDResourceColors = {
 	radiantFinale: string;
 };
 
+export type GNBResourceColors = {
+	// TODO
+};
+
+export type SMNResourceColors = {
+	aetherflow: string;
+	bahamut: string;
+	phoenix: string;
+	solar: string;
+	ruby: string;
+	topaz: string;
+	emerald: string;
+	searing: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -133,6 +148,7 @@ export type ThemeColors = {
 		manaTick: string;
 		cdhTag: string;
 		comboTag: string;
+		petTag: string;
 	};
 	blm: BLMResourceColors;
 	pct: PCTResourceColors;
@@ -143,6 +159,8 @@ export type ThemeColors = {
 	rpr: RPRResourceColors;
 	war: WARResourceColors;
 	brd: BRDResourceColors;
+	gnb: GNBResourceColors;
+	smn: SMNResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -178,6 +196,7 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				RPR: "#965a90",
 				BRD: "#91ba5e",
 				GNB: "#f6b26b",
+				SMN: "#2D9B78", // copied from fflogs
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -198,6 +217,7 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				manaTick: "#3d5c73",
 				cdhTag: "#d55124",
 				comboTag: "#5c8bad", // light blue
+				petTag: "#eb9b5f",
 			},
 			blm: {
 				enochian: "#b69241",
@@ -273,6 +293,18 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				battleVoice: "#71bed1",
 				radiantFinale: "#edcce7",
 			},
+			gnb: {},
+			smn: {
+				// TODO
+				aetherflow: "#ffd4ff",
+				bahamut: "#2D9B78",
+				phoenix: "#d55124",
+				solar: "#9bc6dd",
+				ruby: "#e5004e",
+				topaz: "#b0984e",
+				emerald: "#539350",
+				searing: "#2D9B78",
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -305,6 +337,7 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				WAR: "#b10b0b", // color picker'd on job stone
 				RPR: "#965a90",
 				BRD: "#91ba5e",
+				SMN: "#2D9B78", // copied from fflogs
 			},
 			realTime: "mediumseagreen",
 			historical: "#ff8c00", // darkorange
@@ -325,6 +358,7 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				manaTick: "#C2EAFF",
 				cdhTag: "#ff6633",
 				comboTag: "#53a7c9", // light blue
+				petTag: "#eb9b5f",
 			},
 			blm: {
 				enochian: "#f5cf96",
@@ -400,6 +434,18 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				battleVoice: "#71bed1",
 				radiantFinale: "#edcce7",
 			},
+			gnb: {},
+			smn: {
+				// TODO
+				aetherflow: "#ffd4ff",
+				bahamut: "#2D9B78",
+				phoenix: "#d55124",
+				solar: "#9bc6dd",
+				ruby: "#e5004e",
+				topaz: "#b0984e",
+				emerald: "#539350",
+				searing: "#2D9B78",
+			},
 			timeline: {
 				ruler: "#e9e9e9",
 				tracks: "#f3f3f3",
@@ -465,6 +511,9 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.WANDERERS_MINUET, colors.brd.wanderersCoda],
 		[PotencyModifierType.MAGES_BALLAD, colors.brd.magesCoda],
 		[PotencyModifierType.ARMYS_PAEON, colors.brd.armysCoda],
+		[PotencyModifierType.NO_MERCY, colors.rdm.blackMana], // rdm
+		[PotencyModifierType.SEARING_LIGHT, colors.smn.searing], // smn
+		[PotencyModifierType.PET, colors.resources.petTag],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

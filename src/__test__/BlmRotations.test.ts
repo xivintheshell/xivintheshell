@@ -22,6 +22,7 @@ import {
 	applySkill,
 	applySkillMultiTarget,
 	compareDamageTables,
+	testDamageFromTimeline,
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
@@ -553,5 +554,77 @@ it(
 				hitCount: 1,
 			},
 		]);
+	}),
+);
+
+it(
+	"loads: blm_100_7.05_top_p6_delay_manafont_2.44.txt",
+	testDamageFromTimeline("blm_100_7.05_top_p6_delay_manafont_2.44.txt", {
+		time: 267.842,
+		lastDamageApplicationTime: 267.766,
+		totalPotency: {
+			applied: 82194.63,
+			pending: 0,
+		},
+		gcdSkills: {
+			applied: 104,
+			pending: 0,
+		},
+		mainTableSummary: {
+			totalPotencyWithoutPot: 81214.53,
+			totalPotPotency: 980.09,
+		},
+		dotTables: new Map([
+			[
+				"HIGH_THUNDER",
+				{
+					summary: {
+						totalTicks: 88,
+						maxTicks: 89,
+						dotCoverageTimeFraction: 0.9788,
+						cumulativeGap: 4.966,
+						cumulativeOverride: 10.086,
+						totalPotencyWithoutPot: 8904.93,
+						totalPotPotency: 80.59,
+					},
+				},
+			],
+		]),
+	}),
+);
+
+it(
+	"loads: blm_100_m4s_mll_starter.txt",
+	testDamageFromTimeline("blm_100_m4s_mll_starter.txt", {
+		time: 392.33,
+		lastDamageApplicationTime: 390.904,
+		totalPotency: {
+			applied: 125457.19,
+			pending: 0,
+		},
+		gcdSkills: {
+			applied: 159,
+			pending: 0,
+		},
+		mainTableSummary: {
+			totalPotencyWithoutPot: 123550.81,
+			totalPotPotency: 1906.38,
+		},
+		dotTables: new Map([
+			[
+				"HIGH_THUNDER",
+				{
+					summary: {
+						totalTicks: 127,
+						maxTicks: 129,
+						dotCoverageTimeFraction: 0.991,
+						cumulativeGap: 1.197,
+						cumulativeOverride: 7.313,
+						totalPotencyWithoutPot: 12924.09,
+						totalPotPotency: 162.07,
+					},
+				},
+			],
+		]),
 	}),
 );

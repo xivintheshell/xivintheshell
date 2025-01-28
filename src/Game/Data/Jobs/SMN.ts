@@ -1,17 +1,280 @@
 import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
-export const SMN_ACTIONS = ensureRecord<ActionData>()({});
+export const SMN_ACTIONS = ensureRecord<ActionData>()({
+	SUMMON_CARBUNCLE: {
+		name: "Summon Carbuncle",
+	},
+	RADIANT_AEGIS: {
+		name: "Radiant Aegis",
+	},
+	PHYSICK: {
+		name: "Physick",
+	},
+	GEMSHINE: {
+		name: "Gemshine",
+	},
+	FESTER: {
+		name: "Fester",
+	},
+	ENERGY_DRAIN: {
+		name: "Energy Drain",
+	},
+	RESURRECTION: {
+		name: "Resurrection",
+	},
+	OUTBURST: {
+		name: "Outburst",
+	},
+	PRECIOUS_BRILLIANCE: {
+		name: "Precious Brilliance",
+	},
+	RUBY_OUTBURST: {
+		name: "Ruby Outburst",
+	},
+	TOPAZ_OUTBURST: {
+		name: "Topaz Outburst",
+	},
+	EMERALD_OUTBURST: {
+		name: "Emerald Outburst",
+	},
+	SUMMON_IFRIT: {
+		name: "Summon Ifrit",
+	},
+	PAINFLARE: {
+		name: "Painflare",
+	},
+	SUMMON_TITAN: {
+		name: "Summon Titan",
+	},
+	SUMMON_GARUDA: {
+		name: "Summon Garuda",
+	},
+	ENERGY_SIPHON: {
+		name: "Energy Siphon",
+	},
+	RUBY_RUIN_III: {
+		name: "Ruby Ruin III",
+	},
+	TOPAZ_RUIN_III: {
+		name: "Topaz Ruin III",
+	},
+	EMERALD_RUIN_III: {
+		name: "Emerald Ruin III",
+	},
+	RUIN_III: {
+		name: "Ruin III",
+	},
+	ASTRAL_IMPULSE: {
+		name: "Astral Impulse",
+	},
+	ASTRAL_FLARE: {
+		name: "Astral Flare",
+	},
+	ASTRAL_FLOW: {
+		name: "Astral Flow",
+	},
+	DEATHFLARE: {
+		name: "Deathflare",
+	},
+	RUIN_IV: {
+		name: "Ruin IV",
+	},
+	SEARING_LIGHT: {
+		name: "Searing Light",
+	},
+	SUMMON_BAHAMUT: {
+		name: "Summon Bahamut",
+	},
+	ENKINDLE_BAHAMUT: {
+		name: "Enkindle Bahamut",
+	},
+	RUBY_RITE: {
+		name: "Ruby Rite",
+	},
+	TOPAZ_RITE: {
+		name: "Topaz Rite",
+	},
+	EMERALD_RITE: {
+		name: "Emerald Rite",
+	},
+	TRI_DISASTER: {
+		name: "Tri-disaster",
+	},
+	RUBY_DISASTER: {
+		name: "Ruby Disaster",
+	},
+	TOPAZ_DISASTER: {
+		name: "Topaz Disaster",
+	},
+	EMERALD_DISASTER: {
+		name: "Emerald Disaster",
+	},
+	SUMMON_PHOENIX: {
+		name: "Summon Phoenix",
+	},
+	FOUNTAIN_OF_FIRE: {
+		name: "Fountain of Fire",
+	},
+	BRAND_OF_PURGATORY: {
+		name: "Brand of Purgatory",
+	},
+	REKINDLE: {
+		name: "Rekindle",
+	},
+	ENKINDLE_PHOENIX: {
+		name: "Enkindle Phoenix",
+	},
+	RUBY_CATASTROPHE: {
+		name: "Ruby Catastrophe",
+	},
+	TOPAZ_CATASTROPHE: {
+		name: "Topaz Catastrophe",
+	},
+	EMERALD_CATASTROPHE: {
+		name: "Emerald Catastrophe",
+	},
+	CRIMSON_CYCLONE: {
+		name: "Crimson Cyclone",
+	},
+	CRIMSON_STRIKE: {
+		name: "Crimson Strike",
+	},
+	MOUNTAIN_BUSTER: {
+		name: "Mountain Buster",
+	},
+	SLIPSTREAM: {
+		name: "Slipstream",
+	},
+	SUMMON_IFRIT_II: {
+		name: "Summon Ifrit II",
+	},
+	SUMMON_TITAN_II: {
+		name: "Summon Titan II",
+	},
+	SUMMON_GARUDA_II: {
+		name: "Summon Garuda II",
+	},
+	NECROTIZE: {
+		name: "Necrotize",
+	},
+	SEARING_FLASH: {
+		name: "Searing Flash",
+	},
+	SUMMON_SOLAR_BAHAMUT: {
+		name: "Summon Solar Bahamut",
+	},
+	UMBRAL_IMPULSE: {
+		name: "Umbral Impulse",
+	},
+	UMBRAL_FLARE: {
+		name: "Umbral Flare",
+	},
+	SUNFLARE: {
+		name: "Sunflare",
+	},
+	ENKINDLE_SOLAR_BAHAMUT: {
+		name: "Enkindle Solar Bahamut",
+	},
+	LUX_SOLARIS: {
+		name: "Lux Solaris",
+	},
+	// pet actions
+	INFERNO: {
+		name: "Inferno",
+	},
+	EARTHEN_FURY: {
+		name: "Earthen Fury",
+	},
+	AERIAL_BLAST: {
+		name: "Aerial Blast",
+	},
+	WYRMWAVE: {
+		name: "Wyrmwave",
+	},
+	SCARLET_FLAME: {
+		name: "Scarlet Flame",
+	},
+	LUXWAVE: {
+		name: "Luxwave",
+	},
+	AKH_MORN: {
+		name: "Akh Morn",
+	},
+	REVELATION: {
+		name: "Revelation",
+	},
+	EXODUS: {
+		name: "Exodus",
+	},
+});
 
-export const SMN_COOLDOWNS = ensureRecord<CooldownData>()({});
+export const SMN_COOLDOWNS = ensureRecord<CooldownData>()({
+	cd_RADIANT_AEGIS: { name: "cd_RADIANT_AEGIS" }, // 60s
+	cd_ASTRAL_FLOW: { name: "cd_ASTRAL_FLOW" }, // 20s
+	cd_ENKINDLE: { name: "cd_ENKINDLE" }, // 20s
+	cd_DEMI_SUMMON: { name: "cd_DEMI_SUMMON" }, // 60s scaled to sps
+	cd_ENERGY_DRAIN: { name: "cd_ENERGY_DRAIN" }, // 60s
+	cd_AETHERFLOW: { name: "cd_AETHERFLOW" }, // 1s, used for fester/necrotize/painflare
+	cd_SEARING_LIGHT: { name: "cd_SEARING_LIGHT" }, // 120s
+	cd_SEARING_FLASH: { name: "cd_SEARING_FLASH" }, // 1s
+	cd_LUX_SOLARIS: { name: "cd_LUX_SOLARIS" }, // 60s
+	cd_MOUNTAIN_BUSTER: { name: "cd_MOUNTAIN_BUSTER" }, // 1s
+	// per hauffen: lockout is 4.05s for ifrit/titan; 3.38s for garuda:
+	// https://discord.com/channels/277897135515762698/277968477233479680/1331466393430003793
+	// this number is lower for egis below level 90; need to double check
+	cd_SUMMON_LOCKOUT: { name: "cd_SUMMON_LOCKOUT" },
+});
 
-export const SMN_GAUGES = ensureRecord<ResourceData>()({});
+export const SMN_GAUGES = ensureRecord<ResourceData>()({
+	AETHERFLOW: { name: "Aetherflow" },
+	RUBY_ARCANUM: { name: "Ruby Arcanum" },
+	TOPAZ_ARCANUM: { name: "Topaz Arcanum" },
+	EMERALD_ARCANUM: { name: "Emerald Arcanum" },
+	FIRE_ATTUNEMENT: { name: "Fire Attunement" },
+	EARTH_ATTUNEMENT: { name: "Earth Attunement" },
+	WIND_ATTUNEMENT: { name: "Wind Attunement" },
+	ACTIVE_DEMI: { name: "Active Demi" },
+});
 
-export const SMN_STATUSES = ensureRecord<ResourceData>()({});
+export const SMN_STATUSES = ensureRecord<ResourceData>()({
+	AETHERFLOW: { name: "Aetherflow", maximumStacks: 2 },
+	CRIMSON_STRIKE_READY: { name: "Crimson Strike Ready" },
+	EVERLASTING_FLIGHT: { name: "Everlasting Flight" },
+	FURTHER_RUIN: { name: "Further Ruin" },
+	GARUDAS_FAVOR: { name: "Garuda's Favor" },
+	IFRITS_FAVOR: { name: "Ifrit's Favor" },
+	RADIANT_AEGIS: { name: "Radiant Aegis" },
+	REFULGENT_LUX: { name: "Refulgent Lux" },
+	REKINDLE: { name: "Rekindle" },
+	RUBYS_GLIMMER: { name: "Ruby's Glimmer" },
+	SEARING_LIGHT: { name: "Searing Light" },
+	SLIPSTREAM: { name: "Slipstream", mayBeToggled: true },
+	TITANS_FAVOR: { name: "Titan's Favor" },
+	UNDYING_FLAME: { name: "Undying Flame" },
+});
 
-export const SMN_TRACKERS = ensureRecord<ResourceData>()({});
+export const SMN_TRACKERS = ensureRecord<ResourceData>()({
+	// (next demi summon) 0 = solar, 1 = baha, 2 = solar, 3 = phoenix
+	NEXT_DEMI_CYCLE: { name: "Next Demi Cycle" },
+	// # of remaining demi autos during this summon
+	DEMI_AUTO: { name: "Demi Auto-attack" },
+});
 
-export const SMN_TRAITS = ensureRecord<TraitData>()({});
+export const SMN_TRAITS = ensureRecord<TraitData>()({
+	RUIN_MASTERY_III: { name: "Ruin Mastery III", level: 72 },
+	OUTBURST_MASTERY: { name: "Outburst Mastery", level: 74 },
+	ENHANCED_SUMMON_BAHAMUT: { name: "Enhanced Summon Bahamut", level: 80 },
+	OUTBURST_MASTERY_II: { name: "Outburst Mastery II", level: 82 },
+	RUIN_MASTERY_IV: { name: "Ruin Mastery IV", level: 84 },
+	ELEMENTAL_MASTERY: { name: "Elemental Mastery", level: 86 },
+	ENHANCED_RADIANT_AEGIS: { name: "Enhanced Radiant Aegis", level: 88 },
+	ENKINDLE_II: { name: "Enkindle II", level: 90 },
+	ENHANCED_FESTER: { name: "Enhanced Fester", level: 92 },
+	ARCANE_MASTERY: { name: "Arcane Mastery", level: 94 },
+	ENHANCED_SEARING_LIGHT: { name: "Enhanced Searing Light", level: 96 },
+	ENHANCED_SUMMON_BAHAMUT_II: { name: "Enhanced Summon Bahamut II", level: 100 },
+});
 
 export type SMNActions = typeof SMN_ACTIONS;
 export type SMNActionKey = keyof SMNActions;

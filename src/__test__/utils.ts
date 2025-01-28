@@ -83,6 +83,64 @@ export const makeTestWithConfigFn = (job: ShellJob) => {
 	};
 };
 
+// helper type for `testWithTimelineFile` because it only checks the numbers in `damageData`
+type ComparableStats = Omit<DamageStatisticsData, "mainTable">;
+
+// https://stackoverflow.com/questions/41980195/recursive-partialt-in-typescript
+type RecursivePartial<T> = {
+	[P in keyof T]?: RecursivePartial<T[P]>;
+};
+
+// same as expect(x).toBeCloseTo(y) but with helpful error message
+expect.extend({
+	toBeClose([path, expected, actual]) {
+		return {
+			message: () => `'${path}' should be ${expected}; found: ${actual}`,
+			pass: Math.abs(expected - actual) < 0.005,
+		};
+	},
+});
+
+// recursively checks number fields in `expected` and `actual` to see if they are approximately equal
+// all fields in `expected` should also exist in `actual` and with the same type
+function checkNumbersInObject(expected: object | number, actual: object | number, path: string) {
+	expect(typeof expected === typeof actual);
+
+	if (typeof expected === "number") {
+		expect([path, expected, actual]).toBeClose();
+	} else if (expected instanceof Map) {
+		expect(actual instanceof Map).toBeTruthy();
+		for (let [key, expectedValue] of expected) {
+			const actualValue = (actual as any).get(key);
+			checkNumbersInObject(expectedValue, actualValue, `${path}['${key}']`);
+		}
+	} else {
+		Object.keys(expected).forEach((key) => {
+			const expectedValue = expected[key as keyof typeof expected];
+			const actualValue = actual[key as keyof typeof expected];
+			checkNumbersInObject(expectedValue, actualValue, `${path}.${key}`);
+		});
+	}
+}
+
+// loads a timeline file and checks the resulting `damageData` against the expected values
+// see example usages in BLMRotations.test.ts
+// note: `time` and `lastDamageApplicationTime` in `expectedDamageData` should be raw times (displayed time + countdown)
+export const testDamageFromTimeline = (
+	relPath: string,
+	expectedDamageData: RecursivePartial<ComparableStats>,
+) => {
+	return () => {
+		const absPath = "src/__test__/Asset/" + relPath;
+		const content = JSON.parse(fs.readFileSync(absPath, "utf8"));
+
+		controller.setTinctureBuffPercentage(8);
+		controller.loadBattleRecordFromFile(content);
+
+		checkNumbersInObject(expectedDamageData, damageData, "damageData");
+	};
+};
+
 // We define separate functions instead of an optional parameter to avoid accidentally
 // using the item index as argument when calling .forEach(applySkill)
 export const applySkill = (skillName: ActionKey) => applySkillMultiTarget(skillName, 1);

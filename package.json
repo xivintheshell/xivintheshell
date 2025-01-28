@@ -59,7 +59,6 @@
     "jest-canvas-mock": "^2.5.2",
     "prettier-no-jsx-parens": "^3.4.0",
     "react-app-rewired": "^2.2.1",
-    "react-scripts": "^5.0.1",
-    "ts-node": "^10.9.2"
+    "react-scripts": "^5.0.1"
   }
 }

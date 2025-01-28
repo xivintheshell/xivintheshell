@@ -1,5 +1,17 @@
 [
 	{
+		"date": "1/27/25",
+		"changes": [
+			"[SMN] Added initial support for SMN"
+		]
+	},
+	{
+		"date": "1/26/25",
+		"changes": [
+			"[WAR][GNB] Fixed missing icon for tank LB3s"
+		]
+	},
+	{
 		"date": "1/18/25",
 		"changes": [
 			"[GNB] Added initial support for GNB"
