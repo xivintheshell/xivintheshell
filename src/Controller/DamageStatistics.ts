@@ -65,7 +65,7 @@ function isDoTNode(node: ActionNode) {
 }
 
 function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: ActionNode) {
-	console.assert(isDoTNode(node));
+	console.assert(isDoTNode(node), `${node.skillName} is not registered as a dot skill`);
 	let mainPotency = node.getInitialPotency();
 	let entry: DamageStatsDoTTableEntry = {
 		castTime: node.tmp_startLockTime ? node.tmp_startLockTime - ctl.gameConfig.countdown : 0,
@@ -492,7 +492,6 @@ export function calculateDamageStats(props: {
 									ctl.game.getDisplayTime(),
 									rscType,
 								),
-								theoreticalMaxTicks: 0,
 								totalPotencyWithoutPot: 0,
 								totalPotPotency: 0,
 								totalPartyBuffPotency: 0,
