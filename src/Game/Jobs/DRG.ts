@@ -2,7 +2,7 @@
 
 import { controller } from "../../Controller/Controller";
 import { BuffType, WarningType } from "../Common";
-import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
+import { makeComboModifier, Modifiers, makePositionalModifier, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -123,9 +123,45 @@ export class DRGState extends GameState {
 		return new DRGStatusPropsGenerator(this);
 	}
 
+	override jobSpecificRegisterRecurringEvents() {
+		let dropStarcrossOutsideLife = (rsc: Resource) => {
+			// console.log("out of life: " + !this.hasResourceAvailable("LIFE_OF_THE_DRAGON"));
+			// console.log("has starcross: " + this.hasResourceAvailable("STARCROSS_READY"));
+			if (!this.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
+				if (rsc.available(1)) {
+					// console.log("no life");
+					this.tryConsumeResource("STARCROSS_READY");
+					// controller.reportWarning(WarningType.DropStarcross)
+				}
+			}
+			this.resources.addResourceEvent({
+				rscType: "STARCROSS_READY",
+				name: "drop starcross outside life of the dragon",
+				fnOnRsc: dropStarcrossOutsideLife,
+				delay: 1,
+			});
+		};
+		dropStarcrossOutsideLife(this.resources.get("STARCROSS_READY"));
+	}
+
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+		if (this.hasResourceAvailable("POWER_SURGE")) {
+			node.addBuff(BuffType.PowerSurge);
+		}
 		if (this.hasResourceAvailable("LANCE_CHARGE")) {
-			// node.addBuff(BuffType.LanceCharge);
+			node.addBuff(BuffType.LanceCharge);
+		}
+		if (this.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
+			node.addBuff(BuffType.LifeOfTheDragon);
+		}
+		if (this.hasResourceAvailable("BATTLE_LITANY")) {
+			node.addBuff(BuffType.BattleLitany);
+		}
+		if (this.hasResourceAvailable("ENHANCED_PIERCING_TALON")) {
+			node.addBuff(BuffType.EnhancedPiercingTalon);
+		}
+		if (this.hasResourceAvailable("LIFE_SURGE")) {
+			node.addBuff(BuffType.LifeSurge);
 		}
 	}
 
@@ -206,11 +242,16 @@ export class DRGState extends GameState {
 		}
 	}
 
+	// Return true if the active combo buff is up, or meikyo is active.
+	// Does not advance the combo state.
+	checkCombo(requiredCombo: DRGResourceKey): boolean {
+		return this.hasResourceAvailable(requiredCombo);
+	}
+
 	// gain a scale
 	gainScale(scales: number) {
 		if (this.resources.get("FIRSTMINDS_FOCUS").availableAmount() + scales > 2) {
-			console.log("scale overcap");
-			// trigger warning TODO
+			controller.reportWarning(WarningType.ScaleOvercap);
 		}
 		this.resources.get("FIRSTMINDS_FOCUS").gain(scales);
 	}
@@ -244,10 +285,11 @@ const makeWeaponskill_DRG = (
 		replaceIf?: ConditionalSkillReplace<DRGState>[];
 		startOnHotbar?: boolean;
 		potency?: number | Array<[TraitKey, number]>;
+		falloff?: number;
 		recastTime?: number | ResourceCalculationFn<DRGState>;
 		combo?: {
 			potency: number | Array<[TraitKey, number]>;
-			resource: ResourceKey;
+			resource: DRGResourceKey;
 			resourceValue: number;
 		};
 		positional?: {
@@ -271,8 +313,8 @@ const makeWeaponskill_DRG = (
 		if (name !== "PIERCING_TALON") {
 			state.fixDRGComboState(name);
 		}
-
-		// remove all continuation buffs if gcd is pressed before continuation
+		// remove life surge
+		state.tryConsumeResource("LIFE_SURGE");
 	});
 	const onApplication: EffectFn<DRGState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyMod: PotencyModifierFn<DRGState> =
@@ -284,6 +326,7 @@ const makeWeaponskill_DRG = (
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = jobPotencyMod(state);
+			/*
 			const hitPositional =
 				params.positional &&
 				(state.hasResourceAvailable("TRUE_NORTH") ||
@@ -304,9 +347,60 @@ const makeWeaponskill_DRG = (
 					),
 				);
 			}
-			if (state.hasResourceAvailable("LANCE_CHARGE")) {
-				// mods.push(Modifiers.LanceCharge);
+            */
+			const hitPositional =
+				params.positional &&
+				(state.hasResourceAvailable("TRUE_NORTH") ||
+					(params.positional.location === "flank" &&
+						state.hasResourceAvailable("FLANK_POSITIONAL")) ||
+					(params.positional.location === "rear" &&
+						state.hasResourceAvailable("REAR_POSITIONAL")));
+			if (params.combo && state.checkCombo(params.combo.resource)) {
+				mods.push(
+					makeComboModifier(
+						getBasePotency(state, params.combo.potency) -
+							getBasePotency(state, params.potency),
+					),
+				);
+				// typescript isn't smart enough to elide the null check
+				if (params.positional && hitPositional) {
+					mods.push(
+						makePositionalModifier(
+							getBasePotency(state, params.positional.comboPotency) -
+								getBasePotency(state, params.combo.potency),
+						),
+					);
+				}
+			} else if (params.positional && hitPositional) {
+				mods.push(
+					makePositionalModifier(
+						getBasePotency(state, params.positional.potency) -
+							getBasePotency(state, params.potency),
+					),
+				);
 			}
+			if (state.hasResourceAvailable("POWER_SURGE")) {
+				mods.push(Modifiers.PowerSurge);
+			}
+			if (state.hasResourceAvailable("LANCE_CHARGE")) {
+				mods.push(Modifiers.LanceCharge);
+			}
+			if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
+				mods.push(Modifiers.LifeOfTheDragon);
+			}
+			if (state.hasResourceAvailable("BATTLE_LITANY")) {
+				mods.push(Modifiers.BattleLitany);
+			}
+			if (
+				name === "PIERCING_TALON" &&
+				state.hasResourceAvailable("ENHANCED_PIERCING_TALON")
+			) {
+				mods.push(Modifiers.EnhancedPiercingTalon);
+			}
+			if (state.hasResourceAvailable("LIFE_SURGE")) {
+				mods.push(Modifiers.AutoCrit);
+			}
+
 			return mods;
 		},
 	});
@@ -318,8 +412,10 @@ const makeAbility_DRG = (
 	cdName: CooldownKey,
 	params: {
 		autoUpgrade?: SkillAutoReplace;
+		autoDowngrade?: SkillAutoReplace;
 		requiresCombat?: boolean;
 		potency?: number | Array<[TraitKey, number]>;
+		falloff?: number;
 		replaceIf?: ConditionalSkillReplace<DRGState>[];
 		highlightIf?: StatePredicate<DRGState>;
 		startOnHotbar?: boolean;
@@ -338,8 +434,17 @@ const makeAbility_DRG = (
 		onConfirm: params.onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
+			if (state.hasResourceAvailable("POWER_SURGE")) {
+				mods.push(Modifiers.PowerSurge);
+			}
 			if (state.hasResourceAvailable("LANCE_CHARGE")) {
-				// mods.push(Modifiers.LanceCharge);
+				mods.push(Modifiers.LanceCharge);
+			}
+			if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
+				mods.push(Modifiers.LifeOfTheDragon);
+			}
+			if (state.hasResourceAvailable("BATTLE_LITANY")) {
+				mods.push(Modifiers.BattleLitany);
 			}
 			return mods;
 		},
@@ -358,6 +463,38 @@ const drakesbaneFangAndClawCondition: ConditionalSkillReplace<DRGState> = {
 	condition: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 4,
 };
 
+const raidenThrustCondition: ConditionalSkillReplace<DRGState> = {
+	newSkill: "RAIDEN_THRUST",
+	condition: (state) => state.resources.get("DRACONIAN_FIRE").available(1),
+};
+
+const trueThrustCondition: ConditionalSkillReplace<DRGState> = {
+	newSkill: "TRUE_THRUST",
+	condition: (state) => !state.resources.get("DRACONIAN_FIRE").available(1),
+};
+
+const draconianFuryCondition: ConditionalSkillReplace<DRGState> = {
+	newSkill: "DRACONIAN_FURY",
+	condition: (state) => state.resources.get("DRACONIAN_FIRE").available(1),
+};
+
+const doomSpikeCondition: ConditionalSkillReplace<DRGState> = {
+	newSkill: "DOOM_SPIKE",
+	condition: (state) => !state.resources.get("DRACONIAN_FIRE").available(1),
+};
+
+const starcrossCondition: ConditionalSkillReplace<DRGState> = {
+	newSkill: "STARCROSS",
+	condition: (state) =>
+		state.hasResourceAvailable("STARCROSS_READY") &&
+		state.hasResourceAvailable("LIFE_OF_THE_DRAGON"),
+};
+
+const stardiverCondition: ConditionalSkillReplace<DRGState> = {
+	newSkill: "STARDIVER",
+	condition: (state) => !state.hasResourceAvailable("STARCROSS_READY"),
+};
+
 // DRG skill declarations
 
 makeWeaponskill_DRG("PIERCING_TALON", 15, {
@@ -366,23 +503,14 @@ makeWeaponskill_DRG("PIERCING_TALON", 15, {
 		["LANCE_MASTERY", 200],
 	],
 	applicationDelay: 0.85,
-	combo: {
-		potency: [
-			["NEVER", 300],
-			["LANCE_MASTERY", 350],
-		],
-		resource: "ENHANCED_PIERCING_TALON",
-		resourceValue: 1,
+	onConfirm: (state) => {
+		state.tryConsumeResource("ENHANCED_PIERCING_TALON");
 	},
+	highlightIf: (state) => state.hasResourceAvailable("ENHANCED_PIERCING_TALON"),
 });
 
 makeWeaponskill_DRG("TRUE_THRUST", 1, {
-	replaceIf: [
-		{
-			newSkill: "RAIDEN_THRUST",
-			condition: (state) => state.resources.get("DRACONIAN_FIRE").available(1),
-		},
-	],
+	replaceIf: [raidenThrustCondition],
 	potency: [
 		["NEVER", 200],
 		["LANCE_MASTERY", 230],
@@ -392,12 +520,18 @@ makeWeaponskill_DRG("TRUE_THRUST", 1, {
 
 makeWeaponskill_DRG("RAIDEN_THRUST", 76, {
 	startOnHotbar: false,
-	potency: 320,
+	replaceIf: [trueThrustCondition],
+	potency: [
+		["NEVER", 280],
+		["MELEE_MASTERY_DRG", 320],
+	],
 	applicationDelay: 0.62,
 	validateAttempt: (state) => state.resources.get("DRACONIAN_FIRE").available(1),
 	highlightIf: (state) => state.resources.get("DRACONIAN_FIRE").available(1),
 	onConfirm: (state) => {
-		state.gainScale(1);
+		if (state.hasTraitUnlocked("LANCE_MASTERY_III")) {
+			state.gainScale(1);
+		}
 	},
 });
 
@@ -421,6 +555,13 @@ makeWeaponskill_DRG("DISEMBOWEL", 18, {
 			state.refreshBuff("POWER_SURGE", 0);
 		}
 	},
+	onApplication: (state) => {
+		// DRG is weird with power surge
+		// when disembowel is applied combo tracker should have already progressed
+		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
+			state.refreshBuff("POWER_SURGE", 0);
+		}
+	},
 	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 1,
 });
 
@@ -435,6 +576,13 @@ makeWeaponskill_DRG("SPIRAL_BLOW", 96, {
 	},
 	onConfirm: (state) => {
 		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 1) {
+			state.refreshBuff("POWER_SURGE", 0);
+		}
+	},
+	onApplication: (state) => {
+		// DRG is weird with power surge
+		// when spiral blow is applied combo tracker should have already progressed
+		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
 			state.refreshBuff("POWER_SURGE", 0);
 		}
 	},
@@ -455,8 +603,31 @@ makeWeaponskill_DRG("CHAOS_THRUST", 50, {
 		comboPotency: 260,
 		location: "rear",
 	},
-	onApplication: (state) => {
-		// Apply dot
+	onConfirm: (state, node) => {
+		const modifiers: PotencyModifier[] = [];
+		if (state.hasResourceAvailable("LANCE_CHARGE")) {
+			modifiers.push(Modifiers.LanceCharge);
+		}
+		if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
+			modifiers.push(Modifiers.LifeOfTheDragon);
+		}
+		if (state.hasResourceAvailable("BATTLE_LITANY")) {
+			modifiers.push(Modifiers.BattleLitany);
+		}
+
+		const tickPotency = 40;
+
+		state.addDoTPotencies({
+			node,
+			dotName: "CHAOS_THRUST_DOT",
+			skillName: "CHAOS_THRUST",
+			tickPotency,
+			speedStat: "sks",
+			modifiers,
+		});
+	},
+	onApplication: (state, node) => {
+		state.applyDoT("CHAOS_THRUST_DOT", node);
 	},
 	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2,
 });
@@ -475,8 +646,31 @@ makeWeaponskill_DRG("CHAOTIC_SPRING", 86, {
 		comboPotency: 340,
 		location: "rear",
 	},
-	onApplication: (state) => {
-		// Apply dot
+	onConfirm: (state, node) => {
+		const modifiers: PotencyModifier[] = [];
+		if (state.hasResourceAvailable("LANCE_CHARGE")) {
+			modifiers.push(Modifiers.LanceCharge);
+		}
+		if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
+			modifiers.push(Modifiers.LifeOfTheDragon);
+		}
+		if (state.hasResourceAvailable("BATTLE_LITANY")) {
+			modifiers.push(Modifiers.BattleLitany);
+		}
+
+		const tickPotency = 45;
+
+		state.addDoTPotencies({
+			node,
+			dotName: "CHAOTIC_SPRING_DOT",
+			skillName: "CHAOTIC_SPRING",
+			tickPotency,
+			speedStat: "sks",
+			modifiers,
+		});
+	},
+	onApplication: (state, node) => {
+		state.applyDoT("CHAOTIC_SPRING_DOT", node);
 	},
 	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2,
 });
@@ -635,24 +829,24 @@ makeWeaponskill_DRG("DRAKESBANE", 64, {
 });
 
 makeWeaponskill_DRG("DOOM_SPIKE", 40, {
-	replaceIf: [
-		{
-			newSkill: "DRACONIAN_FURY",
-			condition: (state) => state.resources.get("DRACONIAN_FIRE").available(1),
-		},
-	],
+	replaceIf: [draconianFuryCondition],
 	potency: 110,
+	falloff: 0,
 	applicationDelay: 1.29,
 });
 
 makeWeaponskill_DRG("DRACONIAN_FURY", 82, {
+	replaceIf: [doomSpikeCondition],
 	startOnHotbar: false,
 	potency: 130,
+	falloff: 0,
 	applicationDelay: 0.76,
 	validateAttempt: (state) => state.resources.get("DRACONIAN_FIRE").available(1),
 	highlightIf: (state) => state.resources.get("DRACONIAN_FIRE").available(1),
 	onConfirm: (state) => {
-		state.gainScale(1);
+		if (state.hasTraitUnlocked("LANCE_MASTERY_III")) {
+			state.gainScale(1);
+		}
 	},
 });
 
@@ -663,6 +857,7 @@ makeWeaponskill_DRG("SONIC_THRUST", 62, {
 		resource: "DRG_AOE_COMBO_TRACKER",
 		resourceValue: 1,
 	},
+	falloff: 0,
 	highlightIf: (state) => state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 1,
 	onConfirm: (state) => {
 		if (state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 1) {
@@ -678,29 +873,44 @@ makeWeaponskill_DRG("COERTHAN_TORMENT", 72, {
 		resource: "DRG_AOE_COMBO_TRACKER",
 		resourceValue: 2,
 	},
+	falloff: 0,
 	highlightIf: (state) => state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 2,
 	onConfirm: (state) => {
-		if (state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 2) {
+		if (
+			state.hasTraitUnlocked("ENHANCED_COERTHAN_TORMENT") &&
+			state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 2
+		) {
 			state.refreshBuff("DRACONIAN_FIRE", 0);
 		}
 	},
 });
 
-makeAbility_DRG("LIFE_SURGE", 6, "cd_LIFE_SURGE", {
+makeResourceAbility("DRG", "LIFE_SURGE", 6, "cd_LIFE_SURGE", {
+	rscType: "LIFE_SURGE",
 	applicationDelay: 0,
 	cooldown: 40,
-	onConfirm: (state) => {
-		state.refreshBuff("LIFE_SURGE", 0);
-	},
 	maxCharges: 2,
 });
 
-makeAbility_DRG("LANCE_CHARGE", 30, "cd_LANCE_CHARGE", {
+makeAbility_DRG("WYRMWIND_THRUST", 90, "cd_WYRMWIND_THRUST", {
+	applicationDelay: 1.2,
+	validateAttempt: (state) => state.resources.get("FIRSTMINDS_FOCUS").availableAmount() === 2,
+	highlightIf: (state) => state.resources.get("FIRSTMINDS_FOCUS").availableAmount() === 2,
+	potency: [
+		["NEVER", 420],
+		["MELEE_MASTERY_DRG", 440],
+	],
+	falloff: 0.5,
+	cooldown: 10,
+	onConfirm: (state) => {
+		state.tryConsumeResource("FIRSTMINDS_FOCUS", true);
+	},
+});
+
+makeResourceAbility("DRG", "LANCE_CHARGE", 30, "cd_LANCE_CHARGE", {
+	rscType: "LANCE_CHARGE",
 	applicationDelay: 0.62,
 	cooldown: 60,
-	onConfirm: (state) => {
-		state.refreshBuff("LANCE_CHARGE", 0.62);
-	},
 });
 
 makeResourceAbility("DRG", "BATTLE_LITANY", 52, "cd_BATTLE_LITANY", {
@@ -711,6 +921,11 @@ makeResourceAbility("DRG", "BATTLE_LITANY", 52, "cd_BATTLE_LITANY", {
 
 makeAbility_DRG("GEIRSKOGUL", 60, "cd_GEIRSKOGUL", {
 	applicationDelay: 0.67,
+	potency: [
+		["NEVER", 200],
+		["LANCE_MASTERY_III", 280],
+	],
+	falloff: 0.5,
 	cooldown: 60,
 	onConfirm: (state) => {
 		state.refreshBuff("LIFE_OF_THE_DRAGON", 0);
@@ -720,6 +935,11 @@ makeAbility_DRG("GEIRSKOGUL", 60, "cd_GEIRSKOGUL", {
 
 makeAbility_DRG("NASTROND", 70, "cd_NASTROND", {
 	applicationDelay: 0.76,
+	potency: [
+		["NEVER", 600],
+		["LANCE_MASTERY_III", 720],
+	],
+	falloff: 0.5,
 	cooldown: 2,
 	validateAttempt: (state) =>
 		state.resources.get("LIFE_OF_THE_DRAGON").available(1) &&
@@ -730,4 +950,120 @@ makeAbility_DRG("NASTROND", 70, "cd_NASTROND", {
 	onConfirm: (state) => {
 		state.tryConsumeResource("NASTROND_READY");
 	},
+});
+
+makeAbility_DRG("JUMP", 30, "cd_JUMP", {
+	autoUpgrade: {
+		trait: "JUMP_MASTERY",
+		otherSkill: "HIGH_JUMP",
+	},
+	applicationDelay: 0.49,
+	animationLock: 0.8,
+	potency: 320,
+	cooldown: 30,
+	onConfirm: (state) => {
+		state.refreshBuff("DIVE_READY", 0.0);
+	},
+});
+
+makeAbility_DRG("HIGH_JUMP", 74, "cd_HIGH_JUMP", {
+	autoDowngrade: {
+		trait: "JUMP_MASTERY",
+		otherSkill: "JUMP",
+	},
+	applicationDelay: 0.49,
+	animationLock: 0.8,
+	potency: 400,
+	cooldown: 30,
+	onConfirm: (state) => {
+		state.refreshBuff("DIVE_READY", 0.0);
+	},
+});
+
+makeAbility_DRG("MIRAGE_DIVE", 68, "cd_MIRAGE_DIVE", {
+	applicationDelay: 0.8,
+	validateAttempt: (state) => state.hasResourceAvailable("DIVE_READY"),
+	highlightIf: (state) => state.hasResourceAvailable("DIVE_READY"),
+	potency: 380,
+	cooldown: 1,
+	onConfirm: (state) => {
+		state.tryConsumeResource("DIVE_READY");
+	},
+});
+
+makeAbility_DRG("DRAGONFIRE_DIVE", 50, "cd_DRAGONFIRE_DIVE", {
+	applicationDelay: 0.8,
+	animationLock: 0.8,
+	potency: 500,
+	falloff: 0.5,
+	cooldown: 120,
+	onConfirm: (state) => {
+		if (state.hasTraitUnlocked("ENHANCED_DRAGONFIRE_DIVE")) {
+			state.refreshBuff("DRAGONS_FLIGHT", 0);
+		}
+	},
+});
+
+makeAbility_DRG("RISE_OF_THE_DRAGON", 92, "cd_RISE_OF_THE_DRAGON", {
+	applicationDelay: 1.16,
+	potency: 550,
+	falloff: 0.5,
+	cooldown: 1,
+	validateAttempt: (state) => state.hasResourceAvailable("DRAGONS_FLIGHT"),
+	highlightIf: (state) => state.hasResourceAvailable("DRAGONS_FLIGHT"),
+	onConfirm: (state) => {
+		state.tryConsumeResource("DRAGONS_FLIGHT");
+	},
+});
+
+makeAbility_DRG("STARDIVER", 80, "cd_STARDIVER", {
+	replaceIf: [starcrossCondition],
+	applicationDelay: 1.29,
+	animationLock: 1.5,
+	potency: [
+		["NEVER", 720],
+		["MELEE_MASTERY_DRG", 820],
+	],
+	falloff: 0.5,
+	cooldown: 30,
+	validateAttempt: (state) => state.hasResourceAvailable("LIFE_OF_THE_DRAGON"),
+	onConfirm: (state) => {
+		if (state.hasTraitUnlocked("ENHANCED_STARDIVER")) {
+			state.refreshBuff("STARCROSS_READY", 0);
+		}
+	},
+});
+
+makeAbility_DRG("STARCROSS", 100, "cd_STARCROSS", {
+	startOnHotbar: false,
+	replaceIf: [stardiverCondition],
+	applicationDelay: 0.98,
+	potency: 1000,
+	falloff: 0.5,
+	cooldown: 1,
+	validateAttempt: (state) =>
+		state.hasResourceAvailable("STARCROSS_READY") &&
+		state.hasResourceAvailable("LIFE_OF_THE_DRAGON"),
+	highlightIf: (state) =>
+		state.hasResourceAvailable("STARCROSS_READY") &&
+		state.hasResourceAvailable("LIFE_OF_THE_DRAGON"),
+	onConfirm: (state) => {
+		state.tryConsumeResource("STARCROSS_READY");
+	},
+});
+
+makeAbility_DRG("ELUSIVE_JUMP", 35, "cd_ELUSIVE_JUMP", {
+	potency: 0,
+	animationLock: 1.0,
+	cooldown: 30,
+	onConfirm: (state) => {
+		state.refreshBuff("ENHANCED_PIERCING_TALON", 0);
+	},
+});
+
+makeAbility_DRG("WINGED_GLIDE", 45, "cd_WINGED_GLIDE", {
+	potency: 0,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
+	cooldown: 60,
+	maxCharges: 2,
 });

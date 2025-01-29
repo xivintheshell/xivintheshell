@@ -206,6 +206,16 @@ function buffName(buff: PotencyModifierType) {
 		text = localize({ en: "searing light" }) as string;
 	} else if (buff === PotencyModifierType.PET) {
 		text = localize({ en: "pet" }) as string;
+	} else if (buff === PotencyModifierType.POWER_SURGE) {
+		text = localize({ en: "power surge" }) as string;
+	} else if (buff === PotencyModifierType.LANCE_CHARGE) {
+		text = localize({ en: "lance charge" }) as string;
+	} else if (buff === PotencyModifierType.LIFE_OF_THE_DRAGON) {
+		text = localize({ en: "life of the dragon" }) as string;
+	} else if (buff === PotencyModifierType.BATTLE_LITANY) {
+		text = localize({ en: "battle litany" }) as string;
+	} else if (buff === PotencyModifierType.ENHANCED_PIERCING_TALON) {
+		text = localize({ en: "enhanced piercing talon" }) as string;
 	}
 	return text;
 }
@@ -343,6 +353,21 @@ function BuffTag(props: { buff?: PotencyModifierType; tc?: boolean }) {
 	} else if (props.buff === PotencyModifierType.PET) {
 		text = localize({ en: "PET" }) as string;
 		color = colors.resources.petTag;
+	} else if (props.buff === PotencyModifierType.POWER_SURGE) {
+		text = localize({ en: "PWS" }) as string;
+		color = colors.brd.wanderersCoda;
+	} else if (props.buff === PotencyModifierType.LANCE_CHARGE) {
+		text = localize({ en: "LC" }) as string;
+		color = colors.brd.ragingStrikes;
+	} else if (props.buff === PotencyModifierType.LIFE_OF_THE_DRAGON) {
+		text = localize({ en: "LIFE" }) as string;
+		color = colors.sam.fugetsu;
+	} else if (props.buff === PotencyModifierType.ENHANCED_PIERCING_TALON) {
+		text = localize({ en: "ENH" }) as string;
+		color = colors.sam.fugetsu;
+	} else if (props.buff === PotencyModifierType.BATTLE_LITANY) {
+		text = localize({ en: "BL" }) as string;
+		color = colors.brd.magesCoda;
 	}
 	return <span
 		style={{

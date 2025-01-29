@@ -28,8 +28,8 @@ export const DRG_ACTIONS = ensureRecord<ActionData>()({
 	LIFE_SURGE: { name: "Life Surge" },
 	LANCE_CHARGE: { name: "Lance Charge" },
 	JUMP: { name: "Jump" },
-	HIGH_JUMP: { name: "HIGH_JUMP" },
-	MIRAGE_DIVE: { name: "MIRAGE DIVE" },
+	HIGH_JUMP: { name: "High Jump" },
+	MIRAGE_DIVE: { name: "Mirage Dive" },
 	DRAGONFIRE_DIVE: { name: "Dragonfire Dive" },
 	RISE_OF_THE_DRAGON: { name: "Rise of the Dragon" },
 	BATTLE_LITANY: { name: "Battle Litany" },
@@ -48,6 +48,7 @@ export const DRG_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_LIFE_SURGE: { name: "cd_LifeSurge" }, // 40 sec
 	cd_LANCE_CHARGE: { name: "cd_LanceCharge" }, // 60 sec
 	cd_JUMP: { name: "cd_Jump" }, // 30 sec
+	cd_HIGH_JUMP: { name: "cd_HighJump" }, // 30 sec
 	cd_ELUSIVE_JUMP: { name: "cd_ElusiveJump" }, // 30 sec
 	cd_WINGED_GLIDE: { name: "cd_WingedGlide" }, // 60 sec
 	cd_DRAGONFIRE_DIVE: { name: "cd_DragonfireDive" }, // 120 sec

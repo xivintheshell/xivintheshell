@@ -59,6 +59,12 @@ export const enum PotencyModifierType {
 
 	SEARING_LIGHT,
 
+	POWER_SURGE,
+	ENHANCED_PIERCING_TALON,
+	LANCE_CHARGE,
+	LIFE_OF_THE_DRAGON,
+	BATTLE_LITANY,
+
 	PET,
 }
 
@@ -301,6 +307,32 @@ export const Modifiers = {
 		// https://docs.google.com/spreadsheets/d/1Yt7Px7VHuKG1eJR9CRKs3RpvcR5IZKAAA3xjekvv0LY/edit?gid=0#gid=0
 		damageFactor: 0.8,
 	} as PotencyMultiplier,
+	PowerSurge: {
+		kind: "multiplier",
+		source: PotencyModifierType.POWER_SURGE,
+		damageFactor: 1.1,
+	} as PotencyMultiplier,
+	LanceCharge: {
+		kind: "multiplier",
+		source: PotencyModifierType.LANCE_CHARGE,
+		damageFactor: 1.1,
+	} as PotencyMultiplier,
+	LifeOfTheDragon: {
+		kind: "multiplier",
+		source: PotencyModifierType.LIFE_OF_THE_DRAGON,
+		damageFactor: 1.15,
+	} as PotencyMultiplier,
+	BattleLitany: {
+		kind: "critDirect",
+		source: PotencyModifierType.BATTLE_LITANY,
+		critBonus: 0.1,
+		dhBonus: 0.0,
+	} as CritDirectMultiplier,
+	EnhancedPiercingTalon: {
+		kind: "adder",
+		source: PotencyModifierType.ENHANCED_PIERCING_TALON,
+		additiveAmount: 150,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {
