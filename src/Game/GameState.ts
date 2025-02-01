@@ -662,8 +662,8 @@ export class GameState {
 		let potency: Potency | undefined = node.getInitialPotency();
 		// If it was not, and this action is supposed to do damage, go ahead and add it now
 		// If the skill draws aggro without dealing damage (such as Summon Bahamut), then
-		// create a potency object so a damage mark can be drawn if we're not already in combat.
-		if (!potency && (potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()))) {
+		// create a potency object so an aggro-only potency mark can be drawn.
+		if (!potency && (potencyNumber > 0 || skill.drawsAggro)) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
@@ -847,7 +847,7 @@ export class GameState {
 		// potency
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
-		if (potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()!)) {
+		if (potencyNumber > 0 || skill.drawsAggro) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
