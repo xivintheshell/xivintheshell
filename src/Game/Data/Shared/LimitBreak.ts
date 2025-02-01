@@ -3,7 +3,7 @@ import { ActionData, CooldownData, ResourceData } from "../types";
 
 export const TANK_LB3_ACTIONS = ensureRecord<ActionData>()({
 	LAST_BASTION: { name: "Last Bastion" },
-	LAND_WAKER: { name: "Land Waker" },
+	LAND_WAKER: { name: "Land Waker", label: { zh: "原初大地" } },
 	DARK_FORCE: { name: "Dark Force" },
 	GUNMETAL_SOUL: { name: "Gunmetal Soul" },
 });
@@ -40,7 +40,7 @@ export const CASTER_LB3_ACTIONS = ensureRecord<ActionData>()({
 // Tank LB3 Status effects
 export const TANK_LB3_RESOURCES = ensureRecord<ResourceData>()({
 	LAST_BASTION: { name: "Last Bastion" },
-	LAND_WAKER: { name: "Land Waker" },
+	LAND_WAKER: { name: "Land Waker", label: { zh: "原初大地（战士LB3 buff）" } },
 	DARK_FORCE: { name: "Dark Force" },
 	GUNMETAL_SOUL: { name: "Gunmetal Soul" },
 });
@@ -50,9 +50,9 @@ export const TANK_LB3_RESOURCES = ensureRecord<ResourceData>()({
 // ========================================
 
 export const LIMIT_BREAK_COOLDOWNS = ensureRecord<CooldownData>()({
-	cd_LIMIT_BREAK_1: { name: "cd_LIMIT_BREAK_1" },
-	cd_LIMIT_BREAK_2: { name: "cd_LIMIT_BREAK_2" },
-	cd_LIMIT_BREAK_3: { name: "cd_LIMIT_BREAK_3" },
+	cd_LIMIT_BREAK_1: { name: "cd_LIMIT_BREAK_1", label: { zh: "CD：一段LB" } },
+	cd_LIMIT_BREAK_2: { name: "cd_LIMIT_BREAK_2", label: { zh: "CD：二段LB" } },
+	cd_LIMIT_BREAK_3: { name: "cd_LIMIT_BREAK_3", label: { zh: "CD：三段LB" } },
 });
 
 export const SHARED_LIMIT_BREAK_ACTIONS = ensureRecord<ActionData>()({
@@ -78,8 +78,8 @@ export const SHARED_LIMIT_BREAK_RESOURCES = ensureRecord<ResourceData>()({
 	UNKNOWN: { name: "Unknown" },
 
 	// LB 1 and 2
-	SHIELD_WALL: { name: "Shield Wall" },
-	STRONGHOLD: { name: "Stronghold" },
+	SHIELD_WALL: { name: "Shield Wall", label: { zh: "铜墙铁盾（防护LB1 buff）" } }, // or should we use the formal name(s) here?
+	STRONGHOLD: { name: "Stronghold", label: { zh: "坚守要塞（防护LB2 buff）" } },
 });
 
 // Limit breaks don't have any related traits... yet.

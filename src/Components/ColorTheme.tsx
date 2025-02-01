@@ -3,6 +3,7 @@ import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
 import { ShellJob } from "../Game/Data/Jobs";
+import { PotencyModifierType } from "../Game/Potency";
 
 export type ColorTheme = "Light" | "Dark";
 
@@ -465,6 +466,62 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 		};
 	}
 };
+
+export function getModifierTagColor(modifierType: PotencyModifierType) {
+	let colors = getCurrentThemeColors();
+	let modifierColors = new Map<PotencyModifierType, string>([
+		[PotencyModifierType.AF3, colors.blm.astralFire],
+		[PotencyModifierType.AF2, colors.blm.astralFire],
+		[PotencyModifierType.AF1, colors.blm.astralFire],
+		[PotencyModifierType.UI3, colors.blm.umbralIce],
+		[PotencyModifierType.UI2, colors.blm.umbralIce],
+		[PotencyModifierType.UI1, colors.blm.umbralIce],
+		[PotencyModifierType.ENO, colors.blm.enochian],
+		//[PotencyModifierType.POT, colors.text], // n/a
+		//[PotencyModifierType.PARTY, colors.text], // n/a
+		[PotencyModifierType.AUTO_CDH, colors.resources.cdhTag],
+		[PotencyModifierType.STARRY, colors.pct.starryBuff],
+		[PotencyModifierType.EMBOLDEN_M, colors.rdm.emboldenBuff],
+		[PotencyModifierType.MANAFIC, colors.rdm.manaficBuff],
+		[PotencyModifierType.ACCELERATION, colors.rdm.accelBuff],
+		[PotencyModifierType.STANDARD_SINGLE, colors.dnc.jete],
+		[PotencyModifierType.STANDARD_DOUBLE, colors.dnc.jete],
+		[PotencyModifierType.TECHNICAL_SINGLE, colors.dnc.esprit],
+		[PotencyModifierType.TECHNICAL_DOUBLE, colors.dnc.esprit],
+		[PotencyModifierType.TECHNICAL_TRIPLE, colors.dnc.esprit],
+		[PotencyModifierType.TECHNICAL_QUADRUPLE, colors.dnc.esprit],
+		[PotencyModifierType.DEVILMENT, colors.dnc.feathers],
+		[PotencyModifierType.OVERHEATED, MarkerColor.Pink],
+		[PotencyModifierType.COMBO, colors.resources.comboTag],
+		[PotencyModifierType.FUGETSU, colors.sam.fugetsu],
+		[PotencyModifierType.AUTO_CRIT, colors.resources.cdhTag],
+		[PotencyModifierType.YATEN, colors.pct.cometPaint], // todo
+		[PotencyModifierType.POSITIONAL, MarkerColor.Green], // todo
+		[PotencyModifierType.ARCANE_CIRCLE, MarkerColor.Pink],
+		[PotencyModifierType.DEATHSDESIGN, MarkerColor.Red],
+		[PotencyModifierType.ENHANCED_GIBBET_GALLOWS, MarkerColor.Blue],
+		[PotencyModifierType.ENHANCED_REAPING, MarkerColor.Purple],
+		[PotencyModifierType.IMMORTAL_SACRIFICE, MarkerColor.Pink],
+		[PotencyModifierType.SURGING_TEMPEST, MarkerColor.Purple],
+		[PotencyModifierType.BARRAGE, colors.brd.barrage],
+		[PotencyModifierType.RAGING_STRIKES, colors.brd.ragingStrikes],
+		[PotencyModifierType.BATTLE_VOICE, colors.brd.battleVoice],
+		[PotencyModifierType.RADIANT_FINALE_THREE_CODA, colors.brd.radiantFinale],
+		[PotencyModifierType.RADIANT_FINALE_TWO_CODA, colors.brd.radiantFinale],
+		[PotencyModifierType.RADIANT_FINALE_ONE_CODA, colors.brd.radiantFinale],
+		[PotencyModifierType.WANDERERS_MINUET, colors.brd.wanderersCoda],
+		[PotencyModifierType.MAGES_BALLAD, colors.brd.magesCoda],
+		[PotencyModifierType.ARMYS_PAEON, colors.brd.armysCoda],
+		[PotencyModifierType.NO_MERCY, colors.rdm.blackMana], // gnb
+		[PotencyModifierType.SEARING_LIGHT, colors.smn.searing], // smn
+		[PotencyModifierType.PET, colors.resources.petTag],
+	]);
+	console.assert(
+		modifierColors.has(modifierType),
+		`modifier ${modifierType} doesn't have a color!`,
+	);
+	return modifierColors.get(modifierType) ?? colors.text;
+}
 
 function ColorThemeOption(props: { colorTheme: ColorTheme }) {
 	let icon = <MdLightMode />;
