@@ -1,5 +1,11 @@
 [
 	{
+		"date": "2/1/25",
+		"changes": [
+			"[WAR][SAM][RPR][MCH][DNC] Implemented localization for some recently added jobs"
+		]
+	},
+	{
 		"date": "1/27/25",
 		"changes": [
 			"[SMN] Added initial support for SMN"

@@ -214,7 +214,7 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.UI3, { en: "UI3", zh: "三层冰" }],
 	[PotencyModifierType.UI2, { en: "UI2", zh: "二层冰" }],
 	[PotencyModifierType.UI1, { en: "UI1", zh: "一层冰" }],
-	[PotencyModifierType.ENO, { en: "enochian", zh: "天语" }],
+	[PotencyModifierType.ENO, { en: "ENO", zh: "天语" }],
 	[PotencyModifierType.POT, { en: "pot", zh: "爆发药" }],
 	[PotencyModifierType.PARTY, { en: "party", zh: "团辅" }],
 	[PotencyModifierType.AUTO_CDH, { en: "CDH", zh: "必直暴" }],
