@@ -491,6 +491,7 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.TECHNICAL_TRIPLE, colors.dnc.esprit],
 		[PotencyModifierType.TECHNICAL_QUADRUPLE, colors.dnc.esprit],
 		[PotencyModifierType.DEVILMENT, colors.dnc.feathers],
+		[PotencyModifierType.OVERHEATED, MarkerColor.Pink],
 		[PotencyModifierType.COMBO, colors.resources.comboTag],
 		[PotencyModifierType.FUGETSU, colors.sam.fugetsu],
 		[PotencyModifierType.AUTO_CRIT, colors.resources.cdhTag],

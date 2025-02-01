@@ -1,13 +1,13 @@
 import React from "react";
-import { BuffType } from "../Game/Common";
-import { ContentNode } from "./Common";
-import { MdLanguage } from "react-icons/md";
-import { getCurrentThemeColors } from "./ColorTheme";
-import { getCachedValue, setCachedValue } from "../Controller/Common";
-import { controller } from "../Controller/Controller";
-import { ActionKey, ACTIONS, CooldownKey, COOLDOWNS, ResourceKey } from "../Game/Data";
-import { Data } from "../Game/Data/Data";
-import { PotencyModifierType } from "../Game/Potency";
+import {BuffType} from "../Game/Common";
+import {ContentNode} from "./Common";
+import {MdLanguage} from "react-icons/md";
+import {getCurrentThemeColors} from "./ColorTheme";
+import {getCachedValue, setCachedValue} from "../Controller/Common";
+import {controller} from "../Controller/Controller";
+import {ActionKey, ACTIONS, CooldownKey, COOLDOWNS, ResourceKey} from "../Game/Data";
+import {Data} from "../Game/Data/Data";
+import {PotencyModifierType} from "../Game/Potency";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -172,6 +172,7 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.TECHNICAL_TRIPLE, { en: "triple technical finish", zh: "三色大舞" }],
 	[PotencyModifierType.TECHNICAL_QUADRUPLE, { en: "quadruple technical finish", zh: "四色大舞" }],
 	[PotencyModifierType.DEVILMENT, { en: "devilment", zh: "探戈" }],
+	[PotencyModifierType.OVERHEATED, { en: "OVERHEATED", zh: "过热" }],
 	[PotencyModifierType.COMBO, { en: "combo", zh: "连击" }],
 	[PotencyModifierType.FUGETSU, { en: "fugetsu", zh: "风月" }],
 	[PotencyModifierType.AUTO_CRIT, { en: "auto crit", zh: "必暴" }],
@@ -226,6 +227,7 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.TECHNICAL_TRIPLE, { en: "TTF", zh: "三色大舞" }],
 	[PotencyModifierType.TECHNICAL_QUADRUPLE, { en: "QTF", zh: "四色大舞" }],
 	[PotencyModifierType.DEVILMENT, { en: "DEV", zh: "探戈" }],
+	[PotencyModifierType.OVERHEATED, { en: "OVERHEATED", zh: "过热" }],
 	[PotencyModifierType.COMBO, { en: "CMB", zh: "连击" }],
 	[PotencyModifierType.FUGETSU, { en: "FGS", zh: "风月" }],
 	[PotencyModifierType.AUTO_CRIT, { en: "CRIT", zh: "必暴" }],
