@@ -1,13 +1,13 @@
 import React from "react";
-import {BuffType} from "../Game/Common";
-import {ContentNode} from "./Common";
-import {MdLanguage} from "react-icons/md";
-import {getCurrentThemeColors} from "./ColorTheme";
-import {getCachedValue, setCachedValue} from "../Controller/Common";
-import {controller} from "../Controller/Controller";
-import {ActionKey, ACTIONS, CooldownKey, COOLDOWNS, ResourceKey} from "../Game/Data";
-import {Data} from "../Game/Data/Data";
-import {PotencyModifierType} from "../Game/Potency";
+import { BuffType } from "../Game/Common";
+import { ContentNode } from "./Common";
+import { MdLanguage } from "react-icons/md";
+import { getCurrentThemeColors } from "./ColorTheme";
+import { getCachedValue, setCachedValue } from "../Controller/Common";
+import { controller } from "../Controller/Controller";
+import { ActionKey, ACTIONS, CooldownKey, COOLDOWNS, ResourceKey } from "../Game/Data";
+import { Data } from "../Game/Data/Data";
+import { PotencyModifierType } from "../Game/Potency";
 
 export type Language = "en" | "zh" | "ja";
 export type LocalizedContent = {
@@ -172,7 +172,7 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.TECHNICAL_TRIPLE, { en: "triple technical finish", zh: "三色大舞" }],
 	[PotencyModifierType.TECHNICAL_QUADRUPLE, { en: "quadruple technical finish", zh: "四色大舞" }],
 	[PotencyModifierType.DEVILMENT, { en: "devilment", zh: "探戈" }],
-	[PotencyModifierType.OVERHEATED, { en: "OVERHEATED", zh: "过热" }],
+	[PotencyModifierType.OVERHEATED, { en: "overheated", zh: "过热" }],
 	[PotencyModifierType.COMBO, { en: "combo", zh: "连击" }],
 	[PotencyModifierType.FUGETSU, { en: "fugetsu", zh: "风月" }],
 	[PotencyModifierType.AUTO_CRIT, { en: "auto crit", zh: "必暴" }],
@@ -196,6 +196,8 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.WANDERERS_MINUET, { en: "wanderer's minuet" }],
 	[PotencyModifierType.MAGES_BALLAD, { en: "mage's ballad" }],
 	[PotencyModifierType.ARMYS_PAEON, { en: "army's paeon" }],
+	[PotencyModifierType.NO_MERCY, { en: "no mercy" }], // gnb
+	[PotencyModifierType.SURGING_TEMPEST, { en: "surging tempest", zh: "战场风暴" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -250,6 +252,7 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.ARMYS_PAEON, { en: "AP" }],
 	[PotencyModifierType.NO_MERCY, { en: "NM" }], // gnb
 	[PotencyModifierType.SEARING_LIGHT, { en: "SL" }], // smn
+	[PotencyModifierType.SURGING_TEMPEST, { en: "SURGING", zh: "战场风暴" }],
 	[PotencyModifierType.PET, { en: "PET" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
