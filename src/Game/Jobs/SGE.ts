@@ -590,7 +590,7 @@ makeSGESpell("EUKRASIAN_DOSIS_II", 72, {
 	},
 });
 
-makeSGESpell("EUKRASIAN_DOSIS_III", 72, {
+makeSGESpell("EUKRASIAN_DOSIS_III", 82, {
 	startOnHotbar: false,
 	manaCost: 400,
 	castTime: 0,
@@ -722,6 +722,7 @@ makeSGESpell("DYSKRASIA_II", 82, {
 });
 makeSGESpell("EUKRASIAN_DYSKRASIA", 82, {
 	startOnHotbar: false,
+	falloff: 0,
 	applicationDelay: 1.03,
 	castTime: 0,
 	recastTime: 1.5,
@@ -1039,7 +1040,7 @@ makeSGEAbility("DRUOCHOLE", 45, "cd_DRUOCHOLE", {
 makeSGEAbility("IXOCHOLE", 52, "cd_IXOCHOLE", {
 	cooldown: 30,
 	healingPotency: 400,
-	applicationDelay: 0.78, // Assuming based on Druochole, the spreadsheet doesn't list it :(
+	applicationDelay: 0.756,
 	validateAttempt: (state) => state.hasResourceAvailable("ADDERSGALL"),
 	onConfirm: (state) => state.consumeAddersgall(),
 });
