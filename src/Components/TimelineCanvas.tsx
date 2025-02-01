@@ -497,29 +497,22 @@ function drawPotencyMarks(
 					const splashPotencyAmount =
 						potencyAmount * (1 - (potencyInfo.potency.falloff ?? 1));
 					const splashTargets = potencyInfo.potency.targetCount - 1;
-					const potencyAmountString = potencyAmount.toFixed(2);
 					const splashPotencyString =
-						splashTargets > 1
-							? `+ ${splashTargets} x ${splashPotencyAmount.toFixed(2)}`
-							: `+ ${splashPotencyAmount.toFixed(2)}`;
-
-					const potencyAmountLength = Math.max(
-						potencyAmountString.length,
-						splashPotencyString.length,
-					);
+						splashPotencyAmount.toFixed(2) +
+						(splashTargets > 1 ? ` x ${splashTargets}` : "");
 
 					const additionalTargetString =
 						splashTargets > 1
 							? localize({
-									en: `${sourceStr}, x${splashTargets} additional targets`,
-									zh: `${sourceStr}, x${splashTargets} 另外目标`,
+									en: `${sourceStr}, ${splashTargets} additional targets`,
+									zh: `${sourceStr}, ${splashTargets} 另外目标`,
 								})
 							: localize({
-									en: `${sourceStr}, x1 additional target`,
-									zh: `${sourceStr}, x1 另外目标`,
+									en: `${sourceStr}, 1 additional target`,
+									zh: `${sourceStr}, 1 另外目标`,
 								});
 					info.push(
-						potencyAmountString.padStart(potencyAmountLength, " ") +
+						potencyAmount.toFixed(2) +
 							" (" +
 							localize({
 								en: `${sourceStr}, primary target`,
@@ -527,10 +520,7 @@ function drawPotencyMarks(
 							}) +
 							")",
 					);
-					info.push(
-						splashPotencyString.padStart(potencyAmountLength, " ") +
-							` (${additionalTargetString})`,
-					);
+					info.push(splashPotencyString + ` (${additionalTargetString})`);
 				} else {
 					info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")");
 				}
