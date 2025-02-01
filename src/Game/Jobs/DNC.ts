@@ -548,6 +548,7 @@ makeGCD_DNC("FOUNTAINFALL", 40, {
 		state.hasResourceAvailable("SILKEN_FLOW") || state.hasResourceAvailable("FLOURISHING_FLOW"),
 	onConfirm: (state) => {
 		if (state.hasResourceAvailable("SILKEN_FLOW")) {
+			state.tryConsumeResource("SILKEN_FLOW");
 		} else {
 			state.tryConsumeResource("FLOURISHING_FLOW");
 		}
