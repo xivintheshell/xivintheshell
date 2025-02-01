@@ -1252,6 +1252,7 @@ export class GameState {
 			effectDuration / (props.tickFrequency ?? 3) + (isGroundTargeted ? 1 : 0);
 
 		const tickDescriptor = kind === "damage" ? "DoT" : "HoT";
+		const targetCount = kind === "damage" ? props.node.targetCount : props.node.healTargetCount;
 
 		for (let i = 0; i < effectTicks; i++) {
 			let overtimePotency = new Potency({
@@ -1269,7 +1270,7 @@ export class GameState {
 					` ${tickDescriptor} ` +
 					(i + 1) +
 					`/${effectTicks}`,
-				targetCount: props.node.targetCount,
+				targetCount,
 				falloff: 0, // assume all overtime effects have no falloff
 			});
 			overtimePotency.modifiers = mods;

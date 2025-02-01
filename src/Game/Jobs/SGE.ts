@@ -951,6 +951,7 @@ makeSGEAbility("HAIMA_POP", 70, "cd_HAIMA_POP", {
 });
 
 makeSGEAbility("PHYSIS_II", 60, "cd_PHYSIS", {
+	aoeHeal: true,
 	applicationDelay: 0.85,
 	cooldown: 60,
 	onConfirm: (state, node) => {
@@ -1040,6 +1041,7 @@ makeSGEAbility("DRUOCHOLE", 45, "cd_DRUOCHOLE", {
 makeSGEAbility("IXOCHOLE", 52, "cd_IXOCHOLE", {
 	cooldown: 30,
 	healingPotency: 400,
+	aoeHeal: true,
 	applicationDelay: 0.756,
 	validateAttempt: (state) => state.hasResourceAvailable("ADDERSGALL"),
 	onConfirm: (state) => state.consumeAddersgall(),
@@ -1054,6 +1056,7 @@ makeSGEAbility("TAUROCHOLE", 62, "cd_TAUROCHOLE", {
 
 makeSGEAbility("KERACHOLE", 50, "cd_KERACHOLE", {
 	cooldown: 30,
+	aoeHeal: true,
 	applicationDelay: 0.81,
 	validateAttempt: (state) => state.hasResourceAvailable("ADDERSGALL"),
 	onConfirm: (state, node) => {
