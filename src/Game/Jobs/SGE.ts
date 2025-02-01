@@ -321,6 +321,26 @@ export class SGEState extends GameState {
 			}),
 		);
 	}
+
+	// Modifiers that only affect the caster's own GCD heals
+	addHealingMagicPotencyModifiers(modifiers: PotencyModifier[]) {
+		if (this.hasResourceAvailable("ZOE")) {
+			modifiers.push(Modifiers.Zoe);
+		}
+		if (this.hasResourceAvailable("PHILOSOPHIA")) {
+			modifiers.push(Modifiers.Philosophia);
+		}
+	}
+
+	// Modifiers that affect incoming heals on the player with the effect
+	addHealingActionPotencyModifiers(modifiers: PotencyModifier[]) {
+		if (this.hasResourceAvailable("AUTOPHYSIS")) {
+			modifiers.push(Modifiers.Autophysis);
+		}
+		if (this.hasResourceAvailable("KRASIS")) {
+			modifiers.push(Modifiers.Krasis);
+		}
+	}
 }
 
 const makeSGESpell = (
@@ -339,18 +359,8 @@ const makeSGESpell = (
 
 		const modifiers: PotencyModifier[] = [];
 
-		if (state.hasResourceAvailable("ZOE")) {
-			modifiers.push(Modifiers.Zoe);
-		}
-		if (state.hasResourceAvailable("AUTOPHYSIS")) {
-			modifiers.push(Modifiers.Autophysis);
-		}
-		if (state.hasResourceAvailable("PHILOSOPHIA")) {
-			modifiers.push(Modifiers.Philosophia);
-		}
-		if (state.hasResourceAvailable("KRASIS")) {
-			modifiers.push(Modifiers.Krasis);
-		}
+		state.addHealingMagicPotencyModifiers(modifiers);
+		state.addHealingActionPotencyModifiers(modifiers);
 
 		return modifiers;
 	};
@@ -386,12 +396,9 @@ const makeSGESpell = (
 			if (state.hasResourceAvailable("SOTERIA")) {
 				kardiaPotency.modifiers.push(Modifiers.Soteria);
 			}
-			if (state.hasResourceAvailable("AUTOPHYSIS")) {
-				kardiaPotency.modifiers.push(Modifiers.Autophysis);
-			}
-			if (state.hasResourceAvailable("KRASIS")) {
-				kardiaPotency.modifiers.push(Modifiers.Krasis);
-			}
+
+			state.addHealingActionPotencyModifiers(kardiaPotency.modifiers);
+
 			node.addHoTPotency(kardiaPotency, "KARDION");
 		},
 		(state, node) => {
@@ -413,12 +420,8 @@ const makeSGESpell = (
 			if (state.hasResourceAvailable("TINCTURE")) {
 				eudaimoniaPotency.modifiers.push(Modifiers.Tincture);
 			}
-			if (state.hasResourceAvailable("AUTOPHYSIS")) {
-				eudaimoniaPotency.modifiers.push(Modifiers.Autophysis);
-			}
-			if (state.hasResourceAvailable("KRASIS")) {
-				eudaimoniaPotency.modifiers.push(Modifiers.Krasis);
-			}
+
+			state.addHealingActionPotencyModifiers(eudaimoniaPotency.modifiers);
 
 			node.addHoTPotency(eudaimoniaPotency, "EUDAIMONIA");
 		},
@@ -465,12 +468,7 @@ const makeSGEAbility = (
 
 		const modifiers: PotencyModifier[] = [];
 
-		if (state.hasResourceAvailable("AUTOPHYSIS")) {
-			modifiers.push(Modifiers.Autophysis);
-		}
-		if (state.hasResourceAvailable("KRASIS")) {
-			modifiers.push(Modifiers.Krasis);
-		}
+		state.addHealingActionPotencyModifiers(modifiers);
 
 		return modifiers;
 	};
