@@ -135,7 +135,8 @@ export class MCHState extends GameState {
 					],
 				},
 			],
-			["ROOK_AUTOTURRET", "AUTOMATON_QUEEN"],
+			// until there's a better way to handle wildfire than putting it here
+			["ROOK_AUTOTURRET", "AUTOMATON_QUEEN", "WILDFIRE"],
 		);
 	}
 
