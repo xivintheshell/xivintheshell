@@ -113,7 +113,8 @@ const getAcknowledgements = () => <>
 				Framework for adding new jobs: <b>shanzhe</b>
 			</li>
 			<li>
-				Chinese localization: <b>miyehn</b>, <b>Eshiya</b>, <b>Yuyuka</b>, <b>shanzhe</b>
+				Chinese localization: <b>miyehn</b>, <b>Eshiya</b>, <b>Yuyuka</b>, <b>shanzhe</b>,{" "}
+				<b>小盐</b>, <b>卿落青</b>, <b>久逺</b>
 			</li>
 		</ul>,
 		zh: <ul>
@@ -133,7 +134,7 @@ const getAcknowledgements = () => <>
 				舞者、机工、吟游诗人：<b>Akairyu</b>
 			</li>
 			<li>
-				镰刀：<b>Honey B. Lovely's Favorite Bee</b>
+				钐镰客：<b>Honey B. Lovely's Favorite Bee</b>
 			</li>
 			<li>
 				战士：<b>misterperson</b>
@@ -145,7 +146,8 @@ const getAcknowledgements = () => <>
 				添加新职业的程序框架：<b>shanzhe</b>
 			</li>
 			<li>
-				中文本地化：<b>miyehn</b>、<b>加拉哈德</b>、<b>鱼卡</b>、<b>shanzhe</b>
+				中文本地化：<b>miyehn</b>、<b>加拉哈德</b>、<b>鱼卡</b>、<b>shanzhe</b>、<b>小盐</b>
+				、<b>卿落青</b>、<b>久逺</b>
 			</li>
 		</ul>,
 	})}
