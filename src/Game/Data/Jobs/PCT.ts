@@ -96,21 +96,21 @@ export const PCT_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_TEMPERA_COAT: { name: "cd_TemperaCoat" }, // [0, 120]
 	cd_SMUDGE: { name: "cd_Smudge" }, // [0, 20]
 	cd_LIVING_MUSE: { name: "cd_LivingMuse" }, // [0, 40]
-	cd_PORTRAIT: { name: "cd_Portrait" }, // [0, 30]
+	cd_PORTRAIT: { name: "cd_Portrait", label: { zh: "CD：莫古力激流/马蒂恩惩罚" } }, // [0, 30]
 	cd_STEEL_MUSE: { name: "cd_SteelMuse" }, // [0, 60]
 	cd_SCENIC_MUSE: { name: "cd_ScenicMuse" }, // [0, 120]
 	cd_SUBTRACTIVE: { name: "cd_Subtractive", label: { zh: "CD：减色混合" } }, // [0, 1], not real
 	cd_GRASSA: { name: "cd_Grassa", label: { zh: "CD：油性坦培拉涂层" } }, // [0, 1], not real
-	cd_TEMPERA_POP: { name: "cd_TemperaPop" }, // [0, 1], also not real
+	cd_TEMPERA_POP: { name: "cd_TemperaPop", label: { zh: "CD：坦培拉涂层破盾" } }, // [0, 1], also not real
 });
 export const PCT_GAUGES = ensureRecord<ResourceData>()({
-	PORTRAIT: { name: "Portrait" }, // [0, 2] 1 = moogle, 2 = madeen
-	DEPICTIONS: { name: "Depictions" }, // [0, 3] used to show which creature motifs have been drawn
-	CREATURE_CANVAS: { name: "Creature Canvas" }, // [0, 1]
-	WEAPON_CANVAS: { name: "Weapon Canvas" }, // [0, 1]
-	LANDSCAPE_CANVAS: { name: "Landscape Canvas" }, // [0, 1]
-	PALETTE_GAUGE: { name: "Palette Gauge" }, // [0, 100]
-	PAINT: { name: "Paint" }, // [0, 5]
+	PORTRAIT: { name: "Portrait", label: { zh: "肖像标识（无/莫古力/马蒂恩）" } }, // [0, 2] 1 = moogle, 2 = madeen
+	DEPICTIONS: { name: "Depictions", label: { zh: "动物标识（绒球/翅膀/兽爪/尖牙）" } }, // [0, 3] used to show which creature motifs have been drawn
+	CREATURE_CANVAS: { name: "Creature Canvas", label: { zh: "动物画" } }, // [0, 1]
+	WEAPON_CANVAS: { name: "Weapon Canvas", label: { zh: "武器画" } }, // [0, 1]
+	LANDSCAPE_CANVAS: { name: "Landscape Canvas", label: { zh: "风景画" } }, // [0, 1]
+	PALETTE_GAUGE: { name: "Palette Gauge", label: { zh: "调色量谱" } }, // [0, 100]
+	PAINT: { name: "Paint", label: { zh: "颜料量谱" } }, // [0, 5]
 });
 
 export const PCT_STATUSES = ensureRecord<ResourceData>()({

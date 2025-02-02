@@ -545,6 +545,7 @@ export function ResourcesDisplay(props: {
 					topic={"senExplanation"}
 					content={localize({
 						en: "from left to right: setsu (yukikaze), getsu (gekko/mangetsu), ka (kasha/oka)",
+						zh: "从左到右：雪闪（雪风），月闪（月光/满月），花闪（花车/樱花）",
 					})}
 				/>;
 				return <ResourceCounter

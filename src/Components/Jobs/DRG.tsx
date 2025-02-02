@@ -47,6 +47,7 @@ export class DRGStatusPropsGenerator extends StatusPropsGenerator<DRGState> {
 		const lifeTimer = lifeOfTheDragonRes.available(1)
 			? lifeOfTheDragonRes.pendingChange?.timeTillEvent
 			: undefined;
+		const flippedLifeTimer = lifeTimer ? 20.0 - lifeTimer : 20;
 
 		const comboTimer = chaosCombo.available(1)
 			? chaosCombo.pendingChange?.timeTillEvent
@@ -59,7 +60,7 @@ export class DRGStatusPropsGenerator extends StatusPropsGenerator<DRGState> {
 		const infos: ResourceDisplayProps[] = [
 			{
 				kind: "bar",
-				name: localize({ en: "Combo Timer", zh: "CT " }),
+				name: localize({ en: "Combo Timer" }),
 				color: colors.rdm.manaStack,
 				progress: comboTimer ? comboTimer / 30 : 0,
 				valueString: comboTimer?.toFixed(3) ?? "N/A",
@@ -67,15 +68,15 @@ export class DRGStatusPropsGenerator extends StatusPropsGenerator<DRGState> {
 
 			{
 				kind: "bar",
-				name: localize({ en: "Life of the Dragon", zh: "LT" }),
+				name: localize({ en: "Life of the Dragon" }),
 				color: colors.rdm.manaStack,
-				progress: lifeTimer ? lifeTimer / 20 : 0, // TODO EXACT VALUE
-				valueString: lifeTimer?.toFixed(3) ?? "N/A",
+				progress: lifeTimer ? flippedLifeTimer / 20.0 : 0, // TODO EXACT VALUE
+				valueString: lifeTimer ? flippedLifeTimer.toFixed(3) : "N/A",
 			} as ResourceBarProps,
 
 			{
 				kind: "counter",
-				name: localize({ en: "Firstmind's Focus", zh: "FF" }),
+				name: localize({ en: "Firstmind's Focus" }),
 				color: colors.rdm.manaStack,
 				currentStacks: scales,
 				maxStacks: 2,

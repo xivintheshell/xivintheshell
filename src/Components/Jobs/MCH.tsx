@@ -47,11 +47,12 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
 		const queenTime = punch.availableAmount() + finish.availableAmount();
 		const queenMax = punch.maxValue + finish.maxValue;
 
-		const infos = [
+		return [
 			{
 				kind: "bar",
 				name: localize({
 					en: "Heat",
+					zh: "枪管热度",
 				}),
 				color: colors.mch.heat,
 				progress: heat / 100,
@@ -61,6 +62,7 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
 				kind: "bar",
 				name: localize({
 					en: "Battery",
+					zh: "电量",
 				}),
 				color: colors.mch.battery,
 				progress: battery / 100,
@@ -70,13 +72,12 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
 				kind: "bar",
 				name: localize({
 					en: "Queen Hits",
+					zh: "人偶攻击命中",
 				}),
 				color: colors.mch.battery,
 				progress: queenTime / queenMax,
 				valueString: queenTime.toFixed(0),
 			} as ResourceBarProps,
 		];
-
-		return infos;
 	}
 }

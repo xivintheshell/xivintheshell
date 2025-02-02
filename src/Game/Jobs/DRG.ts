@@ -215,17 +215,13 @@ export class DRGState extends GameState {
 		if (CHAOS_COMBO_MAP.has(skillName)) {
 			this.tryConsumeResource("DRG_HEAVENS_COMBO_TRACKER", true);
 			resType = "DRG_CHAOS_COMBO_TRACKER";
-			combo_value = CHAOS_COMBO_MAP.get(skillName)
-				? Number(CHAOS_COMBO_MAP.get(skillName))
-				: -1;
+			combo_value = CHAOS_COMBO_MAP.get(skillName) ?? -1;
 		}
 		// heavens combo
 		else if (HEAVENS_COMBO_MAP.has(skillName)) {
 			this.tryConsumeResource("DRG_CHAOS_COMBO_TRACKER", true);
 			resType = "DRG_HEAVENS_COMBO_TRACKER";
-			combo_value = HEAVENS_COMBO_MAP.get(skillName)
-				? Number(HEAVENS_COMBO_MAP.get(skillName))
-				: -1;
+			combo_value = HEAVENS_COMBO_MAP.get(skillName) ?? -1;
 		}
 		// drakes bane
 		else if (skillName === "DRAKESBANE") {
@@ -242,7 +238,7 @@ export class DRGState extends GameState {
 		}
 	}
 
-	// Return true if the active combo buff is up, or meikyo is active.
+	// Return true if the active combo buff is up.
 	// Does not advance the combo state.
 	checkCombo(requiredCombo: DRGResourceKey): boolean {
 		return this.hasResourceAvailable(requiredCombo);
@@ -298,7 +294,7 @@ const makeWeaponskill_DRG = (
 			location: "flank" | "rear";
 		};
 		jobPotencyModifiers?: PotencyModifierFn<DRGState>;
-		applicationDelay?: number;
+		applicationDelay: number;
 		animationLock?: number;
 		validateAttempt?: StatePredicate<DRGState>;
 		onExecute?: EffectFn<DRGState>;
@@ -326,28 +322,6 @@ const makeWeaponskill_DRG = (
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = jobPotencyMod(state);
-			/*
-			const hitPositional =
-				params.positional &&
-				(state.hasResourceAvailable("TRUE_NORTH") ||
-					(params.positional.location === "flank" &&
-						state.hasResourceAvailable("FLANK_POSITIONAL")) ||
-					(params.positional.location === "rear" &&
-						state.hasResourceAvailable("REAR_POSITIONAL")));
-
-			if (
-				params.combo &&
-				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
-            */
 			const hitPositional =
 				params.positional &&
 				(state.hasResourceAvailable("TRUE_NORTH") ||
@@ -419,7 +393,7 @@ const makeAbility_DRG = (
 		replaceIf?: ConditionalSkillReplace<DRGState>[];
 		highlightIf?: StatePredicate<DRGState>;
 		startOnHotbar?: boolean;
-		applicationDelay?: number;
+		applicationDelay: number;
 		animationLock?: number;
 		cooldown: number;
 		maxCharges?: number;
@@ -851,6 +825,7 @@ makeWeaponskill_DRG("DRACONIAN_FURY", 82, {
 });
 
 makeWeaponskill_DRG("SONIC_THRUST", 62, {
+	applicationDelay: 0.8,
 	potency: 100,
 	combo: {
 		potency: 120,
@@ -864,9 +839,17 @@ makeWeaponskill_DRG("SONIC_THRUST", 62, {
 			state.refreshBuff("POWER_SURGE", 0);
 		}
 	},
+	onApplication: (state) => {
+		// DRG is weird with power surge
+		// when disembowel is applied combo tracker should have already progressed
+		if (state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 2) {
+			state.refreshBuff("POWER_SURGE", 0);
+		}
+	},
 });
 
 makeWeaponskill_DRG("COERTHAN_TORMENT", 72, {
+	applicationDelay: 0.49,
 	potency: 100,
 	combo: {
 		potency: 150,
@@ -1054,6 +1037,7 @@ makeAbility_DRG("STARCROSS", 100, "cd_STARCROSS", {
 
 makeAbility_DRG("ELUSIVE_JUMP", 35, "cd_ELUSIVE_JUMP", {
 	potency: 0,
+	applicationDelay: 0,
 	animationLock: 1.0,
 	cooldown: 30,
 	onConfirm: (state) => {
@@ -1063,6 +1047,7 @@ makeAbility_DRG("ELUSIVE_JUMP", 35, "cd_ELUSIVE_JUMP", {
 
 makeAbility_DRG("WINGED_GLIDE", 45, "cd_WINGED_GLIDE", {
 	potency: 0,
+	applicationDelay: 0,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	cooldown: 60,
 	maxCharges: 2,
