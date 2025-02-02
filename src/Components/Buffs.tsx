@@ -40,6 +40,17 @@ buffIcons.set(BuffType.ArcaneCircle, require("./Asset/Buffs/RPR/Arcane Circle.pn
 buffIcons.set(BuffType.RagingStrikes, require("./Asset/Buffs/BRD/Raging Strikes.png"));
 buffIcons.set(BuffType.Barrage, require("./Asset/Buffs/BRD/Barrage.png"));
 
+buffIcons.set(BuffType.NoMercy, require("./Asset/Buffs/GNB/No Mercy.png"));
+
+buffIcons.set(
+	BuffType.EnhancedPiercingTalon,
+	require("./Asset/Buffs/DRG/Enhanced Piercing Talon.png"),
+);
+buffIcons.set(BuffType.PowerSurge, require("./Asset/Buffs/DRG/Power Surge.png"));
+buffIcons.set(BuffType.LanceCharge, require("./Asset/Buffs/DRG/Lance Charge.png"));
+buffIcons.set(BuffType.LifeOfTheDragon, require("./Asset/Buffs/DRG/Life of the Dragon.png"));
+buffIcons.set(BuffType.LifeSurge, require("./Asset/Buffs/DRG/Life Surge.png"));
+
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
 	let imgObj = new Image();

@@ -63,6 +63,7 @@ export const enum PotencyModifierType {
 	ENHANCED_PIERCING_TALON,
 	LANCE_CHARGE,
 	LIFE_OF_THE_DRAGON,
+	LIFE_SURGE,
 	BATTLE_LITANY,
 
 	PET,
@@ -333,6 +334,12 @@ export const Modifiers = {
 		source: PotencyModifierType.ENHANCED_PIERCING_TALON,
 		additiveAmount: 150,
 	} as PotencyAdder,
+	LifeSurge: {
+		kind: "critDirect",
+		source: PotencyModifierType.LIFE_SURGE,
+		critBonus: 1,
+		dhBonus: 0,
+	} as CritDirectMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

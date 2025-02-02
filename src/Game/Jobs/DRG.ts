@@ -372,7 +372,7 @@ const makeWeaponskill_DRG = (
 				mods.push(Modifiers.EnhancedPiercingTalon);
 			}
 			if (state.hasResourceAvailable("LIFE_SURGE")) {
-				mods.push(Modifiers.AutoCrit);
+				mods.push(Modifiers.LifeSurge);
 			}
 
 			return mods;
