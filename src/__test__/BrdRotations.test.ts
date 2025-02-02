@@ -5,6 +5,7 @@ import {
 	makeTestWithConfigFn,
 	applySkill,
 	compareDamageTables,
+	testDamageFromTimeline,
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
@@ -242,4 +243,20 @@ it(
 			);
 		},
 	),
+);
+
+it(
+	"loads: brd_dh_buff_test.txt",
+	testDamageFromTimeline("brd_dh_buff_test.txt", {
+		time: 0.733 + 5,
+		lastDamageApplicationTime: -0.313 + 5,
+		totalPotency: {
+			applied: 461.95,
+			pending: 0,
+		},
+		gcdSkills: {
+			applied: 2,
+			pending: 0,
+		},
+	}),
 );

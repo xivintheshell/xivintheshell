@@ -376,7 +376,11 @@ export class Potency {
 			else if (m.source === PotencyModifierType.AUTO_CDH) isAutoCDH = true;
 			else if (m.source === PotencyModifierType.AUTO_CRIT) isAutoCrit = true;
 			else if (m.source === PotencyModifierType.NO_CDH) noCDH = true;
-			else if (m.kind === "multiplier") totalDamageFactor *= m.damageFactor;
+			// handle calculation for ordinary crit/DH bonuses separate from autocrit/dh
+			else if (m.kind === "critDirect") {
+				totalCritBonus += m.critBonus;
+				totalDhBonus += m.dhBonus;
+			} else if (m.kind === "multiplier") totalDamageFactor *= m.damageFactor;
 			else if (m.kind === "adder") totalAdditiveAmount += m.additiveAmount;
 		});
 		// If this skill can't crit or direct hit, it can't be an auto crit/CDH

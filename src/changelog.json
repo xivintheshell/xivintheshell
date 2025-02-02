@@ -1,5 +1,11 @@
 [
 	{
+		"date": "2/2/25",
+		"changes": [
+			"[BRD][DNC] Fixed bonuses given from certain crit/DH buffs not applying in total potency calculations"
+		]
+	},
+	{
 		"date": "2/1/25",
 		"changes": [
 			"[WAR][SAM][RPR][MCH][DNC] Implemented localization for some recently added jobs"
