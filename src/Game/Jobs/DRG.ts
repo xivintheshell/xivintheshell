@@ -47,9 +47,7 @@ makeDRGResource("ENHANCED_PIERCING_TALON", 1, { timeout: 15 });
 makeDRGResource("LANCE_CHARGE", 1, { timeout: 20 });
 makeDRGResource("DIVE_READY", 1, { timeout: 15 });
 makeDRGResource("CHAOS_THRUST_DOT", 1, { timeout: 24 });
-
 makeDRGResource("BATTLE_LITANY", 1, { timeout: 20 });
-
 makeDRGResource("LIFE_OF_THE_DRAGON", 1, { timeout: 20 });
 makeDRGResource("NASTROND_READY", 1, { timeout: 20 });
 makeDRGResource("DRACONIAN_FIRE", 1, { timeout: 30 });
@@ -57,7 +55,6 @@ makeDRGResource("CHAOTIC_SPRING_DOT", 1, { timeout: 24 });
 makeDRGResource("FIRSTMINDS_FOCUS", 2);
 makeDRGResource("DRAGONS_FLIGHT", 1, { timeout: 30 });
 makeDRGResource("STARCROSS_READY", 1, { timeout: 20 });
-
 makeDRGResource("DRG_CHAOS_COMBO_TRACKER", 4, { timeout: 30 });
 makeDRGResource("DRG_HEAVENS_COMBO_TRACKER", 4, { timeout: 30 });
 makeDRGResource("DRG_AOE_COMBO_TRACKER", 2, { timeout: 30 });
@@ -372,8 +369,7 @@ const makeWeaponskill_DRG = (
 				mods.push(Modifiers.EnhancedPiercingTalon);
 			}
 			if (state.hasResourceAvailable("LIFE_SURGE")) {
-				// mods.push(Modifiers.LifeSurge);
-				mods.push(Modifiers.AutoCrit);
+				mods.push(Modifiers.LifeSurge);
 			}
 
 			return mods;
@@ -533,6 +529,7 @@ makeWeaponskill_DRG("DISEMBOWEL", 18, {
 	onApplication: (state) => {
 		// DRG is weird with power surge
 		// when disembowel is applied combo tracker should have already progressed
+		// disembowel applies power surge for: 31.616
 		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
 			state.refreshBuff("POWER_SURGE", 0);
 		}
@@ -557,6 +554,7 @@ makeWeaponskill_DRG("SPIRAL_BLOW", 96, {
 	onApplication: (state) => {
 		// DRG is weird with power surge
 		// when spiral blow is applied combo tracker should have already progressed
+		// spiral blow power surge duration on fflogs: 31.371
 		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
 			state.refreshBuff("POWER_SURGE", 0);
 		}
@@ -579,30 +577,35 @@ makeWeaponskill_DRG("CHAOS_THRUST", 50, {
 		location: "rear",
 	},
 	onConfirm: (state, node) => {
-		const modifiers: PotencyModifier[] = [];
-		if (state.hasResourceAvailable("LANCE_CHARGE")) {
-			modifiers.push(Modifiers.LanceCharge);
-		}
-		if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
-			modifiers.push(Modifiers.LifeOfTheDragon);
-		}
-		if (state.hasResourceAvailable("BATTLE_LITANY")) {
-			modifiers.push(Modifiers.BattleLitany);
-		}
+		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
+			const modifiers: PotencyModifier[] = [];
+			if (state.hasResourceAvailable("LANCE_CHARGE")) {
+				modifiers.push(Modifiers.LanceCharge);
+			}
+			if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
+				modifiers.push(Modifiers.LifeOfTheDragon);
+			}
+			if (state.hasResourceAvailable("BATTLE_LITANY")) {
+				modifiers.push(Modifiers.BattleLitany);
+			}
 
-		const tickPotency = 40;
+			const tickPotency = 40;
 
-		state.addDoTPotencies({
-			node,
-			dotName: "CHAOS_THRUST_DOT",
-			skillName: "CHAOS_THRUST",
-			tickPotency,
-			speedStat: "sks",
-			modifiers,
-		});
-	},
-	onApplication: (state, node) => {
-		state.applyDoT("CHAOS_THRUST_DOT", node);
+			state.addDoTPotencies({
+				node,
+				dotName: "CHAOS_THRUST_DOT",
+				skillName: "CHAOS_THRUST",
+				tickPotency,
+				speedStat: "sks",
+				modifiers,
+			});
+
+			state.addEvent(
+				new Event("apply chaos thrust dot", 0.45, () => {
+					state.applyDoT("CHAOS_THRUST_DOT", node);
+				}),
+			);
+		}
 	},
 	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2,
 });
@@ -622,30 +625,35 @@ makeWeaponskill_DRG("CHAOTIC_SPRING", 86, {
 		location: "rear",
 	},
 	onConfirm: (state, node) => {
-		const modifiers: PotencyModifier[] = [];
-		if (state.hasResourceAvailable("LANCE_CHARGE")) {
-			modifiers.push(Modifiers.LanceCharge);
-		}
-		if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
-			modifiers.push(Modifiers.LifeOfTheDragon);
-		}
-		if (state.hasResourceAvailable("BATTLE_LITANY")) {
-			modifiers.push(Modifiers.BattleLitany);
-		}
+		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
+			const modifiers: PotencyModifier[] = [];
+			if (state.hasResourceAvailable("LANCE_CHARGE")) {
+				modifiers.push(Modifiers.LanceCharge);
+			}
+			if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
+				modifiers.push(Modifiers.LifeOfTheDragon);
+			}
+			if (state.hasResourceAvailable("BATTLE_LITANY")) {
+				modifiers.push(Modifiers.BattleLitany);
+			}
 
-		const tickPotency = 45;
+			const tickPotency = 45;
 
-		state.addDoTPotencies({
-			node,
-			dotName: "CHAOTIC_SPRING_DOT",
-			skillName: "CHAOTIC_SPRING",
-			tickPotency,
-			speedStat: "sks",
-			modifiers,
-		});
-	},
-	onApplication: (state, node) => {
-		state.applyDoT("CHAOTIC_SPRING_DOT", node);
+			state.addDoTPotencies({
+				node,
+				dotName: "CHAOTIC_SPRING_DOT",
+				skillName: "CHAOTIC_SPRING",
+				tickPotency,
+				speedStat: "sks",
+				modifiers,
+			});
+
+			state.addEvent(
+				new Event("apply chaotic spring dot", 0.45, () => {
+					state.applyDoT("CHAOTIC_SPRING_DOT", node);
+				}),
+			);
+		}
 	},
 	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2,
 });
@@ -842,7 +850,8 @@ makeWeaponskill_DRG("SONIC_THRUST", 62, {
 	},
 	onApplication: (state) => {
 		// DRG is weird with power surge
-		// when disembowel is applied combo tracker should have already progressed
+		// when sonic thrust is applied combo tracker should have already progressed
+		// sonic thrust power surge duration: 30.759
 		if (state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 2) {
 			state.refreshBuff("POWER_SURGE", 0);
 		}
@@ -914,6 +923,11 @@ makeAbility_DRG("GEIRSKOGUL", 60, "cd_GEIRSKOGUL", {
 	onConfirm: (state) => {
 		state.refreshBuff("LIFE_OF_THE_DRAGON", 0);
 		state.refreshBuff("NASTROND_READY", 0);
+		state.addEvent(
+			new Event("drop starcross when life drops", 20, () => {
+				state.tryConsumeResource("STARCROSS_READY");
+			}),
+		);
 	},
 });
 

@@ -99,6 +99,10 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 				PotencyModifierType.ENO,
 				PotencyModifierType.FUGETSU,
 				PotencyModifierType.NO_MERCY,
+				PotencyModifierType.POWER_SURGE,
+				PotencyModifierType.LANCE_CHARGE,
+				PotencyModifierType.LIFE_OF_THE_DRAGON,
+				PotencyModifierType.BATTLE_LITANY,
 			].includes(source)
 		) {
 			entry.displayedModifiers.push(source);
