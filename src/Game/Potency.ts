@@ -337,7 +337,7 @@ export const Modifiers = {
 	LifeSurge: {
 		kind: "critDirect",
 		source: PotencyModifierType.LIFE_SURGE,
-		critBonus: 1,
+		critBonus: 1.0,
 		dhBonus: 0,
 	} as CritDirectMultiplier,
 };

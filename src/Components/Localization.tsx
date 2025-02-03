@@ -263,6 +263,7 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.LIFE_OF_THE_DRAGON, { en: "LIFE" }],
 	[PotencyModifierType.ENHANCED_PIERCING_TALON, { en: "ENH" }],
 	[PotencyModifierType.LIFE_SURGE, { en: "LS" }],
+	[PotencyModifierType.BATTLE_LITANY, { en: "BL" }],
 	[PotencyModifierType.PET, { en: "PET" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
