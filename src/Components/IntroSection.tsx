@@ -147,7 +147,7 @@ const getAcknowledgements = () => <>
 			</li>
 			<li>
 				中文本地化：<b>miyehn</b>、<b>加拉哈德</b>、<b>鱼卡</b>、<b>shanzhe</b>、<b>小盐</b>
-				、<b>卿落青</b>、<b>久逺</b>
+				、<b>卿落青</b>、<b>久逺</b>、<b>大猫</b>
 			</li>
 		</ul>,
 	})}
