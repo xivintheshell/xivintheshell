@@ -545,6 +545,7 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.LIFE_OF_THE_DRAGON, colors.drg.lifeOfTheDragon],
 		[PotencyModifierType.BATTLE_LITANY, colors.drg.battleLitany],
 		[PotencyModifierType.POWER_SURGE, colors.drg.powerSurge],
+		[PotencyModifierType.ENHANCED_PIERCING_TALON, colors.drg.enhancedPiercingTalon],
 		[PotencyModifierType.PET, colors.resources.petTag],
 	]);
 	console.assert(

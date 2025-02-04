@@ -23,7 +23,7 @@ import {
 	Weaponskill,
 } from "../Skills";
 import { GameState, PlayerState } from "../GameState";
-import { makeResource, CoolDown, Event, Resource } from "../Resources";
+import { makeResource, CoolDown, Event } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
 import { DRGStatusPropsGenerator } from "../../Components/Jobs/DRG";
@@ -41,9 +41,8 @@ const makeDRGResource = (
 };
 
 // POWER_SURGE duration varies based on weaponskill
-// For now, assume POWER_SURGE duration = 30 + weaponskill application delay
+// this is done manually inside skill declarations
 makeDRGResource("POWER_SURGE", 1, { timeout: 30 });
-
 makeDRGResource("LIFE_SURGE", 1, { timeout: 5.52 });
 makeDRGResource("ENHANCED_PIERCING_TALON", 1, { timeout: 15.62 });
 makeDRGResource("LANCE_CHARGE", 1, { timeout: 20 });
@@ -120,27 +119,6 @@ export class DRGState extends GameState {
 
 	override get statusPropsGenerator(): StatusPropsGenerator<DRGState> {
 		return new DRGStatusPropsGenerator(this);
-	}
-
-	override jobSpecificRegisterRecurringEvents() {
-		let dropStarcrossOutsideLife = (rsc: Resource) => {
-			// console.log("out of life: " + !this.hasResourceAvailable("LIFE_OF_THE_DRAGON"));
-			// console.log("has starcross: " + this.hasResourceAvailable("STARCROSS_READY"));
-			if (!this.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
-				if (rsc.available(1)) {
-					// console.log("no life");
-					this.tryConsumeResource("STARCROSS_READY");
-					// controller.reportWarning(WarningType.DropStarcross)
-				}
-			}
-			this.resources.addResourceEvent({
-				rscType: "STARCROSS_READY",
-				name: "drop starcross outside life of the dragon",
-				fnOnRsc: dropStarcrossOutsideLife,
-				delay: 1,
-			});
-		};
-		dropStarcrossOutsideLife(this.resources.get("STARCROSS_READY"));
 	}
 
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
@@ -352,6 +330,12 @@ const makeWeaponskill_DRG = (
 					),
 				);
 			}
+			if (
+				name === "PIERCING_TALON" &&
+				state.hasResourceAvailable("ENHANCED_PIERCING_TALON")
+			) {
+				mods.push(Modifiers.EnhancedPiercingTalon);
+			}
 			if (state.hasResourceAvailable("POWER_SURGE")) {
 				mods.push(Modifiers.PowerSurge);
 			}
@@ -363,12 +347,6 @@ const makeWeaponskill_DRG = (
 			}
 			if (state.hasResourceAvailable("BATTLE_LITANY")) {
 				mods.push(Modifiers.BattleLitany);
-			}
-			if (
-				name === "PIERCING_TALON" &&
-				state.hasResourceAvailable("ENHANCED_PIERCING_TALON")
-			) {
-				mods.push(Modifiers.EnhancedPiercingTalon);
 			}
 			if (state.hasResourceAvailable("LIFE_SURGE")) {
 				mods.push(Modifiers.LifeSurge);
@@ -525,15 +503,8 @@ makeWeaponskill_DRG("DISEMBOWEL", 18, {
 	},
 	onConfirm: (state) => {
 		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 1) {
-			state.refreshBuff("POWER_SURGE", 0);
-		}
-	},
-	onApplication: (state) => {
-		// DRG is weird with power surge
-		// when disembowel is applied combo tracker should have already progressed
-		// disembowel applies power surge for: 31.616
-		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
-			state.refreshBuff("POWER_SURGE", 0);
+			state.resources.get("POWER_SURGE").gain(1);
+			state.enqueueResourceDrop("POWER_SURGE", 31.63);
 		}
 	},
 	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 1,
@@ -550,15 +521,8 @@ makeWeaponskill_DRG("SPIRAL_BLOW", 96, {
 	},
 	onConfirm: (state) => {
 		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 1) {
-			state.refreshBuff("POWER_SURGE", 0);
-		}
-	},
-	onApplication: (state) => {
-		// DRG is weird with power surge
-		// when spiral blow is applied combo tracker should have already progressed
-		// spiral blow power surge duration on fflogs: 31.371
-		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
-			state.refreshBuff("POWER_SURGE", 0);
+			state.resources.get("POWER_SURGE").gain(1);
+			state.enqueueResourceDrop("POWER_SURGE", 31.38);
 		}
 	},
 	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 1,
@@ -566,7 +530,7 @@ makeWeaponskill_DRG("SPIRAL_BLOW", 96, {
 
 makeWeaponskill_DRG("CHAOS_THRUST", 50, {
 	autoUpgrade: { trait: "LANCE_MASTERY_II", otherSkill: "CHAOTIC_SPRING" },
-	applicationDelay: 0.45, // idk
+	applicationDelay: 1.65,
 	potency: 100,
 	combo: {
 		potency: 220,
@@ -723,7 +687,7 @@ makeWeaponskill_DRG("LANCE_BARRAGE", 96, {
 
 makeWeaponskill_DRG("FULL_THRUST", 26, {
 	autoUpgrade: { trait: "LANCE_MASTERY_II", otherSkill: "HEAVENS_THRUST" },
-	applicationDelay: 0.71,
+	applicationDelay: 1.12,
 	potency: 100,
 	combo: {
 		potency: 380,
@@ -847,15 +811,8 @@ makeWeaponskill_DRG("SONIC_THRUST", 62, {
 	highlightIf: (state) => state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 1,
 	onConfirm: (state) => {
 		if (state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 1) {
-			state.refreshBuff("POWER_SURGE", 0);
-		}
-	},
-	onApplication: (state) => {
-		// DRG is weird with power surge
-		// when sonic thrust is applied combo tracker should have already progressed
-		// sonic thrust power surge duration: 30.759
-		if (state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 2) {
-			state.refreshBuff("POWER_SURGE", 0);
+			state.resources.get("POWER_SURGE").gain(1);
+			state.enqueueResourceDrop("POWER_SURGE", 30.79);
 		}
 	},
 });
