@@ -40,12 +40,14 @@ const makeDRGResource = (
 	makeResource("DRG", rsc, maxValue, params ?? {});
 };
 
-// TODO: get precise durations
+// POWER_SURGE duration varies based on weaponskill
+// For now, assume POWER_SURGE duration = 30 + weaponskill application delay
 makeDRGResource("POWER_SURGE", 1, { timeout: 30 });
-makeDRGResource("LIFE_SURGE", 1, { timeout: 5 });
-makeDRGResource("ENHANCED_PIERCING_TALON", 1, { timeout: 15 });
+
+makeDRGResource("LIFE_SURGE", 1, { timeout: 5.52 });
+makeDRGResource("ENHANCED_PIERCING_TALON", 1, { timeout: 15.62 });
 makeDRGResource("LANCE_CHARGE", 1, { timeout: 20 });
-makeDRGResource("DIVE_READY", 1, { timeout: 15 });
+makeDRGResource("DIVE_READY", 1, { timeout: 15.46 });
 makeDRGResource("CHAOS_THRUST_DOT", 1, { timeout: 24 });
 makeDRGResource("BATTLE_LITANY", 1, { timeout: 20 });
 makeDRGResource("LIFE_OF_THE_DRAGON", 1, { timeout: 20 });
@@ -53,7 +55,7 @@ makeDRGResource("NASTROND_READY", 1, { timeout: 20 });
 makeDRGResource("DRACONIAN_FIRE", 1, { timeout: 30 });
 makeDRGResource("CHAOTIC_SPRING_DOT", 1, { timeout: 24 });
 makeDRGResource("FIRSTMINDS_FOCUS", 2);
-makeDRGResource("DRAGONS_FLIGHT", 1, { timeout: 30 });
+makeDRGResource("DRAGONS_FLIGHT", 1, { timeout: 30.79 });
 makeDRGResource("STARCROSS_READY", 1, { timeout: 20 });
 makeDRGResource("DRG_CHAOS_COMBO_TRACKER", 4, { timeout: 30 });
 makeDRGResource("DRG_HEAVENS_COMBO_TRACKER", 4, { timeout: 30 });
