@@ -181,15 +181,21 @@ export class SGEState extends GameState {
 		recurringAddersgallGain(this.resources.get("ADDERSGALL"));
 	}
 
-	override jobSpecificAddHealingBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
-		if (this.hasResourceAvailable("ZOE")) {
-			node.addBuff(BuffType.Zoe);
-		}
+	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
 		if (this.hasResourceAvailable("AUTOPHYSIS")) {
 			node.addBuff(BuffType.Autophysis);
 		}
 		if (this.hasResourceAvailable("KRASIS")) {
 			node.addBuff(BuffType.Krasis);
+		}
+
+		// If the heal in question isn't a GCD heal, it's not affected by Zoe or Philosophia. Bail out.
+		if (skill.cdName !== "cd_GCD") {
+			return;
+		}
+
+		if (this.hasResourceAvailable("ZOE")) {
+			node.addBuff(BuffType.Zoe);
 		}
 		if (this.hasResourceAvailable("PHILOSOPHIA")) {
 			node.addBuff(BuffType.Philosophia);

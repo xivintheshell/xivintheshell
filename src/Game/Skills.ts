@@ -121,9 +121,9 @@ interface BaseSkill<T extends PlayerState> {
 	readonly healingPotencyFn: ResourceCalculationFn<T>;
 	readonly jobHealingPotencyModifiers: PotencyModifierFn<T>;
 
-	// If defined, this button is treated as an AoE heal, and will apply that healing amount for the number
+	// If true, this button is treated as an AoE heal, and will apply that healing amount for the number
 	// of party members defined in the PARTY_SIZE resource, which defaults to 8
-	readonly aoeHeal?: boolean;
+	readonly aoeHeal: boolean;
 
 	// Determine whether the skill can be executed in the current state.
 	// Should be called when the button is pressed.
@@ -406,7 +406,7 @@ export function makeSpell<T extends PlayerState>(
 		falloff: params.falloff,
 		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
 		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
-		aoeHeal: params.aoeHeal,
+		aoeHeal: params.aoeHeal ?? false,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
 		onExecute,
@@ -464,7 +464,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		falloff: params.falloff,
 		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
 		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
-		aoeHeal: params.aoeHeal,
+		aoeHeal: params.aoeHeal ?? false,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
 		onExecute,
@@ -551,7 +551,7 @@ export function makeAbility<T extends PlayerState>(
 		falloff: params.falloff,
 		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
 		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
-		aoeHeal: params.aoeHeal,
+		aoeHeal: params.aoeHeal ?? false,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt,
 		onExecute,
@@ -669,6 +669,7 @@ export function makeLimitBreak<T extends PlayerState>(
 		jobPotencyModifiers: (state) => [],
 		healingPotencyFn: fnify(params.healingPotency, 0),
 		jobHealingPotencyModifiers: (state) => [],
+		aoeHeal: false,
 		drawsAggro: false,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: (state) => true,

@@ -450,7 +450,7 @@ function drawPotencyMarks(
 				g_ctx.fillStyle = untargetable
 					? g_colors.timeline.untargetableDamageMark
 					: g_colors.timeline.damageMark;
-				time += localize({ en: "potency" });
+				time += localize({ en: "damage potency" });
 		}
 
 		// Create the appropriate shape
@@ -505,11 +505,11 @@ function drawPotencyMarks(
 						splashTargets > 1
 							? localize({
 									en: `${sourceStr}, ${splashTargets} additional targets`,
-									zh: `${sourceStr}, ${splashTargets} 另外目标`,
+									zh: `${sourceStr}, ${splashTargets} 额外目标`,
 								})
 							: localize({
 									en: `${sourceStr}, 1 additional target`,
-									zh: `${sourceStr}, 1 另外目标`,
+									zh: `${sourceStr}, 1 额外目标`,
 								});
 					info.push(
 						potencyAmount.toFixed(2) +
