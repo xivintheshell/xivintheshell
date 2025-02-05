@@ -76,7 +76,8 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 		mainPotencyHit: true,
 		baseMainPotency: 0,
 		baseDotPotency: 0,
-		calculationModifiers: [],
+		initialHitCalculationModifiers: [],
+		tickCalculationModifiers: [],
 		totalNumTicks: 0,
 		numHitTicks: 0,
 		potencyWithoutPot: 0,
@@ -88,11 +89,19 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 	entry.gap = node.getDotTimeGap(dotName);
 	entry.override = node.getDotOverrideAmount(dotName);
 	entry.baseMainPotency = mainPotency?.base ?? 0;
-	entry.calculationModifiers = mainPotency?.modifiers ?? [];
+	entry.initialHitCalculationModifiers = mainPotency?.modifiers ?? [];
 	entry.mainPotencyHit = node.hitBoss(bossIsUntargetable);
 
-	for (let i = 0; i < entry.calculationModifiers.length; i++) {
-		const source = entry.calculationModifiers[i].source;
+	// No DoT effects currently in the game have their tick potencies enhanced by combo or positional bonuses
+	// applied on the DoT skill.
+	entry.tickCalculationModifiers = entry.initialHitCalculationModifiers.filter(
+		(mod) =>
+			mod.source !== PotencyModifierType.COMBO &&
+			mod.source !== PotencyModifierType.POSITIONAL,
+	);
+
+	for (let i = 0; i < entry.initialHitCalculationModifiers.length; i++) {
+		const source = entry.initialHitCalculationModifiers[i].source;
 		// DoTs should show if they are cast under BLM's Enochian, SAM's Fugetsu, or GNB's No Mercy
 		if (
 			[
@@ -109,7 +118,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 		}
 	}
 
-	node.getDotPotencies(dotName).forEach((p) => {
+	node.getDotPotencies(dotName).forEach((p, i) => {
 		if (p.hasResolved()) {
 			entry.totalNumTicks++;
 			entry.baseDotPotency = p.base;
