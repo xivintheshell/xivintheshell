@@ -12,6 +12,7 @@ import { RPRState } from "./RPR";
 import { SAMState } from "./SAM";
 import { SMNState } from "./SMN";
 import { WARState } from "./WAR";
+import { PLDState } from "./PLD";
 
 export function getGameState(config: GameConfig): GameState {
 	switch (config.job) {
@@ -20,6 +21,8 @@ export function getGameState(config: GameConfig): GameState {
 			return new WARState(config);
 		case "GNB":
 			return new GNBState(config);
+		case "PLD":
+			return new PLDState(config);
 		// Healers
 		// Melee
 		case "DRG":
