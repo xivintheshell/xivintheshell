@@ -1,5 +1,11 @@
 [
 	{
+		"date": "2/4/25",
+		"changes": [
+			"[SAM] Fixed AoE combo actions not ending the combo"
+		]
+	},
+	{
 		"date": "2/2/25",
 		"changes": [
 			"[BRD][DNC] Fixed bonuses given from certain crit/DH buffs not applying in total potency calculations"

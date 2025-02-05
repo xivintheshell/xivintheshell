@@ -620,6 +620,7 @@ makeGCD_SAM("MANGETSU", 35, {
 			state.refreshBuff("FUGETSU", 0.62);
 			state.gainSen("GETSU");
 		}
+		state.progressActiveCombo([]);
 	},
 	highlightIf: (state) => state.checkCombo("SAM_TWO_AOE_READY"),
 });
@@ -638,6 +639,7 @@ makeGCD_SAM("OKA", 35, {
 			state.refreshBuff("FUKA", 0.62);
 			state.gainSen("KA_SEN");
 		}
+		state.progressActiveCombo([]);
 	},
 	highlightIf: (state) => state.checkCombo("SAM_TWO_AOE_READY"),
 });
