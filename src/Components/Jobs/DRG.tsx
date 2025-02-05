@@ -60,7 +60,7 @@ export class DRGStatusPropsGenerator extends StatusPropsGenerator<DRGState> {
 			{
 				kind: "bar",
 				name: localize({ en: "Combo Timer" }),
-				color: colors.rdm.manaStack,
+				color: colors.drg.drgComboTimer,
 				progress: comboTimer ? comboTimer / 30 : 0,
 				valueString: comboTimer?.toFixed(3) ?? "N/A",
 			} as ResourceBarProps,
@@ -68,7 +68,7 @@ export class DRGStatusPropsGenerator extends StatusPropsGenerator<DRGState> {
 			{
 				kind: "bar",
 				name: localize({ en: "Life of the Dragon" }),
-				color: colors.rdm.manaStack,
+				color: colors.drg.lifeOfTheDragonBar,
 				progress: lifeTimer ? lifeTimer / 20.0 : 0, // TODO EXACT VALUE
 				valueString: lifeTimer ? lifeTimer.toFixed(3) : "N/A",
 			} as ResourceBarProps,
@@ -76,7 +76,7 @@ export class DRGStatusPropsGenerator extends StatusPropsGenerator<DRGState> {
 			{
 				kind: "counter",
 				name: localize({ en: "Firstmind's Focus" }),
-				color: colors.rdm.manaStack,
+				color: colors.drg.firstmindsFocusStacks,
 				currentStacks: scales,
 				maxStacks: 2,
 			} as ResourceCounterProps,

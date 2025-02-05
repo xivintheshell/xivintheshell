@@ -129,6 +129,9 @@ export type DRGResourceColors = {
 	lifeOfTheDragon: string;
 	enhancedPiercingTalon: string;
 	powerSurge: string;
+	firstmindsFocusStacks: string;
+	lifeOfTheDragonBar: string;
+	drgComboTimer: string;
 };
 
 export type JobAccentColors = Partial<{
@@ -322,6 +325,9 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				battleLitany: "#33b8e3",
 				powerSurge: "#59ed78",
 				enhancedPiercingTalon: "#f4caa6",
+				firstmindsFocusStacks: "#9926c8",
+				lifeOfTheDragonBar: "#d74936",
+				drgComboTimer: "#3d61ae",
 			},
 			timeline: {
 				ruler: "#2d2d2d",
@@ -471,6 +477,9 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				battleLitany: "#33b8e3",
 				powerSurge: "#59ed78",
 				enhancedPiercingTalon: "#f4caa6",
+				firstmindsFocusStacks: "#9926c8",
+				lifeOfTheDragonBar: "#d74936",
+				drgComboTimer: "#3d61ae",
 			},
 			timeline: {
 				ruler: "#e9e9e9",

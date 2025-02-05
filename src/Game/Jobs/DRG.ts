@@ -134,10 +134,13 @@ export class DRGState extends GameState {
 		if (this.hasResourceAvailable("BATTLE_LITANY")) {
 			node.addBuff(BuffType.BattleLitany);
 		}
-		if (this.hasResourceAvailable("ENHANCED_PIERCING_TALON")) {
+		if (
+			skill.name === "PIERCING_TALON" &&
+			this.hasResourceAvailable("ENHANCED_PIERCING_TALON")
+		) {
 			node.addBuff(BuffType.EnhancedPiercingTalon);
 		}
-		if (this.hasResourceAvailable("LIFE_SURGE")) {
+		if (skill.cdName === "cd_GCD" && this.hasResourceAvailable("LIFE_SURGE")) {
 			node.addBuff(BuffType.LifeSurge);
 		}
 	}
@@ -567,7 +570,7 @@ makeWeaponskill_DRG("CHAOS_THRUST", 50, {
 			});
 
 			state.addEvent(
-				new Event("apply chaos thrust dot", 0.45, () => {
+				new Event("apply chaos thrust dot", 1.65, () => {
 					state.applyDoT("CHAOS_THRUST_DOT", node);
 				}),
 			);
