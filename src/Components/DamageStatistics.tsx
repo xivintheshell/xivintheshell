@@ -46,7 +46,8 @@ export type DamageStatsDoTTableEntry = {
 	mainPotencyHit: boolean;
 	baseMainPotency: number;
 	baseDotPotency: number;
-	calculationModifiers: PotencyModifier[];
+	initialHitCalculationModifiers: PotencyModifier[];
+	tickCalculationModifiers: PotencyModifier[];
 	totalNumTicks: number;
 	numHitTicks: number;
 	potencyWithoutPot: number;
@@ -758,7 +759,7 @@ export class DamageStatistics extends React.Component {
 				includeInStats={true}
 				explainUntargetable={!props.row.mainPotencyHit}
 				helpTopic={"thunderTable-main-" + props.key}
-				calc={props.row.calculationModifiers}
+				calc={props.row.initialHitCalculationModifiers}
 				targetCount={props.row.targetCount}
 				falloff={0}
 			/>;
@@ -766,7 +767,7 @@ export class DamageStatistics extends React.Component {
 				basePotency={props.row.baseDotPotency}
 				includeInStats={true}
 				helpTopic={"thunderTable-dot-" + props.key}
-				calc={props.row.calculationModifiers}
+				calc={props.row.tickCalculationModifiers}
 				targetCount={props.row.targetCount}
 				falloff={0}
 			/>;

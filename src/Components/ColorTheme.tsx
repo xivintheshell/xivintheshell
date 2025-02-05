@@ -122,6 +122,18 @@ export type SMNResourceColors = {
 	searing: string;
 };
 
+export type DRGResourceColors = {
+	lifeSurge: string;
+	lanceCharge: string;
+	battleLitany: string;
+	lifeOfTheDragon: string;
+	enhancedPiercingTalon: string;
+	powerSurge: string;
+	firstmindsFocusStacks: string;
+	lifeOfTheDragonBar: string;
+	drgComboTimer: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -161,6 +173,7 @@ export type ThemeColors = {
 	brd: BRDResourceColors;
 	gnb: GNBResourceColors;
 	smn: SMNResourceColors;
+	drg: DRGResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -305,6 +318,17 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				emerald: "#539350",
 				searing: "#2D9B78",
 			},
+			drg: {
+				lifeSurge: "#ff6633",
+				lanceCharge: "#d6002d",
+				lifeOfTheDragon: "#0968af",
+				battleLitany: "#33b8e3",
+				powerSurge: "#59ed78",
+				enhancedPiercingTalon: "#f4caa6",
+				firstmindsFocusStacks: "#9926c8",
+				lifeOfTheDragonBar: "#d74936",
+				drgComboTimer: "#3d61ae",
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -446,6 +470,17 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				emerald: "#539350",
 				searing: "#2D9B78",
 			},
+			drg: {
+				lifeSurge: "#ff6633",
+				lanceCharge: "#d6002d",
+				lifeOfTheDragon: "#0968af",
+				battleLitany: "#33b8e3",
+				powerSurge: "#59ed78",
+				enhancedPiercingTalon: "#f4caa6",
+				firstmindsFocusStacks: "#9926c8",
+				lifeOfTheDragonBar: "#d74936",
+				drgComboTimer: "#3d61ae",
+			},
 			timeline: {
 				ruler: "#e9e9e9",
 				tracks: "#f3f3f3",
@@ -514,6 +549,12 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.ARMYS_PAEON, colors.brd.armysCoda],
 		[PotencyModifierType.NO_MERCY, colors.rdm.blackMana], // gnb
 		[PotencyModifierType.SEARING_LIGHT, colors.smn.searing], // smn
+		[PotencyModifierType.LIFE_SURGE, colors.drg.lifeSurge], // drg
+		[PotencyModifierType.LANCE_CHARGE, colors.drg.lanceCharge],
+		[PotencyModifierType.LIFE_OF_THE_DRAGON, colors.drg.lifeOfTheDragon],
+		[PotencyModifierType.BATTLE_LITANY, colors.drg.battleLitany],
+		[PotencyModifierType.POWER_SURGE, colors.drg.powerSurge],
+		[PotencyModifierType.ENHANCED_PIERCING_TALON, colors.drg.enhancedPiercingTalon],
 		[PotencyModifierType.PET, colors.resources.petTag],
 	]);
 	console.assert(

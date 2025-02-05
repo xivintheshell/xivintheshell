@@ -80,6 +80,11 @@ export enum BuffType {
 	Fugetsu = "Fugetsu",
 	EnhancedEnpi = "Enhanced Enpi",
 	NoMercy = "No Mercy",
+	PowerSurge = "Power Surge",
+	LanceCharge = "Lance Charge",
+	LifeOfTheDragon = "Life Of The Dragon",
+	EnhancedPiercingTalon = "Enhanced Piercing Talon",
+	LifeSurge = "Life Surge",
 	Tincture = "Tincture",
 
 	ArcaneCircle = "Arcane Circle",
@@ -145,6 +150,8 @@ export const enum WarningType {
 	CodaOvercap = "coda overcap",
 
 	CartridgeOvercap = "cartridge overcap",
+
+	ScaleOvercap = "firstminds' focus overcap",
 
 	LateEnkindle = "enkindle used near end of demi window may ghost",
 	RubysGlimmerDrop = "Ruby's Glimmer expired",

@@ -198,6 +198,11 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.ARMYS_PAEON, { en: "army's paeon" }],
 	[PotencyModifierType.NO_MERCY, { en: "no mercy" }], // gnb
 	[PotencyModifierType.SURGING_TEMPEST, { en: "surging tempest", zh: "战场风暴" }],
+	[PotencyModifierType.POWER_SURGE, { en: "power surge" }], // drg
+	[PotencyModifierType.LANCE_CHARGE, { en: "lance charge" }],
+	[PotencyModifierType.ENHANCED_PIERCING_TALON, { en: "enhanced piercing talon" }],
+	[PotencyModifierType.LIFE_OF_THE_DRAGON, { en: "life of the dragon" }],
+	[PotencyModifierType.LIFE_SURGE, { en: "life surge" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -253,6 +258,12 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.NO_MERCY, { en: "NM" }], // gnb
 	[PotencyModifierType.SEARING_LIGHT, { en: "SL" }], // smn
 	[PotencyModifierType.SURGING_TEMPEST, { en: "SURGING", zh: "战场风暴" }],
+	[PotencyModifierType.POWER_SURGE, { en: "PWS" }], // drg
+	[PotencyModifierType.LANCE_CHARGE, { en: "LC" }],
+	[PotencyModifierType.LIFE_OF_THE_DRAGON, { en: "LIFE" }],
+	[PotencyModifierType.ENHANCED_PIERCING_TALON, { en: "ENH" }],
+	[PotencyModifierType.LIFE_SURGE, { en: "LS" }],
+	[PotencyModifierType.BATTLE_LITANY, { en: "BL" }],
 	[PotencyModifierType.PET, { en: "PET" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
