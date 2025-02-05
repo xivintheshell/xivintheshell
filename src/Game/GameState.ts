@@ -1042,6 +1042,8 @@ export class GameState {
 				falloff: 0, // assume all DoTs have no falloff
 			});
 			pDot.modifiers = [...mods, ...(props?.modifiers ?? [])];
+			console.log(props, "modifiers:");
+			console.log(pDot.modifiers);
 			props.node.addDoTPotency(pDot, props.dotName);
 		}
 	}

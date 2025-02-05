@@ -145,6 +145,22 @@ export class DRGState extends GameState {
 		}
 	}
 
+	// applies modifiers that affect all skills
+	pushUniversalModifiers(modifiers: PotencyModifier[]) {
+		if (this.hasResourceAvailable("POWER_SURGE")) {
+			modifiers.push(Modifiers.PowerSurge);
+		}
+		if (this.hasResourceAvailable("LANCE_CHARGE")) {
+			modifiers.push(Modifiers.LanceCharge);
+		}
+		if (this.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
+			modifiers.push(Modifiers.LifeOfTheDragon);
+		}
+		if (this.hasResourceAvailable("BATTLE_LITANY")) {
+			modifiers.push(Modifiers.BattleLitany);
+		}
+	}
+
 	// handle all DRG combo abilities and combo states
 	fixDRGComboState(skillName: ActionKey) {
 		// consume draconian fire
@@ -339,18 +355,7 @@ const makeWeaponskill_DRG = (
 			) {
 				mods.push(Modifiers.EnhancedPiercingTalon);
 			}
-			if (state.hasResourceAvailable("POWER_SURGE")) {
-				mods.push(Modifiers.PowerSurge);
-			}
-			if (state.hasResourceAvailable("LANCE_CHARGE")) {
-				mods.push(Modifiers.LanceCharge);
-			}
-			if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
-				mods.push(Modifiers.LifeOfTheDragon);
-			}
-			if (state.hasResourceAvailable("BATTLE_LITANY")) {
-				mods.push(Modifiers.BattleLitany);
-			}
+			state.pushUniversalModifiers(mods);
 			if (state.hasResourceAvailable("LIFE_SURGE")) {
 				mods.push(Modifiers.LifeSurge);
 			}
@@ -388,18 +393,7 @@ const makeAbility_DRG = (
 		onConfirm: params.onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
-			if (state.hasResourceAvailable("POWER_SURGE")) {
-				mods.push(Modifiers.PowerSurge);
-			}
-			if (state.hasResourceAvailable("LANCE_CHARGE")) {
-				mods.push(Modifiers.LanceCharge);
-			}
-			if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
-				mods.push(Modifiers.LifeOfTheDragon);
-			}
-			if (state.hasResourceAvailable("BATTLE_LITANY")) {
-				mods.push(Modifiers.BattleLitany);
-			}
+			state.pushUniversalModifiers(mods);
 			return mods;
 		},
 	});
@@ -548,15 +542,7 @@ makeWeaponskill_DRG("CHAOS_THRUST", 50, {
 	onConfirm: (state, node) => {
 		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
 			const modifiers: PotencyModifier[] = [];
-			if (state.hasResourceAvailable("LANCE_CHARGE")) {
-				modifiers.push(Modifiers.LanceCharge);
-			}
-			if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
-				modifiers.push(Modifiers.LifeOfTheDragon);
-			}
-			if (state.hasResourceAvailable("BATTLE_LITANY")) {
-				modifiers.push(Modifiers.BattleLitany);
-			}
+			state.pushUniversalModifiers(modifiers);
 
 			const tickPotency = 40;
 
@@ -596,15 +582,7 @@ makeWeaponskill_DRG("CHAOTIC_SPRING", 86, {
 	onConfirm: (state, node) => {
 		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
 			const modifiers: PotencyModifier[] = [];
-			if (state.hasResourceAvailable("LANCE_CHARGE")) {
-				modifiers.push(Modifiers.LanceCharge);
-			}
-			if (state.hasResourceAvailable("LIFE_OF_THE_DRAGON")) {
-				modifiers.push(Modifiers.LifeOfTheDragon);
-			}
-			if (state.hasResourceAvailable("BATTLE_LITANY")) {
-				modifiers.push(Modifiers.BattleLitany);
-			}
+			state.pushUniversalModifiers(modifiers);
 
 			const tickPotency = 45;
 
