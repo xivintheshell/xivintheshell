@@ -24,7 +24,7 @@ get_skill_icon() {
     DST="$SKILL_DIR/$1.png"
     if [[ ! -f "$DST" ]]; then
         echo "Downloading $DST"
-        curl -s "https://beta.xivapi.com/api/1/asset/ui/icon/$ICONSET/$2_hr1.tex?format=png" > "$DST"
+        curl -s "https://v2.xivapi.com/api/asset?path=ui/icon/$ICONSET/$2_hr1.tex&format=png" > "$DST"
     else
         echo "Skipping existing $DST"
     fi
@@ -43,7 +43,7 @@ get_buff_icon() {
     fi
     if [[ ! -f "$DST" ]]; then
         echo "Downloading $DST"
-        curl -s "https://beta.xivapi.com/api/1/asset/ui/icon/$ICONSET/$2_hr1.tex?format=png" > "$DST"
+        curl -s "https://v2.xivapi.com/api/asset?path=ui/icon/$ICONSET/$2_hr1.tex&format=png" > "$DST"
     else
         echo "Skipping existing $DST"
     fi
