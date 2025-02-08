@@ -99,17 +99,17 @@ export class DRGState extends GameState {
 
 		this.registerRecurringEvents([
 			{
-				groupedDots: [
+				groupedEffects: [
 					{
-						dotName: "CHAOS_THRUST_DOT",
+						effectName: "CHAOS_THRUST_DOT",
 						appliedBy: ["CHAOS_THRUST"],
 					},
 				],
 			},
 			{
-				groupedDots: [
+				groupedEffects: [
 					{
-						dotName: "CHAOTIC_SPRING_DOT",
+						effectName: "CHAOTIC_SPRING_DOT",
 						appliedBy: ["CHAOTIC_SPRING"],
 					},
 				],
@@ -548,7 +548,7 @@ makeWeaponskill_DRG("CHAOS_THRUST", 50, {
 
 			state.addDoTPotencies({
 				node,
-				dotName: "CHAOS_THRUST_DOT",
+				effectName: "CHAOS_THRUST_DOT",
 				skillName: "CHAOS_THRUST",
 				tickPotency,
 				speedStat: "sks",
@@ -588,7 +588,7 @@ makeWeaponskill_DRG("CHAOTIC_SPRING", 86, {
 
 			state.addDoTPotencies({
 				node,
-				dotName: "CHAOTIC_SPRING_DOT",
+				effectName: "CHAOTIC_SPRING_DOT",
 				skillName: "CHAOTIC_SPRING",
 				tickPotency,
 				speedStat: "sks",

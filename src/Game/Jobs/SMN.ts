@@ -20,7 +20,7 @@ import {
 	StatePredicate,
 } from "../Skills";
 import { GameState, PlayerState } from "../GameState";
-import { makeResource, CoolDown, DoTBuff, Event } from "../Resources";
+import { makeResource, CoolDown, Event, OverTimeBuff } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
 import { CooldownKey, TraitKey } from "../Data";
@@ -138,9 +138,9 @@ export class SMNState extends GameState {
 		this.registerRecurringEvents(
 			[
 				{
-					groupedDots: [
+					groupedEffects: [
 						{
-							dotName: "SLIPSTREAM",
+							effectName: "SLIPSTREAM",
 							appliedBy: ["SLIPSTREAM"],
 							isGroundTargeted: true,
 						},
@@ -236,7 +236,7 @@ export class SMNState extends GameState {
 		if (potencyIndex < 0) {
 			return;
 		}
-		const autoNode = (this.resources.get("DEMI_AUTO") as DoTBuff).node;
+		const autoNode = (this.resources.get("DEMI_AUTO") as OverTimeBuff).node;
 		if (autoNode !== undefined) {
 			const autoPotency = autoNode.getDotPotencies("DEMI_AUTO")[potencyIndex];
 			this.snapSearingAndTincture(autoNode, autoPotency);
@@ -252,7 +252,7 @@ export class SMNState extends GameState {
 		const demiRsc = this.resources.get("DEMI_AUTO");
 		const basePotency = this.activeDemi === ActiveDemiValue.SOLAR ? 160 : 150;
 		demiRsc.gain(4);
-		(demiRsc as DoTBuff).node = node;
+		(demiRsc as OverTimeBuff).node = node;
 		// assume a fixed delay between demi autos, which is close enough to reality
 		for (let i = 0; i < 4; i++) {
 			node.addDoTPotency(
@@ -1219,7 +1219,7 @@ makeSpell_SMN("SLIPSTREAM", 86, {
 		state.tryConsumeResource("GARUDAS_FAVOR");
 		state.addDoTPotencies({
 			node,
-			dotName: "SLIPSTREAM",
+			effectName: "SLIPSTREAM",
 			skillName: "SLIPSTREAM",
 			tickPotency: 30,
 			speedStat: "sps",

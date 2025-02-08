@@ -83,18 +83,18 @@ export class BRDState extends GameState {
 		this.registerRecurringEvents([
 			{
 				reportName: localizeResourceType("STORMBITE"),
-				groupedDots: [
+				groupedEffects: [
 					{
-						dotName: "STORMBITE",
+						effectName: "STORMBITE",
 						appliedBy: ["STORMBITE", "IRON_JAWS"],
 					},
 				],
 			},
 			{
 				reportName: localizeResourceType("CAUSTIC_BITE"),
-				groupedDots: [
+				groupedEffects: [
 					{
-						dotName: "CAUSTIC_BITE",
+						effectName: "CAUSTIC_BITE",
 						appliedBy: ["CAUSTIC_BITE", "IRON_JAWS"],
 					},
 				],
@@ -504,7 +504,7 @@ dotAppliers.forEach((props) => {
 		onConfirm: (state, node) =>
 			state.addDoTPotencies({
 				node,
-				dotName: props.dotName,
+				effectName: props.dotName,
 				skillName: props.skillName,
 				tickPotency: props.tickPotency,
 				speedStat: "sks",
@@ -526,7 +526,7 @@ makeWeaponskill_BRD("IRON_JAWS", 56, {
 		dotAppliers.forEach((dotParams) => {
 			state.refreshDot({
 				node,
-				dotName: dotParams.dotName,
+				effectName: dotParams.dotName,
 				tickPotency: dotParams.tickPotency,
 				skillName: "IRON_JAWS",
 				speedStat: "sks",

@@ -9,7 +9,7 @@ import {
 } from "../Data/Jobs";
 import { WarningType } from "../Common";
 import { makeAbility, makeLimitBreak, makeResourceAbility, makeSpell } from "../Skills";
-import { DoTBuff, EventTag, makeResource } from "../Resources";
+import { OverTimeBuff, EventTag, makeResource } from "../Resources";
 import type { GameState } from "../GameState";
 import { controller } from "../../Controller/Controller";
 import { SHARED_LIMIT_BREAK_RESOURCES, LimitBreakResourceKey } from "../Data/Shared/LimitBreak";
@@ -121,7 +121,7 @@ makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], "LUCID_DREAMING", 14, "cd_
 	cooldown: 60,
 	assetPath: "Role/Lucid Dreaming.png",
 	onApplication: (state, node) => {
-		let lucid = state.resources.get("LUCID_DREAMING") as DoTBuff;
+		let lucid = state.resources.get("LUCID_DREAMING") as OverTimeBuff;
 		lucid.node = node;
 		lucid.tickCount = 0;
 		let nextLucidTickEvt = state.findNextQueuedEventByTag(EventTag.LucidTick);
@@ -176,6 +176,7 @@ makeResourceAbility(MELEE_JOBS, "BLOODBATH", 8, "cd_BLOODBATH", {
 });
 
 makeAbility([...MELEE_JOBS, ...RANGED_JOBS], "SECOND_WIND", 12, "cd_SECOND_WIND", {
+	healingPotency: 600,
 	applicationDelay: 0.625,
 	cooldown: 120,
 	assetPath: "Role/Second Wind.png",
@@ -298,12 +299,14 @@ TANK_JOBS.forEach((job) => {
 makeLimitBreak(HEALER_JOBS, "HEALING_WIND", "cd_LIMIT_BREAK_1", {
 	tier: "1",
 	castTime: 2,
+	healingPotency: 25,
 	applicationDelay: 0.76,
 	animationLock: 2.1,
 });
 makeLimitBreak(HEALER_JOBS, "BREATH_OF_THE_EARTH", "cd_LIMIT_BREAK_2", {
 	tier: "2",
 	castTime: 2,
+	healingPotency: 50,
 	applicationDelay: 0.8,
 	animationLock: 5.13,
 });
@@ -312,6 +315,7 @@ HEALER_JOBS.forEach((job) => {
 	makeLimitBreak(job, action, "cd_LIMIT_BREAK_3", {
 		tier: "3",
 		castTime: 2,
+		healingPotency: 100,
 		applicationDelay: 0.8,
 		animationLock: 8.1,
 	});

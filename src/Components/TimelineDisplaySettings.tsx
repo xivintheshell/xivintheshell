@@ -13,6 +13,13 @@ export function TimelineDisplaySettings() {
 			}}
 		/>
 		<Checkbox
+			uniqueName={"showHealingMarks"}
+			label={localize({ en: "show healing marks" })}
+			onChange={(val) => {
+				controller.setTimelineOptions({ drawHealingMarks: val });
+			}}
+		/>
+		<Checkbox
 			uniqueName={"showMPAndLucidTickMarks"}
 			label={localize({ en: "show MP and lucid ticks", zh: "显示跳蓝和跳醒梦" })}
 			onChange={(val) => {

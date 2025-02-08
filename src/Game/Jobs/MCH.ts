@@ -14,7 +14,7 @@ import {
 	makeResource,
 	ResourceInfo,
 	Event,
-	DoTBuff,
+	OverTimeBuff,
 	Resource,
 } from "../Resources";
 import {
@@ -117,17 +117,17 @@ export class MCHState extends GameState {
 		this.registerRecurringEvents(
 			[
 				{
-					groupedDots: [
+					groupedEffects: [
 						{
-							dotName: "BIOBLASTER",
+							effectName: "BIOBLASTER",
 							appliedBy: ["BIOBLASTER"],
 						},
 					],
 				},
 				{
-					groupedDots: [
+					groupedEffects: [
 						{
-							dotName: "FLAMETHROWER",
+							effectName: "FLAMETHROWER",
 							appliedBy: ["FLAMETHROWER"],
 							isGroundTargeted: true,
 							exclude: true,
@@ -211,7 +211,7 @@ export class MCHState extends GameState {
 			return;
 		}
 
-		const punchNode = (this.resources.get("QUEEN") as DoTBuff).node;
+		const punchNode = (this.resources.get("QUEEN") as OverTimeBuff).node;
 
 		if (punchNode !== undefined) {
 			this.resolveQueenPotency(punchNode);
@@ -259,7 +259,7 @@ export class MCHState extends GameState {
 			return;
 		}
 
-		const finisherNode = (this.resources.get("QUEEN") as DoTBuff).node;
+		const finisherNode = (this.resources.get("QUEEN") as OverTimeBuff).node;
 
 		if (finisherNode !== undefined) {
 			this.resolveQueenPotency(finisherNode);
@@ -290,7 +290,7 @@ export class MCHState extends GameState {
 		const potencyPerHit = this.hasTraitUnlocked("ENHANCED_WILD_FIRE") ? 240 : 100;
 		const basePotency =
 			Math.min(this.resources.get("WILDFIRE_HITS").availableAmount(), 6) * potencyPerHit;
-		const potencyNode = (this.resources.get("WILDFIRE") as DoTBuff).node;
+		const potencyNode = (this.resources.get("WILDFIRE") as OverTimeBuff).node;
 
 		if (potencyNode === undefined) {
 			return;
@@ -634,7 +634,7 @@ makeAbility_MCH("WILDFIRE", 45, "cd_WILDFIRE", {
 	maxCharges: 1,
 	onConfirm: (state, node) => {
 		state.gainStatus("WILDFIRE_SELF");
-		const wildFire = state.resources.get("WILDFIRE") as DoTBuff;
+		const wildFire = state.resources.get("WILDFIRE") as OverTimeBuff;
 
 		const wildFirePotency = new Potency({
 			config: state.config,
@@ -837,7 +837,7 @@ robotSummons.forEach((params) => {
 				);
 			}
 
-			(state.resources.get("QUEEN") as DoTBuff).node = node;
+			(state.resources.get("QUEEN") as OverTimeBuff).node = node;
 
 			// Schedule the initial punch
 			state.addEvent(new Event("initial queen punch", 5.5, () => state.handleQueenPunch()));
@@ -915,7 +915,7 @@ makeWeaponskill_MCH("BIOBLASTER", 58, {
 	onConfirm: (state, node) =>
 		state.addDoTPotencies({
 			node,
-			dotName: "BIOBLASTER",
+			effectName: "BIOBLASTER",
 			skillName: "BIOBLASTER",
 			tickPotency: 50,
 			speedStat: "sks",
@@ -942,7 +942,7 @@ makeWeaponskill_MCH("FLAMETHROWER", 70, {
 	onConfirm: (state, node) => {
 		state.addDoTPotencies({
 			node,
-			dotName: "FLAMETHROWER",
+			effectName: "FLAMETHROWER",
 			skillName: "FLAMETHROWER",
 			tickPotency: 100,
 			tickFrequency: 1,

@@ -164,10 +164,10 @@ function PotencyDisplay(props: {
 		potencyExplanation = "[ " + potencyExplanation + additiveExplanation + " ]";
 	}
 	props.calc.forEach((m) => {
-		if (m.kind === "multiplier" && m.damageFactor !== 1) {
-			potency *= m.damageFactor;
+		if (m.kind === "multiplier" && m.potencyFactor !== 1) {
+			potency *= m.potencyFactor;
 			potencyExplanation +=
-				" × " + m.damageFactor + "(" + localizeModifierName(m.source) + ")";
+				" × " + m.potencyFactor + "(" + localizeModifierName(m.source) + ")";
 		}
 	});
 	if (props.targetCount && props.falloff !== undefined && props.targetCount > 1) {
@@ -390,16 +390,16 @@ export class DamageStatistics extends React.Component {
 		}
 
 		// Build DoT uptime reports for any DoT groups that have requested reporting
-		const dotUptime = controller.game.dotGroups
-			.filter((group) => group.reportName)
+		const dotUptime = controller.game.overTimeEffectGroups
+			.filter((group) => group.reportName && !group.isHealing)
 			.map((dotGroup) => {
 				let dotStr = dotGroup.reportName + " " + localize({ en: "uptime" }) + colon;
 
 				let uptime = 0;
 				let totalTicks = 0;
 				let maxTicks = 0;
-				dotGroup.groupedDots.forEach((dot) => {
-					const dotTable = this.data.dotTables.get(dot.dotName);
+				dotGroup.groupedEffects.forEach((dot) => {
+					const dotTable = this.data.dotTables.get(dot.effectName);
 					if (!dotTable) {
 						return;
 					}

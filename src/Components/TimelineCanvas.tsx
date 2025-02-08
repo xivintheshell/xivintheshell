@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
 	CursorElem,
-	DamageMarkElem,
+	PotencyMarkElem,
 	ElemType,
 	LucidMarkElem,
 	MarkerElem,
@@ -418,71 +418,118 @@ function drawWarningMarks(
 	});
 }
 
-function drawDamageMarks(
+function drawPotencyMarks(
 	countdown: number,
 	scale: number,
 	timelineOriginX: number,
 	timelineOriginY: number,
-	elems: DamageMarkElem[],
+	elems: PotencyMarkElem[],
 ) {
 	elems.forEach((mark) => {
-		let untargetable = bossIsUntargetable(mark.displayTime);
-		g_ctx.fillStyle = untargetable
-			? g_colors.timeline.untargetableDamageMark
-			: g_colors.timeline.damageMark;
-		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.displayTime, scale);
+		// Only consider untargetable for damage marks
+		const untargetable =
+			mark.type === ElemType.DamageMark && bossIsUntargetable(mark.displayTime);
+		const x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.displayTime, scale);
+
+		// hover text
+		let time = "[" + mark.displayTime.toFixed(3) + "] ";
+		const untargetableStr = localize({ en: "Untargetable", zh: "不可选中" }) as string;
+
+		// Determine fill color and hover text title based on mark type
+		switch (mark.type) {
+			case ElemType.AggroMark:
+				g_ctx.fillStyle = g_colors.timeline.aggroMark;
+				time += localize({ en: "aggro" });
+				break;
+			case ElemType.HealingMark:
+				g_ctx.fillStyle = g_colors.timeline.healingMark;
+				time += localize({ en: "healing potency" });
+				break;
+			// If it's a damage mark, adjust color based on whether the boss is untargetable
+			default:
+				g_ctx.fillStyle = untargetable
+					? g_colors.timeline.untargetableDamageMark
+					: g_colors.timeline.damageMark;
+				time += localize({ en: "damage potency" });
+		}
+
+		// Create the appropriate shape
 		g_ctx.beginPath();
-		g_ctx.moveTo(x - 3, timelineOriginY);
-		g_ctx.lineTo(x + 3, timelineOriginY);
-		g_ctx.lineTo(x, timelineOriginY + 6);
+		if (mark.type === ElemType.AggroMark || mark.type === ElemType.DamageMark) {
+			// Aggro and Damage are a triangle pointing down
+			g_ctx.moveTo(x - 3, timelineOriginY);
+			g_ctx.lineTo(x + 3, timelineOriginY);
+			g_ctx.lineTo(x, timelineOriginY + 6);
+		} else {
+			// Healing is a triangle pointing up, and shifted down so it's visible at the same timestamp as a damage/aggro mark
+			g_ctx.moveTo(x - 3, timelineOriginY + 12);
+			g_ctx.lineTo(x + 3, timelineOriginY + 12);
+			g_ctx.lineTo(x, timelineOriginY + 6);
+		}
 		g_ctx.fill();
 
-		let dm = mark;
 		// pot?
-		let pot = false;
-		dm.buffs.forEach((b) => {
-			if (b === "TINCTURE") pot = true;
-		});
-		// hover text
-		let time = "[" + dm.displayTime.toFixed(3) + "] ";
-		let untargetableStr = localize({ en: "Untargetable", zh: "不可选中" }) as string;
+		const pot = mark.buffs.filter((b) => b === "TINCTURE").length > 0;
+
 		const info: string[] = [];
-		let buffImages: Array<HTMLImageElement | undefined> = [];
-		dm.damageInfos.forEach((damageInfo) => {
-			let sourceStr = damageInfo.sourceDesc.replace(
+		const buffImages: Array<HTMLImageElement | undefined> = [];
+
+		mark.potencyInfos.forEach((potencyInfo) => {
+			const sourceStr = potencyInfo.sourceDesc.replace(
 				"{skill}",
-				localizeSkillName(damageInfo.sourceSkill),
+				localizeSkillName(potencyInfo.sourceSkill),
 			);
+
 			if (untargetable) {
 				info.push((0).toFixed(3) + " (" + sourceStr + ")");
-			} else if (damageInfo.sourceSkill in LIMIT_BREAK_ACTIONS) {
+			} else if (potencyInfo.sourceSkill in LIMIT_BREAK_ACTIONS) {
 				const lbStr = localize({ en: "LB" }) as string;
 				info.push(lbStr + " (" + sourceStr + ")");
 			} else {
-				const potencyAmount = damageInfo.potency.getAmount({
+				const potencyAmount = potencyInfo.potency.getAmount({
 					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 					includePartyBuffs: true,
 					includeSplash: false,
 				});
+
 				// Push additional info for hits that splash
-				if (damageInfo.potency.targetCount > 1) {
-					for (let i = 0; i < damageInfo.potency.targetCount; i++) {
-						let potencyOnHit =
-							i === 0
-								? potencyAmount
-								: potencyAmount * (1 - (damageInfo.potency.falloff ?? 1));
-						const sourceStrForTarget = localize({
-							en: `${sourceStr}, target #${i + 1}`,
-							zh: `${sourceStr}, ${i + 1}号目标`,
-						});
-						info.push(potencyOnHit.toFixed(2) + " (" + sourceStrForTarget + ")");
-					}
+				if (potencyInfo.potency.targetCount > 1) {
+					const splashPotencyAmount =
+						potencyAmount * (1 - (potencyInfo.potency.falloff ?? 1));
+					const splashTargets = potencyInfo.potency.targetCount - 1;
+					const splashPotencyString =
+						splashPotencyAmount.toFixed(2) +
+						(splashTargets > 1 ? ` x ${splashTargets}` : "");
+
+					const additionalTargetString =
+						splashTargets > 1
+							? localize({
+									en: `${sourceStr}, ${splashTargets} additional targets`,
+									zh: `${sourceStr}, ${splashTargets} 额外目标`,
+								})
+							: localize({
+									en: `${sourceStr}, 1 additional target`,
+									zh: `${sourceStr}, 1 额外目标`,
+								});
+					info.push(
+						potencyAmount.toFixed(2) +
+							" (" +
+							localize({
+								en: `${sourceStr}, primary target`,
+								zh: `${sourceStr}, 主要目标`,
+							}) +
+							")",
+					);
+					info.push(splashPotencyString + ` (${additionalTargetString})`);
 				} else {
 					info.push(potencyAmount.toFixed(2) + " (" + sourceStr + ")");
 				}
-				if (pot) buffImages.push(buffIconImages.get(BuffType.Tincture));
 
-				damageInfo.potency.getPartyBuffs().forEach((desc) => {
+				if (pot && !buffImages.includes(buffIconImages.get(BuffType.Tincture))) {
+					buffImages.push(buffIconImages.get(BuffType.Tincture));
+				}
+
+				potencyInfo.potency.getPartyBuffs().forEach((desc) => {
 					const buffImage = buffIconImages.get(desc);
 					if (!buffImages.includes(buffImage)) {
 						buffImages.push();
@@ -491,8 +538,12 @@ function drawDamageMarks(
 			}
 		});
 
+		const interactionArea =
+			mark.type === ElemType.HealingMark
+				? { x: x - 3, y: timelineOriginY + 6, w: 6, h: 6 }
+				: { x: x - 3, y: timelineOriginY, w: 6, h: 6 };
 		testInteraction(
-			{ x: x - 3, y: timelineOriginY, w: 6, h: 6 },
+			interactionArea,
 			untargetable ? [time, ...info, untargetableStr] : [time, ...info],
 			undefined,
 			undefined,
@@ -500,6 +551,7 @@ function drawDamageMarks(
 		);
 	});
 }
+
 function drawLucidMarks(
 	countdown: number,
 	scale: number,
@@ -578,6 +630,11 @@ function drawSkills(
 		[BuffType.RadiantFinale1, { color: g_colors.brd.radiantFinale, showImage: true }],
 		[BuffType.RadiantFinale2, { color: g_colors.brd.radiantFinale, showImage: true }],
 		[BuffType.RadiantFinale3, { color: g_colors.brd.radiantFinale, showImage: true }],
+		[BuffType.Zoe, { color: g_colors.sge.zoe, showImage: true }],
+		[BuffType.Autophysis, { color: g_colors.sge.autophysis, showImage: true }],
+		[BuffType.Krasis, { color: g_colors.sge.krasis, showImage: true }],
+		[BuffType.Soteria, { color: g_colors.sge.soteria, showImage: true }],
+		[BuffType.Philosophia, { color: g_colors.sge.philosophia, showImage: true }],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();
@@ -741,14 +798,25 @@ function drawSkills(
 		lines.push(description);
 
 		// 2. potency
-		if (node.getInitialPotency() && !((node.skillName ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
-			const potency = node.getPotency({
-				tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
-				includePartyBuffs: true,
-				includeSplash: false,
-				untargetable: bossIsUntargetable,
-			}).applied;
-			lines.push(localize({ en: "potency: ", zh: "威力：" }) + potency.toFixed(2));
+		if (!((node.skillName ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
+			if (node.getInitialPotency()) {
+				const potency = node.getPotency({
+					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
+					includePartyBuffs: true,
+					includeSplash: false,
+					untargetable: bossIsUntargetable,
+				}).applied;
+				lines.push(localize({ en: "potency: ", zh: "威力：" }) + potency.toFixed(2));
+			}
+			if (node.getInitialHealingPotency()) {
+				const healingPotency = node.getHealingPotency({
+					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
+					includeSplash: false,
+					includePartyBuffs: true,
+					untargetable: bossIsUntargetable,
+				}).applied;
+				lines.push(localize({ en: "healing potency: " }) + healingPotency.toFixed(2));
+			}
 		}
 
 		// 3. duration
@@ -1014,14 +1082,33 @@ export function drawTimelines(
 			);
 		}
 
-		// damage marks
-		if (g_renderingProps.drawOptions.drawDamageMarks) {
-			drawDamageMarks(
+		// healing marks
+		if (g_renderingProps.drawOptions.drawHealingMarks) {
+			drawPotencyMarks(
 				g_renderingProps.countdown,
 				g_renderingProps.scale,
 				displayOriginX,
 				currentY,
-				(elemBins.get(ElemType.DamageMark) as DamageMarkElem[]) ?? [],
+				(elemBins.get(ElemType.HealingMark) as PotencyMarkElem[]) ?? [],
+			);
+		}
+
+		// damage marks
+		if (g_renderingProps.drawOptions.drawDamageMarks) {
+			drawPotencyMarks(
+				g_renderingProps.countdown,
+				g_renderingProps.scale,
+				displayOriginX,
+				currentY,
+				(elemBins.get(ElemType.DamageMark) as PotencyMarkElem[]) ?? [],
+			);
+
+			drawPotencyMarks(
+				g_renderingProps.countdown,
+				g_renderingProps.scale,
+				displayOriginX,
+				currentY,
+				(elemBins.get(ElemType.AggroMark) as PotencyMarkElem[]) ?? [],
 			);
 		}
 
