@@ -1,5 +1,15 @@
 [
 	{
+		"date": "2/13/25",
+		"changes": [
+			"Updated English FRU tracks to more accurately reflect downtime between phases. We previously used the \"death\" event in a log as the end of a phase, but it turns out this is inaccurate as the last damage application to the boss occurs ~2 seconds before its recorded death.",
+			"- P1 to P2 untargetable duration increased by 2 seconds",
+			"- P2 to intermission untargetable duration decreased to align with the \"crystals become targetable\" mark",
+			"- Intermission to P3 downtime increased to match Gaia's attack killing the crystal",
+			"In order to not break existing timelines, the preset EN full fight track now treats P1 as dying 2 seconds before the end of the enrage cast. The start times of all phases are unaffected."
+		]
+	},
+	{
 		"date": "2/4/25",
 		"changes": [
 			"[SAM] Fixed AoE combo actions not ending the combo",
