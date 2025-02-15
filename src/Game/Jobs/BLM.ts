@@ -80,7 +80,7 @@ export class BLMState extends GameState {
 		this.resources.set(new Resource("POLYGLOT", polyglotStacks, 0));
 
 		// skill CDs (also a form of resource)
-		const manafontCooldown = (this.hasTraitUnlocked("ENHANCED_MANAFONT") && 100) || 180;
+		const manafontCooldown = (this.hasTraitUnlocked("ENHANCED_MANAFONT") && 100) || 120;
 		const swiftcastCooldown = (this.hasTraitUnlocked("ENHANCED_SWIFTCAST") && 40) || 60;
 		[
 			new CoolDown("cd_MANAFONT", manafontCooldown, 1, 1),

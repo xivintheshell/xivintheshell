@@ -1,5 +1,11 @@
 [
 	{
+		"date": "2/15/25",
+		"changes": [
+			"[BLM] Fixed Manafont CD at lvl80 and below: should be 120s"
+		]
+	},
+	{
 		"date": "2/13/25",
 		"changes": [
 			"Updated English FRU tracks to more accurately reflect downtime between phases. We previously used the \"death\" event in a log as the end of a phase, but it turns out this is inaccurate as the last damage application to the boss occurs ~2 seconds before its recorded death.",
