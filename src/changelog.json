@@ -1,5 +1,11 @@
 [
 	{
+		"date": "2/16/25",
+		"changes": [
+			"[SAM] Fixed Hagakure only being usable at 3 sen"
+		]
+	},
+	{
 		"date": "2/15/25",
 		"changes": [
 			"[BLM] Fixed Manafont CD at lvl80 and below: should be 120s"
