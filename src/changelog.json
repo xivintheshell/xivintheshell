@@ -1,5 +1,13 @@
 [
 	{
+		"date": "2/17/25",
+		"changes": [
+			"[SGE] Initial implementation for SGE",
+			"- Some rough edges still exist around Krasis' healing potency modification and Eukrasian shield handling.",
+			"- Basic functionality should be reasonably complete."
+		]
+	},
+	{
 		"date": "2/16/25",
 		"changes": [
 			"[SAM] Fixed Hagakure only being usable at 3 sen"
