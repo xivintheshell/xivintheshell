@@ -114,7 +114,7 @@ const getAcknowledgements = () => <>
 			</li>
 			<li>
 				Chinese localization: <b>miyehn</b>, <b>Eshiya</b>, <b>Yuyuka</b>, <b>shanzhe</b>,{" "}
-				<b>小盐</b>, <b>卿落青</b>, <b>久逺</b>
+				<b>小盐</b>, <b>卿落青</b>, <b>久逺</b>, <b>大猫</b>
 			</li>
 		</ul>,
 		zh: <ul>
