@@ -99,17 +99,17 @@ export class GNBState extends GameState {
 
 		this.registerRecurringEvents([
 			{
-				groupedDots: [
+				groupedEffects: [
 					{
-						dotName: "SONIC_BREAK_DOT",
+						effectName: "SONIC_BREAK_DOT",
 						appliedBy: ["SONIC_BREAK"],
 					},
 				],
 			},
 			{
-				groupedDots: [
+				groupedEffects: [
 					{
-						dotName: "BOW_SHOCK_DOT",
+						effectName: "BOW_SHOCK_DOT",
 						appliedBy: ["BOW_SHOCK"],
 					},
 				],
@@ -540,7 +540,7 @@ makeWeaponskill_GNB("SONIC_BREAK", 54, {
 
 		state.addDoTPotencies({
 			node,
-			dotName: "SONIC_BREAK_DOT",
+			effectName: "SONIC_BREAK_DOT",
 			skillName: "SONIC_BREAK",
 			tickPotency,
 			speedStat: "sks",
@@ -767,7 +767,7 @@ makeAbility_GNB("BOW_SHOCK", 62, "cd_BOW_SHOCK", {
 
 		state.addDoTPotencies({
 			node,
-			dotName: "BOW_SHOCK_DOT",
+			effectName: "BOW_SHOCK_DOT",
 			skillName: "BOW_SHOCK",
 			tickPotency,
 			speedStat: "sks",

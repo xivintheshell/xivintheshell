@@ -67,6 +67,12 @@ export const enum PotencyModifierType {
 	BATTLE_LITANY,
 
 	PET,
+
+	ZOE,
+	SOTERIA,
+	KRASIS,
+	AUTOPHYSIS,
+	PHILOSOPHIA,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -74,7 +80,7 @@ export type PotencyMultiplier = {
 	kind: "multiplier";
 	buffType?: BuffType;
 	source: PotencyModifierType;
-	damageFactor: number;
+	potencyFactor: number;
 };
 
 // Represents an additive potency buff, such as Enhanced Enpi increasing Enpi from 100 -> 270.
@@ -101,7 +107,7 @@ export const Modifiers = {
 		// tincture scaling is computed separately; just treat it as a multiplier of 1
 		kind: "multiplier",
 		source: PotencyModifierType.POT,
-		damageFactor: 1,
+		potencyFactor: 1,
 	} as PotencyMultiplier,
 	AutoCrit: {
 		kind: "critDirect",
@@ -124,13 +130,13 @@ export const Modifiers = {
 	Starry: {
 		kind: "multiplier",
 		source: PotencyModifierType.STARRY,
-		damageFactor: 1.05,
+		potencyFactor: 1.05,
 	} as PotencyMultiplier,
 	EmboldenMagic: {
 		// The RDM self-buff component of Embolden is magic damage only
 		kind: "multiplier",
 		source: PotencyModifierType.EMBOLDEN_M,
-		damageFactor: 1.05,
+		potencyFactor: 1.05,
 	} as PotencyMultiplier,
 	AccelerationImpact: {
 		kind: "adder",
@@ -140,37 +146,37 @@ export const Modifiers = {
 	Manafication: {
 		kind: "multiplier",
 		source: PotencyModifierType.MANAFIC,
-		damageFactor: 1.05,
+		potencyFactor: 1.05,
 	} as PotencyMultiplier,
 	SingleStandardFinish: {
 		kind: "multiplier",
 		source: PotencyModifierType.STANDARD_SINGLE,
-		damageFactor: 1.02,
+		potencyFactor: 1.02,
 	} as PotencyMultiplier,
 	DoubleStandardFinish: {
 		kind: "multiplier",
 		source: PotencyModifierType.STANDARD_DOUBLE,
-		damageFactor: 1.05,
+		potencyFactor: 1.05,
 	} as PotencyMultiplier,
 	SingleTechnicalFinish: {
 		kind: "multiplier",
 		source: PotencyModifierType.TECHNICAL_SINGLE,
-		damageFactor: 1.01,
+		potencyFactor: 1.01,
 	} as PotencyMultiplier,
 	DoubleTechnicalFinish: {
 		kind: "multiplier",
 		source: PotencyModifierType.TECHNICAL_DOUBLE,
-		damageFactor: 1.02,
+		potencyFactor: 1.02,
 	} as PotencyMultiplier,
 	TripleTechnicalFinish: {
 		kind: "multiplier",
 		source: PotencyModifierType.TECHNICAL_TRIPLE,
-		damageFactor: 1.03,
+		potencyFactor: 1.03,
 	} as PotencyMultiplier,
 	QuadrupleTechnicalFinish: {
 		kind: "multiplier",
 		source: PotencyModifierType.TECHNICAL_QUADRUPLE,
-		damageFactor: 1.05,
+		potencyFactor: 1.05,
 	} as PotencyMultiplier,
 	Devilment: {
 		kind: "critDirect",
@@ -181,12 +187,12 @@ export const Modifiers = {
 	FugetsuBase: {
 		kind: "multiplier",
 		source: PotencyModifierType.FUGETSU,
-		damageFactor: 1.1,
+		potencyFactor: 1.1,
 	} as PotencyMultiplier,
 	FugetsuEnhanced: {
 		kind: "multiplier",
 		source: PotencyModifierType.FUGETSU,
-		damageFactor: 1.13,
+		potencyFactor: 1.13,
 	} as PotencyMultiplier,
 	YatenpiBase: {
 		kind: "adder",
@@ -201,12 +207,12 @@ export const Modifiers = {
 	ArcaneCircle: {
 		kind: "multiplier",
 		source: PotencyModifierType.ARCANE_CIRCLE,
-		damageFactor: 1.03,
+		potencyFactor: 1.03,
 	} as PotencyMultiplier,
 	DeathsDesign: {
 		kind: "multiplier",
 		source: PotencyModifierType.DEATHSDESIGN,
-		damageFactor: 1.1,
+		potencyFactor: 1.1,
 	} as PotencyMultiplier,
 	EnhancedGibbetGallows: {
 		kind: "adder",
@@ -231,17 +237,17 @@ export const Modifiers = {
 	SurgingTempest: {
 		kind: "multiplier",
 		source: PotencyModifierType.SURGING_TEMPEST,
-		damageFactor: 1.1,
+		potencyFactor: 1.1,
 	} as PotencyMultiplier,
 	RagingStrikes: {
 		kind: "multiplier",
 		source: PotencyModifierType.RAGING_STRIKES,
-		damageFactor: 1.15,
+		potencyFactor: 1.15,
 	} as PotencyMultiplier,
 	MagesBallad: {
 		kind: "multiplier",
 		source: PotencyModifierType.MAGES_BALLAD,
-		damageFactor: 1.01,
+		potencyFactor: 1.01,
 	} as PotencyMultiplier,
 	ArmysPaeon: {
 		kind: "critDirect",
@@ -264,22 +270,22 @@ export const Modifiers = {
 	RadiantFinaleOneCoda: {
 		kind: "multiplier",
 		source: PotencyModifierType.RADIANT_FINALE_ONE_CODA,
-		damageFactor: 1.02,
+		potencyFactor: 1.02,
 	} as PotencyMultiplier,
 	RadiantFinaleTwoCoda: {
 		kind: "multiplier",
 		source: PotencyModifierType.RADIANT_FINALE_TWO_CODA,
-		damageFactor: 1.04,
+		potencyFactor: 1.04,
 	} as PotencyMultiplier,
 	RadiantFinaleThreeCoda: {
 		kind: "multiplier",
 		source: PotencyModifierType.RADIANT_FINALE_THREE_CODA,
-		damageFactor: 1.06,
+		potencyFactor: 1.06,
 	} as PotencyMultiplier,
 	BarrageRefulgent: {
 		kind: "multiplier",
 		source: PotencyModifierType.BARRAGE,
-		damageFactor: 3,
+		potencyFactor: 3,
 	} as PotencyMultiplier,
 	BarrageWideVolley: {
 		kind: "adder",
@@ -294,34 +300,34 @@ export const Modifiers = {
 	NoMercy: {
 		kind: "multiplier",
 		source: PotencyModifierType.NO_MERCY,
-		damageFactor: 1.2,
+		potencyFactor: 1.2,
 	} as PotencyMultiplier,
 	SearingLight: {
 		kind: "multiplier",
 		source: PotencyModifierType.SEARING_LIGHT,
-		damageFactor: 1.05,
+		potencyFactor: 1.05,
 	} as PotencyMultiplier,
 	SmnPet: {
 		kind: "multiplier",
 		source: PotencyModifierType.PET,
 		// with a 5% party bonus, smn pet skills do approximately 80% of its other potencies
 		// https://docs.google.com/spreadsheets/d/1Yt7Px7VHuKG1eJR9CRKs3RpvcR5IZKAAA3xjekvv0LY/edit?gid=0#gid=0
-		damageFactor: 0.8,
+		potencyFactor: 0.8,
 	} as PotencyMultiplier,
 	PowerSurge: {
 		kind: "multiplier",
 		source: PotencyModifierType.POWER_SURGE,
-		damageFactor: 1.1,
+		potencyFactor: 1.1,
 	} as PotencyMultiplier,
 	LanceCharge: {
 		kind: "multiplier",
 		source: PotencyModifierType.LANCE_CHARGE,
-		damageFactor: 1.1,
+		potencyFactor: 1.1,
 	} as PotencyMultiplier,
 	LifeOfTheDragon: {
 		kind: "multiplier",
 		source: PotencyModifierType.LIFE_OF_THE_DRAGON,
-		damageFactor: 1.15,
+		potencyFactor: 1.15,
 	} as PotencyMultiplier,
 	BattleLitany: {
 		kind: "critDirect",
@@ -340,6 +346,31 @@ export const Modifiers = {
 		critBonus: 1.0,
 		dhBonus: 0,
 	} as CritDirectMultiplier,
+	Zoe: {
+		kind: "multiplier",
+		source: PotencyModifierType.ZOE,
+		potencyFactor: 1.5,
+	} as PotencyMultiplier,
+	Soteria: {
+		kind: "multiplier",
+		source: PotencyModifierType.SOTERIA,
+		potencyFactor: 1.7,
+	} as PotencyMultiplier,
+	Krasis: {
+		kind: "multiplier",
+		source: PotencyModifierType.KRASIS,
+		potencyFactor: 1.2,
+	} as PotencyMultiplier,
+	Autophysis: {
+		kind: "multiplier",
+		source: PotencyModifierType.AUTOPHYSIS,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	Philosophia: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHILOSOPHIA,
+		potencyFactor: 1.2,
+	} as PotencyMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {
@@ -357,6 +388,8 @@ export function makePositionalModifier(addend: number): PotencyAdder {
 		additiveAmount: addend,
 	};
 }
+
+export type PotencyKind = "damage" | "healing";
 
 export type InitialPotencyProps = {
 	config: GameConfig;
@@ -419,7 +452,7 @@ export class Potency {
 			else if (m.kind === "critDirect") {
 				totalCritBonus += m.critBonus;
 				totalDhBonus += m.dhBonus;
-			} else if (m.kind === "multiplier") totalDamageFactor *= m.damageFactor;
+			} else if (m.kind === "multiplier") totalDamageFactor *= m.potencyFactor;
 			else if (m.kind === "adder") totalAdditiveAmount += m.additiveAmount;
 		});
 		// If this skill can't crit or direct hit, it can't be an auto crit/CDH
@@ -436,7 +469,7 @@ export class Potency {
 		if (props.includePartyBuffs && this.snapshotTime) {
 			controller.game.getPartyBuffs(this.snapshotTime).forEach((buff) => {
 				if (buff.kind === "multiplier") {
-					totalDamageFactor *= buff.damageFactor;
+					totalDamageFactor *= buff.potencyFactor;
 				} else if (buff.kind === "critDirect") {
 					totalCritBonus += buff.critBonus;
 					totalDhBonus += buff.dhBonus;

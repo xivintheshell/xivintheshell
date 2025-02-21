@@ -1,5 +1,14 @@
 [
 	{
+		"date": "2/20/25",
+		"changes": [
+			"[SGE] Initial implementation for SGE",
+			"- Some rough edges still exist around Krasis' healing potency modification and Eukrasian shield handling.",
+			"- Basic functionality should be reasonably complete.",
+			"[RDM] Fixed a bug where Manafication could be used before combat"
+		]
+	},
+	{
 		"date": "2/16/25",
 		"changes": [
 			"[SAM] Fixed Hagakure only being usable at 3 sen"

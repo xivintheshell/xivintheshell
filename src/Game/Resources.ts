@@ -123,7 +123,7 @@ export class Resource extends ResourceOrCooldown {
 	}
 }
 
-export class DoTBuff extends Resource {
+export class OverTimeBuff extends Resource {
 	node?: ActionNode = undefined;
 	tickCount: number = 0;
 }
@@ -387,6 +387,7 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, "MANA", 10000, { default: 10000 });
 	makeResource(job, "TINCTURE", 1, { timeout: 30 });
 	makeResource(job, "SPRINT", 1, { timeout: 10 });
+	makeResource(job, "PARTY_SIZE", 8, { default: 8 });
 });
 
 MELEE_JOBS.forEach((job) => {

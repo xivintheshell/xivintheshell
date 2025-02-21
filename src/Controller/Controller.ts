@@ -30,7 +30,13 @@ import { updateStatusDisplay } from "../Components/StatusDisplay";
 import { updateSkillButtons } from "../Components/Skills";
 import { updateConfigDisplay } from "../Components/PlaybackControl";
 import { setHistorical, setJob, setRealTime } from "../Components/Main";
-import { DamageMarkElem, DamageMarkInfo, ElemType, MAX_TIMELINE_SLOTS, Timeline } from "./Timeline";
+import {
+	PotencyMarkElem,
+	PotencyMarkInfo,
+	ElemType,
+	MAX_TIMELINE_SLOTS,
+	Timeline,
+} from "./Timeline";
 import { scrollTimelineTo, updateTimelineView } from "../Components/Timeline";
 import { ActionNode, ActionType, Line, Record } from "./Record";
 import { ImageExportConfig } from "./ImageExportConfig";
@@ -39,7 +45,7 @@ import { updateSkillSequencePresetsView } from "../Components/SkillSequencePrese
 import { refreshTimelineEditor } from "../Components/TimelineEditor";
 import { DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDrawOptions } from "../Components/Common";
 import { TimelineRenderingProps } from "../Components/TimelineCanvas";
-import { Potency, PotencyModifierType } from "../Game/Potency";
+import { Potency, PotencyKind, PotencyModifierType } from "../Game/Potency";
 import {
 	DamageStatisticsData,
 	updateDamageStats,
@@ -63,7 +69,19 @@ require("../Game/Jobs/RoleActions");
 
 type Fixme = any;
 
-const STANDARD_DOT_TICK_KEY = "stdtick";
+const STANDARD_TICK_KEY = "stdtick";
+
+export interface PotencyLogCsv {
+	time: number;
+	source: string;
+	potency: number;
+	buffs: ResourceKey[];
+}
+
+export interface OvertimeEffectCoverage {
+	tStartDisplay: number;
+	tEndDisplay?: number;
+}
 
 class Controller {
 	timeScale;
@@ -82,12 +100,8 @@ class Controller {
 	#lastDamageApplicationTime;
 
 	// todo: should probably move these items to somewhere else: in Record maybe?
-	#damageLogCsv: {
-		time: number;
-		damageSource: string;
-		potency: number;
-		buffs: ResourceKey[];
-	}[] = [];
+	#damageLogCsv: PotencyLogCsv[] = [];
+	#healingLogCsv: PotencyLogCsv[] = [];
 	#actionsLogCsv: {
 		time: number;
 		action: string;
@@ -95,8 +109,9 @@ class Controller {
 		castTime: number;
 	}[] = [];
 	#dotTickTimes: Map<ResourceKey | string, number[]> = new Map();
-	#dotCoverageTimes: Map<ResourceKey, { tStartDisplay: number; tEndDisplay?: number }[]> =
-		new Map();
+	#hotTickTimes: Map<ResourceKey | string, number[]> = new Map();
+	#dotCoverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>> = new Map();
+	#hotCoverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>> = new Map();
 
 	savedHistoricalGame: GameState;
 	savedHistoricalRecord: Record;
@@ -314,6 +329,8 @@ class Controller {
 		this.#actionsLogCsv = [];
 		this.#dotTickTimes = new Map();
 		this.#dotCoverageTimes = new Map();
+		this.#hotTickTimes = new Map();
+		this.#hotCoverageTimes = new Map();
 		this.#bAddingLine = false;
 		this.#bInterrupted = false;
 		this.displayingUpToDateGameState = true;
@@ -538,7 +555,7 @@ class Controller {
 	getMaxTicks(untilRawTime: number, dotName: ResourceKey, excludeStandardTicks: boolean) {
 		let cnt = 0;
 		const dotKeys: Array<ResourceKey | string> = [dotName];
-		if (!excludeStandardTicks) dotKeys.push(STANDARD_DOT_TICK_KEY);
+		if (!excludeStandardTicks) dotKeys.push(STANDARD_TICK_KEY);
 		dotKeys.forEach((key) => {
 			this.#dotTickTimes.get(key)?.forEach((rt) => {
 				if (!bossIsUntargetable(rt - this.gameConfig.countdown) && rt <= untilRawTime) {
@@ -549,15 +566,25 @@ class Controller {
 		return cnt;
 	}
 
-	getDotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceKey) {
+	getDotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceKey): number {
+		return this.getOverTimeCoverageTimeFraction(untilDisplayTime, dot, this.#dotCoverageTimes);
+	}
+	getHotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceKey): number {
+		return this.getOverTimeCoverageTimeFraction(untilDisplayTime, dot, this.#hotCoverageTimes);
+	}
+	private getOverTimeCoverageTimeFraction(
+		untilDisplayTime: number,
+		effect: ResourceKey,
+		coverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>>,
+	): number {
 		if (untilDisplayTime <= Debug.epsilon) return 0;
-		const dotCoverages = this.#dotCoverageTimes.get(dot);
-		if (!dotCoverages) {
+		const effectCoverages = coverageTimes.get(effect);
+		if (!effectCoverages) {
 			return 0;
 		}
 
 		let coveredTime = 0;
-		dotCoverages.forEach((section) => {
+		effectCoverages.forEach((section) => {
 			if (section.tStartDisplay <= untilDisplayTime) {
 				let startTime = Math.max(0, section.tStartDisplay);
 				let endTime =
@@ -621,8 +648,34 @@ class Controller {
 	}
 
 	resolvePotency(p: Potency) {
+		this.resolveAnyPotency(p, ElemType.DamageMark, this.#damageLogCsv);
+
+		this.#updateTotalDamageStats();
+	}
+
+	resolveHealingPotency(p: Potency) {
+		this.resolveAnyPotency(p, ElemType.HealingMark, this.#healingLogCsv);
+	}
+	resolveOverTimePotency(p: Potency, kind: PotencyKind) {
+		if (kind === "damage") {
+			this.resolveAnyPotency(p, ElemType.DamageMark, this.#damageLogCsv);
+		} else {
+			this.resolveAnyPotency(p, ElemType.HealingMark, this.#healingLogCsv);
+		}
+	}
+
+	private resolveAnyPotency(
+		p: Potency,
+		elemType: ElemType.DamageMark | ElemType.HealingMark | ElemType.AggroMark,
+		csvLog: PotencyLogCsv[],
+	) {
 		p.resolve(this.game.getDisplayTime());
 		this.#lastDamageApplicationTime = this.game.time;
+
+		// If the potency didn't actually do anything, assume it's an aggro-only action like Provoke
+		if (p.base === 0) {
+			elemType = ElemType.AggroMark;
+		}
 
 		let pot = false;
 		p.modifiers.forEach((m) => {
@@ -632,24 +685,24 @@ class Controller {
 		if (!this.#bInSandbox) {
 			let sourceDesc = "{skill}@" + p.sourceTime.toFixed(3);
 			if (p.description.length > 0) sourceDesc += " " + p.description;
-			const damageInfo: DamageMarkInfo = {
+			const potencyInfo: PotencyMarkInfo = {
 				potency: p,
 				sourceDesc,
 				sourceSkill: p.sourceSkill,
 			};
 			let existingElement = this.timeline.tryGetElement(
 				this.game.time,
-				ElemType.DamageMark,
-			) as DamageMarkElem;
+				elemType,
+			) as PotencyMarkElem;
 			if (existingElement) {
-				existingElement.damageInfos.push(damageInfo);
+				existingElement.potencyInfos.push(potencyInfo);
 				if (pot && !existingElement.buffs.includes("TINCTURE")) {
 					existingElement.buffs.push("TINCTURE");
 				}
 			} else {
 				this.timeline.addElement({
-					type: ElemType.DamageMark,
-					damageInfos: [damageInfo],
+					type: elemType,
+					potencyInfos: [potencyInfo],
 					buffs: pot ? ["TINCTURE"] : [],
 					time: this.game.time,
 					displayTime: this.game.getDisplayTime(),
@@ -657,9 +710,9 @@ class Controller {
 			}
 
 			// time, damageSource, potency, cumulativePotency
-			this.#damageLogCsv.push({
+			csvLog.push({
 				time: this.game.getDisplayTime(),
-				damageSource: p.sourceSkill + "@" + p.sourceTime,
+				source: p.sourceSkill + "@" + p.sourceTime,
 				// tincture is applied when actually exporting for download.
 				potency: p.getAmount({
 					tincturePotencyMultiplier: 1,
@@ -669,8 +722,6 @@ class Controller {
 				buffs: pot ? ["TINCTURE"] : [],
 			});
 		}
-
-		this.#updateTotalDamageStats();
 	}
 
 	reportLucidTick(time: number, sourceDesc: string) {
@@ -712,12 +763,22 @@ class Controller {
 	 * @param dotName The name of the DoT that ticked. If not provided, assumes the standard DoT tick
 	 */
 	reportDotTick(rawTime: number, dotName?: ResourceKey) {
+		this.reportOverTimeTick(rawTime, this.#dotTickTimes, dotName);
+	}
+	reportHotTick(rawTime: number, hotName?: ResourceKey) {
+		this.reportOverTimeTick(rawTime, this.#hotTickTimes, hotName);
+	}
+	private reportOverTimeTick(
+		rawTime: number,
+		tickTimes: Map<ResourceKey | string, number[]>,
+		effectName?: ResourceKey,
+	) {
 		if (!this.#bInSandbox) {
-			const tickGroupKey = dotName ?? STANDARD_DOT_TICK_KEY;
-			let tickGroup = this.#dotTickTimes.get(tickGroupKey);
+			const tickGroupKey = effectName ?? STANDARD_TICK_KEY;
+			let tickGroup = tickTimes.get(tickGroupKey);
 			if (!tickGroup) {
 				tickGroup = [];
-				this.#dotTickTimes.set(tickGroupKey, tickGroup);
+				tickTimes.set(tickGroupKey, tickGroup);
 			}
 			tickGroup.push(rawTime);
 			this.updateStats();
@@ -725,15 +786,23 @@ class Controller {
 	}
 
 	reportDotStart(displayTime: number, dot: ResourceKey) {
+		this.reportOverTimeStart(displayTime, dot, "damage");
+	}
+	reportHotStart(displayTime: number, hot: ResourceKey) {
+		this.reportOverTimeStart(displayTime, hot, "healing");
+	}
+	reportOverTimeStart(displayTime: number, effect: ResourceKey, kind: PotencyKind) {
 		if (!this.#bInSandbox) {
-			let dotCoverages = this.#dotCoverageTimes.get(dot);
-			if (!dotCoverages) {
-				dotCoverages = [];
-				this.#dotCoverageTimes.set(dot, dotCoverages);
+			const coverageTimes =
+				kind === "damage" ? this.#dotCoverageTimes : this.#hotCoverageTimes;
+			let effectCoverages = coverageTimes.get(effect);
+			if (!effectCoverages) {
+				effectCoverages = [];
+				coverageTimes.set(effect, effectCoverages);
 			}
-			let len = dotCoverages.length;
-			console.assert(len === 0 || dotCoverages[len - 1].tEndDisplay !== undefined);
-			dotCoverages.push({
+			let len = effectCoverages.length;
+			console.assert(len === 0 || effectCoverages[len - 1].tEndDisplay !== undefined);
+			effectCoverages.push({
 				tStartDisplay: displayTime,
 				tEndDisplay: undefined,
 			});
@@ -741,15 +810,26 @@ class Controller {
 	}
 
 	reportDotDrop(displayTime: number, dot: ResourceKey) {
+		this.reportOverTimeDrop(displayTime, dot, "damage");
+	}
+	reportHotDrop(displayTime: number, hot: ResourceKey) {
+		this.reportOverTimeDrop(displayTime, hot, "healing");
+	}
+	reportOverTimeDrop(displayTime: number, effect: ResourceKey, kind: PotencyKind) {
 		if (!this.#bInSandbox) {
-			const dotCoverages = this.#dotCoverageTimes.get(dot);
-			console.assert(dotCoverages, `Reported dropping ${dot} when no coverage was detected`);
-			if (!dotCoverages) {
+			const coverageTimes =
+				kind === "damage" ? this.#dotCoverageTimes : this.#hotCoverageTimes;
+			const effectCoverages = coverageTimes.get(effect);
+			console.assert(
+				effectCoverages,
+				`Reported dropping ${effect} when no coverage was detected`,
+			);
+			if (!effectCoverages) {
 				return;
 			}
-			let len = dotCoverages.length;
-			console.assert(len > 0 && dotCoverages[len - 1].tEndDisplay === undefined);
-			dotCoverages[len - 1].tEndDisplay = displayTime;
+			let len = effectCoverages.length;
+			console.assert(len > 0 && effectCoverages[len - 1].tEndDisplay === undefined);
+			effectCoverages[len - 1].tEndDisplay = displayTime;
 		}
 	}
 
@@ -850,6 +930,7 @@ class Controller {
 		criticalHit: number;
 		directHit: number;
 		determination: number;
+		piety: number;
 		animationLock: number;
 		fps: number;
 		gcdSkillCorrection: number;
@@ -1278,7 +1359,7 @@ class Controller {
 			});
 			let potency = row.potency;
 			if (pot) potency *= this.getTincturePotencyMultiplier();
-			return [row.time, row.damageSource, potency];
+			return [row.time, row.source, potency];
 		});
 		return [["time", "damageSource", "potency"]].concat(csvRows as any[][]);
 	}
