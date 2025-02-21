@@ -556,6 +556,7 @@ makeSGESpell("EUKRASIAN_DOSIS", 30, {
 	castTime: 0,
 	recastTime: 1.5,
 	applicationDelay: 0.76,
+	drawsAggro: true,
 	validateAttempt: (state) => state.hasResourceAvailable("EUKRASIA"),
 	highlightIf: (state) => state.hasResourceAvailable("EUKRASIA"),
 	onConfirm: (state, node) => {
@@ -579,6 +580,7 @@ makeSGESpell("EUKRASIAN_DOSIS_II", 72, {
 	castTime: 0,
 	recastTime: 1.5,
 	applicationDelay: 0.76,
+	drawsAggro: true,
 	validateAttempt: (state) => state.hasResourceAvailable("EUKRASIA"),
 	highlightIf: (state) => state.hasResourceAvailable("EUKRASIA"),
 	onConfirm: (state, node) => {
@@ -602,6 +604,7 @@ makeSGESpell("EUKRASIAN_DOSIS_III", 82, {
 	castTime: 0,
 	recastTime: 1.5,
 	applicationDelay: 0.76,
+	drawsAggro: true,
 	validateAttempt: (state) => state.hasResourceAvailable("EUKRASIA"),
 	highlightIf: (state) => state.hasResourceAvailable("EUKRASIA"),
 	onConfirm: (state, node) => {
@@ -732,6 +735,7 @@ makeSGESpell("EUKRASIAN_DYSKRASIA", 82, {
 	applicationDelay: 1.03,
 	castTime: 0,
 	recastTime: 1.5,
+	drawsAggro: true,
 	validateAttempt: (state) => state.hasResourceAvailable("EUKRASIA"),
 	highlightIf: (state) => state.hasResourceAvailable("EUKRASIA"),
 	onConfirm: (state, node) => {

@@ -98,7 +98,7 @@ const getAcknowledgements = () => <>
 				SAM: <b>Sterling</b>, <b>shanzhe</b>
 			</li>
 			<li>
-				DNC, MCH, BRD: <b>Akairyu</b>
+				DNC, MCH, BRD, SGE: <b>Akairyu</b>
 			</li>
 			<li>
 				RPR: <b>Honey B. Lovely's Favorite Bee</b>
@@ -131,7 +131,7 @@ const getAcknowledgements = () => <>
 				武士：<b>Sterling</b>、<b>shanzhe</b>
 			</li>
 			<li>
-				舞者、机工、吟游诗人：<b>Akairyu</b>
+				舞者、机工、吟游诗人、贤者：<b>Akairyu</b>
 			</li>
 			<li>
 				钐镰客：<b>Honey B. Lovely's Favorite Bee</b>
