@@ -203,6 +203,9 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.ENHANCED_PIERCING_TALON, { en: "enhanced piercing talon" }],
 	[PotencyModifierType.LIFE_OF_THE_DRAGON, { en: "life of the dragon" }],
 	[PotencyModifierType.LIFE_SURGE, { en: "life surge" }],
+	[PotencyModifierType.DIVINE_MIGHT, { en: "divine might" }],
+	[PotencyModifierType.REQUIESCAT, { en: "requiescat" }],
+	[PotencyModifierType.FIGHT_OR_FLIGHT, { en: "fight or flight" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -264,6 +267,9 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.ENHANCED_PIERCING_TALON, { en: "ENH" }],
 	[PotencyModifierType.LIFE_SURGE, { en: "LS" }],
 	[PotencyModifierType.BATTLE_LITANY, { en: "BL" }],
+	[PotencyModifierType.DIVINE_MIGHT, { en: "DM" }],
+	[PotencyModifierType.REQUIESCAT, { en: "REQ" }],
+	[PotencyModifierType.FIGHT_OR_FLIGHT, { en: "FOF" }],
 	[PotencyModifierType.PET, { en: "PET" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {

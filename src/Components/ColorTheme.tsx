@@ -134,6 +134,15 @@ export type DRGResourceColors = {
 	drgComboTimer: string;
 };
 
+export type PLDResourceColors = {
+	divineMight: string;
+	requiescat: string;
+	fightOrFlight: string;
+	pldComboTimer: string;
+	ironWillColor: string;
+	oathGaugeColor: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -174,6 +183,7 @@ export type ThemeColors = {
 	gnb: GNBResourceColors;
 	smn: SMNResourceColors;
 	drg: DRGResourceColors;
+	pld: PLDResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -329,6 +339,14 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				lifeOfTheDragonBar: "#d74936",
 				drgComboTimer: "#3d61ae",
 			},
+			pld: {
+				divineMight: "#ff6633",
+				requiescat: "#d6002d",
+				fightOrFlight: "#0968af",
+				pldComboTimer: "#59ed78",
+				ironWillColor: "#d74936",
+				oathGaugeColor: "#3d61ae",
+			},
 			timeline: {
 				ruler: "#2d2d2d",
 				tracks: "#242424",
@@ -481,6 +499,14 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 				lifeOfTheDragonBar: "#d74936",
 				drgComboTimer: "#3d61ae",
 			},
+			pld: {
+				divineMight: "#ff6633",
+				requiescat: "#d6002d",
+				fightOrFlight: "#0968af",
+				pldComboTimer: "#59ed78",
+				ironWillColor: "#d74936",
+				oathGaugeColor: "#3d61ae",
+			},
 			timeline: {
 				ruler: "#e9e9e9",
 				tracks: "#f3f3f3",
@@ -555,6 +581,9 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.BATTLE_LITANY, colors.drg.battleLitany],
 		[PotencyModifierType.POWER_SURGE, colors.drg.powerSurge],
 		[PotencyModifierType.ENHANCED_PIERCING_TALON, colors.drg.enhancedPiercingTalon],
+		[PotencyModifierType.DIVINE_MIGHT, colors.pld.divineMight], // pld
+		[PotencyModifierType.REQUIESCAT, colors.pld.requiescat],
+		[PotencyModifierType.FIGHT_OR_FLIGHT, colors.pld.fightOrFlight],
 		[PotencyModifierType.PET, colors.resources.petTag],
 	]);
 	console.assert(

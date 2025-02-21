@@ -40,6 +40,8 @@ export const PLD_ACTIONS = ensureRecord<ActionData>()({
 	GUARDIAN: { name: "Guardian" },
 	IMPERATOR: { name: "Imperator" },
 	BLADE_OF_HONOR: { name: "Blade of Honor" },
+
+	AUTO_ATTACK: { name: "Auto Attack" },
 });
 
 export const PLD_COOLDOWNS = ensureRecord<CooldownData>()({
@@ -63,6 +65,8 @@ export const PLD_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_GUARDIAN: { name: "cd_Guardian" }, // 120 sec
 	cd_IMPERATOR: { name: "cd_Imperator" }, // 60 sec
 	cd_BLADE_OF_HONOR: { name: "cd_BladeOfHonor" }, // 1 sec
+
+	cd_AUTO_ATTACK: { name: "cd_AutoAttack" }, // filler
 });
 
 export const PLD_GAUGES = ensureRecord<ResourceData>()({
@@ -85,7 +89,7 @@ export const PLD_STATUSES = ensureRecord<ResourceData>()({
 	INTERVENTION: { name: "Intervention" }, // [0, 1]
 	KNIGHTS_RESOLVE: { name: "Knight's Resolve" }, // [0, 1]
 	KNIGHTS_BENEDICTION: { name: "Knight's Benediction" }, // [0, 1]
-	REQUIESCAT: { name: "Requiescat" }, // [0, 1]
+	REQUIESCAT: { name: "Requiescat", maximumStacks: 4 }, // [0, 1]
 	CONFITEOR_READY: { name: "Confiteor Ready" }, // [0, 1]
 	PASSAGE_OF_ARMS: { name: "Passage of Arms" }, // [0, 1]
 	ARMS_UP: { name: "Arms Up" }, // [0, 1]
@@ -103,6 +107,9 @@ export const PLD_TRACKERS = ensureRecord<ResourceData>()({
 	PLD_CONFITEOR_COMBO_TRACKER: { name: "PLD Confiteor Combo Tracker" }, // [0, 3]
 	// 0 - no combo, 1 - prominence ready
 	PLD_AOE_COMBO_TRACKER: { name: "PLD AOE Combo Tracker" }, // [0, 1]
+
+	// CAN_AUTO_ATTACK: { name: "Can Auto Attack" }, // [0, 1]
+	// AUTO_ATTACK_TRACKER: { name: "Auto Attack Tracker" }, //
 });
 
 export const PLD_TRAITS = ensureRecord<TraitData>()({

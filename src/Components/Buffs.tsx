@@ -51,6 +51,10 @@ buffIcons.set(BuffType.LanceCharge, require("./Asset/Buffs/DRG/Lance Charge.png"
 buffIcons.set(BuffType.LifeOfTheDragon, require("./Asset/Buffs/DRG/Life of the Dragon.png"));
 buffIcons.set(BuffType.LifeSurge, require("./Asset/Buffs/DRG/Life Surge.png"));
 
+buffIcons.set(BuffType.DivineMight, require("./Asset/Buffs/PLD/Divine Might.png"));
+buffIcons.set(BuffType.Requiescat, require("./Asset/Buffs/PLD/Requiescat Zero.png"));
+buffIcons.set(BuffType.FightOrFlight, require("./Asset/Buffs/PLD/Fight or Flight.png"));
+
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
 	let imgObj = new Image();

@@ -44,6 +44,7 @@ export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 		const oath = resources.get("OATH_GAUGE").availableAmount();
 
 		const ironWillActive = resources.get("IRON_WILL").availableAmount();
+		const canAutoAttack = resources.get("AUTOS_ENGAGED").availableAmount();
 
 		const comboTimer = basicCombo.available(1)
 			? basicCombo.pendingChange?.timeTillEvent
@@ -51,11 +52,29 @@ export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 				? aoeCombo.pendingChange?.timeTillEvent
 				: undefined;
 
+		const autoTimer = this.state.findAutoAttackTimerInQueue();
+
 		const infos: ResourceDisplayProps[] = [
+			{
+				kind: "counter",
+				name: localize({ en: "Auto Attacks" }),
+				color: colors.pld.ironWillColor,
+				currentStacks: canAutoAttack,
+				maxStacks: 1,
+			} as ResourceCounterProps,
+
+			{
+				kind: "bar",
+				name: localize({ en: "Auto Tracker" }),
+				color: colors.pld.ironWillColor,
+				progress: autoTimer !== -1 ? (3 - autoTimer) / 3 : 0,
+				valueString: autoTimer !== -1 ? autoTimer.toFixed(3) : "N/A",
+			} as ResourceBarProps,
+
 			{
 				kind: "bar",
 				name: localize({ en: "Combo Timer" }),
-				color: colors.rdm.manaStack,
+				color: colors.pld.pldComboTimer,
 				progress: comboTimer ? comboTimer / 30 : 0,
 				valueString: comboTimer?.toFixed(3) ?? "N/A",
 			} as ResourceBarProps,
@@ -63,7 +82,7 @@ export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 			{
 				kind: "counter",
 				name: localize({ en: "Iron Will" }),
-				color: colors.rdm.manaStack,
+				color: colors.pld.ironWillColor,
 				currentStacks: ironWillActive,
 				maxStacks: 1,
 			} as ResourceCounterProps,
@@ -71,9 +90,9 @@ export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 			{
 				kind: "bar",
 				name: localize({ en: "Oath Gauge" }),
-				color: colors.rdm.manaStack,
+				color: colors.pld.oathGaugeColor,
 				progress: oath / 100,
-				valueString: oath.toFixed(3),
+				valueString: oath.toFixed(0),
 			} as ResourceBarProps,
 		];
 
