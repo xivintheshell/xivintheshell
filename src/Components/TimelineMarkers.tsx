@@ -584,7 +584,7 @@ export class TimelineMarkers extends React.Component {
 				<span>
 					{localize({
 						en: "Current tier (zh) by kiyozero: ",
-						zh: "当前版本（中文，来自kiyozero）：",
+						zh: "当前零式（中文，来自kiyozero）：",
 					})}
 				</span>
 				<LoadCombinedTracksBtn
@@ -605,6 +605,17 @@ export class TimelineMarkers extends React.Component {
 				<LoadCombinedTracksBtn
 					displayName={"M4S"}
 					url={PRESET_MARKERS_BASE + "m4s_zh.txt"}
+					offsetStr={this.state.offsetStr}
+				/>
+			</p>
+			<p>
+				<span>{localize({ en: "EX trial: ", zh: "极神：" })}</span>
+				<LoadCombinedTracksBtn
+					displayName={localize({
+						en: "Queen Eternal (en + zh) by 小盐",
+						zh: "永恒女王（英+中，来自小盐）",
+					})}
+					url={PRESET_MARKERS_BASE + "queen_eternal.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
 			</p>
@@ -649,7 +660,7 @@ export class TimelineMarkers extends React.Component {
 					})}
 				</span>
 				<LoadCombinedTracksBtn
-					displayName={localize({ en: "full (12/8 ver)", zh: "完整（12/8版）" })}
+					displayName={localize({ en: "full (12/8/24 ver)", zh: "完整（12/8/24版）" })}
 					url={PRESET_MARKERS_BASE + "fru_zh.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
