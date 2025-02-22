@@ -1,5 +1,11 @@
 [
 	{
+		"date": "2/21/25",
+		"changes": [
+			"[BRD][GNB][SMN] Removed testing tag"
+		]
+	},
+	{
 		"date": "2/20/25",
 		"changes": [
 			"[SGE] Initial implementation for SGE",
