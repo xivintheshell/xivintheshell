@@ -13,24 +13,51 @@ import { SAMState } from "./SAM";
 import { SMNState } from "./SMN";
 import { SGEState } from "./SGE";
 import { WARState } from "./WAR";
+import { PLDState } from "./PLD";
+import { DRKState } from "./DRK";
+import { ASTState } from "./AST";
+import { SCHState } from "./SCH";
+import { WHMState } from "./WHM";
+import { NINState } from "./NIN";
+import { MNKState } from "./MNK";
+import { VPRState } from "./VPR";
 
 export function getGameState(config: GameConfig): GameState {
 	switch (config.job) {
 		// Tanks
+		case "PLD":
+			return new PLDState(config);
 		case "WAR":
 			return new WARState(config);
+		case "DRK":
+			return new DRKState(config);
 		case "GNB":
 			return new GNBState(config);
+
 		// Healers
+		case "WHM":
+			return new WHMState(config);
+		case "SCH":
+			return new SCHState(config);
+		case "AST":
+			return new ASTState(config);
 		case "SGE":
 			return new SGEState(config);
+
 		// Melee
+		case "MNK":
+			return new MNKState(config);
 		case "DRG":
 			return new DRGState(config);
+		case "NIN":
+			return new NINState(config);
 		case "SAM":
 			return new SAMState(config);
 		case "RPR":
 			return new RPRState(config);
+		case "VPR":
+			return new VPRState(config);
+
 		// Ranged
 		case "BRD":
 			return new BRDState(config);
@@ -38,6 +65,7 @@ export function getGameState(config: GameConfig): GameState {
 			return new MCHState(config);
 		case "DNC":
 			return new DNCState(config);
+
 		// Casters
 		case "BLM":
 			return new BLMState(config);
