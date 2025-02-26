@@ -182,11 +182,19 @@ export class GameConfig {
 
 	// returns GCD before FPS tax
 	adjustedGCD(baseGCD: number = 2.5, speedModifier?: number) {
-		return XIVMath.preTaxGcd(this.level, this.spellSpeed, baseGCD, speedModifier);
+		if (this.shellVersion >= ShellVersion.AllaganGcdFormula) {
+			return XIVMath.preTaxGcd(this.level, this.spellSpeed, baseGCD, speedModifier);
+		} else {
+			return XIVMath.preTaxGcdLegacy(this.level, this.spellSpeed, baseGCD, speedModifier);
+		}
 	}
 
 	adjustedSksGCD(baseGCD: number = 2.5, speedModifier?: number) {
-		return XIVMath.preTaxGcd(this.level, this.skillSpeed, baseGCD, speedModifier);
+		if (this.shellVersion >= ShellVersion.AllaganGcdFormula) {
+			return XIVMath.preTaxGcd(this.level, this.skillSpeed, baseGCD, speedModifier);
+		} else {
+			return XIVMath.preTaxGcdLegacy(this.level, this.skillSpeed, baseGCD, speedModifier);
+		}
 	}
 
 	// returns cast time before FPS and caster tax
