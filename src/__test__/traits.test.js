@@ -1,8 +1,12 @@
 import { TRAITS } from "../Game/Data";
-import { hasUnlockedTrait } from "../utilities";
 
 function GetTraits() {
 	return Object.keys(TRAITS);
+}
+
+function hasUnlockedTrait(traitName, level) {
+	let trait = traitName in TRAITS ? TRAITS[traitName] : TRAITS["NEVER"];
+	return level >= trait.level;
 }
 
 // for helpful error messages
