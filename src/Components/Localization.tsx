@@ -16,6 +16,17 @@ export type LocalizedContent = {
 	ja?: ContentNode;
 };
 
+export function makeLocalizableLabel(resource: {
+	name: string;
+	label: { zh?: string; ja?: string };
+}) {
+	return {
+		en: resource.name,
+		zh: resource.label.zh,
+		ja: resource.label.ja,
+	};
+}
+
 export function localize(content: LocalizedContent) {
 	let currentLang = getCurrentLanguage();
 	if (currentLang === "zh" && content.zh) {

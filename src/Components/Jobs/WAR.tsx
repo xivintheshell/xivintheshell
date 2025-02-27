@@ -5,8 +5,8 @@ import {
 	StatusPropsGenerator,
 } from "../StatusDisplay";
 import { WARState } from "../../Game/Jobs/WAR";
-import { getCurrentThemeColors } from "../../Components/ColorTheme";
-import { localize } from "../../Components/Localization";
+import { getCurrentThemeColors } from "../ColorTheme";
+import { localize } from "../Localization";
 import { ResourceKey, RESOURCES } from "../../Game/Data";
 import { WAR_STATUSES } from "../../Game/Data/Jobs/WAR";
 

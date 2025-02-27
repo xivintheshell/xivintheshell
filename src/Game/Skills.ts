@@ -4,9 +4,8 @@ import { PlayerState, GameState } from "./GameState";
 import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
 import { PotencyModifier } from "./Potency";
 import { ShellJob, ALL_JOBS } from "./Data/Jobs";
-import { ActionKey, ACTIONS, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
+import { ActionKey, ACTIONS, CooldownKey, ResourceKey, RESOURCES, TraitKey, TRAITS } from "./Data";
 import { LimitBreakActionKey } from "./Data/Shared/LimitBreak";
-import { hasUnlockedTrait } from "../utilities";
 import { Data } from "./Data/Data";
 
 // all gapclosers have the same animation lock
@@ -713,6 +712,10 @@ export function getAutoReplacedSkillName(
 	level: LevelSync,
 ): ActionKey {
 	let skill = getSkill(job, skillName);
+	let hasUnlockedTrait = (traitKey: TraitKey, level: LevelSync) => {
+		let trait = traitKey in TRAITS ? TRAITS[traitKey] : TRAITS["NEVER"];
+		return level >= trait.level;
+	};
 	// upgrade: if level >= upgrade options
 	while (skill.autoUpgrade && hasUnlockedTrait(skill.autoUpgrade.trait, level)) {
 		skill = getSkill(job, getAutoReplacedSkillName(job, skill.autoUpgrade.otherSkill, level));

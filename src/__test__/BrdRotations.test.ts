@@ -32,7 +32,7 @@ it(
 				[
 					"STORMBITE",
 					"WANDERERS_MINUET",
-					"EMYPREAL_ARROW",
+					"EMPYREAL_ARROW",
 					"CAUSTIC_BITE",
 					"BATTLE_VOICE",
 					"BURST_SHOT",
@@ -45,7 +45,7 @@ it(
 					"REFULGENT_ARROW",
 					"SIDEWINDER",
 					"RESONANT_ARROW",
-					"EMYPREAL_ARROW",
+					"EMPYREAL_ARROW",
 					"BURST_SHOT",
 					"HEARTBREAK_SHOT",
 					"BURST_SHOT",
@@ -71,7 +71,7 @@ it(
 					hitCount: 1,
 				},
 				{
-					skillName: "EMYPREAL_ARROW",
+					skillName: "EMPYREAL_ARROW",
 					displayedModifiers: [PotencyModifierType.WANDERERS_MINUET],
 					hitCount: 1,
 				},
@@ -171,7 +171,7 @@ it(
 					hitCount: 1,
 				},
 				{
-					skillName: "EMYPREAL_ARROW",
+					skillName: "EMPYREAL_ARROW",
 					displayedModifiers: [
 						PotencyModifierType.WANDERERS_MINUET,
 						PotencyModifierType.RAGING_STRIKES,

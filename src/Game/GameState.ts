@@ -40,8 +40,7 @@ import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";
 import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS, HEALERS } from "./Data/Jobs";
-import { ActionKey, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
-import { hasUnlockedTrait } from "../utilities";
+import { ActionKey, CooldownKey, ResourceKey, RESOURCES, TraitKey, TRAITS } from "./Data";
 import { StatusPropsGenerator } from "../Components/StatusDisplay";
 import { XIVMath } from "./XIVMath";
 
@@ -1516,7 +1515,8 @@ export class GameState {
 	}
 
 	hasTraitUnlocked(traitName: TraitKey) {
-		return hasUnlockedTrait(traitName, this.config.level);
+		let trait = traitName in TRAITS ? TRAITS[traitName] : TRAITS["NEVER"];
+		return this.config.level >= trait.level;
 	}
 
 	isInCombat() {

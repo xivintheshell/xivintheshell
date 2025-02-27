@@ -13,7 +13,7 @@ export const BRD_ACTIONS = ensureRecord<ActionData>()({
 	ARMYS_PAEON: { name: "Army's Paeon" },
 	RAIN_OF_DEATH: { name: "Rain Of Death" },
 	BATTLE_VOICE: { name: "Battle Voice" },
-	EMYPREAL_ARROW: { name: "Empyreal Arrow" },
+	EMPYREAL_ARROW: { name: "Empyreal Arrow" },
 	WANDERERS_MINUET: { name: "Wanderer's Minuet" },
 	IRON_JAWS: { name: "Iron Jaws" },
 	WARDENS_PAEAN: { name: "Warden's Paean" },

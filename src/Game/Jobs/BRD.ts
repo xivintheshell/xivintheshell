@@ -582,7 +582,7 @@ makeWeaponskill_BRD("BLAST_ARROW", 86, {
 	onConfirm: (state) => state.tryConsumeResource("BLAST_ARROW_READY"),
 });
 
-makeAbility_BRD("EMYPREAL_ARROW", 54, "cd_EMPYREAL_ARROW", {
+makeAbility_BRD("EMPYREAL_ARROW", 54, "cd_EMPYREAL_ARROW", {
 	potency: [
 		["NEVER", 240], // TODO - Confirm
 		["RANGED_MASTERY", 260],
