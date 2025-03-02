@@ -1230,7 +1230,7 @@ export function drawTimelines(
 		);
 
 		// delete btn
-		if (g_renderingProps.slots.length > 1) {
+		if (g_renderingProps.slots.length > 1 && slot === g_renderingProps.activeSlotIndex) {
 			g_ctx.fillStyle = g_colors.emphasis;
 			g_ctx.font = "bold 14px monospace";
 			g_ctx.textAlign = "center";

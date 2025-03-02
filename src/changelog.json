@@ -1,5 +1,11 @@
 [
 	{
+		"date": "3/1/25",
+		"changes": [
+			"Make it so that you can only delete the currently active slot, to hopefully reduce the chance of accidentally deleting a slot when switching"
+		]
+	},
+	{
 		"date": "2/26/25",
 		"changes": [
 			"Updated the GCD formula because the old formula may be off by 0.01s when there is haste buff. Thank you Yuyuka for spotting the error. Note: old timelines (including timelines in browser localStorage) aren't affected; only newly created timelines use the new formula."
