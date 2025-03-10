@@ -1,3 +1,21 @@
+// The Record class (and other associated types) are responsible for managing serialization
+// and deserialization of user actions.
+//
+// A SerializedRecord is an at-rest representation of a sequence of actions. This is the
+// format saved in localStorage for timelines and presets, as well as that used in timeline exports.
+//
+// An ActionNode represents a single action, either a skill usage, wait, or buff toggle.
+//
+// A Line is a sequence of ActionNodes.
+//
+// A Record is a Line with an associated GameConfig, as well as information about currently-selected
+// actions.
+//
+// Prior to an internal refactor allowing the representation of invalid actions, Records were
+// represented as a wrapper around a doubly-linked list of ActionNodes. However, they were still
+// serialized as an array of { type, skillName?, buffName?, waitDuration? } objects; the new
+// implementation parses these objects to the contemporary Record format.
+
 import { FileType } from "./Common";
 import { BuffType, SkillReadyStatus } from "../Game/Common";
 import { GameConfig } from "../Game/GameConfig";
@@ -8,8 +26,322 @@ import { ActionKey, ACTIONS, ResourceKey } from "../Game/Data";
 export const enum ActionType {
 	Skill = "Skill",
 	Wait = "Wait",
+	JumpToTimestamp = "JumpToTimestamp",
+	WaitForMP = "WaitForMP",
 	SetResourceEnabled = "SetResourceEnabled",
 }
+
+export interface SerializedAction = {
+	type: "Skill",
+	skillName: ActionKey,
+	targetCount: number,
+} | {
+	type: "Wait", // legacy name; represents a wait for a fixed duration
+	waitDuration: number,
+} | {
+	type: "JumpToTimestamp",
+	targetTime: number, // timestamp in seconds
+} | {
+	type: "WaitForMP",
+	targetAmount: number,
+} | {
+	type: "SetResourceEnabled", // legacy name; also used when a resource is disabled
+	buffName: string,
+};
+
+function skillNode(skillName: ActionKey): SerializedAction {
+	return {
+		type: "Skill",
+		skillName,
+		targetCount: 1,
+	}
+}
+
+function durationWaitNode(waitDuration: number): SerializedAction {
+	return {
+		type: "Wait",
+		waitDuration,
+	}
+}
+
+function jumpToTimestampNode(targetTime: number): SerializedAction {
+	return {
+		type: "JumpToTimestamp",
+		targetTime,
+	}
+}
+
+function waitForMPNode(targetAmount: number): SerializedAction {
+	return {
+		type: "WaitForMP",
+		targetAmount,
+	}
+}
+
+function setResourceNode(buffName: string): SerializedAction {
+	return {
+		type: "SetResourceEnabled",
+		buffName,
+	}
+}
+
+export type SerializedRecord = SerializedAction[];
+
+export class ActionNode {
+	#capturedBuffs: Set<BuffType>;
+	#potency: Potency | undefined;
+	#dotPotencies: Map<ResourceKey, Potency[]>;
+	#healingPotency: Potency | undefined;
+	#hotPotencies: Map<ResourceKey, Potency[]>;
+	// TODO split into different properties for dots/hots?
+	#serialized: SerializedAction;
+	applicationTime?: number;
+	#dotOverrideAmount: Map<ResourceKey, number>;
+	#dotTimeGap: Map<ResourceKey, number>;
+	#hotOverrideAmount: Map<ResourceKey, number>;
+	#hotTimeGap: Map<ResourceKey, number>;
+	healTargetCount: number = 1;
+
+	constructor(action: SerializedAction) {
+		this.#serialized = action;
+		this.#capturedBuffs = new Set<BuffType>();
+		this.#dotPotencies = new Map();
+		this.#hotPotencies = new Map();
+		this.#dotOverrideAmount = new Map();
+		this.#dotTimeGap = new Map();
+		this.#hotOverrideAmount = new Map();
+		this.#hotTimeGap = new Map();
+	}
+
+	getClone(): ActionNode {
+		return new ActionNode(this.#serialized);
+	}
+
+	// move nodeIndex/selected logic out of this class
+
+	addBuff(rsc: BuffType) {
+		this.#capturedBuffs.add(rsc);
+	}
+
+	hasPartyBuff(): boolean {
+		const snapshotTime = this.#potency?.snapshotTime;
+		return snapshotTime && controller.game.getPartyBuffs(snapshotTime).size > 0;
+	}
+
+	getPartyBuffs(): BuffType[] {
+		const snapshotTime = this.#potency?.snapshotTime;
+		return snapshotTime ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
+	}
+
+	setTargetCount(count: number) {
+		if (this.#serialized.type === "Skill") {
+			this.#serialized.targetCount = count;
+		}
+	}
+
+	resolveAll(displayTime: number) {
+		if (this.#potency) {
+			this.#potency.resolve(displayTime);
+		}
+		this.#dotPotencies.forEach((pArr) => {
+			pArr.forEach((p) => {
+				p.resolve(displayTime);
+			});
+		});
+	}
+
+	// true if the node's effects have been applied
+	resolved() {
+		return this.applicationTime !== undefined;
+	}
+
+	hitBoss(untargetable: (displayTime: number) => boolean): boolean {
+		return this.#potency?.hasHitBoss(untargetable) ?? true;
+	}
+
+	getPotency(props: {
+		tincturePotencyMultiplier: number;
+		untargetable: (t: number) => boolean;
+		includePartyBuffs: boolean;
+		includeSplash: boolean;
+		excludeDoT?: boolean;
+	}): { applied: number, snapshottedButPending: number } {
+		let res = {
+			applied: 0,
+			snapshottedButPending: 0,
+		};
+		if (this.#potency) {
+			this.recordPotency(props, this.#potency, res);
+		}
+
+		if (props.excludeDoT) {
+			return res;
+		}
+		this.#dotPotencies.forEach((pArr) => {
+			pArr.forEach((p) => {
+				this.recordPotency(props, p, res);
+			});
+		});
+		return res;
+	}
+
+	getHealingPotency(props: {
+		tincturePotencyMultiplier: number;
+		untargetable: (t: number) => boolean;
+		includePartyBuffs: boolean;
+		includeSplash: boolean;
+		excludeHoT?: boolean;
+	}): { applied: number, snapshottedButPending: number } {
+		let res = {
+			applied: 0,
+			snapshottedButPending: 0,
+		};
+		if (this.#healingPotency) {
+			this.recordPotency(props, this.#healingPotency, res);
+		}
+
+		if (props.excludeHoT) {
+			return res;
+		}
+		this.#hotPotencies.forEach((pArr) => {
+			pArr.forEach((p) => {
+				this.recordPotency(props, p, res);
+			});
+		});
+		return res;
+	}
+
+	private recordPotency(
+		props: {
+			tincturePotencyMultiplier: number;
+			untargetable: (t: number) => boolean;
+			includePartyBuffs: boolean;
+			includeSplash: boolean;
+			excludeDoT?: boolean;
+		},
+		potency: Potency,
+		record: { applied: number; snapshottedButPending: number },
+	) {
+		if (potency.hasHitBoss(props.untargetable)) {
+			record.applied += potency.getAmount(props);
+		} else if (!potency.hasResolved() && potency.hasSnapshotted()) {
+			record.snapshottedButPending += potency.getAmount(props);
+		}
+	}
+
+	removeUnresolvedOvertimePotencies(kind: PotencyKind) {
+		const potencyMap = kind === "damage" ? this.#dotPotencies : this.#hotPotencies;
+		potencyMap.forEach((pArr) => {
+			const unresolvedIndex = pArr.findIndex((p) => !p.hasResolved());
+			if (unresolvedIndex < 0) {
+				return;
+			}
+			pArr.splice(unresolvedIndex);
+		});
+	}
+
+	anyPotencies(): boolean {
+		return this.#potency !== undefined || this.#dotPotencies.size > 0;
+	}
+	anyHealingPotencies(): boolean {
+		return this.#healingPotency !== undefined || this.#hotPotencies.size > 0;
+	}
+	getInitialPotency(): Potency | undefined {
+		return this.#potency;
+	}
+	getInitialHealingPotency(): Potency | undefined {
+		return this.#healingPotency;
+	}
+
+	getAllDotPotencies(): Potency[] {
+		return this.getAllOverTimePotencies("damage");
+	}
+	getAllHotPotencies(): Potency[] {
+		return this.getAllOverTimePotencies("healing");
+	}
+	getAllOverTimePotencies(kind: PotencyKind): Potency[] {
+		if (kind === "damage") {
+			return this.#dotPotencies;
+		} else {
+			return this.#hotPotencies;
+		}
+	}
+
+	getDotPotencies(r: ResourceKey): Potency[] {
+		return this.getOverTimePotencies(r, "damage");
+	}
+	getHotPotencies(r: ResourceKey): Potency[] {
+		return this.getOverTimePotencies(r, "healing");
+	}
+	getOverTimePotencies(r: ResourceKey, kind: PotencyKind): Potency[] {
+		if (kind === "damage") {
+			return this.#dotPotencies.get(r) ?? [];
+		} else {
+			return this.#hotPotencies.get(r) ?? [];
+		}
+	}
+
+	addPotency(p: Potency) {
+		console.assert(
+			!this.#potency,
+			`ActionNode for ${this.skillName} already had an initial potency`,
+		);
+		this.#potency = p;
+	}
+	addHealingPotency(p: Potency) {
+		console.assert(
+			!this.#healingPotency,
+			`ActionNode for ${this.skillName} already had an initial healing potency`,
+		);
+		this.#healingPotency = p;
+	}
+
+	addDoTPotency(p: Potency, r: ResourceKey) {
+		this.addOverTimePotency(p, r, "damage");
+	}
+
+	addHoTPotency(p: Potency, r: ResourceKey) {
+		this.addOverTimePotency(p, r, "healing");
+	}
+	addOverTimePotency(p: Potency, r: ResourceKey, kind: PotencyKind) {
+		const potencyMap: Map<ResourceKey, Potency[]> =
+			kind === "damage" ? this.#dotPotencies : this.#hotPotencies;
+		const pArr = potencyMap.get(r) ?? [];
+		if (pArr.length === 0) {
+			potencyMap.set(r, pArr);
+		}
+		pArr.push(p);
+	}
+
+	setOverTimeGap(effectName: ResourceKey, amount: number, kind: PotencyKind) {
+		this.setOverTimeMappedAmount(effectName, amount, kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap);
+	}
+
+	getOverTimeGap(effectName: ResourceKey, kind: PotencyKind) {
+		this.getOverTimeMappedAmount(effectName, amount, kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap);
+	}
+
+	setOverTimeOverrideAmount(effectName: ResourceKey, amount: number, kind: PotencyKind) {
+		this.setOverTimeMappedAmount(effectName, amount, kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount);
+	}
+
+	getOverTimeOverrideAmount(effectName: ResourceKey, kind: PotencyKind) {
+		this.getOverTimeMappedAmount(effectName, amount, kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount);
+	}
+
+	private setOverTimeMappedAmount(
+		effectName: ResourceKey,
+		amount: number,
+		map: Map<ResourceKey, number>,
+	) {
+		map.set(effectName, amount);
+	}
+	private getOverTimeMappedAmount(effectName: ResourceKey, map: Map<ResourceKey, number>) {
+		return map.get(effectName) ?? 0;
+	}
+}
+
+// everything below is legacy code
 
 function verifyActionNode(action: ActionNode) {
 	console.assert(typeof action !== "undefined");
