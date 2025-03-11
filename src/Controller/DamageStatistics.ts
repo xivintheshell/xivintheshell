@@ -58,14 +58,11 @@ export const getTargetableDurationBetween = (startDisplayTime: number, endDispla
 };
 
 function isDoTNode(node: ActionNode) {
-	if (node.skillName === undefined) {
-		return false;
-	}
-	return ctl.game.dotSkills.includes(node.skillName);
+	return node.serialized.type === ActionType.Skill && ctl.game.dotSkills.includes(node.serialized.skillName);
 }
 
 function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: ActionNode) {
-	console.assert(isDoTNode(node), `${node.skillName} is not registered as a dot skill`);
+	console.assert(isDoTNode(node), `${node.maybeGetSkillName()} is not registered as a dot skill`);
 	let mainPotency = node.getInitialPotency();
 	let entry: DamageStatsDoTTableEntry = {
 		castTime: node.tmp_startLockTime ? node.tmp_startLockTime - ctl.gameConfig.countdown : 0,
@@ -164,14 +161,15 @@ function expandNode(node: ActionNode): ExpandedNode {
 		falloff: 1,
 		targetCount: 1,
 	};
-	if (node.type === ActionType.Skill && node.skillName) {
+	if (node.serialized.type === ActionType.Skill && node.serialized.skillName) {
+		const skillName = node.serialized.skillName;
 		const mainPotency = node.getInitialPotency();
 		if (!mainPotency) {
 			// do nothing if the used ability does no damage
 		} else {
 			res.targetCount = node.targetCount;
 			res.falloff = mainPotency.falloff ?? 1;
-			if (AFUISkills.has(node.skillName)) {
+			if (AFUISkills.has(skillName)) {
 				// for AF/UI skills, display the first modifier that's not enochian or pot
 				// (must be one of af123, ui123)
 				res.basePotency = mainPotency.base;
@@ -183,7 +181,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 						break;
 					}
 				}
-			} else if (enoSkills.has(node.skillName)) {
+			} else if (enoSkills.has(skillName)) {
 				// for foul/xeno/para, display enochian modifier if it has one. Otherwise empty.
 				for (const modifier of mainPotency.modifiers) {
 					const tag = modifier.source;
@@ -197,7 +195,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 			} else if (isDoTNode(node)) {
 				// dot modifiers are handled separately
 				res.basePotency = mainPotency.base;
-				node.targetCount = mainPotency.targetCount;
+				node.serialized.targetCount = mainPotency.targetCount;
 			} else {
 				// for non-BLM jobs, display all non-pot modifiers on all damaging skills
 				res.basePotency = mainPotency.base;
@@ -234,7 +232,7 @@ function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 
 	for (let i = 0; i < table.length; i++) {
 		if (
-			node.skillName === table[i].skillName &&
+			node.maybeGetSkillName() === table[i].skillName &&
 			tagsAreEqual(expanded.displayedModifiers, table[i].displayedModifiers) &&
 			node.targetCount === table[i].targetCount
 		) {
@@ -306,13 +304,13 @@ export function calculateSelectedStats(props: {
 
 	ctl.record.iterateSelected((node) => {
 		if (
-			node.type === ActionType.Skill &&
-			node.skillName &&
-			!(node.skillName in LIMIT_BREAK_ACTIONS)
+			node.serialized.type === ActionType.Skill &&
+			node.serialized.skillName &&
+			!(node.serialized.skillName in LIMIT_BREAK_ACTIONS)
 		) {
-			const checked = getSkillOrDotInclude(node.skillName);
+			const checked = getSkillOrDotInclude(node.serialized.skillName);
 			// gcd count
-			let skillInfo = ctl.game.skillsList.get(node.skillName);
+			let skillInfo = ctl.game.skillsList.get(node.serialized.skillName);
 			if (skillInfo.cdName === "cd_GCD" && checked) {
 				if (node.hitBoss(bossIsUntargetable)) selected.gcdSkills.applied++;
 				else if (!node.resolved()) selected.gcdSkills.pending++;
@@ -375,12 +373,13 @@ export function calculateDamageStats(props: {
 	let skillPotencies: Map<ActionKey, number> = new Map();
 
 	const processNodeFn = (node: ActionNode) => {
-		if (node.type === ActionType.Skill && node.skillName) {
-			const checked = getSkillOrDotInclude(node.skillName);
-			const isLimitBreak = node.skillName in LIMIT_BREAK_ACTIONS;
+		if (node.serialized.type === ActionType.Skill && node.serialized.skillName) {
+			const skillName = node.serialized.skillName;
+			const checked = getSkillOrDotInclude(skillName);
+			const isLimitBreak = skillName in LIMIT_BREAK_ACTIONS;
 
 			// gcd count
-			let skillInfo = ctl.game.skillsList.get(node.skillName);
+			let skillInfo = ctl.game.skillsList.get(skillName);
 			if (skillInfo.cdName === "cd_GCD" && checked) {
 				if (node.hitBoss(bossIsUntargetable)) {
 					gcdSkills.applied++;
@@ -408,7 +407,7 @@ export function calculateDamageStats(props: {
 				if (q.mainTableIndex < 0) {
 					// create an entry if doesn't have one already
 					mainTable.push({
-						skillName: node.skillName,
+						skillName,
 						displayedModifiers: q.expandedNode.displayedModifiers,
 						basePotency: isLimitBreak ? 0 : q.expandedNode.basePotency,
 						calculationModifiers: q.expandedNode.calculationModifiers,
@@ -470,9 +469,9 @@ export function calculateDamageStats(props: {
 				}
 
 				// also get contrib of each skill
-				let skillPotency = skillPotencies.get(node.skillName) ?? 0;
+				let skillPotency = skillPotencies.get(skillName) ?? 0;
 				skillPotency += potencyWithPartyBuffs;
-				skillPotencies.set(node.skillName, skillPotency);
+				skillPotencies.set(skillName, skillPotency);
 
 				// and main table total (only if checked)
 				if (checked) {
@@ -541,7 +540,7 @@ export function calculateDamageStats(props: {
 			const applicationTime = dotTrackingData.lastDoT.applicationTime;
 			console.assert(
 				applicationTime,
-				`DoT node at index ${dotTrackingData.lastDoT.getNodeIndex()} was not resolved`,
+				`DoT node was not resolved`,
 			);
 
 			let lastDotDropTime = (applicationTime as number) + ctl.game.getStatusDuration(dotName);

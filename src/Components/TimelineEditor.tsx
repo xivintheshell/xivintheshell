@@ -15,14 +15,16 @@ function setHandledSkillSelectionThisFrame(handled: boolean) {
 }
 
 function TimelineActionElement(props: {
+	index: number;
 	node: ActionNode;
+	isSelected: boolean;
 	belongingRecord: Record;
 	isFirstInvalid: boolean;
 	refObj?: React.RefObject<HTMLDivElement>;
 }) {
 	let recordIsDirty = props.belongingRecord !== controller.record;
-	let bgColor = props.node.isSelected() ? "rgba(151,111,246,0.25)" : "transparent";
-	if (recordIsDirty && props.node.isSelected()) {
+	let bgColor = props.isSelected ? "rgba(151,111,246,0.25)" : "transparent";
+	if (recordIsDirty && props.isSelected) {
 		bgColor = "rgba(255, 220, 0, 0.25)";
 	}
 	let style: CSSProperties = {
@@ -33,26 +35,26 @@ function TimelineActionElement(props: {
 		background: bgColor,
 	};
 	let name = localize({ en: "(other)", zh: "（其它）" });
-	if (props.node.type === ActionType.Skill) {
+	if (props.node.serialized.type === ActionType.Skill) {
 		const targetStr =
-			props.node.targetCount > 1
+			props.node.serialized.targetCount > 1
 				? localize({
-						en: ` (${props.node.targetCount} targets)`,
-						zh: `（${props.node.targetCount}个目标）`,
+						en: ` (${props.node.serialized.targetCount} targets)`,
+						zh: `（${props.node.serialized.targetCount}个目标）`,
 					})
 				: "";
-		name = props.node.skillName
-			? localizeSkillName(props.node.skillName) + targetStr
+		name = props.node.serialized.skillName
+			? localizeSkillName(props.node.serialized.skillName) + targetStr
 			: localize({ en: "(unknown skill)", zh: "未知技能" });
-	} else if (props.node.type === ActionType.Wait) {
+	} else if (props.node.serialized.type === ActionType.Wait) {
 		name = localize({
-			en: "(wait for " + props.node.waitDuration.toFixed(2) + "s)",
-			zh: "（等" + props.node.waitDuration.toFixed(2) + "秒）",
+			en: "(wait for " + props.node.serialized.waitDuration.toFixed(2) + "s)",
+			zh: "（等" + props.node.serialized.waitDuration.toFixed(2) + "秒）",
 		});
-	} else if (props.node.type === ActionType.SetResourceEnabled) {
+	} else if (props.node.serialized.type === ActionType.SetResourceEnabled) {
 		name = localize({
-			en: "(toggle resource: " + props.node.buffName + ")",
-			zh: "（开关或去除BUFF：" + props.node.buffName + "）",
+			en: "(toggle resource: " + props.node.serialized.buffName + ")",
+			zh: "（开关或去除BUFF：" + props.node.serialized.buffName + "）",
 		});
 	}
 	return <div
@@ -61,10 +63,10 @@ function TimelineActionElement(props: {
 		onClick={(e) => {
 			setHandledSkillSelectionThisFrame(true);
 			if (recordIsDirty) {
-				props.belongingRecord.onClickNode(props.node, e.shiftKey);
+				props.belongingRecord.onClickNode(props.index, e.shiftKey);
 				refreshTimelineEditor();
 			} else {
-				controller.timeline.onClickTimelineAction(props.node, e.shiftKey);
+				controller.timeline.onClickTimelineAction(props.index, e.shiftKey);
 				if (props.node.tmp_startLockTime) {
 					controller.scrollToTime(props.node.tmp_startLockTime);
 				}
@@ -211,11 +213,11 @@ export class TimelineEditor extends React.Component {
 					if (node) {
 						if (node.type === ActionType.Wait) {
 							nodeName = "(Wait)";
-						} else if (node.type === ActionType.SetResourceEnabled) {
-							nodeName = "(Toggle resource " + node.buffName + ")";
-						} else if (node.type === ActionType.Skill) {
-							nodeName = node.skillName
-								? ACTIONS[node.skillName].name
+						} else if (node.serialized.type === ActionType.SetResourceEnabled) {
+							nodeName = "(Toggle resource " + node.serialized.buffName + ")";
+						} else if (node.serialized.type === ActionType.Skill) {
+							nodeName = node.serialized.skillName
+								? ACTIONS[node.serialized.skillName].name
 								: "(unknown skill)";
 						}
 					}
@@ -299,28 +301,16 @@ export class TimelineEditor extends React.Component {
 						const selectionLength = record.getSelectionLength();
 						if (selectionLength > 1) {
 							// To make use of the existing moveSelected abstraction, we do the following:
-							// 1. Record the second to last selected node (this will be the new tail)
-							// 2. Deselect everything except the current tail
-							// 3. Call `moveSelected(-1 * (selectionLength - 1))`
-							// 4. Call `selectUntil` with the new tail
-							// Unfortunately the ActionNode linked list is not double-sided, so we
-							// just manually iterate from the start of the selection until we hit the
-							// second to last node.
-							const newHead = record.getLastSelection();
-							let itr = record.getFirstSelection();
-							let newTail = undefined;
-							while (itr && itr.next !== newHead) {
-								itr = itr.next;
-							}
-							newTail = itr;
-							console.assert(
-								newTail !== undefined,
-								"last selected node had no parent",
-							);
-							record.selectSingle(newHead!);
+							// 1. Deselect everything except the current tail
+							// 2. Call `moveSelected(-1 * (selectionLength - 1))`
+							// 3. Call `selectUntil` on the original range
+							const originalStart = record.selectionStartIndex!;
+							const originalEnd = record.selectionEndIndex!;
+							record.selectSingle(originalEnd);
 							record.moveSelected(-(selectionLength - 1));
-							record.selectUntil(newTail!);
-							return newHead;
+							record.selectSingle(originalStart);
+							record.selectUntil(originalEnd);
+							return record.getFirstSelection();
 						}
 						return undefined;
 					})
@@ -342,21 +332,21 @@ export class TimelineEditor extends React.Component {
 		</div>;
 
 		// mid: actions list
-		let actionsList = [];
-		let itr = displayedRecord.getFirstAction();
-		while (itr) {
-			const isFirstSelected = !this.isDirty() && itr === displayedRecord.getFirstSelection();
+		let actionsList: React.JSX.Element[] = [];
+		displayedRecord.actions.forEach((action, i) => {
+			const isFirstSelected = !this.isDirty() && i === displayedRecord.selectionStartIndex;
 			actionsList.push(
 				<TimelineActionElement
-					key={itr.getNodeIndex()}
-					node={itr}
+					key={i}
+					index={i}
+					node={action}
+					isSelected={displayedRecord.isInSelection(i)}
 					belongingRecord={displayedRecord}
-					isFirstInvalid={this.state.recordValidStatus?.firstInvalidAction === itr}
+					isFirstInvalid={this.state.recordValidStatus?.firstInvalidAction === action}
 					refObj={isFirstSelected ? this.firstSelected : undefined}
 				/>,
 			);
-			itr = itr.next;
-		}
+		})
 		return <div
 			onClick={(evt) => {
 				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {

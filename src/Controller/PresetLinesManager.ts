@@ -1,5 +1,10 @@
 import { FileType, getCachedValue, setCachedValue } from "./Common";
-import { ActionNode, Line } from "./Record";
+import {
+	ActionNode, ActionType, Line, SerializedAction,
+	skillNode,
+	durationWaitNode,
+	setResourceNode,
+} from "./Record";
 import { getNormalizedSkillName, getResourceKeyFromBuffName, jobHasSkill } from "../Game/Skills";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
 import { ShellJob, ALL_JOBS } from "../Game/Data/Jobs";
@@ -54,22 +59,36 @@ export class PresetLinesManager {
 	}
 
 	deserializeAndAppend(content: Fixme) {
-		for (let i = 0; i < content.presets.length; i++) {
+		for (let preset of content.presets) {
 			const skillNames: ActionKey[] = [];
 			const line = new Line();
-			line.name = content.presets[i].name;
-			for (let j = 0; j < content.presets[i].actions.length; j++) {
-				const action = content.presets[i].actions[j];
-				const node = new ActionNode(action.type);
-				if (action.skillName) {
-					node.skillName = getNormalizedSkillName(action.skillName)!;
-					skillNames.push(node.skillName);
+			line.name = preset.name;
+			for (let obj of preset.actions) {
+				const action = obj as SerializedAction;
+				// TODO handle additional wait types
+				// TODO share code with controller.loadBattleRecordFromFile
+				switch (action.type) {
+					case ActionType.Skill:
+						const skillName = getNormalizedSkillName(action.skillName)!;
+						line.addActionNode(new ActionNode(skillNode(skillName)));
+						skillNames.push(skillName);
+						break;
+					case ActionType.SetResourceEnabled:
+						line.addActionNode(
+							new ActionNode(setResourceNode(getResourceKeyFromBuffName(action.buffName)!))
+						);
+						break;
+					case ActionType.Wait:
+						line.addActionNode(
+							new ActionNode(durationWaitNode(action.waitDuration))
+						);
+						break;
+					default:
+						window.alert("unparseable action: " + action.toString());
+						return;
 				}
-				node.waitDuration = action.waitDuration;
-				node.buffName = getResourceKeyFromBuffName(action.buffName);
-				line.addActionNode(node);
 			}
-			this.addLine(line, content.presets[i].job ?? inferJobFromSkillNames(skillNames));
+			this.addLine(line, preset.job ?? inferJobFromSkillNames(skillNames));
 		}
 	}
 

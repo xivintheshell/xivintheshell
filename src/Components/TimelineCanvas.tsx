@@ -28,6 +28,7 @@ import {
 import { BuffType, WarningType } from "../Game/Common";
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
+import { ActionType } from "../Controller/Record";
 import { controller } from "../Controller/Controller";
 import { localize, localizeBuffType, localizeSkillName } from "./Localization";
 import { setEditingMarkerValues } from "./TimelineMarkers";
@@ -648,9 +649,10 @@ function drawSkills(
 		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(skill.displayTime, scale);
 		let y = skill.isGCD ? skillsTopY + TimelineDimensions.skillButtonHeight / 2 : skillsTopY;
 		// if there were multiple targets, draw the number of targets above the ability icon
-		if (skill.node.targetCount > 1) {
+		const targetCount = skill.node.serialized.type === ActionType.Skill ? skill.node.serialized.targetCount : 0;
+		if (targetCount > 1) {
 			targetCounts.push({
-				count: skill.node.targetCount,
+				count: targetCount,
 				x: x + TimelineDimensions.skillButtonHeight / 2,
 				y: y - 5,
 			});
@@ -798,7 +800,7 @@ function drawSkills(
 		lines.push(description);
 
 		// 2. potency
-		if (!((node.skillName ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
+		if (!((node.maybeGetSkillName() ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
 			if (node.getInitialPotency()) {
 				const potency = node.getPotency({
 					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
@@ -843,7 +845,7 @@ function drawSkills(
 				lines,
 				() => {
 					controller.timeline.onClickTimelineAction(
-						node,
+						icon.elem.actionIndex,
 						g_clickEvent ? g_clickEvent.shiftKey : false,
 					);
 					scrollEditorToFirstSelected();
@@ -1450,7 +1452,7 @@ export function TimelineCanvas(props: {
 				g_isKeyboardUpdate = true;
 				g_keyboardEvent = e;
 				if (g_keyboardEvent.key === "Backspace" || g_keyboardEvent.key === "Delete") {
-					let firstSelected = controller.record.getFirstSelection();
+					let firstSelected = controller.record.selectionStartIndex;
 					if (firstSelected) {
 						controller.rewindUntilBefore(firstSelected, false);
 						controller.displayCurrentState();
