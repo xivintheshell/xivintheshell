@@ -1212,6 +1212,17 @@ class Controller {
 				};
 			}
 		}
+
+		// When performing a replay up to a cutoff, advance the game time to the start of the action
+		// at props.cutoffIndex. This ensures the displayed cursor will be at the correct time.
+		if (props.cutoffIndex !== undefined) {
+			const info = line.actions[props.cutoffIndex].info;
+			if (info.type === ActionType.Skill) {
+				const status = this.game.getSkillAvailabilityStatus(info.skillName);
+				this.#requestTick({ deltaTime: status.timeTillAvailable, separateNode: false });
+			}
+		}
+
 		// Re-enable UI updates
 		this.#skipViewUpdates = false;
 		this.updateAllDisplay();
