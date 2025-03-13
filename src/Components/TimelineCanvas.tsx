@@ -1453,7 +1453,7 @@ export function TimelineCanvas(props: {
 				g_keyboardEvent = e;
 				if (g_keyboardEvent.key === "Backspace" || g_keyboardEvent.key === "Delete") {
 					let firstSelected = controller.record.selectionStartIndex;
-					if (firstSelected) {
+					if (firstSelected !== undefined) {
 						controller.rewindUntilBefore(firstSelected, false);
 						controller.displayCurrentState();
 						controller.updateAllDisplay();

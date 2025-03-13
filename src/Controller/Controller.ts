@@ -12,7 +12,6 @@ import {
 	getAutoReplacedSkillName,
 	getConditionalReplacement,
 	getNormalizedSkillName,
-	getResourceKeyFromBuffName,
 } from "../Game/Skills";
 import { Buff } from "../Game/Buffs";
 import {
@@ -43,7 +42,6 @@ import {
 	ActionType,
 	Line,
 	Record,
-	SerializedAction,
 	skillNode,
 	durationWaitNode,
 	setResourceNode,
@@ -428,35 +426,7 @@ class Controller {
 		this.#applyResourceOverrides(this.gameConfig);
 
 		// now add the actions
-		let line = new Line();
-		for (let i = 0; i < content.actions.length; i++) {
-			let action = content.actions[i] as SerializedAction;
-			// TODO support other types of waits
-			switch (action.type) {
-				case ActionType.Skill:
-					const skillName = getNormalizedSkillName(action.skillName);
-					if (skillName === undefined) {
-						// TODO don't return; instead generate an invalid skill entry
-						const msg = `Failed to load record- \nInvalid skill name: ${action.skillName}`;
-						window.alert(msg);
-						return;
-					} else {
-						line.addActionNode(skillNode(skillName, action.targetCount));
-					}
-					break;
-				case ActionType.SetResourceEnabled:
-					line.addActionNode(
-						setResourceNode(getResourceKeyFromBuffName(action.buffName)!),
-					);
-					break;
-				case ActionType.Wait:
-					line.addActionNode(durationWaitNode(action.waitDuration));
-					break;
-				default:
-					window.alert("unparseable action: " + action.toString());
-					return;
-			}
-		}
+		let line = Line.deserialize(content.actions);
 		let replayResult = this.#replay({ line: line, replayMode: ReplayMode.Exact });
 		if (!replayResult.success) {
 			let msg = "Failed to load the entire record- \n";
@@ -1531,18 +1501,9 @@ class Controller {
 	}
 
 	// basically restart the game and play till here:
-	// if node is undefined, replay the whole thing.
+	// if index is undefined, replay the whole thing.
 	rewindUntilBefore(index: number | undefined, removeTrailingIdleTime: boolean) {
 		let replayRecord = this.record;
-
-		let newTail: number | undefined;
-		if (replayRecord.selectionStartIndex === index) {
-			// deleting everything before head (making it empty)
-			newTail = undefined;
-		} else {
-			console.assert(replayRecord.getFirstAction() !== undefined);
-			newTail = index;
-		}
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;
@@ -1550,8 +1511,8 @@ class Controller {
 		this.#requestRestart();
 		this.#applyResourceOverrides(this.gameConfig);
 
-		if (newTail) {
-			replayRecord.spliceUpTo(newTail);
+		if (index !== undefined) {
+			replayRecord.spliceUpTo(index);
 			this.#replay({
 				line: replayRecord,
 				replayMode: ReplayMode.Exact,

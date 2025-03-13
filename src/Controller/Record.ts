@@ -22,6 +22,7 @@ import { GameConfig } from "../Game/GameConfig";
 import { Potency, PotencyKind } from "../Game/Potency";
 import { controller } from "./Controller";
 import { ACTIONS, ActionKey, ResourceKey } from "../Game/Data";
+import { getNormalizedSkillName, getResourceKeyFromBuffName } from "../Game/Skills";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -29,6 +30,7 @@ export const enum ActionType {
 	JumpToTimestamp = "JumpToTimestamp",
 	WaitForMP = "WaitForMP",
 	SetResourceEnabled = "SetResourceEnabled",
+	Invalid = "Invalid",
 }
 
 // TODO don't serialize actionkey/resourcekey, need to serialize string instead
@@ -66,7 +68,8 @@ export type SerializedAction =
 	| SerializedWait
 	| SerializedJump
 	| SerializedMPWait
-	| SerializedSetResource;
+	| SerializedSetResource
+	| { type: ActionType.Invalid };
 
 // Because SkillNode serializes with the localized string value instead of an ActionKey,
 // It needs a different internal type.
@@ -87,7 +90,8 @@ export type NodeInfo =
 	| SerializedWait
 	| SerializedJump
 	| SerializedMPWait
-	| SetResourceNodeInfo;
+	| SetResourceNodeInfo
+	| { type: ActionType.Invalid };
 
 export function skillNode(skillName: ActionKey, targetCount?: number): ActionNode {
 	return new ActionNode({
@@ -125,7 +129,7 @@ export function setResourceNode(buffName: ResourceKey): ActionNode {
 	});
 }
 
-export type SerializedRecord = SerializedAction[];
+export type SerializedLine = SerializedAction[];
 
 export class ActionNode {
 	#capturedBuffs: Set<BuffType>;
@@ -506,6 +510,34 @@ export class Line {
 		let result: any[][] = [];
 		return result;
 	}
+
+	static deserialize(serialized: SerializedLine): Line {
+		const actions = serialized.map((serializedAction) => {
+			// TODO handle additional wait types
+			// TODO ensure objects are well-formed and insert invalid nodes if not
+			if (serializedAction.type === ActionType.Skill) {
+				const skillName = getNormalizedSkillName(serializedAction.skillName)!;
+				return new ActionNode({
+					type: ActionType.Skill,
+					skillName,
+					targetCount: serializedAction.targetCount,
+				});
+			} else if (serializedAction.type === ActionType.SetResourceEnabled) {
+				return new ActionNode({
+					type: ActionType.SetResourceEnabled,
+					buffName: getResourceKeyFromBuffName(serializedAction.buffName)!,
+				});
+			} else if ([ActionType.Wait].includes(serializedAction.type)) {
+				return new ActionNode(serializedAction);
+			} else {
+				window.alert("unparseable action: " + serializedAction.toString());
+				return new ActionNode({ type: ActionType.Invalid });
+			}
+		});
+		const line = new Line();
+		line.actions = actions;
+		return line;
+	}
 }
 
 export type RecordValidStatus = {
@@ -549,8 +581,10 @@ export class Record extends Line {
 
 	isInSelection(index: number): boolean {
 		return (
-			index >= (this.selectionStartIndex ?? 0) &&
-			index <= (this.selectionEndIndex ?? this.length - 1)
+			this.selectionStartIndex !== undefined &&
+			this.selectionEndIndex !== undefined &&
+			index >= this.selectionStartIndex &&
+			index <= this.selectionEndIndex
 		);
 	}
 
@@ -589,7 +623,10 @@ export class Record extends Line {
 		this.selectionEndIndex = lastIndex;
 	}
 	selectUntil(newIndex: number) {
-		if (this.selectionStartIndex && this.selectionStartIndex === this.selectionEndIndex) {
+		if (
+			this.selectionStartIndex !== undefined &&
+			this.selectionStartIndex === this.selectionEndIndex
+		) {
 			// If there is only one node selected: extend the selection window between the current
 			// skill and the newly-selected one
 			if (this.selectionStartIndex <= newIndex) {
@@ -600,7 +637,7 @@ export class Record extends Line {
 				this.startIsPivot = false;
 			}
 		} else if (
-			this.selectionStartIndex &&
+			this.selectionStartIndex !== undefined &&
 			this.selectionStartIndex !== this.selectionEndIndex
 		) {
 			// If a multi-selection is already made, adjust its boundaries around the "pivot" node.

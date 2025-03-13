@@ -1,13 +1,6 @@
 import { FileType, getCachedValue, setCachedValue } from "./Common";
-import {
-	ActionType,
-	Line,
-	SerializedAction,
-	skillNode,
-	durationWaitNode,
-	setResourceNode,
-} from "./Record";
-import { getNormalizedSkillName, getResourceKeyFromBuffName, jobHasSkill } from "../Game/Skills";
+import { ActionType, Line } from "./Record";
+import { jobHasSkill } from "../Game/Skills";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
 import { ShellJob, ALL_JOBS } from "../Game/Data/Jobs";
 import { ActionKey } from "../Game/Data";
@@ -62,32 +55,11 @@ export class PresetLinesManager {
 
 	deserializeAndAppend(content: Fixme) {
 		for (let preset of content.presets) {
-			const skillNames: ActionKey[] = [];
-			const line = new Line();
+			const line = Line.deserialize(preset.actions);
 			line.name = preset.name;
-			for (let obj of preset.actions) {
-				const action = obj as SerializedAction;
-				// TODO handle additional wait types
-				// TODO share code with controller.loadBattleRecordFromFile
-				switch (action.type) {
-					case ActionType.Skill:
-						const skillName = getNormalizedSkillName(action.skillName)!;
-						line.addActionNode(skillNode(skillName));
-						skillNames.push(skillName);
-						break;
-					case ActionType.SetResourceEnabled:
-						line.addActionNode(
-							setResourceNode(getResourceKeyFromBuffName(action.buffName)!),
-						);
-						break;
-					case ActionType.Wait:
-						line.addActionNode(durationWaitNode(action.waitDuration));
-						break;
-					default:
-						window.alert("unparseable action: " + action.toString());
-						return;
-				}
-			}
+			const skillNames: ActionKey[] = line.actions.flatMap((action) =>
+				action.info.type === ActionType.Skill ? [action.info.skillName] : [],
+			);
 			this.addLine(line, preset.job ?? inferJobFromSkillNames(skillNames));
 		}
 	}
