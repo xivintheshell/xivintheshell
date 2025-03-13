@@ -1026,6 +1026,11 @@ class Controller {
 				});
 			}
 
+			if (overrideTickMode !== TickMode.RealTimeAutoPause) {
+				// In manual mode, directly fast-forward to the end of animation lock instead of animating.
+				this.#fastForward();
+			}
+
 			// If this was called within a line load, do not refresh the timeline view
 			if (!this.#skipViewUpdates) {
 				refreshTimelineEditor();
@@ -1582,12 +1587,7 @@ class Controller {
 		}
 	}
 	#handleKeyboardEvent_Manual(evt: { keyCode: number; shiftKey: boolean }) {
-		if (evt.keyCode === 32) {
-			// space
-			this.#fastForward();
-			this.updateAllDisplay();
-			this.autoSave();
-		} else if (evt.keyCode === 85) {
+		if (evt.keyCode === 85) {
 			// u (undo)
 			this.rewindUntilBefore(this.record.tailIndex, false);
 			this.updateAllDisplay();
