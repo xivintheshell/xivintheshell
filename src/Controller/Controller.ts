@@ -199,7 +199,7 @@ class Controller {
 		this.#lastDamageApplicationTime = tmpLastDamageApplicationTime;
 	}
 
-	checkRecordValidity(inRecord: Record, editedNodes: ActionNode[]) {
+	checkRecordValidity(inRecord: Record, firstEditedNodeIndex?: number) {
 		console.assert(inRecord.config !== undefined);
 
 		let result: {
@@ -217,7 +217,7 @@ class Controller {
 		};
 
 		// no edit happened
-		if (editedNodes.length === 0) {
+		if (firstEditedNodeIndex === undefined) {
 			console.log("no edit happened");
 			return result;
 		}
@@ -238,7 +238,7 @@ class Controller {
 			let status = this.#replay({
 				line: inRecord,
 				replayMode: ReplayMode.Edited,
-				editedNodes: editedNodes,
+				firstEditedNodeIndex,
 				selectionStart: inRecord.getFirstSelection(),
 				selectionEnd: inRecord.getLastSelection(),
 			});
@@ -877,14 +877,11 @@ class Controller {
 						},
 			);
 
-			// If the last node is an explicit wait for a specified duration, then add it to
-			// the record.
+			// If the last node is an explicit wait for a specified duration, then add it to the record.
 			// Waits for all other nodes are implicit.
 			let lastAction = this.record.getLastAction();
-			if (lastAction && lastAction.info.type === ActionType.Wait && !props.separateNode) {
-				lastAction.info.waitDuration += timeTicked;
-			} else if (props.separateNode) {
-				this.record.addActionNode(durationWaitNode(timeTicked))
+			if (props.separateNode) {
+				this.record.addActionNode(durationWaitNode(timeTicked));
 			}
 		}
 	}
@@ -1037,14 +1034,6 @@ class Controller {
 		return status;
 	}
 
-	#inArray(n: ActionNode | undefined, l: ActionNode[] | undefined) {
-		if (!l) return false;
-		for (let i = 0; i < l.length; i++) {
-			if (n === l[i]) return true;
-		}
-		return false;
-	}
-
 	// returns true on success
 	#replay(props: {
 		line: Line;
@@ -1052,7 +1041,7 @@ class Controller {
 		removeTrailingIdleTime?: boolean;
 		maxReplayTime?: number;
 		cutoffIndex?: number;
-		editedNodes?: ActionNode[]; // for ReplayMode.Edited: everything before this should instead use ReplayMode.Exact
+		firstEditedNodeIndex?: number; // for ReplayMode.Edited: everything before this should instead use ReplayMode.Exact
 		selectionStart?: ActionNode;
 		selectionEnd?: ActionNode;
 	}): {
@@ -1099,9 +1088,8 @@ class Controller {
 			if (
 				props.replayMode === ReplayMode.Edited &&
 				currentReplayMode === ReplayMode.Exact &&
-				// TODO do a more efficient way to conduct this check?
-				(this.#inArray(itr, props.editedNodes) ||
-					this.#inArray(line.actions[i + 1], props.editedNodes))
+				// TODO why i + 1 as well?
+				(i === props.firstEditedNodeIndex || i + 1 === props.firstEditedNodeIndex)
 			) {
 				currentReplayMode = ReplayMode.Edited;
 			}
@@ -1142,11 +1130,7 @@ class Controller {
 						this.gameConfig.level,
 					);
 				}
-				let status = this.#useSkill(
-					skillName,
-					itr.info.targetCount,
-					TickMode.Manual,
-				);
+				let status = this.#useSkill(skillName, itr.info.targetCount, TickMode.Manual);
 
 				// Wait until the animation lock has completed
 				this.#requestTick({
@@ -1203,15 +1187,15 @@ class Controller {
 			// for edited replay mode, copy selection:
 			if (props.replayMode === ReplayMode.Edited) {
 				let lastAdded = this.record.tailIndex;
-				if (itr === props.selectionStart && lastAdded) {
+				if (itr === props.selectionStart && lastAdded >= 0) {
 					this.record.selectSingle(lastAdded);
-				} else if (itr === props.selectionEnd && lastAdded) {
+				} else if (itr === props.selectionEnd && lastAdded >= 0) {
 					this.record.selectUntil(lastAdded);
 				}
 			}
 
 			// this iteration just added something, but firstAddedIndex is still unset:
-			if (this.record.length !== oldLength && !firstAddedIndex) {
+			if (this.record.length !== oldLength && firstAddedIndex === undefined) {
 				firstAddedIndex = this.record.tailIndex;
 			}
 

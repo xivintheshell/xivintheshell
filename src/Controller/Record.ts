@@ -589,11 +589,10 @@ export class Record extends Line {
 	}
 
 	iterateSelected(fn: (node: ActionNode) => void) {
-		if (this.selectionStartIndex === undefined) {
+		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined) {
 			return;
 		}
-		const endIndex = this.selectionEndIndex ?? this.actions.length - 1;
-		for (let i = this.selectionStartIndex; i <= endIndex; i++) {
+		for (let i = this.selectionStartIndex; i <= this.selectionEndIndex; i++) {
 			fn(this.actions[i]);
 		}
 	}
@@ -607,10 +606,10 @@ export class Record extends Line {
 	}
 
 	getSelectionLength(): number {
-		if (this.selectionStartIndex === undefined) {
+		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined) {
 			return 0;
 		}
-		const endIndex = this.selectionEndIndex ?? this.actions.length - 1;
+		const endIndex = this.selectionEndIndex;
 		return endIndex - this.selectionStartIndex + 1;
 	}
 
@@ -670,11 +669,18 @@ export class Record extends Line {
 			}
 		}
 	}
-	moveSelected(offset: number): ActionNode | undefined {
+	// Re-arrange the selected skills, moving the current selection by `offset`.
+	// Return the index of the first newly-edited skill. The controller uses this to determine
+	// which skills have been edited and need to be re-validated.
+	moveSelected(offset: number): number | undefined {
 		// positive: move right; negative: move left
-		if (offset === 0) return undefined;
-		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined)
+		if (
+			offset === 0 ||
+			this.selectionStartIndex === undefined ||
+			this.selectionEndIndex === undefined
+		) {
 			return undefined;
+		}
 		const originalStartIndex = this.selectionStartIndex;
 		// splice the selected portion, then re-insert it at originalStartIndex + offset
 		// line: a b c d e f
@@ -687,22 +693,19 @@ export class Record extends Line {
 		const selected = this.actions.splice(originalStartIndex, selectionLength);
 		let insertIndex = originalStartIndex + offset;
 		insertIndex = Math.max(insertIndex, 0);
-		insertIndex = Math.min(insertIndex, this.length - 1);
+		insertIndex = Math.min(insertIndex, this.length);
 		this.actions.splice(insertIndex, 0, ...selected);
 		this.selectionStartIndex = insertIndex;
-		this.selectionEndIndex = insertIndex + selectionLength;
-		// return insertIndex;
-		return this.selectionStart;
+		this.selectionEndIndex = insertIndex + selectionLength - 1; // subtract 1 because the range is inclusive
+		return insertIndex;
 	}
-	deleteSelected(): ActionNode | undefined {
-		// TODO does this need to return deleted nodes?
+	deleteSelected(): number | undefined {
 		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined)
 			return undefined;
 		const originalStartIndex = this.selectionStartIndex;
-		const firstDeletedNode = this.selectionStart;
 		this.actions.splice(originalStartIndex, this.getSelectionLength());
 		this.unselectAll();
-		return firstDeletedNode;
+		return originalStartIndex;
 	}
 	serialized() {
 		console.assert(this.config);

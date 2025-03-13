@@ -121,7 +121,7 @@ export class GameConfig {
 		this.shellVersion = props.shellVersion;
 		this.level = props.level ?? DEFAULT_CONFIG.level;
 		this.spellSpeed = props.spellSpeed;
-		this.skillSpeed = props.skillSpeed;
+		this.skillSpeed = props.skillSpeed ?? DEFAULT_CONFIG.skillSpeed;
 		this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
 		this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
 		this.determination = props.determination ?? DEFAULT_CONFIG.determination;

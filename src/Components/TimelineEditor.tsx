@@ -95,7 +95,7 @@ export class TimelineEditor extends React.Component {
 	state: {
 		editedRecord: Record | undefined;
 		recordValidStatus: RecordValidStatus | undefined;
-		editedNodes: ActionNode[];
+		firstEditedNodeIndex: number | undefined;
 	};
 	firstSelected: React.RefObject<HTMLDivElement>;
 	constructor(props: {}) {
@@ -103,7 +103,7 @@ export class TimelineEditor extends React.Component {
 		this.state = {
 			editedRecord: undefined,
 			recordValidStatus: undefined,
-			editedNodes: [],
+			firstEditedNodeIndex: undefined,
 		};
 		this.firstSelected = React.createRef();
 	}
@@ -139,7 +139,7 @@ export class TimelineEditor extends React.Component {
 		this.setState({
 			editedRecord: undefined,
 			recordValidStatus: undefined,
-			editedNodes: [],
+			firstEditedNodeIndex: undefined,
 		});
 	}
 
@@ -250,22 +250,28 @@ export class TimelineEditor extends React.Component {
 			marginBottom: 10,
 			padding: 3,
 		};
-		const doRecordEdit = (action: (record: Record) => ActionNode | undefined) => {
+		const doRecordEdit = (action: (record: Record) => number | undefined) => {
 			if (displayedRecord.getFirstSelection()) {
 				setHandledSkillSelectionThisFrame(true);
 				let copy = this.getRecordCopy();
-				let editedNodes = this.state.editedNodes;
+				let currentEditedNodeIndex = this.state.firstEditedNodeIndex;
 				let firstEditedNode = action(copy);
-				if (firstEditedNode) editedNodes.push(firstEditedNode);
-				let status = controller.checkRecordValidity(copy, editedNodes);
-				if (firstEditedNode && status.straightenedIfValid) {
+				if (firstEditedNode !== undefined) {
+					if (currentEditedNodeIndex === undefined) {
+						currentEditedNodeIndex = firstEditedNode;
+					} else {
+						currentEditedNodeIndex = Math.min(firstEditedNode, currentEditedNodeIndex);
+					}
+				}
+				let status = controller.checkRecordValidity(copy, currentEditedNodeIndex);
+				if (firstEditedNode !== undefined && status.straightenedIfValid) {
 					this.setState({
 						editedRecord: status.straightenedIfValid,
-						editedNodes: [],
+						firstEditedNodeIndex: undefined,
 					});
 				} else {
 					this.setState({
-						editedNodes: editedNodes,
+						firstEditedNodeIndex: currentEditedNodeIndex,
 					});
 				}
 				this.setState({
@@ -311,7 +317,7 @@ export class TimelineEditor extends React.Component {
 							record.moveSelected(-(selectionLength - 1));
 							record.selectSingle(originalStart);
 							record.selectUntil(originalEnd);
-							return record.getFirstSelection();
+							return record.selectionStartIndex;
 						}
 						return undefined;
 					})
