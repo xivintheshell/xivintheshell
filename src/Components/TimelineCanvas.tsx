@@ -649,7 +649,7 @@ function drawSkills(
 		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(skill.displayTime, scale);
 		let y = skill.isGCD ? skillsTopY + TimelineDimensions.skillButtonHeight / 2 : skillsTopY;
 		// if there were multiple targets, draw the number of targets above the ability icon
-		const targetCount = skill.node.serialized.type === ActionType.Skill ? skill.node.serialized.targetCount : 0;
+		const targetCount = skill.node.targetCount;
 		if (targetCount > 1) {
 			targetCounts.push({
 				count: targetCount,
@@ -800,7 +800,7 @@ function drawSkills(
 		lines.push(description);
 
 		// 2. potency
-		if (!((node.maybeGetSkillName() ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
+		if (!((node.maybeGetActionKey() ?? "NEVER") in LIMIT_BREAK_ACTIONS)) {
 			if (node.getInitialPotency()) {
 				const potency = node.getPotency({
 					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,

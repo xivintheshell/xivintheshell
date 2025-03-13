@@ -58,11 +58,11 @@ export const getTargetableDurationBetween = (startDisplayTime: number, endDispla
 };
 
 function isDoTNode(node: ActionNode) {
-	return node.serialized.type === ActionType.Skill && ctl.game.dotSkills.includes(node.serialized.skillName);
+	return node.info.type === ActionType.Skill && ctl.game.dotSkills.includes(node.info.skillName);
 }
 
 function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: ActionNode) {
-	console.assert(isDoTNode(node), `${node.maybeGetSkillName()} is not registered as a dot skill`);
+	console.assert(isDoTNode(node), `${node.getNameForMessage()} is not registered as a dot skill`);
 	let mainPotency = node.getInitialPotency();
 	let entry: DamageStatsDoTTableEntry = {
 		castTime: node.tmp_startLockTime ? node.tmp_startLockTime - ctl.gameConfig.countdown : 0,
@@ -161,8 +161,8 @@ function expandNode(node: ActionNode): ExpandedNode {
 		falloff: 1,
 		targetCount: 1,
 	};
-	if (node.serialized.type === ActionType.Skill && node.serialized.skillName) {
-		const skillName = node.serialized.skillName;
+	if (node.info.type === ActionType.Skill && node.info.skillName) {
+		const skillName = node.info.skillName;
 		const mainPotency = node.getInitialPotency();
 		if (!mainPotency) {
 			// do nothing if the used ability does no damage
@@ -195,7 +195,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 			} else if (isDoTNode(node)) {
 				// dot modifiers are handled separately
 				res.basePotency = mainPotency.base;
-				node.serialized.targetCount = mainPotency.targetCount;
+				node.info.targetCount = mainPotency.targetCount;
 			} else {
 				// for non-BLM jobs, display all non-pot modifiers on all damaging skills
 				res.basePotency = mainPotency.base;
@@ -232,7 +232,8 @@ function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
 
 	for (let i = 0; i < table.length; i++) {
 		if (
-			node.maybeGetSkillName() === table[i].skillName &&
+			node.info.type === ActionType.Skill &&
+			node.info.skillName === table[i].skillName &&
 			tagsAreEqual(expanded.displayedModifiers, table[i].displayedModifiers) &&
 			node.targetCount === table[i].targetCount
 		) {
@@ -304,13 +305,13 @@ export function calculateSelectedStats(props: {
 
 	ctl.record.iterateSelected((node) => {
 		if (
-			node.serialized.type === ActionType.Skill &&
-			node.serialized.skillName &&
-			!(node.serialized.skillName in LIMIT_BREAK_ACTIONS)
+			node.info.type === ActionType.Skill &&
+			node.info.skillName &&
+			!(node.info.skillName in LIMIT_BREAK_ACTIONS)
 		) {
-			const checked = getSkillOrDotInclude(node.serialized.skillName);
+			const checked = getSkillOrDotInclude(node.info.skillName);
 			// gcd count
-			let skillInfo = ctl.game.skillsList.get(node.serialized.skillName);
+			let skillInfo = ctl.game.skillsList.get(node.info.skillName);
 			if (skillInfo.cdName === "cd_GCD" && checked) {
 				if (node.hitBoss(bossIsUntargetable)) selected.gcdSkills.applied++;
 				else if (!node.resolved()) selected.gcdSkills.pending++;
@@ -373,8 +374,8 @@ export function calculateDamageStats(props: {
 	let skillPotencies: Map<ActionKey, number> = new Map();
 
 	const processNodeFn = (node: ActionNode) => {
-		if (node.serialized.type === ActionType.Skill && node.serialized.skillName) {
-			const skillName = node.serialized.skillName;
+		if (node.info.type === ActionType.Skill && node.info.skillName) {
+			const skillName = node.info.skillName;
 			const checked = getSkillOrDotInclude(skillName);
 			const isLimitBreak = skillName in LIMIT_BREAK_ACTIONS;
 
@@ -538,10 +539,7 @@ export function calculateDamageStats(props: {
 			// last dot so far
 
 			const applicationTime = dotTrackingData.lastDoT.applicationTime;
-			console.assert(
-				applicationTime,
-				`DoT node was not resolved`,
-			);
+			console.assert(applicationTime, `DoT node was not resolved`);
 
 			let lastDotDropTime = (applicationTime as number) + ctl.game.getStatusDuration(dotName);
 			let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());

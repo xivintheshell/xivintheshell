@@ -68,8 +68,8 @@ function PresetLine(props: { line: Line }) {
 	};
 	for (const action of line.actions) {
 		// waits and other actions aren't rendered, but TODO maybe they should be
-		if (action.serialized.type === ActionType.Skill) {
-			const skillName = action.serialized.skillName;
+		if (action.info.type === ActionType.Skill) {
+			const skillName = action.info.skillName;
 			let iconPath = getSkillIconPath(skillName);
 			icons.push(<img style={iconStyle} key={ctr} src={iconPath} alt={skillName} />);
 			ctr++;

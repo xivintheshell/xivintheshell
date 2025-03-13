@@ -31,7 +31,7 @@ import {
 } from "./Resources";
 
 import { controller } from "../Controller/Controller";
-import { ActionNode, SerializedSkill } from "../Controller/Record";
+import { ActionNode } from "../Controller/Record";
 import { Modifiers, Potency, PotencyKind, PotencyModifier, PotencyModifierType } from "./Potency";
 import { Buff } from "./Buffs";
 
@@ -644,7 +644,11 @@ export class GameState {
 	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
 	 * it performs the confirmation immediately.
 	 */
-	useSpellOrWeaponskill(skill: Spell<PlayerState> | Weaponskill<PlayerState>, node: ActionNode, actionIndex: number) {
+	useSpellOrWeaponskill(
+		skill: Spell<PlayerState> | Weaponskill<PlayerState>,
+		node: ActionNode,
+		actionIndex: number,
+	) {
 		const cd = this.cooldowns.get(skill.cdName);
 		const secondaryCd = skill.secondaryCd
 			? this.cooldowns.get(skill.secondaryCd.cdName)
@@ -1442,7 +1446,7 @@ export class GameState {
 		// If there is no falloff field specified, then reset the node's targetCount to 1,
 		// ignoring whatever input the user gave
 		if (skill.falloff === undefined) {
-			(node.serialized as SerializedSkill).targetCount = 1;
+			node.setTargetCount(1);
 		}
 		if (skill.aoeHeal) {
 			node.healTargetCount = this.resources.get("PARTY_SIZE").availableAmount();

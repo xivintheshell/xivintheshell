@@ -21,7 +21,7 @@ import { BuffType, SkillReadyStatus } from "../Game/Common";
 import { GameConfig } from "../Game/GameConfig";
 import { Potency, PotencyKind } from "../Game/Potency";
 import { controller } from "./Controller";
-import { ActionKey, ResourceKey } from "../Game/Data";
+import { ACTIONS, ActionKey, ResourceKey } from "../Game/Data";
 
 export const enum ActionType {
 	Skill = "Skill",
@@ -35,68 +35,94 @@ export const enum ActionType {
 // this means we need another layer of indirection for the internal saved value
 // vs. the keys being passed around in code
 
-export interface SerializedSkill {
+interface SerializedSkill {
 	type: ActionType.Skill;
-	skillName: ActionKey;
+	skillName: string; // uses the VALUE of the skill name, not the ActionKey
 	targetCount: number;
 }
 
-interface SerialiezdWait {
+interface SerializedWait {
 	type: ActionType.Wait; // legacy name; represents a wait for a fixed duration
 	waitDuration: number;
 }
 
 interface SerializedJump {
-	type: ActionType.JumpToTimestamp,
-	targetTime: number, // timestamp in seconds
+	type: ActionType.JumpToTimestamp;
+	targetTime: number; // timestamp in seconds
 }
 
-interface SerializedMPWait{
-	type: ActionType.WaitForMP,
-	targetAmount: number,
+interface SerializedMPWait {
+	type: ActionType.WaitForMP;
+	targetAmount: number;
 }
 
-interface SerializedSetResource{
-	type: ActionType.SetResourceEnabled, // legacy name; also used when a resource is disabled
-	buffName: ResourceKey,
+interface SerializedSetResource {
+	type: ActionType.SetResourceEnabled; // legacy name; also used when a resource is disabled
+	buffName: string; // uses the ResourceKey
 }
 
-export type SerializedAction = SerializedSkill | SerialiezdWait | SerializedJump | SerializedMPWait | SerializedSetResource;
+export type SerializedAction =
+	| SerializedSkill
+	| SerializedWait
+	| SerializedJump
+	| SerializedMPWait
+	| SerializedSetResource;
 
-export function skillNode(skillName: ActionKey, targetCount?: number): SerializedAction {
-	return {
+// Because SkillNode serializes with the localized string value instead of an ActionKey,
+// It needs a different internal type.
+// SetResourceInfo serializes with ResourceKey, but we keep a separate type just for cleanliness.
+interface SkillNodeInfo {
+	type: ActionType.Skill;
+	skillName: ActionKey;
+	targetCount: number;
+}
+
+interface SetResourceNodeInfo {
+	type: ActionType.SetResourceEnabled; // legacy name; also used when a resource is disabled
+	buffName: ResourceKey; // uses the ResourceKey
+}
+
+export type NodeInfo =
+	| SkillNodeInfo
+	| SerializedWait
+	| SerializedJump
+	| SerializedMPWait
+	| SetResourceNodeInfo;
+
+export function skillNode(skillName: ActionKey, targetCount?: number): ActionNode {
+	return new ActionNode({
 		type: ActionType.Skill,
 		skillName,
 		targetCount: targetCount ?? 1,
-	}
+	});
 }
 
-export function durationWaitNode(waitDuration: number): SerializedAction {
-	return {
+export function durationWaitNode(waitDuration: number): ActionNode {
+	return new ActionNode({
 		type: ActionType.Wait,
 		waitDuration,
-	}
+	});
 }
 
-export function jumpToTimestampNode(targetTime: number): SerializedAction {
-	return {
+export function jumpToTimestampNode(targetTime: number): ActionNode {
+	return new ActionNode({
 		type: ActionType.JumpToTimestamp,
 		targetTime,
-	}
+	});
 }
 
-export function waitForMPNode(targetAmount: number): SerializedAction {
-	return {
+export function waitForMPNode(targetAmount: number): ActionNode {
+	return new ActionNode({
 		type: ActionType.WaitForMP,
 		targetAmount,
-	}
+	});
 }
 
-export function setResourceNode(buffName: ResourceKey): SerializedAction {
-	return {
+export function setResourceNode(buffName: ResourceKey): ActionNode {
+	return new ActionNode({
 		type: ActionType.SetResourceEnabled,
 		buffName,
-	}
+	});
 }
 
 export type SerializedRecord = SerializedAction[];
@@ -108,21 +134,21 @@ export class ActionNode {
 	#healingPotency: Potency | undefined;
 	#hotPotencies: Map<ResourceKey, Potency[]>;
 	// TODO split into different properties for dots/hots?
-	serialized: SerializedAction;
 	applicationTime?: number;
 	#dotOverrideAmount: Map<ResourceKey, number>;
 	#dotTimeGap: Map<ResourceKey, number>;
 	#hotOverrideAmount: Map<ResourceKey, number>;
 	#hotTimeGap: Map<ResourceKey, number>;
 	healTargetCount: number = 1;
+	info: NodeInfo;
 
 	// animation lock info set in the controller; should probably be moved
 	// elsewhere eventually
 	tmp_startLockTime?: number;
 	tmp_endLockTime?: number;
 
-	constructor(action: SerializedAction) {
-		this.serialized = action;
+	constructor(info: NodeInfo) {
+		this.info = info;
 		this.#capturedBuffs = new Set<BuffType>();
 		this.#dotPotencies = new Map();
 		this.#hotPotencies = new Map();
@@ -132,20 +158,39 @@ export class ActionNode {
 		this.#hotTimeGap = new Map();
 	}
 
-	get type(): ActionType {
-		return this.serialized.type;
+	serialized(): SerializedAction {
+		if (this.info.type === ActionType.Skill) {
+			return {
+				type: ActionType.Skill,
+				skillName: ACTIONS[this.info.skillName].name,
+				targetCount: this.info.targetCount,
+			};
+		} else if (this.info.type === ActionType.SetResourceEnabled) {
+			return {
+				type: ActionType.SetResourceEnabled,
+				buffName: this.info.buffName.toString(),
+			};
+		} else {
+			return this.info;
+		}
+	}
+
+	maybeGetActionKey(): ActionKey | undefined {
+		return this.info.type === ActionType.Skill ? this.info.skillName : undefined;
 	}
 
 	get targetCount(): number {
-		return this.serialized.type === ActionType.Skill ? this.serialized.targetCount : 0;
+		return this.info.type === ActionType.Skill ? this.info.targetCount : 0;
 	}
 
-	maybeGetSkillName(): ActionKey | undefined {
-		return this.serialized.type === ActionType.Skill ? this.serialized.skillName : undefined;
+	getNameForMessage(): string {
+		return this.info.type === ActionType.Skill
+			? ACTIONS[this.info.skillName].name
+			: this.info.type.toString();
 	}
 
 	getClone(): ActionNode {
-		return new ActionNode(this.serialized);
+		return new ActionNode(this.info);
 	}
 
 	// move nodeIndex/selected logic out of this class
@@ -169,8 +214,8 @@ export class ActionNode {
 	}
 
 	setTargetCount(count: number) {
-		if (this.serialized.type === "Skill") {
-			this.serialized.targetCount = count;
+		if (this.info.type === ActionType.Skill) {
+			this.info.targetCount = count;
 		}
 	}
 
@@ -200,7 +245,7 @@ export class ActionNode {
 		includePartyBuffs: boolean;
 		includeSplash: boolean;
 		excludeDoT?: boolean;
-	}): { applied: number, snapshottedButPending: number } {
+	}): { applied: number; snapshottedButPending: number } {
 		let res = {
 			applied: 0,
 			snapshottedButPending: 0,
@@ -226,7 +271,7 @@ export class ActionNode {
 		includePartyBuffs: boolean;
 		includeSplash: boolean;
 		excludeHoT?: boolean;
-	}): { applied: number, snapshottedButPending: number } {
+	}): { applied: number; snapshottedButPending: number } {
 		let res = {
 			applied: 0,
 			snapshottedButPending: 0,
@@ -317,21 +362,17 @@ export class ActionNode {
 	}
 
 	addPotency(p: Potency) {
-		if (this.serialized.type === ActionType.Skill) {
-			console.assert(
-				!this.#potency,
-				`ActionNode for ${this.serialized.skillName} already had an initial potency`,
-			);
-		}
+		console.assert(
+			!this.#potency,
+			`ActionNode for ${this.getNameForMessage()} already had an initial potency`,
+		);
 		this.#potency = p;
 	}
 	addHealingPotency(p: Potency) {
-		if (this.serialized.type === ActionType.Skill) {
-			console.assert(
-				!this.#healingPotency,
-				`ActionNode for ${this.serialized.skillName} already had an initial healing potency`,
-			);
-		}
+		console.assert(
+			!this.#healingPotency,
+			`ActionNode for ${this.getNameForMessage()} already had an initial healing potency`,
+		);
 		this.#healingPotency = p;
 	}
 
@@ -353,19 +394,33 @@ export class ActionNode {
 	}
 
 	setOverTimeGap(effectName: ResourceKey, amount: number, kind: PotencyKind) {
-		this.setOverTimeMappedAmount(effectName, amount, kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap);
+		this.setOverTimeMappedAmount(
+			effectName,
+			amount,
+			kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap,
+		);
 	}
 
 	getOverTimeGap(effectName: ResourceKey, kind: PotencyKind): number {
-		return this.getOverTimeMappedAmount(effectName, kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap);
+		return this.getOverTimeMappedAmount(
+			effectName,
+			kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap,
+		);
 	}
 
 	setOverTimeOverrideAmount(effectName: ResourceKey, amount: number, kind: PotencyKind) {
-		this.setOverTimeMappedAmount(effectName, amount, kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount);
+		this.setOverTimeMappedAmount(
+			effectName,
+			amount,
+			kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount,
+		);
 	}
 
 	getOverTimeOverrideAmount(effectName: ResourceKey, kind: PotencyKind): number {
-		return this.getOverTimeMappedAmount(effectName, kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount);
+		return this.getOverTimeMappedAmount(
+			effectName,
+			kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount,
+		);
 	}
 
 	private setOverTimeMappedAmount(
@@ -375,11 +430,13 @@ export class ActionNode {
 	) {
 		map.set(effectName, amount);
 	}
-	private getOverTimeMappedAmount(effectName: ResourceKey, map: Map<ResourceKey, number>): number {
+	private getOverTimeMappedAmount(
+		effectName: ResourceKey,
+		map: Map<ResourceKey, number>,
+	): number {
 		return map.get(effectName) ?? 0;
 	}
 }
-
 
 // A Line is a collection of ActionNodes.
 export class Line {
@@ -439,7 +496,7 @@ export class Line {
 	serialized(): { name: string; actions: object[] } {
 		return {
 			name: this.name,
-			actions: this.actions.map((node) => node.serialized),
+			actions: this.actions.map((node) => node.serialized()),
 		};
 	}
 
@@ -469,11 +526,15 @@ export class Record extends Line {
 	config?: GameConfig;
 
 	get selectionStart(): ActionNode | undefined {
-		return this.selectionStartIndex !== undefined ? this.actions[this.selectionStartIndex] : undefined;
+		return this.selectionStartIndex !== undefined
+			? this.actions[this.selectionStartIndex]
+			: undefined;
 	}
 
 	get selectionEnd(): ActionNode | undefined {
-		return this.selectionEndIndex !== undefined ? this.actions[this.selectionEndIndex] : undefined;
+		return this.selectionEndIndex !== undefined
+			? this.actions[this.selectionEndIndex]
+			: undefined;
 	}
 
 	getFirstSelection(): ActionNode | undefined {
@@ -487,7 +548,10 @@ export class Record extends Line {
 	}
 
 	isInSelection(index: number): boolean {
-		return index >= (this.selectionStartIndex ?? 0) && index <= (this.selectionEndIndex ?? this.length - 1);
+		return (
+			index >= (this.selectionStartIndex ?? 0) &&
+			index <= (this.selectionEndIndex ?? this.length - 1)
+		);
 	}
 
 	iterateSelected(fn: (node: ActionNode) => void) {
@@ -535,7 +599,10 @@ export class Record extends Line {
 				this.#selectSequence(newIndex, this.selectionStartIndex);
 				this.startIsPivot = false;
 			}
-		} else if (this.selectionStartIndex && this.selectionStartIndex !== this.selectionEndIndex) {
+		} else if (
+			this.selectionStartIndex &&
+			this.selectionStartIndex !== this.selectionEndIndex
+		) {
 			// If a multi-selection is already made, adjust its boundaries around the "pivot" node.
 			// This is the same behavior as if we had only selected the single "pivot" node, and
 			// then attempted a multi-select with the new node as a target.
@@ -561,7 +628,8 @@ export class Record extends Line {
 	moveSelected(offset: number): ActionNode | undefined {
 		// positive: move right; negative: move left
 		if (offset === 0) return undefined;
-		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined) return undefined;
+		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined)
+			return undefined;
 		const originalStartIndex = this.selectionStartIndex;
 		// splice the selected portion, then re-insert it at originalStartIndex + offset
 		// line: a b c d e f
@@ -583,7 +651,8 @@ export class Record extends Line {
 	}
 	deleteSelected(): ActionNode | undefined {
 		// TODO does this need to return deleted nodes?
-		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined) return undefined;
+		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined)
+			return undefined;
 		const originalStartIndex = this.selectionStartIndex;
 		const firstDeletedNode = this.selectionStart;
 		this.actions.splice(originalStartIndex, this.getSelectionLength());

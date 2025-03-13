@@ -2,7 +2,7 @@ import React, { CSSProperties } from "react";
 import { controller } from "../Controller/Controller";
 import { ActionNode, ActionType, Record, RecordValidStatus } from "../Controller/Record";
 import { StaticFn } from "./Common";
-import { localize, localizeSkillName } from "./Localization";
+import { localize, localizeSkillName, localizeResourceType } from "./Localization";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
 import { Columns } from "./Common";
 import { ACTIONS } from "../Game/Data";
@@ -35,26 +35,27 @@ function TimelineActionElement(props: {
 		background: bgColor,
 	};
 	let name = localize({ en: "(other)", zh: "（其它）" });
-	if (props.node.serialized.type === ActionType.Skill) {
+	if (props.node.info.type === ActionType.Skill) {
 		const targetStr =
-			props.node.serialized.targetCount > 1
+			props.node.info.targetCount > 1
 				? localize({
-						en: ` (${props.node.serialized.targetCount} targets)`,
-						zh: `（${props.node.serialized.targetCount}个目标）`,
+						en: ` (${props.node.info.targetCount} targets)`,
+						zh: `（${props.node.info.targetCount}个目标）`,
 					})
 				: "";
-		name = props.node.serialized.skillName
-			? localizeSkillName(props.node.serialized.skillName) + targetStr
+		name = props.node.info.skillName
+			? localizeSkillName(props.node.info.skillName) + targetStr
 			: localize({ en: "(unknown skill)", zh: "未知技能" });
-	} else if (props.node.serialized.type === ActionType.Wait) {
+	} else if (props.node.info.type === ActionType.Wait) {
 		name = localize({
-			en: "(wait for " + props.node.serialized.waitDuration.toFixed(2) + "s)",
-			zh: "（等" + props.node.serialized.waitDuration.toFixed(2) + "秒）",
+			en: "(wait for " + props.node.info.waitDuration.toFixed(2) + "s)",
+			zh: "（等" + props.node.info.waitDuration.toFixed(2) + "秒）",
 		});
-	} else if (props.node.serialized.type === ActionType.SetResourceEnabled) {
+	} else if (props.node.info.type === ActionType.SetResourceEnabled) {
+		const localizedBuffName = localizeResourceType(props.node.info.buffName);
 		name = localize({
-			en: "(toggle resource: " + props.node.serialized.buffName + ")",
-			zh: "（开关或去除BUFF：" + props.node.serialized.buffName + "）",
+			en: "(toggle resource: " + localizedBuffName + ")",
+			zh: "（开关或去除BUFF：" + localizedBuffName + "）",
 		});
 	}
 	return <div
@@ -211,13 +212,13 @@ export class TimelineEditor extends React.Component {
 					let node = this.state.recordValidStatus?.firstInvalidAction;
 					let nodeName = "(unknown node)";
 					if (node) {
-						if (node.type === ActionType.Wait) {
+						if (node.info.type === ActionType.Wait) {
 							nodeName = "(Wait)";
-						} else if (node.serialized.type === ActionType.SetResourceEnabled) {
-							nodeName = "(Toggle resource " + node.serialized.buffName + ")";
-						} else if (node.serialized.type === ActionType.Skill) {
-							nodeName = node.serialized.skillName
-								? ACTIONS[node.serialized.skillName].name
+						} else if (node.info.type === ActionType.SetResourceEnabled) {
+							nodeName = "(Toggle resource " + node.info.buffName + ")";
+						} else if (node.info.type === ActionType.Skill) {
+							nodeName = node.info.skillName
+								? ACTIONS[node.info.skillName].name
 								: "(unknown skill)";
 						}
 					}
@@ -346,7 +347,7 @@ export class TimelineEditor extends React.Component {
 					refObj={isFirstSelected ? this.firstSelected : undefined}
 				/>,
 			);
-		})
+		});
 		return <div
 			onClick={(evt) => {
 				if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {

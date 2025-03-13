@@ -1,6 +1,8 @@
 import { FileType, getCachedValue, setCachedValue } from "./Common";
 import {
-	ActionNode, ActionType, Line, SerializedAction,
+	ActionType,
+	Line,
+	SerializedAction,
 	skillNode,
 	durationWaitNode,
 	setResourceNode,
@@ -70,18 +72,16 @@ export class PresetLinesManager {
 				switch (action.type) {
 					case ActionType.Skill:
 						const skillName = getNormalizedSkillName(action.skillName)!;
-						line.addActionNode(new ActionNode(skillNode(skillName)));
+						line.addActionNode(skillNode(skillName));
 						skillNames.push(skillName);
 						break;
 					case ActionType.SetResourceEnabled:
 						line.addActionNode(
-							new ActionNode(setResourceNode(getResourceKeyFromBuffName(action.buffName)!))
+							setResourceNode(getResourceKeyFromBuffName(action.buffName)!),
 						);
 						break;
 					case ActionType.Wait:
-						line.addActionNode(
-							new ActionNode(durationWaitNode(action.waitDuration))
-						);
+						line.addActionNode(durationWaitNode(action.waitDuration));
 						break;
 					default:
 						window.alert("unparseable action: " + action.toString());
