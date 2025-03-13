@@ -33,10 +33,6 @@ export const enum ActionType {
 	Invalid = "Invalid",
 }
 
-// TODO don't serialize actionkey/resourcekey, need to serialize string instead
-// this means we need another layer of indirection for the internal saved value
-// vs. the keys being passed around in code
-
 interface SerializedSkill {
 	type: ActionType.Skill;
 	skillName: string; // uses the VALUE of the skill name, not the ActionKey
@@ -59,7 +55,7 @@ interface SerializedMPWait {
 }
 
 interface SerializedSetResource {
-	type: ActionType.SetResourceEnabled; // legacy name; also used when a resource is disabled
+	type: ActionType.SetResourceEnabled;
 	buffName: string; // uses the ResourceKey
 }
 
@@ -81,8 +77,8 @@ interface SkillNodeInfo {
 }
 
 interface SetResourceNodeInfo {
-	type: ActionType.SetResourceEnabled; // legacy name; also used when a resource is disabled
-	buffName: ResourceKey; // uses the ResourceKey
+	type: ActionType.SetResourceEnabled;
+	buffName: ResourceKey;
 }
 
 export type NodeInfo =
@@ -196,8 +192,6 @@ export class ActionNode {
 	getClone(): ActionNode {
 		return new ActionNode(this.info);
 	}
-
-	// move nodeIndex/selected logic out of this class
 
 	addBuff(rsc: BuffType) {
 		this.#capturedBuffs.add(rsc);
@@ -473,9 +467,7 @@ export class Line {
 	}
 
 	iterateAll(fn: (node: ActionNode) => void) {
-		for (const node of this.actions) {
-			fn(node);
-		}
+		this.actions.forEach((node) => fn(node));
 	}
 
 	getFirstAction() {
@@ -688,7 +680,7 @@ export class Record extends Line {
 		// - a e f after splice
 		// - a e b c d f
 		// the new selection should now be [2, 4]
-		// if offset would cause an overflow in either direction, clamp it to 0 or length - 1
+		// if offset would cause an overflow in either direction, clamp it to 0 or length
 		const selectionLength = this.getSelectionLength();
 		const selected = this.actions.splice(originalStartIndex, selectionLength);
 		let insertIndex = originalStartIndex + offset;
@@ -700,8 +692,9 @@ export class Record extends Line {
 		return insertIndex;
 	}
 	deleteSelected(): number | undefined {
-		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined)
+		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined) {
 			return undefined;
+		}
 		const originalStartIndex = this.selectionStartIndex;
 		this.actions.splice(originalStartIndex, this.getSelectionLength());
 		this.unselectAll();

@@ -877,8 +877,7 @@ class Controller {
 						},
 			);
 
-			// If the last node is an explicit wait for a specified duration, then add it to the record.
-			// Waits for all other nodes are implicit.
+			// If `separateNode` is true, then create a new explicit wait node.
 			if (props.separateNode) {
 				this.record.addActionNode(durationWaitNode(timeTicked));
 			}
@@ -966,11 +965,16 @@ class Controller {
 	) {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
-		this.#requestTick({ deltaTime: status.timeTillAvailable, separateNode: false });
+		const beforeWaitTime = status.timeTillAvailable;
+
+		// Wait out the current animation lock or remaining cooldown on the skill,
+		// then attempt to use it ASAP
+		this.#requestTick({ deltaTime: beforeWaitTime, separateNode: false });
 		skillName = getConditionalReplacement(skillName, this.game);
 		status = this.game.getSkillAvailabilityStatus(skillName);
 
 		if (status.status.ready()) {
+			// If the skill can be used, do so.
 			let node = skillNode(skillName, targetCount);
 			this.record.addActionNode(node);
 			const actionIndex = this.record.tailIndex;
@@ -1034,6 +1038,12 @@ class Controller {
 			if (!this.#skipViewUpdates) {
 				refreshTimelineEditor();
 			}
+		} else {
+			// After waiting for animation lock and cooldowns, the skill may not be usable
+			// (e.g. if Amplifier is pressed, then the 120s cd will move the timeline to a point where
+			// enochian was dropped and the button can no longer be used).
+			// Insert an artificial wait event to indicate this.
+			this.record.addActionNode(durationWaitNode(beforeWaitTime));
 		}
 		return status;
 	}
@@ -1427,7 +1437,7 @@ class Controller {
 			this.autoSave();
 			this.#requestTick({
 				deltaTime: currentTime - this.game.time,
-				separateNode: false,
+				separateNode: true,
 			});
 			this.shouldLoop = currentLoop;
 		}
