@@ -94,7 +94,6 @@ class Controller {
 	timeScale;
 	shouldLoop;
 	tickMode;
-	lastAttemptedSkill;
 	timeline;
 	#presetLinesManager;
 	gameConfig;
@@ -135,7 +134,6 @@ class Controller {
 		this.timeScale = 1;
 		this.shouldLoop = false;
 		this.tickMode = TickMode.RealTimeAutoPause;
-		this.lastAttemptedSkill = "";
 
 		this.timeline = new Timeline();
 		this.timeline.reset();
@@ -299,7 +297,6 @@ class Controller {
 			this.timeline.drawElements();
 		});
 
-		this.lastAttemptedSkill = "";
 		setHistorical(true);
 
 		if (hasSelected) {
@@ -326,7 +323,6 @@ class Controller {
 	}
 
 	#requestRestart() {
-		this.lastAttemptedSkill = "";
 		this.game = getGameState(this.gameConfig);
 		this.#playPause({ shouldLoop: false });
 		this.timeline.reset();
@@ -353,14 +349,8 @@ class Controller {
 
 	addSelectionToPreset(name = "(untitled)") {
 		console.assert(this.record.getFirstSelection());
-		let line = new Line();
+		let line = this.record.getSelected();
 		line.name = name;
-		this.record.iterateSelected((node) => {
-			// TODO include other types of actions
-			if (node.info.type === ActionType.Skill) {
-				line.addActionNode(node.getClone());
-			}
-		});
 		this.#presetLinesManager.addLine(line, this.getActiveJob());
 	}
 
@@ -887,13 +877,14 @@ class Controller {
 						},
 			);
 
-			// add this tick to game record
+			// If the last node is an explicit wait for a specified duration, then add it to
+			// the record.
+			// Waits for all other nodes are implicit.
 			let lastAction = this.record.getLastAction();
 			if (lastAction && lastAction.info.type === ActionType.Wait && !props.separateNode) {
 				lastAction.info.waitDuration += timeTicked;
-			} else {
-				let waitNode = durationWaitNode(timeTicked);
-				this.record.addActionNode(waitNode);
+			} else if (props.separateNode) {
+				this.record.addActionNode(durationWaitNode(timeTicked))
 			}
 		}
 	}
@@ -902,7 +893,6 @@ class Controller {
 		this.timeScale = props.timeScale;
 		this.tickMode = props.tickMode;
 		this.shouldLoop = false;
-		this.lastAttemptedSkill = "";
 	}
 
 	setConfigAndRestart(props: {
@@ -976,27 +966,13 @@ class Controller {
 	#useSkill(
 		skillName: ActionKey,
 		targetCount: number,
-		bWaitFirst: boolean,
 		overrideTickMode: TickMode = this.tickMode,
 	) {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
-		if (bWaitFirst) {
-			this.#requestTick({ deltaTime: status.timeTillAvailable, separateNode: false });
-			skillName = getConditionalReplacement(skillName, this.game);
-			status = this.game.getSkillAvailabilityStatus(skillName);
-			this.lastAttemptedSkill = "";
-		}
-
-		if (
-			status.status.unavailableReasons.some(
-				(reason) =>
-					reason === SkillUnavailableReason.Blocked ||
-					reason === SkillUnavailableReason.NotInCombat,
-			)
-		) {
-			this.lastAttemptedSkill = skillName;
-		}
+		this.#requestTick({ deltaTime: status.timeTillAvailable, separateNode: false });
+		skillName = getConditionalReplacement(skillName, this.game);
+		status = this.game.getSkillAvailabilityStatus(skillName);
 
 		if (status.status.ready()) {
 			let node = skillNode(skillName, targetCount);
@@ -1147,11 +1123,7 @@ class Controller {
 				lastIter = true;
 			}
 
-			// only Exact & validity replays wait nodes
-			if (
-				itr.info.type === ActionType.Wait &&
-				(currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)
-			) {
+			if (itr.info.type === ActionType.Wait) {
 				this.#requestTick({
 					deltaTime: waitDuration,
 					separateNode: true,
@@ -1161,9 +1133,6 @@ class Controller {
 
 			// skill nodes
 			else if (itr.info.type === ActionType.Skill) {
-				let waitFirst =
-					currentReplayMode === ReplayMode.SkillSequence ||
-					currentReplayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
 				let skillName = itr.info.skillName as ActionKey;
 				if (props.replayMode === ReplayMode.SkillSequence) {
 					// auto-replace as much as possible
@@ -1176,49 +1145,14 @@ class Controller {
 				let status = this.#useSkill(
 					skillName,
 					itr.info.targetCount,
-					waitFirst,
 					TickMode.Manual,
 				);
 
-				let bEditedTimelineShouldWaitAfterSkill =
-					currentReplayMode === ReplayMode.Edited &&
-					i < line.length &&
-					line.actions[i + 1].info.type === ActionType.Wait;
-				if (currentReplayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
-					if (status.status.ready()) {
-						//======== tick wait block ========
-						// qol: clean up this code...
-						let deltaTime = 0;
-						if (maxReplayTime >= 0) {
-							deltaTime = waitDuration;
-						} else {
-							if (props.removeTrailingIdleTime) {
-								deltaTime =
-									itr === props.line.getLastAction()
-										? this.game.timeTillAnySkillAvailable()
-										: waitDuration;
-							} else {
-								deltaTime = waitDuration;
-							}
-						}
-						this.#requestTick({
-							deltaTime: deltaTime,
-							separateNode: false,
-						});
-						//======== tick wait block ========
-					}
-				} else if (
-					currentReplayMode === ReplayMode.SkillSequence ||
-					currentReplayMode === ReplayMode.Edited
-				) {
-					this.#requestTick({
-						deltaTime: this.game.timeTillAnySkillAvailable(),
-						separateNode: false,
-					});
-				} else {
-					lastIter = true;
-					console.assert(false);
-				}
+				// Wait until the animation lock has completed
+				this.#requestTick({
+					deltaTime: this.game.timeTillAnySkillAvailable(),
+					separateNode: false,
+				});
 
 				if (!status.status.ready()) {
 					lastIter = true;
@@ -1548,8 +1482,7 @@ class Controller {
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {
-			let waitFirst = props.skillName === this.lastAttemptedSkill;
-			let status = this.#useSkill(props.skillName, props.targetCount, waitFirst);
+			let status = this.#useSkill(props.skillName, props.targetCount);
 			if (status.status.ready()) {
 				this.scrollToTime(this.game.time);
 				this.autoSave();

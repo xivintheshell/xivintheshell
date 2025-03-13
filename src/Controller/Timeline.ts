@@ -500,7 +500,7 @@ export class Timeline {
 
 		// historical state
 		let firstNode = controller.record.selectionStartIndex;
-		if (firstNode) {
+		if (firstNode !== undefined) {
 			controller.displayHistoricalState(-Infinity, firstNode);
 		} else {
 			// just clicked on the only selected node and unselected it. Still show historical state

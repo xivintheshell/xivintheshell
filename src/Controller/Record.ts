@@ -598,6 +598,14 @@ export class Record extends Line {
 		}
 	}
 
+	getSelected(): Line {
+		const line = new Line();
+		if (this.selectionStartIndex !== undefined && this.selectionEndIndex !== undefined) {
+			line.actions = this.actions.slice(this.selectionStartIndex, this.selectionEndIndex + 1);
+		}
+		return line;
+	}
+
 	getSelectionLength(): number {
 		if (this.selectionStartIndex === undefined) {
 			return 0;
