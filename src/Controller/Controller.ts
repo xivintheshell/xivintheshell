@@ -879,7 +879,6 @@ class Controller {
 
 			// If the last node is an explicit wait for a specified duration, then add it to the record.
 			// Waits for all other nodes are implicit.
-			let lastAction = this.record.getLastAction();
 			if (props.separateNode) {
 				this.record.addActionNode(durationWaitNode(timeTicked));
 			}
