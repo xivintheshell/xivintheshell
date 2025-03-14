@@ -129,7 +129,8 @@ class Controller {
 	#skipViewUpdates: boolean = false;
 	// todo: can probably somehow get rid of this because it should largely overlaps with #bInSandbox
 	displayingUpToDateGameState = true;
-	#lastTickDuration: number = 0; // used during imports to resolve legacy wait durations
+	#lastTickDuration: number = 0; // used during record loads to resolve legacy wait durations
+	lastSkillTime: number = 0; // used for WaitSince.LastSkill; updated in #useSkill
 
 	constructor() {
 		this.timeScale = 1;
@@ -996,6 +997,7 @@ class Controller {
 
 			if (!this.#bInSandbox) {
 				// this block is run when NOT viewing historical state (aka run when receiving input)
+				this.lastSkillTime = this.game.time;
 				let newStatus = this.game.getSkillAvailabilityStatus(skillName, true); // refresh to get re-captured recast time
 				let skill = this.game.skillsList.get(skillName);
 				let isGCD = skill.cdName === "cd_GCD";
