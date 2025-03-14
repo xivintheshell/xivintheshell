@@ -37,6 +37,9 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 			if (key === "LEY_LINES") {
 				return this.makeToggleableTimer(key);
 			}
+			if (key === "THUNDERHEAD" || key === "FIRESTARTER") {
+				return this.makeCommonTimerless(key);
+			}
 			return this.makeCommonTimer(key);
 		});
 	}
