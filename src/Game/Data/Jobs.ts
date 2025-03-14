@@ -70,7 +70,7 @@ export const TANKS = ensureRecord<Job>()({
 	},
 	WAR: {
 		role: "TANK",
-		implementationLevel: "LIVE",
+		implementationLevel: "OUTDATED",
 		limitBreak: "LAND_WAKER",
 		limitBreakBuff: "LAND_WAKER",
 	},
@@ -83,7 +83,7 @@ export const TANKS = ensureRecord<Job>()({
 	},
 	GNB: {
 		role: "TANK",
-		implementationLevel: "LIVE",
+		implementationLevel: "OUTDATED",
 		limitBreak: "GUNMETAL_SOUL",
 		limitBreakBuff: "GUNMETAL_SOUL",
 	},
@@ -138,12 +138,12 @@ export const MELEE = ensureRecord<Job>()({
 	},
 	SAM: {
 		role: "MELEE",
-		implementationLevel: "LIVE",
+		implementationLevel: "OUTDATED",
 		limitBreak: "DOOM_OF_THE_LIVING",
 	},
 	RPR: {
 		role: "MELEE",
-		implementationLevel: "LIVE",
+		implementationLevel: "OUTDATED",
 		limitBreak: "THE_END",
 	},
 	VPR: {
@@ -158,17 +158,17 @@ export type MeleeKey = keyof Melee;
 export const RANGED = ensureRecord<Job>()({
 	BRD: {
 		role: "RANGED",
-		implementationLevel: "LIVE",
+		implementationLevel: "OUTDATED",
 		limitBreak: "SAGITTARIUS_ARROW",
 	},
 	MCH: {
 		role: "RANGED",
-		implementationLevel: "LIVE",
+		implementationLevel: "OUTDATED",
 		limitBreak: "SATELLITE_BEAM",
 	},
 	DNC: {
 		role: "RANGED",
-		implementationLevel: "LIVE",
+		implementationLevel: "OUTDATED",
 		limitBreak: "CRIMSON_LOTUS",
 	},
 });
@@ -178,25 +178,25 @@ export type RangedKey = keyof Ranged;
 export const CASTERS = ensureRecord<Job>()({
 	BLM: {
 		role: "CASTER",
-		implementationLevel: "LIVE",
+		implementationLevel: "OUTDATED",
 		usesMp: true,
 		limitBreak: "METEOR",
 	},
 	SMN: {
 		role: "CASTER",
-		implementationLevel: "LIVE",
+		implementationLevel: "OUTDATED",
 		usesMp: true,
 		limitBreak: "TERAFLARE",
 	},
 	RDM: {
 		role: "CASTER",
-		implementationLevel: "LIVE",
+		implementationLevel: "OUTDATED",
 		usesMp: true,
 		limitBreak: "VERMILLION_SCOURGE",
 	},
 	PCT: {
 		role: "CASTER",
-		implementationLevel: "LIVE",
+		implementationLevel: "OUTDATED",
 		usesMp: true,
 		limitBreak: "CHROMATIC_FANTASY",
 	},
