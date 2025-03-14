@@ -3,7 +3,6 @@ import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Com
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
-import { ActionType } from "../Controller/Record";
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import { localize, localizeSkillName } from "./Localization";
 import { updateTimelineView } from "./Timeline";
@@ -548,9 +547,6 @@ export class SkillsWindow extends React.Component {
 					controller.step(waitTime);
 				} else if (this.state.waitSince === WaitSince.LastSkill) {
 					let timeSinceLastSkill = controller.game.time - controller.lastSkillTime;
-					let lastWait = controller.record.getLastAction(
-						(node) => node.info.type === ActionType.Wait,
-					);
 					let stepTime = waitTime - timeSinceLastSkill;
 					if (stepTime <= 0) {
 						window.alert(

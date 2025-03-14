@@ -1172,9 +1172,6 @@ class Controller {
 					Math.abs(lastLegacyWaitDuration - this.#lastTickDuration) > Debug.epsilon
 				) {
 					const delta = lastLegacyWaitDuration - this.#lastTickDuration;
-					const lastActionWasGCD =
-						lastAction.info.type === ActionType.Skill &&
-						this.game.skillsList.get(lastAction.info.skillName).cdName === "cd_GCD";
 					if (delta > 0 && itr.info.type !== ActionType.Wait) {
 						// If the current action is a skill, we do a quick look-ahead to see if the delta
 						// matches the amount of time that would tick naturally before its usage, and
