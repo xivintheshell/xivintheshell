@@ -21,12 +21,10 @@ import {
 } from "../Skills";
 import { GameState, PlayerState } from "../GameState";
 import {
-	getResourceInfo,
 	makeResource,
 	CoolDown,
 	Event,
 	Resource,
-	ResourceInfo,
 } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { localize } from "../../Components/Localization";
@@ -45,16 +43,15 @@ makeBLMResource("ASTRAL_FIRE", 3);
 makeBLMResource("UMBRAL_ICE", 3);
 makeBLMResource("UMBRAL_HEART", 3);
 makeBLMResource("ASTRAL_SOUL", 6);
-makeBLMResource("LEY_LINES", 1, { timeout: 30 });
+makeBLMResource("LEY_LINES", 1, { timeout: 20 });
 makeBLMResource("ENOCHIAN", 1, { timeout: 15 });
 makeBLMResource("PARADOX", 1);
 
-// re-measured in DT, screen recording at: https://drive.google.com/file/d/1MEFnd-m59qx1yIaZeehSsAxjhLMsWBuw/view?usp=drive_link
-makeBLMResource("FIRESTARTER", 1, { timeout: 30.5 });
+makeBLMResource("FIRESTARTER", 1);
 
 // [6/29/24] note: from screen recording it looks more like: button press (0.1s) gain buff (30.0s) lose buff
 // see: https://drive.google.com/file/d/11KEAEjgezCKxhvUsaLTjugKAH_D1glmy/view?usp=sharing
-makeBLMResource("THUNDERHEAD", 1, { timeout: 30 });
+makeBLMResource("THUNDERHEAD", 1);
 makeBLMResource("THUNDER_III", 1, { timeout: 27 });
 makeBLMResource("THUNDER_IV", 1, { timeout: 21 });
 makeBLMResource("HIGH_THUNDER", 1, { timeout: 30 });
@@ -163,15 +160,7 @@ export class BLMState extends GameState {
 
 	gainThunderhead() {
 		let thunderhead = this.resources.get("THUNDERHEAD");
-		const duration = (getResourceInfo("BLM", "THUNDERHEAD") as ResourceInfo).maxTimeout;
-		if (thunderhead.available(1)) {
-			// already has a proc; reset its timer
-			thunderhead.overrideTimer(this, duration);
-		} else {
-			// there's currently no proc. gain one.
-			thunderhead.gain(1);
-			this.enqueueResourceDrop("THUNDERHEAD", duration);
-		}
+		thunderhead.gain(1);
 	}
 
 	// call this whenever gaining af or ui from a different af/ui/unaspected state
@@ -288,27 +277,12 @@ export class BLMState extends GameState {
 	startOrRefreshEnochian() {
 		let enochian = this.resources.get("ENOCHIAN");
 
-		if (enochian.available(1) && enochian.pendingChange) {
-			// refresh timer (if there's already a timer)
-			enochian.overrideTimer(this, 15);
+		if (enochian.available(1)) {
+			// goodbye timer
 		} else {
 			// reset polyglot countdown to 30s if enochian wasn't actually active
-			if (!enochian.available(1)) {
-				this.resources.get("POLYGLOT").overrideTimer(this, 30);
-			}
-
-			// either fresh gain, or there's enochian but no timer
+			this.resources.get("POLYGLOT").overrideTimer(this, 30);
 			enochian.gain(1);
-
-			// add the event for losing it
-			this.resources.addResourceEvent({
-				rscType: "ENOCHIAN",
-				name: "lose enochian, clear all AF, UI, UH, stop poly timer",
-				delay: 15,
-				fnOnRsc: (rsc) => {
-					this.loseEnochian();
-				},
-			});
 		}
 	}
 
@@ -555,7 +529,7 @@ const makeAbility_BLM = (
 // https://www.fflogs.com/reports/7NMQkxLzcbptw3Xd#fight=15&type=damage-done&source=116&view=events&ability=36986
 makeSpell_BLM("BLIZZARD", 1, {
 	aspect: Aspect.Ice,
-	baseCastTime: 2.5,
+	baseCastTime: 2,
 	baseManaCost: 400,
 	basePotency: 180,
 	applicationDelay: 0.846,
@@ -581,13 +555,7 @@ makeSpell_BLM("BLIZZARD", 1, {
 });
 
 const gainFirestarterProc = (state: PlayerState) => {
-	let duration = (getResourceInfo("BLM", "FIRESTARTER") as ResourceInfo).maxTimeout;
-	if (state.resources.get("FIRESTARTER").available(1)) {
-		state.resources.get("FIRESTARTER").overrideTimer(state, duration);
-	} else {
-		state.resources.get("FIRESTARTER").gain(1);
-		state.enqueueResourceDrop("FIRESTARTER", duration);
-	}
+	state.resources.get("FIRESTARTER").gain(1);
 };
 
 const potentiallyGainFirestarter = (game: PlayerState) => {
@@ -602,7 +570,7 @@ const potentiallyGainFirestarter = (game: PlayerState) => {
 
 makeSpell_BLM("FIRE", 2, {
 	aspect: Aspect.Fire,
-	baseCastTime: 2.5,
+	baseCastTime: 2,
 	baseManaCost: 800,
 	basePotency: 180,
 	applicationDelay: 1.871,
@@ -728,7 +696,7 @@ makeSpell_BLM("FIRE_III", 35, {
 	aspect: Aspect.Fire,
 	baseCastTime: 3.5,
 	baseManaCost: 2000,
-	basePotency: 280,
+	basePotency: 290,
 	applicationDelay: 1.292,
 	onConfirm: (state, node) => {
 		state.tryConsumeResource("FIRESTARTER");
@@ -742,7 +710,7 @@ makeSpell_BLM("BLIZZARD_III", 35, {
 	aspect: Aspect.Ice,
 	baseCastTime: 3.5,
 	baseManaCost: 800,
-	basePotency: 280,
+	basePotency: 290,
 	applicationDelay: 0.89,
 	onConfirm: (state, node) => {
 		state.switchToAForUI("UMBRAL_ICE", 3);
@@ -752,7 +720,7 @@ makeSpell_BLM("BLIZZARD_III", 35, {
 
 makeSpell_BLM("FREEZE", 40, {
 	aspect: Aspect.Ice,
-	baseCastTime: 2.8,
+	baseCastTime: 2,
 	baseManaCost: 1000,
 	basePotency: 120,
 	applicationDelay: 0.664,
@@ -807,9 +775,9 @@ makeResourceAbility("BLM", "LEY_LINES", 52, "cd_LEY_LINES", {
 
 makeSpell_BLM("BLIZZARD_IV", 58, {
 	aspect: Aspect.Ice,
-	baseCastTime: 2.5,
+	baseCastTime: 2,
 	baseManaCost: 800,
-	basePotency: 320,
+	basePotency: 300,
 	applicationDelay: 1.156,
 	validateAttempt: (state) => state.getIceStacks() > 0,
 	onConfirm: (state, node) => state.resources.get("UMBRAL_HEART").gain(3),
@@ -817,9 +785,9 @@ makeSpell_BLM("BLIZZARD_IV", 58, {
 
 makeSpell_BLM("FIRE_IV", 60, {
 	aspect: Aspect.Fire,
-	baseCastTime: 2.8,
+	baseCastTime: 2,
 	baseManaCost: 800,
-	basePotency: 320,
+	basePotency: 300,
 	applicationDelay: 1.159,
 	validateAttempt: (state) => state.getFireStacks() > 0,
 	onConfirm: (state, node) => {
@@ -861,7 +829,7 @@ makeSpell_BLM("FOUL", 70, {
 	baseCastTime: 2.5,
 	baseManaCost: 0,
 	basePotency: 600,
-	falloff: 0.6,
+	falloff: 0.25,
 	applicationDelay: 1.158,
 	validateAttempt: (state) => state.hasResourceAvailable("POLYGLOT"),
 	onConfirm: (state, node) => state.resources.get("POLYGLOT").consume(1),
@@ -908,7 +876,7 @@ makeSpell_BLM("UMBRAL_SOUL", 35, {
 makeSpell_BLM("XENOGLOSSY", 80, {
 	baseCastTime: 0,
 	baseManaCost: 0,
-	basePotency: 880,
+	basePotency: 890,
 	applicationDelay: 0.63,
 	validateAttempt: (state) => state.hasResourceAvailable("POLYGLOT"),
 	onConfirm: (state, node) => state.resources.get("POLYGLOT").consume(1),
@@ -996,12 +964,9 @@ makeSpell_BLM("PARADOX", 90, {
 		if (state.hasEnochian()) {
 			state.startOrRefreshEnochian();
 		}
-		if (state.getIceStacks() > 0) {
-			state.resources.get("UMBRAL_ICE").gain(1);
-		} else if (state.getFireStacks() > 0) {
-			state.resources.get("ASTRAL_FIRE").gain(1);
+		if (state.getFireStacks() > 0) {
 			gainFirestarterProc(state);
-		} else {
+		} else if (state.getIceStacks() === 0){
 			console.error("cannot cast Paradox outside of AF/UI");
 		}
 	},
@@ -1036,9 +1001,9 @@ makeSpell_BLM("HIGH_THUNDER", 92, {
 
 makeSpell_BLM("FLARE_STAR", 100, {
 	aspect: Aspect.Fire,
-	baseCastTime: 3,
+	baseCastTime: 2,
 	baseManaCost: 0,
-	basePotency: 400,
+	basePotency: 500,
 	falloff: 0.65,
 	applicationDelay: 0.622,
 	validateAttempt: (state) => state.hasResourceAvailable("ASTRAL_SOUL", 6),
