@@ -1552,7 +1552,7 @@ export class Config extends React.Component {
 			>
 				{ALL_JOBS.filter((job) => JOBS[job].implementationLevel !== "UNIMPLEMENTED").map(
 					(job) => {
-						const impl = JOBS[job].implementationLevel;
+						const impl = JOBS[job].implementationLevel as ImplementationKey;
 						if (impl !== "LIVE") {
 							return <option key={job} value={job}>
 								{job + ` (${IMPLEMENTATION_LEVELS[impl].label})`}
