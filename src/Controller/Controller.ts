@@ -129,6 +129,7 @@ class Controller {
 	#skipViewUpdates: boolean = false;
 	// todo: can probably somehow get rid of this because it should largely overlaps with #bInSandbox
 	displayingUpToDateGameState = true;
+	#lastTickDuration: number = 0; // used during imports to resolve legacy wait durations
 
 	constructor() {
 		this.timeScale = 1;
@@ -868,6 +869,7 @@ class Controller {
 		prematureStopCondition?: () => boolean;
 	}) {
 		if (props.deltaTime > 0) {
+			this.#lastTickDuration = props.deltaTime;
 			let timeTicked = this.game.tick(
 				props.deltaTime,
 				props.prematureStopCondition
@@ -1049,6 +1051,7 @@ class Controller {
 	}
 
 	// returns true on success
+	// may modify Line in-place to adjust wait durations, or insert/remove wait nodes
 	#replay(props: {
 		line: Line;
 		replayMode: ReplayMode;
@@ -1092,12 +1095,13 @@ class Controller {
 			};
 		}
 
-		const oldLength = this.record.length;
+		let oldLength = this.record.length;
 		let firstAddedIndex: number | undefined = undefined;
 		// assume cutoffIndex < actions.length
 		const cutoff = props.cutoffIndex ?? line.actions.length;
+		const originalActions = line.actions.slice();
 		for (let i = 0; i < cutoff; i++) {
-			const itr = line.actions[i];
+			const itr = originalActions[i];
 			// switch to edited replay past the first edited node
 			if (
 				props.replayMode === ReplayMode.Edited &&
@@ -1125,17 +1129,85 @@ class Controller {
 				lastIter = true;
 			}
 
+			// Account for older versions of xivintheshell, which saved waitDuration fields on
+			// non-wait actions.
+			// If the previous action had a legacyWaitDuration field that did not match the elapsed tick time,
+			// then we need to insert or adjust wait events.
+			// When legacyWaitDuration == lastTickDuration, we don't need to do any adjustments.
+			// Otherwise, we need to create a new waitDuration node or modify the duration of the current one.
+			//
+			// Example 1 (legacyWaitDuration < lastTickDuration)
+			// =================================================
+			// - The last action node is Swiftcast added in manual mode at t=0, and legacyWaitDuration is 0.
+			// - lastTickDuration is 0.7 because current sim behavior automatically advances animation lock.
+			// If the current node is not a duration wait node, then it does not matter, since old
+			// behavior would either error out trying to use another action during animation lock.
+			// Suppose the current node is a duration wait of 1.0s. In older versions, this would
+			// be counted from the execution of the Swiftcast at t=0 since it had a waitDuration of 0;
+			// the next action would happen at t=1.
+			// Therefore, we need to adjust the wait node's duration to be 1-0.7=0.3; in general this is
+			//     itr.info.waitDuration = itr.info.waitDuration + (legacyWaitDuration - lastTickDuration)
+			//
+			// Example 2 (legacyWaitDuration > lastTickDuration)
+			// =================================================
+			// - The last action node is F3 at t=0 with a cast time of 3.4s, and legacyWaitDuration is 3.5.
+			// - lastTickDuration is 3.4 because that's the length of the computed animation lock.
+			// Something like this can occur as a result of an internal cast time formula change
+			// or job mechanic change. For example, Despair becoming instant in 7.1 caused this to occur
+			// for many existing BLM timelines.
+			// If the current node is not a duration wait node, then a new wait node with duration
+			//     newWaitDuration = legacyWaitDuration - lastWaitDuration
+			// must be added to compensate.
+			// If the current node is a duration wait node, then this difference is added:
+			//     itr.info.waitDuration = itr.info.waitDuration + (legacyWaitDuration - lastTickDuration)
+			// Note that this is the same formula as in example 1.
+			if (i > 0) {
+				const lastAction = originalActions[i - 1];
+				const lastLegacyWaitDuration = lastAction.legacyWaitDuration;
+				// This block assumes that legacyWaitDuration is only set on skill/setresource nodes
+				if (
+					lastLegacyWaitDuration !== undefined &&
+					Math.abs(lastLegacyWaitDuration - this.#lastTickDuration) > Debug.epsilon
+				) {
+					const delta = lastLegacyWaitDuration - this.#lastTickDuration;
+					const lastActionWasGCD =
+						lastAction.info.type === ActionType.Skill &&
+						this.game.skillsList.get(lastAction.info.skillName).cdName === "cd_GCD";
+					if (delta > 0 && itr.info.type !== ActionType.Wait) {
+						// If the current action is a skill, we do a quick look-ahead to see if the delta
+						// matches the amount of time that would tick naturally before its usage, and
+						// determine whether to create a new node based on this information.
+						let separateNode = true;
+						if (itr.info.type === ActionType.Skill) {
+							const preWaitTime = this.game.getSkillAvailabilityStatus(
+								itr.info.skillName,
+							).timeTillAvailable;
+							separateNode = Math.abs(preWaitTime - delta) > Debug.epsilon;
+						}
+						if (separateNode) {
+							this.#requestTick({ deltaTime: delta, separateNode });
+							// Don't count this node for the purposes of firstAddedNode
+							oldLength++;
+						}
+					} else if (itr.info.type === ActionType.Wait) {
+						// Piggyback on the current wait node.
+						// Note that delta may be negative in this case
+						waitDuration += delta;
+					}
+				}
+			}
+
 			if (itr.info.type === ActionType.Wait) {
 				this.#requestTick({
 					deltaTime: waitDuration,
 					separateNode: true,
 				});
-				// wait nodes are always valid
+				// wait nodes are always valid, assuming waitDuration is positive
 			}
 
 			// skill nodes
 			else if (itr.info.type === ActionType.Skill) {
-				let skillName = itr.info.skillName as ActionKey;
+				let skillName = itr.info.skillName;
 				if (props.replayMode === ReplayMode.SkillSequence) {
 					// auto-replace as much as possible
 					skillName = getAutoReplacedSkillName(
@@ -1230,7 +1302,7 @@ class Controller {
 		// When performing a replay up to a cutoff, advance the game time to the start of the action
 		// at props.cutoffIndex. This ensures the displayed cursor will be at the correct time.
 		if (props.cutoffIndex !== undefined) {
-			const info = line.actions[props.cutoffIndex].info;
+			const info = originalActions[props.cutoffIndex].info;
 			if (info.type === ActionType.Skill) {
 				const status = this.game.getSkillAvailabilityStatus(info.skillName);
 				this.#requestTick({ deltaTime: status.timeTillAvailable, separateNode: false });

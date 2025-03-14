@@ -141,13 +141,19 @@ export class ActionNode {
 	#hotTimeGap: Map<ResourceKey, number>;
 	healTargetCount: number = 1;
 	info: NodeInfo;
+	// Older versions of xivintheshell attached waitDuration fields to every action
+	// this field is only populated during deserialization.
+	// Note that a value of 0 does have a meaning; if an action is created in manual mode
+	// and spacebar was not pressed to fast-forward, then a wait action performed immediately
+	// after will be relative to the end of the action rather than the end of the animation lock.
+	legacyWaitDuration?: number;
 
-	// animation lock info set in the controller; should probably be moved
+	// timeline animation lock info set in the controller; should probably be moved
 	// elsewhere eventually
 	tmp_startLockTime?: number;
 	tmp_endLockTime?: number;
 
-	constructor(info: NodeInfo) {
+	constructor(info: NodeInfo, legacyWaitDuration?: number) {
 		this.info = info;
 		this.#capturedBuffs = new Set<BuffType>();
 		this.#dotPotencies = new Map();
@@ -156,6 +162,7 @@ export class ActionNode {
 		this.#dotTimeGap = new Map();
 		this.#hotOverrideAmount = new Map();
 		this.#hotTimeGap = new Map();
+		this.legacyWaitDuration = legacyWaitDuration;
 	}
 
 	serialized(): SerializedAction {
@@ -190,7 +197,7 @@ export class ActionNode {
 	}
 
 	getClone(): ActionNode {
-		return new ActionNode(this.info);
+		return new ActionNode(this.info, this.legacyWaitDuration);
 	}
 
 	addBuff(rsc: BuffType) {
@@ -509,16 +516,30 @@ export class Line {
 			// TODO ensure objects are well-formed and insert invalid nodes if not
 			if (serializedAction.type === ActionType.Skill) {
 				const skillName = getNormalizedSkillName(serializedAction.skillName)!;
-				return new ActionNode({
-					type: ActionType.Skill,
-					skillName,
-					targetCount: serializedAction.targetCount,
-				});
+				const legacyWaitDuration =
+					"waitDuration" in serializedAction
+						? serializedAction["waitDuration"]
+						: undefined;
+				return new ActionNode(
+					{
+						type: ActionType.Skill,
+						skillName,
+						targetCount: serializedAction.targetCount,
+					},
+					legacyWaitDuration,
+				);
 			} else if (serializedAction.type === ActionType.SetResourceEnabled) {
-				return new ActionNode({
-					type: ActionType.SetResourceEnabled,
-					buffName: getResourceKeyFromBuffName(serializedAction.buffName)!,
-				});
+				const legacyWaitDuration =
+					"waitDuration" in serializedAction
+						? serializedAction["waitDuration"]
+						: undefined;
+				return new ActionNode(
+					{
+						type: ActionType.SetResourceEnabled,
+						buffName: getResourceKeyFromBuffName(serializedAction.buffName)!,
+					},
+					legacyWaitDuration,
+				);
 			} else if ([ActionType.Wait].includes(serializedAction.type)) {
 				return new ActionNode(serializedAction);
 			} else {
