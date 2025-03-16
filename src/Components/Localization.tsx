@@ -197,12 +197,14 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.MAGES_BALLAD, { en: "mage's ballad" }],
 	[PotencyModifierType.ARMYS_PAEON, { en: "army's paeon" }],
 	[PotencyModifierType.NO_MERCY, { en: "no mercy" }], // gnb
+	[PotencyModifierType.SEARING_LIGHT, { en: "searing light" }],
 	[PotencyModifierType.SURGING_TEMPEST, { en: "surging tempest", zh: "战场风暴" }],
 	[PotencyModifierType.POWER_SURGE, { en: "power surge" }], // drg
 	[PotencyModifierType.LANCE_CHARGE, { en: "lance charge" }],
 	[PotencyModifierType.ENHANCED_PIERCING_TALON, { en: "enhanced piercing talon" }],
 	[PotencyModifierType.LIFE_OF_THE_DRAGON, { en: "life of the dragon" }],
 	[PotencyModifierType.LIFE_SURGE, { en: "life surge" }],
+	[PotencyModifierType.PET, { en: "pet modifier" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
