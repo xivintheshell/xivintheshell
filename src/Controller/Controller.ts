@@ -1330,6 +1330,20 @@ class Controller {
 				this.#requestTick({ deltaTime: status.timeTillAvailable, separateNode: false });
 			}
 		}
+	
+		// Perform legacy wait adjustment for the final action in the list if the last action was a skill/setresource.
+		// Always generate a new node, since there will never be a following skill for which to skip
+		// animation lock.
+		const lastAction = originalActions[originalActions.length - 1];
+		const lastLegacyWaitDuration = lastAction.legacyWaitDuration;
+		if (
+			lastLegacyWaitDuration !== undefined &&
+			(lastAction.info.type === ActionType.Skill || lastAction.info.type === ActionType.SetResourceEnabled) &&
+			Math.abs(lastLegacyWaitDuration - this.#lastTickDuration) > Debug.epsilon
+		) {
+			const delta = lastLegacyWaitDuration - this.#lastTickDuration;
+			this.#requestTick({ deltaTime: delta, separateNode: true });
+		}
 
 		// Re-enable UI updates
 		this.#skipViewUpdates = false;
