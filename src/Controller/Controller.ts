@@ -1047,7 +1047,7 @@ class Controller {
 			if (!this.#skipViewUpdates) {
 				refreshTimelineEditor();
 			}
-		} else {
+		} else if (beforeWaitTime > 0) {
 			// After waiting for animation lock and cooldowns, the skill may not be usable
 			// (e.g. if Amplifier is pressed, then the 120s cd will move the timeline to a point where
 			// enochian was dropped and the button can no longer be used).
@@ -1330,7 +1330,7 @@ class Controller {
 				this.#requestTick({ deltaTime: status.timeTillAvailable, separateNode: false });
 			}
 		}
-	
+
 		// Perform legacy wait adjustment for the final action in the list if the last action was a skill/setresource.
 		// Always generate a new node, since there will never be a following skill for which to skip
 		// animation lock.
