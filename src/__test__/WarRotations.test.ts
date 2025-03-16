@@ -168,22 +168,23 @@ it(
 	testWithConfig({}, () => {
 		(["OVERPOWER", "ONSLAUGHT", "MYTHRIL_TEMPEST"] as ActionKey[]).forEach(applySkill);
 		const state = controller.game as WARState;
+		const animLock = state.config.animationLock;
 		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
 		// Mythril Tempest gives about 30.45 seconds of Surging Tempest immediately
-		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeGreaterThan(30);
-		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeLessThan(31);
+		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeGreaterThan(30 - animLock);
+		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeLessThan(31 - animLock);
 		applySkill("ONSLAUGHT");
 
 		// wait for Surging Tempest to nearly expire before refreshing
 		applySkill("OVERPOWER");
-		controller.step(27.7);
+		controller.step(27.2);
 		applySkill("MYTHRIL_TEMPEST");
 
-		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
-		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeLessThan(1);
 		// Surging Tempest should drop before being re-applied after the application delay on Mythril Tempest
-		controller.step(state.resources.timeTillReady("SURGING_TEMPEST") + Debug.epsilon);
-		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(false);
+		// so we test that the reapplied duration is ~30.45 seconds
+		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
+		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeGreaterThan(30 - animLock);
+		expect(state.resources.timeTillReady("SURGING_TEMPEST")).toBeLessThan(31 - animLock);
 		applySkill("ONSLAUGHT");
 		expect(state.hasResourceAvailable("SURGING_TEMPEST")).toBe(true);
 		// wait for damage application

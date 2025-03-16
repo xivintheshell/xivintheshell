@@ -96,6 +96,7 @@ export function skillNode(skillName: ActionKey, targetCount?: number): ActionNod
 		type: ActionType.Skill,
 		skillName,
 		targetCount: targetCount ?? 1,
+		healTargetCount: undefined,
 	});
 }
 
@@ -518,6 +519,7 @@ export class Line {
 						type: ActionType.Skill,
 						skillName,
 						targetCount: serializedAction.targetCount,
+						healTargetCount: serializedAction.healTargetCount,
 					},
 					legacyWaitDuration,
 				);

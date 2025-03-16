@@ -956,8 +956,11 @@ class Controller {
 		}
 	}
 
-	#fastForward() {
+	#fastForward(maxReplayTime: number) {
 		let deltaTime: number = this.game.timeTillAnySkillAvailable();
+		if (maxReplayTime >= 0) {
+			deltaTime = Math.min(maxReplayTime - this.game.time, deltaTime);
+		}
 		this.#requestTick({ deltaTime: deltaTime, separateNode: false });
 	}
 
@@ -965,6 +968,7 @@ class Controller {
 		skillName: ActionKey,
 		targetCount: number,
 		overrideTickMode: TickMode = this.tickMode,
+		maxReplayTime: number = -1,
 	) {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
@@ -1035,7 +1039,8 @@ class Controller {
 
 			if (overrideTickMode !== TickMode.RealTimeAutoPause) {
 				// In manual mode, directly fast-forward to the end of animation lock instead of animating.
-				this.#fastForward();
+				// If we're in a historical replay, the end may be in the middle of the animation lock.
+				this.#fastForward(maxReplayTime);
 			}
 
 			// If this was called within a line load, do not refresh the timeline view
@@ -1108,8 +1113,7 @@ class Controller {
 			if (
 				props.replayMode === ReplayMode.Edited &&
 				currentReplayMode === ReplayMode.Exact &&
-				// TODO why i + 1 as well?
-				(i === props.firstEditedNodeIndex || i + 1 === props.firstEditedNodeIndex)
+				i === props.firstEditedNodeIndex
 			) {
 				currentReplayMode = ReplayMode.Edited;
 			}
@@ -1119,18 +1123,14 @@ class Controller {
 			let invalidReason: SkillReadyStatus | undefined = undefined;
 			let invalidTime: number | undefined = undefined;
 
-			// maxReplayTime is used for replay for displaying historical game states (only replay some given duration)
-			let waitDuration = itr.info.type === ActionType.Wait ? itr.info.waitDuration : 0;
-			if (
-				maxReplayTime >= 0 &&
-				maxReplayTime - this.game.time < waitDuration &&
-				currentReplayMode === ReplayMode.Exact
-			) {
-				// hit specified max replay time; everything's valid so far
-				waitDuration = maxReplayTime - this.game.time;
-				lastIter = true;
+			let waitDuration = 0;
+			if (itr.info.type === ActionType.Wait) {
+				waitDuration = itr.info.waitDuration;
+			} else if (itr.info.type === ActionType.Skill) {
+				waitDuration = this.game.getSkillAvailabilityStatus(
+					itr.info.skillName,
+				).timeTillAvailable;
 			}
-
 			// Account for older versions of xivintheshell, which saved waitDuration fields on
 			// non-wait actions.
 			// If the previous action had a legacyWaitDuration field that did not match the elapsed tick time,
@@ -1196,6 +1196,30 @@ class Controller {
 				}
 			}
 
+			// maxReplayTime is used for replay for displaying historical game states (only replay some given duration)
+			if (
+				maxReplayTime >= 0 &&
+				maxReplayTime - this.game.time < waitDuration &&
+				currentReplayMode === ReplayMode.Exact
+			) {
+				// hit specified max replay time; everything's valid so far
+				// Instead of performing the next action, wait until maxReplayTime and return early
+				this.#requestTick({
+					deltaTime: maxReplayTime - this.game.time,
+					separateNode: true,
+				});
+				// Re-enable UI updates
+				this.#skipViewUpdates = false;
+				this.updateAllDisplay();
+				return {
+					success: true,
+					firstAddedIndex,
+					firstInvalidNode: undefined,
+					invalidReason: undefined,
+					invalidTime: undefined,
+				};
+			}
+
 			if (itr.info.type === ActionType.Wait) {
 				this.#requestTick({
 					deltaTime: waitDuration,
@@ -1215,13 +1239,12 @@ class Controller {
 						this.gameConfig.level,
 					);
 				}
-				let status = this.#useSkill(skillName, itr.info.targetCount, TickMode.Manual);
-
-				// Wait until the animation lock has completed
-				this.#requestTick({
-					deltaTime: this.game.timeTillAnySkillAvailable(),
-					separateNode: false,
-				});
+				let status = this.#useSkill(
+					skillName,
+					itr.info.targetCount,
+					TickMode.Manual,
+					maxReplayTime,
+				);
 
 				if (!status.status.ready()) {
 					lastIter = true;
