@@ -161,7 +161,7 @@ function expandNode(node: ActionNode): ExpandedNode {
 		falloff: 1,
 		targetCount: 1,
 	};
-	if (node.info.type === ActionType.Skill && node.info.skillName) {
+	if (node.info.type === ActionType.Skill) {
 		const skillName = node.info.skillName;
 		const mainPotency = node.getInitialPotency();
 		if (!mainPotency) {
@@ -304,11 +304,7 @@ export function calculateSelectedStats(props: {
 	}
 
 	ctl.record.iterateSelected((node) => {
-		if (
-			node.info.type === ActionType.Skill &&
-			node.info.skillName &&
-			!(node.info.skillName in LIMIT_BREAK_ACTIONS)
-		) {
+		if (node.info.type === ActionType.Skill && !(node.info.skillName in LIMIT_BREAK_ACTIONS)) {
 			const checked = getSkillOrDotInclude(node.info.skillName);
 			// gcd count
 			let skillInfo = ctl.game.skillsList.get(node.info.skillName);
@@ -374,7 +370,7 @@ export function calculateDamageStats(props: {
 	let skillPotencies: Map<ActionKey, number> = new Map();
 
 	const processNodeFn = (node: ActionNode) => {
-		if (node.info.type === ActionType.Skill && node.info.skillName) {
+		if (node.info.type === ActionType.Skill) {
 			const skillName = node.info.skillName;
 			const checked = getSkillOrDotInclude(skillName);
 			const isLimitBreak = skillName in LIMIT_BREAK_ACTIONS;

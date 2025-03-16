@@ -1449,7 +1449,7 @@ export class GameState {
 			node.setTargetCount(1);
 		}
 		if (skill.aoeHeal) {
-			node.healTargetCount = this.resources.get("PARTY_SIZE").availableAmount();
+			node.setHealTargetCount(this.resources.get("PARTY_SIZE").availableAmount());
 		}
 		// Process the remainder of the skills effects dependent on the kind of skill
 		if (skill.kind === "spell" || skill.kind === "weaponskill") {

@@ -37,6 +37,7 @@ interface SerializedSkill {
 	type: ActionType.Skill;
 	skillName: string; // uses the VALUE of the skill name, not the ActionKey
 	targetCount: number;
+	healTargetCount: number | undefined;
 }
 
 interface SerializedWait {
@@ -74,6 +75,7 @@ interface SkillNodeInfo {
 	type: ActionType.Skill;
 	skillName: ActionKey;
 	targetCount: number;
+	healTargetCount: number | undefined;
 }
 
 interface SetResourceNodeInfo {
@@ -139,7 +141,6 @@ export class ActionNode {
 	#dotTimeGap: Map<ResourceKey, number>;
 	#hotOverrideAmount: Map<ResourceKey, number>;
 	#hotTimeGap: Map<ResourceKey, number>;
-	healTargetCount: number = 1;
 	info: NodeInfo;
 	// Older versions of xivintheshell attached waitDuration fields to every action
 	// this field is only populated during deserialization.
@@ -171,6 +172,7 @@ export class ActionNode {
 				type: ActionType.Skill,
 				skillName: ACTIONS[this.info.skillName].name,
 				targetCount: this.info.targetCount,
+				healTargetCount: this.info.healTargetCount,
 			};
 		} else if (this.info.type === ActionType.SetResourceEnabled) {
 			return {
@@ -188,6 +190,10 @@ export class ActionNode {
 
 	get targetCount(): number {
 		return this.info.type === ActionType.Skill ? this.info.targetCount : 0;
+	}
+
+	get healTargetCount(): number {
+		return this.info.type === ActionType.Skill ? (this.info.healTargetCount ?? 0) : 0;
 	}
 
 	getNameForMessage(): string {
@@ -221,6 +227,12 @@ export class ActionNode {
 	setTargetCount(count: number) {
 		if (this.info.type === ActionType.Skill) {
 			this.info.targetCount = count;
+		}
+	}
+
+	setHealTargetCount(count: number) {
+		if (this.info.type === ActionType.Skill) {
+			this.info.healTargetCount = count;
 		}
 	}
 
@@ -475,25 +487,6 @@ export class Line {
 
 	iterateAll(fn: (node: ActionNode) => void) {
 		this.actions.forEach((node) => fn(node));
-	}
-
-	getFirstAction() {
-		return this.head;
-	}
-
-	getLastAction(condition?: (node: ActionNode) => boolean) {
-		if (condition === undefined) {
-			return this.tail;
-		} else {
-			// Array.findLast seems not to be in our version of ecmascript
-			// and changing ts configuration/polyfill is annoying
-			for (let i = this.actions.length - 1; i >= 0; i--) {
-				if (condition(this.actions[i])) {
-					return this.actions[i];
-				}
-			}
-			return undefined;
-		}
 	}
 
 	serialized(): { name: string; actions: object[] } {
