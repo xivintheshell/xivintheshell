@@ -1,6 +1,6 @@
 import { FileType, getCachedValue, setCachedValue } from "./Common";
-import { ActionNode, Line } from "./Record";
-import { getNormalizedSkillName, getResourceKeyFromBuffName, jobHasSkill } from "../Game/Skills";
+import { ActionType, Line } from "./Record";
+import { jobHasSkill } from "../Game/Skills";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
 import { ShellJob, ALL_JOBS } from "../Game/Data/Jobs";
 import { ActionKey } from "../Game/Data";
@@ -54,22 +54,13 @@ export class PresetLinesManager {
 	}
 
 	deserializeAndAppend(content: Fixme) {
-		for (let i = 0; i < content.presets.length; i++) {
-			const skillNames: ActionKey[] = [];
-			const line = new Line();
-			line.name = content.presets[i].name;
-			for (let j = 0; j < content.presets[i].actions.length; j++) {
-				const action = content.presets[i].actions[j];
-				const node = new ActionNode(action.type);
-				if (action.skillName) {
-					node.skillName = getNormalizedSkillName(action.skillName)!;
-					skillNames.push(node.skillName);
-				}
-				node.waitDuration = action.waitDuration;
-				node.buffName = getResourceKeyFromBuffName(action.buffName);
-				line.addActionNode(node);
-			}
-			this.addLine(line, content.presets[i].job ?? inferJobFromSkillNames(skillNames));
+		for (let preset of content.presets) {
+			const line = Line.deserialize(preset.actions);
+			line.name = preset.name;
+			const skillNames: ActionKey[] = line.actions.flatMap((action) =>
+				action.info.type === ActionType.Skill ? [action.info.skillName] : [],
+			);
+			this.addLine(line, preset.job ?? inferJobFromSkillNames(skillNames));
 		}
 	}
 

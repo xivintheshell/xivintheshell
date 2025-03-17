@@ -93,6 +93,7 @@ export type SkillElem = TimelineElemBase & {
 	lockDuration: number;
 	recastDuration: number;
 	node: ActionNode;
+	actionIndex: number;
 };
 export type MarkerElem = TimelineElemBase & {
 	type: ElemType.Marker;
@@ -491,19 +492,19 @@ export class Timeline {
 		updateMarkers_TimelineMarkerPresets(M);
 	}
 
-	onClickTimelineAction(node: ActionNode, bShift: boolean) {
-		controller.record.onClickNode(node, bShift);
+	onClickTimelineAction(index: number, bShift: boolean) {
+		controller.record.onClickNode(index, bShift);
 
 		updateSkillSequencePresetsView();
 		refreshTimelineEditor();
 
 		// historical state
-		let firstNode = controller.record.getFirstSelection();
-		if (firstNode) {
+		let firstNode = controller.record.selectionStartIndex;
+		if (firstNode !== undefined) {
 			controller.displayHistoricalState(-Infinity, firstNode);
 		} else {
 			// just clicked on the only selected node and unselected it. Still show historical state
-			controller.displayHistoricalState(-Infinity, node);
+			controller.displayHistoricalState(-Infinity, index);
 		}
 	}
 

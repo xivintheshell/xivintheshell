@@ -547,9 +547,12 @@ export class GameState {
 				eventsToExecuteOld.push(this.eventsQueue[i]);
 			}
 			// actually tick them (which might enqueue new events)
-			let executedEvents = 0;
+			// to ensure remaining time on cooldowns is correct, tick each event before calling their effects
 			eventsToExecuteOld.forEach((e) => {
 				e.timeTillEvent -= timeToTick;
+			});
+			let executedEvents = 0;
+			eventsToExecuteOld.forEach((e) => {
 				if (Debug.consoleLogEvents) console.log(e.name + " in " + e.timeTillEvent);
 				if (e.timeTillEvent <= Debug.epsilon) {
 					if (!e.canceled) {
@@ -644,7 +647,11 @@ export class GameState {
 	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
 	 * it performs the confirmation immediately.
 	 */
-	useSpellOrWeaponskill(skill: Spell<PlayerState> | Weaponskill<PlayerState>, node: ActionNode) {
+	useSpellOrWeaponskill(
+		skill: Spell<PlayerState> | Weaponskill<PlayerState>,
+		node: ActionNode,
+		actionIndex: number,
+	) {
 		const cd = this.cooldowns.get(skill.cdName);
 		const secondaryCd = skill.secondaryCd
 			? this.cooldowns.get(skill.secondaryCd.cdName)
@@ -713,6 +720,7 @@ export class GameState {
 			if (manaCost > this.resources.get("MANA").availableAmount()) {
 				controller.reportInterruption({
 					failNode: node,
+					failIndex: actionIndex,
 				});
 			} else if (manaCost > 0) {
 				this.resources.get("MANA").consume(manaCost);
@@ -821,6 +829,7 @@ export class GameState {
 					} else {
 						controller.reportInterruption({
 							failNode: node,
+							failIndex: actionIndex,
 						});
 					}
 				}),
@@ -961,7 +970,7 @@ export class GameState {
 	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
 	 * it performs the confirmation immediately.
 	 */
-	useLimitBreak(skill: LimitBreak<PlayerState>, node: ActionNode) {
+	useLimitBreak(skill: LimitBreak<PlayerState>, node: ActionNode, actionIndex: number) {
 		const cd = this.cooldowns.get(skill.cdName);
 
 		const capturedCastTime = skill.castTimeFn(this);
@@ -1063,6 +1072,7 @@ export class GameState {
 					} else {
 						controller.reportInterruption({
 							failNode: node,
+							failIndex: actionIndex,
 						});
 					}
 				}),
@@ -1430,7 +1440,7 @@ export class GameState {
 		};
 	}
 
-	useSkill(skillName: ActionKey, node: ActionNode) {
+	useSkill(skillName: ActionKey, node: ActionNode, actionIndex: number) {
 		let skill = this.skillsList.get(skillName);
 
 		// Process skill execution effects regardless of skill kind
@@ -1439,18 +1449,18 @@ export class GameState {
 		// If there is no falloff field specified, then reset the node's targetCount to 1,
 		// ignoring whatever input the user gave
 		if (skill.falloff === undefined) {
-			node.targetCount = 1;
+			node.setTargetCount(1);
 		}
 		if (skill.aoeHeal) {
-			node.healTargetCount = this.resources.get("PARTY_SIZE").availableAmount();
+			node.setHealTargetCount(this.resources.get("PARTY_SIZE").availableAmount());
 		}
 		// Process the remainder of the skills effects dependent on the kind of skill
 		if (skill.kind === "spell" || skill.kind === "weaponskill") {
-			this.useSpellOrWeaponskill(skill, node);
+			this.useSpellOrWeaponskill(skill, node, actionIndex);
 		} else if (skill.kind === "ability") {
 			this.useAbility(skill, node);
 		} else if (skill.kind === "limitbreak") {
-			this.useLimitBreak(skill, node);
+			this.useLimitBreak(skill, node, actionIndex);
 		}
 	}
 

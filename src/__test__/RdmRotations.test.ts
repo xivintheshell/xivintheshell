@@ -8,6 +8,7 @@ import {
 	makeTestWithConfigFn,
 	applySkill,
 	compareDamageTables,
+	testDamageFromTimeline,
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
@@ -175,3 +176,22 @@ it(
 );
 
 // it("interrupts verstone if it falls off mid-cast")
+
+it(
+	"loads: rdm_legacy_test_accel_gi_clickoff.txt",
+	testDamageFromTimeline("rdm_legacy_test_accel_gi_clickoff.txt", {
+		time: 15.663,
+		lastDamageApplicationTime: 8.84,
+		totalPotency: {
+			applied: 1840.0,
+			pending: 440.0,
+		},
+		gcdSkills: {
+			applied: 4,
+			pending: 1,
+		},
+		mainTableSummary: {
+			totalPotencyWithoutPot: 1840.0,
+		},
+	}),
+);

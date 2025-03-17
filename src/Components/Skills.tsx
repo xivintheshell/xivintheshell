@@ -4,7 +4,6 @@ import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common"
 import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { Tooltip as ReactTooltip } from "react-tooltip";
-import { ActionType } from "../Controller/Record";
 import { localize, localizeSkillName } from "./Localization";
 import { updateTimelineView } from "./Timeline";
 import * as ReactDOMServer from "react-dom/server";
@@ -547,13 +546,7 @@ export class SkillsWindow extends React.Component {
 				if (this.state.waitSince === WaitSince.Now) {
 					controller.step(waitTime);
 				} else if (this.state.waitSince === WaitSince.LastSkill) {
-					let timeSinceLastSkill = 0;
-					let lastAction = controller.record.getLastAction((node) => {
-						return node.type === ActionType.Wait || node.type === ActionType.Skill;
-					});
-					if (lastAction) {
-						timeSinceLastSkill = lastAction.waitDuration;
-					}
+					let timeSinceLastSkill = controller.game.time - controller.lastSkillTime;
 					let stepTime = waitTime - timeSinceLastSkill;
 					if (stepTime <= 0) {
 						window.alert(
