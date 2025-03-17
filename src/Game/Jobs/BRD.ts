@@ -3,7 +3,7 @@ import { localizeResourceType } from "../../Components/Localization";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, WarningType } from "../Common";
+import { Debug, BuffType, WarningType } from "../Common";
 import { TraitKey } from "../Data";
 import { BRDResourceKey, BRDActionKey, BRDCooldownKey } from "../Data/Jobs/BRD";
 import { GameConfig } from "../GameConfig";
@@ -155,7 +155,7 @@ export class BRDState extends GameState {
 			this.gainRepertoireEffect(song);
 		}
 
-		if (this.resources.timeTillReady(song) > 3) {
+		if (this.resources.timeTillReady(song) > 3 + Debug.epsilon) {
 			this.addEvent(
 				new Event(`${song} tick`, 3, () => {
 					this.songTick(song);
