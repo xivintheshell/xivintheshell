@@ -619,7 +619,7 @@ it(
 						maxTicks: 129,
 						dotCoverageTimeFraction: 0.991,
 						cumulativeGap: 1.197,
-						cumulativeOverride: 6.160,
+						cumulativeOverride: 6.16,
 						totalPotencyWithoutPot: 12924.09,
 						totalPotPotency: 162.07,
 					},

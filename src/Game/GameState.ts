@@ -548,7 +548,9 @@ export class GameState {
 			}
 			// actually tick them (which might enqueue new events)
 			// to ensure remaining time on cooldowns is correct, tick each event before calling their effects
-			eventsToExecuteOld.forEach((e) => { e.timeTillEvent -= timeToTick; });
+			eventsToExecuteOld.forEach((e) => {
+				e.timeTillEvent -= timeToTick;
+			});
 			let executedEvents = 0;
 			eventsToExecuteOld.forEach((e) => {
 				if (Debug.consoleLogEvents) console.log(e.name + " in " + e.timeTillEvent);

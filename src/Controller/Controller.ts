@@ -1338,7 +1338,8 @@ class Controller {
 		const lastLegacyWaitDuration = lastAction.legacyWaitDuration;
 		if (
 			lastLegacyWaitDuration !== undefined &&
-			(lastAction.info.type === ActionType.Skill || lastAction.info.type === ActionType.SetResourceEnabled) &&
+			(lastAction.info.type === ActionType.Skill ||
+				lastAction.info.type === ActionType.SetResourceEnabled) &&
 			Math.abs(lastLegacyWaitDuration - this.#lastTickDuration) > Debug.epsilon
 		) {
 			const delta = lastLegacyWaitDuration - this.#lastTickDuration;

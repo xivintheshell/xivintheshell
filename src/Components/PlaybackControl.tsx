@@ -454,12 +454,15 @@ export class TimeControl extends React.Component {
 							})}
 							{localize({
 								en: <div className="paragraph">
-									- click to use a skill. or if it's not ready, click again to
-									wait then retry
+									- click to use a skill. if the skill is on cooldown, or you're
+									in an animation lock, then the simulation will automatically
+									skip ahead to when the skill can be used again
+									<br />- animation locks and cast bars will play out in sped-up
+									real time until done
 								</div>,
 								zh: <div className="paragraph">
 									- 点击图标使用技能;
-									战斗时间会按下方设置的倍速自动前进直到可释放下一个技能。如果点击的技能CD没有转好，再次点击会快进到它CD转好并重试。
+									战斗时间会按下方设置的倍速自动前进直到可释放下一个技能。如果点击的技能CD没有转好，模拟会自动地快进到它CD转好并重试。
 								</div>,
 							})}
 						</div>
@@ -486,22 +489,14 @@ export class TimeControl extends React.Component {
 						<div className="toolTip">
 							{localize({
 								en: <div className="paragraph">
-									- click to use a skill. or if it's not ready, click again to
-									wait then retry
+									- click to use a skill. if the skill is on cooldown, or you're
+									in an animation lock, then the simulation will automatically
+									skip ahead to when the skill can be used again
+									<br />- animation locks and cast times are skipped immediately
 								</div>,
 								zh: <div className="paragraph">
 									- 点击图标使用技能;
-									战斗时间会自动快进至可释放下一个技能。如果点击的技能CD没有转好，再次点击可以快进到它CD转好并重试。
-								</div>,
-							})}
-							{localize({
-								en: <div className="paragraph">
-									- <ButtonIndicator text={"space"} /> to advance game time to the
-									earliest possible time for the next skill
-								</div>,
-								zh: <div className="paragraph">
-									- 点击 <ButtonIndicator text={"空格"} />{" "}
-									来快进到下一个可释放技能的时间点。
+									战斗时间会自动快进至可释放下一个技能。如果点击的技能CD没有转好，模拟会自动地快进到它CD转好并重试。
 								</div>,
 							})}
 						</div>

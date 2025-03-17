@@ -219,8 +219,8 @@ export function IntroSection(props: { job: ShellJob }) {
 								<ButtonIndicator text={"apply and reset"} />
 							</li>
 							<li style={smallGap}>
-								Click on a skill to use it. If it's not ready yet, click on it again
-								will wait and retry.
+								Click on a skill to use it. The simulation will always jump to when
+								the animation lock ends and the skill's cooldown becomes available.
 							</li>
 							<li style={smallGap}>
 								Press <ButtonIndicator text={"u"} /> to delete the last added action
@@ -237,7 +237,7 @@ export function IntroSection(props: { job: ShellJob }) {
 								<ButtonIndicator text={"应用并重置时间轴"} />
 							</li>
 							<li style={smallGap}>
-								单击使用技能，如果CD还没转好，可以再次点击，会自动等到转好然后重试。
+								单击使用技能，如果CD还没转好，会自动等到转好然后重试。
 							</li>
 							<li style={smallGap}>
 								按 <ButtonIndicator text={"u"} />{" "}
@@ -253,6 +253,7 @@ export function IntroSection(props: { job: ShellJob }) {
 								<ButtonIndicator text={"適用とリセット"} />
 								をクリックしてください。
 							</li>
+							{/* TODO: outdated */}
 							<li style={smallGap}>
 								実行したいアクションをクリックしてください。リキャストが戻ってきていないアクションをクリックすると使用可能な時間まで待って再実行します。
 							</li>
