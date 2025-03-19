@@ -20,7 +20,7 @@ import {
 import {
 	CoolDown,
 	CoolDownState,
-	DoTBuff,
+	OverTimeBuff,
 	Event,
 	EventTag,
 	getAllResources,
@@ -32,38 +32,40 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { ActionNode } from "../Controller/Record";
-import { Modifiers, Potency, PotencyModifier, PotencyModifierType } from "./Potency";
+import { Modifiers, Potency, PotencyKind, PotencyModifier, PotencyModifierType } from "./Potency";
 import { Buff } from "./Buffs";
 
 import type { BLMState } from "./Jobs/BLM";
 import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";
-import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS } from "./Data/Jobs";
+import { ShellJob, HEALER_JOBS, CASTER_JOBS, JOBS, HEALERS } from "./Data/Jobs";
 import { ActionKey, CooldownKey, ResourceKey, RESOURCES, TraitKey } from "./Data";
 import { hasUnlockedTrait } from "../utilities";
 import { StatusPropsGenerator } from "../Components/StatusDisplay";
+import { XIVMath } from "./XIVMath";
 
 //https://www.npmjs.com/package/seedrandom
 let SeedRandom = require("seedrandom");
 
 type RNG = any;
 
-export interface DoTSkillRegistration {
-	dotName: ResourceKey;
+export interface OverTimeSkillRegistration {
+	effectName: ResourceKey;
 	appliedBy: ActionKey[];
 	isGroundTargeted?: true;
-	exclude?: boolean; // Exclude from standard DoT tick handling (Flamethrower)
+	exclude?: boolean; // Exclude from standard tick handling (Flamethrower)
 }
-export interface DoTRegistrationGroup {
+export interface OverTimeRegistrationGroup {
 	reportName?: ReactNode;
-	groupedDots: DoTSkillRegistration[];
+	groupedEffects: OverTimeSkillRegistration[];
+	isHealing?: boolean;
 }
 
-export interface DoTPotencyProps {
+export interface OverTimePotencyProps {
 	node: ActionNode;
 	skillName: ActionKey;
-	dotName: ResourceKey;
+	effectName: ResourceKey;
 	tickPotency: number;
 	tickFrequency?: number;
 	speedStat: "sks" | "sps";
@@ -78,6 +80,7 @@ export class GameState {
 	nonProcRng: RNG; // use this for things other than procs (actor tick offsets, for example)
 	lucidTickOffset: number;
 	dotTickOffset: number;
+	hotTickOffset: number;
 	time: number; // raw time which starts at 0 regardless of countdown
 	resources: ResourceState;
 	cooldowns: CoolDownState;
@@ -85,13 +88,18 @@ export class GameState {
 	skillsList: SkillsList<GameState>;
 	displayedSkills: DisplayedSkills;
 
-	dotGroups: DoTRegistrationGroup[] = [];
+	overTimeEffectGroups: OverTimeRegistrationGroup[] = [];
 	dotResources: ResourceKey[] = [];
+	hotResources: ResourceKey[] = [];
 	excludedDoTs: ResourceKey[] = [];
+	excludedHoTs: ResourceKey[] = [];
 	fullTimeDoTs: ResourceKey[] = [];
 	#groundTargetDoTs: ResourceKey[] = [];
+	#groundTargetHoTs: ResourceKey[] = [];
 	dotSkills: ActionKey[] = [];
+	hotSkills: ActionKey[] = [];
 	#exclusiveDots: Map<ResourceKey, ResourceKey[]> = new Map();
+	#exclusiveHots: Map<ResourceKey, ResourceKey[]> = new Map();
 
 	constructor(config: GameConfig) {
 		this.config = config;
@@ -99,6 +107,7 @@ export class GameState {
 		this.nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
 		this.lucidTickOffset = this.nonProcRng() * 3.0;
 		this.dotTickOffset = this.nonProcRng() * 3.0;
+		this.hotTickOffset = this.nonProcRng() * 3.0;
 
 		// TIME (raw time which starts at 0 regardless of countdown)
 		this.time = 0;
@@ -171,6 +180,10 @@ export class GameState {
 		return this.config.job;
 	}
 
+	get partySize(): number {
+		return this.resources.get("PARTY_SIZE").availableAmount();
+	}
+
 	/**
 	 * Get mp tick, lucid tick, and class-specific recurring timers rolling. Jobs may also
 	 * register a list of pet resources to be treated as DoT effects.
@@ -180,7 +193,7 @@ export class GameState {
 	 * sub-classes must explicitly call this at the end of their constructor.
 	 */
 	protected registerRecurringEvents(
-		dotGroups: DoTRegistrationGroup[] = [],
+		effectGroups: OverTimeRegistrationGroup[] = [],
 		petSkills: ActionKey[] = [],
 	) {
 		let game = this;
@@ -221,7 +234,7 @@ export class GameState {
 		// lucid ticks
 		let recurringLucidTick = () => {
 			// do work at lucid tick
-			let lucid = this.resources.get("LUCID_DREAMING") as DoTBuff;
+			let lucid = this.resources.get("LUCID_DREAMING") as OverTimeBuff;
 			if (lucid.available(1)) {
 				lucid.tickCount++;
 				if (!(this.isBLMState() && this.getFireStacks() > 0)) {
@@ -285,58 +298,115 @@ export class GameState {
 				}),
 			);
 		};
-		dotGroups.forEach((dotGroup) => {
-			dotGroup.groupedDots.forEach((registeredDot) => {
-				if (!this.dotResources.includes(registeredDot.dotName)) {
-					this.dotResources.push(registeredDot.dotName);
-					registeredDot.appliedBy.forEach((dotSkill) => {
-						if (!this.dotSkills.includes(dotSkill)) {
-							this.dotSkills.push(dotSkill);
+
+		let recurringHotTick = () => {
+			this.hotResources
+				.filter((hotResource) => !this.excludedHoTs.includes(hotResource))
+				.forEach((hotResource) => this.handleHoTTick(hotResource));
+
+			// increment count
+			if (this.getDisplayTime() >= 0) {
+				controller.reportHotTick(this.time);
+			}
+
+			// queue the next tick
+			this.addEvent(
+				new Event("HoT tick", 3, () => {
+					recurringHotTick();
+				}),
+			);
+		};
+		effectGroups.forEach((effectGroup) => {
+			effectGroup.groupedEffects.forEach((registeredEffect) => {
+				let resourceArray = this.dotResources;
+				let groundTargetArray = this.#groundTargetDoTs;
+				let exclusiveEffectsArray = this.#exclusiveDots;
+				let excludedArray = this.excludedDoTs;
+
+				if (effectGroup.isHealing) {
+					resourceArray = this.hotResources;
+					groundTargetArray = this.#groundTargetHoTs;
+					exclusiveEffectsArray = this.#exclusiveHots;
+					excludedArray = this.excludedHoTs;
+				}
+
+				if (!resourceArray.includes(registeredEffect.effectName)) {
+					resourceArray.push(registeredEffect.effectName);
+					registeredEffect.appliedBy.forEach((effectSkill) => {
+						if (!effectGroup.isHealing && !this.dotSkills.includes(effectSkill)) {
+							this.dotSkills.push(effectSkill);
+						}
+						if (effectGroup.isHealing && !this.hotSkills.includes(effectSkill)) {
+							this.hotSkills.push(effectSkill);
 						}
 					});
-					this.#exclusiveDots.set(
-						registeredDot.dotName,
-						dotGroup.groupedDots
-							.filter((dot) => dot !== registeredDot)
-							.map((dot) => dot.dotName),
+
+					exclusiveEffectsArray.set(
+						registeredEffect.effectName,
+						effectGroup.groupedEffects
+							.filter((effect) => effect !== registeredEffect)
+							.map((effect) => effect.effectName),
 					);
 
-					// Keep track of DoTs that are ground targeted, so we can handle their special on-application tick
+					// Keep track of effects that are ground targeted, so we can handle their special on-application tick
 					if (
-						registeredDot.isGroundTargeted &&
-						!this.#groundTargetDoTs.includes(registeredDot.dotName)
+						registeredEffect.isGroundTargeted &&
+						!groundTargetArray.includes(registeredEffect.effectName)
 					) {
-						this.#groundTargetDoTs.push(registeredDot.dotName);
+						groundTargetArray.push(registeredEffect.effectName);
 					}
 
-					// Keep track of which DoTs are going to be handled separately from the main DoT tick
+					// Keep track of which effects are going to be handled separately from the main tick
 					if (
-						registeredDot.exclude &&
-						!this.excludedDoTs.includes(registeredDot.dotName)
+						registeredEffect.exclude &&
+						!excludedArray.includes(registeredEffect.effectName)
 					) {
-						this.excludedDoTs.push(registeredDot.dotName);
+						excludedArray.push(registeredEffect.effectName);
 					}
 
 					// Keep track of which DoTs we have a reportName label for, meaning the job wants an uptime report for them
-					if (dotGroup.reportName && !this.fullTimeDoTs.includes(registeredDot.dotName)) {
-						this.fullTimeDoTs.push(registeredDot.dotName);
+					// Uptime report tracking is not supported for HoTs, since they should not be maintained full-time
+					if (
+						!effectGroup.isHealing &&
+						effectGroup.reportName &&
+						!this.fullTimeDoTs.includes(registeredEffect.effectName)
+					) {
+						this.fullTimeDoTs.push(registeredEffect.effectName);
 					}
 				} else {
 					console.assert(
 						false,
-						`${registeredDot.dotName} was registered as a dot multiple times for ${this.job}`,
+						`${registeredEffect.effectName} was registered as an over time effect multiple times for ${this.job}`,
 					);
 				}
 			});
 		});
 		// Register pet summoning skills as DoTs for the purposes of damage reporting
 		petSkills.forEach((skill) => this.dotSkills.push(skill));
-		this.dotGroups = dotGroups;
-		let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
-		while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
-		this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
+
+		this.overTimeEffectGroups = effectGroups;
+
+		// If we registered any over time effects that tick on the standard Ticks, begin the tick recurrences
+		if (this.dotResources.filter((rsc) => !this.excludedDoTs.includes(rsc)).length > 0) {
+			let timeTillFirstDotTick = this.config.timeTillFirstManaTick + this.dotTickOffset;
+			while (timeTillFirstDotTick > 3) timeTillFirstDotTick -= 3;
+			this.addEvent(new Event("initial DoT tick", timeTillFirstDotTick, recurringDotTick));
+		}
+		if (this.hotResources.filter((rsc) => !this.excludedHoTs.includes(rsc)).length > 0) {
+			let timeTillFirstHotTick = this.config.timeTillFirstManaTick + this.hotTickOffset;
+			while (timeTillFirstHotTick > 3) timeTillFirstHotTick -= 3;
+			this.addEvent(new Event("initial HoT tick", timeTillFirstHotTick, recurringHotTick));
+		}
 
 		this.jobSpecificRegisterRecurringEvents();
+	}
+
+	private onResolveOverTimeTick(effect: ResourceKey, kind: PotencyKind) {
+		if (kind === "damage") {
+			this.jobSpecificOnResolveDotTick(effect);
+		} else {
+			this.jobSpecificOnResolveHotTick(effect);
+		}
 	}
 
 	// Job code may override to handle setting up any job-specific recurring events, such as BLM's Polyglot timer
@@ -344,10 +414,12 @@ export class GameState {
 
 	// Job code may override to handle any on-tick effects of a DoT, like pre-Dawntrail Thundercloud
 	jobSpecificOnResolveDotTick(_dotResource: ResourceKey) {}
+	jobSpecificOnResolveHotTick(_hotResource: ResourceKey) {}
 
 	// Job code may override to handle adding buff covers for the timeline
 	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
 	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
+	jobSpecificAddHealingBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
 
 	maybeCancelChanneledSkills(nextSkillName: ActionKey) {
 		const nextSkill = this.skillsList.get(nextSkillName);
@@ -420,21 +492,27 @@ export class GameState {
 	}
 
 	handleDoTTick(dotResource: ResourceKey) {
-		const dotBuff = this.resources.get(dotResource) as DoTBuff;
-		if (dotBuff.availableAmountIncludingDisabled() > 0) {
-			// For floor dots that are toggled off, don't resolve its potency, but increment the tick count.
-			if (dotBuff.node && dotBuff.enabled) {
-				const p = dotBuff.node.getDotPotencies(dotResource)[dotBuff.tickCount];
-				controller.resolvePotency(p);
-				this.jobSpecificOnResolveDotTick(dotResource);
+		this.handleOverTimeTick(dotResource, "damage");
+	}
+	handleHoTTick(hotResource: ResourceKey) {
+		this.handleOverTimeTick(hotResource, "healing");
+	}
+	handleOverTimeTick(effect: ResourceKey, kind: PotencyKind) {
+		const effectBuff = this.resources.get(effect) as OverTimeBuff;
+		if (effectBuff.availableAmountIncludingDisabled() > 0) {
+			// For floor effects that are toggled off, don't resolve its potency, but increment the tick count.
+			if (effectBuff.node && effectBuff.enabled) {
+				const p = effectBuff.node.getOverTimePotencies(effect, kind)[effectBuff.tickCount];
+				controller.resolveOverTimePotency(p, kind);
+				this.onResolveOverTimeTick(effect, kind);
 			}
-			dotBuff.tickCount++;
+			effectBuff.tickCount++;
 		} else {
-			// If the dot buff has expired and was not simply toggled off, then remove
+			// If the effect has expired and was not simply toggled off, then remove
 			// all future dot tick potencies.
-			if (dotBuff.node) {
-				dotBuff.node.removeUnresolvedDoTPotencies();
-				dotBuff.node = undefined;
+			if (effectBuff.node) {
+				effectBuff.node.removeUnresolvedOvertimePotencies(kind);
+				effectBuff.node = undefined;
 			}
 		}
 	}
@@ -477,9 +555,12 @@ export class GameState {
 				eventsToExecuteOld.push(this.eventsQueue[i]);
 			}
 			// actually tick them (which might enqueue new events)
-			let executedEvents = 0;
+			// to ensure remaining time on cooldowns is correct, tick each event before calling their effects
 			eventsToExecuteOld.forEach((e) => {
 				e.timeTillEvent -= timeToTick;
+			});
+			let executedEvents = 0;
+			eventsToExecuteOld.forEach((e) => {
 				if (Debug.consoleLogEvents) console.log(e.name + " in " + e.timeTillEvent);
 				if (e.timeTillEvent <= Debug.epsilon) {
 					if (!e.canceled) {
@@ -510,6 +591,9 @@ export class GameState {
 	captureManaRegenAmount(): number {
 		if (!this.isInCombat()) {
 			return 600;
+		}
+		if (this.job in HEALERS) {
+			return XIVMath.mpTick(this.config.level, this.config.piety);
 		}
 		return 200;
 	}
@@ -553,6 +637,10 @@ export class GameState {
 				if (evt) {
 					evt.canceled = true;
 				}
+			}
+			// Special case: cancelling Kardia on self also cancels Kardion on partner
+			if (buffName === "KARDIA") {
+				this.tryConsumeResource("KARDION");
 			}
 			rsc.consume(rsc.availableAmount());
 			rsc.removeTimer();
@@ -679,7 +767,11 @@ export class GameState {
 	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
 	 * it performs the confirmation immediately.
 	 */
-	useSpellOrWeaponskill(skill: Spell<PlayerState> | Weaponskill<PlayerState>, node: ActionNode) {
+	useSpellOrWeaponskill(
+		skill: Spell<PlayerState> | Weaponskill<PlayerState>,
+		node: ActionNode,
+		actionIndex: number,
+	) {
 		const cd = this.cooldowns.get(skill.cdName);
 		const secondaryCd = skill.secondaryCd
 			? this.cooldowns.get(skill.secondaryCd.cdName)
@@ -711,70 +803,6 @@ export class GameState {
 		// If the skill draws aggro without dealing damage (such as Summon Bahamut), then
 		// create a potency object so a damage mark can be drawn if we're not already in combat.
 		if (!potency && (potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()))) {
-			// TODO Add Auto Attacks based on spell/weaponskill
-			// capturedCastTime = cast time
-
-			/*
-			const currentDelay = state.findAutoAttackTimerInQueue();
-			const aaDelay = baseCastTime + (currentDelay === -1 ? 3 : currentDelay);
-			state.startAutoAttackTimer(aaDelay);
-			*/
-
-			if (this.isInCombat()) {
-				// AUTOS IN COMBAT
-
-				// has a cast time AND autos are already ticking
-				if (hasCast && autosEngaged) {
-					// delay autos
-					const aaDelay =
-						capturedCastTime +
-						(currentDelay === -1 ? recurringAutoDelay : currentDelay);
-					this.startAutoAttackTimer(aaDelay);
-				}
-				// has no cast time AND autos not ticking: CHECK startsAutos
-				else if (!hasCast && !autosEngaged) {
-					// start autos with current delay
-					if (startsAutos) {
-						this.startAutoAttackTimer(currentDelay);
-					} else {
-						// do nothing!
-					}
-				}
-				// has cast time AND autos not ticking: CHECK startsAutos
-				else if (hasCast && !autosEngaged) {
-					if (startsAutos) {
-						const aaDelay =
-							capturedCastTime +
-							(currentDelay === -1 ? recurringAutoDelay : currentDelay);
-						this.startAutoAttackTimer(aaDelay);
-					} else {
-						// SINGLE AUTO ATTACK INSTANCE, OVERWRITE STORED AUTO
-						if (currentDelay > 0) {
-							this.removeAutoAttackTimer();
-							const event = new Event(
-								"aa tick",
-								currentDelay + capturedCastTime,
-								() => {
-									if (this.resources.get("STORED_AUTO").available(0)) {
-										this.resources.get("STORED_AUTO").gain(1);
-									}
-								},
-							);
-							this.addEvent(event);
-						}
-					}
-				}
-			} else {
-				// AUTOS OUT OF COMBAT
-
-				if (startsAutos) {
-					const aaDelay =
-						capturedCastTime +
-						(currentDelay === -1 ? recurringAutoDelay : currentDelay);
-					this.startAutoAttackTimer(aaDelay);
-				}
-			}
-
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
@@ -812,6 +840,23 @@ export class GameState {
 			}
 		}
 
+		const healingPotencyNumber = skill.healingPotencyFn(this);
+		let healingPotency: Potency | undefined = node.getInitialHealingPotency();
+		if (!healingPotency && healingPotencyNumber > 0) {
+			healingPotency = new Potency({
+				config: this.config,
+				sourceTime: this.getDisplayTime(),
+				sourceSkill: skill.name,
+				aspect: skill.aspect,
+				basePotency: healingPotencyNumber,
+				snapshotTime: undefined,
+				description: "",
+				targetCount: node.healTargetCount,
+				falloff: 0, // Heals do not have AoE falloff
+			});
+			node.addHealingPotency(healingPotency);
+		}
+
 		/**
 		 * Perform operations common to casting a spell (consuming mana, rolling the GCD).
 		 *
@@ -830,6 +875,7 @@ export class GameState {
 			if (manaCost > this.resources.get("MANA").availableAmount()) {
 				controller.reportInterruption({
 					failNode: node,
+					failIndex: actionIndex,
 				});
 			} else if (manaCost > 0) {
 				this.resources.get("MANA").consume(manaCost);
@@ -849,14 +895,32 @@ export class GameState {
 					potency.modifiers = mods;
 				}
 			}
-
 			if (doesDamage) {
 				// tincture
-				if (this.hasResourceAvailable("TINCTURE")) {
+				if (this.hasResourceAvailable("TINCTURE") && !node.hasBuff(BuffType.Tincture)) {
 					node.addBuff(BuffType.Tincture);
 				}
 
 				this.jobSpecificAddDamageBuffCovers(node, skill);
+			}
+
+			const heals = healingPotencyNumber > 0;
+			if (healingPotency) {
+				healingPotency.snapshotTime = this.getDisplayTime();
+				const mods: PotencyModifier[] = [];
+				if (this.hasResourceAvailable("TINCTURE")) {
+					mods.push(Modifiers.Tincture);
+				}
+				mods.push(...skill.jobHealingPotencyModifiers(this));
+				healingPotency.modifiers = mods;
+			}
+			if (heals) {
+				// tincture
+				if (this.hasResourceAvailable("TINCTURE") && !node.hasBuff(BuffType.Tincture)) {
+					node.addBuff(BuffType.Tincture);
+				}
+
+				this.jobSpecificAddHealingBuffCovers(node, skill);
 			}
 
 			// Perform additional side effects
@@ -870,6 +934,9 @@ export class GameState {
 						if (!this.hasResourceAvailable("IN_COMBAT")) {
 							this.resources.get("IN_COMBAT").gain(1);
 						}
+					}
+					if (healingPotency) {
+						controller.resolveHealingPotency(healingPotency);
 					}
 					skill.onApplication(this, node);
 				}),
@@ -917,6 +984,7 @@ export class GameState {
 					} else {
 						controller.reportInterruption({
 							failNode: node,
+							failIndex: actionIndex,
 						});
 					}
 				}),
@@ -943,7 +1011,7 @@ export class GameState {
 		// potency
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
-		if (potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()!)) {
+		if (potencyNumber > 0 || skill.drawsAggro) {
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),
@@ -964,11 +1032,46 @@ export class GameState {
 			mods.push(...skill.jobPotencyModifiers(this));
 			potency.modifiers = mods;
 			node.addPotency(potency);
+		}
+
+		const healingPotencyNumber = skill.healingPotencyFn(this);
+		let healingPotency: Potency | undefined = undefined;
+		if (healingPotencyNumber > 0) {
+			healingPotency = new Potency({
+				config: this.config,
+				sourceTime: this.getDisplayTime(),
+				sourceSkill: skill.name,
+				aspect: skill.aspect,
+				basePotency: healingPotencyNumber,
+				snapshotTime: this.getDisplayTime(),
+				description: "",
+				targetCount: node.healTargetCount,
+				falloff: 0, // Heals do not have AoE falloff
+			});
+			const mods: PotencyModifier[] = [];
+			if (this.hasResourceAvailable("TINCTURE")) {
+				mods.push(Modifiers.Tincture);
+			}
+			mods.push(...skill.jobHealingPotencyModifiers(this));
+			healingPotency.modifiers = mods;
+			node.addHealingPotency(healingPotency);
+		}
+
+		if (potencyNumber > 0 && !node.hasBuff(BuffType.Tincture)) {
 			// tincture
 			if (this.hasResourceAvailable("TINCTURE")) {
 				node.addBuff(BuffType.Tincture);
 			}
 			this.jobSpecificAddDamageBuffCovers(node, skill);
+		}
+
+		if (healingPotencyNumber > 0) {
+			// tincture
+			if (this.hasResourceAvailable("TINCTURE") && !node.hasBuff(BuffType.Tincture)) {
+				node.addBuff(BuffType.Tincture);
+			}
+
+			this.jobSpecificAddHealingBuffCovers(node, skill);
 		}
 
 		skill.onConfirm(this, node);
@@ -990,12 +1093,22 @@ export class GameState {
 		if (skill.applicationDelay > 0) {
 			this.addEvent(
 				new Event(skill.name + " applied", skill.applicationDelay, () => {
-					if (potency) controller.resolvePotency(potency);
+					if (potency) {
+						controller.resolvePotency(potency);
+					}
+					if (healingPotency) {
+						controller.resolveHealingPotency(healingPotency);
+					}
 					skill.onApplication(this, node);
 				}),
 			);
 		} else {
-			if (potency) controller.resolvePotency(potency);
+			if (potency) {
+				controller.resolvePotency(potency);
+			}
+			if (healingPotency) {
+				controller.resolveHealingPotency(healingPotency);
+			}
 			skill.onApplication(this, node);
 		}
 
@@ -1012,7 +1125,7 @@ export class GameState {
 	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
 	 * it performs the confirmation immediately.
 	 */
-	useLimitBreak(skill: LimitBreak<PlayerState>, node: ActionNode) {
+	useLimitBreak(skill: LimitBreak<PlayerState>, node: ActionNode, actionIndex: number) {
 		const cd = this.cooldowns.get(skill.cdName);
 
 		const capturedCastTime = skill.castTimeFn(this);
@@ -1037,6 +1150,23 @@ export class GameState {
 			node.addPotency(potency);
 		}
 
+		const healingPotencyNumber = skill.healingPotencyFn(this);
+		let healingPotency: Potency | undefined = undefined;
+		if (healingPotencyNumber > 0) {
+			healingPotency = new Potency({
+				config: this.config,
+				sourceTime: this.getDisplayTime(),
+				sourceSkill: skill.name,
+				aspect: skill.aspect,
+				basePotency: healingPotencyNumber,
+				snapshotTime: undefined,
+				description: "",
+				targetCount: node.healTargetCount,
+				falloff: 0, // Heals do not have AoE falloff
+			});
+			node.addHealingPotency(healingPotency);
+		}
+
 		/**
 		 * Perform operations common to casting a limit break.
 		 *
@@ -1052,12 +1182,18 @@ export class GameState {
 			if (potency) {
 				potency.snapshotTime = this.getDisplayTime();
 			}
+			if (healingPotency) {
+				healingPotency.snapshotTime = this.getDisplayTime();
+			}
 
 			// Enqueue effect application
 			this.addEvent(
 				new Event(skill.name + " applied", skill.applicationDelay, () => {
 					if (potency) {
 						controller.resolvePotency(potency);
+					}
+					if (healingPotency) {
+						controller.resolveHealingPotency(healingPotency);
 					}
 					skill.onApplication(this, node);
 				}),
@@ -1091,6 +1227,7 @@ export class GameState {
 					} else {
 						controller.reportInterruption({
 							failNode: node,
+							failIndex: actionIndex,
 						});
 					}
 				}),
@@ -1165,118 +1302,161 @@ export class GameState {
 	getOverriddenDots(dotName: ResourceKey): ResourceKey[] {
 		return this.#exclusiveDots.get(dotName) ?? [];
 	}
+	getOverriddenHots(hotName: ResourceKey): ResourceKey[] {
+		return this.#exclusiveHots.get(hotName) ?? [];
+	}
 
 	applyDoT(dotName: ResourceKey, node: ActionNode) {
-		const dotBuff = this.resources.get(dotName) as DoTBuff;
-		const dotDuration = (getResourceInfo(this.config.job, dotName) as ResourceInfo).maxTimeout;
+		this.applyOverTimeEffect(dotName, node, "damage");
+	}
+	applyHoT(hotName: ResourceKey, node: ActionNode) {
+		this.applyOverTimeEffect(hotName, node, "healing");
+	}
+	applyOverTimeEffect(effectName: ResourceKey, node: ActionNode, kind: PotencyKind) {
+		const effectBuff = this.resources.get(effectName) as OverTimeBuff;
+		const effectDuration = (getResourceInfo(this.config.job, effectName) as ResourceInfo)
+			.maxTimeout;
 
-		let dotGap: number | undefined = undefined;
-		this.getOverriddenDots(dotName).forEach((removeDot: ResourceKey) => {
-			// Ignore self for the purposes of overriding other DoTs
-			if (removeDot === dotName) {
+		let effectGap: number | undefined = undefined;
+		const overriddenEffects =
+			kind === "damage"
+				? this.getOverriddenDots(effectName)
+				: this.getOverriddenHots(effectName);
+		overriddenEffects.forEach((removeEffect: ResourceKey) => {
+			// Ignore self for the purposes of overriding other HoTs
+			if (removeEffect === effectName) {
 				return;
 			}
-			if (!this.hasResourceAvailable(removeDot)) {
-				const lastExpiration = this.resources.get(removeDot).getLastExpirationTime();
+			if (!this.hasResourceAvailable(removeEffect)) {
+				const lastExpiration = this.resources.get(removeEffect).getLastExpirationTime();
 
-				// If a mutually exclusive DoT was previously applied but has fallen off, the gap is the smallest of the times since any of those DoTs expired
+				// If a mutually exclusive effect was previously applied but has fallen off, the gap is the smallest of the times since any of those effects expired
 				if (lastExpiration) {
 					const thisGap = this.getDisplayTime() - lastExpiration;
-					dotGap = dotGap === undefined ? thisGap : Math.min(dotGap, thisGap);
+					effectGap = effectGap === undefined ? thisGap : Math.min(effectGap, thisGap);
 				}
 				return;
 			}
 
-			node.setDotOverrideAmount(
-				dotName,
-				node.getDotOverrideAmount(dotName) + this.resources.timeTillReady(removeDot),
+			node.setOverTimeOverrideAmount(
+				effectName,
+				node.getOverTimeOverrideAmount(effectName, kind) +
+					this.resources.timeTillReady(removeEffect),
+				kind,
 			);
-			dotGap = 0;
-			this.tryConsumeResource(removeDot);
-			controller.reportDotDrop(this.getDisplayTime(), removeDot);
+			controller.reportOverTimeDrop(this.getDisplayTime(), removeEffect, kind);
+			effectGap = 0;
+			this.tryConsumeResource(removeEffect);
 		});
 
-		if (dotBuff.available(1)) {
-			console.assert(dotBuff.node);
-			(dotBuff.node as ActionNode).removeUnresolvedDoTPotencies();
-			node.setDotOverrideAmount(
-				dotName,
-				node.getDotOverrideAmount(dotName) + this.resources.timeTillReady(dotName),
+		if (effectBuff.available(1)) {
+			console.assert(effectBuff.node);
+			(effectBuff.node as ActionNode).removeUnresolvedOvertimePotencies(kind);
+			node.setOverTimeOverrideAmount(
+				effectName,
+				node.getOverTimeOverrideAmount(effectName, kind) +
+					this.resources.timeTillReady(effectName),
+				kind,
 			);
-			dotBuff.overrideTimer(this, dotDuration);
+			effectBuff.overrideTimer(this, effectDuration);
 		} else {
-			const thisGap = this.getDisplayTime() - (dotBuff.getLastExpirationTime() ?? 0);
-			dotGap = dotGap === undefined ? thisGap : Math.min(dotGap, thisGap);
+			const thisGap = this.getDisplayTime() - (effectBuff.getLastExpirationTime() ?? 0);
+			effectGap = effectGap === undefined ? thisGap : Math.min(effectGap, thisGap);
 
-			dotBuff.gain(1);
-			controller.reportDotStart(this.getDisplayTime(), dotName);
+			effectBuff.gain(1);
+
+			const otName = kind === "damage" ? " DoT" : " HoT";
+			controller.reportOverTimeStart(this.getDisplayTime(), effectName, kind);
 			this.resources.addResourceEvent({
-				rscType: dotName,
-				name: "drop " + dotName + " DoT",
-				delay: dotDuration,
+				rscType: effectName,
+				name: "drop " + effectName + otName,
+				delay: effectDuration,
 				fnOnRsc: (rsc) => {
 					rsc.consume(1);
-					controller.reportDotDrop(this.getDisplayTime(), dotName);
+					controller.reportOverTimeDrop(this.getDisplayTime(), effectName, kind);
 				},
 			});
 		}
-		node.setDotTimeGap(dotName, dotGap ?? 0);
-		dotBuff.node = node;
-		dotBuff.tickCount = 0;
 
-		// Immediately tick any ground-targeted DoTs on application
-		if (this.#groundTargetDoTs.includes(dotName)) {
-			this.handleDoTTick(dotName);
-			controller.reportDotTick(this.time, dotName);
+		node.setOverTimeGap(effectName, effectGap ?? 0, kind);
+
+		effectBuff.node = node;
+		effectBuff.tickCount = 0;
+
+		// Immediately tick any ground-targeted effects on application
+		if (this.#groundTargetDoTs.includes(effectName)) {
+			this.handleDoTTick(effectName);
+			controller.reportDotTick(this.time, effectName);
+		}
+		if (this.#groundTargetHoTs.includes(effectName)) {
+			this.handleHoTTick(effectName);
+			controller.reportHotTick(this.time, effectName);
 		}
 	}
 
-	addDoTPotencies(props: DoTPotencyProps) {
-		const mods: PotencyModifier[] = [];
+	addDoTPotencies(props: OverTimePotencyProps) {
+		this.addOverTimePotencies(props, "damage");
+	}
+	addHoTPotencies(props: OverTimePotencyProps) {
+		this.addOverTimePotencies(props, "healing");
+	}
+	addOverTimePotencies(props: OverTimePotencyProps, kind: PotencyKind) {
+		const mods: PotencyModifier[] = props.modifiers ?? [];
 		// If the job call didn't add Tincture, we can do that here
-		if (
-			this.hasResourceAvailable("TINCTURE") &&
-			!(props.modifiers ?? []).includes(Modifiers.Tincture)
-		) {
+		if (this.hasResourceAvailable("TINCTURE") && !mods.includes(Modifiers.Tincture)) {
 			mods.push(Modifiers.Tincture);
 			props.node.addBuff(BuffType.Tincture);
 		}
 
-		const dotDuration = (getResourceInfo(this.config.job, props.dotName) as ResourceInfo)
+		const effectDuration = (getResourceInfo(this.config.job, props.effectName) as ResourceInfo)
 			.maxTimeout;
-		const isGroundTargeted = this.#groundTargetDoTs.includes(props.dotName);
-		const dotTicks = dotDuration / (props.tickFrequency ?? 3) + (isGroundTargeted ? 1 : 0);
+		const isGroundTargeted =
+			this.#groundTargetDoTs.includes(props.effectName) ||
+			this.#groundTargetHoTs.includes(props.effectName);
+		const effectTicks =
+			effectDuration / (props.tickFrequency ?? 3) + (isGroundTargeted ? 1 : 0);
 
-		for (let i = 0; i < dotTicks; i++) {
-			let pDot = new Potency({
+		const tickDescriptor = kind === "damage" ? "DoT" : "HoT";
+		const targetCount = kind === "damage" ? props.node.targetCount : props.node.healTargetCount;
+
+		for (let i = 0; i < effectTicks; i++) {
+			let overtimePotency = new Potency({
 				config: controller.record.config ?? controller.gameConfig,
 				sourceTime: this.getDisplayTime(),
 				sourceSkill: props.skillName,
 				aspect: props.aspect ?? Aspect.Other,
-				basePotency: this.config.adjustedDoTPotency(props.tickPotency, props.speedStat),
+				basePotency: this.config.adjustedOvertimePotency(
+					props.tickPotency,
+					props.speedStat,
+				),
 				snapshotTime: this.getDisplayTime(),
 				description:
-					localizeResourceType(props.dotName) + " DoT " + (i + 1) + `/${dotTicks}`,
-				targetCount: props.node.targetCount,
-				falloff: 0, // assume all DoTs have no falloff
+					localizeResourceType(props.effectName) +
+					` ${tickDescriptor} ` +
+					(i + 1) +
+					`/${effectTicks}`,
+				targetCount,
+				falloff: 0, // assume all overtime effects have no falloff
 			});
-			pDot.modifiers = [...mods, ...(props?.modifiers ?? [])];
-			console.log(props, "modifiers:");
-			console.log(pDot.modifiers);
-			props.node.addDoTPotency(pDot, props.dotName);
+			overtimePotency.modifiers = mods;
+			props.node.addOverTimePotency(overtimePotency, props.effectName, kind);
 		}
 	}
 
-	refreshDot(props: DoTPotencyProps) {
-		if (!this.hasResourceAvailable(props.dotName)) {
+	refreshDot(props: OverTimePotencyProps) {
+		this.refreshOverTimeEffect(props, "damage");
+	}
+	refreshHot(props: OverTimePotencyProps) {
+		this.refreshOverTimeEffect(props, "healing");
+	}
+	refreshOverTimeEffect(props: OverTimePotencyProps, kind: PotencyKind) {
+		if (!this.hasResourceAvailable(props.effectName)) {
 			return;
 		}
 
-		this.addDoTPotencies({
-			...props,
-		});
+		this.addOverTimePotencies(props, kind);
 
-		this.applyDoT(props.dotName, props.node);
+		this.applyOverTimeEffect(props.effectName, props.node, kind);
 	}
 
 	timeTillNextMpGainEvent() {
@@ -1415,7 +1595,7 @@ export class GameState {
 		};
 	}
 
-	useSkill(skillName: ActionKey, node: ActionNode) {
+	useSkill(skillName: ActionKey, node: ActionNode, actionIndex: number) {
 		let skill = this.skillsList.get(skillName);
 
 		// Process skill execution effects regardless of skill kind
@@ -1424,15 +1604,18 @@ export class GameState {
 		// If there is no falloff field specified, then reset the node's targetCount to 1,
 		// ignoring whatever input the user gave
 		if (skill.falloff === undefined) {
-			node.targetCount = 1;
+			node.setTargetCount(1);
+		}
+		if (skill.aoeHeal) {
+			node.setHealTargetCount(this.resources.get("PARTY_SIZE").availableAmount());
 		}
 		// Process the remainder of the skills effects dependent on the kind of skill
 		if (skill.kind === "spell" || skill.kind === "weaponskill") {
-			this.useSpellOrWeaponskill(skill, node);
+			this.useSpellOrWeaponskill(skill, node, actionIndex);
 		} else if (skill.kind === "ability") {
 			this.useAbility(skill, node);
 		} else if (skill.kind === "limitbreak") {
-			this.useLimitBreak(skill, node);
+			this.useLimitBreak(skill, node, actionIndex);
 		}
 	}
 
@@ -1461,7 +1644,7 @@ export class GameState {
 							kind: "multiplier",
 							source: PotencyModifierType.PARTY,
 							buffType: buff.name,
-							damageFactor: buff.info.damageFactor,
+							potencyFactor: buff.info.damageFactor,
 						});
 					}
 				}

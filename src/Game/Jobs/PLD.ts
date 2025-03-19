@@ -132,21 +132,13 @@ export class PLDState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
-		// Winged Glide Stacks
-		/*
-        const wingedGlideStacks = this.hasTraitUnlocked(TraitName.EnhancedWingedGlide) ? 2: 1;
-        [
-            new CoolDown(ResourceType.cd_WingedGlide, 60, wingedGlideStacks, wingedGlideStacks),
-        ].forEach((cd) => this.cooldowns.set(cd));
-        */
-
 		this.resources.get("OATH_GAUGE").gain(100);
 
 		this.registerRecurringEvents([
 			{
-				groupedDots: [
+				groupedEffects: [
 					{
-						dotName: "CIRCLE_OF_SCORN_DOT",
+						effectName: "CIRCLE_OF_SCORN_DOT",
 						appliedBy: ["CIRCLE_OF_SCORN"],
 					},
 				],
@@ -953,7 +945,7 @@ makeAbility_PLD("CIRCLE_OF_SCORN", 50, "cd_CIRCLE_OF_SCORN", {
 
 		state.addDoTPotencies({
 			node,
-			dotName: "CIRCLE_OF_SCORN_DOT",
+			effectName: "CIRCLE_OF_SCORN_DOT",
 			skillName: "CIRCLE_OF_SCORN",
 			tickPotency,
 			speedStat: "sks",

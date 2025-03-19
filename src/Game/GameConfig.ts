@@ -14,6 +14,7 @@ export type ConfigData = {
 	criticalHit: number;
 	directHit: number;
 	determination: number;
+	piety: number;
 	countdown: number;
 	randomSeed: string;
 	fps: number;
@@ -34,6 +35,7 @@ export const DEFAULT_BLM_CONFIG: ConfigData = {
 	criticalHit: 420,
 	directHit: 420,
 	determination: 440,
+	piety: 440,
 	countdown: 5,
 	randomSeed: "sup",
 	fps: 60,
@@ -54,6 +56,7 @@ export const DEFAULT_PCT_CONFIG: ConfigData = {
 	criticalHit: 3140,
 	directHit: 1993,
 	determination: 2269,
+	piety: 440,
 	countdown: 4.5,
 	randomSeed: "sup",
 	fps: 60,
@@ -83,6 +86,7 @@ export class GameConfig {
 	readonly criticalHit: number;
 	readonly directHit: number;
 	readonly determination: number;
+	readonly piety: number;
 	readonly countdown: number;
 	readonly randomSeed: string;
 	readonly fps: number;
@@ -102,6 +106,7 @@ export class GameConfig {
 		criticalHit: number;
 		directHit: number;
 		determination: number;
+		piety: number;
 		countdown: number;
 		randomSeed: string;
 		fps: number;
@@ -116,10 +121,11 @@ export class GameConfig {
 		this.shellVersion = props.shellVersion;
 		this.level = props.level ?? DEFAULT_CONFIG.level;
 		this.spellSpeed = props.spellSpeed;
-		this.skillSpeed = props.skillSpeed;
+		this.skillSpeed = props.skillSpeed ?? DEFAULT_CONFIG.skillSpeed;
 		this.criticalHit = props.criticalHit ?? DEFAULT_CONFIG.criticalHit;
 		this.directHit = props.directHit ?? DEFAULT_CONFIG.directHit;
 		this.determination = props.determination ?? DEFAULT_CONFIG.determination;
+		this.piety = props.piety ?? DEFAULT_CONFIG.piety;
 		this.countdown = props.countdown;
 		this.randomSeed = props.randomSeed;
 		this.fps = props.fps;
@@ -165,8 +171,9 @@ export class GameConfig {
 		this.legacy_casterTax = props?.casterTax ?? 0;
 	}
 
-	adjustedDoTPotency(inPotency: number, scalar: "sks" | "sps") {
-		return XIVMath.dotPotency(
+	// Presuming DoT and Hot potency calculations work the same way...
+	adjustedOvertimePotency(inPotency: number, scalar: "sks" | "sps") {
+		return XIVMath.overtimePotency(
 			this.level,
 			scalar === "sks" ? this.skillSpeed : this.spellSpeed,
 			inPotency,
@@ -175,11 +182,19 @@ export class GameConfig {
 
 	// returns GCD before FPS tax
 	adjustedGCD(baseGCD: number = 2.5, speedModifier?: number) {
-		return XIVMath.preTaxGcd(this.level, this.spellSpeed, baseGCD, speedModifier);
+		if (this.shellVersion >= ShellVersion.AllaganGcdFormula) {
+			return XIVMath.preTaxGcd(this.level, this.spellSpeed, baseGCD, speedModifier);
+		} else {
+			return XIVMath.preTaxGcdLegacy(this.level, this.spellSpeed, baseGCD, speedModifier);
+		}
 	}
 
 	adjustedSksGCD(baseGCD: number = 2.5, speedModifier?: number) {
-		return XIVMath.preTaxGcd(this.level, this.skillSpeed, baseGCD, speedModifier);
+		if (this.shellVersion >= ShellVersion.AllaganGcdFormula) {
+			return XIVMath.preTaxGcd(this.level, this.skillSpeed, baseGCD, speedModifier);
+		} else {
+			return XIVMath.preTaxGcdLegacy(this.level, this.skillSpeed, baseGCD, speedModifier);
+		}
 	}
 
 	// returns cast time before FPS and caster tax
@@ -225,6 +240,7 @@ export class GameConfig {
 			criticalHit: this.criticalHit,
 			directHit: this.directHit,
 			determination: this.determination,
+			piety: this.piety,
 			countdown: this.countdown,
 			randomSeed: this.randomSeed,
 			casterTax: this.legacy_casterTax, // still want this bc don't want to break cached timelines

@@ -454,12 +454,15 @@ export class TimeControl extends React.Component {
 							})}
 							{localize({
 								en: <div className="paragraph">
-									- click to use a skill. or if it's not ready, click again to
-									wait then retry
+									- click to use a skill. if the skill is on cooldown, or you're
+									in an animation lock, then the simulation will automatically
+									skip ahead to when the skill can be used again
+									<br />- animation locks and cast bars will play out in sped-up
+									real time until done
 								</div>,
 								zh: <div className="paragraph">
 									- 点击图标使用技能;
-									战斗时间会按下方设置的倍速自动前进直到可释放下一个技能。如果点击的技能CD没有转好，再次点击会快进到它CD转好并重试。
+									战斗时间会按下方设置的倍速自动前进直到可释放下一个技能。如果点击的技能CD没有转好，模拟会自动地快进到它CD转好并重试。
 								</div>,
 							})}
 						</div>
@@ -486,22 +489,14 @@ export class TimeControl extends React.Component {
 						<div className="toolTip">
 							{localize({
 								en: <div className="paragraph">
-									- click to use a skill. or if it's not ready, click again to
-									wait then retry
+									- click to use a skill. if the skill is on cooldown, or you're
+									in an animation lock, then the simulation will automatically
+									skip ahead to when the skill can be used again
+									<br />- animation locks and cast times are skipped immediately
 								</div>,
 								zh: <div className="paragraph">
 									- 点击图标使用技能;
-									战斗时间会自动快进至可释放下一个技能。如果点击的技能CD没有转好，再次点击可以快进到它CD转好并重试。
-								</div>,
-							})}
-							{localize({
-								en: <div className="paragraph">
-									- <ButtonIndicator text={"space"} /> to advance game time to the
-									earliest possible time for the next skill
-								</div>,
-								zh: <div className="paragraph">
-									- 点击 <ButtonIndicator text={"空格"} />{" "}
-									来快进到下一个可释放技能的时间点。
+									战斗时间会自动快进至可释放下一个技能。如果点击的技能CD没有转好，模拟会自动地快进到它CD转好并重试。
 								</div>,
 							})}
 						</div>
@@ -548,6 +543,7 @@ type ConfigState = {
 	criticalHit: string;
 	directHit: string;
 	determination: string;
+	piety: string;
 	animationLock: string;
 	fps: string;
 	gcdSkillCorrection: string;
@@ -585,6 +581,7 @@ export class Config extends React.Component {
 	setCriticalHit: (val: string) => void;
 	setDirectHit: (val: string) => void;
 	setDetermination: (val: string) => void;
+	setPiety: (val: string) => void;
 	setAnimationLock: (val: string) => void;
 	setFps: (val: string) => void;
 	setGcdSkillCorrection: (val: string) => void;
@@ -614,6 +611,7 @@ export class Config extends React.Component {
 			criticalHit: "0",
 			directHit: "0",
 			determination: "0",
+			piety: "0",
 			animationLock: "0",
 			fps: "0",
 			gcdSkillCorrection: "0",
@@ -734,6 +732,7 @@ export class Config extends React.Component {
 						];
 						if (stats.has("SPS")) importedFields.push("spellSpeed");
 						if (stats.has("SKS")) importedFields.push("skillSpeed");
+						if (stats.has("PIE")) importedFields.push("piety");
 						this.setState({
 							job: body["jobAbbrev"],
 							level: body["level"],
@@ -742,6 +741,7 @@ export class Config extends React.Component {
 							criticalHit: stats.get("CRT"),
 							directHit: stats.get("DH"),
 							determination: stats.get("DET"),
+							piety: stats.get("PIE"),
 							imported: true,
 							importedFields: importedFields,
 							dirty: true,
@@ -785,6 +785,7 @@ export class Config extends React.Component {
 							criticalHit: stats["crit"],
 							directHit: stats["dhit"],
 							determination: stats["determination"],
+							piety: stats["piety"],
 							imported: true,
 							importedFields: [
 								"job",
@@ -794,6 +795,7 @@ export class Config extends React.Component {
 								"criticalHit",
 								"directHit",
 								"determination",
+								"piety",
 							],
 							dirty: true,
 						});
@@ -847,6 +849,11 @@ export class Config extends React.Component {
 		this.setDetermination = (val: string) => {
 			this.setState({ determination: val, dirty: true });
 			this.removeImportedField("determination");
+		};
+
+		this.setPiety = (val: string) => {
+			this.setState({ piety: val, dirty: true });
+			this.removeImportedField("piety");
 		};
 
 		this.setAnimationLock = (val: string) => {
@@ -1391,6 +1398,7 @@ export class Config extends React.Component {
 			criticalHit: parseFloat(config.criticalHit),
 			directHit: parseFloat(config.directHit),
 			determination: parseFloat(config.determination),
+			piety: parseFloat(config.piety),
 			animationLock: parseFloat(config.animationLock),
 			fps: parseFloat(config.fps),
 			gcdSkillCorrection: parseFloat(config.gcdSkillCorrection),
@@ -1661,6 +1669,12 @@ export class Config extends React.Component {
 				defaultValue={this.state.determination}
 				description={localize({ en: "determination: ", zh: "信念：" })}
 				onChange={this.setDetermination}
+			/>
+			<Input
+				style={{ color: fieldColor("piety") }}
+				defaultValue={this.state.piety}
+				description={localize({ en: "piety: " })}
+				onChange={this.setPiety}
 			/>
 			<Input
 				defaultValue={this.state.animationLock}

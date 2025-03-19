@@ -12,7 +12,6 @@ import {
 	getAutoReplacedSkillName,
 	getConditionalReplacement,
 	getNormalizedSkillName,
-	getResourceKeyFromBuffName,
 } from "../Game/Skills";
 import { Buff } from "../Game/Buffs";
 import {
@@ -30,16 +29,30 @@ import { updateStatusDisplay } from "../Components/StatusDisplay";
 import { updateSkillButtons } from "../Components/Skills";
 import { updateConfigDisplay } from "../Components/PlaybackControl";
 import { setHistorical, setJob, setRealTime } from "../Components/Main";
-import { DamageMarkElem, DamageMarkInfo, ElemType, MAX_TIMELINE_SLOTS, Timeline } from "./Timeline";
+import {
+	PotencyMarkElem,
+	PotencyMarkInfo,
+	ElemType,
+	MAX_TIMELINE_SLOTS,
+	Timeline,
+} from "./Timeline";
 import { scrollTimelineTo, updateTimelineView } from "../Components/Timeline";
-import { ActionNode, ActionType, Line, Record } from "./Record";
+import {
+	ActionNode,
+	ActionType,
+	Line,
+	Record,
+	skillNode,
+	durationWaitNode,
+	setResourceNode,
+} from "./Record";
 import { ImageExportConfig } from "./ImageExportConfig";
 import { inferJobFromSkillNames, PresetLinesManager } from "./PresetLinesManager";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
 import { refreshTimelineEditor } from "../Components/TimelineEditor";
 import { DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDrawOptions } from "../Components/Common";
 import { TimelineRenderingProps } from "../Components/TimelineCanvas";
-import { Potency, PotencyModifierType } from "../Game/Potency";
+import { Potency, PotencyKind, PotencyModifierType } from "../Game/Potency";
 import {
 	DamageStatisticsData,
 	updateDamageStats,
@@ -63,13 +76,24 @@ require("../Game/Jobs/RoleActions");
 
 type Fixme = any;
 
-const STANDARD_DOT_TICK_KEY = "stdtick";
+const STANDARD_TICK_KEY = "stdtick";
+
+export interface PotencyLogCsv {
+	time: number;
+	source: string;
+	potency: number;
+	buffs: ResourceKey[];
+}
+
+export interface OvertimeEffectCoverage {
+	tStartDisplay: number;
+	tEndDisplay?: number;
+}
 
 class Controller {
 	timeScale;
 	shouldLoop;
 	tickMode;
-	lastAttemptedSkill;
 	timeline;
 	#presetLinesManager;
 	gameConfig;
@@ -82,12 +106,8 @@ class Controller {
 	#lastDamageApplicationTime;
 
 	// todo: should probably move these items to somewhere else: in Record maybe?
-	#damageLogCsv: {
-		time: number;
-		damageSource: string;
-		potency: number;
-		buffs: ResourceKey[];
-	}[] = [];
+	#damageLogCsv: PotencyLogCsv[] = [];
+	#healingLogCsv: PotencyLogCsv[] = [];
 	#actionsLogCsv: {
 		time: number;
 		action: string;
@@ -95,8 +115,9 @@ class Controller {
 		castTime: number;
 	}[] = [];
 	#dotTickTimes: Map<ResourceKey | string, number[]> = new Map();
-	#dotCoverageTimes: Map<ResourceKey, { tStartDisplay: number; tEndDisplay?: number }[]> =
-		new Map();
+	#hotTickTimes: Map<ResourceKey | string, number[]> = new Map();
+	#dotCoverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>> = new Map();
+	#hotCoverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>> = new Map();
 
 	savedHistoricalGame: GameState;
 	savedHistoricalRecord: Record;
@@ -108,12 +129,13 @@ class Controller {
 	#skipViewUpdates: boolean = false;
 	// todo: can probably somehow get rid of this because it should largely overlaps with #bInSandbox
 	displayingUpToDateGameState = true;
+	#lastTickDuration: number = 0; // used during record loads to resolve legacy wait durations
+	lastSkillTime: number = 0; // used for WaitSince.LastSkill; updated in #useSkill
 
 	constructor() {
 		this.timeScale = 1;
 		this.shouldLoop = false;
 		this.tickMode = TickMode.RealTimeAutoPause;
-		this.lastAttemptedSkill = "";
 
 		this.timeline = new Timeline();
 		this.timeline.reset();
@@ -179,7 +201,7 @@ class Controller {
 		this.#lastDamageApplicationTime = tmpLastDamageApplicationTime;
 	}
 
-	checkRecordValidity(inRecord: Record, editedNodes: ActionNode[]) {
+	checkRecordValidity(inRecord: Record, firstEditedNodeIndex?: number) {
 		console.assert(inRecord.config !== undefined);
 
 		let result: {
@@ -197,7 +219,7 @@ class Controller {
 		};
 
 		// no edit happened
-		if (editedNodes.length === 0) {
+		if (firstEditedNodeIndex === undefined) {
 			console.log("no edit happened");
 			return result;
 		}
@@ -218,7 +240,7 @@ class Controller {
 			let status = this.#replay({
 				line: inRecord,
 				replayMode: ReplayMode.Edited,
-				editedNodes: editedNodes,
+				firstEditedNodeIndex,
 				selectionStart: inRecord.getFirstSelection(),
 				selectionEnd: inRecord.getLastSelection(),
 			});
@@ -237,7 +259,7 @@ class Controller {
 	}
 
 	// max replay time; cutoff action
-	displayHistoricalState(displayTime: number, cutoffAction?: ActionNode) {
+	displayHistoricalState(displayTime: number, cutoffIndex: number | undefined) {
 		let rawTime = displayTime + this.gameConfig.countdown;
 
 		const hasSelected = this.record.getFirstSelection() !== undefined;
@@ -256,7 +278,7 @@ class Controller {
 				line: tmpRecord,
 				replayMode: ReplayMode.Exact,
 				maxReplayTime: rawTime,
-				cutoffAction: cutoffAction,
+				cutoffIndex,
 			});
 
 			// view only cursor
@@ -277,7 +299,6 @@ class Controller {
 			this.timeline.drawElements();
 		});
 
-		this.lastAttemptedSkill = "";
 		setHistorical(true);
 
 		if (hasSelected) {
@@ -304,7 +325,6 @@ class Controller {
 	}
 
 	#requestRestart() {
-		this.lastAttemptedSkill = "";
 		this.game = getGameState(this.gameConfig);
 		this.#playPause({ shouldLoop: false });
 		this.timeline.reset();
@@ -314,6 +334,8 @@ class Controller {
 		this.#actionsLogCsv = [];
 		this.#dotTickTimes = new Map();
 		this.#dotCoverageTimes = new Map();
+		this.#hotTickTimes = new Map();
+		this.#hotCoverageTimes = new Map();
 		this.#bAddingLine = false;
 		this.#bInterrupted = false;
 		this.displayingUpToDateGameState = true;
@@ -327,19 +349,10 @@ class Controller {
 		return this.#presetLinesManager.serialized();
 	}
 
-	// qol: cleanup?
 	addSelectionToPreset(name = "(untitled)") {
 		console.assert(this.record.getFirstSelection());
-		let line = new Line();
+		let line = this.record.getSelected();
 		line.name = name;
-		let itr = this.record.getFirstSelection();
-		while (itr !== (this.record.getLastSelection()?.next ?? undefined)) {
-			itr = itr as ActionNode;
-			if (itr.type === ActionType.Skill) {
-				line.addActionNode(itr.getClone());
-			}
-			itr = itr.next;
-		}
 		this.#presetLinesManager.addLine(line, this.getActiveJob());
 	}
 
@@ -405,31 +418,23 @@ class Controller {
 		this.#applyResourceOverrides(this.gameConfig);
 
 		// now add the actions
-		let line = new Line();
-		for (let i = 0; i < content.actions.length; i++) {
-			let action = content.actions[i];
-			let node = new ActionNode(action.type);
-			if (action.skillName) {
-				node.skillName = getNormalizedSkillName(action.skillName);
-				if (node.skillName === undefined) {
-					const msg = `Failed to load record- \nInvalid skill name: ${action.skillName}`;
-					window.alert(msg);
-					return;
-				}
-			}
-			node.buffName = getResourceKeyFromBuffName(action.buffName);
-			node.waitDuration = action.waitDuration;
-			node.targetCount = action.targetCount ?? 1;
-			line.addActionNode(node);
-		}
+		let line = Line.deserialize(content.actions);
 		let replayResult = this.#replay({ line: line, replayMode: ReplayMode.Exact });
 		if (!replayResult.success) {
 			let msg = "Failed to load the entire record- \n";
 			if (replayResult.firstInvalidNode) {
-				const actionName = replayResult.firstInvalidNode.skillName
-					? localizeSkillName(replayResult.firstInvalidNode.skillName)
-					: "(unknown)";
-				msg += "Stopped here because the next action " + actionName + " can't be added: ";
+				if (replayResult.firstInvalidNode.info.type === ActionType.Skill) {
+					const actionName = replayResult.firstInvalidNode.info.skillName
+						? localizeSkillName(replayResult.firstInvalidNode.info.skillName)
+						: "(unknown)";
+					msg +=
+						"Stopped here because the next action " + actionName + " can't be added: ";
+				} else {
+					msg +=
+						"Stopped here because the next action " +
+						replayResult.firstInvalidNode.info.type +
+						" can't be added: ";
+				}
 			}
 			msg += replayResult.invalidReason;
 			window.alert(msg);
@@ -455,24 +460,12 @@ class Controller {
 		});
 		console.assert(replayResult.success);
 
-		// copy selection
-		let displayedItr = this.record.getFirstAction();
-		let inItr = newRecord.getFirstAction();
-		let firstSelected: ActionNode | undefined = undefined;
-		let lastSelected: ActionNode | undefined = undefined;
-		while (inItr && displayedItr) {
-			if (inItr === newRecord.getFirstSelection()) firstSelected = displayedItr;
-			if (inItr === newRecord.getLastSelection()) lastSelected = displayedItr;
-			displayedItr = displayedItr.next;
-			inItr = inItr.next;
+		// TODO figure out if there's any edge cases where this is invalid
+		// maybe deletions?
+		if (newRecord.selectionStartIndex !== undefined) {
+			this.record.selectSingle(newRecord.selectionStartIndex);
+			this.record.selectUntil(newRecord.selectionEndIndex!);
 		}
-		if (firstSelected && lastSelected) {
-			this.record.selectSingle(firstSelected);
-			this.record.selectUntil(lastSelected);
-		} else if (firstSelected || lastSelected) {
-			console.assert(false);
-		}
-
 		this.autoSave();
 	}
 
@@ -538,7 +531,7 @@ class Controller {
 	getMaxTicks(untilRawTime: number, dotName: ResourceKey, excludeStandardTicks: boolean) {
 		let cnt = 0;
 		const dotKeys: Array<ResourceKey | string> = [dotName];
-		if (!excludeStandardTicks) dotKeys.push(STANDARD_DOT_TICK_KEY);
+		if (!excludeStandardTicks) dotKeys.push(STANDARD_TICK_KEY);
 		dotKeys.forEach((key) => {
 			this.#dotTickTimes.get(key)?.forEach((rt) => {
 				if (!bossIsUntargetable(rt - this.gameConfig.countdown) && rt <= untilRawTime) {
@@ -549,15 +542,25 @@ class Controller {
 		return cnt;
 	}
 
-	getDotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceKey) {
+	getDotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceKey): number {
+		return this.getOverTimeCoverageTimeFraction(untilDisplayTime, dot, this.#dotCoverageTimes);
+	}
+	getHotCoverageTimeFraction(untilDisplayTime: number, dot: ResourceKey): number {
+		return this.getOverTimeCoverageTimeFraction(untilDisplayTime, dot, this.#hotCoverageTimes);
+	}
+	private getOverTimeCoverageTimeFraction(
+		untilDisplayTime: number,
+		effect: ResourceKey,
+		coverageTimes: Map<ResourceKey, Array<OvertimeEffectCoverage>>,
+	): number {
 		if (untilDisplayTime <= Debug.epsilon) return 0;
-		const dotCoverages = this.#dotCoverageTimes.get(dot);
-		if (!dotCoverages) {
+		const effectCoverages = coverageTimes.get(effect);
+		if (!effectCoverages) {
 			return 0;
 		}
 
 		let coveredTime = 0;
-		dotCoverages.forEach((section) => {
+		effectCoverages.forEach((section) => {
 			if (section.tStartDisplay <= untilDisplayTime) {
 				let startTime = Math.max(0, section.tStartDisplay);
 				let endTime =
@@ -621,8 +624,34 @@ class Controller {
 	}
 
 	resolvePotency(p: Potency) {
+		this.resolveAnyPotency(p, ElemType.DamageMark, this.#damageLogCsv);
+
+		this.#updateTotalDamageStats();
+	}
+
+	resolveHealingPotency(p: Potency) {
+		this.resolveAnyPotency(p, ElemType.HealingMark, this.#healingLogCsv);
+	}
+	resolveOverTimePotency(p: Potency, kind: PotencyKind) {
+		if (kind === "damage") {
+			this.resolveAnyPotency(p, ElemType.DamageMark, this.#damageLogCsv);
+		} else {
+			this.resolveAnyPotency(p, ElemType.HealingMark, this.#healingLogCsv);
+		}
+	}
+
+	private resolveAnyPotency(
+		p: Potency,
+		elemType: ElemType.DamageMark | ElemType.HealingMark | ElemType.AggroMark,
+		csvLog: PotencyLogCsv[],
+	) {
 		p.resolve(this.game.getDisplayTime());
 		this.#lastDamageApplicationTime = this.game.time;
+
+		// If the potency didn't actually do anything, assume it's an aggro-only action like Provoke
+		if (p.base === 0) {
+			elemType = ElemType.AggroMark;
+		}
 
 		let pot = false;
 		p.modifiers.forEach((m) => {
@@ -632,24 +661,24 @@ class Controller {
 		if (!this.#bInSandbox) {
 			let sourceDesc = "{skill}@" + p.sourceTime.toFixed(3);
 			if (p.description.length > 0) sourceDesc += " " + p.description;
-			const damageInfo: DamageMarkInfo = {
+			const potencyInfo: PotencyMarkInfo = {
 				potency: p,
 				sourceDesc,
 				sourceSkill: p.sourceSkill,
 			};
 			let existingElement = this.timeline.tryGetElement(
 				this.game.time,
-				ElemType.DamageMark,
-			) as DamageMarkElem;
+				elemType,
+			) as PotencyMarkElem;
 			if (existingElement) {
-				existingElement.damageInfos.push(damageInfo);
+				existingElement.potencyInfos.push(potencyInfo);
 				if (pot && !existingElement.buffs.includes("TINCTURE")) {
 					existingElement.buffs.push("TINCTURE");
 				}
 			} else {
 				this.timeline.addElement({
-					type: ElemType.DamageMark,
-					damageInfos: [damageInfo],
+					type: elemType,
+					potencyInfos: [potencyInfo],
 					buffs: pot ? ["TINCTURE"] : [],
 					time: this.game.time,
 					displayTime: this.game.getDisplayTime(),
@@ -657,9 +686,9 @@ class Controller {
 			}
 
 			// time, damageSource, potency, cumulativePotency
-			this.#damageLogCsv.push({
+			csvLog.push({
 				time: this.game.getDisplayTime(),
-				damageSource: p.sourceSkill + "@" + p.sourceTime,
+				source: p.sourceSkill + "@" + p.sourceTime,
 				// tincture is applied when actually exporting for download.
 				potency: p.getAmount({
 					tincturePotencyMultiplier: 1,
@@ -669,8 +698,6 @@ class Controller {
 				buffs: pot ? ["TINCTURE"] : [],
 			});
 		}
-
-		this.#updateTotalDamageStats();
 	}
 
 	reportLucidTick(time: number, sourceDesc: string) {
@@ -712,12 +739,22 @@ class Controller {
 	 * @param dotName The name of the DoT that ticked. If not provided, assumes the standard DoT tick
 	 */
 	reportDotTick(rawTime: number, dotName?: ResourceKey) {
+		this.reportOverTimeTick(rawTime, this.#dotTickTimes, dotName);
+	}
+	reportHotTick(rawTime: number, hotName?: ResourceKey) {
+		this.reportOverTimeTick(rawTime, this.#hotTickTimes, hotName);
+	}
+	private reportOverTimeTick(
+		rawTime: number,
+		tickTimes: Map<ResourceKey | string, number[]>,
+		effectName?: ResourceKey,
+	) {
 		if (!this.#bInSandbox) {
-			const tickGroupKey = dotName ?? STANDARD_DOT_TICK_KEY;
-			let tickGroup = this.#dotTickTimes.get(tickGroupKey);
+			const tickGroupKey = effectName ?? STANDARD_TICK_KEY;
+			let tickGroup = tickTimes.get(tickGroupKey);
 			if (!tickGroup) {
 				tickGroup = [];
-				this.#dotTickTimes.set(tickGroupKey, tickGroup);
+				tickTimes.set(tickGroupKey, tickGroup);
 			}
 			tickGroup.push(rawTime);
 			this.updateStats();
@@ -725,15 +762,23 @@ class Controller {
 	}
 
 	reportDotStart(displayTime: number, dot: ResourceKey) {
+		this.reportOverTimeStart(displayTime, dot, "damage");
+	}
+	reportHotStart(displayTime: number, hot: ResourceKey) {
+		this.reportOverTimeStart(displayTime, hot, "healing");
+	}
+	reportOverTimeStart(displayTime: number, effect: ResourceKey, kind: PotencyKind) {
 		if (!this.#bInSandbox) {
-			let dotCoverages = this.#dotCoverageTimes.get(dot);
-			if (!dotCoverages) {
-				dotCoverages = [];
-				this.#dotCoverageTimes.set(dot, dotCoverages);
+			const coverageTimes =
+				kind === "damage" ? this.#dotCoverageTimes : this.#hotCoverageTimes;
+			let effectCoverages = coverageTimes.get(effect);
+			if (!effectCoverages) {
+				effectCoverages = [];
+				coverageTimes.set(effect, effectCoverages);
 			}
-			let len = dotCoverages.length;
-			console.assert(len === 0 || dotCoverages[len - 1].tEndDisplay !== undefined);
-			dotCoverages.push({
+			let len = effectCoverages.length;
+			console.assert(len === 0 || effectCoverages[len - 1].tEndDisplay !== undefined);
+			effectCoverages.push({
 				tStartDisplay: displayTime,
 				tEndDisplay: undefined,
 			});
@@ -741,15 +786,26 @@ class Controller {
 	}
 
 	reportDotDrop(displayTime: number, dot: ResourceKey) {
+		this.reportOverTimeDrop(displayTime, dot, "damage");
+	}
+	reportHotDrop(displayTime: number, hot: ResourceKey) {
+		this.reportOverTimeDrop(displayTime, hot, "healing");
+	}
+	reportOverTimeDrop(displayTime: number, effect: ResourceKey, kind: PotencyKind) {
 		if (!this.#bInSandbox) {
-			const dotCoverages = this.#dotCoverageTimes.get(dot);
-			console.assert(dotCoverages, `Reported dropping ${dot} when no coverage was detected`);
-			if (!dotCoverages) {
+			const coverageTimes =
+				kind === "damage" ? this.#dotCoverageTimes : this.#hotCoverageTimes;
+			const effectCoverages = coverageTimes.get(effect);
+			console.assert(
+				effectCoverages,
+				`Reported dropping ${effect} when no coverage was detected`,
+			);
+			if (!effectCoverages) {
 				return;
 			}
-			let len = dotCoverages.length;
-			console.assert(len > 0 && dotCoverages[len - 1].tEndDisplay === undefined);
-			dotCoverages[len - 1].tEndDisplay = displayTime;
+			let len = effectCoverages.length;
+			console.assert(len > 0 && effectCoverages[len - 1].tEndDisplay === undefined);
+			effectCoverages[len - 1].tEndDisplay = displayTime;
 		}
 	}
 
@@ -814,6 +870,7 @@ class Controller {
 		prematureStopCondition?: () => boolean;
 	}) {
 		if (props.deltaTime > 0) {
+			this.#lastTickDuration = props.deltaTime;
 			let timeTicked = this.game.tick(
 				props.deltaTime,
 				props.prematureStopCondition
@@ -823,14 +880,9 @@ class Controller {
 						},
 			);
 
-			// add this tick to game record
-			let lastAction = this.record.getLastAction();
-			if (lastAction && !props.separateNode) {
-				lastAction.waitDuration += timeTicked;
-			} else {
-				let waitNode = new ActionNode(ActionType.Wait);
-				waitNode.waitDuration = timeTicked;
-				this.record.addActionNode(waitNode);
+			// If `separateNode` is true, then create a new explicit wait node.
+			if (props.separateNode) {
+				this.record.addActionNode(durationWaitNode(timeTicked));
 			}
 		}
 	}
@@ -839,7 +891,6 @@ class Controller {
 		this.timeScale = props.timeScale;
 		this.tickMode = props.tickMode;
 		this.shouldLoop = false;
-		this.lastAttemptedSkill = "";
 	}
 
 	setConfigAndRestart(props: {
@@ -850,6 +901,7 @@ class Controller {
 		criticalHit: number;
 		directHit: number;
 		determination: number;
+		piety: number;
 		animationLock: number;
 		fps: number;
 		gcdSkillCorrection: number;
@@ -904,44 +956,37 @@ class Controller {
 		}
 	}
 
-	#fastForward() {
+	#fastForward(maxReplayTime: number) {
 		let deltaTime: number = this.game.timeTillAnySkillAvailable();
+		if (maxReplayTime >= 0) {
+			deltaTime = Math.min(maxReplayTime - this.game.time, deltaTime);
+		}
 		this.#requestTick({ deltaTime: deltaTime, separateNode: false });
 	}
 
 	#useSkill(
 		skillName: ActionKey,
 		targetCount: number,
-		bWaitFirst: boolean,
 		overrideTickMode: TickMode = this.tickMode,
+		maxReplayTime: number = -1,
 	) {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
-		if (bWaitFirst) {
-			this.#requestTick({ deltaTime: status.timeTillAvailable, separateNode: false });
-			skillName = getConditionalReplacement(skillName, this.game);
-			status = this.game.getSkillAvailabilityStatus(skillName);
-			this.lastAttemptedSkill = "";
-		}
+		const beforeWaitTime = status.timeTillAvailable;
 
-		if (
-			status.status.unavailableReasons.some(
-				(reason) =>
-					reason === SkillUnavailableReason.Blocked ||
-					reason === SkillUnavailableReason.NotInCombat,
-			)
-		) {
-			this.lastAttemptedSkill = skillName;
-		}
+		// Wait out the current animation lock or remaining cooldown on the skill,
+		// then attempt to use it ASAP
+		this.#requestTick({ deltaTime: beforeWaitTime, separateNode: false });
+		skillName = getConditionalReplacement(skillName, this.game);
+		status = this.game.getSkillAvailabilityStatus(skillName);
 
 		if (status.status.ready()) {
-			let node = new ActionNode(ActionType.Skill);
-			node.skillName = skillName;
-			node.waitDuration = 0;
-			node.targetCount = targetCount;
+			// If the skill can be used, do so.
+			let node = skillNode(skillName, targetCount);
 			this.record.addActionNode(node);
+			const actionIndex = this.record.tailIndex;
 
-			this.game.useSkill(skillName, node);
+			this.game.useSkill(skillName, node, actionIndex);
 			if (overrideTickMode === TickMode.RealTimeAutoPause) {
 				this.shouldLoop = true;
 				this.#runLoop(() => {
@@ -956,6 +1001,7 @@ class Controller {
 
 			if (!this.#bInSandbox) {
 				// this block is run when NOT viewing historical state (aka run when receiving input)
+				this.lastSkillTime = this.game.time;
 				let newStatus = this.game.getSkillAvailabilityStatus(skillName, true); // refresh to get re-captured recast time
 				let skill = this.game.skillsList.get(skillName);
 				let isGCD = skill.cdName === "cd_GCD";
@@ -980,7 +1026,8 @@ class Controller {
 					relativeSnapshotTime: snapshotTime,
 					lockDuration: lockDuration,
 					recastDuration: recastDuration,
-					node: node,
+					node,
+					actionIndex,
 				});
 				this.#actionsLogCsv.push({
 					time: this.game.getDisplayTime(),
@@ -990,35 +1037,40 @@ class Controller {
 				});
 			}
 
+			if (overrideTickMode !== TickMode.RealTimeAutoPause) {
+				// In manual mode, directly fast-forward to the end of animation lock instead of animating.
+				// If we're in a historical replay, the end may be in the middle of the animation lock.
+				this.#fastForward(maxReplayTime);
+			}
+
 			// If this was called within a line load, do not refresh the timeline view
 			if (!this.#skipViewUpdates) {
 				refreshTimelineEditor();
 			}
+		} else if (beforeWaitTime > 0) {
+			// After waiting for animation lock and cooldowns, the skill may not be usable
+			// (e.g. if Amplifier is pressed, then the 120s cd will move the timeline to a point where
+			// enochian was dropped and the button can no longer be used).
+			// Insert an artificial wait event to indicate this.
+			this.record.addActionNode(durationWaitNode(beforeWaitTime));
 		}
 		return status;
 	}
 
-	#inArray(n: ActionNode | undefined, l: ActionNode[] | undefined) {
-		if (!l) return false;
-		for (let i = 0; i < l.length; i++) {
-			if (n === l[i]) return true;
-		}
-		return false;
-	}
-
 	// returns true on success
+	// may modify Line in-place to adjust wait durations, or insert/remove wait nodes
 	#replay(props: {
 		line: Line;
 		replayMode: ReplayMode;
 		removeTrailingIdleTime?: boolean;
 		maxReplayTime?: number;
-		cutoffAction?: ActionNode;
-		editedNodes?: ActionNode[]; // for ReplayMode.Edited: everything before this should instead use ReplayMode.Exact
+		cutoffIndex?: number;
+		firstEditedNodeIndex?: number; // for ReplayMode.Edited: everything before this should instead use ReplayMode.Exact
 		selectionStart?: ActionNode;
 		selectionEnd?: ActionNode;
 	}): {
 		success: boolean;
-		firstAddedNode: ActionNode | undefined;
+		firstAddedIndex: number | undefined;
 		firstInvalidNode: ActionNode | undefined;
 		invalidReason: SkillReadyStatus | undefined;
 		invalidTime: number | undefined;
@@ -1027,7 +1079,7 @@ class Controller {
 		this.#skipViewUpdates = true;
 		// default input, if not provided
 		if (props.removeTrailingIdleTime === undefined) props.removeTrailingIdleTime = false;
-		if (props.maxReplayTime === undefined) props.maxReplayTime = -1;
+		let maxReplayTime = props.maxReplayTime ?? -1;
 
 		// when checking record validity as well as final application (ReplayMode.Edited), replay exactly until the first edited node
 		// and also copy over selection status
@@ -1037,28 +1089,31 @@ class Controller {
 			currentReplayMode = ReplayMode.Exact;
 		}
 
-		let itr = props.line.getFirstAction();
-		if (!itr) {
+		const line = props.line;
+		if (line.length === 0) {
 			// Empty line, no need to call re-render here
 			this.#skipViewUpdates = false;
 			return {
 				success: true,
-				firstAddedNode: undefined,
+				firstAddedIndex: undefined,
 				firstInvalidNode: undefined,
 				invalidReason: undefined,
 				invalidTime: undefined,
 			};
 		}
 
-		const oldTail = this.record.getLastAction();
-		let firstAddedNode = undefined;
-		while (itr && itr !== props.cutoffAction) {
+		let oldLength = this.record.length;
+		let firstAddedIndex: number | undefined = undefined;
+		// assume cutoffIndex < actions.length
+		const cutoff = props.cutoffIndex ?? line.actions.length;
+		const originalActions = line.actions.slice();
+		for (let i = 0; i < cutoff; i++) {
+			const itr = originalActions[i];
 			// switch to edited replay past the first edited node
 			if (
 				props.replayMode === ReplayMode.Edited &&
 				currentReplayMode === ReplayMode.Exact &&
-				(this.#inArray(itr, props.editedNodes) ||
-					this.#inArray(itr.next, props.editedNodes))
+				i === props.firstEditedNodeIndex
 			) {
 				currentReplayMode = ReplayMode.Edited;
 			}
@@ -1068,36 +1123,114 @@ class Controller {
 			let invalidReason: SkillReadyStatus | undefined = undefined;
 			let invalidTime: number | undefined = undefined;
 
+			let waitDuration = 0;
+			if (itr.info.type === ActionType.Wait) {
+				waitDuration = itr.info.waitDuration;
+			} else if (itr.info.type === ActionType.Skill) {
+				waitDuration = this.game.getSkillAvailabilityStatus(
+					itr.info.skillName,
+				).timeTillAvailable;
+			}
+			// Account for older versions of xivintheshell, which saved waitDuration fields on
+			// non-wait actions.
+			// If the previous action had a legacyWaitDuration field that did not match the elapsed tick time,
+			// then we need to insert or adjust wait events.
+			// When legacyWaitDuration == lastTickDuration, we don't need to do any adjustments.
+			// Otherwise, we need to create a new waitDuration node or modify the duration of the current one.
+			//
+			// Example 1 (legacyWaitDuration < lastTickDuration)
+			// =================================================
+			// - The last action node is Swiftcast added in manual mode at t=0, and legacyWaitDuration is 0.
+			// - lastTickDuration is 0.7 because current sim behavior automatically advances animation lock.
+			// If the current node is not a duration wait node, then it does not matter, since old
+			// behavior would either error out trying to use another action during animation lock.
+			// Suppose the current node is a duration wait of 1.0s. In older versions, this would
+			// be counted from the execution of the Swiftcast at t=0 since it had a waitDuration of 0;
+			// the next action would happen at t=1.
+			// Therefore, we need to adjust the wait node's duration to be 1-0.7=0.3; in general this is
+			//     itr.info.waitDuration = itr.info.waitDuration + (legacyWaitDuration - lastTickDuration)
+			//
+			// Example 2 (legacyWaitDuration > lastTickDuration)
+			// =================================================
+			// - The last action node is F3 at t=0 with a cast time of 3.4s, and legacyWaitDuration is 3.5.
+			// - lastTickDuration is 3.4 because that's the length of the computed animation lock.
+			// Something like this can occur as a result of an internal cast time formula change
+			// or job mechanic change. For example, Despair becoming instant in 7.1 caused this to occur
+			// for many existing BLM timelines.
+			// If the current node is not a duration wait node, then a new wait node with duration
+			//     newWaitDuration = legacyWaitDuration - lastWaitDuration
+			// must be added to compensate.
+			// If the current node is a duration wait node, then this difference is added:
+			//     itr.info.waitDuration = itr.info.waitDuration + (legacyWaitDuration - lastTickDuration)
+			// Note that this is the same formula as in example 1.
+			if (i > 0) {
+				const lastAction = originalActions[i - 1];
+				const lastLegacyWaitDuration = lastAction.legacyWaitDuration;
+				// This block assumes that legacyWaitDuration is only set on skill/setresource nodes
+				if (
+					lastLegacyWaitDuration !== undefined &&
+					Math.abs(lastLegacyWaitDuration - this.#lastTickDuration) > Debug.epsilon
+				) {
+					const delta = lastLegacyWaitDuration - this.#lastTickDuration;
+					if (delta > 0 && itr.info.type !== ActionType.Wait) {
+						// If the current action is a skill, we do a quick look-ahead to see if the delta
+						// matches the amount of time that would tick naturally before its usage, and
+						// determine whether to create a new node based on this information.
+						let separateNode = true;
+						if (itr.info.type === ActionType.Skill) {
+							const preWaitTime = this.game.getSkillAvailabilityStatus(
+								itr.info.skillName,
+							).timeTillAvailable;
+							separateNode = Math.abs(preWaitTime - delta) > Debug.epsilon;
+						}
+						if (separateNode) {
+							this.#requestTick({ deltaTime: delta, separateNode });
+							// Don't count this node for the purposes of firstAddedNode
+							oldLength++;
+						}
+					} else if (itr.info.type === ActionType.Wait) {
+						// Piggyback on the current wait node.
+						// Note that delta may be negative in this case
+						waitDuration += delta;
+					}
+				}
+			}
+
 			// maxReplayTime is used for replay for displaying historical game states (only replay some given duration)
-			let waitDuration = itr.waitDuration;
 			if (
-				props.maxReplayTime >= 0 &&
-				props.maxReplayTime - this.game.time < waitDuration &&
+				maxReplayTime >= 0 &&
+				maxReplayTime - this.game.time < waitDuration &&
 				currentReplayMode === ReplayMode.Exact
 			) {
 				// hit specified max replay time; everything's valid so far
-				waitDuration = props.maxReplayTime - this.game.time;
-				lastIter = true;
+				// Instead of performing the next action, wait until maxReplayTime and return early
+				this.#requestTick({
+					deltaTime: maxReplayTime - this.game.time,
+					separateNode: true,
+				});
+				// Re-enable UI updates
+				this.#skipViewUpdates = false;
+				this.updateAllDisplay();
+				return {
+					success: true,
+					firstAddedIndex,
+					firstInvalidNode: undefined,
+					invalidReason: undefined,
+					invalidTime: undefined,
+				};
 			}
 
-			// only Exact & validity replays wait nodes
-			if (
-				itr.type === ActionType.Wait &&
-				(currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)
-			) {
+			if (itr.info.type === ActionType.Wait) {
 				this.#requestTick({
 					deltaTime: waitDuration,
 					separateNode: true,
 				});
-				// wait nodes are always valid
+				// wait nodes are always valid, assuming waitDuration is positive
 			}
 
 			// skill nodes
-			else if (itr.type === ActionType.Skill) {
-				let waitFirst =
-					currentReplayMode === ReplayMode.SkillSequence ||
-					currentReplayMode === ReplayMode.Edited; // true for tight replay; false for exact replay
-				let skillName = itr.skillName as ActionKey;
+			else if (itr.info.type === ActionType.Skill) {
+				let skillName = itr.info.skillName;
 				if (props.replayMode === ReplayMode.SkillSequence) {
 					// auto-replace as much as possible
 					skillName = getAutoReplacedSkillName(
@@ -1106,47 +1239,12 @@ class Controller {
 						this.gameConfig.level,
 					);
 				}
-				let status = this.#useSkill(skillName, itr.targetCount, waitFirst, TickMode.Manual);
-
-				let bEditedTimelineShouldWaitAfterSkill =
-					currentReplayMode === ReplayMode.Edited &&
-					itr.next &&
-					itr.next.type === ActionType.Wait;
-				if (currentReplayMode === ReplayMode.Exact || bEditedTimelineShouldWaitAfterSkill) {
-					if (status.status.ready()) {
-						//======== tick wait block ========
-						// qol: clean up this code...
-						let deltaTime = 0;
-						if (props.maxReplayTime >= 0) {
-							deltaTime = waitDuration;
-						} else {
-							if (props.removeTrailingIdleTime) {
-								deltaTime =
-									itr === props.line.getLastAction()
-										? this.game.timeTillAnySkillAvailable()
-										: waitDuration;
-							} else {
-								deltaTime = waitDuration;
-							}
-						}
-						this.#requestTick({
-							deltaTime: deltaTime,
-							separateNode: false,
-						});
-						//======== tick wait block ========
-					}
-				} else if (
-					currentReplayMode === ReplayMode.SkillSequence ||
-					currentReplayMode === ReplayMode.Edited
-				) {
-					this.#requestTick({
-						deltaTime: this.game.timeTillAnySkillAvailable(),
-						separateNode: false,
-					});
-				} else {
-					lastIter = true;
-					console.assert(false);
-				}
+				let status = this.#useSkill(
+					skillName,
+					itr.info.targetCount,
+					TickMode.Manual,
+					maxReplayTime,
+				);
 
 				if (!status.status.ready()) {
 					lastIter = true;
@@ -1166,10 +1264,10 @@ class Controller {
 			}
 			// buff enable/disable also only supported by exact / edited replay
 			else if (
-				itr.type === ActionType.SetResourceEnabled &&
+				itr.info.type === ActionType.SetResourceEnabled &&
 				(currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)
 			) {
-				let success = this.requestToggleBuff(itr.buffName as ResourceKey);
+				let success = this.requestToggleBuff(itr.info.buffName as ResourceKey);
 				const exact = currentReplayMode === ReplayMode.Exact;
 				if (success) {
 					this.#requestTick({
@@ -1196,17 +1294,17 @@ class Controller {
 
 			// for edited replay mode, copy selection:
 			if (props.replayMode === ReplayMode.Edited) {
-				let lastAdded = this.record.getLastAction();
-				if (itr === props.selectionStart && lastAdded) {
+				let lastAdded = this.record.tailIndex;
+				if (itr === props.selectionStart && lastAdded >= 0) {
 					this.record.selectSingle(lastAdded);
-				} else if (itr === props.selectionEnd && lastAdded) {
+				} else if (itr === props.selectionEnd && lastAdded >= 0) {
 					this.record.selectUntil(lastAdded);
 				}
 			}
 
-			// this iteration just added something, but firstAddedNode is still empty:
-			if (this.record.getLastAction() !== oldTail && !firstAddedNode) {
-				firstAddedNode = this.record.getLastAction();
+			// this iteration just added something, but firstAddedIndex is still unset:
+			if (this.record.length !== oldLength && firstAddedIndex === undefined) {
+				firstAddedIndex = this.record.tailIndex;
 			}
 
 			if (lastIter) {
@@ -1215,21 +1313,45 @@ class Controller {
 				this.updateAllDisplay();
 				return {
 					success: false,
-					firstAddedNode: firstAddedNode,
+					firstAddedIndex,
 					firstInvalidNode: firstInvalidNode,
 					invalidReason: invalidReason,
 					invalidTime: invalidTime,
 				};
-			} else {
-				itr = itr.next;
 			}
 		}
+
+		// When performing a replay up to a cutoff, advance the game time to the start of the action
+		// at props.cutoffIndex. This ensures the displayed cursor will be at the correct time.
+		if (props.cutoffIndex !== undefined) {
+			const info = originalActions[props.cutoffIndex].info;
+			if (info.type === ActionType.Skill) {
+				const status = this.game.getSkillAvailabilityStatus(info.skillName);
+				this.#requestTick({ deltaTime: status.timeTillAvailable, separateNode: false });
+			}
+		}
+
+		// Perform legacy wait adjustment for the final action in the list if the last action was a skill/setresource.
+		// Always generate a new node, since there will never be a following skill for which to skip
+		// animation lock.
+		const lastAction = originalActions[originalActions.length - 1];
+		const lastLegacyWaitDuration = lastAction.legacyWaitDuration;
+		if (
+			lastLegacyWaitDuration !== undefined &&
+			(lastAction.info.type === ActionType.Skill ||
+				lastAction.info.type === ActionType.SetResourceEnabled) &&
+			Math.abs(lastLegacyWaitDuration - this.#lastTickDuration) > Debug.epsilon
+		) {
+			const delta = lastLegacyWaitDuration - this.#lastTickDuration;
+			this.#requestTick({ deltaTime: delta, separateNode: true });
+		}
+
 		// Re-enable UI updates
 		this.#skipViewUpdates = false;
 		this.updateAllDisplay();
 		return {
 			success: true,
-			firstAddedNode: firstAddedNode,
+			firstAddedIndex,
 			firstInvalidNode: undefined,
 			invalidReason: undefined,
 			invalidTime: undefined,
@@ -1278,7 +1400,7 @@ class Controller {
 			});
 			let potency = row.potency;
 			if (pot) potency *= this.getTincturePotencyMultiplier();
-			return [row.time, row.damageSource, potency];
+			return [row.time, row.source, potency];
 		});
 		return [["time", "damageSource", "potency"]].concat(csvRows as any[][]);
 	}
@@ -1380,7 +1502,7 @@ class Controller {
 
 		let replayResult = this.#replay({ line: line, replayMode: replayMode });
 		if (!replayResult.success) {
-			this.rewindUntilBefore(replayResult.firstAddedNode, false);
+			this.rewindUntilBefore(replayResult.firstAddedIndex, false);
 			window.alert(
 				'Failed to add line "' +
 					line.name +
@@ -1403,14 +1525,13 @@ class Controller {
 		this.#presetLinesManager.deleteAllLines();
 	}
 
-	reportInterruption(props: { failNode: ActionNode }) {
+	reportInterruption(props: { failNode: ActionNode; failIndex: number }) {
 		if (!this.#bInSandbox) {
+			const nodeDisplayInfo = props.failNode.getNameForMessage();
 			window.alert(
-				"cast failed! Resources for " +
-					ACTIONS[props.failNode.skillName as ActionKey].name +
-					" are no longer available",
+				"cast failed! Resources for " + nodeDisplayInfo + " are no longer available",
 			);
-			console.warn("failed: " + ACTIONS[props.failNode.skillName as ActionKey].name);
+			console.warn("failed: " + nodeDisplayInfo);
 		}
 		// if adding from a line, invalidate the whole line
 		// if loading from file (shouldn't happen)
@@ -1421,32 +1542,20 @@ class Controller {
 		} else {
 			let currentTime = this.game.time;
 			let currentLoop = this.shouldLoop;
-			this.rewindUntilBefore(props.failNode, false);
+			this.rewindUntilBefore(props.failIndex, false);
 			this.autoSave();
 			this.#requestTick({
 				deltaTime: currentTime - this.game.time,
-				separateNode: false,
+				separateNode: true,
 			});
 			this.shouldLoop = currentLoop;
 		}
 	}
 
 	// basically restart the game and play till here:
-	// if node is undefined, replay the whole thing.
-	rewindUntilBefore(node: ActionNode | undefined, removeTrailingIdleTime: boolean) {
+	// if index is undefined, replay the whole thing.
+	rewindUntilBefore(index: number | undefined, removeTrailingIdleTime: boolean) {
 		let replayRecord = this.record;
-
-		let newTail: ActionNode | undefined;
-		if (replayRecord.getFirstAction() === node) {
-			// deleting everything before head (making it empty)
-			newTail = undefined;
-		} else {
-			console.assert(replayRecord.getFirstAction() !== undefined);
-			newTail = replayRecord.getFirstAction();
-			while ((newTail as ActionNode).next !== node) {
-				newTail = (newTail as ActionNode).next;
-			}
-		}
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;
@@ -1454,9 +1563,8 @@ class Controller {
 		this.#requestRestart();
 		this.#applyResourceOverrides(this.gameConfig);
 
-		if (newTail) {
-			replayRecord.tail = newTail;
-			replayRecord.tail.next = undefined;
+		if (index !== undefined) {
+			replayRecord.spliceUpTo(index);
 			this.#replay({
 				line: replayRecord,
 				replayMode: ReplayMode.Exact,
@@ -1467,15 +1575,19 @@ class Controller {
 
 	removeTrailingIdleTime() {
 		// first remove any non-skill nodes in the end
-		let lastSkill = this.record.getLastAction((node) => {
-			return node.type === ActionType.Skill;
-		});
-		if (!lastSkill) {
+		let lastSkillIndex: number | undefined = undefined;
+		for (let i = this.record.length - 1; i >= 0; i--) {
+			if (this.record.actions[i].info.type === ActionType.Skill) {
+				lastSkillIndex = i;
+				break;
+			}
+		}
+		if (lastSkillIndex === undefined) {
 			// no skill has been used yet - delete everything.
-			this.rewindUntilBefore(this.record.getFirstAction(), true);
+			this.rewindUntilBefore(0, true);
 		} else {
 			// there are nodes after the last skill
-			this.rewindUntilBefore(lastSkill.next, true);
+			this.rewindUntilBefore(lastSkillIndex + 1, true);
 		}
 	}
 
@@ -1488,8 +1600,7 @@ class Controller {
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {
-			let waitFirst = props.skillName === this.lastAttemptedSkill;
-			let status = this.#useSkill(props.skillName, props.targetCount, waitFirst);
+			let status = this.#useSkill(props.skillName, props.targetCount);
 			if (status.status.ready()) {
 				this.scrollToTime(this.game.time);
 				this.autoSave();
@@ -1501,9 +1612,7 @@ class Controller {
 		let success = this.game.requestToggleBuff(buffName); // currently always succeeds
 		if (!success) return false;
 
-		let node = new ActionNode(ActionType.SetResourceEnabled);
-		node.buffName = buffName;
-		this.record.addActionNode(node);
+		this.record.addActionNode(setResourceNode(buffName));
 
 		this.#actionsLogCsv.push({
 			time: this.game.getDisplayTime(),
@@ -1590,20 +1699,15 @@ class Controller {
 
 		if (evt.keyCode === 85) {
 			// u (undo)
-			this.rewindUntilBefore(this.record.getLastAction(), false);
+			this.rewindUntilBefore(this.record.tailIndex, false);
 			this.updateAllDisplay();
 			this.autoSave();
 		}
 	}
 	#handleKeyboardEvent_Manual(evt: { keyCode: number; shiftKey: boolean }) {
-		if (evt.keyCode === 32) {
-			// space
-			this.#fastForward();
-			this.updateAllDisplay();
-			this.autoSave();
-		} else if (evt.keyCode === 85) {
+		if (evt.keyCode === 85) {
 			// u (undo)
-			this.rewindUntilBefore(this.record.getLastAction(), false);
+			this.rewindUntilBefore(this.record.tailIndex, false);
 			this.updateAllDisplay();
 			this.autoSave();
 		}

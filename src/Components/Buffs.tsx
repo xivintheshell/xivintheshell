@@ -55,6 +55,12 @@ buffIcons.set(BuffType.DivineMight, require("./Asset/Buffs/PLD/Divine Might.png"
 buffIcons.set(BuffType.Requiescat, require("./Asset/Buffs/PLD/Requiescat Zero.png"));
 buffIcons.set(BuffType.FightOrFlight, require("./Asset/Buffs/PLD/Fight or Flight.png"));
 
+buffIcons.set(BuffType.Zoe, require("./Asset/Buffs/SGE/Zoe.png"));
+buffIcons.set(BuffType.Autophysis, require("./Asset/Buffs/SGE/Autophysis.png"));
+buffIcons.set(BuffType.Krasis, require("./Asset/Buffs/SGE/Krasis.png"));
+buffIcons.set(BuffType.Philosophia, require("./Asset/Buffs/SGE/Philosophia.png"));
+buffIcons.set(BuffType.Soteria, require("./Asset/Buffs/SGE/Soteria.png"));
+
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
 	let imgObj = new Image();

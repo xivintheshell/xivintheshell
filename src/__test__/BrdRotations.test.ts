@@ -222,7 +222,8 @@ it(
 		() => {
 			(["STORMBITE", "WANDERERS_MINUET"] as ActionKey[]).forEach(applySkill);
 			expect(controller.game.time).toBe(
-				(controller.game as BRDState).skillsList.get("STORMBITE").applicationDelay,
+				(controller.game as BRDState).skillsList.get("STORMBITE").applicationDelay +
+					controller.game.config.animationLock,
 			);
 		},
 	),
@@ -239,7 +240,8 @@ it(
 				applySkill,
 			);
 			expect(controller.game.time).toBe(
-				(controller.game as BRDState).skillsList.get("HEARTBREAK_SHOT").applicationDelay,
+				(controller.game as BRDState).skillsList.get("HEARTBREAK_SHOT").applicationDelay +
+					controller.game.config.animationLock,
 			);
 		},
 	),

@@ -121,11 +121,17 @@ export class XIVMath {
 		return Math.floor((140 * (det - subStat)) / div) * 0.001;
 	}
 
-	static dotPotency(level: LevelSync, speed: number, basePotency: number) {
+	static overtimePotency(level: LevelSync, speed: number, basePotency: number) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
-		const dotStrength = (1000 + Math.floor(((speed - subStat) * 130) / div)) * 0.001;
-		return basePotency * dotStrength;
+		const effectStrength = (1000 + Math.floor(((speed - subStat) * 130) / div)) * 0.001;
+		return basePotency * effectStrength;
+	}
+
+	static mpTick(level: LevelSync, pie: number) {
+		const mainStat = this.getMainstatBase(level);
+		const div = this.getStatDiv(level);
+		return 200 + Math.floor((150 * (pie - mainStat)) / div);
 	}
 
 	/**
@@ -139,6 +145,22 @@ export class XIVMath {
 	 * @returns The GCD prior to any FPS tax
 	 */
 	static preTaxGcd(level: LevelSync, speed: number, baseGCD: number, speedModifier?: number) {
+		const subStat = this.getSubstatBase(level);
+		const div = this.getStatDiv(level);
+		let ceil = Math.ceil(((subStat - speed) * 130) / div);
+		let pts = Math.floor(baseGCD * (1000 + ceil));
+		return Math.floor(((100 - (speedModifier ?? 0)) * pts) / 1000) / 100;
+	}
+
+	// DO NOT USE except to support legacy timelines. Arguments are the same as for preTaxGcd
+	// this formula is rounded incorrectly, as a result when there is haste buff the resulting GCD
+	// may be inaccurate by up to 0.01s
+	static preTaxGcdLegacy(
+		level: LevelSync,
+		speed: number,
+		baseGCD: number,
+		speedModifier?: number,
+	) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
 

@@ -91,6 +91,8 @@ export const ROLE_TRAITS = ensureRecord<TraitData>()({
 	ENHANCED_SWIFTCAST: { name: "Enhanced Swiftcast", level: 94 },
 	ENHANCED_ADDLE: { name: "Enhanced Addle", level: 98 },
 
+	MAGICK_MASTERY_HEALER: { name: "Magick_Mastery", level: 94 },
+
 	ENHANCED_SECOND_WIND: { name: "Enhanced Second Wind", level: 94 },
 	ENHANCED_FEINT: { name: "Enhanced Feint", level: 98 },
 

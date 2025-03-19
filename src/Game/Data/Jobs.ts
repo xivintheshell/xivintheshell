@@ -83,7 +83,7 @@ export const TANKS = ensureRecord<Job>()({
 	},
 	GNB: {
 		role: "TANK",
-		implementationLevel: "TESTING",
+		implementationLevel: "LIVE",
 		limitBreak: "GUNMETAL_SOUL",
 		limitBreakBuff: "GUNMETAL_SOUL",
 	},
@@ -112,7 +112,7 @@ export const HEALERS = ensureRecord<Job>()({
 	},
 	SGE: {
 		role: "HEALER",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "TECHNE_MAKRE",
 	},
@@ -158,7 +158,7 @@ export type MeleeKey = keyof Melee;
 export const RANGED = ensureRecord<Job>()({
 	BRD: {
 		role: "RANGED",
-		implementationLevel: "TESTING",
+		implementationLevel: "LIVE",
 		limitBreak: "SAGITTARIUS_ARROW",
 	},
 	MCH: {
@@ -184,7 +184,7 @@ export const CASTERS = ensureRecord<Job>()({
 	},
 	SMN: {
 		role: "CASTER",
-		implementationLevel: "TESTING",
+		implementationLevel: "LIVE",
 		usesMp: true,
 		limitBreak: "TERAFLARE",
 	},

@@ -147,9 +147,6 @@ export const applySkill = (skillName: ActionKey) => applySkillMultiTarget(skillN
 
 export const applySkillMultiTarget = (skillName: ActionKey, targetCount: number) => {
 	// Perform the specified skill as soon as possible
-	// TEST-ONLY HACK: set lastAttemptedSkill to the skill we're about to use
-	// to ensure that trailing wait times are always omitted
-	controller.lastAttemptedSkill = skillName;
 	controller.requestUseSkill({ skillName, targetCount });
 };
 

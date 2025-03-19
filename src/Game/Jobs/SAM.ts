@@ -91,9 +91,9 @@ export class SAMState extends GameState {
 		super.registerRecurringEvents([
 			{
 				reportName: localizeResourceType("HIGANBANA_DOT"),
-				groupedDots: [
+				groupedEffects: [
 					{
-						dotName: "HIGANBANA_DOT",
+						effectName: "HIGANBANA_DOT",
 						appliedBy: ["HIGANBANA"],
 					},
 				],
@@ -701,7 +701,7 @@ makeGCD_SAM("HIGANBANA", 30, {
 
 		state.addDoTPotencies({
 			node,
-			dotName: "HIGANBANA_DOT",
+			effectName: "HIGANBANA_DOT",
 			skillName: "HIGANBANA",
 			tickPotency,
 			speedStat: "sks",
@@ -998,7 +998,7 @@ makeAbility_SAM("HISSATSU_GUREN", 70, "cd_SENEI_GUREN", {
 
 makeAbility_SAM("HAGAKURE", 68, "cd_HAGAKURE", {
 	cooldown: 5,
-	validateAttempt: (state) => state.countSen() === 3,
+	validateAttempt: (state) => state.countSen() > 0,
 	onConfirm: (state) => {
 		state.gainKenki(state.countSen() * 10);
 		state.consumeAllSen();

@@ -60,19 +60,20 @@ class SaveAsPreset extends React.Component {
 function PresetLine(props: { line: Line }) {
 	let line = props.line;
 	let icons = [];
-	let itr = line.getFirstAction();
 	let ctr = 0;
 	let iconStyle = {
 		margin: "0 1px",
 		width: "18px",
 		verticalAlign: "middle",
 	};
-	while (itr) {
-		console.assert(itr.type === ActionType.Skill);
-		let iconPath = getSkillIconPath(itr.skillName);
-		icons.push(<img style={iconStyle} key={ctr} src={iconPath} alt={itr.skillName} />);
-		itr = itr.next;
-		ctr++;
+	for (const action of line.actions) {
+		// waits and other actions aren't rendered, but TODO maybe they should be
+		if (action.info.type === ActionType.Skill) {
+			const skillName = action.info.skillName;
+			let iconPath = getSkillIconPath(skillName);
+			icons.push(<img style={iconStyle} key={ctr} src={iconPath} alt={skillName} />);
+			ctr++;
+		}
 	}
 	let clickableContent = <span>
 		{line.name} ({icons})
@@ -151,8 +152,8 @@ export class SkillSequencePresets extends React.Component {
 					padding: "10px",
 				}}
 			>
-				{controller.getPresetLines().map((line) => {
-					return <PresetLine line={line} key={line._lineIndex} />;
+				{controller.getPresetLines().map((line, i) => {
+					return <PresetLine line={line} key={i} />;
 				})}
 				<SaveAsPreset enabled={hasSelection} />
 				<div style={{ marginTop: 16 }}>

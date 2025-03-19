@@ -115,6 +115,12 @@ export enum BuffType {
 	RagingStrikes = "Raging Strikes",
 
 	DeathsDesign = "Death's Design",
+
+	Zoe = "Zoe",
+	Autophysis = "Autophysis",
+	Krasis = "Krasis",
+	Philosophia = "Philosophia",
+	Soteria = "Soteria",
 }
 
 export const enum WarningType {

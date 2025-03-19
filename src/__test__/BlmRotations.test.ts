@@ -583,7 +583,7 @@ it(
 						maxTicks: 89,
 						dotCoverageTimeFraction: 0.9788,
 						cumulativeGap: 4.966,
-						cumulativeOverride: 10.086,
+						cumulativeOverride: 9.801,
 						totalPotencyWithoutPot: 8904.93,
 						totalPotPotency: 80.59,
 					},
@@ -619,12 +619,31 @@ it(
 						maxTicks: 129,
 						dotCoverageTimeFraction: 0.991,
 						cumulativeGap: 1.197,
-						cumulativeOverride: 7.313,
+						cumulativeOverride: 6.16,
 						totalPotencyWithoutPot: 12924.09,
 						totalPotPotency: 162.07,
 					},
 				},
 			],
 		]),
+	}),
+);
+
+it(
+	"loads: blm_legacy_test_ll_toggle.txt",
+	testDamageFromTimeline("blm_legacy_test_ll_toggle.txt", {
+		time: 27.197,
+		lastDamageApplicationTime: 27.189,
+		totalPotency: {
+			applied: 8277.24,
+			pending: 161.25,
+		},
+		gcdSkills: {
+			applied: 11,
+			pending: 0,
+		},
+		mainTableSummary: {
+			totalPotencyWithoutPot: 8277.24,
+		},
 	}),
 );

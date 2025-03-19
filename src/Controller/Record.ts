@@ -1,103 +1,240 @@
+// The Record class (and other associated types) are responsible for managing serialization
+// and deserialization of user actions.
+//
+// A SerializedRecord is an at-rest representation of a sequence of actions. This is the
+// format saved in localStorage for timelines and presets, as well as that used in timeline exports.
+//
+// An ActionNode represents a single action, either a skill usage, wait, or buff toggle.
+//
+// A Line is a sequence of ActionNodes.
+//
+// A Record is a Line with an associated GameConfig, as well as information about currently-selected
+// actions.
+//
+// Prior to an internal refactor allowing the representation of invalid actions, Records were
+// represented as a wrapper around a linked list of ActionNodes. However, they were still
+// serialized as an array of { type, skillName?, buffName?, waitDuration? } objects; the new
+// implementation parses these objects to the contemporary Record format.
+
 import { FileType } from "./Common";
 import { BuffType, SkillReadyStatus } from "../Game/Common";
 import { GameConfig } from "../Game/GameConfig";
-import { Potency } from "../Game/Potency";
+import { Potency, PotencyKind } from "../Game/Potency";
 import { controller } from "./Controller";
-import { ActionKey, ACTIONS, ResourceKey } from "../Game/Data";
+import { ACTIONS, ActionKey, ResourceKey } from "../Game/Data";
+import { getNormalizedSkillName, getResourceKeyFromBuffName } from "../Game/Skills";
 
 export const enum ActionType {
 	Skill = "Skill",
 	Wait = "Wait",
+	JumpToTimestamp = "JumpToTimestamp",
+	WaitForMP = "WaitForMP",
 	SetResourceEnabled = "SetResourceEnabled",
+	Invalid = "Invalid",
 }
 
-function verifyActionNode(action: ActionNode) {
-	console.assert(typeof action !== "undefined");
-	if (action.type === ActionType.Skill) {
-		console.assert(typeof action.skillName === "string");
-		return;
-	} else if (action.type === ActionType.Wait) {
-		console.assert(!isNaN(action.waitDuration));
-		return;
-	} else if (action.type === ActionType.SetResourceEnabled) {
-		console.assert(typeof action.buffName === "string");
-		return;
-	}
-	console.assert(false);
+interface SerializedSkill {
+	type: ActionType.Skill;
+	skillName: string; // uses the VALUE of the skill name, not the ActionKey
+	targetCount: number;
+	healTargetCount: number | undefined;
 }
+
+interface SerializedWait {
+	type: ActionType.Wait; // legacy name; represents a wait for a fixed duration
+	waitDuration: number;
+}
+
+interface SerializedJump {
+	type: ActionType.JumpToTimestamp;
+	targetTime: number; // timestamp in seconds
+}
+
+interface SerializedMPWait {
+	type: ActionType.WaitForMP;
+	targetAmount: number;
+}
+
+interface SerializedSetResource {
+	type: ActionType.SetResourceEnabled;
+	buffName: string; // uses the ResourceKey
+}
+
+export type SerializedAction =
+	| SerializedSkill
+	| SerializedWait
+	| SerializedJump
+	| SerializedMPWait
+	| SerializedSetResource
+	| { type: ActionType.Invalid };
+
+// Because SkillNode serializes with the localized string value instead of an ActionKey,
+// It needs a different internal type.
+// SetResourceInfo serializes with ResourceKey, but we keep a separate type just for cleanliness.
+interface SkillNodeInfo {
+	type: ActionType.Skill;
+	skillName: ActionKey;
+	targetCount: number;
+	healTargetCount: number | undefined;
+}
+
+interface SetResourceNodeInfo {
+	type: ActionType.SetResourceEnabled;
+	buffName: ResourceKey;
+}
+
+export type NodeInfo =
+	| SkillNodeInfo
+	| SerializedWait
+	| SerializedJump
+	| SerializedMPWait
+	| SetResourceNodeInfo
+	| { type: ActionType.Invalid };
+
+export function skillNode(skillName: ActionKey, targetCount?: number): ActionNode {
+	return new ActionNode({
+		type: ActionType.Skill,
+		skillName,
+		targetCount: targetCount ?? 1,
+		healTargetCount: undefined,
+	});
+}
+
+export function durationWaitNode(waitDuration: number): ActionNode {
+	return new ActionNode({
+		type: ActionType.Wait,
+		waitDuration,
+	});
+}
+
+export function jumpToTimestampNode(targetTime: number): ActionNode {
+	return new ActionNode({
+		type: ActionType.JumpToTimestamp,
+		targetTime,
+	});
+}
+
+export function waitForMPNode(targetAmount: number): ActionNode {
+	return new ActionNode({
+		type: ActionType.WaitForMP,
+		targetAmount,
+	});
+}
+
+export function setResourceNode(buffName: ResourceKey): ActionNode {
+	return new ActionNode({
+		type: ActionType.SetResourceEnabled,
+		buffName,
+	});
+}
+
+export type SerializedLine = SerializedAction[];
 
 export class ActionNode {
-	static _gNodeIndex: number = 0;
-	#nodeIndex: number;
 	#capturedBuffs: Set<BuffType>;
 	#potency: Potency | undefined;
 	#dotPotencies: Map<ResourceKey, Potency[]>;
-
-	type: ActionType;
-	waitDuration: number = 0;
-	skillName?: ActionKey;
-	buffName?: string;
+	#healingPotency: Potency | undefined;
+	#hotPotencies: Map<ResourceKey, Potency[]>;
+	// TODO split into different properties for dots/hots?
 	applicationTime?: number;
 	#dotOverrideAmount: Map<ResourceKey, number>;
 	#dotTimeGap: Map<ResourceKey, number>;
-	targetCount: number = 1;
+	#hotOverrideAmount: Map<ResourceKey, number>;
+	#hotTimeGap: Map<ResourceKey, number>;
+	info: NodeInfo;
+	// Older versions of xivintheshell attached waitDuration fields to every action
+	// this field is only populated during deserialization.
+	// Note that a value of 0 does have a meaning; if an action is created in manual mode
+	// and spacebar was not pressed to fast-forward, then a wait action performed immediately
+	// after will be relative to the end of the action rather than the end of the animation lock.
+	legacyWaitDuration?: number;
 
-	next?: ActionNode = undefined;
-
-	#selected = false;
-
+	// timeline animation lock info set in the controller; should probably be moved
+	// elsewhere eventually
 	tmp_startLockTime?: number;
 	tmp_endLockTime?: number;
 
-	constructor(actionType: ActionType) {
-		this.type = actionType;
-		this.#nodeIndex = ActionNode._gNodeIndex;
+	constructor(info: NodeInfo, legacyWaitDuration?: number) {
+		this.info = info;
 		this.#capturedBuffs = new Set<BuffType>();
 		this.#dotPotencies = new Map();
+		this.#hotPotencies = new Map();
 		this.#dotOverrideAmount = new Map();
 		this.#dotTimeGap = new Map();
-		ActionNode._gNodeIndex++;
+		this.#hotOverrideAmount = new Map();
+		this.#hotTimeGap = new Map();
+		this.legacyWaitDuration = legacyWaitDuration;
 	}
 
-	getClone() {
-		let copy = new ActionNode(this.type);
-		copy.skillName = this.skillName;
-		copy.waitDuration = this.waitDuration;
-		copy.buffName = this.buffName;
-		copy.targetCount = this.targetCount;
-		return copy;
+	serialized(): SerializedAction {
+		if (this.info.type === ActionType.Skill) {
+			return {
+				type: ActionType.Skill,
+				skillName: ACTIONS[this.info.skillName].name,
+				targetCount: this.info.targetCount,
+				healTargetCount: this.info.healTargetCount,
+			};
+		} else if (this.info.type === ActionType.SetResourceEnabled) {
+			return {
+				type: ActionType.SetResourceEnabled,
+				buffName: this.info.buffName.toString(),
+			};
+		} else {
+			return this.info;
+		}
 	}
 
-	getNodeIndex() {
-		return this.#nodeIndex;
+	maybeGetActionKey(): ActionKey | undefined {
+		return this.info.type === ActionType.Skill ? this.info.skillName : undefined;
 	}
 
-	isSelected() {
-		return this.#selected;
+	get targetCount(): number {
+		return this.info.type === ActionType.Skill ? this.info.targetCount : 0;
+	}
+
+	get healTargetCount(): number {
+		return this.info.type === ActionType.Skill ? (this.info.healTargetCount ?? 0) : 0;
+	}
+
+	getNameForMessage(): string {
+		return this.info.type === ActionType.Skill
+			? ACTIONS[this.info.skillName].name
+			: this.info.type.toString();
+	}
+
+	getClone(): ActionNode {
+		return new ActionNode(this.info, this.legacyWaitDuration);
 	}
 
 	addBuff(rsc: BuffType) {
 		this.#capturedBuffs.add(rsc);
 	}
 
-	hasBuff(rsc: BuffType) {
+	hasBuff(rsc: BuffType): boolean {
 		return this.#capturedBuffs.has(rsc);
 	}
 
-	hasPartyBuff() {
+	hasPartyBuff(): boolean {
 		const snapshotTime = this.#potency?.snapshotTime;
-
-		return snapshotTime && controller.game.getPartyBuffs(snapshotTime).size > 0;
+		return snapshotTime !== undefined && controller.game.getPartyBuffs(snapshotTime).size > 0;
 	}
 
-	getPartyBuffs() {
+	getPartyBuffs(): BuffType[] {
 		const snapshotTime = this.#potency?.snapshotTime;
-
 		return snapshotTime ? [...controller.game.getPartyBuffs(snapshotTime).keys()] : [];
 	}
 
 	setTargetCount(count: number) {
-		this.targetCount = count;
+		if (this.info.type === ActionType.Skill) {
+			this.info.targetCount = count;
+		}
+	}
+
+	setHealTargetCount(count: number) {
+		if (this.info.type === ActionType.Skill) {
+			this.info.healTargetCount = count;
+		}
 	}
 
 	resolveAll(displayTime: number) {
@@ -116,7 +253,7 @@ export class ActionNode {
 		return this.applicationTime !== undefined;
 	}
 
-	hitBoss(untargetable: (displayTime: number) => boolean) {
+	hitBoss(untargetable: (displayTime: number) => boolean): boolean {
 		return this.#potency?.hasHitBoss(untargetable) ?? true;
 	}
 
@@ -126,7 +263,7 @@ export class ActionNode {
 		includePartyBuffs: boolean;
 		includeSplash: boolean;
 		excludeDoT?: boolean;
-	}) {
+	}): { applied: number; snapshottedButPending: number } {
 		let res = {
 			applied: 0,
 			snapshottedButPending: 0,
@@ -139,6 +276,32 @@ export class ActionNode {
 			return res;
 		}
 		this.#dotPotencies.forEach((pArr) => {
+			pArr.forEach((p) => {
+				this.recordPotency(props, p, res);
+			});
+		});
+		return res;
+	}
+
+	getHealingPotency(props: {
+		tincturePotencyMultiplier: number;
+		untargetable: (t: number) => boolean;
+		includePartyBuffs: boolean;
+		includeSplash: boolean;
+		excludeHoT?: boolean;
+	}): { applied: number; snapshottedButPending: number } {
+		let res = {
+			applied: 0,
+			snapshottedButPending: 0,
+		};
+		if (this.#healingPotency) {
+			this.recordPotency(props, this.#healingPotency, res);
+		}
+
+		if (props.excludeHoT) {
+			return res;
+		}
+		this.#hotPotencies.forEach((pArr) => {
 			pArr.forEach((p) => {
 				this.recordPotency(props, p, res);
 			});
@@ -164,8 +327,9 @@ export class ActionNode {
 		}
 	}
 
-	removeUnresolvedDoTPotencies() {
-		this.#dotPotencies.forEach((pArr) => {
+	removeUnresolvedOvertimePotencies(kind: PotencyKind) {
+		const potencyMap = kind === "damage" ? this.#dotPotencies : this.#hotPotencies;
+		potencyMap.forEach((pArr) => {
 			const unresolvedIndex = pArr.findIndex((p) => !p.hasResolved());
 			if (unresolvedIndex < 0) {
 				return;
@@ -177,126 +341,210 @@ export class ActionNode {
 	anyPotencies(): boolean {
 		return this.#potency !== undefined || this.#dotPotencies.size > 0;
 	}
-	getInitialPotency() {
+	anyHealingPotencies(): boolean {
+		return this.#healingPotency !== undefined || this.#hotPotencies.size > 0;
+	}
+	getInitialPotency(): Potency | undefined {
 		return this.#potency;
 	}
-	getAllDotPotencies() {
-		return this.#dotPotencies;
+	getInitialHealingPotency(): Potency | undefined {
+		return this.#healingPotency;
 	}
-	getDotPotencies(r: ResourceKey) {
-		return this.#dotPotencies.get(r) ?? [];
+
+	getAllDotPotencies(): Map<ResourceKey, Potency[]> {
+		return this.getAllOverTimePotencies("damage");
+	}
+	getAllHotPotencies(): Map<ResourceKey, Potency[]> {
+		return this.getAllOverTimePotencies("healing");
+	}
+	getAllOverTimePotencies(kind: PotencyKind): Map<ResourceKey, Potency[]> {
+		if (kind === "damage") {
+			return this.#dotPotencies;
+		} else {
+			return this.#hotPotencies;
+		}
+	}
+
+	getDotPotencies(r: ResourceKey): Potency[] {
+		return this.getOverTimePotencies(r, "damage");
+	}
+	getHotPotencies(r: ResourceKey): Potency[] {
+		return this.getOverTimePotencies(r, "healing");
+	}
+	getOverTimePotencies(r: ResourceKey, kind: PotencyKind): Potency[] {
+		if (kind === "damage") {
+			return this.#dotPotencies.get(r) ?? [];
+		} else {
+			return this.#hotPotencies.get(r) ?? [];
+		}
 	}
 
 	addPotency(p: Potency) {
 		console.assert(
 			!this.#potency,
-			`ActionNode for ${this.skillName} already had an initial potency`,
+			`ActionNode for ${this.getNameForMessage()} already had an initial potency`,
 		);
 		this.#potency = p;
 	}
+	addHealingPotency(p: Potency) {
+		console.assert(
+			!this.#healingPotency,
+			`ActionNode for ${this.getNameForMessage()} already had an initial healing potency`,
+		);
+		this.#healingPotency = p;
+	}
 
 	addDoTPotency(p: Potency, r: ResourceKey) {
-		const pArr = this.#dotPotencies.get(r) ?? [];
+		this.addOverTimePotency(p, r, "damage");
+	}
+
+	addHoTPotency(p: Potency, r: ResourceKey) {
+		this.addOverTimePotency(p, r, "healing");
+	}
+	addOverTimePotency(p: Potency, r: ResourceKey, kind: PotencyKind) {
+		const potencyMap: Map<ResourceKey, Potency[]> =
+			kind === "damage" ? this.#dotPotencies : this.#hotPotencies;
+		const pArr = potencyMap.get(r) ?? [];
 		if (pArr.length === 0) {
-			this.#dotPotencies.set(r, pArr);
+			potencyMap.set(r, pArr);
 		}
 		pArr.push(p);
 	}
 
-	select() {
-		this.#selected = true;
-	}
-	unselect() {
-		this.#selected = false;
+	setOverTimeGap(effectName: ResourceKey, amount: number, kind: PotencyKind) {
+		this.setOverTimeMappedAmount(
+			effectName,
+			amount,
+			kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap,
+		);
 	}
 
-	setDotTimeGap(dotName: ResourceKey, amount: number) {
-		this.#dotTimeGap.set(dotName, amount);
+	getOverTimeGap(effectName: ResourceKey, kind: PotencyKind): number {
+		return this.getOverTimeMappedAmount(
+			effectName,
+			kind === "damage" ? this.#dotTimeGap : this.#hotTimeGap,
+		);
 	}
-	getDotTimeGap(dotName: ResourceKey): number {
-		return this.#dotTimeGap.get(dotName) ?? 0;
+
+	setOverTimeOverrideAmount(effectName: ResourceKey, amount: number, kind: PotencyKind) {
+		this.setOverTimeMappedAmount(
+			effectName,
+			amount,
+			kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount,
+		);
 	}
-	setDotOverrideAmount(dotName: ResourceKey, amount: number) {
-		this.#dotOverrideAmount.set(dotName, amount);
+
+	getOverTimeOverrideAmount(effectName: ResourceKey, kind: PotencyKind): number {
+		return this.getOverTimeMappedAmount(
+			effectName,
+			kind === "damage" ? this.#dotOverrideAmount : this.#hotOverrideAmount,
+		);
 	}
-	getDotOverrideAmount(dotName: ResourceKey): number {
-		return this.#dotOverrideAmount.get(dotName) ?? 0;
+
+	private setOverTimeMappedAmount(
+		effectName: ResourceKey,
+		amount: number,
+		map: Map<ResourceKey, number>,
+	) {
+		map.set(effectName, amount);
+	}
+	private getOverTimeMappedAmount(
+		effectName: ResourceKey,
+		map: Map<ResourceKey, number>,
+	): number {
+		return map.get(effectName) ?? 0;
 	}
 }
 
-// Record but without config/stats and selection info, just a sequence of skills
+// A Line is a collection of ActionNodes.
 export class Line {
-	static _gLineIndex: number = 0;
-	_lineIndex: number;
-
-	head?: ActionNode;
-	tail?: ActionNode;
+	actions: ActionNode[];
 	name: string = "(anonymous line)";
 
 	constructor() {
-		this._lineIndex = Line._gLineIndex;
-		Line._gLineIndex++;
+		this.actions = [];
 	}
+
+	get length(): number {
+		return this.actions.length;
+	}
+
+	get head(): ActionNode | undefined {
+		return this.length > 0 ? this.actions[0] : undefined;
+	}
+
+	get tail(): ActionNode | undefined {
+		return this.length > 0 ? this.actions[this.actions.length - 1] : undefined;
+	}
+
+	get tailIndex(): number {
+		return this.length - 1;
+	}
+
 	addActionNode(actionNode: ActionNode) {
 		console.assert(actionNode);
-		if (!this.head) {
-			this.head = actionNode;
-		} else if (this.tail) {
-			this.tail.next = actionNode;
-		} else {
-			console.assert(false);
-		}
-		this.tail = actionNode;
+		this.actions.push(actionNode);
 	}
-	iterateAll(fn: (node: ActionNode) => void): void {
-		let itr: ActionNode | undefined = this.head;
-		while (itr) {
-			fn(itr);
-			itr = itr.next;
-		}
+
+	iterateAll(fn: (node: ActionNode) => void) {
+		this.actions.forEach((node) => fn(node));
 	}
-	getFirstAction() {
-		return this.head;
-	}
-	getLastAction(condition?: (node: ActionNode) => boolean) {
-		if (condition === undefined) {
-			return this.tail;
-		} else {
-			let lastMatch: ActionNode | undefined = undefined;
-			this.iterateAll((node) => {
-				if (condition(node)) {
-					lastMatch = node;
-				}
-			});
-			return lastMatch;
-		}
-	}
+
 	serialized(): { name: string; actions: object[] } {
-		let list = [];
-		let itr = this.head;
-		while (itr) {
-			list.push({
-				type: itr.type,
-				// skill
-				skillName: itr.skillName ? ACTIONS[itr.skillName as ActionKey].name : undefined,
-				// setResourceEnabled
-				buffName: itr.buffName,
-				// any
-				waitDuration: itr.waitDuration,
-				targetCount: itr.targetCount,
-			});
-			itr = itr.next;
-		}
 		return {
 			name: this.name,
-			actions: list,
+			actions: this.actions.map((node) => node.serialized()),
 		};
 	}
+
 	// format: []
 	exportCsv(): any[][] {
 		// todo
 		let result: any[][] = [];
 		return result;
+	}
+
+	static deserialize(serialized: SerializedLine): Line {
+		const actions = serialized.map((serializedAction) => {
+			// TODO handle additional wait types
+			// TODO ensure objects are well-formed and insert invalid nodes if not
+			if (serializedAction.type === ActionType.Skill) {
+				const skillName = getNormalizedSkillName(serializedAction.skillName)!;
+				const legacyWaitDuration =
+					"waitDuration" in serializedAction
+						? serializedAction["waitDuration"]
+						: undefined;
+				return new ActionNode(
+					{
+						type: ActionType.Skill,
+						skillName,
+						targetCount: serializedAction.targetCount,
+						healTargetCount: serializedAction.healTargetCount,
+					},
+					legacyWaitDuration,
+				);
+			} else if (serializedAction.type === ActionType.SetResourceEnabled) {
+				const legacyWaitDuration =
+					"waitDuration" in serializedAction
+						? serializedAction["waitDuration"]
+						: undefined;
+				return new ActionNode(
+					{
+						type: ActionType.SetResourceEnabled,
+						buffName: getResourceKeyFromBuffName(serializedAction.buffName)!,
+					},
+					legacyWaitDuration,
+				);
+			} else if ([ActionType.Wait].includes(serializedAction.type)) {
+				return new ActionNode(serializedAction);
+			} else {
+				window.alert("unparseable action: " + serializedAction.toString());
+				return new ActionNode({ type: ActionType.Invalid });
+			}
+		});
+		const line = new Line();
+		line.actions = actions;
+		return line;
 	}
 }
 
@@ -309,207 +557,164 @@ export type RecordValidStatus = {
 
 // information abt a timeline
 export class Record extends Line {
-	selectionStart?: ActionNode;
-	selectionEnd?: ActionNode;
+	selectionStartIndex?: number;
+	selectionEndIndex?: number; // inclusive
 	// Users can shift-click to re-adjust the currently selected bounds. When startIsPivot is true,
 	// selectionStart is kept as one of the new bounds; if startIsPivot is false, selectionEnd is
 	// kept instead.
 	startIsPivot: boolean = true;
 	config?: GameConfig;
-	getFirstSelection() {
+
+	get selectionStart(): ActionNode | undefined {
+		return this.selectionStartIndex !== undefined
+			? this.actions[this.selectionStartIndex]
+			: undefined;
+	}
+
+	get selectionEnd(): ActionNode | undefined {
+		return this.selectionEndIndex !== undefined
+			? this.actions[this.selectionEndIndex]
+			: undefined;
+	}
+
+	getFirstSelection(): ActionNode | undefined {
 		if (this.selectionStart) console.assert(this.selectionEnd !== undefined);
 		return this.selectionStart;
 	}
-	getLastSelection() {
+
+	getLastSelection(): ActionNode | undefined {
 		if (this.selectionEnd) console.assert(this.selectionStart !== undefined);
 		return this.selectionEnd;
 	}
-	addActionNode(actionNode: ActionNode) {
-		verifyActionNode(actionNode);
-		super.addActionNode(actionNode);
-	}
-	addActionNodeWithoutVerify(actionNode: ActionNode) {
-		super.addActionNode(actionNode);
+
+	isInSelection(index: number): boolean {
+		return (
+			this.selectionStartIndex !== undefined &&
+			this.selectionEndIndex !== undefined &&
+			index >= this.selectionStartIndex &&
+			index <= this.selectionEndIndex
+		);
 	}
 
-	iterateSelected(fn: (node: ActionNode) => void): void {
-		let itr: ActionNode | undefined = this.selectionStart;
-		while (itr && itr !== (this.selectionEnd?.next ?? undefined)) {
-			fn(itr);
-			itr = itr.next;
+	iterateSelected(fn: (node: ActionNode) => void) {
+		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined) {
+			return;
 		}
+		for (let i = this.selectionStartIndex; i <= this.selectionEndIndex; i++) {
+			fn(this.actions[i]);
+		}
+	}
+
+	getSelected(): Line {
+		const line = new Line();
+		if (this.selectionStartIndex !== undefined && this.selectionEndIndex !== undefined) {
+			line.actions = this.actions.slice(this.selectionStartIndex, this.selectionEndIndex + 1);
+		}
+		return line;
 	}
 
 	getSelectionLength(): number {
-		let acc = 0;
-		this.iterateSelected((_) => acc++);
-		return acc;
+		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined) {
+			return 0;
+		}
+		const endIndex = this.selectionEndIndex;
+		return endIndex - this.selectionStartIndex + 1;
 	}
 
-	selectSingle(node: ActionNode) {
+	selectSingle(index: number) {
 		this.unselectAll();
-		node.select();
-		this.selectionStart = node;
-		this.selectionEnd = node;
+		this.selectionStartIndex = index;
+		this.selectionEndIndex = index;
 		this.startIsPivot = true;
 	}
 	unselectAll() {
-		this.iterateAll((itr) => {
-			itr.unselect();
-		});
-		this.selectionStart = undefined;
-		this.selectionEnd = undefined;
+		this.selectionStartIndex = undefined;
+		this.selectionEndIndex = undefined;
 		this.startIsPivot = true;
 	}
-	#selectSequence(first: ActionNode, last: ActionNode) {
+	#selectSequence(firstIndex: number, lastIndex: number) {
 		this.unselectAll();
-		this.selectionStart = first;
-		this.selectionEnd = last;
-		this.iterateSelected((itr) => {
-			itr.select();
-		});
+		this.selectionStartIndex = firstIndex;
+		this.selectionEndIndex = lastIndex;
 	}
-	selectUntil(node: ActionNode) {
-		if (this.selectionStart && this.selectionStart === this.selectionEnd) {
+	selectUntil(newIndex: number) {
+		if (
+			this.selectionStartIndex !== undefined &&
+			this.selectionStartIndex === this.selectionEndIndex
+		) {
 			// If there is only one node selected: extend the selection window between the current
 			// skill and the newly-selected one
-			// First, check if selectionStart comes before node
-			let itr: ActionNode | undefined;
-			for (itr = this.selectionStart; itr; itr = itr.next) {
-				if (itr === node) {
-					this.#selectSequence(this.selectionStart, node);
-					this.startIsPivot = true;
-					return;
-				}
+			if (this.selectionStartIndex <= newIndex) {
+				this.#selectSequence(this.selectionStartIndex, newIndex);
+				this.startIsPivot = true;
+			} else {
+				this.#selectSequence(newIndex, this.selectionStartIndex);
+				this.startIsPivot = false;
 			}
-			// We didn't find the node forwards, so check that node is ahead of selectionStart
-			for (itr = node; itr; itr = itr.next) {
-				if (itr === this.selectionStart) {
-					this.#selectSequence(node, this.selectionStart);
-					this.startIsPivot = false;
-					return;
-				}
-			}
-			// failed both ways (shouldn't get here)
-			console.assert(false);
-		} else if (this.selectionStart && this.selectionStart !== this.selectionEnd) {
+		} else if (
+			this.selectionStartIndex !== undefined &&
+			this.selectionStartIndex !== this.selectionEndIndex
+		) {
 			// If a multi-selection is already made, adjust its boundaries around the "pivot" node.
 			// This is the same behavior as if we had only selected the single "pivot" node, and
 			// then attempted a multi-select with the new node as a target.
-			const pivot = this.startIsPivot ? this.selectionStart : this.selectionEnd;
-			this.selectionStart = pivot;
-			this.selectionEnd = pivot;
-			this.selectUntil(node);
+			const pivot = this.startIsPivot ? this.selectionStartIndex : this.selectionEndIndex;
+			this.selectionStartIndex = pivot;
+			this.selectionEndIndex = pivot;
+			this.selectUntil(newIndex);
 		}
-		// do nothin if no node is selected
+		// do nothing if no node is selected
 	}
-	onClickNode(node: ActionNode, bShift: boolean) {
+	onClickNode(index: number, bShift: boolean) {
 		if (bShift) {
-			this.selectUntil(node);
+			this.selectUntil(index);
 		} else {
 			// if this is already the only selected node, unselect it
-			if (this.selectionStart === node && this.selectionEnd === node) {
+			if (this.selectionStartIndex === index && this.selectionEndIndex === index) {
 				this.unselectAll();
 			} else {
-				this.selectSingle(node);
+				this.selectSingle(index);
 			}
 		}
 	}
-	moveSelected(offset: number) {
+	// Re-arrange the selected skills, moving the current selection by `offset`.
+	// Return the index of the first newly-edited skill. The controller uses this to determine
+	// which skills have been edited and need to be re-validated.
+	moveSelected(offset: number): number | undefined {
 		// positive: move right; negative: move left
-		if (offset === 0) return undefined;
-		let firstSelected = this.getFirstSelection();
-		let lastSelected = this.getLastSelection();
-		if (!firstSelected || !lastSelected) return undefined;
-
-		let oldNodeBeforeSelection: ActionNode | undefined = undefined;
-		let itr = this.getFirstAction();
-		while (itr) {
-			if (itr.next === firstSelected) oldNodeBeforeSelection = itr;
-			itr = itr.next;
+		if (
+			offset === 0 ||
+			this.selectionStartIndex === undefined ||
+			this.selectionEndIndex === undefined
+		) {
+			return undefined;
 		}
-
-		// stitch together before and after chains
-		if (oldNodeBeforeSelection) {
-			oldNodeBeforeSelection.next = lastSelected.next;
-		}
-		// also update head & tail to without selection
-		if (this.head?.isSelected()) {
-			this.head = lastSelected.next;
-		}
-		if (this.tail?.isSelected()) {
-			this.tail = oldNodeBeforeSelection;
-		}
-
-		// temporarily label the unselected nodes with an index
-		let nodesArray: ActionNode[] = [];
-		let nodeBeforeSelectionIdx = -1;
-
-		let idx = 0;
-		itr = this.getFirstAction();
-		while (itr) {
-			nodesArray.push(itr);
-			if (itr === oldNodeBeforeSelection) {
-				nodeBeforeSelectionIdx = idx;
-			}
-			itr = itr.next;
-			idx++;
-		}
-
-		// insert back the selection chain
-		let newIndexBeforeSelection = nodeBeforeSelectionIdx + offset;
-		if (newIndexBeforeSelection >= nodesArray.length)
-			newIndexBeforeSelection = nodesArray.length - 1;
-
-		let newNodeBeforeSelection =
-			newIndexBeforeSelection < 0 ? undefined : nodesArray[newIndexBeforeSelection];
-		if (newNodeBeforeSelection) {
-			let newNodeAfterSelection = newNodeBeforeSelection.next;
-			newNodeBeforeSelection.next = firstSelected;
-			lastSelected.next = newNodeAfterSelection;
-			if (!newNodeAfterSelection) this.tail = lastSelected;
-		} else {
-			lastSelected.next = this.head;
-			this.head = firstSelected;
-		}
-		let firstEditedNode;
-		if (offset < 0) firstEditedNode = this.getFirstSelection();
-		else {
-			if (nodeBeforeSelectionIdx >= 0)
-				firstEditedNode = nodesArray[nodeBeforeSelectionIdx].next;
-			else firstEditedNode = this.head;
-		}
-		return firstEditedNode;
+		const originalStartIndex = this.selectionStartIndex;
+		// splice the selected portion, then re-insert it at originalStartIndex + offset
+		// line: a b c d e f
+		// example: original selection [1, 3] with offset +1 becomes
+		// - a e f after splice
+		// - a e b c d f
+		// the new selection should now be [2, 4]
+		// if offset would cause an overflow in either direction, clamp it to 0 or length
+		const selectionLength = this.getSelectionLength();
+		const selected = this.actions.splice(originalStartIndex, selectionLength);
+		let insertIndex = originalStartIndex + offset;
+		insertIndex = Math.max(insertIndex, 0);
+		insertIndex = Math.min(insertIndex, this.length);
+		this.actions.splice(insertIndex, 0, ...selected);
+		this.selectionStartIndex = insertIndex;
+		this.selectionEndIndex = insertIndex + selectionLength - 1; // subtract 1 because the range is inclusive
+		return insertIndex;
 	}
-	deleteSelected() {
-		let firstSelected = this.getFirstSelection();
-		let lastSelected = this.getLastSelection();
-		if (!firstSelected) return undefined;
+	deleteSelected(): number | undefined {
+		if (this.selectionStartIndex === undefined || this.selectionEndIndex === undefined) {
+			return undefined;
+		}
+		const originalStartIndex = this.selectionStartIndex;
+		this.actions.splice(originalStartIndex, this.getSelectionLength());
 		this.unselectAll();
-
-		let firstBeforeSelected: ActionNode | undefined = undefined;
-		let itr = this.getFirstAction();
-		while (itr) {
-			if (itr.next === firstSelected) {
-				firstBeforeSelected = itr;
-				break;
-			}
-			itr = itr.next;
-		}
-
-		if (firstSelected === this.head) {
-			this.head = lastSelected?.next;
-		}
-		if (lastSelected === this.tail) {
-			this.tail = firstBeforeSelected;
-		}
-		if (firstBeforeSelected) {
-			firstBeforeSelected.next = lastSelected?.next;
-		}
-		if (firstBeforeSelected) {
-			return firstBeforeSelected === this.tail ? this.tail : firstBeforeSelected.next;
-		}
-		return this.head;
+		return originalStartIndex;
 	}
 	serialized() {
 		console.assert(this.config);
@@ -522,23 +727,27 @@ export class Record extends Line {
 		};
 	}
 
+	// delete all actions after index, maintaining the existing selection
+	spliceUpTo(index: number) {
+		const originalStartIndex = this.selectionStartIndex;
+		const originalEndIndex = this.selectionEndIndex;
+		this.unselectAll();
+		if (index < this.length) {
+			this.actions.splice(index, this.length - index);
+		}
+		if (originalStartIndex !== undefined) {
+			this.selectSingle(originalStartIndex);
+			this.selectUntil(originalEndIndex!);
+		}
+	}
+
 	// result is potentially invalid
 	getCloneWithSharedConfig() {
 		let copy = new Record();
 		copy.config = this.config;
-		let itr = this.head;
-		while (itr) {
-			let node = itr.getClone();
-			if (itr.isSelected()) node.select();
-			if (itr === this.selectionStart) {
-				copy.selectionStart = node;
-			}
-			if (itr === this.selectionEnd) {
-				copy.selectionEnd = node;
-			}
-			copy.addActionNodeWithoutVerify(node);
-			itr = itr.next;
-		}
+		copy.actions = this.actions.map((node) => node.getClone());
+		copy.selectionStartIndex = this.selectionStartIndex;
+		copy.selectionEndIndex = this.selectionEndIndex;
 		return copy;
 	}
 }

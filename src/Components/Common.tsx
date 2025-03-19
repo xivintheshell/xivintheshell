@@ -49,12 +49,14 @@ export const TimelineDimensions = {
 
 export type TimelineDrawOptions = {
 	drawDamageMarks: boolean;
+	drawHealingMarks: boolean;
 	drawMPTickMarks: boolean;
 	drawBuffIndicators: boolean;
 };
 export const DEFAULT_TIMELINE_OPTIONS = {
 	drawMarkers: true,
 	drawDamageMarks: true,
+	drawHealingMarks: true,
 	drawMPTickMarks: true,
 	drawBuffIndicators: true,
 };

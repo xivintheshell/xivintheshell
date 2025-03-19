@@ -98,7 +98,7 @@ const getAcknowledgements = () => <>
 				SAM: <b>Sterling</b>, <b>shanzhe</b>
 			</li>
 			<li>
-				DNC, MCH, BRD: <b>Akairyu</b>
+				DNC, MCH, BRD, SGE: <b>Akairyu</b>
 			</li>
 			<li>
 				RPR: <b>Honey B. Lovely's Favorite Bee</b>
@@ -114,7 +114,7 @@ const getAcknowledgements = () => <>
 			</li>
 			<li>
 				Chinese localization: <b>miyehn</b>, <b>Eshiya</b>, <b>Yuyuka</b>, <b>shanzhe</b>,{" "}
-				<b>小盐</b>, <b>卿落青</b>, <b>久逺</b>
+				<b>小盐</b>, <b>卿落青</b>, <b>久逺</b>, <b>大猫</b>
 			</li>
 		</ul>,
 		zh: <ul>
@@ -131,7 +131,7 @@ const getAcknowledgements = () => <>
 				武士：<b>Sterling</b>、<b>shanzhe</b>
 			</li>
 			<li>
-				舞者、机工、吟游诗人：<b>Akairyu</b>
+				舞者、机工、吟游诗人、贤者：<b>Akairyu</b>
 			</li>
 			<li>
 				钐镰客：<b>Honey B. Lovely's Favorite Bee</b>
@@ -219,8 +219,8 @@ export function IntroSection(props: { job: ShellJob }) {
 								<ButtonIndicator text={"apply and reset"} />
 							</li>
 							<li style={smallGap}>
-								Click on a skill to use it. If it's not ready yet, click on it again
-								will wait and retry.
+								Click on a skill to use it. The simulation will always jump to when
+								the animation lock ends and the skill's cooldown becomes available.
 							</li>
 							<li style={smallGap}>
 								Press <ButtonIndicator text={"u"} /> to delete the last added action
@@ -237,7 +237,7 @@ export function IntroSection(props: { job: ShellJob }) {
 								<ButtonIndicator text={"应用并重置时间轴"} />
 							</li>
 							<li style={smallGap}>
-								单击使用技能，如果CD还没转好，可以再次点击，会自动等到转好然后重试。
+								单击使用技能，如果CD还没转好，会自动等到转好然后重试。
 							</li>
 							<li style={smallGap}>
 								按 <ButtonIndicator text={"u"} />{" "}
@@ -253,6 +253,7 @@ export function IntroSection(props: { job: ShellJob }) {
 								<ButtonIndicator text={"適用とリセット"} />
 								をクリックしてください。
 							</li>
+							{/* TODO: outdated */}
 							<li style={smallGap}>
 								実行したいアクションをクリックしてください。リキャストが戻ってきていないアクションをクリックすると使用可能な時間まで待って再実行します。
 							</li>

@@ -27,6 +27,7 @@ export const enum TickMode {
 export const enum ShellVersion {
 	Initial = 0,
 	FpsTax = 1, // extra FPS field added to GameConfig
+	AllaganGcdFormula = 2, // files >= this version uses Allagan's gcd formula which behaves correctly with haste buff
 }
 
 export const enum Expansion {
@@ -35,7 +36,7 @@ export const enum Expansion {
 }
 
 export const ShellInfo = {
-	version: ShellVersion.FpsTax,
+	version: ShellVersion.AllaganGcdFormula,
 	// thisExpansion is not exported so it stays local outside
 };
 
