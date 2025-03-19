@@ -369,6 +369,14 @@ export class GameState {
 	// Job code may override to handle cancelling any of their channeled skills
 	cancelChanneledSkills() {}
 
+	// Job code may override to handle what happens on an auto attack
+	onAutoAttack() {}
+
+	onAuto() {
+		// TODO: HANDLE AUTO ATTACK POTENCY
+		this.onAutoAttack();
+	}
+
 	getStatusDuration(rscType: ResourceKey): number {
 		return (getResourceInfo(this.job, rscType) as ResourceInfo).maxTimeout;
 	}
@@ -558,21 +566,26 @@ export class GameState {
 	 * add recurring auto attack event with an initial delay
 	 */
 	addRecurringAutoAttackEvent(initialDelay: number, recurringDelay: number) {
-		const autoAttackEvent = (recurringDelay: number) => {
-			// console.log("Start Auto Attack Event At: " + this.time);
+		const autoAttackEvent = (initialDelay: number, recurringDelay: number) => {
+			console.log(
+				"Start Auto Attack Event At: " +
+					(this.time - 5).toFixed(3) +
+					" init: " +
+					initialDelay +
+					" recur: " +
+					recurringDelay,
+			);
 			const event = new Event("aa tick", initialDelay, () => {
 				if (this.resources.get("AUTOS_ENGAGED").available(1) && this.isInCombat()) {
-					// placeholder for onAuto Lambda
-					if (this.job === "PLD") {
-						this.resources.get("OATH_GAUGE").gain(5);
-					}
+					// do an auto
+					this.onAuto();
 				}
-				this.addEvent(autoAttackEvent(recurringDelay));
+				this.addEvent(autoAttackEvent(recurringDelay, recurringDelay));
 			});
 			event.addTag(EventTag.MeditateTick);
 			return event;
 		};
-		this.addEvent(autoAttackEvent(recurringDelay));
+		this.addEvent(autoAttackEvent(initialDelay, recurringDelay));
 	}
 
 	/**
@@ -593,17 +606,15 @@ export class GameState {
 	 * Function to start auto attacks
 	 * removes old auto attack timer
 	 * starts a new recurring auto attack timer
-	 * timer for auto recurringDelay(defaults 3) + initial delay
+	 * timer for auto initial + recurringDelay(defaults 3)
 	 */
 	startAutoAttackTimer(initialDelay?: number, reccuringDelay?: number) {
 		// remove previous auto attack timer if ticking
 		if (this.findAutoAttackTimerInQueue() !== -1) {
 			this.removeAutoAttackTimer();
 		} else if (this.resources.get("STORED_AUTO").available(1)) {
-			// AUTO ATTACK call onAuto lambda
-			if (this.job === "PLD") {
-				this.resources.get("OATH_GAUGE").gain(5);
-			}
+			// do an auto attack
+			this.onAuto();
 		}
 		this.tryConsumeResource("STORED_AUTO");
 
@@ -616,9 +627,14 @@ export class GameState {
 		const defaultAutoDelay = 3;
 		const autoDelay = reccuringDelay ? reccuringDelay : defaultAutoDelay;
 
+		let initDelay = 0;
+		if (initialDelay === -1) {
+			initDelay = autoDelay;
+		} else {
+			initDelay = initialDelay ?? autoDelay;
+		}
 		// start reccuring event with a delay
-		console.log("Started Autos with init: " + initialDelay + " recurr: " + autoDelay);
-		this.addRecurringAutoAttackEvent(initialDelay ?? autoDelay, autoDelay);
+		this.addRecurringAutoAttackEvent(initDelay, autoDelay);
 	}
 
 	// removes current auto attack timer
@@ -681,8 +697,13 @@ export class GameState {
 		const hasCast = capturedCastTime !== 0;
 		const autosEngaged = this.resources.get("AUTOS_ENGAGED").available(1);
 		const recurringAutoDelay = 3;
-		const startsAutos = false; // <<--- placeholder for spells starting autos (eg. RDM)
-		console.log("Using: " + skill.name + " cast: " + capturedCastTime);
+		const currentDelay = this.findAutoAttackTimerInQueue();
+		const startsAutos = skill.startsAuto; // <<--- placeholder for spells starting autos (eg. RDM)
+		/*
+		console.log(
+			"Using: " + skill.name + " cast: " + capturedCastTime + " starts auto: " + startsAutos,
+		);
+		*/
 
 		// See if the initial potency was already created
 		let potency: Potency | undefined = node.getInitialPotency();
@@ -700,35 +721,53 @@ export class GameState {
 			*/
 
 			if (this.isInCombat()) {
+				// AUTOS IN COMBAT
+
 				// has a cast time AND autos are already ticking
 				if (hasCast && autosEngaged) {
 					// delay autos
-					const currentDelay = this.findAutoAttackTimerInQueue();
 					const aaDelay =
 						capturedCastTime +
 						(currentDelay === -1 ? recurringAutoDelay : currentDelay);
 					this.startAutoAttackTimer(aaDelay);
 				}
-				// has no cast time AND autos not ticking
+				// has no cast time AND autos not ticking: CHECK startsAutos
 				else if (!hasCast && !autosEngaged) {
-					// start autos
-					this.startAutoAttackTimer();
+					// start autos with current delay
+					if (startsAutos) {
+						this.startAutoAttackTimer(currentDelay);
+					} else {
+						// do nothing!
+					}
 				}
-				// has cast time AND autos not ticking: CHECK skill.kind
+				// has cast time AND autos not ticking: CHECK startsAutos
 				else if (hasCast && !autosEngaged) {
-					if (skill.kind === "weaponskill" || startsAutos) {
-						// weaponskill always starts autos
-						const currentDelay = this.findAutoAttackTimerInQueue();
+					if (startsAutos) {
 						const aaDelay =
 							capturedCastTime +
 							(currentDelay === -1 ? recurringAutoDelay : currentDelay);
 						this.startAutoAttackTimer(aaDelay);
+					} else {
+						// SINGLE AUTO ATTACK INSTANCE, OVERWRITE STORED AUTO
+						if (currentDelay > 0) {
+							this.removeAutoAttackTimer();
+							const event = new Event(
+								"aa tick",
+								currentDelay + capturedCastTime,
+								() => {
+									if (this.resources.get("STORED_AUTO").available(0)) {
+										this.resources.get("STORED_AUTO").gain(1);
+									}
+								},
+							);
+							this.addEvent(event);
+						}
 					}
 				}
 			} else {
-				if (skill.kind === "weaponskill" || startsAutos) {
-					// weaponskill cast or no cast always starts autos
-					const currentDelay = this.findAutoAttackTimerInQueue();
+				// AUTOS OUT OF COMBAT
+
+				if (startsAutos) {
 					const aaDelay =
 						capturedCastTime +
 						(currentDelay === -1 ? recurringAutoDelay : currentDelay);
@@ -749,12 +788,27 @@ export class GameState {
 			});
 			node.addPotency(potency);
 		} else {
-			// no potency cast auto attack delay
-			if (hasCast && autosEngaged) {
-				const currentDelay = this.findAutoAttackTimerInQueue();
-				const aaDelay =
-					capturedCastTime + (currentDelay === -1 ? recurringAutoDelay : currentDelay);
-				this.startAutoAttackTimer(aaDelay);
+			// NO POTENCY AUTO ATTACK DELAY
+			if (this.isInCombat()) {
+				if (hasCast && autosEngaged) {
+					// autos engaged
+					const currentDelay = this.findAutoAttackTimerInQueue();
+					const aaDelay =
+						capturedCastTime +
+						(currentDelay === -1 ? recurringAutoDelay : currentDelay);
+					this.startAutoAttackTimer(aaDelay);
+				} else if (hasCast && !autosEngaged) {
+					// OVERWRITE STORED AUTO, and let timer fizzle out
+					if (currentDelay > 0) {
+						this.removeAutoAttackTimer();
+						const event = new Event("aa tick", currentDelay + capturedCastTime, () => {
+							if (this.resources.get("STORED_AUTO").available(0)) {
+								this.resources.get("STORED_AUTO").gain(1);
+							}
+						});
+						this.addEvent(event);
+					}
+				}
 			}
 		}
 

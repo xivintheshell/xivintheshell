@@ -151,6 +151,10 @@ interface BaseSkill<T extends PlayerState> {
 
 	// The simulation delay, in seconds, between which `onConfirm` and `onApplication` are called.
 	readonly applicationDelay: number;
+
+	// Skill starts autos if true. Weaponskills defaulted to true. Spells defaulted to false.
+	// Set this if you want to overrite the default.
+	readonly startsAuto?: boolean;
 }
 
 export type GCD<T extends PlayerState> = BaseSkill<T> & {
@@ -343,6 +347,7 @@ export function makeSpell<T extends PlayerState>(
 		jobPotencyModifiers: PotencyModifierFn<T>;
 		drawsAggro: boolean;
 		falloff: number;
+		startsAuto: boolean;
 		applicationDelay: number;
 		validateAttempt: StatePredicate<T>;
 		isInstantFn: StatePredicate<T>;
@@ -386,6 +391,7 @@ export function makeSpell<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
+		startsAuto: params.startsAuto ?? false,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
 		onExecute,
@@ -421,6 +427,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		jobPotencyModifiers: PotencyModifierFn<T>;
 		drawsAggro: boolean;
 		falloff: number;
+		startsAuto: boolean;
 		applicationDelay: number;
 		validateAttempt: StatePredicate<T>;
 		isInstantFn: StatePredicate<T>;
@@ -464,6 +471,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
+		startsAuto: params.startsAuto ?? true,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
 		onExecute,
@@ -515,6 +523,7 @@ export function makeAbility<T extends PlayerState>(
 		jobPotencyModifiers: PotencyModifierFn<T>;
 		drawsAggro: boolean;
 		falloff: number;
+		startsAuto: boolean;
 		applicationDelay: number;
 		animationLock: number | ResourceCalculationFn<T>;
 		validateAttempt: StatePredicate<T>;
@@ -564,6 +573,7 @@ export function makeAbility<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
+		startsAuto: params.startsAuto ?? true,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt,
 		onExecute,

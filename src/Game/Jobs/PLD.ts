@@ -185,6 +185,23 @@ export class PLDState extends GameState {
 		this.tryConsumeResource("PASSAGE_OF_ARMS");
 	}
 
+	override onAutoAttack(): void {
+		console.log("auto at: " + (this.time - 5).toFixed(3));
+		controller.reportMeditateTick(this.time, "auto");
+		this.resources.get("OATH_GAUGE").gain(5);
+	}
+
+	captureSpellCastTime(name: ActionKey, baseCastTime: number): number {
+		if (
+			name !== "CLEMENCY" &&
+			(this.hasResourceAvailable("DIVINE_MIGHT") || this.hasResourceAvailable("REQUIESCAT"))
+		) {
+			return 0;
+		} else {
+			return this.config.adjustedCastTime(baseCastTime);
+		}
+	}
+
 	// consume requiescat if applicable
 	tryConsumeRequiescat(spellName: PLDActionKey) {
 		if (PLD_DIVINE_MIGHT_SPELLS.includes(spellName) || PLD_CONFITEOR_COMBO_MAP.has(spellName)) {
@@ -366,6 +383,7 @@ const makeSpell_PLD = (
 		onConfirm?: EffectFn<PLDState>;
 		onApplication?: EffectFn<PLDState>;
 		onExecute?: EffectFn<PLDState>;
+		startsAuto?: boolean;
 	},
 ): Spell<PLDState> => {
 	const baseCastTime = params.baseCastTime ?? 0;
@@ -389,7 +407,7 @@ const makeSpell_PLD = (
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
 		highlightIf: params.highlightIf,
-		castTime: (state) => state.config.adjustedCastTime(baseCastTime),
+		castTime: (state) => state.captureSpellCastTime(name, params.baseCastTime),
 		recastTime: (state) => state.config.adjustedGCD(),
 		manaCost: params.baseManaCost ?? 0,
 		potency: params.basePotency,
@@ -434,6 +452,7 @@ const makeSpell_PLD = (
 		onConfirm: onConfirm,
 		onApplication: onApplication,
 		onExecute: onExecute,
+		startsAuto: params.startsAuto,
 	});
 };
 
@@ -705,6 +724,7 @@ makeSpell_PLD("HOLY_SPIRIT", 64, {
 	baseCastTime: 1.5,
 	applicationDelay: 0.76,
 	baseManaCost: 1000,
+	startsAuto: true,
 	basePotency: [
 		["NEVER", 300],
 		["MELEE_MASTERY_TANK", 350],
