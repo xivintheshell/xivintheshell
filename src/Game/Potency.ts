@@ -4,7 +4,6 @@ import { Aspect, BuffType } from "./Common";
 import { GameConfig } from "./GameConfig";
 import { ActionKey } from "./Data";
 
-
 export const enum PotencyModifierType {
 	AF3,
 	AF2,
@@ -78,7 +77,7 @@ export const enum PotencyModifierType {
 	KRASIS,
 	AUTOPHYSIS,
 	PHILOSOPHIA,
-};
+}
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
 export type PotencyMultiplier = {
@@ -359,7 +358,8 @@ export const Modifiers = {
 	FightOrFlight: {
 		kind: "multiplier",
 		source: PotencyModifierType.FIGHT_OR_FLIGHT,
-		damageFactor: 1.25,
+		potencyFactor: 1.25,
+	} as PotencyMultiplier,
 	Zoe: {
 		kind: "multiplier",
 		source: PotencyModifierType.ZOE,

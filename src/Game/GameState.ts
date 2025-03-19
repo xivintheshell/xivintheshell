@@ -791,8 +791,8 @@ export class GameState {
 		const recurringAutoDelay = 3;
 		const currentDelay = this.findAutoAttackTimerInQueue();
 		const startsAutos = skill.startsAuto; // <<--- placeholder for spells starting autos (eg. RDM)
-		/*
-		console.log(
+
+		/* console.log(
 			"Using: " + skill.name + " cast: " + capturedCastTime + " starts auto: " + startsAutos,
 		);
 		*/
@@ -803,6 +803,70 @@ export class GameState {
 		// If the skill draws aggro without dealing damage (such as Summon Bahamut), then
 		// create a potency object so a damage mark can be drawn if we're not already in combat.
 		if (!potency && (potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()))) {
+			// TODO Add Auto Attacks based on spell/weaponskill
+			// capturedCastTime = cast time
+
+			/*
+			const currentDelay = state.findAutoAttackTimerInQueue();
+			const aaDelay = baseCastTime + (currentDelay === -1 ? 3 : currentDelay);
+			state.startAutoAttackTimer(aaDelay);
+			*/
+
+			if (this.isInCombat()) {
+				// AUTOS IN COMBAT
+
+				// has a cast time AND autos are already ticking
+				if (hasCast && autosEngaged) {
+					// delay autos
+					const aaDelay =
+						capturedCastTime +
+						(currentDelay === -1 ? recurringAutoDelay : currentDelay);
+					this.startAutoAttackTimer(aaDelay);
+				}
+				// has no cast time AND autos not ticking: CHECK startsAutos
+				else if (!hasCast && !autosEngaged) {
+					// start autos with current delay
+					if (startsAutos) {
+						this.startAutoAttackTimer(currentDelay);
+					} else {
+						// do nothing!
+					}
+				}
+				// has cast time AND autos not ticking: CHECK startsAutos
+				else if (hasCast && !autosEngaged) {
+					if (startsAutos) {
+						const aaDelay =
+							capturedCastTime +
+							(currentDelay === -1 ? recurringAutoDelay : currentDelay);
+						this.startAutoAttackTimer(aaDelay);
+					} else {
+						// SINGLE AUTO ATTACK INSTANCE, OVERWRITE STORED AUTO
+						if (currentDelay > 0) {
+							this.removeAutoAttackTimer();
+							const event = new Event(
+								"aa tick",
+								currentDelay + capturedCastTime,
+								() => {
+									if (this.resources.get("STORED_AUTO").available(0)) {
+										this.resources.get("STORED_AUTO").gain(1);
+									}
+								},
+							);
+							this.addEvent(event);
+						}
+					}
+				}
+			} else {
+				// AUTOS OUT OF COMBAT
+
+				if (startsAutos) {
+					const aaDelay =
+						capturedCastTime +
+						(currentDelay === -1 ? recurringAutoDelay : currentDelay);
+					this.startAutoAttackTimer(aaDelay);
+				}
+			}
+
 			potency = new Potency({
 				config: this.config,
 				sourceTime: this.getDisplayTime(),

@@ -159,9 +159,9 @@ interface BaseSkill<T extends PlayerState> {
 	// The simulation delay, in seconds, between which `onConfirm` and `onApplication` are called.
 	readonly applicationDelay: number;
 
-	// Skill starts autos if true. Weaponskills defaulted to true. Spells defaulted to false.
-	// Set this if you want to overrite the default.
-	readonly startsAuto?: boolean;
+	// Skill starts auto if true. Weaponskills defaulted to true, Spells defaulted to false.
+	// Set this if you want to overwrite the default.
+	readonly startsAuto: boolean;
 }
 
 export type GCD<T extends PlayerState> = BaseSkill<T> & {
@@ -340,6 +340,7 @@ export interface MakeSkillParams<T extends PlayerState> {
 	onConfirm: EffectFn<T>;
 	onApplication: EffectFn<T>;
 	secondaryCooldown?: CooldownGroupProperties;
+	startsAuto: boolean;
 }
 
 // Parameters for a spell or weaponskill
@@ -372,30 +373,7 @@ export function makeSpell<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
 	name: ActionKey,
 	unlockLevel: number,
-	params: Partial<{
-		assetPath: string;
-		autoUpgrade: SkillAutoReplace;
-		autoDowngrade: SkillAutoReplace;
-		aspect: Aspect;
-		replaceIf: ConditionalSkillReplace<T>[];
-		startOnHotbar: boolean;
-		highlightIf: StatePredicate<T>;
-		castTime: number | ResourceCalculationFn<T>;
-		recastTime: number | ResourceCalculationFn<T>;
-		animationLock: number | ResourceCalculationFn<T>;
-		manaCost: number | ResourceCalculationFn<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
-		jobPotencyModifiers: PotencyModifierFn<T>;
-		drawsAggro: boolean;
-		falloff: number;
-		applicationDelay: number;
-		validateAttempt: StatePredicate<T>;
-		isInstantFn: StatePredicate<T>;
-		onExecute: EffectFn<T>;
-		onConfirm: EffectFn<T>;
-		onApplication: EffectFn<T>;
-		secondaryCooldown?: CooldownGroupProperties;
-	}>,
+	params: Partial<MakeGCDParams<T>>,
 ): Spell<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -431,12 +409,16 @@ export function makeSpell<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
+		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
+		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
+		aoeHeal: params.aoeHeal ?? false,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
 		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
+		startsAuto: params.startsAuto ?? false,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.secondaryCooldown !== undefined) {
@@ -450,30 +432,7 @@ export function makeWeaponskill<T extends PlayerState>(
 	jobs: ShellJob | ShellJob[],
 	name: ActionKey,
 	unlockLevel: number,
-	params: Partial<{
-		assetPath: string;
-		autoUpgrade: SkillAutoReplace;
-		autoDowngrade: SkillAutoReplace;
-		aspect: Aspect;
-		replaceIf: ConditionalSkillReplace<T>[];
-		startOnHotbar: boolean;
-		highlightIf: StatePredicate<T>;
-		castTime: number | ResourceCalculationFn<T>;
-		recastTime: number | ResourceCalculationFn<T>;
-		animationLock: number | ResourceCalculationFn<T>;
-		manaCost: number | ResourceCalculationFn<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
-		jobPotencyModifiers: PotencyModifierFn<T>;
-		drawsAggro: boolean;
-		falloff: number;
-		applicationDelay: number;
-		validateAttempt: StatePredicate<T>;
-		isInstantFn: StatePredicate<T>;
-		onExecute: EffectFn<T>;
-		onConfirm: EffectFn<T>;
-		onApplication: EffectFn<T>;
-		secondaryCooldown?: CooldownGroupProperties;
-	}>,
+	params: Partial<MakeGCDParams<T>>,
 ): Weaponskill<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -509,12 +468,16 @@ export function makeWeaponskill<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
+		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
+		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
+		aoeHeal: params.aoeHeal ?? false,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
 		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
+		startsAuto: params.startsAuto ?? true,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.secondaryCooldown !== undefined) {
@@ -553,29 +516,7 @@ export function makeAbility<T extends PlayerState>(
 	name: ActionKey,
 	unlockLevel: number,
 	cdName: CooldownKey,
-	params: Partial<{
-		aspect: Aspect;
-		assetPath: string;
-		requiresCombat: boolean;
-		autoUpgrade: SkillAutoReplace;
-		autoDowngrade: SkillAutoReplace;
-		replaceIf: ConditionalSkillReplace<T>[];
-		startOnHotbar: boolean;
-		highlightIf: StatePredicate<T>;
-		potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
-		jobPotencyModifiers: PotencyModifierFn<T>;
-		drawsAggro: boolean;
-		falloff: number;
-		applicationDelay: number;
-		animationLock: number | ResourceCalculationFn<T>;
-		validateAttempt: StatePredicate<T>;
-		onExecute: EffectFn<T>;
-		onConfirm: EffectFn<T>;
-		onApplication: EffectFn<T>;
-		cooldown: number;
-		maxCharges: number;
-		secondaryCooldown?: CooldownGroupProperties;
-	}>,
+	params: Partial<MakeAbilityParams<T>>,
 ): Ability<T> {
 	if (!Array.isArray(jobs)) {
 		jobs = [jobs];
@@ -615,11 +556,15 @@ export function makeAbility<T extends PlayerState>(
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
+		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
+		jobHealingPotencyModifiers: params.jobHealingPotencyModifiers ?? ((state) => []),
+		aoeHeal: params.aoeHeal ?? false,
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt,
 		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
+		startsAuto: params.startsAuto ?? true,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.cooldown !== undefined) {
@@ -739,6 +684,7 @@ export function makeLimitBreak<T extends PlayerState>(
 		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
+		startsAuto: true,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	// Fudge the "cooldown" as the sum of the cast time and the animation lock to make the grey bar on the timeline look right

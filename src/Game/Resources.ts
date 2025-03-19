@@ -387,6 +387,8 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, "MANA", 10000, { default: 10000 });
 	makeResource(job, "TINCTURE", 1, { timeout: 30 });
 	makeResource(job, "SPRINT", 1, { timeout: 10 });
+	makeResource(job, "AUTOS_ENGAGED", 1, { default: 0 });
+	makeResource(job, "STORED_AUTO", 1, { default: 0 });
 });
 
 MELEE_JOBS.forEach((job) => {
