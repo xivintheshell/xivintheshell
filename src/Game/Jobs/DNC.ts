@@ -656,7 +656,10 @@ makeGCD_DNC("FINISHING_MOVE", 96, {
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0.5,
 	applicationDelay: 2.05,
-	onConfirm: (state) => state.applyStandardFinish(2),
+	onConfirm: (state) => {
+		state.applyStandardFinish(2);
+		state.tryConsumeResource("FINISHING_MOVE_READY");
+	},
 	secondaryCooldown: {
 		cdName: "cd_STANDARD_STEP",
 		cooldown: 30,
