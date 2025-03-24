@@ -1,5 +1,11 @@
 [
 	{
+		"date": "3/20/25",
+		"changes": [
+			"[DNC] Fixed an issue where the icons for Finishing Move Ready and Last Dance Ready were swapped, and an issue where Last Dance Ready was not consumed by Last Dance (thank you bluke)"
+		]
+	},
+	{
 		"date": "3/16/25",
 		"changes": [
 			"Fixed an issue where resource toggles were shown in their timeline editor with their internal keys rather than localized test.",
