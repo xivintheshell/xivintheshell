@@ -69,6 +69,7 @@ makePLDResource("SEPULCHRE_READY", 1, { timeout: 30 });
 makePLDResource("HOLY_SHELTRON", 1, { timeout: 8 });
 makePLDResource("BLADE_OF_HONOR_READY", 1, { timeout: 30 });
 makePLDResource("GUARDIAN", 1, { timeout: 15 });
+makePLDResource("GUARDIANS_WILL", 1, { timeout: 15 });
 
 makePLDResource("PLD_COMBO_TRACKER", 2, { timeout: 30 });
 makePLDResource("PLD_CONFITEOR_COMBO_TRACKER", 3, { timeout: 30 });
@@ -133,6 +134,7 @@ export class PLDState extends GameState {
 		super(config);
 
 		this.resources.get("OATH_GAUGE").gain(100);
+		this.autoAttackDelay = 2.5;
 
 		this.registerRecurringEvents([
 			{
@@ -204,16 +206,25 @@ export class PLDState extends GameState {
 	// return true if holy spirit/circle is optimal
 	isHolySpiritCircleGoodForReq() {
 		const currentReqStacks = this.resources.get("REQUIESCAT").availableAmount();
+		// low hanging fruit
 		if (currentReqStacks === 0) {
 			return false;
 		} else if (this.hasResourceAvailable("PLD_CONFITEOR_COMBO_TRACKER")) {
 			return false;
 		} else {
-			return !(
-				currentReqStacks === 1 &&
-				this.hasTraitUnlocked("ENHANCED_REQUIESCAT") &&
-				this.hasResourceAvailable("CONFITEOR_READY")
-			);
+			// check lvl 90+
+			if (this.config.level >= 90) {
+				return false;
+				// check lvl 90 > x >= 80
+			} else if (this.config.level >= 80) {
+				return (
+					!this.hasResourceAvailable("CONFITEOR_READY") ||
+					(this.hasResourceAvailable("CONFITEOR_READY") && currentReqStacks > 1)
+				);
+				// check lvl 80 > x >= 70
+			} else {
+				return true;
+			}
 		}
 	}
 
@@ -270,17 +281,6 @@ export class PLDState extends GameState {
 			}),
 		);
 	}
-
-	/*
-
-	toggleAutoAttack() {
-		if (this.resources.get("CAN_AUTO_ATTACK").available(1)) {
-			this.resources.get("CAN_AUTO_ATTACK").consume(1);
-		} else {
-			this.resources.get("CAN_AUTO_ATTACK").gain(1);
-		}
-	}
-	*/
 }
 
 // === SKILLS ===
@@ -738,6 +738,8 @@ makeSpell_PLD("HOLY_CIRCLE", 72, {
 	basePotency: 100,
 	reqPotency: 300,
 	falloff: 0,
+	highlightIf: (state) =>
+		state.hasResourceAvailable("DIVINE_MIGHT") || state.isHolySpiritCircleGoodForReq(),
 });
 
 makeWeaponskill_PLD("GORING_BLADE", 54, {
@@ -1049,7 +1051,7 @@ makeAbility_PLD("GUARDIAN", 92, "cd_GUARDIAN", {
 	cooldown: 120,
 	onConfirm: (state) => {
 		state.refreshBuff("GUARDIAN", 0.53);
-		// state.refreshBuff("GUARDIAN'S_WILL", 0.53);
+		state.refreshBuff("GUARDIANS_WILL", 0.53);
 	},
 });
 

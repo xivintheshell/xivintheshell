@@ -564,7 +564,7 @@ export function makeAbility<T extends PlayerState>(
 		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
-		startsAuto: params.startsAuto ?? true,
+		startsAuto: params.startsAuto ?? false,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.cooldown !== undefined) {
@@ -684,7 +684,7 @@ export function makeLimitBreak<T extends PlayerState>(
 		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
-		startsAuto: true,
+		startsAuto: false,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	// Fudge the "cooldown" as the sum of the cast time and the animation lock to make the grey bar on the timeline look right

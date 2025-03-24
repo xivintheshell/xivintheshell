@@ -98,6 +98,7 @@ export const PLD_STATUSES = ensureRecord<ResourceData>()({
 	HOLY_SHELTRON: { name: "Holy Sheltron" }, // [0, 1]
 	BLADE_OF_HONOR_READY: { name: "Blade of Honor Ready" }, // [0, 1]
 	GUARDIAN: { name: "Guardian" }, // [0, 1]
+	GUARDIANS_WILL: { name: "Guardian's Will" }, // [0, 1]
 });
 
 export const PLD_TRACKERS = ensureRecord<ResourceData>()({
