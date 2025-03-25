@@ -112,7 +112,7 @@ export const HEALERS = ensureRecord<Job>()({
 	},
 	SGE: {
 		role: "HEALER",
-		implementationLevel: "TESTING",
+		implementationLevel: "LIVE",
 		usesMp: true,
 		limitBreak: "TECHNE_MAKRE",
 	},
@@ -128,7 +128,7 @@ export const MELEE = ensureRecord<Job>()({
 	},
 	DRG: {
 		role: "MELEE",
-		implementationLevel: "TESTING",
+		implementationLevel: "LIVE",
 		limitBreak: "DRAGONSONG_DIVE",
 	},
 	NIN: {
@@ -178,7 +178,7 @@ export type RangedKey = keyof Ranged;
 export const CASTERS = ensureRecord<Job>()({
 	BLM: {
 		role: "CASTER",
-		implementationLevel: "LIVE",
+		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "METEOR",
 	},

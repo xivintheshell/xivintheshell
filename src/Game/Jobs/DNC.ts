@@ -590,7 +590,7 @@ makeGCD_DNC("SABER_DANCE", 76, {
 		["DYNAMIC_DANCER", 520],
 	],
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	falloff: 0.5,
+	falloff: 0.6,
 	applicationDelay: 0.44,
 	validateAttempt: (state) => state.hasResourceAvailable("ESPRIT_GAUGE", 50) && !isDancing(state),
 	highlightIf: (state) => state.hasResourceAvailable("ESPRIT_GAUGE", 50),
@@ -600,7 +600,7 @@ makeGCD_DNC("DANCE_OF_THE_DAWN", 100, {
 	startOnHotbar: false,
 	potency: 1000,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	falloff: 0.5,
+	falloff: 0.6,
 	applicationDelay: 0.44,
 	validateAttempt: (state) => state.hasResourceAvailable("ESPRIT_GAUGE", 50) && !isDancing(state),
 	highlightIf: (state) => state.hasResourceAvailable("ESPRIT_GAUGE", 50),
@@ -612,7 +612,7 @@ makeGCD_DNC("DANCE_OF_THE_DAWN", 100, {
 makeGCD_DNC("LAST_DANCE", 92, {
 	potency: 520,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	falloff: 0.5,
+	falloff: 0.6,
 	applicationDelay: 1.26,
 	validateAttempt: (state) => state.hasResourceAvailable("LAST_DANCE_READY") && !isDancing(state),
 	highlightIf: (state) => state.hasResourceAvailable("LAST_DANCE_READY"),
@@ -654,7 +654,7 @@ makeGCD_DNC("FINISHING_MOVE", 96, {
 	startOnHotbar: false,
 	potency: 850,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	falloff: 0.5,
+	falloff: 0.6,
 	applicationDelay: 2.05,
 	onConfirm: (state) => {
 		state.applyStandardFinish(2);
@@ -689,7 +689,7 @@ standardFinishes.forEach((finish) => {
 		assetPath: "DNC/Standard Finish.png",
 		startOnHotbar: false,
 		potency: finish.potency,
-		falloff: 0.75,
+		falloff: 0.6,
 		applicationDelay: 0.54,
 		onConfirm: (state) => {
 			const bonusLevel = state.getCurrentDanceStatus();
@@ -731,7 +731,7 @@ makeAbility_DNC("FAN_DANCE_III", 66, "cd_FAN_DANCE_III", {
 		["DYNAMIC_DANCER", 220],
 	],
 	cooldown: 1,
-	falloff: 0.5,
+	falloff: 0.6,
 	applicationDelay: 0.62,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable("THREEFOLD_FAN_DANCE") && !isDancing(state),
@@ -743,7 +743,7 @@ makeAbility_DNC("FAN_DANCE_IV", 86, "cd_FAN_DANCE_IV", {
 		["NEVER", 300],
 		["DYNAMIC_DANCER", 420],
 	],
-	falloff: 0.5,
+	falloff: 0.6,
 	cooldown: 1,
 	applicationDelay: 0.62,
 	validateAttempt: (state) =>
@@ -798,7 +798,7 @@ makeGCD_DNC("TILLANA", 82, {
 	startOnHotbar: false,
 	potency: 600,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	falloff: 0.5,
+	falloff: 0.6,
 	applicationDelay: 0.84,
 	onConfirm: (state) => {
 		state.gainResource("ESPRIT_GAUGE", 50);
@@ -842,6 +842,7 @@ technicalFinishes.forEach((params) => {
 		startOnHotbar: false,
 		potency: params.potency,
 		applicationDelay: 0.54,
+		falloff: 0.6,
 		onConfirm: (state) => {
 			const bonusLevel = state.getCurrentDanceStatus();
 			state.tryConsumeResource("TECHNICAL_STEP");
@@ -906,7 +907,7 @@ makeGCD_DNC("STARFALL_DANCE", 90, {
 // AoE Combo and Procs
 makeGCD_DNC("WINDMILL", 15, {
 	replaceIf: [emboiteCondition],
-	potency: 100,
+	potency: 120,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0,
 	applicationDelay: 0.62,
@@ -923,7 +924,7 @@ makeGCD_DNC("BLADESHOWER", 25, {
 	potency: 100,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	combo: {
-		potency: 140,
+		potency: 160,
 		resource: "WINDMILL_COMBO",
 		resourceValue: 1,
 	},
@@ -940,7 +941,7 @@ makeGCD_DNC("BLADESHOWER", 25, {
 });
 makeGCD_DNC("RISING_WINDMILL", 35, {
 	replaceIf: [jeteCondition],
-	potency: 140,
+	potency: 160,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0,
 	applicationDelay: 0.62,
@@ -965,7 +966,7 @@ makeGCD_DNC("RISING_WINDMILL", 35, {
 });
 makeGCD_DNC("BLOODSHOWER", 45, {
 	replaceIf: [pirouetteCondition],
-	potency: 180,
+	potency: 200,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0,
 	applicationDelay: 0.62,

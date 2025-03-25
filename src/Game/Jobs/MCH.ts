@@ -546,7 +546,7 @@ makeWeaponskill_MCH("CHAIN_SAW", 90, {
 		},
 	],
 	potency: 600,
-	falloff: 0.65,
+	falloff: 0.5,
 	applicationDelay: 1.03,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => {
@@ -564,7 +564,7 @@ makeWeaponskill_MCH("CHAIN_SAW", 90, {
 makeWeaponskill_MCH("EXCAVATOR", 90, {
 	startOnHotbar: false,
 	potency: 600,
-	falloff: 0.65,
+	falloff: 0.5,
 	applicationDelay: 1.07,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => {
@@ -596,7 +596,7 @@ makeAbility_MCH("BARREL_STABILIZER", 66, "cd_BARREL_STABILIZER", {
 makeWeaponskill_MCH("FULL_METAL_FIELD", 100, {
 	startOnHotbar: false,
 	potency: 900,
-	falloff: 0.5,
+	falloff: 0.4,
 	applicationDelay: 1.02,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => state.tryConsumeResource("FULL_METAL_MACHINIST"),
@@ -701,7 +701,7 @@ makeAbility_MCH("GAUSS_ROUND", 15, "cd_DOUBLE_CHECK", {
 makeAbility_MCH("DOUBLE_CHECK", 92, "cd_DOUBLE_CHECK", {
 	startOnHotbar: false,
 	potency: 170,
-	falloff: 0.5,
+	falloff: 0.4,
 	applicationDelay: 0.71,
 	cooldown: 30,
 	maxCharges: 3,
@@ -713,7 +713,7 @@ makeAbility_MCH("RICOCHET", 50, "cd_CHECKMATE", {
 		otherSkill: "CHECKMATE",
 	},
 	potency: 130,
-	falloff: 0.5,
+	falloff: 0.4,
 	applicationDelay: 0.71,
 	cooldown: 30,
 	maxCharges: 3,
@@ -721,7 +721,7 @@ makeAbility_MCH("RICOCHET", 50, "cd_CHECKMATE", {
 makeAbility_MCH("CHECKMATE", 92, "cd_CHECKMATE", {
 	startOnHotbar: false,
 	potency: 170,
-	falloff: 0.5,
+	falloff: 0.4,
 	applicationDelay: 0.71,
 	cooldown: 30,
 	maxCharges: 3,
@@ -884,7 +884,7 @@ makeWeaponskill_MCH("SPREAD_SHOT", 18, {
 		trait: "SPREAD_SHOT_MASTERY",
 		otherSkill: "SCATTERGUN",
 	},
-	potency: 140,
+	potency: 110,
 	falloff: 0,
 	applicationDelay: 0.8,
 	recastTime: (state) => state.config.adjustedSksGCD(),
@@ -892,10 +892,7 @@ makeWeaponskill_MCH("SPREAD_SHOT", 18, {
 });
 makeWeaponskill_MCH("SCATTERGUN", 82, {
 	startOnHotbar: false,
-	potency: [
-		["NEVER", 140],
-		["MARKSMANS_MASTERY_II", 160],
-	],
+	potency: 130,
 	falloff: 0,
 	applicationDelay: 1.15,
 	recastTime: (state) => state.config.adjustedSksGCD(),

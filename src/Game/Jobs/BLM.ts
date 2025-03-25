@@ -316,8 +316,8 @@ const retraceCondition = (state: Readonly<BLMState>) =>
 const paraCondition = (state: Readonly<BLMState>) => state.hasResourceAvailable("PARADOX");
 
 const getEnochianModifier = (state: Readonly<BLMState>) =>
-	(state.hasTraitUnlocked("ENHANCED_ENOCHIAN_IV") && 1.32) ||
-	(state.hasTraitUnlocked("ENHANCED_ENOCHIAN_III") && 1.25) ||
+	(state.hasTraitUnlocked("ENHANCED_ENOCHIAN_IV") && 1.27) ||
+	(state.hasTraitUnlocked("ENHANCED_ENOCHIAN_III") && 1.22) ||
 	(state.hasTraitUnlocked("ENHANCED_ENOCHIAN_II") && 1.15) ||
 	1.1;
 
@@ -731,7 +731,7 @@ makeSpell_BLM("FREEZE", 40, {
 
 makeSpell_BLM("FLARE", 50, {
 	aspect: Aspect.Fire,
-	baseCastTime: 3,
+	baseCastTime: 2,
 	baseManaCost: 0, // mana is handled separately
 	basePotency: 240,
 	applicationDelay: 1.157,
@@ -826,7 +826,7 @@ makeAbility_BLM("TRIPLECAST", 66, "cd_TRIPLECAST", {
 });
 
 makeSpell_BLM("FOUL", 70, {
-	baseCastTime: 2.5,
+	baseCastTime: 2,
 	baseManaCost: 0,
 	basePotency: 600,
 	falloff: 0.25,
@@ -838,7 +838,7 @@ makeSpell_BLM("FOUL", 70, {
 
 makeSpell_BLM("DESPAIR", 72, {
 	aspect: Aspect.Fire,
-	baseCastTime: 3, // instant cast at level 100, handled in makeSpell_BLM
+	baseCastTime: 2, // instant cast at level 100, handled in makeSpell_BLM
 	baseManaCost: 0, // mana handled separately, like flare
 	basePotency: 350,
 	applicationDelay: 0.556,
@@ -866,10 +866,6 @@ makeSpell_BLM("UMBRAL_SOUL", 35, {
 	onConfirm: (state, node) => {
 		state.resources.get("UMBRAL_ICE").gain(1);
 		state.resources.get("UMBRAL_HEART").gain(1);
-		state.startOrRefreshEnochian();
-		// halt
-		let enochian = state.resources.get("ENOCHIAN");
-		enochian.removeTimer();
 	},
 });
 
@@ -956,14 +952,11 @@ makeSpell_BLM("PARADOX", 90, {
 	// Paradox made instant via Dawntrail
 	baseCastTime: 0,
 	baseManaCost: 1600,
-	basePotency: 520,
+	basePotency: 540,
 	applicationDelay: 0.624,
 	validateAttempt: paraCondition,
 	onConfirm: (state, node) => {
 		state.resources.get("PARADOX").consume(1);
-		if (state.hasEnochian()) {
-			state.startOrRefreshEnochian();
-		}
 		if (state.getFireStacks() > 0) {
 			gainFirestarterProc(state);
 		} else if (state.getIceStacks() === 0){
