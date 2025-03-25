@@ -112,7 +112,7 @@ export const HEALERS = ensureRecord<Job>()({
 	},
 	SGE: {
 		role: "HEALER",
-		implementationLevel: "LIVE",
+		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "TECHNE_MAKRE",
 	},

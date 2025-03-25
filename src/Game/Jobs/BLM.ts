@@ -20,12 +20,7 @@ import {
 	StatePredicate,
 } from "../Skills";
 import { GameState, PlayerState } from "../GameState";
-import {
-	makeResource,
-	CoolDown,
-	Event,
-	Resource,
-} from "../Resources";
+import { makeResource, CoolDown, Event, Resource } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { localize } from "../../Components/Localization";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
@@ -44,7 +39,7 @@ makeBLMResource("UMBRAL_ICE", 3);
 makeBLMResource("UMBRAL_HEART", 3);
 makeBLMResource("ASTRAL_SOUL", 6);
 makeBLMResource("LEY_LINES", 1, { timeout: 20 });
-makeBLMResource("ENOCHIAN", 1, { timeout: 15 });
+makeBLMResource("ENOCHIAN", 1);
 makeBLMResource("PARADOX", 1);
 
 makeBLMResource("FIRESTARTER", 1);
@@ -959,7 +954,7 @@ makeSpell_BLM("PARADOX", 90, {
 		state.resources.get("PARADOX").consume(1);
 		if (state.getFireStacks() > 0) {
 			gainFirestarterProc(state);
-		} else if (state.getIceStacks() === 0){
+		} else if (state.getIceStacks() === 0) {
 			console.error("cannot cast Paradox outside of AF/UI");
 		}
 	},

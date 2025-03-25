@@ -1086,8 +1086,7 @@ export class Config extends React.Component {
 					info.maxValue > 1 || info.maxValue === info.defaultValue
 						? inputOverrideStacks
 						: 1,
-				effectOrTimerEnabled:
-					rscType === "LEY_LINES" ? inputOverrideEnabled : true,
+				effectOrTimerEnabled: rscType === "LEY_LINES" ? inputOverrideEnabled : true,
 			};
 		}
 		// end validation
