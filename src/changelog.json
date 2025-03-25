@@ -1,5 +1,13 @@
 [
 	{
+		"date": "3/24/25",
+		"changes": [
+			"We have updated the site in accordance with the 7.2 patch notes. Goodbye to the Enochian timer o7",
+			"[BLM] will remain in \"testing\" status until we have a change to play with the changes in-game.",
+			"Since most jobs received only potency changes, your old 7.1 plans should work, but as usual, please let us know if anything seems incorrect."
+		]
+	},
+	{
 		"date": "3/20/25",
 		"changes": [
 			"[DNC] Fixed an issue where the icons for Finishing Move Ready and Last Dance Ready were swapped, and an issue where Last Dance Ready was not consumed by Last Dance (thank you bluke)"

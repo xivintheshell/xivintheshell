@@ -94,14 +94,6 @@ export function ResourceOverrideDisplay(props: {
 					: localize({ en: "disabled", zh: "未生效" })) +
 				rparen;
 		}
-		if (props.override.type === "ENOCHIAN") {
-			str +=
-				lparen +
-				(props.override.effectOrTimerEnabled
-					? localize({ en: "timer enabled", zh: "倒计时中" })
-					: localize({ en: "timer disabled", zh: "暂停倒计时" })) +
-				rparen;
-		}
 		if (rscInfo.maxValue > 1) {
 			str += localize({
 				en: ` (amount: ${props.override.stacks})`,
@@ -117,7 +109,7 @@ export function ResourceOverrideDisplay(props: {
 					});
 				}
 			} else {
-				if (props.override.type !== "ENOCHIAN" || props.override.effectOrTimerEnabled) {
+				if (props.override.effectOrTimerEnabled) {
 					str += localize({
 						en: ` drops in ${props.override.timeTillFullOrDrop}s`,
 						zh: `将在${props.override.timeTillFullOrDrop}秒后消失`,
@@ -1015,46 +1007,17 @@ export class Config extends React.Component {
 			}
 		}
 
-		// if there are AF/UI stacks, must have enochian
+		// if there are AF/UI stacks, implicitly grant enochian
+		let hasEno = false;
 		if (af > 0 || ui > 0 || uh > 0) {
-			if (!M.has("ENOCHIAN")) {
-				window.alert(
-					"since there's at least one AF/UI stack, there should also be an Enochian timer",
-				);
-				return false;
-			}
+			hasEno = true;
 		}
-
-		// vice versa: if there's enochian, must have AF/UI
-		if (M.has("ENOCHIAN")) {
-			if (af === 0 && ui === 0) {
-				window.alert("since there's enochian, there should be at least one AF/UI stack");
-				return false;
-			}
-			// if enochian drop halted, must be in ui and have timer at 15s
-			let enochian = M.get("ENOCHIAN")!;
-			if (!enochian.effectOrTimerEnabled) {
-				if (enochian.timeTillFullOrDrop < 15) {
-					window.alert(
-						"Because the only way to disable Enochian timer (Umbral Soul) also refreshes Enochian, remaining time must be 15 when timer is disabled",
-					);
-					return false;
-				}
-				if (ui === 0) {
-					window.alert(
-						"Enochian timer can only be disabled when in Umbral Ice (the only skill that does this is Umbral Soul)",
-					);
-					return false;
-				}
-			}
-		}
-
 		// if polyglot timer is set (>0), must have enochian
 		if (M.has("POLYGLOT")) {
 			let polyTimer = M.get("POLYGLOT")!.timeTillFullOrDrop;
-			if (polyTimer > 0 && !M.has("ENOCHIAN")) {
+			if (polyTimer > 0 && !hasEno) {
 				window.alert(
-					"since a timer for polyglot is set (time till next stack > 0), there must also be Enochian",
+					"since a timer for polyglot is set (time till next stack > 0), there must also be AF/UI",
 				);
 				return false;
 			}
@@ -1122,8 +1085,7 @@ export class Config extends React.Component {
 					info.maxValue > 1 || info.maxValue === info.defaultValue
 						? inputOverrideStacks
 						: 1,
-				effectOrTimerEnabled:
-					rscType === "LEY_LINES" || rscType === "ENOCHIAN" ? inputOverrideEnabled : true,
+				effectOrTimerEnabled: rscType === "LEY_LINES" ? inputOverrideEnabled : true,
 			};
 		}
 		// end validation
@@ -1197,7 +1159,7 @@ export class Config extends React.Component {
 				}
 
 				// enabled
-				showEnabled = rscType === "LEY_LINES" || rscType === "ENOCHIAN";
+				showEnabled = rscType === "LEY_LINES";
 			}
 
 			let timerDesc;
@@ -1213,8 +1175,6 @@ export class Config extends React.Component {
 			}
 
 			let enabledDesc = localize({ en: "enabled", zh: "生效中" });
-			if (rscType === "ENOCHIAN")
-				enabledDesc = localize({ en: "timer enabled", zh: "倒计时中" });
 
 			inputSection = <div style={{ margin: "6px 0" }}>
 				{/*timer*/}

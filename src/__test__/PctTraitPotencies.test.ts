@@ -13,17 +13,17 @@ const testRedPotency = (level: LevelSync, expectedPotency: number) => {
 };
 
 it("has correct potencies at level 70", () => {
-	testRedPotency(LevelSync.lvl70, 280);
+	testRedPotency(LevelSync.lvl70, 330);
 });
 
 it("has correct potencies at level 80", () => {
-	testRedPotency(LevelSync.lvl80, 340);
+	testRedPotency(LevelSync.lvl80, 400);
 });
 
 it("has correct potencies at level 90", () => {
-	testRedPotency(LevelSync.lvl90, 380);
+	testRedPotency(LevelSync.lvl90, 450);
 });
 
 it("has correct potencies at level 100", () => {
-	testRedPotency(LevelSync.lvl100, 440);
+	testRedPotency(LevelSync.lvl100, 520);
 });

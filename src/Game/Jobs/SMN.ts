@@ -306,7 +306,7 @@ export class SMNState extends GameState {
 			basePotency = 1300;
 		} else {
 			damageName = "EXODUS";
-			basePotency = 1400;
+			basePotency = 1500;
 		}
 		const demiEvent = this.resources.get("ACTIVE_DEMI").pendingChange;
 		console.assert(demiEvent);
@@ -1340,7 +1340,7 @@ makeSpell_SMN("RUIN_IV", 62, {
 	{
 		name: "NECROTIZE" as SMNActionKey,
 		level: 92,
-		potency: 440,
+		potency: 460,
 		applicationDelay: 0.71,
 		autoDowngrade: {
 			trait: "ENHANCED_FESTER",

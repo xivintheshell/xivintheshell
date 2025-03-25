@@ -795,7 +795,7 @@ makeRPRWeaponskill("PLENTIFUL_HARVEST", 88, {
 	potency: 720,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	falloff: 0.6,
+	falloff: 0.4,
 	applicationDelay: 1.16,
 	highlightIf: (state) => state.hasResourceAvailable("IMMORTAL_SACRIFICE", 1),
 	validateAttempt: (state) =>
@@ -821,7 +821,7 @@ makeRPRSpell("COMMUNIO", 90, {
 	aspect: Aspect.Other,
 	castTime: 1.3,
 	recastTime: 2.5,
-	falloff: 0.6,
+	falloff: 0.4,
 	applicationDelay: 1.16,
 	validateAttempt: (state) => state.hasResourceAvailable("ENSHROUDED"),
 	highlightIf: (state) =>
@@ -873,7 +873,7 @@ makeRPRSpell("HARVEST_MOON", 82, {
 	aspect: Aspect.Other,
 	castTime: 0,
 	recastTime: 2.5,
-	falloff: 0.5,
+	falloff: 0.4,
 	applicationDelay: 0.9,
 	validateAttempt: (state) => state.hasResourceAvailable("SOULSOW"),
 	highlightIf: (state) => state.hasResourceAvailable("SOULSOW"),
@@ -976,9 +976,9 @@ makeRPRAbility("LEMURES_SLICE", 86, "cd_LEMURES_SLICE", {
 
 makeRPRAbility("SACRIFICIUM", 92, "cd_SACRIFICIUM", {
 	isPhysical: false,
-	potency: 530,
+	potency: 600,
 	startOnHotbar: false,
-	falloff: 0.5,
+	falloff: 0.4,
 	applicationDelay: 0.76,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("OBLATIO"),
@@ -1005,7 +1005,7 @@ makeRPRWeaponskill("VOID_REAPING", 80, {
 	startOnHotbar: false,
 	potency: [
 		["NEVER", 460],
-		["MELEE_MASTERY_III_RPR", 500],
+		["MELEE_MASTERY_III_RPR", 540],
 	],
 	aspect: Aspect.Physical,
 	recastTime: 1.5,
@@ -1030,7 +1030,7 @@ makeRPRWeaponskill("CROSS_REAPING", 80, {
 	startOnHotbar: false,
 	potency: [
 		["NEVER", 460],
-		["MELEE_MASTERY_III_RPR", 500],
+		["MELEE_MASTERY_III_RPR", 540],
 	],
 	aspect: Aspect.Physical,
 	recastTime: 1.5,
@@ -1071,7 +1071,7 @@ makeRPRWeaponskill("PERFECTIO", 100, {
 	potency: 1300,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
-	falloff: 0.6,
+	falloff: 0.4,
 	applicationDelay: 1.29,
 	startOnHotbar: false,
 	highlightIf: (state) => state.hasResourceAvailable("PERFECTIO_PARATA"),
@@ -1159,7 +1159,7 @@ makeRPRWeaponskill("WHORL_OF_DEATH", 35, {
 });
 
 makeRPRWeaponskill("SPINNING_SCYTHE", 25, {
-	potency: 160,
+	potency: 140,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0,
@@ -1167,9 +1167,9 @@ makeRPRWeaponskill("SPINNING_SCYTHE", 25, {
 });
 
 makeRPRWeaponskill("NIGHTMARE_SCYTHE", 45, {
-	potency: 140,
+	potency: 120,
 	combo: {
-		potency: 200,
+		potency: 180,
 		resource: "RPR_AOE_COMBO",
 		resourceValue: 1,
 	},
@@ -1197,7 +1197,7 @@ makeRPRWeaponskill("SOUL_SCYTHE", 65, {
 
 makeRPRWeaponskill("EXECUTIONERS_GUILLOTINE", 96, {
 	startOnHotbar: false,
-	potency: 300,
+	potency: 260,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0,

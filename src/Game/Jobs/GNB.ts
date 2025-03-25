@@ -628,7 +628,7 @@ makeWeaponskill_GNB("DOUBLE_DOWN", 90, {
 
 makeWeaponskill_GNB("REIGN_OF_BEASTS", 100, {
 	replaceIf: [nobleBloodCondition, lionHeartCondition],
-	potency: 800,
+	potency: 1000,
 	falloff: 0.6,
 	applicationDelay: 1.16,
 	validateAttempt: (state) => state.hasResourceAvailable("READY_TO_REIGN"),
@@ -641,7 +641,7 @@ makeWeaponskill_GNB("REIGN_OF_BEASTS", 100, {
 makeWeaponskill_GNB("NOBLE_BLOOD", 100, {
 	startOnHotbar: false,
 	replaceIf: [reignOfBeastsCondition, lionHeartCondition],
-	potency: 1000,
+	potency: 1100,
 	falloff: 0.6,
 	applicationDelay: 1.65,
 	validateAttempt: (state) =>

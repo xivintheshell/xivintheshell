@@ -510,15 +510,6 @@ export class ResourceOverride {
 				rsc.enabled = this.effectOrTimerEnabled;
 			}
 
-			// Enochian (timer + enabled)
-			else if (rsc.type === "ENOCHIAN") {
-				rsc.consume(rsc.availableAmount());
-				rsc.gain(1);
-				if (this.effectOrTimerEnabled) {
-					overrideDropRscTimer(this.timeTillFullOrDrop);
-				}
-			}
-
 			// Polyglot (refresh timer + stacks)
 			else if (rsc.type === "POLYGLOT") {
 				// stacks

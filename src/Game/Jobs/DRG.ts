@@ -684,12 +684,12 @@ makeWeaponskill_DRG("HEAVENS_THRUST", 86, {
 	applicationDelay: 0.71,
 	potency: [
 		["NEVER", 100],
-		["MELEE_MASTERY_DRG", 140],
+		["MELEE_MASTERY_DRG", 160],
 	],
 	combo: {
 		potency: [
 			["NEVER", 400],
-			["MELEE_MASTERY_DRG", 440],
+			["MELEE_MASTERY_DRG", 460],
 		],
 		resource: "DRG_HEAVENS_COMBO_TRACKER",
 		resourceValue: 2,
@@ -734,7 +734,7 @@ makeWeaponskill_DRG("DRAKESBANE", 64, {
 	potency: [
 		["NEVER", 380],
 		["LANCE_MASTERY_II", 400],
-		["MELEE_MASTERY_DRG", 440],
+		["MELEE_MASTERY_DRG", 460],
 	],
 	validateAttempt: (state) => {
 		return (
@@ -960,7 +960,7 @@ makeAbility_DRG("STARDIVER", 80, "cd_STARDIVER", {
 	animationLock: 1.5,
 	potency: [
 		["NEVER", 720],
-		["MELEE_MASTERY_DRG", 820],
+		["MELEE_MASTERY_DRG", 840],
 	],
 	falloff: 0.5,
 	cooldown: 30,

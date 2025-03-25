@@ -308,7 +308,7 @@ makeWeaponskill_WAR("HEAVY_SWING", 1, {
 	potency: [
 		["NEVER", 150],
 		["MELEE_MASTERY_TANK", 200],
-		["MELEE_MASTERY_II_TANK", 220],
+		["MELEE_MASTERY_II_TANK", 240],
 	],
 	applicationDelay: 0.53,
 });
@@ -341,13 +341,13 @@ makeWeaponskill_WAR("STORMS_PATH", 26, {
 	potency: [
 		["NEVER", 100],
 		["MELEE_MASTERY_TANK", 160],
-		["MELEE_MASTERY_II_TANK", 200],
+		["MELEE_MASTERY_II_TANK", 220],
 	],
 	combo: {
 		potency: [
 			["NEVER", 380],
 			["MELEE_MASTERY_TANK", 440],
-			["MELEE_MASTERY_II_TANK", 480],
+			["MELEE_MASTERY_II_TANK", 500],
 		],
 		resource: "STORM_COMBO",
 		resourceValue: 2,
@@ -365,13 +365,13 @@ makeWeaponskill_WAR("STORMS_EYE", 50, {
 	potency: [
 		["NEVER", 100],
 		["MELEE_MASTERY_TANK", 160],
-		["MELEE_MASTERY_II_TANK", 200],
+		["MELEE_MASTERY_II_TANK", 220],
 	],
 	combo: {
 		potency: [
 			["NEVER", 380],
 			["MELEE_MASTERY_TANK", 440],
-			["MELEE_MASTERY_II_TANK", 480],
+			["MELEE_MASTERY_II_TANK", 500],
 		],
 		resource: "STORM_COMBO",
 		resourceValue: 2,
@@ -507,7 +507,7 @@ makeAbility_WAR("INNER_RELEASE", 70, "cd_INNER_RELEASE", {
 makeWeaponskill_WAR("PRIMAL_REND", 90, {
 	potency: 700,
 	applicationDelay: 1.16,
-	falloff: 0.7,
+	falloff: 0.5,
 	animationLock: 1.2,
 	validateAttempt: (state) => state.hasResourceAvailable("PRIMAL_REND_READY"),
 	onConfirm: (state) => {
@@ -531,7 +531,7 @@ makeWeaponskill_WAR("PRIMAL_REND", 90, {
 makeAbility_WAR("PRIMAL_WRATH", 96, "cd_PRIMAL_WRATH", {
 	startOnHotbar: false,
 	potency: 700,
-	falloff: 0.7,
+	falloff: 0.5,
 	applicationDelay: 1.15,
 	cooldown: 1.0,
 	validateAttempt: (state) => state.hasResourceAvailable("WRATHFUL"),
@@ -542,7 +542,7 @@ makeAbility_WAR("PRIMAL_WRATH", 96, "cd_PRIMAL_WRATH", {
 makeWeaponskill_WAR("PRIMAL_RUINATION", 100, {
 	startOnHotbar: false,
 	potency: 780,
-	falloff: 0.7,
+	falloff: 0.5,
 	applicationDelay: 1.06,
 	validateAttempt: (state) => {
 		return state.hasResourceAvailable("PRIMAL_RUINATION_READY");
@@ -588,7 +588,7 @@ makeWeaponskill_WAR("INNER_CHAOS", 80, {
 
 makeWeaponskill_WAR("CHAOTIC_CYCLONE", 72, {
 	startOnHotbar: false,
-	potency: 300,
+	potency: 200,
 	falloff: 0,
 	applicationDelay: 1.43,
 	validateAttempt: (state) => {
@@ -615,7 +615,7 @@ makeAbility_WAR("ONSLAUGHT", 62, "cd_ONSLAUGHT", {
 });
 
 makeAbility_WAR("UPHEAVAL", 64, "cd_UPHEAVAL", {
-	potency: 400,
+	potency: 420,
 	applicationDelay: 0.62,
 	cooldown: 30,
 });
