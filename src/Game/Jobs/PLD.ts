@@ -32,12 +32,12 @@ import {
 	FAKE_SKILL_ANIMATION_LOCK,
 } from "../Skills";
 import { GameState, PlayerState } from "../GameState";
-import { makeResource, CoolDown, Event, Resource, EventTag } from "../Resources";
+import { makeResource, Event } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
 import { PLDStatusPropsGenerator } from "../../Components/Jobs/PLD";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
-import { ActionKey, CooldownKey, ResourceKey, TraitKey } from "../Data";
+import { ActionKey, ResourceKey, TraitKey } from "../Data";
 import { PLDResourceKey, PLDActionKey, PLDCooldownKey } from "../Data/Jobs/PLD";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
@@ -385,8 +385,8 @@ const makeSpell_PLD = (
 		startsAuto?: boolean;
 	},
 ): Spell<PLDState> => {
-	const baseCastTime = params.baseCastTime ?? 0;
-	const baseRecastTime = params.baseRecastTime ?? 2.5;
+	// const baseCastTime = params.baseCastTime ?? 0;
+	// const baseRecastTime = params.baseRecastTime ?? 2.5;
 	let onConfirm: EffectFn<PLDState> = combineEffects((state, node) => {
 		// first try consuming divine might
 		// next try consuming requiescat
