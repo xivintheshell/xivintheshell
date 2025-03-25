@@ -350,11 +350,6 @@ export const Modifiers = {
 		critBonus: 1.0,
 		dhBonus: 0,
 	} as CritDirectMultiplier,
-	DivineMight: {
-		kind: "adder",
-		source: PotencyModifierType.DIVINE_MIGHT,
-		additiveAmount: 100,
-	} as PotencyAdder,
 	FightOrFlight: {
 		kind: "multiplier",
 		source: PotencyModifierType.FIGHT_OR_FLIGHT,
@@ -395,10 +390,18 @@ export function makeComboModifier(addend: number): PotencyAdder {
 	};
 }
 
-export function makeReqiescatModifier(addend: number): PotencyAdder {
+export function makeRequiescatModifier(addend: number): PotencyAdder {
 	return {
 		kind: "adder",
 		source: PotencyModifierType.REQUIESCAT,
+		additiveAmount: addend,
+	};
+}
+
+export function makeDivineMightModifier(addend: number): PotencyAdder {
+	return {
+		kind: "adder",
+		source: PotencyModifierType.DIVINE_MIGHT,
 		additiveAmount: addend,
 	};
 }

@@ -2,7 +2,13 @@
 
 import { controller } from "../../Controller/Controller";
 import { BuffType, WarningType } from "../Common";
-import { makeComboModifier, makeReqiescatModifier, Modifiers, PotencyModifier } from "../Potency";
+import {
+	makeComboModifier,
+	makeRequiescatModifier,
+	makeDivineMightModifier,
+	Modifiers,
+	PotencyModifier,
+} from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -368,6 +374,7 @@ const makeSpell_PLD = (
 		baseManaCost?: number;
 		basePotency?: number | Array<[TraitKey, number]>;
 		reqPotency?: number | Array<[TraitKey, number]>;
+		dmPotency?: number | Array<[TraitKey, number]>;
 		jobPotencyModifiers?: PotencyModifierFn<PLDState>;
 		falloff?: number;
 		applicationDelay: number;
@@ -409,14 +416,21 @@ const makeSpell_PLD = (
 				PLD_DIVINE_MIGHT_SPELLS.includes(name) &&
 				state.hasResourceAvailable("DIVINE_MIGHT")
 			) {
-				mods.push(Modifiers.DivineMight);
+				if (params.dmPotency) {
+					mods.push(
+						makeDivineMightModifier(
+							getBasePotency(state, params.dmPotency) -
+								getBasePotency(state, params.basePotency),
+						),
+					);
+				}
 			} else if (
 				(PLD_DIVINE_MIGHT_SPELLS.includes(name) || PLD_CONFITEOR_COMBO_MAP.has(name)) &&
 				state.hasResourceAvailable("REQUIESCAT")
 			) {
 				if (params.reqPotency) {
 					mods.push(
-						makeReqiescatModifier(
+						makeRequiescatModifier(
 							getBasePotency(state, params.reqPotency) -
 								getBasePotency(state, params.basePotency),
 						),
@@ -686,7 +700,7 @@ makeWeaponskill_PLD("SEPULCHRE", 76, {
 });
 
 makeWeaponskill_PLD("TOTAL_ECLIPSE", 6, {
-	potency: 100,
+	potency: 120,
 	applicationDelay: 0.76,
 	falloff: 0,
 });
@@ -694,7 +708,7 @@ makeWeaponskill_PLD("TOTAL_ECLIPSE", 6, {
 makeWeaponskill_PLD("PROMINENCE", 40, {
 	potency: 100,
 	combo: {
-		potency: 170,
+		potency: 220,
 		resource: "PLD_AOE_COMBO_TRACKER",
 		resourceValue: 1,
 	},
@@ -727,6 +741,11 @@ makeSpell_PLD("HOLY_SPIRIT", 64, {
 		["MELEE_MASTERY_TANK", 650],
 		["MELEE_MASTERY_II_TANK", 700],
 	],
+	dmPotency: [
+		["NEVER", 400],
+		["MELEE_MASTERY_TANK", 450],
+		["MELEE_MASTERY_II_TANK", 500],
+	],
 	highlightIf: (state) =>
 		state.hasResourceAvailable("DIVINE_MIGHT") || state.isHolySpiritCircleGoodForReq(),
 });
@@ -736,7 +755,8 @@ makeSpell_PLD("HOLY_CIRCLE", 72, {
 	applicationDelay: 0.62,
 	baseManaCost: 1000,
 	basePotency: 100,
-	reqPotency: 300,
+	reqPotency: 350,
+	dmPotency: 250,
 	falloff: 0,
 	highlightIf: (state) =>
 		state.hasResourceAvailable("DIVINE_MIGHT") || state.isHolySpiritCircleGoodForReq(),
@@ -765,7 +785,7 @@ makeSpell_PLD("CONFITEOR", 80, {
 		["NEVER", 920],
 		["MELEE_MASTERY_II_TANK", 1000],
 	], // TODO NEVER POT
-	falloff: 0.5,
+	falloff: 0.6,
 	validateAttempt: (state) => state.hasResourceAvailable("CONFITEOR_READY"),
 	highlightIf: (state) => state.hasResourceAvailable("CONFITEOR_READY"),
 	onConfirm: (state) => {
@@ -790,7 +810,7 @@ makeSpell_PLD("BLADE_OF_FAITH", 90, {
 		["NEVER", 720],
 		["MELEE_MASTERY_II_TANK", 760],
 	], // TODO NEVER POT
-	falloff: 0.5,
+	falloff: 0.6,
 	validateAttempt: (state) => bladeOfFaithCondition.condition(state),
 	highlightIf: (state) => bladeOfFaithCondition.condition(state),
 	onConfirm: (state) => {
@@ -814,7 +834,7 @@ makeSpell_PLD("BLADE_OF_TRUTH", 90, {
 		["NEVER", 820],
 		["MELEE_MASTERY_II_TANK", 880],
 	], // TODO NEVER POT
-	falloff: 0.5,
+	falloff: 0.6,
 	validateAttempt: (state) => bladeOfTruthCondition.condition(state),
 	highlightIf: (state) => bladeOfTruthCondition.condition(state),
 	onConfirm: (state) => {
@@ -838,7 +858,7 @@ makeSpell_PLD("BLADE_OF_VALOR", 90, {
 		["NEVER", 920],
 		["MELEE_MASTERY_II_TANK", 1000],
 	], // TODO NEVER POT
-	falloff: 0.5,
+	falloff: 0.6,
 	validateAttempt: (state) => bladeOfValorCondition.condition(state),
 	highlightIf: (state) => bladeOfValorCondition.condition(state),
 	onConfirm: (state) => {
@@ -882,7 +902,7 @@ makeAbility_PLD("IMPERATOR", 96, "cd_IMPERATOR", {
 	applicationDelay: 1.29,
 	cooldown: 60,
 	potency: 580,
-	falloff: 0.5,
+	falloff: 0.6,
 	onConfirm: (state) => {
 		state.resources.get("REQUIESCAT").gain(4);
 		state.enqueueResourceDrop("REQUIESCAT", 30, 4);
