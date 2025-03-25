@@ -222,7 +222,7 @@ export const Modifiers = {
 	EnhancedReaping: {
 		kind: "adder",
 		source: PotencyModifierType.ENHANCED_REAPING,
-		additiveAmount: 40,
+		additiveAmount: 60,
 	} as PotencyAdder,
 	ImmortalSacrifice: {
 		kind: "adder",

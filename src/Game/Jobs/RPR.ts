@@ -1159,7 +1159,7 @@ makeRPRWeaponskill("WHORL_OF_DEATH", 35, {
 });
 
 makeRPRWeaponskill("SPINNING_SCYTHE", 25, {
-	potency: 120,
+	potency: 140,
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0,
@@ -1167,9 +1167,9 @@ makeRPRWeaponskill("SPINNING_SCYTHE", 25, {
 });
 
 makeRPRWeaponskill("NIGHTMARE_SCYTHE", 45, {
-	potency: 100,
+	potency: 120,
 	combo: {
-		potency: 160,
+		potency: 180,
 		resource: "RPR_AOE_COMBO",
 		resourceValue: 1,
 	},
