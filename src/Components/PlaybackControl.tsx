@@ -1012,7 +1012,6 @@ export class Config extends React.Component {
 		if (af > 0 || ui > 0 || uh > 0) {
 			hasEno = true;
 		}
-
 		// if polyglot timer is set (>0), must have enochian
 		if (M.has("POLYGLOT")) {
 			let polyTimer = M.get("POLYGLOT")!.timeTillFullOrDrop;

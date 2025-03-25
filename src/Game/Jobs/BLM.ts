@@ -63,6 +63,14 @@ export class BLMState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
+		// HACK: if UH or AF was set by override (but eno was not), then grant the enochian buff
+		const startsWithEno = config.initialResourceOverrides.some(
+			(override) => (override.type === "ASTRAL_FIRE" || override.type === "UMBRAL_ICE") && override.stacks > 0
+		);
+		if (startsWithEno) {
+			this.gainStatus("ENOCHIAN");
+		}
+
 		this.thunderTickOffset = this.nonProcRng() * 3.0;
 
 		const polyglotStacks =
