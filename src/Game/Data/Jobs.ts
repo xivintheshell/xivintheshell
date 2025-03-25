@@ -14,14 +14,23 @@ import { LimitBreak3ActionKey, TankLimitBreak3ResourceKey } from "./Shared/Limit
  */
 export interface ImplementationDetails {
 	label?: ReactNode;
+	warningContent?: ReactNode;
 }
 export const IMPLEMENTATION_LEVELS = ensureRecord<ImplementationDetails>()({
 	UNIMPLEMENTED: {},
 	OUTDATED: {
 		label: localize({ en: "Outdated" }),
+		warningContent: localize({
+			en: "WARNING: This job recently had significant changes, and may not have been fully updated to reflect them. Exported plans may not load correctly following these changes, so be cautious about relying on them until the job has been fully updated.",
+			zh: "警告：此职业最近经历的技改还未被完整实现到排轴器中。当前排轴器的此职业可能有bug，或在近期经历更新，所以暂时不要太依赖txt，记得勤在别处保存排轴进度。",
+		}),
 	},
 	TESTING: {
 		label: localize({ en: "Testing", zh: "测试中" }),
+		warningContent: localize({
+			en: "WARNING: This job was recently added to XIV in the Shell and is still being tested. There may be bugs or changes in the near future, so make sure to frequently export and save timelines for this job to make sure you don't lose your work.",
+			zh: "警告：此职业刚被实现没多久，可能还不是很稳定，目前暂时不要太依赖txt文件，记得勤在别处保存进度。",
+		}),
 	},
 	LIVE: {},
 });
