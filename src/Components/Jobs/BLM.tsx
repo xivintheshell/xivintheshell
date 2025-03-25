@@ -47,14 +47,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
 		const colors = getCurrentThemeColors();
 		let eno = this.state.resources.get("ENOCHIAN");
-		let enoCountdown: number;
-		if (eno.available(1) && !eno.pendingChange) {
-			enoCountdown = 15;
-		} else {
-			enoCountdown = this.state.resources.timeTillReady("ENOCHIAN");
-		}
 		const resources = this.state.resources;
-		const enochianCountdown = enoCountdown;
 		const astralFire = this.state.getFireStacks();
 		const umbralIce = this.state.getIceStacks();
 		const umbralHearts = resources.get("UMBRAL_HEART").availableAmount();
@@ -67,18 +60,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 			(this.state.hasTraitUnlocked("ENHANCED_POLYGLOT_II") && 3) ||
 			(this.state.hasTraitUnlocked("ENHANCED_POLYGLOT") && 2) ||
 			1;
-		const infos = [
-			{
-				kind: "bar",
-				name: localize({
-					en: "enochian",
-					zh: "天语",
-					ja: "エノキアン",
-				}),
-				color: colors.blm.enochian,
-				progress: enochianCountdown / 15,
-				valueString: enochianCountdown.toFixed(3),
-			} as ResourceBarProps,
+		const infos: ResourceDisplayProps[] = [
 			{
 				kind: "counter",
 				name: localize({

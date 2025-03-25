@@ -101,71 +101,6 @@ it(
 	}),
 );
 
-// Because despair is instant at level 100, we test this at level 90
-it(
-	"drops enochian with fast F3 + 4xF4 + despair",
-	testWithConfig({ level: 90, spellSpeed: 420 }, () => {
-		let alertMsg = "";
-		let warnMsg = "";
-		const alert = jest.spyOn(window, "alert").mockImplementation((msg) => {
-			alertMsg = msg;
-		});
-		const warn = jest.spyOn(console, "warn").mockImplementation((msg) => {
-			warnMsg = msg;
-		});
-		// at min sps (420), 4xF4 after a fast F3 will drop enochian during the
-		// castbar of despair
-		(
-			[
-				// needed to make F3 fast
-				"BLIZZARD_III",
-				"FIRE_III",
-				"FIRE_IV",
-				"FIRE_IV",
-				"FIRE_IV",
-				"FIRE_IV",
-				"DESPAIR",
-			] as ActionKey[]
-		).forEach(applySkill);
-		// wait 4 seconds for cast finish + damage application
-		controller.step(4);
-		expect(alert).toHaveBeenCalled();
-		expect(warn).toHaveBeenCalled();
-		expect(alertMsg).toEqual("cast failed! Resources for Despair are no longer available");
-		expect(warnMsg).toEqual("failed: Despair");
-		expect(checkEnochian()).toBeFalsy();
-		compareDamageTables([
-			{
-				skillName: "BLIZZARD_III",
-				displayedModifiers: [],
-				hitCount: 1,
-			},
-			{
-				skillName: "FIRE_III",
-				displayedModifiers: [PotencyModifierType.UI3],
-				hitCount: 1,
-			},
-			{
-				skillName: "FIRE_IV",
-				displayedModifiers: [PotencyModifierType.AF3],
-				hitCount: 4,
-			},
-		]);
-	}),
-);
-
-it(
-	"removes paradox on enochian drop",
-	testWithConfig({ spellSpeed: 420 }, () => {
-		(["FIRE_III", "SWIFTCAST", "BLIZZARD_III"] as ActionKey[]).forEach(applySkill);
-		expect(checkEnochian()).toBeTruthy();
-		expect(controller.game.resources.get("PARADOX").available(1)).toBeTruthy();
-		controller.step(15.01); // wait just a tiny bit after the enochian drop
-		expect(checkEnochian()).toBeFalsy();
-		expect(controller.game.resources.get("PARADOX").available(0)).toBeTruthy();
-	}),
-);
-
 it(
 	"has different F1 modifiers at different AF/UI states",
 	testWithConfig({}, () => {
@@ -394,59 +329,6 @@ it(
 			{
 				skillName: "BLIZZARD_III",
 				displayedModifiers: [PotencyModifierType.AF3],
-				hitCount: 1,
-			},
-		]);
-	}),
-);
-
-// 2.38 GCD: doing slow F3 + 5xF4 drains all mana; enochian drops midway through the ensuing B3
-// which will then fail due to not having enough mana (unaspected B3 needs 800 MP)
-it(
-	"checks MP cost at end of cast bar",
-	testWithConfig({ level: 70, spellSpeed: 700 }, () => {
-		let alertMsg = "";
-
-		/* eslint-disable @typescript-eslint/no-unused-vars */
-		let warnMsg = "";
-		const alert = jest.spyOn(window, "alert").mockImplementation((msg) => {
-			alertMsg = msg;
-		});
-		const warn = jest.spyOn(console, "warn").mockImplementation((msg) => {
-			warnMsg = msg;
-		});
-		/* eslint-enable @typescript-eslint/no-unused-vars */
-
-		(
-			[
-				"FIRE_III",
-				"FIRE_IV",
-				"FIRE_IV",
-				"FIRE_IV",
-				"FIRE_IV",
-				"FIRE_IV",
-				"BLIZZARD_III",
-				"THUNDER_III",
-			] as ActionKey[]
-		).forEach(applySkill);
-		// wait for cast time + damage application
-		controller.step(4);
-		expect(alertMsg).toEqual("cast failed! Resources for Blizzard 3 are no longer available");
-		compareDamageTables([
-			{
-				skillName: "FIRE_III",
-				displayedModifiers: [],
-				hitCount: 1,
-			},
-			{
-				skillName: "FIRE_IV",
-				displayedModifiers: [PotencyModifierType.AF3],
-				hitCount: 5,
-			},
-			// B3 cast is canceled, thunder is unaspected
-			{
-				skillName: "THUNDER_III",
-				displayedModifiers: [],
 				hitCount: 1,
 			},
 		]);
