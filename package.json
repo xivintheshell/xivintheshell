@@ -1,7 +1,7 @@
 {
   "name": "xiv-in-the-shell",
   "version": "0.1.0",
-  "homepage": "https://xivintheshell.com",
+  "homepage": "https://xivintheshell.github.io/legacy",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.2",
@@ -29,7 +29,7 @@
   "scripts": {
     "deploy": "gh-pages -d build",
     "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
+    "build": "react-app-rewired build && rm build/CNAME",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject",
     "format": "prettier-no-jsx-parens -w -l ."

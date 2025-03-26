@@ -22,7 +22,7 @@ export let setEditingMarkerValues = (marker: MarkerElem) => {};
 
 export let updateMarkers_TimelineMarkerPresets = (trackBins: Map<number, MarkerElem[]>) => {};
 
-const PRESET_MARKERS_BASE = "/presets/markers/";
+const PRESET_MARKERS_BASE = "/legacy/presets/markers/";
 
 type TimelineMarkersProp = {};
 type TimelineMarkersState = {
