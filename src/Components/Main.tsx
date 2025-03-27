@@ -437,13 +437,15 @@ export default class Main extends React.Component {
 												<p>
 													Help us improve XIV in the Shell! Please take
 													our user survey:{" "}
-													<a
-														target={"_blank"}
-														rel={"noreferrer"}
-														href={"https://forms.gle/eKVygxxZVd894323A"}
-													>
-														https://forms.gle/eKVygxxZVd894323A
-													</a>
+													<b>
+														<a
+															target={"_blank"}
+															rel={"noreferrer"}
+															href={"https://forms.gle/eKVygxxZVd894323A"}
+														>
+															https://forms.gle/eKVygxxZVd894323A
+														</a>
+													</b>
 												</p>
 											</>,
 											zh: <>
