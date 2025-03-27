@@ -441,7 +441,9 @@ export default class Main extends React.Component {
 														<a
 															target={"_blank"}
 															rel={"noreferrer"}
-															href={"https://forms.gle/eKVygxxZVd894323A"}
+															href={
+																"https://forms.gle/eKVygxxZVd894323A"
+															}
 														>
 															https://forms.gle/eKVygxxZVd894323A
 														</a>
