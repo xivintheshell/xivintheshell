@@ -9,7 +9,7 @@ import { SkillSequencePresets } from "./SkillSequencePresets";
 import { IntroSection } from "./IntroSection";
 import changelog from "../changelog.json";
 import { localize, localizeDate, SelectLanguage } from "./Localization";
-import { GlobalHelpTooltip, Tabs } from "./Common";
+import { Expandable, GlobalHelpTooltip, Tabs } from "./Common";
 import { getCurrentThemeColors, SelectColorTheme } from "./ColorTheme";
 import { DamageStatistics } from "./DamageStatistics";
 import { MAX_TIMELINE_SLOTS } from "../Controller/Timeline";
@@ -372,50 +372,6 @@ export default class Main extends React.Component {
 								</div>,
 							})}
 
-							{/* PSA */}
-							<PSA hidden>
-								{localize({
-									en: <>
-										<p>
-											We are moving to a new site! URL:{" "}
-											<b>
-												<a
-													target={"_blank"}
-													rel={"noreferrer"}
-													href={"https://xivintheshell.com"}
-												>
-													xivintheshell.com
-												</a>
-											</b>
-											. It unites BLM and PCT in the Shell, has preliminary
-											RDM support, and might support more jobs in the future.
-										</p>
-										<p>
-											Patch 7.1 job changes as well as future updates will all
-											happen on the new site, so see y'all over there :)
-										</p>
-									</>,
-									zh: <>
-										<p>
-											排轴器搬家了！新地址是这个:{" "}
-											<b>
-												<a
-													target={"_blank"}
-													rel={"noreferrer"}
-													href={"https://xivintheshell.com"}
-												>
-													xivintheshell.com
-												</a>
-											</b>
-											。新地址整合了黑魔和画家排轴器，目前也初步支持赤魔，以后还可能会更新更多职业。
-										</p>
-										<p>
-											7.1技改和今后的所有更新也都将在新地址进行，所以就麻烦大家以后去那边了哈。
-										</p>
-									</>,
-								})}
-							</PSA>
-
 							{/*
 							EW cached content warning
 							Note to devs: this wouldn't work for locally hosted versions though.
@@ -464,6 +420,52 @@ export default class Main extends React.Component {
 							) : undefined}
 
 							<IntroSection job={this.state.job} />
+
+							{/* PSA */}
+							<Expandable
+								defaultShow={true}
+								title={"7-2-user-survey"}
+								titleNode={
+									<span>
+										{localize({ en: "7.2 User Survey", zh: "7.2用户体验调查" })}
+									</span>
+								}
+								content={
+									<PSA>
+										{localize({
+											en: <>
+												<p>
+													Help us improve XIV in the Shell! Please take
+													our user survey:{" "}
+													<a
+														target={"_blank"}
+														rel={"noreferrer"}
+														href={"https://forms.gle/eKVygxxZVd894323A"}
+													>
+														https://forms.gle/eKVygxxZVd894323A
+													</a>
+												</p>
+											</>,
+											zh: <>
+												<p>
+													帮我们改进排轴器！请参加我们的用户体验调查：{" "}
+													<b>
+														<a
+															target={"_blank"}
+															rel={"noreferrer"}
+															href={
+																"https://www.wjx.cn/vm/mQ1gV2b.aspx"
+															}
+														>
+															https://www.wjx.cn/vm/mQ1gV2b.aspx
+														</a>
+													</b>
+												</p>
+											</>,
+										})}
+									</PSA>
+								}
+							/>
 						</div>
 						<div
 							style={{
