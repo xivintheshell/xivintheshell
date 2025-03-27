@@ -51,6 +51,10 @@ buffIcons.set(BuffType.LanceCharge, require("./Asset/Buffs/DRG/Lance Charge.png"
 buffIcons.set(BuffType.LifeOfTheDragon, require("./Asset/Buffs/DRG/Life of the Dragon.png"));
 buffIcons.set(BuffType.LifeSurge, require("./Asset/Buffs/DRG/Life Surge.png"));
 
+buffIcons.set(BuffType.DivineMight, require("./Asset/Buffs/PLD/Divine Might.png"));
+buffIcons.set(BuffType.Requiescat, require("./Asset/Buffs/PLD/Requiescat Zero.png"));
+buffIcons.set(BuffType.FightOrFlight, require("./Asset/Buffs/PLD/Fight or Flight.png"));
+
 buffIcons.set(BuffType.Zoe, require("./Asset/Buffs/SGE/Zoe.png"));
 buffIcons.set(BuffType.Autophysis, require("./Asset/Buffs/SGE/Autophysis.png"));
 buffIcons.set(BuffType.Krasis, require("./Asset/Buffs/SGE/Krasis.png"));

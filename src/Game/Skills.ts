@@ -158,6 +158,10 @@ interface BaseSkill<T extends PlayerState> {
 
 	// The simulation delay, in seconds, between which `onConfirm` and `onApplication` are called.
 	readonly applicationDelay: number;
+
+	// Skill starts auto if true. Weaponskills defaulted to true, Spells defaulted to false.
+	// Set this if you want to overwrite the default.
+	readonly startsAuto: boolean;
 }
 
 export type GCD<T extends PlayerState> = BaseSkill<T> & {
@@ -336,6 +340,7 @@ export interface MakeSkillParams<T extends PlayerState> {
 	onConfirm: EffectFn<T>;
 	onApplication: EffectFn<T>;
 	secondaryCooldown?: CooldownGroupProperties;
+	startsAuto: boolean;
 }
 
 // Parameters for a spell or weaponskill
@@ -413,6 +418,7 @@ export function makeSpell<T extends PlayerState>(
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
+		startsAuto: params.startsAuto ?? false,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.secondaryCooldown !== undefined) {
@@ -471,6 +477,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
+		startsAuto: params.startsAuto ?? true,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.secondaryCooldown !== undefined) {
@@ -557,6 +564,7 @@ export function makeAbility<T extends PlayerState>(
 		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
+		startsAuto: params.startsAuto ?? false,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	if (params.cooldown !== undefined) {
@@ -676,6 +684,7 @@ export function makeLimitBreak<T extends PlayerState>(
 		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,
+		startsAuto: false,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
 	// Fudge the "cooldown" as the sum of the cast time and the animation lock to make the grey bar on the timeline look right
