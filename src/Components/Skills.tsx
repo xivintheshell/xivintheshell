@@ -452,7 +452,8 @@ class SkillButton extends React.Component {
 						position: "absolute",
 						width: skillBoxPx,
 						height: skillBoxPx,
-						background: "url('https://xivintheshell.com/misc/skillIcon_overlay.png') no-repeat",
+						background:
+							"url('https://xivintheshell.com/misc/skillIcon_overlay.png') no-repeat",
 					}}
 				/>
 			</div>
