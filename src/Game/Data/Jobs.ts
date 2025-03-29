@@ -187,7 +187,7 @@ export type RangedKey = keyof Ranged;
 export const CASTERS = ensureRecord<Job>()({
 	BLM: {
 		role: "CASTER",
-		implementationLevel: "OUTDATED",
+		implementationLevel: "LIVE",
 		usesMp: true,
 		limitBreak: "METEOR",
 	},
