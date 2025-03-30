@@ -33,7 +33,6 @@ export function getGameState(config: GameConfig): GameState {
 			return new DRKState(config);
 		case "GNB":
 			return new GNBState(config);
-
 		// Healers
 		case "WHM":
 			return new WHMState(config);

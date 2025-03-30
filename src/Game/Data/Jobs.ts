@@ -72,7 +72,7 @@ export interface Job {
 export const TANKS = ensureRecord<Job>()({
 	PLD: {
 		role: "TANK",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "LAST_BASTION",
 		limitBreakBuff: "LAST_BASTION",

@@ -39,6 +39,8 @@ export const COMMON_TRACKERS = ensureRecord<ResourceData>()({
 	NOT_ANIMATION_LOCKED: { name: "NotAnimationLocked" }, // [0, 1]
 	NOT_CASTER_TAXED: { name: "NotCasterTaxed" }, // [0, 1]
 	IN_COMBAT: { name: "InCombat", label: { zh: "战斗中" } }, // [0, 1], used for abilities that can only execute in combat
+	AUTOS_ENGAGED: { name: "Autos Engaged" }, // [0, 1], corresponding to the right clicking on enemies, looks like: O>>>
+	STORED_AUTO: { name: "Stored Auto" }, // [0, 1], 0 - default, 1 - if auto timer is paused at 0.0
 
 	PARTY_SIZE: { name: "PartySize", label: { zh: "小队人数" } },
 
