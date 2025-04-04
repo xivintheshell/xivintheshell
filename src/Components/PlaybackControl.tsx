@@ -223,7 +223,7 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 				color: warningColor,
 			}}
 		>
-			{details.warningContent}
+			{localize(details.warningContent)}
 		</p>;
 	};
 
@@ -1504,7 +1504,8 @@ export class Config extends React.Component {
 						const impl = JOBS[job].implementationLevel as ImplementationKey;
 						if (impl !== "LIVE") {
 							return <option key={job} value={job}>
-								{job + ` (${IMPLEMENTATION_LEVELS[impl].label})`}
+								{job +
+									` (${localize(IMPLEMENTATION_LEVELS[impl].label ?? { en: "" })})`}
 							</option>;
 						} else {
 							return <option key={job} value={job}>
