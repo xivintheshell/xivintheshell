@@ -1,5 +1,11 @@
 [
 	{
+		"date": "4/6/25",
+		"changes": [
+			"Added English-language markers for M5S + M6S"
+		]
+	},
+	{
 		"date": "3/29/25",
 		"changes": [
 			"[BLM] Removed \"outdated\" status"
