@@ -580,18 +580,23 @@ export class TimelineMarkers extends React.Component {
 					offsetStr={this.state.offsetStr}
 				/>
 				<LoadCombinedTracksBtn
-					displayName={"M8S-1 full"}
-					url={PRESET_MARKERS_BASE + "m8s_p1.txt"}
+					displayName={"M8S full"}
+					url={PRESET_MARKERS_BASE + "m8s_full.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
 				<LoadCombinedTracksBtn
-					displayName={"M8S-1 to adds"}
+					displayName={"M8S P1 to adds"}
 					url={PRESET_MARKERS_BASE + "m8s_p1_through_adds.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
 				<LoadCombinedTracksBtn
-					displayName={"M8S-1 after adds"}
+					displayName={"M8S P1 post-adds"}
 					url={PRESET_MARKERS_BASE + "m8s_p1_post_adds.txt"}
+					offsetStr={this.state.offsetStr}
+				/>
+				<LoadCombinedTracksBtn
+					displayName={"M8S P2"}
+					url={PRESET_MARKERS_BASE + "m8s_p2.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
 			</p>
