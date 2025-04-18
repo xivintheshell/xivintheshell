@@ -1258,3 +1258,10 @@ makeRPRWeaponskill("GUILLOTINE", 70, {
 	highlightIf: (state) => state.hasResourceAvailable("SOUL_REAVER"),
 	validateAttempt: reaverPredicate,
 });
+
+makeRPRAbility("GAIN_SOUL_GAUGE", 50, "cd_GAIN_SOUL_GAUGE", {
+	applicationDelay: 0,
+	animationLock: FAKE_SKILL_ANIMATION_LOCK,
+	cooldown: 0.01,
+	onConfirm: (state) => state.resources.get("SOUL").gain(10),
+});

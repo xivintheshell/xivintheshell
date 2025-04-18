@@ -1,5 +1,11 @@
 [
 	{
+		"date": "4/16/25",
+		"changes": [
+			"[RPR] Added a button to gain +10 Soul Gauge to simulate a target dying with Death's Design active"
+		]
+	},
+	{
 		"date": "4/13/25",
 		"changes": [
 			"Added English-language markers for M8S"
