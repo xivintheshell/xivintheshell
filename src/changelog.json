@@ -1,8 +1,10 @@
 [
 	{
-		"date": "4/16/25",
+		"date": "4/17/25",
 		"changes": [
-			"[RPR] Added a button to gain +10 Soul Gauge to simulate a target dying with Death's Design active"
+			"[RPR] Added a button to gain +10 Soul Gauge to simulate a target dying with Death's Design active",
+			"[BRD] Fixed a bug where Iron Jaws checked the dot status at application time instead of confirmation time (thanks Yumiya)",
+			"[BRD] Fixed a bug where Empyreal Arrow applied repertoire at application time instead of confirmation time (also thanks Yumiya)"
 		]
 	},
 	{

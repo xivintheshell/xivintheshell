@@ -522,20 +522,33 @@ dotAppliers.forEach((props) => {
 makeWeaponskill_BRD("IRON_JAWS", 56, {
 	potency: 100,
 	applicationDelay: 0.67,
-	onApplication: (state, node) => {
-		dotAppliers.forEach((dotParams) => {
-			state.refreshDot({
-				node,
-				effectName: dotParams.dotName,
-				tickPotency: dotParams.tickPotency,
-				skillName: "IRON_JAWS",
-				speedStat: "sks",
-				modifiers: state.getJobPotencyModifiers("IRON_JAWS"),
-			});
-		});
-		if (state.hasTraitUnlocked("BITE_MASTERY_II")) {
-			state.maybeGainProc("HAWKS_EYE", 0.35);
-		}
+	onConfirm: (state, node) => {
+		// GH#131: iron jaws checks whether the dots are active at cast confirm,
+		// not at application time
+		// the refreshed status is still applied at application
+		const dotActive = dotAppliers.map((dotParams) =>
+			state.hasResourceAvailable(dotParams.dotName),
+		);
+		state.addEvent(
+			new Event("iron jaws dot refresh", 0.67, () => {
+				dotAppliers.forEach((dotParams, i) => {
+					state.refreshDot(
+						{
+							node,
+							effectName: dotParams.dotName,
+							tickPotency: dotParams.tickPotency,
+							skillName: "IRON_JAWS",
+							speedStat: "sks",
+							modifiers: state.getJobPotencyModifiers("IRON_JAWS"),
+						},
+						dotActive[i],
+					);
+				});
+				if (state.hasTraitUnlocked("BITE_MASTERY_II")) {
+					state.maybeGainProc("HAWKS_EYE", 0.35);
+				}
+			}),
+		);
 	},
 });
 
@@ -589,7 +602,8 @@ makeAbility_BRD("EMYPREAL_ARROW", 54, "cd_EMPYREAL_ARROW", {
 	],
 	cooldown: 15,
 	applicationDelay: 1.03,
-	onApplication: (state) => state.gainRepertoireEffect(), // on application or on confirm?
+	// GH#130: repertoire effect is applied on confirm
+	onConfirm: (state) => state.gainRepertoireEffect(),
 });
 
 makeAbility_BRD("BLOODLETTER", 12, "cd_HEARTBREAK_SHOT", {

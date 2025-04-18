@@ -1288,14 +1288,14 @@ export class GameState {
 		}
 	}
 
-	refreshDot(props: OverTimePotencyProps) {
-		this.refreshOverTimeEffect(props, "damage");
+	refreshDot(props: OverTimePotencyProps, forceRefresh: boolean = false) {
+		this.refreshOverTimeEffect(props, "damage", forceRefresh);
 	}
 	refreshHot(props: OverTimePotencyProps) {
-		this.refreshOverTimeEffect(props, "healing");
+		this.refreshOverTimeEffect(props, "healing", false);
 	}
-	refreshOverTimeEffect(props: OverTimePotencyProps, kind: PotencyKind) {
-		if (!this.hasResourceAvailable(props.effectName)) {
+	refreshOverTimeEffect(props: OverTimePotencyProps, kind: PotencyKind, forceRefresh: boolean) {
+		if (!forceRefresh && !this.hasResourceAvailable(props.effectName)) {
 			return;
 		}
 
