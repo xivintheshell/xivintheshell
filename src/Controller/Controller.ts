@@ -65,7 +65,14 @@ import {
 	getTargetableDurationBetween,
 } from "./DamageStatistics";
 import { XIVMath } from "../Game/XIVMath";
-import { MELEE_JOBS, ShellJob } from "../Game/Data/Jobs";
+import {
+	TANK_JOBS,
+	MELEE_JOBS,
+	HEALER_JOBS,
+	RANGED_JOBS,
+	CASTER_JOBS,
+	ShellJob,
+} from "../Game/Data/Jobs";
 import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
 import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 import { getGameState } from "../Game/Jobs";
@@ -1417,11 +1424,13 @@ class Controller {
 	getAmaSimCsv(): any[][] {
 		const normalizeName = (s: string) => {
 			if (s === ACTIONS.TINCTURE.name) {
-				return "Grade 2 Gemdraught";
+				return "Grade 3 Gemdraught";
 			} else {
 				return s.replace(" 2", " II").replace(" 3", " III").replace(" 4", " IV");
 			}
 		};
+		const job = this.getActiveJob();
+		const isMelee = TANK_JOBS.includes(job) || MELEE_JOBS.includes(job);
 		const buffRows = this.timeline.getBuffMarkers().map((marker) => {
 			const buff = new Buff(marker.description as BuffType);
 			let buffName: string = buff.info.name as string;
@@ -1459,37 +1468,98 @@ class Controller {
 				) {
 					return "Buff Only";
 				} else if (buff.info.name === BuffType.Card_TheSpear) {
-					return "Big";
+					return !isMelee ? "Big" : "Small";
+				} else if (buff.info.name === BuffType.Card_TheBalance) {
+					return isMelee ? "Big" : "Small";
 				}
 				return "";
 			};
 			return [marker.time, buffName, buff.info.job, getBuffModifiers()];
 		});
+		// sim currently doesn't track mp ticks or mp costs, or any other manner of validation
+		// consequently, we skip any of the following actions:
+		// - sprint
+		// - limit breaks
+		// - buff toggle events
+		// - non-damage/gauge generation abilities (lucid dreaming, gap-closers, defensives)
+		//   - it seems like tanks have their mitigation buttons still
+		// - fake abilities (pop tempera coat, pop tengentsu)
+		const actionFilterSkills = [
+			"SPRINT",
+			"SECOND_WIND",
+			"HEAD_GRAZE",
+			"ESUNA",
+			"ADDLE",
+			"RESCUE",
+			"LUCID_DREAMING",
+			"SURECAST",
+			"FEINT",
+			"BLOODBATH",
+			"TRUE_NORTH",
+			"LEG_SWEEP",
+			"LOW_BLOW",
+			"INTERJECT",
+			// Jobs sorted alphabetically so it's easy to go through each data file in order
+			// BLM
+			"BETWEEN_THE_LINES",
+			"RETRACE",
+			"AETHERIAL_MANIPULATION",
+			"MANAWARD",
+			// BRD
+			"REPELLING_SHOT",
+			"WARDENS_PAEAN",
+			"NATURES_MINNE",
+			"TROUBADOUR",
+			// DNC
+			"EN_AVANT",
+			"SHIELD_SAMBA",
+			"IMPROVISATION",
+			"IMPROVISED_FINISH",
+			"CURING_WALTZ",
+			"CLOSED_POSITION",
+			"ENDING",
+			// DRG - none (winged glide is supported)
+			// GNB - none (apparently even tank stance toggle is included...?)
+			// MCH
+			"QUEEN_OVERDRIVE", // not implemented
+			// no pet actions
+			"VOLLEY_FIRE",
+			"ARM_PUNCH",
+			"ROOK_OVERLOAD",
+			"PILE_BUNKER",
+			"CROWNED_COLLIDER",
+			// PCT
+			"TEMPERA_COAT_POP",
+			"TEMPERA_GRASSA_POP",
+			// RDM - none
+			// RPR
+			"ARCANE_CREST",
+			"ARCANE_CREST_POP",
+			"REGRESS",
+			"GAIN_SOUL_GAUGE",
+			// SAM
+			"MEDITATE",
+			"THIRD_EYE_POP",
+			"TENGENTSU_POP",
+			// SGE - honestly it would be easier to whitelist, I don't think anyone is making
+			// a shell plan with SGE that would require simulating so let's just not for now
+			// SMN
+			"PHYSICK",
+			"RADIANT_AEGIS",
+			"RESURRECTION",
+			// WAR - none
+			// LBs
+			...Object.keys(LIMIT_BREAK_ACTIONS),
+		] as ActionKey[];
+
 		const actionRows = this.#actionsLogCsv
-			// sim currently doesn't track mp ticks or mp costs, so skip lucid dreaming
-			// also skip sprint, buff toggle events, and any other non-damage-related abilities
 			.filter(
 				(row) =>
-					!(
-						[
-							"SPRINT",
-							"LUCID_DREAMING",
-							"BETWEEN_THE_LINES",
-							"RETRACE",
-							"ADDLE",
-							"AETHERIAL_MANIPULATION",
-							"MANAWARD",
-							"SURECAST",
-
-							"TEMPERA_GRASSA_POP",
-							"TEMPERA_COAT_POP",
-							...Object.keys(LIMIT_BREAK_ACTIONS), // Exclude LBs from export
-						] as ActionKey[]
-					)
-						.map((key) => ACTIONS[key].name)
-						.includes(row.action) && !row.action.includes("Toggle buff"),
+					!actionFilterSkills.map((key) => ACTIONS[key].name).includes(row.action) &&
+					!row.action.includes("Toggle buff"),
 			)
 			.map((row) => [row.time, normalizeName(row.action), "", ""]);
+		// TODO add "targets" column to export for multi-target support
 		return [["Time", "skill_name", "job_class", "skill_conditional"]].concat(
 			buffRows as any[][],
 			actionRows as any[][],
