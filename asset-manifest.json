@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.d6fbbdda.css",
-    "main.js": "/static/js/main.375d8f46.js",
+    "main.js": "/static/js/main.ed45aa91.js",
     "static/media/Tincture.png": "/static/media/Tincture.153262855f68ee9288d4.png",
     "static/media/Air Anchor.png": "/static/media/Air Anchor.6d93723885c77fa999cf.png",
     "static/media/Chain Saw.png": "/static/media/Chain Saw.af8cafbbedf7a731fff2.png",
@@ -526,6 +526,7 @@
     "static/media/Entrechat.png": "/static/media/Entrechat.80a1ebf5d829a3022a23.png",
     "static/media/Hammer Stamp.png": "/static/media/Hammer Stamp.dd1c38925c1af752cf67.png",
     "static/media/Weapon Motif.png": "/static/media/Weapon Motif.0ec79208d1f1c371455c.png",
+    "static/media/+10 Soul Gauge.png": "/static/media/+10 Soul Gauge.631afb5963170e75cbb0.png",
     "static/media/Contre Sixte.png": "/static/media/Contre Sixte.6cdf2e389c15bc66a49b.png",
     "static/media/Blast Arrow Ready.png": "/static/media/Blast Arrow Ready.73f8afddbc8bd8fd5ce1.png",
     "static/media/Steel Muse.png": "/static/media/Steel Muse.13502329e5ce314b5397.png",
@@ -731,10 +732,10 @@
     "static/media/Missing.png": "/static/media/Missing.ba6935b114c5518d1384.png",
     "index.html": "/index.html",
     "main.d6fbbdda.css.map": "/static/css/main.d6fbbdda.css.map",
-    "main.375d8f46.js.map": "/static/js/main.375d8f46.js.map"
+    "main.ed45aa91.js.map": "/static/js/main.ed45aa91.js.map"
   },
   "entrypoints": [
     "static/css/main.d6fbbdda.css",
-    "static/js/main.375d8f46.js"
+    "static/js/main.ed45aa91.js"
   ]
 }
