@@ -32,6 +32,7 @@ makeAbility(TANK_JOBS, "INTERJECT", 18, "cd_HEAD_GRAZE", {
 	applicationDelay: 0,
 	cooldown: 30,
 	assetPath: "Role/Interject.png",
+	startsAuto: true,
 });
 
 makeAbility(RANGED_JOBS, "HEAD_GRAZE", 24, "cd_HEAD_GRAZE", {
@@ -53,6 +54,7 @@ makeResourceAbility(TANK_JOBS, "REPRISAL", 22, "cd_REPRISAL", {
 	cooldown: 60,
 	duration: (state) => (state.hasTraitUnlocked("ENHANCED_REPRISAL") && 15) || 10,
 	assetPath: "Role/Reprisal.png",
+	startsAuto: true,
 });
 
 MELEE_JOBS.forEach((job) => {
@@ -191,6 +193,7 @@ makeAbility(TANK_JOBS, "PROVOKE", 15, "cd_PROVOKE", {
 	cooldown: 30,
 	assetPath: "Role/Provoke.png",
 	drawsAggro: true,
+	startsAuto: true,
 });
 
 makeAbility(TANK_JOBS, "SHIRK", 48, "cd_SHIRK", {
@@ -203,6 +206,7 @@ makeAbility(TANK_JOBS, "LOW_BLOW", 25, "cd_LOW_BLOW", {
 	applicationDelay: 0.62,
 	cooldown: 25,
 	assetPath: "Role/Low Blow.png",
+	startsAuto: true,
 });
 
 makeSpell(HEALER_JOBS, "ESUNA", 10, {
