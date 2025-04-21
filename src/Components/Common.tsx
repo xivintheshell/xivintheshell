@@ -108,7 +108,7 @@ export class SaveToFile extends React.Component {
 		this.props = props;
 		this.state = {
 			jsonContent: {},
-			csvContent: {body: []},
+			csvContent: { body: [] },
 			pngContent: undefined,
 		};
 	}
