@@ -50,7 +50,12 @@ import { ImageExportConfig } from "./ImageExportConfig";
 import { inferJobFromSkillNames, PresetLinesManager } from "./PresetLinesManager";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
 import { refreshTimelineEditor } from "../Components/TimelineEditor";
-import { DEFAULT_TIMELINE_OPTIONS, StaticFn, TimelineDrawOptions } from "../Components/Common";
+import {
+	CsvData,
+	DEFAULT_TIMELINE_OPTIONS,
+	StaticFn,
+	TimelineDrawOptions,
+} from "../Components/Common";
 import { TimelineRenderingProps } from "../Components/TimelineCanvas";
 import { Potency, PotencyKind, PotencyModifierType } from "../Game/Potency";
 import {
@@ -65,16 +70,8 @@ import {
 	getTargetableDurationBetween,
 } from "./DamageStatistics";
 import { XIVMath } from "../Game/XIVMath";
-import {
-	TANK_JOBS,
-	MELEE_JOBS,
-	HEALER_JOBS,
-	RANGED_JOBS,
-	CASTER_JOBS,
-	ShellJob,
-} from "../Game/Data/Jobs";
+import { TANK_JOBS, MELEE_JOBS, ShellJob } from "../Game/Data/Jobs";
 import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
-import { LIMIT_BREAK_ACTIONS } from "../Game/Data/Shared/LimitBreak";
 import { getGameState } from "../Game/Jobs";
 import { localizeSkillName } from "../Components/Localization";
 
@@ -120,6 +117,8 @@ class Controller {
 		action: string;
 		isGCD: number;
 		castTime: number;
+		targetCount?: number;
+		isDamaging: boolean; // used to track if the skill is damaging for combat sim export
 	}[] = [];
 	#dotTickTimes: Map<ResourceKey | string, number[]> = new Map();
 	#hotTickTimes: Map<ResourceKey | string, number[]> = new Map();
@@ -1041,6 +1040,8 @@ class Controller {
 					action: ACTIONS[skillName].name,
 					isGCD: isGCD ? 1 : 0,
 					castTime: status.instantCast ? 0 : status.castTime,
+					targetCount: node.targetCount,
+					isDamaging: node.anyPotencies(),
 				});
 			}
 
@@ -1421,7 +1422,7 @@ class Controller {
 
 	// return rows of a CSV to feed to Amarantine's combat sim
 	// https://github.com/Amarantine-xiv/Amas-FF14-Combat-Sim
-	getAmaSimCsv(): any[][] {
+	getAmaSimCsv(): CsvData {
 		const normalizeName = (s: string) => {
 			if (s === ACTIONS.TINCTURE.name) {
 				return "Grade 3 Gemdraught";
@@ -1474,96 +1475,43 @@ class Controller {
 				}
 				return "";
 			};
-			return [marker.time, buffName, buff.info.job, getBuffModifiers()];
+			return [marker.time, buffName, buff.info.job, getBuffModifiers(), ""];
 		});
 		// sim currently doesn't track mp ticks or mp costs, or any other manner of validation
-		// consequently, we skip any of the following actions:
-		// - sprint
-		// - limit breaks
-		// - buff toggle events
-		// - non-damage/gauge generation abilities (lucid dreaming, gap-closers, defensives)
-		//   - it seems like tanks have their mitigation buttons still
-		// - fake abilities (pop tempera coat, pop tengentsu)
-		const actionFilterSkills = [
-			"SPRINT",
-			"SECOND_WIND",
-			"HEAD_GRAZE",
-			"ESUNA",
-			"ADDLE",
-			"RESCUE",
-			"LUCID_DREAMING",
-			"SURECAST",
-			"FEINT",
-			"BLOODBATH",
-			"TRUE_NORTH",
-			"LEG_SWEEP",
-			"LOW_BLOW",
-			"INTERJECT",
-			// Jobs sorted alphabetically so it's easy to go through each data file in order
-			// BLM
-			"BETWEEN_THE_LINES",
-			"RETRACE",
-			"AETHERIAL_MANIPULATION",
-			"MANAWARD",
-			// BRD
-			"REPELLING_SHOT",
-			"WARDENS_PAEAN",
-			"NATURES_MINNE",
-			"TROUBADOUR",
-			// DNC
-			"EN_AVANT",
-			"SHIELD_SAMBA",
-			"IMPROVISATION",
-			"IMPROVISED_FINISH",
-			"CURING_WALTZ",
-			"CLOSED_POSITION",
-			"ENDING",
-			// DRG - none (winged glide is supported)
-			// GNB - none (apparently even tank stance toggle is included...?)
-			// MCH
-			"QUEEN_OVERDRIVE", // not implemented
-			// no pet actions
-			"VOLLEY_FIRE",
-			"ARM_PUNCH",
-			"ROOK_OVERLOAD",
-			"PILE_BUNKER",
-			"CROWNED_COLLIDER",
-			// PCT
-			"TEMPERA_COAT_POP",
-			"TEMPERA_GRASSA_POP",
-			// RDM - none
-			// RPR
-			"ARCANE_CREST",
-			"ARCANE_CREST_POP",
-			"REGRESS",
-			"GAIN_SOUL_GAUGE",
-			// SAM
-			"MEDITATE",
-			"THIRD_EYE_POP",
-			"TENGENTSU_POP",
-			// SGE - honestly it would be easier to whitelist, I don't think anyone is making
-			// a shell plan with SGE that would require simulating so let's just not for now
-			// SMN
-			"PHYSICK",
-			"RADIANT_AEGIS",
-			"RESURRECTION",
-			// WAR - none
-			// LBs
-			...Object.keys(LIMIT_BREAK_ACTIONS),
-		] as ActionKey[];
-
+		// as such, many skills are unsupported: we set the use_strict_skill_naming metadata
+		// flag to allow the sim to raise warnings when we export a skill it doesn't recognize
+		// we exclude buff toggle events from the export since those aren't real skills
 		const actionRows = this.#actionsLogCsv
-			.filter(
-				(row) =>
-					!actionFilterSkills.map((key) => ACTIONS[key].name).includes(row.action) &&
-					!row.action.includes("Toggle buff"),
-			)
-			.map((row) => [row.time, normalizeName(row.action), "", ""]);
-		// TODO add "targets" column to export for multi-target support
-		return [["Time", "skill_name", "job_class", "skill_conditional"]].concat(
-			buffRows as any[][],
-			actionRows as any[][],
-		);
+			.filter((row) => !row.action.includes("Toggle buff"))
+			.map((row) => {
+				let targetCell = "";
+				if (row.isDamaging && row.targetCount !== undefined) {
+					targetCell = '"';
+					for (let i = 0; i < row.targetCount; i++) {
+						if (i !== 0) {
+							targetCell += ", ";
+						}
+						targetCell += "Boss" + i.toString();
+					}
+					targetCell += '"';
+				}
+				return [row.time, normalizeName(row.action), "", "", targetCell];
+			});
+		const meta = ["use_strict_skill_naming = False"];
+		const downtimeWindows = this.timeline
+			.getUntargetableMarkers()
+			.map((marker) => `(${marker.time}, ${marker.time + marker.duration})`);
+		if (downtimeWindows.length > 0) {
+			// append a comma to every window so python recognizes the tuple
+			meta.push("downtime_windows = (" + downtimeWindows.map((s) => s + ",") + ")");
+		}
+		return {
+			meta,
+			body: [["time", "skill_name", "job_class", "skill_conditional", "targets"]].concat(
+				buffRows as any[][],
+				actionRows as any[][],
+			),
+		};
 	}
 
 	// generally used for trying to add a line to the current timeline
@@ -1689,6 +1637,7 @@ class Controller {
 			action: "Toggle buff: " + RESOURCES[buffName].name,
 			isGCD: 0,
 			castTime: 0,
+			isDamaging: false,
 		});
 
 		return true;

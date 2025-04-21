@@ -74,7 +74,7 @@ export class LoadSave extends React.Component {
 			<SaveToFile
 				fileFormat={FileFormat.Csv}
 				getContentFn={() => {
-					return controller.getActionsLogCsv();
+					return { body: controller.getActionsLogCsv() };
 				}}
 				filename={"fight"}
 				displayName={localize({
