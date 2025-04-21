@@ -54,6 +54,13 @@ export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 
 		const autoTimer = this.state.findAutoAttackTimerInQueue();
 
+		let autoString = "";
+		if (this.state.hasResourceAvailable("STORED_AUTO")) {
+			autoString = "stored";
+		} else {
+			autoString = autoTimer !== -1 ? autoTimer.toFixed(3) : "N/A";
+		}
+
 		const infos: ResourceDisplayProps[] = [
 			{
 				kind: "counter",
@@ -68,7 +75,7 @@ export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 				name: localize({ en: "Auto Tracker" }),
 				color: colors.pld.ironWillColor,
 				progress: autoTimer !== -1 ? (3 - autoTimer) / 3 : 0,
-				valueString: autoTimer !== -1 ? autoTimer.toFixed(3) : "N/A",
+				valueString: autoString,
 			} as ResourceBarProps,
 
 			{

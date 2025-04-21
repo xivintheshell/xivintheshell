@@ -185,17 +185,23 @@ export class PLDState extends GameState {
 		this.tryConsumeResource("PASSAGE_OF_ARMS");
 	}
 
-	override onAutoAttack(): void {
-		console.log("auto at: " + (this.time - 5).toFixed(3));
-		controller.reportMeditateTick(this.time, "auto");
+	override jobSpecificOnAutoAttack(): void {
+		controller.reportAutoTick(this.time, "auto");
 		this.resources.get("OATH_GAUGE").gain(5);
 	}
 
+	isSpellInstant(name: ActionKey) {
+		if (name !== "CLEMENCY") {
+			return (
+				this.hasResourceAvailable("DIVINE_MIGHT") || this.hasResourceAvailable("REQUIESCAT")
+			);
+		} else {
+			return this.hasResourceAvailable("REQUIESCAT");
+		}
+	}
+
 	captureSpellCastTime(name: ActionKey, baseCastTime: number): number {
-		if (
-			name !== "CLEMENCY" &&
-			(this.hasResourceAvailable("DIVINE_MIGHT") || this.hasResourceAvailable("REQUIESCAT"))
-		) {
+		if (this.isSpellInstant(name)) {
 			return 0;
 		} else {
 			return this.config.adjustedCastTime(baseCastTime);
@@ -204,7 +210,11 @@ export class PLDState extends GameState {
 
 	// consume requiescat if applicable
 	tryConsumeRequiescat(spellName: PLDActionKey) {
-		if (PLD_DIVINE_MIGHT_SPELLS.includes(spellName) || PLD_CONFITEOR_COMBO_MAP.has(spellName)) {
+		if (
+			PLD_DIVINE_MIGHT_SPELLS.includes(spellName) ||
+			PLD_CONFITEOR_COMBO_MAP.has(spellName) ||
+			spellName === "CLEMENCY"
+		) {
 			this.tryConsumeResource("REQUIESCAT");
 		}
 	}
@@ -262,14 +272,22 @@ export class PLDState extends GameState {
 			this.tryConsumeResource("PLD_AOE_COMBO_TRACKER", true);
 			this.progressComboTracker(skillName, "PLD_COMBO_TRACKER", PLD_BASIC_COMBO_MAP);
 		}
-		// TODO: Does using a physical gcd break confiteor combo ?
+
+		// 1,2,3 AOE1, AOE2, SHIELD BASH all break confiteor combo
+		if (
+			PLD_AOE_COMBO_MAP.has(skillName) ||
+			PLD_BASIC_COMBO_MAP.has(skillName) ||
+			skillName === "SHIELD_BASH"
+		) {
+			this.tryConsumeResource("PLD_CONFITEOR_COMBO_TRACKER", true);
+		}
 	}
 
 	// gain MANA on a delay according to skillName's applicationDelay
 	getDelayedManaFromAction(manaToAdd: number, skillName: PLDActionKey) {
 		this.addEvent(
 			new Event(
-				"get MP from riot blade",
+				"get MP from " + skillName,
 				this.skillsList.get(skillName).applicationDelay,
 				() => {
 					this.resources.get("MANA").gain(manaToAdd);
@@ -449,11 +467,15 @@ const makeSpell_PLD = (
 		validateAttempt: params.validateAttempt,
 		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => {
-			return (
-				name !== "CLEMENCY" &&
-				(state.hasResourceAvailable("DIVINE_MIGHT") ||
-					state.hasResourceAvailable("REQUIESCAT"))
-			);
+			/*
+			if (name !== "CLEMENCY") {
+				return state.hasResourceAvailable("DIVINE_MIGHT") ||
+				state.hasResourceAvailable("REQUIESCAT");
+			} else {
+				return state.hasResourceAvailable("REQUIESCAT");
+			}
+			*/
+			return state.isSpellInstant(name);
 		},
 		onConfirm: onConfirm,
 		onApplication: onApplication,
@@ -777,14 +799,15 @@ makeSpell_PLD("CONFITEOR", 80, {
 	baseCastTime: 0,
 	applicationDelay: 0.62,
 	baseManaCost: 1000,
+	startsAuto: true,
 	basePotency: [
 		["NEVER", 420],
 		["MELEE_MASTERY_II_TANK", 500],
-	], // TODO NEVER POT
+	],
 	reqPotency: [
 		["NEVER", 920],
 		["MELEE_MASTERY_II_TANK", 1000],
-	], // TODO NEVER POT
+	],
 	falloff: 0.6,
 	validateAttempt: (state) => state.hasResourceAvailable("CONFITEOR_READY"),
 	highlightIf: (state) => state.hasResourceAvailable("CONFITEOR_READY"),
@@ -801,15 +824,16 @@ makeSpell_PLD("BLADE_OF_FAITH", 90, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 1000,
+	startsAuto: true,
 	applicationDelay: 0.62,
 	basePotency: [
 		["NEVER", 220],
 		["MELEE_MASTERY_II_TANK", 260],
-	], // TODO NEVER POT
+	],
 	reqPotency: [
 		["NEVER", 720],
 		["MELEE_MASTERY_II_TANK", 760],
-	], // TODO NEVER POT
+	],
 	falloff: 0.6,
 	validateAttempt: (state) => bladeOfFaithCondition.condition(state),
 	highlightIf: (state) => bladeOfFaithCondition.condition(state),
@@ -826,14 +850,15 @@ makeSpell_PLD("BLADE_OF_TRUTH", 90, {
 	baseCastTime: 0,
 	baseManaCost: 1000,
 	applicationDelay: 0.89,
+	startsAuto: true,
 	basePotency: [
 		["NEVER", 320],
 		["MELEE_MASTERY_II_TANK", 380],
-	], // TODO NEVER POT
+	],
 	reqPotency: [
 		["NEVER", 820],
 		["MELEE_MASTERY_II_TANK", 880],
-	], // TODO NEVER POT
+	],
 	falloff: 0.6,
 	validateAttempt: (state) => bladeOfTruthCondition.condition(state),
 	highlightIf: (state) => bladeOfTruthCondition.condition(state),
@@ -850,14 +875,15 @@ makeSpell_PLD("BLADE_OF_VALOR", 90, {
 	baseCastTime: 0,
 	baseManaCost: 1000,
 	applicationDelay: 0.89,
+	startsAuto: true,
 	basePotency: [
 		["NEVER", 420],
 		["MELEE_MASTERY_II_TANK", 500],
-	], // TODO NEVER POT
+	],
 	reqPotency: [
 		["NEVER", 920],
 		["MELEE_MASTERY_II_TANK", 1000],
-	], // TODO NEVER POT
+	],
 	falloff: 0.6,
 	validateAttempt: (state) => bladeOfValorCondition.condition(state),
 	highlightIf: (state) => bladeOfValorCondition.condition(state),
@@ -995,6 +1021,7 @@ makeSpell_PLD("CLEMENCY", 58, {
 	applicationDelay: 0.62,
 	baseManaCost: 2000,
 	basePotency: 0,
+	highlightIf: (state) => state.hasResourceAvailable("REQUIESCAT"),
 });
 
 makeAbility_PLD("SHELTRON", 35, "cd_SHELTRON", {
@@ -1141,7 +1168,7 @@ makeWeaponskill_PLD("SHIELD_BASH", 10, {
 makeAbility_PLD("AUTO_ATTACK", 1, "cd_AUTO_ATTACK", {
 	applicationDelay: 0,
 	animationLock: FAKE_SKILL_ANIMATION_LOCK,
-	cooldown: 0,
+	cooldown: 0.01,
 	onConfirm: (state) => {
 		const currentTimer = state.findAutoAttackTimerInQueue();
 		if (state.resources.get("AUTOS_ENGAGED").availableAmount() === 0) {

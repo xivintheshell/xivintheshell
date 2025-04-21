@@ -733,6 +733,17 @@ class Controller {
 		}
 	}
 
+	reportAutoTick(time: number, sourceDesc: string) {
+		if (!this.#bInSandbox) {
+			this.timeline.addElement({
+				type: ElemType.AutoTickMark,
+				time: time,
+				displayTime: this.game.getDisplayTime(),
+				sourceDesc: sourceDesc,
+			});
+		}
+	}
+
 	/**
 	 * Records the raw time at which a dot tick event took place
 	 * @param rawTime The time of the DoT

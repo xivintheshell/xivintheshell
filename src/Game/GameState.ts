@@ -445,11 +445,11 @@ export class GameState {
 	cancelChanneledSkills() {}
 
 	// Job code may override to handle what happens on an auto attack
-	onAutoAttack() {}
+	jobSpecificOnAutoAttack() {}
 
-	onAuto() {
+	private onAutoAttack() {
 		// TODO: HANDLE AUTO ATTACK POTENCY
-		this.onAutoAttack();
+		this.jobSpecificOnAutoAttack();
 	}
 
 	getStatusDuration(rscType: ResourceKey): number {
@@ -661,11 +661,11 @@ export class GameState {
 			const event = new Event("aa tick", initialDelay, () => {
 				if (this.resources.get("AUTOS_ENGAGED").available(1) && this.isInCombat()) {
 					// do an auto
-					this.onAuto();
+					this.onAutoAttack();
 				}
 				this.addEvent(autoAttackEvent(recurringDelay, recurringDelay));
 			});
-			event.addTag(EventTag.MeditateTick);
+			event.addTag(EventTag.AutoTick);
 			return event;
 		};
 		this.addEvent(autoAttackEvent(initialDelay, recurringDelay));
@@ -675,7 +675,6 @@ export class GameState {
 	 * returns the time til next auto attack, -1 if nothing queued
 	 */
 	findAutoAttackTimerInQueue() {
-		// hi
 		let timer = -1;
 		this.eventsQueue.forEach((event) => {
 			if (event.name === "aa tick") {
@@ -699,7 +698,7 @@ export class GameState {
 		} else if (this.resources.get("STORED_AUTO").available(1)) {
 			// do an auto attack on a delay according to castTime
 			const event = new Event("stored auto", castTime ? castTime : 0, () => {
-				this.onAuto();
+				this.onAutoAttack();
 			});
 			this.addEvent(event);
 		}
@@ -758,59 +757,19 @@ export class GameState {
 	 * continue auto attack timer, and stop when "about full"
 	 *
 	 */
-
-	/**
-	 * Attempt to use a spell or weaponskill. Assumes that resources for the spell are currently available,
-	 * i.e. `skill.validateAttempt` succeeded.
-	 *
-	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
-	 * it performs the confirmation immediately.
-	 */
-	useSpellOrWeaponskill(
+	refreshAutoBasedOnSkill(
 		skill: Spell<PlayerState> | Weaponskill<PlayerState>,
-		node: ActionNode,
-		actionIndex: number,
+		capturedCastTime: number,
+		doesDamage: boolean,
 	) {
-		const cd = this.cooldowns.get(skill.cdName);
-		const secondaryCd = skill.secondaryCd
-			? this.cooldowns.get(skill.secondaryCd.cdName)
-			: undefined;
-
-		let capturedCastTime = skill.castTimeFn(this);
-		const recastTime = skill.recastTimeFn(this);
-
-		this.jobSpecificAddSpeedBuffCovers(node, skill);
-
-		// create potency node object (snapshotted buffs will populate on confirm)
-		const potencyNumber = skill.potencyFn(this);
-
 		// autos helper constants
 		const hasCast = capturedCastTime !== 0;
 		const autosEngaged = this.resources.get("AUTOS_ENGAGED").available(1);
 		const recurringAutoDelay = this.autoAttackDelay; // <<---- placeholder for changing auto attack speed
 		const currentDelay = this.findAutoAttackTimerInQueue();
-		const startsAutos = skill.startsAuto; // <<---  for spells starting autos (eg. RDM)
+		const startsAutos = skill.startsAuto; // <<---  for spells starting autos
 
-		/* console.log(
-			"Using: " + skill.name + " cast: " + capturedCastTime + " starts auto: " + startsAutos,
-		);
-		*/
-
-		// See if the initial potency was already created
-		let potency: Potency | undefined = node.getInitialPotency();
-		// If it was not, and this action is supposed to do damage, go ahead and add it now
-		// If the skill draws aggro without dealing damage (such as Summon Bahamut), then
-		// create a potency object so a damage mark can be drawn if we're not already in combat.
-		if (!potency && (potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()))) {
-			// TODO Add Auto Attacks based on spell/weaponskill
-			// capturedCastTime = cast time
-
-			/*
-			const currentDelay = state.findAutoAttackTimerInQueue();
-			const aaDelay = baseCastTime + (currentDelay === -1 ? 3 : currentDelay);
-			state.startAutoAttackTimer(aaDelay);
-			*/
-
+		if (doesDamage) {
 			if (this.isInCombat()) {
 				// AUTOS IN COMBAT
 
@@ -865,21 +824,8 @@ export class GameState {
 					this.startAutoAttackTimer(aaDelay, recurringAutoDelay, capturedCastTime);
 				}
 			}
-
-			potency = new Potency({
-				config: this.config,
-				sourceTime: this.getDisplayTime(),
-				sourceSkill: skill.name,
-				aspect: skill.aspect,
-				basePotency: potencyNumber,
-				snapshotTime: undefined,
-				description: "",
-				targetCount: node.targetCount,
-				falloff: skill.falloff,
-			});
-			node.addPotency(potency);
 		} else {
-			// NO POTENCY AUTO ATTACK DELAY
+			// auto refresh if does no damage
 			if (this.isInCombat()) {
 				if (hasCast && autosEngaged) {
 					// autos engaged
@@ -901,6 +847,58 @@ export class GameState {
 					}
 				}
 			}
+		}
+	}
+
+	/**
+	 * Attempt to use a spell or weaponskill. Assumes that resources for the spell are currently available,
+	 * i.e. `skill.validateAttempt` succeeded.
+	 *
+	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
+	 * it performs the confirmation immediately.
+	 */
+	useSpellOrWeaponskill(
+		skill: Spell<PlayerState> | Weaponskill<PlayerState>,
+		node: ActionNode,
+		actionIndex: number,
+	) {
+		const cd = this.cooldowns.get(skill.cdName);
+		const secondaryCd = skill.secondaryCd
+			? this.cooldowns.get(skill.secondaryCd.cdName)
+			: undefined;
+
+		let capturedCastTime = skill.castTimeFn(this);
+		const recastTime = skill.recastTimeFn(this);
+
+		this.jobSpecificAddSpeedBuffCovers(node, skill);
+
+		// create potency node object (snapshotted buffs will populate on confirm)
+		const potencyNumber = skill.potencyFn(this);
+
+		// See if the initial potency was already created
+		let potency: Potency | undefined = node.getInitialPotency();
+		// If it was not, and this action is supposed to do damage, go ahead and add it now
+		// If the skill draws aggro without dealing damage (such as Summon Bahamut), then
+		// create a potency object so a damage mark can be drawn if we're not already in combat.
+		if (!potency && (potencyNumber > 0 || (skill.drawsAggro && !this.isInCombat()))) {
+			// refresh autos for skills with potency here
+			this.refreshAutoBasedOnSkill(skill, capturedCastTime, true);
+
+			potency = new Potency({
+				config: this.config,
+				sourceTime: this.getDisplayTime(),
+				sourceSkill: skill.name,
+				aspect: skill.aspect,
+				basePotency: potencyNumber,
+				snapshotTime: undefined,
+				description: "",
+				targetCount: node.targetCount,
+				falloff: skill.falloff,
+			});
+			node.addPotency(potency);
+		} else {
+			// NO POTENCY AUTO ATTACK DELAY
+			this.refreshAutoBasedOnSkill(skill, capturedCastTime, false);
 		}
 
 		const healingPotencyNumber = skill.healingPotencyFn(this);

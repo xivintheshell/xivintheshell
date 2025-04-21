@@ -66,7 +66,7 @@ export const PLD_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_IMPERATOR: { name: "cd_Imperator" }, // 60 sec
 	cd_BLADE_OF_HONOR: { name: "cd_BladeOfHonor" }, // 1 sec
 
-	cd_AUTO_ATTACK: { name: "cd_AutoAttack" }, // filler
+	cd_AUTO_ATTACK: { name: "cd_AutoAttack" }, // filler 0.01 sec
 });
 
 export const PLD_GAUGES = ensureRecord<ResourceData>()({

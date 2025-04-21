@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import {
+	AutoTickMarkElem,
 	CursorElem,
 	PotencyMarkElem,
 	ElemType,
@@ -358,6 +359,28 @@ function drawMeditateTickMarks(
 ) {
 	g_ctx.lineWidth = 1;
 	g_ctx.strokeStyle = g_colors.sam.meditation;
+	g_ctx.beginPath();
+	elems.forEach((tick) => {
+		let x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
+		g_ctx.moveTo(x, originY);
+		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
+
+		testInteraction({ x: x - 2, y: originY, w: 4, h: TimelineDimensions.renderSlotHeight() }, [
+			"[" + tick.displayTime.toFixed(3) + "] " + tick.sourceDesc,
+		]);
+	});
+	g_ctx.stroke();
+}
+
+function drawAutoTickMarks(
+	countdown: number,
+	scale: number,
+	originX: number,
+	originY: number,
+	elems: AutoTickMarkElem[],
+) {
+	g_ctx.lineWidth = 1;
+	g_ctx.strokeStyle = g_colors.pld.ironWillColor;
 	g_ctx.beginPath();
 	elems.forEach((tick) => {
 		let x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
@@ -1135,6 +1158,15 @@ export function drawTimelines(
 			displayOriginX,
 			currentY,
 			(elemBins.get(ElemType.MeditateTickMark) as MeditateTickMarkElem[]) ?? [],
+		);
+
+		// draw auto tick marks here
+		drawAutoTickMarks(
+			g_renderingProps.countdown,
+			g_renderingProps.scale,
+			displayOriginX,
+			currentY,
+			(elemBins.get(ElemType.AutoTickMark) as AutoTickMarkElem[]) ?? [],
 		);
 
 		// warning marks (polyglot overcap)

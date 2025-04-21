@@ -11,6 +11,7 @@ export enum EventTag {
 	MpTick,
 	LucidTick,
 	MeditateTick,
+	AutoTick,
 }
 
 export class Event {
