@@ -1,4 +1,5 @@
 import {
+	CURRENT_GAME_COMBAT_PATCH,
 	getCachedValue,
 	removeCachedValue,
 	ReplayMode,
@@ -70,7 +71,7 @@ import {
 	getTargetableDurationBetween,
 } from "./DamageStatistics";
 import { XIVMath } from "../Game/XIVMath";
-import { TANK_JOBS, MELEE_JOBS, ShellJob } from "../Game/Data/Jobs";
+import { TANK_JOBS, MELEE_JOBS, RANGED_JOBS, ShellJob } from "../Game/Data/Jobs";
 import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
 import { getGameState } from "../Game/Jobs";
 import { localizeSkillName } from "../Components/Localization";
@@ -1498,12 +1499,28 @@ class Controller {
 				return [row.time, normalizeName(row.action), "", "", targetCell];
 			});
 		const meta = ["use_strict_skill_naming = False"];
+		// stats dict is parsed by combat sim as a python dict
+		// WD is the same at a given ilvl across all jobs, but we still want userse to input it manually
+		// main_stat varies for each job's bis, so we still require users to input that for accuracy
+		const statsDict = {
+			job_class: job,
+			det_stat: this.gameConfig.determination,
+			crit_stat: this.gameConfig.criticalHit,
+			dh_stat: this.gameConfig.directHit,
+			speed_stat:
+				isMelee || RANGED_JOBS.includes(job)
+					? this.gameConfig.skillSpeed
+					: this.gameConfig.spellSpeed,
+			version: CURRENT_GAME_COMBAT_PATCH,
+			level: this.gameConfig.level,
+		};
+		meta.push("stats = " + JSON.stringify(statsDict));
 		const downtimeWindows = this.timeline
 			.getUntargetableMarkers()
-			.map((marker) => `(${marker.time}, ${marker.time + marker.duration})`);
-		if (downtimeWindows.length > 0) {
 			// append a comma to every window so python recognizes the tuple
-			meta.push("downtime_windows = (" + downtimeWindows.map((s) => s + ",") + ")");
+			.map((marker) => `(${marker.time}, ${marker.time + marker.duration}),`);
+		if (downtimeWindows.length > 0) {
+			meta.push("downtime_windows = (" + downtimeWindows.join(" ") + ")");
 		}
 		return {
 			meta,

@@ -1,3 +1,7 @@
+// Currently used exclusively for compatibility with Ama's combat sim. This value is not bumped
+// for patches where there are no combat updates.
+export const CURRENT_GAME_COMBAT_PATCH = "7.2";
+
 // Old reddit posts indicate that most abilities (excluding floor dots
 // like Doton and Slipstream) cap at 16 targets. This may not strictly
 // be accurate, but hopefully nobody needs to hit more than 16 targets
