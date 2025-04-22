@@ -1,5 +1,11 @@
 [
 	{
+		"date": "4/21/25",
+		"changes": [
+			"Updated compatibility with Ama's combat sim for newly-supported jobs."
+		]
+	},
+	{
 		"date": "4/17/25",
 		"changes": [
 			"[RPR] Added a button to gain +10 Soul Gauge to simulate a target dying with Death's Design active",
