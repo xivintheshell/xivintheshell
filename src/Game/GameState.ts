@@ -616,6 +616,13 @@ export class GameState {
 
 	requestToggleBuff(buffName: ResourceKey) {
 		let rsc = this.resources.get(buffName);
+
+		// autos are different
+		if (buffName === "AUTOS_ENGAGED") {
+			this.toggleAutosEngaged();
+			return true;
+		}
+
 		// Ley lines, paint lines, and positionals can be toggled.
 		if (RESOURCES[buffName].mayBeToggled) {
 			if (rsc.available(1)) {
@@ -732,6 +739,27 @@ export class GameState {
 			}
 			index++;
 		});
+	}
+
+	toggleAutosEngaged() {
+		const currentTimer = this.findAutoAttackTimerInQueue();
+		if (this.resources.get("AUTOS_ENGAGED").availableAmount() === 0) {
+			// toggle autos ON
+			this.startAutoAttackTimer(currentTimer === -1 ? 3 : currentTimer);
+		} else {
+			// toggle autos OFF
+			this.resources.get("AUTOS_ENGAGED").consume(1);
+			if (currentTimer !== -1) {
+				// create a new event that turns on stored auto at the end
+				this.removeAutoAttackTimer();
+				const event = new Event("aa tick", currentTimer, () => {
+					if (this.resources.get("STORED_AUTO").available(0)) {
+						this.resources.get("STORED_AUTO").gain(1);
+					}
+				});
+				this.addEvent(event);
+			}
+		}
 	}
 
 	/**

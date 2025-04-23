@@ -29,7 +29,6 @@ import {
 	SkillAutoReplace,
 	StatePredicate,
 	Weaponskill,
-	FAKE_SKILL_ANIMATION_LOCK,
 } from "../Skills";
 import { GameState, PlayerState } from "../GameState";
 import { makeResource, Event } from "../Resources";
@@ -80,9 +79,6 @@ makePLDResource("GUARDIANS_WILL", 1, { timeout: 15 });
 makePLDResource("PLD_COMBO_TRACKER", 2, { timeout: 30 });
 makePLDResource("PLD_CONFITEOR_COMBO_TRACKER", 3, { timeout: 30 });
 makePLDResource("PLD_AOE_COMBO_TRACKER", 1, { timeout: 30 });
-
-// makePLDResource("CAN_AUTO_ATTACK", 1);
-// makePLDResource("AUTO_ATTACK_TRACKER", 1, { timeout: 3 }); // timer is 3 for now
 
 const PLD_AOE_COMBO_MAP: Map<PLDActionKey, number> = new Map([
 	["TOTAL_ECLIPSE", 0],
@@ -1163,30 +1159,4 @@ makeAbility_PLD("RELEASE_IRON_WILL", 10, "cd_RELEASE_IRON_WILL", {
 makeWeaponskill_PLD("SHIELD_BASH", 10, {
 	potency: 100,
 	applicationDelay: 0.45,
-});
-
-makeAbility_PLD("AUTO_ATTACK", 1, "cd_AUTO_ATTACK", {
-	applicationDelay: 0,
-	animationLock: FAKE_SKILL_ANIMATION_LOCK,
-	cooldown: 0.01,
-	onConfirm: (state) => {
-		const currentTimer = state.findAutoAttackTimerInQueue();
-		if (state.resources.get("AUTOS_ENGAGED").availableAmount() === 0) {
-			// toggle autos ON
-			state.startAutoAttackTimer(currentTimer === -1 ? 3 : currentTimer);
-		} else {
-			// toggle autos OFF
-			state.resources.get("AUTOS_ENGAGED").consume(1);
-			if (currentTimer !== -1) {
-				// create a new event that turns on stored auto at the end
-				state.removeAutoAttackTimer();
-				const event = new Event("aa tick", currentTimer, () => {
-					if (state.resources.get("STORED_AUTO").available(0)) {
-						state.resources.get("STORED_AUTO").gain(1);
-					}
-				});
-				state.addEvent(event);
-			}
-		}
-	},
 });

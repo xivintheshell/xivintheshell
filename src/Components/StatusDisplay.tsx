@@ -367,7 +367,11 @@ function Buff(props: BuffProps) {
 	let assetName: string = props.rscType;
 	if (props.stacks > 1) assetName += props.stacks;
 	let imgStyle: React.CSSProperties;
-	if (props.rscType === "REAR_POSITIONAL" || props.rscType === "FLANK_POSITIONAL") {
+	if (
+		props.rscType === "AUTOS_ENGAGED" ||
+		"REAR_POSITIONAL" ||
+		props.rscType === "FLANK_POSITIONAL"
+	) {
 		imgStyle = {
 			height: 40,
 			//filter: "drop-shadow(0 2px 1.5px rgba(0, 0, 0, 0.25)",
@@ -854,6 +858,20 @@ export class StatusPropsGenerator<T extends PlayerState> {
 						rscType: key,
 						onSelf: true,
 						enabled: resources.get(key).enabled,
+						stacks: 1,
+						className: "",
+					};
+				}),
+			);
+		}
+
+		if (JOBS[job].role === "TANK" || JOBS[job].role === "MELEE") {
+			roleBuffViewProps.push(
+				...(["AUTOS_ENGAGED"] as ResourceKey[]).map((key) => {
+					return {
+						rscType: key,
+						onSelf: true,
+						enabled: resources.get(key).available(1),
 						stacks: 1,
 						className: "",
 					};

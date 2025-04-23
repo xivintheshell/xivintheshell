@@ -40,8 +40,6 @@ export const PLD_ACTIONS = ensureRecord<ActionData>()({
 	GUARDIAN: { name: "Guardian" },
 	IMPERATOR: { name: "Imperator" },
 	BLADE_OF_HONOR: { name: "Blade of Honor" },
-
-	AUTO_ATTACK: { name: "Auto Attack" },
 });
 
 export const PLD_COOLDOWNS = ensureRecord<CooldownData>()({
@@ -65,8 +63,6 @@ export const PLD_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_GUARDIAN: { name: "cd_Guardian" }, // 120 sec
 	cd_IMPERATOR: { name: "cd_Imperator" }, // 60 sec
 	cd_BLADE_OF_HONOR: { name: "cd_BladeOfHonor" }, // 1 sec
-
-	cd_AUTO_ATTACK: { name: "cd_AutoAttack" }, // filler 0.01 sec
 });
 
 export const PLD_GAUGES = ensureRecord<ResourceData>()({

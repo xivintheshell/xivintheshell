@@ -44,7 +44,6 @@ export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 		const oath = resources.get("OATH_GAUGE").availableAmount();
 
 		const ironWillActive = resources.get("IRON_WILL").availableAmount();
-		const canAutoAttack = resources.get("AUTOS_ENGAGED").availableAmount();
 
 		const comboTimer = basicCombo.available(1)
 			? basicCombo.pendingChange?.timeTillEvent
@@ -62,14 +61,6 @@ export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 		}
 
 		const infos: ResourceDisplayProps[] = [
-			{
-				kind: "counter",
-				name: localize({ en: "Auto Attacks" }),
-				color: colors.pld.ironWillColor,
-				currentStacks: canAutoAttack,
-				maxStacks: 1,
-			} as ResourceCounterProps,
-
 			{
 				kind: "bar",
 				name: localize({ en: "Auto Tracker" }),
