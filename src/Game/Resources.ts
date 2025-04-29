@@ -188,8 +188,6 @@ export class CoolDown extends ResourceOrCooldown {
 				this.#currentRecast = this.#defaultRecast;
 				if (this.stacksAvailable() < this.maxStacks()) {
 					this.#timeTillNextStackAvailable += this.#defaultRecast;
-				} else {
-					this.#timeTillNextStackAvailable = 0;
 				}
 			}
 			deltaTime -= forThisStack;
