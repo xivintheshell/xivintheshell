@@ -186,8 +186,10 @@ export class CoolDown extends ResourceOrCooldown {
 			if (this.#timeTillNextStackAvailable < Debug.epsilon) {
 				super.gain(1);
 				this.#currentRecast = this.#defaultRecast;
-				if (this.stacksAvailable() <= this.maxStacks()) {
+				if (this.stacksAvailable() < this.maxStacks()) {
 					this.#timeTillNextStackAvailable = this.#defaultRecast;
+				} else {
+					this.#timeTillNextStackAvailable = 0;
 				}
 			}
 			deltaTime -= forThisStack;
