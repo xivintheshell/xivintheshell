@@ -91,7 +91,7 @@ export class BLMState extends GameState {
 
 		this.registerRecurringEvents([
 			{
-				reportName: localize({ en: "Thunder DoT" }),
+				reportName: localize({ en: "Thunder DoT", zh: "雷DoT" }),
 				groupedEffects: [
 					{
 						effectName: "HIGH_THUNDER",

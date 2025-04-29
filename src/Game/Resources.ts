@@ -68,6 +68,11 @@ abstract class ResourceOrCooldown {
 		this.currentValue = Math.min(this.currentValue + amount, this.maxValue);
 	}
 	overrideCurrentValue(amount: number) {
+		if (amount < 0 || amount > this.maxValue) {
+			console.warn(
+				`invalid resource value override: ${this.type}, ${amount} should be in [0, ${this.maxValue}]`,
+			);
+		}
 		this.currentValue = amount;
 	}
 }
@@ -466,7 +471,11 @@ export class ResourceOverride {
 		// CD
 		if (info.isCoolDown) {
 			let cd = game.cooldowns.get(this.type as CooldownKey);
-			cd.overrideCurrentValue(cd.maxValue - this.timeTillFullOrDrop);
+			let elapsed = cd.maxStacks() * cd.currentStackCd() - this.timeTillFullOrDrop;
+			let stacks = Math.floor((elapsed + Debug.epsilon) / cd.currentStackCd());
+			let timeTillNextStack = this.timeTillFullOrDrop % cd.currentStackCd();
+			cd.overrideCurrentValue(stacks);
+			cd.overrideTimeTillNextStack(timeTillNextStack);
 		}
 
 		// resource
