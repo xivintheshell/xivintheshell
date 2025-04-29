@@ -187,7 +187,7 @@ export class CoolDown extends ResourceOrCooldown {
 				super.gain(1);
 				this.#currentRecast = this.#defaultRecast;
 				if (this.stacksAvailable() < this.maxStacks()) {
-					this.#timeTillNextStackAvailable = this.#defaultRecast;
+					this.#timeTillNextStackAvailable += this.#defaultRecast;
 				} else {
 					this.#timeTillNextStackAvailable = 0;
 				}
