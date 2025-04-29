@@ -45,16 +45,65 @@ export class Event {
 
 abstract class ResourceOrCooldown {
 	abstract type: ResourceKey | CooldownKey;
-	maxValue: number;
-	#currentValue: number;
+	readonly maxValue: number;
+
+	protected currentValue: number;
+
+	protected constructor(maxValue: number, initialValue: number) {
+		this.maxValue = maxValue;
+		this.currentValue = initialValue;
+	}
+	availableAmount() {
+		return this.currentValue;
+	}
+	consume(amount: number) {
+		if (this.currentValue < amount - Debug.epsilon) {
+			console.warn(
+				`invalid resource consumption: ${this.type}, ${this.currentValue} - ${amount}`,
+			);
+		}
+		this.currentValue = Math.max(this.currentValue - amount, 0);
+	}
+	gain(amount: number) {
+		this.currentValue = Math.min(this.currentValue + amount, this.maxValue);
+	}
+	overrideCurrentValue(amount: number) {
+		if (amount < 0 || amount > this.maxValue) {
+			console.warn(
+				`invalid resource value override: ${this.type}, ${amount} should be in [0, ${this.maxValue}]`,
+			);
+		}
+		this.currentValue = amount;
+	}
+}
+
+// can never be negative
+export class Resource extends ResourceOrCooldown {
+	type: ResourceKey;
 	enabled: boolean;
 	pendingChange?: Event;
+
 	#lastExpirationTime?: number;
 
-	constructor(maxValue: number, initialValue: number) {
-		this.maxValue = maxValue;
-		this.#currentValue = initialValue;
+	constructor(type: ResourceKey, maxValue: number, initialValue: number) {
+		super(maxValue, initialValue);
+		this.type = type;
 		this.enabled = true;
+	}
+
+	available(amount: number) {
+		return this.availableAmount() + Debug.epsilon >= amount;
+	}
+	availableAmountIncludingDisabled(): number {
+		// used for checking LL existence: if Retrace should replace its button
+		// also used for checking if a ground dot has been toggled but is still active
+		return this.currentValue;
+	}
+	availableAmount() {
+		return this.enabled ? super.availableAmount() : 0;
+	}
+	gainWrapping(amount: number) {
+		this.currentValue = (this.currentValue + amount) % (this.maxValue + 1);
 	}
 	overrideTimer(game: GameState, newTime: number) {
 		if (this.pendingChange) {
@@ -77,49 +126,15 @@ abstract class ResourceOrCooldown {
 			this.pendingChange = undefined;
 		}
 	}
-	available(amount: number) {
-		return this.availableAmount() + Debug.epsilon >= amount;
-	}
-	availableAmount() {
-		return this.enabled ? this.#currentValue : 0;
-	}
-	availableAmountIncludingDisabled(): number {
-		// used for checking LL existence: if Retrace should replace its button
-		// also used for checking if a ground dot has been toggled but is still active
-		return this.#currentValue;
-	}
-	consume(amount: number) {
-		if (this.#currentValue < amount - Debug.epsilon) {
-			console.warn("invalid resource consumption: " + this.type);
-			console.log(amount);
-			console.log(this);
-		}
-		this.#currentValue = Math.max(this.#currentValue - amount, 0);
-		if (this.#currentValue === 0) {
-			this.#lastExpirationTime = controller.game.getDisplayTime();
-		}
-	}
 	getLastExpirationTime(): number | undefined {
 		return this.#lastExpirationTime;
 	}
-	gain(amount: number) {
-		this.#currentValue = Math.min(this.#currentValue + amount, this.maxValue);
-	}
-	gainWrapping(amount: number) {
-		this.#currentValue = (this.#currentValue + amount) % (this.maxValue + 1);
-	}
-	overrideCurrentValue(amount: number) {
-		this.#currentValue = amount;
-	}
-}
-
-// can never be negative
-export class Resource extends ResourceOrCooldown {
-	type: ResourceKey;
-
-	constructor(type: ResourceKey, maxValue: number, initialValue: number) {
-		super(maxValue, initialValue);
-		this.type = type;
+	consume(amount: number) {
+		super.consume(amount);
+		if (this.currentValue === 0) {
+			// note: might not want to access controller here
+			this.#lastExpirationTime = controller.game.getDisplayTime();
+		}
 	}
 }
 
@@ -131,75 +146,61 @@ export class OverTimeBuff extends Resource {
 export class CoolDown extends ResourceOrCooldown {
 	type: CooldownKey;
 
-	readonly #defaultBaseRecast: number;
-	#recastTimeScale: number;
-	#currentBaseRecast: number;
+	readonly #defaultRecast: number;
+	#currentRecast: number;
+	#timeTillNextStackAvailable: number;
 
-	constructor(
-		type: CooldownKey,
-		cdPerStack: number,
-		maxStacks: number,
-		initialNumStacks: number,
-	) {
-		super(maxStacks * cdPerStack, initialNumStacks * cdPerStack);
+	constructor(type: CooldownKey, cdPerStack: number, maxStacks: number, initialStacks: number) {
+		super(maxStacks, initialStacks);
 		this.type = type;
 
-		this.#defaultBaseRecast = cdPerStack;
-		this.#currentBaseRecast = cdPerStack; // special case for mixed-recast spells
-		this.#recastTimeScale = 1; // effective for the next stack (i.e. 0.85 if captured LL)
+		this.#defaultRecast = cdPerStack;
+		this.#currentRecast = cdPerStack; // special case for mixed-recast spells
+		this.#timeTillNextStackAvailable = 0;
 	}
 	currentStackCd() {
-		return this.#currentBaseRecast * this.#recastTimeScale;
-	}
-	stacksAvailable() {
-		return Math.floor((this.availableAmount() + Debug.epsilon) / this.#currentBaseRecast);
+		return this.#currentRecast;
 	}
 	maxStacks() {
-		return this.maxValue / this.#currentBaseRecast;
+		return this.maxValue;
 	}
-	useStack(game: GameState) {
-		this.consume(this.#defaultBaseRecast);
-		this.#reCaptureRecastTimeScale(game);
+	useStack() {
+		if (this.stacksAvailable() === this.maxStacks()) {
+			this.#timeTillNextStackAvailable = this.#currentRecast;
+		}
+		super.consume(1);
 	}
-	useStackWithRecast(game: GameState, recast: number) {
+	useStackWithRecast(recast: number) {
+		console.assert(
+			this.maxStacks() === 1,
+			"class CoolDown assumes special recasts are only available for skills with at most 1 stack",
+		);
 		// roll the GCD with a special recast value
-		this.consume(this.#currentBaseRecast);
-		this.maxValue = recast;
-		// LL modifier
-		// (PCT handles hyperphantasia logic separately)
-		this.#reCaptureRecastTimeScale(game);
-		// scale for spells with longer cast/recast
-		this.#currentBaseRecast = recast;
+		this.#currentRecast = recast;
+		this.useStack();
 	}
-	setRecastTimeScale(timeScale: number) {
-		this.#recastTimeScale = timeScale;
-	}
-	#reCaptureRecastTimeScale(game: GameState) {
-		this.#recastTimeScale = this.type === "cd_GCD" ? game.gcdRecastTimeScale() : 1;
-	}
-	restore(game: GameState, deltaTime: number) {
-		let stacksBefore = this.stacksAvailable();
-		let unscaledTimeTillNextStack =
-			(stacksBefore + 1) * this.#currentBaseRecast - this.availableAmount();
-		let scaledTimeTillNextStack = unscaledTimeTillNextStack * this.#recastTimeScale;
-		if (deltaTime >= scaledTimeTillNextStack) {
-			// upon return, will have gained another stack
-			// part before stack gain
-			this.gain(unscaledTimeTillNextStack);
-			// re-capture
-			this.#reCaptureRecastTimeScale(game);
-			// and part after stack gain
-			this.gain((deltaTime - scaledTimeTillNextStack) / this.#recastTimeScale);
-		} else {
-			this.gain(deltaTime / this.#recastTimeScale);
+	restore(deltaTime: number) {
+		while (deltaTime > 0 && super.availableAmount() < this.maxStacks()) {
+			let forThisStack = Math.min(this.#timeTillNextStackAvailable, deltaTime);
+			this.#timeTillNextStackAvailable -= forThisStack;
+			if (this.#timeTillNextStackAvailable < Debug.epsilon) {
+				super.gain(1);
+				this.#currentRecast = this.#defaultRecast;
+				if (this.stacksAvailable() < this.maxStacks()) {
+					this.#timeTillNextStackAvailable += this.#defaultRecast;
+				}
+			}
+			deltaTime -= forThisStack;
 		}
 	}
 	timeTillNextStackAvailable() {
-		if (this.availableAmount() === this.maxValue) return 0;
-		return (
-			(this.#currentBaseRecast - (this.availableAmount() % this.#currentBaseRecast)) *
-			this.#recastTimeScale
-		);
+		return this.#timeTillNextStackAvailable;
+	}
+	overrideTimeTillNextStack(newTime: number) {
+		this.#timeTillNextStackAvailable = newTime;
+	}
+	stacksAvailable(): number {
+		return super.availableAmount();
 	}
 }
 
@@ -229,14 +230,7 @@ export class CoolDownState {
 	}
 
 	tick(deltaTime: number) {
-		for (const cd of this.#map.values()) cd.restore(this.game, deltaTime);
-	}
-	stacksAvailable(rscType: CooldownKey): number {
-		return this.get(rscType).stacksAvailable();
-	}
-	setRecastTimeScale(cdName: CooldownKey, timeScale: number) {
-		let cd = this.get(cdName);
-		cd.setRecastTimeScale(timeScale);
+		for (const cd of this.#map.values()) cd.restore(deltaTime);
 	}
 	timeTillNextStackAvailable(cdName: CooldownKey) {
 		let cd = this.get(cdName);
@@ -477,7 +471,11 @@ export class ResourceOverride {
 		// CD
 		if (info.isCoolDown) {
 			let cd = game.cooldowns.get(this.type as CooldownKey);
-			cd.overrideCurrentValue(cd.maxValue - this.timeTillFullOrDrop);
+			let elapsed = cd.maxStacks() * cd.currentStackCd() - this.timeTillFullOrDrop;
+			let stacks = Math.floor((elapsed + Debug.epsilon) / cd.currentStackCd());
+			let timeTillNextStack = this.timeTillFullOrDrop % cd.currentStackCd();
+			cd.overrideCurrentValue(stacks);
+			cd.overrideTimeTillNextStack(timeTillNextStack);
 		}
 
 		// resource

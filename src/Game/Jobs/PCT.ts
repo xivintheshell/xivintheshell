@@ -1170,7 +1170,9 @@ makeAbility_PCT("TEMPERA_COAT_POP", 10, "cd_TEMPERA_POP", {
 			coatElapsed > 0,
 			"attempted to pop Tempera Coat when no timer for Tempera Coat CD was active",
 		);
-		state.cooldowns.get("cd_TEMPERA_COAT").overrideCurrentValue(180 - coatElapsed);
+		state.cooldowns
+			.get("cd_TEMPERA_COAT")
+			.overrideTimeTillNextStack(Math.max(0, coatElapsed - 60));
 	},
 	highlightIf: (state) => state.hasResourceAvailable("TEMPERA_COAT"),
 });
@@ -1196,7 +1198,9 @@ makeAbility_PCT("TEMPERA_GRASSA_POP", 10, "cd_TEMPERA_POP", {
 			coatElapsed > 0,
 			"attempted to pop Tempera Grassa when no timer for Tempera Coat CD was active",
 		);
-		state.cooldowns.get("cd_TEMPERA_COAT").overrideCurrentValue(150 - coatElapsed);
+		state.cooldowns
+			.get("cd_TEMPERA_COAT")
+			.overrideTimeTillNextStack(Math.max(0, coatElapsed - 30));
 	},
 	highlightIf: (state) => state.hasResourceAvailable("TEMPERA_GRASSA"),
 });

@@ -412,7 +412,7 @@ makeWeaponskill_WAR("MYTHRIL_TEMPEST", 40, {
 
 function reduceInfuriateCooldown(state: WARState) {
 	const cooldown = state.cooldowns.get("cd_INFURIATE") as CoolDown;
-	cooldown.restore(state, 5);
+	cooldown.restore(5);
 }
 
 makeWeaponskill_WAR("FELL_CLEAVE", 54, {

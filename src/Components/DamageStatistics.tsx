@@ -393,7 +393,10 @@ export class DamageStatistics extends React.Component {
 		const dotUptime = controller.game.overTimeEffectGroups
 			.filter((group) => group.reportName && !group.isHealing)
 			.map((dotGroup) => {
-				let dotStr = dotGroup.reportName + " " + localize({ en: "uptime" }) + colon;
+				let dotStr =
+					dotGroup.reportName +
+					(localize({ en: " uptime", zh: "覆盖率" }) as string) +
+					colon;
 
 				let uptime = 0;
 				let totalTicks = 0;

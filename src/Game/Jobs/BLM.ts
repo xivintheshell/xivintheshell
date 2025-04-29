@@ -91,7 +91,7 @@ export class BLMState extends GameState {
 
 		this.registerRecurringEvents([
 			{
-				reportName: localize({ en: "Thunder DoT" }),
+				reportName: localize({ en: "Thunder DoT", zh: "雷DoT" }),
 				groupedEffects: [
 					{
 						effectName: "HIGH_THUNDER",
@@ -388,7 +388,8 @@ const makeSpell_BLM = (
 		...params,
 		aspect: aspect,
 		castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime, aspect),
-		recastTime: (state) => state.config.adjustedGCD(2.5),
+		recastTime: (state) =>
+			state.config.adjustedGCD(2.5, state.hasResourceAvailable("LEY_LINES") ? 15 : 0),
 		manaCost: (state) => state.captureManaCost(name, aspect, params.baseManaCost),
 		// TODO apply AFUI modifiers?
 		potency: (state) => params.basePotency,

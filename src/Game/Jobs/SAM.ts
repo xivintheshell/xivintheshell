@@ -1098,9 +1098,7 @@ makeResourceAbility("SAM", "MEDITATE", 60, "cd_MEDITATE", {
 	// roll the GCD
 	onConfirm: (state) => {
 		const recastTime = state.config.adjustedSksGCD(2.5, state.getFukaModifier());
-		state.cooldowns
-			.get("cd_GCD")
-			.useStackWithRecast(state, state.config.getAfterTaxGCD(recastTime));
+		state.cooldowns.get("cd_GCD").useStackWithRecast(state.config.getAfterTaxGCD(recastTime));
 	},
 	// start the meditate timer
 	onApplication: (state: SAMState) => state.startMeditateTimer(),

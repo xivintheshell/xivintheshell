@@ -1623,7 +1623,7 @@ export class Config extends React.Component {
 			<Input
 				style={{ color: fieldColor("piety") }}
 				defaultValue={this.state.piety}
-				description={localize({ en: "piety: " })}
+				description={localize({ en: "piety: ", zh: "信仰：" })}
 				onChange={this.setPiety}
 			/>
 			<Input

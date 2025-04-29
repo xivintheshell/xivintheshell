@@ -681,8 +681,8 @@ makeWeaponskill_MCH("BLAZING_SHOT", 68, {
 	applicationDelay: 0.85,
 	recastTime: 1.5,
 	onConfirm: (state) => {
-		(state.cooldowns.get("cd_DOUBLE_CHECK") as CoolDown).restore(state, 15);
-		(state.cooldowns.get("cd_CHECKMATE") as CoolDown).restore(state, 15);
+		(state.cooldowns.get("cd_DOUBLE_CHECK") as CoolDown).restore(15);
+		(state.cooldowns.get("cd_CHECKMATE") as CoolDown).restore(15);
 	},
 	validateAttempt: (state) => state.hasResourceAvailable("OVERHEATED"),
 	highlightIf: (state) => state.hasResourceAvailable("OVERHEATED"),

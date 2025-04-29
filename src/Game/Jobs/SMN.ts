@@ -350,7 +350,7 @@ export class SMNState extends GameState {
 		);
 		// prevent radiant aegis and other pet summons
 		const summonLockout = PET_LOCK_DURATIONS.get(sourceSkill)!;
-		this.cooldowns.get("cd_SUMMON_LOCKOUT").useStackWithRecast(this, summonLockout);
+		this.cooldowns.get("cd_SUMMON_LOCKOUT").useStackWithRecast(summonLockout);
 	}
 }
 

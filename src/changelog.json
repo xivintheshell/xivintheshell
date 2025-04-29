@@ -1,5 +1,12 @@
 [
 	{
+		"date": "4/28/25",
+		"changes": [
+			"Refactored cooldown logic. Changes should not affect end users, but let us know if anything is off.",
+			"Added a few missing translations"
+		]
+	},
+	{
 		"date": "4/21/25",
 		"changes": [
 			"Updated compatibility with Ama's combat sim for newly-supported jobs."
