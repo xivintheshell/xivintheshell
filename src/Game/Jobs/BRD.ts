@@ -189,7 +189,7 @@ export class BRDState extends GameState {
 				this.resources.get("PITCH_PERFECT").gain(1);
 				break;
 			case "MAGES_BALLAD":
-				this.cooldowns.get("cd_HEARTBREAK_SHOT").restore(this, 7.5);
+				this.cooldowns.get("cd_HEARTBREAK_SHOT").restore(7.5);
 				break;
 			case "ARMYS_PAEON":
 				this.resources.get("REPERTOIRE").gain(1);

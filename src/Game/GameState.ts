@@ -590,19 +590,6 @@ export class GameState {
 		return 200;
 	}
 
-	// BLM uses this for LL GCD scaling, but PCT and SAM do not.
-	gcdRecastTimeScale(): number {
-		// TODO move this to child class methods
-		if (this.job === "BLM" && this.hasResourceAvailable("LEY_LINES")) {
-			// should be approximately 0.85
-			const num = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5, 15));
-			const denom = this.config.getAfterTaxGCD(this.config.adjustedGCD(2.5));
-			return num / denom;
-		} else {
-			return 1;
-		}
-	}
-
 	requestToggleBuff(buffName: ResourceKey) {
 		let rsc = this.resources.get(buffName);
 		// Ley lines, paint lines, and positionals can be toggled.
@@ -836,9 +823,9 @@ export class GameState {
 			);
 		}
 		// recast
-		cd.useStackWithRecast(this, this.config.getAfterTaxGCD(recastTime));
+		cd.useStackWithRecast(this.config.getAfterTaxGCD(recastTime));
 		if (secondaryCd) {
-			secondaryCd.useStack(this);
+			secondaryCd.useStack();
 		}
 	}
 
@@ -958,7 +945,7 @@ export class GameState {
 		}
 
 		// recast
-		cd.useStack(this);
+		cd.useStack();
 
 		// animation lock
 		this.resources.takeResourceLock("NOT_ANIMATION_LOCKED", skill.animationLockFn(this));
@@ -1079,7 +1066,7 @@ export class GameState {
 			);
 		}
 		// recast
-		cd.useStack(this);
+		cd.useStack();
 	}
 
 	#timeTillSkillAvailable(skillName: ActionKey) {
@@ -1376,7 +1363,7 @@ export class GameState {
 		const secondaryCd = skill.secondaryCd
 			? this.cooldowns.get(skill.secondaryCd.cdName)
 			: undefined;
-		let timeTillNextStackReady = this.cooldowns.timeTillNextStackAvailable(skill.cdName);
+		let timeTillNextStackReady = cd.timeTillNextStackAvailable() % cd.currentStackCd();
 		const timeTillSecondaryReady = skill.secondaryCd
 			? this.cooldowns.timeTillNextStackAvailable(skill.secondaryCd.cdName)
 			: undefined;
