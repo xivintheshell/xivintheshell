@@ -230,7 +230,7 @@ export class TimelineMarkers extends React.Component {
 		});
 		trackIndices.sort();
 
-		let saveTrackLinks: JSX.Element[] = [];
+		let saveTrackLinks: React.JSX.Element[] = [];
 		saveTrackLinks.push(
 			<SaveToFile
 				key={"combined"}
@@ -325,7 +325,7 @@ export class TimelineMarkers extends React.Component {
 			</div>
 		</div>;
 
-		let buffCollection: JSX.Element[] = [];
+		let buffCollection: React.JSX.Element[] = [];
 		buffInfos.forEach((info) => {
 			// prevent starry from being selectable if we're the pictomancer
 			const activeJob = controller.getActiveJob();

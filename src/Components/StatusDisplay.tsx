@@ -647,7 +647,7 @@ export function ResourcesDisplay(props: {
 
 type StatusLayoutFn = (props: StatusViewProps) => React.ReactNode;
 
-export var updateStatusDisplay = (data: StatusViewProps, layoutFn: StatusLayoutFn) => {};
+export let updateStatusDisplay = (data: StatusViewProps, layoutFn: StatusLayoutFn) => {};
 export class StatusDisplay extends React.Component {
 	state: StatusViewProps & {
 		layoutFn: (props: StatusViewProps) => React.ReactNode;

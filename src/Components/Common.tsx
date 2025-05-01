@@ -9,7 +9,7 @@ import { MAX_TIMELINE_SLOTS } from "../Controller/Timeline";
 import { LiaWindowMinimize } from "react-icons/lia";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
-export type ContentNode = JSX.Element | string;
+export type ContentNode = React.JSX.Element | string;
 
 export type ValueChangeEvent = React.ChangeEvent<{ value: string }>;
 
@@ -644,6 +644,7 @@ export class ScrollAnchor extends React.Component {
 	myRef: React.RefObject<HTMLDivElement>;
 	constructor(props: {}) {
 		super(props);
+		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
 		this.myRef = React.createRef();
 	}
 	scroll() {
@@ -735,6 +736,7 @@ export class LoadJsonFromFileOrUrl extends React.Component {
 	constructor(inProps: LoadJsonFromFileOrUrlProps) {
 		super(inProps);
 		this.props = inProps;
+		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
 		this.fileSelectorRef = React.createRef();
 		this.loadUrl = inProps.defaultLoadUrl ?? "";
 

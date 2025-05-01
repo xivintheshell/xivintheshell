@@ -118,6 +118,7 @@ export default class Main extends React.Component {
 			realTime: false,
 			controlRegionHeight: 0,
 		};
+		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
 		this.controlRegionRef = React.createRef();
 
 		this.gameplayKeyCapture = (evt: React.KeyboardEvent) => {
@@ -138,11 +139,7 @@ export default class Main extends React.Component {
 			const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
 			if (link) {
 				if (job in JOBS) {
-					link.href =
-						process.env.PUBLIC_URL +
-						"/favicons/" +
-						job.toString().toLocaleLowerCase() +
-						".ico";
+					link.href = "/favicons/" + job.toString().toLocaleLowerCase() + ".ico";
 				} else {
 					link.href = process.env.PUBLIC_URL + "/favicon.ico";
 				}

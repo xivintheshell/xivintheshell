@@ -77,7 +77,7 @@ import { getGameState } from "../Game/Jobs";
 import { localizeSkillName } from "../Components/Localization";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
-require("../Game/Jobs/RoleActions");
+import "../Game/Jobs/RoleActions";
 
 type Fixme = any;
 

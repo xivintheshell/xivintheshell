@@ -11,6 +11,10 @@
 # production
 /build
 
+# incremental build
+tsconfig.tsbuildinfo
+.next/
+
 # misc
 .DS_Store
 .env.local

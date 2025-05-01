@@ -1,6 +1,5 @@
 import fs from "node:fs";
 
-import { controller } from "../Controller/Controller";
 import { TickMode } from "../Controller/Common";
 import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
 import { PotencyModifierType } from "../Game/Potency";
@@ -9,6 +8,7 @@ import {
 	DamageStatisticsMode,
 	mockDamageStatUpdateFn,
 } from "../Components/DamageStatistics";
+import { controller } from "../Controller/Controller";
 import { ShellJob } from "../Game/Data/Jobs";
 import { ActionKey } from "../Game/Data";
 
@@ -107,6 +107,7 @@ function checkNumbersInObject(expected: object | number, actual: object | number
 	expect(typeof expected === typeof actual);
 
 	if (typeof expected === "number") {
+		// @ts-expect-error not sure why ts isn't intelligent enough to pick up on the custom definition
 		expect([path, expected, actual]).toBeClose();
 	} else if (expected instanceof Map) {
 		expect(actual instanceof Map).toBeTruthy();
