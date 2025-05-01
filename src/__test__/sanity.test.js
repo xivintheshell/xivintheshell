@@ -1,7 +1,7 @@
+import { act } from "react";
 import { render, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import { act } from "react-dom/test-utils";
 import "jest-canvas-mock";
 
 import Main from "../Components/Main";
@@ -45,12 +45,8 @@ it("allows timeline inputs without crashing", async () => {
 	// Sprint applies instantaneously, and will show up in the damage table instantaneously
 	const skillButtonId = "skillButton-Sprint";
 
-	/* eslint-disable testing-library/no-node-access */
-	/* eslint-disable testing-library/no-container */
 	const skillButton = container.querySelector(`[data-tooptip-id="${skillButtonId}"]`);
 	const damageTable = container.querySelector("#damageTable");
-	/* eslint-enable testing-library/no-node-access */
-	/* eslint-enable testing-library/no-container */
 
 	// Before clicking Sprint, it won't show up anywhere
 	expect(within(damageTable).queryByText("Sprint")).not.toBeInTheDocument();

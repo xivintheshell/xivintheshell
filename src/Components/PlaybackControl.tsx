@@ -669,8 +669,6 @@ export class Config extends React.Component {
 
 		this.importGear = async (event: React.SyntheticEvent) => {
 			event.preventDefault();
-			// @ts-ignore seems to be a bug where it can't recognize URL.parse
-			// https://developer.mozilla.org/en-US/docs/Web/API/URL/parse_static
 			const url = URL.parse(this.state.gearImportLink);
 			const headers = new Headers();
 			try {

@@ -25,7 +25,7 @@ function Changelog() {
 				<>
 					<div>
 						{changelog.map((entry) => {
-							let changes: JSX.Element[] = [];
+							let changes: React.JSX.Element[] = [];
 							for (let i = 0; i < entry.changes.length; i++) {
 								changes.push(<div key={i}>{entry.changes[i]}</div>);
 							}

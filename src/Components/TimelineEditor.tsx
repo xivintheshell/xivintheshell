@@ -105,6 +105,7 @@ export class TimelineEditor extends React.Component {
 			recordValidStatus: undefined,
 			firstEditedNodeIndex: undefined,
 		};
+		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
 		this.firstSelected = React.createRef();
 	}
 	componentDidMount() {

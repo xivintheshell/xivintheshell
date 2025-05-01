@@ -46,6 +46,7 @@ class TimelineMain extends React.Component {
 			visibleWidth: 66,
 			version: 0,
 		};
+		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
 		this.myRef = React.createRef();
 
 		this.updateVisibleRange = () => {
