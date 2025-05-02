@@ -410,7 +410,7 @@ export function IntroSection(props: { job: ShellJob }) {
 												it:
 												<br />
 												Enter this tool from{" "}
-												<b>{THIS_DOMAIN + "/#/{command}"}</b> replacing{" "}
+												<b>{THIS_DOMAIN + "/command/{command}"}</b> replacing{" "}
 												<b>{"{command}"}</b> with one of the following:
 												<ul>
 													<li style={smallGap}>
@@ -433,7 +433,7 @@ export function IntroSection(props: { job: ShellJob }) {
 												如果浏览器缓存因不明原因出问题（比如预设了刚打完绝望满蓝这样的“非法状态”），可尝试用以下方法重置浏览器缓存：
 												<br />
 												用以下链接进入本工具：
-												<b>{THIS_DOMAIN + "/#/{command}"}</b>，然后把
+												<b>{THIS_DOMAIN + "/command/{command}"}</b>，然后把
 												<b>{"{command}"}</b>替换成以下两个指令之一：
 												<ul>
 													<li style={smallGap}>
@@ -454,7 +454,7 @@ export function IntroSection(props: { job: ShellJob }) {
 											<div className="paragraph">
 												ブラウザのキャッシュが何らかの理由で壊れている場合、次の方法でリセットできます。
 												<br />
-												<b>{THIS_DOMAIN + "/#/{command}"}</b> にアクセスし、
+												<b>{THIS_DOMAIN + "/command/{command}"}</b> にアクセスし、
 												<b>{"{command}"}</b>{" "}
 												を以下のいずれかに置き換えます：
 												<ul>

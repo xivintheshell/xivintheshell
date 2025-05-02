@@ -17,14 +17,8 @@ const skillIconImages = new Map();
 
 const tryLoadSkillIcon = (assetPath?: string) => {
 	if (assetPath) {
-		try {
-			return require(`./Asset/Skills/${assetPath}`);
-		} catch (e) {
-			// If we forgot to specify the asset path, raise the error in console
-			// and use the missing skill icon.
-			console.error(e);
-			return require("./Asset/Skills/General/Missing.png");
-		}
+		// If we forgot to specify the asset path, we will use Skills/General/Missing.png within the img component.
+		return `assets/Skills/${assetPath}`;
 	}
 	return undefined;
 };
@@ -45,6 +39,10 @@ export const getSkillIconImage = (skillName: ActionKey) => {
 		let imgObj = new Image();
 		imgObj.src = assetIcon;
 		imgObj.onload = () => updateTimelineView();
+		imgObj.onerror = (e) => {
+			console.log("in handler")
+			console.log(e)
+		};
 		skillIconImages.set(skillName, imgObj);
 		return imgObj;
 	}

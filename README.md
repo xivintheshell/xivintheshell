@@ -14,4 +14,5 @@ Many thanks to the players from The Balance discord server for their invaluable 
 
 ---
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project _was_ bootstrapped with [Create React App](https://github.com/facebook/create-react-app), but has since migrated
+to [nextjs](https://nextjs.org/).

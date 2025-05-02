@@ -25,8 +25,10 @@
   },
   "scripts": {
     "deploy": "gh-pages -d build",
-    "start": "next dev",
+    "serve": "next start",
+    "start": "next dev --turbopack",
     "check": "tsc --noEmit",
+    "lint": "next lint",
     "build": "next build",
     "test": "jest src",
     "format": "prettier-no-jsx-parens -w -l ."
@@ -49,7 +51,7 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "14.6.1",
     "@types/jest": "^29.5.14",
-    "eslint-config-next": "15.3.1",
+    "eslint-config-next": "^15.3.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-testing-library": "^7.1.1",
     "gh-pages": "^6.1.1",
