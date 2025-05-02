@@ -1,5 +1,11 @@
 import fs from "node:fs";
 
+// To prevent "ReferenceError: Cannot access 'DEFAULT_TIMELINE_OPTIONS' before initialization"
+// just import the Main component first.
+// I hate javascript.
+// This can't be done in jest.config.ts because mocks aren't set up or something.
+import "../Components/Main";
+
 import { TickMode } from "../Controller/Common";
 import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
 import { PotencyModifierType } from "../Game/Potency";
@@ -8,9 +14,9 @@ import {
 	DamageStatisticsMode,
 	mockDamageStatUpdateFn,
 } from "../Components/DamageStatistics";
-import { controller } from "../Controller/Controller";
 import { ShellJob } from "../Game/Data/Jobs";
 import { ActionKey } from "../Game/Data";
+import { controller } from "../Controller/Controller";
 
 // If this configuration flag is set to `true`, then the fight record of each test run
 // will be exported locally to "$TEST_NAME.txt".
@@ -19,7 +25,17 @@ const SAVE_FIGHT_RECORD = false;
 // Fake object to track damage statistics
 export let damageData: DamageStatisticsData;
 
-const resetDamageData = () => {
+export const rotationTestSetup = () => {
+	// For simplicity, always use "manual" advance mode to avoid any time shenanigans
+	// We eventually should test real-time mode as well
+	controller.setTimeControlSettings({
+		timeScale: 2,
+		tickMode: TickMode.Manual,
+	});
+	if (controller.timeline.slots.length === 0) {
+		controller.timeline.addSlot();
+	}
+	// clear stats from the last run
 	damageData = {
 		time: 0,
 		tinctureBuffPercentage: 0,
@@ -36,20 +52,6 @@ const resetDamageData = () => {
 		dotTables: new Map(),
 		mode: DamageStatisticsMode.Normal,
 	};
-};
-
-export const rotationTestSetup = () => {
-	// For simplicity, always use "manual" advance mode to avoid any time shenanigans
-	// We eventually should test real-time mode as well
-	controller.setTimeControlSettings({
-		timeScale: 2,
-		tickMode: TickMode.Manual,
-	});
-	if (controller.timeline.slots.length === 0) {
-		controller.timeline.addSlot();
-	}
-	// clear stats from the last run
-	resetDamageData();
 	// monkeypatch the updateDamageStats function to avoid needing to initialize the frontend
 	mockDamageStatUpdateFn((newData: Partial<DamageStatisticsData>) => {
 		damageData = { ...damageData, ...newData };

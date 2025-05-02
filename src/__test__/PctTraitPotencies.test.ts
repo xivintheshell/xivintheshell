@@ -1,3 +1,9 @@
+// To prevent "ReferenceError: Cannot access 'DEFAULT_TIMELINE_OPTIONS' before initialization"
+// just import the Main component first.
+// I hate javascript.
+// This can't be done in jest.config.ts because mocks aren't set up or something.
+import "../Components/Main";
+
 import { controller } from "../Controller/Controller";
 import { LevelSync } from "../Game/Common";
 import { getSkill } from "../Game/Skills";
