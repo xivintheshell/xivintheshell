@@ -1,4 +1,4 @@
-import React, { FormEvent, FormEventHandler } from "react";
+import React, { useState, FormEvent, FormEventHandler } from "react";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { controller } from "../Controller/Controller";
@@ -15,6 +15,8 @@ import { ActionKey, ACTIONS } from "../Game/Data";
 // load images lazily to ensure we're not dependent on webpack's module resolution order.
 const skillIconImages = new Map();
 
+const MISSING_PATH = "assets/Skills/General/Missing.png";
+
 const tryLoadSkillIcon = (assetPath?: string) => {
 	if (assetPath) {
 		// If we forgot to specify the asset path, we will use Skills/General/Missing.png within the img component.
@@ -23,7 +25,7 @@ const tryLoadSkillIcon = (assetPath?: string) => {
 	return undefined;
 };
 
-export const getSkillIconPath = (skillName: ActionKey | undefined) => {
+const getSkillIconPath = (skillName: ActionKey | undefined) => {
 	if (!skillName) {
 		return undefined;
 	}
@@ -38,16 +40,31 @@ export const getSkillIconImage = (skillName: ActionKey) => {
 	if (assetIcon) {
 		let imgObj = new Image();
 		imgObj.src = assetIcon;
-		imgObj.onload = () => updateTimelineView();
 		imgObj.onerror = (e) => {
-			console.log("in handler")
-			console.log(e)
+			imgObj.src = MISSING_PATH;
+			// de-register the handler to prevent infinite loops
+			imgObj.onerror = null;
 		};
+		imgObj.onload = () => updateTimelineView();
 		skillIconImages.set(skillName, imgObj);
 		return imgObj;
 	}
 	return undefined;
 };
+
+export function SkillIconImage(props: {skillName: ActionKey}) {
+	// getSkillIconImage produces an image for timeline rendering, and thus shouldn't make a react component.
+	// In all other cases, we probably want an actual react component.
+	// These are also not memoized.
+	const assetIcon = tryLoadSkillIcon(getSkillAssetPath(props.skillName)) ?? MISSING_PATH;
+	const [didError, setDidError] = useState(false);
+	return <img
+		style={props.style}
+		src={didError ? MISSING_PATH : assetIcon}
+		onError={(e) => setDidError(true)}
+		alt={props.skillName}
+	/>;
+}
 
 function ProgressCircleDark(
 	props = {
@@ -313,7 +330,6 @@ class SkillButton extends React.Component {
 		};
 	}
 	render() {
-		let iconPath = getSkillIconPath(this.props.skillName);
 		let iconStyle: React.CSSProperties = {
 			width: 48,
 			height: 48,
@@ -421,7 +437,7 @@ class SkillButton extends React.Component {
 			<div style={iconStyle}>
 				{" "}
 				{/* "overlay" layers */}
-				<img style={iconImgStyle} src={iconPath} alt={this.props.skillName} />
+				<SkillIconImage style={iconImgStyle} skillName={this.props.skillName}/>
 				<div
 					style={{
 						position: "absolute",

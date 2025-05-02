@@ -16,3 +16,13 @@ Many thanks to the players from The Balance discord server for their invaluable 
 
 This project _was_ bootstrapped with [Create React App](https://github.com/facebook/create-react-app), but has since migrated
 to [nextjs](https://nextjs.org/).
+
+## Developer Notes
+NextJS does some stupid things, so there are some differences in the development cycle under the new framework.
+
+- Run the full type checker: `npm run check`. NextJS only reports the FIRST type error by default when in dev mode.
+- Run a hot-reloading dev server: `npm start`. Note that some behavior is different in the dev version compared to
+  the "production" build; in particular, 404 errors are reported as 500 errors instead, and may crash your build.
+- Build and locally run the production site: `npm build && npm serve`.
+
+Stack traces from `npm run test` are currently broken. If anyone can figure out why, please help us!
