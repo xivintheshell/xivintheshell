@@ -17,7 +17,7 @@
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^6.3.0",
     "react-tabs": "^6.1.0",
-    "react-tooltip": "^5.28.1",
+    "react-tooltip": "^5.8.3",
     "seedrandom": "^3.0.5",
     "typescript": "^5.8.3",
     "web-vitals": "^2.1.4",
@@ -25,7 +25,7 @@
   },
   "scripts": {
     "deploy": "gh-pages -d build",
-    "serve": "next start",
+    "serve": "npx serve@latest ./build/",
     "start": "next dev --turbopack",
     "check": "tsc --noEmit",
     "lint": "next lint",

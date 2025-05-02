@@ -9,7 +9,7 @@ import {
 } from "./Common";
 import { controller } from "../Controller/Controller";
 import { FileType, ReplayMode } from "../Controller/Common";
-import { getSkillIconPath } from "./Skills";
+import { SkillIconImage } from "./Skills";
 import { ActionType, Line } from "../Controller/Record";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { localize } from "./Localization";
@@ -70,8 +70,7 @@ function PresetLine(props: { line: Line }) {
 		// waits and other actions aren't rendered, but TODO maybe they should be
 		if (action.info.type === ActionType.Skill) {
 			const skillName = action.info.skillName;
-			let iconPath = getSkillIconPath(skillName);
-			icons.push(<img style={iconStyle} key={ctr} src={iconPath} alt={skillName} />);
+			icons.push(<SkillIconImage style={iconStyle} key={ctr} skillName={skillName} />);
 			ctr++;
 		}
 	}
