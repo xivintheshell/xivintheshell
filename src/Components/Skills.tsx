@@ -52,7 +52,7 @@ export const getSkillIconImage = (skillName: ActionKey) => {
 	return undefined;
 };
 
-export function SkillIconImage(props: {skillName: ActionKey}) {
+export function SkillIconImage(props: {style: React.CSSProperties, skillName: ActionKey}) {
 	// getSkillIconImage produces an image for timeline rendering, and thus shouldn't make a react component.
 	// In all other cases, we probably want an actual react component.
 	// These are also not memoized.

@@ -1,11 +1,5 @@
 import fs from "node:fs";
 
-// To prevent "ReferenceError: Cannot access 'DEFAULT_TIMELINE_OPTIONS' before initialization"
-// just import the Main component first.
-// I hate javascript.
-// This can't be done in jest.config.ts because mocks aren't set up or something.
-import "../Components/Main";
-
 import { TickMode } from "../Controller/Common";
 import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
 import { PotencyModifierType } from "../Game/Potency";
@@ -65,7 +59,7 @@ export const rotationTestTeardown = () => {
 		const record = controller.record.serialized();
 		fs.writeFileSync(`${testName}.txt`, JSON.stringify(record));
 	}
-	jest.restoreAllMocks();
+	vi.restoreAllMocks();
 };
 
 // Makes a test function for the specified job.

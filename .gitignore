@@ -13,7 +13,7 @@
 
 # incremental build
 tsconfig.tsbuildinfo
-.next/
+.react-router/
 
 # misc
 .DS_Store
