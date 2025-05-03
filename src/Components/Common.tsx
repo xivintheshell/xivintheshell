@@ -1,5 +1,4 @@
 import React, { ChangeEvent, CSSProperties, ReactNode, useEffect, useState } from "react";
-import jQuery from "jquery";
 import { localize } from "./Localization";
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import "react-tooltip/dist/react-tooltip.css";
@@ -207,17 +206,14 @@ export function asyncFetch(
 		callback(cachedContent);
 		return;
 	}
-	jQuery.ajax({
-		type: "GET",
-		url: url,
-		//dataType: "text",
-		success: (data) => {
-			callback(data);
-			fetchCache.set(url, data);
-		},
-		error: errorCallback,
-		async: true,
+	const req = new XMLHttpRequest();
+	req.addEventListener("error", errorCallback);
+	req.addEventListener("load", (data) => {
+		callback(req.responseText);
+		fetchCache.set(url, req.responseText);
 	});
+	req.open("GET", url);
+	req.send();
 }
 
 export function parseTime(timeStr: string): number {
