@@ -125,6 +125,9 @@ export class SkillSequencePresets extends React.Component {
 	render() {
 		let hasSelection =
 			controller && controller.record && controller.record.getFirstSelection() !== undefined;
+
+		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
+		const bg = getThemeColors(this.context.activeColorTheme).bgMediumContrast;
 		let content = <div>
 			<button
 				style={{ marginBottom: 10 }}
@@ -147,10 +150,7 @@ export class SkillSequencePresets extends React.Component {
 			/>
 			<div
 				style={{
-					// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
-					outline:
-						"1px solid " +
-						getThemeColors(this.context.activeColorTheme).bgMediumContrast,
+					outline: "1px solid " + bg,
 					margin: "10px 0",
 					padding: "10px",
 				}}

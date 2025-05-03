@@ -1197,6 +1197,9 @@ export class Config extends React.Component {
 			</div>;
 		}
 
+		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
+		const bg = getThemeColors(this.context.activeColorTheme).bgMediumContrast;
+
 		return <div>
 			<form
 				onSubmit={(evt) => {
@@ -1210,10 +1213,7 @@ export class Config extends React.Component {
 				}}
 				style={{
 					marginTop: 16,
-					// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
-					outline:
-						"1px solid " +
-						getThemeColors(this.context.activeColorTheme).bgMediumContrast,
+					outline: "1px solid " + bg,
 					outlineOffset: 6,
 				}}
 			>
