@@ -1,3 +1,4 @@
+import React from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 
 export function links() {

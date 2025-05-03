@@ -25,6 +25,7 @@
     "start": "react-router dev & tsc --noEmit -watch",
     "build": "react-router build",
     "test": "vitest",
+    "lint": "eslint",
     "format": "prettier-no-jsx-parens -w -l ."
   },
   "browserslist": {
@@ -45,13 +46,15 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "14.6.1",
-    "@types/jest": "^29.5.14",
+    "eslint": "^9.26.0",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-testing-library": "^7.1.1",
     "gh-pages": "^6.1.1",
     "jsdom": "^26.1.0",
     "prettier-no-jsx-parens": "^3.4.0",
     "ts-node": "^10.9.2",
+    "typescript-eslint": "^8.31.1",
     "vite": "^6.3.4",
     "vitest": "^3.1.2",
     "vitest-canvas-mock": "^0.3.3"
