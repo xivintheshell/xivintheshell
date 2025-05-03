@@ -1,0 +1,6 @@
+{
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"prettier.prettierPath": "./node_modules/prettier-no-jsx-parens",
+	"prettier.configPath": ".prettierrc.toml"
+}
