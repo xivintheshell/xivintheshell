@@ -1,9 +1,6 @@
-import { act } from "react";
+import React, { act } from "react";
 import { render, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import "@testing-library/jest-dom";
-import "jest-canvas-mock";
-
 import Main from "../Components/Main";
 
 // Need to mock window.URL.createObjectURL
@@ -20,12 +17,12 @@ class ResizeObserver {
 }
 
 beforeEach(() => {
-	window.URL.createObjectURL = jest.fn();
+	window.URL.createObjectURL = vi.fn();
 	window.ResizeObserver = ResizeObserver;
 });
 
 afterEach(() => {
-	jest.restoreAllMocks();
+	vi.restoreAllMocks();
 });
 
 // Basic sanity test to ensure the webpage doesn't crash on load,
@@ -49,9 +46,9 @@ it("allows timeline inputs without crashing", async () => {
 	const damageTable = container.querySelector("#damageTable");
 
 	// Before clicking Sprint, it won't show up anywhere
-	expect(within(damageTable).queryByText("Sprint")).not.toBeInTheDocument();
+	expect(within(damageTable as HTMLElement).queryByText("Sprint")).not.toBeInTheDocument();
 	// click a skill
-	await user.click(skillButton);
+	await user.click(skillButton as HTMLElement);
 	// sz: I'm having a real bad time getting assertions involving DOM elements to work, so I
 	// will leave the testing of the webpage's responsiveness to a later date.
 	// Ideally we should assert that "Sprint" shows up in the damage table, since checking

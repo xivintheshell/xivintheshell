@@ -46,7 +46,7 @@ import { StatusPropsGenerator } from "../Components/StatusDisplay";
 import { XIVMath } from "./XIVMath";
 
 //https://www.npmjs.com/package/seedrandom
-let SeedRandom = require("seedrandom");
+import seedrandom from "seedrandom";
 
 type RNG = any;
 
@@ -104,8 +104,8 @@ export class GameState {
 
 	constructor(config: GameConfig) {
 		this.config = config;
-		this.rng = new SeedRandom(config.randomSeed);
-		this.nonProcRng = new SeedRandom(config.randomSeed + "_nonProcs");
+		this.rng = seedrandom(config.randomSeed);
+		this.nonProcRng = seedrandom(config.randomSeed + "_nonProcs");
 		this.lucidTickOffset = this.nonProcRng() * 3.0;
 		this.dotTickOffset = this.nonProcRng() * 3.0;
 		this.hotTickOffset = this.nonProcRng() * 3.0;
