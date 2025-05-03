@@ -11,37 +11,21 @@ import { getCurrentThemeColors } from "./ColorTheme";
 import { getSkillAssetPath } from "../Game/Skills";
 import { ActionKey, ACTIONS } from "../Game/Data";
 
-// Game/Jobs/* must be run first to ensure all skills have been registered, so we need to
-// load images lazily to ensure we're not dependent on webpack's module resolution order.
 const skillIconImages = new Map();
 
 const MISSING_PATH = "assets/Skills/General/Missing.png";
-
-const tryLoadSkillIcon = (assetPath?: string) => {
-	if (assetPath) {
-		// If we forgot to specify the asset path, we will use Skills/General/Missing.png within the img component.
-		return `assets/Skills/${assetPath}`;
-	}
-	return undefined;
-};
-
-const getSkillIconPath = (skillName: ActionKey | undefined) => {
-	if (!skillName) {
-		return undefined;
-	}
-	return tryLoadSkillIcon(getSkillAssetPath(skillName));
-};
 
 export const getSkillIconImage = (skillName: ActionKey) => {
 	if (skillIconImages.has(skillName)) {
 		return skillIconImages.get(skillName);
 	}
-	const assetIcon = tryLoadSkillIcon(getSkillAssetPath(skillName));
+	const assetIcon = `assets/Skills/${getSkillAssetPath(skillName)}`;
 	if (assetIcon) {
 		let imgObj = new Image();
 		imgObj.src = assetIcon;
 		imgObj.onerror = (e) => {
 			imgObj.src = MISSING_PATH;
+			console.error("failed to load skill image: " + assetIcon);
 			// de-register the handler to prevent infinite loops
 			imgObj.onerror = null;
 		};
@@ -56,7 +40,7 @@ export function SkillIconImage(props: { style: React.CSSProperties; skillName: A
 	// getSkillIconImage produces an image for timeline rendering, and thus shouldn't make a react component.
 	// In all other cases, we probably want an actual react component.
 	// These are also not memoized.
-	const assetIcon = tryLoadSkillIcon(getSkillAssetPath(props.skillName)) ?? MISSING_PATH;
+	const assetIcon = `assets/Skills/${getSkillAssetPath(props.skillName)}`;
 	const [didError, setDidError] = useState(false);
 	return <img
 		style={props.style}
