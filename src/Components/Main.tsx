@@ -30,7 +30,6 @@ import { JOBS, ShellJob } from "../Game/Data/Jobs";
 export let setJob = (job: ShellJob) => {};
 export let setRealTime = (inRealTime: boolean) => {};
 export let setHistorical = (inHistorical: boolean) => {};
-let setColorTheme = (colorTheme: ColorTheme) => {};
 
 function handleUrlCommands(command?: string) {
 	if (command === "resetAll") {
@@ -104,6 +103,7 @@ export default class Main extends React.Component<{ command?: string }> {
 	controlRegionRef: React.RefObject<HTMLDivElement>;
 	gameplayKeyCapture: React.KeyboardEventHandler<HTMLDivElement>;
 	gameplayMouseCapture: React.MouseEventHandler<HTMLDivElement>;
+	setColorTheme: (colorTheme: ColorTheme) => void;
 
 	state: {
 		job: ShellJob;
@@ -119,13 +119,18 @@ export default class Main extends React.Component<{ command?: string }> {
 
 		handleUrlCommands(props.command);
 
+		const cachedColorTheme = getCachedValue("colorTheme");
+
 		this.state = {
 			job: controller.getActiveJob(),
 			hasFocus: false,
 			historical: false,
 			realTime: false,
 			controlRegionHeight: 0,
-			colorTheme: "Light",
+			colorTheme:
+				cachedColorTheme === "Light" || cachedColorTheme === "Dark"
+					? cachedColorTheme
+					: "Light",
 		};
 		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
 		this.controlRegionRef = React.createRef();
@@ -168,8 +173,12 @@ export default class Main extends React.Component<{ command?: string }> {
 			this.setState({ historical: hi });
 		};
 
-		setColorTheme = (colorTheme: ColorTheme) => {
-			this.setState({ colorTheme });
+		this.setColorTheme = (colorTheme: ColorTheme) => {
+			if (colorTheme !== this.state.colorTheme) {
+				controller.updateAllDisplay();
+				this.setState({ colorTheme });
+				setCachedValue("colorTheme", colorTheme);
+			}
 		};
 	}
 
@@ -189,7 +198,6 @@ export default class Main extends React.Component<{ command?: string }> {
 		setJob = (job) => {};
 		setRealTime = (inRealTime) => {};
 		setHistorical = (hi) => {};
-		setColorTheme = (colorTheme) => {};
 	}
 
 	// tabs: https://reactcommunity.org/react-tabs/
@@ -341,7 +349,10 @@ export default class Main extends React.Component<{ command?: string }> {
 				}
 			`}</style>
 			<ColorThemeContext.Provider
-				value={{ activeColorTheme: this.state.colorTheme, setColorTheme }}
+				value={{
+					activeColorTheme: this.state.colorTheme,
+					setColorTheme: this.setColorTheme,
+				}}
 			>
 				<div style={containerStyle}>
 					<div
