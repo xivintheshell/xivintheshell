@@ -7,7 +7,7 @@ import {
 	ResourceBarProps,
 } from "../StatusDisplay";
 import { GNBState } from "../../Game/Jobs/GNB";
-import { getCurrentThemeColors } from "../ColorTheme";
+import { ThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import { GNB_STATUSES, GNBResourceKey } from "../../Game/Data/Jobs/GNB";
 import { RESOURCES } from "../../Game/Data";
@@ -36,8 +36,7 @@ export class GNBStatusPropsGenerator extends StatusPropsGenerator<GNBState> {
 		});
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 
 		const singleCombo = resources.get("GNB_COMBO_TRACKER");

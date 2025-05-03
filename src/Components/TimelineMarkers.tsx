@@ -13,7 +13,7 @@ import {
 import { controller } from "../Controller/Controller";
 import { ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack } from "../Controller/Timeline";
 import { localize, localizeBuffType } from "./Localization";
-import { getCurrentThemeColors, MarkerColor } from "./ColorTheme";
+import { getThemeColors, MarkerColor, ColorThemeContext } from "./ColorTheme";
 import { Buff, buffInfos } from "../Game/Buffs";
 import { BuffType } from "../Game/Common";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
@@ -91,6 +91,8 @@ export class TimelineMarkers extends React.Component {
 	setBuff: (val: BuffType) => void;
 
 	setLoadTrackDest: (val: string) => void;
+
+	static contextType = ColorThemeContext;
 
 	constructor(props: TimelineMarkersProp) {
 		super(props);
@@ -403,7 +405,8 @@ export class TimelineMarkers extends React.Component {
 			</span>
 		</>;
 
-		let textColor = getCurrentThemeColors().text;
+		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
+		let textColor = getThemeColors(this.context.activeColorTheme).text;
 		let individualTrackInput = <input
 			style={{
 				color: textColor,
@@ -427,7 +430,6 @@ export class TimelineMarkers extends React.Component {
 		let loadTracksSection = <>
 			<LoadJsonFromFileOrUrl
 				allowLoadFromUrl={false}
-				loadUrlOnMount={false}
 				defaultLoadUrl={""}
 				label={localize({ en: "Load multiple tracks combined: ", zh: "载入多轨文件：" })}
 				onLoadFn={(content: any) => {
@@ -442,7 +444,6 @@ export class TimelineMarkers extends React.Component {
 			<div className={"paragraph"}>
 				<LoadJsonFromFileOrUrl
 					allowLoadFromUrl={false}
-					loadUrlOnMount={false}
 					label={individualTrackLabel}
 					onLoadFn={(content: any) => {
 						let track = parseInt(this.state.loadTrackDest);

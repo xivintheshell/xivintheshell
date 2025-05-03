@@ -19,7 +19,7 @@ import {
 import { FIXED_BASE_CASTER_TAX, LevelSync, ProcMode } from "../Game/Common";
 import { getAllResources, getResourceInfo, ResourceOverrideData } from "../Game/Resources";
 import { localize, localizeResourceType } from "./Localization";
-import { getCurrentThemeColors } from "./ColorTheme";
+import { getThemeColors, getCurrentThemeColors, ColorThemeContext } from "./ColorTheme";
 import { SerializedConfig } from "../Game/GameConfig";
 import { XIVMath } from "../Game/XIVMath";
 import { FaCheck } from "react-icons/fa6";
@@ -575,6 +575,8 @@ export class Config extends React.Component {
 	setOverrideEnabled: (evt: React.ChangeEvent<{ checked: boolean }>) => void;
 	deleteResourceOverride: (rsc: ResourceKey | CooldownKey) => void;
 	removeImportedField: (field: string) => void;
+
+	static contextType = ColorThemeContext;
 
 	constructor(props: {}) {
 		super(props);
@@ -1208,7 +1210,10 @@ export class Config extends React.Component {
 				}}
 				style={{
 					marginTop: 16,
-					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
+					// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
+					outline:
+						"1px solid " +
+						getThemeColors(this.context.activeColorTheme).bgMediumContrast,
 					outlineOffset: 6,
 				}}
 			>
@@ -1363,7 +1368,8 @@ export class Config extends React.Component {
 	}
 
 	render() {
-		let colors = getCurrentThemeColors();
+		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
+		let colors = getThemeColors(this.context.activeColorTheme);
 		let fpsAndCorrectionColor =
 			this.state.shellVersion >= ShellVersion.FpsTax ? colors.text : colors.warning;
 		let level = parseFloat(this.state.level);

@@ -11,7 +11,7 @@ import { controller } from "../Controller/Controller";
 import { FileType, ReplayMode } from "../Controller/Common";
 import { SkillIconImage } from "./Skills";
 import { ActionType, Line } from "../Controller/Record";
-import { getCurrentThemeColors } from "./ColorTheme";
+import { getThemeColors, ColorThemeContext } from "./ColorTheme";
 import { localize } from "./Localization";
 
 type Fixme = any;
@@ -110,6 +110,8 @@ function PresetLine(props: { line: Line }) {
 }
 
 export class SkillSequencePresets extends React.Component {
+	static contextType = ColorThemeContext;
+
 	constructor(props: Readonly<{}>) {
 		super(props);
 		updateSkillSequencePresetsView = this.unboundUpdatePresetsView.bind(this);
@@ -134,7 +136,6 @@ export class SkillSequencePresets extends React.Component {
 			</button>
 			<LoadJsonFromFileOrUrl
 				allowLoadFromUrl={false} // disabled for now, until when/if people have some common openers
-				loadUrlOnMount={false}
 				defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/lines/default.txt"}
 				onLoadFn={(content: Fixme) => {
 					if (content.fileType === FileType.SkillSequencePresets) {
@@ -146,7 +147,10 @@ export class SkillSequencePresets extends React.Component {
 			/>
 			<div
 				style={{
-					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
+					// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
+					outline:
+						"1px solid " +
+						getThemeColors(this.context.activeColorTheme).bgMediumContrast,
 					margin: "10px 0",
 					padding: "10px",
 				}}

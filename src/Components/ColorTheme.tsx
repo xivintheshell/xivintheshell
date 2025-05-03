@@ -1,4 +1,4 @@
-import React from "react";
+import React, { createContext, useContext } from "react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
@@ -6,11 +6,6 @@ import { ShellJob } from "../Game/Data/Jobs";
 import { PotencyModifierType } from "../Game/Potency";
 
 export type ColorTheme = "Light" | "Dark";
-
-let getCurrentColorTheme: () => ColorTheme = () => {
-	return "Light";
-};
-let setCurrentColorTheme: (colorTheme: ColorTheme) => void = (colorTheme) => {};
 
 export const enum MarkerColor {
 	Red = "#f64141",
@@ -217,8 +212,15 @@ export type ThemeColors = {
 };
 
 export let getCurrentThemeColors: () => ThemeColors = () => {
-	let currentColorTheme = getCurrentColorTheme();
-	if (currentColorTheme === "Dark") {
+	let { activeColorTheme } = useContext(ColorThemeContext);
+	return getThemeColors(activeColorTheme);
+};
+
+// useContext can only be called within function components.
+// Since we still have some class components, we need to manually retrieve the theme in some cases
+// via the contexType property: https://legacy.reactjs.org/docs/context.html#classcontexttype
+export const getThemeColors: (theme: ColorTheme) => ThemeColors = (theme: ColorTheme) => {
+	if (theme === "Dark") {
 		return {
 			accent: "mediumpurple",
 			jobAccents: {
@@ -632,7 +634,8 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 
 function ColorThemeOption(props: { colorTheme: ColorTheme }) {
 	let icon = <MdLightMode />;
-	let colors = getCurrentThemeColors();
+	const colors = getCurrentThemeColors();
+	const { activeColorTheme, setColorTheme } = useContext(ColorThemeContext);
 	if (props.colorTheme === "Dark") icon = <MdDarkMode />;
 	return <div
 		style={{
@@ -640,70 +643,36 @@ function ColorThemeOption(props: { colorTheme: ColorTheme }) {
 			cursor: "pointer",
 			verticalAlign: "middle",
 			borderBottom:
-				props.colorTheme === getCurrentColorTheme() ? "none" : "1px solid " + colors.text,
-			borderTop:
-				props.colorTheme === getCurrentColorTheme() ? "1px solid " + colors.text : "none",
+				props.colorTheme === activeColorTheme ? "none" : "1px solid " + colors.text,
+			borderTop: props.colorTheme === activeColorTheme ? "1px solid " + colors.text : "none",
 		}}
-		onClick={() => {
-			setCurrentColorTheme(props.colorTheme);
-		}}
+		onClick={() => setColorTheme(props.colorTheme)}
 	>
 		{icon}
 	</div>;
 }
 
-export class SelectColorTheme extends React.Component {
-	state: {
-		colorTheme: ColorTheme;
-	};
-	constructor(props: {}) {
-		super(props);
-		let colorTheme: ColorTheme = "Light";
-		let savedColorTheme: string | null = getCachedValue("colorTheme");
-		if (savedColorTheme === "Light" || savedColorTheme === "Dark") colorTheme = savedColorTheme;
-		this.state = {
-			colorTheme: colorTheme,
-		};
-	}
+export const ColorThemeContext = createContext({
+	activeColorTheme: "Light" as ColorTheme,
+	setColorTheme: (_value: ColorTheme) => {},
+});
 
-	componentDidMount() {
-		getCurrentColorTheme = () => {
-			return this.state.colorTheme;
-		};
-		setCurrentColorTheme = (colorTheme: ColorTheme) => {
-			this.setState({ colorTheme: colorTheme });
-			setCachedValue("colorTheme", colorTheme);
-		};
-	}
-	componentDidUpdate(
-		prevProps: Readonly<{}>,
-		prevState: Readonly<{ colorTheme: ColorTheme }>,
-		snapshot?: any,
-	) {
-		if (prevState.colorTheme !== this.state.colorTheme) {
-			controller.updateAllDisplay();
-		}
-	}
-
-	componentWillUnmount() {
-		getCurrentColorTheme = () => {
-			return "Light";
-		};
-		setCurrentColorTheme = (colorTheme) => {};
-	}
-
-	render() {
-		return <div
-			style={{
-				display: "inline-block",
-				position: "absolute",
-				right: 10,
-			}}
-		>
-			<div style={{ display: "inline-block", fontSize: 16, position: "relative" }}>
-				<ColorThemeOption colorTheme={"Light"} />|
-				<ColorThemeOption colorTheme={"Dark"} />
-			</div>
-		</div>;
-	}
+export function SelectColorTheme() {
+	return <div
+		style={{
+			display: "inline-block",
+			position: "absolute",
+			right: 10,
+		}}
+	>
+		<div style={{ display: "inline-block", fontSize: 16, position: "relative" }}>
+			<ColorThemeOption colorTheme={"Light"} />|
+			<ColorThemeOption colorTheme={"Dark"} />
+		</div>
+	</div>;
 }
+
+// setCurrentColorTheme = (colorTheme: ColorTheme) => {
+// 	this.setState({ colorTheme: colorTheme });
+// 	setCachedValue("colorTheme", colorTheme);
+// };

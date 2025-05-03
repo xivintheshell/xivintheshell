@@ -7,7 +7,7 @@ import { Tooltip as ReactTooltip } from "react-tooltip";
 import { localize, localizeSkillName } from "./Localization";
 import { updateTimelineView } from "./Timeline";
 import * as ReactDOMServer from "react-dom/server";
-import { getCurrentThemeColors } from "./ColorTheme";
+import { getThemeColors, ColorThemeContext } from "./ColorTheme";
 import { getSkillAssetPath } from "../Game/Skills";
 import { ActionKey, ACTIONS } from "../Game/Data";
 
@@ -211,6 +211,8 @@ class SkillButton extends React.Component {
 	};
 	handleMouseEnter: () => void;
 
+	static contextType = ColorThemeContext;
+
 	constructor(props: SkillButtonProps) {
 		super(props);
 		this.props = props;
@@ -222,7 +224,8 @@ class SkillButton extends React.Component {
 				game: controller.getDisplayedGame(),
 				skillName: this.props.skillName,
 			});
-			let colors = getCurrentThemeColors();
+			// @ts-expect-error we need to read untyped this.context in place of a useContext hook
+			let colors = getThemeColors(this.context.activeColorTheme);
 			let s: ContentNode[] = [];
 			if (info.status.ready()) {
 				let en = "ready (" + info.stacksAvailable;
@@ -525,6 +528,8 @@ export class SkillsWindow extends React.Component {
 	onRemoveTrailingIdleTime: () => void;
 	onWaitTillNextMpOrLucidTick: () => void;
 
+	static contextType = ColorThemeContext;
+
 	constructor(props: {}) {
 		super(props);
 		updateSkillButtons = (statusList) => {
@@ -664,7 +669,8 @@ export class SkillsWindow extends React.Component {
 			//border: "1px solid red",
 		};
 
-		let colors = getCurrentThemeColors();
+		// @ts-ignore we need to read untyped this.context in place of a context hook
+		let colors = getThemeColors(this.context.activeColorTheme);
 		let textInputFieldStyle = {
 			outline: "none",
 			border: "none",

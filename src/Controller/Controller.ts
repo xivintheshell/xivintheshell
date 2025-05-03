@@ -29,6 +29,7 @@ import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
 import { updateStatusDisplay } from "../Components/StatusDisplay";
 import { updateSkillButtons } from "../Components/Skills";
 import { updateConfigDisplay } from "../Components/PlaybackControl";
+import { type ThemeColors } from "../Components/ColorTheme";
 import { setHistorical, setJob, setRealTime } from "../Components/Main";
 import {
 	PotencyMarkElem,
@@ -845,17 +846,16 @@ class Controller {
 			canMove: game.resources.get("MOVEMENT").available(1),
 		};
 		const propsGenerator = game.statusPropsGenerator;
-		updateStatusDisplay(
-			{
+		updateStatusDisplay((theme: ThemeColors) => {
+			return {
 				time: game.getDisplayTime(),
-				resources: propsGenerator.getAllResourceViewProps(),
+				resources: propsGenerator.getAllResourceViewProps(theme),
 				resourceLocks: resourceLocksData,
 				enemyBuffs: propsGenerator.getAllOtherTargetedBuffViewProps(),
 				selfBuffs: propsGenerator.getAllSelfTargetedBuffViewProps(),
 				level: game.config.level,
-			},
-			propsGenerator.statusLayoutFn,
-		);
+			};
+		}, propsGenerator.statusLayoutFn);
 	}
 
 	updateTimelineDisplay() {

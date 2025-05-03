@@ -7,7 +7,7 @@ import {
 	StatusPropsGenerator,
 } from "../StatusDisplay";
 import { RDMState } from "../../Game/Jobs/RDM";
-import { getCurrentThemeColors } from "../ColorTheme";
+import { ThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import { ResourceKey, RESOURCES } from "../../Game/Data";
 import { RDM_STATUSES } from "../../Game/Data/Jobs/RDM";
@@ -23,8 +23,7 @@ export class RDMStatusPropsGenerator extends StatusPropsGenerator<RDMState> {
 		];
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 
 		const whiteMana = resources.get("WHITE_MANA").availableAmount();

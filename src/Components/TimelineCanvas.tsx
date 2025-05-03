@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import {
 	AutoTickMarkElem,
 	CursorElem,
@@ -31,7 +31,7 @@ import { ActionType } from "../Controller/Record";
 import { controller } from "../Controller/Controller";
 import { localize, localizeBuffType, localizeSkillName } from "./Localization";
 import { setEditingMarkerValues } from "./TimelineMarkers";
-import { getCurrentThemeColors, MarkerColor, ThemeColors } from "./ColorTheme";
+import { getThemeColors, MarkerColor, ThemeColors, ColorThemeContext } from "./ColorTheme";
 import { scrollEditorToFirstSelected } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
 import { updateTimelineView } from "./Timeline";
@@ -1454,6 +1454,7 @@ export function TimelineCanvas(props: {
 	const [mouseHovered, setMouseHovered] = useState(false);
 	const [clickCounter, setClickCounter] = useState(0);
 	const [keyCounter, setKeyCounter] = useState(0);
+	const { activeColorTheme } = useContext(ColorThemeContext);
 
 	// initialization
 	useEffect(() => {
@@ -1502,7 +1503,7 @@ export function TimelineCanvas(props: {
 		g_activeOnClick = undefined;
 		g_visibleLeft = props.visibleLeft;
 		g_visibleWidth = props.visibleWidth;
-		g_colors = getCurrentThemeColors();
+		g_colors = getThemeColors(activeColorTheme);
 
 		cachedPointerMouse = readback_pointerMouse;
 

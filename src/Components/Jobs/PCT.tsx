@@ -9,7 +9,7 @@ import {
 	StatusPropsGenerator,
 } from "../StatusDisplay";
 import { PCTState } from "../../Game/Jobs/PCT";
-import { getCurrentThemeColors } from "../ColorTheme";
+import { ThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import { ResourceKey, RESOURCES } from "../../Game/Data";
 import { PCT_STATUSES, PCTResourceKey } from "../../Game/Data/Jobs/PCT";
@@ -33,8 +33,7 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 		];
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 
 		const portrait = resources.get("PORTRAIT").availableAmount();

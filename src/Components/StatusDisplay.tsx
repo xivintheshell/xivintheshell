@@ -3,7 +3,13 @@ import { Clickable, ContentNode, Help, ProgressBar, StaticFn } from "./Common";
 import type { PlayerState } from "../Game/GameState";
 import { controller } from "../Controller/Controller";
 import { localize, localizeResourceType } from "./Localization";
-import { getCurrentThemeColors } from "./ColorTheme";
+import {
+	getThemeColors,
+	ColorTheme,
+	ThemeColors,
+	getCurrentThemeColors,
+	ColorThemeContext,
+} from "./ColorTheme";
 import { JOBS } from "../Game/Data/Jobs";
 import { ResourceKey, RESOURCES } from "../Game/Data";
 import { ROLE_RESOURCES } from "../Game/Data/Shared/Role";
@@ -651,11 +657,16 @@ export function ResourcesDisplay(props: {
 
 type StatusLayoutFn = (props: StatusViewProps) => React.ReactNode;
 
-export let updateStatusDisplay = (data: StatusViewProps, layoutFn: StatusLayoutFn) => {};
+export let updateStatusDisplay = (
+	data: (color: ThemeColors) => StatusViewProps,
+	layoutFn: StatusLayoutFn,
+) => {};
 export class StatusDisplay extends React.Component {
 	state: StatusViewProps & {
 		layoutFn: (props: StatusViewProps) => React.ReactNode;
 	};
+
+	static contextType = ColorThemeContext;
 	constructor(props: StatusViewProps) {
 		super(props);
 		this.state = {
@@ -668,7 +679,9 @@ export class StatusDisplay extends React.Component {
 				return <div />;
 			},
 		};
-		updateStatusDisplay = (newData, newLayoutFn) => {
+		updateStatusDisplay = (newDataFn, newLayoutFn) => {
+			// @ts-expect-error we need to read untyped this.context in place of a useContext hook
+			const newData = newDataFn(getThemeColors(this.context.activeColorTheme));
 			this.setState({ ...{ layoutFn: newLayoutFn }, ...newData });
 		};
 	}
@@ -887,17 +900,16 @@ export class StatusPropsGenerator<T extends PlayerState> {
 	}
 
 	// Jobs should override this to display their resources
-	public jobSpecificResourceViewProps(): ResourceDisplayProps[] {
+	public jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		return [];
 	}
 
 	// Display the job-specific resources, including MP and the MP tick timer by defauly for jobs that use MP
-	public getAllResourceViewProps(): ResourceDisplayProps[] {
+	public getAllResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		if (!JOBS[this.state.job].usesMp) {
-			return this.jobSpecificResourceViewProps();
+			return this.jobSpecificResourceViewProps(colors);
 		}
 
-		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 		const timeTillNextManaTick = resources.timeTillReady("MANA");
 		const mana = resources.get("MANA").availableAmount();
@@ -921,7 +933,7 @@ export class StatusPropsGenerator<T extends PlayerState> {
 				progress: 1 - timeTillNextManaTick / 3,
 				valueString: (3 - timeTillNextManaTick).toFixed(3) + "/3",
 			} as ResourceBarProps,
-			...this.jobSpecificResourceViewProps(),
+			...this.jobSpecificResourceViewProps(colors),
 		];
 	}
 

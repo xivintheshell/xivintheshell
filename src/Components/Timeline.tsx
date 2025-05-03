@@ -13,7 +13,7 @@ import {
 	timelineCanvasOnMouseMove,
 } from "./TimelineCanvas";
 import { localize } from "./Localization";
-import { getCurrentThemeColors } from "./ColorTheme";
+import { getCurrentThemeColors, getThemeColors, ColorThemeContext } from "./ColorTheme";
 
 import { LoadSave } from "./LoadSave";
 import { TimelineDisplaySettings } from "./TimelineDisplaySettings";
@@ -35,6 +35,8 @@ class TimelineMain extends React.Component {
 		visibleWidth: number;
 		version: number;
 	};
+
+	static contextType = ColorThemeContext;
 
 	constructor(props: {}) {
 		super(props);
@@ -113,7 +115,10 @@ class TimelineMain extends React.Component {
 					width: "100%",
 					overflowX: "scroll",
 					overflowY: "clip",
-					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
+					// @ts-expect-error we need to read untyped this.context in place of a useContext hook
+					outline:
+						"1px solid " +
+						getThemeColors(this.context.activeColorTheme).bgMediumContrast,
 					cursor: timelineCanvasGetPointerMouse() ? "pointer" : "default",
 					paddingBottom: isFirefox ? 10 : 0,
 				}}
@@ -249,21 +254,19 @@ function TimelineTabs() {
 	</div>;
 }
 
-export class Timeline extends React.Component {
-	render() {
-		return <div
-			style={{
-				bottom: 0,
-				left: 0,
-				right: 0,
-				paddingLeft: 0, // forgot why I added the left and right paddings...
-				paddingRight: 0,
-				borderTop: "2px solid " + getCurrentThemeColors().bgHighContrast,
-				flex: 0,
-			}}
-		>
-			<TimelineMain />
-			<TimelineTabs />
-		</div>;
-	}
+export function Timeline() {
+	return <div
+		style={{
+			bottom: 0,
+			left: 0,
+			right: 0,
+			paddingLeft: 0, // forgot why I added the left and right paddings...
+			paddingRight: 0,
+			borderTop: "2px solid " + getCurrentThemeColors().bgHighContrast,
+			flex: 0,
+		}}
+	>
+		<TimelineMain />
+		<TimelineTabs />
+	</div>;
 }

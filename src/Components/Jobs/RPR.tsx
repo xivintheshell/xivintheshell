@@ -1,7 +1,7 @@
 import { ResourceKey, RESOURCES } from "../../Game/Data";
 import { RPR_STATUSES } from "../../Game/Data/Jobs/RPR";
 import { RPRState } from "../../Game/Jobs/RPR";
-import { getCurrentThemeColors } from "../ColorTheme";
+import { ThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import {
 	BuffProps,
@@ -34,8 +34,7 @@ export class RPRStatusPropsGenerator extends StatusPropsGenerator<RPRState> {
 		];
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 		const soulGauge = resources.get("SOUL").availableAmount();
 		const shroudGauge = resources.get("SHROUD").availableAmount();
