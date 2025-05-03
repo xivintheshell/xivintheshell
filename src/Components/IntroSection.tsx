@@ -410,8 +410,10 @@ export function IntroSection(props: { job: ShellJob }) {
 												it:
 												<br />
 												Enter this tool from{" "}
-												<b>{THIS_DOMAIN + "/danger/{command}"}</b> replacing{" "}
-												<b>{"{command}"}</b> with one of the following:
+												<b>
+													{THIS_DOMAIN + "/danger/{command}"}
+												</b> replacing <b>{"{command}"}</b> with one of the
+												following:
 												<ul>
 													<li style={smallGap}>
 														<b>resetResourceOverrides</b>: delete all
@@ -454,7 +456,8 @@ export function IntroSection(props: { job: ShellJob }) {
 											<div className="paragraph">
 												ブラウザのキャッシュが何らかの理由で壊れている場合、次の方法でリセットできます。
 												<br />
-												<b>{THIS_DOMAIN + "/danger/{command}"}</b> にアクセスし、
+												<b>{THIS_DOMAIN + "/danger/{command}"}</b>{" "}
+												にアクセスし、
 												<b>{"{command}"}</b>{" "}
 												を以下のいずれかに置き換えます：
 												<ul>
