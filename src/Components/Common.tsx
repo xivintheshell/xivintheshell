@@ -99,50 +99,43 @@ type SaveToFileProps = {
 	fileFormat: FileFormat;
 	displayName?: ContentNode;
 };
-export class SaveToFile extends React.Component {
-	props: SaveToFileProps;
-	state: { jsonContent: object; csvContent: CsvData; pngContent?: HTMLCanvasElement };
-	constructor(props: SaveToFileProps) {
-		super(props);
-		this.props = props;
-		this.state = {
-			jsonContent: {},
-			csvContent: { body: [] },
-			pngContent: undefined,
-		};
-	}
-	updateContent() {
-		let newContent = this.props.getContentFn();
-		if (this.props.fileFormat === FileFormat.Json) this.setState({ jsonContent: newContent });
-		else if (this.props.fileFormat === FileFormat.Csv)
-			this.setState({ csvContent: newContent });
-		else if (this.props.fileFormat === FileFormat.Png) {
-			this.setState({ pngContent: newContent });
+
+export function SaveToFile(props: SaveToFileProps) {
+	const [state, setState] = useState<{
+		jsonContent: object;
+		csvContent: CsvData;
+		pngContent?: HTMLCanvasElement;
+	}>({ jsonContent: {}, csvContent: { body: [] }, pngContent: undefined });
+
+	const updateContent = () => {
+		let newContent = props.getContentFn();
+		if (props.fileFormat === FileFormat.Json) {
+			// @ts-expect-error no parsing is enforced on getContentFn
+			setState({ jsonContent: newContent });
+		} else if (props.fileFormat === FileFormat.Csv) {
+			// @ts-expect-error no parsing is enforced on getContentFn
+			setState({ csvContent: newContent });
+		} else if (props.fileFormat === FileFormat.Png) {
+			// @ts-expect-error no parsing is enforced on getContentFn
+			setState({ pngContent: newContent });
 		} else console.assert(false);
-	}
-	render() {
-		let url = "";
-		if (this.props.fileFormat === FileFormat.Json) url = getBlobUrl(this.state.jsonContent);
-		else if (this.props.fileFormat === FileFormat.Csv) url = getCsvUrl(this.state.csvContent);
-		else if (this.props.fileFormat === FileFormat.Png) {
-			url = this.state.pngContent?.toDataURL() ?? "";
-		} else console.assert(false);
-		return <a
-			style={{ color: getCurrentThemeColors().fileDownload, marginRight: 6 }}
-			href={url}
-			download={this.props.filename}
-			onClick={() => {
-				this.updateContent();
-			}}
-			onContextMenu={() => {
-				this.updateContent();
-			}}
-		>
-			{"[" +
-				(this.props.displayName === undefined ? "download" : this.props.displayName) +
-				"]"}
-		</a>;
-	}
+	};
+
+	let url = "";
+	if (props.fileFormat === FileFormat.Json) url = getBlobUrl(state.jsonContent);
+	else if (props.fileFormat === FileFormat.Csv) url = getCsvUrl(state.csvContent);
+	else if (props.fileFormat === FileFormat.Png) {
+		url = state.pngContent?.toDataURL() ?? "";
+	} else console.assert(false);
+	return <a
+		style={{ color: getCurrentThemeColors().fileDownload, marginRight: 6 }}
+		href={url}
+		download={props.filename}
+		onClick={() => updateContent()}
+		onContextMenu={() => updateContent()}
+	>
+		{`[${props.displayName === undefined ? "download" : props.displayName}]`}
+	</a>;
 }
 
 //https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/
@@ -500,41 +493,31 @@ type InputProps = {
 	style?: CSSProperties;
 	componentColor?: string; // overrides entire component's color
 };
-export class Input extends React.Component {
-	props: InputProps;
-	onChange;
-	constructor(inProps: InputProps) {
-		super(inProps);
-		this.props = inProps;
-		this.onChange = (e: ChangeEvent<{ value: string }>) => {
-			if (this.props.onChange) this.props.onChange(e.target.value);
-		};
-	}
-	render() {
-		let width = this.props.width ?? 5;
-		let inputStyle: CSSProperties = {
-			color:
-				this.props.style?.color ??
-				this.props.componentColor ??
-				getCurrentThemeColors().text,
-			backgroundColor: "transparent",
-			outline: "none",
-			border: "none",
-			borderBottom:
-				"1px solid " + (this.props.componentColor ?? getCurrentThemeColors().text),
-		};
-		let overrideStyle = this.props.style ?? {};
-		return <div style={{ ...overrideStyle, ...{ color: this.props.componentColor } }}>
-			<span>{this.props.description /* + "(" + this.state.value + ")"*/}</span>
-			<input
-				style={inputStyle}
-				size={width}
-				type="text"
-				value={this.props.defaultValue}
-				onChange={this.onChange}
-			/>
-		</div>;
-	}
+
+export function Input(props: InputProps) {
+	const onChange = (e: ChangeEvent<{ value: string }>) => {
+		if (props.onChange) props.onChange(e.target.value);
+	};
+	const themeColors = getCurrentThemeColors();
+	const width = props.width ?? 5;
+	let inputStyle: CSSProperties = {
+		color: props.style?.color ?? props.componentColor ?? themeColors.text,
+		backgroundColor: "transparent",
+		outline: "none",
+		border: "none",
+		borderBottom: "1px solid " + (props.componentColor ?? themeColors.text),
+	};
+	let overrideStyle = props.style ?? {};
+	return <div style={{ ...overrideStyle, ...{ color: props.componentColor } }}>
+		<span>{props.description /* + "(" + this.state.value + ")"*/}</span>
+		<input
+			style={inputStyle}
+			size={width}
+			type="text"
+			value={props.defaultValue}
+			onChange={onChange}
+		/>
+	</div>;
 }
 
 type SliderProps = {
@@ -715,110 +698,86 @@ export class Expandable extends React.Component {
 type LoadJsonFromFileOrUrlProps = {
 	allowLoadFromUrl: boolean;
 	defaultLoadUrl?: string;
-	loadUrlOnMount: boolean;
 	label?: ContentNode;
 	onLoadFn: (content: object) => void;
 };
-export class LoadJsonFromFileOrUrl extends React.Component {
-	loadUrl: string;
-	fileSelectorRef: React.RefObject<HTMLInputElement>;
-	props: LoadJsonFromFileOrUrlProps;
 
-	onLoadUrlChange: (evt: ChangeEvent<{ value: string }>) => void;
-	onLoadPresetFile: () => void;
-	onLoadUrl: () => void;
-	constructor(inProps: LoadJsonFromFileOrUrlProps) {
-		super(inProps);
-		this.props = inProps;
-		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
-		this.fileSelectorRef = React.createRef();
-		this.loadUrl = inProps.defaultLoadUrl ?? "";
+export function LoadJsonFromFileOrUrl(props: LoadJsonFromFileOrUrlProps) {
+	// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
+	const fileSelectorRef: React.RefObject<HTMLInputElement> = React.createRef();
+	let loadUrl = props.defaultLoadUrl ?? "";
 
-		this.onLoadUrlChange = (evt: ChangeEvent<{ value: string }>) => {
-			if (evt.target) this.loadUrl = evt.target.value;
+	const onLoadUrlChange = (evt: ChangeEvent<{ value: string }>) => {
+		if (evt.target) loadUrl = evt.target.value;
+	};
+
+	const onLoadPresetFile = () => {
+		let cur = fileSelectorRef.current;
+		if (cur && cur.files && cur.files.length > 0) {
+			let fileToLoad = cur.files[0];
+			loadFromFile(fileToLoad, (content) => props.onLoadFn(content));
+			cur.value = "";
+		}
+	};
+
+	const onLoadUrl = () => {
+		let errorHandler = function (e: any) {
+			console.log("some error occurred");
 		};
-
-		this.onLoadPresetFile = () => {
-			let cur = this.fileSelectorRef.current;
-			if (cur && cur.files && cur.files.length > 0) {
-				let fileToLoad = cur.files[0];
-				loadFromFile(fileToLoad, (content) => {
-					this.props.onLoadFn(content);
-				});
-				cur.value = "";
-			}
-		};
-
-		this.onLoadUrl = () => {
-			let errorHandler = function (e: any) {
-				console.log("some error occurred");
-			};
-			asyncFetch(
-				this.loadUrl,
-				(data) => {
-					try {
-						let content = JSON.parse(data);
-						this.props.onLoadFn(content);
-					} catch (e: any) {
-						errorHandler(e);
-					}
-				},
-				(e) => {
+		asyncFetch(
+			loadUrl,
+			(data) => {
+				try {
+					let content = JSON.parse(data);
+					props.onLoadFn(content);
+				} catch (e: any) {
 					errorHandler(e);
-				},
-			);
-		};
-	}
-	componentDidMount() {
-		if (this.props.loadUrlOnMount) this.onLoadUrl();
-	}
-	render() {
-		let colors = getCurrentThemeColors();
-		let longInputStyle = {
-			color: colors.text,
-			background: "transparent",
-			outline: "none",
-			border: "none",
-			borderBottom: "1px solid " + colors.text,
-			width: "30em",
-		};
-		return <div>
-			<div>
-				<span>
-					{this.props.label ?? localize({ en: "Load from file: ", zh: "从文件导入：" })}
-				</span>
-				<input
-					style={{
-						width: "110px",
-						color: "transparent",
+				}
+			},
+			(e) => {
+				errorHandler(e);
+			},
+		);
+	};
+	let colors = getCurrentThemeColors();
+	let longInputStyle = {
+		color: colors.text,
+		background: "transparent",
+		outline: "none",
+		border: "none",
+		borderBottom: "1px solid " + colors.text,
+		width: "30em",
+	};
+	return <div>
+		<div>
+			<span>{props.label ?? localize({ en: "Load from file: ", zh: "从文件导入：" })}</span>
+			<input
+				style={{
+					width: "110px",
+					color: "transparent",
+				}}
+				type="file"
+				ref={fileSelectorRef}
+				onChange={onLoadPresetFile}
+			/>
+		</div>
+		{props.allowLoadFromUrl ? (
+			<form>
+				<span>{localize({ en: "Load from URL: ", zh: "从URL导入：" })}</span>
+				<input defaultValue={loadUrl} style={longInputStyle} onChange={onLoadUrlChange} />
+				<span> </span>
+				<button
+					type={"submit"}
+					onClick={(e) => {
+						onLoadUrl();
+						e.preventDefault();
 					}}
-					type="file"
-					ref={this.fileSelectorRef}
-					onChange={this.onLoadPresetFile}
-				/>
-			</div>
-			{this.props.allowLoadFromUrl ? (
-				<form>
-					<span>{localize({ en: "Load from URL: ", zh: "从URL导入：" })}</span>
-					<input
-						defaultValue={this.loadUrl}
-						style={longInputStyle}
-						onChange={this.onLoadUrlChange}
-					/>
-					<span> </span>
-					<button
-						type={"submit"}
-						onClick={(e) => {
-							this.onLoadUrl();
-							e.preventDefault();
-						}}
-					>
-						{localize({ en: "load", zh: "加载" })}
-					</button>
-				</form>
-			) : undefined}
-		</div>;
-	}
+				>
+					{localize({ en: "load", zh: "加载" })}
+				</button>
+			</form>
+		) : undefined}
+	</div>;
 }
 
 export function ButtonIndicator(props: { text: ContentNode }) {

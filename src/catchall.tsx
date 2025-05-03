@@ -7,5 +7,5 @@ export default function Component() {
 	// For now, operate under the assumption that only one parameter is passed.
 	// Only examine keys.
 	const keys = Array.from(searchParams.keys());
-	return <Main command={keys.length > 0 ? keys[0] : undefined}/>;
+	return <Main command={keys.length > 0 ? keys[0] : undefined} />;
 }

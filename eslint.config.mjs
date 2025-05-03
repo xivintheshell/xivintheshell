@@ -1,5 +1,5 @@
 import eslint from "@eslint/js";
-import tseslint from 'typescript-eslint';
+import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import { defineConfig } from "eslint/config";
 
@@ -25,6 +25,6 @@ export default tseslint.config({
 	settings: {
 		react: {
 			version: "detect",
-		}
-	}
+		},
+	},
 });

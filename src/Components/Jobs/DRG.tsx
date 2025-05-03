@@ -7,7 +7,7 @@ import {
 	ResourceBarProps,
 } from "../StatusDisplay";
 import { DRGState } from "../../Game/Jobs/DRG";
-import { getCurrentThemeColors } from "../ColorTheme";
+import { ThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import { DRG_STATUSES, DRGResourceKey } from "../../Game/Data/Jobs/DRG";
 import { RESOURCES } from "../../Game/Data";
@@ -33,8 +33,7 @@ export class DRGStatusPropsGenerator extends StatusPropsGenerator<DRGState> {
 		});
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 
 		const chaosCombo = resources.get("DRG_CHAOS_COMBO_TRACKER");

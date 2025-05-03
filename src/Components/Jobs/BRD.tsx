@@ -1,7 +1,7 @@
 import { RESOURCES } from "../../Game/Data";
 import { BRDResourceKey, BRD_STATUSES } from "../../Game/Data/Jobs/BRD";
 import { BRDState } from "../../Game/Jobs/BRD";
-import { getCurrentThemeColors } from "../ColorTheme";
+import { ThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import {
 	BuffProps,
@@ -32,8 +32,7 @@ export class BRDStatusPropsGenerator extends StatusPropsGenerator<BRDState> {
 		return [...BARD_BUFFS.map((rscType) => this.makeCommonTimer(rscType))];
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 
 		const pitchPerfect = resources.get("PITCH_PERFECT");

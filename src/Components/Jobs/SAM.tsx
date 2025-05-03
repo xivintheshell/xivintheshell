@@ -7,7 +7,7 @@ import {
 	StatusPropsGenerator,
 } from "../StatusDisplay";
 import { SAMState } from "../../Game/Jobs/SAM";
-import { getCurrentThemeColors } from "../../Components/ColorTheme";
+import { ThemeColors } from "../../Components/ColorTheme";
 import { localize } from "../../Components/Localization";
 import { ResourceKey, RESOURCES } from "../../Game/Data";
 import { SAM_STATUSES } from "../../Game/Data/Jobs/SAM";
@@ -27,8 +27,7 @@ export class SAMStatusPropsGenerator extends StatusPropsGenerator<SAMState> {
 			.map((key) => this.makeCommonTimer(key));
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 		const kenki = resources.get("KENKI").availableAmount();
 		const meditation = resources.get("MEDITATION").availableAmount();
