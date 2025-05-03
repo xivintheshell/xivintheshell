@@ -669,7 +669,7 @@ export class SkillsWindow extends React.Component {
 			//border: "1px solid red",
 		};
 
-		// @ts-ignore we need to read untyped this.context in place of a context hook
+		// @ts-expect-error we need to read untyped this.context in place of a context hook
 		let colors = getThemeColors(this.context.activeColorTheme);
 		let textInputFieldStyle = {
 			outline: "none",
