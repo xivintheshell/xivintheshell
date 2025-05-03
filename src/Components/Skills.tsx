@@ -52,7 +52,7 @@ export const getSkillIconImage = (skillName: ActionKey) => {
 	return undefined;
 };
 
-export function SkillIconImage(props: {style: React.CSSProperties, skillName: ActionKey}) {
+export function SkillIconImage(props: { style: React.CSSProperties; skillName: ActionKey }) {
 	// getSkillIconImage produces an image for timeline rendering, and thus shouldn't make a react component.
 	// In all other cases, we probably want an actual react component.
 	// These are also not memoized.
@@ -437,7 +437,7 @@ class SkillButton extends React.Component {
 			<div style={iconStyle}>
 				{" "}
 				{/* "overlay" layers */}
-				<SkillIconImage style={iconImgStyle} skillName={this.props.skillName}/>
+				<SkillIconImage style={iconImgStyle} skillName={this.props.skillName} />
 				<div
 					style={{
 						position: "absolute",

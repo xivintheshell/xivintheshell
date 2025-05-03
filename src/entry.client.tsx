@@ -5,8 +5,8 @@ import "./Style/normalize.css";
 import "./Style/style.css";
 
 ReactDOM.hydrateRoot(
-  document,
-  <React.StrictMode>
-    <HydratedRouter />
-  </React.StrictMode>
+	document,
+	<React.StrictMode>
+		<HydratedRouter />
+	</React.StrictMode>,
 );

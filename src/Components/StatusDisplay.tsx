@@ -382,7 +382,13 @@ function Buff(props: BuffProps) {
 		className={props.className + " buff " + props.rscType}
 	>
 		<Clickable
-			content={<img style={imgStyle} src={"assets/" + buffIcons.get(assetName)} alt={props.rscType} />}
+			content={
+				<img
+					style={imgStyle}
+					src={"assets/" + buffIcons.get(assetName)}
+					alt={props.rscType}
+				/>
+			}
 			style={{
 				display: "inline-block",
 				verticalAlign: "top",

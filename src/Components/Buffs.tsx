@@ -42,10 +42,7 @@ buffIcons.set(BuffType.Barrage, "Buffs/BRD/Barrage.png");
 
 buffIcons.set(BuffType.NoMercy, "Buffs/GNB/No Mercy.png");
 
-buffIcons.set(
-	BuffType.EnhancedPiercingTalon,
-	"Buffs/DRG/Enhanced Piercing Talon.png"
-);
+buffIcons.set(BuffType.EnhancedPiercingTalon, "Buffs/DRG/Enhanced Piercing Talon.png");
 buffIcons.set(BuffType.PowerSurge, "Buffs/DRG/Power Surge.png");
 buffIcons.set(BuffType.LanceCharge, "Buffs/DRG/Lance Charge.png");
 buffIcons.set(BuffType.LifeOfTheDragon, "Buffs/DRG/Life of the Dragon.png");
