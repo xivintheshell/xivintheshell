@@ -1499,18 +1499,19 @@ class Controller {
 				return [row.time, normalizeName(row.action), "", "", targetCell];
 			});
 		const meta = ["use_strict_skill_naming = False"];
+		const isHealerOrCaster = !(isMelee || RANGED_JOBS.includes(job));
+		if (isHealerOrCaster) {
+			meta.push("enable_autos = False");
+		}
 		// stats dict is parsed by combat sim as a python dict
-		// WD is the same at a given ilvl across all jobs, but we still want userse to input it manually
+		// WD is the same at a given ilvl across all jobs, but we still want users to input it manually
 		// main_stat varies for each job's bis, so we still require users to input that for accuracy
 		const statsDict = {
 			job_class: job,
 			det_stat: this.gameConfig.determination,
 			crit_stat: this.gameConfig.criticalHit,
 			dh_stat: this.gameConfig.directHit,
-			speed_stat:
-				isMelee || RANGED_JOBS.includes(job)
-					? this.gameConfig.skillSpeed
-					: this.gameConfig.spellSpeed,
+			speed_stat: isHealerOrCaster ? this.gameConfig.spellSpeed : this.gameConfig.skillSpeed,
 			version: CURRENT_GAME_COMBAT_PATCH,
 			level: this.gameConfig.level,
 		};

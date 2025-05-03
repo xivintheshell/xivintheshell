@@ -1,5 +1,11 @@
 [
 	{
+		"date": "5/2/25",
+		"changes": [
+			"Changed Ama's combat sim export to disable auto-attacks for healer/caster jobs."
+		]
+	},
+	{
 		"date": "4/28/25",
 		"changes": [
 			"Refactored cooldown logic. Changes should not affect end users, but let us know if anything is off.",
