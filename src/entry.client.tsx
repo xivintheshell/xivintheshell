@@ -4,9 +4,4 @@ import { HydratedRouter } from "react-router/dom";
 import "./Style/normalize.css";
 import "./Style/style.css";
 
-ReactDOM.hydrateRoot(
-	document,
-	<React.StrictMode>
-		<HydratedRouter />
-	</React.StrictMode>,
-);
+ReactDOM.hydrateRoot(document, <HydratedRouter />);

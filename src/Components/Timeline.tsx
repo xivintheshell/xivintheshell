@@ -105,6 +105,8 @@ class TimelineMain extends React.Component {
 			version={this.state.version}
 		/>;
 		const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
+		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
+		const bg = getThemeColors(this.context.activeColorTheme).bgMediumContrast;
 		return <div style={{ position: "relative" }}>
 			{canvas}
 			<div
@@ -115,10 +117,7 @@ class TimelineMain extends React.Component {
 					width: "100%",
 					overflowX: "scroll",
 					overflowY: "clip",
-					// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-					outline:
-						"1px solid " +
-						getThemeColors(this.context.activeColorTheme).bgMediumContrast,
+					outline: "1px solid " + bg,
 					cursor: timelineCanvasGetPointerMouse() ? "pointer" : "default",
 					paddingBottom: isFirefox ? 10 : 0,
 				}}
