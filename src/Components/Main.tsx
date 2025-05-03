@@ -93,7 +93,7 @@ function PSA(props: { hidden?: boolean; color?: string; children: React.ReactNod
 	</div>;
 }
 
-export default class Main extends React.Component {
+export default class Main extends React.Component<{command?: string}> {
 	controlRegionRef: React.RefObject<HTMLDivElement>;
 	gameplayKeyCapture: React.KeyboardEventHandler<HTMLDivElement>;
 	gameplayMouseCapture: React.MouseEventHandler<HTMLDivElement>;
