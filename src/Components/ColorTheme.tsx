@@ -653,7 +653,7 @@ function ColorThemeOption(props: { colorTheme: ColorTheme }) {
 }
 
 export const ColorThemeContext = createContext({
-	activeColorTheme: "Light" as ColorTheme,
+	activeColorTheme: getCachedValue("colorTheme") as ColorTheme,
 	setColorTheme: (_value: ColorTheme) => {},
 });
 
@@ -671,8 +671,3 @@ export function SelectColorTheme() {
 		</div>
 	</div>;
 }
-
-// setCurrentColorTheme = (colorTheme: ColorTheme) => {
-// 	this.setState({ colorTheme: colorTheme });
-// 	setCachedValue("colorTheme", colorTheme);
-// };
