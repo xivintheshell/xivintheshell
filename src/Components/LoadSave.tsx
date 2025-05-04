@@ -1,18 +1,27 @@
 import React from "react";
-import { Columns, FileFormat, LoadJsonFromFileOrUrl, SaveToFile } from "./Common";
+import { Columns, FileFormat, Input, LoadJsonFromFileOrUrl, SaveToFile } from "./Common";
 import { controller } from "../Controller/Controller";
 import { FileType } from "../Controller/Common";
+import { getCurrentThemeColors } from "./ColorTheme";
 import { localize } from "./Localization";
 import { ImageExport } from "./ImageExport";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
+import { FaCheck } from "react-icons/fa6";
 
 type Fixme = any;
 
 export class LoadSave extends React.Component {
 	private readonly onLoad: (content: object) => void;
+	private uploadToURL: (evt: React.SyntheticEvent) => void;
+	state: {
+		uploadLink: string;
+		uploaded: boolean;
+	};
 
 	constructor(props: {} | Readonly<{}>) {
 		super(props);
+
+		this.state = { uploadLink: "", uploaded: false };
 
 		this.onLoad = (content: Fixme) => {
 			if (content.fileType === FileType.Record) {
@@ -33,9 +42,42 @@ export class LoadSave extends React.Component {
 				window.alert("wrong file type '" + content.fileType + "'.");
 			}
 		};
+
+		this.uploadToURL = (evt: React.SyntheticEvent) => {
+			evt.preventDefault();
+			fetch(this.state.uploadLink, {
+				method: "post",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(controller.record.serialized()),
+			})
+				.then((response) => {
+					if (response.ok) {
+						this.setState({ uploaded: true });
+					} else {
+						const failMessageEn =
+							"Upload failed: error " + response.status + "\n" + response.statusText;
+						window.alert(
+							localize({
+								en: failMessageEn,
+							}),
+						);
+						console.error(failMessageEn);
+					}
+				})
+				.catch((error) => {
+					const failMessageEn = "Upload failed:\n" + error;
+					window.alert(
+						localize({
+							en: failMessageEn,
+						}),
+					);
+					console.error(failMessageEn);
+				});
+		};
 	}
 
 	render() {
+		let colors = getCurrentThemeColors();
 		let textExportTitle = localize({
 			en: "Export fight to file",
 			zh: "导出战斗到文件",
@@ -131,22 +173,70 @@ export class LoadSave extends React.Component {
 			})}
 		</>;
 
+		const uploadExportTitle = <>
+			{localize({
+				en: "Export fight to external site",
+			})}
+		</>;
+		const uploadExportContent = <div>
+			<p>
+				{localize({
+					en:
+						"Export your fight plan to an external website. " +
+						"Make sure you trust whatever link you're uploading to.",
+				})}
+			</p>
+
+			<form onSubmit={this.uploadToURL}>
+				<div>
+					<Input
+						style={{ display: "inline-block" }}
+						width={25}
+						description={""}
+						onChange={(s) => this.setState({ uploadLink: s, uploaded: false })}
+					/>
+					<span> </span>
+					<input
+						style={{ display: "inline-block" }}
+						type="submit"
+						value={localize({ en: "Upload" }) as string}
+					/>
+					{
+						<FaCheck
+							style={{
+								display: this.state.uploaded ? "inline" : "none",
+								color: colors.success,
+								position: "relative",
+								top: 4,
+								marginLeft: 8,
+							}}
+						/>
+					}
+				</div>
+			</form>
+		</div>;
+
 		return <Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>
 			{[
 				{
-					defaultSize: 25,
+					defaultSize: 20,
 					title: textImportTitle,
 					content: textImportContent,
 				},
 				{
-					defaultSize: 30,
+					defaultSize: 26,
 					title: textExportTitle,
 					content: textExportContent,
 				},
 				{
-					defaultSize: 45,
+					defaultSize: 27,
 					title: imageExportTitle,
 					content: <ImageExport />,
+				},
+				{
+					defaultSize: 27,
+					title: uploadExportTitle,
+					content: uploadExportContent,
 				},
 			]}
 		</Columns>;
