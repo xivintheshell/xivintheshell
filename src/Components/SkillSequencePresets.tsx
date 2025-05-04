@@ -11,7 +11,7 @@ import { controller } from "../Controller/Controller";
 import { FileType, ReplayMode } from "../Controller/Common";
 import { SkillIconImage } from "./Skills";
 import { ActionType, Line } from "../Controller/Record";
-import { getThemeColors, ColorThemeContext } from "./ColorTheme";
+import { getThemeField, ColorThemeContext } from "./ColorTheme";
 import { localize } from "./Localization";
 
 type Fixme = any;
@@ -127,7 +127,7 @@ export class SkillSequencePresets extends React.Component {
 			controller && controller.record && controller.record.getFirstSelection() !== undefined;
 
 		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
-		const bg = getThemeColors(this.context.activeColorTheme).bgMediumContrast;
+		const bg = getThemeField(this.context.activeColorTheme, "bgMediumContrast");
 		let content = <div>
 			<button
 				style={{ marginBottom: 10 }}

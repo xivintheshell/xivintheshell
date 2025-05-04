@@ -11,6 +11,7 @@ import changelog from "../changelog.json";
 import { localize, localizeDate, SelectLanguage } from "./Localization";
 import { Expandable, GlobalHelpTooltip, Tabs } from "./Common";
 import {
+	getCachedColorTheme,
 	getThemeColors,
 	getCurrentThemeColors,
 	SelectColorTheme,
@@ -119,18 +120,13 @@ export default class Main extends React.Component<{ command?: string }> {
 
 		handleUrlCommands(props.command);
 
-		const cachedColorTheme = getCachedValue("colorTheme");
-
 		this.state = {
 			job: controller.getActiveJob(),
 			hasFocus: false,
 			historical: false,
 			realTime: false,
 			controlRegionHeight: 0,
-			colorTheme:
-				cachedColorTheme === "Light" || cachedColorTheme === "Dark"
-					? cachedColorTheme
-					: "Light",
+			colorTheme: getCachedColorTheme(),
 		};
 		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
 		this.controlRegionRef = React.createRef();
@@ -348,12 +344,7 @@ export default class Main extends React.Component<{ command?: string }> {
 					border-radius: 0.4em;
 				}
 			`}</style>
-			<ColorThemeContext.Provider
-				value={{
-					activeColorTheme: this.state.colorTheme,
-					setColorTheme: this.setColorTheme,
-				}}
-			>
+			<ColorThemeContext.Provider value={this.state.colorTheme}>
 				<div style={containerStyle}>
 					<div
 						style={{
@@ -371,7 +362,7 @@ export default class Main extends React.Component<{ command?: string }> {
 							}}
 						>
 							<SelectLanguage />
-							<SelectColorTheme />
+							<SelectColorTheme setColorTheme={this.setColorTheme} />
 							<div>
 								<h3 style={{ marginTop: 20, marginBottom: 6 }}>XIV in the Shell</h3>
 								{localize({
