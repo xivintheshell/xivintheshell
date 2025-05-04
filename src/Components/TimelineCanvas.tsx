@@ -1454,7 +1454,7 @@ export function TimelineCanvas(props: {
 	const [mouseHovered, setMouseHovered] = useState(false);
 	const [clickCounter, setClickCounter] = useState(0);
 	const [keyCounter, setKeyCounter] = useState(0);
-	const { activeColorTheme } = useContext(ColorThemeContext);
+	const activeColorTheme = useContext(ColorThemeContext);
 
 	// initialization
 	useEffect(() => {

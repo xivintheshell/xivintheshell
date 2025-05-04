@@ -19,7 +19,12 @@ import {
 import { FIXED_BASE_CASTER_TAX, LevelSync, ProcMode } from "../Game/Common";
 import { getAllResources, getResourceInfo, ResourceOverrideData } from "../Game/Resources";
 import { localize, localizeResourceType } from "./Localization";
-import { getThemeColors, getCurrentThemeColors, ColorThemeContext } from "./ColorTheme";
+import {
+	getThemeField,
+	getThemeColors,
+	getCurrentThemeColors,
+	ColorThemeContext,
+} from "./ColorTheme";
 import { SerializedConfig } from "../Game/GameConfig";
 import { XIVMath } from "../Game/XIVMath";
 import { FaCheck } from "react-icons/fa6";
@@ -1198,7 +1203,7 @@ export class Config extends React.Component {
 		}
 
 		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
-		const bg = getThemeColors(this.context.activeColorTheme).bgMediumContrast;
+		const bg = getThemeField(this.context.activeColorTheme, "bgMediumContrast");
 
 		return <div>
 			<form

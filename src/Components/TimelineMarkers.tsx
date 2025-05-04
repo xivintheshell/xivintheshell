@@ -13,7 +13,7 @@ import {
 import { controller } from "../Controller/Controller";
 import { ElemType, MarkerElem, MarkerType, UntargetableMarkerTrack } from "../Controller/Timeline";
 import { localize, localizeBuffType } from "./Localization";
-import { getThemeColors, MarkerColor, ColorThemeContext } from "./ColorTheme";
+import { getThemeField, MarkerColor, ColorThemeContext } from "./ColorTheme";
 import { Buff, buffInfos } from "../Game/Buffs";
 import { BuffType } from "../Game/Common";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
@@ -406,7 +406,7 @@ export class TimelineMarkers extends React.Component {
 		</>;
 
 		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-		let textColor = getThemeColors(this.context.activeColorTheme).text;
+		let textColor = getThemeField(this.context.activeColorTheme, "text") as string;
 		let individualTrackInput = <input
 			style={{
 				color: textColor,

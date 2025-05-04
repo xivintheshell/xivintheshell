@@ -13,7 +13,7 @@ import {
 	timelineCanvasOnMouseMove,
 } from "./TimelineCanvas";
 import { localize } from "./Localization";
-import { getCurrentThemeColors, getThemeColors, ColorThemeContext } from "./ColorTheme";
+import { getCurrentThemeColors, getThemeField, ColorThemeContext } from "./ColorTheme";
 
 import { LoadSave } from "./LoadSave";
 import { TimelineDisplaySettings } from "./TimelineDisplaySettings";
@@ -106,7 +106,7 @@ class TimelineMain extends React.Component {
 		/>;
 		const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
 		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-		const bg = getThemeColors(this.context.activeColorTheme).bgMediumContrast;
+		const bg = getThemeField(this.context.activeColorTheme, "bgMediumContrast");
 		return <div style={{ position: "relative" }}>
 			{canvas}
 			<div
