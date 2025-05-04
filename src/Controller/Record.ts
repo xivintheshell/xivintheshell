@@ -521,6 +521,7 @@ export class Line {
 						targetCount: serializedAction.targetCount,
 						healTargetCount: serializedAction.healTargetCount,
 					},
+					// @ts-expect-error used for parsing legacy format
 					legacyWaitDuration,
 				);
 			} else if (serializedAction.type === ActionType.SetResourceEnabled) {
@@ -533,6 +534,7 @@ export class Line {
 						type: ActionType.SetResourceEnabled,
 						buffName: getResourceKeyFromBuffName(serializedAction.buffName)!,
 					},
+					// @ts-expect-error used for parsing legacy format
 					legacyWaitDuration,
 				);
 			} else if ([ActionType.Wait].includes(serializedAction.type)) {

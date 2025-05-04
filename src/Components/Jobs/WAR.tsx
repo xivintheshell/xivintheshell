@@ -5,7 +5,7 @@ import {
 	StatusPropsGenerator,
 } from "../StatusDisplay";
 import { WARState } from "../../Game/Jobs/WAR";
-import { getCurrentThemeColors } from "../../Components/ColorTheme";
+import { ThemeColors } from "../../Components/ColorTheme";
 import { localize } from "../../Components/Localization";
 import { ResourceKey, RESOURCES } from "../../Game/Data";
 import { WAR_STATUSES } from "../../Game/Data/Jobs/WAR";
@@ -19,8 +19,7 @@ export class WARStatusPropsGenerator extends StatusPropsGenerator<WARState> {
 		return (Object.keys(WAR_STATUSES) as ResourceKey[]).map((key) => this.makeCommonTimer(key));
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 		const beastGauge = resources.get("BEAST_GAUGE").availableAmount();
 		const stormCombo = resources.get("STORM_COMBO");

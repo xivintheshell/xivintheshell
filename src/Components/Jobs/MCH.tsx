@@ -1,7 +1,7 @@
 import { ResourceKey, RESOURCES } from "../../Game/Data";
 import { MCH_STATUSES, MCHResourceKey } from "../../Game/Data/Jobs/MCH";
 import { MCHState } from "../../Game/Jobs/MCH";
-import { getCurrentThemeColors } from "../ColorTheme";
+import { ThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import {
 	BuffProps,
@@ -34,8 +34,7 @@ export class MCHStatusPropsGenerator extends StatusPropsGenerator<MCHState> {
 		];
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 
 		const heat = resources.get("HEAT_GAUGE").availableAmount();

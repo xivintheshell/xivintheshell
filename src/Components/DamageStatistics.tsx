@@ -1,7 +1,7 @@
 import React, { CSSProperties } from "react";
 import { Checkbox, FileFormat, Help, Input, SaveToFile } from "./Common";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
-import { getCurrentThemeColors, getModifierTagColor } from "./ColorTheme";
+import { getThemeColors, getModifierTagColor, ColorThemeContext } from "./ColorTheme";
 import {
 	localize,
 	localizeModifierName,
@@ -295,6 +295,8 @@ export class DamageStatistics extends React.Component {
 		mode: DamageStatisticsMode.Normal,
 	};
 
+	static contextType = ColorThemeContext;
+
 	constructor(props: {}) {
 		super(props);
 		updateDamageStats = (data: Partial<DamageStatisticsData>) => {
@@ -312,7 +314,8 @@ export class DamageStatistics extends React.Component {
 	}
 
 	render() {
-		let colors = getCurrentThemeColors();
+		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
+		let colors = getThemeColors(this.context.activeColorTheme);
 		const allIncluded = allSkillsAreIncluded();
 
 		//////////////////// Summary ///////////////////////

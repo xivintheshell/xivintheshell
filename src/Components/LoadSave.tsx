@@ -121,7 +121,6 @@ export class LoadSave extends React.Component {
 		});
 		let textImportContent = <LoadJsonFromFileOrUrl
 			allowLoadFromUrl={false}
-			loadUrlOnMount={false}
 			onLoadFn={this.onLoad}
 		/>;
 		let imageExportTitle = <>

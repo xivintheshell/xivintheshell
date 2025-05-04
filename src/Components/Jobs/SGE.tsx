@@ -2,7 +2,7 @@ import { RESOURCES } from "../../Game/Data";
 import { SGE_STATUSES, SGEResourceKey } from "../../Game/Data/Jobs/SGE";
 import { SGEState } from "../../Game/Jobs/SGE";
 import { getResourceInfo, ResourceInfo } from "../../Game/Resources";
-import { getCurrentThemeColors } from "../ColorTheme";
+import { ThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import {
 	BuffProps,
@@ -67,8 +67,7 @@ export class SGEStatusPropsGenerator extends StatusPropsGenerator<SGEState> {
 		});
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const addersgall = this.state.resources.get("ADDERSGALL");
 		const addersgallMaxTimeout = (getResourceInfo("SGE", "ADDERSGALL") as ResourceInfo)
 			.maxTimeout;

@@ -7,7 +7,7 @@ import {
 	StatusPropsGenerator,
 } from "../StatusDisplay";
 import { BLMState } from "../../Game/Jobs/BLM";
-import { getCurrentThemeColors } from "../ColorTheme";
+import { type ThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import { RESOURCES } from "../../Game/Data";
 import { BLMResourceKey, BLM_STATUSES } from "../../Game/Data/Jobs/BLM";
@@ -44,8 +44,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 		});
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		let eno = this.state.resources.get("ENOCHIAN");
 		const resources = this.state.resources;
 		const astralFire = this.state.getFireStacks();
