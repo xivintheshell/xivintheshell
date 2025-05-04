@@ -101,7 +101,7 @@ function PSA(props: { hidden?: boolean; color?: string; children: React.ReactNod
 }
 
 export default class Main extends React.Component<{ command?: string }> {
-	controlRegionRef: React.RefObject<HTMLDivElement>;
+	controlRegionRef: React.RefObject<HTMLDivElement | null>;
 	gameplayKeyCapture: React.KeyboardEventHandler<HTMLDivElement>;
 	gameplayMouseCapture: React.MouseEventHandler<HTMLDivElement>;
 	setColorTheme: (colorTheme: ColorTheme) => void;
@@ -128,11 +128,10 @@ export default class Main extends React.Component<{ command?: string }> {
 			controlRegionHeight: 0,
 			colorTheme: getCachedColorTheme(),
 		};
-		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
 		this.controlRegionRef = React.createRef();
 
 		this.gameplayKeyCapture = (evt: React.KeyboardEvent) => {
-			if (evt.target && evt.target === this.controlRegionRef.current) {
+			if (evt.target && evt.target === this.controlRegionRef?.current) {
 				controller.handleKeyboardEvent(evt);
 				evt.preventDefault();
 			}
@@ -389,10 +388,10 @@ export default class Main extends React.Component<{ command?: string }> {
 								})}
 
 								{/*
-							EW cached content warning
-							Note to devs: this wouldn't work for locally hosted versions though.
-							You'll need to manually delete the old key-value pairs in localStorage
-							*/}
+								EW cached content warning
+								Note to devs: this wouldn't work for locally hosted versions though.
+								You'll need to manually delete the old key-value pairs in localStorage
+								*/}
 								{containsEwCacheContent() ? (
 									<div
 										style={{
