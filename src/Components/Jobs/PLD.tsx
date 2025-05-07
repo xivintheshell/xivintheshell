@@ -39,7 +39,6 @@ export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 
 		const basicCombo = resources.get("PLD_COMBO_TRACKER");
 		const aoeCombo = resources.get("PLD_AOE_COMBO_TRACKER");
-		// const confiteorCombo = resources.get("PLD_CONFITEOR_COMBO_TRACKER");
 
 		const oath = resources.get("OATH_GAUGE").availableAmount();
 

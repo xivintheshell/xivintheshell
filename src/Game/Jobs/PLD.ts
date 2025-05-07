@@ -48,13 +48,12 @@ const makePLDResource = (
 	makeResource("PLD", rsc, maxValue, params ?? {});
 };
 
-// TODO: get precise durations
+// Normal PLD Buffs/Debuffs
 makePLDResource("FIGHT_OR_FLIGHT", 1, { timeout: 20 });
 makePLDResource("IRON_WILL", 1);
 makePLDResource("OATH_GAUGE", 100);
-makePLDResource("SHELTRON", 1, { timeout: 6 }); // TODO
+makePLDResource("SHELTRON", 1, { timeout: 6 });
 makePLDResource("SENTINEL", 1, { timeout: 15 });
-makePLDResource("COVER", 1, { timeout: 12 });
 makePLDResource("CIRCLE_OF_SCORN_DOT", 1, { timeout: 15 });
 makePLDResource("HALLOWED_GROUND", 1, { timeout: 10 });
 makePLDResource("BULWARK", 1, { timeout: 10 });
@@ -62,13 +61,11 @@ makePLDResource("GORING_BLADE_READY", 1, { timeout: 30 });
 makePLDResource("DIVINE_VEIL", 1, { timeout: 30 });
 makePLDResource("ATONEMENT_READY", 1, { timeout: 30 });
 makePLDResource("DIVINE_MIGHT", 1, { timeout: 30 });
-makePLDResource("INTERVENTION", 1, { timeout: 8 }); // TODO??
 makePLDResource("KNIGHTS_RESOLVE", 1, { timeout: 4 });
 makePLDResource("KNIGHTS_BENEDICTION", 1, { timeout: 12 });
 makePLDResource("REQUIESCAT", 4, { timeout: 30 });
 makePLDResource("CONFITEOR_READY", 1, { timeout: 30 });
 makePLDResource("PASSAGE_OF_ARMS", 1, { timeout: 18 });
-makePLDResource("ARMS_UP", 1); // ???
 makePLDResource("SUPPLICATION_READY", 1, { timeout: 30 });
 makePLDResource("SEPULCHRE_READY", 1, { timeout: 30 });
 makePLDResource("HOLY_SHELTRON", 1, { timeout: 8 });
@@ -76,9 +73,15 @@ makePLDResource("BLADE_OF_HONOR_READY", 1, { timeout: 30 });
 makePLDResource("GUARDIAN", 1, { timeout: 15 });
 makePLDResource("GUARDIANS_WILL", 1, { timeout: 15 });
 
+// PLD Combo Trackers
 makePLDResource("PLD_COMBO_TRACKER", 2, { timeout: 30 });
 makePLDResource("PLD_CONFITEOR_COMBO_TRACKER", 3, { timeout: 30 });
 makePLDResource("PLD_AOE_COMBO_TRACKER", 1, { timeout: 30 });
+
+// PLD Buffs Applied to Party Members
+makePLDResource("INTERVENTION", 1, { timeout: 8 });
+makePLDResource("ARMS_UP", 1);
+makePLDResource("COVER", 1, { timeout: 12 });
 
 const PLD_AOE_COMBO_MAP: Map<PLDActionKey, number> = new Map([
 	["TOTAL_ECLIPSE", 0],
@@ -136,7 +139,6 @@ export class PLDState extends GameState {
 		super(config);
 
 		this.resources.get("OATH_GAUGE").gain(100);
-		this.autoAttackDelay = 2.5;
 
 		this.registerRecurringEvents([
 			{
@@ -337,6 +339,7 @@ const makeWeaponskill_PLD = (
 		highlightIf?: StatePredicate<PLDState>;
 		onApplication?: EffectFn<PLDState>;
 		secondaryCooldown?: CooldownGroupProperties;
+		startsAuto?: boolean;
 	},
 ): Weaponskill<PLDState> => {
 	const onConfirm: EffectFn<PLDState> = combineEffects(params.onConfirm ?? NO_EFFECT, (state) => {
@@ -352,6 +355,7 @@ const makeWeaponskill_PLD = (
 		...params,
 		onConfirm: onConfirm,
 		onApplication: onApplication,
+		startsAuto: params.startsAuto,
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = jobPotencyMod(state);
@@ -502,11 +506,13 @@ const makeAbility_PLD = (
 		onApplication?: EffectFn<PLDState>;
 		onExecute?: EffectFn<PLDState>;
 		secondaryCooldown?: CooldownGroupProperties;
+		startsAuto?: boolean;
 	},
 ): Ability<PLDState> => {
 	return makeAbility("PLD", name, unlockLevel, cdName, {
 		...params,
 		onConfirm: params.onConfirm,
+		startsAuto: params.startsAuto,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (state.hasResourceAvailable("FIGHT_OR_FLIGHT")) {
@@ -598,9 +604,7 @@ const releaseIronWillCondition: ConditionalSkillReplace<PLDState> = {
 makeWeaponskill_PLD("SHIELD_LOB", 15, {
 	potency: 100,
 	applicationDelay: 0.89,
-	onConfirm: (state) => {
-		// state.startAutoAttackTimer();
-	},
+	startsAuto: false,
 });
 
 makeWeaponskill_PLD("FAST_BLADE", 1, {
@@ -748,7 +752,7 @@ makeSpell_PLD("HOLY_SPIRIT", 64, {
 	baseCastTime: 1.5,
 	applicationDelay: 0.76,
 	baseManaCost: 1000,
-	startsAuto: true,
+	startsAuto: false,
 	basePotency: [
 		["NEVER", 300],
 		["MELEE_MASTERY_TANK", 350],
@@ -795,7 +799,7 @@ makeSpell_PLD("CONFITEOR", 80, {
 	baseCastTime: 0,
 	applicationDelay: 0.62,
 	baseManaCost: 1000,
-	startsAuto: true,
+	startsAuto: false,
 	basePotency: [
 		["NEVER", 420],
 		["MELEE_MASTERY_II_TANK", 500],
@@ -820,7 +824,7 @@ makeSpell_PLD("BLADE_OF_FAITH", 90, {
 	startOnHotbar: false,
 	baseCastTime: 0,
 	baseManaCost: 1000,
-	startsAuto: true,
+	startsAuto: false,
 	applicationDelay: 0.62,
 	basePotency: [
 		["NEVER", 220],
@@ -846,7 +850,7 @@ makeSpell_PLD("BLADE_OF_TRUTH", 90, {
 	baseCastTime: 0,
 	baseManaCost: 1000,
 	applicationDelay: 0.89,
-	startsAuto: true,
+	startsAuto: false,
 	basePotency: [
 		["NEVER", 320],
 		["MELEE_MASTERY_II_TANK", 380],
@@ -871,7 +875,7 @@ makeSpell_PLD("BLADE_OF_VALOR", 90, {
 	baseCastTime: 0,
 	baseManaCost: 1000,
 	applicationDelay: 0.89,
-	startsAuto: true,
+	startsAuto: false,
 	basePotency: [
 		["NEVER", 420],
 		["MELEE_MASTERY_II_TANK", 500],
@@ -942,6 +946,7 @@ makeAbility_PLD("BLADE_OF_HONOR", 100, "cd_BLADE_OF_HONOR", {
 	highlightIf: bladeOfHonorCondition.condition,
 	applicationDelay: 1.16,
 	potency: 1000,
+	startsAuto: false,
 	falloff: 0.5,
 	onConfirm: (state) => {
 		state.tryConsumeResource("BLADE_OF_HONOR_READY");
@@ -1031,6 +1036,7 @@ makeAbility_PLD("SHELTRON", 35, "cd_SHELTRON", {
 	cooldown: 5,
 	onConfirm: (state) => {
 		state.resources.get("OATH_GAUGE").consume(50);
+		state.refreshBuff("SHELTRON", 0);
 	},
 });
 

@@ -87,7 +87,7 @@ export class GameState {
 	eventsQueue: Event[];
 	skillsList: SkillsList<GameState>;
 	displayedSkills: DisplayedSkills;
-	autoAttackDelay: number; // auto attack delay
+	private autoAttackDelay: number; // auto attack delay
 
 	overTimeEffectGroups: OverTimeRegistrationGroup[] = [];
 	dotResources: ResourceKey[] = [];
@@ -172,7 +172,7 @@ export class GameState {
 		this.skillsList = new SkillsList(this);
 		this.displayedSkills = new DisplayedSkills(this.job, config.level);
 
-		this.autoAttackDelay = 2.5; // defaults to 2.5 can be changed by referencing this field
+		this.autoAttackDelay = 2.5; // defaults to 2.5
 	}
 
 	get statusPropsGenerator(): StatusPropsGenerator<PlayerState> {
@@ -696,6 +696,10 @@ export class GameState {
 	 * removes old auto attack timer
 	 * starts a new recurring auto attack timer
 	 * timer for auto initial + recurringDelay(defaults 3)
+	 * initialDelay: delay to next auto attack event.
+	 * recurringDelay: delay between auto attack events (not the first one!)
+	 * Both can be different as this function is called again if downtime/cast bars can interrupt the flow of the timer.
+	 * This is called many times to overwrite the auto timer.
 	 * NOTE BENE: castTime only modifies stored auto
 	 */
 	startAutoAttackTimer(initialDelay?: number, reccuringDelay?: number, castTime?: number) {
@@ -1130,7 +1134,7 @@ export class GameState {
 		const autosEngaged = this.resources.get("AUTOS_ENGAGED").available(1);
 		const recurringAutoDelay = this.autoAttackDelay; // <<---- placeholder for changing auto attack speed
 		const currentDelay = this.findAutoAttackTimerInQueue();
-		const startsAutos = skill.startsAuto || (potency && potencyNumber > 0); // <<---  for spells starting autos (eg. RDM)
+		const startsAutos = skill.startsAuto || (potency && potencyNumber > 0); // <<---  for spells starting autos
 
 		if (startsAutos) {
 			if (!this.isInCombat()) {
