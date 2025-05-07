@@ -764,7 +764,7 @@ makeGCD_SAM("TENDO_SETSUGEKKA", 100, {
 	startOnHotbar: false,
 	replaceIf: [banaCondition, tenkaCondition, tendoGokenCondition, midareCondition],
 	baseCastTime: 1.3,
-	basePotency: 1020,
+	basePotency: 1100,
 	applicationDelay: 1.03,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
 	validateAttempt: tendoMidareCondition.condition,
@@ -856,7 +856,7 @@ makeGCD_SAM("KAESHI_SETSUGEKKA", 74, {
 makeGCD_SAM("TENDO_KAESHI_SETSUGEKKA", 74, {
 	startOnHotbar: false,
 	replaceIf: [kaeshiGokenCondition, tendoKaeshiGokenCondition, kaeshiSetsugekkaCondition],
-	basePotency: 1020,
+	basePotency: 1100,
 	applicationDelay: 1.03,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
 	validateAttempt: tendoKaeshiSetsugekkaCondition.condition,
@@ -871,11 +871,11 @@ makeGCD_SAM("OGI_NAMIKIRI", 90, {
 			condition: (state) => state.hasResourceAvailable("KAESHI_OGI_READY"),
 		},
 	],
-	falloff: 0.75,
+	falloff: 0.5,
 	applicationDelay: 0.49,
 	basePotency: [
 		["NEVER", 860],
-		["WAY_OF_THE_SAMURAI_III", 900],
+		["WAY_OF_THE_SAMURAI_III", 1000],
 	],
 	baseCastTime: 1.3,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
@@ -891,11 +891,11 @@ makeGCD_SAM("OGI_NAMIKIRI", 90, {
 
 makeGCD_SAM("KAESHI_NAMIKIRI", 90, {
 	startOnHotbar: false,
-	falloff: 0.75,
+	falloff: 0.5,
 	applicationDelay: 0.49,
 	basePotency: [
 		["NEVER", 860],
-		["WAY_OF_THE_SAMURAI_III", 900],
+		["WAY_OF_THE_SAMURAI_III", 1000],
 	],
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
 	validateAttempt: (state) => state.hasResourceAvailable("KAESHI_OGI_READY"),
@@ -949,7 +949,7 @@ makeAbility_SAM("HISSATSU_SHINTEN", 52, "cd_SHINTEN", {
 
 makeAbility_SAM("HISSATSU_KYUTEN", 62, "cd_KYUTEN", {
 	cooldown: 1,
-	potency: 120,
+	potency: 100,
 	falloff: 0,
 	validateAttempt: (state) => state.resources.get("KENKI").available(25),
 	onConfirm: (state) => state.resources.get("KENKI").consume(25),
@@ -989,7 +989,7 @@ makeAbility_SAM("HISSATSU_SENEI", 72, "cd_SENEI_GUREN", {
 // cooldown set by trait in constructor
 makeAbility_SAM("HISSATSU_GUREN", 70, "cd_SENEI_GUREN", {
 	cooldown: 60,
-	potency: 500,
+	potency: 400,
 	falloff: 0.25,
 	validateAttempt: (state) => state.resources.get("KENKI").available(25),
 	onConfirm: (state) => state.resources.get("KENKI").consume(25),
@@ -1012,7 +1012,7 @@ makeAbility_SAM("SHOHA", 80, "cd_SHOHA", {
 		["NEVER", 560],
 		["WAY_OF_THE_SAMURAI_III", 640],
 	],
-	falloff: 0.65,
+	falloff: 0.5,
 	applicationDelay: 0.58,
 	validateAttempt: (state) => state.resources.get("MEDITATION").available(3),
 	onConfirm: (state) => state.tryConsumeResource("MEDITATION", true),
@@ -1077,9 +1077,9 @@ makeAbility_SAM("TENGENTSU_POP", 82, "cd_THIRD_EYE_POP", {
 makeAbility_SAM("ZANSHIN", 96, "cd_ZANSHIN", {
 	startOnHotbar: false,
 	cooldown: 1,
-	falloff: 0.6,
+	falloff: 0.5,
 	applicationDelay: 1.03,
-	potency: 900,
+	potency: 940,
 	validateAttempt: (state) =>
 		state.hasResourceAvailable("ZANSHIN_READY") && state.resources.get("KENKI").available(50),
 	onConfirm: (state) => {
@@ -1098,9 +1098,7 @@ makeResourceAbility("SAM", "MEDITATE", 60, "cd_MEDITATE", {
 	// roll the GCD
 	onConfirm: (state) => {
 		const recastTime = state.config.adjustedSksGCD(2.5, state.getFukaModifier());
-		state.cooldowns
-			.get("cd_GCD")
-			.useStackWithRecast(state, state.config.getAfterTaxGCD(recastTime));
+		state.cooldowns.get("cd_GCD").useStackWithRecast(state.config.getAfterTaxGCD(recastTime));
 	},
 	// start the meditate timer
 	onApplication: (state: SAMState) => state.startMeditateTimer(),

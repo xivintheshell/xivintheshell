@@ -565,46 +565,38 @@ export class TimelineMarkers extends React.Component {
 					})}
 				</span>
 				<LoadCombinedTracksBtn
-					displayName={"M2S"}
-					url={PRESET_MARKERS_BASE + "m2s.txt"}
+					displayName={"M5S"}
+					url={PRESET_MARKERS_BASE + "m5s.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
 				<LoadCombinedTracksBtn
-					displayName={"M3S"}
-					url={PRESET_MARKERS_BASE + "m3s.txt"}
+					displayName={"M6S"}
+					url={PRESET_MARKERS_BASE + "m6s.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
 				<LoadCombinedTracksBtn
-					displayName={"M4S"}
-					url={PRESET_MARKERS_BASE + "m4s.txt"}
-					offsetStr={this.state.offsetStr}
-				/>
-			</p>
-			<p>
-				<span>
-					{localize({
-						en: "Current tier (zh) by kiyozero: ",
-						zh: "当前零式（中文，来自kiyozero）：",
-					})}
-				</span>
-				<LoadCombinedTracksBtn
-					displayName={"M1S"}
-					url={PRESET_MARKERS_BASE + "m1s_zh.txt"}
+					displayName={"M7S"}
+					url={PRESET_MARKERS_BASE + "m7s.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
 				<LoadCombinedTracksBtn
-					displayName={"M2S"}
-					url={PRESET_MARKERS_BASE + "m2s_zh.txt"}
+					displayName={"M8S full"}
+					url={PRESET_MARKERS_BASE + "m8s_full.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
 				<LoadCombinedTracksBtn
-					displayName={"M3S"}
-					url={PRESET_MARKERS_BASE + "m3s_zh.txt"}
+					displayName={"M8S P1 to adds"}
+					url={PRESET_MARKERS_BASE + "m8s_p1_through_adds.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
 				<LoadCombinedTracksBtn
-					displayName={"M4S"}
-					url={PRESET_MARKERS_BASE + "m4s_zh.txt"}
+					displayName={"M8S P1 post-adds"}
+					url={PRESET_MARKERS_BASE + "m8s_p1_post_adds.txt"}
+					offsetStr={this.state.offsetStr}
+				/>
+				<LoadCombinedTracksBtn
+					displayName={"M8S P2"}
+					url={PRESET_MARKERS_BASE + "m8s_p2.txt"}
 					offsetStr={this.state.offsetStr}
 				/>
 			</p>

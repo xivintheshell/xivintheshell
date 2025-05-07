@@ -1,5 +1,70 @@
 [
 	{
+		"date": "5/2/25",
+		"changes": [
+			"Changed Ama's combat sim export to disable auto-attacks for healer/caster jobs."
+		]
+	},
+	{
+		"date": "4/28/25",
+		"changes": [
+			"Refactored cooldown logic. Changes should not affect end users, but let us know if anything is off.",
+			"Added a few missing translations"
+		]
+	},
+	{
+		"date": "4/21/25",
+		"changes": [
+			"Updated compatibility with Ama's combat sim for newly-supported jobs."
+		]
+	},
+	{
+		"date": "4/17/25",
+		"changes": [
+			"[RPR] Added a button to gain +10 Soul Gauge to simulate a target dying with Death's Design active",
+			"[BRD] Fixed a bug where Iron Jaws checked the dot status at application time instead of confirmation time (thanks Yumiya)",
+			"[BRD] Fixed a bug where Empyreal Arrow applied repertoire at application time instead of confirmation time (also thanks Yumiya)"
+		]
+	},
+	{
+		"date": "4/13/25",
+		"changes": [
+			"Added English-language markers for M8S"
+		]
+	},
+	{
+		"date": "4/7/25",
+		"changes": [
+			"Added English-language markers for M7S"
+		]
+	},
+	{
+		"date": "4/6/25",
+		"changes": [
+			"Added English-language markers for M5S + M6S"
+		]
+	},
+	{
+		"date": "3/29/25",
+		"changes": [
+			"[BLM] Removed \"outdated\" status"
+		]
+	},
+	{
+		"date": "3/26/25",
+		"changes": [
+			"Added user survey link"
+		]
+	},
+	{
+		"date": "3/24/25",
+		"changes": [
+			"We have updated the site in accordance with the 7.2 patch notes. Goodbye to the Enochian timer o7",
+			"[BLM] will remain in \"outdated\" status until we have a change to play with the changes in-game.",
+			"Since most jobs received only potency changes, your old 7.1 plans should work, but as usual, please let us know if anything seems incorrect."
+		]
+	},
+	{
 		"date": "3/20/25",
 		"changes": [
 			"[DNC] Fixed an issue where the icons for Finishing Move Ready and Last Dance Ready were swapped, and an issue where Last Dance Ready was not consumed by Last Dance (thank you bluke)"

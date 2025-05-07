@@ -189,7 +189,7 @@ export class BRDState extends GameState {
 				this.resources.get("PITCH_PERFECT").gain(1);
 				break;
 			case "MAGES_BALLAD":
-				this.cooldowns.get("cd_HEARTBREAK_SHOT").restore(this, 7.5);
+				this.cooldowns.get("cd_HEARTBREAK_SHOT").restore(7.5);
 				break;
 			case "ARMYS_PAEON":
 				this.resources.get("REPERTOIRE").gain(1);
@@ -522,20 +522,33 @@ dotAppliers.forEach((props) => {
 makeWeaponskill_BRD("IRON_JAWS", 56, {
 	potency: 100,
 	applicationDelay: 0.67,
-	onApplication: (state, node) => {
-		dotAppliers.forEach((dotParams) => {
-			state.refreshDot({
-				node,
-				effectName: dotParams.dotName,
-				tickPotency: dotParams.tickPotency,
-				skillName: "IRON_JAWS",
-				speedStat: "sks",
-				modifiers: state.getJobPotencyModifiers("IRON_JAWS"),
-			});
-		});
-		if (state.hasTraitUnlocked("BITE_MASTERY_II")) {
-			state.maybeGainProc("HAWKS_EYE", 0.35);
-		}
+	onConfirm: (state, node) => {
+		// GH#131: iron jaws checks whether the dots are active at cast confirm,
+		// not at application time
+		// the refreshed status is still applied at application
+		const dotActive = dotAppliers.map((dotParams) =>
+			state.hasResourceAvailable(dotParams.dotName),
+		);
+		state.addEvent(
+			new Event("iron jaws dot refresh", 0.67, () => {
+				dotAppliers.forEach((dotParams, i) => {
+					state.refreshDot(
+						{
+							node,
+							effectName: dotParams.dotName,
+							tickPotency: dotParams.tickPotency,
+							skillName: "IRON_JAWS",
+							speedStat: "sks",
+							modifiers: state.getJobPotencyModifiers("IRON_JAWS"),
+						},
+						dotActive[i],
+					);
+				});
+				if (state.hasTraitUnlocked("BITE_MASTERY_II")) {
+					state.maybeGainProc("HAWKS_EYE", 0.35);
+				}
+			}),
+		);
 	},
 });
 
@@ -589,7 +602,8 @@ makeAbility_BRD("EMYPREAL_ARROW", 54, "cd_EMPYREAL_ARROW", {
 	],
 	cooldown: 15,
 	applicationDelay: 1.03,
-	onApplication: (state) => state.gainRepertoireEffect(), // on application or on confirm?
+	// GH#130: repertoire effect is applied on confirm
+	onConfirm: (state) => state.gainRepertoireEffect(),
 });
 
 makeAbility_BRD("BLOODLETTER", 12, "cd_HEARTBREAK_SHOT", {
@@ -669,7 +683,7 @@ makeAbility_BRD("PITCH_PERFECT", 52, "cd_PITCH_PERFECT", {
 		const pitchPerfectStacks = state.resources.get("PITCH_PERFECT").availableAmount();
 		return pitchPerfectStacks === 3 ? 360 : pitchPerfectStacks === 2 ? 220 : 100;
 	},
-	falloff: 0,
+	falloff: 0.55,
 	onConfirm: (state) => state.tryConsumeResource("PITCH_PERFECT", true),
 	validateAttempt: (state) =>
 		state.hasResourceAvailable("WANDERERS_MINUET") &&
@@ -698,7 +712,7 @@ makeResourceAbility_BRD("BARRAGE", 38, "cd_BARRAGE", {
 makeWeaponskill_BRD("RESONANT_ARROW", 96, {
 	startOnHotbar: false,
 	potency: 600,
-	falloff: 0.5,
+	falloff: 0.55,
 	applicationDelay: 1.16,
 	onConfirm: (state) => state.tryConsumeResource("RESONANT_ARROW_READY"),
 	validateAttempt: (state) => state.hasResourceAvailable("RESONANT_ARROW_READY"),
@@ -734,7 +748,7 @@ makeWeaponskill_BRD("RADIANT_ENCORE", 100, {
 		const radiantCoda = state.resources.get("RADIANT_CODA").availableAmount();
 		return radiantCoda === 3 ? 900 : radiantCoda === 2 ? 600 : 500;
 	},
-	falloff: 0.5,
+	falloff: 0.55,
 	applicationDelay: 1.96,
 	onConfirm: (state) => state.tryConsumeResource("RADIANT_ENCORE_READY"),
 	validateAttempt: (state) => state.hasResourceAvailable("RADIANT_ENCORE_READY"),
@@ -765,7 +779,7 @@ makeWeaponskill_BRD("QUICK_NOCK", 18, {
 });
 makeWeaponskill_BRD("LADONSBITE", 82, {
 	startOnHotbar: false,
-	potency: 110,
+	potency: 140,
 	falloff: 0,
 	applicationDelay: 1.11,
 	onApplication: (state) => state.maybeGainProc("HAWKS_EYE", 0.35),
@@ -793,7 +807,7 @@ makeWeaponskill_BRD("WIDE_VOLLEY", 18, {
 });
 makeWeaponskill_BRD("SHADOWBITE", 72, {
 	startOnHotbar: false,
-	potency: 170,
+	potency: 180,
 	falloff: 0,
 	applicationDelay: 1.43,
 	onConfirm: (state) => {

@@ -53,6 +53,9 @@ export const RPR_ACTIONS = ensureRecord<ActionData>()({
 	HELLS_INGRESS: { name: "Hell's Ingress", label: { zh: "地狱入境" } },
 	HELLS_EGRESS: { name: "Hell's Egress", label: { zh: "地狱出境" } },
 	REGRESS: { name: "Regress", label: { zh: "回退" } },
+
+	// Fake skill to mimic a target dying with DD active
+	GAIN_SOUL_GAUGE: { name: "+10 Soul Gauge", label: { zh: "灵魂量谱+10" } },
 });
 
 export const RPR_COOLDOWNS = ensureRecord<CooldownData>()({
@@ -68,6 +71,8 @@ export const RPR_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_BLOOD_STALK: { name: "cd_BloodStalk" },
 	cd_LEMURES_SLICE: { name: "cd_LemuresSlice" },
 	cd_SACRIFICIUM: { name: "cd_Sacrificium" },
+
+	cd_GAIN_SOUL_GAUGE: { name: "cd_GainSoulGauge" }, // Not real
 });
 
 export const RPR_GAUGES = ensureRecord<ResourceData>()({

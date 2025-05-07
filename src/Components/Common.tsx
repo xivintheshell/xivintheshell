@@ -61,15 +61,23 @@ export const DEFAULT_TIMELINE_OPTIONS = {
 	drawBuffIndicators: true,
 };
 
+export type CsvData = {
+	meta?: Array<any>;
+	body: Array<Array<any>>;
+};
+
 function getBlobUrl(content: object) {
 	let blob = new Blob([JSON.stringify(content)], { type: "text/plain;charset=utf-8" });
 	return window.URL.createObjectURL(blob);
 }
 
-function getCsvUrl(rawContent: object) {
+function getCsvUrl(rawContent: CsvData) {
 	let csvString = "";
-	let content = rawContent as Array<Array<any>>;
-	content.forEach((row) => {
+	// if there's a "meta" field on the object, then prepend it to the CSV rows, and use "body" as the actual array
+	rawContent.meta?.forEach((row) => {
+		csvString += "#" + row.toString() + "\n";
+	});
+	rawContent.body.forEach((row) => {
 		for (let i = 0; i < row.length; i++) {
 			csvString += row[i].toString();
 			if (i < row.length - 1) csvString += ",";
@@ -94,13 +102,13 @@ type SaveToFileProps = {
 };
 export class SaveToFile extends React.Component {
 	props: SaveToFileProps;
-	state: { jsonContent: object; csvContent: Array<Array<any>>; pngContent?: HTMLCanvasElement };
+	state: { jsonContent: object; csvContent: CsvData; pngContent?: HTMLCanvasElement };
 	constructor(props: SaveToFileProps) {
 		super(props);
 		this.props = props;
 		this.state = {
 			jsonContent: {},
-			csvContent: [],
+			csvContent: { body: [] },
 			pngContent: undefined,
 		};
 	}

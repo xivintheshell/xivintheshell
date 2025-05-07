@@ -262,3 +262,19 @@ it(
 		},
 	}),
 );
+
+it(
+	"loads: brd_iron_jaws_snapshot_refresh.txt",
+	testDamageFromTimeline("brd_iron_jaws_snapshot_refresh.txt", {
+		time: 42.4 + 5,
+		lastDamageApplicationTime: 41.37 + 5,
+		totalPotency: {
+			applied: 575,
+			pending: 375,
+		},
+		gcdSkills: {
+			applied: 2,
+			pending: 0,
+		},
+	}),
+);
