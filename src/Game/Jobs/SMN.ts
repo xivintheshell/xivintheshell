@@ -1192,7 +1192,7 @@ makeSpell_SMN("CRIMSON_STRIKE", 86, {
 makeAbility_SMN("MOUNTAIN_BUSTER", 86, "cd_MOUNTAIN_BUSTER", {
 	potency: [
 		["NEVER", 150],
-		["ARCANE_MASTERY", 170],
+		["ARCANE_MASTERY", 160],
 	],
 	cooldown: 1,
 	applicationDelay: 0.76,
