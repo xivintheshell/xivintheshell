@@ -5,7 +5,9 @@
 			"[RPR] Fixed a bug where Regress wasn't usable in enshroud",
 			"[RPR] Fixed a bug where Grim Swathe was replaced with Lemure's Slice instead of Lemure's Scythe",
 			"[RPR] Fixed a bug where Perfectio was usable in enshroud",
-			"[RPR] Fixed a bug where Executioner's Gibbet/Gallows weren't replaced with Void/Cross Reaping while in enshroud"
+			"[RPR] Fixed a bug where Executioner's Gibbet/Gallows weren't replaced with Void/Cross Reaping while in enshroud",
+			"[SMN] Fixed a bug where Slipstream's initial hit falloff was displayed incorrectly in the DoT table (thanks omor1)",
+			"[SMN] Fixed the potency of Mountain Buster (was incorrectly listed as 170 instead of 160, thanks omor1)"
 		]
 	},
 	{

@@ -81,6 +81,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 		potPotency: 0,
 		partyBuffPotency: 0,
 		targetCount: node.targetCount,
+		mainHitFalloff: mainPotency?.falloff ?? 0,
 	};
 
 	entry.gap = node.getOverTimeGap(dotName, "damage");

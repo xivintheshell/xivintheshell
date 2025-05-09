@@ -54,6 +54,7 @@ export type DamageStatsDoTTableEntry = {
 	potPotency: number;
 	partyBuffPotency: number;
 	targetCount: number;
+	mainHitFalloff: number;
 };
 
 export interface DamageStatsDoTTableSummary {
@@ -764,7 +765,7 @@ export class DamageStatistics extends React.Component {
 				helpTopic={"thunderTable-main-" + props.key}
 				calc={props.row.initialHitCalculationModifiers}
 				targetCount={props.row.targetCount}
-				falloff={0}
+				falloff={props.row.mainHitFalloff}
 			/>;
 			let dotPotencyNode = <PotencyDisplay
 				basePotency={props.row.baseDotPotency}
