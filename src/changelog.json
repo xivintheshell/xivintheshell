@@ -1,5 +1,14 @@
 [
 	{
+		"date": "5/9/25",
+		"changes": [
+			"[RPR] Fixed a bug where Regress wasn't usable in enshroud",
+			"[RPR] Fixed a bug where Grim Swathe was replaced with Lemure's Slice instead of Lemure's Scythe",
+			"[RPR] Fixed a bug where Perfectio was usable in enshroud",
+			"[RPR] Fixed a bug where Executioner's Gibbet/Gallows weren't replaced with Void/Cross Reaping while in enshroud"
+		]
+	}
+	{
 		"date": "5/2/25",
 		"changes": [
 			"Changed Ama's combat sim export to disable auto-attacks for healer/caster jobs."
