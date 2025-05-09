@@ -332,6 +332,7 @@ export class RPRState extends GameState {
 		if (this.hasResourceAvailable("IDEAL_HOST")) this.resources.get("IDEAL_HOST").consume(1);
 		if (this.hasTraitUnlocked("ENHANCED_ENSHROUD")) this.setTimedResource("OBLATIO", 1);
 		this.setTimedResource("LEMURE_SHROUD", 5);
+		this.tryConsumeResource("PERFECTIO_PARATA", true);
 	}
 
 	exitEnshroud() {
@@ -362,6 +363,7 @@ const enshroudSkills = new Set<RPRActionKey | RoleActionKey | CommonActionKey>([
 	"ARCANE_CIRCLE",
 	"HELLS_EGRESS",
 	"HELLS_INGRESS",
+	"REGRESS",
 	"ARCANE_CREST",
 
 	"FEINT",
@@ -692,12 +694,12 @@ makeRPRWeaponskill("SOUL_SLICE", 60, {
 makeRPRWeaponskill("GIBBET", 70, {
 	replaceIf: [
 		{
-			newSkill: "EXECUTIONERS_GIBBET",
-			condition: (state) => state.hasResourceAvailable("EXECUTIONER"),
-		},
-		{
 			newSkill: "VOID_REAPING",
 			condition: (state) => state.hasResourceAvailable("ENSHROUDED"),
+		},
+		{
+			newSkill: "EXECUTIONERS_GIBBET",
+			condition: (state) => state.hasResourceAvailable("EXECUTIONER"),
 		},
 	],
 	potency: [
@@ -725,12 +727,12 @@ makeRPRWeaponskill("GIBBET", 70, {
 makeRPRWeaponskill("GALLOWS", 70, {
 	replaceIf: [
 		{
-			newSkill: "EXECUTIONERS_GALLOWS",
-			condition: (state) => state.resources.get("EXECUTIONER").available(1),
-		},
-		{
 			newSkill: "CROSS_REAPING",
 			condition: (state) => state.hasResourceAvailable("ENSHROUDED"),
+		},
+		{
+			newSkill: "EXECUTIONERS_GALLOWS",
+			condition: (state) => state.resources.get("EXECUTIONER").available(1),
 		},
 	],
 	potency: [
@@ -925,7 +927,7 @@ makeRPRAbility("GRIM_SWATHE", 55, "cd_BLOOD_STALK", {
 	replaceIf: [
 		{
 			condition: (state) => state.hasResourceAvailable("ENSHROUDED"),
-			newSkill: "LEMURES_SLICE",
+			newSkill: "LEMURES_SCYTHE",
 		},
 	],
 	isPhysical: true,
@@ -1242,12 +1244,12 @@ makeRPRAbility("LEMURES_SCYTHE", 86, "cd_LEMURES_SLICE", {
 makeRPRWeaponskill("GUILLOTINE", 70, {
 	replaceIf: [
 		{
-			newSkill: "EXECUTIONERS_GUILLOTINE",
-			condition: (state) => state.resources.get("EXECUTIONER").available(1),
-		},
-		{
 			newSkill: "GRIM_REAPING",
 			condition: (state) => state.hasResourceAvailable("ENSHROUDED"),
+		},
+		{
+			newSkill: "EXECUTIONERS_GUILLOTINE",
+			condition: (state) => state.resources.get("EXECUTIONER").available(1),
 		},
 	],
 	potency: 200,
