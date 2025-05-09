@@ -7,7 +7,7 @@
 			"[RPR] Fixed a bug where Perfectio was usable in enshroud",
 			"[RPR] Fixed a bug where Executioner's Gibbet/Gallows weren't replaced with Void/Cross Reaping while in enshroud"
 		]
-	}
+	},
 	{
 		"date": "5/2/25",
 		"changes": [
