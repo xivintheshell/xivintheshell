@@ -11,6 +11,7 @@ export enum EventTag {
 	MpTick,
 	LucidTick,
 	MeditateTick,
+	AutoTick,
 }
 
 export class Event {
@@ -382,6 +383,8 @@ ALL_JOBS.forEach((job) => {
 	makeResource(job, "TINCTURE", 1, { timeout: 30 });
 	makeResource(job, "SPRINT", 1, { timeout: 10 });
 	makeResource(job, "PARTY_SIZE", 8, { default: 8 });
+	makeResource(job, "AUTOS_ENGAGED", 1, { default: 0 });
+	makeResource(job, "STORED_AUTO", 1, { default: 0 });
 });
 
 MELEE_JOBS.forEach((job) => {

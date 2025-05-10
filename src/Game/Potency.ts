@@ -66,6 +66,10 @@ export const enum PotencyModifierType {
 	LIFE_SURGE,
 	BATTLE_LITANY,
 
+	FIGHT_OR_FLIGHT,
+	DIVINE_MIGHT,
+	REQUIESCAT,
+
 	PET,
 
 	ZOE,
@@ -346,6 +350,11 @@ export const Modifiers = {
 		critBonus: 1.0,
 		dhBonus: 0,
 	} as CritDirectMultiplier,
+	FightOrFlight: {
+		kind: "multiplier",
+		source: PotencyModifierType.FIGHT_OR_FLIGHT,
+		potencyFactor: 1.25,
+	} as PotencyMultiplier,
 	Zoe: {
 		kind: "multiplier",
 		source: PotencyModifierType.ZOE,
@@ -377,6 +386,22 @@ export function makeComboModifier(addend: number): PotencyAdder {
 	return {
 		kind: "adder",
 		source: PotencyModifierType.COMBO,
+		additiveAmount: addend,
+	};
+}
+
+export function makeRequiescatModifier(addend: number): PotencyAdder {
+	return {
+		kind: "adder",
+		source: PotencyModifierType.REQUIESCAT,
+		additiveAmount: addend,
+	};
+}
+
+export function makeDivineMightModifier(addend: number): PotencyAdder {
+	return {
+		kind: "adder",
+		source: PotencyModifierType.DIVINE_MIGHT,
 		additiveAmount: addend,
 	};
 }

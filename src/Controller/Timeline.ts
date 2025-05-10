@@ -23,6 +23,7 @@ export const enum ElemType {
 	LucidMark = "LucidMark",
 	MPTickMark = "MPTickMark",
 	MeditateTickMark = "MeditateTickMark",
+	AutoTickMark = "AutoTickMark",
 	Skill = "Skill",
 	Marker = "Marker",
 	WarningMark = "WarningMark",
@@ -78,6 +79,11 @@ export type MeditateTickMarkElem = TimelineElemBase & {
 	displayTime: number;
 	sourceDesc: string;
 };
+export type AutoTickMarkElem = TimelineElemBase & {
+	type: ElemType.AutoTickMark;
+	displayTime: number;
+	sourceDesc: string;
+};
 export type WarningMarkElem = TimelineElemBase & {
 	type: ElemType.WarningMark;
 	warningType: WarningType;
@@ -120,6 +126,7 @@ export type SlotTimelineElem =
 	| LucidMarkElem
 	| MPTickMarkElem
 	| MeditateTickMarkElem
+	| AutoTickMarkElem
 	| WarningMarkElem
 	| SkillElem;
 

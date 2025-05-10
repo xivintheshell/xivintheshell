@@ -85,6 +85,9 @@ export enum BuffType {
 	LifeOfTheDragon = "Life Of The Dragon",
 	EnhancedPiercingTalon = "Enhanced Piercing Talon",
 	LifeSurge = "Life Surge",
+	DivineMight = "Divine Might",
+	Requiescat = "Requiescat",
+	FightOrFlight = "Fight Or Flight",
 	Tincture = "Tincture",
 
 	ArcaneCircle = "Arcane Circle",

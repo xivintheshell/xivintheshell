@@ -85,6 +85,10 @@ export const ROLE_TRACKERS = ensureRecord<ResourceData>()({
 		label: { zh: "身位加成（侧）" },
 		mayBeToggled: true,
 	}, // [0, 1]
+	AUTOS_ENGAGED: {
+		name: "Autos Engaged",
+		mayBeToggled: true,
+	}, // [0,1]
 });
 
 export const ROLE_TRAITS = ensureRecord<TraitData>()({
