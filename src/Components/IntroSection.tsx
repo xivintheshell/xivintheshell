@@ -107,7 +107,7 @@ const getAcknowledgements = () => <>
 				WAR: <b>misterperson</b>
 			</li>
 			<li>
-				GNB, DRG: <b>Sterling</b>
+				GNB, DRG, PLD: <b>Sterling</b>
 			</li>
 			<li>
 				Framework for adding new jobs: <b>shanzhe</b>
@@ -140,7 +140,7 @@ const getAcknowledgements = () => <>
 				战士：<b>misterperson</b>
 			</li>
 			<li>
-				绝抢战士，龙骑士：<b>Sterling</b>
+				绝抢战士，龙骑士，骑士：<b>Sterling</b>
 			</li>
 			<li>
 				添加新职业的程序框架：<b>shanzhe</b>

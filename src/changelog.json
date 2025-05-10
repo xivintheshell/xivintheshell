@@ -1,5 +1,11 @@
 [
 	{
+		"date": "5/10/25",
+		"changes": [
+			"[PLD] Added initial support for PLD"
+		]
+	},
+	{
 		"date": "5/9/25",
 		"changes": [
 			"[RPR] Fixed a bug where Regress wasn't usable in enshroud",
