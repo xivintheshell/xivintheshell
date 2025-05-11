@@ -369,7 +369,7 @@ function Buff(props: BuffProps) {
 	let imgStyle: React.CSSProperties;
 	if (
 		props.rscType === "AUTOS_ENGAGED" ||
-		props.rsctype === "REAR_POSITIONAL" ||
+		props.rscType === "REAR_POSITIONAL" ||
 		props.rscType === "FLANK_POSITIONAL"
 	) {
 		imgStyle = {
