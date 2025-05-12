@@ -198,7 +198,7 @@ function DamageStatsSettings() {
 		if (str !== null) {
 			setTinctureBuffPercentage(str);
 		}
-	});
+	}, []);
 
 	const checkboxLabel = <span>
 		{localize({ en: "exclude damage when untargetable", zh: "Boss上天期间威力按0计算" })}{" "}
