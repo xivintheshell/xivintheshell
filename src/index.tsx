@@ -1,5 +1,5 @@
 import React from "react";
-import { createRoot } from 'react-dom/client';
+import { createRoot } from "react-dom/client";
 
 import "./Style/normalize.css";
 import "./Style/style.css";
@@ -13,6 +13,4 @@ const searchParams = new URLSearchParams(document.location.search);
 // Only examine keys.
 const keys = Array.from(searchParams.keys());
 
-root.render(
-	<Main command={keys.length > 0 ? keys[0] : undefined}/>
-);
+root.render(<Main command={keys.length > 0 ? keys[0] : undefined} />);
