@@ -19,13 +19,13 @@
   },
   "scripts": {
     "deploy": "gh-pages -d build/client",
-    "start": "vite --open & tsc --noEmit -watch",
+    "start": "vite & tsc --noEmit -watch",
     "build": "vite build",
     "test": "vitest",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "format": "prettier-no-jsx-parens -w -l .",
-    "preview": "vite build && vite preview --open"
+    "preview": "vite build && vite preview"
   },
   "browserslist": {
     "production": [

@@ -3,13 +3,13 @@ import { Help, Input, SaveToFile, FileFormat, TimelineDimensions } from "./Commo
 import { localize, LocalizedContent } from "./Localization";
 import { controller } from "../Controller/Controller";
 import { setCachedValue } from "../Controller/Common";
-import { getCurrentThemeColors } from "./ColorTheme";
+import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
 import { swapCtx, drawRuler, drawMarkerTracks, drawTimelines } from "./TimelineCanvas";
 
 /**
  * Creates a mock canvas to draw the components of the timeline we have selected.
  */
-function createMockCanvas(includeTime: boolean): HTMLCanvasElement {
+function createMockCanvas(includeTime: boolean, g_colors: ThemeColors): HTMLCanvasElement {
 	// 0. Figure out length of selection so we can know the size of the canvas we need
 	const activeRenderProps = controller.getTimelineRenderingProps();
 	let startTime = activeRenderProps.selectionStartDisplayTime;
@@ -63,7 +63,6 @@ function createMockCanvas(includeTime: boolean): HTMLCanvasElement {
 		const new_ctx = oneRowCtx;
 		const timelineOrigin = 0;
 		// Mimic drawEverything and add components as necessary
-		const g_colors = getCurrentThemeColors();
 		new_ctx.fillStyle = g_colors.background;
 		new_ctx.fillRect(0, 0, dummyOneRowCanvas.width, dummyOneRowCanvas.height);
 		let currentHeight = 0;
@@ -98,7 +97,6 @@ function createMockCanvas(includeTime: boolean): HTMLCanvasElement {
 		splitCtx.putImageData(data, 0, i * (ROW_PADDING + rowHeight));
 		// If the end was truncated, color in the rest of the line.
 		if (i > 0 && rowWidth < w) {
-			const g_colors = getCurrentThemeColors();
 			splitCtx.fillStyle = g_colors.background;
 			splitCtx.fillRect(
 				rowWidth,
@@ -172,6 +170,7 @@ export function ImageExport() {
 			zh: "显示时间刻度和时间轴标记",
 		})}
 	</>;
+	const themeColors = getCurrentThemeColors();
 	return <div>
 		<p>
 			{localize({
@@ -187,7 +186,7 @@ export function ImageExport() {
 			<SaveToFile
 				filename={"fight"}
 				fileFormat={FileFormat.Png}
-				getContentFn={() => createMockCanvas(state.includeTime)}
+				getContentFn={() => createMockCanvas(state.includeTime, themeColors)}
 				displayName={localize({
 					en: "export selection as png",
 					zh: "将选择部分导出为png",

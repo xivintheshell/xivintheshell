@@ -15,4 +15,4 @@ Many thanks to the players from The Balance discord server for their invaluable 
 ---
 
 This project _was_ bootstrapped with [Create React App](https://github.com/facebook/create-react-app), but has since migrated
-to [Vite](https://vite.dev/guide/) + [React Router](https://reactrouter.com/home).
+to [Vite](https://vite.dev/guide/).

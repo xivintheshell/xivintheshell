@@ -48,9 +48,9 @@ buffIcons.set(BuffType.LanceCharge, "Buffs/DRG/Lance Charge.png");
 buffIcons.set(BuffType.LifeOfTheDragon, "Buffs/DRG/Life of the Dragon.png");
 buffIcons.set(BuffType.LifeSurge, "Buffs/DRG/Life Surge.png");
 
-buffIcons.set(BuffType.DivineMight, "./Asset/Buffs/PLD/Divine Might.png");
-buffIcons.set(BuffType.Requiescat, "./Asset/Buffs/PLD/Requiescat Zero.png");
-buffIcons.set(BuffType.FightOrFlight, "./Asset/Buffs/PLD/Fight or Flight.png");
+buffIcons.set(BuffType.DivineMight, "Buffs/PLD/Divine Might.png");
+buffIcons.set(BuffType.Requiescat, "Buffs/PLD/Requiescat Zero.png");
+buffIcons.set(BuffType.FightOrFlight, "Buffs/PLD/Fight or Flight.png");
 
 buffIcons.set(BuffType.Zoe, "Buffs/SGE/Zoe.png");
 buffIcons.set(BuffType.Autophysis, "Buffs/SGE/Autophysis.png");
