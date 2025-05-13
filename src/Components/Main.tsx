@@ -9,7 +9,7 @@ import { SkillSequencePresets } from "./SkillSequencePresets";
 import { IntroSection } from "./IntroSection";
 import changelog from "../changelog.json";
 import { localize, localizeDate, SelectLanguage } from "./Localization";
-import { Expandable, GlobalHelpTooltip, Tabs } from "./Common";
+import { Expandable, Tabs } from "./Common";
 import {
 	getCachedColorTheme,
 	getThemeColors,
@@ -342,9 +342,19 @@ export default class Main extends React.Component<{ command?: string }> {
 					height: 0.8em;
 					border-radius: 0.4em;
 				}
+				.help-tooltip {
+				    color: ${colors.text};
+				    background-color: ${colors.tipBackground};
+				    opacity: 0.98;
+				    max-width: 300px;
+				    outline: 1px solid ${colors.bgHighContrast};
+				    transition: none;
+				    font-size: 100%;
+				    z-index: 10;
+				}
 			`}</style>
 			<ColorThemeContext.Provider value={this.state.colorTheme}>
-				<div style={containerStyle}>
+				<div style={containerStyle} id={"globalHelpTooltipAnchor"}>
 					<div
 						style={{
 							flex: 1,
@@ -512,7 +522,6 @@ export default class Main extends React.Component<{ command?: string }> {
 						</div>
 					</div>
 					<Timeline />
-					<GlobalHelpTooltip content={"initial content"} />
 				</div>
 			</ColorThemeContext.Provider>
 		</div>;

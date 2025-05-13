@@ -1,9 +1,9 @@
 import React, { useState, FormEvent, FormEventHandler } from "react";
+import { Tooltip } from "@base-ui-components/react/tooltip";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
-import { Tooltip as ReactTooltip } from "react-tooltip";
 import { localize, localizeSkillName } from "./Localization";
 import { updateTimelineView } from "./Timeline";
 import * as ReactDOMServer from "react-dom/server";
@@ -460,12 +460,9 @@ class SkillButton extends React.Component {
 			{proc}
 			{stacksOverlay}
 		</div>;
-		return <span
+		const tooltipTrigger = <span
 			title={ACTIONS[this.props.skillName].name}
-			className={"skillButton"}
-			data-tooltip-offset={3}
-			data-tooltip-html={ReactDOMServer.renderToStaticMarkup(this.state.skillDescription)}
-			data-tooltip-id={"skillButton-" + this.props.skillName}
+			className="skillButton"
 		>
 			<Clickable
 				onClickFn={
@@ -483,6 +480,16 @@ class SkillButton extends React.Component {
 				style={controller.displayingUpToDateGameState ? {} : { cursor: "not-allowed" }}
 			/>
 		</span>;
+		return <Tooltip.Root delay={0}>
+			<Tooltip.Trigger render={tooltipTrigger} />
+			<Tooltip.Portal container={document.getElementById("skillsWindowAnchor")}>
+				<Tooltip.Positioner sideOffset={3} side="top" className="tooltip-positioner">
+					<Tooltip.Popup className="info-tooltip tooltip">
+						{this.state.skillDescription}
+					</Tooltip.Popup>
+				</Tooltip.Positioner>
+			</Tooltip.Portal>
+		</Tooltip.Root>;
 	}
 }
 
@@ -709,7 +716,7 @@ export class SkillsWindow extends React.Component {
 				</div>,
 			})}
 		/>;
-		return <div className={"skillsWindow"}>
+		return <div className={"skillsWindow"} id={"skillsWindowAnchor"}>
 			<div className={"skillIcons"}>
 				<style>{`
 					.info-tooltip {
@@ -722,14 +729,8 @@ export class SkillsWindow extends React.Component {
 						font-size: 100%;
 						z-index: 10;
 					}
-					.info-tooltip-arrow { display: none; }
 				`}</style>
 				{skillButtons}
-				<ReactTooltip
-					anchorSelect={".skillButton"}
-					className={"info-tooltip"}
-					classNameArrow={"info-tooltip-arrow"}
-				/>
 				<div style={{ margin: "10px 0" }}>
 					{localize({
 						en: "# of targets hit",
