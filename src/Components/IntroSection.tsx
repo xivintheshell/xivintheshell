@@ -2,7 +2,7 @@ import React, { CSSProperties } from "react";
 import { clearCachedValues } from "../Controller/Common";
 import { Expandable, Help, ButtonIndicator } from "./Common";
 import { localize } from "./Localization";
-import changelog from "../changelog.json";
+import { Changelog } from "./Changelog";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { ShellJob } from "../Game/Data/Jobs";
 
@@ -14,48 +14,6 @@ const GITHUB_URL = "https://github.com/xivintheshell/xivintheshell";
 const HELP_CHANNEL_URL = "https://discord.com/channels/277897135515762698/1307922201726685236";
 
 const BALANCE_URL = "https://discord.gg/thebalanceffxiv";
-
-function Changelog() {
-	return <div className={"paragraph"}>
-		<Expandable
-			title={"Changelog"}
-			titleNode={localize({ en: "Changelog", zh: "更新日志", ja: "更新履歴" })}
-			defaultShow={false}
-			content={
-				<>
-					<div>
-						{changelog.map((entry) => {
-							let changes: React.JSX.Element[] = [];
-							for (let i = 0; i < entry.changes.length; i++) {
-								changes.push(<div key={i}>{entry.changes[i]}</div>);
-							}
-							return <div className={"paragraph"} key={entry.date}>
-								{entry.date}
-								<br />
-								{changes}
-							</div>;
-						})}
-					</div>
-					<div>
-						For older changelog entries before the BLM/PCT in the Shell rejoining, see
-						the old sites:&nbsp;
-						<a
-							target={"_blank"}
-							rel={"noreferrer"}
-							href={"https://miyehn.me/ffxiv-blm-rotation/"}
-						>
-							BLM in the Shell
-						</a>
-						,&nbsp;
-						<a target={"_blank"} rel={"noreferrer"} href={"https://picto.zqsz.me/"}>
-							PCT in the Shell
-						</a>
-					</div>
-				</>
-			}
-		/>
-	</div>;
-}
 
 // needs to be a function to evaluate localization
 const getAcknowledgements = () => <>
@@ -191,6 +149,7 @@ export function IntroSection(props: { job: ShellJob }) {
 	let colors = getCurrentThemeColors();
 	const job = props.job;
 	return <div>
+		<Changelog />
 		<Expandable
 			defaultShow={true}
 			title={"instructions"}
@@ -603,7 +562,6 @@ export function IntroSection(props: { job: ShellJob }) {
 							}
 						</ul>,
 					})}
-					<Changelog />
 				</div>
 			}
 		/>

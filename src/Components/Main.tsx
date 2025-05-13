@@ -7,7 +7,7 @@ import { controller } from "../Controller/Controller";
 import "react-tabs/style/react-tabs.css";
 import { SkillSequencePresets } from "./SkillSequencePresets";
 import { IntroSection } from "./IntroSection";
-import changelog from "../changelog.json";
+import { getLastChangeDate } from "./Changelog";
 import { localize, localizeDate, SelectLanguage } from "./Localization";
 import { Expandable, Tabs } from "./Common";
 import {
@@ -376,16 +376,15 @@ export default class Main extends React.Component<{ command?: string }> {
 								<h3 style={{ marginTop: 20, marginBottom: 6 }}>XIV in the Shell</h3>
 								{localize({
 									en: <div style={{ marginBottom: 16 }}>
-										Last updated: {changelog[0].date} (see{" "}
-										<b>About this tool/Changelog</b>)
+										Last updated: {getLastChangeDate()} (see <b>Changelog</b>)
 									</div>,
 									zh: <div style={{ marginBottom: 16 }}>
-										最近更新（月日年）：{changelog[0].date}（详见
-										<b>关于/更新日志</b>）
+										最近更新（月日年）：{getLastChangeDate()}（详见
+										<b>更新日志</b>）
 									</div>,
 									ja: <div style={{ marginBottom: 16 }}>
-										最終更新日：{localizeDate(changelog[0].date, "ja")}（
-										<b>このツールについて/更新履歴</b>を参照）（
+										最終更新日：{localizeDate(getLastChangeDate(), "ja")}（
+										<b>更新履歴</b>を参照）（
 										<a
 											href={
 												"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"
