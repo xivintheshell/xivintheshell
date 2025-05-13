@@ -1203,7 +1203,7 @@ export class Config extends React.Component {
 		}
 
 		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
-		const bg = getThemeField(this.context.activeColorTheme, "bgMediumContrast");
+		const bg = getThemeField(this.context, "bgMediumContrast");
 
 		return <div>
 			<form
@@ -1374,7 +1374,7 @@ export class Config extends React.Component {
 
 	render() {
 		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
-		let colors = getThemeColors(this.context.activeColorTheme);
+		let colors = getThemeColors(this.context);
 		let fpsAndCorrectionColor =
 			this.state.shellVersion >= ShellVersion.FpsTax ? colors.text : colors.warning;
 		let level = parseFloat(this.state.level);

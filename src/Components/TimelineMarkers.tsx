@@ -406,7 +406,7 @@ export class TimelineMarkers extends React.Component {
 		</>;
 
 		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-		let textColor = getThemeField(this.context.activeColorTheme, "text") as string;
+		let textColor = getThemeField(this.context, "text") as string;
 		let individualTrackInput = <input
 			style={{
 				color: textColor,

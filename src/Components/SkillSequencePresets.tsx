@@ -127,7 +127,7 @@ export class SkillSequencePresets extends React.Component {
 			controller && controller.record && controller.record.getFirstSelection() !== undefined;
 
 		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
-		const bg = getThemeField(this.context.activeColorTheme, "bgMediumContrast");
+		const bg = getThemeField(this.context, "bgMediumContrast");
 		let content = <div>
 			<button
 				style={{ marginBottom: 10 }}

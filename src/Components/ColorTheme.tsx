@@ -221,7 +221,7 @@ export let getCurrentThemeColors: () => ThemeColors = () => {
 
 // useContext can only be called within function components.
 // Since we still have some class components, we need to manually retrieve the theme in some cases
-// via the contexType property: https://legacy.reactjs.org/docs/context.html#classcontexttype
+// via the contextType property: https://legacy.reactjs.org/docs/context.html#classcontexttype
 export const getThemeColors: (theme: ColorTheme) => ThemeColors = (theme: ColorTheme) => {
 	return theme === "Dark" ? DARK_THEME_COLORS : LIGHT_THEME_COLORS;
 };

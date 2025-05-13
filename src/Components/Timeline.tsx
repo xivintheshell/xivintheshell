@@ -106,7 +106,7 @@ class TimelineMain extends React.Component {
 		/>;
 		const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
 		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-		const bg = getThemeField(this.context.activeColorTheme, "bgMediumContrast");
+		const bg = getThemeField(this.context, "bgMediumContrast");
 		return <div style={{ position: "relative" }}>
 			{canvas}
 			<div

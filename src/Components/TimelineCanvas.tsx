@@ -1406,7 +1406,6 @@ function drawEverything() {
 
 	currentHeight += drawAddSlotButton(currentHeight);
 
-
 	// interactive layer
 	if (g_mouseHovered) {
 		if (g_activeHoverTip) {

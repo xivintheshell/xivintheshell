@@ -681,7 +681,7 @@ export class StatusDisplay extends React.Component {
 		};
 		updateStatusDisplay = (newDataFn, newLayoutFn) => {
 			// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-			const newData = newDataFn(getThemeColors(this.context.activeColorTheme));
+			const newData = newDataFn(getThemeColors(this.context));
 			this.setState({ ...{ layoutFn: newLayoutFn }, ...newData });
 		};
 	}

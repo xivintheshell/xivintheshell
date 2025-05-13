@@ -225,7 +225,7 @@ class SkillButton extends React.Component {
 				skillName: this.props.skillName,
 			});
 			// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-			let colors = getThemeColors(this.context.activeColorTheme);
+			let colors = getThemeColors(this.context);
 			let s: ContentNode[] = [];
 			if (info.status.ready()) {
 				let en = "ready (" + info.stacksAvailable;
@@ -670,7 +670,7 @@ export class SkillsWindow extends React.Component {
 		};
 
 		// @ts-expect-error we need to read untyped this.context in place of a context hook
-		let colors = getThemeColors(this.context.activeColorTheme);
+		let colors = getThemeColors(this.context);
 		let textInputFieldStyle = {
 			outline: "none",
 			border: "none",

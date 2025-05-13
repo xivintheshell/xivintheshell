@@ -293,7 +293,7 @@ export class DamageStatistics extends React.Component {
 
 	render() {
 		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
-		let colors = getThemeColors(this.context.activeColorTheme);
+		let colors = getThemeColors(this.context);
 		const allIncluded = allSkillsAreIncluded();
 
 		//////////////////// Summary ///////////////////////
