@@ -4,7 +4,7 @@ import changelog from "../changelog.json";
 import { getCurrentThemeColors, ColorThemeContext } from "./ColorTheme";
 import { Clickable, Expandable, Help, ButtonIndicator, ContentNode } from "./Common";
 import { localize, LocalizedContent } from "./Localization";
-import { getCachedValue, setCachedValue } from "../Controller/Common";
+import { getCachedValue, setCachedValue, isFirstVisit } from "../Controller/Common";
 
 export function getLastChangeDate(): string {
 	return changelog[0].date;
@@ -116,8 +116,16 @@ export function Changelog() {
 
 	// Check whether CL is up to date on page load
 	useEffect(() => {
-		const lastReadDate = getCachedValue("changelogLastRead");
-		const lastReadChangeCountStr = getCachedValue("changelogLastReadChangeCount");
+		let lastReadDate = getCachedValue("changelogLastRead");
+		let lastReadChangeCountStr = getCachedValue("changelogLastReadChangeCount");
+		// For users that had visited the site prior to deployment of the internal refactor,
+		// use the most recent changelog entry (5/10/25) as the last read.
+		// If someone last visited the site at an earlier date... there's not really
+		// anything we can do about that.
+		if (!isFirstVisit) {
+			lastReadDate = "5/10/25";
+			lastReadChangeCountStr = "1";
+		}
 		const initiallyUpToDate =
 			lastReadDate === null ||
 			lastReadChangeCountStr === null ||
@@ -125,10 +133,14 @@ export function Changelog() {
 				lastReadChangeCountStr === changelog[0].changes.length.toString());
 		setUpToDate(initiallyUpToDate);
 		if (lastReadDate !== null && lastReadChangeCountStr !== null) {
+			// lastReadDate was set, so the user should see the newest changes.
 			if (!initiallyUpToDate) {
 				let i = 0;
+				// We might need to cap the list of "new" entries at some number in the future,
+				// but for now just assume that it's enough for the user to comfortably scroll.
 				for (; i < changelog.length - 1; i++) {
 					// Assume that changelog is sorted, and lastReadDate is somewhere in the list.
+					// Technically we could do a binary search, but I don't feel like parsing the dates.
 					if (lastReadDate === changelog[i].date) {
 						// If the change count of this entry does not match the saved value, then include
 						// this entry to be displayed.

@@ -51,6 +51,10 @@ export function containsEwCacheContent(): boolean {
 
 const thisExpansion: Expansion = Expansion.DT; // change here in ew archive
 
+// Assume that if there are no localStorage entries, this is the user's first visit to the site.
+// A timeline record is always created on page load, so this assumption should be valid.
+export const isFirstVisit = localStorage.length === 0;
+
 export function getCachedValue(key: string): string | null {
 	// 2x reads from localStorage but should be fine...?
 	let current = localStorage.getItem(thisExpansion + "." + key);

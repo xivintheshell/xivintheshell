@@ -1,8 +1,22 @@
 [
 	{
+		"date": "5/14/25",
+		"changes": [
+			"We've made some big updates to the tools we use to build XIV in the Shell. The site should work the same as before, but if you notice anything broken or slow, please let us know posthaste.",
+			"We're planning on adding some large features in the near feature, so we've also made the changelog more prominent in anticipation. Please look forward to it."
+		],
+		"changes_zh": [
+			"我们对制造XIV in the Shell的软件工具做了大更新。网站的操作应该和以前一样、但如果您发现有任何功能有破坏或变慢了，请尽快通知我们。",
+			"因为我们准备在不久的将来内对排轴器增加大功能，所以我们先把更新日志变得更加引人注意。更大的公告也会有像这样的中文翻译。敬请期待。"
+		]
+	},
+	{
 		"date": "5/10/25",
 		"changes": [
 			"[PLD] Added initial support for PLD"
+		],
+		"changes_zh": [
+			"【骑士】 加了初步的骑士支持。"
 		]
 	},
 	{
