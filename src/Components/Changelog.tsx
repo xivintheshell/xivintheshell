@@ -204,14 +204,21 @@ export function Changelog() {
 		<Dialog.Root onOpenChange={onOpenChange}>
 			<Dialog.Trigger render={dialogTrigger} />
 			<Dialog.Portal>
-				<Dialog.Backdrop className="Backdrop" style={{
-					opacity: lightMode ? 0.2 : 0.7,
-				}}/>
-				<Dialog.Popup className="Popup visibleScrollbar" id="changelogPopup" style={{
-					"backgroundColor": colors.background,
-					"border": "1px solid " + colors.bgMediumContrast,
-					"color": colors.text,
-				}}>
+				<Dialog.Backdrop
+					className="Backdrop"
+					style={{
+						opacity: lightMode ? 0.2 : 0.7,
+					}}
+				/>
+				<Dialog.Popup
+					className="Popup visibleScrollbar"
+					id="changelogPopup"
+					style={{
+						backgroundColor: colors.background,
+						border: "1px solid " + colors.bgMediumContrast,
+						color: colors.text,
+					}}
+				>
 					<Dialog.Title render={<h3>{titleNode}</h3>} />
 					<Dialog.Description
 						className="Description"
