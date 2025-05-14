@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { Dialog } from "@base-ui-components/react/dialog";
 import changelog from "../changelog.json";
-import { getCurrentThemeColors } from "./ColorTheme";
+import { getCurrentThemeColors, ColorThemeContext } from "./ColorTheme";
 import { Clickable, Expandable, Help, ButtonIndicator, ContentNode } from "./Common";
 import { localize, LocalizedContent } from "./Localization";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
@@ -52,13 +52,13 @@ function getRenderedEntry(entry: ChangelogEntry) {
 	</div>;
 }
 
-// TODO set background, border, backdrop according to theme
+// Partially copied from BaseUI's Dialog example
+// https://base-ui.com/react/components/dialog
 const changelogDialogStyles = `
 .Backdrop {
   position: fixed;
   inset: 0;
   background-color: black;
-  opacity: 0.2;
   transition: opacity 50ms cubic-bezier(0.45, 1.005, 0, 1.005);
 
   &[data-starting-style],
@@ -74,16 +74,13 @@ const changelogDialogStyles = `
   left: 50%;
   transform: translate(-50%, -50%);
   width: 50vw;
-  height: 60vw;
-  max-height: 60vw;
-  overflow: scroll;
+  height: 70vh;
+  max-height: 70vh;
+  overflow-y: scroll;
   margin-top: -2rem;
   padding-left: 1.5rem;
   padding-right: 1.5rem;
-  background-color: white;
   transition: all 50ms cubic-bezier(0.45, 1.005, 0, 1.005);
-
-  border: 1px solid black;
 
   font-family: monospace;
   font-size: 13px;
@@ -113,6 +110,10 @@ export function Changelog() {
 	let handleStyle: React.CSSProperties = {};
 	const hiddenStartIndex = useRef(5);
 	const [upToDate, setUpToDate] = useState(false);
+
+	const lightMode = useContext(ColorThemeContext) === "Light";
+	const colors = getCurrentThemeColors();
+
 	// Check whether CL is up to date on page load
 	useEffect(() => {
 		const lastReadDate = getCachedValue("changelogLastRead");
@@ -182,16 +183,23 @@ export function Changelog() {
 	const dialogTrigger = <div className="clickable">
 		<span style={handleStyle}>
 			<span>{dialogHandle} </span>
-			{titleNode}
+			<span className="clickableLinkLike">{titleNode}</span>
 		</span>
 	</div>;
+
 	return <>
 		<style>{changelogDialogStyles}</style>
 		<Dialog.Root onOpenChange={onOpenChange}>
 			<Dialog.Trigger render={dialogTrigger} />
 			<Dialog.Portal>
-				<Dialog.Backdrop className="Backdrop" />
-				<Dialog.Popup className="Popup visibleScrollbar" id="changelogPopup">
+				<Dialog.Backdrop className="Backdrop" style={{
+					opacity: lightMode ? 0.2 : 0.7,
+				}}/>
+				<Dialog.Popup className="Popup visibleScrollbar" id="changelogPopup" style={{
+					"backgroundColor": colors.background,
+					"border": "1px solid " + colors.bgMediumContrast,
+					"color": colors.text,
+				}}>
 					<Dialog.Title render={<h3>{titleNode}</h3>} />
 					<Dialog.Description
 						className="Description"

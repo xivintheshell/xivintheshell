@@ -78,6 +78,15 @@
     cursor: pointer;
 }
 
+.clickableLinkLike {
+    display: inline-block;
+}
+
+.clickableLinkLike:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 .paragraph {
     margin: 10px 0;
 }
