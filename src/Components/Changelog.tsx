@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog } from "@base-ui-components/react/dialog";
 import changelog from "../changelog.json";
+import { getCurrentThemeColors } from "./ColorTheme";
 import { Clickable, Expandable, Help, ButtonIndicator, ContentNode } from "./Common";
 import { localize, LocalizedContent } from "./Localization";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
@@ -20,26 +21,38 @@ type ChangelogEntry = {
 	changes_zh?: string[];
 };
 
-type OldChangelogParams = {
-	entryStartIndex: number;
+type ChangelogBodyParams = {
+	newChanges: boolean;
+	hiddenStartIndex: number;
 };
 
 function getRenderedEntry(entry: ChangelogEntry) {
-	return <div>
-		{entry.date}
-		<ul>
+	return <div className="changelogGroup">
+		<div>{entry.date}</div>
+		<div>
 			{localize({
-				en: <>{entry.changes.map((change, i) => <li key={i}>{change}</li>)}</>,
+				en: <>
+					{entry.changes.map((change, i) => <div className="changelogLine" key={i}>
+						{change}
+					</div>)}
+				</>,
 				zh:
 					entry.changes_zh !== undefined ? (
-						<>{entry.changes_zh.map((change, i) => <li key={i}>{change}</li>)}</>
+						<>
+							{entry.changes_zh.map((change, i) => <div
+								className="changelogLine"
+								key={i}
+							>
+								{change}
+							</div>)}
+						</>
 					) : undefined,
 			})}
-		</ul>
+		</div>
 	</div>;
 }
 
-// TODO swap for dark theme
+// TODO set background, border, backdrop according to theme
 const changelogDialogStyles = `
 .Backdrop {
   position: fixed;
@@ -63,12 +76,14 @@ const changelogDialogStyles = `
   width: 50vw;
   height: 60vw;
   max-height: 60vw;
-  overflow: auto;
+  overflow: scroll;
   margin-top: -2rem;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
   background-color: white;
   transition: all 50ms cubic-bezier(0.45, 1.005, 0, 1.005);
+
+  border: 1px solid black;
 
   font-family: monospace;
   font-size: 13px;
@@ -80,33 +95,70 @@ const changelogDialogStyles = `
   }
 }
 
-.Title {
-  margin-top: -0.375rem;
-  margin-bottom: 0.25rem;
-  font-family: monospace;
-  font-size: 1.125rem;
-  line-height: 1.75rem;
-  letter-spacing: -0.0025em;
-  font-weight: 500;
+.changelogGroup {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+.changelogLine {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+	margin-left: 0.5em;
 }
 `;
 
 export function Changelog() {
-	let entryStartIndex: number = 0;
 	let titleNode: ContentNode;
 	let dialogHandle: ContentNode;
+	let handleStyle: React.CSSProperties = {};
+	const hiddenStartIndex = useRef(5);
 	const [upToDate, setUpToDate] = useState(false);
 	// Check whether CL is up to date on page load
 	useEffect(() => {
 		const lastReadDate = getCachedValue("changelogLastRead");
 		const lastReadChangeCountStr = getCachedValue("changelogLastReadChangeCount");
-		setUpToDate(
-			lastReadDate === undefined ||
-				!lastReadChangeCountStr ||
-				(lastReadDate === changelog[0].date &&
-					parseInt(lastReadChangeCountStr) === changelog[0].changes.length),
-		);
+		const initiallyUpToDate =
+			lastReadDate === null ||
+			lastReadChangeCountStr === null ||
+			(lastReadDate === changelog[0].date &&
+				lastReadChangeCountStr === changelog[0].changes.length.toString());
+		setUpToDate(initiallyUpToDate);
+		if (lastReadDate !== null && lastReadChangeCountStr !== null) {
+			if (!initiallyUpToDate) {
+				let i = 0;
+				for (; i < changelog.length - 1; i++) {
+					// Assume that changelog is sorted, and lastReadDate is somewhere in the list.
+					if (lastReadDate === changelog[i].date) {
+						// If the change count of this entry does not match the saved value, then include
+						// this entry to be displayed.
+						if (lastReadChangeCountStr !== changelog[i].changes.length.toString()) {
+							i++;
+						}
+						break;
+					}
+				}
+				hiddenStartIndex.current = i;
+			}
+		} else {
+			setCachedValue("changelogLastRead", changelog[0].date);
+			setCachedValue("changelogLastReadChangeCount", changelog[0].changes.length.toString());
+		}
 	}, []);
+
+	// When the dialog is closed, mark all entries as read.
+	const onOpenChange = (open: boolean) => {
+		if (!open) {
+			hiddenStartIndex.current = 5;
+			if (!upToDate) {
+				setCachedValue("changelogLastRead", changelog[0].date);
+				setCachedValue(
+					"changelogLastReadChangeCount",
+					changelog[0].changes.length.toString(),
+				);
+			}
+			setUpToDate(true);
+		}
+	};
 
 	if (upToDate) {
 		// If this is the user's first visit, or they have already seen all relevant entries, don't do anything special.
@@ -114,31 +166,41 @@ export function Changelog() {
 		dialogHandle = "•"; // U+2022 "bullet"
 	} else {
 		// If something has changed, then stylize the changelog label.
+		const colors = getCurrentThemeColors();
 		titleNode = localize({
 			en: "Changelog (new updates!!)",
 			zh: "更新日志（有变！！）",
 		});
 		dialogHandle = "!";
+		handleStyle = {
+			color: colors.warning,
+			fontWeight: "bold",
+		};
 	}
 	// Don't use a bespoke Clickable component for the expand button, since it suppresses Dialog.Trigger's
 	// built-in dismiss behavior.
 	const dialogTrigger = <div className="clickable">
-		<span>
+		<span style={handleStyle}>
 			<span>{dialogHandle} </span>
 			{titleNode}
 		</span>
 	</div>;
 	return <>
 		<style>{changelogDialogStyles}</style>
-		<Dialog.Root>
+		<Dialog.Root onOpenChange={onOpenChange}>
 			<Dialog.Trigger render={dialogTrigger} />
 			<Dialog.Portal>
 				<Dialog.Backdrop className="Backdrop" />
 				<Dialog.Popup className="Popup visibleScrollbar" id="changelogPopup">
-					<Dialog.Title className="Title">{titleNode}</Dialog.Title>
+					<Dialog.Title render={<h3>{titleNode}</h3>} />
 					<Dialog.Description
 						className="Description"
-						render={<OldChangelog entryStartIndex={entryStartIndex} />}
+						render={
+							<ChangelogBody
+								hiddenStartIndex={hiddenStartIndex.current}
+								newChanges={!upToDate}
+							/>
+						}
 					/>
 				</Dialog.Popup>
 			</Dialog.Portal>
@@ -156,29 +218,45 @@ export function Changelog() {
  * If the user opens the changelog and there are no new entries, the most recent 5 dates are displayed,
  * with older entries placed in an expandable below.
  */
-function OldChangelog(props: OldChangelogParams) {
-	const entriesToShow = [];
-	for (let i = props.entryStartIndex; i < changelog.length; i++) {
-		entriesToShow.push(getRenderedEntry(changelog[i]));
+function ChangelogBody(props: ChangelogBodyParams) {
+	const shownEntries = [];
+	const hiddenEntries = [];
+	for (let i = 0; i < props.hiddenStartIndex; i++) {
+		shownEntries.push(getRenderedEntry(changelog[i]));
 	}
+	for (let i = props.hiddenStartIndex; i < changelog.length; i++) {
+		hiddenEntries.push(getRenderedEntry(changelog[i]));
+	}
+	const shownTitle = localize({
+		en: props.newChanges ? "New Changes" : "Recent Changes",
+		zh: props.newChanges ? "新的更新" : "最近的更新",
+	});
+	const shownChanges = <div style={{ marginTop: 10, marginBottom: 10 }}>
+		<span style={{ marginTop: 10, marginBottom: 10 }}>
+			<b>{shownTitle}</b>
+		</span>
+		<div style={{ margin: 10, paddingLeft: 6 }}>
+			{shownEntries.map((entry, i) => <div key={i}>{entry}</div>)}
+		</div>
+	</div>;
 	// Use a custom Expandable that's always closed to start, and ignores localStorage.
 	// This ensures the changelog dialog is always scrolled to the top, as I couldn't find any
 	// elegant ways to save the scroll state of the pane without slight layout shifts.
 	const [show, setShow] = useState(false);
 	const titleNode = localize({ en: "Older Changes", zh: "之前的更新" });
-	return <div style={{ marginTop: 10, marginBottom: 10 }}>
+	const hiddenChanges = <div style={{ marginTop: 10, marginBottom: 10 }}>
 		<Clickable
 			content={
 				<span>
 					<span>{show ? "- " : "+ "}</span>
-					{titleNode}
+					<b>{titleNode}</b>
 				</span>
 			}
 			onClickFn={() => setShow(!show)}
 		/>
 		<div style={{ position: "relative", display: show ? "block" : "none" }}>
 			<div style={{ margin: 10, paddingLeft: 6, marginBottom: 20 }}>
-				<div>{entriesToShow.map((entry, i) => <div key={i}>{entry}</div>)}</div>
+				<div>{hiddenEntries.map((entry, i) => <div key={i}>{entry}</div>)}</div>
 				<div>
 					For older changelog entries before the BLM/PCT in the Shell rejoining, see&nbsp;
 					<b>About this site/Changelog</b> on the old sites:&nbsp;
@@ -196,5 +274,9 @@ function OldChangelog(props: OldChangelogParams) {
 				</div>
 			</div>
 		</div>
+	</div>;
+	return <div>
+		{shownChanges}
+		{hiddenChanges}
 	</div>;
 }
