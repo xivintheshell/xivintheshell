@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { Dialog } from "@base-ui-components/react/dialog";
+import { FaXmark } from "react-icons/fa6";
 import changelog from "../changelog.json";
 import { getCurrentThemeColors, ColorThemeContext } from "./ColorTheme";
 import { Clickable, Expandable, Help, ButtonIndicator, ContentNode } from "./Common";
@@ -122,7 +123,7 @@ export function Changelog() {
 		// use the most recent changelog entry (5/10/25) as the last read.
 		// If someone last visited the site at an earlier date... there's not really
 		// anything we can do about that.
-		if (!isFirstVisit) {
+		if (!isFirstVisit && (lastReadDate === null || lastReadChangeCountStr === null)) {
 			lastReadDate = "5/10/25";
 			lastReadChangeCountStr = "1";
 		}
@@ -199,6 +200,13 @@ export function Changelog() {
 		</span>
 	</div>;
 
+	const exitTrigger = <FaXmark
+		className="dialogExit"
+		style={{
+			color: colors.bgHighContrast,
+		}}
+	/>;
+
 	return <>
 		<style>{changelogDialogStyles}</style>
 		<Dialog.Root onOpenChange={onOpenChange}>
@@ -220,6 +228,7 @@ export function Changelog() {
 					}}
 				>
 					<Dialog.Title render={<h3>{titleNode}</h3>} />
+					<Dialog.Close render={exitTrigger} />
 					<Dialog.Description
 						className="Description"
 						render={

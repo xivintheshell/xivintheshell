@@ -1,4 +1,4 @@
-#baseUiAnchor {
+.root {
     /*
     Needed for BaseUI dialogs to always appear on top
     https://base-ui.com/react/overview/quick-start
@@ -104,4 +104,12 @@ https://github.com/ReactTooltip/react-tooltip/blob/master/src/components/Tooltip
 
 .tooltip-positioner {
     z-index: 10;
+}
+
+.dialogExit {
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    cursor: pointer;
+    font-size: 1.5rem;
 }
