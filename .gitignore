@@ -14,6 +14,7 @@
 # incremental build
 tsconfig.tsbuildinfo
 .react-router/
+.vite/
 
 # misc
 .DS_Store

@@ -1,7 +1,6 @@
-import React, { ChangeEvent, CSSProperties, ReactNode, useEffect, useState } from "react";
+import React, { ChangeEvent, CSSProperties, ReactNode, useEffect, useState, useRef } from "react";
 import { localize } from "./Localization";
-import { Tooltip as ReactTooltip } from "react-tooltip";
-import "react-tooltip/dist/react-tooltip.css";
+import { Tooltip } from "@base-ui-components/react/tooltip";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { MAX_TIMELINE_SLOTS } from "../Controller/Timeline";
@@ -795,42 +794,7 @@ export function ButtonIndicator(props: { text: ContentNode }) {
 	</span>;
 }
 
-let setGlobalHelpTooltipContent = (newContent: ContentNode) => {};
-
-export function GlobalHelpTooltip(props: { content: ContentNode }) {
-	const [tipContent, setTipContent] = useState(props.content);
-	// hook up update function
-	useEffect(() => {
-		setGlobalHelpTooltipContent = (newContent: ContentNode) => {
-			setTipContent(newContent);
-		};
-	}, []);
-
-	let colors = getCurrentThemeColors();
-
-	return <div>
-		<style>{`
-			.help-tooltip {
-				color: ${colors.text};
-				background-color: ${colors.tipBackground};
-				opacity: 0.98;
-				max-width: 300px;
-				outline: 1px solid ${colors.bgHighContrast};
-				transition: none;
-				font-size: 100%;
-				z-index: 10;
-			}
-			.help-tooltip-arrow { display: none; }
-		`}</style>
-		<ReactTooltip
-			anchorSelect=".global-help-tooltip"
-			className="help-tooltip"
-			classNameArrow="help-tooltip-arrow"
-		>
-			{tipContent}
-		</ReactTooltip>
-	</div>;
-}
+const HELP_MOUSEOVER_HYSTERESIS_MS = 100;
 
 export function Help(props: {
 	topic: string; // need to be unique globally
@@ -849,14 +813,38 @@ export function Help(props: {
 		textAlign: "center",
 		verticalAlign: "middle",
 	};
-	return <span
-		className="help-icon global-help-tooltip"
-		style={style}
-		data-tooltip-offset={4}
-		onMouseEnter={() => {
-			setGlobalHelpTooltipContent(props.content);
-		}}
-	>
-		<span style={{ position: "relative", top: -1, color: "white" }}>&#63;</span>
-	</span>;
+	// To prevent "Flickering" behavior when the mouse is right on the help icon's boundary,
+	// we track the last mouseenter time. This should be updated even if the tooltip is not redrawn.
+	// Technically we should make the threshold to register an entry smaller than the threshold for
+	// exit to resolve this, but that seems annoying to do.
+	const lastMouseEnter = useRef(0);
+	// Manually set open/closed state instead of using Tooltip.Trigger to ensure it goes away
+	// after mousing off the (?) icon.
+	const [open, setOpen] = useState(false);
+	return <Tooltip.Root delay={0} open={open}>
+		<span
+			id={`help-${props.topic}`}
+			className="help-icon global-help-tooltip"
+			style={style}
+			data-tooltip-offset={4}
+			onMouseEnter={() => {
+				const now = Date.now();
+				if (now - lastMouseEnter.current > HELP_MOUSEOVER_HYSTERESIS_MS) {
+					setOpen(true);
+				}
+				lastMouseEnter.current = now;
+			}}
+			onMouseLeave={() => setOpen(false)}
+		>
+			<span style={{ position: "relative", top: -1, color: "white" }}>&#63;</span>
+		</span>
+		<Tooltip.Portal container={document.getElementById("globalHelpTooltipAnchor")}>
+			<Tooltip.Positioner
+				className="tooltip-positioner"
+				anchor={document.getElementById(`help-${props.topic}`)}
+			>
+				<Tooltip.Popup className="help-tooltip tooltip">{props.content}</Tooltip.Popup>
+			</Tooltip.Positioner>
+		</Tooltip.Portal>
+	</Tooltip.Root>;
 }

@@ -1,3 +1,11 @@
+.root {
+    /*
+    Needed for BaseUI dialogs to always appear on top
+    https://base-ui.com/react/overview/quick-start
+    */
+    isolation: isolate;
+}
+
 @font-face {
     font-family: "Goldman Regular";
     src: url("https://xivintheshell.github.io/resources/fonts/Goldman/Goldman-Regular.ttf");
@@ -70,6 +78,38 @@
     cursor: pointer;
 }
 
+.clickableLinkLike {
+    display: inline-block;
+}
+
+.clickableLinkLike:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 .paragraph {
     margin: 10px 0;
+}
+
+/*
+copied when migrating from react-tooltip to baseui
+https://github.com/ReactTooltip/react-tooltip/blob/master/src/components/Tooltip/styles.module.css
+*/
+.tooltip {
+    padding: 8px 16px;
+    border-radius: 3px;
+    font-size: 90%;
+    width: max-content;
+}
+
+.tooltip-positioner {
+    z-index: 10;
+}
+
+.dialogExit {
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    cursor: pointer;
+    font-size: 1.5rem;
 }
