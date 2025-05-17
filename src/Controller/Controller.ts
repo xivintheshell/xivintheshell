@@ -44,6 +44,7 @@ import {
 	ActionType,
 	Line,
 	Record,
+	RecordValidStatus,
 	skillNode,
 	durationWaitNode,
 	jumpToTimestampNode,
@@ -213,13 +214,13 @@ class Controller {
 		this.#lastDamageApplicationTime = tmpLastDamageApplicationTime;
 	}
 
-	checkRecordValidity(inRecord: Record, firstEditedNodeIndex?: number) {
+	checkRecordValidity(inRecord: Record, firstEditedNodeIndex?: number): RecordValidStatus {
 		console.assert(inRecord.config !== undefined);
 
 		let result: {
 			isValid: boolean;
-			firstInvalidAction: ActionNode | undefined;
-			invalidReason: string | undefined;
+			firstInvalidAction: { node: ActionNode; index: number } | undefined;
+			invalidReason: SkillReadyStatus | undefined;
 			invalidTime: number | undefined;
 			straightenedIfValid: Record | undefined;
 		} = {
@@ -259,8 +260,8 @@ class Controller {
 			this.#bAddingLine = false;
 
 			result.isValid = status.success;
-			result.firstInvalidAction = status.firstInvalidNode;
-			result.invalidReason = status.invalidReason?.toString();
+			result.firstInvalidAction = status.firstInvalidAction;
+			result.invalidReason = status.invalidReason;
 			result.invalidTime = status.invalidTime;
 			if (status.success) {
 				result.straightenedIfValid = this.record;
@@ -434,17 +435,18 @@ class Controller {
 		let replayResult = this.#replay({ line: line, replayMode: ReplayMode.Exact });
 		if (!replayResult.success) {
 			let msg = "Failed to load the entire record- \n";
-			if (replayResult.firstInvalidNode) {
-				if (replayResult.firstInvalidNode.info.type === ActionType.Skill) {
-					const actionName = replayResult.firstInvalidNode.info.skillName
-						? localizeSkillName(replayResult.firstInvalidNode.info.skillName)
+			if (replayResult.firstInvalidAction) {
+				const node = replayResult.firstInvalidAction.node;
+				if (node.info.type === ActionType.Skill) {
+					const actionName = node.info.skillName
+						? localizeSkillName(node.info.skillName)
 						: "(unknown)";
 					msg +=
 						"Stopped here because the next action " + actionName + " can't be added: ";
 				} else {
 					msg +=
 						"Stopped here because the next action " +
-						replayResult.firstInvalidNode.info.type +
+						node.info.type +
 						" can't be added: ";
 				}
 			}
@@ -1100,7 +1102,7 @@ class Controller {
 	}): {
 		success: boolean;
 		firstAddedIndex: number | undefined;
-		firstInvalidNode: ActionNode | undefined;
+		firstInvalidAction: { node: ActionNode; index: number } | undefined;
 		invalidReason: SkillReadyStatus | undefined;
 		invalidTime: number | undefined;
 	} {
@@ -1125,7 +1127,7 @@ class Controller {
 			return {
 				success: true,
 				firstAddedIndex: undefined,
-				firstInvalidNode: undefined,
+				firstInvalidAction: undefined,
 				invalidReason: undefined,
 				invalidTime: undefined,
 			};
@@ -1250,7 +1252,7 @@ class Controller {
 				return {
 					success: true,
 					firstAddedIndex,
-					firstInvalidNode: undefined,
+					firstInvalidAction: undefined,
 					invalidReason: undefined,
 					invalidTime: undefined,
 				};
@@ -1363,10 +1365,14 @@ class Controller {
 				// Re-enable UI updates
 				this.#skipViewUpdates = false;
 				this.updateAllDisplay();
+				const firstInvalidAction =
+					firstInvalidNode !== undefined
+						? { node: firstInvalidNode, index: i }
+						: undefined;
 				return {
 					success: false,
 					firstAddedIndex,
-					firstInvalidNode: firstInvalidNode,
+					firstInvalidAction,
 					invalidReason: invalidReason,
 					invalidTime: invalidTime,
 				};
@@ -1404,7 +1410,7 @@ class Controller {
 		return {
 			success: true,
 			firstAddedIndex,
-			firstInvalidNode: undefined,
+			firstInvalidAction: undefined,
 			invalidReason: undefined,
 			invalidTime: undefined,
 		};
