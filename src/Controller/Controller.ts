@@ -46,6 +46,8 @@ import {
 	Record,
 	skillNode,
 	durationWaitNode,
+	jumpToTimestampNode,
+	waitForMPNode,
 	setResourceNode,
 } from "./Record";
 import { ImageExportConfig } from "./ImageExportConfig";
@@ -95,6 +97,8 @@ export interface OvertimeEffectCoverage {
 	tStartDisplay: number;
 	tEndDisplay?: number;
 }
+
+type WaitKind = "duration" | "target" | "mp";
 
 class Controller {
 	timeScale;
@@ -884,9 +888,10 @@ class Controller {
 
 	#requestTick(props: {
 		deltaTime: number;
-		separateNode: boolean;
+		waitKind?: WaitKind;
 		prematureStopCondition?: () => boolean;
 	}) {
+		const fixedTargetTimestamp = props.deltaTime + this.game.getDisplayTime();
 		if (props.deltaTime > 0) {
 			this.#lastTickDuration = props.deltaTime;
 			let timeTicked = this.game.tick(
@@ -898,9 +903,13 @@ class Controller {
 						},
 			);
 
-			// If `separateNode` is true, then create a new explicit wait node.
-			if (props.separateNode) {
+			// If `waitKind` is defined, then create a new explicit wait node.
+			if (props.waitKind === "duration") {
 				this.record.addActionNode(durationWaitNode(timeTicked));
+			} else if (props.waitKind === "target") {
+				this.record.addActionNode(jumpToTimestampNode(fixedTargetTimestamp));
+			} else if (props.waitKind === "mp") {
+				this.record.addActionNode(waitForMPNode());
 			}
 		}
 	}
@@ -979,7 +988,7 @@ class Controller {
 		if (maxReplayTime >= 0) {
 			deltaTime = Math.min(maxReplayTime - this.game.time, deltaTime);
 		}
-		this.#requestTick({ deltaTime: deltaTime, separateNode: false });
+		this.#requestTick({ deltaTime });
 	}
 
 	#useSkill(
@@ -994,7 +1003,7 @@ class Controller {
 
 		// Wait out the current animation lock or remaining cooldown on the skill,
 		// then attempt to use it ASAP
-		this.#requestTick({ deltaTime: beforeWaitTime, separateNode: false });
+		this.#requestTick({ deltaTime: beforeWaitTime });
 		skillName = getConditionalReplacement(skillName, this.game);
 		status = this.game.getSkillAvailabilityStatus(skillName);
 
@@ -1146,6 +1155,11 @@ class Controller {
 			let waitDuration = 0;
 			if (itr.info.type === ActionType.Wait) {
 				waitDuration = itr.info.waitDuration;
+			} else if (itr.info.type === ActionType.JumpToTimestamp) {
+				// negative waitDuration is invalid, and handled further down in code
+				waitDuration = itr.info.targetTime - this.game.getDisplayTime();
+			} else if (itr.info.type === ActionType.WaitForMP) {
+				waitDuration = this.game.timeTillNextMpGainEvent();
 			} else if (itr.info.type === ActionType.Skill) {
 				waitDuration = this.game.getSkillAvailabilityStatus(
 					itr.info.skillName,
@@ -1163,7 +1177,7 @@ class Controller {
 			// - The last action node is Swiftcast added in manual mode at t=0, and legacyWaitDuration is 0.
 			// - lastTickDuration is 0.7 because current sim behavior automatically advances animation lock.
 			// If the current node is not a duration wait node, then it does not matter, since old
-			// behavior would either error out trying to use another action during animation lock.
+			// behavior would error out trying to use another action during animation lock.
 			// Suppose the current node is a duration wait of 1.0s. In older versions, this would
 			// be counted from the execution of the Swiftcast at t=0 since it had a waitDuration of 0;
 			// the next action would happen at t=1.
@@ -1196,15 +1210,17 @@ class Controller {
 						// If the current action is a skill, we do a quick look-ahead to see if the delta
 						// matches the amount of time that would tick naturally before its usage, and
 						// determine whether to create a new node based on this information.
-						let separateNode = true;
+						let waitKind: WaitKind | undefined = undefined;
 						if (itr.info.type === ActionType.Skill) {
 							const preWaitTime = this.game.getSkillAvailabilityStatus(
 								itr.info.skillName,
 							).timeTillAvailable;
-							separateNode = Math.abs(preWaitTime - delta) > Debug.epsilon;
+							if (Math.abs(preWaitTime - delta) > Debug.epsilon) {
+								waitKind = "duration";
+							}
 						}
-						if (separateNode) {
-							this.#requestTick({ deltaTime: delta, separateNode });
+						if (waitKind) {
+							this.#requestTick({ deltaTime: delta, waitKind });
 							// Don't count this node for the purposes of firstAddedNode
 							oldLength++;
 						}
@@ -1226,7 +1242,7 @@ class Controller {
 				// Instead of performing the next action, wait until maxReplayTime and return early
 				this.#requestTick({
 					deltaTime: maxReplayTime - this.game.time,
-					separateNode: true,
+					waitKind: "duration",
 				});
 				// Re-enable UI updates
 				this.#skipViewUpdates = false;
@@ -1240,12 +1256,29 @@ class Controller {
 				};
 			}
 
-			if (itr.info.type === ActionType.Wait) {
-				this.#requestTick({
-					deltaTime: waitDuration,
-					separateNode: true,
-				});
-				// wait nodes are always valid, assuming waitDuration is positive
+			if (
+				[ActionType.Wait, ActionType.JumpToTimestamp, ActionType.WaitForMP].includes(
+					itr.info.type,
+				)
+			) {
+				if (waitDuration >= 0) {
+					this.#requestTick({
+						deltaTime: waitDuration,
+						waitKind:
+							itr.info.type === ActionType.Wait
+								? "duration"
+								: itr.info.type === ActionType.JumpToTimestamp
+									? "target"
+									: "mp",
+					});
+				} else {
+					const reason = makeSkillReadyStatus();
+					reason.addUnavailableReason(SkillUnavailableReason.PastTargetTime);
+					lastIter = true;
+					firstInvalidNode = itr;
+					invalidReason = reason;
+					invalidTime = this.game.getDisplayTime();
+				}
 			}
 
 			// skill nodes
@@ -1296,7 +1329,6 @@ class Controller {
 						deltaTime: exact
 							? waitDuration
 							: Math.min(waitDuration, this.game.timeTillAnySkillAvailable()),
-						separateNode: false,
 					});
 				} else {
 					const reason = makeSkillReadyStatus();
@@ -1347,7 +1379,7 @@ class Controller {
 			const info = originalActions[props.cutoffIndex].info;
 			if (info.type === ActionType.Skill) {
 				const status = this.game.getSkillAvailabilityStatus(info.skillName);
-				this.#requestTick({ deltaTime: status.timeTillAvailable, separateNode: false });
+				this.#requestTick({ deltaTime: status.timeTillAvailable });
 			}
 		}
 
@@ -1363,7 +1395,7 @@ class Controller {
 			Math.abs(lastLegacyWaitDuration - this.#lastTickDuration) > Debug.epsilon
 		) {
 			const delta = lastLegacyWaitDuration - this.#lastTickDuration;
-			this.#requestTick({ deltaTime: delta, separateNode: true });
+			this.#requestTick({ deltaTime: delta, waitKind: "duration" });
 		}
 
 		// Re-enable UI updates
@@ -1601,7 +1633,7 @@ class Controller {
 			this.autoSave();
 			this.#requestTick({
 				deltaTime: currentTime - this.game.time,
-				separateNode: true,
+				waitKind: "duration",
 			});
 			this.shouldLoop = currentLoop;
 		}
@@ -1647,7 +1679,7 @@ class Controller {
 	}
 
 	waitTillNextMpOrLucidTick() {
-		this.#requestTick({ deltaTime: this.game.timeTillNextMpGainEvent(), separateNode: true });
+		this.#requestTick({ deltaTime: this.game.timeTillNextMpGainEvent(), waitKind: "mp" });
 		this.updateAllDisplay();
 	}
 
@@ -1706,7 +1738,6 @@ class Controller {
 			if (timeTillAnySkillAvailable >= dt) {
 				ctrl.#requestTick({
 					deltaTime: dt,
-					separateNode: false,
 					prematureStopCondition: () => {
 						return !loopCondition();
 					},
@@ -1714,14 +1745,12 @@ class Controller {
 			} else {
 				ctrl.#requestTick({
 					deltaTime: timeTillAnySkillAvailable,
-					separateNode: false,
 					prematureStopCondition: () => {
 						return !loopCondition();
 					},
 				});
 				ctrl.#requestTick({
 					deltaTime: dt - timeTillAnySkillAvailable,
-					separateNode: false,
 					prematureStopCondition: () => {
 						return !loopCondition();
 					},
@@ -1746,7 +1775,12 @@ class Controller {
 	}
 
 	step(t: number) {
-		this.#requestTick({ deltaTime: t, separateNode: true });
+		this.#requestTick({ deltaTime: t, waitKind: "duration" });
+		this.updateAllDisplay();
+	}
+
+	stepUntil(t: number) {
+		this.#requestTick({ deltaTime: t - this.game.getDisplayTime(), waitKind: "target" });
 		this.updateAllDisplay();
 	}
 

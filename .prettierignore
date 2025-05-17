@@ -2,6 +2,7 @@ build
 
 *.css
 *.txt
+.vite
 src/changelog.json
 src/index.js
 public

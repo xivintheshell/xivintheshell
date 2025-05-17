@@ -37,6 +37,7 @@ export const enum SkillUnavailableReason {
 	RequirementsNotMet = "requirements not met",
 	SkillNotUnlocked = "skill not unlocked at provided level",
 	BuffNoLongerAvailable = "buff no longer available",
+	PastTargetTime = "jump target time has already passed",
 }
 
 export type SkillReadyStatus = {

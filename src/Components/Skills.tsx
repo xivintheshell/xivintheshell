@@ -583,12 +583,10 @@ export class SkillsWindow extends React.Component {
 		};
 
 		this.onWaitUntilSubmit = (e: FormEvent<HTMLFormElement>) => {
-			let targetTime = parseTime(this.state.waitUntil);
+			const targetTime = parseTime(this.state.waitUntil);
 			if (!isNaN(targetTime)) {
-				let currentTime = controller.game.getDisplayTime();
-				if (targetTime > currentTime) {
-					let elapse = targetTime - currentTime;
-					controller.step(elapse);
+				if (targetTime > controller.game.getDisplayTime()) {
+					controller.stepUntil(targetTime);
 					controller.autoSave();
 				} else {
 					window.alert("Can only jump to a time in the future!");
@@ -893,8 +891,8 @@ export class SkillsWindow extends React.Component {
 					</div>
 					<button onClick={this.onWaitTillNextMpOrLucidTick}>
 						{localize({
-							en: "Wait until Manafont / MP tick / lucid tick",
-							zh: "快进至魔泉生效/跳蓝/跳醒梦",
+							en: "Wait until MP tick / lucid tick",
+							zh: "快进至跳蓝/跳醒梦",
 						})}
 					</button>
 					<span> </span>

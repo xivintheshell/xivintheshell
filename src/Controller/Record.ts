@@ -52,7 +52,6 @@ interface SerializedJump {
 
 interface SerializedMPWait {
 	type: ActionType.WaitForMP;
-	targetAmount: number;
 }
 
 interface SerializedSetResource {
@@ -114,10 +113,9 @@ export function jumpToTimestampNode(targetTime: number): ActionNode {
 	});
 }
 
-export function waitForMPNode(targetAmount: number): ActionNode {
+export function waitForMPNode(): ActionNode {
 	return new ActionNode({
 		type: ActionType.WaitForMP,
-		targetAmount,
 	});
 }
 
@@ -537,10 +535,14 @@ export class Line {
 					// @ts-expect-error used for parsing legacy format
 					legacyWaitDuration,
 				);
-			} else if ([ActionType.Wait].includes(serializedAction.type)) {
+			} else if (
+				[ActionType.Wait, ActionType.JumpToTimestamp, ActionType.WaitForMP].includes(
+					serializedAction.type,
+				)
+			) {
 				return new ActionNode(serializedAction);
 			} else {
-				window.alert("unparseable action: " + serializedAction.toString());
+				window.alert("unparseable action: " + JSON.stringify(serializedAction));
 				return new ActionNode({ type: ActionType.Invalid });
 			}
 		});

@@ -51,6 +51,16 @@ function TimelineActionElement(props: {
 			en: "(wait for " + props.node.info.waitDuration.toFixed(2) + "s)",
 			zh: "（等" + props.node.info.waitDuration.toFixed(2) + "秒）",
 		});
+	} else if (props.node.info.type === ActionType.JumpToTimestamp) {
+		name = localize({
+			en: "(jump to time " + StaticFn.displayTime(props.node.info.targetTime, 2) + ")",
+			zh: "（跳到时间 " + StaticFn.displayTime(props.node.info.targetTime, 2) + "）",
+		});
+	} else if (props.node.info.type === ActionType.WaitForMP) {
+		name = localize({
+			en: "(wait until MP/lucid tick)",
+			zh: "（快进至跳蓝/跳醒梦）",
+		});
 	} else if (props.node.info.type === ActionType.SetResourceEnabled) {
 		const localizedBuffName = localizeResourceType(props.node.info.buffName);
 		name = localize({
@@ -215,6 +225,10 @@ export class TimelineEditor extends React.Component {
 					if (node) {
 						if (node.info.type === ActionType.Wait) {
 							nodeName = "(Wait)";
+						} else if (node.info.type === ActionType.JumpToTimestamp) {
+							nodeName = "(Jump to time)";
+						} else if (node.info.type === ActionType.WaitForMP) {
+							nodeName = "(Wait for MP/lucid tick)";
 						} else if (node.info.type === ActionType.SetResourceEnabled) {
 							nodeName = "(Toggle resource " + node.info.buffName + ")";
 						} else if (node.info.type === ActionType.Skill) {
