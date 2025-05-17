@@ -7,7 +7,7 @@ import {
 	ResourceBarProps,
 } from "../StatusDisplay";
 import { PLDState } from "../../Game/Jobs/PLD";
-import { getCurrentThemeColors } from "../ColorTheme";
+import { ThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import { PLD_STATUSES, PLDResourceKey } from "../../Game/Data/Jobs/PLD";
 import { RESOURCES } from "../../Game/Data";
@@ -33,8 +33,7 @@ export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 		});
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 
 		const basicCombo = resources.get("PLD_COMBO_TRACKER");

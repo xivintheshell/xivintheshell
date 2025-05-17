@@ -1,6 +1,5 @@
 import fs from "node:fs";
 
-import { controller } from "../Controller/Controller";
 import { TickMode } from "../Controller/Common";
 import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
 import { PotencyModifierType } from "../Game/Potency";
@@ -11,6 +10,7 @@ import {
 } from "../Components/DamageStatistics";
 import { ShellJob } from "../Game/Data/Jobs";
 import { ActionKey } from "../Game/Data";
+import { controller } from "../Controller/Controller";
 
 // If this configuration flag is set to `true`, then the fight record of each test run
 // will be exported locally to "$TEST_NAME.txt".
@@ -19,7 +19,17 @@ const SAVE_FIGHT_RECORD = false;
 // Fake object to track damage statistics
 export let damageData: DamageStatisticsData;
 
-const resetDamageData = () => {
+export const rotationTestSetup = () => {
+	// For simplicity, always use "manual" advance mode to avoid any time shenanigans
+	// We eventually should test real-time mode as well
+	controller.setTimeControlSettings({
+		timeScale: 2,
+		tickMode: TickMode.Manual,
+	});
+	if (controller.timeline.slots.length === 0) {
+		controller.timeline.addSlot();
+	}
+	// clear stats from the last run
 	damageData = {
 		time: 0,
 		tinctureBuffPercentage: 0,
@@ -36,20 +46,6 @@ const resetDamageData = () => {
 		dotTables: new Map(),
 		mode: DamageStatisticsMode.Normal,
 	};
-};
-
-export const rotationTestSetup = () => {
-	// For simplicity, always use "manual" advance mode to avoid any time shenanigans
-	// We eventually should test real-time mode as well
-	controller.setTimeControlSettings({
-		timeScale: 2,
-		tickMode: TickMode.Manual,
-	});
-	if (controller.timeline.slots.length === 0) {
-		controller.timeline.addSlot();
-	}
-	// clear stats from the last run
-	resetDamageData();
 	// monkeypatch the updateDamageStats function to avoid needing to initialize the frontend
 	mockDamageStatUpdateFn((newData: Partial<DamageStatisticsData>) => {
 		damageData = { ...damageData, ...newData };
@@ -63,7 +59,7 @@ export const rotationTestTeardown = () => {
 		const record = controller.record.serialized();
 		fs.writeFileSync(`${testName}.txt`, JSON.stringify(record));
 	}
-	jest.restoreAllMocks();
+	vi.restoreAllMocks();
 };
 
 // Makes a test function for the specified job.
@@ -107,6 +103,7 @@ function checkNumbersInObject(expected: object | number, actual: object | number
 	expect(typeof expected === typeof actual);
 
 	if (typeof expected === "number") {
+		// @ts-expect-error not sure why ts isn't intelligent enough to pick up on the custom definition
 		expect([path, expected, actual]).toBeClose();
 	} else if (expected instanceof Map) {
 		expect(actual instanceof Map).toBeTruthy();

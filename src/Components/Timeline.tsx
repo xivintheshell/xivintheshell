@@ -13,7 +13,7 @@ import {
 	timelineCanvasOnMouseMove,
 } from "./TimelineCanvas";
 import { localize } from "./Localization";
-import { getCurrentThemeColors } from "./ColorTheme";
+import { getCurrentThemeColors, getThemeField, ColorThemeContext } from "./ColorTheme";
 
 import { LoadSave } from "./LoadSave";
 import { TimelineDisplaySettings } from "./TimelineDisplaySettings";
@@ -22,7 +22,6 @@ export let updateTimelineView = () => {};
 
 export let scrollTimelineTo = (positionX: number) => {};
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let getVisibleRangeX = () => {};
 
 // the actual timeline canvas
@@ -37,6 +36,8 @@ class TimelineMain extends React.Component {
 		version: number;
 	};
 
+	static contextType = ColorThemeContext;
+
 	constructor(props: {}) {
 		super(props);
 		this.state = {
@@ -46,6 +47,7 @@ class TimelineMain extends React.Component {
 			visibleWidth: 66,
 			version: 0,
 		};
+		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
 		this.myRef = React.createRef();
 
 		this.updateVisibleRange = () => {
@@ -103,6 +105,8 @@ class TimelineMain extends React.Component {
 			version={this.state.version}
 		/>;
 		const isFirefox = navigator.userAgent.indexOf("Firefox") >= 0;
+		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
+		const bg = getThemeField(this.context, "bgMediumContrast");
 		return <div style={{ position: "relative" }}>
 			{canvas}
 			<div
@@ -113,7 +117,7 @@ class TimelineMain extends React.Component {
 					width: "100%",
 					overflowX: "scroll",
 					overflowY: "clip",
-					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
+					outline: "1px solid " + bg,
 					cursor: timelineCanvasGetPointerMouse() ? "pointer" : "default",
 					paddingBottom: isFirefox ? 10 : 0,
 				}}
@@ -249,21 +253,19 @@ function TimelineTabs() {
 	</div>;
 }
 
-export class Timeline extends React.Component {
-	render() {
-		return <div
-			style={{
-				bottom: 0,
-				left: 0,
-				right: 0,
-				paddingLeft: 0, // forgot why I added the left and right paddings...
-				paddingRight: 0,
-				borderTop: "2px solid " + getCurrentThemeColors().bgHighContrast,
-				flex: 0,
-			}}
-		>
-			<TimelineMain />
-			<TimelineTabs />
-		</div>;
-	}
+export function Timeline() {
+	return <div
+		style={{
+			bottom: 0,
+			left: 0,
+			right: 0,
+			paddingLeft: 0, // forgot why I added the left and right paddings...
+			paddingRight: 0,
+			borderTop: "2px solid " + getCurrentThemeColors().bgHighContrast,
+			flex: 0,
+		}}
+	>
+		<TimelineMain />
+		<TimelineTabs />
+	</div>;
 }

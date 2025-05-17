@@ -1,5 +1,5 @@
 import { DNCState } from "../../Game/Jobs/DNC";
-import { getCurrentThemeColors } from "../ColorTheme";
+import { ThemeColors } from "../ColorTheme";
 import { localize } from "../Localization";
 import {
 	BuffProps,
@@ -57,8 +57,7 @@ export class DNCStatusPropsGenerator extends StatusPropsGenerator<DNCState> {
 		];
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		const colors = getCurrentThemeColors();
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		const resources = this.state.resources;
 
 		const feathers = resources.get("FEATHER_GAUGE").availableAmount();

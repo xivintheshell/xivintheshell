@@ -29,6 +29,7 @@ import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
 import { updateStatusDisplay } from "../Components/StatusDisplay";
 import { updateSkillButtons } from "../Components/Skills";
 import { updateConfigDisplay } from "../Components/PlaybackControl";
+import { type ThemeColors } from "../Components/ColorTheme";
 import { setHistorical, setJob, setRealTime } from "../Components/Main";
 import {
 	PotencyMarkElem,
@@ -77,7 +78,7 @@ import { getGameState } from "../Game/Jobs";
 import { localizeSkillName } from "../Components/Localization";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
-require("../Game/Jobs/RoleActions");
+import "../Game/Jobs/RoleActions";
 
 type Fixme = any;
 
@@ -845,17 +846,16 @@ class Controller {
 			canMove: game.resources.get("MOVEMENT").available(1),
 		};
 		const propsGenerator = game.statusPropsGenerator;
-		updateStatusDisplay(
-			{
+		updateStatusDisplay((theme: ThemeColors) => {
+			return {
 				time: game.getDisplayTime(),
-				resources: propsGenerator.getAllResourceViewProps(),
+				resources: propsGenerator.getAllResourceViewProps(theme),
 				resourceLocks: resourceLocksData,
 				enemyBuffs: propsGenerator.getAllOtherTargetedBuffViewProps(),
 				selfBuffs: propsGenerator.getAllSelfTargetedBuffViewProps(),
 				level: game.config.level,
-			},
-			propsGenerator.statusLayoutFn,
-		);
+			};
+		}, propsGenerator.statusLayoutFn);
 	}
 
 	updateTimelineDisplay() {

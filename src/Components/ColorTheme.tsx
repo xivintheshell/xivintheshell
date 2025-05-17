@@ -1,4 +1,4 @@
-import React from "react";
+import React, { createContext, useContext } from "react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { controller } from "../Controller/Controller";
@@ -6,11 +6,6 @@ import { ShellJob } from "../Game/Data/Jobs";
 import { PotencyModifierType } from "../Game/Potency";
 
 export type ColorTheme = "Light" | "Dark";
-
-let getCurrentColorTheme: () => ColorTheme = () => {
-	return "Light";
-};
-let setCurrentColorTheme: (colorTheme: ColorTheme) => void = (colorTheme) => {};
 
 export const enum MarkerColor {
 	Red = "#f64141",
@@ -216,353 +211,366 @@ export type ThemeColors = {
 	};
 };
 
+// This function can only be called from within the body of a function-style React component
+// because it calls React.useContext.
+// If you need the theme colors elsewhere, propagate it from a higher-level component and
+// manually call `getThemeColors` or `getThemeField`.
 export let getCurrentThemeColors: () => ThemeColors = () => {
-	let currentColorTheme = getCurrentColorTheme();
-	if (currentColorTheme === "Dark") {
-		return {
-			accent: "mediumpurple",
-			jobAccents: {
-				BLM: "#9370db", // mediumpurple
-				PCT: "#e176c2",
-				RDM: "#ff0000", // TODO less red
-				DNC: "#e2b0af", // color ripped from xiva/fflogs
-				SAM: "#f59542",
-				MCH: "#6ee1d6",
-				WAR: "#b10b0b", // color picker'd on job stone
-				RPR: "#965a90",
-				BRD: "#91ba5e",
-				GNB: "#f6b26b",
-				SMN: "#2D9B78", // copied from fflogs
-				SGE: "#80a0f0",
-			},
-			realTime: "mediumseagreen",
-			historical: "#ff8c00", // darkorange
-			fileDownload: "#798c3f",
-			text: "#b0b0b0",
-			emphasis: "#dadada",
-			success: "mediumseagreen",
-			warning: "#ff6224",
-			background: "#1f1f21",
-			tipBackground: "#2a2a2a",
-			bgLowContrast: "#333",
-			bgMediumContrast: "#393939",
-			bgHighContrast: "#626262",
-			resources: {
-				gcdBar: "#5cab43",
-				lockBar: "#737373",
-				mana: "#62a5d2",
-				manaTick: "#3d5c73",
-				cdhTag: "#d55124",
-				comboTag: "#5c8bad", // light blue
-				petTag: "#eb9b5f",
-			},
-			blm: {
-				enochian: "#b69241",
-				astralFire: "#d55124",
-				astralSoul: "#cb8046",
-				umbralIce: "#509bd5",
-				umbralHeart: "#8fced5",
-				paradox: "#d953ee",
-				polyTimer: "#594472",
-				polyStacks: "#b138ee",
-			},
-			pct: {
-				creatureCanvas: "#a948e3",
-				weaponCanvas: "#a53535",
-				landscapeCanvas: "#2e51dd",
-				paletteGauge: "#b69241",
-				holyPaint: "#9bc6dd", // blue-ish light gray
-				cometPaint: "#7e19aa", // purple-ish black
-				starryBuff: "#509bd5",
-			},
-			rdm: {
-				whiteMana: "#dddddd",
-				blackMana: "#2a4bf5", // blueish
-				manaStack: "#cb8046", // astral soul
-				emboldenBuff: "#de0202", // bright red but a little less saturated
-				manaficBuff: "#c169c2", // lavender
-				accelBuff: "#f0d1e8", // very light pink
-			},
-			dnc: {
-				esprit: "#e2b0af",
-				feathers: "#8DA147",
-				emboite: "#bf615c",
-				entrechat: "#3a8db7",
-				jete: "#539350",
-				pirouette: "#b0984e",
-			},
-			sam: {
-				kenki: "#d55124",
-				setsu: "#c7ffff",
-				getsu: "#7987fc",
-				kaSen: "#f8a2a6",
-				meditation: "#ff853d",
-				fugetsu: "#0f52ba",
-				iai: "#89cfef",
-			},
-			mch: {
-				heat: "#D35A10",
-				battery: "#2C9FCB",
-			},
-			rpr: {
-				soulGaugeLow: "#660929",
-				soulGaugeHigh: "#e5004e",
-				shroudGaugeLow: "#03706c",
-				shroudGaugeHigh: "#00fcf3",
-				lemureShroud: "#53ffff",
-				voidShroudLow: "#5c125c",
-				voidShroudHigh: "#ff04ff",
-				deathsDesign: "#ab0009",
-				arcaneCircle: "#ff94fd",
-			},
-			war: {
-				beastGauge: "#ffba00",
-			},
-			brd: {
-				soulVoice: "#5DBD99",
-				pitchPerfect: "#9ac5f1",
-				repertoire: "#e8c35a",
-				wanderersCoda: "#add549",
-				magesCoda: "#ffbcf8",
-				armysCoda: "#eb9b5f",
-				ragingStrikes: "#c04414",
-				barrage: "#e6c65b",
-				battleVoice: "#71bed1",
-				radiantFinale: "#edcce7",
-			},
-			gnb: {},
-			smn: {
-				// TODO
-				aetherflow: "#ffd4ff",
-				bahamut: "#2D9B78",
-				phoenix: "#d55124",
-				solar: "#9bc6dd",
-				ruby: "#e5004e",
-				topaz: "#b0984e",
-				emerald: "#539350",
-				searing: "#2D9B78",
-			},
-			drg: {
-				lifeSurge: "#ff6633",
-				lanceCharge: "#d6002d",
-				lifeOfTheDragon: "#0968af",
-				battleLitany: "#33b8e3",
-				powerSurge: "#59ed78",
-				enhancedPiercingTalon: "#f4caa6",
-				firstmindsFocusStacks: "#9926c8",
-				lifeOfTheDragonBar: "#d74936",
-				drgComboTimer: "#3d61ae",
-			},
-			sge: {
-				addersgall: "#80a0f0",
-				addersting: "#9e2dca",
-				zoe: "cyan",
-				autophysis: "lightblue",
-				krasis: "teal",
-				soteria: "green",
-				philosophia: "lightgreen",
-			},
-			pld: {
-				divineMight: "#ff6633",
-				requiescat: "#d6002d",
-				fightOrFlight: "#0968af",
-				pldComboTimer: "#59ed78",
-				ironWillColor: "#d74936",
-				oathGaugeColor: "#3d61ae",
-			},
-			timeline: {
-				ruler: "#2d2d2d",
-				tracks: "#242424",
-				castBar: "#42364d",
-				lockBar: "#696969",
-				gcdBar: "#354931",
-				llCover: "#5ea647",
-				potCover: "#c4543a",
-				buffCover: "#9370db",
-				damageMark: "#ff0000",
-				healingMark: "#2cda30",
-				aggroMark: "#ff8000",
-				untargetableDamageMark: "#7f7f7f",
-				mpTickMark: "#32525e",
-				warningMark: "#9d7103",
-				lucidTickMark: "#56b3d5",
-				countdown: "rgba(15, 15, 15, 0.4)",
-				markerAlpha: "4f",
-			},
-		};
-	} else {
-		// Light mode
-		return {
-			accent: "mediumpurple",
-			jobAccents: {
-				BLM: "#9370db", // mediumpurple
-				PCT: "#f485d6",
-				RDM: "#ff0000", // TODO less red
-				DNC: "#e2b0af", // color ripped from xiva/fflogs
-				SAM: "#f59542",
-				MCH: "#6ee1d6",
-				WAR: "#b10b0b", // color picker'd on job stone
-				RPR: "#965a90",
-				BRD: "#91ba5e",
-				SMN: "#2D9B78", // copied from fflogs
-				SGE: "#80a0f0",
-			},
-			realTime: "mediumseagreen",
-			historical: "#ff8c00", // darkorange
-			fileDownload: "#798c3f",
-			text: "#000000",
-			emphasis: "#000000",
-			success: "mediumseagreen",
-			warning: "#ff4d07",
-			background: "#ffffff",
-			tipBackground: "#ffffff",
-			bgLowContrast: "#efefef",
-			bgMediumContrast: "lightgrey",
-			bgHighContrast: "darkgrey",
-			resources: {
-				gcdBar: "#8edc72",
-				lockBar: "#cbcbcb",
-				mana: "#8ACEEA",
-				manaTick: "#C2EAFF",
-				cdhTag: "#ff6633",
-				comboTag: "#53a7c9", // light blue
-				petTag: "#eb9b5f",
-			},
-			blm: {
-				enochian: "#f5cf96",
-				astralFire: "#ff6633",
-				astralSoul: "#ffa641",
-				umbralIce: "#66bbff",
-				umbralHeart: "#95dae3",
-				paradox: "#d953ee",
-				polyTimer: "#d5bbf1",
-				polyStacks: "#b138ee",
-			},
-			pct: {
-				creatureCanvas: "#b854e8",
-				weaponCanvas: "#d54d48",
-				landscapeCanvas: "#4568f6",
-				paletteGauge: "#f5cf96",
-				holyPaint: "#b7c9d5", // blue-ish light gray
-				cometPaint: "#9926c8", // purple-ish black
-				starryBuff: "#66bbff",
-			},
-			rdm: {
-				whiteMana: "#fcd8d4", // light pink
-				blackMana: "#467aeb", // blue
-				manaStack: "#9926c8", // astral soul
-				emboldenBuff: "#c91310", // dark red
-				manaficBuff: "#530954", // dark purple
-				accelBuff: "#c973b4", // lighter purple
-			},
-			dnc: {
-				esprit: "#e2b0af",
-				feathers: "#8DA147",
-				emboite: "#bf615c",
-				entrechat: "#3a8db7",
-				jete: "#539350",
-				pirouette: "#b0984e",
-			},
-			sam: {
-				kenki: "#d55124",
-				setsu: "#addede",
-				getsu: "#7987fc",
-				kaSen: "#f8a2a6",
-				meditation: "#ff853d",
-				fugetsu: "#0f52ba",
-				iai: "#89cfef",
-			},
-			mch: {
-				heat: "#D35A10",
-				battery: "#2C9FCB",
-			},
-			rpr: {
-				soulGaugeLow: "#660929",
-				soulGaugeHigh: "#e5004e",
-				shroudGaugeLow: "#03706c",
-				shroudGaugeHigh: "#00fcf3",
-				lemureShroud: "#53ffff",
-				voidShroudLow: "#5c125c",
-				voidShroudHigh: "#ff04ff",
-				deathsDesign: "#ab0009",
-				arcaneCircle: "#ff94fd",
-			},
-			war: {
-				beastGauge: "#e74a3c",
-			},
-			brd: {
-				soulVoice: "#5DBD99",
-				pitchPerfect: "#9ac5f1",
-				repertoire: "#e8c35a",
-				wanderersCoda: "#add549",
-				magesCoda: "#ffbcf8",
-				armysCoda: "#eb9b5f",
-				ragingStrikes: "#c04414",
-				barrage: "#e6c65b",
-				battleVoice: "#71bed1",
-				radiantFinale: "#edcce7",
-			},
-			gnb: {},
-			smn: {
-				// TODO
-				aetherflow: "#ffd4ff",
-				bahamut: "#2D9B78",
-				phoenix: "#d55124",
-				solar: "#9bc6dd",
-				ruby: "#e5004e",
-				topaz: "#b0984e",
-				emerald: "#539350",
-				searing: "#2D9B78",
-			},
-			drg: {
-				lifeSurge: "#ff6633",
-				lanceCharge: "#d6002d",
-				lifeOfTheDragon: "#0968af",
-				battleLitany: "#33b8e3",
-				powerSurge: "#59ed78",
-				enhancedPiercingTalon: "#f4caa6",
-				firstmindsFocusStacks: "#9926c8",
-				lifeOfTheDragonBar: "#d74936",
-				drgComboTimer: "#3d61ae",
-			},
-			sge: {
-				addersgall: "#80a0f0",
-				addersting: "#9e2dca",
-				zoe: "cyan",
-				autophysis: "lightblue",
-				krasis: "teal",
-				soteria: "green",
-				philosophia: "lightgreen",
-			},
-			pld: {
-				divineMight: "#ff6633",
-				requiescat: "#d6002d",
-				fightOrFlight: "#0968af",
-				pldComboTimer: "#59ed78",
-				ironWillColor: "#d74936",
-				oathGaugeColor: "#3d61ae",
-			},
-			timeline: {
-				ruler: "#e9e9e9",
-				tracks: "#f3f3f3",
-				castBar: "#ecd6f3",
-				lockBar: "#9d9d9d",
-				gcdBar: "#ccefc6",
-				llCover: "#87ec71",
-				potCover: "#ff865c",
-				buffCover: "#9370db",
-				damageMark: "#ff0000",
-				healingMark: "#2cda30",
-				aggroMark: "#ff8000",
-				untargetableDamageMark: "#7f7f7f",
-				mpTickMark: "#b6dfea",
-				warningMark: "#ffbb29",
-				lucidTickMark: "#88cae0",
-				countdown: "rgba(0, 0, 0, 0.1)",
-				markerAlpha: "7f",
-			},
-		};
-	}
+	return getThemeColors(useContext(ColorThemeContext));
+};
+
+// useContext can only be called within function components.
+// Since we still have some class components, we need to manually retrieve the theme in some cases
+// via the contextType property: https://legacy.reactjs.org/docs/context.html#classcontexttype
+export const getThemeColors: (theme: ColorTheme) => ThemeColors = (theme: ColorTheme) => {
+	return theme === "Dark" ? DARK_THEME_COLORS : LIGHT_THEME_COLORS;
+};
+
+export const getThemeField = (theme: ColorTheme, field: keyof ThemeColors) => {
+	return getThemeColors(theme)[field];
+};
+
+const DARK_THEME_COLORS: ThemeColors = {
+	accent: "mediumpurple",
+	jobAccents: {
+		BLM: "#9370db", // mediumpurple
+		PCT: "#e176c2",
+		RDM: "#ff0000", // TODO less red
+		DNC: "#e2b0af", // color ripped from xiva/fflogs
+		SAM: "#f59542",
+		MCH: "#6ee1d6",
+		WAR: "#b10b0b", // color picker'd on job stone
+		RPR: "#965a90",
+		BRD: "#91ba5e",
+		GNB: "#f6b26b",
+		SMN: "#2D9B78", // copied from fflogs
+		SGE: "#80a0f0",
+	},
+	realTime: "mediumseagreen",
+	historical: "#ff8c00", // darkorange
+	fileDownload: "#798c3f",
+	text: "#b0b0b0",
+	emphasis: "#dadada",
+	success: "mediumseagreen",
+	warning: "#ff6224",
+	background: "#1f1f21",
+	tipBackground: "#2a2a2a",
+	bgLowContrast: "#333",
+	bgMediumContrast: "#393939",
+	bgHighContrast: "#626262",
+	resources: {
+		gcdBar: "#5cab43",
+		lockBar: "#737373",
+		mana: "#62a5d2",
+		manaTick: "#3d5c73",
+		cdhTag: "#d55124",
+		comboTag: "#5c8bad", // light blue
+		petTag: "#eb9b5f",
+	},
+	blm: {
+		enochian: "#b69241",
+		astralFire: "#d55124",
+		astralSoul: "#cb8046",
+		umbralIce: "#509bd5",
+		umbralHeart: "#8fced5",
+		paradox: "#d953ee",
+		polyTimer: "#594472",
+		polyStacks: "#b138ee",
+	},
+	pct: {
+		creatureCanvas: "#a948e3",
+		weaponCanvas: "#a53535",
+		landscapeCanvas: "#2e51dd",
+		paletteGauge: "#b69241",
+		holyPaint: "#9bc6dd", // blue-ish light gray
+		cometPaint: "#7e19aa", // purple-ish black
+		starryBuff: "#509bd5",
+	},
+	rdm: {
+		whiteMana: "#dddddd",
+		blackMana: "#2a4bf5", // blueish
+		manaStack: "#cb8046", // astral soul
+		emboldenBuff: "#de0202", // bright red but a little less saturated
+		manaficBuff: "#c169c2", // lavender
+		accelBuff: "#f0d1e8", // very light pink
+	},
+	dnc: {
+		esprit: "#e2b0af",
+		feathers: "#8DA147",
+		emboite: "#bf615c",
+		entrechat: "#3a8db7",
+		jete: "#539350",
+		pirouette: "#b0984e",
+	},
+	sam: {
+		kenki: "#d55124",
+		setsu: "#c7ffff",
+		getsu: "#7987fc",
+		kaSen: "#f8a2a6",
+		meditation: "#ff853d",
+		fugetsu: "#0f52ba",
+		iai: "#89cfef",
+	},
+	mch: {
+		heat: "#D35A10",
+		battery: "#2C9FCB",
+	},
+	rpr: {
+		soulGaugeLow: "#660929",
+		soulGaugeHigh: "#e5004e",
+		shroudGaugeLow: "#03706c",
+		shroudGaugeHigh: "#00fcf3",
+		lemureShroud: "#53ffff",
+		voidShroudLow: "#5c125c",
+		voidShroudHigh: "#ff04ff",
+		deathsDesign: "#ab0009",
+		arcaneCircle: "#ff94fd",
+	},
+	war: {
+		beastGauge: "#ffba00",
+	},
+	brd: {
+		soulVoice: "#5DBD99",
+		pitchPerfect: "#9ac5f1",
+		repertoire: "#e8c35a",
+		wanderersCoda: "#add549",
+		magesCoda: "#ffbcf8",
+		armysCoda: "#eb9b5f",
+		ragingStrikes: "#c04414",
+		barrage: "#e6c65b",
+		battleVoice: "#71bed1",
+		radiantFinale: "#edcce7",
+	},
+	gnb: {},
+	smn: {
+		// TODO
+		aetherflow: "#ffd4ff",
+		bahamut: "#2D9B78",
+		phoenix: "#d55124",
+		solar: "#9bc6dd",
+		ruby: "#e5004e",
+		topaz: "#b0984e",
+		emerald: "#539350",
+		searing: "#2D9B78",
+	},
+	drg: {
+		lifeSurge: "#ff6633",
+		lanceCharge: "#d6002d",
+		lifeOfTheDragon: "#0968af",
+		battleLitany: "#33b8e3",
+		powerSurge: "#59ed78",
+		enhancedPiercingTalon: "#f4caa6",
+		firstmindsFocusStacks: "#9926c8",
+		lifeOfTheDragonBar: "#d74936",
+		drgComboTimer: "#3d61ae",
+	},
+	sge: {
+		addersgall: "#80a0f0",
+		addersting: "#9e2dca",
+		zoe: "cyan",
+		autophysis: "lightblue",
+		krasis: "teal",
+		soteria: "green",
+		philosophia: "lightgreen",
+	},
+	pld: {
+		divineMight: "#ff6633",
+		requiescat: "#d6002d",
+		fightOrFlight: "#0968af",
+		pldComboTimer: "#59ed78",
+		ironWillColor: "#d74936",
+		oathGaugeColor: "#3d61ae",
+	},
+	timeline: {
+		ruler: "#2d2d2d",
+		tracks: "#242424",
+		castBar: "#42364d",
+		lockBar: "#696969",
+		gcdBar: "#354931",
+		llCover: "#5ea647",
+		potCover: "#c4543a",
+		buffCover: "#9370db",
+		damageMark: "#ff0000",
+		healingMark: "#2cda30",
+		aggroMark: "#ff8000",
+		untargetableDamageMark: "#7f7f7f",
+		mpTickMark: "#32525e",
+		warningMark: "#9d7103",
+		lucidTickMark: "#56b3d5",
+		countdown: "rgba(15, 15, 15, 0.4)",
+		markerAlpha: "4f",
+	},
+};
+
+const LIGHT_THEME_COLORS: ThemeColors = {
+	accent: "mediumpurple",
+	jobAccents: {
+		BLM: "#9370db", // mediumpurple
+		PCT: "#f485d6",
+		RDM: "#ff0000", // TODO less red
+		DNC: "#e2b0af", // color ripped from xiva/fflogs
+		SAM: "#f59542",
+		MCH: "#6ee1d6",
+		WAR: "#b10b0b", // color picker'd on job stone
+		RPR: "#965a90",
+		BRD: "#91ba5e",
+		SMN: "#2D9B78", // copied from fflogs
+		SGE: "#80a0f0",
+	},
+	realTime: "mediumseagreen",
+	historical: "#ff8c00", // darkorange
+	fileDownload: "#798c3f",
+	text: "#000000",
+	emphasis: "#000000",
+	success: "mediumseagreen",
+	warning: "#ff4d07",
+	background: "#ffffff",
+	tipBackground: "#ffffff",
+	bgLowContrast: "#efefef",
+	bgMediumContrast: "lightgrey",
+	bgHighContrast: "darkgrey",
+	resources: {
+		gcdBar: "#8edc72",
+		lockBar: "#cbcbcb",
+		mana: "#8ACEEA",
+		manaTick: "#C2EAFF",
+		cdhTag: "#ff6633",
+		comboTag: "#53a7c9", // light blue
+		petTag: "#eb9b5f",
+	},
+	blm: {
+		enochian: "#f5cf96",
+		astralFire: "#ff6633",
+		astralSoul: "#ffa641",
+		umbralIce: "#66bbff",
+		umbralHeart: "#95dae3",
+		paradox: "#d953ee",
+		polyTimer: "#d5bbf1",
+		polyStacks: "#b138ee",
+	},
+	pct: {
+		creatureCanvas: "#b854e8",
+		weaponCanvas: "#d54d48",
+		landscapeCanvas: "#4568f6",
+		paletteGauge: "#f5cf96",
+		holyPaint: "#b7c9d5", // blue-ish light gray
+		cometPaint: "#9926c8", // purple-ish black
+		starryBuff: "#66bbff",
+	},
+	rdm: {
+		whiteMana: "#fcd8d4", // light pink
+		blackMana: "#467aeb", // blue
+		manaStack: "#9926c8", // astral soul
+		emboldenBuff: "#c91310", // dark red
+		manaficBuff: "#530954", // dark purple
+		accelBuff: "#c973b4", // lighter purple
+	},
+	dnc: {
+		esprit: "#e2b0af",
+		feathers: "#8DA147",
+		emboite: "#bf615c",
+		entrechat: "#3a8db7",
+		jete: "#539350",
+		pirouette: "#b0984e",
+	},
+	sam: {
+		kenki: "#d55124",
+		setsu: "#addede",
+		getsu: "#7987fc",
+		kaSen: "#f8a2a6",
+		meditation: "#ff853d",
+		fugetsu: "#0f52ba",
+		iai: "#89cfef",
+	},
+	mch: {
+		heat: "#D35A10",
+		battery: "#2C9FCB",
+	},
+	rpr: {
+		soulGaugeLow: "#660929",
+		soulGaugeHigh: "#e5004e",
+		shroudGaugeLow: "#03706c",
+		shroudGaugeHigh: "#00fcf3",
+		lemureShroud: "#53ffff",
+		voidShroudLow: "#5c125c",
+		voidShroudHigh: "#ff04ff",
+		deathsDesign: "#ab0009",
+		arcaneCircle: "#ff94fd",
+	},
+	war: {
+		beastGauge: "#e74a3c",
+	},
+	brd: {
+		soulVoice: "#5DBD99",
+		pitchPerfect: "#9ac5f1",
+		repertoire: "#e8c35a",
+		wanderersCoda: "#add549",
+		magesCoda: "#ffbcf8",
+		armysCoda: "#eb9b5f",
+		ragingStrikes: "#c04414",
+		barrage: "#e6c65b",
+		battleVoice: "#71bed1",
+		radiantFinale: "#edcce7",
+	},
+	gnb: {},
+	smn: {
+		// TODO
+		aetherflow: "#ffd4ff",
+		bahamut: "#2D9B78",
+		phoenix: "#d55124",
+		solar: "#9bc6dd",
+		ruby: "#e5004e",
+		topaz: "#b0984e",
+		emerald: "#539350",
+		searing: "#2D9B78",
+	},
+	drg: {
+		lifeSurge: "#ff6633",
+		lanceCharge: "#d6002d",
+		lifeOfTheDragon: "#0968af",
+		battleLitany: "#33b8e3",
+		powerSurge: "#59ed78",
+		enhancedPiercingTalon: "#f4caa6",
+		firstmindsFocusStacks: "#9926c8",
+		lifeOfTheDragonBar: "#d74936",
+		drgComboTimer: "#3d61ae",
+	},
+	sge: {
+		addersgall: "#80a0f0",
+		addersting: "#9e2dca",
+		zoe: "cyan",
+		autophysis: "lightblue",
+		krasis: "teal",
+		soteria: "green",
+		philosophia: "lightgreen",
+	},
+	pld: {
+		divineMight: "#ff6633",
+		requiescat: "#d6002d",
+		fightOrFlight: "#0968af",
+		pldComboTimer: "#59ed78",
+		ironWillColor: "#d74936",
+		oathGaugeColor: "#3d61ae",
+	},
+	timeline: {
+		ruler: "#e9e9e9",
+		tracks: "#f3f3f3",
+		castBar: "#ecd6f3",
+		lockBar: "#9d9d9d",
+		gcdBar: "#ccefc6",
+		llCover: "#87ec71",
+		potCover: "#ff865c",
+		buffCover: "#9370db",
+		damageMark: "#ff0000",
+		healingMark: "#2cda30",
+		aggroMark: "#ff8000",
+		untargetableDamageMark: "#7f7f7f",
+		mpTickMark: "#b6dfea",
+		warningMark: "#ffbb29",
+		lucidTickMark: "#88cae0",
+		countdown: "rgba(0, 0, 0, 0.1)",
+		markerAlpha: "7f",
+	},
 };
 
 export function getModifierTagColor(modifierType: PotencyModifierType) {
@@ -630,9 +638,13 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 	return modifierColors.get(modifierType) ?? colors.text;
 }
 
-function ColorThemeOption(props: { colorTheme: ColorTheme }) {
+function ColorThemeOption(props: {
+	colorTheme: ColorTheme;
+	setColorTheme: (value: ColorTheme) => void;
+}) {
 	let icon = <MdLightMode />;
-	let colors = getCurrentThemeColors();
+	const colors = getCurrentThemeColors();
+	const activeColorTheme = useContext(ColorThemeContext);
 	if (props.colorTheme === "Dark") icon = <MdDarkMode />;
 	return <div
 		style={{
@@ -640,70 +652,33 @@ function ColorThemeOption(props: { colorTheme: ColorTheme }) {
 			cursor: "pointer",
 			verticalAlign: "middle",
 			borderBottom:
-				props.colorTheme === getCurrentColorTheme() ? "none" : "1px solid " + colors.text,
-			borderTop:
-				props.colorTheme === getCurrentColorTheme() ? "1px solid " + colors.text : "none",
+				props.colorTheme === activeColorTheme ? "none" : "1px solid " + colors.text,
+			borderTop: props.colorTheme === activeColorTheme ? "1px solid " + colors.text : "none",
 		}}
-		onClick={() => {
-			setCurrentColorTheme(props.colorTheme);
-		}}
+		onClick={() => props.setColorTheme(props.colorTheme)}
 	>
 		{icon}
 	</div>;
 }
 
-export class SelectColorTheme extends React.Component {
-	state: {
-		colorTheme: ColorTheme;
-	};
-	constructor(props: {}) {
-		super(props);
-		let colorTheme: ColorTheme = "Light";
-		let savedColorTheme: string | null = getCachedValue("colorTheme");
-		if (savedColorTheme === "Light" || savedColorTheme === "Dark") colorTheme = savedColorTheme;
-		this.state = {
-			colorTheme: colorTheme,
-		};
-	}
+export const getCachedColorTheme: () => ColorTheme = () => {
+	const cachedColorTheme = getCachedValue("colorTheme");
+	return cachedColorTheme === "Light" || cachedColorTheme === "Dark" ? cachedColorTheme : "Light";
+};
 
-	componentDidMount() {
-		getCurrentColorTheme = () => {
-			return this.state.colorTheme;
-		};
-		setCurrentColorTheme = (colorTheme: ColorTheme) => {
-			this.setState({ colorTheme: colorTheme });
-			setCachedValue("colorTheme", colorTheme);
-		};
-	}
-	componentDidUpdate(
-		prevProps: Readonly<{}>,
-		prevState: Readonly<{ colorTheme: ColorTheme }>,
-		snapshot?: any,
-	) {
-		if (prevState.colorTheme !== this.state.colorTheme) {
-			controller.updateAllDisplay();
-		}
-	}
+export const ColorThemeContext = createContext(getCachedColorTheme());
 
-	componentWillUnmount() {
-		getCurrentColorTheme = () => {
-			return "Light";
-		};
-		setCurrentColorTheme = (colorTheme) => {};
-	}
-
-	render() {
-		return <div
-			style={{
-				display: "inline-block",
-				position: "absolute",
-				right: 10,
-			}}
-		>
-			<div style={{ display: "inline-block", fontSize: 16, position: "relative" }}>
-				<ColorThemeOption colorTheme={"Light"} />|
-				<ColorThemeOption colorTheme={"Dark"} />
-			</div>
-		</div>;
-	}
+export function SelectColorTheme(props: { setColorTheme: (value: ColorTheme) => void }) {
+	return <div
+		style={{
+			display: "inline-block",
+			position: "absolute",
+			right: 10,
+		}}
+	>
+		<div style={{ display: "inline-block", fontSize: 16, position: "relative" }}>
+			<ColorThemeOption colorTheme={"Light"} setColorTheme={props.setColorTheme} />|
+			<ColorThemeOption colorTheme={"Dark"} setColorTheme={props.setColorTheme} />
+		</div>
+	</div>;
 }

@@ -19,7 +19,12 @@ import {
 import { FIXED_BASE_CASTER_TAX, LevelSync, ProcMode } from "../Game/Common";
 import { getAllResources, getResourceInfo, ResourceOverrideData } from "../Game/Resources";
 import { localize, localizeResourceType } from "./Localization";
-import { getCurrentThemeColors } from "./ColorTheme";
+import {
+	getThemeField,
+	getThemeColors,
+	getCurrentThemeColors,
+	ColorThemeContext,
+} from "./ColorTheme";
 import { SerializedConfig } from "../Game/GameConfig";
 import { XIVMath } from "../Game/XIVMath";
 import { FaCheck } from "react-icons/fa6";
@@ -576,6 +581,8 @@ export class Config extends React.Component {
 	deleteResourceOverride: (rsc: ResourceKey | CooldownKey) => void;
 	removeImportedField: (field: string) => void;
 
+	static contextType = ColorThemeContext;
+
 	constructor(props: {}) {
 		super(props);
 		this.state = {
@@ -669,8 +676,6 @@ export class Config extends React.Component {
 
 		this.importGear = async (event: React.SyntheticEvent) => {
 			event.preventDefault();
-			// @ts-ignore seems to be a bug where it can't recognize URL.parse
-			// https://developer.mozilla.org/en-US/docs/Web/API/URL/parse_static
 			const url = URL.parse(this.state.gearImportLink);
 			const headers = new Headers();
 			try {
@@ -1197,6 +1202,9 @@ export class Config extends React.Component {
 			</div>;
 		}
 
+		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
+		const bg = getThemeField(this.context, "bgMediumContrast");
+
 		return <div>
 			<form
 				onSubmit={(evt) => {
@@ -1210,7 +1218,7 @@ export class Config extends React.Component {
 				}}
 				style={{
 					marginTop: 16,
-					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
+					outline: "1px solid " + bg,
 					outlineOffset: 6,
 				}}
 			>
@@ -1365,7 +1373,8 @@ export class Config extends React.Component {
 	}
 
 	render() {
-		let colors = getCurrentThemeColors();
+		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
+		let colors = getThemeColors(this.context);
 		let fpsAndCorrectionColor =
 			this.state.shellVersion >= ShellVersion.FpsTax ? colors.text : colors.warning;
 		let level = parseFloat(this.state.level);

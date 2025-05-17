@@ -10,7 +10,14 @@ import { IntroSection } from "./IntroSection";
 import changelog from "../changelog.json";
 import { localize, localizeDate, SelectLanguage } from "./Localization";
 import { Expandable, GlobalHelpTooltip, Tabs } from "./Common";
-import { getCurrentThemeColors, SelectColorTheme } from "./ColorTheme";
+import {
+	getCachedColorTheme,
+	getThemeColors,
+	getCurrentThemeColors,
+	SelectColorTheme,
+	ColorTheme,
+	ColorThemeContext,
+} from "./ColorTheme";
 import { DamageStatistics } from "./DamageStatistics";
 import { MAX_TIMELINE_SLOTS } from "../Controller/Timeline";
 import {
@@ -93,10 +100,11 @@ function PSA(props: { hidden?: boolean; color?: string; children: React.ReactNod
 	</div>;
 }
 
-export default class Main extends React.Component {
-	controlRegionRef: React.RefObject<HTMLDivElement>;
+export default class Main extends React.Component<{ command?: string }> {
+	controlRegionRef: React.RefObject<HTMLDivElement | null>;
 	gameplayKeyCapture: React.KeyboardEventHandler<HTMLDivElement>;
 	gameplayMouseCapture: React.MouseEventHandler<HTMLDivElement>;
+	setColorTheme: (colorTheme: ColorTheme) => void;
 
 	state: {
 		job: ShellJob;
@@ -104,6 +112,7 @@ export default class Main extends React.Component {
 		historical: boolean;
 		hasFocus: boolean;
 		controlRegionHeight: number;
+		colorTheme: ColorTheme;
 	};
 
 	constructor(props: { command?: string }) {
@@ -117,11 +126,12 @@ export default class Main extends React.Component {
 			historical: false,
 			realTime: false,
 			controlRegionHeight: 0,
+			colorTheme: getCachedColorTheme(),
 		};
 		this.controlRegionRef = React.createRef();
 
 		this.gameplayKeyCapture = (evt: React.KeyboardEvent) => {
-			if (evt.target && evt.target === this.controlRegionRef.current) {
+			if (evt.target && evt.target === this.controlRegionRef?.current) {
 				controller.handleKeyboardEvent(evt);
 				evt.preventDefault();
 			}
@@ -138,11 +148,7 @@ export default class Main extends React.Component {
 			const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
 			if (link) {
 				if (job in JOBS) {
-					link.href =
-						process.env.PUBLIC_URL +
-						"/favicons/" +
-						job.toString().toLocaleLowerCase() +
-						".ico";
+					link.href = "/favicons/" + job.toString().toLocaleLowerCase() + ".ico";
 				} else {
 					link.href = process.env.PUBLIC_URL + "/favicon.ico";
 				}
@@ -160,6 +166,14 @@ export default class Main extends React.Component {
 
 		setHistorical = (hi: boolean) => {
 			this.setState({ historical: hi });
+		};
+
+		this.setColorTheme = (colorTheme: ColorTheme) => {
+			if (colorTheme !== this.state.colorTheme) {
+				controller.updateAllDisplay();
+				this.setState({ colorTheme });
+				setCachedValue("colorTheme", colorTheme);
+			}
 		};
 	}
 
@@ -183,7 +197,7 @@ export default class Main extends React.Component {
 
 	// tabs: https://reactcommunity.org/react-tabs/
 	render() {
-		let colors = getCurrentThemeColors();
+		let colors = getThemeColors(this.state.colorTheme);
 		let containerStyle: CSSProperties = {
 			height: "100%",
 			accentColor: colors.accent,
@@ -329,173 +343,178 @@ export default class Main extends React.Component {
 					border-radius: 0.4em;
 				}
 			`}</style>
-			<div style={containerStyle}>
-				<div
-					style={{
-						flex: 1,
-						overflowY: "scroll",
-						overscrollBehaviorY: "contain",
-					}}
-				>
+			<ColorThemeContext.Provider value={this.state.colorTheme}>
+				<div style={containerStyle}>
 					<div
 						style={{
-							position: "relative",
-							maxWidth: 1060,
-							margin: "0 auto",
-							marginTop: 40,
+							flex: 1,
+							overflowY: "scroll",
+							overscrollBehaviorY: "contain",
 						}}
 					>
-						<SelectLanguage />
-						<SelectColorTheme />
-						<div>
-							<h3 style={{ marginTop: 20, marginBottom: 6 }}>XIV in the Shell</h3>
-							{localize({
-								en: <div style={{ marginBottom: 16 }}>
-									Last updated: {changelog[0].date} (see{" "}
-									<b>About this tool/Changelog</b>)
-								</div>,
-								zh: <div style={{ marginBottom: 16 }}>
-									最近更新（月日年）：{changelog[0].date}（详见
-									<b>关于/更新日志</b>）
-								</div>,
-								ja: <div style={{ marginBottom: 16 }}>
-									最終更新日：{localizeDate(changelog[0].date, "ja")}（
-									<b>このツールについて/更新履歴</b>を参照）（
-									<a
-										href={
-											"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"
-										}
-									>
-										ロードマップ
-									</a>
-									）
-								</div>,
-							})}
-
-							{/*
-							EW cached content warning
-							Note to devs: this wouldn't work for locally hosted versions though.
-							You'll need to manually delete the old key-value pairs in localStorage
-							*/}
-							{containsEwCacheContent() ? (
-								<div
-									style={{
-										margin: "10px 0",
-										padding: "10px",
-										border: "1px solid " + colors.warning,
-										color: colors.warning,
-										borderRadius: 4,
-									}}
-								>
-									{localize({
-										en: <div>
-											NOTE: Your browser cache contains data from BLM in the
-											Shell before it's updated for Dawntrail. Visit the
-											Endwalker archive at{" "}
-											<a
-												style={{ color: colors.warning }}
-												href={
-													"https://miyehn.me/ffxiv-blm-rotation-endwalker"
-												}
-											>
-												miyehn.me/ffxiv-blm-rotation-endwalker
-											</a>{" "}
-											to access and automatically re-save it. Once you do
-											that, this notice will also go away.
-										</div>,
-										zh: <div>
-											提示：你的浏览器缓存里有排轴器更新到7.0前的数据，它们在这里已经不可用。请访问6.0历史版本（链接：
-											<a
-												style={{ color: colors.warning }}
-												href={
-													"https://miyehn.me/ffxiv-blm-rotation-endwalker"
-												}
-											>
-												miyehn.me/ffxiv-blm-rotation-endwalker
-											</a>
-											），数据会在那边被重新自动保存。访问过一次后，这个提示也会消失。
-										</div>,
-									})}
-								</div>
-							) : undefined}
-
-							<IntroSection job={this.state.job} />
-
-							{/* PSA */}
-							<Expandable
-								defaultShow={true}
-								title={"7-2-user-survey"}
-								titleNode={
-									<span>
-										{localize({ en: "7.2 User Survey", zh: "7.2用户体验调查" })}
-									</span>
-								}
-								content={
-									<PSA>
-										{localize({
-											en: <>
-												<p>
-													Help us improve XIV in the Shell! Please take
-													our user survey:{" "}
-													<b>
-														<a
-															target={"_blank"}
-															rel={"noreferrer"}
-															href={
-																"https://forms.gle/eKVygxxZVd894323A"
-															}
-														>
-															https://forms.gle/eKVygxxZVd894323A
-														</a>
-													</b>
-												</p>
-											</>,
-											zh: <>
-												<p>
-													帮我们改进排轴器！请参加我们的用户体验调查：{" "}
-													<b>
-														<a
-															target={"_blank"}
-															rel={"noreferrer"}
-															href={
-																"https://www.wjx.cn/vm/mQ1gV2b.aspx"
-															}
-														>
-															https://www.wjx.cn/vm/mQ1gV2b.aspx
-														</a>
-													</b>
-												</p>
-											</>,
-										})}
-									</PSA>
-								}
-							/>
-						</div>
 						<div
 							style={{
-								display: "flex",
-								flexDirection: "row",
 								position: "relative",
-								marginBottom: "20px",
+								maxWidth: 1060,
+								margin: "0 auto",
+								marginTop: 40,
 							}}
 						>
-							{mainControlRegion}
-							<ConfigTabs height={this.state.controlRegionHeight} />
+							<SelectLanguage />
+							<SelectColorTheme setColorTheme={this.setColorTheme} />
+							<div>
+								<h3 style={{ marginTop: 20, marginBottom: 6 }}>XIV in the Shell</h3>
+								{localize({
+									en: <div style={{ marginBottom: 16 }}>
+										Last updated: {changelog[0].date} (see{" "}
+										<b>About this tool/Changelog</b>)
+									</div>,
+									zh: <div style={{ marginBottom: 16 }}>
+										最近更新（月日年）：{changelog[0].date}（详见
+										<b>关于/更新日志</b>）
+									</div>,
+									ja: <div style={{ marginBottom: 16 }}>
+										最終更新日：{localizeDate(changelog[0].date, "ja")}（
+										<b>このツールについて/更新履歴</b>を参照）（
+										<a
+											href={
+												"https://coda.io/d/_d-N3WFoMZ8e/Black-Mage-in-the-Shell_suRLF"
+											}
+										>
+											ロードマップ
+										</a>
+										）
+									</div>,
+								})}
+
+								{/*
+								EW cached content warning
+								Note to devs: this wouldn't work for locally hosted versions though.
+								You'll need to manually delete the old key-value pairs in localStorage
+								*/}
+								{containsEwCacheContent() ? (
+									<div
+										style={{
+											margin: "10px 0",
+											padding: "10px",
+											border: "1px solid " + colors.warning,
+											color: colors.warning,
+											borderRadius: 4,
+										}}
+									>
+										{localize({
+											en: <div>
+												NOTE: Your browser cache contains data from BLM in
+												the Shell before it's updated for Dawntrail. Visit
+												the Endwalker archive at{" "}
+												<a
+													style={{ color: colors.warning }}
+													href={
+														"https://miyehn.me/ffxiv-blm-rotation-endwalker"
+													}
+												>
+													miyehn.me/ffxiv-blm-rotation-endwalker
+												</a>{" "}
+												to access and automatically re-save it. Once you do
+												that, this notice will also go away.
+											</div>,
+											zh: <div>
+												提示：你的浏览器缓存里有排轴器更新到7.0前的数据，它们在这里已经不可用。请访问6.0历史版本（链接：
+												<a
+													style={{ color: colors.warning }}
+													href={
+														"https://miyehn.me/ffxiv-blm-rotation-endwalker"
+													}
+												>
+													miyehn.me/ffxiv-blm-rotation-endwalker
+												</a>
+												），数据会在那边被重新自动保存。访问过一次后，这个提示也会消失。
+											</div>,
+										})}
+									</div>
+								) : undefined}
+
+								<IntroSection job={this.state.job} />
+
+								{/* PSA */}
+								<Expandable
+									defaultShow={true}
+									title={"7-2-user-survey"}
+									titleNode={
+										<span>
+											{localize({
+												en: "7.2 User Survey",
+												zh: "7.2用户体验调查",
+											})}
+										</span>
+									}
+									content={
+										<PSA>
+											{localize({
+												en: <>
+													<p>
+														Help us improve XIV in the Shell! Please
+														take our user survey:{" "}
+														<b>
+															<a
+																target={"_blank"}
+																rel={"noreferrer"}
+																href={
+																	"https://forms.gle/eKVygxxZVd894323A"
+																}
+															>
+																https://forms.gle/eKVygxxZVd894323A
+															</a>
+														</b>
+													</p>
+												</>,
+												zh: <>
+													<p>
+														帮我们改进排轴器！请参加我们的用户体验调查：{" "}
+														<b>
+															<a
+																target={"_blank"}
+																rel={"noreferrer"}
+																href={
+																	"https://www.wjx.cn/vm/mQ1gV2b.aspx"
+																}
+															>
+																https://www.wjx.cn/vm/mQ1gV2b.aspx
+															</a>
+														</b>
+													</p>
+												</>,
+											})}
+										</PSA>
+									}
+								/>
+							</div>
+							<div
+								style={{
+									display: "flex",
+									flexDirection: "row",
+									position: "relative",
+									marginBottom: "20px",
+								}}
+							>
+								{mainControlRegion}
+								<ConfigTabs height={this.state.controlRegionHeight} />
+							</div>
+							<SkillSequencePresets />
+							<hr
+								style={{
+									margin: "30px 0px",
+									border: "none",
+									borderTop: "1px solid " + colors.bgHighContrast,
+								}}
+							/>
+							<DamageStatistics />
 						</div>
-						<SkillSequencePresets />
-						<hr
-							style={{
-								margin: "30px 0px",
-								border: "none",
-								borderTop: "1px solid " + colors.bgHighContrast,
-							}}
-						/>
-						<DamageStatistics />
 					</div>
+					<Timeline />
+					<GlobalHelpTooltip content={"initial content"} />
 				</div>
-				<Timeline />
-				<GlobalHelpTooltip content={"initial content"} />
-			</div>
+			</ColorThemeContext.Provider>
 		</div>;
 	}
 }

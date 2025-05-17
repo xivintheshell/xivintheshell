@@ -9,9 +9,9 @@ import {
 } from "./Common";
 import { controller } from "../Controller/Controller";
 import { FileType, ReplayMode } from "../Controller/Common";
-import { getSkillIconPath } from "./Skills";
+import { SkillIconImage } from "./Skills";
 import { ActionType, Line } from "../Controller/Record";
-import { getCurrentThemeColors } from "./ColorTheme";
+import { getThemeField, ColorThemeContext } from "./ColorTheme";
 import { localize } from "./Localization";
 
 type Fixme = any;
@@ -70,8 +70,7 @@ function PresetLine(props: { line: Line }) {
 		// waits and other actions aren't rendered, but TODO maybe they should be
 		if (action.info.type === ActionType.Skill) {
 			const skillName = action.info.skillName;
-			let iconPath = getSkillIconPath(skillName);
-			icons.push(<img style={iconStyle} key={ctr} src={iconPath} alt={skillName} />);
+			icons.push(<SkillIconImage style={iconStyle} key={ctr} skillName={skillName} />);
 			ctr++;
 		}
 	}
@@ -111,6 +110,8 @@ function PresetLine(props: { line: Line }) {
 }
 
 export class SkillSequencePresets extends React.Component {
+	static contextType = ColorThemeContext;
+
 	constructor(props: Readonly<{}>) {
 		super(props);
 		updateSkillSequencePresetsView = this.unboundUpdatePresetsView.bind(this);
@@ -124,6 +125,9 @@ export class SkillSequencePresets extends React.Component {
 	render() {
 		let hasSelection =
 			controller && controller.record && controller.record.getFirstSelection() !== undefined;
+
+		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
+		const bg = getThemeField(this.context, "bgMediumContrast");
 		let content = <div>
 			<button
 				style={{ marginBottom: 10 }}
@@ -135,7 +139,6 @@ export class SkillSequencePresets extends React.Component {
 			</button>
 			<LoadJsonFromFileOrUrl
 				allowLoadFromUrl={false} // disabled for now, until when/if people have some common openers
-				loadUrlOnMount={false}
 				defaultLoadUrl={"https://miyehn.me/ffxiv-blm-rotation/presets/lines/default.txt"}
 				onLoadFn={(content: Fixme) => {
 					if (content.fileType === FileType.SkillSequencePresets) {
@@ -147,7 +150,7 @@ export class SkillSequencePresets extends React.Component {
 			/>
 			<div
 				style={{
-					outline: "1px solid " + getCurrentThemeColors().bgMediumContrast,
+					outline: "1px solid " + bg,
 					margin: "10px 0",
 					padding: "10px",
 				}}

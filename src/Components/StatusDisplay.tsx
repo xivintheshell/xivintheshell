@@ -3,7 +3,13 @@ import { Clickable, ContentNode, Help, ProgressBar, StaticFn } from "./Common";
 import type { PlayerState } from "../Game/GameState";
 import { controller } from "../Controller/Controller";
 import { localize, localizeResourceType } from "./Localization";
-import { getCurrentThemeColors } from "./ColorTheme";
+import {
+	getThemeColors,
+	ColorTheme,
+	ThemeColors,
+	getCurrentThemeColors,
+	ColorThemeContext,
+} from "./ColorTheme";
 import { JOBS } from "../Game/Data/Jobs";
 import { ResourceKey, RESOURCES } from "../Game/Data";
 import { ROLE_RESOURCES } from "../Game/Data/Shared/Role";
@@ -336,14 +342,12 @@ function ResourceText(props: { name: ContentNode; text: ContentNode; className?:
 const buffIcons = new Map();
 
 export function registerBuffIcon(buff: ResourceKey, relativePath: string) {
-	buffIcons.set(buff, require(`./Asset/Buffs/${relativePath}`));
+	buffIcons.set(buff, `Buffs/${relativePath}`);
 	const maxStacks = RESOURCES[buff].maximumStacks ?? 1;
 	for (let i = 2; i <= maxStacks; i++) {
 		buffIcons.set(
 			buff + i,
-			require(
-				`./Asset/Buffs/${relativePath.replace(RESOURCES[buff].name, RESOURCES[buff].name + i)}`,
-			),
+			`Buffs/${relativePath.replace(RESOURCES[buff].name, RESOURCES[buff].name + i)}`,
 		);
 	}
 }
@@ -351,16 +355,16 @@ export function registerBuffIcon(buff: ResourceKey, relativePath: string) {
 // role buffs are registered here; job buffs should be registered in the job's respective file
 Object.keys(ROLE_RESOURCES).forEach((buff) => {
 	const iconName = RESOURCES[buff as ResourceKey].name;
-	buffIcons.set(buff, require(`./Asset/Buffs/Role/${iconName}.png`));
+	buffIcons.set(buff, `Buffs/Role/${iconName}.png`);
 });
 
 // Tank LBs share the same buff icon
 Object.keys(LIMIT_BREAK_RESOURCES).forEach((rscType) =>
-	buffIcons.set(rscType, require("./Asset/Buffs/Role/Tank Limit Break.png")),
+	buffIcons.set(rscType, "Buffs/Role/Tank Limit Break.png"),
 );
 
-buffIcons.set("SPRINT", require("./Asset/Buffs/General/Sprint.png"));
-buffIcons.set("TINCTURE", require("./Asset/Buffs/General/Tincture.png"));
+buffIcons.set("SPRINT", "Buffs/General/Sprint.png");
+buffIcons.set("TINCTURE", "Buffs/General/Tincture.png");
 
 // rscType, stacks, timeRemaining, onSelf, enabled
 function Buff(props: BuffProps) {
@@ -384,7 +388,13 @@ function Buff(props: BuffProps) {
 		className={props.className + " buff " + props.rscType}
 	>
 		<Clickable
-			content={<img style={imgStyle} src={buffIcons.get(assetName)} alt={props.rscType} />}
+			content={
+				<img
+					style={imgStyle}
+					src={"assets/" + buffIcons.get(assetName)}
+					alt={props.rscType}
+				/>
+			}
 			style={{
 				display: "inline-block",
 				verticalAlign: "top",
@@ -647,11 +657,16 @@ export function ResourcesDisplay(props: {
 
 type StatusLayoutFn = (props: StatusViewProps) => React.ReactNode;
 
-export var updateStatusDisplay = (data: StatusViewProps, layoutFn: StatusLayoutFn) => {};
+export let updateStatusDisplay = (
+	data: (color: ThemeColors) => StatusViewProps,
+	layoutFn: StatusLayoutFn,
+) => {};
 export class StatusDisplay extends React.Component {
 	state: StatusViewProps & {
 		layoutFn: (props: StatusViewProps) => React.ReactNode;
 	};
+
+	static contextType = ColorThemeContext;
 	constructor(props: StatusViewProps) {
 		super(props);
 		this.state = {
@@ -664,7 +679,9 @@ export class StatusDisplay extends React.Component {
 				return <div />;
 			},
 		};
-		updateStatusDisplay = (newData, newLayoutFn) => {
+		updateStatusDisplay = (newDataFn, newLayoutFn) => {
+			// @ts-expect-error we need to read untyped this.context in place of a useContext hook
+			const newData = newDataFn(getThemeColors(this.context));
 			this.setState({ ...{ layoutFn: newLayoutFn }, ...newData });
 		};
 	}
@@ -883,17 +900,16 @@ export class StatusPropsGenerator<T extends PlayerState> {
 	}
 
 	// Jobs should override this to display their resources
-	public jobSpecificResourceViewProps(): ResourceDisplayProps[] {
+	public jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		return [];
 	}
 
 	// Display the job-specific resources, including MP and the MP tick timer by defauly for jobs that use MP
-	public getAllResourceViewProps(): ResourceDisplayProps[] {
+	public getAllResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
 		if (!JOBS[this.state.job].usesMp) {
-			return this.jobSpecificResourceViewProps();
+			return this.jobSpecificResourceViewProps(colors);
 		}
 
-		const colors = getCurrentThemeColors();
 		const resources = this.state.resources;
 		const timeTillNextManaTick = resources.timeTillReady("MANA");
 		const mana = resources.get("MANA").availableAmount();
@@ -917,7 +933,7 @@ export class StatusPropsGenerator<T extends PlayerState> {
 				progress: 1 - timeTillNextManaTick / 3,
 				valueString: (3 - timeTillNextManaTick).toFixed(3) + "/3",
 			} as ResourceBarProps,
-			...this.jobSpecificResourceViewProps(),
+			...this.jobSpecificResourceViewProps(colors),
 		];
 	}
 

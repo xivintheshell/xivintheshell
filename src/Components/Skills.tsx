@@ -1,4 +1,4 @@
-import React, { FormEvent, FormEventHandler } from "react";
+import React, { useState, FormEvent, FormEventHandler } from "react";
 import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Common";
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { controller } from "../Controller/Controller";
@@ -7,49 +7,48 @@ import { Tooltip as ReactTooltip } from "react-tooltip";
 import { localize, localizeSkillName } from "./Localization";
 import { updateTimelineView } from "./Timeline";
 import * as ReactDOMServer from "react-dom/server";
-import { getCurrentThemeColors } from "./ColorTheme";
+import { getThemeColors, ColorThemeContext } from "./ColorTheme";
 import { getSkillAssetPath } from "../Game/Skills";
 import { ActionKey, ACTIONS } from "../Game/Data";
 
-// Game/Jobs/* must be run first to ensure all skills have been registered, so we need to
-// load images lazily to ensure we're not dependent on webpack's module resolution order.
 const skillIconImages = new Map();
 
-const tryLoadSkillIcon = (assetPath?: string) => {
-	if (assetPath) {
-		try {
-			return require(`./Asset/Skills/${assetPath}`);
-		} catch (e) {
-			// If we forgot to specify the asset path, raise the error in console
-			// and use the missing skill icon.
-			console.error(e);
-			return require("./Asset/Skills/General/Missing.png");
-		}
-	}
-	return undefined;
-};
-
-export const getSkillIconPath = (skillName: ActionKey | undefined) => {
-	if (!skillName) {
-		return undefined;
-	}
-	return tryLoadSkillIcon(getSkillAssetPath(skillName));
-};
+const MISSING_PATH = "assets/Skills/General/Missing.png";
 
 export const getSkillIconImage = (skillName: ActionKey) => {
 	if (skillIconImages.has(skillName)) {
 		return skillIconImages.get(skillName);
 	}
-	const assetIcon = tryLoadSkillIcon(getSkillAssetPath(skillName));
+	const assetIcon = `assets/Skills/${getSkillAssetPath(skillName)}`;
 	if (assetIcon) {
 		let imgObj = new Image();
 		imgObj.src = assetIcon;
+		imgObj.onerror = (e) => {
+			imgObj.src = MISSING_PATH;
+			console.error("failed to load skill image: " + assetIcon);
+			// de-register the handler to prevent infinite loops
+			imgObj.onerror = null;
+		};
 		imgObj.onload = () => updateTimelineView();
 		skillIconImages.set(skillName, imgObj);
 		return imgObj;
 	}
 	return undefined;
 };
+
+export function SkillIconImage(props: { style: React.CSSProperties; skillName: ActionKey }) {
+	// getSkillIconImage produces an image for timeline rendering, and thus shouldn't make a react component.
+	// In all other cases, we probably want an actual react component.
+	// These are also not memoized.
+	const assetIcon = `assets/Skills/${getSkillAssetPath(props.skillName)}`;
+	const [didError, setDidError] = useState(false);
+	return <img
+		style={props.style}
+		src={didError ? MISSING_PATH : assetIcon}
+		onError={(e) => setDidError(true)}
+		alt={props.skillName}
+	/>;
+}
 
 function ProgressCircleDark(
 	props = {
@@ -212,6 +211,8 @@ class SkillButton extends React.Component {
 	};
 	handleMouseEnter: () => void;
 
+	static contextType = ColorThemeContext;
+
 	constructor(props: SkillButtonProps) {
 		super(props);
 		this.props = props;
@@ -223,7 +224,8 @@ class SkillButton extends React.Component {
 				game: controller.getDisplayedGame(),
 				skillName: this.props.skillName,
 			});
-			let colors = getCurrentThemeColors();
+			// @ts-expect-error we need to read untyped this.context in place of a useContext hook
+			let colors = getThemeColors(this.context);
 			let s: ContentNode[] = [];
 			if (info.status.ready()) {
 				let en = "ready (" + info.stacksAvailable;
@@ -315,7 +317,6 @@ class SkillButton extends React.Component {
 		};
 	}
 	render() {
-		let iconPath = getSkillIconPath(this.props.skillName);
 		let iconStyle: React.CSSProperties = {
 			width: 48,
 			height: 48,
@@ -423,7 +424,7 @@ class SkillButton extends React.Component {
 			<div style={iconStyle}>
 				{" "}
 				{/* "overlay" layers */}
-				<img style={iconImgStyle} src={iconPath} alt={this.props.skillName} />
+				<SkillIconImage style={iconImgStyle} skillName={this.props.skillName} />
 				<div
 					style={{
 						position: "absolute",
@@ -526,6 +527,8 @@ export class SkillsWindow extends React.Component {
 	onTargetCountChange: (e: ValueChangeEvent) => void;
 	onRemoveTrailingIdleTime: () => void;
 	onWaitTillNextMpOrLucidTick: () => void;
+
+	static contextType = ColorThemeContext;
 
 	constructor(props: {}) {
 		super(props);
@@ -666,7 +669,8 @@ export class SkillsWindow extends React.Component {
 			//border: "1px solid red",
 		};
 
-		let colors = getCurrentThemeColors();
+		// @ts-expect-error we need to read untyped this.context in place of a context hook
+		let colors = getThemeColors(this.context);
 		let textInputFieldStyle = {
 			outline: "none",
 			border: "none",

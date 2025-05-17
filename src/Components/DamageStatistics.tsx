@@ -1,7 +1,7 @@
-import React, { CSSProperties } from "react";
+import React, { CSSProperties, useState, useEffect } from "react";
 import { Checkbox, FileFormat, Help, Input, SaveToFile } from "./Common";
 import { PotencyModifier, PotencyModifierType } from "../Game/Potency";
-import { getCurrentThemeColors, getModifierTagColor } from "./ColorTheme";
+import { getThemeColors, getModifierTagColor, ColorThemeContext } from "./ColorTheme";
 import {
 	localize,
 	localizeModifierName,
@@ -181,93 +181,70 @@ function PotencyDisplay(props: {
 	</span>;
 }
 
-class DamageStatsSettings extends React.Component {
-	initialDisplayScale: number;
-	state: {
-		tinctureBuffPercentageStr: string;
-	};
-	setTinctureBuffPercentageStr: (val: string) => void;
+function DamageStatsSettings() {
+	const [tinctureBuffPercentageStr, setTinctureBuffPercentageStr] = useState("8");
 
-	constructor(props: {}) {
-		super(props);
-		// display scale
-		this.initialDisplayScale = 0.4;
-		let str = getCachedValue("timelineDisplayScale");
-		if (str !== null) {
-			this.initialDisplayScale = parseFloat(str);
+	const setTinctureBuffPercentage = (str: string) => {
+		setTinctureBuffPercentageStr(str);
+		const percent = parseFloat(str);
+		if (!isNaN(percent)) {
+			controller.setTinctureBuffPercentage(percent);
+			setCachedValue("tinctureBuffPercentage", str);
 		}
+	};
 
-		// tincture buff percentage
-		str = getCachedValue("tinctureBuffPercentage");
+	useEffect(() => {
+		const str = getCachedValue("tinctureBuffPercentage");
+		if (str !== null) {
+			setTinctureBuffPercentage(str);
+		}
+	}, []);
 
-		// state
-		this.state = {
-			tinctureBuffPercentageStr: str ?? "8",
-		};
-
-		// functions
-		this.setTinctureBuffPercentageStr = (val: string) => {
-			this.setState({ tinctureBuffPercentageStr: val });
-
-			let percentage = parseFloat(val);
-			if (!isNaN(percentage)) {
-				controller.setTinctureBuffPercentage(percentage);
-				setCachedValue("tinctureBuffPercentage", val);
-			}
-		};
-	}
-
-	componentDidMount() {
-		this.setTinctureBuffPercentageStr(this.state.tinctureBuffPercentageStr);
-	}
-
-	render() {
-		let checkboxLabel = <span>
-			{localize({ en: "exclude damage when untargetable", zh: "Boss上天期间威力按0计算" })}{" "}
-			<Help
-				topic={"untargetableMask"}
-				content={
-					<div>
-						<div className={"paragraph"}>
-							{localize({
-								en: "Having this checked will exclude damages from untargetable phases.",
-								zh: "若勾选，统计将不包括Boss上天期间造成的伤害。",
-							})}
-						</div>
-						<div className={"paragraph"}>
-							{localize({
-								en: 'You can mark up such phases using timeline markers of type "Untargetable".',
-								zh: "可在下方用 “不可选中” 类型的时间轴标记来指定时间区间。",
-							})}
-						</div>
-						<div className={"paragraph"}>
-							{localize({
-								en: "This is just a statistics helper though. For example it doesn't prevent you from using skills when the boss is untargetable.",
-								zh: "此功能只是一个统计用的工具，在标注了 “不可选中” 的时间里其实也能正常使用技能。",
-							})}
-						</div>
+	const checkboxLabel = <span>
+		{localize({ en: "exclude damage when untargetable", zh: "Boss上天期间威力按0计算" })}{" "}
+		<Help
+			topic={"untargetableMask"}
+			content={
+				<div>
+					<div className={"paragraph"}>
+						{localize({
+							en: "Having this checked will exclude damages from untargetable phases.",
+							zh: "若勾选，统计将不包括Boss上天期间造成的伤害。",
+						})}
 					</div>
-				}
-			/>
-		</span>;
-		return <div>
-			<Input
-				defaultValue={this.state.tinctureBuffPercentageStr}
-				description={localize({ en: " tincture potency buff ", zh: "爆发药威力加成 " })}
-				onChange={this.setTinctureBuffPercentageStr}
-				width={2}
-				style={{ display: "inline" }}
-			/>
-			<span>%</span>
-			<Checkbox
-				uniqueName={"untargetableMask"}
-				label={checkboxLabel}
-				onChange={(val) => {
-					controller.setUntargetableMask(val);
-				}}
-			/>
-		</div>;
-	}
+					<div className={"paragraph"}>
+						{localize({
+							en: 'You can mark up such phases using timeline markers of type "Untargetable".',
+							zh: "可在下方用 “不可选中” 类型的时间轴标记来指定时间区间。",
+						})}
+					</div>
+					<div className={"paragraph"}>
+						{localize({
+							en: "This is just a statistics helper though. For example it doesn't prevent you from using skills when the boss is untargetable.",
+							zh: "此功能只是一个统计用的工具，在标注了 “不可选中” 的时间里其实也能正常使用技能。",
+						})}
+					</div>
+				</div>
+			}
+		/>
+	</span>;
+	return <div>
+		<Input
+			defaultValue={tinctureBuffPercentageStr}
+			description={localize({ en: " tincture potency buff ", zh: "爆发药威力加成 " })}
+			onChange={setTinctureBuffPercentage}
+			width={2}
+			style={{ display: "inline" }}
+		/>
+		<span>%</span>
+		<Checkbox
+			uniqueName={"untargetableMask"}
+			label={checkboxLabel}
+			onChange={(val) => {
+				controller.setUntargetableMask(val);
+			}}
+		/>
+	</div>;
 }
 
 const rowGap = "0.375em 0.75em";
@@ -296,6 +273,8 @@ export class DamageStatistics extends React.Component {
 		mode: DamageStatisticsMode.Normal,
 	};
 
+	static contextType = ColorThemeContext;
+
 	constructor(props: {}) {
 		super(props);
 		updateDamageStats = (data: Partial<DamageStatisticsData>) => {
@@ -313,7 +292,8 @@ export class DamageStatistics extends React.Component {
 	}
 
 	render() {
-		let colors = getCurrentThemeColors();
+		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
+		let colors = getThemeColors(this.context);
 		const allIncluded = allSkillsAreIncluded();
 
 		//////////////////// Summary ///////////////////////
