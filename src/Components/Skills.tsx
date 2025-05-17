@@ -4,7 +4,7 @@ import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Com
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
-import { localize, localizeSkillName } from "./Localization";
+import { localize, localizeSkillName, localizeSkillUnavailableReason } from "./Localization";
 import { updateTimelineView } from "./Timeline";
 import * as ReactDOMServer from "react-dom/server";
 import { getThemeColors, ColorThemeContext } from "./ColorTheme";
@@ -244,18 +244,16 @@ class SkillButton extends React.Component {
 					)
 				) {
 					s.push(
-						localize({
-							en: " skill requirement(s) not satisfied",
-							zh: " 未满足释放条件",
-						}),
+						localizeSkillUnavailableReason(SkillUnavailableReason.RequirementsNotMet),
 					);
 				}
 				if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotEnoughMP)) {
 					s.push(
-						localize({
-							en: " not enough MP (needs " + info.capturedManaCost + ")",
-							zh: " MP不足（需" + info.capturedManaCost + "）",
-						}),
+						localizeSkillUnavailableReason(SkillUnavailableReason.NotEnoughMP) +
+							localize({
+								en: " (needs " + info.capturedManaCost + ")",
+								zh: " （需" + info.capturedManaCost + "）",
+							}),
 					);
 				}
 				if (info.status.unavailableReasons.includes(SkillUnavailableReason.Blocked)) {
@@ -279,12 +277,7 @@ class SkillButton extends React.Component {
 					);
 				}
 				if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotInCombat)) {
-					s.push(
-						localize({
-							en: "not in combat (wait for first damage application)",
-							zh: "不在战斗中（需先等第一次伤害结算）",
-						}),
-					);
+					s.push(localizeSkillUnavailableReason(SkillUnavailableReason.NotInCombat));
 				}
 			}
 			// if ready, also show captured cast time & time till damage application

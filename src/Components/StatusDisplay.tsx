@@ -689,6 +689,8 @@ export class StatusDisplay extends React.Component {
 		controller.updateStatusDisplay(controller.game);
 	}
 	render() {
+		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
+		const colors = getThemeColors(this.context);
 		return <div
 			style={{
 				position: "relative",
@@ -719,7 +721,17 @@ export class StatusDisplay extends React.Component {
 										<b style={{ color: "darkorange" }}>orange</b> border:
 										viewing historical state, not receiving input
 									</div>
+									<div className="paragraph">
+										<b style={{ color: colors.editingValid }}>yellow</b> border:
+										using timeline editor, edits are valid
+									</div>
+									<div className="paragraph">
+										<b style={{ color: colors.editingInvalid }}>red</b> border:
+										using timeline editor, edits are NOT valid
+									</div>
 								</>,
+								// TODO zh localization
+								// TODO ja outdated
 								ja: <>
 									<div className="paragraph">
 										<span style={{ color: "lightgray" }}>グレー</span> : 未選択
