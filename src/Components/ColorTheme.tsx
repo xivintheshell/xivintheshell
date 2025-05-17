@@ -155,6 +155,8 @@ export type JobAccentColors = Partial<{
 export type ThemeColors = {
 	accent: string;
 	jobAccents: JobAccentColors;
+	editingValid: string;
+	editingInvalid: string;
 	realTime: string;
 	historical: string;
 	fileDownload: string;
@@ -246,6 +248,8 @@ const DARK_THEME_COLORS: ThemeColors = {
 		SMN: "#2D9B78", // copied from fflogs
 		SGE: "#80a0f0",
 	},
+	editingValid: "#ffdc00", // yellow
+	editingInvalid: "#ff0000", // red
 	realTime: "mediumseagreen",
 	historical: "#ff8c00", // darkorange
 	fileDownload: "#798c3f",
@@ -417,6 +421,8 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		SMN: "#2D9B78", // copied from fflogs
 		SGE: "#80a0f0",
 	},
+	editingValid: "#ffdc00", // yellow
+	editingInvalid: "#ff0000", // red
 	realTime: "mediumseagreen",
 	historical: "#ff8c00", // darkorange
 	fileDownload: "#798c3f",

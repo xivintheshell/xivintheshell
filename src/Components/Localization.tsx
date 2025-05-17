@@ -1,5 +1,5 @@
 import React from "react";
-import { BuffType } from "../Game/Common";
+import { BuffType, SkillUnavailableReason } from "../Game/Common";
 import { ContentNode } from "./Common";
 import { MdLanguage } from "react-icons/md";
 import { getCurrentThemeColors } from "./ColorTheme";
@@ -46,6 +46,32 @@ export function localizeSkillName(text: ActionKey): string {
 		en: action.name,
 		...action.label,
 	}).toString();
+}
+
+export function localizeSkillUnavailableReason(reason?: SkillUnavailableReason): string {
+	if (reason === undefined) {
+		return localize({ en: "reason unknown", zh: "未知的理由" }).toString();
+	}
+	let zhReason = "（未知的理由）";
+	// TODO check localization on all of these
+	if (reason === SkillUnavailableReason.Blocked) {
+		zhReason = "在CD，能力技后摇，或读条税中";
+	} else if (reason === SkillUnavailableReason.SecondaryBlocked) {
+		zhReason = "在次要的CD中";
+	} else if (reason === SkillUnavailableReason.NotEnoughMP) {
+		zhReason = "MP不足";
+	} else if (reason === SkillUnavailableReason.NotInCombat) {
+		zhReason = "不在战斗中（需先等第一次伤害结算）";
+	} else if (reason === SkillUnavailableReason.RequirementsNotMet) {
+		zhReason = "未满足释放条件";
+	} else if (reason === SkillUnavailableReason.SkillNotUnlocked) {
+		zhReason = "Lv比此技能的习得条件低";
+	} else if (reason === SkillUnavailableReason.BuffNoLongerAvailable) {
+		zhReason = "BUFF以结束";
+	} else if (reason === SkillUnavailableReason.PastTargetTime) {
+		zhReason = "跳时间的目标已经过去了";
+	}
+	return localize({ en: reason, zh: zhReason }).toString();
 }
 
 const buffsZh = new Map<BuffType, string>([
