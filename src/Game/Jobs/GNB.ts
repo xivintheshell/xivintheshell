@@ -384,7 +384,7 @@ const releaseRoyalGuardCondition: ConditionalSkillReplace<GNBState> = {
 
 // GNB skill declarations
 
-makeWeaponskill_GNB("LIGHTNING_SHOCK", 15, {
+makeWeaponskill_GNB("LIGHTNING_SHOT", 15, {
 	potency: 150,
 	applicationDelay: 0.72,
 });
@@ -781,7 +781,8 @@ makeAbility_GNB("TRAJECTORY", 56, "cd_TRAJECTORY", {
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	cooldown: 30,
 	maxCharges: 2,
-	applicationDelay: 0.22,
+	// Trajectory's application delay was changed from 0.22 to 0.66 at some point in DT
+	applicationDelay: 0.66,
 	drawsAggro: true,
 });
 
