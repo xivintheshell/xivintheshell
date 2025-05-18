@@ -1,5 +1,13 @@
 [
 	{
+		"date": "5/18/25",
+		"changes": [
+			"Updated the site to automatically use dark mode if your system is set to use it. Manually using the theme selector overrides this.",
+			"[GNB] Fixed a typo where \"Lightning Shot\" was incorrectly called \"Lightning Shock.\"",
+			"[GNB] Updated the application delay of Trajectory from 0.22 to 0.66 to match the current version of the game."
+		]
+	},
+	{
 		"date": "5/17/25",
 		"changes": [
 			"We've made some big updates to the tools we use to build XIV in the Shell. The site should work the same as before, but if you notice anything broken or slow, please let us know posthaste.",

@@ -663,7 +663,15 @@ function ColorThemeOption(props: {
 
 export const getCachedColorTheme: () => ColorTheme = () => {
 	const cachedColorTheme = getCachedValue("colorTheme");
-	return cachedColorTheme === "Light" || cachedColorTheme === "Dark" ? cachedColorTheme : "Light";
+	if (cachedColorTheme === "Light" || cachedColorTheme === "Dark") {
+		return cachedColorTheme;
+	}
+	// If the user did not explicitly set a value, use the system default.
+	// https://stackoverflow.com/questions/56393880/how-do-i-detect-dark-mode-using-javascript
+	if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+		return "Dark";
+	}
+	return "Light";
 };
 
 export const ColorThemeContext = createContext(getCachedColorTheme());
