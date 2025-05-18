@@ -2,7 +2,7 @@ import React, { CSSProperties, useState, useEffect, useReducer } from "react";
 import { controller } from "../Controller/Controller";
 import { ActionNode, ActionType, Record, RecordValidStatus } from "../Controller/Record";
 import { StaticFn } from "./Common";
-import { getCurrentThemeColors } from "./ColorTheme";
+import { getCurrentThemeColors, ThemeColors } from "./ColorTheme";
 import {
 	localize,
 	localizeSkillName,
@@ -11,7 +11,6 @@ import {
 } from "./Localization";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
 import { Columns } from "./Common";
-import { ACTIONS } from "../Game/Data";
 
 // about 0.25
 const HIGHLIGHT_ALPHA_HEX = "3f";
@@ -23,13 +22,28 @@ function setHandledSkillSelectionThisFrame(handled: boolean) {
 	bHandledSkillSelectionThisFrame = handled;
 }
 
+const getBorderStyling = (colors: ThemeColors) => {
+	return {
+		borderColor: colors.bgMediumContrast,
+		borderWidth: "1px",
+		borderStyle: "solid",
+	};
+};
+
 const INDEX_CELL_STYLE: CSSProperties = {
 	width: "1.5%",
 	textAlign: "right",
 	paddingRight: "0.3em",
+	paddingLeft: "0.3em",
+};
+
+const TR_STYLE: CSSProperties = {
+	height: "1.6em",
+	userSelect: "none",
 };
 
 const ACTION_CELL_STYLE: CSSProperties = {
+	width: "98.5%",
 	textAlign: "left",
 	paddingLeft: "0.3em",
 };
@@ -55,13 +69,6 @@ function TimelineActionElement(props: {
 	if (recordIsDirty && props.isSelected) {
 		bgColor = colors.editingValid + HIGHLIGHT_ALPHA_HEX;
 	}
-	let style: CSSProperties = {
-		flex: 1,
-		position: "relative",
-		userSelect: "none",
-		padding: "0.075em 6px",
-		background: bgColor,
-	};
 	let name = localize({ en: "(other)", zh: "（其它）" });
 	if (props.node.info.type === ActionType.Skill) {
 		const targetStr =
@@ -96,7 +103,7 @@ function TimelineActionElement(props: {
 			zh: "（开关或去除BUFF：" + localizedBuffName + "）",
 		});
 	}
-	const skillNameCell = <td style={ACTION_CELL_STYLE}>
+	const skillNameCell = <td style={{ ...ACTION_CELL_STYLE, ...getBorderStyling(colors) }}>
 		{props.isFirstInvalid ? (
 			<span
 				style={{
@@ -111,10 +118,10 @@ function TimelineActionElement(props: {
 		<span>{name}</span>
 	</td>;
 	const indexCell = props.includeDetails ? (
-		<td style={INDEX_CELL_STYLE}>{props.index}</td>
+		<td style={{ ...INDEX_CELL_STYLE, ...getBorderStyling(colors) }}>{props.index}</td>
 	) : undefined;
 	return <tr
-		style={style}
+		style={{ ...TR_STYLE, background: bgColor }}
 		ref={props.refObj ?? null}
 		onClick={(e) => {
 			setHandledSkillSelectionThisFrame(true);
@@ -438,19 +445,32 @@ export function TimelineEditor() {
 				},
 				{
 					content: <table
-						style={{ borderCollapse: "collapse", border: colors.bgMediumContrast }}
+						style={{
+							borderCollapse: "collapse",
+							borderColor: colors.bgMediumContrast,
+							borderWidth: "1px",
+							borderStyle: "solid",
+						}}
 					>
 						<thead>
-							<tr>
+							<tr style={TR_STYLE}>
 								{includeDetails && <th
 									className="stickyTh"
-									style={{ ...thStyle, ...INDEX_CELL_STYLE }}
+									style={{
+										...thStyle,
+										...INDEX_CELL_STYLE,
+										...getBorderStyling(colors),
+									}}
 								>
 									#
 								</th>}
 								<th
 									className="stickyTh"
-									style={{ ...thStyle, ...ACTION_CELL_STYLE }}
+									style={{
+										...thStyle,
+										...ACTION_CELL_STYLE,
+										...getBorderStyling(colors),
+									}}
 								>
 									{localize({ en: "Actions", zh: "行动" })}
 								</th>
