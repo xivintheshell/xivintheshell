@@ -224,7 +224,11 @@ const normalizedSkillNameMap = new Map<string, ActionKey>();
  * "Thunder in Magenta" with "in" not capitalized.
  */
 export function getNormalizedSkillName(s: string): ActionKey | undefined {
-	return normalizedSkillNameMap.get(s.toLowerCase());
+	s = s.toLowerCase();
+	if (!normalizedSkillNameMap.has(s)) {
+		console.error("cannot find skill: " + s);
+	}
+	return normalizedSkillNameMap.get(s);
 }
 
 export function getResourceKeyFromBuffName(s: string): ResourceKey | undefined {
