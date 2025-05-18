@@ -3,8 +3,8 @@ import { Dialog } from "@base-ui-components/react/dialog";
 import { FaXmark } from "react-icons/fa6";
 import changelog from "../changelog.json";
 import { getCurrentThemeColors, ColorThemeContext } from "./ColorTheme";
-import { Clickable, Expandable, Help, ButtonIndicator, ContentNode } from "./Common";
-import { localize, LocalizedContent } from "./Localization";
+import { Clickable, ContentNode } from "./Common";
+import { localize } from "./Localization";
 import { getCachedValue, setCachedValue, isFirstVisit } from "../Controller/Common";
 
 export function getLastChangeDate(): string {

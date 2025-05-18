@@ -6,7 +6,6 @@ import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { localize, localizeSkillName, localizeSkillUnavailableReason } from "./Localization";
 import { updateTimelineView } from "./Timeline";
-import * as ReactDOMServer from "react-dom/server";
 import { getThemeColors, ColorThemeContext } from "./ColorTheme";
 import { getSkillAssetPath } from "../Game/Skills";
 import { ActionKey, ACTIONS } from "../Game/Data";
@@ -507,6 +506,7 @@ export type SkillButtonViewInfo = {
 	capturedManaCost: number;
 	highlight: boolean;
 	llCovered: boolean;
+	usedAt: number;
 };
 
 export let updateSkillButtons = (statusList: SkillButtonViewInfo[]) => {};

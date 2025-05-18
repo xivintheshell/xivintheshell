@@ -27,7 +27,7 @@ import {
 } from "../Game/Common";
 import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
 import { updateStatusDisplay } from "../Components/StatusDisplay";
-import { updateSkillButtons } from "../Components/Skills";
+import { updateSkillButtons, SkillButtonViewInfo } from "../Components/Skills";
 import { updateConfigDisplay } from "../Components/PlaybackControl";
 import { type ThemeColors } from "../Components/ColorTheme";
 import { setHistorical, setJob, setRealTime } from "../Components/Main";
@@ -100,6 +100,17 @@ export interface OvertimeEffectCoverage {
 }
 
 type WaitKind = "duration" | "target" | "mp";
+
+type ReplayResult = {
+	success: boolean;
+	firstAddedIndex: number | undefined;
+	invalidActions: {
+		node: ActionNode;
+	    index: number;
+	    reason: SkillReadyStatus;
+	}[];
+	skillUseTimes: number[];
+};
 
 class Controller {
 	timeScale;
@@ -217,17 +228,10 @@ class Controller {
 	checkRecordValidity(inRecord: Record, firstEditedNodeIndex?: number): RecordValidStatus {
 		console.assert(inRecord.config !== undefined);
 
-		let result: {
-			isValid: boolean;
-			firstInvalidAction: { node: ActionNode; index: number } | undefined;
-			invalidReason: SkillReadyStatus | undefined;
-			invalidTime: number | undefined;
-			straightenedIfValid: Record | undefined;
-		} = {
+		let result: RecordValidStatus = {
 			isValid: true,
-			firstInvalidAction: undefined,
-			invalidReason: undefined,
-			invalidTime: undefined,
+			invalidActions: [],
+		    skillUseTimes: [],
 			straightenedIfValid: undefined,
 		};
 
@@ -260,9 +264,8 @@ class Controller {
 			this.#bAddingLine = false;
 
 			result.isValid = status.success;
-			result.firstInvalidAction = status.firstInvalidAction;
-			result.invalidReason = status.invalidReason;
-			result.invalidTime = status.invalidTime;
+			result.invalidActions = status.invalidActions;
+			result.skillUseTimes = status.skillUseTimes;
 			if (status.success) {
 				result.straightenedIfValid = this.record;
 			}
@@ -434,13 +437,14 @@ class Controller {
 		let line = Line.deserialize(content.actions);
 		let replayResult = this.#replay({ line: line, replayMode: ReplayMode.Exact });
 		if (!replayResult.success) {
-			let msg = "Failed to load the entire record- \n";
-			if (replayResult.firstInvalidAction) {
-				const node = replayResult.firstInvalidAction.node;
+			let msg = "Error loading record- \n";
+			if (replayResult.invalidActions.length > 0) {
+				const node = replayResult.invalidActions[0].node;
 				if (node.info.type === ActionType.Skill) {
 					const actionName = node.info.skillName
 						? localizeSkillName(node.info.skillName)
 						: "(unknown)";
+					// TODO update these, since the replay doesn't stop anymore
 					msg +=
 						"Stopped here because the next action " + actionName + " can't be added: ";
 				} else {
@@ -450,7 +454,7 @@ class Controller {
 						" can't be added: ";
 				}
 			}
-			msg += replayResult.invalidReason;
+			msg += replayResult.invalidActions[0].reason;
 			window.alert(msg);
 		}
 	}
@@ -998,7 +1002,7 @@ class Controller {
 		targetCount: number,
 		overrideTickMode: TickMode = this.tickMode,
 		maxReplayTime: number = -1,
-	) {
+	): SkillButtonViewInfo {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
 		const beforeWaitTime = status.timeTillAvailable;
@@ -1009,6 +1013,15 @@ class Controller {
 		skillName = getConditionalReplacement(skillName, this.game);
 		status = this.game.getSkillAvailabilityStatus(skillName);
 
+		if (!status.status.ready() && beforeWaitTime > 0) {
+			// After waiting for animation lock and cooldowns, the skill may not be usable
+			// (e.g. if Amplifier is pressed, then the 120s cd will move the timeline to a point where
+			// enochian was dropped and the button can no longer be used).
+			// Insert an artificial wait event to indicate this.
+			this.record.addActionNode(durationWaitNode(beforeWaitTime));
+		}
+
+		// TODO deal with skill being invalid
 		if (status.status.ready()) {
 			// If the skill can be used, do so.
 			let node = skillNode(skillName, targetCount);
@@ -1078,12 +1091,6 @@ class Controller {
 			if (!this.#skipViewUpdates) {
 				refreshTimelineEditor();
 			}
-		} else if (beforeWaitTime > 0) {
-			// After waiting for animation lock and cooldowns, the skill may not be usable
-			// (e.g. if Amplifier is pressed, then the 120s cd will move the timeline to a point where
-			// enochian was dropped and the button can no longer be used).
-			// Insert an artificial wait event to indicate this.
-			this.record.addActionNode(durationWaitNode(beforeWaitTime));
 		}
 		return status;
 	}
@@ -1099,13 +1106,7 @@ class Controller {
 		firstEditedNodeIndex?: number; // for ReplayMode.Edited: everything before this should instead use ReplayMode.Exact
 		selectionStart?: ActionNode;
 		selectionEnd?: ActionNode;
-	}): {
-		success: boolean;
-		firstAddedIndex: number | undefined;
-		firstInvalidAction: { node: ActionNode; index: number } | undefined;
-		invalidReason: SkillReadyStatus | undefined;
-		invalidTime: number | undefined;
-	} {
+	}): ReplayResult {
 		// Prevent UI updates from occuring until the final action
 		this.#skipViewUpdates = true;
 		// default input, if not provided
@@ -1121,15 +1122,17 @@ class Controller {
 		}
 
 		const line = props.line;
+		const invalidActions: { node: ActionNode, index: number, reason: SkillReadyStatus }[] = [];
+		const skillUseTimes: number[] = [];
+
 		if (line.length === 0) {
 			// Empty line, no need to call re-render here
 			this.#skipViewUpdates = false;
 			return {
 				success: true,
 				firstAddedIndex: undefined,
-				firstInvalidAction: undefined,
-				invalidReason: undefined,
-				invalidTime: undefined,
+				invalidActions,
+				skillUseTimes,
 			};
 		}
 
@@ -1148,11 +1151,6 @@ class Controller {
 			) {
 				currentReplayMode = ReplayMode.Edited;
 			}
-
-			let lastIter = false;
-			let firstInvalidNode: ActionNode | undefined = undefined;
-			let invalidReason: SkillReadyStatus | undefined = undefined;
-			let invalidTime: number | undefined = undefined;
 
 			let waitDuration = 0;
 			if (itr.info.type === ActionType.Wait) {
@@ -1252,11 +1250,12 @@ class Controller {
 				return {
 					success: true,
 					firstAddedIndex,
-					firstInvalidAction: undefined,
-					invalidReason: undefined,
-					invalidTime: undefined,
+					invalidActions,
+					skillUseTimes,
 				};
 			}
+
+			skillUseTimes.push(this.game.getDisplayTime());
 
 			if (
 				[ActionType.Wait, ActionType.JumpToTimestamp, ActionType.WaitForMP].includes(
@@ -1276,10 +1275,11 @@ class Controller {
 				} else {
 					const reason = makeSkillReadyStatus();
 					reason.addUnavailableReason(SkillUnavailableReason.PastTargetTime);
-					lastIter = true;
-					firstInvalidNode = itr;
-					invalidReason = reason;
-					invalidTime = this.game.getDisplayTime();
+					invalidActions.push({
+						node: itr,
+						index: i,
+						reason,
+					});
 				}
 			}
 
@@ -1300,21 +1300,25 @@ class Controller {
 					TickMode.Manual,
 					maxReplayTime,
 				);
+				// #useSkill may advance time before use, so update the pushed time
+				skillUseTimes[skillUseTimes.length - 1] = status.usedAt;
 
 				if (!status.status.ready()) {
-					lastIter = true;
-					firstInvalidNode = itr;
-					invalidReason = status.status.clone();
-					invalidTime = this.game.getDisplayTime();
+					invalidActions.push({
+						node: itr,
+						index: i,
+						reason: status.status.clone(),
+					});
 				}
 
 				if (this.#bInterrupted) {
 					// likely because enochian dropped before a cast snapshots
 					this.#bInterrupted = false;
-					lastIter = true;
-					firstInvalidNode = itr;
-					invalidReason = status.status;
-					invalidTime = this.game.getDisplayTime();
+					invalidActions.push({
+						node: itr,
+						index: i,
+						reason: status.status,
+					});
 				}
 			}
 			// buff enable/disable also only supported by exact / edited replay
@@ -1335,10 +1339,11 @@ class Controller {
 				} else {
 					const reason = makeSkillReadyStatus();
 					reason.addUnavailableReason(SkillUnavailableReason.BuffNoLongerAvailable);
-					lastIter = true;
-					firstInvalidNode = itr;
-					invalidReason = reason;
-					invalidTime = this.game.getDisplayTime();
+					invalidActions.push({
+						node: itr,
+						index: i,
+						reason,
+					});
 				}
 			} else {
 				console.assert(false);
@@ -1359,23 +1364,6 @@ class Controller {
 			// this iteration just added something, but firstAddedIndex is still unset:
 			if (this.record.length !== oldLength && firstAddedIndex === undefined) {
 				firstAddedIndex = this.record.tailIndex;
-			}
-
-			if (lastIter) {
-				// Re-enable UI updates
-				this.#skipViewUpdates = false;
-				this.updateAllDisplay();
-				const firstInvalidAction =
-					firstInvalidNode !== undefined
-						? { node: firstInvalidNode, index: i }
-						: undefined;
-				return {
-					success: false,
-					firstAddedIndex,
-					firstInvalidAction,
-					invalidReason: invalidReason,
-					invalidTime: invalidTime,
-				};
 			}
 		}
 
@@ -1410,9 +1398,8 @@ class Controller {
 		return {
 			success: true,
 			firstAddedIndex,
-			firstInvalidAction: undefined,
-			invalidReason: undefined,
-			invalidTime: undefined,
+			invalidActions,
+			skillUseTimes,
 		};
 	}
 
