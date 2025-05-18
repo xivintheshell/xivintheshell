@@ -5,7 +5,6 @@ import { controller } from "../Controller/Controller";
 import { localize, localizeResourceType } from "./Localization";
 import {
 	getThemeColors,
-	ColorTheme,
 	ThemeColors,
 	getCurrentThemeColors,
 	ColorThemeContext,

@@ -27,11 +27,10 @@ import {
 import { BuffType, WarningType } from "../Game/Common";
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
-import { ActionType } from "../Controller/Record";
 import { controller } from "../Controller/Controller";
 import { localize, localizeBuffType, localizeSkillName } from "./Localization";
 import { setEditingMarkerValues } from "./TimelineMarkers";
-import { getThemeColors, MarkerColor, ThemeColors, ColorThemeContext } from "./ColorTheme";
+import { getThemeColors, ThemeColors, ColorThemeContext } from "./ColorTheme";
 import { scrollEditorToFirstSelected } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
 import { updateTimelineView } from "./Timeline";

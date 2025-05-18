@@ -554,9 +554,12 @@ export class Line {
 
 export type RecordValidStatus = {
 	isValid: boolean;
-	firstInvalidAction: { node: ActionNode; index: number } | undefined;
-	invalidReason: SkillReadyStatus | undefined;
-	invalidTime: number | undefined;
+    invalidActions: {
+	    node: ActionNode;
+	    index: number;
+	    reason: SkillReadyStatus;
+	}[];
+    skillUseTimes: number[];
 	straightenedIfValid: Record | undefined;
 };
 

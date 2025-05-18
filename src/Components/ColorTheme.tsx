@@ -1,7 +1,6 @@
 import React, { createContext, useContext } from "react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
-import { getCachedValue, setCachedValue } from "../Controller/Common";
-import { controller } from "../Controller/Controller";
+import { getCachedValue } from "../Controller/Common";
 import { ShellJob } from "../Game/Data/Jobs";
 import { PotencyModifierType } from "../Game/Potency";
 

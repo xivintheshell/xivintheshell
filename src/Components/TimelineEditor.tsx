@@ -30,22 +30,29 @@ const getBorderStyling = (colors: ThemeColors) => {
 	};
 };
 
-const INDEX_CELL_STYLE: CSSProperties = {
+const INDEX_TD_STYLE: CSSProperties = {
 	width: "1.5%",
 	textAlign: "right",
 	paddingRight: "0.3em",
 	paddingLeft: "0.3em",
 };
 
+const TIMESTAMP_TD_STYLE: CSSProperties = {
+	width: "12%",
+	textAlign: "right",
+	paddingRight: "0.3em",
+	paddingLeft: "0.3em",
+};
+
+const ACTION_TD_STYLE: CSSProperties = {
+	width: "86.5%",
+	textAlign: "left",
+	paddingLeft: "0.3em",
+};
+
 const TR_STYLE: CSSProperties = {
 	height: "1.6em",
 	userSelect: "none",
-};
-
-const ACTION_CELL_STYLE: CSSProperties = {
-	width: "98.5%",
-	textAlign: "left",
-	paddingLeft: "0.3em",
 };
 
 function TimelineActionElement(props: {
@@ -55,7 +62,7 @@ function TimelineActionElement(props: {
 	belongingRecord: Record;
 	isFirstInvalid: boolean;
 	includeDetails: boolean;
-	// usedAt: number; TODO: propagate usage timestamps to the timeline editor view
+	usedAt: number;
 	refObj?: React.RefObject<HTMLTableRowElement>;
 }) {
 	const colors = getCurrentThemeColors();
@@ -103,7 +110,7 @@ function TimelineActionElement(props: {
 			zh: "（开关或去除BUFF：" + localizedBuffName + "）",
 		});
 	}
-	const skillNameCell = <td style={{ ...ACTION_CELL_STYLE, ...getBorderStyling(colors) }}>
+	const skillNameCell = <td style={{ ...ACTION_TD_STYLE, ...getBorderStyling(colors) }}>
 		{props.isFirstInvalid ? (
 			<span
 				style={{
@@ -118,7 +125,12 @@ function TimelineActionElement(props: {
 		<span>{name}</span>
 	</td>;
 	const indexCell = props.includeDetails ? (
-		<td style={{ ...INDEX_CELL_STYLE, ...getBorderStyling(colors) }}>{props.index}</td>
+		<td style={{ ...INDEX_TD_STYLE, ...getBorderStyling(colors) }}>{props.index}</td>
+	) : undefined;
+	const timestampCell = props.includeDetails ? (
+		<td style={{ ...TIMESTAMP_TD_STYLE, ...getBorderStyling(colors) }}>
+			{StaticFn.displayTime(props.usedAt, 3)}
+		</td>
 	) : undefined;
 	return <tr
 		style={{ ...TR_STYLE, background: bgColor }}
@@ -137,6 +149,7 @@ function TimelineActionElement(props: {
 		}}
 	>
 		{indexCell}
+		{timestampCell}
 		{skillNameCell}
 	</tr>;
 }
@@ -255,8 +268,9 @@ export function TimelineEditor() {
 					{discardEditsBtn()}
 				</div>;
 			} else {
-				const node = recordValidStatus?.firstInvalidAction?.node;
-				const index = recordValidStatus?.firstInvalidAction?.index;
+				const firstInvalidAction = recordValidStatus?.invalidActions[0];
+				const node = firstInvalidAction?.node;
+				const index = firstInvalidAction?.index;
 				let nodeNameEn = "(unknown node)";
 				let nodeNameZh = "（未知节点）";
 				if (node) {
@@ -284,13 +298,14 @@ export function TimelineEditor() {
 				}
 				let errorMessageEn = `This sequence contains invalid actions! Check action #${index}: ${nodeNameEn}`;
 				let errorMessageZh = `此编辑有出意外地行动！请查看在${index}位的行动： ${nodeNameZh}`;
-				if (recordValidStatus?.invalidTime) {
-					const timeStr = StaticFn.displayTime(recordValidStatus.invalidTime, 3);
+				const invalidTime = index !== undefined ? recordValidStatus?.skillUseTimes[index] : undefined;
+				if (invalidTime !== undefined) {
+					const timeStr = StaticFn.displayTime(invalidTime, 3);
 					errorMessageEn += ` @ ${timeStr}`;
 					errorMessageZh += ` @ ${timeStr}`;
 				}
 				const localizedReason =
-					recordValidStatus?.invalidReason?.unavailableReasons
+					firstInvalidAction?.reason.unavailableReasons
 						.map(localizeSkillUnavailableReason)
 						.join("; ") ?? localizeSkillUnavailableReason(undefined);
 				errorMessageEn += ` (${localizedReason})`;
@@ -405,6 +420,7 @@ export function TimelineEditor() {
 
 	// mid: actions list
 	const actionsList: React.JSX.Element[] = [];
+	const firstInvalidIndex = recordValidStatus?.invalidActions[0]?.index;
 	displayedRecord.actions.forEach((action, i) => {
 		const isFirstSelected = !isDirty && i === displayedRecord.selectionStartIndex;
 		actionsList.push(
@@ -414,7 +430,8 @@ export function TimelineEditor() {
 				node={action}
 				isSelected={displayedRecord.isInSelection(i)}
 				belongingRecord={displayedRecord}
-				isFirstInvalid={recordValidStatus?.firstInvalidAction?.index === i}
+				isFirstInvalid={firstInvalidIndex === i}
+				usedAt={recordValidStatus?.skillUseTimes[i] ?? 0}
 				includeDetails={includeDetails}
 				refObj={isFirstSelected ? firstSelected : undefined}
 			/>,
@@ -458,17 +475,27 @@ export function TimelineEditor() {
 									className="stickyTh"
 									style={{
 										...thStyle,
-										...INDEX_CELL_STYLE,
+										...INDEX_TD_STYLE,
 										...getBorderStyling(colors),
 									}}
 								>
 									#
 								</th>}
+								{includeDetails && <th
+									className="stickyTh"
+									style={{
+										...thStyle,
+										...TIMESTAMP_TD_STYLE,
+										...getBorderStyling(colors),
+									}}
+								>
+									{localize({ en: "Time", zh: "时间" })}
+								</th>}
 								<th
 									className="stickyTh"
 									style={{
 										...thStyle,
-										...ACTION_CELL_STYLE,
+										...ACTION_TD_STYLE,
 										...getBorderStyling(colors),
 									}}
 								>

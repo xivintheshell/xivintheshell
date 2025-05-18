@@ -1682,21 +1682,22 @@ export class GameState {
 		const highlight = skill.highlightIf(this);
 		return {
 			skillName: skill.name,
-			status: status,
+			status,
 			stacksAvailable:
 				secondaryMaxStacks > 0 ? secondaryStacksAvailable : primaryStacksAvailable,
 			maxStacks: Math.max(primaryMaxStacks, secondaryMaxStacks),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
-			cdRecastTime: cdRecastTime,
+			cdRecastTime,
 			secondaryCdRecastTime: secondaryRecastTime,
-			timeTillNextStackReady: timeTillNextStackReady,
-			timeTillSecondaryReady: timeTillSecondaryReady,
-			timeTillAvailable: timeTillAvailable,
-			timeTillDamageApplication: timeTillDamageApplication,
-			capturedManaCost: capturedManaCost,
-			highlight: highlight,
-			llCovered: llCovered,
+			timeTillNextStackReady,
+			timeTillSecondaryReady,
+			timeTillAvailable,
+			timeTillDamageApplication,
+			capturedManaCost,
+			highlight,
+			llCovered,
+			usedAt: this.getDisplayTime(),
 		};
 	}
 
