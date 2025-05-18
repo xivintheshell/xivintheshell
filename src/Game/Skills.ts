@@ -219,11 +219,17 @@ const skillAssetPaths: Map<ActionKey, string> = new Map();
 const normalizedSkillNameMap = new Map<string, ActionKey>();
 /**
  * Attempt to retrieve an ActionKey member from the specified string. This function is run
- * when a line is loaded to fix some capitalization errors present in earlier versions of
- * PCT in the Shell, where "Thunder In Magenta" was capitalized inappropriately (should be
- * "Thunder in Magenta" with "in" not capitalized.
+ * when a line is loaded to fix skill naming errors in earlier versions of XIV in the Shell.
+ * 
+ * The affected skills include the following:
+ * - [PCT] "Thunder In Magenta" was capitalized inappropriately (should be
+ *   "Thunder in Magenta" with "in" not capitalized
+ * - [GNB] "Lightning Shot" was incorrectly written as "Lightning Shock"
  */
 export function getNormalizedSkillName(s: string): ActionKey | undefined {
+	if (s === "Lightning Shock") {
+		s = "Lightning Shot";
+	}
 	return normalizedSkillNameMap.get(s.toLowerCase());
 }
 

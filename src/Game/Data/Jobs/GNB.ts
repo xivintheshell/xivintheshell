@@ -2,7 +2,7 @@ import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
 export const GNB_ACTIONS = ensureRecord<ActionData>()({
-	LIGHTNING_SHOCK: { name: "Lightning Shock" },
+	LIGHTNING_SHOT: { name: "Lightning Shot" },
 	KEEN_EDGE: { name: "Keen Edge" },
 	BRUTAL_SHELL: { name: "Brutal Shell" },
 	SOLID_BARREL: { name: "Solid Barrel" },

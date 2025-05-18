@@ -384,7 +384,7 @@ const releaseRoyalGuardCondition: ConditionalSkillReplace<GNBState> = {
 
 // GNB skill declarations
 
-makeWeaponskill_GNB("LIGHTNING_SHOCK", 15, {
+makeWeaponskill_GNB("LIGHTNING_SHOT", 15, {
 	potency: 150,
 	applicationDelay: 0.72,
 });
