@@ -220,7 +220,7 @@ const normalizedSkillNameMap = new Map<string, ActionKey>();
 /**
  * Attempt to retrieve an ActionKey member from the specified string. This function is run
  * when a line is loaded to fix skill naming errors in earlier versions of XIV in the Shell.
- * 
+ *
  * The affected skills include the following:
  * - [PCT] "Thunder In Magenta" was capitalized inappropriately (should be
  *   "Thunder in Magenta" with "in" not capitalized
