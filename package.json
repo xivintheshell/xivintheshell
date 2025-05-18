@@ -18,7 +18,7 @@
     "typescript": "^5.8.3"
   },
   "scripts": {
-    "deploy": "gh-pages -d build/client",
+    "deploy": "gh-pages -d build",
     "start": "vite & tsc --noEmit -watch",
     "build": "vite build",
     "test": "vitest",
