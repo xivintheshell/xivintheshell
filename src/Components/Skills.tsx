@@ -480,7 +480,7 @@ class SkillButton extends React.Component {
 				style={controller.displayingUpToDateGameState ? {} : { cursor: "not-allowed" }}
 			/>
 		</span>;
-		return <Tooltip.Root delay={0}>
+		return <Tooltip.Root delay={0} hoverable={false}>
 			<Tooltip.Trigger render={tooltipTrigger} />
 			<Tooltip.Portal container={document.getElementById("skillsWindowAnchor")}>
 				<Tooltip.Positioner sideOffset={3} side="top" className="tooltip-positioner">
