@@ -65,10 +65,16 @@ export class XIVMath {
 			return modifier;
 		}
 		const critDamageMult = XIVMath.#criticalHitStrength(level, crit);
+		const baseCritRate = XIVMath.#criticalHitRate(level, XIVMath.getSubstatBase(level));
 
 		const autoCDH = critRate >= 1 && dhRate >= 1;
-		const critMod = critRate > 1 ? 1 + (critRate - 1) * critDamageMult : 1;
-		const dhMod = dhRate > 1 ? 1 + (dhRate - 1) * 1.25 : 1;
+		console.error("autocdh? " + autoCDH);
+		console.error("critBonus " + critBonus)
+		console.error("critDamageMult " + critDamageMult)
+		const critMod = critRate > 1 ? 1 + (critDamageMult - 1) * (critBonus - 1) : 1;
+		console.error("critMod " + critMod)
+		const dhMod = dhRate > 1 ? 1 + (1.25 - 1) * dhBonus : 1;
+		console.error("dhMod " + dhMod)
 		const clampedCritRate = critRate > 1 ? 1 : critRate;
 		const clampedDHRate = dhRate > 1 ? 1 : dhRate;
 
