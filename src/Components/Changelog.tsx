@@ -15,11 +15,13 @@ export function getLastChangeDate(): string {
 // - date: the date a change was made
 // - changes: a string array describing the changes
 // - [optional] changes_zh: chinese localized version of `changes`
+// - [optional] level: "major" | "minor", determines if the changelog button should be highlighted
 // the array of entries is assumed to have unique dates, and be sorted in descending order by date
 type ChangelogEntry = {
 	date: string;
 	changes: string[];
 	changes_zh?: string[];
+	level?: string;
 };
 
 type ChangelogBodyParams = {
@@ -111,6 +113,7 @@ export function Changelog() {
 	let handleStyle: React.CSSProperties = {};
 	const hiddenStartIndex = useRef(5);
 	const [upToDate, setUpToDate] = useState(false);
+	const [majorChange, setMajorChange] = useState(false);
 
 	const lightMode = useContext(ColorThemeContext) === "Light";
 	const colors = getCurrentThemeColors();
@@ -139,9 +142,10 @@ export function Changelog() {
 				let i = 0;
 				// We might need to cap the list of "new" entries at some number in the future,
 				// but for now just assume that it's enough for the user to comfortably scroll.
+				let hasMajorChange = false;
 				for (; i < changelog.length - 1; i++) {
+					hasMajorChange = hasMajorChange || changelog[i].level === "major";
 					// Assume that changelog is sorted, and lastReadDate is somewhere in the list.
-					// Technically we could do a binary search, but I don't feel like parsing the dates.
 					if (lastReadDate === changelog[i].date) {
 						// If the change count of this entry does not match the saved value, then include
 						// this entry to be displayed.
@@ -151,6 +155,7 @@ export function Changelog() {
 						break;
 					}
 				}
+				setMajorChange(hasMajorChange);
 				hiddenStartIndex.current = i;
 			}
 		} else {
@@ -182,14 +187,20 @@ export function Changelog() {
 		// If something has changed, then stylize the changelog label.
 		const colors = getCurrentThemeColors();
 		titleNode = localize({
-			en: "Changelog (new updates!!)",
-			zh: "更新日志（有变！！）",
+			en: "Changelog (new updates" + (majorChange ? "!!" : "") + ")",
+			zh: "更新日志（有变" + (majorChange ? "！！" : "") + "）",
 		});
 		dialogHandle = "!";
-		handleStyle = {
-			color: colors.warning,
-			fontWeight: "bold",
-		};
+		if (majorChange) {
+			handleStyle = {
+				color: colors.warning,
+				fontWeight: "bold",
+			};
+		} else {
+			handleStyle = {
+				fontWeight: "bold",
+			};
+		}
 	}
 	// Don't use a bespoke Clickable component for the expand button, since it suppresses Dialog.Trigger's
 	// built-in dismiss behavior.
