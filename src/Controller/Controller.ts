@@ -1461,7 +1461,10 @@ class Controller {
 				buffName = "Radiant Finale";
 			}
 			const getBuffModifiers = () => {
-				if (buff.info.name === BuffType.Dokumori) {
+				if (
+					buff.info.name === BuffType.Dokumori ||
+					buff.info.name === BuffType.ChainStratagem
+				) {
 					return "Debuff Only";
 				} else if (buff.info.name === BuffType.RadiantFinale1) {
 					// need to put these in quotes so it stays as one column when parsed

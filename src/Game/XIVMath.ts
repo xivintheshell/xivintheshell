@@ -1,5 +1,14 @@
 import { LevelSync } from "./Common";
 
+// Floor a number to a given precision.
+// This is implemented differently from the corresponding xivgear function
+// because I'm lazy.
+// https://github.com/xiv-gear-planner/gear-planner/blob/7c90ee88ebe20f7e110a0e130f14b7cd6b8a9df7/packages/xivmath/src/xivmath.ts#L57
+export function flp(x: number, digits: number): number {
+	const mult = Math.pow(10, digits);
+	return Math.floor(x * mult) / mult;
+}
+
 export class XIVMath {
 	static getMainstatBase(level: LevelSync) {
 		switch (level) {
@@ -51,6 +60,8 @@ export class XIVMath {
 	) {
 		let modifier = damageFactor;
 
+		// We assume that auto-crit/DH abilities have a base critBonus/dhBonus value of 1,
+		// and that any excess is provided from buffs.
 		const critRate =
 			critBonus >= 1
 				? critBonus
@@ -66,25 +77,21 @@ export class XIVMath {
 		}
 		const critDamageMult = XIVMath.#criticalHitStrength(level, crit);
 		const baseCritRate = XIVMath.#criticalHitRate(level, XIVMath.getSubstatBase(level));
+		const dhMult = 1.25;
 
 		const autoCDH = critRate >= 1 && dhRate >= 1;
-		console.error("autocdh? " + autoCDH);
-		console.error("critBonus " + critBonus)
-		console.error("critDamageMult " + critDamageMult)
-		const critMod = critRate > 1 ? 1 + (critDamageMult - 1) * (critBonus - 1) : 1;
-		console.error("critMod " + critMod)
-		const dhMod = dhRate > 1 ? 1 + (1.25 - 1) * dhBonus : 1;
-		console.error("dhMod " + dhMod)
+		const critMod = critRate > 1 ? flp(1 + (critDamageMult - 1) * (critBonus - 1), 3) : 1;
+		const dhMod = dhRate > 1 ? flp(1 + (dhMult - 1) * (dhBonus - 1), 3) : 1;
 		const clampedCritRate = critRate > 1 ? 1 : critRate;
 		const clampedDHRate = dhRate > 1 ? 1 : dhRate;
 
 		if (autoCDH)
-			modifier *= 1 + XIVMath.#autoMultiDet(level, det) + XIVMath.#autoMultiDH(level, dh);
-		else modifier *= 1 + XIVMath.#autoMultiDet(level, det);
+			modifier *= flp(XIVMath.#detMult(level, det) + XIVMath.#autoDHBonus(level, dh), 3);
+		else modifier *= XIVMath.#detMult(level, det);
 
 		const critDamage = modifier * critMod * critDamageMult;
-		const dhDamage = modifier * 1.25 * dhMod;
-		const critDHDamage = critDamage * 1.25 * dhMod;
+		const dhDamage = modifier * dhMod * dhMult;
+		const critDHDamage = critDamage * dhMod * dhMult;
 		const critDHRate = clampedCritRate * clampedDHRate;
 		const normalRate = 1 - clampedCritRate - clampedDHRate + critDHRate;
 
@@ -114,17 +121,18 @@ export class XIVMath {
 		return Math.floor((550 * (dh - subStat)) / div) * 0.001;
 	}
 
-	static #autoMultiDH(level: LevelSync, dh: number) {
+	static #autoDHBonus(level: LevelSync, dh: number) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
 		return Math.floor((140 * (dh - subStat)) / div) * 0.001;
 	}
 
 	// https://www.akhmorning.com/allagan-studies/stats/det/#explaining-determination
-	static #autoMultiDet(level: LevelSync, det: number) {
-		const subStat = this.getMainstatBase(level);
+	static #detMult(level: LevelSync, det: number) {
+		// DET uses main stat, not substat as the base value
+		const base = this.getMainstatBase(level);
 		const div = this.getStatDiv(level);
-		return Math.floor((140 * (det - subStat)) / div) * 0.001;
+		return Math.floor(1000 + (140 * (det - base)) / div) * 0.001;
 	}
 
 	static overtimePotency(level: LevelSync, speed: number, basePotency: number) {
