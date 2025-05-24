@@ -1460,11 +1460,10 @@ class Controller {
 			) {
 				buffName = "Radiant Finale";
 			}
+			const isDebuff =
+				buff.info.name === BuffType.Dokumori || buff.info.name === BuffType.ChainStratagem;
 			const getBuffModifiers = () => {
-				if (
-					buff.info.name === BuffType.Dokumori ||
-					buff.info.name === BuffType.ChainStratagem
-				) {
+				if (isDebuff) {
 					return "Debuff Only";
 				} else if (buff.info.name === BuffType.RadiantFinale1) {
 					// need to put these in quotes so it stays as one column when parsed
@@ -1490,7 +1489,13 @@ class Controller {
 				}
 				return "";
 			};
-			return [marker.time, buffName, buff.info.job, getBuffModifiers(), ""];
+			return [
+				marker.time,
+				buffName,
+				buff.info.job,
+				getBuffModifiers(),
+				isDebuff ? "Boss0" : "",
+			];
 		});
 		// sim currently doesn't track mp ticks or mp costs, or any other manner of validation
 		// as such, many skills are unsupported: we set the use_strict_skill_naming metadata
