@@ -963,6 +963,7 @@ class Controller {
 		}
 
 		this.autoSave();
+		updateInvalidStatus();
 	}
 
 	getDisplayedGame(): GameState {
