@@ -1738,8 +1738,7 @@ export class GameState {
 		if (skill.kind === "spell" || skill.kind === "weaponskill") {
 			const capturedCastTime = skill.castTimeFn(this);
 			const recastTime = skill.recastTimeFn(this);
-			// Don't check isInstantFn because its result may be invalid
-			const isInstant = capturedCastTime === 0;
+			const isInstant = capturedCastTime === 0 || skill.isInstantFn(this);
 			if (isInstant) {
 				this.resources.takeResourceLock(
 					"NOT_ANIMATION_LOCKED",
@@ -1750,10 +1749,8 @@ export class GameState {
 					"NOT_CASTER_TAXED",
 					this.config.getAfterTaxCastTime(capturedCastTime),
 				);
-				this.cooldowns
-					.get("cd_GCD")
-					.useStackWithRecast(this.config.getAfterTaxGCD(recastTime));
 			}
+			this.cooldowns.get("cd_GCD").useStackWithRecast(this.config.getAfterTaxGCD(recastTime));
 		} else if (skill.kind === "ability") {
 			this.resources.takeResourceLock("NOT_ANIMATION_LOCKED", skill.animationLockFn(this));
 		} else if (skill.kind === "limitbreak") {

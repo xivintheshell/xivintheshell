@@ -726,14 +726,17 @@ function drawSkills(
 		if (skill.node.tmp_invalid) {
 			invalidSections.push({
 				x,
-				y: timelineOriginY,
+				y: timelineOriginY + TimelineDimensions.slotPaddingTop,
 				w: StaticFn.positionFromTimeAndScale(
 					skill.isGCD
 						? Math.max(skill.recastDuration, skill.lockDuration)
 						: skill.lockDuration,
 					scale,
 				),
-				h: TimelineDimensions.renderSlotHeight(),
+				h:
+					TimelineDimensions.renderSlotHeight() -
+					TimelineDimensions.slotPaddingBottom -
+					TimelineDimensions.slotPaddingTop,
 			});
 		}
 
@@ -905,7 +908,7 @@ function drawSkills(
 	// light red overlay for invalid actions
 	const originalAlpha = g_ctx.globalAlpha;
 	g_ctx.fillStyle = g_colors.timeline.invalidBg;
-	g_ctx.globalAlpha = 0.4;
+	g_ctx.globalAlpha = 0.2;
 	g_ctx.beginPath();
 	invalidSections.forEach((r) => {
 		g_ctx.rect(r.x, r.y, r.w, r.h);

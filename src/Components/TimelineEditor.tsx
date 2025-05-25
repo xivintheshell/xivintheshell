@@ -11,11 +11,15 @@ import {
 } from "./Localization";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
 import { Columns } from "./Common";
+import { SkillReadyStatus } from "../Game/Common";
 
 // about 0.25
 const HIGHLIGHT_ALPHA_HEX = "3f";
 
 export let refreshTimelineEditor = () => {};
+// [sz] It brings me no joy to write another global setter function that lives outside the
+// React life cycle, but we don't really have a better way to pass the active timeline slot at the moment.
+export let updateInvalidStatus = () => {};
 
 let bHandledSkillSelectionThisFrame: boolean = false;
 function setHandledSkillSelectionThisFrame(handled: boolean) {
@@ -55,12 +59,16 @@ const TR_STYLE: CSSProperties = {
 	userSelect: "none",
 };
 
+function adjustIndex(i: number | undefined) {
+	return (i ?? 0) + 1;
+}
+
 function TimelineActionElement(props: {
 	index: number;
 	node: ActionNode;
 	isSelected: boolean;
 	belongingRecord: Record;
-	isFirstInvalid: boolean;
+	isInvalid: boolean;
 	includeDetails: boolean;
 	usedAt: number;
 	refObj?: React.RefObject<HTMLTableRowElement>;
@@ -111,7 +119,7 @@ function TimelineActionElement(props: {
 		});
 	}
 	const skillNameCell = <td style={{ ...ACTION_TD_STYLE, ...getBorderStyling(colors) }}>
-		{props.isFirstInvalid ? (
+		{props.isInvalid ? (
 			<span
 				style={{
 					marginRight: 6,
@@ -125,7 +133,9 @@ function TimelineActionElement(props: {
 		<span>{name}</span>
 	</td>;
 	const indexCell = props.includeDetails ? (
-		<td style={{ ...INDEX_TD_STYLE, ...getBorderStyling(colors) }}>{props.index}</td>
+		<td style={{ ...INDEX_TD_STYLE, ...getBorderStyling(colors) }}>
+			{adjustIndex(props.index)}
+		</td>
 	) : undefined;
 	const timestampCell = props.includeDetails ? (
 		<td style={{ ...TIMESTAMP_TD_STYLE, ...getBorderStyling(colors) }}>
@@ -173,6 +183,9 @@ export function TimelineEditor() {
 		refreshTimelineEditor = () => {
 			forceUpdate();
 		};
+		updateInvalidStatus = () => {
+			setRecordValidStatus(controller.checkRecordValidity(controller.record, 0));
+		};
 		scrollEditorToFirstSelected = () => {
 			// lmfao this dirty hack again
 			setTimeout(() => {
@@ -203,9 +216,11 @@ export function TimelineEditor() {
 		setFirstEditedNodeIndex(undefined);
 	};
 
+	const buttonMarginLeft = 5;
+
 	const discardEditsBtn = () => {
 		return <button
-			style={{ display: "block", marginTop: 10 }}
+			style={{ display: "block", marginTop: 10, marginLeft: buttonMarginLeft }}
 			onClick={(e) => {
 				setHandledSkillSelectionThisFrame(true);
 				// discard edits
@@ -215,7 +230,7 @@ export function TimelineEditor() {
 				markClean();
 			}}
 		>
-			discard changes
+			{localize({ en: "discard changes", zh: "放弃更改" })}
 		</button>;
 	};
 
@@ -231,90 +246,160 @@ export function TimelineEditor() {
 
 	const displayedRecord = isDirty ? editedRecord : controller.record;
 
+	const getInvalidActionText = (
+		invalidAction:
+			| {
+					node: ActionNode;
+					index: number;
+					reason: SkillReadyStatus;
+			  }
+			| undefined,
+		inSequence: boolean,
+	) => {
+		const node = invalidAction?.node;
+		const index = invalidAction?.index;
+		const reason = invalidAction?.reason;
+		let nodeNameEn = "(unknown node)";
+		let nodeNameZh = "（未知节点）";
+		if (node) {
+			if (node.info.type === ActionType.Wait) {
+				nodeNameEn = "(Wait)";
+				nodeNameZh = "（等待）";
+			} else if (node.info.type === ActionType.JumpToTimestamp) {
+				nodeNameEn = "(Jump to time)";
+				nodeNameZh = "（跳到时间）";
+			} else if (node.info.type === ActionType.WaitForMP) {
+				nodeNameEn = "(Wait for MP/lucid tick)";
+				nodeNameZh = "（快进到挑篮/跳星梦）";
+			} else if (node.info.type === ActionType.SetResourceEnabled) {
+				const localizedBuffName = localizeResourceType(node.info.buffName);
+				nodeNameEn = "(Toggle resource " + localizedBuffName + ")";
+				nodeNameZh = "（开关或去除BUFF： " + localizedBuffName + "）";
+			} else if (node.info.type === ActionType.Skill) {
+				nodeNameEn = node.info.skillName
+					? localizeSkillName(node.info.skillName)
+					: "(unknown skill)";
+				nodeNameZh = node.info.skillName
+					? localizeSkillName(node.info.skillName)
+					: "（未知技能）";
+			}
+		}
+		let errorMessageEn: string;
+		let errorMessageZh: string;
+		const invalidTime =
+			index !== undefined ? recordValidStatus?.skillUseTimes[index] : undefined;
+		const localizedReason =
+			reason?.unavailableReasons.map(localizeSkillUnavailableReason).join("; ") ??
+			localizeSkillUnavailableReason(undefined);
+		if (inSequence) {
+			errorMessageEn = `This sequence contains invalid actions! Check action #${adjustIndex(index)}: ${nodeNameEn}`;
+			errorMessageZh = `此编辑有出意外地行动！请查看在${adjustIndex(index)}位的行动： ${nodeNameZh}`;
+		} else {
+			errorMessageEn = `This action is invalid! ${nodeNameEn}`;
+			errorMessageZh = `此行动出了意外！ ${nodeNameZh}`;
+		}
+		if (invalidTime !== undefined) {
+			const timeStr = StaticFn.displayTime(invalidTime, 3);
+			errorMessageEn += ` @ ${timeStr}`;
+			errorMessageZh += ` @ ${timeStr}`;
+		}
+		errorMessageEn += ` (${localizedReason})`;
+		errorMessageZh += `（${localizedReason}）`;
+		return {
+			en: errorMessageEn,
+			zh: errorMessageZh,
+		};
+	};
+
 	// left: toolbar
 	const applyTextStyle = { padding: "0.3em" };
 	const applySection = () => {
 		if (isDirty) {
+			const firstInvalidAction = recordValidStatus?.invalidActions[0];
+			return <div>
+				<div
+					style={{
+						...applyTextStyle,
+						backgroundColor:
+							(isValid ? colors.editingValid : colors.editingInvalid) +
+							HIGHLIGHT_ALPHA_HEX,
+					}}
+				>
+					{isValid
+						? localize({
+								en: "This edited sequence is valid.",
+								zh: "此编辑可被应用。",
+							})
+						: localize(getInvalidActionText(firstInvalidAction, true))}
+				</div>
+				<button
+					style={{ display: "block", marginTop: 10, marginLeft: buttonMarginLeft }}
+					onClick={(e) => {
+						setHandledSkillSelectionThisFrame(true);
+
+						// would show only after editing properties
+						// apply edits to timeline
+						if (editedRecord) {
+							// this.state.editedRecord should always update to something that can be replayed exactly
+							// because it comes from status.straightenedIfValid
+							controller.applyEditedRecord(editedRecord);
+						} else {
+							console.assert(false);
+						}
+						markClean();
+
+						controller.displayCurrentState();
+					}}
+				>
+					{localize({
+						en: "apply changes to timeline and save",
+						zh: "应用并保存编辑。",
+					})}
+				</button>
+				{discardEditsBtn()}
+			</div>;
+		} else {
 			if (isValid) {
-				return <div>
-					<div
-						style={{
-							...applyTextStyle,
-							backgroundColor: colors.editingValid + HIGHLIGHT_ALPHA_HEX,
-						}}
-					>
-						{localize({
-							en: "This edited sequence is valid.",
-							zh: "此编辑可被应用。",
-						})}
-					</div>
-					<button
-						style={{ display: "block", marginTop: 10 }}
-						onClick={(e) => {
-							setHandledSkillSelectionThisFrame(true);
-
-							// would show only after editing properties
-							// apply edits to timeline
-							if (editedRecord) {
-								// this.state.editedRecord should always update to something that can be replayed exactly
-								// because it comes from status.straightenedIfValid
-								controller.applyEditedRecord(editedRecord);
-							} else {
-								console.assert(false);
-							}
-							markClean();
-
-							controller.displayCurrentState();
-						}}
-					>
-						apply changes to timeline and save
-					</button>
-					{discardEditsBtn()}
+				return <div style={applyTextStyle}>
+					{localize({ en: "Timeline is up to date.", zh: "时间轴已与编辑器同步。" })}
 				</div>;
 			} else {
+				// There are three different error messages if the timeline is invalid.
+				const invalidIndexMap = new Map<
+					number,
+					{ index: number; node: ActionNode; reason: SkillReadyStatus }
+				>();
+				recordValidStatus?.invalidActions.forEach((info) =>
+					invalidIndexMap.set(info.index, info),
+				);
 				const firstInvalidAction = recordValidStatus?.invalidActions[0];
-				const node = firstInvalidAction?.node;
-				const index = firstInvalidAction?.index;
-				let nodeNameEn = "(unknown node)";
-				let nodeNameZh = "（未知节点）";
-				if (node) {
-					if (node.info.type === ActionType.Wait) {
-						nodeNameEn = "(Wait)";
-						nodeNameZh = "（等待）";
-					} else if (node.info.type === ActionType.JumpToTimestamp) {
-						nodeNameEn = "(Jump to time)";
-						nodeNameZh = "（跳到时间）";
-					} else if (node.info.type === ActionType.WaitForMP) {
-						nodeNameEn = "(Wait for MP/lucid tick)";
-						nodeNameZh = "（快进到挑篮/跳星梦）";
-					} else if (node.info.type === ActionType.SetResourceEnabled) {
-						const localizedBuffName = localizeResourceType(node.info.buffName);
-						nodeNameEn = "(Toggle resource " + localizedBuffName + ")";
-						nodeNameZh = "（开关或去除BUFF： " + localizedBuffName + "）";
-					} else if (node.info.type === ActionType.Skill) {
-						nodeNameEn = node.info.skillName
-							? localizeSkillName(node.info.skillName)
-							: "(unknown skill)";
-						nodeNameZh = node.info.skillName
-							? localizeSkillName(node.info.skillName)
-							: "（未知技能）";
+				let invalidActionToShow = firstInvalidAction;
+				let inSequence = true;
+				if (
+					firstInvalidAction !== undefined &&
+					displayedRecord.selectionStartIndex !== undefined
+				) {
+					// could be written more efficiently, but who cares
+					const firstSelectedInvalid = recordValidStatus?.invalidActions.find((info) =>
+						displayedRecord.isInSelection(info.index),
+					);
+					const selectionLength = displayedRecord.getSelectionLength();
+					if (selectionLength === 1 && firstSelectedInvalid !== undefined) {
+						// 1. The user has selected a single skill, and that skill is invalid.
+						// In this case, display the error for this specific skill.
+						invalidActionToShow = invalidIndexMap.get(
+							displayedRecord.selectionStartIndex!,
+						);
+						inSequence = false;
+					} else if (selectionLength > 1 && firstSelectedInvalid !== undefined) {
+						// 2. The user has selected a range of skills, and one of them is invalid.
+						// In this case, display the error of the first selected skill in this range.
+						invalidActionToShow = firstSelectedInvalid;
 					}
 				}
-				let errorMessageEn = `This sequence contains invalid actions! Check action #${index}: ${nodeNameEn}`;
-				let errorMessageZh = `此编辑有出意外地行动！请查看在${index}位的行动： ${nodeNameZh}`;
-				const invalidTime =
-					index !== undefined ? recordValidStatus?.skillUseTimes[index] : undefined;
-				if (invalidTime !== undefined) {
-					const timeStr = StaticFn.displayTime(invalidTime, 3);
-					errorMessageEn += ` @ ${timeStr}`;
-					errorMessageZh += ` @ ${timeStr}`;
-				}
-				const localizedReason =
-					firstInvalidAction?.reason.unavailableReasons
-						.map(localizeSkillUnavailableReason)
-						.join("; ") ?? localizeSkillUnavailableReason(undefined);
-				errorMessageEn += ` (${localizedReason})`;
-				errorMessageZh += `（${localizedReason}）`;
+				// 3. The user has not made a selection, or the selected action is not
+				// part of the selection. If this is the case, indicate where the first
+				// invalid action in the whole timeline is.
 				return <div>
 					<div
 						style={{
@@ -322,15 +407,10 @@ export function TimelineEditor() {
 							backgroundColor: colors.editingInvalid + HIGHLIGHT_ALPHA_HEX,
 						}}
 					>
-						{localize({ en: errorMessageEn, zh: errorMessageZh })}
+						{localize(getInvalidActionText(invalidActionToShow, inSequence))}
 					</div>
-					{discardEditsBtn()}
 				</div>;
 			}
-		} else {
-			return <div style={applyTextStyle}>
-				{localize({ en: "timeline is up to date.", zh: "时间轴已与编辑器同步。" })}
-			</div>;
 		}
 	};
 	let buttonStyle: CSSProperties = {
@@ -425,7 +505,7 @@ export function TimelineEditor() {
 
 	// mid: actions list
 	const actionsList: React.JSX.Element[] = [];
-	const firstInvalidIndex = recordValidStatus?.invalidActions[0]?.index;
+	const invalidIndices = new Set(recordValidStatus?.invalidActions.map((ac) => ac.index));
 	displayedRecord.actions.forEach((action, i) => {
 		const isFirstSelected = !isDirty && i === displayedRecord.selectionStartIndex;
 		actionsList.push(
@@ -435,7 +515,7 @@ export function TimelineEditor() {
 				node={action}
 				isSelected={displayedRecord.isInSelection(i)}
 				belongingRecord={displayedRecord}
-				isFirstInvalid={firstInvalidIndex === i}
+				isInvalid={invalidIndices.has(i)}
 				usedAt={recordValidStatus?.skillUseTimes[i] ?? 0}
 				includeDetails={includeDetails}
 				refObj={isFirstSelected ? firstSelected : undefined}
