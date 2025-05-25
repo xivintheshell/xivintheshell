@@ -206,7 +206,7 @@ class Controller {
 		}
 	}
 
-	#sandboxEnvironment(fn: () => void) {
+	#sandboxEnvironment(fn: () => void, endsUpToDate: boolean = false) {
 		this.displayingUpToDateGameState = false;
 		this.#bInSandbox = true;
 		let tmpGame = this.game;
@@ -223,9 +223,10 @@ class Controller {
 		this.game = tmpGame;
 		this.record = tmpRecord;
 		this.#lastDamageApplicationTime = tmpLastDamageApplicationTime;
+		this.displayingUpToDateGameState = endsUpToDate;
 	}
 
-	checkRecordValidity(inRecord: Record, firstEditedNodeIndex?: number): RecordValidStatus {
+	checkRecordValidity(inRecord: Record, firstEditedNodeIndex?: number, endsUpToDate: boolean = false): RecordValidStatus {
 		console.assert(inRecord.config !== undefined);
 
 		let result: RecordValidStatus = {
@@ -269,7 +270,7 @@ class Controller {
 			if (status.success) {
 				result.straightenedIfValid = this.record;
 			}
-		});
+		}, endsUpToDate);
 
 		return result;
 	}

@@ -184,7 +184,7 @@ export function TimelineEditor() {
 			forceUpdate();
 		};
 		updateInvalidStatus = () => {
-			setRecordValidStatus(controller.checkRecordValidity(controller.record, 0));
+			setRecordValidStatus(controller.checkRecordValidity(controller.record, 0, true));
 		};
 		scrollEditorToFirstSelected = () => {
 			// lmfao this dirty hack again
@@ -200,7 +200,7 @@ export function TimelineEditor() {
 		// Check the validity of the current record so we get timestamps of all actions
 		// (may be computationally redundant, but this is the easiest thing to do).
 		// TODO: figure out how to cleanly propagate this in an idiomatic way in the future.
-		setRecordValidStatus(controller.checkRecordValidity(controller.record, 0));
+		setRecordValidStatus(controller.checkRecordValidity(controller.record, 0, true));
 		return () => {
 			// on unmount
 			refreshTimelineEditor = () => {};
@@ -212,7 +212,7 @@ export function TimelineEditor() {
 
 	const markClean = () => {
 		setEditedRecord(undefined);
-		setRecordValidStatus(controller.checkRecordValidity(controller.record, 0));
+		setRecordValidStatus(controller.checkRecordValidity(controller.record, 0, true));
 		setFirstEditedNodeIndex(undefined);
 	};
 
