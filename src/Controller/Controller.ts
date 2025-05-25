@@ -54,7 +54,7 @@ import {
 import { ImageExportConfig } from "./ImageExportConfig";
 import { inferJobFromSkillNames, PresetLinesManager } from "./PresetLinesManager";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
-import { refreshTimelineEditor } from "../Components/TimelineEditor";
+import { refreshTimelineEditor, updateInvalidStatus } from "../Components/TimelineEditor";
 import {
 	CsvData,
 	DEFAULT_TIMELINE_OPTIONS,
@@ -263,7 +263,7 @@ class Controller {
 			});
 			this.#bAddingLine = false;
 
-			result.isValid = status.success;
+			result.isValid = status.invalidActions.length === 0;
 			result.invalidActions = status.invalidActions;
 			result.skillUseTimes = status.skillUseTimes;
 			if (status.success) {
@@ -457,6 +457,7 @@ class Controller {
 			msg += replayResult.invalidActions[0].reason;
 			window.alert(msg);
 		}
+		updateInvalidStatus();
 	}
 
 	// assumes newRecord can be replayed exactly
@@ -1446,6 +1447,7 @@ class Controller {
 		this.record.unselectAll();
 		console.assert(this.timeline.loadSlot(slot));
 		this.displayCurrentState();
+		updateInvalidStatus();
 	}
 
 	getDamageLogCsv(): any[][] {
