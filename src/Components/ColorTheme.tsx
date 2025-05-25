@@ -197,6 +197,7 @@ export type ThemeColors = {
 		castBar: string;
 		lockBar: string;
 		gcdBar: string;
+		invalidBg: string;
 		llCover: string;
 		potCover: string;
 		buffCover: string;
@@ -390,6 +391,7 @@ const DARK_THEME_COLORS: ThemeColors = {
 		castBar: "#42364d",
 		lockBar: "#696969",
 		gcdBar: "#354931",
+		invalidBg: "#f25449",
 		llCover: "#5ea647",
 		potCover: "#c4543a",
 		buffCover: "#9370db",
@@ -563,6 +565,7 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		castBar: "#ecd6f3",
 		lockBar: "#9d9d9d",
 		gcdBar: "#ccefc6",
+		invalidBg: "#c21104",
 		llCover: "#87ec71",
 		potCover: "#ff865c",
 		buffCover: "#9370db",

@@ -664,6 +664,7 @@ function drawSkills(
 	const covers: Map<BuffType, Rect[]> = new Map();
 	coverInfo.forEach((_, buff) => covers.set(buff, []));
 	const buffCovers: Rect[] = [];
+	const invalidSections: Rect[] = [];
 
 	let skillIcons: { elem: SkillElem; x: number; y: number }[] = []; // tmp
 	let skillsTopY = timelineOriginY + TimelineDimensions.skillButtonHeight / 2;
@@ -719,6 +720,20 @@ function drawSkills(
 				y: y + TimelineDimensions.skillButtonHeight / 2,
 				w: recastWidth - barsOffset,
 				h: TimelineDimensions.skillButtonHeight / 2,
+			});
+		}
+		// invalid skill shading
+		if (skill.node.tmp_invalid) {
+			invalidSections.push({
+				x,
+				y: timelineOriginY,
+				w: StaticFn.positionFromTimeAndScale(
+					skill.isGCD
+						? Math.max(skill.recastDuration, skill.lockDuration)
+						: skill.lockDuration,
+					scale,
+				),
+				h: TimelineDimensions.renderSlotHeight(),
 			});
 		}
 
@@ -886,6 +901,17 @@ function drawSkills(
 			);
 		}
 	});
+
+	// light red overlay for invalid actions
+	const originalAlpha = g_ctx.globalAlpha;
+	g_ctx.fillStyle = g_colors.timeline.invalidBg;
+	g_ctx.globalAlpha = 0.4;
+	g_ctx.beginPath();
+	invalidSections.forEach((r) => {
+		g_ctx.rect(r.x, r.y, r.w, r.h);
+	});
+	g_ctx.fill();
+	g_ctx.globalAlpha = originalAlpha;
 }
 
 function drawCursor(x: number, y1: number, y2: number, y3: number, color: string, tip: string) {

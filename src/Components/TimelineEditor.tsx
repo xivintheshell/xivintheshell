@@ -184,6 +184,10 @@ export function TimelineEditor() {
 				}
 			}, 0);
 		};
+		// Check the validity of the current record so we get timestamps of all actions
+		// (may be computationally redundant, but this is the easiest thing to do).
+		// TODO: figure out how to cleanly propagate this in an idiomatic way in the future.
+		setRecordValidStatus(controller.checkRecordValidity(controller.record, 0));
 		return () => {
 			// on unmount
 			refreshTimelineEditor = () => {};
@@ -195,7 +199,7 @@ export function TimelineEditor() {
 
 	const markClean = () => {
 		setEditedRecord(undefined);
-		setRecordValidStatus(undefined);
+		setRecordValidStatus(controller.checkRecordValidity(controller.record, 0));
 		setFirstEditedNodeIndex(undefined);
 	};
 
@@ -298,7 +302,8 @@ export function TimelineEditor() {
 				}
 				let errorMessageEn = `This sequence contains invalid actions! Check action #${index}: ${nodeNameEn}`;
 				let errorMessageZh = `此编辑有出意外地行动！请查看在${index}位的行动： ${nodeNameZh}`;
-				const invalidTime = index !== undefined ? recordValidStatus?.skillUseTimes[index] : undefined;
+				const invalidTime =
+					index !== undefined ? recordValidStatus?.skillUseTimes[index] : undefined;
 				if (invalidTime !== undefined) {
 					const timeStr = StaticFn.displayTime(invalidTime, 3);
 					errorMessageEn += ` @ ${timeStr}`;
@@ -337,9 +342,9 @@ export function TimelineEditor() {
 	const doRecordEdit = (action: (record: Record) => number | undefined) => {
 		if (displayedRecord.getFirstSelection()) {
 			setHandledSkillSelectionThisFrame(true);
-			let copy = getRecordCopy();
+			const copy = getRecordCopy();
 			let currentEditedNodeIndex = firstEditedNodeIndex;
-			let firstEditedNode = action(copy);
+			const firstEditedNode = action(copy);
 			if (firstEditedNode !== undefined) {
 				if (currentEditedNodeIndex === undefined) {
 					currentEditedNodeIndex = firstEditedNode;
@@ -347,7 +352,7 @@ export function TimelineEditor() {
 					currentEditedNodeIndex = Math.min(firstEditedNode, currentEditedNodeIndex);
 				}
 			}
-			let status = controller.checkRecordValidity(copy, currentEditedNodeIndex);
+			const status = controller.checkRecordValidity(copy, currentEditedNodeIndex);
 			if (firstEditedNode !== undefined && status.straightenedIfValid) {
 				setEditedRecord(status.straightenedIfValid);
 				setFirstEditedNodeIndex(undefined);

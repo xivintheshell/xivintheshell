@@ -152,6 +152,7 @@ export class ActionNode {
 	// elsewhere eventually
 	tmp_startLockTime?: number;
 	tmp_endLockTime?: number;
+	tmp_invalid: boolean;
 
 	constructor(info: NodeInfo, legacyWaitDuration?: number) {
 		this.info = info;
@@ -163,6 +164,7 @@ export class ActionNode {
 		this.#hotOverrideAmount = new Map();
 		this.#hotTimeGap = new Map();
 		this.legacyWaitDuration = legacyWaitDuration;
+		this.tmp_invalid = false;
 	}
 
 	serialized(): SerializedAction {
@@ -554,12 +556,12 @@ export class Line {
 
 export type RecordValidStatus = {
 	isValid: boolean;
-    invalidActions: {
-	    node: ActionNode;
-	    index: number;
-	    reason: SkillReadyStatus;
+	invalidActions: {
+		node: ActionNode;
+		index: number;
+		reason: SkillReadyStatus;
 	}[];
-    skillUseTimes: number[];
+	skillUseTimes: number[];
 	straightenedIfValid: Record | undefined;
 };
 

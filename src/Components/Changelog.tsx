@@ -144,7 +144,6 @@ export function Changelog() {
 				// but for now just assume that it's enough for the user to comfortably scroll.
 				let hasMajorChange = false;
 				for (; i < changelog.length - 1; i++) {
-					hasMajorChange = hasMajorChange || changelog[i].level === "major";
 					// Assume that changelog is sorted, and lastReadDate is somewhere in the list.
 					if (lastReadDate === changelog[i].date) {
 						// If the change count of this entry does not match the saved value, then include
@@ -154,6 +153,7 @@ export function Changelog() {
 						}
 						break;
 					}
+					hasMajorChange = hasMajorChange || changelog[i].level === "major";
 				}
 				setMajorChange(hasMajorChange);
 				hiddenStartIndex.current = i;

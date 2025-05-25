@@ -106,8 +106,8 @@ type ReplayResult = {
 	firstAddedIndex: number | undefined;
 	invalidActions: {
 		node: ActionNode;
-	    index: number;
-	    reason: SkillReadyStatus;
+		index: number;
+		reason: SkillReadyStatus;
 	}[];
 	skillUseTimes: number[];
 };
@@ -231,7 +231,7 @@ class Controller {
 		let result: RecordValidStatus = {
 			isValid: true,
 			invalidActions: [],
-		    skillUseTimes: [],
+			skillUseTimes: [],
 			straightenedIfValid: undefined,
 		};
 
@@ -1002,6 +1002,7 @@ class Controller {
 		targetCount: number,
 		overrideTickMode: TickMode = this.tickMode,
 		maxReplayTime: number = -1,
+		addInvalidNodes: boolean = true,
 	): SkillButtonViewInfo {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
 
@@ -1013,21 +1014,13 @@ class Controller {
 		skillName = getConditionalReplacement(skillName, this.game);
 		status = this.game.getSkillAvailabilityStatus(skillName);
 
-		if (!status.status.ready() && beforeWaitTime > 0) {
-			// After waiting for animation lock and cooldowns, the skill may not be usable
-			// (e.g. if Amplifier is pressed, then the 120s cd will move the timeline to a point where
-			// enochian was dropped and the button can no longer be used).
-			// Insert an artificial wait event to indicate this.
-			this.record.addActionNode(durationWaitNode(beforeWaitTime));
-		}
+		const node = skillNode(skillName, targetCount);
+		let actionIndex: number;
 
-		// TODO deal with skill being invalid
 		if (status.status.ready()) {
-			// If the skill can be used, do so.
-			let node = skillNode(skillName, targetCount);
 			this.record.addActionNode(node);
-			const actionIndex = this.record.tailIndex;
-
+			actionIndex = this.record.tailIndex;
+			// If the skill can be used, do so.
 			this.game.useSkill(skillName, node, actionIndex);
 			if (overrideTickMode === TickMode.RealTimeAutoPause) {
 				this.shouldLoop = true;
@@ -1035,62 +1028,80 @@ class Controller {
 					return this.game.timeTillAnySkillAvailable() > 0;
 				});
 			}
-
-			let lockDuration = this.game.timeTillAnySkillAvailable();
-
-			node.tmp_startLockTime = this.game.time;
-			node.tmp_endLockTime = this.game.time + lockDuration;
-
-			if (!this.#bInSandbox) {
-				// this block is run when NOT viewing historical state (aka run when receiving input)
-				this.lastSkillTime = this.game.time;
-				let newStatus = this.game.getSkillAvailabilityStatus(skillName, true); // refresh to get re-captured recast time
-				let skill = this.game.skillsList.get(skillName);
-				let isGCD = skill.cdName === "cd_GCD";
-				let isSpellCast = status.castTime > 0 && !status.instantCast;
-				let snapshotTime = isSpellCast
-					? status.castTime - GameConfig.getSlidecastWindow(status.castTime)
-					: 0;
-				let recastDuration = newStatus.cdRecastTime;
-				// special case for meditate, which is an ability that roles the GCD
-				if (skillName === "MEDITATE") {
-					isGCD = true;
-					// get the recast duration of a random GCD
-					recastDuration = this.game.getSkillAvailabilityStatus("YUKIKAZE").cdRecastTime;
+			node.tmp_invalid = false;
+		} else {
+			if (!addInvalidNodes) {
+				// Do not add the skill node if receiving user input for an invalid skill.
+				if (beforeWaitTime > 0) {
+					// After waiting for animation lock and cooldowns, the skill may not be usable
+					// (e.g. if Amplifier is pressed, then the 120s cd will move the timeline to a point where
+					// enochian was dropped and the button can no longer be used).
+					// Insert an artificial wait event to indicate this.
+					this.record.addActionNode(durationWaitNode(beforeWaitTime));
 				}
-				this.timeline.addElement({
-					type: ElemType.Skill,
-					displayTime: this.game.getDisplayTime(),
-					skillName: skillName,
-					isGCD: isGCD,
-					isSpellCast: isSpellCast,
-					time: this.game.time,
-					relativeSnapshotTime: snapshotTime,
-					lockDuration: lockDuration,
-					recastDuration: recastDuration,
-					node,
-					actionIndex,
-				});
-				this.#actionsLogCsv.push({
-					time: this.game.getDisplayTime(),
-					action: ACTIONS[skillName].name,
-					isGCD: isGCD ? 1 : 0,
-					castTime: status.instantCast ? 0 : status.castTime,
-					targetCount: node.targetCount,
-					isDamaging: node.anyPotencies(),
-				});
+				return status;
 			}
+			this.record.addActionNode(node);
+			actionIndex = this.record.tailIndex;
+			// If the skill is invalid and we are NOT accepting user input, roll its animation
+			// locks and cast bars, and mark it as invalid.
+			this.game.useInvalidSkill(skillName, node);
+			node.tmp_invalid = true;
+		}
+		let lockDuration = this.game.timeTillAnySkillAvailable();
 
-			if (overrideTickMode !== TickMode.RealTimeAutoPause) {
-				// In manual mode, directly fast-forward to the end of animation lock instead of animating.
-				// If we're in a historical replay, the end may be in the middle of the animation lock.
-				this.#fastForward(maxReplayTime);
-			}
+		node.tmp_startLockTime = this.game.time;
+		node.tmp_endLockTime = this.game.time + lockDuration;
 
-			// If this was called within a line load, do not refresh the timeline view
-			if (!this.#skipViewUpdates) {
-				refreshTimelineEditor();
+		if (!this.#bInSandbox) {
+			// this block is run when NOT viewing historical state (aka run when receiving input)
+			this.lastSkillTime = this.game.time;
+			let newStatus = this.game.getSkillAvailabilityStatus(skillName, true); // refresh to get re-captured recast time
+			let skill = this.game.skillsList.get(skillName);
+			let isGCD = skill.cdName === "cd_GCD";
+			let isSpellCast = status.castTime > 0 && !status.instantCast;
+			let snapshotTime = isSpellCast
+				? status.castTime - GameConfig.getSlidecastWindow(status.castTime)
+				: 0;
+			let recastDuration = newStatus.cdRecastTime;
+			// special case for meditate, which is an ability that roles the GCD
+			if (skillName === "MEDITATE") {
+				isGCD = true;
+				// get the recast duration of a random GCD
+				recastDuration = this.game.getSkillAvailabilityStatus("YUKIKAZE").cdRecastTime;
 			}
+			this.timeline.addElement({
+				type: ElemType.Skill,
+				displayTime: this.game.getDisplayTime(),
+				skillName: skillName,
+				isGCD: isGCD,
+				isSpellCast: isSpellCast,
+				time: this.game.time,
+				relativeSnapshotTime: snapshotTime,
+				lockDuration: lockDuration,
+				recastDuration: recastDuration,
+				node,
+				actionIndex,
+			});
+			this.#actionsLogCsv.push({
+				time: this.game.getDisplayTime(),
+				action: ACTIONS[skillName].name,
+				isGCD: isGCD ? 1 : 0,
+				castTime: status.instantCast ? 0 : status.castTime,
+				targetCount: node.targetCount,
+				isDamaging: node.anyPotencies(),
+			});
+		}
+
+		if (overrideTickMode !== TickMode.RealTimeAutoPause) {
+			// In manual mode, directly fast-forward to the end of animation lock instead of animating.
+			// If we're in a historical replay, the end may be in the middle of the animation lock.
+			this.#fastForward(maxReplayTime);
+		}
+
+		// If this was called within a line load, do not refresh the timeline view
+		if (!this.#skipViewUpdates) {
+			refreshTimelineEditor();
 		}
 		return status;
 	}
@@ -1122,7 +1133,7 @@ class Controller {
 		}
 
 		const line = props.line;
-		const invalidActions: { node: ActionNode, index: number, reason: SkillReadyStatus }[] = [];
+		const invalidActions: { node: ActionNode; index: number; reason: SkillReadyStatus }[] = [];
 		const skillUseTimes: number[] = [];
 
 		if (line.length === 0) {
@@ -1680,7 +1691,13 @@ class Controller {
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {
-			let status = this.#useSkill(props.skillName, props.targetCount);
+			const status = this.#useSkill(
+				props.skillName,
+				props.targetCount,
+				this.tickMode,
+				-1,
+				false,
+			);
 			if (status.status.ready()) {
 				this.scrollToTime(this.game.time);
 				this.autoSave();
