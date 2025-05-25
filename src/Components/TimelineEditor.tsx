@@ -1,4 +1,4 @@
-import React, { CSSProperties, useState, useEffect, useReducer } from "react";
+import React, { CSSProperties, useState, useEffect, useRef, useReducer } from "react";
 import { controller } from "../Controller/Controller";
 import { ActionNode, ActionType, Record, RecordValidStatus } from "../Controller/Record";
 import { StaticFn } from "./Common";
@@ -9,7 +9,7 @@ import {
 	localizeResourceType,
 	localizeSkillUnavailableReason,
 } from "./Localization";
-import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
+import { TIMELINE_COLUMNS_HEIGHT, updateTimelineView } from "./Timeline";
 import { Columns } from "./Common";
 import { SkillReadyStatus } from "../Game/Common";
 
@@ -17,9 +17,12 @@ import { SkillReadyStatus } from "../Game/Common";
 const HIGHLIGHT_ALPHA_HEX = "3f";
 
 export let refreshTimelineEditor = () => {};
-// [sz] It brings me no joy to write another global setter function that lives outside the
+// [sz] It brings me no joy to write another pair of global setter functions that live outside the
 // React life cycle, but we don't really have a better way to pass the active timeline slot at the moment.
 export let updateInvalidStatus = () => {};
+export let updateActiveTimelineEditor = (slotSwapFn: () => void) => {
+	slotSwapFn();
+};
 
 let bHandledSkillSelectionThisFrame: boolean = false;
 function setHandledSkillSelectionThisFrame(handled: boolean) {
@@ -67,21 +70,20 @@ function TimelineActionElement(props: {
 	index: number;
 	node: ActionNode;
 	isSelected: boolean;
-	belongingRecord: Record;
+	recordIsDirty: boolean;
 	isInvalid: boolean;
 	includeDetails: boolean;
 	usedAt: number;
 	refObj?: React.RefObject<HTMLTableRowElement>;
 }) {
 	const colors = getCurrentThemeColors();
-	let recordIsDirty = props.belongingRecord !== controller.record;
 	// Every other row should be highlighted slightly to provide contrast.
 	let bgColor = props.index % 2 === 1 ? colors.bgLowContrast : "transparent";
 	// These checks to override background color should happen in this specific order.
 	if (props.isSelected) {
 		bgColor = "rgba(151,111,246,0.25)";
 	}
-	if (recordIsDirty && props.isSelected) {
+	if (props.recordIsDirty && props.isSelected) {
 		bgColor = colors.editingValid + HIGHLIGHT_ALPHA_HEX;
 	}
 	let name = localize({ en: "(other)", zh: "（其它）" });
@@ -147,8 +149,8 @@ function TimelineActionElement(props: {
 		ref={props.refObj ?? null}
 		onClick={(e) => {
 			setHandledSkillSelectionThisFrame(true);
-			if (recordIsDirty) {
-				props.belongingRecord.onClickNode(props.index, e.shiftKey);
+			if (props.recordIsDirty) {
+				controller.record.onClickNode(props.index, e.shiftKey);
 				refreshTimelineEditor();
 			} else {
 				controller.timeline.onClickTimelineAction(props.index, e.shiftKey);
@@ -171,12 +173,19 @@ export function TimelineEditor() {
 	// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
 	const firstSelected: React.RefObject<HTMLTableRowElement> = React.createRef();
 
-	const [editedRecord, setEditedRecord] = useState<Record | undefined>(undefined);
+	const [isDirty, setDirty] = useState<boolean>(false);
 	const [recordValidStatus, setRecordValidStatus] = useState<RecordValidStatus | undefined>(
 		undefined,
 	);
 	const [firstEditedNodeIndex, setFirstEditedNodeIndex] = useState<number | undefined>(undefined);
 	const [, forceUpdate] = useReducer((x) => x + 1, 0);
+	// In previous versions of XIV in the Shell, when using the timeline editor, we created a
+	// copy of the record within the TimelineEditor object, and did not reflect any staged
+	// edits in the timeline canvas.
+	// Now, since we want these changes to be reflected, we must set/unset the controller's stored
+	// record as well.
+	const savedControllerRecord = useRef<Record | undefined>(undefined);
+	console.log(savedControllerRecord);
 
 	useEffect(() => {
 		// on mount
@@ -184,6 +193,23 @@ export function TimelineEditor() {
 			forceUpdate();
 		};
 		updateInvalidStatus = () => {
+			// This is called by the controller to ensure timestamps are properly propagated to the
+			// timeline editor table.
+			setRecordValidStatus(controller.checkRecordValidity(controller.record, 0, true));
+		};
+		// When switching the active timeline slot, we must ensure that the batched edits are
+		// discarded.
+		updateActiveTimelineEditor = (slotSwapFn) => {
+			if (savedControllerRecord.current) {
+				controller.record = savedControllerRecord.current;
+				// Force a redraw
+				controller.checkRecordValidity(controller.record, 0, true);
+			}
+			slotSwapFn();
+			setDirty(false);
+			// Make sure to update savedControllerRecord.current in case two swaps are done
+			// in succession.
+			savedControllerRecord.current = controller.record;
 			setRecordValidStatus(controller.checkRecordValidity(controller.record, 0, true));
 		};
 		scrollEditorToFirstSelected = () => {
@@ -207,11 +233,13 @@ export function TimelineEditor() {
 		};
 	}, []);
 
-	const isDirty = editedRecord !== undefined;
 	const isValid = recordValidStatus && recordValidStatus.isValid;
 
-	const markClean = () => {
-		setEditedRecord(undefined);
+	const markClean = (restoreSavedRecord: boolean) => {
+		if (restoreSavedRecord && savedControllerRecord.current) {
+			controller.record = savedControllerRecord.current;
+		}
+		setDirty(false);
 		setRecordValidStatus(controller.checkRecordValidity(controller.record, 0, true));
 		setFirstEditedNodeIndex(undefined);
 	};
@@ -224,10 +252,10 @@ export function TimelineEditor() {
 			onClick={(e) => {
 				setHandledSkillSelectionThisFrame(true);
 				// discard edits
-				if (!editedRecord) {
-					console.assert(false);
+				if (!isDirty) {
+					console.error("attempted to discard edits while timeline editor was not dirty");
 				}
-				markClean();
+				markClean(true);
 			}}
 		>
 			{localize({ en: "discard changes", zh: "放弃更改" })}
@@ -235,16 +263,17 @@ export function TimelineEditor() {
 	};
 
 	const getRecordCopy = () => {
-		if (editedRecord) {
-			return editedRecord;
+		if (isDirty) {
+			return controller.record;
 		} else {
-			let edited = controller.record.getCloneWithSharedConfig();
-			setEditedRecord(edited);
-			return edited;
+			// To ensure edits reflect in the timeline canvas, we need to temporarily override
+			// the controller's active record. We will restore it if edits are discarded.
+			savedControllerRecord.current = controller.record;
+			controller.record = controller.record.getCloneWithSharedConfig();
+			setDirty(true);
+			return controller.record;
 		}
 	};
-
-	const displayedRecord = isDirty ? editedRecord : controller.record;
 
 	const getInvalidActionText = (
 		invalidAction:
@@ -339,14 +368,14 @@ export function TimelineEditor() {
 
 						// would show only after editing properties
 						// apply edits to timeline
-						if (editedRecord) {
-							// this.state.editedRecord should always update to something that can be replayed exactly
-							// because it comes from status.straightenedIfValid
-							controller.applyEditedRecord(editedRecord);
+						if (isDirty) {
+							controller.applyEditedRecord();
 						} else {
-							console.assert(false);
+							console.error(
+								"attempted to apply edits while timeline editor was not dirty",
+							);
 						}
-						markClean();
+						markClean(false);
 
 						controller.displayCurrentState();
 					}}
@@ -375,6 +404,7 @@ export function TimelineEditor() {
 				const firstInvalidAction = recordValidStatus?.invalidActions[0];
 				let invalidActionToShow = firstInvalidAction;
 				let inSequence = true;
+				const displayedRecord = controller.record;
 				if (
 					firstInvalidAction !== undefined &&
 					displayedRecord.selectionStartIndex !== undefined
@@ -420,7 +450,7 @@ export function TimelineEditor() {
 		padding: 3,
 	};
 	const doRecordEdit = (action: (record: Record) => number | undefined) => {
-		if (displayedRecord.getFirstSelection()) {
+		if (controller.record.getFirstSelection()) {
 			setHandledSkillSelectionThisFrame(true);
 			const copy = getRecordCopy();
 			let currentEditedNodeIndex = firstEditedNodeIndex;
@@ -434,12 +464,13 @@ export function TimelineEditor() {
 			}
 			const status = controller.checkRecordValidity(copy, currentEditedNodeIndex);
 			if (firstEditedNode !== undefined && status.straightenedIfValid) {
-				setEditedRecord(status.straightenedIfValid);
+				controller.record = status.straightenedIfValid;
 				setFirstEditedNodeIndex(undefined);
 			} else {
 				setFirstEditedNodeIndex(currentEditedNodeIndex);
 			}
 			setRecordValidStatus(status as RecordValidStatus);
+			updateTimelineView();
 		}
 	};
 	const toolbar = <div style={{ marginBottom: 6, flex: 1 }}>
@@ -506,15 +537,15 @@ export function TimelineEditor() {
 	// mid: actions list
 	const actionsList: React.JSX.Element[] = [];
 	const invalidIndices = new Set(recordValidStatus?.invalidActions.map((ac) => ac.index));
-	displayedRecord.actions.forEach((action, i) => {
-		const isFirstSelected = !isDirty && i === displayedRecord.selectionStartIndex;
+	controller.record.actions.forEach((action, i) => {
+		const isFirstSelected = !isDirty && i === controller.record.selectionStartIndex;
 		actionsList.push(
 			<TimelineActionElement
 				key={i}
 				index={i}
 				node={action}
-				isSelected={displayedRecord.isInSelection(i)}
-				belongingRecord={displayedRecord}
+				isSelected={controller.record.isInSelection(i)}
+				recordIsDirty={isDirty}
 				isInvalid={invalidIndices.has(i)}
 				usedAt={recordValidStatus?.skillUseTimes[i] ?? 0}
 				includeDetails={includeDetails}
@@ -533,7 +564,7 @@ export function TimelineEditor() {
 					controller.displayCurrentState();
 				} else {
 					refreshTimelineEditor();
-					editedRecord?.unselectAll();
+					controller.record.unselectAll();
 				}
 			}
 			setHandledSkillSelectionThisFrame(false);
