@@ -1287,6 +1287,13 @@ class Controller {
 					});
 				} else {
 					const reason = makeSkillReadyStatus();
+					// waitDuration < 0 is only possible for explicit "jump" nodes; make sure
+					// the node is still added to the record (normally implicitly done by requestTick).
+					if (itr.info.type === ActionType.JumpToTimestamp) {
+						this.record.addActionNode(jumpToTimestampNode(itr.info.targetTime));
+					} else {
+						console.error("non-jump wait somehow failed: " + itr.info.type);
+					}
 					reason.addUnavailableReason(SkillUnavailableReason.PastTargetTime);
 					invalidActions.push({
 						node: itr,
