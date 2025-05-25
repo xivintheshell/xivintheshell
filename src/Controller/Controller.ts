@@ -54,7 +54,11 @@ import {
 import { ImageExportConfig } from "./ImageExportConfig";
 import { inferJobFromSkillNames, PresetLinesManager } from "./PresetLinesManager";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
-import { refreshTimelineEditor, updateInvalidStatus } from "../Components/TimelineEditor";
+import {
+	refreshTimelineEditor,
+	updateActiveTimelineEditor,
+	updateInvalidStatus,
+} from "../Components/TimelineEditor";
 import {
 	CsvData,
 	DEFAULT_TIMELINE_OPTIONS,
@@ -206,7 +210,8 @@ class Controller {
 		}
 	}
 
-	#sandboxEnvironment(fn: () => void, endsUpToDate: boolean = false) {
+	#sandboxEnvironment(fn: () => void) {
+		const oldSandbox = this.#bInSandbox;
 		this.displayingUpToDateGameState = false;
 		this.#bInSandbox = true;
 		let tmpGame = this.game;
@@ -217,16 +222,19 @@ class Controller {
 		fn();
 
 		//============v pop stashed states v============
-		this.#bInSandbox = false;
+		this.#bInSandbox = oldSandbox;
 		this.savedHistoricalGame = this.game;
 		this.savedHistoricalRecord = this.record;
 		this.game = tmpGame;
 		this.record = tmpRecord;
 		this.#lastDamageApplicationTime = tmpLastDamageApplicationTime;
-		this.displayingUpToDateGameState = endsUpToDate;
 	}
 
-	checkRecordValidity(inRecord: Record, firstEditedNodeIndex?: number, endsUpToDate: boolean = false): RecordValidStatus {
+	checkRecordValidity(
+		inRecord: Record,
+		firstEditedNodeIndex?: number,
+		endsUpToDate: boolean = false,
+	): RecordValidStatus {
 		console.assert(inRecord.config !== undefined);
 
 		let result: RecordValidStatus = {
@@ -242,35 +250,37 @@ class Controller {
 			return result;
 		}
 
-		this.#sandboxEnvironment(() => {
-			// create environment
-			let cfg = inRecord.config ?? this.gameConfig;
-			this.game = getGameState(cfg);
-			this.record = new Record();
-			this.record.config = cfg;
-			this.#lastDamageApplicationTime = -cfg.countdown;
+		// do NOT wrap this in #useSandbox, since we want changes to reflect on the canvas
+		this.#requestRestart(false);
+		let cfg = inRecord.config ?? this.gameConfig;
+		this.game = getGameState(cfg);
+		this.record = new Record();
+		this.record.config = cfg;
+		this.#lastDamageApplicationTime = -cfg.countdown;
 
-			// apply resource overrides
-			this.#applyResourceOverrides(this.record.config);
+		// apply resource overrides
+		this.#applyResourceOverrides(this.record.config);
 
-			// replay skills sequence
-			this.#bAddingLine = true;
-			let status = this.#replay({
-				line: inRecord,
-				replayMode: ReplayMode.Edited,
-				firstEditedNodeIndex,
-				selectionStart: inRecord.getFirstSelection(),
-				selectionEnd: inRecord.getLastSelection(),
-			});
-			this.#bAddingLine = false;
+		// replay skills sequence
+		this.#bAddingLine = true;
+		let status = this.#replay({
+			line: inRecord,
+			replayMode: ReplayMode.Edited,
+			firstEditedNodeIndex,
+			selectionStart: inRecord.getFirstSelection(),
+			selectionEnd: inRecord.getLastSelection(),
+		});
+		this.#bAddingLine = false;
+		this.record.selectionStartIndex = inRecord.selectionStartIndex;
+		this.record.selectionStartIndex = inRecord.selectionStartIndex;
 
-			result.isValid = status.invalidActions.length === 0;
-			result.invalidActions = status.invalidActions;
-			result.skillUseTimes = status.skillUseTimes;
-			if (status.success) {
-				result.straightenedIfValid = this.record;
-			}
-		}, endsUpToDate);
+		result.isValid = status.invalidActions.length === 0;
+		result.invalidActions = status.invalidActions;
+		result.skillUseTimes = status.skillUseTimes;
+		if (status.success) {
+			result.straightenedIfValid = this.record;
+		}
+		this.displayingUpToDateGameState = endsUpToDate;
 
 		return result;
 	}
@@ -341,11 +351,13 @@ class Controller {
 		this.#applyResourceOverrides(this.gameConfig);
 	}
 
-	#requestRestart() {
+	#requestRestart(clearSelection: boolean = true) {
 		this.game = getGameState(this.gameConfig);
 		this.#playPause({ shouldLoop: false });
 		this.timeline.reset();
-		this.record.unselectAll();
+		if (clearSelection) {
+			this.record.unselectAll();
+		}
 		this.#lastDamageApplicationTime = -this.gameConfig.countdown;
 		this.#damageLogCsv = [];
 		this.#actionsLogCsv = [];
@@ -378,6 +390,10 @@ class Controller {
 	}
 
 	loadBattleRecordFromFile(content: Fixme) {
+		if (content.config === undefined) {
+			window.alert("Error loading record: saved record had no config object");
+			console.error(content);
+		}
 		if (content.config.procMode === undefined) {
 			// for backward compatibility
 			if (content.config.rngProcs !== undefined) {
@@ -462,19 +478,18 @@ class Controller {
 	}
 
 	// assumes newRecord can be replayed exactly
-	applyEditedRecord(newRecord: Record) {
-		if (!newRecord.config) {
-			console.assert(false);
-			return;
-		}
-		this.gameConfig = newRecord.config;
+	applyEditedRecord() {
+		// HACK: this used to take a `newRecord` argument, but now that we always manipulate
+		// the global record object, we need to stash the old record to force #replay to always
+		// rerun in full.
+		const tmp = this.record;
 		this.record = new Record();
-		this.record.config = newRecord.config;
+		this.record.config = tmp.config;
 		this.#requestRestart();
 		this.#applyResourceOverrides(this.gameConfig);
 		// replay actions
 		let replayResult = this.#replay({
-			line: newRecord,
+			line: tmp,
 			replayMode: ReplayMode.Exact,
 			removeTrailingIdleTime: true,
 		});
@@ -482,9 +497,9 @@ class Controller {
 
 		// TODO figure out if there's any edge cases where this is invalid
 		// maybe deletions?
-		if (newRecord.selectionStartIndex !== undefined) {
-			this.record.selectSingle(newRecord.selectionStartIndex);
-			this.record.selectUntil(newRecord.selectionEndIndex!);
+		if (tmp.selectionStartIndex !== undefined) {
+			this.record.selectSingle(tmp.selectionStartIndex);
+			this.record.selectUntil(tmp.selectionEndIndex!);
 		}
 		this.autoSave();
 	}
@@ -1122,6 +1137,7 @@ class Controller {
 		selectionEnd?: ActionNode;
 	}): ReplayResult {
 		// Prevent UI updates from occuring until the final action
+		const oldSkipViewUpdates = this.#skipViewUpdates;
 		this.#skipViewUpdates = true;
 		// default input, if not provided
 		if (props.removeTrailingIdleTime === undefined) props.removeTrailingIdleTime = false;
@@ -1141,7 +1157,7 @@ class Controller {
 
 		if (line.length === 0) {
 			// Empty line, no need to call re-render here
-			this.#skipViewUpdates = false;
+			this.#skipViewUpdates = oldSkipViewUpdates;
 			return {
 				success: true,
 				firstAddedIndex: undefined,
@@ -1414,7 +1430,7 @@ class Controller {
 		}
 
 		// Re-enable UI updates
-		this.#skipViewUpdates = false;
+		this.#skipViewUpdates = oldSkipViewUpdates;
 		this.updateAllDisplay();
 		return {
 			success: true,
@@ -1451,12 +1467,15 @@ class Controller {
 	setActiveSlot(slot: number) {
 		// cancel real time
 		this.#playPause({ shouldLoop: false });
-		this.autoSave();
+		// Before loading the new timeline, restore the record that was saved by the timeline editor
+		// so its edits aren't accidentally saved.
+		updateActiveTimelineEditor(() => {
+			this.autoSave();
 
-		this.record.unselectAll();
-		console.assert(this.timeline.loadSlot(slot));
+			this.record.unselectAll();
+			console.assert(this.timeline.loadSlot(slot));
+		});
 		this.displayCurrentState();
-		updateInvalidStatus();
 	}
 
 	getDamageLogCsv(): any[][] {
