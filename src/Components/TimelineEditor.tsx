@@ -185,7 +185,6 @@ export function TimelineEditor() {
 	// Now, since we want these changes to be reflected, we must set/unset the controller's stored
 	// record as well.
 	const savedControllerRecord = useRef<Record | undefined>(undefined);
-	console.log(savedControllerRecord);
 
 	useEffect(() => {
 		// on mount

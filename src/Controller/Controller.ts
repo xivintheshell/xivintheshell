@@ -1617,7 +1617,7 @@ class Controller {
 		};
 	}
 
-	// generally used for trying to add a line to the current timeline
+	// Used for trying to add a preset skill sequence to the current timeline
 	tryAddLine(line: Line, replayMode = ReplayMode.SkillSequence) {
 		this.#bAddingLine = true;
 
@@ -1634,6 +1634,7 @@ class Controller {
 		} else {
 			this.autoSave();
 			this.#bAddingLine = false;
+			updateInvalidStatus();
 			return true;
 		}
 	}
