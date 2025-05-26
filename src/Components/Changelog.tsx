@@ -36,8 +36,13 @@ function getRenderedEntry(entry: ChangelogEntry) {
 		<div>
 			{localize({
 				en: <>
-					{entry.changes.map((change, i) => <div className="changelogLine" key={i}
-						style={{ color: change.substring(1, 5) === "BETA" ? colors.warning : colors.text }}>
+					{entry.changes.map((change, i) => <div
+						className="changelogLine"
+						key={i}
+						style={{
+							color: change.substring(1, 5) === "BETA" ? colors.warning : colors.text,
+						}}
+					>
 						{change}
 					</div>)}
 				</>,
@@ -47,7 +52,12 @@ function getRenderedEntry(entry: ChangelogEntry) {
 							{entry.changes_zh.map((change, i) => <div
 								className="changelogLine"
 								key={i}
-								style={{ color: change.substring(1, 5) === "BETA" ? colors.warning : colors.text }}
+								style={{
+									color:
+										change.substring(1, 5) === "BETA"
+											? colors.warning
+											: colors.text,
+								}}
 							>
 								{change}
 							</div>)}
