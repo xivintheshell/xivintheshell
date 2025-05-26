@@ -1,5 +1,12 @@
 [
 	{
+		"date": "5/26/25",
+		"changes": [
+			"Fixed a bug where damage log CSV export didn't work (thanks ryxiv)."
+		],
+		"level": "minor"
+	},
+	{
 		"date": "5/23/25",
 		"changes": [
 			"Adjusted the calculations for the effect of crit/DH party buffs on auto-crit/DH hits, like PCT's Hammer combo.",
