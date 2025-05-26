@@ -480,7 +480,7 @@ export class DamageStatistics extends React.Component {
 					<SaveToFile
 						fileFormat={FileFormat.Csv}
 						getContentFn={() => {
-							return controller.getDamageLogCsv();
+							return { body: controller.getDamageLogCsv() };
 						}}
 						filename={"damage-log"}
 						displayName={localize({
