@@ -52,7 +52,7 @@ export function containsEwCacheContent(): boolean {
 const thisExpansion: Expansion = Expansion.DT; // change here in ew archive
 
 // Checks if we're on beta.xivintheshell.com. Set this manually if you want to test this locally.
-export const isBetaSite = window.location.hostname.startsWith("beta");
+export const isBetaSite = window.location.hostname.startsWith("beta") || true;
 
 // Assume that if there are no localStorage entries, this is the user's first visit to the site.
 // A timeline record is always created on page load, so this assumption should be valid.
