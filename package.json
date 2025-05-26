@@ -1,7 +1,7 @@
 {
   "name": "xiv-in-the-shell",
   "version": "0.1.0",
-  "homepage": "https://beta.xivintheshell.com",
+  "homepage": "https://xivintheshell.com",
   "private": true,
   "dependencies": {
     "@base-ui-components/react": "^1.0.0-alpha.8",
