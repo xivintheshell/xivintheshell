@@ -450,9 +450,8 @@ export default class Main extends React.Component<{ command?: string }> {
 								) : undefined}
 
 								{/* Beta site warning */}
-								{isBetaSite && <PSA
-									color={colors.warning}
-									children={localize({
+								{isBetaSite && <PSA color={colors.warning}>
+									{localize({
 										en: <div style={{ marginBottom: "10px" }}>
 											<span>
 												<b style={{ color: colors.warning }}>
@@ -519,7 +518,7 @@ export default class Main extends React.Component<{ command?: string }> {
 											</ul>
 										</div>,
 									})}
-								/>}
+								</PSA>}
 								{isBetaSite && <div style={{ margin: "10px" }}></div>}
 
 								<IntroSection job={this.state.job} />
