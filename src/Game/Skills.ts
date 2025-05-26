@@ -230,7 +230,11 @@ export function getNormalizedSkillName(s: string): ActionKey | undefined {
 	if (s === "Lightning Shock") {
 		s = "Lightning Shot";
 	}
-	return normalizedSkillNameMap.get(s.toLowerCase());
+	s = s.toLowerCase();
+	if (!normalizedSkillNameMap.has(s)) {
+		console.error("cannot find skill: " + s);
+	}
+	return normalizedSkillNameMap.get(s);
 }
 
 export function getResourceKeyFromBuffName(s: string): ResourceKey | undefined {

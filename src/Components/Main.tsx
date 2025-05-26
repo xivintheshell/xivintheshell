@@ -6,7 +6,7 @@ import { StatusDisplay } from "./StatusDisplay";
 import { controller } from "../Controller/Controller";
 import "react-tabs/style/react-tabs.css";
 import { SkillSequencePresets } from "./SkillSequencePresets";
-import { IntroSection } from "./IntroSection";
+import { HELP_CHANNEL_URL, IntroSection } from "./IntroSection";
 import { getLastChangeDate } from "./Changelog";
 import { localize, localizeDate, SelectLanguage } from "./Localization";
 import { Expandable, Tabs } from "./Common";
@@ -25,6 +25,7 @@ import {
 	getCachedValue,
 	setCachedValue,
 	containsEwCacheContent,
+	isBetaSite,
 } from "../Controller/Common";
 import { JOBS, ShellJob } from "../Game/Data/Jobs";
 
@@ -100,6 +101,8 @@ function PSA(props: { hidden?: boolean; color?: string; children: React.ReactNod
 	</div>;
 }
 
+const betaPrefix = isBetaSite ? "[BETA] " : "";
+
 export default class Main extends React.Component<{ command?: string }> {
 	controlRegionRef: React.RefObject<HTMLDivElement | null>;
 	gameplayKeyCapture: React.KeyboardEventHandler<HTMLDivElement>;
@@ -147,7 +150,9 @@ export default class Main extends React.Component<{ command?: string }> {
 			// https://stackoverflow.com/a/260877
 			const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
 			if (link) {
-				if (job in JOBS) {
+				if (isBetaSite) {
+					link.href = "/favicons/beta.ico";
+				} else if (job in JOBS) {
 					link.href = "/favicons/" + job.toString().toLocaleLowerCase() + ".ico";
 				} else {
 					link.href = process.env.PUBLIC_URL + "/favicon.ico";
@@ -156,7 +161,7 @@ export default class Main extends React.Component<{ command?: string }> {
 			// Change the title
 			const title = document.getElementById("pageTitle") as HTMLTitleElement;
 			if (title) {
-				title.text = `XIV in the Shell (${job})`;
+				title.text = `${betaPrefix}XIV in the Shell (${job})`;
 			}
 		};
 
@@ -219,6 +224,7 @@ export default class Main extends React.Component<{ command?: string }> {
 		} else {
 			borderColor = "2px solid " + colors.accent;
 		}
+		const liStyle = { marginBottom: "5px" };
 		let mainControlRegion = <div
 			style={{ flex: 7, display: "inline-block", position: "relative" }}
 		>
@@ -373,7 +379,9 @@ export default class Main extends React.Component<{ command?: string }> {
 							<SelectLanguage />
 							<SelectColorTheme setColorTheme={this.setColorTheme} />
 							<div>
-								<h3 style={{ marginTop: 20, marginBottom: 6 }}>XIV in the Shell</h3>
+								<h3 style={{ marginTop: 20, marginBottom: 6 }}>
+									{betaPrefix}XIV in the Shell
+								</h3>
 								{localize({
 									en: <div style={{ marginBottom: 16 }}>
 										Last updated: {getLastChangeDate()} (see <b>Changelog</b>)
@@ -442,6 +450,80 @@ export default class Main extends React.Component<{ command?: string }> {
 										})}
 									</div>
 								) : undefined}
+
+								{/* Beta site warning */}
+								{isBetaSite && <PSA color={colors.warning}>
+									{localize({
+										en: <div style={{ marginBottom: "10px" }}>
+											<span>
+												<b style={{ color: colors.warning }}>
+													You're currently using the BETA version of XIV
+													in the Shell.
+												</b>
+											</span>
+											<ul>
+												<li style={liStyle}>
+													Things may break in unexpected ways at any time.
+													Use at your own peril, and make sure to export
+													in-progress files frequently.
+												</li>
+												<li style={liStyle}>
+													Application data is not shared with the main
+													site. Anything you do here stays here. Files
+													created on the BETA site may not work on the
+													main site, but files made on the main site
+													should be importable here (if they are not,
+													please report this as a bug).
+												</li>
+												<li style={liStyle}>
+													If the page becomes un-loadable, please contact
+													us and tell us what your last actions on the
+													site were, and we can help you debug what went
+													wrong. You can also try resetting your browser's
+													localStorage data for beta.xivintheshell.com.
+												</li>
+												<li style={liStyle}>
+													To report an issue, you can contact us on
+													Discord in The Balance (
+													<a href={HELP_CHANNEL_URL}>
+														#xiv_in_the_shell_support
+													</a>
+													), or file an issue on{" "}
+													<a href="https://github.com/xivintheshell/xivintheshell/issues">
+														our GitHub
+													</a>
+													.
+												</li>
+											</ul>
+										</div>,
+										zh: <div style={{ marginBottom: "10px" }}>
+											<span>
+												<b style={{ color: colors.warning }}>
+													您正在使用《XIV in the Shell》的测试版（BETA）。
+												</b>
+											</span>
+											<ul>
+												<li style={liStyle}>
+													此排轴器随时可能会意外崩溃。请自行承担使用风险、注意经常导出编辑中的文件。
+												</li>
+												<li style={liStyle}>
+													BETA版与主排轴器网站不共享应用程序数据。在BETA网站上创建的文件不一定能在主网站上导入，但主网站上创建的文件应该能在这里导入（如果不能导入，请报告为bug）。
+												</li>
+												<li style={liStyle}>
+													如果遇到网站无法加载的情况，请反馈给我们，并告诉我们出问题前您最后进行的操作，我们可以帮您排查问题。也可以自己尝试重置beta.xivintheshell.com的localStorage数据。
+												</li>
+												<li style={liStyle}>
+													如果想联系我们给反馈，可请不打冰三攻略组的黑魔们或鱼卡转达，或加miyehn的QQ（870340705，加时请注明来意），或直接到
+													<a href="https://github.com/xivintheshell/xivintheshell/issues">
+														GitHub
+													</a>
+													仓库提issue。
+												</li>
+											</ul>
+										</div>,
+									})}
+								</PSA>}
+								{isBetaSite && <div style={{ margin: "10px" }}></div>}
 
 								<IntroSection job={this.state.job} />
 

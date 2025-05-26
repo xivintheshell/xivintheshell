@@ -1682,26 +1682,27 @@ export class GameState {
 		const highlight = skill.highlightIf(this);
 		return {
 			skillName: skill.name,
-			status: status,
+			status,
 			stacksAvailable:
 				secondaryMaxStacks > 0 ? secondaryStacksAvailable : primaryStacksAvailable,
 			maxStacks: Math.max(primaryMaxStacks, secondaryMaxStacks),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
-			cdRecastTime: cdRecastTime,
+			cdRecastTime,
 			secondaryCdRecastTime: secondaryRecastTime,
-			timeTillNextStackReady: timeTillNextStackReady,
-			timeTillSecondaryReady: timeTillSecondaryReady,
-			timeTillAvailable: timeTillAvailable,
-			timeTillDamageApplication: timeTillDamageApplication,
-			capturedManaCost: capturedManaCost,
-			highlight: highlight,
-			llCovered: llCovered,
+			timeTillNextStackReady,
+			timeTillSecondaryReady,
+			timeTillAvailable,
+			timeTillDamageApplication,
+			capturedManaCost,
+			highlight,
+			llCovered,
+			usedAt: this.getDisplayTime(),
 		};
 	}
 
 	useSkill(skillName: ActionKey, node: ActionNode, actionIndex: number) {
-		let skill = this.skillsList.get(skillName);
+		const skill = this.skillsList.get(skillName);
 
 		// Process skill execution effects regardless of skill kind
 		skill.onExecute(this, node);
@@ -1721,6 +1722,44 @@ export class GameState {
 			this.useAbility(skill, node);
 		} else if (skill.kind === "limitbreak") {
 			this.useLimitBreak(skill, node, actionIndex);
+		}
+	}
+
+	// When a skill from a timeline editor change/old file load would be invalid, we still want
+	// to roll its cast/recast and animation locks.
+	useInvalidSkill(skillName: ActionKey, node: ActionNode) {
+		const skill = this.skillsList.get(skillName);
+		if (skill.falloff === undefined) {
+			node.setTargetCount(1);
+		}
+		if (skill.aoeHeal) {
+			node.setHealTargetCount(this.resources.get("PARTY_SIZE").availableAmount());
+		}
+		if (skill.kind === "spell" || skill.kind === "weaponskill") {
+			const capturedCastTime = skill.castTimeFn(this);
+			const recastTime = skill.recastTimeFn(this);
+			const isInstant = capturedCastTime === 0 || skill.isInstantFn(this);
+			if (isInstant) {
+				this.resources.takeResourceLock(
+					"NOT_ANIMATION_LOCKED",
+					skill.animationLockFn(this),
+				);
+			} else {
+				this.resources.takeResourceLock(
+					"NOT_CASTER_TAXED",
+					this.config.getAfterTaxCastTime(capturedCastTime),
+				);
+			}
+			this.cooldowns.get("cd_GCD").useStackWithRecast(this.config.getAfterTaxGCD(recastTime));
+		} else if (skill.kind === "ability") {
+			this.resources.takeResourceLock("NOT_ANIMATION_LOCKED", skill.animationLockFn(this));
+		} else if (skill.kind === "limitbreak") {
+			const capturedCastTime = skill.castTimeFn(this);
+			const slidecastTime = GameConfig.getSlidecastWindow(capturedCastTime);
+			this.resources.takeResourceLock(
+				"NOT_ANIMATION_LOCKED",
+				slidecastTime + skill.animationLockFn(this),
+			);
 		}
 	}
 
