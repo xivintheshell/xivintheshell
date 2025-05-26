@@ -7,7 +7,7 @@
 # too lazy to rewrite this to parse a text file).
 # Does not re-retrieve assets that were already downloaded (delete the file first if you want to update them).
 
-JOB="RDM"  # change me when you do a different job
+JOB="DRK"  # change me when you do a different job
 
 SKILL_DIR="public/assets/Skills/$JOB"
 BUFF_DIR="public/assets/Buffs/$JOB"
@@ -47,67 +47,60 @@ get_buff_icon() {
     fi
 }
 
-get_buff_icon "Verfire Ready" "013402"
-get_buff_icon "Verstone Ready" "013403"
-get_buff_icon "Acceleration" "013405"
-get_buff_icon "Dualcast" "013406"
-get_buff_icon "Magick Barrier" "013408"
-get_buff_icon "Embolden" "013410"
-get_buff_icon "Thorned Flourish" "013411"
-get_buff_icon "Grand Impact Ready" "013412"
-get_buff_icon "Prefulgence Ready" "013413"
+get_buff_icon "Salted Earth" "23104"
+get_buff_icon "Grit" "213108"
+get_buff_icon "Shadow Wall" "213113"
+get_buff_icon "Dark Mind" "213114"
+get_buff_icon "Living Dead" "213115"
+get_buff_icon "Walking Dead" "213116"
+get_buff_icon "Undead Rebirth" "213124"
+get_buff_icon "Dark Missionary" "213122"
+get_buff_icon "Delirium" "217147"
+get_buff_icon "Delirium" "217148" 2
+get_buff_icon "Delirium" "217149" 3
+get_buff_icon "Blood Weapon" "217926"
+get_buff_icon "Blood Weapon" "217927" 2
+get_buff_icon "Blood Weapon" "217928" 3
+get_buff_icon "Blood Weapon" "217929" 4
+get_buff_icon "Blood Weapon" "217930" 5
+get_buff_icon "Blackest Night" "213118"
+get_buff_icon "Scorn" "213126"
+get_buff_icon "Oblation" "213123"
+get_buff_icon "Shadowed Vigil" "213125"
+get_buff_icon "Vigilant" "213127"
 
-get_buff_icon "Magicked Swordplay" "018665"
-get_buff_icon "Magicked Swordplay" "018666" 2
-get_buff_icon "Magicked Swordplay" "018667" 3
-
-get_buff_icon Manafication "017491"
-get_buff_icon Manafication "017492" 2
-get_buff_icon Manafication "017493" 3
-get_buff_icon Manafication "017494" 4
-get_buff_icon Manafication "017495" 5
-get_buff_icon Manafication "017496" 6
-
-get_skill_icon Riposte "003201"
-get_skill_icon Jolt "003202"
-get_skill_icon Verthunder "003203"
-get_skill_icon "Corps-a-corps" "003204"
-get_skill_icon Veraero "003205"
-get_skill_icon Scatter "003207"
-get_skill_icon Verfire "003208"
-get_skill_icon Verstone "003209"
-get_skill_icon Zwerchhau "003210"
-get_skill_icon Displacement "003211"
-get_skill_icon Fleche "003212"
-get_skill_icon Redoublement "003213"
-get_skill_icon Acceleration "003214"
-get_skill_icon Moulinet "003215"
-get_skill_icon Vercure "003216"
-get_skill_icon "Contre Sixte" "003217"
-get_skill_icon Embolden "003218"
-get_skill_icon Manafication "003219"
-get_skill_icon "Jolt II" "003220"
-get_skill_icon Verraise "003221"
-get_skill_icon Impact "003222"
-get_skill_icon Verflare "003223"
-get_skill_icon Verholy "003224"
-get_skill_icon "Enchanted Riposte" "003225"
-get_skill_icon "Enchanted Zwerchhau" "003226"
-get_skill_icon "Enchanted Redoublement" "003227"
-get_skill_icon "Enchanted Moulinet" "003228"
-get_skill_icon "Verthunder II" "003229"
-get_skill_icon "Veraero II" "003230"
-get_skill_icon Engagement "003231"
-get_skill_icon "Enchanted Reprise" "003232"
-get_skill_icon Reprise "003233"
-get_skill_icon Scorch "003234"
-get_skill_icon "Verthunder III" "003235"
-get_skill_icon "Veraero III" "003236"
-get_skill_icon "Magick Barrier" "003237"
-get_skill_icon Resolution "003238"
-get_skill_icon "Enchanted Moulinet Deux" "003239"
-get_skill_icon "Enchanted Moulinet Trois" "003240"
-get_skill_icon "Jolt III" "003241"
-get_skill_icon "Vice of Thorns" "003242"
-get_skill_icon "Grand Impact" "003243"
-get_skill_icon "Prefulgence" "003244"
+get_skill_icon "Hard Slash" "003051"
+get_skill_icon "Syphon Strike" "003054"
+get_skill_icon "Unleash" "003063"
+get_skill_icon "Grit" "003070"
+get_skill_icon "Release Grit" "003092"
+get_skill_icon "Unmend" "003062"
+get_skill_icon "Souleater" "003055"
+get_skill_icon "Flood of Darkness" "003082"
+get_skill_icon "Blood Weapon" "003071"
+get_skill_icon "Shadow Wall" "003075"
+get_skill_icon "Stalwart Soul" "003084"
+get_skill_icon "Edge of Darkness" "003083"
+get_skill_icon "Dark Mind" "003076"
+get_skill_icon "Living Dead" "003077"
+get_skill_icon "Salted Earth" "003066"
+get_skill_icon "Shadowstride" "003093"
+get_skill_icon "Abyssal Drain" "003064"
+get_skill_icon "Carve and Spit" "003058"
+get_skill_icon "Bloodspiller" "003080"
+get_skill_icon "Quietus" "003079"
+get_skill_icon "Dark Missionary" "003087"
+get_skill_icon "Delirium" "003078"
+get_skill_icon "The Blackest Night" "003081"
+get_skill_icon "Flood of Shadow" "003085"
+get_skill_icon "Edge of Shadow" "003086"
+get_skill_icon "Living Shadow" "003088"
+get_skill_icon "Oblation" "003089"
+get_skill_icon "Salt and Darkness" "003090"
+get_skill_icon "Shadowbringer" "003091"
+get_skill_icon "Shadowed Vigil" "003094"
+get_skill_icon "Scarlet Delirium" "003095"
+get_skill_icon "Comeuppance" "003096"
+get_skill_icon "Torcleaver" "003097"
+get_skill_icon "Impalement" "003098"
+get_skill_icon "Disesteem" "003099"
