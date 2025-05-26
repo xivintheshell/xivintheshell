@@ -463,13 +463,9 @@ class Controller {
 							? localizeSkillName(node.info.skillName)
 							: "(unknown)";
 						// TODO update these, since the replay doesn't stop anymore
-						msg +=
-							"Stopped here because the next action " + actionName + " can't be added: ";
+						msg += `Stopped here because the next action ${actionName} can't be added: `;
 					} else {
-						msg +=
-							"Stopped here because the next action " +
-							node.info.type +
-							" can't be added: ";
+						msg += `Stopped here because the next action ${node.info.type} can't be added: `;
 					}
 				}
 				msg += replayResult.invalidActions[0].reason;
