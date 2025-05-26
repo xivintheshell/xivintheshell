@@ -507,16 +507,13 @@ export default class Main extends React.Component<{ command?: string }> {
 													此排轴器随时可能会意外崩溃。请自行承担使用风险、注意经常导出编辑中的文件。
 												</li>
 												<li style={liStyle}>
-													BETA版与主排轴器网站不共享应用程序数据。在BETA网站上创建的文件不一定能在主网站上
-													导入，但主网站上创建的文件应该能在这里导入（如果不能导入，请报告为bug）。
+													BETA版与主排轴器网站不共享应用程序数据。在BETA网站上创建的文件不一定能在主网站上导入，但主网站上创建的文件应该能在这里导入（如果不能导入，请报告为bug）。
 												</li>
 												<li style={liStyle}>
-													如果遇到网站无法加载的情况，请反馈给我们，并告诉我们出问题前您最后进行的操作，我们可以帮您排查问题。
-													也可以自己尝试重置beta.xivintheshell.com的localStorage数据。
+													如果遇到网站无法加载的情况，请反馈给我们，并告诉我们出问题前您最后进行的操作，我们可以帮您排查问题。也可以自己尝试重置beta.xivintheshell.com的localStorage数据。
 												</li>
 												<li style={liStyle}>
-													如果想联系我们给反馈，可请不打冰三攻略组的黑魔们或鱼卡转达，或加miyehn的QQ（870340705，加时请注明来意），
-													或直接到
+													如果想联系我们给反馈，可请不打冰三攻略组的黑魔们或鱼卡转达，或加miyehn的QQ（870340705，加时请注明来意），或直接到
 													<a href="https://github.com/xivintheshell/xivintheshell/issues">
 														GitHub
 													</a>
