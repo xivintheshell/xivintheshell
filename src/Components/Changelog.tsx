@@ -30,12 +30,14 @@ type ChangelogBodyParams = {
 };
 
 function getRenderedEntry(entry: ChangelogEntry) {
+	const colors = getCurrentThemeColors();
 	return <div className="changelogGroup">
 		<div>{entry.date}</div>
 		<div>
 			{localize({
 				en: <>
-					{entry.changes.map((change, i) => <div className="changelogLine" key={i}>
+					{entry.changes.map((change, i) => <div className="changelogLine" key={i}
+						style={{ color: change.substring(1, 5) === "BETA" ? colors.warning : colors.text }}>
 						{change}
 					</div>)}
 				</>,
@@ -45,6 +47,7 @@ function getRenderedEntry(entry: ChangelogEntry) {
 							{entry.changes_zh.map((change, i) => <div
 								className="changelogLine"
 								key={i}
+								style={{ color: change.substring(1, 5) === "BETA" ? colors.warning : colors.text }}
 							>
 								{change}
 							</div>)}
