@@ -199,7 +199,7 @@ export function TimelineEditor() {
 		// When switching the active timeline slot, we must ensure that the batched edits are
 		// discarded.
 		updateActiveTimelineEditor = (slotSwapFn) => {
-			if (savedControllerRecord.current) {
+			if (isDirty && savedControllerRecord.current) {
 				controller.record = savedControllerRecord.current;
 				// Force a redraw
 				controller.checkRecordValidity(controller.record, 0, true);
