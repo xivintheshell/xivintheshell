@@ -438,43 +438,44 @@ class Controller {
 				);
 		}
 
-		let gameConfig = new GameConfig(content.config);
+		updateActiveTimelineEditor(() => {
+			let gameConfig = new GameConfig(content.config);
 
-		this.gameConfig = gameConfig;
+			this.gameConfig = gameConfig;
 
-		this.record = new Record();
-		this.record.config = gameConfig;
+			this.record = new Record();
+			this.record.config = gameConfig;
 
-		this.#requestRestart();
+			this.#requestRestart();
 
-		// apply resource overrides
-		this.#applyResourceOverrides(this.gameConfig);
+			// apply resource overrides
+			this.#applyResourceOverrides(this.gameConfig);
 
-		// now add the actions
-		let line = Line.deserialize(content.actions);
-		let replayResult = this.#replay({ line: line, replayMode: ReplayMode.Exact });
-		if (!replayResult.success) {
-			let msg = "Error loading record- \n";
-			if (replayResult.invalidActions.length > 0) {
-				const node = replayResult.invalidActions[0].node;
-				if (node.info.type === ActionType.Skill) {
-					const actionName = node.info.skillName
-						? localizeSkillName(node.info.skillName)
-						: "(unknown)";
-					// TODO update these, since the replay doesn't stop anymore
-					msg +=
-						"Stopped here because the next action " + actionName + " can't be added: ";
-				} else {
-					msg +=
-						"Stopped here because the next action " +
-						node.info.type +
-						" can't be added: ";
+			// now add the actions
+			let line = Line.deserialize(content.actions);
+			let replayResult = this.#replay({ line: line, replayMode: ReplayMode.Exact });
+			if (!replayResult.success) {
+				let msg = "Error loading record- \n";
+				if (replayResult.invalidActions.length > 0) {
+					const node = replayResult.invalidActions[0].node;
+					if (node.info.type === ActionType.Skill) {
+						const actionName = node.info.skillName
+							? localizeSkillName(node.info.skillName)
+							: "(unknown)";
+						// TODO update these, since the replay doesn't stop anymore
+						msg +=
+							"Stopped here because the next action " + actionName + " can't be added: ";
+					} else {
+						msg +=
+							"Stopped here because the next action " +
+							node.info.type +
+							" can't be added: ";
+					}
 				}
+				msg += replayResult.invalidActions[0].reason;
+				window.alert(msg);
 			}
-			msg += replayResult.invalidActions[0].reason;
-			window.alert(msg);
-		}
-		updateInvalidStatus();
+		});
 	}
 
 	// assumes newRecord can be replayed exactly
@@ -962,24 +963,25 @@ class Controller {
 		initialResourceOverrides: any[];
 	}) {
 		const oldJob = this.gameConfig.job;
-		this.gameConfig = new GameConfig({
-			...props,
-			shellVersion: ShellInfo.version,
+		updateActiveTimelineEditor(() => {
+			this.gameConfig = new GameConfig({
+				...props,
+				shellVersion: ShellInfo.version,
+			});
+
+			this.record = new Record();
+			this.record.config = this.gameConfig;
+
+			this.#requestRestart();
+			this.#applyResourceOverrides(this.gameConfig);
+			// Propagate changes to the intro section (definitely not idiomatic react... maybe we
+			// should just make the text static for all jobs)
+			if (oldJob !== props.job) {
+				setJob(props.job);
+			}
 		});
 
-		this.record = new Record();
-		this.record.config = this.gameConfig;
-
-		this.#requestRestart();
-		this.#applyResourceOverrides(this.gameConfig);
-		// Propagate changes to the intro section (definitely not idiomatic react... maybe we
-		// should just make the text static for all jobs)
-		if (oldJob !== props.job) {
-			setJob(props.job);
-		}
-
 		this.autoSave();
-		updateInvalidStatus();
 	}
 
 	getDisplayedGame(): GameState {
