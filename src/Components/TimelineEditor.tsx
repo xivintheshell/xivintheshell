@@ -321,10 +321,10 @@ export function TimelineEditor() {
 			localizeSkillUnavailableReason(undefined);
 		if (inSequence) {
 			errorMessageEn = `This sequence contains invalid actions! Check action #${adjustIndex(index)}: ${nodeNameEn}`;
-			errorMessageZh = `此编辑有出意外地行动！请查看在${adjustIndex(index)}位的行动： ${nodeNameZh}`;
+			errorMessageZh = `此编辑包含有问题的技能！请检查在第${adjustIndex(index)}位的技能： ${nodeNameZh}`;
 		} else {
 			errorMessageEn = `This action is invalid! ${nodeNameEn}`;
-			errorMessageZh = `此行动出了意外！ ${nodeNameZh}`;
+			errorMessageZh = `此技能出了意外！ ${nodeNameZh}`;
 		}
 		if (invalidTime !== undefined) {
 			const timeStr = StaticFn.displayTime(invalidTime, 3);
@@ -614,7 +614,7 @@ export function TimelineEditor() {
 										...getBorderStyling(colors),
 									}}
 								>
-									{localize({ en: "Actions", zh: "行动" })}
+									{localize({ en: "Actions", zh: "技能" })}
 								</th>
 							</tr>
 						</thead>
