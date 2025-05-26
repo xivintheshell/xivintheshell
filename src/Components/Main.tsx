@@ -150,7 +150,9 @@ export default class Main extends React.Component<{ command?: string }> {
 			// https://stackoverflow.com/a/260877
 			const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
 			if (link) {
-				if (job in JOBS) {
+				if (isBetaSite) {
+					link.href = "/favicons/beta.ico";
+				} else if (job in JOBS) {
 					link.href = "/favicons/" + job.toString().toLocaleLowerCase() + ".ico";
 				} else {
 					link.href = process.env.PUBLIC_URL + "/favicon.ico";
