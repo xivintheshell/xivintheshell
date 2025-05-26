@@ -720,17 +720,21 @@ export class StatusDisplay extends React.Component {
 										<b style={{ color: "darkorange" }}>orange</b> border:
 										viewing historical state, not receiving input
 									</div>
+								</>,
+								zh: <>
 									<div className="paragraph">
-										<b style={{ color: colors.editingValid }}>yellow</b> border:
-										using timeline editor, edits are valid
+										<span style={{ color: "lightgray" }}>灰色</span>边框：未选中
 									</div>
 									<div className="paragraph">
-										<b style={{ color: colors.editingInvalid }}>red</b> border:
-										using timeline editor, edits are NOT valid
+										<b style={{ color: "mediumpurple" }}>紫色</b>边框：正在接收输入
+									</div>
+									<div className="paragraph">
+										<b style={{ color: "mediumseagreen" }}>绿色</b>边框：正在进行实时动作
+									</div>
+									<div className="paragraph">
+										<b style={{ color: "darkorange" }}>橙色</b>边框：正在查看历史状态，未接收输入
 									</div>
 								</>,
-								// TODO zh localization
-								// TODO ja outdated
 								ja: <>
 									<div className="paragraph">
 										<span style={{ color: "lightgray" }}>グレー</span> : 未選択
