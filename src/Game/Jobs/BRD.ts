@@ -588,7 +588,7 @@ makeWeaponskill_BRD("APEX_ARROW", 80, {
 makeWeaponskill_BRD("BLAST_ARROW", 86, {
 	startOnHotbar: false,
 	potency: 600,
-	falloff: 0.6,
+	falloff: 0.5,
 	applicationDelay: 1.65,
 	validateAttempt: (state) => state.hasResourceAvailable("BLAST_ARROW_READY"),
 	highlightIf: (state) => state.hasResourceAvailable("BLAST_ARROW_READY"),
@@ -683,7 +683,7 @@ makeAbility_BRD("PITCH_PERFECT", 52, "cd_PITCH_PERFECT", {
 		const pitchPerfectStacks = state.resources.get("PITCH_PERFECT").availableAmount();
 		return pitchPerfectStacks === 3 ? 360 : pitchPerfectStacks === 2 ? 220 : 100;
 	},
-	falloff: 0.55,
+	falloff: 0.5,
 	onConfirm: (state) => state.tryConsumeResource("PITCH_PERFECT", true),
 	validateAttempt: (state) =>
 		state.hasResourceAvailable("WANDERERS_MINUET") &&
@@ -712,7 +712,7 @@ makeResourceAbility_BRD("BARRAGE", 38, "cd_BARRAGE", {
 makeWeaponskill_BRD("RESONANT_ARROW", 96, {
 	startOnHotbar: false,
 	potency: 600,
-	falloff: 0.55,
+	falloff: 0.5,
 	applicationDelay: 1.16,
 	onConfirm: (state) => state.tryConsumeResource("RESONANT_ARROW_READY"),
 	validateAttempt: (state) => state.hasResourceAvailable("RESONANT_ARROW_READY"),
@@ -748,7 +748,7 @@ makeWeaponskill_BRD("RADIANT_ENCORE", 100, {
 		const radiantCoda = state.resources.get("RADIANT_CODA").availableAmount();
 		return radiantCoda === 3 ? 900 : radiantCoda === 2 ? 600 : 500;
 	},
-	falloff: 0.55,
+	falloff: 0.5,
 	applicationDelay: 1.96,
 	onConfirm: (state) => state.tryConsumeResource("RADIANT_ENCORE_READY"),
 	validateAttempt: (state) => state.hasResourceAvailable("RADIANT_ENCORE_READY"),
@@ -807,7 +807,7 @@ makeWeaponskill_BRD("WIDE_VOLLEY", 18, {
 });
 makeWeaponskill_BRD("SHADOWBITE", 72, {
 	startOnHotbar: false,
-	potency: 180,
+	potency: 200,
 	falloff: 0,
 	applicationDelay: 1.43,
 	onConfirm: (state) => {
