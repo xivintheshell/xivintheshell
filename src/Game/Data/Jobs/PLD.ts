@@ -2,44 +2,44 @@ import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
 export const PLD_ACTIONS = ensureRecord<ActionData>()({
-	FAST_BLADE: { name: "Fast Blade" },
-	FIGHT_OR_FLIGHT: { name: "Fight or Flight" },
-	RIOT_BLADE: { name: "Riot Blade" },
-	TOTAL_ECLIPSE: { name: "Total Eclipse" },
-	SHIELD_BASH: { name: "Shield Bash" },
-	IRON_WILL: { name: "Iron Will" },
-	RELEASE_IRON_WILL: { name: "Release Iron Will" },
-	SHIELD_LOB: { name: "Shield Lob" },
-	SPIRITS_WITHIN: { name: "Spirits Within" },
-	SHELTRON: { name: "Sheltron" },
-	SENTINEL: { name: "Sentinel" },
-	PROMINENCE: { name: "Prominence" },
-	COVER: { name: "Cover" },
-	CIRCLE_OF_SCORN: { name: "Circle of Scorn" },
-	HALLOWED_GROUND: { name: "Hallowed Ground" },
-	BULWARK: { name: "Bulwark" },
-	GORING_BLADE: { name: "Goring Blade" },
-	DIVINE_VEIL: { name: "Divine Veil" },
-	CLEMENCY: { name: "Clemency" },
-	ROYAL_AUTHORITY: { name: "Royal Authority" },
-	INTERVENTION: { name: "Intervention" },
-	HOLY_SPIRIT: { name: "Holy Spirit" },
-	INTERVENE: { name: "Intervene" },
-	REQUIESCAT: { name: "Requiescat" },
-	PASSAGE_OF_ARMS: { name: "Passage of Arms" },
-	HOLY_CIRCLE: { name: "Holy Circle" },
-	ATONEMENT: { name: "Atonement" },
-	SUPPLICATION: { name: "Supplication" },
-	SEPULCHRE: { name: "Sepulchre" },
-	CONFITEOR: { name: "Confiteor" },
-	HOLY_SHELTRON: { name: "Holy Sheltron" },
-	EXPIACION: { name: "Expiacion" },
-	BLADE_OF_FAITH: { name: "Blade of Faith" },
-	BLADE_OF_TRUTH: { name: "Blade of Truth" },
-	BLADE_OF_VALOR: { name: "Blade of Valor" },
-	GUARDIAN: { name: "Guardian" },
-	IMPERATOR: { name: "Imperator" },
-	BLADE_OF_HONOR: { name: "Blade of Honor" },
+	FAST_BLADE: { name: "Fast Blade", label: { zh: "先锋剑" } },
+	FIGHT_OR_FLIGHT: { name: "Fight or Flight", label: { zh: "战逃反应" } },
+	RIOT_BLADE: { name: "Riot Blade", label: { zh: "暴乱剑" } },
+	TOTAL_ECLIPSE: { name: "Total Eclipse", label: { zh: "全蚀斩" } },
+	SHIELD_BASH: { name: "Shield Bash", label: { zh: "盾牌猛击" } },
+	IRON_WILL: { name: "Iron Will", label: { zh: "钢铁信念" } },
+	RELEASE_IRON_WILL: { name: "Release Iron Will", label: { zh: "解除钢铁信念" } },
+	SHIELD_LOB: { name: "Shield Lob", label: { zh: "投盾" } },
+	SPIRITS_WITHIN: { name: "Spirits Within", label: { zh: "深奥之灵" } },
+	SHELTRON: { name: "Sheltron", label: { zh: "盾阵" } },
+	SENTINEL: { name: "Sentinel", label: { zh: "预警" } },
+	PROMINENCE: { name: "Prominence", label: { zh: "日珥斩" } },
+	COVER: { name: "Cover", label: { zh: "保护" } },
+	CIRCLE_OF_SCORN: { name: "Circle of Scorn", label: { zh: "厄运流转" } },
+	HALLOWED_GROUND: { name: "Hallowed Ground", label: { zh: "神圣领域" } },
+	BULWARK: { name: "Bulwark", label: { zh: "壁垒" } },
+	GORING_BLADE: { name: "Goring Blade", label: { zh: "沥血剑" } },
+	DIVINE_VEIL: { name: "Divine Veil", label: { zh: "圣光幕帘" } },
+	CLEMENCY: { name: "Clemency", label: { zh: "深仁厚泽" } },
+	ROYAL_AUTHORITY: { name: "Royal Authority", label: { zh: "王权剑" } },
+	INTERVENTION: { name: "Intervention", label: { zh: "干预" } },
+	HOLY_SPIRIT: { name: "Holy Spirit", label: { zh: "圣灵" } },
+	INTERVENE: { name: "Intervene", label: { zh: "调停" } },
+	REQUIESCAT: { name: "Requiescat", label: { zh: "安魂祈祷" } },
+	PASSAGE_OF_ARMS: { name: "Passage of Arms", label: { zh: "武装戍卫" } },
+	HOLY_CIRCLE: { name: "Holy Circle", label: { zh: "圣环" } },
+	ATONEMENT: { name: "Atonement", label: { zh: "赎罪剑" } },
+	SUPPLICATION: { name: "Supplication", label: { zh: "祈告剑（赎罪连2）" } },
+	SEPULCHRE: { name: "Sepulchre", label: { zh: "葬送剑（赎罪连3）" } },
+	CONFITEOR: { name: "Confiteor", label: { zh: "悔罪" } },
+	HOLY_SHELTRON: { name: "Holy Sheltron", label: { zh: "圣盾阵" } },
+	EXPIACION: { name: "Expiacion", label: { zh: "偿赎剑" } },
+	BLADE_OF_FAITH: { name: "Blade of Faith", label: { zh: "信念之剑（悔罪连2）" } },
+	BLADE_OF_TRUTH: { name: "Blade of Truth", label: { zh: "真理之剑（悔罪连3）" } },
+	BLADE_OF_VALOR: { name: "Blade of Valor", label: { zh: "英勇之剑（悔罪连4）" } },
+	GUARDIAN: { name: "Guardian", label: { zh: "极致防御" } },
+	IMPERATOR: { name: "Imperator", label: { zh: "绝对统治" } },
+	BLADE_OF_HONOR: { name: "Blade of Honor", label: { zh: "荣耀之剑" } },
 });
 
 export const PLD_COOLDOWNS = ensureRecord<CooldownData>()({
@@ -66,35 +66,35 @@ export const PLD_COOLDOWNS = ensureRecord<CooldownData>()({
 });
 
 export const PLD_GAUGES = ensureRecord<ResourceData>()({
-	OATH_GAUGE: { name: "Oath Gauge" }, // [0, 100]
+	OATH_GAUGE: { name: "Oath Gauge", label: { zh: "忠义值" } }, // [0, 100]
 });
 
 export const PLD_STATUSES = ensureRecord<ResourceData>()({
-	FIGHT_OR_FLIGHT: { name: "Fight or Flight" }, // [0, 1]
-	IRON_WILL: { name: "Iron Will" }, // [0, 1]
-	CIRCLE_OF_SCORN_DOT: { name: "Circle of Scorn DoT" }, // [0, 1]
-	SHELTRON: { name: "Sheltron" }, // [0, 1]
-	SENTINEL: { name: "Sentinel" }, // [0, 1]
-	COVER: { name: "Cover" }, // [0, 1]
-	HALLOWED_GROUND: { name: "Hallowed Ground" }, // [0, 1]
-	BULWARK: { name: "Bulwark" }, // [0, 1]
-	GORING_BLADE_READY: { name: "Goring Blade Ready" }, // [0, 1]
-	DIVINE_VEIL: { name: "Divine Veil" }, // [0, 1]
-	ATONEMENT_READY: { name: "Atonement Ready" }, // [0, 1]
-	DIVINE_MIGHT: { name: "Divine Might" }, // [0, 1]
-	INTERVENTION: { name: "Intervention" }, // [0, 1]
-	KNIGHTS_RESOLVE: { name: "Knight's Resolve" }, // [0, 1]
-	KNIGHTS_BENEDICTION: { name: "Knight's Benediction" }, // [0, 1]
-	REQUIESCAT: { name: "Requiescat", maximumStacks: 4 }, // [0, 1]
-	CONFITEOR_READY: { name: "Confiteor Ready" }, // [0, 1]
-	PASSAGE_OF_ARMS: { name: "Passage of Arms" }, // [0, 1]
-	ARMS_UP: { name: "Arms Up" }, // [0, 1]
-	SUPPLICATION_READY: { name: "Supplication Ready" }, // [0, 1]
-	SEPULCHRE_READY: { name: "Sepulchre Ready" }, // [0, 1]
-	HOLY_SHELTRON: { name: "Holy Sheltron" }, // [0, 1]
-	BLADE_OF_HONOR_READY: { name: "Blade of Honor Ready" }, // [0, 1]
-	GUARDIAN: { name: "Guardian" }, // [0, 1]
-	GUARDIANS_WILL: { name: "Guardian's Will" }, // [0, 1]
+	FIGHT_OR_FLIGHT: { name: "Fight or Flight", label: { zh: "战逃反应" } }, // [0, 1]
+	IRON_WILL: { name: "Iron Will", label: { zh: "钢铁信念" } }, // [0, 1]
+	CIRCLE_OF_SCORN_DOT: { name: "Circle of Scorn DoT", label: { zh: "厄运流转DOT" } }, // [0, 1]
+	SHELTRON: { name: "Sheltron", label: { zh: "盾阵" } }, // [0, 1]
+	SENTINEL: { name: "Sentinel", label: { zh: "预警" } }, // [0, 1]
+	COVER: { name: "Cover", label: { zh: "保护" } }, // [0, 1]
+	HALLOWED_GROUND: { name: "Hallowed Ground", label: { zh: "神圣领域" } }, // [0, 1]
+	BULWARK: { name: "Bulwark", label: { zh: "壁垒" } }, // [0, 1]
+	GORING_BLADE_READY: { name: "Goring Blade Ready", label: { zh: "沥血剑预备" } }, // [0, 1]
+	DIVINE_VEIL: { name: "Divine Veil", label: { zh: "圣光幕帘" } }, // [0, 1]
+	ATONEMENT_READY: { name: "Atonement Ready", label: { zh: "赎罪剑预备" } }, // [0, 1]
+	DIVINE_MIGHT: { name: "Divine Might", label: { zh: "神圣魔法效果提高" } }, // [0, 1]
+	INTERVENTION: { name: "Intervention", label: { zh: "干预" } }, // [0, 1]
+	KNIGHTS_RESOLVE: { name: "Knight's Resolve", label: { zh: "骑士的坚守" } }, // [0, 1]
+	KNIGHTS_BENEDICTION: { name: "Knight's Benediction", label: { zh: "骑士的加护" } }, // [0, 1]
+	REQUIESCAT: { name: "Requiescat", maximumStacks: 4, label: { zh: "安魂祈祷" } }, // [0, 1]
+	CONFITEOR_READY: { name: "Confiteor Ready", label: { zh: "悔罪预备" } }, // [0, 1]
+	PASSAGE_OF_ARMS: { name: "Passage of Arms", label: { zh: "武装戍卫" } }, // [0, 1]
+	ARMS_UP: { name: "Arms Up", label: { zh: "武装" } }, // [0, 1]
+	SUPPLICATION_READY: { name: "Supplication Ready", label: { zh: "祈告剑预备" } }, // [0, 1]
+	SEPULCHRE_READY: { name: "Sepulchre Ready", label: { zh: "葬送剑预备" } }, // [0, 1]
+	HOLY_SHELTRON: { name: "Holy Sheltron", label: { zh: "圣盾阵" } }, // [0, 1]
+	BLADE_OF_HONOR_READY: { name: "Blade of Honor Ready", label: { zh: "荣耀之剑预备" } }, // [0, 1]
+	GUARDIAN: { name: "Guardian", label: { zh: "极致防御" } }, // [0, 1]
+	GUARDIANS_WILL: { name: "Guardian's Will", label: { zh: "极致护盾" } }, // [0, 1]
 });
 
 export const PLD_TRACKERS = ensureRecord<ResourceData>()({
