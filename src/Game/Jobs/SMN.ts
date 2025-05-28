@@ -1133,7 +1133,7 @@ makeAbility_SMN("DEATHFLARE", 60, "cd_ASTRAL_FLOW", {
 	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 0),
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[0].condition,
-	falloff: 0.6,
+	falloff: 0.5,
 	startOnHotbar: false,
 });
 
@@ -1154,7 +1154,7 @@ makeAbility_SMN("SUNFLARE", 100, "cd_ASTRAL_FLOW", {
 	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 2),
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[2].condition,
-	falloff: 0.6,
+	falloff: 0.5,
 	startOnHotbar: false,
 });
 
@@ -1252,19 +1252,19 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 		name: "ENKINDLE_BAHAMUT",
 		level: 70,
 		activeValue: ActiveDemiValue.BAHAMUT,
-		falloff: 0.6,
+		falloff: 0.5,
 	},
 	{
 		name: "ENKINDLE_PHOENIX",
 		level: 80,
 		activeValue: ActiveDemiValue.PHOENIX,
-		falloff: undefined,
+		falloff: 0.5,
 	},
 	{
 		name: "ENKINDLE_SOLAR_BAHAMUT",
 		level: 100,
 		activeValue: ActiveDemiValue.SOLAR,
-		falloff: 0.6,
+		falloff: 0.5,
 	},
 ].forEach((info, i) =>
 	makeAbility_SMN(info.name as SMNActionKey, info.level, "cd_ENKINDLE", {
