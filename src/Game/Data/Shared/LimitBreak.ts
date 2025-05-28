@@ -2,10 +2,10 @@ import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData } from "../types";
 
 export const TANK_LB3_ACTIONS = ensureRecord<ActionData>()({
-	LAST_BASTION: { name: "Last Bastion" },
+	LAST_BASTION: { name: "Last Bastion", label: { zh: "终极堡垒" } },
 	LAND_WAKER: { name: "Land Waker", label: { zh: "原初大地" } },
-	DARK_FORCE: { name: "Dark Force" },
-	GUNMETAL_SOUL: { name: "Gunmetal Soul" },
+	DARK_FORCE: { name: "Dark Force", label: { zh: "暗黑之力" } },
+	GUNMETAL_SOUL: { name: "Gunmetal Soul", label: { zh: "灵魂之青" } },
 });
 
 export const HEALER_LB3_ACTIONS = ensureRecord<ActionData>()({
@@ -39,10 +39,10 @@ export const CASTER_LB3_ACTIONS = ensureRecord<ActionData>()({
 
 // Tank LB3 Status effects
 export const TANK_LB3_RESOURCES = ensureRecord<ResourceData>()({
-	LAST_BASTION: { name: "Last Bastion" },
+	LAST_BASTION: { name: "Last Bastion", label: { zh: "终极堡垒（骑士LB3 buff）" } },
 	LAND_WAKER: { name: "Land Waker", label: { zh: "原初大地（战士LB3 buff）" } },
-	DARK_FORCE: { name: "Dark Force" },
-	GUNMETAL_SOUL: { name: "Gunmetal Soul" },
+	DARK_FORCE: { name: "Dark Force", label: { zh: "暗黑之力（黑骑LB3 buff）" } },
+	GUNMETAL_SOUL: { name: "Gunmetal Soul", label: { zh: "灵魂之青（绝枪LB3 buff）" } },
 });
 
 // ========================================

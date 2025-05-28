@@ -205,8 +205,8 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.LIFE_OF_THE_DRAGON, { en: "life of the dragon" }],
 	[PotencyModifierType.LIFE_SURGE, { en: "life surge" }],
 	[PotencyModifierType.PET, { en: "pet modifier" }],
-	[PotencyModifierType.DIVINE_MIGHT, { en: "divine might" }],
-	[PotencyModifierType.REQUIESCAT, { en: "requiescat" }],
+	[PotencyModifierType.DIVINE_MIGHT, { en: "divine might", zh: "神圣魔法效果提高" }],
+	[PotencyModifierType.REQUIESCAT, { en: "requiescat", zh: "安魂祈祷" }],
 	[PotencyModifierType.FIGHT_OR_FLIGHT, { en: "fight or flight" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
@@ -269,9 +269,9 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.ENHANCED_PIERCING_TALON, { en: "ENH" }],
 	[PotencyModifierType.LIFE_SURGE, { en: "LS" }],
 	[PotencyModifierType.BATTLE_LITANY, { en: "BL" }],
-	[PotencyModifierType.DIVINE_MIGHT, { en: "DM" }],
-	[PotencyModifierType.REQUIESCAT, { en: "REQ" }],
-	[PotencyModifierType.FIGHT_OR_FLIGHT, { en: "FOF" }],
+	[PotencyModifierType.DIVINE_MIGHT, { en: "DM", zh: "强化圣灵" }],
+	[PotencyModifierType.REQUIESCAT, { en: "REQ", zh: "安魂" }],
+	[PotencyModifierType.FIGHT_OR_FLIGHT, { en: "FOF", zh: "战逃" }],
 	[PotencyModifierType.PET, { en: "PET" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
