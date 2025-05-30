@@ -77,22 +77,22 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 		const infos: ResourceDisplayProps[] = [
 			{
 				kind: "counter",
-				name: localize({ en: "aetherflow" }),
+				name: localize({ en: "aetherflow", zh: "以太超流" }),
 				color: colors.smn.aetherflow,
 				currentStacks: resources.get("AETHERFLOW").availableAmount(),
 				maxStacks: 2,
 			} as ResourceCounterProps,
 			{
 				kind: "bar",
-				name: localize({ en: "demi summon" }),
+				name: localize({ en: "demi summon", zh: "亚灵神剩余时间" }),
 				color: demiColor,
 				progress: demiTimer === 0 ? 0 : 1 - demiTimer / 15,
 				valueString: demiTimer.toFixed(3),
 			} as ResourceBarProps,
 			{
 				kind: "attunement",
-				aetherName: localize({ en: "aether" }),
-				attunementName: localize({ en: "attunement" }),
+				aetherName: localize({ en: "aether", zh: "宝石以太" }),
+				attunementName: localize({ en: "attunement", zh: "宝石以太层数" }),
 				ruby: resources.get("RUBY_ARCANUM").available(1),
 				topaz: resources.get("TOPAZ_ARCANUM").available(1),
 				emerald: resources.get("EMERALD_ARCANUM").available(1),
@@ -108,9 +108,12 @@ export class SMNStatusPropsGenerator extends StatusPropsGenerator<SMNState> {
 			} as AttunementGaugeProps,
 			{
 				kind: "bar",
-				name: localize({ en: "summon lock" }),
+				name: localize({ en: "summon lock", zh: "召唤剩余时间" }),
 				color: summonColor,
-				progress: attackProgress > 0 ? summonCd.availableAmount() / summonCd.maxValue : 0,
+				progress:
+					attackProgress > 0
+						? 1 - summonCd.timeTillNextStackAvailable() / summonCd.currentStackCd()
+						: 0,
 				valueString: attackProgress.toFixed(3),
 			} as ResourceBarProps,
 		];
