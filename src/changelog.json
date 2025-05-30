@@ -1,5 +1,17 @@
 [
 	{
+		"date": "5/29/25",
+		"changes": [
+			"[PLD] Chinese localization adjustments.",
+			"[SMN] Chinese localization; fix summon lock bar not showing progress."
+		],
+		"changes_zh": [
+			"【骑士】汉化补充。",
+			"【召唤师】汉化实装；修复召唤剩余时间进度条不显示的问题。"
+		],
+		"level": "minor"
+	},
+	{
 		"date": "5/28/25",
 		"changes": [
 			"[PLD] Chinese localization first draft."
@@ -15,7 +27,7 @@
 			"[BRD][MCH][SMN] Adjusted AoE potencies to reflect patch 7.25."
 		],
 		"changes_zh": [
-			"【吟游诗人】【机工士】【召唤师】调整多目标技能威力至7.25版本的数据。"
+			"【吟游诗人】【机工士】【召唤师】调整多目标技能威力至7.25版本的数值。"
 		],
 		"level": "minor"
 	},

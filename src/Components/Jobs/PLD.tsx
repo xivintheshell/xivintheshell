@@ -69,7 +69,7 @@ export class PLDStatusPropsGenerator extends StatusPropsGenerator<PLDState> {
 
 			{
 				kind: "bar",
-				name: localize({ en: "Combo Timer" }),
+				name: localize({ en: "Combo Timer", zh: "连击监控" }),
 				color: colors.pld.pldComboTimer,
 				progress: comboTimer ? comboTimer / 30 : 0,
 				valueString: comboTimer?.toFixed(3) ?? "N/A",

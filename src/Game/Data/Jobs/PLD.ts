@@ -99,11 +99,14 @@ export const PLD_STATUSES = ensureRecord<ResourceData>()({
 
 export const PLD_TRACKERS = ensureRecord<ResourceData>()({
 	// 0 - no combo, 1 - riot blade ready, 2 - royal authority ready
-	PLD_COMBO_TRACKER: { name: "PLD Combo Tracker" }, // [0, 2]
+	PLD_COMBO_TRACKER: { name: "PLD Combo Tracker", label: { zh: "王权连连击状态" } }, // [0, 2]
 	// 0 - no combo, 1 - bof ready, 2 - bot ready, 3 - bov ready
-	PLD_CONFITEOR_COMBO_TRACKER: { name: "PLD Confiteor Combo Tracker" }, // [0, 3]
+	PLD_CONFITEOR_COMBO_TRACKER: {
+		name: "PLD Confiteor Combo Tracker",
+		label: { zh: "悔罪连连击状态" },
+	}, // [0, 3]
 	// 0 - no combo, 1 - prominence ready
-	PLD_AOE_COMBO_TRACKER: { name: "PLD AOE Combo Tracker" }, // [0, 1]
+	PLD_AOE_COMBO_TRACKER: { name: "PLD AOE Combo Tracker", label: { zh: "AOE连连击状态" } }, // [0, 1]
 
 	// CAN_AUTO_ATTACK: { name: "Can Auto Attack" }, // [0, 1]
 	// AUTO_ATTACK_TRACKER: { name: "Auto Attack Tracker" }, //
