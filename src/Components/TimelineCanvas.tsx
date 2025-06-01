@@ -1387,10 +1387,13 @@ function drawCursors(originX: number, timelineStartY: number) {
 
 function drawAddSlotButton(originY: number) {
 	if (g_renderingProps.slots.length < MAX_TIMELINE_SLOTS) {
-		let handle: Rect = {
-			x: 4,
+		// "Add timeline slot" button
+		const BUTTON_W_PX = 192;
+		const BUTTON_LEFT_MARGIN_PX = 4;
+		const handle: Rect = {
+			x: BUTTON_LEFT_MARGIN_PX,
 			y: originY + 2,
-			w: 192,
+			w: BUTTON_W_PX,
 			h: TimelineDimensions.addSlotButtonHeight - 4,
 		};
 		g_ctx.fillStyle = g_colors.bgLowContrast;
@@ -1412,6 +1415,37 @@ function drawAddSlotButton(originY: number) {
 			undefined,
 			() => {
 				controller.timeline.addSlot();
+				controller.displayCurrentState();
+			},
+			true,
+		);
+
+		// "Clone timeline slot" button
+		const cloneHandle: Rect = {
+			x: 2 * BUTTON_LEFT_MARGIN_PX + BUTTON_W_PX,
+			y: originY + 2,
+			w: BUTTON_W_PX,
+			h: TimelineDimensions.addSlotButtonHeight - 4,
+		};
+		g_ctx.fillStyle = g_colors.bgLowContrast;
+		g_ctx.fillRect(cloneHandle.x, cloneHandle.y, cloneHandle.w, cloneHandle.h);
+		g_ctx.strokeStyle = g_colors.bgHighContrast;
+		g_ctx.lineWidth = 1;
+		g_ctx.strokeRect(cloneHandle.x, cloneHandle.y, cloneHandle.w, cloneHandle.h);
+		g_ctx.font = "13px monospace";
+		g_ctx.fillStyle = g_colors.text;
+		g_ctx.textAlign = "center";
+		g_ctx.fillText(
+			localize({ en: "Clone timeline slot", zh: "复制时间轴" }) as string,
+			cloneHandle.x + cloneHandle.w / 2,
+			cloneHandle.y + cloneHandle.h - 4,
+		);
+
+		testInteraction(
+			cloneHandle,
+			undefined,
+			() => {
+				controller.timeline.cloneSlot();
 				controller.displayCurrentState();
 			},
 			true,
