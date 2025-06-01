@@ -1482,7 +1482,10 @@ class Controller {
 	}
 
 	cloneActiveSlot() {
-		if (this.timeline.activeSlotIndex < 0 || this.timeline.activeSlotIndex >= this.timeline.slots.length) {
+		if (
+			this.timeline.activeSlotIndex < 0 ||
+			this.timeline.activeSlotIndex >= this.timeline.slots.length
+		) {
 			console.error(
 				"tried to clone slot with invalid activeSlotIndex " + this.timeline.activeSlotIndex,
 			);
@@ -1693,7 +1696,12 @@ class Controller {
 			// if it came from a preset or file load.
 			// After adding support for invalid actions, we instead just keep the invalid action around.
 			this.#bInterrupted = true;
-			this.timeline.invalidateLastElement();
+			if (!this.#bInSandbox) {
+				// If the skill was replayed by a timeline edit motion, then invalidate the last cast.
+				// When viewing historical state (a skill is selected), then the last action may be
+				// something else.
+				this.timeline.invalidateLastElement();
+			}
 		}
 	}
 
