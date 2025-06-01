@@ -8,6 +8,7 @@ import {
 	localizeSkillName,
 	localizeResourceType,
 	localizeSkillUnavailableReason,
+	getCurrentLanguage,
 } from "./Localization";
 import { TIMELINE_COLUMNS_HEIGHT, updateTimelineView } from "./Timeline";
 import { Columns } from "./Common";
@@ -287,59 +288,55 @@ export function TimelineEditor() {
 		const node = invalidAction?.node;
 		const index = invalidAction?.index;
 		const reason = invalidAction?.reason;
-		let nodeNameEn = "(unknown node)";
-		let nodeNameZh = "（未知节点）";
+		const isEn = getCurrentLanguage() === "en";
+		const l = (en: string, zh: string) => (isEn ? en : zh);
+		let nodeName = l("(unknown node)", "（未知节点）");
 		if (node) {
 			if (node.info.type === ActionType.Wait) {
-				nodeNameEn = "(Wait)";
-				nodeNameZh = "（等待）";
+				nodeName = l("(Wait)", "（等待）");
 			} else if (node.info.type === ActionType.JumpToTimestamp) {
-				nodeNameEn = "(Jump to time)";
-				nodeNameZh = "（跳到时间）";
+				nodeName = l("(Jump to time)", "（跳到时间）");
 			} else if (node.info.type === ActionType.WaitForMP) {
-				nodeNameEn = "(Wait for MP/lucid tick)";
-				nodeNameZh = "（快进到挑篮/跳星梦）";
+				nodeName = l("(Wait for MP/lucid tick)", "（快进到挑篮/跳星梦）");
 			} else if (node.info.type === ActionType.SetResourceEnabled) {
 				const localizedBuffName = localizeResourceType(node.info.buffName);
-				nodeNameEn = "(Toggle resource " + localizedBuffName + ")";
-				nodeNameZh = "（开关或去除BUFF： " + localizedBuffName + "）";
+				nodeName = l(
+					"(Toggle resource " + localizedBuffName + ")",
+					"（开关或去除BUFF： " + localizedBuffName + "）",
+				);
 			} else if (node.info.type === ActionType.Skill) {
-				nodeNameEn = node.info.skillName
+				nodeName = node.info.skillName
 					? localizeSkillName(node.info.skillName)
-					: "(unknown skill)";
-				nodeNameZh = node.info.skillName
-					? localizeSkillName(node.info.skillName)
-					: "（未知技能）";
+					: l("(unknown skill)", "（未知技能）");
 			}
 		}
-		let errorMessageEn: string;
-		let errorMessageZh: string;
+		let errorMessage: string;
 		const invalidTime =
 			index !== undefined ? recordValidStatus?.skillUseTimes[index] : undefined;
 		const localizedReason =
-			reason?.unavailableReasons.map(localizeSkillUnavailableReason).join("; ") ??
+			reason?.unavailableReasons.map(localizeSkillUnavailableReason).join(l("; ", "、")) ??
 			localizeSkillUnavailableReason(undefined);
 		if (inSequence) {
-			errorMessageEn = `This sequence contains invalid actions! Check action #${adjustIndex(index)}: ${nodeNameEn}`;
-			errorMessageZh = `此编辑包含有问题的技能！请检查在第${adjustIndex(index)}位的技能： ${nodeNameZh}`;
+			errorMessage = l(
+				`This sequence contains invalid actions! Check action #${adjustIndex(index)}: ${nodeName}`,
+				`此编辑包含有问题的技能！请检查在第${adjustIndex(index)}位的技能： ${nodeName}`,
+			);
 		} else {
-			errorMessageEn = `This action is invalid! ${nodeNameEn}`;
-			errorMessageZh = `此技能出了意外！ ${nodeNameZh}`;
+			errorMessage = l(`This action is invalid! ${nodeName}`, `此技能有问题！ ${nodeName}`);
 		}
 		if (invalidTime !== undefined) {
 			const timeStr = StaticFn.displayTime(invalidTime, 3);
-			errorMessageEn += ` @ ${timeStr}.`;
-			errorMessageZh += ` @ ${timeStr}.`;
+			errorMessage += ` @ ${timeStr}` + l(".", "。");
 		}
 		return {
 			en: <>
-				{errorMessageEn}
+				{errorMessage}
 				<br />
 				<br />
 				Reason: {localizedReason}
 			</>,
 			zh: <>
-				{errorMessageZh}
+				{errorMessage}
 				<br />
 				<br />
 				理由：{localizedReason}

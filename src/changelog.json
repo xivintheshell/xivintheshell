@@ -1,5 +1,17 @@
 [
 	{
+		"date": "5/31/25",
+		"changes": [
+			"[BETA] Added the ability to save invalid timelines on the visual canvas. Changes in the timeline editor now reflect in the graphical timeline as well.",
+			"[BETA] The \"jump to timestamp\" and \"wait for MP tick\" buttons will now always look for the specified timestamp/next MP tick, even when actions are shifted in the timeline editor."
+		],
+		"changes_zh": [
+			"【BETA】增加了保存有问题的时间轴的功能。时间轴编辑器里的变化现在会在图形时间轴内显示出。",
+			"【BETA】《快进至指定时间》和《快进到跳蓝》的按钮会在使用时间轴编辑器后坚持寻找设定的时间或下一个条蓝。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "5/29/25",
 		"changes": [
 			"[PLD] Chinese localization adjustments.",
@@ -37,19 +49,7 @@
 			"Fixed a bug where damage log CSV export didn't work (thanks ryxiv)."
 		],
 		"level": "minor"
-	},
-	{
-		"date": "5/25/25",
-		"changes": [
-			"[BETA] Added the ability to save invalid timelines on the visual canvas. Changes in the timeline editor now reflect in the graphical timeline as well.",
-			"[BETA] The \"jump to timestamp\" and \"wait for MP tick\" buttons will now always look for the specified timestamp/next MP tick, even when actions are shifted in the timeline editor."
-		],
-		"changes_zh": [
-			"【BETA】增加了保存有问题的时间轴的功能。时间轴编辑器里的变化现在会在图形时间轴内显示出。",
-			"【BETA】《快进至指定时间》和《快进到跳蓝》的按钮会在使用时间轴编辑器后坚持寻找设定的时间或下一个条蓝。"
-		],
-		"level": "major"
-	},
+	},	
 	{
 		"date": "5/23/25",
 		"changes": [

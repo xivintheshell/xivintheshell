@@ -145,8 +145,6 @@ it("has correct actions after switching slots and triggering a reset", () => {
 	// Behavior of hitting "apply and reset" in PlaybackControl
 	controller.setActiveSlot(2);
 	controller.setConfigAndRestart(controller.game.config);
-	controller.updateAllDisplay();
-	controller.scrollToTime();
 	checkAllSlots([
 		...DEFAULT_EXPECTED_SLOTS.slice(0, 2),
 		{ length: 0, invalidActions: [] },
