@@ -177,6 +177,20 @@ export class Timeline {
 		}
 	}
 
+	// Sets the tmp_invalid field on the last element with a skillNode.
+	invalidateLastElement() {
+		if (this.slots.length > 0) {
+			const elements = this.slots[this.activeSlotIndex].elements;
+			for (let i = elements.length - 1; i >= 0; i--) {
+				const elem = elements[i];
+				if (elem.type === ElemType.Skill) {
+					elem.node.tmp_invalid = true;
+					return;
+				}
+			}
+		}
+	}
+
 	tryGetElement(time: number, type: ElemType): SlotTimelineElem | undefined {
 		return this.slots[this.activeSlotIndex].elements.find(
 			(element) => element.time === time && element.type === type,

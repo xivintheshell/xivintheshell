@@ -274,7 +274,7 @@ export function TimelineEditor() {
 		}
 	};
 
-	const getInvalidActionText = (
+	const getInvalidActionMessage = (
 		invalidAction:
 			| {
 					node: ActionNode;
@@ -328,14 +328,22 @@ export function TimelineEditor() {
 		}
 		if (invalidTime !== undefined) {
 			const timeStr = StaticFn.displayTime(invalidTime, 3);
-			errorMessageEn += ` @ ${timeStr}`;
-			errorMessageZh += ` @ ${timeStr}`;
+			errorMessageEn += ` @ ${timeStr}.`;
+			errorMessageZh += ` @ ${timeStr}.`;
 		}
-		errorMessageEn += ` (${localizedReason})`;
-		errorMessageZh += `（${localizedReason}）`;
 		return {
-			en: errorMessageEn,
-			zh: errorMessageZh,
+			en: <>
+				{errorMessageEn}
+				<br />
+				<br />
+				Reason: {localizedReason}
+			</>,
+			zh: <>
+				{errorMessageZh}
+				<br />
+				<br />
+				理由：{localizedReason}
+			</>,
 		};
 	};
 
@@ -358,7 +366,7 @@ export function TimelineEditor() {
 								en: "This edited sequence is valid.",
 								zh: "此编辑可被应用。",
 							})
-						: localize(getInvalidActionText(firstInvalidAction, true))}
+						: localize(getInvalidActionMessage(firstInvalidAction, true))}
 				</div>
 				<button
 					style={{ display: "block", marginTop: 10, marginLeft: buttonMarginLeft }}
@@ -436,7 +444,7 @@ export function TimelineEditor() {
 							backgroundColor: colors.editingInvalid + HIGHLIGHT_ALPHA_HEX,
 						}}
 					>
-						{localize(getInvalidActionText(invalidActionToShow, inSequence))}
+						{localize(getInvalidActionMessage(invalidActionToShow, inSequence))}
 					</div>
 				</div>;
 			}

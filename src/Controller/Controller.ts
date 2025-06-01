@@ -150,7 +150,6 @@ class Controller {
 	savedHistoricalGame: GameState;
 	savedHistoricalRecord: Record;
 
-	#bAddingLine: boolean = false;
 	#bInterrupted: boolean = false;
 	#bInSandbox: boolean = false;
 
@@ -262,7 +261,6 @@ class Controller {
 		this.#applyResourceOverrides(this.record.config);
 
 		// replay skills sequence
-		this.#bAddingLine = true;
 		let status = this.#replay({
 			line: inRecord,
 			replayMode: ReplayMode.Edited,
@@ -270,7 +268,6 @@ class Controller {
 			selectionStart: inRecord.getFirstSelection(),
 			selectionEnd: inRecord.getLastSelection(),
 		});
-		this.#bAddingLine = false;
 		this.record.selectionStartIndex = inRecord.selectionStartIndex;
 		this.record.selectionStartIndex = inRecord.selectionStartIndex;
 
@@ -365,7 +362,6 @@ class Controller {
 		this.#dotCoverageTimes = new Map();
 		this.#hotTickTimes = new Map();
 		this.#hotCoverageTimes = new Map();
-		this.#bAddingLine = false;
 		this.#bInterrupted = false;
 		this.displayingUpToDateGameState = true;
 	}
@@ -1038,13 +1034,13 @@ class Controller {
 			actionIndex = this.record.tailIndex;
 			// If the skill can be used, do so.
 			this.game.useSkill(skillName, node, actionIndex);
+			node.tmp_invalid = false;
 			if (overrideTickMode === TickMode.RealTimeAutoPause) {
 				this.shouldLoop = true;
 				this.#runLoop(() => {
 					return this.game.timeTillAnySkillAvailable() > 0;
 				});
 			}
-			node.tmp_invalid = false;
 		} else {
 			if (!addInvalidNodes) {
 				// Do not add the skill node if receiving user input for an invalid skill.
@@ -1349,6 +1345,7 @@ class Controller {
 				if (this.#bInterrupted) {
 					// likely because enochian dropped before a cast snapshots
 					this.#bInterrupted = false;
+					status.status.addUnavailableReason(SkillUnavailableReason.CastCanceled);
 					invalidActions.push({
 						node: itr,
 						index: i,
@@ -1617,8 +1614,6 @@ class Controller {
 
 	// Used for trying to add a preset skill sequence to the current timeline
 	tryAddLine(line: Line, replayMode = ReplayMode.SkillSequence) {
-		this.#bAddingLine = true;
-
 		let replayResult = this.#replay({ line: line, replayMode: replayMode });
 		if (!replayResult.success) {
 			this.rewindUntilBefore(replayResult.firstAddedIndex, false);
@@ -1627,11 +1622,9 @@ class Controller {
 					line.name +
 					'" due to insufficient resources and/or stats mismatch.',
 			);
-			this.#bAddingLine = false;
 			return false;
 		} else {
 			this.autoSave();
-			this.#bAddingLine = false;
 			updateInvalidStatus();
 			return true;
 		}
@@ -1646,30 +1639,11 @@ class Controller {
 	}
 
 	reportInterruption(props: { failNode: ActionNode; failIndex: number }) {
-		if (!this.#bInSandbox) {
-			const nodeDisplayInfo = props.failNode.getNameForMessage();
-			window.alert(
-				"cast failed! Resources for " + nodeDisplayInfo + " are no longer available",
-			);
-			console.warn("failed: " + nodeDisplayInfo);
-		}
-		// if adding from a line, invalidate the whole line
-		// if loading from file (shouldn't happen)
-		// if real-time / using a skill directly: get rid of this node but don't scrub time back
-
-		if (this.#bAddingLine) {
-			this.#bInterrupted = true;
-		} else {
-			let currentTime = this.game.time;
-			let currentLoop = this.shouldLoop;
-			this.rewindUntilBefore(props.failIndex, false);
-			this.autoSave();
-			this.#requestTick({
-				deltaTime: currentTime - this.game.time,
-				waitKind: "duration",
-			});
-			this.shouldLoop = currentLoop;
-		}
+		// Previous verions of xivintheshell would remove interrupted casts from the timeline,
+		// raising a window.alert and replacing the spent cast time with an explicit wait event.
+		// After adding support for invalid actions, we instead just keep the invalid action around.
+		this.#bInterrupted = true;
+		this.timeline.invalidateLastElement();
 	}
 
 	// basically restart the game and play till here:

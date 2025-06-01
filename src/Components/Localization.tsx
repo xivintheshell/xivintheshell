@@ -53,7 +53,6 @@ export function localizeSkillUnavailableReason(reason?: SkillUnavailableReason):
 		return localize({ en: "reason unknown", zh: "未知的理由" }).toString();
 	}
 	let zhReason = "（未知的理由）";
-	// TODO check localization on all of these
 	if (reason === SkillUnavailableReason.Blocked) {
 		zhReason = "在CD，能力技后摇，或读条税中";
 	} else if (reason === SkillUnavailableReason.SecondaryBlocked) {
@@ -70,6 +69,10 @@ export function localizeSkillUnavailableReason(reason?: SkillUnavailableReason):
 		zhReason = "BUFF以结束";
 	} else if (reason === SkillUnavailableReason.PastTargetTime) {
 		zhReason = "跳时间的目标已经过去了";
+	} else if (reason === SkillUnavailableReason.CastCanceled) {
+		zhReason = "咏唱被中断";
+	} else {
+		console.error("unlocalized reason: " + reason);
 	}
 	return localize({ en: reason, zh: zhReason }).toString();
 }
