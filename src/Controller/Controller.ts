@@ -1036,7 +1036,7 @@ class Controller {
 			actionIndex = this.record.tailIndex;
 			// If the skill can be used, do so.
 			this.game.useSkill(skillName, node, actionIndex);
-			node.tmp_invalid = false;
+			node.tmp_invalid_reasons = [];
 			if (overrideTickMode === TickMode.RealTimeAutoPause) {
 				this.shouldLoop = true;
 				this.#runLoop(() => {
@@ -1060,7 +1060,7 @@ class Controller {
 			// If the skill is invalid and we are NOT accepting user input, roll its animation
 			// locks and cast bars, and mark it as invalid.
 			this.game.useInvalidSkill(skillName, node);
-			node.tmp_invalid = true;
+			node.tmp_invalid_reasons = status.status.unavailableReasons;
 		}
 		let lockDuration = this.game.timeTillAnySkillAvailable();
 

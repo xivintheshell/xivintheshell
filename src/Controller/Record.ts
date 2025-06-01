@@ -17,7 +17,7 @@
 // implementation parses these objects to the contemporary Record format.
 
 import { FileType } from "./Common";
-import { BuffType, SkillReadyStatus } from "../Game/Common";
+import { BuffType, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { GameConfig } from "../Game/GameConfig";
 import { Potency, PotencyKind } from "../Game/Potency";
 import { controller } from "./Controller";
@@ -152,7 +152,7 @@ export class ActionNode {
 	// elsewhere eventually
 	tmp_startLockTime?: number;
 	tmp_endLockTime?: number;
-	tmp_invalid: boolean;
+	tmp_invalid_reasons: SkillUnavailableReason[];
 
 	constructor(info: NodeInfo, legacyWaitDuration?: number) {
 		this.info = info;
@@ -164,7 +164,7 @@ export class ActionNode {
 		this.#hotOverrideAmount = new Map();
 		this.#hotTimeGap = new Map();
 		this.legacyWaitDuration = legacyWaitDuration;
-		this.tmp_invalid = false;
+		this.tmp_invalid_reasons = [];
 	}
 
 	serialized(): SerializedAction {

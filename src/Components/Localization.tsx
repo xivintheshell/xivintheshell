@@ -70,7 +70,7 @@ export function localizeSkillUnavailableReason(reason?: SkillUnavailableReason):
 	} else if (reason === SkillUnavailableReason.PastTargetTime) {
 		zhReason = "跳时间的目标已经过去了";
 	} else if (reason === SkillUnavailableReason.CastCanceled) {
-		zhReason = "咏唱被中断";
+		zhReason = "咏唱被中断（确定时不再满足播放条件）";
 	} else {
 		console.error("unlocalized reason: " + reason);
 	}

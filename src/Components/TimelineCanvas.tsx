@@ -28,7 +28,13 @@ import { BuffType, WarningType } from "../Game/Common";
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
-import { localize, localizeBuffType, localizeSkillName } from "./Localization";
+import {
+	getCurrentLanguage,
+	localize,
+	localizeBuffType,
+	localizeSkillName,
+	localizeSkillUnavailableReason,
+} from "./Localization";
 import { setEditingMarkerValues } from "./TimelineMarkers";
 import { getThemeColors, ThemeColors, ColorThemeContext } from "./ColorTheme";
 import { scrollEditorToFirstSelected } from "./TimelineEditor";
@@ -723,7 +729,7 @@ function drawSkills(
 			});
 		}
 		// invalid skill shading
-		if (skill.node.tmp_invalid) {
+		if (skill.node.tmp_invalid_reasons.length > 0) {
 			invalidSections.push({
 				x,
 				y: timelineOriginY + TimelineDimensions.slotPaddingTop,
@@ -868,6 +874,15 @@ function drawSkills(
 			lockDuration = node.tmp_endLockTime - node.tmp_startLockTime;
 		}
 		lines.push(localize({ en: "duration: ", zh: "耗时：" }) + lockDuration.toFixed(3));
+
+		// 3.5. invalid reasons
+		if (node.tmp_invalid_reasons.length > 0) {
+			lines.push("");
+			lines.push(localize({ en: "skill is invalid:", zh: "技能有问题：" }).toString());
+			node.tmp_invalid_reasons.forEach((r) =>
+				lines.push("- " + localizeSkillUnavailableReason(r)),
+			);
+		}
 
 		// 4. buff images
 		coverInfo.forEach((info, buff) => {
