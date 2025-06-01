@@ -82,7 +82,7 @@ import { XIVMath } from "../Game/XIVMath";
 import { TANK_JOBS, MELEE_JOBS, RANGED_JOBS, ShellJob } from "../Game/Data/Jobs";
 import { ActionKey, ACTIONS, ResourceKey, RESOURCES } from "../Game/Data";
 import { getGameState } from "../Game/Jobs";
-import { localizeSkillName } from "../Components/Localization";
+import { getCurrentLanguage, localizeSkillName } from "../Components/Localization";
 
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 import "../Game/Jobs/RoleActions";
@@ -151,7 +151,9 @@ class Controller {
 	savedHistoricalRecord: Record;
 
 	#bInterrupted: boolean = false;
+	// TODO: use an enum for state and model timeline editor state here instead of using a bunch of booleans
 	#bInSandbox: boolean = false;
+	#bTakingUserInput: boolean = false;
 
 	#skipViewUpdates: boolean = false;
 	// todo: can probably somehow get rid of this because it should largely overlaps with #bInSandbox
@@ -1343,14 +1345,20 @@ class Controller {
 				}
 
 				if (this.#bInterrupted) {
-					// likely because enochian dropped before a cast snapshots
+					// likely because enochian dropped before a cast snapshots, or a prerequisite
+					// buff fell off before the cast occurred
 					this.#bInterrupted = false;
-					status.status.addUnavailableReason(SkillUnavailableReason.CastCanceled);
-					invalidActions.push({
-						node: itr,
-						index: i,
-						reason: status.status,
-					});
+					// When accepting user input, the skill node gets replaced with a wait for the
+					// duration of the ability's cast time, so we should not add it to the invalid
+					// actions list.
+					if (!this.shouldLoop) {
+						status.status.addUnavailableReason(SkillUnavailableReason.CastCanceled);
+						invalidActions.push({
+							node: itr,
+							index: i,
+							reason: status.status,
+						});
+					}
 				}
 			}
 			// buff enable/disable also only supported by exact / edited replay
@@ -1639,11 +1647,33 @@ class Controller {
 	}
 
 	reportInterruption(props: { failNode: ActionNode; failIndex: number }) {
-		// Previous verions of xivintheshell would remove interrupted casts from the timeline,
-		// raising a window.alert and replacing the spent cast time with an explicit wait event.
-		// After adding support for invalid actions, we instead just keep the invalid action around.
-		this.#bInterrupted = true;
-		this.timeline.invalidateLastElement();
+		if (this.#bTakingUserInput || (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop)) {
+			// #bTakingUserInput is set if and only if the user just tried to use a skill.
+			// In manual mode: requestUseSkill immediately fast-forwards to the cast confirm window.
+			// In real-time auto pause: the shouldLoop flag is set when we're simulating until
+			// the cast confirm window.
+			const nodeDisplayInfo = props.failNode.getNameForMessage();
+			// TODO localize
+			window.alert(
+				"Cast interrupted! Resources for " + nodeDisplayInfo + " are no longer available",
+			);
+			console.warn("failed: " + nodeDisplayInfo);
+			const currentTime = this.game.time;
+			const currentLoop = this.shouldLoop;
+			this.rewindUntilBefore(props.failIndex, false);
+			this.autoSave();
+			this.#requestTick({
+				deltaTime: currentTime - this.game.time,
+				waitKind: "duration",
+			});
+			this.shouldLoop = currentLoop;
+		} else {
+			// Previous verions of xivintheshell would remove interrupted casts from the timeline
+			// if it came from a preset or file load.
+			// After adding support for invalid actions, we instead just keep the invalid action around.
+			this.#bInterrupted = true;
+			this.timeline.invalidateLastElement();
+		}
 	}
 
 	// basically restart the game and play till here:
@@ -1691,6 +1721,7 @@ class Controller {
 	}
 
 	requestUseSkill(props: { skillName: ActionKey; targetCount: number }) {
+		this.#bTakingUserInput = true;
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
 			// not sure should allow any control here.
 		} else {
@@ -1706,6 +1737,7 @@ class Controller {
 				this.autoSave();
 			}
 		}
+		this.#bTakingUserInput = false;
 	}
 
 	requestToggleBuff(buffName: ResourceKey) {

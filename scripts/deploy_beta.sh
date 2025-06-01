@@ -17,5 +17,5 @@ mv build/* ../beta
 cd ../beta
 echo "beta.xivintheshell.com" > CNAME
 git add .
-git commit -m "beta update: $CNAME"
+git commit -m "beta update: $COMMIT_HASH"
 git push

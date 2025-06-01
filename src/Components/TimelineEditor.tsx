@@ -351,7 +351,6 @@ export function TimelineEditor() {
 	const applyTextStyle = { padding: "0.3em" };
 	const applySection = () => {
 		if (isDirty) {
-			const firstInvalidAction = recordValidStatus?.invalidActions[0];
 			return <div>
 				<div
 					style={{
@@ -366,7 +365,7 @@ export function TimelineEditor() {
 								en: "This edited sequence is valid.",
 								zh: "此编辑可被应用。",
 							})
-						: localize(getInvalidActionMessage(firstInvalidAction, true))}
+						: localize(getInvalidActionMessage(recordValidStatus?.invalidActions[0], true))}
 				</div>
 				<button
 					style={{ display: "block", marginTop: 10, marginLeft: buttonMarginLeft }}
