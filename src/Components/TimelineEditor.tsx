@@ -365,7 +365,9 @@ export function TimelineEditor() {
 								en: "This edited sequence is valid.",
 								zh: "此编辑可被应用。",
 							})
-						: localize(getInvalidActionMessage(recordValidStatus?.invalidActions[0], true))}
+						: localize(
+								getInvalidActionMessage(recordValidStatus?.invalidActions[0], true),
+							)}
 				</div>
 				<button
 					style={{ display: "block", marginTop: 10, marginLeft: buttonMarginLeft }}

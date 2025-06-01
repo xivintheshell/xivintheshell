@@ -1647,7 +1647,10 @@ class Controller {
 	}
 
 	reportInterruption(props: { failNode: ActionNode; failIndex: number }) {
-		if (this.#bTakingUserInput || (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop)) {
+		if (
+			this.#bTakingUserInput ||
+			(this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop)
+		) {
 			// #bTakingUserInput is set if and only if the user just tried to use a skill.
 			// In manual mode: requestUseSkill immediately fast-forwards to the cast confirm window.
 			// In real-time auto pause: the shouldLoop flag is set when we're simulating until
