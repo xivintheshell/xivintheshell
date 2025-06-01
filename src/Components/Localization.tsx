@@ -40,6 +40,12 @@ export function localizeDate(date: string, lang: Language): string {
 }
 
 export function localizeSkillName(text: ActionKey): string {
+	if (text === "NEVER") {
+		return localize({
+			en: "unknown skill",
+			zh: "未知技能",
+		}).toString();
+	}
 	const action = Data.getAction(text);
 
 	return localize({
