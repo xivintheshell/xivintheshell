@@ -343,24 +343,6 @@ export class Timeline {
 		controller.setConfigAndRestart(controller.gameConfig);
 	}
 
-	cloneSlot() {
-		if (this.activeSlotIndex < 0 || this.activeSlotIndex >= this.slots.length) {
-			console.error(
-				"tried to clone slot with invalid activeSlotIndex " + this.activeSlotIndex,
-			);
-			return;
-		}
-		const activeSlot = this.slots[this.activeSlotIndex];
-		// elements will be re-populated when the controller runs simulation
-		this.slots.push({
-			job: activeSlot.job,
-			elements: [],
-		});
-		this.activeSlotIndex = this.slots.length - 1;
-		controller.loadBattleRecordFromFile(controller.record.serialized());
-		controller.autoSave();
-	}
-
 	removeSlot(idx: number) {
 		console.assert(idx < this.slots.length);
 		// shift save slots

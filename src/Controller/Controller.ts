@@ -1481,6 +1481,24 @@ class Controller {
 		this.displayCurrentState();
 	}
 
+	cloneActiveSlot() {
+		if (this.timeline.activeSlotIndex < 0 || this.timeline.activeSlotIndex >= this.timeline.slots.length) {
+			console.error(
+				"tried to clone slot with invalid activeSlotIndex " + this.timeline.activeSlotIndex,
+			);
+			return;
+		}
+		this.#playPause({ shouldLoop: false });
+		updateActiveTimelineEditor(() => {
+			const recordToClone = this.record.serialized();
+			this.timeline.addSlot();
+			this.loadBattleRecordFromFile(recordToClone);
+			this.autoSave();
+			this.timeline.loadSlot(this.timeline.slots.length - 1);
+		});
+		this.displayCurrentState();
+	}
+
 	getDamageLogCsv(): any[][] {
 		let csvRows = this.#damageLogCsv.map((row) => {
 			let pot = false;

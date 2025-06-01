@@ -1445,7 +1445,7 @@ function drawAddSlotButton(originY: number) {
 			cloneHandle,
 			undefined,
 			() => {
-				controller.timeline.cloneSlot();
+				controller.cloneActiveSlot();
 				controller.displayCurrentState();
 			},
 			true,
