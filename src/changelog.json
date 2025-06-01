@@ -49,7 +49,7 @@
 			"Fixed a bug where damage log CSV export didn't work (thanks ryxiv)."
 		],
 		"level": "minor"
-	},	
+	},
 	{
 		"date": "5/23/25",
 		"changes": [
