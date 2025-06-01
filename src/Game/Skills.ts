@@ -246,10 +246,9 @@ export function getResourceKeyFromBuffName(s: string): ResourceKey | undefined {
 	return Data.findResourceKey(s);
 }
 
-// Return a particular skill for a job.
-// Raises if the skill is not found.
+// Return a particular skill for a job, or the NEVER_SKILL placeholder skill if no such skill exists.
 export function getSkill<T extends PlayerState>(job: ShellJob, skillName: ActionKey): Skill<T> {
-	return skillMap.get(job)!.get(skillName)!;
+	return skillMap.get(job)!.get(skillName) ?? NEVER_SKILL;
 }
 
 export function getSkillAssetPath(skillName: ActionKey): string | undefined {
