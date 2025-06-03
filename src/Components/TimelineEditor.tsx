@@ -319,7 +319,7 @@ export function TimelineEditor() {
 		if (inSequence) {
 			errorMessage = l(
 				`This sequence contains invalid actions! Check action #${adjustIndex(index)}: ${nodeName}`,
-				`此编辑包含有问题的技能！请检查在第${adjustIndex(index)}位的技能： ${nodeName}`,
+				`此时间轴包含有问题的技能！请检查在第${adjustIndex(index)}位的技能： ${nodeName}`,
 			);
 		} else {
 			errorMessage = l(`This action is invalid! ${nodeName}`, `此技能有问题！ ${nodeName}`);
