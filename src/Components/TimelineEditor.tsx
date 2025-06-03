@@ -151,8 +151,8 @@ function TimelineActionElement(props: {
 		onClick={(e) => {
 			setHandledSkillSelectionThisFrame(true);
 			if (props.recordIsDirty) {
-				controller.record.onClickNode(props.index, e.shiftKey);
-				refreshTimelineEditor();
+				// controller.record.onClickNode(props.index, e.shiftKey);
+				controller.timeline.onClickTimelineAction(props.index, e.shiftKey);
 			} else {
 				controller.timeline.onClickTimelineAction(props.index, e.shiftKey);
 				if (props.node.tmp_startLockTime) {
@@ -564,13 +564,8 @@ export function TimelineEditor() {
 	return <div
 		onClick={(evt) => {
 			if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
-				if (!isDirty) {
-					controller.record.unselectAll();
-					controller.displayCurrentState();
-				} else {
-					refreshTimelineEditor();
-					controller.record.unselectAll();
-				}
+				controller.record.unselectAll();
+				controller.displayCurrentState();
 			}
 			setHandledSkillSelectionThisFrame(false);
 		}}

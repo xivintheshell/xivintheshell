@@ -499,6 +499,17 @@ class Controller {
 		this.autoSave();
 	}
 
+	deleteSelectedSkill() {
+		if (this.record.selectionStartIndex !== undefined) {
+			this.rewindUntilBefore(this.record.selectionStartIndex, false);
+			updateInvalidStatus();
+			this.displayCurrentState();
+			// TODO: push editor dirty state up to the controller and don't autosave if
+			// we're mid-edit
+			this.autoSave();
+		}
+	}
+
 	#updateTotalDamageStats(tablesOnly: boolean = false) {
 		if (!this.#skipViewUpdates) {
 			let damageStats: Partial<DamageStatisticsData> = calculateDamageStats({
