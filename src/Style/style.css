@@ -113,3 +113,10 @@ https://github.com/ReactTooltip/react-tooltip/blob/master/src/components/Tooltip
     cursor: pointer;
     font-size: 1.5rem;
 }
+
+/* Keeps a <th> element fixed in place relative to the table. */
+th.stickyTh {
+    position: sticky;
+    top: -1px;
+    z-index: 2;
+}

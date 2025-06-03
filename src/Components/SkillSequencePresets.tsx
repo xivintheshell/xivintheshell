@@ -38,7 +38,7 @@ class SaveAsPreset extends React.Component {
 			<Input
 				style={{ display: "inline-block", marginTop: "10px" }}
 				defaultValue={this.state.filename}
-				description={localize({ en: "name: ", zh: "文件名：" })}
+				description={localize({ en: "name: ", zh: "预设名：" })}
 				width={30}
 				onChange={this.onChange}
 			/>
@@ -51,7 +51,7 @@ class SaveAsPreset extends React.Component {
 					e.preventDefault();
 				}}
 			>
-				{localize({ en: "add selection to preset", zh: "使用此文件中的预设" })}
+				{localize({ en: "add selection to preset", zh: "将选中的技能保存为预设" })}
 			</button>
 		</form>;
 	}

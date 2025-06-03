@@ -33,10 +33,12 @@ export const enum SkillUnavailableReason {
 	Blocked = "blocked by CD, animation lock or caster tax",
 	SecondaryBlocked = "blocked by secondary CD",
 	NotEnoughMP = "not enough MP",
-	NotInCombat = "must be in combat (after first damage application)",
-	RequirementsNotMet = "requirements not met",
+	NotInCombat = "not in combat (must wait for first damage application)",
+	RequirementsNotMet = "skill requirements not satisfied",
 	SkillNotUnlocked = "skill not unlocked at provided level",
 	BuffNoLongerAvailable = "buff no longer available",
+	PastTargetTime = "jump target time has already passed",
+	CastCanceled = "cast canceled (skill requirements no longer met at confirmation time)",
 }
 
 export type SkillReadyStatus = {

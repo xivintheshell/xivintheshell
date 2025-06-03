@@ -1,6 +1,6 @@
 import { updateTimelineView } from "../Components/Timeline";
 import { controller } from "./Controller";
-import { BuffType, Debug, WarningType } from "../Game/Common";
+import { BuffType, Debug, SkillUnavailableReason, WarningType } from "../Game/Common";
 import { ActionNode } from "./Record";
 import { FileType, getCachedValue, removeCachedValue, setCachedValue } from "./Common";
 import { updateMarkers_TimelineMarkerPresets } from "../Components/TimelineMarkers";
@@ -174,6 +174,21 @@ export class Timeline {
 		} else {
 			console.assert(this.slots.length > 0);
 			this.slots[this.activeSlotIndex].elements.push(elem as SlotTimelineElem);
+		}
+	}
+
+	// Sets the tmp_invalid_reasons field on the last element with a skillNode.
+	// Used when a cast is interrupted.
+	invalidateLastElement() {
+		if (this.slots.length > 0) {
+			const elements = this.slots[this.activeSlotIndex].elements;
+			for (let i = elements.length - 1; i >= 0; i--) {
+				const elem = elements[i];
+				if (elem.type === ElemType.Skill) {
+					elem.node.tmp_invalid_reasons = [SkillUnavailableReason.CastCanceled];
+					return;
+				}
+			}
 		}
 	}
 

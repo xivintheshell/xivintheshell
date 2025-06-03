@@ -3,8 +3,8 @@ import { Dialog } from "@base-ui-components/react/dialog";
 import { FaXmark } from "react-icons/fa6";
 import changelog from "../changelog.json";
 import { getCurrentThemeColors, ColorThemeContext } from "./ColorTheme";
-import { Clickable, Expandable, Help, ButtonIndicator, ContentNode } from "./Common";
-import { localize, LocalizedContent } from "./Localization";
+import { Clickable, ContentNode } from "./Common";
+import { localize } from "./Localization";
 import { getCachedValue, setCachedValue, isFirstVisit } from "../Controller/Common";
 
 export function getLastChangeDate(): string {
@@ -30,12 +30,19 @@ type ChangelogBodyParams = {
 };
 
 function getRenderedEntry(entry: ChangelogEntry) {
+	const colors = getCurrentThemeColors();
 	return <div className="changelogGroup">
 		<div>{entry.date}</div>
 		<div>
 			{localize({
 				en: <>
-					{entry.changes.map((change, i) => <div className="changelogLine" key={i}>
+					{entry.changes.map((change, i) => <div
+						className="changelogLine"
+						key={i}
+						style={{
+							color: change.substring(1, 5) === "BETA" ? colors.warning : colors.text,
+						}}
+					>
 						{change}
 					</div>)}
 				</>,
@@ -45,6 +52,12 @@ function getRenderedEntry(entry: ChangelogEntry) {
 							{entry.changes_zh.map((change, i) => <div
 								className="changelogLine"
 								key={i}
+								style={{
+									color:
+										change.substring(1, 5) === "BETA"
+											? colors.warning
+											: colors.text,
+								}}
 							>
 								{change}
 							</div>)}
@@ -144,7 +157,6 @@ export function Changelog() {
 				// but for now just assume that it's enough for the user to comfortably scroll.
 				let hasMajorChange = false;
 				for (; i < changelog.length - 1; i++) {
-					hasMajorChange = hasMajorChange || changelog[i].level === "major";
 					// Assume that changelog is sorted, and lastReadDate is somewhere in the list.
 					if (lastReadDate === changelog[i].date) {
 						// If the change count of this entry does not match the saved value, then include
@@ -154,6 +166,7 @@ export function Changelog() {
 						}
 						break;
 					}
+					hasMajorChange = hasMajorChange || changelog[i].level === "major";
 				}
 				setMajorChange(hasMajorChange);
 				hiddenStartIndex.current = i;

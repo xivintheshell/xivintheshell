@@ -17,7 +17,7 @@
 // implementation parses these objects to the contemporary Record format.
 
 import { FileType } from "./Common";
-import { BuffType, SkillReadyStatus } from "../Game/Common";
+import { BuffType, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { GameConfig } from "../Game/GameConfig";
 import { Potency, PotencyKind } from "../Game/Potency";
 import { controller } from "./Controller";
@@ -52,7 +52,6 @@ interface SerializedJump {
 
 interface SerializedMPWait {
 	type: ActionType.WaitForMP;
-	targetAmount: number;
 }
 
 interface SerializedSetResource {
@@ -114,10 +113,9 @@ export function jumpToTimestampNode(targetTime: number): ActionNode {
 	});
 }
 
-export function waitForMPNode(targetAmount: number): ActionNode {
+export function waitForMPNode(): ActionNode {
 	return new ActionNode({
 		type: ActionType.WaitForMP,
-		targetAmount,
 	});
 }
 
@@ -154,6 +152,7 @@ export class ActionNode {
 	// elsewhere eventually
 	tmp_startLockTime?: number;
 	tmp_endLockTime?: number;
+	tmp_invalid_reasons: SkillUnavailableReason[];
 
 	constructor(info: NodeInfo, legacyWaitDuration?: number) {
 		this.info = info;
@@ -165,6 +164,7 @@ export class ActionNode {
 		this.#hotOverrideAmount = new Map();
 		this.#hotTimeGap = new Map();
 		this.legacyWaitDuration = legacyWaitDuration;
+		this.tmp_invalid_reasons = [];
 	}
 
 	serialized(): SerializedAction {
@@ -537,10 +537,14 @@ export class Line {
 					// @ts-expect-error used for parsing legacy format
 					legacyWaitDuration,
 				);
-			} else if ([ActionType.Wait].includes(serializedAction.type)) {
+			} else if (
+				[ActionType.Wait, ActionType.JumpToTimestamp, ActionType.WaitForMP].includes(
+					serializedAction.type,
+				)
+			) {
 				return new ActionNode(serializedAction);
 			} else {
-				window.alert("unparseable action: " + serializedAction.toString());
+				window.alert("unparseable action: " + JSON.stringify(serializedAction));
 				return new ActionNode({ type: ActionType.Invalid });
 			}
 		});
@@ -552,9 +556,13 @@ export class Line {
 
 export type RecordValidStatus = {
 	isValid: boolean;
-	firstInvalidAction: ActionNode | undefined;
-	invalidReason: SkillReadyStatus | undefined;
-	invalidTime: number | undefined;
+	invalidActions: {
+		node: ActionNode;
+		index: number;
+		reason: SkillReadyStatus;
+	}[];
+	skillUseTimes: number[];
+	straightenedIfValid: Record | undefined;
 };
 
 // information abt a timeline

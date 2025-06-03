@@ -1,17 +1,18 @@
 import React, { CSSProperties } from "react";
-import { clearCachedValues } from "../Controller/Common";
+import { clearCachedValues, isBetaSite } from "../Controller/Common";
 import { Expandable, Help, ButtonIndicator } from "./Common";
 import { localize } from "./Localization";
 import { Changelog } from "./Changelog";
 import { getCurrentThemeColors } from "./ColorTheme";
 import { ShellJob } from "../Game/Data/Jobs";
 
-const THIS_DOMAIN = "https://xivintheshell.com";
+const THIS_DOMAIN = isBetaSite ? "https://beta.xivintheshell.com" : "https://xivintheshell.com";
 
 const GITHUB_URL = "https://github.com/xivintheshell/xivintheshell";
 
 // #xiv_in_the_shell_support in the Balance discord
-const HELP_CHANNEL_URL = "https://discord.com/channels/277897135515762698/1307922201726685236";
+export const HELP_CHANNEL_URL =
+	"https://discord.com/channels/277897135515762698/1307922201726685236";
 
 const BALANCE_URL = "https://discord.gg/thebalanceffxiv";
 

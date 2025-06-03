@@ -5,7 +5,6 @@ import { controller } from "../Controller/Controller";
 import { localize, localizeResourceType } from "./Localization";
 import {
 	getThemeColors,
-	ColorTheme,
 	ThemeColors,
 	getCurrentThemeColors,
 	ColorThemeContext,
@@ -689,6 +688,8 @@ export class StatusDisplay extends React.Component {
 		controller.updateStatusDisplay(controller.game);
 	}
 	render() {
+		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
+		const colors = getThemeColors(this.context);
 		return <div
 			style={{
 				position: "relative",
@@ -718,6 +719,23 @@ export class StatusDisplay extends React.Component {
 									<div className="paragraph">
 										<b style={{ color: "darkorange" }}>orange</b> border:
 										viewing historical state, not receiving input
+									</div>
+								</>,
+								zh: <>
+									<div className="paragraph">
+										<span style={{ color: "lightgray" }}>灰色</span>边框：未选中
+									</div>
+									<div className="paragraph">
+										<b style={{ color: "mediumpurple" }}>紫色</b>
+										边框：正在接收输入
+									</div>
+									<div className="paragraph">
+										<b style={{ color: "mediumseagreen" }}>绿色</b>
+										边框：正在进行实时动作
+									</div>
+									<div className="paragraph">
+										<b style={{ color: "darkorange" }}>橙色</b>
+										边框：正在查看历史状态，未接收输入
 									</div>
 								</>,
 								ja: <>

@@ -4,9 +4,8 @@ import { Clickable, ContentNode, Help, parseTime, ValueChangeEvent } from "./Com
 import { Debug, SkillReadyStatus, SkillUnavailableReason } from "../Game/Common";
 import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
-import { localize, localizeSkillName } from "./Localization";
+import { localize, localizeSkillName, localizeSkillUnavailableReason } from "./Localization";
 import { updateTimelineView } from "./Timeline";
-import * as ReactDOMServer from "react-dom/server";
 import { getThemeColors, ColorThemeContext } from "./ColorTheme";
 import { getSkillAssetPath } from "../Game/Skills";
 import { ActionKey, ACTIONS } from "../Game/Data";
@@ -244,18 +243,16 @@ class SkillButton extends React.Component {
 					)
 				) {
 					s.push(
-						localize({
-							en: " skill requirement(s) not satisfied",
-							zh: " 未满足释放条件",
-						}),
+						localizeSkillUnavailableReason(SkillUnavailableReason.RequirementsNotMet),
 					);
 				}
 				if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotEnoughMP)) {
 					s.push(
-						localize({
-							en: " not enough MP (needs " + info.capturedManaCost + ")",
-							zh: " MP不足（需" + info.capturedManaCost + "）",
-						}),
+						localizeSkillUnavailableReason(SkillUnavailableReason.NotEnoughMP) +
+							localize({
+								en: " (needs " + info.capturedManaCost + ")",
+								zh: " （需" + info.capturedManaCost + "）",
+							}),
 					);
 				}
 				if (info.status.unavailableReasons.includes(SkillUnavailableReason.Blocked)) {
@@ -279,12 +276,7 @@ class SkillButton extends React.Component {
 					);
 				}
 				if (info.status.unavailableReasons.includes(SkillUnavailableReason.NotInCombat)) {
-					s.push(
-						localize({
-							en: "not in combat (wait for first damage application)",
-							zh: "不在战斗中（需先等第一次伤害结算）",
-						}),
-					);
+					s.push(localizeSkillUnavailableReason(SkillUnavailableReason.NotInCombat));
 				}
 			}
 			// if ready, also show captured cast time & time till damage application
@@ -514,6 +506,7 @@ export type SkillButtonViewInfo = {
 	capturedManaCost: number;
 	highlight: boolean;
 	llCovered: boolean;
+	usedAt: number;
 };
 
 export let updateSkillButtons = (statusList: SkillButtonViewInfo[]) => {};
@@ -583,12 +576,10 @@ export class SkillsWindow extends React.Component {
 		};
 
 		this.onWaitUntilSubmit = (e: FormEvent<HTMLFormElement>) => {
-			let targetTime = parseTime(this.state.waitUntil);
+			const targetTime = parseTime(this.state.waitUntil);
 			if (!isNaN(targetTime)) {
-				let currentTime = controller.game.getDisplayTime();
-				if (targetTime > currentTime) {
-					let elapse = targetTime - currentTime;
-					controller.step(elapse);
+				if (targetTime > controller.game.getDisplayTime()) {
+					controller.stepUntil(targetTime);
 					controller.autoSave();
 				} else {
 					window.alert("Can only jump to a time in the future!");
@@ -893,8 +884,8 @@ export class SkillsWindow extends React.Component {
 					</div>
 					<button onClick={this.onWaitTillNextMpOrLucidTick}>
 						{localize({
-							en: "Wait until Manafont / MP tick / lucid tick",
-							zh: "快进至魔泉生效/跳蓝/跳醒梦",
+							en: "Wait until MP tick / lucid tick",
+							zh: "快进至跳蓝/跳醒梦",
 						})}
 					</button>
 					<span> </span>

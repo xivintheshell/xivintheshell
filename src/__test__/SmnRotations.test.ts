@@ -8,10 +8,6 @@ import {
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
-import { PotencyModifierType } from "../Game/Potency";
-import { ProcMode } from "../Game/Common";
-import { SMNState } from "../Game/Jobs/SMN";
-import { ActionKey } from "../Game/Data";
 
 beforeEach(rotationTestSetup);
 

@@ -27,11 +27,16 @@ import {
 import { BuffType, WarningType } from "../Game/Common";
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
-import { ActionType } from "../Controller/Record";
 import { controller } from "../Controller/Controller";
-import { localize, localizeBuffType, localizeSkillName } from "./Localization";
+import {
+	getCurrentLanguage,
+	localize,
+	localizeBuffType,
+	localizeSkillName,
+	localizeSkillUnavailableReason,
+} from "./Localization";
 import { setEditingMarkerValues } from "./TimelineMarkers";
-import { getThemeColors, MarkerColor, ThemeColors, ColorThemeContext } from "./ColorTheme";
+import { getThemeColors, ThemeColors, ColorThemeContext } from "./ColorTheme";
 import { scrollEditorToFirstSelected } from "./TimelineEditor";
 import { bossIsUntargetable } from "../Controller/DamageStatistics";
 import { updateTimelineView } from "./Timeline";
@@ -665,6 +670,7 @@ function drawSkills(
 	const covers: Map<BuffType, Rect[]> = new Map();
 	coverInfo.forEach((_, buff) => covers.set(buff, []));
 	const buffCovers: Rect[] = [];
+	const invalidSections: Rect[] = [];
 
 	let skillIcons: { elem: SkillElem; x: number; y: number }[] = []; // tmp
 	let skillsTopY = timelineOriginY + TimelineDimensions.skillButtonHeight / 2;
@@ -720,6 +726,23 @@ function drawSkills(
 				y: y + TimelineDimensions.skillButtonHeight / 2,
 				w: recastWidth - barsOffset,
 				h: TimelineDimensions.skillButtonHeight / 2,
+			});
+		}
+		// invalid skill shading
+		if (skill.node.tmp_invalid_reasons.length > 0) {
+			invalidSections.push({
+				x,
+				y: timelineOriginY + TimelineDimensions.slotPaddingTop,
+				w: StaticFn.positionFromTimeAndScale(
+					skill.isGCD
+						? Math.max(skill.recastDuration, skill.lockDuration)
+						: skill.lockDuration,
+					scale,
+				),
+				h:
+					TimelineDimensions.renderSlotHeight() -
+					TimelineDimensions.slotPaddingBottom -
+					TimelineDimensions.slotPaddingTop,
 			});
 		}
 
@@ -852,6 +875,15 @@ function drawSkills(
 		}
 		lines.push(localize({ en: "duration: ", zh: "耗时：" }) + lockDuration.toFixed(3));
 
+		// 3.5. invalid reasons
+		if (node.tmp_invalid_reasons.length > 0) {
+			lines.push("");
+			lines.push(localize({ en: "skill is invalid:", zh: "技能有问题：" }).toString());
+			node.tmp_invalid_reasons.forEach((r) =>
+				lines.push("- " + localizeSkillUnavailableReason(r)),
+			);
+		}
+
 		// 4. buff images
 		coverInfo.forEach((info, buff) => {
 			if (info.showImage && node.hasBuff(buff))
@@ -887,6 +919,17 @@ function drawSkills(
 			);
 		}
 	});
+
+	// light red overlay for invalid actions
+	const originalAlpha = g_ctx.globalAlpha;
+	g_ctx.fillStyle = g_colors.timeline.invalidBg;
+	g_ctx.globalAlpha = 0.2;
+	g_ctx.beginPath();
+	invalidSections.forEach((r) => {
+		g_ctx.rect(r.x, r.y, r.w, r.h);
+	});
+	g_ctx.fill();
+	g_ctx.globalAlpha = originalAlpha;
 }
 
 function drawCursor(x: number, y1: number, y2: number, y3: number, color: string, tip: string) {
@@ -1344,10 +1387,13 @@ function drawCursors(originX: number, timelineStartY: number) {
 
 function drawAddSlotButton(originY: number) {
 	if (g_renderingProps.slots.length < MAX_TIMELINE_SLOTS) {
-		let handle: Rect = {
-			x: 4,
+		// "Add timeline slot" button
+		const BUTTON_W_PX = 192;
+		const BUTTON_LEFT_MARGIN_PX = 4;
+		const handle: Rect = {
+			x: BUTTON_LEFT_MARGIN_PX,
 			y: originY + 2,
-			w: 192,
+			w: BUTTON_W_PX,
 			h: TimelineDimensions.addSlotButtonHeight - 4,
 		};
 		g_ctx.fillStyle = g_colors.bgLowContrast;
@@ -1369,6 +1415,37 @@ function drawAddSlotButton(originY: number) {
 			undefined,
 			() => {
 				controller.timeline.addSlot();
+				controller.displayCurrentState();
+			},
+			true,
+		);
+
+		// "Clone timeline slot" button
+		const cloneHandle: Rect = {
+			x: 2 * BUTTON_LEFT_MARGIN_PX + BUTTON_W_PX,
+			y: originY + 2,
+			w: BUTTON_W_PX,
+			h: TimelineDimensions.addSlotButtonHeight - 4,
+		};
+		g_ctx.fillStyle = g_colors.bgLowContrast;
+		g_ctx.fillRect(cloneHandle.x, cloneHandle.y, cloneHandle.w, cloneHandle.h);
+		g_ctx.strokeStyle = g_colors.bgHighContrast;
+		g_ctx.lineWidth = 1;
+		g_ctx.strokeRect(cloneHandle.x, cloneHandle.y, cloneHandle.w, cloneHandle.h);
+		g_ctx.font = "13px monospace";
+		g_ctx.fillStyle = g_colors.text;
+		g_ctx.textAlign = "center";
+		g_ctx.fillText(
+			localize({ en: "Clone timeline slot", zh: "复制时间轴" }) as string,
+			cloneHandle.x + cloneHandle.w / 2,
+			cloneHandle.y + cloneHandle.h - 4,
+		);
+
+		testInteraction(
+			cloneHandle,
+			undefined,
+			() => {
+				controller.cloneActiveSlot();
 				controller.displayCurrentState();
 			},
 			true,
@@ -1488,10 +1565,7 @@ export function TimelineCanvas(props: {
 				if (g_keyboardEvent.key === "Backspace" || g_keyboardEvent.key === "Delete") {
 					let firstSelected = controller.record.selectionStartIndex;
 					if (firstSelected !== undefined) {
-						controller.rewindUntilBefore(firstSelected, false);
-						controller.displayCurrentState();
-						controller.updateAllDisplay();
-						controller.autoSave();
+						controller.deleteSelectedSkill();
 					}
 				}
 			}

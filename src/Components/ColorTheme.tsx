@@ -1,7 +1,6 @@
 import React, { createContext, useContext } from "react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
-import { getCachedValue, setCachedValue } from "../Controller/Common";
-import { controller } from "../Controller/Controller";
+import { getCachedValue } from "../Controller/Common";
 import { ShellJob } from "../Game/Data/Jobs";
 import { PotencyModifierType } from "../Game/Potency";
 
@@ -155,6 +154,8 @@ export type JobAccentColors = Partial<{
 export type ThemeColors = {
 	accent: string;
 	jobAccents: JobAccentColors;
+	editingValid: string;
+	editingInvalid: string;
 	realTime: string;
 	historical: string;
 	fileDownload: string;
@@ -196,6 +197,7 @@ export type ThemeColors = {
 		castBar: string;
 		lockBar: string;
 		gcdBar: string;
+		invalidBg: string;
 		llCover: string;
 		potCover: string;
 		buffCover: string;
@@ -246,6 +248,8 @@ const DARK_THEME_COLORS: ThemeColors = {
 		SMN: "#2D9B78", // copied from fflogs
 		SGE: "#80a0f0",
 	},
+	editingValid: "#ffdc00", // yellow
+	editingInvalid: "#ff0000", // red
 	realTime: "mediumseagreen",
 	historical: "#ff8c00", // darkorange
 	fileDownload: "#798c3f",
@@ -387,6 +391,7 @@ const DARK_THEME_COLORS: ThemeColors = {
 		castBar: "#42364d",
 		lockBar: "#696969",
 		gcdBar: "#354931",
+		invalidBg: "#f25449",
 		llCover: "#5ea647",
 		potCover: "#c4543a",
 		buffCover: "#9370db",
@@ -417,6 +422,8 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		SMN: "#2D9B78", // copied from fflogs
 		SGE: "#80a0f0",
 	},
+	editingValid: "#ffdc00", // yellow
+	editingInvalid: "#ff0000", // red
 	realTime: "mediumseagreen",
 	historical: "#ff8c00", // darkorange
 	fileDownload: "#798c3f",
@@ -558,6 +565,7 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		castBar: "#ecd6f3",
 		lockBar: "#9d9d9d",
 		gcdBar: "#ccefc6",
+		invalidBg: "#c21104",
 		llCover: "#87ec71",
 		potCover: "#ff865c",
 		buffCover: "#9370db",
