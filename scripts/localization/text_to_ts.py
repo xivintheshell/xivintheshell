@@ -23,6 +23,10 @@ with open("in_data.txt", mode="r", encoding="utf-8") as f:
         if len(ts) >= 2 and ts[0:2] == "//":
             output += "\n" + ts
 
+        elif len(ts) == 0:
+            output += "\n"
+            j += 1
+
         else:
             translation = translation_lines[j].strip()
             insert_pos = ts.index('}')

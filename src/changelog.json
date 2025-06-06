@@ -1,5 +1,15 @@
 [
 	{
+		"date": "6/6/25",
+		"changes": [
+			"[GNB] Chinese localization."
+		],
+		"changes_zh": [
+			"【绝枪战士】汉化。"
+		],
+		"level": "minor"
+	},
+	{
 		"date": "6/3/25",
 		"changes": [
 			"Added the ability to save invalid timelines on the visual canvas. Changes in the timeline editor now reflect in the graphical timeline as well.",

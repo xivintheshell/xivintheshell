@@ -221,7 +221,6 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	],
 	[PotencyModifierType.ENHANCED_REAPING, { en: "enhanced reaping", zh: "虚无/交错收割效果提高" }],
 	[PotencyModifierType.IMMORTAL_SACRIFICE, { en: "immortal sacrifice" }],
-	[PotencyModifierType.SURGING_TEMPEST, { en: "surging tempest" }],
 	[PotencyModifierType.BARRAGE, { en: "barrage" }],
 	[PotencyModifierType.RAGING_STRIKES, { en: "raging strikes" }],
 	[PotencyModifierType.BATTLE_VOICE, { en: "battle voice" }],
@@ -231,18 +230,18 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.WANDERERS_MINUET, { en: "wanderer's minuet" }],
 	[PotencyModifierType.MAGES_BALLAD, { en: "mage's ballad" }],
 	[PotencyModifierType.ARMYS_PAEON, { en: "army's paeon" }],
-	[PotencyModifierType.NO_MERCY, { en: "no mercy" }], // gnb
-	[PotencyModifierType.SEARING_LIGHT, { en: "searing light" }],
+	[PotencyModifierType.NO_MERCY, { en: "no mercy", zh: "无情" }], // gnb
+	[PotencyModifierType.SEARING_LIGHT, { en: "searing light", zh: "灼热之光" }],
 	[PotencyModifierType.SURGING_TEMPEST, { en: "surging tempest", zh: "战场风暴" }],
 	[PotencyModifierType.POWER_SURGE, { en: "power surge" }], // drg
 	[PotencyModifierType.LANCE_CHARGE, { en: "lance charge" }],
 	[PotencyModifierType.ENHANCED_PIERCING_TALON, { en: "enhanced piercing talon" }],
 	[PotencyModifierType.LIFE_OF_THE_DRAGON, { en: "life of the dragon" }],
 	[PotencyModifierType.LIFE_SURGE, { en: "life surge" }],
-	[PotencyModifierType.PET, { en: "pet modifier" }],
+	[PotencyModifierType.PET, { en: "pet modifier", zh: "召唤物加成" }],
 	[PotencyModifierType.DIVINE_MIGHT, { en: "divine might", zh: "神圣魔法效果提高" }],
 	[PotencyModifierType.REQUIESCAT, { en: "requiescat", zh: "安魂祈祷" }],
-	[PotencyModifierType.FIGHT_OR_FLIGHT, { en: "fight or flight" }],
+	[PotencyModifierType.FIGHT_OR_FLIGHT, { en: "fight or flight", zh: "战逃反应" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -285,7 +284,6 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.ENHANCED_GIBBET_GALLOWS, { en: "E. GIB/GAL", zh: "绞决/缢杀↑" }],
 	[PotencyModifierType.ENHANCED_REAPING, { en: "E. REAPING", zh: "虚无/交错收割↑" }],
 	[PotencyModifierType.IMMORTAL_SACRIFICE, { en: "IMMORTAL SAC", zh: "死亡祭品" }],
-	[PotencyModifierType.SURGING_TEMPEST, { en: "SURGING" }],
 	[PotencyModifierType.BARRAGE, { en: "BRG" }],
 	[PotencyModifierType.RAGING_STRIKES, { en: "RS" }],
 	[PotencyModifierType.BATTLE_VOICE, { en: "BV" }],
@@ -295,8 +293,8 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.WANDERERS_MINUET, { en: "WM" }],
 	[PotencyModifierType.MAGES_BALLAD, { en: "MB" }],
 	[PotencyModifierType.ARMYS_PAEON, { en: "AP" }],
-	[PotencyModifierType.NO_MERCY, { en: "NM" }], // gnb
-	[PotencyModifierType.SEARING_LIGHT, { en: "SL" }], // smn
+	[PotencyModifierType.NO_MERCY, { en: "NM", zh: "无情" }], // gnb
+	[PotencyModifierType.SEARING_LIGHT, { en: "SL", zh: "灼热" }], // smn
 	[PotencyModifierType.SURGING_TEMPEST, { en: "SURGING", zh: "战场风暴" }],
 	[PotencyModifierType.POWER_SURGE, { en: "PWS" }], // drg
 	[PotencyModifierType.LANCE_CHARGE, { en: "LC" }],
@@ -307,7 +305,7 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.DIVINE_MIGHT, { en: "DM", zh: "强化圣灵" }],
 	[PotencyModifierType.REQUIESCAT, { en: "REQ", zh: "安魂" }],
 	[PotencyModifierType.FIGHT_OR_FLIGHT, { en: "FOF", zh: "战逃" }],
-	[PotencyModifierType.PET, { en: "PET" }],
+	[PotencyModifierType.PET, { en: "PET", zh: "召唤物" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(
