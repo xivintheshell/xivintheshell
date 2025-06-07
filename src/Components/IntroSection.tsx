@@ -99,7 +99,7 @@ const getAcknowledgements = () => <>
 				战士：<b>misterperson</b>
 			</li>
 			<li>
-				绝抢战士，龙骑士，骑士：<b>Sterling</b>
+				绝抢战士、龙骑士、骑士：<b>Sterling</b>
 			</li>
 			<li>
 				添加新职业的程序框架：<b>shanzhe</b>
