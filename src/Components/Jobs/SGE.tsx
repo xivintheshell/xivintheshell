@@ -81,6 +81,7 @@ export class SGEStatusPropsGenerator extends StatusPropsGenerator<SGEState> {
 				kind: "counter",
 				name: localize({
 					en: RESOURCES.ADDERSGALL.name,
+					zh: RESOURCES.ADDERSGALL.label.zh,
 				}),
 				color: colors.sge.addersgall,
 				currentStacks: addersgall.availableAmount(),
@@ -90,6 +91,7 @@ export class SGEStatusPropsGenerator extends StatusPropsGenerator<SGEState> {
 				kind: "bar",
 				name: localize({
 					en: RESOURCES.ADDERSGALL.name + " timer",
+					zh: RESOURCES.ADDERSGALL.label.zh + "计时器",
 				}),
 				color: colors.sge.addersgall,
 				progress: 1 - addersgallCountdown / addersgallMaxTimeout,
@@ -99,6 +101,7 @@ export class SGEStatusPropsGenerator extends StatusPropsGenerator<SGEState> {
 				kind: "counter",
 				name: localize({
 					en: RESOURCES.ADDERSTING.name,
+					zh: RESOURCES.ADDERSTING.label.zh,
 				}),
 				color: colors.sge.addersting,
 				currentStacks: addersting.availableAmount(),
