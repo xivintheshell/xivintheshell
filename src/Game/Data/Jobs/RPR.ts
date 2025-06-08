@@ -3,56 +3,205 @@ import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
 export const RPR_ACTIONS = ensureRecord<ActionData>()({
 	/** Single-target GCD */
-	SLICE: { name: "Slice", label: { zh: "切割" } },
-	WAXING_SLICE: { name: "Waxing Slice", label: { zh: "增盈切割" } },
-	INFERNAL_SLICE: { name: "Infernal Slice", label: { zh: "地狱切割" } },
-	SHADOW_OF_DEATH: { name: "Shadow of Death", label: { zh: "死亡之影" } },
-	SOUL_SLICE: { name: "Soul Slice", label: { zh: "灵魂切割" } },
-	GIBBET: { name: "Gibbet", label: { zh: "绞决" } },
-	GALLOWS: { name: "Gallows", label: { zh: "缢杀" } },
-	EXECUTIONERS_GIBBET: { name: "Executioner's Gibbet", label: { zh: "绞决处刑" } },
-	EXECUTIONERS_GALLOWS: { name: "Executioner's Gallows", label: { zh: "缢杀处刑" } },
-	VOID_REAPING: { name: "Void Reaping", label: { zh: "虚无收割" } },
-	CROSS_REAPING: { name: "Cross Reaping", label: { zh: "交错收割" } },
-	PLENTIFUL_HARVEST: { name: "Plentiful Harvest", label: { zh: "阴冷收割" } },
-	HARVEST_MOON: { name: "Harvest Moon", label: { zh: "收获月" } },
-	COMMUNIO: { name: "Communio", label: { zh: "团契" } },
-	PERFECTIO: { name: "Perfectio", label: { zh: "完人" } },
-	SOULSOW: { name: "Soulsow", label: { zh: "播魂种" } },
-	HARPE: { name: "Harpe", label: { zh: "勾刃" } },
+	SLICE: {
+		id: 24373,
+		name: "Slice",
+		label: { zh: "切割" },
+	},
+	WAXING_SLICE: {
+		id: 24374,
+		name: "Waxing Slice",
+		label: { zh: "增盈切割" },
+	},
+	INFERNAL_SLICE: {
+		id: 24375,
+		name: "Infernal Slice",
+		label: { zh: "地狱切割" },
+	},
+	SHADOW_OF_DEATH: {
+		id: 24378,
+		name: "Shadow of Death",
+		label: { zh: "死亡之影" },
+	},
+	SOUL_SLICE: {
+		id: 24380,
+		name: "Soul Slice",
+		label: { zh: "灵魂切割" },
+	},
+	GIBBET: {
+		id: 24382,
+		name: "Gibbet",
+		label: { zh: "绞决" },
+	},
+	GALLOWS: {
+		id: 24383,
+		name: "Gallows",
+		label: { zh: "缢杀" },
+	},
+	EXECUTIONERS_GIBBET: {
+		id: 36970,
+		name: "Executioner's Gibbet",
+		label: { zh: "绞决处刑" },
+	},
+	EXECUTIONERS_GALLOWS: {
+		id: 36971,
+		name: "Executioner's Gallows",
+		label: { zh: "缢杀处刑" },
+	},
+	VOID_REAPING: {
+		id: 24395,
+		name: "Void Reaping",
+		label: { zh: "虚无收割" },
+	},
+	CROSS_REAPING: {
+		id: 24396,
+		name: "Cross Reaping",
+		label: { zh: "交错收割" },
+	},
+	PLENTIFUL_HARVEST: {
+		id: 24385,
+		name: "Plentiful Harvest",
+		label: { zh: "阴冷收割" },
+	},
+	HARVEST_MOON: {
+		id: 24388,
+		name: "Harvest Moon",
+		label: { zh: "收获月" },
+	},
+	COMMUNIO: {
+		id: 24398,
+		name: "Communio",
+		label: { zh: "团契" },
+	},
+	PERFECTIO: {
+		id: 36973,
+		name: "Perfectio",
+		label: { zh: "完人" },
+	},
+	SOULSOW: {
+		id: 24387,
+		name: "Soulsow",
+		label: { zh: "播魂种" },
+	},
+	HARPE: {
+		id: 24386,
+		name: "Harpe",
+		label: { zh: "勾刃" },
+	},
 
 	/* Single-target oGCD */
-	BLOOD_STALK: { name: "Blood Stalk", label: { zh: "隐匿挥割" } },
-	UNVEILED_GIBBET: { name: "Unveiled Gibbet", label: { zh: "绞决爪" } },
-	UNVEILED_GALLOWS: { name: "Unveiled Gallows", label: { zh: "缢杀爪" } },
-	LEMURES_SLICE: { name: "Lemure's Slice", label: { zh: "夜游魂切割" } },
-	SACRIFICIUM: { name: "Sacrificium", label: { zh: "祭牲" } },
-	ARCANE_CIRCLE: { name: "Arcane Circle", label: { zh: "神秘环" } },
-	GLUTTONY: { name: "Gluttony", label: { zh: "暴食" } },
-	ENSHROUD: { name: "Enshroud", label: { zh: "夜游魂衣" } },
+	BLOOD_STALK: {
+		id: 24389,
+		name: "Blood Stalk",
+		label: { zh: "隐匿挥割" },
+	},
+	UNVEILED_GIBBET: {
+		id: 24390,
+		name: "Unveiled Gibbet",
+		label: { zh: "绞决爪" },
+	},
+	UNVEILED_GALLOWS: {
+		id: 24391,
+		name: "Unveiled Gallows",
+		label: { zh: "缢杀爪" },
+	},
+	LEMURES_SLICE: {
+		id: 24399,
+		name: "Lemure's Slice",
+		label: { zh: "夜游魂切割" },
+	},
+	SACRIFICIUM: {
+		id: 36969,
+		name: "Sacrificium",
+		label: { zh: "祭牲" },
+	},
+	ARCANE_CIRCLE: {
+		id: 24405,
+		name: "Arcane Circle",
+		label: { zh: "神秘环" },
+	},
+	GLUTTONY: {
+		id: 24393,
+		name: "Gluttony",
+		label: { zh: "暴食" },
+	},
+	ENSHROUD: {
+		id: 24394,
+		name: "Enshroud",
+		label: { zh: "夜游魂衣" },
+	},
 
 	/* Multi-target GCD*/
-	SPINNING_SCYTHE: { name: "Spinning Scythe", label: { zh: "旋转钐割" } },
-	NIGHTMARE_SCYTHE: { name: "Nightmare Scythe", label: { zh: "噩梦钐割" } },
-	WHORL_OF_DEATH: { name: "Whorl of Death", label: { zh: "死亡之涡" } },
-	SOUL_SCYTHE: { name: "Soul Scythe", label: { zh: "灵魂钐割" } },
-	GUILLOTINE: { name: "Guillotine", label: { zh: "断首" } },
+	SPINNING_SCYTHE: {
+		id: 24376,
+		name: "Spinning Scythe",
+		label: { zh: "旋转钐割" },
+	},
+	NIGHTMARE_SCYTHE: {
+		id: 24377,
+		name: "Nightmare Scythe",
+		label: { zh: "噩梦钐割" },
+	},
+	WHORL_OF_DEATH: {
+		id: 24379,
+		name: "Whorl of Death",
+		label: { zh: "死亡之涡" },
+	},
+	SOUL_SCYTHE: {
+		id: 24381,
+		name: "Soul Scythe",
+		label: { zh: "灵魂钐割" },
+	},
+	GUILLOTINE: {
+		id: 24384,
+		name: "Guillotine",
+		label: { zh: "断首" },
+	},
 	EXECUTIONERS_GUILLOTINE: {
+		id: 36972,
 		name: "Executioner's Guillotine",
 		label: { zh: "断首处刑" },
 	},
-	GRIM_REAPING: { name: "Grim Reaping", label: { zh: "阴冷收割" } },
+	GRIM_REAPING: {
+		id: 24397,
+		name: "Grim Reaping",
+		label: { zh: "阴冷收割" },
+	},
 
 	/* Multi-target oGCD */
-	GRIM_SWATHE: { name: "Grim Swathe", label: { zh: "束缚挥割" } },
-	LEMURES_SCYTHE: { name: "Lemure's Scythe", label: { zh: "夜游魂钐割" } },
+	GRIM_SWATHE: {
+		id: 24392,
+		name: "Grim Swathe",
+		label: { zh: "束缚挥割" },
+	},
+	LEMURES_SCYTHE: {
+		id: 24400,
+		name: "Lemure's Scythe",
+		label: { zh: "夜游魂钐割" },
+	},
 
 	// Utility
-	ARCANE_CREST: { name: "Arcane Crest", label: { zh: "神秘纹" } },
+	ARCANE_CREST: {
+		id: 24404,
+		name: "Arcane Crest",
+		label: { zh: "神秘纹" },
+	},
 	ARCANE_CREST_POP: { name: "Pop Arcane Crest", label: { zh: "神秘纹破裂" } },
-	HELLS_INGRESS: { name: "Hell's Ingress", label: { zh: "地狱入境" } },
-	HELLS_EGRESS: { name: "Hell's Egress", label: { zh: "地狱出境" } },
-	REGRESS: { name: "Regress", label: { zh: "回退" } },
+	HELLS_INGRESS: {
+		id: 24401,
+		name: "Hell's Ingress",
+		label: { zh: "地狱入境" },
+	},
+	HELLS_EGRESS: {
+		id: 24402,
+		name: "Hell's Egress",
+		label: { zh: "地狱出境" },
+	},
+	REGRESS: {
+		id: 24403,
+		name: "Regress",
+		label: { zh: "回退" },
+	},
 
 	// Fake skill to mimic a target dying with DD active
 	GAIN_SOUL_GAUGE: { name: "+10 Soul Gauge", label: { zh: "灵魂量谱+10" } },
