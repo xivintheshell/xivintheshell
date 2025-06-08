@@ -2,42 +2,162 @@ import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
 export const WAR_ACTIONS = ensureRecord<ActionData>()({
-	HEAVY_SWING: { name: "Heavy Swing", label: { zh: "重劈" } },
-	MAIM: { name: "Maim", label: { zh: "凶残裂" } },
-	STORMS_PATH: { name: "Storms Path", label: { zh: "暴风斩" } },
-	STORMS_EYE: { name: "Storms Eye", label: { zh: "暴风碎" } },
-	FELL_CLEAVE: { name: "Fell Cleave", label: { zh: "裂石飞环" } },
-	UPHEAVAL: { name: "Upheaval", label: { zh: "动乱" } },
-	ONSLAUGHT: { name: "Onslaught", label: { zh: "猛攻" } },
+	HEAVY_SWING: {
+		id: 31,
+		name: "Heavy Swing",
+		label: { zh: "重劈" },
+	},
+	MAIM: {
+		id: 37,
+		name: "Maim",
+		label: { zh: "凶残裂" },
+	},
+	STORMS_PATH: {
+		id: 42,
+		name: "Storms Path",
+		label: { zh: "暴风斩" },
+	},
+	STORMS_EYE: {
+		id: 45,
+		name: "Storms Eye",
+		label: { zh: "暴风碎" },
+	},
+	FELL_CLEAVE: {
+		id: 3549,
+		name: "Fell Cleave",
+		label: { zh: "裂石飞环" },
+	},
+	UPHEAVAL: {
+		id: 7387,
+		name: "Upheaval",
+		label: { zh: "动乱" },
+	},
+	ONSLAUGHT: {
+		id: 7386,
+		name: "Onslaught",
+		label: { zh: "猛攻" },
+	},
 
-	TOMAHAWK: { name: "Tomahawk", label: { zh: "飞斧" } },
+	TOMAHAWK: {
+		id: 46,
+		name: "Tomahawk",
+		label: { zh: "飞斧" },
+	},
 
-	OVERPOWER: { name: "Overpower", label: { zh: "超压斧" } },
-	MYTHRIL_TEMPEST: { name: "Mythril Tempest", label: { zh: "秘银暴风" } },
-	DECIMATE: { name: "Decimate", label: { zh: "地毁人亡" } },
-	OROGENY: { name: "Orogeny", label: { zh: "群山隆起" } },
+	OVERPOWER: {
+		id: 41,
+		name: "Overpower",
+		label: { zh: "超压斧" },
+	},
+	MYTHRIL_TEMPEST: {
+		id: 16462,
+		name: "Mythril Tempest",
+		label: { zh: "秘银暴风" },
+	},
+	DECIMATE: {
+		id: 3550,
+		name: "Decimate",
+		label: { zh: "地毁人亡" },
+	},
+	OROGENY: {
+		id: 25752,
+		name: "Orogeny",
+		label: { zh: "群山隆起" },
+	},
 
-	INNER_RELEASE: { name: "Inner Release", label: { zh: "原初的解放" } },
-	PRIMAL_WRATH: { name: "Primal Wrath", label: { zh: "原初的怒震" } },
-	PRIMAL_REND: { name: "Primal Rend", label: { zh: "蛮荒崩裂" } },
-	PRIMAL_RUINATION: { name: "Primal Ruination", label: { zh: "尽毁" } },
+	INNER_RELEASE: {
+		id: 7389,
+		name: "Inner Release",
+		label: { zh: "原初的解放" },
+	},
+	PRIMAL_WRATH: {
+		id: 36924,
+		name: "Primal Wrath",
+		label: { zh: "原初的怒震" },
+	},
+	PRIMAL_REND: {
+		id: 25753,
+		name: "Primal Rend",
+		label: { zh: "蛮荒崩裂" },
+	},
+	PRIMAL_RUINATION: {
+		id: 36925,
+		name: "Primal Ruination",
+		label: { zh: "尽毁" },
+	},
 
-	INFURIATE: { name: "Infuriate", label: { zh: "战嚎" } },
-	INNER_CHAOS: { name: "Inner Chaos", label: { zh: "狂魂" } },
-	CHAOTIC_CYCLONE: { name: "Chaotic Cyclone", label: { zh: "混沌旋风" } },
+	INFURIATE: {
+		id: 52,
+		name: "Infuriate",
+		label: { zh: "战嚎" },
+	},
+	INNER_CHAOS: {
+		id: 16465,
+		name: "Inner Chaos",
+		label: { zh: "狂魂" },
+	},
+	CHAOTIC_CYCLONE: {
+		id: 16463,
+		name: "Chaotic Cyclone",
+		label: { zh: "混沌旋风" },
+	},
 
-	THRILL_OF_BATTLE: { name: "Thrill of Battle", label: { zh: "战栗" } },
-	EQUILIBRIUM: { name: "Equilibrium", label: { zh: "泰然自若" } },
-	SHAKE_IT_OFF: { name: "Shake It Off", label: { zh: "摆脱" } },
-	RAW_INTUITION: { name: "Raw Intuition", label: { zh: "原初的直觉" } }, // Lv56-81
-	NASCENT_FLASH: { name: "Nascent Flash", label: { zh: "原初的勇猛" } },
-	BLOODWHETTING: { name: "Bloodwhetting", label: { zh: "原初的血气" } }, // Lv82-
-	VENGEANCE: { name: "Vengeance", label: { zh: "复仇" } }, // Lv38-91
-	DAMNATION: { name: "Damnation", label: { zh: "戮罪" } }, // Lv92-
-	HOLMGANG: { name: "Holmgang", label: { zh: "死斗" } },
+	THRILL_OF_BATTLE: {
+		id: 40,
+		name: "Thrill of Battle",
+		label: { zh: "战栗" },
+	},
+	EQUILIBRIUM: {
+		id: 3552,
+		name: "Equilibrium",
+		label: { zh: "泰然自若" },
+	},
+	SHAKE_IT_OFF: {
+		id: 7388,
+		name: "Shake It Off",
+		label: { zh: "摆脱" },
+	},
+	RAW_INTUITION: {
+		id: 3551,
+		name: "Raw Intuition",
+		label: { zh: "原初的直觉" },
+	}, // Lv56-81
+	NASCENT_FLASH: {
+		id: 16464,
+		name: "Nascent Flash",
+		label: { zh: "原初的勇猛" },
+	},
+	BLOODWHETTING: {
+		id: 25751,
+		name: "Bloodwhetting",
+		label: { zh: "原初的血气" },
+	}, // Lv82-
+	VENGEANCE: {
+		id: 44,
+		name: "Vengeance",
+		label: { zh: "复仇" },
+	}, // Lv38-91
+	DAMNATION: {
+		id: 36923,
+		name: "Damnation",
+		label: { zh: "戮罪" },
+	}, // Lv92-
+	HOLMGANG: {
+		id: 43,
+		name: "Holmgang",
+		label: { zh: "死斗" },
+	},
 
-	DEFIANCE: { name: "Defiance", label: { zh: "守护" } },
-	RELEASE_DEFIANCE: { name: "Release Defiance", label: { zh: "取消守护" } },
+	DEFIANCE: {
+		id: 48,
+		name: "Defiance",
+		label: { zh: "守护" },
+	},
+	RELEASE_DEFIANCE: {
+		id: 32066,
+		name: "Release Defiance",
+		label: { zh: "取消守护" },
+	},
 });
 
 export const WAR_COOLDOWNS = ensureRecord<CooldownData>()({
