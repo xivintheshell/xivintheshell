@@ -19,6 +19,7 @@ import { SMN_ACTIONS, SMN_COOLDOWNS, SMN_RESOURCES, SMN_TRAITS } from "./Jobs/SM
 import { VPR_ACTIONS, VPR_COOLDOWNS, VPR_RESOURCES, VPR_TRAITS } from "./Jobs/VPR";
 import { WAR_ACTIONS, WAR_COOLDOWNS, WAR_RESOURCES, WAR_TRAITS } from "./Jobs/WAR";
 import { WHM_ACTIONS, WHM_COOLDOWNS, WHM_RESOURCES, WHM_TRAITS } from "./Jobs/WHM";
+import { BlueMage_ACTIONS, BlueMage_COOLDOWNS, BlueMage_RESOURCES, BlueMage_TRAITS } from "./Jobs/BlueMage";
 import { COMMON_ACTIONS, COMMON_COOLDOWNS, COMMON_RESOURCES, COMMON_TRAITS } from "./Shared/Common";
 import {
 	LIMIT_BREAK_ACTIONS,
@@ -62,6 +63,7 @@ export const ACTIONS = {
 	...SMN_ACTIONS,
 	...RDM_ACTIONS,
 	...PCT_ACTIONS,
+	...BlueMage_ACTIONS,
 };
 
 export const COOLDOWNS = {
@@ -99,6 +101,7 @@ export const COOLDOWNS = {
 	...SMN_COOLDOWNS,
 	...RDM_COOLDOWNS,
 	...PCT_COOLDOWNS,
+	...BlueMage_COOLDOWNS,
 };
 
 export const RESOURCES = {
@@ -136,6 +139,7 @@ export const RESOURCES = {
 	...SMN_RESOURCES,
 	...RDM_RESOURCES,
 	...PCT_RESOURCES,
+	...BlueMage_RESOURCES,
 };
 
 export const TRAITS = {
@@ -172,6 +176,7 @@ export const TRAITS = {
 	...SMN_TRAITS,
 	...RDM_TRAITS,
 	...PCT_TRAITS,
+	...BlueMage_TRAITS,
 };
 
 export type Actions = typeof ACTIONS;

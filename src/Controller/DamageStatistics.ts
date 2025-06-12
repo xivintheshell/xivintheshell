@@ -111,6 +111,11 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 				PotencyModifierType.LIFE_OF_THE_DRAGON,
 				PotencyModifierType.BATTLE_LITANY,
 				PotencyModifierType.FIGHT_OR_FLIGHT,
+				PotencyModifierType.MOON_FLUTE,
+				PotencyModifierType.WHISTLE,
+				PotencyModifierType.BRISTLE,
+				PotencyModifierType.TINGLEA,
+				PotencyModifierType.TINGLEA,
 			].includes(source)
 		) {
 			entry.displayedModifiers.push(source);

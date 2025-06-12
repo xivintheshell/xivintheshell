@@ -67,6 +67,27 @@ export const DEFAULT_PCT_CONFIG: ConfigData = {
 	initialResourceOverrides: [],
 };
 
+export const DEFAULT_BlueMage_CONFIG: ConfigData = {
+	job: "BlueMage",
+	shellVersion: ShellInfo.version,
+	level: LevelSync.lvl90,
+	// 2.5 GCD
+	spellSpeed: 380,
+	skillSpeed: 380,
+	criticalHit: 380,
+	directHit: 380,
+	determination: 380,
+	piety: 380,
+	countdown: 5,
+	randomSeed: "sup",
+	fps: 60,
+	gcdSkillCorrection: 0,
+	animationLock: 0.7,
+	timeTillFirstManaTick: 1.2,
+	procMode: ProcMode.Never,
+	initialResourceOverrides: [],
+};
+
 export const DEFAULT_CONFIG: ConfigData = DEFAULT_BLM_CONFIG; // TODO
 // {
 // 	['BLM']: DEFAULT_BLM_CONFIG,
