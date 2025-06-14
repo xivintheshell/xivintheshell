@@ -440,6 +440,21 @@ makeBlueMageSpell("Hydro_Pull", 1, {
 		state.tryConsumeResource("Bristle");
 	},
 });
+makeBlueMageSpell("The_Rose_of_Destruction", 1, {
+	basePotency: 400,
+	baseCastTime: 2.0,
+	manaCost: 300,
+	applicationDelay: 0.5,
+	secondaryCooldown: {
+		cdName: "cd_The_Rose_of_Destruction",
+		cooldown: 30,
+		maxCharges: 1,
+	},
+	validateAttempt: (state) => !isOver(state),
+	onConfirm: (state) => {
+		state.tryConsumeResource("Bristle");
+	},
+});
 
 makeBlueMageSpell("Moon_Flute", 1, {
 	baseCastTime: 2.0,

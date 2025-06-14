@@ -24,6 +24,7 @@ export const BlueMage_ACTIONS = ensureRecord<ActionData>()({
 	Revenge_Blast: { name: "Revenge Blast", label: { zh: "复仇冲击" } },
 	Wild_Rage: { name: "Wild Rage", label: { zh: "兽魂的愤怒" } },
 	Goblin_Punch: { name: "Goblin Punch", label: { zh: "哥布林乱拳" } },
+	The_Rose_of_Destruction: { name: "The Rose of Destruction", label: { zh: "斗灵弹" } },
 
 	Eruption: { name: "Eruption", label: { zh: "地火喷发" } },
 	Feather_Rain: { name: "Feather Rain", label: { zh: "飞翎雨" } },
@@ -62,6 +63,7 @@ export const BlueMage_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_Cold_Fog_Pop: { name: "cd_Cold_Fog_Pop", label: { zh: "CD: 彻骨雾寒触发" } },
 	cd_Matra_Magic: { name: "cd_Matra_Magic", label: { zh: "CD: 魔术" } },
 	cd_Winged_Reprobation: { name: "cd_Winged_Reprobation", label: { zh: "CD: 断罪飞翔" } },
+	cd_The_Rose_of_Destruction: { name: "cd_The_Rose_of_Destruction", label: { zh: "CD: 斗灵弹" } },
 });
 
 export const BlueMage_GAUGES = ensureRecord<ResourceData>()({
