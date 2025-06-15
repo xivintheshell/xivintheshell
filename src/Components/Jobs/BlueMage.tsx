@@ -82,18 +82,3 @@ export class BlueMageStatusPropsGenerator extends StatusPropsGenerator<BlueMageS
 	}
 }
 
-/*
-export class BlueMageStatusPropsGenerator extends StatusPropsGenerator<BlueMageState> {
-	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [];
-	}
-
-	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
-		return [];
-	}
-
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		return [];
-	}
-}
-*/
