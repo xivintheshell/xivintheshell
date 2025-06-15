@@ -247,8 +247,8 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.MOON_FLUTE, { en: "Moon Flute", zh: "月笛" }],
 	[PotencyModifierType.TINGLEA, { en: "Tingle", zh: "哔哩哔哩" }],
 	[PotencyModifierType.TINGLEB, { en: "Tingle", zh: "哔哩哔哩" }],
-	[PotencyModifierType.WINGEDREPROBATION, { en: "WingedReprobation", zh: "断罪飞翔" }],
-	[PotencyModifierType.WINGEDREDEMPTION, { en: "Winged Redemption", zh: "完美神的祝福" }],
+	[PotencyModifierType.WINGED_REPROBATION, { en: "Winged Reprobation", zh: "断罪飞翔" }],
+	[PotencyModifierType.WINGED_REDEMPTION, { en: "Winged Redemption", zh: "完美神的祝福" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
