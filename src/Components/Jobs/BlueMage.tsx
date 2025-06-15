@@ -23,11 +23,6 @@ const BlueMage_DEBUFFS: BlueMageResourceKey[] = [
 const BlueMage_BUFFS: BlueMageResourceKey[] = (
 	Object.keys(BlueMage_STATUSES) as BlueMageResourceKey[]
 ).filter((key) => !BlueMage_DEBUFFS.includes(key));
-/*
-(Object.keys(BlueMageState) as BlueMageResourceKey[]).forEach((buff) =>
-	registerBuffIcon(buff, `BlueMage/${RESOURCES[buff].name}.png`),
-);
-*/
 
 (Object.keys(BlueMage_STATUSES) as BlueMageResourceKey[]).forEach((buff) =>
 	registerBuffIcon(buff, `BlueMage/${RESOURCES[buff].name}.png`),
