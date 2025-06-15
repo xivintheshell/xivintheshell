@@ -209,7 +209,13 @@ export const CASTERS = ensureRecord<Job>()({
 		usesMp: true,
 		limitBreak: "CHROMATIC_FANTASY",
 	},
+	BlueMage: {
+		role: "CASTER",
+		implementationLevel: "TESTING",
+		usesMp: true,
+	},
 });
+
 export type Casters = typeof CASTERS;
 export type CasterKey = keyof Casters;
 

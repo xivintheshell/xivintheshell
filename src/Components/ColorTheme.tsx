@@ -29,6 +29,16 @@ export type BLMResourceColors = {
 	polyStacks: string;
 };
 
+export type BlueMageResourceColors = {
+	moonflute: string;
+	whistle: string;
+	bristle: string;
+	tinglea: string;
+	tingleb: string;
+	surpanakha: string;
+	wingedreprobation: string;
+};
+
 export type PCTResourceColors = {
 	creatureCanvas: string;
 	weaponCanvas: string;
@@ -178,6 +188,7 @@ export type ThemeColors = {
 		petTag: string;
 	};
 	blm: BLMResourceColors;
+	bluemage: BlueMageResourceColors;
 	pct: PCTResourceColors;
 	rdm: RDMResourceColors;
 	dnc: DNCResourceColors;
@@ -236,6 +247,7 @@ const DARK_THEME_COLORS: ThemeColors = {
 	accent: "mediumpurple",
 	jobAccents: {
 		BLM: "#9370db", // mediumpurple
+		BlueMage: "#9370db",
 		PCT: "#e176c2",
 		RDM: "#ff0000", // TODO less red
 		DNC: "#e2b0af", // color ripped from xiva/fflogs
@@ -280,6 +292,15 @@ const DARK_THEME_COLORS: ThemeColors = {
 		paradox: "#d953ee",
 		polyTimer: "#594472",
 		polyStacks: "#b138ee",
+	},
+	bluemage: {
+		moonflute: "#b69241",
+		whistle: "#b69241",
+		bristle: "#b69241",
+		tinglea: "#217ff5",
+		tingleb: "#217ff5",
+		surpanakha: "#b69241",
+		wingedreprobation: "#ffd535",
 	},
 	pct: {
 		creatureCanvas: "#a948e3",
@@ -411,6 +432,7 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 	accent: "mediumpurple",
 	jobAccents: {
 		BLM: "#9370db", // mediumpurple
+		BlueMage: "#9370db",
 		PCT: "#f485d6",
 		RDM: "#ff0000", // TODO less red
 		DNC: "#e2b0af", // color ripped from xiva/fflogs
@@ -454,6 +476,15 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		paradox: "#d953ee",
 		polyTimer: "#d5bbf1",
 		polyStacks: "#b138ee",
+	},
+	bluemage: {
+		moonflute: "#b69241",
+		whistle: "#b69241",
+		bristle: "#b69241",
+		tinglea: "#217ff5",
+		tingleb: "#217ff5",
+		surpanakha: "#b69241",
+		wingedreprobation: "#ffd535",
 	},
 	pct: {
 		creatureCanvas: "#b854e8",

@@ -123,6 +123,19 @@ export enum BuffType {
 	Krasis = "Krasis",
 	Philosophia = "Philosophia",
 	Soteria = "Soteria",
+
+	MoonFlute = "Moon Flute",
+	MoonFluteOVERTIME = "Moon Flute OVER TIME",
+	Whistle = "Whistle",
+	Bristle = "Bristle",
+	TingleA = "TingleA",
+	TingleB = "TingleB",
+
+	SurpanakhaA = "SurpanakhaA",
+	SurpanakhaB = "SurpanakhaB",
+	SurpanakhaC = "SurpanakhaC",
+	WingedReprobation = "WingedReprobation",
+	WingedRedemption = "WingedRedemption",
 }
 
 export const enum WarningType {
