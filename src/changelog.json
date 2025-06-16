@@ -34,6 +34,13 @@
 		"level": "minor"
 	},
 	{
+		"date": "6/15/25",
+		"changes": [
+			"[BETA][DRK] Added initial support for DRK."
+		],
+		"level": "major"
+	},
+	{
 		"date": "6/6/25",
 		"changes": [
 			"[GNB][SGE] Chinese localization."

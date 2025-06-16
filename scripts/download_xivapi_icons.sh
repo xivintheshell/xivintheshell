@@ -47,7 +47,7 @@ get_buff_icon() {
     fi
 }
 
-get_buff_icon "Salted Earth" "23104"
+get_buff_icon "Salted Earth" "213104"
 get_buff_icon "Grit" "213108"
 get_buff_icon "Shadow Wall" "213113"
 get_buff_icon "Dark Mind" "213114"

@@ -88,7 +88,7 @@ export const TANKS = ensureRecord<Job>()({
 	},
 	DRK: {
 		role: "TANK",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "DARK_FORCE",
 		limitBreakBuff: "DARK_FORCE",

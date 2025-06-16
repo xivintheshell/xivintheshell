@@ -25,6 +25,7 @@ export const DRK_ACTIONS = ensureRecord<ActionData>()({
 	DARK_MISSIONARY: { name: "Dark Missionary" },
 	DELIRIUM: { name: "Delirium" },
 	THE_BLACKEST_NIGHT: { name: "The Blackest Night" },
+	THE_BLACKEST_NIGHT_POP: { name: "Pop The Blackest Night" },
 	FLOOD_OF_SHADOW: { name: "Flood of Shadow" },
 	EDGE_OF_SHADOW: { name: "Edge of Shadow" },
 	LIVING_SHADOW: { name: "Living Shadow" },
@@ -55,10 +56,13 @@ export const DRK_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_DARK_MISSIONARY: { name: "cd_DarkMissionary" },
 	cd_DELIRIUM: { name: "cd_Delirium" },
 	cd_THE_BLACKEST_NIGHT: { name: "cd_TheBlackestNight" },
+	cd_THE_BLACKEST_NIGHT_POP: { name: "cd_TheBlackestNightPop" },
 	cd_LIVING_SHADOW: { name: "cd_LivingShadow" },
 	cd_OBLATION: { name: "cd_Oblation" },
 	cd_SALT_AND_DARKNESS: { name: "cd_SaltAndDarkness" },
 	cd_SHADOWBRINGER: { name: "cd_Shadowbringer" },
+	// fake
+	cd_POP_TBN: { name: "cd_PopTBN" },
 });
 
 export const DRK_GAUGES = ensureRecord<ResourceData>()({
@@ -67,7 +71,7 @@ export const DRK_GAUGES = ensureRecord<ResourceData>()({
 });
 
 export const DRK_STATUSES = ensureRecord<ResourceData>()({
-	SALTED_EARTH: { name: "Salted Earth" },
+	SALTED_EARTH: { name: "Salted Earth", mayBeToggled: true },
 	GRIT: { name: "Grit" },
 	SHADOW_WALL: { name: "Shadow Wall" },
 	DARK_MIND: { name: "Dark Mind" },
@@ -88,16 +92,16 @@ export const DRK_TRACKERS = ensureRecord<ResourceData>()({
 	DRK_COMBO_TRACKER: { name: "DRK Combo" }, // [0, 2]
 	DRK_AOE_COMBO_TRACKER: { name: "DRK AOE Combo" }, // [0, 1]
 	DRK_DELIRIUM_COMBO_TRACKER: { name: "DRK Delirium Combo" }, // [0, 2]
+	DARK_ARTS: { name: "Dark Arts" }, // [0, 1]
+	ESTEEM_TRACKER: { name: "Esteem Attacks" }, // [0, 5]
 });
 
 export const DRK_TRAITS = ensureRecord<TraitData>()({
 	DAKRSIDE_MASTERY: { name: "Darkside Mastery", level: 74 },
 	ENHANCED_UNMEND: { name: "Enhanced Unmend", level: 84 },
-	MELEE_MASTERY_DRK: { name: "Melee Mastery", level: 84 },
 	ENHANCED_LIVING_SHADOW: { name: "Enhanced Living Shadow", level: 88 },
 	ENHANCED_LIVING_SHADOW_II: { name: "Enhanced Living Shadow II", level: 90 },
 	SHADOW_WALL_MASTERY: { name: "Shadow Wall Mastery", level: 92 },
-	MELEE_MASTERY_II_DRK: { name: "Melee Mastery II", level: 94 },
 	ENHANCED_DELIRIUM: { name: "Enhanced Delirium", level: 96 },
 	ENHANCED_LIVING_SHADOW_III: { name: "Enhanced Living Shadow III", level: 100 },
 });

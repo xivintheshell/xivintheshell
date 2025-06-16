@@ -78,6 +78,7 @@ export const enum PotencyModifierType {
 	AUTOPHYSIS,
 	PHILOSOPHIA,
 
+<<<<<<< HEAD
 	MOON_FLUTE,
 	BRISTLE,
 	WHISTLE,
@@ -86,6 +87,9 @@ export const enum PotencyModifierType {
 	SURPANAKHA,
 	WINGED_REPROBATION,
 	WINGED_REDEMPTION,
+=======
+	DARKSIDE,
+>>>>>>> drk beta
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -429,6 +433,18 @@ export const Modifiers = {
 		source: PotencyModifierType.WINGED_REDEMPTION,
 		additiveAmount: 220,
 	} as PotencyAdder,
+	Darkside: {
+		kind: "multiplier",
+		source: PotencyModifierType.DARKSIDE,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	DrkPet: {
+		kind: "multiplier",
+		source: PotencyModifierType.PET,
+		// with a 5% party bonus, living shadow skills do approximately 105% of its other potencies
+		// https://docs.google.com/spreadsheets/d/1Yt7Px7VHuKG1eJR9CRKs3RpvcR5IZKAAA3xjekvv0LY/edit?gid=0#gid=0
+		potencyFactor: 1.05,
+	} as PotencyMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

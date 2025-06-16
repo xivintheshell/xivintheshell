@@ -173,4 +173,7 @@ export const enum WarningType {
 	LateEnkindle = "enkindle used near end of demi window may ghost",
 	RubysGlimmerDrop = "Ruby's Glimmer expired",
 	AetherflowOvercap = "aetherflow overcap",
+
+	BloodGaugeOvercap = "blood gauge overcap",
+	DarkArtsOvercap = "dark arts overcap",
 }

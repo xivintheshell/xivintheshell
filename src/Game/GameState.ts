@@ -1375,6 +1375,10 @@ export class GameState {
 		return this.resources.get(rscType).available(atLeast ?? 1);
 	}
 
+	hasResourceExactly(rscType: ResourceKey, target: number): boolean {
+		return this.resources.get(rscType).availableAmount() === target;
+	}
+
 	// Add a resource drop event after `delay` seconds.
 	// If `rscType` has a corresponding cooldown duration for the job, then that delay will be
 	// used if `rscType` is undefined.
