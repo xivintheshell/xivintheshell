@@ -29,7 +29,7 @@ export type BLMResourceColors = {
 	polyStacks: string;
 };
 
-export type BlueMageResourceColors = {
+export type BLUResourceColors = {
 	moonflute: string;
 	whistle: string;
 	bristle: string;
@@ -188,7 +188,7 @@ export type ThemeColors = {
 		petTag: string;
 	};
 	blm: BLMResourceColors;
-	bluemage: BlueMageResourceColors;
+	blu: BLUResourceColors;
 	pct: PCTResourceColors;
 	rdm: RDMResourceColors;
 	dnc: DNCResourceColors;
@@ -247,7 +247,7 @@ const DARK_THEME_COLORS: ThemeColors = {
 	accent: "mediumpurple",
 	jobAccents: {
 		BLM: "#9370db", // mediumpurple
-		BlueMage: "#9370db",
+		BLU: "#9370db",
 		PCT: "#e176c2",
 		RDM: "#ff0000", // TODO less red
 		DNC: "#e2b0af", // color ripped from xiva/fflogs
@@ -293,7 +293,7 @@ const DARK_THEME_COLORS: ThemeColors = {
 		polyTimer: "#594472",
 		polyStacks: "#b138ee",
 	},
-	bluemage: {
+	blu: {
 		moonflute: "#b69241",
 		whistle: "#b69241",
 		bristle: "#b69241",
@@ -432,7 +432,7 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 	accent: "mediumpurple",
 	jobAccents: {
 		BLM: "#9370db", // mediumpurple
-		BlueMage: "#9370db",
+		BLU: "#9370db",
 		PCT: "#f485d6",
 		RDM: "#ff0000", // TODO less red
 		DNC: "#e2b0af", // color ripped from xiva/fflogs
@@ -477,7 +477,7 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		polyTimer: "#d5bbf1",
 		polyStacks: "#b138ee",
 	},
-	bluemage: {
+	blu: {
 		moonflute: "#b69241",
 		whistle: "#b69241",
 		bristle: "#b69241",

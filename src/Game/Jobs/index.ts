@@ -21,7 +21,7 @@ import { WHMState } from "./WHM";
 import { NINState } from "./NIN";
 import { MNKState } from "./MNK";
 import { VPRState } from "./VPR";
-import { BlueMageState } from "./BlueMage";
+import { BLUState } from "./BLU";
 
 export function getGameState(config: GameConfig): GameState {
 	switch (config.job) {
@@ -76,8 +76,10 @@ export function getGameState(config: GameConfig): GameState {
 			return new RDMState(config);
 		case "PCT":
 			return new PCTState(config);
-		case "BlueMage":
-			return new BlueMageState(config);
+
+		// Limited
+		case "BLU":
+			return new BLUState(config);
 	}
 	return new GameState(config);
 }

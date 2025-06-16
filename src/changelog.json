@@ -1,8 +1,8 @@
 [
 	{
-		"date": "6/12/25",
+		"date": "6/15/25",
 		"changes": [
-			"[BlueMage] Added support for BlueMage."
+			"[BLU] Added support for BlueMage."
 		],
 		"changes_zh": [
 			"增加青魔支持。"

@@ -665,11 +665,11 @@ function drawSkills(
 		[BuffType.Krasis, { color: g_colors.sge.krasis, showImage: true }],
 		[BuffType.Soteria, { color: g_colors.sge.soteria, showImage: true }],
 		[BuffType.Philosophia, { color: g_colors.sge.philosophia, showImage: true }],
-		[BuffType.MoonFlute, { color: g_colors.bluemage.moonflute, showImage: true }],
-		[BuffType.Bristle, { color: g_colors.bluemage.bristle, showImage: true }],
-		[BuffType.Whistle, { color: g_colors.bluemage.whistle, showImage: true }],
-		[BuffType.TingleA, { color: g_colors.bluemage.tinglea, showImage: true }],
-		[BuffType.TingleB, { color: g_colors.bluemage.tingleb, showImage: true }],
+		[BuffType.WaxingNocturne, { color: g_colors.blu.moonflute, showImage: true }],
+		[BuffType.Bristle, { color: g_colors.blu.bristle, showImage: true }],
+		[BuffType.Whistle, { color: g_colors.blu.whistle, showImage: true }],
+		[BuffType.TingleA, { color: g_colors.blu.tinglea, showImage: true }],
+		[BuffType.TingleB, { color: g_colors.blu.tingleb, showImage: true }],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();

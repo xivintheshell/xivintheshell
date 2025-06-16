@@ -84,8 +84,8 @@ export const enum PotencyModifierType {
 	TINGLEA,
 	TINGLEB,
 	SURPANAKHA,
-	WINGEDREPROBATION,
-	WINGEDREDEMPTION,
+	WINGED_REPROBATION,
+	WINGED_REDEMPTION,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -421,12 +421,12 @@ export const Modifiers = {
 	} as PotencyAdder,
 	WingedReprobation: {
 		kind: "adder",
-		source: PotencyModifierType.WINGEDREPROBATION,
+		source: PotencyModifierType.WINGED_REPROBATION,
 		additiveAmount: 100,
 	} as PotencyAdder,
 	WingedRedemption: {
 		kind: "adder",
-		source: PotencyModifierType.WINGEDREDEMPTION,
+		source: PotencyModifierType.WINGED_REDEMPTION,
 		additiveAmount: 220,
 	} as PotencyAdder,
 };

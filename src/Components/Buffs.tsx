@@ -58,14 +58,6 @@ buffIcons.set(BuffType.Krasis, "Buffs/SGE/Krasis.png");
 buffIcons.set(BuffType.Philosophia, "Buffs/SGE/Philosophia.png");
 buffIcons.set(BuffType.Soteria, "Buffs/SGE/Soteria.png");
 
-buffIcons.set(BuffType.MoonFlute, "Buffs/BlueMage/Moon Flute.png");
-buffIcons.set(BuffType.MoonFluteOVERTIME, "Buffs/BlueMage/Moon Flute OVER TIME.png");
-buffIcons.set(BuffType.Whistle, "Buffs/BlueMage/Whistle.png");
-buffIcons.set(BuffType.Bristle, "Buffs/BlueMage/Bristle.png");
-buffIcons.set(BuffType.TingleA, "Buffs/BlueMage/Tingle.png");
-buffIcons.set(BuffType.TingleB, "Buffs/BlueMage/Tingle.png");
-buffIcons.set(BuffType.WingedReprobation, "Buffs/BlueMage/Winged Reprobation.png");
-
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
 	let imgObj = new Image();
