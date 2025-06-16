@@ -1180,6 +1180,11 @@ export class GameState {
 			this.jobSpecificAddHealingBuffCovers(node, skill);
 		}
 
+		const manaCost = skill.manaCostFn(this);
+		if (manaCost > 0) {
+			this.resources.get("MANA").consume(manaCost);
+		}
+
 		skill.onConfirm(this, node);
 
 		if (potency && !this.hasResourceAvailable("IN_COMBAT")) {
