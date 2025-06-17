@@ -121,6 +121,11 @@ export const enum PotencyModifierType {
 	FEY_ILLUMINATION,
 	DISSIPATION,
 	PROTRACTION,
+
+	PHANTOM,
+	PHANTOM_KICK_1,
+	PHANTOM_KICK_2,
+	PHANTOM_KICK_3,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -653,6 +658,25 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.PROTRACTION,
 		potencyFactor: 1.1,
+	Phantom: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM,
+		potencyFactor: 0, // TODO figure out if using a multiplier is actually a reasonable way to model things
+	} as PotencyMultiplier,
+	PhantomKick1: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_KICK_1,
+		potencyFactor: 1.09,
+	} as PotencyMultiplier,
+	PhantomKick2: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_KICK_2,
+		potencyFactor: 1.18,
+	} as PotencyMultiplier,
+	PhantomKick3: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_KICK_3,
+		potencyFactor: 1.27,
 	} as PotencyMultiplier,
 };
 
