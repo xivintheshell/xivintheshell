@@ -249,6 +249,10 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.TINGLEB, { en: "TING", zh: "哔哩哔哩" }],
 	[PotencyModifierType.WINGED_REPROBATION, { en: "WREP", zh: "断罪飞翔" }],
 	[PotencyModifierType.WINGED_REDEMPTION, { en: "WRED", zh: "完美神的祝福" }],
+	[PotencyModifierType.PHANTOM, { en: "phantom potency" }],
+	[PotencyModifierType.PHANTOM_KICK_1, { en: "phantom kick (1)" }],
+	[PotencyModifierType.PHANTOM_KICK_2, { en: "phantom kick (2)" }],
+	[PotencyModifierType.PHANTOM_KICK_3, { en: "phantom kick (3)" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -320,6 +324,10 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.TINGLEB, { en: "TING", zh: "哔哩哔哩" }],
 	[PotencyModifierType.WINGED_REPROBATION, { en: "WREP", zh: "断罪飞翔" }],
 	[PotencyModifierType.WINGED_REDEMPTION, { en: "WRED", zh: "完美神的祝福" }],
+	[PotencyModifierType.PHANTOM, { en: "PH" }],
+	[PotencyModifierType.PHANTOM_KICK_1, { en: "PK1" }],
+	[PotencyModifierType.PHANTOM_KICK_2, { en: "PK2" }],
+	[PotencyModifierType.PHANTOM_KICK_3, { en: "PK3" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(

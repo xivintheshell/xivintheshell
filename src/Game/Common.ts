@@ -129,6 +129,9 @@ export enum BuffType {
 	Bristle = "Bristle",
 	TingleA = "TingleA",
 	TingleB = "TingleB",
+
+	OccultQuick = "Occult Quick",
+	PhantomKick = "Phantom Kick",
 }
 
 export const enum WarningType {

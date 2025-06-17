@@ -86,6 +86,11 @@ export const enum PotencyModifierType {
 	SURPANAKHA,
 	WINGED_REPROBATION,
 	WINGED_REDEMPTION,
+
+	PHANTOM,
+	PHANTOM_KICK_1,
+	PHANTOM_KICK_2,
+	PHANTOM_KICK_3,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -429,6 +434,26 @@ export const Modifiers = {
 		source: PotencyModifierType.WINGED_REDEMPTION,
 		additiveAmount: 220,
 	} as PotencyAdder,
+	Phantom: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM,
+		potencyFactor: 0.1, // TODO figure out if using a multiplier is actually a reasonable way to model things
+	} as PotencyMultiplier,
+	PhantomKick1: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_KICK_1,
+		potencyFactor: 1.09,
+	} as PotencyMultiplier,
+	PhantomKick2: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_KICK_2,
+		potencyFactor: 1.18,
+	} as PotencyMultiplier,
+	PhantomKick3: {
+		kind: "multiplier",
+		source: PotencyModifierType.PHANTOM_KICK_3,
+		potencyFactor: 1.27,
+	} as PotencyMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

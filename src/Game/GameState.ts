@@ -891,6 +891,10 @@ export class GameState {
 
 		this.jobSpecificAddSpeedBuffCovers(node, skill);
 
+		if (this.hasResourceAvailable("OCCULT_QUICK") && skill.cdName === "cd_GCD") {
+			node.addBuff(BuffType.OccultQuick);
+		}
+
 		// create potency node object (snapshotted buffs will populate on confirm)
 		const potencyNumber = skill.potencyFn(this);
 
@@ -971,6 +975,17 @@ export class GameState {
 					if (this.hasResourceAvailable("TINCTURE")) {
 						mods.push(Modifiers.Tincture);
 					}
+					// TODO consolidate to function
+					if (this.hasResourceAvailable("PHANTOM_KICK")) {
+						const kickStacks = this.resources.get("PHANTOM_KICK").availableAmount();
+						mods.push(
+							kickStacks === 3
+								? Modifiers.PhantomKick3
+								: kickStacks === 2
+									? Modifiers.PhantomKick2
+									: Modifiers.PhantomKick1,
+						);
+					}
 					mods.push(...skill.jobPotencyModifiers(this));
 					potency.modifiers = mods;
 				}
@@ -979,6 +994,10 @@ export class GameState {
 				// tincture
 				if (this.hasResourceAvailable("TINCTURE") && !node.hasBuff(BuffType.Tincture)) {
 					node.addBuff(BuffType.Tincture);
+				}
+				if (this.hasResourceAvailable("PHANTOM_KICK")) {
+					// too lazy to distinguish stacks
+					node.addBuff(BuffType.PhantomKick);
 				}
 
 				this.jobSpecificAddDamageBuffCovers(node, skill);
@@ -1110,6 +1129,17 @@ export class GameState {
 			if (this.hasResourceAvailable("TINCTURE")) {
 				mods.push(Modifiers.Tincture);
 			}
+			// TODO consolidate to function
+			if (this.hasResourceAvailable("PHANTOM_KICK")) {
+				const kickStacks = this.resources.get("PHANTOM_KICK").availableAmount();
+				mods.push(
+					kickStacks === 3
+						? Modifiers.PhantomKick3
+						: kickStacks === 2
+							? Modifiers.PhantomKick2
+							: Modifiers.PhantomKick1,
+				);
+			}
 			mods.push(...skill.jobPotencyModifiers(this));
 			potency.modifiers = mods;
 			node.addPotency(potency);
@@ -1169,6 +1199,10 @@ export class GameState {
 				node.addBuff(BuffType.Tincture);
 			}
 			this.jobSpecificAddDamageBuffCovers(node, skill);
+		}
+		if (this.hasResourceAvailable("PHANTOM_KICK")) {
+			// too lazy to distinguish stacks
+			node.addBuff(BuffType.PhantomKick);
 		}
 
 		if (healingPotencyNumber > 0) {
@@ -1512,6 +1546,17 @@ export class GameState {
 		if (this.hasResourceAvailable("TINCTURE") && !mods.includes(Modifiers.Tincture)) {
 			mods.push(Modifiers.Tincture);
 			props.node.addBuff(BuffType.Tincture);
+		}
+		// TODO consolidate to function
+		if (this.hasResourceAvailable("PHANTOM_KICK")) {
+			const kickStacks = this.resources.get("PHANTOM_KICK").availableAmount();
+			mods.push(
+				kickStacks === 3
+					? Modifiers.PhantomKick3
+					: kickStacks === 2
+						? Modifiers.PhantomKick2
+						: Modifiers.PhantomKick1,
+			);
 		}
 
 		const effectDuration = (getResourceInfo(this.config.job, props.effectName) as ResourceInfo)

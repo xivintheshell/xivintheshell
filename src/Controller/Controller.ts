@@ -87,6 +87,9 @@ import { getCurrentLanguage, localizeSkillName } from "../Components/Localizatio
 // Ensure role actions are imported after job-specific ones to protect hotbar ordering
 import "../Game/Jobs/RoleActions";
 
+// Ensure phantom actions are imported last
+import "../Game/Jobs/Phantom";
+
 type Fixme = any;
 
 const STANDARD_TICK_KEY = "stdtick";
