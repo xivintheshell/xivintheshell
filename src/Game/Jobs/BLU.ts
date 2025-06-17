@@ -64,61 +64,60 @@ export class BLUState extends GameState {
 
 		// change if BLU gets a level cap increase to 100
 		this.cooldowns.set(new CoolDown("cd_SWIFTCAST", 60, 1, 1)),
-
-		this.registerRecurringEvents([
-			{
-				groupedEffects: [
-					{
-						effectName: "NIGHTBLOOM",
-						appliedBy: ["NIGHTBLOOM"],
-					},
-					{
-						effectName: "SONG_OF_TORMENT",
-						appliedBy: ["SONG_OF_TORMENT"],
-					},
-				],
-			},
-			{
-				groupedEffects: [
-					{
-						effectName: "FEATHER_RAIN",
-						appliedBy: ["FEATHER_RAIN"],
-					},
-				],
-			},
-			{
-				groupedEffects: [
-					{
-						effectName: "BREATH_OF_MAGIC",
-						appliedBy: ["BREATH_OF_MAGIC"],
-					},
-				],
-			},
-			{
-				groupedEffects: [
-					{
-						effectName: "MORTAL_FLAME",
-						appliedBy: ["MORTAL_FLAME"],
-					},
-				],
-			},
-			{
-				groupedEffects: [
-					{
-						effectName: "PHANTOM_FLURRY",
-						appliedBy: ["PHANTOM_FLURRY"],
-						isGroundTargeted: true,
-						exclude: true,
-					},
-					{
-						effectName: "APOKALYPSIS",
-						appliedBy: ["APOKALYPSIS"],
-						isGroundTargeted: true,
-						exclude: true,
-					},
-				],
-			},
-		]);
+			this.registerRecurringEvents([
+				{
+					groupedEffects: [
+						{
+							effectName: "NIGHTBLOOM",
+							appliedBy: ["NIGHTBLOOM"],
+						},
+						{
+							effectName: "SONG_OF_TORMENT",
+							appliedBy: ["SONG_OF_TORMENT"],
+						},
+					],
+				},
+				{
+					groupedEffects: [
+						{
+							effectName: "FEATHER_RAIN",
+							appliedBy: ["FEATHER_RAIN"],
+						},
+					],
+				},
+				{
+					groupedEffects: [
+						{
+							effectName: "BREATH_OF_MAGIC",
+							appliedBy: ["BREATH_OF_MAGIC"],
+						},
+					],
+				},
+				{
+					groupedEffects: [
+						{
+							effectName: "MORTAL_FLAME",
+							appliedBy: ["MORTAL_FLAME"],
+						},
+					],
+				},
+				{
+					groupedEffects: [
+						{
+							effectName: "PHANTOM_FLURRY",
+							appliedBy: ["PHANTOM_FLURRY"],
+							isGroundTargeted: true,
+							exclude: true,
+						},
+						{
+							effectName: "APOKALYPSIS",
+							appliedBy: ["APOKALYPSIS"],
+							isGroundTargeted: true,
+							exclude: true,
+						},
+					],
+				},
+			]);
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<BLUState> {
@@ -178,7 +177,7 @@ export class BLUState extends GameState {
 			),
 		);
 	}
-	
+
 	override cancelChanneledSkills(): void {
 		this.tryConsumeResource("PHANTOM_FLURRY");
 		this.tryConsumeResource("APOKALYPSIS");

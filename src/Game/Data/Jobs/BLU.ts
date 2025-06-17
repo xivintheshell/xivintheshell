@@ -61,7 +61,7 @@ export const BLU_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_MATRA_MAGIC: { name: "cd_Matra_Magic", label: { zh: "CD: 魔术" } },
 	cd_WINGED_REPROBATION: { name: "cd_Winged_Reprobation", label: { zh: "CD: 断罪飞翔" } },
 	cd_THE_ROSE_OF_DESTRUCTION: { name: "cd_The_Rose_of_Destruction", label: { zh: "CD: 斗灵弹" } },
-	cd_SURPANAKHA_LOCKOUT: { name: "cd_SurpanakhaLockout", label: { zh: "CD: 穿甲散弹"}},
+	cd_SURPANAKHA_LOCKOUT: { name: "cd_SurpanakhaLockout", label: { zh: "CD: 穿甲散弹" } },
 });
 
 export const BLU_GAUGES = ensureRecord<ResourceData>()({});

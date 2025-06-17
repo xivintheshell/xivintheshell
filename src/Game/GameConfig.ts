@@ -175,7 +175,7 @@ export class GameConfig {
 	adjustedOvertimePotency(inPotency: number, scalar: "sks" | "sps" | "unscaled") {
 		return XIVMath.overtimePotency(
 			this.level,
-			scalar === "sks" ? this.skillSpeed : (scalar === "sps" ? this.spellSpeed : 0),
+			scalar === "sks" ? this.skillSpeed : scalar === "sps" ? this.spellSpeed : 0,
 			inPotency,
 		);
 	}
