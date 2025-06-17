@@ -85,6 +85,7 @@ export const BLU_STATUSES = ensureRecord<ResourceData>()({
 	MORTAL_FLAME: { name: "Mortal Flame", label: { zh: "必灭之炎" } },
 	WINGED_REPROBATION: { name: "Winged Reprobation", label: { zh: "断罪飞翔" }, maximumStacks: 4 },
 	SURPANAKHAS_FURY: { name: "Surpanakha's Fury", label: { zh: "穿甲散弹" }, maximumStacks: 4 },
+	BRUSH_WITH_DEATH: { name: "Brush with Death", label: { zh: "意志薄弱" } },
 });
 
 export const BLU_TRACKERS = ensureRecord<ResourceData>()({

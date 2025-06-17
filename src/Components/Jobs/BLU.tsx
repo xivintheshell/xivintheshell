@@ -2,22 +2,21 @@ import { BLUState } from "../../Game/Jobs/BLU";
 import {
 	registerBuffIcon,
 	BuffProps,
-	ResourceCounterProps,
 	ResourceDisplayProps,
 	StatusPropsGenerator,
-	ResourceBarProps,
 } from "../StatusDisplay";
-import { ResourceKey, RESOURCES } from "../../Game/Data";
+import { RESOURCES } from "../../Game/Data";
 import { BLUResourceKey, BLU_STATUSES } from "../../Game/Data/Jobs/BLU";
 import { ThemeColors } from "../ColorTheme";
-import { localize } from "../Localization";
-import { getResourceInfo, ResourceInfo } from "../../Game/Resources";
 const BLU_DEBUFFS: BLUResourceKey[] = [
 	"SONG_OF_TORMENT",
 	"NIGHTBLOOM",
 	"FEATHER_RAIN",
 	"MORTAL_FLAME",
 	"BREATH_OF_MAGIC",
+	"WANING_NOCTURNE",
+	"DIAMONDBACK",
+	"BRUSH_WITH_DEATH",
 ];
 
 const BLU_BUFFS: BLUResourceKey[] = (Object.keys(BLU_STATUSES) as BLUResourceKey[]).filter(
