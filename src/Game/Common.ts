@@ -155,6 +155,9 @@ export enum BuffType {
 	Dissipation = "Dissipation",
 	Protraction = "Protraction",
 	Recitation = "Recitation",
+
+	OccultQuick = "Occult Quick",
+	PhantomKick = "Phantom Kick",
 }
 
 export type Warning =

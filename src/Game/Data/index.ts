@@ -218,6 +218,7 @@ import {
 	ROLE_RESOURCES,
 	ROLE_TRAITS,
 } from "./Shared/Role";
+import { PHANTOM_ACTIONS, PHANTOM_COOLDOWNS, PHANTOM_RESOURCES } from "./Shared/Phantom";
 
 export const ACTIONS = {
 	...COMMON_ACTIONS,
@@ -256,6 +257,9 @@ export const ACTIONS = {
 	...PCT_ACTIONS,
 	// Limited
 	...BLU_ACTIONS,
+
+	// Phantom
+	...PHANTOM_ACTIONS,
 };
 
 export const COOLDOWNS = {
@@ -295,6 +299,9 @@ export const COOLDOWNS = {
 	...PCT_COOLDOWNS,
 	// Limited
 	...BLU_COOLDOWNS,
+
+	// Phantom
+	...PHANTOM_COOLDOWNS,
 };
 
 export const GAUGES = {
@@ -448,6 +455,9 @@ export const RESOURCES = {
 	...PCT_RESOURCES,
 	// Limited
 	...BLU_RESOURCES,
+
+	// Phantom
+	...PHANTOM_RESOURCES,
 };
 
 export const TRAITS = {
