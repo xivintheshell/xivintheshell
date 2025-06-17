@@ -630,7 +630,8 @@ makeDRKAbility("ABYSSAL_DRAIN", 56, "cd_ABYSSAL_DRAIN", {
 	onApplication: (state) => state.resources.get("MANA").gain(600),
 });
 
-const saltAndDarknessCondition: StatePredicate<DRKState> = (state) => state.resources.get("SALTED_EARTH").availableAmountIncludingDisabled() > 0;
+const saltAndDarknessCondition: StatePredicate<DRKState> = (state) =>
+	state.resources.get("SALTED_EARTH").availableAmountIncludingDisabled() > 0;
 
 makeDRKAbility("SALTED_EARTH", 52, "cd_SALTED_EARTH", {
 	applicationDelay: 0.76,
