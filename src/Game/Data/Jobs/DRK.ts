@@ -38,6 +38,15 @@ export const DRK_ACTIONS = ensureRecord<ActionData>()({
 	TORCLEAVER: { name: "Torcleaver" },
 	IMPALEMENT: { name: "Impalement" },
 	DISESTEEM: { name: "Disesteem" },
+	// Pet actions
+	ABYSSAL_DRAIN_PET: { name: "Abyssal Drain (Esteem)" },
+	SHADOWSTRIDE_PET: { name: "Shadowstride (Esteem)" },
+	SHADOWBRINGER_PET: { name: "Shadowbringer (Esteem)" },
+	EDGE_OF_SHADOW_PET: { name: "Edge of Shadow (Esteem)" },
+	FLOOD_OF_SHADOW_PET: { name: "Flood of Shadow (Esteem)" },
+	BLOODSPILLER_PET: { name: "Bloodspiller (Esteem)" },
+	CARVE_AND_SPIT_PET: { name: "Carve and Spit (Esteem)" },
+	DISESTEEM_PET: { name: "Disesteem (Esteem)" },
 });
 
 export const DRK_COOLDOWNS = ensureRecord<CooldownData>()({

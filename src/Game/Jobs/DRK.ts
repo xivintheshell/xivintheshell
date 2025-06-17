@@ -4,13 +4,16 @@
 // darkside is applied properly
 // unmend reduces shadowstride cd
 // delirium combo gets broken appropriately
+// correct speed scaling stat is used
+// living shadow does enough damage
 
 import { DRKStatusPropsGenerator } from "../../Components/Jobs/DRK";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { GameConfig } from "../GameConfig";
 import { controller } from "../../Controller/Controller";
-import { WarningType } from "../Common";
-import { Modifiers } from "../Potency";
+import { ActionNode } from "../../Controller/Record";
+import { Aspect, WarningType } from "../Common";
+import { Modifiers, Potency } from "../Potency";
 import {
 	Ability,
 	combineEffects,
@@ -33,7 +36,14 @@ import {
 	CooldownGroupProperties,
 } from "../Skills";
 import { GameState } from "../GameState";
-import { getResourceInfo, makeResource, Event, CoolDown, ResourceInfo } from "../Resources";
+import {
+	getResourceInfo,
+	makeResource,
+	Event,
+	CoolDown,
+	ResourceInfo,
+	OverTimeBuff,
+} from "../Resources";
 import { TraitKey } from "../Data";
 import { DRKResourceKey, DRKActionKey, DRKCooldownKey } from "../Data/Jobs/DRK";
 
@@ -78,23 +88,32 @@ makeDRKResource("DARK_ARTS", 1);
 makeDRKResource("DRK_COMBO_TRACKER", 2, { timeout: 30 });
 makeDRKResource("DRK_AOE_COMBO_TRACKER", 1, { timeout: 30 });
 makeDRKResource("DRK_DELIRIUM_COMBO_TRACKER", 2, { timeout: 30 });
-makeDRKResource("ESTEEM_TRACKER", 5);
+
+const ESTEEM_ACTION_COUNT = 6;
+makeDRKResource("ESTEEM_TRACKER", ESTEEM_ACTION_COUNT);
+
+// from The Balance's advanced DRK guide
+const ESTEEM_INITIAL_DELAY = 6.8;
+const ESTEEM_BETWEEN_DELAY = 2.18;
 
 export class DRKState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
-		this.registerRecurringEvents([
-			{
-				groupedEffects: [
-					{
-						effectName: "SALTED_EARTH",
-						appliedBy: ["SALTED_EARTH"],
-						isGroundTargeted: true,
-					},
-				],
-			},
-		]);
+		this.registerRecurringEvents(
+			[
+				{
+					groupedEffects: [
+						{
+							effectName: "SALTED_EARTH",
+							appliedBy: ["SALTED_EARTH"],
+							isGroundTargeted: true,
+						},
+					],
+				},
+			],
+			["LIVING_SHADOW"],
+		);
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<DRKState> {
@@ -179,6 +198,49 @@ export class DRKState extends GameState {
 		this.setComboState("DRK_COMBO_TRACKER", counters[0]);
 		this.setComboState("DRK_AOE_COMBO_TRACKER", counters[1]);
 		this.setComboState("DRK_DELIRIUM_COMBO_TRACKER", counters[2]);
+	}
+
+	// Code for resolving Esteem attacks is roughly copied from MCH code for Automaton Queen.
+	handleEsteemAttack() {
+		if (!this.hasResourceAvailable("ESTEEM_TRACKER")) {
+			return;
+		}
+
+		const esteemNode = (this.resources.get("ESTEEM_TRACKER") as OverTimeBuff).node;
+
+		if (esteemNode !== undefined) {
+			this.resolveEsteemPotency(esteemNode);
+		}
+
+		this.resources.get("ESTEEM_TRACKER").consume(1);
+
+		// schedule next hit
+		if (this.hasResourceAvailable("ESTEEM_TRACKER")) {
+			this.addEvent(
+				new Event("esteem hit", ESTEEM_BETWEEN_DELAY, () => this.handleEsteemAttack()),
+			);
+		}
+	}
+
+	resolveEsteemPotency(node: ActionNode) {
+		const esteemActionsRemaining = this.resources.get("ESTEEM_TRACKER").availableAmount();
+
+		if (esteemActionsRemaining === 0) {
+			return;
+		}
+
+		const esteemPotency =
+			node.getDotPotencies("ESTEEM_TRACKER")[ESTEEM_ACTION_COUNT - esteemActionsRemaining];
+
+		// Esteem actions snapshot at execution time, not when the button was pressed, add Tincture modifier and note snapshot time for party buff handling.
+		// Importantly, Esteem is NOT affected by Darkside.
+		esteemPotency.modifiers.push(Modifiers.DrkPet);
+		if (this.hasResourceAvailable("TINCTURE")) {
+			esteemPotency.modifiers.push(Modifiers.Tincture);
+		}
+		esteemPotency.snapshotTime = this.getDisplayTime();
+
+		controller.resolvePotency(esteemPotency);
 	}
 }
 
@@ -522,7 +584,6 @@ makeDRKWeaponskill("IMPALEMENT", 96, {
 });
 
 const hasScorn: StatePredicate<DRKState> = (state) => state.hasResourceAvailable("SCORN");
-// TODO make living shadow echo
 makeDRKWeaponskill("DISESTEEM", 100, {
 	startOnHotbar: false,
 	applicationDelay: 1.65,
@@ -571,7 +632,6 @@ makeDRKAbility("SALTED_EARTH", 52, "cd_SALTED_EARTH", {
 		},
 	],
 	onConfirm: (state, node) => {
-		state.gainStatus("SALTED_EARTH");
 		state.addDoTPotencies({
 			node,
 			effectName: "SALTED_EARTH",
@@ -580,10 +640,11 @@ makeDRKAbility("SALTED_EARTH", 52, "cd_SALTED_EARTH", {
 			speedStat: "sks",
 		});
 	},
-	// TODO check if this applies properly to multiple targets
-	potency: 0.00001,
 	falloff: 0,
-	onApplication: (state, node) => state.applyDoT("SALTED_EARTH", node),
+	onApplication: (state, node) => {
+		state.applyDoT("SALTED_EARTH", node);
+		state.gainStatus("SALTED_EARTH");
+	},
 });
 
 makeDRKAbility("SALT_AND_DARKNESS", 86, "cd_SALT_AND_DARKNESS", {
@@ -595,10 +656,11 @@ makeDRKAbility("SALT_AND_DARKNESS", 86, "cd_SALT_AND_DARKNESS", {
 	falloff: 0.25,
 });
 
-// TODO copy queen summon code
+// Like MCH's Automaton Queen and SMN's Bahamut, Esteem will snapshot buffs in real time.
+// Esteem always performs a fixed sequence of attacks, and will echo Shadowbringer and Disesteem
+// immediately when used by the player.
 makeDRKAbility("LIVING_SHADOW", 80, "cd_LIVING_SHADOW", {
 	applicationDelay: 0,
-	onConfirm: (state) => state.gainStatus("SCORN"),
 	replaceIf: [
 		{
 			newSkill: "DISESTEEM",
@@ -606,6 +668,58 @@ makeDRKAbility("LIVING_SHADOW", 80, "cd_LIVING_SHADOW", {
 		},
 	],
 	cooldown: 120,
+	onConfirm: (state, node) => {
+		state.gainStatus("SCORN");
+		state.resources.get("ESTEEM_TRACKER").gain(ESTEEM_ACTION_COUNT);
+		// Per The Balance's DRK advanced guide: https://www.thebalanceffxiv.com/jobs/tanks/dark-knight/advanced-guide/
+		//
+		// > At level 100, Living Shadow performs the following abilities, in sequence, totaling 2450 potency. Esteem will always stop after executing six abilities:
+		// > - Abyssal Drain (AoE, 420 Potency, 0% less to additional targets)
+		// > - Shadowstride (Single Target, No Damage)
+		// > - Shadowbringer (AoE, 570 Potency, 25% less to additional targets)
+		// > - Edge of Shadow (Single Target, 420 Potency)
+		// > - Bloodspiller (Single Target, 420 Potency)
+		// > - Disesteem (AoE, 620 Potency, 25% less to additional targets)
+		//
+		// Below level 90, Shadowbringer is replaced by Flood of Shadow.
+		// Below level 100, Disesteem is replaced by Carve and Spit.
+		// At level 80, all filler attcks do 340 potency, and at level 90, they do 420.
+		const fillerPotency = state.hasTraitUnlocked("ENHANCED_LIVING_SHADOW") ? 420 : 340;
+		const esteemAttacks: Array<[DRKActionKey, number, number | undefined]> = [
+			["ABYSSAL_DRAIN_PET", fillerPotency, 0],
+			["SHADOWSTRIDE_PET", 0, undefined],
+			state.hasTraitUnlocked("ENHANCED_LIVING_SHADOW_II")
+				? ["SHADOWBRINGER_PET", 570, 0.25]
+				: ["FLOOD_OF_SHADOW_PET", fillerPotency, 0],
+			["EDGE_OF_SHADOW_PET", fillerPotency, undefined],
+			["BLOODSPILLER_PET", fillerPotency, undefined],
+			state.hasTraitUnlocked("ENHANCED_LIVING_SHADOW_III")
+				? ["DISESTEEM_PET", 620, 0.25]
+				: ["CARVE_AND_SPIT_PET", fillerPotency, undefined],
+		];
+		esteemAttacks.forEach((item) => {
+			const [sourceSkill, basePotency, falloff] = item;
+			node.addDoTPotency(
+				new Potency({
+					config: state.config,
+					sourceTime: state.getDisplayTime(),
+					sourceSkill,
+					aspect: Aspect.Other,
+					description: "",
+					basePotency,
+					snapshotTime: undefined,
+					targetCount: node.targetCount,
+					falloff,
+				}),
+				"ESTEEM_TRACKER",
+			);
+		});
+		(state.resources.get("ESTEEM_TRACKER") as OverTimeBuff).node = node;
+		// Schedule the first esteem hit.
+		state.addEvent(
+			new Event("initial esteem hit", ESTEEM_INITIAL_DELAY, () => state.handleEsteemAttack()),
+		);
+	},
 });
 
 makeDRKAbility("SHADOWBRINGER", 90, "cd_SHADOWBRINGER", {
@@ -615,7 +729,6 @@ makeDRKAbility("SHADOWBRINGER", 90, "cd_SHADOWBRINGER", {
 	falloff: 0.25,
 	maxCharges: 2,
 	validateAttempt: (state) => state.hasResourceAvailable("DARKSIDE"),
-	// TODO echo living shadow
 });
 
 makeDRKAbility("SHADOWSTRIDE", 54, "cd_SHADOWSTRIDE", {
@@ -627,11 +740,20 @@ makeDRKAbility("SHADOWSTRIDE", 54, "cd_SHADOWSTRIDE", {
 
 makeDRKResourceAbility("THE_BLACKEST_NIGHT", 70, "cd_THE_BLACKEST_NIGHT", {
 	rscType: "BLACKEST_NIGHT",
+	manaCost: 3000,
+	replaceIf: [
+		{
+			newSkill: "THE_BLACKEST_NIGHT_POP",
+			condition: (state) => state.hasResourceAvailable("BLACKEST_NIGHT"),
+		},
+	],
 	applicationDelay: 0.62,
 	cooldown: 15,
 });
 
 makeDRKAbility("THE_BLACKEST_NIGHT_POP", 70, "cd_THE_BLACKEST_NIGHT_POP", {
+	startOnHotbar: false,
+	highlightIf: (state) => true,
 	applicationDelay: 0,
 	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: 1,
@@ -640,6 +762,7 @@ makeDRKAbility("THE_BLACKEST_NIGHT_POP", 70, "cd_THE_BLACKEST_NIGHT_POP", {
 			controller.reportWarning(WarningType.DarkArtsOvercap);
 		}
 		state.gainStatus("DARK_ARTS");
+		state.tryConsumeResource("BLACKEST_NIGHT");
 	},
 });
 

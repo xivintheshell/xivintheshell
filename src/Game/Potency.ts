@@ -443,7 +443,9 @@ export const Modifiers = {
 		source: PotencyModifierType.PET,
 		// with a 5% party bonus, living shadow skills do approximately 105% of its other potencies
 		// https://docs.google.com/spreadsheets/d/1Yt7Px7VHuKG1eJR9CRKs3RpvcR5IZKAAA3xjekvv0LY/edit?gid=0#gid=0
-		potencyFactor: 1.05,
+		// however, these comparisons were done assuming the player is already under darkside, so we need
+		// to multiply these values by a further 1.1 to compare against a player without darkside
+		potencyFactor: 1.05 * 1.1,
 	} as PotencyMultiplier,
 };
 
