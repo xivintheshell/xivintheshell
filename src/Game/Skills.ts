@@ -501,6 +501,7 @@ export interface MakeAbilityParams<T extends PlayerState> extends MakeSkillParam
 	requiresCombat: boolean;
 	cooldown: number;
 	maxCharges: number;
+	manaCost?: number | ResourceCalculationFn<T>;
 }
 /**
  * Declare an oGCD ability.
@@ -560,7 +561,7 @@ export function makeAbility<T extends PlayerState>(
 		startOnHotbar: params.startOnHotbar ?? true,
 		highlightIf: params.highlightIf ?? ((state) => false),
 		animationLockFn: (state) => fnify(params.animationLock, state.config.animationLock)(state),
-		manaCostFn: (state) => 0,
+		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
 		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
 		drawsAggro: params.drawsAggro ?? false,

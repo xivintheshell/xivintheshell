@@ -123,6 +123,12 @@ export enum BuffType {
 	Krasis = "Krasis",
 	Philosophia = "Philosophia",
 	Soteria = "Soteria",
+
+	WaxingNocturne = "Waxing Nocturne",
+	Whistle = "Whistle",
+	Bristle = "Bristle",
+	TingleA = "TingleA",
+	TingleB = "TingleB",
 }
 
 export const enum WarningType {

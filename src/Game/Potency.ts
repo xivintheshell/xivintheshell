@@ -77,6 +77,15 @@ export const enum PotencyModifierType {
 	KRASIS,
 	AUTOPHYSIS,
 	PHILOSOPHIA,
+
+	MOON_FLUTE,
+	BRISTLE,
+	WHISTLE,
+	TINGLEA,
+	TINGLEB,
+	SURPANAKHA,
+	WINGED_REPROBATION,
+	WINGED_REDEMPTION,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -380,6 +389,46 @@ export const Modifiers = {
 		source: PotencyModifierType.PHILOSOPHIA,
 		potencyFactor: 1.2,
 	} as PotencyMultiplier,
+	MoonFlute: {
+		kind: "multiplier",
+		source: PotencyModifierType.MOON_FLUTE,
+		potencyFactor: 1.5,
+	} as PotencyMultiplier,
+	Whistle: {
+		kind: "multiplier",
+		source: PotencyModifierType.WHISTLE,
+		potencyFactor: 1.8,
+	} as PotencyMultiplier,
+	Bristle: {
+		kind: "multiplier",
+		source: PotencyModifierType.BRISTLE,
+		potencyFactor: 1.5,
+	} as PotencyMultiplier,
+	TingleA: {
+		kind: "adder",
+		source: PotencyModifierType.TINGLEA,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	TingleB: {
+		kind: "adder",
+		source: PotencyModifierType.TINGLEB,
+		additiveAmount: 300,
+	} as PotencyAdder,
+	Surpanakha: {
+		kind: "adder",
+		source: PotencyModifierType.SURPANAKHA,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	WingedReprobation: {
+		kind: "adder",
+		source: PotencyModifierType.WINGED_REPROBATION,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	WingedRedemption: {
+		kind: "adder",
+		source: PotencyModifierType.WINGED_REDEMPTION,
+		additiveAmount: 220,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

@@ -242,6 +242,13 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.DIVINE_MIGHT, { en: "divine might", zh: "神圣魔法效果提高" }],
 	[PotencyModifierType.REQUIESCAT, { en: "requiescat", zh: "安魂祈祷" }],
 	[PotencyModifierType.FIGHT_OR_FLIGHT, { en: "fight or flight", zh: "战逃反应" }],
+	[PotencyModifierType.WHISTLE, { en: "WH", zh: "口笛" }],
+	[PotencyModifierType.BRISTLE, { en: "BR", zh: "蓄力" }],
+	[PotencyModifierType.MOON_FLUTE, { en: "MF", zh: "月笛" }],
+	[PotencyModifierType.TINGLEA, { en: "TING", zh: "哔哩哔哩" }],
+	[PotencyModifierType.TINGLEB, { en: "TING", zh: "哔哩哔哩" }],
+	[PotencyModifierType.WINGED_REPROBATION, { en: "WREP", zh: "断罪飞翔" }],
+	[PotencyModifierType.WINGED_REDEMPTION, { en: "WRED", zh: "完美神的祝福" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -306,6 +313,13 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.REQUIESCAT, { en: "REQ", zh: "安魂" }],
 	[PotencyModifierType.FIGHT_OR_FLIGHT, { en: "FOF", zh: "战逃" }],
 	[PotencyModifierType.PET, { en: "PET", zh: "召唤物" }],
+	[PotencyModifierType.WHISTLE, { en: "WH", zh: "口笛" }],
+	[PotencyModifierType.BRISTLE, { en: "BR", zh: "蓄力" }],
+	[PotencyModifierType.MOON_FLUTE, { en: "MF", zh: "月笛" }],
+	[PotencyModifierType.TINGLEA, { en: "TING", zh: "哔哩哔哩" }],
+	[PotencyModifierType.TINGLEB, { en: "TING", zh: "哔哩哔哩" }],
+	[PotencyModifierType.WINGED_REPROBATION, { en: "WREP", zh: "断罪飞翔" }],
+	[PotencyModifierType.WINGED_REDEMPTION, { en: "WRED", zh: "完美神的祝福" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(

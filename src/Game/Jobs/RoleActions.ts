@@ -4,6 +4,7 @@ import {
 	MELEE_JOBS,
 	CASTER_JOBS,
 	HEALER_JOBS,
+	LIMITED_JOBS,
 	ALL_JOBS,
 	JOBS,
 } from "../Data/Jobs";
@@ -68,10 +69,10 @@ makeResourceAbility(MELEE_JOBS, "FEINT", 22, "cd_FEINT", {
 	assetPath: "Role/Feint.png",
 });
 
-CASTER_JOBS.forEach((job) => {
+[...LIMITED_JOBS, ...CASTER_JOBS].forEach((job) => {
 	makeResource(job, "ADDLE", 1, { timeout: 15 });
 });
-makeResourceAbility(CASTER_JOBS, "ADDLE", 8, "cd_ADDLE", {
+makeResourceAbility([...CASTER_JOBS, ...LIMITED_JOBS], "ADDLE", 8, "cd_ADDLE", {
 	rscType: "ADDLE",
 	applicationDelay: 0.621, // delayed
 	cooldown: 90,
@@ -104,34 +105,46 @@ makeResourceAbility(MELEE_JOBS, "TRUE_NORTH", 50, "cd_TRUE_NORTH", {
 	assetPath: "Role/True North.png",
 });
 
-[...HEALER_JOBS, ...CASTER_JOBS].forEach((job) => {
+[...HEALER_JOBS, ...CASTER_JOBS, ...LIMITED_JOBS].forEach((job) => {
 	makeResource(job, "SWIFTCAST", 1, { timeout: 10 });
 });
-makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], "SWIFTCAST", 18, "cd_SWIFTCAST", {
-	rscType: "SWIFTCAST",
-	applicationDelay: 0, // instant
-	cooldown: 40, // set by trait in constructor
-	assetPath: "Role/Swiftcast.png",
-});
+makeResourceAbility(
+	[...HEALER_JOBS, ...CASTER_JOBS, ...LIMITED_JOBS],
+	"SWIFTCAST",
+	18,
+	"cd_SWIFTCAST",
+	{
+		rscType: "SWIFTCAST",
+		applicationDelay: 0, // instant
+		cooldown: 40, // set by trait in constructor
+		assetPath: "Role/Swiftcast.png",
+	},
+);
 
-[...HEALER_JOBS, ...CASTER_JOBS].forEach((job) => {
+[...HEALER_JOBS, ...CASTER_JOBS, ...LIMITED_JOBS].forEach((job) => {
 	makeResource(job, "LUCID_DREAMING", 1, { timeout: 21 });
 });
-makeResourceAbility([...HEALER_JOBS, ...CASTER_JOBS], "LUCID_DREAMING", 14, "cd_LUCID_DREAMING", {
-	rscType: "LUCID_DREAMING",
-	applicationDelay: 0.623, // delayed
-	cooldown: 60,
-	assetPath: "Role/Lucid Dreaming.png",
-	onApplication: (state, node) => {
-		let lucid = state.resources.get("LUCID_DREAMING") as OverTimeBuff;
-		lucid.node = node;
-		lucid.tickCount = 0;
-		let nextLucidTickEvt = state.findNextQueuedEventByTag(EventTag.LucidTick);
-		if (nextLucidTickEvt) {
-			nextLucidTickEvt.addTag(EventTag.ManaGain);
-		}
+makeResourceAbility(
+	[...HEALER_JOBS, ...CASTER_JOBS, ...LIMITED_JOBS],
+	"LUCID_DREAMING",
+	14,
+	"cd_LUCID_DREAMING",
+	{
+		rscType: "LUCID_DREAMING",
+		applicationDelay: 0.623, // delayed
+		cooldown: 60,
+		assetPath: "Role/Lucid Dreaming.png",
+		onApplication: (state, node) => {
+			let lucid = state.resources.get("LUCID_DREAMING") as OverTimeBuff;
+			lucid.node = node;
+			lucid.tickCount = 0;
+			let nextLucidTickEvt = state.findNextQueuedEventByTag(EventTag.LucidTick);
+			if (nextLucidTickEvt) {
+				nextLucidTickEvt.addTag(EventTag.ManaGain);
+			}
+		},
 	},
-});
+);
 
 //#endregion
 

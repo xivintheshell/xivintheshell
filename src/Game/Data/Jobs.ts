@@ -56,6 +56,9 @@ export const ROLES = ensureRecord<Role>()({
 	CASTER: {
 		label: localize({ en: "Caster" }),
 	},
+	LIMITED: {
+		label: localize({ en: "Limited" }),
+	},
 });
 export type RoleType = typeof ROLES;
 export type RoleKey = keyof RoleType;
@@ -210,6 +213,13 @@ export const CASTERS = ensureRecord<Job>()({
 		limitBreak: "CHROMATIC_FANTASY",
 	},
 });
+export const LIMITED = ensureRecord<Job>()({
+	BLU: {
+		role: "LIMITED",
+		implementationLevel: "TESTING",
+		usesMp: true,
+	},
+});
 export type Casters = typeof CASTERS;
 export type CasterKey = keyof Casters;
 
@@ -219,6 +229,7 @@ export const JOBS = {
 	...MELEE,
 	...RANGED,
 	...CASTERS,
+	...LIMITED,
 };
 
 export type JobType = typeof JOBS;
@@ -231,3 +242,4 @@ export const HEALER_JOBS: ShellJob[] = Object.keys(HEALERS) as ShellJob[];
 export const MELEE_JOBS: ShellJob[] = Object.keys(MELEE) as ShellJob[];
 export const RANGED_JOBS: ShellJob[] = Object.keys(RANGED) as ShellJob[];
 export const CASTER_JOBS: ShellJob[] = Object.keys(CASTERS) as ShellJob[];
+export const LIMITED_JOBS: ShellJob[] = Object.keys(LIMITED) as ShellJob[];

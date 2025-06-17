@@ -1,5 +1,15 @@
 [
 	{
+		"date": "6/15/25",
+		"changes": [
+			"[BLU] Added support for BlueMage."
+		],
+		"changes_zh": [
+			"增加青魔支持。"
+		],
+		"level": "minor"
+	},
+	{
 		"date": "6/6/25",
 		"changes": [
 			"[GNB][SGE] Chinese localization."
