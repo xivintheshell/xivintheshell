@@ -42,33 +42,29 @@ export const BLU_ACTIONS = ensureRecord<ActionData>()({
 	BEING_MORTAL: { name: "Being Mortal", label: { zh: "终有一死" } },
 	BREATH_OF_MAGIC: { name: "Breath of Magic", label: { zh: "魔法吐息" } },
 	MORTAL_FLAME: { name: "Mortal Flame", label: { zh: "必灭之炎" } },
-	SURPANAKHAA: { name: "Surpanakha", label: { zh: "穿甲散弹" } },
-	SURPANAKHAB: { name: "Surpanakha", label: { zh: "穿甲散弹" } },
-	SURPANAKHAC: { name: "Surpanakha", label: { zh: "穿甲散弹" } },
-	SURPANAKHAD: { name: "Surpanakha", label: { zh: "穿甲散弹" } },
+	SURPANAKHA: { name: "Surpanakha", label: { zh: "穿甲散弹" } },
 });
 
 export const BLU_COOLDOWNS = ensureRecord<CooldownData>()({
-	CD_ERUPTION: { name: "cd_Eruption", label: { zh: "CD: 地火/飞翎雨" } },
-	CD_SHOCK_STRIKE: { name: "cd_Shock_Strike", label: { zh: "CD: 轰雷/地裂" } },
-	CD_GLASS_DANCE: { name: "cd_Glass_Dance", label: { zh: "CD: 冰雪乱舞" } },
-	CD_SURPANAKHA: { name: "cd_Surpanakha", label: { zh: "CD: 穿甲散弹" } },
-	CD_QUASAR: { name: "cd_Quasar", label: { zh: "CD: 类星体/飞踢" } },
-	CD_NIGHTBLOOM: { name: "cd_Nightbloom", label: { zh: "CD: 大旋风/彼岸花" } },
-	CD_SEA_SHANTY: { name: "cd_Sea_Shanty", label: { zh: "CD: 咕噜咕噜" } },
-	CD_BEING_MORTAL: { name: "cd_Being_Mortal", label: { zh: "CD: 启示录/终有一死" } },
-	CD_COLD_FOG: { name: "cd_Cold_Fog", label: { zh: "CD: 彻骨雾寒" } },
-	CD_TRIPLE_TRIDENT: { name: "cd_Triple_Trident", label: { zh: "CD: 渔叉三段" } },
-	CD_PHANTOM_FLURRY: { name: "cd_Phantom_Flurry", label: { zh: "CD: 鬼宿脚" } },
-	CD_COLD_FOG_POP: { name: "cd_Cold_Fog_Pop", label: { zh: "CD: 彻骨雾寒触发" } },
-	CD_MATRA_MAGIC: { name: "cd_Matra_Magic", label: { zh: "CD: 魔术" } },
-	CD_WINGED_REPROBATION: { name: "cd_Winged_Reprobation", label: { zh: "CD: 断罪飞翔" } },
-	CD_THE_ROSE_OF_DESTRUCTION: { name: "cd_The_Rose_of_Destruction", label: { zh: "CD: 斗灵弹" } },
+	cd_ERUPTION: { name: "cd_Eruption", label: { zh: "CD: 地火/飞翎雨" } },
+	cd_SHOCK_STRIKE: { name: "cd_Shock_Strike", label: { zh: "CD: 轰雷/地裂" } },
+	cd_GLASS_DANCE: { name: "cd_Glass_Dance", label: { zh: "CD: 冰雪乱舞" } },
+	cd_SURPANAKHA: { name: "cd_Surpanakha", label: { zh: "CD: 穿甲散弹" } },
+	cd_QUASAR: { name: "cd_Quasar", label: { zh: "CD: 类星体/飞踢" } },
+	cd_NIGHTBLOOM: { name: "cd_Nightbloom", label: { zh: "CD: 大旋风/彼岸花" } },
+	cd_SEA_SHANTY: { name: "cd_Sea_Shanty", label: { zh: "CD: 咕噜咕噜" } },
+	cd_BEING_MORTAL: { name: "cd_Being_Mortal", label: { zh: "CD: 启示录/终有一死" } },
+	cd_COLD_FOG: { name: "cd_Cold_Fog", label: { zh: "CD: 彻骨雾寒" } },
+	cd_TRIPLE_TRIDENT: { name: "cd_Triple_Trident", label: { zh: "CD: 渔叉三段" } },
+	cd_PHANTOM_FLURRY: { name: "cd_Phantom_Flurry", label: { zh: "CD: 鬼宿脚" } },
+	cd_COLD_FOG_POP: { name: "cd_Cold_Fog_Pop", label: { zh: "CD: 彻骨雾寒触发" } },
+	cd_MATRA_MAGIC: { name: "cd_Matra_Magic", label: { zh: "CD: 魔术" } },
+	cd_WINGED_REPROBATION: { name: "cd_Winged_Reprobation", label: { zh: "CD: 断罪飞翔" } },
+	cd_THE_ROSE_OF_DESTRUCTION: { name: "cd_The_Rose_of_Destruction", label: { zh: "CD: 斗灵弹" } },
+	cd_SURPANAKHA_LOCKOUT: { name: "cd_SurpanakhaLockout", label: { zh: "CD: 穿甲散弹" } },
 });
 
-export const BLU_GAUGES = ensureRecord<ResourceData>()({
-	AP: { name: "AP", label: { zh: "穿甲散弹" } },
-});
+export const BLU_GAUGES = ensureRecord<ResourceData>()({});
 
 export const BLU_STATUSES = ensureRecord<ResourceData>()({
 	NIGHTBLOOM: { name: "Bleeding", label: { zh: "出血（彼岸花）" } },
@@ -88,11 +84,12 @@ export const BLU_STATUSES = ensureRecord<ResourceData>()({
 	BREATH_OF_MAGIC: { name: "Breath of Magic", label: { zh: "魔法吐息" } },
 	MORTAL_FLAME: { name: "Mortal Flame", label: { zh: "必灭之炎" } },
 	WINGED_REPROBATION: { name: "Winged Reprobation", label: { zh: "断罪飞翔" }, maximumStacks: 4 },
-	SupranakhaLockout: { name: "SupranakhaLockout", label: { zh: "断罪飞翔" } },
-	SURPANAKHAS_FURY: { name: "Surpanakhas Fury", label: { zh: "穿甲散弹" }, maximumStacks: 4 },
+	SURPANAKHAS_FURY: { name: "Surpanakha's Fury", label: { zh: "穿甲散弹" }, maximumStacks: 4 },
 });
 
-export const BLU_TRACKERS = ensureRecord<ResourceData>()({});
+export const BLU_TRACKERS = ensureRecord<ResourceData>()({
+	SURPANAKHA_LOCKOUT: { name: "Supranakha Lockout", label: { zh: "断罪飞翔" } },
+});
 
 export const BLU_TRAITS = ensureRecord<TraitData>()({});
 

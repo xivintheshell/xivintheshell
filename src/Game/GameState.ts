@@ -68,7 +68,7 @@ export interface OverTimePotencyProps {
 	effectName: ResourceKey;
 	tickPotency: number;
 	tickFrequency?: number;
-	speedStat: "sks" | "sps";
+	speedStat: "sks" | "sps" | "unscaled";
 	aspect?: Aspect;
 	modifiers?: PotencyModifier[];
 }

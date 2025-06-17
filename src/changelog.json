@@ -1,11 +1,11 @@
 [
 	{
-		"date": "6/15/25",
+		"date": "6/16/25",
 		"changes": [
-			"[BLU] Added support for BlueMage."
+			"[BLU] Added support for Blue Mage."
 		],
 		"changes_zh": [
-			"增加青魔支持。"
+			"【青魔】增加青魔支持。"
 		],
 		"level": "minor"
 	},

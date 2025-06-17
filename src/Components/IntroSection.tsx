@@ -69,6 +69,9 @@ const getAcknowledgements = () => <>
 				GNB, DRG, PLD: <b>Sterling</b>
 			</li>
 			<li>
+				BLU: <b>小铅笔</b>
+			</li>
+			<li>
 				Framework for adding new jobs: <b>shanzhe</b>
 			</li>
 			<li>
@@ -100,6 +103,9 @@ const getAcknowledgements = () => <>
 			</li>
 			<li>
 				绝抢战士、龙骑士、骑士：<b>Sterling</b>
+			</li>
+			<li>
+				青魔：<b>小铅笔</b>
 			</li>
 			<li>
 				添加新职业的程序框架：<b>shanzhe</b>
