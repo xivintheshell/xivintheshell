@@ -78,7 +78,6 @@ export const enum PotencyModifierType {
 	AUTOPHYSIS,
 	PHILOSOPHIA,
 
-<<<<<<< HEAD
 	MOON_FLUTE,
 	BRISTLE,
 	WHISTLE,
@@ -87,9 +86,8 @@ export const enum PotencyModifierType {
 	SURPANAKHA,
 	WINGED_REPROBATION,
 	WINGED_REDEMPTION,
-=======
+
 	DARKSIDE,
->>>>>>> drk beta
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8

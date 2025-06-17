@@ -502,7 +502,6 @@ export interface MakeAbilityParams<T extends PlayerState> extends MakeSkillParam
 	requiresCombat: boolean;
 	cooldown: number;
 	maxCharges: number;
-	manaCost?: number | ResourceCalculationFn<T>;
 }
 /**
  * Declare an oGCD ability.

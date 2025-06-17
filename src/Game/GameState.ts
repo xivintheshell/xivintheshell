@@ -1087,8 +1087,6 @@ export class GameState {
 	useAbility(skill: Ability<PlayerState>, node: ActionNode) {
 		console.assert(node);
 		let cd = this.cooldowns.get(skill.cdName);
-		const manaCost = skill.manaCostFn(this);
-		this.resources.get("MANA").consume(manaCost);
 		// potency
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;

@@ -156,8 +156,8 @@ export class DRKState extends GameState {
 
 	// Advance the appropriate combo resources on skill confirmation.
 	processComboStatus(skill: DRKActionKey) {
-		if (["DISESTEEM", "UNMEND", "DELIRIUM", "QUIETUS"].includes(skill)) {
-			// Unmend, Delirium/Quietus, and Disesteem do not affect combo state.
+		if (["DISESTEEM", "UNMEND", "BLOODSPILLER", "QUIETUS"].includes(skill)) {
+			// Unmend, Bloodspiller/Quietus, and Disesteem do not affect combo state.
 			return;
 		}
 		// [melee, aoe, delirium]
@@ -393,7 +393,11 @@ makeDRKWeaponskill("SOULEATER", 26, {
 		resource: "DRK_COMBO_TRACKER",
 		resourceValue: 2,
 	},
-	onConfirm: (state) => state.gainBloodGauge(20),
+	onConfirm: (state) => {
+		if (state.hasResourceAvailable("DRK_COMBO_TRACKER", 2)) {
+			state.gainBloodGauge(20);
+		}
+	},
 });
 
 makeDRKSpell("UNLEASH", 6, {
