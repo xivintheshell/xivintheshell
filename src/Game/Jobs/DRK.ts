@@ -568,6 +568,8 @@ makeDRKWeaponskill("QUIETUS", 64, {
 		replaceIf: deliriumReplacements.filter((rep) => rep.newSkill !== name),
 		potency,
 		onConfirm: (state) => state.tryConsumeResource("DELIRIUM"),
+		// Delirium combo actions inherently grant 200 MP
+		onApplication: (state) => state.resources.get("MANA").gain(200),
 	});
 });
 
@@ -585,6 +587,8 @@ makeDRKWeaponskill("IMPALEMENT", 96, {
 	potency: 300,
 	falloff: 0,
 	onConfirm: (state) => state.tryConsumeResource("DELIRIUM"),
+	// Impalement grants 500 MP
+	onApplication: (state) => state.resources.get("MANA").gain(500),
 });
 
 const hasScorn: StatePredicate<DRKState> = (state) => state.hasResourceAvailable("SCORN");
