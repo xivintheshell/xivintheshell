@@ -669,6 +669,14 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.REQUIESCAT, colors.pld.requiescat],
 		[PotencyModifierType.FIGHT_OR_FLIGHT, colors.pld.fightOrFlight],
 		[PotencyModifierType.PET, colors.resources.petTag],
+		[PotencyModifierType.MOON_FLUTE, colors.blu.moonflute],
+		[PotencyModifierType.WHISTLE, colors.blu.whistle],
+		[PotencyModifierType.BRISTLE, colors.blu.bristle],
+		[PotencyModifierType.TINGLEA, colors.blu.tinglea],
+		[PotencyModifierType.TINGLEB, colors.blu.tingleb],
+		[PotencyModifierType.SURPANAKHA, colors.blu.surpanakha],
+		[PotencyModifierType.WINGED_REDEMPTION, colors.blu.wingedreprobation],
+		[PotencyModifierType.WINGED_REPROBATION, colors.blu.wingedreprobation],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

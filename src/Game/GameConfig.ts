@@ -172,10 +172,10 @@ export class GameConfig {
 	}
 
 	// Presuming DoT and Hot potency calculations work the same way...
-	adjustedOvertimePotency(inPotency: number, scalar: "sks" | "sps") {
+	adjustedOvertimePotency(inPotency: number, scalar: "sks" | "sps" | "unscaled") {
 		return XIVMath.overtimePotency(
 			this.level,
-			scalar === "sks" ? this.skillSpeed : this.spellSpeed,
+			scalar === "sks" ? this.skillSpeed : (scalar === "sps" ? this.spellSpeed : 0),
 			inPotency,
 		);
 	}

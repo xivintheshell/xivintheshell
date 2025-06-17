@@ -57,11 +57,13 @@ makeBLUResource("WINGED_REDEMPTION", 1, { timeout: 10 });
 makeBLUResource("BREATH_OF_MAGIC", 1, { timeout: 60 });
 makeBLUResource("MORTAL_FLAME", 1, { timeout: 900 });
 makeBLUResource("SURPANAKHAS_FURY", 4, { timeout: 3 });
-makeBLUResource("AP", 4, { default: 4, timeout: 30 }); //穿甲散弹计数
 
 export class BLUState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
+
+		// change if BLU gets a level cap increase to 100
+		this.cooldowns.set(new CoolDown("cd_SWIFTCAST", 60, 1, 1)),
 
 		this.registerRecurringEvents([
 			{
@@ -175,30 +177,8 @@ export class BLUState extends GameState {
 				recurringApokalypsisTick,
 			),
 		);
-		let recurringAPGain = (rsc: Resource) => {
-			const APInfo = getResourceInfo("BLU", "AP") as ResourceInfo;
-			if (!this.hasResourceAvailable("AP", APInfo.maxValue)) {
-				this.resources.get("AP").gain(1);
-			}
-			if (this.hasResourceAvailable("AP", APInfo.maxValue)) {
-				this.resources.get("AP").overrideTimer(this, APInfo.maxTimeout);
-			}
-			this.resources.addResourceEvent({
-				rscType: "AP",
-				name: "gain AP",
-				delay: 30,
-				fnOnRsc: recurringAPGain,
-			});
-		};
-		recurringAPGain(this.resources.get("AP"));
 	}
-	consumeAP() {
-		const APInfo = getResourceInfo("BLU", "AP") as ResourceInfo;
-		if (this.hasResourceAvailable("AP", APInfo.maxValue)) {
-			this.resources.get("AP").overrideTimer(this, APInfo.maxTimeout);
-		}
-		this.tryConsumeResource("AP");
-	}
+	
 	override cancelChanneledSkills(): void {
 		this.tryConsumeResource("PHANTOM_FLURRY");
 		this.tryConsumeResource("APOKALYPSIS");
@@ -392,7 +372,7 @@ makeBLUSpell("THE_ROSE_OF_DESTRUCTION", 1, {
 	manaCost: 300,
 	applicationDelay: 0.5,
 	secondaryCooldown: {
-		cdName: "CD_THE_ROSE_OF_DESTRUCTION",
+		cdName: "cd_THE_ROSE_OF_DESTRUCTION",
 		cooldown: 30,
 		maxCharges: 1,
 	},
@@ -433,7 +413,7 @@ makeBLUSpell("MATRA_MAGIC", 1, {
 	manaCost: 200,
 	applicationDelay: 0.5,
 	secondaryCooldown: {
-		cdName: "CD_MATRA_MAGIC",
+		cdName: "cd_MATRA_MAGIC",
 		cooldown: 120,
 		maxCharges: 1,
 	},
@@ -564,7 +544,7 @@ makeBLUSpell("TRIPLE_TRIDENT", 1, {
 	manaCost: 300,
 	applicationDelay: 0.5,
 	secondaryCooldown: {
-		cdName: "CD_TRIPLE_TRIDENT",
+		cdName: "cd_TRIPLE_TRIDENT",
 		cooldown: 90,
 		maxCharges: 1,
 	},
@@ -592,7 +572,7 @@ makeBLUSpell("COLD_FOG", 1, {
 	manaCost: 300,
 	applicationDelay: 0.5,
 	secondaryCooldown: {
-		cdName: "CD_COLD_FOG",
+		cdName: "cd_COLD_FOG",
 		cooldown: 90,
 		maxCharges: 1,
 	},
@@ -609,7 +589,7 @@ makeBLUSpell("WHITE_DEATH", 1, {
 	validateAttempt: (state) => !isOver(state) && state.hasResourceAvailable("TOUCH_OF_FROST"),
 });
 
-makeBLUAbility("POP_COLD_FOG", 1, "CD_COLD_FOG_POP", {
+makeBLUAbility("POP_COLD_FOG", 1, "cd_COLD_FOG_POP", {
 	startOnHotbar: false,
 	applicationDelay: 0,
 	animationLock: FAKE_SKILL_ANIMATION_LOCK,
@@ -636,14 +616,14 @@ makeBLUSpell("WINGED_REPROBATION", 1, {
 	manaCost: 200,
 	applicationDelay: 0.5,
 	secondaryCooldown: {
-		cdName: "CD_WINGED_REPROBATION",
+		cdName: "cd_WINGED_REPROBATION",
 		cooldown: 90,
 		maxCharges: 1,
 	},
 	onConfirm: (state) => {
 		state.resources.get("WINGED_REPROBATION").gain(1);
 		if (state.resources.get("WINGED_REPROBATION").availableAmount() <= 3) {
-			(state.cooldowns.get("CD_WINGED_REPROBATION") as CoolDown).restore(90);
+			(state.cooldowns.get("cd_WINGED_REPROBATION") as CoolDown).restore(90);
 		}
 		if (state.resources.get("WINGED_REPROBATION").availableAmount() === 4) {
 			state.tryConsumeResource("WINGED_REPROBATION", true);
@@ -652,7 +632,7 @@ makeBLUSpell("WINGED_REPROBATION", 1, {
 	},
 });
 
-makeBLUAbility("ERUPTION", 1, "CD_ERUPTION", {
+makeBLUAbility("ERUPTION", 1, "cd_ERUPTION", {
 	cooldown: 30,
 	manaCost: 300,
 	potency: 300,
@@ -660,7 +640,7 @@ makeBLUAbility("ERUPTION", 1, "CD_ERUPTION", {
 	validateAttempt: (state) => !isOver(state),
 });
 
-makeBLUAbility("FEATHER_RAIN", 1, "CD_ERUPTION", {
+makeBLUAbility("FEATHER_RAIN", 1, "cd_ERUPTION", {
 	cooldown: 30,
 	manaCost: 300,
 	potency: 220,
@@ -683,35 +663,35 @@ makeBLUAbility("FEATHER_RAIN", 1, "CD_ERUPTION", {
 	},
 });
 
-makeBLUAbility("MOUNTAIN_BUSTER", 1, "CD_SHOCK_STRIKE", {
+makeBLUAbility("MOUNTAIN_BUSTER", 1, "cd_SHOCK_STRIKE", {
 	cooldown: 60,
 	manaCost: 400,
 	potency: 400,
 	applicationDelay: 0.62,
 	validateAttempt: (state) => !isOver(state),
 });
-makeBLUAbility("SHOCK_STRIKE", 1, "CD_SHOCK_STRIKE", {
+makeBLUAbility("SHOCK_STRIKE", 1, "cd_SHOCK_STRIKE", {
 	cooldown: 60,
 	manaCost: 400,
 	potency: 400,
 	applicationDelay: 0.62,
 	validateAttempt: (state) => !isOver(state),
 });
-makeBLUAbility("GLASS_DANCE", 1, "CD_GLASS_DANCE", {
+makeBLUAbility("GLASS_DANCE", 1, "cd_GLASS_DANCE", {
 	cooldown: 90,
 	manaCost: 500,
 	potency: 350,
 	applicationDelay: 0.62,
 	validateAttempt: (state) => !isOver(state),
 });
-makeBLUAbility("QUASAR", 1, "CD_QUASAR", {
+makeBLUAbility("QUASAR", 1, "cd_QUASAR", {
 	cooldown: 60,
 	manaCost: 300,
 	potency: 300,
 	applicationDelay: 0.62,
 	validateAttempt: (state) => !isOver(state),
 });
-makeBLUAbility("J_KICK", 1, "CD_QUASAR", {
+makeBLUAbility("J_KICK", 1, "cd_QUASAR", {
 	cooldown: 60,
 	manaCost: 300,
 	potency: 300,
@@ -719,21 +699,21 @@ makeBLUAbility("J_KICK", 1, "CD_QUASAR", {
 	animationLock: 1,
 	validateAttempt: (state) => !isOver(state),
 });
-makeBLUAbility("BOTH_ENDS", 1, "CD_NIGHTBLOOM", {
+makeBLUAbility("BOTH_ENDS", 1, "cd_NIGHTBLOOM", {
 	cooldown: 120,
 	manaCost: 300,
 	potency: 600,
 	applicationDelay: 0.62,
 	validateAttempt: (state) => !isOver(state),
 });
-makeBLUAbility("SEA_SHANTY", 1, "CD_SEA_SHANTY", {
+makeBLUAbility("SEA_SHANTY", 1, "cd_SEA_SHANTY", {
 	cooldown: 120,
 	manaCost: 300,
 	potency: 500,
 	applicationDelay: 0.62,
 	validateAttempt: (state) => !isOver(state),
 });
-makeBLUAbility("BEING_MORTAL", 1, "CD_BEING_MORTAL", {
+makeBLUAbility("BEING_MORTAL", 1, "cd_BEING_MORTAL", {
 	cooldown: 120,
 	manaCost: 300,
 	potency: 800,
@@ -741,7 +721,7 @@ makeBLUAbility("BEING_MORTAL", 1, "CD_BEING_MORTAL", {
 	validateAttempt: (state) => !isOver(state),
 });
 
-makeBLUAbility("APOKALYPSIS", 1, "CD_BEING_MORTAL", {
+makeBLUAbility("APOKALYPSIS", 1, "cd_BEING_MORTAL", {
 	cooldown: 120,
 	manaCost: 300,
 	potency: 0,
@@ -759,7 +739,7 @@ makeBLUAbility("APOKALYPSIS", 1, "CD_BEING_MORTAL", {
 			skillName: "APOKALYPSIS",
 			tickPotency: 100,
 			tickFrequency: 1,
-			speedStat: "sks", //引导技能不受咏速加成，必须分配一个所以写了技速，一般法系也不会有技速
+			speedStat: "unscaled",
 			modifiers,
 		});
 	},
@@ -768,7 +748,7 @@ makeBLUAbility("APOKALYPSIS", 1, "CD_BEING_MORTAL", {
 	},
 });
 
-makeBLUAbility("NIGHTBLOOM", 1, "CD_NIGHTBLOOM", {
+makeBLUAbility("NIGHTBLOOM", 1, "cd_NIGHTBLOOM", {
 	cooldown: 120,
 	manaCost: 300,
 	potency: 400,
@@ -793,7 +773,7 @@ makeBLUAbility("NIGHTBLOOM", 1, "CD_NIGHTBLOOM", {
 	},
 });
 
-makeBLUAbility("PHANTOM_FLURRY", 1, "CD_PHANTOM_FLURRY", {
+makeBLUAbility("PHANTOM_FLURRY", 1, "cd_PHANTOM_FLURRY", {
 	replaceIf: [Phantom_FlurryCondition],
 	cooldown: 120,
 	manaCost: 300,
@@ -811,7 +791,7 @@ makeBLUAbility("PHANTOM_FLURRY", 1, "CD_PHANTOM_FLURRY", {
 			skillName: "PHANTOM_FLURRY",
 			tickPotency: 200,
 			tickFrequency: 1,
-			speedStat: "sks", //引导技能不受咏速加成，必须分配一个所以写了技速，一般法系也不会有技速
+			speedStat: "unscaled",
 			modifiers,
 		});
 	},
@@ -820,24 +800,22 @@ makeBLUAbility("PHANTOM_FLURRY", 1, "CD_PHANTOM_FLURRY", {
 	},
 });
 
-makeBLUAbility("SURPANAKHAA", 1, "CD_SURPANAKHA", {
+makeBLUAbility("SURPANAKHA", 1, "cd_SURPANAKHA_LOCKOUT", {
 	cooldown: 1,
 	manaCost: 200,
 	potency: (state) => 200 * (1 + 0.5 * state.resources.get("SURPANAKHAS_FURY").availableAmount()),
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state) && state.hasResourceAvailable("AP"),
-	onConfirm: (state, node) => {
-		if (state.resources.get("AP").availableAmount() === 1) {
-			state.resources.get("AP").consume(1);
-		} else {
-			state.consumeAP();
-		}
-	},
+	validateAttempt: (state) => !isOver(state),
 	onApplication: (state) => {
 		if (state.resources.get("SURPANAKHAS_FURY").availableAmount() === 3) {
 			state.tryConsumeResource("SURPANAKHAS_FURY", true);
 		} else {
 			state.refreshBuff("SURPANAKHAS_FURY", 0);
 		}
+	},
+	secondaryCooldown: {
+		cdName: "cd_SURPANAKHA",
+		cooldown: 1,
+		maxCharges: 4,
 	},
 });

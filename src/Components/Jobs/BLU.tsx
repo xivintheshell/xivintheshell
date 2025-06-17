@@ -38,34 +38,8 @@ export class BLUStatusPropsGenerator extends StatusPropsGenerator<BLUState> {
 			return this.makeCommonTimer(key);
 		});
 	}
+
 	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
-		const AP = this.state.resources.get("AP");
-		const APMaxTimeout = (getResourceInfo("BLU", "AP") as ResourceInfo).maxTimeout;
-		const APCountdown =
-			AP.availableAmount() < AP.maxValue
-				? this.state.resources.timeTillReady("AP")
-				: APMaxTimeout;
-		return [
-			{
-				kind: "counter",
-				name: localize({
-					en: "AP",
-					zh: "穿甲散弹",
-				}),
-				color: colors.blu.surpanakha,
-				currentStacks: AP.availableAmount(),
-				maxStacks: AP.maxValue,
-			} as ResourceCounterProps,
-			{
-				kind: "bar",
-				name: localize({
-					en: "timer",
-					zh: "计时器",
-				}),
-				color: colors.blu.surpanakha,
-				progress: 1 - APCountdown / APMaxTimeout,
-				valueString: APCountdown.toFixed(2),
-			} as ResourceBarProps,
-		];
+		return [];
 	}
 }
