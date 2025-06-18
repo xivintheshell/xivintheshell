@@ -857,7 +857,7 @@ function drawSkills(
 				const potency = node.getPotency({
 					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
 					includePartyBuffs: true,
-					includeSplash: false,
+					includeSplash: true,
 					untargetable: bossIsUntargetable,
 				}).applied;
 				lines.push(localize({ en: "potency: ", zh: "威力：" }) + potency.toFixed(2));
@@ -865,7 +865,7 @@ function drawSkills(
 			if (node.getInitialHealingPotency()) {
 				const healingPotency = node.getHealingPotency({
 					tincturePotencyMultiplier: g_renderingProps.tincturePotencyMultiplier,
-					includeSplash: false,
+					includeSplash: true,
 					includePartyBuffs: true,
 					untargetable: bossIsUntargetable,
 				}).applied;

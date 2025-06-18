@@ -1,5 +1,19 @@
 [
 	{
+		"date": "6/17/25",
+		"changes": [
+			"Fixed timestamps not appearing in the timeline editor when a new skill is added.",
+			"Fixed skill selections ending on \"wait\" events not rendering correctly in the graphical timeline.",
+			"Fixed skill tooltips in the graphical timeline not displaying AoE potency."
+		],
+		"changes_zh": [
+			"修复了新加的技能在时间轴编辑器里不显示出时间戳的问题。",
+			"修复了选择在\"快进至\"结束不正确地在图形时间轴内显示出的问题。",
+			"修复了在图形时间轴内的技能工具提示没显示aoe威力的问题。"
+		],
+		"level": "minor"
+	},
+	{
 		"date": "6/16/25",
 		"changes": [
 			"[BLU] Added support for Blue Mage."
