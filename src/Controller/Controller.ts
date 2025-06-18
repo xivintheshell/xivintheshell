@@ -920,7 +920,8 @@ class Controller {
 		waitKind?: WaitKind;
 		prematureStopCondition?: () => boolean;
 	}) {
-		const fixedTargetTimestamp = props.deltaTime + this.game.getDisplayTime();
+		const now = this.game.time;
+		const fixedTargetTimestamp = props.deltaTime + now;
 		if (props.deltaTime > 0) {
 			this.#lastTickDuration = props.deltaTime;
 			let timeTicked = this.game.tick(
@@ -933,12 +934,18 @@ class Controller {
 			);
 
 			// If `waitKind` is defined, then create a new explicit wait node.
+			let newNode: ActionNode | undefined = undefined;
 			if (props.waitKind === "duration") {
-				this.record.addActionNode(durationWaitNode(timeTicked));
+				newNode = durationWaitNode(timeTicked);
 			} else if (props.waitKind === "target") {
-				this.record.addActionNode(jumpToTimestampNode(fixedTargetTimestamp));
+				newNode = jumpToTimestampNode(fixedTargetTimestamp);
 			} else if (props.waitKind === "mp") {
-				this.record.addActionNode(waitForMPNode());
+				newNode = waitForMPNode();
+			}
+			if (newNode !== undefined) {
+				newNode.tmp_startLockTime = now;
+				newNode.tmp_endLockTime = fixedTargetTimestamp;
+				this.record.addActionNode(newNode);
 			}
 		}
 	}
@@ -1030,6 +1037,7 @@ class Controller {
 		addInvalidNodes: boolean = true,
 	): SkillButtonViewInfo {
 		let status = this.game.getSkillAvailabilityStatus(skillName);
+		const preStartLockTime = this.game.time;
 
 		const beforeWaitTime = status.timeTillAvailable;
 
@@ -1062,7 +1070,10 @@ class Controller {
 					// (e.g. if Amplifier is pressed, then the 120s cd will move the timeline to a point where
 					// enochian was dropped and the button can no longer be used).
 					// Insert an artificial wait event to indicate this.
-					this.record.addActionNode(durationWaitNode(beforeWaitTime));
+					const artificialWaitNode = durationWaitNode(beforeWaitTime);
+					artificialWaitNode.tmp_startLockTime = preStartLockTime;
+					artificialWaitNode.tmp_endLockTime = this.game.time;
+					this.record.addActionNode(artificialWaitNode);
 				}
 				return status;
 			}
@@ -1314,7 +1325,10 @@ class Controller {
 					// waitDuration < 0 is only possible for explicit "jump" nodes; make sure
 					// the node is still added to the record (normally implicitly done by requestTick).
 					if (itr.info.type === ActionType.JumpToTimestamp) {
-						this.record.addActionNode(jumpToTimestampNode(itr.info.targetTime));
+						const jumpNode = jumpToTimestampNode(itr.info.targetTime);
+						jumpNode.tmp_startLockTime = this.game.time;
+						jumpNode.tmp_endLockTime = jumpNode.tmp_startLockTime;
+						this.record.addActionNode(jumpNode);
 					} else {
 						console.error("non-jump wait somehow failed: " + itr.info.type);
 					}
@@ -1775,6 +1789,7 @@ class Controller {
 			if (status.status.ready()) {
 				this.scrollToTime(this.game.time);
 				this.autoSave();
+				updateInvalidStatus();
 			}
 		}
 		this.#bTakingUserInput = false;
@@ -1784,7 +1799,10 @@ class Controller {
 		let success = this.game.requestToggleBuff(buffName); // currently always succeeds
 		if (!success) return false;
 
-		this.record.addActionNode(setResourceNode(buffName));
+		const toggleNode = setResourceNode(buffName);
+		toggleNode.tmp_startLockTime = this.game.time;
+		toggleNode.tmp_endLockTime = toggleNode.tmp_startLockTime;
+		this.record.addActionNode(toggleNode);
 
 		this.#actionsLogCsv.push({
 			time: this.game.getDisplayTime(),
