@@ -234,6 +234,7 @@ const makeBLUSpell = (
 		aspect: aspect,
 		castTime: (state) => state.config.adjustedCastTime(baseCastTime),
 		potency: params.basePotency,
+		validateAttempt: (state) => !isOver(state) && (params.validateAttempt?.(state) ?? true),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = jobPotencyMod(state);
 			if (state.hasResourceAvailable("WAXING_NOCTURNE")) {
@@ -268,7 +269,6 @@ const makeBLUSpell = (
 			}
 			return mods;
 		},
-
 		isInstantFn: (state) => state.hasResourceAvailable("SWIFTCAST") || baseCastTime === 0,
 		onConfirm,
 	});
@@ -305,7 +305,7 @@ const makeBLUAbility = (
 
 			return mods;
 		},
-
+		validateAttempt: (state) => !isOver(state) && (params.validateAttempt?.(state) ?? true),
 		...params,
 	});
 
@@ -314,7 +314,6 @@ makeBLUSpell("SONIC_BOOM", 1, {
 	baseCastTime: 1.0,
 	manaCost: 200,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 });
 
 makeBLUSpell("SHARPENED_KNIFE", 1, {
@@ -323,7 +322,6 @@ makeBLUSpell("SHARPENED_KNIFE", 1, {
 	baseCastTime: 1.0,
 	manaCost: 200,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUSpell("GOBLIN_PUNCH", 1, {
 	aspect: Aspect.Physical,
@@ -331,7 +329,6 @@ makeBLUSpell("GOBLIN_PUNCH", 1, {
 	baseCastTime: 0,
 	manaCost: 200,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUSpell("REVENGE_BLAST", 1, {
 	aspect: Aspect.Physical,
@@ -339,7 +336,6 @@ makeBLUSpell("REVENGE_BLAST", 1, {
 	baseCastTime: 2.0,
 	manaCost: 200,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUSpell("WILD_RAGE", 1, {
 	aspect: Aspect.Physical,
@@ -347,14 +343,12 @@ makeBLUSpell("WILD_RAGE", 1, {
 	baseCastTime: 5,
 	manaCost: 0,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUSpell("CONVICTION_MARCATO", 1, {
 	basePotency: 220,
 	baseCastTime: 2.0,
 	manaCost: 200,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 });
 
 makeBLUSpell("WATER_CANNON", 1, {
@@ -362,7 +356,6 @@ makeBLUSpell("WATER_CANNON", 1, {
 	baseCastTime: 2.0,
 	manaCost: 200,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 });
 
 makeBLUSpell("HYDRO_PULL", 1, {
@@ -370,7 +363,6 @@ makeBLUSpell("HYDRO_PULL", 1, {
 	baseCastTime: 2.0,
 	manaCost: 200,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUSpell("THE_ROSE_OF_DESTRUCTION", 1, {
 	basePotency: 400,
@@ -382,14 +374,12 @@ makeBLUSpell("THE_ROSE_OF_DESTRUCTION", 1, {
 		cooldown: 30,
 		maxCharges: 1,
 	},
-	validateAttempt: (state) => !isOver(state),
 });
 
 makeBLUSpell("MOON_FLUTE", 1, {
 	baseCastTime: 2.0,
 	manaCost: 500,
 	applicationDelay: 0.6,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state) => {
 		if (!state.hasResourceAvailable("WAXING_NOCTURNE")) {
 			state.refreshBuff("WAXING_NOCTURNE", 0.6);
@@ -408,7 +398,6 @@ makeBLUSpell("DIAMONDBACK", 1, {
 	baseCastTime: 2.0,
 	manaCost: 3000,
 	applicationDelay: 0.6,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state) => {
 		if (state.hasResourceAvailable("WAXING_NOCTURNE")) {
 			state.tryConsumeResource("WAXING_NOCTURNE");
@@ -428,7 +417,6 @@ makeBLUSpell("MATRA_MAGIC", 1, {
 		cooldown: 120,
 		maxCharges: 1,
 	},
-	validateAttempt: (state) => !isOver(state),
 });
 
 makeBLUSpell("SONG_OF_TORMENT", 1, {
@@ -436,7 +424,6 @@ makeBLUSpell("SONG_OF_TORMENT", 1, {
 	baseCastTime: 2.0,
 	manaCost: 400,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state, node) => {
 		const modifiers: PotencyModifier[] = [];
 		if (state.hasResourceAvailable("WAXING_NOCTURNE")) {
@@ -464,7 +451,6 @@ makeBLUSpell("BREATH_OF_MAGIC", 1, {
 	baseCastTime: 2.0,
 	manaCost: 300,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state, node) => {
 		const modifiers: PotencyModifier[] = [];
 		if (state.hasResourceAvailable("WAXING_NOCTURNE")) {
@@ -492,7 +478,6 @@ makeBLUSpell("MORTAL_FLAME", 1, {
 	baseCastTime: 2.0,
 	manaCost: 500,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state, node) => {
 		const modifiers: PotencyModifier[] = [];
 		if (state.hasResourceAvailable("WAXING_NOCTURNE")) {
@@ -519,7 +504,6 @@ makeBLUSpell("WHISTLE", 1, {
 	baseCastTime: 1.0,
 	manaCost: 200,
 	applicationDelay: 0,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state) => {
 		state.tryConsumeResource("BRISTLE");
 		state.refreshBuff("WHISTLE", 0);
@@ -530,7 +514,6 @@ makeBLUSpell("BRISTLE", 1, {
 	baseCastTime: 1.0,
 	manaCost: 200,
 	applicationDelay: 0,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state) => {
 		state.tryConsumeResource("WHISTLE");
 		state.refreshBuff("BRISTLE", 0);
@@ -542,7 +525,7 @@ makeBLUSpell("FINAL_STING", 1, {
 	baseCastTime: 2.0,
 	manaCost: 0,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state) && !state.hasResourceAvailable("BRUSH_WITH_DEATH"),
+	validateAttempt: (state) => !state.hasResourceAvailable("BRUSH_WITH_DEATH"),
 	onConfirm: (state) => {
 		state.refreshBuff("BRUSH_WITH_DEATH", 0);
 	},
@@ -553,7 +536,6 @@ makeBLUSpell("TINGLE", 1, {
 	baseCastTime: 2.0,
 	manaCost: 200,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state) => {
 		state.refreshBuff("TINGLE", 0);
 	},
@@ -570,7 +552,6 @@ makeBLUSpell("TRIPLE_TRIDENT", 1, {
 		cooldown: 90,
 		maxCharges: 1,
 	},
-	validateAttempt: (state) => !isOver(state),
 });
 
 const isColdA = (state: Readonly<BLUState>) => state.hasResourceAvailable("COLD_FOG");
@@ -599,7 +580,6 @@ makeBLUSpell("COLD_FOG", 1, {
 		cooldown: 90,
 		maxCharges: 1,
 	},
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state) => {
 		state.refreshBuff("COLD_FOG", 0);
 	},
@@ -631,7 +611,6 @@ makeBLUSpell("END_PHANTOM_FLURRY", 1, {
 	baseCastTime: 0,
 	manaCost: 0,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 });
 
 makeBLUSpell("WINGED_REPROBATION", 1, {
@@ -645,7 +624,6 @@ makeBLUSpell("WINGED_REPROBATION", 1, {
 		cooldown: 90,
 		maxCharges: 1,
 	},
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state) => {
 		state.resources.get("WINGED_REPROBATION").gain(1);
 		if (state.resources.get("WINGED_REPROBATION").availableAmount() <= 3) {
@@ -663,7 +641,6 @@ makeBLUAbility("ERUPTION", 1, "cd_ERUPTION", {
 	manaCost: 300,
 	potency: 300,
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state),
 });
 
 makeBLUAbility("FEATHER_RAIN", 1, "cd_ERUPTION", {
@@ -671,7 +648,6 @@ makeBLUAbility("FEATHER_RAIN", 1, "cd_ERUPTION", {
 	manaCost: 300,
 	potency: 220,
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state, node) => {
 		const modifiers: PotencyModifier[] = [];
 		if (state.hasResourceAvailable("WAXING_NOCTURNE")) {
@@ -694,28 +670,24 @@ makeBLUAbility("MOUNTAIN_BUSTER", 1, "cd_SHOCK_STRIKE", {
 	manaCost: 400,
 	potency: 400,
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUAbility("SHOCK_STRIKE", 1, "cd_SHOCK_STRIKE", {
 	cooldown: 60,
 	manaCost: 400,
 	potency: 400,
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUAbility("GLASS_DANCE", 1, "cd_GLASS_DANCE", {
 	cooldown: 90,
 	manaCost: 500,
 	potency: 350,
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUAbility("QUASAR", 1, "cd_QUASAR", {
 	cooldown: 60,
 	manaCost: 300,
 	potency: 300,
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUAbility("J_KICK", 1, "cd_QUASAR", {
 	cooldown: 60,
@@ -723,28 +695,24 @@ makeBLUAbility("J_KICK", 1, "cd_QUASAR", {
 	potency: 300,
 	applicationDelay: 1,
 	animationLock: 1,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUAbility("BOTH_ENDS", 1, "cd_NIGHTBLOOM", {
 	cooldown: 120,
 	manaCost: 300,
 	potency: 600,
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUAbility("SEA_SHANTY", 1, "cd_SEA_SHANTY", {
 	cooldown: 120,
 	manaCost: 300,
 	potency: 500,
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state),
 });
 makeBLUAbility("BEING_MORTAL", 1, "cd_BEING_MORTAL", {
 	cooldown: 120,
 	manaCost: 300,
 	potency: 800,
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state),
 });
 
 makeBLUAbility("APOKALYPSIS", 1, "cd_BEING_MORTAL", {
@@ -753,7 +721,6 @@ makeBLUAbility("APOKALYPSIS", 1, "cd_BEING_MORTAL", {
 	potency: 0,
 	applicationDelay: 1.38,
 	animationLock: 1.38,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state, node) => {
 		const modifiers: PotencyModifier[] = [];
 		if (state.hasResourceAvailable("WAXING_NOCTURNE")) {
@@ -779,7 +746,6 @@ makeBLUAbility("NIGHTBLOOM", 1, "cd_NIGHTBLOOM", {
 	manaCost: 300,
 	potency: 400,
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state, node) => {
 		const modifiers: PotencyModifier[] = [];
 		if (state.hasResourceAvailable("WAXING_NOCTURNE")) {
@@ -805,7 +771,6 @@ makeBLUAbility("PHANTOM_FLURRY", 1, "cd_PHANTOM_FLURRY", {
 	manaCost: 300,
 	potency: 0,
 	applicationDelay: 0.5,
-	validateAttempt: (state) => !isOver(state),
 	onConfirm: (state, node) => {
 		const modifiers: PotencyModifier[] = [];
 		if (state.hasResourceAvailable("WAXING_NOCTURNE")) {
@@ -831,7 +796,6 @@ makeBLUAbility("SURPANAKHA", 1, "cd_SURPANAKHA_LOCKOUT", {
 	manaCost: 200,
 	potency: (state) => 200 * (1 + 0.5 * state.resources.get("SURPANAKHAS_FURY").availableAmount()),
 	applicationDelay: 0.62,
-	validateAttempt: (state) => !isOver(state),
 	onApplication: (state) => {
 		if (state.resources.get("SURPANAKHAS_FURY").availableAmount() === 3) {
 			state.tryConsumeResource("SURPANAKHAS_FURY", true);
