@@ -2,43 +2,94 @@ import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
 export const PCT_ACTIONS = ensureRecord<ActionData>()({
-	FIRE_IN_RED: { name: "Fire in Red", label: { zh: "火炎之红", ja: "レッドファイア" } },
-	AERO_IN_GREEN: { name: "Aero in Green", label: { zh: "疾风之绿", ja: "グリーンエアロ" } },
-	WATER_IN_BLUE: { name: "Water in Blue", label: { zh: "流水之蓝", ja: "ブルーウォータ" } },
-	FIRE_II_IN_RED: { name: "Fire II in Red", label: { zh: "烈炎之红", ja: "レッドファイラ" } },
+	FIRE_IN_RED: {
+		id: 34650,
+		name: "Fire in Red",
+		label: { zh: "火炎之红", ja: "レッドファイア" },
+	},
+	AERO_IN_GREEN: {
+		id: 34651,
+		name: "Aero in Green",
+		label: { zh: "疾风之绿", ja: "グリーンエアロ" },
+	},
+	WATER_IN_BLUE: {
+		id: 34652,
+		name: "Water in Blue",
+		label: { zh: "流水之蓝", ja: "ブルーウォータ" },
+	},
+	FIRE_II_IN_RED: {
+		id: 34656,
+		name: "Fire II in Red",
+		label: { zh: "烈炎之红", ja: "レッドファイラ" },
+	},
 	AERO_II_IN_GREEN: {
+		id: 34657,
 		name: "Aero II in Green",
 		label: { zh: "烈风之绿", ja: "グリーンエアロラ" },
 	},
-	WATER_II_IN_BLUE: { name: "Water II in Blue", label: { zh: "激水之蓝", ja: "ブルーウォタラ" } },
+	WATER_II_IN_BLUE: {
+		id: 34658,
+		name: "Water II in Blue",
+		label: { zh: "激水之蓝", ja: "ブルーウォタラ" },
+	},
 	BLIZZARD_IN_CYAN: {
+		id: 34653,
 		name: "Blizzard in Cyan",
 		label: { zh: "冰结之蓝青", ja: "シアンブリザド" },
 	},
 	STONE_IN_YELLOW: {
+		id: 34654,
 		name: "Stone in Yellow",
 		label: { zh: "飞石之纯黄", ja: "イエローストーン" },
 	},
 	THUNDER_IN_MAGENTA: {
+		id: 34655,
 		name: "Thunder in Magenta",
 		label: { zh: "闪雷之品红", ja: "マゼンタサンダー" },
 	},
 	BLIZZARD_II_IN_CYAN: {
+		id: 34659,
 		name: "Blizzard II in Cyan",
 		label: { zh: "冰冻之蓝青", ja: "イエローストンラ" },
 	},
 	STONE_II_IN_YELLOW: {
+		id: 34660,
 		name: "Stone II in Yellow",
 		label: { zh: "坚石之纯黄", ja: "マゼンタサンダラ" },
 	},
-	THUNDER_II_IN_MAGENTA: { name: "Thunder II in Magenta", label: { zh: "震雷之品红", ja: "" } },
-	HOLY_IN_WHITE: { name: "Holy in White", label: { zh: "神圣之白", ja: "ホワイトホーリー" } },
-	COMET_IN_BLACK: { name: "Comet in Black", label: { zh: "彗星之黑", ja: "ブラックコメット" } },
-	RAINBOW_DRIP: { name: "Rainbow Drip", label: { zh: "彩虹点滴", ja: "レインボードリップ" } },
-	STAR_PRISM: { name: "Star Prism", label: { zh: "天星棱光", ja: "スタープリズム" } },
+	THUNDER_II_IN_MAGENTA: {
+		id: 34661,
+		name: "Thunder II in Magenta",
+		label: { zh: "震雷之品红", ja: "" },
+	},
+	HOLY_IN_WHITE: {
+		id: 34662,
+		name: "Holy in White",
+		label: { zh: "神圣之白", ja: "ホワイトホーリー" },
+	},
+	COMET_IN_BLACK: {
+		id: 34663,
+		name: "Comet in Black",
+		label: { zh: "彗星之黑", ja: "ブラックコメット" },
+	},
+	RAINBOW_DRIP: {
+		id: 34688,
+		name: "Rainbow Drip",
+		label: { zh: "彩虹点滴", ja: "レインボードリップ" },
+	},
+	STAR_PRISM: {
+		id: 34681,
+		name: "Star Prism",
+		label: { zh: "天星棱光", ja: "スタープリズム" },
+	},
 
-	TEMPERA_COAT: { name: "Tempera Coat", label: { zh: "坦培拉涂层", ja: "テンペラコート" } },
+	TEMPERA_COAT: {
+		id: 34685,
+		name: "Tempera Coat",
+		label: { zh: "坦培拉涂层", ja: "テンペラコート" },
+	},
 	TEMPERA_GRASSA: {
+		id: 34686,
 		name: "Tempera Grassa",
 		label: { zh: "油性坦培拉涂层", ja: "テンペラグラッサ" },
 	},
@@ -50,46 +101,134 @@ export const PCT_ACTIONS = ensureRecord<ActionData>()({
 		name: "Pop Tempera Grassa",
 		label: { zh: "油性坦培拉涂层破盾", ja: "テンペラグラッサ【ブレイク】" },
 	},
-	SMUDGE: { name: "Smudge", label: { zh: "速涂", ja: "スマッジ" } },
+	SMUDGE: {
+		id: 34684,
+		name: "Smudge",
+		label: { zh: "速涂", ja: "スマッジ" },
+	},
 	SUBTRACTIVE_PALETTE: {
+		id: 34683,
 		name: "Subtractive Palette",
 		label: { zh: "减色混合", ja: "サブトラクティブパレット" },
 	},
 
-	CREATURE_MOTIF: { name: "Creature Motif", label: { zh: "动物彩绘", ja: "ピクトアニマル" } },
-	POM_MOTIF: { name: "Pom Motif", label: { zh: "绒球彩绘", ja: "ピクトアニマル" } },
-	WING_MOTIF: { name: "Wing Motif", label: { zh: "翅膀彩绘", ja: "ピクトスケープ" } },
-	CLAW_MOTIF: { name: "Claw Motif", label: { zh: "兽爪彩绘", ja: "ピクトクロー" } },
-	MAW_MOTIF: { name: "Maw Motif", label: { zh: "尖牙彩绘", ja: "ピクトファング" } },
-	LIVING_MUSE: { name: "Living Muse", label: { zh: "动物构想", ja: "イマジンアニマル" } },
-	POM_MUSE: { name: "Pom Muse", label: { zh: "绒球构想", ja: "ピクトポンポン" } },
-	WINGED_MUSE: { name: "Winged Muse", label: { zh: "翅膀构想", ja: "ピクトウィング" } },
-	CLAWED_MUSE: { name: "Clawed Muse", label: { zh: "兽爪构想", ja: "イマジンクロー" } },
-	FANGED_MUSE: { name: "Fanged Muse", label: { zh: "尖牙构想", ja: "イマジンファング" } },
+	CREATURE_MOTIF: {
+		id: 34689,
+		name: "Creature Motif",
+		label: { zh: "动物彩绘", ja: "ピクトアニマル" },
+	},
+	POM_MOTIF: {
+		id: 34664,
+		name: "Pom Motif",
+		label: { zh: "绒球彩绘", ja: "ピクトアニマル" },
+	},
+	WING_MOTIF: {
+		id: 34665,
+		name: "Wing Motif",
+		label: { zh: "翅膀彩绘", ja: "ピクトスケープ" },
+	},
+	CLAW_MOTIF: {
+		id: 34666,
+		name: "Claw Motif",
+		label: { zh: "兽爪彩绘", ja: "ピクトクロー" },
+	},
+	MAW_MOTIF: {
+		id: 34667,
+		name: "Maw Motif",
+		label: { zh: "尖牙彩绘", ja: "ピクトファング" },
+	},
+	LIVING_MUSE: {
+		id: 35347,
+		name: "Living Muse",
+		label: { zh: "动物构想", ja: "イマジンアニマル" },
+	},
+	POM_MUSE: {
+		id: 34670,
+		name: "Pom Muse",
+		label: { zh: "绒球构想", ja: "ピクトポンポン" },
+	},
+	WINGED_MUSE: {
+		id: 34671,
+		name: "Winged Muse",
+		label: { zh: "翅膀构想", ja: "ピクトウィング" },
+	},
+	CLAWED_MUSE: {
+		id: 34672,
+		name: "Clawed Muse",
+		label: { zh: "兽爪构想", ja: "イマジンクロー" },
+	},
+	FANGED_MUSE: {
+		id: 34673,
+		name: "Fanged Muse",
+		label: { zh: "尖牙构想", ja: "イマジンファング" },
+	},
 	MOG_OF_THE_AGES: {
+		id: 34676,
 		name: "Mog of the Ages",
 		label: { zh: "莫古力激流", ja: "モーグリストリーム" },
 	},
 	RETRIBUTION_OF_THE_MADEEN: {
+		id: 34677,
 		name: "Retribution of the Madeen",
 		label: { zh: "马蒂恩惩罚", ja: "マディーンレトリビューション" },
 	},
 
-	WEAPON_MOTIF: { name: "Weapon Motif", label: { zh: "武器彩绘", ja: "ピクトウェポン" } },
-	STEEL_MUSE: { name: "Steel Muse", label: { zh: "武器构想", ja: "イマジンウェポン" } },
-	HAMMER_MOTIF: { name: "Hammer Motif", label: { zh: "重锤彩绘", ja: "ピクトハンマー" } },
-	STRIKING_MUSE: { name: "Striking Muse", label: { zh: "重锤构想", ja: "イマジンハンマー" } },
-	HAMMER_STAMP: { name: "Hammer Stamp", label: { zh: "重锤敲章", ja: "ハンマースタンプ" } },
-	HAMMER_BRUSH: { name: "Hammer Brush", label: { zh: "重锤掠刷", ja: "ハンマーブラッシュ" } },
+	WEAPON_MOTIF: {
+		id: 34690,
+		name: "Weapon Motif",
+		label: { zh: "武器彩绘", ja: "ピクトウェポン" },
+	},
+	STEEL_MUSE: {
+		id: 35348,
+		name: "Steel Muse",
+		label: { zh: "武器构想", ja: "イマジンウェポン" },
+	},
+	HAMMER_MOTIF: {
+		id: 34668,
+		name: "Hammer Motif",
+		label: { zh: "重锤彩绘", ja: "ピクトハンマー" },
+	},
+	STRIKING_MUSE: {
+		id: 34674,
+		name: "Striking Muse",
+		label: { zh: "重锤构想", ja: "イマジンハンマー" },
+	},
+	HAMMER_STAMP: {
+		id: 34678,
+		name: "Hammer Stamp",
+		label: { zh: "重锤敲章", ja: "ハンマースタンプ" },
+	},
+	HAMMER_BRUSH: {
+		id: 34679,
+		name: "Hammer Brush",
+		label: { zh: "重锤掠刷", ja: "ハンマーブラッシュ" },
+	},
 	POLISHING_HAMMER: {
+		id: 34680,
 		name: "Polishing Hammer",
 		label: { zh: "重锤抛光", ja: "ハンマーポリッシュ" },
 	},
 
-	LANDSCAPE_MOTIF: { name: "Landscape Motif", label: { zh: "风景彩绘", ja: "ピクトスケープ" } },
-	SCENIC_MUSE: { name: "Scenic Muse", label: { zh: "风景构想", ja: "イマジンスケープ" } },
-	STARRY_SKY_MOTIF: { name: "Starry Sky Motif", label: { zh: "星空彩绘", ja: "ピクトスカイ" } },
-	STARRY_MUSE: { name: "Starry Muse", label: { zh: "星空构想", ja: "イマジンスカイ" } },
+	LANDSCAPE_MOTIF: {
+		id: 34691,
+		name: "Landscape Motif",
+		label: { zh: "风景彩绘", ja: "ピクトスケープ" },
+	},
+	SCENIC_MUSE: {
+		id: 35349,
+		name: "Scenic Muse",
+		label: { zh: "风景构想", ja: "イマジンスケープ" },
+	},
+	STARRY_SKY_MOTIF: {
+		id: 34669,
+		name: "Starry Sky Motif",
+		label: { zh: "星空彩绘", ja: "ピクトスカイ" },
+	},
+	STARRY_MUSE: {
+		id: 34675,
+		name: "Starry Muse",
+		label: { zh: "星空构想", ja: "イマジンスカイ" },
+	},
 });
 
 export const PCT_COOLDOWNS = ensureRecord<CooldownData>()({
