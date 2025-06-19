@@ -921,7 +921,7 @@ class Controller {
 		prematureStopCondition?: () => boolean;
 	}) {
 		const now = this.game.time;
-		const fixedTargetTimestamp = props.deltaTime + now;
+		const fixedTargetTimestamp = props.deltaTime + this.game.getDisplayTime();
 		if (props.deltaTime > 0) {
 			this.#lastTickDuration = props.deltaTime;
 			let timeTicked = this.game.tick(
