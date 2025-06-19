@@ -1,24 +1,17 @@
 // Skill and state declarations for DRK.
-
-// TODO write tests for:
-// darkside is applied properly
-// unmend reduces shadowstride cd
-// delirium combo gets broken appropriately
-// correct speed scaling stat is used
-// living shadow does enough damage
-
 import { DRKStatusPropsGenerator } from "../../Components/Jobs/DRK";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { GameConfig } from "../GameConfig";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { Aspect, WarningType } from "../Common";
-import { Modifiers, Potency } from "../Potency";
+import { Modifiers, Potency, makeComboModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
+	getBasePotency,
 	FAKE_SKILL_ANIMATION_LOCK,
 	makeAbility,
 	makeResourceAbility,
@@ -263,6 +256,24 @@ type DRKGCDParams = {
 	secondaryCooldown?: CooldownGroupProperties;
 };
 
+const getDarksideAndComboModifiers = (params: DRKGCDParams, state: Readonly<DRKState>) => {
+	const mods = [];
+	if (state.hasResourceAvailable("DARKSIDE")) {
+		mods.push(Modifiers.Darkside);
+	}
+	if (
+		params.combo &&
+		state.resources.get(params.combo.resource).availableAmount() === params.combo.resourceValue
+	) {
+		mods.push(
+			makeComboModifier(
+				getBasePotency(state, params.combo.potency) - getBasePotency(state, params.potency),
+			),
+		);
+	}
+	return mods;
+};
+
 const makeDRKWeaponskill = (
 	name: DRKActionKey,
 	unlockLevel: number,
@@ -276,8 +287,7 @@ const makeDRKWeaponskill = (
 			(state) => state.processComboStatus(name),
 		),
 		recastTime: (state) => state.config.adjustedSksGCD(),
-		jobPotencyModifiers: (state) =>
-			state.hasResourceAvailable("DARKSIDE") ? [Modifiers.Darkside] : [],
+		jobPotencyModifiers: (state) => getDarksideAndComboModifiers(params, state),
 	});
 };
 
@@ -292,8 +302,7 @@ const makeDRKSpell = (
 			state.processComboStatus(name),
 		),
 		recastTime: (state) => state.config.adjustedGCD(), // sps
-		jobPotencyModifiers: (state) =>
-			state.hasResourceAvailable("DARKSIDE") ? [Modifiers.Darkside] : [],
+		jobPotencyModifiers: (state) => getDarksideAndComboModifiers(params, state),
 	});
 };
 
