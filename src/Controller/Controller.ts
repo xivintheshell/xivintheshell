@@ -1774,6 +1774,18 @@ class Controller {
 		this.updateAllDisplay();
 	}
 
+	skipWaningNocturne() {
+		const timeTillReady = this.game.resources.timeTillReady("WANING_NOCTURNE");
+		if (timeTillReady > 0) {
+			this.#requestTick({
+				deltaTime: timeTillReady,
+				waitKind: "duration",
+			});
+			return true;
+		}
+		return false;
+	}
+
 	requestUseSkill(props: { skillName: ActionKey; targetCount: number }) {
 		this.#bTakingUserInput = true;
 		if (this.tickMode === TickMode.RealTimeAutoPause && this.shouldLoop) {
