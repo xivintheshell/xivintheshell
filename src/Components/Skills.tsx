@@ -527,7 +527,6 @@ export class SkillsWindow extends React.Component {
 	onTargetCountChange: (e: ValueChangeEvent) => void;
 	onRemoveTrailingIdleTime: () => void;
 	onWaitTillNextMpOrLucidTick: () => void;
-	onSkipWaningNocturne: () => void;
 
 	static contextType = ColorThemeContext;
 
@@ -603,10 +602,6 @@ export class SkillsWindow extends React.Component {
 
 		this.onWaitTillNextMpOrLucidTick = () => {
 			controller.waitTillNextMpOrLucidTick();
-		};
-
-		this.onSkipWaningNocturne = () => {
-			controller.skipWaningNocturne();
 		};
 
 		this.state = {
@@ -898,13 +893,6 @@ export class SkillsWindow extends React.Component {
 						{localize({
 							en: "Remove trailing idle time",
 							zh: "去除时间轴末尾的发呆时间",
-						})}
-					</button>
-					<span> </span>
-					<button onClick={this.onSkipWaningNocturne}>
-						{localize({
-							en: "Wait until waning nocturne end",
-							zh: "快进至副作用结束",
 						})}
 					</button>
 				</div>
