@@ -2,6 +2,7 @@ import React, { ChangeEvent, CSSProperties, ReactNode, useEffect, useState, useR
 import { localize } from "./Localization";
 import { Tooltip } from "@base-ui-components/react/tooltip";
 import { getCurrentThemeColors } from "./ColorTheme";
+import { Debug } from "../Game/Common";
 import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { MAX_TIMELINE_SLOTS } from "../Controller/Timeline";
 import { LiaWindowMinimize } from "react-icons/lia";
@@ -178,7 +179,7 @@ export const StaticFn = {
 			(time < 0 ? "-" : "") +
 			minute.toString() +
 			":" +
-			(second < 10 ? "0" : "") +
+			((second + Debug.epsilon) < 10 ? "0" : "") +
 			second.toFixed(fractionDigits).toString()
 		);
 	},
