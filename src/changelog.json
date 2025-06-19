@@ -1,5 +1,15 @@
 [
 	{
+		"date": "6/18/25",
+		"changes": [
+			"Fixed a bug where the \"wait until timestamp\" events would change times unexpectedly."
+		],
+		"changes_zh": [
+			"修复了\"快进至\"时间会意外地改变目标时间的问题。"
+		],
+		"level": "minor"
+	},
+	{
 		"date": "6/17/25",
 		"changes": [
 			"Fixed timestamps not appearing in the timeline editor when a new skill is added.",

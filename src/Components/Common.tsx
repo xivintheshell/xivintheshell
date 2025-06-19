@@ -179,7 +179,7 @@ export const StaticFn = {
 			(time < 0 ? "-" : "") +
 			minute.toString() +
 			":" +
-			((second + Debug.epsilon) < 10 ? "0" : "") +
+			(second + Debug.epsilon < 10 ? "0" : "") +
 			second.toFixed(fractionDigits).toString()
 		);
 	},
