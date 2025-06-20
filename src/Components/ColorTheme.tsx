@@ -160,6 +160,9 @@ export type PLDResourceColors = {
 export type DRKResourceColors = {
 	darkside: string;
 	blood: string;
+	darkarts: string;
+	drkComboTimer: string;
+	grit: string;
 };
 
 export type JobAccentColors = Partial<{
@@ -413,9 +416,11 @@ const DARK_THEME_COLORS: ThemeColors = {
 		oathGaugeColor: "#3d61ae",
 	},
 	drk: {
-		// TODO
-		darkside: "#d6002d",
-		blood: "#d6002d",
+		darkside: "#c000d1",
+		blood: "#8803fc",
+		darkarts: "#ffdf0d",
+		drkComboTimer: "#cb8046",
+		grit: "#82cad9",
 	},
 	timeline: {
 		ruler: "#2d2d2d",
@@ -602,9 +607,11 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		oathGaugeColor: "#3d61ae",
 	},
 	drk: {
-		// TODO
-		darkside: "#d6002d",
-		blood: "#d6002d",
+		darkside: "#c000d1",
+		blood: "#8803fc",
+		darkarts: "#ffdf0d",
+		drkComboTimer: "#cb8046",
+		grit: "#82cad9",
 	},
 	timeline: {
 		ruler: "#e9e9e9",

@@ -1,5 +1,15 @@
 [
 	{
+		"date": "6/19/25",
+		"changes": [
+			"[DRK] Added initial support for DRK."
+		],
+		"changes_zh": [
+			"【暗黑骑士】 加了初步的暗黑骑士支持。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "6/18/25",
 		"changes": [
 			"Fixed a bug where the \"wait until timestamp\" events would change times unexpectedly."
@@ -32,13 +42,6 @@
 			"【青魔】增加青魔支持。"
 		],
 		"level": "minor"
-	},
-	{
-		"date": "6/15/25",
-		"changes": [
-			"[BETA][DRK] Added initial support for DRK."
-		],
-		"level": "major"
 	},
 	{
 		"date": "6/6/25",

@@ -39,7 +39,6 @@ export class DRKStatusPropsGenerator extends StatusPropsGenerator<DRKState> {
 		const aoeCombo = resources.get("DRK_AOE_COMBO_TRACKER");
 		const bloodGauge = resources.get("BLOOD_GAUGE").availableAmount();
 		const stanceActive = resources.get("GRIT").availableAmount();
-		const darksideActive = resources.get("DARKSIDE").availableAmount();
 		const darksideTimer = resources.get("DARKSIDE").pendingChange?.timeTillEvent ?? 0;
 		const darkArts = resources.get("DARK_ARTS").availableAmount();
 
@@ -53,29 +52,28 @@ export class DRKStatusPropsGenerator extends StatusPropsGenerator<DRKState> {
 			{
 				kind: "bar",
 				name: localize({ en: "Combo Timer", zh: "连击监控" }),
-				color: colors.rdm.manaStack,
+				color: colors.drk.drkComboTimer,
 				progress: comboTimer ? comboTimer / 30 : 0,
 				valueString: comboTimer?.toFixed(3) ?? "N/A",
 			} as ResourceBarProps,
 			{
 				kind: "counter",
 				name: localize({ en: "Grit" }),
-				color: colors.rdm.manaStack,
+				color: colors.drk.grit,
 				currentStacks: stanceActive,
 				maxStacks: 1,
 			} as ResourceCounterProps,
 			{
-				kind: "counter",
+				kind: "bar",
 				name: localize({ en: "Darkside" }),
 				color: colors.drk.darkside,
-				currentStacks: darksideActive,
-				maxStacks: 1,
+				progress: darksideTimer ? darksideTimer / 60 : 0,
 				valueString: darksideTimer.toFixed(3),
-			} as ResourceCounterProps,
+			} as ResourceBarProps,
 			{
 				kind: "counter",
 				name: localize({ en: "Dark Arts" }),
-				color: colors.drk.darkside,
+				color: colors.drk.darkarts,
 				currentStacks: darkArts,
 				maxStacks: 1,
 			} as ResourceCounterProps,
