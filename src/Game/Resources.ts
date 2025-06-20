@@ -339,6 +339,9 @@ export function getResourceInfo(
 export function getAllResources(
 	job: ShellJob,
 ): Map<ResourceKey | CooldownKey, ResourceOrCoolDownInfo> {
+	if (!resourceInfos.has(job)) {
+		console.error("could not find resources for job " + job);
+	}
 	return resourceInfos.get(job)!;
 }
 

@@ -246,9 +246,10 @@ export function getResourceKeyFromBuffName(s: string): ResourceKey | undefined {
 	return Data.findResourceKey(s);
 }
 
-// Return a particular skill for a job, or the NEVER_SKILL placeholder skill if no such skill exists.
+// Return a particular skill for a job.
+// Raises if the skill is not found.
 export function getSkill<T extends PlayerState>(job: ShellJob, skillName: ActionKey): Skill<T> {
-	return skillMap.get(job)!.get(skillName) ?? NEVER_SKILL;
+	return skillMap.get(job)!.get(skillName)!;
 }
 
 export function getSkillAssetPath(skillName: ActionKey): string | undefined {
@@ -335,6 +336,7 @@ export interface MakeSkillParams<T extends PlayerState> {
 	startOnHotbar: boolean;
 	highlightIf: StatePredicate<T>;
 	animationLock: number | ResourceCalculationFn<T>;
+	manaCost: number | ResourceCalculationFn<T>;
 	potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
 	jobPotencyModifiers: PotencyModifierFn<T>;
 	drawsAggro: boolean;
@@ -357,7 +359,6 @@ export interface MakeGCDParams<T extends PlayerState> extends MakeSkillParams<T>
 	castTime: number | ResourceCalculationFn<T>;
 	recastTime: number | ResourceCalculationFn<T>;
 	isInstantFn: StatePredicate<T>;
-	manaCost: number | ResourceCalculationFn<T>;
 }
 
 /**
@@ -501,7 +502,6 @@ export interface MakeAbilityParams<T extends PlayerState> extends MakeSkillParam
 	requiresCombat: boolean;
 	cooldown: number;
 	maxCharges: number;
-	manaCost?: number | ResourceCalculationFn<T>;
 }
 /**
  * Declare an oGCD ability.

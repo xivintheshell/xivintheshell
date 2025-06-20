@@ -1087,8 +1087,6 @@ export class GameState {
 	useAbility(skill: Ability<PlayerState>, node: ActionNode) {
 		console.assert(node);
 		let cd = this.cooldowns.get(skill.cdName);
-		const manaCost = skill.manaCostFn(this);
-		this.resources.get("MANA").consume(manaCost);
 		// potency
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
@@ -1178,6 +1176,11 @@ export class GameState {
 			}
 
 			this.jobSpecificAddHealingBuffCovers(node, skill);
+		}
+
+		const manaCost = skill.manaCostFn(this);
+		if (manaCost > 0) {
+			this.resources.get("MANA").consume(manaCost);
 		}
 
 		skill.onConfirm(this, node);
@@ -1373,6 +1376,10 @@ export class GameState {
 
 	hasResourceAvailable(rscType: ResourceKey, atLeast?: number): boolean {
 		return this.resources.get(rscType).available(atLeast ?? 1);
+	}
+
+	hasResourceExactly(rscType: ResourceKey, target: number): boolean {
+		return this.resources.get(rscType).availableAmount() === target;
 	}
 
 	// Add a resource drop event after `delay` seconds.

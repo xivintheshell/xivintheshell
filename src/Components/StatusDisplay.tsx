@@ -499,7 +499,7 @@ export function ResourcesDisplay(props: {
 				return <ResourceCounter
 					containerType={"circle"}
 					name={props.name}
-					label={`${props.currentStacks}/${props.maxStacks}`}
+					label={props.valueString ?? `${props.currentStacks}/${props.maxStacks}`}
 					items={items}
 					key={"resourceDisplay" + i}
 				/>;

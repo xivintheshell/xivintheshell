@@ -157,6 +157,14 @@ export type PLDResourceColors = {
 	oathGaugeColor: string;
 };
 
+export type DRKResourceColors = {
+	darkside: string;
+	blood: string;
+	darkarts: string;
+	drkComboTimer: string;
+	grit: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -202,6 +210,7 @@ export type ThemeColors = {
 	drg: DRGResourceColors;
 	sge: SGEResourceColors;
 	pld: PLDResourceColors;
+	drk: DRKResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -406,6 +415,13 @@ const DARK_THEME_COLORS: ThemeColors = {
 		ironWillColor: "#d74936",
 		oathGaugeColor: "#3d61ae",
 	},
+	drk: {
+		darkside: "#c000d1",
+		blood: "#8803fc",
+		darkarts: "#ffdf0d",
+		drkComboTimer: "#cb8046",
+		grit: "#82cad9",
+	},
 	timeline: {
 		ruler: "#2d2d2d",
 		tracks: "#242424",
@@ -590,6 +606,13 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		ironWillColor: "#d74936",
 		oathGaugeColor: "#3d61ae",
 	},
+	drk: {
+		darkside: "#c000d1",
+		blood: "#8803fc",
+		darkarts: "#ffdf0d",
+		drkComboTimer: "#cb8046",
+		grit: "#82cad9",
+	},
 	timeline: {
 		ruler: "#e9e9e9",
 		tracks: "#f3f3f3",
@@ -677,6 +700,7 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.SURPANAKHA, colors.blu.surpanakha],
 		[PotencyModifierType.WINGED_REDEMPTION, colors.blu.wingedreprobation],
 		[PotencyModifierType.WINGED_REPROBATION, colors.blu.wingedreprobation],
+		[PotencyModifierType.DARKSIDE, colors.drk.darkside],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),
