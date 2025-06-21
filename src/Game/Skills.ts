@@ -717,7 +717,7 @@ export class SkillsList<T extends PlayerState> {
 	}
 
 	get(key: ActionKey): Skill<T> {
-		let skill = skillMap.get(this.job)!.get(key) as Skill<T>;
+		const skill = skillMap.get(this.job)!.get(key) as Skill<T>;
 		if (skill) return skill;
 		else {
 			console.error(`could not find skill with key: ${key}`);

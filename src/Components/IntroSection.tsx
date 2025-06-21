@@ -152,8 +152,8 @@ const getAcknowledgements = () => <>
 </>;
 
 export function IntroSection(props: { job: ShellJob }) {
-	let smallGap: CSSProperties = { marginBottom: 5 };
-	let colors = getCurrentThemeColors();
+	const smallGap: CSSProperties = { marginBottom: 5 };
+	const colors = getCurrentThemeColors();
 	const job = props.job;
 	return <div>
 		<Changelog />

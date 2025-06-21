@@ -37,12 +37,12 @@ function handleUrlCommands(command?: string) {
 	if (command === "resetAll") {
 		clearCachedValues();
 	} else if (command === "resetResourceOverrides") {
-		let strOld = getCachedValue("gameRecord");
+		const strOld = getCachedValue("gameRecord");
 		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
 			let str = getCachedValue("gameRecord" + i.toString());
 			if (i === 0 && str === null && strOld !== null) str = strOld; // backward compatible
 			if (str !== null) {
-				let content = JSON.parse(str);
+				const content = JSON.parse(str);
 				console.log(content);
 				if (content.config) {
 					content.config.initialResourceOverrides = [];
@@ -87,7 +87,7 @@ function ConfigTabs(props: { height: number }) {
 }
 
 function PSA(props: { hidden?: boolean; color?: string; children: React.ReactNode }) {
-	let color = props.color ?? getCurrentThemeColors().accent;
+	const color = props.color ?? getCurrentThemeColors().accent;
 	return <div
 		style={{
 			display: props.hidden === true ? "none" : "block",
@@ -188,7 +188,7 @@ export default class Main extends React.Component<{ command?: string }> {
 
 		if (this.controlRegionRef.current) {
 			new ResizeObserver(() => {
-				let height = this.controlRegionRef.current?.clientHeight ?? 0;
+				const height = this.controlRegionRef.current?.clientHeight ?? 0;
 				this.setState({ controlRegionHeight: height });
 			}).observe(this.controlRegionRef.current);
 		}
@@ -202,8 +202,8 @@ export default class Main extends React.Component<{ command?: string }> {
 
 	// tabs: https://reactcommunity.org/react-tabs/
 	render() {
-		let colors = getThemeColors(this.state.colorTheme);
-		let containerStyle: CSSProperties = {
+		const colors = getThemeColors(this.state.colorTheme);
+		const containerStyle: CSSProperties = {
 			height: "100%",
 			accentColor: colors.accent,
 			fontFamily: "monospace",
@@ -225,7 +225,7 @@ export default class Main extends React.Component<{ command?: string }> {
 			borderColor = "2px solid " + colors.accent;
 		}
 		const liStyle = { marginBottom: "5px" };
-		let mainControlRegion = <div
+		const mainControlRegion = <div
 			style={{ flex: 7, display: "inline-block", position: "relative" }}
 		>
 			<div

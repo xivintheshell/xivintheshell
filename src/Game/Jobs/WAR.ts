@@ -118,7 +118,7 @@ export class WARState extends GameState {
 		this.setComboState(brokenCombo, 0);
 
 		// increment or break the current combo's state
-		let comboState = this.resources.get(combo).availableAmount();
+		const comboState = this.resources.get(combo).availableAmount();
 		let nextState = 0;
 		if (isTempestCombo) {
 			if (skill === "OVERPOWER") {

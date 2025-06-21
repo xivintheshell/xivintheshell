@@ -211,7 +211,7 @@ export class Timeline {
 	}
 
 	#markersAreEqual(m1: MarkerElem, m2: MarkerElem): boolean {
-		let almostEq = function (a: number, b: number) {
+		const almostEq = function (a: number, b: number) {
 			return Math.abs(a - b) < Debug.epsilon;
 		};
 
@@ -292,7 +292,7 @@ export class Timeline {
 
 	// assumes input is valid
 	#appendMarkersPreset(preset: Fixme, track: number, offset: number) {
-		let newMarkers = preset.markers.map((m: SerializedMarker): MarkerElem => {
+		const newMarkers = preset.markers.map((m: SerializedMarker): MarkerElem => {
 			return {
 				time: m.time + offset,
 				duration: m.duration,
@@ -381,14 +381,14 @@ export class Timeline {
 	}
 
 	loadSlot(index: number): boolean {
-		let str = getCachedValue("gameRecord" + index.toString());
+		const str = getCachedValue("gameRecord" + index.toString());
 		if (str !== null) {
 			// found record; make sure the slot exists
 			this.activeSlotIndex = index;
 			while (this.slots.length <= index) {
 				this.slots.push({ job: "BLM", elements: [] });
 			}
-			let content = JSON.parse(str);
+			const content = JSON.parse(str);
 			controller.loadBattleRecordFromFile(content);
 			this.slots[index].job = controller.game.job;
 			return true;
@@ -441,9 +441,9 @@ export class Timeline {
 		let rightMostTime = 0;
 		let hasRecord = false;
 		for (let i = 0; i < MAX_TIMELINE_SLOTS; i++) {
-			let str = getCachedValue("gameTimeInfo" + i.toString());
+			const str = getCachedValue("gameTimeInfo" + i.toString());
 			if (str !== null) {
-				let info = JSON.parse(str) as {
+				const info = JSON.parse(str) as {
 					countdown: number;
 					elapsedTime: number;
 				};
@@ -466,22 +466,22 @@ export class Timeline {
 		let rightMostTime = Math.max(0, this.elapsedTime);
 		let countdown = controller.gameConfig.countdown;
 		// and other slots
-		let allSlotsTimeInfo = this.getAllSlotsTimeInfo();
+		const allSlotsTimeInfo = this.getAllSlotsTimeInfo();
 		if (allSlotsTimeInfo !== null) {
 			countdown = Math.max(countdown, allSlotsTimeInfo.countdown);
 			rightMostTime = Math.max(rightMostTime, allSlotsTimeInfo.rightMostTime);
 		}
 		// and include markers
 		this.#allMarkers.forEach((marker) => {
-			let endDisplayTime = marker.time + marker.duration;
+			const endDisplayTime = marker.time + marker.duration;
 			rightMostTime = Math.max(rightMostTime, endDisplayTime + countdown);
 		});
-		let secondsToDraw = Math.ceil((rightMostTime + Math.max(0, countdown) + 4) / 8) * 8;
+		const secondsToDraw = Math.ceil((rightMostTime + Math.max(0, countdown) + 4) / 8) * 8;
 		return secondsToDraw * 100 * this.scale;
 	}
 
 	getCanvasHeight() {
-		let numTracksToDraw = this.getNumMarkerTracks();
+		const numTracksToDraw = this.getNumMarkerTracks();
 		return TimelineDimensions.timelineCanvasHeight(numTracksToDraw, this.slots.length);
 	}
 
@@ -504,7 +504,7 @@ export class Timeline {
 
 	updateTimelineMarkers() {
 		updateTimelineView();
-		let M = new Map<number, MarkerElem[]>();
+		const M = new Map<number, MarkerElem[]>();
 		this.#allMarkers.forEach((marker) => {
 			let trackBin = M.get(marker.track);
 			if (trackBin === undefined) trackBin = [];
@@ -521,7 +521,7 @@ export class Timeline {
 		refreshTimelineEditor();
 
 		// historical state
-		let firstNode = controller.record.selectionStartIndex;
+		const firstNode = controller.record.selectionStartIndex;
 		if (firstNode !== undefined) {
 			controller.displayHistoricalState(-Infinity, firstNode);
 		} else {
@@ -543,9 +543,9 @@ export class Timeline {
 
 	duringUntargetable(displayTime: number) {
 		for (let i = 0; i < this.#untargetableMarkers.length; i++) {
-			let m = this.#untargetableMarkers[i];
-			let mStart = m.time;
-			let mEnd = m.time + m.duration;
+			const m = this.#untargetableMarkers[i];
+			const mStart = m.time;
+			const mEnd = m.time + m.duration;
 			if (displayTime >= mStart && displayTime < mEnd) return true;
 		}
 		return false;
@@ -553,8 +553,11 @@ export class Timeline {
 
 	// inputs are displayed numbers
 	getTargetableDurationBetween(tStart: number, tEnd: number) {
-		let cut = function ([targetA, targetB]: [number, number], [srcA, srcB]: [number, number]) {
-			let res: [number, number][] = [];
+		const cut = function (
+			[targetA, targetB]: [number, number],
+			[srcA, srcB]: [number, number],
+		) {
+			const res: [number, number][] = [];
 			if (targetA < srcA) {
 				res.push([targetA, Math.min(targetB, srcA)]);
 			}
@@ -567,9 +570,9 @@ export class Timeline {
 		let remainings: [number, number][] = [[tStart, tEnd]];
 
 		for (let i = 0; i < this.#untargetableMarkers.length; i++) {
-			let m = this.#untargetableMarkers[i];
-			let mStart = m.time;
-			let mEnd = m.time + m.duration;
+			const m = this.#untargetableMarkers[i];
+			const mStart = m.time;
+			const mEnd = m.time + m.duration;
 
 			let newRemainings: [number, number][] = [];
 			remainings.forEach((rem) => {
@@ -587,14 +590,14 @@ export class Timeline {
 	}
 
 	#save() {
-		let files = this.serializedSeparateMarkerTracks();
+		const files = this.serializedSeparateMarkerTracks();
 		setCachedValue("timelineMarkers", JSON.stringify(files));
 	}
 
 	#load() {
-		let str = getCachedValue("timelineMarkers");
+		const str = getCachedValue("timelineMarkers");
 		if (str !== null) {
-			let files = JSON.parse(str);
+			const files = JSON.parse(str);
 			files.forEach((f: Fixme) => {
 				this.#appendMarkersPreset(f, f.track, 0);
 			});
@@ -603,15 +606,15 @@ export class Timeline {
 
 	// localStorage; saving tracks as separate files
 	serializedSeparateMarkerTracks() {
-		let maxTrack = this.getNumMarkerTracks() - 1;
+		const maxTrack = this.getNumMarkerTracks() - 1;
 
-		let markerTracks: Map<number, SerializedMarker[]> = new Map();
+		const markerTracks: Map<number, SerializedMarker[]> = new Map();
 		for (let i = UntargetableMarkerTrack; i < maxTrack + 1; i++) {
 			markerTracks.set(i, []);
 		}
 
 		this.#allMarkers.forEach((marker) => {
-			let bin = markerTracks.get(marker.track);
+			const bin = markerTracks.get(marker.track);
 			console.assert(bin);
 			if (bin) {
 				bin.push({
@@ -625,7 +628,7 @@ export class Timeline {
 				markerTracks.set(marker.track, bin);
 			}
 		});
-		let files: Fixme[] = [];
+		const files: Fixme[] = [];
 		markerTracks.forEach((bin, i) => {
 			if (bin.length > 0) {
 				files.push({
@@ -640,7 +643,7 @@ export class Timeline {
 
 	// saving tracks as a combined file
 	serializedCombinedMarkerTracks() {
-		let tracks = this.serializedSeparateMarkerTracks();
+		const tracks = this.serializedSeparateMarkerTracks();
 		return {
 			fileType: FileType.MarkerTracksCombined,
 			tracks: tracks,

@@ -199,7 +199,7 @@ export class RDMState extends GameState {
 	}
 
 	gainVerproc(proc: "VERFIRE_READY" | "VERSTONE_READY") {
-		let duration = (getResourceInfo("RDM", proc) as ResourceInfo).maxTimeout;
+		const duration = (getResourceInfo("RDM", proc) as ResourceInfo).maxTimeout;
 		if (this.resources.get(proc).available(1)) {
 			this.resources.get(proc).overrideTimer(this, duration);
 		} else {
@@ -209,7 +209,7 @@ export class RDMState extends GameState {
 	}
 
 	maybeGainVerproc(proc: "VERFIRE_READY" | "VERSTONE_READY", chance: number = 0.5) {
-		let rand = this.rng();
+		const rand = this.rng();
 		if (
 			this.config.procMode === ProcMode.Always ||
 			(this.config.procMode === ProcMode.RNG && rand < chance)

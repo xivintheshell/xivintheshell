@@ -188,7 +188,7 @@ export class DNCState extends GameState {
 			return;
 		}
 
-		let rand = this.rng();
+		const rand = this.rng();
 		if (this.config.procMode === ProcMode.Always || rand < chance) {
 			this.gainProc(proc);
 		}
@@ -213,7 +213,7 @@ export class DNCState extends GameState {
 			return;
 		}
 
-		let rand = this.rng();
+		const rand = this.rng();
 		if (this.config.procMode === ProcMode.Always || rand < chance) {
 			this.gainResource(rscType, amount);
 		}
@@ -1019,7 +1019,7 @@ makeAbility_DNC("IMPROVISATION", 80, "cd_IMPROVISATION", {
 	onConfirm: (state) => {
 		state.gainProc("IMPROVISATION");
 		state.gainProc("IMPROVISATION_REGEN");
-		let risingRhythmRecurrence = () => {
+		const risingRhythmRecurrence = () => {
 			if (!state.hasResourceAvailable("IMPROVISATION")) {
 				return;
 			}

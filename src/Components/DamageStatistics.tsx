@@ -122,8 +122,8 @@ export const mockDamageStatUpdateFn = (
 };
 
 function BuffTag(props: { buff: PotencyModifierType }) {
-	let text: string = localizeModifierTag(props.buff);
-	let color: string = getModifierTagColor(props.buff);
+	const text: string = localizeModifierTag(props.buff);
+	const color: string = getModifierTagColor(props.buff);
 	return <span
 		style={{
 			borderRadius: 2,
@@ -293,7 +293,7 @@ export class DamageStatistics extends React.Component {
 
 	render() {
 		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
-		let colors = getThemeColors(this.context);
+		const colors = getThemeColors(this.context);
 		const allIncluded = allSkillsAreIncluded();
 
 		//////////////////// Summary ///////////////////////
@@ -305,16 +305,16 @@ export class DamageStatistics extends React.Component {
 			? ""
 			: (localize({ en: " (checked only)", zh: "（勾选部分）" }) as string);
 
-		let lastDisplay = this.data.lastDamageApplicationTime - this.data.countdown;
-		let targetableDurationTilLastDisplay = getTargetableDurationBetween(0, lastDisplay);
-		let ppsAvailable = this.data.lastDamageApplicationTime > -this.data.countdown;
-		let lastDamageApplicationTimeDisplay = ppsAvailable
+		const lastDisplay = this.data.lastDamageApplicationTime - this.data.countdown;
+		const targetableDurationTilLastDisplay = getTargetableDurationBetween(0, lastDisplay);
+		const ppsAvailable = this.data.lastDamageApplicationTime > -this.data.countdown;
+		const lastDamageApplicationTimeDisplay = ppsAvailable
 			? lastDisplay.toFixed(3).toString()
 			: "N/A";
 		let potencyStr = localize({ en: "Total potency", zh: "总威力" }) as string;
 		let selectedPotencyStr = localize({ en: "Selected potency", zh: "选中威力" }) as string;
 		if (this.data.tinctureBuffPercentage > 0) {
-			let s =
+			const s =
 				lparen +
 				(localize({ en: "pot +", zh: "爆发药 +" }) as string) +
 				this.data.tinctureBuffPercentage +
@@ -405,7 +405,7 @@ export class DamageStatistics extends React.Component {
 			});
 
 		let selected: React.ReactNode | undefined = undefined;
-		let selectedPPSAvailable = this.selected.targetableDuration > 0;
+		const selectedPPSAvailable = this.selected.targetableDuration > 0;
 		if (this.selected.totalDuration > 0) {
 			selected = <div style={{ flex: 1, color: colors.accent }}>
 				<div>
@@ -427,7 +427,7 @@ export class DamageStatistics extends React.Component {
 			</div>;
 		}
 
-		let summary = <div style={{ display: "flex", marginBottom: 10, flexDirection: "row" }}>
+		const summary = <div style={{ display: "flex", marginBottom: 10, flexDirection: "row" }}>
 			<div style={{ flex: 1 }}>
 				<div
 					style={{
@@ -495,7 +495,7 @@ export class DamageStatistics extends React.Component {
 
 		///////////////////////// Main table //////////////////////////
 
-		let cell = function (widthPercentage: number): CSSProperties {
+		const cell = function (widthPercentage: number): CSSProperties {
 			return {
 				verticalAlign: "middle",
 				boxSizing: "border-box",
@@ -505,11 +505,11 @@ export class DamageStatistics extends React.Component {
 			};
 		};
 
-		let isDoTProp = function (skillName: ActionKey) {
+		const isDoTProp = function (skillName: ActionKey) {
 			return controller.game.dotSkills.includes(skillName);
 		};
 
-		let hidePotency = function (skillName: ActionKey) {
+		const hidePotency = function (skillName: ActionKey) {
 			if (isDoTProp(skillName)) {
 				return true;
 			}
@@ -524,20 +524,20 @@ export class DamageStatistics extends React.Component {
 		};
 
 		// omit the target count column if all abilities hit only one target
-		let makeRow = function (props: {
+		const makeRow = function (props: {
 			lastRowSkill?: ActionKey;
 			row: DamageStatsMainTableEntry;
 			key: number;
 		}) {
 			const sameAsLast = props.row.skillName === props.lastRowSkill;
 
-			let tags: React.ReactNode[] = [];
+			const tags: React.ReactNode[] = [];
 			tags.push(props.row.displayedModifiers.map((tag, i) => <BuffTag key={i} buff={tag} />));
 
 			const includeInStats = getSkillOrDotInclude(props.row.skillName);
 
 			// include checkbox
-			let includeCheckboxes: React.ReactNode[] = [];
+			const includeCheckboxes: React.ReactNode[] = [];
 			if (
 				!sameAsLast &&
 				props.row.basePotency > 0 &&
@@ -639,8 +639,8 @@ export class DamageStatistics extends React.Component {
 			}
 
 			// usage count node
-			let unhitUsages = props.row.usageCount - props.row.hitCount;
-			let usageCountNode = <span
+			const unhitUsages = props.row.usageCount - props.row.hitCount;
+			const usageCountNode = <span
 				style={{ textDecoration: includeInStats ? "none" : "line-through" }}
 			>
 				{props.row.hitCount}
@@ -692,7 +692,7 @@ export class DamageStatistics extends React.Component {
 					) : undefined}
 				</span>;
 			}
-			let rowStyle: CSSProperties = {
+			const rowStyle: CSSProperties = {
 				textAlign: "left",
 				position: "relative",
 				borderTop: sameAsLast ? "none" : "1px solid " + colors.bgMediumContrast,
@@ -710,7 +710,7 @@ export class DamageStatistics extends React.Component {
 				<div style={cell(30)}>{totalPotencyNode}</div>
 			</div>;
 		};
-		let tableRows: React.ReactNode[] = [];
+		const tableRows: React.ReactNode[] = [];
 		for (let i = 0; i < this.data.mainTable.length; i++) {
 			tableRows.push(
 				makeRow({
@@ -723,22 +723,22 @@ export class DamageStatistics extends React.Component {
 
 		////////////////////// dot Table ////////////////////////
 
-		let makedotRow = function (props: { row: DamageStatsDoTTableEntry; key: number }) {
+		const makedotRow = function (props: { row: DamageStatsDoTTableEntry; key: number }) {
 			// tags
-			let tags: React.ReactNode[] = [];
+			const tags: React.ReactNode[] = [];
 			tags.push(props.row.displayedModifiers.map((tag, i) => <BuffTag key={i} buff={tag} />));
 
 			// gap
-			let gapStr = props.row.gap.toFixed(3);
-			let gapNode = props.row.gap > 0 ? <span>{gapStr}</span> : <span />;
+			const gapStr = props.row.gap.toFixed(3);
+			const gapNode = props.row.gap > 0 ? <span>{gapStr}</span> : <span />;
 
 			// override
-			let overrideStr = props.row.override.toFixed(3);
-			let overrideNode = props.row.override > 0 ? <span>{overrideStr}</span> : <span />;
+			const overrideStr = props.row.override.toFixed(3);
+			const overrideNode = props.row.override > 0 ? <span>{overrideStr}</span> : <span />;
 
 			// potency
 			// assume dots have no falloff
-			let mainPotencyNode = <PotencyDisplay
+			const mainPotencyNode = <PotencyDisplay
 				basePotency={props.row.mainPotencyHit ? props.row.baseMainPotency : 0}
 				includeInStats={true}
 				explainUntargetable={!props.row.mainPotencyHit}
@@ -747,7 +747,7 @@ export class DamageStatistics extends React.Component {
 				targetCount={props.row.targetCount}
 				falloff={props.row.mainHitFalloff}
 			/>;
-			let dotPotencyNode = <PotencyDisplay
+			const dotPotencyNode = <PotencyDisplay
 				basePotency={props.row.baseDotPotency}
 				includeInStats={true}
 				helpTopic={"thunderTable-dot-" + props.key}
@@ -757,8 +757,8 @@ export class DamageStatistics extends React.Component {
 			/>;
 
 			// num ticks node
-			let unhitTicks = props.row.totalNumTicks - props.row.numHitTicks;
-			let numTicksNode = <span>
+			const unhitTicks = props.row.totalNumTicks - props.row.numHitTicks;
+			const numTicksNode = <span>
 				{props.row.numHitTicks}
 				{unhitTicks > 0 ? (
 					<span style={{ color: colors.timeline.untargetableDamageMark + "af" }}>
@@ -776,7 +776,7 @@ export class DamageStatistics extends React.Component {
 			</span>;
 
 			// total potency
-			let totalPotencyNode = <span>
+			const totalPotencyNode = <span>
 				{props.row.potencyWithoutPot.toFixed(2)}
 				{props.row.potPotency > 0 ? (
 					<span
@@ -835,7 +835,7 @@ export class DamageStatistics extends React.Component {
 
 		//////////////////////////////////////////////////////////
 
-		let headerCellStyle: CSSProperties = {
+		const headerCellStyle: CSSProperties = {
 			display: "inline-block",
 			padding: rowGap,
 		};
@@ -844,8 +844,8 @@ export class DamageStatistics extends React.Component {
 			: localize({ en: "Applied Skills (Checked Only)", zh: "技能统计（仅统计选中技能）" });
 		let dotHeaderSuffix = "";
 		if (this.data.mode === DamageStatisticsMode.Historical) {
-			let t = (this.data.time - this.data.countdown).toFixed(3) + "s";
-			let upTillStr =
+			const t = (this.data.time - this.data.countdown).toFixed(3) + "s";
+			const upTillStr =
 				lparen +
 				localize({
 					en: "up till " + t,
@@ -868,7 +868,7 @@ export class DamageStatistics extends React.Component {
 		let titleColor = colors.text;
 		if (this.data.mode === DamageStatisticsMode.Historical) titleColor = colors.historical;
 		else if (this.data.mode === DamageStatisticsMode.Selected) titleColor = colors.accent;
-		let mainTable = <div
+		const mainTable = <div
 			id="damageTable"
 			style={{
 				position: "relative",
@@ -944,7 +944,7 @@ export class DamageStatistics extends React.Component {
 			</div>
 		</div>;
 
-		let dotTables = allDotTableRows.map((dotTable) => {
+		const dotTables = allDotTableRows.map((dotTable) => {
 			const dotTableRows = dotTable.tableRows;
 			const dotTableSummary = this.data.dotTables.get(dotTable.dotName)?.summary;
 			if (dotTableSummary === undefined) {

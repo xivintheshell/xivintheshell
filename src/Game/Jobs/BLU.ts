@@ -1,7 +1,7 @@
 import { BLUStatusPropsGenerator } from "../../Components/Jobs/BLU";
 import { controller } from "../../Controller/Controller";
 import { Modifiers, PotencyModifier } from "../Potency";
-import { Aspect, BuffType, Debug, ProcMode, WarningType } from "../Common";
+import { Aspect } from "../Common";
 import {
 	Ability,
 	combineEffects,
@@ -18,14 +18,7 @@ import {
 	StatePredicate,
 } from "../Skills";
 import { GameState } from "../GameState";
-import {
-	getResourceInfo,
-	makeResource,
-	CoolDown,
-	Resource,
-	ResourceInfo,
-	Event,
-} from "../Resources";
+import { makeResource, CoolDown, Event } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { TraitKey, ResourceKey } from "../Data";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
@@ -63,61 +56,61 @@ export class BLUState extends GameState {
 		super(config);
 
 		// change if BLU gets a level cap increase to 100
-		this.cooldowns.set(new CoolDown("cd_SWIFTCAST", 60, 1, 1)),
-			this.registerRecurringEvents([
-				{
-					groupedEffects: [
-						{
-							effectName: "NIGHTBLOOM",
-							appliedBy: ["NIGHTBLOOM"],
-						},
-						{
-							effectName: "SONG_OF_TORMENT",
-							appliedBy: ["SONG_OF_TORMENT"],
-						},
-					],
-				},
-				{
-					groupedEffects: [
-						{
-							effectName: "FEATHER_RAIN",
-							appliedBy: ["FEATHER_RAIN"],
-						},
-					],
-				},
-				{
-					groupedEffects: [
-						{
-							effectName: "BREATH_OF_MAGIC",
-							appliedBy: ["BREATH_OF_MAGIC"],
-						},
-					],
-				},
-				{
-					groupedEffects: [
-						{
-							effectName: "MORTAL_FLAME",
-							appliedBy: ["MORTAL_FLAME"],
-						},
-					],
-				},
-				{
-					groupedEffects: [
-						{
-							effectName: "PHANTOM_FLURRY",
-							appliedBy: ["PHANTOM_FLURRY"],
-							isGroundTargeted: true,
-							exclude: true,
-						},
-						{
-							effectName: "APOKALYPSIS",
-							appliedBy: ["APOKALYPSIS"],
-							isGroundTargeted: true,
-							exclude: true,
-						},
-					],
-				},
-			]);
+		this.cooldowns.set(new CoolDown("cd_SWIFTCAST", 60, 1, 1));
+		this.registerRecurringEvents([
+			{
+				groupedEffects: [
+					{
+						effectName: "NIGHTBLOOM",
+						appliedBy: ["NIGHTBLOOM"],
+					},
+					{
+						effectName: "SONG_OF_TORMENT",
+						appliedBy: ["SONG_OF_TORMENT"],
+					},
+				],
+			},
+			{
+				groupedEffects: [
+					{
+						effectName: "FEATHER_RAIN",
+						appliedBy: ["FEATHER_RAIN"],
+					},
+				],
+			},
+			{
+				groupedEffects: [
+					{
+						effectName: "BREATH_OF_MAGIC",
+						appliedBy: ["BREATH_OF_MAGIC"],
+					},
+				],
+			},
+			{
+				groupedEffects: [
+					{
+						effectName: "MORTAL_FLAME",
+						appliedBy: ["MORTAL_FLAME"],
+					},
+				],
+			},
+			{
+				groupedEffects: [
+					{
+						effectName: "PHANTOM_FLURRY",
+						appliedBy: ["PHANTOM_FLURRY"],
+						isGroundTargeted: true,
+						exclude: true,
+					},
+					{
+						effectName: "APOKALYPSIS",
+						appliedBy: ["APOKALYPSIS"],
+						isGroundTargeted: true,
+						exclude: true,
+					},
+				],
+			},
+		]);
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<BLUState> {
@@ -134,7 +127,7 @@ export class BLUState extends GameState {
 	}
 
 	override jobSpecificRegisterRecurringEvents(): void {
-		let recurringkickTick = () => {
+		const recurringkickTick = () => {
 			this.handleDoTTick("PHANTOM_FLURRY");
 
 			if (this.getDisplayTime() >= 0) {
@@ -148,7 +141,7 @@ export class BLUState extends GameState {
 			);
 		};
 
-		let recurringApokalypsisTick = () => {
+		const recurringApokalypsisTick = () => {
 			this.handleDoTTick("APOKALYPSIS");
 
 			if (this.getDisplayTime() >= 0) {
@@ -201,9 +194,6 @@ const makeBLUSpell = (
 		replaceIf?: ConditionalSkillReplace<BLUState>[];
 		startOnHotbar?: boolean;
 		baseCastTime?: number;
-		baseRecastTime?: number;
-		CastTime?: number;
-		RecastTime?: number;
 		manaCost?: number;
 		basePotency?: number;
 		falloff?: number;
@@ -219,7 +209,6 @@ const makeBLUSpell = (
 	const basePotency = params.basePotency ?? Number;
 	const aspect = params.aspect ?? Aspect.Other;
 	const baseCastTime = params.baseCastTime ?? 0;
-	const baseRecastTime = params.baseRecastTime ?? 2.5;
 	const onConfirm: EffectFn<BLUState> | undefined =
 		baseCastTime > 0
 			? combineEffects(
@@ -288,7 +277,6 @@ const makeBLUAbility = (
 		falloff?: number;
 		applicationDelay?: number;
 		cooldown: number;
-		RecastTime?: number;
 		maxCharges?: number;
 		secondaryCooldown?: CooldownGroupProperties;
 		validateAttempt?: StatePredicate<BLUState>;

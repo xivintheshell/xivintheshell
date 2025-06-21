@@ -29,14 +29,7 @@ import {
 	CooldownGroupProperties,
 } from "../Skills";
 import { GameState } from "../GameState";
-import {
-	getResourceInfo,
-	makeResource,
-	Event,
-	CoolDown,
-	ResourceInfo,
-	OverTimeBuff,
-} from "../Resources";
+import { getResourceInfo, makeResource, Event, ResourceInfo, OverTimeBuff } from "../Resources";
 import { TraitKey } from "../Data";
 import { DRKResourceKey, DRKActionKey, DRKCooldownKey } from "../Data/Jobs/DRK";
 
@@ -334,7 +327,7 @@ makeDRKSpell("UNMEND", 15, {
 	onConfirm: (state) => {
 		if (state.hasTraitUnlocked("ENHANCED_UNMEND")) {
 			// Reduce the cooldown of shadowstride by 5s
-			let gapCloserElapsed = state.cooldowns
+			const gapCloserElapsed = state.cooldowns
 				.get("cd_SHADOWSTRIDE")
 				.timeTillNextStackAvailable();
 			state.cooldowns

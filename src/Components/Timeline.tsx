@@ -22,8 +22,6 @@ export let updateTimelineView = () => {};
 
 export let scrollTimelineTo = (positionX: number) => {};
 
-let getVisibleRangeX = () => {};
-
 // the actual timeline canvas
 class TimelineMain extends React.Component {
 	myRef: React.RefObject<HTMLDivElement>;
@@ -75,17 +73,10 @@ class TimelineMain extends React.Component {
 
 		scrollTimelineTo = (positionX: number) => {
 			if (this.myRef.current != null) {
-				let clientWidth = this.myRef.current.clientWidth;
+				const clientWidth = this.myRef.current.clientWidth;
 				this.myRef.current.scrollLeft = positionX - clientWidth * 0.6;
 			}
 			this.updateVisibleRange();
-		};
-
-		getVisibleRangeX = () => {
-			return {
-				left: this.state.visibleLeft,
-				width: this.state.visibleWidth,
-			};
 		};
 
 		this.updateVisibleRange();
@@ -94,11 +85,10 @@ class TimelineMain extends React.Component {
 	componentWillUnmount() {
 		updateTimelineView = () => {};
 		scrollTimelineTo = (positionX) => {};
-		getVisibleRangeX = () => {};
 	}
 
 	render() {
-		let canvas = <TimelineCanvas
+		const canvas = <TimelineCanvas
 			timelineHeight={this.state.timelineHeight}
 			visibleLeft={this.state.visibleLeft}
 			visibleWidth={this.state.visibleWidth}
@@ -136,9 +126,9 @@ class TimelineMain extends React.Component {
 				}}
 				onMouseMove={(e) => {
 					if (this.myRef.current) {
-						let rect = this.myRef.current.getBoundingClientRect();
-						let x = e.clientX - rect.left;
-						let y = e.clientY - rect.top;
+						const rect = this.myRef.current.getBoundingClientRect();
+						const x = e.clientX - rect.left;
+						const y = e.clientY - rect.top;
 						timelineCanvasOnMouseMove(x, y);
 					}
 				}}

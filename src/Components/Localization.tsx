@@ -17,7 +17,7 @@ export type LocalizedContent = {
 };
 
 export function localize(content: LocalizedContent) {
-	let currentLang = getCurrentLanguage();
+	const currentLang = getCurrentLanguage();
 	if (currentLang === "zh" && content.zh) {
 		return content.zh;
 	} else if (currentLang === "ja" && content.ja) {
@@ -32,7 +32,7 @@ export function localizeDate(date: string, lang: Language): string {
 	if (lang === "zh" || lang === "en") return date;
 
 	if (lang === "ja") {
-		let [month, day, year] = date.split("/");
+		const [month, day, year] = date.split("/");
 		return `20${year}年${month}月${day}日`;
 	}
 
@@ -139,7 +139,7 @@ const buffsJa = new Map<BuffType, string>([
 ]);
 
 export function localizeBuffType(text: BuffType): string {
-	let currentLang = getCurrentLanguage();
+	const currentLang = getCurrentLanguage();
 	if (currentLang === "zh") {
 		return buffsZh.get(text) ?? text;
 	} else if (currentLang === "ja") {
@@ -340,7 +340,7 @@ function LanguageOption(props: { lang: Language }) {
 	let text = "English";
 	if (props.lang === "zh") text = "中文";
 	if (props.lang === "ja") text = "日本語";
-	let colors = getCurrentThemeColors();
+	const colors = getCurrentThemeColors();
 	return <div
 		style={{
 			display: "inline-block",
@@ -364,7 +364,7 @@ export class SelectLanguage extends React.Component {
 	constructor(props: {}) {
 		super(props);
 		let lang: Language = "en";
-		let savedLang = getCachedValue("language");
+		const savedLang = getCachedValue("language");
 		if (savedLang === "zh" || savedLang === "ja") lang = savedLang;
 		this.state = {
 			lang: lang,

@@ -140,7 +140,7 @@ export type StatusViewProps = {
 };
 
 function ResourceStack(props: { color?: string; offset?: { x: number; y: number } }) {
-	let colors = getCurrentThemeColors();
+	const colors = getCurrentThemeColors();
 	return <div
 		style={{
 			top: 1 + (props.offset?.y ?? 0),
@@ -174,7 +174,7 @@ function ResourceBox(props: {
 	color?: string;
 	offset?: { x: number; y: number };
 }) {
-	let colors = getCurrentThemeColors();
+	const colors = getCurrentThemeColors();
 	const width = 30;
 	const height = 24;
 
@@ -420,7 +420,7 @@ function Buff(props: BuffProps) {
 
 export function BuffsDisplay(props: { data: BuffProps[]; style?: CSSProperties }) {
 	const buffs = props.data;
-	let buffElems: React.ReactNode[] = [];
+	const buffElems: React.ReactNode[] = [];
 	for (let i = 0; i < buffs.length; i++) {
 		buffElems.push(<Buff key={i} {...buffs[i]} />);
 	}
@@ -436,9 +436,9 @@ export function BuffsDisplay(props: { data: BuffProps[]; style?: CSSProperties }
 }
 
 export function ResourceLocksDisplay(props: { data: StatusResourceLocksViewProps }) {
-	let colors = getCurrentThemeColors();
-	let data = props.data;
-	let gcd = <ResourceBar
+	const colors = getCurrentThemeColors();
+	const data = props.data;
+	const gcd = <ResourceBar
 		name={"GCD"}
 		color={colors.resources.gcdBar}
 		progress={data.gcdReady ? 0 : 1 - data.timeTillGCDReady / data.gcd}
@@ -446,7 +446,7 @@ export function ResourceLocksDisplay(props: { data: StatusResourceLocksViewProps
 		width={100}
 		hidden={data.gcdReady}
 	/>;
-	let tax = <ResourceBar
+	const tax = <ResourceBar
 		name={"casting/taxed"}
 		color={data.canMove ? colors.resources.gcdBar : colors.resources.lockBar}
 		progress={data.castLocked ? 1 - data.castLockCountdown / data.castLockTotalDuration : 0}
@@ -454,7 +454,7 @@ export function ResourceLocksDisplay(props: { data: StatusResourceLocksViewProps
 		width={100}
 		hidden={!data.castLocked}
 	/>;
-	let anim = <ResourceBar
+	const anim = <ResourceBar
 		name={"using skill"}
 		color={colors.resources.lockBar}
 		progress={data.animLocked ? 1 - data.animLockCountdown / data.animLockTotalDuration : 0}
@@ -490,7 +490,7 @@ export function ResourcesDisplay(props: {
 					key={"resourceDisplay" + i}
 				/>;
 			case "counter": {
-				let items: { color?: string; imgUrl?: string }[] = [];
+				const items: { color?: string; imgUrl?: string }[] = [];
 				for (let i = 0; i < props.maxStacks; i++) {
 					items.push({
 						color: i < props.currentStacks ? props.color : undefined,
@@ -505,7 +505,7 @@ export function ResourcesDisplay(props: {
 				/>;
 			}
 			case "paint": {
-				let items: { color?: string; imgUrl?: string }[] = [];
+				const items: { color?: string; imgUrl?: string }[] = [];
 				for (let i = 0; i < props.maxStacks; i++) {
 					const fillColor =
 						props.hasComet && i === props.currentStacks - 1
@@ -518,7 +518,7 @@ export function ResourcesDisplay(props: {
 						imgUrl: undefined,
 					});
 				}
-				let label = `${props.currentStacks}/${props.maxStacks}`;
+				const label = `${props.currentStacks}/${props.maxStacks}`;
 				return <ResourceCounter
 					containerType="circle"
 					name={props.name}
@@ -529,17 +529,17 @@ export function ResourcesDisplay(props: {
 			}
 			case "dance": {
 				const currentStacks = props.currentStacks;
-				let stackColors = [
+				const stackColors = [
 					props.emboiteColor,
 					props.entrechatColor,
 					props.jeteColor,
 					props.pirouetteColor,
 				];
-				let items: { color?: string; imgUrl?: string }[] = [];
+				const items: { color?: string; imgUrl?: string }[] = [];
 				for (let i = 0; i < props.maxStacks; i++) {
 					items.push({ color: i < currentStacks ? stackColors[i] : undefined });
 				}
-				let label = `${currentStacks}/${props.maxStacks}`;
+				const label = `${currentStacks}/${props.maxStacks}`;
 				return <ResourceCounter
 					containerType="circle"
 					name={props.name}
@@ -688,8 +688,6 @@ export class StatusDisplay extends React.Component {
 		controller.updateStatusDisplay(controller.game);
 	}
 	render() {
-		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-		const colors = getThemeColors(this.context);
 		return <div
 			style={{
 				position: "relative",

@@ -405,7 +405,7 @@ const makeSpell_PLD = (
 ): Spell<PLDState> => {
 	// const baseCastTime = params.baseCastTime ?? 0;
 	// const baseRecastTime = params.baseRecastTime ?? 2.5;
-	let onConfirm: EffectFn<PLDState> = combineEffects((state, node) => {
+	const onConfirm: EffectFn<PLDState> = combineEffects((state, node) => {
 		// first try consuming divine might
 		// next try consuming requiescat
 		const isDivineMightFirst =
@@ -417,7 +417,7 @@ const makeSpell_PLD = (
 		}
 	}, params.onConfirm ?? NO_EFFECT);
 	const onApplication: EffectFn<PLDState> = params.onApplication ?? NO_EFFECT;
-	let onExecute: EffectFn<PLDState> = combineEffects((state, node) => {
+	const onExecute: EffectFn<PLDState> = combineEffects((state, node) => {
 		// pass
 	}, params.onExecute ?? NO_EFFECT);
 	return makeSpell("PLD", name, unlockLevel, {

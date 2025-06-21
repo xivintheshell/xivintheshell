@@ -59,12 +59,12 @@ function getTableStyle(bgHighContrastColor: string) {
 
 // helper that prob won't be used elsewhere
 function getTaxPreview(level: LevelSync, baseCastTime: number, spsStr: string, fpsStr: string) {
-	let sps = parseFloat(spsStr);
-	let fps = parseFloat(fpsStr);
+	const sps = parseFloat(spsStr);
+	const fps = parseFloat(fpsStr);
 	if (isNaN(sps) || isNaN(fps)) {
 		return "n/a";
 	}
-	let adjustedCastTime = XIVMath.preTaxCastTime(level, sps, baseCastTime);
+	const adjustedCastTime = XIVMath.preTaxCastTime(level, sps, baseCastTime);
 	return (
 		XIVMath.afterFpsTax(fps, adjustedCastTime) -
 		adjustedCastTime +
@@ -78,7 +78,7 @@ export function ResourceOverrideDisplay(props: {
 	override: ResourceOverrideData;
 	deleteFn?: (rsc: ResourceKey | CooldownKey) => void; // when null, this component is for display only
 }) {
-	let rscInfo = getResourceInfo(props.job, props.override.type);
+	const rscInfo = getResourceInfo(props.job, props.override.type);
 	let str: ContentNode;
 	const localizedRsc = localizeResourceType(props.override.type);
 	if (rscInfo.isCoolDown) {
@@ -150,18 +150,18 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 		};
 	}, []);
 
-	let castTimesTableDesc = localize({
+	const castTimesTableDesc = localize({
 		en: "Unlike GCDs that have 2 digits of precision, cast times have 3. See About this tool/Implementation notes.",
 		zh: "不同于GCD那样精确到小数点后2位，咏唱时间会精确到小数点后3位。详见 关于/实现细节",
 	});
-	let preTaxFn = (t: number) => {
+	const preTaxFn = (t: number) => {
 		return controller.gameConfig.adjustedCastTime(t).toFixed(3);
 	};
-	let afterTaxFn = (t: number) => {
-		let preTax = controller.gameConfig.adjustedCastTime(t);
+	const afterTaxFn = (t: number) => {
+		const preTax = controller.gameConfig.adjustedCastTime(t);
 		return controller.gameConfig.getAfterTaxCastTime(preTax).toFixed(3);
 	};
-	let castTimesChart = <div>
+	const castTimesChart = <div>
 		<style>{getTableStyle(getCurrentThemeColors().bgHighContrast)}</style>
 		<table>
 			<tbody>
@@ -198,27 +198,27 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 			</tbody>
 		</table>
 	</div>;
-	let lucidTickOffset = controller.game.lucidTickOffset.toFixed(3);
-	let lucidOffsetDesc = localize({
+	const lucidTickOffset = controller.game.lucidTickOffset.toFixed(3);
+	const lucidOffsetDesc = localize({
 		en: "the random time offset of lucid dreaming ticks relative to mp ticks",
 		zh: "醒梦buff期间，每次跳蓝后多久跳醒梦（由随机种子决定）",
 	});
 	// TODO specialize for BLM
 	// TODO (revisit): double check this forced cast
 	const dotTickOffset = controller.game.dotTickOffset.toFixed(3);
-	let offsetDesc = localize({
+	const offsetDesc = localize({
 		en: "the random time offset of DoT ticks relative to mp ticks",
 		zh: "雷DoT期间，每次跳蓝后多久跳雷（由随机种子决定）", // Akairyu's Note - Needs retranslating after removing the reference to thunder
 	});
-	let procMode = controller.gameConfig.procMode;
-	let numOverrides = controller.gameConfig.initialResourceOverrides.length;
+	const procMode = controller.gameConfig.procMode;
+	const numOverrides = controller.gameConfig.initialResourceOverrides.length;
 	const legacyCasterTax = controller.gameConfig.legacy_casterTax;
-	let excerpt = localize({
+	const excerpt = localize({
 		en: `WARNING: this record was created in an earlier version of XIV in the Shell and uses the deprecated caster tax of ${legacyCasterTax}s instead of calculating from your FPS input below. Hover for details: `,
 		zh: `警告：此时间轴文件创建于一个更早版本的排轴器，因此计算读条时间时使用的是当时手动输入的读条税${legacyCasterTax}秒（现已过时），而非由下方的“帧率”和“读条时间修正”计算得来。更多信息：`,
 	});
-	let warningColor = getCurrentThemeColors().warning;
-	let tryGetImplementationWarning = (impl: ImplementationKey, warningColor: string) => {
+	const warningColor = getCurrentThemeColors().warning;
+	const tryGetImplementationWarning = (impl: ImplementationKey, warningColor: string) => {
 		const details = IMPLEMENTATION_LEVELS[impl];
 		if (!details.warningContent) {
 			return;
@@ -232,7 +232,7 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 		</p>;
 	};
 
-	let legacyCasterTaxBlurbContent = localize({
+	const legacyCasterTaxBlurbContent = localize({
 		en: <div>
 			<div className={"paragraph"}>
 				The caster tax config is now replaced by 0.1s + FPS tax and is more precise. You can
@@ -255,7 +255,7 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 			</div>
 		</div>,
 	});
-	let legacyCasterTaxBlurb = <p style={{ color: warningColor }}>
+	const legacyCasterTaxBlurb = <p style={{ color: warningColor }}>
 		{excerpt}
 		<Help topic={"legacy-caster-tax"} content={legacyCasterTaxBlurbContent} />
 	</p>;
@@ -338,7 +338,7 @@ export class TimeControl extends React.Component {
 		super(props);
 
 		this.saveSettings = (settings: TimeControlState) => {
-			let str = JSON.stringify({
+			const str = JSON.stringify({
 				tickMode: settings.tickMode,
 				timeScale: settings.timeScale,
 			});
@@ -346,9 +346,9 @@ export class TimeControl extends React.Component {
 		};
 
 		this.loadSettings = () => {
-			let str = getCachedValue("playbackSettings");
+			const str = getCachedValue("playbackSettings");
 			if (str) {
-				let settings: TimeControlState = JSON.parse(str);
+				const settings: TimeControlState = JSON.parse(str);
 				return settings;
 			}
 			return undefined;
@@ -357,7 +357,7 @@ export class TimeControl extends React.Component {
 		this.setTickMode = (e: ValueChangeEvent) => {
 			if (!e || !e.target || isNaN(parseInt(e.target.value))) return;
 			this.setState({ tickMode: parseInt(e.target.value) });
-			let numVal = parseInt(e.target.value);
+			const numVal = parseInt(e.target.value);
 			if (!isNaN(numVal)) {
 				controller.setTimeControlSettings({
 					tickMode: numVal,
@@ -372,7 +372,7 @@ export class TimeControl extends React.Component {
 
 		this.setTimeScale = (val: string) => {
 			this.setState({ timeScale: val });
-			let numVal = parseFloat(val);
+			const numVal = parseFloat(val);
 			if (!isNaN(numVal)) {
 				controller.setTimeControlSettings({
 					tickMode: this.state.tickMode,
@@ -385,7 +385,7 @@ export class TimeControl extends React.Component {
 			}
 		};
 
-		let settings = this.loadSettings();
+		const settings = this.loadSettings();
 		if (settings) {
 			this.state = {
 				tickMode: settings.tickMode,
@@ -405,12 +405,12 @@ export class TimeControl extends React.Component {
 		});
 	}
 	render() {
-		let radioStyle: React.CSSProperties = {
+		const radioStyle: React.CSSProperties = {
 			position: "relative",
 			top: 3,
 			marginRight: "0.75em",
 		};
-		let tickModeOptionStyle = {
+		const tickModeOptionStyle = {
 			display: "inline-block",
 			marginRight: "0.5em",
 		};
@@ -623,7 +623,7 @@ export class Config extends React.Component {
 		};
 
 		this.updateTaxPreview = (spsStr: string, fpsStr: string, levelStr: string) => {
-			let b1TaxPreview = getTaxPreview(parseFloat(levelStr), 2.5, spsStr, fpsStr);
+			const b1TaxPreview = getTaxPreview(parseFloat(levelStr), 2.5, spsStr, fpsStr);
 			const { gcdStr, taxedGcdStr } = this.getTaxPreview(spsStr, fpsStr, levelStr);
 
 			this.setState({
@@ -651,7 +651,7 @@ export class Config extends React.Component {
 					}
 					this.setState({ randomSeed: seed });
 				}
-				let config = { ...this.state, ...{ randomSeed: seed } };
+				const config = { ...this.state, ...{ randomSeed: seed } };
 				this.setConfigAndRestart(config);
 				this.setState({ dirty: false, imported: false, importedFields: [] });
 				controller.scrollToTime();
@@ -881,7 +881,7 @@ export class Config extends React.Component {
 			this.setState({ overrideEnabled: evt.target.checked });
 		};
 		this.deleteResourceOverride = (rscType: ResourceKey | CooldownKey) => {
-			let overrides = this.state.initialResourceOverrides;
+			const overrides = this.state.initialResourceOverrides;
 			for (let i = 0; i < overrides.length; i++) {
 				if (overrides[i].type === rscType) {
 					overrides.splice(i, 1);
@@ -905,9 +905,9 @@ export class Config extends React.Component {
 		fpsStr: string,
 		levelStr: string,
 	): { gcdStr: string; taxedGcdStr: string } {
-		let level = parseFloat(levelStr);
-		let speed = parseFloat(speedStr);
-		let fps = parseFloat(fpsStr);
+		const level = parseFloat(levelStr);
+		const speed = parseFloat(speedStr);
+		const fps = parseFloat(fpsStr);
 
 		let gcdStr: string;
 		let taxedGcdStr: string;
@@ -915,7 +915,7 @@ export class Config extends React.Component {
 			gcdStr = "n/a";
 			taxedGcdStr = "n/a";
 		} else {
-			let gcd = XIVMath.preTaxGcd(level as LevelSync, speed, 2.5);
+			const gcd = XIVMath.preTaxGcd(level as LevelSync, speed, 2.5);
 			gcdStr = gcd.toFixed(2);
 			taxedGcdStr = XIVMath.afterFpsTax(fps, gcd).toFixed(3);
 		}
@@ -929,11 +929,11 @@ export class Config extends React.Component {
 	// call this whenever the list of options has potentially changed
 	#getFirstAddable(overridesList: ResourceOverrideData[]) {
 		let firstAddableRsc = "aba aba";
-		let S = new Set<ResourceKey | CooldownKey>();
+		const S = new Set<ResourceKey | CooldownKey>();
 		overridesList.forEach((ov) => {
 			S.add(ov.type);
 		});
-		for (let k of getAllResources(this.state.job).keys()) {
+		for (const k of getAllResources(this.state.job).keys()) {
 			if (!S.has(k)) {
 				firstAddableRsc = k;
 				break;
@@ -945,8 +945,8 @@ export class Config extends React.Component {
 	componentDidMount() {
 		updateConfigDisplay = (config) => {
 			this.setState(config);
-			let spsGcd = XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5);
-			let sksGcd = XIVMath.preTaxGcd(config.level, config.skillSpeed, 2.5);
+			const spsGcd = XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5);
+			const sksGcd = XIVMath.preTaxGcd(config.level, config.skillSpeed, 2.5);
 			this.setState({
 				dirty: false,
 				imported: false,
@@ -969,15 +969,15 @@ export class Config extends React.Component {
 
 	#resourceOverridesAreValid() {
 		// gather resources for quick access
-		let M = new Map<ResourceKey | CooldownKey, ResourceOverrideData>();
+		const M = new Map<ResourceKey | CooldownKey, ResourceOverrideData>();
 		this.state.initialResourceOverrides.forEach((ov) => {
 			M.set(ov.type, ov);
 		});
 
 		// shouldn't have AF and UI at the same time
 		if (M.has("ASTRAL_FIRE") && M.has("UMBRAL_ICE")) {
-			let af = M.get("ASTRAL_FIRE")!.stacks;
-			let ui = M.get("UMBRAL_ICE")!.stacks;
+			const af = M.get("ASTRAL_FIRE")!.stacks;
+			const ui = M.get("UMBRAL_ICE")!.stacks;
 			if (af > 0 && ui > 0) {
 				window.alert("shouldn't have both AF and UI stacks");
 				return false;
@@ -1008,7 +1008,7 @@ export class Config extends React.Component {
 		}
 		// if polyglot timer is set (>0), must have enochian
 		if (M.has("POLYGLOT")) {
-			let polyTimer = M.get("POLYGLOT")!.timeTillFullOrDrop;
+			const polyTimer = M.get("POLYGLOT")!.timeTillFullOrDrop;
 			if (polyTimer > 0 && !hasEno) {
 				window.alert(
 					"since a timer for polyglot is set (time till next stack > 0), there must also be AF/UI",
@@ -1021,12 +1021,12 @@ export class Config extends React.Component {
 	}
 
 	#addResourceOverride() {
-		let rscType = this.state.selectedOverrideResource;
-		let info = getAllResources(this.state.job).get(rscType)!;
+		const rscType = this.state.selectedOverrideResource;
+		const info = getAllResources(this.state.job).get(rscType)!;
 
 		let inputOverrideTimer = parseFloat(this.state.overrideTimer);
-		let inputOverrideStacks = parseInt(this.state.overrideStacks);
-		let inputOverrideEnabled = this.state.overrideEnabled;
+		const inputOverrideStacks = parseInt(this.state.overrideStacks);
+		const inputOverrideEnabled = this.state.overrideEnabled;
 
 		// an exception for polyglot: leave empty := no timer set
 		if (rscType === "POLYGLOT" && this.state.overrideTimer === "") {
@@ -1041,7 +1041,7 @@ export class Config extends React.Component {
 		let props: ResourceOverrideData;
 
 		if (info.isCoolDown) {
-			let maxTimer = info.maxStacks * info.cdPerStack;
+			const maxTimer = info.maxStacks * info.cdPerStack;
 			if (inputOverrideTimer < 0 || inputOverrideTimer > maxTimer) {
 				window.alert("invalid input timeout (must be in range [0, " + maxTimer + "])");
 				return;
@@ -1084,20 +1084,20 @@ export class Config extends React.Component {
 		}
 		// end validation
 
-		let overrides = this.state.initialResourceOverrides;
+		const overrides = this.state.initialResourceOverrides;
 		overrides.push(props);
 		this.setState({ initialResourceOverrides: overrides, dirty: true });
 	}
 
 	#addResourceOverrideNode() {
 		const resourceInfos = getAllResources(this.state.job);
-		let S = new Set();
+		const S = new Set();
 		this.state.initialResourceOverrides.forEach((override) => {
 			S.add(override.type);
 		});
 
 		const optionEntries: { rsc: ResourceKey | CooldownKey; isCoolDown: number }[] = [];
-		for (let k of resourceInfos.keys()) {
+		for (const k of resourceInfos.keys()) {
 			if (!S.has(k)) {
 				optionEntries.push({
 					rsc: k,
@@ -1105,7 +1105,7 @@ export class Config extends React.Component {
 				});
 			}
 		}
-		let resourceOptions = optionEntries
+		const resourceOptions = optionEntries
 			.sort((a, b) => {
 				return a.isCoolDown - b.isCoolDown;
 			})
@@ -1115,8 +1115,8 @@ export class Config extends React.Component {
 				</option>;
 			});
 
-		let rscType = this.state.selectedOverrideResource;
-		let info = resourceInfos.get(rscType);
+		const rscType = this.state.selectedOverrideResource;
+		const info = resourceInfos.get(rscType);
 		let inputSection = undefined;
 		if (info !== undefined) {
 			let showTimer, showAmount, showEnabled;
@@ -1168,7 +1168,7 @@ export class Config extends React.Component {
 				timerDesc = localize({ en: "Time till drop: ", zh: " 距状态消失时间：" }) as string;
 			}
 
-			let enabledDesc = localize({ en: "enabled", zh: "生效中" });
+			const enabledDesc = localize({ en: "enabled", zh: "生效中" });
 
 			inputSection = <div style={{ margin: "6px 0" }}>
 				{/*timer*/}
@@ -1248,9 +1248,9 @@ export class Config extends React.Component {
 	}
 
 	#resourceOverridesSection() {
-		let resourceOverridesDisplayNodes = [];
+		const resourceOverridesDisplayNodes = [];
 		for (let i = 0; i < this.state.initialResourceOverrides.length; i++) {
-			let override = this.state.initialResourceOverrides[i];
+			const override = this.state.initialResourceOverrides[i];
 			resourceOverridesDisplayNodes.push(
 				<ResourceOverrideDisplay
 					job={this.state.job}
@@ -1374,11 +1374,11 @@ export class Config extends React.Component {
 
 	render() {
 		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
-		let colors = getThemeColors(this.context);
-		let fpsAndCorrectionColor =
+		const colors = getThemeColors(this.context);
+		const fpsAndCorrectionColor =
 			this.state.shellVersion >= ShellVersion.FpsTax ? colors.text : colors.warning;
-		let level = parseFloat(this.state.level);
-		let b1TaxDesc = <div>
+		const level = parseFloat(this.state.level);
+		const b1TaxDesc = <div>
 			<style>{getTableStyle(colors.bgHighContrast)}</style>
 			<div style={{ marginBottom: 10 }}>
 				{localize({
@@ -1494,14 +1494,14 @@ export class Config extends React.Component {
 				}
 			</div>
 		</form>;
-		let fieldColor = (field: string) => {
+		const fieldColor = (field: string) => {
 			if (this.state.importedFields.indexOf(field) > -1) {
 				return colors.success;
 			} else {
 				return colors.text;
 			}
 		};
-		let editJobSection = <div style={{ marginBottom: 10 }}>
+		const editJobSection = <div style={{ marginBottom: 10 }}>
 			<span>{localize({ en: "job: ", zh: "职业：" })}</span>
 			<select
 				style={{ outline: "none", color: fieldColor("job") }}
@@ -1525,7 +1525,7 @@ export class Config extends React.Component {
 				)}
 			</select>
 		</div>;
-		let editStatsSection = <div style={{ marginBottom: 16 }}>
+		const editStatsSection = <div style={{ marginBottom: 16 }}>
 			<div>
 				<span>{localize({ en: "level: ", zh: "等级：" })}</span>
 				<select

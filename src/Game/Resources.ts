@@ -182,7 +182,7 @@ export class CoolDown extends ResourceOrCooldown {
 	}
 	restore(deltaTime: number) {
 		while (deltaTime > 0 && super.availableAmount() < this.maxStacks()) {
-			let forThisStack = Math.min(this.#timeTillNextStackAvailable, deltaTime);
+			const forThisStack = Math.min(this.#timeTillNextStackAvailable, deltaTime);
 			this.#timeTillNextStackAvailable -= forThisStack;
 			if (this.#timeTillNextStackAvailable < Debug.epsilon) {
 				super.gain(1);
@@ -218,7 +218,7 @@ export class CoolDownState {
 	}
 
 	get(rscType: CooldownKey): CoolDown {
-		let rsc = this.#map.get(rscType);
+		const rsc = this.#map.get(rscType);
 		if (rsc) return rsc;
 		else {
 			console.assert(false, `no cooldown for resource ${rscType}`);
@@ -234,11 +234,11 @@ export class CoolDownState {
 		for (const cd of this.#map.values()) cd.restore(deltaTime);
 	}
 	timeTillNextStackAvailable(cdName: CooldownKey) {
-		let cd = this.get(cdName);
+		const cd = this.get(cdName);
 		return cd.timeTillNextStackAvailable();
 	}
 	timeTillAnyStackAvailable(cdName: CooldownKey) {
-		let cd = this.get(cdName);
+		const cd = this.get(cdName);
 		if (cd.stacksAvailable() > 0) return 0;
 		return cd.timeTillNextStackAvailable();
 	}
@@ -253,7 +253,7 @@ export class ResourceState {
 	}
 
 	get(rscType: ResourceKey): Resource {
-		let rsc = this.#map.get(rscType);
+		const rsc = this.#map.get(rscType);
 		if (rsc) return rsc;
 		else {
 			console.error(`could not find resource ${rscType}`);
@@ -266,7 +266,7 @@ export class ResourceState {
 	}
 
 	timeTillReady(rscType: ResourceKey): number {
-		let rsc = this.get(rscType);
+		const rsc = this.get(rscType);
 		if (rsc.pendingChange) {
 			return rsc.pendingChange.timeTillEvent;
 		}
@@ -281,8 +281,8 @@ export class ResourceState {
 		fnOnRsc: (rsc: Resource) => void;
 		tags?: EventTag[];
 	}) {
-		let rsc = this.get(props.rscType);
-		let evt = new Event(props.name, props.delay, () => {
+		const rsc = this.get(props.rscType);
+		const evt = new Event(props.name, props.delay, () => {
 			rsc.pendingChange = undefined; // unregister self from resource
 			props.fnOnRsc(rsc); // before the scheduled event takes effect
 		});
@@ -443,7 +443,7 @@ export class ResourceOverride {
 
 	// todo
 	static fromGameState(game: GameState) {
-		let overrides: ResourceOverride[] = [];
+		const overrides: ResourceOverride[] = [];
 		// CDs
 		game.cooldowns.forEach((cd: CoolDown, cdName: CooldownKey) => {
 			cd.availableAmount();
@@ -468,7 +468,7 @@ export class ResourceOverride {
 	// other buffs: time till drop
 	// MP, AF, UI, UH, Paradox, Polyglot: amount (stacks)
 	applyTo(game: GameState) {
-		let info = getAllResources(game.job).get(this.type);
+		const info = getAllResources(game.job).get(this.type);
 		if (!info) {
 			console.assert(false, `can't apply override ${this.type} to job ${game.job}`);
 			return;
@@ -476,19 +476,19 @@ export class ResourceOverride {
 
 		// CD
 		if (info.isCoolDown) {
-			let cd = game.cooldowns.get(this.type as CooldownKey);
-			let elapsed = cd.maxStacks() * cd.currentStackCd() - this.timeTillFullOrDrop;
-			let stacks = Math.floor((elapsed + Debug.epsilon) / cd.currentStackCd());
-			let timeTillNextStack = this.timeTillFullOrDrop % cd.currentStackCd();
+			const cd = game.cooldowns.get(this.type as CooldownKey);
+			const elapsed = cd.maxStacks() * cd.currentStackCd() - this.timeTillFullOrDrop;
+			const stacks = Math.floor((elapsed + Debug.epsilon) / cd.currentStackCd());
+			const timeTillNextStack = this.timeTillFullOrDrop % cd.currentStackCd();
 			cd.overrideCurrentValue(stacks);
 			cd.overrideTimeTillNextStack(timeTillNextStack);
 		}
 
 		// resource
 		else {
-			let rsc = game.resources.get(this.type as ResourceKey);
+			const rsc = game.resources.get(this.type as ResourceKey);
 
-			let overrideDropRscTimer = (newTimer: number) => {
+			const overrideDropRscTimer = (newTimer: number) => {
 				rsc.removeTimer();
 				game.resources.addResourceEvent({
 					rscType: rsc.type,
@@ -517,11 +517,11 @@ export class ResourceOverride {
 			// Polyglot (refresh timer + stacks)
 			else if (rsc.type === "POLYGLOT") {
 				// stacks
-				let stacks = this.stacks;
+				const stacks = this.stacks;
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(stacks);
 				// timer
-				let timer = this.timeTillFullOrDrop;
+				const timer = this.timeTillFullOrDrop;
 				if (timer > 0) {
 					// timer is set
 					rsc.overrideTimer(game, timer);
@@ -531,12 +531,12 @@ export class ResourceOverride {
 			// everything else (timer and/or stacks)
 			else {
 				// stacks
-				let stacks = this.stacks;
+				const stacks = this.stacks;
 				rsc.consume(rsc.availableAmount());
 				rsc.gain(stacks);
 
 				// timer
-				let timer = this.timeTillFullOrDrop;
+				const timer = this.timeTillFullOrDrop;
 				if (stacks > 0 && info.maxTimeout >= 0) {
 					// may expire
 					overrideDropRscTimer(timer);

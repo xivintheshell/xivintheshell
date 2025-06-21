@@ -58,10 +58,10 @@ class SaveAsPreset extends React.Component {
 }
 
 function PresetLine(props: { line: Line }) {
-	let line = props.line;
-	let icons = [];
+	const line = props.line;
+	const icons = [];
 	let ctr = 0;
-	let iconStyle = {
+	const iconStyle = {
 		margin: "0 1px",
 		width: "18px",
 		verticalAlign: "middle",
@@ -74,11 +74,11 @@ function PresetLine(props: { line: Line }) {
 			ctr++;
 		}
 	}
-	let clickableContent = <span>
+	const clickableContent = <span>
 		{line.name} ({icons})
 	</span>;
 
-	let addLineStyle = controller.displayingUpToDateGameState
+	const addLineStyle = controller.displayingUpToDateGameState
 		? {}
 		: {
 				//filter: "grayscale(100%)",
@@ -123,12 +123,12 @@ export class SkillSequencePresets extends React.Component {
 		this.forceUpdate();
 	}
 	render() {
-		let hasSelection =
+		const hasSelection =
 			controller && controller.record && controller.record.getFirstSelection() !== undefined;
 
 		// @ts-expect-error: this.context is untyped, and we need this to access the ColorTheme context
 		const bg = getThemeField(this.context, "bgMediumContrast");
-		let content = <div>
+		const content = <div>
 			<button
 				style={{ marginBottom: 10 }}
 				onClick={() => {

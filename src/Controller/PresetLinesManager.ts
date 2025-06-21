@@ -37,9 +37,9 @@ export class PresetLinesManager {
 	}
 
 	#load() {
-		let data = getCachedValue("presetLines");
+		const data = getCachedValue("presetLines");
 		if (data !== null) {
-			let content = JSON.parse(data);
+			const content = JSON.parse(data);
 			this.deserializeAndAppend(content);
 			return true;
 		}
@@ -54,7 +54,7 @@ export class PresetLinesManager {
 	}
 
 	deserializeAndAppend(content: Fixme) {
-		for (let preset of content.presets) {
+		for (const preset of content.presets) {
 			const line = Line.deserialize(preset.actions);
 			line.name = preset.name;
 			const skillNames: ActionKey[] = line.actions.flatMap((action) =>

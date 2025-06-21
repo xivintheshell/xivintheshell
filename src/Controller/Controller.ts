@@ -205,7 +205,7 @@ class Controller {
 	}
 
 	#applyResourceOverrides(gameConfig: GameConfig) {
-		let overrides = gameConfig.initialResourceOverrides;
+		const overrides = gameConfig.initialResourceOverrides;
 		for (let i = 0; i < overrides.length; i++) {
 			overrides[i].applyTo(this.game);
 		}
@@ -215,9 +215,9 @@ class Controller {
 		const oldSandbox = this.#bInSandbox;
 		this.displayingUpToDateGameState = false;
 		this.#bInSandbox = true;
-		let tmpGame = this.game;
-		let tmpRecord = this.record;
-		let tmpLastDamageApplicationTime = this.#lastDamageApplicationTime;
+		const tmpGame = this.game;
+		const tmpRecord = this.record;
+		const tmpLastDamageApplicationTime = this.#lastDamageApplicationTime;
 		//============^ stashed states ^============
 
 		fn();
@@ -238,7 +238,7 @@ class Controller {
 	): RecordValidStatus {
 		console.assert(inRecord.config !== undefined);
 
-		let result: RecordValidStatus = {
+		const result: RecordValidStatus = {
 			isValid: true,
 			invalidActions: [],
 			skillUseTimes: [],
@@ -253,7 +253,7 @@ class Controller {
 
 		// do NOT wrap this in #useSandbox, since we want changes to reflect on the canvas
 		this.#requestRestart(false);
-		let cfg = inRecord.config ?? this.gameConfig;
+		const cfg = inRecord.config ?? this.gameConfig;
 		this.game = getGameState(cfg);
 		this.record = new Record();
 		this.record.config = cfg;
@@ -263,7 +263,7 @@ class Controller {
 		this.#applyResourceOverrides(this.record.config);
 
 		// replay skills sequence
-		let status = this.#replay({
+		const status = this.#replay({
 			line: inRecord,
 			replayMode: ReplayMode.Edited,
 			firstEditedNodeIndex,
@@ -286,11 +286,11 @@ class Controller {
 
 	// max replay time; cutoff action
 	displayHistoricalState(displayTime: number, cutoffIndex: number | undefined) {
-		let rawTime = displayTime + this.gameConfig.countdown;
+		const rawTime = displayTime + this.gameConfig.countdown;
 
 		const hasSelected = this.record.getFirstSelection() !== undefined;
 		this.#sandboxEnvironment(() => {
-			let tmpRecord = this.record;
+			const tmpRecord = this.record;
 			this.game = getGameState(this.gameConfig);
 			this.record = new Record();
 			this.record.config = this.gameConfig;
@@ -378,7 +378,7 @@ class Controller {
 
 	addSelectionToPreset(name = "(untitled)") {
 		console.assert(this.record.getFirstSelection());
-		let line = this.record.getSelected();
+		const line = this.record.getSelected();
 		line.name = name;
 		this.#presetLinesManager.addLine(line, this.getActiveJob());
 	}
@@ -437,7 +437,7 @@ class Controller {
 		}
 
 		updateActiveTimelineEditor(() => {
-			let gameConfig = new GameConfig(content.config);
+			const gameConfig = new GameConfig(content.config);
 
 			this.gameConfig = gameConfig;
 
@@ -450,8 +450,8 @@ class Controller {
 			this.#applyResourceOverrides(this.gameConfig);
 
 			// now add the actions
-			let line = Line.deserialize(content.actions);
-			let replayResult = this.#replay({ line: line, replayMode: ReplayMode.Exact });
+			const line = Line.deserialize(content.actions);
+			const replayResult = this.#replay({ line: line, replayMode: ReplayMode.Exact });
 			if (!replayResult.success) {
 				let msg = "Error loading record- \n";
 				if (replayResult.invalidActions.length > 0) {
@@ -483,7 +483,7 @@ class Controller {
 		this.#requestRestart();
 		this.#applyResourceOverrides(this.gameConfig);
 		// replay actions
-		let replayResult = this.#replay({
+		const replayResult = this.#replay({
 			line: tmp,
 			replayMode: ReplayMode.Exact,
 			removeTrailingIdleTime: true,
@@ -531,7 +531,7 @@ class Controller {
 
 	#updateSelectedDamageStats() {
 		if (!this.#skipViewUpdates) {
-			let stats = calculateSelectedStats({
+			const stats = calculateSelectedStats({
 				tinctureBuffPercentage: this.#tinctureBuffPercentage,
 				lastDamageApplicationTime: this.#lastDamageApplicationTime,
 			});
@@ -603,7 +603,7 @@ class Controller {
 		let coveredTime = 0;
 		effectCoverages.forEach((section) => {
 			if (section.tStartDisplay <= untilDisplayTime) {
-				let startTime = Math.max(0, section.tStartDisplay);
+				const startTime = Math.max(0, section.tStartDisplay);
 				let endTime =
 					section.tEndDisplay !== undefined && section.tEndDisplay <= untilDisplayTime
 						? section.tEndDisplay
@@ -612,7 +612,7 @@ class Controller {
 				coveredTime += getTargetableDurationBetween(startTime, endTime);
 			}
 		});
-		let totalTime = getTargetableDurationBetween(0, untilDisplayTime);
+		const totalTime = getTargetableDurationBetween(0, untilDisplayTime);
 		return coveredTime / totalTime;
 	}
 
@@ -622,11 +622,11 @@ class Controller {
 	}
 
 	getTimelineRenderingProps(): TimelineRenderingProps {
-		let showSelection: boolean =
+		const showSelection: boolean =
 			this.record.getFirstSelection() != null && this.record.getLastSelection() != null;
 		let countdown = this.gameConfig.countdown;
 		// and other slots
-		let allSlotsTimeInfo = this.timeline.getAllSlotsTimeInfo();
+		const allSlotsTimeInfo = this.timeline.getAllSlotsTimeInfo();
 		if (allSlotsTimeInfo !== null) {
 			countdown = Math.max(countdown, allSlotsTimeInfo.countdown);
 		}
@@ -707,7 +707,7 @@ class Controller {
 				sourceDesc,
 				sourceSkill: p.sourceSkill,
 			};
-			let existingElement = this.timeline.tryGetElement(
+			const existingElement = this.timeline.tryGetElement(
 				this.game.time,
 				elemType,
 			) as PotencyMarkElem;
@@ -828,7 +828,7 @@ class Controller {
 				effectCoverages = [];
 				coverageTimes.set(effect, effectCoverages);
 			}
-			let len = effectCoverages.length;
+			const len = effectCoverages.length;
 			console.assert(len === 0 || effectCoverages[len - 1].tEndDisplay !== undefined);
 			effectCoverages.push({
 				tStartDisplay: displayTime,
@@ -855,7 +855,7 @@ class Controller {
 			if (!effectCoverages) {
 				return;
 			}
-			let len = effectCoverages.length;
+			const len = effectCoverages.length;
 			console.assert(len > 0 && effectCoverages[len - 1].tEndDisplay === undefined);
 			effectCoverages[len - 1].tEndDisplay = displayTime;
 		}
@@ -863,10 +863,10 @@ class Controller {
 
 	updateStatusDisplay(game: GameState) {
 		// locks
-		let cast = game.resources.get("NOT_CASTER_TAXED");
-		let anim = game.resources.get("NOT_ANIMATION_LOCKED");
-		let gcd = game.cooldowns.get("cd_GCD");
-		let resourceLocksData = {
+		const cast = game.resources.get("NOT_CASTER_TAXED");
+		const anim = game.resources.get("NOT_ANIMATION_LOCKED");
+		const gcd = game.cooldowns.get("cd_GCD");
+		const resourceLocksData = {
 			gcdReady: gcd.stacksAvailable() > 0,
 			gcd: gcd.currentStackCd(),
 			timeTillGCDReady: game.cooldowns.timeTillAnyStackAvailable("cd_GCD"),
@@ -924,7 +924,7 @@ class Controller {
 		const fixedTargetTimestamp = props.deltaTime + this.game.getDisplayTime();
 		if (props.deltaTime > 0) {
 			this.#lastTickDuration = props.deltaTime;
-			let timeTicked = this.game.tick(
+			const timeTicked = this.game.tick(
 				props.deltaTime,
 				props.prematureStopCondition
 					? props.prematureStopCondition
@@ -1009,7 +1009,7 @@ class Controller {
 	}
 
 	#playPause(props: { shouldLoop: boolean }) {
-		let newShouldLoop = props.shouldLoop;
+		const newShouldLoop = props.shouldLoop;
 		if (this.shouldLoop === newShouldLoop) return;
 
 		this.shouldLoop = newShouldLoop;
@@ -1084,7 +1084,7 @@ class Controller {
 			this.game.useInvalidSkill(skillName, node);
 			node.tmp_invalid_reasons = status.status.unavailableReasons;
 		}
-		let lockDuration = this.game.timeTillAnySkillAvailable();
+		const lockDuration = this.game.timeTillAnySkillAvailable();
 
 		node.tmp_startLockTime = this.game.time;
 		node.tmp_endLockTime = this.game.time + lockDuration;
@@ -1092,11 +1092,11 @@ class Controller {
 		if (!this.#bInSandbox) {
 			// this block is run when NOT viewing historical state (aka run when receiving input)
 			this.lastSkillTime = this.game.time;
-			let newStatus = this.game.getSkillAvailabilityStatus(skillName, true); // refresh to get re-captured recast time
-			let skill = this.game.skillsList.get(skillName);
+			const newStatus = this.game.getSkillAvailabilityStatus(skillName, true); // refresh to get re-captured recast time
+			const skill = this.game.skillsList.get(skillName);
 			let isGCD = skill.cdName === "cd_GCD";
-			let isSpellCast = status.castTime > 0 && !status.instantCast;
-			let snapshotTime = isSpellCast
+			const isSpellCast = status.castTime > 0 && !status.instantCast;
+			const snapshotTime = isSpellCast
 				? status.castTime - GameConfig.getSlidecastWindow(status.castTime)
 				: 0;
 			let recastDuration = newStatus.cdRecastTime;
@@ -1159,7 +1159,7 @@ class Controller {
 		this.#skipViewUpdates = true;
 		// default input, if not provided
 		if (props.removeTrailingIdleTime === undefined) props.removeTrailingIdleTime = false;
-		let maxReplayTime = props.maxReplayTime ?? -1;
+		const maxReplayTime = props.maxReplayTime ?? -1;
 
 		// when checking record validity as well as final application (ReplayMode.Edited), replay exactly until the first edited node
 		// and also copy over selection status
@@ -1352,7 +1352,7 @@ class Controller {
 						this.gameConfig.level,
 					);
 				}
-				let status = this.#useSkill(
+				const status = this.#useSkill(
 					skillName,
 					itr.info.targetCount,
 					TickMode.Manual,
@@ -1391,7 +1391,7 @@ class Controller {
 				itr.info.type === ActionType.SetResourceEnabled &&
 				(currentReplayMode === ReplayMode.Exact || currentReplayMode === ReplayMode.Edited)
 			) {
-				let success = this.requestToggleBuff(itr.info.buffName as ResourceKey);
+				const success = this.requestToggleBuff(itr.info.buffName as ResourceKey);
 				const exact = currentReplayMode === ReplayMode.Exact;
 				if (success) {
 					this.#requestTick({
@@ -1418,7 +1418,7 @@ class Controller {
 
 			// for edited replay mode, copy selection:
 			if (props.replayMode === ReplayMode.Edited) {
-				let lastAdded = this.record.tailIndex;
+				const lastAdded = this.record.tailIndex;
 				if (itr === props.selectionStart && lastAdded >= 0) {
 					this.record.selectSingle(lastAdded);
 				} else if (itr === props.selectionEnd && lastAdded >= 0) {
@@ -1469,12 +1469,12 @@ class Controller {
 	}
 
 	autoSave() {
-		let serializedRecord = this.record.serialized();
+		const serializedRecord = this.record.serialized();
 		this.timeline.saveCurrentSlot(serializedRecord, this.gameConfig.countdown, this.game.time);
 	}
 
 	tryAutoLoad() {
-		let str = getCachedValue("gameRecord");
+		const str = getCachedValue("gameRecord");
 		if (str !== null) {
 			console.log("migrating existing record to slot 0");
 			setCachedValue("gameRecord0", str);
@@ -1484,7 +1484,7 @@ class Controller {
 			this.timeline.loadSlot(i);
 		}
 
-		let hasAtLeastOneSlot = this.timeline.slots.length > 0;
+		const hasAtLeastOneSlot = this.timeline.slots.length > 0;
 		if (!hasAtLeastOneSlot) {
 			this.timeline.addSlot();
 		}
@@ -1528,7 +1528,7 @@ class Controller {
 	}
 
 	getDamageLogCsv(): any[][] {
-		let csvRows = this.#damageLogCsv.map((row) => {
+		const csvRows = this.#damageLogCsv.map((row) => {
 			let pot = false;
 			row.buffs.forEach((b) => {
 				if (b === "TINCTURE") pot = true;
@@ -1541,7 +1541,7 @@ class Controller {
 	}
 
 	getActionsLogCsv(): any[][] {
-		let csvRows = this.#actionsLogCsv.map((row) => {
+		const csvRows = this.#actionsLogCsv.map((row) => {
 			return [row.time, row.action, row.isGCD, row.castTime];
 		});
 		return [["time", "action", "isGCD", "castTime"]].concat(csvRows as any[][]);
@@ -1668,7 +1668,7 @@ class Controller {
 
 	// Used for trying to add a preset skill sequence to the current timeline
 	tryAddLine(line: Line, replayMode = ReplayMode.SkillSequence) {
-		let replayResult = this.#replay({ line: line, replayMode: replayMode });
+		const replayResult = this.#replay({ line: line, replayMode: replayMode });
 		if (!replayResult.success) {
 			this.rewindUntilBefore(replayResult.firstAddedIndex, false);
 			window.alert(
@@ -1733,7 +1733,7 @@ class Controller {
 	// basically restart the game and play till here:
 	// if index is undefined, replay the whole thing.
 	rewindUntilBefore(index: number | undefined, removeTrailingIdleTime: boolean) {
-		let replayRecord = this.record;
+		const replayRecord = this.record;
 
 		this.record = new Record();
 		this.record.config = this.gameConfig;
@@ -1796,7 +1796,7 @@ class Controller {
 	}
 
 	requestToggleBuff(buffName: ResourceKey) {
-		let success = this.game.requestToggleBuff(buffName); // currently always succeeds
+		const success = this.game.requestToggleBuff(buffName); // currently always succeeds
 		if (!success) return false;
 
 		const toggleNode = setResourceNode(buffName);
@@ -1816,7 +1816,7 @@ class Controller {
 	}
 
 	scrollToTime(t?: number) {
-		let targetT = t === undefined ? this.game.time : t;
+		const targetT = t === undefined ? this.game.time : t;
 		// the most adhoc hack ever...
 		setTimeout(() => {
 			scrollTimelineTo(StaticFn.positionFromTimeAndScale(targetT, this.timeline.scale));
@@ -1825,7 +1825,7 @@ class Controller {
 
 	#runLoop(loopCondition: () => boolean) {
 		let prevTime = 0;
-		let ctrl = this;
+		const ctrl = this;
 
 		const loopFn = function (time: number) {
 			if (prevTime === 0) {
@@ -1835,9 +1835,9 @@ class Controller {
 				// ...
 			}
 
-			let dt = ((time - prevTime) / 1000) * ctrl.timeScale;
+			const dt = ((time - prevTime) / 1000) * ctrl.timeScale;
 			// advance by dt
-			let timeTillAnySkillAvailable = ctrl.game.timeTillAnySkillAvailable();
+			const timeTillAnySkillAvailable = ctrl.game.timeTillAnySkillAvailable();
 			if (timeTillAnySkillAvailable >= dt) {
 				ctrl.#requestTick({
 					deltaTime: dt,

@@ -60,8 +60,8 @@ export const isFirstVisit = localStorage.length === 0;
 
 export function getCachedValue(key: string): string | null {
 	// 2x reads from localStorage but should be fine...?
-	let current = localStorage.getItem(thisExpansion + "." + key);
-	let noPrefix = localStorage.getItem(key);
+	const current = localStorage.getItem(thisExpansion + "." + key);
+	const noPrefix = localStorage.getItem(key);
 
 	if (noPrefix !== null) {
 		// found something old

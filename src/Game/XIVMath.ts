@@ -76,7 +76,6 @@ export class XIVMath {
 			return modifier;
 		}
 		const critDamageMult = XIVMath.#criticalHitStrength(level, crit);
-		const baseCritRate = XIVMath.#criticalHitRate(level, XIVMath.getSubstatBase(level));
 		const dhMult = 1.25;
 
 		const autoCDH = critRate >= 1 && dhRate >= 1;
@@ -161,8 +160,8 @@ export class XIVMath {
 	static preTaxGcd(level: LevelSync, speed: number, baseGCD: number, speedModifier?: number) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
-		let ceil = Math.ceil(((subStat - speed) * 130) / div);
-		let pts = Math.floor(baseGCD * (1000 + ceil));
+		const ceil = Math.ceil(((subStat - speed) * 130) / div);
+		const pts = Math.floor(baseGCD * (1000 + ceil));
 		return Math.floor(((100 - (speedModifier ?? 0)) * pts) / 1000) / 100;
 	}
 

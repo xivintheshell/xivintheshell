@@ -135,10 +135,10 @@ makeResourceAbility(
 		cooldown: 60,
 		assetPath: "Role/Lucid Dreaming.png",
 		onApplication: (state, node) => {
-			let lucid = state.resources.get("LUCID_DREAMING") as OverTimeBuff;
+			const lucid = state.resources.get("LUCID_DREAMING") as OverTimeBuff;
 			lucid.node = node;
 			lucid.tickCount = 0;
-			let nextLucidTickEvt = state.findNextQueuedEventByTag(EventTag.LucidTick);
+			const nextLucidTickEvt = state.findNextQueuedEventByTag(EventTag.LucidTick);
 			if (nextLucidTickEvt) {
 				nextLucidTickEvt.addTag(EventTag.ManaGain);
 			}
