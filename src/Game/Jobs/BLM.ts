@@ -120,7 +120,7 @@ export class BLMState extends GameState {
 
 	override jobSpecificRegisterRecurringEvents() {
 		// also polyglot
-		let recurringPolyglotGain = (rsc: Resource) => {
+		const recurringPolyglotGain = (rsc: Resource) => {
 			if (this.hasEnochian()) {
 				if (rsc.availableAmount() === rsc.maxValue) {
 					controller.reportWarning(WarningType.PolyglotOvercap);
@@ -164,7 +164,7 @@ export class BLMState extends GameState {
 	}
 
 	gainThunderhead() {
-		let thunderhead = this.resources.get("THUNDERHEAD");
+		const thunderhead = this.resources.get("THUNDERHEAD");
 		thunderhead.gain(1);
 	}
 
@@ -172,11 +172,11 @@ export class BLMState extends GameState {
 	switchToAForUI(rscType: "ASTRAL_FIRE" | "UMBRAL_ICE", numStacksToGain: number) {
 		console.assert(numStacksToGain > 0);
 
-		let af = this.resources.get("ASTRAL_FIRE");
-		let ui = this.resources.get("UMBRAL_ICE");
-		let uh = this.resources.get("UMBRAL_HEART");
-		let paradox = this.resources.get("PARADOX");
-		let as = this.resources.get("ASTRAL_SOUL");
+		const af = this.resources.get("ASTRAL_FIRE");
+		const ui = this.resources.get("UMBRAL_ICE");
+		const uh = this.resources.get("UMBRAL_HEART");
+		const paradox = this.resources.get("PARADOX");
+		const as = this.resources.get("ASTRAL_SOUL");
 
 		if (rscType === "ASTRAL_FIRE") {
 			if (af.availableAmount() === 0) {
@@ -280,7 +280,7 @@ export class BLMState extends GameState {
 
 	// falls off after 15s unless refreshed by AF / UI
 	startOrRefreshEnochian() {
-		let enochian = this.resources.get("ENOCHIAN");
+		const enochian = this.resources.get("ENOCHIAN");
 
 		if (enochian.available(1)) {
 			// goodbye timer
@@ -293,11 +293,11 @@ export class BLMState extends GameState {
 
 	loseEnochian() {
 		this.resources.get("ENOCHIAN").consume(1);
-		let af = this.resources.get("ASTRAL_FIRE");
-		let ui = this.resources.get("UMBRAL_ICE");
-		let uh = this.resources.get("UMBRAL_HEART");
-		let paradox = this.resources.get("PARADOX");
-		let as = this.resources.get("ASTRAL_SOUL");
+		const af = this.resources.get("ASTRAL_FIRE");
+		const ui = this.resources.get("UMBRAL_ICE");
+		const uh = this.resources.get("UMBRAL_HEART");
+		const paradox = this.resources.get("PARADOX");
+		const as = this.resources.get("ASTRAL_SOUL");
 
 		af.consume(af.availableAmount());
 		ui.consume(ui.availableAmount());
@@ -347,7 +347,7 @@ const makeSpell_BLM = (
 	},
 ): Spell<BLMState> => {
 	const aspect = params.aspect ?? Aspect.Other;
-	let onConfirm: EffectFn<BLMState> = combineEffects(
+	const onConfirm: EffectFn<BLMState> = combineEffects(
 		(state, node) => {
 			// Consume swift/triple before anything else happens.
 			// The code here is dependent on short-circuiting logic to consume the correct resources.
@@ -565,7 +565,7 @@ const gainFirestarterProc = (state: PlayerState) => {
 };
 
 const potentiallyGainFirestarter = (game: PlayerState) => {
-	let rand = game.rng();
+	const rand = game.rng();
 	if (
 		game.config.procMode === ProcMode.Always ||
 		(game.config.procMode === ProcMode.RNG && rand < 0.4)
@@ -652,7 +652,7 @@ const thunderConfirm =
 			modifiers: mods,
 		});
 
-		let thunderhead = game.resources.get("THUNDERHEAD");
+		const thunderhead = game.resources.get("THUNDERHEAD");
 		thunderhead.consume(1);
 		thunderhead.removeTimer();
 	};
@@ -744,9 +744,9 @@ makeSpell_BLM("FLARE", 50, {
 	falloff: 0.3,
 	validateAttempt: (state) => state.getFireStacks() > 0 && state.getMP() >= 800,
 	onConfirm: (state, node) => {
-		let uh = state.resources.get("UMBRAL_HEART");
-		let mana = state.resources.get("MANA");
-		let manaCost = uh.available(1) ? mana.availableAmount() * 0.66 : mana.availableAmount();
+		const uh = state.resources.get("UMBRAL_HEART");
+		const mana = state.resources.get("MANA");
+		const manaCost = uh.available(1) ? mana.availableAmount() * 0.66 : mana.availableAmount();
 		// mana
 		state.resources.get("MANA").consume(manaCost);
 		uh.consume(uh.availableAmount());
@@ -946,7 +946,7 @@ makeAbility_BLM("AMPLIFIER", 86, "cd_AMPLIFIER", {
 	cooldown: 120,
 	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
 	onApplication: (state, node) => {
-		let polyglot = state.resources.get("POLYGLOT");
+		const polyglot = state.resources.get("POLYGLOT");
 		if (polyglot.available(polyglot.maxValue)) {
 			controller.reportWarning(WarningType.PolyglotOvercap);
 		}
@@ -1043,7 +1043,7 @@ makeAbility_BLM("RETRACE", 96, "cd_RETRACE", {
 	cooldown: 40,
 	validateAttempt: retraceCondition,
 	onConfirm: (state, node) => {
-		let ll = state.resources.get("LEY_LINES");
+		const ll = state.resources.get("LEY_LINES");
 		ll.enabled = true;
 		// set LL timer to the closest 0.5s
 		console.assert(

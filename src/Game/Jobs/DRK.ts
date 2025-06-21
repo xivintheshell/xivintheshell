@@ -333,7 +333,7 @@ makeDRKSpell("UNMEND", 15, {
 	onConfirm: (state) => {
 		if (state.hasTraitUnlocked("ENHANCED_UNMEND")) {
 			// Reduce the cooldown of shadowstride by 5s
-			let gapCloserElapsed = state.cooldowns
+			const gapCloserElapsed = state.cooldowns
 				.get("cd_SHADOWSTRIDE")
 				.timeTillNextStackAvailable();
 			state.cooldowns

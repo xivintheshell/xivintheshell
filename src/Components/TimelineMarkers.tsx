@@ -39,10 +39,10 @@ type TimelineMarkersState = {
 	/////////
 	trackBins: Map<number, MarkerElem[]>;
 };
-let asyncFetchJson = function (url: string, callback: (content: any) => void) {
+const asyncFetchJson = function (url: string, callback: (content: any) => void) {
 	asyncFetch(url, (data) => {
 		try {
-			let content = JSON.parse(data);
+			const content = JSON.parse(data);
 			callback(content);
 		} catch {
 			console.log("parse error");
@@ -55,7 +55,7 @@ function LoadCombinedTracksBtn(props: {
 	url: string;
 	offsetStr: string;
 }) {
-	let style: CSSProperties = {
+	const style: CSSProperties = {
 		marginRight: 4,
 	};
 	const parsedOffset = parseTime(props.offsetStr);
@@ -187,8 +187,8 @@ export class TimelineMarkers extends React.Component {
 	}
 
 	render() {
-		let inlineDiv = { display: "inline-block", marginRight: "1em", marginBottom: 6 };
-		let colorOption = function (markerColor: MarkerColor, displayName: ContentNode) {
+		const inlineDiv = { display: "inline-block", marginRight: "1em", marginBottom: 6 };
+		const colorOption = function (markerColor: MarkerColor, displayName: ContentNode) {
 			return <option key={markerColor} value={markerColor}>
 				{displayName}
 			</option>;
@@ -226,13 +226,13 @@ export class TimelineMarkers extends React.Component {
 			onChange={this.setOffset}
 		/>;
 
-		let trackIndices: number[] = [];
+		const trackIndices: number[] = [];
 		this.state.trackBins.forEach((bin, trackIndex) => {
 			trackIndices.push(trackIndex);
 		});
 		trackIndices.sort();
 
-		let saveTrackLinks: React.JSX.Element[] = [];
+		const saveTrackLinks: React.JSX.Element[] = [];
 		saveTrackLinks.push(
 			<SaveToFile
 				key={"combined"}
@@ -245,7 +245,7 @@ export class TimelineMarkers extends React.Component {
 			/>,
 		);
 		trackIndices.forEach((trackIndex) => {
-			let filePostfix: string = trackIndex >= 0 ? trackIndex.toString() : "untargetable";
+			const filePostfix: string = trackIndex >= 0 ? trackIndex.toString() : "untargetable";
 			let displayName: ContentNode =
 				localize({ en: "track ", zh: "轨" }) + trackIndex.toString();
 			if (trackIndex === UntargetableMarkerTrack) {
@@ -256,7 +256,7 @@ export class TimelineMarkers extends React.Component {
 					key={trackIndex}
 					fileFormat={FileFormat.Json}
 					getContentFn={() => {
-						let files = controller.timeline.serializedSeparateMarkerTracks();
+						const files = controller.timeline.serializedSeparateMarkerTracks();
 						for (let i = 0; i < files.length; i++) {
 							if (files[i].track === trackIndex) return files[i];
 						}
@@ -269,9 +269,9 @@ export class TimelineMarkers extends React.Component {
 			);
 		});
 
-		let btnStyle = { marginRight: 4 };
+		const btnStyle = { marginRight: 4 };
 
-		let infoOnlySection = <div>
+		const infoOnlySection = <div>
 			<Input
 				defaultValue={this.state.nextMarkerDescription}
 				description={localize({ en: "Description: ", zh: "描述：" })}
@@ -327,7 +327,7 @@ export class TimelineMarkers extends React.Component {
 			</div>
 		</div>;
 
-		let buffCollection: React.JSX.Element[] = [];
+		const buffCollection: React.JSX.Element[] = [];
 		buffInfos.forEach((info) => {
 			// prevent starry from being selectable if we're the pictomancer
 			const activeJob = controller.getActiveJob();
@@ -347,7 +347,7 @@ export class TimelineMarkers extends React.Component {
 			}
 		});
 
-		let buffOnlySection = <div>
+		const buffOnlySection = <div>
 			<span>{localize({ en: "Buff: ", zh: "团辅：" })}</span>
 			<select
 				value={this.state.nextMarkerBuff}
@@ -373,7 +373,7 @@ export class TimelineMarkers extends React.Component {
 			</div>
 		</div>;
 
-		let actionsSection = <>
+		const actionsSection = <>
 			<button
 				style={btnStyle}
 				onClick={() => {
@@ -386,7 +386,7 @@ export class TimelineMarkers extends React.Component {
 			<button
 				style={btnStyle}
 				onClick={() => {
-					let count = controller.timeline.sortAndRemoveDuplicateMarkers();
+					const count = controller.timeline.sortAndRemoveDuplicateMarkers();
 					if (count > 0) {
 						alert("removed " + count + " duplicate markers");
 					} else {
@@ -406,8 +406,8 @@ export class TimelineMarkers extends React.Component {
 		</>;
 
 		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-		let textColor = getThemeField(this.context, "text") as string;
-		let individualTrackInput = <input
+		const textColor = getThemeField(this.context, "text") as string;
+		const individualTrackInput = <input
 			style={{
 				color: textColor,
 				backgroundColor: "transparent",
@@ -422,12 +422,12 @@ export class TimelineMarkers extends React.Component {
 				this.setState({ loadTrackDest: e.target.value });
 			}}
 		/>;
-		let individualTrackLabel = localize({
+		const individualTrackLabel = localize({
 			en: <span>Load into individual track {individualTrackInput}: </span>,
 			zh: <span>载入第{individualTrackInput}轨：</span>,
 		});
 		const parsedOffset = parseTime(this.state.offsetStr);
-		let loadTracksSection = <>
+		const loadTracksSection = <>
 			<LoadJsonFromFileOrUrl
 				allowLoadFromUrl={false}
 				defaultLoadUrl={""}
@@ -446,7 +446,7 @@ export class TimelineMarkers extends React.Component {
 					allowLoadFromUrl={false}
 					label={individualTrackLabel}
 					onLoadFn={(content: any) => {
-						let track = parseInt(this.state.loadTrackDest);
+						const track = parseInt(this.state.loadTrackDest);
 						if (isNaN(track)) {
 							window.alert("invalid track destination");
 							return;
@@ -463,7 +463,7 @@ export class TimelineMarkers extends React.Component {
 			</div>
 		</>;
 
-		let addColumn = <form>
+		const addColumn = <form>
 			<span>{localize({ en: "Type: ", zh: "类型：" })}</span>
 			<select
 				value={this.state.nextMarkerType}
@@ -508,7 +508,7 @@ export class TimelineMarkers extends React.Component {
 				type={"submit"}
 				style={{ display: "block", marginTop: "0.5em" }}
 				onClick={(e) => {
-					let marker: MarkerElem = {
+					const marker: MarkerElem = {
 						type: ElemType.Marker,
 						markerType: this.state.nextMarkerType,
 						time: parseTime(this.state.nextMarkerTime),
@@ -557,7 +557,7 @@ export class TimelineMarkers extends React.Component {
 		</form>;
 
 		// https://github.com/OverlayPlugin/cactbot/tree/main/ui/raidboss/data/07-dt
-		let presetsSection = <div style={{}}>
+		const presetsSection = <div style={{}}>
 			<p>
 				<span>
 					{localize({

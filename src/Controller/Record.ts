@@ -264,7 +264,7 @@ export class ActionNode {
 		includeSplash: boolean;
 		excludeDoT?: boolean;
 	}): { applied: number; snapshottedButPending: number } {
-		let res = {
+		const res = {
 			applied: 0,
 			snapshottedButPending: 0,
 		};
@@ -290,7 +290,7 @@ export class ActionNode {
 		includeSplash: boolean;
 		excludeHoT?: boolean;
 	}): { applied: number; snapshottedButPending: number } {
-		let res = {
+		const res = {
 			applied: 0,
 			snapshottedButPending: 0,
 		};
@@ -500,7 +500,7 @@ export class Line {
 	// format: []
 	exportCsv(): any[][] {
 		// todo
-		let result: any[][] = [];
+		const result: any[][] = [];
 		return result;
 	}
 
@@ -728,7 +728,7 @@ export class Record extends Line {
 	}
 	serialized() {
 		console.assert(this.config);
-		let base = super.serialized();
+		const base = super.serialized();
 		return {
 			name: base.name,
 			fileType: FileType.Record,
@@ -753,7 +753,7 @@ export class Record extends Line {
 
 	// result is potentially invalid
 	getCloneWithSharedConfig() {
-		let copy = new Record();
+		const copy = new Record();
 		copy.config = this.config;
 		copy.actions = this.actions.map((node) => node.getClone());
 		copy.selectionStartIndex = this.selectionStartIndex;

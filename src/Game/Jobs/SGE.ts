@@ -164,7 +164,7 @@ export class SGEState extends GameState {
 
 	override jobSpecificRegisterRecurringEvents() {
 		// Addersgall recurring timer
-		let recurringAddersgallGain = (rsc: Resource) => {
+		const recurringAddersgallGain = (rsc: Resource) => {
 			const addersgallInfo = getResourceInfo("SGE", "ADDERSGALL") as ResourceInfo;
 			// Not logging a warning since Rhizomata use can desync the timer from when it actually overcapped
 			if (!this.hasResourceAvailable("ADDERSGALL", addersgallInfo.maxValue)) {

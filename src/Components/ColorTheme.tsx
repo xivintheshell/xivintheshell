@@ -237,7 +237,7 @@ export type ThemeColors = {
 // because it calls React.useContext.
 // If you need the theme colors elsewhere, propagate it from a higher-level component and
 // manually call `getThemeColors` or `getThemeField`.
-export let getCurrentThemeColors: () => ThemeColors = () => {
+export const getCurrentThemeColors: () => ThemeColors = () => {
 	return getThemeColors(useContext(ColorThemeContext));
 };
 
@@ -636,8 +636,8 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 };
 
 export function getModifierTagColor(modifierType: PotencyModifierType) {
-	let colors = getCurrentThemeColors();
-	let modifierColors = new Map<PotencyModifierType, string>([
+	const colors = getCurrentThemeColors();
+	const modifierColors = new Map<PotencyModifierType, string>([
 		[PotencyModifierType.AF3, colors.blm.astralFire],
 		[PotencyModifierType.AF2, colors.blm.astralFire],
 		[PotencyModifierType.AF1, colors.blm.astralFire],

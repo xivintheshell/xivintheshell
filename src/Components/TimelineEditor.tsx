@@ -448,7 +448,7 @@ export function TimelineEditor() {
 			}
 		}
 	};
-	let buttonStyle: CSSProperties = {
+	const buttonStyle: CSSProperties = {
 		display: "block",
 		width: "100%",
 		marginBottom: 10,

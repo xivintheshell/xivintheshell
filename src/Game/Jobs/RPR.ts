@@ -137,7 +137,7 @@ export class RPRState extends GameState {
 		const currCombo = this.resources.get("RPR_COMBO").availableAmount();
 		const currAoeCombo = this.resources.get("RPR_AOE_COMBO").availableAmount();
 
-		let [newCombo, newAoeCombo] = new Map<RPRActionKey, [number, number]>([
+		const [newCombo, newAoeCombo] = new Map<RPRActionKey, [number, number]>([
 			["SLICE", [1, 0]],
 			["WAXING_SLICE", [currCombo === 1 ? 2 : 0, 0]],
 			["INFERNAL_SLICE", [0, 0]],
@@ -318,7 +318,7 @@ export class RPRState extends GameState {
 		}
 		const skillInfo = getSkill("RPR", skill);
 		if (skillInfo.potencyFn(this) > 0) {
-			let immortalSac = this.resources.get("IMMORTAL_SACRIFICE");
+			const immortalSac = this.resources.get("IMMORTAL_SACRIFICE");
 			if (immortalSac.availableAmount() === 0) {
 				this.setTimedResource("IMMORTAL_SACRIFICE", 1);
 			} else {

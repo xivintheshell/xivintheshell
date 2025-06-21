@@ -66,7 +66,7 @@ export type CsvData = {
 };
 
 function getBlobUrl(content: object) {
-	let blob = new Blob([JSON.stringify(content)], { type: "text/plain;charset=utf-8" });
+	const blob = new Blob([JSON.stringify(content)], { type: "text/plain;charset=utf-8" });
 	return window.URL.createObjectURL(blob);
 }
 
@@ -83,7 +83,7 @@ function getCsvUrl(rawContent: CsvData) {
 		}
 		csvString += "\n";
 	});
-	let blob = new Blob([csvString], { type: "text/csv;charset=utf-8" });
+	const blob = new Blob([csvString], { type: "text/csv;charset=utf-8" });
 	return window.URL.createObjectURL(blob);
 }
 
@@ -108,7 +108,7 @@ export function SaveToFile(props: SaveToFileProps) {
 	}>({ jsonContent: {}, csvContent: { body: [] }, pngContent: undefined });
 
 	const updateContent = () => {
-		let newContent = props.getContentFn();
+		const newContent = props.getContentFn();
 		if (props.fileFormat === FileFormat.Json) {
 			// @ts-expect-error no parsing is enforced on getContentFn
 			setState({ jsonContent: newContent });
@@ -145,9 +145,9 @@ export function loadFromFile(
 		console.log(content);
 	},
 ) {
-	let fileReader = new FileReader();
+	const fileReader = new FileReader();
 	fileReader.onload = function (fileLoadedEvent) {
-		let str: string = fileLoadedEvent.target?.result?.toString() ?? "";
+		const str: string = fileLoadedEvent.target?.result?.toString() ?? "";
 		let json;
 		try {
 			json = JSON.parse(str);
@@ -173,9 +173,9 @@ export const StaticFn = {
 		return x / (scale * 100);
 	},
 	displayTime: function (time: number, fractionDigits: number) {
-		let absTime = Math.abs(time);
-		let minute = Math.floor(absTime / 60);
-		let second = absTime - 60 * minute;
+		const absTime = Math.abs(time);
+		const minute = Math.floor(absTime / 60);
+		const second = absTime - 60 * minute;
 		return (
 			(time < 0 ? "-" : "") +
 			minute.toString() +
@@ -186,16 +186,16 @@ export const StaticFn = {
 	},
 };
 
-let genericErrorHandler = function (err: object) {
+const genericErrorHandler = function (err: object) {
 	console.log("[asyncFetch] some error occurred");
 };
-let fetchCache: Map<string, string> = new Map();
+const fetchCache: Map<string, string> = new Map();
 export function asyncFetch(
 	url: string,
 	callback: (content: string) => void,
 	errorCallback: (err: object) => void = genericErrorHandler,
 ) {
-	let cachedContent = fetchCache.get(url);
+	const cachedContent = fetchCache.get(url);
 	if (cachedContent) {
 		callback(cachedContent);
 		return;
@@ -211,18 +211,18 @@ export function asyncFetch(
 }
 
 export function parseTime(timeStr: string): number {
-	let val = timeStr.trim();
+	const val = timeStr.trim();
 	let sign = 1;
 	if (timeStr[0] === "-") {
 		sign = -1;
 		timeStr = timeStr.substring(1);
 	}
-	let colonIndex = val.indexOf(":");
+	const colonIndex = val.indexOf(":");
 	if (colonIndex < 0) {
 		return parseFloat(val);
 	}
-	let minute = parseInt(val.substring(0, colonIndex));
-	let second = parseFloat(val.substring(colonIndex + 1));
+	const minute = parseInt(val.substring(0, colonIndex));
+	const second = parseFloat(val.substring(colonIndex + 1));
 	return sign * (minute * 60 + second);
 }
 
@@ -245,7 +245,7 @@ export function ProgressBar(props: {
 	labelColor?: string;
 	offsetY: number;
 }) {
-	let colors = getCurrentThemeColors();
+	const colors = getCurrentThemeColors();
 	const containerStyle: CSSProperties = {
 		position: "relative",
 		display: "inline-block",
@@ -290,7 +290,7 @@ export function Tabs(props: {
 	useEffect(() => {
 		let selected: number | undefined = props.defaultSelectedIndex;
 		// if a cached value exists, it will always override the default
-		let cachedSelected = getCachedValue("tabs: " + props.uniqueName);
+		const cachedSelected = getCachedValue("tabs: " + props.uniqueName);
 		if (cachedSelected !== null) {
 			if (cachedSelected === "none") {
 				selected = undefined;
@@ -313,7 +313,7 @@ export function Tabs(props: {
 		if (tabIndex === selectedIndex || selectedIndex === undefined) {
 			borderBottom = invisibleBorder;
 		}
-		let borderTop = tabIndex === selectedIndex ? visibleBorder : invisibleBorder;
+		const borderTop = tabIndex === selectedIndex ? visibleBorder : invisibleBorder;
 		let borderLeft = invisibleBorder;
 		let borderRight = invisibleBorder;
 		if (tabIndex === selectedIndex) {
@@ -341,7 +341,7 @@ export function Tabs(props: {
 	};
 
 	const titles: ContentNode[] = [];
-	let content: ContentNode[] = [];
+	const content: ContentNode[] = [];
 	for (let i = 0; i < props.content.length; i++) {
 		const tab = props.content[i];
 		const isSelectedTab = i === selectedIndex;
@@ -438,8 +438,8 @@ export function Columns(props: {
 		minSize?: number;
 	}[];
 }) {
-	let colors = getCurrentThemeColors();
-	let children: React.ReactNode[] = [];
+	const colors = getCurrentThemeColors();
+	const children: React.ReactNode[] = [];
 	for (let i = 0; i < props.children.length; i++) {
 		const column = props.children[i];
 		const nextColumn = i < props.children.length - 1 ? props.children[i + 1] : undefined;
@@ -501,14 +501,14 @@ export function Input(props: InputProps) {
 	};
 	const themeColors = getCurrentThemeColors();
 	const width = props.width ?? 5;
-	let inputStyle: CSSProperties = {
+	const inputStyle: CSSProperties = {
 		color: props.style?.color ?? props.componentColor ?? themeColors.text,
 		backgroundColor: "transparent",
 		outline: "none",
 		border: "none",
 		borderBottom: "1px solid " + (props.componentColor ?? themeColors.text),
 	};
-	let overrideStyle = props.style ?? {};
+	const overrideStyle = props.style ?? {};
 	return <div style={{ ...overrideStyle, ...{ color: props.componentColor } }}>
 		<span>{props.description /* + "(" + this.state.value + ")"*/}</span>
 		<input
@@ -555,7 +555,7 @@ export class Slider extends React.Component {
 	}
 	componentDidMount() {
 		let initialValue = this.state.value;
-		let str = getCachedValue("slider: " + this.props.uniqueName);
+		const str = getCachedValue("slider: " + this.props.uniqueName);
 		if (str !== null) {
 			initialValue = str;
 			this.setState({ value: initialValue });
@@ -590,7 +590,7 @@ export function Checkbox(props: {
 	const [checked, setChecked] = useState<boolean>(false);
 	useEffect(() => {
 		let defaultChecked = props.defaultChecked ?? true;
-		let str = getCachedValue("checked: " + props.uniqueName);
+		const str = getCachedValue("checked: " + props.uniqueName);
 		if (str !== null) {
 			defaultChecked = parseInt(str) > 0;
 		}
@@ -606,7 +606,7 @@ export function Checkbox(props: {
 		<input
 			type="checkbox"
 			onChange={(e) => {
-				let newVal = e.currentTarget.checked;
+				const newVal = e.currentTarget.checked;
 				setChecked(newVal);
 				setCachedValue("checked: " + props.uniqueName, newVal ? "1" : "0");
 				props.onChange(newVal);
@@ -659,14 +659,14 @@ export class Expandable extends React.Component {
 		this.props = inProps;
 		if (inProps.autoIndent === false) this.autoIndent = false;
 		this.onClick = () => {
-			let newShow = !this.state.show;
+			const newShow = !this.state.show;
 			this.setState({ show: newShow });
 			if (this.props.onExpand && newShow) this.props.onExpand();
 			if (this.props.onCollapse && !newShow) this.props.onCollapse();
 			setCachedValue("exp: " + inProps.title, (newShow ? 1 : 0).toString());
 		};
 
-		let expanded = getCachedValue("exp: " + inProps.title);
+		const expanded = getCachedValue("exp: " + inProps.title);
 		let show: boolean = inProps.defaultShow ?? false;
 		if (expanded !== null) {
 			show = parseInt(expanded) === 1;
@@ -676,7 +676,7 @@ export class Expandable extends React.Component {
 		};
 	}
 	render() {
-		let indentDivStyle = this.autoIndent
+		const indentDivStyle = this.autoIndent
 			? { margin: 10, paddingLeft: 6, marginBottom: 20 }
 			: {};
 		return <div style={this.props.noMargin ? {} : { marginTop: 10, marginBottom: 10 }}>
@@ -713,23 +713,23 @@ export function LoadJsonFromFileOrUrl(props: LoadJsonFromFileOrUrlProps) {
 	};
 
 	const onLoadPresetFile = () => {
-		let cur = fileSelectorRef.current;
+		const cur = fileSelectorRef.current;
 		if (cur && cur.files && cur.files.length > 0) {
-			let fileToLoad = cur.files[0];
+			const fileToLoad = cur.files[0];
 			loadFromFile(fileToLoad, (content) => props.onLoadFn(content));
 			cur.value = "";
 		}
 	};
 
 	const onLoadUrl = () => {
-		let errorHandler = function (e: any) {
+		const errorHandler = function (e: any) {
 			console.log("some error occurred");
 		};
 		asyncFetch(
 			loadUrl,
 			(data) => {
 				try {
-					let content = JSON.parse(data);
+					const content = JSON.parse(data);
 					props.onLoadFn(content);
 				} catch (e: any) {
 					errorHandler(e);
@@ -740,8 +740,8 @@ export function LoadJsonFromFileOrUrl(props: LoadJsonFromFileOrUrlProps) {
 			},
 		);
 	};
-	let colors = getCurrentThemeColors();
-	let longInputStyle = {
+	const colors = getCurrentThemeColors();
+	const longInputStyle = {
 		color: colors.text,
 		background: "transparent",
 		outline: "none",
@@ -782,7 +782,7 @@ export function LoadJsonFromFileOrUrl(props: LoadJsonFromFileOrUrlProps) {
 }
 
 export function ButtonIndicator(props: { text: ContentNode }) {
-	let colors = getCurrentThemeColors();
+	const colors = getCurrentThemeColors();
 	return <span
 		style={{
 			fontSize: 11,
@@ -802,8 +802,8 @@ export function Help(props: {
 	topic: string; // need to be unique globally
 	content: ContentNode;
 }) {
-	let colors = getCurrentThemeColors();
-	let style: CSSProperties = {
+	const colors = getCurrentThemeColors();
+	const style: CSSProperties = {
 		display: "inline-block",
 		position: "relative",
 		width: 12,

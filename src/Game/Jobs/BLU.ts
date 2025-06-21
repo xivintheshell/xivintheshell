@@ -131,7 +131,7 @@ export class BLUState extends GameState {
 	}
 
 	override jobSpecificRegisterRecurringEvents(): void {
-		let recurringkickTick = () => {
+		const recurringkickTick = () => {
 			this.handleDoTTick("PHANTOM_FLURRY");
 
 			if (this.getDisplayTime() >= 0) {
@@ -145,7 +145,7 @@ export class BLUState extends GameState {
 			);
 		};
 
-		let recurringApokalypsisTick = () => {
+		const recurringApokalypsisTick = () => {
 			this.handleDoTTick("APOKALYPSIS");
 
 			if (this.getDisplayTime() >= 0) {

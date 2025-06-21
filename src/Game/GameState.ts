@@ -199,15 +199,15 @@ export class GameState {
 		effectGroups: OverTimeRegistrationGroup[] = [],
 		petSkills: ActionKey[] = [],
 	) {
-		let game = this;
+		const game = this;
 		if (Debug.disableManaTicks === false) {
 			// get mana ticks rolling (through recursion)
-			let recurringManaRegen = () => {
+			const recurringManaRegen = () => {
 				// mana regen
-				let mana = this.resources.get("MANA");
-				let gainAmount = this.captureManaRegenAmount();
+				const mana = this.resources.get("MANA");
+				const gainAmount = this.captureManaRegenAmount();
 				mana.gain(gainAmount);
-				let currentAmount = mana.availableAmount();
+				const currentAmount = mana.availableAmount();
 				controller.reportManaTick(
 					game.time,
 					"+" + gainAmount + " (MP=" + currentAmount + ")",
@@ -235,14 +235,14 @@ export class GameState {
 		}
 
 		// lucid ticks
-		let recurringLucidTick = () => {
+		const recurringLucidTick = () => {
 			// do work at lucid tick
-			let lucid = this.resources.get("LUCID_DREAMING") as OverTimeBuff;
+			const lucid = this.resources.get("LUCID_DREAMING") as OverTimeBuff;
 			if (lucid.available(1)) {
 				lucid.tickCount++;
 				if (!(this.isBLMState() && this.getFireStacks() > 0)) {
 					// Block lucid ticks for BLM in fire
-					let mana = this.resources.get("MANA");
+					const mana = this.resources.get("MANA");
 					mana.gain(550);
 					let msg = "+550";
 					console.assert(lucid.node !== undefined);
@@ -259,13 +259,13 @@ export class GameState {
 				}
 			}
 			// queue the next tick
-			let recurringLucidTickEvt = new Event("lucid tick", 3, () => {
+			const recurringLucidTickEvt = new Event("lucid tick", 3, () => {
 				recurringLucidTick();
 			});
 			recurringLucidTickEvt.addTag(EventTag.LucidTick);
 			// potentially also give mp gain tag
 			if (lucid.available(1) && lucid.pendingChange) {
-				let timeTillDropLucid = lucid.pendingChange.timeTillEvent;
+				const timeTillDropLucid = lucid.pendingChange.timeTillEvent;
 				if (timeTillDropLucid >= 3) {
 					recurringLucidTickEvt.addTag(EventTag.ManaGain);
 				}
@@ -275,7 +275,7 @@ export class GameState {
 		if ([...HEALER_JOBS, ...CASTER_JOBS].includes(this.job)) {
 			let timeTillFirstLucidTick = this.config.timeTillFirstManaTick + this.lucidTickOffset;
 			while (timeTillFirstLucidTick > 3) timeTillFirstLucidTick -= 3;
-			let firstLucidTickEvt = new Event(
+			const firstLucidTickEvt = new Event(
 				"initial lucid tick",
 				timeTillFirstLucidTick,
 				recurringLucidTick,
@@ -284,7 +284,7 @@ export class GameState {
 			this.addEvent(firstLucidTickEvt);
 		}
 
-		let recurringDotTick = () => {
+		const recurringDotTick = () => {
 			this.dotResources
 				.filter((dotResource) => !this.excludedDoTs.includes(dotResource))
 				.forEach((dotResource) => this.handleDoTTick(dotResource));
@@ -302,7 +302,7 @@ export class GameState {
 			);
 		};
 
-		let recurringHotTick = () => {
+		const recurringHotTick = () => {
 			this.hotResources
 				.filter((hotResource) => !this.excludedHoTs.includes(hotResource))
 				.forEach((hotResource) => this.handleHoTTick(hotResource));
@@ -540,7 +540,7 @@ export class GameState {
 			});
 
 			// time to safely advance without skipping anything or ticking past deltaTime
-			let timeToTick = Math.min(
+			const timeToTick = Math.min(
 				deltaTime - cumulativeDeltaTime,
 				this.eventsQueue[0].timeTillEvent,
 			);
@@ -602,7 +602,7 @@ export class GameState {
 	}
 
 	requestToggleBuff(buffName: ResourceKey) {
-		let rsc = this.resources.get(buffName);
+		const rsc = this.resources.get(buffName);
 
 		// autos are different
 		if (buffName === "AUTOS_ENGAGED") {
@@ -886,7 +886,7 @@ export class GameState {
 			? this.cooldowns.get(skill.secondaryCd.cdName)
 			: undefined;
 
-		let capturedCastTime = skill.castTimeFn(this);
+		const capturedCastTime = skill.castTimeFn(this);
 		const recastTime = skill.recastTimeFn(this);
 
 		this.jobSpecificAddSpeedBuffCovers(node, skill);
@@ -951,7 +951,7 @@ export class GameState {
 			// note that MP costs are re-checked at the end of the cast bar: notably, if enochian
 			// drops in the middle of a an AF3 B3 cast, the spell will cost mana; this also applies
 			// to WHM Thin Air and SCH Recitation if the buffs fall off mid-cast
-			let manaCost = skill.manaCostFn(this);
+			const manaCost = skill.manaCostFn(this);
 			if (manaCost > this.resources.get("MANA").availableAmount()) {
 				controller.reportInterruption({
 					failNode: node,
@@ -1086,7 +1086,7 @@ export class GameState {
 	 */
 	useAbility(skill: Ability<PlayerState>, node: ActionNode) {
 		console.assert(node);
-		let cd = this.cooldowns.get(skill.cdName);
+		const cd = this.cooldowns.get(skill.cdName);
 		// potency
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
@@ -1347,8 +1347,8 @@ export class GameState {
 	}
 
 	#timeTillSkillAvailable(skillName: ActionKey) {
-		let skill = this.skillsList.get(skillName);
-		let cdName = skill.cdName;
+		const skill = this.skillsList.get(skillName);
+		const cdName = skill.cdName;
 		const secondaryCd = skill.secondaryCd?.cdName;
 		let tillAnyCDStack = this.cooldowns.timeTillAnyStackAvailable(cdName);
 		if (secondaryCd) {
@@ -1361,14 +1361,14 @@ export class GameState {
 	}
 
 	timeTillAnySkillAvailable() {
-		let tillNotAnimationLocked = this.resources.timeTillReady("NOT_ANIMATION_LOCKED");
-		let tillNotCasterTaxed = this.resources.timeTillReady("NOT_CASTER_TAXED");
+		const tillNotAnimationLocked = this.resources.timeTillReady("NOT_ANIMATION_LOCKED");
+		const tillNotCasterTaxed = this.resources.timeTillReady("NOT_CASTER_TAXED");
 		return Math.max(tillNotAnimationLocked, tillNotCasterTaxed);
 	}
 
 	findNextQueuedEventByTag(tag: EventTag) {
 		for (let i = 0; i < this.eventsQueue.length; i++) {
-			let evt = this.eventsQueue[i];
+			const evt = this.eventsQueue[i];
 			if (evt.hasTag(tag)) return evt;
 		}
 		return undefined;
@@ -1533,7 +1533,7 @@ export class GameState {
 		const targetCount = kind === "damage" ? props.node.targetCount : props.node.healTargetCount;
 
 		for (let i = 0; i < effectTicks; i++) {
-			let overtimePotency = new Potency({
+			const overtimePotency = new Potency({
 				config: controller.record.config ?? controller.gameConfig,
 				sourceTime: this.getDisplayTime(),
 				sourceSkill: props.skillName,
@@ -1573,7 +1573,7 @@ export class GameState {
 	}
 
 	timeTillNextMpGainEvent() {
-		let foundEvt = this.findNextQueuedEventByTag(EventTag.ManaGain);
+		const foundEvt = this.findNextQueuedEventByTag(EventTag.ManaGain);
 		return foundEvt ? foundEvt.timeTillEvent : 0;
 	}
 
@@ -1586,25 +1586,25 @@ export class GameState {
 		skillName: ActionKey,
 		primaryRecastOnly: boolean = false,
 	): SkillButtonViewInfo {
-		let skill = this.skillsList.get(skillName);
+		const skill = this.skillsList.get(skillName);
 		let timeTillAvailable = this.#timeTillSkillAvailable(skill.name);
-		let capturedManaCost = skill.manaCostFn(this);
-		let llCovered = this.job === "BLM" && this.resources.get("LEY_LINES").available(1);
-		let capturedCastTime =
+		const capturedManaCost = skill.manaCostFn(this);
+		const llCovered = this.job === "BLM" && this.resources.get("LEY_LINES").available(1);
+		const capturedCastTime =
 			skill.kind === "weaponskill" || skill.kind === "spell" || skill.kind === "limitbreak"
 				? skill.castTimeFn(this)
 				: 0;
-		let instantCastAvailable =
+		const instantCastAvailable =
 			capturedCastTime === 0 ||
 			skill.kind === "ability" ||
 			(skill.kind !== "limitbreak" && skill.isInstantFn(this)); // LBs can't be swiftcasted
-		let currentMana = this.resources.get("MANA").availableAmount();
-		let blocked = timeTillAvailable > Debug.epsilon;
-		let enoughMana = capturedManaCost <= currentMana;
-		let reqsMet = skill.validateAttempt(this);
-		let skillUnlocked = this.config.level >= skill.unlockLevel;
+		const currentMana = this.resources.get("MANA").availableAmount();
+		const blocked = timeTillAvailable > Debug.epsilon;
+		const enoughMana = capturedManaCost <= currentMana;
+		const reqsMet = skill.validateAttempt(this);
+		const skillUnlocked = this.config.level >= skill.unlockLevel;
 
-		let status = makeSkillReadyStatus();
+		const status = makeSkillReadyStatus();
 
 		if (blocked) status.addUnavailableReason(SkillUnavailableReason.Blocked);
 		if (
@@ -1666,14 +1666,14 @@ export class GameState {
 		const primaryStacksAvailable = cd.stacksAvailable();
 		const primaryMaxStacks = cd.maxStacks();
 
-		let secondaryRecastTime = secondaryCd?.currentStackCd() ?? 0;
+		const secondaryRecastTime = secondaryCd?.currentStackCd() ?? 0;
 
 		// to be displayed together when hovered on a skill
 		let timeTillDamageApplication = 0;
 		if (status.ready()) {
 			// TODO, should this be changed to capturedCastTime > 0 because of stuff like Iaijutsu?
 			if (skill.kind === "spell") {
-				let timeTillCapture = instantCastAvailable
+				const timeTillCapture = instantCastAvailable
 					? 0
 					: capturedCastTime - GameConfig.getSlidecastWindow(capturedCastTime);
 				timeTillDamageApplication = timeTillCapture + skill.applicationDelay;

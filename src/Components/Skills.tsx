@@ -20,7 +20,7 @@ export const getSkillIconImage = (skillName: ActionKey) => {
 	}
 	const assetIcon = `assets/Skills/${getSkillAssetPath(skillName)}`;
 	if (assetIcon) {
-		let imgObj = new Image();
+		const imgObj = new Image();
 		imgObj.src = assetIcon;
 		imgObj.onerror = (e) => {
 			imgObj.src = MISSING_PATH;
@@ -73,7 +73,7 @@ function ProgressCircleDark(
 	/>;
 
 	const outerStroke = elemRadius; // something large enough to make sure it covers the very corner
-	let outerCircle = <circle
+	const outerCircle = <circle
 		r={elemRadius + outerStroke / 2}
 		cx={20}
 		cy={21}
@@ -219,13 +219,13 @@ class SkillButton extends React.Component {
 			skillDescription: <div />,
 		};
 		this.handleMouseEnter = () => {
-			let info = controller.getSkillInfo({
+			const info = controller.getSkillInfo({
 				game: controller.getDisplayedGame(),
 				skillName: this.props.skillName,
 			});
 			// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-			let colors = getThemeColors(this.context);
-			let s: ContentNode[] = [];
+			const colors = getThemeColors(this.context);
+			const s: ContentNode[] = [];
 			if (info.status.ready()) {
 				let en = "ready (" + info.stacksAvailable;
 				let zh = "可释放 (" + info.stacksAvailable;
@@ -280,7 +280,7 @@ class SkillButton extends React.Component {
 				}
 			}
 			// if ready, also show captured cast time & time till damage application
-			let actualCastTime = info.instantCast ? 0 : info.castTime;
+			const actualCastTime = info.instantCast ? 0 : info.castTime;
 			let infoString = "";
 			if (info.status.ready()) {
 				infoString += localize({ en: "cast: ", zh: "读条：" }) + actualCastTime.toFixed(3);
@@ -289,7 +289,7 @@ class SkillButton extends React.Component {
 					localize({ en: ", cast+delay: ", zh: " 读条+生效延迟：" }) +
 					info.timeTillDamageApplication.toFixed(3);
 			}
-			let content = <div
+			const content = <div
 				style={{
 					color: controller.displayingUpToDateGameState ? colors.text : colors.historical,
 				}}
@@ -309,14 +309,14 @@ class SkillButton extends React.Component {
 		};
 	}
 	render() {
-		let iconStyle: React.CSSProperties = {
+		const iconStyle: React.CSSProperties = {
 			width: 48,
 			height: 48,
 			verticalAlign: "top",
 			position: "relative",
 			display: "inline-block",
 		};
-		let iconImgStyle: React.CSSProperties = {
+		const iconImgStyle: React.CSSProperties = {
 			width: 40,
 			height: 40,
 			position: "absolute",
@@ -412,7 +412,7 @@ class SkillButton extends React.Component {
 				zIndex: 2,
 			}}
 		/>;
-		let icon = <div onMouseEnter={this.handleMouseEnter}>
+		const icon = <div onMouseEnter={this.handleMouseEnter}>
 			<div style={iconStyle}>
 				{" "}
 				{/* "overlay" layers */}
@@ -544,13 +544,13 @@ export class SkillsWindow extends React.Component {
 		};
 
 		this.onWaitTimeSubmit = (e: FormEvent<HTMLFormElement>) => {
-			let waitTime = parseFloat(this.state.waitTime);
+			const waitTime = parseFloat(this.state.waitTime);
 			if (!isNaN(waitTime)) {
 				if (this.state.waitSince === WaitSince.Now) {
 					controller.step(waitTime);
 				} else if (this.state.waitSince === WaitSince.LastSkill) {
-					let timeSinceLastSkill = controller.game.time - controller.lastSkillTime;
-					let stepTime = waitTime - timeSinceLastSkill;
+					const timeSinceLastSkill = controller.game.time - controller.lastSkillTime;
+					const stepTime = waitTime - timeSinceLastSkill;
 					if (stepTime <= 0) {
 						window.alert(
 							"Invalid input: trying to jump to " +
@@ -614,17 +614,17 @@ export class SkillsWindow extends React.Component {
 	}
 
 	render() {
-		let skillButtons = [];
+		const skillButtons = [];
 		for (let i = 0; i < this.state.statusList.length; i++) {
-			let skillName = this.state.statusList[i].skillName;
-			let info = this.state.statusList[i];
+			const skillName = this.state.statusList[i].skillName;
+			const info = this.state.statusList[i];
 
 			const readyAsideFromCd = info
 				? !info.status.unavailableReasons.some(
 						(reason) => reason !== SkillUnavailableReason.Blocked,
 					)
 				: false;
-			let btn = <SkillButton
+			const btn = <SkillButton
 				key={i}
 				highlight={info ? info.highlight : false}
 				skillName={skillName}
@@ -643,7 +643,7 @@ export class SkillsWindow extends React.Component {
 			skillButtons.push(btn);
 		}
 
-		let waitUntilHelp = <Help
+		const waitUntilHelp = <Help
 			topic="waitUntilInputFormat"
 			content={
 				<div>
@@ -660,7 +660,7 @@ export class SkillsWindow extends React.Component {
 			}
 		/>;
 
-		let textInputStyle = {
+		const textInputStyle = {
 			display: "inline-block",
 			flex: "auto",
 			//marginRight: 10,
@@ -668,8 +668,8 @@ export class SkillsWindow extends React.Component {
 		};
 
 		// @ts-expect-error we need to read untyped this.context in place of a context hook
-		let colors = getThemeColors(this.context);
-		let textInputFieldStyle = {
+		const colors = getThemeColors(this.context);
+		const textInputFieldStyle = {
 			outline: "none",
 			border: "none",
 			borderBottom: "1px solid " + colors.text,

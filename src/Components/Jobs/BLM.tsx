@@ -45,7 +45,7 @@ export class BLMStatusPropsGenerator extends StatusPropsGenerator<BLMState> {
 	}
 
 	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
-		let eno = this.state.resources.get("ENOCHIAN");
+		const eno = this.state.resources.get("ENOCHIAN");
 		const resources = this.state.resources;
 		const astralFire = this.state.getFireStacks();
 		const umbralIce = this.state.getIceStacks();

@@ -24,7 +24,6 @@ export default tseslint.config(
 				"@typescript-eslint/no-unused-expressions": ["error", { "allowShortCircuit": true }],
 				"react/no-unescaped-entities": "off",
 				"react/prop-types": "off", // TODO re-enable someday
-				"prefer-const": "off",
 			},
 			settings: {
 				react: {

@@ -145,7 +145,7 @@ export class PCTState extends GameState {
 			// rainbow drip is not affected by inspiration
 			// when rainbow bright is affecting rainbow drip, treat it as a 6s cast
 			// then subtract 3.5s from the result
-			let recast = this.config.adjustedGCD(baseRecastTime);
+			const recast = this.config.adjustedGCD(baseRecastTime);
 			return this.hasResourceAvailable("RAINBOW_BRIGHT") ? recast - 3.5 : recast;
 		}
 		// hammers are not affected by inspiration
@@ -197,8 +197,8 @@ export class PCTState extends GameState {
 	// are greatly reduced
 	// when all 5 phantasia stacks are consumed, then inspiration is also removed
 	tryConsumeHyperphantasia() {
-		let hyperphantasia = this.resources.get("HYPERPHANTASIA");
-		let inspiration = this.resources.get("INSPIRATION");
+		const hyperphantasia = this.resources.get("HYPERPHANTASIA");
+		const inspiration = this.resources.get("INSPIRATION");
 		if (
 			inspiration.available(1) &&
 			hyperphantasia.available(1) &&
@@ -248,7 +248,7 @@ const makeSpell_PCT = (
 	},
 ): Spell<PCTState> => {
 	const baseRecastTime = params.baseRecastTime ?? 2.5;
-	let onConfirm: EffectFn<PCTState> = combineEffects((state, node) => {
+	const onConfirm: EffectFn<PCTState> = combineEffects((state, node) => {
 		// Consume swift/triple before anything else happens.
 		// The code here is dependent on short-circuiting logic to consume the correct resources.
 		// Don't consume non-swiftcast resources yet.
@@ -897,8 +897,8 @@ livingMuseInfos.forEach(([name, level, potencies, applicationDelay, validateAtte
 		cooldown: 40,
 		validateAttempt: validateAttempt,
 		onConfirm: (state) => {
-			let depictions = state.resources.get("DEPICTIONS");
-			let portraits = state.resources.get("PORTRAIT");
+			const depictions = state.resources.get("DEPICTIONS");
+			const portraits = state.resources.get("PORTRAIT");
 			state.tryConsumeResource("CREATURE_CANVAS");
 			depictions.gain(1);
 			// wing: make moogle portrait available (overwrites madeen)
@@ -1165,7 +1165,7 @@ makeAbility_PCT("TEMPERA_COAT_POP", 10, "cd_TEMPERA_POP", {
 	onConfirm: (state) => {
 		state.tryConsumeResource("TEMPERA_COAT");
 		// Reduce the cooldown of tempera coat by 60s
-		let coatElapsed = state.cooldowns.get("cd_TEMPERA_COAT").timeTillNextStackAvailable();
+		const coatElapsed = state.cooldowns.get("cd_TEMPERA_COAT").timeTillNextStackAvailable();
 		console.assert(
 			coatElapsed > 0,
 			"attempted to pop Tempera Coat when no timer for Tempera Coat CD was active",
@@ -1193,7 +1193,7 @@ makeAbility_PCT("TEMPERA_GRASSA_POP", 10, "cd_TEMPERA_POP", {
 	onConfirm: (state) => {
 		state.tryConsumeResource("TEMPERA_GRASSA");
 		// Reduce the cooldown of tempera coat by 30s
-		let coatElapsed = state.cooldowns.get("cd_TEMPERA_COAT").timeTillNextStackAvailable();
+		const coatElapsed = state.cooldowns.get("cd_TEMPERA_COAT").timeTillNextStackAvailable();
 		console.assert(
 			coatElapsed > 0,
 			"attempted to pop Tempera Grassa when no timer for Tempera Coat CD was active",

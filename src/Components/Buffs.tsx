@@ -60,7 +60,7 @@ buffIcons.set(BuffType.Soteria, "Buffs/SGE/Soteria.png");
 
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
-	let imgObj = new Image();
+	const imgObj = new Image();
 	imgObj.src = "assets/" + path;
 	imgObj.onload = function () {
 		updateTimelineView();

@@ -146,7 +146,7 @@ export class MCHState extends GameState {
 
 	// Flamethrower works like a DoT, but ticks every second instead, so we need to handle that separately
 	override jobSpecificRegisterRecurringEvents(): void {
-		let recurringFlamethrowerTick = () => {
+		const recurringFlamethrowerTick = () => {
 			this.handleDoTTick("FLAMETHROWER");
 
 			// increment count

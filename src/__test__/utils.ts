@@ -107,7 +107,7 @@ function checkNumbersInObject(expected: object | number, actual: object | number
 		expect([path, expected, actual]).toBeClose();
 	} else if (expected instanceof Map) {
 		expect(actual instanceof Map).toBeTruthy();
-		for (let [key, expectedValue] of expected) {
+		for (const [key, expectedValue] of expected) {
 			const actualValue = (actual as any).get(key);
 			checkNumbersInObject(expectedValue, actualValue, `${path}['${key}']`);
 		}

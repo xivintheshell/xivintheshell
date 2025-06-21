@@ -63,8 +63,8 @@ function isDoTNode(node: ActionNode) {
 
 function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: ActionNode) {
 	console.assert(isDoTNode(node), `${node.getNameForMessage()} is not registered as a dot skill`);
-	let mainPotency = node.getInitialPotency();
-	let entry: DamageStatsDoTTableEntry = {
+	const mainPotency = node.getInitialPotency();
+	const entry: DamageStatsDoTTableEntry = {
 		castTime: node.tmp_startLockTime ? node.tmp_startLockTime - ctl.gameConfig.countdown : 0,
 		applicationTime: node.applicationTime ? node.applicationTime - ctl.gameConfig.countdown : 0,
 		displayedModifiers: [],
@@ -132,21 +132,21 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 		}
 	});
 
-	let potencyWithoutPot = node.getPotency({
+	const potencyWithoutPot = node.getPotency({
 		tincturePotencyMultiplier: 1,
 		includePartyBuffs: false,
 		untargetable: bossIsUntargetable,
 		includeSplash: true,
 	}).applied;
 
-	let potencyWithPot = node.getPotency({
+	const potencyWithPot = node.getPotency({
 		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 		includePartyBuffs: false,
 		untargetable: bossIsUntargetable,
 		includeSplash: true,
 	}).applied;
 
-	let potencyWithPartyBuffs = node.getPotency({
+	const potencyWithPartyBuffs = node.getPotency({
 		tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 		includePartyBuffs: true,
 		untargetable: bossIsUntargetable,
@@ -161,7 +161,7 @@ function expandDoTNode(node: ActionNode, dotName: ResourceKey, lastNode?: Action
 }
 
 function expandNode(node: ActionNode): ExpandedNode {
-	let res: ExpandedNode = {
+	const res: ExpandedNode = {
 		basePotency: 0,
 		displayedModifiers: [],
 		calculationModifiers: [],
@@ -231,8 +231,8 @@ function tagsAreEqual(a: PotencyModifierType[], b: PotencyModifierType[]) {
 }
 
 function expandAndMatch(table: DamageStatsMainTableEntry[], node: ActionNode) {
-	let expanded = expandNode(node);
-	let res = {
+	const expanded = expandNode(node);
+	const res = {
 		mainTableIndex: -1,
 		expandedNode: expanded,
 	};
@@ -287,22 +287,22 @@ export function calculateSelectedStats(props: {
 	tinctureBuffPercentage: number;
 	lastDamageApplicationTime: number;
 }): SelectedStatisticsData {
-	let selected = {
+	const selected = {
 		totalDuration: 0,
 		targetableDuration: 0,
 		potency: { applied: 0, pending: 0 },
 		gcdSkills: { applied: 0, pending: 0 },
 	};
 
-	let firstSelected = ctl.record.getFirstSelection();
-	let lastSelected = ctl.record.getLastSelection();
+	const firstSelected = ctl.record.getFirstSelection();
+	const lastSelected = ctl.record.getLastSelection();
 	if (firstSelected && lastSelected) {
 		if (
 			firstSelected.tmp_startLockTime !== undefined &&
 			lastSelected.tmp_endLockTime !== undefined
 		) {
 			selected.totalDuration = lastSelected.tmp_endLockTime - firstSelected.tmp_startLockTime;
-			let countdown = ctl.gameConfig.countdown;
+			const countdown = ctl.gameConfig.countdown;
 			selected.targetableDuration = getTargetableDurationBetween(
 				firstSelected.tmp_startLockTime - countdown,
 				lastSelected.tmp_endLockTime - countdown,
@@ -314,13 +314,13 @@ export function calculateSelectedStats(props: {
 		if (node.info.type === ActionType.Skill && !(node.info.skillName in LIMIT_BREAK_ACTIONS)) {
 			const checked = getSkillOrDotInclude(node.info.skillName);
 			// gcd count
-			let skillInfo = ctl.game.skillsList.get(node.info.skillName);
+			const skillInfo = ctl.game.skillsList.get(node.info.skillName);
 			if (skillInfo.cdName === "cd_GCD" && checked) {
 				if (node.hitBoss(bossIsUntargetable)) selected.gcdSkills.applied++;
 				else if (!node.resolved()) selected.gcdSkills.pending++;
 			}
 			// potency
-			let p = node.getPotency({
+			const p = node.getPotency({
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
 				includePartyBuffs: true,
@@ -356,8 +356,8 @@ export function calculateDamageStats(props: {
 	// for main table: only iterate selected
 	// for dot table: as if prev and after don't exist?
 
-	let totalPotency = { applied: 0, pending: 0 };
-	let gcdSkills = { applied: 0, pending: 0 };
+	const totalPotency = { applied: 0, pending: 0 };
+	const gcdSkills = { applied: 0, pending: 0 };
 
 	// has a list of entries, initially empty
 	// take each skill node, find its corresponding entry and add itself to it
@@ -365,8 +365,8 @@ export function calculateDamageStats(props: {
 	// - if there's no existing entry, create one.
 	// sort the entries according to some rule, then return.
 
-	let mainTable: DamageStatsMainTableEntry[] = [];
-	let mainTableSummary = {
+	const mainTable: DamageStatsMainTableEntry[] = [];
+	const mainTableSummary = {
 		totalPotencyWithoutPot: 0,
 		totalPotPotency: 0,
 		totalPartyBuffPotency: 0,
@@ -374,7 +374,7 @@ export function calculateDamageStats(props: {
 
 	const dotTables: Map<ResourceKey, DamageStatsDoTTrackingData> = new Map();
 
-	let skillPotencies: Map<ActionKey, number> = new Map();
+	const skillPotencies: Map<ActionKey, number> = new Map();
 
 	const processNodeFn = (node: ActionNode) => {
 		if (node.info.type === ActionType.Skill) {
@@ -383,7 +383,7 @@ export function calculateDamageStats(props: {
 			const isLimitBreak = skillName in LIMIT_BREAK_ACTIONS;
 
 			// gcd count
-			let skillInfo = ctl.game.skillsList.get(skillName);
+			const skillInfo = ctl.game.skillsList.get(skillName);
 			if (skillInfo.cdName === "cd_GCD" && checked) {
 				if (node.hitBoss(bossIsUntargetable)) {
 					gcdSkills.applied++;
@@ -393,7 +393,7 @@ export function calculateDamageStats(props: {
 			}
 
 			// potency
-			let p = node.getPotency({
+			const p = node.getPotency({
 				tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 				untargetable: bossIsUntargetable,
 				includePartyBuffs: true,
@@ -407,7 +407,7 @@ export function calculateDamageStats(props: {
 
 			// main table
 			if (node.resolved()) {
-				let q = expandAndMatch(mainTable, node);
+				const q = expandAndMatch(mainTable, node);
 				if (q.mainTableIndex < 0) {
 					// create an entry if doesn't have one already
 					mainTable.push({
@@ -439,7 +439,7 @@ export function calculateDamageStats(props: {
 					return;
 				}
 
-				let potencyWithoutPot = node.getPotency({
+				const potencyWithoutPot = node.getPotency({
 					tincturePotencyMultiplier: 1,
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: false,
@@ -447,7 +447,7 @@ export function calculateDamageStats(props: {
 					includeSplash: true,
 				}).applied;
 
-				let potencyWithPot = node.getPotency({
+				const potencyWithPot = node.getPotency({
 					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: false,
@@ -455,7 +455,7 @@ export function calculateDamageStats(props: {
 					includeSplash: true,
 				}).applied;
 
-				let potencyWithPartyBuffs = node.getPotency({
+				const potencyWithPartyBuffs = node.getPotency({
 					tincturePotencyMultiplier: ctl.getTincturePotencyMultiplier(),
 					untargetable: bossIsUntargetable,
 					includePartyBuffs: true,
@@ -517,7 +517,7 @@ export function calculateDamageStats(props: {
 						dotTables.set(rscType, dotTrackingData);
 					}
 
-					let dotTableEntry = expandDoTNode(node, rscType, dotTrackingData.lastDoT);
+					const dotTableEntry = expandDoTNode(node, rscType, dotTrackingData.lastDoT);
 					dotTrackingData.tableRows.push(dotTableEntry);
 					dotTrackingData.lastDoT = node;
 					dotTrackingData.summary.cumulativeGap += dotTableEntry.gap;
@@ -547,17 +547,17 @@ export function calculateDamageStats(props: {
 				`DoT node for ${dotName} was not resolved`,
 			);
 
-			let lastDotDropTime = (applicationTime as number) + ctl.game.getStatusDuration(dotName);
-			let gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
+			const lastDotDropTime = (applicationTime as number) + ctl.game.getStatusDuration(dotName);
+			const gap = getTargetableDurationBetween(lastDotDropTime, ctl.game.getDisplayTime());
 
-			let timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
+			const timeSinceLastDoTDropped = ctl.game.getDisplayTime() - lastDotDropTime;
 			if (timeSinceLastDoTDropped > 0) {
 				dotTrackingData.summary.cumulativeGap += gap;
 				dotTrackingData.summary.timeSinceLastDoTDropped = timeSinceLastDoTDropped;
 			}
 		} else {
 			// no Thunder was used so far
-			let gap = getTargetableDurationBetween(0, Math.max(0, ctl.game.getDisplayTime()));
+			const gap = getTargetableDurationBetween(0, Math.max(0, ctl.game.getDisplayTime()));
 			dotTrackingData.summary.cumulativeGap = gap;
 			dotTrackingData.summary.timeSinceLastDoTDropped = gap;
 		}
@@ -565,12 +565,12 @@ export function calculateDamageStats(props: {
 
 	mainTable.sort((a, b) => {
 		if (a.showPotency !== b.showPotency) {
-			let na = a.showPotency ? 1 : 0;
-			let nb = b.showPotency ? 1 : 0;
+			const na = a.showPotency ? 1 : 0;
+			const nb = b.showPotency ? 1 : 0;
 			return nb - na;
 		} else if (a.skillName !== b.skillName) {
-			let pa = skillPotencies.get(a.skillName) ?? 0;
-			let pb = skillPotencies.get(b.skillName) ?? 0;
+			const pa = skillPotencies.get(a.skillName) ?? 0;
+			const pb = skillPotencies.get(b.skillName) ?? 0;
 			return pb - pa;
 		} else if (a.targetCount !== b.targetCount) {
 			return b.targetCount - a.targetCount;
@@ -578,7 +578,7 @@ export function calculateDamageStats(props: {
 			return b.displayedModifiers.length - a.displayedModifiers.length;
 		} else {
 			for (let i = 0; i < a.displayedModifiers.length; i++) {
-				let diff = a.displayedModifiers[i] - b.displayedModifiers[i];
+				const diff = a.displayedModifiers[i] - b.displayedModifiers[i];
 				if (diff !== 0) return diff;
 			}
 			return 0;

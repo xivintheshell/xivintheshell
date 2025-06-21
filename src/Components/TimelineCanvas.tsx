@@ -193,8 +193,8 @@ function drawTip(lines: string[], canvasWidth: number, canvasHeight: number, ima
 	for (let i = 0; i < lines.length; i++) {
 		g_ctx.fillText(lines[i], x + horizontalPadding, y + i * lineHeight + 2 + verticalPadding);
 	}
-	let initialImageX = x + horizontalPadding;
-	let initialImageY = y + lines.length * lineHeight + 2 + verticalPadding;
+	const initialImageX = x + horizontalPadding;
+	const initialImageY = y + lines.length * lineHeight + 2 + verticalPadding;
 	if (images) {
 		for (let i = 0; i < images.length; i++) {
 			if (images[i]) {
@@ -229,7 +229,7 @@ function drawMarkers(
 			top = markerTracksTopY;
 		}
 		for (let i = 0; i < elems.length; i++) {
-			let m = elems[i];
+			const m = elems[i];
 
 			let localizedDescription = m.description;
 			if (m.markerType === MarkerType.Untargetable)
@@ -237,20 +237,20 @@ function drawMarkers(
 			else if (m.markerType === MarkerType.Buff)
 				localizedDescription = localizeBuffType(m.description as BuffType);
 
-			let left =
+			const left =
 				timelineOrigin + StaticFn.positionFromTimeAndScale(m.time + countdown, scale);
-			let onClick = () => {
-				let success = controller.timeline.deleteMarker(m);
+			const onClick = () => {
+				const success = controller.timeline.deleteMarker(m);
 				console.assert(success);
 				controller.updateStats();
 				setEditingMarkerValues(m);
 			};
 			if (m.duration > 0) {
-				let markerWidth = StaticFn.positionFromTimeAndScale(m.duration, scale);
+				const markerWidth = StaticFn.positionFromTimeAndScale(m.duration, scale);
 				if (m.markerType === MarkerType.Buff) {
 					g_ctx.fillStyle = m.color + g_colors.timeline.markerAlpha;
 					g_ctx.fillRect(left, top, markerWidth, TimelineDimensions.trackHeight);
-					let img = buffIconImages.get(m.description as BuffType);
+					const img = buffIconImages.get(m.description as BuffType);
 					if (img)
 						g_ctx.drawImage(
 							img,
@@ -281,7 +281,7 @@ function drawMarkers(
 					g_ctx.lineTo(left + markerWidth, top + TimelineDimensions.trackHeight / 2);
 					g_ctx.stroke();
 				}
-				let timeStr = m.time + " - " + parseFloat((m.time + m.duration).toFixed(3));
+				const timeStr = m.time + " - " + parseFloat((m.time + m.duration).toFixed(3));
 				testInteraction(
 					{
 						x: left,
@@ -340,7 +340,7 @@ function drawMPTickMarks(
 	g_ctx.strokeStyle = g_colors.timeline.mpTickMark;
 	g_ctx.beginPath();
 	elems.forEach((tick) => {
-		let x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
+		const x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
 		g_ctx.moveTo(x, originY);
 		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
@@ -362,7 +362,7 @@ function drawMeditateTickMarks(
 	g_ctx.strokeStyle = g_colors.sam.meditation;
 	g_ctx.beginPath();
 	elems.forEach((tick) => {
-		let x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
+		const x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
 		g_ctx.moveTo(x, originY);
 		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
@@ -384,7 +384,7 @@ function drawAutoTickMarks(
 	g_ctx.strokeStyle = g_colors.pld.ironWillColor;
 	g_ctx.beginPath();
 	elems.forEach((tick) => {
-		let x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
+		const x = originX + StaticFn.positionFromTimeAndScale(tick.displayTime, scale);
 		g_ctx.moveTo(x, originY);
 		g_ctx.lineTo(x, originY + TimelineDimensions.renderSlotHeight());
 
@@ -586,7 +586,7 @@ function drawLucidMarks(
 ) {
 	g_ctx.fillStyle = g_colors.timeline.lucidTickMark;
 	elems.forEach((mark) => {
-		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.displayTime, scale);
+		const x = timelineOriginX + StaticFn.positionFromTimeAndScale(mark.displayTime, scale);
 		g_ctx.beginPath();
 		g_ctx.moveTo(x - 3, timelineOriginY);
 		g_ctx.lineTo(x + 3, timelineOriginY);
@@ -594,7 +594,7 @@ function drawLucidMarks(
 		g_ctx.fill();
 
 		// hover text
-		let hoverText =
+		const hoverText =
 			"[" +
 			mark.displayTime.toFixed(3) +
 			"] " +
@@ -612,11 +612,11 @@ function drawSkills(
 	elems: SkillElem[],
 	interactive: boolean,
 ) {
-	let targetCounts: Array<{ count: number; x: number; y: number }> = [];
-	let greyLockBars: Rect[] = [];
-	let purpleLockBars: Rect[] = [];
-	let gcdBars: Rect[] = [];
-	let snapshots: number[] = [];
+	const targetCounts: Array<{ count: number; x: number; y: number }> = [];
+	const greyLockBars: Rect[] = [];
+	const purpleLockBars: Rect[] = [];
+	const gcdBars: Rect[] = [];
+	const snapshots: number[] = [];
 
 	// TODO move this into a proper configuration file
 	const coverInfo: Map<BuffType, { color: string; showImage: boolean }> = new Map([
@@ -675,12 +675,12 @@ function drawSkills(
 	const buffCovers: Rect[] = [];
 	const invalidSections: Rect[] = [];
 
-	let skillIcons: { elem: SkillElem; x: number; y: number }[] = []; // tmp
-	let skillsTopY = timelineOriginY + TimelineDimensions.skillButtonHeight / 2;
+	const skillIcons: { elem: SkillElem; x: number; y: number }[] = []; // tmp
+	const skillsTopY = timelineOriginY + TimelineDimensions.skillButtonHeight / 2;
 	elems.forEach((e) => {
-		let skill = e as SkillElem;
-		let x = timelineOriginX + StaticFn.positionFromTimeAndScale(skill.displayTime, scale);
-		let y = skill.isGCD ? skillsTopY + TimelineDimensions.skillButtonHeight / 2 : skillsTopY;
+		const skill = e as SkillElem;
+		const x = timelineOriginX + StaticFn.positionFromTimeAndScale(skill.displayTime, scale);
+		const y = skill.isGCD ? skillsTopY + TimelineDimensions.skillButtonHeight / 2 : skillsTopY;
 		// if there were multiple targets, draw the number of targets above the ability icon
 		const targetCount = skill.node.targetCount;
 		if (targetCount > 1) {
@@ -693,7 +693,7 @@ function drawSkills(
 		// offset the bar under skill button icon so it's completely invisible before the button
 		const barsOffset = 2;
 		// purple/grey bar
-		let lockbarWidth = StaticFn.positionFromTimeAndScale(skill.lockDuration, scale);
+		const lockbarWidth = StaticFn.positionFromTimeAndScale(skill.lockDuration, scale);
 		if (skill.isSpellCast) {
 			purpleLockBars.push({
 				x: x + barsOffset,
@@ -714,7 +714,7 @@ function drawSkills(
 		}
 		// green gcd recast bar
 		if (skill.isGCD) {
-			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
+			const recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
 			gcdBars.push({
 				x: x + barsOffset,
 				y: y + TimelineDimensions.skillButtonHeight / 2,
@@ -723,7 +723,7 @@ function drawSkills(
 			});
 		}
 		if (skill.skillName in LIMIT_BREAK_ACTIONS) {
-			let recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
+			const recastWidth = StaticFn.positionFromTimeAndScale(skill.recastDuration, scale);
 			greyLockBars.push({
 				x: x + barsOffset,
 				y: y + TimelineDimensions.skillButtonHeight / 2,
@@ -767,7 +767,7 @@ function drawSkills(
 		}
 
 		// skill icon
-		let img = getSkillIconImage(skill.skillName);
+		const img = getSkillIconImage(skill.skillName);
 		if (img) skillIcons.push({ elem: e, x: x, y: y });
 	});
 
@@ -839,13 +839,13 @@ function drawSkills(
 	g_ctx.beginPath();
 	skillIcons.forEach((icon) => {
 		g_ctx.drawImage(getSkillIconImage(icon.elem.skillName), icon.x, icon.y, 28, 28);
-		let node = icon.elem.node;
+		const node = icon.elem.node;
 
-		let lines: string[] = [];
-		let buffImages: HTMLImageElement[] = [];
+		const lines: string[] = [];
+		const buffImages: HTMLImageElement[] = [];
 
 		// 1. description
-		let description =
+		const description =
 			localizeSkillName(icon.elem.skillName) + "@" + icon.elem.displayTime.toFixed(3);
 		lines.push(description);
 
@@ -894,7 +894,7 @@ function drawSkills(
 		});
 
 		node.getPartyBuffs().forEach((buffType) => {
-			let img = buffIconImages.get(buffType);
+			const img = buffIconImages.get(buffType);
 			if (img) buffImages.push(img);
 		});
 
@@ -993,7 +993,7 @@ export function drawRuler(originX: number, ignoreVisibleX = false): number {
 	// ruler bg
 	g_ctx.fillStyle = g_colors.timeline.ruler;
 	g_ctx.fillRect(0, 0, xUpperBound, TimelineDimensions.rulerHeight);
-	let displayTime =
+	const displayTime =
 		StaticFn.timeFromPositionAndScale(g_mouseX - originX, g_renderingProps.scale) -
 		g_renderingProps.countdown;
 	// leave the left most section not clickable
@@ -1020,8 +1020,8 @@ export function drawRuler(originX: number, ignoreVisibleX = false): number {
 	// ruler marks
 	g_ctx.lineCap = "butt";
 	g_ctx.beginPath();
-	let pixelsPerSecond = g_renderingProps.scale * 100;
-	let countdownPadding = g_renderingProps.countdown * pixelsPerSecond;
+	const pixelsPerSecond = g_renderingProps.scale * 100;
+	const countdownPadding = g_renderingProps.countdown * pixelsPerSecond;
 	g_ctx.lineWidth = 1;
 	g_ctx.strokeStyle = g_colors.text;
 	g_ctx.textBaseline = "alphabetic";
@@ -1032,7 +1032,7 @@ export function drawRuler(originX: number, ignoreVisibleX = false): number {
 	const cullThreshold = 50;
 	const drawRulerMark = function (sec: number, height: number, drawLabel: boolean) {
 		const x = sec * pixelsPerSecond;
-		let pos = originX + x + countdownPadding;
+		const pos = originX + x + countdownPadding;
 		if (pos >= -cullThreshold && pos <= xUpperBound + cullThreshold) {
 			g_ctx.moveTo(pos, 0);
 			g_ctx.lineTo(pos, height);
@@ -1077,7 +1077,7 @@ export function drawMarkerTracks(originX: number, originY: number, ignoreVisible
 			)
 		: g_visibleWidth;
 	// make trackbins
-	let trackBins = new Map<number, MarkerElem[]>();
+	const trackBins = new Map<number, MarkerElem[]>();
 	g_renderingProps.allMarkers.forEach((marker) => {
 		let trackBin = trackBins.get(marker.track);
 		if (trackBin === undefined) trackBin = [];
@@ -1089,15 +1089,15 @@ export function drawMarkerTracks(originX: number, originY: number, ignoreVisible
 	g_ctx.beginPath();
 	let numTracks = 0;
 	let hasUntargetableTrack = false;
-	for (let k of trackBins.keys()) {
+	for (const k of trackBins.keys()) {
 		numTracks = Math.max(numTracks, k + 1);
 		if (k === UntargetableMarkerTrack) hasUntargetableTrack = true;
 	}
 	if (hasUntargetableTrack) numTracks += 1;
-	let markerTracksBottomY = originY + numTracks * TimelineDimensions.trackHeight;
+	const markerTracksBottomY = originY + numTracks * TimelineDimensions.trackHeight;
 	g_ctx.fillStyle = g_colors.timeline.tracks;
 	for (let i = 0; i < numTracks; i += 2) {
-		let top = markerTracksBottomY - (i + 1) * TimelineDimensions.trackHeight;
+		const top = markerTracksBottomY - (i + 1) * TimelineDimensions.trackHeight;
 		g_ctx.rect(0, top, xUpperBound, TimelineDimensions.trackHeight);
 	}
 	g_ctx.fill();
@@ -1126,14 +1126,14 @@ export function drawTimelines(
 		StaticFn.positionFromTimeAndScale(g_renderingProps.countdown, g_renderingProps.scale);
 
 	for (let slot = 0; slot < g_renderingProps.slots.length; slot++) {
-		let isActiveSlot = slot === g_renderingProps.activeSlotIndex;
-		let elemBins = new Map<ElemType, TimelineElem[]>();
+		const isActiveSlot = slot === g_renderingProps.activeSlotIndex;
+		const elemBins = new Map<ElemType, TimelineElem[]>();
 		if (isImageExportMode && !isActiveSlot) {
 			// Only draw the active timeline in export mode
 			continue;
 		}
 		g_renderingProps.slots[slot].elements.forEach((e) => {
-			let arr = elemBins.get(e.type) ?? [];
+			const arr = elemBins.get(e.type) ?? [];
 			arr.push(e);
 			elemBins.set(e.type, arr);
 		});
@@ -1235,13 +1235,13 @@ export function drawTimelines(
 		// selection rect
 		if (g_renderingProps.showSelection && isActiveSlot && !isImageExportMode) {
 			g_ctx.fillStyle = "rgba(147, 112, 219, 0.15)";
-			let selectionLeftPx =
+			const selectionLeftPx =
 				displayOriginX +
 				StaticFn.positionFromTimeAndScale(
 					g_renderingProps.selectionStartDisplayTime,
 					g_renderingProps.scale,
 				);
-			let selectionWidthPx = StaticFn.positionFromTimeAndScale(
+			const selectionWidthPx = StaticFn.positionFromTimeAndScale(
 				g_renderingProps.selectionEndDisplayTime -
 					g_renderingProps.selectionStartDisplayTime,
 				g_renderingProps.scale,
@@ -1266,7 +1266,7 @@ export function drawTimelines(
 		}
 	}
 	// countdown grey rect
-	let countdownWidth = StaticFn.positionFromTimeAndScale(
+	const countdownWidth = StaticFn.positionFromTimeAndScale(
 		g_renderingProps.countdown,
 		g_renderingProps.scale,
 	);
@@ -1289,8 +1289,8 @@ export function drawTimelines(
 
 	// slot selection bars
 	for (let slot = 0; slot < g_renderingProps.slots.length; slot++) {
-		let currentY = originY + slot * TimelineDimensions.renderSlotHeight();
-		let handle: Rect = {
+		const currentY = originY + slot * TimelineDimensions.renderSlotHeight();
+		const handle: Rect = {
 			x: 0,
 			y: currentY + 1,
 			w: 14,
@@ -1316,7 +1316,7 @@ export function drawTimelines(
 			g_ctx.font = "bold 14px monospace";
 			g_ctx.textAlign = "center";
 			g_ctx.fillText("×", handle.x + handle.w / 2, handle.y + handle.h - 4);
-			let deleteBtn: Rect = {
+			const deleteBtn: Rect = {
 				x: handle.x,
 				y: handle.y + handle.h - handle.w,
 				w: handle.w,
@@ -1344,18 +1344,18 @@ function drawCursors(originX: number, timelineStartY: number) {
 	const slotHeight = TimelineDimensions.renderSlotHeight();
 	const activeSlotStartY = timelineStartY + g_renderingProps.activeSlotIndex * slotHeight;
 
-	let sharedElemBins = new Map<ElemType, TimelineElem[]>();
+	const sharedElemBins = new Map<ElemType, TimelineElem[]>();
 	g_renderingProps.sharedElements.forEach((e) => {
-		let arr = sharedElemBins.get(e.type) ?? [];
+		const arr = sharedElemBins.get(e.type) ?? [];
 		arr.push(e);
 		sharedElemBins.set(e.type, arr);
 	});
 
 	// view only cursor
 	(sharedElemBins.get(ElemType.s_ViewOnlyCursor) ?? []).forEach((cursor) => {
-		let vcursor = cursor as ViewOnlyCursorElem;
+		const vcursor = cursor as ViewOnlyCursorElem;
 		if (vcursor.enabled) {
-			let x =
+			const x =
 				displayOriginX +
 				StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
 			drawCursor(
@@ -1371,8 +1371,8 @@ function drawCursors(originX: number, timelineStartY: number) {
 
 	// cursor
 	(sharedElemBins.get(ElemType.s_Cursor) ?? []).forEach((elem) => {
-		let cursor = elem as CursorElem;
-		let x =
+		const cursor = elem as CursorElem;
+		const x =
 			displayOriginX +
 			StaticFn.positionFromTimeAndScale(cursor.displayTime, g_renderingProps.scale);
 		drawCursor(
@@ -1462,7 +1462,7 @@ function drawAddSlotButton(originY: number) {
 // background layer:
 // white bg, tracks bg, ruler bg, ruler marks, numbers on ruler: update only when canvas size change, countdown grey
 function drawEverything() {
-	let timelineOrigin = -g_visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
+	const timelineOrigin = -g_visibleLeft + TimelineDimensions.leftBufferWidth; // fragCoord.x (...) of rawTime=0.
 	let currentHeight = 0;
 
 	// background white
@@ -1514,7 +1514,7 @@ export let timelineCanvasOnMouseLeave: () => void = () => {};
 export let timelineCanvasOnClick: (e: any) => void = (e: any) => {};
 export let timelineCanvasOnKeyDown: (e: any) => void = (e: any) => {};
 
-export let timelineCanvasGetPointerMouse: () => boolean = () => {
+export const timelineCanvasGetPointerMouse: () => boolean = () => {
 	return readback_pointerMouse;
 };
 
@@ -1526,8 +1526,8 @@ export function TimelineCanvas(props: {
 }) {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const dpr = window.devicePixelRatio;
-	let scaledWidth = props.visibleWidth * dpr;
-	let scaledHeight = props.timelineHeight * dpr;
+	const scaledWidth = props.visibleWidth * dpr;
+	const scaledHeight = props.timelineHeight * dpr;
 
 	const [mouseX, setMouseX] = useState(0);
 	const [mouseY, setMouseY] = useState(0);
@@ -1565,7 +1565,7 @@ export function TimelineCanvas(props: {
 				setKeyCounter((k) => k + 1);
 				g_keyboardEvent = e;
 				if (g_keyboardEvent.key === "Backspace" || g_keyboardEvent.key === "Delete") {
-					let firstSelected = controller.record.selectionStartIndex;
+					const firstSelected = controller.record.selectionStartIndex;
 					if (firstSelected !== undefined) {
 						controller.deleteSelectedSkill();
 					}
@@ -1587,7 +1587,7 @@ export function TimelineCanvas(props: {
 		g_renderingProps = controller.getTimelineRenderingProps();
 
 		// draw
-		let currentContext = canvasRef.current?.getContext("2d", { alpha: false });
+		const currentContext = canvasRef.current?.getContext("2d", { alpha: false });
 		if (currentContext) {
 			g_ctx = currentContext;
 			g_ctx.scale(dpr, dpr);
@@ -1634,7 +1634,7 @@ export function TimelineCanvas(props: {
  * Save the current g_ctx, execute a callback, then restore the saved g_ctx.
  */
 export function swapCtx(new_ctx: CanvasRenderingContext2D, callback: () => void) {
-	let temp_ctx = g_ctx;
+	const temp_ctx = g_ctx;
 	g_ctx = new_ctx;
 	callback();
 	g_ctx = temp_ctx;
