@@ -688,8 +688,6 @@ export class StatusDisplay extends React.Component {
 		controller.updateStatusDisplay(controller.game);
 	}
 	render() {
-		// @ts-expect-error we need to read untyped this.context in place of a useContext hook
-		const colors = getThemeColors(this.context);
 		return <div
 			style={{
 				position: "relative",

@@ -29,7 +29,6 @@ import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
 import {
-	getCurrentLanguage,
 	localize,
 	localizeBuffType,
 	localizeSkillName,
@@ -73,7 +72,6 @@ let g_visibleLeft = 0;
 let g_visibleWidth = 0;
 let g_isClickUpdate = false;
 let g_clickEvent: any = undefined; // valid when isClickUpdate is true
-let g_isKeyboardUpdate = false;
 let g_keyboardEvent: any = undefined;
 let g_mouseX = 0;
 let g_mouseY = 0;
@@ -1565,7 +1563,6 @@ export function TimelineCanvas(props: {
 		timelineCanvasOnKeyDown = (e: any) => {
 			if (!controller.shouldLoop) {
 				setKeyCounter((k) => k + 1);
-				g_isKeyboardUpdate = true;
 				g_keyboardEvent = e;
 				if (g_keyboardEvent.key === "Backspace" || g_keyboardEvent.key === "Delete") {
 					let firstSelected = controller.record.selectionStartIndex;
@@ -1605,7 +1602,6 @@ export function TimelineCanvas(props: {
 
 		// reset event flags
 		g_isClickUpdate = false;
-		g_isKeyboardUpdate = false;
 	}, [
 		// update when dependency props change
 		props.visibleLeft,

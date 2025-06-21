@@ -19,8 +19,9 @@ export default tseslint.config(
 				"@typescript-eslint/no-explicit-any": "off",
 				"@typescript-eslint/no-empty-object-type": "off",
 				"@typescript-eslint/no-this-alias": "off",
+				// do not warn about unused function parameters, which is very common for state functions
+				"@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
 				// TODO re-enable these rules and fix the reported errors
-				"@typescript-eslint/no-unused-vars": "off",
 				"@typescript-eslint/no-unused-expressions": "off",
 				"@typescript-eslint/no-require-imports": "off",
 				"react/no-unescaped-entities": "off",

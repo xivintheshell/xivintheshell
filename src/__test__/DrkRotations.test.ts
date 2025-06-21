@@ -37,7 +37,6 @@ it(
 it(
 	"breaks delirium combo correctly",
 	testWithConfig({}, () => {
-		const state = controller.game as DRKState;
 		(
 			[
 				"DELIRIUM",
@@ -78,7 +77,6 @@ it(
 it(
 	"has roughly correct damage for living shadow at 100",
 	testWithConfig({ level: 100 }, () => {
-		const state = controller.game as DRKState;
 		(["LIVING_SHADOW"] as ActionKey[]).forEach(applySkill);
 		// wait for damage applications
 		controller.step(20);
@@ -96,7 +94,6 @@ it(
 it(
 	"has roughly correct damage for living shadow at 90",
 	testWithConfig({ level: 90 }, () => {
-		const state = controller.game as DRKState;
 		(["LIVING_SHADOW"] as ActionKey[]).forEach(applySkill);
 		// wait for damage applications
 		controller.step(20);
@@ -107,7 +104,6 @@ it(
 it(
 	"has roughly correct damage for living shadow at 80",
 	testWithConfig({ level: 80 }, () => {
-		const state = controller.game as DRKState;
 		(["LIVING_SHADOW"] as ActionKey[]).forEach(applySkill);
 		// wait for damage applications
 		controller.step(20);

@@ -33,7 +33,6 @@ import {
 	getResourceInfo,
 	makeResource,
 	Event,
-	CoolDown,
 	ResourceInfo,
 	OverTimeBuff,
 } from "../Resources";

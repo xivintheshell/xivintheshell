@@ -22,8 +22,6 @@ export let updateTimelineView = () => {};
 
 export let scrollTimelineTo = (positionX: number) => {};
 
-let getVisibleRangeX = () => {};
-
 // the actual timeline canvas
 class TimelineMain extends React.Component {
 	myRef: React.RefObject<HTMLDivElement>;
@@ -81,20 +79,12 @@ class TimelineMain extends React.Component {
 			this.updateVisibleRange();
 		};
 
-		getVisibleRangeX = () => {
-			return {
-				left: this.state.visibleLeft,
-				width: this.state.visibleWidth,
-			};
-		};
-
 		this.updateVisibleRange();
 	}
 
 	componentWillUnmount() {
 		updateTimelineView = () => {};
 		scrollTimelineTo = (positionX) => {};
-		getVisibleRangeX = () => {};
 	}
 
 	render() {

@@ -76,7 +76,6 @@ export class XIVMath {
 			return modifier;
 		}
 		const critDamageMult = XIVMath.#criticalHitStrength(level, crit);
-		const baseCritRate = XIVMath.#criticalHitRate(level, XIVMath.getSubstatBase(level));
 		const dhMult = 1.25;
 
 		const autoCDH = critRate >= 1 && dhRate >= 1;

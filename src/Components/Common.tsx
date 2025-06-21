@@ -158,6 +158,7 @@ export function loadFromFile(
 					zh: "解析出错- 你确定文件没选错吗？本工具只读取JSON格式的文本文件",
 				}),
 			);
+			console.error(e);
 		}
 		callback(json);
 	};

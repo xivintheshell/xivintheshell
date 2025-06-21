@@ -1,7 +1,7 @@
 import { BLUStatusPropsGenerator } from "../../Components/Jobs/BLU";
 import { controller } from "../../Controller/Controller";
 import { Modifiers, PotencyModifier } from "../Potency";
-import { Aspect, BuffType, Debug, ProcMode, WarningType } from "../Common";
+import { Aspect  } from "../Common";
 import {
 	Ability,
 	combineEffects,
@@ -19,11 +19,8 @@ import {
 } from "../Skills";
 import { GameState } from "../GameState";
 import {
-	getResourceInfo,
 	makeResource,
 	CoolDown,
-	Resource,
-	ResourceInfo,
 	Event,
 } from "../Resources";
 import { GameConfig } from "../GameConfig";
@@ -201,9 +198,6 @@ const makeBLUSpell = (
 		replaceIf?: ConditionalSkillReplace<BLUState>[];
 		startOnHotbar?: boolean;
 		baseCastTime?: number;
-		baseRecastTime?: number;
-		CastTime?: number;
-		RecastTime?: number;
 		manaCost?: number;
 		basePotency?: number;
 		falloff?: number;
@@ -219,7 +213,6 @@ const makeBLUSpell = (
 	const basePotency = params.basePotency ?? Number;
 	const aspect = params.aspect ?? Aspect.Other;
 	const baseCastTime = params.baseCastTime ?? 0;
-	const baseRecastTime = params.baseRecastTime ?? 2.5;
 	const onConfirm: EffectFn<BLUState> | undefined =
 		baseCastTime > 0
 			? combineEffects(
@@ -288,7 +281,6 @@ const makeBLUAbility = (
 		falloff?: number;
 		applicationDelay?: number;
 		cooldown: number;
-		RecastTime?: number;
 		maxCharges?: number;
 		secondaryCooldown?: CooldownGroupProperties;
 		validateAttempt?: StatePredicate<BLUState>;
