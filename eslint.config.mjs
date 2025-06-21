@@ -20,8 +20,8 @@ export default tseslint.config(
 				"@typescript-eslint/no-empty-object-type": "off",
 				"@typescript-eslint/no-this-alias": "off",
 				// do not warn about unused function parameters, which is very common for state functions
-				"@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
-				"@typescript-eslint/no-unused-expressions": ["error", { "allowShortCircuit": true }],
+				"@typescript-eslint/no-unused-vars": ["error", { args: "none" }],
+				"@typescript-eslint/no-unused-expressions": ["error", { allowShortCircuit: true }],
 				"react/no-unescaped-entities": "off",
 				"react/prop-types": "off", // TODO re-enable someday
 			},

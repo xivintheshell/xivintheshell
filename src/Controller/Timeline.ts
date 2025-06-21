@@ -553,7 +553,10 @@ export class Timeline {
 
 	// inputs are displayed numbers
 	getTargetableDurationBetween(tStart: number, tEnd: number) {
-		const cut = function ([targetA, targetB]: [number, number], [srcA, srcB]: [number, number]) {
+		const cut = function (
+			[targetA, targetB]: [number, number],
+			[srcA, srcB]: [number, number],
+		) {
 			const res: [number, number][] = [];
 			if (targetA < srcA) {
 				res.push([targetA, Math.min(targetB, srcA)]);

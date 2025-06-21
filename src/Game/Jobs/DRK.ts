@@ -29,13 +29,7 @@ import {
 	CooldownGroupProperties,
 } from "../Skills";
 import { GameState } from "../GameState";
-import {
-	getResourceInfo,
-	makeResource,
-	Event,
-	ResourceInfo,
-	OverTimeBuff,
-} from "../Resources";
+import { getResourceInfo, makeResource, Event, ResourceInfo, OverTimeBuff } from "../Resources";
 import { TraitKey } from "../Data";
 import { DRKResourceKey, DRKActionKey, DRKCooldownKey } from "../Data/Jobs/DRK";
 

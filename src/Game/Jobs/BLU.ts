@@ -1,7 +1,7 @@
 import { BLUStatusPropsGenerator } from "../../Components/Jobs/BLU";
 import { controller } from "../../Controller/Controller";
 import { Modifiers, PotencyModifier } from "../Potency";
-import { Aspect  } from "../Common";
+import { Aspect } from "../Common";
 import {
 	Ability,
 	combineEffects,
@@ -18,11 +18,7 @@ import {
 	StatePredicate,
 } from "../Skills";
 import { GameState } from "../GameState";
-import {
-	makeResource,
-	CoolDown,
-	Event,
-} from "../Resources";
+import { makeResource, CoolDown, Event } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { TraitKey, ResourceKey } from "../Data";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
