@@ -1087,6 +1087,11 @@ export class GameState {
 	useAbility(skill: Ability<PlayerState>, node: ActionNode) {
 		console.assert(node);
 		const cd = this.cooldowns.get(skill.cdName);
+		// special case for NIN mudras: if under the MUDRA buff, do not consume another stack
+		const skipRecast =
+			this.job === "NIN" &&
+			this.hasResourceAvailable("MUDRA") &&
+			["TEN", "CHI", "JIN"].includes(skill.name);
 		// potency
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
@@ -1222,7 +1227,9 @@ export class GameState {
 		}
 
 		// recast
-		cd.useStack();
+		if (!skipRecast) {
+			cd.useStack();
+		}
 
 		// animation lock
 		this.resources.takeResourceLock("NOT_ANIMATION_LOCKED", skill.animationLockFn(this));
@@ -1616,8 +1623,13 @@ export class GameState {
 		if (!reqsMet) status.addUnavailableReason(SkillUnavailableReason.RequirementsNotMet);
 		if (!enoughMana) status.addUnavailableReason(SkillUnavailableReason.NotEnoughMP);
 
-		if (skill.name === "MEDITATE") {
-			// Special case for Meditate
+		const isFollowUpMudra =
+			this.job === "NIN" &&
+			this.hasResourceAvailable("MUDRA") &&
+			["TEN", "CHI", "JIN"].includes(skill.name);
+
+		if (skill.name === "MEDITATE" || isFollowUpMudra) {
+			// Special case for Meditate/mudra actions
 			if (
 				timeTillAvailable > Debug.epsilon ||
 				this.cooldowns.get("cd_GCD").timeTillNextStackAvailable() > Debug.epsilon
@@ -1630,6 +1642,9 @@ export class GameState {
 				status.addUnavailableReason(SkillUnavailableReason.Blocked);
 			}
 		}
+
+		// Do not display stacks on mudra actions if the mudra buff is active
+		const overrideMaxStacks = isFollowUpMudra ? 1 : undefined;
 
 		// Special case for skills that require being in combat
 		if (
@@ -1663,6 +1678,16 @@ export class GameState {
 			}
 		}
 
+		// Special case for mudras: use the GCD as cd if it's rolling
+		if (isFollowUpMudra) {
+			const gcd = this.cooldowns.get("cd_GCD");
+			const gcdRecastTime = gcd.currentStackCd();
+			cd = gcd;
+			cdRecastTime = gcdRecastTime;
+			timeTillNextStackReady = gcd.timeTillNextStackAvailable();
+			timeTillAvailable = timeTillNextStackReady;
+		}
+
 		const primaryStacksAvailable = cd.stacksAvailable();
 		const primaryMaxStacks = cd.maxStacks();
 
@@ -1693,7 +1718,7 @@ export class GameState {
 			status,
 			stacksAvailable:
 				secondaryMaxStacks > 0 ? secondaryStacksAvailable : primaryStacksAvailable,
-			maxStacks: Math.max(primaryMaxStacks, secondaryMaxStacks),
+			maxStacks: overrideMaxStacks ?? Math.max(primaryMaxStacks, secondaryMaxStacks),
 			castTime: capturedCastTime,
 			instantCast: instantCastAvailable,
 			cdRecastTime,

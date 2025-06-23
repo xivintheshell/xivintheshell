@@ -1,22 +1,79 @@
+import { RESOURCES } from "../../Game/Data";
+import { NIN_STATUSES, NINResourceKey } from "../../Game/Data/Jobs/NIN";
 import { NINState } from "../../Game/Jobs/NIN";
-import { BuffProps, ResourceDisplayProps, StatusPropsGenerator } from "../StatusDisplay";
+import { ThemeColors } from "../ColorTheme";
+import { localize, localizeResourceType } from "../Localization";
+import {
+	BuffProps,
+	registerBuffIcon,
+	ResourceBarProps,
+	ResourceCounterProps,
+	ResourceDisplayProps,
+	StatusPropsGenerator,
+} from "../StatusDisplay";
 
-/*
 (Object.keys(NIN_STATUSES) as NINResourceKey[]).forEach((buff) =>
 	registerBuffIcon(buff, `NIN/${RESOURCES[buff].name}.png`),
 );
-*/
+const NIN_DEBUFFS: NINResourceKey[] = ["DOKUMORI", "TRICK_ATTACK", "KUNAIS_BANE"];
+const NIN_BUFFS: NINResourceKey[] = (Object.keys(NIN_STATUSES) as NINResourceKey[]).filter(
+	(key) => !NIN_DEBUFFS.includes(key),
+);
 
 export class NINStatusPropsGenerator extends StatusPropsGenerator<NINState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
-		return [];
+		return [...NIN_DEBUFFS.map((rscType) => this.makeCommonTimer(rscType, false))];
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
-		return [];
+		return NIN_BUFFS.map((key) => {
+			if (key === "HIDE") {
+				return this.makeCommonTimerless(key);
+			}
+			return this.makeCommonTimer(key);
+		});
 	}
 
-	override jobSpecificResourceViewProps(): ResourceDisplayProps[] {
-		return [];
+	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
+		const resources = this.state.resources;
+
+		const singleCombo = resources.get("NIN_COMBO_TRACKER");
+		const aoeCombo = resources.get("NIN_AOE_COMBO_TRACKER");
+		const kazematoi = resources.get("KAZEMATOI").availableAmount();
+		const ninki = resources.get("NINKI").availableAmount();
+
+		const comboTimer = singleCombo.available(1)
+			? singleCombo.pendingChange?.timeTillEvent
+			: aoeCombo.available(1)
+				? aoeCombo.pendingChange?.timeTillEvent
+				: undefined;
+
+		const infos: ResourceDisplayProps[] = [
+			{
+				kind: "bar",
+				name: localize({ en: "Combo Timer", zh: "连击监控" }),
+				// TODO
+				color: colors.drk.drkComboTimer,
+				progress: comboTimer ? comboTimer / 30 : 0,
+				valueString: comboTimer?.toFixed(3) ?? "N/A",
+			} as ResourceBarProps,
+			{
+				kind: "counter",
+				name: localizeResourceType("KAZEMATOI"),
+				// TODO
+				color: colors.drk.darkarts,
+				currentStacks: kazematoi,
+				maxStacks: 5,
+			} as ResourceCounterProps,
+			{
+				kind: "bar",
+				name: localizeResourceType("NINKI"),
+				// TODO
+				color: colors.drk.darkside,
+				progress: ninki / 100,
+			} as ResourceBarProps,
+		];
+
+		return infos;
 	}
 }

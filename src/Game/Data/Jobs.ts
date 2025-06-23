@@ -145,7 +145,7 @@ export const MELEE = ensureRecord<Job>()({
 	},
 	NIN: {
 		role: "MELEE",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		limitBreak: "CHIMATSURI",
 	},
 	SAM: {

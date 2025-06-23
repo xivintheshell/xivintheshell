@@ -88,6 +88,8 @@ export const enum PotencyModifierType {
 	WINGED_REDEMPTION,
 
 	DARKSIDE,
+
+	BUNSHIN,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -116,6 +118,9 @@ export type CritDirectMultiplier = {
 };
 
 export type PotencyModifier = PotencyMultiplier | PotencyAdder | CritDirectMultiplier;
+
+const DARKSIDE_SCALAR = 1.1;
+const NIN_PET_SCALAR = 0.9;
 
 export const Modifiers = {
 	Tincture: {
@@ -434,7 +439,7 @@ export const Modifiers = {
 	Darkside: {
 		kind: "multiplier",
 		source: PotencyModifierType.DARKSIDE,
-		potencyFactor: 1.1,
+		potencyFactor: DARKSIDE_SCALAR,
 	} as PotencyMultiplier,
 	DrkPet: {
 		kind: "multiplier",
@@ -443,7 +448,24 @@ export const Modifiers = {
 		// https://docs.google.com/spreadsheets/d/1Yt7Px7VHuKG1eJR9CRKs3RpvcR5IZKAAA3xjekvv0LY/edit?gid=0#gid=0
 		// however, these comparisons were done assuming the player is already under darkside, so we need
 		// to multiply these values by a further 1.1 to compare against a player without darkside
-		potencyFactor: 1.05 * 1.1,
+		potencyFactor: 1.05 * DARKSIDE_SCALAR,
+	} as PotencyMultiplier,
+	// with a 5% party bonus, the additional potency from bunshin attacks do 90% of player potency
+	// this is applied to the additive bonus from bunshin as well as phantom kamaitachi
+	BunshinST: {
+		kind: "adder",
+		source: PotencyModifierType.BUNSHIN,
+		additiveAmount: 160 * NIN_PET_SCALAR,
+	} as PotencyAdder,
+	BunshinAOE: {
+		kind: "adder",
+		source: PotencyModifierType.BUNSHIN,
+		additiveAmount: 80 * NIN_PET_SCALAR,
+	} as PotencyAdder,
+	NinPet: {
+		kind: "multiplier",
+		source: PotencyModifierType.PET,
+		potencyFactor: NIN_PET_SCALAR,
 	} as PotencyMultiplier,
 };
 
