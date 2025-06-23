@@ -90,6 +90,7 @@ export const enum PotencyModifierType {
 	DARKSIDE,
 
 	BUNSHIN,
+	KASSATSU,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -466,6 +467,11 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.PET,
 		potencyFactor: NIN_PET_SCALAR,
+	} as PotencyMultiplier,
+	Kassatsu: {
+		kind: "multiplier",
+		source: PotencyModifierType.KASSATSU,
+		potencyFactor: 1.3
 	} as PotencyMultiplier,
 };
 

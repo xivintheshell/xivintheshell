@@ -42,6 +42,7 @@ export const NIN_ACTIONS = ensureRecord<ActionData>()({
 	GOKA_MEKKYAKU: { id: 16491, name: "Goka Mekkyaku", label: { zh: "劫火灭却之术" } },
 	HYOSHO_RANRYU: { id: 16492, name: "Hyosho Ranryu", label: { zh: "冰晶乱流之术" } },
 	RABBIT_MEDIUM: { id: 2272, name: "Rabbit Medium", label: { zh: "通灵之术·兔子" } },
+	HOLLOW_NOZUCHI: { id: 25776, name: "Hollow Nozuchi", label: { zh: "幻影野槌" }},
 });
 
 export const NIN_COOLDOWNS = ensureRecord<CooldownData>()({
@@ -73,7 +74,8 @@ export const NIN_STATUSES = ensureRecord<ResourceData>()({
 	KASSATSU: { name: "Kassatsu", label: { zh: "生杀予夺" } },
 	DOKUMORI: { name: "Dokumori", label: { zh: "介毒之术" } },
 	TENRI_JINDO_READY: { name: "Tenri Jindo Ready", label: { zh: "天理人道预备" } },
-	TEN_CHI_JIN: { name: "Ten Chi Jin", label: { zh: "天地人" } },
+	// Internally tracks 3 stacks to simplify buff expiry logic.
+	TEN_CHI_JIN: { name: "Ten Chi Jin", maximumStacks: 3, label: { zh: "天地人" } },
 	MEISUI: { name: "Meisui", label: { zh: "命水" } },
 	SHADOW_WALKER: { name: "Shadow Walker", label: { zh: "忍隐" } },
 	BUNSHIN: { name: "Bunshin", maximumStacks: 5, label: { zh: "分身之术" } },

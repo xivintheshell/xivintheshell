@@ -17,11 +17,14 @@ import { SHARED_LIMIT_BREAK_RESOURCES, LimitBreakResourceKey } from "../Data/Sha
 
 //#region Helper functions
 
-// Special case for RDM, because for some twelvesforsaken reason sprint/pot cancel dualcast
+// Special case for RDM and NIN, because for some twelvesforsaken reason sprint/pot cancel dualcast
+// and everything causes bunny.
 // And so do limit breaks! :(
 const cancelDualcast = (state: GameState) => {
 	if (state.job === "RDM" && state.tryConsumeResource("DUALCAST")) {
 		controller.reportWarning(WarningType.DualcastEaten);
+	} else if (state.job === "NIN" && state.hasResourceAvailable("MUDRA")) {
+		state.gainStatus("BUNNY");
 	}
 };
 

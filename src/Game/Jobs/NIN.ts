@@ -7,18 +7,27 @@
 
 import { NINStatusPropsGenerator } from "../../Components/Jobs/NIN";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
+import { ActionNode } from "../../Controller/Record";
+import { Aspect } from "../Common";
+import { TraitKey } from "../Data";
 import { NINActionKey, NINCooldownKey, NINResourceKey } from "../Data/Jobs/NIN";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
+import { Modifiers, Potency } from "../Potency";
 import { getResourceInfo, makeResource, ResourceInfo } from "../Resources";
 import {
 	Ability,
+	combineEffects,
+	ConditionalSkillReplace,
 	makeAbility,
 	MakeAbilityParams,
 	MakeGCDParams,
 	makeResourceAbility,
 	MakeResourceAbilityParams,
 	makeWeaponskill,
+	MOVEMENT_SKILL_ANIMATION_LOCK,
+	NO_EFFECT,
+	StatePredicate,
 	Weaponskill,
 } from "../Skills";
 
@@ -29,6 +38,9 @@ const makeNINResource = (
 ) => {
 	makeResource("NIN", rsc, maxValue, params ?? {});
 };
+
+makeNINResource("KAZEMATOI", 5);
+makeNINResource("NINKI", 100);
 
 makeNINResource("MUDRA", 1, { timeout: 6 });
 makeNINResource("HIDE", 1);
@@ -62,11 +74,40 @@ export class NINState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
-		this.registerRecurringEvents();
+		this.registerRecurringEvents(
+			[
+				{
+					groupedEffects: [
+						{
+							effectName: "DOTON",
+							appliedBy: ["DOTON"],
+							isGroundTargeted: true,
+						}
+					]
+				}
+			],
+		);
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<NINState> {
 		return new NINStatusPropsGenerator(this);
+	}
+
+	maybeTriggerHollowNozuchi(node: ActionNode) {
+		if (this.hasResourceAvailable("DOTON")) {
+			node.addPotency(
+			new Potency({
+				config: this.config,
+				sourceTime: this.getDisplayTime(),
+				sourceSkill: "HOLLOW_NOZUCHI",
+				aspect: Aspect.Earth,
+				basePotency: 70,
+				snapshotTime: this.getDisplayTime(),
+				description: "",
+				targetCount: node.targetCount,
+				falloff: 0,
+			}));
+		}
 	}
 
 	// Convert the state's current MUDRA_TRACKER resource to a sequence of the last
@@ -100,11 +141,27 @@ export class NINState extends GameState {
 		if (mudraTracker < 1000) {
 			return [
 				Math.floor(mudraTracker / 100),
-				Math.floor(mudraTracker / 10),
+				Math.floor(mudraTracker / 10) % 10,
 				mudraTracker % 10,
 			];
 		}
 		return undefined;
+	}
+
+	isMudraTrackerIn(combos: Mudra[][]): boolean {
+		const tracker = this.parseMudraTracker();
+		return tracker !== undefined && combos.some(
+			(combo) => tracker.length === combo.length
+			&& tracker.every((mudra, i) => combo[i] === mudra)
+		);
+	}
+
+	clearMudraInfo() {
+		console.log("MUDRA_TRACKER: " + this.parseMudraTracker());
+		this.tryConsumeResource("MUDRA");
+		this.tryConsumeResource("KASSATSU");
+		this.resources.get("MUDRA_TRACKER").overrideCurrentValue(0);
+		this.resources.get("BUNNY").overrideCurrentValue(0);
 	}
 
 	pushMudra(mudra: Mudra) {
@@ -119,10 +176,7 @@ export class NINState extends GameState {
 				rscType: "MUDRA",
 				name: "clear mudra tracker/bunny",
 				delay: (getResourceInfo("NIN", "MUDRA") as ResourceInfo).maxTimeout,
-				fnOnRsc: (rsc) => {
-					this.resources.get("MUDRA_TRACKER").overrideCurrentValue(0);
-					this.resources.get("BUNNY").overrideCurrentValue(0);
-				},
+				fnOnRsc: () => this.clearMudraInfo(),
 			});
 		}
 		if (amt > 1000) {
@@ -172,7 +226,7 @@ const makeNINResourceAbility = (
 		["JIN", 45],
 	] as Array<[NINActionKey, number]>
 ).forEach(([name, level], i) => {
-	makeNINAbility(name, 30, "cd_MUDRA", {
+	makeNINAbility(name, level, "cd_MUDRA", {
 		cooldown: 20,
 		maxCharges: 2,
 		// Mudras cannot be used during a GCD roll
@@ -184,4 +238,153 @@ const makeNINResourceAbility = (
 			state.pushMudra(i + 1);
 		},
 	});
+});
+
+// Validate/replace conditions for each ninjutsu.
+const GOKA_CONDITION: StatePredicate<NINState> = (state) =>
+	state.hasTraitUnlocked("ENHANCED_KASSATSU") && state.hasResourceAvailable("KASSATSU") && state.isMudraTrackerIn([[Mudra.Chi, Mudra.Ten], [Mudra.Jin, Mudra.Ten]])
+;
+const HYOSHO_CONDITION: StatePredicate<NINState> = (state) =>
+	state.hasTraitUnlocked("ENHANCED_KASSATSU") && state.hasResourceAvailable("KASSATSU") && state.isMudraTrackerIn([[Mudra.Ten, Mudra.Jin], [Mudra.Chi, Mudra.Jin]])
+;
+const FUMA_CONDITION: StatePredicate<NINState> = (state) => state.isMudraTrackerIn([[Mudra.Ten], [Mudra.Chi], [Mudra.Jin]]);
+const KATON_CONDITION: StatePredicate<NINState> = (state) => state.isMudraTrackerIn([[Mudra.Chi, Mudra.Ten], [Mudra.Jin, Mudra.Ten]]);
+const RAITON_CONDITION: StatePredicate<NINState> = (state) => state.isMudraTrackerIn([[Mudra.Ten, Mudra.Chi], [Mudra.Jin, Mudra.Chi]]);
+const HYOTON_CONDITION: StatePredicate<NINState> = (state) => state.isMudraTrackerIn([[Mudra.Ten, Mudra.Jin], [Mudra.Chi, Mudra.Jin]]);
+const HUTON_CONDITION: StatePredicate<NINState> = (state) => state.isMudraTrackerIn([
+	[Mudra.Jin, Mudra.Chi, Mudra.Ten],
+	[Mudra.Chi, Mudra.Jin, Mudra.Ten],
+]);
+const DOTON_CONDITION: StatePredicate<NINState> = (state) => state.isMudraTrackerIn([
+	[Mudra.Ten, Mudra.Jin, Mudra.Chi],
+	[Mudra.Jin, Mudra.Ten, Mudra.Chi],
+]);
+const SUITON_CONDITION: StatePredicate<NINState> = (state) => state.isMudraTrackerIn([
+	[Mudra.Ten, Mudra.Chi, Mudra.Jin],
+	[Mudra.Chi, Mudra.Ten, Mudra.Jin],
+]);
+
+const NINJUTSU_REPLACE_LIST: ConditionalSkillReplace<NINState>[] = [
+	// Put kassatsu replacements first
+	{
+		newSkill: "GOKA_MEKKYAKU", condition: GOKA_CONDITION,
+	},
+	{
+		newSkill: "HYOSHO_RANRYU", condition: HYOSHO_CONDITION,
+	},
+	{
+		newSkill: "FUMA_SHURIKEN", condition: FUMA_CONDITION,
+	},
+	{
+		newSkill: "KATON", condition: KATON_CONDITION,
+	},
+	{
+		newSkill: "RAITON", condition: RAITON_CONDITION,
+	},
+	{
+		newSkill: "HYOTON", condition: HYOTON_CONDITION,
+	},
+	{
+		newSkill: "HUTON", condition: HUTON_CONDITION,
+	},
+	{
+		newSkill: "DOTON", condition: DOTON_CONDITION,
+	},
+	{
+		newSkill: "SUITON", condition: SUITON_CONDITION,
+	},
+	// If mudra is active but no valid ninjutsu was found, bnuuy
+	{
+		newSkill: "RABBIT_MEDIUM",
+		condition: (state) => false,
+	},
+	// If no mudra is active, then replace the skill with empty ninjutsu
+	{
+		newSkill: "NINJUTSU",
+		condition: (state) => !state.hasResourceAvailable("MUDRA"),
+	},
+];
+
+const getReplaceList = (skill: NINActionKey) => NINJUTSU_REPLACE_LIST.filter((replace) => replace.newSkill !== skill);
+
+makeWeaponskill("NIN", "NINJUTSU", 30, {
+	recastTime: 1.5,
+	validateAttempt: (state) => false,
+	replaceIf: getReplaceList("NINJUTSU"),
+});
+
+([
+	["RABBIT_MEDIUM", 30, undefined, undefined],
+	["FUMA_SHURIKEN", 30, 500, undefined],
+	["KATON", 35, 350, 0, true],
+	["RAITON", 35, 740, undefined],
+	["HYOTON", 45, 350, undefined],
+	["HUTON", 45, 240, 0],
+	["SUITON", 45, 580, undefined],
+	["GOKA_MEKKYAKU", 76, 600, 0],
+	["HYOSHO_RANRYU", 76, 1300, undefined],
+] as Array<[NINActionKey, number, number | Array<[TraitKey, number]> | undefined, number | undefined]>).forEach(
+	([name, level, potency, falloff]) => {
+		// Ninjutsus have a fixed 1.5s recast
+		makeWeaponskill("NIN", name, level, {
+			startOnHotbar: false,
+			recastTime: (state) => state.hasResourceAvailable("TEN_CHI_JIN") ? 1 : 1.5,
+			potency,
+			falloff,
+			replaceIf: getReplaceList(name),
+			validateAttempt: NINJUTSU_REPLACE_LIST.find((item) => item.newSkill === name)!.condition,
+			onConfirm: (
+				combineEffects(
+					// reduce shukuchi CD by 60s on katon/raiton/hyoton
+					// kassatsu-exclusive versions do not restore shukuchi cd
+					["KATON", "RAITON", "HYOTON"].includes(name)
+					? (state: NINState) => {
+						const shukuchiElapsed = state.cooldowns.get("cd_SHUKUCHI").timeTillNextStackAvailable();
+						if (shukuchiElapsed === 0) {
+							return;
+						}
+						// gain a whole stack of shukuchi
+						state.cooldowns.get("cd_SHUKUCHI").restore(60);
+					} : NO_EFFECT,
+					// trigger hollow nozuchi on katon/goka
+					["KATON", "GOKA_MEKKYAKU"].includes(name)
+					? (state: NINState, node: ActionNode) => state.maybeTriggerHollowNozuchi(node)
+					: NO_EFFECT,
+					(state) => state.clearMudraInfo(),
+				)
+			),
+			jobPotencyModifiers: (state) => state.hasResourceAvailable("KASSATSU") ? [Modifiers.Kassatsu] : [],
+		});
+	}
+);
+
+// Special treatment for Doton's puddle creation
+makeWeaponskill("NIN", "DOTON", 45, {
+	startOnHotbar: false,
+	recastTime: (state) => state.hasResourceAvailable("TEN_CHI_JIN") ? 1 : 1.5,
+	potency: 0,
+	falloff: 0,
+	replaceIf: getReplaceList("DOTON"),
+	validateAttempt: NINJUTSU_REPLACE_LIST.find((item) => item.newSkill === "DOTON")!.condition,
+	onConfirm: combineEffects(
+		(state, node) => {
+			state.gainStatus("DOTON");
+			state.addDoTPotencies({
+				node,
+				effectName: "DOTON",
+				skillName: "DOTON",
+				tickPotency: 80,
+				speedStat: "sks",
+			});
+		},
+		(state) => state.clearMudraInfo(),
+	),
+	// Kassatsu does not affect doton
+});
+
+makeNINAbility("SHUKUCHI", 40, "cd_SHUKUCHI", {
+	cooldown: 60,
+	// set by trait in constructor
+	maxCharges: 2,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
