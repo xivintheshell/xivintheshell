@@ -16,7 +16,7 @@ import { NINActionKey, NINCooldownKey, NINResourceKey } from "../Data/Jobs/NIN";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { Modifiers, Potency } from "../Potency";
-import { getResourceInfo, makeResource, ResourceInfo } from "../Resources";
+import { getResourceInfo, makeResource, ResourceInfo, CoolDown } from "../Resources";
 import {
 	Ability,
 	combineEffects,
@@ -75,6 +75,9 @@ enum Mudra {
 export class NINState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
+
+		const shukuchiStacks = this.hasTraitUnlocked("ENHANCED_SHUKUCHI_II") ? 2 : 1;
+		this.cooldowns.set(new CoolDown("cd_SHUKUCHI", 60, shukuchiStacks, shukuchiStacks));
 
 		this.registerRecurringEvents([
 			{
@@ -333,12 +336,36 @@ const getJinReplace = (skill: NINActionKey) =>
 const NINJUTSU_POTENCY_LIST: Array<
 	[NINActionKey, number, number | Array<[TraitKey, number]>, number | undefined]
 > = [
-	["FUMA_SHURIKEN", 30, 500, undefined],
+	[
+		"FUMA_SHURIKEN",
+		30,
+		[
+			["NEVER", 450],
+			["MELEE_MASTERY_III_NIN", 500],
+		],
+		undefined,
+	],
 	["KATON", 35, 350, 0],
-	["RAITON", 35, 740, undefined],
+	[
+		"RAITON",
+		35,
+		[
+			["NEVER", 650],
+			["MELEE_MASTERY_III_NIN", 740],
+		],
+		undefined,
+	],
 	["HYOTON", 45, 350, undefined],
 	["HUTON", 45, 240, 0],
-	["SUITON", 45, 580, undefined],
+	[
+		"SUITON",
+		45,
+		[
+			["NEVER", 500],
+			["MELEE_MASTERY_III_NIN", 580],
+		],
+		undefined,
+	],
 	["GOKA_MEKKYAKU", 76, 600, 0],
 	["HYOSHO_RANRYU", 76, 1300, undefined],
 ];
@@ -455,6 +482,7 @@ const FUMA_CONDITION: StatePredicate<NINState> = (state) =>
 	state.hasResourceAvailable("MUDRA") &&
 	state.isMudraTrackerIn([[Mudra.Ten], [Mudra.Chi], [Mudra.Jin]]);
 const KATON_CONDITION: StatePredicate<NINState> = (state) =>
+	(!state.hasTraitUnlocked("ENHANCED_KASSATSU") || !state.hasResourceAvailable("KASSATSU")) &&
 	state.hasResourceAvailable("MUDRA") &&
 	state.isMudraTrackerIn([
 		[Mudra.Chi, Mudra.Ten],
@@ -467,6 +495,7 @@ const RAITON_CONDITION: StatePredicate<NINState> = (state) =>
 		[Mudra.Jin, Mudra.Chi],
 	]);
 const HYOTON_CONDITION: StatePredicate<NINState> = (state) =>
+	(!state.hasTraitUnlocked("ENHANCED_KASSATSU") || !state.hasResourceAvailable("KASSATSU")) &&
 	state.hasResourceAvailable("MUDRA") &&
 	state.isMudraTrackerIn([
 		[Mudra.Ten, Mudra.Jin],
@@ -514,7 +543,6 @@ const BUNNY_CONDITION: StatePredicate<NINState> = (state) =>
 		]));
 
 const NINJUTSU_REPLACE_LIST: ConditionalSkillReplace<NINState>[] = [
-	// Put kassatsu replacements first
 	{
 		newSkill: "GOKA_MEKKYAKU",
 		condition: GOKA_CONDITION,
