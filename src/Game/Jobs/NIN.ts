@@ -13,12 +13,12 @@ import { NINStatusPropsGenerator } from "../../Components/Jobs/NIN";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
 import { controller } from "../../Controller/Controller";
-import { Aspect, WarningType } from "../Common";
+import { WarningType } from "../Common";
 import { TraitKey } from "../Data";
 import { NINActionKey, NINCooldownKey, NINResourceKey } from "../Data/Jobs/NIN";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { Modifiers, Potency, makeComboModifier, makePositionalModifier } from "../Potency";
+import { Modifiers, makeComboModifier, makePositionalModifier } from "../Potency";
 import { getResourceInfo, makeResource, ResourceInfo, CoolDown } from "../Resources";
 import {
 	Ability,
@@ -27,8 +27,6 @@ import {
 	EffectFn,
 	getBasePotency,
 	makeAbility,
-	MakeAbilityParams,
-	MakeGCDParams,
 	makeResourceAbility,
 	MakeResourceAbilityParams,
 	makeWeaponskill,
@@ -731,7 +729,7 @@ tcjReplaces.forEach(
 	// Use the generic constructor to avoid the generic bunny logic/restrictions.
 	([name, condition]) => {
 		// strip the mudra sign from the end of the key when looking up potencies
-		const [_, applicationDelay, potency, falloff] = NINJUTSU_POTENCY_MAP.get(
+		const [, applicationDelay, potency, falloff] = NINJUTSU_POTENCY_MAP.get(
 			name.substring(0, name.length - 4) as NINActionKey,
 		)!;
 		const mudra = name.substring(name.length - 3);
