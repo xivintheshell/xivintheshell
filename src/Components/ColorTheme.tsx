@@ -165,6 +165,15 @@ export type DRKResourceColors = {
 	grit: string;
 };
 
+export type NINResourceColors = {
+	ninComboTimer: string;
+	kazematoi: string;
+	ninki: string;
+	bunshin: string;
+	kassatsu: string;
+	nozuchi: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -211,6 +220,7 @@ export type ThemeColors = {
 	sge: SGEResourceColors;
 	pld: PLDResourceColors;
 	drk: DRKResourceColors;
+	nin: NINResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -422,6 +432,15 @@ const DARK_THEME_COLORS: ThemeColors = {
 		drkComboTimer: "#cb8046",
 		grit: "#82cad9",
 	},
+	nin: {
+		// TODO
+		ninComboTimer: "#ffffff",
+		kazematoi: "#ffffff",
+		ninki: "#ffffff",
+		bunshin: "#ffffff",
+		kassatsu: "#ffffff",
+		nozuchi: "#ffffff",
+	},
 	timeline: {
 		ruler: "#2d2d2d",
 		tracks: "#242424",
@@ -613,6 +632,15 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		drkComboTimer: "#cb8046",
 		grit: "#82cad9",
 	},
+	nin: {
+		// TODO
+		ninComboTimer: "black",
+		kazematoi: "black",
+		ninki: "black",
+		bunshin: "black",
+		kassatsu: "black",
+		nozuchi: "black",
+	},
 	timeline: {
 		ruler: "#e9e9e9",
 		tracks: "#f3f3f3",
@@ -701,6 +729,9 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.WINGED_REDEMPTION, colors.blu.wingedreprobation],
 		[PotencyModifierType.WINGED_REPROBATION, colors.blu.wingedreprobation],
 		[PotencyModifierType.DARKSIDE, colors.drk.darkside],
+		[PotencyModifierType.BUNSHIN, colors.nin.bunshin],
+		[PotencyModifierType.KASSATSU, colors.nin.kassatsu],
+		[PotencyModifierType.HOLLOW_NOZUCHI, colors.nin.nozuchi],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

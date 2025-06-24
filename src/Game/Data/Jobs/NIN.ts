@@ -32,7 +32,6 @@ export const NIN_ACTIONS = ensureRecord<ActionData>()({
 	DEATHFROG_MEDIUM: { id: 36959, name: "Deathfrog Medium", label: { zh: "通灵之术·虾蟆仙" } },
 	ZESHO_MEPPO: { id: 36960, name: "Zesho Meppo", label: { zh: "是生灭法" } },
 	TENRI_JINDO: { id: 36961, name: "Tenri Jindo", label: { zh: "天理人道" } },
-	FUMA_SHURIKEN: { id: 2265, name: "Fuma Shuriken", label: { zh: "风魔手里剑" } },
 	KATON: { id: 2266, name: "Katon", label: { zh: "火遁之术" } },
 	RAITON: { id: 2267, name: "Raiton", label: { zh: "雷遁之术" } },
 	HYOTON: { id: 2268, name: "Hyoton", label: { zh: "冰遁之术" } },
@@ -42,6 +41,30 @@ export const NIN_ACTIONS = ensureRecord<ActionData>()({
 	GOKA_MEKKYAKU: { id: 16491, name: "Goka Mekkyaku", label: { zh: "劫火灭却之术" } },
 	HYOSHO_RANRYU: { id: 16492, name: "Hyosho Ranryu", label: { zh: "冰晶乱流之术" } },
 	RABBIT_MEDIUM: { id: 2272, name: "Rabbit Medium", label: { zh: "通灵之术·兔子" } },
+	// Because we serialize action name values instead of keys, we need to distinguish between
+	// the different buttons. These will be re-normalized on CSV export.
+	FUMA_SHURIKEN: { id: 2265, name: "Fuma Shuriken", label: { zh: "风魔手里剑" } },
+	FUMA_SHURIKEN_TEN: {
+		id: 18873,
+		name: "Fuma Shuriken (Ten)",
+		label: { zh: "风魔手里剑（天）" },
+	},
+	FUMA_SHURIKEN_CHI: {
+		id: 18874,
+		name: "Fuma Shuriken (Chi)",
+		label: { zh: "风魔手里剑（地）" },
+	},
+	FUMA_SHURIKEN_JIN: {
+		id: 18875,
+		name: "Fuma Shuriken (Jin)",
+		label: { zh: "风魔手里剑（人）" },
+	},
+	KATON_TEN: { id: 18876, name: "Katon (Ten)", label: { zh: "火遁之术（天）" } },
+	RAITON_CHI: { id: 18877, name: "Raiton (Chi)", label: { zh: "雷遁之术（地）" } },
+	HYOTON_JIN: { id: 18878, name: "Hyoton (Jin)", label: { zh: "冰遁之术（人）" } },
+	HUTON_TEN: { id: 18879, name: "Huton (Ten)", label: { zh: "风遁之术（天）" } },
+	DOTON_CHI: { id: 18880, name: "Doton (Chi)", label: { zh: "土遁之术（地）" } },
+	SUITON_JIN: { id: 18881, name: "Suiton (Jin)", label: { zh: "水遁之术（人）" } },
 });
 
 export const NIN_COOLDOWNS = ensureRecord<CooldownData>()({

@@ -31,6 +31,10 @@ const cancelDualcast = (state: GameState) => {
 	}
 };
 
+// NIN cannot use any other abilities while TCJ is active.
+const notInTCJ = (state: Readonly<GameState>) =>
+	state.job !== "NIN" || !state.hasResourceAvailable("TEN_CHI_JIN");
+
 // Special case for NIN, where any action during a mudra causes a bunny.
 const bunny = (state: GameState) => {
 	if (state.job === "NIN" && state.hasResourceAvailable("MUDRA")) {
@@ -80,6 +84,7 @@ makeResourceAbility(MELEE_JOBS, "FEINT", 22, "cd_FEINT", {
 	cooldown: 90,
 	duration: (state) => (state.hasTraitUnlocked("ENHANCED_FEINT") && 15) || 10,
 	assetPath: "Role/Feint.png",
+	validateAttempt: notInTCJ,
 	onConfirm: bunny,
 });
 
@@ -117,6 +122,7 @@ makeResourceAbility(MELEE_JOBS, "TRUE_NORTH", 50, "cd_TRUE_NORTH", {
 	cooldown: 45,
 	maxCharges: 2,
 	assetPath: "Role/True North.png",
+	validateAttempt: notInTCJ,
 	onConfirm: bunny,
 });
 
@@ -178,6 +184,7 @@ makeResourceAbility(
 		applicationDelay: 0.62,
 		cooldown: 120,
 		assetPath: "Role/Arms Length.png",
+		validateAttempt: notInTCJ,
 		onConfirm: bunny,
 	},
 );
@@ -204,6 +211,7 @@ makeResourceAbility(MELEE_JOBS, "BLOODBATH", 8, "cd_BLOODBATH", {
 	applicationDelay: 0.625,
 	cooldown: 90,
 	assetPath: "Role/Bloodbath.png",
+	validateAttempt: notInTCJ,
 	onConfirm: bunny,
 });
 
@@ -212,6 +220,7 @@ makeAbility([...MELEE_JOBS, ...RANGED_JOBS], "SECOND_WIND", 12, "cd_SECOND_WIND"
 	applicationDelay: 0.625,
 	cooldown: 120,
 	assetPath: "Role/Second Wind.png",
+	validateAttempt: notInTCJ,
 	onConfirm: bunny,
 });
 
@@ -257,6 +266,7 @@ makeAbility(MELEE_JOBS, "LEG_SWEEP", 10, "cd_LEG_SWEEP", {
 	applicationDelay: 0.625,
 	cooldown: 40,
 	assetPath: "Role/Leg Sweep.png",
+	validateAttempt: notInTCJ,
 	onConfirm: bunny,
 });
 
@@ -269,6 +279,7 @@ makeResourceAbility(ALL_JOBS, "TINCTURE", 1, "cd_TINCTURE", {
 	applicationDelay: 0.64, // delayed // somewhere in the midrange of what's seen in logs
 	cooldown: 270,
 	assetPath: "General/Tincture.png",
+	validateAttempt: notInTCJ,
 	onConfirm: combineEffects(cancelDualcast, bunny),
 });
 
@@ -277,6 +288,7 @@ makeResourceAbility(ALL_JOBS, "SPRINT", 1, "cd_SPRINT", {
 	applicationDelay: 0.133, // delayed
 	cooldown: 60,
 	assetPath: "General/Sprint.png",
+	validateAttempt: notInTCJ,
 	onConfirm: combineEffects(cancelDualcast, bunny),
 });
 
@@ -368,6 +380,7 @@ makeLimitBreak(MELEE_JOBS, "BRAVER", "cd_LIMIT_BREAK_1", {
 	applicationDelay: 2.23,
 	animationLock: 3.86,
 	potency: 1000,
+	validateAttempt: notInTCJ,
 	onConfirm: bunny,
 });
 makeLimitBreak(MELEE_JOBS, "BLADEDANCE", "cd_LIMIT_BREAK_2", {
@@ -376,6 +389,7 @@ makeLimitBreak(MELEE_JOBS, "BLADEDANCE", "cd_LIMIT_BREAK_2", {
 	applicationDelay: 3.28,
 	animationLock: 3.86,
 	potency: 2200,
+	validateAttempt: notInTCJ,
 	onConfirm: bunny,
 });
 MELEE_JOBS.forEach((job) => {
@@ -386,6 +400,7 @@ MELEE_JOBS.forEach((job) => {
 		applicationDelay: 2.26,
 		animationLock: 3.7,
 		potency: 3500,
+		validateAttempt: notInTCJ,
 		onConfirm: bunny,
 	});
 });

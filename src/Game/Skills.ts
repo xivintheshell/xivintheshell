@@ -652,6 +652,7 @@ export function makeLimitBreak<T extends PlayerState>(
 		animationLock: number;
 		applicationDelay?: number;
 		onExecute?: EffectFn<T>;
+		validateAttempt?: StatePredicate<T>;
 		onConfirm?: EffectFn<T>;
 		onApplication?: EffectFn<T>;
 		castTime?: number;
@@ -690,7 +691,7 @@ export function makeLimitBreak<T extends PlayerState>(
 		aoeHeal: false,
 		drawsAggro: false,
 		applicationDelay: params.applicationDelay ?? 0,
-		validateAttempt: (state) => true,
+		validateAttempt: params.validateAttempt ?? ((state) => true),
 		onExecute,
 		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication: params.onApplication ?? NO_EFFECT,

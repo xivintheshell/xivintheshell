@@ -2,7 +2,9 @@
 
 // TODO stuff to test
 // - mudra -> kassatsu -> ninjutsu eats kassatsu
-// - tcj has different gcd roll from mudras
+// - mudra -> TCJ = eat mudras
+// - TCJ -> mudra still produces valid combinations
+// - TCJ and mudra manual clickoff don't break subsequent usages
 // - various bunny conditions
 
 import { NINStatusPropsGenerator } from "../../Components/Jobs/NIN";
@@ -148,14 +150,19 @@ export class NINState extends GameState {
 		this.resources.get("BUNNY").overrideCurrentValue(0);
 	}
 
-	pushMudra(mudra: Mudra) {
+	pushMudra(mudra: Mudra, tcj: boolean) {
 		const mudraResource = this.resources.get("MUDRA_TRACKER");
 		const amt = mudraResource.availableAmount();
-		if (amt === 0) {
+		if (amt === 0 && !tcj) {
 			console.assert(this.resources.get("MUDRA_TRACKER").availableAmount() === 0);
 			console.assert(this.resources.get("BUNNY").availableAmount() === 0);
 			// enqueue clear for tracker and bunny resources
 			this.gainStatus("MUDRA");
+			// To work around a possible bug in resource management, we must cancel
+			// the original mudra resource expiry event since adding a new resource event
+			// overwrites the existing event without removing it from the event queue.
+			// We should eventually fix this globally, but doing so would require extensive testing.
+			this.resources.get("MUDRA").removeTimer();
 			this.resources.addResourceEvent({
 				rscType: "MUDRA",
 				name: "clear mudra tracker/bunny",
@@ -167,9 +174,26 @@ export class NINState extends GameState {
 			// don't bother, since we're already bunnied
 			return;
 		}
-		mudraResource.overrideCurrentValue(amt * 10 + mudra);
+		const newMudra = amt * 10 + mudra;
+		mudraResource.overrideCurrentValue(newMudra);
+		// Clear mudra state if this is the last TCJ ability in the sequence
+		if (tcj && newMudra > 100) {
+			this.tryConsumeResource("TEN_CHI_JIN");
+			this.clearMudraInfo();
+		}
 	}
 }
+
+// NIN cannot use any other abilities while TCJ is active.
+const notInTCJ = (state: Readonly<GameState>) =>
+	state.job !== "NIN" || !state.hasResourceAvailable("TEN_CHI_JIN");
+
+// Special case for NIN, where any action during a mudra causes a bunny.
+const bunny = (state: GameState) => {
+	if (state.job === "NIN" && state.hasResourceAvailable("MUDRA")) {
+		state.gainStatus("BUNNY");
+	}
+};
 
 const makeNINWeaponskill = (
 	name: NINActionKey,
@@ -178,6 +202,11 @@ const makeNINWeaponskill = (
 ): Weaponskill<NINState> => {
 	return makeWeaponskill("NIN", name, unlockLevel, {
 		...params,
+		validateAttempt: (state: Readonly<NINState>) =>
+			(notInTCJ(state) && params.validateAttempt?.(state)) || false,
+		onConfirm: combineEffects(bunny, (state: NINState, node: ActionNode) =>
+			params.onConfirm?.(state, node),
+		),
 	});
 };
 
@@ -189,6 +218,11 @@ const makeNINAbility = (
 ): Ability<NINState> => {
 	return makeAbility("NIN", name, unlockLevel, cdName, {
 		...params,
+		validateAttempt: (state: Readonly<NINState>) =>
+			(notInTCJ(state) && params.validateAttempt?.(state)) || false,
+		onConfirm: combineEffects(bunny, (state: NINState, node: ActionNode) =>
+			params.onConfirm?.(state, node),
+		),
 	});
 };
 
@@ -198,29 +232,207 @@ const makeNINResourceAbility = (
 	cdName: NINCooldownKey,
 	params: MakeResourceAbilityParams<NINState>,
 ): Ability<NINState> => {
-	return makeResourceAbility("NIN", name, unlockLevel, cdName, params);
+	return makeResourceAbility("NIN", name, unlockLevel, cdName, {
+		...params,
+		validateAttempt: (state: Readonly<NINState>) =>
+			(notInTCJ(state) && params.validateAttempt?.(state)) || false,
+		onConfirm: combineEffects(bunny, (state: NINState, node: ActionNode) =>
+			params.onConfirm?.(state, node),
+		),
+	});
 };
+
+const FS_TCJ_CONDITION = (state: Readonly<NINState>) =>
+	state.hasResourceAvailable("TEN_CHI_JIN") && state.isMudraTrackerIn([[]]);
+const KATON_TCJ_CONDITION = (state: Readonly<NINState>) =>
+	state.hasResourceAvailable("TEN_CHI_JIN") && state.isMudraTrackerIn([[Mudra.Chi], [Mudra.Jin]]);
+const RAITON_TCJ_CONDITION = (state: Readonly<NINState>) =>
+	state.hasResourceAvailable("TEN_CHI_JIN") && state.isMudraTrackerIn([[Mudra.Ten], [Mudra.Jin]]);
+const HYOTON_TCJ_CONDITION = (state: Readonly<NINState>) =>
+	state.hasResourceAvailable("TEN_CHI_JIN") && state.isMudraTrackerIn([[Mudra.Ten], [Mudra.Chi]]);
+const HUTON_TCJ_CONDITION = (state: Readonly<NINState>) =>
+	state.hasResourceAvailable("TEN_CHI_JIN") &&
+	state.isMudraTrackerIn([
+		[Mudra.Jin, Mudra.Chi],
+		[Mudra.Chi, Mudra.Jin],
+	]);
+const DOTON_TCJ_CONDITION = (state: Readonly<NINState>) =>
+	state.hasResourceAvailable("TEN_CHI_JIN") &&
+	state.isMudraTrackerIn([
+		[Mudra.Ten, Mudra.Jin],
+		[Mudra.Jin, Mudra.Ten],
+	]);
+const SUITON_TCJ_CONDITION = (state: Readonly<NINState>) =>
+	state.hasResourceAvailable("TEN_CHI_JIN") &&
+	state.isMudraTrackerIn([
+		[Mudra.Ten, Mudra.Chi],
+		[Mudra.Chi, Mudra.Ten],
+	]);
+const TEN_REPLACEMENTS: ConditionalSkillReplace<NINState>[] = [
+	{
+		newSkill: "TEN",
+		condition: (state) => !state.hasResourceAvailable("TEN_CHI_JIN"),
+	},
+	{
+		newSkill: "FUMA_SHURIKEN_TEN",
+		condition: FS_TCJ_CONDITION,
+	},
+	{
+		newSkill: "KATON_TEN",
+		condition: KATON_TCJ_CONDITION,
+	},
+	{
+		newSkill: "HUTON_TEN",
+		condition: HUTON_TCJ_CONDITION,
+	},
+];
+const CHI_REPLACEMENTS: ConditionalSkillReplace<NINState>[] = [
+	{
+		newSkill: "CHI",
+		condition: (state) => !state.hasResourceAvailable("TEN_CHI_JIN"),
+	},
+	{
+		newSkill: "FUMA_SHURIKEN_CHI",
+		condition: FS_TCJ_CONDITION,
+	},
+	{
+		newSkill: "RAITON_CHI",
+		condition: RAITON_TCJ_CONDITION,
+	},
+	{
+		newSkill: "DOTON_CHI",
+		condition: DOTON_TCJ_CONDITION,
+	},
+];
+const JIN_REPLACEMENTS: ConditionalSkillReplace<NINState>[] = [
+	{
+		newSkill: "JIN",
+		condition: (state) => !state.hasResourceAvailable("TEN_CHI_JIN"),
+	},
+	{
+		newSkill: "FUMA_SHURIKEN_JIN",
+		condition: FS_TCJ_CONDITION,
+	},
+	{
+		newSkill: "HYOTON_JIN",
+		condition: HYOTON_TCJ_CONDITION,
+	},
+	{
+		newSkill: "SUITON_JIN",
+		condition: SUITON_TCJ_CONDITION,
+	},
+];
+
+const getTenReplace = (skill: NINActionKey) =>
+	TEN_REPLACEMENTS.filter((replace) => replace.newSkill !== skill);
+const getChiReplace = (skill: NINActionKey) =>
+	CHI_REPLACEMENTS.filter((replace) => replace.newSkill !== skill);
+const getJinReplace = (skill: NINActionKey) =>
+	JIN_REPLACEMENTS.filter((replace) => replace.newSkill !== skill);
+
+const NINJUTSU_POTENCY_LIST: Array<
+	[NINActionKey, number, number | Array<[TraitKey, number]>, number | undefined]
+> = [
+	["FUMA_SHURIKEN", 30, 500, undefined],
+	["KATON", 35, 350, 0],
+	["RAITON", 35, 740, undefined],
+	["HYOTON", 45, 350, undefined],
+	["HUTON", 45, 240, 0],
+	["SUITON", 45, 580, undefined],
+	["GOKA_MEKKYAKU", 76, 600, 0],
+	["HYOSHO_RANRYU", 76, 1300, undefined],
+];
+
+// @ts-expect-error compiler is not smart enough to validate the destructure
+const NINJUTSU_POTENCY_MAP: Map<
+	NINActionKey,
+	Array<[number, number | Array<[TraitKey, number]>, number | undefined]>
+> = new Map(
+	NINJUTSU_POTENCY_LIST.map(([name, level, potency, falloff]) => [
+		name,
+		[level, potency, falloff],
+	]),
+);
+
+const tcjReplaces: Array<[NINActionKey, StatePredicate<NINState>]> = [
+	["FUMA_SHURIKEN_TEN", FS_TCJ_CONDITION],
+	["FUMA_SHURIKEN_CHI", FS_TCJ_CONDITION],
+	["FUMA_SHURIKEN_JIN", FS_TCJ_CONDITION],
+	["KATON_TEN", KATON_TCJ_CONDITION],
+	["RAITON_CHI", RAITON_TCJ_CONDITION],
+	["HYOTON_JIN", HYOTON_TCJ_CONDITION],
+	["HUTON_TEN", HUTON_TCJ_CONDITION],
+	["SUITON_JIN", SUITON_TCJ_CONDITION],
+];
+tcjReplaces.forEach(
+	// Use the generic constructor to avoid the generic bunny logic/restrictions.
+	([name, condition]) => {
+		// strip the mudra sign from the end of the key when looking up potencies
+		const [_, potency, falloff] = NINJUTSU_POTENCY_MAP.get(
+			name.substring(0, name.length - 4) as NINActionKey,
+		)!;
+		const mudra = name.substring(name.length - 3);
+		const replacer =
+			mudra === "TEN" ? getTenReplace : mudra === "CHI" ? getChiReplace : getJinReplace;
+		makeWeaponskill("NIN", name, 70, {
+			startOnHotbar: false,
+			recastTime: 1,
+			// @ts-expect-error compiler is not smart enough to validate the destructure
+			potency,
+			// @ts-expect-error compiler is not smart enough to validate the destructure
+			falloff,
+			replaceIf: replacer(name),
+			validateAttempt: condition,
+			onConfirm: (state: NINState) =>
+				state.pushMudra(
+					mudra === "TEN" ? Mudra.Ten : mudra === "CHI" ? Mudra.Chi : Mudra.Jin,
+					true,
+				),
+		});
+	},
+);
+
+const dotonConfirm = combineEffects(
+	(state, node) => {
+		state.gainStatus("DOTON");
+		state.addDoTPotencies({
+			node,
+			effectName: "DOTON",
+			skillName: "DOTON",
+			tickPotency: 80,
+			speedStat: "sks",
+		});
+	},
+	(state: NINState) => state.clearMudraInfo(),
+);
+// Special handling for Doton
+makeWeaponskill("NIN", "DOTON_CHI", 70, {
+	startOnHotbar: false,
+	recastTime: 1,
+	replaceIf: getChiReplace("DOTON_CHI"),
+	validateAttempt: DOTON_TCJ_CONDITION,
+	onConfirm: (state: NINState) => state.pushMudra(2, true),
+});
 
 // Mudra actions always take exactly 0.5s regardless of sks/haste.
 // They technically are abilities rather than weaponskills, but it is easier to code them as weaponskills.
 (
 	[
-		["TEN", 30],
-		["CHI", 35],
-		["JIN", 45],
-	] as Array<[NINActionKey, number]>
-).forEach(([name, level], i) => {
+		["TEN", 30, getTenReplace],
+		["CHI", 35, getChiReplace],
+		["JIN", 45, getJinReplace],
+	] as Array<[NINActionKey, number, (key: NINActionKey) => ConditionalSkillReplace<NINState>[]]>
+).forEach(([name, level, replacer], i) => {
 	makeWeaponskill("NIN", name, level, {
 		recastTime: 0.5,
+		replaceIf: replacer(name),
 		secondaryCooldown: {
 			cdName: "cd_MUDRA",
 			cooldown: 20,
 			maxCharges: 2,
 		},
-		// Roll the GCD and update mudra state
-		onConfirm: (state: NINState) => {
-			state.pushMudra(i + 1);
-		},
+		validateAttempt: (state: Readonly<NINState>) => !state.hasResourceAvailable("TEN_CHI_JIN"),
+		onConfirm: (state: NINState) => state.pushMudra(i + 1, false),
 	});
 });
 
@@ -240,33 +452,40 @@ const HYOSHO_CONDITION: StatePredicate<NINState> = (state) =>
 		[Mudra.Chi, Mudra.Jin],
 	]);
 const FUMA_CONDITION: StatePredicate<NINState> = (state) =>
+	state.hasResourceAvailable("MUDRA") &&
 	state.isMudraTrackerIn([[Mudra.Ten], [Mudra.Chi], [Mudra.Jin]]);
 const KATON_CONDITION: StatePredicate<NINState> = (state) =>
+	state.hasResourceAvailable("MUDRA") &&
 	state.isMudraTrackerIn([
 		[Mudra.Chi, Mudra.Ten],
 		[Mudra.Jin, Mudra.Ten],
 	]);
 const RAITON_CONDITION: StatePredicate<NINState> = (state) =>
+	state.hasResourceAvailable("MUDRA") &&
 	state.isMudraTrackerIn([
 		[Mudra.Ten, Mudra.Chi],
 		[Mudra.Jin, Mudra.Chi],
 	]);
 const HYOTON_CONDITION: StatePredicate<NINState> = (state) =>
+	state.hasResourceAvailable("MUDRA") &&
 	state.isMudraTrackerIn([
 		[Mudra.Ten, Mudra.Jin],
 		[Mudra.Chi, Mudra.Jin],
 	]);
 const HUTON_CONDITION: StatePredicate<NINState> = (state) =>
+	state.hasResourceAvailable("MUDRA") &&
 	state.isMudraTrackerIn([
 		[Mudra.Jin, Mudra.Chi, Mudra.Ten],
 		[Mudra.Chi, Mudra.Jin, Mudra.Ten],
 	]);
 const DOTON_CONDITION: StatePredicate<NINState> = (state) =>
+	state.hasResourceAvailable("MUDRA") &&
 	state.isMudraTrackerIn([
 		[Mudra.Ten, Mudra.Jin, Mudra.Chi],
 		[Mudra.Jin, Mudra.Ten, Mudra.Chi],
 	]);
 const SUITON_CONDITION: StatePredicate<NINState> = (state) =>
+	state.hasResourceAvailable("MUDRA") &&
 	state.isMudraTrackerIn([
 		[Mudra.Ten, Mudra.Chi, Mudra.Jin],
 		[Mudra.Chi, Mudra.Ten, Mudra.Jin],
@@ -274,23 +493,25 @@ const SUITON_CONDITION: StatePredicate<NINState> = (state) =>
 
 // probably a more efficient way to do this but whatever
 const BUNNY_CONDITION: StatePredicate<NINState> = (state) =>
-	!state.isMudraTrackerIn([
-		[Mudra.Ten],
-		[Mudra.Chi],
-		[Mudra.Jin],
-		[Mudra.Chi, Mudra.Ten],
-		[Mudra.Jin, Mudra.Ten],
-		[Mudra.Ten, Mudra.Chi],
-		[Mudra.Jin, Mudra.Chi],
-		[Mudra.Ten, Mudra.Jin],
-		[Mudra.Chi, Mudra.Jin],
-		[Mudra.Jin, Mudra.Chi, Mudra.Ten],
-		[Mudra.Chi, Mudra.Jin, Mudra.Ten],
-		[Mudra.Ten, Mudra.Jin, Mudra.Chi],
-		[Mudra.Jin, Mudra.Ten, Mudra.Chi],
-		[Mudra.Ten, Mudra.Chi, Mudra.Jin],
-		[Mudra.Chi, Mudra.Ten, Mudra.Jin],
-	]);
+	state.hasResourceAvailable("MUDRA") &&
+	(state.hasResourceAvailable("BUNNY") ||
+		!state.isMudraTrackerIn([
+			[Mudra.Ten],
+			[Mudra.Chi],
+			[Mudra.Jin],
+			[Mudra.Chi, Mudra.Ten],
+			[Mudra.Jin, Mudra.Ten],
+			[Mudra.Ten, Mudra.Chi],
+			[Mudra.Jin, Mudra.Chi],
+			[Mudra.Ten, Mudra.Jin],
+			[Mudra.Chi, Mudra.Jin],
+			[Mudra.Jin, Mudra.Chi, Mudra.Ten],
+			[Mudra.Chi, Mudra.Jin, Mudra.Ten],
+			[Mudra.Ten, Mudra.Jin, Mudra.Chi],
+			[Mudra.Jin, Mudra.Ten, Mudra.Chi],
+			[Mudra.Ten, Mudra.Chi, Mudra.Jin],
+			[Mudra.Chi, Mudra.Ten, Mudra.Jin],
+		]));
 
 const NINJUTSU_REPLACE_LIST: ConditionalSkillReplace<NINState>[] = [
 	// Put kassatsu replacements first
@@ -354,21 +575,16 @@ makeWeaponskill("NIN", "NINJUTSU", 30, {
 	replaceIf: getReplaceList("NINJUTSU"),
 });
 
-(
-	[
-		["RABBIT_MEDIUM", 30, undefined, undefined],
-		["FUMA_SHURIKEN", 30, 500, undefined],
-		["KATON", 35, 350, 0, true],
-		["RAITON", 35, 740, undefined],
-		["HYOTON", 45, 350, undefined],
-		["HUTON", 45, 240, 0],
-		["SUITON", 45, 580, undefined],
-		["GOKA_MEKKYAKU", 76, 600, 0],
-		["HYOSHO_RANRYU", 76, 1300, undefined],
-	] as Array<
-		[NINActionKey, number, number | Array<[TraitKey, number]> | undefined, number | undefined]
-	>
-).forEach(([name, level, potency, falloff]) => {
+makeWeaponskill("NIN", "RABBIT_MEDIUM", 30, {
+	startOnHotbar: false,
+	recastTime: 1.5,
+	replaceIf: getReplaceList("RABBIT_MEDIUM"),
+	validateAttempt: NINJUTSU_REPLACE_LIST.find((item) => item.newSkill === "RABBIT_MEDIUM")!
+		.condition,
+	onConfirm: (state) => state.clearMudraInfo(),
+});
+
+NINJUTSU_POTENCY_LIST.forEach(([name, level, potency, falloff]) => {
 	// Ninjutsus have a fixed 1.5s recast
 	makeWeaponskill("NIN", name, level, {
 		startOnHotbar: false,
@@ -415,20 +631,27 @@ makeWeaponskill("NIN", "DOTON", 45, {
 	falloff: 0,
 	replaceIf: getReplaceList("DOTON"),
 	validateAttempt: NINJUTSU_REPLACE_LIST.find((item) => item.newSkill === "DOTON")!.condition,
-	onConfirm: combineEffects(
-		(state, node) => {
-			state.gainStatus("DOTON");
-			state.addDoTPotencies({
-				node,
-				effectName: "DOTON",
-				skillName: "DOTON",
-				tickPotency: 80,
-				speedStat: "sks",
-			});
-		},
-		(state) => state.clearMudraInfo(),
-	),
+	onConfirm: dotonConfirm,
 	// Kassatsu does not affect doton
+});
+
+makeNINResourceAbility("KASSATSU", 50, "cd_KASSATSU", {
+	rscType: "KASSATSU",
+	cooldown: 60,
+	applicationDelay: 0,
+	validateAttempt: (state) => !state.hasResourceAvailable("TEN_CHI_JIN"),
+});
+
+makeNINResourceAbility("TEN_CHI_JIN", 70, "cd_TEN_CHI_JIN", {
+	rscType: "TEN_CHI_JIN",
+	applicationDelay: 0,
+	cooldown: 120,
+	validateAttempt: (state) => !state.hasResourceAvailable("KASSATSU"),
+	onConfirm: (state) => {
+		state.hasTraitUnlocked("ENHANCED_TEN_CHI_JIN") && state.gainStatus("TENRI_JINDO_READY"),
+			// Cancel any currently active mudras.
+			state.clearMudraInfo();
+	},
 });
 
 makeNINAbility("SHUKUCHI", 40, "cd_SHUKUCHI", {
