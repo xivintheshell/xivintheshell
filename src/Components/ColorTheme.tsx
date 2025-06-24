@@ -168,10 +168,13 @@ export type DRKResourceColors = {
 export type NINResourceColors = {
 	ninComboTimer: string;
 	kazematoi: string;
+	meisui: string;
 	ninki: string;
 	bunshin: string;
 	kassatsu: string;
 	nozuchi: string;
+	dokumori: string;
+	trick: string;
 };
 
 export type JobAccentColors = Partial<{
@@ -434,12 +437,15 @@ const DARK_THEME_COLORS: ThemeColors = {
 	},
 	nin: {
 		// TODO
-		ninComboTimer: "#ffffff",
-		kazematoi: "#ffffff",
-		ninki: "#ffffff",
-		bunshin: "#ffffff",
-		kassatsu: "#ffffff",
-		nozuchi: "#ffffff",
+		ninComboTimer: "white",
+		kazematoi: "white",
+		meisui: "white",
+		ninki: "white",
+		bunshin: "white",
+		kassatsu: "white",
+		nozuchi: "white",
+		dokumori: "white",
+		trick: "white",
 	},
 	timeline: {
 		ruler: "#2d2d2d",
@@ -636,10 +642,13 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		// TODO
 		ninComboTimer: "black",
 		kazematoi: "black",
+		meisui: "black",
 		ninki: "black",
 		bunshin: "black",
 		kassatsu: "black",
 		nozuchi: "black",
+		dokumori: "black",
+		trick: "black",
 	},
 	timeline: {
 		ruler: "#e9e9e9",
@@ -732,6 +741,11 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.BUNSHIN, colors.nin.bunshin],
 		[PotencyModifierType.KASSATSU, colors.nin.kassatsu],
 		[PotencyModifierType.HOLLOW_NOZUCHI, colors.nin.nozuchi],
+		[PotencyModifierType.KAZEMATOI, colors.nin.kazematoi],
+		[PotencyModifierType.MEISUI, colors.nin.meisui],
+		[PotencyModifierType.DOKUMORI, colors.nin.dokumori],
+		[PotencyModifierType.TRICK_ATTACK, colors.nin.trick],
+		[PotencyModifierType.KUNAIS_BANE, colors.nin.trick],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

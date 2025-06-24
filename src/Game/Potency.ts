@@ -92,6 +92,11 @@ export const enum PotencyModifierType {
 	BUNSHIN,
 	KASSATSU,
 	HOLLOW_NOZUCHI,
+	KAZEMATOI,
+	MEISUI,
+	DOKUMORI,
+	TRICK_ATTACK,
+	KUNAIS_BANE,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -454,6 +459,12 @@ export const Modifiers = {
 	} as PotencyMultiplier,
 	// with a 5% party bonus, the additional potency from bunshin attacks do 90% of player potency
 	// this is applied to the additive bonus from bunshin as well as phantom kamaitachi
+	// don't doubly penalize phantom kamaitachi, since we multiply the pet penalty after additive bonuses
+	BunshinPK: {
+		kind: "adder",
+		source: PotencyModifierType.BUNSHIN,
+		additiveAmount: 160,
+	} as PotencyAdder,
 	BunshinST: {
 		kind: "adder",
 		source: PotencyModifierType.BUNSHIN,
@@ -479,6 +490,31 @@ export const Modifiers = {
 		source: PotencyModifierType.HOLLOW_NOZUCHI,
 		additiveAmount: 70,
 	} as PotencyAdder,
+	Kazematoi: {
+		kind: "adder",
+		source: PotencyModifierType.KAZEMATOI,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	Meisui: {
+		kind: "adder",
+		source: PotencyModifierType.MEISUI,
+		additiveAmount: 150,
+	} as PotencyAdder,
+	Dokumori: {
+		kind: "multiplier",
+		source: PotencyModifierType.DOKUMORI,
+		potencyFactor: 1.05,
+	} as PotencyMultiplier,
+	TrickAttack: {
+		kind: "multiplier",
+		source: PotencyModifierType.TRICK_ATTACK,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	KunaisBane: {
+		kind: "multiplier",
+		source: PotencyModifierType.KUNAIS_BANE,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

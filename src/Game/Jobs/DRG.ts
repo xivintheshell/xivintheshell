@@ -319,12 +319,7 @@ const makeWeaponskill_DRG = (
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = jobPotencyMod(state);
 			const hitPositional =
-				params.positional &&
-				(state.hasResourceAvailable("TRUE_NORTH") ||
-					(params.positional.location === "flank" &&
-						state.hasResourceAvailable("FLANK_POSITIONAL")) ||
-					(params.positional.location === "rear" &&
-						state.hasResourceAvailable("REAR_POSITIONAL")));
+				params.positional && state.hitPositional(params.positional.location);
 			if (params.combo && state.checkCombo(params.combo.resource)) {
 				mods.push(
 					makeComboModifier(

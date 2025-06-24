@@ -178,4 +178,8 @@ export const enum WarningType {
 
 	BloodGaugeOvercap = "blood gauge overcap",
 	DarkArtsOvercap = "dark arts overcap",
+
+	NinkiOvercap = "ninki gauge overcap",
+	KazematoiOvercap = "kazematoi gauge overcap",
+	RaijuOverwrite = "raiju ready overwritten",
 }

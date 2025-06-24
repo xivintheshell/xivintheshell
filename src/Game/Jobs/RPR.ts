@@ -522,14 +522,7 @@ const makeRPRWeaponskill = (
 				);
 			}
 
-			if (
-				params.positional &&
-				(state.hasResourceAvailable("TRUE_NORTH") ||
-					(params.positional.location === "flank" &&
-						state.hasResourceAvailable("FLANK_POSITIONAL")) ||
-					(params.positional.location === "rear" &&
-						state.hasResourceAvailable("REAR_POSITIONAL")))
-			) {
+			if (params.positional && state.hitPositional(params.positional.location)) {
 				mods.push(
 					makePositionalModifier(
 						getBasePotency(state, params.positional.potency) -

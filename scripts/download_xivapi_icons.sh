@@ -48,6 +48,7 @@ get_buff_icon() {
 }
 
 get_buff_icon "Hide" "210607"
+get_buff_icon "Shade Shift" "210605"
 get_buff_icon "Trick Attack" "214857"
 get_buff_icon "Kassatsu" "212902"
 get_buff_icon "Dokumori" "212920"

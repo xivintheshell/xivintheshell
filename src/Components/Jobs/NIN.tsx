@@ -27,7 +27,7 @@ export class NINStatusPropsGenerator extends StatusPropsGenerator<NINState> {
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
 		return NIN_BUFFS.map((key) => {
-			if (key === "HIDE") {
+			if (key === "HIDDEN") {
 				return this.makeCommonTimerless(key);
 			}
 			return this.makeCommonTimer(key);
@@ -52,25 +52,23 @@ export class NINStatusPropsGenerator extends StatusPropsGenerator<NINState> {
 			{
 				kind: "bar",
 				name: localize({ en: "Combo Timer", zh: "连击监控" }),
-				// TODO
-				color: colors.drk.drkComboTimer,
+				color: colors.nin.ninComboTimer,
 				progress: comboTimer ? comboTimer / 30 : 0,
 				valueString: comboTimer?.toFixed(3) ?? "N/A",
 			} as ResourceBarProps,
 			{
 				kind: "counter",
 				name: localizeResourceType("KAZEMATOI"),
-				// TODO
-				color: colors.drk.darkarts,
+				color: colors.nin.kazematoi,
 				currentStacks: kazematoi,
 				maxStacks: 5,
 			} as ResourceCounterProps,
 			{
 				kind: "bar",
 				name: localizeResourceType("NINKI"),
-				// TODO
-				color: colors.drk.darkside,
+				color: colors.nin.ninki,
 				progress: ninki / 100,
+				valueString: ninki.toFixed(0),
 			} as ResourceBarProps,
 		];
 

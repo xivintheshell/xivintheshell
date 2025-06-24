@@ -6,21 +6,26 @@
 // - TCJ -> mudra still produces valid combinations
 // - TCJ and mudra manual clickoff don't break subsequent usages
 // - various bunny conditions
+// - raiju ready being eaten
+// - stacking raiju readies
 
 import { NINStatusPropsGenerator } from "../../Components/Jobs/NIN";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect } from "../Common";
+import { controller } from "../../Controller/Controller";
+import { Aspect, WarningType } from "../Common";
 import { TraitKey } from "../Data";
 import { NINActionKey, NINCooldownKey, NINResourceKey } from "../Data/Jobs/NIN";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { Modifiers, Potency } from "../Potency";
+import { Modifiers, Potency, makeComboModifier, makePositionalModifier } from "../Potency";
 import { getResourceInfo, makeResource, ResourceInfo, CoolDown } from "../Resources";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
+	EffectFn,
+	getBasePotency,
 	makeAbility,
 	MakeAbilityParams,
 	MakeGCDParams,
@@ -29,6 +34,8 @@ import {
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
+	PotencyModifierFn,
+	SkillAutoReplace,
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
@@ -44,8 +51,9 @@ const makeNINResource = (
 makeNINResource("KAZEMATOI", 5);
 makeNINResource("NINKI", 100);
 
+makeNINResource("SHADE_SHIFT", 1, { timeout: 20 });
 makeNINResource("MUDRA", 1, { timeout: 6 });
-makeNINResource("HIDE", 1);
+makeNINResource("HIDDEN", 1);
 makeNINResource("TRICK_ATTACK", 1, { timeout: 15.77 });
 makeNINResource("KASSATSU", 1, { timeout: 15 });
 makeNINResource("DOKUMORI", 1, { timeout: 21 });
@@ -55,7 +63,7 @@ makeNINResource("MEISUI", 1, { timeout: 30 });
 makeNINResource("SHADOW_WALKER", 1, { timeout: 20 });
 makeNINResource("BUNSHIN", 5, { timeout: 30 });
 makeNINResource("PHANTOM_KAMAITACHI_READY", 1, { timeout: 45 });
-makeNINResource("RAIJU_READY", 1, { timeout: 30 });
+makeNINResource("RAIJU_READY", 3, { timeout: 30 });
 makeNINResource("KUNAIS_BANE", 1, { timeout: 16.25 });
 makeNINResource("HIGI", 1, { timeout: 30 });
 makeNINResource("DOTON", 1, { timeout: 18 });
@@ -94,6 +102,47 @@ export class NINState extends GameState {
 
 	override get statusPropsGenerator(): StatusPropsGenerator<NINState> {
 		return new NINStatusPropsGenerator(this);
+	}
+
+	stackRaijuReady() {
+		const rsc = this.resources.get("RAIJU_READY");
+		rsc.gain(1);
+		this.enqueueResourceDrop("RAIJU_READY");
+	}
+
+	gainNinki(amt: number) {
+		const rsc = this.resources.get("NINKI");
+		if (rsc.availableAmount() + amt > 100) {
+			controller.reportWarning(WarningType.NinkiOvercap);
+		}
+		rsc.gain(amt);
+	}
+
+	processComboStatus(skill: NINActionKey) {
+		// Ninjutsus and mudras are handled independently
+		if (
+			["THROWING_DAGGER", "FORKED_RAIJU", "FLEETING_RAIJU", "PHANTOM_KAMAITACHI"].includes(
+				skill,
+			)
+		) {
+			return;
+		}
+		// [melee, aoe]
+		let counters = [
+			this.resources.get("NIN_COMBO_TRACKER").availableAmount(),
+			this.resources.get("NIN_AOE_COMBO_TRACKER").availableAmount(),
+		];
+		if (skill === "SPINNING_EDGE") {
+			counters = [1, 0];
+		} else if (skill === "GUST_SLASH") {
+			counters = [2, 0];
+		} else if (skill === "DEATH_BLOSSOM") {
+			counters = [0, 1];
+		} else {
+			counters = [0, 0];
+		}
+		this.setComboState("NIN_COMBO_TRACKER", counters[0]);
+		this.setComboState("NIN_AOE_COMBO_TRACKER", counters[1]);
 	}
 
 	// Convert the state's current MUDRA_TRACKER resource to a sequence of the last
@@ -188,28 +237,121 @@ export class NINState extends GameState {
 }
 
 // NIN cannot use any other abilities while TCJ is active.
-const notInTCJ = (state: Readonly<GameState>) =>
-	state.job !== "NIN" || !state.hasResourceAvailable("TEN_CHI_JIN");
+const notInTCJ = (state: Readonly<NINState>) => !state.hasResourceAvailable("TEN_CHI_JIN");
 
 // Special case for NIN, where any action during a mudra causes a bunny.
-const bunny = (state: GameState) => {
-	if (state.job === "NIN" && state.hasResourceAvailable("MUDRA")) {
+const bunny = (state: NINState) => {
+	if (state.hasResourceAvailable("MUDRA")) {
 		state.gainStatus("BUNNY");
+	}
+};
+
+const validateWithTCJ = (validateAttempt: StatePredicate<NINState> | undefined) => {
+	if (validateAttempt === undefined) {
+		return notInTCJ;
+	} else {
+		return (state: Readonly<NINState>) => notInTCJ(state) && validateAttempt(state);
 	}
 };
 
 const makeNINWeaponskill = (
 	name: NINActionKey,
 	unlockLevel: number,
-	params: Partial<MakeGCDParams<NINState>>,
+	params: {
+		startOnHotbar?: boolean;
+		potency: number | Array<[TraitKey, number]>;
+		combo?: {
+			potency: number | Array<[TraitKey, number]>;
+			resource: NINResourceKey;
+			resourceValue: number;
+		};
+		positional?: {
+			potency: number | Array<[TraitKey, number]>;
+			comboPotency: number | Array<[TraitKey, number]>;
+			location: "flank" | "rear";
+		};
+		falloff?: number;
+		applicationDelay: number;
+		validateAttempt?: StatePredicate<NINState>;
+		onConfirm?: EffectFn<NINState>;
+		highlightIf?: StatePredicate<NINState>;
+		onApplication?: EffectFn<NINState>;
+		jobPotencyModifiers?: PotencyModifierFn<NINState>;
+		animationLock?: number;
+	},
 ): Weaponskill<NINState> => {
 	return makeWeaponskill("NIN", name, unlockLevel, {
 		...params,
-		validateAttempt: (state: Readonly<NINState>) =>
-			(notInTCJ(state) && params.validateAttempt?.(state)) || false,
-		onConfirm: combineEffects(bunny, (state: NINState, node: ActionNode) =>
-			params.onConfirm?.(state, node),
+		// NIN gets a 15% haste reduction
+		recastTime: (state) => state.config.adjustedSksGCD(2.5, 15),
+		validateAttempt: validateWithTCJ(params.validateAttempt),
+		onConfirm: combineEffects(
+			bunny,
+			(state: NINState, node: ActionNode) => params.onConfirm?.(state, node),
+			(state) => {
+				if (state.tryConsumeResource("BUNSHIN")) {
+					state.gainNinki(5);
+				}
+			},
+			// Everything eats all stacks of raiju ready except throwing dagger/kamaitachi/raiju skills
+			!["THROWING_DAGGER", "PHANTOM_KAMAITACHI", "FORKED_RAIJU", "FLEETING_RAIJU"].includes(
+				name,
+			)
+				? (state) =>
+						state.tryConsumeResource("RAIJU_READY", true) &&
+						controller.reportWarning(WarningType.RaijuOverwrite)
+				: NO_EFFECT,
+			(state) => state.processComboStatus(name),
 		),
+		jobPotencyModifiers: (state) => {
+			const mods = params.jobPotencyModifiers?.(state) ?? [];
+			const hitPositional =
+				params.positional && state.hitPositional(params.positional.location);
+			// TODO refactor all this for all melee jobs
+			if (params.combo && state.hasResourceAvailable(params.combo.resource)) {
+				mods.push(
+					makeComboModifier(
+						getBasePotency(state, params.combo.potency) -
+							getBasePotency(state, params.potency),
+					),
+				);
+				// typescript isn't smart enough to elide the null check
+				if (params.positional && hitPositional) {
+					mods.push(
+						makePositionalModifier(
+							getBasePotency(state, params.positional.comboPotency) -
+								getBasePotency(state, params.combo.potency),
+						),
+					);
+				}
+			} else if (params.positional && hitPositional) {
+				mods.push(
+					makePositionalModifier(
+						getBasePotency(state, params.positional.potency) -
+							getBasePotency(state, params.potency),
+					),
+				);
+			}
+			if (state.hasResourceAvailable("BUNSHIN")) {
+				if (name === "PHANTOM_KAMAITACHI") {
+					mods.push(Modifiers.BunshinPK);
+				} else if (name === "DEATH_BLOSSOM" || name === "HAKKE_MUJINSATSU") {
+					mods.push(Modifiers.BunshinAOE);
+				} else {
+					mods.push(Modifiers.BunshinST);
+				}
+			}
+			if (state.hasResourceAvailable("DOKUMORI")) {
+				mods.push(Modifiers.Dokumori);
+			}
+			if (state.hasResourceAvailable("TRICK_ATTACK")) {
+				mods.push(Modifiers.TrickAttack);
+			}
+			if (state.hasResourceAvailable("KUNAIS_BANE")) {
+				mods.push(Modifiers.KunaisBane);
+			}
+			return mods;
+		},
 	});
 };
 
@@ -217,15 +359,58 @@ const makeNINAbility = (
 	name: NINActionKey,
 	unlockLevel: number,
 	cdName: NINCooldownKey,
-	params: Partial<MakeAbilityParams<NINState>>,
+	params: {
+		autoUpgrade?: SkillAutoReplace;
+		autoDowngrade?: SkillAutoReplace;
+		startOnHotbar?: boolean;
+		cooldown: number;
+		maxCharges?: number;
+		replaceIf?: ConditionalSkillReplace<NINState>[];
+		potency?: number | Array<[TraitKey, number]>;
+		positional?: {
+			potency: number | Array<[TraitKey, number]>;
+			location: "flank" | "rear";
+		};
+		falloff?: number;
+		applicationDelay: number;
+		validateAttempt?: StatePredicate<NINState>;
+		onConfirm?: EffectFn<NINState>;
+		highlightIf?: StatePredicate<NINState>;
+		onApplication?: EffectFn<NINState>;
+		animationLock?: number;
+		jobPotencyModifiers?: PotencyModifierFn<NINState>;
+	},
 ): Ability<NINState> => {
 	return makeAbility("NIN", name, unlockLevel, cdName, {
 		...params,
-		validateAttempt: (state: Readonly<NINState>) =>
-			(notInTCJ(state) && params.validateAttempt?.(state)) || false,
+		validateAttempt: validateWithTCJ(params.validateAttempt),
 		onConfirm: combineEffects(bunny, (state: NINState, node: ActionNode) =>
 			params.onConfirm?.(state, node),
 		),
+		jobPotencyModifiers: (state) => {
+			const mods = params.jobPotencyModifiers?.(state) ?? [];
+			const hitPositional =
+				params.positional && state.hitPositional(params.positional.location);
+			// TODO refactor all this for all melee jobs
+			if (params.positional && hitPositional) {
+				mods.push(
+					makePositionalModifier(
+						getBasePotency(state, params.positional.potency) -
+							getBasePotency(state, params.potency),
+					),
+				);
+			}
+			if (state.hasResourceAvailable("DOKUMORI")) {
+				mods.push(Modifiers.Dokumori);
+			}
+			if (state.hasResourceAvailable("TRICK_ATTACK")) {
+				mods.push(Modifiers.TrickAttack);
+			}
+			if (state.hasResourceAvailable("KUNAIS_BANE")) {
+				mods.push(Modifiers.KunaisBane);
+			}
+			return mods;
+		},
 	});
 };
 
@@ -237,13 +422,160 @@ const makeNINResourceAbility = (
 ): Ability<NINState> => {
 	return makeResourceAbility("NIN", name, unlockLevel, cdName, {
 		...params,
-		validateAttempt: (state: Readonly<NINState>) =>
-			(notInTCJ(state) && params.validateAttempt?.(state)) || false,
+		validateAttempt: validateWithTCJ(params.validateAttempt),
 		onConfirm: combineEffects(bunny, (state: NINState, node: ActionNode) =>
 			params.onConfirm?.(state, node),
 		),
 	});
 };
+
+makeNINWeaponskill("THROWING_DAGGER", 15, {
+	applicationDelay: 0.62,
+	potency: [
+		["NEVER", 120],
+		["MELEE_MASTERY_II_NIN", 200],
+	],
+	onConfirm: (state) => state.gainNinki(5),
+});
+
+makeNINWeaponskill("SPINNING_EDGE", 1, {
+	applicationDelay: 0.4,
+	potency: [
+		["NEVER", 180],
+		["MELEE_MASTERY_II_NIN", 220],
+		["MELEE_MASTERY_III_NIN", 300],
+	],
+	onConfirm: (state) => state.gainNinki(5),
+});
+
+makeNINWeaponskill("GUST_SLASH", 4, {
+	applicationDelay: 0.4,
+	potency: [
+		["NEVER", 100],
+		["MELEE_MASTERY_NIN", 120],
+		["MELEE_MASTERY_II_NIN", 160],
+		["MELEE_MASTERY_III_NIN", 240],
+	],
+	combo: {
+		potency: [
+			["NEVER", 260],
+			["MELEE_MASTERY_NIN", 280],
+			["MELEE_MASTERY_II_NIN", 320],
+			["MELEE_MASTERY_III_NIN", 400],
+		],
+		resource: "NIN_COMBO_TRACKER",
+		resourceValue: 1,
+	},
+	highlightIf: (state) => state.hasResourceExactly("NIN_COMBO_TRACKER", 1),
+	onConfirm: (state) => state.hasResourceExactly("NIN_COMBO_TRACKER", 1) && state.gainNinki(5),
+});
+
+const comboEndGainNinki = (state: NINState) =>
+	state.gainNinki(
+		state.hasTraitUnlocked("SHUKIHO_III") ? 15 : state.hasTraitUnlocked("SHUKIHO_II") ? 10 : 5,
+	);
+
+makeNINWeaponskill("AEOLIAN_EDGE", 26, {
+	applicationDelay: 0.54,
+	potency: [
+		["NEVER", 100],
+		["MELEE_MASTERY_NIN", 140],
+		// according to consolegameswiki,
+		// melee mastery does not affect combo/positional potencies?
+		// TODO verify against tooltips
+		["MELEE_MASTERY_III_NIN", 220],
+	],
+	combo: {
+		potency: [
+			["NEVER", 340],
+			["MELEE_MASTERY_III_NIN", 400],
+		],
+		resource: "NIN_COMBO_TRACKER",
+		resourceValue: 2,
+	},
+	positional: {
+		potency: [
+			["NEVER", 160],
+			["MELEE_MASTERY_NIN", 200],
+			["MELEE_MASTERY_III_NIN", 280],
+		],
+		comboPotency: [
+			["NEVER", 400],
+			["MELEE_MASTERY_III_NIN", 460],
+		],
+		location: "rear",
+	},
+	highlightIf: (state) => state.hasResourceExactly("NIN_COMBO_TRACKER", 2),
+	onConfirm: comboEndGainNinki,
+	jobPotencyModifiers: (state) =>
+		state.tryConsumeResource("KAZEMATOI") ? [Modifiers.Kazematoi] : [],
+});
+
+makeNINWeaponskill("ARMOR_CRUSH", 54, {
+	applicationDelay: 0.62,
+	potency: [
+		["NEVER", 100],
+		["MELEE_MASTERY_NIN", 140],
+		["MELEE_MASTERY_III_NIN", 240],
+	],
+	combo: {
+		potency: [
+			["NEVER", 320],
+			["MELEE_MASTERY_NIN", 360],
+			["MELEE_MASTERY_III_NIN", 440],
+		],
+		resource: "NIN_COMBO_TRACKER",
+		resourceValue: 2,
+	},
+	positional: {
+		potency: [
+			["NEVER", 160],
+			["MELEE_MASTERY_NIN", 200],
+			["MELEE_MASTERY_III_NIN", 300],
+		],
+		comboPotency: [
+			["NEVER", 380],
+			["MELEE_MASTERY_NIN", 420],
+			["MELEE_MASTERY_III_NIN", 500],
+		],
+		location: "flank",
+	},
+	highlightIf: (state) => state.hasResourceExactly("NIN_COMBO_TRACKER", 2),
+	onConfirm: combineEffects((state) => {
+		if (state.hasResourceExactly("NIN_COMBO_TRACKER", 2)) {
+			const rsc = state.resources.get("KAZEMATOI");
+			if (rsc.availableAmount() + 2 > 5) {
+				controller.reportWarning(WarningType.KazematoiOvercap);
+			}
+			rsc.gain(2);
+		}
+	}, comboEndGainNinki),
+});
+
+makeNINWeaponskill("DEATH_BLOSSOM", 38, {
+	applicationDelay: 0.71,
+	potency: 100,
+	falloff: 0,
+	onConfirm: (state) => state.gainNinki(5),
+});
+
+makeNINWeaponskill("HAKKE_MUJINSATSU", 52, {
+	applicationDelay: 0.62,
+	potency: 100,
+	combo: {
+		potency: 120,
+		resource: "NIN_AOE_COMBO_TRACKER",
+		resourceValue: 1,
+	},
+	falloff: 0,
+	highlightIf: (state) => state.hasResourceExactly("NIN_AOE_COMBO_TRACKER", 1),
+	onConfirm: (state) =>
+		state.hasResourceExactly("NIN_AOE_COMBO_TRACKER", 1) && state.gainNinki(5),
+	jobPotencyModifiers: (state) =>
+		state.hasResourceExactly("NIN_AOE_COMBO_TRACKER", 1) && state.hasResourceAvailable("DOTON")
+			? [Modifiers.HollowNozuchi]
+			: [],
+});
 
 const FS_TCJ_CONDITION = (state: Readonly<NINState>) =>
 	state.hasResourceAvailable("TEN_CHI_JIN") && state.isMudraTrackerIn([[]]);
@@ -333,51 +665,55 @@ const getChiReplace = (skill: NINActionKey) =>
 const getJinReplace = (skill: NINActionKey) =>
 	JIN_REPLACEMENTS.filter((replace) => replace.newSkill !== skill);
 
+// name, level, app delay, potency, falloff
 const NINJUTSU_POTENCY_LIST: Array<
-	[NINActionKey, number, number | Array<[TraitKey, number]>, number | undefined]
+	[NINActionKey, number, number, number | Array<[TraitKey, number]>, number | undefined]
 > = [
 	[
 		"FUMA_SHURIKEN",
 		30,
+		0.89,
 		[
 			["NEVER", 450],
 			["MELEE_MASTERY_III_NIN", 500],
 		],
 		undefined,
 	],
-	["KATON", 35, 350, 0],
+	["KATON", 35, 0.94, 350, 0],
 	[
 		"RAITON",
 		35,
+		0.71,
 		[
 			["NEVER", 650],
 			["MELEE_MASTERY_III_NIN", 740],
 		],
 		undefined,
 	],
-	["HYOTON", 45, 350, undefined],
-	["HUTON", 45, 240, 0],
+	["HYOTON", 45, 1.16, 350, undefined],
+	["HUTON", 45, 0.98, 240, 0],
 	[
 		"SUITON",
 		45,
+		0.98,
 		[
 			["NEVER", 500],
 			["MELEE_MASTERY_III_NIN", 580],
 		],
 		undefined,
 	],
-	["GOKA_MEKKYAKU", 76, 600, 0],
-	["HYOSHO_RANRYU", 76, 1300, undefined],
+	["GOKA_MEKKYAKU", 76, 0.76, 600, 0],
+	["HYOSHO_RANRYU", 76, 0.62, 1300, undefined],
 ];
 
 // @ts-expect-error compiler is not smart enough to validate the destructure
 const NINJUTSU_POTENCY_MAP: Map<
 	NINActionKey,
-	Array<[number, number | Array<[TraitKey, number]>, number | undefined]>
+	Array<[number, number, number | Array<[TraitKey, number]>, number | undefined]>
 > = new Map(
-	NINJUTSU_POTENCY_LIST.map(([name, level, potency, falloff]) => [
+	NINJUTSU_POTENCY_LIST.map(([name, level, applicationDelay, potency, falloff]) => [
 		name,
-		[level, potency, falloff],
+		[level, applicationDelay, potency, falloff],
 	]),
 );
 
@@ -395,7 +731,7 @@ tcjReplaces.forEach(
 	// Use the generic constructor to avoid the generic bunny logic/restrictions.
 	([name, condition]) => {
 		// strip the mudra sign from the end of the key when looking up potencies
-		const [_, potency, falloff] = NINJUTSU_POTENCY_MAP.get(
+		const [_, applicationDelay, potency, falloff] = NINJUTSU_POTENCY_MAP.get(
 			name.substring(0, name.length - 4) as NINActionKey,
 		)!;
 		const mudra = name.substring(name.length - 3);
@@ -403,6 +739,8 @@ tcjReplaces.forEach(
 			mudra === "TEN" ? getTenReplace : mudra === "CHI" ? getChiReplace : getJinReplace;
 		makeWeaponskill("NIN", name, 70, {
 			startOnHotbar: false,
+			// @ts-expect-error compiler is not smart enough to validate the destructure
+			applicationDelay,
 			recastTime: 1,
 			// @ts-expect-error compiler is not smart enough to validate the destructure
 			potency,
@@ -415,6 +753,13 @@ tcjReplaces.forEach(
 					mudra === "TEN" ? Mudra.Ten : mudra === "CHI" ? Mudra.Chi : Mudra.Jin,
 					true,
 				),
+			// TODO check if raiju ready is gained on application or confirm
+			onApplication:
+				name === "RAITON_CHI"
+					? (state) => state.stackRaijuReady()
+					: name === "SUITON_JIN" || name === "HUTON_TEN"
+						? (state) => state.gainStatus("SHADOW_WALKER")
+						: undefined,
 		});
 	},
 );
@@ -612,10 +957,11 @@ makeWeaponskill("NIN", "RABBIT_MEDIUM", 30, {
 	onConfirm: (state) => state.clearMudraInfo(),
 });
 
-NINJUTSU_POTENCY_LIST.forEach(([name, level, potency, falloff]) => {
+NINJUTSU_POTENCY_LIST.forEach(([name, level, applicationDelay, potency, falloff]) => {
 	// Ninjutsus have a fixed 1.5s recast
 	makeWeaponskill("NIN", name, level, {
 		startOnHotbar: false,
+		applicationDelay,
 		recastTime: (state) => (state.hasResourceAvailable("TEN_CHI_JIN") ? 1 : 1.5),
 		potency,
 		falloff,
@@ -638,6 +984,13 @@ NINJUTSU_POTENCY_LIST.forEach(([name, level, potency, falloff]) => {
 				: NO_EFFECT,
 			(state) => state.clearMudraInfo(),
 		),
+		// TODO check if raiju ready is gained on application or confirm
+		onApplication:
+			name === "RAITON"
+				? (state) => state.stackRaijuReady()
+				: name === "SUITON" || name === "HUTON"
+					? (state) => state.gainStatus("SHADOW_WALKER")
+					: undefined,
 		jobPotencyModifiers: (state) => {
 			const mods = [];
 			if (state.hasResourceAvailable("KASSATSU")) {
@@ -663,6 +1016,94 @@ makeWeaponskill("NIN", "DOTON", 45, {
 	// Kassatsu does not affect doton
 });
 
+const HAS_RAIJU = (state: Readonly<NINState>) => state.hasResourceAvailable("RAIJU_READY");
+const RAIJU_POTENCY: Array<[TraitKey, number]> = [
+	["NEVER", 560],
+	["MELEE_MASTERY_III_NIN", 700],
+];
+
+makeNINWeaponskill("FORKED_RAIJU", 90, {
+	applicationDelay: 0.62,
+	potency: RAIJU_POTENCY,
+	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
+	highlightIf: HAS_RAIJU,
+	validateAttempt: HAS_RAIJU,
+	onConfirm: (state) => state.tryConsumeResource("RAIJU_READY"),
+});
+
+makeNINWeaponskill("FLEETING_RAIJU", 90, {
+	applicationDelay: 0.76,
+	potency: RAIJU_POTENCY,
+	highlightIf: HAS_RAIJU,
+	validateAttempt: HAS_RAIJU,
+	onConfirm: (state) => state.tryConsumeResource("RAIJU_READY"),
+});
+
+// TODO double check
+// it seems like Dokumori and trick gain gauge and apply buffs near-instantly,
+// but deal damage after delay
+makeNINAbility("DOKUMORI", 66, "cd_DOKUMORI", {
+	applicationDelay: 1.07,
+	potency: 300,
+	falloff: 0,
+	cooldown: 120,
+	onConfirm: (state) => {
+		state.gainStatus("DOKUMORI");
+		state.gainNinki(40);
+		if (state.hasTraitUnlocked("ENHANCED_DOKUMORI")) {
+			state.gainStatus("HIGI");
+		}
+	},
+});
+
+const TRICK_CONDITION = (state: Readonly<NINState>) =>
+	state.hasResourceAvailable("HIDDEN") || state.hasResourceAvailable("SHADOW_WALKER");
+
+makeNINAbility("TRICK_ATTACK", 18, "cd_TRICK_ATTACK", {
+	autoUpgrade: {
+		trait: "TRICK_ATTACK_MASTERY",
+		otherSkill: "KUNAIS_BANE",
+	},
+	applicationDelay: 0.8,
+	potency: 300,
+	positional: {
+		potency: 400,
+		location: "rear",
+	},
+	cooldown: 60,
+	highlightIf: TRICK_CONDITION,
+	validateAttempt: TRICK_CONDITION,
+	onConfirm: (state) => {
+		state.gainStatus("TRICK_ATTACK");
+		state.tryConsumeResource("SHADOW_WALKER");
+	},
+});
+
+makeNINAbility("KUNAIS_BANE", 92, "cd_TRICK_ATTACK", {
+	autoDowngrade: {
+		trait: "TRICK_ATTACK_MASTERY",
+		otherSkill: "TRICK_ATTACK",
+	},
+	startOnHotbar: false,
+	applicationDelay: 1.29,
+	cooldown: 60,
+	potency: 600,
+	falloff: 0,
+	highlightIf: TRICK_CONDITION,
+	validateAttempt: TRICK_CONDITION,
+	onConfirm: (state) => {
+		state.gainStatus("KUNAIS_BANE");
+		state.tryConsumeResource("SHADOW_WALKER");
+	},
+});
+
+makeNINAbility("DREAM_WITHIN_A_DREAM", 56, "cd_DREAM_WITHIN_A_DREAM", {
+	applicationDelay: 0.98,
+	cooldown: 60,
+	// 180 x3 hits
+	potency: 180 * 3,
+});
+
 makeNINResourceAbility("KASSATSU", 50, "cd_KASSATSU", {
 	rscType: "KASSATSU",
 	cooldown: 60,
@@ -670,21 +1111,167 @@ makeNINResourceAbility("KASSATSU", 50, "cd_KASSATSU", {
 	validateAttempt: (state) => !state.hasResourceAvailable("TEN_CHI_JIN"),
 });
 
+const AT_LEAST_50_NINKI = (state: Readonly<NINState>) => state.resources.get("NINKI").available(50);
+
+const CONSUME_50_NINKI = (state: NINState) => {
+	state.resources.get("NINKI").consume(50);
+};
+
+makeNINAbility("BHAVACAKRA", 68, "cd_BHAVACAKRA", {
+	applicationDelay: 0.62,
+	cooldown: 1,
+	potency: [
+		["NEVER", 350],
+		["MELEE_MASTERY_III_NIN", 400],
+	],
+	highlightIf: AT_LEAST_50_NINKI,
+	validateAttempt: AT_LEAST_50_NINKI,
+	replaceIf: [
+		{
+			newSkill: "ZESHO_MEPPO",
+			condition: (state) => state.hasResourceAvailable("HIGI"),
+		},
+	],
+	onConfirm: combineEffects(CONSUME_50_NINKI, (state) => state.tryConsumeResource("MEISUI")),
+	jobPotencyModifiers: (state) =>
+		state.hasResourceAvailable("MEISUI") ? [Modifiers.Meisui] : [],
+});
+
+makeNINAbility("ZESHO_MEPPO", 96, "cd_BHAVACAKRA", {
+	startOnHotbar: false,
+	applicationDelay: 1.03,
+	cooldown: 1,
+	potency: 700,
+	highlightIf: (state) => state.hasResourceAvailable("HIGI") && AT_LEAST_50_NINKI(state),
+	validateAttempt: (state) => state.hasResourceAvailable("HIGI") && AT_LEAST_50_NINKI(state),
+	replaceIf: [
+		{
+			newSkill: "BHAVACAKRA",
+			condition: (state) => !state.hasResourceAvailable("HIGI"),
+		},
+	],
+	onConfirm: combineEffects(CONSUME_50_NINKI, (state) => {
+		state.tryConsumeResource("MEISUI");
+		state.tryConsumeResource("HIGI");
+	}),
+	jobPotencyModifiers: (state) =>
+		state.hasResourceAvailable("MEISUI") ? [Modifiers.Meisui] : [],
+});
+
+makeNINAbility("HELLFROG_MEDIUM", 62, "cd_BHAVACAKRA", {
+	applicationDelay: 0.8,
+	cooldown: 1,
+	potency: 160,
+	falloff: 0,
+	highlightIf: AT_LEAST_50_NINKI,
+	validateAttempt: AT_LEAST_50_NINKI,
+	replaceIf: [
+		{
+			newSkill: "DEATHFROG_MEDIUM",
+			condition: (state) => state.hasResourceAvailable("HIGI"),
+		},
+	],
+	onConfirm: CONSUME_50_NINKI,
+});
+
+makeNINAbility("DEATHFROG_MEDIUM", 96, "cd_BHAVACAKRA", {
+	startOnHotbar: false,
+	applicationDelay: 0.8,
+	cooldown: 1,
+	potency: 260,
+	falloff: 0,
+	highlightIf: (state) => state.hasResourceAvailable("HIGI") && AT_LEAST_50_NINKI(state),
+	validateAttempt: (state) => state.hasResourceAvailable("HIGI") && AT_LEAST_50_NINKI(state),
+	onConfirm: combineEffects(CONSUME_50_NINKI, (state) => state.tryConsumeResource("HIGI")),
+});
+
+makeNINResourceAbility("MEISUI", 72, "cd_MEISUI", {
+	rscType: "MEISUI",
+	cooldown: 120,
+	applicationDelay: 0,
+	highlightIf: (state) => state.hasResourceAvailable("SHADOW_WALKER"),
+	validateAttempt: (state) => state.hasResourceAvailable("SHADOW_WALKER"),
+	onConfirm: (state) => {
+		state.tryConsumeResource("SHADOW_WALKER");
+		state.gainNinki(50);
+	},
+});
+
+makeNINResourceAbility("BUNSHIN", 80, "cd_BUNSHIN", {
+	rscType: "BUNSHIN",
+	cooldown: 90,
+	applicationDelay: 0,
+	replaceIf: [
+		{
+			newSkill: "PHANTOM_KAMAITACHI",
+			condition: (state) => state.hasResourceAvailable("PHANTOM_KAMAITACHI_READY"),
+		},
+	],
+	highlightIf: AT_LEAST_50_NINKI,
+	validateAttempt: AT_LEAST_50_NINKI,
+	onConfirm: combineEffects(CONSUME_50_NINKI, (state) =>
+		state.gainStatus("PHANTOM_KAMAITACHI_READY"),
+	),
+});
+
+makeNINWeaponskill("PHANTOM_KAMAITACHI", 80, {
+	startOnHotbar: false,
+	potency: 600,
+	falloff: 0,
+	applicationDelay: 1.57,
+	highlightIf: (state) => state.hasResourceAvailable("PHANTOM_KAMAITACHI_READY"),
+	validateAttempt: (state) => state.hasResourceAvailable("PHANTOM_KAMAITACHI_READY"),
+	onConfirm: (state) => {
+		state.tryConsumeResource("PHANTOM_KAMAITACHI_READY");
+		state.gainNinki(10);
+	},
+	jobPotencyModifiers: (state) =>
+		state.hasResourceAvailable("DOTON")
+			? [Modifiers.HollowNozuchi, Modifiers.NinPet]
+			: [Modifiers.NinPet],
+});
+
 makeNINResourceAbility("TEN_CHI_JIN", 70, "cd_TEN_CHI_JIN", {
 	rscType: "TEN_CHI_JIN",
 	applicationDelay: 0,
 	cooldown: 120,
+	replaceIf: [
+		{
+			newSkill: "TENRI_JINDO",
+			condition: (state) => state.hasResourceAvailable("TENRI_JINDO_READY"),
+		},
+	],
 	validateAttempt: (state) => !state.hasResourceAvailable("KASSATSU"),
 	onConfirm: (state) => {
-		state.hasTraitUnlocked("ENHANCED_TEN_CHI_JIN") && state.gainStatus("TENRI_JINDO_READY"),
-			// Cancel any currently active mudras.
-			state.clearMudraInfo();
+		state.hasTraitUnlocked("ENHANCED_TEN_CHI_JIN") && state.gainStatus("TENRI_JINDO_READY");
+		// Cancel any currently active mudras.
+		state.clearMudraInfo();
 	},
 });
 
+makeNINAbility("TENRI_JINDO", 100, "cd_TENRI_JINDO", {
+	startOnHotbar: false,
+	applicationDelay: 1.69,
+	cooldown: 1,
+	potency: 1100,
+	falloff: 0,
+	highlightIf: (state) => true,
+	validateAttempt: (state) => state.hasResourceAvailable("TENRI_JINDO_READY"),
+	onConfirm: (state) => state.tryConsumeResource("TENRI_JINDO_READY"),
+});
+
 makeNINAbility("SHUKUCHI", 40, "cd_SHUKUCHI", {
+	applicationDelay: 0,
 	cooldown: 60,
 	// set by trait in constructor
 	maxCharges: 2,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
+
+makeNINResourceAbility("SHADE_SHIFT", 2, "cd_SHADE_SHIFT", {
+	rscType: "SHADE_SHIFT",
+	applicationDelay: 0.4,
+	cooldown: 120,
+});
+
+// TODO potentially deal with Hide?

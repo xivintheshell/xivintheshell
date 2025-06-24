@@ -1553,6 +1553,9 @@ class Controller {
 		const normalizeName = (s: string) => {
 			if (s === ACTIONS.TINCTURE.name) {
 				return "Grade 3 Gemdraught";
+			} else if (s.endsWith("(Ten)") || s.endsWith("(Chi)") || s.endsWith("(Jin)")) {
+				// Strip parentheticals from TCJ actions
+				return s.substring(0, s.length - 6);
 			} else {
 				return s.replace(" 2", " II").replace(" 3", " III").replace(" 4", " IV");
 			}

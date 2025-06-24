@@ -91,7 +91,8 @@ export const NIN_GAUGES = ensureRecord<ResourceData>()({
 
 export const NIN_STATUSES = ensureRecord<ResourceData>()({
 	MUDRA: { name: "Mudra", label: { zh: "手势" } },
-	HIDE: { name: "Hide", label: { zh: "隐遁" } },
+	SHADE_SHIFT: { name: "Shade Shift", label: { zh: "残影" } },
+	HIDDEN: { name: "Hidden", label: { zh: "隐遁" } },
 	TRICK_ATTACK: { name: "Trick Attack", label: { zh: "攻其不备" } },
 	KASSATSU: { name: "Kassatsu", label: { zh: "生杀予夺" } },
 	DOKUMORI: { name: "Dokumori", label: { zh: "介毒之术" } },
@@ -102,7 +103,7 @@ export const NIN_STATUSES = ensureRecord<ResourceData>()({
 	SHADOW_WALKER: { name: "Shadow Walker", label: { zh: "忍隐" } },
 	BUNSHIN: { name: "Bunshin", maximumStacks: 5, label: { zh: "分身之术" } },
 	PHANTOM_KAMAITACHI_READY: { name: "Phantom Kamaitachi Ready", label: { zh: "残影镰鼬预备" } },
-	RAIJU_READY: { name: "Raiju Ready", label: { zh: "月影雷兽预备" } },
+	RAIJU_READY: { name: "Raiju Ready", maximumStacks: 3, label: { zh: "月影雷兽预备" } },
 	KUNAIS_BANE: { name: "Kunai's Bane", label: { zh: "百雷铳" } },
 	HIGI: { name: "Higi", label: { zh: "秘技预备" } },
 	DOTON: { name: "Doton", mayBeToggled: true, label: { zh: "土遁之术" } },

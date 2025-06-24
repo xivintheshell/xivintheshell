@@ -1401,6 +1401,14 @@ export class GameState {
 		return this.resources.get(rscType).availableAmount() === target;
 	}
 
+	hitPositional(location: "flank" | "rear"): boolean {
+		return (
+			this.hasResourceAvailable("TRUE_NORTH") ||
+			(location === "flank" && this.hasResourceAvailable("FLANK_POSITIONAL")) ||
+			(location === "rear" && this.hasResourceAvailable("REAR_POSITIONAL"))
+		);
+	}
+
 	// Add a resource drop event after `delay` seconds.
 	// If `rscType` has a corresponding cooldown duration for the job, then that delay will be
 	// used if `rscType` is undefined.
