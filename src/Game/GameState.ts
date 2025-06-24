@@ -882,9 +882,14 @@ export class GameState {
 		actionIndex: number,
 	) {
 		const cd = this.cooldowns.get(skill.cdName);
-		const secondaryCd = skill.secondaryCd
-			? this.cooldowns.get(skill.secondaryCd.cdName)
-			: undefined;
+		const isFollowUpMudra =
+			this.job === "NIN" &&
+			this.hasResourceAvailable("MUDRA") &&
+			["TEN", "CHI", "JIN"].includes(skill.name);
+		const secondaryCd =
+			!isFollowUpMudra && skill.secondaryCd
+				? this.cooldowns.get(skill.secondaryCd.cdName)
+				: undefined;
 
 		const capturedCastTime = skill.castTimeFn(this);
 		const recastTime = skill.recastTimeFn(this);
@@ -1087,11 +1092,6 @@ export class GameState {
 	useAbility(skill: Ability<PlayerState>, node: ActionNode) {
 		console.assert(node);
 		const cd = this.cooldowns.get(skill.cdName);
-		// special case for NIN mudras: if under the MUDRA buff, do not consume another stack
-		const skipRecast =
-			this.job === "NIN" &&
-			this.hasResourceAvailable("MUDRA") &&
-			["TEN", "CHI", "JIN"].includes(skill.name);
 		// potency
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
@@ -1227,9 +1227,7 @@ export class GameState {
 		}
 
 		// recast
-		if (!skipRecast) {
-			cd.useStack();
-		}
+		cd.useStack();
 
 		// animation lock
 		this.resources.takeResourceLock("NOT_ANIMATION_LOCKED", skill.animationLockFn(this));
@@ -1360,9 +1358,8 @@ export class GameState {
 			this.hasResourceAvailable("MUDRA") &&
 			["TEN", "CHI", "JIN"].includes(skill.name);
 		// Mudras with the MUDRA buff active roll the GCD, not the actual mudra CD.
-		const cdName = isFollowUpMudra ? "cd_GCD" : skill.cdName;
-		const secondaryCd = skill.secondaryCd?.cdName;
-		let tillAnyCDStack = this.cooldowns.timeTillAnyStackAvailable(cdName);
+		const secondaryCd = isFollowUpMudra ? undefined : skill.secondaryCd?.cdName;
+		let tillAnyCDStack = this.cooldowns.timeTillAnyStackAvailable(skill.cdName);
 
 		if (secondaryCd) {
 			tillAnyCDStack = Math.max(
@@ -1616,11 +1613,16 @@ export class GameState {
 		const enoughMana = capturedManaCost <= currentMana;
 		const reqsMet = skill.validateAttempt(this);
 		const skillUnlocked = this.config.level >= skill.unlockLevel;
+		const isFollowUpMudra =
+			this.job === "NIN" &&
+			this.hasResourceAvailable("MUDRA") &&
+			["TEN", "CHI", "JIN"].includes(skill.name);
 
 		const status = makeSkillReadyStatus();
 
 		if (blocked) status.addUnavailableReason(SkillUnavailableReason.Blocked);
 		if (
+			!isFollowUpMudra &&
 			skill.secondaryCd &&
 			this.cooldowns.get(skill.secondaryCd.cdName).stacksAvailable() === 0
 		)
@@ -1653,13 +1655,15 @@ export class GameState {
 		}
 
 		let cd = this.cooldowns.get(skill.cdName);
-		const secondaryCd = skill.secondaryCd
-			? this.cooldowns.get(skill.secondaryCd.cdName)
-			: undefined;
+		const secondaryCd =
+			!isFollowUpMudra && skill.secondaryCd
+				? this.cooldowns.get(skill.secondaryCd.cdName)
+				: undefined;
 		let timeTillNextStackReady = cd.timeTillNextStackAvailable() % cd.currentStackCd();
-		const timeTillSecondaryReady = skill.secondaryCd
-			? this.cooldowns.timeTillNextStackAvailable(skill.secondaryCd.cdName)
-			: undefined;
+		const timeTillSecondaryReady =
+			!isFollowUpMudra && skill.secondaryCd
+				? this.cooldowns.timeTillNextStackAvailable(skill.secondaryCd.cdName)
+				: undefined;
 		let cdRecastTime = cd.currentStackCd();
 		// special case for meditate: if meditate is off CD, use the GCD cooldown instead if it's rolling
 		// this fails the edge case where a GCD is pressed ~58 seconds after meditate was last pressed
@@ -1675,11 +1679,7 @@ export class GameState {
 			}
 		}
 
-		// Special case for mudras: use the GCD as cd if it's rolling
-		const isFollowUpMudra =
-			this.job === "NIN" &&
-			this.hasResourceAvailable("MUDRA") &&
-			["TEN", "CHI", "JIN"].includes(skill.name);
+		// Special case for mudras: ignore secondary CD if buff is up
 		if (isFollowUpMudra) {
 			const gcd = this.cooldowns.get("cd_GCD");
 			const gcdRecastTime = gcd.currentStackCd();

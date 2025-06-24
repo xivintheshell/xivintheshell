@@ -91,6 +91,7 @@ export const enum PotencyModifierType {
 
 	BUNSHIN,
 	KASSATSU,
+	HOLLOW_NOZUCHI,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -471,8 +472,13 @@ export const Modifiers = {
 	Kassatsu: {
 		kind: "multiplier",
 		source: PotencyModifierType.KASSATSU,
-		potencyFactor: 1.3
+		potencyFactor: 1.3,
 	} as PotencyMultiplier,
+	HollowNozuchi: {
+		kind: "adder",
+		source: PotencyModifierType.HOLLOW_NOZUCHI,
+		additiveAmount: 70,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

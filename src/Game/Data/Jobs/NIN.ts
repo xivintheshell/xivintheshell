@@ -42,7 +42,6 @@ export const NIN_ACTIONS = ensureRecord<ActionData>()({
 	GOKA_MEKKYAKU: { id: 16491, name: "Goka Mekkyaku", label: { zh: "劫火灭却之术" } },
 	HYOSHO_RANRYU: { id: 16492, name: "Hyosho Ranryu", label: { zh: "冰晶乱流之术" } },
 	RABBIT_MEDIUM: { id: 2272, name: "Rabbit Medium", label: { zh: "通灵之术·兔子" } },
-	HOLLOW_NOZUCHI: { id: 25776, name: "Hollow Nozuchi", label: { zh: "幻影野槌" }},
 });
 
 export const NIN_COOLDOWNS = ensureRecord<CooldownData>()({
