@@ -443,7 +443,7 @@ const DARK_THEME_COLORS: ThemeColors = {
 		bunshin: "#ed8021",
 		kassatsu: "#fa9bd4",
 		nozuchi: "#d6a440",
-		dokumori: "#7e03a3",
+		dokumori: "#9a0ec4",
 		trick: "#ffd454",
 	},
 	timeline: {
@@ -646,7 +646,7 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		kassatsu: "#fa9bd4",
 		nozuchi: "#d6a440",
 		dokumori: "#7e03a3",
-		trick: "#ffd454",
+		trick: "#e6b525",
 	},
 	timeline: {
 		ruler: "#e9e9e9",

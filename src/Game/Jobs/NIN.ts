@@ -1,15 +1,5 @@
 // Skill and state declarations for NIN.
 
-// TODO stuff to test
-// - mudra -> kassatsu -> ninjutsu eats kassatsu
-// - mudra -> TCJ = eat mudras
-// - TCJ -> mudra still produces valid combinations
-// - TCJ and mudra manual clickoff don't break subsequent usages
-// - various bunny conditions
-// - raiju ready being eaten
-// - stacking raiju readies
-// - kamaitachi does not consume bunshin
-
 import { NINStatusPropsGenerator } from "../../Components/Jobs/NIN";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
