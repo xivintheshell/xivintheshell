@@ -777,10 +777,10 @@ tcjReplaces.forEach(
 			validateAttempt: condition,
 			onConfirm: combineEffects(
 				(state: NINState) =>
-				state.pushMudra(
-					mudra === "TEN" ? Mudra.Ten : mudra === "CHI" ? Mudra.Chi : Mudra.Jin,
-					true,
-				),
+					state.pushMudra(
+						mudra === "TEN" ? Mudra.Ten : mudra === "CHI" ? Mudra.Chi : Mudra.Jin,
+						true,
+					),
 				name === "RAITON_CHI"
 					? (state) => state.stackRaijuReady()
 					: name === "SUITON_JIN" || name === "HUTON_TEN"
@@ -1066,7 +1066,7 @@ makeNINWeaponskill("FLEETING_RAIJU", 90, {
 	validateAttempt: HAS_RAIJU,
 	onConfirm: (state) => {
 		state.gainNinki(5);
-		state.tryConsumeResource("RAIJU_READY")
+		state.tryConsumeResource("RAIJU_READY");
 	},
 });
 
