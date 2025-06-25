@@ -1,5 +1,15 @@
 [
 	{
+		"date": "6/24/25",
+		"changes": [
+			"[BETA][NIN] Added initial support for NIN."
+		],
+		"changes_zh": [
+			"【忍者】 加了初步的支持。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "6/19/25",
 		"changes": [
 			"[DRK] Added initial support for DRK."

@@ -88,6 +88,15 @@ export const enum PotencyModifierType {
 	WINGED_REDEMPTION,
 
 	DARKSIDE,
+
+	BUNSHIN,
+	KASSATSU,
+	HOLLOW_NOZUCHI,
+	KAZEMATOI,
+	MEISUI,
+	DOKUMORI,
+	TRICK_ATTACK,
+	KUNAIS_BANE,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -116,6 +125,9 @@ export type CritDirectMultiplier = {
 };
 
 export type PotencyModifier = PotencyMultiplier | PotencyAdder | CritDirectMultiplier;
+
+const DARKSIDE_SCALAR = 1.1;
+const NIN_PET_SCALAR = 0.9;
 
 export const Modifiers = {
 	Tincture: {
@@ -434,7 +446,7 @@ export const Modifiers = {
 	Darkside: {
 		kind: "multiplier",
 		source: PotencyModifierType.DARKSIDE,
-		potencyFactor: 1.1,
+		potencyFactor: DARKSIDE_SCALAR,
 	} as PotencyMultiplier,
 	DrkPet: {
 		kind: "multiplier",
@@ -443,7 +455,59 @@ export const Modifiers = {
 		// https://docs.google.com/spreadsheets/d/1Yt7Px7VHuKG1eJR9CRKs3RpvcR5IZKAAA3xjekvv0LY/edit?gid=0#gid=0
 		// however, these comparisons were done assuming the player is already under darkside, so we need
 		// to multiply these values by a further 1.1 to compare against a player without darkside
-		potencyFactor: 1.05 * 1.1,
+		potencyFactor: 1.05 * DARKSIDE_SCALAR,
+	} as PotencyMultiplier,
+	// with a 5% party bonus, the additional potency from bunshin attacks do 90% of player potency
+	// this is applied to the additive bonus from bunshin as well as phantom kamaitachi
+	BunshinST: {
+		kind: "adder",
+		source: PotencyModifierType.BUNSHIN,
+		additiveAmount: 160 * NIN_PET_SCALAR,
+	} as PotencyAdder,
+	BunshinAOE: {
+		kind: "adder",
+		source: PotencyModifierType.BUNSHIN,
+		additiveAmount: 80 * NIN_PET_SCALAR,
+	} as PotencyAdder,
+	NinPet: {
+		kind: "multiplier",
+		source: PotencyModifierType.PET,
+		potencyFactor: NIN_PET_SCALAR,
+	} as PotencyMultiplier,
+	Kassatsu: {
+		kind: "multiplier",
+		source: PotencyModifierType.KASSATSU,
+		potencyFactor: 1.3,
+	} as PotencyMultiplier,
+	HollowNozuchi: {
+		kind: "adder",
+		source: PotencyModifierType.HOLLOW_NOZUCHI,
+		additiveAmount: 70,
+	} as PotencyAdder,
+	Kazematoi: {
+		kind: "adder",
+		source: PotencyModifierType.KAZEMATOI,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	Meisui: {
+		kind: "adder",
+		source: PotencyModifierType.MEISUI,
+		additiveAmount: 150,
+	} as PotencyAdder,
+	Dokumori: {
+		kind: "multiplier",
+		source: PotencyModifierType.DOKUMORI,
+		potencyFactor: 1.05,
+	} as PotencyMultiplier,
+	TrickAttack: {
+		kind: "multiplier",
+		source: PotencyModifierType.TRICK_ATTACK,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	KunaisBane: {
+		kind: "multiplier",
+		source: PotencyModifierType.KUNAIS_BANE,
+		potencyFactor: 1.1,
 	} as PotencyMultiplier,
 };
 

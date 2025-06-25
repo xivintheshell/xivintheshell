@@ -250,6 +250,14 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.WINGED_REPROBATION, { en: "WREP", zh: "断罪飞翔" }],
 	[PotencyModifierType.WINGED_REDEMPTION, { en: "WRED", zh: "完美神的祝福" }],
 	[PotencyModifierType.DARKSIDE, { en: "darkside", zh: "暗黑" }],
+	[PotencyModifierType.BUNSHIN, { en: "bunshin", zh: "分身之术" }],
+	[PotencyModifierType.KASSATSU, { en: "kassatsu", zh: "生杀予夺" }],
+	[PotencyModifierType.HOLLOW_NOZUCHI, { en: "hollow nozuchi", zh: "幻影野槌" }],
+	[PotencyModifierType.KAZEMATOI, { en: "kazematoi", zh: "风缠" }],
+	[PotencyModifierType.MEISUI, { en: "meisui", zh: "命水" }],
+	[PotencyModifierType.DOKUMORI, { en: "dokumori", zh: "介毒之术" }],
+	[PotencyModifierType.TRICK_ATTACK, { en: "trick attack", zh: "攻其不备" }],
+	[PotencyModifierType.KUNAIS_BANE, { en: "kunai's bane", zh: "百雷铳" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -322,6 +330,14 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.WINGED_REPROBATION, { en: "WREP", zh: "断罪飞翔" }],
 	[PotencyModifierType.WINGED_REDEMPTION, { en: "WRED", zh: "完美神的祝福" }],
 	[PotencyModifierType.DARKSIDE, { en: "DS", zh: "暗黑" }],
+	[PotencyModifierType.BUNSHIN, { en: "BUN", zh: "分身之术" }],
+	[PotencyModifierType.KASSATSU, { en: "KASS", zh: "生杀予夺" }],
+	[PotencyModifierType.HOLLOW_NOZUCHI, { en: "NOZ", zh: "幻影野槌" }],
+	[PotencyModifierType.KAZEMATOI, { en: "KAZ", zh: "风缠" }],
+	[PotencyModifierType.MEISUI, { en: "MEI", zh: "命水" }],
+	[PotencyModifierType.DOKUMORI, { en: "DOKU", zh: "介毒之术" }],
+	[PotencyModifierType.TRICK_ATTACK, { en: "TRICK", zh: "攻其不备" }],
+	[PotencyModifierType.KUNAIS_BANE, { en: "KB", zh: "百雷铳" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(

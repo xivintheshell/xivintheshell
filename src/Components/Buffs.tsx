@@ -58,6 +58,10 @@ buffIcons.set(BuffType.Krasis, "Buffs/SGE/Krasis.png");
 buffIcons.set(BuffType.Philosophia, "Buffs/SGE/Philosophia.png");
 buffIcons.set(BuffType.Soteria, "Buffs/SGE/Soteria.png");
 
+buffIcons.set(BuffType.TrickAttack, "Buffs/NIN/Trick Attack.png");
+buffIcons.set(BuffType.KunaisBane, "Buffs/NIN/Kunai's Bane.png");
+buffIcons.set(BuffType.Bunshin, "Buffs/NIN/Bunshin.png");
+
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
 	const imgObj = new Image();

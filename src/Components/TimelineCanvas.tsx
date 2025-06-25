@@ -668,6 +668,10 @@ function drawSkills(
 		[BuffType.Whistle, { color: g_colors.blu.whistle, showImage: true }],
 		[BuffType.TingleA, { color: g_colors.blu.tinglea, showImage: true }],
 		[BuffType.TingleB, { color: g_colors.blu.tingleb, showImage: true }],
+		[BuffType.Dokumori, { color: g_colors.nin.dokumori, showImage: true }],
+		[BuffType.TrickAttack, { color: g_colors.nin.trick, showImage: true }],
+		[BuffType.KunaisBane, { color: g_colors.nin.trick, showImage: true }],
+		[BuffType.Bunshin, { color: g_colors.nin.bunshin, showImage: true }],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();

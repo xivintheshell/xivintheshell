@@ -19,6 +19,8 @@ export const enum Aspect {
 	Fire = "Fire",
 	Ice = "Ice",
 	Lightning = "Lightning",
+	Wind = "Wind",
+	Earth = "Earth",
 	Physical = "Physical",
 	Other = "Other",
 }
@@ -129,6 +131,10 @@ export enum BuffType {
 	Bristle = "Bristle",
 	TingleA = "TingleA",
 	TingleB = "TingleB",
+
+	TrickAttack = "Trick Attack",
+	KunaisBane = "Kunai's Bane",
+	Bunshin = "Bunshin",
 }
 
 export const enum WarningType {
@@ -176,4 +182,8 @@ export const enum WarningType {
 
 	BloodGaugeOvercap = "blood gauge overcap",
 	DarkArtsOvercap = "dark arts overcap",
+
+	NinkiOvercap = "ninki gauge overcap",
+	KazematoiOvercap = "kazematoi gauge overcap",
+	RaijuOverwrite = "raiju ready overwritten",
 }

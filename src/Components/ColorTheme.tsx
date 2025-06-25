@@ -165,6 +165,18 @@ export type DRKResourceColors = {
 	grit: string;
 };
 
+export type NINResourceColors = {
+	ninComboTimer: string;
+	kazematoi: string;
+	meisui: string;
+	ninki: string;
+	bunshin: string;
+	kassatsu: string;
+	nozuchi: string;
+	dokumori: string;
+	trick: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -211,6 +223,7 @@ export type ThemeColors = {
 	sge: SGEResourceColors;
 	pld: PLDResourceColors;
 	drk: DRKResourceColors;
+	nin: NINResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -422,6 +435,17 @@ const DARK_THEME_COLORS: ThemeColors = {
 		drkComboTimer: "#cb8046",
 		grit: "#82cad9",
 	},
+	nin: {
+		ninComboTimer: "#8532a8",
+		kazematoi: "#ab1fd1",
+		meisui: "#559ef2",
+		ninki: "#8532a8",
+		bunshin: "#ed8021",
+		kassatsu: "#fa9bd4",
+		nozuchi: "#d6a440",
+		dokumori: "#9a0ec4",
+		trick: "#ffd454",
+	},
 	timeline: {
 		ruler: "#2d2d2d",
 		tracks: "#242424",
@@ -613,6 +637,17 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		drkComboTimer: "#cb8046",
 		grit: "#82cad9",
 	},
+	nin: {
+		ninComboTimer: "#8532a8",
+		kazematoi: "#ab1fd1",
+		meisui: "#559ef2",
+		ninki: "#8532a8",
+		bunshin: "#ed8021",
+		kassatsu: "#fa9bd4",
+		nozuchi: "#d6a440",
+		dokumori: "#7e03a3",
+		trick: "#e6b525",
+	},
 	timeline: {
 		ruler: "#e9e9e9",
 		tracks: "#f3f3f3",
@@ -701,6 +736,14 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.WINGED_REDEMPTION, colors.blu.wingedreprobation],
 		[PotencyModifierType.WINGED_REPROBATION, colors.blu.wingedreprobation],
 		[PotencyModifierType.DARKSIDE, colors.drk.darkside],
+		[PotencyModifierType.BUNSHIN, colors.nin.bunshin],
+		[PotencyModifierType.KASSATSU, colors.nin.kassatsu],
+		[PotencyModifierType.HOLLOW_NOZUCHI, colors.nin.nozuchi],
+		[PotencyModifierType.KAZEMATOI, colors.nin.kazematoi],
+		[PotencyModifierType.MEISUI, colors.nin.meisui],
+		[PotencyModifierType.DOKUMORI, colors.nin.dokumori],
+		[PotencyModifierType.TRICK_ATTACK, colors.nin.trick],
+		[PotencyModifierType.KUNAIS_BANE, colors.nin.trick],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

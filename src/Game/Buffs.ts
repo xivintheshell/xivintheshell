@@ -41,7 +41,8 @@ export const buffInfos = [
 	new BuffInfo(BuffType.ChainStratagem, MarkerColor.Grey, 20, 1, 0.1, 0, "SCH"),
 	new BuffInfo(BuffType.Devilment, MarkerColor.Green, 20, 1, 0.2, 0.2, "DNC"),
 	new BuffInfo(BuffType.Divination, MarkerColor.Yellow, 20, 1.06, 0, 0, "AST"),
-	new BuffInfo(BuffType.Dokumori, MarkerColor.Purple, 20, 1.05, 0, 0, "NIN"),
+	// Per the Balance's NIN advanced guide, Dokumori actually lasts 21s.
+	new BuffInfo(BuffType.Dokumori, MarkerColor.Purple, 21, 1.05, 0, 0, "NIN"),
 	new BuffInfo(BuffType.Embolden, MarkerColor.Grey, 20, 1.05, 0, 0, "RDM"),
 	new BuffInfo(BuffType.MagesBallad, MarkerColor.Purple, 45, 1.01, 0, 0, "BRD"),
 	new BuffInfo(BuffType.RadiantFinale1, MarkerColor.Purple, 20, 1.02, 0, 0, "BRD"),

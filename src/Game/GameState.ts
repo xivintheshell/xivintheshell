@@ -639,6 +639,15 @@ export class GameState {
 			if (buffName === "KARDIA") {
 				this.tryConsumeResource("KARDION");
 			}
+			// Special case: canceling TCJ/Mudra must reset mudra state
+			if (buffName === "TEN_CHI_JIN" || buffName === "MUDRA") {
+				// special casing to fix mudra state if TCJ is clicked off manually
+				// TODO move to generic buff expiry logic
+				this.tryConsumeResource("MUDRA");
+				this.tryConsumeResource("KASSATSU");
+				this.resources.get("MUDRA_TRACKER").overrideCurrentValue(0);
+				this.resources.get("BUNNY").overrideCurrentValue(0);
+			}
 			rsc.consume(rsc.availableAmount());
 			rsc.removeTimer();
 			return true;
@@ -882,9 +891,14 @@ export class GameState {
 		actionIndex: number,
 	) {
 		const cd = this.cooldowns.get(skill.cdName);
-		const secondaryCd = skill.secondaryCd
-			? this.cooldowns.get(skill.secondaryCd.cdName)
-			: undefined;
+		const isFollowUpOrKassatsuMudra =
+			this.job === "NIN" &&
+			(this.hasResourceAvailable("MUDRA") || this.hasResourceAvailable("KASSATSU")) &&
+			["TEN", "CHI", "JIN"].includes(skill.name);
+		const secondaryCd =
+			!isFollowUpOrKassatsuMudra && skill.secondaryCd
+				? this.cooldowns.get(skill.secondaryCd.cdName)
+				: undefined;
 
 		const capturedCastTime = skill.castTimeFn(this);
 		const recastTime = skill.recastTimeFn(this);
@@ -1348,9 +1362,14 @@ export class GameState {
 
 	#timeTillSkillAvailable(skillName: ActionKey) {
 		const skill = this.skillsList.get(skillName);
-		const cdName = skill.cdName;
-		const secondaryCd = skill.secondaryCd?.cdName;
-		let tillAnyCDStack = this.cooldowns.timeTillAnyStackAvailable(cdName);
+		const isFollowUpOrKassatsuMudra =
+			this.job === "NIN" &&
+			(this.hasResourceAvailable("MUDRA") || this.hasResourceAvailable("KASSATSU")) &&
+			["TEN", "CHI", "JIN"].includes(skill.name);
+		// Mudras with the MUDRA buff active roll the GCD, not the actual mudra CD.
+		const secondaryCd = isFollowUpOrKassatsuMudra ? undefined : skill.secondaryCd?.cdName;
+		let tillAnyCDStack = this.cooldowns.timeTillAnyStackAvailable(skill.cdName);
+
 		if (secondaryCd) {
 			tillAnyCDStack = Math.max(
 				tillAnyCDStack,
@@ -1380,6 +1399,14 @@ export class GameState {
 
 	hasResourceExactly(rscType: ResourceKey, target: number): boolean {
 		return this.resources.get(rscType).availableAmount() === target;
+	}
+
+	hitPositional(location: "flank" | "rear"): boolean {
+		return (
+			this.hasResourceAvailable("TRUE_NORTH") ||
+			(location === "flank" && this.hasResourceAvailable("FLANK_POSITIONAL")) ||
+			(location === "rear" && this.hasResourceAvailable("REAR_POSITIONAL"))
+		);
 	}
 
 	// Add a resource drop event after `delay` seconds.
@@ -1603,11 +1630,15 @@ export class GameState {
 		const enoughMana = capturedManaCost <= currentMana;
 		const reqsMet = skill.validateAttempt(this);
 		const skillUnlocked = this.config.level >= skill.unlockLevel;
-
+		const isFollowUpOrKassatsuMudra =
+			this.job === "NIN" &&
+			(this.hasResourceAvailable("MUDRA") || this.hasResourceAvailable("KASSATSU")) &&
+			["TEN", "CHI", "JIN"].includes(skill.name);
 		const status = makeSkillReadyStatus();
 
 		if (blocked) status.addUnavailableReason(SkillUnavailableReason.Blocked);
 		if (
+			!isFollowUpOrKassatsuMudra &&
 			skill.secondaryCd &&
 			this.cooldowns.get(skill.secondaryCd.cdName).stacksAvailable() === 0
 		)
@@ -1615,7 +1646,6 @@ export class GameState {
 		if (!skillUnlocked) status.addUnavailableReason(SkillUnavailableReason.SkillNotUnlocked);
 		if (!reqsMet) status.addUnavailableReason(SkillUnavailableReason.RequirementsNotMet);
 		if (!enoughMana) status.addUnavailableReason(SkillUnavailableReason.NotEnoughMP);
-
 		if (skill.name === "MEDITATE") {
 			// Special case for Meditate
 			if (
@@ -1641,13 +1671,15 @@ export class GameState {
 		}
 
 		let cd = this.cooldowns.get(skill.cdName);
-		const secondaryCd = skill.secondaryCd
-			? this.cooldowns.get(skill.secondaryCd.cdName)
-			: undefined;
+		const secondaryCd =
+			!isFollowUpOrKassatsuMudra && skill.secondaryCd
+				? this.cooldowns.get(skill.secondaryCd.cdName)
+				: undefined;
 		let timeTillNextStackReady = cd.timeTillNextStackAvailable() % cd.currentStackCd();
-		const timeTillSecondaryReady = skill.secondaryCd
-			? this.cooldowns.timeTillNextStackAvailable(skill.secondaryCd.cdName)
-			: undefined;
+		const timeTillSecondaryReady =
+			!isFollowUpOrKassatsuMudra && skill.secondaryCd
+				? this.cooldowns.timeTillNextStackAvailable(skill.secondaryCd.cdName)
+				: undefined;
 		let cdRecastTime = cd.currentStackCd();
 		// special case for meditate: if meditate is off CD, use the GCD cooldown instead if it's rolling
 		// this fails the edge case where a GCD is pressed ~58 seconds after meditate was last pressed
@@ -1661,6 +1693,16 @@ export class GameState {
 				timeTillNextStackReady = gcd.timeTillNextStackAvailable();
 				timeTillAvailable = timeTillNextStackReady;
 			}
+		}
+
+		// Special case for mudras: ignore secondary CD if buff is up
+		if (isFollowUpOrKassatsuMudra) {
+			const gcd = this.cooldowns.get("cd_GCD");
+			const gcdRecastTime = gcd.currentStackCd();
+			cd = gcd;
+			cdRecastTime = gcdRecastTime;
+			timeTillNextStackReady = gcd.timeTillNextStackAvailable();
+			timeTillAvailable = timeTillNextStackReady;
 		}
 
 		const primaryStacksAvailable = cd.stacksAvailable();
@@ -1808,10 +1850,11 @@ export class GameState {
 	// Attempt to consume stacks of the specified resource, removing any active timers if
 	// all stacks have been consumed.
 	// Consumes only 1 stack by default; consumes all available stacks when `consumeAll` is set.
+	// Returns true if at least one stack was consumed.
 	tryConsumeResource(rscType: ResourceKey, consumeAll: boolean = false) {
 		const resource = this.resources.get(rscType);
 		const toConsume = consumeAll ? resource.availableAmount() : 1;
-		if (resource.available(toConsume)) {
+		if (toConsume > 0 && resource.available(toConsume)) {
 			resource.consume(toConsume);
 			if (!resource.available(toConsume)) {
 				resource.removeTimer();

@@ -2,7 +2,7 @@ import { RESOURCES } from "../../Game/Data";
 import { DRK_STATUSES, DRKResourceKey } from "../../Game/Data/Jobs/DRK";
 import { DRKState } from "../../Game/Jobs/DRK";
 import { ThemeColors } from "../ColorTheme";
-import { localize } from "../Localization";
+import { localize, localizeResourceType } from "../Localization";
 import {
 	BuffProps,
 	registerBuffIcon,
@@ -58,28 +58,28 @@ export class DRKStatusPropsGenerator extends StatusPropsGenerator<DRKState> {
 			} as ResourceBarProps,
 			{
 				kind: "counter",
-				name: localize({ en: "Grit" }),
+				name: localizeResourceType("GRIT"),
 				color: colors.drk.grit,
 				currentStacks: stanceActive,
 				maxStacks: 1,
 			} as ResourceCounterProps,
 			{
 				kind: "bar",
-				name: localize({ en: "Darkside" }),
+				name: localizeResourceType("DARKSIDE"),
 				color: colors.drk.darkside,
 				progress: darksideTimer ? darksideTimer / 60 : 0,
 				valueString: darksideTimer.toFixed(3),
 			} as ResourceBarProps,
 			{
 				kind: "counter",
-				name: localize({ en: "Dark Arts" }),
+				name: localizeResourceType("DARK_ARTS"),
 				color: colors.drk.darkarts,
 				currentStacks: darkArts,
 				maxStacks: 1,
 			} as ResourceCounterProps,
 			{
 				kind: "bar",
-				name: localize({ en: "Blood Gauge" }),
+				name: localizeResourceType("BLOOD_GAUGE"),
 				color: colors.drk.blood,
 				progress: bloodGauge / 100,
 				valueString: bloodGauge.toFixed(0),
