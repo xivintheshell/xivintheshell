@@ -824,6 +824,8 @@ makeWeaponskill("NIN", "DOTON_CHI", 70, {
 ).forEach(([name, level, replacer], i) => {
 	makeWeaponskill("NIN", name, level, {
 		recastTime: 0.5,
+		// Nobody ever weaves under mudras because it bunnies, so just treat their animation lock the same as recast.
+		animationLock: 0.5,
 		replaceIf: replacer(name),
 		secondaryCooldown: {
 			cdName: "cd_MUDRA",
