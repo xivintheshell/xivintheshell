@@ -5,7 +5,6 @@ import {
 	applySkill,
 	compareDamageTables,
 	testDamageFromTimeline,
-	damageData,
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
@@ -339,8 +338,8 @@ it(
 		time: 25.317 + 10,
 		lastDamageApplicationTime: 23.81 + 10,
 		totalPotency: {
-			applied: 13730.79,
-			pending: 928.4,
+			applied: 14758.85,
+			pending: 1002.67,
 		},
 		gcdSkills: {
 			applied: 22,
