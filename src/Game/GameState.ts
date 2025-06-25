@@ -1850,10 +1850,11 @@ export class GameState {
 	// Attempt to consume stacks of the specified resource, removing any active timers if
 	// all stacks have been consumed.
 	// Consumes only 1 stack by default; consumes all available stacks when `consumeAll` is set.
+	// Returns true if at least one stack was consumed.
 	tryConsumeResource(rscType: ResourceKey, consumeAll: boolean = false) {
 		const resource = this.resources.get(rscType);
 		const toConsume = consumeAll ? resource.availableAmount() : 1;
-		if (resource.available(toConsume)) {
+		if (toConsume > 0 && resource.available(toConsume)) {
 			resource.consume(toConsume);
 			if (!resource.available(toConsume)) {
 				resource.removeTimer();

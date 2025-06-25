@@ -8,13 +8,14 @@
 // - various bunny conditions
 // - raiju ready being eaten
 // - stacking raiju readies
+// - kamaitachi does not consume bunshin
 
 import { NINStatusPropsGenerator } from "../../Components/Jobs/NIN";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
 import { controller } from "../../Controller/Controller";
-import { WarningType } from "../Common";
-import { TraitKey } from "../Data";
+import { BuffType, WarningType } from "../Common";
+import { ActionKey, TraitKey } from "../Data";
 import { NINActionKey, NINCooldownKey, NINResourceKey } from "../Data/Jobs/NIN";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
@@ -33,6 +34,7 @@ import {
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
+	Skill,
 	SkillAutoReplace,
 	StatePredicate,
 	Weaponskill,
@@ -78,6 +80,19 @@ enum Mudra {
 	Jin = 3,
 }
 
+// this array is used only when computing buff covers
+const BUFFED_BY_BUNSHIN: ActionKey[] = [
+	"SPINNING_EDGE",
+	"GUST_SLASH",
+	"AEOLIAN_EDGE",
+	"ARMOR_CRUSH",
+	"THROWING_DAGGER",
+	"DEATH_BLOSSOM",
+	"HAKKE_MUJINSATSU",
+	"FORKED_RAIJU",
+	"FLEETING_RAIJU",
+];
+
 export class NINState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
@@ -96,6 +111,21 @@ export class NINState extends GameState {
 				],
 			},
 		]);
+	}
+
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<NINState>): void {
+		if (this.hasResourceAvailable("DOKUMORI")) {
+			node.addBuff(BuffType.Dokumori);
+		}
+		if (this.hasResourceAvailable("TRICK_ATTACK")) {
+			node.addBuff(BuffType.TrickAttack);
+		}
+		if (this.hasResourceAvailable("KUNAIS_BANE")) {
+			node.addBuff(BuffType.KunaisBane);
+		}
+		if (this.hasResourceAvailable("BUNSHIN") && BUFFED_BY_BUNSHIN.includes(skill.name)) {
+			node.addBuff(BuffType.Bunshin);
+		}
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<NINState> {
@@ -287,7 +317,7 @@ const makeNINWeaponskill = (
 			bunny,
 			(state: NINState, node: ActionNode) => params.onConfirm?.(state, node),
 			(state) => {
-				if (state.tryConsumeResource("BUNSHIN")) {
+				if (name !== "PHANTOM_KAMAITACHI" && state.tryConsumeResource("BUNSHIN")) {
 					state.gainNinki(5);
 				}
 			},
@@ -330,10 +360,9 @@ const makeNINWeaponskill = (
 					),
 				);
 			}
-			if (state.hasResourceAvailable("BUNSHIN")) {
-				if (name === "PHANTOM_KAMAITACHI") {
-					mods.push(Modifiers.BunshinPK);
-				} else if (name === "DEATH_BLOSSOM" || name === "HAKKE_MUJINSATSU") {
+			// Kamaitachi does not consume Bunshin
+			if (state.hasResourceAvailable("BUNSHIN") && name !== "PHANTOM_KAMAITACHI") {
+				if (name === "DEATH_BLOSSOM" || name === "HAKKE_MUJINSATSU") {
 					mods.push(Modifiers.BunshinAOE);
 				} else {
 					mods.push(Modifiers.BunshinST);
@@ -739,25 +768,25 @@ tcjReplaces.forEach(
 			startOnHotbar: false,
 			// @ts-expect-error compiler is not smart enough to validate the destructure
 			applicationDelay,
-			recastTime: 1,
+			recastTime: name === "HUTON_TEN" || name === "SUITON_JIN" ? 1.5 : 1,
 			// @ts-expect-error compiler is not smart enough to validate the destructure
 			potency,
 			// @ts-expect-error compiler is not smart enough to validate the destructure
 			falloff,
 			replaceIf: replacer(name),
 			validateAttempt: condition,
-			onConfirm: (state: NINState) =>
+			onConfirm: combineEffects(
+				(state: NINState) =>
 				state.pushMudra(
 					mudra === "TEN" ? Mudra.Ten : mudra === "CHI" ? Mudra.Chi : Mudra.Jin,
 					true,
 				),
-			// TODO check if raiju ready is gained on application or confirm
-			onApplication:
 				name === "RAITON_CHI"
 					? (state) => state.stackRaijuReady()
 					: name === "SUITON_JIN" || name === "HUTON_TEN"
 						? (state) => state.gainStatus("SHADOW_WALKER")
-						: undefined,
+						: NO_EFFECT,
+			),
 		});
 	},
 );
@@ -778,7 +807,7 @@ const dotonConfirm = combineEffects(
 // Special handling for Doton
 makeWeaponskill("NIN", "DOTON_CHI", 70, {
 	startOnHotbar: false,
-	recastTime: 1,
+	recastTime: 1.5,
 	replaceIf: getChiReplace("DOTON_CHI"),
 	validateAttempt: DOTON_TCJ_CONDITION,
 	onConfirm: (state: NINState) => state.pushMudra(2, true),
@@ -980,15 +1009,13 @@ NINJUTSU_POTENCY_LIST.forEach(([name, level, applicationDelay, potency, falloff]
 						state.cooldowns.get("cd_SHUKUCHI").restore(60);
 					}
 				: NO_EFFECT,
-			(state) => state.clearMudraInfo(),
-		),
-		// TODO check if raiju ready is gained on application or confirm
-		onApplication:
 			name === "RAITON"
 				? (state) => state.stackRaijuReady()
 				: name === "SUITON" || name === "HUTON"
 					? (state) => state.gainStatus("SHADOW_WALKER")
-					: undefined,
+					: NO_EFFECT,
+			(state) => state.clearMudraInfo(),
+		),
 		jobPotencyModifiers: (state) => {
 			const mods = [];
 			if (state.hasResourceAvailable("KASSATSU")) {
@@ -1026,7 +1053,10 @@ makeNINWeaponskill("FORKED_RAIJU", 90, {
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	highlightIf: HAS_RAIJU,
 	validateAttempt: HAS_RAIJU,
-	onConfirm: (state) => state.tryConsumeResource("RAIJU_READY"),
+	onConfirm: (state) => {
+		state.gainNinki(5);
+		state.tryConsumeResource("RAIJU_READY");
+	},
 });
 
 makeNINWeaponskill("FLEETING_RAIJU", 90, {
@@ -1034,7 +1064,10 @@ makeNINWeaponskill("FLEETING_RAIJU", 90, {
 	potency: RAIJU_POTENCY,
 	highlightIf: HAS_RAIJU,
 	validateAttempt: HAS_RAIJU,
-	onConfirm: (state) => state.tryConsumeResource("RAIJU_READY"),
+	onConfirm: (state) => {
+		state.gainNinki(5);
+		state.tryConsumeResource("RAIJU_READY")
+	},
 });
 
 // TODO double check
