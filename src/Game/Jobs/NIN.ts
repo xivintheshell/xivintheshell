@@ -1062,9 +1062,6 @@ makeNINWeaponskill("FLEETING_RAIJU", 90, {
 	},
 });
 
-// TODO double check
-// it seems like Dokumori and trick gain gauge and apply buffs near-instantly,
-// but deal damage after delay
 makeNINAbility("DOKUMORI", 66, "cd_DOKUMORI", {
 	applicationDelay: 1.07,
 	potency: 300,
@@ -1136,9 +1133,7 @@ makeNINResourceAbility("KASSATSU", 50, "cd_KASSATSU", {
 
 const AT_LEAST_50_NINKI = (state: Readonly<NINState>) => state.resources.get("NINKI").available(50);
 
-const CONSUME_50_NINKI = (state: NINState) => {
-	state.resources.get("NINKI").consume(50);
-};
+const CONSUME_50_NINKI = (state: NINState) => state.resources.get("NINKI").consume(50);
 
 makeNINAbility("BHAVACAKRA", 68, "cd_BHAVACAKRA", {
 	applicationDelay: 0.62,
