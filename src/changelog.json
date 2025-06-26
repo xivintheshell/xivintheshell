@@ -1,5 +1,13 @@
 [
 	{
+		"date": "6/25/25",
+		"changes": [
+			"Fixed a bug where timestamps would not appear for wait events in the timeline editor.",
+			"Fixed a bug where selecting a skill in the visual canvas did not cause the editor table to scroll to its location."
+		],
+		"level": "minor"
+	},
+	{
 		"date": "6/24/25",
 		"changes": [
 			"[NIN] Added initial support for NIN."

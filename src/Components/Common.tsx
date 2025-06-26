@@ -704,8 +704,7 @@ type LoadJsonFromFileOrUrlProps = {
 };
 
 export function LoadJsonFromFileOrUrl(props: LoadJsonFromFileOrUrlProps) {
-	// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
-	const fileSelectorRef: React.RefObject<HTMLInputElement> = React.createRef();
+	const fileSelectorRef: React.RefObject<HTMLInputElement | null> = useRef(null);
 	let loadUrl = props.defaultLoadUrl ?? "";
 
 	const onLoadUrlChange = (evt: ChangeEvent<{ value: string }>) => {
