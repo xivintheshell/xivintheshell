@@ -6,6 +6,7 @@ import { controller } from "../Controller/Controller";
 import { MAX_ABILITY_TARGETS } from "../Controller/Common";
 import { localize, localizeSkillName, localizeSkillUnavailableReason } from "./Localization";
 import { updateTimelineView } from "./Timeline";
+import { updateInvalidStatus } from "./TimelineEditor";
 import { getThemeColors, ColorThemeContext } from "./ColorTheme";
 import { getSkillAssetPath } from "../Game/Skills";
 import { ActionKey, ACTIONS } from "../Game/Data";
@@ -566,6 +567,7 @@ export class SkillsWindow extends React.Component {
 					console.assert(false);
 				}
 				controller.autoSave();
+				updateInvalidStatus();
 			}
 			e.preventDefault();
 		};
@@ -581,6 +583,7 @@ export class SkillsWindow extends React.Component {
 				if (targetTime > controller.game.getDisplayTime()) {
 					controller.stepUntil(targetTime);
 					controller.autoSave();
+					updateInvalidStatus();
 				} else {
 					window.alert("Can only jump to a time in the future!");
 				}
