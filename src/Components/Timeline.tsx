@@ -24,7 +24,7 @@ export let scrollTimelineTo = (positionX: number) => {};
 
 // the actual timeline canvas
 class TimelineMain extends React.Component {
-	myRef: React.RefObject<HTMLDivElement>;
+	myRef: React.RefObject<HTMLDivElement | null>;
 	updateVisibleRange: () => void;
 	state: {
 		timelineWidth: number;
@@ -45,7 +45,6 @@ class TimelineMain extends React.Component {
 			visibleWidth: 66,
 			version: 0,
 		};
-		// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
 		this.myRef = React.createRef();
 
 		this.updateVisibleRange = () => {

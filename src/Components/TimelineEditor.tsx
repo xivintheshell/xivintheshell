@@ -75,7 +75,7 @@ function TimelineActionElement(props: {
 	isInvalid: boolean;
 	includeDetails: boolean;
 	usedAt: number;
-	refObj?: React.RefObject<HTMLTableRowElement>;
+	refObj?: React.RefObject<HTMLTableRowElement | null>;
 }) {
 	const colors = getCurrentThemeColors();
 	// Every other row should be highlighted slightly to provide contrast.
@@ -171,8 +171,7 @@ export let scrollEditorToFirstSelected = () => {};
 
 export function TimelineEditor() {
 	const colors = getCurrentThemeColors();
-	// @ts-expect-error for some reason, newer versions allow the type to be RefObject<elem | null>
-	const firstSelected: React.RefObject<HTMLTableRowElement> = React.createRef();
+	const firstSelected: React.RefObject<HTMLTableRowElement | null> = useRef(null);
 
 	const [isDirty, setDirty] = useState<boolean>(false);
 	const [recordValidStatus, setRecordValidStatus] = useState<RecordValidStatus | undefined>(
