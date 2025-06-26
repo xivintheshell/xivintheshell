@@ -944,7 +944,7 @@ class Controller {
 			}
 			if (newNode !== undefined) {
 				newNode.tmp_startLockTime = now;
-				newNode.tmp_endLockTime = fixedTargetTimestamp;
+				newNode.tmp_endLockTime = props.deltaTime + now;
 				this.record.addActionNode(newNode);
 			}
 		}
@@ -1774,6 +1774,7 @@ class Controller {
 
 	waitTillNextMpOrLucidTick() {
 		this.#requestTick({ deltaTime: this.game.timeTillNextMpGainEvent(), waitKind: "mp" });
+		updateInvalidStatus();
 		this.updateAllDisplay();
 	}
 
