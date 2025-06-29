@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# === WARNING ===
+# This script has been replaced by generate_job_data.py, which automatically queries xivapi and scrapes
+# the CN job guide to generate job data boilerplate. Only use this script if you need to download
+# a small number of assets.
+
 # Helper script to download icons from xivapi and give them proper names.
 # Assumes this is being from the repository root (invoked as ./scripts/download_xivapi_icons.sh).
 # This only needs to be run once per job, so just modify the function calls at the bottom to suit your needs
