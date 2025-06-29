@@ -5,7 +5,7 @@
 
 // TODO: write some stuff about what you want to test
 
-import { MNKStatusPropsGenerator } from "../../Components/Jobs/$JOB";
+import { MNKStatusPropsGenerator } from "../../Components/Jobs/MNK";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
 import { controller } from "../../Controller/Controller";
@@ -49,13 +49,13 @@ const makeMNKResource = (
 makeMNKResource("CHAKRA", 5);
 makeMNKResource("BEAST_CHAKRA", 1);
 makeMNKResource("NADI", 1);
-makeMNKResource("OPO-OPOS_FURY", 1);
+makeMNKResource("OPO_OPOS_FURY", 1);
 makeMNKResource("RAPTORS_FURY", 2);
 makeMNKResource("COEURLS_FURY", 3);
 
 // Statuses
 makeMNKResource("MANTRA", 1, { timeout: 15 });
-makeMNKResource("OPO-OPO_FORM", 1, { timeout: 30 });
+makeMNKResource("OPO_OPO_FORM", 1, { timeout: 30 });
 makeMNKResource("RAPTOR_FORM", 1, { timeout: 30 });
 makeMNKResource("COEURL_FORM", 1, { timeout: 30 });
 makeMNKResource("PERFECT_BALANCE", 3, { timeout: 20 });
@@ -69,7 +69,7 @@ makeMNKResource("BROTHERHOOD", 1, { timeout: 20 });
 makeMNKResource("MEDITATIVE_BROTHERHOOD", 1, { timeout: 20 });
 makeMNKResource("RIDDLE_OF_WIND", 1, { timeout: 15 });
 makeMNKResource("WINDS_RUMINATION", 1, { timeout: 15 });
-makeMNKResource("SIX-SIDED_STAR", 1, { timeout: 5 });
+makeMNKResource("SIX_SIDED_STAR", 1, { timeout: 5 });
 
 // Trackers
 makeMNKResource("BEAST_CHAKRA_1", 1);
@@ -186,7 +186,7 @@ makeMNKResourceAbility("MANTRA", 42, "cd_MANTRA", {
 	cooldown: 90,
 });
 
-makeMNKWeaponskill("FOUR-POINT_FURY", 45, {
+makeMNKWeaponskill("FOUR_POINT_FURY", 45, {
 	applicationDelay: 0.97,
 	potency: 140,
 	falloff: 0,
@@ -257,8 +257,8 @@ makeMNKAbility("EARTHS_REPLY", 64, "cd_EARTHS_REPLY", {
 	applicationDelay: 1.07,
 	cooldown: 1,
 	healingPotency: 300,
-	highlightIf: (state) => state.hasResourceAvailable(EARTHS_RUMINATION),
-	validateAttempt: (state) => state.hasResourceAvailable(EARTHS_RUMINATION),
+	highlightIf: (state) => state.hasResourceAvailable("EARTHS_RUMINATION"),
+	validateAttempt: (state) => state.hasResourceAvailable("EARTHS_RUMINATION"),
 	onConfirm: (state) => state.tryConsumeResource("EARTHS_RUMINATION"),
 });
 
@@ -292,10 +292,10 @@ makeMNKAbility("ENLIGHTENMENT", 74, "cd_Howling Fist", {
 	falloff: 0,
 });
 
-makeMNKWeaponskill("SIX-SIDED_STAR", 80, {
+makeMNKWeaponskill("SIX_SIDED_STAR", 80, {
 	applicationDelay: 0.62,
 	potency: 780,
-	onConfirm: (state) => state.gainStatus("SIX-SIDED_STAR"),
+	onConfirm: (state) => state.gainStatus("SIX_SIDED_STAR"),
 });
 
 makeMNKWeaponskill("SHADOW_OF_THE_DESTROYER", 82, {
@@ -341,8 +341,8 @@ makeMNKWeaponskill("WINDS_REPLY", 96, {
 	applicationDelay: 1.20,
 	potency: 1040,
 	falloff: 0.40,
-	highlightIf: (state) => state.hasResourceAvailable(WINDS_RUMINATION),
-	validateAttempt: (state) => state.hasResourceAvailable(WINDS_RUMINATION),
+	highlightIf: (state) => state.hasResourceAvailable("WINDS_RUMINATION"),
+	validateAttempt: (state) => state.hasResourceAvailable("WINDS_RUMINATION"),
 	onConfirm: (state) => state.tryConsumeResource("WINDS_RUMINATION"),
 });
 
@@ -350,7 +350,7 @@ makeMNKWeaponskill("FIRES_REPLY", 100, {
 	applicationDelay: 1.42,
 	potency: 1400,
 	falloff: 0.40,
-	highlightIf: (state) => state.hasResourceAvailable(FIRES_RUMINATION),
-	validateAttempt: (state) => state.hasResourceAvailable(FIRES_RUMINATION),
+	highlightIf: (state) => state.hasResourceAvailable("FIRES_RUMINATION"),
+	validateAttempt: (state) => state.hasResourceAvailable("FIRES_RUMINATION"),
 	onConfirm: (state) => state.tryConsumeResource("FIRES_RUMINATION"),
 });
