@@ -170,7 +170,13 @@ cache_status_csv_writer = csv.writer(open(cache_status_csv_path, "a"))
 
 @functools.cache
 def proper_case_to_allcaps_name(name: str) -> str:
-    return name.replace(" ", "_").replace("'", "").replace(":", "").upper()
+    return (
+        name.replace("-", "_")
+        .replace(" ", "_")
+        .replace("'", "")
+        .replace(":", "")
+        .upper()
+    )
 
 
 with open(os.path.expanduser(EN_JOB_GUIDE_HTML)) as f:
@@ -340,8 +346,8 @@ ACTIONS_DATA_DECL_BLOCK = textwrap.indent(
             "\tid: " + str(s.action_id) + ",\n"
             '\tname: "' + s.name + '",\n'
             "\tlabel: {\n"
-            "\t\tzh: " + zh_skill_names[i] + ",\n"
-            "\t\tja: " + s.ja_name + ",\n"
+            f'\t\tzh: "{zh_skill_names[i]}",\n'
+            f'\t\tja: "{s.ja_name}",\n'
             "\t},\n"
             "}"
         )
@@ -441,10 +447,10 @@ def generate_action_makefn(arg: tuple[int, SkillAPIInfo]):
         allcaps_required_status = proper_case_to_allcaps_name(required_statuses[i])
         # Assume that the skill is highlighted when the relevant status is present.
         sb.append(
-            f"\thighlightIf: (state) => state.hasResourceAvailable({allcaps_required_status}),"
+            f'\thighlightIf: (state) => state.hasResourceAvailable("{allcaps_required_status}"),'
         )
         sb.append(
-            f"\tvalidateAttempt: (state) => state.hasResourceAvailable({allcaps_required_status}),"
+            f'\tvalidateAttempt: (state) => state.hasResourceAvailable("{allcaps_required_status}"),'
         )
         confirm_lines.append(f'state.tryConsumeResource("{allcaps_required_status}")')
     if not is_ability and name in status_names:
@@ -485,14 +491,18 @@ COOLDOWNS_DECL_BLOCK = textwrap.indent(
 def data_decl_from_info(info: Info) -> str:
     return (
         f'{proper_case_to_allcaps_name(info.en)}: {{ name: "{info.en}"'
-        + (f", label: {{ zh: {info.zh} }}" if info.zh else "")
-        + " }},"
+        + (f', label: {{ zh: "{info.zh}" }}' if info.zh else "")
+        + " },"
     )
 
 
 GAUGES_DECL_BLOCK = textwrap.indent("\n".join(map(data_decl_from_info, GAUGES)), "\t")
-STATUSES_DECL_BLOCK = textwrap.indent("\n".join(map(data_decl_from_info, STATUSES)), "\t")
-TRACKERS_DECL_BLOCK = textwrap.indent("\n".join(map(data_decl_from_info, TRACKERS)), "\t")
+STATUSES_DECL_BLOCK = textwrap.indent(
+    "\n".join(map(data_decl_from_info, STATUSES)), "\t"
+)
+TRACKERS_DECL_BLOCK = textwrap.indent(
+    "\n".join(map(data_decl_from_info, TRACKERS)), "\t"
+)
 
 # Traits are scraped from the EN job guide page. We don't care about translations.
 TRAITS_DECL_BLOCK = textwrap.indent(
@@ -505,13 +515,15 @@ TRAITS_DECL_BLOCK = textwrap.indent(
     "\t",
 )
 
+
 # Used in GameState file
 def state_decl_from_info(info: Info) -> str:
     return (
-        f'make{JOB}Resource("{proper_case_to_allcaps_name(info.en)}", {info.max_stacks}' +
-        (f', {{ timeout: {info.timeout} }}' if info.timeout is not None else "") +
-        ');'
+        f'make{JOB}Resource("{proper_case_to_allcaps_name(info.en)}", {info.max_stacks}'
+        + (f", {{ timeout: {info.timeout} }}" if info.timeout is not None else "")
+        + ");"
     )
+
 
 resource_decl_lines = []
 resource_decl_lines.append("// Gauge resources")
@@ -531,7 +543,7 @@ STATE_FILE_CONTENT = f"""
 
 // TODO: write some stuff about what you want to test
 
-import {{ {JOB}StatusPropsGenerator }} from "../../Components/Jobs/$JOB";
+import {{ {JOB}StatusPropsGenerator }} from "../../Components/Jobs/{JOB}";
 import {{ StatusPropsGenerator }} from "../../Components/StatusDisplay";
 import {{ ActionNode }} from "../../Controller/Record";
 import {{ controller }} from "../../Controller/Controller";
