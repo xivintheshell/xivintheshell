@@ -1,9 +1,10 @@
+#!/usr/bin/env python3
 """
 Script to automatically generate a significant amount of boilerplate for a new job.
 This script must be run from repository root.
 
 Requires installing the beautifulsoup and requests libraries (`pip install bs4 requests`).
-Probably requires at least Python 3.10 (I tested with 3.13).
+Probably requires at least Python 3.11 (I tested with 3.13).
 
 This will destructively overwrite `src/Game/Data/Jobs/$JOB.ts` and `src/Game/Jobs.$JOB.ts`, generating
 boilerplate for basic skill declaration information and data.
@@ -14,7 +15,9 @@ Running this script performs the following actions:
 - Scrapes the Chinese job guide's HTML for translations of these actions to Chinese
 - Downloads image assets from XIVAPI to the appropriate sub-folder in `public/assets/`
 - Retrieves action IDs from XIVAPI
-- Retreives Japanese translations of skills and statuses from XIVAPI
+- Retrieves Japanese translations of skills and statuses from XIVAPI
+- Read the application delay spreadsheet for application delay values
+- Attempts to parse base potency and falloff amount from tooltips
 
 Note that Japanese translations are obtained from XIVAPI while Chinese ones are scraped because
 XIVAPI only reports data available in the international client, which contains English, French,
@@ -25,12 +28,14 @@ unnecessary for the time being.
 
 See the "YOUR CHANGES HERE" for further instructions on precise setup.
 """
+from collections.abc import MutableMapping
 import csv
 from dataclasses import dataclass
+import functools
 import json
 import os
+import re
 import textwrap
-from typing import List
 
 from bs4 import BeautifulSoup
 import requests
@@ -58,11 +63,15 @@ EN_JOB_GUIDE_HTML: str = "~/Downloads/en_mnk.html"
 # https://actff1.web.sdo.com/project/20190917jobguid/index.html#/continfo/monk/pve
 ZH_JOB_GUIDE_HTML: str = "~/Downloads/zh_mnk.html"
 # Both job guides are assumed to have the same order of actions, which may
-# not always be the case between patches.
+# not always be the case when a patch occurs.
+
+# A path to the single-sheet CSV containing this job's application delays
+# Download from here: https://docs.google.com/spreadsheets/d/1Emevsz5_oJdmkXy23hZQUXimirZQaoo5BejSzL3hZ9I/edit?usp=drive_web&ouid=110454175060690521527
+APPLICATION_DELAY_CSV_PATH: str = "scripts/application delay DT - MELEE.csv"
 
 # Action names are scraped from the job guide files. If there are any actions that should not be
 # included due to being out-leveled, list their proper English names here.
-EXCLUDE_ACTIONS: List[str] = [
+EXCLUDE_ACTIONS: list[str] = [
     "Steeled Meditation",
     "Steel Peak",
     "Inspirited Meditation",
@@ -73,23 +82,16 @@ EXCLUDE_ACTIONS: List[str] = [
 LAST_PVE_ACTION: str = "Fire's Reply"
 
 # A list of cooldowns resources to generate.
-COOLDOWNS: List[str] = [
-    "Forbidden Chakra",
-    "Thunderclap",
-    "Mantra",
-    "Perfect Balance",
-    "Riddle of Earth",
-    "Earth's Reply",
-    "Riddle of Fire",
-    "Brotherhood",
-    "Riddle of Wind",
-    "Wind's Reply",
-    "Fire's Reply",
-]
+# Abilities can be omitted, as this script will automatically produce a cooldown object for them.
+# Any abilities that share a cooldown (or are upgrades of an earlier ability) should be entered as
+# values in the dict entry. Leave the list empty if no other abilities use the cooldown.
+COOLDOWNS: dict[str, list[str]] = {
+    "Howling Fist": ["Enlightenment"],
+}
 
 # A list of English gauge element names.
 # Their translations must manually be added.
-GAUGES: List[Info | str] = [
+GAUGES: list[Info] = [
     I("Chakra", "斗气", max_stacks=5),
     I("Beast Chakra 1", "脉轮1"),
     I("Beast Chakra 2", "脉轮2"),
@@ -103,7 +105,7 @@ GAUGES: List[Info | str] = [
 
 # A list of buff/debuffs.
 # Their Chinese translations must manually be added.
-STATUSES: List[Info | str] = [
+STATUSES: list[Info] = [
     I("Mantra", "真言", timeout=15),
     I("Opo-opo Form", "魔猿身形", timeout=30),
     I("Raptor Form", "盗龙身形", timeout=30),
@@ -114,17 +116,17 @@ STATUSES: List[Info | str] = [
     I("Earth's Resolve", "金刚决意", timeout=15),
     I("Earth's Rumination", "金刚周天预备", timeout=30),
     I("Riddle of Fire", "红莲极意", timeout=20),
-    I("Fire's Reply", "乾坤斗气弹预备", timeout=20),
+    I("Fire's Rumination", "乾坤斗气弹预备", timeout=20),
     I("Brotherhood", "义结金兰", timeout=20),
     I("Meditative Brotherhood", "义结金兰：斗气", timeout=20),
     I("Riddle of Wind", "疾风极意", timeout=15),
-    I("Wind's Reply", "绝空拳预备", timeout=15),
-    I("Six-Sided Star", "六合星导脚", timeout=5),
+    I("Wind's Rumination", "绝空拳预备", timeout=15),
+    I("Six-sided Star", "六合星导脚", timeout=5),
 ]
 
 # A list of tracker abilities that don't necessarily correspond to any real in-game buffs.
 # Their translations must manually be added.
-TRACKERS: List[Info | str] = [
+TRACKERS: list[Info] = [
 ]
 
 # Traits are automatically scraped.
@@ -132,6 +134,8 @@ TRACKERS: List[Info | str] = [
 
 STATE_FILE_PATH = f"src/Game/Jobs/{JOB}.ts"
 DATA_FILE_PATH = f"src/Game/Data/Jobs/{JOB}.ts"
+
+status_names = {i.en for i in STATUSES}
 
 # Cache all action and status info queries to XIVAPI so we don't have to re-issue them.
 # A second level of caching explicitly checks the presence of an image file when we perform query.
@@ -152,11 +156,9 @@ if os.path.exists(cache_status_csv_path):
 cache_action_csv_writer = csv.writer(open(cache_action_csv_path, "a"))
 cache_status_csv_writer = csv.writer(open(cache_status_csv_path, "a"))
 
-def proper_case_to_allcaps_name(s: str | Info) -> str:
-    if isinstance(s, Info):
-        name = s.en
-    else:
-        name = s
+
+@functools.cache
+def proper_case_to_allcaps_name(name: str) -> str:
     return name.replace(" ", "_").replace("'", "").replace(":", "").upper()
 
 
@@ -165,34 +167,91 @@ with open(os.path.expanduser(EN_JOB_GUIDE_HTML)) as f:
 with open(os.path.expanduser(ZH_JOB_GUIDE_HTML)) as f:
 	zh_soup = BeautifulSoup(f, "html.parser")
 
-# Parsing action declarations
+# === Parsing action declarations ===
 # The EN job guide has a tbody with class "job__tbody", with each action declared in a tr.
 # The name is then found in a child div with class "skill__wrapper", which then contains a
-# <p><strong> with the actual name of the skill. The unlock level is in div with class
-# "jobclass__wrapper", which contains a <p> with "Lv. #".
+# <p><strong> with the actual name of the skill.
 # The CN job guide has a div with class "job_tbody", which eventually has a child <p> with
 # class "skill_txt", containing a <strong> with the Chinese name. The zh job guide also has text
 # indicating if a skill is learned from job quest ("通过特职任务获得"), so we need to filter those lines as well.
 zh_learned_by_quest = {"通过职业任务获得", "通过特职任务获得"}
 en_skill_names = [t.contents[0] for t in en_soup.select("div.skill__wrapper > p > strong")]
+en_tooltips = ["\n".join(
+	filter(lambda s: isinstance(s, str), t.contents))
+	for t in en_soup.select("tbody.job__tbody > tr > td.content")
+]
+
 zh_skill_names = [t.contents[0] for t in zh_soup.select("p.skill_txt > strong") if t.contents[0] not in zh_learned_by_quest]
 last_idx = en_skill_names.index(LAST_PVE_ACTION)
 en_skill_names = en_skill_names[:last_idx + 1]
+en_tooltips = en_tooltips[:last_idx + 1]
 zh_skill_names = zh_skill_names[:last_idx + 1]
 for exclude_action in EXCLUDE_ACTIONS:
 	idx = en_skill_names.index(exclude_action)
 	if idx > 0:
 		del en_skill_names[idx]
+		del en_tooltips[idx]
 		del zh_skill_names[idx]
+
+# Job guide language is very consistent, so we use regexes to parse out basic potency, falloff, and
+# prerequisite buff information.
+potencies = [None] * (last_idx + 1)
+heal_potencies = [None] * (last_idx + 1)
+falloffs = [None] * (last_idx + 1)
+required_statuses = [None] * (last_idx + 1)
+base_potency_re = re.compile(r"with a potency of ([\d,]+)\.")
+heal_potency_re = re.compile(r"Cure Potency: ([\d,]+)")
+# works for line and proximity splash cleaves
+aoe_falloff_re = re.compile(r"with a potency of ([\d,]+) for the first enemy, and ([\d]+)% less")
+# "all enemies in a straight line before you"
+# "all nearby enemies"
+# "to target and all enemies nearby it"
+aoe_no_falloff_re = re.compile(r"with a potency of ([\d,]+) to (target and )?all")
+# "Can only be executed while under the effect of $EFFECT."
+requirement_re = re.compile(r"Can only be executed while under the effect of ([ '\w]+)\.")
+for i, tooltip in enumerate(en_tooltips):
+	base_potency_match = base_potency_re.search(tooltip)
+	aoe_falloff_match = aoe_falloff_re.search(tooltip)
+	aoe_no_falloff_match = aoe_no_falloff_re.search(tooltip)
+	heal_potency_match = heal_potency_re.search(tooltip)
+	requirement_match = requirement_re.search(tooltip)
+	if base_potency_match:
+		potencies[i] = base_potency_match.group(1).replace(",", "")
+	elif aoe_falloff_match:
+		potencies[i] = aoe_falloff_match.group(1).replace(",", "")
+		falloffs[i] = "0." + aoe_falloff_match.group(2)
+	elif aoe_no_falloff_match:
+		potencies[i] = aoe_no_falloff_match.group(1).replace(",", "")
+		falloffs[i] = "0"
+	if heal_potency_match:
+		heal_potencies[i] = heal_potency_match.group(1).replace(",", "")
+	if requirement_match:
+		maybe_requirement_name = requirement_match.group(1)
+		if maybe_requirement_name in status_names:
+			required_statuses[i] = maybe_requirement_name
 
 XIVAPI_BASE = "https://v2.xivapi.com/api/"
 os.makedirs(f"public/assets/Skills/{JOB}", exist_ok=True)
+
 skill_api_infos = []
+
+
+@dataclass
+class SkillAPIInfo:
+	name: str
+	action_id: int
+	icon_path: str
+	unlock_level: int
+	category: str
+	cooldown: float
+	max_charges: str
+	ja_name: str
+
 
 for name in en_skill_names:
 	if name in cached_xivapi_action_calls:
 		print("using cached xivapi query for " + name)
-		action_id, icon_path, ja_name = cached_xivapi_action_calls[name]
+		action_id, icon_path, unlock_level, category, cooldown, stacks, ja_name = cached_xivapi_action_calls[name]
 	else:
 		print("querying xivapi for " + name)
 		r = requests.get(
@@ -202,16 +261,20 @@ for name in en_skill_names:
 				# this helps restrict a bunch of random skill images that aren't actually the pve skill we want
 				# use ~ (LIKE) for name since there may be some casing errors
 				"query": f'+Name~"{name}" +IsPvP=false +ClassJobCategory.{JOB}=true',
-				"fields": "Name,Name@lang(ja),Icon,ClassJobCategory"
+				"fields": "Name,Name@lang(ja),Icon,ClassJobCategory,ActionCategory.Name,ClassJobLevel,Recast100ms,MaxCharges"
 			}
 		)
 		r.raise_for_status()
 		blob = json.loads(r.text)["results"][0]
 		action_id = blob["row_id"]
+		unlock_level = blob["fields"]["ClassJobLevel"]
+		category = blob["fields"]["ActionCategory"]["fields"]["Name"]
 		icon_path = blob["fields"]["Icon"]["path_hr1"]
 		ja_name = blob["fields"]["Name@lang(ja)"]
-	info = [name, action_id, icon_path, ja_name]
-	skill_api_infos.append(info)
+		cooldown = blob["fields"]["Recast100ms"] * 10 // 100
+		stacks = blob["fields"]["MaxCharges"]
+	info = [name, action_id, icon_path, unlock_level, category, cooldown, stacks, ja_name]
+	skill_api_infos.append(SkillAPIInfo(*info))
 	cache_action_csv_writer.writerow(info)
 	local_img_path = f"public/assets/Skills/{JOB}/{name.replace(':', '')}.png"
 	if os.path.exists(local_img_path):
@@ -229,19 +292,120 @@ for name in en_skill_names:
 			f.write(img_r.content)
 
 
+# Used in Data folder
 ACTIONS_DATA_DECL_BLOCK = textwrap.indent(",\n".join(
 	(
-		proper_case_to_allcaps_name(name) + ": {\n"
-		"\tid: " + str(action_id) + ",\n"
-		'\tname: "' + name + '",\n'
+		proper_case_to_allcaps_name(s.name) + ": {\n"
+		"\tid: " + str(s.action_id) + ",\n"
+		'\tname: "' + s.name + '",\n'
 		"\tlabel: {\n"
 		"\t\tzh: " + zh_skill_names[i] + ",\n"
-		"\t\tja: " + ja_name + ",\n"
+		"\t\tja: " + s.ja_name + ",\n"
 		"\t},\n"
 		"}"
 	)
-	for i, (name, action_id, icon_path, ja_name) in enumerate(skill_api_infos)
+	for i, s in enumerate(skill_api_infos)
 ), "\t")
+
+
+def normalize_application_delay_name(s: str) -> str:
+	return s.replace("-", "").replace("'", "").replace(" ", "").lower()
+
+
+class ApplicationDelayDict(MutableMapping):
+	data = {}
+
+	def __init__(self, *args, **kwargs):
+		# Make sure any initial arguments get normalized
+		self.data = dict(*args, **kwargs)
+
+	def __getitem__(self, key):
+		return self.data[normalize_application_delay_name(key)]
+
+	def __setitem__(self, key, val):
+		self.data[normalize_application_delay_name(key)] = val
+
+	def __delitem__(self, key):
+		del self.data[key]
+
+	def __len__(self):
+		return len(self.data)
+
+	def __iter__(self):
+		return iter(self.data)
+
+
+normalized_application_delay_map = ApplicationDelayDict()
+
+
+with open(APPLICATION_DELAY_CSV_PATH) as f:
+	reader = csv.reader(f)
+	for row in reader:
+		# Multiple jobs will have entries within the same row
+		# Treat any non-numeric value as a possible skill name, and if it's followed by a numer or
+		# "instant" then treat that as its application delay
+		for i in range(len(row) - 1):
+			maybe_skill_name, maybe_delay = row[i], row[i + 1]
+			if maybe_delay == "instant":
+				normalized_application_delay_map[maybe_skill_name] = 0
+			elif maybe_delay.replace(".", "").isdigit():
+				normalized_application_delay_map[maybe_skill_name] = maybe_delay
+
+
+shared_cd_mapping = {}
+for src_ability, dst_list in COOLDOWNS.items():
+	for dst_ability in dst_list:
+		shared_cd_mapping[dst_ability] = src_ability
+
+
+def generate_action_makefn(arg: tuple[int, SkillAPIInfo]):
+	i, s = arg
+	name = s.name
+	allcaps_name = proper_case_to_allcaps_name(name)
+	sb = []
+	is_ability = s.category == "Ability"
+	# If there's an equivalent status name, then make a resource ability.
+	constructor = "ResourceAbility" if name in status_names and is_ability else s.category
+	if is_ability:
+		cd_name = shared_cd_mapping.get(name, allcaps_name)
+		sb.append(f'make{JOB}{constructor}("{allcaps_name}", {s.unlock_level}, "cd_{cd_name}", {{')
+	else:
+		sb.append(f'make{JOB}{constructor}("{allcaps_name}", {s.unlock_level}, {{')
+	if constructor == "ResourceAbility":
+		sb.append(f'\trscType: "{allcaps_name}",')
+	application_delay = normalized_application_delay_map.get(name, None)
+	sb.append(f"\tapplicationDelay: {application_delay or '0'}," + (" // TODO" if application_delay is None else ""))
+	if is_ability:
+		# GCD CD management can be weird, so deal with that manually.
+		sb.append(f"\tcooldown: {s.cooldown},")
+	if int(s.max_charges) > 0:
+		sb.append(f"\tmaxCharges: {s.max_charges},")
+	if potencies[i] is not None:
+		sb.append(f"\tpotency: {potencies[i]},")
+	if falloffs[i] is not None:
+		sb.append(f"\tfalloff: {falloffs[i]},")
+	if heal_potencies[i] is not None:
+		sb.append(f"\thealingPotency: {heal_potencies[i]},")
+	confirm_lines = []
+	if required_statuses[i] is not None:
+		allcaps_required_status = proper_case_to_allcaps_name(required_statuses[i])
+		# Assume that the skill is highlighted when the relevant status is present.
+		sb.append(f"\thighlightIf: (state) => state.hasResourceAvailable({allcaps_required_status}),")
+		sb.append(f"\tvalidateAttempt: (state) => state.hasResourceAvailable({allcaps_required_status}),")
+		confirm_lines.append(f'state.tryConsumeResource("{allcaps_required_status}")')
+	if not is_ability and name in status_names:
+		confirm_lines.append(f'state.gainStatus("{allcaps_name}")')
+	if len(confirm_lines) > 0:
+		sb.append(f'\tonConfirm: (state) => {confirm_lines[0]},')
+	elif len(confirm_lines) > 1:
+		sb.append(f'\tonConfirm: (state) => {{{[s + ";" for s in confirm_lines].join("\n\t\t")}\n\t}},')
+	sb.append("});")
+	return "\n".join(sb)
+
+
+# Used in GameState file
+ACTIONS_DECL_BLOCK = "\n\n".join(map(generate_action_makefn, enumerate(skill_api_infos)))
+
 
 COOLDOWNS_DECL_BLOCK = ""
 GAUGES_DECL_BLOCK = ""
@@ -250,7 +414,6 @@ TRACKERS_DECL_BLOCK = ""
 TRAITS_DECL_BLOCK = ""
 
 RESOURCE_DECL_BLOCK = ""
-ACTIONS_DECL_BLOCK = ""
 
 
 STATE_FILE_CONTENT = f"""
@@ -420,10 +583,7 @@ if __name__ == "__main__":
     	# f.write
         print(DATA_FILE_CONTENT)
     print("Writing job state file...")
-    # with open(STATE_FILE_PATH, "w") as f:
-    #     f.write(STATE_FILE_CONTENT.format(
-    #         JOB=JOB,
-    #         RESOURCE_DECL_BLOCK=RESOURCE_DECL_BLOCK,
-    #         ACTIONS_DECL_BLOCK=ACTIONS_DECL_BLOCK,
-    #     ))
+    with open(STATE_FILE_PATH, "w") as f:
+    	# f.write
+        print(STATE_FILE_CONTENT)
     print("Done.")

@@ -2,8 +2,8 @@
 
 # === WARNING ===
 # This script has been replaced by generate_job_data.py, which automatically queries xivapi and scrapes
-# the CN job guide to generate job data boilerplate. Only use this script if you need to download
-# a small number of assets.
+# the CN job guide to generate job data boilerplate. Only use this script if you are unable to run
+# the Python script for whatever reason.
 
 # Helper script to download icons from xivapi and give them proper names.
 # Assumes this is being from the repository root (invoked as ./scripts/download_xivapi_icons.sh).
