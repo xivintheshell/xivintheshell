@@ -10,6 +10,7 @@ import {
 	NadiGaugeProps,
 	ResourceDisplayProps,
 	StatusPropsGenerator,
+    ResourceCounterProps,
 } from "../StatusDisplay";
 
 (Object.keys(MNK_STATUSES) as MNKResourceKey[]).forEach((buff) =>
@@ -84,6 +85,13 @@ export class MNKStatusPropsGenerator extends StatusPropsGenerator<MNKState> {
 			.join("+");
 
 		const infos: ResourceDisplayProps[] = [
+			{
+				kind: "counter",
+				name: localizeResourceType("CHAKRA"),
+				color: colors.mnk.chakra,
+				currentStacks: resources.get("CHAKRA").availableAmount(),
+				maxStacks: 5,
+			} as ResourceCounterProps,
 			{
 				kind: "beast",
 				name: localizeResourceType("BEAST_CHAKRA"),
