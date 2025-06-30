@@ -177,6 +177,16 @@ export type NINResourceColors = {
 	trick: string;
 };
 
+export type MNKResourceColors = {
+	opo: string;
+	raptor: string;
+	coeurl: string;
+	lunar: string;
+	solar: string;
+	riddleOfFire: string;
+	brotherhood: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -224,6 +234,7 @@ export type ThemeColors = {
 	pld: PLDResourceColors;
 	drk: DRKResourceColors;
 	nin: NINResourceColors;
+	mnk: MNKResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -446,6 +457,16 @@ const DARK_THEME_COLORS: ThemeColors = {
 		dokumori: "#9a0ec4",
 		trick: "#ffd454",
 	},
+	mnk: {
+		// TODO
+		opo: "white",
+		raptor: "white",
+		coeurl: "white",
+		lunar: "white",
+		solar: "white",
+		riddleOfFire: "white",
+		brotherhood: "white",
+	},
 	timeline: {
 		ruler: "#2d2d2d",
 		tracks: "#242424",
@@ -647,6 +668,16 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		nozuchi: "#d6a440",
 		dokumori: "#7e03a3",
 		trick: "#e6b525",
+	},
+	mnk: {
+		// TODO
+		opo: "black",
+		raptor: "black",
+		coeurl: "black",
+		lunar: "black",
+		solar: "black",
+		riddleOfFire: "black",
+		brotherhood: "black",
 	},
 	timeline: {
 		ruler: "#e9e9e9",
