@@ -311,18 +311,18 @@ export const MNK_ACTIONS = ensureRecord<ActionData>()({
 
 export const MNK_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_THUNDERCLAP: { name: "cd_Thunderclap" },
-	cd_HOWLING_FIST: { name: "cd_Howling Fist" },
+	cd_HOWLING_FIST: { name: "cd_HowlingFist" },
 	cd_MANTRA: { name: "cd_Mantra" },
-	cd_PERFECT_BALANCE: { name: "cd_Perfect Balance" },
-	cd_FORBIDDEN_MEDITATION: { name: "cd_Forbidden Meditation" },
-	cd_THE_FORBIDDEN_CHAKRA: { name: "cd_The Forbidden Chakra" },
-	cd_RIDDLE_OF_EARTH: { name: "cd_Riddle of Earth" },
-	cd_EARTHS_REPLY: { name: "cd_Earth's Reply" },
-	cd_RIDDLE_OF_FIRE: { name: "cd_Riddle of Fire" },
+	cd_PERFECT_BALANCE: { name: "cd_PerfectBalance" },
+	cd_FORBIDDEN_MEDITATION: { name: "cd_ForbiddenMeditation" },
+	cd_THE_FORBIDDEN_CHAKRA: { name: "cd_TheForbiddenChakra" },
+	cd_RIDDLE_OF_EARTH: { name: "cd_RiddleOfEarth" },
+	cd_EARTHS_REPLY: { name: "cd_EarthsReply" },
+	cd_RIDDLE_OF_FIRE: { name: "cd_RiddleOfFire" },
 	cd_BROTHERHOOD: { name: "cd_Brotherhood" },
-	cd_RIDDLE_OF_WIND: { name: "cd_Riddle of Wind" },
-	cd_ENLIGHTENED_MEDITATION: { name: "cd_Enlightened Meditation" },
-	cd_ENLIGHTENMENT: { name: "cd_Enlightenment" },
+	cd_RIDDLE_OF_WIND: { name: "cd_RiddleOfWind" },
+	cd_ENLIGHTENED_MEDITATION: { name: "cd_EnlightenedMeditation" },
+	cd_ENLIGHTENMENT: { name: "cd_HowlingFist" },
 });
 
 export const MNK_GAUGES = ensureRecord<ResourceData>()({

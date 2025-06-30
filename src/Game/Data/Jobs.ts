@@ -135,7 +135,7 @@ export type HealerKey = keyof Healers;
 export const MELEE = ensureRecord<Job>()({
 	MNK: {
 		role: "MELEE",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		limitBreak: "FINAL_HEAVEN",
 	},
 	DRG: {

@@ -27,6 +27,8 @@ import {
 	MakeResourceAbilityParams,
 	makeSpell,
 	makeWeaponskill,
+    MakeAbilityParams,
+    MakeGCDParams,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
@@ -285,7 +287,7 @@ makeMNKAbility("ENLIGHTENED_MEDITATION", 74, "cd_ENLIGHTENED_MEDITATION", {
 	cooldown: 1,
 });
 
-makeMNKAbility("ENLIGHTENMENT", 74, "cd_Howling Fist", {
+makeMNKAbility("ENLIGHTENMENT", 74, "cd_ENLIGHTENMENT", {
 	applicationDelay: 0.76,
 	cooldown: 1,
 	potency: 160,

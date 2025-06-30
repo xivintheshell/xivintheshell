@@ -112,6 +112,26 @@ export interface AttunementGaugeProps {
 	emeraldColor: string;
 }
 
+export interface NadiGaugeProps {
+	kind: "nadi";
+	name: ContentNode;
+	label: ContentNode;
+	left: "lunar" | "solar" | null;
+	right: "lunar" | "solar" | null;
+	lunarColor: string;
+	solarColor: string;
+}
+
+export interface BeastGaugeProps {
+	kind: "beast";
+	name: ContentNode;
+	label: ContentNode;
+	chakras: ("opo" | "raptor" | "coeurl")[];
+	opoColor: string;
+	raptorColor: string;
+	coeurlColor: string;
+}
+
 export interface ResourceTextProps {
 	kind: "text";
 	name: ContentNode;
@@ -127,6 +147,8 @@ export type ResourceDisplayProps =
 	| SenCounterProps
 	| CodaCounterProps
 	| AttunementGaugeProps
+	| NadiGaugeProps
+	| BeastGaugeProps
 	| ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
@@ -632,6 +654,56 @@ export function ResourcesDisplay(props: {
 								? ` | ${props.timeRemaining.toFixed(3)}`
 								: "")
 						}
+					/>
+				</div>;
+			}
+			case "nadi": {
+				return <div key={"resourceDisplay" + i}>
+					<ResourceCounter
+						name={props.name}
+						label={props.label}
+						containerType={"circle"}
+						items={[
+							{
+								color:
+									props.left === "lunar"
+										? props.lunarColor
+										: props.left === "solar"
+											? props.solarColor
+											: undefined,
+							},
+							{
+								color:
+									props.right === "lunar"
+										? props.lunarColor
+										: props.right === "solar"
+											? props.solarColor
+											: undefined,
+							},
+						]}
+					/>
+				</div>;
+			}
+			case "beast": {
+				const items: { color: string | undefined }[] = new Array(3).map((i) => {
+					return { color: undefined };
+				});
+				props.chakras.map((value, i) => {
+					items[i] = {
+						color:
+							value === "opo"
+								? props.opoColor
+								: value === "raptor"
+									? props.raptorColor
+									: props.coeurlColor,
+					};
+				});
+				return <div key={"resourceDisplay" + i}>
+					<ResourceCounter
+						name={props.name}
+						label={props.label}
+						containerType={"circle"}
+						items={items}
 					/>
 				</div>;
 			}

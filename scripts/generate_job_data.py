@@ -407,6 +407,11 @@ for src_ability, dst_list in COOLDOWNS.items():
         shared_cd_mapping[dst_ability] = src_ability
 
 
+def normalize_cd_label(name: str) -> str:
+    name = shared_cd_mapping.get(name, name).replace("'", "")
+    return "".join(map(lambda x: x[0].upper() + x[1:], re.split(r"[ \-]", name)))
+
+
 def generate_action_makefn(arg: tuple[int, SkillAPIInfo]):
     i, s = arg
     name = s.name
@@ -418,9 +423,8 @@ def generate_action_makefn(arg: tuple[int, SkillAPIInfo]):
         "ResourceAbility" if name in status_names and is_ability else s.category
     )
     if is_ability:
-        cd_name = shared_cd_mapping.get(name, allcaps_name)
         sb.append(
-            f'make{JOB}{constructor}("{allcaps_name}", {s.unlock_level}, "cd_{cd_name}", {{'
+            f'make{JOB}{constructor}("{allcaps_name}", {s.unlock_level}, "cd_{proper_case_to_allcaps_name(name)}", {{'
         )
     else:
         sb.append(f'make{JOB}{constructor}("{allcaps_name}", {s.unlock_level}, {{')
@@ -473,7 +477,7 @@ ACTIONS_DECL_BLOCK = "\n\n".join(
 # Create a cooldown for every ability that doesn't share a CD with another ability.
 COOLDOWNS_DECL_BLOCK = textwrap.indent(
     "\n".join(
-        f'cd_{proper_case_to_allcaps_name(name)}: {{ name: "cd_{name}" }},'
+        f'cd_{proper_case_to_allcaps_name(name)}: {{ name: "cd_{normalize_cd_label(name)}" }},'
         # Combine ability keys with explicit cooldown keys
         for name in {
             **{
@@ -565,6 +569,8 @@ import {{
 	MakeResourceAbilityParams,
 	makeSpell,
 	makeWeaponskill,
+    MakeAbilityParams,
+    MakeGCDParams,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
