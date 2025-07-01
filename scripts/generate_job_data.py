@@ -269,6 +269,7 @@ for i, tooltip in enumerate(en_tooltips):
 
 XIVAPI_BASE = "https://v2.xivapi.com/api/"
 os.makedirs(f"public/assets/Skills/{JOB}", exist_ok=True)
+os.makedirs(f"public/assets/Buffs/{JOB}", exist_ok=True)
 
 skill_api_infos = []
 
@@ -491,11 +492,60 @@ COOLDOWNS_DECL_BLOCK = textwrap.indent(
     "\t",
 )
 
+# TODO update this loop to use ja translations and other data
+for info in STATUSES:
+    name = info.en
+    if name in cached_xivapi_status_calls:
+        print("using cached xivapi query for " + name)
+        icon_id, icon_path, ja_name = cached_xivapi_status_calls[name]
+        icon_id = int(icon_id)
+    else:
+        print("querying xivapi for " + name)
+        r = requests.get(
+            XIVAPI_BASE + "search?sheets=Status",
+            params={
+                # + means the constraint is mandatory
+                # this helps restrict a bunch of random skill images that aren't actually the pve skill we want
+                # use ~ (LIKE) for name since there may be some casing errors
+                "query": f'+Name~"{name}" +ClassJobCategory.{JOB}=true',
+                "fields": "Name,Name@lang(ja),Icon,ClassJobCategory,ClassJobLevel",
+            },
+        )
+        r.raise_for_status()
+        blob = json.loads(r.text)["results"][0]
+        icon_id = blob["fields"]["Icon"]["id"]
+        icon_path = blob["fields"]["Icon"]["path_hr1"]
+        ja_name = blob["fields"]["Name@lang(ja)"]
+    cache_status_csv_writer.writerow([name, icon_id, icon_path, ja_name])
+    for i in range(info.max_stacks):
+        local_img_path = f"public/assets/Buffs/{JOB}/{name.replace(':', '')}"
+        if i + 1 > 1:
+            local_img_path += str(i + 1)
+        local_img_path += ".png"
+        iconset = icon_id // 1000 * 1000
+        icon_path = f"ui/icon/{iconset}/{icon_id + i}_hr1.tex"
+        if os.path.exists(local_img_path):
+            print("skipping already-downloaded icon for " + name)
+        else:
+            with open(local_img_path, "wb") as f:
+                print("downloading image for " + name)
+                img_r = requests.get(
+                    XIVAPI_BASE + "asset/" + icon_path,
+                    params={"format": "png"},
+                )
+                img_r.raise_for_status()
+                f.write(img_r.content)
+
 
 def data_decl_from_info(info: Info) -> str:
+    fields = {}
+    if info.max_stacks > 1:
+        fields["maximumCharges"] = info.max_stacks
+    if info.zh is not None:
+        fields["label"] = f'{{ zh: "{info.zh}" }}'
     return (
         f'{proper_case_to_allcaps_name(info.en)}: {{ name: "{info.en}"'
-        + (f', label: {{ zh: "{info.zh}" }}' if info.zh else "")
+        + (f', {{ {", ".join(f'{k}: {v}' for k, v in fields.items())} }}' if fields else "")
         + " },"
     )
 

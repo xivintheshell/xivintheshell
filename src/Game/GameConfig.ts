@@ -230,6 +230,10 @@ export class GameConfig {
 		return Debug.constantSlidecastWindow ? 0.5 : 0.46 + 0.02 * castTime;
 	}
 
+	get critRate(): number {
+		return XIVMath.criticalHitRate(this.level, this.criticalHit);
+	}
+
 	serialized() {
 		return {
 			job: this.job,

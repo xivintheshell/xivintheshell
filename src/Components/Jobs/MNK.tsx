@@ -10,7 +10,8 @@ import {
 	NadiGaugeProps,
 	ResourceDisplayProps,
 	StatusPropsGenerator,
-    ResourceCounterProps,
+	ResourceCounterProps,
+	ResourceTextProps,
 } from "../StatusDisplay";
 
 (Object.keys(MNK_STATUSES) as MNKResourceKey[]).forEach((buff) =>
@@ -32,21 +33,11 @@ function numberToBeastChakra(value: number): "opo" | "raptor" | "coeurl" | null 
 function localizeBeast(kind: "opo" | "raptor" | "coeurl" | null): ContentNode | null {
 	switch (kind) {
 		case "opo":
-			return localize({ en: kind, zh: "魔猿" });
+			return localize({ en: "o", zh: "魔猿" });
 		case "raptor":
-			return localize({ en: kind, zh: "盗龙" });
+			return localize({ en: "r", zh: "盗龙" });
 		case "coeurl":
-			return localize({ en: kind, zh: "猛豹" });
-	}
-	return null;
-}
-
-function numberToNadi(value: number): "lunar" | "solar" | null {
-	switch (value) {
-		case 1:
-			return "lunar";
-		case 2:
-			return "solar";
+			return localize({ en: "c", zh: "猛豹" });
 	}
 	return null;
 }
@@ -72,19 +63,43 @@ export class MNKStatusPropsGenerator extends StatusPropsGenerator<MNKState> {
 		const beastChakras = ["BEAST_CHAKRA_1", "BEAST_CHAKRA_2", "BEAST_CHAKRA_3"]
 			.map((key) => resources.get(key as MNKResourceKey).availableAmount())
 			.map(numberToBeastChakra);
-		const leftNadi = numberToNadi(resources.get("NADI_1").availableAmount());
-		const rightNadi = numberToNadi(resources.get("NADI_2").availableAmount());
+		const lunar = resources.get("LUNAR_NADI").available(1);
+		const solar = resources.get("SOLAR_NADI").available(1);
 
 		const beastText = beastChakras
 			.map(localizeBeast)
 			.filter((x) => x !== null)
 			.join("+");
-		const nadiText = [leftNadi, rightNadi]
-			.map(localizeNadi)
+		const nadiText = [
+			localizeNadi(lunar ? "lunar" : null),
+			localizeNadi(solar ? "solar" : null),
+		]
 			.filter((x) => x !== null)
 			.join("+");
 
 		const infos: ResourceDisplayProps[] = [
+			{
+				kind: "counter",
+				name: localizeResourceType("OPO_OPOS_FURY"),
+				color: colors.mnk.opo,
+				currentStacks: resources.get("OPO_OPOS_FURY").availableAmount(),
+				maxStacks: 1,
+			} as ResourceCounterProps,
+			{
+				kind: "counter",
+				name: localizeResourceType("RAPTORS_FURY"),
+				color: colors.mnk.raptor,
+				currentStacks: resources.get("RAPTORS_FURY").availableAmount(),
+				maxStacks: 1,
+			} as ResourceCounterProps,
+			{
+				kind: "counter",
+				name: localizeResourceType("COEURLS_FURY"),
+				color: colors.mnk.coeurl,
+				currentStacks: resources.get("COEURLS_FURY").availableAmount(),
+				maxStacks: 2,
+			} as ResourceCounterProps,
+			// TODO simulate BH chakra overcap
 			{
 				kind: "counter",
 				name: localizeResourceType("CHAKRA"),
@@ -92,6 +107,13 @@ export class MNKStatusPropsGenerator extends StatusPropsGenerator<MNKState> {
 				currentStacks: resources.get("CHAKRA").availableAmount(),
 				maxStacks: 5,
 			} as ResourceCounterProps,
+			{
+				kind: "text",
+				name: localizeResourceType("BEAST_CHAKRA_TIMER"),
+				text: beastChakras.every((x) => x !== null)
+					? resources.get("BEAST_CHAKRA_1").pendingChange?.timeTillEvent.toFixed(3)
+					: "n/a",
+			} as ResourceTextProps,
 			{
 				kind: "beast",
 				name: localizeResourceType("BEAST_CHAKRA"),
@@ -105,10 +127,10 @@ export class MNKStatusPropsGenerator extends StatusPropsGenerator<MNKState> {
 				kind: "nadi",
 				name: localizeResourceType("NADI"),
 				label: nadiText,
+				lunar,
+				solar,
 				lunarColor: colors.mnk.lunar,
 				solarColor: colors.mnk.solar,
-				left: leftNadi,
-				right: rightNadi,
 			} as NadiGaugeProps,
 		];
 		return infos;

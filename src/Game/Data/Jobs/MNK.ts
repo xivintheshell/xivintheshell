@@ -1,4 +1,3 @@
-
 import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
@@ -306,7 +305,7 @@ export const MNK_ACTIONS = ensureRecord<ActionData>()({
 			zh: "乾坤斗气弹",
 			ja: "乾坤闘気弾",
 		},
-	}
+	},
 });
 
 export const MNK_COOLDOWNS = ensureRecord<CooldownData>()({
@@ -324,7 +323,10 @@ export const MNK_COOLDOWNS = ensureRecord<CooldownData>()({
 export const MNK_GAUGES = ensureRecord<ResourceData>()({
 	CHAKRA: { name: "Chakra", label: { zh: "斗气" } },
 	BEAST_CHAKRA: { name: "Beast Chakra", label: { zh: "脉轮" } },
+	BEAST_CHAKRA_TIMER: { name: "Beast Timer", label: { zh: "脉轮时间" } },
 	NADI: { name: "Nadi", label: { zh: "太阴斗气/太阳斗气" } },
+	LUNAR_NADI: { name: "Lunar Nadi", label: { zh: "太阴斗气" } },
+	SOLAR_NADI: { name: "Solar Nadi", label: { zh: "太阳斗气" } },
 	OPO_OPOS_FURY: { name: "Opo-opo's Fury", label: { zh: "魔猿功力" } },
 	RAPTORS_FURY: { name: "Raptor's Fury", label: { zh: "盗龙功力" } },
 	COEURLS_FURY: { name: "Coeurl's Fury", label: { zh: "猛豹功力" } },
@@ -335,7 +337,7 @@ export const MNK_STATUSES = ensureRecord<ResourceData>()({
 	OPO_OPO_FORM: { name: "Opo-opo Form", label: { zh: "魔猿身形" } },
 	RAPTOR_FORM: { name: "Raptor Form", label: { zh: "盗龙身形" } },
 	COEURL_FORM: { name: "Coeurl Form", label: { zh: "猛豹身形" } },
-	PERFECT_BALANCE: { name: "Perfect Balance", label: { zh: "震脚" } },
+	PERFECT_BALANCE: { name: "Perfect Balance", maximumStacks: 3, label: { zh: "震脚" } },
 	FORMLESS_FIST: { name: "Formless Fist", label: { zh: "无相身形" } },
 	RIDDLE_OF_EARTH: { name: "Riddle of Earth", label: { zh: "金刚极意" } },
 	EARTHS_RESOLVE: { name: "Earth's Resolve", label: { zh: "金刚决意" } },
@@ -353,8 +355,6 @@ export const MNK_TRACKERS = ensureRecord<ResourceData>()({
 	BEAST_CHAKRA_1: { name: "Beast Chakra 1", label: { zh: "脉轮1" } },
 	BEAST_CHAKRA_2: { name: "Beast Chakra 2", label: { zh: "脉轮2" } },
 	BEAST_CHAKRA_3: { name: "Beast Chakra 3", label: { zh: "脉轮3" } },
-	NADI_1: { name: "Nadi 1", label: { zh: "太阴斗气/太阳斗气1" } },
-	NADI_2: { name: "Nadi 2", label: { zh: "太阴斗气/太阳斗气1" } },
 });
 
 export const MNK_TRAITS = ensureRecord<TraitData>()({
@@ -363,12 +363,12 @@ export const MNK_TRAITS = ensureRecord<TraitData>()({
 	ENHANCED_GREASED_LIGHTNING_III: { name: "Enhanced Greased Lightning III", level: 76 },
 	ARM_OF_THE_DESTROYER_MASTERY: { name: "Arm of the Destroyer Mastery", level: 82 },
 	ENHANCED_THUNDERCLAP: { name: "Enhanced Thunderclap", level: 84 },
-	MELEE_MASTERY: { name: "Melee Mastery", level: 84 },
+	MELEE_MASTERY_MNK: { name: "Melee Mastery MNK", level: 84 },
 	FLINT_STRIKE_MASTERY: { name: "Flint Strike Mastery", level: 86 },
 	ENHANCED_BROTHERHOOD: { name: "Enhanced Brotherhood", level: 88 },
 	TORNADO_KICK_MASTERY: { name: "Tornado Kick Mastery", level: 90 },
 	BEAST_CHAKRA_MASTERY: { name: "Beast Chakra Mastery", level: 92 },
-	MELEE_MASTERY_II: { name: "Melee Mastery II", level: 94 },
+	MELEE_MASTERY_II_MNK: { name: "Melee Mastery II MNK", level: 94 },
 	ENHANCED_RIDDLE_OF_WIND: { name: "Enhanced Riddle of Wind", level: 96 },
 	ENHANCED_RIDDLE_OF_FIRE: { name: "Enhanced Riddle of Fire", level: 100 },
 });

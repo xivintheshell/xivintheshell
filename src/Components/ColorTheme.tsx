@@ -778,6 +778,10 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.DOKUMORI, colors.nin.dokumori],
 		[PotencyModifierType.TRICK_ATTACK, colors.nin.trick],
 		[PotencyModifierType.KUNAIS_BANE, colors.nin.trick],
+		[PotencyModifierType.BROTHERHOOD, colors.mnk.brotherhood],
+		[PotencyModifierType.RIDDLE_OF_FIRE, colors.mnk.riddleOfFire],
+		[PotencyModifierType.MNK_BALL, colors.mnk.opo],
+		[PotencyModifierType.SSS_CHAKRA, colors.mnk.chakra],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

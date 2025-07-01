@@ -67,7 +67,7 @@ export class XIVMath {
 				? critBonus
 				: critBonus < 0
 					? 0
-					: XIVMath.#criticalHitRate(level, crit) + critBonus;
+					: XIVMath.criticalHitRate(level, crit) + critBonus;
 		const dhRate =
 			dhBonus >= 1 ? dhBonus : dhBonus < 0 ? 0 : XIVMath.#directHitRate(level, dh) + dhBonus;
 
@@ -102,7 +102,7 @@ export class XIVMath {
 		);
 	}
 
-	static #criticalHitRate(level: LevelSync, crit: number) {
+	static criticalHitRate(level: LevelSync, crit: number) {
 		const subStat = this.getSubstatBase(level);
 		const div = this.getStatDiv(level);
 		return (Math.floor((200 * (crit - subStat)) / div) + 50) * 0.001;

@@ -116,8 +116,8 @@ export interface NadiGaugeProps {
 	kind: "nadi";
 	name: ContentNode;
 	label: ContentNode;
-	left: "lunar" | "solar" | null;
-	right: "lunar" | "solar" | null;
+	lunar: boolean;
+	solar: boolean;
 	lunarColor: string;
 	solarColor: string;
 }
@@ -665,20 +665,10 @@ export function ResourcesDisplay(props: {
 						containerType={"circle"}
 						items={[
 							{
-								color:
-									props.left === "lunar"
-										? props.lunarColor
-										: props.left === "solar"
-											? props.solarColor
-											: undefined,
+								color: props.lunar ? props.lunarColor : undefined,
 							},
 							{
-								color:
-									props.right === "lunar"
-										? props.lunarColor
-										: props.right === "solar"
-											? props.solarColor
-											: undefined,
+								color: props.solar ? props.solarColor : undefined,
 							},
 						]}
 					/>
@@ -695,7 +685,9 @@ export function ResourcesDisplay(props: {
 								? props.opoColor
 								: value === "raptor"
 									? props.raptorColor
-									: props.coeurlColor,
+									: value === "coeurl"
+										? props.coeurlColor
+										: undefined,
 					};
 				});
 				return <div key={"resourceDisplay" + i}>

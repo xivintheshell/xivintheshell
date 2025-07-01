@@ -261,7 +261,7 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.BROTHERHOOD, { en: "brotherhood", zh: "义结金兰" }],
 	[PotencyModifierType.RIDDLE_OF_FIRE, { en: "riddle of fire", zh: "红莲极意" }],
 	[PotencyModifierType.MNK_BALL, { en: "BALL", zh: "功力" }],
-	[PotencyModifierType.SSS_CHAKRA, { en: "chakra (sss)", zh: "斗气（六合星）" }],
+	[PotencyModifierType.SSS_CHAKRA, { en: "chakra", zh: "斗气" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -345,7 +345,7 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.BROTHERHOOD, { en: "BH", zh: "义结金兰" }],
 	[PotencyModifierType.RIDDLE_OF_FIRE, { en: "ROF", zh: "红莲极意" }],
 	[PotencyModifierType.MNK_BALL, { en: "BALL", zh: "功力" }],
-	[PotencyModifierType.SSS_CHAKRA, { en: "CHAKRA", zh: "斗气（六合星）" }],
+	[PotencyModifierType.SSS_CHAKRA, { en: "CHAKRA", zh: "斗气" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(
