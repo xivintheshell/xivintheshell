@@ -1,5 +1,12 @@
 [
 	{
+		"date": "7/1/25",
+		"changes": [
+			"[BETA][MNK] Added initial support for MNK."
+		],
+		"level": "major"
+	},
+	{
 		"date": "6/25/25",
 		"changes": [
 			"Fixed a bug where timestamps would not appear for wait events in the timeline editor.",
