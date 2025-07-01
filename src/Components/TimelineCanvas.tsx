@@ -672,6 +672,8 @@ function drawSkills(
 		[BuffType.TrickAttack, { color: g_colors.nin.trick, showImage: true }],
 		[BuffType.KunaisBane, { color: g_colors.nin.trick, showImage: true }],
 		[BuffType.Bunshin, { color: g_colors.nin.bunshin, showImage: true }],
+		[BuffType.RiddleOfFire, { color: g_colors.mnk.riddleOfFire, showImage: true }],
+		[BuffType.Brotherhood, { color: g_colors.mnk.brotherhood, showImage: true }],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();

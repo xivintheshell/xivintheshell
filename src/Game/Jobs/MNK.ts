@@ -6,7 +6,8 @@
 
 import { MNKStatusPropsGenerator } from "../../Components/Jobs/MNK";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
-import { ProcMode } from "../Common";
+import { ActionNode } from "../../Controller/Record";
+import { BuffType, ProcMode } from "../Common";
 import { TraitKey } from "../Data";
 import { MNKActionKey, MNKCooldownKey, MNKResourceKey } from "../Data/Jobs/MNK";
 import { GameConfig } from "../GameConfig";
@@ -29,6 +30,7 @@ import {
 	PotencyModifierFn,
 	SkillAutoReplace,
 	StatePredicate,
+	Skill,
 	Weaponskill,
 } from "../Skills";
 
@@ -49,6 +51,8 @@ makeMNKResource("RAPTORS_FURY", 1);
 makeMNKResource("COEURLS_FURY", 2);
 
 // Statuses
+// extended durations taken from ama's combat sim
+// https://github.com/Amarantine-xiv/Amas-FF14-Combat-Sim_source/blob/fb7f88ec42ab27825ef271cca6a00f2ff57acf85/ama_xiv_combat_sim/simulator/game_data/class_skills/melee/mnk_data.py#L7
 makeMNKResource("MANTRA", 1, { timeout: 15 });
 makeMNKResource("OPO_OPO_FORM", 1, { timeout: 30 });
 makeMNKResource("RAPTOR_FORM", 1, { timeout: 30 });
@@ -58,11 +62,11 @@ makeMNKResource("FORMLESS_FIST", 1, { timeout: 30 });
 makeMNKResource("RIDDLE_OF_EARTH", 1, { timeout: 10 });
 makeMNKResource("EARTHS_RESOLVE", 1, { timeout: 15 });
 makeMNKResource("EARTHS_RUMINATION", 1, { timeout: 30 });
-makeMNKResource("RIDDLE_OF_FIRE", 1, { timeout: 20 });
+makeMNKResource("RIDDLE_OF_FIRE", 1, { timeout: 20.72 });
 makeMNKResource("FIRES_RUMINATION", 1, { timeout: 20 });
 makeMNKResource("BROTHERHOOD", 1, { timeout: 20 });
 makeMNKResource("MEDITATIVE_BROTHERHOOD", 1, { timeout: 20 });
-makeMNKResource("RIDDLE_OF_WIND", 1, { timeout: 15 });
+makeMNKResource("RIDDLE_OF_WIND", 1, { timeout: 15.78 });
 makeMNKResource("WINDS_RUMINATION", 1, { timeout: 15 });
 makeMNKResource("SIX_SIDED_STAR", 1, { timeout: 5 });
 
@@ -162,6 +166,15 @@ export class MNKState extends GameState {
 			["OPO_OPO_FORM", "RAPTOR_FORM", "COEURL_FORM", "FORMLESS_FIST"] as MNKResourceKey[]
 		).forEach((key) => this.tryConsumeResource(key));
 		this.gainStatus("PERFECT_BALANCE");
+	}
+
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<MNKState>): void {
+		if (this.hasResourceAvailable("RIDDLE_OF_FIRE")) {
+			node.addBuff(BuffType.RiddleOfFire);
+		}
+		if (this.hasResourceAvailable("BROTHERHOOD")) {
+			node.addBuff(BuffType.Brotherhood);
+		}
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<MNKState> {
@@ -1018,5 +1031,8 @@ makeMNKWeaponskill("FIRES_REPLY", 100, {
 	falloff: 0.4,
 	highlightIf: (state) => state.hasResourceAvailable("FIRES_RUMINATION"),
 	validateAttempt: (state) => state.hasResourceAvailable("FIRES_RUMINATION"),
-	onConfirm: (state) => state.tryConsumeResource("FIRES_RUMINATION"),
+	onConfirm: (state) => {
+		state.tryConsumeResource("FIRES_RUMINATION");
+		state.gainStatus("FORMLESS_FIST");
+	},
 });

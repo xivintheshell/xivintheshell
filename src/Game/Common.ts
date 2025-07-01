@@ -135,6 +135,8 @@ export enum BuffType {
 	TrickAttack = "Trick Attack",
 	KunaisBane = "Kunai's Bane",
 	Bunshin = "Bunshin",
+
+	RiddleOfFire = "Riddle of Fire",
 }
 
 export const enum WarningType {
