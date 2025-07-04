@@ -1,0 +1,608 @@
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾
+Bootshine,53,ui/icon/000000/000208_hr1.tex,1,Weaponskill,2,0,連撃
+True Strike,54,ui/icon/000000/000209_hr1.tex,4,Weaponskill,2,0,正拳突き
+Snap Punch,56,ui/icon/000000/000210_hr1.tex,6,Weaponskill,2,0,崩拳
+Twin Snakes,61,ui/icon/000000/000213_hr1.tex,18,Weaponskill,2,0,双掌打
+Arm of the Destroyer,62,ui/icon/000000/000215_hr1.tex,26,Weaponskill,2,0,壊神衝
+Demolish,66,ui/icon/000000/000204_hr1.tex,30,Weaponskill,2,0,破砕拳
+Rockbreaker,70,ui/icon/002000/002529_hr1.tex,30,Weaponskill,2,0,地烈斬
+Thunderclap,25762,ui/icon/002000/002975_hr1.tex,35,Ability,30,2,抜重歩法
+Howling Fist,25763,ui/icon/000000/000207_hr1.tex,40,Ability,1,0,空鳴拳
+Mantra,65,ui/icon/000000/000216_hr1.tex,42,Ability,90,0,マントラ
+Four-point Fury,16473,ui/icon/002000/002544_hr1.tex,45,Weaponskill,2,0,四面脚
+Dragon Kick,74,ui/icon/002000/002528_hr1.tex,50,Weaponskill,2,0,双竜脚
+Perfect Balance,69,ui/icon/000000/000217_hr1.tex,50,Ability,40,2,踏鳴
+Form Shift,4262,ui/icon/002000/002536_hr1.tex,52,Weaponskill,2,0,演武
+Forbidden Meditation,36942,ui/icon/000000/000218_hr1.tex,54,Ability,1,0,陰陽闘気
+The Forbidden Chakra,3547,ui/icon/002000/002535_hr1.tex,54,Ability,1,0,陰陽闘気斬
+Masterful Blitz,25764,ui/icon/002000/002976_hr1.tex,60,Weaponskill,2,0,必殺技
+Tornado Kick,3543,ui/icon/002000/002531_hr1.tex,60,Weaponskill,2,0,闘魂旋風脚
+Elixir Field,3545,ui/icon/002000/002533_hr1.tex,60,Weaponskill,2,0,蒼気砲
+Celestial Revolution,25765,ui/icon/002000/002977_hr1.tex,60,Weaponskill,2,0,天宙脚
+Flint Strike,25882,ui/icon/002000/002548_hr1.tex,60,Weaponskill,2,0,爆裂脚
+Riddle of Earth,7394,ui/icon/002000/002537_hr1.tex,64,Ability,120,0,金剛の極意
+Earth's Reply,36944,ui/icon/002000/002549_hr1.tex,64,Ability,1,0,金剛周天
+Riddle of Fire,7395,ui/icon/002000/002541_hr1.tex,68,Ability,60,0,紅蓮の極意
+Brotherhood,7396,ui/icon/002000/002542_hr1.tex,70,Ability,120,0,桃園結義
+Riddle of Wind,25766,ui/icon/002000/002978_hr1.tex,72,Ability,90,0,疾風の極意
+Enlightened Meditation,36943,ui/icon/000000/000219_hr1.tex,74,Ability,1,0,万象闘気
+Enlightenment,16474,ui/icon/002000/002545_hr1.tex,74,Ability,1,0,万象闘気圏
+Six-sided Star,16476,ui/icon/002000/002547_hr1.tex,80,Weaponskill,5,0,六合星導脚
+Shadow of the Destroyer,25767,ui/icon/002000/002979_hr1.tex,82,Weaponskill,2,0,壊神脚
+Rising Phoenix,25768,ui/icon/002000/002980_hr1.tex,86,Weaponskill,2,0,鳳凰の舞
+Phantom Rush,25769,ui/icon/002000/002981_hr1.tex,90,Weaponskill,2,0,夢幻闘舞
+Leaping Opo,36945,ui/icon/002000/002982_hr1.tex,92,Weaponskill,2,0,猿舞連撃
+Rising Raptor,36946,ui/icon/002000/002983_hr1.tex,92,Weaponskill,2,0,竜頷正拳撃
+Pouncing Coeurl,36947,ui/icon/002000/002984_hr1.tex,92,Weaponskill,2,0,虎襲崩拳
+Elixir Burst,36948,ui/icon/002000/002985_hr1.tex,92,Weaponskill,2,0,真空波
+Wind's Reply,36949,ui/icon/002000/002986_hr1.tex,96,Weaponskill,2,0,絶空拳
+Fire's Reply,36950,ui/icon/002000/002987_hr1.tex,100,Weaponskill,2,0,乾坤闘気弾

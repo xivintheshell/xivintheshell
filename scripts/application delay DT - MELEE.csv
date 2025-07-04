@@ -1,0 +1,46 @@
+MNK delay until application,,,NIN delay until application,,,DRG delay until application,,,RPR delay until application,,,SAM delay until application,,,VPR delay until application,,,Role Actions delay until application,
+,,,,,,,,,,,,,,,,,,,
+Name,delay in seconds,,Name,delay in seconds,,Name,delay in seconds,,Name,delay in seconds,,Name,delay in seconds,,Name,delay in seconds,,Name,delay in seconds
+Phantom rush,0.40,,Hollow Nozuchi,0.27,,Chaotic Spring,0.45,,Gallows,0.49,,Tendo Goken,0.36,,Hunter's Den,0.49,,Second Wind,0.62
+Shadow of the Destroyer,0.40,,Shade Shift,0.40,,High Jump,0.49,,Gibbet,0.49,,Tendo Kaeshi Goken,0.36,,Writhing Snap,0.49,,Leg Sweep,0.62
+Steel Peak,0.44,,Gust Slash,0.40,,Coerthan Torment,0.49,,Slice ,0.49,,Hissatsu: Yaten,0.45,,attack,0.54,,Bloodbath,0.62
+Flint Strike,0.53,,Spinning Edge,0.40,,attack,0.54,,Guillotine,0.49,,Hissatsu: Gyoten,0.49,,Dreadwinder,0.58,,Feint,0.54
+attack,0.54,,Mug,0.54,,Battle Litany,0.62,,Unveiled Gibber,0.54,,Kaeshi: Namakiri,0.49,,Reawaken,0.62,,Arm's Length,0.62
+Arm of the Destroyer,0.54,,Aeolian Edge,0.54,,Lance Charge,0.62,,Void Reaping,0.54,,Ogi Namikiri,0.49,,Twinfang Bite,0.62,,True North,instant
+Leaping opo,0.62,,attack,0.54,,Fang and Claw,0.62,,Unveiled Gallows,0.54,,attack,0.54,,Twinfang Thresh,0.67,,LB 1,2.23
+Six-Sided-Star,0.62,,Armor Crush,0.62,,Raiden Thrust,0.62,,Infernal Slice,0.54,,Shoha,0.58,,Twinblood Bite,0.72,,LB 2,3.28
+Rising phoenix,0.76,,Bhavacakra,0.62,,Geirskogul,0.67,,Executioner's Guillotine,0.54,,Meditate,0.62,,Pit of Dread,0.76,,Medicated,0.62 (was ~0.9 before DT)
+Enlightenment,0.76,,Throwing Dagger,0.62,,Wheeling Thrust,0.67,,attack,0.54,,Higanbana,0.62,,Twinblood Thresh,0.79,,Sprint,0.13
+Brotherhood,0.76,,Forked Raiju,0.62,,heaven's Trhrust,0.71,,Grim Swathe,0.58,,Hissatsu: Guren,0.62,,Uncoiled Fury,0.80,,,
+Snap Punch,0.76,,hakke Mujinsatsu,0.62,,Draconian Fury,0.76,,Waxing Slice,0.58,,Hissatsu: Kyuten,0.62,,Bloodied Maw,0.81,,,
+True Strike,0.80,,Hyosho Ranryu,0.62,,Nastrond,0.76,,Executioner's Gibbet,0.62,,Hissatsu: Shinten,0.62,,Dread Maw,0.85,,,
+Twin Snakes,0.84,,raiton,0.71,,True Thrust,0.76,,Arcane Circle,0.62,,Jinpu,0.62,,Hunter's Sting,0.89,,,
+Rising Raptor,0.89,,Death Blossom,0.71,,Dragonfire Dive,0.80,,Communio,0.62,,Kaeshi: Goken,0.62,,Swiftskin's Den,0.94,,,
+Celestial Revolution,0.89,,Fleeting Raiju,0.76,,Mirage Dive,0.80,,Cross Reaping,0.62,,Kaeshi: Setsugekka,0.62,,Hindsting Strike,0.98,,,
+Rockbreaker,0.94,,Goka Mekkyaku,0.76,,Sonic Thrust,0.80,,Spinning Scythe,0.62,,Kasha,0.62,,Hunter's Coil,0.98,,,
+Four Point Fury,0.97,,Deathfrog Medium,0.80,,Piercing Talon,0.85,,Soul Scythe,0.67,,Mangetsu,0.62,,Uncoiled Twinblood,0.98,,,
+Bouncing Coeurl,1.02,,Trick Attack,0.80,,Lance Barrage,0.94,,Lemure's Scythe,0.67,,Midare Setsugekka,0.62,,Steel Maw,1.02,,,
+Elixir Field,1.07,,Hellfrog Medium,0.80,,Starcross,0.98,,Lemure's Slice,0.71,,Oka,0.62,,Uncoiled Twinfang,1.03,,,
+Earth's Reply,1.07,,Fuma Shuriken,0.89,,Vorpal Thrust,1.02,,Sacrificium,0.76,,Tenka Goken,0.62,,Fourth Legacy,1.07,,,
+Elixir Field,1.07,,Katon,0.94,,Rise of the Dragon,1.16,,Nightmare Scythe,0.80,,Hissatsu: Senei,0.67,,Hunter's Bite,1.07,,,
+Bootshine,1.11,,Dream within a Dream,0.98,,Wyrmwind Thrust,1.20,,Grim Reaping,0.80,,Enpi,0.71,,Jagged Maw,1.07,,,
+Howling Fist,1.16,,Suiton,0.98,,Doom Spike,1.29,,Blood Stalk,0.89,,Fuko ,0.76,,Second Legacy,1.07,,,
+Wind's Reply,1.20,,Zesho Meppo,1.03,,Stardiver,1.29,,Harpe,0.89,,gekko,0.76,,Last Lash,1.16,,,
+Dragon Kick,1.29,,Dokumari,1.07,,Spiral Blow,1.38,,Soul Slice,1.03,,Shifu,0.80,,Steel Fangs,1.16,,,
+Elixir Burst,1.42,,Hyoton,1.16,,Disembowel,1.65,,Gluttony,1.07,,Yukikaze,0.80,,Swiftskin's Sting,1.16,,,
+Fire's Reply,1.42,,Kunai's Bane,1.29,,Dragonsong Dive,2.23,,Plentiful Harvest,1.16,,Gyofu,0.85,,Hindsbane Fang,1.21,,,
+The Forbidden Chakra,1.48,,Doton,1.30,,Life Surge,instant,,Harvest moon,1.16,,Zanshin,1.03,,Third Legacy,1.21,,,
+Mantra,1.50,,Phantom Kamaitachi,1.57,,,,,Shadow of Death,1.16,,Tendo Setsugekka,1.03,,Dread Fangs,1.29,,,
+Demolish,1.60,,Tenri Jindo,1.69,,,,,Worl of Death,1.16,,Tendo Kaeshi Setsugekka,1.03,,First Legacy,1.29,,,
+Tornado Kick,1.69,,Chimatsuri,2.29,,,,,Perfectio,1.29,,Doom of the Living,2.23,,Swiftskin's Bite,1.38,,,
+Final Heaven,2.26,,Meisui,instant,,,,,Executioner's Gallows,2.14,,Tengetsu,instant,,Fourth Generation,1.47,,,
+Riddle of Fire,instant,,,,,,,,The End,2.29,,Meikyo Shisui,instant,,Second Generation,1.47,,,
+Riddle of Wind,instant,,,,,,,,Arcane Crest,instant,,Ikishoten,instant,,Swiftskin's Coil,1.47,,,
+Riddle of Earth,instant,,,,,,,,,,,,,,Third Generation,1.47,,,
+Perfect Balance,instant,,,,,,,,,,,,,,Flanksbane Fang,1.60,,,
+,,,,,,,,,,,,,,,Flanksting Strike,1.64,,,
+,,,,,,,,,,,,,,,Death Rattle,1.70,,,
+,,,,,,,,,,,,,,,First Generation,1.70,,,
+,,,,,,,,,,,,,,,World Swallower,2.23,,,
+,,,,,,,,,,,,,,,"Ouroboros        
+",2.33,,,
