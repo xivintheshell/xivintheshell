@@ -509,6 +509,7 @@ makeBLUSpell("BRISTLE", 1, {
 });
 
 makeBLUSpell("FINAL_STING", 1, {
+	aspect: Aspect.Physical,
 	basePotency: 2000,
 	baseCastTime: 2.0,
 	manaCost: 0,
