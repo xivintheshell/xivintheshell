@@ -112,6 +112,36 @@ export interface AttunementGaugeProps {
 	emeraldColor: string;
 }
 
+export interface NadiGaugeProps {
+	kind: "nadi";
+	name: ContentNode;
+	label: ContentNode;
+	lunar: boolean;
+	solar: boolean;
+	lunarColor: string;
+	solarColor: string;
+}
+
+export interface BeastGaugeProps {
+	kind: "beast";
+	name: ContentNode;
+	label: ContentNode;
+	chakras: ("opo" | "raptor" | "coeurl")[];
+	opoColor: string;
+	raptorColor: string;
+	coeurlColor: string;
+}
+
+export interface ChakraGaugeProps {
+	kind: "chakra";
+	name: ContentNode;
+	label: ContentNode;
+	value: number;
+	wrapCount: number;
+	regularColor: string;
+	overflowColor: string;
+}
+
 export interface ResourceTextProps {
 	kind: "text";
 	name: ContentNode;
@@ -127,6 +157,9 @@ export type ResourceDisplayProps =
 	| SenCounterProps
 	| CodaCounterProps
 	| AttunementGaugeProps
+	| NadiGaugeProps
+	| BeastGaugeProps
+	| ChakraGaugeProps
 	| ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
@@ -632,6 +665,72 @@ export function ResourcesDisplay(props: {
 								? ` | ${props.timeRemaining.toFixed(3)}`
 								: "")
 						}
+					/>
+				</div>;
+			}
+			case "nadi": {
+				return <div key={"resourceDisplay" + i}>
+					<ResourceCounter
+						name={props.name}
+						label={props.label}
+						containerType={"circle"}
+						items={[
+							{
+								color: props.lunar ? props.lunarColor : undefined,
+							},
+							{
+								color: props.solar ? props.solarColor : undefined,
+							},
+						]}
+					/>
+				</div>;
+			}
+			case "beast": {
+				const items: { color: string | undefined }[] = new Array(3).map((i) => {
+					return { color: undefined };
+				});
+				props.chakras.map((value, i) => {
+					items[i] = {
+						color:
+							value === "opo"
+								? props.opoColor
+								: value === "raptor"
+									? props.raptorColor
+									: value === "coeurl"
+										? props.coeurlColor
+										: undefined,
+					};
+				});
+				return <div key={"resourceDisplay" + i}>
+					<ResourceCounter
+						name={props.name}
+						label={props.label}
+						containerType={"circle"}
+						items={items}
+					/>
+				</div>;
+			}
+			case "chakra": {
+				const hasOverflow = props.value > props.wrapCount;
+				const modValue = hasOverflow ? props.value % props.wrapCount : props.value;
+				const items: { color: string | undefined }[] = new Array(props.wrapCount);
+				for (let i = 0; i < props.wrapCount; i++) {
+					items[i] = {
+						color: hasOverflow
+							? i + 1 > modValue
+								? props.regularColor
+								: props.overflowColor
+							: i + 1 > modValue
+								? undefined
+								: props.regularColor,
+					};
+				}
+				return <div key={"resourceDisplay" + i}>
+					<ResourceCounter
+						name={props.name}
+						label={props.label}
+						containerType={"circle"}
+						items={items}
 					/>
 				</div>;
 			}

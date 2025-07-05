@@ -97,6 +97,11 @@ export const enum PotencyModifierType {
 	DOKUMORI,
 	TRICK_ATTACK,
 	KUNAIS_BANE,
+
+	BROTHERHOOD,
+	RIDDLE_OF_FIRE,
+	SSS_CHAKRA,
+	MNK_BALL,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -508,6 +513,16 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.KUNAIS_BANE,
 		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	Brotherhood: {
+		kind: "multiplier",
+		source: PotencyModifierType.BROTHERHOOD,
+		potencyFactor: 1.05,
+	} as PotencyMultiplier,
+	RiddleOfFire: {
+		kind: "multiplier",
+		source: PotencyModifierType.RIDDLE_OF_FIRE,
+		potencyFactor: 1.15,
 	} as PotencyMultiplier,
 };
 

@@ -258,6 +258,10 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.DOKUMORI, { en: "dokumori", zh: "介毒之术" }],
 	[PotencyModifierType.TRICK_ATTACK, { en: "trick attack", zh: "攻其不备" }],
 	[PotencyModifierType.KUNAIS_BANE, { en: "kunai's bane", zh: "百雷铳" }],
+	[PotencyModifierType.BROTHERHOOD, { en: "brotherhood", zh: "义结金兰" }],
+	[PotencyModifierType.RIDDLE_OF_FIRE, { en: "riddle of fire", zh: "红莲极意" }],
+	[PotencyModifierType.MNK_BALL, { en: "ball", zh: "功力" }],
+	[PotencyModifierType.SSS_CHAKRA, { en: "chakra", zh: "斗气" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -338,6 +342,10 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.DOKUMORI, { en: "DOKU", zh: "介毒之术" }],
 	[PotencyModifierType.TRICK_ATTACK, { en: "TRICK", zh: "攻其不备" }],
 	[PotencyModifierType.KUNAIS_BANE, { en: "KB", zh: "百雷铳" }],
+	[PotencyModifierType.BROTHERHOOD, { en: "BH", zh: "义结金兰" }],
+	[PotencyModifierType.RIDDLE_OF_FIRE, { en: "ROF", zh: "红莲极意" }],
+	[PotencyModifierType.MNK_BALL, { en: "BALL", zh: "功力" }],
+	[PotencyModifierType.SSS_CHAKRA, { en: "CHAKRA", zh: "斗气" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(

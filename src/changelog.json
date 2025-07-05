@@ -1,5 +1,15 @@
 [
 	{
+		"date": "7/5/25",
+		"changes": [
+			"[MNK] Added initial support for MNK."
+		],
+		"changes_zh": [
+			"【武僧】 加了初步的支持。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "6/25/25",
 		"changes": [
 			"Fixed a bug where timestamps would not appear for wait events in the timeline editor.",

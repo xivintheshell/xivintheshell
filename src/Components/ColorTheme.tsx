@@ -177,6 +177,18 @@ export type NINResourceColors = {
 	trick: string;
 };
 
+export type MNKResourceColors = {
+	opo: string;
+	raptor: string;
+	coeurl: string;
+	lunar: string;
+	solar: string;
+	chakra: string;
+	extraChakra: string;
+	riddleOfFire: string;
+	brotherhood: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -224,6 +236,7 @@ export type ThemeColors = {
 	pld: PLDResourceColors;
 	drk: DRKResourceColors;
 	nin: NINResourceColors;
+	mnk: MNKResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -446,6 +459,17 @@ const DARK_THEME_COLORS: ThemeColors = {
 		dokumori: "#9a0ec4",
 		trick: "#ffd454",
 	},
+	mnk: {
+		opo: "#feabf7",
+		raptor: "#c495fb",
+		coeurl: "#00d9a5",
+		lunar: "#a984f5",
+		solar: "#c6c5c3",
+		riddleOfFire: "#d98d58",
+		brotherhood: "#da4c32",
+		chakra: "#fffea5",
+		extraChakra: "#fe9b28",
+	},
 	timeline: {
 		ruler: "#2d2d2d",
 		tracks: "#242424",
@@ -648,6 +672,17 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		dokumori: "#7e03a3",
 		trick: "#e6b525",
 	},
+	mnk: {
+		opo: "#feabf7",
+		raptor: "#c495fb",
+		coeurl: "#00d9a5",
+		lunar: "#a984f5",
+		solar: "#c6c5c3",
+		riddleOfFire: "#d98d58",
+		brotherhood: "#da4c32",
+		chakra: "#fee11c",
+		extraChakra: "#fe9b28",
+	},
 	timeline: {
 		ruler: "#e9e9e9",
 		tracks: "#f3f3f3",
@@ -744,6 +779,10 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.DOKUMORI, colors.nin.dokumori],
 		[PotencyModifierType.TRICK_ATTACK, colors.nin.trick],
 		[PotencyModifierType.KUNAIS_BANE, colors.nin.trick],
+		[PotencyModifierType.BROTHERHOOD, colors.mnk.brotherhood],
+		[PotencyModifierType.RIDDLE_OF_FIRE, colors.mnk.riddleOfFire],
+		[PotencyModifierType.MNK_BALL, colors.mnk.opo],
+		[PotencyModifierType.SSS_CHAKRA, colors.mnk.chakra],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),
