@@ -1,8 +1,11 @@
 [
 	{
-		"date": "7/1/25",
+		"date": "7/5/25",
 		"changes": [
-			"[BETA][MNK] Added initial support for MNK."
+			"[MNK] Added initial support for MNK."
+		],
+		"changes_zh": [
+			"【武僧】 加了初步的支持。"
 		],
 		"level": "major"
 	},

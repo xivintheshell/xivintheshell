@@ -1,9 +1,5 @@
 // Skill and state declarations for MNK.
 
-// - different PB chakras, and pressing abilities between beast chakra and blitz
-// - beast chakra timer
-// - opo abilities without form
-
 import { MNKStatusPropsGenerator } from "../../Components/Jobs/MNK";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
@@ -140,11 +136,15 @@ export class MNKState extends GameState {
 		if (this.hasResourceAvailable("MEDITATIVE_BROTHERHOOD")) {
 			// Party members under the Meditative Brotherhood each have a 20% chance to generate chakra
 			// on each weaponskill/spell cast.
-			// This generation will usually be an over-estimate because most party members have slower GCDs
-			// than the MNK.
+			// This generation will usually be an over-estimate because most party members will have
+			// a 2.5s GCD. To account for haste buffs and fast skills used during the buff window,
+			// we'll generously assume that party members will perform a weaponskill once every 2.4
+			// seconds on average. Since MNK GCDs are inherently 1.2x faster than base, we attenuate the
+			// base 20% chakra generation rate by a factor of (2 / 2.4).
+			const PARTY_GCD_RATIO = (1 - 0.2) / (1 - 0.04);
 			for (let i = 0; i < this.resources.get("PARTY_SIZE").availableAmount() - 1; i++) {
 				const partyRand = this.rng();
-				if (partyRand < 0.2) {
+				if (partyRand < 0.2 * PARTY_GCD_RATIO) {
 					this.gainChakra();
 				}
 			}
@@ -1017,17 +1017,22 @@ makeMNKResourceAbility("BROTHERHOOD", 70, "cd_BROTHERHOOD", {
 	rscType: "BROTHERHOOD",
 	applicationDelay: 0.76,
 	cooldown: 120,
-	onConfirm: (state) => {
+	onApplication: (state) => {
 		// Override the maximum chakra cap, and set a timer to reset it back to 5 after buff expiry.
 		// Technically this doesn't cover the case of BH being clicked off, but who cares.
 		state.gainStatus("MEDITATIVE_BROTHERHOOD");
-		const rsc = state.resources.get("CHAKRA");
-		state.resources.set(new Resource("CHAKRA", 10, rsc.availableAmount()));
+		state.resources.set(
+			new Resource("CHAKRA", 10, state.resources.get("CHAKRA").availableAmount()),
+		);
 		state.resources.addResourceEvent({
 			rscType: "CHAKRA",
 			name: "restore BH max stacks",
 			delay: (getResourceInfo("MNK", "BROTHERHOOD") as ResourceInfo).maxTimeout,
-			fnOnRsc: () => state.resources.set(new Resource("CHAKRA", 5, rsc.availableAmount())),
+			// may be a different resource object
+			fnOnRsc: () =>
+				state.resources.set(
+					new Resource("CHAKRA", 5, state.resources.get("CHAKRA").availableAmount()),
+				),
 		});
 	},
 });

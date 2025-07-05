@@ -333,7 +333,7 @@ export const MNK_GAUGES = ensureRecord<ResourceData>()({
 	CHAKRA: { name: "Chakra", label: { zh: "斗气" } },
 	BEAST_CHAKRA: { name: "Beast Chakra", label: { zh: "脉轮" } },
 	BEAST_CHAKRA_TIMER: { name: "Beast Timer", label: { zh: "脉轮时间" } },
-	NADI: { name: "Nadi", label: { zh: "太阴斗气/太阳斗气" } },
+	NADI: { name: "Nadi", label: { zh: "太阴/太阳斗气" } },
 	LUNAR_NADI: { name: "Lunar Nadi", label: { zh: "太阴斗气" } },
 	SOLAR_NADI: { name: "Solar Nadi", label: { zh: "太阳斗气" } },
 	OPO_OPOS_FURY: { name: "Opo-opo's Fury", label: { zh: "魔猿功力" } },
