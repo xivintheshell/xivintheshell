@@ -7,6 +7,7 @@ import {
 	BuffProps,
 	registerBuffIcon,
 	BeastGaugeProps,
+	ChakraGaugeProps,
 	NadiGaugeProps,
 	ResourceDisplayProps,
 	StatusPropsGenerator,
@@ -99,14 +100,14 @@ export class MNKStatusPropsGenerator extends StatusPropsGenerator<MNKState> {
 				currentStacks: resources.get("COEURLS_FURY").availableAmount(),
 				maxStacks: 2,
 			} as ResourceCounterProps,
-			// TODO simulate BH chakra overcap
 			{
-				kind: "counter",
+				kind: "chakra",
 				name: localizeResourceType("CHAKRA"),
-				color: colors.mnk.chakra,
-				currentStacks: resources.get("CHAKRA").availableAmount(),
-				maxStacks: 5,
-			} as ResourceCounterProps,
+				regularColor: colors.mnk.chakra,
+				overflowColor: colors.mnk.extraChakra,
+				value: resources.get("CHAKRA").availableAmount(),
+				wrapCount: 5,
+			} as ChakraGaugeProps,
 			{
 				kind: "text",
 				name: localizeResourceType("BEAST_CHAKRA_TIMER"),

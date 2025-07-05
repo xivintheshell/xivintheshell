@@ -132,6 +132,16 @@ export interface BeastGaugeProps {
 	coeurlColor: string;
 }
 
+export interface ChakraGaugeProps {
+	kind: "chakra";
+	name: ContentNode;
+	label: ContentNode;
+	value: number;
+	wrapCount: number;
+	regularColor: string;
+	overflowColor: string;
+}
+
 export interface ResourceTextProps {
 	kind: "text";
 	name: ContentNode;
@@ -149,6 +159,7 @@ export type ResourceDisplayProps =
 	| AttunementGaugeProps
 	| NadiGaugeProps
 	| BeastGaugeProps
+	| ChakraGaugeProps
 	| ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
@@ -690,6 +701,30 @@ export function ResourcesDisplay(props: {
 										: undefined,
 					};
 				});
+				return <div key={"resourceDisplay" + i}>
+					<ResourceCounter
+						name={props.name}
+						label={props.label}
+						containerType={"circle"}
+						items={items}
+					/>
+				</div>;
+			}
+			case "chakra": {
+				const hasOverflow = props.value > props.wrapCount;
+				const modValue = hasOverflow ? props.value % props.wrapCount : props.value;
+				const items: { color: string | undefined }[] = new Array(props.wrapCount);
+				for (let i = 0; i < props.wrapCount; i++) {
+					items[i] = {
+						color: hasOverflow
+							? i + 1 > modValue
+								? props.regularColor
+								: props.overflowColor
+							: i + 1 > modValue
+								? undefined
+								: props.regularColor,
+					};
+				}
 				return <div key={"resourceDisplay" + i}>
 					<ResourceCounter
 						name={props.name}

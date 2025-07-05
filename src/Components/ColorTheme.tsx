@@ -184,6 +184,7 @@ export type MNKResourceColors = {
 	lunar: string;
 	solar: string;
 	chakra: string;
+	extraChakra: string;
 	riddleOfFire: string;
 	brotherhood: string;
 };
@@ -466,6 +467,7 @@ const DARK_THEME_COLORS: ThemeColors = {
 		lunar: "white",
 		solar: "white",
 		chakra: "white",
+		extraChakra: "red",
 		riddleOfFire: "white",
 		brotherhood: "white",
 	},
@@ -681,6 +683,7 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		riddleOfFire: "black",
 		brotherhood: "black",
 		chakra: "black",
+		extraChakra: "red",
 	},
 	timeline: {
 		ruler: "#e9e9e9",

@@ -13,7 +13,7 @@ import { MNKActionKey, MNKCooldownKey, MNKResourceKey } from "../Data/Jobs/MNK";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { Modifiers, makePositionalModifier, PotencyModifierType } from "../Potency";
-import { makeResource, CoolDown } from "../Resources";
+import { getResourceInfo, ResourceInfo, makeResource, CoolDown, Resource } from "../Resources";
 import {
 	Ability,
 	combineEffects,
@@ -133,11 +133,30 @@ export class MNKState extends GameState {
 	}
 
 	gainChakra() {
-		// TODO: handle overflow under BH
 		this.resources.get("CHAKRA").gain(1);
 	}
 
 	maybeGainChakra(autoCrit: boolean) {
+		if (this.hasResourceAvailable("MEDITATIVE_BROTHERHOOD")) {
+			// Party members under the Meditative Brotherhood each have a 20% chance to generate chakra
+			// on each weaponskill/spell cast.
+			// This generation will usually be an over-estimate because most party members have slower GCDs
+			// than the MNK.
+			for (let i = 0; i < this.resources.get("PARTY_SIZE").availableAmount() - 1; i++) {
+				const partyRand = this.rng();
+				if (partyRand < 0.2) {
+					this.gainChakra();
+				}
+			}
+		}
+		// Under meditative brotherhood, all weaponskills generate chakra.
+		if (
+			this.hasTraitUnlocked("ENHANCED_BROTHERHOOD") &&
+			this.hasResourceAvailable("MEDITATIVE_BROTHERHOOD")
+		) {
+			this.gainChakra();
+			return;
+		}
 		// There are 2 layers of RNG at play. After learning "Deep Meditation II", chakra is always
 		// gained on a crit, so we roll against the crit chance of the ability does not auto-crit.
 		// If that trait is not learned, there is an 80% chance to gain a chakra.
@@ -158,6 +177,11 @@ export class MNKState extends GameState {
 				this.gainChakra();
 			}
 		}
+	}
+
+	consumeFiveChakra() {
+		const rsc = this.resources.get("CHAKRA");
+		rsc.consume(Math.min(rsc.availableAmount(), 5));
 	}
 
 	startPB() {
@@ -838,7 +862,6 @@ makeMNKWeaponskill("SIX_SIDED_STAR", 80, {
 		["MELEE_MASTERY_II_MNK", 780],
 	],
 	onConfirm: (state) => {
-		// TODO handle BH overflow chakra
 		state.tryConsumeResource("CHAKRA", true);
 		state.gainStatus("SIX_SIDED_STAR");
 	},
@@ -870,6 +893,19 @@ const meditationValidate: StatePredicate<MNKState> = (state) =>
 const meditationConfirm: EffectFn<MNKState> = (state) =>
 	state.resources.get("CHAKRA").gain(state.isInCombat() ? 1 : 5);
 // Treat meditation as a GCD, even out of combat
+makeMNKWeaponskill("FORBIDDEN_MEDITATION", 54, {
+	recastTime: 1,
+	applicationDelay: 0,
+	replaceIf: [
+		{
+			newSkill: "THE_FORBIDDEN_CHAKRA",
+			condition: chakraReplaceIf,
+		},
+	],
+	validateAttempt: meditationValidate,
+	onConfirm: meditationConfirm,
+});
+
 makeMNKWeaponskill("INSPIRITED_MEDITATION", 40, {
 	autoUpgrade: { otherSkill: "ENLIGHTENED_MEDITATION", trait: "HOWLING_FIST_MASTERY" },
 	recastTime: 1,
@@ -891,19 +927,6 @@ makeMNKWeaponskill("ENLIGHTENED_MEDITATION", 74, {
 	replaceIf: [
 		{
 			newSkill: "ENLIGHTENMENT",
-			condition: chakraReplaceIf,
-		},
-	],
-	validateAttempt: meditationValidate,
-	onConfirm: meditationConfirm,
-});
-
-makeMNKWeaponskill("FORBIDDEN_MEDITATION", 54, {
-	recastTime: 1,
-	applicationDelay: 0,
-	replaceIf: [
-		{
-			newSkill: "THE_FORBIDDEN_CHAKRA",
 			condition: chakraReplaceIf,
 		},
 	],
@@ -942,7 +965,7 @@ makeMNKWeaponskill("FORBIDDEN_MEDITATION", 54, {
 		requiresCombat: true,
 		highlightIf: (state) => state.resources.get("CHAKRA").available(5),
 		validateAttempt: (state) => state.resources.get("CHAKRA").available(5),
-		onConfirm: (state) => state.tryConsumeResource("CHAKRA", true),
+		onConfirm: (state) => state.consumeFiveChakra(),
 	});
 });
 
@@ -963,7 +986,7 @@ makeMNKAbility("THE_FORBIDDEN_CHAKRA", 54, "cd_THE_FORBIDDEN_CHAKRA", {
 	requiresCombat: true,
 	highlightIf: (state) => state.resources.get("CHAKRA").available(5),
 	validateAttempt: (state) => state.resources.get("CHAKRA").available(5),
-	onConfirm: (state) => state.tryConsumeResource("CHAKRA", true),
+	onConfirm: (state) => state.consumeFiveChakra(),
 });
 
 makeMNKResourceAbility("PERFECT_BALANCE", 50, "cd_PERFECT_BALANCE", {
@@ -994,7 +1017,19 @@ makeMNKResourceAbility("BROTHERHOOD", 70, "cd_BROTHERHOOD", {
 	rscType: "BROTHERHOOD",
 	applicationDelay: 0.76,
 	cooldown: 120,
-	onConfirm: (state) => state.gainStatus("MEDITATIVE_BROTHERHOOD"),
+	onConfirm: (state) => {
+		// Override the maximum chakra cap, and set a timer to reset it back to 5 after buff expiry.
+		// Technically this doesn't cover the case of BH being clicked off, but who cares.
+		state.gainStatus("MEDITATIVE_BROTHERHOOD");
+		const rsc = state.resources.get("CHAKRA");
+		state.resources.set(new Resource("CHAKRA", 10, rsc.availableAmount()));
+		state.resources.addResourceEvent({
+			rscType: "CHAKRA",
+			name: "restore BH max stacks",
+			delay: (getResourceInfo("MNK", "BROTHERHOOD") as ResourceInfo).maxTimeout,
+			fnOnRsc: () => state.resources.set(new Resource("CHAKRA", 5, rsc.availableAmount())),
+		});
+	},
 });
 
 makeMNKResourceAbility("RIDDLE_OF_WIND", 72, "cd_RIDDLE_OF_WIND", {
