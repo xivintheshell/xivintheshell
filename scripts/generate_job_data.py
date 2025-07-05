@@ -9,7 +9,7 @@ Probably requires at least Python 3.11 (I tested with 3.13).
 By default, this script will print out the contents of `src/Game/Data/Jobs/$JOB.ts` and
 `src/Game/Jobs.$JOB.ts` boilerplate declarations.
 When run with the `--write` flag, it will destructively overwrite those two files.
-Make sure any previously-made changes were saved before running this script.
+Make sure any previously-made changes were saved to version control before running this script.
 
 Running this script performs the following actions:
 - Scrapes the job guide's HTML for relevant action names and unlock levels
