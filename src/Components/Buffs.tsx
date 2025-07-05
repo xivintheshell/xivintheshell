@@ -62,6 +62,8 @@ buffIcons.set(BuffType.TrickAttack, "Buffs/NIN/Trick Attack.png");
 buffIcons.set(BuffType.KunaisBane, "Buffs/NIN/Kunai's Bane.png");
 buffIcons.set(BuffType.Bunshin, "Buffs/NIN/Bunshin.png");
 
+buffIcons.set(BuffType.RiddleOfFire, "Buffs/MNK/Riddle of Fire.png");
+
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
 	const imgObj = new Image();

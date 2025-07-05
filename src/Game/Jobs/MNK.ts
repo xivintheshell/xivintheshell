@@ -863,23 +863,89 @@ makeMNKWeaponskill("FORM_SHIFT", 52, {
 	onConfirm: (state) => state.setForm("formless"),
 });
 
+const chakraReplaceIf: StatePredicate<MNKState> = (state) =>
+	state.resources.get("CHAKRA").available(5);
+const meditationValidate: StatePredicate<MNKState> = (state) =>
+	!state.resources.get("CHAKRA").available(5);
+const meditationConfirm: EffectFn<MNKState> = (state) =>
+	state.resources.get("CHAKRA").gain(state.isInCombat() ? 1 : 5);
 // Treat meditation as a GCD, even out of combat
-// I'm pretty sure forbidden meditation and enlightened meditation do the same thing, so we only include one.
+makeMNKWeaponskill("INSPIRITED_MEDITATION", 40, {
+	autoUpgrade: { otherSkill: "ENLIGHTENED_MEDITATION", trait: "HOWLING_FIST_MASTERY" },
+	recastTime: 1,
+	applicationDelay: 0,
+	replaceIf: [
+		{
+			newSkill: "HOWLING_FIST",
+			condition: chakraReplaceIf,
+		},
+	],
+	validateAttempt: meditationValidate,
+	onConfirm: meditationConfirm,
+});
+
+makeMNKWeaponskill("ENLIGHTENED_MEDITATION", 74, {
+	autoDowngrade: { otherSkill: "INSPIRITED_MEDITATION", trait: "HOWLING_FIST_MASTERY" },
+	recastTime: 1,
+	applicationDelay: 0,
+	replaceIf: [
+		{
+			newSkill: "ENLIGHTENMENT",
+			condition: chakraReplaceIf,
+		},
+	],
+	validateAttempt: meditationValidate,
+	onConfirm: meditationConfirm,
+});
+
 makeMNKWeaponskill("FORBIDDEN_MEDITATION", 54, {
 	recastTime: 1,
 	applicationDelay: 0,
 	replaceIf: [
 		{
 			newSkill: "THE_FORBIDDEN_CHAKRA",
-			condition: (state) => state.resources.get("CHAKRA").available(5),
+			condition: chakraReplaceIf,
 		},
 	],
-	validateAttempt: (state) => !state.resources.get("CHAKRA").available(5),
-	onConfirm: (state) => state.resources.get("CHAKRA").gain(state.isInCombat() ? 1 : 5),
+	validateAttempt: meditationValidate,
+	onConfirm: meditationConfirm,
 });
 
-// according to consolegameswiki, TFC shares a recast timer with howling fist but not enlightenment?
-// i don't think that will matter to anybody so whatever
+// according to consolegameswiki, TFC shares a recast timer with howling fist but not enlightenment???
+(
+	[
+		["HOWLING_FIST", 40, 1.16, 100, "cd_THE_FORBIDDEN_CHAKRA"],
+		["ENLIGHTENMENT", 74, 0.76, 160, "cd_ENLIGHTENMENT"],
+	] as Array<[MNKActionKey, number, number, number, MNKCooldownKey]>
+).forEach(([key, level, applicationDelay, potency, cd], i) => {
+	const traitKey =
+		i === 0
+			? {
+					autoUpgrade: {
+						otherSkill: "ENLIGHTENMENT",
+						trait: "HOWLING_FIST_MASTERY",
+					} as SkillAutoReplace,
+				}
+			: {
+					autoDowngrade: {
+						otherSkill: "HOWLING_FIST",
+						trait: "HOWLING_FIST_MASTERY",
+					} as SkillAutoReplace,
+				};
+	makeMNKAbility(key, level, cd, {
+		...traitKey,
+		startOnHotbar: false,
+		applicationDelay,
+		cooldown: 1,
+		potency,
+		falloff: 0,
+		requiresCombat: true,
+		highlightIf: (state) => state.resources.get("CHAKRA").available(5),
+		validateAttempt: (state) => state.resources.get("CHAKRA").available(5),
+		onConfirm: (state) => state.tryConsumeResource("CHAKRA", true),
+	});
+});
+
 makeMNKAbility("THE_FORBIDDEN_CHAKRA", 54, "cd_THE_FORBIDDEN_CHAKRA", {
 	startOnHotbar: false,
 	replaceIf: [
@@ -898,39 +964,6 @@ makeMNKAbility("THE_FORBIDDEN_CHAKRA", 54, "cd_THE_FORBIDDEN_CHAKRA", {
 	highlightIf: (state) => state.resources.get("CHAKRA").available(5),
 	validateAttempt: (state) => state.resources.get("CHAKRA").available(5),
 	onConfirm: (state) => state.tryConsumeResource("CHAKRA", true),
-});
-
-(
-	[
-		["HOWLING_FIST", 40, 1.16, 100],
-		["ENLIGHTENMENT", 74, 0.76, 160],
-	] as Array<[MNKActionKey, number, number, number]>
-).forEach(([key, level, applicationDelay, potency], i) => {
-	const traitKey =
-		i === 0
-			? {
-					autoUpgrade: {
-						otherSkill: "ENLIGHTENMENT",
-						trait: "HOWLING_FIST_MASTERY",
-					} as SkillAutoReplace,
-				}
-			: {
-					autoDowngrade: {
-						otherSkill: "HOWLING_FIST",
-						trait: "HOWLING_FIST_MASTERY",
-					} as SkillAutoReplace,
-				};
-	makeMNKAbility(key, level, "cd_THE_FORBIDDEN_CHAKRA", {
-		...traitKey,
-		applicationDelay,
-		cooldown: 1,
-		potency,
-		falloff: 0,
-		requiresCombat: true,
-		highlightIf: (state) => state.resources.get("CHAKRA").available(5),
-		validateAttempt: (state) => state.resources.get("CHAKRA").available(5),
-		onConfirm: (state) => state.tryConsumeResource("CHAKRA", true),
-	});
 });
 
 makeMNKResourceAbility("PERFECT_BALANCE", 50, "cd_PERFECT_BALANCE", {

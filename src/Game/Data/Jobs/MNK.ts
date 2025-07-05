@@ -210,6 +210,14 @@ export const MNK_ACTIONS = ensureRecord<ActionData>()({
 			ja: "疾風の極意",
 		},
 	},
+	INSPIRITED_MEDITATION: {
+		id: 36941,
+		name: "Inspirited Meditation",
+		label: {
+			zh: "空鸣斗气",
+			ja: "空鳴闘気",
+		},
+	},
 	ENLIGHTENED_MEDITATION: {
 		id: 36943,
 		name: "Enlightened Meditation",
@@ -312,6 +320,7 @@ export const MNK_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_THUNDERCLAP: { name: "cd_Thunderclap" },
 	cd_MANTRA: { name: "cd_Mantra" },
 	cd_PERFECT_BALANCE: { name: "cd_PerfectBalance" },
+	cd_ENLIGHTENMENT: { name: "cd_Enlightenment" },
 	cd_THE_FORBIDDEN_CHAKRA: { name: "cd_TheForbiddenChakra" },
 	cd_RIDDLE_OF_EARTH: { name: "cd_RiddleOfEarth" },
 	cd_EARTHS_REPLY: { name: "cd_EarthsReply" },
