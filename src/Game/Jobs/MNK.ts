@@ -9,7 +9,14 @@ import { MNKActionKey, MNKCooldownKey, MNKResourceKey } from "../Data/Jobs/MNK";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { Modifiers, makePositionalModifier, PotencyModifierType } from "../Potency";
-import { getResourceInfo, ResourceInfo, makeResource, CoolDown, Resource } from "../Resources";
+import {
+	getResourceInfo,
+	ResourceInfo,
+	makeResource,
+	CoolDown,
+	Event,
+	Resource,
+} from "../Resources";
 import {
 	Ability,
 	combineEffects,
@@ -136,15 +143,14 @@ export class MNKState extends GameState {
 		if (this.hasResourceAvailable("MEDITATIVE_BROTHERHOOD")) {
 			// Party members under the Meditative Brotherhood each have a 20% chance to generate chakra
 			// on each weaponskill/spell cast.
-			// This generation will usually be an over-estimate because most party members will have
-			// a 2.5s GCD. To account for haste buffs and fast skills used during the buff window,
-			// we'll generously assume that party members will perform a weaponskill once every 2.4
-			// seconds on average. Since MNK GCDs are inherently 1.2x faster than base, we attenuate the
-			// base 20% chakra generation rate by a factor of (2 / 2.4).
-			const PARTY_GCD_RATIO = (1 - 0.2) / (1 - 0.04);
+			// This generation will usually be a slight over-estimate because most party members will have
+			// a 2.5s GCD.
 			for (let i = 0; i < this.resources.get("PARTY_SIZE").availableAmount() - 1; i++) {
 				const partyRand = this.rng();
-				if (partyRand < 0.2 * PARTY_GCD_RATIO) {
+				if (
+					this.config.procMode === ProcMode.Always ||
+					(this.config.procMode === ProcMode.RNG && partyRand < 0.2)
+				) {
 					this.gainChakra();
 				}
 			}
@@ -419,7 +425,7 @@ const makeMNKResourceAbility = (
 		potency,
 		highlightIf: (state) => state.canDoForm("opo"),
 		jobPotencyModifiers: (state) =>
-			state.hasResourceAvailable("OPO_OPO_FORM") ? [Modifiers.AutoCrit] : [],
+			state.hasResourceAvailable("OPO_OPOS_FURY") ? [Modifiers.AutoCrit] : [],
 	});
 });
 
@@ -729,7 +735,7 @@ const getBlitzReplacer = (i: number) =>
 
 const clearBeastChakra: EffectFn<MNKState> = (state) => {
 	BEAST_CHAKRA_KEYS.forEach((key) => state.tryConsumeResource(key, true));
-	state.gainStatus("FORMLESS_FIST");
+	state.setForm("formless");
 };
 const gainNadi: (nadi: "lunar" | "solar") => EffectFn<MNKState> =
 	(nadi: "lunar" | "solar") => (state) =>
@@ -886,52 +892,41 @@ makeMNKWeaponskill("FORM_SHIFT", 52, {
 	onConfirm: (state) => state.setForm("formless"),
 });
 
-const chakraReplaceIf: StatePredicate<MNKState> = (state) =>
-	state.resources.get("CHAKRA").available(5);
-const meditationValidate: StatePredicate<MNKState> = (state) =>
-	!state.resources.get("CHAKRA").available(5);
-const meditationConfirm: EffectFn<MNKState> = (state) =>
-	state.resources.get("CHAKRA").gain(state.isInCombat() ? 1 : 5);
 // Treat meditation as a GCD, even out of combat
-makeMNKWeaponskill("FORBIDDEN_MEDITATION", 54, {
-	recastTime: 1,
-	applicationDelay: 0,
-	replaceIf: [
-		{
-			newSkill: "THE_FORBIDDEN_CHAKRA",
-			condition: chakraReplaceIf,
-		},
-	],
-	validateAttempt: meditationValidate,
-	onConfirm: meditationConfirm,
-});
+// Since they are abilities, they are NOT haste scaled.
+function makeMeditationSkill(
+	name: MNKActionKey,
+	level: number,
+	params: {
+		autoUpgrade?: SkillAutoReplace;
+		autoDowngrade?: SkillAutoReplace;
+		spender: MNKActionKey;
+	},
+) {
+	return makeWeaponskill("MNK", name, level, {
+		autoUpgrade: params.autoUpgrade,
+		autoDowngrade: params.autoDowngrade,
+		recastTime: 1,
+		applicationDelay: 0,
+		replaceIf: [
+			{
+				newSkill: params.spender,
+				condition: (state) => state.resources.get("CHAKRA").available(5),
+			},
+		],
+		validateAttempt: (state) => !state.resources.get("CHAKRA").available(5),
+		onConfirm: (state) => state.resources.get("CHAKRA").gain(state.isInCombat() ? 1 : 5),
+	});
+}
 
-makeMNKWeaponskill("INSPIRITED_MEDITATION", 40, {
+makeMeditationSkill("FORBIDDEN_MEDITATION", 54, { spender: "THE_FORBIDDEN_CHAKRA" });
+makeMeditationSkill("INSPIRITED_MEDITATION", 40, {
 	autoUpgrade: { otherSkill: "ENLIGHTENED_MEDITATION", trait: "HOWLING_FIST_MASTERY" },
-	recastTime: 1,
-	applicationDelay: 0,
-	replaceIf: [
-		{
-			newSkill: "HOWLING_FIST",
-			condition: chakraReplaceIf,
-		},
-	],
-	validateAttempt: meditationValidate,
-	onConfirm: meditationConfirm,
+	spender: "HOWLING_FIST",
 });
-
-makeMNKWeaponskill("ENLIGHTENED_MEDITATION", 74, {
-	autoDowngrade: { otherSkill: "INSPIRITED_MEDITATION", trait: "HOWLING_FIST_MASTERY" },
-	recastTime: 1,
-	applicationDelay: 0,
-	replaceIf: [
-		{
-			newSkill: "ENLIGHTENMENT",
-			condition: chakraReplaceIf,
-		},
-	],
-	validateAttempt: meditationValidate,
-	onConfirm: meditationConfirm,
+makeMeditationSkill("ENLIGHTENED_MEDITATION", 74, {
+	autoDowngrade: { otherSkill: "ENLIGHTENED_MEDITATION", trait: "HOWLING_FIST_MASTERY" },
+	spender: "ENLIGHTENMENT",
 });
 
 // according to consolegameswiki, TFC shares a recast timer with howling fist but not enlightenment???
@@ -1024,16 +1019,16 @@ makeMNKResourceAbility("BROTHERHOOD", 70, "cd_BROTHERHOOD", {
 		state.resources.set(
 			new Resource("CHAKRA", 10, state.resources.get("CHAKRA").availableAmount()),
 		);
-		state.resources.addResourceEvent({
-			rscType: "CHAKRA",
-			name: "restore BH max stacks",
-			delay: (getResourceInfo("MNK", "BROTHERHOOD") as ResourceInfo).maxTimeout,
-			// may be a different resource object
-			fnOnRsc: () =>
-				state.resources.set(
-					new Resource("CHAKRA", 5, state.resources.get("CHAKRA").availableAmount()),
-				),
-		});
+		state.addEvent(
+			new Event(
+				"restore BH max stacks",
+				(getResourceInfo("MNK", "BROTHERHOOD") as ResourceInfo).maxTimeout,
+				() =>
+					state.resources.set(
+						new Resource("CHAKRA", 5, state.resources.get("CHAKRA").availableAmount()),
+					),
+			),
+		);
 	},
 });
 
@@ -1055,6 +1050,7 @@ makeMNKAbility("THUNDERCLAP", 35, "cd_THUNDERCLAP", {
 	cooldown: 30,
 	maxCharges: 3,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
+	drawsAggro: true,
 });
 
 makeMNKResourceAbility("MANTRA", 42, "cd_MANTRA", {
@@ -1106,6 +1102,6 @@ makeMNKWeaponskill("FIRES_REPLY", 100, {
 	validateAttempt: (state) => state.hasResourceAvailable("FIRES_RUMINATION"),
 	onConfirm: (state) => {
 		state.tryConsumeResource("FIRES_RUMINATION");
-		state.gainStatus("FORMLESS_FIST");
+		state.setForm("formless");
 	},
 });

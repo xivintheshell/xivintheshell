@@ -48,7 +48,7 @@ it(
 			},
 			{
 				skillName: "LEAPING_OPO",
-				displayedModifiers: [PotencyModifierType.MNK_BALL],
+				displayedModifiers: [PotencyModifierType.AUTO_CRIT, PotencyModifierType.MNK_BALL],
 				hitCount: 2,
 			},
 			{
@@ -81,7 +81,7 @@ it(
 		time: 24.862 + 10,
 		lastDamageApplicationTime: 24.862 + 10,
 		totalPotency: {
-			applied: 12102.46,
+			applied: 13032.77,
 			pending: 0,
 		},
 		gcdSkills: {
@@ -89,7 +89,7 @@ it(
 			pending: 0,
 		},
 		mainTableSummary: {
-			totalPotencyWithoutPot: 11260.8,
+			totalPotencyWithoutPot: 12122.19,
 		},
 	}),
 );
