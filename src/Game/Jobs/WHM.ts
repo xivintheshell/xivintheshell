@@ -28,7 +28,7 @@ import {
 	Spell,
 	ResourceCalculationFn,
 	fnify,
-    FAKE_SKILL_ANIMATION_LOCK,
+	FAKE_SKILL_ANIMATION_LOCK,
 } from "../Skills";
 import { localize } from "../../Components/Localization";
 
@@ -163,7 +163,7 @@ export class WHMState extends GameState {
 			this.resources.addResourceEvent({
 				rscType: "LILY_TIMER",
 				name: "gain lily",
-				delay: 30,
+				delay: 20,
 				fnOnRsc: () => {
 					this.resources.get("LILLIES").gain(1);
 					recurringLilyGain();
@@ -531,6 +531,7 @@ makeWHMSpell("MEDICA_II", 50, {
 		["NEVER", 200],
 		["ENHANCED_HEALING_MAGIC", 250],
 	],
+	baseCastTime: 2,
 	manaCost: 1000,
 	aoeHeal: true,
 	onConfirm: (state, node) => {
@@ -555,6 +556,7 @@ makeWHMSpell("MEDICA_III", 96, {
 	},
 	applicationDelay: 0.84,
 	healingPotency: 250,
+	baseCastTime: 2,
 	manaCost: 1000,
 	aoeHeal: true,
 	onConfirm: (state, node) => {
@@ -746,7 +748,7 @@ makeWHMResourceAbility("DIVINE_CARESS", 100, "cd_DIVINE_CARESS", {
 			name: "trigger divine aura on divine caress expiry",
 			delay: 10,
 			// TODO early trigger if popped
-			fnOnRsc: () => state.resources.get("DIVINE_AURA").gain(1),
+			fnOnRsc: () => state.gainStatus("DIVINE_AURA"),
 		});
 	},
 });
