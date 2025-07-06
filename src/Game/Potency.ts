@@ -102,6 +102,8 @@ export const enum PotencyModifierType {
 	RIDDLE_OF_FIRE,
 	SSS_CHAKRA,
 	MNK_BALL,
+
+	DIVINATION,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -523,6 +525,11 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.RIDDLE_OF_FIRE,
 		potencyFactor: 1.15,
+	} as PotencyMultiplier,
+	Divination: {
+		kind: "multiplier",
+		source: PotencyModifierType.DIVINATION,
+		potencyFactor: 1.06,
 	} as PotencyMultiplier,
 };
 

@@ -118,7 +118,7 @@ export const HEALERS = ensureRecord<Job>()({
 	},
 	AST: {
 		role: "HEALER",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "ASTRAL_STASIS",
 	},
