@@ -49,6 +49,7 @@ class Info:
     en: str
     zh: str | None
     max_stacks: int = 1
+    max_charges: int = 1
     timeout: int | None = None
 
 
@@ -96,15 +97,15 @@ COOLDOWNS: dict[str, list[str]] = {
 # A list of English gauge element names.
 # Their translations must manually be added.
 GAUGES: list[Info] = [
-    I("Lillies", "百合", max_stacks=3),
-    I("Blood Lily", "血百合", max_stacks=3),
+    I("Lillies", "百合", max_charges=3),
+    I("Blood Lily", "血百合", max_charges=3),
 ]
 
 # A list of buff/debuffs.
 # Their Chinese translations must manually be added.
 STATUSES: list[Info] = [
     I("Presence of Mind", "神速咏唱", timeout=15),
-    I("Sacred Sight", "闪飒预备", timeout=30),
+    I("Sacred Sight", "闪飒预备", timeout=30, max_stacks=3),
     I("Regen", "再生", timeout=18),
     I("Aero II", "烈风", timeout=30),
     I("Medica II", "医济", timeout=15),
@@ -537,7 +538,9 @@ for info in STATUSES:
 def data_decl_from_info(info: Info) -> str:
     fields = {}
     if info.max_stacks > 1:
-        fields["maximumCharges"] = info.max_stacks
+        fields["maximumStacks"] = info.max_stacks
+    if info.max_charges > 1:
+        fields["maximumCharges"] = info.max_charges
     if info.zh is not None:
         fields["label"] = f'{{ zh: "{info.zh}" }}'
     return (

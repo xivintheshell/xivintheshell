@@ -276,7 +276,7 @@ ALL_JOBS.forEach((job) => skillMap.set(job, new Map()));
 
 // Helper function to transform an optional<number | function> that has a default number value into a function.
 // If no default is provided, 0 is used instead.
-function fnify<T extends PlayerState>(
+export function fnify<T extends PlayerState>(
 	arg?: number | ResourceCalculationFn<T>,
 	defaultValue?: number,
 ): ResourceCalculationFn<T> {

@@ -674,6 +674,9 @@ function drawSkills(
 		[BuffType.Bunshin, { color: g_colors.nin.bunshin, showImage: true }],
 		[BuffType.RiddleOfFire, { color: g_colors.mnk.riddleOfFire, showImage: true }],
 		[BuffType.Brotherhood, { color: g_colors.mnk.brotherhood, showImage: true }],
+		[BuffType.Confession, { color: g_colors.whm.confession, showImage: true }],
+		[BuffType.Asylum, { color: g_colors.whm.asylum, showImage: true }],
+		[BuffType.Temperance, { color: g_colors.whm.temperance, showImage: true }],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();

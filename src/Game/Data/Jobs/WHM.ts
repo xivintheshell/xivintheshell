@@ -2,14 +2,6 @@ import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
 export const WHM_ACTIONS = ensureRecord<ActionData>()({
-	STONE: {
-		id: 119,
-		name: "Stone",
-		label: {
-			zh: "飞石",
-			ja: "ストーン",
-		},
-	},
 	CURE: {
 		id: 120,
 		name: "Cure",
@@ -242,6 +234,18 @@ export const WHM_ACTIONS = ensureRecord<ActionData>()({
 			ja: "リタージー・オブ・ベル",
 		},
 	},
+	LITURGY_POP: {
+		name: "Pop Liturgy of the Bell",
+		label: {
+			zh: "礼仪之铃破盾",
+		},
+	},
+	LITURGY_TRIGGER: {
+		name: "Trigger Liturgy of the Bell",
+		label: {
+			zh: "礼仪之铃被打",
+		},
+	},
 	GLARE_IV: {
 		id: 37009,
 		name: "Glare IV",
@@ -281,17 +285,21 @@ export const WHM_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_TEMPERANCE: { name: "cd_Temperance" },
 	cd_AQUAVEIL: { name: "cd_Aquaveil" },
 	cd_LITURGY_OF_THE_BELL: { name: "cd_LiturgyOfTheBell" },
+	cd_LITURGY_POP: { name: "cd_LiturgyPop" },
+	cd_LITURGY_TRIGGER: { name: "cd_LiturgyTrigger" },
 	cd_DIVINE_CARESS: { name: "cd_DivineCaress" },
 });
 
 export const WHM_GAUGES = ensureRecord<ResourceData>()({
 	LILLIES: { name: "Lillies", maximumCharges: 3, label: { zh: "百合" } },
+	LILY_TIMER: { name: "Lily Timer", label: { zh: "百合计时" } },
 	BLOOD_LILY: { name: "Blood Lily", maximumCharges: 3, label: { zh: "血百合" } },
 });
 
 export const WHM_STATUSES = ensureRecord<ResourceData>()({
+	FREECURE: { name: "Freecure", label: { zh: "治疗效果提高" } },
 	PRESENCE_OF_MIND: { name: "Presence of Mind", label: { zh: "神速咏唱" } },
-	SACRED_SIGHT: { name: "Sacred Sight", label: { zh: "闪飒预备" } },
+	SACRED_SIGHT: { name: "Sacred Sight", maximumStacks: 3, label: { zh: "闪飒预备" } },
 	REGEN: { name: "Regen", label: { zh: "再生" } },
 	AERO_II: { name: "Aero II", label: { zh: "烈风" } },
 	MEDICA_II: { name: "Medica II", label: { zh: "医济" } },
@@ -305,7 +313,7 @@ export const WHM_STATUSES = ensureRecord<ResourceData>()({
 	AQUAVEIL: { name: "Aquaveil", label: { zh: "水流幕" } },
 	LITURGY_OF_THE_BELL: {
 		name: "Liturgy of the Bell",
-		maximumCharges: 5,
+		maximumStacks: 5,
 		label: { zh: "礼仪之铃" },
 	},
 	MEDICA_III: { name: "Medica III", label: { zh: "医养" } },

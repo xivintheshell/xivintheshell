@@ -64,6 +64,10 @@ buffIcons.set(BuffType.Bunshin, "Buffs/NIN/Bunshin.png");
 
 buffIcons.set(BuffType.RiddleOfFire, "Buffs/MNK/Riddle of Fire.png");
 
+buffIcons.set(BuffType.Confession, "Buffs/WHM/Confession.png");
+buffIcons.set(BuffType.Asylum, "Buffs/WHM/Asylum.png");
+buffIcons.set(BuffType.Temperance, "Buffs/WHM/Temperance.png");
+
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
 	const imgObj = new Image();

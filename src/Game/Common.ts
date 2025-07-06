@@ -137,6 +137,10 @@ export enum BuffType {
 	Bunshin = "Bunshin",
 
 	RiddleOfFire = "Riddle of Fire",
+
+	Confession = "Confession",
+	Asylum = "Asylum",
+	Temperance = "Temperance",
 }
 
 export const enum WarningType {
