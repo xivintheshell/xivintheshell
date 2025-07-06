@@ -57,15 +57,15 @@ I = Info
 # === BEGIN: YOUR CHANGES HERE ===
 # Modify the variables in this section according to the skills and statuses you wish to generate.
 
-JOB: str = "AST"
+JOB: str = "WHM"
 # A path to a locally-saved HTML file of the English-language job guide.
 # For example, hitting ctrl/cmd-S on this link:
 # https://na.finalfantasyxiv.com/jobguide/monk/
-EN_JOB_GUIDE_HTML: str = "~/Downloads/en_ast.html"
+EN_JOB_GUIDE_HTML: str = "~/Downloads/en_whm.html"
 # A path to a locally-saved HTML file of the Chinese-language job guide.
 # For example, hitting ctrl/cmd-S on this link:
 # https://actff1.web.sdo.com/project/20190917jobguid/index.html#/continfo/monk/pve
-ZH_JOB_GUIDE_HTML: str = "~/Downloads/zh_ast.html"
+ZH_JOB_GUIDE_HTML: str = "~/Downloads/zh_whm.html"
 # Both job guides are assumed to have the same order of actions, which may
 # not always be the case when a patch occurs.
 
@@ -76,92 +76,62 @@ APPLICATION_DELAY_CSV_PATH: str = "scripts/application delay DT - HEALER.csv"
 # Action names are scraped from the job guide files. If there are any actions that should not be
 # included due to being out-leveled, list their proper English names here.
 EXCLUDE_ACTIONS: list[str] = [
-    "Combust",
-    "Malefic",
-    "Malefic II",
+    "Stone",
+    "Aero",
+    "Stone II",
+    "Stone III",
 ]
 
 # Name of the last PVE action in the job guide. This makes it so we don't have to write more complicated
 # CSS selectors to tell BS4 when to stop parsing :).
-LAST_PVE_ACTION: str = "Lady of Crowns"
+LAST_PVE_ACTION: str = "Divine Caress"
 
 # A list of cooldowns resources to generate.
 # Abilities can be omitted, as this script will automatically produce a cooldown object for them.
 # Any abilities that share a cooldown (or are upgrades of an earlier ability) should be entered as
 # values in the dict entry. Leave the list empty if no other abilities use the cooldown.
 COOLDOWNS: dict[str, list[str]] = {
-    "Play I": [
-        "The Balance",
-        "The Spear",
-    ],
-    "Play II": [
-        "The Arrow",
-        "The Bole",
-    ],
-    "Play III": [
-        "The Spire",
-        "The Ewer",
-    ],
-    "Minor Arcana": [
-        "Lord of Crowns",
-        "Lady of Crowns",
-    ],
 }
 
 # A list of English gauge element names.
 # Their translations must manually be added.
 GAUGES: list[Info] = [
-    I("Arcana", "奥秘卡"),
-    I("Minor Arcana", "小奥秘卡", max_stacks=2),
+    I("Lillies", "百合", max_stacks=3),
+    I("Blood Lily", "血百合", max_stacks=3),
 ]
 
 # A list of buff/debuffs.
 # Their Chinese translations must manually be added.
 STATUSES: list[Info] = [
-    I("Lightspeed", "光速", timeout=15),
-    I("The Balance", "太阳神之衡", timeout=15),
-    I("The Arrow", "放浪神之箭", timeout=15),
-    I("The Spire", "建筑神之塔", timeout=30),
-    I("The Spear", "战争神之枪", timeout=15),
-    I("The Bole", "世界树之干", timeout=15),
-    I("The Ewer", "河流神之瓶", timeout=15),
-    I("Aspected Benefic", "吉星相位", timeout=15),
-    I("Aspected Helios", "阳星相位", timeout=15),
-    I("Synastry", "星位合图", timeout=20),
-    I("Divination", "占卜", timeout=20),
-    I("Divining", "神谕预备", timeout=30),
-    # The pair of Collective Unconscious buffs are handled separately because they share a name.
-    I("Wheel of Fortune", "命运之轮", timeout=15),
-    I("Opposition", "天星冲日", timeout=15),
-    I("Earthly Dominance", "地星主宰", timeout=10),
-    I("Giant Dominance", "巨星主宰", timeout=10),
-    I("Combust II", "炽灼", timeout=30),
-    I("Combust III", "焚灼", timeout=30),
-    I("Intersection", "天星交错", timeout=30),
-    I("Horoscope", "天宫图", timeout=10),
-    I("Horoscope Helios", "阳星天宫图", timeout=10),
-    # Neutral Sect is also handled separately because two buffs share the same name.
-    I("Suntouched", "太阳星座预备", timeout=30),
-    I("Exaltation", "擢升", timeout=8),
-    I("Macrocosmos", "大宇宙", timeout=15),
-    I("Helios Conjunction", "阳星合相", timeout=15),
-    I("Sun Sign", "太阳星座", timeout=15),
+    I("Presence of Mind", "神速咏唱", timeout=15),
+    I("Sacred Sight", "闪飒预备", timeout=30),
+    I("Regen", "再生", timeout=18),
+    I("Aero II", "烈风", timeout=30),
+    I("Medica II", "医济", timeout=15),
+    I("Asylum", "庇护所", timeout=24),
+    I("Thin Air", "无中生有", timeout=12),
+    I("Divine Benison", "神祝祷", timeout=15),
+    I("Confession", "全大赦", timeout=10),
+    I("Dia", "天辉", timeout=30),
+    I("Temperance", "节制", timeout=20),
+    I("Divine Grace", "神爱抚预备", timeout=30),
+    I("Aquaveil", "水流幕", timeout=8),
+    I("Liturgy of the Bell", "礼仪之铃", timeout=20, max_stacks=5),
+    I("Medica III", "医养", timeout=15),
+    I("Divine Caress", "神爱抚", timeout=10),
+    I("Divine Aura", "神爱环", timeout=15),
 ]
 
 # A list of tracker abilities that don't necessarily correspond to any real in-game buffs.
 # Their translations must manually be added.
 TRACKERS: list[Info] = [
-    I("Arcana 1", "奥秘卡1", max_stacks=3),
-    I("Arcana 2", "奥秘卡2", max_stacks=3),
-    I("Arcana 3", "奥秘卡3", max_stacks=3),
-    I("Next Draw", "下一张卡", max_stacks=1),
 ]
 
 # Traits are automatically scraped.
 # We need to specify the first and last trait of interest so I don't need to write more complex scraping code
 # to filter PVP actions.
-FIRST_TRAIT = "Combust Mastery II"
-LAST_TRAIT = "Enhanced Neutral Sect"
+FIRST_TRAIT = "Aero Mastery II"
+LAST_TRAIT = "Enhanced Temperance"
 
 # === END: YOUR CHANGES HERE ===
 
@@ -536,7 +506,10 @@ for info in STATUSES:
             },
         )
         r.raise_for_status()
-        blob = json.loads(r.text)["results"][0]
+        body = json.loads(r.text)
+        if len(body["results"]) == 0:
+            raise ValueError(f"xivapi returned no data for {name}, check the buff name and try again")
+        blob = body["results"][0]
         icon_id = blob["fields"]["Icon"]["id"]
         icon_path = blob["fields"]["Icon"]["path_hr1"]
         ja_name = blob["fields"]["Name@lang(ja)"]

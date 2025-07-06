@@ -106,7 +106,7 @@ export type TankKey = keyof Tanks;
 export const HEALERS = ensureRecord<Job>()({
 	WHM: {
 		role: "HEALER",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "PULSE_OF_LIFE",
 	},
