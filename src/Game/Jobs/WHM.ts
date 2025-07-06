@@ -727,7 +727,6 @@ makeWHMAbility("LITURGY_POP", 90, "cd_LITURGY_POP", {
 	cooldown: 1,
 	isPetHeal: true,
 	healingPotency: 212, // 212 per stack, too lazy to model
-	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	validateAttempt: (state) => state.hasResourceAvailable("LITURGY_OF_THE_BELL"),
 	highlightIf: (state) => state.hasResourceAvailable("LITURGY_OF_THE_BELL"),
 	onConfirm: (state) => state.tryConsumeResource("LITURGY_OF_THE_BELL", true),
