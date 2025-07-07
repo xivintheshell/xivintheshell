@@ -106,6 +106,7 @@ export const enum PotencyModifierType {
 	DIVINATION,
 	NEUTRAL_SECT,
 	THE_ARROW,
+	SYNASTRY,
 
 	CONFESSION,
 	ASYLUM,
@@ -547,6 +548,11 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.THE_ARROW,
 		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	Synastry: {
+		kind: "multiplier",
+		source: PotencyModifierType.SYNASTRY,
+		potencyFactor: 1.4,
 	} as PotencyMultiplier,
 	// earthly star is a pet
 	AstPet: {

@@ -198,6 +198,17 @@ export type WHMResourceColors = {
 	temperance: string;
 };
 
+export type ASTResourceColors = {
+	div: string;
+	astralCard: string;
+	umbralCard: string;
+	lord: string;
+	lady: string;
+	neutral: string;
+	synastry: string;
+	arrow: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -247,6 +258,7 @@ export type ThemeColors = {
 	nin: NINResourceColors;
 	mnk: MNKResourceColors;
 	whm: WHMResourceColors;
+	ast: ASTResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -488,6 +500,16 @@ const DARK_THEME_COLORS: ThemeColors = {
 		confession: "#8df2e8",
 		temperance: "#77f7b7",
 	},
+	ast: {
+		div: "white",
+		astralCard: "white",
+		umbralCard: "white",
+		lord: "white",
+		lady: "white",
+		neutral: "white",
+		synastry: "white",
+		arrow: "white",
+	},
 	timeline: {
 		ruler: "#2d2d2d",
 		tracks: "#242424",
@@ -708,6 +730,16 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		asylum: "#b5e075",
 		confession: "#8df2e8",
 		temperance: "#77f7b7",
+	},
+	ast: {
+		div: "black",
+		astralCard: "black",
+		umbralCard: "black",
+		lord: "black",
+		lady: "black",
+		neutral: "black",
+		synastry: "black",
+		arrow: "black",
 	},
 	timeline: {
 		ruler: "#e9e9e9",

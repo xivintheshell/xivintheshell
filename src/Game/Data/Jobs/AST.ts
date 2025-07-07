@@ -2,14 +2,6 @@ import { ensureRecord } from "../../../utilities";
 import { ActionData, CooldownData, ResourceData, TraitData } from "../types";
 
 export const AST_ACTIONS = ensureRecord<ActionData>()({
-	MALEFIC: {
-		id: 3596,
-		name: "Malefic",
-		label: {
-			zh: "凶星",
-			ja: "マレフィク",
-		},
-	},
 	BENEFIC: {
 		id: 3594,
 		name: "Benefic",
@@ -376,7 +368,6 @@ export const AST_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_LIGHTSPEED: { name: "cd_Lightspeed" },
 	cd_ESSENTIAL_DIGNITY: { name: "cd_EssentialDignity" },
 	cd_ASTRAL_DRAW: { name: "cd_AstralDraw" },
-	cd_UMBRAL_DRAW: { name: "cd_UmbralDraw" },
 	cd_PLAY_I: { name: "cd_PlayI" },
 	cd_PLAY_II: { name: "cd_PlayII" },
 	cd_PLAY_III: { name: "cd_PlayIII" },
@@ -389,6 +380,7 @@ export const AST_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_MINOR_ARCANA: { name: "cd_MinorArcana" },
 	cd_CELESTIAL_INTERSECTION: { name: "cd_CelestialIntersection" },
 	cd_HOROSCOPE: { name: "cd_Horoscope" },
+	cd_HOROSCOPE_RECAST: { name: "cd_HoroscopeRecast" },
 	cd_NEUTRAL_SECT: { name: "cd_NeutralSect" },
 	cd_EXALTATION: { name: "cd_Exaltation" },
 	cd_MICROCOSMOS: { name: "cd_Microcosmos" },
@@ -398,7 +390,7 @@ export const AST_COOLDOWNS = ensureRecord<CooldownData>()({
 
 export const AST_GAUGES = ensureRecord<ResourceData>()({
 	ARCANA: { name: "Arcana", label: { zh: "奥秘卡" } },
-	MINOR_ARCANA: { name: "Minor Arcana", maximumCharges: 2, label: { zh: "小奥秘卡" } },
+	MINOR_ARCANA: { name: "Minor Arcana", label: { zh: "小奥秘卡" } },
 });
 
 export const AST_STATUSES = ensureRecord<ResourceData>()({
@@ -423,6 +415,8 @@ export const AST_STATUSES = ensureRecord<ResourceData>()({
 	INTERSECTION: { name: "Intersection", label: { zh: "天星交错" } },
 	HOROSCOPE: { name: "Horoscope", label: { zh: "天宫图" } },
 	HOROSCOPE_HELIOS: { name: "Horoscope Helios", label: { zh: "阳星天宫图" } },
+	NEUTRAL_SECT: { name: "Neutral Sect", label: { zh: "中间学派" } },
+	NEUTRAL_SECT_SHIELD: { name: "Neutral Sect (Shield)", label: { zh: "中间学派（防护罩）" } },
 	SUNTOUCHED: { name: "Suntouched", label: { zh: "太阳星座预备" } },
 	EXALTATION: { name: "Exaltation", label: { zh: "擢升" } },
 	MACROCOSMOS: { name: "Macrocosmos", label: { zh: "大宇宙" } },
@@ -431,18 +425,23 @@ export const AST_STATUSES = ensureRecord<ResourceData>()({
 });
 
 export const AST_TRACKERS = ensureRecord<ResourceData>()({
-	ARCANA_1: { name: "Arcana 1", maximumCharges: 3, label: { zh: "奥秘卡1" } },
-	ARCANA_2: { name: "Arcana 2", maximumCharges: 3, label: { zh: "奥秘卡2" } },
-	ARCANA_3: { name: "Arcana 3", maximumCharges: 3, label: { zh: "奥秘卡3" } },
+	ARCANA_1: { name: "Arcana 1", label: { zh: "奥秘卡1" } },
+	ARCANA_2: { name: "Arcana 2", label: { zh: "奥秘卡2" } },
+	ARCANA_3: { name: "Arcana 3", label: { zh: "奥秘卡3" } },
 	NEXT_DRAW: { name: "Next Draw", label: { zh: "下一张卡" } },
 });
 
 export const AST_TRAITS = ensureRecord<TraitData>()({
-	COMBUST_MASTERY_II: { name: "Combust Mastery II", level: 94 },
-	MALEFIC_MASTERY_III: { name: "Malefic Mastery III", level: 96 },
-	ENHANCED_ESSENTIAL_DIGNITY: { name: "Enhanced Essential Dignity", level: 98 },
-	MALEFIC_MASTERY_IV: { name: "Malefic Mastery IV", level: 100 },
-	GRAVITY_MASTERY: { name: "Gravity Mastery", level: 94 },
+	COMBUST_MASTERY_II: { name: "Combust Mastery II", level: 72 },
+	MALEFIC_MASTERY_III: { name: "Malefic Mastery III", level: 82 },
+	ENHANCED_ESSENTIAL_DIGNITY: { name: "Enhanced Essential Dignity", level: 78 },
+	MALEFIC_MASTERY_IV: { name: "Malefic Mastery IV", level: 82 },
+	GRAVITY_MASTERY: { name: "Gravity Mastery", level: 82 },
+	ENHANCED_CELESTIAL_INTERSECTION: { name: "Enhanced Celestial Intersection", level: 88 },
+	ENHANCED_DIVINATION: { name: "Enhanced Divination", level: 92 },
+	ASPECTED_HELIOS_MASTERY: { name: "Aspected Helios Mastery", level: 96 },
+	ENHANCED_ESSENTIAL_DIGNITY_II: { name: "Enhanced Essential Dignity_II", level: 98 },
+	ENHANCED_NEUTRAL_SECT: { name: "Enhanced Neutral Sect", level: 100 },
 });
 
 export type ASTActions = typeof AST_ACTIONS;

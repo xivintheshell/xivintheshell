@@ -13,30 +13,27 @@ import { ActionKey, TraitKey } from "../Data";
 import { ASTActionKey, ASTCooldownKey, ASTResourceKey } from "../Data/Jobs/AST";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { Modifiers, makeComboModifier, makePositionalModifier } from "../Potency";
+import { Modifiers, PotencyModifier, makeComboModifier, makePositionalModifier } from "../Potency";
 import { getResourceInfo, makeResource, ResourceInfo, CoolDown } from "../Resources";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	MakeResourceAbilityParams,
 	makeSpell,
-	makeWeaponskill,
 	MakeAbilityParams,
-	MakeGCDParams,
-	MOVEMENT_SKILL_ANIMATION_LOCK,
 	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
 	StatePredicate,
 	Spell,
-	Weaponskill,
+	ResourceCalculationFn,
 } from "../Skills";
+import { localize } from "../../Components/Localization";
 
 const makeASTResource = (
 	rsc: ASTResourceKey,
@@ -48,7 +45,7 @@ const makeASTResource = (
 
 // Gauge resources
 makeASTResource("ARCANA", 1);
-makeASTResource("MINOR_ARCANA", 2);
+makeASTResource("MINOR_ARCANA", 1, { default: 1 });
 
 // Statuses
 makeASTResource("LIGHTSPEED", 1, { timeout: 15 });
@@ -70,6 +67,8 @@ makeASTResource("GIANT_DOMINANCE", 1, { timeout: 10 });
 makeASTResource("COMBUST_II", 1, { timeout: 30 });
 makeASTResource("COMBUST_III", 1, { timeout: 30 });
 makeASTResource("INTERSECTION", 1, { timeout: 30 });
+makeASTResource("NEUTRAL_SECT", 1, { timeout: 20 });
+makeASTResource("NEUTRAL_SECT_SHIELD", 1, { timeout: 30 });
 makeASTResource("HOROSCOPE", 1, { timeout: 10 });
 makeASTResource("HOROSCOPE_HELIOS", 1, { timeout: 10 });
 makeASTResource("SUNTOUCHED", 1, { timeout: 30 });
@@ -79,16 +78,86 @@ makeASTResource("HELIOS_CONJUNCTION", 1, { timeout: 15 });
 makeASTResource("SUN_SIGN", 1, { timeout: 15 });
 
 // Trackers
-makeASTResource("ARCANA_1", 3);
-makeASTResource("ARCANA_2", 3);
-makeASTResource("ARCANA_3", 3);
+makeASTResource("ARCANA_1", 1, { default: 1 });
+makeASTResource("ARCANA_2", 1, { default: 1 });
+makeASTResource("ARCANA_3", 1, { default: 1 });
 makeASTResource("NEXT_DRAW", 1);
 
 export class ASTState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
 
-		this.registerRecurringEvents();
+		const edStacks = this.hasTraitUnlocked("ENHANCED_ESSENTIAL_DIGNITY_II")
+			? 3
+			: this.hasTraitUnlocked("ENHANCED_ESSENTIAL_DIGNITY")
+				? 2
+				: 1;
+		const ciStacks = this.hasTraitUnlocked("ENHANCED_CELESTIAL_INTERSECTION") ? 2 : 1;
+		this.cooldowns.set(new CoolDown("cd_ESSENTIAL_DIGNITY", 40, edStacks, edStacks));
+		this.cooldowns.set(new CoolDown("cd_CELESTIAL_INTERSECTION", 30, ciStacks, ciStacks));
+
+		this.registerRecurringEvents([
+			{
+				reportName: localize({ en: "Combust DoT", zh: "焚灼DoT" }),
+				groupedEffects: [
+					{
+						effectName: "COMBUST_II",
+						appliedBy: ["COMBUST_II"],
+					},
+					{
+						effectName: "COMBUST_III",
+						appliedBy: ["COMBUST_III"],
+					},
+				],
+			},
+			// skipping over the ewer's HoT for ease of implementation
+			{
+				isHealing: true,
+				groupedEffects: [
+					{
+						effectName: "WHEEL_OF_FORTUNE",
+						appliedBy: ["COLLECTIVE_UNCONSCIOUS"],
+					},
+				],
+			},
+			{
+				isHealing: true,
+				groupedEffects: [
+					{
+						effectName: "OPPOSITION",
+						appliedBy: ["CELESTIAL_OPPOSITION"],
+					},
+				],
+			},
+			{
+				isHealing: true,
+				groupedEffects: [
+					{
+						effectName: "ASPECTED_BENEFIC",
+						appliedBy: ["ASPECTED_BENEFIC"],
+					},
+				],
+			},
+			{
+				isHealing: true,
+				groupedEffects: [
+					{
+						effectName: "ASPECTED_HELIOS",
+						appliedBy: ["ASPECTED_HELIOS"],
+					},
+					{
+						effectName: "HELIOS_CONJUNCTION",
+						appliedBy: ["HELIOS_CONJUNCTION"],
+					},
+				],
+			},
+		]);
+	}
+
+	drawnAstral(): boolean {
+		// If NEXT_DRAW is 0, then the currently-drawn set of cards is ASTRAL (Balance, Arrow, Spire, Lord).
+		// If NEXT_DRAW is 1, then the currently-drawn set of cards is UMBRAL (Spear, Bole, Ewer, Lady).
+		return !this.hasResourceAvailable("NEXT_DRAW");
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<ASTState> {
@@ -96,23 +165,67 @@ export class ASTState extends GameState {
 	}
 }
 
-const makeASTWeaponskill = (
-	name: ASTActionKey,
-	unlockLevel: number,
-	params: Partial<MakeGCDParams<ASTState>>,
-): Weaponskill<ASTState> => {
-	return makeWeaponskill("AST", name, unlockLevel, {
-		...params,
-	});
-};
-
 const makeASTSpell = (
 	name: ASTActionKey,
 	unlockLevel: number,
-	params: Partial<MakeGCDParams<ASTState>>,
+	params: {
+		autoUpgrade?: SkillAutoReplace;
+		autoDowngrade?: SkillAutoReplace;
+		startOnHotbar?: boolean;
+		baseCastTime?: number;
+		manaCost: number | ResourceCalculationFn<ASTState>;
+		potency?: number | Array<[TraitKey, number]>;
+		healingPotency?: number | Array<[TraitKey, number]>;
+		aoeHeal?: boolean;
+		falloff?: number;
+		drawsAggro?: boolean;
+		applicationDelay: number;
+		replaceIf?: ConditionalSkillReplace<ASTState>[];
+		highlightIf?: StatePredicate<ASTState>;
+		validateAttempt?: StatePredicate<ASTState>;
+		onConfirm?: EffectFn<ASTState>;
+		onApplication?: EffectFn<ASTState>;
+	},
 ): Spell<ASTState> => {
+	const jobHealingPotencyModifiers: PotencyModifierFn<ASTState> = (state) => {
+		if (!params.healingPotency) {
+			return [];
+		}
+
+		const modifiers: PotencyModifier[] = [];
+		if (state.hasResourceAvailable("SYNASTRY") && !params.aoeHeal) {
+			modifiers.push(Modifiers.Synastry);
+		}
+		if (state.hasResourceAvailable("NEUTRAL_SECT")) {
+			modifiers.push(Modifiers.NeutralSect);
+		}
+		if (state.hasResourceAvailable("THE_ARROW")) {
+			modifiers.push(Modifiers.TheArrow);
+		}
+		return modifiers;
+	};
+	// TODO check if lightspeed is before or after recast
+	const baseCastTime = params.baseCastTime ?? 0;
 	return makeSpell("AST", name, unlockLevel, {
 		...params,
+		jobHealingPotencyModifiers,
+		// Do not apply cards as a potency modifier on the AST's self, since they always should
+		// be used on an ally DPS instead.
+		jobPotencyModifiers: params.potency
+			? (state) => (state.hasResourceAvailable("DIVINATION") ? [Modifiers.Divination] : [])
+			: undefined,
+		castTime: (state) =>
+			state.config.adjustedCastTime(
+				Math.max(
+					0,
+					state.hasResourceAvailable("LIGHTSPEED") ? baseCastTime - 2.5 : baseCastTime,
+				),
+			),
+		// swiftcast is used if lightspeed is active
+		onConfirm: combineEffects(
+			baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : NO_EFFECT,
+			params.onConfirm ?? NO_EFFECT,
+		),
 	});
 };
 
@@ -136,114 +249,195 @@ const makeASTResourceAbility = (
 	return makeResourceAbility("AST", name, unlockLevel, cdName, params);
 };
 
-makeASTSpell("MALEFIC", 1, {
-	applicationDelay: 0, // TODO
-	potency: 150,
-});
-
-makeASTSpell("BENEFIC", 2, {
-	applicationDelay: 0.98,
-	healingPotency: 500,
-});
-
-makeASTResourceAbility("LIGHTSPEED", 6, "cd_LIGHTSPEED", {
-	rscType: "LIGHTSPEED",
-	applicationDelay: 0,
-	cooldown: 90,
-	maxCharges: 2,
-});
-
-makeASTSpell("HELIOS", 10, {
+makeASTSpell("MALEFIC_III", 64, {
+	autoUpgrade: {
+		otherSkill: "MALEFIC_IV",
+		trait: "MALEFIC_MASTERY_III",
+	},
+	baseCastTime: 1.5,
 	applicationDelay: 1.07,
-	healingPotency: 400,
+	potency: 190,
+	manaCost: 400,
 });
 
-makeASTSpell("ASCEND", 12, {
+makeASTSpell("MALEFIC_IV", 72, {
+	autoDowngrade: {
+		otherSkill: "MALEFIC_III",
+		trait: "MALEFIC_MASTERY_III",
+	},
+	autoUpgrade: {
+		otherSkill: "FALL_MALEFIC",
+		trait: "MALEFIC_MASTERY_IV",
+	},
+	baseCastTime: 1.5,
 	applicationDelay: 1.07,
+	potency: 230,
+	manaCost: 400,
 });
 
-makeASTAbility("ESSENTIAL_DIGNITY", 15, "cd_ESSENTIAL_DIGNITY", {
+makeASTSpell("FALL_MALEFIC", 82, {
+	autoDowngrade: {
+		otherSkill: "MALEFIC_IV",
+		trait: "MALEFIC_MASTERY_IV",
+	},
+	baseCastTime: 1.5,
+	applicationDelay: 1.07,
+	potency: [
+		["NEVER", 250],
+		["MAGICK_MASTERY_HEALER", 270],
+	],
+	manaCost: 400,
+});
+
+makeASTSpell("COMBUST_II", 46, {
+	autoUpgrade: {
+		otherSkill: "COMBUST_III",
+		trait: "COMBUST_MASTERY_II",
+	},
 	applicationDelay: 0.62,
-	cooldown: 40,
-	maxCharges: 1,
-	healingPotency: 400,
+	manaCost: 400,
+	drawsAggro: true,
+	onConfirm: (state, node) => {
+		state.addDoTPotencies({
+			node,
+			effectName: "COMBUST_II",
+			skillName: "COMBUST_II",
+			tickPotency: 60,
+			speedStat: "sps",
+		});
+	},
+	onApplication: (state, node) => state.applyDoT("COMBUST_II", node),
 });
 
-makeASTSpell("BENEFIC_II", 26, {
-	applicationDelay: 1.07,
-	healingPotency: 800,
+makeASTSpell("COMBUST_III", 72, {
+	autoDowngrade: {
+		otherSkill: "COMBUST_II",
+		trait: "COMBUST_MASTERY_II",
+	},
+	applicationDelay: 0.62,
+	manaCost: 400,
+	drawsAggro: true,
+	onConfirm: (state, node) => {
+		state.addDoTPotencies({
+			node,
+			effectName: "COMBUST_III",
+			skillName: "COMBUST_III",
+			tickPotency: state.hasTraitUnlocked("MAGICK_MASTERY_HEALER") ? 70 : 65,
+			speedStat: "sps",
+		});
+	},
+	onApplication: (state, node) => state.applyDoT("COMBUST_III", node),
 });
 
-makeASTAbility("ASTRAL_DRAW", 30, "cd_ASTRAL_DRAW", {
+makeASTSpell("GRAVITY", 45, {
+	baseCastTime: 1.5,
 	applicationDelay: 0, // TODO
-	cooldown: 55,
+	potency: 120,
+	falloff: 0,
+	manaCost: 400,
 });
 
-makeASTAbility("UMBRAL_DRAW", 30, "cd_UMBRAL_DRAW", {
-	applicationDelay: 0, // TODO
-	cooldown: 55,
+makeASTSpell("GRAVITY_II", 82, {
+	baseCastTime: 1.5,
+	applicationDelay: 1.16,
+	potency: [
+		["NEVER", 130],
+		["MAGICK_MASTERY_HEALER", 140],
+	],
+	falloff: 0,
+	manaCost: 400,
 });
 
-makeASTAbility("PLAY_I", 30, "cd_PLAY_I", {
-	applicationDelay: 0, // TODO
-	cooldown: 1,
+makeASTSpell("MACROCOSMOS", 90, {
+	applicationDelay: 0.75,
+	potency: [
+		["NEVER", 250],
+		["MAGICK_MASTERY_HEALER", 270],
+	],
+	falloff: 0.4,
+	manaCost: 600,
+	onConfirm: (state) => state.gainStatus("MACROCOSMOS"),
 });
 
-makeASTAbility("PLAY_II", 30, "cd_PLAY_II", {
-	applicationDelay: 0, // TODO
-	cooldown: 1,
-});
-
-makeASTAbility("PLAY_III", 30, "cd_PLAY_III", {
-	applicationDelay: 0, // TODO
+makeASTAbility("MICROCOSMOS", 90, "cd_MICROCOSMOS", {
+	startOnHotbar: false,
+	applicationDelay: 0.045,
 	cooldown: 1,
 });
 
 makeASTSpell("ASPECTED_BENEFIC", 34, {
 	applicationDelay: 0.98,
-	healingPotency: 250,
+	healingPotency: [
+		["NEVER", 200],
+		["ENHANCED_HEALING_MAGIC", 250],
+	],
+	manaCost: 400,
 	onConfirm: (state) => state.gainStatus("ASPECTED_BENEFIC"),
 });
 
+makeASTSpell("BENEFIC", 2, {
+	baseCastTime: 1.5,
+	applicationDelay: 0.98,
+	healingPotency: [
+		["NEVER", 450],
+		["ENHANCED_HEALING_MAGIC", 500],
+	],
+	manaCost: 400,
+});
+
+makeASTSpell("BENEFIC_II", 26, {
+	baseCastTime: 1.5,
+	applicationDelay: 1.07,
+	healingPotency: [
+		["NEVER", 700],
+		["ENHANCED_HEALING_MAGIC", 800],
+	],
+	manaCost: 700,
+});
+
 makeASTSpell("ASPECTED_HELIOS", 40, {
-	applicationDelay: 0, // TODO
-	healingPotency: 250,
+	baseCastTime: 1.5,
+	applicationDelay: 1.07,
+	healingPotency: [
+		["NEVER", 200],
+		["ENHANCED_HEALING_MAGIC", 250],
+	],
+	aoeHeal: true,
+	manaCost: 800,
 	onConfirm: (state) => state.gainStatus("ASPECTED_HELIOS"),
 });
 
-makeASTSpell("GRAVITY", 45, {
-	applicationDelay: 0, // TODO
-	potency: 120,
-	falloff: 0,
-});
-
-makeASTSpell("COMBUST_II", 46, {
-	applicationDelay: 0, // TODO
-	onConfirm: (state) => state.gainStatus("COMBUST_II"),
-});
-
-makeASTResourceAbility("SYNASTRY", 50, "cd_SYNASTRY", {
-	rscType: "SYNASTRY",
-	applicationDelay: 0.62,
-	cooldown: 120,
-});
-
-makeASTResourceAbility("DIVINATION", 50, "cd_DIVINATION", {
-	rscType: "DIVINATION",
-	applicationDelay: 0.62,
-	cooldown: 120,
-});
-
-makeASTAbility("COLLECTIVE_UNCONSCIOUS", 58, "cd_COLLECTIVE_UNCONSCIOUS", {
-	applicationDelay: 0, // TODO
-	cooldown: 60,
-	healingPotency: 100,
-});
-
-makeASTAbility("CELESTIAL_OPPOSITION", 60, "cd_CELESTIAL_OPPOSITION", {
+makeASTSpell("HELIOS_CONJUNCTION", 96, {
+	baseCastTime: 1.5,
 	applicationDelay: 1.07,
+	healingPotency: 250,
+	aoeHeal: true,
+	manaCost: 800,
+	onConfirm: (state) => state.gainStatus("HELIOS_CONJUNCTION"),
+});
+
+makeASTSpell("HELIOS", 10, {
+	baseCastTime: 1.5,
+	applicationDelay: 1.07,
+	healingPotency: [
+		["NEVER", 300],
+		["ENHANCED_HEALING_MAGIC", 400],
+	],
+	aoeHeal: true,
+	manaCost: 700,
+});
+
+makeASTSpell("ASCEND", 12, {
+	baseCastTime: 8,
+	applicationDelay: 1.07,
+	manaCost: 2400,
+});
+
+makeASTResourceAbility("LIGHTSPEED", 6, "cd_LIGHTSPEED", {
+	rscType: "LIGHTSPEED",
+	applicationDelay: 0,
 	cooldown: 60,
-	healingPotency: 200,
+	maxCharges: 2,
 });
 
 makeASTAbility("EARTHLY_STAR", 62, "cd_EARTHLY_STAR", {
@@ -255,67 +449,167 @@ makeASTAbility("EARTHLY_STAR", 62, "cd_EARTHLY_STAR", {
 });
 
 makeASTAbility("STELLAR_DETONATION", 62, "cd_STELLAR_DETONATION", {
+	startOnHotbar: false,
 	applicationDelay: 0, // TODO
 	cooldown: 3,
 	potency: 205,
 	falloff: 0,
 	healingPotency: 540,
+	aoeHeal: true,
 });
 
-makeASTSpell("MALEFIC_III", 64, {
-	applicationDelay: 0, // TODO
-	potency: 190,
-});
-
-makeASTAbility("MINOR_ARCANA", 70, "cd_MINOR_ARCANA", {
-	applicationDelay: 0, // TODO
-	cooldown: 1,
-});
-
-makeASTSpell("COMBUST_III", 72, {
-	applicationDelay: 0.62,
-	onConfirm: (state) => state.gainStatus("COMBUST_III"),
-});
-
-makeASTSpell("MALEFIC_IV", 72, {
-	applicationDelay: 0, // TODO
-	potency: 230,
-});
-
-makeASTAbility("CELESTIAL_INTERSECTION", 74, "cd_CELESTIAL_INTERSECTION", {
-	applicationDelay: 0,
-	cooldown: 30,
-	maxCharges: 1,
-	healingPotency: 200,
-});
-
-makeASTResourceAbility("HOROSCOPE", 76, "cd_HOROSCOPE", {
-	rscType: "HOROSCOPE",
-	applicationDelay: 0, // TODO
-	cooldown: 60,
-	healingPotency: 200,
-});
-
-makeASTResourceAbility("HOROSCOPE", 76, "cd_HOROSCOPE", {
-	rscType: "HOROSCOPE",
-	applicationDelay: 0, // TODO
-	cooldown: 60,
-});
-
-makeASTAbility("NEUTRAL_SECT", 80, "cd_NEUTRAL_SECT", {
+makeASTResourceAbility("DIVINATION", 50, "cd_DIVINATION", {
+	rscType: "DIVINATION",
 	applicationDelay: 0.62,
 	cooldown: 120,
 });
 
-makeASTSpell("FALL_MALEFIC", 82, {
-	applicationDelay: 1.07,
-	potency: 270,
+makeASTAbility("ORACLE", 92, "cd_ORACLE", {
+	startOnHotbar: false,
+	applicationDelay: 1.74,
+	cooldown: 1,
 });
 
-makeASTSpell("GRAVITY_II", 82, {
-	applicationDelay: 1.16,
-	potency: 140,
+const ASTRAL_CONDITION: StatePredicate<ASTState> = (state) => state.drawnAstral();
+const UMBRAL_CONDITION: StatePredicate<ASTState> = (state) => !state.drawnAstral();
+
+const DRAW_CONFIRM: EffectFn<ASTState> = (state) =>
+	["NEXT_DRAW", "MINOR_ARCANA", "ARCANA_1", "ARCANA_2", "ARCANA_3"].forEach((rsc) =>
+		state.resources.get(rsc as ASTResourceKey).gainWrapping(1),
+	);
+
+makeASTAbility("ASTRAL_DRAW", 30, "cd_ASTRAL_DRAW", {
+	// Astral draw can only be executed if the currently drawn cards are umbral.
+	replaceIf: [
+		{
+			newSkill: "UMBRAL_DRAW",
+			condition: ASTRAL_CONDITION,
+		},
+	],
+	applicationDelay: 0,
+	cooldown: 55,
+	validateAttempt: UMBRAL_CONDITION,
+	onConfirm: DRAW_CONFIRM,
+});
+
+makeASTAbility("UMBRAL_DRAW", 30, "cd_ASTRAL_DRAW", {
+	startOnHotbar: false,
+	// Umbral draw can only be executed if the currently drawn cards are astral.
+	replaceIf: [
+		{
+			newSkill: "ASTRAL_DRAW",
+			condition: UMBRAL_CONDITION,
+		},
+	],
+	applicationDelay: 0,
+	cooldown: 55,
+	validateAttempt: ASTRAL_CONDITION,
+	onConfirm: DRAW_CONFIRM,
+});
+
+makeASTAbility("MINOR_ARCANA", 70, "cd_MINOR_ARCANA", {
+	applicationDelay: 0,
+	replaceIf: [
+		{
+			newSkill: "LORD_OF_CROWNS",
+			condition: (state) =>
+				ASTRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+		{
+			newSkill: "LADY_OF_CROWNS",
+			condition: (state) =>
+				UMBRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+	],
+	cooldown: 1,
+	validateAttempt: () => false,
+});
+
+makeASTAbility("LORD_OF_CROWNS", 70, "cd_MINOR_ARCANA", {
+	startOnHotbar: false,
+	replaceIf: [
+		{
+			newSkill: "MINOR_ARCANA",
+			condition: (state) => !state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+		{
+			newSkill: "LADY_OF_CROWNS",
+			condition: (state) =>
+				UMBRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+	],
+	applicationDelay: 0.62,
+	cooldown: 1,
+	potency: 400,
 	falloff: 0,
+	onConfirm: (state) => state.tryConsumeResource("MINOR_ARCANA"),
+});
+
+makeASTAbility("LADY_OF_CROWNS", 70, "cd_MINOR_ARCANA", {
+	startOnHotbar: false,
+	replaceIf: [
+		{
+			newSkill: "MINOR_ARCANA",
+			condition: (state) => !state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+		{
+			newSkill: "LORD_OF_CROWNS",
+			condition: (state) =>
+				ASTRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+	],
+	applicationDelay: 0.62,
+	cooldown: 1,
+	healingPotency: 400,
+	aoeHeal: true,
+	onConfirm: (state) => state.tryConsumeResource("MINOR_ARCANA"),
+});
+
+const arcanaMaker = (cd: ASTCooldownKey, rsc: ASTResourceKey, cards: ASTActionKey[]) => {
+	console.assert(cards.length === 3);
+	const replaceList: ConditionalSkillReplace<ASTState>[] = [
+		{
+			newSkill: cards[0],
+			condition: (state) => !state.hasResourceAvailable(rsc),
+		},
+		{
+			newSkill: cards[1],
+			condition: (state) => ASTRAL_CONDITION(state) && state.hasResourceAvailable(rsc),
+		},
+		{
+			newSkill: cards[2],
+			condition: (state) => UMBRAL_CONDITION(state) && state.hasResourceAvailable(rsc),
+		},
+	];
+	replaceList.forEach(({ newSkill, condition }, i) => {
+		makeASTAbility(newSkill as ASTActionKey, 30, cd, {
+			startOnHotbar: i === 0,
+			replaceIf: replaceList.toSpliced(i, 1),
+			applicationDelay: 0.62,
+			cooldown: 1,
+			validateAttempt: i === 0 ? () => false : condition,
+			onConfirm: i !== 0 ? (state) => state.tryConsumeResource(rsc) : undefined,
+			onApplication:
+				i !== 0 ? (state) => state.gainStatus(newSkill as ASTResourceKey) : undefined,
+		});
+	});
+};
+
+arcanaMaker("cd_PLAY_I", "ARCANA_1", ["PLAY_I", "THE_BALANCE", "THE_SPEAR"]);
+arcanaMaker("cd_PLAY_II", "ARCANA_2", ["PLAY_II", "THE_ARROW", "THE_BOLE"]);
+arcanaMaker("cd_PLAY_III", "ARCANA_3", ["PLAY_III", "THE_SPIRE", "THE_EWER"]);
+
+makeASTAbility("ESSENTIAL_DIGNITY", 15, "cd_ESSENTIAL_DIGNITY", {
+	applicationDelay: 0.62,
+	cooldown: 40,
+	maxCharges: 3, // set in constructor
+	healingPotency: 400,
+});
+
+makeASTResourceAbility("SYNASTRY", 50, "cd_SYNASTRY", {
+	rscType: "SYNASTRY",
+	applicationDelay: 0.62,
+	cooldown: 120,
 });
 
 makeASTResourceAbility("EXALTATION", 86, "cd_EXALTATION", {
@@ -325,81 +619,47 @@ makeASTResourceAbility("EXALTATION", 86, "cd_EXALTATION", {
 	healingPotency: 500,
 });
 
-makeASTSpell("MACROCOSMOS", 90, {
+makeASTAbility("COLLECTIVE_UNCONSCIOUS", 58, "cd_COLLECTIVE_UNCONSCIOUS", {
 	applicationDelay: 0, // TODO
-	potency: 270,
-	falloff: 0.4,
-	onConfirm: (state) => state.gainStatus("MACROCOSMOS"),
+	cooldown: 60,
 });
 
-makeASTAbility("MICROCOSMOS", 90, "cd_MICROCOSMOS", {
-	applicationDelay: 0.045,
-	cooldown: 1,
-});
-
-makeASTAbility("ORACLE", 92, "cd_ORACLE", {
-	applicationDelay: 1.74,
-	cooldown: 1,
-});
-
-makeASTSpell("HELIOS_CONJUNCTION", 96, {
+makeASTAbility("CELESTIAL_OPPOSITION", 60, "cd_CELESTIAL_OPPOSITION", {
 	applicationDelay: 1.07,
-	healingPotency: 250,
-	onConfirm: (state) => state.gainStatus("HELIOS_CONJUNCTION"),
-});
-
-makeASTResourceAbility("SUN_SIGN", 100, "cd_SUN_SIGN", {
-	rscType: "SUN_SIGN",
-	applicationDelay: 1.47,
-	cooldown: 1,
-});
-
-makeASTResourceAbility("THE_BALANCE", 30, "cd_PLAY_I", {
-	rscType: "THE_BALANCE",
-	applicationDelay: 0.62,
-	cooldown: 1,
-});
-
-makeASTResourceAbility("THE_ARROW", 30, "cd_PLAY_II", {
-	rscType: "THE_ARROW",
-	applicationDelay: 0.62,
-	cooldown: 1,
-});
-
-makeASTResourceAbility("THE_SPIRE", 30, "cd_PLAY_III", {
-	rscType: "THE_SPIRE",
-	applicationDelay: 0.62,
-	cooldown: 1,
-});
-
-makeASTResourceAbility("THE_SPEAR", 30, "cd_PLAY_I", {
-	rscType: "THE_SPEAR",
-	applicationDelay: 0, // TODO
-	cooldown: 1,
-});
-
-makeASTResourceAbility("THE_BOLE", 30, "cd_PLAY_II", {
-	rscType: "THE_BOLE",
-	applicationDelay: 0.62,
-	cooldown: 1,
-});
-
-makeASTResourceAbility("THE_EWER", 30, "cd_PLAY_III", {
-	rscType: "THE_EWER",
-	applicationDelay: 0.62,
-	cooldown: 1,
+	cooldown: 60,
 	healingPotency: 200,
 });
 
-makeASTAbility("LORD_OF_CROWNS", 70, "cd_MINOR_ARCANA", {
-	applicationDelay: 0.62,
-	cooldown: 1,
-	potency: 400,
-	falloff: 0,
+makeASTAbility("CELESTIAL_INTERSECTION", 74, "cd_CELESTIAL_INTERSECTION", {
+	applicationDelay: 0,
+	cooldown: 30,
+	maxCharges: 1,
+	healingPotency: 200,
+	aoeHeal: true,
 });
 
-makeASTAbility("LADY_OF_CROWNS", 70, "cd_MINOR_ARCANA", {
-	applicationDelay: 0.62,
+makeASTResourceAbility("HOROSCOPE", 76, "cd_HOROSCOPE", {
+	rscType: "HOROSCOPE",
+	applicationDelay: 0, // TODO
+	cooldown: 60,
+});
+
+makeASTAbility("HOROSCOPE_RECAST", 76, "cd_HOROSCOPE_RECAST", {
+	startOnHotbar: false,
+	applicationDelay: 0, // TODO
 	cooldown: 1,
-	healingPotency: 400,
+	healingPotency: 200,
+	aoeHeal: true,
+});
+
+makeASTAbility("NEUTRAL_SECT", 80, "cd_NEUTRAL_SECT", {
+	applicationDelay: 0.62,
+	cooldown: 120,
+});
+
+makeASTResourceAbility("SUN_SIGN", 100, "cd_SUN_SIGN", {
+	startOnHotbar: false,
+	rscType: "SUN_SIGN",
+	applicationDelay: 1.47,
+	cooldown: 1,
 });

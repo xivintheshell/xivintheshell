@@ -436,10 +436,6 @@ export const SGE_TRAITS = ensureRecord<TraitData>()({
 		name: "Enhanced Kerachole",
 		level: 78,
 	},
-	ENHANCED_HEALING_MAGIC: {
-		name: "Enhanced Healing Magic",
-		level: 85,
-	},
 	ENHANCED_ZOE: {
 		name: "Enhanced Zoe",
 		level: 88,

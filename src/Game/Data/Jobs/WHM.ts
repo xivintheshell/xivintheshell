@@ -330,7 +330,6 @@ export const WHM_TRAITS = ensureRecord<TraitData>()({
 	ENHANCED_ASYLUM: { name: "Enhanced Asylum", level: 78 },
 	GLARE_MASTERY: { name: "Glare Mastery", level: 82 },
 	HOLY_MASTERY: { name: "Holy Mastery", level: 82 },
-	ENHANCED_HEALING_MAGIC: { name: "Enhanced Healing Magic", level: 85 },
 	ENHANCED_DIVINE_BENISON: { name: "Enhanced Divine Benison", level: 88 },
 	ENHANCED_PRESENCE_OF_MIND: { name: "Enhanced Presence of Mind", level: 92 },
 	WHITE_MAGIC_MASTERY: { name: "White Magic Mastery", level: 94 },

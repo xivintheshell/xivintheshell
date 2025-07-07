@@ -142,6 +142,13 @@ export interface ChakraGaugeProps {
 	overflowColor: string;
 }
 
+export interface ArcanaGaugeProps {
+	kind: "arcana";
+	name: ContentNode;
+	currentArcanaColor: string;
+	activeSlots: boolean[];
+}
+
 export interface ResourceTextProps {
 	kind: "text";
 	name: ContentNode;
@@ -160,6 +167,7 @@ export type ResourceDisplayProps =
 	| NadiGaugeProps
 	| BeastGaugeProps
 	| ChakraGaugeProps
+	| ArcanaGaugeProps
 	| ResourceTextProps;
 
 // everything should be required here except that'll require repeating all those lines to give default values
@@ -206,10 +214,12 @@ function ResourceBox(props: {
 	imgUrl?: string;
 	color?: string;
 	offset?: { x: number; y: number };
+	heightPx?: number;
+	widthPx?: number;
 }) {
 	const colors = getCurrentThemeColors();
-	const width = 30;
-	const height = 24;
+	const width = props.heightPx ?? 30;
+	const height = props.widthPx ?? 24;
 
 	let inner: ContentNode | undefined = undefined;
 	if (props.imgUrl) {
@@ -290,6 +300,9 @@ function ResourceCounter(props: {
 		// else show an empty box/circle depending on containerType
 		imgUrl?: string;
 		color?: string;
+		// If containerType is "box", then these fields are used for the box element.
+		boxHeightPx?: number;
+		boxWidthPx?: number;
 	}[];
 }) {
 	// true if containerType is "box", or any item has imgUrl specified
@@ -309,6 +322,8 @@ function ResourceCounter(props: {
 				color={item.color}
 				imgUrl={item.imgUrl}
 				offset={anyBox ? { x: -2, y: 0 } : undefined}
+				heightPx={item.boxHeightPx}
+				widthPx={item.boxWidthPx}
 			/>
 		),
 	);
@@ -732,6 +747,21 @@ export function ResourcesDisplay(props: {
 						containerType={"circle"}
 						items={items}
 					/>
+				</div>;
+			}
+			case "arcana": {
+				const items: { color: string | undefined }[] = props.activeSlots.map((slot, i) => {
+					// Display minor arcana smaller than the rest
+					const h = i === props.activeSlots.length - 1 ? 18 : 20;
+					const w = i === props.activeSlots.length - 1 ? 16 : 20;
+					return {
+						color: slot ? props.currentArcanaColor : undefined,
+						boxHeightPx: h,
+						boxWidthPx: w,
+					};
+				});
+				return <div key={"resourceDisplay" + i}>
+					<ResourceCounter name={props.name} containerType={"box"} items={items} />
 				</div>;
 			}
 			default:
