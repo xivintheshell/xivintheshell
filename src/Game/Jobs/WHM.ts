@@ -239,6 +239,7 @@ const makeWHMSpell = (
 			: undefined,
 		jobHealingPotencyModifiers,
 		onConfirm: combineEffects(
+			(state) => state.tryConsumeResource("THIN_AIR"),
 			params.baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : NO_EFFECT,
 			params.onConfirm ?? NO_EFFECT,
 		),
