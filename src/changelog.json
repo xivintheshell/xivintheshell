@@ -1,5 +1,17 @@
 [
 	{
+		"date": "7/8/25",
+		"changes": [
+			"[AST] Added initial support for AST.",
+			"[WHM] Addd initial support for WHM."
+		],
+		"changes_zh": [
+			"【占星术士】 加了初步的支持。",
+			"【白魔】 加了初步的支持。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "7/5/25",
 		"changes": [
 			"[MNK] Added initial support for MNK."

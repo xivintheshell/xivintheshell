@@ -625,7 +625,7 @@ export class GameState {
 			// subtractive spectrum, starstruck, monochrome tones, rainbow drip,
 			// tempera coat/grassa, smudge can be clicked off
 			// but these buffs cannot be
-			return true;
+			return false;
 		} else {
 			// All other buffs are outright canceled.
 			// Special case for meditate: cancel future meditate ticks (assume only one active event).

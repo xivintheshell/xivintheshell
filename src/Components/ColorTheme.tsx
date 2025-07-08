@@ -189,6 +189,26 @@ export type MNKResourceColors = {
 	brotherhood: string;
 };
 
+export type WHMResourceColors = {
+	lily: string;
+	blood: string;
+	pom: string;
+	asylum: string;
+	confession: string;
+	temperance: string;
+};
+
+export type ASTResourceColors = {
+	div: string;
+	astralCard: string;
+	umbralCard: string;
+	lord: string;
+	lady: string;
+	neutral: string;
+	synastry: string;
+	arrow: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -237,6 +257,8 @@ export type ThemeColors = {
 	drk: DRKResourceColors;
 	nin: NINResourceColors;
 	mnk: MNKResourceColors;
+	whm: WHMResourceColors;
+	ast: ASTResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -470,6 +492,24 @@ const DARK_THEME_COLORS: ThemeColors = {
 		chakra: "#fffea5",
 		extraChakra: "#fe9b28",
 	},
+	whm: {
+		lily: "#d3ffff",
+		blood: "#e08889",
+		pom: "#9788e0",
+		asylum: "#b5e075",
+		confession: "#8df2e8",
+		temperance: "#77f7b7",
+	},
+	ast: {
+		div: MarkerColor.Yellow,
+		astralCard: "#52d3f7",
+		umbralCard: "#f7b3ff",
+		lord: "#de1200",
+		lady: "#f8facd",
+		neutral: "#354869",
+		synastry: "#578a7e",
+		arrow: "#1690a8",
+	},
 	timeline: {
 		ruler: "#2d2d2d",
 		tracks: "#242424",
@@ -683,6 +723,24 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		chakra: "#fee11c",
 		extraChakra: "#fe9b28",
 	},
+	whm: {
+		lily: "#a5d0e8",
+		blood: "#ff5454",
+		pom: "#9788e0",
+		asylum: "#b5e075",
+		confession: "#8df2e8",
+		temperance: "#77f7b7",
+	},
+	ast: {
+		div: MarkerColor.Yellow,
+		astralCard: "#52d3f7",
+		umbralCard: "#f7b3ff",
+		lord: "#de1200",
+		lady: "#d3d672",
+		neutral: "#354869",
+		synastry: "#578a7e",
+		arrow: "#1690a8",
+	},
 	timeline: {
 		ruler: "#e9e9e9",
 		tracks: "#f3f3f3",
@@ -783,6 +841,7 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.RIDDLE_OF_FIRE, colors.mnk.riddleOfFire],
 		[PotencyModifierType.MNK_BALL, colors.mnk.opo],
 		[PotencyModifierType.SSS_CHAKRA, colors.mnk.chakra],
+		[PotencyModifierType.DIVINATION, colors.ast.div],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

@@ -137,6 +137,14 @@ export enum BuffType {
 	Bunshin = "Bunshin",
 
 	RiddleOfFire = "Riddle of Fire",
+
+	TheArrow = "The Arrow",
+	NeutralSect = "Neutral Sect",
+	Synastry = "Synastry",
+
+	Confession = "Confession",
+	Asylum = "Asylum",
+	Temperance = "Temperance",
 }
 
 export const enum WarningType {
@@ -188,4 +196,6 @@ export const enum WarningType {
 	NinkiOvercap = "ninki gauge overcap",
 	KazematoiOvercap = "kazematoi gauge overcap",
 	RaijuOverwrite = "raiju ready overwritten",
+
+	CardOverwrite = "damage card overwritten",
 }

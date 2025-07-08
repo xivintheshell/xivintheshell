@@ -102,6 +102,16 @@ export const enum PotencyModifierType {
 	RIDDLE_OF_FIRE,
 	SSS_CHAKRA,
 	MNK_BALL,
+
+	DIVINATION,
+	NEUTRAL_SECT,
+	THE_ARROW,
+	SYNASTRY,
+
+	CONFESSION,
+	ASYLUM,
+	TEMPERANCE,
+	EXTRA_BELL_STACKS,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -523,6 +533,53 @@ export const Modifiers = {
 		kind: "multiplier",
 		source: PotencyModifierType.RIDDLE_OF_FIRE,
 		potencyFactor: 1.15,
+	} as PotencyMultiplier,
+	Divination: {
+		kind: "multiplier",
+		source: PotencyModifierType.DIVINATION,
+		potencyFactor: 1.06,
+	} as PotencyMultiplier,
+	NeutralSect: {
+		kind: "multiplier",
+		source: PotencyModifierType.NEUTRAL_SECT,
+		potencyFactor: 1.2,
+	} as PotencyMultiplier,
+	TheArrow: {
+		kind: "multiplier",
+		source: PotencyModifierType.THE_ARROW,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	Synastry: {
+		kind: "multiplier",
+		source: PotencyModifierType.SYNASTRY,
+		potencyFactor: 1.4,
+	} as PotencyMultiplier,
+	// earthly star is a pet
+	AstPet: {
+		kind: "multiplier",
+		source: PotencyModifierType.PET,
+		potencyFactor: 0.98,
+	} as PotencyMultiplier,
+	Confession: {
+		kind: "adder",
+		source: PotencyModifierType.CONFESSION,
+		additiveAmount: 200,
+	} as PotencyAdder,
+	Asylum: {
+		kind: "multiplier",
+		source: PotencyModifierType.ASYLUM,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	Temperance: {
+		kind: "multiplier",
+		source: PotencyModifierType.TEMPERANCE,
+		potencyFactor: 1.2,
+	} as PotencyMultiplier,
+	// liturgy of the bell is a pet
+	WhmPet: {
+		kind: "multiplier",
+		source: PotencyModifierType.PET,
+		potencyFactor: 0.96,
 	} as PotencyMultiplier,
 };
 

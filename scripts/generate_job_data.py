@@ -49,6 +49,7 @@ class Info:
     en: str
     zh: str | None
     max_stacks: int = 1
+    max_charges: int = 1
     timeout: int | None = None
 
 
@@ -57,89 +58,81 @@ I = Info
 # === BEGIN: YOUR CHANGES HERE ===
 # Modify the variables in this section according to the skills and statuses you wish to generate.
 
-JOB: str = "MNK"
+JOB: str = "WHM"
 # A path to a locally-saved HTML file of the English-language job guide.
 # For example, hitting ctrl/cmd-S on this link:
 # https://na.finalfantasyxiv.com/jobguide/monk/
-EN_JOB_GUIDE_HTML: str = "~/Downloads/en_mnk.html"
+EN_JOB_GUIDE_HTML: str = "~/Downloads/en_whm.html"
 # A path to a locally-saved HTML file of the Chinese-language job guide.
 # For example, hitting ctrl/cmd-S on this link:
 # https://actff1.web.sdo.com/project/20190917jobguid/index.html#/continfo/monk/pve
-ZH_JOB_GUIDE_HTML: str = "~/Downloads/zh_mnk.html"
+ZH_JOB_GUIDE_HTML: str = "~/Downloads/zh_whm.html"
 # Both job guides are assumed to have the same order of actions, which may
 # not always be the case when a patch occurs.
 
 # A path to the single-sheet CSV containing this job's application delays
 # Download from here: https://docs.google.com/spreadsheets/d/1Emevsz5_oJdmkXy23hZQUXimirZQaoo5BejSzL3hZ9I/edit?usp=drive_web&ouid=110454175060690521527
-APPLICATION_DELAY_CSV_PATH: str = "scripts/application delay DT - MELEE.csv"
+APPLICATION_DELAY_CSV_PATH: str = "scripts/application delay DT - HEALER.csv"
 
 # Action names are scraped from the job guide files. If there are any actions that should not be
 # included due to being out-leveled, list their proper English names here.
 EXCLUDE_ACTIONS: list[str] = [
-    "Steeled Meditation",
-    "Steel Peak",
-    "Inspirited Meditation",
+    "Stone",
+    "Aero",
+    "Stone II",
+    "Stone III",
 ]
 
 # Name of the last PVE action in the job guide. This makes it so we don't have to write more complicated
 # CSS selectors to tell BS4 when to stop parsing :).
-LAST_PVE_ACTION: str = "Fire's Reply"
+LAST_PVE_ACTION: str = "Divine Caress"
 
 # A list of cooldowns resources to generate.
 # Abilities can be omitted, as this script will automatically produce a cooldown object for them.
 # Any abilities that share a cooldown (or are upgrades of an earlier ability) should be entered as
 # values in the dict entry. Leave the list empty if no other abilities use the cooldown.
 COOLDOWNS: dict[str, list[str]] = {
-    "Howling Fist": ["Enlightenment"],
 }
 
 # A list of English gauge element names.
 # Their translations must manually be added.
 GAUGES: list[Info] = [
-    I("Chakra", "斗气", max_stacks=5),
-    I("Beast Chakra", "脉轮"),
-    I("Nadi", "太阴斗气/太阳斗气"),
-    I("Opo-opo's Fury", "魔猿功力"),
-    I("Raptor's Fury", "盗龙功力", max_stacks=2),
-    I("Coeurl's Fury", "猛豹功力", max_stacks=3),
+    I("Lillies", "百合", max_charges=3),
+    I("Blood Lily", "血百合", max_charges=3),
 ]
 
 # A list of buff/debuffs.
 # Their Chinese translations must manually be added.
 STATUSES: list[Info] = [
-    I("Mantra", "真言", timeout=15),
-    I("Opo-opo Form", "魔猿身形", timeout=30),
-    I("Raptor Form", "盗龙身形", timeout=30),
-    I("Coeurl Form", "猛豹身形", timeout=30),
-    I("Perfect Balance", "震脚", max_stacks=3, timeout=20),
-    I("Formless Fist", "无相身形", timeout=30),
-    I("Riddle of Earth", "金刚极意", timeout=10),
-    I("Earth's Resolve", "金刚决意", timeout=15),
-    I("Earth's Rumination", "金刚周天预备", timeout=30),
-    I("Riddle of Fire", "红莲极意", timeout=20),
-    I("Fire's Rumination", "乾坤斗气弹预备", timeout=20),
-    I("Brotherhood", "义结金兰", timeout=20),
-    I("Meditative Brotherhood", "义结金兰：斗气", timeout=20),
-    I("Riddle of Wind", "疾风极意", timeout=15),
-    I("Wind's Rumination", "绝空拳预备", timeout=15),
-    I("Six-sided Star", "六合星导脚", timeout=5),
+    I("Presence of Mind", "神速咏唱", timeout=15),
+    I("Sacred Sight", "闪飒预备", timeout=30, max_stacks=3),
+    I("Regen", "再生", timeout=18),
+    I("Aero II", "烈风", timeout=30),
+    I("Medica II", "医济", timeout=15),
+    I("Asylum", "庇护所", timeout=24),
+    I("Thin Air", "无中生有", timeout=12),
+    I("Divine Benison", "神祝祷", timeout=15),
+    I("Confession", "全大赦", timeout=10),
+    I("Dia", "天辉", timeout=30),
+    I("Temperance", "节制", timeout=20),
+    I("Divine Grace", "神爱抚预备", timeout=30),
+    I("Aquaveil", "水流幕", timeout=8),
+    I("Liturgy of the Bell", "礼仪之铃", timeout=20, max_stacks=5),
+    I("Medica III", "医养", timeout=15),
+    I("Divine Caress", "神爱抚", timeout=10),
+    I("Divine Aura", "神爱环", timeout=15),
 ]
 
 # A list of tracker abilities that don't necessarily correspond to any real in-game buffs.
 # Their translations must manually be added.
 TRACKERS: list[Info] = [
-    I("Beast Chakra 1", "脉轮1"),
-    I("Beast Chakra 2", "脉轮2"),
-    I("Beast Chakra 3", "脉轮3"),
-    I("Nadi 1", "太阴斗气/太阳斗气1"),
-    I("Nadi 2", "太阴斗气/太阳斗气1"),
 ]
 
 # Traits are automatically scraped.
 # We need to specify the first and last trait of interest so I don't need to write more complex scraping code
 # to filter PVP actions.
-FIRST_TRAIT = "Deep Meditation II"
-LAST_TRAIT = "Enhanced Riddle of Fire"
+FIRST_TRAIT = "Aero Mastery II"
+LAST_TRAIT = "Enhanced Temperance"
 
 # === END: YOUR CHANGES HERE ===
 
@@ -424,8 +417,9 @@ def generate_action_makefn(arg: tuple[int, SkillAPIInfo]):
         "ResourceAbility" if name in status_names and is_ability else s.category
     )
     if is_ability:
+        cd_name = shared_cd_mapping.get(name, name).replace("'", "")
         sb.append(
-            f'make{JOB}{constructor}("{allcaps_name}", {s.unlock_level}, "cd_{proper_case_to_allcaps_name(name)}", {{'
+            f'make{JOB}{constructor}("{allcaps_name}", {s.unlock_level}, "cd_{proper_case_to_allcaps_name(cd_name)}", {{'
         )
     else:
         sb.append(f'make{JOB}{constructor}("{allcaps_name}", {s.unlock_level}, {{')
@@ -488,6 +482,7 @@ COOLDOWNS_DECL_BLOCK = textwrap.indent(
             },
             **COOLDOWNS,
         }
+        if name not in shared_cd_mapping
     ),
     "\t",
 )
@@ -512,7 +507,10 @@ for info in STATUSES:
             },
         )
         r.raise_for_status()
-        blob = json.loads(r.text)["results"][0]
+        body = json.loads(r.text)
+        if len(body["results"]) == 0:
+            raise ValueError(f"xivapi returned no data for {name}, check the buff name and try again")
+        blob = body["results"][0]
         icon_id = blob["fields"]["Icon"]["id"]
         icon_path = blob["fields"]["Icon"]["path_hr1"]
         ja_name = blob["fields"]["Name@lang(ja)"]
@@ -540,12 +538,14 @@ for info in STATUSES:
 def data_decl_from_info(info: Info) -> str:
     fields = {}
     if info.max_stacks > 1:
-        fields["maximumCharges"] = info.max_stacks
+        fields["maximumStacks"] = info.max_stacks
+    if info.max_charges > 1:
+        fields["maximumCharges"] = info.max_charges
     if info.zh is not None:
         fields["label"] = f'{{ zh: "{info.zh}" }}'
     return (
         f'{proper_case_to_allcaps_name(info.en)}: {{ name: "{info.en}"'
-        + (f', {{ {", ".join(f'{k}: {v}' for k, v in fields.items())} }}' if fields else "")
+        + (f', {", ".join(f'{k}: {v}' for k, v in fields.items())}' if fields else "")
         + " },"
     )
 
