@@ -260,7 +260,7 @@ const makeWHMAbility = (
 		maxCharges?: number;
 		potency?: number;
 		falloff?: number;
-		healingPotency?: number;
+		healingPotency?: number | ResourceCalculationFn<WHMState>;
 		animationLock?: number;
 		isPetHeal?: boolean;
 		highlightIf?: StatePredicate<WHMState>;
@@ -293,7 +293,18 @@ const makeWHMResourceAbility = (
 	cdName: WHMCooldownKey,
 	params: MakeResourceAbilityParams<WHMState>,
 ): Ability<WHMState> => {
-	return makeResourceAbility("WHM", name, unlockLevel, cdName, params);
+	const jobHealingPotencyModifiers: PotencyModifierFn<WHMState> = (state) => {
+		if (!params.healingPotency) {
+			return [];
+		}
+		const modifiers: PotencyModifier[] = [];
+		state.addHealingActionPotencyModifiers(modifiers);
+		return modifiers;
+	};
+	return makeResourceAbility("WHM", name, unlockLevel, cdName, {
+		...params,
+		jobHealingPotencyModifiers,
+	});
 };
 
 makeWHMSpell("STONE_IV", 64, {
@@ -728,7 +739,8 @@ makeWHMAbility("LITURGY_POP", 90, "cd_LITURGY_POP", {
 	applicationDelay: 0,
 	cooldown: 1,
 	isPetHeal: true,
-	healingPotency: 212, // 212 per stack, too lazy to model
+	// TODO make this a potency modifier
+	healingPotency: (state) => 212 * state.resources.get("LITURGY_OF_THE_BELL").availableAmount(),
 	validateAttempt: (state) => state.hasResourceAvailable("LITURGY_OF_THE_BELL"),
 	highlightIf: (state) => state.hasResourceAvailable("LITURGY_OF_THE_BELL"),
 	onConfirm: (state) => state.tryConsumeResource("LITURGY_OF_THE_BELL", true),

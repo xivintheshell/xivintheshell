@@ -406,7 +406,12 @@ export const AST_STATUSES = ensureRecord<ResourceData>()({
 	SYNASTRY: { name: "Synastry", label: { zh: "星位合图" } },
 	DIVINATION: { name: "Divination", label: { zh: "占卜" } },
 	DIVINING: { name: "Divining", label: { zh: "神谕预备" } },
-	WHEEL_OF_FORTUNE: { name: "Wheel of Fortune", label: { zh: "命运之轮" } },
+	COLLECTIVE_UNCONSCIOUS: { name: "Collective Unconscious", label: { zh: "命运之轮" } },
+	COLLECTIVE_UNCONSCIOUS_MIT: {
+		name: "Collective Unconscious (Mitigation)",
+		label: { zh: "命运之轮（减伤）" },
+	},
+	WHEEL_OF_FORTUNE: { name: "Wheel of Fortune", label: { zh: "命运之轮（恢复）" } },
 	OPPOSITION: { name: "Opposition", label: { zh: "天星冲日" } },
 	EARTHLY_DOMINANCE: { name: "Earthly Dominance", label: { zh: "地星主宰" } },
 	GIANT_DOMINANCE: { name: "Giant Dominance", label: { zh: "巨星主宰" } },
