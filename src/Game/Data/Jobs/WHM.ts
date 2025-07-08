@@ -303,7 +303,7 @@ export const WHM_STATUSES = ensureRecord<ResourceData>()({
 	REGEN: { name: "Regen", label: { zh: "再生" } },
 	AERO_II: { name: "Aero II", label: { zh: "烈风" } },
 	MEDICA_II: { name: "Medica II", label: { zh: "医济" } },
-	ASYLUM: { name: "Asylum", label: { zh: "庇护所" } },
+	ASYLUM: { name: "Asylum", mayBeToggled: true, label: { zh: "庇护所" } },
 	THIN_AIR: { name: "Thin Air", label: { zh: "无中生有" } },
 	DIVINE_BENISON: { name: "Divine Benison", label: { zh: "神祝祷" } },
 	CONFESSION: { name: "Confession", label: { zh: "全大赦" } },
@@ -314,6 +314,7 @@ export const WHM_STATUSES = ensureRecord<ResourceData>()({
 	LITURGY_OF_THE_BELL: {
 		name: "Liturgy of the Bell",
 		maximumStacks: 5,
+		mayNotBeCanceled: true,
 		label: { zh: "礼仪之铃" },
 	},
 	MEDICA_III: { name: "Medica III", label: { zh: "医养" } },

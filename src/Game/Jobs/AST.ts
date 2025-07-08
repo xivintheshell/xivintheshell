@@ -234,12 +234,14 @@ const makeASTSpell = (
 			? (state) => (state.hasResourceAvailable("DIVINATION") ? [Modifiers.Divination] : [])
 			: undefined,
 		castTime: (state) =>
-			state.config.adjustedCastTime(
-				Math.max(
-					0,
+			Math.max(
+				0,
+				state.config.adjustedCastTime(
 					state.hasResourceAvailable("LIGHTSPEED") ? baseCastTime - 2.5 : baseCastTime,
 				),
 			),
+		recastTime: (state) => state.config.adjustedGCD(2.5),
+		isInstantFn: (state) => !params.baseCastTime || state.hasResourceAvailable("SWIFTCAST"),
 		// swiftcast is used if lightspeed is active
 		onConfirm: combineEffects(
 			baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : NO_EFFECT,
@@ -256,21 +258,29 @@ const makeASTAbility = (
 ): Ability<ASTState> => {
 	return makeAbility("AST", name, unlockLevel, cdName, {
 		...params,
-		jobHealingPotencyModifiers: (state) => {
-			if (!params.healingPotency) {
-				return [];
-			}
-			const modifiers: PotencyModifier[] = [];
-			if (state.hasResourceAvailable("THE_ARROW")) {
-				modifiers.push(Modifiers.TheArrow);
-			}
-			if (name === "STELLAR_DETONATION") {
-				modifiers.push(Modifiers.AstPet);
-			}
-			return modifiers;
-		},
+		jobHealingPotencyModifiers: params.healingPotency
+			? (state) => {
+					const modifiers: PotencyModifier[] = [];
+					if (state.hasResourceAvailable("THE_ARROW")) {
+						modifiers.push(Modifiers.TheArrow);
+					}
+					if (name === "STELLAR_DETONATION") {
+						modifiers.push(Modifiers.AstPet);
+					}
+					return modifiers;
+				}
+			: undefined,
 		jobPotencyModifiers: params.potency
-			? (state) => (state.hasResourceAvailable("DIVINATION") ? [Modifiers.Divination] : [])
+			? (state) => {
+					const modifiers: PotencyModifier[] = [];
+					if (state.hasResourceAvailable("DIVINATION")) {
+						modifiers.push(Modifiers.Divination);
+					}
+					if (name === "STELLAR_DETONATION") {
+						modifiers.push(Modifiers.AstPet);
+					}
+					return modifiers;
+				}
 			: undefined,
 	});
 };
@@ -374,6 +384,10 @@ makeASTSpell("COMBUST_III", 72, {
 });
 
 makeASTSpell("GRAVITY", 45, {
+	autoUpgrade: {
+		otherSkill: "GRAVITY_II",
+		trait: "GRAVITY_MASTERY",
+	},
 	baseCastTime: 1.5,
 	applicationDelay: 1.16,
 	potency: 120,
@@ -382,6 +396,10 @@ makeASTSpell("GRAVITY", 45, {
 });
 
 makeASTSpell("GRAVITY_II", 82, {
+	autoDowngrade: {
+		otherSkill: "GRAVITY",
+		trait: "GRAVITY_MASTERY",
+	},
 	baseCastTime: 1.5,
 	applicationDelay: 1.16,
 	potency: [
@@ -456,6 +474,10 @@ makeASTSpell("BENEFIC_II", 26, {
 });
 
 makeASTSpell("ASPECTED_HELIOS", 40, {
+	autoUpgrade: {
+		otherSkill: "HELIOS_CONJUNCTION",
+		trait: "ASPECTED_HELIOS_MASTERY",
+	},
 	baseCastTime: 1.5,
 	applicationDelay: 1.07,
 	healingPotency: [
@@ -486,6 +508,10 @@ makeASTSpell("ASPECTED_HELIOS", 40, {
 });
 
 makeASTSpell("HELIOS_CONJUNCTION", 96, {
+	autoDowngrade: {
+		otherSkill: "ASPECTED_HELIOS",
+		trait: "ASPECTED_HELIOS_MASTERY",
+	},
 	baseCastTime: 1.5,
 	applicationDelay: 1.07,
 	healingPotency: 250,
@@ -534,6 +560,152 @@ makeASTSpell("ASCEND", 12, {
 	manaCost: 2400,
 });
 
+const ASTRAL_CONDITION: StatePredicate<ASTState> = (state) => state.drawnAstral();
+const UMBRAL_CONDITION: StatePredicate<ASTState> = (state) => !state.drawnAstral();
+
+const DRAW_CONFIRM: EffectFn<ASTState> = (state) => {
+	if (
+		state.hasResourceAvailable("ARCANA_1") ||
+		(state.drawnAstral() && state.hasResourceAvailable("MINOR_ARCANA"))
+	) {
+		controller.reportWarning(WarningType.CardOverwrite);
+	}
+	state.resources.get("NEXT_DRAW").gainWrapping(1);
+	["MINOR_ARCANA", "ARCANA_1", "ARCANA_2", "ARCANA_3"].forEach((rsc) =>
+		state.resources.get(rsc as ASTResourceKey).gain(1),
+	);
+};
+const DRAW_APPLY: EffectFn<ASTState> = (state) => state.resources.get("MANA").gain(2000);
+
+makeASTAbility("ASTRAL_DRAW", 30, "cd_ASTRAL_DRAW", {
+	// Astral draw can only be executed if the currently drawn cards are umbral.
+	replaceIf: [
+		{
+			newSkill: "UMBRAL_DRAW",
+			condition: ASTRAL_CONDITION,
+		},
+	],
+	applicationDelay: 0,
+	cooldown: 55,
+	validateAttempt: UMBRAL_CONDITION,
+	onConfirm: DRAW_CONFIRM,
+	onApplication: DRAW_APPLY,
+});
+
+makeASTAbility("UMBRAL_DRAW", 30, "cd_ASTRAL_DRAW", {
+	startOnHotbar: false,
+	// Umbral draw can only be executed if the currently drawn cards are astral.
+	replaceIf: [
+		{
+			newSkill: "ASTRAL_DRAW",
+			condition: UMBRAL_CONDITION,
+		},
+	],
+	applicationDelay: 0,
+	cooldown: 55,
+	validateAttempt: ASTRAL_CONDITION,
+	onConfirm: DRAW_CONFIRM,
+	onApplication: DRAW_APPLY,
+});
+
+const arcanaMaker = (cd: ASTCooldownKey, rsc: ASTResourceKey, cards: ASTActionKey[]) => {
+	console.assert(cards.length === 3);
+	const replaceList: ConditionalSkillReplace<ASTState>[] = [
+		{
+			newSkill: cards[0],
+			condition: (state) => !state.hasResourceAvailable(rsc),
+		},
+		{
+			newSkill: cards[1],
+			condition: (state) => ASTRAL_CONDITION(state) && state.hasResourceAvailable(rsc),
+		},
+		{
+			newSkill: cards[2],
+			condition: (state) => UMBRAL_CONDITION(state) && state.hasResourceAvailable(rsc),
+		},
+	];
+	replaceList.forEach(({ newSkill, condition }, i) => {
+		// manual stand-in for toSpliced, available in ES2023
+		const newReplace = replaceList.slice();
+		newReplace.splice(i, 1);
+		makeASTAbility(newSkill as ASTActionKey, 30, cd, {
+			startOnHotbar: i === 0,
+			replaceIf: newReplace,
+			applicationDelay: 0.62,
+			cooldown: 1,
+			validateAttempt: i === 0 ? () => false : condition,
+			onConfirm: i !== 0 ? (state) => state.tryConsumeResource(rsc) : undefined,
+			onApplication:
+				i !== 0 ? (state) => state.gainStatus(newSkill as ASTResourceKey) : undefined,
+		});
+	});
+};
+
+arcanaMaker("cd_PLAY_I", "ARCANA_1", ["PLAY_I", "THE_BALANCE", "THE_SPEAR"]);
+arcanaMaker("cd_PLAY_II", "ARCANA_2", ["PLAY_II", "THE_ARROW", "THE_BOLE"]);
+arcanaMaker("cd_PLAY_III", "ARCANA_3", ["PLAY_III", "THE_SPIRE", "THE_EWER"]);
+
+makeASTAbility("MINOR_ARCANA", 70, "cd_MINOR_ARCANA", {
+	applicationDelay: 0,
+	replaceIf: [
+		{
+			newSkill: "LORD_OF_CROWNS",
+			condition: (state) =>
+				ASTRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+		{
+			newSkill: "LADY_OF_CROWNS",
+			condition: (state) =>
+				UMBRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+	],
+	cooldown: 1,
+	validateAttempt: () => false,
+});
+
+makeASTAbility("LORD_OF_CROWNS", 70, "cd_MINOR_ARCANA", {
+	startOnHotbar: false,
+	replaceIf: [
+		{
+			newSkill: "MINOR_ARCANA",
+			condition: (state) => !state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+		{
+			newSkill: "LADY_OF_CROWNS",
+			condition: (state) =>
+				UMBRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+	],
+	applicationDelay: 0.62,
+	cooldown: 1,
+	potency: 400,
+	falloff: 0,
+	onConfirm: (state) => state.tryConsumeResource("MINOR_ARCANA"),
+});
+
+makeASTAbility("LADY_OF_CROWNS", 70, "cd_MINOR_ARCANA", {
+	startOnHotbar: false,
+	replaceIf: [
+		{
+			newSkill: "MINOR_ARCANA",
+			condition: (state) => !state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+		{
+			newSkill: "LORD_OF_CROWNS",
+			condition: (state) =>
+				ASTRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
+		},
+	],
+	applicationDelay: 0.62,
+	cooldown: 1,
+	healingPotency: 400,
+	aoeHeal: true,
+	onConfirm: (state) => state.tryConsumeResource("MINOR_ARCANA"),
+});
+
+// Even though I personally would want to put lightspeed + div + star in front of cards, this ordering
+// allows all 3 cards + the minor arcana to remain on the same hotbar row.
+
 makeASTResourceAbility("LIGHTSPEED", 6, "cd_LIGHTSPEED", {
 	rscType: "LIGHTSPEED",
 	applicationDelay: 0,
@@ -552,7 +724,7 @@ makeASTAbility("EARTHLY_STAR", 62, "cd_EARTHLY_STAR", {
 			newSkill: "STELLAR_DETONATION",
 			condition: (state) =>
 				state.hasResourceAvailable("EARTHLY_DOMINANCE") ||
-				state.hasResourceAvailable("EARTHLY_DOMINANCE"),
+				state.hasResourceAvailable("GIANT_DOMINANCE"),
 		},
 	],
 	onConfirm: (state, node) => {
@@ -655,143 +827,6 @@ makeASTAbility("ORACLE", 92, "cd_ORACLE", {
 	onConfirm: (state) => state.tryConsumeResource("DIVINING"),
 });
 
-const ASTRAL_CONDITION: StatePredicate<ASTState> = (state) => state.drawnAstral();
-const UMBRAL_CONDITION: StatePredicate<ASTState> = (state) => !state.drawnAstral();
-
-const DRAW_CONFIRM: EffectFn<ASTState> = (state) => {
-	if (
-		state.hasResourceAvailable("ARCANA_1") ||
-		(state.drawnAstral() && state.hasResourceAvailable("MINOR_ARCANA"))
-	) {
-		controller.reportWarning(WarningType.CardOverwrite);
-	}
-	state.resources.get("NEXT_DRAW").gainWrapping(1);
-	["MINOR_ARCANA", "ARCANA_1", "ARCANA_2", "ARCANA_3"].forEach((rsc) =>
-		state.resources.get(rsc as ASTResourceKey).gain(1),
-	);
-};
-
-makeASTAbility("ASTRAL_DRAW", 30, "cd_ASTRAL_DRAW", {
-	// Astral draw can only be executed if the currently drawn cards are umbral.
-	replaceIf: [
-		{
-			newSkill: "UMBRAL_DRAW",
-			condition: ASTRAL_CONDITION,
-		},
-	],
-	applicationDelay: 0,
-	cooldown: 55,
-	validateAttempt: UMBRAL_CONDITION,
-	onConfirm: DRAW_CONFIRM,
-});
-
-makeASTAbility("UMBRAL_DRAW", 30, "cd_ASTRAL_DRAW", {
-	startOnHotbar: false,
-	// Umbral draw can only be executed if the currently drawn cards are astral.
-	replaceIf: [
-		{
-			newSkill: "ASTRAL_DRAW",
-			condition: UMBRAL_CONDITION,
-		},
-	],
-	applicationDelay: 0,
-	cooldown: 55,
-	validateAttempt: ASTRAL_CONDITION,
-	onConfirm: DRAW_CONFIRM,
-});
-
-const arcanaMaker = (cd: ASTCooldownKey, rsc: ASTResourceKey, cards: ASTActionKey[]) => {
-	console.assert(cards.length === 3);
-	const replaceList: ConditionalSkillReplace<ASTState>[] = [
-		{
-			newSkill: cards[0],
-			condition: (state) => !state.hasResourceAvailable(rsc),
-		},
-		{
-			newSkill: cards[1],
-			condition: (state) => ASTRAL_CONDITION(state) && state.hasResourceAvailable(rsc),
-		},
-		{
-			newSkill: cards[2],
-			condition: (state) => UMBRAL_CONDITION(state) && state.hasResourceAvailable(rsc),
-		},
-	];
-	replaceList.forEach(({ newSkill, condition }, i) => {
-		makeASTAbility(newSkill as ASTActionKey, 30, cd, {
-			startOnHotbar: i === 0,
-			replaceIf: replaceList.toSpliced(i, 1),
-			applicationDelay: 0.62,
-			cooldown: 1,
-			validateAttempt: i === 0 ? () => false : condition,
-			onConfirm: i !== 0 ? (state) => state.tryConsumeResource(rsc) : undefined,
-			onApplication:
-				i !== 0 ? (state) => state.gainStatus(newSkill as ASTResourceKey) : undefined,
-		});
-	});
-};
-
-arcanaMaker("cd_PLAY_I", "ARCANA_1", ["PLAY_I", "THE_BALANCE", "THE_SPEAR"]);
-arcanaMaker("cd_PLAY_II", "ARCANA_2", ["PLAY_II", "THE_ARROW", "THE_BOLE"]);
-arcanaMaker("cd_PLAY_III", "ARCANA_3", ["PLAY_III", "THE_SPIRE", "THE_EWER"]);
-
-makeASTAbility("MINOR_ARCANA", 70, "cd_MINOR_ARCANA", {
-	applicationDelay: 0,
-	replaceIf: [
-		{
-			newSkill: "LORD_OF_CROWNS",
-			condition: (state) =>
-				ASTRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
-		},
-		{
-			newSkill: "LADY_OF_CROWNS",
-			condition: (state) =>
-				UMBRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
-		},
-	],
-	cooldown: 1,
-	validateAttempt: () => false,
-});
-
-makeASTAbility("LORD_OF_CROWNS", 70, "cd_MINOR_ARCANA", {
-	startOnHotbar: false,
-	replaceIf: [
-		{
-			newSkill: "MINOR_ARCANA",
-			condition: (state) => !state.hasResourceAvailable("MINOR_ARCANA"),
-		},
-		{
-			newSkill: "LADY_OF_CROWNS",
-			condition: (state) =>
-				UMBRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
-		},
-	],
-	applicationDelay: 0.62,
-	cooldown: 1,
-	potency: 400,
-	falloff: 0,
-	onConfirm: (state) => state.tryConsumeResource("MINOR_ARCANA"),
-});
-
-makeASTAbility("LADY_OF_CROWNS", 70, "cd_MINOR_ARCANA", {
-	startOnHotbar: false,
-	replaceIf: [
-		{
-			newSkill: "MINOR_ARCANA",
-			condition: (state) => !state.hasResourceAvailable("MINOR_ARCANA"),
-		},
-		{
-			newSkill: "LORD_OF_CROWNS",
-			condition: (state) =>
-				ASTRAL_CONDITION(state) && state.hasResourceAvailable("MINOR_ARCANA"),
-		},
-	],
-	applicationDelay: 0.62,
-	cooldown: 1,
-	healingPotency: 400,
-	aoeHeal: true,
-	onConfirm: (state) => state.tryConsumeResource("MINOR_ARCANA"),
-});
-
 makeASTAbility("ESSENTIAL_DIGNITY", 15, "cd_ESSENTIAL_DIGNITY", {
 	applicationDelay: 0.62,
 	cooldown: 40,
@@ -883,6 +918,12 @@ makeASTResourceAbility("NEUTRAL_SECT", 80, "cd_NEUTRAL_SECT", {
 	rscType: "NEUTRAL_SECT",
 	applicationDelay: 0.62,
 	cooldown: 120,
+	replaceIf: [
+		{
+			newSkill: "SUN_SIGN",
+			condition: (state) => state.hasResourceAvailable("SUNTOUCHED"),
+		},
+	],
 	onConfirm: (state) => state.gainStatus("SUNTOUCHED"),
 });
 

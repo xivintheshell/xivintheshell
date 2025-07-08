@@ -1800,7 +1800,7 @@ class Controller {
 	}
 
 	requestToggleBuff(buffName: ResourceKey) {
-		const success = this.game.requestToggleBuff(buffName); // currently always succeeds
+		const success = this.game.requestToggleBuff(buffName);
 		if (!success) return false;
 
 		const toggleNode = setResourceNode(buffName);

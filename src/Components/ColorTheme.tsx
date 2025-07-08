@@ -841,6 +841,7 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.RIDDLE_OF_FIRE, colors.mnk.riddleOfFire],
 		[PotencyModifierType.MNK_BALL, colors.mnk.opo],
 		[PotencyModifierType.SSS_CHAKRA, colors.mnk.chakra],
+		[PotencyModifierType.DIVINATION, colors.ast.div],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),
