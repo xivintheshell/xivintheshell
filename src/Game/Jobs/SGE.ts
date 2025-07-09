@@ -7,7 +7,7 @@ import { Aspect, BuffType } from "../Common";
 import { RESOURCES } from "../Data";
 import { SGEResourceKey, SGEActionKey, SGECooldownKey } from "../Data/Jobs/SGE";
 import { GameConfig } from "../GameConfig";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { Modifiers, Potency, PotencyModifier } from "../Potency";
 import {
 	CoolDown,
@@ -181,7 +181,7 @@ export class SGEState extends GameState {
 		recurringAddersgallGain(this.resources.get("ADDERSGALL"));
 	}
 
-	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("AUTOPHYSIS")) {
 			node.addBuff(BuffType.Autophysis);
 		}

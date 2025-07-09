@@ -30,7 +30,7 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { makeResource, Event } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
@@ -156,7 +156,7 @@ export class PLDState extends GameState {
 		return new PLDStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("FIGHT_OR_FLIGHT")) {
 			node.addBuff(BuffType.FightOrFlight);
 		}

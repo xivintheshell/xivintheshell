@@ -7,7 +7,7 @@ import { RPRResourceKey, RPRActionKey, RPRCooldownKey } from "../Data/Jobs/RPR";
 import { CommonActionKey } from "../Data/Shared/Common";
 import { RoleActionKey } from "../Data/Shared/Role";
 import { GameConfig } from "../GameConfig";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, makeResource } from "../Resources";
 import {
@@ -97,7 +97,7 @@ export class RPRState extends GameState {
 		return new RPRStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("ARCANE_CIRCLE")) {
 			node.addBuff(BuffType.ArcaneCircle);
 		}

@@ -19,7 +19,7 @@ import {
 	Spell,
 	StatePredicate,
 } from "../Skills";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { makeResource, CoolDown, Event, Resource } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { localize } from "../../Components/Localization";
@@ -137,7 +137,7 @@ export class BLMState extends GameState {
 		recurringPolyglotGain(this.resources.get("POLYGLOT"));
 	}
 
-	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("LEY_LINES") && skill.cdName === "cd_GCD") {
 			node.addBuff(BuffType.LeyLines);
 		}
@@ -560,11 +560,11 @@ makeSpell_BLM("BLIZZARD", 1, {
 	],
 });
 
-const gainFirestarterProc = (state: PlayerState) => {
+const gainFirestarterProc = (state: GameState) => {
 	state.resources.get("FIRESTARTER").gain(1);
 };
 
-const potentiallyGainFirestarter = (game: PlayerState) => {
+const potentiallyGainFirestarter = (game: GameState) => {
 	const rand = game.rng();
 	if (
 		game.config.procMode === ProcMode.Always ||

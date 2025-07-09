@@ -19,7 +19,7 @@ import {
 	Spell,
 	StatePredicate,
 } from "../Skills";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { makeResource, CoolDown, Event, OverTimeBuff } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
@@ -155,7 +155,7 @@ export class SMNState extends GameState {
 		return new SMNStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("SEARING_LIGHT")) {
 			node.addBuff(BuffType.SearingLight);
 		}

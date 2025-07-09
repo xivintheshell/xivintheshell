@@ -175,7 +175,7 @@ export class GameState {
 		this.autoAttackDelay = 2.5; // defaults to 2.5
 	}
 
-	get statusPropsGenerator(): StatusPropsGenerator<PlayerState> {
+	get statusPropsGenerator(): StatusPropsGenerator<GameState> {
 		return new StatusPropsGenerator(this);
 	}
 
@@ -425,9 +425,9 @@ export class GameState {
 	jobSpecificOnResolveHotTick(_hotResource: ResourceKey) {}
 
 	// Job code may override to handle adding buff covers for the timeline
-	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
-	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
-	jobSpecificAddHealingBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
+	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<GameState>) {}
+	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<GameState>) {}
+	jobSpecificAddHealingBuffCovers(_node: ActionNode, _skill: Skill<GameState>) {}
 
 	maybeCancelChanneledSkills(nextSkillName: ActionKey) {
 		const nextSkill = this.skillsList.get(nextSkillName);
@@ -791,7 +791,7 @@ export class GameState {
 	 *
 	 */
 	refreshAutoBasedOnSkill(
-		skill: Spell<PlayerState> | Weaponskill<PlayerState>,
+		skill: Spell<GameState> | Weaponskill<GameState>,
 		capturedCastTime: number,
 		doesDamage: boolean,
 	) {
@@ -891,7 +891,7 @@ export class GameState {
 	 * it performs the confirmation immediately.
 	 */
 	useSpellOrWeaponskill(
-		skill: Spell<PlayerState> | Weaponskill<PlayerState>,
+		skill: Spell<GameState> | Weaponskill<GameState>,
 		node: ActionNode,
 		actionIndex: number,
 	) {
@@ -1103,7 +1103,7 @@ export class GameState {
 	 * Because abilities have no cast time, this function snapshots potencies and enqueues the
 	 * application event immediately.
 	 */
-	useAbility(skill: Ability<PlayerState>, node: ActionNode) {
+	useAbility(skill: Ability<GameState>, node: ActionNode) {
 		console.assert(node);
 		const cd = this.cooldowns.get(skill.cdName);
 		// potency
@@ -1253,7 +1253,7 @@ export class GameState {
 	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
 	 * it performs the confirmation immediately.
 	 */
-	useLimitBreak(skill: LimitBreak<PlayerState>, node: ActionNode, actionIndex: number) {
+	useLimitBreak(skill: LimitBreak<GameState>, node: ActionNode, actionIndex: number) {
 		const cd = this.cooldowns.get(skill.cdName);
 
 		const capturedCastTime = skill.castTimeFn(this);
@@ -1893,8 +1893,3 @@ export class GameState {
 		return this.job === "BLM";
 	}
 }
-
-// TODO if we ever support multiple jobs running in parallel, then we will need to move a lot of
-// elements out onto per-player state.
-// This type alias is placed here for now to make this possible future refactor easier.
-export type PlayerState = GameState;

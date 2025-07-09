@@ -7,7 +7,7 @@ import { Debug, BuffType, WarningType } from "../Common";
 import { TraitKey } from "../Data";
 import { BRDResourceKey, BRDActionKey, BRDCooldownKey } from "../Data/Jobs/BRD";
 import { GameConfig } from "../GameConfig";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, makeResource, Event } from "../Resources";
 import {
@@ -106,7 +106,7 @@ export class BRDState extends GameState {
 		return new BRDStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("RAGING_STRIKES")) {
 			node.addBuff(BuffType.RagingStrikes);
 		}

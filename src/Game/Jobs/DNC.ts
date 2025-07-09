@@ -6,7 +6,7 @@ import { BuffType, ProcMode, WarningType } from "../Common";
 import { TraitKey } from "../Data";
 import { DNCResourceKey, DNCActionKey, DNCCooldownKey } from "../Data/Jobs/DNC";
 import { GameConfig } from "../GameConfig";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, getResourceInfo, makeResource, Resource, ResourceInfo } from "../Resources";
 import {
@@ -107,7 +107,7 @@ export class DNCState extends GameState {
 		return new DNCStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("TECHNICAL_FINISH")) {
 			node.addBuff(BuffType.TechnicalFinish);
 		}

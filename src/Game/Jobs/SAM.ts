@@ -21,7 +21,7 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { makeResource, CoolDown, Event, EventTag } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { localizeResourceType } from "../../Components/Localization";
@@ -109,7 +109,7 @@ export class SAMState extends GameState {
 		return this.hasTraitUnlocked("ENHANCED_FUGETSU_AND_FUKA") ? 13 : 10;
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("ENHANCED_ENPI") && skill.name === "ENPI") {
 			node.addBuff(BuffType.EnhancedEnpi);
 		}
@@ -118,7 +118,7 @@ export class SAMState extends GameState {
 		}
 	}
 
-	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("FUKA") && skill.cdName === "cd_GCD") {
 			node.addBuff(BuffType.Fuka);
 		}

@@ -7,7 +7,7 @@ import { BuffType, ProcMode } from "../Common";
 import { TraitKey } from "../Data";
 import { WHMActionKey, WHMCooldownKey, WHMResourceKey } from "../Data/Jobs/WHM";
 import { GameConfig } from "../GameConfig";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { Modifiers, PotencyModifier } from "../Potency";
 import { makeResource, CoolDown } from "../Resources";
 import {
@@ -138,7 +138,7 @@ export class WHMState extends GameState {
 		}
 	}
 
-	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasTraitUnlocked("ENHANCED_ASYLUM") && this.hasResourceAvailable("ASYLUM")) {
 			node.addBuff(BuffType.Asylum);
 		}

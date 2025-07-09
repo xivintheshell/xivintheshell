@@ -19,7 +19,7 @@ import {
 	Spell,
 	StatePredicate,
 } from "../Skills";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { getResourceInfo, makeResource, CoolDown, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
@@ -103,13 +103,13 @@ export class PCTState extends GameState {
 		return new PCTStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("STARRY_MUSE")) {
 			node.addBuff(BuffType.StarryMuse);
 		}
 	}
 
-	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (
 			this.hasResourceAvailable("INSPIRATION") &&
 			HYPERPHANTASIA_SKILLS.includes(skill.name as PCTActionKey)

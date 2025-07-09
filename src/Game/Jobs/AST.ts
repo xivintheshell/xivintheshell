@@ -8,7 +8,7 @@ import { Aspect, BuffType, WarningType } from "../Common";
 import { TraitKey } from "../Data";
 import { ASTActionKey, ASTCooldownKey, ASTResourceKey } from "../Data/Jobs/AST";
 import { GameConfig } from "../GameConfig";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { Modifiers, Potency, PotencyModifier } from "../Potency";
 import { makeResource, CoolDown } from "../Resources";
 import {
@@ -162,7 +162,7 @@ export class ASTState extends GameState {
 		this.tryConsumeResource("COLLECTIVE_UNCONSCIOUS");
 	}
 
-	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (skill.cdName === "cd_GCD" && this.hasResourceAvailable("NEUTRAL_SECT")) {
 			node.addBuff(BuffType.NeutralSect);
 		}
@@ -174,7 +174,7 @@ export class ASTState extends GameState {
 		}
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("DIVINATION")) {
 			node.addBuff(BuffType.Divination);
 		}
