@@ -105,6 +105,10 @@ export class SAMState extends GameState {
 		return new SAMStatusPropsGenerator(this);
 	}
 
+	override inherentSpeedModifier(): number {
+		return this.hasTraitUnlocked("ENHANCED_FUGETSU_AND_FUKA") ? 13 : 10;
+	}
+
 	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
 		if (this.hasResourceAvailable("ENHANCED_ENPI") && skill.name === "ENPI") {
 			node.addBuff(BuffType.EnhancedEnpi);
@@ -140,7 +144,7 @@ export class SAMState extends GameState {
 			return 0;
 		}
 
-		return this.hasTraitUnlocked("ENHANCED_FUGETSU_AND_FUKA") ? 13 : 10;
+		return this.inherentSpeedModifier();
 	}
 
 	// Return true if the active combo buff is up, or meikyo is active.

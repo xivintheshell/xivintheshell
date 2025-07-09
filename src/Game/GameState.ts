@@ -412,6 +412,11 @@ export class GameState {
 		}
 	}
 
+	// Inherent haste modifiers that are always active on the job. This is only used in GCD previews.
+	inherentSpeedModifier(): number | undefined {
+		return undefined;
+	}
+
 	// Job code may override to handle setting up any job-specific recurring events, such as BLM's Polyglot timer
 	jobSpecificRegisterRecurringEvents() {}
 

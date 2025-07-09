@@ -118,6 +118,10 @@ export class NINState extends GameState {
 		}
 	}
 
+	override inherentSpeedModifier(): number {
+		return 15;
+	}
+
 	override get statusPropsGenerator(): StatusPropsGenerator<NINState> {
 		return new NINStatusPropsGenerator(this);
 	}
@@ -301,7 +305,7 @@ const makeNINWeaponskill = (
 	return makeWeaponskill("NIN", name, unlockLevel, {
 		...params,
 		// NIN gets a 15% haste reduction
-		recastTime: (state) => state.config.adjustedSksGCD(2.5, 15),
+		recastTime: (state) => state.config.adjustedSksGCD(2.5, state.inherentSpeedModifier()),
 		validateAttempt: validateWithTCJ(params.validateAttempt),
 		onConfirm: combineEffects(
 			bunny,

@@ -28,7 +28,6 @@ import {
 import { SerializedConfig } from "../Game/GameConfig";
 import { XIVMath } from "../Game/XIVMath";
 import { FaCheck } from "react-icons/fa6";
-import { SAMState } from "../Game/Jobs/SAM";
 import {
 	ShellJob,
 	JOBS,
@@ -58,7 +57,7 @@ function getTableStyle(bgHighContrastColor: string) {
 }
 
 // helper that prob won't be used elsewhere
-function getTaxPreview(level: LevelSync, baseCastTime: number, spsStr: string, fpsStr: string) {
+function getCastTaxPreview(level: LevelSync, baseCastTime: number, spsStr: string, fpsStr: string) {
 	const sps = parseFloat(spsStr);
 	const fps = parseFloat(fpsStr);
 	if (isNaN(sps) || isNaN(fps)) {
@@ -285,14 +284,12 @@ export function ConfigSummary(props: { job: ShellJob; dirty: boolean }) {
 			<Help topic={"dotTickOffset"} content={offsetDesc} />: {dotTickOffset}
 		</div>}
 
-		{props.job === "SAM" && <>
-			<div>
-				{localize({ en: "Fuka GCD", zh: "风花GCD" })}:{" "}
-				{controller.gameConfig
-					.adjustedSksGCD(2.5, (controller.game as SAMState).getFukaModifier())
-					.toFixed(2)}
-			</div>
-		</>}
+		{props.job === "MNK" && <div>
+			{localize({ en: "SSS GCD", zh: "六合星GCD" })}:{" "}
+			{controller.gameConfig
+				.adjustedSksGCD(5, controller.game.inherentSpeedModifier())
+				.toFixed(2)}
+		</div>}
 
 		{props.job === "BLM" ? (
 			// TODO modify for PCT and other jobs
@@ -623,8 +620,8 @@ export class Config extends React.Component {
 		};
 
 		this.updateTaxPreview = (spsStr: string, fpsStr: string, levelStr: string) => {
-			const b1TaxPreview = getTaxPreview(parseFloat(levelStr), 2.5, spsStr, fpsStr);
-			const { gcdStr, taxedGcdStr } = this.getTaxPreview(spsStr, fpsStr, levelStr);
+			const b1TaxPreview = getCastTaxPreview(parseFloat(levelStr), 2.5, spsStr, fpsStr);
+			const { gcdStr, taxedGcdStr } = this.getGcdTaxPreview(spsStr, fpsStr, levelStr);
 
 			this.setState({
 				b1TaxPreview: b1TaxPreview,
@@ -634,7 +631,13 @@ export class Config extends React.Component {
 		};
 
 		this.updateSksTaxPreview = (sksStr: string, fpsStr: string, levelStr: string) => {
-			const { gcdStr, taxedGcdStr } = this.getTaxPreview(sksStr, fpsStr, levelStr);
+			// TODO: This code does not correctly apply new haste modifiers if the job is changed.
+			const { gcdStr, taxedGcdStr } = this.getGcdTaxPreview(
+				sksStr,
+				fpsStr,
+				levelStr,
+				controller.game.inherentSpeedModifier(),
+			);
 
 			this.setState({
 				sksGcdPreview: gcdStr,
@@ -900,10 +903,11 @@ export class Config extends React.Component {
 		};
 	}
 
-	private getTaxPreview(
+	private getGcdTaxPreview(
 		speedStr: string,
 		fpsStr: string,
 		levelStr: string,
+		speedModifier?: number,
 	): { gcdStr: string; taxedGcdStr: string } {
 		const level = parseFloat(levelStr);
 		const speed = parseFloat(speedStr);
@@ -915,7 +919,7 @@ export class Config extends React.Component {
 			gcdStr = "n/a";
 			taxedGcdStr = "n/a";
 		} else {
-			const gcd = XIVMath.preTaxGcd(level as LevelSync, speed, 2.5);
+			const gcd = XIVMath.preTaxGcd(level as LevelSync, speed, 2.5, speedModifier);
 			gcdStr = gcd.toFixed(2);
 			taxedGcdStr = XIVMath.afterFpsTax(fps, gcd).toFixed(3);
 		}
@@ -946,12 +950,18 @@ export class Config extends React.Component {
 		updateConfigDisplay = (config) => {
 			this.setState(config);
 			const spsGcd = XIVMath.preTaxGcd(config.level, config.spellSpeed, 2.5);
-			const sksGcd = XIVMath.preTaxGcd(config.level, config.skillSpeed, 2.5);
+			const { gcdStr: sksGcdPreview, taxedGcdStr: taxedSksGcdPreview } =
+				this.getGcdTaxPreview(
+					config.skillSpeed.toString(),
+					config.fps.toString(),
+					config.level.toString(),
+					controller.game.inherentSpeedModifier(),
+				);
 			this.setState({
 				dirty: false,
 				imported: false,
 				importedFields: [],
-				b1TaxPreview: getTaxPreview(
+				b1TaxPreview: getCastTaxPreview(
 					config.level,
 					2.5,
 					`${config.spellSpeed}`,
@@ -959,8 +969,8 @@ export class Config extends React.Component {
 				),
 				gcdPreview: spsGcd.toFixed(2),
 				taxedGcdPreview: XIVMath.afterFpsTax(config.fps, spsGcd).toFixed(3),
-				sksGcdPreview: sksGcd.toFixed(2),
-				sksTaxedGcdPreview: XIVMath.afterFpsTax(config.fps, sksGcd).toFixed(3),
+				sksGcdPreview,
+				taxedSksGcdPreview,
 				selectedOverrideResource: this.#getFirstAddable(config.initialResourceOverrides),
 			});
 			refreshConfigSummary();
@@ -1398,19 +1408,27 @@ export class Config extends React.Component {
 					</tr>
 					<tr>
 						<td>2.8</td>
-						<td>{getTaxPreview(level, 2.8, this.state.spellSpeed, this.state.fps)}</td>
+						<td>
+							{getCastTaxPreview(level, 2.8, this.state.spellSpeed, this.state.fps)}
+						</td>
 					</tr>
 					<tr>
 						<td>3.0</td>
-						<td>{getTaxPreview(level, 3.0, this.state.spellSpeed, this.state.fps)}</td>
+						<td>
+							{getCastTaxPreview(level, 3.0, this.state.spellSpeed, this.state.fps)}
+						</td>
 					</tr>
 					<tr>
 						<td>3.5</td>
-						<td>{getTaxPreview(level, 3.5, this.state.spellSpeed, this.state.fps)}</td>
+						<td>
+							{getCastTaxPreview(level, 3.5, this.state.spellSpeed, this.state.fps)}
+						</td>
 					</tr>
 					<tr>
 						<td>4.0</td>
-						<td>{getTaxPreview(level, 4.0, this.state.spellSpeed, this.state.fps)}</td>
+						<td>
+							{getCastTaxPreview(level, 4.0, this.state.spellSpeed, this.state.fps)}
+						</td>
 					</tr>
 				</tbody>
 			</table>
@@ -1569,8 +1587,8 @@ export class Config extends React.Component {
 								</p>
 								<p>
 									{localize({
-										en: `Measured average GCD should be ${this.state.taxedGcdPreview} due to FPS tax`,
-										zh: `由于帧率税的影响，测量得到的平均GCD为${this.state.taxedGcdPreview}`,
+										en: `Measured average GCD should be ${this.state.taxedGcdPreview} due to FPS tax.`,
+										zh: `由于帧率税的影响，测量得到的平均GCD为${this.state.taxedGcdPreview}。`,
 									})}
 								</p>
 							</>
@@ -1601,8 +1619,8 @@ export class Config extends React.Component {
 								</p>
 								<p>
 									{localize({
-										en: `Measured average GCD should be ${this.state.taxedSksGcdPreview} due to FPS tax`,
-										zh: `由于帧率税的影响，测量得到的平均GCD为${this.state.taxedSksGcdPreview}`,
+										en: `Measured average GCD should be ${this.state.taxedSksGcdPreview} due to FPS tax.`,
+										zh: `由于帧率税的影响，测量得到的平均GCD为${this.state.taxedSksGcdPreview}。`,
 									})}
 								</p>
 							</>
