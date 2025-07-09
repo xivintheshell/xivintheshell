@@ -3,7 +3,7 @@
 import { MNKStatusPropsGenerator } from "../../Components/Jobs/MNK";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, ProcMode } from "../Common";
+import { BuffType } from "../Common";
 import { TraitKey } from "../Data";
 import { MNKActionKey, MNKCooldownKey, MNKResourceKey } from "../Data/Jobs/MNK";
 import { GameConfig } from "../GameConfig";
@@ -145,11 +145,7 @@ export class MNKState extends GameState {
 			// This generation will usually be a slight over-estimate because most party members will have
 			// a 2.5s GCD.
 			for (let i = 0; i < this.resources.get("PARTY_SIZE").availableAmount() - 1; i++) {
-				const partyRand = this.rng();
-				if (
-					this.config.procMode === ProcMode.Always ||
-					(this.config.procMode === ProcMode.RNG && partyRand < 0.2)
-				) {
+				if (this.triggersEffect(0.2, true)) {
 					this.gainChakra();
 				}
 			}
@@ -165,20 +161,13 @@ export class MNKState extends GameState {
 		// There are 2 layers of RNG at play. After learning "Deep Meditation II", chakra is always
 		// gained on a crit, so we roll against the crit chance of the ability does not auto-crit.
 		// If that trait is not learned, there is an 80% chance to gain a chakra.
-		const rand = this.rng();
 		const critChance = autoCrit ? 1 : this.config.critRate;
-		if (
-			autoCrit ||
-			this.config.procMode === ProcMode.Always ||
-			(this.config.procMode === ProcMode.RNG && rand < critChance)
-		) {
+		// Do not inline this triggers check, as it is stateful and advances the RNG.
+		const didCrit = this.triggersEffect(critChance, true);
+		if (autoCrit || didCrit) {
 			const chakraChance = this.hasTraitUnlocked("DEEP_MEDITATION_II") ? 1 : 0.8;
-			const rand2 = this.rng();
-			if (
-				chakraChance === 1 ||
-				this.config.procMode === ProcMode.Always ||
-				(this.config.procMode === ProcMode.RNG && rand2 < chakraChance)
-			) {
+			const triggersChakra = this.triggersEffect(chakraChance);
+			if (chakraChance === 1 || triggersChakra) {
 				this.gainChakra();
 			}
 		}

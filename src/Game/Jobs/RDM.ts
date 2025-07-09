@@ -1,7 +1,7 @@
 // Skill and state declarations for RDM.
 
 import { controller } from "../../Controller/Controller";
-import { Aspect, BuffType, ProcMode, WarningType } from "../Common";
+import { Aspect, BuffType, WarningType } from "../Common";
 import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -208,13 +208,7 @@ export class RDMState extends GameState {
 	}
 
 	maybeGainVerproc(proc: "VERFIRE_READY" | "VERSTONE_READY", chance: number = 0.5) {
-		const rand = this.rng();
-		if (
-			this.config.procMode === ProcMode.Always ||
-			(this.config.procMode === ProcMode.RNG && rand < chance)
-		) {
-			this.gainVerproc(proc);
-		}
+		this.maybeGainProc(proc, chance, true);
 	}
 
 	// Advance the appropriate combo resources (RDMMeleeCounter, RDMFinisherCounter, RDMAoECounter)

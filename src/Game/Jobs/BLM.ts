@@ -2,7 +2,7 @@
 
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, BuffType, Debug, ProcMode, WarningType } from "../Common";
+import { Aspect, BuffType, Debug, WarningType } from "../Common";
 import { PotencyModifierType, PotencyMultiplier } from "../Potency";
 import {
 	Ability,
@@ -558,20 +558,6 @@ makeSpell_BLM("BLIZZARD", 1, {
 	],
 });
 
-const gainFirestarterProc = (state: GameState) => {
-	state.resources.get("FIRESTARTER").gain(1);
-};
-
-const potentiallyGainFirestarter = (game: GameState) => {
-	const rand = game.rng();
-	if (
-		game.config.procMode === ProcMode.Always ||
-		(game.config.procMode === ProcMode.RNG && rand < 0.4)
-	) {
-		gainFirestarterProc(game);
-	}
-};
-
 makeSpell_BLM("FIRE", 2, {
 	aspect: Aspect.Fire,
 	baseCastTime: 2,
@@ -580,7 +566,9 @@ makeSpell_BLM("FIRE", 2, {
 	applicationDelay: 1.871,
 	onConfirm: (state, node) => {
 		// Refresh Enochian and gain a UI stack at the cast confirm window, not the damage application.
-		potentiallyGainFirestarter(state);
+		if (state.triggersEffect(0.4, true)) {
+			state.gainStatus("FIRESTARTER");
+		}
 		if (state.getIceStacks() === 0) {
 			// in fire or no enochian
 			state.switchToAForUI("ASTRAL_FIRE", 1);
@@ -962,7 +950,7 @@ makeSpell_BLM("PARADOX", 90, {
 	onConfirm: (state, node) => {
 		state.resources.get("PARADOX").consume(1);
 		if (state.getFireStacks() > 0) {
-			gainFirestarterProc(state);
+			state.gainStatus("FIRESTARTER");
 		} else if (state.getIceStacks() === 0) {
 			console.error("cannot cast Paradox outside of AF/UI");
 		}

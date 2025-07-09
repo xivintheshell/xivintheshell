@@ -3,7 +3,7 @@
 import { WHMStatusPropsGenerator } from "../../Components/Jobs/WHM";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, ProcMode } from "../Common";
+import { BuffType } from "../Common";
 import { TraitKey } from "../Data";
 import { WHMActionKey, WHMCooldownKey, WHMResourceKey } from "../Data/Jobs/WHM";
 import { GameConfig } from "../GameConfig";
@@ -486,16 +486,7 @@ makeWHMSpell("CURE", 2, {
 	],
 	baseCastTime: 1.5,
 	manaCost: 400,
-	onConfirm: (state) => {
-		const rand = state.rng();
-		const chance = 0.15;
-		if (
-			state.config.procMode === ProcMode.Always ||
-			(state.config.procMode === ProcMode.RNG && rand < chance)
-		) {
-			state.gainStatus("FREECURE");
-		}
-	},
+	onConfirm: (state) => state.maybeGainProc("FREECURE", 0.15),
 });
 
 makeWHMSpell("CURE_II", 30, {

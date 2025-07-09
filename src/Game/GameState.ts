@@ -479,23 +479,30 @@ export class GameState {
 		}
 	}
 
-	maybeGainProc(proc: ResourceKey, chance: number = 0.5) {
-		if (!this.triggersEffect(chance)) {
+	/**
+	 * Check if a random effect would be triggered.
+	 *
+	 * The `alwaysRoll` parameter exists for backwards compatibility; some implementations that didn't use
+	 * this helper function would always trigger a prng call regardless of if ProcMode was set to Always.
+	 */
+	maybeGainProc(proc: ResourceKey, chance: number = 0.5, alwaysRoll: boolean = false) {
+		if (!this.triggersEffect(chance, alwaysRoll)) {
 			return;
 		}
 
 		this.gainStatus(proc);
 	}
 
-	triggersEffect(chance: number): boolean {
+	triggersEffect(chance: number, alwaysRoll: boolean = false): boolean {
 		if (this.config.procMode === ProcMode.Never) {
 			return false;
 		}
+		const preRoll = alwaysRoll ? this.rng() : undefined;
 		if (this.config.procMode === ProcMode.Always) {
 			return true;
 		}
 
-		const rand = this.rng();
+		const rand = preRoll ?? this.rng();
 		return rand < chance;
 	}
 
@@ -1023,7 +1030,7 @@ export class GameState {
 			}
 
 			// Perform additional side effects
-			skill.onConfirm?.(this, node);
+			skill.onConfirm(this, node);
 
 			// Enqueue effect application
 			this.addEvent(
@@ -1037,7 +1044,7 @@ export class GameState {
 					if (healingPotency) {
 						controller.resolveHealingPotency(healingPotency);
 					}
-					skill.onApplication?.(this, node);
+					skill.onApplication(this, node);
 				}),
 			);
 
@@ -1202,7 +1209,7 @@ export class GameState {
 			this.resources.get("MANA").consume(manaCost);
 		}
 
-		skill.onConfirm?.(this, node);
+		skill.onConfirm(this, node);
 
 		if (potency && !this.hasResourceAvailable("IN_COMBAT")) {
 			const combatStart = this.resources.timeTillReady("IN_COMBAT");
@@ -1227,7 +1234,7 @@ export class GameState {
 					if (healingPotency) {
 						controller.resolveHealingPotency(healingPotency);
 					}
-					skill.onApplication?.(this, node);
+					skill.onApplication(this, node);
 				}),
 			);
 		} else {
@@ -1237,7 +1244,7 @@ export class GameState {
 			if (healingPotency) {
 				controller.resolveHealingPotency(healingPotency);
 			}
-			skill.onApplication?.(this, node);
+			skill.onApplication(this, node);
 		}
 
 		// recast
@@ -1304,7 +1311,7 @@ export class GameState {
 		 */
 		const onLimitBreakConfirm = () => {
 			// Perform additional side effects
-			skill.onConfirm?.(this, node);
+			skill.onConfirm(this, node);
 
 			// potency
 			if (potency) {
@@ -1323,7 +1330,7 @@ export class GameState {
 					if (healingPotency) {
 						controller.resolveHealingPotency(healingPotency);
 					}
-					skill.onApplication?.(this, node);
+					skill.onApplication(this, node);
 				}),
 			);
 

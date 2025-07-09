@@ -44,6 +44,9 @@ export type StatePredicate<T> = (state: Readonly<T>) => boolean;
 export type EffectFn<T> = (state: T, node: ActionNode) => void;
 export type PotencyModifierFn<T> = (state: Readonly<T>) => PotencyModifier[];
 
+// empty function
+export function NO_EFFECT<T extends GameState>(state: T, node: ActionNode) {}
+
 /**
  * Create a new EffectFn that performs f1 followed by each function in fs.
  */
@@ -148,14 +151,14 @@ interface BaseSkill<T extends GameState> {
 	//
 	// Universal effects like MP consumption and queueing the damage application event should not
 	// be specified here, and are automatically handled in GameState.useSkill.
-	readonly onConfirm?: EffectFn<T>;
+	readonly onConfirm: EffectFn<T>;
 
 	// Perform events at skill application. This function should always be called `applicationDelay`
 	// simulation seconds after `onConfirm`, assuming `onConfirm` did not produce any errors.
 	//
 	// Universal effects like damage application should not be specified here, and are automatically
 	// handled in GameState.useSkill.
-	readonly onApplication?: EffectFn<T>;
+	readonly onApplication: EffectFn<T>;
 
 	// The simulation delay, in seconds, between which `onConfirm` and `onApplication` are called.
 	readonly applicationDelay: number;
@@ -426,7 +429,7 @@ export function makeSpell<T extends GameState>(
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
 		onExecute,
-		onConfirm: params.onConfirm,
+		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
 		startsAuto: params.startsAuto ?? false,
@@ -485,7 +488,7 @@ export function makeWeaponskill<T extends GameState>(
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
 		onExecute,
-		onConfirm: params.onConfirm,
+		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
 		startsAuto: params.startsAuto ?? true,
@@ -573,7 +576,7 @@ export function makeAbility<T extends GameState>(
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt,
 		onExecute,
-		onConfirm: params.onConfirm,
+		onConfirm: params.onConfirm ?? NO_EFFECT,
 		onApplication,
 		startsAuto: params.startsAuto ?? false,
 	};
@@ -694,8 +697,8 @@ export function makeLimitBreak<T extends GameState>(
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		onExecute,
-		onConfirm: params.onConfirm,
-		onApplication: params.onApplication,
+		onConfirm: params.onConfirm ?? NO_EFFECT,
+		onApplication: params.onApplication ?? NO_EFFECT,
 		startsAuto: false,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));
