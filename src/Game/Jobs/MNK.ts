@@ -207,6 +207,10 @@ export class MNKState extends GameState {
 		}
 	}
 
+	override inherentSpeedModifier(): number {
+		return this.hasTraitUnlocked("ENHANCED_GREASED_LIGHTNING_III") ? 20 : 15;
+	}
+
 	override get statusPropsGenerator(): StatusPropsGenerator<MNKState> {
 		return new MNKStatusPropsGenerator(this);
 	}
@@ -273,10 +277,7 @@ const makeMNKWeaponskill = (
 		validateAttempt: (state) =>
 			(formCondition?.(state) ?? true) && (params.validateAttempt?.(state) ?? true),
 		recastTime: (state) =>
-			state.config.adjustedSksGCD(
-				params.recastTime ?? 2.5,
-				state.hasTraitUnlocked("ENHANCED_GREASED_LIGHTNING_III") ? 20 : 15,
-			),
+			state.config.adjustedSksGCD(params.recastTime ?? 2.5, state.inherentSpeedModifier()),
 		onConfirm: combineEffects(
 			params.onConfirm ?? NO_EFFECT,
 			name !== "SIX_SIDED_STAR" && params.potency
