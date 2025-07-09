@@ -3,11 +3,13 @@
 		"date": "7/8/25",
 		"changes": [
 			"[AST] Added initial support for AST.",
-			"[WHM] Addd initial support for WHM."
+			"[WHM] Addd initial support for WHM.",
+			"[SAM][NIN][MNK] GCD calculations in the configuration panel now account for jobs' natural speed buffs."
 		],
 		"changes_zh": [
 			"【占星术士】 加了初步的支持。",
-			"【白魔】 加了初步的支持。"
+			"【白魔】 加了初步的支持。",
+			"【武士】【忍者】【武僧】属性设置里的GCD现在会使用职业固有的复唱时间缩短。"
 		],
 		"level": "major"
 	},
