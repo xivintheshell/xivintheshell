@@ -13,7 +13,6 @@ import {
 	makeResourceAbility,
 	makeSpell,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	Skill,
 	SkillAutoReplace,
 	Spell,
@@ -381,12 +380,11 @@ const makeSpell_BLM = (
 				state.gainUmbralMana(params.applicationDelay);
 			}
 		},
-		params.onConfirm ?? NO_EFFECT,
+		params.onConfirm,
 	);
-	const onApplication: EffectFn<BLMState> = params.onApplication ?? NO_EFFECT;
 	return makeSpell("BLM", name, unlockLevel, {
 		...params,
-		aspect: aspect,
+		aspect,
 		castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime, aspect),
 		recastTime: (state) =>
 			state.config.adjustedGCD(2.5, state.hasResourceAvailable("LEY_LINES") ? 15 : 0),
@@ -404,8 +402,8 @@ const makeSpell_BLM = (
 			state.hasResourceAvailable("SWIFTCAST") ||
 			// Triple
 			state.hasResourceAvailable("TRIPLECAST"),
-		onConfirm: onConfirm,
-		onApplication: onApplication,
+		onConfirm,
+		onApplication: params.onApplication,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyMultiplier[] = [];
 			if (state.hasResourceAvailable("ENOCHIAN")) {

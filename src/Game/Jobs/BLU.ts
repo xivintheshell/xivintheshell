@@ -11,7 +11,6 @@ import {
 	makeAbility,
 	makeSpell,
 	CooldownGroupProperties,
-	NO_EFFECT,
 	ResourceCalculationFn,
 	PotencyModifierFn,
 	Spell,
@@ -211,10 +210,7 @@ const makeBLUSpell = (
 	const baseCastTime = params.baseCastTime ?? 0;
 	const onConfirm: EffectFn<BLUState> | undefined =
 		baseCastTime > 0
-			? combineEffects(
-					(state) => state.tryConsumeResource("SWIFTCAST"),
-					params.onConfirm ?? NO_EFFECT,
-				)
+			? combineEffects((state) => state.tryConsumeResource("SWIFTCAST"), params.onConfirm)
 			: params.onConfirm;
 	const jobPotencyMod: PotencyModifierFn<BLUState> =
 		params.jobPotencyModifiers ?? ((state) => []);

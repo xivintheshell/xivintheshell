@@ -13,7 +13,6 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
-	NO_EFFECT,
 	Skill,
 	SkillAutoReplace,
 	Spell,
@@ -389,10 +388,7 @@ const makeSpell_SMN = (
 	const baseRecastTime = params.baseRecastTime ?? 2.5;
 	const onConfirm: EffectFn<SMNState> | undefined =
 		baseCastTime > 0
-			? combineEffects(
-					(state) => state.tryConsumeResource("SWIFTCAST"),
-					params.onConfirm ?? NO_EFFECT,
-				)
+			? combineEffects((state) => state.tryConsumeResource("SWIFTCAST"), params.onConfirm)
 			: params.onConfirm;
 	return makeSpell("SMN", name, unlockLevel, {
 		...params,

@@ -1,6 +1,6 @@
 import { Aspect, LevelSync } from "./Common";
 import { ActionNode } from "../Controller/Record";
-import { GameState, GameState } from "./GameState";
+import { GameState } from "./GameState";
 import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
 import { PotencyModifier } from "./Potency";
 import { ShellJob, ALL_JOBS } from "./Data/Jobs";
@@ -44,20 +44,21 @@ export type StatePredicate<T> = (state: Readonly<T>) => boolean;
 export type EffectFn<T> = (state: T, node: ActionNode) => void;
 export type PotencyModifierFn<T> = (state: Readonly<T>) => PotencyModifier[];
 
-// empty function
-export function NO_EFFECT<T extends GameState>(state: T, node: ActionNode) {}
-
 /**
  * Create a new EffectFn that performs f1 followed by each function in fs.
  */
 export function combineEffects<T extends GameState>(
-	f1: EffectFn<T>,
-	...fs: Array<EffectFn<T>>
+	f1: EffectFn<T> | undefined,
+	...fs: Array<EffectFn<T> | undefined>
 ): EffectFn<T> {
 	return (state: T, node: ActionNode) => {
-		f1(state, node);
+		if (f1 !== undefined) {
+			f1(state, node);
+		}
 		for (const fn of fs) {
-			fn(state, node);
+			if (fn !== undefined) {
+				fn(state, node);
+			}
 		}
 	};
 }
@@ -147,14 +148,14 @@ interface BaseSkill<T extends GameState> {
 	//
 	// Universal effects like MP consumption and queueing the damage application event should not
 	// be specified here, and are automatically handled in GameState.useSkill.
-	readonly onConfirm: EffectFn<T>;
+	readonly onConfirm?: EffectFn<T>;
 
 	// Perform events at skill application. This function should always be called `applicationDelay`
 	// simulation seconds after `onConfirm`, assuming `onConfirm` did not produce any errors.
 	//
 	// Universal effects like damage application should not be specified here, and are automatically
 	// handled in GameState.useSkill.
-	readonly onApplication: EffectFn<T>;
+	readonly onApplication?: EffectFn<T>;
 
 	// The simulation delay, in seconds, between which `onConfirm` and `onApplication` are called.
 	readonly applicationDelay: number;
@@ -390,11 +391,11 @@ export function makeSpell<T extends GameState>(
 	}
 	const onApplication: EffectFn<T> = combineEffects(
 		(state, node) => (node.applicationTime = state.time),
-		params.onApplication ?? NO_EFFECT,
+		params.onApplication,
 	);
 	const onExecute: EffectFn<T> = combineEffects(
 		(state) => state.maybeCancelChanneledSkills(name),
-		params.onExecute ?? NO_EFFECT,
+		params.onExecute,
 	);
 	const info: Spell<T> = {
 		kind: "spell",
@@ -425,7 +426,7 @@ export function makeSpell<T extends GameState>(
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => false), // Spells should be assumed to have a cast time unless otherwise specified
 		onExecute,
-		onConfirm: params.onConfirm ?? NO_EFFECT,
+		onConfirm: params.onConfirm,
 		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
 		startsAuto: params.startsAuto ?? false,
@@ -449,11 +450,11 @@ export function makeWeaponskill<T extends GameState>(
 	}
 	const onApplication: EffectFn<T> = combineEffects(
 		(state, node) => (node.applicationTime = state.time),
-		params.onApplication ?? NO_EFFECT,
+		params.onApplication,
 	);
 	const onExecute: EffectFn<T> = combineEffects(
 		(state) => state.maybeCancelChanneledSkills(name),
-		params.onExecute ?? NO_EFFECT,
+		params.onExecute,
 	);
 	const info: Weaponskill<T> = {
 		kind: "weaponskill",
@@ -484,7 +485,7 @@ export function makeWeaponskill<T extends GameState>(
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		isInstantFn: params.isInstantFn ?? ((state) => true), // Weaponskills should be assumed to be instant unless otherwise specified
 		onExecute,
-		onConfirm: params.onConfirm ?? NO_EFFECT,
+		onConfirm: params.onConfirm,
 		onApplication,
 		applicationDelay: params.applicationDelay ?? 0,
 		startsAuto: params.startsAuto ?? true,
@@ -533,11 +534,11 @@ export function makeAbility<T extends GameState>(
 	}
 	const onApplication: EffectFn<T> = combineEffects(
 		(state, node) => (node.applicationTime = state.time),
-		params.onApplication ?? NO_EFFECT,
+		params.onApplication,
 	);
 	const onExecute: EffectFn<T> = combineEffects(
 		(state) => state.maybeCancelChanneledSkills(name),
-		params.onExecute ?? NO_EFFECT,
+		params.onExecute,
 	);
 	// All abilities that require being in combat should check isInCombat
 	const validateAttempt: StatePredicate<T> = combinePredicatesAnd(
@@ -572,7 +573,7 @@ export function makeAbility<T extends GameState>(
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt,
 		onExecute,
-		onConfirm: params.onConfirm ?? NO_EFFECT,
+		onConfirm: params.onConfirm,
 		onApplication,
 		startsAuto: params.startsAuto ?? false,
 	};
@@ -619,7 +620,7 @@ export function makeResourceAbility<T extends GameState>(
 			typeof duration === "number" ? (state: T) => duration : duration;
 		resource.gain(resource.maxValue);
 		state.enqueueResourceDrop(params.rscType, durationFn(state));
-	}, params?.onApplication ?? NO_EFFECT);
+	}, params?.onApplication);
 	return makeAbility(jobs, name, unlockLevel, cdName, {
 		...params,
 		onApplication,
@@ -666,7 +667,7 @@ export function makeLimitBreak<T extends GameState>(
 	const assetName = "Limit Break " + params.tier;
 	const onExecute: EffectFn<T> = combineEffects(
 		(state) => state.maybeCancelChanneledSkills(name),
-		params.onExecute ?? NO_EFFECT,
+		params.onExecute,
 	);
 	const info: LimitBreak<T> = {
 		kind: "limitbreak",
@@ -693,8 +694,8 @@ export function makeLimitBreak<T extends GameState>(
 		applicationDelay: params.applicationDelay ?? 0,
 		validateAttempt: params.validateAttempt ?? ((state) => true),
 		onExecute,
-		onConfirm: params.onConfirm ?? NO_EFFECT,
-		onApplication: params.onApplication ?? NO_EFFECT,
+		onConfirm: params.onConfirm,
+		onApplication: params.onApplication,
 		startsAuto: false,
 	};
 	jobs.forEach((job) => setSkill(job, info.name, info));

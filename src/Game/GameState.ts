@@ -1023,7 +1023,7 @@ export class GameState {
 			}
 
 			// Perform additional side effects
-			skill.onConfirm(this, node);
+			skill.onConfirm?.(this, node);
 
 			// Enqueue effect application
 			this.addEvent(
@@ -1037,7 +1037,7 @@ export class GameState {
 					if (healingPotency) {
 						controller.resolveHealingPotency(healingPotency);
 					}
-					skill.onApplication(this, node);
+					skill.onApplication?.(this, node);
 				}),
 			);
 
@@ -1202,7 +1202,7 @@ export class GameState {
 			this.resources.get("MANA").consume(manaCost);
 		}
 
-		skill.onConfirm(this, node);
+		skill.onConfirm?.(this, node);
 
 		if (potency && !this.hasResourceAvailable("IN_COMBAT")) {
 			const combatStart = this.resources.timeTillReady("IN_COMBAT");
@@ -1227,7 +1227,7 @@ export class GameState {
 					if (healingPotency) {
 						controller.resolveHealingPotency(healingPotency);
 					}
-					skill.onApplication(this, node);
+					skill.onApplication?.(this, node);
 				}),
 			);
 		} else {
@@ -1237,7 +1237,7 @@ export class GameState {
 			if (healingPotency) {
 				controller.resolveHealingPotency(healingPotency);
 			}
-			skill.onApplication(this, node);
+			skill.onApplication?.(this, node);
 		}
 
 		// recast
@@ -1304,7 +1304,7 @@ export class GameState {
 		 */
 		const onLimitBreakConfirm = () => {
 			// Perform additional side effects
-			skill.onConfirm(this, node);
+			skill.onConfirm?.(this, node);
 
 			// potency
 			if (potency) {
@@ -1323,7 +1323,7 @@ export class GameState {
 					if (healingPotency) {
 						controller.resolveHealingPotency(healingPotency);
 					}
-					skill.onApplication(this, node);
+					skill.onApplication?.(this, node);
 				}),
 			);
 

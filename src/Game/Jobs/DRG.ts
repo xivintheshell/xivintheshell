@@ -15,7 +15,6 @@ import {
 	ResourceCalculationFn,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
@@ -300,7 +299,7 @@ const makeWeaponskill_DRG = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Weaponskill<DRGState> => {
-	const onConfirm: EffectFn<DRGState> = combineEffects(params.onConfirm ?? NO_EFFECT, (state) => {
+	const onConfirm: EffectFn<DRGState> = combineEffects(params.onConfirm, (state) => {
 		// fix gcd combo state
 		if (name !== "PIERCING_TALON") {
 			state.fixDRGComboState(name);
@@ -308,13 +307,12 @@ const makeWeaponskill_DRG = (
 		// remove life surge
 		state.tryConsumeResource("LIFE_SURGE");
 	});
-	const onApplication: EffectFn<DRGState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyMod: PotencyModifierFn<DRGState> =
 		params.jobPotencyModifiers ?? ((state) => []);
 	return makeWeaponskill("DRG", name, unlockLevel, {
 		...params,
-		onConfirm: onConfirm,
-		onApplication: onApplication,
+		onConfirm,
+		onApplication: params.onApplication,
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = jobPotencyMod(state);

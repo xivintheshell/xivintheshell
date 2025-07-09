@@ -20,7 +20,6 @@ import {
 	MakeResourceAbilityParams,
 	makeSpell,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
@@ -240,12 +239,12 @@ const makeWHMSpell = (
 		jobHealingPotencyModifiers,
 		onConfirm: combineEffects(
 			(state) => state.tryConsumeResource("THIN_AIR"),
-			params.baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : NO_EFFECT,
-			params.onConfirm ?? NO_EFFECT,
+			params.baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : undefined,
+			params.onConfirm,
 		),
 		onApplication: combineEffects(
-			params.potency ? (state) => state.startLilyTimer() : NO_EFFECT,
-			params.onApplication ?? NO_EFFECT,
+			params.potency ? (state) => state.startLilyTimer() : undefined,
+			params.onApplication,
 		),
 	});
 };

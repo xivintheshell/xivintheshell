@@ -19,7 +19,6 @@ import {
 	makeWeaponskill,
 	MakeAbilityParams,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	Spell,
 	StatePredicate,
 	Weaponskill,
@@ -275,7 +274,7 @@ const makeDRKWeaponskill = (
 	return makeWeaponskill("DRK", name, unlockLevel, {
 		...params,
 		onConfirm: combineEffects(
-			params.onConfirm ?? NO_EFFECT,
+			params.onConfirm,
 			(state) => state.bloodWeaponConfirm(params.applicationDelay),
 			(state) => state.processComboStatus(name),
 		),
@@ -291,9 +290,7 @@ const makeDRKSpell = (
 ): Spell<DRKState> => {
 	return makeSpell("DRK", name, unlockLevel, {
 		...params,
-		onConfirm: combineEffects(params.onConfirm ?? NO_EFFECT, (state) =>
-			state.processComboStatus(name),
-		),
+		onConfirm: combineEffects(params.onConfirm, (state) => state.processComboStatus(name)),
 		recastTime: (state) => state.config.adjustedGCD(), // sps
 		jobPotencyModifiers: (state) => getDarksideAndComboModifiers(params, state),
 	});

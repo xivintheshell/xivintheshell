@@ -14,7 +14,6 @@ import {
 	ResourceCalculationFn,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
@@ -236,7 +235,7 @@ const makeWeaponskill_GNB = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Weaponskill<GNBState> => {
-	const onConfirm: EffectFn<GNBState> = combineEffects(params.onConfirm ?? NO_EFFECT, (state) => {
+	const onConfirm: EffectFn<GNBState> = combineEffects(params.onConfirm, (state) => {
 		// fix gcd combo state
 		if (name !== "SONIC_BREAK") {
 			state.fixGNBComboState(name);
@@ -249,13 +248,12 @@ const makeWeaponskill_GNB = (
 		state.tryConsumeResource("READY_TO_TEAR");
 		state.tryConsumeResource("READY_TO_GOUGE");
 	});
-	const onApplication: EffectFn<GNBState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyMod: PotencyModifierFn<GNBState> =
 		params.jobPotencyModifiers ?? ((state) => []);
 	return makeWeaponskill("GNB", name, unlockLevel, {
 		...params,
-		onConfirm: onConfirm,
-		onApplication: onApplication,
+		onConfirm,
+		onApplication: params.onApplication,
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = jobPotencyMod(state);

@@ -30,7 +30,6 @@ import {
 	MakeResourceAbilityParams,
 	makeSpell,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	ResourceCalculationFn,
 	Skill,
@@ -437,7 +436,7 @@ const makeSGESpell = (
 			}
 			state.tryConsumeResource("ZOE");
 		},
-		params.onConfirm ?? NO_EFFECT,
+		params.onConfirm,
 	);
 	return makeSpell("SGE", name, unlockLevel, {
 		...params,
@@ -457,7 +456,7 @@ const makeSGESpell = (
 			eudaimoniaPotencies.forEach((eudaimoniaPotency) => {
 				controller.resolveHealingPotency(eudaimoniaPotency);
 			});
-		}, params.onApplication ?? NO_EFFECT),
+		}, params.onApplication),
 	});
 };
 

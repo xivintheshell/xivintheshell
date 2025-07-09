@@ -14,7 +14,6 @@ import {
 	makeSpell,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
@@ -337,7 +336,7 @@ const makeSpell_RDM = (
 		(state) => state.processManafic(),
 		// onConfirm must be checked before acceleration is consume
 		// to make sure procs are properly gained
-		params.onConfirm ?? NO_EFFECT,
+		params.onConfirm,
 		(state) => state.processDualcastAndInstants(name),
 		(state) => state.processComboStatus(name),
 	);
@@ -397,7 +396,7 @@ const makeMeleeGCD = (
 	const onConfirm: EffectFn<RDMState> = combineEffects(
 		(state) => state.processManafic(),
 		(state) => state.processComboStatus(name),
-		params.onConfirm ?? NO_EFFECT,
+		params.onConfirm,
 	);
 	return makeWeaponskill("RDM", name, unlockLevel, {
 		...params,

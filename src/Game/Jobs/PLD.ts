@@ -22,7 +22,6 @@ import {
 	ResourceCalculationFn,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	Spell,
@@ -342,19 +341,18 @@ const makeWeaponskill_PLD = (
 		startsAuto?: boolean;
 	},
 ): Weaponskill<PLDState> => {
-	const onConfirm: EffectFn<PLDState> = combineEffects(params.onConfirm ?? NO_EFFECT, (state) => {
+	const onConfirm: EffectFn<PLDState> = combineEffects(params.onConfirm, (state) => {
 		// fix gcd combo state
 		if (name !== "SHIELD_LOB" && name !== "SHIELD_BASH" && name !== "GORING_BLADE") {
 			state.fixPLDPhysicalComboState(name);
 		}
 	});
-	const onApplication: EffectFn<PLDState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyMod: PotencyModifierFn<PLDState> =
 		params.jobPotencyModifiers ?? ((state) => []);
 	return makeWeaponskill("PLD", name, unlockLevel, {
 		...params,
-		onConfirm: onConfirm,
-		onApplication: onApplication,
+		onConfirm,
+		onApplication: params.onApplication,
 		startsAuto: params.startsAuto,
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
@@ -415,11 +413,7 @@ const makeSpell_PLD = (
 		} else {
 			state.tryConsumeRequiescat(name);
 		}
-	}, params.onConfirm ?? NO_EFFECT);
-	const onApplication: EffectFn<PLDState> = params.onApplication ?? NO_EFFECT;
-	const onExecute: EffectFn<PLDState> = combineEffects((state, node) => {
-		// pass
-	}, params.onExecute ?? NO_EFFECT);
+	}, params.onConfirm);
 	return makeSpell("PLD", name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
@@ -477,9 +471,9 @@ const makeSpell_PLD = (
 			*/
 			return state.isSpellInstant(name);
 		},
-		onConfirm: onConfirm,
-		onApplication: onApplication,
-		onExecute: onExecute,
+		onConfirm,
+		onApplication: params.onApplication,
+		onExecute: params.onExecute,
 		startsAuto: params.startsAuto,
 	});
 };

@@ -19,7 +19,6 @@ import {
 	makeResourceAbility,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	SkillAutoReplace,
 	StatePredicate,
@@ -214,7 +213,7 @@ const makeWeaponskill_WAR = (
 	},
 ): Weaponskill<WARState> => {
 	const onConfirm: EffectFn<WARState> = combineEffects(
-		params.onConfirm ?? NO_EFFECT,
+		params.onConfirm,
 		(state) => state.processComboStatus(name),
 		// All Weaponskills affected by Inner Release will consume Inner Release stacks
 		// and grant Burgeoning Fury stacks.
@@ -232,13 +231,12 @@ const makeWeaponskill_WAR = (
 			}
 		},
 	);
-	const onApplication: EffectFn<WARState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyMod: PotencyModifierFn<WARState> =
 		params.jobPotencyModifiers ?? ((state) => []);
 	return makeWeaponskill("WAR", name, unlockLevel, {
 		...params,
-		onConfirm: onConfirm,
-		onApplication: onApplication,
+		onConfirm,
+		onApplication: params.onApplication,
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = jobPotencyMod(state);

@@ -22,7 +22,6 @@ import {
 	MakeResourceAbilityParams,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
@@ -322,7 +321,7 @@ const makeNINWeaponskill = (
 				? (state) =>
 						state.tryConsumeResource("RAIJU_READY", true) &&
 						controller.reportWarning(WarningType.RaijuOverwrite)
-				: NO_EFFECT,
+				: undefined,
 			(state) => state.processComboStatus(name),
 		),
 		jobPotencyModifiers: (state) => {
@@ -779,7 +778,7 @@ tcjReplaces.forEach(
 					? (state) => state.stackRaijuReady()
 					: name === "SUITON_JIN" || name === "HUTON_TEN"
 						? (state) => state.gainStatus("SHADOW_WALKER")
-						: NO_EFFECT,
+						: undefined,
 			),
 		});
 	},
@@ -1004,12 +1003,12 @@ NINJUTSU_POTENCY_LIST.forEach(([name, level, applicationDelay, potency, falloff]
 						// gain a whole stack of shukuchi
 						state.cooldowns.get("cd_SHUKUCHI").restore(60);
 					}
-				: NO_EFFECT,
+				: undefined,
 			name === "RAITON"
 				? (state) => state.stackRaijuReady()
 				: name === "SUITON" || name === "HUTON"
 					? (state) => state.gainStatus("SHADOW_WALKER")
-					: NO_EFFECT,
+					: undefined,
 			(state) => state.clearMudraInfo(),
 		),
 		jobPotencyModifiers: (state) => {

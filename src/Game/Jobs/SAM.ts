@@ -13,7 +13,6 @@ import {
 	makeResourceAbility,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	ResourceCalculationFn,
 	Skill,
@@ -283,7 +282,7 @@ const makeGCD_SAM = (
 		onApplication?: EffectFn<SAMState>;
 	},
 ): Weaponskill<SAMState> => {
-	const onApplication: EffectFn<SAMState> = params.onApplication ?? NO_EFFECT;
+	const onApplication: EffectFn<SAMState> | undefined = params.onApplication;
 	const jobPotencyModifiers = (state: Readonly<SAMState>) => {
 		const mods: PotencyModifier[] = state.hasResourceAvailable("FUGETSU")
 			? [state.getFugetsuModifier()]

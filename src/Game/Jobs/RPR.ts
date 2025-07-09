@@ -25,7 +25,6 @@ import {
 	makeSpell,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	ResourceCalculationFn,
 	Skill,
 	Spell,
@@ -444,10 +443,7 @@ const makeRPRSpell = (
 		onApplication?: EffectFn<RPRState>;
 	},
 ): Spell<RPRState> => {
-	const onConfirm: EffectFn<RPRState> = combineEffects(
-		baseOnConfirm(name),
-		params.onConfirm ?? NO_EFFECT,
-	);
+	const onConfirm: EffectFn<RPRState> = combineEffects(baseOnConfirm(name), params.onConfirm);
 
 	const validateAttempt: StatePredicate<RPRState> = combinePredicatesAnd(
 		(state) => !state.resources.get("ENSHROUDED").available(1) || isEnshroudSkill(name),
@@ -495,10 +491,7 @@ const makeRPRWeaponskill = (
 		highlightIf?: StatePredicate<RPRState>;
 	},
 ): Weaponskill<RPRState> => {
-	const onConfirm: EffectFn<RPRState> = combineEffects(
-		baseOnConfirm(name),
-		params.onConfirm ?? NO_EFFECT,
-	);
+	const onConfirm: EffectFn<RPRState> = combineEffects(baseOnConfirm(name), params.onConfirm);
 
 	const validateAttempt: StatePredicate<RPRState> = combinePredicatesAnd(
 		(state) => !state.resources.get("ENSHROUDED").available(1) || isEnshroudSkill(name),
@@ -589,7 +582,7 @@ const makeRPRAbility = (
 		onApplication?: EffectFn<RPRState>;
 	},
 ): Ability<RPRState> => {
-	const onConfirm = combineEffects(baseOnConfirm(name), params.onConfirm ?? NO_EFFECT);
+	const onConfirm = combineEffects(baseOnConfirm(name), params.onConfirm);
 
 	const validateAttempt: StatePredicate<RPRState> = combinePredicatesAnd(
 		(state) => !state.resources.get("ENSHROUDED").available(1) || isEnshroudSkill(name),

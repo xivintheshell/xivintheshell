@@ -29,7 +29,6 @@ import {
 	makeWeaponskill,
 	MakeAbilityParams,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	SkillAutoReplace,
 	StatePredicate,
@@ -279,7 +278,7 @@ const makeMNKWeaponskill = (
 		recastTime: (state) =>
 			state.config.adjustedSksGCD(params.recastTime ?? 2.5, state.inherentSpeedModifier()),
 		onConfirm: combineEffects(
-			params.onConfirm ?? NO_EFFECT,
+			params.onConfirm,
 			name !== "SIX_SIDED_STAR" && params.potency
 				? (state, node) => {
 						const potency = node.getInitialPotency();
@@ -287,7 +286,7 @@ const makeMNKWeaponskill = (
 							state.maybeGainChakra(potency.modifiers.includes(Modifiers.AutoCrit));
 						}
 					}
-				: NO_EFFECT,
+				: undefined,
 			params.form
 				? (state) => {
 						const nextForm = params.form!.nextForm;
@@ -317,8 +316,8 @@ const makeMNKWeaponskill = (
 							state.setForm(nextForm);
 						}
 					}
-				: NO_EFFECT,
-			params.ball ? (state) => state.tryConsumeResource(params.ball!.rsc) : NO_EFFECT,
+				: undefined,
+			params.ball ? (state) => state.tryConsumeResource(params.ball!.rsc) : undefined,
 		),
 		jobPotencyModifiers: (state) => {
 			const mods = params.jobPotencyModifiers?.(state) ?? [];

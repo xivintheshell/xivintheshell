@@ -13,7 +13,6 @@ import {
 	makeResourceAbility,
 	makeSpell,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	Spell,
@@ -260,8 +259,7 @@ const makeSpell_PCT = (
 			name === "HAMMER_BRUSH" ||
 			name === "POLISHING_HAMMER" ||
 			state.tryConsumeResource("SWIFTCAST");
-	}, params.onConfirm ?? NO_EFFECT);
-	const onApplication: EffectFn<PCTState> = params.onApplication ?? NO_EFFECT;
+	}, params.onConfirm);
 	return makeSpell("PCT", name, unlockLevel, {
 		replaceIf: params.replaceIf,
 		startOnHotbar: params.startOnHotbar,
@@ -292,8 +290,8 @@ const makeSpell_PCT = (
 			name === "HAMMER_BRUSH" ||
 			name === "POLISHING_HAMMER" ||
 			state.hasResourceAvailable("SWIFTCAST"),
-		onConfirm: onConfirm,
-		onApplication: onApplication,
+		onConfirm,
+		onApplication: params.onApplication,
 	});
 };
 

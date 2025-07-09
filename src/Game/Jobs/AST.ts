@@ -21,7 +21,6 @@ import {
 	MakeResourceAbilityParams,
 	makeSpell,
 	MakeAbilityParams,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
@@ -244,8 +243,8 @@ const makeASTSpell = (
 		isInstantFn: (state) => !params.baseCastTime || state.hasResourceAvailable("SWIFTCAST"),
 		// swiftcast is used if lightspeed is active
 		onConfirm: combineEffects(
-			baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : NO_EFFECT,
-			params.onConfirm ?? NO_EFFECT,
+			baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : undefined,
+			params.onConfirm,
 		),
 	});
 };

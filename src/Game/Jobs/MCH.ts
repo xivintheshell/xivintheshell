@@ -27,7 +27,6 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
-	NO_EFFECT,
 	ResourceCalculationFn,
 	SkillAutoReplace,
 	StatePredicate,
@@ -328,7 +327,7 @@ const makeWeaponskill_MCH = (
 	},
 ): Weaponskill<MCHState> => {
 	const onConfirm: EffectFn<MCHState> = combineEffects(
-		params.onConfirm ?? NO_EFFECT,
+		params.onConfirm,
 		(state) => state.processComboStatus(name),
 		(state) => {
 			if (name !== "FULL_METAL_FIELD") {
@@ -347,11 +346,10 @@ const makeWeaponskill_MCH = (
 			}
 		},
 	);
-	const onApplication: EffectFn<MCHState> = params.onApplication ?? NO_EFFECT;
 	return makeWeaponskill("MCH", name, unlockLevel, {
 		...params,
 		onConfirm,
-		onApplication,
+		onApplication: params.onApplication,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (
@@ -401,7 +399,7 @@ const makeAbility_MCH = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<MCHState> => {
-	const onConfirm: EffectFn<MCHState> = combineEffects(params.onConfirm ?? NO_EFFECT);
+	const onConfirm: EffectFn<MCHState> = combineEffects(params.onConfirm);
 	return makeAbility("MCH", name, unlockLevel, cdName, {
 		...params,
 		onConfirm: onConfirm,
@@ -429,7 +427,7 @@ const makeResourceAbility_MCH = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<MCHState> => {
-	const onConfirm: EffectFn<MCHState> = combineEffects(params.onConfirm ?? NO_EFFECT);
+	const onConfirm: EffectFn<MCHState> = combineEffects(params.onConfirm);
 	return makeResourceAbility("MCH", name, unlockLevel, cdName, {
 		...params,
 		onConfirm,

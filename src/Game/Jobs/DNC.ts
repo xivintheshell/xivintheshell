@@ -20,7 +20,6 @@ import {
 	makeResourceAbility,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	ResourceCalculationFn,
 	Skill,
 	StatePredicate,
@@ -315,7 +314,7 @@ const makeGCD_DNC = (
 				state.simulatePartyEspritGain();
 			}
 		},
-		params.onConfirm ?? NO_EFFECT,
+		params.onConfirm,
 		(state) => state.processComboStatus(name),
 	);
 	return makeWeaponskill("DNC", name, unlockLevel, {

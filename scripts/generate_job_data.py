@@ -622,7 +622,6 @@ import {{
     MakeAbilityParams,
     MakeGCDParams,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
