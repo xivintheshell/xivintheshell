@@ -240,7 +240,7 @@ export class GameState {
 			const lucid = this.resources.get("LUCID_DREAMING") as OverTimeBuff;
 			if (lucid.available(1)) {
 				lucid.tickCount++;
-				if (!(this.isBLMState() && this.getFireStacks() > 0)) {
+				if (!(this.job === "BLM" && this.hasResourceAvailable("ASTRAL_FIRE"))) {
 					// Block lucid ticks for BLM in fire
 					const mana = this.resources.get("MANA");
 					mana.gain(550);
@@ -1893,10 +1893,5 @@ export class GameState {
 
 	isInCombat() {
 		return this.hasResourceAvailable("IN_COMBAT");
-	}
-
-	// These methods enforce type specialization so we can avoid some casts on the frontend
-	isBLMState(): this is BLMState {
-		return this.job === "BLM";
 	}
 }

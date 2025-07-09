@@ -162,11 +162,6 @@ export class BLMState extends GameState {
 		return this.resources.get("MANA").availableAmount();
 	}
 
-	gainThunderhead() {
-		const thunderhead = this.resources.get("THUNDERHEAD");
-		thunderhead.gain(1);
-	}
-
 	// call this whenever gaining af or ui from a different af/ui/unaspected state
 	switchToAForUI(rscType: "ASTRAL_FIRE" | "UMBRAL_ICE", numStacksToGain: number) {
 		console.assert(numStacksToGain > 0);
@@ -179,7 +174,7 @@ export class BLMState extends GameState {
 
 		if (rscType === "ASTRAL_FIRE") {
 			if (af.availableAmount() === 0) {
-				this.gainThunderhead();
+				this.gainStatus("THUNDERHEAD");
 			}
 			af.gain(numStacksToGain);
 
@@ -192,7 +187,7 @@ export class BLMState extends GameState {
 			ui.consume(ui.availableAmount());
 		} else if (rscType === "UMBRAL_ICE") {
 			if (ui.availableAmount() === 0) {
-				this.gainThunderhead();
+				this.gainStatus("THUNDERHEAD");
 			}
 			ui.gain(numStacksToGain);
 
@@ -291,18 +286,16 @@ export class BLMState extends GameState {
 	}
 
 	loseEnochian() {
+		const rscToLose: BLMResourceKey[] = [
+			"ENOCHIAN",
+			"ASTRAL_FIRE",
+			"UMBRAL_ICE",
+			"UMBRAL_HEART",
+			"PARADOX",
+			"ASTRAL_SOUL",
+		];
+		rscToLose.forEach((rsc) => this.tryConsumeResource(rsc, true));
 		this.resources.get("ENOCHIAN").consume(1);
-		const af = this.resources.get("ASTRAL_FIRE");
-		const ui = this.resources.get("UMBRAL_ICE");
-		const uh = this.resources.get("UMBRAL_HEART");
-		const paradox = this.resources.get("PARADOX");
-		const as = this.resources.get("ASTRAL_SOUL");
-
-		af.consume(af.availableAmount());
-		ui.consume(ui.availableAmount());
-		uh.consume(uh.availableAmount());
-		paradox.consume(paradox.availableAmount());
-		as.consume(as.availableAmount());
 	}
 }
 
@@ -638,9 +631,7 @@ const thunderConfirm =
 			modifiers: mods,
 		});
 
-		const thunderhead = game.resources.get("THUNDERHEAD");
-		thunderhead.consume(1);
-		thunderhead.removeTimer();
+		game.tryConsumeResource("THUNDERHEAD");
 	};
 
 makeSpell_BLM("THUNDER_III", 45, {
@@ -676,7 +667,7 @@ makeAbility_BLM("MANAFONT", 30, "cd_MANAFONT", {
 
 		if (state.hasTraitUnlocked("ASPECT_MASTERY_V")) state.resources.get("PARADOX").gain(1);
 
-		state.gainThunderhead();
+		state.gainStatus("THUNDERHEAD");
 		state.startOrRefreshEnochian();
 	},
 	onApplication: (state, node) => {
@@ -789,7 +780,7 @@ makeSpell_BLM("FIRE_IV", 60, {
 });
 
 makeAbility_BLM("BETWEEN_THE_LINES", 62, "cd_BETWEEN_THE_LINES", {
-	applicationDelay: 0, // ?
+	applicationDelay: 0,
 	cooldown: 3,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	validateAttempt: (state) =>
@@ -800,7 +791,7 @@ makeAbility_BLM("BETWEEN_THE_LINES", 62, "cd_BETWEEN_THE_LINES", {
 });
 
 makeAbility_BLM("AETHERIAL_MANIPULATION", 50, "cd_AETHERIAL_MANIPULATION", {
-	applicationDelay: 0, // ?
+	applicationDelay: 0,
 	cooldown: 10,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
@@ -811,9 +802,7 @@ makeAbility_BLM("TRIPLECAST", 66, "cd_TRIPLECAST", {
 	maxCharges: 2,
 	onApplication: (state, node) => {
 		const triple = state.resources.get("TRIPLECAST");
-		if (triple.pendingChange) triple.removeTimer();
-		triple.gain(3);
-		state.enqueueResourceDrop("TRIPLECAST");
+		state.gainStatus("TRIPLECAST", 3);
 	},
 });
 
@@ -867,7 +856,7 @@ makeSpell_BLM("XENOGLOSSY", 80, {
 	basePotency: 890,
 	applicationDelay: 0.63,
 	validateAttempt: (state) => state.hasResourceAvailable("POLYGLOT"),
-	onConfirm: (state, node) => state.resources.get("POLYGLOT").consume(1),
+	onConfirm: (state, node) => state.tryConsumeResource("POLYGLOT"),
 	highlightIf: (state) => state.hasResourceAvailable("POLYGLOT"),
 });
 
@@ -992,8 +981,8 @@ makeSpell_BLM("FLARE_STAR", 100, {
 	falloff: 0.65,
 	applicationDelay: 0.622,
 	validateAttempt: (state) => state.hasResourceAvailable("ASTRAL_SOUL", 6),
-	onConfirm: (state, node) => state.resources.get("ASTRAL_SOUL").consume(6),
-	highlightIf: (state) => state.resources.get("ASTRAL_SOUL").available(6),
+	onConfirm: (state, node) => state.tryConsumeResource("ASTRAL_SOUL", true),
+	highlightIf: (state) => state.hasResourceAvailable("ASTRAL_SOUL", 6),
 });
 
 makeSpell_BLM("THUNDER_IV", 64, {
