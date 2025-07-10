@@ -295,7 +295,6 @@ export class BLMState extends GameState {
 			"ASTRAL_SOUL",
 		];
 		rscToLose.forEach((rsc) => this.tryConsumeResource(rsc, true));
-		this.resources.get("ENOCHIAN").consume(1);
 	}
 }
 
@@ -853,7 +852,8 @@ makeSpell_BLM("XENOGLOSSY", 80, {
 	basePotency: 890,
 	applicationDelay: 0.63,
 	validateAttempt: (state) => state.hasResourceAvailable("POLYGLOT"),
-	onConfirm: (state, node) => state.tryConsumeResource("POLYGLOT"),
+	// Don't call tryConsumeResource so we ensure the timer keeps ticking.
+	onConfirm: (state, node) => state.resources.get("POLYGLOT").consume(1),
 	highlightIf: (state) => state.hasResourceAvailable("POLYGLOT"),
 });
 
