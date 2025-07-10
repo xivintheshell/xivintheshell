@@ -8,7 +8,7 @@ import { CommonActionKey } from "../Data/Shared/Common";
 import { RoleActionKey } from "../Data/Shared/Role";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
+import { Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, makeResource } from "../Resources";
 import {
 	Ability,
@@ -18,7 +18,6 @@ import {
 	CooldownGroupProperties,
 	EffectFn,
 	FAKE_SKILL_ANIMATION_LOCK,
-	getBasePotency,
 	getSkill,
 	makeAbility,
 	makeResourceAbility,
@@ -502,28 +501,6 @@ const makeRPRWeaponskill = (
 		onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = basePotencyModifiers(state);
-			if (
-				params.combo &&
-				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
-
-			if (params.positional && state.hitPositional(params.positional.location)) {
-				mods.push(
-					makePositionalModifier(
-						getBasePotency(state, params.positional.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
-
 			if (
 				["GIBBET", "EXECUTIONERS_GIBBET"].includes(name) &&
 				state.hasResourceAvailable("ENHANCED_GIBBET")

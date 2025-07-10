@@ -2,19 +2,17 @@
 
 import { controller } from "../../Controller/Controller";
 import { BuffType, WarningType } from "../Common";
-import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
+import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	CooldownGroupProperties,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	ResourceCalculationFn,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
 	StatePredicate,
@@ -216,7 +214,6 @@ const makeWeaponskill_GNB = (
 			resourceValue: number;
 		};
 		falloff?: number;
-		jobPotencyModifiers?: PotencyModifierFn<GNBState>;
 		applicationDelay?: number;
 		animationLock?: number;
 		validateAttempt?: StatePredicate<GNBState>;
@@ -240,31 +237,12 @@ const makeWeaponskill_GNB = (
 		state.tryConsumeResource("READY_TO_TEAR");
 		state.tryConsumeResource("READY_TO_GOUGE");
 	});
-	const jobPotencyMod: PotencyModifierFn<GNBState> =
-		params.jobPotencyModifiers ?? ((state) => []);
 	return makeWeaponskill("GNB", name, unlockLevel, {
 		...params,
 		onConfirm,
 		recastTime: (state) => state.config.adjustedSksGCD(),
-		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = jobPotencyMod(state);
-			if (
-				params.combo &&
-				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
-			if (state.hasResourceAvailable("NO_MERCY")) {
-				mods.push(Modifiers.NoMercy);
-			}
-			return mods;
-		},
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable("NO_MERCY") ? [Modifiers.NoMercy] : [],
 	});
 };
 
@@ -293,13 +271,8 @@ const makeAbility_GNB = (
 ): Ability<GNBState> => {
 	return makeAbility("GNB", name, unlockLevel, cdName, {
 		...params,
-		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = [];
-			if (state.hasResourceAvailable("NO_MERCY")) {
-				mods.push(Modifiers.NoMercy);
-			}
-			return mods;
-		},
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable("NO_MERCY") ? [Modifiers.NoMercy] : [],
 	});
 };
 

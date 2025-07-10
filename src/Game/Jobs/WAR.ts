@@ -6,7 +6,7 @@ import { TraitKey, CooldownKey } from "../Data";
 import { WARResourceKey, WARActionKey } from "../Data/Jobs/WAR";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
+import { Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, Event, getResourceInfo, makeResource, ResourceInfo } from "../Resources";
 import {
 	Ability,
@@ -14,7 +14,6 @@ import {
 	ConditionalSkillReplace,
 	CooldownGroupProperties,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
@@ -134,7 +133,7 @@ export class WARState extends GameState {
 	}
 
 	hasComboStatus(comboName: "STORM_COMBO" | "TEMPEST_COMBO", state: number): boolean {
-		return this.resources.get(comboName).availableAmount() === state;
+		return this.hasResourceExactly(comboName, state);
 	}
 
 	gainBeastGauge(amount: number) {
@@ -239,17 +238,6 @@ const makeWeaponskill_WAR = (
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = jobPotencyMod(state);
-			if (
-				params.combo &&
-				state.hasComboStatus(params.combo.resource, params.combo.resourceValue)
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
 			if (state.hasResourceAvailable("SURGING_TEMPEST")) {
 				mods.push(Modifiers.SurgingTempest);
 			}

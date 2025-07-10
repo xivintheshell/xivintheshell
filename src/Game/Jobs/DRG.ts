@@ -2,14 +2,13 @@
 
 import { controller } from "../../Controller/Controller";
 import { BuffType, WarningType } from "../Common";
-import { makeComboModifier, Modifiers, makePositionalModifier, PotencyModifier } from "../Potency";
+import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	CooldownGroupProperties,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	ResourceCalculationFn,
@@ -301,32 +300,6 @@ const makeWeaponskill_DRG = (
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = params.jobPotencyModifiers?.(state) ?? [];
-			const hitPositional =
-				params.positional && state.hitPositional(params.positional.location);
-			if (params.combo && state.checkCombo(params.combo.resource)) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-				// typescript isn't smart enough to elide the null check
-				if (params.positional && hitPositional) {
-					mods.push(
-						makePositionalModifier(
-							getBasePotency(state, params.positional.comboPotency) -
-								getBasePotency(state, params.combo.potency),
-						),
-					);
-				}
-			} else if (params.positional && hitPositional) {
-				mods.push(
-					makePositionalModifier(
-						getBasePotency(state, params.positional.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
 			if (
 				name === "PIERCING_TALON" &&
 				state.hasResourceAvailable("ENHANCED_PIERCING_TALON")

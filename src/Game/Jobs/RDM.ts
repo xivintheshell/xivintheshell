@@ -2,13 +2,12 @@
 
 import { controller } from "../../Controller/Controller";
 import { Aspect, BuffType, WarningType } from "../Common";
-import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
+import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
@@ -383,18 +382,6 @@ const makeMeleeGCD = (
 		onConfirm: onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
-			if (
-				params.combo &&
-				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
 			if (!isPhysical) {
 				if (state.hasResourceAvailable("EMBOLDEN")) {
 					mods.push(Modifiers.EmboldenMagic);

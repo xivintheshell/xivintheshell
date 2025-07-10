@@ -9,14 +9,13 @@ import { ActionKey, TraitKey } from "../Data";
 import { NINActionKey, NINCooldownKey, NINResourceKey } from "../Data/Jobs/NIN";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { Modifiers, makeComboModifier, makePositionalModifier } from "../Potency";
+import { Modifiers } from "../Potency";
 import { getResourceInfo, makeResource, ResourceInfo, CoolDown } from "../Resources";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	MakeResourceAbilityParams,
@@ -326,33 +325,6 @@ const makeNINWeaponskill = (
 		),
 		jobPotencyModifiers: (state) => {
 			const mods = params.jobPotencyModifiers?.(state) ?? [];
-			const hitPositional =
-				params.positional && state.hitPositional(params.positional.location);
-			// TODO refactor all this for all melee jobs
-			if (params.combo && state.hasResourceAvailable(params.combo.resource)) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-				// typescript isn't smart enough to elide the null check
-				if (params.positional && hitPositional) {
-					mods.push(
-						makePositionalModifier(
-							getBasePotency(state, params.positional.comboPotency) -
-								getBasePotency(state, params.combo.potency),
-						),
-					);
-				}
-			} else if (params.positional && hitPositional) {
-				mods.push(
-					makePositionalModifier(
-						getBasePotency(state, params.positional.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
 			// Kamaitachi does not consume Bunshin
 			if (state.hasResourceAvailable("BUNSHIN") && name !== "PHANTOM_KAMAITACHI") {
 				if (name === "DEATH_BLOSSOM" || name === "HAKKE_MUJINSATSU") {
@@ -409,17 +381,6 @@ const makeNINAbility = (
 		),
 		jobPotencyModifiers: (state) => {
 			const mods = params.jobPotencyModifiers?.(state) ?? [];
-			const hitPositional =
-				params.positional && state.hitPositional(params.positional.location);
-			// TODO refactor all this for all melee jobs
-			if (params.positional && hitPositional) {
-				mods.push(
-					makePositionalModifier(
-						getBasePotency(state, params.positional.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
 			if (state.hasResourceAvailable("DOKUMORI")) {
 				mods.push(Modifiers.Dokumori);
 			}

@@ -330,6 +330,19 @@ function normalizeAssetPath(job: ShellJob, key: ActionKey) {
 	return `${job}/${name.replace(":", "")}.png`;
 }
 
+// Parameters describing potency of a combo action and the ResourceKey value needed to activate the combo.
+export interface ComboPotency {
+	potency: number | Array<[TraitKey, number]>;
+	resource: ResourceKey;
+	resourceValue: number;
+}
+
+export interface PositionalPotency {
+	potency: number | Array<[TraitKey, number]>;
+	comboPotency?: number | Array<[TraitKey, number]>;
+	location: "flank" | "rear";
+}
+
 // Shared parameters for all skill kinds
 export interface MakeSkillParams<T extends GameState> {
 	assetPath: string;
@@ -342,6 +355,10 @@ export interface MakeSkillParams<T extends GameState> {
 	animationLock: number | ResourceCalculationFn<T>;
 	manaCost: number | ResourceCalculationFn<T>;
 	potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
+	// combo and positional are not passed directly to the skill constructor, but are used by default
+	// in computing jobPotencyModifiers
+	combo: ComboPotency;
+	positional: PositionalPotency;
 	jobPotencyModifiers: PotencyModifierFn<T>;
 	drawsAggro: boolean;
 	falloff: number;
@@ -400,6 +417,22 @@ export function makeSpell<T extends GameState>(
 		(state) => state.maybeCancelChanneledSkills(name),
 		params.onExecute,
 	);
+	const jobPotencyModifiers: PotencyModifierFn<T> = (state) => {
+		const mods = [];
+		if (params.potency && (params.combo || params.positional)) {
+			mods.push(
+				...state.computeComboAndPositionalModifiers(
+					getBasePotency(state, params.potency!),
+					params.combo,
+					params.positional,
+				),
+			);
+		}
+		if (params.jobPotencyModifiers) {
+			mods.push(...params.jobPotencyModifiers(state));
+		}
+		return mods;
+	};
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
@@ -420,7 +453,7 @@ export function makeSpell<T extends GameState>(
 		animationLockFn: (state) => fnify(params.animationLock, state.config.animationLock)(state),
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
-		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		jobPotencyModifiers,
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
 		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
@@ -459,6 +492,22 @@ export function makeWeaponskill<T extends GameState>(
 		(state) => state.maybeCancelChanneledSkills(name),
 		params.onExecute,
 	);
+	const jobPotencyModifiers: PotencyModifierFn<T> = (state) => {
+		const mods = [];
+		if (params.potency && (params.combo || params.positional)) {
+			mods.push(
+				...state.computeComboAndPositionalModifiers(
+					getBasePotency(state, params.potency!),
+					params.combo,
+					params.positional,
+				),
+			);
+		}
+		if (params.jobPotencyModifiers) {
+			mods.push(...params.jobPotencyModifiers(state));
+		}
+		return mods;
+	};
 	const info: Weaponskill<T> = {
 		kind: "weaponskill",
 		name: name,
@@ -479,7 +528,7 @@ export function makeWeaponskill<T extends GameState>(
 		animationLockFn: (state) => fnify(params.animationLock, state.config.animationLock)(state),
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
-		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		jobPotencyModifiers,
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
 		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),

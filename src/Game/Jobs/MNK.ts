@@ -60,7 +60,8 @@ makeMNKResource("OPO_OPO_FORM", 1, { timeout: 30 });
 makeMNKResource("RAPTOR_FORM", 1, { timeout: 30 });
 makeMNKResource("COEURL_FORM", 1, { timeout: 30 });
 makeMNKResource("PERFECT_BALANCE", 3, { timeout: 20 });
-makeMNKResource("FORMLESS_FIST", 1, { timeout: 30 });
+// Begin combat in an indefinite formless fist.
+makeMNKResource("FORMLESS_FIST", 1, { timeout: 30, default: 1 });
 makeMNKResource("RIDDLE_OF_EARTH", 1, { timeout: 10 });
 makeMNKResource("EARTHS_RESOLVE", 1, { timeout: 15 });
 makeMNKResource("EARTHS_RUMINATION", 1, { timeout: 30 });
@@ -251,6 +252,9 @@ const makeMNKWeaponskill = (
 		: undefined;
 	return makeWeaponskill("MNK", name, unlockLevel, {
 		...params,
+		// Do not pass positional data to the constructor, since we want to compute the ball positional
+		// modifier independently.
+		positional: undefined,
 		highlightIf: (state) => {
 			// probably a more efficient way to write this expression but i'm lazy
 			if (!formCondition && !params.ball && !params.highlightIf) {

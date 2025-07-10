@@ -2,17 +2,18 @@
 
 import { controller } from "../../Controller/Controller";
 import { BuffType, WarningType } from "../Common";
-import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
+import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	ConditionalSkillReplace,
+	ComboPotency,
 	EffectFn,
 	FAKE_SKILL_ANIMATION_LOCK,
-	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
+	PositionalPotency,
 	PotencyModifierFn,
 	ResourceCalculationFn,
 	Skill,
@@ -121,6 +122,10 @@ export class SAMState extends GameState {
 		if (this.hasResourceAvailable("FUKA") && skill.cdName === "cd_GCD") {
 			node.addBuff(BuffType.Fuka);
 		}
+	}
+
+	override hitCombo(combo: ComboPotency): boolean {
+		return super.hitCombo(combo) || this.hasResourceAvailable("MEIKYO_SHISUI");
 	}
 
 	override cancelChanneledSkills(): void {
@@ -258,15 +263,8 @@ const makeGCD_SAM = (
 		baseCastTime?: number;
 		baseRecastTime?: number;
 		basePotency: number | Array<[TraitKey, number]>;
-		combo?: {
-			potency: number | Array<[TraitKey, number]>;
-			resource: SAMResourceKey;
-		};
-		positional?: {
-			potency: number | Array<[TraitKey, number]>;
-			comboPotency: number | Array<[TraitKey, number]>;
-			location: "flank" | "rear";
-		};
+		combo?: ComboPotency;
+		positional?: PositionalPotency;
 		falloff?: number;
 		applicationDelay: number;
 		jobPotencyModifiers?: PotencyModifierFn<SAMState>;
@@ -282,31 +280,6 @@ const makeGCD_SAM = (
 			: [];
 		if (params.jobPotencyModifiers) {
 			mods.push(...params.jobPotencyModifiers(state));
-		}
-		const hitPositional = params.positional && state.hitPositional(params.positional.location);
-		if (params.combo && state.checkCombo(params.combo.resource)) {
-			mods.push(
-				makeComboModifier(
-					getBasePotency(state, params.combo.potency) -
-						getBasePotency(state, params.basePotency),
-				),
-			);
-			// typescript isn't smart enough to elide the null check
-			if (params.positional && hitPositional) {
-				mods.push(
-					makePositionalModifier(
-						getBasePotency(state, params.positional.comboPotency) -
-							getBasePotency(state, params.combo.potency),
-					),
-				);
-			}
-		} else if (params.positional && hitPositional) {
-			mods.push(
-				makePositionalModifier(
-					getBasePotency(state, params.positional.potency) -
-						getBasePotency(state, params.basePotency),
-				),
-			);
 		}
 		return mods;
 	};
@@ -417,6 +390,7 @@ makeGCD_SAM("YUKIKAZE", 50, {
 			["WAY_OF_THE_SAMURAI_III", 340],
 		],
 		resource: "SAM_TWO_READY",
+		resourceValue: 1,
 	},
 	onConfirm: (state) => {
 		if (state.checkCombo("SAM_TWO_READY")) {
@@ -441,6 +415,7 @@ makeGCD_SAM("JINPU", 4, {
 			["WAY_OF_THE_SAMURAI_III", 300],
 		],
 		resource: "SAM_TWO_READY",
+		resourceValue: 1,
 	},
 	onConfirm: (state) => {
 		if (state.checkCombo("SAM_TWO_READY")) {
@@ -470,6 +445,7 @@ makeGCD_SAM("GEKKO", 30, {
 			["WAY_OF_THE_SAMURAI_III", 370],
 		],
 		resource: "GEKKO_READY",
+		resourceValue: 1,
 	},
 	positional: {
 		potency: [
@@ -510,6 +486,7 @@ makeGCD_SAM("SHIFU", 18, {
 			["WAY_OF_THE_SAMURAI_III", 300],
 		],
 		resource: "SAM_TWO_READY",
+		resourceValue: 1,
 	},
 	onConfirm: (state) => {
 		if (state.checkCombo("SAM_TWO_READY")) {
@@ -539,6 +516,7 @@ makeGCD_SAM("KASHA", 40, {
 			["WAY_OF_THE_SAMURAI_III", 370],
 		],
 		resource: "KASHA_READY",
+		resourceValue: 1,
 	},
 	positional: {
 		potency: [
@@ -596,6 +574,7 @@ makeGCD_SAM("MANGETSU", 35, {
 	combo: {
 		potency: 120,
 		resource: "SAM_TWO_AOE_READY",
+		resourceValue: 1,
 	},
 	onConfirm: (state) => {
 		if (state.checkCombo("SAM_TWO_AOE_READY")) {
@@ -615,6 +594,7 @@ makeGCD_SAM("OKA", 35, {
 	combo: {
 		potency: 120,
 		resource: "SAM_TWO_AOE_READY",
+		resourceValue: 1,
 	},
 	onConfirm: (state) => {
 		if (state.checkCombo("SAM_TWO_AOE_READY")) {

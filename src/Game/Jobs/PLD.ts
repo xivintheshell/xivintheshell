@@ -3,7 +3,6 @@
 import { controller } from "../../Controller/Controller";
 import { BuffType, WarningType } from "../Common";
 import {
-	makeComboModifier,
 	makeRequiescatModifier,
 	makeDivineMightModifier,
 	Modifiers,
@@ -329,7 +328,6 @@ const makeWeaponskill_PLD = (
 			resourceValue: number;
 		};
 		falloff?: number;
-		jobPotencyModifiers?: PotencyModifierFn<PLDState>;
 		applicationDelay: number;
 		animationLock?: number;
 		validateAttempt?: StatePredicate<PLDState>;
@@ -347,34 +345,12 @@ const makeWeaponskill_PLD = (
 			state.fixPLDPhysicalComboState(name);
 		}
 	});
-	const jobPotencyMod: PotencyModifierFn<PLDState> =
-		params.jobPotencyModifiers ?? ((state) => []);
 	return makeWeaponskill("PLD", name, unlockLevel, {
 		...params,
 		onConfirm,
-		onApplication: params.onApplication,
-		startsAuto: params.startsAuto,
 		recastTime: (state) => state.config.adjustedSksGCD(),
-		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = jobPotencyMod(state);
-			if (
-				params.combo &&
-				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
-
-			if (state.hasResourceAvailable("FIGHT_OR_FLIGHT")) {
-				mods.push(Modifiers.FightOrFlight);
-			}
-			return mods;
-		},
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable("FIGHT_OR_FLIGHT") ? [Modifiers.FightOrFlight] : [],
 	});
 };
 

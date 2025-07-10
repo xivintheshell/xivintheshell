@@ -7,7 +7,7 @@ import { ActionKey, TraitKey } from "../Data";
 import { MCHResourceKey, MCHActionKey, MCHCooldownKey } from "../Data/Jobs/MCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { makeComboModifier, Modifiers, Potency, PotencyModifier } from "../Potency";
+import { Modifiers, Potency, PotencyModifier } from "../Potency";
 import {
 	CoolDown,
 	getResourceInfo,
@@ -23,7 +23,6 @@ import {
 	ConditionalSkillReplace,
 	CooldownGroupProperties,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
@@ -351,18 +350,6 @@ const makeWeaponskill_MCH = (
 		onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
-			if (
-				params.combo &&
-				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
 			if (state.hasResourceAvailable("REASSEMBLED") || name === "FULL_METAL_FIELD") {
 				mods.push(Modifiers.AutoCDH);
 			}

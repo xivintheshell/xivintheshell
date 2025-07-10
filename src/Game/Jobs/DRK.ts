@@ -5,13 +5,12 @@ import { GameConfig } from "../GameConfig";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { Aspect, WarningType } from "../Common";
-import { Modifiers, Potency, makeComboModifier } from "../Potency";
+import { Modifiers, Potency } from "../Potency";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
-	getBasePotency,
 	FAKE_SKILL_ANIMATION_LOCK,
 	makeAbility,
 	makeResourceAbility,
@@ -248,24 +247,6 @@ type DRKGCDParams = {
 	secondaryCooldown?: CooldownGroupProperties;
 };
 
-const getDarksideAndComboModifiers = (params: DRKGCDParams, state: Readonly<DRKState>) => {
-	const mods = [];
-	if (state.hasResourceAvailable("DARKSIDE")) {
-		mods.push(Modifiers.Darkside);
-	}
-	if (
-		params.combo &&
-		state.resources.get(params.combo.resource).availableAmount() === params.combo.resourceValue
-	) {
-		mods.push(
-			makeComboModifier(
-				getBasePotency(state, params.combo.potency) - getBasePotency(state, params.potency),
-			),
-		);
-	}
-	return mods;
-};
-
 const makeDRKWeaponskill = (
 	name: DRKActionKey,
 	unlockLevel: number,
@@ -279,7 +260,8 @@ const makeDRKWeaponskill = (
 			(state) => state.processComboStatus(name),
 		),
 		recastTime: (state) => state.config.adjustedSksGCD(),
-		jobPotencyModifiers: (state) => getDarksideAndComboModifiers(params, state),
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable("DARKSIDE") ? [Modifiers.Darkside] : [],
 	});
 };
 
@@ -292,7 +274,8 @@ const makeDRKSpell = (
 		...params,
 		onConfirm: combineEffects(params.onConfirm, (state) => state.processComboStatus(name)),
 		recastTime: (state) => state.config.adjustedGCD(), // sps
-		jobPotencyModifiers: (state) => getDarksideAndComboModifiers(params, state),
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable("DARKSIDE") ? [Modifiers.Darkside] : [],
 	});
 };
 

@@ -7,7 +7,7 @@ import { TraitKey } from "../Data";
 import { DNCResourceKey, DNCActionKey, DNCCooldownKey } from "../Data/Jobs/DNC";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
+import { Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, getResourceInfo, makeResource, Resource, ResourceInfo } from "../Resources";
 import {
 	Ability,
@@ -15,7 +15,6 @@ import {
 	ConditionalSkillReplace,
 	CooldownGroupProperties,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
@@ -295,21 +294,9 @@ const makeGCD_DNC = (
 	);
 	return makeWeaponskill("DNC", name, unlockLevel, {
 		...params,
-		onConfirm: onConfirm,
+		onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
-			if (
-				params.combo &&
-				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
 			if (state.hasResourceAvailable("STANDARD_FINISH")) {
 				const modifier =
 					state.resources.get("STANDARD_BONUS").availableAmount() === 2

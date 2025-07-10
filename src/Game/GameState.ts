@@ -9,9 +9,12 @@ import {
 import { GameConfig } from "./GameConfig";
 import {
 	Ability,
+	ComboPotency,
 	DisplayedSkills,
 	FAKE_SKILL_ANIMATION_LOCK,
+	getBasePotency,
 	LimitBreak,
+	PositionalPotency,
 	Skill,
 	SkillsList,
 	Spell,
@@ -32,7 +35,15 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { ActionNode } from "../Controller/Record";
-import { Modifiers, Potency, PotencyKind, PotencyModifier, PotencyModifierType } from "./Potency";
+import {
+	Modifiers,
+	Potency,
+	PotencyKind,
+	PotencyModifier,
+	PotencyModifierType,
+	makeComboModifier,
+	makePositionalModifier,
+} from "./Potency";
 import { Buff } from "./Buffs";
 
 import { SkillButtonViewInfo } from "../Components/Skills";
@@ -1418,6 +1429,33 @@ export class GameState {
 			(location === "flank" && this.hasResourceAvailable("FLANK_POSITIONAL")) ||
 			(location === "rear" && this.hasResourceAvailable("REAR_POSITIONAL"))
 		);
+	}
+
+	// Overide this function if special buffs (like Meikyo Shisui) would override the combo requirement.
+	hitCombo(combo: ComboPotency): boolean {
+		return this.hasResourceExactly(combo.resource, combo.resourceValue);
+	}
+
+	computeComboAndPositionalModifiers(
+		potency: number,
+		combo?: ComboPotency,
+		positional?: PositionalPotency,
+	): PotencyModifier[] {
+		const mods = [];
+		if (combo && this.hitCombo(combo)) {
+			mods.push(makeComboModifier(getBasePotency(this, combo.potency) - potency));
+			if (positional && this.hitPositional(positional.location)) {
+				mods.push(
+					makePositionalModifier(
+						getBasePotency(this, positional.comboPotency) -
+							getBasePotency(this, combo.potency),
+					),
+				);
+			}
+		} else if (positional && this.hitPositional(positional.location)) {
+			mods.push(makePositionalModifier(getBasePotency(this, positional.potency) - potency));
+		}
+		return mods;
 	}
 
 	// Add a resource drop event after `delay` seconds.
