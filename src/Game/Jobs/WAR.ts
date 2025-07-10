@@ -1,12 +1,11 @@
 import { WARStatusPropsGenerator } from "../../Components/Jobs/WAR";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
-import { controller } from "../../Controller/Controller";
-import { LevelSync, WarningType } from "../Common";
 import { TraitKey, CooldownKey } from "../Data";
 import { WARResourceKey, WARActionKey } from "../Data/Jobs/WAR";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
 import { Modifiers, PotencyModifier } from "../Potency";
+import { LevelSync } from "../Common";
 import { CoolDown, Event, getResourceInfo, makeResource, ResourceInfo } from "../Resources";
 import {
 	Ability,
@@ -27,13 +26,18 @@ import {
 const makeWARResource = (
 	rsc: WARResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnOvercap?: boolean;
+		warnOnTimeout?: boolean;
+	},
 ) => {
 	makeResource("WAR", rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
-makeWARResource("BEAST_GAUGE", 100);
+makeWARResource("BEAST_GAUGE", 100, { warnOnOvercap: true });
 
 // Status Effects
 makeWARResource("SURGING_TEMPEST", 1, { timeout: 60 });
@@ -42,8 +46,8 @@ makeWARResource("INNER_RELEASE", 3, { timeout: 15 });
 makeWARResource("INNER_STRENGTH", 1, { timeout: 15 });
 makeWARResource("BURGEONING_FURY", 3, { timeout: 30 });
 makeWARResource("WRATHFUL", 1, { timeout: 30 });
-makeWARResource("PRIMAL_REND_READY", 1, { timeout: 30 });
-makeWARResource("PRIMAL_RUINATION_READY", 1, { timeout: 20 });
+makeWARResource("PRIMAL_REND_READY", 1, { timeout: 30, warnOnTimeout: true });
+makeWARResource("PRIMAL_RUINATION_READY", 1, { timeout: 20, warnOnTimeout: true });
 
 makeWARResource("THRILL_OF_BATTLE", 1, { timeout: 10 });
 makeWARResource("EQUILIBRIUM", 1, { timeout: 15 });
@@ -137,11 +141,7 @@ export class WARState extends GameState {
 	}
 
 	gainBeastGauge(amount: number) {
-		const resource = this.resources.get("BEAST_GAUGE");
-		if (resource.availableAmount() + amount > resource.maxValue) {
-			controller.reportWarning(WarningType.BeastGaugeOvercap);
-		}
-		resource.gain(amount);
+		this.resources.get("BEAST_GAUGE").gain(amount);
 	}
 
 	gainProc(proc: WARResourceKey, amount?: number) {

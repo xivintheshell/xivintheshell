@@ -4,7 +4,7 @@ import { ASTStatusPropsGenerator } from "../../Components/Jobs/AST";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
 import { controller } from "../../Controller/Controller";
-import { Aspect, BuffType, WarningType } from "../Common";
+import { Aspect, BuffType } from "../Common";
 import { TraitKey } from "../Data";
 import { ASTActionKey, ASTCooldownKey, ASTResourceKey } from "../Data/Jobs/AST";
 import { GameConfig } from "../GameConfig";
@@ -15,6 +15,7 @@ import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
+	CooldownGroupProperties,
 	EffectFn,
 	makeAbility,
 	makeResourceAbility,
@@ -33,7 +34,7 @@ import { localize } from "../../Components/Localization";
 const makeASTResource = (
 	rsc: ASTResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: { timeout?: number; default?: number; warnOnTimeout?: boolean },
 ) => {
 	makeResource("AST", rsc, maxValue, params ?? {});
 };
@@ -54,7 +55,7 @@ makeASTResource("ASPECTED_BENEFIC", 1, { timeout: 15 });
 makeASTResource("ASPECTED_HELIOS", 1, { timeout: 15 });
 makeASTResource("SYNASTRY", 1, { timeout: 20 });
 makeASTResource("DIVINATION", 1, { timeout: 20 });
-makeASTResource("DIVINING", 1, { timeout: 30 });
+makeASTResource("DIVINING", 1, { timeout: 30, warnOnTimeout: true });
 makeASTResource("COLLECTIVE_UNCONSCIOUS", 1, { timeout: 18 });
 makeASTResource("COLLECTIVE_UNCONSCIOUS_MIT", 1, { timeout: 5 });
 makeASTResource("WHEEL_OF_FORTUNE", 1, { timeout: 15 });
@@ -195,6 +196,7 @@ const makeASTSpell = (
 		manaCost: number | ResourceCalculationFn<ASTState>;
 		potency?: number | Array<[TraitKey, number]>;
 		healingPotency?: number | Array<[TraitKey, number]>;
+		secondaryCooldown?: CooldownGroupProperties;
 		aoeHeal?: boolean;
 		falloff?: number;
 		drawsAggro?: boolean;
@@ -411,12 +413,23 @@ makeASTSpell("GRAVITY_II", 82, {
 
 makeASTSpell("MACROCOSMOS", 90, {
 	applicationDelay: 0.75,
+	secondaryCooldown: {
+		cdName: "cd_MACROCOSMOS",
+		cooldown: 180,
+		maxCharges: 1,
+	},
 	potency: [
 		["NEVER", 250],
 		["MAGICK_MASTERY_HEALER", 270],
 	],
 	falloff: 0.4,
 	manaCost: 600,
+	replaceIf: [
+		{
+			newSkill: "MICROCOSMOS",
+			condition: (state) => state.hasResourceAvailable("MACROCOSMOS"),
+		},
+	],
 	onConfirm: (state) => state.gainStatus("MACROCOSMOS"),
 });
 
@@ -424,6 +437,8 @@ makeASTAbility("MICROCOSMOS", 90, "cd_MICROCOSMOS", {
 	startOnHotbar: false,
 	applicationDelay: 0.045,
 	cooldown: 1,
+	validateAttempt: (state) => state.hasResourceAvailable("MACROCOSMOS"),
+	onConfirm: (state) => state.tryConsumeResource("MACROCOSMOS"),
 });
 
 makeASTSpell("ASPECTED_BENEFIC", 34, {
@@ -567,7 +582,11 @@ const DRAW_CONFIRM: EffectFn<ASTState> = (state) => {
 		state.hasResourceAvailable("ARCANA_1") ||
 		(state.drawnAstral() && state.hasResourceAvailable("MINOR_ARCANA"))
 	) {
-		controller.reportWarning(WarningType.CardOverwrite);
+		controller.reportWarning({
+			kind: "custom",
+			en: "damage card overwritten!",
+			zh: "伤害卡被覆盖！",
+		});
 	}
 	state.resources.get("NEXT_DRAW").gainWrapping(1);
 	["MINOR_ARCANA", "ARCANA_1", "ARCANA_2", "ARCANA_3"].forEach((rsc) =>

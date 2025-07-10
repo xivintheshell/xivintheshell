@@ -1,7 +1,7 @@
 // Skill and state declarations for SAM.
 
 import { controller } from "../../Controller/Controller";
-import { BuffType, WarningType } from "../Common";
+import { BuffType } from "../Common";
 import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -32,28 +32,32 @@ import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { SAMResourceKey, SAMCooldownKey } from "../Data/Jobs/SAM";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
-const makeSAMResource = (rsc: SAMResourceKey, maxValue: number, params?: { timeout: number }) => {
+const makeSAMResource = (
+	rsc: SAMResourceKey,
+	maxValue: number,
+	params?: { timeout?: number; warnOnOvercap?: boolean; warnOnTimeout?: boolean },
+) => {
 	makeResource("SAM", rsc, maxValue, params ?? {});
 };
 
-makeSAMResource("MEIKYO_SHISUI", 3, { timeout: 20 });
+makeSAMResource("MEIKYO_SHISUI", 3, { timeout: 20, warnOnTimeout: true });
 makeSAMResource("FUGETSU", 1, { timeout: 40 });
 makeSAMResource("FUKA", 1, { timeout: 40 });
 makeSAMResource("ZANSHIN_READY", 1, { timeout: 30 });
-makeSAMResource("TENDO", 1, { timeout: 30 });
+makeSAMResource("TENDO", 1, { timeout: 30, warnOnTimeout: true });
 makeSAMResource("OGI_READY", 1, { timeout: 30 });
-makeSAMResource("TSUBAME_GAESHI_READY", 1, { timeout: 30 });
+makeSAMResource("TSUBAME_GAESHI_READY", 1, { timeout: 30, warnOnTimeout: true });
 makeSAMResource("THIRD_EYE", 1, { timeout: 4 });
 makeSAMResource("TENGENTSU", 1, { timeout: 4 });
 makeSAMResource("TENGENTSUS_FORESIGHT", 1, { timeout: 9 });
 makeSAMResource("ENHANCED_ENPI", 1, { timeout: 15 });
 makeSAMResource("MEDITATE", 1, { timeout: 15.2 }); // based on a random DSR P7 log I saw
 
-makeSAMResource("KENKI", 100);
-makeSAMResource("SETSU", 1);
-makeSAMResource("GETSU", 1);
-makeSAMResource("KA_SEN", 1);
-makeSAMResource("MEDITATION", 3);
+makeSAMResource("KENKI", 100, { warnOnOvercap: true });
+makeSAMResource("SETSU", 1, { warnOnOvercap: true });
+makeSAMResource("GETSU", 1, { warnOnOvercap: true });
+makeSAMResource("KA_SEN", 1, { warnOnOvercap: true });
+makeSAMResource("MEDITATION", 3, { warnOnOvercap: true });
 
 makeSAMResource("HIGANBANA_DOT", 1, { timeout: 60 });
 
@@ -186,25 +190,15 @@ export class SAMState extends GameState {
 	}
 
 	gainKenki(kenkiAmount: number) {
-		if (this.resources.get("KENKI").availableAmount() + kenkiAmount > 100) {
-			controller.reportWarning(WarningType.KenkiOvercap);
-		}
 		this.resources.get("KENKI").gain(kenkiAmount);
 	}
 
 	gainMeditation() {
-		if (this.resources.get("MEDITATION").availableAmount() === 3) {
-			controller.reportWarning(WarningType.MeditationOvercap);
-		}
 		this.resources.get("MEDITATION").gain(1);
 	}
 
 	gainSen(sen: SAMResourceKey) {
-		const resource = this.resources.get(sen);
-		if (resource.available(1)) {
-			controller.reportWarning(WarningType.SenOvercap);
-		}
-		resource.gain(1);
+		this.resources.get(sen).gain(1);
 	}
 
 	countSen(): number {

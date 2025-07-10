@@ -23,7 +23,7 @@ import {
 	ProcMode,
 	SkillReadyStatus,
 	SkillUnavailableReason,
-	WarningType,
+	Warning,
 } from "../Game/Common";
 import { DEFAULT_CONFIG, GameConfig } from "../Game/GameConfig";
 import { updateStatusDisplay } from "../Components/StatusDisplay";
@@ -653,7 +653,7 @@ class Controller {
 		};
 	}
 
-	reportWarning(type: WarningType) {
+	reportWarning(type: Warning) {
 		if (!this.#bInSandbox) {
 			this.timeline.addElement({
 				type: ElemType.WarningMark,
@@ -662,6 +662,10 @@ class Controller {
 				displayTime: this.game.getDisplayTime(),
 			});
 		}
+	}
+
+	reportComboBreak() {
+		this.reportWarning({ kind: "combobreak" });
 	}
 
 	resolvePotency(p: Potency) {

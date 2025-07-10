@@ -1,8 +1,7 @@
 import { DNCStatusPropsGenerator } from "../../Components/Jobs/DNC";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
-import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, WarningType } from "../Common";
+import { BuffType } from "../Common";
 import { TraitKey } from "../Data";
 import { DNCResourceKey, DNCActionKey, DNCCooldownKey } from "../Data/Jobs/DNC";
 import { GameConfig } from "../GameConfig";
@@ -28,14 +27,14 @@ import {
 const makeDNCResource = (
 	rsc: DNCResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: { timeout?: number; default?: number; warnOnOvercap?: boolean },
 ) => {
 	makeResource("DNC", rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
-makeDNCResource("ESPRIT_GAUGE", 100);
-makeDNCResource("FEATHER_GAUGE", 4);
+makeDNCResource("ESPRIT_GAUGE", 100, { warnOnOvercap: true });
+makeDNCResource("FEATHER_GAUGE", 4, { warnOnOvercap: true });
 makeDNCResource("STANDARD_DANCE", 2);
 makeDNCResource("TECHNICAL_DANCE", 4);
 
@@ -45,7 +44,7 @@ makeDNCResource("SILKEN_FLOW", 1, { timeout: 30 });
 makeDNCResource("FLOURISHING_SYMMETRY", 1, { timeout: 30 });
 makeDNCResource("FLOURISHING_FLOW", 1, { timeout: 30 });
 
-makeDNCResource("THREEFOLD_FAN_DANCE", 1, { timeout: 30 });
+makeDNCResource("THREEFOLD_FAN_DANCE", 1, { timeout: 30, warnOnOvercap: true });
 makeDNCResource("FOURFOLD_FAN_DANCE", 1, { timeout: 30 });
 
 makeDNCResource("FINISHING_MOVE_READY", 1, { timeout: 30 });
@@ -169,9 +168,6 @@ export class DNCState extends GameState {
 	}
 
 	gainProc(proc: DNCResourceKey) {
-		if (this.hasResourceAvailable(proc) && proc === "THREEFOLD_FAN_DANCE") {
-			controller.reportWarning(WarningType.FanThreeOverwrite);
-		}
 		this.gainStatus(proc);
 	}
 
@@ -180,12 +176,6 @@ export class DNCState extends GameState {
 	}
 
 	gainResource(rscType: "ESPRIT_GAUGE" | "FEATHER_GAUGE", amount: number) {
-		const resource = this.resources.get(rscType);
-		if (resource.availableAmount() + amount > resource.maxValue) {
-			controller.reportWarning(
-				rscType === "ESPRIT_GAUGE" ? WarningType.EspritOvercap : WarningType.FeatherOvercap,
-			);
-		}
 		this.resources.get(rscType).gain(amount);
 	}
 

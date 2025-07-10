@@ -1,7 +1,6 @@
 // Skill and state declarations for DRG
 
-import { controller } from "../../Controller/Controller";
-import { BuffType, WarningType } from "../Common";
+import { BuffType } from "../Common";
 import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -33,7 +32,12 @@ import { DRGResourceKey } from "../Data/Jobs/DRG";
 const makeDRGResource = (
 	rsc: DRGResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number; warningOnTimeout?: WarningType },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnTimeout?: boolean;
+		warnOnOvercap?: boolean;
+	},
 ) => {
 	makeResource("DRG", rsc, maxValue, params ?? {});
 };
@@ -41,19 +45,19 @@ const makeDRGResource = (
 // POWER_SURGE duration varies based on weaponskill
 // this is done manually inside skill declarations
 makeDRGResource("POWER_SURGE", 1, { timeout: 30 });
-makeDRGResource("LIFE_SURGE", 1, { timeout: 5.52 });
+makeDRGResource("LIFE_SURGE", 1, { timeout: 5.52, warnOnTimeout: true });
 makeDRGResource("ENHANCED_PIERCING_TALON", 1, { timeout: 15.62 });
 makeDRGResource("LANCE_CHARGE", 1, { timeout: 20 });
-makeDRGResource("DIVE_READY", 1, { timeout: 15.46 });
+makeDRGResource("DIVE_READY", 1, { timeout: 15.46, warnOnTimeout: true });
 makeDRGResource("CHAOS_THRUST_DOT", 1, { timeout: 24 });
 makeDRGResource("BATTLE_LITANY", 1, { timeout: 20 });
 makeDRGResource("LIFE_OF_THE_DRAGON", 1, { timeout: 20 });
-makeDRGResource("NASTROND_READY", 1, { timeout: 20 });
+makeDRGResource("NASTROND_READY", 1, { timeout: 20, warnOnTimeout: true });
 makeDRGResource("DRACONIAN_FIRE", 1, { timeout: 30 });
 makeDRGResource("CHAOTIC_SPRING_DOT", 1, { timeout: 24 });
-makeDRGResource("FIRSTMINDS_FOCUS", 2);
+makeDRGResource("FIRSTMINDS_FOCUS", 2, { warnOnOvercap: true });
 makeDRGResource("DRAGONS_FLIGHT", 1, { timeout: 30.79 });
-makeDRGResource("STARCROSS_READY", 1, { timeout: 20 });
+makeDRGResource("STARCROSS_READY", 1, { timeout: 20, warnOnTimeout: true });
 makeDRGResource("DRG_CHAOS_COMBO_TRACKER", 4, { timeout: 30 });
 makeDRGResource("DRG_HEAVENS_COMBO_TRACKER", 4, { timeout: 30 });
 makeDRGResource("DRG_AOE_COMBO_TRACKER", 2, { timeout: 30 });
@@ -228,9 +232,6 @@ export class DRGState extends GameState {
 
 	// gain a scale
 	gainScale(scales: number) {
-		if (this.resources.get("FIRSTMINDS_FOCUS").availableAmount() + scales > 2) {
-			controller.reportWarning(WarningType.ScaleOvercap);
-		}
 		this.resources.get("FIRSTMINDS_FOCUS").gain(scales);
 	}
 
@@ -354,12 +355,12 @@ const makeAbility_DRG = (
 
 const drakesbaneWheelingCondition: ConditionalSkillReplace<DRGState> = {
 	newSkill: "DRAKESBANE",
-	condition: (state) => state.resources.get("DRG_HEAVENS_COMBO_TRACKER").availableAmount() === 4,
+	condition: (state) => state.hasResourceExactly("DRG_HEAVENS_COMBO_TRACKER", 4),
 };
 
 const drakesbaneFangAndClawCondition: ConditionalSkillReplace<DRGState> = {
 	newSkill: "DRAKESBANE",
-	condition: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 4,
+	condition: (state) => state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 4),
 };
 
 const raidenThrustCondition: ConditionalSkillReplace<DRGState> = {
@@ -450,12 +451,12 @@ makeWeaponskill_DRG("DISEMBOWEL", 18, {
 		resourceValue: 1,
 	},
 	onConfirm: (state) => {
-		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 1) {
+		if (state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 1)) {
 			state.resources.get("POWER_SURGE").gain(1);
 			state.enqueueResourceDrop("POWER_SURGE", 31.63);
 		}
 	},
-	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 1,
+	highlightIf: (state) => state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 1),
 });
 
 makeWeaponskill_DRG("SPIRAL_BLOW", 96, {
@@ -468,12 +469,12 @@ makeWeaponskill_DRG("SPIRAL_BLOW", 96, {
 		resourceValue: 1,
 	},
 	onConfirm: (state) => {
-		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 1) {
+		if (state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 1)) {
 			state.resources.get("POWER_SURGE").gain(1);
 			state.enqueueResourceDrop("POWER_SURGE", 31.38);
 		}
 	},
-	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 1,
+	highlightIf: (state) => state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 1),
 });
 
 makeWeaponskill_DRG("CHAOS_THRUST", 50, {
@@ -491,7 +492,7 @@ makeWeaponskill_DRG("CHAOS_THRUST", 50, {
 		location: "rear",
 	},
 	onConfirm: (state, node) => {
-		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
+		if (state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 2)) {
 			const modifiers: PotencyModifier[] = [];
 			state.pushUniversalModifiers(modifiers);
 
@@ -513,7 +514,7 @@ makeWeaponskill_DRG("CHAOS_THRUST", 50, {
 			);
 		}
 	},
-	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2,
+	highlightIf: (state) => state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 2),
 });
 
 makeWeaponskill_DRG("CHAOTIC_SPRING", 86, {
@@ -531,7 +532,7 @@ makeWeaponskill_DRG("CHAOTIC_SPRING", 86, {
 		location: "rear",
 	},
 	onConfirm: (state, node) => {
-		if (state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2) {
+		if (state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 2)) {
 			const modifiers: PotencyModifier[] = [];
 			state.pushUniversalModifiers(modifiers);
 
@@ -553,7 +554,7 @@ makeWeaponskill_DRG("CHAOTIC_SPRING", 86, {
 			);
 		}
 	},
-	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 2,
+	highlightIf: (state) => state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 2),
 });
 
 makeWeaponskill_DRG("WHEELING_THRUST", 58, {
@@ -582,7 +583,7 @@ makeWeaponskill_DRG("WHEELING_THRUST", 58, {
 		],
 		location: "rear",
 	},
-	highlightIf: (state) => state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 3,
+	highlightIf: (state) => state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 3),
 });
 
 makeWeaponskill_DRG("VORPAL_THRUST", 4, {
@@ -600,8 +601,7 @@ makeWeaponskill_DRG("VORPAL_THRUST", 4, {
 		resource: "DRG_HEAVENS_COMBO_TRACKER",
 		resourceValue: 1,
 	},
-	highlightIf: (state) =>
-		state.resources.get("DRG_HEAVENS_COMBO_TRACKER").availableAmount() === 1,
+	highlightIf: (state) => state.hasResourceExactly("DRG_HEAVENS_COMBO_TRACKER", 1),
 });
 
 makeWeaponskill_DRG("LANCE_BARRAGE", 96, {
@@ -613,8 +613,7 @@ makeWeaponskill_DRG("LANCE_BARRAGE", 96, {
 		resource: "DRG_HEAVENS_COMBO_TRACKER",
 		resourceValue: 1,
 	},
-	highlightIf: (state) =>
-		state.resources.get("DRG_HEAVENS_COMBO_TRACKER").availableAmount() === 1,
+	highlightIf: (state) => state.hasResourceExactly("DRG_HEAVENS_COMBO_TRACKER", 1),
 });
 
 makeWeaponskill_DRG("FULL_THRUST", 26, {
@@ -626,8 +625,7 @@ makeWeaponskill_DRG("FULL_THRUST", 26, {
 		resource: "DRG_HEAVENS_COMBO_TRACKER",
 		resourceValue: 2,
 	},
-	highlightIf: (state) =>
-		state.resources.get("DRG_HEAVENS_COMBO_TRACKER").availableAmount() === 2,
+	highlightIf: (state) => state.hasResourceExactly("DRG_HEAVENS_COMBO_TRACKER", 2),
 });
 
 makeWeaponskill_DRG("HEAVENS_THRUST", 86, {
@@ -645,8 +643,7 @@ makeWeaponskill_DRG("HEAVENS_THRUST", 86, {
 		resource: "DRG_HEAVENS_COMBO_TRACKER",
 		resourceValue: 2,
 	},
-	highlightIf: (state) =>
-		state.resources.get("DRG_HEAVENS_COMBO_TRACKER").availableAmount() === 2,
+	highlightIf: (state) => state.hasResourceExactly("DRG_HEAVENS_COMBO_TRACKER", 2),
 });
 
 makeWeaponskill_DRG("FANG_AND_CLAW", 56, {
@@ -675,8 +672,7 @@ makeWeaponskill_DRG("FANG_AND_CLAW", 56, {
 		],
 		location: "flank",
 	},
-	highlightIf: (state) =>
-		state.resources.get("DRG_HEAVENS_COMBO_TRACKER").availableAmount() === 3,
+	highlightIf: (state) => state.hasResourceExactly("DRG_HEAVENS_COMBO_TRACKER", 3),
 });
 
 makeWeaponskill_DRG("DRAKESBANE", 64, {
@@ -689,22 +685,22 @@ makeWeaponskill_DRG("DRAKESBANE", 64, {
 	],
 	validateAttempt: (state) => {
 		return (
-			state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 4 ||
-			state.resources.get("DRG_HEAVENS_COMBO_TRACKER").availableAmount() === 4
+			state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 4) ||
+			state.hasResourceExactly("DRG_HEAVENS_COMBO_TRACKER", 4)
 		);
 	},
 	onConfirm: (state) => {
 		if (
-			state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 4 ||
-			state.resources.get("DRG_HEAVENS_COMBO_TRACKER").availableAmount() === 4
+			state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 4) ||
+			state.hasResourceExactly("DRG_HEAVENS_COMBO_TRACKER", 4)
 		) {
 			state.refreshBuff("DRACONIAN_FIRE", 0);
 		}
 	},
 	highlightIf: (state) => {
 		return (
-			state.resources.get("DRG_CHAOS_COMBO_TRACKER").availableAmount() === 4 ||
-			state.resources.get("DRG_HEAVENS_COMBO_TRACKER").availableAmount() === 4
+			state.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", 4) ||
+			state.hasResourceExactly("DRG_HEAVENS_COMBO_TRACKER", 4)
 		);
 	},
 });
@@ -740,9 +736,9 @@ makeWeaponskill_DRG("SONIC_THRUST", 62, {
 		resourceValue: 1,
 	},
 	falloff: 0,
-	highlightIf: (state) => state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 1,
+	highlightIf: (state) => state.hasResourceExactly("DRG_AOE_COMBO_TRACKER", 1),
 	onConfirm: (state) => {
-		if (state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 1) {
+		if (state.hasResourceExactly("DRG_AOE_COMBO_TRACKER", 1)) {
 			state.resources.get("POWER_SURGE").gain(1);
 			state.enqueueResourceDrop("POWER_SURGE", 30.79);
 		}
@@ -758,11 +754,11 @@ makeWeaponskill_DRG("COERTHAN_TORMENT", 72, {
 		resourceValue: 2,
 	},
 	falloff: 0,
-	highlightIf: (state) => state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 2,
+	highlightIf: (state) => state.hasResourceExactly("DRG_AOE_COMBO_TRACKER", 2),
 	onConfirm: (state) => {
 		if (
 			state.hasTraitUnlocked("ENHANCED_COERTHAN_TORMENT") &&
-			state.resources.get("DRG_AOE_COMBO_TRACKER").availableAmount() === 2
+			state.hasResourceExactly("DRG_AOE_COMBO_TRACKER", 2)
 		) {
 			state.refreshBuff("DRACONIAN_FIRE", 0);
 		}
@@ -778,8 +774,8 @@ makeResourceAbility("DRG", "LIFE_SURGE", 6, "cd_LIFE_SURGE", {
 
 makeAbility_DRG("WYRMWIND_THRUST", 90, "cd_WYRMWIND_THRUST", {
 	applicationDelay: 1.2,
-	validateAttempt: (state) => state.resources.get("FIRSTMINDS_FOCUS").availableAmount() === 2,
-	highlightIf: (state) => state.resources.get("FIRSTMINDS_FOCUS").availableAmount() === 2,
+	validateAttempt: (state) => state.hasResourceExactly("FIRSTMINDS_FOCUS", 2),
+	highlightIf: (state) => state.hasResourceExactly("FIRSTMINDS_FOCUS", 2),
 	potency: [
 		["NEVER", 420],
 		["MELEE_MASTERY_DRG", 440],

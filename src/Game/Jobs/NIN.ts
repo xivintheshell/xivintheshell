@@ -4,7 +4,7 @@ import { NINStatusPropsGenerator } from "../../Components/Jobs/NIN";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
 import { controller } from "../../Controller/Controller";
-import { BuffType, WarningType } from "../Common";
+import { BuffType } from "../Common";
 import { ActionKey, TraitKey } from "../Data";
 import { NINActionKey, NINCooldownKey, NINResourceKey } from "../Data/Jobs/NIN";
 import { GameConfig } from "../GameConfig";
@@ -31,27 +31,32 @@ import {
 const makeNINResource = (
 	rsc: NINResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnOvercap?: boolean;
+		warnOnTimeout?: boolean;
+	},
 ) => {
 	makeResource("NIN", rsc, maxValue, params ?? {});
 };
 
-makeNINResource("KAZEMATOI", 5);
-makeNINResource("NINKI", 100);
+makeNINResource("KAZEMATOI", 5, { warnOnOvercap: true });
+makeNINResource("NINKI", 100, { warnOnOvercap: true });
 
 makeNINResource("SHADE_SHIFT", 1, { timeout: 20 });
 makeNINResource("MUDRA", 1, { timeout: 6 });
 makeNINResource("HIDDEN", 1);
 makeNINResource("TRICK_ATTACK", 1, { timeout: 15.77 });
-makeNINResource("KASSATSU", 1, { timeout: 15 });
+makeNINResource("KASSATSU", 1, { timeout: 15, warnOnTimeout: true });
 makeNINResource("DOKUMORI", 1, { timeout: 21 });
-makeNINResource("TENRI_JINDO_READY", 1, { timeout: 30 });
+makeNINResource("TENRI_JINDO_READY", 1, { timeout: 30, warnOnTimeout: true });
 makeNINResource("TEN_CHI_JIN", 1, { timeout: 6 });
 makeNINResource("MEISUI", 1, { timeout: 30 });
 makeNINResource("SHADOW_WALKER", 1, { timeout: 20 });
-makeNINResource("BUNSHIN", 5, { timeout: 30 });
-makeNINResource("PHANTOM_KAMAITACHI_READY", 1, { timeout: 45 });
-makeNINResource("RAIJU_READY", 3, { timeout: 30 });
+makeNINResource("BUNSHIN", 5, { timeout: 30, warnOnTimeout: true });
+makeNINResource("PHANTOM_KAMAITACHI_READY", 1, { timeout: 45, warnOnTimeout: true });
+makeNINResource("RAIJU_READY", 3, { timeout: 30, warnOnTimeout: true });
 makeNINResource("KUNAIS_BANE", 1, { timeout: 16.25 });
 makeNINResource("HIGI", 1, { timeout: 30 });
 makeNINResource("DOTON", 1, { timeout: 18 });
@@ -131,11 +136,7 @@ export class NINState extends GameState {
 	}
 
 	gainNinki(amt: number) {
-		const rsc = this.resources.get("NINKI");
-		if (rsc.availableAmount() + amt > 100) {
-			controller.reportWarning(WarningType.NinkiOvercap);
-		}
-		rsc.gain(amt);
+		this.resources.get("NINKI").gain(amt);
 	}
 
 	processComboStatus(skill: NINActionKey) {
@@ -319,7 +320,7 @@ const makeNINWeaponskill = (
 			)
 				? (state) =>
 						state.tryConsumeResource("RAIJU_READY", true) &&
-						controller.reportWarning(WarningType.RaijuOverwrite)
+						controller.reportWarning({ kind: "overwrite", rsc: "RAIJU_READY" })
 				: undefined,
 			(state) => state.processComboStatus(name),
 		),
@@ -524,11 +525,7 @@ makeNINWeaponskill("ARMOR_CRUSH", 54, {
 	highlightIf: (state) => state.hasResourceExactly("NIN_COMBO_TRACKER", 2),
 	onConfirm: combineEffects((state) => {
 		if (state.hasResourceExactly("NIN_COMBO_TRACKER", 2)) {
-			const rsc = state.resources.get("KAZEMATOI");
-			if (rsc.availableAmount() + 2 > 5) {
-				controller.reportWarning(WarningType.KazematoiOvercap);
-			}
-			rsc.gain(2);
+			state.resources.get("KAZEMATOI").gain(2);
 		}
 	}, comboEndGainNinki),
 });

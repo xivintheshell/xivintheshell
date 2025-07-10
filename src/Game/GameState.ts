@@ -140,7 +140,12 @@ export class GameState {
 				);
 			} else {
 				this.resources.set(
-					new Resource(rsc as ResourceKey, info.maxValue, info.defaultValue),
+					new Resource(
+						rsc as ResourceKey,
+						info.maxValue,
+						info.defaultValue,
+						info.warnOnOvercap,
+					),
 				);
 			}
 		});
@@ -1481,8 +1486,8 @@ export class GameState {
 				rsc.consume(toConsume ?? rsc.availableAmountIncludingDisabled());
 				// Make sure the timer is canceled to avoid this warning
 				const rscInfo = getResourceInfo(this.job, rsc.type) as ResourceInfo;
-				if (rscInfo.warningOnTimeout) {
-					controller.reportWarning(rscInfo.warningOnTimeout);
+				if (rscInfo.warnOnTimeout) {
+					controller.reportWarning({ kind: "timeout", rsc: rsc.type });
 				}
 			},
 		});

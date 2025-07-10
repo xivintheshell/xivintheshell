@@ -1,7 +1,7 @@
 // Skill and state declarations for PLD
 
 import { controller } from "../../Controller/Controller";
-import { BuffType, WarningType } from "../Common";
+import { BuffType } from "../Common";
 import {
 	makeRequiescatModifier,
 	makeDivineMightModifier,
@@ -41,7 +41,7 @@ import { PLDResourceKey, PLDActionKey, PLDCooldownKey } from "../Data/Jobs/PLD";
 const makePLDResource = (
 	rsc: PLDResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number; warningOnTimeout?: WarningType },
+	params?: { timeout?: number; default?: number; warnOnTimeout?: boolean },
 ) => {
 	makeResource("PLD", rsc, maxValue, params ?? {});
 };
@@ -57,17 +57,17 @@ makePLDResource("HALLOWED_GROUND", 1, { timeout: 10 });
 makePLDResource("BULWARK", 1, { timeout: 10 });
 makePLDResource("GORING_BLADE_READY", 1, { timeout: 30 });
 makePLDResource("DIVINE_VEIL", 1, { timeout: 30 });
-makePLDResource("ATONEMENT_READY", 1, { timeout: 30 });
-makePLDResource("DIVINE_MIGHT", 1, { timeout: 30 });
+makePLDResource("ATONEMENT_READY", 1, { timeout: 30, warnOnTimeout: true });
+makePLDResource("DIVINE_MIGHT", 1, { timeout: 30, warnOnTimeout: true });
 makePLDResource("KNIGHTS_RESOLVE", 1, { timeout: 4 });
 makePLDResource("KNIGHTS_BENEDICTION", 1, { timeout: 12 });
-makePLDResource("REQUIESCAT", 4, { timeout: 30 });
-makePLDResource("CONFITEOR_READY", 1, { timeout: 30 });
+makePLDResource("REQUIESCAT", 4, { timeout: 30, warnOnTimeout: true });
+makePLDResource("CONFITEOR_READY", 1, { timeout: 30, warnOnTimeout: true });
 makePLDResource("PASSAGE_OF_ARMS", 1, { timeout: 18 });
-makePLDResource("SUPPLICATION_READY", 1, { timeout: 30 });
-makePLDResource("SEPULCHRE_READY", 1, { timeout: 30 });
+makePLDResource("SUPPLICATION_READY", 1, { timeout: 30, warnOnTimeout: true });
+makePLDResource("SEPULCHRE_READY", 1, { timeout: 30, warnOnTimeout: true });
 makePLDResource("HOLY_SHELTRON", 1, { timeout: 8 });
-makePLDResource("BLADE_OF_HONOR_READY", 1, { timeout: 30 });
+makePLDResource("BLADE_OF_HONOR_READY", 1, { timeout: 30, warnOnTimeout: true });
 makePLDResource("GUARDIAN", 1, { timeout: 15 });
 makePLDResource("GUARDIANS_WILL", 1, { timeout: 15 });
 

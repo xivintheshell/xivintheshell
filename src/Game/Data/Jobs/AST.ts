@@ -383,6 +383,7 @@ export const AST_COOLDOWNS = ensureRecord<CooldownData>()({
 	cd_HOROSCOPE_RECAST: { name: "cd_HoroscopeRecast" },
 	cd_NEUTRAL_SECT: { name: "cd_NeutralSect" },
 	cd_EXALTATION: { name: "cd_Exaltation" },
+	cd_MACROCOSMOS: { name: "cd_Macrocosmos" },
 	cd_MICROCOSMOS: { name: "cd_Microcosmos" },
 	cd_ORACLE: { name: "cd_Oracle" },
 	cd_SUN_SIGN: { name: "cd_SunSign" },

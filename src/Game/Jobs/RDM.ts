@@ -1,7 +1,7 @@
 // Skill and state declarations for RDM.
 
 import { controller } from "../../Controller/Controller";
-import { Aspect, BuffType, WarningType } from "../Common";
+import { Aspect, BuffType } from "../Common";
 import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -34,7 +34,7 @@ import { RDMResourceKey, RDMActionKey } from "../Data/Jobs/RDM";
 const makeRDMResource = (
 	rsc: RDMResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number; warningOnTimeout?: WarningType },
+	params?: { timeout?: number; default?: number; warnOnTimeout?: boolean },
 ) => {
 	makeResource("RDM", rsc, maxValue, params ?? {});
 };
@@ -49,24 +49,24 @@ makeRDMResource("DUALCAST", 1, { timeout: 15 });
 makeRDMResource("EMBOLDEN", 1, { timeout: 20 });
 makeRDMResource("GRAND_IMPACT_READY", 1, {
 	timeout: 30,
-	warningOnTimeout: WarningType.GIDrop,
+	warnOnTimeout: true,
 });
 makeRDMResource("MAGICK_BARRIER", 1, { timeout: 10 });
 makeRDMResource("MAGICKED_SWORDPLAY", 3, {
 	timeout: 30,
-	warningOnTimeout: WarningType.MagickedSwordplayDrop,
+	warnOnTimeout: true,
 });
 makeRDMResource("MANAFICATION", 6, {
 	timeout: 30,
-	warningOnTimeout: WarningType.ManaficDrop,
+	warnOnTimeout: true,
 });
 makeRDMResource("PREFULGENCE_READY", 1, {
 	timeout: 30,
-	warningOnTimeout: WarningType.PrefulgenceDrop,
+	warnOnTimeout: true,
 });
 makeRDMResource("THORNED_FLOURISH", 1, {
 	timeout: 30,
-	warningOnTimeout: WarningType.ViceOfThornsDrop,
+	warnOnTimeout: true,
 });
 makeRDMResource("VERFIRE_READY", 1, { timeout: 30 });
 makeRDMResource("VERSTONE_READY", 1, { timeout: 30 });
@@ -169,7 +169,11 @@ export class RDMState extends GameState {
 		}
 		// Raise warning after if we became imbalanced
 		if (Math.abs(black.availableAmount() - white.availableAmount()) > 30) {
-			controller.reportWarning(WarningType.ImbalancedMana);
+			controller.reportWarning({
+				kind: "custom",
+				en: "mana difference became more than 30",
+				zh: "魔元失衡！",
+			});
 		}
 	}
 
@@ -211,7 +215,7 @@ export class RDMState extends GameState {
 		if (skill === "ENCHANTED_RIPOSTE" || skill === "RIPOSTE") {
 			// TODO check if aoe combo does get reset
 			if (anyComboActive) {
-				controller.reportWarning(WarningType.ComboBreak);
+				controller.reportComboBreak();
 			}
 			counters = [1, 0, 0];
 			if (skill === "ENCHANTED_RIPOSTE") {
@@ -219,7 +223,7 @@ export class RDMState extends GameState {
 			}
 		} else if (skill === "ENCHANTED_ZWERCHHAU" || skill === "ZWERCHHAU") {
 			if (anyComboActive && meleeComboCounter !== 1) {
-				controller.reportWarning(WarningType.ComboBreak);
+				controller.reportComboBreak();
 			}
 			counters = [meleeComboCounter === 1 ? 2 : 0, 0, 0];
 			if (skill === "ENCHANTED_ZWERCHHAU") {
@@ -227,7 +231,7 @@ export class RDMState extends GameState {
 			}
 		} else if (skill === "ENCHANTED_REDOUBLEMENT" || skill === "REDOUBLEMENT") {
 			if (anyComboActive && meleeComboCounter !== 2) {
-				controller.reportWarning(WarningType.ComboBreak);
+				controller.reportComboBreak();
 			}
 			counters = [0, 0, 0];
 			if (skill === "ENCHANTED_REDOUBLEMENT") {
@@ -243,7 +247,7 @@ export class RDMState extends GameState {
 			counters = [0, 0, 0];
 		} else if (skill === "ENCHANTED_MOULINET") {
 			if (meleeComboCounter + finisherCounter > 0) {
-				controller.reportWarning(WarningType.ComboBreak);
+				controller.reportComboBreak();
 			}
 			counters = [0, 0, 1];
 			manaStacks.gain(1);
@@ -259,7 +263,7 @@ export class RDMState extends GameState {
 			counters = [meleeComboCounter, finisherCounter, aoeCounter];
 		} else {
 			if (anyComboActive) {
-				controller.reportWarning(WarningType.ComboBreak);
+				controller.reportComboBreak();
 			}
 			counters = [0, 0, 0];
 			manaStacks.consume(manaStacks.availableAmount());
@@ -985,7 +989,7 @@ makeResourceAbility("RDM", "MANAFICATION", 60, "cd_MANAFICATION", {
 			state.hasResourceAvailable("RDM_FINISHER_COUNTER") ||
 			state.hasResourceAvailable("RDM_AOE_COUNTER")
 		) {
-			controller.reportWarning(WarningType.ComboBreak);
+			controller.reportComboBreak();
 		}
 		state.setComboState("RDM_MELEE_COUNTER", 0);
 		state.setComboState("RDM_FINISHER_COUNTER", 0);
@@ -1054,7 +1058,7 @@ makeResourceAbility("RDM", "ACCELERATION", 50, "cd_ACCELERATION", {
 	onApplication: (state) => {
 		if (state.hasTraitUnlocked("ENHANCED_ACCELERATION_II")) {
 			if (state.hasResourceAvailable("GRAND_IMPACT_READY")) {
-				controller.reportWarning(WarningType.GIOverwrite);
+				controller.reportWarning({ kind: "overwrite", rsc: "GRAND_IMPACT_READY" });
 			}
 			state.gainStatus("GRAND_IMPACT_READY");
 		}

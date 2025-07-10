@@ -39,7 +39,12 @@ import {
 const makeMNKResource = (
 	rsc: MNKResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnTimeout?: boolean;
+		warnOnOvercap?: boolean;
+	},
 ) => {
 	makeResource("MNK", rsc, maxValue, params ?? {});
 };
@@ -48,9 +53,9 @@ const makeMNKResource = (
 makeMNKResource("CHAKRA", 5, { default: 5 });
 makeMNKResource("BEAST_CHAKRA", 1);
 makeMNKResource("NADI", 1);
-makeMNKResource("OPO_OPOS_FURY", 1);
-makeMNKResource("RAPTORS_FURY", 1);
-makeMNKResource("COEURLS_FURY", 2);
+makeMNKResource("OPO_OPOS_FURY", 1, { warnOnOvercap: true });
+makeMNKResource("RAPTORS_FURY", 1, { warnOnOvercap: true });
+makeMNKResource("COEURLS_FURY", 2, { warnOnOvercap: true });
 
 // Statuses
 // extended durations taken from ama's combat sim
@@ -66,11 +71,11 @@ makeMNKResource("RIDDLE_OF_EARTH", 1, { timeout: 10 });
 makeMNKResource("EARTHS_RESOLVE", 1, { timeout: 15 });
 makeMNKResource("EARTHS_RUMINATION", 1, { timeout: 30 });
 makeMNKResource("RIDDLE_OF_FIRE", 1, { timeout: 20.72 });
-makeMNKResource("FIRES_RUMINATION", 1, { timeout: 20 });
+makeMNKResource("FIRES_RUMINATION", 1, { timeout: 20, warnOnTimeout: true });
 makeMNKResource("BROTHERHOOD", 1, { timeout: 20 });
 makeMNKResource("MEDITATIVE_BROTHERHOOD", 1, { timeout: 20 });
 makeMNKResource("RIDDLE_OF_WIND", 1, { timeout: 15.78 });
-makeMNKResource("WINDS_RUMINATION", 1, { timeout: 15 });
+makeMNKResource("WINDS_RUMINATION", 1, { timeout: 15, warnOnTimeout: true });
 makeMNKResource("SIX_SIDED_STAR", 1, { timeout: 5 });
 
 // Trackers

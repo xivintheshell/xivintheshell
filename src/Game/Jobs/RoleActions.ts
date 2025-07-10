@@ -8,7 +8,6 @@ import {
 	ALL_JOBS,
 	JOBS,
 } from "../Data/Jobs";
-import { WarningType } from "../Common";
 import {
 	combineEffects,
 	makeAbility,
@@ -27,7 +26,7 @@ import { SHARED_LIMIT_BREAK_RESOURCES, LimitBreakResourceKey } from "../Data/Sha
 // And so do limit breaks! :(
 const cancelDualcast = (state: GameState) => {
 	if (state.job === "RDM" && state.tryConsumeResource("DUALCAST")) {
-		controller.reportWarning(WarningType.DualcastEaten);
+		controller.reportWarning({ kind: "custom", en: "dualcast dropped" });
 	}
 };
 

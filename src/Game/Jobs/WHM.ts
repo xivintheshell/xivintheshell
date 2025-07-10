@@ -34,7 +34,12 @@ import { localize } from "../../Components/Localization";
 const makeWHMResource = (
 	rsc: WHMResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnTimeout?: boolean;
+		warnOnOvercap?: boolean;
+	},
 ) => {
 	makeResource("WHM", rsc, maxValue, params ?? {});
 };
@@ -42,12 +47,12 @@ const makeWHMResource = (
 // Gauge resources
 makeWHMResource("LILLIES", 3);
 makeWHMResource("LILY_TIMER", 1);
-makeWHMResource("BLOOD_LILY", 3);
+makeWHMResource("BLOOD_LILY", 3, { warnOnOvercap: true });
 
 // Statuses
 makeWHMResource("FREECURE", 1, { timeout: 15 });
 makeWHMResource("PRESENCE_OF_MIND", 1, { timeout: 15 });
-makeWHMResource("SACRED_SIGHT", 3, { timeout: 30 });
+makeWHMResource("SACRED_SIGHT", 3, { timeout: 30, warnOnTimeout: true });
 makeWHMResource("REGEN", 1, { timeout: 18 });
 makeWHMResource("AERO_II", 1, { timeout: 30 });
 makeWHMResource("MEDICA_II", 1, { timeout: 15 });

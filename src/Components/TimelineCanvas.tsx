@@ -24,12 +24,13 @@ import {
 	TimelineDimensions,
 	TimelineDrawOptions,
 } from "./Common";
-import { BuffType, WarningType } from "../Game/Common";
+import { BuffType } from "../Game/Common";
 import { getSkillIconImage } from "./Skills";
 import { buffIconImages } from "./Buffs";
 import { controller } from "../Controller/Controller";
 import {
 	localize,
+	localizeResourceType,
 	localizeBuffType,
 	localizeSkillName,
 	localizeSkillUnavailableReason,
@@ -418,24 +419,44 @@ function drawWarningMarks(
 		g_ctx.fillText("!", x, bottomY - 1);
 
 		let message: string = "[" + mark.displayTime.toFixed(3) + "] ";
-		if (mark.warningType === WarningType.PolyglotOvercap) {
-			message += localize({ en: "polyglot overcap!", zh: "通晓溢出！" });
-		} else if (mark.warningType === WarningType.CometOverwrite) {
-			message += localize({ en: "comet overwrite!", zh: "彗星之黑被覆盖！" });
-		} else if (mark.warningType === WarningType.PaletteOvercap) {
-			message += localize({ en: "palette gauge overcap!", zh: "调色量值溢出！" });
-		} else if (mark.warningType === WarningType.ImbalancedMana) {
-			message += localize({ en: mark.warningType + "!", zh: "魔元失衡！" });
-		} else if (mark.warningType === WarningType.KenkiOvercap) {
-			message += localize({ en: "kenki overcap!" });
-		} else if (mark.warningType === WarningType.MeditationOvercap) {
-			message += localize({ en: "meditation stack overcap!" });
-		} else if (mark.warningType === WarningType.SenOvercap) {
-			message += localize({ en: "sen overcap!" });
-		} else {
-			message += localize({ en: mark.warningType + "!" });
+		switch (mark.warningType.kind) {
+			case "combobreak":
+				message += localize({
+					en: "broken combo!",
+					zh: "连击被断！",
+				}).toString();
+				break;
+			case "overcap":
+				message +=
+					localizeResourceType(mark.warningType.rsc).toString() +
+					localize({
+						en: "overcap!",
+						zh: "溢出！",
+					}).toString();
+				break;
+			case "overwrite":
+				message +=
+					localizeResourceType(mark.warningType.rsc).toString() +
+					localize({
+						en: "overwrite!",
+						zh: "被覆盖！",
+					}).toString();
+				break;
+			case "timeout":
+				message +=
+					localizeResourceType(mark.warningType.rsc).toString() +
+					localize({
+						en: "expired!",
+						zh: "已过期！",
+					});
+				break;
+			default:
+				message += localize({
+					en: mark.warningType.en,
+					zh: mark.warningType.zh,
+				});
+				break;
 		}
-
 		testInteraction(
 			{ x: x - sideLength / 2, y: bottomY - sideLength, w: sideLength, h: sideLength },
 			[message],

@@ -1,7 +1,7 @@
 // Skill and state declarations for SMN.
 
 import { controller } from "../../Controller/Controller";
-import { Aspect, BuffType, WarningType } from "../Common";
+import { Aspect, BuffType } from "../Common";
 import { Modifiers, Potency } from "../Potency";
 import {
 	Ability,
@@ -31,7 +31,12 @@ import { SMNResourceKey, SMNActionKey } from "../Data/Jobs/SMN";
 const makeSMNResource = (
 	rsc: SMNResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number; warningOnTimeout?: WarningType },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnTimeout?: boolean;
+		warnOnOvercap?: boolean;
+	},
 ) => {
 	makeResource("SMN", rsc, maxValue, params ?? {});
 };
@@ -45,7 +50,7 @@ export enum ActiveDemiValue {
 
 const DEMI_DURATION: number = 15;
 
-makeSMNResource("AETHERFLOW", 2);
+makeSMNResource("AETHERFLOW", 2, { warnOnOvercap: true });
 makeSMNResource("RUBY_ARCANUM", 1);
 makeSMNResource("TOPAZ_ARCANUM", 1);
 makeSMNResource("EMERALD_ARCANUM", 1);
@@ -64,7 +69,7 @@ makeSMNResource("REKINDLE", 1, { timeout: 30 });
 makeSMNResource("UNDYING_FLAME", 1, { timeout: 15 });
 makeSMNResource("RUBYS_GLIMMER", 1, {
 	timeout: 30,
-	warningOnTimeout: WarningType.RubysGlimmerDrop,
+	warnOnTimeout: true,
 });
 makeSMNResource("SEARING_LIGHT", 1, { timeout: 20 });
 makeSMNResource("SLIPSTREAM", 1, { timeout: 15 });
@@ -310,7 +315,10 @@ export class SMNState extends GameState {
 		const demiEvent = this.resources.get("ACTIVE_DEMI").pendingChange;
 		console.assert(demiEvent);
 		if (demiEvent && demiEvent.timeTillEvent < 2.5) {
-			controller.reportWarning(WarningType.LateEnkindle);
+			controller.reportWarning({
+				kind: "custom",
+				en: "enkindle used near end of demi window may ghost",
+			});
 		}
 		this.queuePetDamageEvent(
 			node,
@@ -1307,9 +1315,6 @@ makeSpell_SMN("RUIN_IV", 62, {
 		...info,
 		cooldown: 60,
 		onConfirm: (state) => {
-			if (state.resources.get("AETHERFLOW").available(1)) {
-				controller.reportWarning(WarningType.AetherflowOvercap);
-			}
 			state.gainStatus("AETHERFLOW", 2);
 			state.gainStatus("FURTHER_RUIN");
 		},

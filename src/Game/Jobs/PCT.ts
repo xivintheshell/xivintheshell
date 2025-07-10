@@ -1,7 +1,6 @@
 // Skill and state declarations for PCT.
 
-import { controller } from "../../Controller/Controller";
-import { BuffType, WarningType } from "../Common";
+import { BuffType } from "../Common";
 import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -32,7 +31,7 @@ import { PCTResourceKey, PCTActionKey, PCTCooldownKey } from "../Data/Jobs/PCT";
 const makePCTResource = (
 	rsc: PCTResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: { timeout?: number; default?: number; warnOnOvercap?: boolean },
 ) => {
 	makeResource("PCT", rsc, maxValue, params ?? {});
 };
@@ -43,11 +42,11 @@ makePCTResource("DEPICTIONS", 3);
 makePCTResource("CREATURE_CANVAS", 1, { default: 1 });
 makePCTResource("WEAPON_CANVAS", 1, { default: 1 });
 makePCTResource("LANDSCAPE_CANVAS", 1, { default: 1 });
-makePCTResource("PALETTE_GAUGE", 100);
+makePCTResource("PALETTE_GAUGE", 100, { warnOnOvercap: true });
 makePCTResource("PAINT", 5);
 
 makePCTResource("AETHERHUES", 2, { timeout: 30.8 });
-makePCTResource("MONOCHROME_TONES", 1);
+makePCTResource("MONOCHROME_TONES", 1, { warnOnOvercap: true });
 makePCTResource("SUBTRACTIVE_PALETTE", 3);
 makePCTResource("HAMMER_TIME", 3, { timeout: 30 });
 makePCTResource("INSPIRATION", 1, { timeout: 30 });
@@ -489,11 +488,7 @@ makeSpell_PCT("WATER_IN_BLUE", 15, {
 		blueCondition.condition(state) && !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => {
 		state.doFiller();
-		const paletteGauge = state.resources.get("PALETTE_GAUGE");
-		if (paletteGauge.available(100)) {
-			controller.reportWarning(WarningType.PaletteOvercap);
-		}
-		paletteGauge.gain(25);
+		state.resources.get("PALETTE_GAUGE").gain(25);
 		if (state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
 			state.resources.get("PAINT").gain(1);
 		}
@@ -551,11 +546,7 @@ makeSpell_PCT("WATER_II_IN_BLUE", 45, {
 		blue2Condition.condition(state) && !state.hasResourceAvailable("SUBTRACTIVE_PALETTE"),
 	onConfirm: (state) => {
 		state.doFiller();
-		const paletteGauge = state.resources.get("PALETTE_GAUGE");
-		if (paletteGauge.available(100)) {
-			controller.reportWarning(WarningType.PaletteOvercap);
-		}
-		paletteGauge.gain(25);
+		state.resources.get("PALETTE_GAUGE").gain(25);
 		if (state.hasTraitUnlocked("ENHANCED_ARTISTRY")) {
 			state.resources.get("PAINT").gain(1);
 		}
@@ -769,9 +760,6 @@ makeAbility_PCT("SUBTRACTIVE_PALETTE", 60, "cd_SUBTRACTIVE", {
 			state.resources.get("PALETTE_GAUGE").consume(50);
 		}
 		// gain comet (caps at 1)
-		if (state.hasResourceAvailable("MONOCHROME_TONES")) {
-			controller.reportWarning(WarningType.CometOverwrite);
-		}
 		if (state.hasTraitUnlocked("ENHANCED_PALETTE")) {
 			state.gainStatus("MONOCHROME_TONES");
 		}

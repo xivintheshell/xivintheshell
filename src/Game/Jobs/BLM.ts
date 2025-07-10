@@ -1,8 +1,7 @@
 // Skill and state declarations for BLM.
 
-import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, BuffType, Debug, WarningType } from "../Common";
+import { Aspect, BuffType, Debug } from "../Common";
 import { PotencyModifierType, PotencyMultiplier } from "../Potency";
 import {
 	Ability,
@@ -28,11 +27,15 @@ import { BLMResourceKey, BLMActionKey, BLMCooldownKey } from "../Data/Jobs/BLM";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
-const makeBLMResource = (rsc: BLMResourceKey, maxValue: number, params?: { timeout: number }) => {
+const makeBLMResource = (
+	rsc: BLMResourceKey,
+	maxValue: number,
+	params?: { timeout: number; warnOnOvercap?: boolean },
+) => {
 	makeResource("BLM", rsc, maxValue, params ?? {});
 };
 
-makeBLMResource("POLYGLOT", 3, { timeout: 30 });
+makeBLMResource("POLYGLOT", 3, { timeout: 30, warnOnOvercap: true });
 makeBLMResource("ASTRAL_FIRE", 3);
 makeBLMResource("UMBRAL_ICE", 3);
 makeBLMResource("UMBRAL_HEART", 3);
@@ -121,9 +124,6 @@ export class BLMState extends GameState {
 		// also polyglot
 		const recurringPolyglotGain = (rsc: Resource) => {
 			if (this.hasEnochian()) {
-				if (rsc.availableAmount() === rsc.maxValue) {
-					controller.reportWarning(WarningType.PolyglotOvercap);
-				}
 				rsc.gain(1);
 			}
 			this.resources.addResourceEvent({
@@ -919,9 +919,6 @@ makeAbility_BLM("AMPLIFIER", 86, "cd_AMPLIFIER", {
 	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
 	onApplication: (state, node) => {
 		const polyglot = state.resources.get("POLYGLOT");
-		if (polyglot.available(polyglot.maxValue)) {
-			controller.reportWarning(WarningType.PolyglotOvercap);
-		}
 		polyglot.gain(1);
 	},
 });

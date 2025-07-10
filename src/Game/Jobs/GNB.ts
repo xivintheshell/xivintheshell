@@ -1,7 +1,6 @@
 // Skill and state declarations for GNB
 
-import { controller } from "../../Controller/Controller";
-import { BuffType, WarningType } from "../Common";
+import { BuffType } from "../Common";
 import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
@@ -31,12 +30,17 @@ import { GNBResourceKey } from "../Data/Jobs/GNB";
 const makeGNBResource = (
 	rsc: GNBResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number; warningOnTimeout?: WarningType },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnTimeout?: boolean;
+		warnOnOvercap?: boolean;
+	},
 ) => {
 	makeResource("GNB", rsc, maxValue, params ?? {});
 };
 
-makeGNBResource("POWDER_GAUGE", 3);
+makeGNBResource("POWDER_GAUGE", 3, { warnOnOvercap: true });
 makeGNBResource("ROYAL_GUARD", 1);
 
 // TODO: get precise durations
@@ -52,13 +56,13 @@ makeGNBResource("GREAT_NEBULA", 1, { timeout: 15 });
 makeGNBResource("HEART_OF_LIGHT", 1, { timeout: 15 });
 makeGNBResource("HEART_OF_STONE", 1, { timeout: 8 });
 
-makeGNBResource("READY_TO_BLAST", 1, { timeout: 10 });
-makeGNBResource("READY_TO_BREAK", 1, { timeout: 30 });
-makeGNBResource("READY_TO_GOUGE", 1, { timeout: 10 });
-makeGNBResource("READY_TO_RAZE", 1, { timeout: 10 });
-makeGNBResource("READY_TO_REIGN", 1, { timeout: 30 });
-makeGNBResource("READY_TO_RIP", 1, { timeout: 10 });
-makeGNBResource("READY_TO_TEAR", 1, { timeout: 10 });
+makeGNBResource("READY_TO_BLAST", 1, { timeout: 10, warnOnTimeout: true });
+makeGNBResource("READY_TO_BREAK", 1, { timeout: 30, warnOnTimeout: true });
+makeGNBResource("READY_TO_GOUGE", 1, { timeout: 10, warnOnTimeout: true });
+makeGNBResource("READY_TO_RAZE", 1, { timeout: 10, warnOnTimeout: true });
+makeGNBResource("READY_TO_REIGN", 1, { timeout: 30, warnOnTimeout: true });
+makeGNBResource("READY_TO_RIP", 1, { timeout: 10, warnOnTimeout: true });
+makeGNBResource("READY_TO_TEAR", 1, { timeout: 10, warnOnTimeout: true });
 
 makeGNBResource("SONIC_BREAK_DOT", 1, { timeout: 30 });
 makeGNBResource("SUPERBOLIDE", 1, { timeout: 10 });
@@ -172,10 +176,6 @@ export class GNBState extends GameState {
 
 	// gain a cart
 	gainCartridge(carts: number) {
-		const maxCarts = this.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2;
-		if (this.resources.get("POWDER_GAUGE").availableAmount() + carts > maxCarts) {
-			controller.reportWarning(WarningType.CartridgeOvercap);
-		}
 		this.resources.get("POWDER_GAUGE").gain(carts);
 	}
 

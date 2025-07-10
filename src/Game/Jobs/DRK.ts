@@ -4,7 +4,7 @@ import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { GameConfig } from "../GameConfig";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, WarningType } from "../Common";
+import { Aspect } from "../Common";
 import { Modifiers, Potency } from "../Potency";
 import {
 	Ability,
@@ -34,14 +34,19 @@ import { DRKResourceKey, DRKActionKey, DRKCooldownKey } from "../Data/Jobs/DRK";
 const makeDRKResource = (
 	rsc: DRKResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnOvercap?: boolean;
+		warnOnTimeout?: boolean;
+	},
 ) => {
 	makeResource("DRK", rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
 makeDRKResource("DARKSIDE", 1, { timeout: 60 });
-makeDRKResource("BLOOD_GAUGE", 100);
+makeDRKResource("BLOOD_GAUGE", 100, { warnOnOvercap: true });
 
 // Buffs
 makeDRKResource("SALTED_EARTH", 1, { timeout: 15 });
@@ -56,17 +61,17 @@ makeDRKResource("WALKING_DEAD", 1, { timeout: 10 });
 // we don't support full HP planning.
 makeDRKResource("UNDEAD_REBIRTH", 1);
 makeDRKResource("DARK_MISSIONARY", 1, { timeout: 15 });
-makeDRKResource("DELIRIUM", 3, { timeout: 15 });
-makeDRKResource("BLOOD_WEAPON", 3, { timeout: 15 });
-makeDRKResource("BLACKEST_NIGHT", 1, { timeout: 7 });
+makeDRKResource("DELIRIUM", 3, { timeout: 15, warnOnTimeout: true });
+makeDRKResource("BLOOD_WEAPON", 3, { timeout: 15, warnOnTimeout: true });
+makeDRKResource("BLACKEST_NIGHT", 1, { timeout: 7, warnOnTimeout: true });
 // Scorn allows the cast of Disesteem.
-makeDRKResource("SCORN", 1, { timeout: 30 });
+makeDRKResource("SCORN", 1, { timeout: 30, warnOnTimeout: true });
 makeDRKResource("OBLATION", 1, { timeout: 10 });
 makeDRKResource("SHADOWED_VIGIL", 1, { timeout: 15 });
 // Excog effect of Shadowed Vigil.
 makeDRKResource("VIGILANT", 1, { timeout: 20 });
 
-makeDRKResource("DARK_ARTS", 1);
+makeDRKResource("DARK_ARTS", 1, { warnOnOvercap: true });
 
 // Combo trackers
 makeDRKResource("DRK_COMBO_TRACKER", 2, { timeout: 30 });
@@ -118,11 +123,7 @@ export class DRKState extends GameState {
 	}
 
 	gainBloodGauge(amt: number) {
-		const rsc = this.resources.get("BLOOD_GAUGE");
-		if (rsc.availableAmount() + amt > 100) {
-			controller.reportWarning(WarningType.BloodGaugeOvercap);
-		}
-		rsc.gain(amt);
+		this.resources.get("BLOOD_GAUGE").gain(amt);
 	}
 
 	bloodWeaponConfirm(applicationDelay: number) {
@@ -752,9 +753,6 @@ makeDRKAbility("THE_BLACKEST_NIGHT_POP", 70, "cd_THE_BLACKEST_NIGHT_POP", {
 	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: 1,
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable("DARK_ARTS")) {
-			controller.reportWarning(WarningType.DarkArtsOvercap);
-		}
 		state.gainStatus("DARK_ARTS");
 		state.tryConsumeResource("BLACKEST_NIGHT");
 	},

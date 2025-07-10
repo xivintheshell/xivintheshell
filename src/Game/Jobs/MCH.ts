@@ -2,7 +2,7 @@ import { MCHStatusPropsGenerator } from "../../Components/Jobs/MCH";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, WarningType } from "../Common";
+import { Aspect } from "../Common";
 import { ActionKey, TraitKey } from "../Data";
 import { MCHResourceKey, MCHActionKey, MCHCooldownKey } from "../Data/Jobs/MCH";
 import { GameConfig } from "../GameConfig";
@@ -35,26 +35,31 @@ import {
 const makeMCHResource = (
 	rsc: MCHResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnOvercap?: boolean;
+		warnOnTimeout?: boolean;
+	},
 ) => {
 	makeResource("MCH", rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
-makeMCHResource("HEAT_GAUGE", 100);
-makeMCHResource("BATTERY_GAUGE", 100);
+makeMCHResource("HEAT_GAUGE", 100, { warnOnOvercap: true });
+makeMCHResource("BATTERY_GAUGE", 100, { warnOnOvercap: true });
 
 // Status Effects
-makeMCHResource("REASSEMBLED", 1, { timeout: 5 });
-makeMCHResource("OVERHEATED", 5, { timeout: 10 });
+makeMCHResource("REASSEMBLED", 1, { timeout: 5, warnOnTimeout: true });
+makeMCHResource("OVERHEATED", 5, { timeout: 10, warnOnTimeout: true });
 makeMCHResource("WILDFIRE", 1, { timeout: 10 });
 makeMCHResource("WILDFIRE_SELF", 1, { timeout: 10 });
 makeMCHResource("FLAMETHROWER", 1, { timeout: 10 });
 makeMCHResource("BIOBLASTER", 1, { timeout: 15 });
 makeMCHResource("TACTICIAN", 1, { timeout: 15 });
-makeMCHResource("HYPERCHARGED", 1, { timeout: 30 });
-makeMCHResource("EXCAVATOR_READY", 1, { timeout: 30 });
-makeMCHResource("FULL_METAL_MACHINIST", 1, { timeout: 30 });
+makeMCHResource("HYPERCHARGED", 1, { timeout: 30, warnOnTimeout: true });
+makeMCHResource("EXCAVATOR_READY", 1, { timeout: 30, warnOnTimeout: true });
+makeMCHResource("FULL_METAL_MACHINIST", 1, { timeout: 30, warnOnTimeout: true });
 
 // Combos & other tracking
 makeMCHResource("HEAT_COMBO", 2, { timeout: 30 });
@@ -194,12 +199,6 @@ export class MCHState extends GameState {
 	}
 
 	gainResource(rscType: "HEAT_GAUGE" | "BATTERY_GAUGE", amount: number) {
-		const resource = this.resources.get(rscType);
-		if (resource.availableAmount() + amount > resource.maxValue) {
-			controller.reportWarning(
-				rscType === "HEAT_GAUGE" ? WarningType.HeatOvercap : WarningType.BatteryOvercap,
-			);
-		}
 		this.resources.get(rscType).gain(amount);
 	}
 
