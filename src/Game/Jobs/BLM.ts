@@ -81,7 +81,7 @@ export class BLMState extends GameState {
 			(this.hasTraitUnlocked("ENHANCED_POLYGLOT_II") && 3) ||
 			(this.hasTraitUnlocked("ENHANCED_POLYGLOT") && 2) ||
 			1;
-		this.resources.set(new Resource("POLYGLOT", polyglotStacks, 0));
+		this.resources.set(new Resource("POLYGLOT", polyglotStacks, 0, true));
 
 		// skill CDs (also a form of resource)
 		const manafontCooldown = (this.hasTraitUnlocked("ENHANCED_MANAFONT") && 100) || 120;

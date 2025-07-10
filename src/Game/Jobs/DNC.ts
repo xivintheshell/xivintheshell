@@ -88,7 +88,7 @@ export class DNCState extends GameState {
 
 		// Disable Esprit Gauge for level 70 duties
 		if (!this.hasTraitUnlocked("ESPRIT")) {
-			this.resources.set(new Resource("ESPRIT_GAUGE", 0, 0));
+			this.resources.set(new Resource("ESPRIT_GAUGE", 0, 0, true));
 		}
 
 		const enAvantStacks = this.hasTraitUnlocked("ENHANCED_EN_AVANT_II") ? 3 : 2;

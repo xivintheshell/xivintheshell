@@ -96,7 +96,7 @@ export class GNBState extends GameState {
 		this.cooldowns.set(new CoolDown("cd_GNASHING_FANG", this.config.adjustedSksGCD(30), 1, 1));
 
 		const powderGaugeMax = this.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2;
-		this.resources.set(new Resource("POWDER_GAUGE", powderGaugeMax, 0));
+		this.resources.set(new Resource("POWDER_GAUGE", powderGaugeMax, 0, true));
 
 		this.registerRecurringEvents([
 			{
