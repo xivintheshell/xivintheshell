@@ -20,6 +20,7 @@ import {
 import { GameState } from "../GameState";
 import { makeResource, CoolDown } from "../Resources";
 import { GameConfig } from "../GameConfig";
+import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
 import { ActionKey, TraitKey } from "../Data";
 import { PCTStatusPropsGenerator } from "../../Components/Jobs/PCT";
@@ -31,7 +32,12 @@ import { PCTResourceKey, PCTActionKey, PCTCooldownKey } from "../Data/Jobs/PCT";
 const makePCTResource = (
 	rsc: PCTResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number; warnOnOvercap?: boolean },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnOvercap?: boolean;
+		warnOnTimeout?: boolean;
+	},
 ) => {
 	makeResource("PCT", rsc, maxValue, params ?? {});
 };
@@ -46,14 +52,14 @@ makePCTResource("PALETTE_GAUGE", 100, { warnOnOvercap: true });
 makePCTResource("PAINT", 5);
 
 makePCTResource("AETHERHUES", 2, { timeout: 30.8 });
-makePCTResource("MONOCHROME_TONES", 1, { warnOnOvercap: true });
+makePCTResource("MONOCHROME_TONES", 1);
 makePCTResource("SUBTRACTIVE_PALETTE", 3);
 makePCTResource("HAMMER_TIME", 3, { timeout: 30 });
 makePCTResource("INSPIRATION", 1, { timeout: 30 });
-makePCTResource("SUBTRACTIVE_SPECTRUM", 1, { timeout: 30 });
-makePCTResource("HYPERPHANTASIA", 5, { timeout: 30 });
-makePCTResource("RAINBOW_BRIGHT", 1, { timeout: 30 });
-makePCTResource("STARSTRUCK", 1, { timeout: 20 });
+makePCTResource("SUBTRACTIVE_SPECTRUM", 1, { timeout: 30, warnOnTimeout: true });
+makePCTResource("HYPERPHANTASIA", 5, { timeout: 30, warnOnTimeout: true });
+makePCTResource("RAINBOW_BRIGHT", 1, { timeout: 30, warnOnTimeout: true });
+makePCTResource("STARSTRUCK", 1, { timeout: 20, warnOnTimeout: true });
 makePCTResource("STARRY_MUSE", 1, { timeout: 20.5 });
 makePCTResource("TEMPERA_COAT", 1, { timeout: 10 });
 makePCTResource("TEMPERA_GRASSA", 1, { timeout: 10 });
@@ -760,6 +766,13 @@ makeAbility_PCT("SUBTRACTIVE_PALETTE", 60, "cd_SUBTRACTIVE", {
 			state.resources.get("PALETTE_GAUGE").consume(50);
 		}
 		// gain comet (caps at 1)
+		if (state.hasResourceAvailable("MONOCHROME_TONES")) {
+			controller.reportWarning({
+				kind: "custom",
+				en: "comet overwrite!",
+				zh: "彗星之黑被覆盖！",
+			});
+		}
 		if (state.hasTraitUnlocked("ENHANCED_PALETTE")) {
 			state.gainStatus("MONOCHROME_TONES");
 		}

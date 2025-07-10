@@ -430,7 +430,7 @@ function drawWarningMarks(
 				message +=
 					localizeResourceType(mark.warningType.rsc).toString() +
 					localize({
-						en: "overcap!",
+						en: " overcap!",
 						zh: "溢出！",
 					}).toString();
 				break;
@@ -438,7 +438,7 @@ function drawWarningMarks(
 				message +=
 					localizeResourceType(mark.warningType.rsc).toString() +
 					localize({
-						en: "overwrite!",
+						en: " overwrite!",
 						zh: "被覆盖！",
 					}).toString();
 				break;
@@ -446,7 +446,7 @@ function drawWarningMarks(
 				message +=
 					localizeResourceType(mark.warningType.rsc).toString() +
 					localize({
-						en: "expired!",
+						en: " expired!",
 						zh: "已过期！",
 					});
 				break;

@@ -480,6 +480,9 @@ export class GameState {
 		const resource = this.resources.get(rscType);
 		const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
 		if (this.hasResourceAvailable(rscType)) {
+			if (resourceInfo.warnOnOvercap && stacks >= resource.availableAmount()) {
+				controller.reportWarning({ kind: "overcap", rsc: rscType });
+			}
 			if (resourceInfo.maxTimeout > 0) {
 				resource.overrideTimer(this, resourceInfo.maxTimeout);
 			}

@@ -395,7 +395,6 @@ const makeSpell_BLM = (
 			// Triple
 			state.hasResourceAvailable("TRIPLECAST"),
 		onConfirm,
-		onApplication: params.onApplication,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyMultiplier[] = [];
 			if (state.hasResourceAvailable("ENOCHIAN")) {

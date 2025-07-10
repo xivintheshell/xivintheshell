@@ -267,7 +267,6 @@ const makeGCD_SAM = (
 		onApplication?: EffectFn<SAMState>;
 	},
 ): Weaponskill<SAMState> => {
-	const onApplication: EffectFn<SAMState> | undefined = params.onApplication;
 	const jobPotencyModifiers = (state: Readonly<SAMState>) => {
 		const mods: PotencyModifier[] = state.hasResourceAvailable("FUGETSU")
 			? [state.getFugetsuModifier()]
@@ -293,7 +292,6 @@ const makeGCD_SAM = (
 		potency: params.basePotency,
 		jobPotencyModifiers,
 		isInstantFn: (state) => !(params.baseCastTime && params.baseCastTime > 0),
-		onApplication,
 	});
 };
 
