@@ -415,9 +415,7 @@ const makeSpell_PLD = (
 		}
 	}, params.onConfirm);
 	return makeSpell("PLD", name, unlockLevel, {
-		replaceIf: params.replaceIf,
-		startOnHotbar: params.startOnHotbar,
-		highlightIf: params.highlightIf,
+		...params,
 		castTime: (state) => state.captureSpellCastTime(name, params.baseCastTime),
 		recastTime: (state) => state.config.adjustedGCD(),
 		manaCost: params.baseManaCost ?? 0,
@@ -457,9 +455,6 @@ const makeSpell_PLD = (
 			}
 			return mods;
 		},
-		falloff: params.falloff,
-		validateAttempt: params.validateAttempt,
-		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => {
 			/*
 			if (name !== "CLEMENCY") {
@@ -472,9 +467,6 @@ const makeSpell_PLD = (
 			return state.isSpellInstant(name);
 		},
 		onConfirm,
-		onApplication: params.onApplication,
-		onExecute: params.onExecute,
-		startsAuto: params.startsAuto,
 	});
 };
 
@@ -505,8 +497,6 @@ const makeAbility_PLD = (
 ): Ability<PLDState> => {
 	return makeAbility("PLD", name, unlockLevel, cdName, {
 		...params,
-		onConfirm: params.onConfirm,
-		startsAuto: params.startsAuto,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (state.hasResourceAvailable("FIGHT_OR_FLIGHT")) {

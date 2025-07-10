@@ -68,7 +68,7 @@ const AOE_COMBO_SKILLS: ActionKey[] = [
 	"DRACONIAN_FURY",
 ];
 
-const CHAOS_COMBO_MAP: Map<ActionKey, number> = new Map([
+const CHAOS_COMBO_PREREQ: Map<ActionKey, number> = new Map([
 	["DISEMBOWEL", 1],
 	["SPIRAL_BLOW", 1],
 	["CHAOS_THRUST", 2],
@@ -76,7 +76,7 @@ const CHAOS_COMBO_MAP: Map<ActionKey, number> = new Map([
 	["WHEELING_THRUST", 3],
 ]);
 
-const HEAVENS_COMBO_MAP: Map<ActionKey, number> = new Map([
+const HEAVENS_COMBO_PREREQ: Map<ActionKey, number> = new Map([
 	["VORPAL_THRUST", 1],
 	["LANCE_BARRAGE", 1],
 	["FULL_THRUST", 2],
@@ -165,26 +165,21 @@ export class DRGState extends GameState {
 		// consume draconian fire
 		this.tryConsumeResource("DRACONIAN_FIRE", true);
 
-		let resType: DRGResourceKey = "DRG_AOE_COMBO_TRACKER";
 		// HANDLE AOE DIFFERENTLY
 		if (AOE_COMBO_SKILLS.includes(skillName)) {
 			// reset chaos and heavens thrust combo trackers
 			this.tryConsumeResource("DRG_CHAOS_COMBO_TRACKER", true);
 			this.tryConsumeResource("DRG_HEAVENS_COMBO_TRACKER", true);
+			let nextComboValue = 0;
 			if (skillName === "DOOM_SPIKE" || skillName === "DRACONIAN_FURY") {
-				this.tryConsumeResource(resType, true);
-				this.resources.get(resType).gain(1);
-				this.enqueueResourceDrop(resType);
-			} else if (skillName === "SONIC_THRUST") {
-				if (this.resources.get(resType).availableAmount() === 1) {
-					this.resources.get(resType).gain(1);
-					this.enqueueResourceDrop(resType);
-				} else {
-					this.tryConsumeResource(resType, true);
-				}
-			} else if (skillName === "COERTHAN_TORMENT") {
-				this.tryConsumeResource(resType, true);
+				nextComboValue = 1;
+			} else if (
+				skillName === "SONIC_THRUST" &&
+				this.hasResourceExactly("DRG_AOE_COMBO_TRACKER", 1)
+			) {
+				nextComboValue = 2;
 			}
+			this.setComboState("DRG_AOE_COMBO_TRACKER", nextComboValue);
 			return;
 		}
 
@@ -197,39 +192,32 @@ export class DRGState extends GameState {
 			this.tryConsumeResource("DRG_HEAVENS_COMBO_TRACKER", true);
 
 			// start the two branching combos
-			this.resources.get("DRG_CHAOS_COMBO_TRACKER").gain(1);
-			this.enqueueResourceDrop("DRG_CHAOS_COMBO_TRACKER");
-			this.resources.get("DRG_HEAVENS_COMBO_TRACKER").gain(1);
-			this.enqueueResourceDrop("DRG_HEAVENS_COMBO_TRACKER");
-
+			this.setComboState("DRG_CHAOS_COMBO_TRACKER", 1);
+			this.setComboState("DRG_HEAVENS_COMBO_TRACKER", 1);
 			return;
 		}
 
-		let combo_value = -1;
-		// chaos combo
-		if (CHAOS_COMBO_MAP.has(skillName)) {
+		if (CHAOS_COMBO_PREREQ.has(skillName)) {
+			const prereqComboValue = CHAOS_COMBO_PREREQ.get(skillName)!;
 			this.tryConsumeResource("DRG_HEAVENS_COMBO_TRACKER", true);
-			resType = "DRG_CHAOS_COMBO_TRACKER";
-			combo_value = CHAOS_COMBO_MAP.get(skillName) ?? -1;
-		}
-		// heavens combo
-		else if (HEAVENS_COMBO_MAP.has(skillName)) {
+			this.setComboState(
+				"DRG_CHAOS_COMBO_TRACKER",
+				this.hasResourceExactly("DRG_CHAOS_COMBO_TRACKER", prereqComboValue)
+					? prereqComboValue + 1
+					: 0,
+			);
+		} else if (HEAVENS_COMBO_PREREQ.has(skillName)) {
+			const prereqComboValue = HEAVENS_COMBO_PREREQ.get(skillName)!;
 			this.tryConsumeResource("DRG_CHAOS_COMBO_TRACKER", true);
-			resType = "DRG_HEAVENS_COMBO_TRACKER";
-			combo_value = HEAVENS_COMBO_MAP.get(skillName) ?? -1;
-		}
-		// drakes bane
-		else if (skillName === "DRAKESBANE") {
+			this.setComboState(
+				"DRG_HEAVENS_COMBO_TRACKER",
+				this.hasResourceExactly("DRG_HEAVENS_COMBO_TRACKER", prereqComboValue)
+					? prereqComboValue + 1
+					: 0,
+			);
+		} else if (skillName === "DRAKESBANE") {
 			this.tryConsumeResource("DRG_HEAVENS_COMBO_TRACKER", true);
 			this.tryConsumeResource("DRG_CHAOS_COMBO_TRACKER", true);
-			return;
-		}
-
-		if (this.resources.get(resType).availableAmount() === combo_value) {
-			this.resources.get(resType).gain(1);
-			this.enqueueResourceDrop(resType);
-		} else {
-			this.tryConsumeResource(resType, true);
 		}
 	}
 
@@ -307,15 +295,12 @@ const makeWeaponskill_DRG = (
 		// remove life surge
 		state.tryConsumeResource("LIFE_SURGE");
 	});
-	const jobPotencyMod: PotencyModifierFn<DRGState> =
-		params.jobPotencyModifiers ?? ((state) => []);
 	return makeWeaponskill("DRG", name, unlockLevel, {
 		...params,
 		onConfirm,
-		onApplication: params.onApplication,
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = jobPotencyMod(state);
+			const mods: PotencyModifier[] = params.jobPotencyModifiers?.(state) ?? [];
 			const hitPositional =
 				params.positional && state.hitPositional(params.positional.location);
 			if (params.combo && state.checkCombo(params.combo.resource)) {

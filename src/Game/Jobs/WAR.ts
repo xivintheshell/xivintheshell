@@ -236,7 +236,6 @@ const makeWeaponskill_WAR = (
 	return makeWeaponskill("WAR", name, unlockLevel, {
 		...params,
 		onConfirm,
-		onApplication: params.onApplication,
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = jobPotencyMod(state);
@@ -286,7 +285,6 @@ const makeAbility_WAR = (
 ): Ability<WARState> => {
 	return makeAbility("WAR", name, unlockLevel, cdName, {
 		...params,
-		onConfirm: params.onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (state.hasResourceAvailable("SURGING_TEMPEST")) {

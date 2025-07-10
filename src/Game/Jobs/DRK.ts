@@ -521,7 +521,7 @@ makeDRKWeaponskill("BLOODSPILLER", 62, {
 	applicationDelay: 0.8,
 	validateAttempt: hasBloodOrDelirium,
 	highlightIf: hasBloodOrDelirium,
-	replaceIf: deliriumReplacements.filter((rep) => rep.newSkill !== "BLOODSPILLER"),
+	replaceIf: deliriumReplacements,
 	potency: [
 		["NEVER", 500],
 		["MELEE_MASTERY_II_TANK", 600],
@@ -564,7 +564,7 @@ makeDRKWeaponskill("QUIETUS", 64, {
 		applicationDelay: delay,
 		validateAttempt: deliriumReplacements[i + 1].condition,
 		highlightIf: deliriumReplacements[i + 1].condition,
-		replaceIf: deliriumReplacements.filter((rep) => rep.newSkill !== name),
+		replaceIf: deliriumReplacements,
 		potency,
 		onConfirm: (state) => state.tryConsumeResource("DELIRIUM"),
 		// Delirium combo actions inherently grant 200 MP

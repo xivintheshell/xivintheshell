@@ -800,10 +800,7 @@ makeAbility_BLM("TRIPLECAST", 66, "cd_TRIPLECAST", {
 	applicationDelay: 0, // instant
 	cooldown: 60,
 	maxCharges: 2,
-	onApplication: (state, node) => {
-		const triple = state.resources.get("TRIPLECAST");
-		state.gainStatus("TRIPLECAST", 3);
-	},
+	onApplication: (state, node) => state.gainStatus("TRIPLECAST", 3),
 });
 
 makeSpell_BLM("FOUL", 70, {

@@ -719,9 +719,6 @@ const BLITZ_REPLACES: ConditionalSkillReplace<MNKState>[] = [
 	},
 ];
 
-const getBlitzReplacer = (i: number) =>
-	BLITZ_REPLACES.slice(0, i).concat(BLITZ_REPLACES.slice(i + 1));
-
 const clearBeastChakra: EffectFn<MNKState> = (state) => {
 	BEAST_CHAKRA_KEYS.forEach((key) => state.tryConsumeResource(key, true));
 	state.setForm("formless");
@@ -732,7 +729,7 @@ const gainNadi: (nadi: "lunar" | "solar") => EffectFn<MNKState> =
 
 makeMNKWeaponskill("MASTERFUL_BLITZ", 60, {
 	applicationDelay: 0,
-	replaceIf: getBlitzReplacer(0),
+	replaceIf: BLITZ_REPLACES,
 	validateAttempt: (state) => false,
 });
 
@@ -760,7 +757,7 @@ makeMNKWeaponskill("MASTERFUL_BLITZ", 60, {
 		...traitKey,
 		startOnHotbar: false,
 		applicationDelay,
-		replaceIf: getBlitzReplacer(4),
+		replaceIf: BLITZ_REPLACES,
 		highlightIf: (state) => true,
 		potency,
 		falloff: 0.4,
@@ -795,7 +792,7 @@ makeMNKWeaponskill("MASTERFUL_BLITZ", 60, {
 		...traitKey,
 		startOnHotbar: false,
 		applicationDelay,
-		replaceIf: getBlitzReplacer(1),
+		replaceIf: BLITZ_REPLACES,
 		highlightIf: (state) => true,
 		potency,
 		falloff: 0.4,
@@ -806,7 +803,7 @@ makeMNKWeaponskill("MASTERFUL_BLITZ", 60, {
 makeMNKWeaponskill("CELESTIAL_REVOLUTION", 60, {
 	startOnHotbar: false,
 	applicationDelay: 0.89,
-	replaceIf: getBlitzReplacer(3),
+	replaceIf: BLITZ_REPLACES,
 	highlightIf: (state) => true,
 	potency: 600,
 	onConfirm: combineEffects(clearBeastChakra, (state) =>
@@ -840,7 +837,7 @@ makeMNKWeaponskill("CELESTIAL_REVOLUTION", 60, {
 		...traitKey,
 		startOnHotbar: false,
 		applicationDelay,
-		replaceIf: getBlitzReplacer(2),
+		replaceIf: BLITZ_REPLACES,
 		highlightIf: (state) => true,
 		potency,
 		falloff: 0.4,

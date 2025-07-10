@@ -435,9 +435,7 @@ const makeResourceAbility_BRD = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<BRDState> => {
-	return makeResourceAbility("BRD", name, unlockLevel, cdName, {
-		...params,
-	});
+	return makeResourceAbility("BRD", name, unlockLevel, cdName, params);
 };
 
 makeWeaponskill_BRD("HEAVY_SHOT", 1, {

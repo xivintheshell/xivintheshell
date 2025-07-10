@@ -22,7 +22,7 @@ import {
 	Weaponskill,
 } from "../Skills";
 import { GameState } from "../GameState";
-import { getResourceInfo, makeResource, CoolDown, Resource, ResourceInfo } from "../Resources";
+import { makeResource, CoolDown, Resource } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
 import { ActionKey, CooldownKey, TraitKey } from "../Data";
@@ -120,10 +120,7 @@ export class RDMState extends GameState {
 		if (this.hasResourceAvailable("EMBOLDEN") && skill.aspect !== Aspect.Physical) {
 			node.addBuff(BuffType.Embolden);
 		}
-		if (
-			(this.hasResourceAvailable("MANAFICATION") && skill.kind === "spell") ||
-			skill.kind === "weaponskill"
-		) {
+		if (this.hasResourceAvailable("MANAFICATION") && skill.cdName === "cd_GCD") {
 			node.addBuff(BuffType.Manafication);
 		}
 		if (skill.name === "IMPACT" && this.hasResourceAvailable("ACCELERATION")) {
@@ -153,8 +150,7 @@ export class RDMState extends GameState {
 			this.tryConsumeResource("SWIFTCAST");
 		// After any hardcast skill, gain dualcast
 		if (!isInstant) {
-			this.resources.get("DUALCAST").gain(1);
-			this.enqueueResourceDrop("DUALCAST");
+			this.gainStatus("DUALCAST");
 		}
 	}
 
@@ -194,16 +190,6 @@ export class RDMState extends GameState {
 		} else {
 			this.resources.get("WHITE_MANA").consume(amount);
 			this.resources.get("BLACK_MANA").consume(amount);
-		}
-	}
-
-	gainVerproc(proc: "VERFIRE_READY" | "VERSTONE_READY") {
-		const duration = (getResourceInfo("RDM", proc) as ResourceInfo).maxTimeout;
-		if (this.resources.get(proc).available(1)) {
-			this.resources.get(proc).overrideTimer(this, duration);
-		} else {
-			this.resources.get(proc).gain(1);
-			this.enqueueResourceDrop(proc, duration);
 		}
 	}
 
@@ -292,8 +278,7 @@ export class RDMState extends GameState {
 			!this.hasResourceAvailable("MANAFICATION") &&
 			this.hasTraitUnlocked("ENHANCED_MANAFICATION_III")
 		) {
-			this.resources.get("PREFULGENCE_READY").gain(1);
-			this.enqueueResourceDrop("PREFULGENCE_READY");
+			this.gainStatus("PREFULGENCE_READY");
 		}
 	}
 }
@@ -545,7 +530,7 @@ makeSpell_RDM("VERAERO", 10, {
 	onConfirm: (state) => {
 		state.gainColorMana({ w: 6 });
 		if (state.hasResourceAvailable("ACCELERATION")) {
-			state.gainVerproc("VERSTONE_READY");
+			state.gainStatus("VERSTONE_READY");
 		} else {
 			state.maybeGainVerproc("VERSTONE_READY");
 		}
@@ -563,7 +548,7 @@ makeSpell_RDM("VERTHUNDER", 4, {
 	onConfirm: (state) => {
 		state.gainColorMana({ b: 6 });
 		if (state.hasResourceAvailable("ACCELERATION")) {
-			state.gainVerproc("VERFIRE_READY");
+			state.gainStatus("VERFIRE_READY");
 		} else {
 			state.maybeGainVerproc("VERFIRE_READY");
 		}
@@ -586,7 +571,7 @@ makeSpell_RDM("VERAERO_III", 82, {
 	onConfirm: (state) => {
 		state.gainColorMana({ w: 6 });
 		if (state.hasResourceAvailable("ACCELERATION")) {
-			state.gainVerproc("VERSTONE_READY");
+			state.gainStatus("VERSTONE_READY");
 		} else {
 			state.maybeGainVerproc("VERSTONE_READY");
 		}
@@ -604,7 +589,7 @@ makeSpell_RDM("VERTHUNDER_III", 82, {
 	onConfirm: (state) => {
 		state.gainColorMana({ b: 6 });
 		if (state.hasResourceAvailable("ACCELERATION")) {
-			state.gainVerproc("VERFIRE_READY");
+			state.gainStatus("VERFIRE_READY");
 		} else {
 			state.maybeGainVerproc("VERFIRE_READY");
 		}
@@ -840,7 +825,7 @@ const moulinetConditions: ConditionalSkillReplace<RDMState>[] = [
 ];
 
 makeMeleeGCD("MOULINET", 52, {
-	replaceIf: [moulinetConditions[1], moulinetConditions[2], moulinetConditions[3]],
+	replaceIf: moulinetConditions,
 	falloff: 0,
 	applicationDelay: 0.8, // TODO
 	potency: 60,
@@ -850,7 +835,7 @@ makeMeleeGCD("MOULINET", 52, {
 
 makeMeleeGCD("ENCHANTED_MOULINET", 52, {
 	startOnHotbar: false,
-	replaceIf: [moulinetConditions[0], moulinetConditions[2], moulinetConditions[3]],
+	replaceIf: moulinetConditions,
 	falloff: 0,
 	applicationDelay: 0.8,
 	potency: 130,
@@ -861,7 +846,7 @@ makeMeleeGCD("ENCHANTED_MOULINET", 52, {
 
 makeMeleeGCD("ENCHANTED_MOULINET_II", 52, {
 	startOnHotbar: false,
-	replaceIf: [moulinetConditions[0], moulinetConditions[1], moulinetConditions[3]],
+	replaceIf: moulinetConditions,
 	falloff: 0,
 	applicationDelay: 0.8,
 	potency: 140,
@@ -873,7 +858,7 @@ makeMeleeGCD("ENCHANTED_MOULINET_II", 52, {
 
 makeMeleeGCD("ENCHANTED_MOULINET_III", 52, {
 	startOnHotbar: false,
-	replaceIf: [moulinetConditions[0], moulinetConditions[1], moulinetConditions[2]],
+	replaceIf: moulinetConditions,
 	falloff: 0,
 	applicationDelay: 0.8,
 	potency: 150,
@@ -903,7 +888,7 @@ makeSpell_RDM("VERHOLY", 70, {
 			state.resources.get("WHITE_MANA").availableAmount() <
 			state.resources.get("BLACK_MANA").availableAmount()
 		) {
-			state.gainVerproc("VERSTONE_READY");
+			state.gainStatus("VERSTONE_READY");
 		} else {
 			state.maybeGainVerproc("VERSTONE_READY", 0.2);
 		}
@@ -925,7 +910,7 @@ makeSpell_RDM("VERFLARE", 68, {
 			state.resources.get("BLACK_MANA").availableAmount() <
 			state.resources.get("WHITE_MANA").availableAmount()
 		) {
-			state.gainVerproc("VERFIRE_READY");
+			state.gainStatus("VERFIRE_READY");
 		} else {
 			state.maybeGainVerproc("VERFIRE_READY", 0.2);
 		}
@@ -989,8 +974,7 @@ makeResourceAbility("RDM", "EMBOLDEN", 58, "cd_EMBOLDEN", {
 	cooldown: 120,
 	onApplication: (state) => {
 		if (state.hasTraitUnlocked("ENHANCED_EMBOLDEN")) {
-			state.resources.get("THORNED_FLOURISH").gain(1);
-			state.enqueueResourceDrop("THORNED_FLOURISH");
+			state.gainStatus("THORNED_FLOURISH");
 		}
 	},
 });
@@ -1007,8 +991,7 @@ makeResourceAbility("RDM", "MANAFICATION", 60, "cd_MANAFICATION", {
 	applicationDelay: 0,
 	cooldown: 110,
 	onApplication: (state) => {
-		state.resources.get("MAGICKED_SWORDPLAY").gain(3);
-		state.enqueueResourceDrop("MAGICKED_SWORDPLAY");
+		state.gainStatus("MAGICKED_SWORDPLAY", 3);
 		// Manification resets combos
 		if (
 			state.hasResourceAvailable("RDM_MELEE_COUNTER") ||
@@ -1086,8 +1069,7 @@ makeResourceAbility("RDM", "ACCELERATION", 50, "cd_ACCELERATION", {
 			if (state.hasResourceAvailable("GRAND_IMPACT_READY")) {
 				controller.reportWarning(WarningType.GIOverwrite);
 			}
-			state.resources.get("GRAND_IMPACT_READY").gain(1);
-			state.enqueueResourceDrop("GRAND_IMPACT_READY");
+			state.gainStatus("GRAND_IMPACT_READY");
 		}
 	},
 });

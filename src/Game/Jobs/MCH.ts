@@ -349,7 +349,6 @@ const makeWeaponskill_MCH = (
 	return makeWeaponskill("MCH", name, unlockLevel, {
 		...params,
 		onConfirm,
-		onApplication: params.onApplication,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (
@@ -399,15 +398,7 @@ const makeAbility_MCH = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<MCHState> => {
-	const onConfirm: EffectFn<MCHState> = combineEffects(params.onConfirm);
-	return makeAbility("MCH", name, unlockLevel, cdName, {
-		...params,
-		onConfirm: onConfirm,
-		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = [];
-			return mods;
-		},
-	});
+	return makeAbility("MCH", name, unlockLevel, cdName, params);
 };
 
 const makeResourceAbility_MCH = (
@@ -463,7 +454,7 @@ makeWeaponskill_MCH("HEATED_SLUG_SHOT", 60, {
 	applicationDelay: 0.8,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	onConfirm: (state) => state.gainResource("HEAT_GAUGE", 5),
-	highlightIf: (state) => state.resources.get("HEAT_COMBO").availableAmount() === 1,
+	highlightIf: (state) => state.hasResourceExactly("HEAT_COMBO", 1),
 });
 
 makeWeaponskill_MCH("HEATED_CLEAN_SHOT", 64, {
@@ -487,7 +478,7 @@ makeWeaponskill_MCH("HEATED_CLEAN_SHOT", 64, {
 		state.gainResource("HEAT_GAUGE", 5);
 		state.gainResource("BATTERY_GAUGE", 10);
 	},
-	highlightIf: (state) => state.resources.get("HEAT_COMBO").availableAmount() === 2,
+	highlightIf: (state) => state.hasResourceExactly("HEAT_COMBO", 2),
 });
 
 makeResourceAbility_MCH("REASSEMBLE", 10, "cd_REASSEMBLE", {

@@ -678,13 +678,6 @@ const JIN_REPLACEMENTS: ConditionalSkillReplace<NINState>[] = [
 	},
 ];
 
-const getTenReplace = (skill: NINActionKey) =>
-	TEN_REPLACEMENTS.filter((replace) => replace.newSkill !== skill);
-const getChiReplace = (skill: NINActionKey) =>
-	CHI_REPLACEMENTS.filter((replace) => replace.newSkill !== skill);
-const getJinReplace = (skill: NINActionKey) =>
-	JIN_REPLACEMENTS.filter((replace) => replace.newSkill !== skill);
-
 // name, level, app delay, potency, falloff
 const NINJUTSU_POTENCY_LIST: Array<
 	[NINActionKey, number, number, number | Array<[TraitKey, number]>, number | undefined]
@@ -756,7 +749,11 @@ tcjReplaces.forEach(
 		)!;
 		const mudra = name.substring(name.length - 3);
 		const replacer =
-			mudra === "TEN" ? getTenReplace : mudra === "CHI" ? getChiReplace : getJinReplace;
+			mudra === "TEN"
+				? TEN_REPLACEMENTS
+				: mudra === "CHI"
+					? CHI_REPLACEMENTS
+					: JIN_REPLACEMENTS;
 		makeWeaponskill("NIN", name, 70, {
 			startOnHotbar: false,
 			// @ts-expect-error compiler is not smart enough to validate the destructure
@@ -766,7 +763,7 @@ tcjReplaces.forEach(
 			potency,
 			// @ts-expect-error compiler is not smart enough to validate the destructure
 			falloff,
-			replaceIf: replacer(name),
+			replaceIf: replacer,
 			validateAttempt: condition,
 			onConfirm: combineEffects(
 				(state: NINState) =>
@@ -801,7 +798,7 @@ const dotonConfirm = combineEffects(
 makeWeaponskill("NIN", "DOTON_CHI", 70, {
 	startOnHotbar: false,
 	recastTime: 1.5,
-	replaceIf: getChiReplace("DOTON_CHI"),
+	replaceIf: CHI_REPLACEMENTS,
 	validateAttempt: DOTON_TCJ_CONDITION,
 	onConfirm: (state: NINState) => state.pushMudra(2, true),
 });
@@ -810,16 +807,16 @@ makeWeaponskill("NIN", "DOTON_CHI", 70, {
 // They technically are abilities rather than weaponskills, but it is easier to code them as weaponskills.
 (
 	[
-		["TEN", 30, getTenReplace],
-		["CHI", 35, getChiReplace],
-		["JIN", 45, getJinReplace],
-	] as Array<[NINActionKey, number, (key: NINActionKey) => ConditionalSkillReplace<NINState>[]]>
+		["TEN", 30, TEN_REPLACEMENTS],
+		["CHI", 35, CHI_REPLACEMENTS],
+		["JIN", 45, JIN_REPLACEMENTS],
+	] as Array<[NINActionKey, number, ConditionalSkillReplace<NINState>[]]>
 ).forEach(([name, level, replacer], i) => {
 	makeWeaponskill("NIN", name, level, {
 		recastTime: 0.5,
 		// Nobody ever weaves under mudras because it bunnies, so just treat their animation lock the same as recast.
 		animationLock: 0.5,
-		replaceIf: replacer(name),
+		replaceIf: replacer,
 		secondaryCooldown: {
 			cdName: "cd_MUDRA",
 			cooldown: 20,

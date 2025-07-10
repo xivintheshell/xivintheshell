@@ -935,6 +935,18 @@ export class StatusPropsGenerator<T extends GameState> {
 		};
 	}
 
+	makeToggleableTimerless(rscType: ResourceKey, onSelf: boolean = true): BuffProps {
+		const resource = this.state.resources.get(rscType);
+
+		return {
+			rscType,
+			onSelf,
+			enabled: resource.enabled,
+			stacks: resource.availableAmount(),
+			className: resource.availableAmountIncludingDisabled() > 0 ? "" : "hidden",
+		};
+	}
+
 	// Jobs should override this to display their enemy-targeted buffs
 	public jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
 		return [];

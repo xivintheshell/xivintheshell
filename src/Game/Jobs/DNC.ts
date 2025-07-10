@@ -2,7 +2,7 @@ import { DNCStatusPropsGenerator } from "../../Components/Jobs/DNC";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, ProcMode, WarningType } from "../Common";
+import { BuffType, WarningType } from "../Common";
 import { TraitKey } from "../Data";
 import { DNCResourceKey, DNCActionKey, DNCCooldownKey } from "../Data/Jobs/DNC";
 import { GameConfig } from "../GameConfig";
@@ -170,27 +170,14 @@ export class DNCState extends GameState {
 	}
 
 	gainProc(proc: DNCResourceKey) {
-		const duration = (getResourceInfo("DNC", proc) as ResourceInfo).maxTimeout;
-		if (this.resources.get(proc).available(1)) {
-			if (proc === "THREEFOLD_FAN_DANCE") {
-				controller.reportWarning(WarningType.FanThreeOverwrite);
-			}
-			this.resources.get(proc).overrideTimer(this, duration);
-		} else {
-			this.resources.get(proc).gain(1);
-			this.enqueueResourceDrop(proc, duration);
+		if (this.hasResourceAvailable(proc) && proc === "THREEFOLD_FAN_DANCE") {
+			controller.reportWarning(WarningType.FanThreeOverwrite);
 		}
+		this.gainStatus(proc);
 	}
 
-	maybeGainProc(proc: DNCResourceKey, chance: number = 0.5) {
-		if (this.config.procMode === ProcMode.Never) {
-			return;
-		}
-
-		const rand = this.rng();
-		if (this.config.procMode === ProcMode.Always || rand < chance) {
-			this.gainProc(proc);
-		}
+	override maybeGainProc(proc: DNCResourceKey, chance: number = 0.5) {
+		super.maybeGainProc(proc, chance, true);
 	}
 
 	gainResource(rscType: "ESPRIT_GAUGE" | "FEATHER_GAUGE", amount: number) {
@@ -208,12 +195,7 @@ export class DNCState extends GameState {
 		amount: number,
 		chance: number = 0.5,
 	) {
-		if (this.config.procMode === ProcMode.Never) {
-			return;
-		}
-
-		const rand = this.rng();
-		if (this.config.procMode === ProcMode.Always || rand < chance) {
+		if (this.triggersEffect(chance, true)) {
 			this.gainResource(rscType, amount);
 		}
 	}
@@ -238,14 +220,8 @@ export class DNCState extends GameState {
 		}
 
 		this.gainProc("STANDARD_FINISH");
-		// Remove previous bonus in case they single-stepped this time...
-		this.tryConsumeResource("STANDARD_BONUS", true);
-
 		// Grant the new standard step bonus
-		this.resources.get("STANDARD_BONUS").gain(bonusLevel);
-		const duration = (getResourceInfo("DNC", "STANDARD_FINISH") as ResourceInfo).maxTimeout;
-		this.enqueueResourceDrop("STANDARD_BONUS", duration, bonusLevel);
-
+		this.gainStatus("STANDARD_BONUS", bonusLevel);
 		if (this.hasResourceAvailable("DANCE_PARTNER")) {
 			this.gainProc("STANDARD_FINISH_PARTNER");
 		}
@@ -433,9 +409,7 @@ const makeResourceAbility_DNC = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<DNCState> => {
-	return makeResourceAbility("DNC", name, unlockLevel, cdName, {
-		...params,
-	});
+	return makeResourceAbility("DNC", name, unlockLevel, cdName, params);
 };
 
 // Dance Moves
@@ -855,11 +829,7 @@ technicalFinishes.forEach((params) => {
 			if (state.hasTraitUnlocked("ESPRIT")) {
 				state.gainProc("ESPRIT_TECHNICAL");
 			}
-			state.resources.get("TECHNICAL_BONUS").gain(bonusLevel);
-			const duration = (getResourceInfo("DNC", "TECHNICAL_FINISH") as ResourceInfo)
-				.maxTimeout;
-			state.enqueueResourceDrop("TECHNICAL_BONUS", duration, bonusLevel);
-
+			state.gainStatus("TECHNICAL_BONUS", bonusLevel);
 			if (state.hasTraitUnlocked("ENHANCED_TECHNICAL_FINISH")) {
 				state.gainProc("FLOURISHING_FINISH");
 			}

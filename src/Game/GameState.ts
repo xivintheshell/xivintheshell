@@ -35,7 +35,6 @@ import { ActionNode } from "../Controller/Record";
 import { Modifiers, Potency, PotencyKind, PotencyModifier, PotencyModifierType } from "./Potency";
 import { Buff } from "./Buffs";
 
-import type { BLMState } from "./Jobs/BLM";
 import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";

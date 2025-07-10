@@ -157,9 +157,8 @@ export class SAMState extends GameState {
 	refreshBuff(rscType: SAMResourceKey, delay: number) {
 		// buffs are applied on hit, so apply it after a delay
 		this.addEvent(
-			new Event("gain fugetsu", delay, () => {
-				this.resources.get(rscType).gain(1);
-				this.enqueueResourceDrop(rscType);
+			new Event(`gain ${rscType}`, delay, () => {
+				this.gainStatus(rscType);
 			}),
 		);
 	}
@@ -211,15 +210,9 @@ export class SAMState extends GameState {
 	}
 
 	consumeAllSen() {
-		if (this.resources.get("SETSU").available(1)) {
-			this.resources.get("SETSU").consume(1);
-		}
-		if (this.resources.get("GETSU").available(1)) {
-			this.resources.get("GETSU").consume(1);
-		}
-		if (this.resources.get("KA_SEN").available(1)) {
-			this.resources.get("KA_SEN").consume(1);
-		}
+		["GETSU", "SETSU", "KA_SEN"].forEach((rsc) =>
+			this.tryConsumeResource(rsc as SAMResourceKey),
+		);
 	}
 
 	startMeditateTimer() {
@@ -326,21 +319,14 @@ const makeGCD_SAM = (
 				: state.config.adjustedSksCastTime(1.8, state.getFukaModifier());
 	}
 	return makeWeaponskill("SAM", name, unlockLevel, {
-		replaceIf: params.replaceIf,
-		startOnHotbar: params.startOnHotbar,
-		highlightIf: params.highlightIf,
-		autoUpgrade: params.autoUpgrade,
-		autoDowngrade: params.autoDowngrade,
-		castTime: castTime,
+		...params,
+		castTime,
 		recastTime: (state) =>
 			state.config.adjustedSksGCD(params.baseRecastTime ?? 2.5, state.getFukaModifier()),
 		potency: params.basePotency,
-		validateAttempt: params.validateAttempt,
-		jobPotencyModifiers: jobPotencyModifiers,
-		applicationDelay: params.applicationDelay,
+		jobPotencyModifiers,
 		isInstantFn: (state) => !(params.baseCastTime && params.baseCastTime > 0),
-		onConfirm: params.onConfirm,
-		onApplication: onApplication,
+		onApplication,
 	});
 };
 
@@ -667,14 +653,16 @@ const tendoMidareCondition: ConditionalSkillReplace<SAMState> = {
 	condition: (state) => state.hasResourceAvailable("TENDO") && state.countSen() === 3,
 };
 
+const iaiReplaces = [
+	banaCondition,
+	tenkaCondition,
+	tendoGokenCondition,
+	midareCondition,
+	tendoMidareCondition,
+];
+
 makeGCD_SAM("IAIJUTSU", 30, {
-	replaceIf: [
-		banaCondition,
-		tenkaCondition,
-		tendoGokenCondition,
-		midareCondition,
-		tendoMidareCondition,
-	],
+	replaceIf: iaiReplaces,
 	baseCastTime: 1.3, // if below level 80, set to scale in makeGCD_SAM
 	basePotency: 0,
 	applicationDelay: 0,
@@ -683,7 +671,7 @@ makeGCD_SAM("IAIJUTSU", 30, {
 
 makeGCD_SAM("HIGANBANA", 30, {
 	startOnHotbar: false,
-	replaceIf: [tenkaCondition, tendoGokenCondition, midareCondition, tendoMidareCondition],
+	replaceIf: iaiReplaces,
 	baseCastTime: 1.3,
 	basePotency: 200,
 	applicationDelay: 0.62,
@@ -713,17 +701,15 @@ makeGCD_SAM("HIGANBANA", 30, {
 
 const iaiConfirm = (kaeshiValue: number) => (state: SAMState) => {
 	state.consumeAllSen();
-	state.resources.get("KAESHI_TRACKER").overrideCurrentValue(kaeshiValue);
-	state.enqueueResourceDrop("KAESHI_TRACKER");
+	state.gainStatus("KAESHI_TRACKER", kaeshiValue);
 	state.gainMeditation();
-	state.resources.get("TSUBAME_GAESHI_READY").gain(1);
-	state.enqueueResourceDrop("TSUBAME_GAESHI_READY");
+	state.gainStatus("TSUBAME_GAESHI_READY");
 	state.tryConsumeResource("TENDO");
 };
 
 makeGCD_SAM("TENKA_GOKEN", 30, {
 	startOnHotbar: false,
-	replaceIf: [banaCondition, tendoGokenCondition, midareCondition, tendoMidareCondition],
+	replaceIf: iaiReplaces,
 	baseCastTime: 1.3,
 	basePotency: 300,
 	falloff: 0,
@@ -734,7 +720,7 @@ makeGCD_SAM("TENKA_GOKEN", 30, {
 
 makeGCD_SAM("TENDO_GOKEN", 100, {
 	startOnHotbar: false,
-	replaceIf: [banaCondition, tenkaCondition, midareCondition, tendoMidareCondition],
+	replaceIf: iaiReplaces,
 	baseCastTime: 1.3,
 	basePotency: 410,
 	falloff: 0,
@@ -745,7 +731,7 @@ makeGCD_SAM("TENDO_GOKEN", 100, {
 
 makeGCD_SAM("MIDARE_SETSUGEKKA", 30, {
 	startOnHotbar: false,
-	replaceIf: [banaCondition, tenkaCondition, tendoGokenCondition, tendoMidareCondition],
+	replaceIf: iaiReplaces,
 	baseCastTime: 1.3,
 	basePotency: [
 		["NEVER", 620],
@@ -759,7 +745,7 @@ makeGCD_SAM("MIDARE_SETSUGEKKA", 30, {
 
 makeGCD_SAM("TENDO_SETSUGEKKA", 100, {
 	startOnHotbar: false,
-	replaceIf: [banaCondition, tenkaCondition, tendoGokenCondition, midareCondition],
+	replaceIf: iaiReplaces,
 	baseCastTime: 1.3,
 	basePotency: 1100,
 	applicationDelay: 1.03,
@@ -770,31 +756,33 @@ makeGCD_SAM("TENDO_SETSUGEKKA", 100, {
 
 const kaeshiGokenCondition: ConditionalSkillReplace<SAMState> = {
 	newSkill: "KAESHI_GOKEN",
-	condition: (state) => state.resources.get("KAESHI_TRACKER").availableAmount() === 1,
+	condition: (state) => state.hasResourceExactly("KAESHI_TRACKER", 1),
 };
 
 const tendoKaeshiGokenCondition: ConditionalSkillReplace<SAMState> = {
 	newSkill: "TENDO_KAESHI_GOKEN",
-	condition: (state) => state.resources.get("KAESHI_TRACKER").availableAmount() === 2,
+	condition: (state) => state.hasResourceExactly("KAESHI_TRACKER", 2),
 };
 
 const kaeshiSetsugekkaCondition: ConditionalSkillReplace<SAMState> = {
 	newSkill: "KAESHI_SETSUGEKKA",
-	condition: (state) => state.resources.get("KAESHI_TRACKER").availableAmount() === 3,
+	condition: (state) => state.hasResourceExactly("KAESHI_TRACKER", 3),
 };
 
 const tendoKaeshiSetsugekkaCondition: ConditionalSkillReplace<SAMState> = {
 	newSkill: "TENDO_KAESHI_SETSUGEKKA",
-	condition: (state) => state.resources.get("KAESHI_TRACKER").availableAmount() === 4,
+	condition: (state) => state.hasResourceExactly("KAESHI_TRACKER", 4),
 };
 
+const kaeshiReplaces = [
+	kaeshiGokenCondition,
+	tendoKaeshiGokenCondition,
+	kaeshiSetsugekkaCondition,
+	tendoKaeshiSetsugekkaCondition,
+];
+
 makeGCD_SAM("TSUBAME_GAESHI", 74, {
-	replaceIf: [
-		kaeshiGokenCondition,
-		tendoKaeshiGokenCondition,
-		kaeshiSetsugekkaCondition,
-		tendoKaeshiSetsugekkaCondition,
-	],
+	replaceIf: kaeshiReplaces,
 	basePotency: 0,
 	applicationDelay: 0,
 	validateAttempt: (state) => false,
@@ -808,11 +796,7 @@ const tsubameConfirm = (state: SAMState) => {
 
 makeGCD_SAM("KAESHI_GOKEN", 74, {
 	startOnHotbar: false,
-	replaceIf: [
-		tendoKaeshiGokenCondition,
-		kaeshiSetsugekkaCondition,
-		tendoKaeshiSetsugekkaCondition,
-	],
+	replaceIf: kaeshiReplaces,
 	basePotency: 300,
 	falloff: 0,
 	applicationDelay: 0.62,
@@ -823,11 +807,7 @@ makeGCD_SAM("KAESHI_GOKEN", 74, {
 
 makeGCD_SAM("TENDO_KAESHI_GOKEN", 100, {
 	startOnHotbar: false,
-	replaceIf: [
-		tendoKaeshiGokenCondition,
-		kaeshiSetsugekkaCondition,
-		tendoKaeshiSetsugekkaCondition,
-	],
+	replaceIf: kaeshiReplaces,
 	basePotency: 410,
 	falloff: 0,
 	applicationDelay: 0.36,
@@ -838,7 +818,7 @@ makeGCD_SAM("TENDO_KAESHI_GOKEN", 100, {
 
 makeGCD_SAM("KAESHI_SETSUGEKKA", 74, {
 	startOnHotbar: false,
-	replaceIf: [kaeshiGokenCondition, tendoKaeshiGokenCondition, tendoKaeshiSetsugekkaCondition],
+	replaceIf: kaeshiReplaces,
 	basePotency: [
 		["NEVER", 620],
 		["WAY_OF_THE_SAMURAI_III", 640],
@@ -852,7 +832,7 @@ makeGCD_SAM("KAESHI_SETSUGEKKA", 74, {
 
 makeGCD_SAM("TENDO_KAESHI_SETSUGEKKA", 74, {
 	startOnHotbar: false,
-	replaceIf: [kaeshiGokenCondition, tendoKaeshiGokenCondition, kaeshiSetsugekkaCondition],
+	replaceIf: kaeshiReplaces,
 	basePotency: 1100,
 	applicationDelay: 1.03,
 	jobPotencyModifiers: (state) => [Modifiers.AutoCrit],
@@ -880,8 +860,7 @@ makeGCD_SAM("OGI_NAMIKIRI", 90, {
 	onConfirm: (state) => {
 		state.tryConsumeResource("OGI_READY");
 		state.gainMeditation();
-		state.resources.get("KAESHI_OGI_READY").gain(1);
-		state.enqueueResourceDrop("KAESHI_OGI_READY");
+		state.gainStatus("KAESHI_OGI_READY");
 	},
 	highlightIf: (state) => state.hasResourceAvailable("OGI_READY"),
 });
@@ -904,12 +883,9 @@ makeAbility_SAM("MEIKYO_SHISUI", 50, "cd_MEIKYO_SHISUI", {
 	cooldown: 55,
 	maxCharges: 2,
 	onConfirm: (state) => {
-		state.resources.get("MEIKYO_SHISUI").gain(3);
-		state.enqueueResourceDrop("MEIKYO_SHISUI");
-
+		state.gainStatus("MEIKYO_SHISUI", 3);
 		if (state.hasTraitUnlocked("ENHANCED_MEIKYO_SHISUI_II")) {
-			state.resources.get("TENDO").gain(1);
-			state.enqueueResourceDrop("TENDO");
+			state.gainStatus("TENDO");
 		}
 	},
 });
@@ -926,12 +902,10 @@ makeAbility_SAM("IKISHOTEN", 68, "cd_IKISHOTEN", {
 	onConfirm: (state) => {
 		state.gainKenki(50);
 		if (state.hasTraitUnlocked("ENHANCED_IKISHOTEN")) {
-			state.resources.get("OGI_READY").gain(1);
-			state.enqueueResourceDrop("OGI_READY");
+			state.gainStatus("OGI_READY");
 		}
 		if (state.hasTraitUnlocked("ENHANCED_IKISHOTEN_II")) {
-			state.resources.get("ZANSHIN_READY").gain(1);
-			state.enqueueResourceDrop("ZANSHIN_READY");
+			state.gainStatus("ZANSHIN_READY");
 		}
 	},
 });
@@ -969,8 +943,7 @@ makeAbility_SAM("HISSATSU_YATEN", 56, "cd_YATEN", {
 	validateAttempt: (state) => state.resources.get("KENKI").available(10),
 	onConfirm: (state) => {
 		state.resources.get("KENKI").consume(10);
-		state.resources.get("ENHANCED_ENPI").gain(1);
-		state.enqueueResourceDrop("ENHANCED_ENPI");
+		state.gainStatus("ENHANCED_ENPI");
 	},
 	highlightIf: (state) => state.resources.get("KENKI").available(10),
 });
@@ -1064,8 +1037,7 @@ makeAbility_SAM("TENGENTSU_POP", 82, "cd_THIRD_EYE_POP", {
 	validateAttempt: (state) => state.hasResourceAvailable("TENGENTSU"),
 	onConfirm: (state) => {
 		state.tryConsumeResource("TENGENTSU");
-		state.resources.get("TENGENTSUS_FORESIGHT").gain(1);
-		state.enqueueResourceDrop("TENGENTSUS_FORESIGHT");
+		state.gainStatus("TENGENTSUS_FORESIGHT");
 		state.gainKenki(10);
 	},
 	highlightIf: (state) => state.hasResourceAvailable("TENGENTSU"),
