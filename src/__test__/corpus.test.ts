@@ -27,31 +27,33 @@ beforeEach(rotationTestSetup);
 afterEach(rotationTestTeardown);
 
 try {
-	const timelineDir = fs.opendirSync(TL_DIR);
-	if (!fs.existsSync(OUT_DIR)) {
-		fs.mkdirSync(OUT_DIR);
-	}
-	const outDir = fs.opendirSync(OUT_DIR);
-	const timelineDamageMaps = new Map<string, boolean>();
-	// @ts-expect-error ts doesn't like top-level await, but vitest doesn't care
-	for await (const dirent of timelineDir) {
-		if (dirent.isFile()) {
-			timelineDamageMaps.set(dirent.name, false);
+	if (fs.existsSync(TL_DIR)) {
+		const timelineDir = fs.opendirSync(TL_DIR);
+		if (!fs.existsSync(OUT_DIR)) {
+			fs.mkdirSync(OUT_DIR);
 		}
-	}
-	// @ts-expect-error ts doesn't like top-level await, but vitest doesn't care
-	for await (const dirent of outDir) {
-		// strip the .json suffix
-		const name = dirent.name.substring(0, dirent.name.length - 5);
-		if (dirent.isFile() && timelineDamageMaps.has(name)) {
-			timelineDamageMaps.set(name, true);
+		const outDir = fs.opendirSync(OUT_DIR);
+		const timelineDamageMaps = new Map<string, boolean>();
+		// @ts-expect-error ts doesn't like top-level await, but vitest doesn't care
+		for await (const dirent of timelineDir) {
+			if (dirent.isFile()) {
+				timelineDamageMaps.set(dirent.name, false);
+			}
 		}
+		// @ts-expect-error ts doesn't like top-level await, but vitest doesn't care
+		for await (const dirent of outDir) {
+			// strip the .json suffix
+			const name = dirent.name.substring(0, dirent.name.length - 5);
+			if (dirent.isFile() && timelineDamageMaps.has(name)) {
+				timelineDamageMaps.set(name, true);
+			}
+		}
+		timelineDamageMaps.forEach((value, key) =>
+			(value ? timelinesToExpect : timelinesToGenerate).push(key),
+		);
 	}
-	timelineDamageMaps.forEach((value, key) =>
-		(value ? timelinesToExpect : timelinesToGenerate).push(key),
-	);
 } catch (e) {
-	console.error(e)
+	console.error(e);
 	console.log("Could not open secretTestTimelines; skipping tests.");
 }
 
