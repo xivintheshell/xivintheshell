@@ -7,8 +7,8 @@ import { RPRResourceKey, RPRActionKey, RPRCooldownKey } from "../Data/Jobs/RPR";
 import { CommonActionKey } from "../Data/Shared/Common";
 import { RoleActionKey } from "../Data/Shared/Role";
 import { GameConfig } from "../GameConfig";
-import { GameState, PlayerState } from "../GameState";
-import { makeComboModifier, makePositionalModifier, Modifiers, PotencyModifier } from "../Potency";
+import { GameState } from "../GameState";
+import { Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, makeResource } from "../Resources";
 import {
 	Ability,
@@ -18,14 +18,12 @@ import {
 	CooldownGroupProperties,
 	EffectFn,
 	FAKE_SKILL_ANIMATION_LOCK,
-	getBasePotency,
 	getSkill,
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	ResourceCalculationFn,
 	Skill,
 	Spell,
@@ -97,7 +95,7 @@ export class RPRState extends GameState {
 		return new RPRStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("ARCANE_CIRCLE")) {
 			node.addBuff(BuffType.ArcaneCircle);
 		}
@@ -444,10 +442,7 @@ const makeRPRSpell = (
 		onApplication?: EffectFn<RPRState>;
 	},
 ): Spell<RPRState> => {
-	const onConfirm: EffectFn<RPRState> = combineEffects(
-		baseOnConfirm(name),
-		params.onConfirm ?? NO_EFFECT,
-	);
+	const onConfirm: EffectFn<RPRState> = combineEffects(baseOnConfirm(name), params.onConfirm);
 
 	const validateAttempt: StatePredicate<RPRState> = combinePredicatesAnd(
 		(state) => !state.resources.get("ENSHROUDED").available(1) || isEnshroudSkill(name),
@@ -457,8 +452,8 @@ const makeRPRSpell = (
 	return makeSpell("RPR", name, unlockLevel, {
 		...params,
 		recastTime: (state) => state.config.adjustedGCD(params.recastTime),
-		onConfirm: onConfirm,
-		validateAttempt: validateAttempt,
+		onConfirm,
+		validateAttempt,
 		isInstantFn: (state) =>
 			!(
 				name === "COMMUNIO" ||
@@ -495,10 +490,7 @@ const makeRPRWeaponskill = (
 		highlightIf?: StatePredicate<RPRState>;
 	},
 ): Weaponskill<RPRState> => {
-	const onConfirm: EffectFn<RPRState> = combineEffects(
-		baseOnConfirm(name),
-		params.onConfirm ?? NO_EFFECT,
-	);
+	const onConfirm: EffectFn<RPRState> = combineEffects(baseOnConfirm(name), params.onConfirm);
 
 	const validateAttempt: StatePredicate<RPRState> = combinePredicatesAnd(
 		(state) => !state.resources.get("ENSHROUDED").available(1) || isEnshroudSkill(name),
@@ -506,31 +498,9 @@ const makeRPRWeaponskill = (
 	);
 	return makeWeaponskill("RPR", name, unlockLevel, {
 		...params,
-		onConfirm: onConfirm,
+		onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = basePotencyModifiers(state);
-			if (
-				params.combo &&
-				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
-
-			if (params.positional && state.hitPositional(params.positional.location)) {
-				mods.push(
-					makePositionalModifier(
-						getBasePotency(state, params.positional.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
-
 			if (
 				["GIBBET", "EXECUTIONERS_GIBBET"].includes(name) &&
 				state.hasResourceAvailable("ENHANCED_GIBBET")
@@ -565,7 +535,7 @@ const makeRPRWeaponskill = (
 
 			return mods;
 		},
-		validateAttempt: validateAttempt,
+		validateAttempt,
 	});
 };
 
@@ -589,7 +559,7 @@ const makeRPRAbility = (
 		onApplication?: EffectFn<RPRState>;
 	},
 ): Ability<RPRState> => {
-	const onConfirm = combineEffects(baseOnConfirm(name), params.onConfirm ?? NO_EFFECT);
+	const onConfirm = combineEffects(baseOnConfirm(name), params.onConfirm);
 
 	const validateAttempt: StatePredicate<RPRState> = combinePredicatesAnd(
 		(state) => !state.resources.get("ENSHROUDED").available(1) || isEnshroudSkill(name),
@@ -598,8 +568,8 @@ const makeRPRAbility = (
 
 	return makeAbility("RPR", name, unlockLevel, cdName, {
 		...params,
-		onConfirm: onConfirm,
-		validateAttempt: validateAttempt,
+		onConfirm,
+		validateAttempt,
 		jobPotencyModifiers: basePotencyModifiers,
 	});
 };
@@ -641,9 +611,7 @@ makeRPRWeaponskill("WAXING_SLICE", 5, {
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.58,
-	highlightIf: function (state: Readonly<RPRState>): boolean {
-		return state.resources.get("RPR_COMBO").availableAmount() === 1;
-	},
+	highlightIf: (state) => state.hasResourceExactly("RPR_COMBO", 1),
 });
 
 makeRPRWeaponskill("INFERNAL_SLICE", 30, {
@@ -664,9 +632,7 @@ makeRPRWeaponskill("INFERNAL_SLICE", 30, {
 	aspect: Aspect.Physical,
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.54,
-	highlightIf: function (state: Readonly<RPRState>): boolean {
-		return state.resources.get("RPR_COMBO").availableAmount() === 2;
-	},
+	highlightIf: (state) => state.hasResourceExactly("RPR_COMBO", 2),
 });
 
 makeRPRWeaponskill("SOUL_SLICE", 60, {
@@ -797,9 +763,7 @@ makeRPRWeaponskill("PLENTIFUL_HARVEST", 88, {
 		state.hasResourceAvailable("IMMORTAL_SACRIFICE", 1) &&
 		!state.hasResourceAvailable("BLOODSOWN_CIRCLE"),
 	onConfirm: (state) => {
-		state.resources
-			.get("IMMORTAL_SACRIFICE")
-			.consume(state.resources.get("IMMORTAL_SACRIFICE").availableAmount());
+		state.tryConsumeResource("IMMORTAL_SACRIFICE", true);
 		state.setTimedResource("IDEAL_HOST", 1);
 		state.setTimedResource("PERFECTIO_OCCULTA", 1);
 	},
@@ -823,8 +787,7 @@ makeRPRSpell("COMMUNIO", 90, {
 		state.hasResourceAvailable("ENSHROUDED") &&
 		state.resources.get("LEMURE_SHROUD").availableAmount() === 1,
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable("PERFECTIO_OCCULTA")) {
-			state.resources.get("PERFECTIO_OCCULTA").consume(1);
+		if (state.tryConsumeResource("PERFECTIO_OCCULTA")) {
 			state.setTimedResource("PERFECTIO_PARATA", 1);
 		}
 		state.exitEnshroud();
@@ -978,7 +941,7 @@ makeRPRAbility("SACRIFICIUM", 92, "cd_SACRIFICIUM", {
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("OBLATIO"),
 	highlightIf: (state) => state.hasResourceAvailable("OBLATIO"),
-	onConfirm: (state) => state.resources.get("OBLATIO").consume(1),
+	onConfirm: (state) => state.tryConsumeResource("OBLATIO"),
 });
 
 makeResourceAbility("RPR", "ARCANE_CIRCLE", 72, "cd_ARCANE_CIRCLE", {
@@ -1057,9 +1020,9 @@ makeResourceAbility("RPR", "ENSHROUD", 80, "cd_ENSHROUD", {
 	validateAttempt: (state) => {
 		return state.hasResourceAvailable("SHROUD", 50) || state.hasResourceAvailable("IDEAL_HOST");
 	},
-	onConfirm: combineEffects(baseOnConfirm("ENSHROUD"), (state: RPRState) => {
-		state.enterEnshroud();
-	}) as EffectFn<GameState>,
+	onConfirm: combineEffects(baseOnConfirm("ENSHROUD"), (state) =>
+		state.enterEnshroud(),
+	) as EffectFn<RPRState>,
 });
 
 makeRPRWeaponskill("PERFECTIO", 100, {
@@ -1137,7 +1100,7 @@ makeRPRAbility("ARCANE_CREST_POP", 40, "cd_ARCANE_CREST_POP", {
 	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	startOnHotbar: false,
 	onConfirm: (state) => {
-		state.resources.get("CREST_OF_TIME_BORROWED").consume(1);
+		state.tryConsumeResource("CREST_OF_TIME_BORROWED");
 		state.setTimedResource("CREST_OF_TIME_RETURNED", 1);
 	},
 	validateAttempt: (state) => state.hasResourceAvailable("CREST_OF_TIME_BORROWED"),
@@ -1172,9 +1135,7 @@ makeRPRWeaponskill("NIGHTMARE_SCYTHE", 45, {
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	falloff: 0,
 	applicationDelay: 0.8,
-	highlightIf: function (state: Readonly<RPRState>): boolean {
-		return state.resources.get("RPR_AOE_COMBO").availableAmount() === 1;
-	},
+	highlightIf: (state) => state.hasResourceExactly("RPR_AOE_COMBO", 1),
 });
 
 makeRPRWeaponskill("SOUL_SCYTHE", 65, {

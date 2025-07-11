@@ -4,14 +4,13 @@ import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { GameConfig } from "../GameConfig";
 import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, WarningType } from "../Common";
-import { Modifiers, Potency, makeComboModifier } from "../Potency";
+import { Aspect } from "../Common";
+import { Modifiers, Potency } from "../Potency";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
-	getBasePotency,
 	FAKE_SKILL_ANIMATION_LOCK,
 	makeAbility,
 	makeResourceAbility,
@@ -19,7 +18,6 @@ import {
 	makeWeaponskill,
 	MakeAbilityParams,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	Spell,
 	StatePredicate,
 	Weaponskill,
@@ -36,14 +34,19 @@ import { DRKResourceKey, DRKActionKey, DRKCooldownKey } from "../Data/Jobs/DRK";
 const makeDRKResource = (
 	rsc: DRKResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnOvercap?: boolean;
+		warnOnTimeout?: boolean;
+	},
 ) => {
 	makeResource("DRK", rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
 makeDRKResource("DARKSIDE", 1, { timeout: 60 });
-makeDRKResource("BLOOD_GAUGE", 100);
+makeDRKResource("BLOOD_GAUGE", 100, { warnOnOvercap: true });
 
 // Buffs
 makeDRKResource("SALTED_EARTH", 1, { timeout: 15 });
@@ -58,17 +61,17 @@ makeDRKResource("WALKING_DEAD", 1, { timeout: 10 });
 // we don't support full HP planning.
 makeDRKResource("UNDEAD_REBIRTH", 1);
 makeDRKResource("DARK_MISSIONARY", 1, { timeout: 15 });
-makeDRKResource("DELIRIUM", 3, { timeout: 15 });
-makeDRKResource("BLOOD_WEAPON", 3, { timeout: 15 });
-makeDRKResource("BLACKEST_NIGHT", 1, { timeout: 7 });
+makeDRKResource("DELIRIUM", 3, { timeout: 15, warnOnTimeout: true });
+makeDRKResource("BLOOD_WEAPON", 3, { timeout: 15, warnOnTimeout: true });
+makeDRKResource("BLACKEST_NIGHT", 1, { timeout: 7, warnOnTimeout: true });
 // Scorn allows the cast of Disesteem.
-makeDRKResource("SCORN", 1, { timeout: 30 });
+makeDRKResource("SCORN", 1, { timeout: 30, warnOnTimeout: true });
 makeDRKResource("OBLATION", 1, { timeout: 10 });
 makeDRKResource("SHADOWED_VIGIL", 1, { timeout: 15 });
 // Excog effect of Shadowed Vigil.
 makeDRKResource("VIGILANT", 1, { timeout: 20 });
 
-makeDRKResource("DARK_ARTS", 1);
+makeDRKResource("DARK_ARTS", 1, { warnOnOvercap: true });
 
 // Combo trackers
 makeDRKResource("DRK_COMBO_TRACKER", 2, { timeout: 30 });
@@ -120,11 +123,7 @@ export class DRKState extends GameState {
 	}
 
 	gainBloodGauge(amt: number) {
-		const rsc = this.resources.get("BLOOD_GAUGE");
-		if (rsc.availableAmount() + amt > 100) {
-			controller.reportWarning(WarningType.BloodGaugeOvercap);
-		}
-		rsc.gain(amt);
+		this.resources.get("BLOOD_GAUGE").gain(amt);
 	}
 
 	bloodWeaponConfirm(applicationDelay: number) {
@@ -249,24 +248,6 @@ type DRKGCDParams = {
 	secondaryCooldown?: CooldownGroupProperties;
 };
 
-const getDarksideAndComboModifiers = (params: DRKGCDParams, state: Readonly<DRKState>) => {
-	const mods = [];
-	if (state.hasResourceAvailable("DARKSIDE")) {
-		mods.push(Modifiers.Darkside);
-	}
-	if (
-		params.combo &&
-		state.resources.get(params.combo.resource).availableAmount() === params.combo.resourceValue
-	) {
-		mods.push(
-			makeComboModifier(
-				getBasePotency(state, params.combo.potency) - getBasePotency(state, params.potency),
-			),
-		);
-	}
-	return mods;
-};
-
 const makeDRKWeaponskill = (
 	name: DRKActionKey,
 	unlockLevel: number,
@@ -275,12 +256,13 @@ const makeDRKWeaponskill = (
 	return makeWeaponskill("DRK", name, unlockLevel, {
 		...params,
 		onConfirm: combineEffects(
-			params.onConfirm ?? NO_EFFECT,
+			params.onConfirm,
 			(state) => state.bloodWeaponConfirm(params.applicationDelay),
 			(state) => state.processComboStatus(name),
 		),
 		recastTime: (state) => state.config.adjustedSksGCD(),
-		jobPotencyModifiers: (state) => getDarksideAndComboModifiers(params, state),
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable("DARKSIDE") ? [Modifiers.Darkside] : [],
 	});
 };
 
@@ -291,11 +273,10 @@ const makeDRKSpell = (
 ): Spell<DRKState> => {
 	return makeSpell("DRK", name, unlockLevel, {
 		...params,
-		onConfirm: combineEffects(params.onConfirm ?? NO_EFFECT, (state) =>
-			state.processComboStatus(name),
-		),
+		onConfirm: combineEffects(params.onConfirm, (state) => state.processComboStatus(name)),
 		recastTime: (state) => state.config.adjustedGCD(), // sps
-		jobPotencyModifiers: (state) => getDarksideAndComboModifiers(params, state),
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable("DARKSIDE") ? [Modifiers.Darkside] : [],
 	});
 };
 
@@ -524,7 +505,7 @@ makeDRKWeaponskill("BLOODSPILLER", 62, {
 	applicationDelay: 0.8,
 	validateAttempt: hasBloodOrDelirium,
 	highlightIf: hasBloodOrDelirium,
-	replaceIf: deliriumReplacements.filter((rep) => rep.newSkill !== "BLOODSPILLER"),
+	replaceIf: deliriumReplacements,
 	potency: [
 		["NEVER", 500],
 		["MELEE_MASTERY_II_TANK", 600],
@@ -567,7 +548,7 @@ makeDRKWeaponskill("QUIETUS", 64, {
 		applicationDelay: delay,
 		validateAttempt: deliriumReplacements[i + 1].condition,
 		highlightIf: deliriumReplacements[i + 1].condition,
-		replaceIf: deliriumReplacements.filter((rep) => rep.newSkill !== name),
+		replaceIf: deliriumReplacements,
 		potency,
 		onConfirm: (state) => state.tryConsumeResource("DELIRIUM"),
 		// Delirium combo actions inherently grant 200 MP
@@ -772,9 +753,6 @@ makeDRKAbility("THE_BLACKEST_NIGHT_POP", 70, "cd_THE_BLACKEST_NIGHT_POP", {
 	animationLock: FAKE_SKILL_ANIMATION_LOCK,
 	cooldown: 1,
 	onConfirm: (state) => {
-		if (state.hasResourceAvailable("DARK_ARTS")) {
-			controller.reportWarning(WarningType.DarkArtsOvercap);
-		}
 		state.gainStatus("DARK_ARTS");
 		state.tryConsumeResource("BLACKEST_NIGHT");
 	},

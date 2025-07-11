@@ -1,8 +1,7 @@
 // Skill and state declarations for BLM.
 
-import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Aspect, BuffType, Debug, ProcMode, WarningType } from "../Common";
+import { Aspect, BuffType, Debug } from "../Common";
 import { PotencyModifierType, PotencyMultiplier } from "../Potency";
 import {
 	Ability,
@@ -13,13 +12,12 @@ import {
 	makeResourceAbility,
 	makeSpell,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	Skill,
 	SkillAutoReplace,
 	Spell,
 	StatePredicate,
 } from "../Skills";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { makeResource, CoolDown, Event, Resource } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { localize } from "../../Components/Localization";
@@ -29,11 +27,15 @@ import { BLMResourceKey, BLMActionKey, BLMCooldownKey } from "../Data/Jobs/BLM";
 
 // === JOB GAUGE ELEMENTS AND STATUS EFFECTS ===
 // TODO values changed by traits are handled in the class constructor, should be moved here
-const makeBLMResource = (rsc: BLMResourceKey, maxValue: number, params?: { timeout: number }) => {
+const makeBLMResource = (
+	rsc: BLMResourceKey,
+	maxValue: number,
+	params?: { timeout: number; warnOnOvercap?: boolean },
+) => {
 	makeResource("BLM", rsc, maxValue, params ?? {});
 };
 
-makeBLMResource("POLYGLOT", 3, { timeout: 30 });
+makeBLMResource("POLYGLOT", 3, { timeout: 30, warnOnOvercap: true });
 makeBLMResource("ASTRAL_FIRE", 3);
 makeBLMResource("UMBRAL_ICE", 3);
 makeBLMResource("UMBRAL_HEART", 3);
@@ -79,7 +81,7 @@ export class BLMState extends GameState {
 			(this.hasTraitUnlocked("ENHANCED_POLYGLOT_II") && 3) ||
 			(this.hasTraitUnlocked("ENHANCED_POLYGLOT") && 2) ||
 			1;
-		this.resources.set(new Resource("POLYGLOT", polyglotStacks, 0));
+		this.resources.set(new Resource("POLYGLOT", polyglotStacks, 0, true));
 
 		// skill CDs (also a form of resource)
 		const manafontCooldown = (this.hasTraitUnlocked("ENHANCED_MANAFONT") && 100) || 120;
@@ -122,9 +124,6 @@ export class BLMState extends GameState {
 		// also polyglot
 		const recurringPolyglotGain = (rsc: Resource) => {
 			if (this.hasEnochian()) {
-				if (rsc.availableAmount() === rsc.maxValue) {
-					controller.reportWarning(WarningType.PolyglotOvercap);
-				}
 				rsc.gain(1);
 			}
 			this.resources.addResourceEvent({
@@ -137,7 +136,7 @@ export class BLMState extends GameState {
 		recurringPolyglotGain(this.resources.get("POLYGLOT"));
 	}
 
-	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddSpeedBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("LEY_LINES") && skill.cdName === "cd_GCD") {
 			node.addBuff(BuffType.LeyLines);
 		}
@@ -163,11 +162,6 @@ export class BLMState extends GameState {
 		return this.resources.get("MANA").availableAmount();
 	}
 
-	gainThunderhead() {
-		const thunderhead = this.resources.get("THUNDERHEAD");
-		thunderhead.gain(1);
-	}
-
 	// call this whenever gaining af or ui from a different af/ui/unaspected state
 	switchToAForUI(rscType: "ASTRAL_FIRE" | "UMBRAL_ICE", numStacksToGain: number) {
 		console.assert(numStacksToGain > 0);
@@ -180,7 +174,7 @@ export class BLMState extends GameState {
 
 		if (rscType === "ASTRAL_FIRE") {
 			if (af.availableAmount() === 0) {
-				this.gainThunderhead();
+				this.gainStatus("THUNDERHEAD");
 			}
 			af.gain(numStacksToGain);
 
@@ -193,7 +187,7 @@ export class BLMState extends GameState {
 			ui.consume(ui.availableAmount());
 		} else if (rscType === "UMBRAL_ICE") {
 			if (ui.availableAmount() === 0) {
-				this.gainThunderhead();
+				this.gainStatus("THUNDERHEAD");
 			}
 			ui.gain(numStacksToGain);
 
@@ -292,18 +286,15 @@ export class BLMState extends GameState {
 	}
 
 	loseEnochian() {
-		this.resources.get("ENOCHIAN").consume(1);
-		const af = this.resources.get("ASTRAL_FIRE");
-		const ui = this.resources.get("UMBRAL_ICE");
-		const uh = this.resources.get("UMBRAL_HEART");
-		const paradox = this.resources.get("PARADOX");
-		const as = this.resources.get("ASTRAL_SOUL");
-
-		af.consume(af.availableAmount());
-		ui.consume(ui.availableAmount());
-		uh.consume(uh.availableAmount());
-		paradox.consume(paradox.availableAmount());
-		as.consume(as.availableAmount());
+		const rscToLose: BLMResourceKey[] = [
+			"ENOCHIAN",
+			"ASTRAL_FIRE",
+			"UMBRAL_ICE",
+			"UMBRAL_HEART",
+			"PARADOX",
+			"ASTRAL_SOUL",
+		];
+		rscToLose.forEach((rsc) => this.tryConsumeResource(rsc, true));
 	}
 }
 
@@ -381,12 +372,11 @@ const makeSpell_BLM = (
 				state.gainUmbralMana(params.applicationDelay);
 			}
 		},
-		params.onConfirm ?? NO_EFFECT,
+		params.onConfirm,
 	);
-	const onApplication: EffectFn<BLMState> = params.onApplication ?? NO_EFFECT;
 	return makeSpell("BLM", name, unlockLevel, {
 		...params,
-		aspect: aspect,
+		aspect,
 		castTime: (state) => state.captureSpellCastTimeAFUI(params.baseCastTime, aspect),
 		recastTime: (state) =>
 			state.config.adjustedGCD(2.5, state.hasResourceAvailable("LEY_LINES") ? 15 : 0),
@@ -404,8 +394,7 @@ const makeSpell_BLM = (
 			state.hasResourceAvailable("SWIFTCAST") ||
 			// Triple
 			state.hasResourceAvailable("TRIPLECAST"),
-		onConfirm: onConfirm,
-		onApplication: onApplication,
+		onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyMultiplier[] = [];
 			if (state.hasResourceAvailable("ENOCHIAN")) {
@@ -560,20 +549,6 @@ makeSpell_BLM("BLIZZARD", 1, {
 	],
 });
 
-const gainFirestarterProc = (state: PlayerState) => {
-	state.resources.get("FIRESTARTER").gain(1);
-};
-
-const potentiallyGainFirestarter = (game: PlayerState) => {
-	const rand = game.rng();
-	if (
-		game.config.procMode === ProcMode.Always ||
-		(game.config.procMode === ProcMode.RNG && rand < 0.4)
-	) {
-		gainFirestarterProc(game);
-	}
-};
-
 makeSpell_BLM("FIRE", 2, {
 	aspect: Aspect.Fire,
 	baseCastTime: 2,
@@ -582,7 +557,9 @@ makeSpell_BLM("FIRE", 2, {
 	applicationDelay: 1.871,
 	onConfirm: (state, node) => {
 		// Refresh Enochian and gain a UI stack at the cast confirm window, not the damage application.
-		potentiallyGainFirestarter(state);
+		if (state.triggersEffect(0.4, true)) {
+			state.gainStatus("FIRESTARTER");
+		}
 		if (state.getIceStacks() === 0) {
 			// in fire or no enochian
 			state.switchToAForUI("ASTRAL_FIRE", 1);
@@ -652,9 +629,7 @@ const thunderConfirm =
 			modifiers: mods,
 		});
 
-		const thunderhead = game.resources.get("THUNDERHEAD");
-		thunderhead.consume(1);
-		thunderhead.removeTimer();
+		game.tryConsumeResource("THUNDERHEAD");
 	};
 
 makeSpell_BLM("THUNDER_III", 45, {
@@ -690,7 +665,7 @@ makeAbility_BLM("MANAFONT", 30, "cd_MANAFONT", {
 
 		if (state.hasTraitUnlocked("ASPECT_MASTERY_V")) state.resources.get("PARADOX").gain(1);
 
-		state.gainThunderhead();
+		state.gainStatus("THUNDERHEAD");
 		state.startOrRefreshEnochian();
 	},
 	onApplication: (state, node) => {
@@ -803,7 +778,7 @@ makeSpell_BLM("FIRE_IV", 60, {
 });
 
 makeAbility_BLM("BETWEEN_THE_LINES", 62, "cd_BETWEEN_THE_LINES", {
-	applicationDelay: 0, // ?
+	applicationDelay: 0,
 	cooldown: 3,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 	validateAttempt: (state) =>
@@ -814,7 +789,7 @@ makeAbility_BLM("BETWEEN_THE_LINES", 62, "cd_BETWEEN_THE_LINES", {
 });
 
 makeAbility_BLM("AETHERIAL_MANIPULATION", 50, "cd_AETHERIAL_MANIPULATION", {
-	applicationDelay: 0, // ?
+	applicationDelay: 0,
 	cooldown: 10,
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
 });
@@ -823,12 +798,7 @@ makeAbility_BLM("TRIPLECAST", 66, "cd_TRIPLECAST", {
 	applicationDelay: 0, // instant
 	cooldown: 60,
 	maxCharges: 2,
-	onApplication: (state, node) => {
-		const triple = state.resources.get("TRIPLECAST");
-		if (triple.pendingChange) triple.removeTimer();
-		triple.gain(3);
-		state.enqueueResourceDrop("TRIPLECAST");
-	},
+	onApplication: (state, node) => state.gainStatus("TRIPLECAST", 3),
 });
 
 makeSpell_BLM("FOUL", 70, {
@@ -881,6 +851,7 @@ makeSpell_BLM("XENOGLOSSY", 80, {
 	basePotency: 890,
 	applicationDelay: 0.63,
 	validateAttempt: (state) => state.hasResourceAvailable("POLYGLOT"),
+	// Don't call tryConsumeResource so we ensure the timer keeps ticking.
 	onConfirm: (state, node) => state.resources.get("POLYGLOT").consume(1),
 	highlightIf: (state) => state.hasResourceAvailable("POLYGLOT"),
 });
@@ -947,9 +918,6 @@ makeAbility_BLM("AMPLIFIER", 86, "cd_AMPLIFIER", {
 	validateAttempt: (state) => state.getFireStacks() > 0 || state.getIceStacks() > 0,
 	onApplication: (state, node) => {
 		const polyglot = state.resources.get("POLYGLOT");
-		if (polyglot.available(polyglot.maxValue)) {
-			controller.reportWarning(WarningType.PolyglotOvercap);
-		}
 		polyglot.gain(1);
 	},
 });
@@ -964,7 +932,7 @@ makeSpell_BLM("PARADOX", 90, {
 	onConfirm: (state, node) => {
 		state.resources.get("PARADOX").consume(1);
 		if (state.getFireStacks() > 0) {
-			gainFirestarterProc(state);
+			state.gainStatus("FIRESTARTER");
 		} else if (state.getIceStacks() === 0) {
 			console.error("cannot cast Paradox outside of AF/UI");
 		}
@@ -1006,8 +974,8 @@ makeSpell_BLM("FLARE_STAR", 100, {
 	falloff: 0.65,
 	applicationDelay: 0.622,
 	validateAttempt: (state) => state.hasResourceAvailable("ASTRAL_SOUL", 6),
-	onConfirm: (state, node) => state.resources.get("ASTRAL_SOUL").consume(6),
-	highlightIf: (state) => state.resources.get("ASTRAL_SOUL").available(6),
+	onConfirm: (state, node) => state.tryConsumeResource("ASTRAL_SOUL", true),
+	highlightIf: (state) => state.hasResourceAvailable("ASTRAL_SOUL", 6),
 });
 
 makeSpell_BLM("THUNDER_IV", 64, {

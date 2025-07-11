@@ -1,9 +1,8 @@
 // Skill and state declarations for PLD
 
 import { controller } from "../../Controller/Controller";
-import { BuffType, WarningType } from "../Common";
+import { BuffType } from "../Common";
 import {
-	makeComboModifier,
 	makeRequiescatModifier,
 	makeDivineMightModifier,
 	Modifiers,
@@ -22,7 +21,6 @@ import {
 	ResourceCalculationFn,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	Spell,
@@ -30,7 +28,7 @@ import {
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { makeResource, Event } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
@@ -43,7 +41,7 @@ import { PLDResourceKey, PLDActionKey, PLDCooldownKey } from "../Data/Jobs/PLD";
 const makePLDResource = (
 	rsc: PLDResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number; warningOnTimeout?: WarningType },
+	params?: { timeout?: number; default?: number; warnOnTimeout?: boolean },
 ) => {
 	makeResource("PLD", rsc, maxValue, params ?? {});
 };
@@ -59,17 +57,17 @@ makePLDResource("HALLOWED_GROUND", 1, { timeout: 10 });
 makePLDResource("BULWARK", 1, { timeout: 10 });
 makePLDResource("GORING_BLADE_READY", 1, { timeout: 30 });
 makePLDResource("DIVINE_VEIL", 1, { timeout: 30 });
-makePLDResource("ATONEMENT_READY", 1, { timeout: 30 });
-makePLDResource("DIVINE_MIGHT", 1, { timeout: 30 });
+makePLDResource("ATONEMENT_READY", 1, { timeout: 30, warnOnTimeout: true });
+makePLDResource("DIVINE_MIGHT", 1, { timeout: 30, warnOnTimeout: true });
 makePLDResource("KNIGHTS_RESOLVE", 1, { timeout: 4 });
 makePLDResource("KNIGHTS_BENEDICTION", 1, { timeout: 12 });
-makePLDResource("REQUIESCAT", 4, { timeout: 30 });
-makePLDResource("CONFITEOR_READY", 1, { timeout: 30 });
+makePLDResource("REQUIESCAT", 4, { timeout: 30, warnOnTimeout: true });
+makePLDResource("CONFITEOR_READY", 1, { timeout: 30, warnOnTimeout: true });
 makePLDResource("PASSAGE_OF_ARMS", 1, { timeout: 18 });
-makePLDResource("SUPPLICATION_READY", 1, { timeout: 30 });
-makePLDResource("SEPULCHRE_READY", 1, { timeout: 30 });
+makePLDResource("SUPPLICATION_READY", 1, { timeout: 30, warnOnTimeout: true });
+makePLDResource("SEPULCHRE_READY", 1, { timeout: 30, warnOnTimeout: true });
 makePLDResource("HOLY_SHELTRON", 1, { timeout: 8 });
-makePLDResource("BLADE_OF_HONOR_READY", 1, { timeout: 30 });
+makePLDResource("BLADE_OF_HONOR_READY", 1, { timeout: 30, warnOnTimeout: true });
 makePLDResource("GUARDIAN", 1, { timeout: 15 });
 makePLDResource("GUARDIANS_WILL", 1, { timeout: 15 });
 
@@ -156,7 +154,7 @@ export class PLDState extends GameState {
 		return new PLDStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("FIGHT_OR_FLIGHT")) {
 			node.addBuff(BuffType.FightOrFlight);
 		}
@@ -330,7 +328,6 @@ const makeWeaponskill_PLD = (
 			resourceValue: number;
 		};
 		falloff?: number;
-		jobPotencyModifiers?: PotencyModifierFn<PLDState>;
 		applicationDelay: number;
 		animationLock?: number;
 		validateAttempt?: StatePredicate<PLDState>;
@@ -342,41 +339,18 @@ const makeWeaponskill_PLD = (
 		startsAuto?: boolean;
 	},
 ): Weaponskill<PLDState> => {
-	const onConfirm: EffectFn<PLDState> = combineEffects(params.onConfirm ?? NO_EFFECT, (state) => {
+	const onConfirm: EffectFn<PLDState> = combineEffects(params.onConfirm, (state) => {
 		// fix gcd combo state
 		if (name !== "SHIELD_LOB" && name !== "SHIELD_BASH" && name !== "GORING_BLADE") {
 			state.fixPLDPhysicalComboState(name);
 		}
 	});
-	const onApplication: EffectFn<PLDState> = params.onApplication ?? NO_EFFECT;
-	const jobPotencyMod: PotencyModifierFn<PLDState> =
-		params.jobPotencyModifiers ?? ((state) => []);
 	return makeWeaponskill("PLD", name, unlockLevel, {
 		...params,
-		onConfirm: onConfirm,
-		onApplication: onApplication,
-		startsAuto: params.startsAuto,
+		onConfirm,
 		recastTime: (state) => state.config.adjustedSksGCD(),
-		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = jobPotencyMod(state);
-			if (
-				params.combo &&
-				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
-
-			if (state.hasResourceAvailable("FIGHT_OR_FLIGHT")) {
-				mods.push(Modifiers.FightOrFlight);
-			}
-			return mods;
-		},
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable("FIGHT_OR_FLIGHT") ? [Modifiers.FightOrFlight] : [],
 	});
 };
 
@@ -415,15 +389,9 @@ const makeSpell_PLD = (
 		} else {
 			state.tryConsumeRequiescat(name);
 		}
-	}, params.onConfirm ?? NO_EFFECT);
-	const onApplication: EffectFn<PLDState> = params.onApplication ?? NO_EFFECT;
-	const onExecute: EffectFn<PLDState> = combineEffects((state, node) => {
-		// pass
-	}, params.onExecute ?? NO_EFFECT);
+	}, params.onConfirm);
 	return makeSpell("PLD", name, unlockLevel, {
-		replaceIf: params.replaceIf,
-		startOnHotbar: params.startOnHotbar,
-		highlightIf: params.highlightIf,
+		...params,
 		castTime: (state) => state.captureSpellCastTime(name, params.baseCastTime),
 		recastTime: (state) => state.config.adjustedGCD(),
 		manaCost: params.baseManaCost ?? 0,
@@ -463,9 +431,6 @@ const makeSpell_PLD = (
 			}
 			return mods;
 		},
-		falloff: params.falloff,
-		validateAttempt: params.validateAttempt,
-		applicationDelay: params.applicationDelay,
 		isInstantFn: (state) => {
 			/*
 			if (name !== "CLEMENCY") {
@@ -477,10 +442,7 @@ const makeSpell_PLD = (
 			*/
 			return state.isSpellInstant(name);
 		},
-		onConfirm: onConfirm,
-		onApplication: onApplication,
-		onExecute: onExecute,
-		startsAuto: params.startsAuto,
+		onConfirm,
 	});
 };
 
@@ -511,8 +473,6 @@ const makeAbility_PLD = (
 ): Ability<PLDState> => {
 	return makeAbility("PLD", name, unlockLevel, cdName, {
 		...params,
-		onConfirm: params.onConfirm,
-		startsAuto: params.startsAuto,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (state.hasResourceAvailable("FIGHT_OR_FLIGHT")) {

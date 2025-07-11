@@ -1,6 +1,6 @@
 import { updateTimelineView } from "../Components/Timeline";
 import { controller } from "./Controller";
-import { BuffType, Debug, SkillUnavailableReason, WarningType } from "../Game/Common";
+import { BuffType, Debug, SkillUnavailableReason, Warning } from "../Game/Common";
 import { ActionNode } from "./Record";
 import { FileType, getCachedValue, removeCachedValue, setCachedValue } from "./Common";
 import { updateMarkers_TimelineMarkerPresets } from "../Components/TimelineMarkers";
@@ -86,7 +86,7 @@ export type AutoTickMarkElem = TimelineElemBase & {
 };
 export type WarningMarkElem = TimelineElemBase & {
 	type: ElemType.WarningMark;
-	warningType: WarningType;
+	warningType: Warning;
 	displayTime: number;
 };
 export type SkillElem = TimelineElemBase & {

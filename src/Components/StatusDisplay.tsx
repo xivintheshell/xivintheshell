@@ -1,6 +1,6 @@
 import React, { CSSProperties } from "react";
 import { Clickable, ContentNode, Help, ProgressBar, StaticFn } from "./Common";
-import type { PlayerState } from "../Game/GameState";
+import type { GameState } from "../Game/GameState";
 import { controller } from "../Controller/Controller";
 import { localize, localizeResourceType } from "./Localization";
 import {
@@ -890,7 +890,7 @@ export class StatusDisplay extends React.Component {
 	}
 }
 
-export class StatusPropsGenerator<T extends PlayerState> {
+export class StatusPropsGenerator<T extends GameState> {
 	state: T;
 
 	constructor(state: T) {
@@ -932,6 +932,18 @@ export class StatusPropsGenerator<T extends PlayerState> {
 			enabled: true,
 			stacks: this.state.resources.get(rscType).availableAmount(),
 			className: this.state.hasResourceAvailable(rscType) ? "" : "hidden",
+		};
+	}
+
+	makeToggleableTimerless(rscType: ResourceKey, onSelf: boolean = true): BuffProps {
+		const resource = this.state.resources.get(rscType);
+
+		return {
+			rscType,
+			onSelf,
+			enabled: resource.enabled,
+			stacks: resource.availableAmount(),
+			className: resource.availableAmountIncludingDisabled() > 0 ? "" : "hidden",
 		};
 	}
 

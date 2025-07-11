@@ -7,7 +7,7 @@ import { Aspect, BuffType } from "../Common";
 import { RESOURCES } from "../Data";
 import { SGEResourceKey, SGEActionKey, SGECooldownKey } from "../Data/Jobs/SGE";
 import { GameConfig } from "../GameConfig";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { Modifiers, Potency, PotencyModifier } from "../Potency";
 import {
 	CoolDown,
@@ -30,7 +30,6 @@ import {
 	MakeResourceAbilityParams,
 	makeSpell,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	ResourceCalculationFn,
 	Skill,
@@ -181,7 +180,7 @@ export class SGEState extends GameState {
 		recurringAddersgallGain(this.resources.get("ADDERSGALL"));
 	}
 
-	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("AUTOPHYSIS")) {
 			node.addBuff(BuffType.Autophysis);
 		}
@@ -437,7 +436,7 @@ const makeSGESpell = (
 			}
 			state.tryConsumeResource("ZOE");
 		},
-		params.onConfirm ?? NO_EFFECT,
+		params.onConfirm,
 	);
 	return makeSpell("SGE", name, unlockLevel, {
 		...params,
@@ -457,7 +456,7 @@ const makeSGESpell = (
 			eudaimoniaPotencies.forEach((eudaimoniaPotency) => {
 				controller.resolveHealingPotency(eudaimoniaPotency);
 			});
-		}, params.onApplication ?? NO_EFFECT),
+		}, params.onApplication),
 	});
 };
 

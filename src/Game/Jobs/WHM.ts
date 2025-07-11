@@ -3,11 +3,11 @@
 import { WHMStatusPropsGenerator } from "../../Components/Jobs/WHM";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, ProcMode } from "../Common";
+import { BuffType } from "../Common";
 import { TraitKey } from "../Data";
 import { WHMActionKey, WHMCooldownKey, WHMResourceKey } from "../Data/Jobs/WHM";
 import { GameConfig } from "../GameConfig";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { Modifiers, PotencyModifier } from "../Potency";
 import { makeResource, CoolDown } from "../Resources";
 import {
@@ -20,7 +20,6 @@ import {
 	MakeResourceAbilityParams,
 	makeSpell,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
@@ -35,7 +34,12 @@ import { localize } from "../../Components/Localization";
 const makeWHMResource = (
 	rsc: WHMResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnTimeout?: boolean;
+		warnOnOvercap?: boolean;
+	},
 ) => {
 	makeResource("WHM", rsc, maxValue, params ?? {});
 };
@@ -43,12 +47,12 @@ const makeWHMResource = (
 // Gauge resources
 makeWHMResource("LILLIES", 3);
 makeWHMResource("LILY_TIMER", 1);
-makeWHMResource("BLOOD_LILY", 3);
+makeWHMResource("BLOOD_LILY", 3, { warnOnOvercap: true });
 
 // Statuses
 makeWHMResource("FREECURE", 1, { timeout: 15 });
 makeWHMResource("PRESENCE_OF_MIND", 1, { timeout: 15 });
-makeWHMResource("SACRED_SIGHT", 3, { timeout: 30 });
+makeWHMResource("SACRED_SIGHT", 3, { timeout: 30, warnOnTimeout: true });
 makeWHMResource("REGEN", 1, { timeout: 18 });
 makeWHMResource("AERO_II", 1, { timeout: 30 });
 makeWHMResource("MEDICA_II", 1, { timeout: 15 });
@@ -138,7 +142,7 @@ export class WHMState extends GameState {
 		}
 	}
 
-	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasTraitUnlocked("ENHANCED_ASYLUM") && this.hasResourceAvailable("ASYLUM")) {
 			node.addBuff(BuffType.Asylum);
 		}
@@ -240,12 +244,12 @@ const makeWHMSpell = (
 		jobHealingPotencyModifiers,
 		onConfirm: combineEffects(
 			(state) => state.tryConsumeResource("THIN_AIR"),
-			params.baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : NO_EFFECT,
-			params.onConfirm ?? NO_EFFECT,
+			params.baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : undefined,
+			params.onConfirm,
 		),
 		onApplication: combineEffects(
-			params.potency ? (state) => state.startLilyTimer() : NO_EFFECT,
-			params.onApplication ?? NO_EFFECT,
+			params.potency ? (state) => state.startLilyTimer() : undefined,
+			params.onApplication,
 		),
 	});
 };
@@ -487,16 +491,7 @@ makeWHMSpell("CURE", 2, {
 	],
 	baseCastTime: 1.5,
 	manaCost: 400,
-	onConfirm: (state) => {
-		const rand = state.rng();
-		const chance = 0.15;
-		if (
-			state.config.procMode === ProcMode.Always ||
-			(state.config.procMode === ProcMode.RNG && rand < chance)
-		) {
-			state.gainStatus("FREECURE");
-		}
-	},
+	onConfirm: (state) => state.maybeGainProc("FREECURE", 0.15),
 });
 
 makeWHMSpell("CURE_II", 30, {

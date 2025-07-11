@@ -1,3 +1,5 @@
+import type { ResourceKey } from "./Data";
+
 export const Debug = {
 	epsilon: 1e-6,
 	disableManaTicks: false,
@@ -147,55 +149,24 @@ export enum BuffType {
 	Temperance = "Temperance",
 }
 
-export const enum WarningType {
-	PolyglotOvercap = "polyglot overcap",
-
-	CometOverwrite = "comet overwrite",
-	PaletteOvercap = "palette gauge overcap",
-
-	DualcastEaten = "dualcast dropped",
-	ImbalancedMana = "mana difference became more than 30",
-	ComboBreak = "broken combo",
-	// TODO make buff overwrite warning generic
-	GIOverwrite = "Grand Impact Ready overwrite",
-	GIDrop = "Grand Impact expired",
-	ViceOfThornsDrop = "Vice of Thorns expired",
-	PrefulgenceDrop = "Prefulgence expired",
-	ManaficDrop = "Manafication stacks expired",
-	MagickedSwordplayDrop = "Magicked Swordplay stacks expired",
-
-	EspritOvercap = "esprit gauge overcap",
-	FeatherOvercap = "feather gauge overcap",
-	FanThreeOverwrite = "overwrote fan dance 3",
-
-	HeatOvercap = "heat gauge overcap",
-	BatteryOvercap = "battery gauge overcap",
-
-	KenkiOvercap = "kenki overcap",
-	MeditationOvercap = "meditation stack overcap",
-	SenOvercap = "sen overcap",
-
-	BeastGaugeOvercap = "Beast Gauge overcap",
-	InnerReleaseDrop = "Inner Release expired",
-	NascentChaosDrop = "Nascent Chaos expired",
-
-	SoulVoiceOvercap = "soul voice overcap",
-	CodaOvercap = "coda overcap",
-
-	CartridgeOvercap = "cartridge overcap",
-
-	ScaleOvercap = "firstminds' focus overcap",
-
-	LateEnkindle = "enkindle used near end of demi window may ghost",
-	RubysGlimmerDrop = "Ruby's Glimmer expired",
-	AetherflowOvercap = "aetherflow overcap",
-
-	BloodGaugeOvercap = "blood gauge overcap",
-	DarkArtsOvercap = "dark arts overcap",
-
-	NinkiOvercap = "ninki gauge overcap",
-	KazematoiOvercap = "kazematoi gauge overcap",
-	RaijuOverwrite = "raiju ready overwritten",
-
-	CardOverwrite = "damage card overwritten",
-}
+export type Warning =
+	| {
+			kind: "combobreak";
+	  }
+	| {
+			kind: "overcap";
+			rsc: ResourceKey;
+	  }
+	| {
+			kind: "overwrite";
+			rsc: ResourceKey;
+	  }
+	| {
+			kind: "timeout";
+			rsc: ResourceKey;
+	  }
+	| {
+			kind: "custom";
+			en: string;
+			zh?: string;
+	  };

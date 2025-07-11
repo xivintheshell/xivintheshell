@@ -1,5 +1,19 @@
 [
 	{
+		"date": "7/10/25",
+		"changes": [
+			"[MNK] Now begins encounters with Formless Fist active by default.",
+			"[DRG][NIN] Fixed a bug where using combo actions out of sequence granted combo potency bonus.",
+			"[AST] Fixed Macrocosmos/Microcosmos."
+		],
+		"changes_zh": [
+			"【武士】现在会从战斗开始有\"无相身形\"。",
+			"【龙骑士】【忍者】修复了用错误的连击技能会给连击威力增加的问题。",
+			"【占星术士】修复了大宇宙和小宇宙。"
+		],
+		"level": "minor"
+	},
+	{
 		"date": "7/8/25",
 		"changes": [
 			"[AST] Added initial support for AST.",

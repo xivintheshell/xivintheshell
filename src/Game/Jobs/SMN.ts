@@ -1,7 +1,7 @@
 // Skill and state declarations for SMN.
 
 import { controller } from "../../Controller/Controller";
-import { Aspect, BuffType, WarningType } from "../Common";
+import { Aspect, BuffType } from "../Common";
 import { Modifiers, Potency } from "../Potency";
 import {
 	Ability,
@@ -13,13 +13,12 @@ import {
 	makeAbility,
 	makeResourceAbility,
 	makeSpell,
-	NO_EFFECT,
 	Skill,
 	SkillAutoReplace,
 	Spell,
 	StatePredicate,
 } from "../Skills";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { makeResource, CoolDown, Event, OverTimeBuff } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
@@ -32,7 +31,12 @@ import { SMNResourceKey, SMNActionKey } from "../Data/Jobs/SMN";
 const makeSMNResource = (
 	rsc: SMNResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number; warningOnTimeout?: WarningType },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnTimeout?: boolean;
+		warnOnOvercap?: boolean;
+	},
 ) => {
 	makeResource("SMN", rsc, maxValue, params ?? {});
 };
@@ -46,7 +50,7 @@ export enum ActiveDemiValue {
 
 const DEMI_DURATION: number = 15;
 
-makeSMNResource("AETHERFLOW", 2);
+makeSMNResource("AETHERFLOW", 2, { warnOnOvercap: true });
 makeSMNResource("RUBY_ARCANUM", 1);
 makeSMNResource("TOPAZ_ARCANUM", 1);
 makeSMNResource("EMERALD_ARCANUM", 1);
@@ -65,7 +69,7 @@ makeSMNResource("REKINDLE", 1, { timeout: 30 });
 makeSMNResource("UNDYING_FLAME", 1, { timeout: 15 });
 makeSMNResource("RUBYS_GLIMMER", 1, {
 	timeout: 30,
-	warningOnTimeout: WarningType.RubysGlimmerDrop,
+	warnOnTimeout: true,
 });
 makeSMNResource("SEARING_LIGHT", 1, { timeout: 20 });
 makeSMNResource("SLIPSTREAM", 1, { timeout: 15 });
@@ -155,7 +159,7 @@ export class SMNState extends GameState {
 		return new SMNStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("SEARING_LIGHT")) {
 			node.addBuff(BuffType.SearingLight);
 		}
@@ -311,7 +315,10 @@ export class SMNState extends GameState {
 		const demiEvent = this.resources.get("ACTIVE_DEMI").pendingChange;
 		console.assert(demiEvent);
 		if (demiEvent && demiEvent.timeTillEvent < 2.5) {
-			controller.reportWarning(WarningType.LateEnkindle);
+			controller.reportWarning({
+				kind: "custom",
+				en: "enkindle used near end of demi window may ghost",
+			});
 		}
 		this.queuePetDamageEvent(
 			node,
@@ -389,10 +396,7 @@ const makeSpell_SMN = (
 	const baseRecastTime = params.baseRecastTime ?? 2.5;
 	const onConfirm: EffectFn<SMNState> | undefined =
 		baseCastTime > 0
-			? combineEffects(
-					(state) => state.tryConsumeResource("SWIFTCAST"),
-					params.onConfirm ?? NO_EFFECT,
-				)
+			? combineEffects((state) => state.tryConsumeResource("SWIFTCAST"), params.onConfirm)
 			: params.onConfirm;
 	return makeSpell("SMN", name, unlockLevel, {
 		...params,
@@ -435,19 +439,16 @@ const makeAbility_SMN = (
 	},
 ): Ability<SMNState> =>
 	makeAbility("SMN", name, unlockLevel, cdName, {
+		...params,
 		jobPotencyModifiers: (state) =>
 			state.hasResourceAvailable("SEARING_LIGHT") ? [Modifiers.SearingLight] : [],
-		...params,
 	});
 
-// manual stand-in for toSpliced, available in ES2023
-function toSpliced<T>(arr: T[], i: number): T[] {
-	const newArr = arr.slice();
-	newArr.splice(i, 1);
-	return newArr;
-}
-
 const R3_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
+	{
+		newSkill: "RUIN_III",
+		condition: (state) => state.activeDemi === ActiveDemiValue.NONE,
+	},
 	{
 		newSkill: "ASTRAL_IMPULSE",
 		condition: (state) => state.activeDemi === ActiveDemiValue.BAHAMUT,
@@ -480,9 +481,9 @@ makeSpell_SMN("ASTRAL_IMPULSE", 58, {
 		["ARCANE_MASTERY", 500],
 	],
 	manaCost: 300,
-	replaceIf: toSpliced(R3_REPLACE_LIST, 0),
+	replaceIf: R3_REPLACE_LIST,
 	applicationDelay: 0.67,
-	validateAttempt: R3_REPLACE_LIST[0].condition,
+	validateAttempt: R3_REPLACE_LIST[1].condition,
 	startOnHotbar: false,
 });
 
@@ -492,22 +493,26 @@ makeSpell_SMN("FOUNTAIN_OF_FIRE", 80, {
 		["ARCANE_MASTERY", 580],
 	],
 	manaCost: 300,
-	replaceIf: toSpliced(R3_REPLACE_LIST, 1),
+	replaceIf: R3_REPLACE_LIST,
 	applicationDelay: 1.07,
-	validateAttempt: R3_REPLACE_LIST[1].condition,
+	validateAttempt: R3_REPLACE_LIST[2].condition,
 	startOnHotbar: false,
 });
 
 makeSpell_SMN("UMBRAL_IMPULSE", 100, {
 	basePotency: 620,
 	manaCost: 300,
-	replaceIf: toSpliced(R3_REPLACE_LIST, 2),
+	replaceIf: R3_REPLACE_LIST,
 	applicationDelay: 0.8,
-	validateAttempt: R3_REPLACE_LIST[2].condition,
+	validateAttempt: R3_REPLACE_LIST[3].condition,
 	startOnHotbar: false,
 });
 
 const OUTBURST_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
+	{
+		newSkill: "OUTBURST",
+		condition: (state) => state.activeDemi === ActiveDemiValue.NONE,
+	},
 	{
 		newSkill: "ASTRAL_FLARE",
 		condition: (state) => state.activeDemi === ActiveDemiValue.BAHAMUT,
@@ -551,9 +556,9 @@ makeSpell_SMN("TRI_DISASTER", 74, {
 makeSpell_SMN("ASTRAL_FLARE", 58, {
 	basePotency: 180,
 	manaCost: 300,
-	replaceIf: toSpliced(OUTBURST_REPLACE_LIST, 0),
+	replaceIf: OUTBURST_REPLACE_LIST,
 	applicationDelay: 0.54,
-	validateAttempt: OUTBURST_REPLACE_LIST[0].condition,
+	validateAttempt: OUTBURST_REPLACE_LIST[1].condition,
 	falloff: 0,
 	startOnHotbar: false,
 });
@@ -561,9 +566,9 @@ makeSpell_SMN("ASTRAL_FLARE", 58, {
 makeSpell_SMN("BRAND_OF_PURGATORY", 80, {
 	basePotency: 240,
 	manaCost: 300,
-	replaceIf: toSpliced(OUTBURST_REPLACE_LIST, 1),
+	replaceIf: OUTBURST_REPLACE_LIST,
 	applicationDelay: 0.8,
-	validateAttempt: OUTBURST_REPLACE_LIST[1].condition,
+	validateAttempt: OUTBURST_REPLACE_LIST[2].condition,
 	falloff: 0,
 	startOnHotbar: false,
 });
@@ -571,7 +576,7 @@ makeSpell_SMN("BRAND_OF_PURGATORY", 80, {
 makeSpell_SMN("UMBRAL_FLARE", 100, {
 	basePotency: 280,
 	manaCost: 300,
-	replaceIf: toSpliced(OUTBURST_REPLACE_LIST, 2),
+	replaceIf: OUTBURST_REPLACE_LIST,
 	applicationDelay: 0.53,
 	validateAttempt: OUTBURST_REPLACE_LIST[2].condition,
 	falloff: 0,
@@ -917,7 +922,7 @@ const DEMI_COOLDOWN_GROUP: CooldownGroupProperties = {
 ].forEach((info, i) =>
 	makeSpell_SMN(info.name as SMNActionKey, info.level, {
 		applicationDelay: 0.76,
-		replaceIf: toSpliced(DEMI_REPLACE_LIST, i),
+		replaceIf: DEMI_REPLACE_LIST,
 		secondaryCooldown: DEMI_COOLDOWN_GROUP,
 		validateAttempt: (state) => !state.hasActivePet && state.nextDemi === info.activeValue,
 		drawsAggro: true,
@@ -1130,7 +1135,7 @@ makeAbility_SMN("DEATHFLARE", 60, "cd_ASTRAL_FLOW", {
 	potency: 500,
 	applicationDelay: 0.8,
 	cooldown: 20,
-	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 0),
+	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[0].condition,
 	falloff: 0.5,
@@ -1140,7 +1145,7 @@ makeAbility_SMN("DEATHFLARE", 60, "cd_ASTRAL_FLOW", {
 makeAbility_SMN("REKINDLE", 80, "cd_ASTRAL_FLOW", {
 	applicationDelay: 1.03,
 	cooldown: 20,
-	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 1),
+	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[1].condition,
 	onConfirm: (state) => state.gainStatus("REKINDLE"),
@@ -1151,7 +1156,7 @@ makeAbility_SMN("SUNFLARE", 100, "cd_ASTRAL_FLOW", {
 	potency: 800,
 	applicationDelay: 0.8,
 	cooldown: 20,
-	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 2),
+	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[2].condition,
 	falloff: 0.5,
@@ -1164,7 +1169,7 @@ makeSpell_SMN("CRIMSON_CYCLONE", 86, {
 		["ARCANE_MASTERY", 490],
 	],
 	applicationDelay: 0.8,
-	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 3),
+	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[3].condition,
 	onConfirm: (state) => {
@@ -1181,7 +1186,7 @@ makeSpell_SMN("CRIMSON_STRIKE", 86, {
 		["ARCANE_MASTERY", 490],
 	],
 	applicationDelay: 0.76,
-	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 4),
+	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[4].condition,
 	onConfirm: (state) => state.tryConsumeResource("CRIMSON_STRIKE_READY"),
@@ -1196,7 +1201,7 @@ makeAbility_SMN("MOUNTAIN_BUSTER", 86, "cd_MOUNTAIN_BUSTER", {
 	],
 	cooldown: 1,
 	applicationDelay: 0.76,
-	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 5),
+	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[5].condition,
 	onConfirm: (state) => state.tryConsumeResource("TITANS_FAVOR"),
@@ -1212,7 +1217,7 @@ makeSpell_SMN("SLIPSTREAM", 86, {
 		["ARCANE_MASTERY", 490],
 	],
 	applicationDelay: 1.02,
-	replaceIf: toSpliced(ASTRAL_FLOW_REPLACE_LIST, 6),
+	replaceIf: ASTRAL_FLOW_REPLACE_LIST,
 	highlightIf: (state) => true,
 	validateAttempt: ASTRAL_FLOW_REPLACE_LIST[6].condition,
 	onConfirm: (state, node) => {
@@ -1270,7 +1275,7 @@ const ENKINDLE_REPLACE_LIST: ConditionalSkillReplace<SMNState>[] = [
 	makeAbility_SMN(info.name as SMNActionKey, info.level, "cd_ENKINDLE", {
 		applicationDelay: 0,
 		cooldown: 20,
-		replaceIf: toSpliced(ENKINDLE_REPLACE_LIST, i),
+		replaceIf: ENKINDLE_REPLACE_LIST,
 		validateAttempt: (state) => state.activeDemi === info.activeValue,
 		onConfirm: (state, node) => state.queueEnkindle(node, info.name as SMNActionKey),
 		startOnHotbar: i === 0,
@@ -1310,9 +1315,6 @@ makeSpell_SMN("RUIN_IV", 62, {
 		...info,
 		cooldown: 60,
 		onConfirm: (state) => {
-			if (state.resources.get("AETHERFLOW").available(1)) {
-				controller.reportWarning(WarningType.AetherflowOvercap);
-			}
 			state.gainStatus("AETHERFLOW", 2);
 			state.gainStatus("FURTHER_RUIN");
 		},

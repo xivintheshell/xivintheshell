@@ -1,6 +1,6 @@
 import { Aspect, LevelSync } from "./Common";
 import { ActionNode } from "../Controller/Record";
-import { PlayerState, GameState } from "./GameState";
+import { GameState } from "./GameState";
 import { makeCooldown, getResourceInfo, ResourceInfo } from "./Resources";
 import { PotencyModifier } from "./Potency";
 import { ShellJob, ALL_JOBS } from "./Data/Jobs";
@@ -27,7 +27,7 @@ export type SkillAutoReplace = {
 // satisfied the level requirement of the replacing skill is always checked before the condition;
 // multiple replacements for a single skill should have disjoint conditions.
 // This replacement check is NOT performed recursively.
-export type ConditionalSkillReplace<T extends PlayerState> = {
+export type ConditionalSkillReplace<T extends GameState> = {
 	newSkill: ActionKey;
 	condition: (state: Readonly<T>) => boolean;
 };
@@ -45,24 +45,28 @@ export type EffectFn<T> = (state: T, node: ActionNode) => void;
 export type PotencyModifierFn<T> = (state: Readonly<T>) => PotencyModifier[];
 
 // empty function
-export function NO_EFFECT<T extends PlayerState>(state: T, node: ActionNode) {}
+export function NO_EFFECT<T extends GameState>(state: T, node: ActionNode) {}
 
 /**
  * Create a new EffectFn that performs f1 followed by each function in fs.
  */
-export function combineEffects<T extends PlayerState>(
-	f1: EffectFn<T>,
-	...fs: Array<EffectFn<T>>
+export function combineEffects<T extends GameState>(
+	f1: EffectFn<T> | undefined,
+	...fs: Array<EffectFn<T> | undefined>
 ): EffectFn<T> {
 	return (state: T, node: ActionNode) => {
-		f1(state, node);
+		if (f1 !== undefined) {
+			f1(state, node);
+		}
 		for (const fn of fs) {
-			fn(state, node);
+			if (fn !== undefined) {
+				fn(state, node);
+			}
 		}
 	};
 }
 
-export function combinePredicatesAnd<T extends PlayerState>(
+export function combinePredicatesAnd<T extends GameState>(
 	f1: StatePredicate<T>,
 	...fs: Array<StatePredicate<T>>
 ): StatePredicate<T> {
@@ -80,7 +84,7 @@ export interface CooldownGroupProperties {
  *
  * Use the `Skill` type in type annotations instead of this interface.
  */
-interface BaseSkill<T extends PlayerState> {
+interface BaseSkill<T extends GameState> {
 	// === COSMETIC PROPERTIES ===
 	readonly name: ActionKey;
 	readonly assetPath: string; // path relative to the Components/Asset/Skills folder
@@ -164,7 +168,7 @@ interface BaseSkill<T extends PlayerState> {
 	readonly startsAuto: boolean;
 }
 
-export type GCD<T extends PlayerState> = BaseSkill<T> & {
+export type GCD<T extends GameState> = BaseSkill<T> & {
 	// GCDs have cast/recast + MP cost, but oGCDs do not.
 	// The only exception is BLU (as far as I [sz] know). Let us pray we never cross that particular bridge.
 	readonly castTimeFn: ResourceCalculationFn<T>;
@@ -174,20 +178,20 @@ export type GCD<T extends PlayerState> = BaseSkill<T> & {
 	readonly isInstantFn: StatePredicate<T>;
 };
 
-export type Spell<T extends PlayerState> = GCD<T> & {
+export type Spell<T extends GameState> = GCD<T> & {
 	kind: "spell";
 };
 
-export type Weaponskill<T extends PlayerState> = GCD<T> & {
+export type Weaponskill<T extends GameState> = GCD<T> & {
 	kind: "weaponskill";
 };
 
-export type Ability<T extends PlayerState> = BaseSkill<T> & {
+export type Ability<T extends GameState> = BaseSkill<T> & {
 	kind: "ability";
 };
 
 // Limit breaks (mostly) have a cast time but don't otherwise actually interact with the GCD
-export type LimitBreak<T extends PlayerState> = BaseSkill<T> & {
+export type LimitBreak<T extends GameState> = BaseSkill<T> & {
 	kind: "limitbreak";
 	readonly castTimeFn: ResourceCalculationFn<T>;
 };
@@ -206,13 +210,13 @@ export type LimitBreak<T extends PlayerState> = BaseSkill<T> & {
  *   // castTimeFn, recastTimeFn, etc. are valid here
  * }
  */
-export type Skill<T extends PlayerState> = Spell<T> | Weaponskill<T> | Ability<T> | LimitBreak<T>;
+export type Skill<T extends GameState> = Spell<T> | Weaponskill<T> | Ability<T> | LimitBreak<T>;
 
 // Map tracking skills for each job.
 // This is automatically populated by the makeWeaponskill, makeSpell, and makeAbility helper functions.
 // Unfortunately, I [sz] don't really know of a good way to encode the relationship between
 // the ShellJob and Skill<T>, so we'll just have to live with performing casts at certain locations.
-const skillMap: Map<ShellJob, Map<ActionKey, Skill<PlayerState>>> = new Map();
+const skillMap: Map<ShellJob, Map<ActionKey, Skill<GameState>>> = new Map();
 // Track asset paths for all skills so we can load icons for multiple timelines
 const skillAssetPaths: Map<ActionKey, string> = new Map();
 
@@ -248,7 +252,7 @@ export function getResourceKeyFromBuffName(s: string): ResourceKey | undefined {
 
 // Return a particular skill for a job.
 // Raises if the skill is not found.
-export function getSkill<T extends PlayerState>(job: ShellJob, skillName: ActionKey): Skill<T> {
+export function getSkill<T extends GameState>(job: ShellJob, skillName: ActionKey): Skill<T> {
 	return skillMap.get(job)!.get(skillName)!;
 }
 
@@ -262,12 +266,12 @@ export function jobHasSkill(job: ShellJob, skillName: ActionKey): boolean {
 }
 
 // Return the map of all skills for a job.
-export function getAllSkills<T extends PlayerState>(job: ShellJob): Map<ActionKey, Skill<T>> {
+export function getAllSkills<T extends GameState>(job: ShellJob): Map<ActionKey, Skill<T>> {
 	return skillMap.get(job)!;
 }
 
-function setSkill<T extends PlayerState>(job: ShellJob, skillName: ActionKey, skill: Skill<T>) {
-	skillMap.get(job)!.set(skillName, skill as Skill<PlayerState>);
+function setSkill<T extends GameState>(job: ShellJob, skillName: ActionKey, skill: Skill<T>) {
+	skillMap.get(job)!.set(skillName, skill as Skill<GameState>);
 	normalizedSkillNameMap.set(ACTIONS[skillName].name.toLowerCase(), skillName);
 	skillAssetPaths.set(skillName, skill.assetPath);
 }
@@ -276,7 +280,7 @@ ALL_JOBS.forEach((job) => skillMap.set(job, new Map()));
 
 // Helper function to transform an optional<number | function> that has a default number value into a function.
 // If no default is provided, 0 is used instead.
-export function fnify<T extends PlayerState>(
+export function fnify<T extends GameState>(
 	arg?: number | ResourceCalculationFn<T>,
 	defaultValue?: number,
 ): ResourceCalculationFn<T> {
@@ -289,7 +293,7 @@ export function fnify<T extends PlayerState>(
 	}
 }
 
-function convertTraitPotencyArray<T extends PlayerState>(
+function convertTraitPotencyArray<T extends GameState>(
 	arr: Array<[TraitKey, number]>,
 ): ResourceCalculationFn<T> {
 	console.assert(arr.length > 0, `invalid trait potency array: ${arr}`);
@@ -311,7 +315,7 @@ function convertTraitPotencyArray<T extends PlayerState>(
 	};
 }
 
-export function getBasePotency<T extends PlayerState>(
+export function getBasePotency<T extends GameState>(
 	state: Readonly<T>,
 	potencyArg?: number | Array<[TraitKey, number]> | ResourceCalculationFn<T>,
 ): number {
@@ -326,8 +330,21 @@ function normalizeAssetPath(job: ShellJob, key: ActionKey) {
 	return `${job}/${name.replace(":", "")}.png`;
 }
 
+// Parameters describing potency of a combo action and the ResourceKey value needed to activate the combo.
+export interface ComboPotency {
+	potency: number | Array<[TraitKey, number]>;
+	resource: ResourceKey;
+	resourceValue: number;
+}
+
+export interface PositionalPotency {
+	potency: number | Array<[TraitKey, number]>;
+	comboPotency?: number | Array<[TraitKey, number]>;
+	location: "flank" | "rear";
+}
+
 // Shared parameters for all skill kinds
-export interface MakeSkillParams<T extends PlayerState> {
+export interface MakeSkillParams<T extends GameState> {
 	assetPath: string;
 	autoUpgrade: SkillAutoReplace;
 	autoDowngrade: SkillAutoReplace;
@@ -338,6 +355,10 @@ export interface MakeSkillParams<T extends PlayerState> {
 	animationLock: number | ResourceCalculationFn<T>;
 	manaCost: number | ResourceCalculationFn<T>;
 	potency: number | ResourceCalculationFn<T> | Array<[TraitKey, number]>;
+	// combo and positional are not passed directly to the skill constructor, but are used by default
+	// in computing jobPotencyModifiers
+	combo: ComboPotency;
+	positional: PositionalPotency;
 	jobPotencyModifiers: PotencyModifierFn<T>;
 	drawsAggro: boolean;
 	falloff: number;
@@ -355,7 +376,7 @@ export interface MakeSkillParams<T extends PlayerState> {
 }
 
 // Parameters for a spell or weaponskill
-export interface MakeGCDParams<T extends PlayerState> extends MakeSkillParams<T> {
+export interface MakeGCDParams<T extends GameState> extends MakeSkillParams<T> {
 	castTime: number | ResourceCalculationFn<T>;
 	recastTime: number | ResourceCalculationFn<T>;
 	isInstantFn: StatePredicate<T>;
@@ -379,7 +400,7 @@ export interface MakeGCDParams<T extends PlayerState> extends MakeSkillParams<T>
  * - onConfirm: empty function
  * - onApplication: empty function
  */
-export function makeSpell<T extends PlayerState>(
+export function makeSpell<T extends GameState>(
 	jobs: ShellJob | ShellJob[],
 	name: ActionKey,
 	unlockLevel: number,
@@ -390,12 +411,28 @@ export function makeSpell<T extends PlayerState>(
 	}
 	const onApplication: EffectFn<T> = combineEffects(
 		(state, node) => (node.applicationTime = state.time),
-		params.onApplication ?? NO_EFFECT,
+		params.onApplication,
 	);
 	const onExecute: EffectFn<T> = combineEffects(
 		(state) => state.maybeCancelChanneledSkills(name),
-		params.onExecute ?? NO_EFFECT,
+		params.onExecute,
 	);
+	const jobPotencyModifiers: PotencyModifierFn<T> = (state) => {
+		const mods = [];
+		if (params.potency && (params.combo || params.positional)) {
+			mods.push(
+				...state.computeComboAndPositionalModifiers(
+					getBasePotency(state, params.potency!),
+					params.combo,
+					params.positional,
+				),
+			);
+		}
+		if (params.jobPotencyModifiers) {
+			mods.push(...params.jobPotencyModifiers(state));
+		}
+		return mods;
+	};
 	const info: Spell<T> = {
 		kind: "spell",
 		name: name,
@@ -416,7 +453,7 @@ export function makeSpell<T extends PlayerState>(
 		animationLockFn: (state) => fnify(params.animationLock, state.config.animationLock)(state),
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
-		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		jobPotencyModifiers,
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
 		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
@@ -438,7 +475,7 @@ export function makeSpell<T extends PlayerState>(
 	return info;
 }
 
-export function makeWeaponskill<T extends PlayerState>(
+export function makeWeaponskill<T extends GameState>(
 	jobs: ShellJob | ShellJob[],
 	name: ActionKey,
 	unlockLevel: number,
@@ -449,12 +486,28 @@ export function makeWeaponskill<T extends PlayerState>(
 	}
 	const onApplication: EffectFn<T> = combineEffects(
 		(state, node) => (node.applicationTime = state.time),
-		params.onApplication ?? NO_EFFECT,
+		params.onApplication,
 	);
 	const onExecute: EffectFn<T> = combineEffects(
 		(state) => state.maybeCancelChanneledSkills(name),
-		params.onExecute ?? NO_EFFECT,
+		params.onExecute,
 	);
+	const jobPotencyModifiers: PotencyModifierFn<T> = (state) => {
+		const mods = [];
+		if (params.potency && (params.combo || params.positional)) {
+			mods.push(
+				...state.computeComboAndPositionalModifiers(
+					getBasePotency(state, params.potency!),
+					params.combo,
+					params.positional,
+				),
+			);
+		}
+		if (params.jobPotencyModifiers) {
+			mods.push(...params.jobPotencyModifiers(state));
+		}
+		return mods;
+	};
 	const info: Weaponskill<T> = {
 		kind: "weaponskill",
 		name: name,
@@ -475,7 +528,7 @@ export function makeWeaponskill<T extends PlayerState>(
 		animationLockFn: (state) => fnify(params.animationLock, state.config.animationLock)(state),
 		manaCostFn: fnify(params.manaCost, 0),
 		potencyFn: (state) => getBasePotency(state, params.potency),
-		jobPotencyModifiers: params.jobPotencyModifiers ?? ((state) => []),
+		jobPotencyModifiers,
 		drawsAggro: params.drawsAggro ?? false,
 		falloff: params.falloff,
 		healingPotencyFn: (state) => getBasePotency(state, params.healingPotency),
@@ -498,7 +551,7 @@ export function makeWeaponskill<T extends PlayerState>(
 }
 
 // Parameters for an ability
-export interface MakeAbilityParams<T extends PlayerState> extends MakeSkillParams<T> {
+export interface MakeAbilityParams<T extends GameState> extends MakeSkillParams<T> {
 	requiresCombat: boolean;
 	cooldown: number;
 	maxCharges: number;
@@ -521,7 +574,7 @@ export interface MakeAbilityParams<T extends PlayerState> extends MakeSkillParam
  * - cooldown: the cooldown (in seconds) of the ability; no resourceInfos entry is added if this is unspecified
  * - maxCharges: the maximum number of charges an ability has, default 1
  */
-export function makeAbility<T extends PlayerState>(
+export function makeAbility<T extends GameState>(
 	jobs: ShellJob | ShellJob[],
 	name: ActionKey,
 	unlockLevel: number,
@@ -533,11 +586,11 @@ export function makeAbility<T extends PlayerState>(
 	}
 	const onApplication: EffectFn<T> = combineEffects(
 		(state, node) => (node.applicationTime = state.time),
-		params.onApplication ?? NO_EFFECT,
+		params.onApplication,
 	);
 	const onExecute: EffectFn<T> = combineEffects(
 		(state) => state.maybeCancelChanneledSkills(name),
-		params.onExecute ?? NO_EFFECT,
+		params.onExecute,
 	);
 	// All abilities that require being in combat should check isInCombat
 	const validateAttempt: StatePredicate<T> = combinePredicatesAnd(
@@ -587,7 +640,7 @@ export function makeAbility<T extends PlayerState>(
 	return info;
 }
 
-export type MakeResourceAbilityParams<T extends PlayerState> = {
+export type MakeResourceAbilityParams<T extends GameState> = {
 	rscType: ResourceKey;
 	cooldown: number;
 	applicationDelay: number;
@@ -600,7 +653,7 @@ export type MakeResourceAbilityParams<T extends PlayerState> = {
  *
  * Any additional effects should be encoded in `onConfirm` or `onApplication`.
  */
-export function makeResourceAbility<T extends PlayerState>(
+export function makeResourceAbility<T extends GameState>(
 	jobs: ShellJob | ShellJob[],
 	name: ActionKey,
 	unlockLevel: number,
@@ -619,7 +672,7 @@ export function makeResourceAbility<T extends PlayerState>(
 			typeof duration === "number" ? (state: T) => duration : duration;
 		resource.gain(resource.maxValue);
 		state.enqueueResourceDrop(params.rscType, durationFn(state));
-	}, params?.onApplication ?? NO_EFFECT);
+	}, params?.onApplication);
 	return makeAbility(jobs, name, unlockLevel, cdName, {
 		...params,
 		onApplication,
@@ -643,7 +696,7 @@ export function makeResourceAbility<T extends PlayerState>(
  * select which skill icon is shown
  * - tier: which tier of limit break is this?
  */
-export function makeLimitBreak<T extends PlayerState>(
+export function makeLimitBreak<T extends GameState>(
 	jobs: ShellJob | ShellJob[],
 	name: LimitBreakActionKey,
 	cdName: CooldownKey,
@@ -666,7 +719,7 @@ export function makeLimitBreak<T extends PlayerState>(
 	const assetName = "Limit Break " + params.tier;
 	const onExecute: EffectFn<T> = combineEffects(
 		(state) => state.maybeCancelChanneledSkills(name),
-		params.onExecute ?? NO_EFFECT,
+		params.onExecute,
 	);
 	const info: LimitBreak<T> = {
 		kind: "limitbreak",
@@ -710,7 +763,7 @@ const NEVER_SKILL = makeAbility(ALL_JOBS, "NEVER", 1, "NEVER", {
 	validateAttempt: (state) => false,
 });
 
-export class SkillsList<T extends PlayerState> {
+export class SkillsList<T extends GameState> {
 	job: ShellJob;
 
 	constructor(state: GameState) {
@@ -744,7 +797,7 @@ export function getAutoReplacedSkillName(
 	return skill.name;
 }
 
-export function getConditionalReplacement<T extends PlayerState>(
+export function getConditionalReplacement<T extends GameState>(
 	key: ActionKey,
 	state: T,
 ): ActionKey {
@@ -752,7 +805,8 @@ export function getConditionalReplacement<T extends PlayerState>(
 	const skill = getSkill(state.job, key);
 	for (const candidate of skill.replaceIf) {
 		if (candidate.newSkill === key) {
-			console.error(`Skill ${key} tried to replace itself with the same skill`);
+			// Ignore if the replacement would try to produce the original skill.
+			continue;
 		}
 		const candidateSkill = getSkill(state.job, candidate.newSkill);
 		if (!candidateSkill) {
@@ -789,7 +843,7 @@ export class DisplayedSkills {
 	// Get the list of skills to display in the current game state.
 	// `replaceIf` and `autoUpgrade`/`autoDowngrade`` conditions are checked here;
 	// `autoUpgrade`/`autoDowngrade` conditions are also checked in the constructor.
-	getCurrentSkillNames<T extends PlayerState>(state: T): ActionKey[] {
+	getCurrentSkillNames<T extends GameState>(state: T): ActionKey[] {
 		return this.#skills.map((skillName) => getConditionalReplacement(skillName, state));
 	}
 }

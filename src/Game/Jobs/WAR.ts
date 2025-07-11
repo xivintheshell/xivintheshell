@@ -1,12 +1,11 @@
 import { WARStatusPropsGenerator } from "../../Components/Jobs/WAR";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
-import { controller } from "../../Controller/Controller";
-import { LevelSync, WarningType } from "../Common";
 import { TraitKey, CooldownKey } from "../Data";
 import { WARResourceKey, WARActionKey } from "../Data/Jobs/WAR";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
+import { Modifiers, PotencyModifier } from "../Potency";
+import { LevelSync } from "../Common";
 import { CoolDown, Event, getResourceInfo, makeResource, ResourceInfo } from "../Resources";
 import {
 	Ability,
@@ -14,12 +13,10 @@ import {
 	ConditionalSkillReplace,
 	CooldownGroupProperties,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	SkillAutoReplace,
 	StatePredicate,
@@ -29,13 +26,18 @@ import {
 const makeWARResource = (
 	rsc: WARResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnOvercap?: boolean;
+		warnOnTimeout?: boolean;
+	},
 ) => {
 	makeResource("WAR", rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
-makeWARResource("BEAST_GAUGE", 100);
+makeWARResource("BEAST_GAUGE", 100, { warnOnOvercap: true });
 
 // Status Effects
 makeWARResource("SURGING_TEMPEST", 1, { timeout: 60 });
@@ -44,8 +46,8 @@ makeWARResource("INNER_RELEASE", 3, { timeout: 15 });
 makeWARResource("INNER_STRENGTH", 1, { timeout: 15 });
 makeWARResource("BURGEONING_FURY", 3, { timeout: 30 });
 makeWARResource("WRATHFUL", 1, { timeout: 30 });
-makeWARResource("PRIMAL_REND_READY", 1, { timeout: 30 });
-makeWARResource("PRIMAL_RUINATION_READY", 1, { timeout: 20 });
+makeWARResource("PRIMAL_REND_READY", 1, { timeout: 30, warnOnTimeout: true });
+makeWARResource("PRIMAL_RUINATION_READY", 1, { timeout: 20, warnOnTimeout: true });
 
 makeWARResource("THRILL_OF_BATTLE", 1, { timeout: 10 });
 makeWARResource("EQUILIBRIUM", 1, { timeout: 15 });
@@ -135,15 +137,11 @@ export class WARState extends GameState {
 	}
 
 	hasComboStatus(comboName: "STORM_COMBO" | "TEMPEST_COMBO", state: number): boolean {
-		return this.resources.get(comboName).availableAmount() === state;
+		return this.hasResourceExactly(comboName, state);
 	}
 
 	gainBeastGauge(amount: number) {
-		const resource = this.resources.get("BEAST_GAUGE");
-		if (resource.availableAmount() + amount > resource.maxValue) {
-			controller.reportWarning(WarningType.BeastGaugeOvercap);
-		}
-		resource.gain(amount);
+		this.resources.get("BEAST_GAUGE").gain(amount);
 	}
 
 	gainProc(proc: WARResourceKey, amount?: number) {
@@ -214,7 +212,7 @@ const makeWeaponskill_WAR = (
 	},
 ): Weaponskill<WARState> => {
 	const onConfirm: EffectFn<WARState> = combineEffects(
-		params.onConfirm ?? NO_EFFECT,
+		params.onConfirm,
 		(state) => state.processComboStatus(name),
 		// All Weaponskills affected by Inner Release will consume Inner Release stacks
 		// and grant Burgeoning Fury stacks.
@@ -232,27 +230,14 @@ const makeWeaponskill_WAR = (
 			}
 		},
 	);
-	const onApplication: EffectFn<WARState> = params.onApplication ?? NO_EFFECT;
 	const jobPotencyMod: PotencyModifierFn<WARState> =
 		params.jobPotencyModifiers ?? ((state) => []);
 	return makeWeaponskill("WAR", name, unlockLevel, {
 		...params,
-		onConfirm: onConfirm,
-		onApplication: onApplication,
+		onConfirm,
 		recastTime: (state) => state.config.adjustedSksGCD(),
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = jobPotencyMod(state);
-			if (
-				params.combo &&
-				state.hasComboStatus(params.combo.resource, params.combo.resourceValue)
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
 			if (state.hasResourceAvailable("SURGING_TEMPEST")) {
 				mods.push(Modifiers.SurgingTempest);
 			}
@@ -288,7 +273,6 @@ const makeAbility_WAR = (
 ): Ability<WARState> => {
 	return makeAbility("WAR", name, unlockLevel, cdName, {
 		...params,
-		onConfirm: params.onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
 			if (state.hasResourceAvailable("SURGING_TEMPEST")) {

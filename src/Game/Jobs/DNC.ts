@@ -1,13 +1,12 @@
 import { DNCStatusPropsGenerator } from "../../Components/Jobs/DNC";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
-import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, ProcMode, WarningType } from "../Common";
+import { BuffType } from "../Common";
 import { TraitKey } from "../Data";
 import { DNCResourceKey, DNCActionKey, DNCCooldownKey } from "../Data/Jobs/DNC";
 import { GameConfig } from "../GameConfig";
-import { GameState, PlayerState } from "../GameState";
-import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
+import { GameState } from "../GameState";
+import { Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, getResourceInfo, makeResource, Resource, ResourceInfo } from "../Resources";
 import {
 	Ability,
@@ -15,12 +14,10 @@ import {
 	ConditionalSkillReplace,
 	CooldownGroupProperties,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	ResourceCalculationFn,
 	Skill,
 	StatePredicate,
@@ -30,14 +27,14 @@ import {
 const makeDNCResource = (
 	rsc: DNCResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: { timeout?: number; default?: number; warnOnOvercap?: boolean },
 ) => {
 	makeResource("DNC", rsc, maxValue, params ?? {});
 };
 
 // Gauge resources
-makeDNCResource("ESPRIT_GAUGE", 100);
-makeDNCResource("FEATHER_GAUGE", 4);
+makeDNCResource("ESPRIT_GAUGE", 100, { warnOnOvercap: true });
+makeDNCResource("FEATHER_GAUGE", 4, { warnOnOvercap: true });
 makeDNCResource("STANDARD_DANCE", 2);
 makeDNCResource("TECHNICAL_DANCE", 4);
 
@@ -47,7 +44,7 @@ makeDNCResource("SILKEN_FLOW", 1, { timeout: 30 });
 makeDNCResource("FLOURISHING_SYMMETRY", 1, { timeout: 30 });
 makeDNCResource("FLOURISHING_FLOW", 1, { timeout: 30 });
 
-makeDNCResource("THREEFOLD_FAN_DANCE", 1, { timeout: 30 });
+makeDNCResource("THREEFOLD_FAN_DANCE", 1, { timeout: 30, warnOnOvercap: true });
 makeDNCResource("FOURFOLD_FAN_DANCE", 1, { timeout: 30 });
 
 makeDNCResource("FINISHING_MOVE_READY", 1, { timeout: 30 });
@@ -91,7 +88,7 @@ export class DNCState extends GameState {
 
 		// Disable Esprit Gauge for level 70 duties
 		if (!this.hasTraitUnlocked("ESPRIT")) {
-			this.resources.set(new Resource("ESPRIT_GAUGE", 0, 0));
+			this.resources.set(new Resource("ESPRIT_GAUGE", 0, 0, true));
 		}
 
 		const enAvantStacks = this.hasTraitUnlocked("ENHANCED_EN_AVANT_II") ? 3 : 2;
@@ -107,7 +104,7 @@ export class DNCState extends GameState {
 		return new DNCStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, _skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("TECHNICAL_FINISH")) {
 			node.addBuff(BuffType.TechnicalFinish);
 		}
@@ -171,36 +168,14 @@ export class DNCState extends GameState {
 	}
 
 	gainProc(proc: DNCResourceKey) {
-		const duration = (getResourceInfo("DNC", proc) as ResourceInfo).maxTimeout;
-		if (this.resources.get(proc).available(1)) {
-			if (proc === "THREEFOLD_FAN_DANCE") {
-				controller.reportWarning(WarningType.FanThreeOverwrite);
-			}
-			this.resources.get(proc).overrideTimer(this, duration);
-		} else {
-			this.resources.get(proc).gain(1);
-			this.enqueueResourceDrop(proc, duration);
-		}
+		this.gainStatus(proc);
 	}
 
-	maybeGainProc(proc: DNCResourceKey, chance: number = 0.5) {
-		if (this.config.procMode === ProcMode.Never) {
-			return;
-		}
-
-		const rand = this.rng();
-		if (this.config.procMode === ProcMode.Always || rand < chance) {
-			this.gainProc(proc);
-		}
+	override maybeGainProc(proc: DNCResourceKey, chance: number = 0.5) {
+		super.maybeGainProc(proc, chance, true);
 	}
 
 	gainResource(rscType: "ESPRIT_GAUGE" | "FEATHER_GAUGE", amount: number) {
-		const resource = this.resources.get(rscType);
-		if (resource.availableAmount() + amount > resource.maxValue) {
-			controller.reportWarning(
-				rscType === "ESPRIT_GAUGE" ? WarningType.EspritOvercap : WarningType.FeatherOvercap,
-			);
-		}
 		this.resources.get(rscType).gain(amount);
 	}
 
@@ -209,12 +184,7 @@ export class DNCState extends GameState {
 		amount: number,
 		chance: number = 0.5,
 	) {
-		if (this.config.procMode === ProcMode.Never) {
-			return;
-		}
-
-		const rand = this.rng();
-		if (this.config.procMode === ProcMode.Always || rand < chance) {
+		if (this.triggersEffect(chance, true)) {
 			this.gainResource(rscType, amount);
 		}
 	}
@@ -239,14 +209,8 @@ export class DNCState extends GameState {
 		}
 
 		this.gainProc("STANDARD_FINISH");
-		// Remove previous bonus in case they single-stepped this time...
-		this.tryConsumeResource("STANDARD_BONUS", true);
-
 		// Grant the new standard step bonus
-		this.resources.get("STANDARD_BONUS").gain(bonusLevel);
-		const duration = (getResourceInfo("DNC", "STANDARD_FINISH") as ResourceInfo).maxTimeout;
-		this.enqueueResourceDrop("STANDARD_BONUS", duration, bonusLevel);
-
+		this.gainStatus("STANDARD_BONUS", bonusLevel);
 		if (this.hasResourceAvailable("DANCE_PARTNER")) {
 			this.gainProc("STANDARD_FINISH_PARTNER");
 		}
@@ -315,26 +279,14 @@ const makeGCD_DNC = (
 				state.simulatePartyEspritGain();
 			}
 		},
-		params.onConfirm ?? NO_EFFECT,
+		params.onConfirm,
 		(state) => state.processComboStatus(name),
 	);
 	return makeWeaponskill("DNC", name, unlockLevel, {
 		...params,
-		onConfirm: onConfirm,
+		onConfirm,
 		jobPotencyModifiers: (state) => {
 			const mods: PotencyModifier[] = [];
-			if (
-				params.combo &&
-				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
 			if (state.hasResourceAvailable("STANDARD_FINISH")) {
 				const modifier =
 					state.resources.get("STANDARD_BONUS").availableAmount() === 2
@@ -434,9 +386,7 @@ const makeResourceAbility_DNC = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<DNCState> => {
-	return makeResourceAbility("DNC", name, unlockLevel, cdName, {
-		...params,
-	});
+	return makeResourceAbility("DNC", name, unlockLevel, cdName, params);
 };
 
 // Dance Moves
@@ -856,11 +806,7 @@ technicalFinishes.forEach((params) => {
 			if (state.hasTraitUnlocked("ESPRIT")) {
 				state.gainProc("ESPRIT_TECHNICAL");
 			}
-			state.resources.get("TECHNICAL_BONUS").gain(bonusLevel);
-			const duration = (getResourceInfo("DNC", "TECHNICAL_FINISH") as ResourceInfo)
-				.maxTimeout;
-			state.enqueueResourceDrop("TECHNICAL_BONUS", duration, bonusLevel);
-
+			state.gainStatus("TECHNICAL_BONUS", bonusLevel);
 			if (state.hasTraitUnlocked("ENHANCED_TECHNICAL_FINISH")) {
 				state.gainProc("FLOURISHING_FINISH");
 			}

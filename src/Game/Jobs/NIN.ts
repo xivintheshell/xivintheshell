@@ -4,25 +4,23 @@ import { NINStatusPropsGenerator } from "../../Components/Jobs/NIN";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
 import { controller } from "../../Controller/Controller";
-import { BuffType, WarningType } from "../Common";
+import { BuffType } from "../Common";
 import { ActionKey, TraitKey } from "../Data";
 import { NINActionKey, NINCooldownKey, NINResourceKey } from "../Data/Jobs/NIN";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { Modifiers, makeComboModifier, makePositionalModifier } from "../Potency";
+import { Modifiers } from "../Potency";
 import { getResourceInfo, makeResource, ResourceInfo, CoolDown } from "../Resources";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	makeResourceAbility,
 	MakeResourceAbilityParams,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
@@ -33,27 +31,32 @@ import {
 const makeNINResource = (
 	rsc: NINResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnOvercap?: boolean;
+		warnOnTimeout?: boolean;
+	},
 ) => {
 	makeResource("NIN", rsc, maxValue, params ?? {});
 };
 
-makeNINResource("KAZEMATOI", 5);
-makeNINResource("NINKI", 100);
+makeNINResource("KAZEMATOI", 5, { warnOnOvercap: true });
+makeNINResource("NINKI", 100, { warnOnOvercap: true });
 
 makeNINResource("SHADE_SHIFT", 1, { timeout: 20 });
 makeNINResource("MUDRA", 1, { timeout: 6 });
 makeNINResource("HIDDEN", 1);
 makeNINResource("TRICK_ATTACK", 1, { timeout: 15.77 });
-makeNINResource("KASSATSU", 1, { timeout: 15 });
+makeNINResource("KASSATSU", 1, { timeout: 15, warnOnTimeout: true });
 makeNINResource("DOKUMORI", 1, { timeout: 21 });
-makeNINResource("TENRI_JINDO_READY", 1, { timeout: 30 });
+makeNINResource("TENRI_JINDO_READY", 1, { timeout: 30, warnOnTimeout: true });
 makeNINResource("TEN_CHI_JIN", 1, { timeout: 6 });
 makeNINResource("MEISUI", 1, { timeout: 30 });
 makeNINResource("SHADOW_WALKER", 1, { timeout: 20 });
-makeNINResource("BUNSHIN", 5, { timeout: 30 });
-makeNINResource("PHANTOM_KAMAITACHI_READY", 1, { timeout: 45 });
-makeNINResource("RAIJU_READY", 3, { timeout: 30 });
+makeNINResource("BUNSHIN", 5, { timeout: 30, warnOnTimeout: true });
+makeNINResource("PHANTOM_KAMAITACHI_READY", 1, { timeout: 45, warnOnTimeout: true });
+makeNINResource("RAIJU_READY", 3, { timeout: 30, warnOnTimeout: true });
 makeNINResource("KUNAIS_BANE", 1, { timeout: 16.25 });
 makeNINResource("HIGI", 1, { timeout: 30 });
 makeNINResource("DOTON", 1, { timeout: 18 });
@@ -133,11 +136,7 @@ export class NINState extends GameState {
 	}
 
 	gainNinki(amt: number) {
-		const rsc = this.resources.get("NINKI");
-		if (rsc.availableAmount() + amt > 100) {
-			controller.reportWarning(WarningType.NinkiOvercap);
-		}
-		rsc.gain(amt);
+		this.resources.get("NINKI").gain(amt);
 	}
 
 	processComboStatus(skill: NINActionKey) {
@@ -321,39 +320,12 @@ const makeNINWeaponskill = (
 			)
 				? (state) =>
 						state.tryConsumeResource("RAIJU_READY", true) &&
-						controller.reportWarning(WarningType.RaijuOverwrite)
-				: NO_EFFECT,
+						controller.reportWarning({ kind: "overwrite", rsc: "RAIJU_READY" })
+				: undefined,
 			(state) => state.processComboStatus(name),
 		),
 		jobPotencyModifiers: (state) => {
 			const mods = params.jobPotencyModifiers?.(state) ?? [];
-			const hitPositional =
-				params.positional && state.hitPositional(params.positional.location);
-			// TODO refactor all this for all melee jobs
-			if (params.combo && state.hasResourceAvailable(params.combo.resource)) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-				// typescript isn't smart enough to elide the null check
-				if (params.positional && hitPositional) {
-					mods.push(
-						makePositionalModifier(
-							getBasePotency(state, params.positional.comboPotency) -
-								getBasePotency(state, params.combo.potency),
-						),
-					);
-				}
-			} else if (params.positional && hitPositional) {
-				mods.push(
-					makePositionalModifier(
-						getBasePotency(state, params.positional.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
 			// Kamaitachi does not consume Bunshin
 			if (state.hasResourceAvailable("BUNSHIN") && name !== "PHANTOM_KAMAITACHI") {
 				if (name === "DEATH_BLOSSOM" || name === "HAKKE_MUJINSATSU") {
@@ -410,17 +382,6 @@ const makeNINAbility = (
 		),
 		jobPotencyModifiers: (state) => {
 			const mods = params.jobPotencyModifiers?.(state) ?? [];
-			const hitPositional =
-				params.positional && state.hitPositional(params.positional.location);
-			// TODO refactor all this for all melee jobs
-			if (params.positional && hitPositional) {
-				mods.push(
-					makePositionalModifier(
-						getBasePotency(state, params.positional.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
 			if (state.hasResourceAvailable("DOKUMORI")) {
 				mods.push(Modifiers.Dokumori);
 			}
@@ -564,11 +525,7 @@ makeNINWeaponskill("ARMOR_CRUSH", 54, {
 	highlightIf: (state) => state.hasResourceExactly("NIN_COMBO_TRACKER", 2),
 	onConfirm: combineEffects((state) => {
 		if (state.hasResourceExactly("NIN_COMBO_TRACKER", 2)) {
-			const rsc = state.resources.get("KAZEMATOI");
-			if (rsc.availableAmount() + 2 > 5) {
-				controller.reportWarning(WarningType.KazematoiOvercap);
-			}
-			rsc.gain(2);
+			state.resources.get("KAZEMATOI").gain(2);
 		}
 	}, comboEndGainNinki),
 });
@@ -679,13 +636,6 @@ const JIN_REPLACEMENTS: ConditionalSkillReplace<NINState>[] = [
 	},
 ];
 
-const getTenReplace = (skill: NINActionKey) =>
-	TEN_REPLACEMENTS.filter((replace) => replace.newSkill !== skill);
-const getChiReplace = (skill: NINActionKey) =>
-	CHI_REPLACEMENTS.filter((replace) => replace.newSkill !== skill);
-const getJinReplace = (skill: NINActionKey) =>
-	JIN_REPLACEMENTS.filter((replace) => replace.newSkill !== skill);
-
 // name, level, app delay, potency, falloff
 const NINJUTSU_POTENCY_LIST: Array<
 	[NINActionKey, number, number, number | Array<[TraitKey, number]>, number | undefined]
@@ -757,7 +707,11 @@ tcjReplaces.forEach(
 		)!;
 		const mudra = name.substring(name.length - 3);
 		const replacer =
-			mudra === "TEN" ? getTenReplace : mudra === "CHI" ? getChiReplace : getJinReplace;
+			mudra === "TEN"
+				? TEN_REPLACEMENTS
+				: mudra === "CHI"
+					? CHI_REPLACEMENTS
+					: JIN_REPLACEMENTS;
 		makeWeaponskill("NIN", name, 70, {
 			startOnHotbar: false,
 			// @ts-expect-error compiler is not smart enough to validate the destructure
@@ -767,7 +721,7 @@ tcjReplaces.forEach(
 			potency,
 			// @ts-expect-error compiler is not smart enough to validate the destructure
 			falloff,
-			replaceIf: replacer(name),
+			replaceIf: replacer,
 			validateAttempt: condition,
 			onConfirm: combineEffects(
 				(state: NINState) =>
@@ -779,7 +733,7 @@ tcjReplaces.forEach(
 					? (state) => state.stackRaijuReady()
 					: name === "SUITON_JIN" || name === "HUTON_TEN"
 						? (state) => state.gainStatus("SHADOW_WALKER")
-						: NO_EFFECT,
+						: undefined,
 			),
 		});
 	},
@@ -802,7 +756,7 @@ const dotonConfirm = combineEffects(
 makeWeaponskill("NIN", "DOTON_CHI", 70, {
 	startOnHotbar: false,
 	recastTime: 1.5,
-	replaceIf: getChiReplace("DOTON_CHI"),
+	replaceIf: CHI_REPLACEMENTS,
 	validateAttempt: DOTON_TCJ_CONDITION,
 	onConfirm: (state: NINState) => state.pushMudra(2, true),
 });
@@ -811,16 +765,16 @@ makeWeaponskill("NIN", "DOTON_CHI", 70, {
 // They technically are abilities rather than weaponskills, but it is easier to code them as weaponskills.
 (
 	[
-		["TEN", 30, getTenReplace],
-		["CHI", 35, getChiReplace],
-		["JIN", 45, getJinReplace],
-	] as Array<[NINActionKey, number, (key: NINActionKey) => ConditionalSkillReplace<NINState>[]]>
+		["TEN", 30, TEN_REPLACEMENTS],
+		["CHI", 35, CHI_REPLACEMENTS],
+		["JIN", 45, JIN_REPLACEMENTS],
+	] as Array<[NINActionKey, number, ConditionalSkillReplace<NINState>[]]>
 ).forEach(([name, level, replacer], i) => {
 	makeWeaponskill("NIN", name, level, {
 		recastTime: 0.5,
 		// Nobody ever weaves under mudras because it bunnies, so just treat their animation lock the same as recast.
 		animationLock: 0.5,
-		replaceIf: replacer(name),
+		replaceIf: replacer,
 		secondaryCooldown: {
 			cdName: "cd_MUDRA",
 			cooldown: 20,
@@ -1004,12 +958,12 @@ NINJUTSU_POTENCY_LIST.forEach(([name, level, applicationDelay, potency, falloff]
 						// gain a whole stack of shukuchi
 						state.cooldowns.get("cd_SHUKUCHI").restore(60);
 					}
-				: NO_EFFECT,
+				: undefined,
 			name === "RAITON"
 				? (state) => state.stackRaijuReady()
 				: name === "SUITON" || name === "HUTON"
 					? (state) => state.gainStatus("SHADOW_WALKER")
-					: NO_EFFECT,
+					: undefined,
 			(state) => state.clearMudraInfo(),
 		),
 		jobPotencyModifiers: (state) => {

@@ -1,13 +1,12 @@
 import { BRDStatusPropsGenerator } from "../../Components/Jobs/BRD";
 import { localizeResourceType } from "../../Components/Localization";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
-import { controller } from "../../Controller/Controller";
 import { ActionNode } from "../../Controller/Record";
-import { Debug, BuffType, WarningType } from "../Common";
+import { Debug, BuffType } from "../Common";
 import { TraitKey } from "../Data";
 import { BRDResourceKey, BRDActionKey, BRDCooldownKey } from "../Data/Jobs/BRD";
 import { GameConfig } from "../GameConfig";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { Modifiers, PotencyModifier } from "../Potency";
 import { CoolDown, makeResource, Event } from "../Resources";
 import {
@@ -29,17 +28,17 @@ import {
 const makeBRDResource = (
 	rsc: BRDResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: { timeout?: number; default?: number; warnOnOvercap?: boolean },
 ) => {
 	makeResource("BRD", rsc, maxValue, params ?? {});
 };
 
-makeBRDResource("SOUL_VOICE", 100);
+makeBRDResource("SOUL_VOICE", 100, { warnOnOvercap: true });
 makeBRDResource("PITCH_PERFECT", 3);
 makeBRDResource("REPERTOIRE", 4);
-makeBRDResource("WANDERERS_CODA", 1);
-makeBRDResource("MAGES_CODA", 1);
-makeBRDResource("ARMYS_CODA", 1);
+makeBRDResource("WANDERERS_CODA", 1, { warnOnOvercap: true });
+makeBRDResource("MAGES_CODA", 1, { warnOnOvercap: true });
+makeBRDResource("ARMYS_CODA", 1, { warnOnOvercap: true });
 makeBRDResource("ETHOS_REPERTOIRE", 4);
 makeBRDResource("MUSE_REPERTOIRE", 4);
 
@@ -106,7 +105,7 @@ export class BRDState extends GameState {
 		return new BRDStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("RAGING_STRIKES")) {
 			node.addBuff(BuffType.RagingStrikes);
 		}
@@ -197,9 +196,6 @@ export class BRDState extends GameState {
 		}
 
 		if (this.hasTraitUnlocked("SOUL_VOICE")) {
-			if (this.hasResourceAvailable("SOUL_VOICE", 100)) {
-				controller.reportWarning(WarningType.SoulVoiceOvercap);
-			}
 			this.resources.get("SOUL_VOICE").gain(5);
 		}
 	}
@@ -233,9 +229,6 @@ export class BRDState extends GameState {
 					: newSong === "MAGES_BALLAD"
 						? "MAGES_CODA"
 						: "ARMYS_CODA";
-			if (this.hasResourceAvailable(coda)) {
-				controller.reportWarning(WarningType.CodaOvercap);
-			}
 			this.resources.get(coda).gain(1);
 		}
 
@@ -435,9 +428,7 @@ const makeResourceAbility_BRD = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Ability<BRDState> => {
-	return makeResourceAbility("BRD", name, unlockLevel, cdName, {
-		...params,
-	});
+	return makeResourceAbility("BRD", name, unlockLevel, cdName, params);
 };
 
 makeWeaponskill_BRD("HEAVY_SHOT", 1, {

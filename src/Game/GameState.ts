@@ -9,9 +9,12 @@ import {
 import { GameConfig } from "./GameConfig";
 import {
 	Ability,
+	ComboPotency,
 	DisplayedSkills,
 	FAKE_SKILL_ANIMATION_LOCK,
+	getBasePotency,
 	LimitBreak,
+	PositionalPotency,
 	Skill,
 	SkillsList,
 	Spell,
@@ -32,10 +35,17 @@ import {
 
 import { controller } from "../Controller/Controller";
 import { ActionNode } from "../Controller/Record";
-import { Modifiers, Potency, PotencyKind, PotencyModifier, PotencyModifierType } from "./Potency";
+import {
+	Modifiers,
+	Potency,
+	PotencyKind,
+	PotencyModifier,
+	PotencyModifierType,
+	makeComboModifier,
+	makePositionalModifier,
+} from "./Potency";
 import { Buff } from "./Buffs";
 
-import type { BLMState } from "./Jobs/BLM";
 import { SkillButtonViewInfo } from "../Components/Skills";
 import { ReactNode } from "react";
 import { localizeResourceType } from "../Components/Localization";
@@ -130,7 +140,12 @@ export class GameState {
 				);
 			} else {
 				this.resources.set(
-					new Resource(rsc as ResourceKey, info.maxValue, info.defaultValue),
+					new Resource(
+						rsc as ResourceKey,
+						info.maxValue,
+						info.defaultValue,
+						info.warnOnOvercap,
+					),
 				);
 			}
 		});
@@ -175,7 +190,7 @@ export class GameState {
 		this.autoAttackDelay = 2.5; // defaults to 2.5
 	}
 
-	get statusPropsGenerator(): StatusPropsGenerator<PlayerState> {
+	get statusPropsGenerator(): StatusPropsGenerator<GameState> {
 		return new StatusPropsGenerator(this);
 	}
 
@@ -240,7 +255,7 @@ export class GameState {
 			const lucid = this.resources.get("LUCID_DREAMING") as OverTimeBuff;
 			if (lucid.available(1)) {
 				lucid.tickCount++;
-				if (!(this.isBLMState() && this.getFireStacks() > 0)) {
+				if (!(this.job === "BLM" && this.hasResourceAvailable("ASTRAL_FIRE"))) {
 					// Block lucid ticks for BLM in fire
 					const mana = this.resources.get("MANA");
 					mana.gain(550);
@@ -425,9 +440,9 @@ export class GameState {
 	jobSpecificOnResolveHotTick(_hotResource: ResourceKey) {}
 
 	// Job code may override to handle adding buff covers for the timeline
-	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
-	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
-	jobSpecificAddHealingBuffCovers(_node: ActionNode, _skill: Skill<PlayerState>) {}
+	jobSpecificAddDamageBuffCovers(_node: ActionNode, _skill: Skill<GameState>) {}
+	jobSpecificAddSpeedBuffCovers(_node: ActionNode, _skill: Skill<GameState>) {}
+	jobSpecificAddHealingBuffCovers(_node: ActionNode, _skill: Skill<GameState>) {}
 
 	maybeCancelChanneledSkills(nextSkillName: ActionKey) {
 		const nextSkill = this.skillsList.get(nextSkillName);
@@ -465,6 +480,9 @@ export class GameState {
 		const resource = this.resources.get(rscType);
 		const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
 		if (this.hasResourceAvailable(rscType)) {
+			if (resourceInfo.warnOnOvercap && stacks >= resource.availableAmount()) {
+				controller.reportWarning({ kind: "overcap", rsc: rscType });
+			}
 			if (resourceInfo.maxTimeout > 0) {
 				resource.overrideTimer(this, resourceInfo.maxTimeout);
 			}
@@ -479,23 +497,30 @@ export class GameState {
 		}
 	}
 
-	maybeGainProc(proc: ResourceKey, chance: number = 0.5) {
-		if (!this.triggersEffect(chance)) {
+	/**
+	 * Check if a random effect would be triggered.
+	 *
+	 * The `alwaysRoll` parameter exists for backwards compatibility; some implementations that didn't use
+	 * this helper function would always trigger a prng call regardless of if ProcMode was set to Always.
+	 */
+	maybeGainProc(proc: ResourceKey, chance: number = 0.5, alwaysRoll: boolean = false) {
+		if (!this.triggersEffect(chance, alwaysRoll)) {
 			return;
 		}
 
 		this.gainStatus(proc);
 	}
 
-	triggersEffect(chance: number): boolean {
+	triggersEffect(chance: number, alwaysRoll: boolean = false): boolean {
 		if (this.config.procMode === ProcMode.Never) {
 			return false;
 		}
+		const preRoll = alwaysRoll ? this.rng() : undefined;
 		if (this.config.procMode === ProcMode.Always) {
 			return true;
 		}
 
-		const rand = this.rng();
+		const rand = preRoll ?? this.rng();
 		return rand < chance;
 	}
 
@@ -791,7 +816,7 @@ export class GameState {
 	 *
 	 */
 	refreshAutoBasedOnSkill(
-		skill: Spell<PlayerState> | Weaponskill<PlayerState>,
+		skill: Spell<GameState> | Weaponskill<GameState>,
 		capturedCastTime: number,
 		doesDamage: boolean,
 	) {
@@ -891,7 +916,7 @@ export class GameState {
 	 * it performs the confirmation immediately.
 	 */
 	useSpellOrWeaponskill(
-		skill: Spell<PlayerState> | Weaponskill<PlayerState>,
+		skill: Spell<GameState> | Weaponskill<GameState>,
 		node: ActionNode,
 		actionIndex: number,
 	) {
@@ -1103,7 +1128,7 @@ export class GameState {
 	 * Because abilities have no cast time, this function snapshots potencies and enqueues the
 	 * application event immediately.
 	 */
-	useAbility(skill: Ability<PlayerState>, node: ActionNode) {
+	useAbility(skill: Ability<GameState>, node: ActionNode) {
 		console.assert(node);
 		const cd = this.cooldowns.get(skill.cdName);
 		// potency
@@ -1253,7 +1278,7 @@ export class GameState {
 	 * If the spell is a hardcast, this enqueues the cast confirm event. If it is instant, then
 	 * it performs the confirmation immediately.
 	 */
-	useLimitBreak(skill: LimitBreak<PlayerState>, node: ActionNode, actionIndex: number) {
+	useLimitBreak(skill: LimitBreak<GameState>, node: ActionNode, actionIndex: number) {
 		const cd = this.cooldowns.get(skill.cdName);
 
 		const capturedCastTime = skill.castTimeFn(this);
@@ -1414,6 +1439,33 @@ export class GameState {
 		);
 	}
 
+	// Overide this function if special buffs (like Meikyo Shisui) would override the combo requirement.
+	hitCombo(combo: ComboPotency): boolean {
+		return this.hasResourceExactly(combo.resource, combo.resourceValue);
+	}
+
+	computeComboAndPositionalModifiers(
+		potency: number,
+		combo?: ComboPotency,
+		positional?: PositionalPotency,
+	): PotencyModifier[] {
+		const mods = [];
+		if (combo && this.hitCombo(combo)) {
+			mods.push(makeComboModifier(getBasePotency(this, combo.potency) - potency));
+			if (positional && this.hitPositional(positional.location)) {
+				mods.push(
+					makePositionalModifier(
+						getBasePotency(this, positional.comboPotency) -
+							getBasePotency(this, combo.potency),
+					),
+				);
+			}
+		} else if (positional && this.hitPositional(positional.location)) {
+			mods.push(makePositionalModifier(getBasePotency(this, positional.potency) - potency));
+		}
+		return mods;
+	}
+
 	// Add a resource drop event after `delay` seconds.
 	// If `rscType` has a corresponding cooldown duration for the job, then that delay will be
 	// used if `rscType` is undefined.
@@ -1437,8 +1489,8 @@ export class GameState {
 				rsc.consume(toConsume ?? rsc.availableAmountIncludingDisabled());
 				// Make sure the timer is canceled to avoid this warning
 				const rscInfo = getResourceInfo(this.job, rsc.type) as ResourceInfo;
-				if (rscInfo.warningOnTimeout) {
-					controller.reportWarning(rscInfo.warningOnTimeout);
+				if (rscInfo.warnOnTimeout) {
+					controller.reportWarning({ kind: "timeout", rsc: rsc.type });
 				}
 			},
 		});
@@ -1887,14 +1939,4 @@ export class GameState {
 	isInCombat() {
 		return this.hasResourceAvailable("IN_COMBAT");
 	}
-
-	// These methods enforce type specialization so we can avoid some casts on the frontend
-	isBLMState(): this is BLMState {
-		return this.job === "BLM";
-	}
 }
-
-// TODO if we ever support multiple jobs running in parallel, then we will need to move a lot of
-// elements out onto per-player state.
-// This type alias is placed here for now to make this possible future refactor easier.
-export type PlayerState = GameState;

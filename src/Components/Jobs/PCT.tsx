@@ -26,7 +26,7 @@ export class PCTStatusPropsGenerator extends StatusPropsGenerator<PCTState> {
 					return this.makeCommonTimerless(key);
 				}
 				if (key === "INSPIRATION") {
-					return this.makeToggleableTimer(key);
+					return this.makeToggleableTimerless(key);
 				}
 				return this.makeCommonTimer(key);
 			}),

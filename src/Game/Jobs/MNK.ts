@@ -3,7 +3,7 @@
 import { MNKStatusPropsGenerator } from "../../Components/Jobs/MNK";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { ActionNode } from "../../Controller/Record";
-import { BuffType, ProcMode } from "../Common";
+import { BuffType } from "../Common";
 import { TraitKey } from "../Data";
 import { MNKActionKey, MNKCooldownKey, MNKResourceKey } from "../Data/Jobs/MNK";
 import { GameConfig } from "../GameConfig";
@@ -29,7 +29,6 @@ import {
 	makeWeaponskill,
 	MakeAbilityParams,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	SkillAutoReplace,
 	StatePredicate,
@@ -40,7 +39,12 @@ import {
 const makeMNKResource = (
 	rsc: MNKResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnTimeout?: boolean;
+		warnOnOvercap?: boolean;
+	},
 ) => {
 	makeResource("MNK", rsc, maxValue, params ?? {});
 };
@@ -49,9 +53,9 @@ const makeMNKResource = (
 makeMNKResource("CHAKRA", 5, { default: 5 });
 makeMNKResource("BEAST_CHAKRA", 1);
 makeMNKResource("NADI", 1);
-makeMNKResource("OPO_OPOS_FURY", 1);
-makeMNKResource("RAPTORS_FURY", 1);
-makeMNKResource("COEURLS_FURY", 2);
+makeMNKResource("OPO_OPOS_FURY", 1, { warnOnOvercap: true });
+makeMNKResource("RAPTORS_FURY", 1, { warnOnOvercap: true });
+makeMNKResource("COEURLS_FURY", 2, { warnOnOvercap: true });
 
 // Statuses
 // extended durations taken from ama's combat sim
@@ -61,16 +65,17 @@ makeMNKResource("OPO_OPO_FORM", 1, { timeout: 30 });
 makeMNKResource("RAPTOR_FORM", 1, { timeout: 30 });
 makeMNKResource("COEURL_FORM", 1, { timeout: 30 });
 makeMNKResource("PERFECT_BALANCE", 3, { timeout: 20 });
-makeMNKResource("FORMLESS_FIST", 1, { timeout: 30 });
+// Begin combat in an indefinite formless fist.
+makeMNKResource("FORMLESS_FIST", 1, { timeout: 30, default: 1 });
 makeMNKResource("RIDDLE_OF_EARTH", 1, { timeout: 10 });
 makeMNKResource("EARTHS_RESOLVE", 1, { timeout: 15 });
 makeMNKResource("EARTHS_RUMINATION", 1, { timeout: 30 });
 makeMNKResource("RIDDLE_OF_FIRE", 1, { timeout: 20.72 });
-makeMNKResource("FIRES_RUMINATION", 1, { timeout: 20 });
+makeMNKResource("FIRES_RUMINATION", 1, { timeout: 20, warnOnTimeout: true });
 makeMNKResource("BROTHERHOOD", 1, { timeout: 20 });
 makeMNKResource("MEDITATIVE_BROTHERHOOD", 1, { timeout: 20 });
 makeMNKResource("RIDDLE_OF_WIND", 1, { timeout: 15.78 });
-makeMNKResource("WINDS_RUMINATION", 1, { timeout: 15 });
+makeMNKResource("WINDS_RUMINATION", 1, { timeout: 15, warnOnTimeout: true });
 makeMNKResource("SIX_SIDED_STAR", 1, { timeout: 5 });
 
 // Trackers
@@ -146,11 +151,7 @@ export class MNKState extends GameState {
 			// This generation will usually be a slight over-estimate because most party members will have
 			// a 2.5s GCD.
 			for (let i = 0; i < this.resources.get("PARTY_SIZE").availableAmount() - 1; i++) {
-				const partyRand = this.rng();
-				if (
-					this.config.procMode === ProcMode.Always ||
-					(this.config.procMode === ProcMode.RNG && partyRand < 0.2)
-				) {
+				if (this.triggersEffect(0.2, true)) {
 					this.gainChakra();
 				}
 			}
@@ -166,20 +167,13 @@ export class MNKState extends GameState {
 		// There are 2 layers of RNG at play. After learning "Deep Meditation II", chakra is always
 		// gained on a crit, so we roll against the crit chance of the ability does not auto-crit.
 		// If that trait is not learned, there is an 80% chance to gain a chakra.
-		const rand = this.rng();
 		const critChance = autoCrit ? 1 : this.config.critRate;
-		if (
-			autoCrit ||
-			this.config.procMode === ProcMode.Always ||
-			(this.config.procMode === ProcMode.RNG && rand < critChance)
-		) {
+		// Do not inline this triggers check, as it is stateful and advances the RNG.
+		const didCrit = this.triggersEffect(critChance, true);
+		if (autoCrit || didCrit) {
 			const chakraChance = this.hasTraitUnlocked("DEEP_MEDITATION_II") ? 1 : 0.8;
-			const rand2 = this.rng();
-			if (
-				chakraChance === 1 ||
-				this.config.procMode === ProcMode.Always ||
-				(this.config.procMode === ProcMode.RNG && rand2 < chakraChance)
-			) {
+			const triggersChakra = this.triggersEffect(chakraChance);
+			if (chakraChance === 1 || triggersChakra) {
 				this.gainChakra();
 			}
 		}
@@ -263,6 +257,9 @@ const makeMNKWeaponskill = (
 		: undefined;
 	return makeWeaponskill("MNK", name, unlockLevel, {
 		...params,
+		// Do not pass positional data to the constructor, since we want to compute the ball positional
+		// modifier independently.
+		positional: undefined,
 		highlightIf: (state) => {
 			// probably a more efficient way to write this expression but i'm lazy
 			if (!formCondition && !params.ball && !params.highlightIf) {
@@ -279,7 +276,7 @@ const makeMNKWeaponskill = (
 		recastTime: (state) =>
 			state.config.adjustedSksGCD(params.recastTime ?? 2.5, state.inherentSpeedModifier()),
 		onConfirm: combineEffects(
-			params.onConfirm ?? NO_EFFECT,
+			params.onConfirm,
 			name !== "SIX_SIDED_STAR" && params.potency
 				? (state, node) => {
 						const potency = node.getInitialPotency();
@@ -287,7 +284,7 @@ const makeMNKWeaponskill = (
 							state.maybeGainChakra(potency.modifiers.includes(Modifiers.AutoCrit));
 						}
 					}
-				: NO_EFFECT,
+				: undefined,
 			params.form
 				? (state) => {
 						const nextForm = params.form!.nextForm;
@@ -317,8 +314,8 @@ const makeMNKWeaponskill = (
 							state.setForm(nextForm);
 						}
 					}
-				: NO_EFFECT,
-			params.ball ? (state) => state.tryConsumeResource(params.ball!.rsc) : NO_EFFECT,
+				: undefined,
+			params.ball ? (state) => state.tryConsumeResource(params.ball!.rsc) : undefined,
 		),
 		jobPotencyModifiers: (state) => {
 			const mods = params.jobPotencyModifiers?.(state) ?? [];
@@ -731,9 +728,6 @@ const BLITZ_REPLACES: ConditionalSkillReplace<MNKState>[] = [
 	},
 ];
 
-const getBlitzReplacer = (i: number) =>
-	BLITZ_REPLACES.slice(0, i).concat(BLITZ_REPLACES.slice(i + 1));
-
 const clearBeastChakra: EffectFn<MNKState> = (state) => {
 	BEAST_CHAKRA_KEYS.forEach((key) => state.tryConsumeResource(key, true));
 	state.setForm("formless");
@@ -744,7 +738,7 @@ const gainNadi: (nadi: "lunar" | "solar") => EffectFn<MNKState> =
 
 makeMNKWeaponskill("MASTERFUL_BLITZ", 60, {
 	applicationDelay: 0,
-	replaceIf: getBlitzReplacer(0),
+	replaceIf: BLITZ_REPLACES,
 	validateAttempt: (state) => false,
 });
 
@@ -772,7 +766,7 @@ makeMNKWeaponskill("MASTERFUL_BLITZ", 60, {
 		...traitKey,
 		startOnHotbar: false,
 		applicationDelay,
-		replaceIf: getBlitzReplacer(4),
+		replaceIf: BLITZ_REPLACES,
 		highlightIf: (state) => true,
 		potency,
 		falloff: 0.4,
@@ -807,7 +801,7 @@ makeMNKWeaponskill("MASTERFUL_BLITZ", 60, {
 		...traitKey,
 		startOnHotbar: false,
 		applicationDelay,
-		replaceIf: getBlitzReplacer(1),
+		replaceIf: BLITZ_REPLACES,
 		highlightIf: (state) => true,
 		potency,
 		falloff: 0.4,
@@ -818,7 +812,7 @@ makeMNKWeaponskill("MASTERFUL_BLITZ", 60, {
 makeMNKWeaponskill("CELESTIAL_REVOLUTION", 60, {
 	startOnHotbar: false,
 	applicationDelay: 0.89,
-	replaceIf: getBlitzReplacer(3),
+	replaceIf: BLITZ_REPLACES,
 	highlightIf: (state) => true,
 	potency: 600,
 	onConfirm: combineEffects(clearBeastChakra, (state) =>
@@ -852,7 +846,7 @@ makeMNKWeaponskill("CELESTIAL_REVOLUTION", 60, {
 		...traitKey,
 		startOnHotbar: false,
 		applicationDelay,
-		replaceIf: getBlitzReplacer(2),
+		replaceIf: BLITZ_REPLACES,
 		highlightIf: (state) => true,
 		potency,
 		falloff: 0.4,

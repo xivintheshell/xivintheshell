@@ -601,7 +601,7 @@ import {{ {JOB}StatusPropsGenerator }} from "../../Components/Jobs/{JOB}";
 import {{ StatusPropsGenerator }} from "../../Components/StatusDisplay";
 import {{ ActionNode }} from "../../Controller/Record";
 import {{ controller }} from "../../Controller/Controller";
-import {{ BuffType, WarningType }} from "../Common";
+import {{ BuffType }} from "../Common";
 import {{ ActionKey, TraitKey }} from "../Data";
 import {{ {JOB}ActionKey, {JOB}CooldownKey, {JOB}ResourceKey }} from "../Data/Jobs/{JOB}";
 import {{ GameConfig }} from "../GameConfig";
@@ -622,7 +622,6 @@ import {{
     MakeAbilityParams,
     MakeGCDParams,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
 	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
@@ -634,7 +633,7 @@ import {{
 const make{JOB}Resource = (
 	rsc: {JOB}ResourceKey,
 	maxValue: number,
-	params?: {{ timeout?: number; default?: number }},
+	params?: {{ timeout?: number; default?: number, warnOnOvercap?: boolean, warnOnTimeout?: boolean }},
 ) => {{
 	makeResource("{JOB}", rsc, maxValue, params ?? {'{}'});
 }};

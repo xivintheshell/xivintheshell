@@ -1,4 +1,4 @@
-import { Debug, WarningType } from "./Common";
+import { Debug } from "./Common";
 import { GameState } from "./GameState";
 import { ActionNode } from "../Controller/Record";
 import { BLMState } from "./Jobs/BLM";
@@ -82,14 +82,21 @@ abstract class ResourceOrCooldown {
 export class Resource extends ResourceOrCooldown {
 	type: ResourceKey;
 	enabled: boolean;
+	warnOnOvercap: boolean;
 	pendingChange?: Event;
 
 	#lastExpirationTime?: number;
 
-	constructor(type: ResourceKey, maxValue: number, initialValue: number) {
+	constructor(
+		type: ResourceKey,
+		maxValue: number,
+		initialValue: number,
+		warnOnOvercap: boolean = false,
+	) {
 		super(maxValue, initialValue);
 		this.type = type;
 		this.enabled = true;
+		this.warnOnOvercap = warnOnOvercap;
 	}
 
 	available(amount: number) {
@@ -102,6 +109,12 @@ export class Resource extends ResourceOrCooldown {
 	}
 	availableAmount() {
 		return this.enabled ? super.availableAmount() : 0;
+	}
+	gain(amount: number) {
+		if (this.warnOnOvercap && this.currentValue + amount > this.maxValue) {
+			controller.reportWarning({ kind: "overcap", rsc: this.type });
+		}
+		super.gain(amount);
 	}
 	gainWrapping(amount: number) {
 		this.currentValue = (this.currentValue + amount) % (this.maxValue + 1);
@@ -314,7 +327,8 @@ export type ResourceInfo = {
 	defaultValue: number;
 	maxValue: number;
 	maxTimeout: number;
-	warningOnTimeout?: WarningType;
+	warnOnOvercap?: boolean;
+	warnOnTimeout?: boolean;
 };
 export type CoolDownInfo = {
 	isCoolDown: true;
@@ -353,7 +367,8 @@ export function makeResource(
 	params: Partial<{
 		default: number;
 		timeout: number;
-		warningOnTimeout: WarningType;
+		warnOnOvercap: boolean;
+		warnOnTimeout: boolean;
 	}>,
 ) {
 	getAllResources(job).set(rsc, {
@@ -361,7 +376,8 @@ export function makeResource(
 		defaultValue: params.default ?? 0,
 		maxValue: maxValue,
 		maxTimeout: params.timeout ?? -1,
-		warningOnTimeout: params.warningOnTimeout,
+		warnOnOvercap: params.warnOnOvercap ?? false,
+		warnOnTimeout: params.warnOnTimeout ?? false,
 	});
 }
 

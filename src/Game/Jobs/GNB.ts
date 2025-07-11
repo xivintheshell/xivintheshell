@@ -1,27 +1,23 @@
 // Skill and state declarations for GNB
 
-import { controller } from "../../Controller/Controller";
-import { BuffType, WarningType } from "../Common";
-import { makeComboModifier, Modifiers, PotencyModifier } from "../Potency";
+import { BuffType } from "../Common";
+import { Modifiers, PotencyModifier } from "../Potency";
 import {
 	Ability,
 	combineEffects,
 	ConditionalSkillReplace,
 	CooldownGroupProperties,
 	EffectFn,
-	getBasePotency,
 	makeAbility,
 	ResourceCalculationFn,
 	makeWeaponskill,
 	MOVEMENT_SKILL_ANIMATION_LOCK,
-	NO_EFFECT,
-	PotencyModifierFn,
 	Skill,
 	SkillAutoReplace,
 	StatePredicate,
 	Weaponskill,
 } from "../Skills";
-import { GameState, PlayerState } from "../GameState";
+import { GameState } from "../GameState";
 import { makeResource, CoolDown, Event, Resource } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { ActionNode } from "../../Controller/Record";
@@ -34,12 +30,17 @@ import { GNBResourceKey } from "../Data/Jobs/GNB";
 const makeGNBResource = (
 	rsc: GNBResourceKey,
 	maxValue: number,
-	params?: { timeout?: number; default?: number; warningOnTimeout?: WarningType },
+	params?: {
+		timeout?: number;
+		default?: number;
+		warnOnTimeout?: boolean;
+		warnOnOvercap?: boolean;
+	},
 ) => {
 	makeResource("GNB", rsc, maxValue, params ?? {});
 };
 
-makeGNBResource("POWDER_GAUGE", 3);
+makeGNBResource("POWDER_GAUGE", 3, { warnOnOvercap: true });
 makeGNBResource("ROYAL_GUARD", 1);
 
 // TODO: get precise durations
@@ -55,13 +56,13 @@ makeGNBResource("GREAT_NEBULA", 1, { timeout: 15 });
 makeGNBResource("HEART_OF_LIGHT", 1, { timeout: 15 });
 makeGNBResource("HEART_OF_STONE", 1, { timeout: 8 });
 
-makeGNBResource("READY_TO_BLAST", 1, { timeout: 10 });
-makeGNBResource("READY_TO_BREAK", 1, { timeout: 30 });
-makeGNBResource("READY_TO_GOUGE", 1, { timeout: 10 });
-makeGNBResource("READY_TO_RAZE", 1, { timeout: 10 });
-makeGNBResource("READY_TO_REIGN", 1, { timeout: 30 });
-makeGNBResource("READY_TO_RIP", 1, { timeout: 10 });
-makeGNBResource("READY_TO_TEAR", 1, { timeout: 10 });
+makeGNBResource("READY_TO_BLAST", 1, { timeout: 10, warnOnTimeout: true });
+makeGNBResource("READY_TO_BREAK", 1, { timeout: 30, warnOnTimeout: true });
+makeGNBResource("READY_TO_GOUGE", 1, { timeout: 10, warnOnTimeout: true });
+makeGNBResource("READY_TO_RAZE", 1, { timeout: 10, warnOnTimeout: true });
+makeGNBResource("READY_TO_REIGN", 1, { timeout: 30, warnOnTimeout: true });
+makeGNBResource("READY_TO_RIP", 1, { timeout: 10, warnOnTimeout: true });
+makeGNBResource("READY_TO_TEAR", 1, { timeout: 10, warnOnTimeout: true });
 
 makeGNBResource("SONIC_BREAK_DOT", 1, { timeout: 30 });
 makeGNBResource("SUPERBOLIDE", 1, { timeout: 10 });
@@ -95,7 +96,7 @@ export class GNBState extends GameState {
 		this.cooldowns.set(new CoolDown("cd_GNASHING_FANG", this.config.adjustedSksGCD(30), 1, 1));
 
 		const powderGaugeMax = this.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2;
-		this.resources.set(new Resource("POWDER_GAUGE", powderGaugeMax, 0));
+		this.resources.set(new Resource("POWDER_GAUGE", powderGaugeMax, 0, true));
 
 		this.registerRecurringEvents([
 			{
@@ -121,7 +122,7 @@ export class GNBState extends GameState {
 		return new GNBStatusPropsGenerator(this);
 	}
 
-	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<PlayerState>): void {
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
 		if (this.hasResourceAvailable("NO_MERCY")) {
 			node.addBuff(BuffType.NoMercy);
 		}
@@ -138,8 +139,7 @@ export class GNBState extends GameState {
 
 			this.tryConsumeResource("GNB_AOE_COMBO_TRACKER");
 			if (skillName === "DEMON_SLICE") {
-				this.resources.get("GNB_AOE_COMBO_TRACKER").gain(1);
-				this.enqueueResourceDrop("GNB_AOE_COMBO_TRACKER");
+				this.setComboState("GNB_AOE_COMBO_TRACKER", 1);
 			}
 			return;
 		}
@@ -165,28 +165,17 @@ export class GNBState extends GameState {
 			index = REIGN_COMBO_SKILLS.indexOf(skillName);
 		}
 		// console.log("Skill: " + skillName + " Index: " + index);
+		let nextComboValue = 0;
 		if (index === 0) {
-			this.tryConsumeResource(resType, true);
-			this.resources.get(resType).gain(1);
-			this.enqueueResourceDrop(resType);
-		} else if (index === 1) {
-			if (this.resources.get(resType).availableAmount() === 1) {
-				this.resources.get(resType).gain(1);
-				this.enqueueResourceDrop(resType);
-			} else {
-				this.tryConsumeResource(resType, true);
-			}
-		} else if (index === 2) {
-			this.tryConsumeResource(resType, true);
+			nextComboValue = 1;
+		} else if (index === 1 && this.hasResourceExactly(resType, 1)) {
+			nextComboValue = 2;
 		}
+		this.setComboState(resType, nextComboValue);
 	}
 
 	// gain a cart
 	gainCartridge(carts: number) {
-		const maxCarts = this.hasTraitUnlocked("CARTRIDGE_CHARGE_II") ? 3 : 2;
-		if (this.resources.get("POWDER_GAUGE").availableAmount() + carts > maxCarts) {
-			controller.reportWarning(WarningType.CartridgeOvercap);
-		}
 		this.resources.get("POWDER_GAUGE").gain(carts);
 	}
 
@@ -225,7 +214,6 @@ const makeWeaponskill_GNB = (
 			resourceValue: number;
 		};
 		falloff?: number;
-		jobPotencyModifiers?: PotencyModifierFn<GNBState>;
 		applicationDelay?: number;
 		animationLock?: number;
 		validateAttempt?: StatePredicate<GNBState>;
@@ -236,9 +224,9 @@ const makeWeaponskill_GNB = (
 		secondaryCooldown?: CooldownGroupProperties;
 	},
 ): Weaponskill<GNBState> => {
-	const onConfirm: EffectFn<GNBState> = combineEffects(params.onConfirm ?? NO_EFFECT, (state) => {
+	const onConfirm: EffectFn<GNBState> = combineEffects(params.onConfirm, (state) => {
 		// fix gcd combo state
-		if (name !== "SONIC_BREAK") {
+		if (!["SONIC_BREAK", "BURST_STRIKE", "DOUBLE_DOWN", "LIGHTNING_SHOT"].includes(name)) {
 			state.fixGNBComboState(name);
 		}
 
@@ -249,33 +237,12 @@ const makeWeaponskill_GNB = (
 		state.tryConsumeResource("READY_TO_TEAR");
 		state.tryConsumeResource("READY_TO_GOUGE");
 	});
-	const onApplication: EffectFn<GNBState> = params.onApplication ?? NO_EFFECT;
-	const jobPotencyMod: PotencyModifierFn<GNBState> =
-		params.jobPotencyModifiers ?? ((state) => []);
 	return makeWeaponskill("GNB", name, unlockLevel, {
 		...params,
-		onConfirm: onConfirm,
-		onApplication: onApplication,
+		onConfirm,
 		recastTime: (state) => state.config.adjustedSksGCD(),
-		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = jobPotencyMod(state);
-			if (
-				params.combo &&
-				state.resources.get(params.combo.resource).availableAmount() ===
-					params.combo.resourceValue
-			) {
-				mods.push(
-					makeComboModifier(
-						getBasePotency(state, params.combo.potency) -
-							getBasePotency(state, params.potency),
-					),
-				);
-			}
-			if (state.hasResourceAvailable("NO_MERCY")) {
-				mods.push(Modifiers.NoMercy);
-			}
-			return mods;
-		},
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable("NO_MERCY") ? [Modifiers.NoMercy] : [],
 	});
 };
 
@@ -304,14 +271,8 @@ const makeAbility_GNB = (
 ): Ability<GNBState> => {
 	return makeAbility("GNB", name, unlockLevel, cdName, {
 		...params,
-		onConfirm: params.onConfirm,
-		jobPotencyModifiers: (state) => {
-			const mods: PotencyModifier[] = [];
-			if (state.hasResourceAvailable("NO_MERCY")) {
-				mods.push(Modifiers.NoMercy);
-			}
-			return mods;
-		},
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable("NO_MERCY") ? [Modifiers.NoMercy] : [],
 	});
 };
 
@@ -416,11 +377,11 @@ makeWeaponskill_GNB("BRUTAL_SHELL", 4, {
 	applicationDelay: 1.07,
 	onConfirm: (state) => {
 		// apply brutal shell buff if combo is 1
-		if (state.resources.get("GNB_COMBO_TRACKER").availableAmount() === 1) {
+		if (state.hasResourceExactly("GNB_COMBO_TRACKER", 1)) {
 			state.refreshBuff("BRUTAL_SHELL", 0);
 		}
 	},
-	highlightIf: (state) => state.resources.get("GNB_COMBO_TRACKER").availableAmount() === 1,
+	highlightIf: (state) => state.hasResourceExactly("GNB_COMBO_TRACKER", 1),
 });
 
 makeWeaponskill_GNB("SOLID_BARREL", 26, {
@@ -441,11 +402,11 @@ makeWeaponskill_GNB("SOLID_BARREL", 26, {
 	applicationDelay: 1.07,
 	onConfirm: (state) => {
 		// add cart if combo is 2
-		if (state.resources.get("GNB_COMBO_TRACKER").availableAmount() === 2) {
+		if (state.hasResourceExactly("GNB_COMBO_TRACKER", 2)) {
 			state.gainCartridge(1);
 		}
 	},
-	highlightIf: (state) => state.resources.get("GNB_COMBO_TRACKER").availableAmount() === 2,
+	highlightIf: (state) => state.hasResourceExactly("GNB_COMBO_TRACKER", 2),
 });
 
 makeWeaponskill_GNB("DEMON_SLICE", 10, {
@@ -464,11 +425,11 @@ makeWeaponskill_GNB("DEMON_SLAUGHTER", 40, {
 	falloff: 0,
 	applicationDelay: 0.62,
 	onConfirm: (state) => {
-		if (state.resources.get("GNB_AOE_COMBO_TRACKER").availableAmount() === 1) {
+		if (state.hasResourceExactly("GNB_AOE_COMBO_TRACKER", 1)) {
 			state.gainCartridge(1);
 		}
 	},
-	highlightIf: (state) => state.resources.get("GNB_AOE_COMBO_TRACKER").availableAmount() === 1,
+	highlightIf: (state) => state.hasResourceExactly("GNB_AOE_COMBO_TRACKER", 1),
 });
 
 makeWeaponskill_GNB("BURST_STRIKE", 30, {
@@ -583,13 +544,11 @@ makeWeaponskill_GNB("SAVAGE_CLAW", 60, {
 		["MELEE_MASTERY_II_TANK", 560],
 	],
 	applicationDelay: 0.62,
-	validateAttempt: (state) =>
-		state.resources.get("GNB_GNASHING_COMBO_TRACKER").availableAmount() === 1,
+	validateAttempt: (state) => state.hasResourceExactly("GNB_GNASHING_COMBO_TRACKER", 1),
 	onConfirm: (state) => {
 		state.refreshBuff("READY_TO_TEAR", 0);
 	},
-	highlightIf: (state) =>
-		state.resources.get("GNB_GNASHING_COMBO_TRACKER").availableAmount() === 1,
+	highlightIf: (state) => state.hasResourceExactly("GNB_GNASHING_COMBO_TRACKER", 1),
 });
 
 makeWeaponskill_GNB("WICKED_TALON", 60, {
@@ -600,13 +559,11 @@ makeWeaponskill_GNB("WICKED_TALON", 60, {
 		["MELEE_MASTERY_II_TANK", 620],
 	],
 	applicationDelay: 1.16,
-	validateAttempt: (state) =>
-		state.resources.get("GNB_GNASHING_COMBO_TRACKER").availableAmount() === 2,
+	validateAttempt: (state) => state.hasResourceExactly("GNB_GNASHING_COMBO_TRACKER", 2),
 	onConfirm: (state) => {
 		state.refreshBuff("READY_TO_GOUGE", 0);
 	},
-	highlightIf: (state) =>
-		state.resources.get("GNB_GNASHING_COMBO_TRACKER").availableAmount() === 2,
+	highlightIf: (state) => state.hasResourceExactly("GNB_GNASHING_COMBO_TRACKER", 2),
 });
 
 makeWeaponskill_GNB("DOUBLE_DOWN", 90, {
@@ -644,9 +601,8 @@ makeWeaponskill_GNB("NOBLE_BLOOD", 100, {
 	potency: 1100,
 	falloff: 0.6,
 	applicationDelay: 1.65,
-	validateAttempt: (state) =>
-		state.resources.get("GNB_REIGN_COMBO_TRACKER").availableAmount() === 1,
-	highlightIf: (state) => state.resources.get("GNB_REIGN_COMBO_TRACKER").availableAmount() === 1,
+	validateAttempt: (state) => state.hasResourceExactly("GNB_REIGN_COMBO_TRACKER", 1),
+	highlightIf: (state) => state.hasResourceExactly("GNB_REIGN_COMBO_TRACKER", 1),
 });
 
 makeWeaponskill_GNB("LION_HEART", 100, {
@@ -655,9 +611,8 @@ makeWeaponskill_GNB("LION_HEART", 100, {
 	potency: 1200,
 	falloff: 0.6,
 	applicationDelay: 1.79,
-	validateAttempt: (state) =>
-		state.resources.get("GNB_REIGN_COMBO_TRACKER").availableAmount() === 2,
-	highlightIf: (state) => state.resources.get("GNB_REIGN_COMBO_TRACKER").availableAmount() === 2,
+	validateAttempt: (state) => state.hasResourceExactly("GNB_REIGN_COMBO_TRACKER", 2),
+	highlightIf: (state) => state.hasResourceExactly("GNB_REIGN_COMBO_TRACKER", 2),
 });
 
 makeAbility_GNB("CONTINUATION", 70, "cd_CONTINUATION", {
