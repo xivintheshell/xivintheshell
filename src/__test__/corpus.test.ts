@@ -28,7 +28,7 @@ afterEach(rotationTestTeardown);
 
 try {
 	const timelineDir = fs.opendirSync(TL_DIR);
-	if (!fs.statSync(OUT_DIR).isDirectory()) {
+	if (!fs.existsSync(OUT_DIR)) {
 		fs.mkdirSync(OUT_DIR);
 	}
 	const outDir = fs.opendirSync(OUT_DIR);
@@ -50,7 +50,8 @@ try {
 	timelineDamageMaps.forEach((value, key) =>
 		(value ? timelinesToExpect : timelinesToGenerate).push(key),
 	);
-} catch {
+} catch (e) {
+	console.error(e)
 	console.log("Could not open secretTestTimelines; skipping tests.");
 }
 
