@@ -790,7 +790,7 @@ makeBLUAbility("SURPANAKHA", 1, "cd_SURPANAKHA_LOCKOUT", {
 	},
 	secondaryCooldown: {
 		cdName: "cd_SURPANAKHA",
-		cooldown: 1,
+		cooldown: 30,
 		maxCharges: 4,
 	},
 });

@@ -1116,9 +1116,7 @@ export class GameState {
 		}
 		// recast
 		cd.useStackWithRecast(this.config.getAfterTaxGCD(recastTime));
-		if (secondaryCd) {
-			secondaryCd.useStack();
-		}
+		secondaryCd?.useStack();
 	}
 
 	/**
@@ -1131,6 +1129,9 @@ export class GameState {
 	useAbility(skill: Ability<GameState>, node: ActionNode) {
 		console.assert(node);
 		const cd = this.cooldowns.get(skill.cdName);
+		const secondaryCd = skill.secondaryCd
+			? this.cooldowns.get(skill.secondaryCd.cdName)
+			: undefined;
 		// potency
 		const potencyNumber = skill.potencyFn(this);
 		let potency: Potency | undefined = undefined;
@@ -1267,6 +1268,7 @@ export class GameState {
 
 		// recast
 		cd.useStack();
+		secondaryCd?.useStack();
 
 		// animation lock
 		this.resources.takeResourceLock("NOT_ANIMATION_LOCKED", skill.animationLockFn(this));
