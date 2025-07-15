@@ -136,8 +136,11 @@ function checkNumbersInObject(
 ) {
 	expect(typeof expected === typeof actual);
 	if (typeof expected === "number") {
+		expect(typeof actual).toBe("number");
+		// @ts-expect-error
 		expect(expected).toBeCloseTo(actual, 5);
 	} else if (typeof expected === "string") {
+		expect(typeof actual).toBe("string");
 		expect(expected).toEqual(actual);
 	} else {
 		Object.keys(expected).forEach((key) => {
