@@ -23,3 +23,23 @@ it(
 		},
 	}),
 );
+
+// Makes sure that the unscaled dot potencies from apokalypsis + phantom flurry are calculated correctly
+it(
+	"loads: blu_channel_potencies.txt",
+	testDamageFromTimeline("blu_channel_potencies.txt", {
+		time: 23.08 + 2,
+		lastDamageApplicationTime: 19.7331 + 2,
+		totalPotency: {
+			applied: 2300,
+			pending: 0,
+		},
+		gcdSkills: {
+			applied: 0,
+			pending: 0,
+		},
+		mainTableSummary: {
+			totalPotencyWithoutPot: 2300,
+		},
+	}),
+);

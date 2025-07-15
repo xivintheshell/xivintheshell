@@ -1,5 +1,17 @@
 [
 	{
+		"date": "7/14/25",
+		"changes": [
+			"[BLU] Fixed a bug where Apokalypsis and Phantom Flurry's potencies were incorrect.",
+			"[BLU] Fixed a bug where Surpanakha's 30-second cooldown was not applied."
+		],
+		"changes_zh": [
+			"【青魔】修复了\"启示录\"和\"鬼宿脚\"威力的错误。",
+			"【青魔】修复了\"穿甲散弹\"没有用30秒CD。"
+		],
+		"level": "minor"
+	},
+	{
 		"date": "7/10/25",
 		"changes": [
 			"[MNK] Now begins encounters with Formless Fist active by default.",
