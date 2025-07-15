@@ -137,7 +137,7 @@ function checkNumbersInObject(
 	expect(typeof expected === typeof actual);
 	if (typeof expected === "number") {
 		expect(typeof actual).toBe("number");
-		// @ts-expect-error
+		// @ts-expect-error checker not smart enough to refine type based on a vitest expectation
 		expect(expected).toBeCloseTo(actual, 5);
 	} else if (typeof expected === "string") {
 		expect(typeof actual).toBe("string");
