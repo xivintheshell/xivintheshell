@@ -226,7 +226,15 @@ const makeWeaponskill_GNB = (
 ): Weaponskill<GNBState> => {
 	const onConfirm: EffectFn<GNBState> = combineEffects(params.onConfirm, (state) => {
 		// fix gcd combo state
-		if (!["SONIC_BREAK", "BURST_STRIKE", "DOUBLE_DOWN", "LIGHTNING_SHOT"].includes(name)) {
+		if (
+			![
+				"SONIC_BREAK",
+				"BURST_STRIKE",
+				"FATED_CIRCLE",
+				"DOUBLE_DOWN",
+				"LIGHTNING_SHOT",
+			].includes(name)
+		) {
 			state.fixGNBComboState(name);
 		}
 
