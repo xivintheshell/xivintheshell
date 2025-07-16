@@ -1,5 +1,17 @@
 [
 	{
+		"date": "7/15/25",
+		"changes": [
+			"Fixed \"real-time auto pause\" display.",
+			"[GNB] Fixed a bug where Fated Circle broke combos."
+		],
+		"changes_zh": [
+			"修复了\"实时(带自动暂停）\"显示。",
+			"【绝抢战士】修复了命运之环会打断连击的问题。"
+		],
+		"level": "minor"
+	},
+	{
 		"date": "7/14/25",
 		"changes": [
 			"[BLU] Fixed a bug where Apokalypsis and Phantom Flurry's potencies were incorrect.",
@@ -7,7 +19,7 @@
 		],
 		"changes_zh": [
 			"【青魔】修复了\"启示录\"和\"鬼宿脚\"威力的错误。",
-			"【青魔】修复了\"穿甲散弹\"没有用30秒CD。"
+			"【青魔】修复了\"穿甲散弹\"没有用30秒CD的问题。"
 		],
 		"level": "minor"
 	},

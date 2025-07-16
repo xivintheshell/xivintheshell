@@ -1055,6 +1055,8 @@ class Controller {
 		let actionIndex: number;
 
 		if (status.status.ready()) {
+			// Set the lock time now so its timestamp appears in the timeline editor correctly.
+			node.tmp_startLockTime = this.game.time;
 			this.record.addActionNode(node);
 			actionIndex = this.record.tailIndex;
 			// If the skill can be used, do so.
@@ -1062,9 +1064,7 @@ class Controller {
 			node.tmp_invalid_reasons = [];
 			if (overrideTickMode === TickMode.RealTimeAutoPause) {
 				this.shouldLoop = true;
-				this.#runLoop(() => {
-					return this.game.timeTillAnySkillAvailable() > 0;
-				});
+				this.#runLoop(() => this.game.timeTillAnySkillAvailable() > 0, true);
 			}
 		} else {
 			if (!addInvalidNodes) {
@@ -1797,7 +1797,11 @@ class Controller {
 			if (status.status.ready()) {
 				this.scrollToTime(this.game.time);
 				this.autoSave();
-				updateInvalidStatus();
+				// This is needed to correct timestamps of newly-used actions
+				// in realtime mode, this is handled at the end of the animation loop
+				if (this.tickMode !== TickMode.RealTimeAutoPause) {
+					updateInvalidStatus();
+				}
 			}
 		}
 		this.#bTakingUserInput = false;
@@ -1831,7 +1835,7 @@ class Controller {
 		}, 0);
 	}
 
-	#runLoop(loopCondition: () => boolean) {
+	#runLoop(loopCondition: () => boolean, forceEditorUpdate: boolean = false) {
 		let prevTime = 0;
 		const ctrl = this;
 
@@ -1879,6 +1883,9 @@ class Controller {
 				ctrl.shouldLoop = false;
 				ctrl.autoSave();
 				setRealTime(false);
+				if (forceEditorUpdate) {
+					updateInvalidStatus();
+				}
 			}
 		};
 		setRealTime(true);
