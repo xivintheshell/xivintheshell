@@ -40,7 +40,13 @@ const bunny = (state: GameState) => {
 		state.gainStatus("BUNNY");
 	}
 };
-
+const isSkillBlocked = (state: Readonly<GameState>): boolean => {
+	// 在青魔法师处于WANING_NOCTURNE状态时禁用所有技能
+	if (state.job === "BLU" && state.hasResourceAvailable("WANING_NOCTURNE")) {
+		return true;
+	}
+	return false;
+};
 //#endregion
 
 //#region Interrupts
@@ -96,6 +102,7 @@ makeResourceAbility([...CASTER_JOBS, ...LIMITED_JOBS], "ADDLE", 8, "cd_ADDLE", {
 	cooldown: 90,
 	duration: (state) => (state.hasTraitUnlocked("ENHANCED_ADDLE") && 15) || 10,
 	assetPath: "Role/Addle.png",
+	validateAttempt: (state) => !isSkillBlocked(state),
 });
 
 //#endregion
@@ -138,6 +145,7 @@ makeResourceAbility(
 		applicationDelay: 0, // instant
 		cooldown: 40, // set by trait in constructor
 		assetPath: "Role/Swiftcast.png",
+		validateAttempt: (state) => !isSkillBlocked(state),
 	},
 );
 
@@ -154,6 +162,7 @@ makeResourceAbility(
 		applicationDelay: 0.623, // delayed
 		cooldown: 60,
 		assetPath: "Role/Lucid Dreaming.png",
+		validateAttempt: (state) => !isSkillBlocked(state),
 		onApplication: (state, node) => {
 			const lucid = state.resources.get("LUCID_DREAMING") as OverTimeBuff;
 			lucid.node = node;
