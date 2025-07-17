@@ -160,7 +160,7 @@ export const MELEE = ensureRecord<Job>()({
 	},
 	VPR: {
 		role: "MELEE",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		limitBreak: "WORLD_SWALLOWER",
 	},
 });

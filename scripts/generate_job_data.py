@@ -31,6 +31,7 @@ unnecessary for the time being.
 See the "YOUR CHANGES HERE" for further instructions on precise setup.
 """
 import argparse
+from collections import defaultdict
 from collections.abc import MutableMapping
 import csv
 from dataclasses import dataclass
@@ -58,34 +59,29 @@ I = Info
 # === BEGIN: YOUR CHANGES HERE ===
 # Modify the variables in this section according to the skills and statuses you wish to generate.
 
-JOB: str = "WHM"
+JOB: str = "VPR"
 # A path to a locally-saved HTML file of the English-language job guide.
 # For example, hitting ctrl/cmd-S on this link:
 # https://na.finalfantasyxiv.com/jobguide/monk/
-EN_JOB_GUIDE_HTML: str = "~/Downloads/en_whm.html"
+EN_JOB_GUIDE_HTML: str = "~/Downloads/en_vpr.html"
 # A path to a locally-saved HTML file of the Chinese-language job guide.
 # For example, hitting ctrl/cmd-S on this link:
 # https://actff1.web.sdo.com/project/20190917jobguid/index.html#/continfo/monk/pve
-ZH_JOB_GUIDE_HTML: str = "~/Downloads/zh_whm.html"
+ZH_JOB_GUIDE_HTML: str = "~/Downloads/zh_vpr.html"
 # Both job guides are assumed to have the same order of actions, which may
 # not always be the case when a patch occurs.
 
 # A path to the single-sheet CSV containing this job's application delays
 # Download from here: https://docs.google.com/spreadsheets/d/1Emevsz5_oJdmkXy23hZQUXimirZQaoo5BejSzL3hZ9I/edit?usp=drive_web&ouid=110454175060690521527
-APPLICATION_DELAY_CSV_PATH: str = "scripts/application delay DT - HEALER.csv"
+APPLICATION_DELAY_CSV_PATH: str = "scripts/application delay DT - MELEE.csv"
 
 # Action names are scraped from the job guide files. If there are any actions that should not be
 # included due to being out-leveled, list their proper English names here.
-EXCLUDE_ACTIONS: list[str] = [
-    "Stone",
-    "Aero",
-    "Stone II",
-    "Stone III",
-]
+EXCLUDE_ACTIONS: list[str] = []
 
 # Name of the last PVE action in the job guide. This makes it so we don't have to write more complicated
 # CSS selectors to tell BS4 when to stop parsing :).
-LAST_PVE_ACTION: str = "Divine Caress"
+LAST_PVE_ACTION: str = "Fourth Legacy"
 
 # A list of cooldowns resources to generate.
 # Abilities can be omitted, as this script will automatically produce a cooldown object for them.
@@ -97,42 +93,45 @@ COOLDOWNS: dict[str, list[str]] = {
 # A list of English gauge element names.
 # Their translations must manually be added.
 GAUGES: list[Info] = [
-    I("Lillies", "百合", max_charges=3),
-    I("Blood Lily", "血百合", max_charges=3),
+    I("Rattling Coil", "飞蛇之魂", max_stacks=3),
+    I("Serpent Offerings", "灵力", max_stacks=100),
+    I("Anguine Tribute", "祖灵力", max_stacks=5),
 ]
 
 # A list of buff/debuffs.
 # Their Chinese translations must manually be added.
 STATUSES: list[Info] = [
-    I("Presence of Mind", "神速咏唱", timeout=15),
-    I("Sacred Sight", "闪飒预备", timeout=30, max_stacks=3),
-    I("Regen", "再生", timeout=18),
-    I("Aero II", "烈风", timeout=30),
-    I("Medica II", "医济", timeout=15),
-    I("Asylum", "庇护所", timeout=24),
-    I("Thin Air", "无中生有", timeout=12),
-    I("Divine Benison", "神祝祷", timeout=15),
-    I("Confession", "全大赦", timeout=10),
-    I("Dia", "天辉", timeout=30),
-    I("Temperance", "节制", timeout=20),
-    I("Divine Grace", "神爱抚预备", timeout=30),
-    I("Aquaveil", "水流幕", timeout=8),
-    I("Liturgy of the Bell", "礼仪之铃", timeout=20, max_stacks=5),
-    I("Medica III", "医养", timeout=15),
-    I("Divine Caress", "神爱抚", timeout=10),
-    I("Divine Aura", "神爱环", timeout=15),
+    I("Hunter's Instinct", "猛袭", timeout=40),
+    I("Swiftscaled", "疾速", timeout=40),
+    I("Honed Steel", "咬噬锐牙", timeout=60),
+    I("Honed Reavers", "穿裂锐牙", timeout=60),
+    I("Flankstung Venom", "侧击锐牙", timeout=60),
+    I("Hindstung Venom", "背击锐牙", timeout=60),
+    I("Flanksbane Venom", "侧裂锐牙", timeout=60),
+    I("Hindsbane Venom", "背裂锐牙", timeout=60),
+    I("Grimskin's Venom", "乱裂锐牙", timeout=60),
+    I("Grimhunter's Venom", "乱击锐牙", timeout=60),
+    I("Hunter's Venom", "飞蛇之魂", timeout=30),
+    I("Swiftskin's Venom", "乱击双锐牙", timeout=30),
+    I("Poised for Twinfang", "连尾锐尾", timeout=60),
+    I("Poised for Twinblood", "乱尾锐尾", timeout=60),
+    I("Fellhunter's Venom", "连闪双锐牙", timeout=30),
+    I("Fellskin's Venom", "乱闪双锐牙", timeout=30),
+    I("Ready to Reawaken", "祖灵降临预备", timeout=30),
+    I("Reawakened", "祖灵降临", timeout=30),
 ]
 
 # A list of tracker abilities that don't necessarily correspond to any real in-game buffs.
 # Their translations must manually be added.
 TRACKERS: list[Info] = [
+    # manually copied from NoHome's branch since these are complicated
 ]
 
 # Traits are automatically scraped.
 # We need to specify the first and last trait of interest so I don't need to write more complex scraping code
 # to filter PVP actions.
-FIRST_TRAIT = "Aero Mastery II"
-LAST_TRAIT = "Enhanced Temperance"
+FIRST_TRAIT = "Melee Mastery"
+LAST_TRAIT = "Serpent's Legacy"
 
 # === END: YOUR CHANGES HERE ===
 
@@ -221,10 +220,16 @@ for exclude_action in EXCLUDE_ACTIONS:
 
 # Job guide language is very consistent, so we use regexes to parse out basic potency, falloff, and
 # prerequisite buff information.
-potencies = [None] * (last_idx + 1)
-heal_potencies = [None] * (last_idx + 1)
-falloffs = [None] * (last_idx + 1)
-required_statuses = [None] * (last_idx + 1)
+skill_count = last_idx + 1
+potencies = [None] * skill_count
+heal_potencies = [None] * skill_count
+falloffs = [None] * skill_count
+required_statuses = [None] * skill_count
+# tooltip includes "This action cannot be assigned to a hotbar"
+hotbar_assignable = [None] * skill_count
+# tooltip includes "X changes to Y when requirement"; X is stored for skill at index Y
+replace_group = [None] * skill_count
+
 base_potency_re = re.compile(r"with a potency of ([\d,]+)\.")
 heal_potency_re = re.compile(r"Cure Potency: ([\d,]+)")
 # works for line and proximity splash cleaves
@@ -239,12 +244,17 @@ aoe_no_falloff_re = re.compile(r"with a potency of ([\d,]+) to (target and )?all
 requirement_re = re.compile(
     r"Can only be executed while under the effect of ([ '\w]+)\."
 )
+hotbar_assignable_re = re.compile(r"This action cannot be assigned to a hotbar")
+# A skill name is one or more words starting with a capital letter, before lowercase "changes""
+replace_group_re = re.compile(r"(?P<target_skill>([A-Z][a-z': ]+)+) changes to [A-Z]")
 for i, tooltip in enumerate(en_tooltips):
     base_potency_match = base_potency_re.search(tooltip)
     aoe_falloff_match = aoe_falloff_re.search(tooltip)
     aoe_no_falloff_match = aoe_no_falloff_re.search(tooltip)
     heal_potency_match = heal_potency_re.search(tooltip)
     requirement_match = requirement_re.search(tooltip)
+    hotbar_assignable_match = hotbar_assignable_re.search(tooltip)
+    replace_group_match = replace_group_re.search(tooltip)
     if base_potency_match:
         potencies[i] = base_potency_match.group(1).replace(",", "")
     elif aoe_falloff_match:
@@ -259,6 +269,10 @@ for i, tooltip in enumerate(en_tooltips):
         maybe_requirement_name = requirement_match.group(1)
         if maybe_requirement_name in status_names:
             required_statuses[i] = maybe_requirement_name
+    if hotbar_assignable_match:
+        hotbar_assignable[i] = False
+    if replace_group_match:
+        replace_group[i] = replace_group_match.group("target_skill")
 
 XIVAPI_BASE = "https://v2.xivapi.com/api/"
 os.makedirs(f"public/assets/Skills/{JOB}", exist_ok=True)
@@ -406,6 +420,12 @@ def normalize_cd_label(name: str) -> str:
     return "".join(map(lambda x: x[0].upper() + x[1:], re.split(r"[ \-]", name)))
 
 
+replace_group_mapping = defaultdict(list)
+for maybe_replaces, info in zip(replace_group, skill_api_infos):
+    if maybe_replaces:
+        replace_group_mapping[maybe_replaces].append(info.name)
+
+
 def generate_action_makefn(arg: tuple[int, SkillAPIInfo]):
     i, s = arg
     name = s.name
@@ -425,6 +445,12 @@ def generate_action_makefn(arg: tuple[int, SkillAPIInfo]):
         sb.append(f'make{JOB}{constructor}("{allcaps_name}", {s.unlock_level}, {{')
     if constructor == "ResourceAbility":
         sb.append(f'\trscType: "{allcaps_name}",')
+    if hotbar_assignable[i] is not None:
+        sb.append(f"\tstartOnHotbar: {str(hotbar_assignable[i]).lower()},")
+    if replace_group[i]:
+        sb.append(f"\treplaceIf: {proper_case_to_allcaps_name(replace_group[i])}_REPLACEMENTS,")
+    elif name in replace_group_mapping:
+        sb.append(f"\treplaceIf: {proper_case_to_allcaps_name(name)}_REPLACEMENTS,")
     application_delay = normalized_application_delay_map.get(name, None)
     sb.append(
         f"\tapplicationDelay: {application_delay or '0'},"
@@ -589,6 +615,18 @@ resource_decl_lines.extend(map(state_decl_from_info, TRACKERS))
 
 RESOURCE_DECL_BLOCK = "\n".join(resource_decl_lines)
 
+replace_group_lines = []
+for skill, replaced_by_list in replace_group_mapping.items():
+    replace_group_lines.append(f"const {proper_case_to_allcaps_name(skill)}_REPLACEMENTS: ConditionalSkillReplace<{JOB}State>[] = [")
+    for replaced_by in [skill] + replaced_by_list:
+        replace_group_lines.append("\t{")
+        replace_group_lines.append(f'\t\tnewSkill: "{proper_case_to_allcaps_name(replaced_by)}",')
+        replace_group_lines.append("\t\tcondition: (state) => false, // TODO")
+        replace_group_lines.append("\t},")
+    replace_group_lines.append("];")
+
+REPLACE_GROUP_DECL_BLOCK = "\n".join(replace_group_lines)
+
 
 STATE_FILE_CONTENT = f"""
 // Skill and state declarations for {JOB}.
@@ -691,6 +729,8 @@ const make{JOB}ResourceAbility = (
 ): Ability<{JOB}State> => {{
 	return makeResourceAbility("{JOB}", name, unlockLevel, cdName, params);
 }};
+
+{REPLACE_GROUP_DECL_BLOCK}
 
 {ACTIONS_DECL_BLOCK}
 """
