@@ -67,10 +67,12 @@ export function combineEffects<T extends GameState>(
 }
 
 export function combinePredicatesAnd<T extends GameState>(
-	f1: StatePredicate<T>,
-	...fs: Array<StatePredicate<T>>
+	f1?: StatePredicate<T>,
+	...fs: Array<StatePredicate<T> | undefined>
 ): StatePredicate<T> {
-	return (state: T) => f1(state) && fs.every((pred) => pred(state));
+	// Undefined arguments are treated as vacuously true.
+	return (state: T) =>
+		(f1 === undefined || f1(state)) && fs.every((pred) => pred === undefined || pred(state));
 }
 
 export interface CooldownGroupProperties {
