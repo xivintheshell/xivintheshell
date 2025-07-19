@@ -46,21 +46,21 @@ export class VPRStatusPropsGenerator extends StatusPropsGenerator<VPRState> {
 			{
 				kind: "bar",
 				name: localize({ en: "Combo Timer", zh: "连击监控" }),
-				color: colors.nin.ninComboTimer, // TODO
+				color: colors.vpr.vprComboTimer,
 				progress: comboTimer ? comboTimer / 30 : 0,
 				valueString: comboTimer?.toFixed(3) ?? "N/A",
 			} as ResourceBarProps,
 			{
 				kind: "counter",
 				name: localizeResourceType("RATTLING_COIL"),
-				color: colors.nin.kazematoi, // TODO
+				color: colors.vpr.rattlingCoil,
 				currentStacks: coils,
 				maxStacks: 5,
 			} as ResourceCounterProps,
 			{
 				kind: "bar",
 				name: localizeResourceType("SERPENT_OFFERINGS"),
-				color: colors.nin.ninki, // TODO
+				color: colors.vpr.serpentOfferings,
 				progress: offerings / 100,
 				valueString: offerings.toFixed(0),
 			} as ResourceBarProps,
@@ -68,7 +68,7 @@ export class VPRStatusPropsGenerator extends StatusPropsGenerator<VPRState> {
 				// TODO show reawaken timer
 				kind: "counter",
 				name: localizeResourceType("ANGUINE_TRIBUTE"),
-				color: colors.nin.kazematoi, // TODO
+				color: colors.vpr.anguineTribute,
 				currentStacks: anguine,
 				maxStacks: 5,
 			} as ResourceCounterProps,

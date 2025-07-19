@@ -112,6 +112,22 @@ export const enum PotencyModifierType {
 	ASYLUM,
 	TEMPERANCE,
 	EXTRA_BELL_STACKS,
+
+	HUNTERS_INSTINCT,
+	HONED_STEEL,
+	HONED_REAVERS,
+	HINDSTUNG_VENOM,
+	HINDSBANE_VENOM,
+	FLANKSBANE_VENOM,
+	FLANKSTUNG_VENOM,
+	GRIMSKINS_VENOM,
+	GRIMHUNTERS_VENOM,
+	HUNTERS_VENOM,
+	SWIFTSKINS_VENOM,
+	FELLHUNTERS_VENOM,
+	FELLSKINS_VENOM,
+	POISED_FOR_TWINFANG,
+	POISED_FOR_TWINBLOOD,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -581,6 +597,92 @@ export const Modifiers = {
 		source: PotencyModifierType.PET,
 		potencyFactor: 0.96,
 	} as PotencyMultiplier,
+	// VPR stuff
+	HuntersInstinct: {
+		kind: "multiplier",
+		source: PotencyModifierType.HUNTERS_INSTINCT,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	HonedSteelST: {
+		kind: "adder",
+		source: PotencyModifierType.HONED_STEEL,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	HonedSteelAoE: {
+		kind: "adder",
+		source: PotencyModifierType.HONED_STEEL,
+		additiveAmount: 20,
+	} as PotencyAdder,
+	HonedReaversST: {
+		kind: "adder",
+		source: PotencyModifierType.HONED_REAVERS,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	HonedReaversAoE: {
+		kind: "adder",
+		source: PotencyModifierType.HONED_REAVERS,
+		additiveAmount: 20,
+	} as PotencyAdder,
+	HindstungVenom: {
+		kind: "adder",
+		source: PotencyModifierType.HINDSTUNG_VENOM,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	HindsbaneVenom: {
+		kind: "adder",
+		source: PotencyModifierType.HINDSBANE_VENOM,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	FlanksbaneVenom: {
+		kind: "adder",
+		source: PotencyModifierType.FLANKSBANE_VENOM,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	FlankstungVenom: {
+		kind: "adder",
+		source: PotencyModifierType.FLANKSTUNG_VENOM,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	GrimskinsVenom: {
+		kind: "adder",
+		source: PotencyModifierType.GRIMSKINS_VENOM,
+		additiveAmount: 20,
+	} as PotencyAdder,
+	GrimhuntersVenom: {
+		kind: "adder",
+		source: PotencyModifierType.GRIMHUNTERS_VENOM,
+		additiveAmount: 20,
+	} as PotencyAdder,
+	HuntersVenom: {
+		kind: "adder",
+		source: PotencyModifierType.HUNTERS_VENOM,
+		additiveAmount: 50,
+	} as PotencyAdder,
+	SwiftskinsVenom: {
+		kind: "adder",
+		source: PotencyModifierType.SWIFTSKINS_VENOM,
+		additiveAmount: 50,
+	} as PotencyAdder,
+	FellhuntersVenom: {
+		kind: "adder",
+		source: PotencyModifierType.FELLHUNTERS_VENOM,
+		additiveAmount: 30,
+	} as PotencyAdder,
+	FellskinsVenom: {
+		kind: "adder",
+		source: PotencyModifierType.FELLSKINS_VENOM,
+		additiveAmount: 30,
+	} as PotencyAdder,
+	PoisedForTwinfang: {
+		kind: "adder",
+		source: PotencyModifierType.POISED_FOR_TWINFANG,
+		additiveAmount: 50,
+	} as PotencyAdder,
+	PoisedForTwinblood: {
+		kind: "adder",
+		source: PotencyModifierType.POISED_FOR_TWINBLOOD,
+		additiveAmount: 50,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

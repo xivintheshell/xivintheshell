@@ -1,5 +1,11 @@
 [
 	{
+		"date": "7/21/25",
+		"changes": [
+			"[BETA] VPR testing"
+		]
+	},
+	{
 		"date": "7/20/25",
 		"changes": [
 			"[BLU] Using an action while Waning Nocturne or Diamondback are active now uses the action as soon as the debuff expires."
