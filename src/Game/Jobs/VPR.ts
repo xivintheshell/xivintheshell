@@ -712,10 +712,7 @@ makeVPRWeaponskill("OUROBOROS", 96, {
 	falloff: 0.6,
 	baseRecastTime: 3,
 	highlightIf: (state) => state.hasResourceExactly("ANGUINE_TRIBUTE", 1),
-	onConfirm: (state) => {
-		state.tryConsumeResource("REAWAKENED");
-		state.consumeAnguine();
-	},
+	onConfirm: (state) => state.cancelReawaken(),
 });
 
 makeVPRWeaponskill("VICEWINDER", 65, {
