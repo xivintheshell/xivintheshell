@@ -1057,7 +1057,7 @@ const fangsAndBloods = [
 	[
 		"UNCOILED_TWINBLOOD",
 		92,
-		"blod",
+		"blood",
 		0.98,
 		120,
 		0.5,
