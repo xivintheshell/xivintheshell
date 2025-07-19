@@ -147,6 +147,9 @@ export enum BuffType {
 	Confession = "Confession",
 	Asylum = "Asylum",
 	Temperance = "Temperance",
+
+	HuntersInstinct = "Hunter's Instinct",
+	Swiftscaled = "Swiftscaled",
 }
 
 export type Warning =

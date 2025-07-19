@@ -1,5 +1,11 @@
 [
 	{
+		"date": "7/19/25",
+		"changes": [
+			"[BETA] VPR testing"
+		]
+	},
+	{
 		"date": "7/15/25",
 		"changes": [
 			"Fixed \"real-time auto pause\" display.",
