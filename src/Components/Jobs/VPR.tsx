@@ -55,7 +55,7 @@ export class VPRStatusPropsGenerator extends StatusPropsGenerator<VPRState> {
 				name: localizeResourceType("RATTLING_COIL"),
 				color: colors.vpr.rattlingCoil,
 				currentStacks: coils,
-				maxStacks: 5,
+				maxStacks: resources.get("RATTLING_COIL").maxValue,
 			} as ResourceCounterProps,
 			{
 				kind: "bar",
@@ -70,7 +70,7 @@ export class VPRStatusPropsGenerator extends StatusPropsGenerator<VPRState> {
 				name: localizeResourceType("ANGUINE_TRIBUTE"),
 				color: colors.vpr.anguineTribute,
 				currentStacks: anguine,
-				maxStacks: 5,
+				maxStacks: resources.get("ANGUINE_TRIBUTE").maxValue,
 			} as ResourceCounterProps,
 		];
 
