@@ -1,7 +1,5 @@
 // Skill and state declarations for VPR.
 
-// TODO: write tests coils, ogcd orders, and buff timeouts
-
 import { controller } from "../../Controller/Controller";
 import { VPRStatusPropsGenerator } from "../../Components/Jobs/VPR";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
@@ -48,7 +46,7 @@ const makeVPRResource = (
 // Gauge resources
 makeVPRResource("RATTLING_COIL", 3, { warnOnOvercap: true });
 makeVPRResource("SERPENT_OFFERINGS", 100, { warnOnOvercap: true });
-makeVPRResource("ANGUINE_TRIBUTE", 5, { timeout: 30, warnOnTimeout: true });
+makeVPRResource("ANGUINE_TRIBUTE", 5, { timeout: 30 });
 
 // Statuses
 // Self-buffs
@@ -75,8 +73,8 @@ makeVPRResource("POISED_FOR_TWINBLOOD", 1, { timeout: 60 });
 makeVPRResource("FELLHUNTERS_VENOM", 1, { timeout: 30 });
 makeVPRResource("FELLSKINS_VENOM", 1, { timeout: 30 });
 // Reawaken stuff
-makeVPRResource("READY_TO_REAWAKEN", 1, { timeout: 30 });
-makeVPRResource("REAWAKENED", 1, { timeout: 30 });
+makeVPRResource("READY_TO_REAWAKEN", 1, { timeout: 30, warnOnTimeout: true });
+makeVPRResource("REAWAKENED", 1, { timeout: 30, warnOnTimeout: true });
 
 // Trackers
 // These all are cleared on using a Weaponskill (or Spell), not on a timeout.
@@ -84,10 +82,10 @@ makeVPRResource("DEATH_RATTLE_READY", 1);
 makeVPRResource("COIL_OGCD_READY", 2);
 makeVPRResource("DEN_OGCD_READY", 2);
 makeVPRResource("UNCOILED_OGCD_READY", 2);
-makeVPRResource("HUNTERS_COIL_READY", 1, { timeout: 30 });
-makeVPRResource("HUNTERS_DEN_READY", 1, { timeout: 30 });
-makeVPRResource("SWIFTSKINS_COIL_READY", 1, { timeout: 30 });
-makeVPRResource("SWIFTSKINS_DEN_READY", 1, { timeout: 30 });
+makeVPRResource("HUNTERS_COIL_READY", 1, { timeout: 30, warnOnTimeout: true });
+makeVPRResource("HUNTERS_DEN_READY", 1, { timeout: 30, warnOnTimeout: true });
+makeVPRResource("SWIFTSKINS_COIL_READY", 1, { timeout: 30, warnOnTimeout: true });
+makeVPRResource("SWIFTSKINS_DEN_READY", 1, { timeout: 30, warnOnTimeout: true });
 makeVPRResource("LAST_LASH_READY", 1);
 // In addition to using GCD actions, Legacies are cleared when leaving Reawaken.
 makeVPRResource("LEGACY_READY", 4);
@@ -118,7 +116,7 @@ export class VPRState extends GameState {
 		const coilStacks = this.hasTraitUnlocked("ENHANCED_VIPERS_RATTLE") ? 3 : 2;
 		const anguineStacks = this.hasTraitUnlocked("ENHANCED_SERPENTS_LINEAGE") ? 5 : 4;
 		this.resources.set(new Resource("RATTLING_COIL", coilStacks, 0, true));
-		this.resources.set(new Resource("ANGUINE_TRIBUTE", anguineStacks, 0, true));
+		this.resources.set(new Resource("ANGUINE_TRIBUTE", anguineStacks, 0));
 
 		this.registerRecurringEvents();
 	}
@@ -248,6 +246,7 @@ export class VPRState extends GameState {
 	}
 
 	cancelReawaken() {
+		// Legacy follow-ups are canceled by the last reawaken skill
 		this.tryConsumeResource("LEGACY_READY", true);
 		this.tryConsumeResource("ANGUINE_TRIBUTE", true);
 		this.tryConsumeResource("REAWAKENED");
@@ -320,6 +319,13 @@ const makeVPRAbility = (
 ): Ability<VPRState> => {
 	return makeAbility("VPR", name, unlockLevel, cdName, {
 		...params,
+		jobPotencyModifiers: (state) => {
+			const mods = params.jobPotencyModifiers?.(state) ?? [];
+			if (state.hasResourceAvailable("HUNTERS_INSTINCT")) {
+				mods.push(Modifiers.HuntersInstinct);
+			}
+			return mods;
+		},
 	});
 };
 
@@ -490,7 +496,7 @@ makeVPRWeaponskill("STEEL_FANGS", 1, {
 		["MELEE_MASTERY_VPR", 200],
 	],
 	jobPotencyModifiers: (state) =>
-		state.hasResourceAvailable("HONED_STEEL") ? [Modifiers.HonedSteelST] : [],
+		state.hasResourceAvailable("HONED_STEEL") ? [Modifiers.HonedST] : [],
 	highlightIf: (state) => state.hasResourceAvailable("HONED_STEEL"),
 	onConfirm: (state) => {
 		state.tryConsumeResource("HONED_STEEL");
@@ -506,7 +512,7 @@ makeVPRWeaponskill("REAVING_FANGS", 10, {
 		["MELEE_MASTERY_VPR", 200],
 	],
 	jobPotencyModifiers: (state) =>
-		state.hasResourceAvailable("HONED_REAVERS") ? [Modifiers.HonedReaversST] : [],
+		state.hasResourceAvailable("HONED_REAVERS") ? [Modifiers.HonedST] : [],
 	highlightIf: (state) => state.hasResourceAvailable("HONED_REAVERS"),
 	onConfirm: (state) => {
 		state.tryConsumeResource("HONED_REAVERS");
@@ -521,7 +527,7 @@ const ALL_FINISHER_BUFFS: VPRStatusKey[] = [...FLANK_FINISHER_BUFFS, ...REAR_FIN
 makeVPRWeaponskill("HUNTERS_STING", 5, {
 	startOnHotbar: false,
 	replaceIf: STEEL_FANGS_REPLACEMENTS,
-	applicationDelay: 0.890,
+	applicationDelay: 0.89,
 	potency: [
 		["NEVER", 240], // TODO verify
 		["MELEE_MASTERY_VPR", 300],
@@ -554,7 +560,6 @@ const finishers = [
 		1.649,
 		"flank",
 		"FLANKSTUNG_VENOM",
-		Modifiers.FlankstungVenom,
 		"HINDSTUNG_VENOM",
 		STEEL_FANGS_REPLACEMENTS,
 	],
@@ -563,16 +568,14 @@ const finishers = [
 		1.604,
 		"flank",
 		"FLANKSBANE_VENOM",
-		Modifiers.FlanksbaneVenom,
 		"HINDSBANE_VENOM",
 		REAVING_FANGS_REPLACEMENTS,
 	],
 	[
 		"HINDSTING_STRIKE",
-		0.980,
+		0.98,
 		"rear",
 		"HINDSTUNG_VENOM",
-		Modifiers.HindstungVenom,
 		"FLANKSBANE_VENOM",
 		STEEL_FANGS_REPLACEMENTS,
 	],
@@ -581,7 +584,6 @@ const finishers = [
 		1.203,
 		"rear",
 		"HINDSBANE_VENOM",
-		Modifiers.HindsbaneVenom,
 		"FLANKSTUNG_VENOM",
 		REAVING_FANGS_REPLACEMENTS,
 	],
@@ -591,12 +593,11 @@ const finishers = [
 		number,
 		"rear" | "flank",
 		VPRStatusKey,
-		PotencyModifier,
 		VPRStatusKey,
 		ConditionalSkillReplace<VPRState>[],
 	]
 >;
-finishers.forEach(([name, applicationDelay, location, consumes, modifier, applies, replaceIf]) => {
+finishers.forEach(([name, applicationDelay, location, consumes, applies, replaceIf]) => {
 	makeVPRWeaponskill(name, 30, {
 		startOnHotbar: false,
 		replaceIf,
@@ -612,7 +613,8 @@ finishers.forEach(([name, applicationDelay, location, consumes, modifier, applie
 			],
 			location,
 		},
-		jobPotencyModifiers: (state) => (state.hasResourceAvailable(consumes) ? [modifier] : []),
+		jobPotencyModifiers: (state) =>
+			state.hasResourceAvailable(consumes) ? [Modifiers.VenomST] : [],
 		highlightIf: (state) =>
 			!ALL_FINISHER_BUFFS.some((rsc) => state.hasResourceAvailable(rsc)) ||
 			state.hasResourceAvailable(consumes),
@@ -634,10 +636,10 @@ makeVPRWeaponskill("HUNTERS_COIL", 65, {
 	validateAttempt: (state) => state.hasResourceAvailable("HUNTERS_COIL_READY"),
 	onConfirm: (state) => {
 		// hunter's coil ready is consumed in skill constructor
-		state.gainStatus("HUNTERS_VENOM");
 		state.gainStatus("HUNTERS_INSTINCT");
 		state.gainOfferings(5);
 		if (state.hasTraitUnlocked("VIPERS_BITE")) {
+			state.gainStatus("HUNTERS_VENOM");
 			state.gainStatus("COIL_OGCD_READY", 2);
 		}
 		// Refresh timer for Swiftskin's Coil (was previously set by Vicewinder)
@@ -657,11 +659,10 @@ makeVPRWeaponskill("SWIFTSKINS_COIL", 65, {
 	validateAttempt: (state) => state.hasResourceAvailable("SWIFTSKINS_COIL_READY"),
 	onConfirm: (state) => {
 		// swiftskin's coil ready is consumed in skill constructor
-		state.gainStatus("SWIFTSKINS_VENOM");
 		state.gainStatus("SWIFTSCALED");
 		state.gainOfferings(5);
-		state.gainStatus("COIL_OGCD_READY", 2);
 		if (state.hasTraitUnlocked("VIPERS_BITE")) {
+			state.gainStatus("SWIFTSKINS_VENOM");
 			state.gainStatus("COIL_OGCD_READY", 2);
 		}
 		// Refresh timer for Swiftskin's Coil (was previously set by Vicewinder)
@@ -748,8 +749,8 @@ makeVPRWeaponskill("UNCOILED_FURY", 82, {
 	validateAttempt: (state) => state.hasResourceAvailable("RATTLING_COIL"),
 	onConfirm: (state) => {
 		state.tryConsumeResource("RATTLING_COIL");
-		state.gainStatus("POISED_FOR_TWINFANG");
 		if (state.hasTraitUnlocked("UNCOILED_FANGS")) {
+			state.gainStatus("POISED_FOR_TWINFANG");
 			state.gainStatus("UNCOILED_OGCD_READY", 2);
 		}
 	},
@@ -761,7 +762,7 @@ makeVPRWeaponskill("STEEL_MAW", 25, {
 	potency: 100,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
-		state.hasResourceAvailable("HONED_STEEL") ? [Modifiers.HonedSteelAoE] : [],
+		state.hasResourceAvailable("HONED_STEEL") ? [Modifiers.HonedAoE] : [],
 	highlightIf: (state) => state.hasResourceAvailable("HONED_STEEL"),
 	onConfirm: (state) => {
 		state.tryConsumeResource("HONED_STEEL");
@@ -775,7 +776,7 @@ makeVPRWeaponskill("REAVING_MAW", 35, {
 	potency: 100,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
-		state.hasResourceAvailable("HONED_REAVERS") ? [Modifiers.HonedReaversAoE] : [],
+		state.hasResourceAvailable("HONED_REAVERS") ? [Modifiers.HonedAoE] : [],
 	highlightIf: (state) => state.hasResourceAvailable("HONED_REAVERS"),
 	onConfirm: (state) => {
 		state.tryConsumeResource("HONED_REAVERS");
@@ -810,7 +811,7 @@ makeVPRWeaponskill("JAGGED_MAW", 50, {
 	potency: 140,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
-		state.hasResourceAvailable("GRIMSKINS_VENOM") ? [Modifiers.GrimskinsVenom] : [],
+		state.hasResourceAvailable("GRIMSKINS_VENOM") ? [Modifiers.VenomAoE] : [],
 	highlightIf: (state) =>
 		state.hasResourceAvailable("GRIMSKINS_VENOM") ||
 		!state.hasResourceAvailable("GRIMHUNTERS_VENOM"),
@@ -828,7 +829,7 @@ makeVPRWeaponskill("BLOODIED_MAW", 50, {
 	potency: 140,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
-		state.hasResourceAvailable("GRIMHUNTERS_VENOM") ? [Modifiers.GrimhuntersVenom] : [],
+		state.hasResourceAvailable("GRIMHUNTERS_VENOM") ? [Modifiers.VenomAoE] : [],
 	highlightIf: (state) =>
 		state.hasResourceAvailable("GRIMHUNTERS_VENOM") ||
 		!state.hasResourceAvailable("GRIMSKINS_VENOM"),
@@ -858,10 +859,10 @@ makeVPRWeaponskill("HUNTERS_DEN", 70, {
 	validateAttempt: (state) => state.hasResourceAvailable("HUNTERS_DEN_READY"),
 	onConfirm: (state) => {
 		// hunter's den ready is consumed in skill constructor
-		state.gainStatus("FELLHUNTERS_VENOM");
 		state.gainStatus("HUNTERS_INSTINCT");
 		state.gainOfferings(5);
 		if (state.hasTraitUnlocked("VIPERS_THRESH")) {
+			state.gainStatus("FELLHUNTERS_VENOM");
 			state.gainStatus("DEN_OGCD_READY", 2);
 		}
 		// Refresh timer for Swiftskin's Den (was previously set by Vicepit)
@@ -891,10 +892,10 @@ makeVPRWeaponskill("SWIFTSKINS_DEN", 70, {
 	onConfirm: (state) => {
 		// swiftskin's den ready is consumed in skill constructor
 		// hunter's den ready was already granted by vicepit
-		state.gainStatus("FELLSKINS_VENOM");
 		state.gainStatus("SWIFTSCALED");
 		state.gainOfferings(5);
 		if (state.hasTraitUnlocked("VIPERS_THRESH")) {
+			state.gainStatus("FELLSKINS_VENOM");
 			state.gainStatus("DEN_OGCD_READY", 2);
 		}
 		// Refresh timer for Hunter's Den (was previously set by Vicepit)
@@ -990,80 +991,7 @@ makeVPRAbility("TWINBLOOD", 75, "cd_TWINBLOOD", {
 	validateAttempt: (state) => false,
 });
 
-const fangsAndBloods = [
-	[
-		"TWINFANG_BITE",
-		75,
-		"fang",
-		0.629,
-		120,
-		undefined,
-		"COIL_OGCD_READY",
-		"HUNTERS_VENOM",
-		Modifiers.HuntersVenom,
-		"SWIFTSKINS_VENOM",
-	],
-	[
-		"TWINBLOOD_BITE",
-		75,
-		"blood",
-		0.714,
-		120,
-		undefined,
-		"COIL_OGCD_READY",
-		"SWIFTSKINS_VENOM",
-		Modifiers.SwiftskinsVenom,
-		"HUNTERS_VENOM",
-	],
-	[
-		"TWINFANG_THRESH",
-		80,
-		"fang",
-		0.666,
-		50,
-		0,
-		"DEN_OGCD_READY",
-		"FELLHUNTERS_VENOM",
-		Modifiers.FellhuntersVenom,
-		"FELLSKINS_VENOM",
-	],
-	[
-		"TWINBLOOD_THRESH",
-		80,
-		"blood",
-		0.764,
-		50,
-		0,
-		"DEN_OGCD_READY",
-		"FELLSKINS_VENOM",
-		Modifiers.FellskinsVenom,
-		"FELLHUNTERS_VENOM",
-	],
-	[
-		"UNCOILED_TWINFANG",
-		92,
-		"fang",
-		1.040,
-		120,
-		0.5,
-		"UNCOILED_OGCD_READY",
-		"POISED_FOR_TWINFANG",
-		Modifiers.PoisedForTwinfang,
-		"POISED_FOR_TWINBLOOD",
-	],
-	[
-		"UNCOILED_TWINBLOOD",
-		92,
-		"blood",
-		0.977,
-		120,
-		0.5,
-		"UNCOILED_OGCD_READY",
-		"POISED_FOR_TWINBLOOD",
-		Modifiers.PoisedForTwinblood,
-		"POISED_FOR_TWINFANG",
-	],
-] as Array<
+const fangsAndBloods: Array<
 	[
 		VPRActionKey,
 		number,
@@ -1076,7 +1004,80 @@ const fangsAndBloods = [
 		PotencyModifier,
 		VPRStatusKey,
 	]
->;
+> = [
+	[
+		"TWINFANG_BITE",
+		75,
+		"fang",
+		0.629,
+		120,
+		undefined,
+		"COIL_OGCD_READY",
+		"HUNTERS_VENOM",
+		Modifiers.VenomOGCDST,
+		"SWIFTSKINS_VENOM",
+	],
+	[
+		"TWINBLOOD_BITE",
+		75,
+		"blood",
+		0.714,
+		120,
+		undefined,
+		"COIL_OGCD_READY",
+		"SWIFTSKINS_VENOM",
+		Modifiers.VenomOGCDST,
+		"HUNTERS_VENOM",
+	],
+	[
+		"TWINFANG_THRESH",
+		80,
+		"fang",
+		0.666,
+		50,
+		0,
+		"DEN_OGCD_READY",
+		"FELLHUNTERS_VENOM",
+		Modifiers.VenomOGCDAoE,
+		"FELLSKINS_VENOM",
+	],
+	[
+		"TWINBLOOD_THRESH",
+		80,
+		"blood",
+		0.764,
+		50,
+		0,
+		"DEN_OGCD_READY",
+		"FELLSKINS_VENOM",
+		Modifiers.VenomOGCDAoE,
+		"FELLHUNTERS_VENOM",
+	],
+	[
+		"UNCOILED_TWINFANG",
+		92,
+		"fang",
+		1.04,
+		120,
+		0.5,
+		"UNCOILED_OGCD_READY",
+		"POISED_FOR_TWINFANG",
+		Modifiers.Poised,
+		"POISED_FOR_TWINBLOOD",
+	],
+	[
+		"UNCOILED_TWINBLOOD",
+		92,
+		"blood",
+		0.977,
+		120,
+		0.5,
+		"UNCOILED_OGCD_READY",
+		"POISED_FOR_TWINBLOOD",
+		Modifiers.Poised,
+		"POISED_FOR_TWINFANG",
+	],
+];
 fangsAndBloods.forEach(
 	([
 		name,

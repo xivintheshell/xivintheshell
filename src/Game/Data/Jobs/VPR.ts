@@ -397,7 +397,7 @@ export const VPR_STATUSES = ensureRecord<ResourceData>()({
 	FELLHUNTERS_VENOM: { name: "Fellhunter's Venom", label: { zh: "连闪双锐牙" } },
 	FELLSKINS_VENOM: { name: "Fellskin's Venom", label: { zh: "乱闪双锐牙" } },
 	READY_TO_REAWAKEN: { name: "Ready to Reawaken", label: { zh: "祖灵降临预备" } },
-	REAWAKENED: { name: "Reawakened", label: { zh: "祖灵降临" } },
+	REAWAKENED: { name: "Reawakened", label: { zh: "祖灵降临" }, mayNotBeCanceled: true },
 });
 
 export const VPR_TRACKERS = ensureRecord<ResourceData>()({

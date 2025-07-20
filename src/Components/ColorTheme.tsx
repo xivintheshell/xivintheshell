@@ -871,7 +871,9 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.SSS_CHAKRA, colors.mnk.chakra],
 		[PotencyModifierType.DIVINATION, colors.ast.div],
 		[PotencyModifierType.HUNTERS_INSTINCT, colors.vpr.huntersInstinct],
-		// TODO add colors for every dang modifier
+		[PotencyModifierType.HONED, colors.vpr.vprComboTimer],
+		[PotencyModifierType.VENOM, colors.vpr.vprComboTimer],
+		[PotencyModifierType.POISED, colors.vpr.vprComboTimer],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),
