@@ -478,13 +478,13 @@ const REAWAKEN_REPLACEMENTS: ConditionalSkillReplace<VPRState>[] = [
 ];
 
 makeVPRWeaponskill("WRITHING_SNAP", 15, {
-	applicationDelay: 0.49,
+	applicationDelay: 0.488,
 	potency: 200,
 });
 
 makeVPRWeaponskill("STEEL_FANGS", 1, {
 	replaceIf: STEEL_FANGS_REPLACEMENTS,
-	applicationDelay: 1.16,
+	applicationDelay: 1.158,
 	potency: [
 		["NEVER", 140], // TODO verify
 		["MELEE_MASTERY_VPR", 200],
@@ -500,7 +500,7 @@ makeVPRWeaponskill("STEEL_FANGS", 1, {
 
 makeVPRWeaponskill("REAVING_FANGS", 10, {
 	replaceIf: REAVING_FANGS_REPLACEMENTS,
-	applicationDelay: 1.29,
+	applicationDelay: 1.293,
 	potency: [
 		["NEVER", 140], // TODO verify
 		["MELEE_MASTERY_VPR", 200],
@@ -521,7 +521,7 @@ const ALL_FINISHER_BUFFS: VPRStatusKey[] = [...FLANK_FINISHER_BUFFS, ...REAR_FIN
 makeVPRWeaponskill("HUNTERS_STING", 5, {
 	startOnHotbar: false,
 	replaceIf: STEEL_FANGS_REPLACEMENTS,
-	applicationDelay: 0.89,
+	applicationDelay: 0.890,
 	potency: [
 		["NEVER", 240], // TODO verify
 		["MELEE_MASTERY_VPR", 300],
@@ -551,7 +551,7 @@ makeVPRWeaponskill("SWIFTSKINS_STING", 20, {
 const finishers = [
 	[
 		"FLANKSTING_STRIKE",
-		1.64,
+		1.649,
 		"flank",
 		"FLANKSTUNG_VENOM",
 		Modifiers.FlankstungVenom,
@@ -560,7 +560,7 @@ const finishers = [
 	],
 	[
 		"FLANKSBANE_FANG",
-		1.6,
+		1.604,
 		"flank",
 		"FLANKSBANE_VENOM",
 		Modifiers.FlanksbaneVenom,
@@ -569,7 +569,7 @@ const finishers = [
 	],
 	[
 		"HINDSTING_STRIKE",
-		0.98,
+		0.980,
 		"rear",
 		"HINDSTUNG_VENOM",
 		Modifiers.HindstungVenom,
@@ -578,7 +578,7 @@ const finishers = [
 	],
 	[
 		"HINDSBANE_FANG",
-		1.21,
+		1.203,
 		"rear",
 		"HINDSBANE_VENOM",
 		Modifiers.HindsbaneVenom,
@@ -626,7 +626,7 @@ finishers.forEach(([name, applicationDelay, location, consumes, modifier, applie
 
 makeVPRWeaponskill("HUNTERS_COIL", 65, {
 	replaceIf: HUNTERS_COIL_REPLACEMENTS,
-	applicationDelay: 0.98,
+	applicationDelay: 0.982,
 	potency: 570,
 	positional: { potency: 620, location: "flank" },
 	baseRecastTime: 3,
@@ -649,7 +649,7 @@ makeVPRWeaponskill("HUNTERS_COIL", 65, {
 
 makeVPRWeaponskill("SWIFTSKINS_COIL", 65, {
 	replaceIf: SWIFTSKINS_COIL_REPLACEMENTS,
-	applicationDelay: 1.47,
+	applicationDelay: 1.473,
 	potency: 570,
 	positional: { potency: 620, location: "rear" },
 	baseRecastTime: 3,
@@ -673,7 +673,7 @@ makeVPRWeaponskill("SWIFTSKINS_COIL", 65, {
 
 makeVPRWeaponskill("REAWAKEN", 90, {
 	replaceIf: REAWAKEN_REPLACEMENTS,
-	applicationDelay: 0.62,
+	applicationDelay: 0.625,
 	potency: 750,
 	falloff: 0.6,
 	baseRecastTime: 2.2,
@@ -707,7 +707,7 @@ makeVPRWeaponskill("REAWAKEN", 90, {
 makeVPRWeaponskill("OUROBOROS", 96, {
 	startOnHotbar: false,
 	replaceIf: REAWAKEN_REPLACEMENTS,
-	applicationDelay: 2.33,
+	applicationDelay: 2.313,
 	potency: 1150,
 	falloff: 0.6,
 	baseRecastTime: 3,
@@ -716,7 +716,7 @@ makeVPRWeaponskill("OUROBOROS", 96, {
 });
 
 makeVPRWeaponskill("VICEWINDER", 65, {
-	applicationDelay: 0.58,
+	applicationDelay: 0.581,
 	potency: 500,
 	secondaryCooldown: {
 		cdName: "cd_VICEWINDER",
@@ -740,7 +740,7 @@ makeVPRWeaponskill("VICEWINDER", 65, {
 });
 
 makeVPRWeaponskill("UNCOILED_FURY", 82, {
-	applicationDelay: 0.8,
+	applicationDelay: 0.804,
 	potency: 680,
 	falloff: 0.5,
 	baseRecastTime: 3.5,
@@ -757,7 +757,7 @@ makeVPRWeaponskill("UNCOILED_FURY", 82, {
 
 makeVPRWeaponskill("STEEL_MAW", 25, {
 	replaceIf: STEEL_MAW_REPLACEMENTS,
-	applicationDelay: 1.02,
+	applicationDelay: 1.091,
 	potency: 100,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
@@ -771,7 +771,7 @@ makeVPRWeaponskill("STEEL_MAW", 25, {
 
 makeVPRWeaponskill("REAVING_MAW", 35, {
 	replaceIf: REAVING_MAW_REPLACEMENTS,
-	applicationDelay: 0.85,
+	applicationDelay: 0.908,
 	potency: 100,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
@@ -786,7 +786,7 @@ makeVPRWeaponskill("REAVING_MAW", 35, {
 makeVPRWeaponskill("HUNTERS_BITE", 40, {
 	startOnHotbar: false,
 	replaceIf: STEEL_MAW_REPLACEMENTS,
-	applicationDelay: 1.07,
+	applicationDelay: 1.134,
 	potency: 130,
 	falloff: 0,
 	highlightIf: (state) => true,
@@ -796,7 +796,7 @@ makeVPRWeaponskill("HUNTERS_BITE", 40, {
 makeVPRWeaponskill("SWIFTSKINS_BITE", 45, {
 	startOnHotbar: false,
 	replaceIf: REAVING_MAW_REPLACEMENTS,
-	applicationDelay: 1.38,
+	applicationDelay: 1.445,
 	potency: 130,
 	falloff: 0,
 	highlightIf: (state) => true,
@@ -806,7 +806,7 @@ makeVPRWeaponskill("SWIFTSKINS_BITE", 45, {
 makeVPRWeaponskill("JAGGED_MAW", 50, {
 	startOnHotbar: false,
 	replaceIf: STEEL_MAW_REPLACEMENTS,
-	applicationDelay: 1.07,
+	applicationDelay: 1.127,
 	potency: 140,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
@@ -824,7 +824,7 @@ makeVPRWeaponskill("JAGGED_MAW", 50, {
 makeVPRWeaponskill("BLOODIED_MAW", 50, {
 	startOnHotbar: false,
 	replaceIf: REAVING_MAW_REPLACEMENTS,
-	applicationDelay: 0.81,
+	applicationDelay: 0.866,
 	potency: 140,
 	falloff: 0,
 	jobPotencyModifiers: (state) =>
@@ -850,7 +850,7 @@ makeVPRWeaponskill("HUNTERS_DEN", 70, {
 			condition: (state) => state.hasResourceAvailable("REAWAKENED"),
 		},
 	],
-	applicationDelay: 0.49,
+	applicationDelay: 0.569,
 	potency: 280,
 	falloff: 0,
 	baseRecastTime: 3,
@@ -882,7 +882,7 @@ makeVPRWeaponskill("SWIFTSKINS_DEN", 70, {
 			condition: (state) => state.hasResourceAvailable("REAWAKENED"),
 		},
 	],
-	applicationDelay: 0.94,
+	applicationDelay: 0.999,
 	potency: 280,
 	falloff: 0,
 	baseRecastTime: 3,
@@ -905,7 +905,7 @@ makeVPRWeaponskill("SWIFTSKINS_DEN", 70, {
 });
 
 makeVPRWeaponskill("VICEPIT", 70, {
-	applicationDelay: 0.76,
+	applicationDelay: 0.827,
 	potency: 220,
 	secondaryCooldown: {
 		cdName: "cd_VICEWINDER",
@@ -958,7 +958,7 @@ makeVPRAbility("SERPENTS_TAIL", 55, "cd_SERPENTS_TAIL", {
 makeVPRAbility("DEATH_RATTLE", 55, "cd_SERPENTS_TAIL", {
 	startOnHotbar: false,
 	replaceIf: SERPENTS_TAIL_REPLACEMENTS,
-	applicationDelay: 1.7,
+	applicationDelay: 1.697,
 	cooldown: 1,
 	potency: 280,
 	highlightIf: (state) => true,
@@ -968,7 +968,7 @@ makeVPRAbility("DEATH_RATTLE", 55, "cd_SERPENTS_TAIL", {
 makeVPRAbility("LAST_LASH", 60, "cd_SERPENTS_TAIL", {
 	startOnHotbar: false,
 	replaceIf: SERPENTS_TAIL_REPLACEMENTS,
-	applicationDelay: 1.16,
+	applicationDelay: 1.226,
 	cooldown: 1,
 	potency: 100,
 	falloff: 0,
@@ -995,7 +995,7 @@ const fangsAndBloods = [
 		"TWINFANG_BITE",
 		75,
 		"fang",
-		0.62,
+		0.629,
 		120,
 		undefined,
 		"COIL_OGCD_READY",
@@ -1007,7 +1007,7 @@ const fangsAndBloods = [
 		"TWINBLOOD_BITE",
 		75,
 		"blood",
-		0.72,
+		0.714,
 		120,
 		undefined,
 		"COIL_OGCD_READY",
@@ -1019,7 +1019,7 @@ const fangsAndBloods = [
 		"TWINFANG_THRESH",
 		80,
 		"fang",
-		0.67,
+		0.666,
 		50,
 		0,
 		"DEN_OGCD_READY",
@@ -1031,7 +1031,7 @@ const fangsAndBloods = [
 		"TWINBLOOD_THRESH",
 		80,
 		"blood",
-		0.79,
+		0.764,
 		50,
 		0,
 		"DEN_OGCD_READY",
@@ -1043,7 +1043,7 @@ const fangsAndBloods = [
 		"UNCOILED_TWINFANG",
 		92,
 		"fang",
-		1.03,
+		1.040,
 		120,
 		0.5,
 		"UNCOILED_OGCD_READY",
@@ -1055,7 +1055,7 @@ const fangsAndBloods = [
 		"UNCOILED_TWINBLOOD",
 		92,
 		"blood",
-		0.98,
+		0.977,
 		120,
 		0.5,
 		"UNCOILED_OGCD_READY",
@@ -1113,10 +1113,10 @@ fangsAndBloods.forEach(
 );
 
 const generations = [
-	["FIRST_GENERATION", 1.7, STEEL_FANGS_REPLACEMENTS],
-	["SECOND_GENERATION", 1.47, REAVING_FANGS_REPLACEMENTS],
-	["THIRD_GENERATION", 1.47, HUNTERS_COIL_REPLACEMENTS],
-	["FOURTH_GENERATION", 1.47, SWIFTSKINS_COIL_REPLACEMENTS],
+	["FIRST_GENERATION", 1.702, STEEL_FANGS_REPLACEMENTS],
+	["SECOND_GENERATION", 1.473, REAVING_FANGS_REPLACEMENTS],
+	["THIRD_GENERATION", 1.473, HUNTERS_COIL_REPLACEMENTS],
+	["FOURTH_GENERATION", 1.473, SWIFTSKINS_COIL_REPLACEMENTS],
 ] as Array<[VPRActionKey, number, ConditionalSkillReplace<VPRState>[]]>;
 generations.forEach(([name, applicationDelay, replaceIf], i) => {
 	makeVPRWeaponskill(name, 90, {
@@ -1143,10 +1143,10 @@ generations.forEach(([name, applicationDelay, replaceIf], i) => {
 });
 
 const legacies: Array<[VPRActionKey, number]> = [
-	["FIRST_LEGACY", 1.29],
-	["SECOND_LEGACY", 1.07],
-	["THIRD_LEGACY", 1.21],
-	["FOURTH_LEGACY", 1.07],
+	["FIRST_LEGACY", 1.289],
+	["SECOND_LEGACY", 1.065],
+	["THIRD_LEGACY", 1.19],
+	["FOURTH_LEGACY", 1.065],
 ];
 legacies.forEach(([name, applicationDelay]) => {
 	makeVPRAbility(name, 100, "cd_SERPENTS_TAIL", {
