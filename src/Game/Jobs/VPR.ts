@@ -637,8 +637,12 @@ finishers.forEach(([name, applicationDelay, location, consumes, applies, replace
 		onConfirm: (state) => {
 			state.gainStatus("DEATH_RATTLE_READY");
 			state.resources.get("SERPENT_OFFERINGS").gain(10);
-			if (ALL_FINISHER_BUFFS.filter((rsc) => rsc !== consumes).some((rsc) => state.hasResourceAvailable(rsc))) {
-				controller.reportWarning({kind: "custom", en: "incorrect combo ender!"});
+			if (
+				ALL_FINISHER_BUFFS.filter((rsc) => rsc !== consumes).some((rsc) =>
+					state.hasResourceAvailable(rsc),
+				)
+			) {
+				controller.reportWarning({ kind: "custom", en: "incorrect combo ender!" });
 			}
 		},
 		extendedStatus: applies,
@@ -1125,7 +1129,10 @@ fangsAndBloods.forEach(
 			onConfirm: (state) => {
 				state.tryConsumeResource(tracker);
 				if (!state.hasResourceAvailable(consumes)) {
-					controller.reportWarning({kind: "custom", en: `unbuffed twin${which} ability!`})
+					controller.reportWarning({
+						kind: "custom",
+						en: `unbuffed twin${which} ability!`,
+					});
 				}
 				if (state.tryConsumeResource(consumes) && state.hasResourceAvailable(tracker)) {
 					state.gainStatus(applies);
