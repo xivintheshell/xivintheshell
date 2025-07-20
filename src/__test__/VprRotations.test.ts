@@ -19,6 +19,55 @@ afterEach(rotationTestTeardown);
 const testWithConfig = makeTestWithConfigFn("VPR");
 
 it(
+	"keeps reawaken through ranged filler and coil",
+	testWithConfig({}, () => {
+		const state = controller.game as VPRState;
+		state.resources.get("SERPENT_OFFERINGS").gain(50);
+		state.resources.get("RATTLING_COIL").gain(1);
+		(
+			[
+				"REAWAKEN",
+				"FIRST_GENERATION",
+				"WRITHING_SNAP",
+				"UNCOILED_FURY",
+				"SECOND_GENERATION",
+			] as ActionKey[]
+		).forEach(applySkill);
+		controller.step(4);
+		expect(state.hasResourceAvailable("REAWAKENED")).toBeTruthy();
+		expect(state.hasResourceAvailable("ANGUINE_TRIBUTE")).toBeTruthy();
+		compareDamageTables([
+			{
+				skillName: "REAWAKEN",
+				displayedModifiers: [],
+				hitCount: 1,
+			},
+			{
+				skillName: "FIRST_GENERATION",
+				displayedModifiers: [PotencyModifierType.COMBO],
+				hitCount: 1,
+			},
+			{
+				skillName: "SECOND_GENERATION",
+				displayedModifiers: [PotencyModifierType.COMBO],
+				hitCount: 1,
+			},
+			{
+				skillName: "WRITHING_SNAP",
+				displayedModifiers: [],
+				hitCount: 1,
+			},
+			{
+				skillName: "UNCOILED_FURY",
+				displayedModifiers: [],
+				hitCount: 1,
+			},
+		]);
+	}),
+);
+
+
+it(
 	"ends reawaken buffs if ouroboros is used early",
 	testWithConfig({}, () => {
 		const state = controller.game as VPRState;
@@ -195,7 +244,6 @@ it(
 	}),
 );
 
-// "auto-replaces single-target filler correctly"
 it(
 	"auto-replaces single-target filler correctly",
 	testWithConfig({}, () => {

@@ -31,24 +31,39 @@ export class VPRStatusPropsGenerator extends StatusPropsGenerator<VPRState> {
 
 		const singleCombo = resources.get("VPR_COMBO");
 		const aoeCombo = resources.get("VPR_AOE_COMBO");
+		const twinCombos: VPRResourceKey[] = [
+			"HUNTERS_COIL_READY",
+			"SWIFTSKINS_COIL_READY",
+			"HUNTERS_DEN_READY",
+			"SWIFTSKINS_DEN_READY",
+		];
 		const coils = resources.get("RATTLING_COIL").availableAmount();
 		const offerings = resources.get("SERPENT_OFFERINGS").availableAmount();
 		const anguine = resources.get("ANGUINE_TRIBUTE").availableAmount();
-		// TODO adjust gauge for sync
-
 		const comboTimer = singleCombo.available(1)
 			? singleCombo.pendingChange?.timeTillEvent
 			: aoeCombo.available(1)
 				? aoeCombo.pendingChange?.timeTillEvent
 				: undefined;
+		const presentTwinCombos = twinCombos.filter((rsc) => resources.get(rsc).available(1));
+		const twinComboTimer = presentTwinCombos.length > 0 ? Math.max(
+			...presentTwinCombos.map((rsc) => resources.get(rsc).pendingChange!.timeTillEvent)
+		) : undefined;
 
 		const infos: ResourceDisplayProps[] = [
 			{
 				kind: "bar",
-				name: localize({ en: "Combo Timer", zh: "连击监控" }),
+				name: localize({ en: "Dual Wield Combo Timer", zh: "连击监控" }),
 				color: colors.vpr.vprComboTimer,
 				progress: comboTimer ? comboTimer / 30 : 0,
 				valueString: comboTimer?.toFixed(3) ?? "N/A",
+			} as ResourceBarProps,
+			{
+				kind: "bar",
+				name: localize({ en: "Twinblade Combo Timer", zh: "双牙连击监控" }),
+				color: colors.vpr.vprComboTimer,
+				progress: twinComboTimer ? twinComboTimer / 30 : 0,
+				valueString: twinComboTimer?.toFixed(3) ?? "N/A",
 			} as ResourceBarProps,
 			{
 				kind: "counter",
@@ -57,7 +72,9 @@ export class VPRStatusPropsGenerator extends StatusPropsGenerator<VPRState> {
 				currentStacks: coils,
 				maxStacks: resources.get("RATTLING_COIL").maxValue,
 			} as ResourceCounterProps,
-			{
+		];
+		if (this.state.hasTraitUnlocked("SERPENTS_LINEAGE")) {
+			infos.push({
 				kind: "bar",
 				name: localizeResourceType("SERPENT_OFFERINGS"),
 				color: colors.vpr.serpentOfferings,
@@ -65,15 +82,13 @@ export class VPRStatusPropsGenerator extends StatusPropsGenerator<VPRState> {
 				valueString: offerings.toFixed(0),
 			} as ResourceBarProps,
 			{
-				// TODO show reawaken timer
 				kind: "counter",
 				name: localizeResourceType("ANGUINE_TRIBUTE"),
 				color: colors.vpr.anguineTribute,
 				currentStacks: anguine,
 				maxStacks: resources.get("ANGUINE_TRIBUTE").maxValue,
-			} as ResourceCounterProps,
-		];
-
+			} as ResourceCounterProps);
+		}
 		return infos;
 	}
 }

@@ -49,6 +49,8 @@ makeVPRResource("SERPENT_OFFERINGS", 100, { warnOnOvercap: true });
 makeVPRResource("ANGUINE_TRIBUTE", 5, { timeout: 30 });
 
 // Statuses
+// Buffs are applied at snapshot, but start counting down at application. We model this behavior by
+// explicitly setting durations in ability confirms.
 // Self-buffs
 makeVPRResource("HUNTERS_INSTINCT", 1, { timeout: 40 });
 makeVPRResource("SWIFTSCALED", 1, { timeout: 40 });
@@ -182,6 +184,10 @@ export class VPRState extends GameState {
 	}
 
 	processCombo(skill: VPRActionKey) {
+		// Ranged filler and coils do not affect combo state, including reawaken
+		if (skill === "WRITHING_SNAP" || skill === "UNCOILED_FURY") {
+			return;
+		}
 		// Reawaken GCDs don't affect normal combo state
 		const reawakenList = [
 			"REAWAKEN",
@@ -923,7 +929,12 @@ makeVPRWeaponskill("VICEPIT", 70, {
 		!state.hasResourceAvailable("SWIFTSKINS_DEN_READY"),
 	onConfirm: (state) => {
 		if (state.hasTraitUnlocked("VIPERS_RATTLE")) {
-			state.resources.get("RATTLING_COIL").gain(1);
+			// If used during an untargetable phase, do not gain the coil.
+			// We don't apply this logic to Vicewinder because it is sometimes necessary to
+			// press Vicepit during untargetable phases to prepare a twinblade button.
+			if (!controller.timeline.duringUntargetable(state.getDisplayTime())) {
+				state.resources.get("RATTLING_COIL").gain(1);
+			}
 		}
 		state.gainStatus("HUNTERS_DEN_READY");
 		state.gainStatus("SWIFTSKINS_DEN_READY");
@@ -1137,8 +1148,8 @@ generations.forEach(([name, applicationDelay, replaceIf], i) => {
 		},
 		highlightIf: (state) => state.hasResourceExactly("REAWAKEN_COMBO", i + 1),
 		onConfirm: (state) => {
-			state.consumeAnguine();
 			state.setLegacy(i + 1);
+			state.consumeAnguine();
 		},
 	});
 });
