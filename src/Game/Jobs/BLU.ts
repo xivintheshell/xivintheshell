@@ -17,7 +17,7 @@ import {
 	StatePredicate,
 } from "../Skills";
 import { GameState } from "../GameState";
-import { makeResource, CoolDown, Event } from "../Resources";
+import { makeResource, CoolDown, Event, getResourceInfo, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { TraitKey, ResourceKey } from "../Data";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
@@ -121,6 +121,17 @@ export class BLUState extends GameState {
 			new Event("gain buff", delay, () => {
 				this.resources.get(rscType).gain(1);
 				this.enqueueResourceDrop(rscType);
+				// To allow users to easily skip to the end of diamondback/waning nocturne durations,
+				// we treat their applications as an animation lock.
+				// We still need to check these buffs in `validateAttempt` to prevent hardcasts that
+				// end after the buff changes from executing.
+				// This also avoids the need to special-case locking out role actions.
+				if (rscType === "WANING_NOCTURNE" || rscType === "DIAMONDBACK") {
+					this.resources.takeResourceLock(
+						"NOT_ANIMATION_LOCKED",
+						(getResourceInfo("BLU", rscType) as ResourceInfo).maxTimeout,
+					);
+				}
 			}),
 		);
 	}

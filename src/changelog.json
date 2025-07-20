@@ -1,5 +1,14 @@
 [
 	{
+		"date": "7/20/25",
+		"changes": [
+			"[BLU] Using an action while Waning Nocturne or Diamondback are active now uses the action as soon as the debuff expires."
+		],
+		"changes_zh": [
+			"【青魔】在有\"狂战士化的副作用\"或\"超硬化\"状态下使用技能，现在会自动地等到状态结束后再播放。"
+		]
+	},
+	{
 		"date": "7/15/25",
 		"changes": [
 			"Fixed \"real-time auto pause\" display.",
