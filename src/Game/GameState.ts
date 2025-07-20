@@ -476,23 +476,23 @@ export class GameState {
 		return (getResourceInfo(this.job, rscType) as ResourceInfo).maxTimeout;
 	}
 
-	gainStatus(rscType: ResourceKey, stacks: number = 1, duration?: number) {
+	gainStatus(rscType: ResourceKey, stacks: number = 1) {
 		const resource = this.resources.get(rscType);
 		const resourceInfo = getResourceInfo(this.job, rscType) as ResourceInfo;
 		if (this.hasResourceAvailable(rscType)) {
 			if (resourceInfo.warnOnOvercap && stacks >= resource.availableAmount()) {
 				controller.reportWarning({ kind: "overcap", rsc: rscType });
 			}
-			if (duration !== undefined || resourceInfo.maxTimeout > 0) {
-				resource.overrideTimer(this, duration ?? resourceInfo.maxTimeout);
+			if (resourceInfo.maxTimeout > 0) {
+				resource.overrideTimer(this, resourceInfo.maxTimeout);
 			}
 			if (resource.availableAmount() !== stacks) {
 				resource.overrideCurrentValue(stacks);
 			}
 		} else {
 			resource.gain(stacks);
-			if (duration !== undefined || resourceInfo.maxTimeout > 0) {
-				this.enqueueResourceDrop(rscType, duration ?? resourceInfo.maxTimeout);
+			if (resourceInfo.maxTimeout > 0) {
+				this.enqueueResourceDrop(rscType);
 			}
 		}
 	}

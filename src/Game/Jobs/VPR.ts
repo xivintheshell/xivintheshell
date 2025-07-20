@@ -108,6 +108,10 @@ const FOLLOWUP_STATUSES: VPRResourceKey[] = [
 	"LEGACY_READY",
 ];
 
+const FLANK_FINISHER_BUFFS: VPRStatusKey[] = ["FLANKSBANE_VENOM", "FLANKSTUNG_VENOM"];
+const REAR_FINISHER_BUFFS: VPRStatusKey[] = ["HINDSBANE_VENOM", "HINDSTUNG_VENOM"];
+const ALL_FINISHER_BUFFS: VPRStatusKey[] = [...FLANK_FINISHER_BUFFS, ...REAR_FINISHER_BUFFS];
+
 export class VPRState extends GameState {
 	constructor(config: GameConfig) {
 		super(config);
@@ -167,20 +171,6 @@ export class VPRState extends GameState {
 		if (this.hasTraitUnlocked("SERPENTS_LINEAGE")) {
 			this.resources.get("SERPENT_OFFERINGS").gain(n);
 		}
-	}
-
-	gainComboEnder(status: VPRStatusKey) {
-		(
-			[
-				"FLANKSBANE_VENOM",
-				"HINDSBANE_VENOM",
-				"FLANKSTUNG_VENOM",
-				"HINDSTUNG_VENOM",
-				"GRIMHUNTERS_VENOM",
-				"GRIMSKINS_VENOM",
-			] as VPRStatusKey[]
-		).forEach((key) => this.tryConsumeResource(key));
-		this.gainStatus(status);
 	}
 
 	processCombo(skill: VPRActionKey) {
@@ -258,6 +248,28 @@ export class VPRState extends GameState {
 		this.tryConsumeResource("REAWAKENED");
 		this.setComboState("REAWAKEN_COMBO", 0);
 	}
+
+	applyExtendedStatus(rscType: VPRStatusKey, applicationDelay: number) {
+		// Most buffs are applied at confirm, but do not start ticking down until application.
+		// We model this by extending its duration by applicationDelay.
+		// If the buff is a combo ender, consume all other combo enders first.
+		if (ALL_FINISHER_BUFFS.includes(rscType)) {
+			ALL_FINISHER_BUFFS.forEach((rsc) => rsc !== rscType && this.tryConsumeResource(rsc))
+		}
+
+		const resource = this.resources.get(rscType);
+		const resourceInfo = getResourceInfo("VPR", rscType) as ResourceInfo;
+		if (this.hasResourceAvailable(rscType)) {
+			if (resourceInfo.maxTimeout > 0) {
+				resource.overrideTimer(this, resourceInfo.maxTimeout + applicationDelay);
+			}
+		} else {
+			resource.gain(1);
+			if (resourceInfo.maxTimeout > 0) {
+				this.enqueueResourceDrop(rscType, resourceInfo.maxTimeout + applicationDelay);
+			}
+		}
+	}
 }
 
 const makeVPRWeaponskill = (
@@ -272,12 +284,13 @@ const makeVPRWeaponskill = (
 		secondaryCooldown?: CooldownGroupProperties;
 		baseRecastTime?: number;
 		falloff?: number;
-		applicationDelay?: number;
+		applicationDelay: number;
 		jobPotencyModifiers?: PotencyModifierFn<VPRState>;
 		onConfirm?: EffectFn<VPRState>;
 		validateAttempt?: StatePredicate<VPRState>;
 		onApplication?: EffectFn<VPRState>;
 		highlightIf?: StatePredicate<VPRState>;
+		extendedStatus?: VPRStatusKey;
 	},
 ): Weaponskill<VPRState> => {
 	const replaceCondition: StatePredicate<VPRState> | undefined = params.replaceIf?.find(
@@ -305,6 +318,7 @@ const makeVPRWeaponskill = (
 				});
 			},
 			params.onConfirm,
+			params.extendedStatus ? (state) => state.applyExtendedStatus(params.extendedStatus!, params.applicationDelay) : undefined,
 			(state) => state.processCombo(name),
 		),
 		jobPotencyModifiers: (state) => {
@@ -504,10 +518,8 @@ makeVPRWeaponskill("STEEL_FANGS", 1, {
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable("HONED_STEEL") ? [Modifiers.HonedST] : [],
 	highlightIf: (state) => state.hasResourceAvailable("HONED_STEEL"),
-	onConfirm: (state) => {
-		state.tryConsumeResource("HONED_STEEL");
-		state.gainStatus("HONED_REAVERS");
-	},
+	onConfirm: (state) => state.tryConsumeResource("HONED_STEEL"),
+	extendedStatus: "HONED_REAVERS",
 });
 
 makeVPRWeaponskill("REAVING_FANGS", 10, {
@@ -520,15 +532,9 @@ makeVPRWeaponskill("REAVING_FANGS", 10, {
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable("HONED_REAVERS") ? [Modifiers.HonedST] : [],
 	highlightIf: (state) => state.hasResourceAvailable("HONED_REAVERS"),
-	onConfirm: (state) => {
-		state.tryConsumeResource("HONED_REAVERS");
-		state.gainStatus("HONED_STEEL");
-	},
+	onConfirm: (state) => state.tryConsumeResource("HONED_REAVERS"),
+	extendedStatus: "HONED_STEEL",
 });
-
-const FLANK_FINISHER_BUFFS: VPRStatusKey[] = ["FLANKSBANE_VENOM", "FLANKSTUNG_VENOM"];
-const REAR_FINISHER_BUFFS: VPRStatusKey[] = ["HINDSBANE_VENOM", "HINDSTUNG_VENOM"];
-const ALL_FINISHER_BUFFS: VPRStatusKey[] = [...FLANK_FINISHER_BUFFS, ...REAR_FINISHER_BUFFS];
 
 makeVPRWeaponskill("HUNTERS_STING", 5, {
 	startOnHotbar: false,
@@ -542,7 +548,7 @@ makeVPRWeaponskill("HUNTERS_STING", 5, {
 	highlightIf: (state) =>
 		!ALL_FINISHER_BUFFS.some((rsc) => state.hasResourceAvailable(rsc)) ||
 		FLANK_FINISHER_BUFFS.some((rsc) => state.hasResourceAvailable(rsc)),
-	onConfirm: (state) => state.gainStatus("HUNTERS_INSTINCT"),
+	extendedStatus: "HUNTERS_INSTINCT",
 });
 
 makeVPRWeaponskill("SWIFTSKINS_STING", 20, {
@@ -557,7 +563,7 @@ makeVPRWeaponskill("SWIFTSKINS_STING", 20, {
 	highlightIf: (state) =>
 		!ALL_FINISHER_BUFFS.some((rsc) => state.hasResourceAvailable(rsc)) ||
 		REAR_FINISHER_BUFFS.some((rsc) => state.hasResourceAvailable(rsc)),
-	onConfirm: (state) => state.gainStatus("SWIFTSCALED"),
+	extendedStatus: "SWIFTSCALED",
 });
 
 const finishers = [
@@ -625,10 +631,10 @@ finishers.forEach(([name, applicationDelay, location, consumes, applies, replace
 			!ALL_FINISHER_BUFFS.some((rsc) => state.hasResourceAvailable(rsc)) ||
 			state.hasResourceAvailable(consumes),
 		onConfirm: (state) => {
-			state.gainComboEnder(applies);
 			state.gainStatus("DEATH_RATTLE_READY");
 			state.resources.get("SERPENT_OFFERINGS").gain(10);
 		},
+		extendedStatus: applies,
 	});
 });
 
@@ -642,7 +648,6 @@ makeVPRWeaponskill("HUNTERS_COIL", 65, {
 	validateAttempt: (state) => state.hasResourceAvailable("HUNTERS_COIL_READY"),
 	onConfirm: (state) => {
 		// hunter's coil ready is consumed in skill constructor
-		state.gainStatus("HUNTERS_INSTINCT");
 		state.gainOfferings(5);
 		if (state.hasTraitUnlocked("VIPERS_BITE")) {
 			state.gainStatus("HUNTERS_VENOM");
@@ -653,6 +658,7 @@ makeVPRWeaponskill("HUNTERS_COIL", 65, {
 			state.gainStatus("SWIFTSKINS_COIL_READY");
 		}
 	},
+	extendedStatus: "HUNTERS_INSTINCT",
 });
 
 makeVPRWeaponskill("SWIFTSKINS_COIL", 65, {
@@ -665,7 +671,6 @@ makeVPRWeaponskill("SWIFTSKINS_COIL", 65, {
 	validateAttempt: (state) => state.hasResourceAvailable("SWIFTSKINS_COIL_READY"),
 	onConfirm: (state) => {
 		// swiftskin's coil ready is consumed in skill constructor
-		state.gainStatus("SWIFTSCALED");
 		state.gainOfferings(5);
 		if (state.hasTraitUnlocked("VIPERS_BITE")) {
 			state.gainStatus("SWIFTSKINS_VENOM");
@@ -676,6 +681,7 @@ makeVPRWeaponskill("SWIFTSKINS_COIL", 65, {
 			state.gainStatus("HUNTERS_COIL_READY");
 		}
 	},
+	extendedStatus: "SWIFTSCALED",
 });
 
 makeVPRWeaponskill("REAWAKEN", 90, {
@@ -770,10 +776,8 @@ makeVPRWeaponskill("STEEL_MAW", 25, {
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable("HONED_STEEL") ? [Modifiers.HonedAoE] : [],
 	highlightIf: (state) => state.hasResourceAvailable("HONED_STEEL"),
-	onConfirm: (state) => {
-		state.tryConsumeResource("HONED_STEEL");
-		state.gainStatus("HONED_REAVERS");
-	},
+	onConfirm: (state) => state.tryConsumeResource("HONED_STEEL"),
+	extendedStatus: "HONED_REAVERS",
 });
 
 makeVPRWeaponskill("REAVING_MAW", 35, {
@@ -784,10 +788,8 @@ makeVPRWeaponskill("REAVING_MAW", 35, {
 	jobPotencyModifiers: (state) =>
 		state.hasResourceAvailable("HONED_REAVERS") ? [Modifiers.HonedAoE] : [],
 	highlightIf: (state) => state.hasResourceAvailable("HONED_REAVERS"),
-	onConfirm: (state) => {
-		state.tryConsumeResource("HONED_REAVERS");
-		state.gainStatus("HONED_STEEL");
-	},
+	onConfirm: (state) => state.tryConsumeResource("HONED_REAVERS"),
+	extendedStatus: "HONED_STEEL",
 });
 
 makeVPRWeaponskill("HUNTERS_BITE", 40, {
@@ -797,7 +799,7 @@ makeVPRWeaponskill("HUNTERS_BITE", 40, {
 	potency: 130,
 	falloff: 0,
 	highlightIf: (state) => true,
-	onConfirm: (state) => state.gainStatus("HUNTERS_INSTINCT"),
+	extendedStatus: "HUNTERS_INSTINCT",
 });
 
 makeVPRWeaponskill("SWIFTSKINS_BITE", 45, {
@@ -807,7 +809,7 @@ makeVPRWeaponskill("SWIFTSKINS_BITE", 45, {
 	potency: 130,
 	falloff: 0,
 	highlightIf: (state) => true,
-	onConfirm: (state) => state.gainStatus("SWIFTSCALED"),
+	extendedStatus: "SWIFTSCALED",
 });
 
 makeVPRWeaponskill("JAGGED_MAW", 50, {
@@ -822,10 +824,10 @@ makeVPRWeaponskill("JAGGED_MAW", 50, {
 		state.hasResourceAvailable("GRIMSKINS_VENOM") ||
 		!state.hasResourceAvailable("GRIMHUNTERS_VENOM"),
 	onConfirm: (state) => {
-		state.gainComboEnder("GRIMHUNTERS_VENOM");
 		state.gainStatus("LAST_LASH_READY");
 		state.resources.get("SERPENT_OFFERINGS").gain(10);
 	},
+	extendedStatus: "GRIMHUNTERS_VENOM",
 });
 
 makeVPRWeaponskill("BLOODIED_MAW", 50, {
@@ -840,10 +842,10 @@ makeVPRWeaponskill("BLOODIED_MAW", 50, {
 		state.hasResourceAvailable("GRIMHUNTERS_VENOM") ||
 		!state.hasResourceAvailable("GRIMSKINS_VENOM"),
 	onConfirm: (state) => {
-		state.gainComboEnder("GRIMSKINS_VENOM");
 		state.gainStatus("LAST_LASH_READY");
 		state.resources.get("SERPENT_OFFERINGS").gain(10);
 	},
+	extendedStatus: "GRIMSKINS_VENOM",
 });
 
 makeVPRWeaponskill("HUNTERS_DEN", 70, {
@@ -865,7 +867,6 @@ makeVPRWeaponskill("HUNTERS_DEN", 70, {
 	validateAttempt: (state) => state.hasResourceAvailable("HUNTERS_DEN_READY"),
 	onConfirm: (state) => {
 		// hunter's den ready is consumed in skill constructor
-		state.gainStatus("HUNTERS_INSTINCT");
 		state.gainOfferings(5);
 		if (state.hasTraitUnlocked("VIPERS_THRESH")) {
 			state.gainStatus("FELLHUNTERS_VENOM");
@@ -876,6 +877,7 @@ makeVPRWeaponskill("HUNTERS_DEN", 70, {
 			state.gainStatus("SWIFTSKINS_DEN_READY");
 		}
 	},
+	extendedStatus: "HUNTERS_INSTINCT",
 });
 
 makeVPRWeaponskill("SWIFTSKINS_DEN", 70, {
@@ -898,7 +900,6 @@ makeVPRWeaponskill("SWIFTSKINS_DEN", 70, {
 	onConfirm: (state) => {
 		// swiftskin's den ready is consumed in skill constructor
 		// hunter's den ready was already granted by vicepit
-		state.gainStatus("SWIFTSCALED");
 		state.gainOfferings(5);
 		if (state.hasTraitUnlocked("VIPERS_THRESH")) {
 			state.gainStatus("FELLSKINS_VENOM");
@@ -909,6 +910,7 @@ makeVPRWeaponskill("SWIFTSKINS_DEN", 70, {
 			state.gainStatus("HUNTERS_DEN_READY");
 		}
 	},
+	extendedStatus: "SWIFTSCALED",
 });
 
 makeVPRWeaponskill("VICEPIT", 70, {
