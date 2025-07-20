@@ -521,13 +521,12 @@ const DARK_THEME_COLORS: ThemeColors = {
 		arrow: "#1690a8",
 	},
 	vpr: {
-		// TODO
-		vprComboTimer: "white",
-		rattlingCoil: "white",
-		serpentOfferings: "white",
-		anguineTribute: "white",
-		huntersInstinct: "white",
-		swiftscaled: "white",
+		vprComboTimer: "#dea65d",
+		rattlingCoil: MarkerColor.Red,
+		serpentOfferings: MarkerColor.Red,
+		anguineTribute: "#24e2ff",
+		huntersInstinct: "#9e5a02",
+		swiftscaled: "#ffe20a",
 	},
 	timeline: {
 		ruler: "#2d2d2d",
@@ -761,13 +760,12 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		arrow: "#1690a8",
 	},
 	vpr: {
-		// TODO
-		vprComboTimer: "black",
-		rattlingCoil: "black",
-		serpentOfferings: "black",
-		anguineTribute: "black",
-		huntersInstinct: "black",
-		swiftscaled: "black",
+		vprComboTimer: "#dea65d",
+		rattlingCoil: MarkerColor.Red,
+		serpentOfferings: MarkerColor.Red,
+		anguineTribute: "#24e2ff",
+		huntersInstinct: "#9e5a02",
+		swiftscaled: "#ffe20a",
 	},
 	timeline: {
 		ruler: "#e9e9e9",

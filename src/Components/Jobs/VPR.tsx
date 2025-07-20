@@ -46,9 +46,14 @@ export class VPRStatusPropsGenerator extends StatusPropsGenerator<VPRState> {
 				? aoeCombo.pendingChange?.timeTillEvent
 				: undefined;
 		const presentTwinCombos = twinCombos.filter((rsc) => resources.get(rsc).available(1));
-		const twinComboTimer = presentTwinCombos.length > 0 ? Math.max(
-			...presentTwinCombos.map((rsc) => resources.get(rsc).pendingChange!.timeTillEvent)
-		) : undefined;
+		const twinComboTimer =
+			presentTwinCombos.length > 0
+				? Math.max(
+						...presentTwinCombos.map(
+							(rsc) => resources.get(rsc).pendingChange!.timeTillEvent,
+						),
+					)
+				: undefined;
 
 		const infos: ResourceDisplayProps[] = [
 			{
@@ -74,20 +79,23 @@ export class VPRStatusPropsGenerator extends StatusPropsGenerator<VPRState> {
 			} as ResourceCounterProps,
 		];
 		if (this.state.hasTraitUnlocked("SERPENTS_LINEAGE")) {
-			infos.push({
-				kind: "bar",
-				name: localizeResourceType("SERPENT_OFFERINGS"),
-				color: colors.vpr.serpentOfferings,
-				progress: offerings / 100,
-				valueString: offerings.toFixed(0),
-			} as ResourceBarProps,
-			{
-				kind: "counter",
-				name: localizeResourceType("ANGUINE_TRIBUTE"),
-				color: colors.vpr.anguineTribute,
-				currentStacks: anguine,
-				maxStacks: resources.get("ANGUINE_TRIBUTE").maxValue,
-			} as ResourceCounterProps);
+			infos.push(
+				{
+					kind: "bar",
+					name: localizeResourceType("SERPENT_OFFERINGS"),
+					color:
+						offerings >= 50 ? colors.vpr.anguineTribute : colors.vpr.serpentOfferings,
+					progress: offerings / 100,
+					valueString: offerings.toFixed(0),
+				} as ResourceBarProps,
+				{
+					kind: "counter",
+					name: localizeResourceType("ANGUINE_TRIBUTE"),
+					color: colors.vpr.anguineTribute,
+					currentStacks: anguine,
+					maxStacks: resources.get("ANGUINE_TRIBUTE").maxValue,
+				} as ResourceCounterProps,
+			);
 		}
 		return infos;
 	}

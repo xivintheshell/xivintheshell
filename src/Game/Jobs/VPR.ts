@@ -254,7 +254,8 @@ export class VPRState extends GameState {
 		// We model this by extending its duration by applicationDelay.
 		// If the buff is a combo ender, consume all other combo enders first.
 		if (ALL_FINISHER_BUFFS.includes(rscType)) {
-			ALL_FINISHER_BUFFS.forEach((rsc) => rsc !== rscType && this.tryConsumeResource(rsc))
+			// Combo ender "venom" buffs are mutually exclusive with each other.
+			ALL_FINISHER_BUFFS.forEach((rsc) => rsc !== rscType && this.tryConsumeResource(rsc));
 		}
 
 		const resource = this.resources.get(rscType);
@@ -318,7 +319,10 @@ const makeVPRWeaponskill = (
 				});
 			},
 			params.onConfirm,
-			params.extendedStatus ? (state) => state.applyExtendedStatus(params.extendedStatus!, params.applicationDelay) : undefined,
+			params.extendedStatus
+				? (state) =>
+						state.applyExtendedStatus(params.extendedStatus!, params.applicationDelay)
+				: undefined,
 			(state) => state.processCombo(name),
 		),
 		jobPotencyModifiers: (state) => {
@@ -960,6 +964,7 @@ makeVPRAbility("SLITHER", 40, "cd_SLITHER", {
 	cooldown: 30,
 	maxCharges: 3, // set by trait in constructor
 	animationLock: MOVEMENT_SKILL_ANIMATION_LOCK,
+	// drawsAggro: true, // TODO find application delay
 });
 
 makeVPRAbility("SERPENTS_TAIL", 55, "cd_SERPENTS_TAIL", {

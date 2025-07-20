@@ -66,7 +66,6 @@ it(
 	}),
 );
 
-
 it(
 	"ends reawaken buffs if ouroboros is used early",
 	testWithConfig({}, () => {

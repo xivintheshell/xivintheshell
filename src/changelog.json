@@ -332,13 +332,13 @@
 	{
 		"date": "3/16/25",
 		"changes": [
-			"Fixed an issue where resource toggles were shown in their timeline editor with their internal keys rather than localized test.",
+			"Fixed an issue where resource toggles were shown in the timeline editor with their internal keys rather than localized text.",
 			"Fixed mistakes in DoT effect override calculations.",
 			"In anticipation of patch 7.2, we're working on some changes to make it easier to migrate timelines after site or game changes. The following things have changed:",
 			"- Single-clicking an action will now try to use it as soon as the current animation lock/skill cooldown is over (this used to require double-clicking). If the action cannot be used, a wait is automatically added to the timeilne.",
 			"- In \"manual\" control mode, you no longer need to press space to advance past an action's animation lock (it will now advance automatically when a skill is used).",
 			"- Displayed wait durations are now always calculated from the end of the previous animation lock. Any existing timelines will automatically be adjusted--the shown wait times may be different, but the times where actions are used will remain the same.",
-			"- Skill sequence presets now include wait durations. This lets you load/save sequences that use late weaves or wait for MP ticks (assuming ticks still line up quietly).",
+			"- Skill sequence presets now include wait durations. This lets you load/save sequences that use late weaves or wait for MP ticks (assuming ticks still line up correctly).",
 			"As a consequence of these changes, you actually might now be able to load BLM timelines from 7.05/7.0 that previously were broken as a result of Despair becoming instant. Despair will still be instant and other buff usage will be unchanged, but the time between abilities should be correct.",
 			"These changes are very large, and while we've tested to make sure they won't break your existing timelines, there might still be some bugs that slipped through the cracks. As always, please reach out to us if you encounter any problems."
 		]
