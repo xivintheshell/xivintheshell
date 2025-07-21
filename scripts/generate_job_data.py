@@ -58,30 +58,34 @@ I = Info
 
 # === BEGIN: YOUR CHANGES HERE ===
 # Modify the variables in this section according to the skills and statuses you wish to generate.
-
-JOB: str = "VPR"
+JOB: str = "SCH"
 # A path to a locally-saved HTML file of the English-language job guide.
 # For example, hitting ctrl/cmd-S on this link:
 # https://na.finalfantasyxiv.com/jobguide/monk/
-EN_JOB_GUIDE_HTML: str = "~/Downloads/en_vpr.html"
+EN_JOB_GUIDE_HTML: str = "~/Downloads/en_sch.html"
 # A path to a locally-saved HTML file of the Chinese-language job guide.
 # For example, hitting ctrl/cmd-S on this link:
 # https://actff1.web.sdo.com/project/20190917jobguid/index.html#/continfo/monk/pve
-ZH_JOB_GUIDE_HTML: str = "~/Downloads/zh_vpr.html"
+ZH_JOB_GUIDE_HTML: str = "~/Downloads/zh_sch.html"
 # Both job guides are assumed to have the same order of actions, which may
 # not always be the case when a patch occurs.
 
 # A path to the single-sheet CSV containing this job's application delays
 # Download from here: https://docs.google.com/spreadsheets/d/1Emevsz5_oJdmkXy23hZQUXimirZQaoo5BejSzL3hZ9I/edit?usp=drive_web&ouid=110454175060690521527
-APPLICATION_DELAY_CSV_PATH: str = "scripts/application delay DT - MELEE.csv"
+APPLICATION_DELAY_CSV_PATH: str = "scripts/application delay DT - HEALER.csv"
 
 # Action names are scraped from the job guide files. If there are any actions that should not be
 # included due to being out-leveled, list their proper English names here.
-EXCLUDE_ACTIONS: list[str] = []
+<<<<<<< Updated upstream
+EXCLUDE_ACTIONS: list[str] = [
+    "Ruin",
+    "Bio",
+    "Broil",
+]
 
 # Name of the last PVE action in the job guide. This makes it so we don't have to write more complicated
 # CSS selectors to tell BS4 when to stop parsing :).
-LAST_PVE_ACTION: str = "Fourth Legacy"
+LAST_PVE_ACTION: str = "Accession"
 
 # A list of cooldowns resources to generate.
 # Abilities can be omitted, as this script will automatically produce a cooldown object for them.
@@ -93,45 +97,52 @@ COOLDOWNS: dict[str, list[str]] = {
 # A list of English gauge element names.
 # Their translations must manually be added.
 GAUGES: list[Info] = [
-    I("Rattling Coil", "飞蛇之魂", max_stacks=3),
-    I("Serpent Offerings", "灵力", max_stacks=100),
-    I("Anguine Tribute", "祖灵力", max_stacks=5),
+    I("Aetherflow", "以太超流", max_charges=3),
+    I("Faerie", "异想以太", max_stacks=100),
 ]
 
 # A list of buff/debuffs.
 # Their Chinese translations must manually be added.
 STATUSES: list[Info] = [
-    I("Hunter's Instinct", "猛袭", timeout=40),
-    I("Swiftscaled", "疾速", timeout=40),
-    I("Honed Steel", "咬噬锐牙", timeout=60),
-    I("Honed Reavers", "穿裂锐牙", timeout=60),
-    I("Flankstung Venom", "侧击锐牙", timeout=60),
-    I("Hindstung Venom", "背击锐牙", timeout=60),
-    I("Flanksbane Venom", "侧裂锐牙", timeout=60),
-    I("Hindsbane Venom", "背裂锐牙", timeout=60),
-    I("Grimskin's Venom", "乱裂锐牙", timeout=60),
-    I("Grimhunter's Venom", "乱击锐牙", timeout=60),
-    I("Hunter's Venom", "飞蛇之魂", timeout=30),
-    I("Swiftskin's Venom", "乱击双锐牙", timeout=30),
-    I("Poised for Twinfang", "连尾锐尾", timeout=60),
-    I("Poised for Twinblood", "乱尾锐尾", timeout=60),
-    I("Fellhunter's Venom", "连闪双锐牙", timeout=30),
-    I("Fellskin's Venom", "乱闪双锐牙", timeout=30),
-    I("Ready to Reawaken", "祖灵降临预备", timeout=30),
-    I("Reawakened", "祖灵降临", timeout=30),
+    I("Bio II", "猛毒菌", timeout=30),
+    I("Catalyze", "激励", timeout=30),
+    # Galvanize is applied by all non-critlo GCD shields
+    I("Galvanize", "鼓舞", timeout=30),
+    I("Whispering Dawn", "仙光的低语", timeout=21),
+    I("Angel's Whisper", "天使的低语", timeout=21),
+    I("Fey Illumination", "异想的幻光", timeout=20),
+    I("Seraphic Illumination", "炽天的幻光", timeout=20),
+    # Separate regen effect handled manually
+    I("Sacred Soil", "野战治疗阵", timeout=30),
+    I("Dissipation", "转化", timeout=30),
+    I("Excogitation", "深谋远虑之策", timeout=45),
+    I("Chain Stratagem", "连环计", timeout=20),
+    I("Impact Imminent", "埋伏之毒预备", timeout=30),
+    I("Biolysis", "蛊毒法", timeout=30),
+    I("Recitation", "秘策", timeout=15),
+    # Note: Faerie Gauge does not increase while pet is dissipated/not summoned
+    I("Fey Union", "异想的融光"),
+    # Using the Consolation ability applies the "Seraphic Veil" buff
+    I("Seraphic Veil", "炽天的幕帘", timeout=30),
+    I("Protraction", "生命回生法", timeout=10),
+    I("Expedience", "疾风之计", timeout=10),
+    I("Desperate Measures", "怒涛之计", timeout=20),
+    I("Baneful Impaction", "埋伏之毒", timeout=15),
+    # Separate regen effect handled manually
+    I("Seraphism", "炽天附体", timeout=20),
 ]
 
 # A list of tracker abilities that don't necessarily correspond to any real in-game buffs.
 # Their translations must manually be added.
 TRACKERS: list[Info] = [
-    # manually copied from NoHome's branch since these are complicated
+    I("Seraph Summon Timer", "炽天的召唤时间", timeout=22),
 ]
 
 # Traits are automatically scraped.
 # We need to specify the first and last trait of interest so I don't need to write more complex scraping code
 # to filter PVP actions.
-FIRST_TRAIT = "Melee Mastery"
-LAST_TRAIT = "Serpent's Legacy"
+FIRST_TRAIT = "Corruption Mastery II"
+LAST_TRAIT = "Enhanced Recitation"
 
 # === END: YOUR CHANGES HERE ===
 
@@ -213,7 +224,7 @@ en_tooltips = en_tooltips[: last_idx + 1]
 zh_skill_names = zh_skill_names[: last_idx + 1]
 for exclude_action in EXCLUDE_ACTIONS:
     idx = en_skill_names.index(exclude_action)
-    if idx > 0:
+    if idx >= 0:
         del en_skill_names[idx]
         del en_tooltips[idx]
         del zh_skill_names[idx]

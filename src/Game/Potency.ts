@@ -117,6 +117,8 @@ export const enum PotencyModifierType {
 	HONED,
 	VENOM,
 	POISED,
+
+	CHAIN_STRAT, // TODO healing modifiers
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -627,6 +629,12 @@ export const Modifiers = {
 		source: PotencyModifierType.POISED,
 		additiveAmount: 50,
 	} as PotencyAdder,
+	ChainStrat: {
+		kind: "critDirect",
+		source: PotencyModifierType.CHAIN_STRAT,
+		critBonus: 0.1,
+		dhBonus: 0.0,
+	} as CritDirectMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

@@ -112,7 +112,7 @@ export const HEALERS = ensureRecord<Job>()({
 	},
 	SCH: {
 		role: "HEALER",
-		implementationLevel: "UNIMPLEMENTED",
+		implementationLevel: "TESTING",
 		usesMp: true,
 		limitBreak: "ANGEL_FEATHERS",
 	},
@@ -230,6 +230,16 @@ export const JOBS = {
 	...RANGED,
 	...CASTERS,
 	...LIMITED,
+	// When no jobs use the "UNIMPLEMENTED" status, a line in PlaybackControl starts complaining.
+	// I [sz] am too lazy to figure out how to properly work around type inference here, so this
+	// sentinel job will be forever unimplemented to force proper inference on the implementationLevel field.
+	...ensureRecord<Job>()({
+		NEVER: {
+			role: "LIMITED",
+			implementationLevel: "UNIMPLEMENTED",
+			usesMp: false,
+		},
+	}),
 };
 
 export type JobType = typeof JOBS;
