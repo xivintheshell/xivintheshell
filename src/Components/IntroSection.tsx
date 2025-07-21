@@ -72,6 +72,9 @@ const getAcknowledgements = () => <>
 				BLU: <b>小铅笔</b>
 			</li>
 			<li>
+				VPR: <b>shanzhe</b>, <b>misterperson</b>
+			</li>
+			<li>
 				Framework for adding new jobs: <b>shanzhe</b>
 			</li>
 			<li>
@@ -106,6 +109,9 @@ const getAcknowledgements = () => <>
 			</li>
 			<li>
 				青魔：<b>小铅笔</b>
+			</li>
+			<li>
+				蝰蛇剑士：<b>shanzhe</b>、<b>misterperson</b>
 			</li>
 			<li>
 				添加新职业的程序框架：<b>shanzhe</b>
