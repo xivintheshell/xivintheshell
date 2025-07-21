@@ -2,11 +2,11 @@
 	{
 		"date": "7/20/25",
 		"changes": [
-			"[VPR] Added initial support for VPR.",
+			"[VPR] Added initial support for VPR. Thanks to Verra for help testing.",
 			"[BLU] Using an action while Waning Nocturne or Diamondback are active now uses the action as soon as the debuff expires."
 		],
 		"changes_zh": [
-			"【蝰蛇剑士】 加了初步的支持。",
+			"【蝰蛇剑士】 加了初步的支持。谢谢Verra帮助测试。",
 			"【青魔】在有\"狂战士化的副作用\"或\"超硬化\"状态下使用技能，现在会自动地等到状态结束后再播放。"
 		],
 		"level": "major"
