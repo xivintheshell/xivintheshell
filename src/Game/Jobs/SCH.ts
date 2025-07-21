@@ -81,6 +81,11 @@ export class SCHState extends GameState {
 		super(config);
 		this.aetherpactOffset = this.nonProcRng() * 3.0;
 
+		const deploymentCd = this.hasTraitUnlocked("ENHANCED_DEPLOYMENT_TACTICS") ? 90 : 120;
+		const recitationCd = this.hasTraitUnlocked("ENHANCED_RECITATION") ? 60 : 90;
+		this.cooldowns.set(new CoolDown("cd_DEPLOYMENT_TACTICS", deploymentCd, 1, 1));
+		this.cooldowns.set(new CoolDown("cd_RECITATION", recitationCd, 1, 1));
+
 		this.registerRecurringEvents([
 			{
 				reportName: localize({ en: "Bio/Biolysis DoT", zh: "毒DoT" }),
@@ -399,7 +404,10 @@ makeSCHSpell("BIOLYSIS", 72, {
 
 makeSCHSpell("RUIN_II", 38, {
 	applicationDelay: 0.94,
-	potency: 220,
+	potency: [
+		["NEVER", 200],
+		["BROIL_MASTERY_IV", 220],
+	],
 	baseCastTime: 0,
 	manaCost: 400,
 });
@@ -527,7 +535,10 @@ makeSCHSpell("CONCITATION", 96, {
 
 makeSCHSpell("PHYSICK", 4, {
 	applicationDelay: 1.03,
-	healingPotency: 450,
+	healingPotency: [
+		["NEVER", 400],
+		["ENHANCED_HEALING_MAGIC", 450],
+	],
 	baseCastTime: 1.5,
 	manaCost: 300,
 });
@@ -659,7 +670,7 @@ makeSCHResourceAbility("FEY_ILLUMINATION", 40, "cd_FEY_ILLUMINATION", {
 
 makeSCHAbility("DEPLOYMENT_TACTICS", 56, "cd_DEPLOYMENT_TACTICS", {
 	applicationDelay: 0.89,
-	cooldown: 120,
+	cooldown: 120, // set by trait in constructor
 });
 
 makeSCHResourceAbility("EMERGENCY_TACTICS", 58, "cd_EMERGENCY_TACTICS", {
@@ -696,7 +707,7 @@ makeSCHAbility("DISSOLVE_UNION", 70, "cd_DISSOLVE_UNION", {
 makeSCHResourceAbility("RECITATION", 74, "cd_RECITATION", {
 	rscType: "RECITATION",
 	applicationDelay: 0,
-	cooldown: 90,
+	cooldown: 90, // set by trait in constructor
 });
 
 makeSCHAbility("FEY_BLESSING", 76, "cd_FEY_BLESSING", {
