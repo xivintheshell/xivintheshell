@@ -1,5 +1,12 @@
 [
 	{
+		"date": "7/23/25",
+		"changes": [
+			"[BETA] SCH beta"
+		]
+
+	},
+	{
 		"date": "7/22/25",
 		"changes": [
 			"[DNC] Fixed a bug where Fountain and Bladeshower could grant Silken Flow when used without combo."

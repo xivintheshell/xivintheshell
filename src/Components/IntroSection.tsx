@@ -51,7 +51,7 @@ const getAcknowledgements = () => <>
 				BLM: <b>shanzhe</b>, <b>Akairyu</b>, <b>Turtle</b>, <b>miyehn</b>
 			</li>
 			<li>
-				PCT, RDM, SMN, DRK, NIN, MNK, WHM, AST: <b>shanzhe</b>
+				PCT, RDM, SMN, DRK, NIN, MNK, WHM, AST, SCH: <b>shanzhe</b>
 			</li>
 			<li>
 				SAM: <b>Sterling</b>, <b>shanzhe</b>
@@ -90,7 +90,7 @@ const getAcknowledgements = () => <>
 				黑魔：<b>shanzhe</b>、<b>Akairyu</b>、<b>Turtle</b>、<b>miyehn</b>
 			</li>
 			<li>
-				绘灵魔、赤魔、召唤、暗黑骑士、忍者、武僧、白魔、占星术士：<b>shanzhe</b>
+				绘灵魔、赤魔、召唤、暗黑骑士、忍者、武僧、白魔、占星术士、学者：<b>shanzhe</b>
 			</li>
 			<li>
 				武士：<b>Sterling</b>、<b>shanzhe</b>
