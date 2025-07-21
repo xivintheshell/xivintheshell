@@ -17,7 +17,7 @@ import {
 	StatePredicate,
 } from "../Skills";
 import { GameState } from "../GameState";
-import { makeResource, CoolDown, Event } from "../Resources";
+import { makeResource, CoolDown, Event, getResourceInfo, ResourceInfo } from "../Resources";
 import { GameConfig } from "../GameConfig";
 import { TraitKey, ResourceKey } from "../Data";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
@@ -121,6 +121,28 @@ export class BLUState extends GameState {
 			new Event("gain buff", delay, () => {
 				this.resources.get(rscType).gain(1);
 				this.enqueueResourceDrop(rscType);
+				// To allow users to easily skip to the end of diamondback/waning nocturne durations,
+				// we treat their applications as an animation lock.
+				// We still need to check these buffs in `validateAttempt` to prevent hardcasts that
+				// end after the buff changes from executing.
+				// This also avoids the need to special-case locking out role actions.
+				if (rscType === "WANING_NOCTURNE" || rscType === "DIAMONDBACK") {
+					// Diamondback lasts longer than Waning Nocturne, so if dback would expire before
+					// Waning Nocturne, don't re-take the animation lock.
+					const newLockDuration = (getResourceInfo("BLU", rscType) as ResourceInfo)
+						.maxTimeout;
+					const changeEvent = this.resources.get("NOT_ANIMATION_LOCKED").pendingChange;
+					if (changeEvent !== undefined) {
+						this.resources
+							.get("NOT_ANIMATION_LOCKED")
+							.overrideTimer(
+								this,
+								Math.max(newLockDuration, changeEvent.timeTillEvent),
+							);
+					} else {
+						this.resources.takeResourceLock("NOT_ANIMATION_LOCKED", newLockDuration);
+					}
+				}
 			}),
 		);
 	}
@@ -369,7 +391,8 @@ makeBLUSpell("MOON_FLUTE", 1, {
 			state.refreshBuff("WAXING_NOCTURNE", 0.6);
 			state.addEvent(
 				new Event("Waxing_Nocturne ended", 15.6, () => {
-					if (!state.hasResourceAvailable("DIAMONDBACK")) {
+					// Don't apply Waning Nocturne if it was already triggered by Diamondback
+					if (!state.hasResourceAvailable("WANING_NOCTURNE")) {
 						state.refreshBuff("WANING_NOCTURNE", 0);
 					}
 				}),
