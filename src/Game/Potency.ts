@@ -112,6 +112,11 @@ export const enum PotencyModifierType {
 	ASYLUM,
 	TEMPERANCE,
 	EXTRA_BELL_STACKS,
+
+	HUNTERS_INSTINCT,
+	HONED,
+	VENOM,
+	POISED,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -581,6 +586,47 @@ export const Modifiers = {
 		source: PotencyModifierType.PET,
 		potencyFactor: 0.96,
 	} as PotencyMultiplier,
+	// VPR stuff
+	HuntersInstinct: {
+		kind: "multiplier",
+		source: PotencyModifierType.HUNTERS_INSTINCT,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	HonedST: {
+		kind: "adder",
+		source: PotencyModifierType.HONED,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	HonedAoE: {
+		kind: "adder",
+		source: PotencyModifierType.HONED,
+		additiveAmount: 20,
+	} as PotencyAdder,
+	VenomST: {
+		kind: "adder",
+		source: PotencyModifierType.VENOM,
+		additiveAmount: 100,
+	} as PotencyAdder,
+	VenomAoE: {
+		kind: "adder",
+		source: PotencyModifierType.VENOM,
+		additiveAmount: 20,
+	} as PotencyAdder,
+	VenomOGCDST: {
+		kind: "adder",
+		source: PotencyModifierType.VENOM,
+		additiveAmount: 50,
+	} as PotencyAdder,
+	VenomOGCDAoE: {
+		kind: "adder",
+		source: PotencyModifierType.VENOM,
+		additiveAmount: 30,
+	} as PotencyAdder,
+	Poised: {
+		kind: "adder",
+		source: PotencyModifierType.POISED,
+		additiveAmount: 50,
+	} as PotencyAdder,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

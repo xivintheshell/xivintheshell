@@ -5,7 +5,7 @@ import { ActionNode } from "./Record";
 import { FileType, getCachedValue, removeCachedValue, setCachedValue } from "./Common";
 import { updateMarkers_TimelineMarkerPresets } from "../Components/TimelineMarkers";
 import { updateSkillSequencePresetsView } from "../Components/SkillSequencePresets";
-import { refreshTimelineEditor } from "../Components/TimelineEditor";
+import { refreshTimelineEditor, updateInvalidStatus } from "../Components/TimelineEditor";
 import { Potency } from "../Game/Potency";
 import { MarkerColor } from "../Components/ColorTheme";
 import { TimelineDimensions } from "../Components/Common";
@@ -258,6 +258,8 @@ export class Timeline {
 		this.#allMarkers.forEach((m) => {
 			if (m.markerType === MarkerType.Untargetable) this.#untargetableMarkers.push(m);
 		});
+		// Some abilities check whether the boss was hit to determine gauge state.
+		updateInvalidStatus();
 	}
 
 	#recreateBuffList() {
@@ -329,10 +331,15 @@ export class Timeline {
 	}
 
 	deleteAllMarkers() {
+		const anyUntargetable = this.#untargetableMarkers.length > 0;
 		this.#allMarkers = [];
 		this.#untargetableMarkers = [];
 		this.#buffMarkers = [];
 		this.drawElements();
+		if (anyUntargetable) {
+			// Some abilities check whether the boss was hit to determine gauge state.
+			updateInvalidStatus();
+		}
 		this.#save();
 	}
 

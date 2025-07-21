@@ -209,6 +209,15 @@ export type ASTResourceColors = {
 	arrow: string;
 };
 
+export type VPRResourceColors = {
+	vprComboTimer: string;
+	rattlingCoil: string;
+	serpentOfferings: string;
+	anguineTribute: string;
+	huntersInstinct: string;
+	swiftscaled: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -259,6 +268,7 @@ export type ThemeColors = {
 	mnk: MNKResourceColors;
 	whm: WHMResourceColors;
 	ast: ASTResourceColors;
+	vpr: VPRResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -510,6 +520,14 @@ const DARK_THEME_COLORS: ThemeColors = {
 		synastry: "#578a7e",
 		arrow: "#1690a8",
 	},
+	vpr: {
+		vprComboTimer: "#dea65d",
+		rattlingCoil: MarkerColor.Red,
+		serpentOfferings: MarkerColor.Red,
+		anguineTribute: "#24e2ff",
+		huntersInstinct: "#9e5a02",
+		swiftscaled: "#ffe20a",
+	},
 	timeline: {
 		ruler: "#2d2d2d",
 		tracks: "#242424",
@@ -741,6 +759,14 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		synastry: "#578a7e",
 		arrow: "#1690a8",
 	},
+	vpr: {
+		vprComboTimer: "#dea65d",
+		rattlingCoil: MarkerColor.Red,
+		serpentOfferings: MarkerColor.Red,
+		anguineTribute: "#24e2ff",
+		huntersInstinct: "#9e5a02",
+		swiftscaled: "#ffe20a",
+	},
 	timeline: {
 		ruler: "#e9e9e9",
 		tracks: "#f3f3f3",
@@ -842,6 +868,10 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.MNK_BALL, colors.mnk.opo],
 		[PotencyModifierType.SSS_CHAKRA, colors.mnk.chakra],
 		[PotencyModifierType.DIVINATION, colors.ast.div],
+		[PotencyModifierType.HUNTERS_INSTINCT, colors.vpr.huntersInstinct],
+		[PotencyModifierType.HONED, colors.vpr.vprComboTimer],
+		[PotencyModifierType.VENOM, colors.vpr.vprComboTimer],
+		[PotencyModifierType.POISED, colors.vpr.vprComboTimer],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

@@ -263,6 +263,10 @@ const modifierNames = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.MNK_BALL, { en: "ball", zh: "功力" }],
 	[PotencyModifierType.SSS_CHAKRA, { en: "chakra", zh: "斗气" }],
 	[PotencyModifierType.DIVINATION, { en: "divination", zh: "占卜" }],
+	[PotencyModifierType.HUNTERS_INSTINCT, { en: "hunter's instinct", zh: "猛袭" }],
+	[PotencyModifierType.HONED, { en: "honed" }],
+	[PotencyModifierType.VENOM, { en: "venom" }],
+	[PotencyModifierType.POISED, { en: "poised" }],
 ]);
 export function localizeModifierName(modifierType: PotencyModifierType): string {
 	console.assert(
@@ -348,6 +352,10 @@ const modifierTags = new Map<PotencyModifierType, LocalizedContent>([
 	[PotencyModifierType.MNK_BALL, { en: "BALL", zh: "功力" }],
 	[PotencyModifierType.SSS_CHAKRA, { en: "CHAKRA", zh: "斗气" }],
 	[PotencyModifierType.DIVINATION, { en: "DIV", zh: "占卜" }],
+	[PotencyModifierType.HUNTERS_INSTINCT, { en: "HI", zh: "猛袭" }],
+	[PotencyModifierType.HONED, { en: "HONED" }],
+	[PotencyModifierType.VENOM, { en: "VENOM" }],
+	[PotencyModifierType.POISED, { en: "POISED" }],
 ]);
 export function localizeModifierTag(modifierType: PotencyModifierType): string {
 	console.assert(

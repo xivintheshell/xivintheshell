@@ -72,6 +72,9 @@ buffIcons.set(BuffType.Confession, "Buffs/WHM/Confession.png");
 buffIcons.set(BuffType.Asylum, "Buffs/WHM/Asylum.png");
 buffIcons.set(BuffType.Temperance, "Buffs/WHM/Temperance.png");
 
+buffIcons.set(BuffType.HuntersInstinct, "Buffs/VPR/Hunter's Instinct.png");
+buffIcons.set(BuffType.Swiftscaled, "Buffs/VPR/Swiftscaled.png");
+
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
 	const imgObj = new Image();

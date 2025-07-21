@@ -17,6 +17,7 @@ import { getThemeField, MarkerColor, ColorThemeContext } from "./ColorTheme";
 import { Buff, buffInfos } from "../Game/Buffs";
 import { BuffType } from "../Game/Common";
 import { TIMELINE_COLUMNS_HEIGHT } from "./Timeline";
+import { updateInvalidStatus } from "./TimelineEditor";
 
 export let setEditingMarkerValues = (marker: MarkerElem) => {};
 
@@ -549,6 +550,10 @@ export class TimelineMarkers extends React.Component {
 					}
 					controller.timeline.addMarker(marker);
 					controller.updateStats();
+					if (this.state.nextMarkerType === MarkerType.Untargetable) {
+						// Some abilities check whether the boss was hit to determine gauge state.
+						updateInvalidStatus();
+					}
 					e.preventDefault();
 				}}
 			>
