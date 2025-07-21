@@ -15,7 +15,7 @@ import {
 (Object.keys(VPR_STATUSES) as VPRResourceKey[]).forEach((buff) =>
 	registerBuffIcon(buff, `VPR/${RESOURCES[buff].name}.png`),
 );
-const NIN_BUFFS: VPRResourceKey[] = Object.keys(VPR_STATUSES) as VPRResourceKey[];
+const VPR_BUFFS: VPRResourceKey[] = Object.keys(VPR_STATUSES) as VPRResourceKey[];
 
 export class VPRStatusPropsGenerator extends StatusPropsGenerator<VPRState> {
 	override jobSpecificOtherTargetedBuffViewProps(): BuffProps[] {
@@ -23,7 +23,7 @@ export class VPRStatusPropsGenerator extends StatusPropsGenerator<VPRState> {
 	}
 
 	override jobSpecificSelfTargetedBuffViewProps(): BuffProps[] {
-		return NIN_BUFFS.map((key) => this.makeCommonTimer(key));
+		return VPR_BUFFS.map((key) => this.makeCommonTimer(key));
 	}
 
 	override jobSpecificResourceViewProps(colors: ThemeColors): ResourceDisplayProps[] {
