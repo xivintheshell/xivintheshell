@@ -19,7 +19,7 @@ import {
 	localizeSkillUnavailableReason,
 	getCurrentLanguage,
 } from "./Localization";
-import { TIMELINE_COLUMNS_HEIGHT, updateTimelineView } from "./Timeline";
+import { TIMELINE_COLUMNS_HEIGHT, updateTimelineView, DragLockContext } from "./Timeline";
 import { Columns } from "./Common";
 import { SkillReadyStatus } from "../Game/Common";
 
@@ -34,11 +34,6 @@ export let updateActiveTimelineEditor = (slotSwapFn: () => void) => {
 	slotSwapFn();
 };
 
-let bHandledSkillSelectionThisFrame: boolean = false;
-function setHandledSkillSelectionThisFrame(handled: boolean) {
-	bHandledSkillSelectionThisFrame = handled;
-}
-
 const EditorDragContext = createContext<
 	(i: number) => {
 		start: DragEventHandler<HTMLTableRowElement>;
@@ -46,6 +41,7 @@ const EditorDragContext = createContext<
 		enter: DragEventHandler<HTMLTableRowElement>;
 		leave: DragEventHandler<HTMLTableRowElement>;
 		drop: DragEventHandler<HTMLTableRowElement>;
+		setSelected: (b: boolean) => void;
 	}
 >((i) => {
 	return {
@@ -54,6 +50,7 @@ const EditorDragContext = createContext<
 		enter: (e) => {},
 		leave: (e) => {},
 		drop: (e) => {},
+		setSelected: (b) => {},
 	};
 });
 
@@ -184,8 +181,14 @@ function TimelineActionElement(props: {
 			borderColor: dragTarget ? colors.editingValid : undefined,
 		}}
 		ref={props.refObj ?? null}
-		draggable={props.isSelected}
-		onDragStart={ctx.start}
+		draggable={!useContext(DragLockContext).value}
+		onDragStart={(e) => {
+			ctx.start(e);
+			ctx.setSelected(true);
+			if (!props.isSelected) {
+				controller.timeline.onClickTimelineAction(props.index, false);
+			}
+		}}
 		onDragEnd={ctx.end}
 		onDragEnter={(e) => {
 			ctx.enter(e);
@@ -205,7 +208,7 @@ function TimelineActionElement(props: {
 			e.preventDefault();
 		}}
 		onClick={(e) => {
-			setHandledSkillSelectionThisFrame(true);
+			ctx.setSelected(true);
 			if (props.recordIsDirty) {
 				// controller.record.onClickNode(props.index, e.shiftKey);
 				controller.timeline.onClickTimelineAction(props.index, e.shiftKey);
@@ -235,6 +238,7 @@ export function TimelineEditor() {
 	);
 	const [firstEditedNodeIndex, setFirstEditedNodeIndex] = useState<number | undefined>(undefined);
 	const [, forceUpdate] = useReducer((x) => x + 1, 0);
+	const bHandledSkillSelectionThisFrame = useRef(false);
 	// In previous versions of XIV in the Shell, when using the timeline editor, we created a
 	// copy of the record within the TimelineEditor object, and did not reflect any staged
 	// edits in the timeline canvas.
@@ -305,7 +309,7 @@ export function TimelineEditor() {
 		return <button
 			style={{ display: "block", marginTop: 10, marginLeft: buttonMarginLeft }}
 			onClick={(e) => {
-				setHandledSkillSelectionThisFrame(true);
+				bHandledSkillSelectionThisFrame.current = true;
 				// discard edits
 				if (!isDirty) {
 					console.error("attempted to discard edits while timeline editor was not dirty");
@@ -424,7 +428,7 @@ export function TimelineEditor() {
 				<button
 					style={{ display: "block", marginTop: 10, marginLeft: buttonMarginLeft }}
 					onClick={(e) => {
-						setHandledSkillSelectionThisFrame(true);
+						bHandledSkillSelectionThisFrame.current = true;
 
 						// would show only after editing properties
 						// apply edits to timeline
@@ -511,7 +515,7 @@ export function TimelineEditor() {
 	};
 	const doRecordEdit = (action: (record: Record) => number | undefined) => {
 		if (controller.record.getFirstSelection()) {
-			setHandledSkillSelectionThisFrame(true);
+			bHandledSkillSelectionThisFrame.current = true;
 			const copy = getRecordCopy();
 			let currentEditedNodeIndex = firstEditedNodeIndex;
 			const firstEditedNode = action(copy);
@@ -615,16 +619,11 @@ export function TimelineEditor() {
 	});
 
 	// We only allow dragging if an element is currently selected.
-	// TODO: handle multi-select drag
-	const dragSrc = useRef<number | null>(null);
 	const dragDst = useRef<number | null>(null);
 	const dragHandlers = (i: number) => {
 		return {
-			start: (e: React.DragEvent) => {
-				dragSrc.current = i;
-			},
+			start: (e: React.DragEvent) => {},
 			end: (e: React.DragEvent) => {
-				dragSrc.current = null;
 				dragDst.current = null;
 			},
 			enter: (e: React.DragEvent) => {
@@ -638,12 +637,16 @@ export function TimelineEditor() {
 			drop: (e: React.DragEvent) => {
 				// TODO set above or below in dragover based on cursor position relative to self
 				if (dragDst !== null) {
-					const distance = i - (dragSrc.current ?? 0);
+					const start = controller.record.selectionStartIndex ?? 0;
+					const distance = i - (start ?? 0);
 					if (distance !== 0) {
 						doRecordEdit((record) => record.moveSelected(distance));
 					}
-					console.log("drop " + i + " from " + dragSrc.current);
+					console.log("drop " + i + " from " + start);
 				}
+			},
+			setSelected: (b: boolean) => {
+				bHandledSkillSelectionThisFrame.current = b;
 			},
 		};
 	};
@@ -653,11 +656,11 @@ export function TimelineEditor() {
 	};
 	return <div
 		onClick={(evt) => {
-			if (!evt.shiftKey && !bHandledSkillSelectionThisFrame) {
+			if (!evt.shiftKey && !bHandledSkillSelectionThisFrame.current) {
 				controller.record.unselectAll();
 				controller.displayCurrentState();
 			}
-			setHandledSkillSelectionThisFrame(false);
+			bHandledSkillSelectionThisFrame.current = false;
 		}}
 	>
 		<Columns contentHeight={TIMELINE_COLUMNS_HEIGHT}>
