@@ -175,6 +175,14 @@ export class DNCState extends GameState {
 		super.maybeGainProc(proc, chance, true);
 	}
 
+	// Used to fix a bug where uncombo'd actions could generate procs without disrupting the prng string.
+	gainProcIfCombo(proc: DNCResourceKey, condition: boolean) {
+		const shouldGain = this.triggersEffect(0.5, true);
+		if (shouldGain && condition) {
+			this.gainProc(proc);
+		}
+	}
+
 	gainResource(rscType: "ESPRIT_GAUGE" | "FEATHER_GAUGE", amount: number) {
 		this.resources.get(rscType).gain(amount);
 	}
@@ -451,7 +459,7 @@ makeGCD_DNC("FOUNTAIN", 2, {
 	recastTime: (state) => state.config.adjustedSksGCD(),
 	applicationDelay: 0.98,
 	onConfirm: (state) => {
-		state.maybeGainProc("SILKEN_FLOW");
+		state.gainProcIfCombo("SILKEN_FLOW", state.hasResourceExactly("CASCADE_COMBO", 1));
 
 		if (state.hasTraitUnlocked("ESPRIT")) {
 			state.gainResource("ESPRIT_GAUGE", 5);
@@ -877,7 +885,7 @@ makeGCD_DNC("BLADESHOWER", 25, {
 	falloff: 0,
 	applicationDelay: 0.62,
 	onConfirm: (state) => {
-		state.maybeGainProc("SILKEN_FLOW");
+		state.gainProcIfCombo("SILKEN_FLOW", state.hasResourceExactly("WINDMILL_COMBO", 1));
 
 		if (state.hasTraitUnlocked("ESPRIT")) {
 			state.gainResource("ESPRIT_GAUGE", 5);
