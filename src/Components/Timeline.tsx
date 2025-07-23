@@ -1,5 +1,7 @@
-import React from "react";
+import React, { createContext, useContext, useState } from "react";
+import { FaLockOpen, FaLock } from "react-icons/fa6";
 import { controller } from "../Controller/Controller";
+import { getCachedValue, setCachedValue } from "../Controller/Common";
 import { Help, Slider, Tabs, TABS_TITLE_HEIGHT } from "./Common";
 import { TimelineMarkers } from "./TimelineMarkers";
 import { TimelineEditor } from "./TimelineEditor";
@@ -21,6 +23,15 @@ import { TimelineDisplaySettings } from "./TimelineDisplaySettings";
 export let updateTimelineView = () => {};
 
 export let scrollTimelineTo = (positionX: number) => {};
+
+const DRAG_LOCK_CACHE_KEY = "dragLock";
+
+const initialDragLockStr = getCachedValue(DRAG_LOCK_CACHE_KEY);
+const initialDragLock = initialDragLockStr === null || initialDragLockStr === "true";
+export const DragLockContext = createContext<{ value: boolean; setter: (value: boolean) => void }>({
+	value: initialDragLock,
+	setter: (value: boolean) => {},
+});
 
 // the actual timeline canvas
 class TimelineMain extends React.Component {
@@ -161,6 +172,7 @@ class TimelineMain extends React.Component {
 export const TIMELINE_SETTINGS_HEIGHT = 320;
 export const TIMELINE_COLUMNS_HEIGHT = TIMELINE_SETTINGS_HEIGHT - 40;
 function TimelineTabs() {
+	const { value: dragLock, setter: setDragLock } = useContext(DragLockContext);
 	return <div
 		style={{
 			position: "relative",
@@ -222,6 +234,33 @@ function TimelineTabs() {
 			height={TIMELINE_SETTINGS_HEIGHT}
 			defaultSelectedIndex={undefined}
 		/>
+		{/* TODO add description and style properly w/ bg shading */}
+		<div
+			style={{
+				position: "absolute",
+				top: 0,
+				right: 300,
+				height: TABS_TITLE_HEIGHT,
+				lineHeight: `${TABS_TITLE_HEIGHT}px`,
+				verticalAlign: "middle",
+				cursor: "pointer",
+				userSelect: "none",
+			}}
+			onClick={(e) => {
+				e.preventDefault();
+				setDragLock(!dragLock);
+			}}
+		>
+			drag lock{" "}
+			<Help
+				topic="dragLock"
+				content={localize({
+					en: <p>When locked, disables click/drag to rearrange timeline skills.</p>,
+					zh: <p>锁定是，禁止用单击并拖动来改变技能轴。</p>,
+				})}
+			/>{" "}
+			{dragLock ? <FaLock /> : <FaLockOpen />}
+		</div>
 		<Slider
 			uniqueName={"timelineDisplayScale"}
 			description={localize({ en: "horizontal scale ", zh: "水平缩放 " })}
@@ -243,6 +282,7 @@ function TimelineTabs() {
 }
 
 export function Timeline() {
+	const [dragLock, setDragLock] = useState(initialDragLock);
 	return <div
 		style={{
 			bottom: 0,
@@ -254,7 +294,17 @@ export function Timeline() {
 			flex: 0,
 		}}
 	>
-		<TimelineMain />
-		<TimelineTabs />
+		<DragLockContext.Provider
+			value={{
+				value: dragLock,
+				setter: (value) => {
+					setCachedValue(DRAG_LOCK_CACHE_KEY, value.toString());
+					setDragLock(value);
+				},
+			}}
+		>
+			<TimelineMain />
+			<TimelineTabs />
+		</DragLockContext.Provider>
 	</div>;
 }
