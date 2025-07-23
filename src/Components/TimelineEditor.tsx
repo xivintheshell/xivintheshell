@@ -1,4 +1,13 @@
-import React, { CSSProperties, useState, useEffect, useRef, useReducer } from "react";
+import React, {
+	CSSProperties,
+	useState,
+	useEffect,
+	useRef,
+	useReducer,
+	useContext,
+	createContext,
+	DragEventHandler,
+} from "react";
 import { controller } from "../Controller/Controller";
 import { ActionNode, ActionType, Record, RecordValidStatus } from "../Controller/Record";
 import { StaticFn } from "./Common";
@@ -29,6 +38,24 @@ let bHandledSkillSelectionThisFrame: boolean = false;
 function setHandledSkillSelectionThisFrame(handled: boolean) {
 	bHandledSkillSelectionThisFrame = handled;
 }
+
+const EditorDragContext = createContext<
+	(i: number) => {
+		start: DragEventHandler<HTMLTableRowElement>;
+		end: DragEventHandler<HTMLTableRowElement>;
+		enter: DragEventHandler<HTMLTableRowElement>;
+		leave: DragEventHandler<HTMLTableRowElement>;
+		drop: DragEventHandler<HTMLTableRowElement>;
+	}
+>((i) => {
+	return {
+		start: (e) => {},
+		end: (e) => {},
+		enter: (e) => {},
+		leave: (e) => {},
+		drop: (e) => {},
+	};
+});
 
 const getBorderStyling = (colors: ThemeColors) => {
 	return {
@@ -145,9 +172,38 @@ function TimelineActionElement(props: {
 			{StaticFn.displayTime(props.usedAt, 3)}
 		</td>
 	) : undefined;
+	const [dragTarget, setDragTarget] = useState(false);
+	const ctx = useContext(EditorDragContext)(props.index);
 	return <tr
-		style={{ ...TR_STYLE, background: bgColor }}
+		style={{
+			...TR_STYLE,
+			background: bgColor,
+			// add a border that doesn't affect element size on the bottom
+			borderTopWidth: dragTarget ? "2px" : undefined,
+			borderTopStyle: dragTarget ? "solid" : undefined,
+			borderColor: dragTarget ? colors.editingValid : undefined,
+		}}
 		ref={props.refObj ?? null}
+		draggable={props.isSelected}
+		onDragStart={ctx.start}
+		onDragEnd={ctx.end}
+		onDragEnter={(e) => {
+			ctx.enter(e);
+			setDragTarget(true);
+		}}
+		onDragLeave={(e) => {
+			ctx.leave(e);
+			setDragTarget(false);
+		}}
+		onDrop={(e) => {
+			ctx.drop(e);
+			setDragTarget(false);
+		}}
+		onDragOver={(e) => {
+			// TODO filter out event source element
+			// preventDefault enables this to receive drops
+			e.preventDefault();
+		}}
 		onClick={(e) => {
 			setHandledSkillSelectionThisFrame(true);
 			if (props.recordIsDirty) {
@@ -557,6 +613,41 @@ export function TimelineEditor() {
 			/>,
 		);
 	});
+
+	// We only allow dragging if an element is currently selected.
+	// TODO: handle multi-select drag
+	const dragSrc = useRef<number | null>(null);
+	const dragDst = useRef<number | null>(null);
+	const dragHandlers = (i: number) => {
+		return {
+			start: (e: React.DragEvent) => {
+				dragSrc.current = i;
+			},
+			end: (e: React.DragEvent) => {
+				dragSrc.current = null;
+				dragDst.current = null;
+			},
+			enter: (e: React.DragEvent) => {
+				console.log("enter " + i);
+				dragDst.current = i;
+			},
+			leave: (e: React.DragEvent) => {
+				console.log("leave " + i);
+				dragDst.current = null;
+			},
+			drop: (e: React.DragEvent) => {
+				// TODO set above or below in dragover based on cursor position relative to self
+				if (dragDst !== null) {
+					const distance = i - (dragSrc.current ?? 0);
+					if (distance !== 0) {
+						doRecordEdit((record) => record.moveSelected(distance));
+					}
+					console.log("drop " + i + " from " + dragSrc.current);
+				}
+			},
+		};
+	};
+
 	const thStyle: CSSProperties = {
 		backgroundColor: colors.bgHighContrast,
 	};
@@ -618,7 +709,11 @@ export function TimelineEditor() {
 								</th>
 							</tr>
 						</thead>
-						<tbody>{actionsList}</tbody>
+						<tbody>
+							<EditorDragContext.Provider value={dragHandlers}>
+								{actionsList}
+							</EditorDragContext.Provider>
+						</tbody>
 					</table>,
 					defaultSize: 40,
 					fullBorder: true,
