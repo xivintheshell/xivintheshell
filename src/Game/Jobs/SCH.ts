@@ -756,8 +756,7 @@ makeSCHAbility("WHISPERING_DAWN", 20, "cd_WHISPERING_DAWN", {
 	},
 });
 
-makeSCHResourceAbility("FEY_ILLUMINATION", 40, "cd_FEY_ILLUMINATION", {
-	rscType: "FEY_ILLUMINATION",
+makeSCHAbility("FEY_ILLUMINATION", 40, "cd_FEY_ILLUMINATION", {
 	applicationDelay: 0,
 	cooldown: 120,
 	validateAttempt: (state) => !state.hasResourceAvailable("DISSIPATION"),
