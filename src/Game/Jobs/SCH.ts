@@ -649,7 +649,10 @@ makeSCHAbility("AETHERFLOW", 45, "cd_AETHERFLOW", {
 	applicationDelay: 0,
 	cooldown: 60,
 	requiresCombat: true,
-	onConfirm: (state) => state.resources.get("AETHERFLOW").gain(3),
+	onConfirm: (state) => {
+		state.resources.get("MANA").gain(2000);
+		state.resources.get("AETHERFLOW").gain(3)
+	},
 });
 
 makeSCHResourceAbility("DISSIPATION", 60, "cd_DISSIPATION", {
