@@ -219,10 +219,10 @@ export class SCHState extends GameState {
 		snapshot: (state: SCHState) => (state: SCHState) => void,
 	) {
 		// enqueue the pet's "prepares" event
-		// debugger;
-		this.nextEstimatedPetApplication = this.getDisplayTime() + summonDelay + applicationDelay;
+		const now = this.getDisplayTime();
+		this.nextEstimatedPetApplication = now + summonDelay + applicationDelay;
 		const seraphTimer = this.resources.get("SERAPH_SUMMON_TIMER").pendingChange?.timeTillEvent;
-		if (seraphTimer !== undefined && this.nextEstimatedPetApplication > seraphTimer) {
+		if (seraphTimer !== undefined && this.nextEstimatedPetApplication > seraphTimer + now) {
 			controller.reportWarning({
 				kind: "custom",
 				en: `${localizeSkillName(sourceSkill)} is likely to ghost when seraph leaves!`,
