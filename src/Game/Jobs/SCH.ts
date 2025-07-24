@@ -8,7 +8,8 @@ import { TraitKey } from "../Data";
 import { SCHActionKey, SCHCooldownKey, SCHResourceKey } from "../Data/Jobs/SCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { Modifiers, PotencyModifier } from "../Potency";
+import { Aspect } from "../Common";
+import { Potency, Modifiers, PotencyModifier } from "../Potency";
 import { Event, makeResource, CoolDown } from "../Resources";
 import {
 	Ability,
@@ -26,7 +27,9 @@ import {
 	Spell,
 	ResourceCalculationFn,
 } from "../Skills";
-import { localize } from "../../Components/Localization";
+import { localize, localizeSkillName } from "../../Components/Localization";
+import { ActionNode } from "../../Controller/Record";
+import { controller } from "../../Controller/Controller";
 
 const makeSCHResource = (
 	rsc: SCHResourceKey,
@@ -74,12 +77,29 @@ makeSCHResource("SERAPHISM_REGEN", 1, { timeout: 20 }); // TODO use short durati
 // Trackers
 makeSCHResource("SERAPH_SUMMON_TIMER", 1, { timeout: 22 });
 
+// From DMs with Caro, in steady mode there's usually a 90 ms delay between the SCH pressing a
+// button and Eos beginning the action.
+const DEFAULT_EOS_COMMAND_DELAY: number = 0.09;
+// Tracks the amount of time it takes for the pet's "prepares" to the application of its effects.
+const PET_APPLICATION_DELAYS: Map<SCHActionKey, number> = new Map([
+	["FEY_BLESSING", 0.667],
+	// ["EMBRACE", 0.624],
+	["WHISPERING_DAWN", 1.156],
+	["CONSOLATION", 0.889],
+	["ANGELS_WHISPER", 1.029],
+	// ["SERAPHIC_VEIL", 1.025],
+	["AETHERPACT", 0.668],
+	["FEY_ILLUMINATION", 1.3],
+]);
+
 export class SCHState extends GameState {
 	aetherpactOffset: number;
+	nextEstimatedPetApplication: number | undefined;
 
 	constructor(config: GameConfig) {
 		super(config);
 		this.aetherpactOffset = this.nonProcRng() * 3.0;
+		this.nextEstimatedPetApplication = undefined;
 
 		const deploymentCd = this.hasTraitUnlocked("ENHANCED_DEPLOYMENT_TACTICS") ? 90 : 120;
 		const recitationCd = this.hasTraitUnlocked("ENHANCED_RECITATION") ? 60 : 90;
@@ -168,6 +188,72 @@ export class SCHState extends GameState {
 		);
 	}
 
+	makePetPotency(
+		targetCount: number,
+		petSkill: SCHActionKey,
+		sourceTime: number,
+		basePotency: number,
+	): Potency {
+		const potency = new Potency({
+			config: this.config,
+			sourceTime,
+			sourceSkill: petSkill,
+			aspect: Aspect.Other,
+			basePotency,
+			snapshotTime: this.getDisplayTime(),
+			description: "",
+			targetCount,
+			falloff: undefined,
+		});
+		const mods = [Modifiers.SchPet];
+		potency.modifiers = mods;
+		return potency;
+	}
+
+	queuePetAction(
+		node: ActionNode,
+		sourceSkill: SCHActionKey,
+		petSkill: SCHActionKey,
+		summonDelay: number, // delay from summon to pet snapshot
+		applicationDelay: number, // delay from pet snapshot to application
+		snapshot: (state: SCHState) => (state: SCHState) => void,
+	) {
+		// enqueue the pet's "prepares" event
+		// debugger;
+		this.nextEstimatedPetApplication = this.getDisplayTime() + summonDelay + applicationDelay;
+		const seraphTimer = this.resources.get("SERAPH_SUMMON_TIMER").pendingChange?.timeTillEvent;
+		if (seraphTimer !== undefined && this.nextEstimatedPetApplication > seraphTimer) {
+			controller.reportWarning({
+				kind: "custom",
+				en: `${localizeSkillName(sourceSkill)} is likely to ghost when seraph leaves!`,
+			});
+		}
+		this.addEvent(
+			new Event(petSkill + " pet snapshot", summonDelay, () => {
+				console.log(petSkill + " snapshot");
+				const effect = snapshot(this);
+				this.addEvent(
+					new Event(petSkill + " application", applicationDelay, () => {
+						console.log(petSkill + " apply");
+						effect(this);
+					}),
+				);
+			}),
+		);
+	}
+
+	warnLastPetGhost() {
+		if (
+			this.nextEstimatedPetApplication !== undefined &&
+			this.nextEstimatedPetApplication > this.getDisplayTime()
+		) {
+			controller.reportWarning({
+				kind: "custom",
+				en: "previous pet command is likely to ghost!",
+			});
+		}
+	}
+
 	hasRealFairy(): boolean {
 		return (
 			!this.hasResourceAvailable("DISSIPATION") &&
@@ -189,12 +275,22 @@ export class SCHState extends GameState {
 
 	// Modifiers that only affect the caster's own GCD heals
 	addHealingMagicPotencyModifiers(modifiers: PotencyModifier[]) {
-		// TODO
+		if (
+			this.hasResourceAvailable("FEY_ILLUMINATION") ||
+			this.hasResourceAvailable("SERAPHIC_ILLUMINATION")
+		) {
+			modifiers.push(Modifiers.FeyIllum);
+		}
+		if (this.hasResourceAvailable("DISSIPATION")) {
+			modifiers.push(Modifiers.Dissipation);
+		}
 	}
 
 	// Modifiers that affect incoming heals on the player with the effect
 	addHealingActionPotencyModifiers(modifiers: PotencyModifier[]) {
-		// TODO
+		if (this.hasResourceAvailable("PROTRACTION")) {
+			modifiers.push(Modifiers.Protraction);
+		}
 	}
 
 	override get statusPropsGenerator(): StatusPropsGenerator<SCHState> {
@@ -241,13 +337,12 @@ const makeSCHSpell = (
 		}
 		return modifiers;
 	};
-	// TODO chain strat potency
-
 	return makeSpell("SCH", name, unlockLevel, {
 		...params,
 		castTime: (state) => state.config.adjustedCastTime(params.baseCastTime ?? 0),
 		recastTime: (state) => state.config.adjustedGCD(2.5),
 		isInstantFn: (state) => !params.baseCastTime || state.hasResourceAvailable("SWIFTCAST"),
+		jobPotencyModifiers: (state) => state.maybeChainModifier(),
 		jobHealingPotencyModifiers,
 		onConfirm: combineEffects(
 			params.baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : undefined,
@@ -280,9 +375,9 @@ const makeSCHAbility = (
 		}
 		return modifiers;
 	};
-	// TODO chain strat potency
 	return makeAbility("SCH", name, unlockLevel, cdName, {
 		...params,
+		jobPotencyModifiers: (state) => state.maybeChainModifier(),
 		jobHealingPotencyModifiers,
 	});
 };
@@ -388,6 +483,7 @@ makeSCHSpell("BIOLYSIS", 72, {
 	applicationDelay: 0.67,
 	baseCastTime: 0,
 	manaCost: 300,
+	drawsAggro: true,
 	onConfirm: (state, node) => {
 		state.addDoTPotencies({
 			node,
@@ -563,6 +659,7 @@ makeSCHResourceAbility("DISSIPATION", 60, "cd_DISSIPATION", {
 	requiresCombat: true,
 	validateAttempt: (state) => !state.hasResourceAvailable("SERAPH_SUMMON_TIMER"),
 	onConfirm: (state) => {
+		state.warnLastPetGhost();
 		state.resources.get("AETHERFLOW").gain(3);
 		state.tryConsumeResource("SERAPHISM");
 		// TODO if we model the regen properly as reapplying from the buff, don't consume the regen portion
@@ -619,51 +716,61 @@ makeSCHAbility("INDOMITABILITY", 52, "cd_INDOMITABILITY", {
 });
 
 makeSCHAbility("WHISPERING_DAWN", 20, "cd_WHISPERING_DAWN", {
-	applicationDelay: 0, // TODO
+	applicationDelay: 0,
 	cooldown: 60,
-	healingPotency: 80,
 	validateAttempt: (state) => !state.hasResourceAvailable("DISSIPATION"),
 	onConfirm: (state, node) => {
 		state.tryConsumeResource("FEY_UNION");
 		const effectName = state.hasResourceAvailable("SERAPH_SUMMON_TIMER")
 			? "ANGELS_WHISPER"
 			: "WHISPERING_DAWN";
-		state.addHoTPotencies({
+		const petSnapshot = (state: SCHState) => {
+			state.addHoTPotencies({
+				node,
+				skillName: "WHISPERING_DAWN",
+				effectName,
+				speedStat: "sps",
+				tickPotency: 80,
+			});
+			return (state: SCHState) => {
+				state.applyHoT(effectName, node);
+				node.getHotPotencies("WHISPERING_DAWN").forEach((potency) => {
+					if (!potency.modifiers.includes(Modifiers.SchPet)) {
+						potency.modifiers.push(Modifiers.SchPet);
+					}
+				});
+				state.gainStatus(effectName);
+			};
+		};
+		state.queuePetAction(
 			node,
-			skillName: "WHISPERING_DAWN",
+			"WHISPERING_DAWN",
 			effectName,
-			speedStat: "sps",
-			tickPotency: 300,
-		});
-		state.addEvent(
-			new Event(
-				"start " + effectName + " HoT",
-				0, // TODO
-				() => {
-					state.applyHoT(effectName, node);
-					state.gainStatus(effectName);
-				},
-			),
+			DEFAULT_EOS_COMMAND_DELAY,
+			PET_APPLICATION_DELAYS.get(effectName)!,
+			petSnapshot,
 		);
 	},
 });
 
 makeSCHResourceAbility("FEY_ILLUMINATION", 40, "cd_FEY_ILLUMINATION", {
 	rscType: "FEY_ILLUMINATION",
-	applicationDelay: 0, // TODO
+	applicationDelay: 0,
 	cooldown: 120,
 	validateAttempt: (state) => !state.hasResourceAvailable("DISSIPATION"),
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		state.tryConsumeResource("FEY_UNION");
 		const effectName = state.hasResourceAvailable("SERAPH_SUMMON_TIMER")
 			? "SERAPHIC_ILLUMINATION"
 			: "FEY_ILLUMINATION";
-		state.addEvent(
-			new Event(
-				"start " + effectName + " HoT",
-				0, // TODO
-				() => state.gainStatus(effectName),
-			),
+		const petSnapshot = (state: SCHState) => (state: SCHState) => state.gainStatus(effectName);
+		state.queuePetAction(
+			node,
+			"FEY_ILLUMINATION",
+			"FEY_ILLUMINATION",
+			DEFAULT_EOS_COMMAND_DELAY,
+			PET_APPLICATION_DELAYS.get("FEY_ILLUMINATION")!,
+			petSnapshot,
 		);
 	},
 });
@@ -686,19 +793,27 @@ makeSCHAbility("AETHERPACT", 70, "cd_AETHERPACT", {
 			condition: (state) => state.hasResourceAvailable("FEY_UNION"),
 		},
 	],
-	applicationDelay: 0, // TODO
+	applicationDelay: 0,
 	cooldown: 3,
 	validateAttempt: (state) =>
 		state.resources.get("FAERIE_GAUGE").available(10) && state.hasRealFairy(),
-	// TODO pet jank
-	onApplication: (state, node) => {
+	onConfirm: (state, node) => {
 		state.gainStatus("FEY_UNION");
+		const petSnapshot = (state: SCHState) => (state: SCHState) => state.gainStatus("FEY_UNION");
+		state.queuePetAction(
+			node,
+			"AETHERPACT",
+			"AETHERPACT",
+			DEFAULT_EOS_COMMAND_DELAY,
+			PET_APPLICATION_DELAYS.get("AETHERPACT")!,
+			petSnapshot,
+		);
 	},
 });
 
 makeSCHAbility("DISSOLVE_UNION", 70, "cd_DISSOLVE_UNION", {
 	startOnHotbar: false,
-	applicationDelay: 0, // TODO
+	applicationDelay: 0,
 	cooldown: 1,
 	validateAttempt: (state) => state.hasResourceAvailable("FEY_UNION"),
 	onConfirm: (state) => state.tryConsumeResource("FEY_UNION"),
@@ -711,12 +826,28 @@ makeSCHResourceAbility("RECITATION", 74, "cd_RECITATION", {
 });
 
 makeSCHAbility("FEY_BLESSING", 76, "cd_FEY_BLESSING", {
-	applicationDelay: 0, // TODO
+	applicationDelay: 0,
 	cooldown: 60,
-	healingPotency: 320,
 	validateAttempt: (state) => state.hasRealFairy(),
-	onConfirm: (state) => {
+	onConfirm: (state, node) => {
 		state.tryConsumeResource("FEY_UNION");
+		const petSnapshot = (state: SCHState) => {
+			const healPotency = state.makePetPotency(
+				node.healTargetCount,
+				"FEY_BLESSING",
+				state.getDisplayTime(),
+				320,
+			);
+			return (state: SCHState) => controller.resolveHealingPotency(healPotency);
+		};
+		state.queuePetAction(
+			node,
+			"FEY_BLESSING",
+			"FEY_BLESSING",
+			DEFAULT_EOS_COMMAND_DELAY,
+			PET_APPLICATION_DELAYS.get("FEY_BLESSING")!,
+			petSnapshot,
+		);
 	},
 });
 
@@ -727,23 +858,43 @@ makeSCHAbility("SUMMON_SERAPH", 80, "cd_SUMMON_SERAPH", {
 			condition: (state) => state.hasResourceAvailable("SERAPH_SUMMON_TIMER"),
 		},
 	],
-	applicationDelay: 0, // TODO
+	applicationDelay: 0,
 	cooldown: 120,
 	validateAttempt: (state) => state.hasRealFairy(),
+	// Treat seraph summon as instant
 	onConfirm: (state) => {
+		state.warnLastPetGhost();
+		state.gainStatus("SERAPH_SUMMON_TIMER");
 		state.tryConsumeResource("FEY_UNION");
 	},
-	// TODO find out how long it takes for seraph to be summoned, and when the timer starts ticking
-	onApplication: (state) => state.gainStatus("SERAPH_SUMMON_TIMER"),
 });
 
 makeSCHAbility("CONSOLATION", 80, "cd_CONSOLATION", {
 	startOnHotbar: false,
-	applicationDelay: 0, // TODO
+	applicationDelay: 0,
 	cooldown: 30,
 	maxCharges: 2,
 	healingPotency: 250,
 	validateAttempt: (state) => state.hasResourceAvailable("SERAPH_SUMMON_TIMER"),
+	onConfirm: (state, node) => {
+		const petSnapshot = (state: SCHState) => {
+			const healPotency = state.makePetPotency(
+				node.healTargetCount,
+				"CONSOLATION",
+				state.getDisplayTime(),
+				250,
+			);
+			return (state: SCHState) => controller.resolveHealingPotency(healPotency);
+		};
+		state.queuePetAction(
+			node,
+			"CONSOLATION",
+			"CONSOLATION",
+			DEFAULT_EOS_COMMAND_DELAY,
+			PET_APPLICATION_DELAYS.get("CONSOLATION")!,
+			petSnapshot,
+		);
+	},
 });
 
 makeSCHResourceAbility("PROTRACTION", 86, "cd_PROTRACTION", {

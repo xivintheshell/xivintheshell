@@ -118,7 +118,10 @@ export const enum PotencyModifierType {
 	VENOM,
 	POISED,
 
-	CHAIN_STRAT, // TODO healing modifiers
+	CHAIN_STRAT,
+	FEY_ILLUMINATION,
+	DISSIPATION,
+	PROTRACTION,
 }
 
 // Represents a multiplicative potency buff, e.g. AF3 multipliers potencies by 1.8
@@ -635,6 +638,26 @@ export const Modifiers = {
 		critBonus: 0.1,
 		dhBonus: 0.0,
 	} as CritDirectMultiplier,
+	SchPet: {
+		kind: "multiplier",
+		source: PotencyModifierType.PET,
+		potencyFactor: 0.9,
+	} as PotencyMultiplier,
+	FeyIllum: {
+		kind: "multiplier",
+		source: PotencyModifierType.FEY_ILLUMINATION,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
+	Dissipation: {
+		kind: "multiplier",
+		source: PotencyModifierType.DISSIPATION,
+		potencyFactor: 1.2,
+	} as PotencyMultiplier,
+	Protraction: {
+		kind: "multiplier",
+		source: PotencyModifierType.PROTRACTION,
+		potencyFactor: 1.1,
+	} as PotencyMultiplier,
 };
 
 export function makeComboModifier(addend: number): PotencyAdder {

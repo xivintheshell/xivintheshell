@@ -306,6 +306,13 @@ export const SCH_ACTIONS = ensureRecord<ActionData>()({
 			ja: "アクセッション",
 		},
 	},
+	// Pet action
+	ANGELS_WHISPER: {
+		name: "Angel's Whisper",
+		label: {
+			zh: "天使的低语",
+		},
+	},
 });
 
 export const SCH_COOLDOWNS = ensureRecord<CooldownData>()({
