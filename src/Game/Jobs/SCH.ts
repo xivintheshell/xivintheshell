@@ -651,7 +651,7 @@ makeSCHAbility("AETHERFLOW", 45, "cd_AETHERFLOW", {
 	requiresCombat: true,
 	onConfirm: (state) => {
 		state.resources.get("MANA").gain(2000);
-		state.resources.get("AETHERFLOW").gain(3)
+		state.resources.get("AETHERFLOW").gain(3);
 	},
 });
 
