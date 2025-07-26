@@ -1,5 +1,17 @@
 [
 	{
+		"date": "7/25/25",
+		"changes": [
+			"[SCH] Initial SCH implementation. Thanks to Caro for help with numbers and some mechanics.",
+			"That's every job now in the shell! Stay tuned for more features and improvements to come."
+		],
+		"changes_zh": [
+			"【学者】加了初步的支持。谢谢Caro帮助找数字和介绍职业机制。",
+			"所有的职业现在都包括在排轴器里了！请期待更多的功能和更大的进步。"
+		],
+		"level": "major"
+	},
+	{
 		"date": "7/22/25",
 		"changes": [
 			"[DNC] Fixed a bug where Fountain and Bladeshower could grant Silken Flow when used without combo."

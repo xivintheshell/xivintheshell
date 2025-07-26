@@ -523,7 +523,7 @@ makeWeaponskill_BRD("IRON_JAWS", 56, {
 		state.addEvent(
 			new Event("iron jaws dot refresh", 0.67, () => {
 				dotAppliers.forEach((dotParams, i) => {
-					state.refreshDot(
+					state.refreshDoT(
 						{
 							node,
 							effectName: dotParams.dotName,

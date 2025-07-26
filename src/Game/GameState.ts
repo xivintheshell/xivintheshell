@@ -1508,13 +1508,17 @@ export class GameState {
 	applyDoT(dotName: ResourceKey, node: ActionNode) {
 		this.applyOverTimeEffect(dotName, node, "damage");
 	}
-	applyHoT(hotName: ResourceKey, node: ActionNode) {
-		this.applyOverTimeEffect(hotName, node, "healing");
+	applyHoT(hotName: ResourceKey, node: ActionNode, duration?: number) {
+		this.applyOverTimeEffect(hotName, node, "healing", duration);
 	}
-	applyOverTimeEffect(effectName: ResourceKey, node: ActionNode, kind: PotencyKind) {
+	applyOverTimeEffect(
+		effectName: ResourceKey,
+		node: ActionNode,
+		kind: PotencyKind,
+		duration?: number,
+	) {
 		const effectBuff = this.resources.get(effectName) as OverTimeBuff;
-		const effectDuration = (getResourceInfo(this.config.job, effectName) as ResourceInfo)
-			.maxTimeout;
+		const effectDuration = duration ?? this.getStatusDuration(effectName);
 
 		let effectGap: number | undefined = undefined;
 		const overriddenEffects =
@@ -1596,10 +1600,10 @@ export class GameState {
 	addDoTPotencies(props: OverTimePotencyProps) {
 		this.addOverTimePotencies(props, "damage");
 	}
-	addHoTPotencies(props: OverTimePotencyProps) {
-		this.addOverTimePotencies(props, "healing");
+	addHoTPotencies(props: OverTimePotencyProps, duration?: number) {
+		this.addOverTimePotencies(props, "healing", duration);
 	}
-	addOverTimePotencies(props: OverTimePotencyProps, kind: PotencyKind) {
+	addOverTimePotencies(props: OverTimePotencyProps, kind: PotencyKind, duration?: number) {
 		const mods: PotencyModifier[] = props.modifiers ?? [];
 		// If the job call didn't add Tincture, we can do that here
 		if (this.hasResourceAvailable("TINCTURE") && !mods.includes(Modifiers.Tincture)) {
@@ -1607,13 +1611,13 @@ export class GameState {
 			props.node.addBuff(BuffType.Tincture);
 		}
 
-		const effectDuration = (getResourceInfo(this.config.job, props.effectName) as ResourceInfo)
-			.maxTimeout;
+		const effectDuration = duration ?? this.getStatusDuration(props.effectName);
 		const isGroundTargeted =
 			this.#groundTargetDoTs.includes(props.effectName) ||
 			this.#groundTargetHoTs.includes(props.effectName);
+		// TODO do more precise calculation if the duration does not round.
 		const effectTicks =
-			effectDuration / (props.tickFrequency ?? 3) + (isGroundTargeted ? 1 : 0);
+			Math.ceil(effectDuration / (props.tickFrequency ?? 3)) + (isGroundTargeted ? 1 : 0);
 
 		const tickDescriptor = kind === "damage" ? "DoT" : "HoT";
 		const targetCount = kind === "damage" ? props.node.targetCount : props.node.healTargetCount;
@@ -1642,11 +1646,11 @@ export class GameState {
 		}
 	}
 
-	refreshDot(props: OverTimePotencyProps, forceRefresh: boolean = false) {
+	refreshDoT(props: OverTimePotencyProps, forceRefresh: boolean = false) {
 		this.refreshOverTimeEffect(props, "damage", forceRefresh);
 	}
-	refreshHot(props: OverTimePotencyProps) {
-		this.refreshOverTimeEffect(props, "healing", false);
+	refreshHoT(props: OverTimePotencyProps, forceRefresh: boolean = false) {
+		this.refreshOverTimeEffect(props, "healing", forceRefresh);
 	}
 	refreshOverTimeEffect(props: OverTimePotencyProps, kind: PotencyKind, forceRefresh: boolean) {
 		if (!forceRefresh && !this.hasResourceAvailable(props.effectName)) {

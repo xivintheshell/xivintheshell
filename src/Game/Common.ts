@@ -150,6 +150,11 @@ export enum BuffType {
 
 	HuntersInstinct = "Hunter's Instinct",
 	Swiftscaled = "Swiftscaled",
+
+	FeyIllumination = "Fey Illumination",
+	Dissipation = "Dissipation",
+	Protraction = "Protraction",
+	Recitation = "Recitation",
 }
 
 export type Warning =
