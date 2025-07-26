@@ -1,7 +1,5 @@
 // Skill and state declarations for SCH.
 
-// TODO: write tests for dissipation/seraphism/seraph interactions, and fey union passive gauge spend
-
 import { SCHStatusPropsGenerator } from "../../Components/Jobs/SCH";
 import { StatusPropsGenerator } from "../../Components/StatusDisplay";
 import { TraitKey } from "../Data";
@@ -315,6 +313,7 @@ const makeSCHSpell = (
 		manaCost: number | ResourceCalculationFn<SCHState>;
 		potency?: number | Array<[TraitKey, number]>;
 		healingPotency?: number | Array<[TraitKey, number]>;
+		jobHealingPotencyModifiers?: PotencyModifierFn<SCHState>;
 		aoeHeal?: boolean;
 		falloff?: number;
 		applicationDelay: number;
@@ -330,7 +329,7 @@ const makeSCHSpell = (
 			return [];
 		}
 
-		const modifiers: PotencyModifier[] = [];
+		const modifiers: PotencyModifier[] = params.jobHealingPotencyModifiers?.(state) ?? [];
 		state.addHealingMagicPotencyModifiers(modifiers);
 		state.addHealingActionPotencyModifiers(modifiers);
 		if (
@@ -593,12 +592,13 @@ makeSCHSpell("ADLOQUIUM", 30, {
 	baseCastTime: 2,
 	manaCost: 900,
 	healingPotency: 300,
+	jobHealingPotencyModifiers: (state) =>
+		state.hasResourceAvailable("RECITATION") ? [Modifiers.AutoCrit] : [],
 	onConfirm: (state) => {
-		if (state.tryConsumeResource("RECITATION")) {
-			state.gainStatus("GALVANIZE");
-			if (state.triggersEffect(state.config.critRate)) {
-				state.gainStatus("CATALYZE");
-			}
+		// Shields are applied instantaneously.
+		state.gainStatus("GALVANIZE");
+		if (state.tryConsumeResource("RECITATION") || state.triggersEffect(state.config.critRate)) {
+			state.gainStatus("CATALYZE");
 		}
 	},
 });
@@ -612,6 +612,8 @@ makeSCHSpell("SUCCOR", 35, {
 	baseCastTime: 2,
 	manaCost: 900,
 	healingPotency: 200,
+	jobHealingPotencyModifiers: (state) =>
+		state.hasResourceAvailable("RECITATION") ? [Modifiers.AutoCrit] : [],
 	onConfirm: (state) => {
 		state.tryConsumeResource("RECITATION");
 		state.gainStatus("GALVANIZE");
@@ -628,6 +630,8 @@ makeSCHSpell("CONCITATION", 96, {
 	baseCastTime: 2,
 	manaCost: 900,
 	healingPotency: 200,
+	jobHealingPotencyModifiers: (state) =>
+		state.hasResourceAvailable("RECITATION") ? [Modifiers.AutoCrit] : [],
 	onConfirm: (state) => {
 		state.tryConsumeResource("RECITATION");
 		state.gainStatus("GALVANIZE");
@@ -719,6 +723,8 @@ makeSCHResourceAbility("EXCOGITATION", 62, "cd_EXCOGITATION", {
 	applicationDelay: 0.8,
 	cooldown: 45,
 	healingPotency: 800,
+	jobHealingPotencyModifiers: (state) =>
+		state.hasResourceAvailable("RECITATION") ? [Modifiers.AutoCrit] : [],
 	validateAttempt: (state) =>
 		state.hasResourceAvailable("RECITATION") || state.hasResourceAvailable("AETHERFLOW"),
 	onConfirm: (state) => {
@@ -731,6 +737,8 @@ makeSCHAbility("INDOMITABILITY", 52, "cd_INDOMITABILITY", {
 	applicationDelay: 0.62,
 	cooldown: 30,
 	healingPotency: 400,
+	jobHealingPotencyModifiers: (state) =>
+		state.hasResourceAvailable("RECITATION") ? [Modifiers.AutoCrit] : [],
 	validateAttempt: (state) =>
 		state.hasResourceAvailable("RECITATION") || state.hasResourceAvailable("AETHERFLOW"),
 	onConfirm: (state) => {
@@ -911,7 +919,10 @@ makeSCHAbility("CONSOLATION", 80, "cd_CONSOLATION", {
 				state.getDisplayTime(),
 				250,
 			);
-			return (state: SCHState) => controller.resolveHealingPotency(healPotency);
+			return (state: SCHState) => {
+				state.gainStatus("SERAPHIC_VEIL");
+				controller.resolveHealingPotency(healPotency);
+			};
 		};
 		state.queuePetAction(
 			node,

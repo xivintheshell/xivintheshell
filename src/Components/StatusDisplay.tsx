@@ -378,11 +378,18 @@ function ResourceCounter(props: {
 	}
 }
 
-function ResourceText(props: { name: ContentNode; text: ContentNode; color?: string; className?: string }) {
+function ResourceText(props: {
+	name: ContentNode;
+	text: ContentNode;
+	color?: string;
+	className?: string;
+}) {
 	return <div className={props.className} style={{ marginBottom: 4, lineHeight: "1.5em" }}>
 		<div style={{ display: "inline-block", height: "100%", width: 108 }}>{props.name}</div>
 		<div style={{ width: 200, display: "inline-block" }}>
-			<div style={{ display: "inline-block", marginLeft: 6, color: props.color }}>{props.text}</div>
+			<div style={{ display: "inline-block", marginLeft: 6, color: props.color }}>
+				{props.text}
+			</div>
 		</div>
 	</div>;
 }
