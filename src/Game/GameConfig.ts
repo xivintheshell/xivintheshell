@@ -68,10 +68,7 @@ export const DEFAULT_PCT_CONFIG: ConfigData = {
 };
 
 export const DEFAULT_CONFIG: ConfigData = DEFAULT_BLM_CONFIG; // TODO
-// {
-// 	['BLM']: DEFAULT_BLM_CONFIG,
-// 	['PCT']: DEFAULT_PCT_CONFIG,
-// }[ShellInfo.job];
+Object.freeze(DEFAULT_CONFIG);
 
 export type SerializedConfig = ConfigData & {
 	casterTax: number; // still want this bc don't want to break cached timelines
