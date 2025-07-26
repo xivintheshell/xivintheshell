@@ -218,6 +218,13 @@ export type VPRResourceColors = {
 	swiftscaled: string;
 };
 
+export type SCHResourceColors = {
+	chain: string;
+	faerieGauge: string;
+	aetherflow: string;
+	seraph: string;
+};
+
 export type JobAccentColors = Partial<{
 	[key in ShellJob]: string;
 }>;
@@ -269,6 +276,7 @@ export type ThemeColors = {
 	whm: WHMResourceColors;
 	ast: ASTResourceColors;
 	vpr: VPRResourceColors;
+	sch: SCHResourceColors;
 	timeline: {
 		ruler: string;
 		tracks: string;
@@ -528,6 +536,12 @@ const DARK_THEME_COLORS: ThemeColors = {
 		huntersInstinct: "#9e5a02",
 		swiftscaled: "#ffe20a",
 	},
+	sch: {
+		chain: MarkerColor.Grey,
+		faerieGauge: "#96ffbd",
+		aetherflow: "#acfff7",
+		seraph: "#44b6fd",
+	},
 	timeline: {
 		ruler: "#2d2d2d",
 		tracks: "#242424",
@@ -767,6 +781,12 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		huntersInstinct: "#9e5a02",
 		swiftscaled: "#ffe20a",
 	},
+	sch: {
+		chain: MarkerColor.Grey,
+		faerieGauge: "#96ffbd",
+		aetherflow: "#79d9d0",
+		seraph: "#3299d9",
+	},
 	timeline: {
 		ruler: "#e9e9e9",
 		tracks: "#f3f3f3",
@@ -872,6 +892,7 @@ export function getModifierTagColor(modifierType: PotencyModifierType) {
 		[PotencyModifierType.HONED, colors.vpr.vprComboTimer],
 		[PotencyModifierType.VENOM, colors.vpr.vprComboTimer],
 		[PotencyModifierType.POISED, colors.vpr.vprComboTimer],
+		[PotencyModifierType.CHAIN_STRAT, colors.sch.chain],
 	]);
 	console.assert(
 		modifierColors.has(modifierType),

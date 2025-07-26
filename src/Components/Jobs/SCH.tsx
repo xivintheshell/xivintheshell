@@ -56,18 +56,19 @@ export class SCHStatusPropsGenerator extends StatusPropsGenerator<SCHState> {
 				kind: "text",
 				name: localizeResourceType("SERAPH_SUMMON_TIMER"),
 				text: seraphTimer?.toFixed(3) ?? "N/A",
+				color: colors.sch.seraph,
 			} as ResourceTextProps,
 			{
 				kind: "bar",
 				name: localizeResourceType("FAERIE_GAUGE"),
-				color: colors.blm.umbralIce, // TODO
+				color: colors.sch.faerieGauge,
 				progress: faerie / 100,
 				valueString: faerie.toFixed(0),
 			} as ResourceBarProps,
 			{
 				kind: "counter",
 				name: localizeResourceType("AETHERFLOW"),
-				color: colors.blm.umbralIce, // TODO
+				color: colors.sch.aetherflow,
 				currentStacks: aether,
 				maxStacks: 3,
 				valueString: aether.toFixed(0),

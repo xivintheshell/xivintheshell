@@ -704,6 +704,7 @@ function drawSkills(
 		[BuffType.Temperance, { color: g_colors.whm.temperance, showImage: true }],
 		[BuffType.HuntersInstinct, { color: g_colors.vpr.huntersInstinct, showImage: true }],
 		[BuffType.Swiftscaled, { color: g_colors.vpr.swiftscaled, showImage: true }],
+		[BuffType.ChainStratagem, { color: g_colors.sch.chain, showImage: true }],
 	]);
 
 	const covers: Map<BuffType, Rect[]> = new Map();
