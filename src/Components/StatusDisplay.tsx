@@ -153,7 +153,7 @@ export interface ResourceTextProps {
 	kind: "text";
 	name: ContentNode;
 	text: ContentNode;
-	color: string;
+	color?: string;
 	className?: string;
 }
 

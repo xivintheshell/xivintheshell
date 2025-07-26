@@ -6,7 +6,7 @@ import { TraitKey } from "../Data";
 import { SCHActionKey, SCHCooldownKey, SCHResourceKey } from "../Data/Jobs/SCH";
 import { GameConfig } from "../GameConfig";
 import { GameState } from "../GameState";
-import { Aspect } from "../Common";
+import { Aspect, BuffType } from "../Common";
 import { Potency, Modifiers, PotencyModifier } from "../Potency";
 import { Event, makeResource, CoolDown } from "../Resources";
 import {
@@ -20,6 +20,7 @@ import {
 	makeSpell,
 	MakeAbilityParams,
 	PotencyModifierFn,
+	Skill,
 	SkillAutoReplace,
 	StatePredicate,
 	Spell,
@@ -158,6 +159,43 @@ export class SCHState extends GameState {
 				],
 			},
 		]);
+	}
+
+	override jobSpecificAddHealingBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
+		// Modifiers that only affect the caster's own GCD heals
+		if (skill.cdName === "cd_GCD") {
+			if (
+				this.hasResourceAvailable("FEY_ILLUMINATION") ||
+				this.hasResourceAvailable("SERAPHIC_ILLUMINATION")
+			) {
+				node.addBuff(BuffType.FeyIllumination);
+			}
+			if (this.hasResourceAvailable("DISSIPATION")) {
+				node.addBuff(BuffType.Dissipation);
+			}
+		}
+		if (this.hasResourceAvailable("PROTRACTION")) {
+			node.addBuff(BuffType.Protraction);
+		}
+		const RECITABLE_SKILLS: SCHActionKey[] = [
+			"ADLOQUIUM",
+			"SUCCOR",
+			"CONCITATION",
+			"EXCOGITATION",
+			"INDOMITABILITY",
+		];
+		if (
+			this.hasResourceAvailable("RECITATION") &&
+			RECITABLE_SKILLS.includes(skill.name as SCHActionKey)
+		) {
+			node.addBuff(BuffType.Recitation);
+		}
+	}
+
+	override jobSpecificAddDamageBuffCovers(node: ActionNode, skill: Skill<GameState>): void {
+		if (this.hasResourceAvailable("CHAIN_STRATAGEM")) {
+			node.addBuff(BuffType.ChainStratagem);
+		}
 	}
 
 	override jobSpecificRegisterRecurringEvents() {
@@ -313,7 +351,6 @@ const makeSCHSpell = (
 		manaCost: number | ResourceCalculationFn<SCHState>;
 		potency?: number | Array<[TraitKey, number]>;
 		healingPotency?: number | Array<[TraitKey, number]>;
-		jobHealingPotencyModifiers?: PotencyModifierFn<SCHState>;
 		aoeHeal?: boolean;
 		falloff?: number;
 		applicationDelay: number;
@@ -329,7 +366,7 @@ const makeSCHSpell = (
 			return [];
 		}
 
-		const modifiers: PotencyModifier[] = params.jobHealingPotencyModifiers?.(state) ?? [];
+		const modifiers: PotencyModifier[] = [];
 		state.addHealingMagicPotencyModifiers(modifiers);
 		state.addHealingActionPotencyModifiers(modifiers);
 		if (
@@ -350,9 +387,6 @@ const makeSCHSpell = (
 		jobHealingPotencyModifiers,
 		onConfirm: combineEffects(
 			params.baseCastTime ? (state) => state.tryConsumeResource("SWIFTCAST") : undefined,
-			params.healingPotency && name !== "PHYSICK"
-				? (state) => state.tryConsumeResource("EMERGENCY_TACTICS")
-				: undefined,
 			params.onConfirm,
 		),
 	});
@@ -591,17 +625,30 @@ makeSCHSpell("ADLOQUIUM", 30, {
 	applicationDelay: 0.98,
 	baseCastTime: 2,
 	manaCost: 900,
+	// TODO treat etact as a healing modifier
 	healingPotency: 300,
-	jobHealingPotencyModifiers: (state) =>
-		state.hasResourceAvailable("RECITATION") ? [Modifiers.AutoCrit] : [],
 	onConfirm: (state) => {
 		// Shields are applied instantaneously.
-		state.gainStatus("GALVANIZE");
-		if (state.tryConsumeResource("RECITATION") || state.triggersEffect(state.config.critRate)) {
+		const etact = state.tryConsumeResource("EMERGENCY_TACTICS");
+		if (!etact) {
+			state.gainStatus("GALVANIZE");
+		}
+		if (
+			(state.tryConsumeResource("RECITATION") ||
+				state.triggersEffect(state.config.critRate)) &&
+			!etact
+		) {
 			state.gainStatus("CATALYZE");
 		}
 	},
 });
+
+const succorConfirm: EffectFn<SCHState> = (state) => {
+	state.tryConsumeResource("RECITATION");
+	if (!state.tryConsumeResource("EMERGENCY_TACTICS")) {
+		state.gainStatus("GALVANIZE");
+	}
+};
 
 makeSCHSpell("SUCCOR", 35, {
 	autoUpgrade: {
@@ -612,12 +659,7 @@ makeSCHSpell("SUCCOR", 35, {
 	baseCastTime: 2,
 	manaCost: 900,
 	healingPotency: 200,
-	jobHealingPotencyModifiers: (state) =>
-		state.hasResourceAvailable("RECITATION") ? [Modifiers.AutoCrit] : [],
-	onConfirm: (state) => {
-		state.tryConsumeResource("RECITATION");
-		state.gainStatus("GALVANIZE");
-	},
+	onConfirm: succorConfirm,
 });
 
 makeSCHSpell("CONCITATION", 96, {
@@ -630,12 +672,7 @@ makeSCHSpell("CONCITATION", 96, {
 	baseCastTime: 2,
 	manaCost: 900,
 	healingPotency: 200,
-	jobHealingPotencyModifiers: (state) =>
-		state.hasResourceAvailable("RECITATION") ? [Modifiers.AutoCrit] : [],
-	onConfirm: (state) => {
-		state.tryConsumeResource("RECITATION");
-		state.gainStatus("GALVANIZE");
-	},
+	onConfirm: succorConfirm,
 });
 
 makeSCHSpell("PHYSICK", 4, {
@@ -723,8 +760,6 @@ makeSCHResourceAbility("EXCOGITATION", 62, "cd_EXCOGITATION", {
 	applicationDelay: 0.8,
 	cooldown: 45,
 	healingPotency: 800,
-	jobHealingPotencyModifiers: (state) =>
-		state.hasResourceAvailable("RECITATION") ? [Modifiers.AutoCrit] : [],
 	validateAttempt: (state) =>
 		state.hasResourceAvailable("RECITATION") || state.hasResourceAvailable("AETHERFLOW"),
 	onConfirm: (state) => {
@@ -737,8 +772,6 @@ makeSCHAbility("INDOMITABILITY", 52, "cd_INDOMITABILITY", {
 	applicationDelay: 0.62,
 	cooldown: 30,
 	healingPotency: 400,
-	jobHealingPotencyModifiers: (state) =>
-		state.hasResourceAvailable("RECITATION") ? [Modifiers.AutoCrit] : [],
 	validateAttempt: (state) =>
 		state.hasResourceAvailable("RECITATION") || state.hasResourceAvailable("AETHERFLOW"),
 	onConfirm: (state) => {
@@ -859,6 +892,7 @@ makeSCHResourceAbility("RECITATION", 74, "cd_RECITATION", {
 makeSCHAbility("FEY_BLESSING", 76, "cd_FEY_BLESSING", {
 	applicationDelay: 0,
 	cooldown: 60,
+	healingPotency: 320,
 	validateAttempt: (state) => state.hasRealFairy(),
 	onConfirm: (state, node) => {
 		state.tryConsumeResource("FEY_UNION");
@@ -869,6 +903,7 @@ makeSCHAbility("FEY_BLESSING", 76, "cd_FEY_BLESSING", {
 				state.getDisplayTime(),
 				320,
 			);
+			state.addHealingActionPotencyModifiers(healPotency.modifiers);
 			return (state: SCHState) => controller.resolveHealingPotency(healPotency);
 		};
 		state.queuePetAction(
@@ -990,9 +1025,11 @@ makeSCHSpell("MANIFESTATION", 100, {
 	validateAttempt: (state) => state.hasResourceAvailable("SERAPHISM"),
 	onConfirm: (state) => {
 		// Does not consume Recitation
-		state.gainStatus("GALVANIZE");
-		if (state.triggersEffect(state.config.critRate)) {
-			state.gainStatus("CATALYZE");
+		if (!state.tryConsumeResource("EMERGENCY_TACTICS")) {
+			state.gainStatus("GALVANIZE");
+			if (state.triggersEffect(state.config.critRate)) {
+				state.gainStatus("CATALYZE");
+			}
 		}
 	},
 });
@@ -1005,5 +1042,6 @@ makeSCHSpell("ACCESSION", 100, {
 	baseCastTime: 0,
 	manaCost: 900,
 	validateAttempt: (state) => state.hasResourceAvailable("SERAPHISM"),
-	onConfirm: (state) => state.gainStatus("GALVANIZE"),
+	onConfirm: (state) =>
+		!state.tryConsumeResource("EMERGENCY_TACTICS") && state.gainStatus("GALVANIZE"),
 });

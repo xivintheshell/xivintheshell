@@ -223,6 +223,10 @@ export type SCHResourceColors = {
 	faerieGauge: string;
 	aetherflow: string;
 	seraph: string;
+	feyIllumination: string;
+	dissipation: string;
+	protraction: string;
+	recitation: string;
 };
 
 export type JobAccentColors = Partial<{
@@ -541,6 +545,10 @@ const DARK_THEME_COLORS: ThemeColors = {
 		faerieGauge: "#96ffbd",
 		aetherflow: "#acfff7",
 		seraph: "#44b6fd",
+		feyIllumination: "#2cc7b0",
+		dissipation: "#c4c4c4",
+		protraction: "#77c990",
+		recitation: "#ffce1c",
 	},
 	timeline: {
 		ruler: "#2d2d2d",
@@ -786,6 +794,10 @@ const LIGHT_THEME_COLORS: ThemeColors = {
 		faerieGauge: "#96ffbd",
 		aetherflow: "#79d9d0",
 		seraph: "#3299d9",
+		feyIllumination: "#2cc7b0",
+		dissipation: "#c4c4c4",
+		protraction: "#77c990",
+		recitation: "#ffce1c",
 	},
 	timeline: {
 		ruler: "#e9e9e9",

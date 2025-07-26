@@ -8,6 +8,7 @@ import {
 } from "./utils";
 
 import { controller } from "../Controller/Controller";
+import { SCHActionKey } from "../Game/Data/Jobs/SCH";
 import { SCHState } from "../Game/Jobs/SCH";
 import { ProcMode } from "../Game/Common";
 
@@ -20,7 +21,9 @@ const testWithConfig = makeTestWithConfigFn("SCH");
 it(
 	"does not generate faerie gauge under dissipation",
 	testWithConfig({}, () => {
-		["DISSIPATION", "ENERGY_DRAIN", "LUSTRATE", "INDOMITABILITY"].forEach(applySkill);
+		(["DISSIPATION", "ENERGY_DRAIN", "LUSTRATE", "INDOMITABILITY"] as SCHActionKey[]).forEach(
+			applySkill,
+		);
 		const state = controller.game as SCHState;
 		expect(state.hasResourceAvailable("FAERIE_GAUGE")).toBeFalsy();
 		expect(state.hasResourceAvailable("AETHERFLOW")).toBeFalsy();
@@ -38,7 +41,14 @@ it(
 		expect(state.hasResourceAvailable("FEY_ILLUMINATION")).toBeTruthy();
 		// wait for cooldowns
 		controller.step(120);
-		["SUMMON_SERAPH", "CONSOLATION", "FEY_ILLUMINATION", "WHISPERING_DAWN"].forEach(applySkill);
+		(
+			[
+				"SUMMON_SERAPH",
+				"CONSOLATION",
+				"FEY_ILLUMINATION",
+				"WHISPERING_DAWN",
+			] as SCHActionKey[]
+		).forEach(applySkill);
 		controller.step(3);
 		expect(state.hasResourceAvailable("ANGELS_WHISPER")).toBeTruthy();
 		expect(state.hasResourceAvailable("SERAPHIC_ILLUMINATION")).toBeTruthy();
@@ -143,6 +153,18 @@ it(
 		expect(state.hasResourceAvailable("SERAPHISM")).toBeFalsy();
 		// regen effect is not canceled
 		expect(state.hasResourceAvailable("SERAPHISM_REGEN")).toBeTruthy();
+	}),
+);
+
+it(
+	"consumes etact",
+	testWithConfig({}, () => {
+		const state = controller.game as SCHState;
+		applySkill("EMERGENCY_TACTICS");
+		expect(state.hasResourceAvailable("EMERGENCY_TACTICS")).toBeTruthy();
+		applySkill("CONCITATION");
+		expect(state.hasResourceAvailable("EMERGENCY_TACTICS")).toBeFalsy();
+		expect(state.hasResourceAvailable("GALVANIZE")).toBeFalsy();
 	}),
 );
 

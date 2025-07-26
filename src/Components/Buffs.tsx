@@ -75,6 +75,11 @@ buffIcons.set(BuffType.Temperance, "Buffs/WHM/Temperance.png");
 buffIcons.set(BuffType.HuntersInstinct, "Buffs/VPR/Hunter's Instinct.png");
 buffIcons.set(BuffType.Swiftscaled, "Buffs/VPR/Swiftscaled.png");
 
+buffIcons.set(BuffType.FeyIllumination, "Buffs/SCH/Fey Illumination.png");
+buffIcons.set(BuffType.Dissipation, "Buffs/SCH/Dissipation.png");
+buffIcons.set(BuffType.Protraction, "Buffs/SCH/Protraction.png");
+buffIcons.set(BuffType.Recitation, "Buffs/SCH/Recitation.png");
+
 export const buffIconImages: Map<BuffType, HTMLImageElement> = new Map();
 buffIcons.forEach((path, skillName) => {
 	const imgObj = new Image();

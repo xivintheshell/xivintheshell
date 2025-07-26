@@ -56,7 +56,7 @@ export class SCHStatusPropsGenerator extends StatusPropsGenerator<SCHState> {
 				kind: "text",
 				name: localizeResourceType("SERAPH_SUMMON_TIMER"),
 				text: seraphTimer?.toFixed(3) ?? "N/A",
-				color: colors.sch.seraph,
+				color: seraphTimer ? colors.sch.seraph : undefined,
 			} as ResourceTextProps,
 			{
 				kind: "bar",
